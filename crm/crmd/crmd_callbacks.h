@@ -34,8 +34,6 @@ gboolean lrm_dispatch(int fd, gpointer user_data);
 
 extern void lrm_op_callback (lrm_op_t* op);
 
-extern void lrm_monitor_callback (lrm_mon_t* monitor);
-
 extern void crmd_client_status_callback(const char * node, const char * client,
 			     const char * status, void * private);
 

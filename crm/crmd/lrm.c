@@ -100,7 +100,7 @@ do_lrm_control(long long action,
 		
 		crm_trace("LRM: set_lrm_callback...");
 		ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(
-			fsa_lrm_conn, lrm_op_callback, lrm_monitor_callback);
+			fsa_lrm_conn, lrm_op_callback);
 		
 		if(ret != HA_OK) {
 			crm_err("Failed to set LRM callbacks");
@@ -228,7 +228,7 @@ build_active_RAs(xmlNodePtr rsc_list)
 			this_op = op->op_type;
 
 			if(found == FALSE && safe_str_neq(this_op, "status")){
-				switch(op->status) {
+				switch(op->op_status) {
 					case LRM_OP_DONE:
 						status_text = "done";
 						break;
@@ -363,7 +363,7 @@ do_lrm_invoke(long long action,
 		msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_ID, TRUE);
 	
 	// only the first 16 chars are used by the LRM
-	strncpy(rid, id_from_cib, 16);
+	strncpy(rid, id_from_cib, 64);
 	
 	crm_op = get_xml_attr(msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
 	
@@ -415,6 +415,10 @@ do_lrm_rsc_op(
 		
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(
 			fsa_lrm_conn, rid);
+
+		
+
+
 	}
 	
 	if(rsc == NULL) {
@@ -425,38 +429,31 @@ do_lrm_rsc_op(
 	// now do the op
 	crm_verbose("performing op %s...", operation);
 	op = g_new(lrm_op_t, 1);
-	op->op_type = operation;
-	op->params = xml2list(msg, rsc_path, DIMOF(rsc_path));
-	op->timeout = 0;
-	op->user_data = rsc;
+	op->op_type   = operation;
+	op->params    = xml2list(msg, rsc_path, DIMOF(rsc_path));
+	op->timeout   = 0;
+	op->interval  = 0;
+	op->user_data = NULL;
+	op->target_rc = EVERYTIME;
 	rsc->ops->perform_op(rsc, op);
 
-	return I_NULL;
-}
-
-enum crmd_fsa_input
-do_lrm_monitor(lrm_rsc_t *rsc)
-{
-	lrm_mon_t* mon = NULL;
-
-	if(rsc == NULL) {
-		crm_err("Could not find resource to monitor");
-		return I_FAIL;
+	if(safe_str_eq(operation, "start")) {
+		// initiate the monitor action
+		op = g_new(lrm_op_t, 1);
+		op->op_type   = "status";
+		op->params    = NULL;
+		op->user_data = NULL;
+		op->timeout   = 0;
+		op->interval  = 1000;
+		op->target_rc = CHANGED;
+		int monitor_call_id = rsc->ops->perform_op(rsc, op);
+		if(monitor_call_id < 0) {
+			// just so its used
+		}
 	}
-	
-	mon = g_new(lrm_mon_t, 1);
-	mon->op_type = "status";
-	mon->params = NULL;
-	mon->timeout = 0;
-	mon->user_data = rsc;
-	mon->mode = LRM_MONITOR_SET;
-	mon->interval = 2;
-	mon->target = 1;
-	rsc->ops->set_monitor(rsc, mon);
 
 	return I_NULL;
 }
-
 
 GHashTable *
 xml2list(xmlNodePtr parent, const char**attr_path, int depth)
@@ -551,37 +548,11 @@ do_lrm_event(long long action,
 	     void *data)
 {
 	
-	if(cause == C_LRM_MONITOR_CALLBACK) {
-		lrm_mon_t* monitor = (lrm_mon_t*)data;
-		lrm_rsc_t* rsc = monitor->rsc;
-		
-
-		switch(monitor->status) {
-			case LRM_OP_DONE:
-				crm_trace("An LRM monitor operation passed");
-				return I_NULL;
-				break;
-
-			case LRM_OP_CANCELLED:
-			case LRM_OP_TIMEOUT:
-			case LRM_OP_NOTSUPPORTED:
-			case LRM_OP_ERROR:
-				crm_err("An LRM monitor operation failed"
-					" or was aborted");
-
-				do_update_resource(rsc,
-						   monitor->status,
-						   monitor->rc,
-						   monitor->op_type);
-
-				break;
-		}	
-
-	} else if(cause == C_LRM_OP_CALLBACK) {
+	if(cause == C_LRM_OP_CALLBACK) {
 		lrm_op_t* op = (lrm_op_t*)data;
 		lrm_rsc_t* rsc = op->rsc;
 
-		switch(op->status) {
+		switch(op->op_status) {
 			case LRM_OP_CANCELLED:
 			case LRM_OP_TIMEOUT:
 			case LRM_OP_NOTSUPPORTED:
@@ -592,7 +563,7 @@ do_lrm_event(long long action,
 			case LRM_OP_DONE:
 
 				do_update_resource(rsc,
-						   op->status,
+						   op->op_status,
 						   op->rc,
 						   op->op_type);
 

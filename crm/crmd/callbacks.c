@@ -223,12 +223,6 @@ lrm_op_callback (lrm_op_t* op)
 }
 
 void
-lrm_monitor_callback (lrm_mon_t* monitor)
-{
-	s_crmd_fsa(C_LRM_MONITOR_CALLBACK, I_LRM_EVENT, monitor);
-}
-
-void
 crmd_client_status_callback(const char * node, const char * client,
 		 const char * status, void * private)
 {

@@ -79,6 +79,5 @@ extern gboolean send_ha_reply(ll_cluster_t *hb_cluster,
 			      xmlNodePtr xml_response_data);
 
 extern void lrm_op_callback (lrm_op_t* op);
-extern void lrm_monitor_callback (lrm_mon_t* monitor);
 
 #endif
