@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.19 2005/02/25 15:26:31 andrew Exp $ */
+/* $Id: main.c,v 1.20 2005/02/28 10:53:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -85,6 +85,7 @@ main(int argc, char ** argv)
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
+				cl_log_enable_stderr(1);
 				alter_debug(DEBUG_INC);
 				break;
 			case 'h':		/* Help message */
