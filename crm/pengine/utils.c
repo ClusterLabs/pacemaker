@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.53 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: utils.c,v 1.54 2005/02/18 10:32:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -480,14 +480,16 @@ gint sort_rsc_priority(gconstpointer a, gconstpointer b)
 	const resource_t *resource1 = (const resource_t*)a;
 	const resource_t *resource2 = (const resource_t*)b;
 
-	if(a == NULL) return 1;
-	if(b == NULL) return -1;
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
   
-	if(resource1->priority > resource2->priority)
+	if(resource1->priority > resource2->priority) {
 		return -1;
-
-	if(resource1->priority < resource2->priority)
+	}
+	
+	if(resource1->priority < resource2->priority) {
 		return 1;
+	}
 
 	return 0;
 }
@@ -497,14 +499,16 @@ gint sort_cons_strength(gconstpointer a, gconstpointer b)
 	const rsc_dependancy_t *rsc_constraint1 = (const rsc_dependancy_t*)a;
 	const rsc_dependancy_t *rsc_constraint2 = (const rsc_dependancy_t*)b;
 
-	if(a == NULL) return 1;
-	if(b == NULL) return -1;
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
   
-	if(rsc_constraint1->strength > rsc_constraint2->strength)
+	if(rsc_constraint1->strength > rsc_constraint2->strength) {
 		return 1;
-
-	if(rsc_constraint1->strength < rsc_constraint2->strength)
+	}
+	
+	if(rsc_constraint1->strength < rsc_constraint2->strength) {
 		return -1;
+	}
 	return 0;
 }
 
@@ -513,15 +517,17 @@ gint sort_color_weight(gconstpointer a, gconstpointer b)
 	const color_t *color1 = (const color_t*)a;
 	const color_t *color2 = (const color_t*)b;
 
-	if(a == NULL) return 1;
-	if(b == NULL) return -1;
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
   
-	if(color1->local_weight > color2->local_weight)
+	if(color1->local_weight > color2->local_weight) {
 		return -1;
-
-	if(color1->local_weight < color2->local_weight)
+	}
+	
+	if(color1->local_weight < color2->local_weight) {
 		return 1;
-
+	}
+	
 	return 0;
 }
 
@@ -530,15 +536,16 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	const node_t *node1 = (const node_t*)a;
 	const node_t *node2 = (const node_t*)b;
 
-	if(a == NULL) return 1;
-	if(b == NULL) return -1;
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
 	
-	if(node1->weight > node2->weight)
+	if(node1->weight > node2->weight) {
 		return -1;
-
-	if(node1->weight < node2->weight)
+	}
+	
+	if(node1->weight < node2->weight) {
 		return 1;
-  
+	}
 
 	return 0;
 }
