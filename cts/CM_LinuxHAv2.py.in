@@ -111,9 +111,6 @@ class LinuxHAv2(HeartbeatCM):
 	    if self.Env["CIBfilename"] == None:
 		os.system("echo " + default_cts_cib + " > /tmp/cts.default.cib")
 		self.Env["CIBfilename"] = "/tmp/cts.default.cib"
-	    for node in self.Env["nodes"]:
-		os.system("scp /tmp/cts.default.cib root@"+self["CIBfile"]%(node))
-#		self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
     
     def StataCM(self, node):
 
@@ -147,6 +144,10 @@ class LinuxHAv2(HeartbeatCM):
         watch.setwatch()
         self.log ("CM_LinuxHAv2.py: Starting %s on node %s"
                 %(self["Name"], node))
+
+	if self.Env["ClobberCIB"] != None:
+	    self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
+
         self.rsh(node, self["StartCmd"])
         if watch.look():
             self.ShouldBeStatus[node]=self["up"]
