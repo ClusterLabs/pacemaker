@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.10 2005/02/07 20:31:09 andrew Exp $ */
+/* $Id: primatives.c,v 1.11 2005/02/09 15:33:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -416,15 +416,17 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 {
 	const char *replace = NULL;
 	const char *object_name = NULL;
-	const char *object_id = NULL;
+	char *object_id = NULL;
 	crm_data_t *equiv_node = NULL;
 	int result = cib_ok;
 	
 	if(new_obj != NULL) {
 		object_name = crm_element_name(new_obj);
+		if(crm_element_value(new_obj, XML_ATTR_ID) != NULL){
+			object_id = crm_element_value_copy(new_obj,XML_ATTR_ID);
+		}
 	}
-	object_id = crm_element_value(new_obj, XML_ATTR_ID);
-	
+
 	if(new_obj == NULL) {
 		result = cib_NOOBJECT;
 
@@ -495,7 +497,6 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 			
 		} else {
 			copy_in_properties(equiv_node, new_obj);
-			
 		}
 
 		crm_debug("Processing children of <%s id=%s>",
@@ -528,7 +529,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 		  crm_str(object_name), crm_str(object_id));
 	
 	cib_post_notify(CRM_OP_CIB_UPDATE, new_obj, result, equiv_node);
-
+	crm_free(object_id);
 	return result;
 }
 
@@ -540,26 +541,10 @@ update_node_state(crm_data_t *target, crm_data_t *update)
 	gboolean any_updates    = FALSE;
 	gboolean clear_stonith  = FALSE;
 	gboolean clear_shutdown = FALSE;
-	const char *local_prop_value = NULL;
-	const char *local_prop_name = NULL;
 
-#ifdef USE_LIBXML
-	xmlAttrPtr prop_iter    = NULL;
-	prop_iter = update->properties;
-	while(prop_iter != NULL) {
-		local_prop_name = prop_iter->name;
-		prop_iter = prop_iter->next;
-#else
-	int lpc = 0;
-	for(; lpc < update->nfields; lpc++) {
-		if(update->types[lpc] != FT_STRING) {
-			continue;
-		}
-		local_prop_name = update->names[lpc];
-#endif		
-		local_prop_value =
-			crm_element_value(update, local_prop_name);
-
+	xml_prop_iter(
+		update, local_prop_name, local_prop_value,
+		
 		if(local_prop_name == NULL) {
 			/*  error */
 			
@@ -582,8 +567,7 @@ update_node_state(crm_data_t *target, crm_data_t *update)
 			set_xml_property_copy(
 				target, local_prop_name, local_prop_value);
 		}
-			  
-	}
+		);
 	
 	xml_remove_prop(target, XML_CIB_ATTR_CLEAR_SHUTDOWN);
 	if(clear_shutdown) {
