@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.31 2004/10/12 21:05:53 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.32 2004/11/24 15:37:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,13 +52,14 @@ typedef struct oc_node_list_s oc_node_list_t;
  * Plus a couple of other things
  */
 struct crm_subsystem_s {
-		pid_t	pid;		/* Process id of child process */
-		const char*	command;	/* What command to run? */
-		const char*	path;		/* Path (argv[0])? */
-/* extras */
-		const char*	name;
-		IPC_Channel	*ipc;	/* How can we communicate with it */
-		long long	flag;	/*  */
+		pid_t	pid;		  /* Process id of child process */
+		const char*	name;     /* executable name */
+		const char*	path;	  /* Command location */
+ 		const char*	command;  /* Command with path */
+		const char*	args;     /* Command arguments */
+
+		IPC_Channel	*ipc;	  /* How can we communicate with it */
+		long long	flag;	  /*  */
 };
 
 typedef struct fsa_timer_s fsa_timer_t;

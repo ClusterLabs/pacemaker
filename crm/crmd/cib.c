@@ -77,7 +77,7 @@ do_cib_control(long long action,
 
 		} else {
 			crm_info("Ignoring request to start %s after shutdown",
-				 this_subsys->command);
+				 this_subsys->name);
 		}
 	}
 	

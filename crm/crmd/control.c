@@ -187,10 +187,6 @@ do_startup(long long action,
 	crm_info("Register PID");
 	register_pid(PID_FILE, FALSE, crm_shutdown);
 	
-	/* Async get client status information in the cluster */
-	fsa_cluster_conn->llc_ops->client_status(
-		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
-
 	ipc_clients = g_hash_table_new(&g_str_hash, &g_str_equal);
 	
 	if(was_error == 0) {
@@ -280,31 +276,37 @@ do_startup(long long action,
 	crm_malloc(pe_subsystem,  sizeof(struct crm_subsystem_s));
 
 	if(cib_subsystem != NULL) {
-		cib_subsystem->pid = 0;	
-		cib_subsystem->path = crm_strdup(BIN_DIR);
-		cib_subsystem->name = crm_strdup(CRM_SYSTEM_CIB);
-		cib_subsystem->command = BIN_DIR"/cib";
-		cib_subsystem->flag = R_CIB_CONNECTED;	
+		cib_subsystem->pid      = -1;	
+		cib_subsystem->flag     = R_CIB_CONNECTED;	
+		cib_subsystem->path     = BIN_DIR;
+		cib_subsystem->name     = CRM_SYSTEM_CIB;
+		cib_subsystem->command  = BIN_DIR"/"CRM_SYSTEM_CIB;
+		cib_subsystem->args     = "-VVc";
+
 	} else {
 		was_error = TRUE;
 	}
 	
 	if(te_subsystem != NULL) {
-		te_subsystem->pid = 0;	
-		te_subsystem->path = crm_strdup(BIN_DIR);
-		te_subsystem->name = crm_strdup(CRM_SYSTEM_TENGINE);
-		te_subsystem->command = BIN_DIR"/tengine";
-		te_subsystem->flag = R_TE_CONNECTED;	
+		te_subsystem->pid      = -1;	
+		te_subsystem->flag     = R_TE_CONNECTED;	
+		te_subsystem->path     = BIN_DIR;
+		te_subsystem->name     = CRM_SYSTEM_TENGINE;
+		te_subsystem->command  = BIN_DIR"/"CRM_SYSTEM_TENGINE;
+		te_subsystem->args     = "-VVc";
+		
 	} else {
 		was_error = TRUE;
 	}
 	
 	if(pe_subsystem != NULL) {
-		pe_subsystem->pid = 0;	
-		pe_subsystem->path = crm_strdup(BIN_DIR);
-		pe_subsystem->name = crm_strdup(CRM_SYSTEM_PENGINE);
-		pe_subsystem->command = BIN_DIR"/pengine";
-		pe_subsystem->flag = R_PE_CONNECTED;	
+		pe_subsystem->pid      = -1;	
+		pe_subsystem->flag     = R_PE_CONNECTED;	
+		pe_subsystem->path     = BIN_DIR;
+		pe_subsystem->name     = CRM_SYSTEM_PENGINE;
+		pe_subsystem->command  = BIN_DIR"/"CRM_SYSTEM_PENGINE;
+		pe_subsystem->args     = "-VVc";
+		
 	} else {
 		was_error = TRUE;
 	}
@@ -618,6 +620,12 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	}
 	crm_info("FSA Hostname: %s", fsa_our_uname);
 
+	/* Async get client status information in the cluster */
+	crm_debug("Requesting an initial dump of CRMD client_status");
+	fsa_cluster_conn->llc_ops->client_status(
+		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
+
+	
 	return TRUE;
     
 }

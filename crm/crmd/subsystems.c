@@ -51,7 +51,7 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 {
 	crm_info("Stopping sub-system \"%s\"", the_subsystem->name);
 	if (the_subsystem->pid <= 0) {
-		crm_err("Client %s not running yet", the_subsystem->command);
+		crm_err("Client %s not running yet", the_subsystem->name);
 
 	} else if(! is_set(fsa_input_register, the_subsystem->flag) ) {
 		/* running but not yet connected */
@@ -83,11 +83,11 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	const char 	*devnull = "/dev/null";
 	
 
-	crm_info("Starting sub-system \"%s\"", the_subsystem->command);
+	crm_info("Starting sub-system \"%s\"", the_subsystem->name);
 
 	if (the_subsystem->pid > 0) {
 		crm_warn("Client %s already running as pid %d",
-			the_subsystem->command, (int) the_subsystem->pid);
+			the_subsystem->name, (int) the_subsystem->pid);
 
 		/* starting a started X is not an error */
 		return TRUE;
@@ -123,8 +123,8 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 			break;
 	}
 
-	crm_info("Executing \"%s\" (pid %d)",
-		 the_subsystem->command, (int) getpid());
+	crm_info("Executing \"%s %s\" (pid %d)",
+		 the_subsystem->command, the_subsystem->args, (int) getpid());
 
 	/* A precautionary measure */
 	getrlimit(RLIMIT_NOFILE, &oflimits);
@@ -136,11 +136,19 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
 	(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 	
-	(void)execl("/bin/sh", "sh", "-c", the_subsystem->command,
-		    (const char *)NULL);
+	{
+		char* const start_args[] = {
+			crm_strdup(the_subsystem->args),
+			NULL
+		};
+		
+		(void)execv(the_subsystem->command, start_args);
+	}
 	
 	/* Should not happen */
-	cl_perror("FATAL: Cannot exec %s", the_subsystem->command);
+	cl_perror("FATAL: Cannot exec %s %s",
+		  the_subsystem->command, the_subsystem->args);
+
 	exit(100); /* Suppress respawning */
 	return TRUE; /* never reached */
 }
