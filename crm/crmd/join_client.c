@@ -214,7 +214,12 @@ do_cl_join_result(long long action,
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 		return I_NULL;
 	}
-	
+
+	if(fsa_our_dc == NULL) {
+		crm_info("Set DC to %s", welcome_from);
+		fsa_our_dc = crm_strdup(welcome_from);
+	} 	
+
 	/* send our status section to the DC */
 	crm_debug("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
