@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.16 2005/02/22 13:36:06 andrew Exp $ */
+/* $Id: io.c,v 1.17 2005/02/28 10:51:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -209,6 +209,7 @@ initializeCib(crm_data_t *new_cib)
 
 	if(initialized == FALSE) {
 		crm_warn("CIB Verification failed");
+		the_cib = NULL;
 
 	} else {
 		const char *option = "suppress_cib_writes";
