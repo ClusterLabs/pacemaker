@@ -58,7 +58,7 @@ halib_PROGRAMS	= ptest
 
 noinst_HEADERS	= 
 
-ptest_SOURCES	= pengine.c putils.c ptest.c 
+ptest_SOURCES	= pengine.c utils.c ptest.c 
 
 ptest_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ptest_LDFLAGS	= $(XML_LIBS)
