@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.11 2005/02/11 22:06:40 andrew Exp $ */
+/* $Id: notify.c,v 1.12 2005/02/16 18:03:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,6 +45,7 @@ extern GHashTable *client_list;
 int pending_updates = 0;
 
 void cib_notify_client(gpointer key, gpointer value, gpointer user_data);
+void attach_cib_generation(HA_Message *msg, const char *field, crm_data_t *a_cib);
 
 void
 cib_notify_client(gpointer key, gpointer value, gpointer user_data)
@@ -97,6 +98,7 @@ cib_pre_notify(
 	}
 
 	type = cl_get_string(update_msg, F_CIB_OBJTYPE);	
+	attach_cib_generation(update_msg, "cib_generation", the_cib);
 	
 	if(existing != NULL) {
 		add_message_xml(update_msg, F_CIB_EXISTING, existing);
@@ -158,10 +160,12 @@ cib_post_notify(
 	}
 
 	
+	attach_cib_generation(update_msg, "cib_generation", the_cib);
 	if(update != NULL) {
 		add_message_xml(update_msg, F_CIB_UPDATE, update);
 
-	} else if(new_obj != NULL) {
+	}
+	if(new_obj != NULL) {
 		add_message_xml(update_msg, F_CIB_UPDATE_RESULT, new_obj);
 	}
 
@@ -203,4 +207,17 @@ cib_post_notify(
 	crm_msg_del(update_msg);
 
 	crm_debug("Notify complete");
+}
+
+void
+attach_cib_generation(HA_Message *msg, const char *field, crm_data_t *a_cib) 
+{
+	crm_data_t *generation = create_xml_node(
+		NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+
+	if(the_cib != NULL) {
+		copy_in_properties(generation, a_cib);
+	}
+	add_message_xml(msg, field, a_cib);
+	free_xml(generation);
 }
