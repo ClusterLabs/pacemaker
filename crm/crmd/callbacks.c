@@ -56,7 +56,7 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 	   && safe_str_neq(from, fsa_our_uname)) {
 		crm_err("Another DC detected");
 #ifdef MSG_LOG
-		crm_log_message_adv(LOG_ERR, DEVEL_DIR"/inbound.ha.log", msg);
+		crm_log_message_adv(LOG_ERR, "inbound.ha.log", msg);
 #endif
 		crm_log_message(LOG_ERR, msg);
 		new_input = new_ha_msg_input(msg);
@@ -65,14 +65,14 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 	} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
 		crm_verbose("Ignoring message for the DC [F_SEQ=%s]", seq);
 #ifdef MSG_LOG
-		crm_log_message_adv(LOG_TRACE, DEVEL_DIR"/inbound.ha.log", msg);
+		crm_log_message_adv(LOG_TRACE, "inbound.ha.log", msg);
 #endif
 		return;
 
 	} else if(safe_str_eq(from, fsa_our_uname)
 		  && safe_str_eq(op, CRM_OP_VOTE)) {
 #ifdef MSG_LOG
-		crm_log_message_adv(LOG_TRACE, DEVEL_DIR"/inbound.ha.log", msg);
+		crm_log_message_adv(LOG_TRACE, "inbound.ha.log", msg);
 #endif
 		crm_verbose("Ignoring our own vote [F_SEQ=%s]", seq);
 		return;
@@ -80,7 +80,7 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 	} else if(AM_I_DC && safe_str_eq(op, CRM_OP_HBEAT)) {
 		crm_verbose("Ignoring our own heartbeat [F_SEQ=%s]", seq);
 #ifdef MSG_LOG
-		crm_log_message_adv(LOG_INSANE, DEVEL_DIR"/inbound.ha.log", msg);
+		crm_log_message_adv(LOG_INSANE, "inbound.ha.log", msg);
 #endif
 		return;
 
@@ -88,7 +88,7 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 		crm_debug("Processing message");
 		crm_log_message(LOG_MSG, msg);
 #ifdef MSG_LOG
-		crm_log_message_adv(LOG_DEBUG, DEVEL_DIR"/inbound.ha.log", msg);
+		crm_log_message_adv(LOG_DEBUG, "inbound.ha.log", msg);
 #endif
 		new_input = new_ha_msg_input(msg);
 		register_fsa_input(C_HA_MESSAGE, I_ROUTER, new_input);
@@ -146,7 +146,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		crm_log_message(LOG_MSG, new_input->msg);
 	
 #ifdef MSG_LOG
-		crm_log_message_adv(LOG_DEBUG, DEVEL_DIR"/inbound.ipc.log", new_input->msg);
+		crm_log_message_adv(LOG_DEBUG, "inbound.ipc.log", new_input->msg);
 #endif
 		crmd_authorize_message(new_input, curr_client);
 		delete_ha_msg_input(new_input);
@@ -325,13 +325,13 @@ crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 	int lpc = 0;
 	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
 
-	while(hb_cluster->llc_ops->msgready(hb_cluster)) {
+	if(hb_cluster->llc_ops->msgready(hb_cluster)) {
  		lpc++; 
 		/* invoke the callbacks but dont block */
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
 
-	crm_trace("%d HA messages dispatched", lpc);
+	crm_debug("%d HA messages dispatched", lpc);
 
 	if (channel && (channel->ch_status == IPC_DISCONNECT)) {
 		crm_crit("Lost connection to heartbeat service.");
