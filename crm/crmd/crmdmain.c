@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.20 2004/06/03 07:52:17 andrew Exp $ */
+/* $Id: crmdmain.c,v 1.21 2004/06/09 14:26:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,7 +58,6 @@ void crmd_hamsg_callback(const struct ha_msg* msg, void* private_data);
 gboolean crmd_tickle_apphb(gpointer data);
 
 GMainLoop*  crmd_mainloop = NULL;
-gboolean crm_verbose_state = TRUE;
 
 int
 main(int argc, char ** argv)

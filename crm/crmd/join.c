@@ -312,7 +312,7 @@ do_process_welcome_ack(long long action,
 	tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
 	set_xml_property_copy(tmp1, XML_ATTR_ID, join_from);
 	set_xml_property_copy(tmp1, "uname", join_from);
-	set_xml_property_copy(tmp1, XML_ATTR_TYPE, "node");
+	set_xml_property_copy(tmp1, XML_ATTR_TYPE, "member");
 	
 	tmp2 = create_cib_fragment(tmp1, NULL);
 

@@ -478,10 +478,10 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	
 	
 	update = create_xml_node(NULL, "node_state");
-	set_xml_property_copy(update, XML_ATTR_ID, fsa_our_uname);
+	set_xml_property_copy(update,  XML_ATTR_ID, fsa_our_uname);
 	iter = create_xml_node(update, XML_CIB_TAG_LRM);
-	iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
-	iter = create_xml_node(iter, "lrm_resource");
+	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
+	iter = create_xml_node(iter,   "lrm_resource");
 	
 	set_xml_property_copy(iter, XML_ATTR_ID, rsc->id);
 	set_xml_property_copy(iter, XML_LRM_ATTR_LASTOP, op_type);
