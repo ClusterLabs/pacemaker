@@ -94,7 +94,7 @@ class LinuxHAv2(HeartbeatCM):
    <status/>
 </cib>
 '''
-	if 1:
+	if self.Env["CIBResource"]:
 	    self.default_cts_cib='''
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
    <configuration>
@@ -523,6 +523,7 @@ class DcAudit(ClusterAudit):
         for node in self.CM.Env["nodes"]:
 	    if self.CM.ShouldBeStatus[node] == self.CM["up"]:
 		nodes_up = nodes_up + 1
+#		self.PS_State[node] = os.system("@SSH@ root@%s ps -C crmd" %(node))
 		self.NodeEpoche[node] = self.CM.rsh.readaline(
 		    node, self.CM["EpocheCmd"])
 		self.NodeState[node] = self.CM.rsh.readaline(
