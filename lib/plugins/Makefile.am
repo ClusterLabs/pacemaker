@@ -20,6 +20,9 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-## Subdirectories...
+if LRM_BUILD
+LRM_DIR = lrm
+endif
+
 SUBDIRS			= InterfaceMgr HBauth HBcomm stonith AppHBNotification \
-			  @LRM_DIR@
+			  $(LRM_DIR)

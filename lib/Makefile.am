@@ -19,6 +19,19 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
+if EVENTD_BUILD
+EVENTD_DIR = eventd
+endif
+if CHECKPOINTD_BUILD
+CHECKPOINTD_DIR = checkpointd
+endif
+if SWIG_BUILD
+SWIG_DIR = bindings
+endif
+if LRM_BUILD
+LRM_DIR = lrm
+endif
+
 #
 #	PILS is supposed to be an independent library
 #	Stonith should rely only on PILS
@@ -36,7 +49,7 @@ SUBDIRS			=  	\
 	apphb			\
 	recoverymgr		\
 	plugins 		\
-	@EVENTD_DIR@		\
-	@CHECKPOINTD_DIR@	\
-	@SWIG_DIR@		\
-	@LRM_DIR@
+	$(CHECKPOINTD_DIR)	\
+	$(EVENTD_DIR)		\
+	$(SWIG_DIR)		\
+	$(LRM_DIR)

@@ -51,14 +51,20 @@ MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
 
 ## proc-ha is left out from SUBDIRS (completely obsolete)
 
+if CRM_BUILD
+CRM_DIR = crm
+endif
+if LRM_BUILD
+LRM_DIR = lrm
+endif
+if SNMP_SUBAGENT_BUILD
+SNMP_SUBAGENT_DIR = snmp_subagent
+endif
+
 SUBDIRS                 = libltdl doc debian pkg replace include lib \
                         ldirectord heartbeat telecom\
                         cts linux-ha membership contrib config \
-			@SNMP_SUBAGENT_DIR@ @CRM_DIR@ @LRM_DIR@ tools
-
-DIST_SUBDIRS                 = libltdl doc debian pkg replace include lib \
-                        ldirectord heartbeat telecom cts linux-ha membership \
-			contrib config @CRM_DIR@ @LRM_DIR@ tools
+			$(CRM_DIR) $(LRM_DIR) $(SNMP_SUBAGENT_DIR) tools
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
 HBDOCS = doc/heartbeat_api.html
