@@ -8,7 +8,7 @@
 #include <glib.h>
 #include <sys/stat.h>
 #include <clplumbing/cl_log.h>
-
+#include <lrm/raexec.h>
 #include <lrm/racommon.h>
 
 void
