@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <errno.h>
 #include <dirent.h>
 #include <libgen.h>  /* Add it for compiling on OSX */
@@ -72,6 +73,8 @@ static void params_hash_to_argv(gpointer key, gpointer value,
 static char* get_resource_meta(const char* rsc_type);
 static int raexec_setenv(GHashTable * env_params);
 static void set_env(gpointer key, gpointer value, gpointer user_data);
+/* Filter the unqulified file */
+static gboolean filtered(char * file_name);
 /* The end of internal function & data list */
 
 /* Rource agent execution plugin operations */
@@ -245,7 +248,7 @@ get_resource_list(GList ** rsc_info)
 	{
 		while (file_num--) {
 			rsc_info_t * rsc_info_tmp;
-			if (*(namelist[file_num]->d_name) != '.') {
+			if ( filtered(namelist[file_num]->d_name) == TRUE ) {
 				rsc_info_tmp = g_new(rsc_info_t, 1);
 				rsc_info_tmp->rsc_type =
 					g_strdup(namelist[file_num]->d_name);
@@ -344,4 +347,28 @@ static char*
 get_resource_meta(const char* rsc_type)
 {
 	return strdup(rsc_type);
+}
+
+/* 
+ *    Description:   Filter a file. 
+ *    Return Value:   
+ *		     TRUE:  the file is qualified.
+ *		     FALSE: the file is unqualified.
+ *    Notes: A qalifed file is a regular file with excute bits.
+ */
+static gboolean 
+filtered(char * file_name)
+{
+	struct stat buf;
+
+	if ( stat(file_name, &buf) != 0 ) {
+		return FALSE;
+	}
+
+	if (   S_ISREG(buf.st_mode) 
+            && (   ( buf.st_mode & S_IXUSR ) || ( buf.st_mode & S_IXGRP ) 
+		|| ( buf.st_mode & S_IXOTH ) ) ) {
+		return TRUE;
+	}
+	return FALSE;
 }
