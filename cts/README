@@ -120,7 +120,7 @@ Options for CTSlab:
 		Enable/disable STONITH tests
 	--standby (yes|no)
 		Enable/disable standby tests
-	--v2
+	-v2
 		Test the release 2.0 ( include 1.99.*)
 		(see the mini-HOWTOs at the end for more details)
 	
