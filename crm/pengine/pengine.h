@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.50 2005/03/11 14:19:03 andrew Exp $ */
+/* $Id: pengine.h,v 1.51 2005/03/16 19:39:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -93,6 +93,7 @@ struct node_shared_s {
 		gboolean unclean;
 		gboolean shutdown;
 		gboolean is_dc;
+		int	 num_resources;
 		GListPtr running_rsc;	/* resource_t* */
 		GListPtr agents;	/* lrm_agent_t* */
 		
@@ -113,6 +114,7 @@ struct color_shared_s {
 		GListPtr allocated_resources; /* resources_t* */
 		node_t  *chosen_node;
 		gboolean pending;
+		int	 num_resources;
 };
 
 struct color_s { 

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.58 2005/03/04 15:59:09 alan Exp $ */
+/* $Id: utils.c,v 1.59 2005/03/16 19:39:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -533,6 +533,9 @@ gint sort_color_weight(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
+/* return -1 if 'a' is more preferred
+ * return  1 if 'b' is more preferred
+ */
 gint sort_node_weight(gconstpointer a, gconstpointer b)
 {
 	const node_t *node1 = (const node_t*)a;
@@ -549,6 +552,16 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 		return 1;
 	}
 
+	/* now try to balance resources across the cluster */
+	if(node1->details->num_resources
+	   < node2->details->num_resources) {
+		return -1;
+		
+	} else if(node1->details->num_resources
+		  > node2->details->num_resources) {
+		return 1;
+	}
+	
 	return 0;
 }
 

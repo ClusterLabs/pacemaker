@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.42 2005/03/14 21:01:27 andrew Exp $ */
+/* $Id: stages.c,v 1.43 2005/03/16 19:39:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -423,18 +423,26 @@ choose_node_from_list(color_t *color)
 {
 	/*
 	  1. Sort by weight
-	  2. color.chosen_node = highest wieghted node 
+	  2. color.chosen_node = the node (of those with the highest wieght)
+				   with the fewest resources
 	  3. remove color.chosen_node from all other colors
 	*/
 	GListPtr nodes = color->details->candidate_nodes;
 	node_t *chosen = NULL;
 
 	nodes  = g_list_sort(nodes, sort_node_weight);
+
 	chosen = g_list_nth_data(nodes, 0);
 
 	color->details->chosen_node = NULL;
 	color->details->pending = FALSE;
 
+	chosen->details->num_resources += color->details->num_resources;
+
+	/* todo: update the old node for each resource to reflect its
+	 * new resource count
+	 */
+	
 	if(chosen == NULL) {
 		crm_debug("Could not allocate a node for color %d", color->id);
 		return FALSE;
