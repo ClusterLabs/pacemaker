@@ -329,12 +329,6 @@ More details are given in the annotated DTD below.
 	needed or "source" should be unset when a node is detected as being 
 	unclean.
 
-	"health" the list of possible values for this attribute need 
-	to be fleshed out but the intention is to allow the PE to 
-	differentiate (when trying to place resources) between a healthy
-	node in the active state and one that is overloaded or performing 
-	recovery activities.
-
  	A node which is exp_state == down && state == active is, in
 	fact, going down. The Policy Engine will migrate resources away
 	from it.
@@ -349,7 +343,6 @@ More details are given in the annotated DTD below.
 	unclean		CDATA			#REQUIRED
 	exp_state	(active|down)		#REQUIRED
 	source		CDATA			#IMPLIED
-	health		(ok|overloaded|recovery|sick)	'ok'
 	timestamp	CDATA			#REQUIRED>
 
 <!-- Information from the Local Resource Manager of the node.
