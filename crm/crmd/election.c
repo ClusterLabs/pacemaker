@@ -324,19 +324,18 @@ do_dc_takeover(long long action,
 	free_xml(cib);
 
 	rc = fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, NULL, update, &output,
-		cib_sync_call|cib_verbose);
+		fsa_cib_conn, NULL, update, &output, cib_sync_call);
 	
 	if(rc == cib_ok) {
 		int revision_i = -1;
 		const char *revision = NULL;
 
+		crm_data_t *generation = cib_get_generation(fsa_cib_conn);
+		
 		crm_devel("Checking our feature revision is allowed: %d",
 			  cib_feature_revision);
 
-		cib = find_xml_node(output, XML_TAG_CIB, TRUE);
-		
-		revision = crm_element_value(cib, XML_ATTR_CIB_REVISION);
+		revision = crm_element_value(generation, XML_ATTR_CIB_REVISION);
 		revision_i = atoi(revision?revision:"0");
 
 		if(revision_i > cib_feature_revision) {
@@ -344,6 +343,8 @@ do_dc_takeover(long long action,
 			/* go into a stall state */
 			result = I_HALT;
 		}
+
+		free_xml(generation);
 
 	} else if(rc == cib_revision_unsupported) {
 		crm_err("Feature revision not permitted");
