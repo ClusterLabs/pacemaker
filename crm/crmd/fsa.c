@@ -304,6 +304,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		else IF_FSA_ACTION(A_WARN, do_log)
 		else IF_FSA_ACTION(A_LOG,  do_log)
 
+		/* this is always run, some inputs/states may make various
+		 * actions irrelevant/invalid
+		 */
+		fsa_actions = clear_flags(fsa_actions, cause, fsa_state, cur_input);
+
 		/* update state variables */
 		next_state  = crmd_fsa_state[cur_input][fsa_state];
 		last_state  = fsa_state;
@@ -320,12 +325,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				fsa_actions, cause, last_state, fsa_state,
 				cur_input, fsa_data);
 		}
-
-		/* this is always run, some inputs/states may make various
-		 * actions irrelevant/invalid
-		 */
-		fsa_actions = clear_flags(fsa_actions, cause, fsa_state, cur_input);
-
 	
 		/* regular action processing in order of action priority
 		 *
@@ -618,8 +617,7 @@ do_state_transition(long long actions,
 	}
 	
 	if(tmp != actions) {
-		fsa_dump_actions(actions, "Action b4");
-		fsa_dump_actions(actions ^ tmp, "New action");
+		fsa_dump_actions(actions ^ tmp, "New actions");
 		actions = tmp;
 	}
 
@@ -632,18 +630,14 @@ clear_flags(long long actions,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input cur_input)
 {
-
-	if(is_set(fsa_input_register, R_SHUTDOWN)){
-		clear_bit_inplace(actions, A_DC_TIMER_START);
-	}
-
-	if(cur_state == S_STOPPING) {
+	long long saved_actions = actions;
+	if(is_set(fsa_input_register, R_SHUTDOWN) && cur_state == S_STARTING) {
 		clear_bit_inplace(
 			actions,
-			A_CCM_CONNECT|A_STARTED|A_LRM_CONNECT|
-			A_HA_CONNECT|A_CIB_START);
+			A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY|A_DC_TIMER_START);
 	}
-	
+
+	fsa_dump_actions(actions ^ saved_actions, "Cleared Actions");
 	return actions;
 }
 
