@@ -96,46 +96,15 @@ do_cib_control(long long action,
 	FNIN();
 	
 	if(action & stop_actions) {
-#if INTEGRATED_CIB
 		// dont do anything, its embedded now
-#else
-		if(stop_subsystem(this_subsys) == FALSE) {
-			result = I_FAIL;
-		} else {
-			int lpc = CLIENT_EXIT_WAIT;
-			int pid_status = -1;
-			while(lpc-- > 0
-			      && this_subsys->pid > 0
-			      && CL_PID_EXISTS(this_subsys->pid)) {
-
-				sleep(1);
-				waitpid(this_subsys->pid, &pid_status, WNOHANG);
-			}
-			
-			if(CL_PID_EXISTS(this_subsys->pid)) {
-				cl_log(LOG_ERR,
-				       "Process %s is still active [pid=%d]",
-				       this_subsys->command, this_subsys->pid);
-				result = I_FAIL;
-			} 
-		}
-
-		cleanup_subsystem(this_subsys);
-#endif
 	}
 
 	if(action & start_actions) {
 
 		if(cur_state != S_STOPPING) {
-#if INTEGRATED_CIB
 			if(startCib(CIB_FILENAME) == FALSE)
 				result = I_FAIL;
-#else
-			if(start_subsystem(this_subsys) == FALSE) {
-				result = I_FAIL;
-				cleanup_subsystem(this_subsys);
-			}
-#endif
+
 		} else {
 			cl_log(LOG_INFO,
 			       "Ignoring request to start %s after shutdown",
@@ -163,44 +132,57 @@ do_cib_invoke(long long action,
 	
 	if(action & A_CIB_INVOKE) {
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
-#ifdef INTEGRATED_CIB
 		xmlNodePtr answer = process_cib_message(cib_msg, TRUE);
 		if(relay_message(answer, TRUE) == FALSE) {
 			cl_log(LOG_ERR, "Confused what to do with cib result");
 			xml_message_debug(answer, "Couldnt route: ");
 		}
-		free_xml(answer);
-#else
-		if(relay_message(cib_msg, FALSE) == FALSE) {
-			cl_log(LOG_ERR, "Confused what to do with message");
-			xml_message_debug(cib_msg, "Couldnt route: ");
+
+		// check the answer, see if we are interested in it also
+#if 0
+		if(interested in reply) {
+			put_message(answer);
+			FN_RET(I_REQUEST);
 		}
-#endif	
+		
+#endif
+
+		free_xml(answer);
+
+		/* experimental */
+/* 	} else if(action & A_CIB_INVOKE_LOCAL) { */
+/* 		xmlNodePtr answer = process_cib_message(cib_msg, TRUE); */
+/* 		put_message(answer); */
+/* 		FN_RET(I_REQUEST); */
 
 	} else if(action & A_CIB_BUMPGEN) {  
  		// check if the response was ok before next bit
-		xmlNodePtr options = find_xml_node(cib_msg, XML_TAG_OPTIONS);
-		const char *section = xmlGetProp(options, XML_ATTR_FILTER_TYPE);
-		xmlNodePtr new_options = create_xml_node(NULL, XML_TAG_OPTIONS);
 
+		const char *section = get_xml_attr(cib_msg, XML_TAG_OPTIONS,
+						   XML_ATTR_FILTER_TYPE, FALSE);
+		
 		/* set the section so that we dont always send the
 		 * whole thing
 		 */
-		xmlSetProp(new_options, XML_ATTR_FILTER_TYPE, section);
-#ifdef INTEGRATED_CIB
+		xmlNodePtr new_options =
+			set_xml_attr(NULL, XML_TAG_OPTIONS,
+				     XML_ATTR_FILTER_TYPE, section, TRUE);
+		
 		xmlNodePtr answer = process_cib_request(CRM_OPERATION_BUMP,
-							NULL, NULL);
+							new_options, NULL);
 
 		send_request(NULL, answer, CRM_OPERATION_STORE,
 			     NULL, CRM_SYSTEM_CRMD);
 
 		free_xml(answer);
-#else 
-		send_request(new_options, NULL, CRM_OPERATION_BUMP,
-			     NULL, CRM_SYSTEM_CIB);
-#endif	
+		free_xml(new_options);
+
   	} else if(action & A_UPDATE_NODESTATUS) {
 
+		/* build our status */
+		/* save to message list CIB */
+		/* return I_MESSAGE */
+		
 	} else {
 		cl_log(LOG_ERR, "Unexpected action %s",
 		       fsa_action2string(action));
@@ -370,9 +352,8 @@ gboolean
 crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 {
 	FNIN();
-	// assign the client to be something, or put in a hashtable
-	CRM_DEBUG("A client tried to connect... and there was much rejoicing.");
 
+	CRM_DEBUG("A client tried to connect... and there was much rejoicing.");
 
 	if (client_channel == NULL) {
 		cl_log(LOG_ERR, "Channel was NULL");
