@@ -42,7 +42,7 @@ do_election_vote(long long action,
 	enum crmd_fsa_input election_result = I_NULL;
 	FNIN();
 
-	/* dont vote if we're in one of these states */
+	/* dont vote if we're in one of these states or wanting to shut down */
 	switch(cur_state) {
 		case S_RECOVERY:
 		case S_RECOVERY_DC:
@@ -53,9 +53,13 @@ do_election_vote(long long action,
 			// log warning
 			break;
 		default:
+			if(is_set(fsa_input_register, R_SHUTDOWN)) {
+				FNRET(I_NULL);
+				// log warning
+			}
 			break;
 	}
-
+	
 	send_request(NULL, NULL, CRM_OPERATION_VOTE, NULL, CRM_SYSTEM_CRMD);
 	
 	FNRET(election_result);
@@ -251,13 +255,15 @@ do_dc_timer_control(long long action,
 		   enum crmd_fsa_input current_input,
 		   void *data)
 {
+	gboolean timer_op_ok = TRUE;
 	FNIN();
 
 	if(action & A_DC_TIMER_STOP) {
-		stopTimer(election_trigger);
+		timer_op_ok = stopTimer(election_trigger);
 	}
 
-	if(action & A_DC_TIMER_START) {
+	/* dont start a timer that wasnt already running */
+	if(action & A_DC_TIMER_START && timer_op_ok) {
 		startTimer(election_trigger);
 	}
 	
@@ -468,12 +474,20 @@ do_announce(long long action,
 	 * This timer was started either on startup or when a node
 	 * left the CCM list
 	 */
-#if 0
-	if(we are sick) {
-		log error ;
-		FNRET(I_NULL);
-	} else 
-#endif
+
+	/* dont announce if we're in one of these states */
+	switch(cur_state) {
+		case S_RECOVERY:
+		case S_RECOVERY_DC:
+		case S_RELEASE_DC:
+		case S_TERMINATE:
+			FNRET(I_NULL);
+			// log warning
+			break;
+		default:
+			break;
+	}
+
 	if(AM_I_OPERATIONAL) {
 		send_request(NULL, NULL, CRM_OPERATION_ANNOUNCE,
 			     NULL, CRM_SYSTEM_DC);
@@ -543,7 +557,6 @@ do_process_welcome_ack(long long action,
 	tmp1 = find_entity(tmp1, XML_CIB_TAG_STATE, join_from, FALSE);
 	set_xml_property_copy(tmp1, "state", "active");
 	
-
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {
 		// that was the last outstanding join ack)

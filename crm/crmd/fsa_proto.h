@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.5 2004/04/01 07:38:43 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.6 2004/04/12 15:34:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,7 +70,7 @@ do_cib_control(long long action,
 
 /*	A_HA_CONNECT	*/
 enum crmd_fsa_input
-do_ha_register(long long action,
+do_ha_control(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input cur_input,
@@ -78,7 +78,7 @@ do_ha_register(long long action,
 
 /*	A_CCM_CONNECT	*/
 enum crmd_fsa_input
-do_ccm_register(long long action,
+do_ccm_control(long long action,
 		enum crmd_fsa_cause cause,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input cur_input,
@@ -86,7 +86,7 @@ do_ccm_register(long long action,
 
 /*	A_LRM_CONNECT	*/
 enum crmd_fsa_input
-do_lrm_register(long long action,
+do_lrm_control(long long action,
 		enum crmd_fsa_cause cause,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input cur_input,
@@ -284,6 +284,13 @@ do_te_invoke(long long action,
 	     enum crmd_fsa_input cur_input,
 	     void *data);
 
+/*	A_SHUTDOWN_REQ	*/
+enum crmd_fsa_input
+do_shutdown_req(long long action,
+		enum crmd_fsa_cause cause,
+		enum crmd_fsa_state cur_state,
+		enum crmd_fsa_input cur_input,
+		void *data);
 
 /*	A_SHUTDOWN	*/
 enum crmd_fsa_input

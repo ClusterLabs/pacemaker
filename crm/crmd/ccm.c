@@ -49,25 +49,64 @@ void new_node_state(xmlNodePtr node_updates,
 		    const char *uname, const char *state);
 
 #define CCM_EVENT_DETAIL 1
+oc_ev_t *fsa_ev_token;
 
 /*	 A_CCM_CONNECT	*/
 enum crmd_fsa_input
-do_ccm_register(long long action,
+do_ccm_control(long long action,
 		enum crmd_fsa_cause cause,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input current_input,
 		void *data)
 {
-	int registered = 0;
-	
+	int      ret;
+/* 	fd_set   rset; */
+ 	int	 fsa_ev_fd; 
+    
 	FNIN();
-	// or pass the cluster in through "void *data"?
-	registered = register_with_ccm(fsa_cluster_conn);
 
-	if(registered == 0)
-		FNRET(I_NULL);
+	if(action & A_CCM_DISCONNECT){
+		oc_ev_unregister(fsa_ev_token);
+
+	}
+
+	if(action & A_CCM_CONNECT) {
+		
+		cl_log(LOG_INFO, "Registering with CCM");
+		oc_ev_register(&fsa_ev_token);
+		
+		cl_log(LOG_INFO, "Setting up CCM callbacks");
+		oc_ev_set_callback(fsa_ev_token, OC_EV_MEMB_CLASS,
+				   crmd_ccm_input_callback,
+				   NULL);
+
+		oc_ev_special(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
+		
+		cl_log(LOG_INFO, "Activating CCM token");
+		ret = oc_ev_activate(fsa_ev_token, &fsa_ev_fd);
+		if (ret){
+			cl_log(LOG_INFO, "CCM Activation failed... unregistering");
+			oc_ev_unregister(fsa_ev_token);
+			return(I_FAIL);
+		}
+		cl_log(LOG_INFO, "CCM Activation passed... all set to go!");
+
+/* 		FD_ZERO(&rset); */
+/* 		FD_SET(fsa_ev_fd, &rset); */
+		
+//GFDSource*
+		G_main_add_fd(G_PRIORITY_LOW, fsa_ev_fd, FALSE, ccm_dispatch,
+			      fsa_ev_token,
+			      default_ipc_input_destroy);
+		
+	}
+
+	if(action & ~(A_CCM_CONNECT|A_CCM_DISCONNECT)) {
+		cl_log(LOG_ERR, "Unexpected action %s in %s",
+		       fsa_action2string(action), __FUNCTION__);
+	}
 	
-	FNRET(I_FAIL);
+	FNRET(I_NULL);
 }
 
 
@@ -371,44 +410,6 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 int
 register_with_ccm(ll_cluster_t *hb_cluster)
 {
-	int      ret;
-	fd_set   rset;
-	oc_ev_t *fsa_ev_token;
-	int	 fsa_ev_fd;
-    
-	cl_log(LOG_INFO, "Registering with CCM");
-	oc_ev_register(&fsa_ev_token);
-    
-	cl_log(LOG_INFO, "Setting up CCM callbacks");
-	oc_ev_set_callback(fsa_ev_token, OC_EV_MEMB_CLASS,
-			   crmd_ccm_input_callback,
-			   NULL);
-	oc_ev_special(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
-    
-	cl_log(LOG_INFO, "Activating CCM token");
-	ret = oc_ev_activate(fsa_ev_token, &fsa_ev_fd);
-	if (ret){
-		cl_log(LOG_INFO, "CCM Activation failed... unregistering");
-		oc_ev_unregister(fsa_ev_token);
-		return(1);
-	}
-	cl_log(LOG_INFO, "CCM Activation passed... all set to go!");
-
-
-
-	FD_ZERO(&rset);
-	FD_SET(fsa_ev_fd, &rset);
-    
-	if (oc_ev_handle_event(fsa_ev_token)){
-		cl_log(LOG_ERR,"CCM Activation: terminating");
-		return(1);
-	}
-    
-//GFDSource*
-	G_main_add_fd(G_PRIORITY_LOW, fsa_ev_fd, FALSE, ccm_dispatch,
-		      fsa_ev_token,
-		      default_ipc_input_destroy);
-    
 	FNRET(0);
 }
 

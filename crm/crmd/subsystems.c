@@ -138,6 +138,26 @@ do_cib_invoke(long long action,
 
 	
 	if(action & A_CIB_INVOKE) {
+
+		const char *op = xmlGetProp(cib_msg, XML_ATTR_OP);
+		if(safe_str_eq(op, CRM_OPERATION_SHUTDOWN_REQ)){
+			// create update section
+			xmlNodePtr tmp1 = NULL;
+			xmlNodePtr tmp2 =
+				create_xml_node(NULL, XML_CIB_TAG_STATE);
+			const char *req_from =
+				xmlGetProp(cib_msg, XML_ATTR_HOSTFROM);
+			
+			set_xml_property_copy(tmp1, "id", req_from);
+			set_xml_property_copy(tmp1, "exp_state", "shutdown");
+
+			// create fragment
+			tmp1 = create_cib_fragment(tmp2, XML_CIB_TAG_STATUS);
+			
+			// add to cib_msg
+			xmlAddChild(cib_msg, tmp1);
+		}
+
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
 		xmlNodePtr answer = process_cib_message(cib_msg, TRUE);
 		if(relay_message(answer, TRUE) == FALSE) {
@@ -151,7 +171,6 @@ do_cib_invoke(long long action,
 			put_message(answer);
 			FNRET(I_REQUEST);
 		}
-		
 #endif
 
 		free_xml(answer);
@@ -193,8 +212,8 @@ do_cib_invoke(long long action,
 		free_xml(data);
 		
 	} else {
-		cl_log(LOG_ERR, "Unexpected action %s",
-		       fsa_action2string(action));
+		cl_log(LOG_ERR, "Unexpected action %s in %s",
+		       fsa_action2string(action), __FUNCTION__);
 	}
 	
 	
@@ -401,17 +420,16 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 static gboolean
 stop_subsystem(struct crm_subsystem_s*	centry)
 {
-	cl_log(LOG_INFO, "Stopping sub-system \"%s\"", centry->command);
+	cl_log(LOG_INFO, "Stopping sub-system \"%s\"", centry->name);
 	if (centry->pid <= 0) {
 		cl_log(LOG_ERR,
 		       "OOPS! client %s not running yet",
 		       centry->command);
+
 	} else {
-#if 0
-		return run_command(centry, "-k", FALSE);
-#else
+		cl_log(LOG_INFO, "Sending quit message to %s.", centry->name);
 		send_request(NULL, NULL, "quit", NULL, centry->name);
-#endif
+
 	}
 	
 	return TRUE;
@@ -539,45 +557,62 @@ run_command(struct crm_subsystem_s *centry,
 
 /*	 A_LRM_CONNECT	*/
 enum crmd_fsa_input
-do_lrm_register(long long action,
+do_lrm_control(long long action,
 		enum crmd_fsa_cause cause,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input current_input,
 		void *data)
 {
+	enum crmd_fsa_input failed = I_NULL;//I_FAIL;
 	int ret = HA_OK;
 	FNIN();
 
-	CRM_DEBUG("LRM: connect...");
-	fsa_lrm_conn = ll_lrm_new("lrm");	
-	if(NULL == fsa_lrm_conn) {
-		return I_FAIL;
-	}
-	
-	CRM_DEBUG("LRM: sigon...");
-	ret = fsa_lrm_conn->lrm_ops->signon(fsa_lrm_conn,
-						  "crmd");
-
-	if(ret != HA_OK) {
-		cl_log(LOG_ERR, "Failed to sign on to the LRM");
-		return I_FAIL;
-	}
-	
-	CRM_DEBUG("LRM: set_lrm_callback...");
-	ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(fsa_lrm_conn,
-						      lrm_op_callback,
-						      lrm_monitor_callback);
-	
-	if(ret != HA_OK) {
-		cl_log(LOG_ERR, "Failed to set LRM callbacks");
-		return I_FAIL;
+	if(action & A_LRM_DISCONNECT) {
+		fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
 	}
 
-	// TODO: create a destroy handler that causes some recovery to happen
-	G_main_add_fd(G_PRIORITY_LOW,
-		      fsa_lrm_conn->lrm_ops->inputfd(fsa_lrm_conn), FALSE,
-		      lrm_dispatch, fsa_lrm_conn,
-		      default_ipc_input_destroy);
+	if(action & A_LRM_CONNECT) {
+	
+		CRM_DEBUG("LRM: connect...");
+		fsa_lrm_conn = ll_lrm_new("lrm");	
+		if(NULL == fsa_lrm_conn) {
+			return failed;
+		}
+		
+		CRM_DEBUG("LRM: sigon...");
+		ret = fsa_lrm_conn->lrm_ops->signon(fsa_lrm_conn,
+						    "crmd");
+		
+		if(ret != HA_OK) {
+			cl_log(LOG_ERR, "Failed to sign on to the LRM");
+			return failed;
+		}
+		
+		CRM_DEBUG("LRM: set_lrm_callback...");
+		ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(fsa_lrm_conn,
+							      lrm_op_callback,
+							      lrm_monitor_callback);
+		
+		if(ret != HA_OK) {
+			cl_log(LOG_ERR, "Failed to set LRM callbacks");
+			return failed;
+		}
+
+		/* TODO: create a destroy handler that causes
+		 * some recovery to happen
+		 */
+		G_main_add_fd(G_PRIORITY_LOW,
+			      fsa_lrm_conn->lrm_ops->inputfd(fsa_lrm_conn),
+			      FALSE,
+			      lrm_dispatch, fsa_lrm_conn,
+			      default_ipc_input_destroy);
+	}	
+
+	if(action & ~(A_LRM_CONNECT|A_LRM_DISCONNECT)) {
+		cl_log(LOG_ERR, "Unexpected action %s in %s",
+		       fsa_action2string(action), __FUNCTION__);
+	}
+		
 	
 	FNRET(I_NULL);
 }
@@ -588,8 +623,6 @@ gboolean lrm_dispatch(int fd, gpointer user_data)
 	lrm->lrm_ops->rcvmsg(lrm, FALSE);
 	return TRUE;
 }
-
-
 
 xmlNodePtr
 do_lrm_query(void)

@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.9 2004/04/01 07:38:43 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.10 2004/04/12 15:34:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -191,7 +191,8 @@ enum crmd_fsa_input {
 	I_ROUTER,	/* Do our job as router and forward this to the
 			 * right place
 			 */
-	I_SHUTDOWN,	/* We need to shutdown */
+	I_SHUTDOWN,	/* We are asking to shutdown */
+	I_TERMINATE,	/* We have been told to shutdown */
 	I_STARTUP,
 	I_SUCCESS,	/* The action completed successfully */
 
@@ -295,8 +296,7 @@ A_WARN
 #define	A_STARTED		0x0000000000000002ULL
 	/* Connect to Heartbeat */
 #define	A_HA_CONNECT		0x0000000000000004ULL
-	/* Connect to the Local Resource Manager */
-#define	A_LRM_CONNECT		0x0000000000000008ULL
+#define	A_HA_DISCONNECT		0x0000000000000008ULL
 
 /* -- Election actions -- */
 #define	A_DC_TIMER_START	0x0000000000000010ULL
@@ -356,16 +356,17 @@ A_WARN
 #define	A_EXIT_0		0x0000000040000000ULL
 #define	A_EXIT_1		0x0000000080000000ULL
 
+#define	A_SHUTDOWN_REQ		0x0000000100000000ULL
+
 /* -- CCM actions -- */
 #define	A_CCM_CONNECT		0x0000001000000000ULL
+#define	A_CCM_DISCONNECT	0x0000002000000000ULL
 	/* Process whatever it is the CCM is trying to tell us.
 	 * This will generate inputs such as I_NODE_JOIN,
 	 * I_NODE_LEAVE, I_SHUTDOWN, I_DC_RELEASE, I_DC_TAKEOVER
 	 */
-#define	A_CCM_EVENT		0x0000002000000000ULL
-#define	A_CCM_UPDATE_CACHE	0x0000004000000000ULL
-
-#define	A_CIB_BUMPGEN		0x0000008000000000ULL
+#define	A_CCM_EVENT		0x0000004000000000ULL
+#define	A_CCM_UPDATE_CACHE	0x0000008000000000ULL
 
 /* -- CBI actions -- */
 #define	A_CIB_INVOKE		0x0000010000000000ULL
@@ -393,7 +394,6 @@ A_WARN
 #define	A_PE_INVOKE		0x0001000000000000ULL
 #define	A_PE_START		0x0002000000000000ULL
 #define	A_PE_STOP		0x0004000000000000ULL
-
 /* -- Misc actions -- */
 	/* Add a system generate "block" so that resources arent moved
 	 * to or are activly moved away from the affected node.  This
@@ -402,15 +402,22 @@ A_WARN
 #define	A_NODE_BLOCK		0x0010000000000000ULL
 	/* Update our information in the local CIB */
 #define A_UPDATE_NODESTATUS	0x0020000000000000ULL
-#define A_LRM_INVOKE		0x0040000000000000ULL
-#define A_LRM_EVENT		0x0080000000000000ULL
+#define	A_CIB_BUMPGEN		0x0040000000000000ULL
+
+/* -- LRM Actions -- */
+	/* Connect to the Local Resource Manager */
+#define	A_LRM_CONNECT		0x0100000000000000ULL
+	/* Disconnect from the Local Resource Manager */
+#define A_LRM_DISCONNECT	0x0200000000000000ULL
+#define A_LRM_INVOKE		0x0400000000000000ULL
+#define A_LRM_EVENT		0x0800000000000000ULL
 
 /* -- Logging actions -- */
-#define	A_LOG			0x0100000000000000ULL
-#define	A_ERROR			0x0200000000000000ULL
-#define	A_WARN			0x0400000000000000ULL
+#define	A_LOG			0x1000000000000000ULL
+#define	A_ERROR			0x2000000000000000ULL
+#define	A_WARN			0x4000000000000000ULL
 
-#define O_SHUTDOWN A_DC_TIMER_STOP|A_SHUTDOWN|A_STOP|A_EXIT_0|A_CIB_STOP
+#define O_SHUTDOWN A_DC_TIMER_STOP|A_CCM_DISCONNECT|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_SHUTDOWN|A_STOP|A_EXIT_0|A_CIB_STOP
 #define O_RELEASE  A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED
 #define O_DC_TIMER_RESTART	A_DC_TIMER_STOP|A_DC_TIMER_START
 #define	O_PE_RESTART		A_PE_START|A_PE_STOP

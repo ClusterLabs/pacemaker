@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.13 2004/04/06 16:25:57 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.14 2004/04/12 15:34:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -94,8 +94,8 @@ extern void set_bit_inplace   (long long *action_list, long long action);
 
 extern gboolean is_set(long long action_list, long long action);
 
-extern void startTimer(fsa_timer_t *timer);
-extern void stopTimer(fsa_timer_t *timer);
+extern gboolean startTimer(fsa_timer_t *timer);
+extern gboolean stopTimer(fsa_timer_t *timer);
 extern gboolean timer_popped(gpointer data);
 extern gboolean do_dc_heartbeat(gpointer data);
 

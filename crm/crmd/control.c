@@ -22,6 +22,7 @@
 #include <crmd.h>
 #include <crm/common/ipcutils.h>
 #include <crm/common/crmutils.h>
+#include <crmd_messages.h>
 
 #include <clplumbing/Gmain_timeout.h>
 
@@ -39,7 +40,7 @@ GHashTable   *ipc_clients = NULL;
 
 /*	 A_HA_CONNECT	*/
 enum crmd_fsa_input
-do_ha_register(long long action,
+do_ha_control(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input current_input,
@@ -49,22 +50,38 @@ do_ha_register(long long action,
 	
 	FNIN();
 
-	if(fsa_cluster_conn == NULL)
-		fsa_cluster_conn = ll_cluster_new("heartbeat");
-
-	// make sure we are disconnected first
-	fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn);
+	if(action & A_HA_DISCONNECT) {
+		if(fsa_cluster_conn != NULL) {
+			fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn);
+		}
+		
+	}
 	
-	registered = register_with_ha(fsa_cluster_conn,
-				      crm_system_name,
-				      crmd_ha_input_dispatch,
-				      crmd_ha_input_callback,
-				      crmd_ha_input_destroy);
+	if(action & A_HA_CONNECT) {
+		if(fsa_cluster_conn == NULL)
+			fsa_cluster_conn = ll_cluster_new("heartbeat");
 
-	if(registered)
-		FNRET(I_NULL);
+		// make sure we are disconnected first
+		fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn);
+		
+		registered = register_with_ha(fsa_cluster_conn,
+					      crm_system_name,
+					      crmd_ha_input_dispatch,
+					      crmd_ha_input_callback,
+					      crmd_ha_input_destroy);
+		
+		if(registered == FALSE)
+			FNRET(I_FAIL);
+
+	} 
 	
-	FNRET(I_FAIL);
+	if(action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) {
+		cl_log(LOG_ERR, "Unexpected action %s in %s",
+		       fsa_action2string(action), __FUNCTION__);
+	}
+	
+	
+	FNRET(I_NULL);
 }
 
 /*	 A_SHUTDOWN	*/
@@ -80,16 +97,51 @@ do_shutdown(long long action,
 	
 	FNIN();
 
-	tmp = do_pe_control(A_PE_STOP, cause, cur_state, current_input, data);
-	if(tmp != I_NULL)
-		next_input = I_FAIL;
-	tmp = do_te_control(A_TE_STOP, cause, cur_state, current_input, data);
-	if(tmp != I_NULL)
-		next_input = I_FAIL;
-	tmp = do_cib_control(A_CIB_STOP, cause, cur_state, current_input, data);
-	if(tmp != I_NULL)
-		next_input = I_FAIL;
+	/* last attempt to shut these down */
+	if(is_set(fsa_input_register, R_PE_CONNECTED)) {
+		cl_log(LOG_WARNING,
+		       "Last attempt to shutdown the PolicyEngine");
+		tmp = do_pe_control(A_PE_STOP, cause, cur_state,
+				    current_input, data);
+		if(tmp != I_NULL) {
+			next_input = I_ERROR;
+			cl_log(LOG_ERR, "Failed to shutdown the PolicyEngine");
+		}
+	}
+
+	if(is_set(fsa_input_register, R_TE_CONNECTED)) {
+		cl_log(LOG_WARNING,
+		       "Last attempt to shutdown the Transitioner");
+		tmp = do_pe_control(A_TE_STOP, cause, cur_state,
+				    current_input, data);
+		if(tmp != I_NULL) {
+			next_input = I_ERROR;
+			cl_log(LOG_ERR, "Failed to shutdown the Transitioner");
+		}
+		
+	}
+
+	/* TODO: shutdown all remaining resources? */
 	
+	FNRET(next_input);
+}
+
+/*	 A_SHUTDOWN_REQ	*/
+enum crmd_fsa_input
+do_shutdown_req(long long action,
+	    enum crmd_fsa_cause cause,
+	    enum crmd_fsa_state cur_state,
+	    enum crmd_fsa_input current_input,
+	    void *data)
+{
+	enum crmd_fsa_input next_input = I_NULL;
+	FNIN();
+
+	if(send_request(NULL, NULL, CRM_OPERATION_SHUTDOWN_REQ,
+			NULL, CRM_SYSTEM_DC) == FALSE){
+		next_input = I_ERROR;
+	}
+
 	FNRET(next_input);
 }
 
@@ -229,7 +281,7 @@ do_startup(long long action,
 	
 	shutdown_escalation_timmer->source_id = -1;
 	shutdown_escalation_timmer->period_ms = interval*13;
-	shutdown_escalation_timmer->fsa_input = I_ERROR;
+	shutdown_escalation_timmer->fsa_input = I_TERMINATE;
 	shutdown_escalation_timmer->callback = timer_popped;
 	
 	/* set up the sub systems */
@@ -249,7 +301,7 @@ do_startup(long long action,
 	te_subsystem->pid = 0;	
 	te_subsystem->respawn = 1;	
 	te_subsystem->path = cl_strdup(BIN_DIR);
-	cib_subsystem->name = cl_strdup(CRM_SYSTEM_TENGINE);
+	te_subsystem->name = cl_strdup(CRM_SYSTEM_TENGINE);
 	te_subsystem->command = BIN_DIR"/tengine";
 	te_subsystem->flag = R_TE_CONNECTED;	
 
@@ -259,7 +311,7 @@ do_startup(long long action,
 	pe_subsystem->pid = 0;	
 	pe_subsystem->respawn = 1;	
 	pe_subsystem->path = cl_strdup(BIN_DIR);
-	cib_subsystem->name = cl_strdup(CRM_SYSTEM_PENGINE);
+	pe_subsystem->name = cl_strdup(CRM_SYSTEM_PENGINE);
 	pe_subsystem->command = BIN_DIR"/pengine";
 	pe_subsystem->flag = R_PE_CONNECTED;	
 

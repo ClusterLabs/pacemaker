@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.3 2004/04/06 16:20:30 andrew Exp $ */
+/* $Id: crm.h,v 1.4 2004/04/12 15:34:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -97,6 +97,8 @@
 #define CRM_OPERATION_VOTE	"vote"
 #define CRM_OPERATION_ANNOUNCE	"announce"
 #define CRM_OPERATION_HBEAT	"dc_beat"
+#define CRM_OPERATION_SHUTDOWN	"shutdown"
+#define CRM_OPERATION_SHUTDOWN_REQ	"req_shutdown"
 
 
 #define CRM_XMLCOMPRESS_OFF 0

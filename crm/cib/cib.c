@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.28 2004/04/01 15:45:12 andrew Exp $ */
+/* $Id: cib.c,v 1.29 2004/04/12 15:34:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -106,8 +106,8 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 	enum cib_result result = CIBRES_OK;
 	xmlNodePtr fragment = find_xml_node(message, XML_TAG_FRAGMENT);
 	xmlNodePtr options  = find_xml_node(message, XML_TAG_OPTIONS);
-	const char *op      = get_xml_attr(message, XML_TAG_OPTIONS,
-					   XML_ATTR_OP, TRUE);
+	const char *op      = get_xml_attr (message, XML_TAG_OPTIONS,
+					    XML_ATTR_OP, TRUE);
 
 #ifdef MSG_LOG
 	if(msg_cib_strm == NULL) {

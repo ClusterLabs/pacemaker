@@ -722,8 +722,15 @@ handle_message(xmlNodePtr stored_msg)
 		} else if(strcmp(op, CRM_OPERATION_WELCOME) == 0) {
 			next_input = I_WELCOME;
 				
+		} else if(strcmp(op, CRM_OPERATION_SHUTDOWN_REQ) == 0) {
+			next_input = I_CIB_OP;
+				
+		} else if(strcmp(op, CRM_OPERATION_SHUTDOWN) == 0) {
+			next_input = I_TERMINATE;
+			
 		} else if(strcmp(op, CRM_OPERATION_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
+			
 		} else if(strcmp(op, CRM_OPERATION_REPLACE) == 0
 			|| strcmp(op, CRM_OPERATION_ERASE) == 0) {
 			next_input = I_CIB_OP;
@@ -758,6 +765,14 @@ handle_message(xmlNodePtr stored_msg)
 		if(strcmp(op, CRM_OPERATION_WELCOME) == 0) {
 			next_input = I_WELCOME_ACK;
 				
+		} else if(strcmp(op, CRM_OPERATION_VOTE) == 0
+			  || strcmp(op, CRM_OPERATION_HBEAT) == 0
+			  || strcmp(op, CRM_OPERATION_WELCOME) == 0
+			  || strcmp(op, CRM_OPERATION_SHUTDOWN_REQ) == 0
+			  || strcmp(op, CRM_OPERATION_SHUTDOWN) == 0
+			  || strcmp(op, CRM_OPERATION_ANNOUNCE) == 0) {
+			next_input = I_NULL;
+			
 		} else if(AM_I_DC
 			  && (strcmp(op, CRM_OPERATION_CREATE) == 0
 			      || strcmp(op, CRM_OPERATION_UPDATE) == 0

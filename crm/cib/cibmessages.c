@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.28 2004/04/09 16:30:34 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.29 2004/04/12 15:34:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -161,7 +161,8 @@ cib_process_request(const char *op,
 		cib_update_op = CIB_OP_ADD;
 		
 	} else if (strcmp(CRM_OPERATION_UPDATE, op) == 0
-		   || strcmp(CRM_OPERATION_WELCOME, op) == 0) {
+		   || strcmp(CRM_OPERATION_WELCOME, op) == 0
+		   || strcmp(CRM_OPERATION_SHUTDOWN_REQ, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_MODIFY;
 		
