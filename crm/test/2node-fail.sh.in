@@ -52,7 +52,7 @@ function 2node_fail_test() {
     do_cmd echo "wait for HA to start on ${test_node_1}"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 500 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1000 \
 	-s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" \
 	-s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" \
 	-e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
@@ -63,7 +63,7 @@ function 2node_fail_test() {
     do_cmd echo "wait for CRMd to start on ${test_node_1}"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 1500 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 2500 \
 	-s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}" \
 	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
     cts_assert "CRMd startup on ${test_node_1} failed."
@@ -105,7 +105,7 @@ function 2node_fail_test() {
 	   </rsc_location>'"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd make_constraint_adv $test_node_1 $node_xml
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
 	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
     cts_assert Adding constraint2 did not pass
 
@@ -115,7 +115,7 @@ function 2node_fail_test() {
     args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - ignore $args
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
 	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
 	-s "crmd(.*) Performing op start(.*) on rsc1" \
 	-s "crmd(.*) Resource state: rsc1(.*) after start"
@@ -127,7 +127,7 @@ function 2node_fail_test() {
     args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - ignore $args
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
 	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
 	-s "crmd(.*) Performing op start(.*) on rsc2" \
 	-s "crmd(.*) Resource state: rsc2(.*) after start"
@@ -162,7 +162,7 @@ function 2node_fail_test() {
     do_cmd echo "wait for HA to start on $test_node_2"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
 	-s "${test_node_2} ccm(.*) Hostname: ${test_node_2}" \
 	-s "${test_node_2} heartbeat(.*): info: Starting (.*)lrmd" \
 	-e "${test_node_2} heartbeat(.*) Client (.*) respawning too fast"
@@ -173,12 +173,12 @@ function 2node_fail_test() {
     do_cmd echo "wait for CRMd to start on $test_node_2"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
 	-s "${test_node_2} crmd(.*)FSA Hostname: ${test_node_2}" \
 	-s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
     cts_assert "CRMd startup on ${test_node_2} failed."
 
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 3500 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 8000 \
 	-s "${test_node_1} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
 	-s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2" \
 	-s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_2}"
@@ -216,19 +216,21 @@ function 2node_fail_test() {
 
     if [ $test_for_election = 0 ]; then
 	do_cmd echo Killed the DC... checking for DC Failover
-	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 60000 \
+	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 80000 \
+	    -s "${good_node} crmd(.*) State transition" \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
 	cts_assert "Transition of the DC from ${fail_node} to ${good_node} failed."
     else
 	do_cmd echo Killed slave node... checking the DC noticed
-	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 60000 \
+	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 80000 \
+	    -s "${good_node} crmd(.*) State transition" \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_POLICY_ENGINE\"" \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_IDLE\""
 	cts_assert "Failure of slave node ${fail_node} was not noticed on the DC (${good_node})."    
     fi
 
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 60000 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 80000 \
 	    -s "${god_node} crmd(.*) Performing op start(.*) on ${moved_rsc}" \
 	    -s "crmd(.*) Resource state: ${moved_rsc}(.*) after start] on ${good_node}"
     cts_assert "Move of ${moved_rsc} to ${good_node} failed."
@@ -262,7 +264,7 @@ function 2node_fail_test() {
 	    do_cmd echo "wait for HA to start on $fail_node"
 	    crm_log_pos=$(stat -L -c %s $logfile)
 	    do_cmd remote_cmd $INIT_USER $fail_node $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
-	    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2000 \
+	    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
 		-s "${fail_node} ccm(.*) Hostname: ${fail_node}" \
 		-s "${fail_node} heartbeat(.*): info: Starting (.*)lrmd" \
 		-e "${fail_node} heartbeat(.*) Client (.*) respawning too fast"
@@ -274,12 +276,12 @@ function 2node_fail_test() {
 	do_cmd echo "wait for CRMd to start on $fail_node"
 	crm_log_pos=$(stat -L -c %s $logfile)
 	do_cmd remote_cmd $CRMD_USER $fail_node $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
-	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
+	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 20000 \
 	    -s "${fail_node} crmd(.*)FSA Hostname: ${fail_node}" \
 	    -s "${fail_node} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
 	cts_assert "CRMd startup on ${fail_node} failed."
 
-	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
+	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 20000 \
 	    -s "${good_node} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
 	    -s "${fail_node} crmd(.*) Performing op start(.*) on ${moved_rsc}" \
 	    -s "crmd(.*) Resource state: ${moved_rsc}(.*) after start] on ${fail_node}"

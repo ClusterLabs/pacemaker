@@ -727,11 +727,12 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	int len = 0;
 	char *fail_state = NULL;
 
-
 	if(op == NULL || rsc == NULL) {
 		crm_err("Either resouce or op was not specified");
 		return;
 	}
+
+	crm_info("Updating resouce %s after op %s", rsc->id, op->op_type);
 	
 	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	set_uuid(update, XML_ATTR_UUID, fsa_our_uname);
@@ -782,10 +783,17 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	set_xml_property_copy(iter, XML_LRM_ATTR_TARGET, fsa_our_uname);
 	
 	fragment = create_cib_fragment(update, NULL);
-
-	fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
-		cib_discard_reply);
+	
+	{
+		int rc = cib_ok;
+		rc = fsa_cib_conn->cmds->modify(
+			fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
+			cib_sync_call);
+		if(rc != cib_ok) {
+			crm_err("Resource state update failed: %s",
+				cib_error2string(rc));
+		}
+	}
 	
 	free_xml(fragment);
 	free_xml(update);
@@ -808,8 +816,8 @@ do_lrm_event(long long action,
 	op = (lrm_op_t*)msg_data->data;
 	rsc = op->rsc;
 	
-	crm_debug("Processing %d event for %s/%s",
-		  op->op_status, op->op_type, rsc->id);
+	crm_info("Processing %d event for %s/%s",
+		 op->op_status, op->op_type, rsc->id);
 	
 	switch(op->op_status) {
 		case LRM_OP_ERROR:

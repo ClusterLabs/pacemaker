@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.13 2004/12/09 14:45:00 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.14 2004/12/16 14:34:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -307,9 +307,9 @@ main(int argc, char **argv)
 		
 	} else if(exit_code < 0) {
 		crm_err("Call failed: %s", cib_error2string(exit_code));
-		fprintf(stderr, "Call failed: %s", cib_error2string(exit_code));
+		fprintf(stderr, "Call failed: %s\n",
+			cib_error2string(exit_code));
 		operation_status = exit_code;
-
 	}
 
 
@@ -560,7 +560,7 @@ void cibadmin_op_callback(
 		fprintf(stderr, "Local CIB _is_ the master instance\n");
 		
 	} else if(rc != 0) {
-		crm_warn("Call %s failed (%d): %s",
+		crm_warn("Call %s failed (%d): %s\n",
 			cib_action, rc, cib_error2string(rc));
 		fprintf(stderr, "Call %s failed (%d): %s\n",
 			cib_action, rc, cib_error2string(rc));

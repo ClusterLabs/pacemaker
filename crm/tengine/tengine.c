@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.36 2004/11/12 17:14:34 andrew Exp $ */
+/* $Id: tengine.c,v 1.37 2004/12/16 14:34:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -396,8 +396,6 @@ initiate_action(action_t *action)
 		add_node_copy(rsc_op, action->xml->children);
 
 		destination = CRM_SYSTEM_LRMD;
-		
-			
 #endif			
 		ret = TRUE;
 			

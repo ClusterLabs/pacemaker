@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.10 2004/12/10 20:07:07 andrew Exp $ */
+/* $Id: cib.h,v 1.11 2004/12/16 14:34:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -91,7 +91,8 @@ enum cib_errors {
 	cib_msg_field_add	= -33,
 	cib_client_gone		= -34,
 	cib_not_master		= -35,
-	cib_client_corrupt	= -36
+	cib_client_corrupt	= -36,
+	cib_master_timeout	= -37
 };
 
 enum cib_op {
@@ -126,9 +127,11 @@ enum cib_section {
 #define F_CIB_DELEGATED	"cib_delegated_from"
 #define F_CIB_OBJID	"cib_object"
 #define F_CIB_OBJTYPE	"cib_object_type"
+#define F_CIB_EXISTING	"cib_existing_object"
+#define F_CIB_SEENCOUNT	"cib_seen"
+#define F_CIB_TIMEOUT	"cib_timeout"
 #define F_CIB_UPDATE	"cib_update"
 #define F_CIB_UPDATE_RESULT	"cib_update_result"
-#define F_CIB_EXISTING		"cib_existing_object"
 
 #define T_CIB			"cib"
 #define T_CIB_NOTIFY		"cib_notify"

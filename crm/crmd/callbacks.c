@@ -240,7 +240,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 
 
 void
-lrm_op_callback (lrm_op_t* op)
+lrm_op_callback(lrm_op_t* op)
 {
 	/* todo: free op->rsc */
 	crm_debug("received callback");

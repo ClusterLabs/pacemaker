@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.4 2004/12/15 16:19:42 andrew Exp $ */
+/* $Id: main.c,v 1.5 2004/12/16 14:34:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,7 @@
 #include <hb_api.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/coredumps.h>
+#include <clplumbing/Gmain_timeout.h>
 
 /* #include <ocf/oc_event.h> */
 
@@ -61,6 +62,7 @@ gboolean cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name);
 void cib_shutdown(int nsig);
 void cib_ha_connection_destroy(gpointer user_data);
 gboolean startCib(const char *filename);
+extern gboolean cib_msg_timeout(gpointer data);
 
 ll_cluster_t *hb_conn = NULL;
 
@@ -161,9 +163,6 @@ int
 init_start(void)
 {
 	gboolean was_error = FALSE;
-#ifdef REALTIME_SUPPORT
-	static int  crm_realtime = 1;
-#endif
 
 	hb_conn = ll_cluster_new("heartbeat");
 	cib_register_ha(hb_conn, CRM_SYSTEM_CIB);
@@ -190,15 +189,8 @@ init_start(void)
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);
 		
-#ifdef REALTIME_SUPPORT
-		if (crm_realtime == 1) {
-			cl_enable_realtime();
-
-		} else if (crm_realtime == 0) {
-			cl_disable_realtime();
-		}
-		cl_make_realtime(SCHED_RR, 5, 64, 64);
-#endif
+		Gmain_timeout_add(1000, cib_msg_timeout, NULL);
+		
 		g_main_run(mainloop);
 		return_to_orig_privs();
 

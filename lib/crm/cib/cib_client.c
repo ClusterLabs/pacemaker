@@ -75,7 +75,7 @@ int cib_client_del_notify_callback(
 	cib_t *cib, const char *event, void (*callback)(
 		const char *event, struct ha_msg *msg));
 
-gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
+gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b);
 
 extern cib_t *cib_native_new(cib_t *cib);
 
@@ -434,7 +434,7 @@ int cib_client_add_notify_callback(
 	new_client->callback = callback;
 
 	list_item = g_list_find_custom(
-		cib->notify_list, new_client, cib_GCompareFunc);
+		cib->notify_list, new_client, ciblib_GCompareFunc);
 	
 	if(list_item != NULL) {
 		crm_warn("Callback already present");
@@ -463,7 +463,7 @@ int cib_client_del_notify_callback(
 	new_client->callback = callback;
 
 	list_item = g_list_find_custom(
-		cib->notify_list, new_client, cib_GCompareFunc);
+		cib->notify_list, new_client, ciblib_GCompareFunc);
 	
 	if(list_item != NULL) {
 		cib_notify_client_t *list_client = list_item->data;
@@ -479,7 +479,7 @@ int cib_client_del_notify_callback(
 	return cib_ok;
 }
 
-gint cib_GCompareFunc(gconstpointer a, gconstpointer b)
+gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
 {
 	const cib_notify_client_t *a_client = a;
 	const cib_notify_client_t *b_client = b;
@@ -652,6 +652,9 @@ cib_error2string(enum cib_errors return_code)
 			break;
 		case cib_client_corrupt:
 			error_msg = "Service client not valid";
+			break;
+		case cib_master_timeout:
+			error_msg = "No master service is currently active";
 			break;
 	}
 			
