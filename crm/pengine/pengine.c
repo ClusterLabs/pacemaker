@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.59 2005/03/14 21:00:28 andrew Exp $ */
+/* $Id: pengine.c,v 1.60 2005/03/29 20:01:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,8 +57,10 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
 		crm_data_t * output = NULL;
-
-		crm_xml_info(xml_data, "[in ]");
+		crm_data_t * status = get_object_root(XML_CIB_TAG_STATUS, xml_data);
+		
+		crm_xml_info(status, "[in ]");
+		crm_xml_devel(xml_data, "[all]");
 		output = do_calculations(xml_data);
 		crm_xml_devel(output, "[out]");
 
