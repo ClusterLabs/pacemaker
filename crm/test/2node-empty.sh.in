@@ -48,13 +48,7 @@ cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
 
 #----
 
-sleep 30
-
-#----
-
 do_cmd echo Various sanity checks - stage 1
-do_cmd wait_for_state S_IDLE 3 $test_node_1 
-cts_assert "S_IDLE not reached on $test_node_1 (CIB create)!"
 
 do_cmd is_running rsc1 $test_node_1
 cts_assert_false "rsc1 IS running"
@@ -81,7 +75,7 @@ cts_assert "CRMd on ${test_node_2} did not join the cluster."
 
 do_cmd echo Various sanity checks - stage 2
 do_cmd wait_for_state S_IDLE 3 $test_node_1 
-cts_assert "S_IDLE not reached on $test_node_1 (CIB create)!"
+cts_assert "S_IDLE not reached on $test_node_1"
 
 do_cmd is_running rsc1 $test_node_1
 cts_assert_false "rsc1 IS running"
@@ -94,20 +88,12 @@ cts_assert "$test_node_1 is supposed to be the DC"
 
 #----
 
-do_cmd echo Shutdown $test_node_1
-crm_log_pos=$(stat -L -c %s $logfile)
-do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmadmin -K $test_node_1 &
+stop_node $test_node_1 crmd
+
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
     -s "${test_node_2} crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
     -s "${test_node_1} crmd(.*) State transition (.*) \-> \"S_NOT_DC\""
 cts_assert "Transition of the DC from ${test_node_1} to ${test_node_2} failed."
-
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
-    -s "${test_node_1} crmd(.*)State transition \"S_NOT_DC\" \-> \"S_STOPPING\"" \
-    -s "crmd(.*)State transition" \
-    -e "${test_node_1} crmd(.*)Timer I_TERMINATE just popped" \
-    -s "${test_node_1} crmd(.*)\[crmd\] stopped" 
-cts_assert "Shutdown of ${test_node_1} failed"
 
 #----
 
@@ -126,14 +112,7 @@ cts_assert "$test_node_2 is supposed to be the DC"
 
 #----
 
-do_cmd echo Shutdown $test_node_2
-crm_log_pos=$(stat -L -c %s $logfile)
-do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmadmin -K $test_node_2
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
-    -s "${test_node_2} crmd(.*)State transition (.*) \-> \"S_PENDING\"" \
-    -s "${test_node_2} crmd(.*)State transition \"S_PENDING\" \-> \"S_STOPPING\""\
-    -s "${test_node_2} crmd(.*)\[crmd\] stopped" 
-cts_assert "Shutdown of ${test_node_2} failed."
+stop_node $test_node_2 crmd
 
 #----
 

@@ -129,7 +129,7 @@ function remote_cmd() {
 
 function start_node() {
     ha_node=$1
-    do_cmd echo "wait for HA to start"
+    do_cmd echo "wait for HA to start on $ha_node"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd remote_cmd $INIT_USER $ha_node $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
     do_cmd ${testdir}/testutils.pl -l ${logfile} -p $crm_log_pos --search -a -m 100 \
@@ -145,7 +145,7 @@ function start_node() {
     do_cmd remote_cmd $INIT_USER $ha_node "killall -INT crmd"
     if [ $? = 1 ]; then 
 	crm_log_pos=$(stat -L -c %s $logfile)
-	do_cmd echo "wait for CRMd to start"
+	do_cmd echo "wait for CRMd to start on $ha_node"
 	do_cmd remote_cmd $CRMD_USER $ha_node $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
     fi
 
@@ -158,20 +158,20 @@ function stop_node()
 {
     a_node=$1; shift;
     down_cmd=$1; shift;
-    do_cmd echo Shutdown $test_node_1
+    do_cmd echo Shutdown $a_node
     crm_log_pos=$(stat -L -c %s $logfile)
 
     if [ "$down_cmd" = "crmd" ]; then
-	do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmadmin -K $test_node_1
+	do_cmd remote_cmd $CRMD_USER $a_node $HALIB_DIR/crmadmin -K $a_node
     else
-	do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -k
+	do_cmd remote_cmd $INIT_USER $a_node $HALIB_DIR/heartbeat -k
     fi
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 500 \
-	-s "${test_node_1} crmd(.*)State transition (.*) \-> \"S_PENDING\"" \
-	-s "${test_node_1} crmd(.*)State transition \"S_PENDING\" \-> \"S_STOPPING\"" \
-	-s "${test_node_1} crmd(.*)\[crmd\] stopped" 
-    cts_assert "Shutdown of ${test_node_1} failed."
-
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -t 120 \
+	-s "${a_node} crmd(.*)State transition" \
+	-s "${a_node} crmd(.*)State transition (.*) \-> \"S_STOPPING\"" \
+	-s "${a_node} crmd(.*)\[crmd\] stopped" \
+	-e "${a_node} crmd(.*)Timer I_TERMINATE just popped"
+    cts_assert "Shutdown of ${a_node} failed."
 }
 
 function is_state() {
