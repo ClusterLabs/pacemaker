@@ -35,6 +35,8 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+extern GHashTable *joined_nodes;
+
 long long
 do_state_transition(long long actions,
 		    enum crmd_fsa_cause cause,
@@ -514,6 +516,7 @@ do_state_transition(long long actions,
 		    enum crmd_fsa_input current_input,
 		    void *data)
 {
+	gboolean clear_recovery_bit = TRUE;
 	long long tmp = actions;
 	const char *state_from = fsa_state2string(cur_state);
 	const char *state_to   = fsa_state2string(next_state);
@@ -550,20 +553,38 @@ do_state_transition(long long actions,
 					 " that we have a new DC");
 				tmp = set_bit(tmp, A_SHUTDOWN_REQ);
 			}
-			tmp = clear_bit(tmp, A_RECOVER);
 			break;
 		case S_RECOVERY_DC:
 		case S_RECOVERY:
-			tmp = set_bit(tmp, A_RECOVER);
+			clear_recovery_bit = FALSE;
 			break;
+		case S_POLICY_ENGINE:
+			if(g_hash_table_size(joined_nodes)
+			   != fsa_membership_copy->members_size) {
+				crm_warn("Only %d (of %d) cluster nodes are"
+					 " eligable to run resources.",
+					 g_hash_table_size(joined_nodes),
+					 fsa_membership_copy->members_size);
+			} else {
+				crm_info("All %d clusters nodes are"
+					 " eligable to run resources.",
+					 fsa_membership_copy->members_size);
+			}
+			break;
+			
 		case S_IDLE:
 			dump_rsc_info();
 			// keep going
 		default:
-			tmp = clear_bit(tmp, A_RECOVER);
 			break;
 	}
 
+	if(clear_recovery_bit && next_state != S_PENDING) {
+		tmp = clear_bit(tmp, A_RECOVER);
+	} else if(clear_recovery_bit == FALSE) {
+		tmp = set_bit(tmp, A_RECOVER);
+	}
+	
 	if(tmp != actions) {
 		crm_info("Action b4    %.16llx ", actions);
 		crm_info("Action after %.16llx ", tmp);
