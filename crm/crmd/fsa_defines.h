@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.34 2005/02/15 09:45:43 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.35 2005/02/23 12:22:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -448,6 +448,8 @@ enum crmd_fsa_input {
 
 #define R_CCM_DATA	0x00100000ULL /* Have we got CCM data yet */
 #define R_PEER_DATA	0x00200000ULL /* Have we got T_CL_STATUS data yet */
+
+#define R_IN_RECOVERY	0x80000000ULL
 
 enum crmd_fsa_cause
 {

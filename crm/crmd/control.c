@@ -174,7 +174,11 @@ do_exit(long long action,
 			 fsa_action2string(action));
 	}
 
-	if(is_set(fsa_input_register, R_STAYDOWN)) {
+	if(is_set(fsa_input_register, R_IN_RECOVERY)) {
+		crm_info("Could not recover from internal error");
+		exit_code = 2;			
+
+	} else if(is_set(fsa_input_register, R_STAYDOWN)) {
 		crm_info("Inhibiting respawn by Heartbeat");
 		exit_code = 100;
 	}
@@ -420,6 +424,7 @@ do_recover(long long action,
 	   enum crmd_fsa_input current_input,
 	   fsa_data_t *msg_data)
 {
+	set_bit_inplace(fsa_input_register, R_IN_RECOVERY);
 	crm_err("Action %s (%.16llx) not supported\n",
 	       fsa_action2string(action), action);
 
