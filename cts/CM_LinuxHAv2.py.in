@@ -115,7 +115,7 @@ class LinuxHAv2(HeartbeatCM):
         if self.Env["CIBResource"] == 1:
             self.log("Enabling DC resource")
             resources='''
-       <resource id="DcIPaddr" class="heartbeat" type="IPaddr2" priority="1.0">
+       <resource id="DcIPaddr" class="heartbeat" type="IPaddr2" provider="heartbeat" priority="1.0">
          <operations>
            <op id="1" name="monitor" interval="1000" timeout="500"/>
          </operations>
@@ -137,7 +137,7 @@ class LinuxHAv2(HeartbeatCM):
             for node in self.Env["nodes"]:
                 # These resources prefer to run on the node with the same name
                 node_resource=("""
-       <resource id="%s" class="heartbeat" type="IPaddr2">
+       <resource id="%s" class="heartbeat" type="IPaddr2" provider="heartbeat" >
          <operations>
            <op id="1" name="monitor" interval="1000" timeout="500"/>
          </operations>
