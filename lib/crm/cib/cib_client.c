@@ -218,9 +218,12 @@ gboolean cib_client_is_master(cib_t *cib)
 		return cib_variant;
 	} 
 
-	return cib->cmds->variant_op(
+	if(cib_ok == cib->cmds->variant_op(
 		cib, CRM_OP_CIB_ISMASTER, NULL, NULL,NULL,NULL,
-		cib_scope_local|cib_sync_call);
+		cib_scope_local|cib_sync_call)) {
+		return TRUE;
+	}
+	return FALSE;
 }
 
 int cib_client_set_slave(cib_t *cib, int call_options)
@@ -317,7 +320,7 @@ int cib_client_sync_from(
 		}
 		
 		crm_debug("Storing current CIB (should trigger a store everywhere)");
-		crm_xml_debug(current_cib, "XML to store");
+/* 		crm_xml_debug(current_cib, "XML to store"); */
 		rc = cib->cmds->replace(
 			cib, section, current_cib, &stored_cib, call_options);
 	}
