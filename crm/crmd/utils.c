@@ -708,4 +708,4 @@ set_uuid(xmlNodePtr node, const char *attr, const char *uname)
 	}
 	
 	crm_free(uuid_calc);
-}
+}/*memory leak*/ /* BEAM BUG - this is not a memory leak */
