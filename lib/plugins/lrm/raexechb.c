@@ -254,7 +254,7 @@ get_resource_list(GList ** rsc_info)
 	} else 
 	{
 		while (file_num--) {
-			rsc_info_t * rsc_info_tmp;
+			rsc_info_t * rsc_info_tmp = NULL;
 			if (*(namelist[file_num]->d_name) != '.') {
 				rsc_info_tmp = g_new(rsc_info_t, 1);	
 				rsc_info_tmp->rsc_type = 
@@ -264,12 +264,14 @@ get_resource_list(GList ** rsc_info)
 			 * the version is setted 1.0.
 			 */
 				rsc_info_tmp->version = g_strdup("1.0");
+				*rsc_info = g_list_append(*rsc_info, 
+						(gpointer)rsc_info_tmp);
 			}
 			free(namelist[file_num]);
 		}
 		free(namelist);
 	}
-	return 0;			
+	return g_list_length(*rsc_info);			
 }
 
 static void

@@ -224,12 +224,14 @@ get_resource_list(GList ** rsc_info)
 			 * the version is setted 1.0.
 			 */
 				rsc_info_tmp->version = g_strdup("1.0");
+				*rsc_info = g_list_append(*rsc_info, 
+						(gpointer)rsc_info_tmp);
 			}
 			free(namelist[file_num]);
 		}
 		free(namelist);
 	}
-	return 0;			
+	return g_list_length(*rsc_info);			
 }
 
 static int 

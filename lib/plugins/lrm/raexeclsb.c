@@ -46,7 +46,7 @@
  * Are there multiple paths? Now according to LSB init scripts, the answer 
  * is 'no', but should be 'yes' for lsb none-init scripts?
  */
-static const char * RA_PATH = "/lib/lsb/init-functions/";
+static const char * RA_PATH = "/usr/lib/lsb/";
 static const int status_op_exitcode_map[] = { 0, 11, 12, 13, 14 };
 
 /* The begin of exported function list */
@@ -236,12 +236,14 @@ get_resource_list(GList ** rsc_info)
 			 * the version is setted 1.0.
 			 */
 				rsc_info_tmp->version = g_strdup("1.0");
+				*rsc_info = g_list_append(*rsc_info, 
+						(gpointer)rsc_info_tmp);
 			}
 			free(namelist[file_num]);
 		}
 		free(namelist);
 	}
-	return 0;			
+	return g_list_length(*rsc_info);			
 }
 
 static int 
