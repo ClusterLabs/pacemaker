@@ -402,11 +402,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_HA_CONNECT, do_ha_control)
 		ELSEIF_FSA_ACTION(A_LRM_CONNECT,do_lrm_control)
 		ELSEIF_FSA_ACTION(A_CCM_CONNECT,do_ccm_control)
-		ELSEIF_FSA_ACTION(A_ANNOUNCE,	do_announce)
 		
 		/* sub-system start */
-		ELSEIF_FSA_ACTION(A_PE_START,	do_pe_control)
 		ELSEIF_FSA_ACTION(A_TE_START,	do_te_control)
+		ELSEIF_FSA_ACTION(A_PE_START,	do_pe_control)
 		
 		/* sub-system restart
 		 */
@@ -429,9 +428,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
 		ELSEIF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
 		ELSEIF_FSA_ACTION(A_RECOVER,		do_recover)
+		ELSEIF_FSA_ACTION(A_JOIN_ACK,		do_ack_welcome)
+		ELSEIF_FSA_ACTION(A_ANNOUNCE,		do_announce)
 		ELSEIF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)
-		ELSEIF_FSA_ACTION(A_ELECT_TIMER_START,	do_election_timer_ctrl)
 		ELSEIF_FSA_ACTION(A_ELECT_TIMER_STOP,	do_election_timer_ctrl)
+		ELSEIF_FSA_ACTION(A_ELECT_TIMER_START,	do_election_timer_ctrl)
 		ELSEIF_FSA_ACTION(A_ELECTION_COUNT,	do_election_count_vote)
 		ELSEIF_FSA_ACTION(A_ELECTION_TIMEOUT,	do_election_timer_ctrl)
 		
@@ -455,7 +456,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_DC_RELEASE,		do_dc_release)
 		ELSEIF_FSA_ACTION(A_JOIN_WELCOME_ALL,	do_send_welcome)
 		ELSEIF_FSA_ACTION(A_JOIN_WELCOME,	do_send_welcome)
-		ELSEIF_FSA_ACTION(A_JOIN_ACK,		do_ack_welcome)
 		ELSEIF_FSA_ACTION(A_JOIN_PROCESS_ACK,	do_process_welcome_ack)
 		
 		/*
@@ -976,6 +976,9 @@ fsa_action2string(long long action)
 			break;
 		case A_TE_STOP:
 			actionAsText = "A_TE_STOP";
+			break;
+		case A_TE_CANCEL:
+			actionAsText = "A_TE_CANCEL";
 			break;
 		case A_TE_COPYTO:
 			actionAsText = "A_TE_COPYTO";
