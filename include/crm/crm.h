@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.1 2004/03/24 10:11:10 andrew Exp $ */
+/* $Id: crm.h,v 1.2 2004/03/26 14:13:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,6 +41,7 @@
 //#define FSA_TRACE 1
 
 #include <clplumbing/cl_log.h>
+#include <clplumbing/cl_malloc.h>
 
 /* Developmental debug stuff */
 #if 1
@@ -93,9 +94,8 @@
 #define CRM_OPERATION_ANNOUNCE	"announce"
 #define CRM_OPERATION_HBEAT	"dc_beat"
 
-/* so we dont have to include heartbeat.h */
-extern char *ha_strdup(const char *s);
-extern void *ha_malloc(size_t size);
-extern void  ha_free(void *mem);
+
+#define CRM_XMLCOMPRESS_OFF 0
+#define CRM_XMLCOMPRESS_ON  9
 
 #endif
