@@ -1,4 +1,4 @@
-/* $Id: xmlutils.h,v 1.6 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: xmlutils.h,v 1.7 2004/03/10 22:34:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -59,7 +59,7 @@ extern char * dump_xml_node(xmlNodePtr msg, gboolean whole_doc);
 
 extern void free_xml(xmlNodePtr a_node);
 
-extern void xml_message_debug(xmlNodePtr msg);
+extern void xml_message_debug(xmlNodePtr msg, const char *text);
 
 extern xmlNodePtr create_xml_node(xmlNodePtr parent, const char *name);
 

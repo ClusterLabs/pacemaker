@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.13 2004/03/05 13:10:21 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.14 2004/03/10 22:34:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -212,7 +212,7 @@ find_entity_nested(xmlNodePtr parent,
 void
 copy_in_properties(xmlNodePtr src, xmlNodePtr target)
 {
-#if 0
+#if 1
 	xmlAttrPtr prop_iter = NULL;
 	FNIN();
 
@@ -244,11 +244,13 @@ dump_xml(xmlNodePtr msg)
 }
 
 void
-xml_message_debug(xmlNodePtr msg)
+xml_message_debug(xmlNodePtr msg, const char *text)
 {
 	FNIN();
 	char *msg_buffer = dump_xml_node(msg, FALSE);
-	CRM_DEBUG2("Dumping xml message: %s", msg_buffer);
+	CRM_DEBUG3("%s: %s",
+		   text==NULL?"<null>":text,
+		   msg_buffer==NULL?"<null>":msg_buffer);
 	ha_free(msg_buffer);
 	FNOUT();
 }
@@ -277,12 +279,8 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 		xmlMemoryDump ();
 	
 		xmlBufferPtr xml_buffer = xmlBufferCreate();
-//		CRM_DEBUG("About to dump XML into buffer");
 		msg_size = xmlNodeDump(xml_buffer, msg->doc, msg, 0, 0);
 
-		//CRM_DEBUG2("Dumped XML into buffer: [%s]", xmlBufferContent(xml_buffer));
-//		CRM_DEBUG2("Dumped %d XML characters into buffer", msg_size);
-	
 		xml_message =
 			(xmlChar*)ha_strdup(xmlBufferContent(xml_buffer)); 
 		xmlBufferFree(xml_buffer);
@@ -327,16 +325,15 @@ set_xml_property_copy(xmlNodePtr node,
 	if(node != NULL)
 		parent_name = node->name;
 	
-//	CRM_DEBUG4("[%s] Setting %s to %s", parent_name, name, value);
+	CRM_DEBUG4("[%s] Setting %s to %s", parent_name, name, value);
 
-	if (name == NULL)
+	if (name == NULL || strlen(name) <= 0)
 		ret_value = NULL;
 	else if(node == NULL)
 		ret_value = NULL;
+	else if (value == NULL || strlen(value) <= 0)
+		ret_value = NULL;
 	else {
-		if (value == NULL)
-			value = "";
-
 		local_value = ha_strdup(value);
 		local_name = ha_strdup(name);
 		ret_value = xmlSetProp(node, local_name, local_value);
