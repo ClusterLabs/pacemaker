@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.49 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: unpack.c,v 1.50 2005/02/01 22:46:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -128,7 +128,7 @@ unpack_config(crm_data_t * config)
 				 "transition_timeout", value);
 		}
 	}
-	crm_info("%s set to: %s",
+	crm_debug("%s set to: %s",
 		 "transition_timeout", transition_timeout);
 	
 	return TRUE;
@@ -482,11 +482,11 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 		}
 
 		if(this_node->details->unclean) {
-			crm_warn("Node %s is due for STONITH", uname);
+			crm_warn("Node %s is unclean", uname);
 		}
 
 		if(this_node->details->shutdown) {
-			crm_info("Node %s is due for shutdown", uname);
+			crm_debug("Node %s is due for shutdown", uname);
 		}
 	}
 	return online;
@@ -816,28 +816,28 @@ order_new(resource_t *lh_rsc, enum action_tasks lh_action_task, action_t *lh_act
 		*ordering_constraints, order);
 	
 	if(lh_rsc != NULL && rh_rsc != NULL) {
-		crm_info("Created ordering constraint %d (%s):"
+		crm_debug("Created ordering constraint %d (%s):"
 			 " %s/%s before %s/%s",
 			 order->id, strength2text(order->strength),
 			 lh_rsc->id, task2text(lh_action_task),
 			 rh_rsc->id, task2text(rh_action_task));
 		
 	} else if(lh_rsc != NULL) {
-		crm_info("Created ordering constraint %d (%s):"
+		crm_debug("Created ordering constraint %d (%s):"
 			 " %s/%s before action %d (%s)",
 			 order->id, strength2text(order->strength),
 			 lh_rsc->id, task2text(lh_action_task),
 			 rh_action->id, task2text(rh_action_task));
 		
 	} else if(rh_rsc != NULL) {
-		crm_info("Created ordering constraint %d (%s):"
+		crm_debug("Created ordering constraint %d (%s):"
 			 " action %d (%s) before %s/%s",
 			 order->id, strength2text(order->strength),
 			 lh_action->id, task2text(lh_action_task),
 			 rh_rsc->id, task2text(rh_action_task));
 		
 	} else {
-		crm_info("Created ordering constraint %d (%s):"
+		crm_debug("Created ordering constraint %d (%s):"
 			 " action %d (%s) before action %d (%s)",
 			 order->id, strength2text(order->strength),
 			 lh_action->id, task2text(lh_action_task),

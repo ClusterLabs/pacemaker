@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.32 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: stages.c,v 1.33 2005/02/01 22:46:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -257,7 +257,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 	slist_iter(
 		node, node_t, nodes, lpc,
 		if(node->details->shutdown) {
-			crm_warn("Scheduling Node %s for shutdown",
+			crm_info("Scheduling Node %s for shutdown",
 				 node->details->uname);
 			
 			down_op = action_new(NULL, shutdown_crm, node);
@@ -383,60 +383,6 @@ stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 	return TRUE;
 }
 
-/*
- * Print a nice human readable high-level summary of what we're going to do 
- */
-gboolean
-summary(GListPtr resources)
-{
-#if 0
-	int lpc = 0;
-	const char *rsc_id      = NULL;
-	const char *node_id     = NULL;
-	const char *new_node_id = NULL;
-	
-	slist_iter(
-		rsc, resource_t, resources, lpc,
-		rsc_id = safe_val(NULL, rsc, id);
-		node_id = safe_val4(NULL, rsc, cur_node, details, uname);
-		new_node_id = safe_val6(
-			NULL, rsc, color, details, chosen_node, details, uname);
-
-		if(rsc->runnable == FALSE) {
-			crm_err("Resource %s was not runnable", rsc_id);
-			if(node_id != NULL) {
-				crm_warn("Stopping Resource (%s) on node %s",
-					 rsc_id, node_id);
-			}
-
-		} else if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL) {
-			crm_err("Could not allocate Resource %s", rsc_id);
-			crm_debug_action(
-				print_resource("Could not allocate",rsc,TRUE));
-			if(node_id != NULL) {
-				
-				crm_warn("Stopping Resource (%s) on node %s",
-					 rsc_id, node_id);
-			}
-			
-		} else if(safe_str_eq(node_id, new_node_id)){
-			crm_debug("No change for Resource %s (%s)",
-				  rsc_id,
-				  safe_val4(NULL, rsc, cur_node, details, uname));
-			
-		} else if(node_id == NULL) {
-			crm_info("Starting Resource %s on %s",
-				 rsc_id, new_node_id);
-			
-		} else {
-			crm_info("Moving Resource %s from %s to %s",
-				 rsc_id, node_id, new_node_id);
-		}
-		);
-	
-#endif	
-	return TRUE;
-}
 
 gboolean
 choose_node_from_list(color_t *color)

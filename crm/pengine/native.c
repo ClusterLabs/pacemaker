@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.10 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: native.c,v 1.11 2005/02/01 22:46:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -251,7 +251,6 @@ void native_create_actions(resource_t *rsc)
 		}
 		
 	} else {
-		/* stop and or possible restart */
 		crm_debug("Stop and possible restart of %s", rsc->id);
 		
 		slist_iter(
@@ -297,7 +296,7 @@ void native_create_actions(resource_t *rsc)
 		if(action->extra_attrs == NULL) {
 			action->extra_attrs = create_xml_node(NULL, "extra");
 		}
-		crm_xml_info(rsc->extra_attrs, "copying in extra attributes");
+		crm_xml_debug(rsc->extra_attrs, "copying in extra attributes");
 		copy_in_properties(action->extra_attrs, rsc->extra_attrs);
 		);
 }
@@ -591,8 +590,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		return;
 			
 	} else if(is_active(constraint) == FALSE) {
-		crm_info("Constraint (%s) is not active", constraint->id);
-		/* warning */
+		crm_debug("Constraint (%s) is not active", constraint->id);
 		return;
 	} else if(rsc == NULL) {
 		crm_err("LHS of rsc_to_node (%s) is NULL", constraint->id);

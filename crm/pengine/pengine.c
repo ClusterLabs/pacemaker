@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.54 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: pengine.c,v 1.55 2005/02/01 22:46:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,7 +36,6 @@ int num_synapse = 0;
 gboolean
 process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 {
-	char *msg_buffer = NULL;
 	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *op = cl_get_string(msg, F_CRM_TASK);
 	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
@@ -59,18 +58,10 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
 		crm_data_t * output = NULL;
-		
-		msg_buffer = dump_xml_formatted(xml_data);
-		do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/pe.log",
-			   "%s: %s\n", "[in ]", msg_buffer);
-		crm_free(msg_buffer);
 
+		crm_xml_info(xml_data, "[in ]");
 		output = do_calculations(xml_data);
-
-		msg_buffer = dump_xml_formatted(output);
-		do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/pe.log",
-			   "%s: %s\n", "[out ]", msg_buffer);
-		crm_free(msg_buffer);
+		crm_xml_debug(output, "[out]");
 
 		if (send_ipc_reply(sender, msg, output) ==FALSE) {
 
@@ -160,9 +151,6 @@ do_calculations(crm_data_t * cib_object)
 	crm_verbose("=#=#=#=#= Stage 7 =#=#=#=#=");
 	stage7(resources, actions, ordering_constraints);
 	
-	crm_verbose("=#=#=#=#= Summary =#=#=#=#=");
-	summary(resources);
-
 	crm_verbose("========= Action Sets =========");
 
 	crm_verbose("\t========= Set %d (Un-runnable) =========", -1);

@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.41 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: ptest.c,v 1.42 2005/02/01 22:46:41 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -129,7 +129,7 @@ main(int argc, char **argv)
 	} else {
 		cib_object = file2xml(stdin);
 	}
-	crm_info("=#=#=#=#= Stage 0 =#=#=#=#=");
+	crm_debug("=#=#=#=#= Stage 0 =#=#=#=#=");
 
 #ifdef MCHECK
 	mtrace();
@@ -200,7 +200,6 @@ main(int argc, char **argv)
 		   print_color(NULL, color, FALSE));
 
 	crm_debug("=#=#=#=#= Summary =#=#=#=#=");
-	summary(resources);
 	crm_debug("========= Action List =========");
 	slist_iter(action, action_t, actions, lpc,
 		   print_action(NULL, action, TRUE));
@@ -224,8 +223,6 @@ main(int argc, char **argv)
 	stage7(resources, actions, ordering_constraints);
 
 	crm_debug("=#=#=#=#= Summary =#=#=#=#=");
-	summary(resources);
-
 	crm_debug("========= All Actions =========");
 	slist_iter(action, action_t, actions, lpc,
 		   print_action("\t", action, TRUE);

@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.6 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: incarnation.c,v 1.7 2005/02/01 22:46:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,10 +57,14 @@ void incarnation_unpack(resource_t *rsc)
 	incarnation_variant_data_t *incarnation_data = NULL;
 	resource_t *self = NULL;
 
-	const char *ordered         = crm_element_value(xml_obj, XML_RSC_ATTR_ORDERED);
-	const char *interleave      = crm_element_value(xml_obj, XML_RSC_ATTR_INTERLEAVE);
-	const char *max_incarn      = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION_MAX);
-	const char *max_incarn_node = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION_NODEMAX);
+	const char *ordered         = crm_element_value(
+		xml_obj, XML_RSC_ATTR_ORDERED);
+	const char *interleave      = crm_element_value(
+		xml_obj, XML_RSC_ATTR_INTERLEAVE);
+	const char *max_incarn      = crm_element_value(
+		xml_obj, XML_RSC_ATTR_INCARNATION_MAX);
+	const char *max_incarn_node = crm_element_value(
+		xml_obj, XML_RSC_ATTR_INCARNATION_NODEMAX);
 
 	crm_verbose("Processing resource %s...", rsc->id);
 
@@ -204,7 +208,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 		if(lpc != 0) {
 			child_rh = g_list_nth_data(incarnation_data->child_list, lpc);
 			
-			crm_info("Incarnation %d will run on a differnt node to 0",
+			crm_debug("Incarnation %d will run on a differnt node to 0",
 				  lpc);
 			
 			rsc_dependancy_new("pe_incarnation_internal_must_not",
@@ -220,7 +224,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 			if(offset >= incarnation_data->incarnation_max) {
 				break;
 			}
-			crm_info("Incarnation %d will run on the same node as %d",
+			crm_debug("Incarnation %d will run on the same node as %d",
 				  offset, lpc);
 
 			incarnation_data->active_incarnation++;
@@ -236,11 +240,11 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 		if(lpc < incarnation_data->active_incarnation) {
-			crm_info("Coloring Incarnation %d", lpc);
+			crm_debug("Coloring Incarnation %d", lpc);
 			child_rsc->fns->color(child_rsc, colors);
 		} else {
 			/* TODO: assign "no color"?  Doesnt seem to need it */
-			crm_info("Incarnation %d cannot be started", lpc);
+			crm_warn("Incarnation %d cannot be started", lpc);
 		} 
 		);
 	crm_info("%d Incarnations are active", incarnation_data->active_incarnation);
@@ -299,7 +303,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 			  pecs_startstop, ordering_constraints);
 		
 		if(incarnation_data->ordered && last_rsc != NULL) {
-			crm_info("Ordered version");
+			crm_debug("Ordered version");
 			if(lpc < incarnation_data->active_incarnation) {
 				/* child/child relative start */
 				order_new(last_rsc,  start_rsc, NULL,
@@ -313,7 +317,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 				  pecs_startstop, ordering_constraints);
 
 		} else if(incarnation_data->ordered) {
-			crm_info("Ordered version (1st node)");
+			crm_debug("Ordered version (1st node)");
 
 			/* child start before global started */
 			order_new(child_rsc,              start_rsc, NULL,
@@ -331,7 +335,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 				  pecs_startstop, ordering_constraints);
 
 		} else {
-			crm_info("Un-ordered version");
+			crm_debug("Un-ordered version");
 
 			if(lpc < incarnation_data->active_incarnation) {
 				/* child start before global started */
@@ -364,7 +368,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 		);
 
 	if(incarnation_data->ordered && last_rsc != NULL) {
-		crm_info("Ordered version (last node)");
+		crm_debug("Ordered version (last node)");
 		/* last child start before global started */
 		order_new(last_rsc,         start_rsc, NULL,
 			  incarnation_data->self, started_rsc, NULL,
