@@ -45,11 +45,11 @@ void crmd_ha_input_destroy(gpointer user_data);
 void
 crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 {
-	const char *from = ha_msg_value(msg, F_ORIG);
 	const char *to = NULL;
-	xmlNodePtr root_xml_node;
-
-	
+	char *xml_text = NULL;
+	xmlNodePtr root_xml_node = NULL;
+	const char *from = ha_msg_value(msg, F_ORIG);
+	const char *seq  = ha_msg_value(msg, F_SEQ);
 
 #ifdef MSG_LOG
 	if(msg_in_strm == NULL) {
@@ -60,8 +60,7 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 	if(safe_str_eq(from, fsa_our_uname)) {
 #ifdef MSG_LOG
 		fprintf(msg_in_strm,
-			"Discarded message [F_SEQ=%s] from ourselves.\n",
-			ha_msg_value(msg, F_SEQ));
+			"Discarded message [F_SEQ=%s] from ourselves.\n", seq);
 		fflush(msg_in_strm);
 #endif
 		return;
@@ -69,28 +68,30 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 		crm_err("Value of %s was NULL", F_ORIG);
 	}
 	
-#ifdef MSG_LOG
-	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n", crm_str(from),
-		ha_msg_value(msg, F_SEQ),
-		ha_msg_value(msg, F_TYPE),
-		ha_msg_value(msg, "xml")
-		);
-	fflush(msg_in_strm);
-#endif
-
 	root_xml_node = find_xml_in_hamessage(msg);
 	to = xmlGetProp(root_xml_node, XML_ATTR_HOSTTO);
+
+#ifdef MSG_LOG
+	xml_text = dump_xml_formatted(root_xml_node);
+	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n", crm_str(from),
+		seq,
+		ha_msg_value(msg, F_TYPE),
+		xml_text
+		);
+	fflush(msg_in_strm);
+	crm_free(xml_text);
+#endif
 	
 	if(to != NULL && strlen(to) > 0 && strcmp(to, fsa_our_uname) != 0) {
 #ifdef MSG_LOG
 		fprintf(msg_in_strm,
-			"Discarding message [F_SEQ=%s] for someone else.",
-			ha_msg_value(msg, F_SEQ));
+			"Discarding message [F_SEQ=%s] for someone else", seq);
 #endif
 		return;
 	}
 
 	set_xml_property_copy(root_xml_node, XML_ATTR_HOSTFROM, from);
+	set_xml_property_copy(root_xml_node, "F_SEQ", seq);
 	s_crmd_fsa(C_HA_MESSAGE, I_ROUTER, root_xml_node);
 
 	free_xml(root_xml_node);
@@ -121,7 +122,6 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		msg_ipc_strm = fopen(DEVEL_DIR"/inbound.ipc.log", "w");
 	}
 #endif
-
 
 	while(client->ops->is_message_pending(client)) {
 		if (client->ch_status == IPC_DISCONNECT) {
