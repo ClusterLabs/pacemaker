@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.13 2004/03/05 13:08:11 andrew Exp $ */
+/* $Id: msgutils.c,v 1.14 2004/03/05 14:13:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -659,12 +659,6 @@ create_reply(xmlNodePtr original_request,
 	set_xml_property_copy(reply, XML_ATTR_SYSTO,    sys_from);
 	set_xml_property_copy(reply, XML_ATTR_SYSFROM,  sys_to);
 
-	char *req_txt = dump_xml(original_request);
-	char *reply_txt = dump_xml(reply);
-	CRM_DEBUG3("Created (Reply): %s\n\tfrom: %s\n",
-		  reply_txt, req_txt);
-	
-	
 	FNRET(reply);
 }
 
@@ -700,11 +694,6 @@ create_forward(xmlNodePtr original_request,
 	
 	set_xml_property_copy(forward, XML_ATTR_SYSTO,    sys_to);
 	set_xml_property_copy(forward, XML_ATTR_SYSFROM,  sys_from);
-
-	char *req_txt = dump_xml(original_request);
-	char *reply_txt = dump_xml(forward);
-	CRM_DEBUG3("Created (Forward): %s\n\n\tfrom: %s\n",
-		  reply_txt, req_txt);
 
 	FNRET(forward);
 }
