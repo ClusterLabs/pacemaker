@@ -1,4 +1,4 @@
-/* $Id: penginemain.c,v 1.17 2004/07/30 15:31:06 andrew Exp $ */
+/* $Id: penginemain.c,v 1.18 2004/08/03 09:16:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,9 +38,9 @@
 
 #define SYS_NAME CRM_SYSTEM_PENGINE
 #define OPTARGS	"skrhV"
-#define PID_FILE     WORKING_DIR "/"SYS_NAME".pid"
-#define DAEMON_LOG   "/var/log/"SYS_NAME".log"
-#define DAEMON_DEBUG   "/var/log/"SYS_NAME".debug"
+#define PID_FILE     WORKING_DIR "/" SYS_NAME ".pid"
+#define DAEMON_LOG   WORKING_DIR "/" SYS_NAME ".log"
+#define DAEMON_DEBUG WORKING_DIR "/" SYS_NAME ".debug"
 
 GMainLoop*  mainloop = NULL;
 const char* crm_system_name = SYS_NAME;
