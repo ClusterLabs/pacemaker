@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.24 2005/02/03 14:17:20 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.25 2005/02/11 22:01:22 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -136,19 +136,8 @@ main(int argc, char **argv)
 		{0, 0, 0, 0}
 	};
 
-	/* Redirect messages from glib functions to our handler */
-	g_log_set_handler(NULL,
-			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
-			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
-			  | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
-			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
-			  cl_glib_msg_handler, NULL);
-	/* and for good measure... */
-	g_log_set_always_fatal((GLogLevelFlags)0);    
-	
 	crm_system_name = basename(argv[0]);
-	cl_log_set_entity(crm_system_name);
-	cl_log_set_facility(LOG_USER);
+	crm_log_init(crm_system_name);
 
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
