@@ -1,4 +1,4 @@
-/* $Id: msgutils.h,v 1.7 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: msgutils.h,v 1.8 2004/03/05 13:08:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,7 +23,8 @@
 #include <clplumbing/ipc.h>
 #include <hb_api.h>
 
-extern const char *generateReference(void);
+extern const char *generateReference(const char *custom1, const char *custom2);
+
 extern gboolean conditional_add_failure(xmlNodePtr failed,
 					xmlNodePtr target,
 					int operation,
