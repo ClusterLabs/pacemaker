@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.30 2004/10/08 18:10:56 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.31 2004/10/12 21:05:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,12 +45,12 @@ struct oc_node_list_s
 		int dead_members_size;
 		GHashTable *dead_members; /* contents: oc_node_t * */
 };
+typedef struct oc_node_list_s oc_node_list_t;
 
 /* copy from struct client_child in heartbeat.h
  *
  * Plus a couple of other things
  */
-typedef struct oc_node_list_s oc_node_list_t;
 struct crm_subsystem_s {
 		pid_t	pid;		/* Process id of child process */
 		const char*	command;	/* What command to run? */
@@ -92,7 +92,8 @@ extern volatile enum crmd_fsa_state fsa_state;
 extern oc_node_list_t *fsa_membership_copy;
 extern ll_cluster_t   *fsa_cluster_conn;
 extern ll_lrm_t       *fsa_lrm_conn;
-extern volatile long long       fsa_input_register;
+extern volatile long long fsa_input_register;
+extern volatile long long fsa_actions;
 extern const char     *fsa_our_uname;
 extern char	      *fsa_pe_ref; /* the last invocation of the PE */
 extern char           *fsa_our_dc;
