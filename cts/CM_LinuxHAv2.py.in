@@ -66,6 +66,8 @@ class LinuxHAv2(HeartbeatCM):
                 r"Both machines own .* resources!",
                 r"No one owns .* resources!",
                 r", exiting\.",
+                r"ERROR:",
+                r"CRIT.*:",
             ),
         })
 	# KLUDGE!  Expedient, but a Kludge (FIXME)
