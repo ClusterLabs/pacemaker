@@ -105,6 +105,15 @@ do_test rsc_node2 "Rsc1 Node2	"
 
 echo ""
 
+do_test rsc_attr1 "Attr inc	"
+do_test rsc_attr2 "Attr dec	"
+do_test rsc_attr3 "Attr set -	"
+do_test rsc_attr4 "Attr set +	"
+do_test rsc_attr5 "Attr only	"
+do_test rsc_attr6 "Attr multi	"
+
+echo ""
+
 do_test complex1 "Complex	"
 
 echo ""
@@ -117,6 +126,7 @@ do_test bad5 "Bad data	"
 do_test bad6 "Bad lrm_rsc"
 do_test bad7 "No lrm	"
 
+echo ""
 # Generate these test outputs
 create_mode="true"
 #do_test bad7 "Bad data"

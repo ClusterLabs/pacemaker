@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.3 2004/06/08 11:47:48 andrew Exp $ */
+/* $Id: color.c,v 1.4 2004/06/11 13:27:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,6 +88,13 @@ apply_node_constraints(GListPtr constraints, GListPtr nodes)
 		if(cons->node_list_rh == NULL) {
 			crm_err("RHS of rsc_to_node (%s) is NULL", cons->id);
 			continue;
+		} else if(cons->modifier == only) {
+			GListPtr intersection = node_list_and(
+				cons->node_list_rh, rsc_lh->allowed_nodes);
+
+			pe_free_shallow(rsc_lh->allowed_nodes);
+			rsc_lh->allowed_nodes = intersection;
+			
 		} else {
 			int llpc = 0;
 			slist_iter(node_rh, node_t, cons->node_list_rh, llpc,
@@ -487,8 +494,9 @@ update_node_weight(rsc_to_node_t *cons, const char *id, GListPtr nodes)
 		case dec:
 			node_rh->weight -= cons->weight;
 			break;
+		case only:
 		case modifier_none:
-			// warning
+			crm_err("Should not be here");
 			break;
 	}
 	return TRUE;

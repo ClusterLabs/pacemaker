@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.8 2004/06/11 10:41:45 andrew Exp $ */
+/* $Id: unpack.c,v 1.9 2004/06/11 13:27:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -395,8 +395,10 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 		a_modifier = inc;
 	} else if(safe_str_eq(mod, "dec")){
 		a_modifier = dec;
+	} else if(safe_str_eq(mod, "only")){
+		a_modifier = only;
 	} else {
-		// error
+		crm_err("Unknown modifier %s", mod);
 	}		
 
 	if(attr_exp == NULL) {

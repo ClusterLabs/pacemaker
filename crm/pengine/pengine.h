@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.23 2004/06/11 10:41:45 andrew Exp $ */
+/* $Id: pengine.h,v 1.24 2004/06/11 13:27:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,7 +57,8 @@ enum con_modifier {
 	modifier_none,
 	set,
 	inc,
-	dec
+	dec,
+	only
 };
 
 enum action_tasks {

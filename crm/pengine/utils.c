@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.28 2004/06/11 10:41:45 andrew Exp $ */
+/* $Id: utils.c,v 1.29 2004/06/11 13:27:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -524,6 +524,9 @@ modifier2text(enum con_modifier modifier)
 			break;
 		case dec: 
 			result = "dec";
+			break;
+		case only: 
+			result = "only";
 			break;
 	}
 	return result;
