@@ -36,8 +36,6 @@
 GListPtr fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
 
-gboolean send_ha_message(ll_cluster_t *hb_fd, crm_data_t *root);
-
 enum crmd_fsa_input handle_request(ha_msg_input_t *stored_msg);
 enum crmd_fsa_input handle_response(ha_msg_input_t *stored_msg);
 enum crmd_fsa_input handle_shutdown_request(HA_Message *stored_msg);
@@ -613,7 +611,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 			if(is_set(fsa_input_register,
 				  the_subsystem->flag_connected)) {
 				auth_result = FALSE;
-				crm_err("Bit\t%.16llx set in %.16llx",
+				crm_warn("Bit\t%.16llx set in %.16llx",
 					  the_subsystem->flag_connected,
 					  fsa_input_register);
 				crm_err("Client %s is already connected",
@@ -621,7 +619,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 			} else if(FALSE == is_set(fsa_input_register,
 					 the_subsystem->flag_required)) {
 				auth_result = FALSE;
-				crm_err("Bit\t%.16llx not set in %.16llx",
+				crm_warn("Bit\t%.16llx not set in %.16llx",
 					  the_subsystem->flag_connected,
 					  fsa_input_register);
 				crm_err("Client %s joined without us asking",
@@ -988,7 +986,6 @@ gboolean
 send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 {
 	int log_level        = LOG_DEV;
-	int send_result      = HA_OK;
 	gboolean broadcast   = FALSE;
 	gboolean all_is_good = TRUE;
 
@@ -1020,14 +1017,10 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 		    || strlen(host_to) == 0
 		    || safe_str_eq(sys_to, CRM_SYSTEM_DC)) {
 			broadcast = TRUE;
-			send_result=hb_fd->llc_ops->sendclustermsg(hb_fd, msg);
+			all_is_good = send_ha_message(hb_fd, msg, NULL);
 		} else {
-			send_result = hb_fd->llc_ops->send_ordered_nodemsg(
-				hb_fd, msg, host_to);
+			all_is_good = send_ha_message(hb_fd, msg, host_to);
 		}
-		
-		if(send_result != HA_OK)
-			all_is_good = FALSE;
 	}
 	
 	if(all_is_good == FALSE) {
@@ -1044,10 +1037,6 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 			   all_is_good?"succeeded":"failed");
 	}
 	
-#ifdef MSG_LOG
-	crm_log_message_adv(log_level, "outbound.log", msg);
-#endif
-
 	crm_msg_del(msg);
 	
 	return all_is_good;

@@ -1,4 +1,4 @@
-/* $Id: ipc.h,v 1.6 2005/01/18 20:33:04 andrew Exp $ */
+/* $Id: ipc.h,v 1.7 2005/02/28 11:04:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,6 +33,9 @@ typedef struct crmd_client_s
 		IPC_Channel *client_channel;
 		GCHSource *client_source;
 } crmd_client_t;
+
+extern gboolean send_ha_message(
+	ll_cluster_t *hb_conn, HA_Message *msg, const char *node);
 
 extern gboolean send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg);
 
