@@ -49,6 +49,8 @@
 struct crm_subsystem_s *cib_subsystem = NULL;
 void crmd_update_confirm(const char *event, HA_Message *msg);
 
+int cib_retries = 0;
+
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
 enum crmd_fsa_input
 do_cib_control(long long action,
@@ -74,22 +76,36 @@ do_cib_control(long long action,
 		if(cur_state != S_STOPPING) {
 			if(fsa_cib_conn->cmds->signon(
 				   fsa_cib_conn, cib_command) != cib_ok) {
-				result = I_FAIL;
 				crm_err("Could not connect to the CIB service");
 				
 			} else if(fsa_cib_conn->cmds->add_notify_callback(
 					  fsa_cib_conn, T_CIB_UPDATE_CONFIRM,
 					  crmd_update_confirm) != cib_ok) {
-				result = I_FAIL;
 				crm_err("Could not set notify callback");
 			} else if(fsa_cib_conn->cmds->set_connection_dnotify(
 					  fsa_cib_conn,
 					  crmd_cib_connection_destroy)!=cib_ok){
-				result = I_FAIL;
 				crm_err("Could not set dnotify callback");
 			} else {
 				set_bit_inplace(
 					fsa_input_register, R_CIB_CONNECTED);
+			}
+
+			if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+				crm_warn("Could complete CIB registration %d"
+					 " time... retry", cib_retries);
+				if(++cib_retries < 30) {
+					startTimer(wait_timer);
+					crmd_fsa_stall();
+
+				} else {
+					crm_err("Could complete CIB"
+						" registration  %d times..."
+						" hard error", cib_retries);
+					result = I_ERROR;
+				}
+			} else {
+				cib_retries = 0;
 			}
 			
 		} else {
