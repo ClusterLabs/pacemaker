@@ -38,6 +38,8 @@ FILE *router_strm = NULL;
 
 GListPtr fsa_message_queue = NULL;
 
+extern void crm_shutdown(int nsig);
+
 gboolean relay_message(xmlNodePtr xml_relay_message,
 		       gboolean originated_locally);
 
@@ -410,7 +412,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		return can_reply;
 	}
 	
-	crm_info("received client join msg: %s",
+	crm_debug("received client join msg: %s",
 		 (char*)client_msg->msg_body);
 
 	result = process_hello_message(root_xml_node,
@@ -485,7 +487,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 				   "n/a", CRM_SYSTEM_CRMD,
 				   "0", "1");
 
-		crm_info("Updated client list with %s",
+		crm_debug("Updated client list with %s",
 		       (char*)table_key);
 		
 		if(the_subsystem != NULL) {
@@ -568,7 +570,11 @@ handle_message(xmlNodePtr stored_msg)
 			next_input = I_WELCOME;
 				
 		} else if(strcmp(op, "init_shutdown") == 0) {
-			next_input = I_SHUTDOWN;
+
+			crm_warn("This method of shutting down is somewhat untested");
+			crm_shutdown(SIGTERM);
+			//next_input = I_SHUTDOWN;
+			next_input = I_NULL;
 				
 		} else if(strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
 
