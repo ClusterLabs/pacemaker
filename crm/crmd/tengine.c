@@ -55,7 +55,7 @@ do_te_control(long long action,
 	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input current_input,
-	      void *data)
+	      fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input result = I_NULL;
 	struct crm_subsystem_s *this_subsys = te_subsystem;
@@ -119,15 +119,15 @@ do_te_copyto(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
-	     void *data)
+	     fsa_data_t *msg_data)
 {
-	xmlNodePtr message       = (xmlNodePtr)data;
+	xmlNodePtr message       = (xmlNodePtr)msg_data->data;
 	xmlNodePtr message_copy  = NULL;
 	xmlNodePtr opts          = NULL;
 	const char *true_op      = NULL;
 
-	if(data != NULL) {
-		crm_xml_devel(data, "[TE input]");
+	if(message != NULL) {
+		crm_xml_devel(message, "[TE input]");
 
 		message_copy = copy_xml_node_recursive(message);
 		opts  = find_xml_node(message_copy, XML_TAG_OPTIONS);
@@ -175,15 +175,15 @@ do_te_invoke(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
-	     void *data)
+	     fsa_data_t *msg_data)
 {
 	xmlNodePtr graph = NULL;
-	xmlNodePtr msg = (xmlNodePtr)data;
+	xmlNodePtr msg = (xmlNodePtr)msg_data->data;
 	
 
 	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
 		crm_info("Waiting for the TE to connect");
-		if(data != NULL) {
+		if(msg != NULL) {
 			free_xml(te_last_input);
 			te_last_input = copy_xml_node_recursive(msg);
 		}
@@ -213,7 +213,7 @@ do_te_invoke(long long action,
 	}
 
 	/* only free it if it was a local copy */
-	if(data == NULL) {
+	if(msg == NULL) {
 		free_xml(msg);
 	}
 	

@@ -56,7 +56,7 @@ do_pe_control(long long action,
 	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input current_input,
-	      void *data)
+	      fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input result = I_NULL;
 	struct crm_subsystem_s *this_subsys = pe_subsystem;
@@ -115,7 +115,7 @@ do_pe_invoke(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
-	     void *data)
+	     fsa_data_t *msg_data)
 {
 	xmlNodePtr local_cib = NULL;
 

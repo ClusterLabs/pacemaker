@@ -34,7 +34,7 @@ do_log(long long action,
        enum crmd_fsa_cause cause,
        enum crmd_fsa_state cur_state,
        enum crmd_fsa_input current_input,
-       void *data)
+       fsa_data_t *msg_data)
 {
 	int log_type = LOG_DEBUG;
 

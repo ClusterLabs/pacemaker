@@ -41,9 +41,9 @@ do_cl_join_announce(long long action,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input current_input,
-	    void *data)
+	    fsa_data_t *msg_data)
 {
-	xmlNodePtr msg = (xmlNodePtr)data;
+	xmlNodePtr msg = (xmlNodePtr)msg_data->data;
 	
 	/* Once we hear from the DC, we can stop the timer
 	 *
@@ -116,10 +116,10 @@ do_cl_join_request(long long action,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input current_input,
-	    void *data)
+	    fsa_data_t *msg_data)
 {
 	xmlNodePtr tmp1;
-	xmlNodePtr welcome = (xmlNodePtr)data;
+	xmlNodePtr welcome = (xmlNodePtr)msg_data->data;
 	const char *welcome_from = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 	
 #if 0
@@ -155,10 +155,10 @@ do_cl_join_result(long long action,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input current_input,
-	    void *data)
+	    fsa_data_t *msg_data)
 {
 	gboolean   was_nack      = TRUE;
-	xmlNodePtr welcome       = (xmlNodePtr)data;
+	xmlNodePtr welcome       = (xmlNodePtr)msg_data->data;
 	xmlNodePtr tmp1          = find_xml_node(welcome, XML_TAG_OPTIONS);
 	const char *ack_nack     = xmlGetProp(tmp1, CRM_OP_JOINACK);
 	const char *welcome_from = xmlGetProp(welcome, XML_ATTR_HOSTFROM);

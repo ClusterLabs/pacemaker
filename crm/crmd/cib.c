@@ -55,7 +55,7 @@ do_cib_control(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input current_input,
-	       void *data)
+	       fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input result = I_NULL;
 	struct crm_subsystem_s *this_subsys = cib_subsystem;
@@ -91,7 +91,7 @@ do_cib_invoke(long long action,
 	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input current_input,
-	      void *data)
+	      fsa_data_t *msg_data)
 {
 	xmlNodePtr cib_msg = NULL;
 	xmlNodePtr answer = NULL;
@@ -99,8 +99,8 @@ do_cib_invoke(long long action,
 	const char *section = NULL;
 	enum crmd_fsa_input result = I_NULL;
 
-	if(data != NULL) {
-		cib_msg = (xmlNodePtr)data;
+	if(msg_data->data != NULL) {
+		cib_msg = (xmlNodePtr)msg_data->data;
 	}
 	
 	
@@ -249,7 +249,7 @@ invoke_local_cib(xmlNodePtr msg_options,
 {
 	enum crmd_fsa_input result = I_NULL;
 	xmlNodePtr request = NULL;
-	
+	fsa_data_t *fsa_data = NULL;
 
 	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
 				   XML_ATTR_OP, operation, TRUE);
@@ -262,12 +262,16 @@ invoke_local_cib(xmlNodePtr msg_options,
 				 NULL,
 				 NULL);
 
-	result = do_cib_invoke(A_CIB_INVOKE_LOCAL,
-			       C_UNKNOWN,
-			       fsa_state,
-			       I_CIB_OP,
-			       request);
+	crm_malloc(fsa_data, sizeof(fsa_data_t));
+	fsa_data->fsa_input = I_CIB_UPDATE;
+	fsa_data->fsa_cause = C_IPC_MESSAGE;
+	fsa_data->data = request;
 
+	result = do_cib_invoke(
+		A_CIB_INVOKE_LOCAL, C_UNKNOWN, fsa_state,
+		I_CIB_OP, fsa_data);
+
+	crm_free(fsa_data);
 	free_xml(request);
 	
 	return result;

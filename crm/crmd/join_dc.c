@@ -45,7 +45,7 @@ do_dc_join_offer_all(long long action,
 		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
-		    void *data)
+		    fsa_data_t *msg_data)
 {
 	/* reset everyones status back to down or in_ccm in the CIB */
 	xmlNodePtr update     = NULL;
@@ -118,19 +118,19 @@ do_dc_join_offer_one(long long action,
 		enum crmd_fsa_cause cause,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input current_input,
-		void *data)
+		fsa_data_t *msg_data)
 {
 	xmlNodePtr update = NULL;
 	xmlNodePtr welcome = NULL;
 	const char *join_to = NULL;
 
-	if(data == NULL) {
+	if(msg_data->data == NULL) {
 		crm_err("Attempt to send welcome message "
 			 "without a message to reply to!");
 		return I_NULL;
 	}
 
-	welcome = (xmlNodePtr)data;
+	welcome = (xmlNodePtr)msg_data->data;
 	
 	join_to = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 	if(join_to != NULL) {
@@ -161,10 +161,10 @@ do_dc_join_req(long long action,
 		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
-		    void *data)
+		    fsa_data_t *msg_data)
 {
 	xmlNodePtr generation;
-	xmlNodePtr join_ack = (xmlNodePtr)data;
+	xmlNodePtr join_ack = (xmlNodePtr)msg_data->data;
 	const char *ack_nack = CRMD_JOINSTATE_MEMBER;
 
 	gboolean is_a_member  = FALSE;
@@ -238,7 +238,7 @@ do_dc_join_finalize(long long action,
 		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
-		    void *data)
+		    fsa_data_t *msg_data)
 {
 	if(! is_set(fsa_input_register, R_HAVE_CIB)) {
 		if(is_set(fsa_input_register, R_CIB_ASKED)) {
@@ -283,11 +283,11 @@ do_dc_join_ack(long long action,
 		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
-		    void *data)
+		    fsa_data_t *msg_data)
 {
 	/* now update them to "member" */
 	xmlNodePtr tmp1 = NULL, update = NULL;
-	xmlNodePtr join_ack = (xmlNodePtr)data;
+	xmlNodePtr join_ack = (xmlNodePtr)msg_data->data;
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
 
 	const char *join_state = NULL;

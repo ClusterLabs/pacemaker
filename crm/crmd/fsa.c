@@ -43,7 +43,7 @@ do_state_transition(long long actions,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_state next_state,
 		    enum crmd_fsa_input current_input,
-		    void *data);
+		    fsa_data_t *msg_data);
 
 long long clear_flags(long long actions,
 			     enum crmd_fsa_cause cause,
@@ -61,7 +61,7 @@ void dump_rsc_info(void);
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
 	crm_verbose("Performing action %s", fsa_action2string(x));	\
-	next_input = y(x, cause, cur_state, last_input, data);		\
+	next_input = y(x, cause, cur_state, last_input, fsa_data);	\
 	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
 		fprintf(dot_strm,					\
 			"\t// %s:\t%s\t(data? %p)\t(result=%s)\n",	\
@@ -79,7 +79,7 @@ void dump_rsc_info(void);
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
 	crm_verbose("Performing action %s", fsa_action2string(x));	\
-	next_input = y(x, cause, cur_state, last_input, data);		\
+	next_input = y(x, cause, cur_state, last_input, fsa_data);	\
 	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
 		fprintf(dot_strm,					\
 			"\t// %s:\t%s\t(data? %p)\t(result=%s)\n",	\
@@ -99,7 +99,7 @@ void dump_rsc_info(void);
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
 	crm_verbose("Performing action %s", fsa_action2string(x));	\
-	next_input = y(x, cause, cur_state, last_input, data);		\
+	next_input = y(x, cause, cur_state, last_input, fsa_data);	\
 	crm_verbose("Result of action %s was %s",			\
 		fsa_action2string(x), fsa_input2string(next_input));	\
      }
@@ -108,7 +108,7 @@ void dump_rsc_info(void);
      if(is_set(actions,x)) {						\
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
-	next_input = y(x, cause, cur_state, last_input, data);		\
+	next_input = y(x, cause, cur_state, last_input, fsa_data);	\
      }
 # endif
 #endif
@@ -150,7 +150,6 @@ const char *dot_intro = "digraph \"g\" {\n"
 "	 ]\n"
 "\n"
 "// DC only nodes\n"
-"	\"S_RECOVERY_DC\" [ fontcolor = \"green\" ]\n"
 "	\"S_INTEGRATION\" [ fontcolor = \"green\" ]\n"
 "	\"S_POLICY_ENGINE\" [ fontcolor = \"green\" ]\n"
 "	\"S_TRANSITION_ENGINE\" [ fontcolor = \"green\" ]\n"
@@ -160,21 +159,22 @@ const char *dot_intro = "digraph \"g\" {\n"
 
 static FILE *dot_strm = NULL;
 
-enum crmd_fsa_state fsa_state;
+volatile enum crmd_fsa_state fsa_state;
 oc_node_list_t *fsa_membership_copy;
 ll_cluster_t   *fsa_cluster_conn;
 ll_lrm_t       *fsa_lrm_conn;
-long long       fsa_input_register;
-long long       fsa_actions = A_NOTHING;
+volatile long long       fsa_input_register;
+volatile long long       fsa_actions = A_NOTHING;
 const char     *fsa_our_uname;
 char	       *fsa_our_dc;
 
 fsa_timer_t *election_trigger = NULL;		/*  */
 fsa_timer_t *election_timeout = NULL;		/*  */
-fsa_timer_t *shutdown_escalation_timmer = NULL; /*  */
+fsa_timer_t *shutdown_escalation_timer = NULL; /*  */
 fsa_timer_t *integration_timer = NULL;
 fsa_timer_t *finalization_timer = NULL;
 fsa_timer_t *dc_heartbeat = NULL;
+fsa_timer_t *wait_timer = NULL;
 
 int fsa_join_reannouce = 0;
 
@@ -183,6 +183,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	   enum crmd_fsa_input initial_input,
 	   void *data)
 {
+	fsa_data_t *fsa_data = NULL;
 	long long actions = fsa_actions;
 	long long new_actions = A_NOTHING;
 	long long last_action = A_NOTHING;
@@ -219,6 +220,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 
 	fflush(dot_strm);
 #endif
+
+	crm_malloc(fsa_data, sizeof(fsa_data_t));
+	fsa_data->fsa_input = initial_input;
+	fsa_data->fsa_cause = cause;
+	fsa_data->data = data;
+
 	/*
 	 * Process actions in order of priority but do only one
 	 * action at a time to avoid complicating the ordering.
@@ -283,9 +290,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 * Allows actions to be added or removed when entering a state
 		 */
 		if(last_state != cur_state){
-			actions = do_state_transition(actions, cause,
-						      last_state, cur_state,
-						      last_input, data);
+			actions = do_state_transition(
+				actions, cause, last_state, cur_state,
+				last_input, data);
 		}
 
 		/* this is always run, some inputs/states may make various
@@ -317,13 +324,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		else IF_FSA_ACTION(A_CCM_CONNECT,	do_ccm_control)
 		else IF_FSA_ACTION(A_TE_START,		do_te_control)
 		else IF_FSA_ACTION(A_PE_START,		do_pe_control)
+		else IF_FSA_ACTION(A_STARTED,		do_started)
 		
 		/* sub-system restart
 		 */
 		else IF_FSA_ACTION(O_CIB_RESTART,	do_cib_control)
 		else IF_FSA_ACTION(O_PE_RESTART,	do_pe_control)
 		else IF_FSA_ACTION(O_TE_RESTART,	do_te_control)
-		else IF_FSA_ACTION(A_STARTED,		do_started)
 		
 		/* DC Timer */
 		else IF_FSA_ACTION(O_DC_TIMER_RESTART,	do_dc_timer_control)
@@ -412,7 +419,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		
 		else if((actions & A_MSG_PROCESS) != 0
 			|| is_message()) {
-			xmlNodePtr stored_msg = NULL;
+			fsa_data_t *stored_msg = NULL;
 			crm_verbose("Checking messages... %d",
 				  g_list_length(fsa_message_queue));
 			
@@ -433,7 +440,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			 * type of the data (and therefore the correct way
 			 * to free it).  A wrapper is probably required.
 			 */
-			data = stored_msg;
+			fsa_data = stored_msg;
 
 #ifdef DOT_FSA_ACTIONS
 			fprintf(dot_strm,
@@ -450,10 +457,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 #endif
 
 /*#ifdef FSA_TRACE*/
-			crm_xml_devel(stored_msg,"FSA processing message");
+			crm_xml_devel(stored_msg->data,"FSA processing message");
 /*#endif*/
 
-			next_input = handle_message(stored_msg);
+			next_input = handle_message(stored_msg->data);
 
 #ifdef DOT_FSA_ACTIONS
 			fprintf(dot_strm, "\t(result=%s)\n",
@@ -516,7 +523,7 @@ do_state_transition(long long actions,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_state next_state,
 		    enum crmd_fsa_input current_input,
-		    void *data)
+		    fsa_data_t *msg_data)
 {
 	gboolean clear_recovery_bit = TRUE;
 	long long tmp = actions;

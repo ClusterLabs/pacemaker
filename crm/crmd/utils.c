@@ -621,23 +621,17 @@ create_node_state(const char *uuid,
 	set_uuid(node_state, XML_ATTR_UUID, uname);
 	set_xml_property_copy(node_state, XML_ATTR_UNAME, uname);
 
-	if(ccm_state != NULL) {
-		set_xml_property_copy(
-			node_state, XML_CIB_ATTR_INCCM, ccm_state);
-	}
+	set_xml_property_copy(
+		node_state, XML_CIB_ATTR_INCCM, ccm_state);
 
-	if(crmd_state != NULL) {
-		set_xml_property_copy(
-			node_state, XML_CIB_ATTR_CRMDSTATE, crmd_state);
-	}
+	set_xml_property_copy(
+		node_state, XML_CIB_ATTR_CRMDSTATE, crmd_state);
 
-	if(join_state != NULL) {
-		set_xml_property_copy(
-			node_state, XML_CIB_ATTR_JOINSTATE, join_state);
-
-		set_xml_property_copy(
-			node_state, XML_CIB_ATTR_EXPSTATE, join_state);
-	}
+	set_xml_property_copy(
+		node_state, XML_CIB_ATTR_JOINSTATE, join_state);
+	
+	set_xml_property_copy(
+		node_state, XML_CIB_ATTR_EXPSTATE, join_state);
 
 	crm_xml_devel(node_state, "created");
 

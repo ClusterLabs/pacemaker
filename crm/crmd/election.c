@@ -37,7 +37,7 @@ do_election_vote(long long action,
 		 enum crmd_fsa_cause cause,
 		 enum crmd_fsa_state cur_state,
 		 enum crmd_fsa_input current_input,
-		 void *data)
+		 fsa_data_t *msg_data)
 {
 	gboolean not_voting = FALSE;
 	xmlNodePtr msg_options = NULL;
@@ -92,6 +92,7 @@ do_dc_heartbeat(gpointer data)
 	if(was_sent == FALSE) {
 		/* this is bad */
 		stopTimer(timer); /* dont make it go off again */
+
 		s_crmd_fsa(C_HEARTBEAT_FAILED, I_SHUTDOWN, NULL);
 	}
 	
@@ -110,10 +111,10 @@ do_election_count_vote(long long action,
 		       enum crmd_fsa_cause cause,
 		       enum crmd_fsa_state cur_state,
 		       enum crmd_fsa_input current_input,
-		       void *data)
+		       fsa_data_t *msg_data)
 {
 	gboolean we_loose = FALSE;
-	xmlNodePtr vote = (xmlNodePtr)data;
+	xmlNodePtr vote = (xmlNodePtr)msg_data->data;
 	enum crmd_fsa_input election_result = I_NULL;
 	const char *vote_from    = xmlGetProp(vote, XML_ATTR_HOSTFROM);
 	const char *your_version = get_xml_attr(
@@ -126,10 +127,17 @@ do_election_count_vote(long long action,
 		return election_result;
 	}
 
-	if(fsa_membership_copy->members_size < 1) {
-		/* if even we are not in the cluster then we should not vote */
+	if(fsa_membership_copy == NULL) {
+		/* if the membership copy is NULL we REALLY shouldnt be voting
+		 * the question is how we managed to get here.
+		 */
+		crm_err("Membership copy was NULL");
 		return I_FAIL;
 		
+	} else if(fsa_membership_copy->members_size < 1) {
+		
+		/* if even we are not in the cluster then we should not vote */
+		return I_FAIL;
 	}
 
 	our_node = (oc_node_t*)
@@ -138,16 +146,6 @@ do_election_count_vote(long long action,
 	your_node = (oc_node_t*)
 		g_hash_table_lookup(fsa_membership_copy->members, vote_from);
 
-#if 0
-	crm_debug("%s (bornon=%d), our bornon (%d)",
-		   vote_from, our_node->born, my_born);
-
-	crm_debug("%s %s %s",
-	       fsa_our_uname,
-	       strcmp(fsa_our_uname, vote_from) < 0?"<":">=",
-	       vote_from);
-#endif
-	
 	if(is_set(fsa_input_register, R_SHUTDOWN)) {
 		crm_debug("Election fail: we are shutting down");
 		we_loose = TRUE;
@@ -207,7 +205,7 @@ do_election_timer_ctrl(long long action,
 		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
-		    void *data)
+		    fsa_data_t *msg_data)
 {
 	
 
@@ -239,7 +237,7 @@ do_dc_timer_control(long long action,
 		   enum crmd_fsa_cause cause,
 		   enum crmd_fsa_state cur_state,
 		   enum crmd_fsa_input current_input,
-		   void *data)
+		   fsa_data_t *msg_data)
 {
 	gboolean timer_op_ok = TRUE;
 	
@@ -263,7 +261,7 @@ do_dc_takeover(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input current_input,
-	       void *data)
+	       fsa_data_t *msg_data)
 {
 	crm_trace("################## Taking over the DC ##################");
 	set_bit_inplace(fsa_input_register, R_THE_DC);
@@ -272,7 +270,11 @@ do_dc_takeover(long long action,
 
 	crm_free(fsa_our_dc);
 	fsa_our_dc = crm_strdup(fsa_our_uname);
-	
+
+	/* Async get client status information in the cluster */
+	fsa_cluster_conn->llc_ops->client_status(
+		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
+
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(fsa_input_register, R_INVOKE_PE);
 	
@@ -280,17 +282,6 @@ do_dc_takeover(long long action,
 	clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 
 	startTimer(dc_heartbeat);
-
-	if (HA_OK != fsa_cluster_conn->llc_ops->set_cstatus_callback(
-		    fsa_cluster_conn, crmd_client_status_callback, NULL)) {
-		crm_err("Cannot set client status callback\n");
-		crm_err("REASON: %s\n",
-		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
-	}
-
-	/* Async get client status information in the cluster */
-	fsa_cluster_conn->llc_ops->client_status(
-		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 	
 	return I_NULL;
 }
@@ -301,7 +292,7 @@ do_dc_release(long long action,
 	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input current_input,
-	      void *data)
+	      fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input result = I_NULL;
 	

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.3 2004/09/20 14:30:20 andrew Exp $ */
+/* $Id: main.c,v 1.4 2004/10/05 20:59:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -148,8 +148,10 @@ init_start(void)
     enum crmd_fsa_state state;
 
     fsa_state = S_PENDING;
+    fsa_input_register = 0; /* zero out the regester */
+	
     state = s_crmd_fsa(C_STARTUP, I_STARTUP, NULL);
-
+    
     if (state == S_PENDING) {
 	    /* Create the mainloop and run it... */
 	    crmd_mainloop = g_main_new(FALSE);

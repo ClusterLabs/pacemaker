@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.22 2004/10/01 13:28:17 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.23 2004/10/05 20:59:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -435,6 +435,9 @@ enum crmd_fsa_input {
 #define	R_CIB_DONE	0x00010000 /* Have we calculated the CIB? */
 #define R_HAVE_CIB	0x00020000 /* Do we have an up-to-date CIB */
 #define R_CIB_ASKED	0x00040000 /* Have we asked for an up-to-date CIB */
+
+#define R_CCM_DATA	0x00100000 /* Have we got CCM data yet */
+#define R_PEER_DATA	0x00200000 /* Have we got CCM data yet */
 
 enum crmd_fsa_cause
 {

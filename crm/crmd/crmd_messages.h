@@ -24,8 +24,8 @@
 #include <crmd_fsa.h>
 #include <libxml/tree.h>
 
-GListPtr put_message(xmlNodePtr new_message);
-xmlNodePtr get_message(void);
+GListPtr put_message(fsa_data_t *new_message);
+fsa_data_t *get_message(void);
 gboolean is_message(void);
 
 extern gboolean relay_message(xmlNodePtr xml_relay_message,
