@@ -17,53 +17,22 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include \
-				-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl 	\
-				-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
-				-I$(top_builddir) -I$(top_srcdir)
-
 hadir			= $(sysconfdir)/ha.d
 halibdir		= $(libdir)/@HB_PKG@
 commmoddir		= $(halibdir)/modules/comm
 havarlibdir		= $(localstatedir)/lib/@HB_PKG@
 PIDFILE			= $(localstatedir)/run/crmd.pid
-XML_FLAGS		= `xml2-config --cflags`
-XML_LIBS		= `xml2-config --libs`
 
-# fifos with path
+# sockets with path
 crmdir			= $(havarlibdir)/crm
 
-COMMONLIBS		= $(CRM_DEBUG_LIBS) 								\
-				$(top_builddir)/lib/clplumbing/libplumb.la			\
-				$(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la	\
-				$(top_builddir)/lib/apphb/libapphb.la				\
-				$(top_builddir)/heartbeat/libhbclient.la  			\
-				$(GLIBLIB)											\
-				$(LIBRT)
-
-LIBRT 			= @LIBRT@
-AM_CFLAGS		= @CFLAGS@											\
-				-DPIDFILE='"$(PIDFILE)"' 							\
-				$(CRM_DEBUG_FLAGS)
-
-## libraries
-lib_LTLIBRARIES		= 
-
-
-## binary progs
-halib_PROGRAMS		= pengine
-
+## Perl scripts
+halib_SCRIPTS		=	pengine
 
 ## SOURCES
 
 #noinst_HEADERS		= config.h control.h crmd.h
 noinst_HEADERS		= 
-
-pengine_SOURCES		= penginemain.c
-pengine_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-pengine_LDFLAGS		= $(XML_LIBS)
-pengine_LDADD		= $(COMMONLIBS)
-
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

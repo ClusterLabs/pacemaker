@@ -1,0 +1,212 @@
+#! /usr/bin/perl -Tw
+my($VERSION)=(qw$Id: pengine,v 1.1 2004/03/16 12:12:29 lars Exp $)[2];
+#
+# Copyright (C) 2004 Lars Marowsky-Brée
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+
+=head1 Policy Engine
+
+This does wonders, and stuff.
+
+Because it's wonderful, error handling ain't done yet.
+
+=cut
+
+use strict;
+use warnings;
+use heartbeat::clplumbing::ipc;
+use heartbeat::clplumbing::log;
+use Getopt::Std;
+use XML::Simple qw(:strict);
+use POSIX qw(setsid);
+use vars qw(	$ch
+		$CRM_SOCKET
+		$DEBUG
+		%opts
+	);
+
+$CRM_SOCKET = "/var/lib/heartbeat/crm";
+$DEBUG = 1;
+
+#######################################################################
+
+cl_log_set_entity("pengine");
+
+getopts("dhvskr", \%opts);
+
+if (defined($opts{'v'})) {
+	print "Policy Engine $VERSION\n";
+	exit 0;
+}
+
+if (defined($opts{'d'})) {
+	cl_log_enable_stderr(1);
+	$DEBUG = 1;
+} else {
+	&daemonize();
+}
+
+cl_log('notice', "Policy Engine $VERSION starting...");
+
+if ($DEBUG) {
+	# In debug mode, we'll only pretend to connect.
+	cl_log('warn', "Magic not yet implemented, no cookie!");
+}
+
+# First, connect to daddy. Yes, this sets global vars in a sub function,
+# but it's documented, and there can only be one connection to the CRM
+# at any given time!
+
+&signin();
+
+my $iter = 0;
+while ( ($DEBUG == 0) && $ch->isrconn() && $ch->iswconn()) {
+	$ch->waitin();
+	if ($ch->ch_status == $IPC_DISCONNECT) {
+		cl_log('info', "Connection with crmd lost");
+		exit(2);
+	}
+	
+	if ($ch->is_message_pending()) {
+		my $msg = &crm_recv_msg();
+		cl_log("info", "Woah, we received message number $iter");
+		$iter++;
+	}
+}
+
+exit 0;
+
+#######################################################################
+sub signin {
+	my $rc = 0;
+	
+	cl_log('notice', "Connecting to crmd...");
+
+	my $ch = heartbeat::clplumbing::ipc::channel->new($CRM_SOCKET);
+
+	if ($rc = $ch->initiate_connection != $IPC_OK) {
+		cl_log('err', "Connection to crmd failed with $rc");
+		exit(1);
+	}
+
+	cl_log('notice', "Connection to crmd established, signing in");
+	
+	&send_crm_msg( { 'hello' =>
+			{ 'client_uuid' => '01234567890abcdef0123456789abcdef',
+			  'client_name' => 'pengine',
+			  'major_version' => '1',
+			  'minor_version' => '0',
+			}
+		      } );
+}
+
+
+sub send_crm_msg {
+	my ($ref) = @_;
+	my $xml = XMLout($ref, 
+			ContentKey => '-content',
+			KeepRoot => 1,
+			NoAttr => 1,
+			KeyAttr => { });
+	cl_log('debug', "XML dump: ".$xml) if $DEBUG; 
+	
+	my $msg = heartbeat::clplumbing::ipc::message->new($ch, $xml);
+
+	my $rc = $ch->send($msg);
+}
+
+sub crm_recv_msg {
+	cl_log('debug', "Trying to receive message from crmd") if $DEBUG;
+	
+	my ($rc, $msg) = $ch->recv();
+	
+	if ($rc != $IPC_OK) {
+		cl_log('err', "Error receiving message from crmd: $rc");
+		exit(1);
+	}
+	
+	cl_log('debug', "XML message received: ".$msg->body());
+	
+	my $ref = XMLin($msg->body(), 
+			ContentKey => '-content',
+			KeepRoot => 1,
+			NoAttr => 1,
+			ForceArray => 1,
+			KeyAttr => { });
+	
+	return $ref;
+}
+
+sub daemonize {
+	my $pid = fork();
+	if ($pid < 0) {
+		cl_log('err', "fork failed!");
+		exit(1);
+	} elsif ($pid > 0) {
+		exit(0);
+	} else {
+		# Rejoice.
+	}
+	
+	if (POSIX::setsid() < 0) {
+		cl_log("err", "setsid() failed");
+		exit(1);
+	}
+
+	if (chdir("/") < 0 ) {
+		cl_log("err", "chdir failed");
+		exit(1);
+	}
+	
+	cl_log_enable_stderr(0);
+	close(STDIN);
+	close(STDOUT);
+	close(STDERR);
+
+	if (open(STDIN, "</dev/null") < 0 
+		|| open(STDOUT, ">>/dev/console") < 0
+		|| open(STDERR, ">>/dev/console") < 0) {
+		cl_log("err", "Re-opening file handles failed!");
+		exit(1);
+	}
+}
+
+=head1 AUTHOR
+
+Lars Marowsky-Bree, E<lt>lmb@suse.deE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2004 by Lars Marowsky-Bree
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+=cut
+
+
