@@ -382,7 +382,6 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 {
 	xmlNodePtr tmp1 = NULL;
 	xmlNodePtr tmp2 = NULL;
-	xmlNodePtr cib_copy    = NULL;
 	xmlNodePtr options     = NULL;
 
 	const char *join_to = NULL;
@@ -451,12 +450,6 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 			options, CRM_OP_JOINACK, XML_BOOLEAN_FALSE);
 	}
 
-	/* send the CIB to the node */
-	cib_copy = get_cib_copy(fsa_cib_conn);
-	send_request(NULL, cib_copy, CRM_OP_CIB_REPLACE,
-		     join_to, CRM_SYSTEM_CRMD, NULL);	
-	free_xml(cib_copy);
-	
 	/* send the ack/nack to the node */
 	send_request(options, NULL, CRM_OP_JOINACK,
 		     join_to, CRM_SYSTEM_CRMD, NULL);	
