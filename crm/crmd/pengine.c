@@ -77,11 +77,16 @@ do_pe_control(long long action,
 			      && CL_PID_EXISTS(this_subsys->pid)) {
 
 				sleep(1);
-				waitpid(this_subsys->pid, &pid_status, WNOHANG);
+
+				if(waitpid(this_subsys->pid,
+					   &pid_status, WNOHANG) > 0) {
+					this_subsys->pid = -1;
+					break;
+				}
 			}
 			
-			if(CL_PID_EXISTS(this_subsys->pid)) {
-				crm_err("Process %s is still active with pid=%d",
+			if(this_subsys->pid != -1) {
+				crm_err("Proc %s is still active with pid=%d",
 				       this_subsys->command, this_subsys->pid);
 				result = I_FAIL;
 			} 
@@ -140,7 +145,3 @@ do_pe_invoke(long long action,
 
 	return I_NULL;
 }
-
-
-
-
