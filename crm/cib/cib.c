@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.27 2004/04/01 15:42:17 andrew Exp $ */
+/* $Id: cib.c,v 1.28 2004/04/01 15:45:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -152,7 +152,7 @@ process_cib_request(const char *op,
 {
 	enum cib_result result = CIBRES_OK;
 
-	return cib_process_request(op, fragment, options, &result);
+	return cib_process_request(op, options, fragment, &result);
 }
 
 
