@@ -52,10 +52,6 @@ do_cmd make_constraint $test_node_1 rsc2 can
 do_cmd wait_for_state S_IDLE 30 $test_node_1 
 cts_assert "S_IDLE not reached on $test_node_1 after CIB create"
 
-# wait for the last TE action to complete - temporary hack
-# seems VERY long, check into where the time is
-sleep 20
-
 do_cmd is_running rsc1 $test_node_1
 cts_assert "rsc1 NOT running"
 
