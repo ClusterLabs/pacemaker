@@ -143,6 +143,7 @@ class CtsLab(UserDict):
 	CMclass		The type of ClusterManager we are running
 			(This is a class object, not a class instance)
         RandSeed	Random seed.  It is a triple of bytes. (optional)
+        HAdir		Base directory for HA installation
 
     The CTS code ignores names it doesn't know about/need.
     The individual tests have access to this information, and it is
@@ -153,7 +154,7 @@ class CtsLab(UserDict):
     def __init__(self, nodes):
         self.data = {}
         self["nodes"] = nodes
-        self.MinimalKeys=["nodes", "reset", "logger", "CMclass"]
+        self.MinimalKeys=["nodes", "reset", "logger", "CMclass", "HAdir"]
 
     def HasMinimalKeys(self):
         'Return TRUE if our object has the minimal set of keys/values in it'
@@ -170,6 +171,10 @@ class CtsLab(UserDict):
             self["reset"] = Stonith()
         if not self.has_key("CMclass"):
             self["CMclass"] = HeartbeatCM
+        if not self.has_key("HAdir"):
+            self["HAdir"] = "@sysconfdir@/ha.d"
+        if not self.has_key("LogFileName"):
+            self["LogFileName"] = "/var/log/ha-log"
 
         #
         #  Now set up our random number generator...
@@ -282,6 +287,8 @@ if __name__ == '__main__':
     from CTS import Scenario, InitClusterManager, PingFest
 
     Environment = CtsLab(["sgi1", "sgi2"])
+    #Environment["HAdir"] = "@sysconfdir@/ha.d"
+    #Environment["LogFileName"] = "/var/log/halog-local7"
     #Environment["RandSeed"] = (156, 104, 218)
     Environment["DoStonith"] = 1
     Environment["DoStandby"] = 1

@@ -725,6 +725,9 @@ class Fastdetection(CTSTest):
 ##############################################################################
 class BandwidthTest(CTSTest):
 ##############################################################################
+#	Tests should not be cluster-manager-specific
+#	If you need to find out cluster manager configuration to do this, then
+#	it should be added to the generic cluster manager API.
     '''Test the bandwidth which heartbeat uses'''
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
@@ -817,6 +820,11 @@ class BandwidthTest(CTSTest):
 class RedundantpathTest(CTSTest):
 ##########################################################################
     '''In heartbeat, it has redundant path to communicate between the cluster'''
+#
+#	Tests should not be cluster-manager specific
+#	One needs to isolate what you need from the cluster manager and then
+#	add a (new) API to do it.
+#
     def __init__(self,cm,timeout=60):
         CTSTest.__init__(self,cm)
         self.name = "RedundantpathTest"
@@ -877,7 +885,7 @@ class RedundantpathTest(CTSTest):
                 for serial in serials:
                     num = num+1
 
-        (num, eths, serial) = PathCount()
+        (num, eths, serial) = self.PathCount()
         if num <= 1:
             return self.failure("There is only one path between the two nodes, please reconfigure.")
 
@@ -916,7 +924,7 @@ class RedundantpathTest(CTSTest):
         '''It is always applicable'''
         return self.PathCount()[0] > 1
 
-AllTestClasses.append(RedundantpathTest)
+#AllTestClasses.append(RedundantpathTest)
 
 ##########################################################################
 class DRBDTest(CTSTest):
@@ -1033,6 +1041,11 @@ class Split_brainTest(CTSTest):
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 return self.skipped()
 
+	#
+	#	Tests should not be cluster-manager-specific
+	#	Really need to add an isolate_node() member function to
+	#	the generic cluster manager API.
+	#
         cf = HBConfig()
         
         IPaddr = None

@@ -44,7 +44,7 @@ class HeartbeatCM(ClusterManager):
     def __init__(self, Environment, randseed=None):
 
         self.ResourceDirs = ["@sysconfdir@/ha.d/resource.d", "@sysconfdir@/rc.d/init.d", "@sysconfdir@/rc.d/"]
-        self.ResourceFile = "@sysconfdir@/ha.d/haresources"
+        self.ResourceFile = Environment["HAdir"] + "/haresources"
         ClusterManager.__init__(self, Environment, randseed=randseed)
         self.update({
             "Name"	     : "heartbeat",
@@ -60,7 +60,7 @@ class HeartbeatCM(ClusterManager):
             "IPaddrCmd"      : "@sysconfdir@/ha.d/resource.d/IPaddr %s status",
             "Standby"	     : "@libdir@/heartbeat/hb_standby >/dev/null 2>&1",
             "TestConfigDir"  : "@sysconfdir@/ha.d/testconfigs",
-            "LogFileName"    : "/var/log/ha-log",
+            "LogFileName"    : Environment["LogFileName"],
 
             # Patterns to look for in the log files for various occasions...
             "Pat:We_started"       : "(%s).* Initial resource acquisition complete",
@@ -83,6 +83,8 @@ class HeartbeatCM(ClusterManager):
              	r"CRIT.*:",
             ),
         })
+        
+        self.cf=HBConfig(Environment["HAdir"])
         self._finalConditions()
 
     def SetClusterConfig(self, configpath="default", nodelist=None):
