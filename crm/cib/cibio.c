@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.21 2004/04/29 15:33:03 andrew Exp $ */
+/* $Id: cibio.c,v 1.22 2004/05/11 17:54:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -338,8 +338,6 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 	xmlDocPtr foo;
 	FNIN();
 
-	
-	
 	if (initializeCib(new_cib) == TRUE) {
 		int res = moveFile(filename, filename_bak, FALSE, NULL);
 	
@@ -363,7 +361,11 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 				xmlSetTreeDoc(new_cib,foo);
 			}
 
-	    
+			time_t now = time(NULL);
+			char *now_str = asctime(localtime(&now));
+			set_xml_property_copy(new_cib, "last_written",now_str);
+			free(now_str);
+			
 			/* save it.
 			 * set arg 3 to 0 to disable line breaks,1 to enable
 			 * res == num bytes saved

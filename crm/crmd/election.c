@@ -294,6 +294,28 @@ do_dc_takeover(long long action,
 	clear_bit_inplace(&fsa_input_register, R_HAVE_CIB);
 
 	startTimer(dc_heartbeat);
+
+	/* Update the CIB to indicate we are the DC
+	 *
+	 * Has the side benefit of setting our state to active
+	 * if we are the only node around
+	 */
+	xmlNodePtr tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
+
+	set_node_tstamp(tmp1);
+	set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
+	set_xml_property_copy(tmp1, "source",    fsa_our_uname);
+	set_xml_property_copy(tmp1, "state",     "active");
+	set_xml_property_copy(tmp1, "exp_state",     "active");
+	set_xml_property_copy(tmp1, "is_dc",     "true");
+
+	xmlNodePtr fragment = create_cib_fragment(tmp1, NULL);
+	
+	send_request(NULL, fragment, CRM_OPERATION_UPDATE,
+		     NULL, CRM_SYSTEM_DCIB);
+	
+	free_xml(fragment);
+	free_xml(tmp1);
 	
 	FNRET(I_NULL);
 }

@@ -491,7 +491,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 
 //		ELSEIF_FSA_ACTION(A_, do_)
 		
-		else if(is_message()) {
+		else if((actions & A_MSG_PROCESS) != 0
+			|| is_message()) {
 			xmlNodePtr stored_msg = NULL;
 			
 			fsa_message_queue_t msg = get_message();
@@ -505,7 +506,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 				       "Invalid stored message");
 				continue;
 			}
-			
+
+			/*
+			 * This is where we should clean up old messages
+			 * The problem is that we dont always know the
+			 * type of the data (and therefore the correct way
+			 * to free it).  A wrapper is probably required.
+			 */
 			data = msg->message;
 
 #ifdef DOT_FSA_ACTIONS
@@ -955,6 +962,9 @@ fsa_action2string(long long action)
 			break;
 		case A_TE_STOP:
 			actionAsText = "A_TE_STOP";
+			break;
+		case A_TE_COPYTO:
+			actionAsText = "A_TE_COPYTO";
 			break;
 		case A_PE_INVOKE:
 			actionAsText = "A_PE_INVOKE";

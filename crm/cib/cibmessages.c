@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.32 2004/04/29 15:33:03 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.33 2004/05/11 17:54:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -429,8 +429,7 @@ update_results(xmlNodePtr failed,
 		error_msg = cib_error2string(return_code);
 		operation_msg = cib_op2string(operation);
 
-		xml_node = create_xml_node(failed,
-						      XML_FAIL_TAG_CIB);
+		xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
 
 		was_error = TRUE;
 				

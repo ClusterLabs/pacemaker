@@ -705,7 +705,7 @@ unpack_nodes(xmlNodePtr xml_nodes, GSListPtr *nodes)
 			attrs = attrs->next;
 		}
 		
-		pdebug("Adding node id... %s (%p)", id, new_node);
+		pdebug_action(print_node("Added", new_node, FALSE));
 
 		*nodes = g_slist_append(*nodes, new_node);    
 	}
@@ -748,7 +748,7 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->rsc_cons = NULL; 
 		new_rsc->node_cons = NULL; 
 		new_rsc->id = cl_strdup(id);
-
+		new_rsc->cur_node = NULL;
 		
 		action_t *action_stop = action_new(action_id++, new_rsc,
 						    stop_rsc);
@@ -1785,6 +1785,8 @@ do_calculations(xmlNodePtr cib_object)
 
 	xmlNodePtr graph = NULL;
 
+//	pe_debug_on();
+	
 	pdebug("=#=#=#=#= Stage 0 =#=#=#=#=");
 		  
 	stage0(cib_object,

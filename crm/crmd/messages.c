@@ -66,8 +66,9 @@ put_message(xmlNodePtr new_message)
 		cl_malloc(sizeof(struct fsa_message_queue_s));
 
 	CRM_DEBUG("Adding msg to queue");
-	
-	next_message->message = new_message;
+
+	// make sure to free it properly later
+	next_message->message = copy_xml_node_recursive(new_message);
 	next_message->next = NULL;
 	
 	if(fsa_message_queue == NULL) {

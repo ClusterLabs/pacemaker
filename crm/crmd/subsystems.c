@@ -147,7 +147,9 @@ do_cib_invoke(long long action,
 	
 	if(action & A_CIB_INVOKE) {
 
-		const char *op = xmlGetProp(cib_msg, XML_ATTR_OP);
+		const char *op = get_xml_attr(cib_msg, XML_TAG_OPTIONS,
+					      XML_ATTR_OP, TRUE);
+
 		if(safe_str_eq(op, CRM_OPERATION_SHUTDOWN_REQ)){
 			// create update section
 			tmp2 =
@@ -872,7 +874,7 @@ do_lrm_invoke(long long action,
 	msg = (xmlNodePtr)data;
 		
 	operation = get_xml_attr_nested(msg, rsc_path, DIMOF(rsc_path) -3,
-					XML_ATTR_OP, TRUE);
+					"task", TRUE);
 	
 	id_from_cib = get_xml_attr_nested(msg, rsc_path, DIMOF(rsc_path) -2,
 					  "id", TRUE);
@@ -884,7 +886,7 @@ do_lrm_invoke(long long action,
 	
 		CRM_DEBUG("performing op %s...", operation);
 
-		xmlNodePtr iter = create_xml_node(iter, "lrm_resource");
+		xmlNodePtr iter = create_xml_node(NULL, "lrm_resource");
 	
 		set_xml_property_copy(iter, XML_ATTR_ID, id_from_cib);
 		set_xml_property_copy(iter, "last_op", operation);
