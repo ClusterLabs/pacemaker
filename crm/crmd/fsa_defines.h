@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.23 2004/10/05 20:59:09 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.24 2004/10/13 20:48:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -175,8 +175,8 @@ enum crmd_fsa_input {
 			 */
 /* 10 */
 	I_FAIL,		/* The action failed to complete successfully */
-	I_INTEGRATION_TIMEOUT, 
-	I_FINALIZATION_TIMEOUT, 
+	I_INTEGRATED, 
+	I_FINALIZED, 
 	I_NODE_JOIN,	/* A node has entered the cluster */
 	I_NOT_DC,	/* We are not and were not the DC before or after
 			 * the current operation or state
@@ -188,7 +188,7 @@ enum crmd_fsa_input {
 	I_RESTART,	/* The current set of actions needs to be
 			 * restarted
 			 */
-	I_REQUEST,	/* Some non-resource, non-ccm action is required
+	I_TE_SUCCESS,	/* Some non-resource, non-ccm action is required
 			 * of us, eg. ping
 			 */
 /* 20 */
@@ -198,7 +198,7 @@ enum crmd_fsa_input {
 	I_SHUTDOWN,	/* We are asking to shutdown */
 	I_TERMINATE,	/* We have been told to shutdown */
 	I_STARTUP,
-	I_SUCCESS,	/* The action completed successfully */
+	I_PE_SUCCESS,	/* The action completed successfully */
 
 	I_JOIN_OFFER,	/* The DC is offering membership */
 	I_JOIN_REQUEST,	/* The client is requesting membership */
@@ -454,6 +454,7 @@ enum crmd_fsa_cause
 	C_HEARTBEAT_FAILED,
 	C_SUBSYSTEM_CONNECT,
 	C_HA_DISCONNECT,
+	C_FSA_INTERNAL,
 	C_ILLEGAL
 };
 
