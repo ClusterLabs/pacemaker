@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.5 2004/04/29 15:24:31 andrew Exp $ */
+/* $Id: crm.h,v 1.6 2004/05/06 12:09:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <ha_config.h>
+#include <glib.h>
 
 /* Clean these up at some point, some probably should be runtime options */
 #define WORKING_DIR HA_VARLIBDIR"/heartbeat/crm"
@@ -39,13 +40,14 @@
 #define DOT_FSA_ACTIONS 1
 #define DOT_ALL_FSA_INPUTS 1
 //#define FSA_TRACE 1
+#define USE_FAKE_LRM 1
 
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_malloc.h>
 #include <string.h>
 
 #define safe_str_eq(x, y)  x!=NULL && y!=NULL && strcmp(x,y) == 0
-#define safe_str_neq(x, y) x!=NULL && y!=NULL && strcmp(x,y) != 0
+#define safe_str_neq(x, y) x != y && (x==NULL || y==NULL || strcmp(x,y) != 0)
 
 /* Developmental debug stuff */
 #if 1
@@ -95,7 +97,12 @@
 #define CRM_OPERATION_SHUTDOWN_REQ	"req_shutdown"
 
 
-#define CRM_XMLCOMPRESS_OFF 0
-#define CRM_XMLCOMPRESS_ON  9
+typedef GSList* GSListPtr;
+
+#define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
+				         x *w = (x*)g_slist_nth_data(y, z); \
+					 a;				    \
+				  }
+
 
 #endif

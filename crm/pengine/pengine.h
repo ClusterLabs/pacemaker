@@ -1,9 +1,6 @@
 #ifndef PENGINE__H
 #define PENGINE__H
 
-typedef GSList* GSListPtr;
-
-
 typedef struct node_s node_t;
 typedef struct color_s color_t;
 typedef struct rsc_to_node_s rsc_to_node_t;
@@ -194,11 +191,6 @@ extern gboolean stage8(GSListPtr action_sets, xmlNodePtr *graph);
 extern gboolean summary(GSListPtr resources);
 
 extern gboolean pe_input_dispatch(IPC_Channel *sender, void *user_data);
-
-#define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
-				         x *w = (x*)g_slist_nth_data(y, z); \
-					 a;				    \
-				  }
 
 extern gboolean pe_debug;
 extern gboolean pe_debug_saved;
