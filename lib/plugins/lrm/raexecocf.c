@@ -281,5 +281,6 @@ add_prefix_foreach(gpointer key, gpointer value, gpointer user_data)
 static gboolean
 let_remove_eachitem(gpointer key, gpointer value, gpointer user_data)
 {
+	g_free(key);
 	return TRUE;
 }
