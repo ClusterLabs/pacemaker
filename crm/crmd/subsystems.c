@@ -68,8 +68,7 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 	} else if(client_channel == NULL
 		  || client_channel->ops->get_chan_status(
 			  client_channel) != IPC_CONNECT) {
-		crm_err("Temporary error, dont log a bugzilla."
-			"  Client %s has already quit", the_subsystem->name);
+		crm_err("Client %s has already quit", the_subsystem->name);
 		
 	} else {
 		HA_Message *quit = create_request(
