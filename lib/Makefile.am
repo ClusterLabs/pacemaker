@@ -33,5 +33,5 @@ SUBDIRS			=  	\
 	clplumbing		\
 	apphb recoverymgr	\
 	plugins  checkpointd    \
-	@SWIG_DIR@
+	@EVENTD_DIR@ @SWIG_DIR@
 
