@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.10 2004/03/26 15:16:38 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.11 2004/03/27 09:33:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,6 +24,7 @@
 #include <clplumbing/ipc.h>
 #include <hb_api.h>
 #include <libxml/tree.h>
+#include <lrm/lrm_api.h>
 
 struct ccm_data 
 {

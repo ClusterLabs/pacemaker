@@ -67,6 +67,7 @@ crmd_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crmd_LDFLAGS	= $(XML_LIBS)
 crmd_LDADD	= $(COMMONLIBS) 					\
 		  $(top_builddir)/$(CRM_DIR)/cib/libcib.la		\
+		  $(top_builddir)/lib/lrm/liblrm.la		\
 		  $(top_builddir)/membership/ccm/libccmclient.la  
 
 #

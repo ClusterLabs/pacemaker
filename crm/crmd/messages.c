@@ -548,6 +548,11 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 		xml_message_debug(action, "Change the way we handle");
 		relay_message(process_cib_message(action, TRUE), TRUE);
 		
+	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_LRMD) == 0) {
+
+		do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE,
+			      fsa_state, I_MESSAGE, action);
+		
 	} else {
 		cl_log(LOG_ERR,
 		       "Unknown Sub-system (%s)... discarding message.",
@@ -863,5 +868,11 @@ handle_message(xmlNodePtr stored_msg)
 }
 
 
-void lrm_op_callback (lrm_op_t* op);
-void lrm_monitor_callback (lrm_mon_t* monitor);
+void lrm_op_callback (lrm_op_t* op)
+{
+}
+
+void lrm_monitor_callback (lrm_mon_t* monitor)
+{
+}
+

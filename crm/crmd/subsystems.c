@@ -142,7 +142,7 @@ do_cib_invoke(long long action,
 #if 0
 		if(interested in reply) {
 			put_message(answer);
-			FN_RET(I_REQUEST);
+			FNRET(I_REQUEST);
 		}
 		
 #endif
@@ -153,7 +153,7 @@ do_cib_invoke(long long action,
 	} else if(action & A_CIB_INVOKE_LOCAL) {
 		xmlNodePtr answer = process_cib_message(cib_msg, TRUE);
 		put_message(answer);
-		FN_RET(I_REQUEST);
+		FNRET(I_REQUEST);
 
 	} else if(action & A_CIB_BUMPGEN) {  
  		// check if the response was ok before next bit
@@ -541,7 +541,7 @@ do_lrm_register(long long action,
 
 	CRM_DEBUG("LRM: connect...");
 	fsa_lrm_connection = ll_lrm_new("lrm");	
-	if(NULL == lrm) {
+	if(NULL == fsa_lrm_connection) {
 		return I_FAIL;
 	}
 	
@@ -564,6 +564,12 @@ do_lrm_register(long long action,
 		return I_FAIL;
 	}
 
+#if 0
+	G_main_add_fd(G_PRIORITY_LOW, lrm_inputfd(fsa_lrm_connection), FALSE,
+		      lrm_dispatch, fsa_lrm_connection,
+		      default_ipc_input_destroy);
+#endif
+	
 	FNRET(I_NULL);
 }
 
@@ -580,61 +586,60 @@ do_lrm_invoke(long long action,
 	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n",
 	       fsa_action2string(action), action);
 
+
 #if 0
-	rsc_id_t rid;
-	puts("add_rsc...");
-	uuid_generate(rid);
-	lrm->lrm_ops->add_rsc(lrm, rid, "lsb", "lsb_initscript_sim.sh", NULL);
 
-	puts("get_rsc...");
-	lrm_rsc_t*	rsc = lrm->lrm_ops->get_rsc(lrm, rid);
-	printf_rsc(rsc);
 
+	if(startup query) {
+		xmlNodePtr data, msg;
+		
+		GList* resources = lrm_get_all_rscs (fsa_lrm_connection);
+		for(each resource){
+			xmlNodePtr xml_rep = dump_resource(resource);
+			
+		}
+
+		msg = create_from(data);
+		put_message(msg);
+		return I_MESSAGE;
+
+	} else {
+		decode lrm message;
+		if(monitor op) {
+
+			lrm_mon_t* mon = g_new(lrm_mon_t, 1);
+			mon->op_type = "status";
+			mon->params = NULL;
+			mon->timeout = 0;
+			mon->user_data = NULL;
+			mon->mode = LRM_MONITOR_SET;
+			mon->interval = 2;
+			mon->target = 1;
+			rsc->ops->set_monitor(rsc,mon);
+			printf_mon(mon);
+			mon = g_new(lrm_mon_t, 1);
+		} else {
+			// make sure its added to the list
+
+			rsc_id_t rid;
+			puts("add_rsc...");
+			uuid_generate(rid);
+			lrm->lrm_ops->add_rsc(lrm, rid, "lsb", "lsb_initscript_sim.sh", NULL);
+
+			// now do the op
+			puts("perform_op...");
+			lrm_op_t* op = g_new(lrm_op_t, 1);
+			op->op_type = "start";
+			op->params = NULL;
+			op->timeout = 0;
+			op->user_data = strdup("It is a start op!");
+			rsc->ops->perform_op(rsc,op);
+			printf_op(op);
+			
+		}
+	}
 	
-	puts("set_monitor...");
-	lrm_mon_t* mon = g_new(lrm_mon_t, 1);
-	mon->op_type = "status";
-	mon->params = NULL;
-	mon->timeout = 0;
-	mon->user_data = NULL;
-	mon->mode = LRM_MONITOR_SET;
-	mon->interval = 2;
-	mon->target = 1;
-	rsc->ops->set_monitor(rsc,mon);
-	printf_mon(mon);
-	mon = g_new(lrm_mon_t, 1);
 
-	mon->op_type = "status";
-	mon->params = NULL;
-	mon->timeout = 0;
-	mon->user_data = NULL;
-	mon->mode = LRM_MONITOR_CHANGE;
-	mon->interval = 2;
-	mon->target = 1;
-	rsc->ops->set_monitor(rsc,mon);
-	printf_mon(mon);
-
-	puts("perform_op...");
-	lrm_op_t* op = g_new(lrm_op_t, 1);
-	op->op_type = "start";
-	op->params = NULL;
-	op->timeout = 0;
-	op->user_data = strdup("It is a start op!");
-	rsc->ops->perform_op(rsc,op);
-	printf_op(op);
-
-	sleep(10);
-	
-	op = g_new(lrm_op_t, 1);
-	op->op_type = "stop";
-	op->params = NULL;
-	op->timeout = 0;
-	op->user_data = strdup("It is a stop op!");
-	rsc->ops->perform_op(rsc,op);
-	printf_op(op);
-
-	sleep(10);
-	puts("rcvmsg...");
 	while (TRUE) {
 		lrm->lrm_ops->rcvmsg(lrm,TRUE);
 	}

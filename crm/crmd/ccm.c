@@ -15,14 +15,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+/* put these first so that uuid_t is defined without conflicts */
+#include <ocf/oc_event.h>
+#include <ocf/oc_membership.h>
+
 #include <crm/crm.h>
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
 
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
-#include <ocf/oc_event.h>
-#include <ocf/oc_membership.h>
 #include <clplumbing/GSource.h>
 #include <crm/common/ipcutils.h>
 #include <string.h>
