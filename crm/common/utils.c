@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.22 2005/02/01 22:33:53 andrew Exp $ */
+/* $Id: utils.c,v 1.23 2005/02/02 21:47:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -289,7 +289,6 @@ do_crm_log(int log_level, const char *function,
 	}
 
 	if(do_log) {
-		const char *cur_debugfile = NULL;
 		va_list ap;
 		char	*buf = NULL;
 		int	nbytes;
@@ -297,25 +296,18 @@ do_crm_log(int log_level, const char *function,
 		va_start(ap, fmt);
 		nbytes=vasprintf(&buf, fmt, ap);
 		va_end(ap);
-		
-		if(alt_debugfile == NULL || nbytes < MAXLINE) {
-			if(alt_debugfile) {
-				cur_debugfile = cl_log_get_debugfile();
-				cl_log_set_debugfile(alt_debugfile);
-			}
-			if(function == NULL) {
-				cl_log(log_as, "[%d] %s", log_level, buf);
-			} else {
-				cl_log(log_as, "(%s [%d]) %s",
-				       function, log_level, buf);
-			}
-			if(cur_debugfile) {
-				cl_log_set_debugfile(cur_debugfile);
-			}
+
+		cl_log(LOG_DEBUG, "Dumped %d bytes", nbytes);
+		if(function == NULL) {
+			cl_log(log_as, "[%d] %s%c", log_level, buf, 0);
 		} else {
-			FILE *fp = fopen(alt_debugfile, "a");
-			fprintf(fp, "%s\n", buf);
-			fclose(fp);
+			cl_log(log_as, "(%s [%d]) %s%c",
+			       function, log_level, buf, 0);
+		}
+		
+		if(nbytes > MAXLINE) {
+			cl_log(LOG_WARNING,
+			       "Log from %s() was truncated", function);
 		}
 		free(buf);
 	}
@@ -469,3 +461,29 @@ safe_str_neq(const char *a, const char *b)
 	}
 	return TRUE;
 }
+
+
+void
+set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname) 
+{
+	char *uuid_calc = NULL;
+	
+	crm_malloc(uuid_calc, sizeof(char)*50);
+
+	if(uuid_calc != NULL) {
+		uuid_t uuid_raw;
+		if(hb->llc_ops->get_uuid_by_name(
+			   hb, uname, uuid_raw) == HA_FAIL) {
+			crm_err("Could not calculate UUID for %s", uname);
+			crm_free(uuid_calc);
+			uuid_calc = crm_strdup(uname);
+			
+		} else {
+			uuid_unparse(uuid_raw, uuid_calc);
+		}
+		set_xml_property_copy(node, attr, uuid_calc);
+	}
+	
+	crm_free(uuid_calc);
+}/*memory leak*/ /* BEAM BUG - this is not a memory leak */
+
