@@ -1112,8 +1112,8 @@ def TestList(cm):
     for testclass in AllTestClasses:
         bound_test = testclass(cm)
         if bound_test.is_applicable():
-        	result.append(bound_test)
-#    result = [Fastdetection(cm)]
+            result.append(bound_test)
+#   result = [SimulStart(cm)]
     return result
 
 
