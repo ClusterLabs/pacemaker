@@ -49,9 +49,9 @@ More details are given in the annotated DTD below.
 
 -->
 
-<!-- Either configuration or status must be present. Why else would you
+<!-- configuration and status must be present. Why else would you
      have a CIB? -->
-<!ELEMENT cib (configuration?, status?)>
+<!ELEMENT cib (configuration, status)>
 
 <!-- TODO: Is the version element necessary? If we flag the DTD against
      which the CIB validates, the version is implicit... -->

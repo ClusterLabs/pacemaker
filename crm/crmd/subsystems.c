@@ -62,7 +62,7 @@ xmlNodePtr do_lrm_query(void);
 GHashTable *xml2list(xmlNodePtr parent, const char **attr_path, int depth);
 gboolean lrm_dispatch(int fd, gpointer user_data);
 void send_cib_status_update(xmlNodePtr update);
-void send_cib_lrm_update(xmlNodePtr update, gboolean do_delete);
+void send_cib_lrm_update(xmlNodePtr update, gboolean lrm_replace);
 void do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type);
 
 
@@ -189,6 +189,7 @@ do_cib_invoke(long long action,
 		xmlNodePtr data = do_lrm_query();
 
 		send_cib_lrm_update(data, TRUE);
+
 		free_xml(data);
 		
 	} else {
@@ -960,9 +961,12 @@ do_lrm_event(long long action,
 }
 
 
-
-void send_cib_lrm_update(xmlNodePtr update,
-			 gboolean do_delete)
+/*
+ * If lrm_replace is TRUE, then we keep the update local
+ *  (Ie. we dont send it to the DC) because that will be handled by
+ *  another part of the JoinProtocol at the correct point.
+ */
+void send_cib_lrm_update(xmlNodePtr update, gboolean lrm_replace)
 {
 	xmlNodePtr fragment, tmp1, tmp2;
 	
@@ -970,21 +974,21 @@ void send_cib_lrm_update(xmlNodePtr update,
 	set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
 	fragment = create_cib_fragment(tmp1, NULL);
 
-	if(do_delete && AM_I_DC) {
+	if(lrm_replace) {
 		tmp2 = create_xml_node(tmp1, "lrm");
 		process_cib_request(CRM_OPERATION_DELETE, NULL, fragment);
-		free_xml(tmp2);
-			
-	} else if(do_delete) {
-		tmp2 = create_xml_node(tmp1, "lrm");
-		send_request(NULL, fragment, CRM_OPERATION_DELETE,
-			     NULL, CRM_SYSTEM_DCIB);
-		free_xml(tmp2);
-	}
-	
-	add_node_copy(tmp1, update);
 
-	send_cib_status_update(tmp1);
+		free_xml(tmp2);
+
+		add_node_copy(tmp1, update);
+
+		process_cib_request(CRM_OPERATION_UPDATE, NULL, fragment);
+		
+	} else {
+		add_node_copy(tmp1, update);
+
+		send_cib_status_update(tmp1);
+	}
 	
 	free_xml(fragment); // takes tmp1 with it
 }

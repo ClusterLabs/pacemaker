@@ -724,11 +724,7 @@ handle_message(xmlNodePtr stored_msg)
 				
 		} else if(strcmp(op, CRM_OPERATION_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
-/* admins may want to do this				
-		} else if(strcmp(op, CRM_OPERATION_STORE) == 0 && AM_I_DC) {
-			next_input = I_RELEASE_DC;
-*/
-		} else if(strcmp(op, CRM_OPERATION_STORE) == 0
+		} else if(strcmp(op, CRM_OPERATION_REPLACE) == 0
 			|| strcmp(op, CRM_OPERATION_ERASE) == 0) {
 			next_input = I_CIB_OP;
 			fprintf(router_strm, "Message result: CIB Op\n");
@@ -760,9 +756,6 @@ handle_message(xmlNodePtr stored_msg)
 	} else if(strcmp(type, XML_ATTR_RESPONSE) == 0) {
 
 		if(strcmp(op, CRM_OPERATION_WELCOME) == 0) {
-			next_input = I_WELCOME;
-				
-		} else if(strcmp(op, CRM_OPERATION_JOINACK) == 0) {
 			next_input = I_WELCOME_ACK;
 				
 		} else if(AM_I_DC
@@ -776,50 +769,7 @@ handle_message(xmlNodePtr stored_msg)
 
 			next_input = I_CIB_UPDATE;
 			
-		} else if (AM_I_DC && strcmp(op, CRM_OPERATION_STORE) == 0) {
-
-			/* if there was any result, we need to merge it back
-			 * into our (the DC) copy of the CIB
-			 */
-			xmlNodePtr data =
-				find_xml_node(stored_msg, XML_TAG_FRAGMENT);
-
-			const char *status =
-				get_xml_attr(stored_msg, XML_TAG_OPTIONS,
-					     XML_ATTR_RESULT, TRUE);
-
-			if(status != NULL
-			   && strcmp(status, "ok") == 0
-			   && data != NULL) {
-
-				CRM_DEBUG("Updating the CIB with the results of a store");
-				
-				/* do a replace or an update? */
-				xmlNodePtr resp = process_cib_request(
-					CRM_OPERATION_UPDATE, NULL, data);
-
-				// TODO: check the return status
-
-				next_input = I_CIB_UPDATE;
-				
-				free_xml(resp);
-				
-
-			} else if(data != NULL) {
-				cl_log(LOG_ERR,
-				       "Store failed with response [%s]",
-				       status);
-				
-			} else {
-				CRM_DEBUG3("Status=%s, data=%p",
-					  status, data);
-			}
-			
-
-
-		} else if(AM_I_DC
-			  && strcmp(sys_from, CRM_SYSTEM_CIB) == 0
-			  && strcmp(op, CRM_OPERATION_FORWARD) == 0) {
+		} else if(AM_I_DC && strcmp(sys_from, CRM_SYSTEM_CIB) == 0) {
 				
 			/* this is a reply to our earlier command
 			 * Send it to the relevant node(s)
@@ -845,7 +795,7 @@ handle_message(xmlNodePtr stored_msg)
 							     TRUE);
 			}
 			
-			send_request(local_options, data, CRM_OPERATION_STORE,
+			send_request(local_options, data, CRM_OPERATION_REPLACE,
 				     uname, CRM_SYSTEM_CRMD);
 
 			free_xml(local_options);

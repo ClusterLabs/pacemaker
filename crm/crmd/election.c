@@ -142,6 +142,7 @@ do_election_count_vote(long long action,
 		if(strcmp(vote_from, node_uname) == 0) {
 			your_born = this_born_on;
 			your_index = lpc;
+
 		} else if (strcmp(fsa_our_uname, node_uname) == 0) {
 			my_born = this_born_on;
 			my_index = lpc;
@@ -349,8 +350,6 @@ do_send_welcome(long long action,
 	gboolean was_sent = TRUE;
 	FNIN();
 
-	startTimer(integration_timer);
-	
 	if(action & A_JOIN_WELCOME && data == NULL) {
 		cl_log(LOG_ERR,
 		       "Attempt to send welcome message "
@@ -360,15 +359,20 @@ do_send_welcome(long long action,
 	} else if(action & A_JOIN_WELCOME) {
 		xmlNodePtr welcome = (xmlNodePtr)data;
 
-		set_xml_attr(welcome, XML_TAG_OPTIONS,
-			     XML_ATTR_OP, CRM_OPERATION_WELCOME, FALSE);
-
-		send_ha_reply(fsa_cluster_conn, welcome, NULL);
-
+		const char *join_to = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
+		if(join_to != NULL) {
+			send_request(NULL, NULL, CRM_OPERATION_WELCOME,
+				     join_to, CRM_SYSTEM_CRMD);
+		}
+		
 		FNRET(I_NULL);
 	}
 
 // welcome everyone...
+
+	/* Give everyone a chance to join before invoking the PolicyEngine */
+	stopTimer(integration_timer);
+	startTimer(integration_timer);
 	
 	members = fsa_membership_copy->members;
 	size = fsa_membership_copy->members_size;
@@ -426,11 +430,6 @@ do_ack_welcome(long long action,
 	xmlNodePtr welcome = (xmlNodePtr)data;
 	FNIN();
 	
-	/* Once we hear from the DC, we can stop the timer
-	 *
-	 * This timer was started either on startup or when a node
-	 * left the CCM list
-	 */
 #if 0
 	if(we are sick) {
 		log error ;
@@ -438,10 +437,18 @@ do_ack_welcome(long long action,
 	} 
 #endif
 
-	set_xml_attr(welcome, XML_TAG_OPTIONS,
-		     XML_ATTR_OP, CRM_OPERATION_JOINACK, FALSE);
+	xmlNodePtr cib_copy = get_cib_copy();
+	xmlNodePtr tmp1 = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
+
+	xmlUnlinkNode(tmp1); /* so that it can be deleted as part
+			      * of the fragment
+			      */
+	tmp1 = create_cib_fragment(tmp1, XML_CIB_TAG_STATUS);
 	
-	send_ha_reply(fsa_cluster_conn, welcome, NULL);
+	send_ha_reply(fsa_cluster_conn, welcome, tmp1);
+
+	free_xml(tmp1);
+	free_xml(cib_copy);
 	
 	FNRET(I_NULL);
 }
@@ -507,36 +514,36 @@ do_process_welcome_ack(long long action,
 		}
 	}
 	
+	xmlNodePtr cib_fragment = find_xml_node(join_ack, XML_TAG_FRAGMENT);
+
 	if(is_a_member == FALSE) {
 		cl_log(LOG_ERR, "Node %s is not known to us", join_from);
+
+		/* make sure any information from this node is discarded,
+		 * it is invalid
+		 */
+		free_xml(cib_fragment);
 		FNRET(I_FAIL);
 	}
 	
-	CRM_DEBUG2("Forwarding CIB to %s", join_from);
-	
 	// add them to our list of "active" nodes
-	
 	g_hash_table_insert(joined_nodes, strdup(join_from),strdup(join_from));
-	
-	
-	// TODO: clear their "block" in the CIB
 
-	/*
-	 * Send a message to the CIB asking what the contents are.
-	 *
-	 * Forward the ack so that the reply will be directed appropriatly
+
+
+	/* TODO: check the fragment is only for the status section
+	const char *section = get_xml_attr(cib_fragment, NULL,
+					   XML_ATTR_FILTER_TYPE, TRUE);	*/
+	
+	/* Make changes so that state=active for this node when the update
+	 *  is processed by A_CIB_INVOKE
 	 */
-	xmlNodePtr cib_copy = get_cib_copy();
-	xmlNodePtr frag = create_cib_fragment(cib_copy, "all");
-
-	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-	set_xml_property_copy(msg_options, XML_ATTR_VERBOSE, "true");
-
-	send_request(msg_options, frag, CRM_OPERATION_STORE,
-		     join_from, CRM_SYSTEM_CIB);
-
-	free_xml(msg_options);
+	xmlNodePtr tmp1 = find_xml_node(cib_fragment, XML_TAG_CIB);
+	tmp1 = get_object_root(XML_CIB_TAG_STATUS, tmp1);
+	tmp1 = find_entity(tmp1, XML_CIB_TAG_STATE, join_from, FALSE);
+	set_xml_property_copy(tmp1, "state", "active");
 	
+
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {
 		// that was the last outstanding join ack)

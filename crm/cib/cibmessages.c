@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.27 2004/03/30 15:15:27 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.28 2004/04/09 16:30:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -160,7 +160,8 @@ cib_process_request(const char *op,
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_ADD;
 		
-	} else if (strcmp(CRM_OPERATION_UPDATE, op) == 0) {
+	} else if (strcmp(CRM_OPERATION_UPDATE, op) == 0
+		   || strcmp(CRM_OPERATION_WELCOME, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_MODIFY;
 		
@@ -168,59 +169,7 @@ cib_process_request(const char *op,
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_DELETE;
 
-	} else if (strcmp(CRM_OPERATION_FORWARD, op) == 0) {
-		/* force a pick-up of the /entire/ CIB before
-		 * returning
-		 */
-		section = NULL;
-		verbose = "true"; 
-
-		/* this will reply to the DC and leaves it up to it to direct
-		 * the message appropriately
-		 */
-		
-	} else if (strcmp(CRM_OPERATION_STORE, op) == 0) {
-		xmlNodePtr cib_updates = NULL;
-		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB());
-		
-		CRM_DEBUG("Storing DC copy of the cib");
-		cib_updates = find_xml_node(fragment, XML_TAG_CIB);
-
-#if 0
-		/* copy in any version tags etc verbatum */
-		copy_in_properties(tmpCib, cib_updates);
-		
-		/* replace the following sections verbatum */
-		replace_section(XML_CIB_TAG_NODES,       tmpCib, fragment);
-		replace_section(XML_CIB_TAG_RESOURCES,   tmpCib, fragment);
-		replace_section(XML_CIB_TAG_CONSTRAINTS, tmpCib, fragment);
-		
-		/* incorporate the info from the DC and then send it back */
-		updateList(tmpCib, fragment, failed,
-			   CIB_OP_MODIFY,
-			   XML_CIB_TAG_STATUS);
-#endif
-		if(check_generation(cib_updates, tmpCib) == FALSE)
-			*result = CIBRES_FAILED_STALE;
-		else if (activateCibXml(cib_updates, CIB_FILENAME) < 0)
-			*result = CIBRES_FAILED_ACTIVATION;
-		else {
-			/* incorporate the info from the DC and then
-			 * send it back
-			 */
-#if 0
-			remove <status id=us><lrm id=*> from cib_updates;
-			query lrm, populate <status id=us><lrm id=*>
-#endif
-		}
-		
-		/* Force a pick-up of the merged status section and send it
-		 * back to the DC (but only if the DC asked for it by
-		 * setting verbose=true)
-		 */
-		section = XML_CIB_TAG_STATUS;
-		
-	} else if (strcmp("replace", op) == 0) {
+	} else if (strcmp(CRM_OPERATION_REPLACE, op) == 0) {
 		CRM_DEBUG2("Replacing section=%s of the cib", section);
 		xmlNodePtr tmpCib = NULL;
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
