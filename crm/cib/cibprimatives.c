@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.20 2004/03/25 17:11:22 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.21 2004/03/26 13:29:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -241,6 +241,7 @@ addStatus(xmlNodePtr cib, xmlNodePtr anXmlNode)
 	}
 
 	CRM_DEBUG2("Adding " XML_CIB_TAG_NODE " (%s)...", id);
+
 	xmlNodePtr root = get_object_root(XML_CIB_TAG_STATUS, cib);
 	return add_cib_object(root, anXmlNode);
 }
@@ -259,33 +260,14 @@ findStatus(xmlNodePtr cib, const char *id)
 int
 updateStatus(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
-	const char *src_existing = NULL;
-	const char *src_new	 = NULL;
-
-	gboolean from_owner = FALSE;
+	const char *id = ID(anXmlNode);
+	if (id == NULL || strlen(id) < 1) {
+		return CIBRES_MISSING_ID;
+	}
+	
+	CRM_DEBUG2("Updating " XML_CIB_TAG_NODE " (%s)...", id);
 
 	xmlNodePtr root = get_object_root(XML_CIB_TAG_STATUS, cib);
-	xmlNodePtr res = findStatus(cib, ID(anXmlNode));
-
-	if(anXmlNode == NULL) {
-		return CIBRES_FAILED_NOOBJECT;
-		
-	} else if(res == NULL) {
-		return add_cib_object(root, anXmlNode);
-	}
-	
-	src_existing = xmlGetProp(res, XML_CIB_ATTR_SOURCE);
-	src_new      = xmlGetProp(anXmlNode, XML_CIB_ATTR_SOURCE);
-
-	if(src_new != NULL && src_existing != NULL) {
-		from_owner = (strcmp(src_new, src_existing) == 0);
-	}
-
-	if(from_owner) {
-		return update_cib_object(root, anXmlNode, TRUE);
-
-	}
-	
 	return update_cib_object(root, anXmlNode, FALSE);
 }
 
