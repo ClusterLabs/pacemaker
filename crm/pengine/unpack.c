@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.59 2005/03/04 15:59:09 alan Exp $ */
+/* $Id: unpack.c,v 1.60 2005/03/11 14:19:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,13 +32,6 @@
 #include <pengine.h>
 #include <pe_utils.h>
 
-int      max_valid_nodes = 0;
-int      order_id        = 1;
-GListPtr agent_defaults  = NULL;
-gboolean stonith_enabled = FALSE;
-const char* transition_timeout = "60000"; /* 1 minute */
-
-extern const char *dc_uuid;
 
 GListPtr match_attrs(const char *attr, const char *op, const char *value,
 		     const char *type, GListPtr node_list);
@@ -110,14 +103,6 @@ unpack_config(crm_data_t * config)
 {
 	const char *value = NULL;
 	
-	value = param_value(config, "failed_nodes");
-	if(safe_str_eq(value, XML_CIB_ATTR_STONITH)) {
-		crm_debug("Enabling STONITH of failed nodes");
-		stonith_enabled = TRUE;
-	} else {
-		stonith_enabled = FALSE;
-	}
-
 	value = param_value(config, "transition_timeout");
 	if(value != NULL) {
 		int tmp = atoi(value);
@@ -130,6 +115,29 @@ unpack_config(crm_data_t * config)
 	}
 	crm_devel("%s set to: %s",
 		 "transition_timeout", transition_timeout);
+
+	value = param_value(config, "stonith_enabled");
+	if(value != NULL) {
+		crm_str_to_boolean(value, &stonith_enabled);
+	}
+	crm_info("STONITH of failed nodes is %s", stonith_enabled?"enabled":"disabled");
+	
+	value = param_value(config, "symetrical_cluster");
+	if(value != NULL) {
+		crm_str_to_boolean(value, &symetric_cluster);
+	}
+	if(symetric_cluster) {
+		crm_info("Cluster is symetric"
+			 " - resources can run anywhere by default");
+	}
+
+	value = param_value(config, "require_quorum");
+	if(value != NULL) {
+		crm_str_to_boolean(value, &require_quorum);
+	}
+	if(require_quorum) {
+		crm_info("Quorum required for fencing and resource management");
+	}
 	
 	return TRUE;
 }
@@ -279,6 +287,7 @@ unpack_resources(crm_data_t * xml_resources,
 		 GListPtr *resources,
 		 GListPtr *actions,
 		 GListPtr *ordering_constraints,
+		 GListPtr *placement_constraints,
 		 GListPtr all_nodes)
 {
 	crm_verbose("Begining unpack...");
@@ -290,6 +299,14 @@ unpack_resources(crm_data_t * xml_resources,
 			*resources = g_list_append(*resources, new_rsc);
 			crm_devel_action(
 				print_resource("Added", new_rsc, FALSE));
+
+			if(symetric_cluster) {
+				rsc_to_node_t *new_con = rsc2node_new(
+					"symetric_default", new_rsc, 0,
+					TRUE, NULL, placement_constraints);
+				new_con->node_list_rh = node_list_dup(all_nodes, FALSE);
+			}
+
 		} else {
 			crm_err("Failed unpacking resource %s",
 				crm_element_value(xml_obj, XML_ATTR_ID));
@@ -457,7 +474,7 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 	const char *unclean    = NULL;/*crm_element_value(node_state,XML_CIB_ATTR_STONITH); */
 	
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
-	   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
+	   && crm_is_true(ccm_state)
 	   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
 	   && safe_str_eq(crm_state, ONLINESTATUS)
 	   && shutdown == NULL) {
@@ -521,7 +538,7 @@ is_node_unclean(crm_data_t * node_state)
 		if(safe_str_eq(crm_state, OFFLINESTATUS)
 		   || (ha_state != NULL && safe_str_eq(ha_state, DEADSTATUS))
 		   || safe_str_eq(join_state, CRMD_JOINSTATE_DOWN)
-		   || safe_str_eq(ccm_state, XML_BOOLEAN_NO)) {
+		   || FALSE == crm_is_true(ccm_state)) {
 			crm_warn("Node %s is un-expectedly down", uname);
 			return TRUE;
 		}
@@ -934,9 +951,7 @@ unpack_rsc_order(
 	
 	}
 
-	if(safe_str_eq(symetrical, XML_BOOLEAN_FALSE)) {
-		symetrical_bool = FALSE;
-	}
+	crm_str_to_boolean(symetrical, &symetrical_bool);
 	if(safe_str_eq(type, "before")) {
 		type_is_after = FALSE;
 	}
@@ -1245,12 +1260,11 @@ unpack_rsc_location(
 			pe_free_shallow_adv(old_list, TRUE);
 			);
 
-		if(rule_has_expressions == FALSE) {
+		if(rule_has_expressions == FALSE && symetric_cluster == FALSE) {
 			/* feels like a hack */
 			crm_devel("Rule %s had no expressions,"
 				  " adding all nodes", crm_element_value(rule, XML_ATTR_ID));
 			
-			new_con->node_list_rh = node_list_dup(node_list,FALSE);
 		}
 		
 		if(new_con->node_list_rh == NULL) {

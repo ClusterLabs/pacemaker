@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.40 2005/03/04 15:59:09 alan Exp $ */
+/* $Id: stages.c,v 1.41 2005/03/11 14:19:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,7 +32,18 @@
 node_t *choose_fencer(action_t *stonith, node_t *node, GListPtr resources);
 void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 
+int order_id        = 1;
+int max_valid_nodes = 0;
+
+GListPtr agent_defaults = NULL;
+
+gboolean have_quorum      = FALSE;
+gboolean require_quorum   = FALSE;
+gboolean stonith_enabled  = FALSE;
+gboolean symetric_cluster = TRUE;
+
 char *dc_uuid = NULL;
+const char* transition_timeout = "60000"; /* 1 minute */
 
 /*
  * Unpack everything
@@ -71,7 +82,7 @@ stage0(crm_data_t * cib,
 	if(cib != NULL && crm_element_value(cib, XML_ATTR_DC_UUID) != NULL) {
 		/* this should always be present */
 		dc_uuid = crm_element_value_copy(cib, XML_ATTR_DC_UUID);
-	}
+	}	
 	
 	/* reset remaining global variables */
 	num_synapse = 0;
@@ -81,13 +92,24 @@ stage0(crm_data_t * cib,
 	color_id = 0;
 	
 	unpack_config(config);
+
+	if(require_quorum) {
+		const char *value = crm_element_value(cib, XML_ATTR_HAVE_QUORUM);
+		if(value != NULL) {
+			crm_str_to_boolean(value, &have_quorum);
+		}
+		if(have_quorum == FALSE) {
+			crm_warn("We do not have quorum"
+				 " - fencing and resource management disabled");
+		}
+	}
 	
 	unpack_global_defaults(agent_defaults);
 	
 	unpack_nodes(cib_nodes, nodes);
 
 	unpack_resources(cib_resources, resources, actions,
-			 ordering_constraints, *nodes);
+			 ordering_constraints, placement_constraints, *nodes);
 
 	unpack_status(cib_status, *nodes, *resources, actions,
 		      placement_constraints);

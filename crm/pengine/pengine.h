@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.49 2005/02/23 15:44:00 andrew Exp $ */
+/* $Id: pengine.h,v 1.50 2005/03/11 14:19:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -279,6 +279,7 @@ extern gboolean unpack_resources(crm_data_t *xml_resources,
 				 GListPtr *resources,
 				 GListPtr *actions,
 				 GListPtr *ordering_constraints,
+				 GListPtr *placement_constraints,
 				 GListPtr all_nodes);
 
 extern gboolean unpack_config(crm_data_t *config);
@@ -329,10 +330,14 @@ extern int      max_valid_nodes;
 extern int      order_id;
 extern int      action_id;
 extern gboolean stonith_enabled;
+extern gboolean have_quorum;
+extern gboolean require_quorum;
+extern gboolean symetric_cluster;
 extern GListPtr agent_defaults;
 extern const char* transition_timeout;
 extern int num_synapse;
 extern int color_id;
+extern char *dc_uuid;
 
 #endif
 

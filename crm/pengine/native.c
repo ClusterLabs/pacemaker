@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.17 2005/03/01 10:25:34 andrew Exp $ */
+/* $Id: native.c,v 1.18 2005/03/11 14:19:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -179,7 +179,7 @@ void native_color(resource_t *rsc, GListPtr *colors)
 		}
 		
 		if(new_color == NULL) {
-			crm_err("Could not color resource %s", rsc->id);
+			crm_warn("Resource %s cannot run anywhere", rsc->id);
 			print_resource("ERROR: No color", rsc, FALSE);
 			native_assign_color(rsc, no_color);
 		}
@@ -190,7 +190,6 @@ void native_color(resource_t *rsc, GListPtr *colors)
 
 void native_create_actions(resource_t *rsc)
 {
-	action_t *start_op = NULL;
 	gboolean can_start = FALSE;
 	node_t *chosen = NULL;
 	native_variant_data_t *native_data = NULL;
@@ -207,10 +206,13 @@ void native_create_actions(resource_t *rsc)
 	
 	if(can_start && g_list_length(native_data->running_on) == 0) {
 		/* create start action */
+		action_t *op = action_new(rsc, start_rsc, chosen);
 		crm_info("Start resource %s (%s)",
-			 rsc->id,
-			 safe_val3(NULL, chosen, details, uname));
-		start_op = action_new(rsc, start_rsc, chosen);
+			 rsc->id, safe_val3(NULL, chosen, details, uname));
+
+		if(have_quorum == FALSE && require_quorum == TRUE) {
+			op->runnable = FALSE;
+		}
 		
 	} else if(g_list_length(native_data->running_on) > 1) {
 		crm_info("Attempting recovery of resource %s",
@@ -233,8 +235,7 @@ void native_create_actions(resource_t *rsc)
 			crm_info("Start resource %s (%s)",
 				 rsc->id,
 				 safe_val3(NULL, chosen, details, uname));
-			start_op = action_new(
-				rsc, start_rsc, chosen);
+			action_new(rsc, start_rsc, chosen);
 		}
 		
 	} else {
