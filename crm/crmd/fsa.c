@@ -42,8 +42,11 @@ do_state_transition(long long actions,
 		    enum crmd_fsa_input current_input,
 		    void *data);
 
-// delete this
-extern fsa_message_queue_t fsa_message_queue;
+long long clear_flags(long long actions,
+			     enum crmd_fsa_cause cause,
+			     enum crmd_fsa_state cur_state,
+			     enum crmd_fsa_input cur_input);
+
 
 #ifdef DOT_FSA_ACTIONS
 # ifdef FSA_TRACE
@@ -329,7 +332,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_TE_COPYTO,		do_te_copyto)
 		ELSEIF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
 		ELSEIF_FSA_ACTION(A_RECOVER,		do_recover)
-		ELSEIF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_lrm_invoke)
+		ELSEIF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_update_node_status)
 		ELSEIF_FSA_ACTION(A_JOIN_ACK,		do_ack_welcome)
 		ELSEIF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
 		ELSEIF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)

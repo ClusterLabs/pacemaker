@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.21 2004/06/02 16:03:34 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.22 2004/06/04 09:18:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -73,19 +73,9 @@ struct fsa_timer_s
 		gboolean (*callback)(gpointer data);
 };
 
-
-
 extern enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause,
 				      enum crmd_fsa_input initial_input,
 				      void *data);
-
-extern long long clear_flags(long long actions,
-			     enum crmd_fsa_cause cause,
-			     enum crmd_fsa_state cur_state,
-			     enum crmd_fsa_input cur_input);
-
-extern gboolean do_dc_heartbeat(gpointer data);
-
 
 /* Global FSA stuff */
 extern enum crmd_fsa_state fsa_state;
@@ -96,6 +86,7 @@ extern long long       fsa_input_register;
 extern const char     *fsa_our_uname;
 extern char	      *fsa_pe_ref; // the last invocation of the PE
 extern const char     *fsa_our_dc;
+extern fsa_message_queue_t fsa_message_queue;
 
 extern fsa_timer_t *election_trigger;		/*  */
 extern fsa_timer_t *election_timeout;		/*  */
@@ -107,14 +98,9 @@ extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;
 extern struct crm_subsystem_s *pe_subsystem;
 
-extern enum crmd_fsa_input send_cib_status_update(xmlNodePtr update);
+// these two should be moved elsewhere...
 extern xmlNodePtr do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite);
-extern enum crmd_fsa_input invoke_local_cib(xmlNodePtr msg_options,
-					    xmlNodePtr msg_data,
-					    const char *operation);
-
-extern void CrmdClientStatus(const char * node, const char * client,
-			     const char * status, void * private);
+extern gboolean do_dc_heartbeat(gpointer data);
 
 #define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)

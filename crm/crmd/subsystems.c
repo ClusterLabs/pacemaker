@@ -39,6 +39,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crmd_messages.h>
+#include <crmd_callbacks.h>
 
 #include <crm/cib.h>
 #include <crmd.h>

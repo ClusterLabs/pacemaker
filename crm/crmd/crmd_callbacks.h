@@ -30,9 +30,22 @@ extern void crmd_ha_input_callback(const struct ha_msg* msg,
 extern gboolean crmd_ipc_input_callback(IPC_Channel *client,
 					gpointer user_data);
 
+gboolean lrm_dispatch(int fd, gpointer user_data);
+
 extern void lrm_op_callback (lrm_op_t* op);
 
 extern void lrm_monitor_callback (lrm_mon_t* monitor);
 
-extern void CrmdClientStatus(const char * node, const char * client,
+extern void crmd_client_status_callback(const char * node, const char * client,
 			     const char * status, void * private);
+
+extern void msg_ccm_join(const struct ha_msg *msg, void *foo);
+
+extern gboolean crmd_client_connect(IPC_Channel *newclient,
+				    gpointer user_data);
+
+extern void crmd_ha_input_callback(const struct ha_msg* msg,
+				   void* private_data);
+
+extern gboolean crmd_ipc_input_callback(IPC_Channel *client,
+					gpointer user_data);

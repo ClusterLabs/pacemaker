@@ -1,4 +1,4 @@
-/* $Id: crmd.h,v 1.6 2004/06/02 12:31:34 andrew Exp $ */
+/* $Id: crmd.h,v 1.7 2004/06/04 09:18:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,19 +26,5 @@ extern GMainLoop  *crmd_mainloop;
 extern const char *crm_system_name;
 
 extern GHashTable *ipc_clients;
-
-extern GHashTable *pending_remote_replies;
-
-extern void msg_ccm_join(const struct ha_msg *msg, void *foo);
-
-extern gboolean crmd_client_connect(IPC_Channel *newclient,
-				    gpointer user_data);
-
-extern void crmd_ha_input_callback(const struct ha_msg* msg,
-				   void* private_data);
-
-extern gboolean crmd_ipc_input_callback(IPC_Channel *client,
-					gpointer user_data);
-    
 
 #endif

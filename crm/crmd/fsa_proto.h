@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.8 2004/06/01 12:25:16 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.9 2004/06/04 09:18:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -243,6 +243,15 @@ do_cib_invoke(long long action,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input cur_input,
 	      void *data);
+
+
+/* A_UPDATE_NODESTATUS */
+enum crmd_fsa_input
+do_update_node_status(long long action,
+		      enum crmd_fsa_cause cause,
+		      enum crmd_fsa_state cur_state,
+		      enum crmd_fsa_input cur_input,
+		      void *data);
 
 /*	A_LRM_INVOKE	*/
 enum crmd_fsa_input

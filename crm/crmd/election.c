@@ -25,6 +25,7 @@
 #include <crm/crm.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
+#include <crmd_callbacks.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -275,7 +276,7 @@ do_dc_takeover(long long action,
 	startTimer(dc_heartbeat);
 
 	if (fsa_cluster_conn->llc_ops->set_cstatus_callback(
-		    fsa_cluster_conn, CrmdClientStatus, NULL)!=HA_OK){
+		    fsa_cluster_conn, crmd_client_status_callback, NULL)!=HA_OK){
 		crm_err("Cannot set client status callback\n");
 		crm_err("REASON: %s\n",
 		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));

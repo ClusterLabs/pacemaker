@@ -31,6 +31,7 @@
 
 #include <crmd.h>
 #include <crmd_messages.h>
+#include <crmd_callbacks.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -227,7 +228,7 @@ lrm_monitor_callback (lrm_mon_t* monitor)
 }
 
 void
-CrmdClientStatus(const char * node, const char * client,
+crmd_client_status_callback(const char * node, const char * client,
 		 const char * status, void * private)
 {
 	const char    *join = NULL;
@@ -315,3 +316,12 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 	}
 	return root;
 }
+
+gboolean lrm_dispatch(int fd, gpointer user_data)
+{
+	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
+	lrm->lrm_ops->rcvmsg(lrm, FALSE);
+	return TRUE;
+}
+
+

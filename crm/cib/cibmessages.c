@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.40 2004/06/03 07:52:16 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.41 2004/06/04 09:18:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -293,7 +293,6 @@ replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 		new_section = NULL,
 		old_section = NULL;
 	
-	
 	cib_updates = find_xml_node(fragment, XML_TAG_CIB);
 
 	/* find the old and new versions of the section */
@@ -350,17 +349,19 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
     
 	while(child != NULL) {
 		if(operation == CIB_OP_DELETE) {
-			update_results(failed, child, operation,
-				       delete_cib_object(this_section, child));
+			update_results(
+				failed, child, operation,
+				delete_cib_object(this_section, child));
 
 		} else if(operation == CIB_OP_MODIFY) {
-			update_results(failed, child, operation,
-				       update_cib_object(this_section, child,
-							 FALSE));
+			update_results(
+				failed, child, operation,
+				update_cib_object(this_section, child, FALSE));
 				       
 		} else {
-			update_results(failed, child, operation,
-				       add_cib_object(this_section, child));
+			update_results(
+				failed, child, operation,
+				add_cib_object(this_section, child));
 		} 
 		
 		child = child->next;
@@ -443,27 +444,20 @@ update_results(xmlNodePtr failed,
 
 		was_error = TRUE;
 				
-		set_xml_property_copy(xml_node,
-				      XML_FAILCIB_ATTR_ID,
-				      ID(target));
+		set_xml_property_copy(
+			xml_node, XML_FAILCIB_ATTR_ID, ID(target));
 
-		set_xml_property_copy(xml_node,
-				      XML_FAILCIB_ATTR_OBJTYPE,
-				      TYPE(target));
+		set_xml_property_copy(
+			xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
 
-		set_xml_property_copy(xml_node,
-				      XML_FAILCIB_ATTR_OP,
-				      operation_msg);
+		set_xml_property_copy(
+			xml_node, XML_FAILCIB_ATTR_OP, operation_msg);
 	
-		set_xml_property_copy(xml_node,
-				      XML_FAILCIB_ATTR_REASON,
-				      error_msg);
+		set_xml_property_copy(
+			xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
 
-		crm_debug(
-		       "Action %s failed: %s (cde=%d)",
-		       operation_msg,
-		       error_msg,
-		       return_code);
+		crm_debug("Action %s failed: %s (cde=%d)",
+			  operation_msg, error_msg, return_code);
 	
 	}
 
