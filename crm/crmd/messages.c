@@ -446,7 +446,7 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 	if(msg_error != NULL) {
 		processing_complete = TRUE;
 		crm_err("%s", msg_error);
-		crm_log_message(LOG_ERR, relay_message);
+		crm_log_message(LOG_WARNING, relay_message);
 	}
 
 	if(processing_complete) {
