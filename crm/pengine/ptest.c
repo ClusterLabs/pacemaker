@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.7 2004/04/29 15:23:41 andrew Exp $ */
+/* $Id: ptest.c,v 1.8 2004/04/29 20:53:39 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -139,8 +139,10 @@ main(int argc, char **argv)
 		   print_resource(NULL, resource, TRUE));    
 
 	cl_log(LOG_INFO, "========= Constraints =========");
-	slist_iter(constraint, rsc_constraint_t, cons_list, lpc,
-		   print_cons(NULL, constraint, FALSE));
+	slist_iter(constraint, rsc_to_node_t, node_cons_list, lpc,
+		   print_rsc_to_node(NULL, constraint, FALSE));
+	slist_iter(constraint, rsc_to_rsc_t, rsc_cons_list, lpc,
+		   print_rsc_to_rsc(NULL, constraint, FALSE));
     
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 1 =#=#=#=#=");
 	stage1(node_list);

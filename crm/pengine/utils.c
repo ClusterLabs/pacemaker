@@ -19,8 +19,8 @@ gint sort_node_weight(gconstpointer a, gconstpointer b);
 
 
 
-gboolean is_active(rsc_constraint_t *cons);
-rsc_constraint_t *invert_constraint(rsc_constraint_t *constraint);
+gboolean is_active(rsc_to_node_t *cons);
+rsc_to_rsc_t *invert_constraint(rsc_to_rsc_t *constraint);
 gboolean filter_nodes(resource_t *rsc);
 color_t *find_color(GSListPtr candidate_colors, color_t *other_color);
 resource_t *pe_find_resource(GSListPtr rsc_list, const char *id_rh);
@@ -28,7 +28,7 @@ node_t *pe_find_node(GSListPtr node_list, const char *id);
 gboolean choose_node_from_list(GSListPtr colors,
 			       color_t *color,
 			       GSListPtr nodes);
-rsc_constraint_t *copy_constraint(rsc_constraint_t *constraint);
+rsc_to_node_t *copy_constraint(rsc_to_node_t *constraint);
 
 GSListPtr node_list_dup(GSListPtr list1);
 GSListPtr node_list_and(GSListPtr list1, GSListPtr list2);
@@ -42,55 +42,45 @@ node_t *find_list_node(GSListPtr list, const char *id);
 gboolean unpack_rsc_to_attr(xmlNodePtr xml_obj);
 gboolean unpack_rsc_to_node(xmlNodePtr xml_obj);
 gboolean choose_color(resource_t *lh_resource, GSListPtr candidate_colors);
-gboolean strict_postproc(rsc_constraint_t *constraint,
+gboolean strict_postproc(rsc_to_node_t *constraint,
 			 color_t *local_color,
 			 color_t *other_color);
-gboolean strict_preproc(rsc_constraint_t *constraint,
+gboolean strict_preproc(rsc_to_node_t *constraint,
 			color_t *local_color,
 			color_t *other_color);
-gboolean update_node_weight(rsc_constraint_t *cons, node_t *node_rh);
+gboolean update_node_weight(rsc_to_node_t *cons, node_t *node_rh);
 gboolean process_node_lrm_state(xmlNodePtr lrm_state);
 
 /* only for rsc_to_rsc constraints */
-rsc_constraint_t *
-invert_constraint(rsc_constraint_t *constraint) 
+rsc_to_rsc_t *
+invert_constraint(rsc_to_rsc_t *constraint) 
 {
 	pdebug("Inverting constraint");
-	rsc_constraint_t *inverted_con =
-		cl_malloc(sizeof(rsc_constraint_t));
+	rsc_to_rsc_t *inverted_con =
+		cl_malloc(sizeof(rsc_to_node_t));
 
 	inverted_con->id = cl_strdup(constraint->id);
-	inverted_con->type = constraint->type;
 	inverted_con->strength = constraint->strength;
-	inverted_con->is_placement = constraint->is_placement;
+//	inverted_con->is_placement = constraint->is_placement;
 
 	// swap the direction
 	inverted_con->rsc_lh = constraint->rsc_rh;
 	inverted_con->rsc_rh = constraint->rsc_lh;
 
-	inverted_con->node_list_rh = NULL;
-	inverted_con->modifier     = modifier_none;
-	inverted_con->weight       = 0.0;
-  
-	pdebug_action(print_cons("Inverted constraint", inverted_con, FALSE));
+	pdebug_action(print_rsc_to_rsc(
+			      "Inverted constraint", inverted_con, FALSE));
 	return inverted_con;
 }
 
-rsc_constraint_t *
-copy_constraint(rsc_constraint_t *constraint) 
+rsc_to_node_t *
+copy_constraint(rsc_to_node_t *constraint) 
 {
-	rsc_constraint_t *copied_con =
-		cl_malloc(sizeof(rsc_constraint_t));
+	rsc_to_node_t *copied_con =
+		cl_malloc(sizeof(rsc_to_node_t));
 
 	copied_con->id		 = cl_strdup(constraint->id);
-	copied_con->type	 = constraint->type;
-	copied_con->strength	 = constraint->strength;
-	copied_con->is_placement = constraint->is_placement;
 
-	// swap the direction
 	copied_con->rsc_lh = constraint->rsc_lh;
-	copied_con->rsc_rh = constraint->rsc_rh;
-
 	copied_con->node_list_rh = constraint->node_list_rh;
 	copied_con->modifier	 = constraint->modifier;
 	copied_con->weight	 = constraint->weight;
@@ -241,12 +231,6 @@ node_list_dup(GSListPtr list1)
 		}
 		);
 
-	pdebug("node list dup %p", result); 
-	pdebug_action(slist_iter(
-		       this_node, node_t, result, lpc,
-		       print_node("dup", this_node, TRUE);
-		       ));
-  
 	return result;
 }
 
@@ -402,8 +386,8 @@ gint sort_rsc_priority(gconstpointer a, gconstpointer b)
 
 gint sort_cons_strength(gconstpointer a, gconstpointer b)
 {
-	const rsc_constraint_t *rsc_constraint1 = (const rsc_constraint_t*)a;
-	const rsc_constraint_t *rsc_constraint2 = (const rsc_constraint_t*)b;
+	const rsc_to_rsc_t *rsc_constraint1 = (const rsc_to_rsc_t*)a;
+	const rsc_to_rsc_t *rsc_constraint2 = (const rsc_to_rsc_t*)b;
 
 	if(a == NULL) return 1;
 	if(b == NULL) return -1;
@@ -457,7 +441,7 @@ contype2text(enum con_type type)
 	const char *result = "<unknown>";
 	switch(type)
 	{
-		case none:
+		case type_none:
 			result = "none";
 			break;
 		case rsc_to_rsc:
@@ -611,8 +595,9 @@ print_color(const char *pre_text, color_t *color, gboolean details)
 		print_color_details("\t", color->details, details);
 	}
 }
+
 void
-print_cons(const char *pre_text, rsc_constraint_t *cons, gboolean details)
+print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 { 
 	if(cons == NULL) {
 		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
@@ -624,40 +609,45 @@ print_cons(const char *pre_text, rsc_constraint_t *cons, gboolean details)
 	cl_log(LOG_DEBUG, "%s%s%s Constraint %s (%p):",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
-	       contype2text(cons->type), cons->id, cons);
+	       "rsc_to_node",
+	       cons->id, cons);
+
+	if(details == FALSE) {
+		cl_log(LOG_DEBUG,
+		       "\t%s --> %s, %f (node placement rule)",
+		       cons->rsc_lh->id, 
+		       modifier2text(cons->modifier),
+		       cons->weight);
+		int lpc = 0;
+		slist_iter(
+			node, node_t, cons->node_list_rh, lpc,
+			print_node("\t\t-->", node, FALSE)
+			);
+	}
+}; 
+
+void
+print_rsc_to_rsc(const char *pre_text, rsc_to_rsc_t *cons, gboolean details)
+{ 
+	if(cons == NULL) {
+		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
+		       pre_text==NULL?"":pre_text,
+		       pre_text==NULL?"":": ",
+		       __FUNCTION__);
+		return;
+	}
+	cl_log(LOG_DEBUG, "%s%s%s Constraint %s (%p):",
+	       pre_text==NULL?"":pre_text,
+	       pre_text==NULL?"":": ",
+	       "rsc_to_rsc", cons->id, cons);
 
 	if(details == FALSE) {
 
-		switch(cons->type)
-		{
-			case none:
-				cl_log(LOG_ERR, "must specify a type");
-				break;
-			case rsc_to_rsc:
-				cl_log(LOG_DEBUG,
-				       "\t%s --> %s, %s (%s rule)",
-				       cons->rsc_lh==NULL?"null":cons->rsc_lh->id, 
-				       cons->rsc_rh==NULL?"null":cons->rsc_rh->id, 
-				       strength2text(cons->strength),
-				       cons->is_placement?"placement":"ordering");
-				break;
-			case rsc_to_node:
-			case rsc_to_attr:
-				cl_log(LOG_DEBUG,
-				       "\t%s --> %s, %f (node placement rule)",
-				       cons->rsc_lh->id, 
-				       modifier2text(cons->modifier),
-				       cons->weight);
-				int lpc = 0;
-				slist_iter(
-					node, node_t, cons->node_list_rh, lpc,
-					print_node("\t\t-->", node, FALSE)
-					);
-				break;
-			case base_weight:
-				cl_log(LOG_ERR, "not supported");
-				break;
-		}
+		cl_log(LOG_DEBUG,
+		       "\t%s --> %s, %s",
+		       cons->rsc_lh==NULL?"null":cons->rsc_lh->id, 
+		       cons->rsc_rh==NULL?"null":cons->rsc_rh->id, 
+		       strength2text(cons->strength));
 	}
 }; 
 
@@ -682,10 +672,11 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 	       rsc->cur_node_id);
 
 	cl_log(LOG_DEBUG,
-	       "\t%d candidate colors, %d allowed nodes and %d constraints",
+	       "\t%d candidate colors, %d allowed nodes, %d rsc_cons and %d node_cons",
 	       g_slist_length(rsc->candidate_colors),
 	       g_slist_length(rsc->allowed_nodes),
-	       g_slist_length(rsc->constraints));
+	       g_slist_length(rsc->rsc_cons),
+	       g_slist_length(rsc->node_cons));
 
 	if(details) {
 		int lpc = 0;
