@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.51 2004/09/06 08:18:25 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.52 2004/10/20 13:48:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -327,6 +327,7 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 	xmlNodePtr this_section = get_object_root(section, local_cib);
 	xmlNodePtr cib_updates  = NULL;
 	xmlNodePtr xml_section  = NULL;
+	const char *obj_id = NULL;
 
 	cib_updates  = find_xml_node(update_fragment, XML_TAG_CIB);
 	xml_section  = get_object_root(section, cib_updates);
@@ -347,9 +348,9 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 	xml_child_iter(
 		xml_section, a_child, NULL,
 
-		crm_debug("%s to section %s with <%s id=%s>",
-			  cib_op2string(operation), section, a_child->name, xmlGetProp(a_child, "id"));
-
+		obj_id = xmlGetProp(a_child, "id");
+		crm_info("%s to %s with id=%s", cib_op2string(operation), a_child->name, obj_id);
+		
 		if(operation == CIB_OP_DELETE) {
 			update_results(
 				failed, a_child, operation,
