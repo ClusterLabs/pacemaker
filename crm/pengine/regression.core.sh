@@ -91,35 +91,36 @@ function do_test {
 	cat $output 2>/dev/null >> $failed
     fi
 
-    ../tengine/ttest -X $expected 2> $te_output
-
+    if [ "$test_te" = "true" ]; then
+	../tengine/ttest -X $expected 2> $te_output
+	
 #    if [ "$create_mode" = "true" ]; then
-    if [ "$create_mode" = "true" -a ! -f $te_expected ]; then
-	cp "$te_output" "$te_expected"
+	if [ "$create_mode" = "true" -a ! -f $te_expected ]; then
+	    cp "$te_output" "$te_expected"
+	fi
+	
+	if [ -f $te_expected ]; then
+	    diff $diff_opts -q $te_expected $te_output >/dev/null
+	    rc=$?
+	fi
+	
+	if [ "$create_mode" = "true" ]; then
+	    echo "Test $name	($base)...	Created expected output (PE)" 
+	elif [ ! -f $te_expected ]; then
+	    echo "==== Raw results for TE test ($base) ====" >> $failed
+	    cat $te_output 2>/dev/null >> $failed
+	elif [ "$rc" = 0 ]; then
+	    echo "Test $name	($base)...	Passed (TE)";
+	elif [ "$rc" = 1 ]; then
+	    echo "Test $name	($base)...	* Failed (TE)";
+	    diff $diff_opts $te_expected $te_output 2>/dev/null >> $failed
+	else 
+	    echo "Test $name	($base)...	Error TE (diff: $rc)";
+	    echo "==== Raw results for test ($base) TE ====" >> $failed
+	    cat $te_output 2>/dev/null >> $failed
+	fi
     fi
-
-    if [ -f $te_expected ]; then
-	diff $diff_opts -q $te_expected $te_output >/dev/null
-	rc=$?
-    fi
-
-    if [ "$create_mode" = "true" ]; then
-	echo "Test $name	($base)...	Created expected output (PE)" 
-    elif [ ! -f $te_expected ]; then
-	echo "==== Raw results for TE test ($base) ====" >> $failed
-	cat $te_output 2>/dev/null >> $failed
-    elif [ "$rc" = 0 ]; then
-	echo "Test $name	($base)...	Passed (TE)";
-    elif [ "$rc" = 1 ]; then
-	echo "Test $name	($base)...	* Failed (TE)";
-	diff $diff_opts $te_expected $te_output 2>/dev/null >> $failed
-    else 
-	echo "Test $name	($base)...	Error TE (diff: $rc)";
-	echo "==== Raw results for test ($base) TE ====" >> $failed
-	cat $te_output 2>/dev/null >> $failed
-    fi
-    
-    rm $output $te_output
+    rm -f $output $te_output
 }
 
 function test_results {

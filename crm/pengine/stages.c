@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.28 2004/11/12 17:20:58 andrew Exp $ */
+/* $Id: stages.c,v 1.29 2005/01/06 11:02:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -368,6 +368,7 @@ stage8(GListPtr resources, GListPtr actions, xmlNodePtr *graph)
 	crm_xml_devel(*graph, "created resource-driven action list");
 
 	/* catch any non-resource specific actions */
+	crm_debug("processing non-resource actions");
 	slist_iter(
 		action, action_t, actions, lpc,
 

@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.2 2004/11/12 17:18:56 andrew Exp $ */
+/* $Id: incarnation.c,v 1.3 2005/01/06 11:02:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,23 +96,47 @@ void incarnation_unpack(resource_t *rsc)
 	xml_child_iter(
 		xml_obj, xml_obj_child, XML_CIB_TAG_RESOURCE,
 
+		char *inc_max = crm_itoa(incarnation_data->max_incarnation);
 		for(lpc = 0; lpc < incarnation_data->max_incarnation; lpc++) {
 			resource_t *child_rsc = NULL;
-			xmlNodePtr child_copy = copy_xml_node_recursive(xml_obj_child);
+			xmlNodePtr child_copy = copy_xml_node_recursive(
+				xml_obj_child);
 
 			set_id(child_copy, rsc->id, lpc);
 			
 			if(common_unpack(child_copy, &child_rsc)) {
+				char *inc_num = crm_itoa(lpc);
+
 				incarnation_data->child_list = g_list_append(
 					incarnation_data->child_list, child_rsc);
+
+				if(child_rsc->extra_attrs == NULL) {
+					child_rsc->extra_attrs =
+						create_xml_node(NULL, "extra");
+				}
 				
+				set_xml_property_copy(
+					child_rsc->extra_attrs,
+					XML_CIB_ATTR_INCARNATION, inc_num);
+				set_xml_property_copy(
+					child_rsc->extra_attrs,
+					XML_CIB_ATTR_INCARNATION_MAX, inc_max);
+
+				crm_xml_info(child_rsc->extra_attrs,
+					     "creating extra attributes");
+
 				crm_debug_action(
 					print_resource("Added", child_rsc, FALSE));
+
+				crm_free(inc_num);
+				
 			} else {
 				crm_err("Failed unpacking resource %s",
 					xmlGetProp(child_copy, XML_ATTR_ID));
 			}
 		}
+		crm_free(inc_max);
+		
 		/* only count the first one */
 		break;
 		);
@@ -484,8 +508,8 @@ void incarnation_expand(resource_t *rsc, xmlNodePtr *graph)
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 
 		child_rsc->fns->expand(child_rsc, graph);
-		);
 
+		);
 }
 
 void incarnation_dump(resource_t *rsc, const char *pre_text, gboolean details)
@@ -495,7 +519,8 @@ void incarnation_dump(resource_t *rsc, const char *pre_text, gboolean details)
 
 	common_dump(rsc, pre_text, details);
 	
-	incarnation_data->self->fns->dump(incarnation_data->self, pre_text, details);
+	incarnation_data->self->fns->dump(
+		incarnation_data->self, pre_text, details);
 
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,

@@ -65,7 +65,7 @@
     <action_set>
       <rsc_op id="1" rsc_id="rsc1:child_rsc1:1" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
         <resource class="heartbeat" type="apache" priority="1.0" id="rsc1:child_rsc1:1"/>
-        <args/>
+        <args incarnation="1" incarnation_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -78,7 +78,7 @@
     <action_set>
       <rsc_op id="2" rsc_id="rsc1:child_rsc1:1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
         <resource class="heartbeat" type="apache" priority="1.0" id="rsc1:child_rsc1:1"/>
-        <args/>
+        <args incarnation="1" incarnation_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -94,7 +94,7 @@
     <action_set>
       <rsc_op id="3" rsc_id="rsc1:child_rsc1:3" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
         <resource class="heartbeat" type="apache" priority="1.0" id="rsc1:child_rsc1:3"/>
-        <args/>
+        <args incarnation="3" incarnation_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -107,7 +107,7 @@
     <action_set>
       <rsc_op id="4" rsc_id="rsc1:child_rsc1:3" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
         <resource class="heartbeat" type="apache" priority="1.0" id="rsc1:child_rsc1:3"/>
-        <args/>
+        <args incarnation="3" incarnation_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -123,7 +123,7 @@
     <action_set>
       <rsc_op id="5" rsc_id="rsc1:child_rsc1:4" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
         <resource class="heartbeat" type="apache" priority="1.0" id="rsc1:child_rsc1:4"/>
-        <args/>
+        <args incarnation="4" incarnation_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -199,7 +199,7 @@
     <action_set>
       <rsc_op id="10" rsc_id="rsc2:child_rsc2:0" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
         <resource class="heartbeat" type="apache" priority="1.0" id="rsc2:child_rsc2:0"/>
-        <args/>
+        <args incarnation="0" incarnation_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -212,7 +212,7 @@
     <action_set>
       <rsc_op id="11" rsc_id="rsc2:child_rsc2:0" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
         <resource class="heartbeat" type="apache" priority="1.0" id="rsc2:child_rsc2:0"/>
-        <args/>
+        <args incarnation="0" incarnation_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -228,7 +228,7 @@
     <action_set>
       <rsc_op id="12" rsc_id="rsc2:child_rsc2:2" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
         <resource class="heartbeat" type="apache" priority="1.0" id="rsc2:child_rsc2:2"/>
-        <args/>
+        <args incarnation="2" incarnation_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -241,7 +241,7 @@
     <action_set>
       <rsc_op id="13" rsc_id="rsc2:child_rsc2:2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
         <resource class="heartbeat" type="apache" priority="1.0" id="rsc2:child_rsc2:2"/>
-        <args/>
+        <args incarnation="2" incarnation_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -257,7 +257,7 @@
     <action_set>
       <rsc_op id="14" rsc_id="rsc2:child_rsc2:4" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
         <resource class="heartbeat" type="apache" priority="1.0" id="rsc2:child_rsc2:4"/>
-        <args/>
+        <args incarnation="4" incarnation_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -270,7 +270,7 @@
     <action_set>
       <rsc_op id="15" rsc_id="rsc2:child_rsc2:4" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
         <resource class="heartbeat" type="apache" priority="1.0" id="rsc2:child_rsc2:4"/>
-        <args/>
+        <args incarnation="4" incarnation_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.7 2004/11/12 17:20:58 andrew Exp $ */
+/* $Id: native.c,v 1.8 2005/01/06 11:02:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -264,7 +264,6 @@ void native_create_actions(resource_t *rsc)
 				crm_info("Leave resource %s alone (%s)", rsc->id,
 					 safe_val3(NULL, chosen, details, uname));
 				
-				
 				/* in case the actions already exist */
 				slist_iter(
 					action, action_t, rsc->actions, lpc2,
@@ -292,7 +291,15 @@ void native_create_actions(resource_t *rsc)
 			
 			);	
 	}
-	
+
+	slist_iter(
+		action, action_t, rsc->actions, lpc,
+		if(action->extra_attrs == NULL) {
+			action->extra_attrs = create_xml_node(NULL, "extra");
+		}
+		crm_xml_info(rsc->extra_attrs, "copying in extra attributes");
+		copy_in_properties(action->extra_attrs, rsc->extra_attrs);
+		);
 }
 
 void native_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)

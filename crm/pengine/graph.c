@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.22 2004/11/12 17:20:01 andrew Exp $ */
+/* $Id: graph.c,v 1.23 2005/01/06 11:02:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -267,23 +267,15 @@ action2xml(action_t *action, gboolean as_input)
 
 	set_xml_property_copy(
 		action_xml, "timeout", action->timeout);
-
-/* 	set_xml_property_copy( */
-/* 		action_xml, XML_LRM_ATTR_OPTIONAL, */
-/* 		action->optional?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE); */
-
-/* 	set_xml_property_copy( */
-/* 		action_xml, XML_LRM_ATTR_RUNNABLE, */
-/* 		action->runnable?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE); */
-
+	
 	if(as_input) {
 		return action_xml;
 	}
 	
-/* 	set_xml_property_copy( */
-/* 		action_xml, XML_LRM_ATTR_DISCARD, */
-/* 		action->discard?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE); */
-	
+	crm_xml_info(action->extra_attrs, "copying in extra attributes");
+	if(action->extra_attrs) {
+		copy_in_properties(action->args, action->extra_attrs);
+	}
 	add_node_copy(action_xml, action->args);
 	
 	return action_xml;

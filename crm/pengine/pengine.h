@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.43 2004/11/23 20:43:08 andrew Exp $ */
+/* $Id: pengine.h,v 1.44 2005/01/06 11:02:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -172,11 +172,7 @@ struct resource_s {
 		GListPtr rsc_cons;         /* rsc_dependancy_t* */
 		GListPtr actions;	   /* action_t*        */
 
-		/* (soon to be) variant specific */
-		int max_instances;
-		int max_node_instances;
-		int max_masters;
-		int max_node_masters;
+		xmlNodePtr  extra_attrs;
 };
 
 struct action_wrapper_s 
@@ -210,8 +206,7 @@ struct action_s
 		GListPtr actions_before; /* action_warpper_t* */
 		GListPtr actions_after;  /* action_warpper_t* */
 
-		/* (soon to be) variant specific */
-		int	    incarnation;
+		xmlNodePtr  extra_attrs;
 };
 
 struct order_constraint_s 
