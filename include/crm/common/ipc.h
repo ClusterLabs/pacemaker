@@ -1,4 +1,4 @@
-/* $Id: ipc.h,v 1.3 2004/10/21 18:25:43 andrew Exp $ */
+/* $Id: ipc.h,v 1.4 2004/12/05 16:04:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,7 +25,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 
-typedef struct _crmd_client 
+typedef struct crmd_client_s 
 {
 		char *sub_sys;
 		char *uuid;
@@ -33,6 +33,7 @@ typedef struct _crmd_client
 		IPC_Channel *client_channel;
 		GCHSource *client_source;
 } crmd_client_t;
+
 
 extern gboolean send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg);
 
@@ -44,12 +45,22 @@ extern xmlNodePtr find_xml_in_ipcmessage(IPC_Message *msg,
 extern gboolean send_xmlipc_message(IPC_Channel *ipc_client,
 				    xmlNodePtr msg);
 
+extern int init_server_ipc_comms(
+	char *channel_name,
+	gboolean (*channel_client_connect)(
+		IPC_Channel *newclient, gpointer user_data),
+	void (*channel_connection_destroy)(gpointer user_data));
+
+/* extern GCHSource *init_client_ipc_comms( */
 extern IPC_Channel *init_client_ipc_comms(
-	const char *child,
+	const char *channel_name,
 	gboolean (*dispatch)(IPC_Channel* source_data, gpointer user_data),
-	crmd_client_t *user_data);
+	void *client_data);
+
+extern IPC_Channel *init_client_ipc_comms_nodispatch(const char *channel_name);
 
 extern gboolean subsystem_msg_dispatch(IPC_Channel *sender, void *user_data);
 
-#endif
+extern IPC_WaitConnection *wait_channel_init(char daemonsocket[]);
 
+#endif
