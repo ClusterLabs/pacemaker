@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.7 2004/12/21 08:13:04 andrew Exp $ */
+/* $Id: callbacks.c,v 1.8 2005/01/10 14:29:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,10 +47,11 @@ gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean cib_msg_timeout(gpointer data);
 void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
 
-
-int        next_client_id = 0;
-gboolean   cib_is_master  = FALSE;
-GHashTable *client_list   = NULL;
+GHashTable *peer_hash = NULL;
+int        next_client_id  = 0;
+gboolean   cib_is_master   = FALSE;
+gboolean   cib_have_quorum = FALSE;
+GHashTable *client_list    = NULL;
 extern const char *cib_our_uname;
 extern ll_cluster_t *hb_conn;
 
@@ -925,4 +926,57 @@ cib_get_operation_id(const struct ha_msg* msg, int *operation)
 	crm_err("Operation %s is not valid", op);
 	*operation = -1;
 	return cib_operation;
+}
+
+void
+cib_client_status_callback(const char * node, const char * client,
+			   const char * status, void * private)
+{
+	crm_notice("Status update: Client %s/%s now has status [%s]\n",
+		   node, client, status);
+
+	g_hash_table_replace(peer_hash, crm_strdup(node), crm_strdup(status));
+	return;
+}
+
+gboolean cib_ccm_dispatch(int fd, gpointer user_data)
+{
+	int rc = 0;
+	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
+	crm_debug("received callback");	
+	rc = oc_ev_handle_event(ccm_token);
+	if(0 == rc) {
+		return TRUE;
+
+	} else {
+		crm_err("CCM connection appears to have failed: rc=%d.", rc);
+		return FALSE;
+	}
+}
+
+
+void 
+cib_ccm_msg_callback(
+	oc_ed_t event, void *cookie, size_t size, const void *data)
+{
+	crm_debug("received callback");
+	
+	crm_info("event=%s", 
+	       event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
+	       event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
+	       event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
+	       event==OC_EV_MS_EVICTED?"EVICTED":
+	       "NO QUORUM MEMBERSHIP");
+
+	if(event==OC_EV_MS_NEW_MEMBERSHIP 
+	   || event==OC_EV_MS_NOT_PRIMARY
+	   || event==OC_EV_MS_PRIMARY_RESTORED) {
+		cib_have_quorum = TRUE;
+	} else {
+		cib_have_quorum = FALSE;
+	}
+	
+	oc_ev_callback_done(cookie);
+	
+	return;
 }

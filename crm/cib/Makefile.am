@@ -62,7 +62,9 @@ cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c \
 			callbacks.c main.c
 cib_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cib_LDFLAGS		= $(XML_LIBS)
-cib_LDADD		= $(COMMONLIBS)
+cib_LDADD		= $(COMMONLIBS) \
+			$(top_builddir)/membership/ccm/libccmclient.la  
+
 
 cibmon_SOURCES		= cibmon.c
 cibmon_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'

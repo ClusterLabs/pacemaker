@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.9 2004/12/17 09:32:24 andrew Exp $ */
+/* $Id: messages.c,v 1.10 2005/01/10 14:29:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <heartbeat.h>
 #include <clplumbing/cl_log.h>
 
 #include <time.h>
@@ -63,6 +64,34 @@ gboolean update_results(
 enum cib_errors cib_update_counter(
 	xmlNodePtr xml_obj, const char *field, gboolean reset);
 
+int set_connected_peers(xmlNodePtr xml_obj);
+void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
+
+
+int
+set_connected_peers(xmlNodePtr xml_obj)
+{
+	int active = 0;
+	char *peers_s = NULL;
+
+	g_hash_table_foreach(peer_hash, GHFunc_count_peers, &active);
+	peers_s = crm_itoa(active);
+	set_xml_property_copy(xml_obj, XML_ATTR_NUMPEERS, peers_s);
+	crm_free(peers_s);
+
+	return active;
+}
+
+void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data)
+{
+	int *active = user_data;
+	if(safe_str_eq(value, ONLINESTATUS)) {
+		(*active)++;
+		
+	} else if(safe_str_eq(value, JOINSTATUS)) {
+		(*active)++;
+	}
+}
 
 enum cib_errors 
 cib_process_default(
@@ -230,8 +259,8 @@ cib_process_bump(
 		    CRM_OP_CIB_BUMP, section);
 
 	cib_update_counter(tmpCib, XML_ATTR_GENERATION, FALSE);
-	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, TRUE);
-		
+	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
+	
 	if(activateCibXml(tmpCib, CIB_FILENAME) < 0) {
 		result = cib_ACTIVATION;
 	}
@@ -267,6 +296,17 @@ cib_update_counter(xmlNodePtr xml_obj, const char *field, gboolean reset)
 	set_xml_property_copy(xml_obj, field, new_value);
 	crm_free(new_value);
 
+	if(safe_str_eq(field, XML_ATTR_NUMUPDATES)) {
+		set_connected_peers(xml_obj);
+		if(cib_have_quorum) {
+			set_xml_property_copy(
+				xml_obj, XML_ATTR_HAVE_QUORUM, "true");
+		} else {
+			set_xml_property_copy(
+				xml_obj, XML_ATTR_HAVE_QUORUM, "false");
+		}
+	}
+	
 	return cib_ok;
 }
 

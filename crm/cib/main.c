@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.5 2004/12/16 14:34:18 andrew Exp $ */
+/* $Id: main.c,v 1.6 2005/01/10 14:29:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,7 +32,9 @@
 #include <clplumbing/coredumps.h>
 #include <clplumbing/Gmain_timeout.h>
 
-/* #include <ocf/oc_event.h> */
+/* #include <portability.h> */
+#include <ocf/oc_event.h>
+/* #include <ocf/oc_membership.h> */
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -52,9 +54,12 @@
 #define DAEMON_LOG   DEVEL_DIR"/"CRM_SYSTEM_CIB".log"
 #define DAEMON_DEBUG DEVEL_DIR"/"CRM_SYSTEM_CIB".debug"
 
+extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
+
 GMainLoop*  mainloop = NULL;
 const char* crm_system_name = CRM_SYSTEM_CIB;
 const char *cib_our_uname = NULL;
+oc_ev_t *cib_ev_token;
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
@@ -103,6 +108,7 @@ main(int argc, char ** argv)
 	CL_SIGNAL(SIGTERM,   cib_shutdown);
 
 	client_list = g_hash_table_new(&g_str_hash, &g_str_equal);
+	peer_hash = g_hash_table_new(&g_str_hash, &g_str_equal);
 	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -184,7 +190,87 @@ init_start(void)
 		crm_strdup("cib_rw"), cib_client_connect,
 		default_ipc_connection_destroy);
 
+
 	if(was_error == FALSE) {
+		crm_debug("Be informed of CRM Client Status changes");
+		if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(
+			    hb_conn, cib_client_status_callback, hb_conn)) {
+			
+			crm_err("Cannot set cstatus callback: %s\n",
+				hb_conn->llc_ops->errmsg(hb_conn));
+			was_error = TRUE;
+		} else {
+			crm_info("Client Status callback set");
+		}
+	}
+
+	if(was_error == FALSE) {
+		gboolean did_fail = TRUE;
+		int num_ccm_fails = 0;
+		int max_ccm_fails = 30;
+		int ret;
+		int cib_ev_fd;
+		
+		while(did_fail && was_error == FALSE) {
+			did_fail = FALSE;
+			crm_info("Registering with CCM");
+			ret = oc_ev_register(&cib_ev_token);
+			if (ret != 0) {
+				crm_warn("CCM registration failed");
+				did_fail = TRUE;
+			}
+			
+			if(did_fail == FALSE) {
+				crm_info("Setting up CCM callbacks");
+				ret = oc_ev_set_callback(
+					cib_ev_token, OC_EV_MEMB_CLASS,
+					cib_ccm_msg_callback, NULL);
+				if (ret != 0) {
+					crm_warn("CCM callback not set");
+					did_fail = TRUE;
+				}
+			}
+			if(did_fail == FALSE) {
+				oc_ev_special(cib_ev_token, OC_EV_MEMB_CLASS, 0);
+				
+				crm_info("Activating CCM token");
+				ret = oc_ev_activate(cib_ev_token, &cib_ev_fd);
+				if (ret != 0){
+					crm_warn("CCM Activation failed");
+					did_fail = TRUE;
+				}
+			}
+			
+			if(did_fail) {
+				num_ccm_fails++;
+				oc_ev_unregister(cib_ev_token);
+				
+				if(num_ccm_fails < max_ccm_fails){
+					crm_warn("CCM Connection failed"
+						 " %d times (%d max)",
+						 num_ccm_fails, max_ccm_fails);
+					sleep(1);
+					
+				} else {
+					crm_err("CCM Activation failed %d (max) times",
+						num_ccm_fails);
+					was_error = TRUE;
+					
+				}
+			}
+		}
+
+		crm_info("CCM Activation passed... all set to go!");
+		G_main_add_fd(G_PRIORITY_LOW, cib_ev_fd, FALSE, cib_ccm_dispatch,
+			      cib_ev_token, default_ipc_connection_destroy);
+	}
+
+	if(was_error == FALSE) {
+		/* Async get client status information in the cluster */
+		crm_debug("Requesting an initial dump of CRMD client_status");
+		hb_conn->llc_ops->client_status(
+			hb_conn, NULL, CRM_SYSTEM_CRMD, -1);
+
 		/* Create the mainloop and run it... */
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);

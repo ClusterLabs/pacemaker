@@ -1,4 +1,4 @@
-/* $Id: callbacks.h,v 1.2 2004/12/16 14:34:18 andrew Exp $ */
+/* $Id: callbacks.h,v 1.3 2005/01/10 14:29:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,11 +25,16 @@
 #include <clplumbing/ipc.h>
 #include <clplumbing/GSource.h>
 
+#include <ocf/oc_event.h>
+/* #include <ocf/oc_membership.h> */
+
 #include <crm/crm.h>
 #include <crm/cib.h>
 
-extern gboolean cib_is_master;
+extern gboolean   cib_is_master;
+extern gboolean   cib_have_quorum;
 extern GHashTable *client_list;
+extern GHashTable *peer_hash;
 
 typedef struct cib_client_s 
 {
@@ -64,4 +69,10 @@ extern gboolean cib_ro_callback   (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_ha_dispatch   (IPC_Channel *channel, gpointer user_data);
 
 extern void cib_peer_callback(const struct ha_msg* msg, void* private_data);
+extern void cib_client_status_callback(const char * node, const char * client,
+				       const char * status, void * private);
 
+extern gboolean cib_ccm_dispatch(int fd, gpointer user_data);
+
+extern void cib_ccm_msg_callback(
+	oc_ed_t event, void *cookie, size_t size, const void *data);

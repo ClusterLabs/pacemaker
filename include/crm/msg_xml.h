@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.17 2005/01/06 11:12:06 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.18 2005/01/10 14:29:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,7 +23,9 @@
 #define XML_TAG_CIB			"cib"
 #define XML_TAG_FAILED			"failed"
 
-#define XML_ATTR_GENERATION		"generation"
+#define XML_ATTR_NUMPEERS		"num_peers"
+#define XML_ATTR_HAVE_QUORUM		"have_quorum"
+#define XML_ATTR_GENERATION		"epoche"
 #define XML_ATTR_NUMUPDATES		"updates"
 #define XML_ATTR_TIMEOUT		"timeout"
 #define XML_ATTR_TSTAMP			"timestamp"
