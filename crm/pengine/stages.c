@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.43 2005/03/16 19:39:37 andrew Exp $ */
+/* $Id: stages.c,v 1.44 2005/03/17 07:42:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -437,17 +437,16 @@ choose_node_from_list(color_t *color)
 	color->details->chosen_node = NULL;
 	color->details->pending = FALSE;
 
-	chosen->details->num_resources += color->details->num_resources;
+	if(chosen == NULL) {
+		crm_debug("Could not allocate a node for color %d", color->id);
+		return FALSE;
+	}
 
 	/* todo: update the old node for each resource to reflect its
 	 * new resource count
 	 */
 	
-	if(chosen == NULL) {
-		crm_debug("Could not allocate a node for color %d", color->id);
-		return FALSE;
-	}
-	
+	chosen->details->num_resources += color->details->num_resources;
 	color->details->chosen_node = node_copy(chosen);
 	return TRUE;
 }
