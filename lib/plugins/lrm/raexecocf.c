@@ -66,11 +66,13 @@ static const char * RA_PATH = STONITH_RA_DIR;
 #endif
 
 /* The begin of exported function list */
-static int execra(const char * rsc_type,
+static int execra(const char * rsc_id,
+		  const char * rsc_type,
 		  const char * provider,
 		  const char * op_type,
 	 	  GHashTable * params);
-static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op_type);
+static uniform_ret_execra_t map_ra_retvalue(int ret_execra, 
+					    const char * op_type);
 static int get_resource_list(GList ** rsc_info);
 static char* get_resource_meta(const char* rsc_type,  const char* provider);
 static int get_provider_list(const char* op_type, GList ** providers);
@@ -79,6 +81,8 @@ static int get_provider_list(const char* op_type, GList ** providers);
 
 /* The begin of internal used function & data list */
 static void add_OCF_prefix(GHashTable * params, GHashTable * new_params);
+static void add_OCF_env_vars(GHashTable * env, const char * rsc_id,
+			     const char * rsc_type, const char * provider);
 static void add_prefix_foreach(gpointer key, gpointer value,
 				   gpointer user_data);
 static int raexec_setenv(GHashTable * env_params);
@@ -164,8 +168,8 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
  * The function to execute a RA.
  */
 static int
-execra(const char * rsc_type, const char * provider, const char * op_type,
-	GHashTable * params)
+execra(const char * rsc_id, const char * rsc_type, const char * provider,
+       const char * op_type, GHashTable * params)
 {
 	uniform_ret_execra_t exit_value;
 	char ra_pathname[RA_MAX_NAME_LENGTH];
@@ -176,34 +180,7 @@ execra(const char * rsc_type, const char * provider, const char * op_type,
 	/* Setup environment correctly */
 	tmp_for_setenv = g_hash_table_new(g_str_hash, g_str_equal);
 	add_OCF_prefix(params, tmp_for_setenv);
-
-	g_hash_table_insert(tmp_for_setenv, g_strdup("OCF_RA_VERSION_MAJOR"), 
-			    g_strdup("1"));
-	g_hash_table_insert(tmp_for_setenv, g_strdup("OCF_RA_VERSION_MINOR"), 
-			    g_strdup("0"));
-
-	/* According to OCF specification, OCF_ROOT refer to the root of 
-	 * the OCF directory hierarchy. Now as for current directory
-	 * layout, OCF_ROOT==OCF_RA_DIR?  I'm not very sure, pls fix me.
-	 */
-	g_hash_table_insert(tmp_for_setenv, g_strdup("OCF_ROOT"), 
-			    g_strdup(OCF_ROOT_DIR));
-
-	/* Currently the rsc_type==rsc_class_name, maybe not correct.
-	 * Please fix me if you are sure what it should be. 
-	 */
-	g_hash_table_insert(tmp_for_setenv, g_strdup("OCF_RESOURCE_TYPE"), 
-			    g_strdup(rsc_type));
-
-	/* Notes: this is not added to specification yet. Sept 10,2004 */
-	g_hash_table_insert(tmp_for_setenv, g_strdup("OCF_RESOURCE_PROVIDER"),
-			    g_strdup(provider));
-
-	/* TODO: This is not passed in currently. */
-#if 0
-	g_hash_table_insert(tmp_for_setenv, "OCF_RESOURCE_INSTANCE", 
-			"FIXME");
-#endif
+	add_OCF_env_vars(tmp_for_setenv, rsc_id, rsc_type, provider);
 	raexec_setenv(tmp_for_setenv);
 	g_hash_table_foreach_remove(tmp_for_setenv, let_remove_eachitem, NULL);
 	g_hash_table_destroy(tmp_for_setenv);
@@ -323,10 +300,17 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	GString* g_str_tmp = NULL;
 	char ra_pathname[RA_MAX_NAME_LENGTH];
 	FILE* file = NULL;
+	GHashTable * tmp_for_setenv;
 
 	get_ra_pathname(RA_PATH, rsc_type, provider, ra_pathname);
 
 	strncat(ra_pathname, " meta-data",RA_MAX_NAME_LENGTH);
+
+	tmp_for_setenv = g_hash_table_new(g_str_hash, g_str_equal);
+	add_OCF_env_vars(tmp_for_setenv, NULL, rsc_type, provider);
+	raexec_setenv(tmp_for_setenv);
+	g_hash_table_foreach_remove(tmp_for_setenv, let_remove_eachitem, NULL);
+	g_hash_table_destroy(tmp_for_setenv);
 
 	file = popen(ra_pathname, "r");
 	if (NULL==file) {
@@ -445,4 +429,40 @@ get_providers(const char* class_path, const char* op_type, GList ** providers)
 		free(namelist);
 	}
 	return g_list_length(*providers);
+}
+
+static void
+add_OCF_env_vars(GHashTable * env, const char * rsc_id,
+	         const char * rsc_type, const char * provider)
+{
+	if ( env == NULL ) {
+		cl_log(LOG_WARNING, "env should not be a NULL pointer.");
+		return;
+	}
+	
+	g_hash_table_insert(env, g_strdup("OCF_RA_VERSION_MAJOR"), 
+			    g_strdup("1"));
+	g_hash_table_insert(env, g_strdup("OCF_RA_VERSION_MINOR"), 
+			    g_strdup("0"));
+	g_hash_table_insert(env, g_strdup("OCF_ROOT"), 
+			    g_strdup(OCF_ROOT_DIR));
+
+	if ( rsc_id != NULL ) {
+		g_hash_table_insert(env, g_strdup("OCF_RESOURCE_INSTANCE"),
+				    g_strdup(rsc_id));
+	}
+
+	/* Currently the rsc_type=="the filename of the RA script/executable",
+	 * It seems always correct even in the furture. ;-)
+	 */
+	if ( rsc_type != NULL ) {
+		g_hash_table_insert(env, g_strdup("OCF_RESOURCE_TYPE"), 
+				    g_strdup(rsc_type));
+	}
+
+	/* Notes: this is not added to specification yet. Sept 10,2004 */
+	if ( provider != NULL ) {
+		g_hash_table_insert(env, g_strdup("OCF_RESOURCE_PROVIDER"),
+			    	    g_strdup(provider));
+	}
 }
