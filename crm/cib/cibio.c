@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.11 2004/03/10 22:24:41 andrew Exp $ */
+/* $Id: cibio.c,v 1.12 2004/03/18 10:25:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -469,15 +469,12 @@ activateCibXml(xmlNodePtr new_cib)
 		error_code = -5;
 	}
 
-	CRM_DEBUG2("New CIB %p", new_cib);
-	CRM_DEBUG2("Saved CIB %p", saved_cib);
-
 // Make sure memory is cleaned up appropriately
 	if (error_code < 0) {
-		CRM_DEBUG2("Freeing new CIB %p", new_cib);
+//		CRM_DEBUG2("Freeing new CIB %p", new_cib);
 		free_xml(new_cib);
 	} else {
-		CRM_DEBUG2("Freeing saved CIB %p", saved_cib);
+//		CRM_DEBUG2("Freeing saved CIB %p", saved_cib);
 		free_xml(saved_cib);
 	}
 	
