@@ -1214,7 +1214,11 @@ class Split_brainTest(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''
-        return [ "ERROR:.*Both machines own.*resources" ]
+        return [ "ERROR:.*Both machines own.*resources"
+	,	"ERROR:.*lost a lot of packets!"
+ 	,	"ERROR: Cannot rexmit pkt .*: seqno too low"
+	,	"ERROR: Irretrievably lost packet: node"
+	]
 
 AllTestClasses.append(Split_brainTest)
 
