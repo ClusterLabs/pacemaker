@@ -359,11 +359,10 @@ class RestartTest(CTSTest):
         self.start = StartTest(cm)
         self.stop = StopTest(cm)
 
-    def __call__(self):
+    def __call__(self, node):
         '''Perform the 'restart' test. '''
         self.incr("calls")
 
-        node = self.CM.Env.RandomNode()
         self.incr("node:" + node)
 
         if self.CM.ShouldBeStatus[node] == self.CM["down"]:
@@ -637,18 +636,26 @@ class StandbyTest(CTSTest):
            return None
         else:
 
-            if self.CM.Env.has_key("DoStandby"):
-                flag=self.CM.Env["DoStandby"]
-                if type(flag) == types.IntType:
-		    return flag
-                if not re.match("[yt]", flag, re.I):
-                    return None
+            #if self.CM.Env.has_key("DoStandby"):
+                #flag=self.CM.Env["DoStandby"]
+                #if type(flag) == types.IntType:
+		    #return flag
+                #if not re.match("[yt]", flag, re.I):
+                    #return None
             #
             # We need to strip off everything after the first blank
             #
             cmd=self.CM["Standby"];
             cmd = cmd.split()[0]
-            return os.access(cmd, os.X_OK)
+            if not os.access(cmd, os.X_OK):
+                return None
+
+            cf = self.CM.cf
+            if not cf.Parameters.has_key("auto_failback"):
+                return None
+            elif cf.Parameters["auto_failback"][0] == "legacy":
+                return None
+            return 1
 
 #	Register StandbyTest as a good test to run
 AllTestClasses.append(StandbyTest)
@@ -715,8 +722,8 @@ class Fastdetection(CTSTest):
             return self.failure("Couldn't stop heartbeat")
 
     def is_applicable(self):
-        '''this test is always applicable'''
-        return 1
+        '''This test is applicable when auto_failback != legacy'''
+        return self.standby.is_applicable()
 
 AllTestClasses.append(Fastdetection)
 
@@ -738,7 +745,7 @@ class BandwidthTest(CTSTest):
         if self.CM.ShouldBeStatus[node] != self.CM["up"]:
             return self.skipped()
             
-        cf = HBConfig()
+        cf = self.CM.cf
         eth = None
         port = None
         for cfp in cf.Parameters:
@@ -832,7 +839,7 @@ class RedundantpathTest(CTSTest):
 
     def PathCount(self):
         '''Return number of communication paths'''
-        cf = HBConfig()
+        cf = self.CM.cf
 	eths = []
 	serials = []
         num = 0
@@ -862,7 +869,7 @@ class RedundantpathTest(CTSTest):
         if self.CM.ShouldBeStatus[node]!=self.CM["up"]:
             return self.skipped()
     
-        cf = HBConfig()
+        cf = self.CM.cf
         num = 0
         PathDown = None
         eths = []
@@ -1048,7 +1055,7 @@ class Split_brainTest(CTSTest):
 	#	Really need to add an isolate_node() member function to
 	#	the generic cluster manager API.
 	#
-        cf = HBConfig()
+        cf = self.CM.cf
         
         IPaddr = None
         for reslist in cf.ResourceGroups.keys():
