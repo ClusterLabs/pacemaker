@@ -225,20 +225,18 @@ create_simple_message(char *text, IPC_Channel *ch)
 gboolean
 default_ipc_input_dispatch(IPC_Channel *client, gpointer user_data)
 {
-    FNIN();
-    CRM_DEBUG("default_ipc_input_dispatch: default processing of IPC messages");
-    if(client->ch_status == IPC_DISCONNECT)
-    {
-		cl_log(LOG_INFO, "default_ipc_input_dispatch: received HUP");
-//	FNRET(FALSE);  i dont understand these return values at all
-    }
-    else
-    {
-		xmlNodePtr root = find_xml_in_ipcmessage(get_ipc_message(client), TRUE);
+	xmlNodePtr root;
+	IPC_Message *msg = NULL;
+	
+	FNIN();
+	CRM_DEBUG("default_ipc_input_dispatch: default processing of IPC messages");
+	msg = get_ipc_message(client);
+	if (msg) {
+		root = find_xml_in_ipcmessage(msg, TRUE);
 		validate_crm_message(root, NULL, NULL, NULL);
-    }
-    
-    FNRET(TRUE); /* TOBEDONE */
+	}
+
+	FNRET(TRUE); /* TOBEDONE */
 }
 
 xmlNodePtr
@@ -445,17 +443,20 @@ wait_channel_init(char daemonfifo[])
 IPC_Message *
 get_ipc_message(IPC_Channel *a_channel)
 {
-    FNIN();
-    IPC_Message *msg = NULL;
-    if(a_channel->ops->is_message_pending(a_channel) == TRUE)
-    {
-		if(a_channel->ops->recv(a_channel, &msg) != IPC_OK)
-		{
+	FNIN();
+	IPC_Message *msg = NULL;
+	if(a_channel->ops->is_message_pending(a_channel) == TRUE) {
+		if (a_channel->ch_status == IPC_DISCONNECT) {
+			/* The pending message was IPC_DISCONNECT */
+			cl_log(LOG_INFO, "get_ipc_message: received HUP");
+			FNRET(msg);
+		}
+		if(a_channel->ops->recv(a_channel, &msg) != IPC_OK) {
 			perror("Receive failure:");
-			FNRET(FALSE);
+			FNRET(msg);
 		}
 		cl_log(LOG_INFO, "Got message [body=%s]", (char*)msg->msg_body);
-    }
-    FNRET(msg);
+	}
+	FNRET(msg);
 }
 
