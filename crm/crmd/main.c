@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.8 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: main.c,v 1.9 2005/02/01 22:51:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,7 +51,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 const char* crm_system_name = SYS_NAME;
-#define OPTARGS	"skrhV"
+#define OPTARGS	"hV"
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
@@ -63,11 +63,8 @@ GMainLoop*  crmd_mainloop = NULL;
 int
 main(int argc, char ** argv)
 {
-    int	req_restart = FALSE;
-    int	req_status  = FALSE;
-    int	req_stop    = FALSE;
-    int	argerr      = 0;
     int flag;
+    int	argerr = 0;
     struct stat buf;
 
 #ifdef DEVEL_DIR
@@ -83,10 +80,11 @@ main(int argc, char ** argv)
 		      cl_glib_msg_handler, NULL);
     /* and for good measure... */
     g_log_set_always_fatal((GLogLevelFlags)0);    
+
+    cl_log_set_facility(LOG_LOCAL7);
     cl_log_set_entity(crm_system_name);
-    cl_log_set_logfile(DAEMON_LOG);
-    cl_log_set_debugfile(DAEMON_DEBUG);
-    cl_log_set_facility(LOG_USER);
+    cl_log_send_to_logging_daemon(TRUE);
+    
     CL_SIGNAL(DEBUG_INC, alter_debug);
     CL_SIGNAL(DEBUG_DEC, alter_debug);
 
@@ -95,21 +93,12 @@ main(int argc, char ** argv)
 	    exit(100);
     }
     
-    set_crm_log_level(LOG_DEV);
+    set_crm_log_level(LOG_VERBOSE);
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
 				alter_debug(DEBUG_INC);
-				break;
-			case 's':		/* Status */
-				req_status = TRUE;
-				break;
-			case 'k':		/* Stop (kill) */
-				req_stop = TRUE;
-				break;
-			case 'r':		/* Restart */
-				req_restart = TRUE;
 				break;
 			case 'h':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
@@ -139,20 +128,7 @@ main(int argc, char ** argv)
     if(cl_cdtocoredir() != 0) {
 	    crm_err("Cannot cd to coredump dir");
     }
-    
-    
-    if (req_status){
-	    return init_status(PID_FILE, crm_system_name);
-    }
-  
-    if (req_stop){
-	    return init_stop(PID_FILE);
-    }
-	
-    if (req_restart) { 
-	    init_stop(PID_FILE);
-    }
-	
+ 
     return init_start();
 }
 
