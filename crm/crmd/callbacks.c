@@ -37,6 +37,38 @@
 crm_data_t *find_xml_in_hamessage(const HA_Message * msg);
 void crmd_ha_connection_destroy(gpointer user_data);
 
+
+/* #define MAX_EMPTY_CALLBACKS 20 */
+/* int empty_callbacks = 0; */
+
+gboolean
+crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
+{
+	int lpc = 0;
+	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
+
+	while(lpc == 0 && hb_cluster->llc_ops->msgready(hb_cluster)) {
+		if(channel->ch_status != IPC_CONNECT) {
+			/* there really is no point continuing */
+			break;
+		}
+ 		lpc++; 
+		/* invoke the callbacks but dont block */
+		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
+	}
+
+	crm_devel("%d HA messages dispatched", lpc);
+	G_main_set_trigger(fsa_source);
+	
+	if (channel && (channel->ch_status != IPC_CONNECT)) {
+		crm_crit("Lost connection to heartbeat service.");
+		return FALSE;
+	}
+    
+	return TRUE;
+}
+
+
 void
 crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 {
@@ -140,13 +172,13 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 	int lpc = 0;
 	IPC_Message *msg = NULL;
 	ha_msg_input_t *new_input = NULL;
-	gboolean hack_return_good = TRUE;
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
-
+	gboolean stay_connected = TRUE;
+	
 	crm_verbose("Processing IPC message from %s",
 		   curr_client->table_key);
 
-	while(client->ops->is_message_pending(client)) {
+	while(lpc == 0 && client->ops->is_message_pending(client)) {
 		if (client->ch_status != IPC_CONNECT) {
 			/* The message which was pending for us is that
 			 * the IPC status is now IPC_DISCONNECT */
@@ -155,7 +187,9 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		if (client->ops->recv(client, &msg) != IPC_OK) {
 			perror("Receive failure:");
 			crm_err("[%s] [receive failure]", curr_client->table_key);
-			return !hack_return_good;
+			stay_connected = FALSE;
+			break;
+			
 		} else if (msg == NULL) {
 			crm_err("No message from %s this time", curr_client->table_key);
 			continue;
@@ -173,10 +207,11 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		msg = NULL;
 		new_input = NULL;
 	}
-
+	
 	crm_verbose("Processed %d messages", lpc);
     
 	if (client->ch_status != IPC_CONNECT) {
+		stay_connected = FALSE;
 		crm_verbose("received HUP from %s", curr_client->table_key);
 		if (curr_client != NULL) {
 			struct crm_subsystem_s *the_subsystem = NULL;
@@ -199,7 +234,6 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 			
 			if(the_subsystem != NULL) {
 				cleanup_subsystem(the_subsystem);
-				s_crmd_fsa(C_FSA_INTERNAL);
 				
 			} /* else that was a transient client */
 			
@@ -214,7 +248,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 					ipc_clients, curr_client->table_key);
 			}
 
-
+#if 0
 			if(curr_client->client_source != NULL) {
 				gboolean det = G_main_del_IPC_Channel(
 					curr_client->client_source);
@@ -222,16 +256,16 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 				crm_verbose("crm_client was %s detached",
 					   det?"successfully":"not");
 			}
-			
+#endif		
 			crm_free(curr_client->table_key);
 			crm_free(curr_client->sub_sys);
 			crm_free(curr_client->uuid);
 			crm_free(curr_client);
 		}
-		return !hack_return_good;
 	}
-    
-	return hack_return_good;
+
+	G_main_set_trigger(fsa_source);
+	return stay_connected;
 }
 
 
@@ -241,7 +275,7 @@ lrm_op_callback(lrm_op_t* op)
 	/* todo: free op->rsc */
 	crm_devel("received callback");
 	register_fsa_input(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
-	s_crmd_fsa(C_LRM_OP_CALLBACK);
+	G_main_set_trigger(fsa_source);
 }
 
 void
@@ -270,7 +304,7 @@ crmd_ha_status_callback(
 		update, XML_CIB_ATTR_CLEAR_SHUTDOWN, XML_BOOLEAN_TRUE);
 	
 	update_local_cib(create_cib_fragment(update, NULL));
-	s_crmd_fsa(C_FSA_INTERNAL);
+	G_main_set_trigger(fsa_source);
 	free_xml(update);
 }
 
@@ -322,7 +356,7 @@ crmd_client_status_callback(const char * node, const char * client,
 		free_xml(update);
 	}
 	
-	s_crmd_fsa(C_CRMD_STATUS_CALLBACK);
+	G_main_set_trigger(fsa_source);
 }
 
 
@@ -336,39 +370,9 @@ gboolean lrm_dispatch(int fd, gpointer user_data)
 		crm_err("lrm->lrm_ops->rcvmsg() failed, connection lost?");
 		clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
 		register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-		s_crmd_fsa(C_FSA_INTERNAL);
+		G_main_set_trigger(fsa_source);
 		return FALSE;
 	}
-	return TRUE;
-}
-
-/* #define MAX_EMPTY_CALLBACKS 20 */
-/* int empty_callbacks = 0; */
-
-gboolean
-crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
-{
-	int lpc = 0;
-	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
-
-	while(hb_cluster->llc_ops->msgready(hb_cluster)) {
-		if(channel->ch_status != IPC_CONNECT) {
-			/* there really is no point continuing */
-			break;
-		}
- 		lpc++; 
-		/* invoke the callbacks but dont block */
-		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
-	}
-
-	crm_devel("%d HA messages dispatched", lpc);
-	s_crmd_fsa(C_HA_MESSAGE);
-
-	if (channel && (channel->ch_status != IPC_CONNECT)) {
-		crm_crit("Lost connection to heartbeat service.");
-		return FALSE;
-	}
-    
 	return TRUE;
 }
 
@@ -379,7 +383,7 @@ crmd_ha_connection_destroy(gpointer user_data)
 	/* this is always an error */
 	/* feed this back into the FSA */
 	register_fsa_input(C_HA_DISCONNECT, I_ERROR, NULL);
-	s_crmd_fsa(C_HA_DISCONNECT);
+	G_main_set_trigger(fsa_source);
 }
 
 
@@ -433,7 +437,7 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 		register_fsa_input(C_CCM_CALLBACK, I_ERROR, NULL);
 		was_error = TRUE;
 	}
-	s_crmd_fsa(C_CCM_CALLBACK);
+	G_main_set_trigger(fsa_source);
 	return !was_error;
 }
 
@@ -487,6 +491,13 @@ crmd_cib_connection_destroy(gpointer user_data)
 	register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 	clear_bit_inplace(fsa_input_register, R_CIB_CONNECTED);
 	
-	s_crmd_fsa(C_FSA_INTERNAL);
+	G_main_set_trigger(fsa_source);
 	return;
+}
+
+gboolean
+crm_fsa_trigger(gpointer user_data) 
+{
+	s_crmd_fsa(C_FSA_INTERNAL);
+	return TRUE;	
 }

@@ -112,7 +112,7 @@ crm_timer_popped(gpointer data)
 		register_fsa_input_before(
 			C_TIMER_POPPED, timer->fsa_input, NULL);
 	}
-	s_crmd_fsa(C_TIMER_POPPED);
+	G_main_set_trigger(fsa_source);
 	
 	return TRUE;
 }

@@ -41,6 +41,7 @@ enum crmd_fsa_input handle_response(ha_msg_input_t *stored_msg);
 enum crmd_fsa_input handle_shutdown_request(HA_Message *stored_msg);
 
 ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
+gboolean ipc_queue_helper(gpointer key, gpointer value, gpointer user_data);
 
 
 #ifdef MSG_LOG
@@ -609,7 +610,6 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		}
 #endif
 		register_fsa_input(C_IPC_MESSAGE, I_ROUTER, client_msg);
-		s_crmd_fsa(C_IPC_MESSAGE);
 		
 		return can_reply;
 	}
@@ -711,7 +711,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 			set_bit_inplace(
 				fsa_input_register, the_subsystem->flag_connected);
 		}
-		s_crmd_fsa(C_SUBSYSTEM_CONNECT);
+		G_main_set_trigger(fsa_source);
 
 	} else {
 		crm_warn("Rejected client logon request");
@@ -1166,3 +1166,29 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 
 	return send_ok;
 }	
+
+
+void
+msg_queue_helper(void) 
+{
+	IPC_Channel *ipc = NULL;
+	if(fsa_cluster_conn != NULL) {
+		ipc = fsa_cluster_conn->llc_ops->ipcchan(
+			fsa_cluster_conn);
+	}
+	if(ipc != NULL) {
+		ipc->ops->is_message_pending(ipc);
+	}
+/*  	g_hash_table_foreach_remove(ipc_clients, ipc_queue_helper, NULL); */
+}
+
+
+gboolean
+ipc_queue_helper(gpointer key, gpointer value, gpointer user_data) 
+{
+	crmd_client_t *ipc_client = value;
+	if(ipc_client->client_channel != NULL) {
+		ipc_client->client_channel->ops->is_message_pending(ipc_client->client_channel);
+	}
+	return FALSE;
+}

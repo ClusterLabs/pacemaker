@@ -175,6 +175,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	do_fsa_stall = FALSE;
 	while(next_input != I_NULL || fsa_actions != A_NOTHING || is_message()) {
 
+ 		msg_queue_helper();
+
 		if(do_fsa_stall) {
 			/* we may be waiting for an a-sync task to "happen"
 			 * and until it does, we cant do anything else

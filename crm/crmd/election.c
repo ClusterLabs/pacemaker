@@ -115,7 +115,7 @@ do_dc_heartbeat(gpointer data)
 		crm_timer_stop(timer); /* make it not go off again */
 
 		register_fsa_input(C_HEARTBEAT_FAILED, I_SHUTDOWN, NULL);
-		s_crmd_fsa(C_HEARTBEAT_FAILED);
+		G_main_set_trigger(fsa_source);
 
 		return FALSE;
 	}

@@ -57,3 +57,5 @@ extern gboolean crmd_client_connect(
 	IPC_Channel *newclient, gpointer user_data);
 
 extern void crmd_cib_connection_destroy(gpointer user_data);
+
+extern gboolean crm_fsa_trigger(gpointer user_data);

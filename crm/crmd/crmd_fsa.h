@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.37 2005/03/03 16:19:25 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.38 2005/04/04 08:17:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -127,6 +127,7 @@ extern fsa_timer_t *finalization_timer;
 extern fsa_timer_t *wait_timer;
 
 extern int fsa_join_reannouce;
+extern GTRIGSource *fsa_source;
 
 extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;

@@ -42,6 +42,7 @@ gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
 
 
 GHashTable   *ipc_clients = NULL;
+GTRIGSource  *fsa_source = NULL;
 
 /*	 A_HA_CONNECT	*/
 enum crmd_fsa_input
@@ -216,6 +217,9 @@ do_startup(long long action,
 	crm_info("Register Signal Handler");
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, crm_shutdown, NULL, NULL);
+
+	fsa_source = G_main_add_TriggerHandler(
+		G_PRIORITY_HIGH, crm_fsa_trigger, NULL, NULL);
 
 	ipc_clients = g_hash_table_new(g_str_hash, g_str_equal);
 	
@@ -539,7 +543,7 @@ crm_shutdown(int nsig, gpointer unused)
 		if(is_set(fsa_input_register, R_SHUTDOWN)) {
 			crm_err("Escalating the shutdown");
 			register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
-			s_crmd_fsa(C_SHUTDOWN);
+			G_main_set_trigger(fsa_source);
 
 		} else {
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
@@ -552,7 +556,7 @@ crm_shutdown(int nsig, gpointer unused)
 				/* cant rely on this... */
 				crm_timer_start(shutdown_escalation_timer);
 				register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
-			s_crmd_fsa(C_SHUTDOWN);
+				G_main_set_trigger(fsa_source);
 
 			} else {
 				crm_err("Could not set R_SHUTDOWN");
