@@ -2,9 +2,9 @@
 <!DOCTYPE transition_graph SYSTEM "crm-1.0.dtd">
 <transition_graph>
   <actions id="0">
-    <rsc_op id="1" rsc_id="rsc1" target="node1" task="stop" runnable="true" optional="false" discard="false" allow_fail="false">
+    <rsc_op id="1" rsc_id="rsc1" on_node="node1" operation="stop" runnable="true" optional="false" discard="false" allow_fail="false">
       <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
     </rsc_op>
-    <crm_event id="3" target="node1" task="shutdown_crm" runnable="true" optional="false" discard="false" allow_fail="false"/>
+    <crm_event id="3" on_node="node1" operation="shutdown_crm" runnable="true" optional="false" discard="false" allow_fail="false"/>
   </actions>
 </transition_graph>

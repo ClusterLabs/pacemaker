@@ -108,6 +108,14 @@ do_test rsc_rsc8 "Should 3	"
 
 echo ""
 
+do_test attrs1 "string: eq (and)	"
+do_test attrs2 "string: lt / gt (and)"
+do_test attrs3 "string: ne (or)	"
+do_test attrs4 "string: exists	"
+do_test attrs5 "string: notexists	"
+
+echo ""
+
 #do_test rsc_node1 "Rsc1 Node1	"
 #do_test rsc_node2 "Rsc1 Node2	"
 #do_test rsc_node3 "Node Only	"

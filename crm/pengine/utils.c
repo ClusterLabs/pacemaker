@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.32 2004/06/28 08:29:20 andrew Exp $ */
+/* $Id: utils.c,v 1.33 2004/07/01 08:52:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -83,10 +83,12 @@ node_list_and(GListPtr list1, GListPtr list2, gboolean filter)
 	GListPtr result = NULL;
 	int lpc = 0;
 
+	crm_debug("start");
+	
 	for(lpc = 0; lpc < g_list_length(list1); lpc++) {
 		node_t *node = (node_t*)g_list_nth_data(list1, lpc);
 		node_t *new_node = NULL;
-		node_t *other_node = find_list_node(list2, node->details->id);
+		node_t *other_node = pe_find_node(list2, node->details->uname);
 
 		if(node == NULL || other_node == NULL) {
 			continue;
@@ -105,28 +107,14 @@ node_list_and(GListPtr list1, GListPtr list2, gboolean filter)
 		}
 		if(filter && new_node->weight < 0) {
 			crm_free(new_node);
-			continue;
+		} else {
+			result = g_list_append(result, new_node);
 		}
-		
-		result = g_list_append(result, new_node);
 	}
- 
-	return result;
-}
 
-node_t *
-find_list_node(GListPtr list, const char *id)
-{
-	int lpc = 0;
-	slist_iter(
-		thing, node_t, list, lpc,
-		if(safe_str_eq(thing->details->id, id)) {
-			crm_trace("found %s", id);
-			return thing;
-		}
-		);
-	
-	return NULL;
+	crm_debug("end");
+
+	return result;
 }
 
 /* list1 - list2 */
@@ -138,7 +126,7 @@ node_list_minus(GListPtr list1, GListPtr list2, gboolean filter)
 
 	slist_iter(
 		node, node_t, list1, lpc,
-		node_t *other_node = find_list_node(list2, node->details->id);
+		node_t *other_node = pe_find_node(list2, node->details->uname);
 		
 		if(node == NULL || other_node != NULL
 		   || (filter && node->weight < 0)) {
@@ -164,7 +152,7 @@ node_list_xor(GListPtr list1, GListPtr list2, gboolean filter)
 	
 	slist_iter(
 		node, node_t, list1, lpc,
-		node_t *other_node = (node_t*)find_list_node(list2, node->details->id);
+		node_t *other_node = (node_t*)pe_find_node(list2, node->details->uname);
 
 		if(node == NULL || other_node != NULL
 		   || (filter && node->weight < 0)) {
@@ -177,7 +165,7 @@ node_list_xor(GListPtr list1, GListPtr list2, gboolean filter)
  
 	slist_iter(
 		node, node_t, list2, lpc,
-		node_t *other_node = (node_t*)find_list_node(list1, node->details->id);
+		node_t *other_node = (node_t*)pe_find_node(list1, node->details->uname);
 
 		if(node == NULL || other_node != NULL
 		   || (filter && node->weight < 0)) {
@@ -207,8 +195,8 @@ node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
 			continue;
 		}
 
-		other_node = (node_t*)find_list_node(
-			result, node->details->id);
+		other_node = (node_t*)pe_find_node(
+			result, node->details->uname);
 
 		if(other_node == NULL) {
 			node_t *new_node = node_copy(node);
@@ -246,11 +234,12 @@ node_copy(node_t *this_node)
 		print_node("Failed copy of", this_node, TRUE);
 		return NULL;
 	}
-	node_t *new_node  = crm_malloc(sizeof(node_t));
+	node_t *new_node  = (node_t*)crm_malloc(sizeof(node_t));
+//	crm_trace("copying %p (%s) to %p", this_node, this_node->details->uname, new_node);
 	new_node->weight  = this_node->weight; 
 	new_node->fixed   = this_node->fixed;
 	new_node->details = this_node->details; 
-
+	
 	return new_node;
 }
 
@@ -361,8 +350,25 @@ pe_find_resource(GListPtr rsc_list, const char *id_rh)
 	// error
 	return NULL;
 }
+
+
 node_t *
-pe_find_node(GListPtr nodes, const char *id)
+pe_find_node(GListPtr nodes, const char *uname)
+{
+	int lpc = 0;
+  
+	for(lpc = 0; lpc < g_list_length(nodes); lpc++) {
+		node_t *node = g_list_nth_data(nodes, lpc);
+		if(safe_str_eq(node->details->uname, uname)) {
+			return node;
+		}
+	}
+	// error
+	return NULL;
+}
+
+node_t *
+pe_find_node_id(GListPtr nodes, const char *id)
 {
 	int lpc = 0;
   
@@ -612,7 +618,7 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       node->details==NULL?"error ":node->details->online?"":"Unavailable/Unclean ",
-	       node->details->id, 
+	       node->details->uname, 
 	       node->weight,
 	       node->fixed?"True":"False"); 
 
@@ -662,7 +668,7 @@ print_color_details(const char *pre_text,
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       color->id, 
-	       color->chosen_node==NULL?"<unset>":color->chosen_node->details->id,
+	       color->chosen_node==NULL?"<unset>":color->chosen_node->details->uname,
 	       g_list_length(color->candidate_nodes)); 
 	if(details) {
 		int lpc = 0;
@@ -685,7 +691,7 @@ print_color(const char *pre_text, color_t *color, gboolean details)
 	       pre_text==NULL?"":": ",
 	       color->id, 
 	       color->local_weight,
-		  safe_val5("<unset>",color,details,chosen_node,details,id),
+		  safe_val5("<unset>",color,details,chosen_node,details,uname),
 	       g_list_length(color->details->candidate_nodes)); 
 	if(details) {
 		print_color_details("\t", color->details, details);
@@ -762,7 +768,7 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 	       rsc->id,
 	       (double)rsc->priority,
 	       safe_val3(-1, rsc, color, id),
-	       safe_val4(NULL, rsc, cur_node, details, id));
+	       safe_val4(NULL, rsc, cur_node, details, uname));
 
 	crm_debug("\t%d candidate colors, %d allowed nodes, %d rsc_cons and %d node_cons",
 	       g_list_length(rsc->candidate_colors),
@@ -810,7 +816,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			       action->discard?"Discarded ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 			       action->id,
 			       task2text(action->task),
-			       safe_val4(NULL, action, node, details, id));
+			       safe_val4(NULL, action, node, details, uname));
 			break;
 		default:
 			crm_debug("%s%s%sAction %d: %s %s @ %s",
@@ -820,7 +826,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			       action->id,
 			       task2text(action->task),
 			       safe_val3(NULL, action, rsc, id),
-			       safe_val4(NULL, action, node, details, id));
+			       safe_val4(NULL, action, node, details, uname));
 			
 			break;
 	}
@@ -866,11 +872,10 @@ pe_free_nodes(GListPtr nodes)
 		nodes = nodes->next;
 
 		crm_trace("deleting node");
-		crm_trace("%s is being deleted", details->id);
+		crm_trace("%s is being deleted", details->uname);
 		print_node("delete", node, FALSE);
 		
 		if(details != NULL) {
-//			crm_free(details->id);
 			if(details->attrs != NULL) {
 				g_hash_table_foreach_remove(details->attrs,
 							    ghash_free_str_str,
@@ -879,10 +884,8 @@ pe_free_nodes(GListPtr nodes)
 				g_hash_table_destroy(details->attrs);
 			}
 			
-//			crm_free(details);
 		}
 		
-//		crm_free(node);
 	}
 	g_list_free(nodes);
 }
@@ -930,6 +933,7 @@ pe_free_shallow_adv(GListPtr alist, gboolean with_data)
 		item_next = item_next->next;
 		
 		if(with_data) {
+//			crm_trace("freeing %p", item->data);
 			crm_free(item->data);
 		}
 		

@@ -14,8 +14,8 @@
   <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" result="cannot" boolean="or">
-	  <expresssion match="uname:node1"/>
-	  <expresssion match="uname:node3"/>
+	  <expresssion attribute="uname" op="eq" value="node1"/>
+	  <expresssion attribute="uname" op="eq" value="node3"/>
 	</rule>
 	<rule id="can3" result="can"/>
       </rsc_location>

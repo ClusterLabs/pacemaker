@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.7 2004/06/28 08:29:20 andrew Exp $ */
+/* $Id: stages.c,v 1.8 2004/07/01 08:52:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -286,31 +286,31 @@ stage5(GListPtr resources)
 			rsc->stop->optional = FALSE;
 			crm_warn("Stop resource %s (%s)",
 				  safe_val(NULL, rsc, id),
-				  safe_val5(NULL, rsc, stop, node,details,id));
+				  safe_val5(NULL, rsc, stop, node,details,uname));
 
 			crm_debug_action(
 				print_action(
 					CRMD_STATE_ACTIVE, rsc->stop, FALSE));
 			
 			
-		} else if(safe_str_eq(safe_val4(NULL, rsc,cur_node,details,id),
+		} else if(safe_str_eq(safe_val4(NULL, rsc,cur_node,details,uname),
 				      safe_val6(NULL, rsc, color ,details,
-						chosen_node, details, id))){
+						chosen_node, details, uname))){
 			crm_verbose("No change for Resource %s (%s)",
 				    safe_val(NULL, rsc, id),
-				    safe_val4(NULL,rsc,cur_node,details,id));
+				    safe_val4(NULL,rsc,cur_node,details,uname));
 
 			rsc->stop->node  = safe_val(NULL, rsc, cur_node);
 			rsc->start->node = safe_val4(NULL, rsc, color,
 						     details, chosen_node);
 			
-		} else if(safe_val4(NULL, rsc,cur_node,details,id) == NULL) {
+		} else if(safe_val4(NULL, rsc,cur_node,details,uname) == NULL) {
 			rsc->start->node = safe_val4(NULL, rsc, color,
 						     details, chosen_node);
 
 			crm_debug("Start resource %s (%s)",
 				  safe_val(NULL, rsc, id),
-				  safe_val5(NULL, rsc, start,node,details,id));
+				  safe_val5(NULL, rsc, start,node,details,uname));
 			rsc->start->optional = FALSE;
 			
 		} else {
@@ -322,8 +322,8 @@ stage5(GListPtr resources)
 
 			crm_debug("Move resource %s (%s -> %s)",
 				  safe_val(NULL, rsc, id),
-				  safe_val5(NULL, rsc, stop, node,details,id),
-				  safe_val5(NULL, rsc, start,node,details,id));
+				  safe_val5(NULL, rsc, stop, node,details,uname),
+				  safe_val5(NULL, rsc, start,node,details,uname));
 		}
 
 		if(rsc->stop->node == NULL) {
@@ -353,7 +353,7 @@ stage6(GListPtr *actions, GListPtr *action_constraints, GListPtr nodes)
 		node, node_t, nodes, lpc,
 		if(node->details->shutdown) {
 			crm_warn("Scheduling Node %s for shutdown",
-				 node->details->id);
+				 node->details->uname);
 			
 			down_node = action_new(NULL,shutdown_crm);
 			down_node->node     = node;
@@ -369,7 +369,7 @@ stage6(GListPtr *actions, GListPtr *action_constraints, GListPtr nodes)
 
 		if(node->details->unclean) {
 			crm_warn("Scheduling Node %s for STONITH",
-				 node->details->id);
+				 node->details->uname);
 
 			stonith_node = action_new(NULL,stonith_op);
 			stonith_node->node     = node;
@@ -538,9 +538,9 @@ summary(GListPtr resources)
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 		rsc_id = safe_val(NULL, rsc, id);
-		node_id = safe_val4(NULL, rsc, cur_node, details, id);
+		node_id = safe_val4(NULL, rsc, cur_node, details, uname);
 		new_node_id = safe_val6(
-			NULL, rsc, color, details, chosen_node, details, id);
+			NULL, rsc, color, details, chosen_node, details, uname);
 
 		if(rsc->runnable == FALSE) {
 			crm_err("Resource %s was not runnable", rsc_id);
@@ -562,7 +562,7 @@ summary(GListPtr resources)
 		} else if(safe_str_eq(node_id, new_node_id)){
 			crm_debug("No change for Resource %s (%s)",
 				  rsc_id,
-				  safe_val4(NULL, rsc, cur_node, details, id));
+				  safe_val4(NULL, rsc, cur_node, details, uname));
 			
 		} else if(node_id == NULL) {
 			crm_info("Starting Resource %s on %s",
@@ -602,7 +602,7 @@ choose_node_from_list(GListPtr colors, color_t *color, GListPtr nodes)
 		
 		node_t *other_node =
 			pe_find_node(color_n->details->candidate_nodes,
-				     color->details->chosen_node->details->id);
+				     color->details->chosen_node->details->uname);
 
 		if(color_n != color) {
 			color_n->details->candidate_nodes =

@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.8 2004/06/29 16:22:04 msoffen Exp $ */
+/* $Id: graph.c,v 1.9 2004/07/01 08:52:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -253,7 +253,7 @@ action2xml(action_t *action)
 
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_TARGET,
-		safe_val4(NULL, action, node, details, id));
+		safe_val4(NULL, action, node, details, uname));
 
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_TASK, task2text(action->task));

@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.23 2004/06/28 08:29:20 andrew Exp $ */
+/* $Id: ptest.c,v 1.24 2004/07/01 08:52:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -62,7 +62,7 @@ main(int argc, char **argv)
 	GListPtr action_sets = NULL;
 	xmlNodePtr graph = NULL;
 	char *msg_buffer = NULL;
-  
+
 	cl_log_set_entity("ptest");
 	cl_log_enable_stderr(TRUE);
 	cl_log_set_facility(LOG_USER);
@@ -143,8 +143,8 @@ main(int argc, char **argv)
 /* 	crm_devel("devel %d", LOG_DEV); */
 /* 	crm_verbose("verbose %d", LOG_VERBOSE); */
 /* 	crm_trace("trace %d", LOG_TRACE); */
-	
-	
+
+
 	stage0(cib_object,
 	       &resources,
 	       &nodes,  &node_constraints,

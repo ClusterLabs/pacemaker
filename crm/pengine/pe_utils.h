@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.8 2004/06/28 08:29:20 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.9 2004/07/01 08:52:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,11 +42,11 @@ extern color_t *create_color(
 // Node helper functions
 extern gboolean filter_nodes(resource_t *rsc);
 
-extern node_t *pe_find_node(GListPtr node_list, const char *id);
+extern node_t *pe_find_node(GListPtr node_list, const char *uname);
+
+extern node_t *pe_find_node_id(GListPtr node_list, const char *id);
 
 extern node_t *node_copy(node_t *this_node) ;
-
-extern node_t *find_list_node(GListPtr list, const char *id);
 
 
 // Binary like operators for lists of nodes

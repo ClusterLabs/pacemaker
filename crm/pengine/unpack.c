@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.12 2004/06/28 08:29:20 andrew Exp $ */
+/* $Id: unpack.c,v 1.13 2004/07/01 08:52:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,8 +38,8 @@ int      order_id        = 1;
 GListPtr agent_defaults  = NULL;
 gboolean stonith_enabled = FALSE;
 
-GListPtr match_attrs(
-	const char *attr_exp, GListPtr node_list, gboolean invert);
+GListPtr match_attrs(const char *attr, const char *op, const char *value,
+		     const char *type, GListPtr node_list);
 
 gboolean unpack_rsc_to_attr(xmlNodePtr xml_obj,
 			    GListPtr rsc_list,
@@ -185,6 +185,7 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 		xmlNodePtr xml_obj = xml_nodes;
 		xmlNodePtr attrs   = xml_obj->children;
 		const char *id     = xmlGetProp(xml_obj, XML_ATTR_ID);
+		const char *uname  = xmlGetProp(xml_obj, XML_ATTR_UNAME);
 		const char *type   = xmlGetProp(xml_obj, XML_ATTR_TYPE);
 
 		crm_verbose("Processing node %s", id);
@@ -208,8 +209,8 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 		new_node->fixed   = FALSE;
 		new_node->details = (struct node_shared_s*)
 			crm_malloc(sizeof(struct node_shared_s));
-//		new_node->details->id		= crm_strdup(id);
 		new_node->details->id		= id;
+		new_node->details->uname	= uname;
 		new_node->details->type		= node_ping;
 		new_node->details->online	= FALSE;
 		new_node->details->unclean	= FALSE;
@@ -414,7 +415,7 @@ unpack_status(xmlNodePtr status,
 		lrm_rsc    = find_xml_node(lrm_rsc,    "lrm_resource");
 
 		crm_verbose("Processing node %s", id);
-		this_node = pe_find_node(nodes, id);
+		this_node = pe_find_node_id(nodes, id);
 
 		if(id == NULL) {
 			// error
@@ -575,7 +576,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc, GListPtr rsc_list,
 		
 		rsc_id    = xmlGetProp(rsc_entry, XML_ATTR_ID);
 		node_id   = xmlGetProp(rsc_entry, XML_LRM_ATTR_TARGET);
-		rsc_state = xmlGetProp(rsc_entry, XML_LRM_ATTR_OPSTATE);
+		rsc_state = xmlGetProp(rsc_entry, XML_LRM_ATTR_RSCSTATE);
 		rsc_code  = xmlGetProp(rsc_entry, "op_code");
 		last_op   = xmlGetProp(rsc_entry, "last_op");
 		
@@ -697,7 +698,7 @@ unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
 		case pesf_block:
 			crm_warn("SHARED RESOURCE %s WILL REMAIN BLOCKED"
 				 " UNTIL CLEANED UP MANUALLY ON NODE %s",
-				 rsc_lh->id, node->details->id);
+				 rsc_lh->id, node->details->uname);
 			rsc_lh->start->runnable = FALSE;
 			break;
 			
@@ -729,8 +730,8 @@ unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
 		if(rsc_lh->cur_node != NULL) {
 			crm_err("Resource %s running on multiple nodes %s, %s",
 				rsc_lh->id,
-				rsc_lh->cur_node->details->id,
-				node->details->id);
+				rsc_lh->cur_node->details->uname,
+				node->details->uname);
 			// TODO: some recovery action!!
 			// like force a stop on the second node?
 			return FALSE;
@@ -741,7 +742,7 @@ unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
 			
 			/* create the link between this node and the rsc */
 			crm_verbose("Setting cur_node = %s for rsc = %s",
-				    node->details->id, rsc_lh->id);
+				    node->details->uname, rsc_lh->id);
 			
 			rsc_lh->cur_node = node;
 			node->details->running_rsc = g_list_append(
@@ -905,18 +906,17 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	return rsc2rsc_new(id, strength_e, rsc_lh, rsc_rh);
 }
 
+
+/* do NOT free the nodes returned here */
 GListPtr
-match_attrs(const char *attr_exp, GListPtr node_list, gboolean invert)
+match_attrs(const char *attr, const char *op, const char *value,
+	    const char *type, GListPtr node_list)
 {
 	int lpc = 0;
 	GListPtr result = NULL;
-	char *name = NULL, *value = NULL;
 	
-	if(decodeNVpair(attr_exp, ':', &name, &value) == FALSE) {
-		return NULL;
-
-	} else if(name == NULL) {
-		crm_err("Attribute %s was invalid", name);
+	if(attr == NULL || op == NULL) {
+		crm_err("Invlaid attribute or operation in expression");
 		return NULL;
 	}
 
@@ -924,21 +924,72 @@ match_attrs(const char *attr_exp, GListPtr node_list, gboolean invert)
 		node, node_t, node_list, lpc,
 		gboolean accept = FALSE;
 		
+		int cmp = 0;
 		const char *h_val = (const char*)g_hash_table_lookup(
-			node->details->attrs, name);
+			node->details->attrs, attr);
 
-		if(h_val != NULL && value == NULL && invert == FALSE) {
-			accept = TRUE;
 
-		} else if(h_val == NULL && value == NULL && invert) {
-			accept = TRUE;
+		if(value != NULL && h_val != NULL) {
+			if(type == NULL || (safe_str_eq(type, "string"))) {
+				cmp = strcmp(h_val, value);
 
-		} else if(h_val != NULL && value != NULL) {
-			if(invert == FALSE && safe_str_eq(value, h_val)) {
-				accept = TRUE;
-			} else if(invert && safe_str_neq(value, h_val)) {
-				accept = TRUE;
+			} else if(safe_str_eq(type, "number")) {
+				float value_f = atof(value);
+				float h_val_f = atof(h_val);
+
+				if(h_val_f < value_f) {
+					cmp = -1;
+				} else if(h_val_f > value_f)  {
+					cmp = 1;
+				} else {
+					cmp = 0;
+				}
+				
+			} else if(safe_str_eq(type, "version")) {
+				crm_err("Version comparisions are not yet supported");
+				continue;
 			}
+			
+		} else if(value == NULL && h_val == NULL) {
+			cmp = 0;
+		} else if(value == NULL) {
+			cmp = 1;
+		} else {
+			cmp = -1;
+		}
+		
+		if(safe_str_eq(op, "exists")) {
+			if(h_val != NULL) accept = TRUE;	
+
+		} else if(safe_str_eq(op, "notexists")) {
+			if(h_val == NULL) accept = TRUE;
+
+		} else if(safe_str_eq(op, "eq")) {
+			if((h_val == value) || cmp == 0)
+				accept = TRUE;
+
+		} else if(safe_str_eq(op, "ne")) {
+			if((h_val == NULL && value != NULL)
+			   || (h_val != NULL && value == NULL)
+			   || cmp != 0)
+				accept = TRUE;
+
+		} else if(value == NULL || h_val == NULL) {
+			// the comparision is meaningless from this point on
+			accept = FALSE;
+			
+		} else if(safe_str_eq(op, "lt")) {
+			if(cmp < 0) accept = TRUE;
+			
+		} else if(safe_str_eq(op, "lte")) {
+			if(cmp <= 0) accept = TRUE;
+			
+		} else if(safe_str_eq(op, "gt")) {
+			if(cmp > 0) accept = TRUE;
+			
+		} else if(safe_str_eq(op, "gte")) {
+			if(cmp >= 0) accept = TRUE;
+			
 		}
 		
 		if(accept) {
@@ -977,7 +1028,7 @@ add_node_attrs(xmlNodePtr attrs, node_t *node)
 	}	
  	g_hash_table_insert(node->details->attrs,
 			    crm_strdup("uname"),
-			    crm_strdup(node->details->id));
+			    crm_strdup(node->details->uname));
  	g_hash_table_insert(node->details->attrs,
 			    crm_strdup("id"),
 			    crm_strdup(node->details->id));
@@ -995,8 +1046,13 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
   <constraints>
      <rsc_location rsc="Filesystem-whatever-1" timestamp="..." lifetime="...">
      	<rule score="+50.0" result="can">
-       		<node_expression match="san" not_match="uname:node2"/>
-       		<!-- and --><node_expression match="arch:i686" />
+<!ATTLIST node_expression
+	  id         CDATA #REQUIRED
+	  attribute  CDATA #REQUIRED
+	  operation  (lt|gt|lte|gte|eq|ne|exists|notexists)
+	  value      CDATA #IMPLIED
+	  type	     (integer|string|version)    'string'>
+
 	</rule>
      	<rule score="+500.0">
        		<node_expression match="cpu:50GHz" />
@@ -1035,7 +1091,7 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 		const char *rule_id = xmlGetProp(rule, XML_ATTR_ID);
 		const char *score   = xmlGetProp(rule, "score");
 		const char *result  = xmlGetProp(rule, "result");
-		const char *boolean = xmlGetProp(rule, "boolean");
+		const char *boolean = xmlGetProp(rule, "boolean_op");
 		float score_f       = atof(score?score:"0.0");
 
 		rsc_to_node_t *new_con = NULL;
@@ -1063,58 +1119,39 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 		}
 		
 		while(expr != NULL) {
-			const char *match     = xmlGetProp(expr, "match");
-			const char *not_match = xmlGetProp(expr, "not_match");
+			const char *attr  = xmlGetProp(expr, "attribute");
+			const char *op    = xmlGetProp(expr, "operation");
+			const char *value = xmlGetProp(expr, "value");
+			const char *type  = xmlGetProp(expr, "type");
 
 			expr = expr->next;
 
-			if(match != NULL) {
-				GListPtr match_L = match_attrs(
-					match, node_list, FALSE);
-
-				if(first_expr) {
-					new_con->node_list_rh =	match_L;
-					first_expr = FALSE;
-					continue;
-				}
-
-				if(do_and) {
-					crm_trace("do_and");
-					
-					new_con->node_list_rh = node_list_and(
-						new_con->node_list_rh,
-						match_L, FALSE);
-				} else {
-					crm_trace("do_or");
-
-					new_con->node_list_rh = node_list_or(
-						new_con->node_list_rh,
-						match_L, FALSE);
-				}
-				pe_free_shallow(match_L);
-			}
+			GListPtr match_L = match_attrs(
+				attr, op, value, type, node_list);
 			
-			if(not_match != NULL) {
-				GListPtr not_match_L = match_attrs(
-					not_match, node_list, TRUE);
+			if(first_expr) {
+				new_con->node_list_rh =	node_list_dup(
+					match_L, FALSE);
+				first_expr = FALSE;
+				continue;
+			}
 
-				if(first_expr) {
-					new_con->node_list_rh =	not_match_L;
-					first_expr = FALSE;
-					continue;
-				}
+			GListPtr old_list = new_con->node_list_rh;
 
-				if(do_and) {
-					new_con->node_list_rh = node_list_and(
-						new_con->node_list_rh,
-						not_match_L, FALSE);
-				} else {
-					new_con->node_list_rh = node_list_or(
-						new_con->node_list_rh,
-						not_match_L, FALSE);
-				}
-				pe_free_shallow(not_match_L);
-			}	
+			if(do_and) {
+				crm_trace("do_and");
+				
+				new_con->node_list_rh = node_list_and(
+					old_list, match_L, FALSE);
+			} else {
+				crm_trace("do_or");
+				
+				new_con->node_list_rh = node_list_or(
+					old_list, match_L, FALSE);
+			}
+			pe_free_shallow_adv(match_L,  FALSE);
+			pe_free_shallow_adv(old_list, TRUE);
+
 		}
 		
 		if(new_con->node_list_rh == NULL) {

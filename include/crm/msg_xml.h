@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.6 2004/06/25 16:24:47 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.7 2004/07/01 08:52:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,6 +51,7 @@
 #define XML_ATTR_REQUEST		"request"
 #define XML_ATTR_RESPONSE		"response"
 
+#define XML_ATTR_UNAME			"uname"
 #define XML_ATTR_MSGTYPE		"message_type"
 #define XML_ATTR_SYSFROM		"sys_from"
 #define XML_ATTR_SYSTO			"sys_to"
@@ -116,15 +117,15 @@
 #define XML_CIB_ATTR_STONITH	    	"stonith"
 #define XML_CIB_ATTR_CLEAR_STONITH  	"clear_stonith"
 
-#define XML_LRM_ATTR_TASK		"task"
-#define XML_LRM_ATTR_TARGET		"target"
+#define XML_LRM_ATTR_TASK		"operation"
+#define XML_LRM_ATTR_TARGET		"on_node"
 #define XML_LRM_ATTR_DISCARD		"discard"
 #define XML_LRM_ATTR_RUNNABLE		"runnable"
 #define XML_LRM_ATTR_OPTIONAL		"optional"
 
 #define XML_NODE_ATTR_STATE		"state"
+#define XML_LRM_ATTR_RSCSTATE		"rsc_state"
 #define XML_LRM_ATTR_LASTOP		"last_op"
-#define XML_LRM_ATTR_OPSTATE		"op_state"
 #define XML_LRM_ATTR_OPCODE		"op_code"
 
 #define XML_NVPAIR_ATTR_NAME        	"name"

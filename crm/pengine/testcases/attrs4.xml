@@ -11,7 +11,9 @@
   </resources>
   <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can"/>
+	<rule id="can1" result="can" boolean_op="and">
+	  <expression attribute="id" operation="exists"/>
+	</rule>
       </rsc_location>
   </constraints>
  </configuration>

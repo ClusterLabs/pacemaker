@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.26 2004/06/28 08:29:20 andrew Exp $ */
+/* $Id: pengine.h,v 1.27 2004/07/01 08:52:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,7 +76,8 @@ enum action_order {
 };
 
 struct node_shared_s { 
-		const char	*id; 
+		const char *id; 
+		const char *uname; 
 		gboolean online;
 		gboolean unclean;
 		gboolean shutdown;

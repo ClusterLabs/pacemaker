@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.6 2004/06/28 08:29:20 andrew Exp $ */
+/* $Id: color.c,v 1.7 2004/07/01 08:52:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -98,7 +98,7 @@ apply_node_constraints(GListPtr constraints, GListPtr nodes)
 		pe_free_shallow(rsc_lh->allowed_nodes);
 		rsc_lh->allowed_nodes = or_list;
 		slist_iter(node_rh, node_t, cons->node_list_rh, llpc,
-			   update_node_weight(cons, node_rh->details->id,
+			   update_node_weight(cons, node_rh->details->uname,
 					      rsc_lh->allowed_nodes));
 
 		crm_debug_action(print_resource("after update", rsc_lh, TRUE));
@@ -121,13 +121,13 @@ apply_agent_constraints(GListPtr resources)
 			node, node_t, rsc->allowed_nodes, lpc2,
 			
 			crm_trace("Checking if %s supports %s/%s",
-				  node->details->id,
+				  node->details->uname,
 				  rsc->agent->class, rsc->agent->type);
 
 			if(has_agent(node, rsc->agent) == FALSE) {
 				/* remove node from contention */
 				crm_trace("Marking node %s unavailable for %s",
-					  node->details->id, rsc->id);
+					  node->details->uname, rsc->id);
 				node->weight = -1.0;
 				node->fixed = TRUE;
 			}
@@ -136,7 +136,7 @@ apply_agent_constraints(GListPtr resources)
 				 * lpc2-- might be sufficient
 				 */
 				crm_debug("Removing node %s from %s",
-					  node->details->id, rsc->id);
+					  node->details->uname, rsc->id);
 
 				lpc2 = -1;
 				rsc->allowed_nodes = g_list_remove(
@@ -179,7 +179,7 @@ has_agent(node_t *a_node, lrm_agent_t *an_agent)
 		);
 	
 	crm_verbose("%s doesnt support version %f of %s/%s",
-		    a_node->details->id, an_agent->version,
+		    a_node->details->uname, an_agent->version,
 		    an_agent->class, an_agent->type);
 	
 	return FALSE;
@@ -470,7 +470,7 @@ update_node_weight(rsc_to_node_t *cons, const char *id, GListPtr nodes)
 		crm_warn("Constraint %s is irrelevant as the"
 			 " weight of node %s is fixed as %f.",
 			 cons->id,
-			 node_rh->details->id,
+			 node_rh->details->uname,
 			 node_rh->weight);
 		return TRUE;
 	}
@@ -478,7 +478,7 @@ update_node_weight(rsc_to_node_t *cons, const char *id, GListPtr nodes)
 	crm_verbose("Constraint %s (%s): node %s weight %f.",
 		    cons->id,
 		    cons->can?"can":"cannot",
-		    node_rh->details->id,
+		    node_rh->details->uname,
 		    node_rh->weight);
 
 	if(cons->can == FALSE) {

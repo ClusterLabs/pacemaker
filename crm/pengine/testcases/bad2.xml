@@ -14,12 +14,9 @@
   <constraints>
       <rsc_location id="run_rsc1" rsc="rsc3">
 	<rule id="can1" result="cannot">
-	  <expresssion match="uname:node1"/>
+	  <expresssion attribute="uname" op="eq" value="node1"/>
 	</rule>
       </rsc_location>
-     <rsc_to_node id="cons1" from="rsc3" weight="-1.0" modifier="set">
-       <node_ref id="node_match_1" type="uname" name="node1"/>
-     </rsc_to_node>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" result="can"/>
       </rsc_location>

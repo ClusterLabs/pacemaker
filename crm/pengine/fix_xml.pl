@@ -32,6 +32,9 @@ unless (open($filedesc, '>',$filename)) {
     print STDERR "Can't open $filename: $!\n";
 }
 
+print $filedesc "<?xml version=\"1.0\"?>\n";
+print $filedesc "<!DOCTYPE transition_graph SYSTEM \"crm-1.0.dtd\">\n";
+
 foreach $line (@lines)	
 {
     @tags = split />/, $line;
