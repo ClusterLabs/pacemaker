@@ -830,14 +830,15 @@ handle_message(xmlNodePtr stored_msg)
 			  || strcmp(op, CRM_OPERATION_ANNOUNCE) == 0) {
 			next_input = I_NULL;
 			
-/* 		} else if(AM_I_DC */
-/* 			  && (strcmp(op, CRM_OPERATION_CREATE) == 0 */
-/* 			      || strcmp(op, CRM_OPERATION_UPDATE) == 0 */
-/* 			      || strcmp(op, CRM_OPERATION_DELETE) == 0 */
-/* 			      || strcmp(op, CRM_OPERATION_REPLACE) == 0 */
-/* 			      || strcmp(op, CRM_OPERATION_ERASE) == 0)) { */
-
-/* 			// perhaps we should do somethign with these replies */
+		} else if(strcmp(op, CRM_OPERATION_CREATE) == 0
+			  || strcmp(op, CRM_OPERATION_UPDATE) == 0
+			  || strcmp(op, CRM_OPERATION_DELETE) == 0
+			  || strcmp(op, CRM_OPERATION_REPLACE) == 0
+			  || strcmp(op, CRM_OPERATION_ERASE) == 0) {
+			
+			/* perhaps we should do somethign with these replies,
+			 * especially check that the actions passed
+			 */
 /* 			fprintf(router_strm, "Message result: CIB Reply\n"); */
 
 		} else {
