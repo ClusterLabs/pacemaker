@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.18 2004/07/27 11:52:24 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.19 2004/08/30 03:17:38 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,9 +151,9 @@ Description:
  *
  *======================================*/
 enum crmd_fsa_input {
-// 0
+/* 0 */
 	I_NULL,		/* Nothing happened */
-// 1
+/* 1 */
 	I_CCM_EVENT,
 	
 	I_CIB_OP,	/* An update to the CIB occurred */
@@ -172,7 +172,7 @@ enum crmd_fsa_input {
 			 * being performed.  For example, we may have lost
 			 * our connection to the CIB.
 			 */
-// 10
+/* 10 */
 	I_FAIL,		/* The action failed to complete successfully */
 	I_INTEGRATION_TIMEOUT, 
 	I_NODE_JOIN,	/* A node has entered the CCM membership list*/
@@ -190,7 +190,7 @@ enum crmd_fsa_input {
 	I_REQUEST,	/* Some non-resource, non-ccm action is required
 			 * of us, eg. ping
 			 */
-// 20
+/* 20 */
 	I_ROUTER,	/* Do our job as router and forward this to the
 			 * right place
 			 */

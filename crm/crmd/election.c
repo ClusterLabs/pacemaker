@@ -40,6 +40,7 @@ do_election_vote(long long action,
 		 void *data)
 {
 	gboolean not_voting = FALSE;
+	xmlNodePtr msg_options = NULL;
 	enum crmd_fsa_input election_result = I_NULL;
 	
 	/* dont vote if we're in one of these states or wanting to shut down */
@@ -71,7 +72,7 @@ do_election_vote(long long action,
 		}
 	}
 	
-	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
+	msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
 	set_xml_property_copy(msg_options, XML_ATTR_VERSION, CRM_VERSION);
 	
 	send_request(msg_options, NULL, CRM_OP_VOTE,
@@ -84,14 +85,14 @@ gboolean
 do_dc_heartbeat(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
-//	crm_debug("#!!#!!# Heartbeat timer just popped!");
-	
 	gboolean was_sent = send_request(NULL, NULL, CRM_OP_HBEAT, 
 					 NULL, CRM_SYSTEM_CRMD, NULL);
 
+/*	crm_debug("#!!#!!# Heartbeat timer just popped!"); */
+	
 	if(was_sent == FALSE) {
-		// this is bad
-		stopTimer(timer); // dont make it go off again
+		/* this is bad */
+		stopTimer(timer); /* dont make it go off again */
 		s_crmd_fsa(C_HEARTBEAT_FAILED, I_SHUTDOWN, NULL);
 	}
 	
@@ -122,12 +123,12 @@ do_election_count_vote(long long action,
 	struct election_data_s election_data;
 
 	if(vote_from == NULL || strcmp(vote_from, fsa_our_uname) == 0) {
-		// dont count our own vote
+		/* dont count our own vote */
 		return election_result;
 	}
 
 	if(fsa_membership_copy->members_size < 1) {
-		// if even we are not in the cluster then we should not vote
+		/* if even we are not in the cluster then we should not vote */
 		return I_FAIL;
 		
 	}
@@ -174,13 +175,13 @@ do_election_count_vote(long long action,
 
 	} else {
 		election_data.winning_uname = NULL;
-		election_data.winning_bornon = -1; // maximum integer
+		election_data.winning_bornon = -1; /* maximum integer */
 		
 		crm_trace("We might win... we should vote (possibly again)");
-		election_result = I_DC_TIMEOUT; // new "default"
+		election_result = I_DC_TIMEOUT; /* new "default" */
 
 #if 0
-		// we dont try to predict the winner anymore
+		/* we dont try to predict the winner anymore */
 		g_hash_table_foreach(fsa_membership_copy->members,
 				     ghash_count_vote, &election_data);
 		
@@ -208,7 +209,7 @@ do_election_count_vote(long long action,
 	}
 
 	if(we_loose || election_result == I_ELECTION_DC) {
-		// cancel timer, its been decided
+		/* cancel timer, its been decided */
 		stopTimer(election_timeout);
 	}
 	
@@ -216,7 +217,7 @@ do_election_count_vote(long long action,
 }
 
 /*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT 	*/
-// we won
+/* we won */
 enum crmd_fsa_input
 do_election_timer_ctrl(long long action,
 		    enum crmd_fsa_cause cause,
@@ -304,7 +305,7 @@ do_dc_takeover(long long action,
 		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
 	}
 
-	// just in case
+	/* just in case */
 	create_node_entry(fsa_our_uname, fsa_our_uname, "member");
 	
 	/* store our state in the CIB (since some fields will not be
@@ -362,13 +363,13 @@ do_dc_release(long long action,
 	} else if (action & A_DC_RELEASED) {
 
 		if(cur_state == S_STOPPING) {
-			result = I_SHUTDOWN; // necessary?
+			result = I_SHUTDOWN; /* necessary? */
 			result = I_RELEASE_SUCCESS;
 		}
 #if 0
 		else if( are there errors ) {
-			// we cant stay up if not healthy
-			// or perhaps I_ERROR and go to S_RECOVER?
+			/* we cant stay up if not healthy */
+			/* or perhaps I_ERROR and go to S_RECOVER? */
 			result = I_SHUTDOWN;
 		}
 #endif

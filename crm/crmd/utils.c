@@ -42,7 +42,7 @@ timer_popped(gpointer data)
 	crm_info("#!!#!!# Timer %s just popped!",
 	       fsa_input2string(timer->fsa_input));
 	
-	stopTimer(timer); // dont make it go off again
+	stopTimer(timer); /* dont make it go off again */
 
 	s_crmd_fsa(C_TIMER_POPPED, timer->fsa_input, NULL);
 	
@@ -113,10 +113,10 @@ clear_bit(long long action_list, long long action)
 {
 	crm_trace("Clearing bit\t%.16llx", action);
 
-	// ensure its set
+	/* ensure its set */
 	action_list |= action;
 
-	// then toggle
+	/* then toggle */
 	action_list = action_list ^ action;
 
 	return action_list;
@@ -153,7 +153,7 @@ set_bit_inplace(long long *action_list, long long action)
 gboolean
 is_set(long long action_list, long long action)
 {
-//	crm_verbose("Checking bit\t%.16llx", action);
+/*	crm_verbose("Checking bit\t%.16llx", action); */
 	return ((action_list & action) == action);
 }
 
@@ -593,7 +593,7 @@ cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
 	/* Forcing client to die */
 	kill(the_subsystem->pid, -9);
 	
-	// cleanup the ps entry
+	/* cleanup the ps entry */
 	waitpid(the_subsystem->pid, &pid_status, WNOHANG);
 	the_subsystem->pid = -1;
 }

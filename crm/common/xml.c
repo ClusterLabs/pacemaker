@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.9 2004/08/27 15:21:58 andrew Exp $ */
+/* $Id: xml.c,v 1.10 2004/08/30 03:17:38 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -119,7 +119,7 @@ get_xml_attr(xmlNodePtr parent,
 {
 
 	if(node_name == NULL) {
-		// get it from the current node
+		/* get it from the current node */
 		return get_xml_attr_nested(parent, NULL, 0, attr_name, error);
 	}
 	return get_xml_attr_nested(parent, &node_name, 1, attr_name, error);
@@ -335,7 +335,7 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 
 	xmlCleanupParser();
 	
-	// HA wont send messages with newlines in them.
+	/*  HA wont send messages with newlines in them. */
 	for(; xml_message != NULL && lpc < msg_size; lpc++)
 		if (xml_message[lpc] == '\n')
 			xml_message[lpc] = ' ';
@@ -440,7 +440,7 @@ free_xml(xmlNodePtr a_node)
 {
 	
 	if (a_node == NULL)
-		; // nothing to do
+		; /*  nothing to do */
 	else if (a_node->doc != NULL)
 		xmlFreeDoc(a_node->doc);
 	else
@@ -588,7 +588,7 @@ file2xml(FILE *input)
 	
 	while (more) {
 		ch = fgetc(input);
-//		crm_debug("Got [%c]", ch);
+/* 		crm_debug("Got [%c]", ch); */
 		switch(ch) {
 			case EOF: 
 			case 0:
@@ -658,6 +658,10 @@ int
 write_xml_file(xmlNodePtr xml_node, const char *filename) 
 {
 	int res = 0;
+	xmlDocPtr foo = NULL;
+	char now_str[26];
+	time_t now;
+
 	crm_debug("Writing XML out to %s", filename);
 	
 	if (xml_node == NULL) {
@@ -665,15 +669,14 @@ write_xml_file(xmlNodePtr xml_node, const char *filename)
 		
 	} else if (xml_node->doc == NULL) {
 		crm_trace("Creating doc pointer for %s", xml_node->name);
-		xmlDocPtr foo = xmlNewDoc("1.0");
+		foo = xmlNewDoc("1.0");
 		xmlDocSetRootElement(foo, xml_node);
 		xmlSetTreeDoc(xml_node, foo);
 	}
 
-	 char now_str[26];
-	 time_t now = time(NULL);
-	 ctime_r(&now, now_str);
-	 set_xml_property_copy(xml_node, "last_written",now_str);
+	now = time(NULL);
+	ctime_r(&now, now_str);
+	set_xml_property_copy(xml_node, "last_written",now_str);
 
 	/* save it.
 	 * set arg 3 to 0 to disable line breaks,1 to enable
@@ -694,6 +697,8 @@ print_xml_formatted(xmlNodePtr an_xml_node)
 {
 	int len = 0;
 	xmlChar *buffer = NULL;
+	xmlDocPtr foo = NULL;
+
 	xmlNodePtr xml_node = copy_xml_node_recursive(an_xml_node);
 	
 	if (xml_node == NULL) {
@@ -701,7 +706,7 @@ print_xml_formatted(xmlNodePtr an_xml_node)
 		
 	} else if (xml_node->doc == NULL) {
 		crm_trace("Creating doc pointer for %s", xml_node->name);
-		xmlDocPtr foo = xmlNewDoc("1.0");
+		foo = xmlNewDoc("1.0");
 		xmlDocSetRootElement(foo, xml_node);
 		xmlSetTreeDoc(xml_node, foo);
 	}

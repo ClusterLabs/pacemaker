@@ -412,7 +412,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		/* exit gracefully */
 		ELSEIF_FSA_ACTION(A_EXIT_0,	do_exit)
 
-//		ELSEIF_FSA_ACTION(A_, do_)
+/*		ELSEIF_FSA_ACTION(A_, do_) */
 		
 		else if((actions & A_MSG_PROCESS) != 0
 			|| is_message()) {
@@ -453,9 +453,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 				   A_MSG_PROCESS);
 #endif
 
-//#ifdef FSA_TRACE
+/*#ifdef FSA_TRACE*/
 			xml_message_debug(stored_msg,"FSA processing message");
-//#endif
+/*#endif*/
 
 			next_input = handle_message(stored_msg);
 
@@ -505,7 +505,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	fflush(dot_strm);
 #endif
 
-	// cleanup inputs?
+	/* cleanup inputs? */
 	fsa_actions = actions;
 	
 	return fsa_state;
@@ -537,15 +537,15 @@ do_state_transition(long long actions,
 	}
 	
 	
-//	if(current_input != I_NULL
-//	   && (current_input != I_DC_HEARTBEAT || cur_state != S_NOT_DC)){
+/*	if(current_input != I_NULL */
+/*	   && (current_input != I_DC_HEARTBEAT || cur_state != S_NOT_DC)){ */
 		
 	fprintf(dot_strm,
 		"\t\"%s\" -> \"%s\" [ label =\"%s\" ] // %s",
 		state_from, state_to, input,
 		asctime(localtime(&now)));
 	fflush(dot_strm);
-	//}
+	/*}*/
 
 	crm_info("State transition \"%s\" -> \"%s\" [ cause =\"%s\" %s ]",
 		 state_from, state_to, input, asctime(localtime(&now)));
@@ -580,7 +580,7 @@ do_state_transition(long long actions,
 			
 		case S_IDLE:
 			dump_rsc_info();
-			// keep going
+			/* keep going */
 		default:
 			break;
 	}
@@ -652,6 +652,13 @@ dump_rsc_info(void)
 	xmlNodePtr node      = NULL;
 	xmlNodePtr resources = NULL;
 	xmlNodePtr rsc       = NULL;
+	const char *rsc_id    = NULL;
+	const char *node_id   = NULL;
+	const char *rsc_state = NULL;
+	const char *op_status = NULL;
+	const char *last_rc   = NULL;
+	const char *last_op   = NULL;
+
 	
 	const char *path[] = {
 		"lrm",
@@ -677,13 +684,12 @@ dump_rsc_info(void)
 		while(resources != NULL) {
 			rsc = resources;
 			resources = resources->next;
-
-			const char *rsc_id    = xmlGetProp(rsc, XML_ATTR_ID);
-			const char *node_id   = xmlGetProp(rsc, XML_LRM_ATTR_TARGET);
-			const char *rsc_state = xmlGetProp(rsc, XML_LRM_ATTR_RSCSTATE);
-			const char *op_status = xmlGetProp(rsc, XML_LRM_ATTR_OPCODE);
-			const char *last_rc   = xmlGetProp(rsc, XML_LRM_ATTR_RCCODE);
-			const char *last_op   = xmlGetProp(rsc, XML_LRM_ATTR_LASTOP);
+			rsc_id    = xmlGetProp(rsc, XML_ATTR_ID);
+			node_id   = xmlGetProp(rsc, XML_LRM_ATTR_TARGET);
+			rsc_state = xmlGetProp(rsc, XML_LRM_ATTR_RSCSTATE);
+			op_status = xmlGetProp(rsc, XML_LRM_ATTR_OPCODE);
+			last_rc   = xmlGetProp(rsc, XML_LRM_ATTR_RCCODE);
+			last_op   = xmlGetProp(rsc, XML_LRM_ATTR_LASTOP);
 			
 /* 			if(safe_str_eq(rsc_state, "stopped")) { */
 /* 				continue; */

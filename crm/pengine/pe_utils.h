@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.11 2004/07/05 09:51:39 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.12 2004/08/30 03:17:38 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -20,18 +20,18 @@
 #define PE_UTILS__H
 
 
-// General utilities
+/* General utilities */
 extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 
 extern action_t *action_new(resource_t *rsc, enum action_tasks task);
 
 
-// Constraint helper functions
+/* Constraint helper functions */
 extern rsc_to_rsc_t *invert_constraint(rsc_to_rsc_t *constraint);
 
 extern rsc_to_node_t *copy_constraint(rsc_to_node_t *constraint);
 
-// Color helper functions
+/* Color helper functions */
 extern void add_color_to_rsc(resource_t *rsc, color_t *color);
 
 extern color_t *find_color(GListPtr candidate_colors, color_t *other_color);
@@ -41,7 +41,7 @@ extern color_t *create_color(
 
 extern color_t *copy_color(color_t *a_color);
 
-// Node helper functions
+/* Node helper functions */
 extern gboolean filter_nodes(resource_t *rsc);
 
 extern node_t *pe_find_node(GListPtr node_list, const char *uname);
@@ -51,7 +51,7 @@ extern node_t *pe_find_node_id(GListPtr node_list, const char *id);
 extern node_t *node_copy(node_t *this_node) ;
 
 
-// Binary like operators for lists of nodes
+/* Binary like operators for lists of nodes */
 extern GListPtr node_list_dup(GListPtr list1, gboolean filter);
 
 extern GListPtr node_list_and(GListPtr list1, GListPtr list2, gboolean filter);
@@ -66,10 +66,10 @@ extern GListPtr node_list_or(GListPtr list1, GListPtr list2, gboolean filter);
 
 
 
-// For creating the transition graph
+/* For creating the transition graph */
 extern xmlNodePtr action2xml(action_t *action);
 
-// Printing functions for debug
+/* Printing functions for debug */
 extern void print_node(
 	const char *pre_text, node_t *node, gboolean details);
 
@@ -91,19 +91,19 @@ extern void print_color_details(
 extern void print_action(
 	const char *pre_text, action_t *action, gboolean details);
 
-// Sorting functions
+/* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
 extern gint sort_cons_strength(gconstpointer a, gconstpointer b);
 extern gint sort_color_weight(gconstpointer a, gconstpointer b);
 extern gint sort_node_weight(gconstpointer a, gconstpointer b);
 
-// enum 2 text functions (mostly used by print_*)
+/* enum 2 text functions (mostly used by print_*) */
 extern const char *contype2text(enum con_type type);
 extern const char *strength2text(enum con_strength strength);
-//extern const char *modifier2text(enum con_modifier modifier);
+/*extern const char *modifier2text(enum con_modifier modifier); */
 extern const char *task2text(enum action_tasks task);
 
-// free the various structures
+/* free the various structures */
 extern void pe_free_nodes(GListPtr nodes);
 extern void pe_free_colors(GListPtr colors);
 extern void pe_free_rsc_to_rsc(rsc_to_rsc_t *cons);
@@ -113,7 +113,7 @@ extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
 extern void pe_free_resources(GListPtr resources);
 extern void pe_free_actions(GListPtr actions);
 
-// Helper macros to avoid NULL pointers
+/* Helper macros to avoid NULL pointers */
 #define safe_val(def, x,y)          (x?x->y:def)
 #define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
 #define safe_val4(def, t,u,v,w)     (t?t->u?t->u->v?t->u->v->w:def:def:def)

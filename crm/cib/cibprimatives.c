@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.39 2004/08/27 15:21:58 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.40 2004/08/30 03:17:37 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,7 +54,7 @@ void update_node_state(xmlNodePtr existing_node, xmlNodePtr update);
 
 
 
-//--- Resource
+/* --- Resource */
 
 int
 addResource(xmlNodePtr cib, xmlNodePtr anXmlNode)
@@ -117,7 +117,7 @@ delResource(xmlNodePtr cib, xmlNodePtr delete_spec)
 }
 
 
-//--- Constraint
+/* --- Constraint */
 
 int
 addConstraint(xmlNodePtr cib, xmlNodePtr anXmlNode)
@@ -179,7 +179,7 @@ delConstraint(xmlNodePtr cib, xmlNodePtr delete_spec)
 	return delete_cib_object(root, delete_spec);
 }
 
-//--- HaNode
+/* --- HaNode */
 
 int
 addHaNode(xmlNodePtr cib, xmlNodePtr anXmlNode)
@@ -243,7 +243,7 @@ delHaNode(xmlNodePtr cib, xmlNodePtr delete_spec)
 	return delete_cib_object(root, delete_spec);
 }
 
-//--- Status
+/* --- Status */
 
 int
 addStatus(xmlNodePtr cib, xmlNodePtr anXmlNode)
@@ -328,7 +328,7 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 	children = delete_spec->children;
 	
 	if(object_id == NULL) {
-		// placeholder object
+		/*  placeholder object */
 		equiv_node = find_xml_node(parent, object_name);
 		
 	} else {
@@ -342,7 +342,7 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 
 	} else if(children == NULL) {
 
-		// only leaves are deleted
+		/*  only leaves are deleted */
 		unlink_xml_node(equiv_node);
 		free_xml(equiv_node);
 
@@ -352,7 +352,7 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 			int tmp_result =
 				delete_cib_object(equiv_node, children);
 			
-			// only the first error is likely to be interesting
+			/*  only the first error is likely to be interesting */
 			if(tmp_result != CIBRES_OK
 			   && result == CIBRES_OK) {
 				result = tmp_result;
@@ -383,7 +383,7 @@ add_cib_object(xmlNodePtr parent, xmlNodePtr new_obj)
 	children = new_obj->children;
 	
 	if(object_id == NULL) {
-		// placeholder object
+		/*  placeholder object */
 		equiv_node = find_xml_node(parent, object_name);
 		
 	} else {
@@ -407,6 +407,7 @@ add_cib_object(xmlNodePtr parent, xmlNodePtr new_obj)
 int
 update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 {
+	const char *replace = NULL;
 	const char *object_name = NULL;
 	const char *object_id = NULL;
 	xmlNodePtr equiv_node = NULL;
@@ -428,7 +429,7 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 	crm_debug("Processing update to <%s id=%s>", object_name, object_id);
 
 	if(object_id == NULL) {
-		// placeholder object
+		/*  placeholder object */
 		equiv_node = find_xml_node(parent, object_name);
 
 	} else {
@@ -449,7 +450,7 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 			crm_debug("Added  <%s id=%s>", object_name, object_id);
 
 			if(object_id == NULL) {
-				// placeholder object
+				/*  placeholder object */
 				equiv_node = find_xml_node(parent, object_name);
 				
 			} else {
@@ -460,7 +461,7 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 	} else {
 		crm_verbose("Found node <%s id=%s> to update", object_name, object_id);
 
-		const char *replace = xmlGetProp(new_obj, "replace");
+		replace = xmlGetProp(new_obj, "replace");
 		
 		if(force == FALSE) {
 			const char *ts_existing  = NULL;
@@ -516,14 +517,15 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 		
 		xml_child_iter(
 			new_obj, a_child, NULL, 
+			int tmp_result = 0;
 			crm_debug("Updating child <%s id=%s>",
 				  a_child->name,
 				  xmlGetProp(a_child, XML_ATTR_ID));
 			
-			int tmp_result =
+			tmp_result =
 				update_cib_object(equiv_node, a_child, force);
 
-			// only the first error is likely to be interesting
+			/*  only the first error is likely to be interesting */
 			if(tmp_result != CIBRES_OK) {
 				crm_err("Error updating child <%s id=%s>",
 					a_child->name,
@@ -558,7 +560,7 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 			xmlGetProp(update, local_prop_name);
 
 		if(local_prop_name == NULL) {
-			// error
+			/*  error */
 			
 		} else if(strcmp(local_prop_name, XML_ATTR_ID) == 0) {
 			
@@ -585,14 +587,14 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 	}
 	
 	if(clear_shutdown) {
-		// unset XML_CIB_ATTR_SHUTDOWN 
+		/*  unset XML_CIB_ATTR_SHUTDOWN  */
 		crm_verbose("Clearing %s", XML_CIB_ATTR_SHUTDOWN);
 		xmlUnsetProp(target, XML_CIB_ATTR_SHUTDOWN);
 		any_updates = TRUE;
 	}
 
 	if(clear_stonith) {
-		// unset XML_CIB_ATTR_STONITH
+		/*  unset XML_CIB_ATTR_STONITH */
 		crm_verbose("Clearing %s", XML_CIB_ATTR_STONITH);
 		xmlUnsetProp(target, XML_CIB_ATTR_STONITH);
 		any_updates = TRUE;

@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.27 2004/08/27 15:21:59 andrew Exp $ */
+/* $Id: tengine.c,v 1.28 2004/08/30 03:17:40 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,7 +29,7 @@
 
 GListPtr graph = NULL;
 IPC_Channel *crm_ch = NULL;
-uint default_op_timeout = 60*1000; // 60 seconds
+uint default_op_timeout = 60*1000; /* 60 seconds */
 
 typedef enum {
 	TE_LIST_ACTIVE,
@@ -109,7 +109,7 @@ unpack_graph(xmlNodePtr xml_graph)
 */
 	xmlNodePtr xml_action_list = xml_graph?xml_graph->children:NULL;
 	if(xml_action_list == NULL) {
-		// nothing to do
+		/* nothing to do */
 		return FALSE;
 	}
 	
@@ -183,12 +183,12 @@ extract_event(xmlNodePtr msg)
 	section = xmlGetProp(iter, XML_ATTR_SECTION);
 
 	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
-		// ignore - for the moment
+		/* ignore - for the moment */
 		crm_debug("Ignoring changes to the %s section", XML_CIB_TAG_CRMCONFIG);
 		return TRUE;
 		
 	} else if(safe_str_neq(section, XML_CIB_TAG_STATUS)) {
-		// these too are never expected	
+		/* these too are never expected	 */
 		crm_debug("Ignoring changes outside the %s section", XML_CIB_TAG_STATUS);
 		return FALSE;
 	}
@@ -236,7 +236,7 @@ extract_event(xmlNodePtr msg)
 			crm_trace("Processing simple state update");
 			code = crm_itoa(LRM_OP_DONE);
 			if(safe_str_neq(state, OFFLINESTATUS)) {
-				// always recompute
+				/* always recompute */
 				abort = TRUE;
 				continue;
 			}
@@ -303,16 +303,22 @@ process_graph_event(
 	const char *event_action, const char *event_rc, const char *op_status)
 {
 	int lpc;
-	xmlNodePtr action        = NULL; // <rsc_op> or <crm_event>
+	xmlNodePtr action        = NULL; /* <rsc_op> or <crm_event> */
 	xmlNodePtr next_action   = NULL;
 	action_list_t *matched_action_list = NULL;
+	xmlNodePtr xml_action = NULL;
+	const char *allow_fail  = NULL;
+	op_status_t rsc_code_i = 0;
 
-// Find the action corresponding to this event
+/* Find the action corresponding to this event */
 	crm_trace("looking for: task=%s node=%s rsc_id=%s rc=%s",
 		  event_action, event_node, event_rsc, event_rc);
 	
 	slist_iter(
 		action_list, action_list_t, graph, lpc,
+		const char *this_action = NULL;
+		const char *this_node   = NULL;
+		const char *this_rsc    = NULL;
 
 		if(action_list->status != TE_LIST_ACTIVE) {
 			crm_trace("skipping %s list[%d]",
@@ -335,11 +341,11 @@ process_graph_event(
 			<resource id="rsc3" priority="3.0"/>
 		</rsc_op>
 */
-		const char *this_action = xmlGetProp(
+		this_action = xmlGetProp(
 			action, XML_LRM_ATTR_TASK);
-		const char *this_node   = xmlGetProp(
+		this_node   = xmlGetProp(
 			action, XML_LRM_ATTR_TARGET);
-		const char *this_rsc    = xmlGetProp(
+		this_rsc    = xmlGetProp(
 			action, XML_LRM_ATTR_RSCID);
 
 		crm_trace("matching against: <%s task=%s node=%s rsc_id=%s/>",
@@ -373,8 +379,8 @@ process_graph_event(
 		);			
 
 	if(matched_action_list == NULL) {
-		// unexpected event, trigger a pe-recompute
-		// possibly do this only for certain types of actions
+		/* unexpected event, trigger a pe-recompute */
+		/* possibly do this only for certain types of actions */
 		crm_err("Unexpected event... matched action list was NULL"
 			" for: task=%s node=%s rsc_id=%s, rc=%s, state=%s",
 			event_action, event_node, event_rsc, event_rc, rsc_state);
@@ -386,19 +392,19 @@ process_graph_event(
 			  matched_action_list->id);
 	}
 
-	xmlNodePtr xml_action = g_list_nth_data(matched_action_list->actions,
+	xml_action = g_list_nth_data(matched_action_list->actions,
 						 matched_action_list->index);
-	const char *allow_fail  = xmlGetProp(xml_action, "allow_fail");
+	allow_fail  = xmlGetProp(xml_action, "allow_fail");
 
 	/* check for action failure */
-	op_status_t rsc_code_i = -1;
+	rsc_code_i = -1;
 
 	if(event_rc != NULL) {
 		rsc_code_i = atoi(op_status);
 	}
 	
 	if(rsc_code_i == -1) {
-		// just information that the action was sent
+		/* just information that the action was sent */
 		crm_trace("Ignoring TE initiated updates");
 		return TRUE;
 	}
@@ -417,7 +423,7 @@ process_graph_event(
 			}
 			break;
 		case LRM_OP_CANCELLED:
-			// do nothing??
+			/* do nothing?? */
 			crm_warn("Dont know what to do for cancelled ops yet");
 			break;
 		default:
@@ -510,6 +516,13 @@ initiate_action(action_list_t *list)
 	const char *task      = NULL;
 	const char *discard   = NULL;
 	const char *timeout   = NULL;
+#ifndef TESTING
+	xmlNodePtr options = NULL;
+	unsigned   op_timeout = 0;
+	xmlNodePtr data    = NULL;
+	xmlNodePtr rsc_op  = NULL;
+#endif
+
 	
 	crm_info("Initiating action on list %d", list->id);
 	while(TRUE) {
@@ -578,7 +591,7 @@ initiate_action(action_list_t *list)
 		} else if(id == NULL || strlen(id) == 0
 			  || on_node == NULL || strlen(on_node) == 0
 			  || task == NULL || strlen(task) == 0) {
-			// error
+			/* error */
 			crm_err("Failed on corrupted command: %s (id=%s) on %s",
 				task, id, on_node);
 			
@@ -612,7 +625,7 @@ initiate_action(action_list_t *list)
 			crm_info("Executing crm-event (%s): %s on %s",
 				 id, task, on_node);
 #ifndef TESTING
-			xmlNodePtr options = create_xml_node(
+			options = create_xml_node(
 				NULL, XML_TAG_OPTIONS);
 			set_xml_property_copy(options, XML_ATTR_OP, task);
 
@@ -637,10 +650,9 @@ initiate_action(action_list_t *list)
 			  <rsc_op id="operation number" on_node="" task="">
 			  <resource>...</resource>
 			*/
-			unsigned   op_timeout = 0;
-			xmlNodePtr data    = create_xml_node(NULL, "msg_data");
-			xmlNodePtr rsc_op  = create_xml_node(data, "rsc_op");
-			xmlNodePtr options = create_xml_node(
+			data    = create_xml_node(NULL, "msg_data");
+			rsc_op  = create_xml_node(data, "rsc_op");
+			options = create_xml_node(
 				NULL, XML_TAG_OPTIONS);
 
 			if(timeout != NULL) {
@@ -660,7 +672,7 @@ initiate_action(action_list_t *list)
 			
 			add_node_copy(rsc_op, xml_action->children);
 
-			// let everyone know this was invoked
+			/* let everyone know this was invoked */
 			do_update_cib(xml_action, -1);
 
 			send_ipc_request(crm_ch, options, data,
@@ -701,6 +713,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 
 	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
 	const char *ref    = xmlGetProp(msg, XML_ATTR_REFERENCE);
+	xmlNodePtr graph = NULL;
 
 	crm_debug("Processing %s (%s) message", op, ref);
 
@@ -725,9 +738,9 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 
 	
 	if(op == NULL){
-		// error
+		/* error */
 	} else if(strcmp(op, CRM_OP_HELLO) == 0) {
-		// ignore
+		/* ignore */
 
 	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
 		crm_verbose("Bad sys-to %s", sys_to);
@@ -738,12 +751,12 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		crm_trace("Initializing graph...");
 		initialize_graph();
 
-		xmlNodePtr graph = find_xml_node(msg, "transition_graph");
+		graph = find_xml_node(msg, "transition_graph");
 		crm_trace("Unpacking graph...");
 		unpack_graph(graph);
 		crm_trace("Initiating transition...");
 		if(initiate_transition() == FALSE) {
-			// nothing to be done.. means we're done.
+			/* nothing to be done.. means we're done. */
 			crm_info("No actions to be taken..."
 			       " transition compelte.");
 		}
@@ -767,11 +780,11 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		   || strcmp(true_op, CRM_OP_SHUTDOWN_REQ) == 0
 		   || strcmp(true_op, CRM_OP_ERASE) == 0) {
 
-			// these are always unexpected, trigger the PE
+			/* these are always unexpected, trigger the PE */
 			send_abort(msg);
 			
 		} else if(strcmp(true_op, CRM_OP_UPDATE) == 0) {
-			// this may not be un-expected
+			/* this may not be un-expected */
 			if(extract_event(msg) == FALSE){
 				send_abort(msg);
 			}
@@ -890,6 +903,13 @@ timer_callback(gpointer data)
 gboolean
 do_update_cib(xmlNodePtr xml_action, int status)
 {
+	char *code;
+	char since_epoch[64];
+	xmlNodePtr fragment = NULL;
+	xmlNodePtr options  = NULL;
+	xmlNodePtr state    = NULL;
+	xmlNodePtr rsc      = NULL;
+
 	const char *task   = xmlGetProp(xml_action, XML_LRM_ATTR_TASK);
 	const char *rsc_id = xmlGetProp(xml_action, XML_LRM_ATTR_RSCID);
 	const char *target = xmlGetProp(xml_action, XML_LRM_ATTR_TARGET);
@@ -917,12 +937,9 @@ do_update_cib(xmlNodePtr xml_action, int status)
           <lrm_resource id="rsc2" last_op="start" op_code="0" target="hadev"/>
 */
 
-	char *code;
-	char since_epoch[64];
-	xmlNodePtr fragment = NULL;
-	xmlNodePtr options  = create_xml_node(NULL, XML_TAG_OPTIONS);
-	xmlNodePtr state    = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	xmlNodePtr rsc      = NULL;
+	fragment = NULL;
+	options  = create_xml_node(NULL, XML_TAG_OPTIONS);
+	state    = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
 	set_xml_property_copy(options, XML_ATTR_OP,    CRM_OP_UPDATE);
 	set_xml_property_copy(state,   XML_ATTR_UUID,  target_uuid);

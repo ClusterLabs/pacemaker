@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.24 2004/08/29 02:36:39 msoffen Exp $ */
+/* $Id: unpack.c,v 1.25 2004/08/30 03:17:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,7 +28,7 @@
 #include <glib.h>
 #include <libxml/tree.h>
 
-#include <heartbeat.h> // for ONLINESTATUS
+#include <heartbeat.h> /* for ONLINESTATUS */
 
 #include <pengine.h>
 #include <pe_utils.h>
@@ -164,7 +164,7 @@ get_agent_param_metadata(resource_t *rsc, const char *param)
 const char *
 get_agent_param_global(resource_t *rsc, const char *param)
 {
-	const char * value = NULL;//g_hashtable_lookup(agent_global_defaults, param);
+	const char * value = NULL;/*g_hashtable_lookup(agent_global_defaults, param); */
 	if(value == NULL) {
 		crm_err("No global value default for %s", param);
 	}
@@ -263,7 +263,7 @@ unpack_resources(xmlNodePtr xml_resources,
 		resource_t *new_rsc = NULL;
 		const char *priority   = xmlGetProp(
 			xml_obj, XML_CIB_ATTR_PRIORITY);
-		// todo: check for null
+		/* todo: check for null */
 		xml_resources = xml_resources->next;
 
 		crm_verbose("Processing resource...");
@@ -408,9 +408,9 @@ rsc2node_new(const char *id, resource_t *rsc,
 
 
 
-// remove nodes that are down, stopping
-// create +ve rsc_to_node constraints between resources and the nodes they are running on
-// anything else?
+/* remove nodes that are down, stopping */
+/* create +ve rsc_to_node constraints between resources and the nodes they are running on */
+/* anything else? */
 gboolean
 unpack_status(xmlNodePtr status,
 	      GListPtr nodes, GListPtr rsc_list,
@@ -428,7 +428,7 @@ unpack_status(xmlNodePtr status,
 	while(status != NULL) {
 		node_state = status;
 		status     = status->next;
-//		id         = xmlGetProp(node_state, XML_ATTR_ID);
+/*		id         = xmlGetProp(node_state, XML_ATTR_ID); */
 		uname      = xmlGetProp(node_state,    XML_ATTR_UNAME);
 		attrs      = find_xml_node(node_state, "attributes");
 		lrm_rsc    = find_xml_node(node_state, XML_CIB_TAG_LRM);
@@ -440,7 +440,7 @@ unpack_status(xmlNodePtr status,
 		this_node = pe_find_node(nodes, uname);
 
 		if(uname == NULL) {
-			// error
+			/* error */
 			continue;
 
 		} else if(this_node == NULL) {
@@ -478,7 +478,7 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
 	const char *ccm_state  = xmlGetProp(node_state,XML_CIB_ATTR_INCCM);
 	const char *shutdown   = xmlGetProp(node_state,XML_CIB_ATTR_SHUTDOWN);
-	const char *unclean    = NULL;//xmlGetProp(node_state,XML_CIB_ATTR_STONITH);
+	const char *unclean    = NULL;/*xmlGetProp(node_state,XML_CIB_ATTR_STONITH); */
 	
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
 	   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
@@ -488,7 +488,7 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 
 	} else {
 		crm_verbose("remove");
-		// remove node from contention
+		/* remove node from contention */
 		this_node->weight = -1;
 		this_node->fixed = TRUE;
 
@@ -531,10 +531,10 @@ is_node_unclean(xmlNodePtr node_state)
 
 	/* do an actual calculation once STONITH is available */
 
-	// } else if(...) {
+	/* } else if(...) { */
 	}
 
-	// for now...
+	/* for now... */
 	if(0) {
 		state = NULL;
 		join_state = NULL;
@@ -660,7 +660,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 			 * For now this should do
 			 */
 			if(safe_str_eq(last_op, "stop")) {
-				// map this to a timeout so it is re-issued
+				/* map this to a timeout so it is re-issued */
 				rsc_code_i = LRM_OP_TIMEOUT;
 			} else {
 				/* map this to a "done" so it is not marked
@@ -685,7 +685,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 					rsc_entry, rsc_lh,node);
 				break;
 			case LRM_OP_CANCELLED:
-				// do nothing??
+				/* do nothing?? */
 				crm_warn("Dont know what to do for cancelled ops yet");
 				break;
 		}
@@ -774,8 +774,8 @@ unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
 				rsc_lh->id,
 				rsc_lh->cur_node->details->uname,
 				node->details->uname);
-			// TODO: some recovery action!!
-			// like force a stop on the second node?
+			/* TODO: some recovery action!! */
+			/* like force a stop on the second node? */
 			return FALSE;
 			
 		} else {
@@ -800,7 +800,7 @@ rsc2rsc_new(const char *id, enum con_strength strength, enum rsc_con_type type,
 	rsc_to_rsc_t *inverted_con = NULL;
 
 	if(rsc_lh == NULL || rsc_rh == NULL){
-		// error
+		/* error */
 		return FALSE;
 	}
 
@@ -901,7 +901,7 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	}
 		
 #if 1
-	// eventually move to the new rsc_location "running|not_running" constraints
+	/* eventually move to the new rsc_location "running|not_running" constraints */
 	
 	/* make sure the lower priority resource stops before
 	 *  the higher is started, otherwise they may be both running
@@ -1023,7 +1023,7 @@ match_attrs(const char *attr, const char *op, const char *value,
 				accept = TRUE;
 
 		} else if(value == NULL || h_val == NULL) {
-			// the comparision is meaningless from this point on
+			/* the comparision is meaningless from this point on */
 			accept = FALSE;
 			
 		} else if(safe_str_eq(op, "lt")) {

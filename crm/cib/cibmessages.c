@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.48 2004/08/27 15:21:57 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.49 2004/08/30 03:17:37 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -121,7 +121,7 @@ cib_process_request(const char *op,
 		crm_verbose("Handling a %s for section=%s of the cib",
 			   CRM_OP_BUMP, section);
 		
-		// modify the timestamp
+		/* modify the timestamp */
 		set_node_tstamp(tmpCib);
 		old_value =
 			xmlGetProp(get_the_CIB(), XML_ATTR_GENERATION);
@@ -159,10 +159,10 @@ cib_process_request(const char *op,
 
 		crm_err("Op %s is not currently supported", op);
 		*result = CIBRES_FAILED_NOTSUPPORTED;
-/*
+#if 0
 		xmlNodePtr new_cib = createEmptyCib();
 
-		// Preserve the status section
+		/* Preserve the status section */
 		xmlNodePtr state_info = copy_xml_node_recursive(
 			get_object_root(XML_CIB_TAG_STATUS, get_the_CIB()));
 
@@ -172,13 +172,13 @@ cib_process_request(const char *op,
 		state_info->children = NULL;
 		free_xml(state_info);
 
-		// Preserve generation counters etc
+		/* Preserve generation counters etc */
 		copy_in_properties(new_cib, get_the_CIB());
 
 		if (activateCibXml(new_cib, CIB_FILENAME) < 0) {
 			*result = CIBRES_FAILED;
 		}
-*/
+#endif
 	} else if (strcmp(CRM_OP_CREATE, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_ADD;
@@ -223,10 +223,10 @@ cib_process_request(const char *op,
 		crm_verbose("Updating section=%s of the cib (op=%s)",
 			   section, op);
 
-			// should we be doing this?
-			// do logging
+			/* should we be doing this? */
+			/* do logging */
 			
-			// make changes to a temp copy then activate
+			/* make changes to a temp copy then activate */
 		if(section == NULL) {
 			crm_err("No section specified in %s",
 			       XML_ATTR_FILTER_TYPE);

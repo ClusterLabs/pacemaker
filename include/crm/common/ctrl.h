@@ -1,4 +1,4 @@
-/* $Id: ctrl.h,v 1.1 2004/06/02 11:40:50 andrew Exp $ */
+/* $Id: ctrl.h,v 1.2 2004/08/30 03:17:40 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,7 +21,7 @@
 
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/lsb_exitcodes.h>
-//#include <clplumbing/GSource.h>
+/* #include <clplumbing/GSource.h> */
 
 extern gboolean tickle_apphb_template(gpointer data);
 

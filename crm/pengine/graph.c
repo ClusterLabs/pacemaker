@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.12 2004/08/27 15:21:59 andrew Exp $ */
+/* $Id: graph.c,v 1.13 2004/08/30 03:17:38 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,7 +46,7 @@ create_action_set(action_t *action)
 
 	crm_debug_action(print_action("Create action set for", action, FALSE));
 	
-	// process actions_before
+	/* process actions_before */
 	if(action->seen_count == 0) {
 		crm_verbose("Processing \"before\" for action %d", action->id);
 		slist_iter(
@@ -71,7 +71,7 @@ create_action_set(action_t *action)
 			);
 	}
 	
-	// add ourselves
+	/* add ourselves */
 	if(action->runnable) {
 		if(action->processed == FALSE) {
 			crm_verbose("Adding self %d", action->id);
@@ -204,7 +204,7 @@ stonith_constraints(node_t *node,
 			order_new(
 				stonith_op,rsc->start,pecs_must,action_constraints);
 		} else {
-			// dont run this anywhere else
+			/* dont run this anywhere else */
 			rsc->start->runnable = FALSE;
 		}
 		

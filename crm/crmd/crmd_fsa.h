@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.24 2004/06/28 08:23:52 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.25 2004/08/30 03:17:38 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,13 +37,13 @@ struct ccm_data
 struct oc_node_list_s
 {
 		int members_size;
-		GHashTable *members; // contents: oc_node_t *
+		GHashTable *members; /* contents: oc_node_t * */
 
 		int new_members_size;
-		GHashTable *new_members; // contents: oc_node_t *
+		GHashTable *new_members; /* contents: oc_node_t * */
 
 		int dead_members_size;
-		GHashTable *dead_members; // contents: oc_node_t *
+		GHashTable *dead_members; /* contents: oc_node_t * */
 };
 
 /* copy from struct client_child in heartbeat.h
@@ -84,7 +84,7 @@ extern ll_cluster_t   *fsa_cluster_conn;
 extern ll_lrm_t       *fsa_lrm_conn;
 extern long long       fsa_input_register;
 extern const char     *fsa_our_uname;
-extern char	      *fsa_pe_ref; // the last invocation of the PE
+extern char	      *fsa_pe_ref; /* the last invocation of the PE */
 extern const char     *fsa_our_dc;
 extern GListPtr fsa_message_queue;
 
@@ -98,7 +98,7 @@ extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;
 extern struct crm_subsystem_s *pe_subsystem;
 
-// these two should be moved elsewhere...
+/* these two should be moved elsewhere... */
 extern xmlNodePtr do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite);
 extern gboolean do_dc_heartbeat(gpointer data);
 

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.33 2004/07/30 15:31:06 andrew Exp $ */
+/* $Id: pengine.h,v 1.34 2004/08/30 03:17:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -73,10 +73,10 @@ struct node_shared_s {
 		gboolean online;
 		gboolean unclean;
 		gboolean shutdown;
-		GListPtr running_rsc;	// resource_t*
-		GListPtr agents;	// lrm_agent_t*
+		GListPtr running_rsc;	/* resource_t* */
+		GListPtr agents;	/* lrm_agent_t* */
 		
-		GHashTable *attrs;	// char* => char*
+		GHashTable *attrs;	/* char* => char* */
 		enum node_type type;
 }; 
 
@@ -89,8 +89,8 @@ struct node_s {
 struct color_shared_s {
 		int      id;
 		float    highest_priority;
-		GListPtr candidate_nodes; // node_t*
-		GListPtr allocated_resources; // resources_t*
+		GListPtr candidate_nodes; /* node_t* */
+		GListPtr allocated_resources; /* resources_t* */
 		node_t  *chosen_node;
 		gboolean pending;
 };
@@ -115,8 +115,8 @@ struct rsc_to_node_s {
 		resource_t	*rsc_lh; 
 
 		float		weight;
-		GListPtr node_list_rh; // node_t*
-//		enum con_modifier modifier;
+		GListPtr node_list_rh; /* node_t* */
+/*		enum con_modifier modifier; */
 		gboolean can;
 };
 
@@ -151,13 +151,13 @@ struct resource_s {
 		action_t	*stop;
 		action_t	*start;
 		
-		GListPtr	actions;	  // action_t*
+		GListPtr	actions;	  /* action_t* */
 		
-		GListPtr	candidate_colors; // color_t*
-		GListPtr	allowed_nodes;    // node_t*
-		GListPtr	node_cons;        // rsc_to_node_t* 
-		GListPtr	rsc_cons;         // resource_t*
-		GListPtr	fencable_nodes;   // node_t*
+		GListPtr	candidate_colors; /* color_t* */
+		GListPtr	allowed_nodes;    /* node_t* */
+		GListPtr	node_cons;        /* rsc_to_node_t*  */
+		GListPtr	rsc_cons;         /* resource_t* */
+		GListPtr	fencable_nodes;   /* node_t* */
 
 		color_t		*color;
 };
@@ -186,8 +186,8 @@ struct action_s
 
 		xmlNodePtr args;
 		
-		GListPtr actions_before; // action_warpper_t*
-		GListPtr actions_after;  // action_warpper_t*
+		GListPtr actions_before; /* action_warpper_t* */
+		GListPtr actions_after;  /* action_warpper_t* */
 };
 
 struct order_constraint_s 
@@ -196,7 +196,7 @@ struct order_constraint_s
 		action_t *lh_action;
 		action_t *rh_action;
 		enum con_strength strength;
-//		enum action_order order;
+/*		enum action_order order; */
 };
 
 extern gboolean stage0(xmlNodePtr cib,

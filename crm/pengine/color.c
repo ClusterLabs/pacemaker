@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.14 2004/08/29 02:34:29 msoffen Exp $ */
+/* $Id: color.c,v 1.15 2004/08/30 03:17:38 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,14 +69,14 @@ apply_node_constraints(GListPtr constraints, GListPtr nodes)
 	slist_iter(
 		cons, rsc_to_node_t, constraints, lpc,
 		crm_debug_action(print_rsc_to_node("Applying", cons, FALSE));
-		// take "lifetime" into account
+		/* take "lifetime" into account */
 		if(cons == NULL) {
 			crm_err("Constraint (%d) is NULL", lpc);
 			continue;
 			
 		} else if(is_active(cons) == FALSE) {
 			crm_info("Constraint (%d) is not active", lpc);
-			// warning
+			/* warning */
 			continue;
 		}
     
@@ -247,7 +247,7 @@ strict_preproc(rsc_to_rsc_t *constraint, GListPtr *colors, GListPtr resources)
 					create_color(colors, lh_resource, NULL);
 				}
 				
-				// x * should * should_not = x
+				/* x * should * should_not = x */
 				local_color->local_weight = 
 					local_color->local_weight * factor;
 				
@@ -479,7 +479,7 @@ color_resource(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 	crm_debug_action(print_resource("Coloring", lh_resource, FALSE));
 	
 	if(lh_resource->provisional == FALSE) {
-		// already processed this resource
+		/* already processed this resource */
 		return;
 	}
 	
@@ -489,7 +489,7 @@ color_resource(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 	crm_debug_action(
 		print_resource("Pre-processing", lh_resource, FALSE));
 
-	//------ Pre-processing
+	/*------ Pre-processing */
 	rsc_preproc(lh_resource, colors, resources);
 	
 	/* avoid looping through lists when we know this resource
@@ -500,7 +500,7 @@ color_resource(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 			    lh_resource->id, lh_resource->color->id);
 		
 	} else if(lh_resource->allowed_nodes != NULL) {
-		// filter out nodes with a negative weight
+		/* filter out nodes with a negative weight */
 		filter_nodes(lh_resource);
 		new_color = create_color(colors, lh_resource, NULL);
 		assign_color(lh_resource, new_color);
@@ -517,7 +517,7 @@ color_resource(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 	crm_debug_action(
 		print_resource("Post-processing", lh_resource, FALSE));
 
-	//------ Post-processing
+	/*------ Post-processing */
 	rsc_postproc(lh_resource, colors, resources);
 	
 	crm_debug_action(print_resource("Colored", lh_resource, FALSE));
@@ -535,7 +535,7 @@ update_node_weight(rsc_to_node_t *cons, const char *id, GListPtr nodes)
 	}
 
 	if(node_rh->fixed) {
-		// warning
+		/* warning */
 		crm_warn("Constraint %s is irrelevant as the"
 			 " weight of node %s is fixed as %f.",
 			 cons->id,

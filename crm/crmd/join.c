@@ -39,27 +39,30 @@ do_send_welcome(long long action,
 		enum crmd_fsa_input current_input,
 		void *data)
 {
-	
+	xmlNodePtr update = NULL;
+	xmlNodePtr welcome = NULL;
+	xmlNodePtr tmp1 = NULL;
+	const char *join_to = NULL;
 
 	if(action & A_JOIN_WELCOME && data == NULL) {
 		crm_err("Attempt to send welcome message "
 			 "without a message to reply to!");
 		return I_NULL;
-//		return do_send_welcome_all(
-//			A_JOIN_WELCOME_ALL,cause,cur_state,current_input,data);
+/*		return do_send_welcome_all( */
+/*			A_JOIN_WELCOME_ALL,cause,cur_state,current_input,data); */
 		
 	} else if(action & A_JOIN_WELCOME) {
-		xmlNodePtr welcome = (xmlNodePtr)data;
+		welcome = (xmlNodePtr)data;
 
-		const char *join_to = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
+		join_to = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 		if(join_to != NULL) {
 			stopTimer(integration_timer);
 
-			xmlNodePtr update = create_node_state(
+			update = create_node_state(
 				join_to, join_to,
 				NULL, NULL, CRMD_JOINSTATE_PENDING);
 
-			xmlNodePtr tmp1 = create_cib_fragment(update, NULL);
+			tmp1 = create_cib_fragment(update, NULL);
 			invoke_local_cib(NULL, tmp1, CRM_OP_UPDATE);
 
 			send_request(NULL, NULL, CRM_OP_WELCOME,
@@ -92,7 +95,7 @@ do_send_welcome_all(long long action,
 {
 	
 
-	// reset everyones status back to down or in_ccm in the CIB
+	/* reset everyones status back to down or in_ccm in the CIB */
 	xmlNodePtr update     = NULL;
 	xmlNodePtr cib_copy   = get_cib_copy();
 	xmlNodePtr tmp1       = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
@@ -108,7 +111,7 @@ do_send_welcome_all(long long action,
 		
 	}
 
-	// catch any nodes that are active in the CIB but not in the CCM list 
+	/* catch any nodes that are active in the CIB but not in the CCM list  */
 	while(node_entry != NULL){
 		const char *node_id = xmlGetProp(node_entry, XML_ATTR_UNAME);
 
@@ -134,7 +137,7 @@ do_send_welcome_all(long long action,
 		}
 	}
 
-	// now process the CCM data
+	/* now process the CCM data */
 	free_xml(do_update_cib_nodes(update, TRUE));
 	free_xml(cib_copy);
 
@@ -148,7 +151,7 @@ do_send_welcome_all(long long action,
 /* No point hanging around in S_INTEGRATION if we're the only ones here! */
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {
-		// that was the last outstanding join ack)
+		/* that was the last outstanding join ack) */
 		crm_info("That was the last outstanding join ack");
 		return I_SUCCESS;
 		
@@ -156,7 +159,7 @@ do_send_welcome_all(long long action,
 		crm_debug("Still waiting on %d outstanding join acks",
 			  fsa_membership_copy->members_size
 			  - g_hash_table_size(joined_nodes));
-		// dont waste time by invoking the pe yet;
+		/* dont waste time by invoking the pe yet; */
 	}
 	
 	return I_NULL;

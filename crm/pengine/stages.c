@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.16 2004/08/29 02:35:12 msoffen Exp $ */
+/* $Id: stages.c,v 1.17 2004/08/30 03:17:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,7 +50,7 @@ stage0(xmlNodePtr cib,
        GListPtr *actions, GListPtr *action_constraints,
        GListPtr *stonith_list, GListPtr *shutdown_list)
 {
-//	int lpc;
+/*	int lpc; */
 	xmlNodePtr cib_nodes       = get_object_root(
 		XML_CIB_TAG_NODES,       cib);
 	xmlNodePtr cib_status      = get_object_root(
@@ -62,7 +62,7 @@ stage0(xmlNodePtr cib,
 	xmlNodePtr config          = get_object_root(
 		XML_CIB_TAG_CRMCONFIG,   cib);
 	xmlNodePtr agent_defaults  = NULL;
-	//get_object_root(XML_CIB_TAG_RA_DEFAULTS, cib);
+	/*get_object_root(XML_CIB_TAG_RA_DEFAULTS, cib); */
 
 	/* reset remaining global variables */
 	max_valid_nodes = 0;
@@ -145,16 +145,16 @@ stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 	crm_trace("create \"no color\"");
 	no_color = create_color(NULL, NULL, NULL);
 	
-	// Take (next) highest resource
+	/* Take (next) highest resource */
 	slist_iter(
 		lh_resource, resource_t, sorted_rscs, lpc,
-		// if resource.provisional == FALSE, repeat 
+		/* if resource.provisional == FALSE, repeat  */
 		if(lh_resource->provisional == FALSE) {
-			// already processed this resource
+			/* already processed this resource */
 			continue;
 		}
 		color_resource(lh_resource, colors, sorted_rscs);
-		// next resource
+		/* next resource */
 		);
 	
 	return TRUE;
@@ -168,11 +168,11 @@ stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 gboolean
 stage3(GListPtr colors)
 {
-	// not sure if this is a good idea or not
+	/* not sure if this is a good idea or not */
 	if(g_list_length(colors) > max_valid_nodes) {
-		// we need to consolidate some
+		/* we need to consolidate some */
 	} else if(g_list_length(colors) < max_valid_nodes) {
-		// we can create a few more
+		/* we can create a few more */
 	}
 	return TRUE;
 }
@@ -244,7 +244,7 @@ stage5(GListPtr resources)
 			NULL, rsc, color, details, chosen_node);
 		stop_node = safe_val(NULL, rsc, cur_node);
 		if(stop_node == NULL && start_node == NULL) {
-			// it is not and will not run
+			/* it is not and will not run */
 			default_node = NULL;
 
 		} else if(stop_node == NULL) {
@@ -272,7 +272,7 @@ stage5(GListPtr resources)
 			   safe_val3(NULL, stop_node, details, uname),
 			   safe_val3(NULL, start_node, details, uname))) {
 
-			// its not moving so choose either copy
+			/* its not moving so choose either copy */
 			default_node = start_node;
 			crm_verbose("No change (possible restart)"
 				    " for Resource %s (%s)",
@@ -371,7 +371,7 @@ stage6(GListPtr *actions, GListPtr *action_constraints,
 					      "target", node->details->uname);
 			
 			if(stonith_node->node == NULL) {
-				//stonith_node->runnable = FALSE;
+				/*stonith_node->runnable = FALSE; */
 			}
 			
 			if(down_node != NULL) {
@@ -441,7 +441,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 		list = g_list_append(list, wrapper);
 		order->rh_action->actions_before = list;
 		);
-//	}
+/*	} */
 	
 	update_runnable(actions);
 

@@ -1,4 +1,4 @@
-/* $Id: ctrl.c,v 1.5 2004/07/30 15:31:05 andrew Exp $ */
+/* $Id: ctrl.c,v 1.6 2004/08/30 03:17:38 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,8 +80,8 @@ register_pid(const char *pid_file,
 		(void)open("/dev/null", j == 0 ? O_RDONLY : O_RDONLY);
 	}
 */
-//	CL_IGNORE_SIG(SIGINT);
-//	CL_IGNORE_SIG(SIGHUP);
+/*	CL_IGNORE_SIG(SIGINT); */
+/*	CL_IGNORE_SIG(SIGHUP); */
 	CL_SIGNAL(SIGTERM, shutdown);
 }
 
@@ -170,7 +170,7 @@ register_with_apphb(const char *client_name,
 	int     hb_intvl_ms = wdt_interval_ms * 2;
 	int     rc = 0;
 
-	// Register with apphb
+	/* Register with apphb */
 	crm_info("Signing in with AppHb");
 	sprintf(app_instance, "%s_%ld", client_name, (long)getpid());
   
@@ -193,7 +193,7 @@ register_with_apphb(const char *client_name,
 		exit(2);
 	}
   
-	// regularly tell apphb that we are alive
+	/* regularly tell apphb that we are alive */
 	crm_info("Setting up AppHb Heartbeat");
 	Gmain_timeout_add(wdt_interval_ms, tickle_fn, NULL);
 }

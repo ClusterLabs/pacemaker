@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.3 2004/08/03 09:21:43 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.4 2004/08/30 03:17:36 msoffen Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -41,7 +41,7 @@
 #include <crm/cib.h>
 
 #include <getopt.h>
-#include <ha_msg.h> // someone complaining about _ha_msg_mod not being found
+#include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
 #include <crm/dmalloc_wrapper.h>
 
 
@@ -100,7 +100,7 @@ main(int argc, char **argv)
 	char *xml_text = NULL;
 	
 	static struct option long_options[] = {
-		// Top-level Options
+		/* Top-level Options */
 		{CRM_OP_ERASE,   0, 0, 'E'},
 		{CRM_OP_QUERY,   0, 0, 'Q'},
 		{CRM_OP_CREATE,  0, 0, 'C'},
@@ -113,7 +113,7 @@ main(int argc, char **argv)
 		{"help",         0, 0, '?'},
 		{"reference",    1, 0, 0},
 
-		// common options
+		/* common options */
 		{XML_ATTR_ID, 1, 0, 'i'},
 		{"obj_type", 1, 0, 'o'},
 
@@ -287,7 +287,7 @@ handleCibMod(const char *xml)
 	
 	crm_trace("Object creation complete");
 
-	// create the cib request
+	/* create the cib request */
 	fragment = create_cib_fragment(cib_object, NULL);
 
 	set_xml_property_copy(msg_options, XML_ATTR_OP, cib_action);
@@ -491,7 +491,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 		if (this_msg_reference != NULL) {
-			// in testing mode...
+			/* in testing mode... */
 			/* 31 = "test-_.xml" + an_int_as_string + '\0' */
 			filename_len = 31 + strlen(this_msg_reference);
 

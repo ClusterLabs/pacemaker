@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.12 2004/08/29 03:01:12 msoffen Exp $ */
+/* $Id: utils.c,v 1.13 2004/08/30 03:17:38 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -252,7 +252,7 @@ do_crm_log(int log_level, const char *function, const char *fmt, ...)
 		int	nbytes;
 		
 		memset(buf, EOS, sizeof(buf)-1);
-		//			buf[MAXLINE-1] = EOS;
+		/*			buf[MAXLINE-1] = EOS; */
 		va_start(ap, fmt);
 		nbytes=vsnprintf(buf, sizeof(buf)-1, fmt, ap);
 		va_end(ap);

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.38 2004/08/29 02:36:53 msoffen Exp $ */
+/* $Id: utils.c,v 1.39 2004/08/30 03:17:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,7 +46,7 @@ invert_constraint(rsc_to_rsc_t *constraint)
 	inverted_con->id = crm_strdup(constraint->id);
 	inverted_con->strength = constraint->strength;
 
-	// swap the direction
+	/* swap the direction */
 	inverted_con->rsc_lh = constraint->rsc_rh;
 	inverted_con->rsc_rh = constraint->rsc_lh;
 
@@ -252,7 +252,7 @@ node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
 			node_merge_weights(other_node, node);
 
 			if(filter && node->weight < 0) {
-				// TODO: remove and free other_node
+				/* TODO: remove and free other_node */
 			}
 			
 		} else if(filter && node->weight < 0) {
@@ -393,7 +393,7 @@ filter_nodes(resource_t *rsc)
 			rsc->allowed_nodes =
 				g_list_remove(rsc->allowed_nodes,node);
 			crm_free(node);
-			lpc2 = -1; // restart the loop
+			lpc2 = -1; /* restart the loop */
 		}
 		);
 
@@ -412,7 +412,7 @@ pe_find_resource(GListPtr rsc_list, const char *id_rh)
 			return rsc;
 		}
 	}
-	// error
+	/* error */
 	return NULL;
 }
 
@@ -429,7 +429,7 @@ pe_find_node(GListPtr nodes, const char *uname)
 			return node;
 		}
 	}
-	// error
+	/* error */
 	return NULL;
 }
 
@@ -445,7 +445,7 @@ pe_find_node_id(GListPtr nodes, const char *id)
 			return node;
 		}
 	}
-	// error
+	/* error */
 	return NULL;
 }
 
@@ -467,7 +467,7 @@ gint gslist_color_compare(gconstpointer a, gconstpointer b)
 	const color_t *color_a = (const color_t*)a;
 	const color_t *color_b = (const color_t*)b;
 
-//	crm_trace("%d vs. %d", a?color_a->id:-2, b?color_b->id:-2);
+/*	crm_trace("%d vs. %d", a?color_a->id:-2, b?color_b->id:-2); */
 	if(a == b) {
 		return 0;
 	} else if(a == NULL || b == NULL) {
@@ -555,7 +555,7 @@ action_new(resource_t *rsc, enum action_tasks task)
 	action->id   = action_id++;
 	action->rsc  = rsc;
 	action->task = task;
-	action->node = NULL; // fill node in later
+	action->node = NULL; /* fill node in later */
 	action->actions_before   = NULL;
 	action->actions_after    = NULL;
 	action->failure_is_fatal = TRUE;
@@ -981,7 +981,7 @@ pe_free_shallow_adv(GListPtr alist, gboolean with_data)
 		item_next = item_next->next;
 		
 		if(with_data) {
-//			crm_trace("freeing %p", item->data);
+/*			crm_trace("freeing %p", item->data); */
 			crm_free(item->data);
 		}
 		
@@ -1025,8 +1025,8 @@ pe_free_actions(GListPtr actions)
 		action_t *action = (action_t *)list_item->data;
 		actions = actions->next;
 
-		pe_free_shallow(action->actions_before); // action_warpper_t*
-		pe_free_shallow(action->actions_after); // action_warpper_t*
+		pe_free_shallow(action->actions_before); /* action_warpper_t* */
+		pe_free_shallow(action->actions_after); /* action_warpper_t* */
 		action->actions_before = NULL;
 		action->actions_after  = NULL;
 		free_xml(action->args);
@@ -1050,8 +1050,8 @@ pe_free_rsc_to_node(rsc_to_node_t *cons)
 {
 	if(cons != NULL) {
 
-		// right now we dont make copies so this isnt required
-//		pe_free_shallow(cons->node_list_rh); // node_t*
+		/* right now we dont make copies so this isnt required */
+/*		pe_free_shallow(cons->node_list_rh); */ /* node_t* */
 		crm_free(cons);
 	}
 }

@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.4 2004/08/27 15:21:57 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.5 2004/08/30 03:17:37 msoffen Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -103,14 +103,14 @@ main(int argc, char **argv)
 	int level = 0;
 
 	static struct option long_options[] = {
-		// Top-level Options
+		/* Top-level Options */
 		{"verbose", 0, 0, 'V'},
 		{"help", 0, 0, '?'},
 		{"silent", 0, 0, 's'},
 		{"reference", 1, 0, 0},
 
-		// daemon options
-		{"kill", 1, 0, 'K'},  // stop a node
+		/* daemon options */
+		{"kill", 1, 0, 'K'},  /* stop a node */
 		{"crm_debug_inc", 1, 0, 'i'},
 		{"crm_debug_dec", 1, 0, 'd'},
 		{"status", 1, 0, 'S'},
@@ -292,7 +292,7 @@ do_work(ll_cluster_t * hb_cluster)
 		if (dest_node != NULL) {
 			sys_to = CRM_SYSTEM_CRMD;
 			if (BE_VERBOSE) {
-				expected_responses = -1;// wait until timeout instead
+				expected_responses = -1;/* wait until timeout instead */
 			}
 			
 			set_xml_property_copy(
@@ -319,7 +319,7 @@ do_work(ll_cluster_t * hb_cluster)
 		
 		dest_node = NULL;
 
-		ret = 0; // no return message
+		ret = 0; /* no return message */
 		
 	} else if(DO_WHOIS_DC) {
 		sys_to = CRM_SYSTEM_DC;
@@ -368,7 +368,7 @@ do_work(ll_cluster_t * hb_cluster)
 		set_xml_property_copy(
 			msg_options, XML_ATTR_TIMEOUT, "0");
 		
-		ret = 0; // no return message
+		ret = 0; /* no return message */
 		
 	} else if(DO_DEBUG == debug_inc) {
 		/* tell dest_node to increase its debug level
@@ -381,7 +381,7 @@ do_work(ll_cluster_t * hb_cluster)
 		set_xml_property_copy(msg_options, XML_ATTR_OP, "debug_inc");
 		set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
 		
-		ret = 0; // no return message
+		ret = 0; /* no return message */
 		
 	} else if(DO_DEBUG == debug_dec) {
 		/* tell dest_node to increase its debug level
@@ -394,7 +394,7 @@ do_work(ll_cluster_t * hb_cluster)
 		set_xml_property_copy(msg_options, XML_ATTR_OP, "debug_dec");
 		set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
 		
-		ret = 0; // no return message
+		ret = 0; /* no return message */
 		
 	} else {
 		crm_err("Unknown options");
@@ -560,7 +560,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 		
 		if (this_msg_reference != NULL) {
-			// in testing mode...
+			/* in testing mode... */
 			/* 31 = "test-_.xml" + an_int_as_string + '\0' */
 			filename_len = 31 + strlen(this_msg_reference);
 
@@ -758,7 +758,7 @@ usage(const char *cmd, int exit_status)
 		"request the names of all resources\n", "resources", 'R');
 	fprintf(stream, "\t--%s (-%c) <rsc>\t: "
 		"request the location of <rsc>\n", "whereis", 'W');
-//	fprintf(stream, "\t--%s (-%c)\t\n", "disconnect", 'D');
+/*	fprintf(stream, "\t--%s (-%c)\t\n", "disconnect", 'D'); */
 	fflush(stream);
 
 	exit(exit_status);

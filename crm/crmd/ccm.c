@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.32 2004/08/29 03:01:12 msoffen Exp $ */
+/* $Id: ccm.c,v 1.33 2004/08/30 03:17:38 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -518,7 +518,7 @@ do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite)
 		free_xml(fragment);
 	}
 
-	// so it can be freed
+	/* so it can be freed */
 	return update_data.updates;
 
 }

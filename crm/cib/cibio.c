@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.33 2004/08/27 15:21:57 andrew Exp $ */
+/* $Id: cibio.c,v 1.34 2004/08/30 03:17:37 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,7 +126,7 @@ verifyCibXml(xmlNodePtr cib)
 	tmp_node = get_object_root(XML_CIB_TAG_CRMCONFIG, cib);
  	if (tmp_node == NULL) is_valid = FALSE;
 
-	// more integrity tests
+	/* more integrity tests */
 
 	return is_valid;
 }
@@ -173,7 +173,7 @@ readCibXmlFile(const char *filename)
 	
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
-//		return createEmptyCib();
+/*		return createEmptyCib(); */
 		root = NULL;
 	}
 
@@ -232,7 +232,7 @@ initializeCib(xmlNodePtr new_cib)
 		initialized = FALSE;
 		the_cib = new_cib;
 
-		// update search paths
+		/* update search paths */
 		/* not used yet...
 		node_search =
 			get_object_root(XML_CIB_TAG_NODES, new_cib);
@@ -331,7 +331,7 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 {
 	int error_code = 0;
 	xmlNodePtr saved_cib = get_the_CIB();
-	const char *filename_bak = CIB_BACKUP; // calculate
+	const char *filename_bak = CIB_BACKUP; /* calculate */
 
 	if (initializeCib(new_cib) == TRUE) {
 		int res = moveFile(filename, filename_bak, FALSE, NULL);
@@ -347,7 +347,7 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 			write_xml_file(new_cib, DEVEL_DIR"/cib.xml");
 #endif
 			if (res < 0) {
-				// assume 0 is good
+				/* assume 0 is good */
 				if (moveFile(filename_bak,
 					     filename,
 					     FALSE,
@@ -357,9 +357,9 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 						 "(code: %d)... panic!",
 						 res);
 					error_code = -2;
-					// should probably exit here 
+					/* should probably exit here  */
 				} else if (initializeCib(saved_cib) == FALSE) {
-					// oh we are so dead 
+					/* oh we are so dead  */
 					crm_crit("Could not re-initialize "
 						 "with the old CIB.  "
 						 "Everything is about to go "
@@ -382,7 +382,7 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 		error_code = -5;
 	}
 
-	// Make sure memory is cleaned up appropriately
+	/* Make sure memory is cleaned up appropriately */
 	if (error_code != 0) {
 		crm_trace("Freeing new CIB %p", new_cib);
 		free_xml(new_cib);

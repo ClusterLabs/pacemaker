@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.41 2004/08/27 15:21:59 andrew Exp $ */
+/* $Id: pengine.c,v 1.42 2004/08/30 03:17:38 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -63,10 +63,10 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 	sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
 
 	if(op == NULL){
-		// error
+		/* error */
 
 	} else if(strcmp(op, CRM_OP_HELLO) == 0) {
-		// ignore
+		/* ignore */
 		
 	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
 		crm_verbose("Bad sys-to %s", sys_to);
@@ -111,7 +111,7 @@ do_calculations(xmlNodePtr cib_object)
 
 	xmlNodePtr graph = NULL;
 
-//	pe_debug_on();
+/*	pe_debug_on(); */
 	
 	crm_verbose("=#=#=#=#= Stage 0 =#=#=#=#=");
 		  

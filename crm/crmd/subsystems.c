@@ -22,17 +22,17 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include <unistd.h>			// for access
+#include <unistd.h>			/* for access */
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/realtime.h>
-#include <sys/types.h>	// for calls to open
-#include <sys/stat.h>	// for calls to open
-#include <fcntl.h>	// for calls to open
-#include <pwd.h>	// for getpwuid
-#include <grp.h>	// for initgroups
+#include <sys/types.h>	/* for calls to open */
+#include <sys/stat.h>	/* for calls to open */
+#include <fcntl.h>	/* for calls to open */
+#include <pwd.h>	/* for getpwuid */
+#include <grp.h>	/* for initgroups */
 
-#include <sys/time.h>	// for getrlimit
-#include <sys/resource.h>// for getrlimit
+#include <sys/time.h>	/* for getrlimit */
+#include <sys/resource.h>/* for getrlimit */
 
 #include <errno.h>
 
@@ -73,7 +73,7 @@ do_cib_control(long long action,
 	
 	
 	if(action & stop_actions) {
-		// dont do anything, its embedded now
+		/* dont do anything, its embedded now */
 	}
 
 	if(action & start_actions) {
@@ -112,7 +112,7 @@ do_cib_invoke(long long action,
 	
 	
 	if(action & A_CIB_INVOKE || action & A_CIB_INVOKE_LOCAL) {
-//		gboolean is_update   = FALSE;
+/*		gboolean is_update   = FALSE; */
 		xmlNodePtr options   = find_xml_node(cib_msg, XML_TAG_OPTIONS);
 		const char *sys_from = xmlGetProp(cib_msg, XML_ATTR_SYSFROM);
 		const char *op       = xmlGetProp(options, XML_ATTR_OP);
@@ -120,11 +120,11 @@ do_cib_invoke(long long action,
 		crm_debug("[CIB b4]\t%s\n\n", dump_xml_node(cib_msg, FALSE));
 		if(cib_msg == NULL) {
 			crm_err("No message for CIB command");
-			return I_NULL; // I_ERROR
+			return I_NULL; /* I_ERROR */
 
 		} else if(op == NULL) {
 			xml_message_debug(cib_msg, "Invalid CIB Message");
-			return I_NULL; // I_ERROR
+			return I_NULL; /* I_ERROR */
 
 		}
 
@@ -153,7 +153,7 @@ do_cib_invoke(long long action,
 				result = I_ELECTION_DC;	
 			}
 			
-			// the TENGINE will get CC'd by other means.
+			/* the TENGINE will get CC'd by other means. */
 			if(AM_I_DC
 			   && sys_from != NULL
 			   && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE) 
@@ -177,23 +177,23 @@ do_cib_invoke(long long action,
 		return result;
 
 	} else if(action & A_CIB_BUMPGEN) {
-//		xmlNodePtr options   = find_xml_node(cib_msg, XML_TAG_OPTIONS);
-//		const char *op       = xmlGetProp(options, XML_ATTR_OP);
+/*		xmlNodePtr options   = find_xml_node(cib_msg, XML_TAG_OPTIONS); */
+/*		const char *op       = xmlGetProp(options, XML_ATTR_OP); */
 
 		if(AM_I_DC == FALSE) {
 			return I_NULL;
 		}
 
- 		// check if the response was ok before next bit
+ 		/* check if the response was ok before next bit */
 
-//		if(safe_str_neq(op, CRM_OP_WELCOME)) {
+/*		if(safe_str_neq(op, CRM_OP_WELCOME)) { */
 			/* set the section so that we dont always send the
 			 * whole thing
 			 */
 		section = get_xml_attr(
 			cib_msg, XML_TAG_OPTIONS,
 			XML_ATTR_FILTER_TYPE, FALSE);
-//		}
+/*		} */
 		
 		if(section != NULL) {
 			new_options = set_xml_attr(
@@ -430,7 +430,7 @@ do_te_copyto(long long action,
 	
 	relay_message(message, FALSE);
 
-	// only free it if it was a local copy
+	/* only free it if it was a local copy */
 	if(data == NULL) {
 		free_xml(message);
 	}
@@ -482,7 +482,7 @@ do_te_invoke(long long action,
 			     NULL, CRM_SYSTEM_TENGINE, NULL);
 	}
 
-	// only free it if it was a local copy
+	/* only free it if it was a local copy */
 	if(data == NULL) {
 		free_xml(msg);
 	}
@@ -635,7 +635,7 @@ start_subsystem(struct crm_subsystem_s*	centry)
 	/* Suppress respawning */
 	exit(100);
 
-	// never reached
+	/* never reached */
 	return TRUE;
 }
 

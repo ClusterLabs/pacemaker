@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.30 2004/08/27 15:21:59 andrew Exp $ */
+/* $Id: ptest.c,v 1.31 2004/08/30 03:17:39 msoffen Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -70,7 +70,7 @@ main(int argc, char **argv)
 	while (1) {
 		int option_index = 0;
 		static struct option long_options[] = {
-			// Top-level Options
+			/* Top-level Options */
 			{"help", 0, 0, 0},
       
 			{0, 0, 0, 0}
@@ -156,9 +156,9 @@ main(int argc, char **argv)
 		   print_resource(NULL, resource, TRUE));
 
 	crm_debug("=#=#=#=#= Stage 2 =#=#=#=#=");
-//	pe_debug_on();
+/*	pe_debug_on(); */
 	stage2(resources, nodes, &colors);
-//	pe_debug_off();
+/*	pe_debug_off(); */
 
 	crm_debug("========= Nodes =========");
 	slist_iter(node, node_t, nodes, lpc,
@@ -257,7 +257,7 @@ main(int argc, char **argv)
 	crm_verbose("deleting actions");
 	pe_free_actions(actions);
 
-//	GListPtr action_sets = NULL;
+/*	GListPtr action_sets = NULL; */
 
 	crm_verbose("deleting resources");
 	pe_free_resources(resources); 

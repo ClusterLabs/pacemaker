@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.9 2004/07/30 15:31:07 andrew Exp $ */
+/* $Id: ttest.c,v 1.10 2004/08/30 03:17:40 msoffen Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -57,7 +57,7 @@ main(int argc, char **argv)
 	while (1) {
 		int option_index = 0;
 		static struct option long_options[] = {
-			// Top-level Options
+			/* Top-level Options */
 			{"daemon", 0, 0, 0},
       
 			{0, 0, 0, 0}
@@ -125,7 +125,7 @@ main(int argc, char **argv)
 	crm_trace("Initiating transition...");
 
 	if(initiate_transition() == FALSE) {
-		// nothing to be done.. means we're done.
+		/* nothing to be done.. means we're done. */
 		crm_info("No actions to be taken..."
 		       " transition compelte.");
 	}

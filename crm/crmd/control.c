@@ -80,7 +80,7 @@ do_ha_control(long long action,
 		if(fsa_cluster_conn == NULL)
 			fsa_cluster_conn = ll_cluster_new("heartbeat");
 
-		// make sure we are disconnected first
+		/* make sure we are disconnected first */
 		fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn);
 		
 		registered = register_with_ha(fsa_cluster_conn,
@@ -195,9 +195,9 @@ do_startup(long long action,
 {
 	int facility;
 	int was_error = 0;
-	int interval = 1; // seconds between DC heartbeats
+	int interval = 1; /* seconds between DC heartbeats */
 
-	fsa_input_register = 0; // zero out the regester
+	fsa_input_register = 0; /* zero out the regester */
 	
 	crm_info("Register PID");
 	register_pid(PID_FILE, FALSE, crm_shutdown);
@@ -377,19 +377,19 @@ do_read_config(long long action,
 	}
 	
 	if(dc_heartbeat->period_ms < 1) {
-		// sensible default
+		/* sensible default */
 		dc_heartbeat->period_ms = 1000;
 		
 	}
 	if(election_trigger->period_ms < 1) {
-		// sensible default
+		/* sensible default */
 		election_trigger->period_ms = dc_heartbeat->period_ms * 4;
 		
 	}
 	if(shutdown_escalation_timmer->period_ms < 1) {
-		// sensible default
+		/* sensible default */
 		shutdown_escalation_timmer->period_ms
-			= election_trigger->period_ms * 3 *10;// 10 for testing
+			= election_trigger->period_ms * 3 *10;/* 10 for testing */
 	}
 	
 	election_timeout->period_ms  = dc_heartbeat->period_ms * 6;
@@ -414,7 +414,7 @@ crm_shutdown(int nsig)
 			set_bit_inplace(&fsa_input_register, R_SHUTDOWN);
 
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
-				// cant rely on this...
+				/* cant rely on this... */
 				startTimer(shutdown_escalation_timmer);
 				
 				s_crmd_fsa(C_SHUTDOWN, I_SHUTDOWN, NULL);
@@ -484,7 +484,7 @@ init_server_ipc_comms(
 				      NULL,
 				      FALSE,
 				      channel_client_connect,
-				      wait_ch, // user data passed to ??
+				      wait_ch, /* user data passed to ?? */
 				      channel_input_destroy);
 
 	crm_debug("Listening on: %s", commpath);
@@ -536,7 +536,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 		      hb_cluster->llc_ops->inputfd(hb_cluster),
 		      FALSE, 
 		      dispatch_method, 
-		      hb_cluster,  // usrdata 
+		      hb_cluster,  /* usrdata  */
 		      cleanup_method);
 
 	crm_debug("Finding our node name");

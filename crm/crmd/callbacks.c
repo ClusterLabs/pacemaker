@@ -206,7 +206,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 			
 			if(the_subsystem != NULL) {
 				cleanup_subsystem(the_subsystem);
-			} // else that was a transient client
+			} /* else that was a transient client */
 			
 			if (curr_client->table_key != NULL) {
 				/*
@@ -254,6 +254,8 @@ crmd_client_status_callback(const char * node, const char * client,
 	const char   *extra = NULL;
 	xmlNodePtr   update = NULL;
 	xmlNodePtr fragment = NULL;
+	xmlNodePtr msg_options = NULL;
+	xmlNodePtr request = NULL;
 
 	if(safe_str_eq(status, JOINSTATUS)){
 		status = ONLINESTATUS;
@@ -276,21 +278,21 @@ crmd_client_status_callback(const char * node, const char * client,
 		}
 		
 		fragment = create_cib_fragment(update, NULL);
-//		store_request(NULL, fragment,
-//			      CRM_OP_UPDATE, CRM_SYSTEM_DCIB);
+/*		store_request(NULL, fragment, */
+/*			      CRM_OP_UPDATE, CRM_SYSTEM_DCIB); */
 
-		xmlNodePtr msg_options = set_xml_attr(
+		msg_options = set_xml_attr(
 			NULL, XML_TAG_OPTIONS, XML_ATTR_OP, CRM_OP_UPDATE, TRUE);
 		
-//		crm_verbose("Storing op=%s message for later processing", operation);
+/*		crm_verbose("Storing op=%s message for later processing", operation); */
 		
-		xmlNodePtr request = create_request(
+		request = create_request(
 			msg_options, fragment, NULL, CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
 
 		free_xml(fragment);
 		free_xml(update);
 
-//		s_crmd_fsa(C_CRMD_STATUS_CALLBACK, I_NULL, NULL);
+/*		s_crmd_fsa(C_CRMD_STATUS_CALLBACK, I_NULL, NULL); */
 		s_crmd_fsa(C_CRMD_STATUS_CALLBACK, I_CIB_OP, request);
 		
 	} else {
@@ -318,7 +320,7 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 	crm_debug("[F_TO=%s]", ha_msg_value(msg, F_TO));
 	crm_debug("[F_COMMENT=%s]", ha_msg_value(msg, F_COMMENT));
 	crm_debug("[F_XML=%s]", ha_msg_value(msg, "xml"));
-//    crm_debug("[F_=%s]", ha_msg_value(ha_msg, F_));
+/*    crm_debug("[F_=%s]", ha_msg_value(ha_msg, F_)); */
 #endif
 	
 	if (strcmp("CRM", ha_msg_value(msg, F_TYPE)) != 0) {
@@ -364,12 +366,12 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 	while(hb_cluster->llc_ops->msgready(hb_cluster)) {
 		lpc++;
 		empty_callbacks = 0;
-		// invoke the callbacks but dont block
+		/* invoke the callbacks but dont block */
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
 
 	if(lpc == 0) {
-		// hey what happened??
+		/* hey what happened?? */
 		crm_warn("We were called but no message was ready."
 		       "  Likely the connection to Heartbeat failed,"
 			" check the logs.");
@@ -379,7 +381,7 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 				" considering heartbeat dead",
 				MAX_EMPTY_CALLBACKS);
 
-			// s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL);
+			/* s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL); */
 
 			return FALSE;
 		}
@@ -393,7 +395,7 @@ void
 crmd_ha_input_destroy(gpointer user_data)
 {
 	crm_crit("Heartbeat has left us");
-	// this is always an error
-	// feed this back into the FSA
+	/* this is always an error */
+	/* feed this back into the FSA */
 	s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL);
 }

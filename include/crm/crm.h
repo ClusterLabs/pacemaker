@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.20 2004/08/29 03:01:13 msoffen Exp $ */
+/* $Id: crm.h,v 1.21 2004/08/30 03:17:40 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -108,7 +108,7 @@
 #define CRMD_RSCSTATE_MON_PENDING	CRMD_RSCSTATE_START_OK
 #define CRMD_RSCSTATE_MON_OK		CRMD_RSCSTATE_START_OK
 #define CRMD_RSCSTATE_MON_FAIL		"status_failed"
-//#define CRMD_RSCSTATE_GENERIC		"pending"
+/* #define CRMD_RSCSTATE_GENERIC		"pending" */
 #define CRMD_RSCSTATE_GENERIC_PENDING	"pending"
 #define CRMD_RSCSTATE_GENERIC_OK	"complete"
 #define CRMD_RSCSTATE_GENERIC_FAIL	"pending_failed"
