@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.39 2005/03/09 16:07:45 andrew Exp $ */
+/* $Id: utils.c,v 1.40 2005/03/11 14:00:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -545,6 +545,7 @@ extern int conn_logd_intval;
 void
 crm_set_ha_options(ll_cluster_t *hb_cluster) 
 {
+#if 0
 	int facility;
 	char *param_val = NULL;
 	const char *param_name = NULL;
@@ -609,7 +610,7 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 		cl_free(param_val);
 		param_val = NULL;
 	}
-
+#endif
 }
 
 
@@ -619,6 +620,8 @@ crm_set_env_options(void)
 {
 	char *param_val = NULL;
 	const char *param_name = NULL;
+
+	/* apparently we're not allowed to free the result of getenv */
 	
 	param_name = ENV_PREFIX "" KEY_FACILITY;
 	param_val = getenv(param_name);
@@ -635,6 +638,9 @@ crm_set_env_options(void)
 	param_val = getenv(param_name);
 	crm_info("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
+		if(safe_str_eq("/dev/null", param_val)) {
+			param_val = NULL;
+		}
 		cl_log_set_logfile(param_val);
 		param_val = NULL;
 	}
@@ -643,6 +649,9 @@ crm_set_env_options(void)
 	param_val = getenv(param_name);
 	crm_info("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
+		if(safe_str_eq("/dev/null", param_val)) {
+			param_val = NULL;
+		}
 		cl_log_set_debugfile(param_val);
 		param_val = NULL;
 	}
@@ -764,18 +773,29 @@ crm_logfacility_from_name(const char * value)
 	return -1;
 }
 
+gboolean
+crm_is_true(const char * s)
+{
+	gboolean ret = FALSE;
+	crm_str_to_boolean(s, &ret);
+	return ret;
+}
+
 int
 crm_str_to_boolean(const char * s, int * ret)
 {
-	if (	strcasecmp(s, "true") == 0
+	if(s == NULL) {
+		return -1;
+
+	} else if (strcasecmp(s, "true") == 0
 	||	strcasecmp(s, "on") == 0
 	||	strcasecmp(s, "yes") == 0
 	||	strcasecmp(s, "y") == 0
 	||	strcasecmp(s, "1") == 0){
 		*ret = TRUE;
 		return 1;
-	}
-	if (	strcasecmp(s, "false") == 0
+
+	} else if (strcasecmp(s, "false") == 0
 	||	strcasecmp(s, "off") == 0
 	||	strcasecmp(s, "no") == 0
 	||	strcasecmp(s, "n") == 0
