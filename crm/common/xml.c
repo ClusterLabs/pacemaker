@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.33 2005/02/11 22:08:21 andrew Exp $ */
+/* $Id: xml.c,v 1.34 2005/02/17 16:31:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -557,8 +557,10 @@ string2xml(const char *input)
 	return xml_object;
 #else
 	crm_data_t *output = parse_xml(input, NULL);
-	crm_update_parents(output);
-	crm_validate_data(output);
+	if(output != NULL) {
+		crm_update_parents(output);
+		crm_validate_data(output);
+	}
 	return output;
 #endif	
 }
@@ -649,11 +651,13 @@ file2xml(FILE *input)
 	if(read_len != length) {
 		crm_err("Calculated and read bytes differ: %d vs. %d",
 			length, read_len);
-	} else {
+	} else  if(length > 0) {
 		new_obj = string2xml(buffer);
+	} else {
+		crm_warn("File contained no XML");
 	}
+	
 	crm_free(buffer);
-	crm_validate_data(new_obj);
 	return new_obj;
 #endif	
 }
@@ -674,7 +678,7 @@ dump_array(int log_level, const char *message, const char **array, int depth)
 	}
 	
 	for (j=0; j < depth && array[j] != NULL; j++) {
-		if (array[j] == NULL) break;
+		if (array[j] == NULL) { break; }
 		do_crm_log(log_level, __FUNCTION__, NULL, "\t--> (%s).", array[j]);
 	}
 }
@@ -700,9 +704,6 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 	ctime_r(&now, now_str);
 	now_str[24] = EOS; /* replace the newline */
 	set_xml_property_copy(xml_node, "last_written", now_str);
-
-	crm_validate_data(xml_node);
-	crm_xml_debug(xml_node, "Writing out revised xml");
 	crm_validate_data(xml_node);
 	
 #ifdef USE_LIBXML
@@ -726,8 +727,11 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 	{
 		FILE *file_output_strm = fopen(filename, "w");
 		char *buffer = dump_xml_formatted(xml_node);
-		res = fprintf(file_output_strm, "%s", buffer);
-		fflush(file_output_strm);
+		CRM_DEV_ASSERT(buffer != NULL && strlen(buffer) > 0);
+		if(buffer != NULL && strlen(buffer) > 0) {
+			res = fprintf(file_output_strm, "%s", buffer);
+			fflush(file_output_strm);
+		}
 		crm_free(buffer);
 	}
 #endif
@@ -1534,7 +1538,9 @@ parse_xml(const char *input, int *offset)
 /* 						lpc++; /\* " *\/ */
 
 						crm_debug("creating nvpair: <%s %s=\"%s\"...",
-							  tag_name, attr_name, attr_value);
+							  tag_name,
+							  crm_str(attr_name),
+							  crm_str(attr_value));
 						
 						ha_msg_add(new_obj, attr_name, attr_value);
 						crm_free(attr_name);
