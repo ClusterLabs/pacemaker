@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.44 2005/03/31 16:25:17 andrew Exp $ */
+/* $Id: utils.c,v 1.45 2005/04/04 07:32:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -598,6 +598,9 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 	crm_devel("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		crm_str_to_boolean(param_val, &use_logging_daemon);
+		if(use_logging_daemon) {
+			cl_set_logging_wqueue_maxlen(500);
+		}
 		cl_free(param_val);
 		param_val = NULL;
 	}
@@ -623,6 +626,17 @@ crm_set_env_options(void)
 
 	/* apparently we're not allowed to free the result of getenv */
 	
+	param_name = ENV_PREFIX "" KEY_DEBUGLEVEL;
+	param_val = getenv(param_name);
+	crm_debug("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		int debug_level = atoi(param_val);
+		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
+			set_crm_log_level(LOG_INFO + debug_level);
+		}
+		param_val = NULL;
+	}
+
 	param_name = ENV_PREFIX "" KEY_FACILITY;
 	param_val = getenv(param_name);
 	crm_debug("%s = %s", param_name, param_val);
@@ -656,22 +670,14 @@ crm_set_env_options(void)
 		param_val = NULL;
 	}
 	
-	param_name = ENV_PREFIX "" KEY_DEBUGLEVEL;
-	param_val = getenv(param_name);
-	crm_debug("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		int debug_level = atoi(param_val);
-		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
-			set_crm_log_level(LOG_INFO + debug_level);
-		}
-		param_val = NULL;
-	}
-
 	param_name = ENV_PREFIX "" KEY_LOGDAEMON;
 	param_val = getenv(param_name);
 	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		crm_str_to_boolean(param_val, &use_logging_daemon);
+		if(use_logging_daemon) {
+			cl_set_logging_wqueue_maxlen(500);
+		}
 		param_val = NULL;
 	}
 
