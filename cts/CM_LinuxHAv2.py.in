@@ -72,7 +72,7 @@ class LinuxHAv2(HeartbeatCM):
             ),
         })
 #        self.rsh.cp(self.Env["cib_config"], self["CIBfile"]%self.Env["nodes"][0])
-	# KLUDGE!  Expedient, but a Kludge (FIXME)
+        # KLUDGE!  Expedient, but a Kludge (FIXME)
 #        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
         CTStests.AllTestClasses = [FlipTest, RestartTest, StartOnebyOne, SimulStart, SimulStop]
         CTSaudits.AllAuditClasses = [CrmdStateAudit, HAResourceAudit]
@@ -88,16 +88,16 @@ class LinuxHAv2(HeartbeatCM):
                 if self.ShouldBeStatus[node] != self["up"]:
                     self.log(
                     "Node status for %s is %s but we think it should be %s"
-                    %	(node, self["up"], self.ShouldBeStatus[node]))
+                    %        (node, self["up"], self.ShouldBeStatus[node]))
             else:
                 if self.ShouldBeStatus[node] != self["down"]:
                     self.log(
                     "Node status for %s is %s but we think it should be %s"
-                    %	(node, self["down"], self.ShouldBeStatus[node]))
-        except KeyError:	pass
+                    %        (node, self["down"], self.ShouldBeStatus[node]))
+        except KeyError:        pass
 
-        if ret:	self.ShouldBeStatus[node]=self["up"]
-        else:	self.ShouldBeStatus[node]=self["down"]
+        if ret:        self.ShouldBeStatus[node]=self["up"]
+        else:        self.ShouldBeStatus[node]=self["down"]
         return ret
 
     def StartaCM(self, node):
@@ -116,7 +116,7 @@ class LinuxHAv2(HeartbeatCM):
        
         self.ShouldBeStatus[node]=self["down"]        
         self.log ("Could not start %s on node %s"
-        %	(self["Name"], node))
+        %        (self["Name"], node))
         return None
 
     def Configuration(self):
@@ -250,10 +250,10 @@ class CrmdStateAudit(ClusterAudit):
     def __init__(self, cm):
         self.CM = cm
         self.Stats = {"calls":0
-        ,	"success":0
-        ,	"failure":0
-        ,	"skipped":0
-        ,	"auditfail":0}
+        ,        "success":0
+        ,        "failure":0
+        ,        "skipped":0
+        ,        "auditfail":0}
 
     def has_key(self, key):
         return self.Stats.has_key(key)
@@ -273,64 +273,64 @@ class CrmdStateAudit(ClusterAudit):
     def __call__(self):
         self.CM.log ("Do Audit %s"%self.name())
         passed = 1
-	dc_count = 0
-	up_count = 0
-	node_count = 0
-	up_are_down = 0
-	down_are_up = 0
-	slave_count = 0
-	unstable_count = 0
+        dc_count = 0
+        up_count = 0
+        node_count = 0
+        up_are_down = 0
+        down_are_up = 0
+        slave_count = 0
+        unstable_count = 0
 
         for node in self.CM.Env["nodes"]:
-	    out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
-	    ret = (string.find(out, 'ok') != -1)
-	    node_count = node_count + 1
-	    if ret:
-		up_count = up_count + 1
-		if self.CM.ShouldBeStatus[node] == self.CM["down"]:
-		    self.CM.log(
-			"Node %s %s when it should be %s"
-			%	(node, self.CM["up"], self.CM.ShouldBeStatus[node]))
-		    self.CM.ShouldBeStatus[node] = self.CM["up"]
-		    down_are_up = down_are_up + 1
+            out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
+            ret = (string.find(out, 'ok') != -1)
+            node_count = node_count + 1
+            if ret:
+                up_count = up_count + 1
+                if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+                    self.CM.log(
+                        "Node %s %s when it should be %s"
+                        %        (node, self.CM["up"], self.CM.ShouldBeStatus[node]))
+                    self.CM.ShouldBeStatus[node] = self.CM["up"]
+                    down_are_up = down_are_up + 1
 
-		ret= (string.find(out, 'S_NOT_DC') != -1)
-		if ret:
-		    slave_count = slave_count + 1
-		else:	
-		    ret= (string.find(out, 'S_IDLE') != -1)
-		    if ret:
-			dc_count = dc_count + 1
-		    else:
-			unstable_count = unstable_count + 1
-	    else:
-		if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-		    self.CM.log(
-			"Node %s %s when it should be %s"
-			%	(node, self.CM["down"], self.CM.ShouldBeStatus[node]))
-		    self.CM.ShouldBeStatus[node] = self.CM["down"]
-		    up_are_down = up_are_down + 1
+                ret= (string.find(out, 'S_NOT_DC') != -1)
+                if ret:
+                    slave_count = slave_count + 1
+                else:        
+                    ret= (string.find(out, 'S_IDLE') != -1)
+                    if ret:
+                        dc_count = dc_count + 1
+                    else:
+                        unstable_count = unstable_count + 1
+            else:
+                if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                    self.CM.log(
+                        "Node %s %s when it should be %s"
+                        %        (node, self.CM["down"], self.CM.ShouldBeStatus[node]))
+                    self.CM.ShouldBeStatus[node] = self.CM["down"]
+                    up_are_down = up_are_down + 1
 
-	if up_count > 0 and dc_count != 1:
-	    passed = 0
-	    self.CM.log("Exactly 1 node should be DC.  We found %d (of %d)"
-		     %(dc_count, up_count))
+        if up_count > 0 and dc_count != 1:
+            passed = 0
+            self.CM.log("Exactly 1 node should be DC.  We found %d (of %d)"
+                     %(dc_count, up_count))
 
-	if unstable_count > 0:
-	    passed = 0
-	    self.CM.log("Cluster is not stable.  We found %d (of %d) unstable nodes" 
-		     %(dc_count, up_count))
+        if unstable_count > 0:
+            passed = 0
+            self.CM.log("Cluster is not stable.  We found %d (of %d) unstable nodes" 
+                     %(dc_count, up_count))
 
-	if up_are_down > 0:
-	    passed = 0
-	    self.CM.log("%d (of %d) nodes expected to be up were down."
-		     %(up_are_down, node_count))
+        if up_are_down > 0:
+            passed = 0
+            self.CM.log("%d (of %d) nodes expected to be up were down."
+                     %(up_are_down, node_count))
 
-	if down_are_up > 0:
-	    passed = 0
-	    self.CM.log("%d (of %d) nodes expected to be down were up." 
-		     %(down_are_up, node_count))
-	    
+        if down_are_up > 0:
+            passed = 0
+            self.CM.log("%d (of %d) nodes expected to be down were up." 
+                     %(down_are_up, node_count))
+            
         return passed
 
     def name(self):
