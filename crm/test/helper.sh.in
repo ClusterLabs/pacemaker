@@ -422,47 +422,42 @@ function crm-cleanup() {
     fi
     do_cmd echo Cleaning up on $test_node_1, $test_node_2 and  $test_node_3
 
+    crm-cleanup-node $test_node_1 $1
+    crm-cleanup-node $test_node_2 $1
+    crm-cleanup-node $test_node_3 $1
+}
+
+function crm-cleanup-node() {
+    ha_host=$1
+    do_cmd echo Cleaning up on $ha_host
+
 # stop all running HAs
-    do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
-    do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
-    do_cmd remote_cmd $INIT_USER $test_node_3 $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
+    do_cmd remote_cmd $INIT_USER $ha_host $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
     
 # be *very* sure everything has stopped
-    do_cmd remote_cmd $INIT_USER $test_node_1 "killall -q9 heartbeat ccm lrmd crmd"
-    do_cmd remote_cmd $INIT_USER $test_node_2 "killall -q9 heartbeat ccm lrmd crmd"
-    do_cmd remote_cmd $INIT_USER $test_node_3 "killall -q9 heartbeat ccm lrmd crmd"
+    do_cmd remote_cmd $INIT_USER $ha_host "killall -q9 heartbeat ccm lrmd crmd"
 
 # resources too
-    do_cmd remote_cmd $INIT_USER $test_node_1 "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
-    do_cmd remote_cmd $INIT_USER $test_node_1 "/etc/ha.d/resource.d/IPaddr $ip_rsc_2 stop" 2>&1 > /dev/null
-    do_cmd remote_cmd $INIT_USER $test_node_2 "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
-    do_cmd remote_cmd $INIT_USER $test_node_2 "/etc/ha.d/resource.d/IPaddr $ip_rsc_2 stop" 2>&1 > /dev/null
-    do_cmd remote_cmd $INIT_USER $test_node_3 "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
-    do_cmd remote_cmd $INIT_USER $test_node_3 "/etc/ha.d/resource.d/IPaddr $ip_rsc_2 stop" 2>&1 > /dev/null
+    do_cmd remote_cmd $INIT_USER $ha_host "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
+    do_cmd remote_cmd $INIT_USER $ha_host "/etc/ha.d/resource.d/IPaddr $ip_rsc_2 stop" 2>&1 > /dev/null
     
-    if [ -z $1 ]; then
+    if [ -z $2 ]; then
 # make *sure* theres nothing left over from last time
-	do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f $HAVAR_DIR/crm/cib*.xml"
-	do_cmd remote_cmd $INIT_USER $test_node_2 "rm -f $HAVAR_DIR/crm/cib*.xml"
-	do_cmd remote_cmd $INIT_USER $test_node_3 "rm -f $HAVAR_DIR/crm/cib*.xml"
+	do_cmd remote_cmd $INIT_USER $ha_host "rm -f $HAVAR_DIR/crm/cib*.xml"
 
-	do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f /tmp/crm/*"
-	do_cmd remote_cmd $INIT_USER $test_node_2 "rm -f /tmp/crm/*"
-	do_cmd remote_cmd $INIT_USER $test_node_3 "rm -f /tmp/crm/*"
-
-	do_cmd remote_cmd $CRMD_USER $test_node_1 "rm -f ~/core"
-	do_cmd remote_cmd $CRMD_USER $test_node_2 "rm -f ~/core"
-	do_cmd remote_cmd $CRMD_USER $test_node_3 "rm -f ~/core"
+	remote_cmd $INIT_USER $ha_host "rm -f /tmp/crm/*" 2>&1 > /dev/null 
+	do_cmd remote_cmd $CRMD_USER $ha_host "touch /tmp/crm/cluster.log 2>&1 > /dev/null"
+	do_cmd remote_cmd $CRMD_USER $ha_host "rm -f ~/core 2>&1 > /dev/null"
+	do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart 2>&1 > /dev/null"
 
 # zero out logs, maybe
-	if [ ${test_node_1} = "fish" -a ${test_node_2} = "chips" ]; then
-	    do_cmd remote_cmd $INIT_USER $test_node_1 "cat /dev/null > /var/log/messages"
-	    do_cmd remote_cmd $INIT_USER $test_node_2 "cat /dev/null > /var/log/messages"
-	    do_cmd remote_cmd $INIT_USER $test_node_3 "cat /dev/null > /var/log/messages"
+	if [ ${test_node_1} = "fish" ]; then
+	    do_cmd remote_cmd $INIT_USER $ha_host "cat /dev/null > /var/log/messages"
 	fi
 	    
     fi
 }
+
 
 function mark_log() 
 {
