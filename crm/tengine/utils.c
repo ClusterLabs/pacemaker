@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.16 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: utils.c,v 1.17 2005/02/25 10:32:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -265,9 +265,22 @@ do_update_cib(crm_data_t *xml_action, int status)
 		   status<0?"new action":XML_ATTR_TIMEOUT,
 		   crm_element_name(xml_action), crm_str(task), rsc_id, target);
 	
+#ifndef TESTING
 	rc = te_cib_conn->cmds->modify(
 		te_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, call_options);
-	
+#else
+	{
+		HA_Message *cmd = ha_msg_new(11);
+		ha_msg_add(cmd, F_TYPE,		T_CRM);
+		ha_msg_add(cmd, F_CRM_VERSION,	CRM_VERSION);
+		ha_msg_add(cmd, F_CRM_MSG_TYPE, XML_ATTR_REQUEST);
+		ha_msg_add(cmd, F_CRM_TASK,	CRM_OP_EVENTCC);
+		ha_msg_add(cmd, F_CRM_SYS_TO,   CRM_SYSTEM_TENGINE);
+		ha_msg_add(cmd, F_CRM_SYS_FROM, CRM_SYSTEM_TENGINE);
+		ha_msg_addstruct(cmd, crm_element_name(state), state);
+		send_ipc_message(crm_ch, cmd);
+	}
+#endif
 	free_xml(fragment);
 	free_xml(state);
 

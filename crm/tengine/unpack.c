@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.22 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: unpack.c,v 1.23 2005/02/25 10:32:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -219,7 +219,6 @@ unpack_action(crm_data_t *xml_action)
 	return action;
 }
 
-
 gboolean
 extract_event(crm_data_t *msg)
 {
@@ -235,14 +234,12 @@ extract_event(crm_data_t *msg)
        <lrm_resources>
 	 <rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>
 */
-
-	crm_trace("Extracting event");
+	crm_trace("Extracting event from %s", crm_element_name(msg));
 	xml_child_iter(
-		msg, iter, XML_CIB_TAG_STATE,
+		msg, node_state, XML_CIB_TAG_STATE,
 
 		crm_data_t *shutdown = NULL;
 		crm_data_t *resources = NULL;
-		crm_data_t *node_state = iter;
 
 		const char *ccm_state  = crm_element_value(
 			node_state, XML_CIB_ATTR_INCCM);

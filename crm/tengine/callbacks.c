@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.13 2005/02/21 17:23:52 andrew Exp $ */
+/* $Id: callbacks.c,v 1.14 2005/02/25 10:32:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -157,6 +157,13 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		crm_info("Received event_cc while not in a transition..."
 			 "  Poking the Policy Engine");
 		send_abort("Initiate a transition", NULL);
+#ifdef TESTING
+	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
+		crm_trace("Processing %s...", CRM_OP_EVENTCC);
+		if(extract_event(msg) == FALSE) {
+			send_abort("ttest loopback", msg);
+		}
+#endif
 	}
 
 	crm_devel("finished processing message");

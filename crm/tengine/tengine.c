@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.46 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: tengine.c,v 1.47 2005/02/25 10:32:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -360,7 +360,10 @@ initiate_action(action_t *action)
 		st_op->timeout = crm_atoi(timeout, "10"); /* one second */
 		st_op->node_name = crm_strdup(target);
 
+		crm_info("Executing fencing operation (%s) on %s", id, target);
 #ifdef TESTING
+		fprintf(stderr, "Executing fencing operation (%s) on %s",
+			id, target);
 		ret = TRUE;
 #else
 		if (ST_OK == stonithd_node_fence( st_op )) {
@@ -378,6 +381,10 @@ initiate_action(action_t *action)
 		/*
 		  <crm_msg op=XML_LRM_ATTR_TASK to=XML_RES_ATTR_TARGET>
 		*/
+#ifdef TESTING
+		fprintf(stderr, "Executing crm-event (%s): %s on %s",
+			 id, task, on_node);
+#endif
 		crm_info("Executing crm-event (%s): %s on %s",
 			 id, task, on_node);
 
@@ -389,6 +396,12 @@ initiate_action(action_t *action)
 	} else if(action->type == action_type_rsc){
 		crm_data_t *rsc = find_xml_node(
 			action->xml, XML_CIB_TAG_RESOURCE, TRUE);
+#ifdef TESTING
+		fprintf(stderr, "Executing rsc-op (%s): %s %s on %s",
+			 id, task,
+			 crm_element_value(rsc, XML_ATTR_ID),
+			 on_node);
+#endif
 		crm_info("Executing rsc-op (%s): %s %s on %s",
 			 id, task,
 			 crm_element_value(rsc, XML_ATTR_ID),
@@ -432,7 +445,7 @@ initiate_action(action_t *action)
 #ifndef TESTING
 		send_ipc_message(crm_ch, cmd);
 #else
-		cl_log_message(LOG_DEBUG, cmd);
+		crm_log_message(LOG_DEBUG, cmd);
 #endif
 		crm_free(counter);
 

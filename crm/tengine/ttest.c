@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.16 2005/01/26 13:31:01 andrew Exp $ */
+/* $Id: ttest.c,v 1.17 2005/02/25 10:32:08 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -60,8 +60,18 @@ main(int argc, char **argv)
 	
 	IPC_Channel* channels[2];
   
-	cl_log_set_entity("ttest");
-	cl_log_set_facility(LOG_USER);
+	set_crm_log_level(0);
+/* 	crm_log_init("ttest"); */
+	g_log_set_handler(NULL,
+			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
+			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
+			  | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
+			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
+			  cl_glib_msg_handler, NULL);
+
+	/* and for good measure... - this enum is a bit field (!) */
+	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
+	set_crm_log_level(LOG_WARNING);
 
 	while (1) {
 		int option_index = 0;
@@ -98,6 +108,7 @@ main(int argc, char **argv)
 				break;
 
 			case 'V':
+				cl_log_enable_stderr(TRUE);
 				alter_debug(DEBUG_INC);
 				break;
 			default:
@@ -128,10 +139,16 @@ main(int argc, char **argv)
 	crm_debug("=#=#=#=#= Getting XML =#=#=#=#=");
 	if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
-		xml_graph = file2xml(xml_strm);
+		if(xml_strm) {
+			xml_graph = file2xml(xml_strm);
+		} else {
+			crm_err("Could not open %s for reading", xml_file);
+			xml_file = NULL;
+		}
 		
-	} else {
-		xml_graph = file2xml(stdin);
+	}
+	if(xml_file == NULL) {
+		xml_graph = stdin2xml();
 	}
   
 #ifdef MTRACE  

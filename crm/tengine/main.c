@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.21 2005/02/21 17:21:40 andrew Exp $ */
+/* $Id: main.c,v 1.22 2005/02/25 10:32:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -118,7 +118,7 @@ init_start(void)
 		init_ok = FALSE;
 		crm_err("Could not connect to the CRMd");
 	}
-
+	
 	if(init_ok) {
 		crm_trace("Creating CIB connection");
 		te_cib_conn = cib_new();
