@@ -2,8 +2,8 @@
   <synapse id="0">
     <action_set>
       <pseudo_event id="5" rsc_id="rsc1" operation="start" allow_fail="false">
-        <resource id="rsc1" priority="1.0" incarnation_max="5" incarnation_node_max="2"/>
-        <args/>
+         <resource id="rsc1"/>
+         <attributes/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -11,8 +11,8 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="6" rsc_id="rsc1" operation="running" allow_fail="false">
-        <resource id="rsc1" priority="1.0" incarnation_max="5" incarnation_node_max="2"/>
-        <args/>
+         <resource id="rsc1"/>
+         <attributes/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -33,8 +33,11 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="1" rsc_id="rsc1:child_rsc1:0" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <resource id="rsc1:child_rsc1:0" class="heartbeat" type="apache" priority="1.0"/>
-        <args incarnation="0" incarnation_max="5"/>
+         <resource id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
+         <attributes>
+           <nvpair name="incarnation_max" value="5"/>
+           <nvpair name="incarnation" value="0"/>
+         </attributes>
       </rsc_op>
     </action_set>
     <inputs>
@@ -46,8 +49,11 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="2" rsc_id="rsc1:child_rsc1:1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
-         <resource id="rsc1:child_rsc1:1" class="heartbeat" type="apache" priority="1.0"/>
-        <args incarnation="1" incarnation_max="5"/>
+         <resource id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
+         <attributes>
+           <nvpair name="incarnation_max" value="5"/>
+           <nvpair name="incarnation" value="1"/>
+         </attributes>
       </rsc_op>
     </action_set>
     <inputs>
@@ -59,8 +65,11 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="3" rsc_id="rsc1:child_rsc1:2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <resource id="rsc1:child_rsc1:2" class="heartbeat" type="apache" priority="1.0"/>
-        <args incarnation="2" incarnation_max="5"/>
+         <resource id="rsc1:child_rsc1:2" class="heartbeat" type="apache"/>
+         <attributes>
+           <nvpair name="incarnation_max" value="5"/>
+           <nvpair name="incarnation" value="2"/>
+         </attributes>
       </rsc_op>
     </action_set>
     <inputs>
@@ -72,8 +81,11 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="4" rsc_id="rsc1:child_rsc1:3" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
-         <resource id="rsc1:child_rsc1:3" class="heartbeat" type="apache" priority="1.0"/>
-        <args incarnation="3" incarnation_max="5"/>
+         <resource id="rsc1:child_rsc1:3" class="heartbeat" type="apache"/>
+         <attributes>
+           <nvpair name="incarnation_max" value="5"/>
+           <nvpair name="incarnation" value="3"/>
+         </attributes>
       </rsc_op>
     </action_set>
     <inputs>

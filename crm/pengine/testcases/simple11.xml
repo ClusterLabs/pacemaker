@@ -1,26 +1,39 @@
 <?xml version="1.0"?>
-<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <cib>
   <configuration>
-    <crm_config/>
+    <crm_config>
+      <nvpair id="symetric_cluster" name="symetric_cluster" value="false"/>
+    </crm_config>
     <nodes>
       <node id="node1" uname="node1" type="member"/>
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache" priority="3.0"/>
-      <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
+      <resource id="rsc1" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="3.0"/>
+          </attributes>
+        </instance_attributes>
+      </resource>
+      <resource id="rsc2" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="2.0"/>
+          </attributes>
+        </instance_attributes>
+      </resource>
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" result="can"/>
 	<rule id="score1" score="10.0">
-	  <expresssion attribute="uname" operation="eq" value="node1"/>
+	  <expression attribute="uname" operation="eq" value="node1"/>
 	</rule>
       </rsc_location>
       <rsc_location id="run_rsc2" rsc="rsc2">
 	<rule id="can2" result="can">
-	  <expresssion attribute="uname" operation="eq" value="node1"/>
+	  <expression attribute="uname" operation="eq" value="node1"/>
 	</rule>
       </rsc_location>
     </constraints>

@@ -2,8 +2,8 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="1" rsc_id="rsc1" operation="stop" on_node="node1" on_node_uuid="8661583D-08B0-11D9-B627-000A95B71D78" allow_fail="false">
-        <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="stonith"/>
-        <args/>
+         <resource id="rsc1" class="heartbeat" type="apache" on_stopfail="stonith"/>
+         <attributes/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -11,8 +11,8 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="2" rsc_id="rsc1" operation="start" on_node="node2" on_node_uuid="8661583D-08B0-11D9-B627-000A95B71D79" allow_fail="false">
-        <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="stonith"/>
-        <args/>
+         <resource id="rsc1" class="heartbeat" type="apache" on_stopfail="stonith"/>
+         <attributes/>
       </rsc_op>
     </action_set>
     <inputs>

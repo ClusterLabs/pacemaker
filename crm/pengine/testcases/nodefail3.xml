@@ -8,7 +8,7 @@
     <node id="8661583D-08B0-11D9-B627-000A95B71D79" uname="node2" type="member"/>
   </nodes>
   <resources>
-     <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="ignore"/>
+     <resource id="rsc1" class="heartbeat" type="apache" on_stopfail="ignore"/>
   </resources>
   <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">

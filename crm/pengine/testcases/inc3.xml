@@ -8,10 +8,22 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <incarnation id="rsc1" priority="1.0" incarnation_max="5" incarnation_node_max="2">
+      <incarnation id="rsc1">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="incarnation_max" value="5"/>
+            <nvpair name="incarnation_node_max" value="2"/>
+          </attributes>
+        </instance_attributes>
 	<resource id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
       </incarnation>
-      <incarnation id="rsc2" priority="1.0" incarnation_max="5" incarnation_node_max="3">
+      <incarnation id="rsc2">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="incarnation_max" value="5"/>
+            <nvpair name="incarnation_node_max" value="3"/>
+          </attributes>
+        </instance_attributes>
 	<resource id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
       </incarnation>
     </resources>

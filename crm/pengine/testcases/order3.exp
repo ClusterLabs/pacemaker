@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="1" rsc_id="rsc1" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
         <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-        <args/>
+         <attributes/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="2" rsc_id="rsc1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
         <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-        <args/>
+         <attributes/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="3" rsc_id="rsc2" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
         <resource id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
-        <args/>
+         <attributes/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -42,7 +42,7 @@
     <action_set>
       <rsc_op id="4" rsc_id="rsc2" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
         <resource id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
-        <args/>
+         <attributes/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -61,7 +61,7 @@
     <action_set>
       <rsc_op id="5" rsc_id="rsc3" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
         <resource id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
-        <args/>
+         <attributes/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -70,7 +70,7 @@
     <action_set>
       <rsc_op id="6" rsc_id="rsc3" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
         <resource id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
-        <args/>
+         <attributes/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -86,7 +86,7 @@
     <action_set>
       <rsc_op id="7" rsc_id="rsc4" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
         <resource id="rsc4" class="heartbeat" type="apache" priority="1.0"/>
-        <args/>
+         <attributes/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -99,7 +99,7 @@
     <action_set>
       <rsc_op id="8" rsc_id="rsc4" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
         <resource id="rsc4" class="heartbeat" type="apache" priority="1.0"/>
-        <args/>
+         <attributes/>
       </rsc_op>
     </action_set>
     <inputs>

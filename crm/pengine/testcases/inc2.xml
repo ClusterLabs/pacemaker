@@ -8,22 +8,21 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <incarnation id="rsc1" priority="1.0" incarnation_max="5" incarnation_node_max="2">
-	<resource id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
+      <incarnation id="rsc1">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="incarnation_max" value="5"/>
+            <nvpair name="incarnation_node_max" value="2"/>
+          </attributes>
+        </instance_attributes>
+	<resource id="child_rsc1" class="heartbeat" type="apache"/>
       </incarnation>
     </resources>
-    <constraints>
-      <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can"/>
-      </rsc_location>
-    </constraints>
+    <constraints/>
   </configuration>
   <status>
     <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
         <lrm_resources>
           <lrm_resource id="rsc1:child_rsc1:0" last_op="start" rsc_state="started" op_status="0" rc_code="0" on_node="node2"/>
           <lrm_resource id="rsc1:child_rsc1:1" last_op="start" rsc_state="started" op_status="0" rc_code="0" on_node="node2"/>
@@ -33,13 +32,6 @@
         </lrm_resources>
       </lrm>
     </node_state>
-    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
-      <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
   </status>
 </cib>

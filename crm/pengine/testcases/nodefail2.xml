@@ -8,7 +8,7 @@
     <node id="8661583D-08B0-11D9-B627-000A95B71D79" uname="node2" type="member"/>
   </nodes>
   <resources>
-     <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="block"/>
+     <resource id="rsc1" class="heartbeat" type="apache" on_stopfail="block"/>
   </resources>
   <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
@@ -21,22 +21,11 @@
  <status>
     <node_state id="8661583D-08B0-11D9-B627-000A95B71D78" uname="node1" crmd="offline" join="down" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
         <lrm_resources>
           <lrm_resource id="rsc1" last_op="stop" rsc_state="running" op_status="0" on_node="node1"/>
         </lrm_resources>
       </lrm>
     </node_state>
-    <node_state id="8661583D-08B0-11D9-B627-000A95B71D79" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
-      <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
-        <lrm_resources>
-        </lrm_resources>
-      </lrm>
-    </node_state>
+    <node_state id="8661583D-08B0-11D9-B627-000A95B71D79" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
  </status>
 </cib>

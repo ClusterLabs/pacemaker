@@ -9,11 +9,10 @@
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
+      <resource id="rsc1" class="heartbeat" type="apache"/>
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can"/>
 	<rule id="score1" score="1000">
 	  <expression id="exp1" attribute="rsc1" operation="not_colocated"/>
 	</rule>

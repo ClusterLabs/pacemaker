@@ -8,15 +8,15 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource_group id="rsc1" priority="1.0">
-	<resource id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
-	<resource id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
-	<resource id="child_rsc3" class="heartbeat" type="apache" priority="1.0"/>
+      <resource_group id="rsc1">
+	<resource id="child_rsc1" class="heartbeat" type="apache"/>
+	<resource id="child_rsc2" class="heartbeat" type="apache"/>
+	<resource id="child_rsc3" class="heartbeat" type="apache"/>
       </resource_group>
-      <resource_group id="rsc2" priority="1.0">
-	<resource id="child_rsc4" class="heartbeat" type="apache" priority="1.0"/>
-	<resource id="child_rsc5" class="heartbeat" type="apache" priority="1.0"/>
-	<resource id="child_rsc6" class="heartbeat" type="apache" priority="1.0"/>
+      <resource_group id="rsc2">
+	<resource id="child_rsc4" class="heartbeat" type="apache"/>
+	<resource id="child_rsc5" class="heartbeat" type="apache"/>
+	<resource id="child_rsc6" class="heartbeat" type="apache"/>
       </resource_group>
     </resources>
     <constraints>

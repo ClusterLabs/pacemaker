@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="1" rsc_id="rsc1" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
         <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-        <args/>
+         <attributes/>
       </rsc_op>
     </action_set>
     <inputs/>

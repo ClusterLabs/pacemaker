@@ -8,26 +8,17 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-      <resource_group id="rsc2" priority="1.0">
-	<resource id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
-	<resource id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
-	<resource id="child_rsc3" class="heartbeat" type="apache" priority="1.0"/>
+      <resource id="rsc1" class="heartbeat" type="apache"/>
+      <resource_group id="rsc2">
+	<resource id="child_rsc1" class="heartbeat" type="apache"/>
+	<resource id="child_rsc2" class="heartbeat" type="apache"/>
+	<resource id="child_rsc3" class="heartbeat" type="apache"/>
       </resource_group>
-      <resource id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
+      <resource id="rsc3" class="heartbeat" type="apache"/>
     </resources>
     <constraints>
       <rsc_order id="order1" from="rsc2" type="after"  to="rsc1"/>
       <rsc_order id="order2" from="rsc2" type="before" to="rsc3"/>
-      <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1-1" result="can"/>
-      </rsc_location>
-      <rsc_location id="run_rsc2" rsc="rsc2">
-	<rule id="can2-1" result="can"/>
-      </rsc_location>
-      <rsc_location id="run_rsc3" rsc="rsc3">
-	<rule id="can3-1" result="can"/>
-      </rsc_location>
     </constraints>
   </configuration>
   <status>

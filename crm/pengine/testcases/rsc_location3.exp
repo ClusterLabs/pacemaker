@@ -2,8 +2,10 @@
   <synapse id="0">
     <action_set>
       <rsc_op id="1" rsc_id="rsc2" operation="start" on_node="node1" on_node_uuid="node1" allow_fail="false">
-        <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
-        <args/>
+         <resource id="rsc2" class="heartbeat" type="apache"/>
+         <attributes>
+           <nvpair name="priority" value="2.0"/>
+         </attributes>
       </rsc_op>
     </action_set>
     <inputs/>

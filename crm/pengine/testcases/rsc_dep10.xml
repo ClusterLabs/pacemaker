@@ -3,7 +3,9 @@
 <!-- must but cant -->
 <cib>
   <configuration>
-    <crm_config/>
+    <crm_config>
+      <nvpair id="symetric_cluster" name="symetric_cluster" value="false"/>
+    </crm_config>
     <nodes>
       <node id="node1" uname="node1" type="member"/>
       <node id="node2" uname="node2" type="member"/>

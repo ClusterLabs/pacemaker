@@ -9,16 +9,24 @@
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-      <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
+      <resource id="rsc1" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="1.0"/>
+          </attributes>
+        </instance_attributes>
+      </resource>
+      <resource id="rsc2" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="2.0"/>
+          </attributes>
+        </instance_attributes>
+      </resource>
     </resources>
     <constraints>
       <rsc_colocation id="not_same_1" from="rsc1" to="rsc2" type="must_not"/>
-      <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can"/>
-      </rsc_location>
       <rsc_location id="run_rsc2" rsc="rsc2">
-	<rule id="can2" result="can"/>
 	<rule id="score1" score="10">
 	  <expression id="exp1" attribute="rsc1" operation="colocated"/>
 	</rule>

@@ -8,15 +8,12 @@
       <node id="8661583D-08B0-11D9-B627-000A95B71D79" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="stonith"/>
+      <resource id="rsc1" class="heartbeat" type="apache" on_stopfail="stonith"/>
     </resources>
-    <constraints>
-      <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can"/>
-      </rsc_location>
-    </constraints>
+    <constraints/>
     <crm_config>
       <nvpair id="failed_nodes" name="failed_nodes" value="stonith"/>
+      <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
     </crm_config>
   </configuration>
   <status>

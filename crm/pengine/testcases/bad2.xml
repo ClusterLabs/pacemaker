@@ -9,39 +9,31 @@
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-      <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
+      <resource id="rsc1" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="1.0"/>
+          </attributes>
+        </instance_attributes>
+      </resource>
+      <resource id="rsc2" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="2.0"/>
+          </attributes>
+        </instance_attributes>
+      </resource>
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc3">
 	<rule id="can1" result="cannot">
-	  <expresssion attribute="uname" op="eq" value="node1"/>
+	  <expression attribute="uname" op="eq" value="node1"/>
 	</rule>
-      </rsc_location>
-      <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can"/>
-      </rsc_location>
-      <rsc_location id="run_rsc2" rsc="rsc2">
-	<rule id="can2" result="can"/>
       </rsc_location>
     </constraints>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
-      <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
-    <node_state id="node2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
-      <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
+    <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="node2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
   </status>
 </cib>
