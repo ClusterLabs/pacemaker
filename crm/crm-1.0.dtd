@@ -83,7 +83,34 @@ More details are given in the annotated DTD below.
 	  serial    CDATA #REQUIRED
 	  timestamp CDATA #REQUIRED>
 
+
 <!ELEMENT crm_config (nvpair*)>
+<!--
+    Current crm_config options:
+	transition_timeout (period in milliseconds, default=60000):
+		A time after which the transition is deemed failed.
+
+	symetrical_cluster (boolean, default=TRUE):
+		If true, resources are permitted to run anywhere by default.
+		Otherwise, explict constraints must be created to specify 
+		 where they can run.
+ 
+	stonith_enabled (boolean, default=FALSE):
+		If true, failed nodes will be fenced.
+
+	require_quorum (boolean, default=FALSE):
+		If true, fencing operations and starting of resources will
+		 not occur unless we have quorum (as defined by the CCM)
+
+		Resources currently running in our partition can still be
+		 safely stopped or restarted elsewhere in our partition.
+
+	suppress_cib_writes (boolean, default=FALSE):
+		If true, changes to the configuration and cluster status
+		 will not be written to disk and will be kept in memory only.
+		Use this option if you have no local disk.
+  -->
+
 
 <!ELEMENT nodes	      (node*)>
 
