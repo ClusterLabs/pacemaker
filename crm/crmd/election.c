@@ -59,8 +59,12 @@ do_election_vote(long long action,
 			}
 			break;
 	}
+
+	xmlNodePtr msg_options =
+		set_xml_attr(NULL, XML_TAG_OPTIONS,
+			     XML_ATTR_VERSION, CRM_VERSION, TRUE);
 	
-	send_request(NULL, NULL, CRM_OP_VOTE,
+	send_request(msg_options, NULL, CRM_OP_VOTE,
 		     NULL, CRM_SYSTEM_CRMD, NULL);
 	
 	return election_result;
@@ -101,7 +105,9 @@ do_election_count_vote(long long action,
 	gboolean we_loose = FALSE;
 	xmlNodePtr vote = (xmlNodePtr)data;
 	enum crmd_fsa_input election_result = I_NULL;
-	const char *vote_from = xmlGetProp(vote, XML_ATTR_HOSTFROM);
+	const char *vote_from    = xmlGetProp(vote, XML_ATTR_HOSTFROM);
+	const char *your_version = get_xml_attr(
+		vote, XML_TAG_OPTIONS, XML_ATTR_VERSION, TRUE);
 	oc_node_t *our_node = NULL, * your_node = NULL;
 	struct election_data_s election_data;
 
@@ -143,6 +149,10 @@ do_election_count_vote(long long action,
 	} else if(your_node == NULL) {
 		crm_err("The other side doesnt exist in the CCM list");
 		
+	} else if(compare_version(your_version, CRM_VERSION) < 0) {
+		crm_debug("Election fail: version");
+		we_loose = TRUE;
+		
 	} else if(your_node->node_born_on < our_node->node_born_on) {
 		crm_debug("Election fail: born_on");
 		we_loose = TRUE;
@@ -159,6 +169,8 @@ do_election_count_vote(long long action,
 		crm_trace("We might win... we should vote (possibly again)");
 		election_result = I_DC_TIMEOUT; // new "default"
 
+#if 0
+		// we dont try to predict the winner anymore
 		g_hash_table_foreach(fsa_membership_copy->members,
 				     ghash_count_vote, &election_data);
 		
@@ -170,6 +182,7 @@ do_election_count_vote(long long action,
 			crm_debug("Election win: lowest born_on and uname");
 			election_result = I_ELECTION_DC;
 		}
+#endif
 	}
 	
 	if(we_loose) {
