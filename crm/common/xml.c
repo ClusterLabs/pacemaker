@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.39 2005/02/25 13:33:32 andrew Exp $ */
+/* $Id: xml.c,v 1.40 2005/02/25 15:25:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -795,15 +795,15 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 		FILE *file_output_strm = fopen(filename, "w");
 		char *buffer = dump_xml_formatted(xml_node);
 		CRM_DEV_ASSERT(buffer != NULL && strlen(buffer) > 0);
-		if(file_output_strm) {
+		if(file_output_strm == NULL) {
 			res = -1;
 			crm_err("Cannot write to %s", filename);
 			
 		} else if(buffer != NULL && strlen(buffer) > 0) {
 			res = fprintf(file_output_strm, "%s", buffer);
 			fflush(file_output_strm);
+			fclose(file_output_strm);
 		}
-		fclose(file_output_strm);
 		crm_free(buffer);
 	}
 #endif
