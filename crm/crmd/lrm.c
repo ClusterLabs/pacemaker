@@ -181,16 +181,18 @@ do_lrm_control(long long action,
 		
 		if(ret != HA_OK) {
 			if(++num_lrm_register_fails < max_lrm_register_fails) {
-				crm_warn("Failed to sign on to the LRM %d (%d max) times",
-					 num_lrm_register_fails, max_lrm_register_fails);
+				crm_warn("Failed to sign on to the LRM %d"
+					 " (%d max) times",
+					 num_lrm_register_fails,
+					 max_lrm_register_fails);
 				
 				startTimer(wait_timer);
 				crmd_fsa_stall();
 				return I_NULL;
 
 			} else {
-				crm_err("Failed to sign on to the LRM %d (max) times",
-					num_lrm_register_fails);
+				crm_err("Failed to sign on to the LRM %d"
+					" (max) times", num_lrm_register_fails);
 				return failed;
 			}
 		}
