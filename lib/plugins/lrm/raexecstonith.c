@@ -40,6 +40,7 @@
 
 #include <lrm/raexec.h>
 #include <fencing/stonithd_api.h>
+#include <stonith/stonith.h>
 
 # define PIL_PLUGINTYPE		RA_EXEC_TYPE
 # define PIL_PLUGINTYPE_S	"RAExec"
@@ -93,34 +94,22 @@ static const char * meta_data1 = "\n"
 
 static const char * meta_data2 = 
 "\" version=\"0.1\">\n"
-"  <version>1.0</version>\n"
-"  <parameters>\n"
-"    <parameter name=\"config_string\" unique=\"0\">\n"
-"      <longdesc lang=\"en\">\n"
-"        Config string for a stonith resource -- one type of stonith devices\n"
-"      </longdesc>\n"
-"      <shortdesc lang=\"en\">Config string</shortdesc>\n"
-"      <content type=\"string\" default=\"\" />\n"
-"    </parameter>\n"
-"    <parameter name=\"config_file\" unique=\"0\">\n"
-"      <longdesc lang=\"en\">\n"
-"        Config file for a stonith resource -- one type of stonithd devices.\n"
-"      </longdesc>\n"
-"      <shortdesc lang=\"en\">Config file</shortdesc>\n"
-"      <content type=\"string\" default=\"\" />\n"
-"    </parameter>\n"
-"  </parameters>\n"
+"  <version>1.0</version>\n";
+
+static const char * meta_data3 = 
 "  <actions>\n"
 "    <action name=\"start\"   timeout=\"15\" />\n"
 "    <action name=\"stop\"    timeout=\"15\" />\n"
 "    <action name=\"status\"  timeout=\"15\" />\n"
 "    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
-"    <action name=\"meta-data\"  timeout=\"5\" />\n"
+"    <action name=\"meta-data\"  timeout=\"15\" />\n"
 "  </actions>\n"
 "  <special tag=\"heartbeat\">\n"
 "    <version>2.0</version>\n"
 "  </special>\n"
 "</resource-agent>\n";
+
+static const char * no_parameter_info = "<!-- No parameter segment --->";
 
 PIL_PLUGIN_BOILERPLATE2("1.0", Debug);
 
@@ -301,9 +290,28 @@ static char *
 get_resource_meta(const char* rsc_type, const char* provider)
 {
 	char * buffer;
-	buffer = g_new(char, strlen(meta_data1)+strlen(meta_data2)+40);
+	const char * tmp = NULL;
+	Stonith * stonith_obj = NULL;	
 
-	sprintf(buffer, "%s%s%s", meta_data1, rsc_type, meta_data2);
+	if ( provider != NULL ) {
+		cl_log(LOG_ERR, "stonithRA plugin: now donnot take the provider"
+			" into account.");
+		return NULL;
+	}
+
+	stonith_obj = stonith_new(rsc_type);
+	tmp = stonith_get_info(stonith_obj, ST_CONF_XML);
+	if (tmp == NULL) {
+		cl_log(LOG_WARNING, "stonithRA plugin: cannot get the parameter"
+			" segment of %s's metadata.", rsc_type);
+		tmp = no_parameter_info;
+	}
+
+	buffer = g_new(char, strlen(meta_data1) + strlen(meta_data2)
+				+ strlen(tmp) + strlen(meta_data3) + 1);
+
+	sprintf(buffer, "%s%s%s%s", meta_data1, meta_data2, tmp, meta_data3);
+	stonith_delete(stonith_obj);
 
 	return buffer;
 }
