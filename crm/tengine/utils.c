@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.14 2005/02/02 21:57:11 andrew Exp $ */
+/* $Id: utils.c,v 1.15 2005/02/15 08:13:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,7 +47,7 @@ send_abort(const char *text, crm_data_t *msg)
 		crm_info("Sending \"abort\" message... %s", text);
 	}
 	
-	print_state(LOG_ERR);
+	print_state(LOG_WARNING);
 	initialize_graph();
 
 	cmd = create_request(CRM_OP_TEABORT, NULL, NULL,
