@@ -873,11 +873,21 @@ do_lrm_event(long long action,
 	}
 
 	rsc = op->rsc;
+
+	if(op->rc != EXECRA_OK) {
+		if(op->op_status != LRM_OP_ERROR) {
+			crm_warn("Mapping operation %d status with a rc=%d"
+				 " to status %d",
+				 op->op_status, op->rc, LRM_OP_ERROR);
+			op->op_status = LRM_OP_ERROR;
+		}
+	}
 	
 	switch(op->op_status) {
 		case LRM_OP_ERROR:
-			crm_err("LRM operation %s/%s failed",
-				crm_str(rsc->id), op->op_type);
+			crm_warn("LRM operation %s/%s (rc=%s) failed",
+				 crm_str(rsc->id), op->op_type,
+				 execra_code2string(op->rc));
 			break;
 		case LRM_OP_CANCELLED:
 			crm_warn("LRM operation %s/%s was cancelled",
