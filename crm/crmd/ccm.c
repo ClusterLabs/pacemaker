@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.59 2005/03/03 16:19:25 andrew Exp $ */
+/* $Id: ccm.c,v 1.60 2005/03/04 15:59:08 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -199,7 +199,7 @@ do_ccm_event(long long action,
 	 */
 	
 	if(oc->m_n_out != 0) {
-		int lpc = 0;
+		unsigned lpc = 0;
 		int offset = oc->m_out_idx;
 		for(lpc=0; lpc < oc->m_n_out; lpc++) {
 			crm_data_t *node_state = NULL;
@@ -491,14 +491,14 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		crm_warn("MY NODE IS NOT IN CCM THE MEMBERSHIP LIST");
 	}
 	
-	for(lpc=0; lpc<oc->m_n_in; lpc++) {
+	for(lpc=0; lpc<(int)oc->m_n_in; lpc++) {
 		crm_info("\tNEW:     %s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_in_idx+lpc].node_uname,
 		       oc->m_array[oc->m_in_idx+lpc].node_id,
 		       oc->m_array[oc->m_in_idx+lpc].node_born_on);
 	}
 	
-	for(lpc=0; lpc<oc->m_n_out; lpc++) {
+	for(lpc=0; lpc<(int)oc->m_n_out; lpc++) {
 		crm_info("\tLOST:    %s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_out_idx+lpc].node_uname,
 		       oc->m_array[oc->m_out_idx+lpc].node_id,

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.36 2005/03/03 19:37:50 andrew Exp $ */
+/* $Id: utils.c,v 1.37 2005/03/04 15:59:08 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -291,7 +291,7 @@ get_crm_log_level(void)
 void
 crm_log_message_adv(int level, const char *prefix, const HA_Message *msg)
 {
-	if(crm_log_level >= level) {
+	if((int)crm_log_level >= level) {
 		do_crm_log(level, NULL, NULL, "#========= %s message start ==========#", prefix?prefix:"");
 		if(level > LOG_DEBUG) {
 			cl_log_message(LOG_DEBUG, msg);
@@ -308,7 +308,7 @@ do_crm_log(int log_level, const char *function,
 {
 	int log_as = log_level;
 	gboolean do_log = FALSE;
-	if(log_level <= crm_log_level) {
+	if(log_level <= (int)crm_log_level) {
 		do_log = TRUE;
 		if(log_level > LOG_INFO) {
 			log_as = LOG_DEBUG;

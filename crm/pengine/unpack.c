@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.58 2005/03/01 10:25:34 andrew Exp $ */
+/* $Id: unpack.c,v 1.59 2005/03/04 15:59:09 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -628,7 +628,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 			 */
 			action_status_i = LRM_OP_ERROR;
 			
-		} else if(action_status_i == -1) {
+		} else if(action_status_i == (op_status_t)-1) {
 			/*
 			 * TODO: this may need some more thought
 			 * Some cases:

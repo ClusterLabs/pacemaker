@@ -1083,10 +1083,10 @@ copy_ccm_data(const struct crmd_ccm_data_s *ccm_input)
 oc_ev_membership_t *
 copy_ccm_oc_data(const oc_ev_membership_t *oc_in) 
 {
-	int lpc = 0;
+	unsigned lpc = 0;
 	int size = 0;
 	int offset = 0;
-	int num_nodes = 0;
+	unsigned num_nodes = 0;
 	oc_ev_membership_t *oc_copy = NULL;
 
 	if(oc_in->m_n_member > 0

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.39 2005/02/23 15:44:00 andrew Exp $ */
+/* $Id: stages.c,v 1.40 2005/03/04 15:59:09 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -178,9 +178,9 @@ stage3(GListPtr colors)
 {
 	crm_devel("Processing stage 3");
 	/* not sure if this is a good idea or not */
-	if(g_list_length(colors) > max_valid_nodes) {
+	if((ssize_t)g_list_length(colors) > max_valid_nodes) {
 		/* we need to consolidate some */
-	} else if(g_list_length(colors) < max_valid_nodes) {
+	} else if((ssize_t)g_list_length(colors) < max_valid_nodes) {
 		/* we can create a few more */
 	}
 	return TRUE;

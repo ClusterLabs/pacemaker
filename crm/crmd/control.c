@@ -592,7 +592,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	crm_devel("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		int debug_level = atoi(param_val);
-		if(debug_level > 0 && (debug_level+LOG_INFO) > crm_log_level) {
+		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
 			set_crm_log_level(LOG_INFO + debug_level);
 		}
 		cl_free(param_val);

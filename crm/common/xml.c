@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.42 2005/03/02 14:03:12 andrew Exp $ */
+/* $Id: xml.c,v 1.43 2005/03/04 15:59:08 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1368,7 +1368,7 @@ get_tag_name(const char *input)
 	const char *error = NULL;
 	gboolean do_special = FALSE;
 	
-	for(lpc = 0; error == NULL && lpc < strlen(input); lpc++) {
+	for(lpc = 0; error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
 		ch = input[lpc];
 		crm_insane("Processing char %c [%d]", ch, lpc);
 
@@ -1417,7 +1417,7 @@ get_attr_name(const char *input)
 	char ch = 0;
 	const char *error = NULL;
 	
-	for(lpc = 0; error == NULL && lpc < strlen(input); lpc++) {
+	for(lpc = 0; error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
 		ch = input[lpc];
 		crm_insane("Processing char %c[%d]", ch, lpc);
 
@@ -1454,7 +1454,7 @@ get_attr_value(const char *input)
 	char ch = 0;
 	const char *error = NULL;
 	
-	for(lpc = 0; error == NULL && lpc < strlen(input); lpc++) {
+	for(lpc = 0; error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
 		ch = input[lpc];
 		crm_insane("Processing char %c [%d]", ch, lpc);
 		
@@ -1534,7 +1534,7 @@ parse_xml(const char *input, int *offset)
 	ha_msg_add(new_obj, XML_ATTR_TAGNAME, tag_name);
 	lpc = len;
 
-	for(; more && error == NULL && lpc < strlen(input); lpc++) {
+	for(; more && error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
 			ch = our_input[lpc];
 			crm_insane("Processing char %c[%d]", ch, lpc);
 			switch(ch) {

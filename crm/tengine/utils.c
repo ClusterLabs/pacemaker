@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.19 2005/03/01 10:25:34 andrew Exp $ */
+/* $Id: utils.c,v 1.20 2005/03/04 15:59:09 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -146,7 +146,7 @@ print_input(const char *prefix, action_t *input, int log_level)
 		   actiontype2text(input->type));
 
 	if(input->complete == FALSE) {
-		crm_log_xml(log_level, "\t  Raw input", input->xml);
+		crm_log_xml((unsigned)log_level, "\t  Raw input", input->xml);
 	}
 }
 

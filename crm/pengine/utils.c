@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.57 2005/02/23 15:44:01 andrew Exp $ */
+/* $Id: utils.c,v 1.58 2005/03/04 15:59:09 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -123,7 +123,7 @@ GListPtr
 node_list_and(GListPtr list1, GListPtr list2, gboolean filter)
 {
 	GListPtr result = NULL;
-	int lpc = 0;
+	unsigned lpc = 0;
 
 	for(lpc = 0; lpc < g_list_length(list1); lpc++) {
 		node_t *node = (node_t*)g_list_nth_data(list1, lpc);
@@ -386,7 +386,7 @@ copy_color(color_t *a_color)
 resource_t *
 pe_find_resource(GListPtr rsc_list, const char *id)
 {
-	int lpc = 0;
+	unsigned lpc = 0;
 	resource_t *rsc = NULL;
 	resource_t *child_rsc = NULL;
 
@@ -417,7 +417,7 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 node_t *
 pe_find_node(GListPtr nodes, const char *uname)
 {
-	int lpc = 0;
+	unsigned lpc = 0;
 	node_t *node = NULL;
   
 	for(lpc = 0; lpc < g_list_length(nodes); lpc++) {
@@ -433,7 +433,7 @@ pe_find_node(GListPtr nodes, const char *uname)
 node_t *
 pe_find_node_id(GListPtr nodes, const char *id)
 {
-	int lpc = 0;
+	unsigned lpc = 0;
 	node_t *node = NULL;
   
 	for(lpc = 0; lpc < g_list_length(nodes); lpc++) {

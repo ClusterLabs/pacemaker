@@ -565,7 +565,7 @@ do_state_transition(long long actions,
 					 fsa_state2string(next_state),
 					 fsa_cause2string(cause));
 			}
-			if(g_hash_table_size(join_requests)
+			if((ssize_t)g_hash_table_size(join_requests)
 			   != fsa_membership_copy->members_size) {
 				crm_warn("Only %d (of %d) cluster nodes "
 					 "responded to the join offer.",
@@ -585,13 +585,13 @@ do_state_transition(long long actions,
 					 fsa_cause2string(cause));
 			}
 			
-			if(g_hash_table_size(confirmed_nodes)
+			if((ssize_t)g_hash_table_size(confirmed_nodes)
 			   == fsa_membership_copy->members_size) {
 				crm_info("All %d clusters nodes are"
 					 " eligable to run resources.",
 					 fsa_membership_copy->members_size);
 
-			} else if(g_hash_table_size(confirmed_nodes)
+			} else if((ssize_t)g_hash_table_size(confirmed_nodes)
 				  == num_join_invites) {
 				crm_warn("All %d (%d total) cluster "
 					 "nodes are eligable to run resources",

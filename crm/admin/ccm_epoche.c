@@ -1,4 +1,4 @@
-/* $Id: ccm_epoche.c,v 1.2 2005/02/28 10:50:22 andrew Exp $ */
+/* $Id: ccm_epoche.c,v 1.3 2005/03/04 15:59:08 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -213,14 +213,14 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 			  oc->m_array[oc->m_memb_idx+lpc].node_born_on);
 	}
 	
-	for(lpc=0; lpc<oc->m_n_in; lpc++) {
+	for(lpc=0; lpc < (int)oc->m_n_in; lpc++) {
 		crm_devel("\tNEW:     %s [nodeid=%d, born=%d]",
 			  oc->m_array[oc->m_in_idx+lpc].node_uname,
 			  oc->m_array[oc->m_in_idx+lpc].node_id,
 			  oc->m_array[oc->m_in_idx+lpc].node_born_on);
 	}
 	
-	for(lpc=0; lpc<oc->m_n_out; lpc++) {
+	for(lpc=0; lpc < (int)oc->m_n_out; lpc++) {
 		crm_devel("\tLOST:    %s [nodeid=%d, born=%d]",
 			  oc->m_array[oc->m_out_idx+lpc].node_uname,
 			  oc->m_array[oc->m_out_idx+lpc].node_id,

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.27 2005/02/28 11:28:23 andrew Exp $ */
+/* $Id: callbacks.c,v 1.28 2005/03/04 15:59:08 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1063,7 +1063,7 @@ void
 cib_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
-	int lpc = 0;
+	unsigned lpc = 0;
 	int offset = 0;
 	const oc_ev_membership_t *membership = data;
 	crm_devel("received callback");

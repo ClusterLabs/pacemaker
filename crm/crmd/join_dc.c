@@ -107,7 +107,7 @@ do_dc_join_offer_all(long long action,
 	
 #endif
 /* No point hanging around in S_INTEGRATION if we're the only ones here! */
-	if(g_hash_table_size(join_requests)
+	if((ssize_t)g_hash_table_size(join_requests)
 	   >= fsa_membership_copy->members_size) {
 		crm_info("Not expecting any join acks");
 		register_fsa_input(C_FSA_INTERNAL, I_INTEGRATED, NULL);
@@ -154,7 +154,7 @@ do_dc_join_offer_one(long long action,
 			 join_to);
 
 		/* Make sure we end up in the correct state again */
-		if(g_hash_table_size(join_requests)
+		if((ssize_t)g_hash_table_size(join_requests)
 		   >= fsa_membership_copy->members_size) {
 
 			crm_info("False alarm, returning to %s",
@@ -266,7 +266,7 @@ do_dc_join_req(long long action,
 	g_hash_table_insert(
 		join_requests, crm_strdup(join_from), crm_strdup(ack_nack));
 
-	if(g_hash_table_size(join_requests)
+	if((ssize_t)g_hash_table_size(join_requests)
 	   >= fsa_membership_copy->members_size) {
 		crm_info("That was the last outstanding join ack");
 		register_fsa_input(C_FSA_INTERNAL, I_INTEGRATED, NULL);
@@ -355,7 +355,7 @@ do_dc_join_finalize(long long action,
 		  g_hash_table_size(join_requests));
 	g_hash_table_foreach(join_requests, finalize_join_for, NULL);
 	
-	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
+	if(num_join_invites <= (ssize_t)g_hash_table_size(confirmed_nodes)) {
 		crm_info("Not expecting any join confirmations");
 		
 		register_fsa_input(C_FSA_INTERNAL, I_FINALIZED, NULL);
@@ -432,7 +432,7 @@ do_dc_join_ack(long long action,
 
 	update_local_cib(create_cib_fragment(update, NULL));
 
-	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
+	if(num_join_invites <= (ssize_t)g_hash_table_size(confirmed_nodes)) {
 		crm_info("That was the last outstanding join confirmation");
 		register_fsa_input_later(C_FSA_INTERNAL, I_FINALIZED, NULL);
 		
