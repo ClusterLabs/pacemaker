@@ -68,6 +68,12 @@ DISTCHECK_CONFIGURE_FLAGS = --with-initdir=prefix
 rpm:		dist
 		$(RPM) --nodeps $(RPMFLAGS) $(TARFILE) </dev/null;
 
+deb:		dist
+		rm -rf $(distdir)
+		tar -zxf $(TARFILE)
+		cd $(distdir) ; dpkg-buildpackage -rfakeroot -us -uc 
+		rm -rf $(distdir)
+
 clean:	am_config_clean
 am_config_clean:
 		rm -fr $(PACKAGE)-*.tar.gz
