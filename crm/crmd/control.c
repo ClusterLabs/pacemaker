@@ -35,7 +35,7 @@
 
 gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
 void crmd_ha_input_destroy(gpointer user_data);
-void shutdown(int nsig);
+void crm_shutdown(int nsig);
 
 GHashTable   *ipc_clients = NULL;
 
@@ -208,7 +208,7 @@ do_startup(long long action,
 	fsa_input_register = 0; // zero out the regester
 	
 	cl_log(LOG_INFO, "Register PID");
-	register_pid(PID_FILE, FALSE, shutdown);
+	register_pid(PID_FILE, FALSE, crm_shutdown);
 	
 	cl_log_set_logfile(DAEMON_LOG);
 /*	if (crm_debug()) { */
@@ -372,11 +372,11 @@ do_recover(long long action,
 }
 
 void
-shutdown(int nsig)
+crm_shutdown(int nsig)
 {
 	FNIN();
     
-	CL_SIGNAL(nsig, shutdown);
+	CL_SIGNAL(nsig, crm_shutdown);
 
     
 	if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {

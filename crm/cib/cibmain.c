@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.15 2004/04/15 00:34:06 msoffen Exp $ */
+/* $Id: cibmain.c,v 1.16 2004/04/21 18:50:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -64,7 +64,7 @@ const char* crm_system_name = CRM_SYSTEM_CIB;
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
-void shutdown(int nsig);
+void cib_shutdown(int nsig);
 gboolean cib_msg_callback(IPC_Channel *client, gpointer user_data);
 
 #define OPTARGS	"skrh"
@@ -150,7 +150,7 @@ init_start(void)
 	}
 
 	cl_log(LOG_INFO, "Register PID");
-	register_pid(PID_FILE, FALSE, shutdown);
+	register_pid(PID_FILE, FALSE, cib_shutdown);
 
 	xmlInitParser();  // only do this once
 
@@ -340,10 +340,10 @@ usage(const char* cmd, int exit_status)
 }
 
 void
-shutdown(int nsig)
+cib_shutdown(int nsig)
 {
 	static int	shuttingdown = 0;
-	CL_SIGNAL(nsig, shutdown);
+	CL_SIGNAL(nsig, cib_shutdown);
   
 	if (!shuttingdown) {
 		shuttingdown = 1;

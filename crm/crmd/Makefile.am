@@ -19,7 +19,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl	\
-		-I$(top_builddir)/linux-ha  -I$(top_srcdir)/linux-ha	\
+		-I$(top_builddir)/linux-ha  -I$(top_srcdir)/linux-ha \
 		-I$(top_builddir)           -I$(top_srcdir)
 
 hadir		= $(sysconfdir)/ha.d
@@ -67,7 +67,7 @@ crmd_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crmd_LDFLAGS	= $(XML_LIBS)
 crmd_LDADD	= $(COMMONLIBS) 					\
 		  $(top_builddir)/$(CRM_DIR)/cib/libcib.la		\
-		  $(top_builddir)/lib/lrm/liblrm.la		\
+		  $(top_builddir)/lib/lrm/liblrm.la			\
 		  $(top_builddir)/membership/ccm/libccmclient.la  
 
 #

@@ -1,4 +1,4 @@
-/* $Id: tenginemain.c,v 1.10 2004/03/24 10:18:23 andrew Exp $ */
+/* $Id: tenginemain.c,v 1.11 2004/04/21 18:50:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,7 +60,7 @@ const char* crm_system_name = "transitioner";
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
-void shutdown(int nsig);
+void tengine_shutdown(int nsig);
 
 int
 main(int argc, char ** argv)
@@ -154,7 +154,7 @@ init_start(void)
     }
     
     cl_log(LOG_INFO, "Register PID");
-    register_pid(PID_FILE, FALSE, shutdown);
+    register_pid(PID_FILE, FALSE, tengine_shutdown);
 
     IPC_Channel *crm_ch = init_client_ipc_comms("crmd",
 						default_ipc_input_dispatch,
@@ -217,10 +217,10 @@ usage(const char* cmd, int exit_status)
 }
 
 void
-shutdown(int nsig)
+tengine_shutdown(int nsig)
 {
     static int	shuttingdown = 0;
-    CL_SIGNAL(nsig, shutdown);
+    CL_SIGNAL(nsig, tengine_shutdown);
   
     if (!shuttingdown) {
 		shuttingdown = 1;
