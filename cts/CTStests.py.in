@@ -1390,16 +1390,17 @@ class ResourceRecover(CTSTest):
         # if there is not resource , return directly
         resourcelist=self.CM.Resources()
         if len(resourcelist)==0:
-            self.CM.log("Can't find any resource on cluster,[ResourceRecover] will not run")
+            self.CM.log("Can't find any resource on cluster,exit this test")
             return self.success()
 
         resourcelist=self.CM.Resources()
         resource=self.CM.Env.RandomGen.choice(resourcelist)
         resourcetype = str(resource.Type())
+        label = resourcetype+"::"+str(resource.rid)
         node=resource.RunningNodes()
         if node == []:
-            return self.failure("%s is not running on any node" %(resource))
-        self.CM.log("Choice resource [%s] [%s] on (%s)"%(resourcetype,str(resource.rid),node[0]))
+            return self.failure("%s is not running on any node" %label)
+        self.CM.log("Choice resource %s on %s"%(label,node[0]))
 
         # stop a resource
         resource.Stop(node[0])
@@ -1413,8 +1414,8 @@ class ResourceRecover(CTSTest):
             elif len(recovernode)==0:
                 time.sleep(1)
             else:
-                return self.failure("%s be recovered more than one node"%(resourcetype))
-        return self.failure("%s are not be recovered at any node of cluster"%(resourcetype))
+                return self.failure("%s is recovered more than one nodes"%label)
+        return self.failure("%s is not recovered at any node"%label)
 
     def is_applicable(self):
         '''ResourceRecover is applicable only when there is any resource running on cluster
@@ -1422,6 +1423,10 @@ class ResourceRecover(CTSTest):
         if self.CM["Name"] == "linux-ha-v2":
             return 1
         return 0
+        
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        return [ "ERROR: fn\(do_update_resource\): Resource action .* failed"]
 
 AllTestClasses.append(ResourceRecover)
 
