@@ -10,7 +10,6 @@ Copyright (C) 2004 International Business Machines
 Additional Audits, Revised Start action, Default Configuration:
      Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
 
-Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
 '''
 
 #
@@ -599,50 +598,6 @@ class PartitionAudit(ClusterAudit):
     def name(self):
         return "PartitionAudit"
 
-###################################################################
-class ResourceRecover(CTSTest):
-###################################################################
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name="ResourceRecover"
-        self.max=30
-
-    def __call__(self, dummy):
-        '''Perform the 'ResourceRecover' test. '''
-        self.incr("calls")
-
-        resourcelist=self.CM.Resources()
-        resource=self.CM.Env.RandomGen.choice(resourcelist)
-        resourcetype = str(resource.Type())
-        node=resource.RunningNodes()
-
-        self.CM.log("Choice resource [%s] [%s] on (%s)"%(resourcetype,str(resource.rid),node[0]))
-
-        # stop a resource
-        resource.Stop(node[0])
-        retrycount=1
-
-        while retrycount<=self.max:
-            recovernode=resource.RunningNodes()
-            if len(recovernode)==1:
-                return self.success()
-            elif len(recovernode)==0:
-                time.sleep(1)
-            else:
-                return self.failure("%s be recovered more than one node"%(resourcetype))
-        return self.failure("%s are not be recovered at any node of cluster"%(resourcetype))
-
-    def is_applicable(self):
-        '''resourceRecover is applicable only when there is any resource running on cluster
-        and environment is linux-ha-v2'''
-        if not self.CM["Name"] == "linux-ha-v2":
-            self.CM.log("[ResourceRecover] will not run because it only run at linux-ha-v2")
-            return None
-        resourcelist=self.CM.Resources()
-        if len(resourcelist)>0:
-            return 1
-        self.CM.log("Can't find any resource on cluster,[ResourceRecover] will not run")
-        return None
 
 #######################################################################
 #
