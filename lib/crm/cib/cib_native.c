@@ -360,21 +360,15 @@ cib_native_perform_op(
 	/* Start processing the reply... */
 	if(ha_msg_value_int(op_reply, F_CIB_RC, &rc) != HA_OK) {
 		rc = cib_return_code;
-	}
-	
-	/* eg. op may have been a privelidged action and we are in query mode */
-	if(rc != cib_ok) {
-		ha_msg_del(op_reply);
-		return rc;
-	}
+	}	
 	
 	if(!(call_options & cib_discard_reply)) {
 		output = cl_get_string(op_msg, F_CIB_CALLDATA);
 	}
 
-	if(output != NULL && output_data == NULL) {
-		rc = cib_output_ptr;
-
+	if(output_data == NULL) {
+		/* do nothing more */
+		
 	} else if(output != NULL) {
 		*output_data = string2xml(output);
 		if(*output_data == NULL) {
