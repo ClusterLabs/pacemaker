@@ -497,7 +497,7 @@ class StonithTest(CTSTest):
 
         # I can't remember why I put this in here :-(
 
-        time.sleep(10)
+        time.sleep(30)
 
         if not ret1:
             self.CM.log("When node %s STONITHed, the other node didn't log it" % node)
@@ -1397,7 +1397,8 @@ class ResourceRecover(CTSTest):
         resource=self.CM.Env.RandomGen.choice(resourcelist)
         resourcetype = str(resource.Type())
         node=resource.RunningNodes()
-
+        if node == []:
+            return self.failure("%s is not running on any node"%(resource.id))
         self.CM.log("Choice resource [%s] [%s] on (%s)"%(resourcetype,str(resource.rid),node[0]))
 
         # stop a resource
