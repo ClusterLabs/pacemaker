@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.26 2004/03/30 15:15:27 andrew Exp $ */
+/* $Id: cib.c,v 1.27 2004/04/01 15:42:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -185,7 +185,6 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 		whole_cib = TRUE;
 	}
 	
-	
 	set_xml_property_copy(fragment, XML_ATTR_SECTION, section);
 
 	if(whole_cib == FALSE) {
@@ -199,6 +198,9 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	xmlAddChild(fragment, cib);
 	CRM_DEBUG("Fragment created");
 
+	xml_message_debug(fragment, "created fragment");
+	
+	
 	cl_free(auto_section);
 	return fragment;
 }
@@ -214,17 +216,17 @@ pluralSection(const char *a_section)
 	} else if(strcmp(a_section, XML_TAG_CIB) == 0) {
 		a_section_parent = cl_strdup("all");
 
-	} else if(strcmp(a_section, "node") == 0) {
-		a_section_parent = cl_strdup("nodes");
+	} else if(strcmp(a_section, XML_CIB_TAG_NODE) == 0) {
+		a_section_parent = cl_strdup(XML_CIB_TAG_NODES);
 
-	} else if(strcmp(a_section, "state") == 0) {
-		a_section_parent = cl_strdup("status");
+	} else if(strcmp(a_section, XML_CIB_TAG_STATE) == 0) {
+		a_section_parent = cl_strdup(XML_CIB_TAG_STATUS);
 
-	} else if(strcmp(a_section, "constraint") == 0) {
-		a_section_parent = cl_strdup("constraints");
+	} else if(strcmp(a_section, XML_CIB_TAG_CONSTRAINT) == 0) {
+		a_section_parent = cl_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, "resource") == 0) {
-		a_section_parent = cl_strdup("resources");
+	} else if(strcmp(a_section, XML_CIB_TAG_RESOURCE) == 0) {
+		a_section_parent = cl_strdup(XML_CIB_TAG_RESOURCES);
 
 	} else {
 		cl_log(LOG_ERR, "Unknown section %s", a_section);
