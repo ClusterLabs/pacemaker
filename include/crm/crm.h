@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.22 2004/09/14 05:54:42 andrew Exp $ */
+/* $Id: crm.h,v 1.23 2004/09/15 20:19:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,7 +45,7 @@
 #define DEVEL_CIB_COPY   1
 #define DEVEL_DIR	"/tmp/crm"
 
-#define CRM_VERSION	"0.5"
+#define CRM_VERSION	"0.6"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1

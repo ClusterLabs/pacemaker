@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.5 2004/09/14 05:54:42 andrew Exp $ */
+/* $Id: xml.h,v 1.6 2004/09/15 20:19:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -200,5 +200,9 @@ extern void print_xml_formatted(int log_level, const char *function, xmlNodePtr 
 /* 			} else {					\ */
 /* 				crm_debug("Ignoring node %s (filter %s)", \ */
 /* 					  b->name, (const char*)c);	\ */
+
+
+/* make sure the looop progresses before continuing */
+#define xml_iter_continue(a) a=a->next; continue
 
 #endif
