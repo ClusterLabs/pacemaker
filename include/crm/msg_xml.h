@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.22 2005/01/18 20:33:04 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.23 2005/01/26 13:21:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,8 +27,11 @@
 #define F_CRM_HOST_FROM			F_ORIG
 #define F_CRM_REFERENCE			XML_ATTR_REFERENCE
 #define F_CRM_VERSION			XML_ATTR_VERSION
+#define F_CRM_ORIGIN			"origin"
 
 /*---- Common tags/attrs */
+#define XML_ATTR_TAGNAME		"__name__"
+#define XML_ATTR_PARENT			"__parent__"
 #define XML_TAG_CIB			"cib"
 #define XML_TAG_FAILED			"failed"
 
@@ -194,11 +197,11 @@
 
 #define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 
-#include <libxml/tree.h> 
+#include <crm/common/xml.h> 
 
-#define ID(x) xmlGetProp(x, XML_ATTR_ID)
-#define INSTANCE(x) xmlGetProp(x, XML_CIB_ATTR_INSTANCE)
-#define TSTAMP(x) xmlGetProp(x, XML_ATTR_TSTAMP)
-#define TYPE(x) x != NULL ? x->name : NULL 
+#define ID(x) crm_element_value(x, XML_ATTR_ID)
+#define INSTANCE(x) crm_element_value(x, XML_CIB_ATTR_INSTANCE)
+#define TSTAMP(x) crm_element_value(x, XML_ATTR_TSTAMP)
+#define TYPE(x) crm_element_name(x) 
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: msg.h,v 1.3 2005/01/18 20:33:04 andrew Exp $ */
+/* $Id: msg.h,v 1.4 2005/01/26 13:21:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,21 +19,21 @@
 #ifndef CRM_COMMON_MSG__H
 #define CRM_COMMON_MSG__H
 
+#include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <clplumbing/ipc.h>
 
-typedef struct ha_msg HA_Message;
 
 extern HA_Message *validate_crm_message(HA_Message *msg,
 				       const char *sys,
 				       const char *uuid,
 				       const char *msg_type);
 
-extern xmlNodePtr createPingAnswerFragment(const char *from,
+extern crm_data_t *createPingAnswerFragment(const char *from,
 					   const char *status);
 
-extern xmlNodePtr createPingRequest(const char *crm_msg_reference,
+extern crm_data_t *createPingRequest(const char *crm_msg_reference,
 				    const char *to);
 
 extern void send_hello_message(IPC_Channel *ipc_client,
@@ -42,25 +42,30 @@ extern void send_hello_message(IPC_Channel *ipc_client,
 			       const char *major_version,
 			       const char *minor_version);
 
-extern gboolean process_hello_message(xmlNodePtr hello,
+extern gboolean process_hello_message(crm_data_t *hello,
 				      char **uuid,
 				      char **client_name,
 				      char **major_version,
 				      char **minor_version);
 
 extern gboolean send_ipc_reply(
-	IPC_Channel *ipc_channel, HA_Message *request, xmlNodePtr xml_response_data);
+	IPC_Channel *ipc_channel, HA_Message *request, crm_data_t *xml_response_data);
 
-extern HA_Message *create_reply(HA_Message *request, xmlNodePtr xml_response_data);
+#define create_reply(request, xml_response_data) create_reply_adv(request, xml_response_data, __FUNCTION__);
+extern HA_Message *create_reply_adv(HA_Message *request, crm_data_t *xml_response_data, const char *origin);
 
-extern HA_Message *create_request(
-	const char *task, xmlNodePtr xml_data, const char *host_to,
-	const char *sys_to, const char *sys_from, const char *uuid_from);
+#define create_request(task, xml_data, host_to, sys_to, sys_from, uuid_from) create_request_adv(task, xml_data, host_to, sys_to, sys_from, uuid_from, __FUNCTION__)
+
+extern HA_Message *create_request_adv(
+	const char *task, crm_data_t *xml_data, const char *host_to,
+	const char *sys_to, const char *sys_from, const char *uuid_from,
+	const char *origin);
+
 
 typedef struct ha_msg_input_s 
 {
 		HA_Message *msg;
-		xmlNodePtr xml;
+		crm_data_t *xml;
 		
 } ha_msg_input_t;
 

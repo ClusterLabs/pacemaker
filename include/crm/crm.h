@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.37 2005/01/21 10:33:46 andrew Exp $ */
+/* $Id: crm.h,v 1.38 2005/01/26 13:21:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,8 @@
 #include <mcheck.h>
 #endif
 #include <crm/common/util.h>
+
+typedef struct ha_msg HA_Message;
 
 #define CRM_ASSERT(expr) if(expr == FALSE) {		\
 		crm_crit("Triggered assert at %s:%d",	\
@@ -141,8 +143,8 @@ typedef GList* GListPtr;
 
 #define crm_atoi(text, default) atoi(text?text:default)
 
-#define safe_str_eq(x, y)  (x!=NULL && y!=NULL && strcmp(x,y) == 0)
-#define safe_str_neq(x, y) (x != y && (x==NULL || y==NULL || strcmp(x,y) != 0))
+extern gboolean safe_str_eq(const char *a, const char *b);
+extern gboolean safe_str_neq(const char *a, const char *b);
 
 #define slist_iter(w, x, y, z, a)					\
 	{								\
@@ -164,19 +166,19 @@ typedef GList* GListPtr;
 #define LOG_DEV      LOG_DEBUG+2
 #define LOG_TRACE    LOG_DEBUG+3
 #define LOG_INSANE   LOG_DEBUG+5
-#define LOG_MSG      LOG_DEBUG
+#define LOG_MSG      LOG_TRACE
 
 #if 1
-#  define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FUNCTION__, w)
-#  define crm_err(w...)     do_crm_log(LOG_ERR,     __FUNCTION__, w)
-#  define crm_warn(w...)    do_crm_log(LOG_WARNING, __FUNCTION__, w)
-#  define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FUNCTION__, w)
-#  define crm_info(w...)    do_crm_log(LOG_INFO,    __FUNCTION__, w)
-#  define crm_debug(w...)   do_crm_log(LOG_DEBUG,   __FUNCTION__, w)
-#  define crm_devel(w...)   do_crm_log(LOG_DEV,     __FUNCTION__, w)
-#  define crm_verbose(w...) do_crm_log(LOG_VERBOSE, __FUNCTION__, w)
-#  define crm_trace(w...)   do_crm_log(LOG_TRACE,   __FUNCTION__, w)
-#  define crm_insane(w...)  do_crm_log(LOG_INSANE,  __FUNCTION__, w)
+#  define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FUNCTION__, NULL, w)
+#  define crm_err(w...)     do_crm_log(LOG_ERR,     __FUNCTION__, NULL, w)
+#  define crm_warn(w...)    do_crm_log(LOG_WARNING, __FUNCTION__, NULL, w)
+#  define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FUNCTION__, NULL, w)
+#  define crm_info(w...)    do_crm_log(LOG_INFO,    __FUNCTION__, NULL, w)
+#  define crm_debug(w...)   do_crm_log(LOG_DEBUG,   __FUNCTION__, NULL, w)
+#  define crm_devel(w...)   do_crm_log(LOG_DEV,     __FUNCTION__, NULL, w)
+#  define crm_verbose(w...) do_crm_log(LOG_VERBOSE, __FUNCTION__, NULL, w)
+#  define crm_trace(w...)   do_crm_log(LOG_TRACE,   __FUNCTION__, NULL, w)
+#  define crm_insane(w...)  do_crm_log(LOG_INSANE,  __FUNCTION__, NULL, w)
 #else
 #  define crm_crit(w...)    cl_log(LOG_CRIT,    w)
 #  define crm_err(w...)     cl_log(LOG_ERR,     w)
@@ -190,14 +192,9 @@ typedef GList* GListPtr;
 #  define crm_insane(w...)  cl_log(LOG_INSANE,  w)
 #endif
 
-#define crm_log_message(level, msg) if(crm_log_level >= level) {	\
-		if(level > LOG_DEBUG) {					\
-			cl_log_message(LOG_DEBUG, msg);			\
-		} else {						\
-			cl_log_message(level, msg);			\
-		}							\
-	}								\
-	
+extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_Message *msg);
+#define crm_log_message(level, msg) crm_log_message_adv(level, NULL, msg)
+
 #define crm_do_action(level, actions) if(crm_log_level >= level) {	\
 		actions;						\
 	}
@@ -230,6 +227,18 @@ typedef GList* GListPtr;
 	}							\
 	
 #define crm_strdup(x) cl_strdup(x)
-#define crm_free(x)   if(x) { cl_free(x); x=NULL; }
+
+#if 1
+#  define crm_free(x)   if(x) { cl_free(x); x=NULL; }
+#else
+#  define crm_free(x)   x=NULL
+#endif
 #define crm_str(x)    (const char*)(x?x:"<null>")
+
+#if 1
+#  define crm_msg_del(msg) ha_msg_del(msg)
+#else
+#  define crm_msg_del(msg) msg =  NULL
+#endif
+
 #endif

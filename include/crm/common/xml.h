@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.8 2005/01/12 15:44:25 andrew Exp $ */
+/* $Id: xml.h,v 1.9 2005/01/26 13:21:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,8 +29,16 @@
 #include <fcntl.h>
 
 #include <clplumbing/cl_log.h> 
-#include <libxml/tree.h> 
 
+#define USE_LIBXML 1
+
+#ifdef USE_LIBXML
+#  include <libxml/tree.h> 
+   typedef xmlNode crm_data_t;
+#else
+#  include <ha_msg.h>
+   typedef struct ha_msg crm_data_t;
+#endif
 /*
  * Replacement function for xmlCopyPropList which at the very least,
  * doesnt work the way *I* would expect it to.
@@ -40,7 +48,7 @@
  * Not recursive, does not return anything. 
  *
  */
-extern void copy_in_properties(xmlNodePtr target, xmlNodePtr src);
+extern void copy_in_properties(crm_data_t *target, crm_data_t *src);
 
 /*
  * Find a child named search_path[i] at level i in the XML fragment where i=0
@@ -51,8 +59,8 @@ extern void copy_in_properties(xmlNodePtr target, xmlNodePtr src);
  * On success, returns the sub-fragment described by search_path.
  * On failure, returns NULL.
  */
-extern xmlNodePtr find_xml_node_nested(
-	xmlNodePtr root, const char **search_path, int len);
+extern crm_data_t *find_xml_node_nested(
+	crm_data_t *root, const char **search_path, int len);
 
 
 /*
@@ -68,7 +76,7 @@ extern xmlNodePtr find_xml_node_nested(
  * On success, returns the value of attr_name.
  * On failure, returns NULL.
  */
-extern const char *get_xml_attr_nested(xmlNodePtr parent,
+extern const char *get_xml_attr_nested(crm_data_t *parent,
 				       const char **node_path, int length,
 				       const char *attr_name, gboolean error);
 
@@ -83,7 +91,12 @@ extern const char *get_xml_attr_nested(xmlNodePtr parent,
  * Wont barf on NULL.
  *
  */
-extern void free_xml(xmlNodePtr a_node);
+extern void free_xml_fn(crm_data_t *a_node);
+#if 0
+#  define free_xml(xml_obj) free_xml_fn(xml_obj); xml_obj = NULL
+#else
+#  define free_xml(xml_obj) xml_obj = NULL
+#endif
 
 /*
  * Create a node named "name" as a child of "parent"
@@ -92,7 +105,7 @@ extern void free_xml(xmlNodePtr a_node);
  * Returns the created node
  *
  */
-extern xmlNodePtr create_xml_node(xmlNodePtr parent, const char *name);
+extern crm_data_t *create_xml_node(crm_data_t *parent, const char *name);
 
 /*
  * Make a copy of name and value and use the copied memory to create
@@ -102,23 +115,22 @@ extern xmlNodePtr create_xml_node(xmlNodePtr parent, const char *name);
  *
  * If name or value are an empty string, nothing is done.
  *
- * Returns NULL on failure and the attribute created on success.
+ * Returns FALSE on failure and TRUE on success.
  *
  */
-extern xmlAttrPtr set_xml_property_copy(xmlNodePtr node,
-					const xmlChar *name,
-					const xmlChar *value);
+extern gboolean set_xml_property_copy(
+	crm_data_t *node, const char *name, const char *value);
 
 /*
  * Unlink the node and set its doc pointer to NULL so free_xml()
  * will act appropriately
  */
-extern void unlink_xml_node(xmlNodePtr node);
+extern void unlink_xml_node(crm_data_t *node);
 
 /*
  * Set a timestamp attribute on a_node
  */
-extern void set_node_tstamp(xmlNodePtr a_node);
+extern void set_node_tstamp(crm_data_t *a_node);
 
 /*
  * Returns a deep copy of src_node
@@ -127,12 +139,13 @@ extern void set_node_tstamp(xmlNodePtr a_node);
  * XML_TRACE being defined) that does more logging...
  * helpful when part of the XML document has been freed :)
  */
-extern xmlNodePtr copy_xml_node_recursive(xmlNodePtr src_node);
+extern crm_data_t *copy_xml_node_recursive(crm_data_t *src_node);
 
 /*
  * Add a copy of xml_node to new_parent
  */
-extern xmlNodePtr add_node_copy(xmlNodePtr new_parent, xmlNodePtr xml_node);
+extern crm_data_t *add_node_copy(
+	crm_data_t *new_parent, crm_data_t *xml_node);
 
 
 /*
@@ -144,7 +157,7 @@ extern xmlNodePtr add_node_copy(xmlNodePtr new_parent, xmlNodePtr xml_node);
  * Whitespace between tags is discarded.
  *
  */
-extern xmlNodePtr file2xml(FILE *input);
+extern crm_data_t *file2xml(FILE *input);
 
 /*
  * Read in the contents of a string and produce an XML fragment (it will
@@ -155,37 +168,36 @@ extern xmlNodePtr file2xml(FILE *input);
  * Whitespace between tags is discarded.
  *
  */
-extern xmlNodePtr string2xml(const char *input);
+extern crm_data_t *string2xml(const char *input);
 
 
 /* convience "wrapper" functions */
-extern xmlNodePtr find_xml_node(xmlNodePtr cib, const char * node_path, gboolean must_find);
+extern crm_data_t *find_xml_node(
+	crm_data_t *cib, const char * node_path, gboolean must_find);
 
-extern xmlNodePtr find_entity(xmlNodePtr parent,
+extern crm_data_t *find_entity(crm_data_t *parent,
 			      const char *node_name,
 			      const char *id,
 			      gboolean siblings);
 
-extern const char *get_xml_attr(xmlNodePtr parent,
-				const char *node_name, const char *attr_name,
-				gboolean error);
+extern int write_xml_file(crm_data_t *xml_node, const char *filename);
 
-extern xmlNodePtr set_xml_attr(xmlNodePtr parent,
-			       const char *node_name,
-			       const char *attr_name,
-			       const char *attr_value,
-			       gboolean create);
+extern char *dump_xml_formatted(crm_data_t *msg);
+extern char *dump_xml_unformatted(crm_data_t *msg);
 
-extern int write_xml_file(xmlNodePtr xml_node, const char *filename);
+extern void print_xml_formatted(
+	int log_level, const char *function,
+	crm_data_t *an_xml_node, const char *text);
 
-extern char *dump_xml_formatted(xmlNodePtr msg);
-extern char *dump_xml_unformatted(xmlNodePtr msg);
-
-extern void print_xml_formatted(int log_level, const char *function, xmlNodePtr an_xml_node, const char *text);
-
-#define xml_child_iter(a,b,c,d) if(a != NULL) {			\
-		xmlNodePtr b = NULL;					\
-		xmlNodePtr __crm_xml_iter = a->children;		\
+#ifdef USE_LIBXML
+#   define xml_remove_prop(obj, name) xmlUnsetProp(obj, name)
+#   define xml_has_children(root) root->children?TRUE:FALSE
+#   define crm_element_value(data, name) xmlGetProp(data, name)
+#   define crm_element_name(data) data?data->name:NULL
+#   define crm_element_parent(data, parent) parent=(data?data->parent:NULL)
+#   define xml_child_iter(a,b,c,d) if(a != NULL) {			\
+		crm_data_t *b = NULL;					\
+		crm_data_t *__crm_xml_iter = a->children;		\
 		while(__crm_xml_iter != NULL) {			\
 			b = __crm_xml_iter;				\
 			__crm_xml_iter = __crm_xml_iter->next;		\
@@ -198,5 +210,43 @@ extern void print_xml_formatted(int log_level, const char *function, xmlNodePtr 
 	} else {							\
 		crm_trace("Parent of loop was NULL");			\
 	}
+#else
+extern void crm_update_parents(crm_data_t *root);
+extern gboolean crm_xml_has_children(crm_data_t *root);
+#   define xml_remove_prop(obj, name) cl_msg_del_value(obj, name, FT_STRING); \
+	 		crm_validate_data(obj)
+#   define xml_has_children(root) crm_xml_has_children(root)
+#   define xmlGetNodePath(data) cl_get_string(data, XML_ATTR_TAGNAME)
+#   define crm_element_parent(data, parent) ha_msg_value_int(data, XML_ATTR_PARENT, (int*)parent)
+#   define crm_set_element_parent(data, parent) if(parent != NULL) {	\
+		ha_msg_mod_int(data, XML_ATTR_PARENT, (int)parent);	\
+	} else {							\
+		cl_msg_del_value(data, XML_ATTR_PARENT, FT_STRING);		\
+	}
+#   define crm_element_value(data, name) cl_get_string(data, name)
+#   define crm_element_name(data) cl_get_string(data, XML_ATTR_TAGNAME) 
+#   define xml_child_iter(a, b, c, d) if(a != NULL) {			\
+		int __counter = 0;					\
+		crm_data_t *b = NULL;					\
+		for (__counter = 0; __counter < a->nfields; __counter++) { \
+			if(a->types[__counter] != FT_STRUCT) {		\
+				continue;				\
+			}						\
+			b = a->values[__counter];			\
+			if(b == NULL) {				\
+				crm_trace("Skipping %s == NULL", a->names[__counter]); \
+			} else if(c == NULL || safe_str_eq(c, a->names[__counter])) { \
+				d;					\
+			} else {					\
+				crm_trace("Skipping <%s../>", a->names[__counter]); \
+			}						\
+		}							\
+	} else {							\
+		crm_trace("Parent of loop was NULL");			\
+	}
+
+extern void crm_validate_data(crm_data_t *root);
+#endif
+
 
 #endif
