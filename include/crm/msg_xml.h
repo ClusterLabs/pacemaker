@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.1 2004/03/24 10:11:10 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.2 2004/04/02 12:11:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,7 +80,7 @@
 #define XML_CIB_TAG_NODES         "nodes"
 #define XML_CIB_TAG_CONSTRAINTS   "constraints"
 
-#define XML_CIB_TAG_STATE         "state"
+#define XML_CIB_TAG_STATE         "node_state"
 #define XML_CIB_TAG_RESOURCE      "resource"
 #define XML_CIB_TAG_NODE          "node"
 #define XML_CIB_TAG_CONSTRAINT    "constraint"
