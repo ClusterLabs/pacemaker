@@ -1,5 +1,5 @@
 #! /usr/bin/perl -Tw
-my($VERSION)=(qw$Id: pengine,v 1.4 2004/03/16 18:26:16 lars Exp $)[2];
+my($VERSION)=(qw$Id: pengine,v 1.5 2004/03/18 09:47:31 lars Exp $)[2];
 #
 # Copyright (C) 2004 Lars Marowsky-Brée
 #
@@ -37,15 +37,23 @@ use vars qw(	$ch
 		$CRM_SOCKET
 		$DEBUG
 		%opts
+		%XMLOpts
 	);
 
 $CRM_SOCKET = "/var/lib/heartbeat/crm/crmd";
 $DEBUG = 1;
 
+%XMLOpts = (
+	ContentKey => '-content',
+	KeepRoot => 1,
+	KeyAttr => { 'hello' => '+client_uuid' },
+);
+
 #######################################################################
 
 cl_log_set_entity("pengine");
-cl_log_set_facility("6");
+cl_log_set_facility("local0");
+cl_log_set_logfile("/tmp/pengine.log");
 
 getopts("dhvskr", \%opts);
 
@@ -56,15 +64,16 @@ if (defined($opts{'v'})) {
 
 if (defined($opts{'d'})) {
 	cl_log_enable_stderr(1);
-	$DEBUG = 1;
+	$DEBUG++;
 } else {
-	&daemonize();
+	# TODO: No longer needed, should be removed completely, but
+	# maybe I need it again one day ;-)
+	# &daemonize();
 }
 
 cl_log('notice', "Policy Engine $VERSION starting...");
 
 if ($DEBUG) {
-	# In debug mode, we'll only pretend to connect.
 	cl_log('warn', "Magic not yet implemented, no cookie!");
 }
 
@@ -75,20 +84,20 @@ if ($DEBUG) {
 &signin();
 
 my $iter = 0;
+my %regs = ( hello => 0, );
 while ($ch->isrconn() && $ch->iswconn()) {
 	$ch->waitin();
-	if ($ch->ch_status == $IPC_DISCONNECT) {
-		cl_log('info', "Connection with crmd lost");
-		exit(2);
-	}
 	
 	if ($ch->is_message_pending()) {
 		my $msg = &crm_recv_msg();
+		
 		cl_log("info", "Woah, we received message number $iter");
 		$iter++;
-	}
+	} 
 }
 
+cl_log("info", "Disconnecting from crmd: R".$ch->isrconn().
+		" W".$ch->iswconn());
 exit 0;
 
 #######################################################################
@@ -119,13 +128,14 @@ sub signin {
 sub send_crm_msg {
 	my ($ref) = @_;
 	my $xml = XMLout($ref, 
-			ContentKey => '-content',
-			KeepRoot => 1,
-			KeyAttr => { 'hello' => 'client_uuid' });
+			%XMLOpts,
+			NoIndent => 1);
+	# Kill all remaining annoying whitespace to make libxml2 more
+	# happy. (None should be left, but paranoia rules.)
 	$xml =~ s/>\s+/>/og;
 	$xml =~ s/\s+</</og;
 	
-	cl_log('debug', "XML dump: ".$xml) if $DEBUG; 
+	cl_log('info', "XML message we are about to sent: ".$xml) if $DEBUG; 
 	
 	my $msg = heartbeat::clplumbing::ipc::message->new($ch, $xml);
 
@@ -133,7 +143,7 @@ sub send_crm_msg {
 }
 
 sub crm_recv_msg {
-	cl_log('debug', "Trying to receive message from crmd") if $DEBUG;
+	cl_log('info', "Trying to receive message from crmd") if $DEBUG;
 	
 	my ($rc, $msg) = $ch->recv();
 	
@@ -142,14 +152,13 @@ sub crm_recv_msg {
 		exit(1);
 	}
 	
-	cl_log('debug', "XML message received: ".$msg->body());
+	cl_log('info', "XML message received: ".$msg->body());
 	
 	my $ref = XMLin($msg->body(), 
-			ContentKey => '-content',
-			KeepRoot => 1,
-			NoAttr => 1,
+			%XMLOpts,
 			ForceArray => 1,
-			KeyAttr => { });
+			ForceContent => 1,
+			NormaliseSpace => 1, );
 	
 	return $ref;
 }
