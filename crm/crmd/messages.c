@@ -176,6 +176,7 @@ void
 crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 {
 	const char *from = ha_msg_value(msg, F_ORIG);
+	const char *to = NULL;
 
 	FNIN();
 
@@ -187,7 +188,8 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 	if(msg_in_strm == NULL) {
 		msg_in_strm = fopen("/tmp/inbound.log", "w");
 	}
-	fprintf(msg_in_strm, "[HA (%s:%s)]\t%s\n",
+	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n",
+		from,
 		ha_msg_value(msg, F_SEQ),
 		ha_msg_value(msg, F_TYPE),
 		ha_msg_value(msg, "xml")
@@ -197,17 +199,31 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 #endif
 
 	if(from == NULL || strcmp(from, fsa_our_uname) == 0) {
-		CRM_DEBUG("Discarding message from ourselves");
-		CRM_DEBUG2("[F_XML=%s]", ha_msg_value(msg, "xml"));
+		CRM_DEBUG2("Discarding message [F_SEQ=%s] from ourselves.",
+			   ha_msg_value(msg, F_SEQ));
 		FNOUT();
 	}
-	
-	xmlNodePtr root_xml_node = find_xml_in_hamessage(msg);
-	set_xml_property_copy(root_xml_node, XML_ATTR_HOSTFROM, from);
 
+	xmlNodePtr root_xml_node = find_xml_in_hamessage(msg);
+	to = xmlGetProp(root_xml_node, XML_ATTR_HOSTTO);
+
+/*
+	if(AM_I_DC == FALSE && (to == NULL || strlen(to) == 0)) {
+		CRM_DEBUG2("Discarding message [F_SEQ=%s] for the DC.",
+			   ha_msg_value(msg, F_SEQ));
+		FNOUT();
+	}
+*/
+
+	if(to != NULL && strlen(to) > 0 && strcmp(to, fsa_our_uname) != 0) {
+		CRM_DEBUG2("Discarding message [F_SEQ=%s] for someone else.",
+			   ha_msg_value(msg, F_SEQ));
+		FNOUT();
+	}
+
+	set_xml_property_copy(root_xml_node, XML_ATTR_HOSTFROM, from);
 	s_crmd_fsa(C_HA_MESSAGE, I_ROUTER, root_xml_node);
 
-//	process_message(root_xml_node, FALSE, from);
 	free_xml(root_xml_node);
 
 	FNOUT();
