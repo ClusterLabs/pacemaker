@@ -207,7 +207,8 @@ do_ccm_update_cache(long long action,
 	membership_copy->members_size = oc->m_n_member;
 
 	if(membership_copy->members_size > 0) {
-		membership_copy->members = g_hash_table_new(g_str_hash, g_direct_equal);
+		membership_copy->members =
+			g_hash_table_new(g_str_hash, g_str_equal);
 		members = membership_copy->members;
 		
 		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
@@ -220,8 +221,10 @@ do_ccm_update_cache(long long action,
 			
 			member->node_uname =
 				crm_strdup(oc->m_array[offset+lpc].node_uname);
-			
+
+			g_hash_table_insert(members, member->node_uname, member);	
 		}
+		
 	} else {
 		membership_copy->members = NULL;
 	}
@@ -231,7 +234,8 @@ do_ccm_update_cache(long long action,
 	membership_copy->new_members_size = oc->m_n_in;
 
 	if(membership_copy->new_members_size > 0) {
-		membership_copy->new_members = g_hash_table_new(g_str_hash, g_direct_equal);
+		membership_copy->new_members =
+			g_hash_table_new(g_str_hash, g_str_equal);
 		members = membership_copy->new_members;
 		
 		for(lpc=0; lpc < membership_copy->new_members_size; lpc++) {
@@ -246,7 +250,6 @@ do_ccm_update_cache(long long action,
 				crm_strdup(oc->m_array[offset+lpc].node_uname);
 
 			g_hash_table_insert(members, member->node_uname, member);
-			
 		}
 
 	} else {
@@ -258,7 +261,7 @@ do_ccm_update_cache(long long action,
 	membership_copy->dead_members_size = oc->m_n_out;
 	if(membership_copy->dead_members_size > 0) {
 		membership_copy->dead_members =
-			g_hash_table_new(g_str_hash, g_direct_equal);
+			g_hash_table_new(g_str_hash, g_str_equal);
 
 		members = membership_copy->dead_members;
 
@@ -496,13 +499,13 @@ do_update_cib_nodes(xmlNodePtr updates)
 		g_hash_table_foreach(fsa_membership_copy->members,
 				     ghash_update_cib_node, &update_data);
 	}
-	
+/*	
 	CRM_DEBUG("Processing the \"in_ccm (new)\" list");
 	if(fsa_membership_copy->new_members != NULL) {
 		g_hash_table_foreach(fsa_membership_copy->new_members,
 				     ghash_update_cib_node, &update_data);
 	}
-
+*/
 	if(update_data.updates != NULL) {
 		xmlNodePtr fragment = create_cib_fragment(update_data.updates, NULL);
 		
