@@ -137,6 +137,7 @@ class LogWatcher:
         self.regexes = regexes
         self.filename = log
         self.debug=debug
+        self.whichmatch = -1
         if self.debug:
             print "Debug now on for for log", log
         self.Timeout = int(timeout)
@@ -183,10 +184,13 @@ class LogWatcher:
                 line=self.file.readline()
                 if self.debug: print "Looking at line:", line
                 if line:
+                    which=-1
                     for regex in self.regexes:
+                        which=which+1
                         if self.debug: print "Comparing line to ", regex
                         matchobj = re.search(regex, line)
                         if matchobj:
+                            self.whichmatch=which
                             if self.returnonlymatch:
                               return matchobj.group(self.returnonlymatch)
                             else:
@@ -198,6 +202,28 @@ class LogWatcher:
                 else:
                     return None
         return None
+
+    def lookforall(self, timeout=None):
+        '''Examine the log looking for ALL of the given patterns.
+        It starts looking from the place marked by setwatch().
+
+        We return when the timeout is reached, or when we have found
+	ALL of the regexes that were part of the watch
+        '''
+
+        if timeout == None: timeout = self.Timeout
+        save_regexes = self.regexes
+        returnresult = []
+        while (len(self.regexes) > 0):
+            oneresult = self.look(timeout)
+            if not oneresult:
+                self.regexes = save_regexes
+                return None
+            returnresult.append(oneresult)
+            del self.regexes[self.whichmatch]
+        self.regexes = save_regexes
+        return returnresult
+                
 
 class ClusterManager(UserDict):
     '''The Cluster Manager class.
@@ -637,11 +663,14 @@ as they might have been rebooted or crashed for some reason beforehand.
         #	Clear out the cobwebs ;-)
 
         self.TearDown(CM)
+        for node in CM.Env["nodes"]:
+            CM.rsh(node, CM["FixCommCmd"]+ "; true")
 
         # Now start the Cluster Manager on all the nodes.
-
         CM.log("Starting Cluster Manager on all nodes")
         CM.startall()
+
+
         return 1
 
 
