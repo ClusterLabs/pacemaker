@@ -818,10 +818,10 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 			crm_debug("Resource state update: %s",
 				  cib_error2string(rc));
 			
-		} else if(I_AM_DC) {
+		} else if(AM_I_DC) {
 			crm_err("Resource state update failed: %s",
 				cib_error2string(rc));
-			CRM_DEV_ASSERT(rc == cib_ok && I_AM_DC);
+			CRM_DEV_ASSERT(rc == cib_ok && AM_I_DC);
 			
 		} else if(rc == cib_master_timeout
 			  && (fsa_state==S_PENDING || fsa_state==S_ELECTION)) {
