@@ -86,8 +86,31 @@ do_test simple6 "Stop Start	"
 do_test simple7 "Shutdown	"
 do_test simple8 "Stonith	"
 
+echo ""
 
-#create_mode="true"
+do_test rsc_rsc1 "Must not	"
+do_test rsc_rsc2 "Should not	"
+do_test rsc_rsc3 "Must	"
+do_test rsc_rsc4 "Should	"
+do_test rsc_rsc5 "Must not 3	"
+do_test rsc_rsc6 "Should not 3"
+do_test rsc_rsc7 "Must 3	"
+do_test rsc_rsc8 "Should 3	"
+
+echo ""
+
+do_test rsc_node1 "Rsc1 Node1"
+do_test rsc_node2 "Rsc1 Node2"
+
+echo ""
+
+do_test bad1 "Bad data"
+do_test bad2 "Bad data"
+do_test bad3 "Bad data"
+do_test bad4 "Bad data"
+do_test bad5 "Bad data"
+do_test bad6 "Bad data"
+#do_test bad7 "Bad data"
 
 
 if [ -s regression.failed ]; then
