@@ -141,7 +141,7 @@ register_fsa_input_adv(
 				break;
 				
 			case C_SUBSYSTEM_CONNECT:
-				
+			case C_FSA_INTERNAL:
 			case C_LRM_MONITOR_CALLBACK:
 			case C_TIMER_POPPED:
 			case C_SHUTDOWN:
@@ -224,6 +224,7 @@ delete_fsa_input(fsa_data_t *fsa_data)
 				
 				break;
 				
+			case C_FSA_INTERNAL:
 			case C_LRM_MONITOR_CALLBACK:
 			case C_TIMER_POPPED:
 			case C_SHUTDOWN:
@@ -233,8 +234,9 @@ delete_fsa_input(fsa_data_t *fsa_data)
 			case C_ILLEGAL:
 			case C_UNKNOWN:
 			case C_STARTUP:
-				crm_err("Dont know how to free %s data",
-					fsa_cause2string(fsa_data->fsa_cause));
+				crm_err("Dont know how to free %s data from %s",
+					fsa_cause2string(fsa_data->fsa_cause),
+					fsa_data->where);
 				exit(1);
 				break;
 		}
@@ -838,15 +840,15 @@ handle_request(xmlNodePtr stored_msg)
 			}
 				
 		} else if(strcmp(op, CRM_OP_TECOMPLETE) == 0) {
-			if(fsa_state == S_TRANSITION_ENGINE) {
-				next_input = I_SUCCESS;
-			} else {
-				crm_warn("Op %s is only valid in state %s..."
-					 "We are in (%s)",
-					 op,
-					 fsa_state2string(S_TRANSITION_ENGINE),
-					 fsa_state2string(fsa_state));
-			}
+/* 			if(fsa_state == S_TRANSITION_ENGINE) { */
+				next_input = I_TE_SUCCESS;
+/* 			} else { */
+/* 				crm_warn("Op %s is only valid in state %s..." */
+/* 					 "We are in (%s)", */
+/* 					 op, */
+/* 					 fsa_state2string(S_TRANSITION_ENGINE), */
+/* 					 fsa_state2string(fsa_state)); */
+/* 			} */
 
 		} else if(strcmp(op, CRM_OP_CREATE) == 0
 			      || strcmp(op, CRM_OP_UPDATE) == 0
@@ -854,7 +856,7 @@ handle_request(xmlNodePtr stored_msg)
 			      || strcmp(op, CRM_OP_REPLACE) == 0
 			      || strcmp(op, CRM_OP_DELETE) == 0) {
 			next_input = I_CIB_OP;
-				
+			
 		} else if(strcmp(op, CRM_OP_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
 			
@@ -905,12 +907,8 @@ handle_response(xmlNodePtr stored_msg)
 		
  	} else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
 
-		if(fsa_state == S_POLICY_ENGINE
-		   && safe_str_eq(msg_ref, fsa_pe_ref)) {
-			next_input = I_SUCCESS;
-		} else if(fsa_state != S_POLICY_ENGINE) {
-			crm_err("Reply to %s is only valid in state %s",
-				op, fsa_state2string(S_POLICY_ENGINE));
+		if(safe_str_eq(msg_ref, fsa_pe_ref)) {
+			next_input = I_PE_SUCCESS;
 			
 		} else {
 			crm_verbose("Skipping superceeded reply from %s",
