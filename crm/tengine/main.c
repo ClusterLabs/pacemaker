@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.2 2004/09/20 14:30:20 andrew Exp $ */
+/* $Id: main.c,v 1.3 2004/09/29 19:40:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -77,6 +77,8 @@ main(int argc, char ** argv)
     cl_log_set_debugfile(DAEMON_DEBUG);
     CL_SIGNAL(DEBUG_INC, alter_debug);
     CL_SIGNAL(DEBUG_DEC, alter_debug);
+
+    set_crm_log_level(LOG_DEV);
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
