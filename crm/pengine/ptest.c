@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.19 2004/06/02 18:41:40 andrew Exp $ */
+/* $Id: ptest.c,v 1.20 2004/06/07 10:29:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -58,7 +58,7 @@ main(int argc, char **argv)
 		int option_index = 0;
 		static struct option long_options[] = {
 			// Top-level Options
-			{"daemon", 0, 0, 0},
+			{"help", 0, 0, 0},
       
 			{0, 0, 0, 0}
 		};
@@ -128,8 +128,10 @@ main(int argc, char **argv)
 
 	xmlNodePtr graph = NULL;
 
+#ifdef MCHECK
 	mtrace();
-	pe_debug_on();
+#endif
+	set_crm_log_level(LOG_VERBOSE);
 	
 	stage0(cib_object,
 	       &resources,
@@ -137,89 +139,89 @@ main(int argc, char **argv)
 	       &actions,  &action_constraints,
 	       &stonith_list, &shutdown_list);
 	
-	crm_info("========= Nodes =========");
+	crm_debug("========= Nodes =========");
 	slist_iter(node, node_t, nodes, lpc,
 		   print_node(NULL, node, TRUE));
 
-	crm_info("========= Resources =========");
+	crm_debug("========= Resources =========");
 	slist_iter(resource, resource_t, resources, lpc,
 		   print_resource(NULL, resource, TRUE));    
 
-	crm_info("========= Constraints =========");
+	crm_debug("========= Constraints =========");
 	slist_iter(constraint, rsc_to_node_t, node_constraints, lpc,
 		   print_rsc_to_node(NULL, constraint, FALSE));
     
-	crm_info("=#=#=#=#= Stage 1 =#=#=#=#=");
+	crm_debug("=#=#=#=#= Stage 1 =#=#=#=#=");
 	stage1(node_constraints, nodes, resources);
 
-	crm_info("========= Nodes =========");
+	crm_debug("========= Nodes =========");
 	slist_iter(node, node_t, nodes, lpc,
 		   print_node(NULL, node, TRUE));
 
-	crm_info("========= Resources =========");
+	crm_debug("========= Resources =========");
 	slist_iter(resource, resource_t, resources, lpc,
 		   print_resource(NULL, resource, TRUE));
 
-	crm_info("=#=#=#=#= Stage 2 =#=#=#=#=");
+	crm_debug("=#=#=#=#= Stage 2 =#=#=#=#=");
 //	pe_debug_on();
 	stage2(resources, nodes, &colors);
 //	pe_debug_off();
 
-	crm_info("========= Nodes =========");
+	crm_debug("========= Nodes =========");
 	slist_iter(node, node_t, nodes, lpc,
 		   print_node(NULL, node, TRUE));
 
-	crm_info("========= Resources =========");
+	crm_debug("========= Resources =========");
 	slist_iter(resource, resource_t, resources, lpc,
 		   print_resource(NULL, resource, TRUE));  
   
-	crm_info("========= Colors =========");
+	crm_debug("========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
   
-	crm_info("=#=#=#=#= Stage 3 =#=#=#=#=");
+	crm_debug("=#=#=#=#= Stage 3 =#=#=#=#=");
 	stage3(colors);
-	crm_info("========= Colors =========");
+	crm_debug("========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
 
-	crm_info("=#=#=#=#= Stage 4 =#=#=#=#=");
+	crm_debug("=#=#=#=#= Stage 4 =#=#=#=#=");
 	stage4(colors);
-	crm_info("========= Colors =========");
+	crm_debug("========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
 
-	crm_info("=#=#=#=#= Summary =#=#=#=#=");
+	crm_debug("=#=#=#=#= Summary =#=#=#=#=");
 	summary(resources);
-	crm_info("========= Action List =========");
+	crm_debug("========= Action List =========");
 	slist_iter(action, action_t, actions, lpc,
 		   print_action(NULL, action, FALSE));
 	
-	crm_info("=#=#=#=#= Stage 5 =#=#=#=#=");
+	crm_debug("=#=#=#=#= Stage 5 =#=#=#=#=");
 	stage5(resources);
 
-	crm_info("=#=#=#=#= Stage 6 =#=#=#=#=");
+	crm_debug("=#=#=#=#= Stage 6 =#=#=#=#=");
 	stage6(&actions, &action_constraints,
 	       stonith_list, shutdown_list);
 
-	crm_info("========= Action List =========");
+	crm_debug("========= Action List =========");
 	slist_iter(action, action_t, actions, lpc,
 		   print_action(NULL, action, TRUE));
 	
-	crm_info("=#=#=#=#= Stage 7 =#=#=#=#=");
+	crm_debug("=#=#=#=#= Stage 7 =#=#=#=#=");
 	stage7(resources, actions, action_constraints, &action_sets);
 
-	crm_info("=#=#=#=#= Summary =#=#=#=#=");
+	crm_debug("=#=#=#=#= Summary =#=#=#=#=");
 	summary(resources);
 
-	crm_info("========= All Actions =========");
+	crm_debug("========= All Actions =========");
 	slist_iter(action, action_t, actions, lpc,
 		   print_action("\t", action, TRUE);
 		);
 
-	crm_info("========= Action Sets =========");
+	crm_debug("========= Action Sets =========");
 
-	crm_info("\t========= Set %d (Un-runnable) =========", -1);
+	crm_debug("\t========= Set %d (Un-runnable) =========", -1);
 	slist_iter(action, action_t, actions, lpc,
 		   if(action->optional == FALSE && action->runnable == FALSE) {
 			   print_action("\t", action, TRUE);
@@ -228,20 +230,20 @@ main(int argc, char **argv)
 
 	int lpc2;
 	slist_iter(action_set, GList, action_sets, lpc,
-		   crm_info("\t========= Set %d =========", lpc);
+		   crm_debug("\t========= Set %d =========", lpc);
 		   slist_iter(action, action_t, action_set, lpc2,
 			      print_action("\t", action, TRUE)));
 
 	
-	crm_info("========= Stonith List =========");
+	crm_debug("========= Stonith List =========");
 	slist_iter(node, node_t, stonith_list, lpc,
 		   print_node(NULL, node, FALSE));
   
-	crm_info("========= Shutdown List =========");
+	crm_debug("========= Shutdown List =========");
 	slist_iter(node, node_t, shutdown_list, lpc,
 		   print_node(NULL, node, FALSE));
 
-	crm_info("=#=#=#=#= Stage 8 =#=#=#=#=");
+	crm_debug("=#=#=#=#= Stage 8 =#=#=#=#=");
 	stage8(action_sets, &graph);
 
 //	GListPtr action_sets = NULL;
@@ -282,8 +284,10 @@ main(int argc, char **argv)
 	g_list_free(shutdown_list);
 	g_list_free(stonith_list);
 
-	pe_debug_off();
+#ifdef MCHECK
 	muntrace();
+#endif
+	set_crm_log_level(LOG_INFO);
 
 	char *msg_buffer = dump_xml_node(graph, FALSE);
 	fprintf(stdout, "%s\n", msg_buffer);

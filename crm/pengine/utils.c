@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.23 2004/06/02 18:41:40 andrew Exp $ */
+/* $Id: utils.c,v 1.24 2004/06/07 10:29:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,6 +28,7 @@
 #include <pe_utils.h>
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
+gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 
 /* only for rsc_to_rsc constraints */
 rsc_to_rsc_t *
@@ -239,7 +240,13 @@ static int color_id = 0;
 color_t *
 create_color(GListPtr *colors, GListPtr nodes, GListPtr resources)
 {
-	color_t *new_color = crm_malloc(sizeof(color_t));
+	color_t *new_color = NULL;
+	
+	if(g_list_length(*colors) >= max_valid_nodes) {
+		return NULL;
+	}
+	
+	new_color = crm_malloc(sizeof(color_t));
 
 	new_color->id = color_id++;
 	new_color->local_weight = 1.0;
@@ -300,7 +307,7 @@ filter_nodes(resource_t *rsc)
 			rsc->allowed_nodes =
 				g_list_remove(rsc->allowed_nodes,node);
 			crm_free(node);
-			lpc2--;
+			lpc2 = 0; // restart the loop
 		}
 		);
 
@@ -811,62 +818,6 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 }
 
 
-xmlNodePtr
-action2xml(action_t *action)
-{
-	xmlNodePtr action_xml = NULL;
-	
-	if(action == NULL) {
-		return NULL;
-	}
-	
-	switch(action->task) {
-		case stonith_op:
-			action_xml = create_xml_node(NULL, "pseduo_event");
-			break;
-		case shutdown_crm:
-			action_xml = create_xml_node(NULL, "crm_event");
-			break;
-		default:
-			action_xml = create_xml_node(NULL, "rsc_op");
-			add_node_copy(action_xml, action->rsc->xml);
-			
-			break;
-	}
-
-	set_xml_property_copy(action_xml,
-			      XML_LRM_ATTR_TARGET,
-			      safe_val4(NULL, action, node, details, id));
-
-	set_xml_property_copy(action_xml,
-			      XML_ATTR_ID,
-			      crm_itoa(action->id));
-
-	set_xml_property_copy(action_xml,
-			      XML_LRM_ATTR_RUNNABLE,
-			      action->runnable?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
-
-	set_xml_property_copy(action_xml,
-			      XML_LRM_ATTR_OPTIONAL,
-			      action->optional?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
-
-	set_xml_property_copy(action_xml,
-			      XML_LRM_ATTR_TASK,
-			      task2text(action->task));
-
-	set_xml_property_copy(action_xml,
-			      XML_LRM_ATTR_DISCARD,
-			      action->discard?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
-
-	set_xml_property_copy(action_xml,
-			      "allow_fail",
-			      action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
-
-	return action_xml;
-}
-
-gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
-
 void
 pe_free_nodes(GListPtr nodes)
 {
@@ -877,10 +828,11 @@ pe_free_nodes(GListPtr nodes)
 		nodes = nodes->next;
 
 		if(details != NULL) {
-			crm_free(details->id);
-			g_hash_table_foreach_remove(details->attrs,
-						    ghash_free_str_str, NULL);
+//			crm_free(details->id);
+			g_hash_table_foreach_remove(
+				details->attrs, ghash_free_str_str, NULL);
 
+			g_hash_table_destroy(details->attrs);
 			crm_free(details);
 		}
 		
@@ -952,7 +904,7 @@ pe_free_resources(GListPtr resources)
 		rsc = (resource_t *)list_item->data;
 		resources = resources->next;
 
-		crm_free(rsc->id);
+//		crm_free(rsc->id);
 		
 //		crm_verbose("color");
 //		crm_free(rsc->color);
@@ -999,7 +951,7 @@ void
 pe_free_rsc_to_rsc(rsc_to_rsc_t *cons)
 { 
 	if(cons != NULL) {
-		crm_free(cons->id);
+//		crm_free(cons->id);
 		crm_free(cons);
 	}
 }
@@ -1008,7 +960,7 @@ void
 pe_free_rsc_to_node(rsc_to_node_t *cons)
 {
 	if(cons != NULL) {
-		crm_free(cons->id);
+//		crm_free(cons->id);
 		pe_free_shallow(cons->node_list_rh); // node_t*
 		crm_free(cons);
 	}

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.20 2004/06/02 18:41:40 andrew Exp $ */
+/* $Id: pengine.h,v 1.21 2004/06/07 10:29:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,6 +26,7 @@ typedef struct color_s color_t;
 typedef struct rsc_to_node_s rsc_to_node_t;
 typedef struct rsc_to_rsc_s rsc_to_rsc_t;
 typedef struct resource_s resource_t;
+typedef struct lrm_agent_s lrm_agent_t;
 typedef struct order_constraint_s order_constraint_t;
 typedef struct action_s action_t;
 typedef struct action_wrapper_s action_wrapper_t;
@@ -74,13 +75,14 @@ enum action_order {
 };
 
 struct node_shared_s { 
-		char	*id; 
+		const char	*id; 
 		gboolean online;
 		gboolean unclean;
 		gboolean shutdown;
-		GListPtr running_rsc; // resource_t*
+		GListPtr running_rsc;	// resource_t*
+		GListPtr agents;	// lrm_agent_t*
 		
-		GHashTable *attrs;     // char* => char*
+		GHashTable *attrs;	// char* => char*
 		enum node_type type;
 }; 
 
@@ -103,7 +105,7 @@ struct color_s {
 };
 
 struct rsc_to_rsc_s { 
-		char		*id;
+		const char	*id;
 		resource_t	*rsc_lh; 
 
 //		gboolean	is_placement;
@@ -112,7 +114,7 @@ struct rsc_to_rsc_s {
 };
 
 struct rsc_to_node_s { 
-		char		*id;
+		const char	*id;
 		resource_t	*rsc_lh; 
 
 		float		weight;
@@ -120,12 +122,20 @@ struct rsc_to_node_s {
 		enum con_modifier modifier;
 };
 
+struct lrm_agent_s { 
+		const char *class;
+		const char *type;
+};
+
 struct resource_s { 
-		char *id; 
+		const char *id; 
 		xmlNodePtr xml; 
 		int priority; 
 		node_t *cur_node; 
 
+		const char *class;
+		const char *type;
+		
 		gboolean runnable;
 		gboolean provisional; 
 
@@ -212,36 +222,46 @@ extern gboolean summary(GListPtr resources);
 
 extern gboolean pe_input_dispatch(IPC_Channel *sender, void *user_data);
 
-extern void pe_free_nodes(GListPtr nodes);
-extern void pe_free_colors(GListPtr colors);
-extern void pe_free_rsc_to_rsc(rsc_to_rsc_t *cons);
-extern void pe_free_rsc_to_node(rsc_to_node_t *cons);
-extern void pe_free_shallow(GListPtr alist);
-extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
-extern void pe_free_resources(GListPtr resources);
-extern void pe_free_actions(GListPtr actions);
 
-extern gboolean pe_debug;
-extern gboolean pe_debug_saved;
+extern gboolean process_pe_message(xmlNodePtr msg, IPC_Channel *sender);
+
+extern gboolean unpack_constraints(xmlNodePtr xml_constraints,
+				   GListPtr nodes, GListPtr resources,
+				   GListPtr *node_constraints,
+				   GListPtr *action_constraints);
+
+extern gboolean unpack_resources(xmlNodePtr xml_resources,
+				 GListPtr *resources,
+				 GListPtr *actions,
+				 GListPtr *action_cons,
+				 GListPtr all_nodes);
+
+extern gboolean unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes);
+
+extern gboolean unpack_status(xmlNodePtr status,
+			      GListPtr nodes,
+			      GListPtr rsc_list,
+			      GListPtr *node_constraints);
+
+
+extern gboolean apply_node_constraints(GListPtr constraints, GListPtr nodes);
+
+extern gboolean apply_agent_constraints(GListPtr resources);
+
+extern void color_resource(resource_t *lh_resource,
+			   GListPtr *colors,
+			   GListPtr resources);
+
+extern gboolean choose_node_from_list(
+	GListPtr colors, color_t *color, GListPtr nodes);
+
+extern gboolean update_runnable(GListPtr actions);
+extern GListPtr create_action_set(action_t *action);
+
 extern color_t *no_color;
-
-#define pdebug_action(x) if(pe_debug) {		\
-		x;				\
-	}
-
-#define pdebug(x...) if(pe_debug) {		\
-		cl_log(LOG_DEBUG, x);		\
-	}
-
-#define pe_debug_on()  pe_debug_saved = pe_debug; pe_debug = TRUE;
-#define pe_debug_off() pe_debug_saved = pe_debug; pe_debug = FALSE;
-#define pe_debug_restore() pe_debug = pe_debug_saved;
-
-#define safe_val(def, x,y)          (x?x->y:def)
-#define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
-#define safe_val4(def, t,u,v,w)     (t?t->u?t->u->v?t->u->v->w:def:def:def)
-#define safe_val5(def, t,u,v,w,x)   (t?t->u?t->u->v?t->u->v->w?t->u->v->w->x:def:def:def:def)
-#define safe_val6(def, t,u,v,w,x,y) (t?t->u?t->u->v?t->u->v->w?t->u->v->w->x?t->u->v->w->x->y:def:def:def:def:def)
-#define safe_val7(def, t,u,v,w,x,y,z) (t?t->u?t->u->v?t->u->v->w?t->u->v->w->x?t->u->v->w->x->y?t->u->v->w->x->y->z:def:def:def:def:def:def)
+extern int      max_valid_nodes;
+extern int      order_id;
+extern int      action_id;
 
 #endif
+
