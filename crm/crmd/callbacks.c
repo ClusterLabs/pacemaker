@@ -35,8 +35,10 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+#ifdef MSG_LOG
 FILE *msg_in_strm = NULL;
 FILE *msg_ipc_strm = NULL;
+#endif
 
 xmlNodePtr find_xml_in_hamessage(const struct ha_msg* msg);
 void crmd_ha_connection_destroy(gpointer user_data);
@@ -77,10 +79,7 @@ crmd_ha_msg_callback(const struct ha_msg* msg, void* private_data)
 #ifdef MSG_LOG
 	xml_text = dump_xml_formatted(root_xml_node);
 	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n", crm_str(from),
-		seq,
-		ha_msg_value(msg, F_TYPE),
-		xml_text
-		);
+		seq, ha_msg_value(msg, F_TYPE), xml_text);
 	fflush(msg_in_strm);
 	crm_free(xml_text);
 #endif

@@ -40,6 +40,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_CCM_EVENT */
@@ -57,6 +58,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_CIB_OP */
@@ -74,6 +76,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_CIB_UPDATE */
@@ -91,6 +94,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_DC_TIMEOUT */
@@ -108,6 +112,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_RECOVERY,
+		/* S_HALT		==> */	S_ELECTION,
 	},
 
 /* Got an I_ELECTION */
@@ -125,6 +130,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_ELECTION,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_PE_CALC */
@@ -142,6 +148,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_POLICY_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_RELEASE_DC */
@@ -159,6 +166,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_RELEASE_DC,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_ELECTION_DC */
@@ -176,6 +184,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_INTEGRATION,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_ERROR */
@@ -193,6 +202,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_TERMINATE,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_RECOVERY,
+		/* S_HALT		==> */	S_RELEASE_DC,
 	},
 
 /* Got an I_FAIL */
@@ -210,6 +220,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_POLICY_ENGINE,
+		/* S_HALT		==> */	S_RELEASE_DC,
 	},
 
 /* Got an I_INTEGRATED */
@@ -227,6 +238,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_FINALIZED */
@@ -244,6 +256,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_NODE_JOIN */
@@ -261,6 +274,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_INTEGRATION,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_NOT_DC */
@@ -278,6 +292,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_RECOVERY,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_RECOVERED */
@@ -295,6 +310,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_RELEASE_FAIL */
@@ -312,6 +328,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_STOPPING,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_RELEASE_SUCCESS */
@@ -329,6 +346,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_RECOVERY,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_RESTART */
@@ -346,6 +364,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_TE_SUCCESS */
@@ -363,6 +382,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_IDLE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_ROUTER */
@@ -380,6 +400,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_SHUTDOWN */
@@ -397,6 +418,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_RELEASE_DC,
+		/* S_HALT		==> */	S_RELEASE_DC,
 	},
 
 /* Got an I_TERMINATE */
@@ -414,6 +436,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_RELEASE_DC,
+		/* S_HALT		==> */	S_RELEASE_DC,
 	},
 
 /* Got an I_STARTUP */
@@ -431,6 +454,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_RECOVERY,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_PE_SUCCESS */
@@ -448,6 +472,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_TERMINATE,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_JOIN_OFFER */
@@ -465,6 +490,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_RELEASE_DC,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_JOIN_REQUEST */
@@ -482,6 +508,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_INTEGRATION,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_JOIN_RESULT */
@@ -499,6 +526,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_POLICY_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},	
 
 /* Got an I_WAIT_FOR_EVENT */
@@ -516,6 +544,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_DC_HEARTBEAT */
@@ -533,6 +562,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_ELECTION,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_LRM_EVENT */
@@ -550,6 +580,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_HALT		==> */	S_HALT,
 	},
 
 /* Got an I_PENDING */
@@ -567,6 +598,25 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_RELEASE_DC,
+		/* S_HALT		==> */	S_HALT,
+	},
+
+/* Got an I_HALT */
+	{
+		/* S_IDLE		==> */	S_HALT,
+		/* S_ELECTION		==> */	S_HALT,
+		/* S_INTEGRATION	==> */	S_HALT,
+		/* S_FINALIZE_JOIN	==> */	S_HALT,
+		/* S_NOT_DC		==> */	S_HALT,
+		/* S_POLICY_ENGINE	==> */	S_HALT,
+		/* S_RECOVERY		==> */	S_RECOVERY,
+		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
+		/* S_STARTING		==> */	S_HALT,
+		/* S_PENDING		==> */	S_HALT,
+		/* S_STOPPING		==> */	S_STOPPING,
+		/* S_TERMINATE		==> */	S_TERMINATE,
+		/* S_TRANSITION_ENGINE	==> */	S_HALT,
+		/* S_HALT		==> */	S_HALT,
 	},
 };
 
@@ -596,6 +646,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_NOTHING,
 		/* S_TERMINATE		==> */	A_NOTHING,
 		/* S_TRANSITION_ENGINE	==> */	A_NOTHING,
+		/* S_HALT		==> */	A_NOTHING,
 	},
 
 /* Got an I_CCM_EVENT */
@@ -613,6 +664,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_NOTHING,
 		/* S_TERMINATE		==> */	A_NOTHING,
 		/* S_TRANSITION_ENGINE	==> */	A_CCM_EVENT|A_CCM_UPDATE_CACHE,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_CIB_OP */
@@ -630,6 +682,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_CIB_INVOKE,
 		/* S_TERMINATE		==> */	A_CIB_INVOKE,
 		/* S_TRANSITION_ENGINE	==> */	A_CIB_INVOKE,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_CIB_UPDATE */
@@ -647,6 +700,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_LOG,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_DC_TIMEOUT */
@@ -664,6 +718,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_NOTHING,
 		/* S_TERMINATE		==> */	A_NOTHING,
 		/* S_TRANSITION_ENGINE	==> */	A_TE_CANCEL|A_WARN,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_ELECTION */
@@ -681,6 +736,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_LOG,
 		/* S_TERMINATE		==> */	A_LOG,
 		/* S_TRANSITION_ENGINE	==> */	A_ELECTION_VOTE,
+		/* S_HALT		==> */	A_ELECTION_VOTE,
 	},
 
 /* Got an I_PE_CALC */
@@ -698,6 +754,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_PE_INVOKE|A_TE_CANCEL,
+		/* S_HALT		==> */	A_WARN,
 	},
 	
 /* Got an I_RELEASE_DC */
@@ -715,6 +772,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	O_RELEASE|A_ERROR,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_ELECTION_DC */
@@ -732,6 +790,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_WARN|A_ELECTION_VOTE,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_ERROR */
@@ -749,6 +808,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_EXIT_1,
 		/* S_TERMINATE		==> */	A_EXIT_1,
 		/* S_TRANSITION_ENGINE	==> */	A_RECOVER|O_RELEASE,
+		/* S_HALT		==> */	O_SHUTDOWN|A_WARN,
 	},
 
 /* Got an I_FAIL */
@@ -766,6 +826,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN|A_EXIT_1,
 		/* S_TRANSITION_ENGINE	==> */	A_WARN|O_TE_RESTART|A_RECOVER,
+		/* S_HALT		==> */	A_WARN,
 	},
 	
 /* Got an I_INTEGRATED */
@@ -783,6 +844,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_NOTHING,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_FINALIZED */
@@ -800,6 +862,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_NOTHING,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_NODE_JOIN */
@@ -817,6 +880,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_DC_JOIN_OFFER_ONE,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_NOT_DC */
@@ -834,6 +898,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	O_RELEASE,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_RECOVERED */
@@ -851,6 +916,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_WARN,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_RELEASE_FAIL */
@@ -868,6 +934,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN|O_SHUTDOWN,
 		/* S_TERMINATE		==> */	A_WARN|O_SHUTDOWN,
 		/* S_TRANSITION_ENGINE	==> */	A_WARN|O_SHUTDOWN,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_RELEASE_SUCCESS */
@@ -885,6 +952,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_WARN,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_RESTART */
@@ -902,6 +970,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_LOG|O_SHUTDOWN,
 		/* S_TERMINATE		==> */	A_LOG|O_SHUTDOWN,
 		/* S_TRANSITION_ENGINE	==> */	A_LOG|A_TE_INVOKE,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_TE_SUCCESS */
@@ -919,6 +988,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_LOG,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_ROUTER */
@@ -936,6 +1006,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_MSG_ROUTE,
 		/* S_TERMINATE		==> */	A_MSG_ROUTE,
 		/* S_TRANSITION_ENGINE	==> */	A_MSG_ROUTE,
+		/* S_HALT		==> */	A_WARN|A_MSG_ROUTE,
 	},
 
 /* Got an I_SHUTDOWN */
@@ -953,6 +1024,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_SHUTDOWN_REQ,
 		/* S_TERMINATE		==> */	A_SHUTDOWN_REQ,
 		/* S_TRANSITION_ENGINE	==> */	O_RELEASE|A_ELECTION_START,
+		/* S_HALT		==> */	O_RELEASE|A_SHUTDOWN_REQ|A_WARN,
 	},
 
 /* Got an I_TERMINATE */
@@ -970,6 +1042,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	O_SHUTDOWN,
 		/* S_TERMINATE		==> */	O_SHUTDOWN,
 		/* S_TRANSITION_ENGINE	==> */	O_SHUTDOWN|O_RELEASE,
+		/* S_HALT		==> */	O_SHUTDOWN|O_RELEASE|A_WARN,
 	},
 
 /* Got an I_STARTUP */
@@ -987,6 +1060,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_WARN,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_PE_SUCCESS */
@@ -1004,6 +1078,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_LOG,
 		/* S_TERMINATE		==> */	A_LOG,
 		/* S_TRANSITION_ENGINE	==> */	A_LOG,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_JOIN_OFFER */
@@ -1021,6 +1096,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_LOG,
 		/* S_TERMINATE		==> */	A_LOG,
 		/* S_TRANSITION_ENGINE	==> */	O_RELEASE|A_CL_JOIN_REQUEST,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_JOIN_REQUEST */
@@ -1038,6 +1114,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_DC_JOIN_PROCESS_REQ,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_JOIN_RESULT */
@@ -1055,6 +1132,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_LOG,
 		/* S_TERMINATE		==> */	A_LOG,
 		/* S_TRANSITION_ENGINE	==> */	A_WARN|A_DC_JOIN_PROCESS_ACK|A_PE_INVOKE,
+		/* S_HALT		==> */	A_WARN,
 	},
 	
 /* Got an I_WAIT_FOR_EVENT */
@@ -1072,6 +1150,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_LOG,
 		/* S_TERMINATE		==> */	A_LOG,
 		/* S_TRANSITION_ENGINE	==> */	A_LOG,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_DC_HEARTBEAT */
@@ -1089,6 +1168,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_NOTHING,
 		/* S_TERMINATE		==> */	A_NOTHING,
 		/* S_TRANSITION_ENGINE	==> */	A_WARN|A_ELECTION_VOTE,
+		/* S_HALT		==> */	A_WARN|O_DC_TICKLE,
 	},
 
 /* Got an I_LRM_EVENT */
@@ -1106,6 +1186,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_LRM_EVENT,
 		/* S_TERMINATE		==> */	A_LRM_EVENT,
 		/* S_TRANSITION_ENGINE	==> */	A_LRM_EVENT,
+		/* S_HALT		==> */	A_WARN,
 	},
 
 /* Got an I_PENDING */
@@ -1123,6 +1204,25 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_WARN|O_RELEASE,
+		/* S_HALT		==> */	A_WARN,
+	},
+
+/* Got an I_HALT */
+	{
+		/* S_IDLE		==> */	A_WARN,
+		/* S_ELECTION		==> */	A_WARN,
+		/* S_INTEGRATION	==> */	A_WARN,
+		/* S_FINALIZE_JOIN	==> */	A_WARN,
+		/* S_NOT_DC		==> */	A_WARN,
+		/* S_POLICY_ENGINE	==> */	A_WARN,
+		/* S_RECOVERY		==> */	A_WARN,
+		/* S_RELEASE_DC		==> */	A_WARN,
+		/* S_STARTING		==> */	A_WARN,
+		/* S_PENDING		==> */	A_WARN,
+		/* S_STOPPING		==> */	A_WARN,
+		/* S_TERMINATE		==> */	A_WARN,
+		/* S_TRANSITION_ENGINE	==> */	A_WARN,
+		/* S_HALT		==> */	A_WARN,
 	},
 };
 

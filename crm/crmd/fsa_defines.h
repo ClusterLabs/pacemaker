@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.30 2005/01/12 17:18:17 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.31 2005/01/13 13:43:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -63,6 +63,11 @@ enum crmd_fsa_state {
         S_TRANSITION_ENGINE,/* Attempt to make the calculated next stable
 			     * state of the cluster a reality
 			     */
+
+        S_HALT,		/* Freeze - dont do anything
+			 * Something ad happened that needs the admin to fix
+			 * Wait for I_ELECTION
+			 */
 
 	/*  ----------- Last input found in table is above ---------- */
 	S_ILLEGAL	/* This is an illegal FSA state */
@@ -218,6 +223,7 @@ enum crmd_fsa_input {
 
 /* 30 */
 	I_PENDING,
+	I_HALT,
 	
 	/*  ------------ Last input found in table is above ----------- */
 	I_ILLEGAL	/* This is an illegal value for an FSA input */

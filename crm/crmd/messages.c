@@ -718,14 +718,15 @@ handle_request(xmlNodePtr stored_msg)
 		register_fsa_input_w_actions(
 			C_HA_MESSAGE, I_NULL, stored_msg, A_ELECTION_COUNT);
 
-#if 0
-		/* force the DC into an election mode?
-		 * its the old way of doing things but what is gained?
-		 */
-		if(AM_I_DC) {
+		/* Sometimes we _must_ go into S_ELECTION */
+		if(fsa_state == S_HALT) {
 			next_input = I_ELECTION;
-		}
+#if 0
+		} else if(AM_I_DC) {
+		/* This is the old way of doing things but what is gained? */
+			next_input = I_ELECTION;
 #endif
+		}
 		
 	} else if(strcmp(op, CRM_OP_LOCAL_SHUTDOWN) == 0) {
 		

@@ -49,8 +49,8 @@ do_timer_control(long long action,
 		   fsa_data_t *msg_data)
 {
 	gboolean timer_op_ok = TRUE;
+	enum crmd_fsa_input result = I_NULL;
 	
-
 	if(action & A_DC_TIMER_STOP) {
 		timer_op_ok = stopTimer(election_trigger);
 
@@ -67,7 +67,11 @@ do_timer_control(long long action,
 	/* dont start a timer that wasnt already running */
 	if(action & A_DC_TIMER_START && timer_op_ok) {
 		startTimer(election_trigger);
-
+		if(AM_I_DC) {
+			/* there can be only one */
+			result = I_ELECTION;
+		}
+		
 	} else if(action & A_FINALIZE_TIMER_START) {
 		startTimer(finalization_timer);
 
@@ -299,6 +303,9 @@ fsa_input2string(enum crmd_fsa_input input)
 		case I_PENDING:
 			inputAsText = "I_PENDING";
 			break;
+		case I_HALT:
+			inputAsText = "I_HALT";
+			break;
 		case I_ILLEGAL:
 			inputAsText = "I_ILLEGAL";
 			break;
@@ -356,6 +363,9 @@ fsa_state2string(enum crmd_fsa_state state)
 			break;
 		case S_STARTING:
 			stateAsText = "S_STARTING";
+			break;
+		case S_HALT:
+			stateAsText = "S_HALT";
 			break;
 		case S_ILLEGAL:
 			stateAsText = "S_ILLEGAL";
