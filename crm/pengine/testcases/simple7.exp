@@ -11,7 +11,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <crm_event id="2" operation="shutdown_crm" on_node="node1" on_node_uuid="node1" allow_fail="false">
+      <crm_event id="2" operation="do_shutdown" on_node="node1" on_node_uuid="node1" allow_fail="false">
         <args/>
       </crm_event>
     </action_set>
