@@ -708,7 +708,7 @@ handle_message(xmlNodePtr stored_msg)
 			next_input = I_CIB_OP;
 			fprintf(router_strm, "Message result: CIB Op\n");
 
-		} else if(AM_I_DC == FALSE
+		} else if(AM_I_DC
 			  && (strcmp(op, CRM_OPERATION_CREATE) == 0
 			      || strcmp(op, CRM_OPERATION_UPDATE) == 0
 			      || strcmp(op, CRM_OPERATION_DELETE) == 0)) {
