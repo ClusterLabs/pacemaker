@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.62 2005/03/29 06:55:47 andrew Exp $ */
+/* $Id: ccm.c,v 1.63 2005/04/01 12:29:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -444,9 +444,19 @@ do_ccm_update_cache(long long action,
 	if(AM_I_DC) {
 		/* should be sufficient for only the DC to do this */
 		crm_data_t *foo = NULL;
+		HA_Message *no_op = NULL;
+		
 		crm_devel("Updating the CIB");
 		foo = do_update_cib_nodes(NULL, FALSE);
 		free_xml(foo);
+
+		/* Membership changed, remind everyone we're here.
+		 * This will aid detection of duplicate DCs
+		 */
+		no_op = create_request(CRM_OP_NOOP, NULL, NULL,
+				       CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+	
+		send_msg_via_ha(fsa_cluster_conn, no_op);
 	}
 	
 	set_bit_inplace(fsa_input_register, R_CCM_DATA);
