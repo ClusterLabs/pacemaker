@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.9 2005/02/07 11:09:47 andrew Exp $ */
+/* $Id: primatives.c,v 1.10 2005/02/07 20:31:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -499,7 +499,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 		}
 
 		crm_debug("Processing children of <%s id=%s>",
-			  object_name, object_id);
+			  crm_str(object_name), crm_str(object_id));
 		
 		xml_child_iter(
 			new_obj, a_child, NULL, 
@@ -524,7 +524,8 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 			);
 		
 	}
-	crm_debug("Finished with <%s id=%s>", crm_str(object_name), object_id);
+	crm_debug("Finished with <%s id=%s>",
+		  crm_str(object_name), crm_str(object_id));
 	
 	cib_post_notify(CRM_OP_CIB_UPDATE, new_obj, result, equiv_node);
 
