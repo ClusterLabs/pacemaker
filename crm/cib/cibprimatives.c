@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.29 2004/05/23 19:54:04 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.30 2004/05/26 07:05:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -570,6 +570,13 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 			// unset "unclean" 
 			set_xml_property_copy(target, "unclean", NULL);
 		}
+		
+	} else if(safe_str_eq(state, "active")
+		&& safe_str_eq(exp_state, "active")) {
+
+		// unset "unclean" 
+		any_updates = TRUE;
+		set_xml_property_copy(target, "unclean", NULL);
 		
 	} else if(state != NULL) {
 		any_updates = TRUE;
