@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.50 2005/04/05 15:31:13 andrew Exp $ */
+/* $Id: crm.h,v 1.51 2005/04/06 14:13:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,11 +29,18 @@
 #ifdef MCHECK
 #include <mcheck.h>
 #endif
-#include <crm/common/util.h>
+
+#include <config.h>
 
 #ifndef CRM_DEV_BUILD
 #  define CRM_DEV_BUILD 0
 #endif
+
+#define ipc_call_diff_max_ms 1000
+#define action_diff_max_ms   1000
+#define fsa_diff_max_ms      2000
+
+#include <crm/common/util.h>
 
 #define CRM_ASSERT(expr) if((expr) == FALSE) {			\
 		do_crm_log(LOG_CRIT, __PRETTY_FUNCTION__, NULL,	\
