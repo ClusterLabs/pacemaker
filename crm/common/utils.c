@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.21 2005/01/27 08:55:31 andrew Exp $ */
+/* $Id: utils.c,v 1.22 2005/02/01 22:33:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#ifndef _GNU_SOURCE
+#  define _GNU_SOURCE
+#endif
+
 #include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
