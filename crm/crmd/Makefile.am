@@ -59,14 +59,15 @@ halib_PROGRAMS	= crmd
 
 noinst_HEADERS	= 
 
-crmd_SOURCES	= crmdmain.c crmd.c \
-		fsa.c control.c messages.c ccm.c 	\
+crmd_SOURCES	= crmdmain.c crmd.c 					\
+		fsa.c control.c messages.c ccm.c 			\
 		election.c subsystems.c misc.c 
 
 crmd_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crmd_LDFLAGS	= $(XML_LIBS)
 crmd_LDADD	= $(COMMONLIBS) 					\
-		$(top_builddir)/membership/ccm/libccmclient.la  
+		  $(top_builddir)/$(CRM_DIR)/cib/libcib.la		\
+		  $(top_builddir)/membership/ccm/libccmclient.la  
 
 #
 
