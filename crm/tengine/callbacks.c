@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.20 2005/04/01 10:13:33 andrew Exp $ */
+/* $Id: callbacks.c,v 1.21 2005/04/06 14:38:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,11 +58,17 @@ te_update_confirm(const char *event, HA_Message *msg)
 		send_abort("Illegal update", update);
 		done = TRUE;
 		
+	} else if(strcmp(op, CRM_OP_CIB_ERASE) == 0) {
+		/* these are always unexpected, trigger the PE */
+		crm_err("Need to trigger an election here so that"
+			" the current state of all nodes is obtained");
+		send_abort("Erase event", update);
+		done = TRUE;
+
 	} else if(strcmp(op, CRM_OP_CIB_CREATE) == 0
 		  || strcmp(op, CRM_OP_CIB_DELETE) == 0
 		  || strcmp(op, CRM_OP_CIB_REPLACE) == 0
-		  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
-		  || strcmp(op, CRM_OP_CIB_ERASE) == 0) {
+		  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
 		
 		/* these are always unexpected, trigger the PE */
 		send_abort("Non-update change", update);
@@ -114,7 +120,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	const char *ref    = cl_get_string(msg, XML_ATTR_REFERENCE);
 	const char *op     = cl_get_string(msg, F_CRM_TASK);
 
-	crm_log_message(LOG_VERBOSE, msg);
+	crm_log_message(LOG_DEV, msg);
 	
 	if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE), XML_ATTR_RESPONSE)
 	   && safe_str_neq(op, CRM_OP_EVENTCC)) {
@@ -140,7 +146,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 
 		crm_trace("Unpacking graph...");
 		unpack_graph(xml_data);
-		crm_trace("Initiating transition...");
+		crm_debug("Initiating transition...");
 
 		in_transition = TRUE;
 
