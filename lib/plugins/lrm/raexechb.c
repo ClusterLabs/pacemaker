@@ -45,6 +45,30 @@
 #define PIL_PLUGINLICENSEURL	URL_PUBDOM
 
 static const char * RA_PATH = HB_RA_DIR;
+
+#define meta_data_template  "\n"\
+"<?xml version=\"1.0\"?>\n"\
+"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"\
+"<resource-agent name=%s"\
+"\" version=\"0.1\">\n"\
+"  <version>1.0</version>\n"\
+"  <longdesc lang=\"en\">\n"\
+"    %s"\
+"  </longdesc>\n"\
+"  <shortdesc lang=\"en\">%s</shortdesc>\n"\
+"  <parameters>\n"\
+"  </parameters>\n"\
+"  <actions>\n"\
+"    <action name=\"start\"   timeout=\"15\" />\n"\
+"    <action name=\"stop\"    timeout=\"15\" />\n"\
+"    <action name=\"status\"  timeout=\"15\" />\n"\
+"    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"\
+"    <action name=\"meta-data\"  timeout=\"5\" />\n"\
+"  </actions>\n"\
+"  <special tag=\"heartbeart\">\n"\
+"  </special>\n"\
+"</resource-agent>\n"
+
 /* Map to the return code of the 'monitor' operation defined in the OCF RA
  * specification.
  */
@@ -138,6 +162,15 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	GString * debug_info;
 	char * optype_tmp = NULL;
 	int index_tmp = 0;
+
+	/* How to generate the meta-data? There is nearly no value
+	 * information in meta-data build up in current way. 
+	 * Should directly add meta-data to the script itself?
+	 */
+	if ( strncmp(op_type, "meta-data", strlen("meta-data")) == 0 ) {
+		printf("%s", get_resource_meta(rsc_type, provider));
+		exit(0);
+	}
 
 	/* To simulate the 'monitor' operation with 'status'.
 	 * Now suppose there is no 'monitor' operation for heartbeat scripts.
@@ -264,7 +297,12 @@ get_resource_list(GList ** rsc_info)
 static char*
 get_resource_meta(const char* rsc_type,  const char* provider)
 {
-	return g_strndup(rsc_type, strnlen(rsc_type, MAX_LENGTH_OF_RSCNAME));
+	GString * meta_data;
+
+	meta_data = g_string_new("");
+	g_string_sprintf( meta_data, meta_data_template, rsc_type
+			, rsc_type, rsc_type);
+	return meta_data->str;
 }	
 static int
 get_provider_list(const char* ra_type, GList ** providers)
