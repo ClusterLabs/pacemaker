@@ -531,8 +531,15 @@ cib_native_notify(gpointer data, gpointer user_data)
 {
 	struct ha_msg *msg = user_data;
 	cib_notify_client_t *entry = data;
-	const char *event = cl_get_string(msg, F_SUBTYPE);
+	const char *event = NULL;
 
+	if(msg == NULL) {
+		crm_warn("Skipping callback - NULL message");
+		return;
+	}
+
+	event = cl_get_string(msg, F_SUBTYPE);
+	
 	if(entry == NULL) {
 		crm_warn("Skipping callback - NULL callback client");
 		return;
@@ -549,6 +556,7 @@ cib_native_notify(gpointer data, gpointer user_data)
 	
 	crm_trace("Invoking callback for %p/%s event...", entry, event);
 	entry->callback(event, msg);
+	crm_trace("Callback invoked...");
 }
 
 gboolean
