@@ -247,6 +247,8 @@ class ClusterManager(UserDict):
             "StopDRBDCmd"    : None,
             "StatusDRBDCmd"  : None,
             "DRBDCheckconf"  : None,
+            "BreakCommCmd"   : None,
+            "FixCommCmd"     : None,
             "TestConfigDir"  : None,
             "LogFileName"    : None,
 

@@ -713,14 +713,16 @@ class Fastdetection(CTSTest):
                 self.CM.rsh(node, self.CM["StartCmd"])
                 self.CM.ShouldBeStatus[node]=self.CM["up"]
                 return self.failure("Didn't find the log message")
+            # Can't do this before killing heartbeat, because it will respawn them
+            self.CM.rsh(node, "killall -9 ccm ipfail&")
         else:
-                return self.failure("couldn't stop heartbeat")
+                return self.failure("Couldn't stop heartbeat")
 
     def is_applicable(self):
         '''this test is always applicable'''
         return 1
 
-#AllTestClasses.append(Fastdetection)
+AllTestClasses.append(Fastdetection)
 
 ##############################################################################
 class BandwidthTest(CTSTest):
@@ -742,12 +744,14 @@ class BandwidthTest(CTSTest):
             
         cf = HBConfig()
         eth = None
+        port = None
         for cfp in cf.Parameters:
             if cfp == "bcast":
                 eth=cf.Parameters["bcast"][0]
                 break
             if cfp == "mcast":
-                eth = cf.Parameters["mcast"][0]
+                eth = cf.Parameters["mcast"][0][0]
+                port = cf.Parameters["mcast"][0][2]
                 break
             if cfp == "ucast":
                 eth = cf.Parameters["ucast"][0]
@@ -756,13 +760,13 @@ class BandwidthTest(CTSTest):
         if eth == None:
             return self.skipped()
 
-        port=None
-        for cfp in cf.Parameters:
-            if cfp == "udpport":
-                port = cf.Parameters["udpport"][0]
-                break
         if port == None:
-            port =  694
+            for cfp in cf.Parameters:
+                if cfp == "udpport":
+                    port = cf.Parameters["udpport"][0]
+                    break
+            if port == None:
+                port =  694
         
         bandwidth = 0.0 
         for i in 1,2,3,4,5:
@@ -814,7 +818,7 @@ class BandwidthTest(CTSTest):
         '''BandwidthTest is always applicable'''
         return 1
 
-#AllTestClasses.append(BandwidthTest)
+AllTestClasses.append(BandwidthTest)
 
 ##########################################################################
 class RedundantpathTest(CTSTest):
@@ -1060,35 +1064,12 @@ class Split_brainTest(CTSTest):
                    break
 
         if IPaddr==None:
-            self.failure("Cannot find the IPaddr resource to test")
+            return self.failure("Cannot find the IPaddr resource to test")
 
-	'''If there are redundant path, break the paths'''
-        eths = []
-        serials = []
-        for cfp in cf.Parameters:
-            if cfp == "bcast":
-                eths = cf.Parameters["bcast"]
-            if cfp == "mcast":
-                if cf.Parameters["mcast"][0] not in eths:
-                   eths.append(cf.Parameters["mcast"][0])
-            if cfp == "ucast":
-                if cf.Parameters["ucast"][0] not in eths:
-                    eths.append(cf.Parameters["mcast"][0])
-            if cfp == "serial":
-               serials = cf.Parameters["serial"]
-
-        for eth in eths:
-            self.CM.rsh(node,"ifconfig %s down" % eth)
-        for serial in serials:
-            self.CM.rsh(node,"setserial %s uart none" % serial)
+        if self.CM.rsh(node,self.CM["BreakCommCmd"]) != 0:
+            return self.failure("Cannot break the communication")
 
         done = time.time()+self.timeout+1
-
-	# FIXME: This next loop should probably be redone
-	# be using the resource operations and objects not some
-	# hard-wired command and output.  You may need to
-	# hardwire the resource type, but not the command, output, etc.
-	# in fact, this will fail to work even for heartbeat in the future.
 
         for node in self.CM.Env["nodes"]:
             while (time.time() < done):
@@ -1098,16 +1079,11 @@ class Split_brainTest(CTSTest):
                 else:
                     time.sleep(1)
 
-        if eths != []:
-            for eth in eths:
-                self.CM.rsh(node,"ifconfig %s up" % eth)
-        if serials != []:
-            for serial in serials:
-                self.CM.rsh(node,"setserial %s uart 16550" % serial)
-        if time.time() > done():
-            return self.failure("Both nodes don't both take over resources.")
-          
+        if self.CM.rsh(node, self.CM["FixCommCmd"]) != 0:
+            return self.failure("Cannot fix the communication")
+
         done = time.time()+self.timeout+1
+
         while time.time() < done:
             for audit in CTSaudits.AuditList(self.CM):
                 if not audit():
@@ -1125,7 +1101,7 @@ class Split_brainTest(CTSTest):
         '''Split_brain is applicable'''
         return 1
 
-#AllTestClasses.append(Split_brainTest)
+AllTestClasses.append(Split_brainTest)
 
 def TestList(cm):
     result = []
