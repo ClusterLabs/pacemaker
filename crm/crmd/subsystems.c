@@ -55,9 +55,7 @@ static gboolean run_command    (struct crm_subsystem_s *centry,
 				const char *options,
 				gboolean update_pid);
 
-gboolean crmd_authorize_message(xmlNodePtr root_xml_node,
-				IPC_Message *client_msg,
-				crmd_client_t *curr_client);
+xmlNodePtr do_lrm_startup_query(void);
 
 struct crm_subsystem_s *cib_subsystem = NULL;
 struct crm_subsystem_s *te_subsystem  = NULL;
@@ -546,7 +544,7 @@ do_lrm_register(long long action,
 	}
 	
 	CRM_DEBUG("LRM: sigon...");
-	ret = fsa_lrm_conn->lrm_ops->signon(fsa_lrm_connection,
+	ret = fsa_lrm_conn->lrm_ops->signon(fsa_lrm_conn,
 						  "crmd");
 
 	if(ret != HA_OK) {
@@ -555,7 +553,7 @@ do_lrm_register(long long action,
 	}
 	
 	CRM_DEBUG("LRM: set_lrm_callback...");
-	ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(fsa_lrm_connection,
+	ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(fsa_lrm_conn,
 							    lrm_op_callback,
 							    lrm_monitor_callback);
 	
@@ -572,6 +570,98 @@ do_lrm_register(long long action,
 	
 	FNRET(I_NULL);
 }
+
+
+xmlNodePtr
+do_lrm_startup_query(void)
+{
+	GList* lrm_list = NULL;
+	xmlNodePtr data = create_xml_node(NULL, "lrm");
+	xmlNodePtr agent_list = create_xml_node(data, "lrm_agents");
+	
+	lrm_list = fsa_lrm_conn->lrm_ops->get_ra_supported(fsa_lrm_conn);
+	if (NULL != lrm_list) {
+		GList* element = g_list_first(lrm_list);
+		while (NULL != element) {
+			char *rsc_type = (char*)element->data;
+			
+			xmlNodePtr agent =
+				create_xml_node(agent_list, "lrm_agent");
+			
+			set_xml_property_copy(agent, "type", rsc_type);
+			/* we dont have these yet */
+			set_xml_property_copy(agent, "class", NULL);
+			set_xml_property_copy(agent, "version", NULL);
+			
+			element = g_list_next(element);
+		}
+	}
+	
+	g_list_free(lrm_list);
+	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
+
+	xmlNodePtr rsc_list = create_xml_node(data, "lrm_resources");
+	if (NULL != lrm_list) {
+		GList* element = g_list_first(lrm_list);
+		while (NULL != element) {
+			lrm_rsc_t *the_rsc = (lrm_rsc_t*)element->data;
+			
+/* 				const char*	ra_type; */
+/* 				GHashTable* 	params; */
+			
+			xmlNodePtr xml_rsc =
+				create_xml_node(rsc_list, "rsc_state");
+			
+			set_xml_property_copy(xml_rsc,
+					      "id",
+					      the_rsc->id);
+			
+			set_xml_property_copy(xml_rsc,
+					      "rsc_id",
+					      the_rsc->name);
+			
+			set_xml_property_copy(xml_rsc,
+					      "node_id",
+					      fsa_our_uname);
+			
+			state_flag_t cur_state = 0;
+			GList *rsc_ops = the_rsc->ops->get_cur_state(
+				the_rsc, &cur_state);
+			
+			if(rsc_ops == NULL)
+				continue;
+			
+			GList* ops_iter = g_list_first(rsc_ops);
+			if(ops_iter == NULL)
+				continue;
+			
+			set_xml_property_copy(xml_rsc,
+					      "rsc_op",
+					      (char*)ops_iter->data);
+			
+			const char *cur_state_str = NULL;
+			switch(cur_state) {
+				case LRM_RSC_IDLE:
+					cur_state_str = "Idle";
+					break;
+				case LRM_RSC_BUSY:
+					cur_state_str = "Busy";
+					break;
+			}
+			
+			
+			set_xml_property_copy(xml_rsc,
+					      "op_result",
+					      cur_state_str);
+			
+			element = g_list_next(element);
+		}
+	}
+	g_list_free(lrm_list);
+
+	return data;
+}
+
 
 /*	 A_LRM_INVOKE	*/
 enum crmd_fsa_input
@@ -608,110 +698,30 @@ do_lrm_invoke(long long action,
 	</node_state>
 		 
 	if(startup query) {
-		GList* lrm_list = NULL;
-		xmlNodePtr msg;
-		xmlNodePtr data = create_xml_node(NULL, "lrm");
-		xmlNodePtr agent_list = create_xml_node(data, "lrm_agents");
 
-		lrm_list = lrm_get_ra_supported (ll_lrm_t* lrm);
-		if (NULL != lrm_list) {
-			GList* element = g_list_first(lrm_list);
-			while (NULL != element) {
-				char *rsc_type = (char*)element->data;
-
-				xmlNodePtr agent =
-					create_xml_node(agent_list, "lrm_agent");
-
-				set_xml_property_copy(agent, "type", rsc_type);
-				set_xml_property_copy(agent, "class", NULL);
-				set_xml_property_copy(agent, "version", NULL);
-				
-				element = g_list_next(element);
-			}
-		}
-
-		xmlNodePtr rsc_list = create_xml_node(data, "lrm_resources");
-
-		lrm_list = lrm_get_all_rscs(fsa_lrm_conn);
-		if (NULL != lrm_list) {
-			GList* element = g_list_first(lrm_list);
-			while (NULL != element) {
-				lrm_rsc_t *the_rsc = (lrm_rsc_t*)element->data;
-				
-/* 				const char*	ra_type; */
-/* 				GHashTable* 	params; */
-
-				xmlNodePtr agent =
-					create_xml_node(rsc_list, "rsc_state");
-
-				set_xml_property_copy(rsc_list,
-						      "id",
-						      the_rsc->id);
-				
-				set_xml_property_copy(rsc_list,
-						      "rsc_id",
-						      the_rsc->name);
-				
-				set_xml_property_copy(rsc_list,
-						      "node_id",
-						      fsa_our_uname);
-
-				state_flag_t cur_state = 0;
-				GList *rsc_ops = the_rsc->ops->get_cur_state(
-					the_rsc, &cur_state);
-
-				if(rsc_ops == NULL)
-					continue;
-
-				GList* ops_iter = g_list_first(rsc_ops);
-				if(ops_iter == NULL)
-					continue;
-				
-				set_xml_property_copy(rsc_list,
-						      "rsc_op",
-						      (char*)ops_iter->data);
-
-				const char *cur_state_str = NULL;
-				swtich(cur_state) {
-					case LRM_RSC_IDLE:
-						cur_state_str = "Idle";
-						break;
-					case LRM_RSC_BUSY:
-						cur_state_str = "Busy";
-						break;
-				}
-				
-				
-				set_xml_property_copy(rsc_list,
-						      "op_result",
-						      cur_state_str);
-
-				element = g_list_next(element);
-			}
-		}
-		g_list_free(rid_str_list);
-
-		msg = create_from(data);
+		xmlNodePtr data = do_lrm_startup_query();
+		xmlNodePtr msg  = create_from(data);
 		put_message(msg);
 		return I_MESSAGE;
 
+	}
+	
+	decode lrm message;
+	if(monitor op) {
+		
+		lrm_mon_t* mon = g_new(lrm_mon_t, 1);
+		mon->op_type = "status";
+		mon->params = NULL;
+		mon->timeout = 0;
+		mon->user_data = NULL;
+		mon->mode = LRM_MONITOR_SET;
+		mon->interval = 2;
+		mon->target = 1;
+		rsc->ops->set_monitor(rsc,mon);
+		printf_mon(mon);
+		mon = g_new(lrm_mon_t, 1);
 	} else {
-		decode lrm message;
-		if(monitor op) {
-
-			lrm_mon_t* mon = g_new(lrm_mon_t, 1);
-			mon->op_type = "status";
-			mon->params = NULL;
-			mon->timeout = 0;
-			mon->user_data = NULL;
-			mon->mode = LRM_MONITOR_SET;
-			mon->interval = 2;
-			mon->target = 1;
-			rsc->ops->set_monitor(rsc,mon);
-			printf_mon(mon);
-			mon = g_new(lrm_mon_t, 1);
-		} else {
-			// make sure its added to the list
+		// make sure its added to the list
 /*
 <!ELEMENT resource (instance_attributes*)>
 <!ATTLIST resource
@@ -731,66 +741,63 @@ do_lrm_invoke(long long action,
 <!ELEMENT parameters (nvpair*)>
 
 */
-			xmlNodePtr msg = NULL;
-			xmlNodePtr resource =
-				find_xml_node_nested(msg, NULL, 0);
-			
-			const char *rsc_path[] = 
-				{
-					XML_TAG_MSG,
-					"msg_data",
-					"rsc_op",
-					"resource",
-					"instance_attributes",
-					"parameters"
-				};
-
-			rsc_id_t rid =
-				get_xml_attr_nested(msg,
+		xmlNodePtr msg = NULL;
+		xmlNodePtr resource =
+			find_xml_node_nested(msg, NULL, 0);
+		
+		const char *rsc_path[] = 
+			{
+				XML_TAG_MSG,
+				"msg_data",
+				"rsc_op",
+				"resource",
+				"instance_attributes",
+				"parameters"
+			};
+		
+		rsc_id_t rid =
+			get_xml_attr_nested(msg,
+					    rsc_path,
+					    DIMOF(rsc_path) -2,
+					    "id", TRUE);
+		
+		lrm_rsc_t *rsc = fsa_lrm_conn->lrm_ops->get_rsc(
+			fsa_lrm_conn, rid);
+		
+		if(rsc == NULL) {
+			CRM_DEBUG("add_rsc...");
+			fsa_lrm_conn->lrm_ops->add_rsc(
+				fsa_lrm_conn, rid,
+				get_xml_attr_nested(msg, 
 						    rsc_path,
 						    DIMOF(rsc_path) -2,
-						    "id", TRUE);
-
-			lrm_rsc_t *rsc = fsa_lrm_conn->lrm_ops->get_rsc(
-				fsa_lrm_conn, rid);
+						    "class", TRUE),
+				get_xml_attr_nested(msg, 
+						    rsc_path,
+						    DIMOF(rsc_path) -2,
+						    "type", TRUE),
+				xml2list(msg, rsc_params));
 			
-			if(rsc == NULL) {
-				CRM_DEBUG("add_rsc...");
-				fsa_lrm_conn->lrm_ops->add_rsc(
-					fsa_lrm_conn, rid,
-					get_xml_attr_nested(msg, 
-							    rsc_path,
-							    DIMOF(rsc_path) -2,
-							    "class", TRUE),
-					get_xml_attr_nested(msg, 
-							    rsc_path,
-							    DIMOF(rsc_path) -2,
-							    "type", TRUE),
-					xml2list(msg, rsc_params));
-				
-				rsc = fsa_lrm_conn->lrm_ops->get_rsc(
-					fsa_lrm_conn, rid);
-			}
-				
-
-			// now do the op
-			CRM_DEBUG("perform_op...");
-			lrm_op_t* op = g_new(lrm_op_t, 1);
-			op->op_type = get_xml_attr_nested(msg,
-							  rsc_path,
-							  DIMOF(rsc_path) -3,
-							  "operation", TRUE);
-			op->params = xml2list(msg, rsc_params);
-			op->timeout = 0;
-			op->user_data = rsc;
-			rsc->ops->perform_op(rsc, op);
+			rsc = fsa_lrm_conn->lrm_ops->get_rsc(
+				fsa_lrm_conn, rid);
 		}
+		
+		// now do the op
+		CRM_DEBUG("perform_op...");
+		lrm_op_t* op = g_new(lrm_op_t, 1);
+		op->op_type = get_xml_attr_nested(msg,
+						  rsc_path,
+						  DIMOF(rsc_path) -3,
+						  "operation", TRUE);
+		op->params = xml2list(msg, rsc_params);
+		op->timeout = 0;
+		op->user_data = rsc;
+		rsc->ops->perform_op(rsc, op);
 	}
-	
 
-	while (TRUE) {
-		lrm->lrm_ops->rcvmsg(lrm,TRUE);
-	}
+/* 	while (TRUE) { */
+/* 		lrm->lrm_ops->rcvmsg(lrm,TRUE); */
+/* 	} */
 #endif
 	
 	FNRET(I_NULL);
