@@ -118,7 +118,6 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 #endif
 
 	delete_ha_msg_input(new_input);
-	s_crmd_fsa(C_HA_MESSAGE);
 
 	return;
 }
@@ -355,6 +354,7 @@ crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 	}
 
 	crm_devel("%d HA messages dispatched", lpc);
+	s_crmd_fsa(C_HA_MESSAGE);
 
 	if (channel && (channel->ch_status != IPC_CONNECT)) {
 		crm_crit("Lost connection to heartbeat service.");
