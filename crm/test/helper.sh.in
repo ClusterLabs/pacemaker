@@ -35,7 +35,7 @@ HAVAR_DIR=@HA_VARLIBDIR@/heartbeat
 HAINIT_DIR=@INITDIR@
 
 INIT_USER=root
-CRMD_USER=root
+CRMD_USER=hacluster
 ADMIN_USER=root
 
 test_node_1=""
@@ -122,7 +122,6 @@ function remote_cmd() {
     if [ $local_version = "1" ]; then
 	su - ${user} -c "$*"
     else
-	echo "$*" >> cmds.out
 	`which ssh` ${user}@${host} "$*"
     fi
     return $?;
@@ -263,19 +262,19 @@ function make_incarnation()
     args=$*
 
     uuid=`uuidgen`
-    node_xml="'<incarnation id=\"${id}\" incarnation_node_max=\"1\" incarnation_max=\"${max}\">"
+    node_xml="'<incarnation id=\\\"${id}\\\" incarnation_node_max=\\\"1\\\" incarnation_max=\\\"${max}\\\">"
 
     if [ ! -z $priority -a "x$priority" != "x-" ]; then
-	node_xml="$node_xml priority=\"${priority}\""
+	node_xml="$node_xml priority=\\\"${priority}\\\""
     fi
 
-    node_xml="$node_xml <resource id=\"child_${id}\" class=\"${class}\" type=\"${type}\""
+    node_xml="$node_xml <resource id=\\\"child_${id}\\\" class=\\\"${class}\\\" type=\\\"${type}\\\""
 
     if [ ! -z $version -a "x$version" != "x-" ]; then
-	node_xml="$node_xml version=\"${version}\""
+	node_xml="$node_xml version=\\\"${version}\\\""
     fi
     if [ ! -z $stopfail -a "x$stopfail" != "x-" ]; then
-	node_xml="$node_xml on_stopfail=\"${stopfail}\""
+	node_xml="$node_xml on_stopfail=\\\"${stopfail}\\\""
     fi
     node_xml="$node_xml >";
 
@@ -420,7 +419,11 @@ function dump_node() {
     remote_cmd ${ADMIN_USER} ${a_node} "rm -f /tmp/crm-${a_node_index}"
 
     cd $test_dump_dir
-    scp -r ${ADMIN_USER} ${a_node}:${dump_file} .
+    if [ $local_version = 1 ]; then
+	cp -r ${dump_file} .
+    else 
+	scp -r ${ADMIN_USER} ${a_node}:${dump_file} .
+    fi
     tar zxvf ${a_node_index}-${a_node}.tgz
     cd -
     remote_cmd ${ADMIN_USER} ${a_node} "rm ${dump_file}"
@@ -470,12 +473,12 @@ function do_cmd() {
     if [ $cmd = "echo" ]; then
 	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
 		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
-		echo -n -e "\033[01;33m"
+		echo -n -e "\033[01;32m"
 		$cmdline | tee -a $test_dump_dir/test.txt
 		echo -n -e "\033[00m"
 	    elif [ $OUTPUT_ECHO -eq 1 -a $OUTPUT_CMDS -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
 		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
-		echo -n -e "\033[01;33m"
+		echo -n -e "\033[01;32m"
 		$cmdline | tee -a $test_dump_dir/test.txt
 		echo -n -e "\033[00m"
 	    fi
