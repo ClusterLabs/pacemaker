@@ -30,7 +30,7 @@ htmlfiles		= HardwareGuide.html	\
 
 txtfiles                = $(htmlfiles:.html=.txt)
 
-CLEANFILES              = $(txtfiles) ChangeLog
+CLEANFILES              = ChangeLog
 
 SPECSRC 		= $(top_builddir)/heartbeat.spec
 
@@ -42,7 +42,7 @@ doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles)
 
 man_MANS		= heartbeat.8 apphbd.8
 
-EXTRA_DIST = $(htmlfiles) $(man_MANS) $(OTHER_DOCS)
+EXTRA_DIST = $(txtfiles) $(htmlfiles) $(man_MANS) $(OTHER_DOCS)
 
 ChangeLog: $(SPECSRC)
 	rm -fr ChangeLog
