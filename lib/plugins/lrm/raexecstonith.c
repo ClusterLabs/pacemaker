@@ -169,7 +169,7 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	 * Now handle "meta-data" operation locally. 
 	 * Should be changed in the future?
 	 */
-	if (strncmp(op_type, "meta-data", strlen("meta-data")) == 0) {
+	if ( 0 == STRNCMP_CONST(op_type, "meta-data")) {
 		char * tmp;
 		tmp = get_resource_meta(rsc_type, provider);
 		printf("%s", tmp);

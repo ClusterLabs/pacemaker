@@ -220,7 +220,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	/* Specially handle the operation "metameta-data". To build up its
 	 * output from templet, dummy data and its comment head.
 	 */
-	if ( strncmp(op_type, "meta-data", strlen("meta-data")) == 0 ) {
+	if ( 0 == STRNCMP_CONST(op_type, "meta-data")) {
 		printf("%s", get_resource_meta(rsc_type, provider));
 		exit(0);
 	}
@@ -228,7 +228,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	/* To simulate the 'monitor' operation with 'status'.
 	 * Now suppose there is no 'monitor' operation for LSB scripts.
 	 */
-	if (0 == strncmp(op_type, "monitor", strlen("monitor"))) {
+	if (0 == STRNCMP_CONST(op_type, "monitor")) {
 		optype_tmp = g_strdup("status");
 	} else {
 		optype_tmp = g_strdup(op_type);
@@ -279,7 +279,7 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 	/* Except op_type equals 'status', the UNIFORM_RET_EXECRA is compatible
 	   with LSB standard.
 	*/
-	if ( strncmp(op_type, "status", strlen("status")) == 0 ) {
+	if ( 0 == STRNCMP_CONST(op_type, "status")) {
 		if (ret_execra < 0 || ret_execra > 4 ) {
 			ret_execra = EXECRA_UNKNOWN_ERROR;
 		}

@@ -157,7 +157,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	 * information in meta-data build up in current way. 
 	 * Should directly add meta-data to the script itself?
 	 */
-	if ( strncmp(op_type, "meta-data", strlen("meta-data")) == 0 ) {
+	if ( 0 == STRNCMP_CONST(op_type, "meta-data") ) {
 		printf("%s", get_resource_meta(rsc_type, provider));
 		exit(0);
 	}
@@ -165,7 +165,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	/* To simulate the 'monitor' operation with 'status'.
 	 * Now suppose there is no 'monitor' operation for heartbeat scripts.
 	 */
-	if (0 == strncmp(op_type, "monitor", strlen("monitor")) ) {
+	if ( 0 == STRNCMP_CONST(op_type, "monitor") ) {
 		optype_tmp = g_strdup("status");
 	} else {
 		optype_tmp = g_strdup(op_type);
@@ -275,7 +275,7 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 		   * running_pattern2 = "*OK*";
 	const char * lower_std_output = NULL;
 	
-	if ( strncmp(op_type, "status", strlen("status")) == 0 ) {
+	if ( 0 == STRNCMP_CONST(op_type, "status") ) {
 		if (std_output == NULL ) {
 			cl_log(LOG_WARNING, "The heartbeat RA may not to output "
 				"status string, such as 'running', to stdout.");
