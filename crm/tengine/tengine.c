@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.24 2004/08/03 09:00:47 andrew Exp $ */
+/* $Id: tengine.c,v 1.25 2004/08/18 07:49:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -812,8 +812,10 @@ send_success(void)
 	crm_trace("Sending \"complete\" message");
 
 #ifdef MSG_LOG
-	fprintf(msg_te_strm, "[Result ]\tTransition complete\n");
-	fflush(msg_te_strm);
+	if(msg_te_strm != NULL) {
+		fprintf(msg_te_strm, "[Result ]\tTransition complete\n");
+		fflush(msg_te_strm);
+	}
 #endif
 	
 	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TECOMPLETE);
