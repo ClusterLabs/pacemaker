@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.16 2005/02/25 10:25:48 andrew Exp $ */
+/* $Id: notify.c,v 1.17 2005/02/28 11:07:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -128,7 +128,8 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 			crm_warn("Notification of client %s/%s failed",
 				 client->name, client->id);
 		}
-		CRM_DEV_ASSERT(is_confirm && client->channel->send_queue->current_qlen < client->channel->send_queue->max_qlen);
+		qlen = client->channel->send_queue->current_qlen;
+		CRM_DEV_ASSERT(is_confirm == FALSE || qlen <= max_qlen);
 		
 	} else {
 		crm_trace("Client %s/%s not interested in %s notifications",
