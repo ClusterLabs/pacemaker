@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.28 2005/02/19 18:20:25 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.29 2005/02/20 14:38:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -110,7 +110,6 @@ main(int argc, char **argv)
 	int argerr = 0;
 	int flag;
 	ll_cluster_t *hb_cluster = NULL;
-	int level = 0;
 
 	static struct option long_options[] = {
 		/* Top-level Options */
@@ -184,11 +183,10 @@ main(int argc, char **argv)
 */
 			
 			case 'V':
-				level = get_crm_log_level();
 				BE_VERBOSE = TRUE;
 				admin_verbose = XML_BOOLEAN_TRUE;
 				cl_log_enable_stderr(TRUE);
-				set_crm_log_level(level+1);
+				alter_debug(DEBUG_INC);
 				break;
 			case 't':
 				message_timeout_ms = atoi(optarg);

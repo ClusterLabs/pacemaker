@@ -55,7 +55,7 @@ AM_CFLAGS		= @CFLAGS@					\
 lib_LTLIBRARIES		= 
 
 ## binary progs
-halib_PROGRAMS		= crmadmin cibadmin
+halib_PROGRAMS		= crmadmin cibadmin ccm_epoche
 
 ## SOURCES
 
@@ -71,6 +71,11 @@ cibadmin_SOURCES	= cibadmin.c
 cibadmin_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cibadmin_LDFLAGS	= $(XML_LIBS)
 cibadmin_LDADD		= $(COMMONLIBS) 				
+
+ccm_epoche_SOURCES	= ccm_epoche.c
+ccm_epoche_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+ccm_epoche_LDADD	= $(COMMONLIBS) \
+			  $(top_builddir)/membership/ccm/libccmclient.la
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

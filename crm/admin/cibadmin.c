@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.24 2005/02/19 18:20:25 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.25 2005/02/20 14:38:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -97,7 +97,6 @@ main(int argc, char **argv)
 	int option_index = 0;
 	int argerr = 0;
 	int flag;
-	int level = 0;
 	char *admin_input_xml = NULL;
 	crm_data_t *output = NULL;
 	
@@ -202,10 +201,9 @@ main(int argc, char **argv)
 				command_options |= cib_scope_local;
 				break;
 			case 'V':
-				level = get_crm_log_level();
 				command_options = command_options | cib_verbose;
 				cl_log_enable_stderr(TRUE);
-				set_crm_log_level(level+1);
+				alter_debug(DEBUG_INC);
 				break;
 			case '?':
 				usage(crm_system_name, LSB_EXIT_OK);
