@@ -30,22 +30,23 @@
 #include <crm/dmalloc_wrapper.h>
 
 int num_join_invites = 0;
+GHashTable *join_offers         = NULL;
 GHashTable *join_requests       = NULL;
 GHashTable *confirmed_nodes     = NULL;
 xmlNodePtr our_generation       = NULL;
 const char *max_generation_from = NULL;
 
-void finalize_join_for(gpointer key, gpointer value, gpointer user_data);
 void initialize_join(void);
-
+void finalize_join_for(gpointer key, gpointer value, gpointer user_data);
+void join_send_offer(gpointer key, gpointer value, gpointer user_data);
 
 /*	 A_DC_JOIN_OFFER_ALL	*/
 enum crmd_fsa_input
 do_dc_join_offer_all(long long action,
-		    enum crmd_fsa_cause cause,
-		    enum crmd_fsa_state cur_state,
-		    enum crmd_fsa_input current_input,
-		    fsa_data_t *msg_data)
+		     enum crmd_fsa_cause cause,
+		     enum crmd_fsa_state cur_state,
+		     enum crmd_fsa_input current_input,
+		     fsa_data_t *msg_data)
 {
 	/* reset everyones status back to down or in_ccm in the CIB */
 	xmlNodePtr update     = NULL;
@@ -64,7 +65,7 @@ do_dc_join_offer_all(long long action,
 
 		const char *node_id = xmlGetProp(node_entry, XML_ATTR_UNAME);
 		gpointer a_node = g_hash_table_lookup(
-				fsa_membership_copy->members, node_id);
+			fsa_membership_copy->members, node_id);
 
 		if(a_node != NULL || (safe_str_eq(fsa_our_uname, node_id))) {
 			/* handled by do_update_cib_node() */
@@ -86,16 +87,25 @@ do_dc_join_offer_all(long long action,
 	free_xml(do_update_cib_nodes(update, TRUE));
 	free_xml(cib_copy);
 
+#if 0
 	/* Avoid ordered message delays caused when the CRMd proc
 	 * isnt running yet (ie. send as a broadcast msg which are never
 	 * sent ordered.
 	 */
 	send_request(NULL, NULL, CRM_OP_WELCOME,
 		     NULL, CRM_SYSTEM_CRMD, NULL);	
+#else
 
+	crm_debug("Offering membership to %d clients",
+		  fsa_membership_copy->members_size);
+	
+	g_hash_table_foreach(fsa_membership_copy->members,
+			     join_send_offer, NULL);
+	
+#endif
 /* No point hanging around in S_INTEGRATION if we're the only ones here! */
 	if(g_hash_table_size(join_requests)
-		  >= fsa_membership_copy->members_size) {
+	   >= fsa_membership_copy->members_size) {
 		crm_info("Not expecting any join acks");
 		register_fsa_input(cause, I_SUCCESS, msg_data->data);
 		return I_NULL;
@@ -116,53 +126,60 @@ do_dc_join_offer_all(long long action,
 /*	 A_DC_JOIN_OFFER_ONE	*/
 enum crmd_fsa_input
 do_dc_join_offer_one(long long action,
-		enum crmd_fsa_cause cause,
-		enum crmd_fsa_state cur_state,
-		enum crmd_fsa_input current_input,
-		fsa_data_t *msg_data)
+		     enum crmd_fsa_cause cause,
+		     enum crmd_fsa_state cur_state,
+		     enum crmd_fsa_input current_input,
+		     fsa_data_t *msg_data)
 {
-	xmlNodePtr update = NULL;
 	xmlNodePtr welcome = NULL;
 	const char *join_to = NULL;
 
 	if(msg_data->data == NULL) {
 		crm_err("Attempt to send welcome message "
-			 "without a message to reply to!");
+			"without a message to reply to!");
 		return I_NULL;
 	}
 
 	welcome = (xmlNodePtr)msg_data->data;
 	
 	join_to = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
-	if(join_to != NULL) {
-/* 		stopTimer(integration_timer); */
+
+	gpointer a_node = g_hash_table_lookup(join_offers, join_to);
+	if(a_node != NULL) {
+		/* note: it _is_ possible that a node will have been
+		 *  sick or starting up when the original offer was made.
+		 *  however, it will either re-announce itself in due course
+		 *  _or_ we can re-store the original offer on the client.
+		 */
+		crm_warn("Already offered membership to %s... discarding",
+			 join_to);
 		
-		/* send the welcome */
-		crm_debug("Sending %s to %s", CRM_OP_WELCOME, join_to);
-			
-		send_request(NULL, NULL, CRM_OP_WELCOME,
-			     join_to, CRM_SYSTEM_CRMD, NULL);
-
-		free_xml(update);
-			
-		/* if this client is sick, we shouldnt wait forever */
-		crm_debug("Restarting the integration timer");
-/* 		startTimer(integration_timer); */
-
 	} else {
-		crm_err("No recipient for welcome message");
+		oc_node_t member;
+		member.node_uname = crm_strdup(join_to);
+		join_send_offer(NULL, &member, NULL);
+		crm_free(member.node_uname);
+
+		crm_debug("Starting the integration timer");
+		startTimer(integration_timer);
+
+		/* this was a genuine join request, cancel any existing
+		 * transition and invoke the PE
+		 */
+		register_fsa_input_w_actions(
+			msg_data->fsa_cause, I_NULL, NULL, A_TE_CANCEL);
 	}
-		
+	
 	return I_NULL;
 }
 
 /*	 A_DC_JOIN_PROCESS_REQ	*/
 enum crmd_fsa_input
 do_dc_join_req(long long action,
-		    enum crmd_fsa_cause cause,
-		    enum crmd_fsa_state cur_state,
-		    enum crmd_fsa_input current_input,
-		    fsa_data_t *msg_data)
+	       enum crmd_fsa_cause cause,
+	       enum crmd_fsa_state cur_state,
+	       enum crmd_fsa_input current_input,
+	       fsa_data_t *msg_data)
 {
 	xmlNodePtr generation;
 	xmlNodePtr join_ack = (xmlNodePtr)msg_data->data;
@@ -292,10 +309,10 @@ do_dc_join_finalize(long long action,
 /*	A_DC_JOIN_PROCESS_ACK	*/
 enum crmd_fsa_input
 do_dc_join_ack(long long action,
-		    enum crmd_fsa_cause cause,
-		    enum crmd_fsa_state cur_state,
-		    enum crmd_fsa_input current_input,
-		    fsa_data_t *msg_data)
+	       enum crmd_fsa_cause cause,
+	       enum crmd_fsa_state cur_state,
+	       enum crmd_fsa_input current_input,
+	       fsa_data_t *msg_data)
 {
 	/* now update them to "member" */
 	xmlNodePtr tmp1 = NULL, update = NULL;
@@ -412,6 +429,9 @@ void
 initialize_join(void)
 {
 	/* clear out/reset a bunch of stuff */
+	if(join_offers != NULL) {
+		g_hash_table_destroy(join_offers);
+	}
 	if(join_requests != NULL) {
 		g_hash_table_destroy(join_requests);
 	}
@@ -426,6 +446,7 @@ initialize_join(void)
 	set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 
+	join_offers     = g_hash_table_new(&g_str_hash, &g_str_equal);
 	join_requests   = g_hash_table_new(&g_str_hash, &g_str_equal);
 	confirmed_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
 
@@ -434,4 +455,34 @@ initialize_join(void)
 			    crm_strdup(CRMD_JOINSTATE_MEMBER));
 	
 }
-	
+
+void
+join_send_offer(gpointer key, gpointer value, gpointer user_data)
+{
+	const char *join_to = NULL;
+	const oc_node_t *member = (const oc_node_t*)value;
+
+	crm_debug("Sending %s offer", CRM_OP_WELCOME);
+	if(member != NULL) {
+		join_to = member->node_uname;
+	}
+
+	if(join_to == NULL) {
+		crm_err("No recipient for welcome message");
+
+	} else if(safe_str_eq(join_to, fsa_our_uname)) {
+		crm_debug("Skipping %s msg for ourselves (%s)",
+			  CRM_OP_WELCOME, join_to);
+
+	} else {
+		/* send the welcome */
+		crm_debug("Sending %s to %s", CRM_OP_WELCOME, join_to);
+			
+		send_request(NULL, NULL, CRM_OP_WELCOME,
+			     join_to, CRM_SYSTEM_CRMD, NULL);
+
+		g_hash_table_insert(join_offers, crm_strdup(join_to),
+				    crm_strdup(CRMD_JOINSTATE_PENDING));
+		
+	}
+}
