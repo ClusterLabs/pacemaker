@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.13 2004/10/24 13:00:11 lge Exp $ */
+/* $Id: crmadmin.c,v 1.14 2004/12/05 16:30:55 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -350,7 +350,7 @@ do_work(ll_cluster_t * hb_cluster)
 		sys_to = CRM_SYSTEM_DCIB;
 
 		set_xml_property_copy(
-			msg_options, XML_ATTR_OP, CRM_OP_UPDATE);
+			msg_options, XML_ATTR_OP, CRM_OP_CIB_UPDATE);
 		
 		set_xml_property_copy(
 			msg_options, XML_ATTR_TIMEOUT, "0");
@@ -400,21 +400,21 @@ do_work(ll_cluster_t * hb_cluster)
 		
 		
 	} else if(DO_RESOURCE) {
-		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_QUERY);
+		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_CIB_QUERY);
 		set_xml_property_copy(
 			msg_options, XML_ATTR_FILTER_TYPE, XML_CIB_TAG_STATUS);
 		
 		sys_to = CRM_SYSTEM_CIB;
 
 	} else if(DO_RESOURCE_LIST) {
-		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_QUERY);
+		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_CIB_QUERY);
 		set_xml_property_copy(
 			msg_options, XML_ATTR_FILTER_TYPE, XML_CIB_TAG_RESOURCES);
 		
 		sys_to = CRM_SYSTEM_CIB;
 
 	} else if(DO_NODE_LIST) {
-		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_QUERY);
+		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_CIB_QUERY);
 		set_xml_property_copy(
 			msg_options, XML_ATTR_FILTER_TYPE, XML_CIB_TAG_NODES);
 		
