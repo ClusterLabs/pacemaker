@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.35 2004/06/03 07:52:16 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.36 2004/06/21 08:29:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,7 +25,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
-
 
 #include <clplumbing/cl_log.h>
 
@@ -431,12 +430,13 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 		equiv_node = find_xml_node(parent, object_name);
 
 	} else {
-		equiv_node =
-			find_entity(parent, object_name, object_id, FALSE);
+		equiv_node = find_entity(parent, object_name, object_id,FALSE);
 	}
 	
 	if(equiv_node != NULL) {
 
+		const char *replace = xmlGetProp(new_obj, "replace");
+		
 		if(force == FALSE) {
 			const char *ts_existing  = NULL;
 			const char *ts_new       = NULL;
@@ -463,6 +463,16 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 				       ts_new, ts_existing);
 				return CIBRES_FAILED_STALE;
 			}
+		}
+
+		if(replace != NULL) {
+			xmlNodePtr remove = find_xml_node(equiv_node, replace);
+			if(remove != NULL) {
+				xmlUnlinkNode(remove);
+				remove->doc = NULL;
+				free_xml(remove);	
+			}
+			xmlUnsetProp(new_obj, "replace");
 		}
 		
 		if(safe_str_eq(XML_CIB_TAG_STATE, object_name)){
@@ -498,15 +508,10 @@ void
 update_node_state(xmlNodePtr target, xmlNodePtr update)
 {
 	const char *source	= NULL;
-	const char *replace     = NULL;
-	
 	xmlAttrPtr prop_iter    = NULL;
-
 	gboolean any_updates    = FALSE;
 	gboolean clear_stonith  = FALSE;
 	gboolean clear_shutdown = FALSE;
-
-	
 	
 	prop_iter = update->properties;
 	while(prop_iter != NULL) {
@@ -526,11 +531,7 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 			
 		} else if(strcmp(local_prop_name, XML_CIB_ATTR_CLEAR_STONITH) == 0) {
 			clear_stonith = TRUE;
-			clear_shutdown = TRUE;
-			
-		} else if(strcmp(local_prop_name, "replace") == 0) {
-			replace = local_prop_value;
-			any_updates = TRUE;
+			clear_shutdown = TRUE;			
 			
 		} else if(strcmp(local_prop_name, "source") == 0) {
 			source = local_prop_value;
@@ -557,14 +558,7 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 		crm_verbose("Clearing %s", XML_CIB_ATTR_STONITH);
 		xmlUnsetProp(target, XML_CIB_ATTR_STONITH);
 		any_updates = TRUE;
-	}
-	
-	if(replace != NULL) {
-		xmlNodePtr lrm = find_xml_node(target, replace);
-		xmlUnlinkNode(lrm);
-		lrm->doc = NULL;
-		free_xml(lrm);	
-	}
+	}	
 	
 	if(any_updates) {
 		set_node_tstamp(target);
