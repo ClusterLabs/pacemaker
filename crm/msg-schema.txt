@@ -100,24 +100,6 @@ timeout:	allows the receiver to know how long the sender is
 		expecting the task to take so we can act and report back 
 		accordingly.
 
-Key Operations
-===============
-shutdown:   	enable the CRM to shutdown a particular sub-system
-respawn:    	enable the CRM to restart a particular sub-system
-reconnect,disconnect: 	enable lmb's "CRM disconnect" feature
-noop: 		a sensible default for "constructor functions" to use
-ping:		allow the CRM to determin if a sub-system is alive
-deep_ping:	allow the DC to determin which sub-systems of a remote CRM 
-		are alive
-cib_op:		Send a CIB update (most likely an admin request) to the DC's 
-		CIB which will then propogate the change if it is valid.
-validate:	Check if an update to the running cluster will result in 
-		failed dependancies.
-validate_clean: Check if an update will result in failed dependancies if all
-		nodes in the cluster were behaving correctly (Ie. ignore any 
-		system generated constraints).
-replace:        Tells the CIB to accept the CIB (or fragment) as sent instead
-		of doing an object by object update. 
 
 Attribute values
 =================
@@ -127,113 +109,50 @@ fleshed out at a later date.
 Message Schema:
 ###################
 
-<!ELEMENT crm_message (request|response)>
+<!ELEMENT crm_message (options, data?)>
 <!ATTLIST crm_message
           version          #CDATA                       '1'
 	  message_type	   (none|request|response)	'none'
-          sys_from         (none|crm|dc|cib|lrm|admin)	'none'
-          sys_to           (none|crm|dc|cib|lrm|admin)	'none'
+          sys_from         (none|crmd|cib|lrm|admin)	'none'
+          sys_to           (none|crmd|cib|lrm|admin)	'none'
 	  host_from	   #CDATA
 	  host_to	   #CDATA
 	  reference	   #CDATA
           timestamp        #CDATA                       '0'>
 
-<!ELEMENT request (dc_request|cib_request|lrm_request|pe_request|te_request)+>
-<!ATTLIST request>
 
-<!ELEMENT dc_request cib_request?>
-<!ATTLIST dc_request
-          dc_operation	(noop|ping|deep_ping|dc_query|cib_op)	'noop'
-          timeout       #CDATA          '0'>
+<!ELEMENT options>
+<!ATTLIST options
+	  operation		#CDATA
+	  result?		(ok|failed|...)		'ok'
+          verbose?		(true|false)		'false'
+          timeout?		#CDATA			'0'
+	  filter_priority?	#CDATA	<!-- might be useful later -->
+          filter_type?		#CDATA
+	  filter_id?		#CDATA>
 
-<!ELEMENT crm_request cib_request?>
-<!ATTLIST crm_request
-          crm_operation	(noop|ping|deep_ping|dc_query)	'noop'
-          timeout       #CDATA          '0'>
-
-<!ELEMENT lrm_request>
-<!ATTLIST lrm_request
-          lrm_operation    (noop|ping|query|start|stop|restart|shutdown|respawn|disconnect|reconnect)	'noop'
-          type_filter?     #CDATA
-	  id_filter?	   #CDATA
-          timeout          #CDATA       '0'>
-
-<!ELEMENT pe_request>
-<!ATTLIST pe_request
-          pe_operation    (noop|ping|validate|validate_clean|calculate|shutdown|respawn|disconnect|reconnect)	'noop'
-          timeout          #CDATA       '0'>
-
-<!ELEMENT te_request (existing_cib,target_cib)>
-<!ATTLIST te_request
-          te_operation    (noop|ping|calculate|shutdown|respawn|disconnect|reconnect)	'noop'
-          type_filter?     #CDATA	<!-- might be useful later -->
-	  id_filter?	   #CDATA	<!-- might be useful later -->
-	  priority_filter? #CDATA	<!-- might be useful later -->
-          timeout          #CDATA       '0'>
-
-<!ELEMENT existing_cib (cib)>
-<!ATTLIST existing_cib>
-
-<!ELEMENT target_cib (cib)>
-<!ATTLIST target_cib>
-
-<!ELEMENT cib_request (cib)>
-<!-- 
-The value for timestamp is the one that should be used for all updates and adds.
- -->
-<!ATTLIST cib_request
-          cib_operation    (noop|ping|query|add|update|delete|replace|respawn|disconnect|reconnect)	'noop'
-          cib_section      (none|all|nodes|resources|constraints|status)			'none'
-          verbose	   (true|false)								'false'
-          timeout          #CDATA       '0'>
-
-<!ELEMENT response (dc_response|cib_response|lrm_response|pe_response|te_response)>
-<!ATTLIST response>
-
-<!-- 
-The DC rarely has anything interesting to say itself... more it is a broker for the CIB and LRM.
--->
-<!ELEMENT dc_response (ping_item*|cib_response|lrm_response)>
-<!ATTLIST dc_response
-	  i_am_dc	    (yes|no)	'no'>
-
-<!ELEMENT crm_response (ping_item*)>
-<!ATTLIST crm_response
-	  i_am_dc	    (yes|no)	'no'>
+<!-- data is one of ping_item, cib_fragment, lrm_status -->
 
 <!ELEMENT ping_item>
 <!ATTLIST ping_item
-	  crm_subsystem    (none|crm|dc|cib|lrm)		    'none'
-	  ping_status	   (error|timeout|stopped|running|sick)	    'timeout'>
+	  crm_subsystem    (none|crmd|dc|cib|lrm)		     'none'
+	  ping_status	   (error|timeout|stopped|running|sick)	     'timeout'>
 
-<!ELEMENT lrm_response (cib_fragment, res_failed?)|ping_item>
-<!ATTLIST lrm_response>
+<!ELEMENT lrm_status (resource_info)*>
+<!ATTLIST lrm_status>
 
-<!ELEMENT pe_response (cib, res_action_list?, res_failed?)|ping_item>
-<!ATTLIST pe_response>
-
-<!ELEMENT te_response (cib, res_failed?)|ping_item>
-<!ATTLIST te_response>
-
-<!ELEMENT res_failed (failed_resource)*>
-<!ATTLIST res_failed>
-
-<!ELEMENT failed_resource>
-<!ATTLIST failed_resource 
+<!ELEMENT resource_info>
+<!ATTLIST resource_info 
 	  res_id		#CDATA
-	  reason?		(unknown|...)					'unknown'
-          lrm_operation         (noop|start|stop|restart)	'noop'
-	  resource_status	(stopped|starting|running|stopping|failed)	'stopped'>
+          last_op		(noop|start|stop|restart)	     'noop'
+          last_op_result        (fail|pass|unknown|...)		     'unknown'
+	  status		#CDATA>
 
-<!-- unless verbose was specified, if everything went well just set action_result=ok -->
-<!ELEMENT cib_response ((cib_fragment,obj_failed?)|(ping_item))?>
-<!ATTLIST cib_response
-	  action_result	    (ok|failed|...)>
 
 <!-- always describe which part of the cib are being returned -->
-<!ELEMENT cib_fragment (cib)>
+<!ELEMENT cib_fragment (cib, obj_failed?)>
 <!ATTLIST cib_fragment
-          cib_section      (none|all|nodes|resources|constraints|status)        'none'>
+          cib_section  (none|all|nodes|resources|constraints|status) 'none'>
 
 <!ELEMENT obj_failed (failed_update)*>
 <!ATTLIST obj_failed>
@@ -241,7 +160,7 @@ The DC rarely has anything interesting to say itself... more it is a broker for 
 <!ELEMENT failed_update>
 <!ATTLIST failed_update 
 	  id			#CDATA
-          object_type		(none|node|resource|constraint|state)   'none'
-          operation		(none|add|update|delete|replace)        'none'
-	  reason?		(unknown|...)				'unknown'>
+          object_type		(none|node|resource|constraint|state) 'none'
+          operation		(none|add|update|delete|replace)      'none'
+	  reason?		(unknown|...)			      'unknown'>
 

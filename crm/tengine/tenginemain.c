@@ -1,4 +1,4 @@
-/* $Id: tenginemain.c,v 1.7 2004/02/17 22:11:57 lars Exp $ */
+/* $Id: tenginemain.c,v 1.8 2004/02/26 12:58:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -154,11 +154,11 @@ init_start(void)
     }
     
     cl_log(LOG_INFO, "Register PID");
-    register_pid(PID_FILE, TRUE, shutdown);
+    register_pid(PID_FILE, FALSE, shutdown);
 
     IPC_Channel *crm_ch = init_client_ipc_comms("crmd",
-												default_ipc_input_dispatch,
-												NULL);
+						default_ipc_input_dispatch,
+						NULL);
     send_hello_message(crm_ch, "1234", CRM_SYSTEM_TENGINE, "0", "1");
 
     /* Create the mainloop and run it... */
@@ -166,12 +166,12 @@ init_start(void)
     cl_log(LOG_INFO, "Starting %s", crm_system_name);
 
     G_main_add_IPC_Channel(G_PRIORITY_LOW,
-						   crm_ch,
-						   FALSE, 
-						   default_ipc_input_dispatch,
-						   crm_ch, 
-						   default_ipc_input_destroy);
-
+			   crm_ch,
+			   FALSE, 
+			   default_ipc_input_dispatch,
+			   crm_ch, 
+			   default_ipc_input_destroy);
+    
     
     
 #ifdef REALTIME_SUPPORT

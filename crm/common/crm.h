@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.10 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: crm.h,v 1.11 2004/02/26 12:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,11 +23,14 @@
 #include <ha_config.h>
 
 #define WORKING_DIR HA_VARLIBDIR"/heartbeat/crm"
+#define BIN_DIR "/usr/lib/heartbeat"
 #define MAXDATASIZE 65535 // ipc comms
 #define FIFO_LEN    1024
 #define APPNAME_LEN 256
 #define LOG_DIR     "/var/log"
 #define MAX_IPC_FAIL 5
+
+#include <clplumbing/cl_log.h>
 
 #if 1
 #   define CRM_DEBUG(w)        cl_log(LOG_DEBUG, w)

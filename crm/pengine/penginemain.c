@@ -1,4 +1,4 @@
-/* $Id: penginemain.c,v 1.7 2004/02/17 22:11:57 lars Exp $ */
+/* $Id: penginemain.c,v 1.8 2004/02/26 12:58:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -156,7 +156,7 @@ init_start(void)
     }
     
     cl_log(LOG_INFO, "Register PID");
-    register_pid(PID_FILE, TRUE, shutdown);
+    register_pid(PID_FILE, FALSE, shutdown);
 
     IPC_Channel *crm_ch = init_client_ipc_comms("crmd",
 												default_ipc_input_dispatch,

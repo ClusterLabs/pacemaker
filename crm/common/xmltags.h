@@ -1,4 +1,4 @@
-/* $Id: xmltags.h,v 1.7 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: xmltags.h,v 1.8 2004/02/26 12:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,82 +19,57 @@
 #ifndef XML_TAGS__H
 #define XML_TAGS__H
 
-#define CRM_VERSION                "0.1"
+#define CRM_VERSION			"0.1"
 
 //---- Common tags/attrs
-#define XML_TAG_CIB                "cib"
-#define XML_TAG_FAILED             "failed"
+#define XML_TAG_CIB			"cib"
+#define XML_TAG_FAILED			"failed"
 
-#define XML_ATTR_TIMEOUT           "timeout"
-#define XML_ATTR_TSTAMP            "timestamp"
-#define XML_ATTR_VERSION           "version"
-#define XML_ATTR_DESC              "description"
-#define XML_ATTR_ID                "id"
-#define XML_ATTR_FILTER_TYPE       "type_filter"
-#define XML_ATTR_FILTER_ID         "id_filter"
-#define XML_ATTR_FILTER_PRIORITY   "priority_filter"
-#define XML_ATTR_VERBOSE           "verbose"
+#define XML_ATTR_TIMEOUT		"timeout"
+#define XML_ATTR_TSTAMP			"timestamp"
+#define XML_ATTR_VERSION		"version"
+#define XML_ATTR_DESC			"description"
+#define XML_ATTR_ID			"id"
+#define XML_ATTR_FILTER_TYPE		"type_filter"
+#define XML_ATTR_FILTER_ID		"id_filter"
+#define XML_ATTR_FILTER_PRIORITY	"priority_filter"
+#define XML_ATTR_VERBOSE		"verbose"
+#define XML_ATTR_OP			"operation"
 
+#define XML_TAG_OPTIONS			"options"
 
 //---- top level tags/attrs
-#define XML_MSG_TAG                "crm_message"
-#define XML_MSG_TAG_REQUEST        "request"
-#define XML_MSG_TAG_RESPONSE       "response"
+#define XML_MSG_TAG			"crm_message"
+#define XML_ATTR_REQUEST		"request"
+#define XML_ATTR_RESPONSE		"response"
 
-#define XML_MSG_ATTR_MSGTYPE       "message_type"
-#define XML_MSG_ATTR_SYSFROM       "sys_from"
-#define XML_MSG_ATTR_SYSTO         "sys_to"
-#define XML_MSG_ATTR_HOSTFROM      "host_from"
-#define XML_MSG_ATTR_HOSTTO        "host_to"
-#define XML_MSG_ATTR_REFERENCE     "crm_msg_reference"
+#define XML_ATTR_MSGTYPE		"message_type"
+#define XML_ATTR_SYSFROM		"sys_from"
+#define XML_ATTR_SYSTO			"sys_to"
+#define XML_ATTR_HOSTFROM		"host_from"
+#define XML_ATTR_HOSTTO			"host_to"
+#define XML_ATTR_REFERENCE		"crm_msg_reference"
 
+#define XML_FAIL_TAG_RESOURCE		"failed_resource"
 
-//---- request tags/attrs
-#define XML_REQ_TAG_DC             "dc_request"
-#define XML_REQ_TAG_CRM            "crmd_request"
-#define XML_REQ_TAG_CIB            "cib_request"
-#define XML_REQ_TAG_LRM            "lrm_request"
-#define XML_REQ_TAG_PE             "pe_request"
-#define XML_REQ_TAG_TE             "te_request"
+#define XML_FAILRES_ATTR_RESID		"resource_id"
+#define XML_FAILRES_ATTR_REASON		"reason"
+#define XML_FAILRES_ATTR_RESSTATUS	"resource_status"
 
-#define XML_DC_ATTR_OP		   "dc_operation"
-#define XML_CRM_ATTR_OP            "crmd_operation"
-#define XML_LRM_ATTR_OP            "lrm_operation"
-#define XML_PE_ATTR_OP             "pe_operation"
-#define XML_TE_ATTR_OP             "te_operation"
-#define XML_CIB_ATTR_OP            "cib_operation"
-#define XML_CIB_ATTR_SECTION       "cib_section"
+#define XML_CRM_TAG_PING		"ping_response"
+#define XML_PING_ATTR_STATUS		"ping_result"
+#define XML_PING_ATTR_SYSFROM		"crm_subsystem"
 
-#define XML_LRM_ATTR_IDFILTER      "id_filter"
-#define XML_LRM_ATTR_TYPEFILTER    "type_filter"
+#define XML_TAG_FRAGMENT		"cib_fragment"
+#define XML_ATTR_RESULT			"cib_action_result"
+#define XML_ATTR_SECTION		"section"
 
+#define XML_FAIL_TAG_CIB		"failed_update"
 
-//---- response tags/attrs
-#define XML_RESP_TAG_DC             "dc_response"
-#define XML_RESP_TAG_CRM            "crmd_response"
-#define XML_RESP_TAG_CIB            "cib_response"
-#define XML_RESP_TAG_LRM            "lrm_response"
-#define XML_RESP_TAG_PE             "pe_response"
-#define XML_RESP_TAG_TE             "te_response"
-#define XML_FAIL_TAG_RESOURCE       "failed_resource"
-
-#define XML_FAILRES_ATTR_RESID      "resource_id"
-#define XML_FAILRES_ATTR_REASON     "reason"
-#define XML_FAILRES_ATTR_RESSTATUS  "resource_status"
-
-#define XML_CRM_TAG_PING            "ping_response"
-#define XML_PING_ATTR_STATUS        "ping_result"
-#define XML_PING_ATTR_SYSFROM       "crm_subsystem"
-
-#define XML_CIB_TAG_FRAGMENT        "cib_fragment"
-#define XML_CIB_ATTR_RESULT         "cib_action_result"
-
-#define XML_FAIL_TAG_CIB            "failed_update"
-
-#define XML_FAILCIB_ATTR_ID         "id"
-#define XML_FAILCIB_ATTR_OBJTYPE    "object_type"
-#define XML_FAILCIB_ATTR_OP         "operation"
-#define XML_FAILCIB_ATTR_REASON     "reason"
+#define XML_FAILCIB_ATTR_ID		"id"
+#define XML_FAILCIB_ATTR_OBJTYPE	"object_type"
+#define XML_FAILCIB_ATTR_OP		"operation"
+#define XML_FAILCIB_ATTR_REASON		"reason"
 
 //---- CIB specific tags/attrs
 #define XML_CIB_TAG_CONFIGURATION "configuration"

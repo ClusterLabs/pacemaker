@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.9 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: ipcutils.c,v 1.10 2004/02/26 12:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -120,8 +120,8 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	}
 
 	if (all_is_good) {
-		host_to = xmlGetProp(root, XML_MSG_ATTR_HOSTTO);
-		sys_to = xmlGetProp(root, XML_MSG_ATTR_SYSTO);
+		host_to = xmlGetProp(root, XML_ATTR_HOSTTO);
+		sys_to = xmlGetProp(root, XML_ATTR_SYSTO);
 		if (sys_to == NULL || strlen(sys_to) == 0)
 		{
 			cl_log(LOG_INFO,

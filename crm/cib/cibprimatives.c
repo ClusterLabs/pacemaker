@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.11 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: cibprimatives.c,v 1.12 2004/02/26 12:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,7 +72,7 @@ addResource(xmlNodePtr cib, cibResource *xml_node)
 	FNIN();
 	
 	id = xmlGetProp(xml_node, XML_ATTR_ID);
-	type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
+	type = xmlGetProp(xml_node, XML_CIB_ATTR_RESTYPE);
 	
 	if (id == NULL || strlen(id) < 1)
 		add_res = -1;
@@ -186,22 +186,18 @@ addStatus(xmlNodePtr cib, cibStatus *xml_node)
 {
 	int add_res = 0;
 	const char *id = NULL;
-	const char *type = NULL;
 	const char *instance = NULL;
 	xmlNodePtr new_parent = NULL;
 
 	FNIN();
 	
 	id = xmlGetProp(xml_node, XML_ATTR_ID);
-	type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
 	instance = xmlGetProp(xml_node, XML_CIB_ATTR_INSTANCE);
 	
 	if (id == NULL || strlen(id) < 1)
 		add_res = -1;
 	else if (findStatus(cib, id, instance) != NULL)
 		add_res = -2;
-	else if (type == NULL || strlen(type) < 1)
-		add_res = -3;
 	else {
 		new_parent = get_object_root(XML_CIB_TAG_STATUS, cib);
 
@@ -324,7 +320,7 @@ addConstraint(xmlNodePtr cib, cibConstraint *xml_node)
 	FNIN();
 	
 	id = xmlGetProp(xml_node, XML_ATTR_ID);
-	type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
+	type = xmlGetProp(xml_node, XML_CIB_ATTR_CONTYPE);
 	
 	if (id == NULL || strlen(id) < 1)
 		add_res = -1;

@@ -1,4 +1,4 @@
-/* $Id: crmd.c,v 1.11 2004/02/17 22:11:57 lars Exp $ */
+/* $Id: crmd.c,v 1.12 2004/02/26 12:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,6 +46,7 @@
 #include <crm/common/msgutils.h>
 #include <crm/common/xmlutils.h>
 
+
 #include <crm/dmalloc_wrapper.h>
 
 
@@ -61,8 +62,9 @@ GHashTable   *ipc_clients = NULL;
 const char   *our_uname = NULL;
 
 gboolean have_lrmd = FALSE;
-gboolean have_pe = FALSE;
-gboolean have_te = FALSE;
+gboolean have_pe   = FALSE;
+gboolean have_te   = FALSE;
+gboolean have_cib  = FALSE;
 
 #include <crm/common/crmutils.h>
 #include <crm/common/ipcutils.h>
@@ -153,7 +155,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 {
 	// check the best case first
 	const char *sys_from   = xmlGetProp(root_xml_node,
-					    XML_MSG_ATTR_SYSFROM);
+					    XML_ATTR_SYSFROM);
 	char *uid = NULL;
 	char *client_name = NULL;
 	char *major_version = NULL;
@@ -165,11 +167,18 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 
 	if (sys_from != NULL) {
 		gboolean can_reply = FALSE; // no-one has registered with this id
-		if (g_hash_table_lookup (ipc_clients, sys_from) != NULL)
-			can_reply = TRUE;  // reply can be routed
+		const char *filtered_from = sys_from;
 
-		CRM_DEBUG2("Message reply would%s be able to be routed.",
-			   can_reply?"":" not");
+		/* The CIB can have two names on the DC */
+		if(strcmp(sys_from, CRM_SYSTEM_DCIB) == 0)
+			filtered_from = CRM_SYSTEM_CIB;
+		
+		if (g_hash_table_lookup (ipc_clients, filtered_from) != NULL)
+			can_reply = TRUE;  // reply can be routed
+		
+		
+		CRM_DEBUG3("Message reply can%s be routed from %s.",
+			   can_reply?"":" not", sys_from);
 		FNRET(can_reply);
 	}
 
@@ -210,13 +219,15 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		} else if (strcmp(CRM_SYSTEM_PENGINE, client_name) == 0) {
 			result = !have_te;
 			have_te = TRUE;
+		} else if (strcmp(CRM_SYSTEM_CIB, client_name) == 0) {
+			result = !have_cib;
+			have_cib = TRUE;
 		} else if (strcmp(CRM_SYSTEM_TENGINE, client_name) == 0) {
 			result = !have_te;
 			have_pe = TRUE;
 		} else
-			table_key =
-				(gpointer)generate_hash_key(client_name,
-							    uid);
+			table_key = (gpointer)
+				generate_hash_key(client_name, uid);
 	}
 
 	if(table_key == NULL)
@@ -245,14 +256,18 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 void
 crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 {
+	const char *from = ha_msg_value(msg, F_ORIG);
 	FNIN();
-	cl_log(LOG_DEBUG,
-	       "processing HA message (%s from %s)",
-	       ha_msg_value(msg, F_SEQ), ha_msg_value(msg, F_ORIG));
+
+	CRM_DEBUG3("processing HA message (%s from %s)",
+		   ha_msg_value(msg, F_SEQ), from);
 	
 	xmlNodePtr root_xml_node = find_xml_in_hamessage(msg);
-	process_message(root_xml_node, FALSE, ha_msg_value(msg, F_ORIG));
+	set_xml_property_copy(root_xml_node, XML_ATTR_HOSTFROM, from);
+
+	process_message(root_xml_node, FALSE, from);
 	free_xml(root_xml_node);
+
 	FNOUT();
 }
 
@@ -330,6 +345,10 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 			else if (strcmp(CRM_SYSTEM_TENGINE,
 					curr_client->sub_sys) == 0)
 				have_pe = FALSE;
+
+			else if (strcmp(CRM_SYSTEM_CIB,
+					curr_client->sub_sys) == 0)
+				have_cib = FALSE;
 
 			if (curr_client->table_key != NULL) {
 				/*
@@ -510,11 +529,11 @@ process_message(xmlNodePtr root_xml_node,
 		const char *src_node_name)
 {
 	const char *crm_msg_reference = xmlGetProp(root_xml_node,
-						   XML_MSG_ATTR_REFERENCE);
+						   XML_ATTR_REFERENCE);
 	const char *sys_from = xmlGetProp(root_xml_node,
-					  XML_MSG_ATTR_SYSFROM);
+					  XML_ATTR_SYSFROM);
 	const char *sys_to   = xmlGetProp(root_xml_node,
-					  XML_MSG_ATTR_SYSTO);
+					  XML_ATTR_SYSTO);
 	const char *op       = NULL;
 	xmlNodePtr action = NULL;
 	gboolean processing_complete = FALSE;
@@ -542,19 +561,15 @@ process_message(xmlNodePtr root_xml_node,
 					      NULL,
 					      NULL,
 					      NULL);
-		op = xmlGetProp(action, XML_CRM_ATTR_OP);  
 
-		if (strcmp(CRM_SYSTEM_DC, sys_to) == 0) {
-			dc_mode = TRUE;
-			op = xmlGetProp(action, XML_DC_ATTR_OP);
-		}
+		xmlNodePtr options = find_xml_node(action, XML_TAG_OPTIONS);
+		op = xmlGetProp(options, XML_ATTR_OP);  
 
 		if (op == NULL) {
 			cl_log(LOG_ERR,
 			       "Invalid XML message.  "
-			       "No value %s operation for specified in (%s).",
-			       dc_mode?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD,
-			       root_xml_node->name); 
+			       "No value operation for specified in %s.",
+			       xmlGetNodePath(options)); 
 		} else {
 			processing_complete =
 				crm_dc_process_message(root_xml_node,
@@ -584,107 +599,137 @@ relay_message(xmlNodePtr xml_relay_message,
 	      gboolean originated_locally,
 	      const char *host_from)
 {
-	const char *crm_msg_reference  = xmlGetProp(xml_relay_message,
-						    XML_MSG_ATTR_REFERENCE);
-	const char *sys_from   = xmlGetProp(xml_relay_message,
-					    XML_MSG_ATTR_SYSFROM);
-	const char *host_to    = xmlGetProp(xml_relay_message,
-					    XML_MSG_ATTR_HOSTTO);
-	const char *sys_to     = xmlGetProp(xml_relay_message,
-					    XML_MSG_ATTR_SYSTO);
-	const char *type       = xmlGetProp(xml_relay_message,
-					    XML_MSG_ATTR_MSGTYPE);
-	char *dest_node = NULL;
-
-	int is_for_dc  = 0;
-	int is_for_crm = 0;
-	int is_request = 0;
-	int is_local   = 0;
+	const char *host_to = xmlGetProp(xml_relay_message, XML_ATTR_HOSTTO);
+	const char *sys_to  = xmlGetProp(xml_relay_message, XML_ATTR_SYSTO);
 	gboolean processing_complete = FALSE;
-	
+	int is_for_dc  = 0;
+	int is_for_dcib  = 0;
+	int is_for_crm = 0;
+	int is_local   = 0;
+
 	FNIN();
 
-	if (sys_to == NULL || crm_msg_reference == NULL || type == NULL) {
-		cl_log(LOG_DEBUG,
-		       "relay_message: Invalid message, (%s, %s, %s) discarding.",
-		       sys_to, crm_msg_reference, type);
-		FNRET(TRUE); // Discard.  Should have been picked up by now anyway
+	if(xml_relay_message != NULL
+	   && strcmp(XML_MSG_TAG, xml_relay_message->name) != 0) {
+
+		cl_log(LOG_INFO, "Ignoring message of type %s",
+		       xml_relay_message->name);
+		FNRET(TRUE);
 	}
-    
-	is_for_dc  = (strcmp(CRM_SYSTEM_DC, sys_to) == 0);
-	is_for_crm = (strcmp(CRM_SYSTEM_CRMD, sys_to) == 0);
-	is_request = (strcmp("request", type) == 0);
-	is_local   = (host_to == NULL
-		      || strlen(host_to) == 0
-		      || strcmp(our_uname, host_to) == 0);
+	
 
-	CRM_DEBUG("relaying message");
-	CRM_DEBUG2("originated locally %d", originated_locally);
-	CRM_DEBUG2("is dc %d", is_for_dc);
-	CRM_DEBUG2("is crm %d", is_for_crm);
-	CRM_DEBUG2("is request %d", is_request);
-	CRM_DEBUG2("is local %d", is_local);
-	CRM_DEBUG2("our host [%s]", our_uname);
-	CRM_DEBUG2("dest host [%s]", host_to);
-    
-	if (is_request == 1 && is_for_dc == 0 && originated_locally == FALSE) {
-		/* save host/crm_msg_reference in routing table
-		 * so that responses will be directed appropriately
-		 */
-		CRM_DEBUG("Generating key to look up hash table with");
-		gpointer action_ref =
-			(gpointer)generate_hash_key(crm_msg_reference, sys_to);
-		CRM_DEBUG2("key (%s)", (char*)action_ref);
-
-		if(g_hash_table_lookup(pending_remote_replies, action_ref) == NULL){
-			CRM_DEBUG2(
-				"Updating crm_msg_reference table for %s",
-				host_from);
-			gpointer value =
-				(gpointer)generate_hash_value(host_from,
-							      sys_from);
-			CRM_DEBUG2("value (%s)", (char*)value);
-			g_hash_table_insert (pending_remote_replies,
-					     action_ref,
-					     value);
-			/* remove from the table based on FIFO or a timed sweep
-			 *    or something
-			 *
-			 * cleanup_crm_msg_referenceTable();
-			 */
-		} else {
-			cl_log(LOG_INFO,
-			       "Already processing a message with crm_msg_reference "
-			       "number (%s) for sub-system (%s)... discarding message.",
-			       crm_msg_reference, sys_to);
-			processing_complete = TRUE;
-		}
+	if(sys_to == NULL) {
+		cl_log(LOG_ERR, "Message did not have any value for %s",
+		       XML_ATTR_SYSTO);
+		FNRET(TRUE);
 	}
+	
+	is_for_dc   = (strcmp(CRM_SYSTEM_DC, sys_to) == 0);
+	is_for_dcib = (strcmp(CRM_SYSTEM_DCIB, sys_to) == 0);
+	is_for_crm  = (strcmp(CRM_SYSTEM_CRMD, sys_to) == 0);
+	
+	is_local = 0;
+	if(host_to == NULL || strlen(host_to) == 0) {
+		if(!is_for_dc)
+			is_local = 1;
+	} else if(strcmp(our_uname, host_to) == 0) {
+		is_local=1;
+	}
+	
 
-	if (is_for_dc) {
-		// only forward dc messages if they originated locally
-		if (originated_locally && i_am_dc == FALSE) {
-			// DC Messages are always broadcast
+	if(is_for_dc || is_for_dcib) {
+		if(i_am_dc && is_for_dcib) {
+			send_msg_via_ipc(xml_relay_message, "cib");
+			processing_complete = TRUE; 
+
+		} else if(i_am_dc) {
+			; // more to be done by caller
+
+		} else if(originated_locally) {
 			send_msg_via_ha(xml_relay_message, NULL);
-			processing_complete = TRUE;
-		} else if (i_am_dc == FALSE) {
-			processing_complete = TRUE;  // ignore
+			processing_complete = TRUE; 
+
+		} else {
+			processing_complete = TRUE; // discard
 		}
-	} else if (is_local) {
-		if (!is_for_crm) {
-			send_msg_via_ipc(xml_relay_message, sys_to);
-			processing_complete = TRUE;
-		}
+		
+	} else if(is_local && is_for_crm) {
+		; // more to be done by caller
+	} else if(is_local) {
+		send_msg_via_ipc(xml_relay_message, sys_to);
+		processing_complete = TRUE;
 	} else {
-		dest_node = find_destination_host(xml_relay_message,
-						  crm_msg_reference,
-						  sys_from,
-						  is_request);
-		send_msg_via_ha(xml_relay_message, dest_node);
+		const char *sys_from  =
+			xmlGetProp(xml_relay_message, XML_ATTR_SYSFROM);
+		
+		if(i_am_dc && strcmp(CRM_SYSTEM_CIB, sys_from) == 0) {
+			// we are a special CIB
+			xmlSetProp(xml_relay_message,
+				   XML_ATTR_SYSFROM,
+				   CRM_SYSTEM_DCIB);
+		}
+		
+		send_msg_via_ha(xml_relay_message, host_to);
 		processing_complete = TRUE;
 	}
-
+	
+	
 	FNRET(processing_complete);
+	
+#if 0
+// ipc
+if (is_request == 1 && originated_locally == FALSE) {
+	/* save host/crm_msg_reference in routing table
+	 * so that responses will be directed
+	 * appropriately
+	 */
+	CRM_DEBUG("Generating hash key");
+	gpointer action_ref = (gpointer)
+		generate_hash_key(crm_msg_reference, sys_to);
+	
+	CRM_DEBUG2("key (%s)", (char*)action_ref);
+	
+	if(g_hash_table_lookup(pending_remote_replies,
+			       action_ref) == NULL){
+		
+		CRM_DEBUG2(
+			"Updating crm_msg_reference table for %s",
+			host_from);
+		
+		gpointer value = (gpointer)
+			generate_hash_value(
+				host_from,
+				sys_from);
+		
+		CRM_DEBUG2("value (%s)", (char*)value);
+		
+		g_hash_table_insert(
+			pending_remote_replies,
+			action_ref,
+			value);
+		/* remove from the table based on FIFO
+		 * or a timed sweep or something
+		 *
+		 * cleanup_crm_msg_referenceTable();
+		 */
+	} else {
+		cl_log(LOG_INFO,
+		       "Already processing a message with crm_msg_reference "
+		       "number (%s) for sub-system (%s)... discarding message.",
+		       crm_msg_reference, sys_to);
+	}
+}
+
+ 
+// HA 
+ if(!is_request)
+	 dest_node =
+		 find_destination_host(
+			 xml_relay_message,
+			 crm_msg_reference,
+			 sys_from,
+			 is_request);
+#endif		
 }
 
 gboolean
@@ -706,11 +751,8 @@ crm_dc_process_message(xmlNodePtr whole_message,
 		// DC specific actions
 		if (strcmp("cib_op", op) == 0)
 		{
-			xmlNodePtr cib_req =
-				find_xml_node(action, XML_REQ_TAG_CIB);
-	    
 			wrapper = create_forward(whole_message,
-						 cib_req,
+						 whole_message,
 						 "cib");
 			relay_message(wrapper, TRUE, host_from);
 			processing_complete = TRUE;
@@ -724,20 +766,12 @@ crm_dc_process_message(xmlNodePtr whole_message,
 	{
 		CRM_DEBUG("Processing common DC/CRMd actions");
 	
-		xmlNodePtr response = NULL;
 		if (strcmp("ping", op) == 0)
 		{
 			// eventually do some stuff to figure out if we *are* ok
 			ping = createPingAnswerFragment(sys_to, "ok");
 
-			if (dc_mode)
-				response = create_xml_node(NULL,
-							   XML_RESP_TAG_DC);
-			else response = create_xml_node(NULL,
-							XML_RESP_TAG_CRM);
-			xmlAddChild(response, ping);
-	    
-			wrapper = create_reply(whole_message, response);
+			wrapper = create_reply(whole_message, ping);
 			relay_message(wrapper, TRUE, host_from);
 			processing_complete = TRUE;
 			free_xml(wrapper);
@@ -747,15 +781,7 @@ crm_dc_process_message(xmlNodePtr whole_message,
 			// eventually do some stuff to figure out if we *are* ok
 			ping = createPingAnswerFragment(sys_to, "ok");
 
-			if (dc_mode)
-				response = create_xml_node(NULL,
-							   XML_RESP_TAG_DC);
-			else
-				response = create_xml_node(NULL,
-							   XML_RESP_TAG_CRM);
-			xmlAddChild(response, ping);
-	    
-			wrapper = create_reply(whole_message, response);
+			wrapper = create_reply(whole_message, ping);
 			relay_message(wrapper, TRUE, host_from);
 			free_xml(wrapper);
 
@@ -825,7 +851,7 @@ send_msg_via_ha(xmlNodePtr action, const char *dest_node)
 		FNOUT();
 	}
 	CRM_DEBUG2("Relaying message to (%s) via HA", dest_node);
-	set_xml_property_copy(action, XML_MSG_ATTR_HOSTTO, dest_node);
+	set_xml_property_copy(action, XML_ATTR_HOSTTO, dest_node);
 	send_xmlha_message(hb_cluster, action);
 	FNOUT();
 }
@@ -926,10 +952,10 @@ find_destination_host(xmlNodePtr xml_root_node,
 				   dest_node,
 				   sys_to);
 			set_xml_property_copy(xml_root_node,
-					      XML_MSG_ATTR_SYSTO,
+					      XML_ATTR_SYSTO,
 					      sys_to);
 			CRM_DEBUG3("setting (%s=%s) on HA message",
-				   XML_MSG_ATTR_SYSTO, sys_to);
+				   XML_ATTR_SYSTO, sys_to);
 		}
 		else
 		{

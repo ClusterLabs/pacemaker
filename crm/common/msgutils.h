@@ -1,4 +1,4 @@
-/* $Id: msgutils.h,v 1.6 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: msgutils.h,v 1.7 2004/02/26 12:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,15 +61,19 @@ extern gboolean forward_ipc_request(IPC_Channel *ipc_channel,
 				    xmlNodePtr xml_response_data,
 				    const char *sys_to,
 				    const char *sys_from);
-extern gboolean send_ipc_request(IPC_Channel *ipc_channel,
-				 xmlNodePtr xml_msg_node,
-				 const char *host_to,
-				 const char *sys_to,
-				 const char *sys_from,
-				 const char *uid_from,
-				 const char *crm_msg_reference);
+extern gboolean
+send_ipc_request(IPC_Channel *ipc_channel,
+		 xmlNodePtr xml_options, xmlNodePtr xml_data,
+		 const char *host_to, const char *sys_to,
+		 const char *sys_from, const char *uid_from,
+		 const char *crm_msg_reference);
 
-extern gboolean send_ha_request(void);
+extern gboolean
+send_ha_request(ll_cluster_t *hb_fd,
+		xmlNodePtr xml_options, xmlNodePtr xml_data,
+		const char *host_to, const char *sys_to,
+		const char *sys_from, const char *uid_from,
+		const char *crm_msg_reference);
 
 extern gboolean send_ha_reply(ll_cluster_t *hb_cluster,
 			      xmlNodePtr xml_request,
@@ -98,5 +102,11 @@ extern char *generate_hash_value(const char *src_node,
 extern gboolean decode_hash_value(gpointer value,
 				  char **node,
 				  char **subsys);
+
+extern xmlNodePtr
+create_request(xmlNodePtr xml_options, xmlNodePtr xml_data,
+	       const char *host_to, const char *sys_to,
+	       const char *sys_from, const char *uid_from,
+	       const char *crm_msg_reference);
 
 #endif

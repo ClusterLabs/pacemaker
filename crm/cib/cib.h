@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.2 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: cib.h,v 1.3 2004/02/26 12:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -20,8 +20,7 @@
 #define CIB__H
 
 
-gboolean cib_client_connect(IPC_Channel *newclient, gpointer user_data);
-gboolean cib_input_dispatch(IPC_Channel *client, gpointer user_data);
+gboolean cib_msg_callback(IPC_Channel *client, gpointer user_data);
 
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: lrmdmessages.c,v 1.6 2004/02/17 22:11:57 lars Exp $ */
+/* $Id: lrmdmessages.c,v 1.7 2004/02/26 12:58:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -64,22 +64,22 @@ createEmptyMsg(const char *crm_msg_reference)
     lrmd_msg = create_xml_node(NULL, XML_MSG_TAG);
 
     set_xml_property_copy(lrmd_msg, XML_ATTR_VERSION, CRM_VERSION);
-    set_xml_property_copy(lrmd_msg, XML_MSG_ATTR_SUBSYS, "none");
+    set_xml_property_copy(lrmd_msg, XML_ATTR_SUBSYS, "none");
     if (crm_msg_reference == NULL) {
 	set_xml_property_copy(lrmd_msg,
-			      XML_MSG_ATTR_MSGTYPE,
-			      XML_MSG_TAG_REQUEST);
+			      XML_ATTR_MSGTYPE,
+			      XML_ATTR_REQUEST);
 	set_xml_property_copy(lrmd_msg,
-			      XML_MSG_ATTR_REFERENCE,
+			      XML_ATTR_REFERENCE,
 			      generateReference());
     }
     else
     {
 	set_xml_property_copy(lrmd_msg,
-			      XML_MSG_ATTR_MSGTYPE,
-			      XML_MSG_TAG_RESPONSE);
+			      XML_ATTR_MSGTYPE,
+			      XML_ATTR_RESPONSE);
 	set_xml_property_copy(lrmd_msg,
-			      XML_MSG_ATTR_REFERENCE,
+			      XML_ATTR_REFERENCE,
 			      crm_msg_reference);
     }
     
@@ -108,12 +108,12 @@ createLrmdRequest(gboolean isLocal, const char *operation,
     {
 	xmlNodePtr request;
 	root = createEmptyMsg(NULL);
-	set_xml_property_copy(root, XML_MSG_ATTR_SUBSYS, "cib");
-	request   = create_xml_node(root, NULL, XML_MSG_TAG_REQUEST, NULL);
+	set_xml_property_copy(root, XML_ATTR_SUBSYS, "cib");
+	request   = create_xml_node(root, NULL, XML_ATTR_REQUEST, NULL);
 	cmd       = create_xml_node(request, NULL, XML_REQ_TAG_LRM, NULL);
-	crm_msg_reference = xmlGetProp(root, XML_MSG_ATTR_REFERENCE);
+	crm_msg_reference = xmlGetProp(root, XML_ATTR_REFERENCE);
     }
-    set_xml_property_copy(cmd, XML_MSG_ATTR_REFERENCE, crm_msg_reference);
+    set_xml_property_copy(cmd, XML_ATTR_REFERENCE, crm_msg_reference);
     set_xml_property_copy(cmd, XML_LRM_ATTR_OP       , operation);
     set_xml_property_copy(cmd, XML_LRM_ATTR_IDFILTE  , id_filter);
     set_xml_property_copy(cmd, XML_LRM_ATTR_TYPEFILTE, type_filter);
@@ -147,7 +147,7 @@ processLrmdRequest(xmlNodePtr command)
     const char *op          = xmlGetProp(command, XML_LRM_ATTR_OP);
     const char *id_filter   = set_xml_property_copy(command, XML_LRM_ATTR_IDFILTE);
     const char *type_filter = set_xml_property_copy(command, XML_LRM_ATTR_TYPEFILTE);
-    const char *crm_msg_reference   = xmlGetProp(command, XML_MSG_ATTR_REFERENCE);
+    const char *crm_msg_reference   = xmlGetProp(command, XML_ATTR_REFERENCE);
     
     gboolean start_resource = FALSE;
     gboolean stop_resource = FALSE;
@@ -305,8 +305,8 @@ createLrmdAnswer(const char *crm_msg_reference, const char *operation,
  */
     
     root = createEmptyMsg(crm_msg_reference);
-    set_xml_property_copy(root, XML_MSG_ATTR_SRCSUBSYS, "lrm");
-    response = create_xml_node(root, NULL, XML_MSG_TAG_RESPONSE, NULL);
+    set_xml_property_copy(root, XML_ATTR_SRCSUBSYS, "lrm");
+    response = create_xml_node(root, NULL, XML_ATTR_RESPONSE, NULL);
     answer = create_xml_node(response, NULL, XML_RESP_TAG_LRM, NULL);
 
     if (operation == NULL) return root;

@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.12 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: adminmain.c,v 1.13 2004/02/26 12:58:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -94,6 +94,8 @@ gboolean DO_WHOIS_DC     = FALSE;
 gboolean DO_RECALC_TREE  = FALSE;
 gboolean DO_FLUSH_RECALC = FALSE;
 
+xmlNodePtr msg_options = NULL;
+
 typedef struct str_list_s
 {
 		int num_items;
@@ -129,6 +131,7 @@ char *instance = NULL;
 char *node = NULL;
 
 int operation_status = 0;
+const char *sys_to = NULL;;
 
 int
 main(int argc, char **argv)
@@ -959,33 +962,24 @@ xmlNodePtr
 wrapUpdate(xmlNodePtr update, const char *section_name,
 	   const char *action)
 {
-	xmlNodePtr dc_req = NULL, cib_req = NULL;
 	xmlNodePtr cib = NULL, fragment = NULL, object_root = NULL;
 	FNIN();
 
-	// create the cib request
-	cib_req = create_xml_node(NULL, XML_REQ_TAG_CIB);
-	set_xml_property_copy(cib_req, XML_CIB_ATTR_OP, action);
-	set_xml_property_copy(cib_req, XML_ATTR_VERBOSE, verbose);
-	set_xml_property_copy(cib_req, XML_CIB_ATTR_SECTION, section_name);
+	set_xml_property_copy(msg_options, XML_ATTR_OP, action);
 
 	// create the update section
-	fragment = create_xml_node(cib_req, XML_CIB_TAG_FRAGMENT);
-	set_xml_property_copy(fragment, XML_CIB_ATTR_SECTION, section_name);
+	fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
+	set_xml_property_copy(fragment, XML_ATTR_SECTION, section_name);
+	set_xml_property_copy(msg_options, XML_ATTR_FILTER_TYPE, section_name);
 
 	cib = createEmptyCib();
 	object_root = get_object_root(section_name, cib);
 	xmlAddChild(object_root, update);
 
+	
 	xmlAddChild(fragment, cib);
 
-	// create the real request
-	dc_req = create_xml_node(NULL, XML_REQ_TAG_DC);
-	set_xml_property_copy(dc_req, XML_DC_ATTR_OP, "cib_op");
-	set_xml_property_copy(dc_req, XML_ATTR_TIMEOUT, "0");
-	xmlAddChild(dc_req, cib_req);
-
-	return dc_req;
+	return fragment;
 }
 
 
@@ -1005,14 +999,18 @@ pluralSection(void)
 }
 
 
+
 int
 do_work(ll_cluster_t * hb_cluster)
 {
 	/* construct the request */
-	xmlNodePtr xml_root_node = NULL, cib_req = NULL;
+	xmlNodePtr msg_data = NULL;
 	const char *dest_node = NULL;
+	gboolean all_is_good = TRUE;
 	
-
+	msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
+	set_xml_property_copy(msg_options, XML_ATTR_VERBOSE, verbose);
+	set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
 	
 	if (DO_DAEMON == TRUE && DO_QUERY == TRUE) {
 		cl_log(LOG_DEBUG, "Querying the CIB");
@@ -1020,40 +1018,44 @@ do_work(ll_cluster_t * hb_cluster)
 
 		CRM_DEBUG2("Querying the CIB for section: %s",
 			   obj_type_parent);
-		xml_root_node = create_xml_node(NULL, XML_REQ_TAG_DC);
-		set_xml_property_copy(xml_root_node, XML_DC_ATTR_OP, "cib_op");
 
-		cib_req = create_xml_node(xml_root_node, XML_REQ_TAG_CIB);
-		set_xml_property_copy(cib_req, XML_CIB_ATTR_OP, "query");
-		set_xml_property_copy(cib_req, XML_ATTR_VERBOSE, verbose);
-		set_xml_property_copy(cib_req,
-				      XML_CIB_ATTR_SECTION,
+		set_xml_property_copy(msg_options, XML_ATTR_OP, "query");
+		set_xml_property_copy(msg_options, XML_ATTR_FILTER_ID,
 				      obj_type_parent);
 
 		dest_node = status;
 		CRM_DEBUG2("CIB query creation %s",
-			   xml_root_node == NULL ? "failed." : "passed.");
-	} else if (DO_DAEMON == TRUE && DO_ERASE == TRUE) {
-		xml_root_node = create_xml_node(NULL, XML_REQ_TAG_DC);
-		set_xml_property_copy(xml_root_node, XML_DC_ATTR_OP, "cib_op");
+			   msg_data == NULL ? "failed." : "passed.");
 
-		cib_req = create_xml_node(xml_root_node, XML_REQ_TAG_CIB);
-		set_xml_property_copy(cib_req, XML_CIB_ATTR_OP, "erase");
-		set_xml_property_copy(cib_req, XML_ATTR_VERBOSE, verbose);
+		sys_to = CRM_SYSTEM_DCIB;
+		
+	} else if (DO_DAEMON == TRUE && DO_ERASE == TRUE) {
+		set_xml_property_copy(msg_options, XML_ATTR_OP, "erase");
 
 		dest_node = status;
-		CRM_DEBUG2("CIB Erase creation %s",
-			   xml_root_node == NULL ? "failed." : "passed.");
+		CRM_DEBUG("CIB Erase op in progress");
+
+		sys_to = CRM_SYSTEM_DCIB;
 
 	} else if (DO_DAEMON == FALSE && DO_CREATE == TRUE) {
-		xml_root_node = handleCreate();
+		msg_data = handleCreate();
+		sys_to = CRM_SYSTEM_DCIB;
+		if(msg_data == NULL) all_is_good = FALSE;
+		
 	} else if (DO_DAEMON == FALSE && DO_DELETE == TRUE) {
-		xml_root_node = handleDelete();
+		msg_data = handleDelete();
+		sys_to = CRM_SYSTEM_DCIB;
+		if(msg_data == NULL) all_is_good = FALSE;
+		
 	} else if (DO_DAEMON == FALSE && DO_MODIFY == TRUE) {
-		xml_root_node = handleModify();
+		msg_data = handleModify();
+		sys_to = CRM_SYSTEM_DCIB;
+		if(msg_data == NULL) all_is_good = FALSE;
+		
 	} else if (DO_DAEMON == TRUE && DO_HEALTH == TRUE) {
-		cl_log(LOG_DEBUG, "Querying the system");
+		CRM_DEBUG("Querying the system");
 
+		sys_to = CRM_SYSTEM_DC;
 /*
   <!ATTLIST dc_request
   dc_operation	(noop|ping|deep_ping|dc_query|cib_op)	'noop'
@@ -1061,6 +1063,7 @@ do_work(ll_cluster_t * hb_cluster)
   timeout       #CDATA          '0'>
 */
 		if (status != NULL) {
+			sys_to = CRM_SYSTEM_CRMD;
 			const char *ping_type = "ping";
 			if (BE_VERBOSE) {
 				ping_type = "ping_deep";
@@ -1070,48 +1073,42 @@ do_work(ll_cluster_t * hb_cluster)
 					expected_responses = -1;// wait until timeout instead
 			}
 
-			if (status != NULL) {
-				xml_root_node =
-					create_xml_node(NULL,
-							XML_REQ_TAG_CRM);
-				set_xml_property_copy(xml_root_node,
-						      XML_CRM_ATTR_OP,
-						      ping_type);
-				set_xml_property_copy(xml_root_node,
-						      XML_MSG_ATTR_SYSTO,
-						      CRM_SYSTEM_CRMD);
-			} else {
-				xml_root_node =
-					create_xml_node(NULL,
-							XML_REQ_TAG_DC);
-				set_xml_property_copy(xml_root_node,
-						      XML_DC_ATTR_OP,
-						      ping_type);
-				set_xml_property_copy(xml_root_node,
-						      XML_MSG_ATTR_SYSTO,
-						      CRM_SYSTEM_DC);
-			}
+			set_xml_property_copy(msg_options,
+					      XML_ATTR_OP,
+					      ping_type);
+			
+			set_xml_property_copy(msg_options,
+					      XML_ATTR_TIMEOUT,
+					      "0");
 
-			set_xml_property_copy(xml_root_node,
-					      XML_ATTR_TIMEOUT, "0");
 			dest_node = status;
-		} else
+		} else {
 			cl_log(LOG_INFO, "Cluster-wide health not available yet");
+			all_is_good = FALSE;
+		}
+	} else {
+		cl_log(LOG_ERR, "Unknown options");
+		all_is_good = FALSE;
 	}
+	
 
 	CRM_DEBUG2("Creation of request %s",
-		   xml_root_node == NULL ? "failed. Aborting.": "passed.  Sending.");
+		   all_is_good ? "passed.  Sending." : "failed. Aborting.");
 
 /* send it */
-	if (xml_root_node != NULL && crmd_channel != NULL) {
-//      CRM_DEBUG2("sending message: %s", xml_root_node->name);
-		const char *sys_to = CRM_SYSTEM_DC;
-		if (dest_node != NULL) sys_to = CRM_SYSTEM_CRMD;
+	if (all_is_good && crmd_channel != NULL) {
 
+		if(sys_to == NULL) {
+			if (dest_node != NULL)
+				sys_to = CRM_SYSTEM_CRMD;
+			else
+				sys_to = CRM_SYSTEM_DC;				
+		}
+		
 		send_ipc_request(crmd_channel,
-				 xml_root_node,
-				 dest_node,
-				 sys_to,
+				 msg_options,
+				 msg_data,
+				 dest_node, sys_to,
 				 crm_system_name,
 				 adminuid,
 				 this_msg_reference);
@@ -1191,8 +1188,6 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	gboolean hack_return_good = TRUE;
 	static int recieved_responses = 0;
 
-	CRM_DEBUG("admin_msg_callback: in IPC callback");
-
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {
 		if (server->ops->recv(server, &msg) != IPC_OK) {
@@ -1228,7 +1223,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 		if (strcmp("response",
-			   xmlGetProp(xml_root_node, XML_MSG_ATTR_MSGTYPE)) != 0) {
+			   xmlGetProp(xml_root_node, XML_ATTR_MSGTYPE)) != 0) {
 			cl_log(LOG_ERR,
 			       "The admin client does not accept requests");
 			continue;

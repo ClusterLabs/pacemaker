@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.11 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: cib.c,v 1.12 2004/02/26 12:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,8 +45,6 @@
 #include <ocf/oc_event.h>
 #include <libxml/tree.h>
 
-#define REPLACE
-
 #include <crm/common/ipcutils.h>
 #include <crm/common/crmutils.h>
 #include <crm/common/xmltags.h>
@@ -86,46 +84,26 @@ cibConstraint *createVariableConstraint(const char *id,
 extern xmlNodePtr processCibRequest(xmlNodePtr command);
 
 gboolean
-cib_client_connect(IPC_Channel *newclient, gpointer user_data)
-{
-	CRM_DEBUG("A client tried to connect");
-
-	IPC_Message *client_msg = (IPC_Message *)user_data;
-	cl_log(LOG_INFO,
-	       "recieved client join msg: %s",
-	       (char*)client_msg->msg_body);
-
-	if (newclient != NULL)
-		G_main_add_IPC_Channel(G_PRIORITY_LOW,
-				       newclient,
-				       FALSE, 
-				       cib_input_dispatch,
-				       newclient, 
-				       default_ipc_input_destroy);
-	FNRET(TRUE);
-}
-
-gboolean
-cib_input_dispatch(IPC_Channel *client, gpointer user_data)
+cib_msg_callback(IPC_Channel *sender, void *user_data)
 {
 	int lpc = 0;
 	char *buffer = NULL;
 	xmlDocPtr doc = NULL;
 	IPC_Message *msg = NULL;
-	gboolean hack_return_good = TRUE;
-	xmlNodePtr msg_xml_node = NULL, answer = NULL, root_xml_node = NULL;
+	gboolean all_is_well = TRUE;
+	xmlNodePtr answer = NULL, root_xml_node = NULL;
 	
 	FNIN();
 		
-	while(client->ops->is_message_pending(client)) {
-		if (client->ch_status == IPC_DISCONNECT) {
+	while(sender->ops->is_message_pending(sender)) {
+		if (sender->ch_status == IPC_DISCONNECT) {
 			/* The message which was pending for us is that
 			 * the IPC status is now IPC_DISCONNECT */
 			break;
 		}
-		if (client->ops->recv(client, &msg) != IPC_OK) {
+		if (sender->ops->recv(sender, &msg) != IPC_OK) {
 			perror("Receive failure:");
-			FNRET(!hack_return_good);
+			FNRET(!all_is_well);
 		}
 		if (msg == NULL) {
 			cl_log(LOG_ERR, "No message this time");
@@ -138,60 +116,68 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 		/* the docs say only do this once, but in their code
 		 * they do it every time!
 		 */
-		xmlInitParser();
+//		xmlInitParser();
 
 		buffer = (char*)msg->msg_body;
-		cl_log(LOG_DEBUG, "Got xml [text=%s]", buffer);
-		doc = xmlParseMemory(buffer, strlen(buffer));
+		cl_log(LOG_DEBUG, "[text=%s]", buffer);
+		doc = xmlParseMemory(ha_strdup(buffer), strlen(buffer));
 
 		CRM_DEBUG("Finished parsing buffer as XML");
-		if (doc != NULL) {
-			CRM_DEBUG("About to interrogate xml");
-			root_xml_node = xmlDocGetRootElement(doc);
-			CRM_DEBUG("Got the root element");
-			
-			msg_xml_node =
-				validate_crm_message(root_xml_node,
-						     CRM_SYSTEM_CIB,
-						     NULL,
-						     XML_MSG_TAG_REQUEST);
-	
-			if (msg_xml_node != NULL) {
-				answer = processCibRequest(msg_xml_node);
-				if (send_ipc_reply(
-					    client,
-					    root_xml_node,
-					    answer) == FALSE)
-					cl_log(LOG_WARNING,
-					       "Cib answer could not be sent");
-
-				if(answer != NULL)
-					free_xml(answer);
-			} else if (root_xml_node != NULL)
-				cl_log(LOG_INFO,
-				       "Received a message destined for (%s) "
-				       "by mistake",
-				       xmlGetProp(root_xml_node,
-						  XML_MSG_ATTR_SYSTO));
-			else
-				cl_log(LOG_INFO, "Root node was NULL!!");
-
-			free_xml(root_xml_node);
-		} else {
+		if(doc == NULL) {
 			cl_log(LOG_INFO,
 			       "XML Buffer was not valid...\n Buffer: (%s)",
 			       buffer);
 		}
+
+		CRM_DEBUG("About to interrogate xml");
+		root_xml_node = xmlDocGetRootElement(doc);
+		CRM_DEBUG("Got the root element");
+		
+		const char *sys_to = xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
+
+		if (root_xml_node == NULL) {
+			cl_log(LOG_WARNING, "Root node was NULL!!");
+
+		} else if (strcmp(sys_to, CRM_SYSTEM_CIB) != 0
+			&& strcmp(sys_to, CRM_SYSTEM_DCIB) != 0) {
+			
+			cl_log(LOG_WARNING,
+			       "Received a message destined for %s by mistake",
+			       sys_to);
+
+		} else {
+
+			answer = processCibRequest(root_xml_node);
+			
+			if (send_ipc_reply(sender,
+					   root_xml_node,
+					   answer) == FALSE)
+				
+				cl_log(LOG_WARNING,
+				       "Cib answer could not be sent");
+		}
+		
+		if(answer != NULL)
+			free_xml(answer);
+		
+		msg->msg_done(msg);
+		msg = NULL;
+	}
+
+	// clean up after a break
+	if(msg != NULL)
 		msg->msg_done(msg);
 
-	}
+	if(root_xml_node != NULL)
+		free_xml(root_xml_node);
+
 	
 	CRM_DEBUG2("Processed %d messages", lpc);
-	if (client->ch_status == IPC_DISCONNECT) {
-		cl_log(LOG_INFO, "the client has left us: received HUP");
-		FNRET(!hack_return_good);
+	if (sender->ch_status == IPC_DISCONNECT) {
+		cl_log(LOG_INFO, "the sender has left us: received HUP");
+		FNRET(!all_is_well);
 	}
-	FNRET(hack_return_good);
+	FNRET(all_is_well);
 }
 
 

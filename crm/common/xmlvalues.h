@@ -1,4 +1,4 @@
-/* $Id: xmlvalues.h,v 1.4 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: xmlvalues.h,v 1.5 2004/02/26 12:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,6 +72,7 @@
 
 
 #define CRM_SYSTEM_DC       "dc"
+#define CRM_SYSTEM_DCIB     "dcib" // The master CIB
 #define CRM_SYSTEM_CIB      "cib"
 #define CRM_SYSTEM_CRMD     "crmd"
 #define CRM_SYSTEM_LRMD     "lrmd"

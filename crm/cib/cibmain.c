@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.8 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: cibmain.c,v 1.9 2004/02/26 12:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,6 +49,7 @@
 #include <crm/common/xmlvalues.h>
 #include <cibio.h>
 #include <cib.h>
+#include <crm/common/msgutils.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -123,14 +124,6 @@ main(int argc, char ** argv)
 		FNRET(init_stop(PID_FILE));
 	}
   
-	if (req_comms_restart) { 
-//	init_stop();
-		// kill the current comms
-		init_server_ipc_comms(CRM_SYSTEM_CIB,
-				      cib_client_connect,
-				      default_ipc_input_destroy);
-	}
-
 	if (req_restart) { 
 		init_stop(PID_FILE);
 	}
@@ -179,27 +172,42 @@ init_start(void)
 		initializeCib(createEmptyCib());
 	}
     
-	init_server_ipc_comms(CRM_SYSTEM_CIB,
-			      cib_client_connect,
-			      default_ipc_input_destroy);
-    
-	/* Create the mainloop and run it... */
-	mainloop = g_main_new(FALSE);
-	cl_log(LOG_INFO, "Starting %s", crm_system_name);
-  
-#ifdef REALTIME_SUPPORT
-	static int  crm_realtime = 1;
-	if (crm_realtime == 1) {
-		cl_enable_realtime();
-	} else if (crm_realtime == 0) {
-		cl_disable_realtime();
-	}
-	cl_make_realtime(SCHED_RR, 5, 64, 64);
-#endif
+	IPC_Channel *crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
+						    cib_msg_callback,
+						    NULL);
 
-	g_main_run(mainloop);
-	return_to_orig_privs();
-  
+	if(crm_ch != NULL) {
+		send_hello_message(crm_ch, "-", CRM_SYSTEM_CIB, "0", "1");
+
+	/* Create the mainloop and run it... */
+		mainloop = g_main_new(FALSE);
+		cl_log(LOG_INFO, "Starting %s", crm_system_name);
+		
+/* 		G_main_add_IPC_Channel(G_PRIORITY_LOW, */
+/* 				       crm_ch, */
+/* 				       FALSE,  */
+/* 				       cib_msg_callback, */
+/* 				       crm_ch,  */
+/* 				       default_ipc_input_destroy); */
+	
+	
+#ifdef REALTIME_SUPPORT
+		static int  crm_realtime = 1;
+		if (crm_realtime == 1) {
+			cl_enable_realtime();
+		} else if (crm_realtime == 0) {
+			cl_disable_realtime();
+		}
+		cl_make_realtime(SCHED_RR, 5, 64, 64);
+#endif
+		
+		g_main_run(mainloop);
+		return_to_orig_privs();
+	} else {
+		cl_log(LOG_ERR, "Connection to CRM not valid, exiting.");
+	}
+	
+	
 	if (unlink(PID_FILE) == 0) {
 		cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
 	}

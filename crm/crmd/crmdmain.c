@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.8 2004/02/17 22:11:57 lars Exp $ */
+/* $Id: crmdmain.c,v 1.9 2004/02/26 12:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -165,36 +165,16 @@ init_start(void)
 
     CRM_DEBUG("Init server comms");
     was_error = init_server_ipc_comms(CRM_SYSTEM_CRMD,
-									  crmd_client_connect,
-									  default_ipc_input_destroy);
-
-	if (was_error == 0) {
-		crmd_client_t *cib_server =
-			(crmd_client_t *)ha_malloc(sizeof(crmd_client_t));
-		
-		CRM_DEBUG("Signon with the CIB");
-		IPC_Channel *cib_channel =
-			init_client_ipc_comms("cib",
-								  crmd_ipc_input_callback,
-								  cib_server);
-		if (cib_channel != NULL) {
-			g_hash_table_insert (ipc_clients,
-								 ha_strdup("cib"),
-								 (gpointer)cib_channel);
-
-			cib_server->sub_sys = ha_strdup("cib");
-			cib_server->table_key = ha_strdup("cib");
-			cib_server->uid = ha_strdup("");
-		} else
-			was_error = 1;
-    }
+				      crmd_client_connect,
+				      default_ipc_input_destroy);
+    
     if (was_error == 0) {
 		CRM_DEBUG("Registering with HA");
 		was_error = (register_with_ha(hb_cluster,
-									  crm_system_name,
-									  crmd_ha_input_dispatch,
-									  crmd_ha_input_callback,
-									  crmd_ha_input_destroy) == FALSE);
+					      crm_system_name,
+					      crmd_ha_input_dispatch,
+					      crmd_ha_input_callback,
+					      crmd_ha_input_destroy) == FALSE);
     }
     if (was_error == 0) {
 		CRM_DEBUG("Registering with CCM");
@@ -241,17 +221,17 @@ gboolean
 crmd_ha_input_dispatch(int fd, gpointer user_data)
 {
 	FNIN();
-    
-    ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
-    
-    while(hb_cluster->llc_ops->msgready(hb_cluster))
-    {
+	
+	ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
+	
+	while(hb_cluster->llc_ops->msgready(hb_cluster))
+	{
 		CRM_DEBUG("there was another message...");
 		// invoke the callbacks but dont block
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
-    }
-    
-    FNRET(TRUE);
+	}
+	
+	FNRET(TRUE);
 }
 
 void
