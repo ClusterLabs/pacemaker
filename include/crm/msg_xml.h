@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.8 2004/07/27 11:43:21 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.9 2004/08/11 07:10:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,8 +18,6 @@
  */
 #ifndef XML_TAGS__H
 #define XML_TAGS__H
-
-#define CRM_VERSION			"0.1"
 
 //---- Common tags/attrs
 #define XML_TAG_CIB			"cib"
