@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.5 2004/06/02 15:25:12 andrew Exp $ */
+/* $Id: ttest.c,v 1.6 2004/06/07 10:40:33 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -111,9 +111,9 @@ main(int argc, char **argv)
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
   
-  
+#ifdef MTRACE  
 	mtrace();
-
+#endif
 	crm_trace("Initializing graph...");
 	initialize_graph();
 	
@@ -131,8 +131,9 @@ main(int argc, char **argv)
 
 	initialize_graph();
 	free_xml(xml_graph);
+#ifdef MTRACE  
 	muntrace();
-
+#endif
 	crm_trace("Transition complete...");
 
 	return 0;
