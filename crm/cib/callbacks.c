@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.18 2005/02/09 15:28:34 andrew Exp $ */
+/* $Id: callbacks.c,v 1.19 2005/02/10 11:05:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -451,6 +451,7 @@ cib_common_callback(
 			/* send via HA to other nodes */
  			crm_info("Forwarding %s op to all instances", op);
 			ha_msg_add(op_request, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
+			cl_log_message(LOG_DEBUG, op_request);
 			hb_conn->llc_ops->sendclustermsg(hb_conn, op_request);
 
 		} else {
@@ -593,11 +594,12 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 		crm_debug("Removing msg from delegated list");
 		hash_client->delegated_calls = g_list_remove(
 			hash_client->delegated_calls, orig_msg);
-		CRM_ASSERT(orig_msg != msg);
+		CRM_DEV_ASSERT(orig_msg != msg);
 		crm_msg_del(orig_msg);
 	}
 	
 	crm_debug("Delivering reply to client %s", token);
+	cl_log_message(LOG_DEBUG, msg);
 	if(msg2ipcchan(msg, hash_client->channel) != HA_OK) {
 		crm_err("Delivery of reply to client %s failed", token);
 		return cib_reply_failed;
