@@ -1,4 +1,4 @@
-/* $Id: atest.c,v 1.1 2005/02/02 21:52:20 andrew Exp $ */
+/* $Id: atest.c,v 1.2 2005/02/07 11:18:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,36 +53,49 @@
 
 const char* crm_system_name = "core";
 
+gboolean process_atest_message(
+	HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender);
+
+
+GMainLoop*  mainloop = NULL;
+
 int
 main(int argc, char ** argv)
 {
-    /* Redirect messages from glib functions to our handler */
-    g_log_set_handler(NULL,
-		      G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
-		      | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
-		      | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
-		      | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
-		      cl_glib_msg_handler, NULL);
+	IPC_Channel* channels[2];
+	crm_data_t *a_cib = NULL;
+	HA_Message *cmd = NULL;
+	
+	crm_log_init(crm_system_name);
+	set_crm_log_level(LOG_INSANE-1);
+	
+	a_cib = createEmptyCib();
+	cl_log_message(LOG_DEBUG, (HA_Message*)a_cib);
 
-    /* and for good measure... */
-    g_log_set_always_fatal((GLogLevelFlags)0);    
-    cl_log_set_entity(crm_system_name);
-    cl_log_set_facility(LOG_LOCAL7);
-    cl_log_send_to_logging_daemon(TRUE);
-    CL_SIGNAL(DEBUG_INC, alter_debug);
-    CL_SIGNAL(DEBUG_DEC, alter_debug);
+	if (ipc_channel_pair(channels) != IPC_OK) {
+		cl_perror("Can't create ipc channel pair");
+		exit(1);
+	}
+	G_main_add_IPC_Channel(G_PRIORITY_LOW,
+			       channels[1], FALSE,
+			       subsystem_msg_dispatch,
+			       (void*)process_atest_message, 
+			       default_ipc_connection_destroy);
 
-    set_crm_log_level(LOG_DEV);
+	/* send transition graph over IPC instead */
+	cmd = create_request(CRM_OP_TRANSITION, a_cib, NULL,
+			     CRM_SYSTEM_TENGINE, CRM_SYSTEM_TENGINE, NULL);
+	
+	send_ipc_message(channels[0], cmd);
 
-    crm_debug("some log");
-    cl_log(LOG_DEBUG, "same log");
-    crm_debug("some log");
-    cl_log(LOG_DEBUG, "same log");
-    
+	mainloop = g_main_new(FALSE);
+	crm_debug("Starting mainloop");
+	g_main_run(mainloop);
+	
 #if 0
     /* read local config file */
     crm_debug("Enabling coredumps");
-    if(cl_set_corerootdir(DEVEL_DIR) < 0){
+    if(cl_set_corerootdir(HA_COREDIR) < 0){
 	    cl_perror("cannot set corerootdir");
     }
     if(cl_enable_coredumps(1) != 0) {
@@ -97,4 +110,12 @@ main(int argc, char ** argv)
     crm_err("We just dumped core");
 #endif
     return 0;
+}
+
+gboolean
+process_atest_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
+{
+	crm_debug("made it");
+	cl_log_message(LOG_DEBUG, msg);
+	return TRUE;
 }
