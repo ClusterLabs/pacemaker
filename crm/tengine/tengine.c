@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.32 2004/09/17 13:00:50 andrew Exp $ */
+/* $Id: tengine.c,v 1.33 2004/09/21 19:22:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,7 +29,7 @@
 
 GListPtr graph = NULL;
 IPC_Channel *crm_ch = NULL;
-uint default_transition_timeout = 60*1000; /* 60 seconds */
+uint default_transition_timeout = 30*1000; /* 30 seconds */
 
 gboolean initiate_action(action_t *action);
 gboolean in_transition = FALSE;
@@ -282,9 +282,13 @@ process_graph_event(xmlNodePtr event)
 			slist_iter(
 				action, action_t, synapse->actions, lpc2,
 
-				/* Invoke the action and start the timer */
+				/* allow some leway */
+				int tmp_time = 2 * action->timeout;
+				gboolean passed = FALSE;
 				action->invoked = TRUE;
-				gboolean passed = initiate_action(action);
+
+				/* Invoke the action and start the timer */
+				passed = initiate_action(action);
 
 				if(passed == FALSE) {
 					crm_err("Failed initiating "
@@ -296,8 +300,8 @@ process_graph_event(xmlNodePtr event)
 						   action->xml);
 					break;
 				} 
-				if(action->timeout > transition_timeout) {
-					transition_timeout = action->timeout;
+				if(tmp_time > transition_timeout) {
+					transition_timeout = tmp_time;
 				}
 			
 				);

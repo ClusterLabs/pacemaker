@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.3 2004/09/17 13:03:10 andrew Exp $ */
+/* $Id: unpack.c,v 1.4 2004/09/21 19:22:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,6 +47,17 @@ unpack_graph(xmlNodePtr xml_graph)
 */
 	int num_synapses = 0;
 	int num_actions = 0;
+
+	const char *time = xmlGetProp(xml_graph, "global_timeout");
+	if(time != NULL) {
+		int tmp_time = atoi(time);
+		if(time > 0) {
+			default_transition_timeout = tmp_time;
+		}
+	}
+
+	crm_info("Default transition timeout set to %d",
+		 default_transition_timeout);
 
 	xml_child_iter(
 		xml_graph, synapse, "synapse",
@@ -153,7 +164,6 @@ unpack_action(xmlNodePtr xml_action)
 
 	} else if(safe_str_eq(action_copy->name, "crm_event")) {
 		action->type = action_type_crm;
-
 	}
 
 	tmp = xmlGetProp(action_copy, "timeout");

@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.5 2004/09/14 05:54:44 andrew Exp $ */
+/* $Id: tengine.h,v 1.6 2004/09/21 19:22:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -78,6 +78,7 @@ extern gboolean unpack_graph(xmlNodePtr xml_graph);
 extern gboolean extract_event(xmlNodePtr msg);
 extern gboolean process_te_message(xmlNodePtr msg, IPC_Channel *sender);
 
+extern uint default_transition_timeout;
 
 #endif
 

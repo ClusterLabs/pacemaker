@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.3 2004/09/17 13:03:10 andrew Exp $ */
+/* $Id: utils.c,v 1.4 2004/09/21 19:22:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -245,6 +245,8 @@ timer_callback(gpointer data)
 		}
 		action->timer_id = -1;
 
+		/* TODO: send a cancel notice to the LRM */
+		/* TODO: use the ack from above to update the CIB */
 		return do_update_cib(action->xml, LRM_OP_TIMEOUT);	
 	}
 }
