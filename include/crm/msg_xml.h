@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.15 2004/10/21 18:25:43 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.16 2004/12/05 16:06:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,6 +24,7 @@
 #define XML_TAG_FAILED			"failed"
 
 #define XML_ATTR_GENERATION		"generation"
+#define XML_ATTR_NUMUPDATES		"updates"
 #define XML_ATTR_TIMEOUT		"timeout"
 #define XML_ATTR_TSTAMP			"timestamp"
 #define XML_ATTR_VERSION		"version"
