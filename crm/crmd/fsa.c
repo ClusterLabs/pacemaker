@@ -376,7 +376,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		else IF_FSA_ACTION(A_CL_JOIN_RESULT,	do_cl_join_result)
 		else IF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
 
-		else IF_FSA_ACTION(A_ELECTION_START,	do_election_vote)
 		else IF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)
 		else IF_FSA_ACTION(A_ELECTION_COUNT,	do_election_count_vote)
 		
@@ -395,6 +394,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		 */
 		else IF_FSA_ACTION(A_DC_TAKEOVER,	 do_dc_takeover)
 		else IF_FSA_ACTION(A_DC_RELEASE,	 do_dc_release)
+		else IF_FSA_ACTION(A_ELECTION_START,	 do_election_vote)
 		else IF_FSA_ACTION(A_DC_JOIN_OFFER_ALL,	 do_dc_join_offer_all)
 		else IF_FSA_ACTION(A_DC_JOIN_OFFER_ONE,	 do_dc_join_offer_one)
 		else IF_FSA_ACTION(A_DC_JOIN_PROCESS_REQ,do_dc_join_req)
