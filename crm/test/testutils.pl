@@ -137,7 +137,7 @@ sub string_search() {
 			    $results{$regex} = 1;
 			}
 			$found = scalar(keys %results)-1;
-			print STDOUT "Found match ".$found." of ".scalar(@search_for)." for (".$regex."): \n\t".$line;
+			print STDOUT "[line $num_lines]: Found match ".$found." of ".scalar(@search_for)." for (".$regex."): \n\t".$line;
 
 			if(scalar(@search_for) < scalar(keys %results)) {
 			    
