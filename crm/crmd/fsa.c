@@ -343,10 +343,21 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 #endif
 			actions |= new_actions;
 		}
-		
 
-		if(cur_input != I_NULL)
-			last_input = cur_input; // only for non I_NULL
+
+		switch(cur_input) {
+			case I_NULL:
+				break;
+#if 0
+			case I_SOME_EVENT:
+			case I_SOME_OTHER_EVENT:
+				cc_transitioner(cur_input, data);
+				/* flow through... */
+#endif
+			default:
+				last_input = cur_input;
+				break;
+		}
 	
 		cur_state = next_state;
 		fsa_state = cur_state;
@@ -363,16 +374,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		actions = clear_flags(actions, cause, cur_state, cur_input);
 		
 		/* regular action processing in order of action priority
-		 * and/or ease of processing
-		 */
-
-		/*
+		 *
 		 * Make sure all actions that connect to required systems
 		 * are performed first
-		 */
-		
-		/* External connect
-		 * These will drop existing connections if present
 		 */
 		if(actions == A_NOTHING) {
 
@@ -386,7 +390,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			} else if(is_set(fsa_input_register, R_INVOKE_PE)) {
 				CRM_DEBUG("Invoke the PE somehow");
 			}
-		
 		}
 	
 	/* logging */
