@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.8 2004/12/05 16:05:42 andrew Exp $ */
+/* $Id: cib.h,v 1.9 2004/12/09 14:53:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -89,7 +89,9 @@ enum cib_errors {
 	cib_callback_token	= -31,
 	cib_callback_register	= -32,
 	cib_msg_field_add	= -33,
-	cib_client_gone		= -34
+	cib_client_gone		= -34,
+	cib_not_master		= -35,
+	cib_client_corrupt	= -36
 };
 
 enum cib_op {
@@ -118,17 +120,20 @@ enum cib_section {
 #define F_CIB_OPERATION "cib_op"
 #define F_CIB_ISREPLY   "cib_isreplyto"
 #define F_CIB_SECTION   "cib_section"
+#define F_CIB_HOST	"cib_host"
 #define F_CIB_RC	"cib_rc"
 #define F_CIB_CALLBACK_TOKEN	"cib_callback_token"
-
+#define F_CIB_GLOBAL_UPDATE	"cib_update"
+#define F_CIB_DELEGATED	"cib_delegated_from"
 
 typedef struct cib_s  cib_t;
 
 typedef struct cib_api_operations_s
 {
 		int (*variant_op)(
-			cib_t *cib, const char *op, const char *section,
-			xmlNodePtr data, xmlNodePtr *output_data, int call_options);
+			cib_t *cib, const char *op, const char *host,
+			const char *section, xmlNodePtr data,
+			xmlNodePtr *output_data, int call_options);
 		
 		int (*signon) (cib_t *cib, enum cib_conn_type type);
 		int (*signoff)(cib_t *cib);

@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.32 2004/12/05 16:03:31 andrew Exp $ */
+/* $Id: crm.h,v 1.33 2004/12/09 14:53:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -67,6 +67,7 @@
 
 /* soon to be moved to cib.h */
 #define CRM_OP_CIB_SLAVE	"cib_slave"
+#define CRM_OP_CIB_SLAVEALL	"cib_slave_all"
 #define CRM_OP_CIB_MASTER	"cib_master"
 #define CRM_OP_CIB_SYNC		"cib_sync"
 #define CRM_OP_CIB_ISMASTER	"cib_ismaster"
