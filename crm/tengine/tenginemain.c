@@ -1,4 +1,4 @@
-/* $Id: tenginemain.c,v 1.13 2004/05/06 12:11:59 andrew Exp $ */
+/* $Id: tenginemain.c,v 1.14 2004/06/01 16:12:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -161,7 +161,7 @@ init_start(void)
     cl_log(LOG_INFO, "Register PID");
     register_pid(PID_FILE, FALSE, tengine_shutdown);
 
-    crm_ch = init_client_ipc_comms("crmd",
+    crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
 				   subsystem_input_dispatch,
 				   (void*)process_te_message);
 

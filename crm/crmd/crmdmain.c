@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.16 2004/06/01 12:25:15 andrew Exp $ */
+/* $Id: crmdmain.c,v 1.17 2004/06/01 16:12:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,7 +42,7 @@
 
 #include <libxml/tree.h>
 
-const char* crm_system_name = "crmd";
+const char* crm_system_name = CRM_SYSTEM_CRMD;
 
 #include <crm/common/crmutils.h>
 #include <crm/common/ipcutils.h>

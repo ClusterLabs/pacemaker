@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.23 2004/06/01 12:25:14 andrew Exp $ */
+/* $Id: cibio.c,v 1.24 2004/06/01 16:12:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -246,7 +246,7 @@ initializeCib(xmlNodePtr new_cib)
 		*/
 		initialized = TRUE;
 
-		CRM_DEBUG("CIB initialized");
+		CRM_NOTE("CIB initialized");
 		FNRET(TRUE);
 	}
 	else {
@@ -271,7 +271,6 @@ moveFile(const char *oldname,
 	int s_res = stat(newname, &tmp);
 	FNIN();
 	
-	cl_log(LOG_INFO, "Stat of %s (code: %d).", newname, s_res);
 	if (s_res >= 0)
 	{
 		if (backup == TRUE) {
@@ -292,7 +291,6 @@ moveFile(const char *oldname,
 	}
     
 	s_res = stat(oldname, &tmp);
-	cl_log(LOG_INFO, "Stat of %s (code: %d).", oldname, s_res);
 
 	if (s_res >= 0) {
 		res = link(oldname, newname);
@@ -352,10 +350,6 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 			       CIB_FILENAME);
 	    
 			if (new_cib->doc == NULL) {
-				cl_log(LOG_INFO,
-				       "Writing of a node tree with a NULL "
-				       "document will fail, creating a new "
-				       "back link.");
 				foo = xmlNewDoc("1.0");
 				xmlDocSetRootElement(foo, new_cib);
 				xmlSetTreeDoc(new_cib,foo);

@@ -244,14 +244,13 @@ do_startup(long long action,
 	CRM_DEBUG("Facility: %d", facility);
 	
 	if(was_error == 0) {
-		CRM_DEBUG("Init server comms");
+		cl_log(LOG_INFO, "Init server comms");
 		was_error = init_server_ipc_comms(CRM_SYSTEM_CRMD,
 						  crmd_client_connect,
 						  default_ipc_input_destroy);
 	}
 	
 	if (was_error == 0) {
-		CRM_DEBUG("Finding our node name");
 		fsa_our_uname = fsa_cluster_conn->llc_ops->get_mynodeid(
 			fsa_cluster_conn);
 		
@@ -395,7 +394,7 @@ crm_shutdown(int nsig)
 	if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
 
 		if(is_set(fsa_input_register, R_SHUTDOWN)) {
-			CRM_DEBUG("Escalating the shutdown");
+			cl_log(LOG_WARNING, "Escalating the shutdown");
 			s_crmd_fsa(C_SHUTDOWN, I_ERROR, NULL);
 
 		} else {
@@ -408,7 +407,7 @@ crm_shutdown(int nsig)
 		}
 		
 	} else {
-		CRM_DEBUG("exit from shutdown");
+		cl_log(LOG_INFO, "exit from shutdown");
 		exit(LSB_EXIT_OK);
 	    
 	}

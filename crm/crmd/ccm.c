@@ -492,7 +492,6 @@ do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite)
 	struct update_data_s update_data;
 	update_data.updates = updates;
 	
-	CRM_DEBUG("Processing the \"down\" list");
 	update_data.state = XML_BOOLEAN_NO;
 	update_data.join  = CRMD_JOINSTATE_DOWN;
 	if(fsa_membership_copy->dead_members != NULL) {
@@ -500,7 +499,6 @@ do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite)
 				     ghash_update_cib_node, &update_data);
 	}
 	
-	CRM_DEBUG("Processing the \"in_ccm (all)\" list");
 	update_data.state = XML_BOOLEAN_YES;
 	update_data.join  = NULL;
 	if(overwrite) {
@@ -518,7 +516,6 @@ do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite)
 	 *  is reset
 	 *
 	update_data.join = CRMD_JOINSTATE_PENDING;
-	CRM_DEBUG("Processing the \"in_ccm (new)\" list");
 	if(fsa_membership_copy->new_members != NULL) {
 		g_hash_table_foreach(fsa_membership_copy->new_members,
 				     ghash_update_cib_node, &update_data);

@@ -80,25 +80,24 @@ do_lrm_control(long long action,
 
 	if(action & A_LRM_CONNECT) {
 	
-		CRM_DEBUG("LRM: connect...");
+		CRM_NOTE("LRM: connect...");
 		fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
 		if(NULL == fsa_lrm_conn) {
 			return failed;
 		}
 		
-		CRM_DEBUG("LRM: sigon...");
+		CRM_NOTE("LRM: sigon...");
 		ret = fsa_lrm_conn->lrm_ops->signon(fsa_lrm_conn,
-						    "crmd");
+						    CRM_SYSTEM_CRMD);
 		
 		if(ret != HA_OK) {
 			cl_log(LOG_ERR, "Failed to sign on to the LRM");
 			return failed;
 		}
 		
-		CRM_DEBUG("LRM: set_lrm_callback...");
-		ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(fsa_lrm_conn,
-							      lrm_op_callback,
-							      lrm_monitor_callback);
+		CRM_NOTE("LRM: set_lrm_callback...");
+		ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(
+			fsa_lrm_conn, lrm_op_callback, lrm_monitor_callback);
 		
 		if(ret != HA_OK) {
 			cl_log(LOG_ERR, "Failed to set LRM callbacks");
@@ -185,8 +184,6 @@ do_lrm_query(void)
 		set_xml_property_copy(xml_rsc, XML_ATTR_ID,     the_rsc->id);
 		set_xml_property_copy(xml_rsc, "rsc_id", the_rsc->name);
 		set_xml_property_copy(xml_rsc, "node_id",fsa_our_uname);
-		
-		CRM_DEBUG("get_cur_state...");
 		
 		op_list = the_rsc->ops->get_cur_state(the_rsc,
 						      &cur_state);
@@ -442,7 +439,7 @@ do_lrm_invoke(long long action,
 	} else if(operation != NULL) {
 		if(rsc == NULL) {
 			// add it to the list
-			CRM_DEBUG("add_rsc...");
+			CRM_DEBUG("adding rsc %s before operation", rid);
 			fsa_lrm_conn->lrm_ops->add_rsc(
 				fsa_lrm_conn, rid,
 				get_xml_attr_nested(msg, 
@@ -575,7 +572,7 @@ do_lrm_event(long long action,
 
 		switch(monitor->status) {
 			case LRM_OP_DONE:
-				CRM_DEBUG("An LRM monitor operation passed");
+				CRM_NOTE("An LRM monitor operation passed");
 				FNRET(I_NULL);
 				break;
 

@@ -491,8 +491,6 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 {
 	FNIN();
 
-	CRM_DEBUG("A client tried to connect... and there was much rejoicing.");
-
 	if (client_channel == NULL) {
 		cl_log(LOG_ERR, "Channel was NULL");
 	} else if (client_channel->ch_status == IPC_DISCONNECT) {
@@ -514,7 +512,6 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 		blank_client->uuid       = NULL;
 		blank_client->table_key = NULL;
 	
-		CRM_DEBUG("Adding IPC Channel to main thread.");
 		blank_client->client_source =
 			G_main_add_IPC_Channel(G_PRIORITY_LOW,
 					       client_channel,

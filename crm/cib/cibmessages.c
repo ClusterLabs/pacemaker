@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.36 2004/06/01 12:25:14 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.37 2004/06/01 16:12:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -208,7 +208,6 @@ cib_process_request(const char *op,
 	}
     
 	if (update_the_cib) {
-		CRM_DEBUG("Backing up CIB");
 		tmpCib = copy_xml_node_recursive(get_the_CIB());
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 
@@ -253,7 +252,7 @@ cib_process_request(const char *op,
 					     cib_update_op, section);
 		}
 		
-		CRM_DEBUG("Activating temporary CIB");
+		CRM_NOTE("Activating temporary CIB");
 		/* if(check_generation(cib_updates, tmpCib) == FALSE) */
 /* 			status = "discarded old update"; */
 /* 		else  */

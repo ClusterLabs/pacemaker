@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.30 2004/06/01 12:25:15 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.31 2004/06/01 16:12:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,7 +54,7 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	}
 
 	if(search_path == NULL) {
-		CRM_DEBUG("Will never find NULL :)");
+		CRM_NOTE("Will never find NULL");
 		FNRET(NULL);
 	}
 	
@@ -383,7 +383,7 @@ find_entity_nested(xmlNodePtr parent,
 
 		if (siblings == TRUE) {
 #ifdef XML_TRACE
-			CRM_DEBUG("Nothing yet... checking siblings");	    
+			CRM_NOTE("Nothing yet... checking siblings");	    
 #endif
 			parent = parent->next;
 		} else
@@ -683,7 +683,7 @@ copy_xml_node_recursive(xmlNodePtr src_node)
 		FNRET(local_node);
 	}
 
-	CRM_DEBUG("Returning null");
+	CRM_NOTE("Returning null");
 	FNRET(NULL);
 #else
 	return xmlCopyNode(src_node, 1);
@@ -747,8 +747,6 @@ string2xml(const char *input)
 
 	xmlBufferFree(xml_buffer);
 	xml_object = xmlDocGetRootElement(doc);
-
-	xml_message_debug(xml_object, "Created fragment");
 
 	return xml_object;
 }

@@ -54,7 +54,7 @@ gboolean relay_message(xmlNodePtr xml_relay_message,
 	fflush(router_strm);					\
 	crm_free(msg_text);
 #else
-#    define ROUTER_RESULT(x)	CRM_DEBUG(x);
+#    define ROUTER_RESULT(x)	CRM_DEBUG(x, NULL);
 #endif
 
 
@@ -157,7 +157,7 @@ do_msg_route(long long action,
 					
 					/* what else should go here? */
 				default:
-					CRM_DEBUG("Defering local processing of message");
+					CRM_NOTE("Defering local processing of message");
 
 					put_message(xml_message);
 					result = I_REQUEST;
@@ -253,7 +253,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 			FNRET(!hack_return_good);
 		}
 		if (msg == NULL) {
-			CRM_DEBUG("No message this time");
+			cl_log(LOG_WARNING, "No message this time");
 			continue;
 		}
 
@@ -269,7 +269,6 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 			if (crmd_authorize_message(root_xml_node,
 						   msg,
 						   curr_client)) {
-				CRM_DEBUG("Message authorized,about to relay");
 				s_crmd_fsa(C_IPC_MESSAGE,
 					   I_ROUTER,
 					   root_xml_node);
@@ -297,12 +296,16 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 			struct crm_subsystem_s *the_subsystem = NULL;
 			
 			if (curr_client->sub_sys == NULL) {
-				CRM_DEBUG("Client had not registered with us yet");
-			} else if (strcmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) {
+				cl_log(LOG_WARNING,
+				       "Client had not registered with us yet");
+			} else if (strcmp(CRM_SYSTEM_PENGINE,
+					  curr_client->sub_sys) == 0) {
 				the_subsystem = pe_subsystem;
-			} else if (strcmp(CRM_SYSTEM_TENGINE, curr_client->sub_sys) == 0) {
+			} else if (strcmp(CRM_SYSTEM_TENGINE,
+					  curr_client->sub_sys) == 0) {
 				the_subsystem = te_subsystem;
-			} else if (strcmp(CRM_SYSTEM_CIB, curr_client->sub_sys) == 0){
+			} else if (strcmp(CRM_SYSTEM_CIB,
+					  curr_client->sub_sys) == 0){
 				the_subsystem = cib_subsystem;
 			}
 			
@@ -322,8 +325,8 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 
 
 			if(curr_client->client_source != NULL) {
-				gboolean det =
-					G_main_del_IPC_Channel(curr_client->client_source);
+				gboolean det = G_main_del_IPC_Channel(
+					curr_client->client_source);
 			
 				CRM_DEBUG("crm_client was %s detached",
 					   det?"successfully":"not");
@@ -334,7 +337,6 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 			crm_free(curr_client->uuid);
 			crm_free(curr_client);
 		}
-		CRM_DEBUG("this client has now left the building.");
 		FNRET(!hack_return_good);
 	}
     
@@ -597,12 +599,12 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	gpointer table_key = NULL;
 	gboolean result;
 	const char *op = get_xml_attr(root_xml_node, XML_TAG_OPTIONS,
-				      XML_ATTR_OP, FALSE);
+				      XML_ATTR_OP, TRUE);
 	
 	FNIN();
 
 	if (safe_str_neq(CRM_OP_HELLO, op)) {
-			
+
 		if(sys_from == NULL) {
 			return FALSE;
 		}
@@ -662,7 +664,8 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 
 		
 		if (client_name == NULL)
-			CRM_DEBUG("Client had not registered with us yet");
+			cl_log(LOG_WARNING,
+			       "Client had not registered with us yet");
 		else if (strcmp(CRM_SYSTEM_PENGINE, client_name) == 0) 
 			the_subsystem = pe_subsystem;
 		else if (strcmp(CRM_SYSTEM_TENGINE, client_name) == 0)
@@ -690,9 +693,10 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		}
 	}
 	
-	if(result == TRUE && table_key == NULL)
+	if(result == TRUE && table_key == NULL) {
 		table_key = (gpointer)crm_strdup(client_name);
-
+	}
+	
 	if (result == TRUE) {
 		cl_log(LOG_INFO, "Accepted client %s", (char*)table_key);
 
@@ -741,7 +745,7 @@ handle_message(xmlNodePtr stored_msg)
 	const char *sys_from = get_xml_attr(stored_msg, NULL,
 					    XML_ATTR_SYSFROM, TRUE);
 
-	const char *host_from = get_xml_attr(stored_msg, NULL,
+	const char *host_from= get_xml_attr(stored_msg, NULL,
 					    XML_ATTR_HOSTFROM, TRUE);
 
 	const char *msg_ref  = get_xml_attr(stored_msg, NULL,
@@ -925,14 +929,11 @@ handle_message(xmlNodePtr stored_msg)
 
 void lrm_op_callback (lrm_op_t* op)
 {
-	CRM_DEBUG("In lrm_op_callback()");
-
 	s_crmd_fsa(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
 }
 
 void lrm_monitor_callback (lrm_mon_t* monitor)
 {
-	CRM_DEBUG("In lrm_monitor_callback()");
 	s_crmd_fsa(C_LRM_MONITOR_CALLBACK, I_LRM_EVENT, monitor);
 }
 

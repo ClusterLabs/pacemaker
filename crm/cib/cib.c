@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.37 2004/06/01 12:25:14 andrew Exp $ */
+/* $Id: cib.c,v 1.38 2004/06/01 16:12:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -180,10 +180,6 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	}
 	
 	xmlAddChild(fragment, cib);
-	CRM_DEBUG("Fragment created");
-
-	xml_message_debug(fragment, "created fragment");
-	
 	
 	crm_free(auto_section);
 	return fragment;

@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.25 2004/06/01 12:25:14 andrew Exp $ */
+/* $Id: adminmain.c,v 1.26 2004/06/01 16:12:49 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -345,7 +345,7 @@ handleCibMod(void)
 		return NULL;
 	}
 	
-	CRM_DEBUG("Object creation complete");
+	CRM_NOTE("Object creation complete");
 
 	// create the cib request
 	fragment = create_cib_fragment(cib_object, NULL);
@@ -396,7 +396,7 @@ do_work(ll_cluster_t * hb_cluster)
 					      CRM_OP_ERASE);
 			
 			dest_node = status;
-			CRM_DEBUG("CIB Erase op in progress");
+			CRM_NOTE("CIB Erase op in progress");
 			
 			sys_to = CRM_SYSTEM_DCIB;
 		} else {
@@ -411,7 +411,7 @@ do_work(ll_cluster_t * hb_cluster)
 				all_is_good = FALSE;
 		
 	} else if (DO_DAEMON == TRUE && DO_HEALTH == TRUE) {
-		CRM_DEBUG("Querying the system");
+		CRM_NOTE("Querying the system");
 
 		sys_to = CRM_SYSTEM_DC;
 
@@ -558,7 +558,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 		if (msg == NULL) {
-			CRM_DEBUG("No message this time");
+			CRM_NOTE("No message this time");
 			continue;
 		}
 

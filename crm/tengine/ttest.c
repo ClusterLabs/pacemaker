@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.2 2004/05/23 19:54:04 andrew Exp $ */
+/* $Id: ttest.c,v 1.3 2004/06/01 16:12:50 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -127,14 +127,14 @@ main(int argc, char **argv)
   
 	mtrace();
 
-	CRM_DEBUG("Initializing graph...");
+	CRM_NOTE("Initializing graph...");
 	initialize_graph();
 	
 	xmlNodePtr xml_graph = file2xml(stdin);
 
-	CRM_DEBUG("Unpacking graph...");
+	CRM_NOTE("Unpacking graph...");
 	unpack_graph(xml_graph);
-	CRM_DEBUG("Initiating transition...");
+	CRM_NOTE("Initiating transition...");
 
 	if(initiate_transition() == FALSE) {
 		// nothing to be done.. means we're done.
@@ -146,7 +146,7 @@ main(int argc, char **argv)
 	free_xml(xml_graph);
 	muntrace();
 
-	CRM_DEBUG("Transition complete...");
+	CRM_NOTE("Transition complete...");
 
 	return 0;
 }

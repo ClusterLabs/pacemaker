@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.29 2004/06/01 12:25:15 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.30 2004/06/01 16:12:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -378,7 +378,7 @@ find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free)
 
 	FNIN();
 	if (msg == NULL) {
-		CRM_DEBUG("IPC Message was empty...");
+		CRM_NOTE("IPC Message was empty...");
 		FNRET(NULL);
 	}
 
