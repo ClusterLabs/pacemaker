@@ -624,6 +624,9 @@ do_lrm_event(long long action,
 		lrm_op_t* op = (lrm_op_t*)data;
 		lrm_rsc_t* rsc = op->rsc;
 
+		crm_debug("Processing %d event for %s/%s",
+			  op->op_status, op->op_type, rsc->id);
+		
 		switch(op->op_status) {
 			case LRM_OP_ERROR:
 			case LRM_OP_CANCELLED:
