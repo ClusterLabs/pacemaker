@@ -22,11 +22,12 @@ MAINTAINERCLEANFILES    = Makefile.in
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
 			-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha
 
-#habindir		= @bindir@
-halibdir		= $(libdir)/@HB_PKG@
+apiuid			= @HA_CCMUID@
+habindir		= @bindir@
+#halibdir		= $(libdir)/@HB_PKG@
 gliblib			= @GLIBLIB@
 
-halib_PROGRAMS		= cl_status cl_respawn
+habin_PROGRAMS		= cl_status cl_respawn
 
 ## SOURCES
 cl_status_SOURCES	= cl_status.c
@@ -40,3 +41,9 @@ cl_respawn_LDADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
 			  $(top_builddir)/lib/apphb/libapphb.la		\
 			  $(gliblib)					\
 			  $(top_builddir)/replace/libreplace.la
+
+install-data-hook:    # install-exec-hook doesn't work (!)
+	-chown $(apiuid) $(DESTDIR)/$(habindir)/cl_status
+	-chmod u+s $(DESTDIR)/$(habindir)/cl_status
+
+.PHONY: install-exec-hook
