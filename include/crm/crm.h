@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.41 2005/02/07 12:09:59 andrew Exp $ */
+/* $Id: crm.h,v 1.42 2005/02/10 10:42:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,11 +37,7 @@
 		abort();				\
 	}
 
-#define CRM_ASSERT_FALSE(expr) if(expr) {		\
-		crm_crit("Triggered assert at %s:%d",	\
-			 __FILE__, __LINE__);		\
-		abort();				\
-	}
+#define CRM_DEV_ASSERT(expr) if(1) { CRM_ASSERT(expr); }
 
 /* Clean these up at some point, some probably should be runtime options */
 #define WORKING_DIR	HA_VARLIBDIR"/heartbeat/crm"
