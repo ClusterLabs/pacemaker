@@ -147,7 +147,7 @@ More details are given in the annotated DTD below.
 
 <!-- CONSTRAINTS -->
 <!ELEMENT constraints
-(rsc_to_rsc*,rsc_to_node*,node_baseweight*,node_track*)>
+(rsc_to_rsc*,rsc_to_node*,rsc_to_attr*,node_baseweight*,node_track*)>
 
 <!-- Every constraint entry also has a 'lifetime' attribute, which
      expresses when this is applicable. For example, a constraint could

@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.31 2004/04/15 00:34:06 msoffen Exp $ */
+/* $Id: cib.c,v 1.32 2004/04/29 15:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -121,7 +121,7 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 	
 	data = cib_process_request(op, options, fragment, &result);
 
-	CRM_DEBUG2("[cib] operation returned result %d", result);
+	CRM_DEBUG("[cib] operation returned result %d", result);
 
 	if(auto_reply) {
 		reply = create_reply(message, data);
@@ -235,7 +235,7 @@ pluralSection(const char *a_section)
 		a_section_parent = cl_strdup("all");
 	}
 	
-	CRM_DEBUG2("Plural is %s", a_section_parent);
+	CRM_DEBUG("Plural is %s", a_section_parent);
 	return a_section_parent;
 }
 

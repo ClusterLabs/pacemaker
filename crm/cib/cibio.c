@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.20 2004/04/15 00:34:06 msoffen Exp $ */
+/* $Id: cibio.c,v 1.21 2004/04/29 15:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -420,10 +420,10 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 
 // Make sure memory is cleaned up appropriately
 	if (error_code != 0) {
-//		CRM_DEBUG2("Freeing new CIB %p", new_cib);
+//		CRM_DEBUG("Freeing new CIB %p", new_cib);
 		free_xml(new_cib);
 	} else {
-//		CRM_DEBUG2("Freeing saved CIB %p", saved_cib);
+//		CRM_DEBUG("Freeing saved CIB %p", saved_cib);
 		free_xml(saved_cib);
 	}
 

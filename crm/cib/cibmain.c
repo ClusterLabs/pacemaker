@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.16 2004/04/21 18:50:28 andrew Exp $ */
+/* $Id: cibmain.c,v 1.17 2004/04/29 15:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -307,7 +307,7 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 	if(root_xml_node != NULL)
 		free_xml(root_xml_node);
 
-	CRM_DEBUG2("Processed %d messages", lpc);
+	CRM_DEBUG("Processed %d messages", lpc);
 	if (sender->ch_status == IPC_DISCONNECT) {
 		cl_log(LOG_ERR, "The server has left us: Shutting down...NOW");
 

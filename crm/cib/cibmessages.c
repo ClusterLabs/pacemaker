@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.31 2004/04/15 00:34:06 msoffen Exp $ */
+/* $Id: cibmessages.c,v 1.32 2004/04/29 15:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -111,7 +111,7 @@ cib_process_request(const char *op,
 		
 	} else if (strcmp(CRM_OPERATION_BUMP, op) == 0) {
 		tmpCib = get_cib_copy();
-		CRM_DEBUG3("Handling a %s for section=%s of the cib",
+		CRM_DEBUG("Handling a %s for section=%s of the cib",
 			   CRM_OPERATION_BUMP, section);
 		
 		// modify the timestamp
@@ -141,7 +141,7 @@ cib_process_request(const char *op,
 		
 		
 	} else if (strcmp("query", op) == 0) {
-		CRM_DEBUG2("Handling a query for section=%s of the cib",
+		CRM_DEBUG("Handling a query for section=%s of the cib",
 			   section);
 		/* force a pick-up of the relevant section before
 		 * returning
@@ -173,7 +173,7 @@ cib_process_request(const char *op,
 		cib_update_op = CIB_OP_DELETE;
 
 	} else if (strcmp(CRM_OPERATION_REPLACE, op) == 0) {
-		CRM_DEBUG2("Replacing section=%s of the cib", section);
+		CRM_DEBUG("Replacing section=%s of the cib", section);
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 
 		if (section == NULL
@@ -202,7 +202,7 @@ cib_process_request(const char *op,
 		tmpCib = copy_xml_node_recursive(get_the_CIB());
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 
-		CRM_DEBUG3("Updating section=%s of the cib (op=%s)",
+		CRM_DEBUG("Updating section=%s of the cib (op=%s)",
 			   section, op);
 
 			// should we be doing this?
@@ -255,7 +255,7 @@ cib_process_request(const char *op,
 
 		}
 		
-		CRM_DEBUG2("CIB update status: %d", *result);
+		CRM_DEBUG("CIB update status: %d", *result);
 	}
 	
 	output_section = section;

@@ -228,7 +228,7 @@ do_startup(long long action,
 		cl_log_set_facility(facility);
 	}
 	
-	CRM_DEBUG2("Facility: %d", facility);
+	CRM_DEBUG("Facility: %d", facility);
 	
 	if(was_error == 0) {
 		CRM_DEBUG("Init server comms");

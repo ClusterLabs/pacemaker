@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.22 2004/04/15 00:35:19 msoffen Exp $ */
+/* $Id: ipcutils.c,v 1.23 2004/04/29 15:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -237,13 +237,13 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 		all_is_good = FALSE;
 	}
     
-/*     CRM_DEBUG2("Sending message: %s", (char*)msg->msg_body); */
-	CRM_DEBUG2("Message is%s valid to send", all_is_good?"":" not");
+/*     CRM_DEBUG("Sending message: %s", (char*)msg->msg_body); */
+	CRM_DEBUG("Message is%s valid to send", all_is_good?"":" not");
 
 	if (ipc_client == NULL) {
 		all_is_good = FALSE;
 	}
-	CRM_DEBUG2("IPC Client is%s set.", all_is_good?"":" not");
+	CRM_DEBUG("IPC Client is%s set.", all_is_good?"":" not");
 	if (all_is_good) {		
 		while(lpc++ < MAX_IPC_FAIL
 		      && ipc_client->ops->send(ipc_client, msg) == IPC_FAIL)
@@ -259,7 +259,7 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 		FNRET(!all_is_good);
 	}
     
-	CRM_DEBUG2("Sending of IPC message %s.",
+	CRM_DEBUG("Sending of IPC message %s.",
 		   all_is_good?"succeeded":"failed");
 	FNRET(all_is_good);
 }

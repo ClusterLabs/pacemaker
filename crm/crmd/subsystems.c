@@ -708,7 +708,7 @@ do_lrm_query(void)
 		
 		op_list = the_rsc->ops->get_cur_state(the_rsc,
 							     &cur_state);
-		CRM_DEBUG2("\tcurrent state:%s\n",
+		CRM_DEBUG("\tcurrent state:%s\n",
 			   cur_state==LRM_RSC_IDLE?"Idel":"Busy");
 		
 		node = g_list_first(op_list);
@@ -909,7 +909,7 @@ do_lrm_invoke(long long action,
 		}
 		
 		// now do the op
-		CRM_DEBUG2("performing op %s...", operation);
+		CRM_DEBUG("performing op %s...", operation);
 		op = g_new(lrm_op_t, 1);
 		op->op_type = operation;
 		op->params = xml2list(msg, rsc_path, DIMOF(rsc_path));
@@ -939,7 +939,7 @@ xml2list(xmlNodePtr parent, const char**attr_path, int depth)
 			const char *key = xmlGetProp(node_iter, "name");
 			const char *value = xmlGetProp(node_iter, "value");
 			
-			CRM_DEBUG3("Added %s=%s", key, value);
+			CRM_DEBUG("Added %s=%s", key, value);
 			
 			g_hash_table_insert (nvpair_hash,
 					     cl_strdup(key),

@@ -247,7 +247,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 
 	FNIN();
-	CRM_DEBUG2("Processing IPC message from %s",
+	CRM_DEBUG("Processing IPC message from %s",
 		   curr_client->table_key);
 
 	while(client->ops->is_message_pending(client)) {
@@ -267,7 +267,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 
 		lpc++;
 		buffer = (char*)msg->msg_body;
-		CRM_DEBUG3("Processing xml from %s [text=%s]",
+		CRM_DEBUG("Processing xml from %s [text=%s]",
 			   curr_client->table_key, buffer);
 	
 		root_xml_node =
@@ -296,7 +296,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		root_xml_node = NULL;
 	}
 
-	CRM_DEBUG2("Processed %d messages", lpc);
+	CRM_DEBUG("Processed %d messages", lpc);
     
 	if (client->ch_status == IPC_DISCONNECT)
 	{
@@ -333,7 +333,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 				gboolean det =
 					G_main_del_IPC_Channel(curr_client->client_source);
 			
-				CRM_DEBUG2("crm_client was %s detached",
+				CRM_DEBUG("crm_client was %s detached",
 					   det?"successfully":"not");
 			}
 			
@@ -478,13 +478,13 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	}
 
 #if 0
-	CRM_DEBUG2("is_local    %d", is_local);
-	CRM_DEBUG2("is_for_dcib %d", is_for_dcib);
-	CRM_DEBUG2("is_for_dc   %d", is_for_dc);
-	CRM_DEBUG2("is_for_crm  %d", is_for_crm);
-	CRM_DEBUG2("AM_I_DC     %d", AM_I_DC);
-	CRM_DEBUG2("sys_to      %s", sys_to);
-	CRM_DEBUG2("host_to     %s", host_to);
+	CRM_DEBUG("is_local    %d", is_local);
+	CRM_DEBUG("is_for_dcib %d", is_for_dcib);
+	CRM_DEBUG("is_for_dc   %d", is_for_dc);
+	CRM_DEBUG("is_for_crm  %d", is_for_crm);
+	CRM_DEBUG("AM_I_DC     %d", AM_I_DC);
+	CRM_DEBUG("sys_to      %s", sys_to);
+	CRM_DEBUG("host_to     %s", host_to);
 #endif
 /*
 	if(AM_I_DC && sys_cc != NULL && strcmp(sys_cc, CRM_SYSTEM_DC) == 0) {
@@ -549,7 +549,7 @@ send_msg_via_ha(xmlNodePtr action, const char *dest_node)
 		       dest_node);
 		FNOUT();
 	}
-//	CRM_DEBUG2("Relaying message to (%s) via HA", dest_node);
+//	CRM_DEBUG("Relaying message to (%s) via HA", dest_node);
 	set_xml_property_copy(action, XML_ATTR_HOSTTO, dest_node);
 
 	send_xmlha_message(fsa_cluster_conn, action);
@@ -621,7 +621,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 			can_reply = TRUE;  // reply can be routed
 		
 		
-		CRM_DEBUG3("Message reply can%s be routed from %s.",
+		CRM_DEBUG("Message reply can%s be routed from %s.",
 			   can_reply?"":" not", sys_from);
 		FNRET(can_reply);
 	}
@@ -824,7 +824,7 @@ handle_message(xmlNodePtr stored_msg)
 			
 	}
 
-/* 	CRM_DEBUG3("%s: Next input is %s", __FUNCTION__, */
+/* 	CRM_DEBUG("%s: Next input is %s", __FUNCTION__, */
 /* 		   fsa_input2string(next_input)); */
 	
 		

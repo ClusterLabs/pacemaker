@@ -285,7 +285,7 @@ do_dc_takeover(long long action,
 	CRM_DEBUG("################## Taking over the DC ##################");
 	set_bit_inplace(&fsa_input_register, R_THE_DC);
 
-	CRM_DEBUG2("Am I the DC? %s", AM_I_DC?"yes":"no");
+	CRM_DEBUG("Am I the DC? %s", AM_I_DC?"yes":"no");
 	
 	set_bit_inplace(&fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(&fsa_input_register, R_INVOKE_PE);
@@ -339,7 +339,7 @@ do_dc_release(long long action,
 		       fsa_action2string(action));
 	}
 
-	CRM_DEBUG2("Am I still the DC? %s", AM_I_DC?"yes":"no");
+	CRM_DEBUG("Am I still the DC? %s", AM_I_DC?"yes":"no");
 
 	FNRET(result);
 }
@@ -398,13 +398,13 @@ do_send_welcome(long long action,
 			continue;
 		}
 
-		CRM_DEBUG3("Sending welcome message to %s (%d)",
+		CRM_DEBUG("Sending welcome message to %s (%d)",
 			   new_node, was_sent);
 		num_sent++;
 		was_sent = was_sent
 			&& send_request(NULL, NULL, CRM_OPERATION_WELCOME,
 					new_node, CRM_SYSTEM_CRMD);
-		CRM_DEBUG3("Sent welcome message to %s (%d)",
+		CRM_DEBUG("Sent welcome message to %s (%d)",
 			   new_node, was_sent);
 	}
 

@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.26 2004/04/15 00:35:19 msoffen Exp $ */
+/* $Id: xmlutils.c,v 1.27 2004/04/29 15:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,7 +75,7 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		while(child != NULL) {
 			const char * child_name = (const char*)child->name;
 #ifdef XML_TRACE
-			CRM_DEBUG3("comparing (%s) with (%s).",
+			CRM_DEBUG("comparing (%s) with (%s).",
 				   search_path[j],
 				   child->name);
 #endif
@@ -83,7 +83,7 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 				lastMatch = child;
 				child = lastMatch->children;
 #ifdef XML_TRACE
-				CRM_DEBUG3("found node (%s) @line (%ld).",
+				CRM_DEBUG("found node (%s) @line (%ld).",
 					   search_path[j],
 					   xmlGetLineNo(child));
 #endif
@@ -94,7 +94,7 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		}
 		if (is_found == FALSE) {
 #ifdef XML_TRACE
-			CRM_DEBUG2(
+			CRM_DEBUG(
 				"No more siblings left... %s cannot be found.",
 				search_path[j]);
 #endif
@@ -106,7 +106,7 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	    && lastMatch != NULL
 	    && strcmp(lastMatch->name, search_path[j-1]) == 0) {
 #ifdef XML_TRACE
-		CRM_DEBUG2("returning node (%s).",
+		CRM_DEBUG("returning node (%s).",
 			   xmlGetNodePath(lastMatch));
 #endif
 		FNRET(lastMatch);
@@ -317,18 +317,18 @@ find_entity_nested(xmlNodePtr parent,
 #endif
 	while(parent != NULL) {
 #ifdef XML_TRACE
-		CRM_DEBUG2("examining (%s).", xmlGetNodePath(parent));
+		CRM_DEBUG("examining (%s).", xmlGetNodePath(parent));
 #endif
 		child = parent->children;
 	
 		while(child != NULL) {
 #ifdef XML_TRACE
-			CRM_DEBUG2("looking for (%s) [name].", node_name);
+			CRM_DEBUG("looking for (%s) [name].", node_name);
 #endif
 			if (node_name != NULL
 			    && strcmp(child->name, node_name) != 0) {    
 #ifdef XML_TRACE
-				CRM_DEBUG3(
+				CRM_DEBUG(
 					"skipping entity (%s=%s) [node_name].",
 					xmlGetNodePath(child), child->name);
 #endif
@@ -345,7 +345,7 @@ find_entity_nested(xmlNodePtr parent,
 #endif
 				if (strcmp(child_value, elem_filter_value)) {
 #ifdef XML_TRACE
-					CRM_DEBUG2("skipping entity (%s) [attr_value].",
+					CRM_DEBUG("skipping entity (%s) [attr_value].",
 						   xmlGetNodePath(child));
 #endif
 					break;
@@ -371,7 +371,7 @@ find_entity_nested(xmlNodePtr parent,
 					       xmlGetNodePath(child));
 				} else if (strcmp(id, child_id) == 0) {
 #ifdef XML_TRACE
-					CRM_DEBUG2("found entity (%s).", id);
+					CRM_DEBUG("found entity (%s).", id);
 #endif
 					FNRET(child);
 				}   
@@ -441,14 +441,14 @@ xml_message_debug(xmlNodePtr msg, const char *text)
 
 	FNIN();
 	if(msg == NULL) {
-		CRM_DEBUG3("%s: %s",
+		CRM_DEBUG("%s: %s",
 		   text==NULL?"<null>":text,"<null>");
 		
 		FNOUT();
 	}
 	
 	msg_buffer = dump_xml_node(msg, FALSE);
-	CRM_DEBUG3("%s: %s",
+	CRM_DEBUG("%s: %s",
 		   text==NULL?"<null>":text,
 		   msg_buffer==NULL?"<null>":msg_buffer);
 	cl_free(msg_buffer);
@@ -477,7 +477,7 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 		xmlDocDumpMemory(msg->doc, &xml_message, &msg_size);
 	} else {
 #ifdef XML_TRACE
-		CRM_DEBUG2("mem used by xml: %d", xmlMemUsed());
+		CRM_DEBUG("mem used by xml: %d", xmlMemUsed());
 #endif    
 		xmlMemoryDump ();
 	
@@ -541,7 +541,7 @@ set_xml_property_copy(xmlNodePtr node,
 
 	
 #ifdef XML_TRACE
-	CRM_DEBUG4("[%s] Setting %s to %s", parent_name, name, value);
+	CRM_DEBUG("[%s] Setting %s to %s", parent_name, name, value);
 #endif
 	if (name == NULL || strlen(name) <= 0) {
 		ret_value = NULL;
@@ -585,7 +585,7 @@ create_xml_node(xmlNodePtr parent, const char *name)
 	}
 
 #ifdef XML_TRACE
-	CRM_DEBUG3("Created node [%s [%s]]", parent_name, local_name);
+	CRM_DEBUG("Created node [%s [%s]]", parent_name, local_name);
 #endif
 	FNRET(ret_value);
 }
@@ -670,12 +670,12 @@ copy_xml_node_recursive(xmlNodePtr src_node)
 			local_child = copy_xml_node_recursive(node_iter);
 			if(local_child != NULL) {
 				xmlAddChild(local_node, local_child);
-				CRM_DEBUG3("Copied node [%s [%s]", local_name, local_child->name);
+				CRM_DEBUG("Copied node [%s [%s]", local_name, local_child->name);
 			} 				
 			node_iter = node_iter->next;
 		}
 
-		CRM_DEBUG2("Returning [%s]", local_node->name);
+		CRM_DEBUG("Returning [%s]", local_node->name);
 		FNRET(local_node);
 	}
 

@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.26 2004/04/15 00:35:19 msoffen Exp $ */
+/* $Id: msgutils.c,v 1.27 2004/04/29 15:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -205,27 +205,27 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 
 	FNIN();
 
-	CRM_DEBUG2("Attempting to decode: [%s]", srcstring);
+	CRM_DEBUG("Attempting to decode: [%s]", srcstring);
 	if (srcstring != NULL) {
 		len = strlen(srcstring);
 		while(lpc < len) {
 			if (srcstring[lpc++] == separator) {
 				*name = (char*)cl_malloc(sizeof(char)*lpc);
-				CRM_DEBUG2("Malloc ok %d", lpc);
+				CRM_DEBUG("Malloc ok %d", lpc);
 				strncpy(*name, srcstring, lpc-1);
-				CRM_DEBUG2("Strcpy ok %d", lpc-1);
+				CRM_DEBUG("Strcpy ok %d", lpc-1);
 				(*name)[lpc-1] = '\0';
-				CRM_DEBUG2("Found token [%s]", *name);
+				CRM_DEBUG("Found token [%s]", *name);
 
 				// this sucks but as the strtok *is* a bug
 				len = len-lpc+1;
 				*value = (char*)cl_malloc(sizeof(char)*len);
-				CRM_DEBUG2("Malloc ok %d", len);
+				CRM_DEBUG("Malloc ok %d", len);
 				temp = srcstring+lpc;
 				CRM_DEBUG("Doing str copy");
 				strncpy(*value, temp, len-1);
 				(*value)[len-1] = '\0';
-				CRM_DEBUG2("Found token [%s]", *value);
+				CRM_DEBUG("Found token [%s]", *value);
 
 				FNRET(TRUE);
 			}

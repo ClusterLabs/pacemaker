@@ -46,7 +46,7 @@ do_state_transition(long long actions,
 # ifdef FSA_TRACE
 #  define ELSEIF_FSA_ACTION(x,y)					\
      else if(is_set(actions,x)) {					\
-	CRM_DEBUG3("Invoking action %s (%.16llx)",			\
+	CRM_DEBUG("Invoking action %s (%.16llx)",			\
 		fsa_action2string(x), x);				\
 	actions = clear_bit(actions, x);				\
 	next_input = y(x, cause, cur_state, last_input, data);		\
@@ -58,7 +58,7 @@ do_state_transition(long long actions,
 			data==NULL?"no":"yes",				\
 			fsa_input2string(next_input));			\
 	fflush(dot_strm);						\
-	CRM_DEBUG3("Result of action %s was %s",			\
+	CRM_DEBUG("Result of action %s was %s",			\
 		fsa_action2string(x), fsa_input2string(next_input));	\
      }
 # else
@@ -80,11 +80,11 @@ do_state_transition(long long actions,
 # ifdef FSA_TRACE
 #  define ELSEIF_FSA_ACTION(x,y)					\
      else if(is_set(actions,x)) {					\
-	CRM_DEBUG3("Invoking action %s (%.16llx)",			\
+	CRM_DEBUG("Invoking action %s (%.16llx)",			\
 		fsa_action2string(x), x);				\
 	actions = clear_bit(actions, x);				\
 	next_input = y(x, cause, cur_state, last_input, data);		\
-	CRM_DEBUG3("Result of action %s was %s",			\
+	CRM_DEBUG("Result of action %s was %s",			\
 		fsa_action2string(x), fsa_input2string(next_input));	\
      }
 # else
@@ -157,16 +157,16 @@ fsa_timer_t *dc_heartbeat = NULL;
 long long
 toggle_bit(long long action_list, long long action)
 {
-//	CRM_DEBUG2("Toggling bit %.16llx", action);
+//	CRM_DEBUG("Toggling bit %.16llx", action);
 	action_list ^= action;
-//	CRM_DEBUG2("Result %.16llx", action_list & action);
+//	CRM_DEBUG("Result %.16llx", action_list & action);
 	return action_list;
 }
 
 long long
 clear_bit(long long action_list, long long action)
 {
-//	CRM_DEBUG2("Clearing bit\t%.16llx", action);
+//	CRM_DEBUG("Clearing bit\t%.16llx", action);
 
 	// ensure its set
 	action_list |= action;
@@ -180,7 +180,7 @@ clear_bit(long long action_list, long long action)
 long long
 set_bit(long long action_list, long long action)
 {
-//	CRM_DEBUG2("Adding bit\t%.16llx", action);
+//	CRM_DEBUG("Adding bit\t%.16llx", action);
 	action_list |= action;
 	return action_list;
 }
@@ -208,7 +208,7 @@ set_bit_inplace(long long *action_list, long long action)
 gboolean
 is_set(long long action_list, long long action)
 {
-//	CRM_DEBUG2("Checking bit\t%.16llx", action);
+//	CRM_DEBUG("Checking bit\t%.16llx", action);
 	return ((action_list & action) == action);
 }
 
@@ -221,7 +221,7 @@ startTimer(fsa_timer_t *timer)
 					  timer->callback,
 					  (void*)timer);
 /*
-		CRM_DEBUG3("#!!#!!# Started %s timer (%d)",
+		CRM_DEBUG("#!!#!!# Started %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
 */
@@ -240,7 +240,7 @@ stopTimer(fsa_timer_t *timer)
 {
 	if(((int)timer->source_id) > 0) {
 /*
-		CRM_DEBUG3("#!!#!!# Stopping %s timer (%d)",
+		CRM_DEBUG("#!!#!!# Stopping %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
 */
@@ -278,7 +278,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	next_state = starting_state;
 
 #ifdef FSA_TRACE
-	CRM_DEBUG4("FSA invoked with Cause: %s\n\tState: %s, Input: %s",
+	CRM_DEBUG("FSA invoked with Cause: %s\n\tState: %s, Input: %s",
 		   fsa_cause2string(cause),
 		   fsa_state2string(cur_state),
 		   fsa_input2string(cur_input));
@@ -310,7 +310,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		cur_input = next_input;
 
 #ifdef FSA_TRACE
-		CRM_DEBUG3("FSA while loop:\tState: %s, Input: %s",
+		CRM_DEBUG("FSA while loop:\tState: %s, Input: %s",
 			   fsa_state2string(cur_state),
 			   fsa_input2string(cur_input));
 #endif		
@@ -323,7 +323,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 
 		if(new_actions != A_NOTHING) {
 #ifdef FSA_TRACE
-			CRM_DEBUG2("Adding actions %.16llx", new_actions);
+			CRM_DEBUG("Adding actions %.16llx", new_actions);
 #endif
 			actions |= new_actions;
 		}
@@ -500,7 +500,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			fflush(dot_strm);
 #endif
 #ifdef FSA_TRACE
-			CRM_DEBUG3("Invoking action %s (%.16llx)",
+			CRM_DEBUG("Invoking action %s (%.16llx)",
 				   fsa_action2string(A_MSG_PROCESS),
 				   A_MSG_PROCESS);
 #endif
@@ -517,7 +517,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			fprintf(dot_strm, "\t(result=%s)\n",
 				fsa_input2string(next_input));
 #endif
-			CRM_DEBUG3("Result of action %s was %s",
+			CRM_DEBUG("Result of action %s was %s",
 				   fsa_action2string(A_MSG_PROCESS),
 				   fsa_input2string(next_input));	
 	
@@ -542,7 +542,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	}
 	
 #ifdef FSA_TRACE
-	CRM_DEBUG2("################# Exiting the FSA (%s) ##################",
+	CRM_DEBUG("################# Exiting the FSA (%s) ##################",
 		  fsa_state2string(fsa_state));
 #endif
 	// cleanup inputs?

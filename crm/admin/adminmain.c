@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.21 2004/04/26 12:36:05 msoffen Exp $ */
+/* $Id: adminmain.c,v 1.22 2004/04/29 15:33:02 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -214,11 +214,11 @@ main(int argc, char **argv)
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
 			case 'i':
-				CRM_DEBUG3("Option %c => %s", flag, optarg);
+				CRM_DEBUG("Option %c => %s", flag, optarg);
 				id = cl_strdup(optarg);
 				break;
 			case 'o':
-				CRM_DEBUG3("Option %c => %s", flag, optarg);
+				CRM_DEBUG("Option %c => %s", flag, optarg);
 				obj_type = cl_strdup(optarg);
 				break;
 			case 'C':
@@ -377,7 +377,7 @@ do_work(ll_cluster_t * hb_cluster)
 			cl_log(LOG_DEBUG, "Querying the CIB");
 			obj_type_parent = pluralSection(obj_type);
 			
-			CRM_DEBUG2("Querying the CIB for section: %s",
+			CRM_DEBUG("Querying the CIB for section: %s",
 				   obj_type_parent);
 			
 			set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OPERATION_QUERY);
@@ -385,7 +385,7 @@ do_work(ll_cluster_t * hb_cluster)
 					      obj_type_parent);
 			
 			dest_node = status;
-			CRM_DEBUG2("CIB query creation %s",
+			CRM_DEBUG("CIB query creation %s",
 				   msg_data == NULL ? "failed." : "passed.");
 			
 			sys_to = CRM_SYSTEM_DCIB;
@@ -565,7 +565,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 		lpc++;
 		buffer =(char *) msg->msg_body;
-		CRM_DEBUG2("Got xml [text=%s]", buffer);
+		CRM_DEBUG("Got xml [text=%s]", buffer);
 
 		xml_root_node =
 			find_xml_in_ipcmessage(msg, TRUE);
