@@ -21,6 +21,7 @@
 #include <time.h>
 
 #include <crm/crm.h>
+#include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
@@ -47,6 +48,7 @@ long long clear_flags(long long actions,
 			     enum crmd_fsa_state cur_state,
 			     enum crmd_fsa_input cur_input);
 
+void dump_rsc_info(void);
 
 #ifdef DOT_FSA_ACTIONS
 # ifdef FSA_TRACE
@@ -520,12 +522,12 @@ do_state_transition(long long actions,
 //	if(current_input != I_NULL
 //	   && (current_input != I_DC_HEARTBEAT || cur_state != S_NOT_DC)){
 		
-		fprintf(dot_strm,
-			"\t\"%s\" -> \"%s\" [ label =\"%s\" ] // %s",
-			state_from, state_to, input,
-			asctime(localtime(&now)));
-		fflush(dot_strm);
-		//}
+	fprintf(dot_strm,
+		"\t\"%s\" -> \"%s\" [ label =\"%s\" ] // %s",
+		state_from, state_to, input,
+		asctime(localtime(&now)));
+	fflush(dot_strm);
+	//}
 
 	crm_info("State transition \"%s\" -> \"%s\" [ cause =\"%s\" %s ]",
 		 state_from, state_to, input, asctime(localtime(&now)));
@@ -545,6 +547,9 @@ do_state_transition(long long actions,
 		case S_RECOVERY:
 			tmp = set_bit(tmp, A_RECOVER);
 			break;
+		case S_IDLE:
+			dump_rsc_info();
+			// keep going
 		default:
 			tmp = clear_bit(tmp, A_RECOVER);
 			break;
@@ -600,4 +605,46 @@ clear_flags(long long actions,
 			break;
 	}
 	return actions;
+}
+
+void
+dump_rsc_info(void)
+{
+	xmlNodePtr local_cib = get_cib_copy();
+	xmlNodePtr root      = get_object_root("status", local_cib);
+	xmlNodePtr nodes     = root->children;
+	xmlNodePtr node      = NULL;
+	xmlNodePtr resources = NULL;
+	xmlNodePtr rsc       = NULL;
+	
+	const char *path[] = {
+		"lrm",
+		"lrm_resources"
+	};
+	
+
+	while(nodes != NULL) {
+		node = nodes;
+		nodes = nodes->next;
+		
+		resources = find_xml_node_nested(node, path, DIMOF(path));
+		while(resources != NULL) {
+			rsc = resources;
+			resources = resources->next;
+
+//          <lrm_resource id="rsc1" last_op="start" op_state="started" op_code="0" target="node1"/>
+			const char *id       = xmlGetProp(rsc, "id");
+			const char *op_code  = xmlGetProp(rsc, "op_code");
+			const char *op_state  = xmlGetProp(rsc, "op_state");
+			const char *last_op  = xmlGetProp(rsc, "last_op");
+			const char *target   = xmlGetProp(rsc, "target");
+
+			if(safe_str_eq(op_state, "stopped")) {
+				continue;
+			}
+			
+			crm_info("Resource state: %s %s [%s after %s] on %s",
+				 id, op_state, op_code, last_op, target);
+		}
+	}
 }

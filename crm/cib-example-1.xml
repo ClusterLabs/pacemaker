@@ -6,25 +6,25 @@
 <configuration version="1.0" source="lmb" serial="1" timestamp="1080033905.000">
 <!-- ============================================================== -->
 <nodes>
-<node id="n001" uname="chip" description="4-way DL580 4G" type="node">
+<node id="n001" uname="chip" description="4-way DL580 4G" type="member">
 	<attributes>
 	<nvpair id="nv001" name="san-msa1000" value="yes" />
 	<nvpair id="nv002" name="arch" value="IA32" />
 	</attributes>
 </node>
-<node id="n002" uname="dale" description="4-way DL580 4G" type="node">
+<node id="n002" uname="dale" description="4-way DL580 4G" type="member">
 	<attributes>
 	<nvpair id="nv003" name="san-msa1000" value="yes" />
 	<nvpair id="nv004" name="arch" value="IA32" />
 	</attributes>
 </node>
-<node id="n003" uname="hastur" description="4-way AMD64 4G" type="node">
+<node id="n003" uname="hastur" description="4-way AMD64 4G" type="member">
 	<attributes>
 	<nvpair id="nv005" name="san-msa1000" value="no" />
 	<nvpair id="nv006" name="arch" value="AMD64" />
 	</attributes>
 </node>
-<node id="n004" uname="cthluh" description="4-way AMD64 4G" type="node">
+<node id="n004" uname="cthluh" description="4-way AMD64 4G" type="member">
 	<attributes>
 	<nvpair id="nv007" name="san-msa1000" value="no" />
 	<nvpair id="nv008" name="arch" value="AMD64" />

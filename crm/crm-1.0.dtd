@@ -232,7 +232,7 @@ More details are given in the annotated DTD below.
     combined.
 
 -->
-<!ELEMENT rule (node_expression*)>
+<!ELEMENT rule (expression*)>
 <!ATTLIST rule
 	  id         CDATA        #REQUIRED
 	  score      CDATA        #IMPLIED
@@ -241,7 +241,7 @@ More details are given in the annotated DTD below.
 
 <!--
     Reference a set of nodes, either by directly specifying a node id,
-    uname, or by matching its attributes. All rules need to match.
+      uname, or by matching its attributes. 
     
     (You can express "OR" by having multiple rsc_to_node / node_baseweight
     entries.)
@@ -251,7 +251,13 @@ More details are given in the annotated DTD below.
     Two builtin attributes will be node id and node uname so that:
       attribute=id value=8C05CA5C-C9E3-11D8-BEE6-000A95B71D78 operation=eq, and
       attribute=uname value=test1 operation=eq
-    would both be valid tests
+    would both be valid tests.
+
+    Additionally, the "running" and "not_running" tests checks to see if
+      the value specified for "attribute" is a resource that is (not) running
+      on the node.  So these would both be valid tests.
+        attribute=myWebServer operation=running, and
+        attribute=myWebServer operation=not_running
 
     "type" determines how the values being tested.
       For "integer", they would be converted into a number format (probably
@@ -264,7 +270,7 @@ More details are given in the annotated DTD below.
 <!ATTLIST expression
 	  id         CDATA #REQUIRED
 	  attribute  CDATA #REQUIRED
-	  operation  (lt|gt|lte|gte|eq|ne|exists|notexists)
+	  operation  (lt|gt|lte|gte|eq|ne|exists|notexists|running|not_running)
 	  value      CDATA #IMPLIED
 	  type	     (integer|string|version)    'string'>
 
@@ -430,16 +436,21 @@ typedef enum {
 
 <!ELEMENT lrm_resources (rsc_state*)>
 
-<!ELEMENT rsc_state EMPTY>
+<!ELEMENT rsc_state (can_fence)*>
 <!ATTLIST rsc_state
           id		CDATA #REQUIRED
           rsc_id	CDATA #REQUIRED
           node_id	CDATA #IMPLIED
-	  rsc_state	(stopped|starting|started|fail|restarting|stopping|stop_fail)
+	  ra_state	(stopped|starting|started|fail|restarting|stopping|stop_fail)
 	  			#REQUIRED
 	  last_op	CDATA #REQUIRED
 	  op_code	CDATA #REQUIRED
           timestamp	CDATA #REQUIRED>
+
+<!-- id is the uname of the node that can be fenced by this resource -->
+<!ELEMENT can_fence EMPTY>
+<!ATTLIST can_fence
+          id		CDATA #REQUIRED>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->

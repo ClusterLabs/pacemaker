@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.11 2004/07/15 15:32:49 msoffen Exp $ */
+/* $Id: color.c,v 1.12 2004/07/23 08:34:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -233,7 +233,7 @@ strict_preproc(rsc_to_rsc_t *constraint, GListPtr *colors, GListPtr resources)
 
 				if(local_color == NULL) {
 					crm_err("Couldnt add color %d to %s",
-						other_color?other_color->id:NULL,
+						other_color?other_color->id:0,
 						lh_resource->id);
 					break;
 				}

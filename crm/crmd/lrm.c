@@ -39,7 +39,8 @@
 
 xmlNodePtr do_lrm_query(gboolean);
 
-gboolean build_suppported_RAs(xmlNodePtr xml_agent_list);
+gboolean build_suppported_RAs(
+	xmlNodePtr metadata_list, xmlNodePtr xml_agent_list);
 
 gboolean build_active_RAs(xmlNodePtr rsc_list);
 
@@ -125,13 +126,19 @@ do_lrm_control(long long action,
 	return I_NULL;
 }
 
+
+
 gboolean
-build_suppported_RAs(xmlNodePtr xml_agent_list)
+build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 {
 	int lpc = 0, llpc = 0;
-	GList *types    = NULL;
-	GList *classes  = NULL;
-	xmlNodePtr xml_agent = NULL;
+	GList *types            = NULL;
+	GList *classes          = NULL;
+	const char *version     = NULL;
+	const char *ra_data     = NULL;
+//	GHashTable *metadata    = NULL;
+	xmlNodePtr xml_agent    = NULL;
+	xmlNodePtr xml_metadata = NULL;
 
 	classes = fsa_lrm_conn->lrm_ops->get_rsc_class_supported(fsa_lrm_conn);
 
@@ -141,17 +148,37 @@ build_suppported_RAs(xmlNodePtr xml_agent_list)
 		types = fsa_lrm_conn->lrm_ops->get_rsc_type_supported(
 			fsa_lrm_conn, class);
 
+/*		metadata = fsa_lrm_conn->lrm_ops->get_all_type_metadatas(
+			fsa_lrm_conn, class);
+*/	
 		slist_iter(
 			type, char, types, llpc,
 			
+			version = "1";
+
 			xml_agent = create_xml_node(
 				xml_agent_list, "lrm_agent");
 			
 			set_xml_property_copy(xml_agent, "class",       class);
 			set_xml_property_copy(xml_agent, XML_ATTR_TYPE, type);
 
-			/* we dont have this yet */
-			set_xml_property_copy(xml_agent, "version",     "1");
+//			ra_data = g_hashtable_lookup(metadata, type);
+			if(ra_data != NULL) {
+				xml_metadata = create_xml_node(
+					xml_metadata, "agent_metadata");
+				set_xml_property_copy(
+					xml_metadata, "class",       class);
+				set_xml_property_copy(
+					xml_metadata, XML_ATTR_TYPE, type);
+
+				xmlNodePtr tmp = string2xml(ra_data);
+				if(tmp != NULL) {
+					xmlAddChild(xml_metadata, tmp);
+				}
+				// extract version
+			}
+			
+			set_xml_property_copy(xml_agent, "version",     version);
 
 			)
 		g_list_free(types);
@@ -247,9 +274,10 @@ do_lrm_query(gboolean is_replace)
 	xmlNodePtr xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
 	xmlNodePtr rsc_list  = create_xml_node(xml_data,XML_LRM_TAG_RESOURCES);
 	xmlNodePtr xml_agent_list = create_xml_node(xml_data, "lrm_agents");
+	xmlNodePtr xml_metadata_list = create_xml_node(xml_data, "metatdata");
 
-	/* Build a list of supported agents */
-	build_suppported_RAs(xml_agent_list);
+	/* Build a list of supported agents and metadata */
+	build_suppported_RAs(xml_metadata_list, xml_agent_list);
 	
 	/* Build a list of active (not always running) resources */
 	build_active_RAs(rsc_list);
@@ -487,7 +515,7 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	set_xml_property_copy(iter, XML_LRM_ATTR_LASTOP, op_type);
 	
 	tmp = crm_itoa(status);
-	set_xml_property_copy(iter, XML_LRM_ATTR_OPSTATE, tmp);
+	set_xml_property_copy(iter, XML_LRM_ATTR_RSCSTATE, tmp);
 	crm_free(tmp);
 	
 	tmp = crm_itoa(rc);
@@ -647,7 +675,7 @@ do_fake_lrm_op(gpointer data)
 			}
 		}
 		
-		set_xml_property_copy(iter, XML_LRM_ATTR_OPSTATE,op_status);
+		set_xml_property_copy(iter, XML_LRM_ATTR_RSCSTATE,op_status);
 		set_xml_property_copy(iter, XML_LRM_ATTR_OPCODE, op_code_s);
 		set_xml_property_copy(
 			iter, XML_LRM_ATTR_TARGET, fsa_our_uname);

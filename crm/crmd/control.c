@@ -548,6 +548,8 @@ init_server_ipc_comms(
 	return 0;
 }
 
+#define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
+
 gboolean
 register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 		 gboolean (*dispatch_method)(int fd, gpointer user_data),
@@ -560,8 +562,12 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 	crm_info("Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
 		crm_err("Cannot sign on with heartbeat");
-		crm_err("REASON: %s",
-			hb_cluster->llc_ops->errmsg(hb_cluster));
+		if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
+			crm_crit("cluster errmsg function unavailable");
+		} else {
+			crm_err("REASON: %s",
+				hb_cluster->llc_ops->errmsg(hb_cluster));
+		}
 		return FALSE;
 	}
   
@@ -580,11 +586,14 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 						  hb_cluster)
 	    !=HA_OK){
 		crm_err("Cannot set CRM message callback");
-		crm_err("REASON: %s",
-			hb_cluster->llc_ops->errmsg(hb_cluster));
+		if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
+			crm_crit("cluster errmsg function unavailable");
+		} else {
+			crm_err("REASON: %s",
+				hb_cluster->llc_ops->errmsg(hb_cluster));
+		}
 		return FALSE;
 	}
-
 
 	G_main_add_fd(G_PRIORITY_HIGH, 
 		      hb_cluster->llc_ops->inputfd(hb_cluster),
