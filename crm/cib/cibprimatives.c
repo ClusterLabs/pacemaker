@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.26 2004/04/29 15:33:03 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.27 2004/05/18 15:59:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,6 +36,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/common/xmlutils.h>
+#include <crm/common/crmutils.h>
 #include <crm/cib.h>
 
 #include <crm/dmalloc_wrapper.h>
@@ -545,29 +546,28 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 	
 	unclean   = xmlGetProp(target, "unclean");
 	exp_state = xmlGetProp(target, "exp_state");
-	
-	if(safe_str_eq(state, "in_ccm")) {
-		if(safe_str_eq(old_state, "active")) {
-			state = "active";
-		} else {
-			any_updates = TRUE;
-		}
+
+	if(safe_str_eq(state, old_state)){
+		// do nothing
 		
 	} else if(safe_str_eq(state, "down")) {
 		any_updates = TRUE;
 		if(safe_str_neq(exp_state, "down")) {
 
-			// TODO: Set the actual time
 			// TODO: Only if not set?
 			if(old_unclean == NULL) {
-				set_xml_property_copy(target,
-						      "unclean",
-						      "time");
+				time_t now = time(NULL);
+				char *now_s = crm_itoa((int)now);
+				
+				set_xml_property_copy(target, "unclean", now_s);
+				cl_free(now_s);
 			}
-			
-			// TODO: unset source?
 					
+		} else {
+			// unset "unclean" 
+			set_xml_property_copy(target, "unclean", NULL);
 		}
+		
 	} else if(state != NULL) {
 		any_updates = TRUE;
 	}
@@ -578,7 +578,6 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 		free_xml(lrm);
 		
 	}
-	
 	
 	set_xml_property_copy(target, "state", state);
 	
