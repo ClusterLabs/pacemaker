@@ -33,9 +33,6 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-FILE *msg_out_strm = NULL;
-FILE *router_strm = NULL;
-
 GListPtr fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
 
@@ -929,7 +926,6 @@ handle_response(ha_msg_input_t *stored_msg)
 		/* perhaps we should do somethign with these replies,
 		 * especially check that the actions passed
 		 */
-/* 		fprintf(router_strm, "Message result: CIB Reply\n"); */
 
 	} else {
 		crm_err("Unexpected response (op=%s) sent to the %s",
