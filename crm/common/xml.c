@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.27 2005/02/07 11:17:17 andrew Exp $ */
+/* $Id: xml.c,v 1.28 2005/02/07 12:15:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -740,7 +740,7 @@ gboolean
 add_message_xml(HA_Message *msg, const char *field, crm_data_t *xml) 
 {
 #ifdef USE_LIBXML
-	char *buffer = dump_xml_formatted(xml);
+	char *buffer = dump_xml_unformatted(xml);
 	ha_msg_add(msg, field, buffer);
 	crm_free(buffer);
 #else
