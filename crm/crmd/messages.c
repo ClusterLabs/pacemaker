@@ -36,7 +36,6 @@ FILE *router_strm = NULL;
 
 fsa_message_queue_t fsa_message_queue = NULL;
 
-/* stolen temporarily from crmd.c */
 gboolean relay_message(xmlNodePtr xml_relay_message,
 		       gboolean originated_locally);
 
@@ -58,7 +57,7 @@ gboolean relay_message(xmlNodePtr xml_relay_message,
 
 
 
-/* returns the current head of the SOCKET queue */
+/* returns the current head of the FIFO queue */
 fsa_message_queue_t
 put_message(xmlNodePtr new_message)
 {
@@ -97,7 +96,7 @@ get_message(void)
 	return next_message;
 }
 
-/* returns the current head of the SOCKET queue */
+/* returns the current head of the FIFO queue */
 gboolean
 is_message(void)
 {
@@ -114,10 +113,10 @@ do_msg_store(long long action,
 	     enum crmd_fsa_input current_input,
 	     void *data)
 {
-	xmlNodePtr new_message = (xmlNodePtr)data;
+//	xmlNodePtr new_message = (xmlNodePtr)data;
 	FNIN();
 
-	put_message(new_message);
+//	put_message(new_message);
 
 	FNRET(I_NULL);
 }
@@ -163,9 +162,12 @@ do_msg_route(long long action,
 				case I_DC_HEARTBEAT:
 					defer = FALSE;
 					break;
+					
 					/* what else should go here? */
 				default:
 					CRM_DEBUG("Defering local processing of message");
+
+					put_message(xml_message);
 					result = I_REQUEST;
 					break;
 			}
@@ -362,12 +364,9 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	xmlNodePtr request = NULL;
 	FNIN();
 
-	if(operation != NULL) {
-		if(msg_options == NULL)
-			msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-		
-		set_xml_property_copy(msg_options, XML_ATTR_OP, operation);
-	}
+
+	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
+				   XML_ATTR_OP, operation, TRUE);
 	
 	request = create_request(msg_options,
 				 msg_data,
@@ -399,8 +398,8 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	gboolean processing_complete = FALSE;
 	const char *host_to = xmlGetProp(xml_relay_message, XML_ATTR_HOSTTO);
 	const char *sys_to  = xmlGetProp(xml_relay_message, XML_ATTR_SYSTO);
-	xmlNodePtr options  = find_xml_node(xml_relay_message, XML_TAG_OPTIONS);
-	const char *sys_cc  = xmlGetProp(options, XML_ATTR_SYSCC);
+	const char *sys_cc  = get_xml_attr(xml_relay_message, XML_TAG_OPTIONS,
+					   XML_ATTR_SYSCC, FALSE);
 
 	FNIN();
 
@@ -687,12 +686,18 @@ enum crmd_fsa_input
 handle_message(xmlNodePtr stored_msg)
 {
 	enum crmd_fsa_input next_input = I_NULL;
-	xmlNodePtr options = find_xml_node(stored_msg, XML_TAG_OPTIONS);
 
-	const char *sys_to   = xmlGetProp(stored_msg, XML_ATTR_SYSTO);
-	const char *sys_from = xmlGetProp(stored_msg, XML_ATTR_SYSFROM);
-	const char *type     = xmlGetProp(stored_msg, XML_ATTR_MSGTYPE);
-	const char *op       = xmlGetProp(options,    XML_ATTR_OP);
+	const char *sys_to   = get_xml_attr(stored_msg, NULL,
+					    XML_ATTR_SYSTO, TRUE);
+
+	const char *sys_from = get_xml_attr(stored_msg, NULL,
+					    XML_ATTR_SYSFROM, TRUE);
+
+	const char *type     = get_xml_attr(stored_msg, NULL,
+					    XML_ATTR_MSGTYPE, TRUE);
+	
+	const char *op       = get_xml_attr(stored_msg, XML_TAG_OPTIONS,
+					    XML_ATTR_OP, TRUE);
 
 //	xml_message_debug(stored_msg, "Processing message");
 
@@ -765,16 +770,6 @@ handle_message(xmlNodePtr stored_msg)
 
 			next_input = I_CIB_UPDATE;
 			
-#ifndef INTEGRATED_CIB
-		} else if(AM_I_DC && strcmp(op, CRM_OPERATION_BUMP) == 0) {
-
-			xmlNodePtr data =
-				find_xml_node(stored_msg, XML_TAG_FRAGMENT);
-			
-			send_request(NULL, data, CRM_OPERATION_STORE,
-				     NULL, CRM_SYSTEM_CRMD);
-#endif
-			
 		} else if (AM_I_DC && strcmp(op, CRM_OPERATION_STORE) == 0) {
 
 			/* if there was any result, we need to merge it back
@@ -784,7 +779,8 @@ handle_message(xmlNodePtr stored_msg)
 				find_xml_node(stored_msg, XML_TAG_FRAGMENT);
 
 			const char *status =
-				xmlGetProp(options, XML_ATTR_RESULT);
+				get_xml_attr(stored_msg, XML_TAG_OPTIONS,
+					     XML_ATTR_RESULT, TRUE);
 
 			if(status != NULL
 			   && strcmp(status, "ok") == 0
@@ -792,7 +788,6 @@ handle_message(xmlNodePtr stored_msg)
 
 				CRM_DEBUG("Updating the CIB with the results of a store");
 				
-#ifdef INTEGRATED_CIB
 				/* do a replace or an update? */
 				xmlNodePtr resp = process_cib_request(
 					CRM_OPERATION_UPDATE, NULL, data);
@@ -803,15 +798,6 @@ handle_message(xmlNodePtr stored_msg)
 				
 				free_xml(resp);
 				
-#else
-				gboolean sent =
-					send_request(NULL, data,
-						     CRM_OPERATION_UPDATE,
-						     NULL, CRM_SYSTEM_CIB);
-				if(sent == FALSE) {
-					next_input = I_FAIL;
-				}
-#endif
 
 			} else if(data != NULL) {
 				cl_log(LOG_ERR,
@@ -832,28 +818,32 @@ handle_message(xmlNodePtr stored_msg)
 			/* this is a reply to our earlier command
 			 * Send it to the relevant node(s)
 			 */
-			const char *uname = xmlGetProp(options,
-						       "forward_to");
+			const char *uname =
+				get_xml_attr(stored_msg, XML_TAG_OPTIONS,
+					     "forward_to", FALSE);
 
 			xmlNodePtr data = find_xml_node(stored_msg,
 							XML_TAG_FRAGMENT);
 
-			xmlNodePtr local_options =
-				create_xml_node(NULL, XML_TAG_OPTIONS);
-
+			xmlNodePtr local_options = NULL;
+			
 			/* If this is part of join request processing,
 			 * ask for the status section, otherwise just blast
 			 * it down to them.
 			 */
 			if(uname != NULL) {
-				set_xml_property_copy(local_options,
-						      XML_ATTR_VERBOSE,
-						      "true");
+				local_options = set_xml_attr(NULL,
+							     XML_TAG_OPTIONS,
+							     XML_ATTR_VERBOSE,
+							     "true",
+							     TRUE);
 			}
 			
 			send_request(local_options, data, CRM_OPERATION_STORE,
 				     uname, CRM_SYSTEM_CRMD);
-				
+
+			free_xml(local_options);
+			
 		} else {
 			cl_log(LOG_ERR,
 			       "Unexpected response (op=%s) sent to the %s",
