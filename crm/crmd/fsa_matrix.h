@@ -145,10 +145,10 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_NOT_DC		==> */	S_RECOVERY,
 		/* S_POLICY_ENGINE	==> */	S_INTEGRATION,
 		/* S_RECOVERY		==> */	S_RECOVERY,
-		/* S_RECOVERY_DC	==> */	S_RELEASE_DC,
-		/* S_RELEASE_DC		==> */	S_STOPPING,
+		/* S_RECOVERY_DC	==> */	S_RECOVERY_DC,
+		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
 		/* S_STARTING		==> */	S_STOPPING,
-		/* S_STOPPING		==> */	S_TERMINATE,
+		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_POLICY_ENGINE,
 	},
@@ -315,18 +315,18 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 
 /* Got an I_SHUTDOWN */
 	{
-		/* S_IDLE		==> */	S_RELEASE_DC,
-		/* S_ELECTION		==> */	S_RELEASE_DC,
-		/* S_INTEGRATION	==> */	S_RELEASE_DC,
+		/* S_IDLE		==> */	S_STOPPING,
+		/* S_ELECTION		==> */	S_STOPPING,
+		/* S_INTEGRATION	==> */	S_STOPPING,
 		/* S_NOT_DC		==> */	S_STOPPING,
-		/* S_POLICY_ENGINE	==> */	S_RELEASE_DC,
+		/* S_POLICY_ENGINE	==> */	S_STOPPING,
 		/* S_RECOVERY		==> */	S_STOPPING,
-		/* S_RECOVERY_DC	==> */	S_RELEASE_DC,
+		/* S_RECOVERY_DC	==> */	S_STOPPING,
 		/* S_RELEASE_DC		==> */	S_STOPPING,
 		/* S_STARTING		==> */	S_STOPPING,
-		/* S_STOPPING		==> */	S_TERMINATE,
+		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
-		/* S_TRANSITION_ENGINE	==> */	S_RELEASE_DC,
+		/* S_TRANSITION_ENGINE	==> */	S_STOPPING,
 	},
 
 /* Got an I_STARTUP */
@@ -354,7 +354,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_POLICY_ENGINE	==> */	S_TRANSITION_ENGINE,
 		/* S_RECOVERY		==> */	S_NOT_DC,
 		/* S_RECOVERY_DC	==> */	S_INTEGRATION,
-		/* S_RELEASE_DC		==> */	S_NOT_DC,
+		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
 		/* S_STARTING		==> */	S_STARTING,
 		/* S_STOPPING		==> */	S_TERMINATE,
 		/* S_TERMINATE		==> */	S_ILLEGAL,
@@ -378,6 +378,22 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 	},
 
 /* Got an I_WELCOME_ACK */
+	{
+		/* S_IDLE		==> */	S_IDLE,
+		/* S_ELECTION		==> */	S_ELECTION,
+		/* S_INTEGRATION	==> */	S_INTEGRATION,
+		/* S_NOT_DC		==> */	S_NOT_DC,
+		/* S_POLICY_ENGINE	==> */	S_POLICY_ENGINE,
+		/* S_RECOVERY		==> */	S_RECOVERY,
+		/* S_RECOVERY_DC	==> */	S_RECOVERY_DC,
+		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
+		/* S_STARTING		==> */	S_STARTING,
+		/* S_STOPPING		==> */	S_STOPPING,
+		/* S_TERMINATE		==> */	S_TERMINATE,
+		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+	},
+
+	/* Got an I_WAIT_FOR_EVENT */
 	{
 		/* S_IDLE		==> */	S_IDLE,
 		/* S_ELECTION		==> */	S_ELECTION,
@@ -454,18 +470,18 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_DC_TIMEOUT */
 	{
-		/* S_IDLE		==> */	A_ELECTION_TIMEOUT|A_ELECTION_VOTE,
-		/* S_ELECTION		==> */	A_ELECTION_TIMEOUT|A_ELECTION_VOTE,
-		/* S_INTEGRATION	==> */	A_ELECTION_TIMEOUT|A_ELECTION_VOTE,
-		/* S_NOT_DC		==> */	A_ELECTION_TIMEOUT|A_ELECTION_VOTE,
-		/* S_POLICY_ENGINE	==> */	A_ELECTION_TIMEOUT|A_ELECTION_VOTE,
+		/* S_IDLE		==> */	A_ELECTION_VOTE,
+		/* S_ELECTION		==> */	A_ELECTION_VOTE,
+		/* S_INTEGRATION	==> */	A_ELECTION_VOTE,
+		/* S_NOT_DC		==> */	A_ELECTION_VOTE,
+		/* S_POLICY_ENGINE	==> */	A_ELECTION_VOTE,
 		/* S_RECOVERY		==> */	A_NOTHING,
 		/* S_RECOVERY_DC	==> */	A_NOTHING,
-		/* S_RELEASE_DC		==> */	A_ELECTION_TIMEOUT|A_ELECTION_VOTE,
-		/* S_STARTING		==> */	A_ELECTION_TIMEOUT|A_ELECTION_VOTE,
+		/* S_RELEASE_DC		==> */	A_ELECTION_VOTE,
+		/* S_STARTING		==> */	A_ELECTION_VOTE,
 		/* S_STOPPING		==> */	A_NOTHING,
 		/* S_TERMINATE		==> */	A_NOTHING,
-		/* S_TRANSITION_ENGINE	==> */	A_ELECTION_TIMEOUT|A_ELECTION_VOTE,
+		/* S_TRANSITION_ENGINE	==> */	A_ELECTION_VOTE,
 	},
 	
 /* Got an I_ELECTION_RELEASE_DC */
@@ -487,7 +503,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 /* Got an I_ELECTION_DC */
 	{
 		/* S_IDLE		==> */	A_WARN,
-		/* S_ELECTION		==> */	A_DC_TAKEOVER|A_PE_START|A_TE_START,
+		/* S_ELECTION		==> */	A_DC_TAKEOVER|A_PE_START|A_TE_START|A_JOIN_WELCOME_ALL,
 		/* S_INTEGRATION	==> */	A_WARN,
 		/* S_NOT_DC		==> */	A_NOTHING,
 		/* S_POLICY_ENGINE	==> */	A_WARN,
@@ -527,7 +543,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_RECOVERY_DC	==> */	A_WARN|O_SHUTDOWN|O_RELEASE,
 		/* S_RELEASE_DC		==> */	A_WARN|O_SHUTDOWN,
 		/* S_STARTING		==> */	A_WARN|O_SHUTDOWN,
-		/* S_STOPPING		==> */	A_WARN|A_EXIT_1,
+		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN|A_EXIT_1,
 		/* S_TRANSITION_ENGINE	==> */	A_WARN|A_TE_RESTART|A_RECOVER,
 	},
@@ -695,17 +711,17 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 /* Got an I_SHUTDOWN */
 	{
 		/* S_IDLE		==> */	O_SHUTDOWN,
-		/* S_ELECTION		==> */	O_SHUTDOWN,
-		/* S_INTEGRATION	==> */	O_SHUTDOWN,
+		/* S_ELECTION		==> */	O_SHUTDOWN|O_RELEASE,
+		/* S_INTEGRATION	==> */	O_SHUTDOWN|A_PE_STOP|A_TE_STOP|O_RELEASE,
 		/* S_NOT_DC		==> */	O_SHUTDOWN,
-		/* S_POLICY_ENGINE	==> */	O_SHUTDOWN,
+		/* S_POLICY_ENGINE	==> */	O_SHUTDOWN|A_PE_STOP|A_TE_STOP|O_RELEASE,
 		/* S_RECOVERY		==> */	O_SHUTDOWN,
-		/* S_RECOVERY_DC	==> */	O_SHUTDOWN,
+		/* S_RECOVERY_DC	==> */	O_SHUTDOWN|A_PE_STOP|A_TE_STOP|O_RELEASE,
 		/* S_RELEASE_DC		==> */	O_SHUTDOWN,
 		/* S_STARTING		==> */	O_SHUTDOWN,
 		/* S_STOPPING		==> */	O_SHUTDOWN,
 		/* S_TERMINATE		==> */	O_SHUTDOWN,
-		/* S_TRANSITION_ENGINE	==> */	O_SHUTDOWN,
+		/* S_TRANSITION_ENGINE	==> */	O_SHUTDOWN|A_PE_STOP|O_RELEASE,
 	},
 
 /* Got an I_STARTUP */
@@ -770,6 +786,22 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_JOIN_PROCESS_ACK,
+	},
+
+/* Got an I_WAIT_FOR_EVENT */
+	{
+		/* S_IDLE		==> */	A_LOG,
+		/* S_ELECTION		==> */	A_LOG,
+		/* S_INTEGRATION	==> */	A_LOG,
+		/* S_NOT_DC		==> */	A_LOG,
+		/* S_POLICY_ENGINE	==> */	A_LOG,
+		/* S_RECOVERY		==> */	A_LOG,
+		/* S_RECOVERY_DC	==> */	A_LOG,
+		/* S_RELEASE_DC		==> */	A_LOG,
+		/* S_STARTING		==> */	A_LOG,
+		/* S_STOPPING		==> */	A_LOG,
+		/* S_TERMINATE		==> */	A_LOG,
+		/* S_TRANSITION_ENGINE	==> */	A_LOG,
 	},
 
 };

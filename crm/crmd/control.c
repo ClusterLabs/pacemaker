@@ -25,6 +25,8 @@
 #include <crm/common/xmlvalues.h>
 #include <clplumbing/Gmain_timeout.h>
 
+#include <crm/dmalloc_wrapper.h>
+
 #define PID_FILE     WORKING_DIR"/crm.pid"
 #define DAEMON_LOG   LOG_DIR"/crm.log"
 #define DAEMON_DEBUG LOG_DIR"/crm.debug"
@@ -207,8 +209,37 @@ do_startup(long long action,
 	election_timeout->fsa_input = I_ELECTION_DC;
 	
 	shutdown_escalation_timmer->source_id = -1;
-	shutdown_escalation_timmer->period_ms = 10000;
-	shutdown_escalation_timmer->fsa_input = I_DC_TIMEOUT;
+	shutdown_escalation_timmer->period_ms = 50000;
+	shutdown_escalation_timmer->fsa_input = I_ERROR;
+
+	/* set up the sub systems */
+	cib_subsystem = (struct crm_subsystem_s*)
+		ha_malloc(sizeof(struct crm_subsystem_s));
+	
+	cib_subsystem->pid = 0;	
+	cib_subsystem->respawn = 1;	
+	cib_subsystem->command = NULL;
+	cib_subsystem->path = ha_strdup(BIN_DIR);
+	cib_subsystem->command = BIN_DIR"/cib";
+
+	te_subsystem = (struct crm_subsystem_s*)
+		ha_malloc(sizeof(struct crm_subsystem_s));
+	
+	te_subsystem->pid = 0;	
+	te_subsystem->respawn = 1;	
+	te_subsystem->command = NULL;
+	te_subsystem->path = ha_strdup(BIN_DIR);
+	te_subsystem->command = BIN_DIR"/tengine";
+
+	pe_subsystem = (struct crm_subsystem_s*)
+		ha_malloc(sizeof(struct crm_subsystem_s));
+	
+	pe_subsystem->pid = 0;	
+	pe_subsystem->respawn = 1;	
+	pe_subsystem->command = NULL;
+	pe_subsystem->path = ha_strdup(BIN_DIR);
+	pe_subsystem->command = BIN_DIR"/pengine";
+
 
 	if (was_error == 0) {
 		CRM_DEBUG2("Starting DC timer: %d seconds",
@@ -273,17 +304,22 @@ do_recover(long long action,
 void
 shutdown(int nsig)
 {
-    static int	shuttingdown = 0;
+    FNIN();
+    
     CL_SIGNAL(nsig, shutdown);
-  
-    if (!shuttingdown) {
-		shuttingdown = 1;
-    }
-    if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
-	    s_crmd_fsa(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
+    set_bit_inplace(&fsa_input_register, R_SHUTDOWN);
+    startTimer(shutdown_escalation_timmer);
+    
+    if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
+    
+	    CRM_DEBUG("Invoking FSA with I_SHUTDOWN");
+	    s_crmd_fsa(C_SHUTDOWN, I_SHUTDOWN, NULL);
+	    
     } else {
-		exit(LSB_EXIT_OK);
-		
+	    CRM_DEBUG("exit from shutdown");
+	    exit(LSB_EXIT_OK);
+	    
     }
+    FNOUT();
 }

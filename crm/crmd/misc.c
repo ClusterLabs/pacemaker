@@ -18,6 +18,8 @@
 #include <crm/common/crm.h>
 #include <crmd_fsa.h>
 
+#include <crm/dmalloc_wrapper.h>
+
 /*	A_LOG, A_WARN, A_ERROR	*/
 enum crmd_fsa_input
 do_log(long long action,

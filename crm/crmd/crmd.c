@@ -1,4 +1,4 @@
-/* $Id: crmd.c,v 1.13 2004/02/27 13:41:45 andrew Exp $ */
+/* $Id: crmd.c,v 1.14 2004/02/29 20:48:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,7 +48,6 @@
 
 #include <crmd_fsa.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 
 gboolean dc_election_in_progress = FALSE;
@@ -66,6 +65,8 @@ GHashTable   *ipc_clients = NULL;
 #include <crm/common/xmlutils.h>
 #include <glib.h>
 #include <crmd.h>
+
+#include <crm/dmalloc_wrapper.h>
 
 void send_msg_via_ha(xmlNodePtr action, const char *dest_node);
 void send_msg_via_ipc(xmlNodePtr action, const char *sys);

@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.1 2004/02/27 13:41:45 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.2 2004/02/29 20:48:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -197,6 +197,10 @@ enum crmd_fsa_input {
 			   overlord
 			*/
 	
+	I_WAIT_FOR_EVENT, /* we may be waiting for an async task to "happen"
+			   * and until it does, we cant do anything else
+			   */
+	
 	/*  ------------ Last input found in table is above ----------- */
 	I_ILLEGAL,	/* This is an illegal value for an FSA input */
 			/* (must be last) */
@@ -322,11 +326,13 @@ A_WARN
 	 * giving up the responsibilities of being the DC.
 	 */
 #define	A_DC_RELEASE		0x0000000002000000ULL
+	/* */
+#define	A_DC_RELEASED		0x0000000004000000ULL
 	/* Hook to perform any actions (apart from starting, the TE, PE
 	 * and gathering the latest CIB) that might be necessary before
 	 * taking over the responsibilities of being the DC.
 	 */
-#define	A_DC_TAKEOVER		0x0000000004000000ULL
+#define	A_DC_TAKEOVER		0x0000000008000000ULL
 
 /* -- Shutdown actions -- */
 #define	A_SHUTDOWN		0x0000000010000000ULL
@@ -385,7 +391,7 @@ A_WARN
 #define	A_WARN			0x0400000000000000ULL
 
 #define O_SHUTDOWN A_SHUTDOWN|A_STOP|A_EXIT_0|A_CIB_STOP
-#define O_RELEASE  A_DC_RELEASE|A_PE_STOP|A_TE_STOP
+#define O_RELEASE  A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED
 	
 
 

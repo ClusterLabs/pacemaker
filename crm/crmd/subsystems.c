@@ -18,6 +18,9 @@
 #include <crm/common/crm.h>
 #include <crmd_fsa.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include <unistd.h>			// for access
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/realtime.h>
@@ -33,8 +36,19 @@
 #include <crm/common/ipcutils.h>
 #include <crmd.h>
 #include <crmd_messages.h>
+#include <string.h>
+#include <errno.h>
 
-static gboolean start_a_child_client(gpointer childentry, gpointer pidtable);
+#include <crm/dmalloc_wrapper.h>
+
+#define CLIENT_EXIT_WAIT 2
+
+static gboolean stop_subsystem (struct crm_subsystem_s *centry);
+static gboolean start_subsystem(struct crm_subsystem_s *centry);
+static gboolean run_command    (struct crm_subsystem_s *centry,
+				const char *options,
+				gboolean update_pid);
+
 gboolean crmd_authorize_message(xmlNodePtr root_xml_node,
 				IPC_Message *client_msg,
 				crmd_client_t *curr_client);
@@ -51,41 +65,44 @@ do_cib_control(long long action,
 	       void *data)
 {
 	enum crmd_fsa_input result = I_NULL;
+	struct crm_subsystem_s *this_subsys = cib_subsystem;
 	
+	long long stop_actions = A_CIB_STOP | A_CIB_RESTART;
+	long long start_actions = A_CIB_START | A_CIB_RESTART;
+
 	FNIN();
 	
-	if(action & A_CIB_STOP || action & A_CIB_RESTART) {
-		if(cib_subsystem != NULL) {
-			clear_bit_inplace(&fsa_input_register,R_CIB_CONNECTED);
+	if(action & stop_actions) {
+		clear_bit_inplace(&fsa_input_register,R_CIB_CONNECTED);
 			
-			// make sure we do a shutdown
-			if(cib_subsystem->command != NULL)
-				ha_free(cib_subsystem->command);
-			cib_subsystem->command = ha_strdup("cib/cib -k");
-			
-			start_a_child_client(cib_subsystem, NULL);
-		} // else we havent been started yet
-	}
-	
-	if(action & A_CIB_START || action & A_CIB_RESTART) {
-		if(cib_subsystem == NULL) {
-			cib_subsystem = (struct crm_subsystem_s*)
-				ha_malloc(sizeof(struct crm_subsystem_s));
-			
-			cib_subsystem->pid = 0;	
-			cib_subsystem->respawn = 1;	
-			cib_subsystem->command = NULL;
-			cib_subsystem->u_runas = -1;	 
-			cib_subsystem->g_runas = -1;	 
-			cib_subsystem->path = ha_strdup(BIN_DIR);	
-		}
-		
-		// make sure we always do a (re)start here
-		if(cib_subsystem->command != NULL)
-			ha_free(cib_subsystem->command);
-		cib_subsystem->command = ha_strdup("cib/cib -r");	
-		if(start_a_child_client(cib_subsystem, NULL) == FALSE)
+		if(stop_subsystem(this_subsys) == FALSE)
 			result = I_FAIL;
+		else if(this_subsys->pid > 0
+			&& CL_PID_EXISTS(this_subsys->pid)) {
+			int pid_status = -1;
+			
+			sleep(CLIENT_EXIT_WAIT);
+			waitpid(this_subsys->pid, &pid_status, WNOHANG);
+			
+			if(CL_PID_EXISTS(this_subsys->pid)) {
+				cl_log(LOG_ERR,
+				       "Process %s is still active with pid=%d",
+				       this_subsys->command, this_subsys->pid);
+				result = I_FAIL;
+			}
+		}
+	}
+
+	if(action & start_actions) {
+
+		if(cur_state != S_STOPPING) {
+			if(start_subsystem(this_subsys) == FALSE)
+				result = I_FAIL;
+		} else {
+			cl_log(LOG_INFO,
+			       "Ignoring request to start %s while shutting down",
+			       this_subsys->command);
+		}
 	}
 	
 	FNRET(result);
@@ -103,7 +120,7 @@ do_cib_invoke(long long action,
 	FNRET(I_NULL);
 }
 
-/*	 A_PE_START	*/
+/*	 A_PE_START, A_PE_STOP, A_TE_RESTART	*/
 enum crmd_fsa_input
 do_pe_control(long long action,
 	    enum crmd_fsa_state cur_state,
@@ -111,41 +128,44 @@ do_pe_control(long long action,
 	    void *data)
 {
 	enum crmd_fsa_input result = I_NULL;
+	struct crm_subsystem_s *this_subsys = pe_subsystem;
+
+	long long stop_actions = A_PE_STOP | A_PE_RESTART;
+	long long start_actions = A_PE_START | A_PE_RESTART;
 	
 	FNIN();
 
-	if(action & A_PE_STOP || action & A_PE_RESTART) {
-		if(pe_subsystem != NULL) {
-			clear_bit_inplace(&fsa_input_register, R_PE_CONNECTED);
+	if(action & stop_actions) {
+		clear_bit_inplace(&fsa_input_register,R_PE_CONNECTED);
 			
-			// make sure we do a shutdown
-			if(pe_subsystem->command != NULL)
-				ha_free(pe_subsystem->command);
-			pe_subsystem->command = ha_strdup("pengine -k");
-
-			start_a_child_client(pe_subsystem, NULL);
-		} // else we havent been started yet
-	}
-	
-	if(action & A_PE_START || action & A_PE_RESTART) {
-		if(pe_subsystem == NULL) {
-			pe_subsystem = (struct crm_subsystem_s*)
-				ha_malloc(sizeof(struct crm_subsystem_s));
-			
-			pe_subsystem->pid = 0;	
-			pe_subsystem->respawn = 1;	
-			pe_subsystem->command = NULL;
-			pe_subsystem->u_runas = -1;	 
-			pe_subsystem->g_runas = -1;	 
-			pe_subsystem->path = ha_strdup(BIN_DIR);	
-		}
-		
-		// make sure we always do a (re)start here
-		if(pe_subsystem->command != NULL)
-			ha_free(pe_subsystem->command);
-		pe_subsystem->command = ha_strdup("pengine -r");	
-		if(start_a_child_client(pe_subsystem, NULL) == FALSE)
+		if(stop_subsystem(this_subsys) == FALSE)
 			result = I_FAIL;
+		else if(this_subsys->pid > 0
+			&& CL_PID_EXISTS(this_subsys->pid)) {
+			int pid_status = -1;
+			
+			sleep(CLIENT_EXIT_WAIT);
+			waitpid(this_subsys->pid, &pid_status, WNOHANG);
+			
+			if(CL_PID_EXISTS(this_subsys->pid)) {
+				cl_log(LOG_ERR,
+				       "Process %s is still active with pid=%d",
+				       this_subsys->command, this_subsys->pid);
+				result = I_FAIL;
+			}
+		}
+	}
+
+	if(action & start_actions) {
+
+		if(cur_state != S_STOPPING) {
+			if(start_subsystem(this_subsys) == FALSE)
+				result = I_FAIL;
+		} else {
+			cl_log(LOG_INFO,
+			       "Ignoring request to start %s while shutting down",
+			       this_subsys->command);
+		}
 	}
 	
 	FNRET(result);
@@ -163,7 +183,13 @@ do_pe_invoke(long long action,
 	FNRET(I_NULL);
 }
 
-/*	 A_TE_START	*/
+	
+	
+/* 	FNRET(result); */
+/* } */
+
+
+/*	 A_TE_START, A_TE_STOP, A_TE_RESTART	*/
 enum crmd_fsa_input
 do_te_control(long long action,
 	    enum crmd_fsa_state cur_state,
@@ -171,43 +197,51 @@ do_te_control(long long action,
 	    void *data)
 {
 	enum crmd_fsa_input result = I_NULL;
+	struct crm_subsystem_s *this_subsys = te_subsystem;
+	
+	long long stop_actions = A_TE_STOP | A_TE_RESTART;
+	long long start_actions = A_TE_START | A_TE_RESTART;
 	
 	FNIN();
 
-	if(action & A_TE_STOP || action & A_TE_RESTART) {
-		if(te_subsystem != NULL) {
-			clear_bit_inplace(&fsa_input_register, R_TE_CONNECTED);
-			
-			// make sure we do a shutdown
-			if(te_subsystem->command != NULL)
-				ha_free(te_subsystem->command);
-			te_subsystem->command = ha_strdup("tengine -k");
+	if(action & stop_actions) {
+		clear_bit_inplace(&fsa_input_register,R_TE_CONNECTED);
 
-			start_a_child_client(te_subsystem, NULL);
-		} // else we havent been started yet
-	}
-	
-	if(action & A_TE_START || action & A_TE_RESTART) {
-		if(te_subsystem == NULL) {
-			te_subsystem = (struct crm_subsystem_s*)
-				ha_malloc(sizeof(struct crm_subsystem_s));
-			
-			te_subsystem->pid = 0;	
-			te_subsystem->respawn = 1;	
-			te_subsystem->command = NULL;
-			te_subsystem->u_runas = -1;	 
-			te_subsystem->g_runas = -1;	 
-			te_subsystem->path = ha_strdup(BIN_DIR);	
+		if(cur_state != S_STOPPING && is_set(fsa_input_register, R_TE_PEND)) {
+			result = I_WAIT_FOR_EVENT;
+			FNRET(result);
 		}
 		
-		// make sure we always do a (re)start here
-		if(te_subsystem->command != NULL)
-			ha_free(te_subsystem->command);
-		te_subsystem->command = ha_strdup("tengine -r");	
-		if(start_a_child_client(te_subsystem, NULL) == FALSE)
+		if(stop_subsystem(this_subsys) == FALSE)
 			result = I_FAIL;
+		else if(this_subsys->pid > 0
+			&& CL_PID_EXISTS(this_subsys->pid)) {
+			int pid_status = -1;
+			
+			sleep(CLIENT_EXIT_WAIT);
+			waitpid(this_subsys->pid, &pid_status, WNOHANG);
+			
+			if(CL_PID_EXISTS(this_subsys->pid)) {
+				cl_log(LOG_ERR,
+				       "Process %s is still active with pid=%d",
+				       this_subsys->command, this_subsys->pid);
+				result = I_FAIL;
+			}
+		}
 	}
-	
+
+	if(action & start_actions) {
+
+		if(cur_state != S_STOPPING) {
+			if(start_subsystem(this_subsys) == FALSE)
+				result = I_FAIL;
+		} else {
+			cl_log(LOG_INFO,
+			       "Ignoring request to start %s while shutting down",
+			       this_subsys->command);
+		}
+	}
+
 	FNRET(result);
 }
 
@@ -263,28 +297,37 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 	FNRET(TRUE);
 }
 
-
-/*
- * Why re-invent the wheel? Steal the start_a_child_client from heartbeat.c,
- *
- * Only minor modifications have been made, so it should be possible to just
- * drop in verbatum any changes made there
- */
 static gboolean
-start_a_child_client(gpointer childentry, gpointer pidtable)
+stop_subsystem(struct crm_subsystem_s*	centry)
 {
-	struct crm_subsystem_s*	centry = childentry;
-	pid_t			pid;
-	struct passwd*		pwent;
+	cl_log(LOG_INFO, "Stopping sub-system \"%s\"", centry->command);
 
-	cl_log(LOG_INFO, "Starting child client \"%s\" (%d,%d)"
-	,	centry->command, (int) centry->u_runas
-	,	(int) centry->g_runas);
+	if (centry->pid == 0) {
+		cl_log(LOG_ERR, "OOPS! client %s not running yet", centry->command);
+	}
+
+	return run_command(centry, "-k", FALSE);
+}
+
+
+static gboolean
+start_subsystem(struct crm_subsystem_s*	centry)
+{
+	cl_log(LOG_INFO, "Starting sub-system \"%s\"", centry->command);
 
 	if (centry->pid != 0) {
 		cl_log(LOG_ERR, "OOPS! client %s already running as pid %d"
-		,	centry->command, (int) centry->pid);
+		       ,	centry->command, (int) centry->pid);
 	}
+
+	return run_command(centry, "-r", TRUE);
+}
+
+
+static gboolean
+run_command(struct crm_subsystem_s *centry, const char *options, gboolean update_pid)
+{
+	pid_t			pid;
 
 	/*
 	 * We need to ensure that the exec will succeed before
@@ -292,10 +335,18 @@ start_a_child_client(gpointer childentry, gpointer pidtable)
 	 * won't exec in the first place.
 	 */
 
-	if (access(centry->path, F_OK|X_OK) < 0) {
-		cl_perror("Cannot exec %s", centry->command);
+	if (access(centry->path, F_OK|X_OK) != 0) {
+		cl_perror("Cannot (access) exec %s", centry->path);
 		return FALSE;
 	}
+
+	struct stat buf;
+	int s_res = stat(centry->command, &buf);
+	if(s_res != 0) {
+		cl_perror("Cannot (stat) exec %s", centry->command);
+		return FALSE;
+	}
+	
 
 	/* We need to fork so we can make child procs not real time */
 	switch(pid=fork()) {
@@ -309,7 +360,8 @@ start_a_child_client(gpointer childentry, gpointer pidtable)
 				NewTrackedProc(pid, 1, PT_LOGVERBOSE
 				,	centry, &ManagedChildTrackOps);
 #else
-				centry->pid = pid;
+				if(update_pid)
+					centry->pid = pid;
 #endif
 				return TRUE;
 
@@ -327,21 +379,22 @@ start_a_child_client(gpointer childentry, gpointer pidtable)
 		sleep(1);
 	}
 
-	cl_log(LOG_INFO, "Starting \"%s\" as uid %d  gid %d (pid %d)"
-	,	centry->command, (int) centry->u_runas
-	,	(int) centry->g_runas, (int) getpid());
-
-	if(((int)centry->g_runas >= 0) && ((int)centry->u_runas >= 0)) {
-		if ((pwent = getpwuid(centry->u_runas)) == NULL
-		    || initgroups(pwent->pw_name, centry->g_runas) < 0
-		    || setgid(centry->g_runas) < 0
-		    || setuid(centry->u_runas) < 0) {
-			cl_perror("Cannot setup uid/gid for child process %s", centry->command);
-		}
-	}
+	char *cmd_with_options = NULL;
+	int size = strlen(options);
+	size += strlen(centry->command);
+	size += 2; // ' ' + \0
 	
+	cmd_with_options = ha_malloc((1+size)*sizeof(char));
+	sprintf(cmd_with_options, "%s %s", centry->command, options);
+	cmd_with_options[size] = 0;
+	
+
+	cl_log(LOG_INFO, "Executing \"%s\" (pid %d)",
+	       cmd_with_options, (int) getpid());
+
 	if(CL_SIGINTERRUPT(SIGALRM, 0) < 0) {
-		cl_perror("Cannot set interrupt for child process %s", centry->command);
+		cl_perror("Cannot set interrupt for child process %s",
+			  cmd_with_options);
 	}else{
 		const char *	devnull = "/dev/null";
 		unsigned int	j;
@@ -355,15 +408,16 @@ start_a_child_client(gpointer childentry, gpointer pidtable)
 		for (j=0; j < oflimits.rlim_cur; ++j) {
 			close(j);
 		}
-
+		(void)devnull;
+		
 		(void)open(devnull, O_RDONLY);	/* Stdin:  fd 0 */
 		(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
 		(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
-		(void)execl("/bin/sh", "sh", "-c", centry->command
-		,	(const char *)NULL);
+
+		(void)execl("/bin/sh", "sh", "-c", cmd_with_options, (const char *)NULL);
 
 		/* Should not happen */
-		cl_perror("Cannot exec %s", centry->command);
+		cl_perror("Cannot exec %s", cmd_with_options);
 	}
 	/* Suppress respawning */
 	exit(100);

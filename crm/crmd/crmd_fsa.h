@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.5 2004/02/27 13:41:45 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.6 2004/02/29 20:48:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,12 +52,10 @@ struct oc_node_list_s
 struct crm_subsystem_s {
 		pid_t	pid;		/* Process id of child process */
 		int	respawn;	/* Respawn it if it dies? */
-		uid_t	u_runas;	/* Which user to run as? */
-		gid_t	g_runas;	/* Which group id to run as? */
 		int	respawncount;	/* Last time we respawned this command */
 		int	shortrcount;	/* How many times has it respawned too fast? */
-		char*	command;	/* What command to run? */
-		char*	path;		/* Path (argv[0])? */
+		const char*	command;	/* What command to run? */
+		const char*	path;		/* Path (argv[0])? */
 /* extras */
 		IPC_Channel *ipc;	/* How can we communicate with it */
 };

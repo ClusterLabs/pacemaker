@@ -26,10 +26,19 @@ void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 #include <ocf/oc_event.h>
 #include <ocf/oc_membership.h>
 
+#include <crm/dmalloc_wrapper.h>
+
 int register_with_ccm(ll_cluster_t *hb_cluster);
-void crmd_ccm_input_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
-void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
+
 void msg_ccm_join(const struct ha_msg *msg, void *foo);
+
+void crmd_ccm_input_callback(oc_ed_t event,
+			     void *cookie,
+			     size_t size,
+			     const void *data);
+
+void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
+
 
 
 
@@ -167,13 +176,14 @@ do_ccm_update_cache(long long action,
 #ifdef CCM_UNAME
 			members[lpc].node_uname =
 				ha_strdup(oc->m_array[offset+lpc].node_uname);
+			CRM_DEBUG2("Uname: %s", oc->m_array[offset+lpc].node_uname);
 #endif	
 		}
 	}
 	
 
 	/*--*-- New Member Nodes --*--*/
-	offset = oc->m_n_in;
+	offset = oc->m_in_idx;
 	membership_copy->new_members_size = oc->m_n_in;
 
 	CRM_DEBUG2("Number of new members: %d", membership_copy->new_members_size);
@@ -197,14 +207,14 @@ do_ccm_update_cache(long long action,
 #ifdef CCM_UNAME
 			members[lpc].node_uname =
 				ha_strdup(oc->m_array[offset+lpc].node_uname);
+			CRM_DEBUG2("Uname: %s", oc->m_array[offset+lpc].node_uname);
 #endif	
-			
 		}
 	}
 	
 
 	/*--*-- Recently Dead Member Nodes --*--*/
-	offset = oc->m_n_out;
+	offset = oc->m_out_idx;
 	membership_copy->dead_members_size = oc->m_n_out;
 	if(membership_copy->dead_members_size > 0) {
 		int size = membership_copy->dead_members_size;
@@ -223,6 +233,7 @@ do_ccm_update_cache(long long action,
 #ifdef CCM_UNAME
 			members[lpc].node_uname =
 				ha_strdup(oc->m_array[offset+lpc].node_uname);
+			CRM_DEBUG2("Uname: %s", oc->m_array[offset+lpc].node_uname);
 #endif			
 		}
 	}

@@ -28,6 +28,7 @@
 #include <crmd.h>
 #include <crmd_messages.h>
 
+#include <crm/dmalloc_wrapper.h>
 
 fsa_message_queue_t fsa_message_queue = NULL;
 

@@ -21,6 +21,8 @@
 # fsa_matrix.h and an actions graph of sorts based on the crmd_fsa_actions
 # array also in fsa_matrix.h.
 
+$do_links2self=1;
+
 make_inputs_dot("fsa_matrix.h", "fsa_inputs.dot", "const enum crmd_fsa_state crmd_fsa_state", "const long long crmd_fsa_actions");
 make_actions_dot("fsa_matrix.h", "fsa_actions.dot", "const long long crmd_fsa_actions", "ELSEIF_INVOKE_FSA_ACTION");
 
@@ -141,13 +143,18 @@ sub make_inputs_dot
 		}
 		
 		chop($state2);
-		
-		if( $state1 ne $state2 )
+
+		if($do_links2self && $state1 eq $state2)
 		{
 		    $self_links = $self_links+1;
 		}
-#	    else
+		else
 		{
+		    if( $state1 eq $state2 )
+		    {
+			$self_links = $self_links+1;
+		    }
+
 		    if( exists($HoH{$state1}) )
 		    {
 			$rec = $HoH{$state1};
