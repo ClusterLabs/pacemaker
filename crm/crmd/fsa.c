@@ -465,6 +465,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 * Make sure the CIB is always updated before invoking the
 		 * PE, and the PE before the TE
 		 */
+		ELSEIF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_cib_invoke)
+		ELSEIF_FSA_ACTION(A_CIB_INVOKE_LOCAL,	do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_CIB_INVOKE,		do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_LRM_INVOKE,		do_lrm_invoke)
