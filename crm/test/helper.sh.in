@@ -130,15 +130,19 @@ function remote_cmd() {
 }
 
 function start_node() {
-    ha_node=$1
+    ha_node="$1"
+    srch_node="$ha_node "
+    if [ $local_version = "1" ]; then
+	srch_node=""
+    fi
     do_cmd echo "wait for HA to start on $ha_node"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd remote_cmd $INIT_USER $ha_node $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
     do_cmd ${testdir}/testutils.pl -l ${logfile} -p $crm_log_pos --search -a -m 100 \
-	-s "${ha_node} ccm(.*) info: Hostname: ${ha_node}" \
-	-s "${ha_node} cib(.*) Hostname: ${ha_node}" \
-	-s "${ha_node} heartbeat(.*) info: Starting(.*)lrmd" \
-	-e "${ha_node} heartbeat(.*)Client(.*) respawning too fast"
+	-s "${srch_node}ccm(.*) info: Hostname: ${ha_node}" \
+	-s "${srch_node}cib(.*) Hostname: ${ha_node}" \
+	-s "${srch_node}heartbeat(.*) info: Starting(.*)lrmd" \
+	-e "${srch_node}heartbeat(.*)Client(.*) respawning too fast"
     cts_assert "Startup of Heartbeat on ${ha_node} failed."
     
 #----
@@ -163,6 +167,11 @@ function stop_node()
     do_cmd echo Shutdown $a_node
     crm_log_pos=$(stat -L -c %s $logfile)
 
+    srch_node="$a_node "
+    if [ $local_version = "1" ]; then
+	srch_node=""
+    fi
+
     if [ $crm_only = 1 ]; then
 	do_cmd echo "Shutting down CRMd"
 	do_cmd remote_cmd $CRMD_USER $a_node $HALIB_DIR/crmadmin -K $a_node
@@ -171,10 +180,10 @@ function stop_node()
 	do_cmd remote_cmd $INIT_USER $a_node $HALIB_DIR/heartbeat -k
     fi
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -t 120 \
-	-s "${a_node} crmd(.*)State transition" \
-	-s "${a_node} crmd(.*)State transition (.*) \-> S_STOPPING" \
-	-s "${a_node} crmd(.*)\[crmd\] stopped" \
-	-e "${a_node} crmd(.*)Timer I_TERMINATE just popped"
+	-s "${srch_node} crmd(.*)State transition" \
+	-s "${srch_node} crmd(.*)State transition (.*) \-> S_STOPPING" \
+	-s "${srch_node} crmd(.*)\[crmd\] stopped" \
+	-e "${srch_node} crmd(.*)Timer I_TERMINATE just popped"
     cts_assert "Shutdown of ${a_node} failed."
 }
 
@@ -457,6 +466,7 @@ function dump_node() {
     a_node=$2
 
     dump_file="/tmp/${a_node_index}-${a_node}.tgz"
+
 
     remote_cmd $ADMIN_USER ${a_node} "stat -L -c %s $logfile > /tmp/crm/.logend"
     remote_cmd ${ADMIN_USER} ${a_node} "ps axf > /tmp/crm/processes"
