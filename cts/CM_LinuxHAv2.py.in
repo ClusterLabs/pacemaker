@@ -352,7 +352,7 @@ class LinuxHAv2(HeartbeatCM):
         return rc
 
     def Configuration(self):
-        if 0!=self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],self.Env["HAdir"]):
+        if 0!=self.rsh.cp("root@"+self["CIBfile"]%self.Env["nodes"][0],self.Env["HAdir"]):
             raise ValueError("Can not copy file to %s, maybe permission denied"%self.Env["HAdir"])
         cib=parse("%s/cib.xml"%self.Env["HAdir"])
         return cib.getElementsByTagName('configuration')[0]

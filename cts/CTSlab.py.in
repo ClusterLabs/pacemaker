@@ -469,7 +469,7 @@ if __name__ == '__main__':
             if test.name == TestCase:
                 Tests.append(test)
         if Tests == []:
-            usage("--choose")        
+            usage("--choose: No applicable/valid tests chosen")        
     else:
         Tests = TestList(cm)    
     
