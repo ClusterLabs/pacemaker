@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.41 2004/06/04 09:18:30 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.42 2004/06/28 08:17:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -181,7 +181,6 @@ cib_process_request(const char *op,
 
 	} else if (strcmp(CRM_OP_REPLACE, op) == 0) {
 		crm_verbose("Replacing section=%s of the cib", section);
-		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 
 		if (section == NULL
 		    || strlen(section) == 0
@@ -206,7 +205,6 @@ cib_process_request(const char *op,
     
 	if (update_the_cib) {
 		tmpCib = copy_xml_node_recursive(get_the_CIB());
-		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 
 		crm_verbose("Updating section=%s of the cib (op=%s)",
 			   section, op);

@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.41 2004/06/03 07:52:16 andrew Exp $ */
+/* $Id: cib.c,v 1.42 2004/06/28 08:17:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -102,8 +102,13 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 	enum cib_result result = CIBRES_OK;
 	xmlNodePtr fragment = find_xml_node(message, XML_TAG_FRAGMENT);
 	xmlNodePtr options  = find_xml_node(message, XML_TAG_OPTIONS);
-	const char *op      = get_xml_attr (message, XML_TAG_OPTIONS,
-					    XML_ATTR_OP, TRUE);
+	const char *section = xmlGetProp(fragment, XML_ATTR_SECTION);
+	const char *op      = xmlGetProp(options , XML_ATTR_OP);
+
+	if(section != NULL) {
+		set_xml_property_copy(
+			options, XML_ATTR_FILTER_TYPE, section);
+	}
 	
 	data = cib_process_request(op, options, fragment, &result);
 
@@ -113,9 +118,8 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 		reply = create_reply(message, data);
 		free_xml(data);
 
-		// TODO: put real result in here
 		set_xml_attr(reply, XML_TAG_OPTIONS,
-			     XML_ATTR_RESULT, "ok", TRUE);
+			     XML_ATTR_RESULT, cib_error2string(result), TRUE);
 		
 		return reply;
 	}
@@ -129,6 +133,13 @@ process_cib_request(const char *op,
 		    const xmlNodePtr fragment)
 {
 	enum cib_result result = CIBRES_OK;
+
+	const char *section = xmlGetProp(fragment, XML_ATTR_SECTION);
+
+	if(section != NULL) {
+		set_xml_property_copy(
+			options, XML_ATTR_FILTER_TYPE, section);
+	}
 
 	return cib_process_request(op, options, fragment, &result);
 }
@@ -202,6 +213,9 @@ pluralSection(const char *a_section)
 		
 	} else if(strcmp(a_section, XML_CIB_TAG_RESOURCE) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
+
+	} else if(strcmp(a_section, XML_CIB_TAG_NVPAIR) == 0) {
+		a_section_parent = crm_strdup(XML_CIB_TAG_CRMCONFIG);
 
 	} else {
 		crm_err("Unknown section %s", a_section);

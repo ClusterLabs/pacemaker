@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.28 2004/06/07 21:28:39 msoffen Exp $ */
+/* $Id: cibio.c,v 1.29 2004/06/28 08:17:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -90,6 +90,7 @@ createEmptyCib(void)
 	create_xml_node(config, XML_CIB_TAG_NODES);
 	create_xml_node(config, XML_CIB_TAG_RESOURCES);
 	create_xml_node(config, XML_CIB_TAG_CONSTRAINTS);
+	create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
 	
 	if (verifyCibXml(cib_root)) {
 		return cib_root;
@@ -122,6 +123,9 @@ verifyCibXml(xmlNodePtr cib)
 	if (tmp_node == NULL) is_valid = FALSE;
 
 	tmp_node = get_object_root(XML_CIB_TAG_STATUS, cib);
+ 	if (tmp_node == NULL) is_valid = FALSE;
+
+	tmp_node = get_object_root(XML_CIB_TAG_CRMCONFIG, cib);
  	if (tmp_node == NULL) is_valid = FALSE;
 
 	// more integrity tests
@@ -184,7 +188,6 @@ readCibXmlFile(const char *filename)
 xmlNodePtr
 get_the_CIB(void)
 {
-	
 	return the_cib;
 }
 
