@@ -45,7 +45,10 @@
 #define PIL_PLUGINLICENSEURL	URL_PUBDOM
 
 static const char * RA_PATH = HB_RA_DIR;
-static const int status_op_exitcode_map[] = { 0, 11, 12, 13, 14 };
+/* Map to the return code of the 'monitor' operation defined in the OCF RA
+ * specification.
+ */
+static const int status_op_exitcode_map[] = { 0, 1, 1, 7, 1 };
 
 /* The begin of exported function list */
 static int execra(const char * rsc_id,
@@ -127,13 +130,24 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	char ra_pathname[RA_MAX_NAME_LENGTH];
 	uniform_ret_execra_t exit_value;
 	GString * debug_info;
+	char * optype_tmp = NULL;
 	int index_tmp = 0;
 
+	/* To simulate the 'monitor' operation with 'status'.
+	 * Now suppose there is no 'monitor' operation for heartbeat scripts.
+	 */
+	if (0 == strncmp(op_type, "monitor", strlen("monitor")) ) {
+		optype_tmp = g_strdup("status");
+	} else {
+		optype_tmp = g_strdup(op_type);
+	}
+
 	/* Prepare the call parameter */
-	if (0 > prepare_cmd_parameters(rsc_type, op_type, params, params_argv)) {
+	if (0 > prepare_cmd_parameters(rsc_type, optype_tmp, params, params_argv)) {
 		cl_log(LOG_ERR, "HB RA: Error of preparing parameters");
 		return -1;
 	}
+	g_free(optype_tmp);
 
 	get_ra_pathname(RA_PATH, rsc_type, NULL, ra_pathname);
 
@@ -223,7 +237,7 @@ map_ra_retvalue(int ret_execra, const char * op_type)
 	*/
 	if ( strncmp(op_type, "status", strlen("status")) == 0 ) {
 		if (ret_execra < 0 || ret_execra > 4 ) {
-			ret_execra = 4;
+			ret_execra = 1;
 		}
 		return status_op_exitcode_map[ret_execra];
 	} else
