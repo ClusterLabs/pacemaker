@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.11 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.12 2004/03/05 13:00:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -71,7 +71,9 @@ xmlNodePtr createCibFragmentAnswer(const char *section,
 				   xmlNodePtr data,
 				   xmlNodePtr failed);
 
-void replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr command);
+void replace_section(const char *section,
+		     xmlNodePtr tmpCib,
+		     xmlNodePtr command);
 
 
 
@@ -165,11 +167,11 @@ processCibRequest(xmlNodePtr command)
 
 		/* change the op to "store" so that when a reply is created
 		 * the other end will do the right thing with it.
+		 * and change sysfrom to cib so it gets sent there.
 		 */
 		// cheat
 		set_xml_property_copy(options, XML_ATTR_OP, "store");
-		
-		
+
 	} else if (strcmp("store", op) == 0) {
 		CRM_DEBUG("Storing DC copy of the cib");
 
