@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.17 2004/09/21 19:24:37 andrew Exp $ */
+/* $Id: graph.c,v 1.18 2004/09/29 13:38:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -202,13 +202,11 @@ stonith_constraints(node_t *node,
 		}
 
 		/* stop before stonith */
-#if 0
-		a pointless optimization?  probably
-		if(shutdown_op != NULL) {
-			/* the next rule is implied */
-			continue;
-		}
-#endif
+/* 		a pointless optimization?  probably */
+/* 		if(shutdown_op != NULL) { */
+/* 			/\* the next rule is implied *\/ */
+/* 			continue; */
+/* 		} */
 		crm_malloc(wrapper, sizeof(action_wrapper_t));
 		if(wrapper != NULL) {
 			wrapper->action = rsc->stop;
