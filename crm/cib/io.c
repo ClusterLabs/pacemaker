@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.6 2005/02/01 22:45:12 andrew Exp $ */
+/* $Id: io.c,v 1.7 2005/02/09 15:30:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -163,6 +163,11 @@ uninitializeCib(void)
 gboolean
 initializeCib(crm_data_t *new_cib)
 {
+#if 0
+	if(new_cib != NULL) {
+		crm_set_element_parent(new_cib, NULL);
+	}
+#endif
 	if (verifyCibXml(new_cib)) {
 
 		initialized = FALSE;
@@ -184,12 +189,8 @@ initializeCib(crm_data_t *new_cib)
 		crm_trace("CIB initialized");
 		return TRUE;
 	}
-	else {
-		crm_warn("CIB Verification failed");
-	}
-	
+	crm_warn("CIB Verification failed");
 	return FALSE;
-    
 }
 
 int
@@ -269,9 +270,17 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 	crm_data_t *saved_cib = get_the_CIB();
 	const char *filename_bak = CIB_BACKUP; /* calculate */
 
+	crm_xml_debug(new_cib, "Attempting to activate CIB");
+
+	CRM_ASSERT(new_cib != saved_cib);
+	crm_validate_data(new_cib);
+	if(saved_cib != NULL) {
+		crm_validate_data(saved_cib);
+	}
+	
 	if (initializeCib(new_cib) == TRUE) {
 		int res = moveFile(filename, filename_bak, FALSE, NULL);
-	
+
 		if (res  < 0) {
 			crm_warn("Could not make backup of the current Cib "
 				 "(code: %d)... aborting update.", res);
@@ -311,9 +320,7 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 				}
 			}
 		}
-	}
-	else
-	{
+	} else {
 		crm_warn("Ignoring invalid or NULL Cib");
 		error_code = -5;
 	}
@@ -322,8 +329,10 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 	if (error_code != 0) {
 		crm_trace("Freeing new CIB %p", new_cib);
 		free_xml(new_cib);
-	} else {
+		
+	} else if(saved_cib != NULL) {
 		crm_trace("Freeing saved CIB %p", saved_cib);
+		crm_validate_data(saved_cib);
 		free_xml(saved_cib);
 	}
 
