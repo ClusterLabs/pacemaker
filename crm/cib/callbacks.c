@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.26 2005/02/25 10:22:42 andrew Exp $ */
+/* $Id: callbacks.c,v 1.27 2005/02/28 11:28:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,12 +46,14 @@
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean cib_msg_timeout(gpointer data);
 void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
+gboolean ghash_str_clfree(gpointer key, gpointer value, gpointer user_data);
 
 GHashTable *peer_hash = NULL;
 int        next_client_id  = 0;
 gboolean   cib_is_master   = FALSE;
 gboolean   cib_have_quorum = FALSE;
 GHashTable *client_list    = NULL;
+GHashTable *ccm_membership = NULL;
 extern const char *cib_our_uname;
 extern ll_cluster_t *hb_conn;
 
@@ -367,7 +369,7 @@ cib_common_callback(
 		crm_verbose("Processing IPC message from %s on %s channel",
 			    cib_client->id, cib_client->channel_name);
  		crm_log_message(LOG_MSG, op_request);
-		crm_log_message_adv(LOG_DEV, "cib.client-in.log", op_request);
+		crm_log_message_adv(LOG_DEV, "Client[inbound]", op_request);
 		
 		lpc++;
 		rc = cib_ok;
@@ -418,13 +420,12 @@ cib_common_callback(
 
 			if(host != NULL) {
 				crm_devel("Forwarding %s op to %s", op, host);
-				hb_conn->llc_ops->send_ordered_nodemsg(
-					hb_conn, op_request, host);
+				send_ha_message(hb_conn, op_request, host);
+
 			} else {
 				crm_info("Forwarding %s op to master instance",
 					 op);
-				hb_conn->llc_ops->sendclustermsg(
-					hb_conn, op_request);
+				send_ha_message(hb_conn, op_request, NULL);
 			}
 
 			if(call_options & cib_discard_reply) {
@@ -511,9 +512,8 @@ cib_common_callback(
 			ha_msg_add(op_request,
 				   F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 			cl_log_message(LOG_DEV, op_request);
-			CRM_DEV_ASSERT(hb_conn->llc_ops->sendclustermsg(
-					       hb_conn, op_request) == HA_OK);
-
+			send_ha_message(hb_conn, op_request, NULL);
+			
 		} else {
 			if(call_options & cib_scope_local ) {
 				crm_devel("Request not broadcast : local scope");
@@ -755,9 +755,9 @@ gboolean
 cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 {
 	if (channel->ch_status != IPC_CONNECT && cib_client != NULL) {
-		crm_info("Cleaning up after %s channel disconnect from client (%p) %s",
+		crm_info("Cleaning up after %s channel disconnect from client (%p) %s/%s",
 			 cib_client->channel_name, cib_client,
-			 crm_str(cib_client->id));
+			 crm_str(cib_client->id), crm_str(cib_client->name));
 
 		if(cib_client->id != NULL) {
 			g_hash_table_remove(client_list, cib_client->id);
@@ -803,7 +803,7 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 
 	crm_trace("%d HA messages dispatched", lpc);
 
-	if (channel && (channel->ch_status == IPC_DISCONNECT)) {
+	if (channel && (channel->ch_status != IPC_CONNECT)) {
 		crm_crit("Lost connection to heartbeat service... exiting");
 		exit(100);
 		return FALSE;
@@ -833,12 +833,22 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 	const char *client_id  = NULL;
 
 	if(safe_str_eq(originator, cib_our_uname)) {
-		crm_devel("Discarding message %s from ourselves",
-			  cl_get_string(msg, F_SEQ));
+ 		crm_devel("Discarding message %s/%s from ourselves",
+			  cl_get_string(msg, F_CIB_CLIENTID), 
+			  cl_get_string(msg, F_CIB_CALLID));
 		return;
-	}
-	
-	if(cib_get_operation_id(msg, &call_type) != cib_ok) {
+
+	} else if(ccm_membership == NULL) {
+ 		crm_devel("Discarding message %s/%s: membership not established",
+			  originator, cl_get_string(msg, F_SEQ));
+		return;
+		
+	} else if(g_hash_table_lookup(ccm_membership, originator) == NULL) {
+ 		crm_devel("Discarding message %s/%s: not in our membership",
+			  originator, cl_get_string(msg, F_CIB_CALLID));
+		return;
+
+	} else if(cib_get_operation_id(msg, &call_type) != cib_ok) {
 		crm_err("Invalid operation... discarding msg %s",
 			cl_get_string(msg, F_SEQ));
 		return;
@@ -858,7 +868,7 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 	}
 
 	crm_info("Processing message from peer to %s...", request_to);
- 	crm_log_message(LOG_DEV, msg);
+	crm_log_message_adv(LOG_DEV, "Peer[inbound]", msg);
 
 	if(safe_str_eq(update, XML_BOOLEAN_TRUE)
 	   && safe_str_eq(reply_to, cib_our_uname)) {
@@ -990,16 +1000,14 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		ha_msg_add(op_bcast, F_CIB_ISREPLY, originator);
 		ha_msg_add(op_bcast, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 		crm_log_message(LOG_DEV, op_bcast);
-		hb_conn->llc_ops->sendclustermsg(hb_conn, op_bcast);
+		send_ha_message(hb_conn, op_bcast, NULL);
 		crm_msg_del(op_bcast);
 		
 	} else {
 		/* send reply via HA to originating node */
 		crm_devel("Sending request result to originator only");
 		ha_msg_add(op_reply, F_CIB_ISREPLY, originator);
-		crm_log_message(LOG_DEV, op_reply);
-		hb_conn->llc_ops->send_ordered_nodemsg(
-			hb_conn, op_reply, originator);
+		send_ha_message(hb_conn, op_reply, originator);
 	}
 	crm_msg_del(op_reply);
 
@@ -1055,6 +1063,9 @@ void
 cib_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
+	int lpc = 0;
+	int offset = 0;
+	const oc_ev_membership_t *membership = data;
 	crm_devel("received callback");
 	
 	crm_info("event=%s", 
@@ -1071,8 +1082,36 @@ cib_ccm_msg_callback(
 	} else {
 		cib_have_quorum = FALSE;
 	}
+
+	if(data == NULL) {
+		return;
+	}
+	
+	if(ccm_membership != NULL) {
+		g_hash_table_foreach_remove(
+			ccm_membership, ghash_str_clfree, NULL);
+	}
+	ccm_membership = g_hash_table_new(g_str_hash, g_str_equal);
+
+	offset = membership->m_memb_idx;
+	
+	for(lpc = 0; lpc < membership->m_n_member; lpc++) {
+		oc_node_t a_node = membership->m_array[lpc+offset];
+		char *uname = crm_strdup(a_node.node_uname);
+		crm_devel("Copying ccm member node %d:%s", lpc, uname);
+		g_hash_table_insert(ccm_membership, uname, uname);	
+	}
 	
 	oc_ev_callback_done(cookie);
 	
 	return;
+}
+
+gboolean
+ghash_str_clfree(gpointer key, gpointer value, gpointer user_data)
+{
+	if(key != NULL) {
+		crm_free(key);
+	}
+	return TRUE;
 }
