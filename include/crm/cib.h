@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.15 2005/01/26 13:21:45 andrew Exp $ */
+/* $Id: cib.h,v 1.16 2005/02/16 18:22:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -193,7 +193,7 @@ typedef struct cib_api_operations_s
 			cib_t *cib, const char *host, const char *section,
 			crm_data_t **output_data, int call_options);
 
-		gboolean (*is_master) (cib_t *cib);
+		int (*is_master) (cib_t *cib);
 		int (*set_master)(cib_t *cib, int call_options);
 		int (*set_slave) (cib_t *cib, int call_options);
 		int (*set_slave_all)(cib_t *cib, int call_options);

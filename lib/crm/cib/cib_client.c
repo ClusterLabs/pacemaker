@@ -49,7 +49,7 @@ int cib_client_sync(cib_t *cib, const char *section, int call_options);
 int cib_client_sync_from(
 	cib_t *cib, const char *host, const char *section, int call_options);
 
-gboolean cib_client_is_master(cib_t *cib);
+int cib_client_is_master(cib_t *cib);
 int cib_client_set_slave(cib_t *cib, int call_options);
 int cib_client_set_slave_all(cib_t *cib, int call_options);
 int cib_client_set_master(cib_t *cib, int call_options);
@@ -208,7 +208,7 @@ int cib_client_query_from(cib_t *cib, const char *host, const char *section,
 }
 
 
-gboolean cib_client_is_master(cib_t *cib)
+int cib_client_is_master(cib_t *cib)
 {
 	if(cib == NULL) {
 		return cib_missing;
@@ -217,13 +217,9 @@ gboolean cib_client_is_master(cib_t *cib)
 	} else if(cib->cmds->variant_op == NULL) {
 		return cib_variant;
 	} 
-
-	if(cib_ok == cib->cmds->variant_op(
+	return cib->cmds->variant_op(
 		cib, CRM_OP_CIB_ISMASTER, NULL, NULL,NULL,NULL,
-		cib_scope_local|cib_sync_call)) {
-		return TRUE;
-	}
-	return FALSE;
+		cib_scope_local|cib_sync_call);
 }
 
 int cib_client_set_slave(cib_t *cib, int call_options)
