@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.1 2004/09/15 09:22:57 andrew Exp $ */
+/* $Id: utils.c,v 1.2 2004/09/15 20:22:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,6 +27,7 @@
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
 
+extern int global_transition_timer;
 FILE *msg_te_strm = NULL;
 
 void print_input(const char *prefix, action_t *input, gboolean to_file);
@@ -224,7 +225,14 @@ timer_callback(gpointer data)
 			 " marking transition complete.");
 		crm_warn("Some actions may not have been executed.");
 
+		if(global_transition_timer > 0) {
+			crm_devel("Stopping transition timer");
+			g_source_remove(global_transition_timer);
+			global_transition_timer = -1;
+		}
+		
 		send_success("timeout");
+		
 		return TRUE;
 		
 	} else {
@@ -232,6 +240,9 @@ timer_callback(gpointer data)
 		 * - which may or may not abort the transition
 		 */
 		action_t *action = (action_t*)data;
+		if(action->timer_id > 0) {
+			g_source_remove(action->timer_id);
+		}
 		action->timer_id = -1;
 
 		return do_update_cib(action->xml, LRM_OP_TIMEOUT);	
