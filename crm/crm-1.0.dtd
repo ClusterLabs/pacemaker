@@ -490,7 +490,7 @@ More details are given in the annotated DTD below.
 <!ELEMENT op_reply EMPTY>
 <!ATTLIST op_reply
 	  result	(ok|fail)	#REQUIRED
-          verbose_reply	CDATA		#IMPLIED
+          verbose	CDATA		#IMPLIED
           timestamp	CDATA		#REQUIRED>
 
 <!-- ============================================================== -->
