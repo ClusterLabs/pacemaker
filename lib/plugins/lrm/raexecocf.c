@@ -280,7 +280,6 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	get_ra_pathname(RA_PATH, rsc_type, provider, ra_pathname);
 
 	strncat(ra_pathname, " meta-data",RA_MAX_NAME_LENGTH);
-
 	tmp_for_setenv = g_hash_table_new(g_str_hash, g_str_equal);
 	add_OCF_env_vars(tmp_for_setenv, "DUMMY_INSTANCE", rsc_type, provider);
 	raexec_setenv(tmp_for_setenv);
@@ -302,6 +301,10 @@ get_resource_meta(const char* rsc_type, const char* provider)
 		else {
 			sleep(1);
 		}
+	}
+	if (0 == g_str_tmp->len) {
+		pclose(file);
+		return NULL;
 	}
 	data = (char*)g_new(char, g_str_tmp->len+1);
 	data[0] = data[g_str_tmp->len] = 0;
