@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.11 2005/02/10 11:04:41 andrew Exp $ */
+/* $Id: cibmon.c,v 1.12 2005/02/11 22:00:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -46,7 +46,7 @@
 #include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
 #include <crm/dmalloc_wrapper.h>
 
-FILE *msg_cibmon_strm = NULL;
+#define UPDATE_PREFIX "cib.updates:"
 
 int exit_code = cib_ok;
 
@@ -93,14 +93,12 @@ main(int argc, char **argv)
 
 	crm_log_init(crm_system_name);
 	cl_set_corerootdir(HA_COREDIR);	    
-	cl_enable_coredumps(1);
 	cl_cdtocoredir();
 	
 #ifdef USE_LIBXML
 	/* docs say only do this once, but in their code they do it every time! */
 	xmlInitParser(); 
 #endif
-	msg_cibmon_strm = fopen(DEVEL_DIR"/cibmon.updates", "a");
 
 	while (1) {
 		flag = getopt_long(argc, argv, OPTARGS,
@@ -117,7 +115,7 @@ main(int argc, char **argv)
 				}
 				printf("\n");
 				printf("Long option (--%s) is not"
-				" (yet?) properly supported\n",
+				       " (yet?) properly supported\n",
 		       		long_options[option_index].name);
 				++argerr;
 				break;
@@ -186,8 +184,6 @@ main(int argc, char **argv)
 	if(exit_code != cib_ok) {
 		crm_err("Signon to CIB failed: %s",
 			cib_error2string(exit_code));
-		fprintf(stderr, "Signon to CIB failed: %s\n",
-			cib_error2string(exit_code));
 	} 
 
 	if(exit_code == cib_ok) {
@@ -202,8 +198,6 @@ main(int argc, char **argv)
 		if(exit_code != cib_ok) {
 			crm_err("Failed to set %s callback: %s",
 				T_CIB_PRE_NOTIFY, cib_error2string(exit_code));
-			fprintf(stderr, "Failed to set %s callback: %s",
-				T_CIB_PRE_NOTIFY, cib_error2string(exit_code));
 		}
 	}
 	if(exit_code == cib_ok && post_notify) {
@@ -212,8 +206,6 @@ main(int argc, char **argv)
 		
 		if(exit_code != cib_ok) {
 			crm_err("Failed to set %s callback: %s",
-				T_CIB_POST_NOTIFY, cib_error2string(exit_code));
-			fprintf(stderr, "Failed to set %s callback: %s",
 				T_CIB_POST_NOTIFY, cib_error2string(exit_code));
 		}
 	}
@@ -224,16 +216,11 @@ main(int argc, char **argv)
 		if(exit_code != cib_ok) {
 			crm_err("Failed to set %s callback: %s",
 				T_CIB_UPDATE_CONFIRM, cib_error2string(exit_code));
-			fprintf(stderr, "Failed to set %s callback: %s",
-				T_CIB_UPDATE_CONFIRM, cib_error2string(exit_code));
 		}
 	}
 	
 	if(exit_code != cib_ok) {
 		crm_err("Setup failed, could not monitor CIB actions");
-		fprintf(stderr, "Setup failed, could not monitor CIB actions\n");
-		fflush(stderr);
-		fflush(stdout);
 		return -exit_code;
 	}
 
@@ -312,7 +299,6 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 
 	crm_data_t *update     = NULL;
 	crm_data_t *pre_update = NULL;
-	char *xml_text         = NULL;
 
 	if(msg == NULL) {
 		crm_err("NULL update");
@@ -326,9 +312,6 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	update     = get_message_xml(msg, F_CIB_UPDATE);
 	pre_update = get_message_xml(msg, F_CIB_EXISTING);
 
-	if(update != NULL) {
-		xml_text   = dump_xml_formatted(update);
-	}
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 
 	update_depth++;
@@ -338,37 +321,20 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 		crm_trace("[%s] Ignoring intermediate update", event);
 		return;
 	}
-	
-	fprintf(msg_cibmon_strm, "[%s] Raw update for %s (to %s)\n%s\n",
-		event, op, crm_str(type), crm_str(xml_text));
 
 	if(update != NULL) {
-		crm_verbose("[%s] Performing %s on <%s%s%s>",
+		crm_debug(UPDATE_PREFIX"[%s] Performing %s on <%s%s%s>",
 			    event, op, type, id?" id=":"", id?id:"");
-		crm_xml_verbose(update, "Update");
-		fprintf(msg_cibmon_strm, "[%s] Performing %s to <%s%s%s>."
-			"  Update follows\n%s\n",
-			event, op, crm_str(type), id?" id=":"", id?id:"",
-			xml_text);
-
+		print_xml_formatted(LOG_INSANE,  UPDATE_PREFIX,
+				    update, "Update");
+		
 	} else if(update == NULL) {
-		crm_verbose("[%s] Performing operation %s (on section=%s)",
-			    event, op, type);
-		fprintf(msg_cibmon_strm, "[%s] Performing %s (to %s)\n",
-			event, op, crm_str(type));
+		crm_info("[%s] Performing operation %s (on section=%s)",
+			 event, op, crm_str(type));
 	}
-	crm_free(xml_text);
 
-	crm_xml_verbose(pre_update, "Existing obejct");
-	
-	if(pre_update != NULL) {
-		xml_text = dump_xml_formatted(pre_update);
-	}
-	fprintf(msg_cibmon_strm, "[%s] Existing object\n%s\n",
-		event, xml_text);
-
-	fflush(msg_cibmon_strm);
-	crm_free(xml_text);
+	print_xml_formatted(LOG_DEBUG,  UPDATE_PREFIX,
+			    pre_update, "Existing Object");
 }
 
 
@@ -382,7 +348,6 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 
 	crm_data_t *update = NULL;
 	crm_data_t *output = NULL;
-	char *xml_text     = NULL;
 
 	if(msg == NULL) {
 		crm_err("NULL update");
@@ -396,10 +361,6 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	update = get_message_xml(msg, F_CIB_UPDATE);
 	output = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-	if(output != NULL) {
-		xml_text = dump_xml_formatted(output);
-	}
-	
 	update_depth--;
 	if(last_notify_pre == FALSE 
 	   && update_depth > 0
@@ -413,39 +374,35 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	
 	if(update == NULL) {
 		if(rc == cib_ok) {
-			crm_verbose("Operation %s (to section=%s) completed",
-				    op, crm_str(type));
-			fprintf(msg_cibmon_strm, "[%s] %s (to %s) completed\n",
-				event, op, crm_str(type));
+			crm_verbose("[%s] %s (to %s) completed",
+				    event, op, crm_str(type));
 			
 		} else {
-			crm_warn("Operation %s (to section=%s) FAILED: (%d) %s",
-				 op, crm_str(type), rc, cib_error2string(rc));
-			fprintf(msg_cibmon_strm, "[%s] %s (to %s) FAILED: (%d) %s\n",
-				event, op, crm_str(type), rc, cib_error2string(rc));
+			crm_warn("[%s] %s (to %s) FAILED: (%d) %s",
+				 event, op, crm_str(type), rc,
+				 cib_error2string(rc));
 		}
 		
 	} else {
 		if(rc == cib_ok) {
-			crm_verbose("Completed %s of <%s%s%s>",
-				    op, type, id?" id=":"", id?id:"");
-			fprintf(msg_cibmon_strm, "[%s] Operation %s to <%s%s%s> completed.\n",
-				event, op, crm_str(type), id?" id=":"", id?id:"");
+			crm_verbose("[%s] Operation %s to <%s%s%s> completed.",
+				    event, op, crm_str(type),
+				    id?" id=":"", id?id:"");
 			
 		} else {
-			crm_warn("%s of <%s%s%s> FAILED: (%d) %s", op, type,
-				 id?" id=":"", id?id:"", rc, cib_error2string(rc));
-			fprintf(msg_cibmon_strm, "[%s] Operation %s to <%s %s%s> FAILED: (%d) %s\n",
+			crm_warn("[%s] Operation %s to <%s %s%s> FAILED: (%d) %s",
 				event, op, crm_str(type), id?" id=":"", id?id:"",
 				rc, cib_error2string(rc));
 		}
 	}
-	fprintf(msg_cibmon_strm, "[%s] Operation %s result:\n%s\n",
-		event, op, crm_str(xml_text));
-	crm_free(xml_text);
-	crm_xml_verbose(output, "Resulting fragment");
-
-	fflush(msg_cibmon_strm);
+	if(update == NULL) {
+		print_xml_formatted(
+			rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
+			update, "Update");
+	}
+	print_xml_formatted(
+		rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
+		output, "Resulting Object");
 }
 
 void
@@ -469,25 +426,25 @@ cibmon_update_confirm(const char *event, HA_Message *msg)
 
 	if(id == NULL) {
 		if(rc == cib_ok) {
-			fprintf(msg_cibmon_strm, "[%s] %s (to section=%s) confirmed.\n",
-				event, op, crm_str(type));
+			crm_info("[%s] %s (to section=%s) confirmed.\n",
+				 event, op, crm_str(type));
 		} else {
-			fprintf(msg_cibmon_strm, "[%s] %s (to section=%s) ABORTED: (%d) %s\n",
-				event, op, crm_str(type), 
-				rc, cib_error2string(rc));
+			crm_warn("[%s] %s (to section=%s) ABORTED: (%d) %s\n",
+				 event, op, crm_str(type), 
+				 rc, cib_error2string(rc));
 		}
 		
 	} else {
 		if(rc == cib_ok) {
-			fprintf(msg_cibmon_strm, "[%s] %s (to <%s%s%s>) confirmed\n",
-				event, op, crm_str(type), id?" id=":"", id?id:"");
+			crm_info("[%s] %s (to <%s%s%s>) confirmed\n",
+				 event, op, crm_str(type),
+				 id?" id=":"", id?id:"");
 		} else {
-			fprintf(msg_cibmon_strm, "[%s] %s (to <%s%s%s>) ABORTED: (%d) %s\n",
-				event, op, crm_str(type), id?" id=":"", id?id:"",
-				rc, cib_error2string(rc));
+			crm_warn("[%s] %s (to <%s%s%s>) ABORTED: (%d) %s\n",
+				 event, op, crm_str(type),
+				 id?" id=":"", id?id:"",
+				 rc, cib_error2string(rc));
 		}
 	}
-	fprintf(msg_cibmon_strm, "\n=================================\n\n");
-	
-	fflush(msg_cibmon_strm);
+	crm_debug("\n=================================\n\n");
 }
