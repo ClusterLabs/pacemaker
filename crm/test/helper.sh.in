@@ -442,6 +442,10 @@ function do_cts_assert() {
 	do_cmd echo "Expected rc ($expected) != $result"
 	do_err=1
     else
+	# this is a hack for the fact that stat dumps core with MALLOC_CHECK_=2
+	if [ $local_version = 1 ]; then
+	    file $HADIR/core* | grep -e "from 'stat'" | rm -f `awk '{ print $1 }' | tr ':' ' '`
+	fi
 	for a_host in $node_list; do
 	    remote_cmd ${ADMIN_USER} ${a_host} "ls -al ${HAVAR_DIR}/cores/*/core*" 2>/dev/null 
 	    if [ $? -ne 1 ]; then
@@ -548,20 +552,20 @@ function do_cmd() {
     if [ $cmd = "echo" ]; then
 	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
 		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
-		if [ $local_version != "1" ]; then
+		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[01;32m"
 		fi
 		$cmdline | tee -a $test_dump_dir/test.txt
-		if [ $local_version != "1" ]; then
+		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[00m"
 		fi
 	    elif [ $OUTPUT_ECHO -eq 1 -a $OUTPUT_CMDS -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
 		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
-		if [ $local_version != "1" ]; then
+		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[01;32m"
 		fi
 		$cmdline | tee -a $test_dump_dir/test.txt
-		if [ $local_version != "1" ]; then
+		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[00m"
 		fi
 	    fi
