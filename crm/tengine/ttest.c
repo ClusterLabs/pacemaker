@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.13 2004/10/24 12:38:33 lge Exp $ */
+/* $Id: ttest.c,v 1.14 2004/11/12 17:12:51 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -35,7 +35,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?"
+#define OPTARGS	"V?X:"
 
 #include <getopt.h>
 #include <glib.h>
@@ -55,6 +55,9 @@ main(int argc, char **argv)
 	int argerr = 0;
 	xmlNodePtr xml_graph = NULL;
 	xmlNodePtr options = NULL;
+	
+	const char *xml_file = NULL;
+	
 	IPC_Channel* channels[2];
   
 	cl_log_set_entity("ttest");
@@ -90,6 +93,10 @@ main(int argc, char **argv)
 				   printf ("option %c\n", c);
 				*/
       
+			case 'X':
+				xml_file = crm_strdup(optarg);
+				break;
+
 			case 'V':
 				alter_debug(DEBUG_INC);
 				break;
@@ -115,7 +122,17 @@ main(int argc, char **argv)
 		crm_err("%d errors in option parsing", argerr);
 	}
   
+	crm_trace("Initializing graph...");
+	initialize_graph();
+	
 	crm_debug("=#=#=#=#= Getting XML =#=#=#=#=");
+	if(xml_file != NULL) {
+		FILE *xml_strm = fopen(xml_file, "r");
+		xml_graph = file2xml(xml_strm);
+		
+	} else {
+		xml_graph = file2xml(stdin);
+	}
   
 #ifdef MTRACE  
 	mtrace();
@@ -126,16 +143,16 @@ main(int argc, char **argv)
 	}
 	crm_ch = channels[0];
 
+/* 	fcntl(channels[0]->ops->get_send_select_fd(channels[0]), F_SETFL, O_NONBLOCK); */
+/* 	fcntl(channels[0]->ops->get_recv_select_fd(channels[0]), F_SETFL, O_NONBLOCK); */
+/* 	fcntl(channels[1]->ops->get_send_select_fd(channels[0]), F_SETFL, O_NONBLOCK); */
+/* 	fcntl(channels[1]->ops->get_recv_select_fd(channels[0]), F_SETFL, O_NONBLOCK); */
+	
 	G_main_add_IPC_Channel(G_PRIORITY_LOW,
 			       channels[1], FALSE,
 			       subsystem_msg_dispatch,
 			       (void*)process_te_message, 
 			       default_ipc_connection_destroy);
-
-	crm_trace("Initializing graph...");
-	initialize_graph();
-	
-	xml_graph = file2xml(stdin);
 
 	/* send transition graph over IPC instead */
 	options = create_xml_node(NULL, XML_TAG_OPTIONS);
