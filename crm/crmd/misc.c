@@ -54,8 +54,10 @@ do_log(long long action,
 	
 	if(msg_data->data_type == fsa_dt_ha_msg) {
 		ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);
-		crm_log_message(log_type, input->msg);
-
+		if(log_type > LOG_DEBUG) {
+			crm_log_message(log_type, input->msg);
+		}
+		
 	} else if(msg_data->data_type == fsa_dt_xml) {
 		crm_data_t *input = fsa_typed_data(msg_data->data_type);
 		if(crm_log_level >= log_type) {
