@@ -120,7 +120,7 @@ function remote_cmd() {
     shift
     
     if [ $local_version = "1" ]; then
-	su - ${user} -c "$*"
+	su ${user} -c "$*"
     else
 	`which ssh` ${user}@${host} "$*"
     fi
@@ -407,7 +407,7 @@ function dump_node() {
 
     dump_file="/tmp/${a_node_index}-${a_node}.tgz"
 
-    remote_cmd $CRMD_USER ${a_node} "stat -L -c %s $logfile > /tmp/crm/.logend"
+    remote_cmd $ADMIN_USER ${a_node} "stat -L -c %s $logfile > /tmp/crm/.logend"
     remote_cmd ${ADMIN_USER} ${a_node} "ps axf > /tmp/crm/processes"
     remote_cmd ${ADMIN_USER} ${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart  -l $logfile > /tmp/crm/cluster-test.log"
 #    `which ssh` ${ADMIN_USER}@${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart -epf /tmp/crm/.logend -l $logfile > /tmp/crm/cluster-test.log"
@@ -553,7 +553,7 @@ function crm-cleanup-node() {
 	if [ `dirname $logfile` = "/tmp/crm" ]; then
 	    do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart"
 	fi
-	remote_cmd $CRMD_USER $ha_host "stat -L -c %s $logfile > /tmp/crm/.logstart"
+	remote_cmd $ADMIN_USER $ha_host "stat -L -c %s $logfile > /tmp/crm/.logstart"
 	do_cmd remote_cmd $ADMIN_USER $ha_host "logger -i -p local7.info __crmtest_${test_type}_log_mark__"
 	do_cmd sleep 2
 	do_cmd remote_cmd $ADMIN_USER $ha_host "echo 1 > /proc/sys/kernel/core_uses_pid"
