@@ -77,7 +77,7 @@ static int get_provider_list(const char* op_type, GList ** providers);
 /* The end of exported function list */
 
 /* The begin of internal used function & data list */
-static void add_OCF_prefix( GHashTable * params, GHashTable * new_params);
+static void add_OCF_prefix(GHashTable * params, GHashTable * new_params);
 static void add_prefix_foreach(gpointer key, gpointer value,
 				   gpointer user_data);
 static gboolean let_remove_eachitem(gpointer key, gpointer value,
@@ -156,7 +156,7 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
  */
 
 static int
-execra( const char * rsc_type, const char * provider, const char * op_type,
+execra(const char * rsc_type, const char * provider, const char * op_type,
 	GHashTable * params)
 {
 	uniform_ret_execra_t exit_value;
@@ -165,13 +165,30 @@ execra( const char * rsc_type, const char * provider, const char * op_type,
 
 	get_ra_pathname(RA_PATH, rsc_type, provider, ra_pathname);
 
-	/* execute the RA */
-	cl_log(LOG_DEBUG, "Will execute OCF RA : %s %s", ra_pathname, op_type);
+	/* Setup environment correctly */
 	tmp_for_setenv = g_hash_table_new(g_str_hash, g_str_equal);
-	add_OCF_prefix( params, tmp_for_setenv);
+	add_OCF_prefix(params, tmp_for_setenv);
+	add_OCF_environment(tmp_for_setenv);
+
+	/* LRM team: Please cross-check before enabling. */
+#if 0
+	g_hash_table_insert(tmp_for_setenv, "OCF_RA_VERSION_MAJOR", "1");
+	g_hash_table_insert(tmp_for_setenv, "OCF_RA_VERSION_MINOR", "0");
+	g_hash_table_insert(tmp_for_setenv, "OCF_ROOT", "/usr/lib/ocf");
+	/* TODO: This is not passed in currently. */
+	g_hash_table_insert(tmp_for_setenv, "OCF_RESOURCE_INSTANCE", 
+			"FIXME");
+	g_hash_table_insert(tmp_for_setenv, "OCF_RESOURCE_TYPE", 
+			rsc_type);
+	g_hash_table_insert(tmp_for_setenv, "OCF_RESOURCE_PROVIDER", 
+			provider);
+#endif
 	raexec_setenv(tmp_for_setenv);
 	g_hash_table_foreach_remove(tmp_for_setenv, let_remove_eachitem, NULL);
 	g_hash_table_destroy(tmp_for_setenv);
+	
+	/* execute the RA */
+	cl_log(LOG_DEBUG, "Will execute OCF RA : %s %s", ra_pathname, op_type);
 	execl(ra_pathname, ra_pathname, op_type, NULL);
 
 	switch (errno) {
@@ -256,7 +273,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
 }
 
 static void 
-add_OCF_prefix( GHashTable * env_params, GHashTable * new_env_params)
+add_OCF_prefix(GHashTable * env_params, GHashTable * new_env_params)
 {
 	if (env_params) {
 		g_hash_table_foreach(env_params, add_prefix_foreach,
