@@ -564,24 +564,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		cl_log_set_facility(facility);
  	}	
 	crm_verbose("Facility: %d", facility);
-	
-	param_name = KEY_LOGFILE;
-	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_devel("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		cl_log_set_logfile(param_val);
-		cl_free(param_val);
-		param_val = NULL;
-	}
-
-	param_name = KEY_DBGFILE;
-	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_devel("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		cl_log_set_debugfile(param_val);
-		cl_free(param_val);
-		param_val = NULL;
-	}
 
 	param_name = KEY_DEBUGLEVEL;
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);

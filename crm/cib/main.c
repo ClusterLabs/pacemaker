@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.20 2005/02/28 10:53:25 andrew Exp $ */
+/* $Id: main.c,v 1.21 2005/02/28 14:02:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -284,24 +284,9 @@ cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
  	}	
 	crm_verbose("Facility: %d", facility);	
 
-	param_name = KEY_LOGFILE;
-	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_info("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		cl_log_set_logfile(param_val);
-		cl_free(param_val);
-		param_val = NULL;
-	}
-	param_name = KEY_DBGFILE;
-	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	if(param_val != NULL) {
-		cl_log_set_debugfile(param_val);
-		cl_free(param_val);
-		param_val = NULL;
-	}
 	param_name = KEY_DEBUGLEVEL;
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_info("%s = %s", param_name, param_val);
+	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		cl_free(param_val);
 		param_val = NULL;
