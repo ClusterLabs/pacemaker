@@ -41,7 +41,8 @@ void
 crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 {
 	ha_msg_input_t *new_input = NULL;
-
+	oc_node_t *from_node = NULL;
+	
 	const char *from = ha_msg_value(msg, F_ORIG);
 	const char *seq  = ha_msg_value(msg, F_SEQ);
 	const char *op   = ha_msg_value(msg, F_CRM_TASK);
@@ -51,7 +52,19 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 
 	CRM_DEV_ASSERT(from != NULL);
 
-	if(AM_I_DC
+	if(fsa_membership_copy == NULL) {
+		crm_devel("Ignoring HA messages until we are"
+			  " connected to the CCM");
+		return;
+	}
+	
+	from_node = g_hash_table_lookup(fsa_membership_copy->members, from);
+
+	if(from_node == NULL) {
+		crm_devel("Ignoring HA messages from %s: not in our"
+			  " membership list", from);
+		
+	} else if(AM_I_DC
 	   && safe_str_eq(sys_from, CRM_SYSTEM_DC)
 	   && safe_str_neq(from, fsa_our_uname)) {
 		crm_err("Another DC detected");
