@@ -93,7 +93,7 @@ do_election_vote(long long action,
 	}
 
 	send_request(vote, NULL);
-	startTimer(election_timeout);		
+	crm_timer_start(election_timeout);		
 
 	return I_NULL;
 }
@@ -119,7 +119,7 @@ do_dc_heartbeat(gpointer data)
 
 	if(send_msg_via_ha(fsa_cluster_conn, msg) == FALSE) {
 		/* this is bad */
-		stopTimer(timer); /* make it not go off again */
+		crm_timer_stop(timer); /* make it not go off again */
 
 		register_fsa_input(C_HEARTBEAT_FAILED, I_SHUTDOWN, NULL);
 		s_crmd_fsa(C_HEARTBEAT_FAILED);
@@ -163,36 +163,34 @@ do_election_count_vote(long long action,
 		crm_err("Membership copy was NULL");
 		return I_NULL;
 		
-	} else if(fsa_membership_copy->members_size < 1) {
-		
-		/* if even we are not in the cluster then we should not vote */
-		return I_NULL;
+	} else if(fsa_membership_copy->members != NULL) {
+		our_node = (oc_node_t*)
+			g_hash_table_lookup(fsa_membership_copy->members,fsa_our_uname);
+
+		your_node = (oc_node_t*)
+			g_hash_table_lookup(fsa_membership_copy->members,vote_from);
 	}
-
-	our_node = (oc_node_t*)
-		g_hash_table_lookup(fsa_membership_copy->members,fsa_our_uname);
-
-	your_node = (oc_node_t*)
-		g_hash_table_lookup(fsa_membership_copy->members,vote_from);
-
-	/* if your_version == 0, then they're shutting down too */
-	if(is_set(fsa_input_register, R_SHUTDOWN)) {
-		if(your_version != 0) {
-			crm_debug("Election fail: we are shutting down");
+	
+	if(your_node == NULL) {
+		crm_debug("Election ignore: The other side doesnt exist in CCM.");
+		return I_NULL;
+		
+		/* if your_version == 0, then they're shutting down too */
+	} else if(is_set(fsa_input_register, R_SHUTDOWN)) {
+		if(compare_version(your_version, "0") > 0) {
+			crm_info("Election fail: we are shutting down: %s", crm_str(your_version));
 			we_loose = TRUE;
+			
 		} else {
 			/* pretend nothing happened, they want to shutdown too*/
+			crm_info("Election ignore: they are shutting down too");
 			return I_NULL;
 		}
 		
 	} else if(our_node == NULL
 		|| fsa_membership_copy->last_event == OC_EV_MS_EVICTED) {
-		crm_debug("Election fail: we dont exist in CCM");
+		crm_info("Election fail: we dont exist in CCM");
 		we_loose = TRUE;
-		
-	} else if(your_node == NULL) {
-		crm_err("The other side doesnt exist in CCM.  Ignoring vote.");
-		return I_NULL;
 		
 	} else if(compare_version(your_version, CRM_VERSION) > 0) {
 		crm_debug("Election fail: version");
@@ -211,14 +209,17 @@ do_election_count_vote(long long action,
 	} else if(strcmp(fsa_our_uname, vote_from) > 0) {
 		crm_debug("Election fail: uname");
 		we_loose = TRUE;
-
-	} else if(strcmp(fsa_our_uname, vote_from) == 0) {
-		crm_debug("Election ??pass??: dup uname");
-		CRM_DEV_ASSERT(strcmp(fsa_our_uname, vote_from) != 0);
+/* cant happen...
+ *	} else if(strcmp(fsa_our_uname, vote_from) == 0) {
+ *
+ * default...
+ *	} else { // strcmp(fsa_our_uname, vote_from) < 0
+ *		we win
+ */
 	}
 
 	if(we_loose) {
-		stopTimer(election_timeout);
+		crm_timer_stop(election_timeout);
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		crm_info("Election lost to %s", vote_from);
 		if(fsa_input_register & R_THE_DC) {
@@ -249,7 +250,7 @@ do_election_count_vote(long long action,
 		}
 #else
 		if(cur_state == S_PENDING) {
-			crm_info("We already lost the election");
+			crm_info("Election ignore: We already lost the election");
 			return I_NULL;
 			
 		} else {
@@ -380,7 +381,7 @@ do_dc_release(long long action,
 
 	crm_trace("################## Releasing the DC ##################");
 
-	stopTimer(dc_heartbeat);
+	crm_timer_stop(dc_heartbeat);
 	if(action & A_DC_RELEASE) {
 		clear_bit_inplace(fsa_input_register, R_THE_DC);
 		
