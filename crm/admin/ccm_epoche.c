@@ -1,4 +1,4 @@
-/* $Id: ccm_epoche.c,v 1.1 2005/02/20 14:38:54 andrew Exp $ */
+/* $Id: ccm_epoche.c,v 1.2 2005/02/28 10:50:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,8 +39,9 @@
 
 const char* crm_system_name = "ccm_age";
 oc_ev_t *ccm_token = NULL;
+int command = 0;
 
-#define OPTARGS	"hV"
+#define OPTARGS	"hVqep"
 
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
@@ -69,6 +70,11 @@ main(int argc, char ** argv)
 				break;
 			case 'h':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
+				break;
+			case 'p':
+			case 'e':		
+			case 'q':		
+				command = flag;
 				break;
 			default:
 				++argerr;
@@ -168,43 +174,65 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 		  oc->m_n_member, oc->m_n_in, oc->m_n_out,
 		  oc->m_memb_idx, oc->m_in_idx, oc->m_out_idx);
 
-	if(crm_log_level >= LOG_DEV) {
-		node_list_size = oc->m_n_member;
-		for(lpc=0; lpc<node_list_size; lpc++) {
-			crm_devel("\tCURRENT: %s [nodeid=%d, born=%d]",
-				  oc->m_array[oc->m_memb_idx+lpc].node_uname,
-				  oc->m_array[oc->m_memb_idx+lpc].node_id,
-				  oc->m_array[oc->m_memb_idx+lpc].node_born_on);
-		}
-	
-		for(lpc=0; lpc<oc->m_n_in; lpc++) {
-			crm_devel("\tNEW:     %s [nodeid=%d, born=%d]",
-				 oc->m_array[oc->m_in_idx+lpc].node_uname,
-				 oc->m_array[oc->m_in_idx+lpc].node_id,
-				 oc->m_array[oc->m_in_idx+lpc].node_born_on);
+	node_list_size = oc->m_n_member;
+	if(command == 'q') {
+		crm_debug("Processing \"%s\" event.", 
+			  event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
+			  event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
+			  event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
+			  event==OC_EV_MS_EVICTED?"EVICTED":
+			  "NO QUORUM MEMBERSHIP");
+		if(event == OC_EV_MS_NEW_MEMBERSHIP
+		   || event == OC_EV_MS_NOT_PRIMARY
+		   || event == OC_EV_MS_PRIMARY_RESTORED) {
+			fprintf(stdout, "1\n");
+		} else {
+			fprintf(stdout, "0\n");
 		}
 		
-		for(lpc=0; lpc<oc->m_n_out; lpc++) {
-			crm_devel("\tLOST:    %s [nodeid=%d, born=%d]",
-				 oc->m_array[oc->m_out_idx+lpc].node_uname,
-				 oc->m_array[oc->m_out_idx+lpc].node_id,
-				 oc->m_array[oc->m_out_idx+lpc].node_born_on);
-		}
+	} else if(command == 'e') {
+		crm_debug("Searching %d members for our birth", oc->m_n_member);
 	}
-	crm_devel("-----------------------");
+	for(lpc=0; lpc<node_list_size; lpc++) {
+		if(command == 'p') {
+			fprintf(stdout, "%s ",
+				oc->m_array[oc->m_memb_idx+lpc].node_uname);
+		} else if(command == 'e') {
+			if(oc_ev_is_my_nodeid(ccm_token, &(oc->m_array[lpc]))){
+				crm_debug("MATCH: nodeid=%d, uname=%s, born=%d",
+					  oc->m_array[oc->m_memb_idx+lpc].node_id,
+					  oc->m_array[oc->m_memb_idx+lpc].node_uname,
+					  oc->m_array[oc->m_memb_idx+lpc].node_born_on);
+				fprintf(stdout, "%d\n",
+					oc->m_array[oc->m_memb_idx+lpc].node_born_on);
+			}
+		}
+		crm_devel("\tCURRENT: %s [nodeid=%d, born=%d]",
+			  oc->m_array[oc->m_memb_idx+lpc].node_uname,
+			  oc->m_array[oc->m_memb_idx+lpc].node_id,
+			  oc->m_array[oc->m_memb_idx+lpc].node_born_on);
+	}
 	
-	crm_debug("Searching %d members for our birth", oc->m_n_member);
-	for(lpc = 0; lpc < oc->m_n_member; lpc++) {
-		if(oc_ev_is_my_nodeid(ccm_token, &(oc->m_array[lpc]))){
-			crm_debug("MATCH: nodeid=%d, uname=%s, born=%d",
-				  oc->m_array[oc->m_memb_idx+lpc].node_id,
-				  oc->m_array[oc->m_memb_idx+lpc].node_uname,
-				  oc->m_array[oc->m_memb_idx+lpc].node_born_on);
-			fprintf(stdout, "%d\n",
-				oc->m_array[oc->m_memb_idx+lpc].node_born_on);
-			fflush(stdout);
-			exit(0);
-		}
+	for(lpc=0; lpc<oc->m_n_in; lpc++) {
+		crm_devel("\tNEW:     %s [nodeid=%d, born=%d]",
+			  oc->m_array[oc->m_in_idx+lpc].node_uname,
+			  oc->m_array[oc->m_in_idx+lpc].node_id,
+			  oc->m_array[oc->m_in_idx+lpc].node_born_on);
 	}
+	
+	for(lpc=0; lpc<oc->m_n_out; lpc++) {
+		crm_devel("\tLOST:    %s [nodeid=%d, born=%d]",
+			  oc->m_array[oc->m_out_idx+lpc].node_uname,
+			  oc->m_array[oc->m_out_idx+lpc].node_id,
+			  oc->m_array[oc->m_out_idx+lpc].node_born_on);
+	}
+
+	crm_devel("-----------------------");
 	oc_ev_callback_done(cookie);
+
+	if(command == 'p') {
+		fprintf(stdout, "\n");
+	}
+	fflush(stdout);
+	exit(0);
 }
