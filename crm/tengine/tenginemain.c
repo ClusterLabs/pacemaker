@@ -1,4 +1,4 @@
-/* $Id: tenginemain.c,v 1.18 2004/07/30 15:31:07 andrew Exp $ */
+/* $Id: tenginemain.c,v 1.19 2004/08/03 09:00:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,12 +39,12 @@
 #include <crm/dmalloc_wrapper.h>
 
 #define OPTARGS	"skrhV"
-#define PID_FILE     WORKING_DIR "/transitioner.pid"
-#define DAEMON_LOG   "/var/log/transitioner.log"
-#define DAEMON_DEBUG "/var/log/transitioner.debug"
+#define PID_FILE     WORKING_DIR "/" CRM_SYSTEM_TENGINE ".pid"
+#define DAEMON_LOG   WORKING_DIR "/" CRM_SYSTEM_TENGINE ".log"
+#define DAEMON_DEBUG WORKING_DIR "/" CRM_SYSTEM_TENGINE ".debug"
 
 GMainLoop*  mainloop = NULL;
-const char* crm_system_name = "transitioner";
+const char* crm_system_name = CRM_SYSTEM_TENGINE;
 
 
 void usage(const char* cmd, int exit_status);
@@ -62,6 +62,10 @@ main(int argc, char ** argv)
     
     cl_log_set_entity(crm_system_name);
     cl_log_set_facility(LOG_USER);
+    cl_log_set_logfile(DAEMON_LOG);
+    cl_log_set_debugfile(DAEMON_DEBUG);
+    CL_SIGNAL(DEBUG_INC, alter_debug);
+    CL_SIGNAL(DEBUG_DEC, alter_debug);
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -127,12 +131,7 @@ init_start(void)
 		crm_crit("already running: [pid %ld].", pid);
 		exit(LSB_EXIT_OK);
     }
-  
-    cl_log_set_logfile(DAEMON_LOG);
-    cl_log_set_debugfile(DAEMON_DEBUG);
-    CL_SIGNAL(DEBUG_INC, alter_debug);
-    CL_SIGNAL(DEBUG_DEC, alter_debug);
-
+    
     /* change the logging facility to the one used by heartbeat daemon */
     hb_fd = ll_cluster_new("heartbeat");
     

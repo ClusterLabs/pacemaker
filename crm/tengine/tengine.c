@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.23 2004/07/27 11:54:27 andrew Exp $ */
+/* $Id: tengine.c,v 1.24 2004/08/03 09:00:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,7 @@ typedef enum {
 
 typedef struct action_list_s 
 {
+		int id;
 		int index;
 		int index_max;
 
@@ -81,7 +82,10 @@ initialize_graph(void)
 
 			free_xml(action);
 		}
-		if(action_list->timer_id >= 0) {
+		if(action_list->timer_id > 0) {
+			crm_debug("Removing timer for list: %d",
+				  action_list->id);
+
 			g_source_remove(action_list->timer_id);
 		}
 		graph = g_list_remove(graph, action_list);
@@ -111,6 +115,7 @@ unpack_graph(xmlNodePtr xml_graph)
 	}
 	
 	while(xml_action_list != NULL) {
+		int listnum = 0;
 		xmlNodePtr xml_obj         = xml_action_list;
 		xmlNodePtr xml_action      = xml_obj->children;
 		action_list_t *action_list = (action_list_t*)
@@ -118,12 +123,15 @@ unpack_graph(xmlNodePtr xml_graph)
 
 		xml_action_list = xml_action_list->next;
 
+		action_list->id        = ++listnum;
 		action_list->force     = FALSE;
 		action_list->index     = -1;
 		action_list->index_max = 0;
 		action_list->timer_id  = -1;
 		action_list->status    = TE_LIST_ACTIVE;
 		action_list->actions   = NULL;
+
+		crm_debug("Created action list %d", action_list->id);
 		
 		while(xml_action != NULL) {
 			xmlNodePtr action =
@@ -167,15 +175,19 @@ extract_event(xmlNodePtr msg)
 	 <rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>
 */
 
+	crm_trace("Extracting event");
+	
 	iter = find_xml_node(msg, XML_TAG_FRAGMENT);
 	section = xmlGetProp(iter, XML_ATTR_SECTION);
 
-	if(safe_str_neq(section, XML_CIB_TAG_CRMCONFIG)) {
+	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
 		// ignore - for the moment
+		crm_debug("Ignoring changes to the %s section", XML_CIB_TAG_CRMCONFIG);
 		return TRUE;
 		
 	} else if(safe_str_neq(section, XML_CIB_TAG_STATUS)) {
-		// these too are never expected
+		// these too are never expected	
+		crm_debug("Ignoring changes outside the %s section", XML_CIB_TAG_STATUS);
 		return FALSE;
 	}
 	
@@ -191,12 +203,14 @@ extract_event(xmlNodePtr msg)
 		iter = iter->next;
 
 		if(xmlGetProp(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
+			crm_trace("Aborting on %s attribute", XML_CIB_ATTR_SHUTDOWN);
 			abort = TRUE;
 			
 		} else if(xmlGetProp(node_state, XML_CIB_ATTR_STONITH) != NULL) {
 			/* node marked for STONITH
 			 *   possibly by us when a shutdown timmed out
 			 */
+			crm_trace("Checking for STONITH");
 			code = crm_itoa(LRM_OP_TIMEOUT);
 			event_node = xmlGetProp(node_state, XML_ATTR_ID);
 
@@ -209,6 +223,7 @@ extract_event(xmlNodePtr msg)
 			/* simple node state update...
 			 *   possibly from a shutdown we requested
 			 */
+			crm_trace("Processing simple state update");
 			code = crm_itoa(LRM_OP_DONE);
 			if(safe_str_neq(state, OFFLINESTATUS)) {
 				// always recompute
@@ -226,6 +241,7 @@ extract_event(xmlNodePtr msg)
 		} else if(state == NULL && child != NULL) {
 			/* LRM resource update...
 			 */
+			crm_trace("Processing LRM resource update");
 			child = find_xml_node(node_state, XML_CIB_TAG_LRM);
 			child = find_xml_node(child, XML_LRM_TAG_RESOURCES);
 
@@ -254,10 +270,12 @@ extract_event(xmlNodePtr msg)
 			/* this is a complex event and could not be completely
 			 * due to any request we made
 			 */
+			crm_trace("Aborting on complex update");
 			abort = TRUE;
 			
 		} else {
 			/* ignore */
+			crm_err("Ignoring message");
 		}
 	}
 	
@@ -273,8 +291,6 @@ process_graph_event(const char *event_node, const char *event_rsc,
 	xmlNodePtr next_action   = NULL;
 	action_list_t *matched_action_list = NULL;
 
-	int old = set_crm_log_level(LOG_TRACE);
-	
 // Find the action corresponding to this event
 	crm_trace("looking for: task=%s node=%s rsc_id=%s rc=%s",
 		  event_action, event_node, event_rsc, event_rc);
@@ -348,6 +364,10 @@ process_graph_event(const char *event_node, const char *event_rsc,
 			event_action, event_node, event_rsc, event_rc);
 		
 		return FALSE;
+	} else {
+		crm_trace("Matched event to item %d in list %d",
+			  matched_action_list->index,
+			  matched_action_list->id);
 	}
 
 	xmlNodePtr xml_action = g_list_nth_data(matched_action_list->actions,
@@ -358,11 +378,12 @@ process_graph_event(const char *event_node, const char *event_rsc,
 	op_status_t rsc_code_i = -1;
 
 	if(event_rc != NULL) {
-		atoi(event_rc);
+		rsc_code_i = atoi(event_rc);
 	}
 	
 	if(rsc_code_i == -1) {
 		// just information that the action was sent
+		crm_trace("Ignoring TE initiated updates");
 		return TRUE;
 	}
 	
@@ -389,12 +410,17 @@ process_graph_event(const char *event_node, const char *event_rsc,
 			break;
 	}
 	
-	set_crm_log_level(old);
+	crm_trace("Action was successful, looking for next action");
 
 	while(matched_action_list->status == TE_LIST_ACTIVE) {
 		gboolean passed = FALSE;
 
-		g_source_remove(matched_action_list->timer_id);
+		if(matched_action_list->timer_id > 0) {
+			crm_debug("Removing timer for list: %s",
+				  xml_action->name);
+			g_source_remove(matched_action_list->timer_id);
+		}
+		
 		matched_action_list->timer_id = -1;
 		next_action = g_list_nth_data(matched_action_list->actions,
 					      matched_action_list->index);
@@ -409,13 +435,16 @@ process_graph_event(const char *event_node, const char *event_rsc,
 			/* last action in that list, check if there are
 			 *  anymore actions at all
 			 */
+			crm_err("Our list is complete... anyone else?");
 			slist_iter(
 				action_list, action_list_t, graph, lpc,
 				if(action_list->status != TE_LIST_COMPLETE){
+					crm_err("Another list is not yet complete");
 					return TRUE;
 				}
 				);
 		} else {
+			crm_debug("Exiting with status: %d", matched_action_list->status);
 			return TRUE;
 			
 		}
@@ -433,14 +462,22 @@ initiate_transition(void)
 {
 	int lpc;
 	gboolean anything = FALSE;
+
+	crm_info("Initating transition");
 	
 	slist_iter(
 		action_list, action_list_t, graph, lpc,
+
 		if(initiate_action(action_list)
 		   && action_list->status != TE_LIST_COMPLETE) {
 			anything = TRUE;
 		}
+
 		);
+
+	crm_info("Transition %s", anything?"started":"complete");
+	if(anything == FALSE)
+		send_success();		
 
 	return anything;
 }
@@ -458,13 +495,14 @@ initiate_action(action_list_t *list)
 	const char *discard   = NULL;
 	const char *timeout   = NULL;
 	
+	crm_info("Initiating action on list %d", list->id);
 	while(TRUE) {
 		
 		list->index++;
 		xml_action = g_list_nth_data(list->actions, list->index);
 		
 		if(xml_action == NULL) {
-			crm_info("No tasks left on this list");
+			crm_info("No tasks left on list %d", list->id);
 			list->status = TE_LIST_COMPLETE;
 			
 			return TRUE;
@@ -591,6 +629,8 @@ initiate_action(action_list_t *list)
 
 			if(timeout != NULL) {
 				op_timeout = (unsigned)atoi(timeout);
+				crm_debug("Decoded timeout %d from %s",
+					  op_timeout, timeout);
 			}
 		
 			set_xml_property_copy(options, XML_ATTR_OP, "rsc_op");
@@ -612,6 +652,7 @@ initiate_action(action_list_t *list)
 					 NULL, NULL);
 
 			if(op_timeout > 0) {
+				crm_debug("Setting timer for list %d",list->id);
 				list->timer_id = Gmain_timeout_add(
 					op_timeout,timer_callback,(void*)list);
 			}
@@ -689,7 +730,6 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 			// nothing to be done.. means we're done.
 			crm_info("No actions to be taken..."
 			       " transition compelte.");
-			send_success();		
 		}
 		crm_trace("Processing complete...");
 		
@@ -697,6 +737,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
 		const char *true_op = get_xml_attr (msg, XML_TAG_OPTIONS,
 						    XML_ATTR_TRUEOP, TRUE);
+		crm_trace("Processing %s...", CRM_OP_EVENTCC);
 		if(true_op == NULL) {
 			crm_err(
 			       "Illegal update,"
@@ -731,6 +772,9 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		crm_err("Received quit message, terminating");
 		exit(0);
 	}
+
+	crm_debug("finished processing message");
+	print_state();
 	
 	return TRUE;
 }
@@ -831,15 +875,17 @@ do_update_cib(xmlNodePtr xml_action, int status)
 	const char *task   = xmlGetProp(xml_action, XML_LRM_ATTR_TASK);
 	const char *target = xmlGetProp(xml_action, XML_LRM_ATTR_TARGET);
 	const char *rsc_id = xmlGetProp(xml_action, "rsc_id");
-	
-	if(xmlGetProp(xml_action, "rsc_id") != NULL) {
-		crm_warn("%s: %s %s on %s timed out",
-			 xml_action->name, task, rsc_id, target);
-	} else {
-		crm_warn("%s: %s on %s timed out",
-			 xml_action->name, task, target);
-	}
 
+	if(status == LRM_OP_TIMEOUT) {
+		if(xmlGetProp(xml_action, "rsc_id") != NULL) {
+			crm_warn("%s: %s %s on %s timed out",
+				 xml_action->name, task, rsc_id, target);
+		} else {
+			crm_warn("%s: %s on %s timed out",
+				 xml_action->name, task, target);
+		}
+	}
+	
 	print_state();
 
 /*
