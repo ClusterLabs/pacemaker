@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.36 2004/07/05 09:51:39 andrew Exp $ */
+/* $Id: pengine.c,v 1.37 2004/07/05 13:52:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -138,7 +138,7 @@ do_calculations(xmlNodePtr cib_object)
 	stage3(colors);
 
 	crm_verbose("=#=#=#=#= Stage 4 =#=#=#=#=");
-	stage4(resources);
+	stage4(colors);
 	crm_verbose("========= Colors =========");
 	crm_debug_action(
 		slist_iter(color, color_t, colors, lpc,

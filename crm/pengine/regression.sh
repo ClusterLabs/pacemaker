@@ -39,7 +39,7 @@ function do_test {
 
     if [ "$create_mode" != "true" -a ! -f $expected ]; then
 	echo "Test $name	($base)...	Error ($expected)";
-	return;
+#	return;
     fi
 
     ./ptest < $input 2>/dev/null 2>/dev/null > $output
@@ -72,6 +72,8 @@ function do_test {
 	diff $diff_opts $expected $output 2>/dev/null >> $failed
     else
 	echo "Test $name	($base)...	Error (diff: $rc)";
+	echo "==== Raw results for test ($base) ====" >> $failed
+	cat $output 2>/dev/null >> $failed
     fi
     
     rm $output
@@ -108,6 +110,7 @@ do_test rsc_rsc6 "Should not 3"
 do_test rsc_rsc7 "Must 3	"
 do_test rsc_rsc8 "Should 3	"
 do_test rsc_rsc9 "2*MustNot 1*ShouldNot	"
+do_test rsc_rsc10 "Must (cant)"
 echo ""
 
 do_test attrs1 "string: eq (and)	"
@@ -115,21 +118,6 @@ do_test attrs2 "string: lt / gt (and)"
 do_test attrs3 "string: ne (or)	"
 do_test attrs4 "string: exists	"
 do_test attrs5 "string: notexists	"
-
-echo ""
-
-#do_test rsc_node1 "Rsc1 Node1	"
-#do_test rsc_node2 "Rsc1 Node2	"
-#do_test rsc_node3 "Node Only	"
-
-echo ""
-
-#do_test rsc_attr1 "Attr inc	"
-#do_test rsc_attr2 "Attr dec	"
-#do_test rsc_attr3 "Attr set -	"
-#do_test rsc_attr4 "Attr set +	"
-#do_test rsc_attr5 "Attr only	"
-#do_test rsc_attr6 "Attr multi	"
 
 echo ""
 

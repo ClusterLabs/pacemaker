@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.29 2004/07/05 09:51:39 andrew Exp $ */
+/* $Id: pengine.h,v 1.30 2004/07/05 13:52:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -90,6 +90,7 @@ struct color_shared_s {
 		int      id;
 		float    highest_priority;
 		GListPtr candidate_nodes; // node_t*
+		GListPtr allocated_resources; // resources_t*
 		node_t  *chosen_node;
 		gboolean pending;
 };
@@ -280,6 +281,8 @@ extern gboolean order_new(
 	action_t *before, action_t *after, enum con_strength strength,
 	GListPtr *action_constraints);
 
+
+extern gboolean process_colored_constraints(resource_t *rsc);
 
 extern color_t *no_color;
 extern int      max_valid_nodes;

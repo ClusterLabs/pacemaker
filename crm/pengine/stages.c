@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.10 2004/07/05 09:51:39 andrew Exp $ */
+/* $Id: stages.c,v 1.11 2004/07/05 13:52:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,7 +27,6 @@
 
 #include <pengine.h>
 #include <pe_utils.h>
-
 
 /*
  * Unpack everything
@@ -181,71 +180,41 @@ stage3(GListPtr colors)
  * Choose a node for each (if possible) color
  */
 gboolean
-stage4(GListPtr resources)
+stage4(GListPtr colors)
 {
-	int lpc = 0;
-	int lpc2 = 0;
-	slist_iter(
-		rsc, resource_t, resources, lpc,
+	int lpc = 0, lpc2 = 0;
 
-		if(rsc->color == NULL) {
-			crm_err("No color associated with %s", rsc->id);
+	slist_iter(
+		color, color_t, colors, lpc,
+
+		crm_debug("assigning node to color %d", color->id);
+		
+		if(color == NULL) {
+			crm_err("NULL color detected");
 			continue;
 			
-		} else if(rsc->color->details->pending == FALSE) {
+		} else if(color->details->pending == FALSE) {
 			continue;
 		}
 		
-		choose_node_from_list(rsc->color);
-		
+		choose_node_from_list(color);
+
+		crm_debug("assigned %s to color %d",
+			  safe_val5(NULL, color, details, chosen_node, details, uname),
+			  color->id);
+
 		slist_iter(
-			constraint, rsc_to_rsc_t, rsc->rsc_cons, lpc2,
-			
-			if(constraint->variant != same_node) {
-				continue;
-			}
+			rsc, resource_t, color->details->allocated_resources, lpc2,
 
-			/* remove the node from the other color */
-			color_t *other_c = constraint->rsc_rh->color;
+			process_colored_constraints(rsc);
 			
-			node_t *other_n = pe_find_node(
-				other_c->details->candidate_nodes,
-				safe_val6(NULL, rsc, color, details,
-					  chosen_node, details, uname));
-
-			if(other_c == NULL) {
-				crm_err("No color associated with %s", constraint->id);
-				continue;
-			} else if(other_n == NULL) {
-				crm_err("No node associated with rsc/color %s/%d",
-					rsc->id, rsc->color->id);
-				continue;
-			}
-			
-			switch(constraint->strength) {
-				case pecs_must_not:
-					
-					other_c->details->candidate_nodes =
-						g_list_remove(
-							other_c->details->candidate_nodes,
-							other_n);
-			
-					crm_free(other_n);
-					break;
-				case pecs_should_not:
-					other_n->weight = -1;
-					break;
-				default:
-					break;
-			}
-			
-
 			);
 		);
 	crm_verbose("done");
 	return TRUE;
 	
 }
+
 
 /*
  * Attach nodes to the actions that need to be taken

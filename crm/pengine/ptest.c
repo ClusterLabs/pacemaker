@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.25 2004/07/05 09:51:39 andrew Exp $ */
+/* $Id: ptest.c,v 1.26 2004/07/05 13:52:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -198,7 +198,7 @@ main(int argc, char **argv)
 		   print_color(NULL, color, FALSE));
 
 	crm_debug("=#=#=#=#= Stage 4 =#=#=#=#=");
-	stage4(resources);
+	stage4(colors);
 	crm_debug("========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));

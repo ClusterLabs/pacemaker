@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.35 2004/07/05 09:51:39 andrew Exp $ */
+/* $Id: utils.c,v 1.36 2004/07/05 13:52:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -318,23 +318,18 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr resources)
 	color_t *new_color = NULL;
 	
 	crm_trace("Creating color");
-/*
-	if(colors != NULL && g_list_length(*colors) >= max_valid_nodes) {
-		crm_warn("Created %d colors already", max_valid_nodes);
-		return NULL;
-	}
-*/
 	new_color = crm_malloc(sizeof(color_t));
-
-	new_color->id = color_id++;
+	new_color->id           = color_id++;
 	new_color->local_weight = 1.0;
+	
 	crm_trace("Creating color details");
 	new_color->details = crm_malloc(sizeof(struct color_shared_s));
-	new_color->details->id               = new_color->id;
-	new_color->details->highest_priority = -1;
-	new_color->details->chosen_node      = NULL;
-	new_color->details->candidate_nodes  = NULL;
-	new_color->details->pending          = TRUE;
+	new_color->details->id                  = new_color->id;
+	new_color->details->highest_priority    = -1;
+	new_color->details->chosen_node         = NULL;
+	new_color->details->candidate_nodes     = NULL;
+	new_color->details->allocated_resources = NULL;
+	new_color->details->pending             = TRUE;
 
 	if(resource != NULL) {
 		crm_trace("populating node list");
@@ -347,25 +342,6 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr resources)
 
 	if(colors != NULL) {
 		*colors = g_list_append(*colors, new_color);      
-	}
-	
-	if(resources != NULL) {
-#if 0
-		/* Add any new color to the list of candidate_colors for
-		 * resources that havent been decided yet 
-		 */
-		int lpc;
-		slist_iter(
-			rsc, resource_t, resources, lpc,
-			if(rsc->provisional && rsc->runnable) {
-				color_t *color_copy = copy_color(new_color);
-
-				rsc->candidate_colors =
-					g_list_append(rsc->candidate_colors,
-						       color_copy);
-			}
-			);
-#endif
 	}
 	
 	return new_color;
@@ -969,6 +945,7 @@ pe_free_colors(GListPtr colors)
 		
 		if(details != NULL) {
 			pe_free_shallow(details->candidate_nodes);
+			pe_free_shallow_adv(details->allocated_resources, FALSE);
 			crm_free(details->chosen_node);
 			crm_free(details);
 		}
@@ -1014,16 +991,7 @@ pe_free_resources(GListPtr resources)
 		rsc = (resource_t *)list_item->data;
 		resources = resources->next;
 
-//		crm_free(rsc->id);
-		
-//		crm_verbose("color");
-//		crm_free(rsc->color);
-
-		int lpc;
-		slist_iter(clr, color_t, rsc->candidate_colors, lpc,
-			   print_color("deleting", clr, FALSE));
-		
-//		pe_free_shallow(rsc->candidate_colors);
+		pe_free_shallow_adv(rsc->candidate_colors, TRUE);
 		pe_free_shallow(rsc->allowed_nodes);
 
 		while(rsc->rsc_cons) {
@@ -1061,7 +1029,6 @@ void
 pe_free_rsc_to_rsc(rsc_to_rsc_t *cons)
 { 
 	if(cons != NULL) {
-//		crm_free(cons->id);
 		crm_free(cons);
 	}
 }
@@ -1070,7 +1037,6 @@ void
 pe_free_rsc_to_node(rsc_to_node_t *cons)
 {
 	if(cons != NULL) {
-//		crm_free(cons->id);
 
 		// right now we dont make copies so this isnt required
 //		pe_free_shallow(cons->node_list_rh); // node_t*
