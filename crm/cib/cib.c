@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.32 2004/04/29 15:33:03 andrew Exp $ */
+/* $Id: cib.c,v 1.33 2004/05/14 21:22:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -194,7 +194,7 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 		object_root = get_object_root(section, cib);
 		add_node_copy(object_root, update);
 	} else {
-		cib = copy_xml_node_recursive(update);
+		cib = xmlCopyNodeList(update);
 	}
 	
 	xmlAddChild(fragment, cib);
