@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.13 2005/02/03 20:08:21 msoffen Exp $ */
+/* $Id: callbacks.c,v 1.14 2005/02/06 04:51:36 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -140,7 +140,7 @@ cib_client_connect(IPC_Channel *channel, gpointer user_data)
 			new_client->id[35] = EOS;
 			
 			uuid_generate(client_id);
-			crm_malloc(new_client->callback_id, sizeof(char)*30);
+			crm_malloc(new_client->callback_id, sizeof(char)*36);
 			uuid_unparse(client_id, new_client->callback_id);
 			new_client->callback_id[35] = EOS;
 			
