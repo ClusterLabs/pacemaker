@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.23 2005/02/16 18:02:54 andrew Exp $ */
+/* $Id: messages.c,v 1.24 2005/02/17 16:27:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -103,7 +103,7 @@ cib_process_default(
 {
 	enum cib_errors result = cib_ok;
 	crm_debug("Processing \"%s\" event", op);
-	if(answer != NULL) *answer = NULL;
+	if(answer != NULL) { *answer = NULL; }	
 
 	if(op == NULL) {
 		result = cib_operation;
@@ -187,8 +187,8 @@ cib_process_query(
 
 	crm_debug("Processing \"%s\" event for section=%s", op, crm_str(section));
 
-	if(answer != NULL) *answer = NULL;
-	else return cib_ok;
+	if(answer != NULL) { *answer = NULL; }	
+	else { return cib_ok };
 	
 #if 0
 	if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
@@ -238,7 +238,7 @@ cib_process_erase(
 	enum cib_errors result = cib_ok;
 
 	crm_debug("Processing \"%s\" event", op);
-	if(answer != NULL) *answer = NULL;
+	if(answer != NULL) { *answer = NULL; }	
 
 	tmpCib = createEmptyCib();
 
@@ -271,7 +271,7 @@ cib_process_bump(
 	crm_debug("Processing \"%s\" event for epoche=%s",
 		  op, crm_str(crm_element_value(the_cib, XML_ATTR_GENERATION)));
 	
-	if(answer != NULL) *answer = NULL;
+	if(answer != NULL) { *answer = NULL; }	
 
 	cib_pre_notify(op, get_the_CIB(), NULL);
 
@@ -344,7 +344,7 @@ cib_process_replace(
 	enum cib_errors result = cib_ok;
 	
 	crm_debug("Processing \"%s\" event for section=%s", op, crm_str(section));
-	if(answer != NULL) *answer = NULL;
+	if(answer != NULL) { *answer = NULL; }	
 
 	if (options & cib_verbose) {
 		verbose = TRUE;

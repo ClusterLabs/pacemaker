@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.9 2005/02/15 16:09:36 andrew Exp $ */
+/* $Id: io.c,v 1.10 2005/02/17 16:27:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -247,7 +247,7 @@ moveFile(const char *oldname,
 		if (backup == TRUE) {
 			char backname[1024];
 			static const char *back_ext = "bak";
-			if (ext != NULL) back_ext = (char*)ext;
+			if (ext != NULL) { back_ext = (char*)ext; }
 	    
 			snprintf(backname, sizeof(backname)-1,
 				 "%s.%s", newname, back_ext);
