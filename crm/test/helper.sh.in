@@ -285,12 +285,9 @@ function do_cts_assert() {
     shift
     shift
 
-set -x
     if [ $result -ne $expected ]; then
-set  +x
 	err $*
     fi
-set  +x
 }
 
 function err() {
