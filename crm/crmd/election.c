@@ -31,6 +31,8 @@
 #include <crm/dmalloc_wrapper.h>
 
 GHashTable *joined_nodes = NULL;
+void ghash_count_vote(gpointer key, gpointer value, gpointer user_data);
+void ghash_send_welcome(gpointer key, gpointer value, gpointer user_data);
 
 /*	A_ELECTION_VOTE	*/
 enum crmd_fsa_input
@@ -99,6 +101,11 @@ do_dc_heartbeat(gpointer data)
 	return TRUE;
 }
 
+struct election_data_s 
+{
+		const char *winning_uname;
+		unsigned int winning_bornon;
+};
 
 /*	A_ELECTION_COUNT	*/
 enum crmd_fsa_input
@@ -110,12 +117,8 @@ do_election_count_vote(long long action,
 {
 	gboolean we_loose = FALSE;
 	xmlNodePtr vote = (xmlNodePtr)data;
-	unsigned int my_born = -1, your_born = -1;
-	int lpc = 0, my_index = -1, your_index = -1;
 	enum crmd_fsa_input election_result = I_NULL;
 	const char *vote_from = xmlGetProp(vote, XML_ATTR_HOSTFROM);
-	const char *lowest_uname = NULL;
-	int lowest_bornon = 0;
 	
 	FNIN();
 
@@ -129,78 +132,62 @@ do_election_count_vote(long long action,
 		FNRET(I_FAIL);
 		
 	}
-	
-	lowest_uname = fsa_membership_copy->members[0].node_uname;
-	lowest_bornon = fsa_membership_copy->members[0].node_born_on;
-	
-	for(; lpc < fsa_membership_copy->members_size; lpc++) {
-		
-		const char *node_uname =
-			fsa_membership_copy->members[lpc].node_uname;
-		int this_born_on =
-			fsa_membership_copy->members[lpc].node_born_on;
-		
-		if(node_uname == NULL) {
-			continue;
-		}
-		
-		if(strcmp(vote_from, node_uname) == 0) {
-			your_born = this_born_on;
-			your_index = lpc;
 
-		} else if (strcmp(fsa_our_uname, node_uname) == 0) {
-			my_born = this_born_on;
-			my_index = lpc;
-		}
-		
-		if(lowest_bornon > this_born_on) {
-			lowest_uname = node_uname;
-			lowest_bornon = this_born_on;
-			
-		} else if(lowest_bornon == this_born_on
-			  && strcmp(lowest_uname, node_uname) > 0) {
-			lowest_uname = node_uname;
-			lowest_bornon = this_born_on;
-		}
-	}
+	oc_node_t *our_node = (oc_node_t*)
+		g_hash_table_lookup(fsa_membership_copy->members, fsa_our_uname);
+
+	oc_node_t *your_node = (oc_node_t*)
+		g_hash_table_lookup(fsa_membership_copy->members, vote_from);
 
 #if 0
 	cl_log(LOG_DEBUG, "%s (bornon=%d), our bornon (%d)",
-		   vote_from, your_born, my_born);
+		   vote_from, our_node->born, my_born);
 
 	cl_log(LOG_DEBUG, "%s %s %s",
 	       fsa_our_uname,
 	       strcmp(fsa_our_uname, vote_from) < 0?"<":">=",
 	       vote_from);
 #endif
-
-	cl_log(LOG_DEBUG, "Election winner should be %s (born_on=%d)",
-	       lowest_uname, lowest_bornon);
 	
-	
-	if(lowest_uname != NULL && strcmp(lowest_uname, fsa_our_uname) == 0){
-		cl_log(LOG_DEBUG, "Election win: lowest born_on and uname");
-		election_result = I_ELECTION_DC;
-
-	} else if(your_born < my_born) {
+	if(your_node->node_born_on < our_node->node_born_on) {
 		cl_log(LOG_DEBUG, "Election fail: born_on");
 		we_loose = TRUE;
-	} else if(your_born == my_born
+
+	} else if(your_node->node_born_on == our_node->node_born_on
 		  && strcmp(fsa_our_uname, vote_from) > 0) {
 		cl_log(LOG_DEBUG, "Election fail: uname");
 		we_loose = TRUE;
-	} else {
-		CRM_DEBUG("We might win... we should vote (possibly again)");
-		election_result = I_DC_TIMEOUT;
-	}
 
+	} else {
+		struct election_data_s election_data;
+		election_data.winning_uname = NULL;
+		election_data.winning_bornon = -1; // maximum integer
+		
+		CRM_DEBUG("We might win... we should vote (possibly again)");
+		election_result = I_DC_TIMEOUT; // new "default"
+
+		g_hash_table_foreach(fsa_membership_copy->members,
+				     ghash_count_vote, &election_data);
+		
+		cl_log(LOG_DEBUG, "Election winner should be %s (born_on=%d)",
+		       election_data.winning_uname, election_data.winning_bornon);
+		
+	
+		if(safe_str_eq(election_data.winning_uname, fsa_our_uname)){
+			cl_log(LOG_DEBUG, "Election win: lowest born_on and uname");
+			election_result = I_ELECTION_DC;
+		}
+	}
+	
 	if(we_loose) {
 		if(fsa_input_register & R_THE_DC) {
 			cl_log(LOG_DEBUG, "Give up the DC");
 			election_result = I_RELEASE_DC;
+			
 		} else {
 			cl_log(LOG_DEBUG, "We werent the DC anyway");
 			election_result = I_NOT_DC;
+			
 		}
 	}
 
@@ -211,7 +198,6 @@ do_election_count_vote(long long action,
 	
 	FNRET(election_result);
 }
-
 
 /*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT 	*/
 // we won
@@ -352,9 +338,7 @@ do_send_welcome(long long action,
 		enum crmd_fsa_input current_input,
 		void *data)
 {
-	int lpc = 0, size = 0, num_sent = 0;
-	oc_node_t *members;
-	gboolean was_sent = TRUE;
+	int num_sent = 0;
 	FNIN();
 
 	if(action & A_JOIN_WELCOME && data == NULL) {
@@ -388,24 +372,35 @@ do_send_welcome(long long action,
 	stopTimer(integration_timer);
 	startTimer(integration_timer);
 	
-	members = fsa_membership_copy->members;
-	size = fsa_membership_copy->members_size;
-	
 	if(joined_nodes != NULL) {
 		g_hash_table_destroy(joined_nodes);
 		joined_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
 		
 	}
 
-	// reset everyones status back to down in the CIB
-	xmlNodePtr cib_copy = get_cib_copy();
-	xmlNodePtr tmp1 = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
+	// reset everyones status back to down or in_ccm in the CIB
+	xmlNodePtr update     = NULL;
+	xmlNodePtr cib_copy   = get_cib_copy();
+	xmlNodePtr tmp1       = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
 	xmlNodePtr node_entry = tmp1->children;
-	xmlNodePtr update = NULL;
+
+
+	// catch any nodes that are active in the CIB but not in the CCM list 
 	while(node_entry != NULL){
-		tmp1 = create_node_state(xmlGetProp(node_entry, "id"),
-					 "down", NULL, NULL);
+		const char *state   = "down";
+		const char *node_id = xmlGetProp(node_entry, "id");
+
+		gpointer a_node =
+			g_hash_table_lookup(fsa_membership_copy->members, node_id);
+
 		node_entry = node_entry->next;
+
+		if(a_node != NULL || (safe_str_eq(fsa_our_uname, node_id))) {
+			// handled by do_update_cib_nodes()
+			continue;
+		}
+
+		tmp1 = create_node_state(node_id, state, NULL, NULL);
 		
 		if(update == NULL) {
 			update = tmp1;
@@ -414,37 +409,12 @@ do_send_welcome(long long action,
 		}
 	}
 
-	if(update != NULL) {
-		xml_message_debug(update, "creating fragment for...");
-		tmp1 = create_cib_fragment(update, NULL);
-		send_request(NULL, tmp1, "update", NULL, CRM_SYSTEM_DCIB);
-		
-	}
-	
-	free_xml(tmp1);
-	free_xml(update);
+	// now process the CCM data
+	free_xml(do_update_cib_nodes(update));
 	free_xml(cib_copy);
 	
-	for(; members != NULL && lpc < size; lpc++) {
-		const char *new_node = members[lpc].node_uname;
-		if(strcmp(fsa_our_uname, new_node) == 0) {
-			// dont send one to ourselves
-			continue;
-		}
-
-		CRM_DEBUG("Sending welcome message to %s (%d)",
-			   new_node, was_sent);
-		num_sent++;
-		was_sent = was_sent
-			&& send_request(NULL, NULL, CRM_OPERATION_WELCOME,
-					new_node, CRM_SYSTEM_CRMD);
-
-		CRM_DEBUG("Sent welcome message to %s (%d)",
-			   new_node, was_sent);
-	}
-
-	if(was_sent == FALSE)
-		FNRET(I_FAIL);
+	g_hash_table_foreach(fsa_membership_copy->members,
+				     ghash_send_welcome, &num_sent);
 
 /* No point hanging around in S_INTEGRATION if we're the only ones here! */
 	if(num_sent == 0) {
@@ -567,27 +537,21 @@ do_process_welcome_ack(long long action,
 		    enum crmd_fsa_input current_input,
 		    void *data)
 {
-	int lpc = 0, size = 0;
-	oc_node_t *members;
-	gboolean is_a_member = FALSE;
 	xmlNodePtr tmp1;
-	xmlNodePtr join_ack = (xmlNodePtr)data;
 	xmlNodePtr cib_fragment;
+	xmlNodePtr join_ack = (xmlNodePtr)data;
+
+	int size = 0;
+	gboolean is_a_member  = FALSE;
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
 
 	FNIN();
 
-	
-	FNIN();
+	gpointer join_node =
+		g_hash_table_lookup(fsa_membership_copy->members, join_from);
 
-	members = fsa_membership_copy->members;
-	size = fsa_membership_copy->members_size;
-	
-	for(; lpc < size; lpc++) {
-		const char *new_node = members[lpc].node_uname;
-		if(strcmp(join_from, new_node) == 0) {
-			is_a_member = TRUE;
-		}
+	if(join_node != NULL) {
+		is_a_member = TRUE;
 	}
 	
 	cib_fragment = find_xml_node(join_ack, XML_TAG_FRAGMENT);
@@ -641,4 +605,50 @@ do_process_welcome_ack(long long action,
 		//dont waste time by invoking the pe yet;
 	}
 	FNRET(I_CIB_OP);
+}
+
+
+void
+ghash_send_welcome(gpointer key, gpointer value, gpointer user_data)
+{
+	int *num_sent = (int*)user_data;
+	const char *node_uname = (const char*)key;
+
+	if(strcmp(fsa_our_uname, node_uname) == 0) {
+		// dont send one to ourselves
+		return;
+	}
+
+	if(send_request(NULL, NULL, CRM_OPERATION_WELCOME,
+			node_uname, CRM_SYSTEM_CRMD)) {
+		*num_sent++;
+		CRM_DEBUG("Sent welcome message to %s", node_uname);
+		
+	} else {
+		cl_log(LOG_ERR, "Couldnt send welcome message to %s", node_uname);
+		
+	}
+}
+
+void
+ghash_count_vote(gpointer key, gpointer value, gpointer user_data)
+{
+	
+	struct election_data_s *election_data =
+		(struct election_data_s *)user_data;
+
+	oc_node_t *cur_node = (oc_node_t*)value;
+	const char *node_uname = (const char*)key;
+	
+	if(election_data->winning_bornon > cur_node->node_born_on) {
+		election_data->winning_uname = node_uname;
+		election_data->winning_bornon = cur_node->node_born_on;
+		
+	} else if(election_data->winning_bornon == cur_node->node_born_on
+		  && (election_data->winning_uname == NULL
+		      || strcmp(election_data->winning_uname, node_uname) > 0)) {
+		election_data->winning_uname = node_uname;
+		election_data->winning_bornon = cur_node->node_born_on;
+
+	}
 }

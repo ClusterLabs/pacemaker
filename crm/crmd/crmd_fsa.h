@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.16 2004/05/14 21:15:54 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.17 2004/05/17 12:25:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,14 +36,13 @@ struct ccm_data
 struct oc_node_list_s
 {
 		int members_size;
-		oc_node_t *members;
+		GHashTable *members; // contents: oc_node_t *
 
 		int new_members_size;
-		oc_node_t *new_members;
+		GHashTable *new_members; // contents: oc_node_t *
 
 		int dead_members_size;
-		oc_node_t *dead_members;
-//		struct oc_node_list_s *next;
+		GHashTable *dead_members; // contents: oc_node_t *
 };
 
 /* copy from struct client_child in heartbeat.h
@@ -122,6 +121,7 @@ extern void cleanup_subsystem(struct crm_subsystem_s *the_subsystem);
 extern enum crmd_fsa_input send_cib_status_update(xmlNodePtr update);
 extern xmlNodePtr create_node_state(const char *node, const char *state,
 				    const char *exp_state, xmlNodePtr lrm_data);
+extern xmlNodePtr do_update_cib_nodes(xmlNodePtr updates);
 
 #define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)
