@@ -109,6 +109,7 @@ class LinuxHAv2(HeartbeatCM):
 '''
         resources=''' '''
         constraints=''' '''
+        cib_fencing = ""
         if self.Env["CIBResource"] == 1:
             self.log("Enabling DC resource")
             resources='''
@@ -147,7 +148,7 @@ class LinuxHAv2(HeartbeatCM):
         </rule>
       </rsc_location>""" % (node, node, node, node))
                 constraints = constraints + node_constraint
-            cib_fencing = ""
+            
             if self.Env["DoFencing"] == 1 :
                 cib_fencing='''
        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>'''
