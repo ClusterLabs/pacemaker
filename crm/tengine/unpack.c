@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.14 2004/12/17 09:33:17 andrew Exp $ */
+/* $Id: unpack.c,v 1.15 2004/12/21 08:15:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -246,11 +246,14 @@ extract_event(xmlNodePtr msg)
 	}
 	
 	while(abort == FALSE && iter != NULL) {
-		xmlNodePtr node_state = iter;
-		xmlNodePtr child = iter->children;
 		xmlNodePtr shutdown = NULL;
-		const char *state = xmlGetProp(
-			node_state, XML_CIB_ATTR_CRMDSTATE);
+		xmlNodePtr resources = NULL;
+		xmlNodePtr node_state = iter;
+
+		const char *ccm_state  = xmlGetProp(node_state, XML_CIB_ATTR_INCCM);
+		const char *crmd_state = xmlGetProp(node_state, XML_CIB_ATTR_CRMDSTATE);
+		const char *join_state = xmlGetProp(node_state, XML_CIB_ATTR_JOINSTATE);
+
 		iter = iter->next;
 
 		crm_xml_devel(node_state,"Processing");
@@ -259,6 +262,7 @@ extract_event(xmlNodePtr msg)
 			crm_devel("Aborting on %s attribute",
 				  XML_CIB_ATTR_SHUTDOWN);
 			abort = TRUE;
+			continue;
 			
 		} else if(xmlGetProp(node_state, XML_CIB_ATTR_STONITH) != NULL) {
 			/* node marked for STONITH
@@ -273,54 +277,60 @@ extract_event(xmlNodePtr msg)
 			process_graph_event(shutdown);
 
 			free_xml(shutdown);
-			
-		} else if(state != NULL && child == NULL) {
+			continue;
+		}
+
+		resources = find_xml_node(node_state, XML_CIB_TAG_LRM);
+		resources = find_xml_node(resources, XML_LRM_TAG_RESOURCES);
+
+		if(crmd_state != NULL || ccm_state != NULL || join_state != NULL) {
 			/* simple node state update...
 			 *   possibly from a shutdown we requested
 			 */
-			crm_devel("Processing simple state update");
-			if(safe_str_neq(state, OFFLINESTATUS)) {
+			crm_devel("Processing state update");
+			if(crmd_state != NULL
+			   && safe_str_neq(crmd_state, OFFLINESTATUS)) {
 				/* always recompute */
 				abort = TRUE;
-				continue;
+				
+			} else if(crmd_state != NULL) {
+
+				/* regular shutdowns are caught above */
+			} else if(ccm_state != NULL
+				  && safe_str_eq(ccm_state, XML_BOOLEAN_YES)) {
+				abort = TRUE;
+
+			} else if(join_state != NULL
+				  && safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)) {
+				abort = TRUE;
+			} else {
+				/* this may be called more than once per shutdown
+				 * ie. once per update of each field
+				 */
+				event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
+				shutdown = create_shutdown_event(event_node, LRM_OP_DONE);
+				
+				abort = !process_graph_event(shutdown);
+
+				free_xml(shutdown);
 			}
 			
-			event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
-			shutdown = create_shutdown_event(
-				event_node, LRM_OP_DONE);
-
-			process_graph_event(shutdown);
-
-			free_xml(shutdown);
-
-		} else if(state == NULL && child != NULL) {
+			if(abort) {
+				crm_xml_debug(
+					node_state, "Update resulted in state-based abort");
+			}
+		}
+		if(abort == FALSE && resources != NULL) {
 			/* LRM resource update...
 			 */
-			crm_devel("Processing LRM resource update");
-			child = find_xml_node(node_state, XML_CIB_TAG_LRM);
-			child = find_xml_node(child, XML_LRM_TAG_RESOURCES);
-
-			if(child != NULL) {
-				child = child->children;
-			} else {
-				abort = TRUE;
-			}
+			xmlNodePtr child = resources->children;
 			
 			event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
 			while(abort == FALSE && child != NULL) {
-				process_graph_event(child);
+				crm_xml_devel(child, "Processing LRM resource update");
+				abort = !process_graph_event(child);
 				child = child->next;
 			}	
-		} else if(state != NULL && child != NULL) {
-			/* this is a complex event and could not be completely
-			 * due to any request we made
-			 */
-			crm_devel("Aborting on complex update");
-			abort = TRUE;
-			
-		} else {
-			/* ignore */
-			crm_xml_warn(node_state,"Ignoring message");
 		}
 	}
 	
