@@ -77,9 +77,11 @@ static int get_provider_list(const char* op_type, GList ** providers);
 /* The end of exported function list */
 
 /* The begin of internal used function & data list */
-static void add_OCF_prefix( GHashTable ** params);
+static void add_OCF_prefix( GHashTable * params, GHashTable * new_params);
 static void add_prefix_foreach(gpointer key, gpointer value,
 				   gpointer user_data);
+static gboolean let_remove_eachitem(gpointer key, gpointer value,
+				    gpointer user_data);
 /* The end of internal function & data list */
 
 /* Rource agent execution plugin operations */
@@ -159,14 +161,17 @@ execra( const char * rsc_type, const char * provider, const char * op_type,
 {
 	uniform_ret_execra_t exit_value;
 	char ra_pathname[RA_MAX_NAME_LENGTH];
-
+	GHashTable * tmp_for_setenv;
 
 	get_ra_pathname(RA_PATH, rsc_type, provider, ra_pathname);
 
 	/* execute the RA */
 	cl_log(LOG_DEBUG, "Will execute OCF RA : %s %s", ra_pathname, op_type);
-	add_OCF_prefix( &params);
-	raexec_setenv(params);
+	tmp_for_setenv = g_hash_table_new(g_str_hash, g_str_equal);
+	add_OCF_prefix( params, tmp_for_setenv);
+	raexec_setenv(tmp_for_setenv);
+	g_hash_table_foreach_remove(tmp_for_setenv, let_remove_eachitem, NULL);
+	g_hash_table_destroy(tmp_for_setenv);
 	execl(ra_pathname, ra_pathname, op_type, NULL);
 
 	switch (errno) {
@@ -251,11 +256,11 @@ get_resource_meta(const char* rsc_type, const char* provider)
 }
 
 static void 
-add_OCF_prefix( GHashTable ** env_params)
+add_OCF_prefix( GHashTable * env_params, GHashTable * new_env_params)
 {
-	if (*env_params) {
-		g_hash_table_foreach(*env_params, add_prefix_foreach,
-					    *env_params);
+	if (env_params) {
+		g_hash_table_foreach(env_params, add_prefix_foreach,
+				     new_env_params);
 	}
 }
 
@@ -263,16 +268,18 @@ static void
 add_prefix_foreach(gpointer key, gpointer value, gpointer user_data)
 {
 	const int MAX_LENGTH_OF_ENV = 50;
-	GHashTable * this_hashtable = (GHashTable *) user_data;
+	GHashTable * new_hashtable = (GHashTable *) user_data;
 	char * newkey;
 
 	newkey = g_new(gchar, strnlen((char*)key, MAX_LENGTH_OF_ENV-1) + 1);
 	memset(newkey, '\0', strnlen((char*)key, MAX_LENGTH_OF_ENV-1) + 1); 
 	strncat(newkey, "OCF_RESKEY_", 12);
 	strncat(newkey, key, strnlen((char*)key, MAX_LENGTH_OF_ENV-12));
-	g_hash_table_insert(this_hashtable, (gpointer)newkey, value);
-	g_hash_table_remove(this_hashtable, key);
-	g_free(key);
-	/*Need to free the memory to which key and value point?*/
+	g_hash_table_insert(new_hashtable, (gpointer)newkey, value);
 }
 
+static gboolean
+let_remove_eachitem(gpointer key, gpointer value, gpointer user_data)
+{
+	return TRUE;
+}

@@ -168,6 +168,7 @@ raexec_setenv(GHashTable * env_params)
 static void
 set_env(gpointer key, gpointer value, gpointer user_data)
 {
+	cl_log(LOG_DEBUG, "key=%s  value=%s", (char*)key, (char*)value);
         setenv((const char *)key, (const char *)value, 1);
         /*Need to free the memory to which key and value point?*/
 }
