@@ -512,6 +512,21 @@ class Resource:
         raise ValueError("Abstract Class member (IsWorkingCorrectly)")
         return None
 
+
+    def Start(self, nodename):
+        '''
+        This member function starts or activates the resource.
+        '''
+        raise ValueError("Abstract Class member (Start)")
+        return None
+
+    def Stop(self, nodename):
+        '''
+        This member function stops or deactivates the resource.
+        '''
+        raise ValueError("Abstract Class member (Stop)")
+        return None
+
     def __repr__(self):
 	if (self.Instance and len(self.Instance) > 1):
 		return "{" + self.ResourceType + "::" + self.Instance + "}"

@@ -226,7 +226,6 @@ class HBResource(Resource):
           Rlist = Rlist + " " + dir
         Rlist = Rlist + '"; '
 
-
         Script= Rlist + '''
         T="''' + self.ResourceType + '''";
         I="''' + instance + '''";
@@ -244,12 +243,22 @@ class HBResource(Resource):
 	#print "Running " + Script + "\n"
 
         line = self.CM.rsh.readaline(nodename, Script)
-        if  re.search(pattern, line):
-          return 1
-        elif operation == "monitor":
-          return self.CM.rsh.lastrc == 0
-        else:
-	  return 0
+        if operation == "status":
+          if re.search(pattern, line):
+              return 1
+        return self.CM.rsh.lastrc == 0
+
+    def Start(self, nodename):
+        '''
+        This member function starts or activates the resource.
+        '''
+        return self._ResourceOperation("start", None, nodename)
+
+    def Stop(self, nodename):
+        '''
+        This member function stops or deactivates the resource.
+        '''
+        return self._ResourceOperation("stop", None, nodename)
 
         
 #    def IsWorkingCorrectly(self, nodename):
