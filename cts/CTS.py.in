@@ -337,6 +337,8 @@ class ClusterManager(UserDict):
 
         '''Start up the cluster manager on a given node'''
 
+        self.log ("Starting %s on node %s"
+		  %	(self["Name"], node))
         rc=self.rsh(node, self["StartCmd"])
         if rc == 0:
             self.ShouldBeStatus[node]=self["up"]
@@ -357,6 +359,9 @@ class ClusterManager(UserDict):
     def StopaCM(self, node):
 
         '''Stop the cluster manager on a given node'''
+
+        self.log ("Stopping %s on node %s"
+		  %	(self["Name"], node))
 
         rc=self.rsh(node, self["StopCmd"])
         if rc == 0:
@@ -735,6 +740,7 @@ as they might have been rebooted or crashed for some reason beforehand.
         #	Clear out the cobwebs ;-)
 
         self.TearDown(CM)
+
         for node in CM.Env["nodes"]:
             CM.rsh(node, CM["DelFileCommCmd"]+ "; true")
 

@@ -6,6 +6,8 @@
 __copyright__='''
 Author: Huang Zhen <zhenhltc@cn.ibm.com>
 Copyright (C) 2004 International Business Machines
+
+Additional Audits: Andrew Beekhof <andrew@beekhof.net>
 '''
 
 #
@@ -52,7 +54,9 @@ class LinuxHAv2(HeartbeatCM):
             "StartCmd"       : "@libdir@/heartbeat/heartbeat >/dev/null 2>&1",
             "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
             "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null",
+	    "EpocheCmd"	     : "@libdir@/heartbeat/ccm_epoche",
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s status 0 0 EVERYTIME 2>/dev/null|grep return",
+            "IsIPAddrRscRunning"   : "",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             # Patterns to look for in the log files for various occasions...
@@ -68,14 +72,48 @@ class LinuxHAv2(HeartbeatCM):
                 r"No one owns .* resources!",
                 r", exiting\.",
                 r"ERROR:",
-                r"CRIT.*:",
+                r"CRIT:",
             ),
         })
-#        self.rsh.cp(self.Env["cib_config"], self["CIBfile"]%self.Env["nodes"][0])
+	default_cts_cib='''
+<cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
+   <configuration>
+     <crm_config/>
+     <nodes/>
+     <resources>
+     </resources>
+     <constraints>
+      <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
+	<rule id="can_run_DcIPaddr" result="can" boolean_op="and">
+	  <expression attribute="is_dc" operation="eq" value="true"/>
+	</rule>
+      </rsc_location>
+     </constraints>
+   </configuration>
+   <status/>
+</cib>
+'''
+	a_resource='''
+       <resource id="DcIPaddr" class="heartbeat" type="IPaddr2" priority="1.0">
+         <instance_attributes>
+	   <rsc_parameters>
+	     <nvpair name="1" value="127.0.0.10"/>
+	   </rsc_parameters>
+         </instance_attributes>
+       </resource>
+'''
         # KLUDGE!  Expedient, but a Kludge (FIXME)
 #        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
         CTStests.AllTestClasses = [FlipTest, RestartTest, StartOnebyOne, SimulStart, SimulStop]
-        CTSaudits.AllAuditClasses = [CrmdStateAudit, HAResourceAudit]
+#        CTSaudits.AllAuditClasses = [CrmdStateAudit, HAResourceAudit]
+        CTSaudits.AllAuditClasses = [CrmdStateAudit, DcAudit, DcIPaddrAudit]
+	if self.Env["ClobberCIB"] != None:
+	    if self.Env["CIBfilename"] == None:
+		os.system("echo " + default_cts_cib + " > /tmp/cts.default.cib")
+		self.Env["CIBfilename"] = "/tmp/cts.default.cib"
+	    for node in self.Env["nodes"]:
+		os.system("scp /tmp/cts.default.cib root@"+self["CIBfile"]%(node))
+#		self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
     
     def StataCM(self, node):
 
@@ -335,6 +373,152 @@ class CrmdStateAudit(ClusterAudit):
 
     def name(self):
         return "CrmdStateAudit"
+
+class DcIPaddrAudit(ClusterAudit):
+    def __init__(self, cm):
+        self.CM = cm
+        self.Stats = {"calls":0
+        ,        "success":0
+        ,        "failure":0
+        ,        "skipped":0
+        ,        "auditfail":0}
+
+    def has_key(self, key):
+        return self.Stats.has_key(key)
+
+    def __setitem__(self, key, value):
+        self.Stats[key] = value
+        
+    def __getitem__(self, key):
+        return self.Stats[key]
+
+    def incr(self, name):
+        '''Increment (or initialize) the value associated with the given name'''
+        if not self.Stats.has_key(name):
+            self.Stats[name]=0
+        self.Stats[name] = self.Stats[name]+1
+
+    def __call__(self):
+        self.CM.log ("Do Audit %s"%self.name())
+        passed = 1
+
+	the_dc = self.find_dc()
+	if the_dc == None:
+	    return passed
+
+        #Make sure the resouces are running on one and only one node
+        Resources = self.CM.Resources()
+        for resource in Resources :
+	    if resource.rid == "DcIPaddr":
+		if self.audit_ip_addr(resource, the_dc) == 0:
+		    passed = 0
+
+        return passed
+
+    def is_node_dc(self, node):
+	out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
+	return (string.find(out, 'S_IDLE') != -1)
+
+    def audit_ip_addr(self, resource, node):
+        self.CM.log ("Auditing %s"%(resource))
+	RunningNodes = self._RscRunningNodes(resource)
+	if len(RunningNodes) == 0 :
+	    self.CM.log("%s is not running" %(resource))
+	    return 0
+
+	if len(RunningNodes) > 1:
+	    self.CM.log("%s is running more than once"	%(resource))
+
+	for running_on in RunningNodes:
+	    if self.is_node_dc(running_on) == 0:
+		self.CM.log("%s is running on a non-DC node %s" 
+			    %(resource, running_on))
+		return 0
+
+	return 1
+
+    def name(self):
+        return "DcIPaddrAudit"
+
+    def find_dc(self):
+        for node in self.CM.Env["nodes"]:
+	    if self.is_node_dc(node):
+		return node
+	return None
+
+    def _RscRunningNodes(self, resource):
+        ResourceNodes = []
+        for node in self.CM.Env["nodes"]:
+	    if resource.IsRunningOn(node):
+		ResourceNodes.append(node)
+        return ResourceNodes
+
+class DcAudit(ClusterAudit):
+    def __init__(self, cm):
+        self.CM = cm
+        self.Stats = {"calls":0
+        ,        "success":0
+        ,        "failure":0
+        ,        "skipped":0
+        ,        "auditfail":0}
+	self.NodeEpoche={}
+
+    def has_key(self, key):
+        return self.Stats.has_key(key)
+
+    def __setitem__(self, key, value):
+        self.Stats[key] = value
+        
+    def __getitem__(self, key):
+        return self.Stats[key]
+
+    def incr(self, name):
+        '''Increment (or initialize) the value associated with the given name'''
+        if not self.Stats.has_key(name):
+            self.Stats[name]=0
+        self.Stats[name] = self.Stats[name]+1
+
+    def __call__(self):
+        self.CM.log ("Do Audit %s"%self.name())
+        passed = 0
+	lowest_epoche = None
+	nodes_up = 0
+
+	dc_allowed_list=[]
+
+        for node in self.CM.Env["nodes"]:
+	    if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+		nodes_up = nodes_up + 1
+		out=self.CM.rsh.readaline(node, self.CM["EpocheCmd"])
+		self.NodeEpoche[node] = out
+		if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
+		    lowest_epoche = self.NodeEpoche[node]
+
+	if nodes_up == 0:
+	    print ("No nodes running")
+	    return 1
+
+        for node in self.CM.Env["nodes"]:
+	    if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+		if self.NodeEpoche[node] == lowest_epoche:
+		    dc_allowed_list.append(node)
+
+	for node in dc_allowed_list:
+	    if self.is_node_dc(node):
+		passed = 1
+
+	if passed == 0:
+	    self.CM.log ("DC not found on any of the %d allowed nodes"
+			 %(len(dc_allowed_list)))
+
+        return passed
+
+    def is_node_dc(self, node):
+	out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
+	return (string.find(out, 'S_IDLE') != -1) 
+
+    def name(self):
+        return "DcAudit"
 
 
 #######################################################################

@@ -307,6 +307,8 @@ if __name__ == '__main__':
     NumIter = 500
     SuppressMonitoring = None
     Version = 1
+    CIBfilename = None
+    ClobberCIB = 0
     #
     # The values of the rest of the parameters are now properly derived from
     # the configuration files.
@@ -359,6 +361,11 @@ if __name__ == '__main__':
            Version = 2
        elif args[i] == "-1" or args[i] == "--classic":
            Version = 1
+       elif args[i] == "--clobber-cib" or args[i] == "-c":
+	   ClobberCIB = 1
+       elif args[i] == "--cib-filename":
+           skipthis=1
+	   CIBfilename = args[i+1]
        else:
            NumIter=int(args[i])
           
@@ -372,6 +379,8 @@ if __name__ == '__main__':
 
     Environment = CtsLab(config.Parameters["node"])
     Environment["HAdir"] = HAdir
+    Environment["ClobberCIB"] = ClobberCIB
+    Environment["CIBfilename"] = CIBfilename
     Environment["LogFileName"] = LogFile
     Environment["DoStonith"] = DoStonith
     Environment["DoStandby"] = DoStandby
