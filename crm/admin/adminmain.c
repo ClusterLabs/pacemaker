@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.13 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: adminmain.c,v 1.14 2004/03/18 13:23:34 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -62,7 +62,7 @@
 GMainLoop *mainloop = NULL;
 const char *crm_system_name = "crmadmin";
 IPC_Channel *crmd_channel = NULL;
-char *adminuid = NULL;
+char *admin_uuid = NULL;
 
 void usage(const char *cmd, int exit_status);
 void test_messaging(ll_cluster_t * hb_cluster);
@@ -642,7 +642,7 @@ handleCreate(void)
 	CRM_DEBUG("Object creation complete");
 
 	// create the cib request
-	xml_root_node = wrapUpdate(new_xml_node, section_name, "create");
+	xml_root_node = wrapUpdate(new_xml_node, section_name, CRM_OPERATION_CREATE);
 
 	return xml_root_node;
 
@@ -703,7 +703,7 @@ handleDelete(void)
 	}
 
 	// create the cib request
-	xml_root_node = wrapUpdate(new_xml_node, section_name, "delete");
+	xml_root_node = wrapUpdate(new_xml_node, section_name, CRM_OPERATION_DELETE);
 
 	CRM_DEBUG("Creation of removal request complete");
 
@@ -949,7 +949,7 @@ handleModify(void)
 
 
 	// create the cib request
-	xml_root_node = wrapUpdate(new_xml_node, section_name, "update");
+	xml_root_node = wrapUpdate(new_xml_node, section_name, CRM_OPERATION_UPDATE);
 
 	CRM_DEBUG("Creation of modify request complete");
 
@@ -1030,7 +1030,7 @@ do_work(ll_cluster_t * hb_cluster)
 		sys_to = CRM_SYSTEM_DCIB;
 		
 	} else if (DO_DAEMON == TRUE && DO_ERASE == TRUE) {
-		set_xml_property_copy(msg_options, XML_ATTR_OP, "erase");
+		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OPERATION_ERASE);
 
 		dest_node = status;
 		CRM_DEBUG("CIB Erase op in progress");
@@ -1064,7 +1064,7 @@ do_work(ll_cluster_t * hb_cluster)
 */
 		if (status != NULL) {
 			sys_to = CRM_SYSTEM_CRMD;
-			const char *ping_type = "ping";
+			const char *ping_type = CRM_OPERATION_PING;
 			if (BE_VERBOSE) {
 				ping_type = "ping_deep";
 				if (status != NULL)
@@ -1110,7 +1110,7 @@ do_work(ll_cluster_t * hb_cluster)
 				 msg_data,
 				 dest_node, sys_to,
 				 crm_system_name,
-				 adminuid,
+				 admin_uuid,
 				 this_msg_reference);
 	} else if (crmd_channel == NULL) {
 		cl_log(LOG_ERR,
@@ -1141,16 +1141,16 @@ do_init(void)
 		cl_log_set_facility(facility);
 	}
 
-	adminuid = ha_malloc(sizeof(char) * 11);
-	snprintf(adminuid, 10, "%d", getpid());
-	adminuid[10] = '\0';
+	admin_uuid = ha_malloc(sizeof(char) * 11);
+	snprintf(admin_uuid, 10, "%d", getpid());
+	admin_uuid[10] = '\0';
 
 	crmd_channel =
 		init_client_ipc_comms(CRM_SYSTEM_CRMD,
 				      admin_msg_callback,
 				      NULL);
 	send_hello_message(crmd_channel,
-			   adminuid,
+			   admin_uuid,
 			   crm_system_name,
 			   "0",
 			   "1");
@@ -1186,7 +1186,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	int lpc = 0;
 	IPC_Message *msg = NULL;
 	gboolean hack_return_good = TRUE;
-	static int recieved_responses = 0;
+	static int received_responses = 0;
 
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {
@@ -1215,7 +1215,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 		if (validate_crm_message(xml_root_node,
 					 crm_system_name,
-					 adminuid,
+					 admin_uuid,
 					 "response") == FALSE) {
 			cl_log(LOG_INFO,
 			       "CRM message was not valid... discarding.");
@@ -1229,8 +1229,8 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			continue;
 		}
 
-		recieved_responses++;
-		CRM_DEBUG2("upated counter to %d", recieved_responses);
+		received_responses++;
+		CRM_DEBUG2("upated counter to %d", received_responses);
 
 		// do stuff
 
@@ -1242,13 +1242,13 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 			filename = ha_malloc(sizeof(char) * filename_len);
 			sprintf(filename, "test-%s_%d.xml", this_msg_reference,
-				recieved_responses);
+				received_responses);
 			filename[filename_len - 1] = '\0';
 			if (xmlSaveFormatFile(filename, xml_root_node->doc, 1) < 0) {
 				cl_log(LOG_CRIT,
 				       "Couuld not save response to file test-%s_%d.xml",
 				       this_msg_reference,
-				       recieved_responses);
+				       received_responses);
 			}
 		}
 	}
@@ -1260,7 +1260,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 	cl_log(LOG_DEBUG, "admin_msg_callback: processing IPC message");
 
-	if (recieved_responses >= expected_responses) {
+	if (received_responses >= expected_responses) {
 		cl_log(LOG_INFO,
 		       "Recieved expected number (%d) of messages from Heartbeat."
 		       "  Exiting normally.", expected_responses);
