@@ -87,10 +87,8 @@ gboolean
 do_dc_heartbeat(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
-
-	cl_log(LOG_INFO, "#!!#!!# Timer %s just popped!",
-	       fsa_input2string(timer->fsa_input));
-
+//	cl_log(LOG_DEBUG, "#!!#!!# Heartbeat timer just popped!");
+	
 	gboolean was_sent = send_request(NULL, NULL, CRM_OPERATION_HBEAT, 
 					 NULL, CRM_SYSTEM_CRMD);
 
@@ -149,15 +147,15 @@ do_election_count_vote(long long action,
 		}
 	}
 	
-	CRM_DEBUG3("Their index (%d), our index (%d)",
-		   your_index, my_index);
+	cl_log(LOG_DEBUG, "%s (index=%d), our index (%d)",
+		   vote_from, your_index, my_index);
 
-	CRM_DEBUG3("Their bornon (%d), our bornon (%d)",
-		   your_born, my_born);
+	cl_log(LOG_DEBUG, "%s (bornon=%d), our bornon (%d)",
+		   vote_from, your_born, my_born);
 
 	if(your_born < my_born) {
 		we_loose = TRUE;
-	} else if(your_index < my_index) {
+	} else if(strcmp(fsa_our_uname, vote_from) < 0) {
 		we_loose = TRUE;
 	} else {
 		CRM_DEBUG("We might win... we should vote (possibly again)");
@@ -353,11 +351,14 @@ do_send_welcome(long long action,
 			continue;
 		}
 
-		CRM_DEBUG2("Sending welcome message to %s", new_node);
+		CRM_DEBUG3("Sending welcome message to %s (%d)",
+			   new_node, was_sent);
 		num_sent++;
 		was_sent = was_sent
 			&& send_request(NULL, NULL, CRM_OPERATION_WELCOME,
 					new_node, CRM_SYSTEM_CRMD);
+		CRM_DEBUG3("Sent welcome message to %s (%d)",
+			   new_node, was_sent);
 	}
 
 	if(was_sent == FALSE)
