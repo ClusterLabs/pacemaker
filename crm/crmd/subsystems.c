@@ -975,30 +975,58 @@ do_lrm_invoke(long long action,
 	crm_op = get_xml_attr(msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
 
 	if(safe_str_eq(crm_op, "rsc_op")) {
-	
-		CRM_DEBUG("performing op %s...", operation);
+
+		const char *op_status = NULL;
 		xmlNodePtr update = NULL;
 		xmlNodePtr state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 		xmlNodePtr iter = create_xml_node(state, "lrm");
-		iter = create_xml_node(iter, "lrm_resources");
 
-		iter = create_xml_node(iter, "lrm_resource");
+		CRM_DEBUG("performing op %s...", operation);
 
 		// so we can identify where to do the update
 		set_xml_property_copy(state, "id", fsa_our_uname);
 
+		iter = create_xml_node(iter, "lrm_resources");
+		iter = create_xml_node(iter, "lrm_resource");
+
 		set_xml_property_copy(iter, XML_ATTR_ID, id_from_cib);
 		set_xml_property_copy(iter, "last_op", operation);
 
-		if(safe_str_eq(operation, "start")){
-			set_xml_property_copy(iter, "op_status", "started");
+		long int op_code = 0;
+
+#if 0
+		/* introduce a 10% chance of an action failing */
+		op_code = random();
+#endif
+		if((op_code % 10) == 1) {
+			op_code = 1;
 		} else {
-			set_xml_property_copy(iter, "op_status", "stopped");
+			op_code = 0;
+		}
+		char *op_code_s = crm_itoa(op_code);
+
+		if(op_code) {
+			// fail
+			if(safe_str_eq(operation, "start")){
+				op_status = "stopped";
+			} else {
+				op_status = "started";
+			}
+		} else {
+			// pass
+			if(safe_str_eq(operation, "start")){
+				op_status = "started";
+			} else {
+				op_status = "stopped";
+			}
 		}
 		
-		set_xml_property_copy(iter, "op_code", "0");
-		set_xml_property_copy(iter, "op_node", fsa_our_uname);
+		set_xml_property_copy(iter, "op_status", op_status);
+		set_xml_property_copy(iter, "op_code",   op_code_s);
+		set_xml_property_copy(iter, "op_node",   fsa_our_uname);
 
+		cl_free(op_code_s);
+		
 		update = create_cib_fragment(state, NULL);
 		
 		send_request(NULL, update, "update",
