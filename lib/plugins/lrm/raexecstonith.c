@@ -74,7 +74,7 @@ static int get_providers(const char* class_path, const char* op_type,
 			 GList ** providers);
 static void stonithRA_ops_callback(stonithRA_ops_t * op, void * private_data);
 static int exit_value;
-static gboolean signoned_to_stonithd = FALSE;
+static gboolean signedon_to_stonithd = FALSE;
 /* The end of internal function & data list */
 
 /* Rource agent execution plugin operations */
@@ -145,10 +145,12 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 	PluginImports = imports;
 	OurPlugin = us;
 
-	if (ST_OK != stonithd_signon("STONITH_RA")) {
-		signoned_to_stonithd = TRUE;
+	if (ST_OK == stonithd_signon("STONITH_RA")) {
+		signedon_to_stonithd = TRUE;
+	} else {
+		/* Redundant, but more safe */
+		signedon_to_stonithd = FALSE;
 		cl_log(LOG_ERR, "Can not signon to the stonithd.");
-		/* return PIL_OOPS; */ /* Should add a new type for this */
 	}
 
 	/* Register ourself as a plugin */
@@ -163,7 +165,10 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 static PIL_rc
 close_stonithRA(PILInterface* pif, void* ud_interface)
 {
-	stonithd_signoff();
+	if (signedon_to_stonithd == TRUE) {
+		stonithd_signoff();
+		signedon_to_stonithd = FALSE;
+	}
 	return PIL_OK;
 }
 
@@ -181,21 +186,36 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 {
 	stonithRA_ops_t * op;
 	int call_id = -1;
+	gboolean signedon_locally = FALSE;
 
-	if (signoned_to_stonithd == FALSE) {
-		if (ST_OK != stonithd_signon("STONITH_RA")) {
+	if (signedon_to_stonithd == FALSE) {
+		if (ST_OK != stonithd_signon("STONITH_RA_EXEC")) {
 			cl_log(LOG_ERR, "Can not signon to the stonithd.");
 			exit(EXECRA_UNKNOWN_ERROR);
 		} else {
-			signoned_to_stonithd = TRUE;
+			/* 
+			 * Since this function will be called in a child
+			 * process, actually this assignment is useless
+			 * and harmless. Remain it for an apparent logic.
+			 */
+			signedon_to_stonithd = TRUE;
+			signedon_locally = TRUE;
 		}
 	}
 
+	/*
+	 * Now handle "meta-data" operation locally. 
+	 * Should be changed in the future?
+	 */
 	if (strncmp(op_type, "meta-data", strlen("meta-data")) == 0) {
 		char * tmp;
 		tmp = get_resource_meta(rsc_type, provider);
 		printf("%s", tmp);
 		g_free(tmp);
+		if (signedon_locally == TRUE) {
+			stonithd_signoff();
+			signedon_locally = FALSE;
+		}
 		exit(0);
 	}
 
@@ -216,6 +236,10 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	if (ST_FAIL == stonithd_virtual_stonithRA_ops(op, &call_id)) {
 		cl_log(LOG_DEBUG, "sending stonithRA op to stonithd failed.");
 		/* Need to improve the granularity for error return code */
+		if (signedon_locally == TRUE) {
+			stonithd_signoff();
+			signedon_locally = FALSE;
+		}
 		exit(EXECRA_EXEC_UNKNOWN_ERROR);
 	}
 
@@ -232,6 +256,10 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	g_free(op->op_type);
 	g_free(op->rsc_id);
 	g_free(op);
+	if (signedon_locally == TRUE) {
+		stonithd_signoff();
+		signedon_locally = FALSE;
+	}
 	cl_log(LOG_DEBUG, "stonithRA orignal exit code=%d", exit_value);
 	exit(map_ra_retvalue(exit_value, op_type));
 }
@@ -266,12 +294,12 @@ get_resource_list(GList ** rsc_info)
 		*rsc_info = NULL;
 	}
 
-	if (signoned_to_stonithd == FALSE) {
+	if (signedon_to_stonithd == FALSE) {
 		if (ST_OK != stonithd_signon("STONITH_RA")) {
 			cl_log(LOG_ERR, "Can not signon to the stonithd.");
 			return -1;
 		} else {
-			signoned_to_stonithd = TRUE;
+			signedon_to_stonithd = TRUE;
 		}
 	}
 
@@ -307,7 +335,6 @@ get_resource_meta(const char* rsc_type, const char* provider)
 static int
 get_providers(const char* class_path, const char* op_type, GList ** providers)
 {
-
 	if ( providers == NULL ) {
 		cl_log(LOG_ERR, "Parameter error: get_providers");
 		return -2;
