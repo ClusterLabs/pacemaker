@@ -549,7 +549,7 @@ start_subsystem(struct crm_subsystem_s*	centry)
 
 	crm_info("Starting sub-system \"%s\"", centry->command);
 
-	if (centry->pid != 0) {
+	if (centry->pid > 0) {
 		crm_err("OOPS! client %s already running as pid %d"
 		       ,	centry->command, (int) centry->pid);
 	}
