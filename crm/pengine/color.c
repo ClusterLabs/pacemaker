@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.15 2004/08/30 03:17:38 msoffen Exp $ */
+/* $Id: color.c,v 1.16 2004/09/14 05:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -124,9 +124,10 @@ apply_agent_constraints(GListPtr resources)
 		slist_iter(
 			node, node_t, rsc->allowed_nodes, lpc2,
 			
-			crm_trace("Checking if %s supports %s/%s",
+			crm_trace("Checking if %s supports %s/%s (%s)",
 				  node->details->uname,
-				  rsc->agent->class, rsc->agent->type);
+				  rsc->agent->class, rsc->agent->type,
+				  rsc->agent->version);
 
 			if(has_agent(node, rsc->agent) == FALSE) {
 				/* remove node from contention */
@@ -170,7 +171,8 @@ has_agent(node_t *a_node, lrm_agent_t *an_agent)
 	slist_iter(
 		agent, lrm_agent_t, a_node->details->agents, lpc,
 
-		crm_trace("Checking against  %s/%s",agent->class, agent->type);
+		crm_trace("Checking against  %s/%s (%s)",
+			  agent->class, agent->type, agent->version);
 
 		if(safe_str_eq(an_agent->type, agent->type)){
 			if(an_agent->class == NULL) {
@@ -207,11 +209,9 @@ strict_preproc(rsc_to_rsc_t *constraint, GListPtr *colors, GListPtr resources)
 	resource_t *lh_resource = constraint->rsc_lh;
 	resource_t *rh_resource = constraint->rsc_rh;
 
-	color_t *other_color = constraint->rsc_rh->color;
 	color_t *local_color = NULL;
 	
 	float max_pri = lh_resource->effective_priority;
-	float factor = 2.0;
 
 	switch(constraint->strength) {
 		case pecs_ignore:
@@ -224,38 +224,6 @@ strict_preproc(rsc_to_rsc_t *constraint, GListPtr *colors, GListPtr resources)
 			}
 			lh_resource->effective_priority = max_pri;
 			rh_resource->effective_priority = max_pri;
-			break;
-			
-		case pecs_should:
-		case pecs_should_not:
-			if(constraint->variant != same_node) {
-				break;
-
-			} else if(constraint->rsc_rh->provisional == FALSE
-				&& constraint->rsc_lh->provisional) {
-				local_color = add_color(lh_resource, other_color);
-
-				if(local_color == NULL) {
-					crm_err("Couldnt add color %d to %s",
-						other_color?other_color->id:0,
-						lh_resource->id);
-					break;
-				}
-
-				if(constraint->strength == pecs_should_not) {
-					factor = 1 / factor;
-					create_color(colors, lh_resource, NULL);
-				}
-				
-				/* x * should * should_not = x */
-				local_color->local_weight = 
-					local_color->local_weight * factor;
-				
-/* 			} else if(constraint->rsc_lh->provisional == FALSE */
-/* 				&& constraint->rsc_rh->provisional) { */
-/* 				add_color(constraint->rsc_rh, constraint->rsc_lh->color); */
-			} 
-			
 			break;
 			
 		case pecs_must_not:
@@ -286,8 +254,6 @@ strict_postproc(rsc_to_rsc_t *constraint, GListPtr *colors, GListPtr resources)
 	switch(constraint->strength) {
 		case pecs_ignore:
 		case pecs_startstop:
-		case pecs_should_not:
-		case pecs_should:
 			break;
 
 		case pecs_must:
@@ -645,9 +611,6 @@ process_colored_constraints(resource_t *rsc)
 						other_n);
 				
 				crm_free(other_n);
-				break;
-			case pecs_should_not:
-				other_n->weight = -1;
 				break;
 			default:
 				break;

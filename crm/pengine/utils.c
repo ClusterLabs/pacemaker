@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.39 2004/08/30 03:17:39 msoffen Exp $ */
+/* $Id: utils.c,v 1.40 2004/09/14 05:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -564,6 +564,7 @@ action_new(resource_t *rsc, enum action_tasks task)
 	action->processed  = FALSE;
 	action->optional   = TRUE;
 	action->seen_count = 0;
+	action->timeout = 0;
 	action->args = create_xml_node(NULL, "args");
 	
 	return action;
@@ -605,12 +606,6 @@ strength2text(enum con_strength strength)
 			break;
 		case pecs_must:
 			result = XML_STRENGTH_VAL_MUST;
-			break;
-		case pecs_should:
-			result = XML_STRENGTH_VAL_SHOULD;
-			break;
-		case pecs_should_not:
-			result = XML_STRENGTH_VAL_SHOULDNOT;
 			break;
 		case pecs_must_not:
 			result = XML_STRENGTH_VAL_MUSTNOT;

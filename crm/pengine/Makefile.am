@@ -66,7 +66,7 @@ ptest_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ptest_LDFLAGS	= $(XML_LIBS)
 ptest_LDADD	= $(COMMONLIBS) 
 
-pengine_SOURCES	= pengine.c stages.c unpack.c color.c graph.c utils.c penginemain.c 
+pengine_SOURCES	= pengine.c stages.c unpack.c color.c graph.c utils.c main.c 
 
 pengine_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 pengine_LDFLAGS	= $(XML_LIBS)

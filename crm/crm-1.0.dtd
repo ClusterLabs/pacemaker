@@ -124,9 +124,24 @@ More details are given in the annotated DTD below.
 <!ATTLIST resource
           id            CDATA #REQUIRED
           description   CDATA #IMPLIED
-          class         (ocf|init|heartbeat|stonith)	#REQUIRED
+          class         (ocf|init|heartbeat|stonith)   #REQUIRED
 	  priority      CDATA #IMPLIED
-          type          CDATA #REQUIRED>
+          type          CDATA #REQUIRED
+	  min_version   CDATA #REQUIRED
+
+	  start_timeout CDATA #REQUIRED
+	  stop_timeout  CDATA #REQUIRED
+
+	  on_stopfail       (ignore|stonith|block)    'block'
+	  restart_type      (ignore|restart|recover)  'ignore'
+
+	  post_event_notify (true|false)              'false'
+	  pre_event_notify  (true|false)              'false'
+
+	  max_instances  CDATA #REQUIRED
+	  max_masters    CDATA #REQUIRED
+	  max_node_instances  CDATA #REQUIRED
+	  max_node_masters    CDATA #REQUIRED>
 
 <!--
 
@@ -180,15 +195,23 @@ More details are given in the annotated DTD below.
      The placement policies work in the same fashion.
 
  -->
-<!ELEMENT rsc_to_rsc EMPTY>
-<!ATTLIST rsc_to_rsc
-		id	  CDATA #REQUIRED
-		from	  CDATA #REQUIRED
-		to	  CDATA #REQUIRED
-		lifetime  CDATA #IMPLIED
-		timestamp CDATA #REQUIRED
-		type	  (ordering|placement) #REQUIRED
-		strength  (must|should|shouldnot|mustnot) #REQUIRED>
+<!ELEMENT rsc_order EMPTY>
+<!ATTLIST rsc_order
+	  id	    CDATA #REQUIRED
+	  from	    CDATA #REQUIRED
+	  to	    CDATA #REQUIRED
+	  lifetime  CDATA #IMPLIED
+	  timestamp CDATA #REQUIRED
+	  type      (before|after)>
+
+<!ELEMENT rsc_dependancy EMPTY>
+<!ATTLIST rsc_dependancy
+	  id	    CDATA #REQUIRED
+	  from	    CDATA #REQUIRED
+	  to	    CDATA #REQUIRED
+	  lifetime  CDATA #IMPLIED
+	  timestamp CDATA #REQUIRED
+	  type      (must|mustnot) #REQUIRED>
 
 <!-- Specify which nodes are eligible for running a given resource. 
      
@@ -455,36 +478,56 @@ typedef enum {
 <!-- ============================================================== -->
 <!-- ============================================================== -->
 
-<!-- 
-     The transition graph consists of a number of cction sets which contain
-     a self contained list of actions to be performed.
-     
-     No action in one set shall depend on an action in another set and each 
-     action is listed in the order in which it needs to be invoked.
-
-     Action set id=-1 is special in that it lists actions that could not be 
-     started.  These may move to the errors section soon.
-
-     Each action set may have at most 1 pending action at any time and 
-     progression depends on receipt of the action's result or a timeout.
-
-     Failed or timedout actions may or may not be fatal as determined by
-     the action itself.
-
-     Parts of the list may be skipped if marked optional but only until the 
-     first non-optional action is encountered.
+<!--
+ The Transition Graph is an ordered list of synapses, which consist of a
+ list of pre-conditions (events) they are waiting for / triggering on
+ and a (list of) actions which are initiated when they "fire". The first
+ synapse to have a matching input "consumes" the event unless specified
+ differently.
+ 
 -->
-<!ELEMENT transition_graph (actions*,errors*)>
+
+<!ELEMENT transition_graph (action_set*,errors*)>
+
+<!-- When all inputs to a synapse are satisfied, the synapse fires the
+     actions.
+     
+     "reset" states whether after having fired once, the synapse resets
+     and accepts input again. "no": After having fired, the synapse
+     becomes completely inactive. "yes": it completely resets. "greedy":
+     The synapse will still 'consume' input, but not fire again.
+-->
+
+<!ELEMENT synapse (inputs,action_set)>
+<!ATTLIST synapse
+	  id	CDATA #REQUIRED
+	  reset	(no|yes|greedy) 'greedy'>
+
+<!ELEMENT inputs (trigger+)>
+
+<!-- event_spec specifies the event we are looking for.
+     This can be anything from "rsc foo started somewhere / on node X",
+     "STONITH of node A completed", "DEFAULT" etc... 
+
+     If an event is "consumed", no further inputs in other synapses will
+     be triggered by it. If "no", the event will pass through,
+     triggering us but otherwise completely unaltered. If "marks", we
+     simply remember that the event has been accepted somewhere, but
+     pass it on.
+     
+-->
+<!ELEMENT trigger (rsc_state*,node_state*,pseudo_event*,crm_event*)>
+<!ATTLIST trigger
+	  id		CDATA #REQUIRED
+	  consumes	(no|yes|marks) 'marks'>
 
 
 <!-- STONITH events end up being rsc_ops; remember that we hope to
      simply invoke 'STONITH Resource Agent' and feed it with appropriate
      parameters.
-  -->
 
+  -->
 <!ELEMENT action_set (rsc_op*,pseudo_event*,crm_event*)>
-<!ATTLIST action_set
-	  id CDATA #REQUIRED>
 
 <!-- The resource object inside the rsc_op object differs from the
      resources list only in content, not in syntax.
@@ -632,12 +675,12 @@ Andrew:
 
 <!ELEMENT parameters (parameter*)>
 
-<!ELEMENT actions (action*)>
+<!ELEMENT action_set (action*)>
 
 <!ELEMENT parameter (longdesc+,shortdesc+,content)>
 <!ATTLIST parameter
         name    CDATA   #REQUIRED
-        unique  (1|0)   "0">
+        unique  (1|0)   '0'>
 
 <!ELEMENT longdesc ANY>
 <!ATTLIST longdesc

@@ -684,7 +684,7 @@ create_node_state(const char *uuid,
 		set_xml_property_copy(node_state, XML_CIB_ATTR_JOINSTATE,     join_state);
 	}
 
-	print_xml_formatted(node_state, "created");
+	crm_xml_devel(node_state, "created");
 
 	return node_state;
 }

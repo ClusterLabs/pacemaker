@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.10 2004/08/30 03:17:40 msoffen Exp $ */
+/* $Id: ttest.c,v 1.11 2004/09/14 05:54:44 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <crm/common/ipc.h>
 #include <crm/common/xml.h>
 #include <crm/msg_xml.h>
 
@@ -39,10 +40,13 @@
 #include <getopt.h>
 #include <glib.h>
 #include <tengine.h>
+#include <clplumbing/GSource.h>
 
 extern gboolean unpack_graph(xmlNodePtr xml_graph);
 extern gboolean initiate_transition(void);
 extern gboolean initialize_graph(void);
+
+GMainLoop*  mainloop = NULL;
 
 int
 main(int argc, char **argv)
@@ -109,29 +113,46 @@ main(int argc, char **argv)
 		crm_err("%d errors in option parsing", argerr);
 	}
   
-	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
+	crm_debug("=#=#=#=#= Getting XML =#=#=#=#=");
   
 #ifdef MTRACE  
 	mtrace();
 #endif
+	IPC_Channel* channels[2];
+	if (ipc_channel_pair(channels) != IPC_OK) {
+		cl_perror("Can't create ipc channel pair");
+		exit(1);
+	}
+	crm_ch = channels[0];
+
+	G_main_add_IPC_Channel(G_PRIORITY_LOW,
+			       channels[1], FALSE,
+			       subsystem_input_dispatch,
+			       (void*)process_te_message, 
+			       default_ipc_input_destroy);
 
 	crm_trace("Initializing graph...");
 	initialize_graph();
 	
 	xml_graph = file2xml(stdin);
 
-	crm_trace("Unpacking graph...");
-	unpack_graph(xml_graph);
-	crm_trace("Initiating transition...");
+	/* send transition graph over IPC instead */
+	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
+	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TRANSITION);
+	send_ipc_request(channels[0], options, xml_graph,
+			 NULL, CRM_SYSTEM_TENGINE, CRM_SYSTEM_TENGINE,
+			 NULL, NULL);
+	
+	free_xml(options);
+	free_xml(xml_graph);
 
-	if(initiate_transition() == FALSE) {
-		/* nothing to be done.. means we're done. */
-		crm_info("No actions to be taken..."
-		       " transition compelte.");
-	}
+    /* Create the mainloop and run it... */
+	mainloop = g_main_new(FALSE);
+	crm_debug("Starting mainloop");
+	g_main_run(mainloop);
 
 	initialize_graph();
-	free_xml(xml_graph);
+	
 #ifdef MTRACE  
 	muntrace();
 #endif
@@ -139,3 +160,4 @@ main(int argc, char **argv)
 
 	return 0;
 }
+

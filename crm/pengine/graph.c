@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.13 2004/08/30 03:17:38 msoffen Exp $ */
+/* $Id: graph.c,v 1.14 2004/09/14 05:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,138 +29,74 @@
 #include <pengine.h>
 #include <pe_utils.h>
 
+gboolean update_action(action_t *action);
 
-
-
-GListPtr
-create_action_set(action_t *action)
+gboolean
+update_action_states(GListPtr actions)
 {
-	int lpc;
-	GListPtr tmp = NULL;
-	GListPtr result = NULL;
-	gboolean preceeding_complete = FALSE;
-
-	if(action->processed) {
-		return NULL;
-	}
-
-	crm_debug_action(print_action("Create action set for", action, FALSE));
-	
-	/* process actions_before */
-	if(action->seen_count == 0) {
-		crm_verbose("Processing \"before\" for action %d", action->id);
-		slist_iter(
-			other, action_wrapper_t, action->actions_before, lpc,
-
-			tmp = create_action_set(other->action);
-			result = g_list_concat(result, tmp);
-			preceeding_complete = TRUE;
-			);
-		
-	} else {
-		crm_verbose("Already seen action %d", action->id);
-		crm_verbose("Processing \"before\" for action %d", action->id);
-		slist_iter(
-			other, action_wrapper_t, action->actions_before, lpc,
-			
-			if(other->action->seen_count > action->seen_count
-			   && other->strength == pecs_must) {
-				tmp = create_action_set(other->action);
-				result = g_list_concat(result, tmp);
-			}	
-			);
-	}
-	
-	/* add ourselves */
-	if(action->runnable) {
-		if(action->processed == FALSE) {
-			crm_verbose("Adding self %d", action->id);
-			result = g_list_append(result, action);
-		} else {
-			crm_verbose("Already added self %d", action->id);
-		}
-		
-	} else {
-		crm_verbose("Skipping ourselves, we're not runnable");
-	}
-	action->processed = TRUE;
-	
-	if(preceeding_complete == FALSE) {
-		
-		/* add any "before" actions that arent already processed */
-		slist_iter(
-			other, action_wrapper_t, action->actions_before, lpc,
-			
-			tmp = create_action_set(other->action);
-			result = g_list_concat(result, tmp);
-			);
-	}
-
-	action->seen_count = action->seen_count + 1;
-	
-	/* process actions_after
-	 *
-	 * do this regardless of whether we are runnable.  Any direct or
-	 *  indirect hard/XML_STRENGTH_VAL_MUST dependancies on us will have
-	 *  been picked up earlier on in stage 7
-	 */
-	crm_verbose("Processing \"after\" for action %d", action->id);
+	int lpc = 0;
 	slist_iter(
-		other, action_wrapper_t, action->actions_after, lpc,
-		
-		tmp = create_action_set(other->action);
-		result = g_list_concat(result, tmp);
+		action, action_t, actions, lpc,
+
+		update_action(action);
 		);
-	
-	return result;
+
+	return TRUE;
 }
 
 
 gboolean
-update_runnable(GListPtr actions)
+update_action(action_t *action)
 {
+	gboolean change = FALSE;
+	int lpc = 0;
 
-	int lpc = 0, lpc2 = 0;
-	gboolean change = TRUE;
+	if(action->optional && action->runnable) {
+		return FALSE;
+	}
+	
+	slist_iter(
+		other, action_wrapper_t, action->actions_after, lpc,
 
-	while(change) {
-		change = FALSE;
-		slist_iter(
-			action, action_t, actions, lpc,
-
-			if(action->runnable) {
+		if(action->runnable == FALSE) {
+			if(other->action->runnable == FALSE) {
 				continue;
-			} else if(action->optional) {
-				continue;
-			}
-			
-			slist_iter(
-				other, action_wrapper_t, action->actions_after, lpc2,
-				if(other->action->runnable == FALSE) {
-					continue;
-					
-				}
-				switch(other->strength) {
-					case pecs_should:
-					case pecs_should_not:
-					case pecs_must_not:
-					case pecs_startstop:
-					case pecs_ignore:
-						continue;
-						break;
-					case pecs_must:
-						break;
-				}
-				
+			} else if (other->strength == pecs_must) {
 				change = TRUE;
+				other->action->runnable =FALSE;
 				crm_debug_action(
 					print_action("Marking unrunnable",
 						     other->action, FALSE));
-				other->action->runnable = FALSE;
-				);
-			);
+			}
+			
+		}
+
+		if(action->optional == FALSE && other->action->optional) {
+
+	switch(action->rsc->restart_type) {
+		case pe_restart_ignore:
+			break;
+		case pe_restart_recover:
+				crm_err("Recover after dependancy "
+					"restart not supported... "
+					"forcing a restart");
+				/* keep going */
+		case pe_restart_restart:
+			change = TRUE;
+			other->action->optional = FALSE;
+			crm_debug_action(
+				print_action("Marking manditory",
+					     other->action, FALSE));
 	}
-	return TRUE;
+		}
+		
+		if(change) {
+			update_action(other->action);
+		}
+		
+		);
+
+	return change;
 }
 
 
@@ -273,6 +209,15 @@ action2xml(action_t *action)
 		action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
 
 	add_node_copy(action_xml, action->args);
+
+
+/* 	slist_iter( */
+/* 		wrapper, action_wrapper_t, action->actions_before, lpc, */
+
+/* 		xmlNodePtr prereq = create_xml_node(action_xml, "trigger"); */
+/* 		set_xml_property_copy(prereq, "action_id", wrapper->action->id); */
+/* 		); */
+
 	
 	return action_xml;
 }

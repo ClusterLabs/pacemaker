@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.5 2004/09/06 08:18:25 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.6 2004/09/14 05:54:42 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -124,6 +124,16 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_EINVAL);
 	}
 
+	/* Redirect messages from glib functions to our handler */
+	g_log_set_handler(NULL,
+			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
+			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
+			  | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
+			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
+			  cl_glib_msg_handler, NULL);
+	/* and for good measure... */
+	g_log_set_always_fatal((GLogLevelFlags)0);    
+	
 	cl_log_set_entity(crm_system_name);
 	cl_log_set_facility(LOG_USER);
 
@@ -478,17 +488,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 		
 		received_responses++;
-
-		if(strcmp(CRM_OP_QUERY, cib_action) == 0) {
-			print_xml_formatted(xml_root_node, cib_action);
-			
-		} else if (strcmp(CRM_OP_ERASE, cib_action) == 0) {
-			print_xml_formatted(xml_root_node, cib_action);
-		
-		} else if(cib_action != NULL) {
-			print_xml_formatted(xml_root_node, cib_action);
-		
-		}
+		crm_xml_devel(xml_root_node, cib_action);
 
 		if (this_msg_reference != NULL) {
 			/* in testing mode... */

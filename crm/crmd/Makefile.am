@@ -17,8 +17,6 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-
-
 INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl	\
 		-I$(top_builddir)/linux-ha  -I$(top_srcdir)/linux-ha \
@@ -62,7 +60,7 @@ halib_PROGRAMS	= crmd
 noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
 		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h
 
-crmd_SOURCES	= crmdmain.c crmd.c 					\
+crmd_SOURCES	= main.c crmd.c 					\
 		fsa.c control.c messages.c ccm.c callbacks.c		\
 		election.c subsystems.c lrm.c join.c utils.c misc.c
 

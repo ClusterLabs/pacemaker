@@ -454,7 +454,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 #endif
 
 /*#ifdef FSA_TRACE*/
-			print_xml_formatted(stored_msg,"FSA processing message");
+			crm_xml_devel(stored_msg,"FSA processing message");
 /*#endif*/
 
 			next_input = handle_message(stored_msg);
@@ -673,8 +673,8 @@ dump_rsc_info(void)
 			rsc_id    = xmlGetProp(rsc, XML_ATTR_ID);
 			node_id   = xmlGetProp(rsc, XML_LRM_ATTR_TARGET);
 			rsc_state = xmlGetProp(rsc, XML_LRM_ATTR_RSCSTATE);
-			op_status = xmlGetProp(rsc, XML_LRM_ATTR_OPCODE);
-			last_rc   = xmlGetProp(rsc, XML_LRM_ATTR_RCCODE);
+			op_status = xmlGetProp(rsc, XML_LRM_ATTR_OPSTATUS);
+			last_rc   = xmlGetProp(rsc, XML_LRM_ATTR_RC);
 			last_op   = xmlGetProp(rsc, XML_LRM_ATTR_LASTOP);
 			
 /* 			if(safe_str_eq(rsc_state, "stopped")) { */

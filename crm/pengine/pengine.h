@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.34 2004/08/30 03:17:39 msoffen Exp $ */
+/* $Id: pengine.h,v 1.35 2004/09/14 05:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,8 +47,6 @@ enum node_type {
 enum con_strength {
 	pecs_ignore,
 	pecs_must,
-	pecs_should,
-	pecs_should_not,
 	pecs_must_not,
 	pecs_startstop
 };
@@ -132,6 +130,11 @@ enum pe_stop_fail {
 	pesf_ignore
 };
 
+enum pe_restart {
+	pe_restart_restart,
+	pe_restart_recover,
+	pe_restart_ignore
+};
 
 struct resource_s { 
 		const char	*id; 
@@ -147,17 +150,23 @@ struct resource_s {
 		gboolean	provisional;
 
 		enum pe_stop_fail stopfail_type;
+		enum pe_restart   restart_type;
 
+		int max_instances;
+		int max_node_instances;
+		int max_masters;
+		int max_node_masters;
+
+		
 		action_t	*stop;
 		action_t	*start;
 		
-		GListPtr	actions;	  /* action_t* */
-		
-		GListPtr	candidate_colors; /* color_t* */
-		GListPtr	allowed_nodes;    /* node_t* */
+		GListPtr	actions;	  /* action_t*       */
+		GListPtr	candidate_colors; /* color_t*        */
+		GListPtr	allowed_nodes;    /* node_t*         */
 		GListPtr	node_cons;        /* rsc_to_node_t*  */
-		GListPtr	rsc_cons;         /* resource_t* */
-		GListPtr	fencable_nodes;   /* node_t* */
+		GListPtr	rsc_cons;         /* rsc_to_rsc_t*   */
+		GListPtr	fencable_nodes;   /* node_t*         */
 
 		color_t		*color;
 };
@@ -183,6 +192,7 @@ struct action_s
 		gboolean failure_is_fatal;
 
 		int seen_count;
+		int timeout;
 
 		xmlNodePtr args;
 		
@@ -273,8 +283,7 @@ extern void color_resource(resource_t *lh_resource,
 
 extern gboolean choose_node_from_list(color_t *color);
 
-extern gboolean update_runnable(GListPtr actions);
-extern GListPtr create_action_set(action_t *action);
+extern gboolean update_action_states(GListPtr actions);
 
 extern gboolean shutdown_constraints(
 	node_t *node, action_t *shutdown_op, GListPtr *action_constraints);

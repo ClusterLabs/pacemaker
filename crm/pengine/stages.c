@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.18 2004/09/06 08:18:26 andrew Exp $ */
+/* $Id: stages.c,v 1.19 2004/09/14 05:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -73,15 +73,15 @@ stage0(xmlNodePtr cib,
 	
 	unpack_global_defaults(agent_defaults);
 	
-	unpack_nodes(safe_val(NULL, cib_nodes, children), nodes);
+	unpack_nodes(cib_nodes, nodes);
 
-	unpack_resources(safe_val(NULL, cib_resources, children),
+	unpack_resources(cib_resources,
 			 resources, actions, action_constraints, *nodes);
 
-	unpack_status(safe_val(NULL, cib_status, children),
+	unpack_status(cib_status,
 		      *nodes, *resources, actions, node_constraints);
 
-	unpack_constraints(safe_val(NULL, cib_constraints, children),
+	unpack_constraints(cib_constraints,
 			   *nodes, *resources,
 			   node_constraints, action_constraints);
 
@@ -240,6 +240,7 @@ stage5(GListPtr resources)
 
 		crm_debug_action(print_resource("Processing", rsc, FALSE));
 		
+		default_node = NULL;
 		start_node = safe_val4(
 			NULL, rsc, color, details, chosen_node);
 		stop_node = safe_val(NULL, rsc, cur_node);
@@ -403,8 +404,10 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 	int lpc;
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
-	GListPtr action_set = NULL;
 
+// compress(action1, action2)
+
+	
 /*
 	for(lpc = 0; lpc < g_list_length(action_constraints);  lpc++) {
 		order_constraint_t *order = (order_constraint_t*)
@@ -442,47 +445,9 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 		order->rh_action->actions_before = list;
 		);
 /*	} */
-	
-	update_runnable(actions);
 
-	slist_iter(
-		rsc, resource_t, resources, lpc,	
+	update_action_states(actions);
 
-		action_set = NULL;
-		/* any non-essential stop actions will be marked redundant by
-		 *  during stage6
-		 */
-		action_set = create_action_set(rsc->start);
-
-		if(action_set != NULL) {
-			crm_verbose("Created action set for %s->start",
-			       rsc->id);
-			*action_sets = g_list_append(*action_sets,
-						      action_set);
-		} else {
-			crm_verbose("No actions resulting from %s->start",
-			       rsc->id);
-		}
-		);
-
-	crm_verbose("Processing unconnected actions");
-	action_set = NULL;
-	slist_iter(
-		action, action_t, actions, lpc,
-
-		if(action->runnable && action->processed == FALSE) {
-			action_set = g_list_append(action_set, action);
-		}
-		);
-	
-	if(action_set != NULL) {
-		crm_verbose("Created action set for unconnected actions");
-		*action_sets = g_list_append(*action_sets, action_set);
-	} else {
-		crm_verbose("No unconnected actions");
-	}
-	
-	
 	return TRUE;
 }
 
@@ -490,13 +455,19 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
  * Create a dependancy graph to send to the transitioner (via the CRMd)
  */
 gboolean
-stage8(GListPtr action_sets, xmlNodePtr *graph)
+stage8(GListPtr actions, xmlNodePtr *graph)
 {
 	int lpc = 0;
-	xmlNodePtr xml_action_set = NULL;
+	int lpc2 = 0;
 
+	xmlNodePtr syn = NULL;
+	xmlNodePtr set = NULL;
+	xmlNodePtr in  = NULL;
+	xmlNodePtr input = NULL;
+	xmlNodePtr xml_action = NULL;
+	
 	*graph = create_xml_node(NULL, "transition_graph");
-
+	
 /* errors...
 	slist_iter(action, action_t, action_list, lpc,
 		   if(action->optional == FALSE && action->runnable == FALSE) {
@@ -504,21 +475,48 @@ stage8(GListPtr action_sets, xmlNodePtr *graph)
 		   }
 		);
 */
-	slist_iter(action_set, GList, action_sets, lpc,
-	           int lpc2;
-		   crm_verbose("Processing Action Set %d", lpc);
-		   xml_action_set = create_xml_node(NULL, "actions");
-		   set_xml_property_copy(
-			   xml_action_set, XML_ATTR_ID, crm_itoa(lpc));
+	slist_iter(
+		action, action_t, actions, lpc,
 
-		   slist_iter(action, action_t, action_set, lpc2,
-			      xmlNodePtr xml_action = action2xml(action);
-			      xmlAddChild(xml_action_set, xml_action);
-			   )
-		   xmlAddChild(*graph, xml_action_set);
+		if(action->optional) {
+			continue;
+		} else if(action->runnable == FALSE) {
+			continue;
+		}
+		
+		syn    = create_xml_node(*graph, "synapse");
+		set    = create_xml_node(syn, "action_set");
+		in     = create_xml_node(syn, "inputs");
+		
+		xml_action = action2xml(action);
+		xmlAddChild(set, xml_action);
+
+		slist_iter(
+			wrapper,action_wrapper_t,action->actions_before,lpc2,
+
+			switch(wrapper->strength) {
+				case pecs_must_not:
+				case pecs_ignore:
+					/* ignore both */
+					break;
+				case pecs_startstop:
+					if(wrapper->action->runnable == FALSE){
+						break;
+					}
+					/* keep going */
+				case pecs_must:
+					input = create_xml_node(in, "trigger");
+					
+					xml_action=action2xml(wrapper->action);
+					xmlAddChild(input, xml_action);
+					break;
+			}
+			
+			);
+
 		);
 
-	print_xml_formatted(*graph, "created action list");
+	crm_xml_devel(*graph, "created action list");
 	
 	return TRUE;
 }
@@ -603,29 +601,5 @@ choose_node_from_list(color_t *color)
 node_t *
 choose_fencer(action_t *stonith, node_t *a_node, GListPtr resources)
 {
-	int lpc = 0;
-	int lpc2 = 0;
-	slist_iter(
-		rsc, resource_t, resources, lpc,
-		if(rsc->is_stonith == FALSE) {
-			continue;
-		}
-
-		slist_iter(
-			node, node_t, rsc->fencable_nodes, lpc2,
-
-			if(safe_str_eq(
-				   safe_val3(NULL, node, details, uname),
-				   safe_val3(NULL, a_node, details, uname))) {
-
-				stonith->node = rsc->cur_node;
-				rsc->actions = g_list_append(
-					rsc->actions, stonith);
-
-				return rsc->cur_node;
-			}
-			);
-		);
-	
 	return NULL;
 }

@@ -40,13 +40,13 @@ GListPtr fsa_message_queue = NULL;
 
 extern void crm_shutdown(int nsig);
 
-gboolean relay_message(xmlNodePtr xml_relay_message,
-		       gboolean originated_locally);
+gboolean relay_message(
+	xmlNodePtr xml_relay_message, gboolean originated_locally);
 
 
-gboolean send_ha_reply(ll_cluster_t *hb_cluster,
-		       xmlNodePtr xml_request,
-		       xmlNodePtr xml_response_data);
+gboolean send_ha_reply(
+	ll_cluster_t *hb_cluster,
+	xmlNodePtr xml_request, xmlNodePtr xml_response_data);
 
 gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);
 
@@ -54,7 +54,7 @@ gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);
 
 #    define ROUTER_RESULT(x) char *msg_text = dump_xml_formatted(xml_relay_message);\
 	if(router_strm == NULL) {					\
-		router_strm = fopen(DEVEL_DIR"/router.log", "w");		\
+		router_strm = fopen(DEVEL_DIR"/router.log", "w");       \
 	}								\
 	fprintf(router_strm, "[%d RESULT (%s)]\t%s\t%s\n",		\
 		AM_I_DC,						\
@@ -62,9 +62,9 @@ gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);
 		x, msg_text);						\
 	fflush(router_strm);						\
 	crm_free(msg_text);						\
-	crm_verbose(x);
+	crm_xml_devel(xml_relay_message, x);
 #else
-#    define ROUTER_RESULT(x)	crm_verbose(x);
+#    define ROUTER_RESULT(x)	crm_xml_devel(xml_relay_message, x);
 #endif
 
 
@@ -205,7 +205,7 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD,
 		NULL, NULL);
 
-/*	print_xml_formatted(request, "Final request..."); */
+/*	crm_xml_devel(request, "Final request..."); */
 
 	if(msg_reference != NULL) {
 		*msg_reference = crm_strdup(xmlGetProp(request, XML_ATTR_REFERENCE));
@@ -260,13 +260,12 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	int is_for_crm	= 0;
 	int is_for_cib	= 0;
 	int is_local    = 0;
-	gboolean dont_cc= TRUE;
-	gboolean processing_complete = FALSE;
+	gboolean processing_complete = TRUE;
 	const char *host_to = xmlGetProp(xml_relay_message,XML_ATTR_HOSTTO);
 	const char *sys_to  = xmlGetProp(xml_relay_message,XML_ATTR_SYSTO);
 
 	crm_debug("Routing message %s",
-		xmlGetProp(xml_relay_message,XML_ATTR_REFERENCE));
+		  xmlGetProp(xml_relay_message, XML_ATTR_REFERENCE));
 	
 	if(xml_relay_message == NULL) {
 		crm_err("Cannot route empty message");
@@ -279,20 +278,14 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	}
 
 	if(strcmp(XML_MSG_TAG, xml_relay_message->name) != 0) {
-
-		print_xml_formatted(xml_relay_message,
-				  "Bad message type, should be crm_message");
-		crm_err("Ignoring message of type %s",
-		       xml_relay_message->name);
+		crm_xml_err(xml_relay_message,
+			    "Bad message type, should be crm_message");
 		return TRUE;
 	}
 	
-
 	if(sys_to == NULL) {
-		print_xml_formatted(xml_relay_message,
-				  "Message did not have any value for sys_to");
-		crm_err("Message did not have any value for %s",
-		       XML_ATTR_SYSTO);
+		crm_xml_err(xml_relay_message,
+			    "Message did not have any value for sys_to");
 		return TRUE;
 	}
 	
@@ -303,12 +296,15 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	
 	is_local = 0;
 	if(host_to == NULL || strlen(host_to) == 0) {
-		if(is_for_dc)
+		if(is_for_dc) {
 			is_local = 0;
-		else if(is_for_crm && originated_locally)
+
+		} else if(is_for_crm && originated_locally) {
 			is_local = 0;
-		else
+
+		} else {
 			is_local = 1;
+		}
 		
 	} else if(strcmp(fsa_our_uname, host_to) == 0) {
 		is_local=1;
@@ -330,11 +326,10 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		} else if(originated_locally) {
 			ROUTER_RESULT("Message result: External relay to DC");
 			send_msg_via_ha(xml_relay_message, NULL);
-			processing_complete = TRUE; 
 
 		} else {
 			ROUTER_RESULT("Message result: Discard, not DC");
-			processing_complete = TRUE; /* discard */
+			/* discard */
 		}
 		
 	} else if(is_local && (is_for_crm || is_for_cib)) {
@@ -342,34 +337,21 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		processing_complete = FALSE; /* more to be done by caller */
 
 	} else if(is_local) {
-		if(dont_cc) {
-			ROUTER_RESULT("Message result: Local relay");
-
-		} else {
-			/* The DC should also get this message */
-			ROUTER_RESULT("Message result: Local relay with CC");
-		}
+		ROUTER_RESULT("Message result: Local relay");
 		send_msg_via_ipc(xml_relay_message, sys_to);
-		processing_complete = TRUE & dont_cc;
 		
 	} else {
-		if(dont_cc) {
-			ROUTER_RESULT("Message result: External relay");
-		} else {
-			/* The DC should also get this message */
-			ROUTER_RESULT("Message result: External relay with CC");
-		}
+		ROUTER_RESULT("Message result: External relay");
 		send_msg_via_ha(xml_relay_message, host_to);
-		processing_complete = TRUE & dont_cc;
 	}
 	
 	return processing_complete;
 }
 
 gboolean
-crmd_authorize_message(xmlNodePtr root_xml_node,
-		       IPC_Message *client_msg,
-		       crmd_client_t *curr_client)
+crmd_authorize_message(
+	xmlNodePtr root_xml_node,
+	IPC_Message *client_msg, crmd_client_t *curr_client)
 {
 	/* check the best case first */
 	const char *sys_from   = xmlGetProp(root_xml_node,
@@ -384,14 +366,17 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	struct crm_subsystem_s *the_subsystem = NULL;
 	gboolean can_reply = FALSE; /* no-one has registered with this id */
 
-	const char *op = get_xml_attr(root_xml_node, XML_TAG_OPTIONS,
-				      XML_ATTR_OP, TRUE);
+	const char *op = get_xml_attr(
+		root_xml_node, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
 	
 	
 
 	if (safe_str_neq(CRM_OP_HELLO, op)) {
 
 		if(sys_from == NULL) {
+			crm_warn("Message [%s] was had no value for %s... discarding",
+				 xmlGetProp(root_xml_node, XML_ATTR_REFERENCE),
+				XML_ATTR_SYSFROM);
 			return FALSE;
 		}
 		
@@ -401,15 +386,16 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		if(strcmp(sys_from, CRM_SYSTEM_DCIB) == 0)
 			filtered_from = CRM_SYSTEM_CIB;
 		
-		if (g_hash_table_lookup (ipc_clients, filtered_from) != NULL)
+		if (g_hash_table_lookup (ipc_clients, filtered_from) != NULL) {
 			can_reply = TRUE;  /* reply can be routed */
-		
+		}
 		
 		crm_verbose("Message reply can%s be routed from %s.",
 			   can_reply?"":" not", sys_from);
 
 		if(can_reply == FALSE) {
-			crm_err("Message not authorized");
+			crm_warn("Message [%s] not authorized",
+				 xmlGetProp(root_xml_node, XML_ATTR_REFERENCE));
 		}
 		
 		return can_reply;
@@ -443,14 +429,18 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		 */
 
 		
-		if (client_name == NULL)
+		if (client_name == NULL) {
 			crm_warn("Client had not registered with us yet");
-		else if (strcmp(CRM_SYSTEM_PENGINE, client_name) == 0) 
+
+		} else if (strcmp(CRM_SYSTEM_PENGINE, client_name) == 0) {
 			the_subsystem = pe_subsystem;
-		else if (strcmp(CRM_SYSTEM_TENGINE, client_name) == 0)
+			
+		} else if (strcmp(CRM_SYSTEM_TENGINE, client_name) == 0) {
 			the_subsystem = te_subsystem;
-		else if (strcmp(CRM_SYSTEM_CIB, client_name) == 0)
+			
+		} else if (strcmp(CRM_SYSTEM_CIB, client_name) == 0) {
 			the_subsystem = cib_subsystem;
+		}
 
 		if (the_subsystem != NULL) {
 			/* do we already have one? */
@@ -536,7 +526,7 @@ handle_message(xmlNodePtr stored_msg)
 	const char *op       = get_xml_attr(
 		stored_msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
 
-/*	print_xml_formatted(stored_msg, "Processing message"); */
+/*	crm_xml_devel(stored_msg, "Processing message"); */
 
 	crm_verbose("Received %s %s in state %s",
 		    op, type, fsa_state2string(fsa_state));
@@ -544,7 +534,7 @@ handle_message(xmlNodePtr stored_msg)
 	if(type == NULL || op == NULL) {
 		crm_err("Ignoring message (type=%s), (op=%s)",
 		       type, op);
-		print_xml_formatted(stored_msg, "Bad message");
+		crm_xml_devel(stored_msg, "Bad message");
 		
 	} else if(strcmp(type, XML_ATTR_REQUEST) == 0){
 		if(strcmp(op, CRM_OP_HBEAT) == 0) {
@@ -759,14 +749,14 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		msg = ha_msg_new(4); 
 		ha_msg_add(msg, F_TYPE, "CRM");
 		ha_msg_add(msg, F_COMMENT, "A CRM xml message");
-		xml_text = dump_xml_formatted(root);
+		xml_text = dump_xml_unformatted(root);
 		xml_len = strlen(xml_text);
 		
 		if (xml_text == NULL || xml_len <= 0) {
 			crm_err(
 			       "Failed sending an invalid XML Message via HA");
 			all_is_good = FALSE;
-			print_xml_formatted(root, "Bad message was");
+			crm_xml_devel(root, "Bad message was");
 			
 		} else {
 			if(ha_msg_add(msg, "xml", xml_text) == HA_FAIL) {
@@ -794,8 +784,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		if (host_to == NULL
 		    || strlen(host_to) == 0) {
 			broadcast = TRUE;
-			send_result =
-				hb_fd->llc_ops->sendclustermsg(hb_fd, msg);
+			send_result=hb_fd->llc_ops->sendclustermsg(hb_fd, msg);
 		}
 		else {
 			send_result = hb_fd->llc_ops->send_ordered_nodemsg(
@@ -910,7 +899,7 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_CIB) == 0) {
 		crm_err("Sub-system (%s) has been incorporated into the CRMd.",
 			sys);
-		print_xml_formatted(action, "Change the way we handle");
+		crm_xml_devel(action, "Change the way we handle");
 		relay_message(process_cib_message(action, TRUE), TRUE);
 		
 	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_LRMD) == 0) {

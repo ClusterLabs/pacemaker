@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.25 2004/08/30 03:17:39 msoffen Exp $ */
+/* $Id: unpack.c,v 1.26 2004/09/14 05:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,7 +51,10 @@ gboolean unpack_rsc_to_node(xmlNodePtr xml_obj,
 			    GListPtr node_list,
 			    GListPtr *node_constraints);
 
-gboolean unpack_rsc_to_rsc(
+gboolean unpack_rsc_order(
+	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr *action_constraints);
+
+gboolean unpack_rsc_dependancy(
 	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr *action_constraints);
 
 gboolean unpack_rsc_location(
@@ -182,15 +185,15 @@ gboolean
 unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 {
 	node_t *new_node   = NULL;
-	xmlNodePtr xml_obj = NULL;
 	xmlNodePtr attrs   = NULL;
 	const char *id     = NULL;
 	const char *uname  = NULL;
 	const char *type   = NULL;
 
 	crm_verbose("Begining unpack...");
-	while(xml_nodes != NULL) {
-		xml_obj = xml_nodes;
+	xml_child_iter(
+		xml_nodes, xml_obj, XML_CIB_TAG_NODE,
+
 		attrs   = xml_obj->children;
 		id     = xmlGetProp(xml_obj, XML_ATTR_ID);
 		uname  = xmlGetProp(xml_obj, XML_ATTR_UNAME);
@@ -202,8 +205,6 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 			attrs = attrs->children;
 		}
 		
-		xml_nodes = xml_nodes->next;
-	
 		if(id == NULL) {
 			crm_err("Must specify id tag in <node>");
 			continue;
@@ -238,7 +239,7 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 		crm_verbose("Done with node %s", xmlGetProp(xml_obj, "uname"));
 
 		crm_debug_action(print_node("Added", new_node, FALSE));
-	}
+		);
   
 	*nodes = g_list_sort(*nodes, sort_node_weight);
 
@@ -253,18 +254,27 @@ unpack_resources(xmlNodePtr xml_resources,
 		 GListPtr all_nodes)
 {
 	crm_verbose("Begining unpack...");
-	while(xml_resources != NULL) {
+	xml_child_iter(
+		xml_resources, xml_obj, XML_CIB_TAG_RESOURCE,
 		action_t *action_stop  = NULL;
 		action_t *action_start = NULL;
-		xmlNodePtr xml_obj     = xml_resources;
 		const char *id         = xmlGetProp(xml_obj, XML_ATTR_ID);
 		const char *stopfail   = xmlGetProp(xml_obj, "on_stopfail");
+		const char *restart    = xmlGetProp(xml_obj, "restart_type");
+
+		const char *max_instances      = xmlGetProp(
+			xml_obj, "max_instances");
+		const char *max_node_instances = xmlGetProp(
+			xml_obj, "max_node_instances");
+		const char *max_masters      = xmlGetProp(
+			xml_obj, "max_masters");
+		const char *max_node_masters = xmlGetProp(
+			xml_obj, "max_node_masters");
+
 		const char *version    = xmlGetProp(xml_obj, XML_ATTR_VERSION);
 		resource_t *new_rsc = NULL;
 		const char *priority   = xmlGetProp(
 			xml_obj, XML_CIB_ATTR_PRIORITY);
-		/* todo: check for null */
-		xml_resources = xml_resources->next;
 
 		crm_verbose("Processing resource...");
 		
@@ -279,23 +289,28 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->agent->class	= xmlGetProp(xml_obj, "class");
 		new_rsc->agent->type	= xmlGetProp(xml_obj, "type");
 		new_rsc->agent->version	= version?version:"0.0";
-		new_rsc->priority	= atof(priority?priority:"0.0"); 
+
+		new_rsc->priority	    = atoi(priority?priority:"0"); 
 		new_rsc->effective_priority = new_rsc->priority;
+
+		new_rsc->max_instances	    = atoi(
+			max_instances?max_instances:"1"); 
+		new_rsc->max_node_instances = atoi(
+			max_node_instances?max_node_instances:"1"); 
+		new_rsc->max_masters	    = atoi(
+			max_masters?max_masters:"0"); 
+		new_rsc->max_node_masters   = atoi(
+			max_node_masters?max_node_masters:"0"); 
+
 		new_rsc->candidate_colors   = NULL;
-		new_rsc->fencable_nodes     = NULL;
 		new_rsc->actions            = NULL;
 		new_rsc->color		= NULL; 
-		new_rsc->is_stonith	= FALSE; 
 		new_rsc->runnable	= TRUE; 
 		new_rsc->provisional	= TRUE; 
 		new_rsc->allowed_nodes	= NULL;
 		new_rsc->rsc_cons	= NULL; 
 		new_rsc->node_cons	= NULL; 
 		new_rsc->cur_node	= NULL;
-
-		if(safe_str_eq(new_rsc->agent->class, "stonith")) {
-			new_rsc->is_stonith = TRUE;
-		}
 		
 		if(safe_str_eq(stopfail, "ignore")) {
 			new_rsc->stopfail_type = pesf_ignore;
@@ -303,6 +318,14 @@ unpack_resources(xmlNodePtr xml_resources,
 			new_rsc->stopfail_type = pesf_stonith;
 		} else {
 			new_rsc->stopfail_type = pesf_block;
+		}
+
+		if(safe_str_eq(restart, "restart")) {
+			new_rsc->restart_type = pe_restart_restart;
+		} else if(safe_str_eq(restart, "recover")) {
+			new_rsc->restart_type = pe_restart_recover;
+		} else {
+			new_rsc->restart_type = pe_restart_ignore;
 		}
 
 		action_stop    = action_new(new_rsc, stop_rsc);
@@ -317,12 +340,13 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->actions =
 			g_list_append(new_rsc->actions, action_start);
 
-		order_new(action_stop, action_start, pecs_startstop, action_cons);
+		order_new(action_stop,action_start,pecs_startstop,action_cons);
 
 		*resources = g_list_append(*resources, new_rsc);
 	
 		crm_debug_action(print_resource("Added", new_rsc, FALSE));
-	}
+		);
+	
 	*resources = g_list_sort(*resources, sort_rsc_priority);
 
 	return TRUE;
@@ -337,36 +361,35 @@ unpack_constraints(xmlNodePtr xml_constraints,
 		   GListPtr *action_constraints)
 {
 	crm_verbose("Begining unpack...");
-	while(xml_constraints != NULL) {
-		const char *id = xmlGetProp(xml_constraints, XML_ATTR_ID);
-		xmlNodePtr xml_obj = xml_constraints;
-		xml_constraints = xml_constraints->next;
+	xml_child_iter(
+		xml_constraints, xml_obj, NULL,
+
+		const char *id = xmlGetProp(xml_obj, XML_ATTR_ID);
 		if(id == NULL) {
-			crm_err("Constraint must have an id");
+			crm_err("Constraint <%s...> must have an id",
+				xml_obj->name);
+			xml_obj = xml_obj->next;
 			continue;
 		}
 
 		crm_verbose("Processing constraint %s %s", xml_obj->name,id);
-		if(safe_str_eq("rsc_to_rsc", xml_obj->name)) {
-			unpack_rsc_to_rsc(xml_obj, resources,
-					  action_constraints);
-/*
-		} else if(safe_str_eq("rsc_to_node", xml_obj->name)) {
-			unpack_rsc_to_node(xml_obj, resources, nodes,
-					   node_constraints);
-			
-		} else if(safe_str_eq("rsc_to_attr", xml_obj->name)) {
-			unpack_rsc_to_attr(xml_obj, resources, nodes,
-					   node_constraints);
-*/		
+		if(safe_str_eq("rsc_order", xml_obj->name)) {
+			unpack_rsc_order(
+				xml_obj, resources, action_constraints);
+
+		} else if(safe_str_eq("rsc_dependancy", xml_obj->name)) {
+			unpack_rsc_dependancy(
+				xml_obj, resources, action_constraints);
+
 		} else if(safe_str_eq("rsc_location", xml_obj->name)) {
-			unpack_rsc_location(xml_obj, resources, nodes,
-					    node_constraints);
+			unpack_rsc_location(
+				xml_obj, resources, nodes, node_constraints);
+
 		} else {
 			crm_err("Unsupported constraint type: %s",
 				xml_obj->name);
 		}
-	}
+		);
 
 	return TRUE;
 }
@@ -418,16 +441,15 @@ unpack_status(xmlNodePtr status,
 {
 	const char *uname     = NULL;
 
-	xmlNodePtr node_state = NULL;
 	xmlNodePtr lrm_rsc    = NULL;
 	xmlNodePtr lrm_agents = NULL;
 	xmlNodePtr attrs      = NULL;
 	node_t    *this_node  = NULL;
 	
 	crm_verbose("Begining unpack");
-	while(status != NULL) {
-		node_state = status;
-		status     = status->next;
+	xml_child_iter(
+		status, node_state, XML_CIB_TAG_STATE,
+
 /*		id         = xmlGetProp(node_state, XML_ATTR_ID); */
 		uname      = xmlGetProp(node_state,    XML_ATTR_UNAME);
 		attrs      = find_xml_node(node_state, "attributes");
@@ -462,7 +484,7 @@ unpack_status(xmlNodePtr status,
 		crm_verbose("Processing lrm agents");
 		unpack_lrm_agents(this_node, lrm_agents);
 
-	}
+		);
 
 	return TRUE;
 	
@@ -552,16 +574,15 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 	 * the resource's list of allowed_nodes
 	 */
 	lrm_agent_t *agent   = NULL;
-	xmlNodePtr xml_agent = NULL;
 	const char *version  = NULL;
 
 	if(agent_list == NULL) {
 		return FALSE;
 	}
 
-	xml_agent = agent_list->children;
-	
-	while(xml_agent != NULL){
+	xml_child_iter(
+		agent_list, xml_agent, XML_LRM_TAG_AGENT,
+
 		agent = (lrm_agent_t*)crm_malloc(sizeof(lrm_agent_t));
 		agent->class = xmlGetProp(xml_agent, "class");
 		agent->type  = xmlGetProp(xml_agent, "type");
@@ -577,9 +598,7 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 			  
 		node->details->agents = g_list_append(
 			node->details->agents, agent);
-		
-		xml_agent = xml_agent->next;
-	}
+		);
 	
 	return TRUE;
 }
@@ -599,9 +618,9 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 	const char *last_rc   = NULL;
 	const char *last_op   = NULL;
 	resource_t *rsc_lh    = NULL;
-	op_status_t  rsc_code_i = LRM_OP_ERROR;
+	op_status_t  action_status_i = LRM_OP_ERROR;
 	xmlNodePtr stonith_list = NULL;
-	
+
 	while(lrm_rsc != NULL) {
 		rsc_entry = lrm_rsc;
 		lrm_rsc   = lrm_rsc->next;
@@ -609,8 +628,8 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 		rsc_id    = xmlGetProp(rsc_entry, XML_ATTR_ID);
 		node_id   = xmlGetProp(rsc_entry, XML_LRM_ATTR_TARGET);
 		rsc_state = xmlGetProp(rsc_entry, XML_LRM_ATTR_RSCSTATE);
-		op_status = xmlGetProp(rsc_entry, XML_LRM_ATTR_OPCODE);
-		last_rc   = xmlGetProp(rsc_entry, XML_LRM_ATTR_RCCODE);
+		op_status = xmlGetProp(rsc_entry, XML_LRM_ATTR_OPSTATUS);
+		last_rc   = xmlGetProp(rsc_entry, XML_LRM_ATTR_RC);
 		last_op   = xmlGetProp(rsc_entry, XML_LRM_ATTR_LASTOP);
 		
 		rsc_lh    = pe_find_resource(rsc_list, rsc_id);
@@ -623,28 +642,25 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 				" %s in %s's status section",
 				rsc_id, node_id);
 			continue;
-		} else if(last_rc == NULL) {
+		} else if(op_status == NULL) {
 			crm_err("Invalid resource status entry for %s in %s",
 				rsc_id, node_id);
 			continue;
 		}
 
-		stonith_list = rsc_entry->children;
-		while(stonith_list != NULL) {
+		xml_child_iter(
+			stonith_list, rsc_entry, "can_fence",
 
 			node_t *node = pe_find_node(
 				nodes, xmlGetProp(stonith_list, "id"));
 
-			stonith_list = stonith_list->next;
-
 			rsc_lh->fencable_nodes = g_list_append(
 				rsc_lh->fencable_nodes, node_copy(node));
-			
-		}
+			);
 		
-		rsc_code_i = atoi(last_rc);
+		action_status_i = atoi(op_status);
 
-		if(rsc_code_i == -1) {
+		if(action_status_i == -1) {
 			/*
 			 * TODO: this needs more thought
 			 * Some cases:
@@ -661,17 +677,17 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 			 */
 			if(safe_str_eq(last_op, "stop")) {
 				/* map this to a timeout so it is re-issued */
-				rsc_code_i = LRM_OP_TIMEOUT;
+				action_status_i = LRM_OP_TIMEOUT;
 			} else {
 				/* map this to a "done" so it is not marked
 				 * as failed, then make sure it is re-issued
 				 */
-				rsc_code_i = LRM_OP_DONE;
+				action_status_i = LRM_OP_DONE;
 				rsc_lh->start->optional = FALSE;
 			}
 		}
 
-		switch(rsc_code_i) {
+		switch(action_status_i) {
 			case LRM_OP_DONE:
 				unpack_healthy_resource(
 					node_constraints, actions,
@@ -848,7 +864,7 @@ order_new(action_t *before, action_t *after, enum con_strength strength,
 }
 
 gboolean
-unpack_rsc_to_rsc(xmlNodePtr xml_obj,
+unpack_rsc_dependancy(xmlNodePtr xml_obj,
 		  GListPtr rsc_list,
 		  GListPtr *action_constraints)
 {
@@ -857,13 +873,13 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	const char *id_lh    = xmlGetProp(xml_obj, "from");
 	const char *id       = xmlGetProp(xml_obj, XML_ATTR_ID);
 	const char *id_rh    = xmlGetProp(xml_obj, "to");
-	const char *strength = xmlGetProp(xml_obj, "strength");
-	const char *type     = xmlGetProp(xml_obj, XML_ATTR_TYPE);
+	const char *type = xmlGetProp(xml_obj, XML_ATTR_TYPE);
 
 	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
 	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
  
 #if 1
+	/* relates to the ifdef below */
 	action_t *before, *after;
 #endif
 	if(rsc_lh == NULL) {
@@ -874,35 +890,25 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 		return FALSE;
 	}
 	
-	if(safe_str_eq(strength, XML_STRENGTH_VAL_MUST)) {
+	if(safe_str_eq(type, XML_STRENGTH_VAL_MUST)) {
 		strength_e = pecs_must;
 		
-	} else if(safe_str_eq(strength, XML_STRENGTH_VAL_SHOULD)) {
-		strength_e = pecs_should;
+	} else if(safe_str_eq(type, XML_STRENGTH_VAL_SHOULD)) {
+		crm_err("Type %s is no longer supported", type);
+		strength_e = pecs_must;
 		
-	} else if(safe_str_eq(strength, XML_STRENGTH_VAL_SHOULDNOT)) {
-		strength_e = pecs_should_not;
+	} else if(safe_str_eq(type, XML_STRENGTH_VAL_SHOULDNOT)) {
+		crm_err("Type %s is no longer supported", type);
+		strength_e = pecs_must_not;
 		
-	} else if(safe_str_eq(strength, XML_STRENGTH_VAL_MUSTNOT)) {
+	} else if(safe_str_eq(type, XML_STRENGTH_VAL_MUSTNOT)) {
 		strength_e = pecs_must_not;
 
 	} else {
-		crm_err("Unknown value for %s: %s", "strength", strength);
+		crm_err("Unknown value for %s: %s", "type", type);
 		return FALSE;
 	}
 
-	if(safe_str_eq(type, "ordering")) {
-		rsc2rsc_new(id, strength_e, start_before, rsc_lh, rsc_rh);
-		order_new(rsc_lh->stop, rsc_rh->stop, strength_e,
-			  action_constraints);
-		order_new(rsc_rh->start, rsc_lh->start, strength_e,
-			  action_constraints);
-		return TRUE;
-	}
-		
-#if 1
-	/* eventually move to the new rsc_location "running|not_running" constraints */
-	
 	/* make sure the lower priority resource stops before
 	 *  the higher is started, otherwise they may be both running
 	 *  on the same node when the higher is replacing the lower
@@ -930,7 +936,51 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	order_new(before, after, strength_e,action_constraints);
 	
 	return rsc2rsc_new(id, strength_e, same_node, rsc_lh, rsc_rh);
-#endif
+}
+
+gboolean
+unpack_rsc_order(xmlNodePtr xml_obj,
+		  GListPtr rsc_list,
+		  GListPtr *action_constraints)
+{
+	enum con_strength strength_e = pecs_ignore;
+
+	const char *id       = xmlGetProp(xml_obj, XML_ATTR_ID);
+	const char *id_lh    = xmlGetProp(xml_obj, "from");
+	const char *id_rh    = xmlGetProp(xml_obj, "to");
+	const char *type     = xmlGetProp(xml_obj, XML_ATTR_TYPE);
+
+	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
+	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
+
+	if(xml_obj == NULL) {
+		crm_err("No constraint object to process.");
+		return FALSE;
+
+	} else if(id == NULL) {
+		crm_err("%s constraint must have an id", xml_obj->name);
+		return FALSE;
+		
+	} else if(rsc_lh == NULL || rsc_rh == NULL) {
+		crm_err("Constraint %s needs two sides lh: %p rh: %p"
+			" (NULL indicates missing side)",
+			id, rsc_lh, rsc_rh);
+		return FALSE;
+	
+	} else if(safe_str_eq(type, "after")) {
+		rsc2rsc_new(id, strength_e, start_after, rsc_lh, rsc_rh);
+		order_new(rsc_rh->stop, rsc_lh->stop, pecs_must,
+			  action_constraints);
+		order_new(rsc_lh->start, rsc_rh->start, pecs_must,
+			  action_constraints);
+	} else {
+		rsc2rsc_new(id, strength_e, start_before, rsc_lh, rsc_rh);
+		order_new(rsc_lh->stop, rsc_rh->stop, pecs_must,
+			  action_constraints);
+		order_new(rsc_rh->start, rsc_lh->start, pecs_must,
+			  action_constraints);
+	}
+	return TRUE;
 }
 
 
@@ -1118,7 +1168,7 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
    Further translation:
        
 */
-	xmlNodePtr rules    = xml_obj->children;
+	gboolean were_rules = FALSE;
 	const char *id_lh   = xmlGetProp(xml_obj, "rsc");
 	const char *id      = xmlGetProp(xml_obj, XML_ATTR_ID);
 	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
@@ -1129,16 +1179,13 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 		return FALSE;
 	}
 			
-	if(rules == NULL) {
-		crm_err("no rules for constraint %s", id);
-	}
-	
-	while(rules != NULL) {
+	xml_child_iter(
+		xml_obj, rule, "rule",
+
 		gboolean first_expr = TRUE;
-		gboolean   can_run  = FALSE;
-		gboolean   do_and   = TRUE;
-		xmlNodePtr rule     = rules;
-		xmlNodePtr expr     = rule->children;
+		gboolean can_run    = FALSE;
+		gboolean do_and     = TRUE;
+
 		const char *rule_id = xmlGetProp(rule, XML_ATTR_ID);
 		const char *score   = xmlGetProp(rule, "score");
 		const char *result  = xmlGetProp(rule, "result");
@@ -1149,11 +1196,12 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 
 		rsc_to_node_t *new_con = NULL;
 
+		were_rules = TRUE;
+		
 		if(safe_str_eq(boolean, "or")) {
 			do_and = FALSE;
 		}
 
-		rules = rules->next;
 		if(result == NULL || (safe_str_eq(result, "can"))) {
 			can_run = TRUE;
 		}
@@ -1167,19 +1215,20 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 		}
 		
 		/* feels like a hack */
-		if(expr == NULL && can_run) {
+		if(rule->children == NULL && can_run) {
 			new_con->node_list_rh = node_list_dup(node_list,FALSE);
 		}
-		
-		while(expr != NULL) {
+
+		xml_child_iter(
+			rule, expr, "expression",
+
 			const char *attr  = xmlGetProp(expr, "attribute");
 			const char *op    = xmlGetProp(expr, "operation");
 			const char *value = xmlGetProp(expr, "value");
 			const char *type  = xmlGetProp(expr, "type");
 
-			crm_trace("processing expression: %s", xmlGetProp(expr, "id"));
-
-			expr = expr->next;
+			crm_trace("processing expression: %s",
+				  xmlGetProp(expr, "id"));
 
 			match_L = match_attrs(
 				attr, op, value, type, node_list);
@@ -1206,15 +1255,20 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 			}
 			pe_free_shallow_adv(match_L,  FALSE);
 			pe_free_shallow_adv(old_list, TRUE);
-
-		}
+			);
 		
 		if(new_con->node_list_rh == NULL) {
 			crm_warn("No matching nodes for constraint/rule %s/%s",
 				 id, xmlGetProp(rule, "id"));
 		}
 		crm_debug_action(print_rsc_to_node("Added", new_con, FALSE));
+		);
+
+	if(were_rules == FALSE) {
+		crm_err("no rules for constraint %s", id);
 	}
+
+	
 	return TRUE;
 }
 

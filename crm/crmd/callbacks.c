@@ -155,12 +155,13 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 			   curr_client->table_key, buffer);
 	
 #ifdef MSG_LOG
-	fprintf(msg_ipc_strm, "[%s] [text=%s]",
-		curr_client->table_key, buffer);
-	fflush(msg_in_strm);
+		fprintf(msg_ipc_strm, "[%s] [text=%s]\n",
+			curr_client->table_key, buffer);
+		fflush(msg_in_strm);
 #endif
 
 		root_xml_node = find_xml_in_ipcmessage(msg, FALSE);
+	
 		if (root_xml_node != NULL) {
 			if (crmd_authorize_message(
 				    root_xml_node, msg, curr_client)) {

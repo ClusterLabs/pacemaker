@@ -260,12 +260,12 @@ build_active_RAs(xmlNodePtr rsc_list)
 	
 				tmp = crm_itoa(op->rc);
 				set_xml_property_copy(
-					xml_rsc, XML_LRM_ATTR_RCCODE, tmp);
+					xml_rsc, XML_LRM_ATTR_RC, tmp);
 				crm_free(tmp);
 
 				tmp = crm_itoa(op->op_status);
 				set_xml_property_copy(
-					xml_rsc, XML_LRM_ATTR_OPCODE, tmp);
+					xml_rsc, XML_LRM_ATTR_OPSTATUS, tmp);
 				crm_free(tmp);
 				
 				/* we only want the last one */
@@ -285,11 +285,11 @@ build_active_RAs(xmlNodePtr rsc_list)
 	
 				tmp = crm_itoa(op->rc);
 				set_xml_property_copy(
-					xml_rsc, XML_LRM_ATTR_RCCODE, tmp);
+					xml_rsc, XML_LRM_ATTR_RC, tmp);
 				crm_free(tmp);
 
 				set_xml_property_copy(
-					xml_rsc, XML_LRM_ATTR_OPCODE, "0");
+					xml_rsc, XML_LRM_ATTR_OPSTATUS, "0");
 
 				/* we only want the last one */
 				found_op = TRUE;
@@ -619,11 +619,11 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	crm_free(fail_state);
 	
 	tmp = crm_itoa(op->rc);
-	set_xml_property_copy(iter, XML_LRM_ATTR_RCCODE, tmp);
+	set_xml_property_copy(iter, XML_LRM_ATTR_RC, tmp);
 	crm_free(tmp);
 
 	tmp = crm_itoa(op->op_status);
-	set_xml_property_copy(iter, XML_LRM_ATTR_OPCODE, tmp);
+	set_xml_property_copy(iter, XML_LRM_ATTR_OPSTATUS, tmp);
 	crm_free(tmp);
 
 	set_xml_property_copy(iter, XML_LRM_ATTR_TARGET, fsa_our_uname);
@@ -746,7 +746,7 @@ do_fake_lrm_op(gpointer data)
 		}
 		
 		set_xml_property_copy(iter, XML_LRM_ATTR_RSCSTATE,op_status);
-		set_xml_property_copy(iter, XML_LRM_ATTR_OPCODE, op_code_s);
+		set_xml_property_copy(iter, XML_LRM_ATTR_OPSTATUS, op_code_s);
 		set_xml_property_copy(
 			iter, XML_LRM_ATTR_TARGET, fsa_our_uname);
 

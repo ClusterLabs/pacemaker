@@ -19,9 +19,9 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 
 
-INCLUDES        = -I$(top_builddir)/include  -I$(top_srcdir)/include	\
-		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl 	\
-		  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha	\
+INCLUDES        = -I$(top_builddir)/include  -I$(top_srcdir)/include  \
+		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl  \
+		  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
 		  -I$(top_builddir)          -I$(top_srcdir)
 
 hadir		= $(sysconfdir)/ha.d
@@ -61,11 +61,11 @@ halib_PROGRAMS	= cib
 #noinst_HEADERS		= config.h control.h crmd.h
 noinst_HEADERS		= cibio.h  cibmessages.h   cibprimatives.h
 
-libcib_la_SOURCES	= cibio.c cibprimatives.c cibmessages.c cib.c
+libcib_la_SOURCES	= io.c primatives.c messages.c cib.c
 libcib_la_LDFLAGS	= -version-info 0:0:0
 libcib_la_CFLAGS	= -I$(top_builddir)
 
-cib_SOURCES		= cibmain.c
+cib_SOURCES		= main.c
 cib_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cib_LDFLAGS		= $(XML_LIBS)
 cib_LDADD		= $(COMMONLIBS) libcib.la

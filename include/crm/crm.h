@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.21 2004/08/30 03:17:40 msoffen Exp $ */
+/* $Id: crm.h,v 1.22 2004/09/14 05:54:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -159,8 +159,18 @@ typedef GList* GListPtr;
 		x;						\
 	}
 
+#define crm_xml_crit(x,y)    print_xml_formatted(LOG_CRIT,   __FUNCTION__, x,y)
+#define crm_xml_err(x,y)     print_xml_formatted(LOG_ERR,    __FUNCTION__, x,y)
+#define crm_xml_warn(x,y)    print_xml_formatted(LOG_WARNING,__FUNCTION__, x,y)
+#define crm_xml_notice(x,y)  print_xml_formatted(LOG_NOTICE, __FUNCTION__, x,y)
+#define crm_xml_info(x,y)    print_xml_formatted(LOG_INFO,   __FUNCTION__, x,y)
+#define crm_xml_debug(x,y)   print_xml_formatted(LOG_DEBUG,  __FUNCTION__, x,y)
+#define crm_xml_devel(x,y)   print_xml_formatted(LOG_DEV,    __FUNCTION__, x,y)
+#define crm_xml_verbose(x,y) print_xml_formatted(LOG_VERBOSE,__FUNCTION__, x,y)
+#define crm_xml_trace(x,y)   print_xml_formatted(LOG_TRACE,  __FUNCTION__, x,y)
+
 #define crm_malloc(x) malloc(x)
-#define crm_free(x)   if(x) { free(x); x=NULL; }
 #define crm_strdup(x) strdup(x)
+#define crm_free(x)   if(x) { free(x); x=NULL; }
 
 #endif

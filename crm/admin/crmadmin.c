@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.5 2004/08/30 03:17:37 msoffen Exp $ */
+/* $Id: crmadmin.c,v 1.6 2004/09/14 05:54:42 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -124,6 +124,16 @@ main(int argc, char **argv)
 		{0, 0, 0, 0}
 	};
 
+	/* Redirect messages from glib functions to our handler */
+	g_log_set_handler(NULL,
+			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
+			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
+			  | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
+			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
+			  cl_glib_msg_handler, NULL);
+	/* and for good measure... */
+	g_log_set_always_fatal((GLogLevelFlags)0);    
+	
 	crm_system_name = basename(argv[0]);
 	cl_log_set_entity(crm_system_name);
 	cl_log_set_facility(LOG_USER);
@@ -627,7 +637,7 @@ do_find_resource(const char *rsc, xmlNodePtr xml_node)
 			const char *last_op =
 				xmlGetProp(rscstates,XML_LRM_ATTR_LASTOP);
 			const char *op_code =
-				xmlGetProp(rscstates,XML_LRM_ATTR_OPCODE);
+				xmlGetProp(rscstates,XML_LRM_ATTR_OPSTATUS);
 
 			rscstates = rscstates->next;
 			

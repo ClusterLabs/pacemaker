@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.11 2004/09/04 10:41:55 andrew Exp $ */
+/* $Id: xml.c,v 1.12 2004/09/14 05:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -552,7 +552,7 @@ file2xml(FILE *input)
 	xmlBufferFree(xml_buffer);
 	xml_object = xmlDocGetRootElement(doc);
 
-	print_xml_formatted(xml_object, "Created fragment");
+	crm_xml_devel(xml_object, "Created fragment");
 
 	return xml_object;
 }
@@ -632,10 +632,14 @@ dump_xml_formatted(xmlNodePtr an_xml_node) {
 		foo = xmlNewDoc("1.0");
 		xmlDocSetRootElement(foo, xml_node);
 		xmlSetTreeDoc(xml_node, foo);
+		crm_trace("Doc pointer set for %s", xml_node->name);
 	}
 
+	crm_trace("Initializing Parser");
 	xmlInitParser();
+	crm_trace("Dumping data");
 	xmlDocDumpFormatMemory(xml_node->doc, &buffer, &len,1);
+	crm_trace("Cleaning up parser");
 	xmlCleanupParser();
 	
 	free_xml(xml_node);
@@ -644,22 +648,58 @@ dump_xml_formatted(xmlNodePtr an_xml_node) {
 }
 
 void
-print_xml_formatted(xmlNodePtr msg, const char *text)
+print_xml_formatted (int log_level, const char *function,
+		     xmlNodePtr msg, const char *text)
 {
 	char *msg_buffer;
 
 	if(msg == NULL) {
-		crm_verbose("%s: %s",
-		   text==NULL?"<null>":text,"<null>");
-		
+		do_crm_log(log_level, function, "%s: %s",
+			   text==NULL?"<null>":text, "<null>");
 		return;
 	}
 	
 	msg_buffer = dump_xml_formatted(msg);
-	crm_verbose("%s: %s",
+	do_crm_log(log_level, function, "%s: %s",
 		   text==NULL?"<null>":text,
 		   msg_buffer==NULL?"<null>":msg_buffer);
 	crm_free(msg_buffer);
 
 	return;
+}
+
+char *
+dump_xml_unformatted(xmlNodePtr an_xml_node) {
+	int len = 0;
+	xmlBufferPtr xml_buffer;
+	xmlChar *buffer = NULL;
+
+	if (an_xml_node == NULL) {
+		return NULL;
+	}
+
+	crm_trace("Initializing Parser");
+	xmlInitParser();
+	crm_trace("Dumping data");
+	
+	xml_buffer = xmlBufferCreate();
+	len = xmlNodeDump(xml_buffer, an_xml_node->doc, an_xml_node, 0, 0);
+	
+	if(len < 0) {
+		crm_err("Error dumping xml");
+		xmlBufferFree(xml_buffer);
+		return NULL;
+	}
+	
+	buffer = (xmlChar*)crm_strdup(xmlBufferContent(xml_buffer)); 
+	xmlBufferFree(xml_buffer);
+
+	if (!buffer) {
+		crm_err("memory allocation failed");
+	}
+
+	crm_trace("Cleaning up parser");
+	xmlCleanupParser();
+
+	return buffer;
 }

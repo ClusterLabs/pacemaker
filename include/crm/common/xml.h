@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.4 2004/09/04 10:40:10 andrew Exp $ */
+/* $Id: xml.h,v 1.5 2004/09/14 05:54:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -179,14 +179,17 @@ extern xmlNodePtr set_xml_attr(xmlNodePtr parent,
 extern int write_xml_file(xmlNodePtr xml_node, const char *filename);
 
 extern char *dump_xml_formatted(xmlNodePtr msg);
+extern char *dump_xml_unformatted(xmlNodePtr msg);
 
-extern void print_xml_formatted(xmlNodePtr an_xml_node, const char *text);
+extern void print_xml_formatted(int log_level, const char *function, xmlNodePtr an_xml_node, const char *text);
 
 #define xml_child_iter(a,b,c,d) if(a != NULL) {			\
 		xmlNodePtr b = a->children;				\
 		while(b != NULL) {					\
 			if(c == NULL || safe_str_eq(c, b->name)) {	\
 				d;					\
+			} else {					\
+				crm_trace("Skipping <%s../>", b->name);	\
 			}						\
 			b=b->next;					\
 		}							\

@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.13 2004/09/04 10:40:10 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.14 2004/09/14 05:54:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -128,8 +128,8 @@
 #define XML_LRM_ATTR_RSCSTATE		"rsc_state"
 #define XML_LRM_ATTR_RSCID		"rsc_id"
 #define XML_LRM_ATTR_LASTOP		"last_op"
-#define XML_LRM_ATTR_OPCODE		"op_status"
-#define XML_LRM_ATTR_RCCODE		"rc_code"
+#define XML_LRM_ATTR_OPSTATUS		"op_status"
+#define XML_LRM_ATTR_RC		"rc_code"
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
 #define XML_NVPAIR_ATTR_VALUE        	"value"

@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.43 2004/09/06 08:18:25 andrew Exp $ */
+/* $Id: pengine.c,v 1.44 2004/09/14 05:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -209,7 +209,7 @@ do_calculations(xmlNodePtr cib_object)
 		);
 
 	crm_verbose("=#=#=#=#= Stage 8 =#=#=#=#=");
-	stage8(action_sets, &graph);
+	stage8(actions, &graph);
 
 	crm_verbose("=#=#=#=#= Cleanup =#=#=#=#=");
 

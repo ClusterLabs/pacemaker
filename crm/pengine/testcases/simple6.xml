@@ -11,7 +11,7 @@
      <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
   </resources>
   <constraints>
-      <rsc_to_rsc id="not_same_1" from="rsc1" to="rsc2" type="placement" strength="must_not"/>    
+      <rsc_dependancy id="not_same_1" from="rsc1" to="rsc2" type="must_not"/>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" result="can"/>
       </rsc_location>

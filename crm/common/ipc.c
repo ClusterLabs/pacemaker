@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.6 2004/09/04 10:41:55 andrew Exp $ */
+/* $Id: ipc.c,v 1.7 2004/09/14 05:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -62,10 +62,9 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 	gboolean res;
 	
 
-	xml_message = dump_xml_formatted(msg);
+	xml_message = dump_xml_unformatted(msg);
 	
-	cib_dump =
-		create_simple_message(xml_message, ipc_client);
+	cib_dump = create_simple_message(xml_message, ipc_client);
 	res = send_ipc_message(ipc_client, cib_dump);
 	crm_free(xml_message);
 
@@ -229,18 +228,16 @@ init_client_ipc_comms(const char *child,
 		return NULL;
 	}
 
-	if(callback_data == NULL)
+	if(callback_data == NULL) {
 		callback_data = ch;
-
+	}
+	
 	ch->ops->set_recv_qlen(ch, 100);
 	ch->ops->set_send_qlen(ch, 100);
 
-	the_source = G_main_add_IPC_Channel(G_PRIORITY_LOW,
-					    ch,
-					    FALSE, 
-					    dispatch,
-					    callback_data, 
-					    default_ipc_input_destroy);
+	the_source = G_main_add_IPC_Channel(
+		G_PRIORITY_LOW, ch, FALSE, dispatch, callback_data, 
+		default_ipc_input_destroy);
 
 	crm_debug("Processing of %s complete", commpath);
 
@@ -308,9 +305,6 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 	const char *sys_to;
 	const char *type;
 
-	
-	
-
 	while(sender->ops->is_message_pending(sender)) {
 		if (sender->ch_status == IPC_DISCONNECT) {
 			/* The message which was pending for us is that
@@ -327,7 +321,6 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 		}
 
 		lpc++;
-
 
 		buffer = (char*)msg->msg_body;
 		root_xml_node = string2xml(buffer);

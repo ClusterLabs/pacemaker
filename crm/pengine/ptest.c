@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.32 2004/09/06 08:18:26 andrew Exp $ */
+/* $Id: ptest.c,v 1.33 2004/09/14 05:54:43 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -48,7 +48,6 @@ main(int argc, char **argv)
 {
 	xmlNodePtr cib_object = NULL;
 	int lpc = 0;
-	int lpc2 = 0;
 	int argerr = 0;
 	int flag;
 		
@@ -211,21 +210,6 @@ main(int argc, char **argv)
 		   print_action("\t", action, TRUE);
 		);
 
-	crm_debug("========= Action Sets =========");
-
-	crm_debug("\t========= Set %d (Un-runnable) =========", -1);
-	slist_iter(action, action_t, actions, lpc,
-		   if(action->optional == FALSE && action->runnable == FALSE) {
-			   print_action("\t", action, TRUE);
-		   }
-		);
-
-	slist_iter(action_set, GList, action_sets, lpc,
-		   crm_debug("\t========= Set %d =========", lpc);
-		   slist_iter(action, action_t, action_set, lpc2,
-			      print_action("\t", action, TRUE)));
-
-	
 	crm_debug("========= Stonith List =========");
 	slist_iter(node, node_t, stonith_list, lpc,
 		   print_node(NULL, node, FALSE));
@@ -235,7 +219,7 @@ main(int argc, char **argv)
 		   print_node(NULL, node, FALSE));
 
 	crm_debug("=#=#=#=#= Stage 8 =#=#=#=#=");
-	stage8(action_sets, &graph);
+	stage8(actions, &graph);
 
 
 	crm_verbose("deleting node cons");

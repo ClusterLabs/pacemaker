@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.13 2004/08/30 03:17:38 msoffen Exp $ */
+/* $Id: utils.c,v 1.14 2004/09/14 05:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -335,22 +335,23 @@ alter_debug(int nsig)
 	
 	switch(nsig) {
 		case DEBUG_INC:
-			crm_log_level++;
-			fprintf(stderr, "Upped log level to %d\n", crm_log_level);
-			cl_log(LOG_INFO, "Upped log level to %d\n", crm_log_level);
-			
-			if(crm_log_level > LOG_INFO) {
+			if(crm_log_level == LOG_INFO) {
 				cl_log_enable_stderr(TRUE);
+			} else {
+				crm_log_level++;
+				fprintf(stderr, "Upped log level to %d\n", crm_log_level);
+				cl_log(LOG_INFO, "Upped log level to %d\n", crm_log_level);
 			}
+			
 			break;
 
 		case DEBUG_DEC:
-			crm_log_level--;
-			fprintf(stderr, "Reduced log level to %d\n", crm_log_level);
-			cl_log(LOG_INFO, "Reduced log level to %d\n", crm_log_level);
-			
-			if(crm_log_level < LOG_DEBUG) {
-				cl_log_enable_stderr(FALSE);
+			if(crm_log_level == LOG_INFO) {
+				cl_log_enable_stderr(TRUE);
+			} else {
+				crm_log_level--;
+				fprintf(stderr, "Reduced log level to %d\n", crm_log_level);
+				cl_log(LOG_INFO, "Reduced log level to %d\n", crm_log_level);
 			}
 			break;	
 
