@@ -40,4 +40,4 @@ include_HEADERS	        = apphb.h apphb_notify.h HBauth.h HBcomm.h \
 			  recoverymgr.h
 
 SUBDIRS                 = clplumbing ocf pils saf $(CHECKPOINTD_DIR) \
-			  stonith $(LRM_DIR) $(USE_CRM_DIR)
+			  stonith fencing $(LRM_DIR) $(USE_CRM_DIR)

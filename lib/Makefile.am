@@ -56,6 +56,7 @@ SUBDIRS			=  	\
 	$(EVENTD_DIR)		\
 	$(CMS_DIR)		\
 	$(SWIG_DIR)		\
+	fencing			\
 	$(LRM_DIR)
 
 DIST_SUBDIRS		=  	\
@@ -70,4 +71,5 @@ DIST_SUBDIRS		=  	\
 	eventd			\
 	cmsclient		\
 	bindings		\
+	fencing			\
 	lrm			
