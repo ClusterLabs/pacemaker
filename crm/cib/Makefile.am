@@ -52,7 +52,7 @@ AM_CFLAGS	= @CFLAGS@ -DPIDFILE='"$(PIDFILE)"' $(CRM_DEBUG_FLAGS)
 lib_LTLIBRARIES	= libcib.la
 
 ## binary progs
-#halib_PROGRAMS	= cib
+halib_PROGRAMS	= cib
 
 
 ## SOURCES
@@ -63,11 +63,11 @@ libcib_la_SOURCES	= cibio.c cibprimatives.c cibmessages.c cib.c
 libcib_la_LDFLAGS	= -version-info 0:0:0
 libcib_la_CFLAGS	= -I$(top_builddir)
 
-#cib_SOURCES		= cibmain.c
-#cib_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-#cib_LDFLAGS		= $(XML_LIBS)
-#cib_LDADD		= $(COMMONLIBS) \
-#			  $(top_builddir)/$(CRM_DIR)/cib/libcib.la
+cib_SOURCES		= cibmain.c
+cib_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+cib_LDFLAGS		= $(XML_LIBS)
+cib_LDADD		= $(COMMONLIBS) \
+			  libcib.la
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
