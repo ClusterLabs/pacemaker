@@ -63,10 +63,11 @@ static int get_provider_list(const char* op_type, GList ** providers);
 #define MAX_PARAMETER_NUM 40
 typedef char * RA_ARGV[MAX_PARAMETER_NUM];
 
+const int MAX_LENGTH_OF_RSCNAME = 40,
+	  MAX_LENGTH_OF_OPNAME = 40;
+
 static int prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 		GHashTable * params, RA_ARGV params_argv);
-static void params_hash_to_argv(gpointer key, gpointer value,
-                                gpointer user_data);
 /* The end of internal function & data list */
 
 /* Rource agent execution plugin operations */
@@ -165,21 +166,22 @@ execra( const char * rsc_type, const char * provider, const char * op_type,
 	} while (params_argv[++index_tmp] != NULL);
 	debug_info->str[debug_info->len-1] = '\0';
 	cl_log(LOG_DEBUG, "Will execute a heartbeat RA: %s", debug_info->str);
+	cl_log(LOG_ERR, "Will execute a heartbeat RA: %s", debug_info->str);
 	g_string_free(debug_info, TRUE);
 	
-	if ( execv(ra_pathname, params_argv) < 0 ) {
-		cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
-	}
+	execv(ra_pathname, params_argv);
+	cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
 
 	switch (errno) {
 		case ENOENT:   /* No such file or directory */
 		case EISDIR:   /* Is a directory */
 			exit_value = EXECRA_NO_RA;
+			cl_log(LOG_ERR, "Cause: No such file or directory.");
 			break;
 		default:
 			exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
+			cl_log(LOG_ERR, "Cause: execv unknow error.");
         }
-        cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
         exit(exit_value);
 }
 
@@ -187,11 +189,10 @@ static int
 prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 	GHashTable * params_ht, RA_ARGV params_argv)
 {
-	/* For heartbeat scripts, no corresponding definite specification
-	 * Maybe not need this function? 	
-	 */ 
-	int tmp_len;
+	int tmp_len, index;
 	int ht_size = 0;
+	char buf_tmp[20];
+	void * value_tmp;
 
 	if (params_ht) {
 		ht_size = g_hash_table_size(params_ht);
@@ -201,19 +202,35 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 		return -1;
 	}
                                                                                         
-	tmp_len = strnlen(rsc_type, 160) + 1;
-	params_argv[0] = g_new(char, tmp_len);
-	strncpy(params_argv[0], rsc_type, tmp_len);
-
-	tmp_len = strnlen(op_type, 160) + 1;
-	params_argv[ht_size+1] = g_new(char, tmp_len);
-	strncpy(params_argv[ht_size+1], op_type, tmp_len);
-
+	tmp_len = strnlen(rsc_type, MAX_LENGTH_OF_RSCNAME);
+	params_argv[0] = g_strndup(rsc_type, tmp_len);
+	/* Add operation code as the last argument */
+	tmp_len = strnlen(op_type, MAX_LENGTH_OF_OPNAME);
+	params_argv[ht_size+1] = g_strndup(op_type, tmp_len);
+	/* Add the teminating NULL pointer */
 	params_argv[ht_size+2] = NULL;
-                                                                                        
-	if (params_ht) {
-		g_hash_table_foreach(params_ht, params_hash_to_argv, 
-					params_argv);
+
+	/* No actual arguments except op_type */
+	if (ht_size == 0) {
+		return 0;
+	}
+
+	/* Now suppose the parameter formate stored in Hashtabe is like
+	 * key="1", value="-Wl,soname=test"
+	 * Moreover, the key is supposed as a string transfered from an integer.
+	 * It may be changed in the future.
+	 */
+	for (index = 1; index <= ht_size; index++ ) {
+		snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
+		value_tmp = g_hash_table_lookup(params_ht, buf_tmp);
+		/* suppose the key is consecutive */
+		if ( value_tmp == NULL ) {
+			cl_log(LOG_ERR, "Parameter ordering error in"\
+				"prepare_cmd_parameters, raexeclsb.c");
+			cl_log(LOG_ERR, "search key=%s.", buf_tmp);
+			return -1;
+                }
+		params_argv[index] = g_strdup((char *)value_tmp);
 	}
 	return 0;
 }
@@ -233,26 +250,10 @@ get_resource_list(GList ** rsc_info)
 	return get_runnable_list(RA_PATH, rsc_info);			
 }
 
-static void
-params_hash_to_argv(gpointer key, gpointer value, gpointer user_data)
-{
-	int param_index;
-	char** ra_argv = (char** ) user_data;
-
-	if (ra_argv == NULL ) {
-		return;
-	}
-	
-	/* the parameter index start from 1 */
-	/* and start from 2 in argv array */
-	param_index = atoi( (char*) key );
-	ra_argv[param_index] = g_strdup((char*)value);
-}
-
 static char*
 get_resource_meta(const char* rsc_type,  const char* provider)
 {
-	return strdup(rsc_type);
+	return g_strndup(rsc_type, strnlen(rsc_type, MAX_LENGTH_OF_RSCNAME));
 }	
 static int
 get_provider_list(const char* op_type, GList ** providers)
@@ -260,4 +261,3 @@ get_provider_list(const char* op_type, GList ** providers)
 	*providers = NULL;
 	return 0;
 }
-
