@@ -15,6 +15,7 @@ typedef struct action_list_s
 		GSListPtr actions;
 } action_list_t;
 
+void print_state(void);
 gboolean initialize_graph(void);
 gboolean unpack_graph(xmlNodePtr xml_graph);
 gboolean extract_event(xmlNodePtr msg);
@@ -279,7 +280,7 @@ process_graph_event(const char *event_node,
 		return FALSE;
 	}
 
-	while(matched_action_list->index < matched_action_list->index_max) {
+	while(matched_action_list->index <= matched_action_list->index_max) {
 		next_action = g_slist_nth_data(matched_action_list->actions,
 					       matched_action_list->index);
 
@@ -309,17 +310,8 @@ process_graph_event(const char *event_node,
 
 	}
 	cl_log(LOG_INFO, "Transition complete...");
-	
-	// indicate to the CRMd that we're done
-	xmlNodePtr options = create_xml_node(NULL, "options");
-	set_xml_property_copy(options, XML_ATTR_OP,
-			      "te_complete");
-	
-	send_ipc_request(crm_ch, options, NULL,
-			 NULL, "dc", "tengine",
-			 NULL, NULL);
-	
-	free_xml(options);
+
+	send_success();
 	
 	return TRUE;
 }
@@ -527,8 +519,10 @@ send_abort(xmlNodePtr msg)
 {	
 	xmlNodePtr options = create_xml_node(NULL, "options");
 
+	print_state();
+	
 	CRM_DEBUG("Sending \"abort\" message");
-
+	
 	xml_message_debug(msg, "aborting on this msg");
 	
 	set_xml_property_copy(options, XML_ATTR_OP, "te_abort");
@@ -545,6 +539,8 @@ send_success(void)
 {	
 	xmlNodePtr options = create_xml_node(NULL, "options");
 
+	print_state();
+
 	CRM_DEBUG("Sending \"complete\" message");
 	
 	set_xml_property_copy(options, XML_ATTR_OP, "te_complete");
@@ -554,4 +550,25 @@ send_success(void)
 			 NULL, NULL);
 	
 	free_xml(options);
+}
+
+void
+print_state(void)
+{
+	int lpc = 0;
+	cl_log(LOG_DEBUG, "#!!#!!# Start Transitioner state");
+	if(graph == NULL) {
+		cl_log(LOG_DEBUG, "\tEmpty transition graph");
+	} else {
+		slist_iter(
+			action_list, action_list_t, graph, lpc,
+
+			cl_log(LOG_DEBUG,
+			       "\tAction set %d: %d of %d actions invoked",
+			       lpc, action_list->index,
+			       action_list->index_max);
+			);
+	}
+	
+	cl_log(LOG_DEBUG, "#!!#!!# End Transitioner state");
 }
