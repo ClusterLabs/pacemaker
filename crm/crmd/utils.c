@@ -35,6 +35,8 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+void copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy);
+
 
 gboolean
 timer_popped(gpointer data)
@@ -42,7 +44,7 @@ timer_popped(gpointer data)
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
 	crm_info("#!!#!!# Timer %s just popped!",
-	       fsa_input2string(timer->fsa_input));
+		 fsa_input2string(timer->fsa_input));
 	
 	stopTimer(timer); /* make it _not_ go off again */
 
@@ -63,19 +65,17 @@ startTimer(fsa_timer_t *timer)
 			Gmain_timeout_add(timer->period_ms,
 					  timer->callback,
 					  (void*)timer);
-/*
-		crm_verbose("#!!#!!# Started %s timer (%d)",
+		crm_trace("#!!#!!# Started %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
-*/
 	} else if(timer->period_ms < 0) {
 		crm_err("Tried to start timer %s with -ve period",
 			fsa_input2string(timer->fsa_input));
 		
 	} else {
-		crm_info("#!!#!!# Timer %s already running (%d)",
-		       fsa_input2string(timer->fsa_input),
-		       timer->source_id);
+		crm_debug("#!!#!!# Timer %s already running (%d)",
+			  fsa_input2string(timer->fsa_input),
+			  timer->source_id);
 		return FALSE;		
 	}
 	return TRUE;
@@ -86,16 +86,15 @@ gboolean
 stopTimer(fsa_timer_t *timer)
 {
 	if(((int)timer->source_id) > 0) {
-/*
-		crm_verbose("#!!#!!# Stopping %s timer (%d)",
+		crm_devel("#!!#!!# Stopping %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
-*/
 		g_source_remove(timer->source_id);
 		timer->source_id = -2;
-
+		
 	} else {
-		crm_info("#!!#!!# Timer %s already stopped (%d)",
+		timer->source_id = -2;
+		crm_debug("#!!#!!# Timer %s already stopped (%d)",
 		       fsa_input2string(timer->fsa_input),
 		       timer->source_id);
 		return FALSE;
@@ -585,9 +584,9 @@ fsa_action2string(long long action)
 void
 fsa_dump_actions(long long action, const char *text)
 {
-	if(is_set(action, A_NOTHING)) {
-		crm_debug("Action %.16llx (A_NOTHING) %s", A_NOTHING, text);
-	}
+/* 	if(action == A_NOTHING) { */
+/* 		crm_debug("Action %.16llx (A_NOTHING) %s", A_NOTHING, text); */
+/* 	} */
 	if(is_set(action, A_READCONFIG)) {
 		crm_debug("Action %.16llx (A_READCONFIG) %s", A_READCONFIG, text);
 	}
@@ -911,6 +910,7 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 {
 	int lpc = 0;
 	int size = 0;
+	int offset = 0;
 	int num_nodes = 0;
 	oc_ev_membership_t *oc_copy = NULL;
 
@@ -949,45 +949,71 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 	oc_copy->m_n_in     = oc_in->m_n_in;
 	oc_copy->m_in_idx   = oc_in->m_in_idx;
 
-	crm_debug("instace=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
-		  "new_idx=%d, old_idx=%d",
+	crm_debug("instance=%d, nodes=%d (idx=%d), new=%d (idx=%d), lost=%d (idx=%d)",
 		  oc_in->m_instance,
 		  oc_in->m_n_member,
-		  oc_in->m_n_in,
-		  oc_in->m_n_out,
 		  oc_in->m_memb_idx,
+		  oc_in->m_n_in,
 		  oc_in->m_in_idx,
+		  oc_in->m_n_out,
 		  oc_in->m_out_idx);
-	
-	for(lpc = 0; lpc < num_nodes; lpc++) {
-		crm_devel("Copying ccm node %d", lpc);
-		oc_node_t a_node      = oc_in->m_array[lpc];
-		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc]);
 
-		crm_devel("Copying ccm node %d: id=%d, born=%d, uname=%s",
-			  lpc, a_node.node_id, a_node.node_born_on,
-			  a_node.node_uname);
+	offset = oc_in->m_memb_idx;
+	for(lpc = 0; lpc < oc->m_n_member; lpc++) {
+		crm_devel("Copying ccm member node %d", lpc);
+		oc_node_t a_node      = oc_in->m_array[lpc+offset];
+		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
+		copy_ccm_node(a_node, a_node_copy);
 		
-		a_node_copy->node_id      = a_node.node_id;
-		a_node_copy->node_born_on = a_node.node_born_on;	
-		a_node_copy->node_uname   = NULL;
+	}
+
+	offset = oc_in->m_in_idx;
+	for(lpc = 0; lpc < oc->m_n_in; lpc++) {
+		crm_devel("Copying ccm new node %d", lpc);
+		oc_node_t a_node      = oc_in->m_array[lpc+offset];
+		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
+		copy_ccm_node(a_node, a_node_copy);
 		
-		if(a_node.node_uname != NULL) {
-			a_node_copy->node_uname =
-				crm_strdup(a_node.node_uname);
-		} else {
-			crm_err("Node Id %d had a NULL uname!",
-				a_node.node_id);
-		}
+	}
+
+	offset = oc_in->m_out_idx;
+	for(lpc = 0; lpc < oc->m_n_out; lpc++) {
+		crm_devel("Copying ccm lost node %d", lpc);
+		oc_node_t a_node      = oc_in->m_array[lpc+offset];
+		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
+		copy_ccm_node(a_node, a_node_copy);
 		
-		crm_devel("Copied ccm node %d: id=%d, born=%d, uname=%s",
-			  lpc, a_node_copy->node_id, a_node_copy->node_born_on,
-			  a_node_copy->node_uname);
 	}
 	
 	return oc_copy;
 }
+
+
+void
+copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy)
+{
+	crm_devel("Copying ccm node: id=%d, born=%d, uname=%s",
+		  a_node.node_id, a_node.node_born_on,
+		  a_node.node_uname);
 	
+	a_node_copy->node_id      = a_node.node_id;
+	a_node_copy->node_born_on = a_node.node_born_on;	
+	a_node_copy->node_uname   = NULL;
+	
+	if(a_node.node_uname != NULL) {
+			a_node_copy->node_uname =
+				crm_strdup(a_node.node_uname);
+	} else {
+		crm_err("Node Id %d had a NULL uname!",
+			a_node.node_id);
+	}
+	
+	crm_devel("Copied ccm node: id=%d, born=%d, uname=%s",
+		  a_node_copy->node_id, a_node_copy->node_born_on,
+		  a_node_copy->node_uname);
+}
+
+
 lrm_op_t *
 copy_lrm_op(const lrm_op_t *op)
 {
