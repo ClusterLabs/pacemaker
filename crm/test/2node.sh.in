@@ -247,6 +247,12 @@ cts_assert "Shutdown of ${test_node_2} failed."
 
 #----
 
+do_cmd remote_cmd $CRMD_USER $test_node_1 "ls -al /tmp/crm/*/core"
+cts_assert_false "Core file(s) found on $test_node_1"
+
+do_cmd remote_cmd $CRMD_USER $test_node_2 "ls -al /tmp/crm/*/core"
+cts_assert_false "Core file(s) found on $test_node_2"
+
 do_cmd remote_cmd $CRMD_USER $test_node_2 killall -9 crmd
 
 echo "test: PASSED"
