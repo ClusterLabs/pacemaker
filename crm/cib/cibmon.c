@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.16 2005/02/23 12:24:06 andrew Exp $ */
+/* $Id: cibmon.c,v 1.17 2005/03/11 13:58:19 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -315,9 +315,6 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	id       = cl_get_string(msg, F_CIB_OBJID);
 	type     = cl_get_string(msg, F_CIB_OBJTYPE);
 
-	update     = get_message_xml(msg, F_CIB_UPDATE);
-	pre_update = get_message_xml(msg, F_CIB_EXISTING);
-
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 
 	update_depth++;
@@ -327,6 +324,9 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 		crm_trace("[%s] Ignoring intermediate update", event);
 		return;
 	}
+
+	update     = get_message_xml(msg, F_CIB_UPDATE);
+	pre_update = get_message_xml(msg, F_CIB_EXISTING);
 
 	if(update != NULL) {
 		crm_devel(UPDATE_PREFIX"[%s] Performing %s on <%s%s%s>",
@@ -341,6 +341,9 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 
 	print_xml_formatted(LOG_DEV,  UPDATE_PREFIX,
 			    pre_update, "Existing Object");
+
+	free_xml(update);
+	free_xml(pre_update);
 }
 
 
@@ -365,10 +368,6 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	id       = cl_get_string(msg, F_CIB_OBJID);
 	type     = cl_get_string(msg, F_CIB_OBJTYPE);
 
-	update = get_message_xml(msg, F_CIB_UPDATE);
-	output = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-	generation = get_message_xml(msg, "cib_generation");
-
 	update_depth--;
 	if(last_notify_pre == FALSE 
 	   && update_depth > 0
@@ -379,6 +378,9 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 
 	last_notify_pre = FALSE;
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
+	update = get_message_xml(msg, F_CIB_UPDATE);
+	output = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+	generation = get_message_xml(msg, "cib_generation");
 	
 	if(update == NULL) {
 		if(rc == cib_ok) {
@@ -417,6 +419,9 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 			rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
 			generation, "CIB Generation");
 	}
+	free_xml(update);
+	free_xml(output);
+	free_xml(generation);
 }
 
 
