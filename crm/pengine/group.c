@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.10 2005/02/23 15:43:59 andrew Exp $ */
+/* $Id: group.c,v 1.11 2005/03/31 08:03:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -85,6 +85,9 @@ void group_unpack(resource_t *rsc)
 				group_data->first_child = new_rsc;
 			}
 			
+			rsc_colocation_new("pe_group_internal_colo", pecs_must,
+					   group_data->self, new_rsc);
+		
 			crm_devel_action(
 				print_resource("Added", new_rsc, FALSE));
 		} else {
@@ -137,10 +140,6 @@ void group_color(resource_t *rsc, GListPtr *colors)
 	}
 
  	group_data->self->fns->color(group_data->self, colors);
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		child_rsc->fns->color(child_rsc, colors);
-		);
 }
 
 void group_create_actions(resource_t *rsc)
@@ -212,9 +211,6 @@ void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 				  child_rsc,        start_rsc, NULL,
 				  pecs_startstop, ordering_constraints);
 		}
-		
-		rsc_colocation_new("pe_group_internal", pecs_must,
-				   group_data->self, child_rsc);
 		
 		last_rsc = child_rsc;
 		);
