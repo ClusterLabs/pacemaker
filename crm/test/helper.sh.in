@@ -127,6 +127,33 @@ function remote_cmd() {
     return $?;
 }
 
+function start_crmd() {
+    ha_node=$1
+    do_cmd echo "wait for HA to start"
+    crm_log_pos=$(stat -L -c %s $logfile)
+    do_cmd remote_cmd $INIT_USER $ha_node $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
+    do_cmd ${testdir}/testutils.pl -l ${logfile} -p $crm_log_pos --search -a -m 100 \
+	-s "${ha_node} ccm(.*) info: Hostname: ${ha_node}" \
+	-s "${ha_node} cib(.*) Hostname: ${ha_node}" \
+	-s "${ha_node} heartbeat(.*) info: Starting(.*)lrmd" \
+	-e "${ha_node} heartbeat(.*)Client(.*) respawning too fast"
+    cts_assert "Startup of Heartbeat on ${ha_node} failed."
+    
+#----
+    
+    do_cmd echo "Check if CRMd was started too"
+    do_cmd remote_cmd $INIT_USER $ha_node "killall -INT crmd"
+    if [ $? = 1 ]; then 
+	crm_log_pos=$(stat -L -c %s $logfile)
+	do_cmd echo "wait for CRMd to start"
+	do_cmd remote_cmd $CRMD_USER $ha_node $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
+    fi
+
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 20 \
+	-s "${ha_node} crmd(.*) info:(.*)FSA Hostname: ${ha_node}"
+    cts_assert "CRMd startup on ${ha_node} failed."
+}
+
 function is_state() {
     ret=1
     host=$1
@@ -533,9 +560,6 @@ function crm-cleanup-node() {
     ha_host=$1
     do_cmd echo Cleaning up on $ha_host
 
-# stop all running HAs
-    do_cmd remote_cmd $INIT_USER $ha_host $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
-    
 # be *very* sure everything has stopped
     do_cmd remote_cmd $INIT_USER $ha_host "killall -q9 heartbeat ccm lrmd crmd crmadmin cibadmin ha_logd stonithd cib pengine tengine"
 
@@ -561,7 +585,6 @@ function crm-cleanup-node() {
 # zero out logs, maybe
     fi
 }
-
 
 function mark_log() 
 {
