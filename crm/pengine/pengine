@@ -1,5 +1,5 @@
 #! /usr/bin/perl -Tw
-my($VERSION)=(qw$Id: pengine,v 1.1 2004/03/16 12:12:29 lars Exp $)[2];
+my($VERSION)=(qw$Id: pengine,v 1.2 2004/03/16 17:13:13 lars Exp $)[2];
 #
 # Copyright (C) 2004 Lars Marowsky-Brée
 #
@@ -39,12 +39,13 @@ use vars qw(	$ch
 		%opts
 	);
 
-$CRM_SOCKET = "/var/lib/heartbeat/crm";
+$CRM_SOCKET = "/var/lib/heartbeat/crm/crmd";
 $DEBUG = 1;
 
 #######################################################################
 
 cl_log_set_entity("pengine");
+cl_log_set_facility("6");
 
 getopts("dhvskr", \%opts);
 
@@ -96,7 +97,7 @@ sub signin {
 	
 	cl_log('notice', "Connecting to crmd...");
 
-	my $ch = heartbeat::clplumbing::ipc::channel->new($CRM_SOCKET);
+	$ch = heartbeat::clplumbing::ipc::channel->new($CRM_SOCKET);
 
 	if ($rc = $ch->initiate_connection != $IPC_OK) {
 		cl_log('err', "Connection to crmd failed with $rc");
