@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.17 2005/02/10 11:08:45 andrew Exp $ */
+/* $Id: xml.h,v 1.18 2005/02/10 15:50:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,7 +31,7 @@
 #include <ha_msg.h>
 #include <clplumbing/cl_log.h> 
 
-#define USE_LIBXML 1
+/* #define USE_LIBXML 1 */
 #define XML_PARANOIA_CHECKS 1
 
 #ifdef USE_LIBXML
