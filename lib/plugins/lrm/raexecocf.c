@@ -45,7 +45,6 @@
 # define PIL_PLUGINLICENSE	LICENSE_PUBDOM
 # define PIL_PLUGINLICENSEURL	URL_PUBDOM
 
-#ifndef COMPILE_AS_STONITH
 # define PIL_PLUGIN		ocf
 # define PIL_PLUGIN_S		"ocf"
 /* 
@@ -53,17 +52,6 @@
  * But actually or for future?
  */
 static const char * RA_PATH = OCF_RA_DIR;
-
-#else
-# define PIL_PLUGIN		stonith
-# define PIL_PLUGIN_S		"stonith"
-/* 
- * Are there multiple paths? Now according to OCF spec, the answer is 'no'.
- * But actually or for future?
- */
-static const char * RA_PATH = STONITH_RA_DIR;
-
-#endif
 
 /* The begin of exported function list */
 static int execra(const char * rsc_id,
