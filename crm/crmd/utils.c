@@ -894,6 +894,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 xmlNodePtr
 create_node_state(const char *uuid,
 		  const char *uname,
+		  const char *ha_state,
 		  const char *ccm_state,
 		  const char *crmd_state,
 		  const char *join_state,
@@ -904,6 +905,9 @@ create_node_state(const char *uuid,
 	crm_debug("Creating node state entry for %s", uname);
 	set_uuid(node_state, XML_ATTR_UUID, uname);
 	set_xml_property_copy(node_state, XML_ATTR_UNAME, uname);
+
+	set_xml_property_copy(
+		node_state, XML_CIB_ATTR_HASTATE, ha_state);
 
 	set_xml_property_copy(
 		node_state, XML_CIB_ATTR_INCCM, ccm_state);
@@ -1103,6 +1107,10 @@ copy_lrm_op(const lrm_op_t *op)
 
 	/*please notice the client needs release the memory of rsc.*/
 	op_copy->rsc = copy_lrm_rsc(op->rsc);
+	if(op_copy->rsc == NULL) {
+		crm_err("Op callback for %s did not contain a resource",
+			 op_copy->rsc_id);
+	}
 
 	return op_copy;
 }
@@ -1112,6 +1120,11 @@ lrm_rsc_t *
 copy_lrm_rsc(const lrm_rsc_t *rsc)
 {
 	lrm_rsc_t *rsc_copy = NULL;
+
+	if(rsc == NULL) {
+		return NULL;
+	}
+	
 	crm_malloc(rsc_copy, sizeof(lrm_rsc_t));
 
 	rsc_copy->id       = crm_strdup(rsc->id);

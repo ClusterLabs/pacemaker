@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.14 2004/09/14 05:54:42 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.15 2004/10/21 18:25:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -113,6 +113,7 @@
 #define XML_CIB_ATTR_EXPSTATE     	"expected"
 #define XML_CIB_ATTR_INCCM        	"in_ccm"
 #define XML_CIB_ATTR_CRMDSTATE    	"crmd"
+#define XML_CIB_ATTR_HASTATE    	"ha"
 
 #define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 #define XML_CIB_ATTR_CLEAR_SHUTDOWN 	"clear_shutdown"

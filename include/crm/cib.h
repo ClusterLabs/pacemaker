@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.5 2004/09/21 19:11:22 andrew Exp $ */
+/* $Id: cib.h,v 1.6 2004/10/21 18:25:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,7 +70,7 @@ extern char      *pluralSection(const char *a_section);
 extern const char *cib_error2string(enum cib_result);
 extern const char *cib_op2string(enum cib_op);
 
-#define create_cib_fragment(x,y) create_cib_fragment_adv(x, y, __FUNCTION__)
+#define create_cib_fragment(update,section) create_cib_fragment_adv(update, section, __FUNCTION__)
 
 
 #endif

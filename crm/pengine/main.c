@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.2 2004/09/20 14:30:20 andrew Exp $ */
+/* $Id: main.c,v 1.3 2004/10/21 18:25:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -150,7 +150,7 @@ init_start(void)
     register_pid(PID_FILE, FALSE, pengine_shutdown);
 
     crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
-				   subsystem_input_dispatch,
+				   subsystem_msg_dispatch,
 				   (void*)process_pe_message);
 
     if(crm_ch != NULL) {

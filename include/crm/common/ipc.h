@@ -1,4 +1,4 @@
-/* $Id: ipc.h,v 1.2 2004/06/07 10:20:41 andrew Exp $ */
+/* $Id: ipc.h,v 1.3 2004/10/21 18:25:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,7 +36,7 @@ typedef struct _crmd_client
 
 extern gboolean send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg);
 
-extern void default_ipc_input_destroy(gpointer user_data);
+extern void default_ipc_connection_destroy(gpointer user_data);
 
 extern xmlNodePtr find_xml_in_ipcmessage(IPC_Message *msg,
 					 gboolean do_free);
@@ -49,7 +49,7 @@ extern IPC_Channel *init_client_ipc_comms(
 	gboolean (*dispatch)(IPC_Channel* source_data, gpointer user_data),
 	crmd_client_t *user_data);
 
-extern gboolean subsystem_input_dispatch(IPC_Channel *sender, void *user_data);
+extern gboolean subsystem_msg_dispatch(IPC_Channel *sender, void *user_data);
 
 #endif
 

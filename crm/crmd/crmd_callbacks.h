@@ -21,7 +21,7 @@
 
 extern void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
 extern gboolean ccm_dispatch(int fd, gpointer user_data);
-extern void crmd_ccm_input_callback(
+extern void crmd_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data);
 
 /*
@@ -29,20 +29,24 @@ extern void crmd_ccm_input_callback(
  * Returning FALSE means "we're all done, close the connection"
  */
 
-extern gboolean crmd_ha_input_dispatch(
+extern gboolean crmd_ha_msg_dispatch(
 	IPC_Channel *channel, gpointer user_data);
-extern void crmd_ha_input_callback(
+
+extern void crmd_ha_msg_callback(
 	const struct ha_msg* msg, void* private_data);
 
-extern gboolean crmd_ipc_input_callback(
+extern gboolean crmd_ipc_msg_callback(
 	IPC_Channel *client, gpointer user_data);
 
-extern gboolean crmd_ipc_input_callback(
+extern gboolean crmd_ipc_msg_callback(
 	IPC_Channel *client, gpointer user_data);
 
 extern gboolean lrm_dispatch(int fd, gpointer user_data);
 
 extern void lrm_op_callback (lrm_op_t* op);
+
+extern void crmd_ha_status_callback(
+	const char *node, const char * status,	void* private_data);
 
 extern void crmd_client_status_callback(
 	const char * node, const char * client, const char * status, void * private);

@@ -34,26 +34,18 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-extern void crmd_ha_input_destroy(gpointer user_data);
+extern void crmd_ha_connection_destroy(gpointer user_data);
 extern gboolean stop_all_resources(void);
 
 void crm_shutdown(int nsig);
-
 IPC_WaitConnection *wait_channel_init(char daemonsocket[]);
+gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
 
 int init_server_ipc_comms(
 	const char *child,
-	gboolean (*channel_client_connect)(IPC_Channel *newclient,
-					   gpointer user_data),
-	void (*channel_input_destroy)(gpointer user_data));
-
-
-gboolean
-register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
-		 gboolean (*dispatch_method)(IPC_Channel *channel, gpointer user_data),
-		 void (*message_callback)(const struct ha_msg* msg,
-					  void* private_data),
-		 GDestroyNotify cleanup_method);
+	gboolean (*channel_client_connect)(
+		IPC_Channel *newclient, gpointer user_data),
+	void (*channel_connection_destroy)(gpointer user_data));
 
 GHashTable   *ipc_clients = NULL;
 
@@ -82,9 +74,7 @@ do_ha_control(long long action,
 		fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn);
 		
 		registered = register_with_ha(
-			fsa_cluster_conn, crm_system_name,
-			crmd_ha_input_dispatch, crmd_ha_input_callback,
-			crmd_ha_input_destroy);
+			fsa_cluster_conn, crm_system_name);
 		
 		if(registered == FALSE) {
 			return I_FAIL;
@@ -197,13 +187,6 @@ do_startup(long long action,
 	crm_info("Register PID");
 	register_pid(PID_FILE, FALSE, crm_shutdown);
 	
-	if (HA_OK != fsa_cluster_conn->llc_ops->set_cstatus_callback(
-		    fsa_cluster_conn, crmd_client_status_callback, NULL)) {
-		crm_err("Cannot set client status callback\n");
-		crm_err("REASON: %s\n",
-		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
-	}
-
 	/* Async get client status information in the cluster */
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
@@ -214,7 +197,7 @@ do_startup(long long action,
 		crm_info("Init server comms");
 		was_error = init_server_ipc_comms(
 			CRM_SYSTEM_CRMD, crmd_client_connect,
-			default_ipc_input_destroy);
+			default_ipc_connection_destroy);
 	}	
 
 	/* set up the timers */
@@ -538,7 +521,7 @@ int
 init_server_ipc_comms(
 	const char *child,
 	gboolean (*channel_client_connect)(IPC_Channel *newclient,gpointer user_data),
-	void (*channel_input_destroy)(gpointer user_data))
+	void (*channel_connection_destroy)(gpointer user_data))
 {
 	/* the clients wait channel is the other source of events.
 	 * This source delivers the clients connection events.
@@ -547,7 +530,6 @@ init_server_ipc_comms(
     
 	char    commpath[SOCKET_LEN];
 	IPC_WaitConnection *wait_ch;
-
 	
 	sprintf(commpath, WORKING_DIR "/%s", child);
 
@@ -559,7 +541,7 @@ init_server_ipc_comms(
 	
 	G_main_add_IPC_WaitConnection(
 		G_PRIORITY_LOW, wait_ch, NULL, FALSE,
-		channel_client_connect, wait_ch, channel_input_destroy);
+		channel_client_connect, wait_ch, channel_connection_destroy);
 
 	crm_debug("Listening on: %s", commpath);
 
@@ -569,26 +551,19 @@ init_server_ipc_comms(
 #define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
 
 gboolean
-register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
-		 gboolean (*dispatch_method)(IPC_Channel *channel, gpointer user_data),
-		 void (*message_callback)(const struct ha_msg* msg,
-					  void* private_data),
-		 GDestroyNotify cleanup_method)
+register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 {
 	int facility;
 	
 	if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
-	  crm_crit("cluster errmsg function unavailable");
+		crm_crit("cluster errmsg function unavailable");
 	}
+	
 	crm_info("Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
-		crm_err("Cannot sign on with heartbeat");
-		if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
-			crm_crit("cluster errmsg function unavailable");
-		} else {
-			crm_err("REASON: %s",
-				hb_cluster->llc_ops->errmsg(hb_cluster));
-		}
+
+		crm_err("Cannot sign on with heartbeat: %s",
+			hb_cluster->llc_ops->errmsg(hb_cluster));
 		return FALSE;
 	}
 
@@ -602,27 +577,38 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
   
 	crm_debug("Be informed of CRM messages");
 	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
-		    hb_cluster, T_CRM, message_callback, hb_cluster)){
+		    hb_cluster, T_CRM, crmd_ha_msg_callback, hb_cluster)){
 		
-		crm_err("Cannot set CRM message callback");
-		if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
-			crm_crit("cluster errmsg function unavailable");
-
-		} else {
-			crm_err("REASON: %s",
-				hb_cluster->llc_ops->errmsg(hb_cluster));
-		}
+		crm_err("Cannot set msg callback: %s",
+			hb_cluster->llc_ops->errmsg(hb_cluster));
 		return FALSE;
 	}
+
+#if 0
+	crm_debug("Be informed of Node Status changes");
+	if (HA_OK != hb_cluster->llc_ops->set_nstatus_callback(
+		    hb_cluster, crmd_ha_status_callback, hb_cluster)){
+		
+		crm_err("Cannot set nstatus callback: %s",
+			hb_cluster->llc_ops->errmsg(hb_cluster));
+		return FALSE;
+	}
+#endif
 	
-	G_main_add_IPC_Channel(G_PRIORITY_HIGH, 
-			       hb_cluster->llc_ops->ipcchan(hb_cluster),
-			       FALSE,  dispatch_method,  hb_cluster /* userdata  */,  
-			       cleanup_method);
-/* 	G_main_add_fd(G_PRIORITY_HIGH,  */
-/* 		      hb_cluster->llc_ops->inputfd(hb_cluster), */
-/* 		      FALSE,  dispatch_method,  hb_cluster /\* userdata  *\/,   */
-/* 		      cleanup_method); */
+	crm_debug("Be informed of CRM Client Status changes");
+	if (HA_OK != hb_cluster->llc_ops->set_cstatus_callback(
+		    hb_cluster, crmd_client_status_callback, hb_cluster)) {
+
+		crm_err("Cannot set cstatus callback: %s\n",
+			hb_cluster->llc_ops->errmsg(hb_cluster));
+		return FALSE;
+	}
+
+	crm_debug("Adding channel to mainloop");
+	G_main_add_IPC_Channel(
+		G_PRIORITY_HIGH, hb_cluster->llc_ops->ipcchan(hb_cluster),
+		FALSE, crmd_ha_msg_dispatch, hb_cluster /* userdata  */,  
+		crmd_ha_connection_destroy);
 
 	crm_debug("Finding our node name");
 	if ((fsa_our_uname =

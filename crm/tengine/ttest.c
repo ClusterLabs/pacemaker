@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.11 2004/09/14 05:54:44 andrew Exp $ */
+/* $Id: ttest.c,v 1.12 2004/10/21 18:25:43 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -127,9 +127,9 @@ main(int argc, char **argv)
 
 	G_main_add_IPC_Channel(G_PRIORITY_LOW,
 			       channels[1], FALSE,
-			       subsystem_input_dispatch,
+			       subsystem_msg_dispatch,
 			       (void*)process_te_message, 
-			       default_ipc_input_destroy);
+			       default_ipc_connection_destroy);
 
 	crm_trace("Initializing graph...");
 	initialize_graph();

@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.10 2004/09/29 08:46:01 andrew Exp $ */
+/* $Id: ipc.c,v 1.11 2004/10/21 18:25:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -183,7 +183,7 @@ find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free)
 
 
 void
-default_ipc_input_destroy(gpointer user_data)
+default_ipc_connection_destroy(gpointer user_data)
 {
 	
 	return;
@@ -240,7 +240,7 @@ init_client_ipc_comms(const char *child,
 
 	the_source = G_main_add_IPC_Channel(
 		G_PRIORITY_LOW, ch, FALSE, dispatch, callback_data, 
-		default_ipc_input_destroy);
+		default_ipc_connection_destroy);
 
 	crm_debug("Processing of %s complete", commpath);
 
@@ -298,7 +298,7 @@ send_ipc_reply(IPC_Channel *ipc_channel,
 
 
 gboolean
-subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
+subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 {
 	int lpc = 0;
 	char *buffer = NULL;

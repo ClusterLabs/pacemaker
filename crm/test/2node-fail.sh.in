@@ -37,8 +37,8 @@ function 2node_fail_test() {
 #----
 
     echo -ne "\033]0;$test_type: Iteration $iteration of $repeats\007"
-    do_cmd echo "$test_type: Iteration $iteration of $repeats"
     do_cmd echo "#############################"
+    do_cmd echo "$test_type: Iteration $iteration of $repeats"
     do_cmd echo "wait for HA to start on ${test_node_1}"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &

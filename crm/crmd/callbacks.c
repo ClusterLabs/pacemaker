@@ -39,10 +39,10 @@ FILE *msg_in_strm = NULL;
 FILE *msg_ipc_strm = NULL;
 
 xmlNodePtr find_xml_in_hamessage(const struct ha_msg* msg);
-void crmd_ha_input_destroy(gpointer user_data);
+void crmd_ha_connection_destroy(gpointer user_data);
 
 void
-crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
+crmd_ha_msg_callback(const struct ha_msg* msg, void* private_data)
 {
 	const char *to = NULL;
 	char *xml_text = NULL;
@@ -108,7 +108,7 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
  * Returning FALSE means "we're all done, close the connection"
  */
 gboolean
-crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
+crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 {
 	int lpc = 0;
 	char *buffer = NULL;
@@ -117,7 +117,6 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	xmlNodePtr root_xml_node;
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 
-	
 	crm_verbose("Processing IPC message from %s",
 		   curr_client->table_key);
 
@@ -244,9 +243,58 @@ void
 lrm_op_callback (lrm_op_t* op)
 {
 	/* todo: free op->rsc */
+	crm_debug("received callback");
 	register_fsa_input(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
 	s_crmd_fsa(C_LRM_OP_CALLBACK);
 }
+
+void
+crmd_ha_status_callback(
+	const char *node, const char * status,	void* private_data)
+{
+	xmlNodePtr update      = NULL;
+	xmlNodePtr fragment    = NULL;
+	xmlNodePtr msg_options = NULL;
+	xmlNodePtr request     = NULL;
+
+	crm_debug("received callback");
+	crm_notice("Status update: Node %s now has status [%s]\n",node,status);
+
+	if(AM_I_DC == FALSE) {
+		crm_debug("Got nstatus callback in non-DC mode");
+		return;
+		
+	} else if(safe_str_neq(status, DEADSTATUS)) {
+		crm_debug("nstatus callback was not for a dead node");
+		return;
+	}
+
+	/* this node is taost */
+	update = create_node_state(
+		node, node, status, NULL, NULL, NULL, NULL);
+	
+	set_xml_property_copy(
+		update, XML_CIB_ATTR_CLEAR_SHUTDOWN, XML_BOOLEAN_TRUE);
+	
+	fragment = create_cib_fragment(update, NULL);
+	
+	msg_options = set_xml_attr(
+		NULL, XML_TAG_OPTIONS, XML_ATTR_OP, CRM_OP_UPDATE, TRUE);
+	
+	request = create_request(
+		msg_options, fragment, NULL,
+		CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
+	
+	crm_xml_debug(fragment, "Node status update");
+	
+	free_xml(fragment);
+	free_xml(update);
+	
+	register_fsa_input(C_CRMD_STATUS_CALLBACK, I_CIB_OP, request);
+	s_crmd_fsa(C_CRMD_STATUS_CALLBACK);
+	
+}
+
 
 void
 crmd_client_status_callback(const char * node, const char * client,
@@ -258,6 +306,8 @@ crmd_client_status_callback(const char * node, const char * client,
 	xmlNodePtr fragment = NULL;
 	xmlNodePtr msg_options = NULL;
 	xmlNodePtr request = NULL;
+
+	crm_debug("received callback");
 
 	set_bit_inplace(fsa_input_register, R_PEER_DATA);
 	
@@ -276,29 +326,31 @@ crmd_client_status_callback(const char * node, const char * client,
 
 	if(AM_I_DC == FALSE) {
 		crm_debug("Got client status callback in non-DC mode");
-
-	} else {
-		update = create_node_state(node, node, NULL, status, join, NULL);
-
-		set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
+		return;
 		
-		fragment = create_cib_fragment(update, NULL);
-
-		msg_options = set_xml_attr(
-			NULL, XML_TAG_OPTIONS, XML_ATTR_OP, CRM_OP_UPDATE, TRUE);
-		
-		request = create_request(
-			msg_options, fragment, NULL,
-			CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
-
-		crm_xml_debug(fragment, "Client status update");
-		
-		free_xml(fragment);
-		free_xml(update);
-
-		register_fsa_input(C_CRMD_STATUS_CALLBACK, I_CIB_OP, request);
-		s_crmd_fsa(C_CRMD_STATUS_CALLBACK);
 	}
+	
+	update = create_node_state(
+		node, node, NULL, NULL, status, join, NULL);
+	
+	set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
+	
+	fragment = create_cib_fragment(update, NULL);
+	
+	msg_options = set_xml_attr(
+		NULL, XML_TAG_OPTIONS, XML_ATTR_OP, CRM_OP_UPDATE, TRUE);
+	
+	request = create_request(
+		msg_options, fragment, NULL,
+		CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
+	
+	crm_xml_debug(fragment, "Client status update");
+	
+	free_xml(fragment);
+	free_xml(update);
+	
+	register_fsa_input(C_CRMD_STATUS_CALLBACK, I_CIB_OP, request);
+	s_crmd_fsa(C_CRMD_STATUS_CALLBACK);
 }
 
 
@@ -351,25 +403,33 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 gboolean lrm_dispatch(int fd, gpointer user_data)
 {
 	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
+	crm_debug("received callback");
 	lrm->lrm_ops->rcvmsg(lrm, FALSE);
 	return TRUE;
 }
 
-#define MAX_EMPTY_CALLBACKS 20
-int empty_callbacks = 0;
+/* #define MAX_EMPTY_CALLBACKS 20 */
+/* int empty_callbacks = 0; */
 
 gboolean
-crmd_ha_input_dispatch(IPC_Channel *channel, gpointer user_data)
+crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 {
 	int lpc = 0;
 	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
-    
+
+#if 1
 	while(hb_cluster->llc_ops->msgready(hb_cluster)) {
-		lpc++;
-		empty_callbacks = 0;
+ 		lpc++; 
 		/* invoke the callbacks but dont block */
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
+/* 		empty_callbacks = 0; */
 	}
+#else
+	while(hb_cluster->llc_ops->rcvmsg(hb_cluster, 0)) {
+ 		lpc++; 
+	}
+#endif
+	crm_trace("%d HA messages dispatched", lpc);
 
 	if (channel && (channel->ch_status == IPC_DISCONNECT)) {
 		crm_crit("Lost connection to heartbeat service.");
@@ -397,7 +457,7 @@ crmd_ha_input_dispatch(IPC_Channel *channel, gpointer user_data)
 }
 
 void
-crmd_ha_input_destroy(gpointer user_data)
+crmd_ha_connection_destroy(gpointer user_data)
 {
 	crm_crit("Heartbeat has left us");
 	/* this is always an error */
@@ -436,8 +496,8 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 		blank_client->client_source =
 			G_main_add_IPC_Channel(
 				G_PRIORITY_LOW, client_channel,
-				FALSE,  crmd_ipc_input_callback,
-				blank_client, default_ipc_input_destroy);
+				FALSE,  crmd_ipc_msg_callback,
+				blank_client, default_ipc_connection_destroy);
 	}
     
 	return TRUE;
@@ -447,16 +507,18 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 gboolean ccm_dispatch(int fd, gpointer user_data)
 {
 	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
+	crm_debug("received callback");	
 	oc_ev_handle_event(ccm_token);
 	return TRUE;
 }
 
 
 void 
-crmd_ccm_input_callback(
+crmd_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
 	struct crmd_ccm_data_s *event_data = NULL;
+	crm_debug("received callback");
 	
 	if(data != NULL) {
 		set_bit_inplace(fsa_input_register, R_CCM_DATA);

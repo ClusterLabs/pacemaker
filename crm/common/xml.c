@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.18 2004/10/08 17:56:49 andrew Exp $ */
+/* $Id: xml.c,v 1.19 2004/10/21 18:25:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -367,7 +367,6 @@ unlink_xml_node(xmlNodePtr node)
 void
 free_xml(xmlNodePtr a_node)
 {
-	
         if(a_node == NULL) {
 		; /*  nothing to do */
 	} else if (a_node->doc != NULL) {

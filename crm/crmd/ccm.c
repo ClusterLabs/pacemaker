@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.40 2004/10/21 17:30:12 andrew Exp $ */
+/* $Id: ccm.c,v 1.41 2004/10/21 18:25:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,7 +42,7 @@ int register_with_ccm(ll_cluster_t *hb_cluster);
 
 void msg_ccm_join(const struct ha_msg *msg, void *foo);
 
-void crmd_ccm_input_callback(oc_ed_t event,
+void crmd_ccm_msg_callback(oc_ed_t event,
 			     void *cookie,
 			     size_t size,
 			     const void *data);
@@ -77,7 +77,7 @@ do_ccm_control(long long action,
 		
 		crm_info("Setting up CCM callbacks");
 		oc_ev_set_callback(fsa_ev_token, OC_EV_MEMB_CLASS,
-				   crmd_ccm_input_callback,
+				   crmd_ccm_msg_callback,
 				   NULL);
 
 		oc_ev_special(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
@@ -106,7 +106,7 @@ do_ccm_control(long long action,
 /* GFDSource* */
 		G_main_add_fd(G_PRIORITY_LOW, fsa_ev_fd, FALSE, ccm_dispatch,
 			      fsa_ev_token,
-			      default_ipc_input_destroy);
+			      default_ipc_connection_destroy);
 		
 	}
 
@@ -192,7 +192,7 @@ do_ccm_event(long long action,
 			}
 			
 			node_state = create_node_state(
-				NULL, uname,
+				NULL, uname, NULL,
 				XML_BOOLEAN_NO, NULL, NULL, NULL);
 			
 			fragment = create_cib_fragment(node_state, NULL);
@@ -627,7 +627,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	} 
 
 	tmp1 = create_node_state(node_uname, node_uname,
-				 data->state, NULL, state, NULL);
+				 NULL, data->state, NULL, state, NULL);
 
 	if(data->updates == NULL) {
 		crm_verbose("Creating first update");

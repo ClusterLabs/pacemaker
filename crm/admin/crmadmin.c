@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.11 2004/10/20 13:46:54 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.12 2004/10/21 18:25:42 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -764,9 +764,11 @@ is_node_online(xmlNodePtr node_state)
 	const char *uname      = xmlGetProp(node_state,XML_ATTR_UNAME);
 	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
+	const char *ha_state  = xmlGetProp(node_state,XML_CIB_ATTR_HASTATE);
 	const char *ccm_state  = xmlGetProp(node_state,XML_CIB_ATTR_INCCM);
 
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
+	   && safe_str_eq(ha_state, ACTIVESTATUS)
 	   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
 	   && safe_str_eq(crm_state, ONLINESTATUS)) {
 		crm_debug("Node %s is online", uname);

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.36 2004/10/20 13:54:02 andrew Exp $ */
+/* $Id: unpack.c,v 1.37 2004/10/21 18:25:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -528,11 +528,13 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
 	const char *ccm_state  = xmlGetProp(node_state,XML_CIB_ATTR_INCCM);
+	const char *ha_state   = xmlGetProp(node_state,XML_CIB_ATTR_HASTATE);
 	const char *shutdown   = xmlGetProp(node_state,XML_CIB_ATTR_SHUTDOWN);
 	const char *unclean    = NULL;/*xmlGetProp(node_state,XML_CIB_ATTR_STONITH); */
 	
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
 	   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
+	   && safe_str_eq(ha_state, ACTIVESTATUS)
 	   && safe_str_eq(crm_state, ONLINESTATUS)
 	   && shutdown == NULL) {
 		if(this_node != NULL) {
@@ -582,6 +584,7 @@ is_node_unclean(xmlNodePtr node_state)
 	const char *exp_state  = xmlGetProp(node_state,XML_CIB_ATTR_EXPSTATE);
 	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
+	const char *ha_state  = xmlGetProp(node_state,XML_CIB_ATTR_HASTATE);
 	const char *ccm_state  = xmlGetProp(node_state,XML_CIB_ATTR_INCCM);
 
 	if(safe_str_eq(exp_state, CRMD_STATE_INACTIVE)) {
@@ -592,13 +595,14 @@ is_node_unclean(xmlNodePtr node_state)
 	} else if(safe_str_neq(exp_state, CRMD_JOINSTATE_DOWN)) {
 
 		if(safe_str_eq(crm_state, OFFLINESTATUS)
+		   || safe_str_eq(ha_state, DEADSTATUS)
 		   || safe_str_eq(join_state, CRMD_JOINSTATE_DOWN)
 		   || safe_str_eq(ccm_state, XML_BOOLEAN_NO)) {
 			crm_warn("Node %s is un-expectedly down", uname);
 			return TRUE;
 		}
-		crm_debug("Node %s: join=%s, crm=%s, ccm=%s",
-			  uname, join_state, crm_state, ccm_state);
+		crm_debug("Node %s: ha=%s, join=%s, crm=%s, ccm=%s",
+			  uname, ha_state, join_state, crm_state, ccm_state);
 	} else {
 		crm_debug("Node %s was expected to be down", uname);
 	}

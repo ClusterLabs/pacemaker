@@ -385,12 +385,6 @@ function do_cmd() {
 		echo -n -e "\033[00m"
 	    fi
 
-    elif [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
-	$cmdline
-	rc=$?
-	# for the logs...
-	$cmdline -v 2>&1 >> $test_dump_dir/test.txt
-
     elif [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
 	$cmdline 2>&1 >> $test_dump_dir/test.txt
 	rc=$?
@@ -406,6 +400,12 @@ function do_cmd() {
     else
 	$cmdline 2>&1 >> $test_dump_dir/test.txt
 	rc=$?
+    fi
+
+    if [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
+	# for the logs...
+	$cmdline -v 2>&1 >> $test_dump_dir/test.txt
+
     fi
 
     OUTPUT_STDOUT=$old_OUTPUT_STDOUT

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1 2004/09/15 09:16:55 andrew Exp $ */
+/* $Id: main.c,v 1.2 2004/10/21 18:25:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -173,7 +173,7 @@ init_start(void)
 	}
 	
 	crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
-				       subsystem_input_dispatch,
+				       subsystem_msg_dispatch,
 				       (void*)process_maincib_message);
 
 	if(crm_ch != NULL) {

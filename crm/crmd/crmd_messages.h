@@ -48,10 +48,10 @@ gboolean have_wait_message(void);
 extern gboolean relay_message(xmlNodePtr xml_relay_message,
 		       gboolean originated_locally);
 
-extern void crmd_ha_input_callback(const struct ha_msg* msg,
+extern void crmd_ha_msg_callback(const struct ha_msg* msg,
 				   void* private_data);
 
-extern gboolean crmd_ipc_input_callback(IPC_Channel *client,
+extern gboolean crmd_ipc_msg_callback(IPC_Channel *client,
 					gpointer user_data);
 
 extern void process_message(xmlNodePtr root_xml_node,

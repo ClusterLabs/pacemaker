@@ -35,6 +35,8 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 
+#include <lrm/raexec.h>
+
 #include <crm/dmalloc_wrapper.h>
 
 gboolean stop_all_resources(void);
@@ -131,7 +133,7 @@ do_lrm_control(long long action,
 			      fsa_lrm_conn->lrm_ops->inputfd(fsa_lrm_conn),
 			      FALSE,
 			      lrm_dispatch, fsa_lrm_conn,
-			      default_ipc_input_destroy);
+			      default_ipc_connection_destroy);
 
 		set_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
 		
@@ -522,7 +524,7 @@ do_lrm_rsc_op(
 	}	
 
 	op_result = rsc->ops->perform_op(rsc, op);
-	if(op_result != HA_OK) {
+	if(op_result != EXECRA_OK) {
 		crm_err("Operation %s on %s failed with code: %d",
 			operation, rid, op_result);
 		return I_FAIL;

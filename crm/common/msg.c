@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.7 2004/09/17 13:03:09 andrew Exp $ */
+/* $Id: msg.c,v 1.8 2004/10/21 18:25:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -267,8 +267,6 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 {
 	const char *true_from = sys_from;
 	xmlNodePtr request;
-
-	
 
 	if (uuid_from != NULL)
 		true_from = generate_hash_key(sys_from, uuid_from);
