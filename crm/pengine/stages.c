@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.33 2005/02/01 22:46:41 andrew Exp $ */
+/* $Id: stages.c,v 1.34 2005/02/02 21:56:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -278,6 +278,8 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 			
 			set_xml_property_copy(stonith_op->args,
 					      "target", node->details->uname);
+			set_xml_property_copy(stonith_op->args,
+					      "target_uuid", node->details->id);
 			
 			if(down_op != NULL) {
 				down_op->failure_is_fatal = FALSE;
