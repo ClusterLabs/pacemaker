@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.16 2005/02/16 18:22:42 andrew Exp $ */
+/* $Id: cib.h,v 1.17 2005/02/21 13:13:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -139,6 +139,7 @@ enum cib_section {
 #define F_CIB_CALLBACK_TOKEN	"cib_callback_token"
 #define F_CIB_GLOBAL_UPDATE	"cib_update"
 #define F_CIB_UPDATE_RESULT	"cib_update_result"
+#define F_CIB_CLIENTNAME	"cib_clientname"
 
 #define T_CIB			"cib"
 #define T_CIB_NOTIFY		"cib_notify"
@@ -160,7 +161,8 @@ typedef struct cib_api_operations_s
 			const char *section, crm_data_t *data,
 			crm_data_t **output_data, int call_options);
 		
-		int (*signon) (cib_t *cib, enum cib_conn_type type);
+		int (*signon) (
+			cib_t *cib, const char *name, enum cib_conn_type type);
 		int (*signoff)(cib_t *cib);
 		int (*free) (cib_t *cib);
 

@@ -1,4 +1,4 @@
-/* $Id: callbacks.h,v 1.5 2005/01/26 13:30:55 andrew Exp $ */
+/* $Id: callbacks.h,v 1.6 2005/02/21 13:13:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,6 +40,7 @@ extern GHashTable *peer_hash;
 typedef struct cib_client_s 
 {
 		char  *id;
+		char  *name;
 		char  *callback_id;
 
 		const char  *channel_name;

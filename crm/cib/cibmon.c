@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.14 2005/02/19 18:11:03 andrew Exp $ */
+/* $Id: cibmon.c,v 1.15 2005/02/21 13:13:45 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -177,7 +177,8 @@ main(int argc, char **argv)
 		if(attempts != 0) {
 			sleep(1);
 		}
-		exit_code = the_cib->cmds->signon(the_cib, cib_query);
+		exit_code = the_cib->cmds->signon(
+			the_cib, crm_system_name, cib_query);
 
 	} while(exit_code == cib_connection && attempts++ < max_failures);
 		

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.19 2005/02/19 18:16:12 andrew Exp $ */
+/* $Id: main.c,v 1.20 2005/02/21 13:13:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -130,8 +130,8 @@ init_start(void)
 	
 	if(init_ok) {
 		crm_trace("Connecting to the CIB");
-		if(te_cib_conn->cmds->signon(
-			   te_cib_conn, cib_command) != cib_ok) {
+		if(cib_ok != te_cib_conn->cmds->signon(
+			   te_cib_conn, crm_system_name, cib_command)) {
 			init_ok = FALSE;
 		}
 	}

@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.25 2005/02/20 14:38:54 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.26 2005/02/21 13:13:44 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -426,7 +426,7 @@ do_init(void)
 	xmlInitParser(); 
 #endif
 	the_cib = cib_new();
-	rc = the_cib->cmds->signon(the_cib, cib_command);
+	rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 	if(rc != cib_ok) {
 		crm_err("Signon to CIB failed: %s",
 			cib_error2string(rc));

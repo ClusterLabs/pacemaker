@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.13 2005/02/19 18:11:03 andrew Exp $ */
+/* $Id: notify.c,v 1.14 2005/02/21 13:13:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -59,15 +59,18 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	if(client != NULL
 	   && safe_str_eq(client->channel_name, cib_channel_callback)) {
-		crm_trace("Notifying client %s of update", client->id);
+		crm_trace("Notifying client %s/%s of update",
+			  client->name, client->id);
 		
 		if(client->channel->should_send_blocking == FALSE) {
-			crm_warn("Client channel %s was not set to \"send blocking\"", client->id);
+			crm_warn("Client channel %s/%s was not set to"
+				 " \"send blocking\"", client->name,client->id);
 			client->channel->should_send_blocking = TRUE;
 		}
 		
 		if(msg2ipcchan(update_msg, client->channel) != HA_OK) {
-			crm_err("Notification of client %s failed", client->id);
+			crm_warn("Notification of client %s/%s failed",
+				client->name, client->id);
 		}
 	}
 }

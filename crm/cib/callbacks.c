@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.23 2005/02/19 18:11:03 andrew Exp $ */
+/* $Id: callbacks.c,v 1.24 2005/02/21 13:13:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -222,6 +222,8 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 	cib_client_t *hash_client = NULL;
 	const char *type = NULL;
 	const char *uuid_ticket = NULL;
+	const char *client_name = NULL;
+	gboolean register_failed = FALSE;
 
 	if(cib_client == NULL) {
 		crm_err("Discarding IPC message from unknown source"
@@ -245,18 +247,38 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 			crm_msg_del(op_request);
 			continue;
 		}
-		
-		uuid_ticket = cl_get_string(op_request, F_CIB_CALLBACK_TOKEN);
-		hash_client = g_hash_table_lookup(client_list, uuid_ticket);
 
-		if(hash_client != NULL) {
-			crm_err("Duplicate registration request... disconnecting");
+		uuid_ticket = cl_get_string(op_request, F_CIB_CALLBACK_TOKEN);
+		client_name = cl_get_string(op_request, F_CIB_CLIENTNAME);
+
+		CRM_DEV_ASSERT(uuid_ticket != NULL);
+		if(crm_assert_failed) {
+			register_failed = crm_assert_failed;
+		}
+		
+		CRM_DEV_ASSERT(client_name != NULL);
+		if(crm_assert_failed) {
+			register_failed = crm_assert_failed;
+		}
+
+		if(register_failed == FALSE) {
+			hash_client = g_hash_table_lookup(client_list, uuid_ticket);
+			if(hash_client != NULL) {
+				crm_err("Duplicate registration request..."
+					" disconnecting");
+				register_failed = TRUE;
+			}
+		}
+		
+		if(register_failed) {
+			crm_err("Registration request failed... disconnecting");
 			crm_msg_del(op_request);
 			return FALSE;
 		}
 
+		cib_client->id   = crm_strdup(uuid_ticket);
+		cib_client->name = crm_strdup(client_name);
 
-		cib_client->id = crm_strdup(uuid_ticket);
 		g_hash_table_insert(client_list, cib_client->id, cib_client);
 		crm_info("Registered %s on %s channel",
 			    cib_client->id, cib_client->channel_name);
@@ -416,7 +438,7 @@ cib_common_callback(
 			crm_log_message(LOG_ERR, op_request);
 			crm_err("Output message");
 			crm_log_message(LOG_ERR, op_reply);
-			crm_log_message_adv(LOG_ERR, DEVEL_DIR"/cib.out.log", op_reply);
+			crm_log_message_adv(LOG_ERR, "cib.out.log", op_reply);
 		}
 		
 		if(op_reply == NULL) {
@@ -722,6 +744,7 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 #if 0
 		/* todo - put this back in once i recheck its safe */
  		crm_free(cib_client->callback_id);
+  		crm_free(cib_client->name);
   		crm_free(cib_client->id);
 #endif
   		crm_free(cib_client);

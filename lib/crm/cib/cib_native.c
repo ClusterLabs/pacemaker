@@ -43,7 +43,7 @@ int cib_native_perform_op(
 	cib_t *cib, const char *op, const char *host, const char *section,
 	crm_data_t *data, crm_data_t **output_data, int call_options);
 
-int cib_native_signon(cib_t* cib, enum cib_conn_type type);
+int cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type);
 int cib_native_signoff(cib_t* cib);
 int cib_native_free(cib_t* cib);
 
@@ -89,7 +89,7 @@ cib_native_new (cib_t *cib)
 }
 
 int
-cib_native_signon(cib_t* cib, enum cib_conn_type type)
+cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 {
 	int rc = cib_ok;
 	char *uuid_ticket = NULL;
@@ -174,6 +174,7 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 		reg_msg = ha_msg_new(2);
 		ha_msg_add(reg_msg, F_CIB_OPERATION, CRM_OP_REGISTER);
 		ha_msg_add(reg_msg, F_CIB_CALLBACK_TOKEN, uuid_ticket);
+		ha_msg_add(reg_msg, F_CIB_CLIENTNAME, name);
 
 		CRM_DEV_ASSERT(native->command_channel->should_send_blocking);
 
