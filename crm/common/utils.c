@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.7 2004/07/19 14:41:19 andrew Exp $ */
+/* $Id: utils.c,v 1.8 2004/07/27 11:45:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -121,7 +121,7 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 	
 	sprintf(hash_key, "%s_%s", sys?sys:"none", crm_msg_reference);
 	hash_key[ref_len-1] = '\0';
-	crm_info("created hash key: (%s)", hash_key);
+	crm_debug("created hash key: (%s)", hash_key);
 	return hash_key;
 }
 
@@ -206,7 +206,7 @@ crm_itoa(int an_int)
 	return buffer;
 }
 
-unsigned int crm_log_level = LOG_VERBOSE;
+unsigned int crm_log_level = LOG_INFO;
 
 /* returns the old value */
 unsigned int
@@ -218,44 +218,42 @@ set_crm_log_level(unsigned int level)
 }
 
 unsigned int
-get_crm_log_level(unsigned int level)
+get_crm_log_level(void)
 {
-	int old = crm_log_level;
-	crm_log_level = level;
-	return old;
+	return crm_log_level;
 }
 
 void
 do_crm_log(int log_level, const char *function, const char *fmt, ...)
 {
+	int log_as = log_level;
 	gboolean do_log = FALSE;
 	if(log_level < LOG_INFO) {
 		do_log = TRUE;
 
-	} else {
-		if(log_level <= crm_log_level) {
-			do_log = TRUE;
-			if(log_level != LOG_INFO) {
-				log_level = LOG_DEBUG;
-			}
+	} else if(log_level <= crm_log_level) {
+		do_log = TRUE;
+		if(log_level != LOG_INFO) {
+			log_as = LOG_DEBUG;
 		}
 	}
 
 	if(do_log) {
-			va_list ap;
-			char	buf[MAXLINE];
-			int	nbytes;
-
-			buf[MAXLINE-1] = EOS;
-			va_start(ap, fmt);
-			nbytes=vsnprintf(buf, sizeof(buf)-1, fmt, ap);
-			va_end(ap);
-
-			if(function == NULL) {
-				cl_log(log_level, "%s", buf);
-			} else {
-				cl_log(log_level, "(%s) %s", function, buf);
-			}
+		va_list ap;
+		char	buf[MAXLINE];
+		int	nbytes;
+		
+		memset(buf, EOS, sizeof(buf)-1);
+		//			buf[MAXLINE-1] = EOS;
+		va_start(ap, fmt);
+		nbytes=vsnprintf(buf, sizeof(buf)-1, fmt, ap);
+		va_end(ap);
+		
+		if(function == NULL) {
+			cl_log(log_as, "[%d] %s", log_level, buf);
+		} else {
+			cl_log(log_as, "(%s [%d]) %s", function,log_level,buf);
+		}
 	}
 }
 
