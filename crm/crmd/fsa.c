@@ -55,6 +55,8 @@ long long clear_flags(long long actions,
 
 void dump_rsc_info(void);
 
+#define DOT_PREFIX "live.dot: "
+
 #ifdef DOT_FSA_ACTIONS
 # ifdef FSA_TRACE
 #  define IF_FSA_ACTION(x,y)						\
@@ -72,10 +74,9 @@ void dump_rsc_info(void);
 			    fsa_input2string(next_input));		\
 	   }								\
 	   if((x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT ){ \
-		   fprintf(dot_strm, "\t// %s\n",			\
+		   crm_debug(DOT_PREFIX"\t// %s\n",			\
 			   fsa_action2string(x));			\
 	   }								\
-	   fflush(dot_strm);						\
    }
 # else
 #  define IF_FSA_ACTION(x,y)						\
@@ -84,8 +85,8 @@ void dump_rsc_info(void);
 	   fsa_actions = clear_bit(fsa_actions, x);			\
 	   next_input = y(x, cause, cur_state, last_input, fsa_data);	\
 	   if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT ) \
-		   fprintf(dot_strm, "\t// %s\n", fsa_action2string(x)); \
-	   fflush(dot_strm);						\
+		   crm_debug(DOT_PREFIX"\t// %s\n",			\
+			   fsa_action2string(x));			\
    }
 # endif
 #else
@@ -116,50 +117,53 @@ void dump_rsc_info(void);
 #endif
 
 /* #define ELSEIF_FSA_ACTION(x,y) else IF_FSA_ACTION(x,y) */
+void init_dotfile(void);
 
-const char *dot_intro = "digraph \"g\" {\n"
-"	size = \"30,30\"\n"
-"	graph [\n"
-"		fontsize = \"12\"\n"
-"		fontname = \"Times-Roman\"\n"
-"		fontcolor = \"black\"\n"
-"		bb = \"0,0,398.922306,478.927856\"\n"
-"		color = \"black\"\n"
-"	]\n"
-"	node [\n"
-"		fontsize = \"12\"\n"
-"		fontname = \"Times-Roman\"\n"
-"		fontcolor = \"black\"\n"
-"		shape = \"ellipse\"\n"
-"		color = \"black\"\n"
-"	]\n"
-"	edge [\n"
-"		fontsize = \"12\"\n"
-"		fontname = \"Times-Roman\"\n"
-"		fontcolor = \"black\"\n"
-"		color = \"black\"\n"
-"	]\n"
-"// special nodes\n"
-"	\"S_PENDING\" \n"
-"	[\n"
-"	 color = \"blue\"\n"
-"	 fontcolor = \"blue\"\n"
-"	 ]\n"
-"	\"S_TERMINATE\" \n"
-"	[\n"
-"	 color = \"red\"\n"
-"	 fontcolor = \"red\"\n"
-"	 ]\n"
-"\n"
-"// DC only nodes\n"
-"	\"S_INTEGRATION\" [ fontcolor = \"green\" ]\n"
-"	\"S_POLICY_ENGINE\" [ fontcolor = \"green\" ]\n"
-"	\"S_TRANSITION_ENGINE\" [ fontcolor = \"green\" ]\n"
-"	\"S_RELEASE_DC\" [ fontcolor = \"green\" ]\n"
-"	\"S_IDLE\" [ fontcolor = \"green\" ]\n";
+void
+init_dotfile(void)
+{
+	crm_debug(DOT_PREFIX"digraph \"g\" {");
+	crm_debug(DOT_PREFIX"	size = \"30,30\"");
+	crm_debug(DOT_PREFIX"	graph [");
+	crm_debug(DOT_PREFIX"		fontsize = \"12\"");
+	crm_debug(DOT_PREFIX"		fontname = \"Times-Roman\"");
+	crm_debug(DOT_PREFIX"		fontcolor = \"black\"");
+	crm_debug(DOT_PREFIX"		bb = \"0,0,398.922306,478.927856\"");
+	crm_debug(DOT_PREFIX"		color = \"black\"");
+	crm_debug(DOT_PREFIX"	]");
+	crm_debug(DOT_PREFIX"	node [");
+	crm_debug(DOT_PREFIX"		fontsize = \"12\"");
+	crm_debug(DOT_PREFIX"		fontname = \"Times-Roman\"");
+	crm_debug(DOT_PREFIX"		fontcolor = \"black\"");
+	crm_debug(DOT_PREFIX"		shape = \"ellipse\"");
+	crm_debug(DOT_PREFIX"		color = \"black\"");
+	crm_debug(DOT_PREFIX"	]");
+	crm_debug(DOT_PREFIX"	edge [");
+	crm_debug(DOT_PREFIX"		fontsize = \"12\"");
+	crm_debug(DOT_PREFIX"		fontname = \"Times-Roman\"");
+	crm_debug(DOT_PREFIX"		fontcolor = \"black\"");
+	crm_debug(DOT_PREFIX"		color = \"black\"");
+	crm_debug(DOT_PREFIX"	]");
+	crm_debug(DOT_PREFIX"// special nodes");
+	crm_debug(DOT_PREFIX"	\"S_PENDING\" ");
+	crm_debug(DOT_PREFIX"	[");
+	crm_debug(DOT_PREFIX"	 color = \"blue\"");
+	crm_debug(DOT_PREFIX"	 fontcolor = \"blue\"");
+	crm_debug(DOT_PREFIX"	 ]");
+	crm_debug(DOT_PREFIX"	\"S_TERMINATE\" ");
+	crm_debug(DOT_PREFIX"	[");
+	crm_debug(DOT_PREFIX"	 color = \"red\"");
+	crm_debug(DOT_PREFIX"	 fontcolor = \"red\"");
+	crm_debug(DOT_PREFIX"	 ]");
+	crm_debug(DOT_PREFIX"// DC only nodes");
+	crm_debug(DOT_PREFIX"	\"S_INTEGRATION\" [ fontcolor = \"green\" ]");
+	crm_debug(DOT_PREFIX"	\"S_POLICY_ENGINE\" [ fontcolor = \"green\" ]");
+	crm_debug(DOT_PREFIX"	\"S_TRANSITION_ENGINE\" [ fontcolor = \"green\" ]");
+	crm_debug(DOT_PREFIX"	\"S_RELEASE_DC\" [ fontcolor = \"green\" ]");
+	crm_debug(DOT_PREFIX"	\"S_IDLE\" [ fontcolor = \"green\" ]");
+}
 
 
-static FILE *dot_strm = NULL;
 
 volatile enum crmd_fsa_state fsa_state = S_STARTING;
 oc_node_list_t *fsa_membership_copy;
@@ -185,6 +189,7 @@ volatile gboolean do_fsa_stall = FALSE;
 enum crmd_fsa_state
 s_crmd_fsa(enum crmd_fsa_cause cause)
 {
+	time_t now;
 	fsa_data_t *fsa_data = NULL;
 	long long new_actions = A_NOTHING;
 	long long last_action = A_NOTHING;
@@ -202,14 +207,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		   fsa_state2string(cur_state));
 #endif
 
-#ifdef DOT_FSA_ACTIONS
-	if(dot_strm == NULL) {
-		dot_strm = fopen(DEVEL_DIR"/live.dot", "w");
-		fprintf(dot_strm, "%s", dot_intro);
-		fflush(dot_strm);
-	}
-#endif
-	
 	/*
 	 * Process actions in order of priority but do only one
 	 * action at a time to avoid complicating the ordering.
@@ -279,23 +276,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
 			fsa_dump_actions(fsa_data->actions, "\tadded back");
 
-			crm_debug("FSA input: State=%s\tCause=%s"
-				  "\tInput=%s\tOrigin=%s()",
-				  fsa_state2string(cur_state),
-				  fsa_cause2string(fsa_data->fsa_cause),
-				  fsa_input2string(fsa_data->fsa_input),
-				  fsa_data->origin);
-#ifdef DOT_FSA_ACTIONS
-			fprintf(dot_strm,
-				"\t// FSA input: State=%s\tCause=%s"
-				"\tInput=%s\tOrigin=%s()\n",
+			crm_debug(DOT_PREFIX"\t// FSA input: State=%s\tCause=%s"
+				"\tInput=%s\tOrigin=%s()",
 				fsa_state2string(cur_state),
 				fsa_cause2string(fsa_data->fsa_cause),
 				fsa_input2string(fsa_data->fsa_input),
 				fsa_data->origin);
-			
-			fflush(dot_strm);
-#endif
 			
 		} else if(fsa_data == NULL) {
 			crm_malloc(fsa_data, sizeof(fsa_data_t));
@@ -506,16 +492,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		  fsa_state2string(fsa_state));
 #endif
 
-#ifdef DOT_FSA_ACTIONS
-	{
-		time_t now = time(NULL);
-		fprintf(dot_strm,			
-			"\t// ### Exiting the FSA (%s%s): %s\n",
-			fsa_state2string(fsa_state), do_fsa_stall?": paused":"",
-			asctime(localtime(&now)));
-		fflush(dot_strm);
-	}
-#endif
+
+	now = time(NULL);
+	crm_debug(DOT_PREFIX"\t// ### Exiting the FSA (%s%s): %s\n",
+		  fsa_state2string(fsa_state), do_fsa_stall?": paused":"",
+		  asctime(localtime(&now)));
 
 	/* cleanup inputs? */
 	delete_fsa_input(fsa_data);
@@ -549,11 +530,9 @@ do_state_transition(long long actions,
 	}
 	
 	if(current_input != I_DC_HEARTBEAT && cur_state != S_NOT_DC){
-		fprintf(dot_strm,
-			"\t\"%s\" -> \"%s\" [ label=\"%s\" cause=%s origin=%s ] // %s",
-			state_from, state_to, input, fsa_cause2string(cause), msg_data->origin,
-			asctime(localtime(&now)));
-		fflush(dot_strm);
+		crm_debug(DOT_PREFIX"\t\"%s\" -> \"%s\" [ label=\"%s\" cause=%s origin=%s ] // %s",
+			  state_from, state_to, input, fsa_cause2string(cause), msg_data->origin,
+			  asctime(localtime(&now)));
 	}
 
 	crm_info("State transition \"%s\" -> \"%s\""

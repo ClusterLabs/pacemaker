@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.10 2005/02/03 14:20:44 andrew Exp $ */
+/* $Id: main.c,v 1.11 2005/02/07 17:28:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,6 +57,7 @@ void usage(const char* cmd, int exit_status);
 int init_start(void);
 void crmd_hamsg_callback(const HA_Message * msg, void* private_data);
 gboolean crmd_tickle_apphb(gpointer data);
+extern void init_dotfile(void);
 
 GMainLoop*  crmd_mainloop = NULL;
 
@@ -127,6 +128,8 @@ init_start(void)
 
     crm_info("Starting %s", crm_system_name);
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
+
+    init_dotfile();
     state = s_crmd_fsa(C_STARTUP);
     
     if (state == S_PENDING || state == S_STARTING) {
