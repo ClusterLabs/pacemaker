@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.20 2004/12/05 16:29:51 andrew Exp $ */
+/* $Id: xml.c,v 1.21 2004/12/15 10:20:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,9 +50,9 @@ find_xml_node(xmlNodePtr root, const char * search_path)
 	
 	xml_child_iter(
 		root, a_child, search_path,
-		crm_trace("returning node (%s).", xmlGetNodePath(a_child));
-		crm_trace("contents\t%s", dump_xml_formatted(a_child));
-		crm_trace("found in\t%s", dump_xml_formatted(root));
+		crm_insane("returning node (%s).", xmlGetNodePath(a_child));
+		crm_insane("contents\t%s", dump_xml_formatted(a_child));
+		crm_insane("found in\t%s", dump_xml_formatted(root));
 		return a_child;
 		);
 
@@ -73,7 +73,7 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		return NULL;
 	}
 	
-	dump_array(LOG_TRACE, "Looking for.", search_path, len);
+	dump_array(LOG_INSANE, "Looking for.", search_path, len);
 
 	for (j=0; j < len; ++j) {
 		if (search_path[j] == NULL) {
@@ -91,11 +91,11 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	}
 
 	if (is_found) {
-		crm_trace("returning node (%s).",
+		crm_insane("returning node (%s).",
 			   xmlGetNodePath(lastMatch));
 
-		crm_trace("found\t%s", dump_xml_formatted(lastMatch));
-		crm_trace("in \t%s", dump_xml_formatted(root));
+		crm_insane("found\t%s", dump_xml_formatted(lastMatch));
+		crm_insane("in \t%s", dump_xml_formatted(root));
 		
 		return lastMatch;
 	}
@@ -179,7 +179,7 @@ set_xml_attr(
 	xmlAttrPtr result = NULL;
 	
 	if(node_name != NULL) {
-		crm_trace("Setting %s=%s at [%s [%s]]",
+		crm_insane("Setting %s=%s at [%s [%s]]",
 			  attr_name, attr_value,
 			  xmlGetNodePath(parent), node_name);
 		node = find_xml_node(parent, node_name);
@@ -302,7 +302,7 @@ set_xml_property_copy(xmlNodePtr node,
 		parent_name = node->name;
 	}
 	
-	crm_trace("[%s] Setting %s to %s",crm_str(parent_name), name, value);
+	crm_insane("[%s] Setting %s to %s",crm_str(parent_name), name, value);
 
 	if (name == NULL || strlen(name) <= 0) {
 		ret_value = NULL;
@@ -348,7 +348,7 @@ create_xml_node(xmlNodePtr parent, const char *name)
 		}
 	}
 
-	crm_trace("Created node [%s [%s]]",
+	crm_insane("Created node [%s [%s]]",
 		  crm_str(parent_name), crm_str(local_name));
 /*	set_node_tstamp(ret_value); */
 	return ret_value;
@@ -430,15 +430,15 @@ copy_xml_node_recursive(xmlNodePtr src_node)
 			local_child = copy_xml_node_recursive(node_iter);
 			if(local_child != NULL) {
 				xmlAddChild(local_node, local_child);
-				crm_trace("Copied node [%s [%s]", local_name, local_child->name);
+				crm_insane("Copied node [%s [%s]", local_name, local_child->name);
 			} 				
 			);
 
-		crm_trace("Returning [%s]", local_node->name);
+		crm_insane("Returning [%s]", local_node->name);
 		return local_node;
 	}
 
-	crm_trace("Returning null");
+	crm_insane("Returning null");
 	return NULL;
 #else
 	xmlNodePtr new_xml = xmlCopyNode(src_node, 1);
@@ -612,7 +612,7 @@ write_xml_file(xmlNodePtr xml_node, const char *filename)
 		return -1;
 		
 	} else if (xml_node->doc == NULL) {
-		crm_trace("Creating doc pointer for %s", xml_node->name);
+		crm_insane("Creating doc pointer for %s", xml_node->name);
 		foo = xmlNewDoc("1.0");
 		xmlDocSetRootElement(foo, xml_node);
 		xmlSetTreeDoc(xml_node, foo);
@@ -650,27 +650,27 @@ dump_xml_formatted(xmlNodePtr an_xml_node) {
 		
 	} else {
 	  /* reset the doc pointer */
-		crm_trace("Creating doc pointer for %s", xml_node->name);
+		crm_insane("Creating doc pointer for %s", xml_node->name);
 		foo = xmlNewDoc("1.0");
 		xmlDocSetRootElement(foo, xml_node);
 		xmlSetTreeDoc(xml_node, foo);
-		crm_trace("Doc pointer set for %s", xml_node->name);
+		crm_insane("Doc pointer set for %s", xml_node->name);
 	}
 
-	crm_trace("Initializing Parser");
+	crm_insane("Initializing Parser");
 	xmlInitParser();
-	crm_trace("Dumping data");
+	crm_insane("Dumping data");
 	xmlDocDumpFormatMemory(xml_node->doc, &xml_buffer, &len,1);
-	crm_trace("Cleaning up parser");
+	crm_insane("Cleaning up parser");
 	xmlCleanupParser();
 
-	crm_trace("Copying memory into crm_ space");
+	crm_insane("Copying memory into crm_ space");
 	if(xml_buffer != NULL && len > 0) {
 		/* copy the text into crm_ memory */ 
 		buffer = crm_strdup(xml_buffer);
 		xmlFree(xml_buffer);
 	}
-	crm_trace("Buffer coppied");
+	crm_insane("Buffer coppied");
 	
 	free_xml(xml_node);
 
@@ -689,13 +689,13 @@ print_xml_formatted (int log_level, const char *function,
 		return;
 	}
 
-	crm_trace("dumping XML to char *");
+	crm_insane("dumping XML to char *");
 	msg_buffer = dump_xml_formatted(msg);
 	do_crm_log(log_level, function, "%s: %s",
 		   crm_str(text), crm_str(msg_buffer));
-	crm_trace("Freeing char * buffer");
+	crm_insane("Freeing char * buffer");
 	crm_free(msg_buffer);
-	crm_trace("Free-d char * buffer");
+	crm_insane("Free-d char * buffer");
 
 	return;
 }
@@ -710,9 +710,9 @@ dump_xml_unformatted(xmlNodePtr an_xml_node) {
 		return NULL;
 	}
 
-	crm_trace("Initializing Parser");
+	crm_insane("Initializing Parser");
 	xmlInitParser();
-	crm_trace("Dumping data");
+	crm_insane("Dumping data");
 	
 	xml_buffer = xmlBufferCreate();
 	len = xmlNodeDump(xml_buffer, an_xml_node->doc, an_xml_node, 0, 0);
@@ -730,7 +730,7 @@ dump_xml_unformatted(xmlNodePtr an_xml_node) {
 		crm_err("memory allocation failed");
 	}
 
-	crm_trace("Cleaning up parser");
+	crm_insane("Cleaning up parser");
 	xmlCleanupParser();
 
 	return buffer;

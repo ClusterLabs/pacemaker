@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.33 2004/12/09 14:53:41 andrew Exp $ */
+/* $Id: crm.h,v 1.34 2004/12/15 10:20:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -148,6 +148,7 @@ typedef GList* GListPtr;
 #define LOG_VERBOSE  LOG_DEBUG+1
 #define LOG_DEV      LOG_DEBUG+2
 #define LOG_TRACE    LOG_DEBUG+3
+#define LOG_INSANE   LOG_DEBUG+5
 
 #if 1
 #  define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FUNCTION__, w)
@@ -159,6 +160,7 @@ typedef GList* GListPtr;
 #  define crm_devel(w...)   do_crm_log(LOG_DEV,     __FUNCTION__, w)
 #  define crm_verbose(w...) do_crm_log(LOG_VERBOSE, __FUNCTION__, w)
 #  define crm_trace(w...)   do_crm_log(LOG_TRACE,   __FUNCTION__, w)
+#  define crm_insane(w...)  do_crm_log(LOG_INSANE,  __FUNCTION__, w)
 #else
 #  define crm_crit(w...)    cl_log(LOG_CRIT,    w)
 #  define crm_err(w...)     cl_log(LOG_ERR,     w)
@@ -169,6 +171,7 @@ typedef GList* GListPtr;
 #  define crm_devel(w...)   cl_log(LOG_DEV,     w)
 #  define crm_verbose(w...) cl_log(LOG_VERBOSE, w)
 #  define crm_trace(w...)   cl_log(LOG_TRACE,   w)
+#  define crm_insane(w...)  cl_log(LOG_INSANE,  w)
 #endif
 
 #define crm_debug_action(x) if(crm_log_level >= LOG_DEBUG) {	\
