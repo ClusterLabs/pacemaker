@@ -25,9 +25,10 @@ crmdir			= $(HA_VARLIBDIR)/$(HB_PKG)/crm
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)$(crmdir)
-	-chgrp $(apigid) $(DESTDIR)/$(crmdir)
-#	-chown $(ccmuid) $(DESTDIR)/$(crmdir)
-	chmod 770 $(DESTDIR)/$(crmdir)
+#	-chgrp $(apigid) $(DESTDIR)/$(crmdir)
+#	-chown $(ccmuid) $(DESTDIR)/$(libdir)/$(HB_PKG)
+	cp  admin_cib_test.sh $(DESTDIR)/$(libdir)/$(HB_PKG)
+	-chmod 770 $(DESTDIR)/$(crmdir)
 #	test -p $(DESTDIR)$(ccmreqfifo) || mkfifo -m 200 $(DESTDIR)$(ccmreqfifo)
 #	test -p $(DESTDIR)$(ccmresfifo) || mkfifo -m 600 $(DESTDIR)$(ccmresfifo)
 #	-chgrp $(apigid) $(DESTDIR)/$(ccmreqfifo)
