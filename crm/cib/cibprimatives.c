@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.37 2004/07/09 15:35:58 msoffen Exp $ */
+/* $Id: cibprimatives.c,v 1.38 2004/08/18 10:21:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -430,10 +430,23 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 		equiv_node = find_xml_node(parent, object_name);
 
 	} else {
-		equiv_node = find_entity(parent, object_name, object_id,FALSE);
+		equiv_node = find_entity(parent, object_name, object_id, FALSE);
 	}
 	
-	if(equiv_node != NULL) {
+	if(equiv_node == NULL) {
+		crm_debug("No node to update, creating %s instead", new_obj->name);
+		if(parent == NULL) {
+			crm_warn("Failed to add <%s id=%s> (NULL parent)",
+				 object_name, object_id);
+			return CIBRES_FAILED_NODECOPY;
+			
+		} else if(add_node_copy(parent, new_obj) == NULL) {
+			crm_warn("Failed to add  <%s id=%s>", object_name, object_id);
+			return CIBRES_FAILED_NODECOPY;
+		}
+		
+	} else {
+		crm_verbose("Found node <%s id=%s> to update", object_name, object_id);
 
 		const char *replace = xmlGetProp(new_obj, "replace");
 		
@@ -485,7 +498,7 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 		
 		while(children != NULL) {
 			int tmp_result =
-				update_cib_object(equiv_node, children,force);
+				update_cib_object(equiv_node, children, force);
 
 			// only the first error is likely to be interesting
 			if(tmp_result != CIBRES_OK
@@ -494,9 +507,6 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 			}
 			children = children->next;
 		}
-		
-	} else if(add_node_copy(parent, new_obj) == NULL) {
-		return CIBRES_FAILED_NODECOPY;
 		
 	}
 	

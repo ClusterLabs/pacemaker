@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.46 2004/08/11 06:56:34 andrew Exp $ */
+/* $Id: cib.c,v 1.47 2004/08/18 10:21:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -118,7 +118,7 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 	
 	data = cib_process_request(op, options, fragment, &result);
 
-	crm_verbose("[cib] operation returned result %d", result);
+	crm_info("[cib] operation returned result %d", result);
 
 	if(auto_reply) {
 		reply = create_reply(message, data);
@@ -126,7 +126,7 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 
 		set_xml_attr(reply, XML_TAG_OPTIONS,
 			     XML_ATTR_RESULT, cib_error2string(result), TRUE);
-		
+
 		return reply;
 	}
 	

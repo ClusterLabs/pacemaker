@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.45 2004/08/03 09:19:01 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.46 2004/08/18 10:21:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -176,6 +176,10 @@ cib_process_request(const char *op,
 		
 		
 	} else if (strcmp(CRM_OP_ERASE, op) == 0) {
+
+		crm_err("Op %s is not currently supported", op);
+		*result = CIBRES_FAILED_NOTSUPPORTED;
+/*
 		xmlNodePtr new_cib = createEmptyCib();
 
 		// Preserve the status section
@@ -194,7 +198,7 @@ cib_process_request(const char *op,
 		if (activateCibXml(new_cib, CIB_FILENAME) < 0) {
 			*result = CIBRES_FAILED;
 		}
-
+*/
 	} else if (strcmp(CRM_OP_CREATE, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_ADD;
@@ -305,8 +309,9 @@ cib_process_request(const char *op,
 	free_xml(failed);
 
 #ifdef MSG_LOG
-	fprintf(msg_cib_strm, "[Reply (%s)]\t%s\n",
-		op, dump_xml_node(cib_answer, FALSE));
+	fprintf(msg_cib_strm, "[Reply (%s:%s)]\t%s\n",
+		op, cib_error2string(*result),
+		dump_xml_node(cib_answer, FALSE));
 	fflush(msg_cib_strm);
 #endif
 
@@ -461,8 +466,7 @@ update_results(xmlNodePtr failed,
 	xmlNodePtr xml_node;
 	
     
-	if (return_code != CIBRES_OK)
-	{
+	if (return_code != CIBRES_OK) {
 		error_msg = cib_error2string(return_code);
 		operation_msg = cib_op2string(operation);
 
@@ -485,6 +489,8 @@ update_results(xmlNodePtr failed,
 		crm_debug("Action %s failed: %s (cde=%d)",
 			  operation_msg, error_msg, return_code);
 	
+	} else {
+		crm_debug("CIB %s passed", operation_msg);
 	}
 
 	return was_error;
