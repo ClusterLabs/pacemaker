@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.65 2005/04/01 10:07:21 andrew Exp $ */
+/* $Id: unpack.c,v 1.66 2005/04/01 12:41:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -936,7 +936,7 @@ unpack_rsc_order(
 	const char *id_lh      = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
 	const char *id_rh      = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
 	const char *action     = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
-	const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMETRICAL);
+	const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 	const char *type       = crm_element_value(xml_obj, XML_ATTR_TYPE);
 
 	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);

@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.27 2005/03/31 08:12:08 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.28 2005/04/01 12:41:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -180,7 +180,7 @@
 #define XML_CONS_ATTR_FROM		"from"
 #define XML_CONS_ATTR_TO		"to"
 #define XML_CONS_ATTR_ACTION		"action"
-#define XML_CONS_ATTR_SYMETRICAL	"symetrical"
+#define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
