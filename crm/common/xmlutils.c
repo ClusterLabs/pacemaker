@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.12 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: xmlutils.c,v 1.13 2004/03/05 13:10:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,11 +54,13 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		FNRET(NULL);
 	}
 
+	/*
 	CRM_DEBUG("looking for...");
 	for (j=0; j < len; ++j) {
 		if (search_path[j] == NULL) break;
 		CRM_DEBUG2(" --> (%s).", search_path[j]);
 	}
+	*/
     
 	xmlNodePtr child = root->children, lastMatch = NULL;
 	for (j=0; j < len; ++j) {
@@ -70,15 +72,19 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		
 		while(child != NULL) {
 			const char * child_name = (const char*)child->name;
+/*
 			CRM_DEBUG3("comparing (%s) with (%s).",
 				   search_path[j],
 				   child->name);
+*/
 			if (strcmp(child_name, search_path[j]) == 0) {
 				lastMatch = child;
 				child = lastMatch->children;
+/*
 				CRM_DEBUG3("found node (%s) @line (%ld).",
 					   search_path[j],
 					   xmlGetLineNo(child));
+*/
 				is_found = TRUE;
 				break;
 			}
@@ -266,16 +272,16 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 		}
 		xmlDocDumpMemory(msg->doc, &xml_message, &msg_size);
 	} else {
-		CRM_DEBUG2("mem used by xml: %d", xmlMemUsed());
+//		CRM_DEBUG2("mem used by xml: %d", xmlMemUsed());
     
 		xmlMemoryDump ();
 	
 		xmlBufferPtr xml_buffer = xmlBufferCreate();
-		CRM_DEBUG("About to dump XML into buffer");
+//		CRM_DEBUG("About to dump XML into buffer");
 		msg_size = xmlNodeDump(xml_buffer, msg->doc, msg, 0, 0);
 
 		//CRM_DEBUG2("Dumped XML into buffer: [%s]", xmlBufferContent(xml_buffer));
-		CRM_DEBUG2("Dumped %d XML characters into buffer", msg_size);
+//		CRM_DEBUG2("Dumped %d XML characters into buffer", msg_size);
 	
 		xml_message =
 			(xmlChar*)ha_strdup(xmlBufferContent(xml_buffer)); 
@@ -321,7 +327,7 @@ set_xml_property_copy(xmlNodePtr node,
 	if(node != NULL)
 		parent_name = node->name;
 	
-	CRM_DEBUG4("[%s] Setting %s to %s", parent_name, name, value);
+//	CRM_DEBUG4("[%s] Setting %s to %s", parent_name, name, value);
 
 	if (name == NULL)
 		ret_value = NULL;
