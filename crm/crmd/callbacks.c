@@ -337,14 +337,13 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 
 	if(lpc == 0) {
 		// hey what happened??
-		crm_crit("We were called but no message was ready."
+		crm_warn("We were called but no message was ready."
 		       "  Likely the connection to Heartbeat failed,"
 			" check the logs");
 
-		// feed this back into the FSA
-		s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL);
+//		s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL);
+//		return FALSE;
 
-		return FALSE;
 	}
 	
     
@@ -354,5 +353,8 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 void
 crmd_ha_input_destroy(gpointer user_data)
 {
-	crm_info("in my hb_input_destroy");
+	crm_err("Heartbeat has left us");
+	// this is always an error
+	// feed this back into the FSA
+	s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL);
 }
