@@ -197,6 +197,7 @@ get_resource_list(GList ** rsc_info)
 	struct dirent **namelist;
 	GList* item;
 	int file_num;
+	char subdir[FILENAME_MAX+1];
 
 	if ( rsc_info == NULL ) {
 		cl_log(LOG_ERR, "Parameter error: get_resource_list");
@@ -212,7 +213,6 @@ get_resource_list(GList ** rsc_info)
 	if (file_num < 0) {
 		return -2;
 	}
-	char subdir[FILENAME_MAX+1];
 	while (file_num--) {
 		GList* ra_subdir = NULL;
 		if ((DT_DIR != namelist[file_num]->d_type) || 

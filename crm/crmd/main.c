@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.5 2004/10/08 18:10:56 andrew Exp $ */
+/* $Id: main.c,v 1.6 2004/10/15 18:25:21 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -67,6 +67,7 @@ main(int argc, char ** argv)
     int	req_stop    = FALSE;
     int	argerr      = 0;
     int flag;
+    struct stat buf;
 
 #ifdef DEVEL_DIR
     mkdir(DEVEL_DIR, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -88,7 +89,6 @@ main(int argc, char ** argv)
     CL_SIGNAL(DEBUG_INC, alter_debug);
     CL_SIGNAL(DEBUG_DEC, alter_debug);
 
-    struct stat buf;
     if(stat(DEVEL_DIR, &buf) != 0) {
 	    cl_perror("Stat of %s failed... exiting", DEVEL_DIR);
 	    exit(100);

@@ -169,9 +169,6 @@ build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 		types = fsa_lrm_conn->lrm_ops->get_rsc_type_supported(
 			fsa_lrm_conn, class);
 
-/*		metadata = fsa_lrm_conn->lrm_ops->get_all_type_metadatas(
-			fsa_lrm_conn, class);
-*/	
 		slist_iter(
 			type, char, types, llpc,
 			

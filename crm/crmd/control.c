@@ -370,12 +370,13 @@ do_started(long long action,
 		return I_NULL;
 
 	} else if(is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
+		struct ha_msg*	msg = NULL;
+
 		/* try reading from HA */
 		crm_info("Delaying start, some systems not connected %.16llx (%.16llx)",
 			 fsa_input_register, (long long)R_PEER_DATA);
 
 		crm_debug("Looking for a HA message");
-		struct ha_msg*	msg = NULL;
 		msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
 		if(msg != NULL) {
 			crm_debug("There was a HA message");

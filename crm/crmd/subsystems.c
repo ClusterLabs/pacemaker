@@ -77,6 +77,10 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	pid_t       pid;
 	struct stat buf;
 	int         s_res;
+	unsigned int	j;
+	struct rlimit	oflimits;
+	const char 	*devnull = "/dev/null";
+	
 
 	crm_info("Starting sub-system \"%s\"", the_subsystem->command);
 
@@ -121,10 +125,6 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	crm_info("Executing \"%s\" (pid %d)",
 		 the_subsystem->command, (int) getpid());
 
-	unsigned int	j;
-	struct rlimit	oflimits;
-	const char 	*devnull = "/dev/null";
-	
 	/* A precautionary measure */
 	getrlimit(RLIMIT_NOFILE, &oflimits);
 	for (j=0; j < oflimits.rlim_cur; ++j) {

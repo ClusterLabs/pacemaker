@@ -124,6 +124,7 @@ do_dc_join_offer_one(long long action,
 		     enum crmd_fsa_input current_input,
 		     fsa_data_t *msg_data)
 {
+	gpointer a_node = NULL;
 	xmlNodePtr welcome = NULL;
 	const char *join_to = NULL;
 
@@ -137,7 +138,7 @@ do_dc_join_offer_one(long long action,
 	
 	join_to = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 
-	gpointer a_node = g_hash_table_lookup(join_offers, join_to);
+	a_node = g_hash_table_lookup(join_offers, join_to);
 	if(a_node != NULL) {
 		/* note: it _is_ possible that a node will have been
 		 *  sick or starting up when the original offer was made.
@@ -218,12 +219,13 @@ do_dc_join_req(long long action,
 	crm_debug("Welcoming node %s after ACK (ref %s)", join_from, ref);
 	
 	if(is_a_member == FALSE) {
-		crm_err("Node %s is not known to us (ref %s)", join_from, ref);
 		/* nack them now so they are not counted towards the
 		 * expected responses
 		 */
 		char *local_from = crm_strdup(join_from);
 		char *local_down = crm_strdup(CRMD_JOINSTATE_DOWN);
+
+		crm_err("Node %s is not known to us (ref %s)", join_from, ref);
 		finalize_join_for(local_from, local_down, NULL);
 		crm_free(local_from);
 		crm_free(local_down);
@@ -376,15 +378,21 @@ do_dc_join_ack(long long action,
 void
 finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 {
-	if(key == NULL || value == NULL) {
-		return;
-	}
 	xmlNodePtr tmp1 = NULL;
 	xmlNodePtr tmp2 = NULL;
 	xmlNodePtr cib_copy    = NULL;
-	xmlNodePtr options     = create_xml_node(NULL, XML_TAG_OPTIONS);
-	const char *join_to    = (const char *)key;
-	const char *join_state = (const char *)value;
+	xmlNodePtr options     = NULL;
+
+	const char *join_to = NULL;
+	const char *join_state = NULL;
+
+	if(key == NULL || value == NULL) {
+		return;
+	}
+
+	options     = create_xml_node(NULL, XML_TAG_OPTIONS);
+	join_to    = (const char *)key;
+	join_state = (const char *)value;
 
 	/* make sure the node exists in the config section */
 	create_node_entry(join_to, join_to, CRMD_JOINSTATE_MEMBER);
