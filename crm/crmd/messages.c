@@ -300,22 +300,26 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 			if (curr_client->sub_sys == NULL)
 				CRM_DEBUG("Client had not registered with us yet");
 			else if (strcmp(CRM_SYSTEM_PENGINE,
-					curr_client->sub_sys) == 0)
+					curr_client->sub_sys) == 0) {
+				pe_subsystem->ipc = NULL;
 				clear_bit_inplace(&fsa_input_register,
 						  R_PE_CONNECTED);
 
-			else if (strcmp(CRM_SYSTEM_TENGINE,
-					curr_client->sub_sys) == 0)
+			} else if (strcmp(CRM_SYSTEM_TENGINE,
+					curr_client->sub_sys) == 0) {
+				te_subsystem->ipc = NULL;
 				clear_bit_inplace(&fsa_input_register,
 						  R_TE_CONNECTED);
 
 
-			else if (strcmp(CRM_SYSTEM_CIB,
-					curr_client->sub_sys) == 0)
+			} else if (strcmp(CRM_SYSTEM_CIB,
+					curr_client->sub_sys) == 0) {
+				cib_subsystem->ipc = NULL;
 				clear_bit_inplace(&fsa_input_register,
 						  R_CIB_CONNECTED);
-
-
+				
+			}
+		
 			if (curr_client->table_key != NULL) {
 				/*
 				 * Key is destroyed below: curr_client->table_key
