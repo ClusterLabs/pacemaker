@@ -233,7 +233,7 @@ do_pe_control(long long action,
 	if(action & stop_actions) {
 		if(stop_subsystem(this_subsys) == FALSE)
 			result = I_FAIL;
-		else {
+		else  if(this_subsys->pid > 0){
 			int lpc = CLIENT_EXIT_WAIT;
 			int pid_status = -1;
 			while(lpc-- > 0
@@ -314,7 +314,7 @@ do_te_control(long long action,
 	if(action & stop_actions) {
 		if(stop_subsystem(this_subsys) == FALSE)
 			result = I_FAIL;
-		else {
+		else if(this_subsys->pid > 0){
 			int lpc = CLIENT_EXIT_WAIT;
 			int pid_status = -1;
 			while(lpc-- > 0
