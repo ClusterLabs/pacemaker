@@ -50,6 +50,7 @@ class HeartbeatCM(ClusterManager):
         self.update({
             "Name"	     : "heartbeat",
             "DeadTime"	     : 30,
+            "StableTime"     : 30,
             "StartCmd"	     : "ulimit -c unlimited; MALLOC_CHECK_=2; export MALLOC_CHECK_; @libdir@/heartbeat/heartbeat -d 2>/dev/null",
             "StopCmd"	     : "@libdir@/heartbeat/heartbeat -k",
             "StatusCmd"	     : "@libdir@/heartbeat/heartbeat -s",

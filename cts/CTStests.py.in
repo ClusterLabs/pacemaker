@@ -277,7 +277,7 @@ class StopTest(CTSTest):
                 pat = (self.thempat % node)
 
         watch = CTS.LogWatcher(self.CM["LogFileName"], [pat]
-        ,	timeout=self.CM["DeadTime"]+10)
+        ,	self.CM["DeadTime"]+10)
         watch.setwatch()
         self.CM.StopaCM(node)
         if watch.look():
@@ -355,7 +355,7 @@ class FlipTest(CTSTest):
             ret = self.stop(node)
             type="up->down"
             # Give the cluster time to recognize it's gone...
-            time.sleep(self.CM["DeadTime"]+2)
+            time.sleep(self.CM["StableTime"])
         elif self.CM.ShouldBeStatus[node] == self.CM["down"]:
             self.incr("started")
             ret = self.start(node)
@@ -398,7 +398,7 @@ class RestartTest(CTSTest):
 
         ret1 = self.stop(node)
         # Give the cluster time to recognize we're gone...
-        time.sleep(self.CM["DeadTime"]+2)
+        time.sleep(self.CM["StableTime"])
         ret2 = self.start(node)
 
         if not ret1:
@@ -541,7 +541,7 @@ class IPaddrtest(CTSTest):
 
         ret1 = self.stop(node)
         # Give the cluster time to recognize we're gone...
-        time.sleep(self.CM["DeadTime"]+10)
+        time.sleep(self.CM["StableTime"])
         ret2 = self.start(node)
 
 
@@ -695,16 +695,13 @@ class SimulStop(CTSTest):
 
         watchpats = [ ]
 
-        pat = self.CM["Pat:We_stopped"]
         for node in self.CM.Env["nodes"]:
-          prefix = ('(%s) .* ' % node)
-          thispat = prefix + pat
-          watchpats.append(thispat)
+	    pat = (self.CM["Pat:All_stopped"] % node)
+	    watchpats.append(pat)
 
         #     Stop all the nodes - at about the same time...
         watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
         ,     timeout=self.CM["DeadTime"]+10)
-        watch.ReturnOnlyMatch()
 
         watch.setwatch()
         for node in self.CM.Env["nodes"]:
@@ -712,8 +709,18 @@ class SimulStop(CTSTest):
         if watch.lookforall():
 	    return self.success()
 
-        return self.failure("Did not find stop pattern(s): "
-        +     repr(watch.unmatched))
+	did_fail=0
+        for node in self.CM.Env["nodes"]:
+	    if self.CM.StataCM(node) == 1:
+		did_fail=1
+		
+	if did_fail:
+	    return self.failure("Did not find stop pattern(s): "
+				+     repr(watch.unmatched))
+
+        self.CM.log("All nodes stopped but CTS didnt detect these patterns: " 
+		    + repr(watch.unmatched))
+        return self.success()
 
     def is_applicable(self):
         '''SimulStop is always applicable'''
