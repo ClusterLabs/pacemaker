@@ -903,7 +903,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 	{
 		/* S_IDLE		==> */	A_LOG,
 		/* S_ELECTION		==> */	A_WARN,
-		/* S_INTEGRATION	==> */	A_LOG|A_CIB_INVOKE,
+		/* S_INTEGRATION	==> */	A_LOG|A_CIB_INVOKE|A_PE_INVOKE,
 		/* S_NOT_DC		==> */	A_NOTHING,
 		/* S_POLICY_ENGINE	==> */	A_LOG|A_TE_INVOKE,
 		/* S_RECOVERY		==> */	A_RECOVER|A_LOG,
