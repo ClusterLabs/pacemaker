@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.10 2004/10/13 21:51:47 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.11 2004/10/20 13:46:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <libgen.h>
 
+#include <heartbeat.h>
 #include <hb_api.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/Gmain_timeout.h>
@@ -63,6 +64,7 @@ int do_find_resource(const char *rsc, xmlNodePtr xml_node);
 int do_find_resource_list(xmlNodePtr xml_node);
 int do_find_node_list(xmlNodePtr xml_node);
 gboolean admin_message_timeout(gpointer data);
+gboolean is_node_online(xmlNodePtr node_state);
 
 enum debug {
 	debug_none,
@@ -81,22 +83,24 @@ gboolean DO_WHOIS_DC      = FALSE;
 gboolean DO_NODE_LIST     = FALSE;
 gboolean BE_SILENT        = FALSE;
 gboolean DO_RESOURCE_LIST = FALSE;
+gboolean DO_OPTION        = FALSE;
 enum debug DO_DEBUG       = debug_none;
 
 xmlNodePtr msg_options = NULL;
 
-const char *verbose = XML_BOOLEAN_FALSE;
+const char *admin_verbose = XML_BOOLEAN_FALSE;
 char *id = NULL;
 char *this_msg_reference = NULL;
 char *disconnect = NULL;
 char *dest_node  = NULL;
 char *rsc_name   = NULL;
+char *crm_option = NULL;
 
 int operation_status = 0;
 const char *sys_to = NULL;;
 const char *crm_system_name = "crmadmin";
 
-#define OPTARGS	"V?K:S:HE:DW:d:i:RNst:"
+#define OPTARGS	"V?K:S:HE:DW:d:i:RNst:o:"
 
 int
 main(int argc, char **argv)
@@ -126,6 +130,7 @@ main(int argc, char **argv)
 		{"resources", 0, 0, 'R'},
 		{"nodes", 0, 0, 'N'},
 		{"whereis", 1, 0, 'W'},
+		{"option", 1, 0, 'o'},
 
 		{0, 0, 0, 0}
 	};
@@ -183,7 +188,7 @@ main(int argc, char **argv)
 			case 'V':
 				level = get_crm_log_level();
 				BE_VERBOSE = TRUE;
-				verbose = XML_BOOLEAN_TRUE;
+				admin_verbose = XML_BOOLEAN_TRUE;
 				cl_log_enable_stderr(TRUE);
 				set_crm_log_level(level+1);
 				break;
@@ -209,6 +214,11 @@ main(int argc, char **argv)
 				DO_RESET = TRUE;
 				crm_verbose("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
+				break;
+			case 'o':
+				DO_OPTION = TRUE;
+				crm_verbose("Option %c => %s", flag, optarg);
+				crm_option = crm_strdup(optarg);
 				break;
 			case 's':
 				BE_SILENT = TRUE;
@@ -307,7 +317,7 @@ do_work(ll_cluster_t * hb_cluster)
 	gboolean all_is_good = TRUE;
 	
 	msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-	set_xml_property_copy(msg_options, XML_ATTR_VERBOSE, verbose);
+	set_xml_property_copy(msg_options, XML_ATTR_VERBOSE, admin_verbose);
 	set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
 
 	if (DO_HEALTH == TRUE) {
@@ -330,6 +340,36 @@ do_work(ll_cluster_t * hb_cluster)
 		} else {
 			crm_info("Cluster-wide health not available yet");
 			all_is_good = FALSE;
+		}
+		
+	} else if(DO_OPTION) {
+		char *name = NULL;
+		char *value = NULL;
+		xmlNodePtr xml_option = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
+
+		sys_to = CRM_SYSTEM_DCIB;
+
+		set_xml_property_copy(
+			msg_options, XML_ATTR_OP, CRM_OP_UPDATE);
+		
+		set_xml_property_copy(
+			msg_options, XML_ATTR_TIMEOUT, "0");
+
+		if(decodeNVpair(crm_option, '=', &name, &value) == FALSE) {
+			crm_err("%s needs to be of the form <name>=<value>",
+				crm_option);
+			all_is_good = FALSE;
+		} else {
+			set_xml_property_copy(
+				xml_option, XML_NVPAIR_ATTR_NAME, name);
+			set_xml_property_copy(
+				xml_option, XML_NVPAIR_ATTR_VALUE, value);
+			
+			msg_data = create_cib_fragment(xml_option, NULL);
+			
+			free_xml(xml_option);
+			crm_free(name);
+			crm_free(value);
 		}
 		
 	} else if(DO_ELECT_DC) {
@@ -658,10 +698,17 @@ do_find_resource(const char *rsc, xmlNodePtr xml_node)
 		xml_node, path, DIMOF(path));
 
 	while(nodestates != NULL) {
-		xmlNodePtr rscstates = find_xml_node_nested(
-			nodestates, path2, DIMOF(path2));
+		xmlNodePtr rscstates = NULL;
+		xmlNodePtr a_node = nodestates;
 		nodestates = nodestates->next;
 
+		if(is_node_online(a_node) == FALSE) {
+			crm_debug("Skipping offline node: %s",
+				xmlGetProp(a_node, XML_ATTR_ID));
+			continue;
+		}
+		
+		rscstates = find_xml_node_nested(a_node, path2, DIMOF(path2));
 		
 		while(rscstates != NULL) {
 			const char *id = xmlGetProp(rscstates,XML_ATTR_ID);
@@ -710,6 +757,26 @@ do_find_resource(const char *rsc, xmlNodePtr xml_node)
 					
 	return found;
 }
+
+gboolean
+is_node_online(xmlNodePtr node_state) 
+{
+	const char *uname      = xmlGetProp(node_state,XML_ATTR_UNAME);
+	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
+	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
+	const char *ccm_state  = xmlGetProp(node_state,XML_CIB_ATTR_INCCM);
+
+	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
+	   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
+	   && safe_str_eq(crm_state, ONLINESTATUS)) {
+		crm_debug("Node %s is online", uname);
+		return TRUE;
+	}
+	crm_debug("Node %s: %s %s %s", uname, join_state, ccm_state, crm_state);
+	crm_debug("Node %s is offline", uname);
+	return FALSE;
+}
+
 
 int
 do_find_resource_list(xmlNodePtr xml_node)
