@@ -71,6 +71,8 @@ class LinuxHAv2(HeartbeatCM):
             "Pat:DC_IDLE"      : "crmd:.*State transition.*-> S_IDLE",
             "Pat:We_started"   : "%s crmd:.*State transition.*-> (S_NOT_DC|S_IDLE)",
             "Pat:They_started" : "%s crmd:.*State transition.*-> (S_NOT_DC|S_IDLE)",
+            "Pat:They_stopped" : "%s heartbeat.*Heartbeat shutdown complete",
+            "Pat:They_dead"    : "node (%s).*: is dead",
             "Pat:We_stopped"   : ("%s heartbeat.*Heartbeat shutdown complete" %(self.OurNode)),
             "Pat:All_stopped"  : "%s heartbeat.*Heartbeat shutdown complete",
             
