@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.55 2005/03/31 16:40:07 andrew Exp $ */
+/* $Id: tengine.c,v 1.56 2005/04/01 12:34:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -204,9 +204,10 @@ match_graph_event(action_t *action, crm_data_t *event)
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
 			if(FALSE == crm_is_true(allow_fail)) {
-				crm_err("Action %s to %s on %s resulted in"
-					" failure... aborting transition.",
-					event_action, event_rsc, event_node);
+				crm_err("Action %s for \"%s\" on %s resulted in"
+					" failure (%d)... aborting transition.",
+					event_action, event_rsc, event_node,
+					op_status_i);
 				send_abort("Action failed", match->xml);
 				return -2;
 			}
@@ -257,7 +258,7 @@ match_down_event(const char *target, const char *filter, int rc)
 			
 			if(safe_str_eq(this_action, XML_CIB_ATTR_STONITH)) {
 				action_args = find_xml_node(
-					action->xml, "args", TRUE);
+					action->xml, XML_TAG_ATTRS, TRUE);
 				this_node = crm_element_value(
 					action_args, XML_LRM_ATTR_TARGET);
 
@@ -558,13 +559,17 @@ initiate_action(action_t *action)
 		  <rsc_op id="operation number" on_node="" task="">
 		  <resource>...</resource>
 		*/
-		rsc_op  = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+#if 1
+		rsc_op  = copy_xml_node_recursive(action->xml);
+#else
+		rsc_op = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
 		
 		set_xml_property_copy(rsc_op, XML_ATTR_ID, id);
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TASK, task);
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TARGET, on_node);
 
 		add_node_copy(rsc_op, rsc);
+#endif
 		destination = CRM_SYSTEM_LRMD;
 		ret = TRUE;
 			
@@ -593,7 +598,7 @@ initiate_action(action_t *action)
 #ifndef TESTING
 		send_ipc_message(crm_ch, cmd);
 #else
-		crm_log_message(LOG_DEBUG, cmd);
+		crm_log_message(LOG_INFO, cmd);
 #endif
 		crm_free(counter);
 
