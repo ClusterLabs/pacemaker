@@ -198,7 +198,7 @@ class LogWatcher:
             newsize=os.path.getsize(self.filename)
             if self.file.tell() == newsize:
                 if timeout > 0:
-                    time.sleep(1)
+                    time.sleep(0.025)
                 else:
                     return None
         return None

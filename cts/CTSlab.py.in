@@ -304,6 +304,7 @@ if __name__ == '__main__':
     DoStonith = 0
     DoStandby = 1
     NumIter = 500
+    SuppressMonitoring = None
     #
     # The values of the rest of the parameters are now properly derived from
     # the configuration files.
@@ -348,6 +349,8 @@ if __name__ == '__main__':
                DoStandby=0
            else:
                usage(args[i+1])
+       elif args[i] == "--suppressmonitoring":
+           SuppressMonitoring = 1
        else:
            NumIter=int(args[i])
           
@@ -364,6 +367,7 @@ if __name__ == '__main__':
     Environment["LogFileName"] = LogFile
     Environment["DoStonith"] = DoStonith
     Environment["DoStandby"] = DoStandby
+    Environment["SuppressMonitoring"] = SuppressMonitoring
     #Environment["RandSeed"] = (156, 104, 218)
 
     Environment.SupplyDefaults()
@@ -385,13 +389,16 @@ if __name__ == '__main__':
     cm.log("System log files: " + Environment["LogFileName"])
     cm.log("Enable Stonith: " + ("%d" % Environment["DoStonith"]))
     cm.log("Enable Standby: " + ("%d" % Environment["DoStandby"]))
+    if Environment.has_key("SuppressMonitoring") \
+    and Environment["SuppressMonitoring"]:
+        cm.log("Resource Monitoring is disabled")
     cm.log("Cluster nodes: " + repr(config.Parameters["node"]))
 
     Audits = AuditList(cm)
     Tests = TestList(cm)
 
     tests = RandomTests(scenario, cm, Tests, Audits)
-    overall, detailed = tests.run(500)
+    overall, detailed = tests.run(NumIter)
  
     cm.log("****************")
     cm.log("Overall Results:" + repr(overall))

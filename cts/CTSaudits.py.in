@@ -119,6 +119,9 @@ class ResourceAudit(ClusterAudit):
                     +   "(otherRsc = " + repr(lastResource) + ")")
                     Fatal = 1
 
+                if self.CM.Env.has_key("SuppressMonitoring") and \
+                self.CM.Env["SuppressMonitoring"]:
+                    continue
 
 		# Is the resource working correctly ?
 

@@ -664,6 +664,9 @@ class Fastdetection(CTSTest):
         self.timeout = timeout
         self.start = StartTest(cm)
         self.standby = StandbyTest(cm)
+        self.__setitem__("min", 0)
+        self.__setitem__("max", 0)
+        self.__setitem__("totaltime", 0)
 
     def __call__(self, node):
         '''Perform the fastfailureDetection test'''
@@ -687,19 +690,27 @@ class Fastdetection(CTSTest):
         stopwatch.setwatch()
 
         if self.CM.rsh(node, "killall -9 heartbeat")==0:
-            Starttime = time.time()
+            Starttime = os.times()[4]
             if stopwatch.look():
-                Stoptime = time.time()
+                Stoptime = os.times()[4]
+                self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
                 Detectiontime = Stoptime-Starttime
-                self.CM.log("The detection time is %s seconds" % Detectiontime)
+                self.CM.log("Failure detection time is %f seconds" % Detectiontime)
                 self.CM.rsh(node, self.CM["StartCmd"])
+                self.Stats["totaltime"] = self.Stats["totaltime"] + Detectiontime
+        	if self.Stats["min"] == 0:
+                    self.Stats["min"] = Detectiontime
+        	if Detectiontime > self.Stats["max"]:
+                    self.Stats["max"] = Detectiontime
+        	if Detectiontime < self.Stats["min"]:
+                    self.Stats["min"] = Detectiontime
                 return self.success()
             else:
                 self.CM.rsh(node, self.CM["StartCmd"])
                 self.CM.ShouldBeStatus[node]=self.CM["up"]
                 return self.failure("Didn't find the log message")
             # Can't do this before killing heartbeat, because it will respawn them
-            self.CM.rsh(node, "killall -9 ccm ipfail&")
+            self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
         else:
                 return self.failure("Couldn't stop heartbeat")
 
@@ -1095,7 +1106,7 @@ def TestList(cm):
         bound_test = testclass(cm)
         if bound_test.is_applicable():
         	result.append(bound_test)
-    # result = [StandbyTest(cm)]
+#    result = [Fastdetection(cm)]
     return result
 
 
