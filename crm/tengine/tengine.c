@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.49 2005/03/04 15:59:09 alan Exp $ */
+/* $Id: tengine.c,v 1.50 2005/03/11 14:25:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -153,13 +153,25 @@ match_graph_event(action_t *action, crm_data_t *event)
 	
 	crm_devel("matching against: <%s task=%s node=%s rsc_id=%s/>",
 		  crm_element_name(action->xml), this_action, this_node, this_rsc);
-	
-	if(safe_str_neq(this_node, event_node)) {
-		crm_devel("node mismatch: %s", event_node);
-
-	} else if(safe_str_neq(this_action, event_action)) {	
+	if(safe_str_neq(this_action, event_action)) {	
 		crm_devel("action mismatch: %s", event_action);
 		
+	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT)) {
+		if(safe_str_eq(this_action, XML_CIB_ATTR_STONITH)) {
+			
+		} else if(safe_str_neq(this_node, event_node)) {
+			crm_devel("node mismatch: %s", event_node);
+		} else {
+			crm_devel(XML_GRAPH_TAG_CRM_EVENT);
+			match = action;
+		}
+		
+		crm_devel(XML_GRAPH_TAG_CRM_EVENT);
+		match = action;
+		
+	} else if(safe_str_neq(this_node, event_node)) {
+		crm_devel("node mismatch: %s", event_node);
+
 	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP)) {
 		crm_devel(XML_GRAPH_TAG_RSC_OP);
 		if(safe_str_eq(this_rsc, event_rsc)) {
@@ -167,10 +179,6 @@ match_graph_event(action_t *action, crm_data_t *event)
 		} else {
 			crm_devel("bad rsc (%s) != (%s)", this_rsc, event_rsc);
 		}
-		
-	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT)) {
-		crm_devel(XML_GRAPH_TAG_CRM_EVENT);
-		match = action;
 		
 	} else {
 		crm_devel("no match");
@@ -194,7 +202,7 @@ match_graph_event(action_t *action, crm_data_t *event)
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			if(safe_str_neq(allow_fail, XML_BOOLEAN_TRUE)) {
+			if(FALSE == crm_is_true(allow_fail)) {
 				crm_err("Action %s to %s on %s resulted in"
 					" failure... aborting transition.",
 					event_action, event_rsc, event_node);
@@ -208,6 +216,96 @@ match_graph_event(action_t *action, crm_data_t *event)
 			break;
 		default:
 			crm_err("Unsupported action result: %d", op_status_i);
+			send_abort("Unsupport action result", match->xml);
+			return -2;
+	}
+	
+	crm_devel("Action %d was successful, looking for next action",
+		match->id);
+
+	match->complete = TRUE;
+	return match->id;
+}
+
+int
+match_down_event(const char *target, const char *filter, int rc)
+{
+	const char *allow_fail  = NULL;
+	const char *this_action = NULL;
+	const char *this_node   = NULL;
+	action_t *match = NULL;
+	
+	slist_iter(
+		synapse, synapse_t, graph, lpc,
+
+		/* lookup event */
+		slist_iter(
+			action, action_t, synapse->actions, lpc2,
+
+			crm_data_t *action_args = NULL;
+			if(action->type != action_type_crm) {
+				continue;
+			}
+			
+			this_action = crm_element_value(
+				action->xml, XML_LRM_ATTR_TASK);
+
+			if(filter != NULL && safe_str_neq(this_action, filter)) {
+				continue;
+			}
+			
+			if(safe_str_eq(this_action, XML_CIB_ATTR_STONITH)) {
+				action_args = find_xml_node(
+					action->xml, "args", TRUE);
+				this_node = crm_element_value(
+					action_args, "target");
+
+			} else if(safe_str_eq(this_action, CRM_OP_SHUTDOWN)) {
+				this_node = crm_element_value(
+					action->xml, "target");
+			} else {
+				continue;
+			}
+			
+			if(safe_str_neq(this_node, target)) {
+				crm_devel("node mismatch: %s", this_node);
+				continue;
+			}
+
+			match = action;
+			);
+		if(match != NULL) {
+			break;
+		}
+		);
+	
+	if(match == NULL) {
+		crm_devel("didnt match current action");
+		return -1;
+	}
+
+	crm_devel("matched");
+
+	/* stop this event's timer if it had one */
+	stop_te_timer(match->timer);
+
+	/* Process OP status */
+	switch(rc) {
+		case STONITH_SUCCEEDED:
+			break;
+		case STONITH_CANNOT:
+		case STONITH_TIMEOUT:
+		case STONITH_GENERIC:
+			allow_fail = crm_element_value(match->xml, "allow_fail");
+			if(FALSE == crm_is_true(allow_fail)) {
+				crm_err("Stonith of %s failed (%d)..."
+					" aborting transition.", target, rc);
+				send_abort("Action failed", match->xml);
+				return -2;
+			}
+			break;
+		default:
+			crm_err("Unsupported action result: %d", rc);
 			send_abort("Unsupport action result", match->xml);
 			return -2;
 	}
@@ -311,9 +409,6 @@ check_for_completion(void)
 	}
 }
 
-
-
-
 gboolean
 initiate_action(action_t *action) 
 {
@@ -360,29 +455,34 @@ initiate_action(action_t *action)
 		  && safe_str_eq(task, XML_CIB_ATTR_STONITH)){
 		
 /*         <args target="node1"/> */
-		stonith_ops_t * st_op = NULL;
 		crm_data_t *action_args = find_xml_node(
 			action->xml, "args", TRUE);
 		const char *target = crm_element_value(action_args, "target");
 		
+#ifdef TESTING
+		crm_info("Executing fencing operation (%s) on %s", id, target);
+		fprintf(stderr, "Executing fencing operation (%s) on %s\n",
+			id, target);
+		ret = TRUE;
+		action->complete = TRUE;
+#else
+		stonith_ops_t * st_op = NULL;
+		const char *uuid = crm_element_value(action_args,"target_uuid");
 		crm_malloc(st_op, sizeof(stonith_ops_t));
 		st_op->optype = RESET;
 		st_op->timeout = crm_atoi(timeout, "10"); /* one second */
 		st_op->node_name = crm_strdup(target);
+ 		CRM_DEV_ASSERT(uuid_parse(uuid, st_op->node_uuid) == 0);
 
 		crm_info("Executing fencing operation (%s) on %s", id, target);
-#ifdef TESTING
-		fprintf(stderr, "Executing fencing operation (%s) on %s\n",
-			id, target);
-		ret = TRUE;
-#else
+
 		if(stonithd_input_IPC_channel() == NULL) {
 			crm_err("Cannot fence %s - stonith not available", target);
 			
 		} else if (ST_OK == stonithd_node_fence( st_op )) {
 			ret = TRUE;
 		}
-#endif			
+#endif
 		
 	} else if(on_node == NULL || strlen(on_node) == 0) {
 		/* error */

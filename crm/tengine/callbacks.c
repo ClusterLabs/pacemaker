@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.15 2005/02/28 10:57:24 andrew Exp $ */
+/* $Id: callbacks.c,v 1.16 2005/03/11 14:25:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -175,8 +175,8 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 void
 tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 {
-	action_t *te_action = private_data;
-
+	int action_id = -1;
+	
 	if(op == NULL) {
 		crm_err("Called with a NULL op!");
 		return;
@@ -186,18 +186,25 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		 op->optype, op->node_name, op->op_result,
 		 (char *)op->node_list);
 
+	/* this will mark the event complete if a match is found */
+	action_id = match_down_event(op->node_name, XML_CIB_ATTR_STONITH, op->op_result);
+	
 	if(op->op_result == STONITH_SUCCEEDED) {
 		enum cib_errors rc = cib_ok;
-		crm_data_t *action_args = find_xml_node(
-			te_action->xml, "args", TRUE);
-		const char *target = crm_element_value(action_args, "target");
-		const char *uuid = crm_element_value(action_args,"target_uuid");
+		const char *target = op->node_name;
+		char *uuid   = NULL;
 		
 		/* zero out the node-status & remove all LRM status info */
 		crm_data_t *update = NULL;
 		crm_data_t *node_state = create_xml_node(
 			NULL, XML_CIB_TAG_STATE);
 
+		if(op->node_uuid != NULL) {
+			uuid_unparse(op->node_uuid, uuid);
+		} else {
+			crm_err("UUID must be present in fencing operations!");
+		}
+		
 		set_xml_property_copy(node_state, XML_ATTR_UUID, uuid);
 		set_xml_property_copy(node_state, XML_ATTR_UNAME, target);
 		set_xml_property_copy(
@@ -220,14 +227,15 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		rc = te_cib_conn->cmds->modify(
 			te_cib_conn, XML_CIB_TAG_STATUS,update,NULL,cib_none);	
 
-		if(rc == cib_ok) {
-			/* mark the action complete */
-			te_action->complete = TRUE;
-			
-			process_trigger(te_action->id);
-			check_for_completion();
-		} else {
+		if(action_id < 0) {
+			send_abort("Stonith not matched", update);
+
+		} else if(rc != cib_ok) {
 			send_abort("Couldnt update CIB after stonith", update);
+			
+		} else {
+			process_trigger(action_id);
+			check_for_completion();
 		}
 		free_xml(update);
 		

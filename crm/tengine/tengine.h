@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.16 2005/02/02 21:58:40 andrew Exp $ */
+/* $Id: tengine.h,v 1.17 2005/03/11 14:25:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -81,6 +81,7 @@ extern gboolean process_graph_event(crm_data_t *event);
 /*	const char *event_node,   const char *event_rsc, const char *rsc_state,
  *	const char *event_action, const char *event_rc, const char *op_status); */
 extern int match_graph_event(action_t *action, crm_data_t *event);
+extern int match_down_event(const char *target, const char *filter, int rc);
 
 extern gboolean initiate_transition(void);
 

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.23 2005/02/25 10:32:08 andrew Exp $ */
+/* $Id: unpack.c,v 1.24 2005/03/11 14:25:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -212,9 +212,7 @@ unpack_action(crm_data_t *xml_action)
 	action->timer->action    = action;
 
 	tmp = crm_element_value(action_copy, "can_fail");
-	if(safe_str_eq(tmp, XML_BOOLEAN_TRUE)) {
-		action->can_fail = TRUE;
-	}
+	crm_str_to_boolean(tmp, &(action->can_fail));
 
 	return action;
 }
@@ -251,9 +249,7 @@ extract_event(crm_data_t *msg)
 		crm_xml_devel(node_state,"Processing");
 		
 		if(crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
-			crm_devel("Aborting on %s attribute",
-				  XML_CIB_ATTR_SHUTDOWN);
-			abort = TRUE;
+			send_abort("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute", node_state);
 			break;
 			
 		} else if(crm_element_value(node_state, XML_CIB_ATTR_STONITH) != NULL) {
@@ -261,7 +257,8 @@ extract_event(crm_data_t *msg)
 			 *   possibly by us when a shutdown timmed out
 			 */
 			crm_devel("Checking for STONITH");
-			event_node = crm_element_value(node_state, XML_ATTR_UNAME);
+			event_node = crm_element_value(
+				node_state, XML_ATTR_UNAME);
 
 			shutdown = create_shutdown_event(
 				event_node, LRM_OP_TIMEOUT);
@@ -284,36 +281,38 @@ extract_event(crm_data_t *msg)
 			if(crmd_state != NULL
 			   && safe_str_neq(crmd_state, OFFLINESTATUS)) {
 				/* always recompute */
-				crm_devel("Abort - crmd not offline");
-				abort = TRUE;
+				send_abort("CRMd not offline", node_state);
+				break;
 				
 			} else if(join_state != NULL
 				  && safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)) {
-				crm_devel("Abort - new CRMD node");
-				abort = TRUE;
+				send_abort("New CRMd node", node_state);
+				break;
 
 			} else {
 				/* this may be called more than once per shutdown
 				 * ie. once per update of each field
 				 */
+				int action_id = -1;
 				crm_devel("Checking if this was a known shutdown");
 				event_node = crm_element_value(node_state, XML_ATTR_UNAME);
-				shutdown = create_shutdown_event(event_node, LRM_OP_DONE);
-				
-				abort = !process_graph_event(shutdown);
+				action_id = match_down_event(
+					event_node, NULL, LRM_OP_DONE);
 
-				free_xml(shutdown);
+				if(action_id < 0) {
+					send_abort("Stonith/shutdown event not matched", node_state);
+					break;
+				} else {
+					process_trigger(action_id);
+					check_for_completion();
+				}
 			}
 			
-			if(abort) {
-				crm_xml_devel(
-					node_state, "Update resulted in state-based abort");
-			} else if(ccm_state != NULL
-				  && safe_str_eq(ccm_state, XML_BOOLEAN_YES)) {
+			if(ccm_state != NULL && crm_is_true(ccm_state)) {
 				crm_devel("Ignore - new CCM node");
 			}
 		}
-		if(abort == FALSE && resources != NULL) {
+		if(resources != NULL) {
 			/* LRM resource update...
 			 */
 			xml_child_iter(
@@ -326,9 +325,9 @@ extract_event(crm_data_t *msg)
 				}
 				);
 			
-		}
-		if(abort) {
-			break;
+			if(abort) {
+				break;
+			}
 		}
 		);
 	
