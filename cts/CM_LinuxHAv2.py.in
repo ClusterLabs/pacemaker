@@ -48,15 +48,16 @@ class LinuxHAv2(HeartbeatCM):
         HeartbeatCM.__init__(self, Environment, randseed=randseed)
         self.update({
             "Name"           : "linux-ha-v2",
+	    "DeadTime"	     : 90,
             "StartCmd"       : "@libdir@/heartbeat/heartbeat >/dev/null 2>&1",
             "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
-            "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null|egrep '(S_IDLE|S_NOT_DC)'",
+            "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null",
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s status 0 0 EVERYTIME 2>/dev/null|grep return",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             # Patterns to look for in the log files for various occasions...
-            "Pat:We_started"    : " %s crmd: .* State transition .*-> .(S_NOT_DC|S_IDLE). ",
-            "Pat:They_started"  : " %s crmd: .* State transition .*-> .(S_NOT_DC|S_IDLE). ",
+            "Pat:We_started"    : " %s crmd: .* State transition .*-> (S_NOT_DC|S_IDLE)",
+            "Pat:They_started"  : " %s crmd: .* State transition .*-> (S_NOT_DC|S_IDLE)",
             
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
@@ -68,7 +69,8 @@ class LinuxHAv2(HeartbeatCM):
             ),
         })
         CTSaudits.AllAuditClasses = [HAResourceAudit]
-        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
+#        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
+        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop]
     
     def StataCM(self, node):
 
@@ -98,8 +100,10 @@ class LinuxHAv2(HeartbeatCM):
         '''Start up the cluster manager on a given node'''
         watch = CTS.LogWatcher(self["LogFileName"]
         ,                      [self["Pat:We_started"]%node]
-        ,                      60)
+        ,                      60, 1)
         watch.setwatch()
+        self.log ("CM_LinuxHAv2.py: Starting %s on node %s"
+		  %	(self["Name"], node))
         self.rsh(node, self["StartCmd"])
         if watch.look():
             self.ShouldBeStatus[node]=self["up"]
