@@ -474,7 +474,8 @@ enum crmd_fsa_input
 do_lrm_rsc_op(
 	lrm_rsc_t *rsc, char *rid, const char *operation, xmlNodePtr msg)
 {
-	lrm_op_t* op = NULL;
+	lrm_op_t* op        = NULL;
+	int op_result       = HA_OK;
 	int monitor_call_id = 0;
 
 	if(rsc == NULL) {
@@ -519,9 +520,14 @@ do_lrm_rsc_op(
 			operation);
 		op->user_data = crm_strdup(CRMD_RSCSTATE_GENERIC_OK);
 	}	
-	
-	rsc->ops->perform_op(rsc, op);
 
+	op_result = rsc->ops->perform_op(rsc, op);
+	if(op_result != HA_OK) {
+		crm_err("Operation %s on %s failed with code: %d",
+			operation, rid, op_result);
+		return I_FAIL;
+	}
+	
 	if(safe_str_eq(operation, CRMD_RSCSTATE_START)) {
 		/* initiate the monitor action */
 		op = g_new(lrm_op_t, 1);
