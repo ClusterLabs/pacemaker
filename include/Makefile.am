@@ -28,4 +28,4 @@ include_HEADERS	        = apphb.h apphb_notify.h HBauth.h HBcomm.h \
 			  ha_msg.h heartbeat.h hb_api.h ha_config.h \
 			  recoverymgr.h
 
-SUBDIRS                 = clplumbing ocf pils saf stonith
+SUBDIRS                 = checkpointd clplumbing ocf pils saf stonith
