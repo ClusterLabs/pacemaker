@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.30 2004/06/29 17:08:30 msoffen Exp $ */
+/* $Id: cibadmin.c,v 1.1 2004/07/27 11:21:44 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -40,15 +40,16 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?i:o:D:C:S:HA:U:M:I:EWRFt:m:a:d:w:c:r:p:s:"
+#define OPTARGS	"V?i:o:"
+//D:C:S:HA:U:M:I:EWRFt:m:a:d:w:c:r:p:s:"
 
 #include <getopt.h>
-
+#include <ha_msg.h> // someone complaining about _ha_msg_mod not being found
 #include <crm/dmalloc_wrapper.h>
 
 
 GMainLoop *mainloop = NULL;
-const char *crm_system_name = "crmadmin";
+const char *crm_system_name = "cibadmin";
 IPC_Channel *crmd_channel = NULL;
 char *admin_uuid = NULL;
 
@@ -57,20 +58,13 @@ ll_cluster_t *do_init(void);
 int do_work(ll_cluster_t * hb_cluster);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
-char *pluralSection(const char *a_section);
 xmlNodePtr handleCibMod(void);
 
 
-gboolean DO_DAEMON  = FALSE;
 gboolean BE_VERBOSE = FALSE;
 int expected_responses = 1;
 
 gboolean DO_HEALTH       = FALSE;
-gboolean DO_ELECT_DC     = FALSE;
-gboolean DO_WHOIS_DC     = FALSE;
-gboolean DO_RECALC_TREE  = FALSE;
-gboolean DO_FLUSH_RECALC = FALSE;
-
 
 const char *cib_action = NULL;
 xmlNodePtr msg_options = NULL;
@@ -88,8 +82,6 @@ char *this_msg_reference = NULL;
 char *obj_type = NULL;
 char *clear = NULL;
 char *status = NULL;
-char *disconnect = NULL;
-char *unload_ha = NULL;
 char *migrate_from = NULL;
 char *migrate_res = NULL;
 char *subtype = NULL;
@@ -105,43 +97,33 @@ main(int argc, char **argv)
 	int argerr = 0;
 	int flag;
 	ll_cluster_t *hb_cluster = NULL;
+	int level = 0;
 
 	static struct option long_options[] = {
 		// Top-level Options
-		{"daemon", 0, 0, 0},
-		{CRM_OP_ERASE, 0, 0, 0},
-		{CRM_OP_QUERY, 0, 0, 0},
-		{CRM_OP_CREATE, 0, 0, 0},
-		{CRM_OP_REPLACE, 0, 0, 0},
-		{CRM_OP_STORE, 0, 0, 0},
-		{CRM_OP_UPDATE, 0, 0, 0},
-		{CRM_OP_DELETE, 0, 0, 0},
-		{"verbose", 0, 0, 'V'},
-		{"help", 0, 0, '?'},
-		{"reference", 1, 0, 0},
+		{CRM_OP_ERASE,   0, 0, 'E'},
+		{CRM_OP_QUERY,   0, 0, 'Q'},
+		{CRM_OP_CREATE,  0, 0, 'C'},
+		{CRM_OP_REPLACE, 0, 0, 'R'},
+		{CRM_OP_STORE,   0, 0, 'S'},
+		{CRM_OP_UPDATE,  0, 0, 'U'},
+		{CRM_OP_DELETE,  0, 0, 'D'},
+		{"verbose",      0, 0, 'V'},
+		{"help",         0, 0, '?'},
+		{"reference",    1, 0, 0},
 
 		// common options
 		{XML_ATTR_ID, 1, 0, 'i'},
 		{"obj_type", 1, 0, 'o'},
 
-		// daemon options
-		{"reset", 1, 0, 'C'},
-		{"status", 1, 0, 'S'},
-		{"health", 0, 0, 'H'},
-		{"disconnect", 1, 0, 'A'},
-		{"unload_ha", 1, 0, 'U'},
-		{"migrate_from", 1, 0, 'M'},
-		{"migrate_res", 1, 0, 'I'},
-		{"elect_dc", 0, 0, 'E'},
-		{"whois_dc", 0, 0, 'W'},
-		{"recalc_tree", 0, 0, 'R'},
-		{"flush_recalc_tree", 0, 0, 'F'},
-
 		{0, 0, 0, 0}
 	};
 
+	if(argc < 2) {
+		usage(crm_system_name, LSB_EXIT_EINVAL);
+	}
+
 	cl_log_set_entity(crm_system_name);
-	cl_log_enable_stderr(TRUE);
 	cl_log_set_facility(LOG_USER);
 
 	while (1) {
@@ -157,31 +139,33 @@ main(int argc, char **argv)
 					printf(" with arg %s", optarg);
 				printf("\n");
 			
-				if (strcmp("daemon", long_options[option_index].name) == 0)
-					DO_DAEMON = TRUE;
-				else if (strcmp(CRM_OP_ERASE,
-						long_options[option_index].name) == 0
-					 || strcmp(CRM_OP_CREATE,
-						   long_options[option_index].name) == 0
-					 || strcmp(CRM_OP_UPDATE,
-						   long_options[option_index].name) == 0
-					 || strcmp(CRM_OP_DELETE,
-						   long_options[option_index].name) == 0
-					 || strcmp(CRM_OP_REPLACE,
-						   long_options[option_index].name) == 0
-					 || strcmp(CRM_OP_STORE,
-						   long_options[option_index].name) == 0
-					 || strcmp(CRM_OP_QUERY,
-						   long_options[option_index].name) == 0){
-					
-					cib_action = crm_strdup(long_options[option_index].name);
+				if (strcmp(CRM_OP_ERASE,
+					   long_options[option_index].name) == 0
+				    || strcmp(CRM_OP_CREATE,
+					      long_options[option_index].name) == 0
+				    || strcmp(CRM_OP_UPDATE,
+					      long_options[option_index].name) == 0
+				    || strcmp(CRM_OP_DELETE,
+					      long_options[option_index].name) == 0
+				    || (safe_str_eq(
+					    CRM_OP_REPLACE,
+					    long_options[option_index].name))
 
+				    || (safe_str_eq(
+					    CRM_OP_STORE,
+					    long_options[option_index].name))
+				    
+				    || (safe_str_eq(
+					    CRM_OP_QUERY,
+					    long_options[option_index].name))){
+					cib_action = crm_strdup(long_options[option_index].name);
+					
 				} else if (strcmp("reference",
 						  long_options[option_index].name) == 0) {
 					this_msg_reference =
 						crm_strdup(optarg);
 				} else {
-					printf( "?? Long option (--%s) is not yet properly supported ??\n",
+					printf("?? Long option (--%s) is not yet properly supported ??\n",
 						long_options[option_index].name);
 					++argerr;
 				}
@@ -195,8 +179,11 @@ main(int argc, char **argv)
 */
 			
 			case 'V':
+				level = get_crm_log_level();
 				BE_VERBOSE = TRUE;
 				verbose = XML_BOOLEAN_TRUE;
+				cl_log_enable_stderr(TRUE);
+				set_crm_log_level(level+1);
 				break;
 			case '?':
 				usage(crm_system_name, LSB_EXIT_OK);
@@ -208,53 +195,6 @@ main(int argc, char **argv)
 			case 'o':
 				crm_verbose("Option %c => %s", flag, optarg);
 				obj_type = crm_strdup(optarg);
-				break;
-			case 'C':
-				printf("Option %c is not yet supported\n", flag);
-				++argerr;
-				break;
-			case 'S':
-				DO_HEALTH = TRUE;
-				status = crm_strdup(optarg);
-				break;
-			case 'H':
-				DO_HEALTH = TRUE;
-				break;
-			case 'A':
-				printf("Option %c is not yet supported\n", flag);
-				++argerr;
-				break;
-			case 'U':
-				printf("Option %c is not yet supported\n", flag);
-				++argerr;
-				break;
-			case 'M':
-				printf("Option %c is not yet supported\n", flag);
-				++argerr;
-				break;
-			case 'I':
-				printf("Option %c is not yet supported\n", flag);
-				++argerr;
-				break;
-			case 'E':
-				DO_ELECT_DC = TRUE;
-				printf("Option %c is not yet supported\n", flag);
-				++argerr;
-				break;
-			case 'W':
-				DO_WHOIS_DC = TRUE;
-				printf("Option %c is not yet supported\n", flag);
-				++argerr;
-				break;
-			case 'R':
-				DO_RECALC_TREE = TRUE;
-				printf("Option %c is not yet supported\n", flag);
-				++argerr;
-				break;
-			case 'F':
-				DO_FLUSH_RECALC = TRUE;
-				printf("Option %c is not yet supported\n", flag);
-				++argerr;
 				break;
 			default:
 				printf("?? getopt returned character code 0%o ??\n", flag);
@@ -350,87 +290,49 @@ do_work(ll_cluster_t * hb_cluster)
 	const char *dest_node = NULL;
 	gboolean all_is_good = TRUE;
 	char *obj_type_parent = NULL;
-	const char *ping_type = NULL;
 	
 	msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
 	set_xml_property_copy(msg_options, XML_ATTR_VERBOSE, verbose);
 	set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
 
-
-	if (DO_DAEMON == TRUE && cib_action != NULL) {
-
-		if(strcmp(CRM_OP_QUERY, cib_action) == 0) {
-			crm_debug("Querying the CIB");
-			obj_type_parent = pluralSection(obj_type);
-			
-			crm_verbose("Querying the CIB for section: %s",
-				   obj_type_parent);
-			
-			set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_QUERY);
-			set_xml_property_copy(msg_options, XML_ATTR_FILTER_ID,
-					      obj_type_parent);
-			
-			dest_node = status;
-			crm_verbose("CIB query creation %s",
-				   msg_data == NULL ? "failed." : "passed.");
-			
-			sys_to = CRM_SYSTEM_DCIB;
-			
-		} else if (strcmp(CRM_OP_ERASE, cib_action) == 0) {
-			set_xml_property_copy(msg_options,
-					      XML_ATTR_OP,
-					      CRM_OP_ERASE);
-			
-			dest_node = status;
-			crm_trace("CIB Erase op in progress");
-			
-			sys_to = CRM_SYSTEM_DCIB;
-		} else {
-			crm_err("Unknown daemon options");
-			all_is_good = FALSE;
-		}
+	if(strcmp(CRM_OP_QUERY, cib_action) == 0) {
+		crm_debug("Querying the CIB");
+		obj_type_parent = pluralSection(obj_type);
+		
+		crm_verbose("Querying the CIB for section: %s",
+			    obj_type_parent);
+		
+		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_QUERY);
+		set_xml_property_copy(msg_options, XML_ATTR_FILTER_ID,
+				      obj_type_parent);
+		
+		dest_node = status;
+		crm_verbose("CIB query creation %s",
+			    msg_data == NULL ? "failed." : "passed.");
+		
+		sys_to = CRM_SYSTEM_DCIB;
+		
+	} else if (strcmp(CRM_OP_ERASE, cib_action) == 0) {
+		set_xml_property_copy(msg_options,
+				      XML_ATTR_OP,
+				      CRM_OP_ERASE);
+		
+		dest_node = status;
+		crm_trace("CIB Erase op in progress");
+		
+		sys_to = CRM_SYSTEM_DCIB;
 		
 	} else if(cib_action != NULL) {
-			msg_data = handleCibMod();
-			sys_to = CRM_SYSTEM_DCIB;
-			if(msg_data == NULL)
-				all_is_good = FALSE;
-		
-	} else if (DO_DAEMON == TRUE && DO_HEALTH == TRUE) {
-		crm_trace("Querying the system");
-
-		sys_to = CRM_SYSTEM_DC;
-
-		if (status != NULL) {
-			sys_to = CRM_SYSTEM_CRMD;
-			ping_type = CRM_OP_PING;
-			if (BE_VERBOSE) {
-				ping_type = "ping_deep";
-				if (status != NULL)
-					expected_responses = 2;	// 5; // CRM/DC, LRMD, CIB, PENGINE, TENGINE
-				else
-					expected_responses = -1;// wait until timeout instead
-			}
-
-			set_xml_property_copy(msg_options,
-					      XML_ATTR_OP,
-					      ping_type);
-			
-			set_xml_property_copy(msg_options,
-					      XML_ATTR_TIMEOUT,
-					      "0");
-
-			dest_node = status;
-		} else {
-			crm_info("Cluster-wide health not available yet");
+		msg_data = handleCibMod();
+		sys_to = CRM_SYSTEM_DCIB;
+		if(msg_data == NULL)
 			all_is_good = FALSE;
-		}
+		
 	} else {
 		crm_err("Unknown options");
 		all_is_good = FALSE;
 	}
 	
-
 	if(all_is_good == FALSE) {
 		crm_err("Creation of request failed.  No message to send");
 		return -1;
@@ -505,13 +407,25 @@ usage(const char *cmd, int exit_status)
 
 	stream = exit_status ? stderr : stdout;
 
-	fprintf(stream, "usage: %s [-srkh]" "[-c configure file]\n", cmd);
+	fprintf(stream, "usage: %s [-?Vio] command [xml_data]\n", cmd);
 
-/* 	fprintf(stream, "\t-d\tsets debug level\n"); */
-/* 	fprintf(stream, "\t-s\tgets daemon status\n"); */
-/* 	fprintf(stream, "\t-r\trestarts daemon\n"); */
-/* 	fprintf(stream, "\t-k\tstops daemon\n"); */
-/* 	fprintf(stream, "\t-h\thelp message\n"); */
+	fprintf(stream, "Options\n");
+	fprintf(stream, "\t--%s (-%c)\tid of the object being operated on\n",
+		XML_ATTR_ID, 'i');
+	fprintf(stream, "\t--%s (-%c)\tobject type being operated on\n",
+		"obj_type", 'o');
+	fprintf(stream, "\t--%s (-%c)\tturn on debug info."
+		"  additional instance increase verbosity\n", "verbose", 'V');
+	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
+	fprintf(stream, "\nCommands\n");
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_ERASE, 'E');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_QUERY, 'Q');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CREATE, 'C');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_REPLACE, 'R');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_STORE, 'S');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_UPDATE, 'U');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_DELETE, 'D');
+
 	fflush(stream);
 
 	exit(exit_status);

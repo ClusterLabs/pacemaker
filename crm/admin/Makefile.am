@@ -56,7 +56,7 @@ lib_LTLIBRARIES		=
 
 
 ## binary progs
-halib_PROGRAMS		= crmadmin
+halib_PROGRAMS		= crmadmin cibadmin
 
 
 ## SOURCES
@@ -64,11 +64,15 @@ halib_PROGRAMS		= crmadmin
 #noinst_HEADERS		= config.h control.h crmd.h
 noinst_HEADERS		= 
 
-crmadmin_SOURCES	= adminmain.c
+crmadmin_SOURCES	= crmadmin.c
 crmadmin_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crmadmin_LDFLAGS	= $(XML_LIBS)
 crmadmin_LDADD		= $(COMMONLIBS) 				
 
+cibadmin_SOURCES	= cibadmin.c
+cibadmin_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+cibadmin_LDFLAGS	= $(XML_LIBS)
+cibadmin_LDADD		= $(COMMONLIBS) 				
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
