@@ -668,115 +668,51 @@ class StandbyTest(CTSTest):
 #	Register StandbyTest as a good test to run
 AllTestClasses.append(StandbyTest)
 
-###############################################################
-class ResponseTest(CTSTest):
-###############################################################
-    '''Test one node's response when the other node fails abnormally'''
-    def __init__(self,cm,timeout=600):
-        CTSTest.__init__(self,cm)
-        self.name="Response"
-        self.theystopped = self.CM["Pat:They_stopped"]
-        self.allstopped = self.CM["Pat:All_stopped"]
-        self.usstart   = self.CM["Pat:We_started"]
-        self.themstart = self.CM["Pat:They_started"]
-        self.timeout=timeout
-
-    def __call__(self,node):
-        '''Perform the 'response' test'''
-        self.incr("calls")
-
-        if self.CM.ShouldBeStatus[node]!=self.CM["up"]:
-            return self.skipped()
-	
-        stopwatch = None
-	
-        if self.CM.upcount() != 1:
-            stopwatch= (self.theystopped % node)
-
-        if (self.CM.upcount() <= 1):
-            uppat = (self.usstart % node)
-        else:
-            uppat=(self.themstart % node)
-
-        upwatch = CTS.LogWatcher(self.CM["LogFileName"], [uppat]
-        ,       timeout=self.timeout)
-        
-        if stopwatch:
-            watch= CTS.LogWatcher(self.CM["LogFileName"], [stopwatch]
-            ,   timeout=self.CM["DeadTime"]+10)
-            watch.setwatch()
-        
-        KillWorked = None
-          
-        if self.CM.rsh(node,self.CM["KillmachineCmd"])==0:
-            KillWorked=1
-        else:
-            return self.failure("The node is not killed")
-        
-	upwatch.setwatch()
-
-        if stopwatch:
-            if watch.look():
-                ret1=1
-            else:
-                reason="Did not find " + stopwatch
-                ret1=0
-        else:
-            ret1=1
-
-        if upwatch.look():
-            ret2=1
-        else:
-            reason = "Did not find " + uppat
-            ret2 = 0
-
-        self.CM.ShouldBeStatus[node] = self.CM["up"]
-
-        if ret1 and ret2:
-            return self.success()
-        else:
-            return self.failure(reason)
-	   
-    def is_applicable(self): 
-        '''ResponseTest is applicable unless suppressed by CM.Env["DoResponse"]=0'''
-        if self.CM.Env.has_key("DoResponse"):
-            return self.CM.Env["DoResponse"]
-        return 1
-
-AllTestClasses.append(ResponseTest)
-
 #######################################################################
 class Fastdetection(CTSTest):
 #######################################################################
-    '''Test the time which one node find out the other node is dead abnormally'''
+    '''Test the time which one node find out the other node is killed very quickly'''
     def __init__(self,cm,timeout=60):
-        CTSTest.__init__(self,cm)
+        CTSTest.__init__(self, cm)
         self.name = "FastFailureDetection"
         self.they_stopped = self.CM["Pat:They_stopped"]
         self.timeout = timeout
+        self.start = StartTest(cm)
+        self.standby = StandbyTest(cm)
 
-    def __call__(self,node):
+    def __call__(self, node):
         '''Perform the fastfailureDetection test'''
         self.incr("calls")
-        if self.CM.ShouldBeStatus[node] != self.CM["up"]:
+
+        if self.CM.upcount() < 1:
             return self.skipped()
 
-        stoppat = (self.they_stopped%node)
-        stopwatch = CTS.LogWatcher(self.CM["LogFileName"],[stoppat],timeout=self.timeout)
+        if self.CM.ShouldBeStatus[node] != self.CM["up"]:
+            ret=self.start(node)
+            if not ret:
+                return ret;
+
+	# Make sure they're not holding any resources
+	ret = self.standby(node)
+        if not ret:
+            return ret;
+
+        stoppat = (self.they_stopped % node)
+        stopwatch = CTS.LogWatcher(self.CM["LogFileName"], [stoppat], timeout=self.timeout)
         stopwatch.setwatch()
 
-        if self.CM.rsh(node,"killall -9 heartbeat")==0:
+        if self.CM.rsh(node, "killall -9 heartbeat")==0:
             Starttime = time.time()
             if stopwatch.look():
                 Stoptime = time.time()
                 Detectiontime = Stoptime-Starttime
-                self.CM.log("The detection time is %s s" % Detectiontime)
-                self.CM.rsh(node,self.CM["StartCmd"])
+                self.CM.log("The detection time is %s seconds" % Detectiontime)
+                self.CM.rsh(node, self.CM["StartCmd"])
                 return self.success()
             else:
-                self.CM.rsh(node,self.CM["StartCmd"])
+                self.CM.rsh(node, self.CM["StartCmd"])
                 self.CM.ShouldBeStatus[node]=self.CM["up"]
-                return self.failure("don't find the log message")
+                return self.failure("Didn't find the log message")
         else:
                 return self.failure("couldn't stop heartbeat")
 
@@ -784,17 +720,17 @@ class Fastdetection(CTSTest):
         '''this test is always applicable'''
         return 1
 
-AllTestClasses.append(Fastdetection)
+#AllTestClasses.append(Fastdetection)
 
 ##############################################################################
 class BandwidthTest(CTSTest):
 ##############################################################################
     '''Test the bandwidth which heartbeat uses'''
-    def __init__(self,cm):
-        CTSTest.__init__(self,cm)
+    def __init__(self, cm):
+        CTSTest.__init__(self, cm)
         self.name = "Bandwidth"
 	
-    def __call__(self,node):
+    def __call__(self, node):
         '''Perform the Bandwidth test'''
         self.incr("calls")
         
@@ -872,10 +808,10 @@ class BandwidthTest(CTSTest):
             return self.failure("no response!")
 
     def is_applicable(self):
-        '''BandwidthTest is alwayss applicable'''
+        '''BandwidthTest is always applicable'''
         return 1
 
-AllTestClasses.append(BandwidthTest)
+#AllTestClasses.append(BandwidthTest)
 
 ##########################################################################
 class RedundantpathTest(CTSTest):
@@ -999,6 +935,10 @@ class DRBDTest(CTSTest):
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 return self.skipped()
 
+	# Note:  All these special cases with Start/Stop/StatusDRBD
+	# should be reworked to use resource objects instead of
+	# being hardwired to bypass the objects here.
+
         for node in self.CM.Env["nodes"]:
             done=time.time()+self.timeout+1
             while (time.time()<done):
@@ -1071,7 +1011,7 @@ class DRBDTest(CTSTest):
 
         if self.CM.Env.has_key("DoDrbd"):
            return self.CM.Env["DoDrbd"]
-        return 1 
+        return 0
 
 AllTestClasses.append(DRBDTest)
 
@@ -1170,7 +1110,7 @@ class Split_brainTest(CTSTest):
         '''Split_brain is applicable'''
         return 1
 
-AllTestClasses.append(Split_brainTest)
+#AllTestClasses.append(Split_brainTest)
 
 def TestList(cm):
     result = []

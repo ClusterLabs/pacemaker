@@ -53,7 +53,6 @@ class HeartbeatCM(ClusterManager):
             "StopCmd"	     : "@libdir@/heartbeat/heartbeat -k",
             "StatusCmd"	     : "@libdir@/heartbeat/heartbeat -s",
             "RereadCmd"	     : "@libdir@/heartbeat/heartbeat -r",
-            "KillmachineCmd" : "reboot -n",
             "StartDRBDCmd"   : "@sysconfdir@/init.d/drbd start >/dev/null 2>&1",
             "StopDRBDCmd"    : "@sysconfdir@/init.d/drbd stop",
             "StatusDRBDCmd"  : "@sysconfdir@/init.d/drbd status",
