@@ -130,6 +130,10 @@ Mini HOWTOs:
 How to redirect linux-HA logging the way CTS wants it using syslog
 --------------------------------------------------------------------------------
 
+NOTE:   There have been reports of messages being lost with vanilla syslog.
+	At least one of the developers recommend using syslog-ng or indead
+	anything else to avoid these problems.
+
 1)	Redirect each machines to go (at least) to syslog local7:
 
 	Change /etc/ha.d/ha.cf on each test machine to say this:
