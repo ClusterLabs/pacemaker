@@ -120,7 +120,7 @@ random for the selected number of iterations.
                     test["max_time"] = elapsed_time
 
             errcount=0
-            while errcount < 20:
+            while errcount < 100:
                 match=BadNews.look()
                 if match:
                    ignorelist=test.errorstoignore()
