@@ -600,16 +600,16 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 /* Got an I_ELECTION_DC */
 	{
 		/* S_IDLE		==> */	A_WARN,
-		/* S_ELECTION		==> */	A_DC_TAKEOVER|A_PE_START|A_TE_START|A_JOIN_WELCOME_ALL|A_DC_TIMER_STOP,
+		/* S_ELECTION		==> */	A_LOG|A_DC_TAKEOVER|A_PE_START|A_TE_START|A_JOIN_WELCOME_ALL|A_DC_TIMER_STOP,
 		/* S_INTEGRATION	==> */	A_WARN,
-		/* S_NOT_DC		==> */	A_NOTHING,
+		/* S_NOT_DC		==> */	A_ERROR,
 		/* S_POLICY_ENGINE	==> */	A_WARN,
-		/* S_RECOVERY		==> */	A_NOTHING,
-		/* S_RECOVERY_DC	==> */	A_NOTHING,
+		/* S_RECOVERY		==> */	A_WARN,
+		/* S_RECOVERY_DC	==> */	A_LOG,
 		/* S_RELEASE_DC		==> */	A_WARN,
-		/* S_PENDING		==> */	A_NOTHING,
-		/* S_STOPPING		==> */	A_NOTHING,
-		/* S_TERMINATE		==> */	A_NOTHING,
+		/* S_PENDING		==> */	A_ERROR,
+		/* S_STOPPING		==> */	A_WARN,
+		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_WARN,
 	},
 
