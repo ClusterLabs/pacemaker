@@ -36,12 +36,14 @@ enum con_modifier {
 struct node_shared_s { 
 		char	*id; 
 		gboolean online;
+		gboolean unclean;
+		GSListPtr running_rsc;
+		
 		GHashTable *attrs;
 		enum node_type type;
 }; 
 
 struct node_s { 
-		char	*id; 
 		float	weight; 
 		gboolean fixed;
 		struct node_shared_s *details;
@@ -65,7 +67,7 @@ struct rsc_constraint_s {
 		char		*id;
 		resource_t	*rsc_lh; 
 		enum con_type type;
-
+		
 		// rsc_to_rsc
 		gboolean	is_placement;
 		resource_t	*rsc_rh; 
@@ -81,6 +83,7 @@ struct resource_s {
 		char *id; 
 		xmlNodePtr xml; 
 		int priority; 
+		gboolean runnable;
 		GSListPtr candidate_colors; 
 		color_t *color; 
 		gboolean provisional; 
@@ -107,21 +110,6 @@ extern GSListPtr stonith_list;
 extern GSListPtr shutdown_list;
 extern color_t *current_color;
 
-#define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
-				         x *w = (x*)g_slist_nth_data(y, z); \
-					 a;				    \
-				  }
-
-extern gboolean pe_debug;
-extern gboolean pe_debug_saved;
-#define pdebug(x) if(pe_debug) {		\
-		x;				\
-	}
-
-#define pe_debug_on()  pe_debug_saved = pe_debug; pe_debug = TRUE;
-#define pe_debug_off() pe_debug_saved = pe_debug; pe_debug = FALSE;
-#define pe_debug_restore() pe_debug = pe_debug_saved;
-
 extern void print_node(const char *pre_text,
 		       node_t *node,
 		       gboolean details);
@@ -145,3 +133,27 @@ extern void print_color_details(const char *pre_text,
 extern const char *contype2text(enum con_type type);
 extern const char *strength2text(enum con_strength strength);
 extern const char *modifier2text(enum con_modifier modifier);
+
+#define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
+				         x *w = (x*)g_slist_nth_data(y, z); \
+					 a;				    \
+				  }
+
+extern gboolean pe_debug;
+extern gboolean pe_debug_saved;
+#define pdebug_action(x) if(pe_debug) {		\
+		x;				\
+	}
+
+#define pdebug(x...) if(pe_debug) {		\
+		cl_log(LOG_DEBUG, x);		\
+	}
+
+#define pe_debug_on()  pe_debug_saved = pe_debug; pe_debug = TRUE;
+#define pe_debug_off() pe_debug_saved = pe_debug; pe_debug = FALSE;
+#define pe_debug_restore() pe_debug = pe_debug_saved;
+
+#define value(x,y,z) (x==NULL?NULL:x->y==NULL?NULL:x->y->z)
+#define value_boolean(x,y,z) (x==NULL?FALSE:x->y==NULL?FALSE:x->y->z)
+
+

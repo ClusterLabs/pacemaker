@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.6 2004/04/28 14:41:06 andrew Exp $ */
+/* $Id: ptest.c,v 1.7 2004/04/29 15:23:41 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -154,7 +154,9 @@ main(int argc, char **argv)
 		   print_resource(NULL, resource, TRUE));
 
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 2 =#=#=#=#=");
+	pe_debug_on();
 	stage2(rsc_list, node_list, NULL);
+	pe_debug_off();
 
 	cl_log(LOG_INFO, "========= Nodes =========");
 	slist_iter(node, node_t, node_list, lpc,

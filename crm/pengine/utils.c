@@ -49,13 +49,13 @@ gboolean strict_preproc(rsc_constraint_t *constraint,
 			color_t *local_color,
 			color_t *other_color);
 gboolean update_node_weight(rsc_constraint_t *cons, node_t *node_rh);
-gboolean add_positive_preference(xmlNodePtr lrm_state);
+gboolean process_node_lrm_state(xmlNodePtr lrm_state);
 
 /* only for rsc_to_rsc constraints */
 rsc_constraint_t *
 invert_constraint(rsc_constraint_t *constraint) 
 {
-	pdebug(cl_log(LOG_DEBUG, "Inverting constraint"));
+	pdebug("Inverting constraint");
 	rsc_constraint_t *inverted_con =
 		cl_malloc(sizeof(rsc_constraint_t));
 
@@ -72,7 +72,7 @@ invert_constraint(rsc_constraint_t *constraint)
 	inverted_con->modifier     = modifier_none;
 	inverted_con->weight       = 0.0;
   
-	pdebug(print_cons("Inverted constraint", inverted_con, FALSE));
+	pdebug_action(print_cons("Inverted constraint", inverted_con, FALSE));
 	return inverted_con;
 }
 
@@ -126,7 +126,7 @@ node_list_and(GSListPtr list1, GSListPtr list2)
 	for(lpc = 0; lpc < g_slist_length(list1); lpc++) {
 		node_t *node = (node_t*)g_slist_nth_data(list1, lpc);
 		node_t *new_node = node_copy(node);
-		node_t *other_node = (node_t*)find_list_node(list2, node->id);
+		node_t *other_node = find_list_node(list2, node->details->id);
 
 		if(node == NULL || other_node == NULL) {
 			continue;
@@ -142,7 +142,6 @@ node_list_and(GSListPtr list1, GSListPtr list2)
 			}
 		}
 		result = g_slist_append(result, new_node);
-    
 	}
   
  
@@ -153,12 +152,13 @@ node_t *
 find_list_node(GSListPtr list, const char *id)
 {
 	int lpc = 0;
-	for(lpc = 0; lpc < g_slist_length(list); lpc++) {
-		node_t *thing = (node_t *)g_slist_nth_data(list, lpc);
-		if(safe_str_eq(thing->id, id)) {
+	slist_iter(
+		thing, node_t, list, lpc,
+		if(safe_str_eq(thing->details->id, id)) {
 			return thing;
 		}
-	}
+		);
+	
 	return NULL;
 }
 
@@ -170,9 +170,9 @@ node_list_minus(GSListPtr list1, GSListPtr list2)
 	GSListPtr result = NULL;
 	int lpc = 0;
 
-	for(lpc = 0; lpc < g_slist_length(list1); lpc++) {
-		node_t *node = (node_t*)g_slist_nth_data(list1, lpc);
-		node_t *other_node = (node_t*)find_list_node(list2, node->id);
+	slist_iter(
+		node, node_t, list1, lpc,
+		node_t *other_node = find_list_node(list2, node->details->id);
 		
 		if(node == NULL || other_node != NULL) {
 			continue;
@@ -181,11 +181,11 @@ node_list_minus(GSListPtr list1, GSListPtr list2)
 		}
 		node_t *new_node = node_copy(node);
 		result = g_slist_append(result, new_node);
-    
-	}
+		);
   
-	pdebug(cl_log(LOG_DEBUG, "Minus result len: %d",
-		      g_slist_length(result)));
+	pdebug("Minus result len: %d",
+		      g_slist_length(result));
+
 	return result;
 }
 
@@ -196,10 +196,10 @@ node_list_xor(GSListPtr list1, GSListPtr list2)
 {
 	GSListPtr result = NULL;
 	int lpc = 0;
-
-	for(lpc = 0; lpc < g_slist_length(list1); lpc++) {
-		node_t *node = (node_t*)g_slist_nth_data(list1, lpc);
-		node_t *other_node = (node_t*)find_list_node(list2, node->id);
+	
+	slist_iter(
+		node, node_t, list1, lpc,
+		node_t *other_node = (node_t*)find_list_node(list2, node->details->id);
 
 		if(node == NULL || other_node != NULL) {
 			continue;
@@ -208,12 +208,12 @@ node_list_xor(GSListPtr list1, GSListPtr list2)
 		}
 		node_t *new_node = node_copy(node);
 		result = g_slist_append(result, new_node);
-    
-	}
+		);
+	
  
-	for(lpc = 0; lpc < g_slist_length(list2); lpc++) {
-		node_t *node = (node_t*)g_slist_nth_data(list2, lpc);
-		node_t *other_node = (node_t*)find_list_node(list1, node->id);
+	slist_iter(
+		node, node_t, list1, lpc,
+		node_t *other_node = (node_t*)find_list_node(list1, node->details->id);
 
 		if(node == NULL || other_node != NULL) {
 			continue;
@@ -222,10 +222,9 @@ node_list_xor(GSListPtr list1, GSListPtr list2)
 		}
 		node_t *new_node = node_copy(node);
 		result = g_slist_append(result, new_node);
-	}
+		);
   
-	pdebug(cl_log(LOG_DEBUG, "Xor result len: %d",
-		      g_slist_length(result)));
+	pdebug("Xor result len: %d", g_slist_length(result));
 	return result;
 }
 
@@ -242,8 +241,8 @@ node_list_dup(GSListPtr list1)
 		}
 		);
 
-	pdebug(cl_log(LOG_DEBUG, "node list dup %p", result)); 
-	pdebug(slist_iter(
+	pdebug("node list dup %p", result); 
+	pdebug_action(slist_iter(
 		       this_node, node_t, result, lpc,
 		       print_node("dup", this_node, TRUE);
 		       ));
@@ -259,7 +258,6 @@ node_copy(node_t *this_node)
 		return NULL;
 	}
 	node_t *new_node = cl_malloc(sizeof(node_t));
-	new_node->id     = cl_strdup(this_node->id); 
 	new_node->weight = this_node->weight; 
 	new_node->fixed  = this_node->fixed;
 	new_node->details = this_node->details; 
@@ -280,7 +278,7 @@ create_color(GSListPtr nodes, gboolean create_only)
 	new_color->details->chosen_node = NULL; 
 	new_color->details->candidate_nodes = node_list_dup(nodes);
 
-	pdebug(print_color("Created color", new_color, TRUE));
+	pdebug_action(print_color("Created color", new_color, TRUE));
 
 	if(create_only == FALSE) {
 		colors = g_slist_append(colors, new_color);      
@@ -288,11 +286,12 @@ create_color(GSListPtr nodes, gboolean create_only)
 		/*  Add any new color to the list of candidate_colors for
 		 * resources that havent been decided yet 
 		 */
-		for(lpc = 0; lpc < g_slist_length(rsc_list); lpc++) {
-			resource_t *rh_resource = 
-				(resource_t*)g_slist_nth_data(rsc_list, lpc);
-			add_color_to_rsc(rh_resource, new_color);
-		}
+		slist_iter(
+			rsc, resource_t, rsc_list, lpc,
+			if(rsc->provisional && rsc->runnable) {
+				add_color_to_rsc(rsc, new_color);
+			}
+			);
 	}
 	
 	return new_color;
@@ -317,7 +316,7 @@ gboolean
 filter_nodes(resource_t *rsc)
 {
 	int lpc2 = 0;
-	pdebug(print_resource("Filtering nodes for", rsc, FALSE));
+	pdebug_action(print_resource("Filtering nodes for", rsc, FALSE));
 	slist_iter(
 		node, node_t, rsc->allowed_nodes, lpc2,
 		if(node == NULL) {
@@ -326,7 +325,7 @@ filter_nodes(resource_t *rsc)
 		} else if(node->weight < 0.0
 			  || node->details->online == FALSE
 			  || node->details->type == node_ping) {
-			pdebug(print_node("Removing", node, FALSE));
+			pdebug_action(print_node("Removing", node, FALSE));
 			rsc->allowed_nodes =
 				g_slist_remove(rsc->allowed_nodes,node);
 			lpc2--;
@@ -356,7 +355,7 @@ pe_find_node(GSListPtr nodes, const char *id)
   
 	for(lpc = 0; lpc < g_slist_length(nodes); lpc++) {
 		node_t *node = g_slist_nth_data(nodes, lpc);
-		if(safe_str_eq(node->id, id)) {
+		if(safe_str_eq(node->details->id, id)) {
 			return node;
 		}
 	}
@@ -370,6 +369,11 @@ color_t *
 find_color(GSListPtr candidate_colors, color_t *other_color)
 {
 	int lpc = 0;
+	if(other_color == NULL) {
+		cl_log(LOG_ERR, "Cannot find NULL color");
+		return NULL;
+	}
+	
 	slist_iter(color, color_t, candidate_colors, lpc,
 		   if(color->id == other_color->id) {
 			   return color;
@@ -383,6 +387,7 @@ gint sort_rsc_priority(gconstpointer a, gconstpointer b)
 {
 	const resource_t *resource1 = (const resource_t*)a;
 	const resource_t *resource2 = (const resource_t*)b;
+
 	if(a == NULL) return 1;
 	if(b == NULL) return -1;
   
@@ -399,6 +404,9 @@ gint sort_cons_strength(gconstpointer a, gconstpointer b)
 {
 	const rsc_constraint_t *rsc_constraint1 = (const rsc_constraint_t*)a;
 	const rsc_constraint_t *rsc_constraint2 = (const rsc_constraint_t*)b;
+
+	if(a == NULL) return 1;
+	if(b == NULL) return -1;
   
 	if(rsc_constraint1->strength > rsc_constraint2->strength)
 		return 1;
@@ -412,6 +420,7 @@ gint sort_color_weight(gconstpointer a, gconstpointer b)
 {
 	const color_t *color1 = (const color_t*)a;
 	const color_t *color2 = (const color_t*)b;
+
 	if(a == NULL) return 1;
 	if(b == NULL) return -1;
   
@@ -521,16 +530,28 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 		       __FUNCTION__);
 		return;
 	}
+
 	cl_log(LOG_DEBUG, "%s%s%sNode %s: (weight=%f, fixed=%s)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       node->details==NULL?"error ":node->details->online?"":"Unavailable/Unclean ",
-	       node->id, 
+	       node->details->id, 
 	       node->weight,
 	       node->fixed?"True":"False"); 
+
 	if(details && node->details != NULL) {
+		cl_log(LOG_DEBUG, "\t\t===Node Attributes");
 		g_hash_table_foreach(node->details->attrs,
 				     print_str_str, cl_strdup("\t\t"));
+	}
+
+	if(details) {
+		int lpc = 0;
+		cl_log(LOG_DEBUG, "\t\t===Node Attributes");
+		slist_iter(
+			rsc, resource_t, node->details->running_rsc, lpc,
+			print_resource("\t\t", rsc, FALSE);
+			);
 	}
 	
 };
@@ -560,7 +581,7 @@ print_color_details(const char *pre_text,
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       color->id, 
-	       color->chosen_node==NULL?"<unset>":color->chosen_node->id,
+	       color->chosen_node==NULL?"<unset>":color->chosen_node->details->id,
 	       g_slist_length(color->candidate_nodes)); 
 	if(details) {
 		int lpc = 0;
@@ -584,7 +605,7 @@ print_color(const char *pre_text, color_t *color, gboolean details)
 	       pre_text==NULL?"":": ",
 	       color->id, 
 	       color->local_weight,
-	       color->details->chosen_node==NULL?"<unset>":color->details->chosen_node->id,
+	       color->details->chosen_node==NULL?"<unset>":color->details->chosen_node->details->id,
 	       g_slist_length(color->details->candidate_nodes)); 
 	if(details) {
 		print_color_details("\t", color->details, details);
@@ -650,10 +671,11 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 		       __FUNCTION__);
 		return;
 	}
-	cl_log(LOG_DEBUG, "%s%s%sResource %s: (priority=%f, color=%d, now=%s)",
+	cl_log(LOG_DEBUG, "%s%s%s%sResource %s: (priority=%f, color=%d, now=%s)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       rsc->provisional?"Provisional ":"",
+	       rsc->runnable?"":"(Non-Startable) ",
 	       rsc->id,
 	       (double)rsc->priority,
 	       rsc->color==NULL?-1:rsc->color->id,

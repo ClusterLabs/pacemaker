@@ -56,9 +56,8 @@ gboolean strict_preproc(rsc_constraint_t *constraint,
 			color_t *local_color,
 			color_t *other_color);
 gboolean update_node_weight(rsc_constraint_t *cons, node_t *node_rh);
-gboolean add_positive_preference(xmlNodePtr lrm_state);
+gboolean process_node_lrm_state(node_t *node, xmlNodePtr lrm_state);
 GSListPtr match_attrs(xmlNodePtr attr_exp, GSListPtr node_list);
-
 
 GSListPtr rsc_list = NULL; 
 GSListPtr node_list = NULL;
@@ -95,7 +94,7 @@ stage1(GSListPtr nodes)
 	// filter out unavailable nodes
 	slist_iter(
 		node, node_t, node_list, lpc,
-		pdebug(print_node("Before", node, FALSE));
+		pdebug_action(print_node("Before", node, FALSE));
 		);
 	
 	slist_iter(
@@ -105,13 +104,12 @@ stage1(GSListPtr nodes)
 		} else if(node->weight < 0.0
 			  || node->details->online == FALSE
 			  || node->details->type == node_ping) {
-/* 			pdebug(print_node("Removing", node)); */
+/* 			pdebug_action(print_node("Removing", node)); */
 /* 			nodes = g_slist_remove(nodes, node); */
 /* 			lpc--; */
 		} else {
 			max_valid_nodes++;
-		}
-		
+		}	
 		);
 
 	node_list = nodes;
@@ -125,19 +123,24 @@ color_resource(resource_t *lh_resource)
 {
 	int lpc = 0;
 
-	pdebug(print_resource("Coloring", lh_resource, FALSE));
+	pdebug_action(print_resource("Coloring", lh_resource, FALSE));
 	
+	if(lh_resource->provisional == FALSE) {
+			// already processed this resource
+		return;
+	}
 	lh_resource->constraints = g_slist_sort(lh_resource->constraints, sort_cons_strength);
 
-	pdebug(cl_log(LOG_DEBUG, "=== Pre-processing"));
+	pdebug("=== Pre-processing");
 	//------ Pre-processing
-	for(; lpc < g_slist_length(lh_resource->constraints); lpc++) {
+	for(; lh_resource->runnable
+		    && lpc < g_slist_length(lh_resource->constraints); lpc++) {
 		color_t *other_color = NULL;
 		color_t *local_color = NULL;
 		rsc_constraint_t *constraint = (rsc_constraint_t*)
 			g_slist_nth_data(lh_resource->constraints, lpc);
 
-		pdebug(print_cons("Processing constraint", constraint, FALSE));
+		pdebug_action(print_cons("Processing constraint", constraint, FALSE));
 
 		if(constraint->is_placement == FALSE) {
 			continue;
@@ -165,14 +168,14 @@ color_resource(resource_t *lh_resource)
 	 */
 	choose_color(lh_resource, lh_resource->candidate_colors);	
   
-	pdebug(cl_log(LOG_DEBUG, "* Colors %d, Nodes %d",
+	pdebug("* Colors %d, Nodes %d",
 		      g_slist_length(colors),
-		      max_valid_nodes));
+		      max_valid_nodes);
 	
 	if(lh_resource->provisional
 		&& g_slist_length(colors) < max_valid_nodes) {
 		// Create new color
-		pdebug(cl_log(LOG_DEBUG, "Create a new color"));
+		pdebug("Create a new color");
 		current_color = create_color(lh_resource->allowed_nodes, FALSE);
 		lh_resource->color = current_color;
 		lh_resource->provisional = FALSE;
@@ -183,9 +186,8 @@ color_resource(resource_t *lh_resource)
 		lh_resource->provisional = FALSE;
 		
 	}
-	
 
-	pdebug(print_resource("Post-processing", lh_resource, FALSE));
+	pdebug_action(print_resource("Post-processing", lh_resource, FALSE));
 
 	//------ Post-processing
 
@@ -208,7 +210,7 @@ color_resource(resource_t *lh_resource)
 		strict_postproc(constraint, local_color, other_color);
 	}
 	
-	pdebug(print_resource("Colored", lh_resource, FALSE));
+	pdebug_action(print_resource("Colored", lh_resource, FALSE));
 }
 
 gboolean
@@ -232,14 +234,15 @@ stage2(GSListPtr sorted_rsc,
 		this_resource->provisional = TRUE;
 		);
 
-	pdebug(cl_log(LOG_DEBUG, "initialized resources to default color"));
+	pdebug("initialized resources to default color");
   
 	// Take (next) highest resource
 	for(lpc = 0; lpc < g_slist_length(sorted_rsc); lpc++) {
 		resource_t *lh_resource = (resource_t*)g_slist_nth_data(sorted_rsc, lpc);
 
 		// if resource.provisional == FALSE, repeat 
-		if(lh_resource->provisional == FALSE) {
+		if(lh_resource->provisional == FALSE
+		   || lh_resource->runnable == FALSE) {
 			// already processed this resource
 			continue;
 		}
@@ -270,37 +273,49 @@ stage5(GSListPtr resources)
 	int lpc = 0;
 	slist_iter(
 		rsc, resource_t, resources, lpc,
-		if(rsc->color->details->chosen_node == NULL) {
+		if(rsc->runnable == FALSE) {
+			cl_log(LOG_ERR,
+			       "Resource %s was not runnable",
+			       rsc->id);
+			if(rsc->cur_node_id != NULL) {
+				
+				cl_log(LOG_WARNING,
+				       "Stopping Resource (%s) on node %s",
+				       rsc->id,
+				       rsc->cur_node_id);
+			}
+
+		} else if(rsc->color->details->chosen_node == NULL) {
 			cl_log(LOG_ERR,
 			       "Could not allocate Resource %s",
 			       rsc->id);
 			if(rsc->cur_node_id != NULL) {
 				
-				cl_log(LOG_ERR,
+				cl_log(LOG_WARNING,
 				       "Stopping Resource (%s) on node %s",
 				       rsc->id,
 				       rsc->cur_node_id);
 			}
 			
 		} else if(safe_str_eq(rsc->cur_node_id,
-				      rsc->color->details->chosen_node->id)){
+				      rsc->color->details->chosen_node->details->id)){
 			cl_log(LOG_DEBUG,
 			       "No change for Resource %s (%s)",
 			       rsc->id,
 			       rsc->cur_node_id);
 			
 		} else if(rsc->cur_node_id == NULL) {
-			cl_log(LOG_DEBUG,
+			cl_log(LOG_INFO,
 			       "Starting Resource %s on %s",
 			       rsc->id,
-			       rsc->color->details->chosen_node->id);
+			       rsc->color->details->chosen_node->details->id);
 			
 		} else {
-			cl_log(LOG_DEBUG,
+			cl_log(LOG_INFO,
 			       "Moving Resource %s from %s to %s",
 			       rsc->id,
 			       rsc->cur_node_id,
-			       rsc->color->details->chosen_node->id);
+			       rsc->color->details->chosen_node->details->id);
 		}
 		);
 	
@@ -322,7 +337,7 @@ stage4(GSListPtr colors)
 		color_n = color_n_plus_1;
 		color_n_plus_1 = (color_t*)g_slist_nth_data(colors, lpc);
 
-		pdebug(print_color("Choose node for...", color_n, FALSE));
+		pdebug_action(print_color("Choose node for...", color_n, FALSE));
 //		print_color(color_n_plus_1, FALSE);
 		
 		if(color_n == NULL) {
@@ -336,12 +351,11 @@ stage4(GSListPtr colors)
 						  color_n_plus_1_nodes);
 
 		if(g_slist_length(xor) == 0 || g_slist_length(minus) == 0) {
-			pdebug(cl_log(LOG_DEBUG,
-				      "Choose any node from our list"));
+			pdebug(				      "Choose any node from our list");
 			choose_node_from_list(color_n, color_n_nodes);
 
 		} else {
-			pdebug(cl_log(LOG_DEBUG, "Choose a node not in n+1"));
+			pdebug("Choose a node not in n+1");
 			choose_node_from_list(color_n, minus);      
 		}
 
@@ -349,14 +363,14 @@ stage4(GSListPtr colors)
 
 	// chose last color
 	if(color_n_plus_1 != NULL) {
-		pdebug(print_color("Choose node for last color...",
+		pdebug_action(print_color("Choose node for last color...",
 				   color_n_plus_1,
 				   FALSE));
 
 		choose_node_from_list(color_n_plus_1, 
 				      color_n_plus_1_nodes);
 	}
-	pdebug(cl_log(LOG_DEBUG, "done %s", __FUNCTION__));
+	pdebug("done %s", __FUNCTION__);
 	return TRUE;
 	
 }
@@ -381,7 +395,7 @@ choose_node_from_list(color_t *color, GSListPtr nodes)
 	slist_iter(
 		color_n, color_t, colors, lpc,
 		node_t *other_node = pe_find_node(color_n->details->candidate_nodes,
-						  color->details->chosen_node->id);
+						  color->details->chosen_node->details->id);
 		color_n->details->candidate_nodes =
 			g_slist_remove(color_n->details->candidate_nodes,
 				       other_node);
@@ -394,9 +408,9 @@ choose_node_from_list(color_t *color, GSListPtr nodes)
 gboolean
 unpack_nodes(xmlNodePtr nodes)
 {
-	pdebug(cl_log(LOG_DEBUG, "Begining unpack... %s", __FUNCTION__));
+	pdebug("Begining unpack... %s", __FUNCTION__);
 	while(nodes != NULL) {
-		pdebug(cl_log(LOG_DEBUG, "Processing node..."));
+		pdebug("Processing node...");
 		xmlNodePtr xml_obj = nodes;
 		xmlNodePtr attrs = xml_obj->children;
 		const char *id = xmlGetProp(xml_obj, "id");
@@ -421,7 +435,9 @@ unpack_nodes(xmlNodePtr nodes)
 		new_node->details = (struct node_shared_s*)
 			cl_malloc(sizeof(struct node_shared_s*));
 		new_node->details->online = FALSE;
-		new_node->id = cl_strdup(id);
+		new_node->details->unclean = FALSE;
+		new_node->details->running_rsc = NULL;
+		new_node->details->id = cl_strdup(id);
 		new_node->details->attrs =
 			g_hash_table_new(g_str_hash, g_str_equal);
 		new_node->details->type = node_ping;
@@ -441,8 +457,8 @@ unpack_nodes(xmlNodePtr nodes)
 			attrs = attrs->next;
 		}
 		
-		pdebug(cl_log(LOG_DEBUG, "Adding node id... %s (%p)",
-			      id, new_node));
+		pdebug("Adding node id... %s (%p)",
+			      id, new_node);
 
 		node_list = g_slist_append(node_list, new_node);    
 	}
@@ -456,7 +472,7 @@ unpack_nodes(xmlNodePtr nodes)
 gboolean 
 unpack_resources(xmlNodePtr resources)
 {
-	pdebug(cl_log(LOG_DEBUG, "Begining unpack... %s", __FUNCTION__));
+	pdebug("Begining unpack... %s", __FUNCTION__);
 	while(resources != NULL) {
 		xmlNodePtr xml_obj = resources;
 		const char *id = xmlGetProp(xml_obj, "id");
@@ -464,7 +480,7 @@ unpack_resources(xmlNodePtr resources)
 		float priority_f = atof(priority);
 		resources = resources->next;
 
-		pdebug(cl_log(LOG_DEBUG, "Processing resource..."));
+		pdebug("Processing resource...");
 		
 		if(id == NULL) {
 			cl_log(LOG_ERR, "Must specify id tag in <resource>");
@@ -475,12 +491,13 @@ unpack_resources(xmlNodePtr resources)
 		new_rsc->priority = priority_f; 
 		new_rsc->candidate_colors = NULL;
 		new_rsc->color = NULL; 
+		new_rsc->runnable = TRUE; 
 		new_rsc->provisional = TRUE; 
 		new_rsc->allowed_nodes = node_list_dup(node_list);    
 		new_rsc->constraints = NULL; 
 		new_rsc->id = cl_strdup(id);
 
-		pdebug(print_resource("Added", new_rsc, FALSE));
+		pdebug_action(print_resource("Added", new_rsc, FALSE));
 		rsc_list = g_slist_append(rsc_list, new_rsc);
 
 	}
@@ -494,7 +511,7 @@ unpack_resources(xmlNodePtr resources)
 gboolean 
 unpack_constraints(xmlNodePtr constraints)
 {
-	pdebug(cl_log(LOG_DEBUG, "Begining unpack... %s", __FUNCTION__));
+	pdebug("Begining unpack... %s", __FUNCTION__);
 	while(constraints != NULL) {
 		const char *id = xmlGetProp(constraints, "id");
 		xmlNodePtr xml_obj = constraints;
@@ -504,8 +521,8 @@ unpack_constraints(xmlNodePtr constraints)
 			continue;
 		}
 
-		pdebug(cl_log(LOG_DEBUG, "Processing constraint %s %s",
-			      xml_obj->name,id));
+		pdebug("Processing constraint %s %s",
+			      xml_obj->name,id);
 		if(safe_str_eq("rsc_to_rsc", xml_obj->name)) {
 			unpack_rsc_to_rsc(xml_obj);
 
@@ -530,13 +547,13 @@ apply_node_constraints(GSListPtr constraints,
 		       GSListPtr resources,
 		       GSListPtr nodes)
 {
-	pdebug(cl_log(LOG_DEBUG, "Applying constraints... %s", __FUNCTION__));
+	pdebug("Applying constraints... %s", __FUNCTION__);
 	int lpc = 0;
 	for(lpc = 0; lpc < g_slist_length(constraints); lpc++) {
 		rsc_constraint_t *cons = (rsc_constraint_t *)
 			g_slist_nth_data(constraints, lpc);
 		
-		pdebug(print_cons("Applying", cons, FALSE));
+		pdebug_action(print_cons("Applying", cons, FALSE));
 		// take "lifetime" into account
 		if(cons == NULL) {
 			cl_log(LOG_ERR, "Constraint (%d) is NULL", lpc); 	
@@ -559,7 +576,7 @@ apply_node_constraints(GSListPtr constraints,
 
 		if(cons->type == rsc_to_rsc) {
 			// nothing 
-			pdebug(cl_log(LOG_DEBUG, "nothing to do"));
+			pdebug("nothing to do");
 			continue;
 			
 		} else if(cons->type == rsc_to_node
@@ -594,7 +611,7 @@ apply_node_constraints(GSListPtr constraints,
 gboolean
 unpack_status(xmlNodePtr status)
 {
-	pdebug(cl_log(LOG_DEBUG, "Begining unpack %s", __FUNCTION__));
+	pdebug("Begining unpack %s", __FUNCTION__);
 	while(status != NULL) {
 		const char *id = xmlGetProp(status, "id");
 		const char *state = xmlGetProp(status, "state");
@@ -606,13 +623,13 @@ unpack_status(xmlNodePtr status)
 		lrm_state = find_xml_node(lrm_state, "rsc_state");
 		status = status->next;
 
-		pdebug(cl_log(LOG_DEBUG, "Processing node %s", id));
+		pdebug("Processing node %s", id);
 
 		if(id == NULL){
 			// error
 			continue;
 		}
-		pdebug(cl_log(LOG_DEBUG, "Processing node attrs"));
+		pdebug("Processing node attrs");
 		
 		node_t *this_node = pe_find_node(node_list, id);
 		while(attrs != NULL){
@@ -620,8 +637,8 @@ unpack_status(xmlNodePtr status)
 			const char *value = xmlGetProp(attrs, "value");
 			
 			if(name != NULL && value != NULL) {
-				pdebug(cl_log(LOG_DEBUG, "Adding %s => %s",
-					      name, value));
+				pdebug("Adding %s => %s",
+					      name, value);
 				g_hash_table_insert(this_node->details->attrs,
 						    cl_strdup(name),
 						    cl_strdup(value));
@@ -629,8 +646,7 @@ unpack_status(xmlNodePtr status)
 			attrs = attrs->next;
 		}
 
-		pdebug(cl_log(LOG_DEBUG, "Processing node lrm state"));
-		add_positive_preference(lrm_state);
+		pdebug("determining node state");
 		
 		if(safe_str_eq(exp_state, "active")
 		   && safe_str_eq(state, "active")) {
@@ -638,13 +654,13 @@ unpack_status(xmlNodePtr status)
 			this_node->details->online = TRUE;
 			
 		} else {
-			pdebug(cl_log(LOG_DEBUG, "remove %s", __FUNCTION__));
+			pdebug("remove %s", __FUNCTION__);
 			// remove node from contention
 			this_node->weight = -1;
 			this_node->fixed = TRUE;
 
-			pdebug(cl_log(LOG_DEBUG, "state %s, expected %s",
-				      state, exp_state));
+			pdebug("state %s, expected %s",
+				      state, exp_state);
 			
 			if(safe_str_eq(state, "shutdown")){
 				// create shutdown req
@@ -655,6 +671,7 @@ unpack_status(xmlNodePtr status)
 				  && safe_str_neq(state, "active")) {
 				// mark unclean in the xml
 				state = "unclean";
+				this_node->details->unclean = TRUE;
 				
 				// remove any running resources from being allocated
 			}
@@ -664,6 +681,10 @@ unpack_status(xmlNodePtr status)
 							      this_node);
 			}
 		}
+
+		pdebug("Processing node lrm state");
+		process_node_lrm_state(this_node, lrm_state);
+		
 	}
 	cons_list = g_slist_sort(cons_list, sort_cons_strength);
 
@@ -687,7 +708,17 @@ strict_preproc(rsc_constraint_t *constraint,
 	resource_t * lh_resource = constraint->rsc_lh;
 	switch(constraint->strength) {
 		case must:
-			/// not yet...
+			if(constraint->rsc_rh->runnable == FALSE) {
+				cl_log(LOG_WARNING,
+				       "Resource %s must run on the same node"
+				       " as %s (cons %s), but %s is not"
+				       " runnable.",
+				       constraint->rsc_lh->id,
+				       constraint->rsc_rh->id,
+				       constraint->id,
+				       constraint->rsc_rh->id);
+				constraint->rsc_lh->runnable = FALSE;
+			}
 			break;
 			
 			// x * should * should_not = x
@@ -702,9 +733,9 @@ strict_preproc(rsc_constraint_t *constraint,
 				local_color->local_weight = 
 					local_color->local_weight * 0.5;
 			}
-			pdebug(cl_log(LOG_DEBUG, "# Colors %d, Nodes %d",
+			pdebug("# Colors %d, Nodes %d",
 				      g_slist_length(colors),
-				      max_valid_nodes));
+				      max_valid_nodes);
 			       
 			if(g_slist_length(colors) < max_valid_nodes
 //			   && g_slist_length(lh_resource->candidate_colors)==1
@@ -735,7 +766,9 @@ gboolean
 strict_postproc(rsc_constraint_t *constraint,
 		color_t *local_color,
 		color_t *other_color)
-{	
+{
+	print_cons("Post processing", constraint, FALSE);
+	
 	switch(constraint->strength) {
 		case must:
 			if(constraint->rsc_rh->provisional == TRUE) {
@@ -744,6 +777,19 @@ strict_postproc(rsc_constraint_t *constraint,
 				color_resource(constraint->rsc_rh);
 			}
 			// else check for error
+			if(constraint->rsc_lh->runnable == FALSE) {
+				cl_log(LOG_WARNING,
+				       "Resource %s must run on the same node"
+				       " as %s (cons %s), but %s is not"
+				       " runnable.",
+				       constraint->rsc_rh->id,
+				       constraint->rsc_lh->id,
+				       constraint->id,
+				       constraint->rsc_lh->id);
+				constraint->rsc_rh->runnable = FALSE;
+				
+			}
+			
 			break;
 			
 		case should:
@@ -766,32 +812,36 @@ gboolean
 choose_color(resource_t *lh_resource, GSListPtr candidate_colors)
 {
 	int lpc = 0;
-	GSListPtr sorted_colors = g_slist_sort(candidate_colors,
-					sort_color_weight);
 
-	lh_resource->candidate_colors = sorted_colors;
+	if(lh_resource->runnable == FALSE) {
+		lh_resource->color = no_color;
+		lh_resource->provisional = FALSE;
+	} else {
+		GSListPtr sorted_colors = g_slist_sort(candidate_colors,
+						       sort_color_weight);
+		
+		lh_resource->candidate_colors = sorted_colors;
 	
-	pdebug(cl_log(LOG_DEBUG,
-		      "Choose a color from %d possibilities",
-		      g_slist_length(sorted_colors)));
+		pdebug(			      "Choose a color from %d possibilities",
+			      g_slist_length(sorted_colors));
+	}
 
-	
-	for(lpc = 0; lh_resource->provisional
-		    && lpc < g_slist_length(sorted_colors);
-	    lpc++) {
-		color_t *this_color = (color_t*)
-			g_slist_nth_data(sorted_colors, lpc);
-		GSListPtr intersection =
-			node_list_and(this_color->details->candidate_nodes, 
-				      lh_resource->allowed_nodes);
+	if(lh_resource->provisional) {
+		slist_iter(
+			this_color, color_t,lh_resource->candidate_colors, lpc,
+			GSListPtr intersection = node_list_and(
+				this_color->details->candidate_nodes, 
+				lh_resource->allowed_nodes);
 
-		if(g_slist_length(intersection) != 0) {
-			// TODO: merge node weights
-			g_slist_free(this_color->details->candidate_nodes);
-			this_color->details->candidate_nodes = intersection;
-			lh_resource->color = this_color;
-			lh_resource->provisional = FALSE;
-		}
+			if(g_slist_length(intersection) != 0) {
+				// TODO: merge node weights
+				g_slist_free(this_color->details->candidate_nodes);
+				this_color->details->candidate_nodes = intersection;
+				lh_resource->color = this_color;
+				lh_resource->provisional = FALSE;
+				break;
+			}
+			);
 	}
 	return !lh_resource->provisional;
 }
@@ -939,7 +989,7 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj)
 			       "node %s (from %s) not found",
 			       id_rh, attr_exp->name);
 		}
-		pdebug(print_cons("Added", new_con, FALSE));
+		pdebug_action(print_cons("Added", new_con, FALSE));
 		cons_list = g_slist_append(cons_list, new_con);
 
 		/* dont add it to the resource,
@@ -954,10 +1004,11 @@ gboolean
 update_node_weight(rsc_constraint_t *cons, node_t *node)
 {
 	node_t *node_rh = pe_find_node(cons->rsc_lh->allowed_nodes,
-				       node->id);				
+				       node->details->id);
+
 	if(node_rh == NULL) {
 		node_t *node_tmp = pe_find_node(node_list,
-						node->id);
+						node->details->id);
 		node_rh = node_copy(node_tmp);
 		cons->rsc_lh->allowed_nodes =
 			g_slist_append(cons->rsc_lh->allowed_nodes,
@@ -975,17 +1026,16 @@ update_node_weight(rsc_constraint_t *cons, node_t *node)
 		       "Constraint %s is irrelevant as the"
 		       " weight of node %s is fixed as %f.",
 		       cons->id,
-		       node_rh->id,
+		       node_rh->details->id,
 		       node_rh->weight);
 		return TRUE;
 	}
 	
-	pdebug(cl_log(LOG_DEBUG,
-		      "Constraint %s: node %s weight %s %f.",
+	pdebug(		      "Constraint %s: node %s weight %s %f.",
 		      cons->id,
-		      node_rh->id,
+		      node_rh->details->id,
 		      modifier2text(cons->modifier),
-		      node_rh->weight));
+		      node_rh->weight);
 	
 	switch(cons->modifier) {
 		case set:
@@ -1006,16 +1056,24 @@ update_node_weight(rsc_constraint_t *cons, node_t *node)
 }
 
 gboolean
-add_positive_preference(xmlNodePtr lrm_state)
+process_node_lrm_state(node_t *node, xmlNodePtr lrm_state)
 {
-	pdebug(cl_log(LOG_DEBUG, "here %s", __FUNCTION__));
+	pdebug("here %s", __FUNCTION__);
 	
 	while(lrm_state != NULL) {
+		const char *id    = xmlGetProp(lrm_state, "id");
 		const char *rsc_id    = xmlGetProp(lrm_state, "rsc_id");
 		const char *node_id   = xmlGetProp(lrm_state, "node_id");
 		const char *rsc_state = xmlGetProp(lrm_state, "rsc_state");
 		resource_t *rsc_lh = pe_find_resource(rsc_list, rsc_id);
 		rsc_lh->cur_node_id = cl_strdup(node_id);
+
+		node->details->running_rsc =
+			g_slist_append(node->details->running_rsc, rsc_lh);
+
+		if(node->details->unclean) {
+			rsc_lh->runnable = FALSE;
+		}
 		
 		if((safe_str_eq(rsc_state, "starting"))
 		   || (safe_str_eq(rsc_state, "started"))) {
@@ -1023,7 +1081,7 @@ add_positive_preference(xmlNodePtr lrm_state)
 			node_t *node_rh;
 			rsc_constraint_t *new_cons =
 				cl_malloc(sizeof(rsc_constraint_t));
-			new_cons->id = cl_strdup(""); // genereate one
+			new_cons->id = cl_strdup(id); // genereate one
 			new_cons->type = rsc_to_node;
 			new_cons->weight = 100.0;
 			new_cons->modifier = inc;
@@ -1035,7 +1093,7 @@ add_positive_preference(xmlNodePtr lrm_state)
 								node_rh);
 					
 			cons_list = g_slist_append(cons_list, new_cons);
-			pdebug(print_cons("Added", new_cons, FALSE));
+			pdebug_action(print_cons("Added", new_cons, FALSE));
 			
 		} else if(safe_str_eq(rsc_state, "stop_fail")) {
 			// do soemthing
