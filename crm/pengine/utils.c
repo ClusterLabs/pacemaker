@@ -7,6 +7,7 @@
 
 #include <pengine.h>
 
+
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 
 color_t *create_color(GSListPtr nodes, gboolean create_only);
@@ -517,10 +518,10 @@ task2text(enum action_tasks task)
 			result = "no_action";
 			break;
 		case stop_rsc:
-			result = "stop_rsc";
+			result = "stop";
 			break;
 		case start_rsc:
-			result = "start_rsc";
+			result = "start";
 			break;
 		case shutdown_crm:
 			result = "shutdown_crm";
@@ -705,7 +706,7 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 	       g_slist_length(rsc->allowed_nodes),
 	       g_slist_length(rsc->rsc_cons),
 	       g_slist_length(rsc->node_cons));
-
+	
 	if(details) {
 		int lpc = 0;
 		cl_log(LOG_DEBUG, "\t=== Colors");
@@ -734,17 +735,58 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 		return;
 	}
 
-	cl_log(LOG_DEBUG, "%s%s%sAction %d: (action=%s to %s on %s)",
+	cl_log(LOG_DEBUG, "%s%s%sAction %d: %s %s @ %s",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
-	       action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+	       action->runnable?action->optional?"Optional ":action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 	       action->id,
 	       task2text(action->task),
 	       safe_val3(NULL, action, rsc, id),
 	       safe_val7(NULL, action, rsc, color, details, chosen_node, details, id));
 	
-	cl_log(LOG_DEBUG, "\t(seen=%d, before=%d, after=%d)",
-	       action->seen_count,
-	       g_slist_length(action->actions_before),
-	       g_slist_length(action->actions_after));
+//	if(details == FALSE) {
+		cl_log(LOG_DEBUG, "\t\t(seen=%d, before=%d, after=%d)",
+		       action->seen_count,
+		       g_slist_length(action->actions_before),
+		       g_slist_length(action->actions_after));
+//	}
+
+	if(details) {
+		int lpc = 0;
+#if 1
+		cl_log(LOG_DEBUG, "\t\t====== Before");
+		slist_iter(
+			other, action_wrapper_t, action->actions_before, lpc,
+			print_action("\t\t", other->action, FALSE);
+			);
+//#else
+		cl_log(LOG_DEBUG, "\t\t====== After");
+		slist_iter(
+			other, action_wrapper_t, action->actions_after, lpc,
+			print_action("\t\t", other->action, FALSE);
+			);		
+#endif
+		cl_log(LOG_DEBUG, "\t\t====== End");
+	}
+	
+
+}
+
+
+action_t *
+action_new(int id, resource_t *rsc, enum action_tasks task)
+{
+	action_t *action = (action_t*)cl_malloc(sizeof(action_t));
+	action->id = id;
+	action->rsc = rsc;
+	action->task = task;
+	action->actions_before = NULL;
+	action->actions_after = NULL;
+	action->node = NULL; // fill node in later
+	action->runnable = FALSE;
+	action->processed = FALSE;
+	action->optional = FALSE;
+	action->failed = FALSE;   // here?
+	action->complete = FALSE; // here?
+	action->seen_count = 0;
 }

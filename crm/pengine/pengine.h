@@ -8,6 +8,7 @@ typedef struct rsc_to_rsc_s rsc_to_rsc_t;
 typedef struct resource_s resource_t;
 typedef struct order_constraint_s order_constraint_t;
 typedef struct action_s action_t;
+typedef struct action_wrapper_s action_wrapper_t;
 
 enum con_type {
 	type_none,
@@ -27,7 +28,8 @@ enum con_strength {
 	must,
 	should,
 	should_not,
-	must_not
+	must_not,
+	startstop
 };
 
 enum con_modifier {
@@ -54,9 +56,9 @@ struct node_shared_s {
 		char	*id; 
 		gboolean online;
 		gboolean unclean;
-		GSListPtr running_rsc;
+		GSListPtr running_rsc; // resource_t*
 		
-		GHashTable *attrs;
+		GHashTable *attrs;     // char* => char*
 		enum node_type type;
 }; 
 
@@ -68,7 +70,7 @@ struct node_s {
  
 struct color_shared_s {
 		int id; 
-		GSListPtr candidate_nodes; 
+		GSListPtr candidate_nodes; // node_t*
 		node_t *chosen_node; 
 };
 
@@ -92,7 +94,7 @@ struct rsc_to_node_s {
 		resource_t	*rsc_lh; 
 
 		float		weight;
-		GSListPtr node_list_rh; 
+		GSListPtr node_list_rh; // node_t*
 		enum con_modifier modifier;
 };
 
@@ -108,13 +110,20 @@ struct resource_s {
 		action_t *stop;
 		action_t *start;
 		
-		GSListPtr candidate_colors; 
-		GSListPtr allowed_nodes; 
-		GSListPtr node_cons; 
-		GSListPtr rsc_cons; 
+		GSListPtr candidate_colors; // color_t*
+		GSListPtr allowed_nodes;    // node_t*
+		GSListPtr node_cons;        // rsc_to_node_t* 
+		GSListPtr rsc_cons;         // resource_t*
 
 		color_t *color;
 };
+
+struct action_wrapper_s 
+{
+		enum con_strength strength;
+		action_t *action;
+};
+
 
 struct action_s 
 {
@@ -131,8 +140,8 @@ struct action_s
 
 		int seen_count;
 		
-		GSListPtr actions_before;
-		GSListPtr actions_after;
+		GSListPtr actions_before; // action_warpper_t*
+		GSListPtr actions_after;  // action_warpper_t*
 };
 
 struct order_constraint_s 
@@ -203,6 +212,8 @@ extern const char *contype2text(enum con_type type);
 extern const char *strength2text(enum con_strength strength);
 extern const char *modifier2text(enum con_modifier modifier);
 extern const char *task2text(enum action_tasks task);
+
+extern action_t *action_new(int id, resource_t *rsc, enum action_tasks task);
 
 #define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
 				         x *w = (x*)g_slist_nth_data(y, z); \

@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.9 2004/04/30 15:22:22 andrew Exp $ */
+/* $Id: ptest.c,v 1.10 2004/05/03 10:40:10 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -195,7 +195,7 @@ main(int argc, char **argv)
 	stage5(rsc_list);
 	cl_log(LOG_INFO, "========= Action List =========");
 	slist_iter(action, action_t, action_list, lpc,
-		   print_action(NULL, action, FALSE));
+		   print_action(NULL, action, TRUE));
 
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 6 =#=#=#=#=");
 	stage6(rsc_list, action_list, action_cons_list);
@@ -203,12 +203,17 @@ main(int argc, char **argv)
 	cl_log(LOG_INFO, "=#=#=#=#= Summary =#=#=#=#=");
 	summary(rsc_list);
 
+	cl_log(LOG_INFO, "========= All Actions =========");
+	slist_iter(action, action_t, action_list, lpc,
+		   print_action("\t", action, TRUE);
+		);
+
 	cl_log(LOG_INFO, "========= Action Sets =========");
 
 	cl_log(LOG_INFO, "\t========= Set %d (Un-runnable) =========", -1);
 	slist_iter(action, action_t, action_list, lpc,
-		   if(action->runnable == FALSE) {
-			   print_action("\t", action, FALSE);
+		   if(action->optional == FALSE && action->runnable == FALSE) {
+			   print_action("\t", action, TRUE);
 		   }
 		);
 
@@ -216,7 +221,7 @@ main(int argc, char **argv)
 	slist_iter(action_set, GSList, action_set_list, lpc,
 		   cl_log(LOG_INFO, "\t========= Set %d =========", lpc);
 		   slist_iter(action, action_t, action_set, lpc2,
-			      print_action("\t", action, FALSE)));
+			      print_action("\t", action, TRUE)));
 
 	
 	cl_log(LOG_INFO, "========= Stonith List =========");

@@ -227,7 +227,8 @@ stage4(GSListPtr colors)
 gboolean
 stage5(GSListPtr resources)
 {
-	// fill in the nodes to perform the actions on
+	
+	pdebug("filling in the nodes to perform the actions on");
 	int lpc = 0;
 	slist_iter(
 		rsc, resource_t, resources, lpc,
@@ -275,6 +276,9 @@ stage5(GSListPtr resources)
 			rsc->start->runnable = TRUE;
 		}
 
+		print_action("stage5", rsc->stop, FALSE);
+		print_action("stage5", rsc->start, FALSE);
+		
 		);
 	
 	return TRUE;
@@ -288,13 +292,23 @@ stage6(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints)
 	slist_iter(
 		order, order_constraint_t, action_constraints, lpc,
 
-		order->lh_action->actions_before =
-			g_slist_append(order->lh_action->actions_before,
-				       order->rh_action);
+		action_wrapper_t *wrapper = (action_wrapper_t*)
+			cl_malloc(sizeof(action_wrapper_t));
+		wrapper->action = order->rh_action;
+		wrapper->strength = order->strength;
+		
+		order->lh_action->actions_after =
+			g_slist_append(order->lh_action->actions_after,
+				       wrapper);
 
-		order->rh_action->actions_after =
-			g_slist_append(order->rh_action->actions_after,
-				       order->lh_action);
+		wrapper = (action_wrapper_t*)
+			cl_malloc(sizeof(action_wrapper_t));
+		wrapper->action = order->lh_action;
+		wrapper->strength = order->strength;
+
+		order->rh_action->actions_before =
+			g_slist_append(order->rh_action->actions_before,
+				       wrapper);
 
 		);
 
@@ -303,14 +317,29 @@ stage6(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints)
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 		GSListPtr action_set = NULL;
+		if(rsc->stop->runnable) {
+			action_set = create_action_set(rsc->stop);
+			if(action_set != NULL) {
+				action_set_list =
+					g_slist_append(action_set_list,
+						       action_set);
+			} else {
+				pdebug("No actions resulting from %s->stop",
+				       rsc->id);
+			}
+			
+			
+		}
 		if(rsc->start->runnable) {
 			action_set = create_action_set(rsc->start);
-		} else if(rsc->stop->runnable) {
-			action_set = create_action_set(rsc->stop);
-		}
-		if(action_set) {
-			action_set_list =
-				g_slist_append(action_set_list, action_set);
+			if(action_set != NULL) {
+				action_set_list =
+					g_slist_append(action_set_list,
+						       action_set);
+			} else {
+				pdebug("No actions resulting from %s->start",
+				       rsc->id);
+			}
 		}
 		
 		);
@@ -482,6 +511,7 @@ unpack_resources(xmlNodePtr resources)
 		const char *id = xmlGetProp(xml_obj, "id");
 		const char *priority = xmlGetProp(xml_obj, "priority");
 		float priority_f = atof(priority);
+
 		resources = resources->next;
 
 		pdebug("Processing resource...");
@@ -503,45 +533,24 @@ unpack_resources(xmlNodePtr resources)
 		new_rsc->id = cl_strdup(id);
 
 		
-		action_t *action_start = (action_t*)cl_malloc(sizeof(action_t));
-		action_t *action_stop = (action_t*)cl_malloc(sizeof(action_t));
-		action_start->id = action_id++;
-		action_start->rsc = new_rsc;
-		action_start->task = start_rsc;
-		action_start->actions_before = NULL;
-		action_start->actions_after = NULL;
-		action_start->node = NULL; // fill node in later
-		action_start->runnable = FALSE;
-		action_start->processed = FALSE;
-		action_start->optional = FALSE;
-		action_start->failed = FALSE;   // here?
-		action_start->complete = FALSE; // here?
-		action_start->seen_count = 0;
+		action_t *action_stop = action_new(action_id++, new_rsc,
+						    stop_rsc);
 
-		new_rsc->start = action_start;
-		action_list = g_slist_append(action_list, action_start);
-		
-		action_stop->id = action_id++;
-		action_stop->rsc = new_rsc;
-		action_stop->task = stop_rsc;
-		action_stop->actions_before = NULL;
-		action_stop->actions_after = NULL;
-		action_stop->node = NULL; // fill node in later
-		action_stop->runnable = FALSE;
-		action_stop->processed = FALSE;
-		action_stop->optional = FALSE;
-		action_stop->failed = FALSE;   // here?
-		action_stop->complete = FALSE; // here?
-		action_stop->seen_count = 0;
+		action_t *action_start = action_new(action_id++, new_rsc,
+						    start_rsc);
 
 		new_rsc->stop = action_stop;
 		action_list = g_slist_append(action_list, action_stop);
 
+		new_rsc->start = action_start;
+		action_list = g_slist_append(action_list, action_start);
+
 		order_constraint_t *order = (order_constraint_t*)
 			cl_malloc(sizeof(order_constraint_t));
 		order->id = order_id++;
-		order->lh_action = action_start;
-		order->rh_action = action_stop;
+		order->lh_action = action_stop;
+		order->rh_action = action_start;
+		order->strength = startstop;
 		action_cons_list = g_slist_append(action_cons_list, order);
 	
 		pdebug_action(print_resource("Added", new_rsc, FALSE));
@@ -1228,13 +1237,12 @@ create_ordering(const char *id, enum con_strength strength,
 	action_t *rh_stop = rsc_rh->stop;
 	action_t *rh_start = rsc_rh->start;
 	
-	/* lh start after rh */
-	
 	order_constraint_t *order = (order_constraint_t*)
 		cl_malloc(sizeof(order_constraint_t));
 	order->id = order_id++;
 	order->lh_action = lh_stop;
 	order->rh_action = rh_stop;
+	order->strength = strength;
 	action_cons_list = g_slist_append(action_cons_list, order);
 	
 	order = (order_constraint_t*)
@@ -1242,6 +1250,7 @@ create_ordering(const char *id, enum con_strength strength,
 	order->id = order_id++;
 	order->lh_action = rh_start;
 	order->rh_action = lh_start;
+	order->strength = strength;
 	action_cons_list = g_slist_append(action_cons_list, order);
 
 	return TRUE;
@@ -1293,41 +1302,51 @@ create_action_set(action_t *action)
 {
 	int lpc = 0;
 	GSListPtr result = NULL;
+	GSListPtr tmp = NULL;
 
 	if(action->processed) {
 		return NULL;
 	}
 
-	print_action("Processing", action, FALSE);
-
-	action->seen_count = action->seen_count + 1;
+	pdebug_action(print_action("Create action set for", action, FALSE));
+	pe_debug_on();
+	
 	// process actions_before
-	if(action->seen_count == 1) {
+	if(action->seen_count == 0) {
+		pdebug("Processing \"before\" for action %d", action->id);
 		slist_iter(
-			other, action_t, action->actions_before, lpc,
-			result = create_action_set(other);
+			other, action_wrapper_t, action->actions_before, lpc,
+			tmp = create_action_set(other->action);
+			pdebug("%d (%d total) \"before\" actions for %d)",
+			       g_slist_length(tmp), g_slist_length(result),action->id);
+			result = g_slist_concat(result, tmp);
 			);
 
 		// add ourselves
+		pdebug("Adding self %d", action->id);
 		if(action->processed == FALSE) {
 			result = g_slist_append(result, action);
 			action->processed = TRUE;
 		}
 		
 	} else {
+		pdebug("Already seen action %d", action->id);
+		pdebug("Processing \"before\" for action %d", action->id);
 		slist_iter(
-			other, action_t, action->actions_before, lpc,
+			other, action_wrapper_t, action->actions_before, lpc,
 			
-			if(other->seen_count > action->seen_count
-			   // && strength == MUST
-				) {
-				result = g_slist_concat(
-					result, create_action_set(other));
+			if(other->action->seen_count > action->seen_count
+			   && other->strength == must) {
+				tmp = create_action_set(other->action);
+				pdebug("%d (%d total) \"before\" actions for %d)",
+				       g_slist_length(tmp), g_slist_length(result),action->id);
+				result = g_slist_concat(result, tmp);
 			}
 			
 			);
 
 		// add ourselves
+		pdebug("Adding self %d", action->id);
 		if(action->processed == FALSE) {
 			result = g_slist_append(result, action);
 			action->processed = TRUE;
@@ -1335,19 +1354,25 @@ create_action_set(action_t *action)
 
 		// add strength == !MUST
 		slist_iter(
-			other, action_t, action->actions_before, lpc,
+			other, action_wrapper_t, action->actions_before, lpc,
 			
-			result = g_slist_concat(result,
-						create_action_set(other));
+			tmp = create_action_set(other->action);
+			pdebug("%d (%d total) post-self \"before\" actions for %d)",
+			       g_slist_length(tmp), g_slist_length(result),action->id);
+			result = g_slist_concat(result, tmp);
 			);
 	}
 	
+	action->seen_count = action->seen_count + 1;
 	
 	// process actions_after
+	pdebug("Processing \"after\" for action %d", action->id);
 	slist_iter(
-		other, action_t, action->actions_after, lpc,
-		result = g_slist_concat(result,
-					create_action_set(other));
+		other, action_wrapper_t, action->actions_after, lpc,
+		tmp = create_action_set(other->action);
+		pdebug("%d (%d total) \"after\" actions for %d)",
+		       g_slist_length(tmp), g_slist_length(result),action->id);
+		result = g_slist_concat(result, tmp);
 		);
 	
 	return result;
@@ -1368,14 +1393,16 @@ update_runnable(GSListPtr actions)
 
 			if(action->runnable) {
 				continue;
+			} else if(action->optional) {
+				continue;
 			}
 			
 			slist_iter(
-				other, action_t, action->actions_before, lpc2,
-				if(other->runnable) {
+				other, action_wrapper_t, action->actions_before, lpc2,
+				if(other->action->runnable) {
 					change = TRUE;
 				}
-				other->runnable = FALSE;
+				other->action->runnable = FALSE;
 				);
 			);
 	}
