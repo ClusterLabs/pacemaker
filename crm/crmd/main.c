@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.11 2005/02/07 17:28:25 andrew Exp $ */
+/* $Id: main.c,v 1.12 2005/02/10 11:08:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,10 +126,10 @@ init_start(void)
     fsa_state = S_STARTING;
     fsa_input_register = 0; /* zero out the regester */
 
+    init_dotfile();
     crm_info("Starting %s", crm_system_name);
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
 
-    init_dotfile();
     state = s_crmd_fsa(C_STARTUP);
     
     if (state == S_PENDING || state == S_STARTING) {

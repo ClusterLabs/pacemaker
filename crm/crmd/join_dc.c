@@ -58,7 +58,7 @@ do_dc_join_offer_all(long long action,
 	
 	/* catch any nodes that are active in the CIB but not in the CCM list*/
 	update = get_object_root(XML_CIB_TAG_STATUS, update);
-	CRM_ASSERT(update != NULL);
+	CRM_DEV_ASSERT(update != NULL);
 
 	xml_child_iter(
 		tmp1, node_entry, XML_CIB_TAG_STATE,

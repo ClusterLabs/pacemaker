@@ -49,7 +49,7 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 	const char *sys_to   = ha_msg_value(msg, F_CRM_SYS_TO);
 	const char *sys_from = ha_msg_value(msg, F_CRM_SYS_FROM);
 
-	CRM_ASSERT(from != NULL);
+	CRM_DEV_ASSERT(from != NULL);
 
 	if(AM_I_DC
 	   && safe_str_eq(sys_from, CRM_SYSTEM_DC)

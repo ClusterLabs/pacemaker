@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.49 2005/02/02 21:47:55 andrew Exp $ */
+/* $Id: ccm.c,v 1.50 2005/02/10 11:08:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -558,7 +558,7 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 
 	tmp = find_xml_node(fragment, XML_TAG_CIB, TRUE);
 	tmp = get_object_root(XML_CIB_TAG_STATUS, tmp);
-	CRM_ASSERT(tmp != NULL);
+	CRM_DEV_ASSERT(tmp != NULL);
 	
 	update_data.updates = tmp;
 
@@ -614,7 +614,6 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	tmp1 = create_node_state(node_uname, node_uname,
 				 NULL, data->state, NULL, state, NULL);
 
-	CRM_ASSERT(data->updates != NULL);
 	add_node_copy(data->updates, tmp1);
 	free_xml(tmp1);
 }

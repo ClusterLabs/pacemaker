@@ -191,7 +191,7 @@ update_local_cib_adv(
 	ha_msg_input_t *fsa_input = NULL;
 	int call_options = cib_scope_local|cib_sync_call;
 
-	CRM_ASSERT(msg_data != NULL);
+	CRM_DEV_ASSERT(msg_data != NULL);
 	
 	crm_malloc(fsa_input, sizeof(ha_msg_input_t));
 
@@ -233,9 +233,9 @@ update_local_cib_adv(
 	delete_ha_msg_input(fsa_input);
 #else
  	crm_msg_del(fsa_input->msg);
+	crm_free(fsa_input);
 	/* BUG: it should be possible to free this but for some reason I cant */
 /*  	free_xml(fsa_input->xml); */
-	crm_free(fsa_input);
 #endif
 	crm_debug("deleted input");
 }
