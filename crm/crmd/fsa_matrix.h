@@ -146,12 +146,12 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 
 /* Got an I_RELEASE_DC */
 	{
-		/* S_IDLE		==> */	S_RECOVERY,
+		/* S_IDLE		==> */	S_RELEASE_DC,
 		/* S_ELECTION		==> */	S_RELEASE_DC,
-		/* S_INTEGRATION	==> */	S_RECOVERY,
-		/* S_FINALIZE_JOIN	==> */	S_RECOVERY,
+		/* S_INTEGRATION	==> */	S_RELEASE_DC,
+		/* S_FINALIZE_JOIN	==> */	S_RELEASE_DC,
 		/* S_NOT_DC		==> */	S_NOT_DC,
-		/* S_POLICY_ENGINE	==> */	S_RECOVERY,
+		/* S_POLICY_ENGINE	==> */	S_RELEASE_DC,
 		/* S_RECOVERY		==> */	S_RECOVERY,
 		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
 		/* S_STARTING		==> */	S_RECOVERY,
