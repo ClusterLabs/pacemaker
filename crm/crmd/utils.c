@@ -108,18 +108,18 @@ startTimer(fsa_timer_t *timer)
 			Gmain_timeout_add(timer->period_ms,
 					  timer->callback,
 					  (void*)timer);
-		crm_debug("Started %s timer (%d)",
+		crm_debug("Started %s timer (%d), period=%dms",
 			  fsa_input2string(timer->fsa_input),
-			  timer->source_id);
+			  timer->source_id, timer->period_ms);
 
 	} else if(timer->period_ms < 0) {
 		crm_err("Tried to start timer %s with -ve period",
 			fsa_input2string(timer->fsa_input));
 		
 	} else {
-		crm_debug("Timer %s already running (%d)",
+		crm_debug("Timer %s (period=%dms) already running (%d)",
 			  fsa_input2string(timer->fsa_input),
-			  timer->source_id);
+			  timer->period_ms, timer->source_id);
 		return FALSE;		
 	}
 	return TRUE;
@@ -134,17 +134,17 @@ stopTimer(fsa_timer_t *timer)
 		return FALSE;
 		
 	} else if(timer->source_id != (guint)-1 && timer->source_id != (guint)-2) {
-		crm_devel("Stopping %s timer (%d)",
-			   fsa_input2string(timer->fsa_input),
-			   timer->source_id);
+		crm_debug("Stopping %s timer (period=%dms, src=%d)",
+			  fsa_input2string(timer->fsa_input),
+			  timer->period_ms, timer->source_id);
 		g_source_remove(timer->source_id);
 		timer->source_id = -2;
 		
 	} else {
-		timer->source_id = -2;
-		crm_debug("Timer %s already stopped (%d)",
+		crm_debug("Timer %s (period=%dms) already stopped (src=%d)",
 		       fsa_input2string(timer->fsa_input),
-		       timer->source_id);
+			  timer->period_ms, timer->source_id);
+		timer->source_id = -2;
 		return FALSE;
 	}
 	return TRUE;

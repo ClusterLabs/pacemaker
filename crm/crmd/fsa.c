@@ -566,7 +566,11 @@ do_state_transition(long long actions,
 		 fsa_cause2string(cause), msg_data->where,
 		 asctime(localtime(&now)));
 
-	if(next_state != S_ELECTION && election_timeout != NULL) {
+	/* the last two clauses might cause trouble later */
+	if(election_timeout != NULL
+	   && next_state != S_ELECTION
+	   && next_state != S_RELEASE_DC
+	   && next_state != S_PENDING) {
 		stopTimer(election_timeout);
 /* 	} else { */
 /* 		startTimer(election_timeout); */

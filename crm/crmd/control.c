@@ -442,7 +442,7 @@ do_read_config(long long action,
 	if(shutdown_escalation_timer->period_ms < 1) {
 		/* sensible default */
 		shutdown_escalation_timer->period_ms
-			= election_trigger->period_ms * 3 *10;/* 10 for testing */
+			= election_trigger->period_ms * 3 * 100;
 	}
 	if(fsa_join_reannouce < 0) {
 		fsa_join_reannouce = 100; /* how many times should we let
@@ -473,6 +473,11 @@ crm_shutdown(int nsig)
 		} else {
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
 
+			/* fast track the case where no-one else is out there */
+			if(AM_I_DC) {
+				election_timeout->fsa_input = I_TERMINATE;
+			}
+
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				/* cant rely on this... */
 				startTimer(shutdown_escalation_timer);
@@ -484,6 +489,7 @@ crm_shutdown(int nsig)
 				exit(LSB_EXIT_ENOTSUPPORTED);
 			}
 		}
+		
 	} else {
 		crm_info("exit from shutdown");
 		exit(LSB_EXIT_OK);

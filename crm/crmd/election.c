@@ -199,6 +199,7 @@ do_election_count_vote(long long action,
 	}
 	
 	if(we_loose) {
+		stopTimer(election_timeout);
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		if(fsa_input_register & R_THE_DC) {
 			crm_debug("Give up the DC");
