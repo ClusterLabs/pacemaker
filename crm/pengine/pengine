@@ -42,7 +42,7 @@ use vars qw(	$ch
 
 {
 	no warnings qw(qw);
-	($VERSION) = (qw$Id: pengine,v 1.6 2004/03/18 10:48:31 lars Exp $)[2];
+	($VERSION) = (qw$Id: pengine,v 1.7 2004/03/18 11:07:08 lars Exp $)[2];
 }
 
 $CRM_SOCKET = "/var/lib/heartbeat/crm/crmd";
@@ -95,13 +95,19 @@ while ($ch->isrconn() && $ch->iswconn()) {
 	$ch->waitin();
 	
 	if ($ch->is_message_pending()) {
-		my $msg = &crm_recv_msg();
-		
-		if (defined($msg)) {
-			my $reply = &handle_msg($msg);
-			if (defined($reply)) {
-				&send_crm_msg($reply);
+		if ($ch->status() == $IPC_CONNECT
+		    || $ch->status() == $IPC_DISC_PENDING) {
+			my $msg = &crm_recv_msg();
+			
+			if (defined($msg)) {
+				my $reply = &handle_msg($msg);
+				if (defined($reply)) {
+					&send_crm_msg($reply);
+				}
 			}
+		} else {
+			cl_log("info", "Received disconnect event.");
+			last;
 		}
 	} 
 }
