@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.21 2004/07/15 16:29:21 msoffen Exp $ */
+/* $Id: tengine.c,v 1.22 2004/07/23 10:24:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -269,19 +269,9 @@ process_graph_event(const char *event_node, const char *event_rsc,
 		    const char *event_action, const char *event_rc)
 {
 	int lpc;
-	xmlNodePtr action       = NULL; // <rsc_op> or <crm_event>
-	xmlNodePtr next_action  = NULL;
-
-	// BITEME
-	xmlNodePtr this_action  = NULL;
-	xmlNodePtr allow_fail  = NULL;
-
-	// const char *this_action = NULL;
-	const char *this_node   = NULL;
-	const char *this_rsc    = NULL;
+	xmlNodePtr action        = NULL; // <rsc_op> or <crm_event>
+	xmlNodePtr next_action   = NULL;
 	action_list_t *matched_action_list = NULL;
-	op_status_t rsc_code_i  = 0;
-
 
 	int old = set_crm_log_level(LOG_TRACE);
 	
@@ -313,11 +303,11 @@ process_graph_event(const char *event_node, const char *event_rsc,
 			<resource id="rsc3" priority="3.0"/>
 		</rsc_op>
 */
-		this_action = xmlGetProp(
+		const char *this_action = xmlGetProp(
 			action, XML_LRM_ATTR_TASK);
-		this_node   = xmlGetProp(
+		const char *this_node   = xmlGetProp(
 			action, XML_LRM_ATTR_TARGET);
-		this_rsc    = xmlGetProp(
+		const char *this_rsc    = xmlGetProp(
 			action, "rsc_id");
 
 		crm_trace("matching against: <%s task=%s node=%s rsc_id=%s/>",
@@ -360,12 +350,12 @@ process_graph_event(const char *event_node, const char *event_rsc,
 		return FALSE;
 	}
 
-	this_action = g_list_nth_data(matched_action_list->actions,
+	xmlNodePtr this_action = g_list_nth_data(matched_action_list->actions,
 						 matched_action_list->index);
-	allow_fail  = xmlGetProp(this_action, "allow_fail");
+	const char *allow_fail  = xmlGetProp(this_action, "allow_fail");
 
 	/* check for action failure */
-	rsc_code_i = -1;
+	op_status_t rsc_code_i = -1;
 
 	if(event_rc != NULL) {
 		atoi(event_rc);
