@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.13 2004/03/10 22:29:17 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.14 2004/03/16 10:10:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -82,6 +82,7 @@ gboolean check_generation(xmlNodePtr newCib, xmlNodePtr oldCib);
 #define CIB_OP_ADD    1
 #define CIB_OP_MODIFY 2
 #define CIB_OP_DELETE 3
+#define CIB_OP_MAX    CIB_OP_DELETE
 
 
 xmlNodePtr
@@ -215,7 +216,8 @@ processCibRequest(xmlNodePtr command)
 		replace_section(XML_CIB_TAG_CONSTRAINTS, tmpCib, command);
 		
 		/* incorporate the info from the DC and then send it back */
-		updateList(tmpCib, command, failed, cib_update_op,
+		updateList(tmpCib, command, failed,
+			   CIB_OP_MODIFY,
 			   XML_CIB_TAG_STATUS);
 
 		if(check_generation(cib_updates, tmpCib) == FALSE)
@@ -235,11 +237,14 @@ processCibRequest(xmlNodePtr command)
 	} else if (strcmp("replace", op) == 0) {
 		CRM_DEBUG2("Replacing section=%s of the cib", section);
 		xmlNodePtr tmpCib = find_xml_node(command, XML_TAG_CIB);
+		xmlNodePtr section_xml = find_xml_node(command,
+						       XML_TAG_FRAGMENT);
+		section = xmlGetProp(section_xml, XML_ATTR_SECTION);
 		
 		if (strcmp("all", section) == 0) {
-			replace_section(XML_CIB_TAG_NODES,    tmpCib,command);
-			replace_section(XML_CIB_TAG_RESOURCES,tmpCib,command);
-			replace_section(XML_CIB_TAG_STATUS,   tmpCib,command);
+			replace_section(XML_CIB_TAG_NODES,     tmpCib,command);
+			replace_section(XML_CIB_TAG_RESOURCES, tmpCib,command);
+			replace_section(XML_CIB_TAG_STATUS,    tmpCib,command);
 			replace_section(XML_CIB_TAG_CONSTRAINTS,tmpCib,command);
 		} else {
 			replace_section(section, tmpCib, command);
@@ -262,6 +267,9 @@ processCibRequest(xmlNodePtr command)
 		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
 		CRM_DEBUG("Updating temporary CIB");
 
+		xmlNodePtr section_xml = find_xml_node(command,
+						       XML_TAG_FRAGMENT);
+		section = xmlGetProp(section_xml, XML_ATTR_SECTION);
 		CRM_DEBUG3("Updating section=%s of the cib (op=%s)",
 			   section, op);
 
@@ -386,12 +394,19 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_command, xmlNodePtr failed,
 	cib_updates = find_xml_node_nested(update_command, node_path, 2);
 	xml_section = get_object_root(section, cib_updates);
 
+	set_node_tstamp(get_object_root(section, local_cib));
+	
 	if (section == NULL || xml_section == NULL) {
 		cl_log(LOG_ERR, "Section %s not found in message."
 		       "  CIB update is corrupt, ignoring.", section);
 		return "section not present";
 	}
 
+	if(CIB_OP_NONE > operation > CIB_OP_MAX) {
+		cl_log(LOG_ERR, "Invalid operation on section %s",
+		       section);
+	}
+	
 	if (strcmp(section, XML_CIB_TAG_NODES) == 0)
 		type_check = XML_CIB_TAG_NODE;
 	else if (strcmp(section, XML_CIB_TAG_RESOURCES) == 0)
