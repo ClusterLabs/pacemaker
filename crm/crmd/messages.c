@@ -165,7 +165,7 @@ do_msg_route(long long action,
 				CRM_DEBUG("Performing local processing of message");
 				result = I_NULL;
 			}
-		}
+		} 
 	}
 	
 	FNRET(result);
@@ -177,37 +177,34 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 {
 	const char *from = ha_msg_value(msg, F_ORIG);
 
-	if(from == NULL || strcmp(from, fsa_our_uname) == 0) {
-		CRM_DEBUG("Discarding message from ourselves");
-		FNOUT();
-	} else {
-		CRM_DEBUG4("%%%%%%%%%%%%%%%% %s , %s , %d",from, fsa_our_uname,
-			  strcmp(from, fsa_our_uname));
-	}
-	
-	
 	FNIN();
 
 	CRM_DEBUG3("processing HA message (%s from %s)",
 		   ha_msg_value(msg, F_SEQ), from);
+
+#ifdef MSG_LOG
+	
+	if(msg_in_strm == NULL) {
+		msg_in_strm = fopen("/tmp/inbound.log", "w");
+	}
+	fprintf(msg_in_strm, "[HA (%s:%s)]\t%s\n",
+		ha_msg_value(msg, F_SEQ),
+		ha_msg_value(msg, F_TYPE),
+		ha_msg_value(msg, "xml")
+		);
+	fflush(msg_in_strm);
+	
+#endif
+
+	if(from == NULL || strcmp(from, fsa_our_uname) == 0) {
+		CRM_DEBUG("Discarding message from ourselves");
+		CRM_DEBUG2("[F_XML=%s]", ha_msg_value(msg, "xml"));
+		FNOUT();
+	}
 	
 	xmlNodePtr root_xml_node = find_xml_in_hamessage(msg);
 	set_xml_property_copy(root_xml_node, XML_ATTR_HOSTFROM, from);
 
-#ifdef MSG_LOG
-	
-	char *msg_text = dump_xml(root_xml_node);
-	if(msg_in_strm == NULL) {
-		msg_in_strm = fopen("/tmp/inbound.log", "w");
-	}
-	fprintf(msg_in_strm, "[HA (%s)]\t%s\n",
-		xmlGetProp(root_xml_node, XML_ATTR_REFERENCE),
-		msg_text);
-	fflush(msg_in_strm);
-	ha_free(msg_text);
-	
-#endif
-	
 	s_crmd_fsa(C_HA_MESSAGE, I_ROUTER, root_xml_node);
 
 //	process_message(root_xml_node, FALSE, from);
@@ -255,20 +252,6 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		xmlNodePtr root_xml_node =
 			find_xml_in_ipcmessage(msg, FALSE);
 		if (root_xml_node != NULL) {
-
-#ifdef MSG_LOG
-	
-	char *msg_text = dump_xml(root_xml_node);
-	if(msg_in_strm == NULL) {
-		msg_in_strm = fopen("/tmp/inbound.log", "w");
-	}
-	fprintf(msg_in_strm, "[IPC (%s)]\t%s\n",
-		xmlGetProp(root_xml_node, XML_ATTR_REFERENCE),
-		msg_text);
-	fflush(msg_in_strm);
-	ha_free(msg_text);
-	
-#endif
 			if (crmd_authorize_message(root_xml_node,
 						   msg,
 						   curr_client)) {
@@ -296,38 +279,28 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		       "received HUP from %s",
 		       curr_client->table_key);
 		if (curr_client != NULL) {
+			struct crm_subsystem_s *the_subsystem = NULL;
 			
 			if (curr_client->sub_sys == NULL)
 				CRM_DEBUG("Client had not registered with us yet");
-			else if (strcmp(CRM_SYSTEM_PENGINE,
-					curr_client->sub_sys) == 0) {
-				pe_subsystem->ipc = NULL;
-				clear_bit_inplace(&fsa_input_register,
-						  R_PE_CONNECTED);
+			else if (strcmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) 
+				the_subsystem = pe_subsystem;
+			else if (strcmp(CRM_SYSTEM_TENGINE, curr_client->sub_sys) == 0)
+				the_subsystem = te_subsystem;
+			else if (strcmp(CRM_SYSTEM_CIB, curr_client->sub_sys) == 0)
+				the_subsystem = cib_subsystem;
 
-			} else if (strcmp(CRM_SYSTEM_TENGINE,
-					curr_client->sub_sys) == 0) {
-				te_subsystem->ipc = NULL;
-				clear_bit_inplace(&fsa_input_register,
-						  R_TE_CONNECTED);
-
-
-			} else if (strcmp(CRM_SYSTEM_CIB,
-					curr_client->sub_sys) == 0) {
-				cib_subsystem->ipc = NULL;
-				clear_bit_inplace(&fsa_input_register,
-						  R_CIB_CONNECTED);
-				
-			}
-		
+			if(the_subsystem != NULL) {
+				cleanup_subsystem(the_subsystem);
+			} // else that was a transient client
+			
 			if (curr_client->table_key != NULL) {
 				/*
 				 * Key is destroyed below: curr_client->table_key
 				 * Value is cleaned up by G_main_del_IPC_Channel
 				 */
-				g_hash_table_remove(
-					ipc_clients,
-					curr_client->table_key);
+				g_hash_table_remove(ipc_clients,
+						    curr_client->table_key);
 			}
 
 
@@ -351,6 +324,42 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	FNRET(hack_return_good);
 }
 
+/*
+ * This method adds a copy of xml_response_data
+ */
+gboolean
+send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
+	     const char *operation, const char *host_to, const char *sys_to)
+{
+	gboolean was_sent = FALSE;
+	xmlNodePtr request = NULL;
+	FNIN();
+
+	if(operation != NULL) {
+		if(msg_options == NULL)
+			msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
+		
+		set_xml_property_copy(msg_options, XML_ATTR_OP, operation);
+	}
+	
+	request = create_request(msg_options,
+				 msg_data,
+				 host_to,
+				 sys_to,
+				 AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD,
+				 NULL,
+				 NULL);
+
+	xml_message_debug(request, "Final request...");
+
+	was_sent = relay_message(request, TRUE);
+
+	free_xml(request);
+
+	FNRET(was_sent);
+}
+
+
 gboolean
 relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 {
@@ -367,13 +376,18 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	if(xml_relay_message != NULL
 	   && strcmp(XML_MSG_TAG, xml_relay_message->name) != 0) {
 
-		cl_log(LOG_INFO, "Ignoring message of type %s",
+		xml_message_debug(xml_relay_message,
+				  "Bad message type, should be crm_message");
+		cl_log(LOG_INFO,
+		       "Ignoring message of type %s",
 		       xml_relay_message->name);
 		FNRET(TRUE);
 	}
 	
 
 	if(sys_to == NULL) {
+		xml_message_debug(xml_relay_message,
+				  "Message did not have any value for sys_to");
 		cl_log(LOG_ERR, "Message did not have any value for %s",
 		       XML_ATTR_SYSTO);
 		FNRET(TRUE);
@@ -385,8 +399,13 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	
 	is_local = 0;
 	if(host_to == NULL || strlen(host_to) == 0) {
-		if(!is_for_dc)
+		if(is_for_dc)
+			is_local = 0;
+		else if(is_for_crm && originated_locally)
+			is_local = 0;
+		else
 			is_local = 1;
+		
 	} else if(strcmp(fsa_our_uname, host_to) == 0) {
 		is_local=1;
 	}
@@ -401,14 +420,9 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	
 
 	if(is_for_dc || is_for_dcib) {
-		if(AM_I_DC && is_for_dcib) {
-			ROUTER_RESULT("Message result: Local relay to the cib");
-			send_msg_via_ipc(xml_relay_message, "cib");
-			processing_complete = TRUE; 
-
-		} else if(AM_I_DC) {
+		if(AM_I_DC) {
 			ROUTER_RESULT("Message result: DC/CRMd process");
-			; // more to be done by caller
+			processing_complete = FALSE; // more to be done by caller
 
 		} else if(originated_locally) {
 			ROUTER_RESULT("Message result: External relay to DC");
@@ -429,15 +443,14 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		send_msg_via_ipc(xml_relay_message, sys_to);
 		processing_complete = TRUE;
 	} else {
-		const char *sys_from  =
-			xmlGetProp(xml_relay_message, XML_ATTR_SYSFROM);
-		
-		if(AM_I_DC && strcmp(CRM_SYSTEM_CIB, sys_from) == 0) {
-			// we are a special CIB
-			xmlSetProp(xml_relay_message,
-				   XML_ATTR_SYSFROM,
-				   CRM_SYSTEM_DCIB);
-		}
+/* 		const char *sys_from  = */
+/* 			xmlGetProp(xml_relay_message, XML_ATTR_SYSFROM); */
+/* 		if(AM_I_DC && strcmp(CRM_SYSTEM_CIB, sys_from) == 0) { */
+/* 			// we are a special CIB */
+/* 			xmlSetProp(xml_relay_message, */
+/* 				   XML_ATTR_SYSFROM, */
+/* 				   CRM_SYSTEM_DCIB); */
+/* 		} */
 
 		ROUTER_RESULT("Message result: External relay");
 		CRM_DEBUG2("Message result: External relay to %s", host_to);
@@ -445,7 +458,6 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		send_msg_via_ha(xml_relay_message, host_to);
 		processing_complete = TRUE;
 	}
-	
 	
 	FNRET(processing_complete);
 }
@@ -560,37 +572,25 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		/* if we already have one of those clients
 		 * only applies to te, pe etc.  not admin clients
 		 */
-		if (strcmp(CRM_SYSTEM_PENGINE, client_name) == 0) {
+
+		struct crm_subsystem_s *the_subsystem = NULL;
+		
+		if (client_name == NULL)
+			CRM_DEBUG("Client had not registered with us yet");
+		else if (strcmp(CRM_SYSTEM_PENGINE, client_name) == 0) 
+			the_subsystem = pe_subsystem;
+		else if (strcmp(CRM_SYSTEM_TENGINE, client_name) == 0)
+			the_subsystem = te_subsystem;
+		else if (strcmp(CRM_SYSTEM_CIB, client_name) == 0)
+			the_subsystem = cib_subsystem;
+
+		if (the_subsystem != NULL) {
 			// do we already have one?
-			result = (fsa_input_register & R_PE_CONNECTED) == 0;
+			result = (fsa_input_register & the_subsystem->flag) == 0;
+			set_bit_inplace(&fsa_input_register, the_subsystem->flag);
 
-			set_bit_inplace(&fsa_input_register, R_PE_CONNECTED);
-
-			if(result && pe_subsystem != NULL) {
-				pe_subsystem->ipc =
-					curr_client->client_channel;
-			} // else we didnt ask for the client to start
-
-		} else if (strcmp(CRM_SYSTEM_CIB, client_name) == 0) {
-			// do we already have one?
-			result = (fsa_input_register & R_CIB_CONNECTED) == 0;
-
-			set_bit_inplace(&fsa_input_register, R_CIB_CONNECTED);
-
-			if(result && cib_subsystem != NULL) {
-				cib_subsystem->ipc =
-					curr_client->client_channel;
-			} // else we didnt ask for the client to start
-			
-		} else if (strcmp(CRM_SYSTEM_TENGINE, client_name) == 0) {
-			// do we already have one?
-			result = (fsa_input_register & R_TE_CONNECTED) == 0;
-
-			set_bit_inplace(&fsa_input_register, R_TE_CONNECTED);
-
-			if(result && te_subsystem != NULL) {
-				te_subsystem->ipc =
-					curr_client->client_channel;
+			if(result) {
+				the_subsystem->ipc = curr_client->client_channel;
 			} // else we didnt ask for the client to start
 
 		} else

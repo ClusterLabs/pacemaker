@@ -36,6 +36,7 @@
 #include <crm/common/ipcutils.h>
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlutils.h>
+#include <crm/common/xmlvalues.h>
 #include <crmd.h>
 #include <crmd_messages.h>
 #include <string.h>
@@ -43,7 +44,7 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-#define CLIENT_EXIT_WAIT 2
+#define CLIENT_EXIT_WAIT 10
 
 static gboolean stop_subsystem (struct crm_subsystem_s *centry);
 static gboolean start_subsystem(struct crm_subsystem_s *centry);
@@ -58,6 +59,22 @@ gboolean crmd_authorize_message(xmlNodePtr root_xml_node,
 struct crm_subsystem_s *cib_subsystem = NULL;
 struct crm_subsystem_s *te_subsystem  = NULL;
 struct crm_subsystem_s *pe_subsystem  = NULL;
+
+void
+cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
+{
+	int pid_status = -1;
+	the_subsystem->ipc = NULL;
+	clear_bit_inplace(&fsa_input_register,
+			  the_subsystem->flag);
+
+	/* Forcing client to die */
+	kill(the_subsystem->pid, -9);
+	
+	// cleanup the ps entry
+	waitpid(the_subsystem->pid, &pid_status, WNOHANG);
+	the_subsystem->pid = -1;
+}
 
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
 enum crmd_fsa_input
@@ -76,31 +93,37 @@ do_cib_control(long long action,
 	FNIN();
 	
 	if(action & stop_actions) {
-		clear_bit_inplace(&fsa_input_register,R_CIB_CONNECTED);
-			
 		if(stop_subsystem(this_subsys) == FALSE)
 			result = I_FAIL;
-		else if(this_subsys->pid > 0
-			&& CL_PID_EXISTS(this_subsys->pid)) {
+		else {
+			int lpc = CLIENT_EXIT_WAIT;
 			int pid_status = -1;
-			
-			sleep(CLIENT_EXIT_WAIT);
-			waitpid(this_subsys->pid, &pid_status, WNOHANG);
+			while(lpc-- > 0
+			      && this_subsys->pid > 0
+			      && CL_PID_EXISTS(this_subsys->pid)) {
+
+				sleep(1);
+				waitpid(this_subsys->pid, &pid_status, WNOHANG);
+			}
 			
 			if(CL_PID_EXISTS(this_subsys->pid)) {
 				cl_log(LOG_ERR,
 				       "Process %s is still active with pid=%d",
 				       this_subsys->command, this_subsys->pid);
 				result = I_FAIL;
-			}
+			} 
 		}
+
+		cleanup_subsystem(this_subsys);
 	}
 
 	if(action & start_actions) {
 
 		if(cur_state != S_STOPPING) {
-			if(start_subsystem(this_subsys) == FALSE)
+			if(start_subsystem(this_subsys) == FALSE) {
 				result = I_FAIL;
+				cleanup_subsystem(this_subsys);
+			}
 		} else {
 			cl_log(LOG_INFO,
 			       "Ignoring request to start %s while shutting down",
@@ -111,7 +134,7 @@ do_cib_control(long long action,
 	FNRET(result);
 }
 
-/*	 A_CIB_INVOKE	*/
+/*	 A_CIB_INVOKE, A_CIB_DISTRIBUTE	*/
 enum crmd_fsa_input
 do_cib_invoke(long long action,
 	      enum crmd_fsa_cause cause,
@@ -119,15 +142,39 @@ do_cib_invoke(long long action,
 	      enum crmd_fsa_input current_input,
 	      void *data)
 {
+	xmlNodePtr cib_msg = NULL;
 	FNIN();
-				
-	set_xml_property_copy((xmlNodePtr)data,
-			      XML_ATTR_SYSTO,
-			      "cib");
-	send_msg_via_ipc((xmlNodePtr)data, "cib");
+
+	if(action & A_CIB_INVOKE) {
+		cib_msg = (xmlNodePtr)data;
+		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
+		if(relay_message(cib_msg, FALSE) == FALSE) {
+			cl_log(LOG_ERR, "Confused what to do with message");
+			xml_message_debug(cib_msg, "Couldnt route: ");
+		} else {
+			xmlNodePtr options =
+				find_xml_node(cib_msg, XML_TAG_OPTIONS);
+
+			const char *op = xmlGetProp(options, XML_ATTR_OP);
+			if(strcmp(op, "create") == 0
+			  || strcmp(op, "update") == 0
+			  || strcmp(op, "delete") == 0
+			  || strcmp(op, "erase") == 0)
+				send_request(NULL, NULL, "bump", NULL, CRM_SYSTEM_CIB);
+		
+
+		}
+	}
+	
+
+
+/* else if(action & A_CIB_DISTRIBUTE) {  */
+/* 		// check if the response was ok before next bit */
+/*  	}  */
 	
 	FNRET(I_NULL);
 }
+
 
 /*	 A_PE_START, A_PE_STOP, A_TE_RESTART	*/
 enum crmd_fsa_input
@@ -146,31 +193,37 @@ do_pe_control(long long action,
 	FNIN();
 
 	if(action & stop_actions) {
-		clear_bit_inplace(&fsa_input_register,R_PE_CONNECTED);
-			
 		if(stop_subsystem(this_subsys) == FALSE)
 			result = I_FAIL;
-		else if(this_subsys->pid > 0
-			&& CL_PID_EXISTS(this_subsys->pid)) {
+		else {
+			int lpc = CLIENT_EXIT_WAIT;
 			int pid_status = -1;
-			
-			sleep(CLIENT_EXIT_WAIT);
-			waitpid(this_subsys->pid, &pid_status, WNOHANG);
+			while(lpc-- > 0
+			      && this_subsys->pid > 0
+			      && CL_PID_EXISTS(this_subsys->pid)) {
+
+				sleep(1);
+				waitpid(this_subsys->pid, &pid_status, WNOHANG);
+			}
 			
 			if(CL_PID_EXISTS(this_subsys->pid)) {
 				cl_log(LOG_ERR,
 				       "Process %s is still active with pid=%d",
 				       this_subsys->command, this_subsys->pid);
 				result = I_FAIL;
-			}
+			} 
 		}
+
+		cleanup_subsystem(this_subsys);
 	}
 
 	if(action & start_actions) {
 
 		if(cur_state != S_STOPPING) {
-			if(start_subsystem(this_subsys) == FALSE)
+			if(start_subsystem(this_subsys) == FALSE) {
 				result = I_FAIL;
+				cleanup_subsystem(this_subsys);
+			}
 		} else {
 			cl_log(LOG_INFO,
 			       "Ignoring request to start %s while shutting down",
@@ -198,12 +251,6 @@ do_pe_invoke(long long action,
 	FNRET(I_NULL);
 }
 
-	
-	
-/* 	FNRET(result); */
-/* } */
-
-
 /*	 A_TE_START, A_TE_STOP, A_TE_RESTART	*/
 enum crmd_fsa_input
 do_te_control(long long action,
@@ -220,38 +267,44 @@ do_te_control(long long action,
 	
 	FNIN();
 
-	if(action & stop_actions) {
-		clear_bit_inplace(&fsa_input_register,R_TE_CONNECTED);
-
-/* 		if(cur_state != S_STOPPING */
+/* 		if(action & stop_actions && cur_state != S_STOPPING */
 /* 		   && is_set(fsa_input_register, R_TE_PEND)) { */
 /* 			result = I_WAIT_FOR_EVENT; */
 /* 			FNRET(result); */
 /* 		} */
-		
+	
+	if(action & stop_actions) {
 		if(stop_subsystem(this_subsys) == FALSE)
 			result = I_FAIL;
-		else if(this_subsys->pid > 0
-			&& CL_PID_EXISTS(this_subsys->pid)) {
+		else {
+			int lpc = CLIENT_EXIT_WAIT;
 			int pid_status = -1;
-			
-			sleep(CLIENT_EXIT_WAIT);
-			waitpid(this_subsys->pid, &pid_status, WNOHANG);
+			while(lpc-- > 0
+			      && this_subsys->pid > 0
+			      && CL_PID_EXISTS(this_subsys->pid)) {
+
+				sleep(1);
+				waitpid(this_subsys->pid, &pid_status, WNOHANG);
+			}
 			
 			if(CL_PID_EXISTS(this_subsys->pid)) {
 				cl_log(LOG_ERR,
 				       "Process %s is still active with pid=%d",
 				       this_subsys->command, this_subsys->pid);
 				result = I_FAIL;
-			}
+			} 
 		}
+
+		cleanup_subsystem(this_subsys);
 	}
 
 	if(action & start_actions) {
 
 		if(cur_state != S_STOPPING) {
-			if(start_subsystem(this_subsys) == FALSE)
+			if(start_subsystem(this_subsys) == FALSE) {
 				result = I_FAIL;
+				cleanup_subsystem(this_subsys);
+			}
 		} else {
 			cl_log(LOG_INFO,
 			       "Ignoring request to start %s while shutting down",
@@ -299,6 +352,8 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 			       "Could not allocate memory for a blank crmd_client_t");
 			FNRET(FALSE);
 		}
+		client_channel->ops->set_recv_qlen(client_channel, 100);
+		client_channel->ops->set_send_qlen(client_channel, 100);
 	
 		blank_client->client_channel = client_channel;
 		blank_client->sub_sys = NULL;

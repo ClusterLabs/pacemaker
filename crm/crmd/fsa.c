@@ -24,6 +24,7 @@
 #include <crm/common/xmlutils.h>
 #include <crm/common/msgutils.h>
 #include <crm/common/xmltags.h>
+#include <crm/common/xmlvalues.h>
 #include <clplumbing/Gmain_timeout.h>
 
 #include <crmd_messages.h>
@@ -34,6 +35,8 @@
 
 #define DOT_FSA_ACTIONS 1
 #define DOT_ALL_FSA_INPUTS 1
+
+enum crmd_fsa_input handle_message(xmlNodePtr stored_msg);
 
 
 #ifdef DOT_FSA_ACTIONS
@@ -429,9 +432,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 * Make sure the CIB is always updated before invoking the
 		 * PE, and the PE before the TE
 		 */
-		ELSEIF_FSA_ACTION(A_CIB_INVOKE, do_cib_invoke)
-		ELSEIF_FSA_ACTION(A_PE_INVOKE,  do_pe_invoke)
-		ELSEIF_FSA_ACTION(A_TE_INVOKE,  do_te_invoke)
+		ELSEIF_FSA_ACTION(A_CIB_INVOKE,		do_cib_invoke)
+		ELSEIF_FSA_ACTION(A_CIB_DISTRIBUTE,	do_cib_invoke)
+		ELSEIF_FSA_ACTION(A_PE_INVOKE,		do_pe_invoke)
+		ELSEIF_FSA_ACTION(A_TE_INVOKE,		do_te_invoke)
 		
 		/* sub-system stop */
 		ELSEIF_FSA_ACTION(A_PE_STOP,	do_pe_control)
@@ -451,23 +455,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 //		ELSEIF_FSA_ACTION(A_, do_)
 		
 		else if(actions & A_MSG_PROCESS) {
-			const char *op = NULL;
-
-			next_input = I_NULL;
-
-			fprintf(dot_strm,
-				"\t\t// %s:\t%s\t(0x%.16llx) with data? %s\n",
-				fsa_input2string(cur_input),
-				fsa_action2string(A_MSG_PROCESS),
-				A_MSG_PROCESS,
-				data==NULL?"no":"yes");
-			fflush(dot_strm);
-
-			CRM_DEBUG3("Invoking action %s (%.16llx)",
-				   fsa_action2string(A_MSG_PROCESS),
-				   A_MSG_PROCESS);
-
-
+			xmlNodePtr stored_msg = NULL;
+			
 			/* any more queued messages? */
 			if(is_message() == FALSE) {
 				CRM_DEBUG("No more messages");
@@ -479,58 +468,27 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 					cl_log(LOG_ERR,
 					       "Invalid stored message");
 				}
-				
-				char *foo = dump_xml((xmlNodePtr)data);
-				CRM_DEBUG2("FSA processing message: %s", foo);
 			}
-			
-			xmlNodePtr options =
-				find_xml_node((xmlNodePtr)data,
-					      XML_TAG_OPTIONS);
-			op = xmlGetProp(options, XML_ATTR_OP);
-			
-			if(op == NULL)
-				continue;
-			
-			if(strcmp(op, "vote") == 0) {
-				next_input = I_ELECTION;
-				
-			} else if(strcmp(op, "beat") == 0) {
-				next_input = I_DC_HEARTBEAT;
-				
-			} else if(strcmp(op, "welcome") == 0) {
-				next_input = I_WELCOME;
-				
-			} else if(strcmp(op, "announce") == 0) {
-				next_input = I_NODE_JOIN;
-				
-			} else if(strcmp(op, "join_ack") == 0) {
-				next_input = I_WELCOME_ACK;
-				
-			} else if(strcmp(op, "store") == 0
-				  || strcmp(op, "update") == 0) {
-				
-				next_input = I_CIB_UPDATE;
-				
-			} else if(strcmp(op, "ping") == 0) {
-				/* eventually do some stuff to figure out
-				 * if we /are/ ok
-				 */
-				const char *sys_to =
-					xmlGetProp(options, XML_ATTR_SYSTO);
-				
-				xmlNodePtr ping =
-					createPingAnswerFragment(sys_to, "ok");
-				
-				xmlNodePtr wrapper =
-					create_reply((xmlNodePtr)data, ping);
-				relay_message(wrapper, TRUE);
-				free_xml(wrapper);
-				
-			} else {
-				cl_log(LOG_ERR, "Unexpected operation %s", op);
-			}
-			
+
+#ifdef DOT_FSA_ACTIONS
+			fprintf(dot_strm,
+				"\t\t// %s:\t%s\t(0x%.16llx) with data? %s\n",
+				fsa_input2string(cur_input),
+				fsa_action2string(A_MSG_PROCESS),
+				A_MSG_PROCESS,
+				stored_msg==NULL?"no":"yes");
+			fflush(dot_strm);
+#endif
+			CRM_DEBUG3("Invoking action %s (%.16llx)",
+				   fsa_action2string(A_MSG_PROCESS),
+				   A_MSG_PROCESS);
+
+			stored_msg = (xmlNodePtr)data;
+			xml_message_debug(stored_msg,
+					  "FSA processing message:");
+
+			next_input = handle_message(stored_msg);
+
 			CRM_DEBUG3("Result of action %s was %s",
 				   fsa_action2string(A_MSG_PROCESS),
 				   fsa_input2string(next_input));	
@@ -606,8 +564,8 @@ fsa_input2string(int input)
 		case I_ELECTION:
 			inputAsText = "I_ELECTION";
 			break;
-		case I_ELECTION_RELEASE_DC:
-			inputAsText = "I_ELECTION_RELEASE_DC";
+		case I_RELEASE_DC:
+			inputAsText = "I_RELEASE_DC";
 			break;
 		case I_ELECTION_DC:
 			inputAsText = "I_ELECTION_DC";
@@ -838,6 +796,9 @@ fsa_action2string(long long action)
 		case A_ELECTION_VOTE:
 			actionAsText = "A_ELECTION_VOTE";
 			break;
+		case A_ANNOUNCE:
+			actionAsText = "A_ANNOUNCE";
+			break;
 		case A_JOIN_ACK:
 			actionAsText = "A_JOIN_ACK";
 			break;
@@ -891,6 +852,9 @@ fsa_action2string(long long action)
 			break;
 		case A_CCM_UPDATE_CACHE:
 			actionAsText = "A_CCM_UPDATE_CACHE";
+			break;
+		case A_CIB_DISTRIBUTE:
+			actionAsText = "A_CIB_DISTRIBUTE";
 			break;
 		case A_CIB_INVOKE:
 			actionAsText = "A_CIB_INVOKE";
@@ -951,4 +915,141 @@ fsa_action2string(long long action)
 	}
 	
 	return actionAsText;
+}
+
+
+enum crmd_fsa_input
+handle_message(xmlNodePtr stored_msg)
+{
+	enum crmd_fsa_input next_input = I_NULL;
+	xmlNodePtr options = find_xml_node(stored_msg, XML_TAG_OPTIONS);
+
+	const char *sys_to   = xmlGetProp(stored_msg, XML_ATTR_SYSTO);
+	const char *sys_from = xmlGetProp(stored_msg, XML_ATTR_SYSFROM);
+	const char *type     = xmlGetProp(stored_msg, XML_ATTR_MSGTYPE);
+	const char *op = xmlGetProp(options, XML_ATTR_OP);
+
+	if(type == NULL || op == NULL) {
+		cl_log(LOG_ERR, "Ignoring message (type=%s), (op=%s)",
+		       type, op);
+		xml_message_debug(stored_msg, "Bad message");
+		
+	} else if(strcmp(type, XML_ATTR_REQUEST) == 0){
+		if(strcmp(op, "vote") == 0) {
+			next_input = I_ELECTION;
+				
+		} else if(strcmp(op, "beat") == 0) {
+			next_input = I_DC_HEARTBEAT;
+				
+		} else if(strcmp(op, "welcome") == 0) {
+			next_input = I_WELCOME;
+				
+		} else if(strcmp(op, "announce") == 0) {
+			next_input = I_NODE_JOIN;
+				
+		} else if(strcmp(op, "store") == 0 && AM_I_DC) {
+			next_input = I_RELEASE_DC;
+				
+		} else if(strcmp(op, "store") == 0
+			  || strcmp(op, "create") == 0
+			  || strcmp(op, "update") == 0
+			  || strcmp(op, "delete") == 0
+			  || strcmp(op, "erase") == 0) {
+			next_input = I_CIB_UPDATE;
+				
+		} else if(strcmp(op, "ping") == 0) {
+			/* eventually do some stuff to figure out
+			 * if we /are/ ok
+			 */
+			xmlNodePtr ping =
+				createPingAnswerFragment(sys_to, "ok");
+				
+			xmlNodePtr wrapper = create_reply(stored_msg, ping);
+			relay_message(wrapper, TRUE);
+			free_xml(wrapper);
+				
+		} else {
+			cl_log(LOG_ERR,
+			       "Unexpected (request) operation %s", op);
+		}
+		
+	} else if(strcmp(type, XML_ATTR_RESPONSE) == 0) {
+
+		if(strcmp(op, "welcome") == 0) {
+			next_input = I_WELCOME;
+				
+		} else if(strcmp(op, "join_ack") == 0) {
+			next_input = I_WELCOME_ACK;
+				
+		} else if(strcmp(op, "create") == 0
+			  || strcmp(op, "update") == 0
+			  || strcmp(op, "delete") == 0
+			  || strcmp(op, "erase") == 0) {
+
+			// perhaps we should do somethign with these replies
+
+		} else if(strcmp(op, "bump") == 0) {
+
+			xmlNodePtr data = find_xml_node(stored_msg,
+							XML_TAG_FRAGMENT);
+			
+			send_request(NULL, data, "store",
+				     NULL, CRM_SYSTEM_CRMD);
+
+		} else if (strcmp(op, "store") == 0) {
+
+			if(AM_I_DC == FALSE) {
+				
+				/* we need to merge these results back
+				 * into the DC
+				 */
+				xmlNodePtr data =
+					find_xml_node(stored_msg,
+						      XML_TAG_FRAGMENT);
+				
+				if(data != NULL) {
+					send_request(NULL, data, "update",
+						     NULL, CRM_SYSTEM_CIB);
+				}
+			}
+
+		} else if(strcmp(sys_from, CRM_SYSTEM_CIB) == 0
+		   && strcmp(op, "forward") == 0
+		   && AM_I_DC) {
+				
+			/* this is a reply to our earlier command
+			 * Send it to the relevant node(s)
+			 */
+			const char *uname = xmlGetProp(options,
+						       "forward_to");
+
+			xmlNodePtr data = find_xml_node(stored_msg,
+							XML_TAG_FRAGMENT);
+
+			xmlNodePtr local_options =
+				create_xml_node(NULL, XML_TAG_OPTIONS);
+
+			/* If this is part of join request processing,
+			 * ask for the status section, otherwise just blast
+			 * it down to them.
+			 */
+			if(uname != NULL) {
+				set_xml_property_copy(local_options,
+						      XML_ATTR_VERBOSE,
+						      "true");
+			}
+			
+			send_request(local_options, data, "store",
+				     uname, CRM_SYSTEM_CRMD);
+				
+		} else {
+			cl_log(LOG_ERR,
+			       "Unexpected (response) operation %s", op);
+		}
+	} else {
+			
+	}
+		
+	return next_input;
+		
 }

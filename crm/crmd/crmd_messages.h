@@ -68,4 +68,11 @@ extern gboolean add_pending_outgoing_reply(const char *originating_node_name,
 extern gboolean crmd_authorize_message(xmlNodePtr root_xml_node,
 				       IPC_Message *client_msg,
 				       crmd_client_t *curr_client);
+extern gboolean send_request(xmlNodePtr msg_options,
+			     xmlNodePtr msg_data, 
+			     const char *operation,
+			     const char *host_to,
+			     const char *sys_to);
+
+
 #endif

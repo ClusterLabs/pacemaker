@@ -24,6 +24,7 @@
 #include <crm/common/ipcutils.h>
 #include <crm/common/msgutils.h>
 #include <string.h>
+#include <crmd_messages.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -61,18 +62,8 @@ do_election_vote(long long action,
 	startTimer(election_timeout);
 	CRM_DEBUG("Set the election timer... if it goes off, we win.");
 
-	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-	set_xml_property_copy(msg_options, XML_ATTR_OP, "vote");
-
-	
 	/* host_to = NULL (for broadcast) */
-	send_ha_request(fsa_cluster_connection,
-			msg_options, NULL,
-			NULL, CRM_SYSTEM_CRMD,
-			CRM_SYSTEM_CRMD, NULL,
-			NULL);
-
-	free_xml(msg_options);
+	send_request(NULL, NULL, "vote", NULL, CRM_SYSTEM_CRMD);
 	
 	FNRET(election_result);
 }
@@ -100,14 +91,8 @@ do_dc_heartbeat(gpointer data)
 	cl_log(LOG_INFO, "#!!#!!# Timer %s just popped!",
 	       fsa_input2string(timer->fsa_input));
 
-	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-	set_xml_property_copy(msg_options, XML_ATTR_OP, "beat");
-	
-	gboolean was_sent = send_ha_request(fsa_cluster_connection,
-					    msg_options, NULL,
-					    NULL, CRM_SYSTEM_CRMD,
-					    CRM_SYSTEM_DC, NULL,
-					    NULL);
+	gboolean was_sent = send_request(NULL, NULL, "beat", 
+					 NULL, CRM_SYSTEM_CRMD);
 
 	if(was_sent == FALSE) {
 		// this is bad
@@ -190,7 +175,7 @@ do_election_count_vote(long long action,
 		CRM_DEBUG("We lost the election");
 		if(fsa_input_register & R_THE_DC) {
 			CRM_DEBUG("Give up the DC");
-			election_result = I_ELECTION_RELEASE_DC;
+			election_result = I_RELEASE_DC;
 		} else {
 			CRM_DEBUG("We werent the DC anyway");
 			election_result = I_NOT_DC;
@@ -327,9 +312,7 @@ do_send_welcome(long long action,
 	int lpc = 0, size = 0, num_sent = 0;
 	oc_node_t *members;
 	gboolean was_sent = TRUE;
-	
 	FNIN();
-
 
 	startTimer(integration_timer);
 	
@@ -342,18 +325,16 @@ do_send_welcome(long long action,
 	} else if(action & A_JOIN_WELCOME) {
 		xmlNodePtr welcome = (xmlNodePtr)data;
 		xmlNodePtr options = find_xml_node(welcome, XML_TAG_OPTIONS);
-	
 		set_xml_property_copy(options, XML_ATTR_OP, "welcome");
-		
+
 		send_ha_reply(fsa_cluster_connection, welcome, NULL);
+
 		FNRET(I_NULL);
 	}
 	
 	members = fsa_membership_copy->members;
 	size = fsa_membership_copy->members_size;
-	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-	set_xml_property_copy(msg_options, XML_ATTR_OP, "welcome");
-
+	
 	if(joined_nodes != NULL) {
 		g_hash_table_destroy(joined_nodes);
 		joined_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
@@ -375,13 +356,9 @@ do_send_welcome(long long action,
 		CRM_DEBUG2("Sending welcome message to %s", new_node);
 		num_sent++;
 		was_sent = was_sent
-			&& send_ha_request(fsa_cluster_connection,
-					   msg_options, NULL,
-					   new_node, CRM_SYSTEM_CRMD,
-					   CRM_SYSTEM_DC, NULL,
-					   NULL);
+			&& send_request(NULL, NULL, "welcome",
+					new_node, CRM_SYSTEM_CRMD);
 	}
-	free_xml(msg_options);
 
 	if(was_sent == FALSE)
 		FNRET(I_FAIL);
@@ -442,7 +419,6 @@ do_announce(long long action,
 	    enum crmd_fsa_input current_input,
 	    void *data)
 {
-	xmlNodePtr welcome = (xmlNodePtr)data;
 	FNIN();
 	
 	/* Once we hear from the DC, we can stop the timer
@@ -457,17 +433,13 @@ do_announce(long long action,
 	} 
 #endif
 
-	xmlNodePtr msg_options = find_xml_node(welcome, XML_TAG_OPTIONS);
-	
-	set_xml_property_copy(msg_options, XML_ATTR_OP, "announce");
-	
-	send_ha_reply(fsa_cluster_connection, welcome, NULL);
+	send_request(NULL, NULL, "announce", NULL, CRM_SYSTEM_DC);
 	
 	FNRET(I_NULL);
 }
 
 
-/*	 A_PROCESS_JOIN_ACK	*/
+/*	 A_JOIN_PROCESS_ACK	*/
 enum crmd_fsa_input
 do_process_welcome_ack(long long action,
 		    enum crmd_fsa_cause cause,
@@ -501,7 +473,7 @@ do_process_welcome_ack(long long action,
 	
 	if(is_a_member == FALSE) {
 		cl_log(LOG_ERR, "Node %s is not known to us", join_from);
-		FNRET(I_NULL);
+		FNRET(I_FAIL);
 	}
 
 	// add them to our list of "active" nodes
@@ -511,24 +483,16 @@ do_process_welcome_ack(long long action,
 	
 	// TODO: clear their "block" in the CIB
 
-
-	
-	// update their copy of the CIB
-	
 	/*
 	 * Send a message to the CIB asking what the contents are.
 	 *
 	 * Forward the ack so that the reply will be directed appropriatly
 	 */
 
-	xmlNodePtr msg_options = find_xml_node(join_ack, XML_TAG_OPTIONS);
+	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
+	set_xml_property_copy(msg_options, "forward_to", join_from);
+	send_request(msg_options, NULL, "forward", NULL, CRM_SYSTEM_CIB);
 	
-	set_xml_property_copy(msg_options, XML_ATTR_OP, "forward");
-
-	forward_ipc_request(cib_subsystem->ipc,
-			    join_ack, NULL,
-			    CRM_SYSTEM_DCIB, CRM_SYSTEM_CRMD);
-
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {
 		// that was the last outstanding join ack)

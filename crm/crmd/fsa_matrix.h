@@ -105,7 +105,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_TRANSITION_ENGINE	==> */	S_ELECTION,
 	},
 
-/* Got an I_ELECTION_RELEASE_DC */
+/* Got an I_RELEASE_DC */
 	{
 		/* S_IDLE		==> */	S_RECOVERY,
 		/* S_ELECTION		==> */	S_RELEASE_DC,
@@ -502,18 +502,18 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_CIB_UPDATE */
 	{
-		/* S_IDLE		==> */	A_CIB_INVOKE|A_PE_INVOKE,
+		/* S_IDLE		==> */	A_CIB_INVOKE|A_CIB_DISTRIBUTE|A_PE_INVOKE,
 		/* S_ELECTION		==> */	A_CIB_INVOKE,
-		/* S_INTEGRATION	==> */	A_CIB_INVOKE|A_PE_INVOKE, 
+		/* S_INTEGRATION	==> */	A_CIB_INVOKE|A_CIB_DISTRIBUTE|A_PE_INVOKE, 
 		/* S_NOT_DC		==> */	A_CIB_INVOKE,
-		/* S_POLICY_ENGINE	==> */	A_CIB_INVOKE|A_PE_INVOKE,
+		/* S_POLICY_ENGINE	==> */	A_CIB_INVOKE|A_CIB_DISTRIBUTE|A_PE_INVOKE,
 		/* S_RECOVERY		==> */	A_CIB_INVOKE,
-		/* S_RECOVERY_DC	==> */	A_CIB_INVOKE|A_PE_INVOKE,
+		/* S_RECOVERY_DC	==> */	A_CIB_INVOKE|A_CIB_DISTRIBUTE|A_PE_INVOKE,
 		/* S_RELEASE_DC		==> */	A_CIB_INVOKE,
 		/* S_PENDING		==> */	A_CIB_INVOKE,
 		/* S_STOPPING		==> */	A_CIB_INVOKE,
 		/* S_TERMINATE		==> */	A_CIB_INVOKE,
-		/* S_TRANSITION_ENGINE	==> */	A_CIB_INVOKE|A_PE_INVOKE,
+		/* S_TRANSITION_ENGINE	==> */	A_CIB_INVOKE|A_CIB_DISTRIBUTE|A_PE_INVOKE,
 	},
 
 /* Got an I_DC_TIMEOUT */
@@ -549,20 +549,20 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 	},
 
 	
-/* Got an I_ELECTION_RELEASE_DC */
+/* Got an I_RELEASE_DC */
 	{
-		/* S_IDLE		==> */	O_RELEASE,
+		/* S_IDLE		==> */	O_RELEASE|A_ERROR,
 		/* S_ELECTION		==> */	O_RELEASE,
-		/* S_INTEGRATION	==> */	O_RELEASE,
+		/* S_INTEGRATION	==> */	O_RELEASE|A_ERROR,
 		/* S_NOT_DC		==> */	A_ERROR,
-		/* S_POLICY_ENGINE	==> */	O_RELEASE,
+		/* S_POLICY_ENGINE	==> */	O_RELEASE|A_ERROR,
 		/* S_RECOVERY		==> */	O_RELEASE,
-		/* S_RECOVERY_DC	==> */	O_RELEASE,
-		/* S_RELEASE_DC		==> */	O_RELEASE,
+		/* S_RECOVERY_DC	==> */	O_RELEASE|A_ERROR,
+		/* S_RELEASE_DC		==> */	O_RELEASE|A_ERROR,
 		/* S_PENDING		==> */	A_ERROR,
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	O_RELEASE,
+		/* S_TRANSITION_ENGINE	==> */	O_RELEASE|A_ERROR,
 	},
 
 /* Got an I_ELECTION_DC */
