@@ -62,8 +62,8 @@ SNMP_SUBAGENT_DIR = snmp_subagent
 endif
 
 SUBDIRS                 = libltdl doc debian pkg replace include lib \
-                        ldirectord heartbeat telecom\
-                        cts linux-ha membership contrib config \
+                        ldirectord heartbeat membership telecom\
+                        cts linux-ha contrib config \
 			$(USE_CRM_DIR) $(LRM_DIR) $(SNMP_SUBAGENT_DIR) tools
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
