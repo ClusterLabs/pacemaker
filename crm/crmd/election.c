@@ -68,7 +68,7 @@ do_election_vote(long long action,
 	}
 
 	if(not_voting) {
-		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_none);
+		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		if(AM_I_DC) {
 			return I_RELEASE_DC;
 		} else {
@@ -187,7 +187,7 @@ do_election_count_vote(long long action,
 	}
 	
 	if(we_loose) {
-		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_none);
+		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		if(fsa_input_register & R_THE_DC) {
 			crm_debug("Give up the DC");
 			election_result = I_RELEASE_DC;
@@ -267,7 +267,7 @@ do_dc_release(long long action,
 		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 
 	} else if (action & A_DC_RELEASED) {
-		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_none);
+		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 
 		if(cur_state == S_STOPPING) {
 			result = I_SHUTDOWN; /* necessary? */
