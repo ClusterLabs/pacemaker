@@ -582,7 +582,6 @@ do_node_block(long long action,
 const char *
 fsa_input2string(int input)
 {
-	gboolean found = TRUE;
 	const char *inputAsText = NULL;
 	
 	switch(input){
@@ -670,14 +669,11 @@ fsa_input2string(int input)
 		case I_ILLEGAL:
 			inputAsText = "I_ILLEGAL";
 			break;
-		default:
-			found = FALSE;
-			inputAsText = "<UNKNOWN_INPUT>";
-			break;
 	}
 
-	if(found == FALSE) {
+	if(inputAsText == NULL) {
 		cl_log(LOG_ERR, "Input %d is unknown", input);
+		inputAsText = "<UNKNOWN_INPUT>";
 	}
 	
 	return inputAsText;
@@ -686,7 +682,6 @@ fsa_input2string(int input)
 const char *
 fsa_state2string(int state)
 {
-	gboolean found = TRUE;
 	const char *stateAsText = NULL;
 	
 	switch(state){
@@ -729,14 +724,11 @@ fsa_state2string(int state)
 		case S_ILLEGAL:
 			stateAsText = "S_ILLEGAL";
 			break;
-		default:
-			found = FALSE;
-			stateAsText = "<UNKNOWN_STATE>";
-			break;
 	}
 
-	if(found == FALSE) {
+	if(stateAsText == NULL) {
 		cl_log(LOG_ERR, "State %d is unknown", state);
+		stateAsText = "<UNKNOWN_STATE>";
 	}
 	
 	return stateAsText;
@@ -745,7 +737,6 @@ fsa_state2string(int state)
 const char *
 fsa_cause2string(int cause)
 {
-	gboolean found = TRUE;
 	const char *causeAsText = NULL;
 	
 	switch(cause){
@@ -776,14 +767,11 @@ fsa_cause2string(int cause)
 		case C_ILLEGAL:
 			causeAsText = "C_ILLEGAL";
 			break;
-		default:
-			found = FALSE;
-			causeAsText = "<UNKNOWN_CAUSE>";
-			break;
 	}
 
-	if(found == FALSE) {
+	if(causeAsText == NULL) {
 		cl_log(LOG_ERR, "Cause %d is unknown", cause);
+		causeAsText = "<UNKNOWN_CAUSE>";
 	}
 	
 	return causeAsText;
@@ -792,7 +780,6 @@ fsa_cause2string(int cause)
 const char *
 fsa_action2string(long long action)
 {
-	gboolean found = TRUE;
 	const char *actionAsText = NULL;
 	
 	switch(action){
@@ -947,14 +934,11 @@ fsa_action2string(long long action)
 		case A_WARN:
 			actionAsText = "A_WARN";
 			break;
-		default:
-			found = FALSE;
-			actionAsText = "<UNKNOWN_ACTION>";
-			break;
 	}
 
-	if(found == FALSE) {
+	if(actionAsText == NULL) {
 		cl_log(LOG_ERR, "Action %.16llx is unknown", action);
+		actionAsText = "<UNKNOWN_ACTION>";
 	}
 	
 	return actionAsText;
