@@ -138,6 +138,7 @@ class LogWatcher:
         self.filename = log
         self.debug=debug
         self.whichmatch = -1
+        self.unmatched = None
         if self.debug:
             print "Debug now on for for log", log
         self.Timeout = int(timeout)
@@ -217,10 +218,12 @@ class LogWatcher:
         while (len(self.regexes) > 0):
             oneresult = self.look(timeout)
             if not oneresult:
+                self.unmatched = self.regexes
                 self.regexes = save_regexes
                 return None
             returnresult.append(oneresult)
             del self.regexes[self.whichmatch]
+        self.unmatched = None
         self.regexes = save_regexes
         return returnresult
                 

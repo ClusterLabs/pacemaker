@@ -547,8 +547,6 @@ class SimulStart(CTSTest):
             self.incr("stops")
             self.stop = StopTest(self.CM)
             self.stop(node)
-
-
          
         watchpats = [ ]
 
@@ -567,7 +565,9 @@ class SimulStart(CTSTest):
             self.CM.StartaCM(node)
         if watch.lookforall():
  	    return self.success()
-        return self.failure("did not find start message")
+        
+        return self.failure("did not find start pattern(s): " 
+        +	repr(watch.unmatched))
 
 
     def is_applicable(self):
@@ -703,7 +703,7 @@ class Fastdetection(CTSTest):
                     self.Stats["max"] = Detectiontime
         	if Detectiontime < self.Stats["min"]:
                     self.Stats["min"] = Detectiontime
-                self.CM.ShouldBeStatus[node] = self.CM["down"]:
+                self.CM.ShouldBeStatus[node] = self.CM["down"]
                 self.start(node)
                 return self.success()
             else:
