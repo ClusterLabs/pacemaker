@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.49 2004/11/12 17:20:58 andrew Exp $ */
+/* $Id: utils.c,v 1.50 2004/11/23 20:43:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -612,15 +612,18 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 		if(rsc != NULL) {
 			crm_debug("Adding created action to its resource");
 			rsc->actions = g_list_append(rsc->actions, action);
-			if(rsc->timeout != NULL) {
-				action->timeout = crm_strdup(rsc->timeout);
-			}
 			if(task == start_rsc) {
 				rsc->starting = TRUE;
-			}
-			if(task == stop_rsc) {
+				action->timeout = rsc->start_timeout;
+
+			} else if(task == stop_rsc) {
 				rsc->stopping = TRUE;
+				action->timeout = rsc->stop_timeout;
+
+			} else {
+				action->timeout = rsc->def_timeout;
 			}
+			
 		}
 
 	}

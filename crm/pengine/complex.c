@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.7 2004/11/12 17:20:58 andrew Exp $ */
+/* $Id: complex.c,v 1.8 2004/11/23 20:43:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -112,11 +112,13 @@ is_active(rsc_to_node_t *cons)
 gboolean	
 common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 {
-	const char *id       = xmlGetProp(xml_obj, XML_ATTR_ID);
-	const char *stopfail = xmlGetProp(xml_obj, "on_stopfail");
-	const char *restart  = xmlGetProp(xml_obj, "restart_type");
-	const char *timeout  = xmlGetProp(xml_obj, "timeout");
-	const char *priority = xmlGetProp(xml_obj, XML_CIB_ATTR_PRIORITY);	
+	const char *id            = xmlGetProp(xml_obj, XML_ATTR_ID);
+	const char *stopfail      = xmlGetProp(xml_obj, "on_stopfail");
+	const char *restart       = xmlGetProp(xml_obj, "restart_type");
+	const char *def_timeout   = xmlGetProp(xml_obj, "def_timeout");
+	const char *start_timeout = xmlGetProp(xml_obj, "start_timeout");
+	const char *stop_timeout  = xmlGetProp(xml_obj, "stop_timeout");
+	const char *priority      = xmlGetProp(xml_obj, XML_CIB_ATTR_PRIORITY);	
 	
 	crm_verbose("Processing resource input...");
 	
@@ -143,7 +145,6 @@ common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 		crm_err("Unknown resource type: %s", xml_obj->name);
 		crm_free(*rsc);
 		return FALSE;
-/* 	} else if((*rsc)->variant == pe_native) { */
 	}
 	
 	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
@@ -156,7 +157,9 @@ common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 	(*rsc)->provisional	   = TRUE; 
 	(*rsc)->starting	   = FALSE; 
 	(*rsc)->stopping	   = FALSE; 
-	(*rsc)->timeout		   = timeout;
+	(*rsc)->start_timeout	   = start_timeout;
+	(*rsc)->stop_timeout	   = stop_timeout;
+	(*rsc)->def_timeout	   = def_timeout;
 	(*rsc)->candidate_colors   = NULL;
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;

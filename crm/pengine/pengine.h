@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.42 2004/11/12 17:20:58 andrew Exp $ */
+/* $Id: pengine.h,v 1.43 2004/11/23 20:43:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -153,7 +153,10 @@ struct resource_s {
 
 		float	     priority; 
 		float	     effective_priority; 
-		const char  *timeout;
+
+		const char  *start_timeout;
+		const char  *stop_timeout;
+		const char  *def_timeout;
 		
 		gboolean     starting;
 		gboolean     stopping;
