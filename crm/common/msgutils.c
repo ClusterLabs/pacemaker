@@ -392,7 +392,7 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 		FNRET(FALSE);
 	    }
 	    cl_log(LOG_INFO, "Decoded value: (%s:%d)", *subsys, 
-		   strlen(*subsys));
+		   (int)strlen(*subsys));
 	    FNRET(TRUE);
     }
     else if(char_value != NULL)
