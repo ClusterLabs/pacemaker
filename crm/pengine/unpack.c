@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.53 2005/02/11 22:11:29 andrew Exp $ */
+/* $Id: unpack.c,v 1.54 2005/02/15 08:10:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -246,7 +246,7 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 		new_node->details->uname	= uname;
 		new_node->details->type		= node_ping;
 		new_node->details->online	= FALSE;
-		new_node->details->unclean	= FALSE;
+		new_node->details->unclean	= TRUE; /* all nodes are unclean until we've seen their status entry */
 		new_node->details->shutdown	= FALSE;
 		new_node->details->running_rsc	= NULL;
 		new_node->details->agents	= NULL;
@@ -259,7 +259,8 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 
 		add_node_attrs(attrs, new_node);
 		*nodes = g_list_append(*nodes, new_node);    
-		crm_verbose("Done with node %s", crm_element_value(xml_obj, XML_ATTR_UNAME));
+		crm_verbose("Done with node %s",
+			    crm_element_value(xml_obj, XML_ATTR_UNAME));
 
 		crm_debug_action(print_node("Added", new_node, FALSE));
 		);
@@ -412,6 +413,11 @@ unpack_status(crm_data_t * status,
 				uname);
 			continue;
 		}
+
+		/* Mark the node as provisionally clean
+		 * - at least we have seen it in the current cluster's lifetime
+		 */
+		this_node->details->unclean = FALSE;
 		
 		crm_verbose("Adding runtime node attrs");
 		add_node_attrs(attrs, this_node);
