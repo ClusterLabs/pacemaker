@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.48 2005/01/27 08:54:26 andrew Exp $ */
+/* $Id: ccm.c,v 1.49 2005/02/02 21:47:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -611,13 +611,6 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	crm_verbose("%s processing %s (%s)",
 		  __FUNCTION__, node_uname, data->state);
 
-#if 0
-	if(state != NULL
-	   && safe_str_eq(fsa_our_uname, node_uname)) {
-		/* the DC is always a member */
-		state = CRMD_JOINSTATE_MEMBER;
-	} 
-#endif
 	tmp1 = create_node_state(node_uname, node_uname,
 				 NULL, data->state, NULL, state, NULL);
 
