@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.10 2004/07/05 09:51:39 andrew Exp $ */
+/* $Id: graph.c,v 1.11 2004/07/20 09:03:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -223,13 +223,6 @@ action2xml(action_t *action)
 	}
 	
 	switch(action->task) {
-		case stonith_op:
-			action_xml = create_xml_node(NULL, "pseduo_event");
-
-			set_xml_property_copy(
-				action_xml, XML_ATTR_ID, crm_itoa(action->id));
-
-			break;
 		case shutdown_crm:
 			action_xml = create_xml_node(NULL, "crm_event");
 
@@ -239,21 +232,22 @@ action2xml(action_t *action)
 			break;
 		default:
 			action_xml = create_xml_node(NULL, "rsc_op");
-			add_node_copy(action_xml, action->rsc->xml);
+			add_node_copy(action_xml,
+				      safe_val3(NULL, action, rsc, xml));
 
 			set_xml_property_copy(
 				action_xml, XML_ATTR_ID, crm_itoa(action->id));
 
 			set_xml_property_copy(
 				action_xml, "rsc_id",
-				safe_val3(NULL, action, rsc, id));
+				safe_val3("__no_rsc__", action, rsc, id));
 			
 			break;
 	}
 
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_TARGET,
-		safe_val4(NULL, action, node, details, uname));
+		safe_val4("__no_node__", action, node, details, uname));
 
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_TASK, task2text(action->task));
@@ -274,5 +268,7 @@ action2xml(action_t *action)
 		action_xml, "allow_fail",
 		action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
 
+	add_node_copy(action_xml, action->args);
+	
 	return action_xml;
 }

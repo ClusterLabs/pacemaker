@@ -17,71 +17,10 @@
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  #
 
-verbose=$1
-io_dir=testcases
-diff_opts="--ignore-all-space -1 -u"
-failed=.regression.failed
-# zero out the error log
-> $failed
-
-function do_test {
-
-    base=$1;
-    name=$2;
-    input=$io_dir/${base}.xml
-    output=$io_dir/${base}.out
-    expected=$io_dir/${base}.exp
-
-    if [ ! -f $input ]; then
-	echo "Test $name	($base)...	Error ($input)";
-	return;
-    fi
-
-    if [ "$create_mode" != "true" -a ! -f $expected ]; then
-	echo "Test $name	($base)...	Error ($expected)";
-#	return;
-    fi
-
-    ./ptest < $input 2>/dev/null 2>/dev/null > $output
-
-    if [ ! -s $output ]; then
-	echo "Test $name	($base)...	Error ($output)";
-	rm $output
-	return;
-    fi
-
-    ./fix_xml.pl $output
-
-    if [ ! -s $output ]; then
-	echo "Test $name	($base)...	Error (fixed $output)";
-	rm $output
-	return;
-    fi
-
-    if [ "$create_mode" = "true" ]; then
-	cp "$output" "$expected"
-    fi
-
-    diff $diff_opts -q $expected $output >/dev/null
-    rc=$?
-
-    if [ "$create_mode" = "true" ]; then
-	echo "Test $name	($base)...	Created expected output" 
-    elif [ "$rc" = 0 ]; then
-	echo "Test $name	($base)...	Passed";
-    elif [ "$rc" = 1 ]; then
-	echo "Test $name	($base)...	* Failed";
-	diff $diff_opts $expected $output 2>/dev/null >> $failed
-    else 
-	echo "Test $name	($base)...	Error (diff: $rc)";
-	echo "==== Raw results for test ($base) ====" >> $failed
-	cat $output 2>/dev/null >> $failed
-    fi
-    
-    rm $output
-}
+. regression.core.sh
 
 create_mode="false"
+#create_mode="true"
 do_test simple1 "Offline	"
 do_test simple2 "Start	"
 do_test simple3 "Start 2	"
@@ -115,10 +54,13 @@ do_test attrs4 "string: exists	"
 do_test attrs5 "string: notexists	"
 
 echo ""
-do_test stopfail1 "Stop Failed - STONITH	"
 do_test stopfail2 "Stop Failed - Block	"
 do_test stopfail3 "Stop Failed - Ignore (1 node)"
 do_test stopfail4 "Stop Failed - Ignore (2 node)"
+do_test stopfail1 "Stop Failed - STONITH (block)"
+do_test stopfail5 "Stop Failed - STONITH (pass)"
+do_test stopfail6 "Stop Failed - STONITH (pass2)"
+do_test stopfail7 "Stop Failed - STONITH (should fail)"
 
 echo ""
 do_test rsc_location1 "Score (not running)	"
@@ -144,16 +86,5 @@ create_mode="true"
 echo Generating test outputs for these tests...
 #do_test bad7 "Bad data"
 
-if [ -s $failed ]; then
-    if [ "$verbose" = "-v" ]; then
-	echo "Results of failed tests...."
-	less $failed
-    else
-	echo "Results of failed tests are in $failed...."
-	echo "Use $0 -v to display them automatically."
-    fi
-else
-    rm $failed
-fi
-
+test_results
 

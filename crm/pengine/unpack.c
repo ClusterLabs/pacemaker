@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.18 2004/07/19 14:30:06 andrew Exp $ */
+/* $Id: unpack.c,v 1.19 2004/07/20 09:03:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -59,7 +59,8 @@ gboolean unpack_rsc_location(
 	GListPtr *action_constraints);
 
 gboolean unpack_lrm_rsc_state(
-	node_t *node, xmlNodePtr lrm_state, GListPtr rsc_list,
+	node_t *node, xmlNodePtr lrm_state,
+	GListPtr rsc_list, GListPtr nodes,
 	GListPtr *actions, GListPtr *node_constraints);
 
 gboolean add_node_attrs(xmlNodePtr attrs, node_t *node);
@@ -273,6 +274,8 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->priority	= atof(priority?priority:"0.0"); 
 		new_rsc->effective_priority = new_rsc->priority;
 		new_rsc->candidate_colors   = NULL;
+		new_rsc->fencable_nodes     = NULL;
+		new_rsc->actions            = NULL;
 		new_rsc->color		= NULL; 
 		new_rsc->is_stonith	= FALSE; 
 		new_rsc->runnable	= TRUE; 
@@ -282,6 +285,10 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->node_cons	= NULL; 
 		new_rsc->cur_node	= NULL;
 
+		if(safe_str_eq(new_rsc->agent->class, "stonith")) {
+			new_rsc->is_stonith = TRUE;
+		}
+		
 		if(safe_str_eq(stopfail, "ignore")) {
 			new_rsc->stopfail_type = pesf_ignore;
 		} else if(safe_str_eq(stopfail, "stonith")) {
@@ -293,10 +300,14 @@ unpack_resources(xmlNodePtr xml_resources,
 		action_stop    = action_new(new_rsc, stop_rsc);
 		*actions       = g_list_append(*actions, action_stop);
 		new_rsc->stop  = action_stop;
+		new_rsc->actions =
+			g_list_append(new_rsc->actions, action_stop);
 
 		action_start   = action_new(new_rsc, start_rsc);
 		*actions       = g_list_append(*actions, action_start);
 		new_rsc->start = action_start;
+		new_rsc->actions =
+			g_list_append(new_rsc->actions, action_start);
 
 		order_new(action_stop, action_start, pecs_startstop, action_cons);
 
@@ -436,7 +447,7 @@ unpack_status(xmlNodePtr status,
 		determine_online_status(node_state, this_node);
 
 		crm_verbose("Processing lrm resource entries");
-		unpack_lrm_rsc_state(this_node, lrm_rsc, rsc_list,
+		unpack_lrm_rsc_state(this_node, lrm_rsc, rsc_list, nodes,
 				     actions, node_constraints);
 
 		crm_verbose("Processing lrm agents");
@@ -560,7 +571,8 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 
 
 gboolean
-unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc, GListPtr rsc_list,
+unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
+		     GListPtr rsc_list, GListPtr nodes,
 		     GListPtr *actions, GListPtr *node_constraints)
 {
 	xmlNodePtr rsc_entry  = NULL;
@@ -602,7 +614,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc, GListPtr rsc_list,
 		while(stonith_list != NULL) {
 
 			node_t *node = pe_find_node(
-				rsc_list, xmlGetProp(stonith_list, "id"));
+				nodes, xmlGetProp(stonith_list, "id"));
 
 			stonith_list = stonith_list->next;
 

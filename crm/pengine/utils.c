@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.36 2004/07/05 13:52:03 andrew Exp $ */
+/* $Id: utils.c,v 1.37 2004/07/20 09:03:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -416,7 +416,7 @@ pe_find_node(GListPtr nodes, const char *uname)
   
 	for(lpc = 0; lpc < g_list_length(nodes); lpc++) {
 		node_t *node = g_list_nth_data(nodes, lpc);
-		if(safe_str_eq(node->details->uname, uname)) {
+		if(node != NULL && safe_str_eq(node->details->uname, uname)) {
 			return node;
 		}
 	}
@@ -554,7 +554,8 @@ action_new(resource_t *rsc, enum action_tasks task)
 	action->processed  = FALSE;
 	action->optional   = TRUE;
 	action->seen_count = 0;
-
+	action->args = create_xml_node(NULL, "args");
+	
 	return action;
 }
 
@@ -1017,7 +1018,8 @@ pe_free_actions(GListPtr actions)
 		pe_free_shallow(action->actions_before); // action_warpper_t*
 		pe_free_shallow(action->actions_after); // action_warpper_t*
 		action->actions_before = NULL;
-		action->actions_after = NULL;
+		action->actions_after  = NULL;
+		free_xml(action->args);
 		crm_free(action);
 	}
 	g_list_free(actions);

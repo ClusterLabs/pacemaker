@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.27 2004/07/19 14:30:06 andrew Exp $ */
+/* $Id: ptest.c,v 1.28 2004/07/20 09:03:39 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -213,7 +213,7 @@ main(int argc, char **argv)
 	stage5(resources);
 
 	crm_debug("=#=#=#=#= Stage 6 =#=#=#=#=");
-	stage6(&actions, &action_constraints, nodes);
+	stage6(&actions, &action_constraints, nodes, resources);
 
 	crm_debug("========= Action List =========");
 	slist_iter(action, action_t, actions, lpc,

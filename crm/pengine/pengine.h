@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.31 2004/07/19 14:30:06 andrew Exp $ */
+/* $Id: pengine.h,v 1.32 2004/07/20 09:03:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,11 +151,13 @@ struct resource_s {
 		action_t	*stop;
 		action_t	*start;
 		
+		GListPtr	actions;	  // action_t*
+		
 		GListPtr	candidate_colors; // color_t*
 		GListPtr	allowed_nodes;    // node_t*
 		GListPtr	node_cons;        // rsc_to_node_t* 
 		GListPtr	rsc_cons;         // resource_t*
-		GListPtr	fencable_nodes;    // node_t*
+		GListPtr	fencable_nodes;   // node_t*
 
 		color_t		*color;
 };
@@ -181,6 +183,8 @@ struct action_s
 		gboolean failure_is_fatal;
 
 		int seen_count;
+
+		xmlNodePtr args;
 		
 		GListPtr actions_before; // action_warpper_t*
 		GListPtr actions_after;  // action_warpper_t*
@@ -217,7 +221,8 @@ extern gboolean stage4(GListPtr colors);
 extern gboolean stage5(GListPtr resources);
 
 extern gboolean stage6(
-	GListPtr *actions, GListPtr *action_constraints, GListPtr nodes);
+	GListPtr *actions, GListPtr *action_constraints,
+	GListPtr nodes, GListPtr resources);
 
 extern gboolean stage7(GListPtr resources,
 		       GListPtr actions,

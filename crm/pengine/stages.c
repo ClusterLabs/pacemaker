@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.12 2004/07/15 15:32:49 msoffen Exp $ */
+/* $Id: stages.c,v 1.13 2004/07/20 09:03:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,6 +29,8 @@
 
 #include <pengine.h>
 #include <pe_utils.h>
+
+node_t *choose_fencer(action_t *stonith, node_t *node, GListPtr resources);
 
 /*
  * Unpack everything
@@ -229,8 +231,8 @@ stage4(GListPtr colors)
 gboolean
 stage5(GListPtr resources)
 {
-	
 	int lpc = 0;
+	int lpc2 = 0;
 
 	crm_verbose("filling in the nodes to perform the actions on");
 	slist_iter(
@@ -238,69 +240,90 @@ stage5(GListPtr resources)
 
 		crm_debug_action(print_resource("Processing", rsc, FALSE));
 		
-		if(safe_val(NULL, rsc, stop) == NULL
-		   || safe_val(NULL, rsc, start) == NULL) {
-			// error
-			crm_err("Either start action (%p) or"
-				" stop action (%p) were not defined",
-				safe_val(NULL, rsc, stop),
-				safe_val(NULL, rsc, start));
-			continue;
-		}
-		if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL){
-			rsc->stop->node = safe_val(NULL, rsc, cur_node);
-			
-			rsc->start->node    = NULL;
-			rsc->stop->optional = FALSE;
+		node_t *start_node = safe_val4(
+			NULL, rsc, color, details, chosen_node);
+		node_t *stop_node = safe_val(NULL, rsc, cur_node);
+		node_t *default_node = NULL;
+		if(stop_node == NULL && start_node == NULL) {
+			// it is not and will not run
+			default_node = NULL;
+
+		} else if(stop_node == NULL) {
+			/* it is not running yet, all actions must take place
+			 * on the new node and if they fail, they fail
+			 */
+			default_node = start_node;
+			rsc->start->optional = FALSE;
+			crm_info("Starting resource %s (%s)",
+				  safe_val(NULL, rsc, id),
+				  safe_val3(NULL, stop_node, details,uname));
+
+
+		} else if(start_node == NULL) {
+			/* it is being stopped, all actions must take place
+			 * on the existing node and if they fail, they fail
+			 */
+			default_node = stop_node;
+			rsc->stop->optional  = FALSE;
 			crm_warn("Stop resource %s (%s)",
 				  safe_val(NULL, rsc, id),
-				  safe_val5(NULL, rsc, stop, node,details,uname));
+				  safe_val3(NULL, stop_node, details,uname));
 
-			crm_debug_action(
-				print_action(
-					CRMD_STATE_ACTIVE, rsc->stop, FALSE));
-			
-			
-		} else if(safe_str_eq(safe_val4(NULL, rsc,cur_node,details,uname),
-				      safe_val6(NULL, rsc, color ,details,
-						chosen_node, details, uname))){
-			crm_verbose("No change for Resource %s (%s)",
+		} else if(safe_str_eq(
+			   safe_val3(NULL, stop_node, details, uname),
+			   safe_val3(NULL, start_node, details, uname))) {
+
+			// its not moving so choose either copy
+			default_node = start_node;
+			crm_verbose("No change (possible restart)"
+				    " for Resource %s (%s)",
 				    safe_val(NULL, rsc, id),
-				    safe_val4(NULL,rsc,cur_node,details,uname));
+				    safe_val3(
+					    NULL,default_node,details,uname));
 
-			rsc->stop->node  = safe_val(NULL, rsc, cur_node);
-			rsc->start->node = safe_val4(NULL, rsc, color,
-						     details, chosen_node);
-			
-		} else if(safe_val4(NULL, rsc,cur_node,details,uname) == NULL) {
-			rsc->start->node = safe_val4(NULL, rsc, color,
-						     details, chosen_node);
-
-			crm_debug("Start resource %s (%s)",
-				  safe_val(NULL, rsc, id),
-				  safe_val5(NULL, rsc, start,node,details,uname));
-			rsc->start->optional = FALSE;
 			
 		} else {
-			rsc->stop->node = safe_val(NULL, rsc, cur_node);
-			rsc->start->node = safe_val4(NULL, rsc, color,
-						     details, chosen_node);
-			rsc->start->optional = FALSE;
-			rsc->stop->optional  = FALSE;
+			/* the resource is moving... oh god
+			 *
+			 * we'll have to interpret dependancies or something
+			 * to figure out the right node.
+			 *
+			 * For now, put everything on the start node and
+			 * possibly add constraints to make other actions
+			 * occur after the start 
+			 */
 
+			default_node = start_node;
+			rsc->stop->optional  = FALSE;
+			rsc->start->optional = FALSE;
+			
 			crm_debug("Move resource %s (%s -> %s)",
 				  safe_val(NULL, rsc, id),
-				  safe_val5(NULL, rsc, stop, node,details,uname),
-				  safe_val5(NULL, rsc, start,node,details,uname));
+				  safe_val3(NULL, stop_node,details,uname),
+				  safe_val3(NULL, start_node,details,uname));
 		}
+		
+		
+		slist_iter(
+			action, action_t, rsc->actions, lpc2,
 
-		if(rsc->stop->node == NULL) {
-			rsc->stop->runnable = FALSE;
-		}
-		if(rsc->start->node == NULL) {
-			rsc->start->runnable = FALSE;
-		}
+			switch(action->task) {
+				case start_rsc:
+					action->node = start_node;
+					break;
+				case stop_rsc:
+					action->node = stop_node;
+					break;
+				default:
+					action->node = default_node;
+					break;
+			}
 
+			if(action->node == NULL) {
+				action->runnable = FALSE;
+			}
+			
+			);
 		);
 	
 	return TRUE;
@@ -310,7 +333,8 @@ stage5(GListPtr resources)
  * Create dependacies for stonith and shutdown operations
  */
 gboolean
-stage6(GListPtr *actions, GListPtr *action_constraints, GListPtr nodes)
+stage6(GListPtr *actions, GListPtr *action_constraints,
+       GListPtr nodes, GListPtr resources)
 {
 
 	int lpc = 0;
@@ -340,10 +364,18 @@ stage6(GListPtr *actions, GListPtr *action_constraints, GListPtr nodes)
 				 node->details->uname);
 
 			stonith_node = action_new(NULL,stonith_op);
-			stonith_node->node     = node;
 			stonith_node->runnable = TRUE;
 			stonith_node->optional = FALSE;
+			choose_fencer(
+				stonith_node, node, resources);
 
+			set_xml_property_copy(stonith_node->args,
+					      "target", node->details->uname);
+			
+			if(stonith_node->node == NULL) {
+				//stonith_node->runnable = FALSE;
+			}
+			
 			if(down_node != NULL) {
 				down_node->failure_is_fatal = FALSE;
 			}
@@ -423,6 +455,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 		 *  during stage6
 		 */
 		action_set = create_action_set(rsc->start);
+
 		if(action_set != NULL) {
 			crm_verbose("Created action set for %s->start",
 			       rsc->id);
@@ -567,4 +600,34 @@ choose_node_from_list(color_t *color)
 	}
 	
 	return TRUE;
+}
+
+node_t *
+choose_fencer(action_t *stonith, node_t *a_node, GListPtr resources)
+{
+	int lpc = 0;
+	int lpc2 = 0;
+	slist_iter(
+		rsc, resource_t, resources, lpc,
+		if(rsc->is_stonith == FALSE) {
+			continue;
+		}
+
+		slist_iter(
+			node, node_t, rsc->fencable_nodes, lpc2,
+
+			if(safe_str_eq(
+				   safe_val3(NULL, node, details, uname),
+				   safe_val3(NULL, a_node, details, uname))) {
+
+				stonith->node = rsc->cur_node;
+				rsc->actions = g_list_append(
+					rsc->actions, stonith);
+
+				return rsc->cur_node;
+			}
+			);
+		);
+	
+	return NULL;
 }

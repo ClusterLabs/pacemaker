@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.38 2004/07/15 15:32:49 msoffen Exp $ */
+/* $Id: pengine.c,v 1.39 2004/07/20 09:03:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -154,7 +154,7 @@ do_calculations(xmlNodePtr cib_object)
 	stage5(resources);
 
 	crm_verbose("=#=#=#=#= Stage 6 =#=#=#=#=");
-	stage6(&actions, &action_constraints, nodes);
+	stage6(&actions, &action_constraints, nodes, resources);
 
 	crm_verbose("========= Action List =========");
 	crm_debug_action(
