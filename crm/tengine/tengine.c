@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.30 2004/09/14 05:54:44 andrew Exp $ */
+/* $Id: tengine.c,v 1.31 2004/09/15 20:24:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -230,15 +230,13 @@ process_graph_event(xmlNodePtr event)
 		crm_xml_devel(event, "Event found");
 	} else if(action_id == -2) {
 		crm_xml_info(event, "Event found but failed");
-#ifdef TESTING
-	} else if(event == NULL) {
-#endif
-	} else {
+	} else if(event != NULL) {
 		/* unexpected event, trigger a pe-recompute */
 		/* possibly do this only for certain types of actions */
 		crm_err("Action not matched, aborting transition");
 		send_abort("Event not matched", event);
 		return FALSE;
+/*	} else { we dont care, a transition is starting */
 	}
 	
 	/* something happened, stop the timer and start it again at the end */
