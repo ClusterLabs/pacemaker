@@ -793,6 +793,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	fragment = create_cib_fragment(update, NULL);
 	
 	{
+		int lpc = 0;
 		int rc = cib_ok;
 		int call_options = cib_sync_call;
 
@@ -803,10 +804,16 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 			crm_debug("Possibly nowhere to send resource update to."
 				  "  Performing an async update just in case.");
 		}
-		
-		rc = fsa_cib_conn->cmds->modify(
-			fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
-			call_options);
+
+		do {
+			fsa_cib_conn->call_timeout = 5;
+			rc = fsa_cib_conn->cmds->modify(
+				fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
+				call_options);
+			lpc++;
+			
+		} while(call_options != 0 && rc != cib_ok && lpc < 4);
+		fsa_cib_conn->call_timeout = 0; /* back to the default */		
 
 		/*
 		 * There are a couple of options here...
@@ -822,7 +829,13 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 		 *   the next signup or election.
 		 */
 
-		if(rc == cib_ok) {
+		if(call_options == 0) {
+			/* the return code is a call number, not an error
+			 * code
+			 */
+			crm_debug("Sent resource state update message: %d", rc);
+			
+		} if(rc == cib_ok) {
 			crm_debug("Resource state update: %s",
 				  cib_error2string(rc));
 			
@@ -831,8 +844,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 				cib_error2string(rc));
 			CRM_DEV_ASSERT(rc == cib_ok && AM_I_DC);
 			
-		} else if(rc == cib_master_timeout
-			  && (fsa_state==S_PENDING || fsa_state==S_ELECTION)) {
+		} else if(rc == cib_master_timeout) {
 			crm_warn("Resource state update failed: %s",
 				cib_error2string(rc));
 			crm_warn("The resource state will be updated during the"
