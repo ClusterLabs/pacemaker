@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.51 2005/03/16 19:39:37 andrew Exp $ */
+/* $Id: pengine.h,v 1.52 2005/03/31 07:57:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -172,11 +172,11 @@ struct resource_s {
 		enum pe_stop_fail      stopfail_type;
 		enum pe_restart        restart_type;
 
-		GListPtr candidate_colors; /* color_t*        */
+		GListPtr candidate_colors; /* color_t*          */
 		GListPtr rsc_cons;         /* rsc_colocation_t* */
-		GListPtr actions;	   /* action_t*        */
+		GListPtr actions;	   /* action_t*         */
 
-		crm_data_t * extra_attrs;
+		GHashTable * parameters;
 };
 
 struct action_wrapper_s 
@@ -209,8 +209,6 @@ struct action_s
 		
 		GListPtr actions_before; /* action_warpper_t* */
 		GListPtr actions_after;  /* action_warpper_t* */
-
-		crm_data_t * extra_attrs;
 };
 
 struct order_constraint_s 

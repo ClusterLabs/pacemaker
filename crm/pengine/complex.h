@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.8 2005/02/23 15:43:59 andrew Exp $ */
+/* $Id: complex.h,v 1.9 2005/03/31 07:57:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,6 +18,7 @@
  */
 
 #include <crm/common/xml.h>
+#include <glib.h>
 
 #define n_object_classes 3
 
@@ -136,4 +137,10 @@ extern gboolean native_constraint_violated(
 extern void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 extern void common_agent_constraints(
 	GListPtr node_list, lrm_agent_t *agent, const char *id);
+
+extern void unpack_instance_attributes(crm_data_t *xml_obj, GHashTable *hash);
+extern const char *get_rsc_param(resource_t *rsc, const char *prop);
+extern void add_rsc_param(resource_t *rsc, const char *name, const char *value);
+extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
+extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 

@@ -90,7 +90,7 @@ More details are given in the annotated DTD below.
 	transition_timeout (period in milliseconds, default=60000):
 		A time after which the transition is deemed failed.
 
-	symetrical_cluster (boolean, default=TRUE):
+	symetric_cluster (boolean, default=TRUE):
 		If true, resources are permitted to run anywhere by default.
 		Otherwise, explict constraints must be created to specify 
 		 where they can run.
@@ -118,7 +118,7 @@ More details are given in the annotated DTD below.
      subsystem whatever", and then a constraint could include a
      dependency on such an attribute being present or having a specific
      value. -->
-<!ELEMENT node (attributes?)>
+<!ELEMENT node (instance_attributes*)>
 <!-- 
      Description in all elements is opaque to the CRM, some
      adminstrative comments.
@@ -220,7 +220,7 @@ More details are given in the annotated DTD below.
      much sense here.
 
 -->
-<!ELEMENT instance_attributes (rule?, rsc_parameters)>
+<!ELEMENT instance_attributes (rule?, attributes)>
 <!ATTLIST instance_attributes
 	  weight	CDATA #IMPLIED
 	  id		CDATA #REQUIRED>
@@ -615,7 +615,7 @@ typedef enum {
 
 -->
 
-<!ELEMENT rsc_op (resource, attrs)>
+<!ELEMENT rsc_op (resource, attributes)>
 <!ATTLIST rsc_op
 	id	      CDATA	#REQUIRED
 	operation     CDATA	#REQUIRED
@@ -627,7 +627,7 @@ typedef enum {
 <!-- For added flexibility, an action can trigger an event, which is
      then consumed somewhere else. Woah. Cool. 
 -->
-<!ELEMENT pseudo_event (attrs)>
+<!ELEMENT pseudo_event (attributes)>
 <!ATTLIST pseudo_event
 	id	      CDATA	#REQUIRED
 	operation     CDATA	#REQUIRED
@@ -639,7 +639,7 @@ typedef enum {
 <!-- crm_event: We can instruct a crmd to shutdown (maybe the whole node?),
      sign-out cleanly, or to retrigger the DC election.
 -->
-<!ELEMENT crm_event (attrs)>
+<!ELEMENT crm_event (attributes)>
 <!ATTLIST crm_event
 	id	      CDATA	#REQUIRED
 	allow_fail    (true|false) 'false'
@@ -712,12 +712,7 @@ typedef enum {
 	  name		CDATA #REQUIRED
 	  value		CDATA #IMPLIED>
 
-<!-- Same same, different names for clarity ;) -->
-<!ELEMENT attrs (nvpair*)>
 <!ELEMENT attributes (nvpair*)>
-<!ELEMENT rsc_parameters (nvpair*)>
-
-
 
 <!-- 
 

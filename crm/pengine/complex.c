@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.15 2005/02/23 15:43:59 andrew Exp $ */
+/* $Id: complex.c,v 1.16 2005/03/31 07:57:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -118,8 +118,10 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	const char *def_timeout   = crm_element_value(xml_obj, XML_ATTR_TIMEOUT);
 	const char *start_timeout = crm_element_value(xml_obj, XML_RSC_ATTR_START_TIMEOUT);
 	const char *stop_timeout  = crm_element_value(xml_obj, XML_RSC_ATTR_STOP_TIMEOUT);
-	const char *priority      = crm_element_value(xml_obj, XML_CIB_ATTR_PRIORITY);	
-	
+	const char *priority      = NULL;
+
+	crm_data_t *attr_sets = find_xml_node(xml_obj, XML_TAG_ATTR_SETS,FALSE);
+
 	crm_xml_verbose(xml_obj, "Processing resource input...");
 	
 	if(id == NULL) {
@@ -150,6 +152,13 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
 	crm_verbose("Unpacking resource...");
 	
+	(*rsc)->parameters = g_hash_table_new_full(
+		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+
+	unpack_instance_attributes(attr_sets, (*rsc)->parameters);
+
+	priority = get_rsc_param(*rsc, XML_CIB_ATTR_PRIORITY);
+
 	(*rsc)->priority	   = atoi(priority?priority:"0"); 
 	(*rsc)->effective_priority = (*rsc)->priority;
 	(*rsc)->recovery_type      = recovery_stop_start;
@@ -163,7 +172,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	(*rsc)->candidate_colors   = NULL;
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
-	(*rsc)->extra_attrs	   = create_xml_node(NULL, "extra");
+
 	
 	if(safe_str_eq(stopfail, "ignore")) {
 		(*rsc)->stopfail_type = pesf_ignore;
@@ -325,4 +334,85 @@ has_agent(node_t *a_node, lrm_agent_t *an_agent)
 		    an_agent->class, an_agent->type);
 	
 	return FALSE;
+}
+
+void
+unpack_instance_attributes(crm_data_t *xml_obj, GHashTable *hash)
+{
+	const char *name = NULL;
+	const char *value = NULL;
+	
+	if(xml_obj == NULL) {
+		crm_devel("No instance attributes");
+		return;
+		
+	} else if(safe_str_neq(XML_TAG_ATTR_SETS, crm_element_name(xml_obj))) {
+		crm_err("Invalid location for instance attributes: %s",
+			crm_element_name(xml_obj));
+		CRM_DEV_ASSERT(FALSE);
+		return;
+	}
+	
+	xml_child_iter(
+		xml_obj, attr_set, XML_TAG_ATTRS,
+
+		/* todo: check any rules */
+		
+		xml_child_iter(
+			attr_set, an_attr, XML_CIB_TAG_NVPAIR,
+
+			name =crm_element_value(an_attr, XML_NVPAIR_ATTR_NAME);
+			value=crm_element_value(an_attr, XML_NVPAIR_ATTR_VALUE);
+			add_hash_param(hash, name, value);
+			);
+		);
+}
+
+void
+add_rsc_param(resource_t *rsc, const char *name, const char *value)
+{
+	CRM_DEV_ASSERT(rsc != NULL);
+	if(crm_assert_failed) {
+		return;
+	}
+	add_hash_param(rsc->parameters, name, value);
+}
+
+void
+add_hash_param(GHashTable *hash, const char *name, const char *value)
+{
+	CRM_DEV_ASSERT(hash != NULL);
+	if(crm_assert_failed) {
+		return;
+	}
+
+	if(g_hash_table_lookup(hash, name) == NULL) {
+		crm_debug("adding: name=%s value=%s", name, value);
+		g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
+	}
+}
+	
+const char *
+get_rsc_param(resource_t *rsc, const char *name)
+{
+	CRM_DEV_ASSERT(rsc != NULL);
+	if(crm_assert_failed) {
+		return NULL;
+	}
+	return g_hash_table_lookup(rsc->parameters, name);
+}
+
+void
+hash2nvpair(gpointer key, gpointer value, gpointer user_data) 
+{
+	const char *name    = key;
+	const char *s_value = value;
+
+	crm_data_t *xml_node  = user_data;
+	crm_data_t *xml_child = create_xml_node(xml_node, XML_CIB_TAG_NVPAIR);
+
+	set_xml_property_copy(xml_child, XML_NVPAIR_ATTR_NAME, name);
+	set_xml_property_copy(xml_child, XML_NVPAIR_ATTR_VALUE, s_value);
+
+	crm_debug("dumped: name=%s value=%s", name, s_value);
 }

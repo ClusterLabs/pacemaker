@@ -53,7 +53,7 @@ enum crmd_fsa_input do_lrm_rsc_op(
 
 enum crmd_fsa_input do_fake_lrm_op(gpointer data);
 
-GHashTable *xml2list(crm_data_t *parent, const char **attr_path, int depth);
+GHashTable *xml2list(crm_data_t *parent);
 GHashTable *monitors = NULL;
 int num_lrm_register_fails = 0;
 int max_lrm_register_fails = 30;
@@ -624,7 +624,7 @@ do_lrm_rsc_op(
 	op->user_data = NULL;
 	op->target_rc = EVERYTIME;
 	if(msg != NULL) {
-		op->params = xml2list(msg, rsc_path, DIMOF(rsc_path));
+		op->params = xml2list(msg);
 	} else {
 		CRM_DEV_ASSERT(safe_str_eq(CRMD_RSCSTATE_STOP, operation));
 	}
@@ -692,20 +692,17 @@ free_lrm_op(lrm_op_t *op)
 
 
 GHashTable *
-xml2list(crm_data_t *parent, const char**attr_path, int depth)
+xml2list(crm_data_t *parent)
 {
 	crm_data_t *nvpair_list = NULL;
-
-	GHashTable   *nvpair_hash =
-		g_hash_table_new(g_str_hash, g_str_equal);
+	GHashTable *nvpair_hash = g_hash_table_new(g_str_hash, g_str_equal);
 
 	CRM_DEV_ASSERT(parent != NULL);
 	if(parent != NULL) {
-		nvpair_list = find_xml_node_nested(parent, attr_path, depth);
+		nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
 		if(nvpair_list == NULL) {
 			crm_xml_devel(parent, "No attributes for resource op");
 		}
-		
 	}
 	
 	xml_child_iter(

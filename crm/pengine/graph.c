@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.28 2005/02/28 11:23:42 andrew Exp $ */
+/* $Id: graph.c,v 1.29 2005/03/31 07:57:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -210,7 +210,7 @@ action2xml(action_t *action, gboolean as_input)
 		return NULL;
 	}
 
-	crm_devel("Dumping action%d as XML", action->id);
+	crm_devel("Dumping action %d as XML", action->id);
 	switch(action->task) {
 		case stonith_node:
 		case shutdown_crm:
@@ -230,10 +230,10 @@ action2xml(action_t *action, gboolean as_input)
 				action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
 			}
 
-			if(!as_input) {
-				add_node_copy(
-					action_xml,
-					safe_val3(NULL, action, rsc, xml));
+			if(!as_input && action->rsc != NULL) {
+				crm_data_t *rsc_xml = create_xml_node(
+					action_xml, crm_element_name(action->rsc->xml));
+				copy_in_properties(rsc_xml, action->rsc->xml);
 			}
 			
 			set_xml_property_copy(
@@ -273,10 +273,12 @@ action2xml(action_t *action, gboolean as_input)
 		return action_xml;
 	}
 	
-	crm_xml_devel(action->extra_attrs, "copying in extra attributes");
-	if(action->extra_attrs) {
-		copy_in_properties(action->args, action->extra_attrs);
+	if(action->rsc != NULL) {
+		g_hash_table_foreach(
+			action->rsc->parameters, hash2nvpair, action->args);
 	}
+	
+	crm_xml_debug(action->args, "copied in extra attributes");
 	add_node_copy(action_xml, action->args);
 	
 	return action_xml;
