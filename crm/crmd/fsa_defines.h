@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.5 2004/03/18 10:34:24 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.6 2004/03/19 10:43:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -392,6 +392,8 @@ A_WARN
 	 * way we can return quickly even if busy with other things.
 	 */
 #define	A_NODE_BLOCK		0x0010000000000000ULL
+	/* Update our information in the local CIB */
+#define A_UPDATE_NODESTATUS	0x0020000000000000ULL
 
 /* -- Logging actions -- */
 #define	A_LOG			0x0100000000000000ULL

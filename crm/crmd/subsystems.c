@@ -134,7 +134,7 @@ do_cib_control(long long action,
 	FNRET(result);
 }
 
-/*	 A_CIB_INVOKE, A_CIB_BUMPGEN	*/
+/*	 A_CIB_INVOKE, A_CIB_BUMPGEN, A_UPDATE_NODESTATUS	*/
 enum crmd_fsa_input
 do_cib_invoke(long long action,
 	      enum crmd_fsa_cause cause,
@@ -169,7 +169,13 @@ do_cib_invoke(long long action,
 		send_request(new_options, NULL, CRM_OPERATION_BUMP,
 			     NULL, CRM_SYSTEM_CIB);
 		
-  	}  
+  	} else if(action & A_UPDATE_NODESTATUS) {
+		
+	} else {
+		cl_log(LOG_ERR, "Unexpected action %s",
+		       fsa_action2string(action));
+	}
+	
 	
 	FNRET(I_NULL);
 }
@@ -381,16 +387,10 @@ stop_subsystem(struct crm_subsystem_s*	centry)
 		       "OOPS! client %s not running yet",
 		       centry->command);
 	} else {
-#if 1
+#if 0
 		return run_command(centry, "-k", FALSE);
 #else
-		if(centry->ipc != NULL) {
-			centry->ipc->ch_status = IPC_DISC_PENDING;
-		} else {
-			cl_log(LOG_WARNING,
-			       "Could not stop [%s] as it hasnt connected yet",
-			       centry->command);
-		}
+		send_request(NULL, NULL, "quit", NULL, centry->name);
 #endif
 	}
 	

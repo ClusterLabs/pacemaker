@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.20 2004/03/18 10:48:51 andrew Exp $ */
+/* $Id: msgutils.c,v 1.21 2004/03/19 10:43:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -127,39 +127,88 @@ conditional_add_failure(xmlNodePtr failed,
     
 	if (return_code < 0)
 	{
+		const char *error_msg = NULL;
+		const char *operation_msg = NULL;
 		was_error = TRUE;
-	
-		cl_log(LOG_DEBUG,
-		       "Action %d failed (cde=%d)",
-		       operation,
-		       return_code);
-	
+
+		switch(return_code) {
+			case CIB_ERROR_MISSING_ID:
+				error_msg = "CIB_ERROR_MISSING_ID";
+				break;
+			case CIB_ERROR_MISSING_TYPE:
+				error_msg = "CIB_ERROR_MISSING_TYPE";
+				break;
+			case CIB_ERROR_MISSING_FIELD:
+				error_msg = "CIB_ERROR_MISSING_FIELD";
+				break;
+			case CIB_ERROR_OBJTYPE_MISMATCH:
+				error_msg = "CIB_ERROR_OBJTYPE_MISMATCH";
+				break;
+			case CIB_ERROR_EXISTS:
+				error_msg = "CIB_ERROR_EXISTS";
+				break;
+			case CIB_ERROR_NOT_EXISTS:
+				error_msg = "CIB_ERROR_NOT_EXISTS";
+				break;
+			case CIB_ERROR_CORRUPT:
+				error_msg = "CIB_ERROR_CORRUPT";
+				break;
+			case CIB_ERROR_OTHER:
+				error_msg = "CIB_ERROR_OTHER";
+				break;
+			default:
+				cl_log(LOG_ERR,
+				       "Unknown CIB Error %d", return_code);
+				error_msg = "<unknown error>";
+				break;				
+		}
+
+		switch(operation) {
+			case 0:
+				operation_msg = "CIB_OP_NONE";
+				break;
+			case 1:
+				operation_msg = "CIB_OP_ADD";
+				break;
+			case 2:
+				operation_msg = "CIB_OP_MODIFY";
+				break;
+			case 3:
+				operation_msg = "CIB_OP_DELETE";
+				break;
+			default:
+				cl_log(LOG_ERR,
+				       "Unknown CIB operation %d", operation);
+				operation_msg = "<unknown operation>";
+				break;				
+		}
+		
+		
 		xmlNodePtr xml_node = create_xml_node(failed,
 						      XML_FAIL_TAG_CIB);
+
 		set_xml_property_copy(xml_node,
 				      XML_FAILCIB_ATTR_ID,
 				      ID(target));
+
 		set_xml_property_copy(xml_node,
 				      XML_FAILCIB_ATTR_OBJTYPE,
 				      TYPE(target));
-	
-		char buffer[20]; // will handle 64 bit integers
-	
-		/* for now just put in the operation code
-		 * later, convert it to text 
-		 */
-		sprintf(buffer, "%d", operation);
+
 		set_xml_property_copy(xml_node,
 				      XML_FAILCIB_ATTR_OP,
-				      buffer);
+				      operation_msg);
 	
-		/* for now just put in the return code
-		 * later, convert it to text based on the operation
-		 */
-		sprintf(buffer, "%d", return_code);
 		set_xml_property_copy(xml_node,
 				      XML_FAILCIB_ATTR_REASON,
-				      buffer);
+				      error_msg);
+
+		cl_log(LOG_DEBUG,
+		       "Action %s failed: %s (cde=%d)",
+		       operation_msg,
+		       error_msg,
+		       return_code);
+	
 	}
 
 	FNRET(was_error);

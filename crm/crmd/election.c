@@ -434,7 +434,12 @@ do_announce(long long action,
 	} 
 #endif
 
-	send_request(NULL, NULL, CRM_OPERATION_ANNOUNCE, NULL, CRM_SYSTEM_DC);
+	if(AM_I_OPERATIONAL) {
+		send_request(NULL, NULL, CRM_OPERATION_ANNOUNCE, NULL, CRM_SYSTEM_DC);
+	} else {
+		CRM_DEBUG("Delay announcement until we have finished local startup");
+		FNRET(I_NULL);
+	}
 	
 	FNRET(I_NULL);
 }

@@ -29,10 +29,4 @@ install-exec-local:
 #	-chown $(ccmuid) $(DESTDIR)/$(libdir)/$(HB_PKG)
 	cp  admin_cib_test.sh $(DESTDIR)/$(libdir)/$(HB_PKG)
 	-chmod 770 $(DESTDIR)/$(crmdir)
-#	test -p $(DESTDIR)$(ccmreqfifo) || mkfifo -m 200 $(DESTDIR)$(ccmreqfifo)
-#	test -p $(DESTDIR)$(ccmresfifo) || mkfifo -m 600 $(DESTDIR)$(ccmresfifo)
-#	-chgrp $(apigid) $(DESTDIR)/$(ccmreqfifo)
-#	-chgrp $(apigid) $(DESTDIR)/$(ccmresfifo)
-#	-chown $(ccmuid) $(DESTDIR)/$(ccmreqfifo)
-#	-chown $(ccmuid) $(DESTDIR)/$(ccmresfifo)
 

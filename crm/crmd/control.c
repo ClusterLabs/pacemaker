@@ -216,7 +216,7 @@ do_startup(long long action,
 		ha_malloc(sizeof(fsa_timer_t));
 
 
-	int interval = 3; // seconds between DC heartbeats
+	int interval = 1; // seconds between DC heartbeats
 
 	interval = interval * 1000;
 	
@@ -252,6 +252,7 @@ do_startup(long long action,
 	cib_subsystem->pid = 0;	
 	cib_subsystem->respawn = 1;	
 	cib_subsystem->path = ha_strdup(BIN_DIR);
+	cib_subsystem->name = ha_strdup(CRM_SYSTEM_CIB);
 	cib_subsystem->command = BIN_DIR"/cib";
 	cib_subsystem->flag = R_CIB_CONNECTED;	
 
@@ -261,6 +262,7 @@ do_startup(long long action,
 	te_subsystem->pid = 0;	
 	te_subsystem->respawn = 1;	
 	te_subsystem->path = ha_strdup(BIN_DIR);
+	cib_subsystem->name = ha_strdup(CRM_SYSTEM_TENGINE);
 	te_subsystem->command = BIN_DIR"/tengine";
 	te_subsystem->flag = R_TE_CONNECTED;	
 
@@ -270,6 +272,7 @@ do_startup(long long action,
 	pe_subsystem->pid = 0;	
 	pe_subsystem->respawn = 1;	
 	pe_subsystem->path = ha_strdup(BIN_DIR);
+	cib_subsystem->name = ha_strdup(CRM_SYSTEM_PENGINE);
 	pe_subsystem->command = BIN_DIR"/pengine";
 	pe_subsystem->flag = R_PE_CONNECTED;	
 
@@ -307,9 +310,8 @@ do_started(long long action,
 {
 	FNIN();
 
-	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n",
-	       fsa_action2string(action), action);
-
+	clear_bit_inplace(&fsa_input_register, R_STARTING);
+	
 	FNRET(I_NULL);
 }
 

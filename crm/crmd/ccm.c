@@ -25,6 +25,7 @@ void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 #include <ocf/oc_membership.h>
 #include <clplumbing/GSource.h>
 #include <crm/common/ipcutils.h>
+#include <string.h>
 #include <crm/dmalloc_wrapper.h>
 
 int register_with_ccm(ll_cluster_t *hb_cluster);
@@ -38,9 +39,6 @@ void crmd_ccm_input_callback(oc_ed_t event,
 
 void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
 gboolean ccm_dispatch(int fd, gpointer user_data);
-
-static oc_ev_t   * fsa_ev_token;  // for CCM comms
-static int	   fsa_ev_fd;     // for CCM comms
 
 #define CCM_UNAME 1
 
@@ -118,8 +116,8 @@ do_ccm_event(long long action,
 			 */
 			return_input = I_NULL;
 		} else {
-			cl_log(LOG_INFO, "So why are we here?  What CCM event happened?");
-			/* so what happened??  why are we here? */
+			cl_log(LOG_INFO,
+			       "So why are we here?  What CCM event happened?");
 		}
 	}
 
@@ -287,12 +285,14 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		       oc->m_array[oc->m_memb_idx+lpc].node_uname,
 		       oc->m_array[oc->m_memb_idx+lpc].node_id,
 		       oc->m_array[oc->m_memb_idx+lpc].node_born_on);
+		
 #else
 		cl_log(LOG_INFO,"\tnodeid=%d, born=%d",
 		       oc->m_array[oc->m_memb_idx+lpc].node_id,
 		       oc->m_array[oc->m_memb_idx+lpc].node_born_on);
 #endif
-		if (oc_ev_is_my_nodeid(fsa_ev_token, &(oc->m_array[lpc]))) {
+		if(fsa_our_uname != NULL
+		   && strcmp(fsa_our_uname, oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
 			member = TRUE;
 			member_id = oc->m_array[oc->m_memb_idx+lpc].node_id;
 		}
@@ -338,7 +338,8 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		       oc->m_array[oc->m_out_idx+lpc].node_id,
 		       oc->m_array[oc->m_out_idx+lpc].node_born_on);
 #endif
-		if (oc_ev_is_my_nodeid(fsa_ev_token, &(oc->m_array[lpc]))) {
+		if(fsa_our_uname != NULL
+		   && strcmp(fsa_our_uname, oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
 			cl_log(LOG_ERR,
 			       "We're not part of the cluster anymore");
 		}
@@ -351,8 +352,10 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 int
 register_with_ccm(ll_cluster_t *hb_cluster)
 {
-	int ret;
-	fd_set rset;
+	int      ret;
+	fd_set   rset;
+	oc_ev_t *fsa_ev_token;
+	int	 fsa_ev_fd;
     
 	cl_log(LOG_INFO, "Registering with CCM");
 	oc_ev_register(&fsa_ev_token);
@@ -385,24 +388,12 @@ register_with_ccm(ll_cluster_t *hb_cluster)
 //GFDSource*
 	G_main_add_fd(G_PRIORITY_LOW, fsa_ev_fd, FALSE, ccm_dispatch, fsa_ev_token,
 		      default_ipc_input_destroy);
-
-/* 	cl_log(LOG_INFO, "Sign up for \"ccmjoin\" messages"); */
-/* 	if (hb_cluster->llc_ops->set_msg_callback( */
-/* 		    hb_cluster, */
-/* 		    "ccmjoin", */
-/* 		    msg_ccm_join, */
-/* 		    hb_cluster) != HA_OK) */
-/* 	{ */
-/* 		cl_log(LOG_ERR, "Cannot set msg_ipfail_join callback"); */
-/* 	} */
     
 	FNRET(0);
 }
 
 gboolean ccm_dispatch(int fd, gpointer user_data)
 {
-	CRM_DEBUG("#@#@#@# In ccm_dispatch()");
-	
 	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
 	oc_ev_handle_event(ccm_token);
 	return TRUE;
@@ -434,7 +425,7 @@ crmd_ccm_input_callback(oc_ed_t event,
 		ha_free(event_data);
 	} else {
 		cl_log(LOG_INFO, "CCM Callback with NULL data... "
-		       "I dont think this is bad");
+		       "I dont /think/ this is bad");
 	}
 	
 	oc_ev_callback_done(cookie);

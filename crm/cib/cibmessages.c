@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.17 2004/03/18 13:32:39 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.18 2004/03/19 10:43:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -125,10 +125,16 @@ processCibRequest(xmlNodePtr command)
 	}
 
 
-	if(op == NULL)
+	if(op == NULL) {
 		cl_log(LOG_WARNING, "No operation specified\n");
-	else if(strcmp("noop", op) == 0) ;
-	else if (strcmp(CRM_OPERATION_PING, op) == 0) {
+	} else if(strcmp("noop", op) == 0) {
+		;
+		
+	} else if(strcmp("quit", op) == 0) {
+		cl_log(LOG_WARNING, "The CRMd has asked us to exit... complying");
+		exit(0);
+		
+	} else if (strcmp(CRM_OPERATION_PING, op) == 0) {
 		CRM_DEBUG("Handling a ping");
 		status = "ok";
 		cib_answer =

@@ -1,4 +1,4 @@
-/* $Id: xmltags.h,v 1.10 2004/03/18 13:32:38 andrew Exp $ */
+/* $Id: xmltags.h,v 1.11 2004/03/19 10:43:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -97,11 +97,11 @@
 #define XML_CIB_ATTR_RESID2       "res_id_2"
 #define XML_CIB_ATTR_CLEAR        "clear_on"
 #define XML_CIB_ATTR_SOURCE       "source"
-#define XML_CIB_ATTR_CONTYPE      "constraint_type"
-#define XML_CIB_ATTR_RESTYPE      "resource_type"
+#define XML_CIB_ATTR_CONTYPE      "type"
+#define XML_CIB_ATTR_RESTYPE      "type"
 #define XML_CIB_ATTR_RESSTATUS    "resource_status"
 #define XML_CIB_ATTR_NODEID       "node_id"
-#define XML_CIB_ATTR_NODETYPE     "node_type"
+#define XML_CIB_ATTR_NODETYPE     "type"
 #define XML_CIB_ATTR_NODESTATUS   "node_status"
 #define XML_CIB_ATTR_VARTYPE      "var_type"
 #define XML_CIB_ATTR_VARVALUE     "var_value"

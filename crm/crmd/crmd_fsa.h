@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.8 2004/03/10 22:35:54 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.9 2004/03/19 10:43:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,6 +58,7 @@ struct crm_subsystem_s {
 		const char*	command;	/* What command to run? */
 		const char*	path;		/* Path (argv[0])? */
 /* extras */
+		const char*	name;
 		IPC_Channel	*ipc;	/* How can we communicate with it */
 		long long	flag;	/*  */
 };
@@ -118,6 +119,7 @@ extern struct crm_subsystem_s *pe_subsystem;
 extern void cleanup_subsystem(struct crm_subsystem_s *the_subsystem);
 
 #define AM_I_DC is_set(fsa_input_register, R_THE_DC)
+#define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)
 
 #include <fsa_proto.h>
 

@@ -939,6 +939,9 @@ fsa_action2string(long long action)
 		case A_NODE_BLOCK:
 			actionAsText = "A_NODE_BLOCK";
 			break;
+		case A_UPDATE_NODESTATUS:
+			actionAsText = "A_UPDATE_NODESTATUS";
+			break;
 		case A_LOG:
 			actionAsText = "A_LOG";
 			break;

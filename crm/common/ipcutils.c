@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.15 2004/03/18 10:48:51 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.16 2004/03/19 10:43:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -272,6 +272,15 @@ default_ipc_input_dispatch(IPC_Channel *client, gpointer user_data)
 	if (msg) {
 		root = find_xml_in_ipcmessage(msg, TRUE);
 		validate_crm_message(root, NULL, NULL, NULL);
+		xmlNodePtr options = find_xml_node(root, XML_TAG_OPTIONS);
+		const char *op = xmlGetProp(options, XML_ATTR_OP);
+		if(op != NULL && strcmp(op, "quit") == 0) {
+			cl_log(LOG_WARNING,
+			       "The CRMd has asked us to exit... complying");
+			exit(0);
+		}
+		
+
 	} else if (client->ch_status == IPC_DISCONNECT) {
 		cl_log(LOG_ERR, "The server has left us: Shutting down...NOW");
 
