@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.42 2004/11/12 16:24:45 andrew Exp $ */
+/* $Id: ccm.c,v 1.43 2004/11/23 11:18:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,42 +65,62 @@ do_ccm_control(long long action,
 {
 	int      ret;
  	int	 fsa_ev_fd; 
-    
+	gboolean did_fail = FALSE;
+	
 	if(action & A_CCM_DISCONNECT){
 		oc_ev_unregister(fsa_ev_token);
 	}
 
 	if(action & A_CCM_CONNECT) {
-		
 		crm_info("Registering with CCM");
-		oc_ev_register(&fsa_ev_token);
-		
-		crm_info("Setting up CCM callbacks");
-		oc_ev_set_callback(fsa_ev_token, OC_EV_MEMB_CLASS,
-				   crmd_ccm_msg_callback,
-				   NULL);
+		ret = oc_ev_register(&fsa_ev_token);
+		if (ret != 0) {
+			crm_warn("CCM registration failed");
+			did_fail = TRUE;
+		}
 
-		oc_ev_special(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
-		
-		crm_info("Activating CCM token");
-		ret = oc_ev_activate(fsa_ev_token, &fsa_ev_fd);
-		if (ret){
+		if(did_fail == FALSE) {
+			crm_info("Setting up CCM callbacks");
+			ret = oc_ev_set_callback(fsa_ev_token, OC_EV_MEMB_CLASS,
+						 crmd_ccm_msg_callback, NULL);
+			if (ret != 0) {
+				crm_warn("CCM callback not set");
+				did_fail = TRUE;
+			}
+		}
+		if(did_fail == FALSE) {
+			oc_ev_special(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
+			
+			crm_info("Activating CCM token");
+			ret = oc_ev_activate(fsa_ev_token, &fsa_ev_fd);
+			if (ret != 0){
+				crm_warn("CCM Activation failed");
+				did_fail = TRUE;
+			}
+		}
+
+		if(did_fail) {
+			num_ccm_register_fails++;
 			oc_ev_unregister(fsa_ev_token);
-
-			if(++num_ccm_register_fails < max_ccm_register_fails) {
-				crm_warn("CCM Activation failed %d (%d max) times",
-					 num_ccm_register_fails, max_ccm_register_fails);
-
+			
+			if(num_ccm_register_fails < max_ccm_register_fails) {
+				crm_warn("CCM Connection failed"
+					 " %d times (%d max)",
+					 num_ccm_register_fails,
+					 max_ccm_register_fails);
+				
 				startTimer(wait_timer);
 				crmd_fsa_stall();
 				return I_NULL;
-
+				
 			} else {
 				crm_err("CCM Activation failed %d (max) times",
-					 num_ccm_register_fails);
+					num_ccm_register_fails);
 				return I_FAIL;
 			}
 		}
+		
+
 		crm_info("CCM Activation passed... all set to go!");
 
 /* GFDSource* */
