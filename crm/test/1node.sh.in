@@ -125,7 +125,7 @@ cts_assert "rsc2 NOT running on $test_node_1"
 
 #----
 
-stop_node $test_node_1 crmd
+stop_node $test_node_1 
 
 #----
     

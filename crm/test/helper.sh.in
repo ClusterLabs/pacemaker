@@ -164,8 +164,10 @@ function stop_node()
     crm_log_pos=$(stat -L -c %s $logfile)
 
     if [ $crm_only = 1 ]; then
+	do_cmd echo "Shutting down CRMd"
 	do_cmd remote_cmd $CRMD_USER $a_node $HALIB_DIR/crmadmin -K $a_node
     else
+	do_cmd echo "Shutting down Heartbeat"
 	do_cmd remote_cmd $INIT_USER $a_node $HALIB_DIR/heartbeat -k
     fi
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -t 120 \
