@@ -55,17 +55,19 @@ void
 CrmdClientStatus(const char * node, const char * client,
 		 const char * status, void * private)
 {
+	const char    *join = NULL;
 	const char   *extra = NULL;
 	xmlNodePtr   update = NULL;
 	xmlNodePtr fragment = NULL;
 
 	if(safe_str_eq(status, JOINSTATUS)){
 		status = ONLINESTATUS;
-		extra = XML_CIB_ATTR_CLEAR_SHUTDOWN;
+		extra  = XML_CIB_ATTR_CLEAR_SHUTDOWN;
 
 	} else if(safe_str_eq(status, LEAVESTATUS)){
 		status = OFFLINESTATUS;
-		extra = XML_CIB_ATTR_CLEAR_SHUTDOWN;
+		join   = CRMD_JOINSTATE_DOWN;
+		extra  = XML_CIB_ATTR_CLEAR_SHUTDOWN;
 	}
 	
 	cl_log(LOG_NOTICE,
@@ -73,7 +75,8 @@ CrmdClientStatus(const char * node, const char * client,
 	       node, client, status);
 
 	if(AM_I_DC) {
-		update = create_node_state(node, NULL, status, NULL);
+		update = create_node_state(node, NULL, status, join);
+
 		if(extra != NULL) {
 			set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
 		}
