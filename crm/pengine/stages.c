@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.2 2004/06/07 21:28:39 msoffen Exp $ */
+/* $Id: stages.c,v 1.3 2004/06/08 11:47:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,9 +16,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
-#include <portability.h>
-
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -50,7 +47,7 @@ stage0(xmlNodePtr cib,
        GListPtr *actions, GListPtr *action_constraints,
        GListPtr *stonith_list, GListPtr *shutdown_list)
 {
-	int lpc;
+//	int lpc;
 	xmlNodePtr cib_nodes       = get_object_root(
 		XML_CIB_TAG_NODES,       cib);
 	xmlNodePtr cib_status      = get_object_root(
@@ -70,6 +67,8 @@ stage0(xmlNodePtr cib,
 	unpack_resources(safe_val(NULL, cib_resources, children),
 			 resources, actions, action_constraints, *nodes);
 
+	int old_log = 0;
+	old_log = set_crm_log_level(LOG_TRACE);
 	unpack_status(safe_val(NULL, cib_status, children),
 		      *nodes, *resources, node_constraints);
 
@@ -77,21 +76,26 @@ stage0(xmlNodePtr cib,
 			   *nodes, *resources,
 			   node_constraints, action_constraints);
 
+//	set_crm_log_level(old_log);
+#if 0
+
+	avoid this loop... just go off the various flags later
+
 	slist_iter(
 		node, node_t, *nodes, lpc,
 		if(node->details->shutdown) {
 			*shutdown_list = g_list_append(*shutdown_list, node);
 			crm_verbose("Scheduling Node %s for shutdown",
-			       node->details->id);
-
+				    node->details->id);
+			
 		} else if(node->details->unclean) {
 			*stonith_list = g_list_append(*stonith_list, node);
 			crm_verbose("Scheduling Node %s for STONITH",
-			       node->details->id);
-
+				    node->details->id);
+			
 		}
 		);
-	
+#endif
 	return TRUE;
 }
 
@@ -142,6 +146,8 @@ stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 {
 	int lpc;
 	color_t *current_color = NULL;
+
+	crm_trace("setup");
 	
 	// Set initial color
 	// Set color.candidate_nodes = all active nodes
@@ -149,18 +155,22 @@ stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 		crm_free(no_color->details);
 		crm_free(no_color);
 	}
+	
+	crm_trace("create \"no color\"");
 	no_color = create_color(NULL, NULL, sorted_rscs);
+	crm_trace("create default color");
 	current_color = create_color(colors, sorted_nodes, sorted_rscs);
 	
 	// Set resource.color = color (all resources)
 	// Set resource.provisional = TRUE (all resources)
+/*
 	slist_iter(
 		this_resource, resource_t, sorted_rscs, lpc,
 
-		this_resource->color = current_color;
+		this_resource->color = NULL;
 		this_resource->provisional = TRUE;
 		);
-
+*/
 	crm_verbose("initialized resources to default color");
   
 	// Take (next) highest resource
@@ -266,9 +276,8 @@ gboolean
 stage5(GListPtr resources)
 {
 	
-	int lpc = 0;
-
 	crm_verbose("filling in the nodes to perform the actions on");
+	int lpc = 0;
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 
@@ -344,104 +353,48 @@ stage5(GListPtr resources)
  * Create dependacies for stonith and shutdown operations
  */
 gboolean
-stage6(GListPtr *actions, GListPtr *action_constraints,
-       GListPtr stonith_nodes, GListPtr shutdown_nodes)
+stage6(GListPtr *actions, GListPtr *action_constraints, GListPtr nodes)
 {
+
 	int lpc = 0;
-	int llpc = 0;
 	action_t *down_node = NULL;
+	action_t *stonith_node = NULL;
 
 	slist_iter(
-		node, node_t, shutdown_nodes, lpc,
-
-		down_node =
-			action_new(action_id++, NULL, shutdown_crm);
-		down_node->node = node;
-		down_node->runnable = TRUE;
-
-		*actions = g_list_append(*actions, down_node);
-		
-		slist_iter(
-			rsc, resource_t, node->details->running_rsc, llpc,
+		node, node_t, nodes, lpc,
+		if(node->details->shutdown) {
+			crm_warn("Scheduling Node %s for shutdown",
+				 node->details->id);
 			
-			order_constraint_t *order = (order_constraint_t*)
-				crm_malloc(sizeof(order_constraint_t));
-
-			/* stop resources before shutdown */
-			order->id = order_id++;
-			order->lh_action = rsc->stop;
-			order->rh_action = down_node;
-			order->strength = must;
-
-			crm_debug_action(
-				print_action("LH (Shutdown)",
-					     order->lh_action, FALSE));
-			crm_debug_action(
-				print_action("RH (Shutdown)",
-					     order->rh_action, FALSE));
+			down_node = action_new(action_id++, NULL,shutdown_crm);
+			down_node->node     = node;
+			down_node->runnable = TRUE;
 			
-			*action_constraints =
-				g_list_append(*action_constraints, order);
-			);
+			*actions = g_list_append(*actions, down_node);
+			
+			shutdown_constraints(
+				node, down_node, action_constraints);
+			
+		}
+
+		if(node->details->unclean) {
+			crm_warn("Scheduling Node %s for STONITH",
+				 node->details->id);
+
+			stonith_node = action_new(action_id++,NULL,stonith_op);
+			stonith_node->node     = node;
+			stonith_node->runnable = TRUE;
+			
+			*actions = g_list_append(*actions, stonith_node);
+			
+			stonith_constraints(node, stonith_node, down_node,
+					    action_constraints);
+		}
 		);
 
-	slist_iter(
-		node, node_t, stonith_nodes, lpc,	
-
-		action_t *stonith_node =
-			action_new(action_id++, NULL, stonith_op);
-		stonith_node->node = node;
-		stonith_node->runnable = TRUE;
-
-		*actions = g_list_append(*actions, stonith_node);
-
-		slist_iter(
-			rsc, resource_t, node->details->running_rsc, llpc,
-			
-			order_constraint_t *order = NULL;
-
-			/*
-			 * Mark the stop as irrelevant
-			 *
-			 * Possibly one day failed actions wont terminate
-			 *   the transition, but not yet
-			 */
-			rsc->stop->discard = TRUE;
-
-			/* This is always the opposite of the discard. */
-			rsc->stop->optional = ! rsc->stop->discard;
-
-			/* try stopping the resource before stonithing the node
-			 *
-			 * if the stop succeeds, the transitioner can then
-			 * decided if  stonith is needed
-			 */
-			order = (order_constraint_t*)
-				crm_malloc(sizeof(order_constraint_t));
-			order->lh_action = rsc->stop;
-			order->rh_action = stonith_node;
-			order->id = order_id++;
-			order->strength = must;
-			*action_constraints =
-				g_list_append(*action_constraints, order);
-
-			/* stonith before start */
-			order = (order_constraint_t*)
-				crm_malloc(sizeof(order_constraint_t));
-
-			order->id = order_id++;
-			order->lh_action = stonith_node;
-			order->rh_action = rsc->start;
-			order->strength = must;
-			*action_constraints =
-				g_list_append(*action_constraints, order);
-			);
-		);
-	
 
 	return TRUE;
 }
-
 
 /*
  * Determin the sets of independant actions and the correct order for the
@@ -527,7 +480,6 @@ gboolean
 stage8(GListPtr action_sets, xmlNodePtr *graph)
 {
 	int lpc = 0;
-	int lpc2;
 	xmlNodePtr xml_action_set = NULL;
 
 	*graph = create_xml_node(NULL, "transition_graph");
@@ -539,6 +491,7 @@ stage8(GListPtr action_sets, xmlNodePtr *graph)
 		   }
 		);
 */
+	int lpc2;
 	slist_iter(action_set, GList, action_sets, lpc,
 		   crm_verbose("Processing Action Set %d", lpc);
 		   xml_action_set = create_xml_node(NULL, "actions");
@@ -589,8 +542,7 @@ summary(GListPtr resources)
 			if(node_id != NULL) {
 				
 				crm_warn("Stopping Resource (%s) on node %s",
-					 rsc_id,
-					 node_id);
+					 rsc_id, node_id);
 			}
 			
 		} else if(safe_str_eq(node_id, new_node_id)){
@@ -600,14 +552,11 @@ summary(GListPtr resources)
 			
 		} else if(node_id == NULL) {
 			crm_info("Starting Resource %s on %s",
-				 rsc_id,
-				 new_node_id);
+				 rsc_id, new_node_id);
 			
 		} else {
 			crm_info("Moving Resource %s from %s to %s",
-				 rsc_id,
-				 node_id,
-				 new_node_id);
+				 rsc_id, node_id, new_node_id);
 		}
 		);
 	
@@ -643,8 +592,9 @@ choose_node_from_list(GListPtr colors, color_t *color, GListPtr nodes)
 
 		if(color_n != color) {
 			color_n->details->candidate_nodes =
-				g_list_remove(color_n->details->candidate_nodes,
-					       other_node);
+				g_list_remove(
+					color_n->details->candidate_nodes,
+					other_node);
 			//		crm_free(other_node);
 		}	
 		);

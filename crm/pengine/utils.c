@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.25 2004/06/07 21:28:39 msoffen Exp $ */
+/* $Id: utils.c,v 1.26 2004/06/08 11:47:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,7 +61,7 @@ copy_constraint(rsc_to_node_t *constraint)
 
 	copied_con->id		 = crm_strdup(constraint->id);
 
-	copied_con->rsc_lh = constraint->rsc_lh;
+	copied_con->rsc_lh	 = constraint->rsc_lh;
 	copied_con->node_list_rh = constraint->node_list_rh;
 	copied_con->modifier	 = constraint->modifier;
 	copied_con->weight	 = constraint->weight;
@@ -148,12 +148,11 @@ node_list_minus(GListPtr list1, GListPtr list2)
 		node, node_t, list1, lpc,
 		node_t *other_node = find_list_node(list2, node->details->id);
 		
-		node_t *new_node = NULL;
-		if(node == NULL || other_node != NULL) {
+		if(node == NULL || other_node != NULL || node->weight < 0) {
 			continue;
 			
 		}
-		new_node = node_copy(node);
+		node_t *new_node = node_copy(node);
 		result = g_list_append(result, new_node);
 		);
   
@@ -169,16 +168,15 @@ node_list_xor(GListPtr list1, GListPtr list2)
 {
 	GListPtr result = NULL;
 	int lpc = 0;
-	node_t *new_node = NULL;
 	
 	slist_iter(
 		node, node_t, list1, lpc,
 		node_t *other_node = (node_t*)find_list_node(list2, node->details->id);
 
-		if(node == NULL || other_node != NULL) {
+		if(node == NULL || other_node != NULL || node->weight < 0) {
 			continue;
 		}
-		new_node = node_copy(node);
+		node_t *new_node = node_copy(node);
 		result = g_list_append(result, new_node);
 		);
 	
@@ -187,10 +185,10 @@ node_list_xor(GListPtr list1, GListPtr list2)
 		node, node_t, list1, lpc,
 		node_t *other_node = (node_t*)find_list_node(list1, node->details->id);
 
-		if(node == NULL || other_node != NULL) {
+		if(node == NULL || other_node != NULL || node->weight < 0) {
 			continue;
 		}
-		new_node = node_copy(node);
+		node_t *new_node = node_copy(node);
 		result = g_list_append(result, new_node);
 		);
   
@@ -205,6 +203,10 @@ node_list_dup(GListPtr list1)
 	int lpc = 0;
 	slist_iter(
 		this_node, node_t, list1, lpc,
+		if(this_node->weight < 0) {
+			continue;
+		}
+		
 		node_t *new_node = node_copy(this_node);
 		if(new_node != NULL) {
 			result = g_list_append(result, new_node);
@@ -217,14 +219,13 @@ node_list_dup(GListPtr list1)
 node_t *
 node_copy(node_t *this_node) 
 {
-	node_t *new_node = NULL;
 	if(this_node == NULL) {
 		print_node("Failed copy of", this_node, TRUE);
 		return NULL;
 	}
-	new_node = crm_malloc(sizeof(node_t));
-	new_node->weight = this_node->weight; 
-	new_node->fixed  = this_node->fixed;
+	node_t *new_node  = crm_malloc(sizeof(node_t));
+	new_node->weight  = this_node->weight; 
+	new_node->fixed   = this_node->fixed;
 	new_node->details = this_node->details; 
 
 	return new_node;
@@ -248,17 +249,21 @@ create_color(GListPtr *colors, GListPtr nodes, GListPtr resources)
 {
 	color_t *new_color = NULL;
 	
-	if(g_list_length(*colors) >= max_valid_nodes) {
+	crm_trace("Creating color");
+	if(colors != NULL && g_list_length(*colors) >= max_valid_nodes) {
+		crm_warn("Created %d colors already", max_valid_nodes);
 		return NULL;
 	}
-	
+
 	new_color = crm_malloc(sizeof(color_t));
 
 	new_color->id = color_id++;
 	new_color->local_weight = 1.0;
+	crm_trace("Creating color details");
 	new_color->details = crm_malloc(sizeof(struct color_shared_s));
 	new_color->details->id = new_color->id; 
-	new_color->details->chosen_node = NULL; 
+	new_color->details->chosen_node = NULL;
+	crm_trace("populating node list");
 	new_color->details->candidate_nodes = node_list_dup(nodes);
 
 	crm_debug_action(print_color("Created color", new_color, TRUE));
@@ -313,7 +318,7 @@ filter_nodes(resource_t *rsc)
 			rsc->allowed_nodes =
 				g_list_remove(rsc->allowed_nodes,node);
 			crm_free(node);
-			lpc2 = 0; // restart the loop
+			lpc2 = -1; // restart the loop
 		}
 		);
 
@@ -664,8 +669,6 @@ print_color(const char *pre_text, color_t *color, gboolean details)
 void
 print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 { 
-	int lpc = 0;
-
 	if(cons == NULL) {
 		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
@@ -684,6 +687,7 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 		       modifier2text(cons->modifier),
 		       cons->weight);
 
+		int lpc = 0;
 		slist_iter(
 			node, node_t, cons->node_list_rh, lpc,
 			print_node("\t\t-->", node, FALSE)
@@ -717,8 +721,6 @@ print_rsc_to_rsc(const char *pre_text, rsc_to_rsc_t *cons, gboolean details)
 void
 print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 { 
-	int lpc = 0;
-
 	if(rsc == NULL) {
 		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
@@ -742,6 +744,7 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 	       g_list_length(rsc->node_cons));
 	
 	if(details) {
+		int lpc = 0;
 		crm_debug("\t=== Actions");
 		print_action("\tStop: ", rsc->stop, FALSE);
 		print_action("\tStart: ", rsc->start, FALSE);
@@ -829,22 +832,30 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 void
 pe_free_nodes(GListPtr nodes)
 {
-	while(nodes != NULL){
+	while(nodes != NULL) {
 		GListPtr list_item = nodes;
 		node_t *node = (node_t*)list_item->data;
 		struct node_shared_s *details = node->details;
 		nodes = nodes->next;
 
+		crm_trace("deleting node");
+		crm_trace("%s is being deleted", details->id);
+		print_node("delete", node, FALSE);
+		
 		if(details != NULL) {
 //			crm_free(details->id);
-			g_hash_table_foreach_remove(
-				details->attrs, ghash_free_str_str, NULL);
+			if(details->attrs != NULL) {
+				g_hash_table_foreach_remove(details->attrs,
+							    ghash_free_str_str,
+							    NULL);
 
-			g_hash_table_destroy(details->attrs);
-			crm_free(details);
+				g_hash_table_destroy(details->attrs);
+			}
+			
+//			crm_free(details);
 		}
 		
-		crm_free(node);
+//		crm_free(node);
 	}
 	g_list_free(nodes);
 }
@@ -906,7 +917,6 @@ pe_free_resources(GListPtr resources)
 { 
 	volatile GListPtr list_item = NULL;
 	resource_t *rsc = NULL;
-	int lpc;
 	
 	while(resources != NULL) {
 		list_item = resources;
@@ -918,6 +928,7 @@ pe_free_resources(GListPtr resources)
 //		crm_verbose("color");
 //		crm_free(rsc->color);
 
+		int lpc;
 		slist_iter(clr, color_t, rsc->candidate_colors, lpc,
 			   print_color("deleting", clr, FALSE));
 		
@@ -939,12 +950,9 @@ pe_free_resources(GListPtr resources)
 void
 pe_free_actions(GListPtr actions) 
 {
-	GListPtr list_item = NULL;
-	action_t *action = NULL;
-
 	while(actions != NULL) {
-		list_item = actions;
-		action = (action_t *)list_item->data;
+		GListPtr list_item = actions;
+		action_t *action = (action_t *)list_item->data;
 		actions = actions->next;
 
 		pe_free_shallow(action->actions_before); // action_warpper_t*
@@ -972,7 +980,10 @@ pe_free_rsc_to_node(rsc_to_node_t *cons)
 {
 	if(cons != NULL) {
 //		crm_free(cons->id);
-		pe_free_shallow(cons->node_list_rh); // node_t*
+
+		// right now we dont make copies so this isnt required
+//		pe_free_shallow(cons->node_list_rh); // node_t*
 		crm_free(cons);
 	}
 }
+

@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.2 2004/06/07 21:28:39 msoffen Exp $ */
+/* $Id: color.c,v 1.3 2004/06/08 11:47:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,7 +16,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <portability.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -61,13 +60,10 @@ gboolean choose_color(resource_t *lh_resource);
 gboolean 
 apply_node_constraints(GListPtr constraints, GListPtr nodes)
 {
-	int lpc = 0;
-
 	crm_verbose("Applying constraints...");
+	int lpc = 0;
 	slist_iter(
 		cons, rsc_to_node_t, constraints, lpc,
-		resource_t *rsc_lh = NULL;
-
 		crm_debug_action(print_rsc_to_node("Applying", cons, FALSE));
 		// take "lifetime" into account
 		if(cons == NULL) {
@@ -80,7 +76,7 @@ apply_node_constraints(GListPtr constraints, GListPtr nodes)
 			continue;
 		}
     
-		rsc_lh = cons->rsc_lh;
+		resource_t *rsc_lh = cons->rsc_lh;
 		if(rsc_lh == NULL) {
 			crm_err("LHS of rsc_to_node (%s) is NULL", cons->id);
 			continue;
@@ -116,11 +112,16 @@ apply_agent_constraints(GListPtr resources)
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 
+		crm_trace("Applying RA restrictions to %s", rsc->id);
 		slist_iter(
 			node, node_t, rsc->allowed_nodes, lpc2,
 			
+			crm_trace("Checking if %s supports %s/%s",
+				  node->details->id, rsc->class, rsc->type);
 			if(has_agent(node, rsc->class, rsc->type) == FALSE) {
 				/* remove node from contention */
+				crm_trace("Marking node %s unavailable for %s",
+					  node->details->id, rsc->id);
 				node->weight = -1.0;
 				node->fixed = TRUE;
 			}
@@ -128,7 +129,10 @@ apply_agent_constraints(GListPtr resources)
 				/* the structure of the list will have changed
 				 * lpc2-- might be sufficient
 				 */
-				lpc2 = 0;
+				crm_debug("Removing node %s from %s",
+					  node->details->id, rsc->id);
+
+				lpc2 = -1;
 				rsc->allowed_nodes = g_list_remove(
 					rsc->allowed_nodes, node);
 				crm_free(node);
@@ -136,6 +140,7 @@ apply_agent_constraints(GListPtr resources)
 			
 			)
 		);
+	crm_trace("Finished applying RA restrictions");
 	return TRUE;
 }
 
@@ -143,8 +148,16 @@ gboolean
 has_agent(node_t *a_node, const char *class, const char *type)
 {
 	int lpc;
+	if(a_node == NULL || type == NULL) {
+		crm_warn("Invalid inputs");
+		return FALSE;
+	}
+	
+
 	slist_iter(
 		agent, lrm_agent_t, a_node->details->agents, lpc,
+
+		crm_trace("Checking against  %s/%s",agent->class, agent->type);
 
 		if(safe_str_eq(type, agent->type)){
 			if(class == NULL) {
@@ -154,7 +167,9 @@ has_agent(node_t *a_node, const char *class, const char *type)
 			}
 		}
 		);
-		
+	
+	crm_verbose("%s doesnt support %s/%s",a_node->details->id,class,type);
+	
 	return FALSE;
 }
 

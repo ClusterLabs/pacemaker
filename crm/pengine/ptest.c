@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.21 2004/06/07 21:28:39 msoffen Exp $ */
+/* $Id: ptest.c,v 1.22 2004/06/08 11:47:48 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -202,8 +202,7 @@ main(int argc, char **argv)
 	stage5(resources);
 
 	crm_debug("=#=#=#=#= Stage 6 =#=#=#=#=");
-	stage6(&actions, &action_constraints,
-	       stonith_list, shutdown_list);
+	stage6(&actions, &action_constraints, nodes);
 
 	crm_debug("========= Action List =========");
 	slist_iter(action, action_t, actions, lpc,
@@ -246,8 +245,6 @@ main(int argc, char **argv)
 	crm_debug("=#=#=#=#= Stage 8 =#=#=#=#=");
 	stage8(action_sets, &graph);
 
-//	GListPtr action_sets = NULL;
-
 
 	crm_verbose("deleting node cons");
 	while(node_constraints) {
@@ -255,12 +252,11 @@ main(int argc, char **argv)
 		node_constraints = node_constraints->next;
 	}
 	g_list_free(node_constraints);
-
+	
 	crm_verbose("deleting order cons");
 	pe_free_shallow(action_constraints);
 
 	crm_verbose("deleting action sets");
-
 	slist_iter(action_set, GList, action_sets, lpc,
 		   pe_free_shallow_adv(action_set, FALSE);
 		);
@@ -268,6 +264,8 @@ main(int argc, char **argv)
 	
 	crm_verbose("deleting actions");
 	pe_free_actions(actions);
+
+//	GListPtr action_sets = NULL;
 
 	crm_verbose("deleting resources");
 	pe_free_resources(resources); 
@@ -294,6 +292,8 @@ main(int argc, char **argv)
 	fflush(stdout);
 	crm_free(msg_buffer);
 
+	free_xml(graph);
+	free_xml(cib_object);
 	
 	return 0;
 }

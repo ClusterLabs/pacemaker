@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.21 2004/06/07 10:29:03 andrew Exp $ */
+/* $Id: pengine.h,v 1.22 2004/06/08 11:47:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -206,10 +206,8 @@ extern gboolean stage4(GListPtr colors);
 
 extern gboolean stage5(GListPtr resources);
 
-extern gboolean stage6(GListPtr *actions,
-		       GListPtr *action_constraints,
-		       GListPtr stonith,
-		       GListPtr shutdown);
+extern gboolean stage6(
+	GListPtr *actions, GListPtr *action_constraints, GListPtr nodes);
 
 extern gboolean stage7(GListPtr resources,
 		       GListPtr actions,
@@ -221,7 +219,6 @@ extern gboolean stage8(GListPtr action_sets, xmlNodePtr *graph);
 extern gboolean summary(GListPtr resources);
 
 extern gboolean pe_input_dispatch(IPC_Channel *sender, void *user_data);
-
 
 extern gboolean process_pe_message(xmlNodePtr msg, IPC_Channel *sender);
 
@@ -257,6 +254,15 @@ extern gboolean choose_node_from_list(
 
 extern gboolean update_runnable(GListPtr actions);
 extern GListPtr create_action_set(action_t *action);
+
+extern gboolean shutdown_constraints(
+	node_t *node, action_t *shutdown_op, GListPtr *action_constraints);
+
+extern gboolean stonith_constraints(
+	node_t *node, action_t *stonith_op, action_t *shutdown_op,
+	GListPtr *action_constraints);
+
+
 
 extern color_t *no_color;
 extern int      max_valid_nodes;
