@@ -154,10 +154,17 @@ class LinuxHAv2(HeartbeatCM):
         if watch.look():
             self.ShouldBeStatus[node]=self["up"]
             return 1
-       
-        self.ShouldBeStatus[node]=self["down"]        
-        self.log ("Could not start %s on node %s"
-        %        (self["Name"], node))
+
+	out = self.CM.rsh.readaline(node, self.CM["StatusCmd"])
+	if string.find(out, 'ok') == -1:
+	    self.ShouldBeStatus[node]=self["down"]        
+	    self.log ("Could not start %s on node %s"
+		      %        (self["Name"], node))
+	else:
+	    self.ShouldBeStatus[node]=self["up"]        
+	    self.log ("%s only partially started on node %s"
+		      %        (self["Name"], node))
+
         return None
 
     def Configuration(self):
@@ -360,7 +367,7 @@ class CrmdStateAudit(ClusterAudit):
         if unstable_count > 0:
             passed = 0
             self.CM.log("Cluster is not stable.  We found %d (of %d) unstable nodes" 
-                     %(dc_count, up_count))
+                     %(unstable_count, up_count))
 
         if up_are_down > 0:
             passed = 0
@@ -465,6 +472,7 @@ class DcAudit(ClusterAudit):
         ,        "skipped":0
         ,        "auditfail":0}
 	self.NodeEpoche={}
+	self.NodeState={}
 
     def has_key(self, key):
         return self.Stats.has_key(key)
@@ -492,10 +500,18 @@ class DcAudit(ClusterAudit):
         for node in self.CM.Env["nodes"]:
 	    if self.CM.ShouldBeStatus[node] == self.CM["up"]:
 		nodes_up = nodes_up + 1
-		out=self.CM.rsh.readaline(node, self.CM["EpocheCmd"])
-		self.NodeEpoche[node] = out
-		if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
-		    lowest_epoche = self.NodeEpoche[node]
+		self.NodeEpoche[node] = self.CM.rsh.readaline(
+		    node, self.CM["EpocheCmd"])
+		self.NodeState[node] = self.CM.rsh.readaline(
+		    node, self.CM["StatusCmd"]%node)
+
+		if len(self.NodeState[node]) > 1:
+		    self.NodeState[node] = self.NodeState[node][:-1]
+
+		if len(self.NodeEpoche[node]) > 1:
+		    self.NodeEpoche[node] = self.NodeEpoche[node][:-1]
+		    if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
+			lowest_epoche = self.NodeEpoche[node]
 
 	if nodes_up == 0:
 	    print ("No nodes running")
@@ -507,18 +523,21 @@ class DcAudit(ClusterAudit):
 		    dc_allowed_list.append(node)
 
 	for node in dc_allowed_list:
-	    if self.is_node_dc(node):
+	    if self.is_node_dc(self.NodeState[node]):
 		passed = 1
 
 	if passed == 0:
-	    self.CM.log ("DC not found on any of the %d allowed nodes"
-			 %(len(dc_allowed_list)))
+	    self.CM.log("DC not found on any of the %d allowed nodes: %s"
+			%(len(dc_allowed_list), str(dc_allowed_list)))
+	    for node in self.CM.Env["nodes"]:
+		if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+		    self.CM.log ("%s : %s : %s"  %(node, self.NodeEpoche[node], self.NodeState[node]))
+		    
 
         return passed
 
-    def is_node_dc(self, node):
-	out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
-	return (string.find(out, 'S_IDLE') != -1) 
+    def is_node_dc(self, status_line):
+	return (string.find(status_line, 'S_IDLE') != -1) 
 
     def name(self):
         return "DcAudit"
