@@ -25,6 +25,9 @@ endif
 if CHECKPOINTD_BUILD
 CHECKPOINTD_DIR = checkpointd
 endif
+if CMS_BUILD
+CMS_DIR = cmsclient
+endif
 if SWIG_BUILD
 SWIG_DIR = bindings
 endif
@@ -51,5 +54,6 @@ SUBDIRS			=  	\
 	plugins 		\
 	$(CHECKPOINTD_DIR)	\
 	$(EVENTD_DIR)		\
+	$(CMS_DIR)		\
 	$(SWIG_DIR)		\
 	$(LRM_DIR)
