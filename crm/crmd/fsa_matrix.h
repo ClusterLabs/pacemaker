@@ -411,7 +411,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_FINALIZE_JOIN	==> */	S_RELEASE_DC,
 		/* S_NOT_DC		==> */	S_NOT_DC,
 		/* S_POLICY_ENGINE	==> */	S_RELEASE_DC,
-		/* S_RECOVERY		==> */	S_PENDING,
+		/* S_RECOVERY		==> */	S_STOPPING,
 		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
 		/* S_STARTING		==> */	S_STOPPING,
 		/* S_PENDING		==> */	S_PENDING,
