@@ -1,0 +1,206 @@
+BASIC REQUIREMENTS BEFORE STARTING:
+
+Three machines:  one test exerciser and two test cluster machines.
+
+	The two test cluster machines need to be on the same subnet.
+		and they should have journalling filesytems for
+		all their filesystems
+	You also need two free IP addresses on that subnet to test
+		mutual IP address takeover
+
+	The test exerciser machine doesn't need to be on the same subnet
+	as the test machines.  Minimal demands are made on the exerciser
+	machine - it just has to stay up during the tests ;-).
+
+Install heartbeat, heartbeat-pils, and heartbeat-stonith on all three
+machines.  Set up the configuration on the cluster machines *and make
+a copy of on the test exerciser machine*.  These are the necessary files:
+	/etc/ha.d/ha.cf
+	/etc/ha.d/haresources
+	/etc/ha.d/authkeys
+
+Note that wherever machine names are mentioned in these configuration files,
+they must match the machines' `uname -n` name.  This may or may not match
+the machines' FQDN (fully qualified domain name) - it depends on how
+you (and your OS) have named the machines.  It helps a lot in tracking
+problems if the three machines' clocks are closely synchronized.  xntpd
+does this, but you can do it by hand if you want.
+
+Make sure the at service is enabled on the test cluster machines.
+(this is normally the 'atd' service started by /etc/init.d/atd).
+This doesn't mean just start it, it means enable it to start on every boot into
+your default init state (probably either 3 or 5).  Enabling it for both state
+3 and 5 is a good minimum.  We don't need this in production - just for these
+tests.
+
+Make sure all your filesystems are journalling filesystems (/boot can be
+ext2 if you want)...  This means jfs, ext3, or reiserfs.
+
+Here's what you need to do to run CTS
+
+Configure the two "cluster" machines with their logging of heartbeat
+messages redirected via syslog to the third machine.  Let's call it the
+exerciser...   The exerciser doesn't have to be the same OS as the others
+but it needs to be one that supports a lot of the other things
+(like ssh and remote syslog logging).
+
+You may want to configure the cluster machines to boot into run level 3,
+that is without Xdm logins - particularly if they're behind a KVM switch.
+Some distros refuse to boot correctly without knowing what kind of mouse
+is present, and the kvm switch will likely make it impossible to figure
+out without manual intervention.  And since some of the tests cause the
+machine to reboot without manual intervention this would be a problem.
+
+Configure syslog on the cluster machines accordingly.
+	(see the mini-HOWTOs at the end for more details)
+
+The exerciser needs to be able to ssh over to the cluster nodes as root
+without a password challenge.  Configure ssh accordingly.
+	(see the mini-HOWTOs at the end for more details)
+
+The "heartbeat" service (init script) needs to be enabled to
+automatically start in the default run level on the cluster machines. 
+This typically means you need a symlink for /etc/rc.d/rc3.d/S*heartbeat
+to /etc/init.d/heartbeat, and one in /etc/rc.d/rc5.d/S*heartbeat.
+If you don't do this, then things will look fine until you run the STONITH
+test - and it will always fail...
+
+The test software is called cts and is in the (surprise!) cts directory.
+It's in the tarball, and (for later versions) is installed in
+/usr/lib/heartbeat/cts.
+
+The cts system consists of the following files:
+CM_fs.py        - ignore this - it's for failsafe
+CM_hb.py        - interacts with heartbeat
+CTS.py          - the core common code for testing
+CTSaudits.py    - performs audits at the end of each test
+CTSlab.py       - defines the "lab" (test) environment
+CTStests.py     - contains the definitions of the tests
+
+You'll only need to modify the CTSlab.py file...
+
+There's a line in the Stonith class for performing a stonith in your lab
+environment.  You'll need to use the ssh stonith type. 
+
+You need to supply the system with your list of nodes:
+
+        Environment = CtsLab(["sgi1", "sgi2"])
+
+is what it looks like now...
+
+This line of code:
+
+    overall, detailed = tests.run(5000)
+
+tells it to run 5000 tests chosen at random from the default list of tests.
+In my environment, each test averages something like 1-2 minutes.  This means
+that the sequence will take the better part of a week to run.
+
+This default list comes from this statement:
+        Tests = TestList(cm)
+
+TestList is defined in CTStests.py  It looks like it has appropriate values.
+
+The one thing you can't test with this version of CTS is cluster partition
+merging.  That's what a couple of our users have been having trouble with.
+That (currently) has to be tested by hand...
+
+OK.  Now assuming you did all this and the stuff described below, what you
+need to do is run CTSlab.py.  This is the same as the file you modified above.
+If you run any other file, it won't test your cluster ;-)
+
+Depending on permissions, etc., this may be either done as:
+	./CTSlab.py
+or as
+	python ./CTSlab.py
+
+The test output goes to standard error, so you'll probably want to catch stderr
+with the usual 2>&1 construct like this:
+	./CTSlab.py > outputfile 2>&1 &
+followed by a
+	tail -f outputfile
+
+
+==============
+Mini HOWTOs:
+==============
+
+--------------------------------------------------------------------------------
+How to redirect linux-HA logging the way CTS wants it using syslog
+--------------------------------------------------------------------------------
+
+1)	Redirect each machines to go (at least) to syslog local7:
+
+	Change /etc/ha.d/ha.cf on each test machine to say this:
+
+logfacility local7
+
+	(you can also log to a dedicated local file with logfile if you want)
+
+2)	Change /etc/syslog.conf to redirect local7 on each of your slave
+	machines to redirect to your testmonitor machine by adding this line
+	somewhere near the top of /etc/syslog.conf
+
+local7.*                                @testmonitor-machine 
+
+3)	Change syslog on the testmonitor-machine to accept remote
+	logging requests. You do this by making sure it gets invoked with
+	the "-r" option On SuSE Linux you need to change /etc/rc.config
+	to put have this line for SYSLOGD_PARAMS:
+	If you're on a recent version of SuSE/UL, this parameter has
+	moved into /etc/sysconfig/syslog.  You'll have to restart syslog
+	after putting these parameters into effect.
+
+SYSLOGD_PARAMS="-r"
+
+4)	Change on the testmonitor-machine to redirect messages
+	from local7 into /var/log/ha-log by adding this line to
+	/etc/syslog.conf 
+
+local7.*			-/var/log/ha-log
+
+	and then (on SuSE) run this command:
+
+/etc/rc.d/syslog restart
+
+	Use the corresponding function for your distro.
+
+--------------------------------------------------------------------------------
+How to make OpenSSH allow you to login as root across the network without
+a password.
+--------------------------------------------------------------------------------
+
+All our scripts run ssh -l root, so you don't have to do any of your testing
+logged in as root on the test machine
+
+1)	Grab your key from the testmonitor-machine:
+	take the single line out of ~/.ssh/identity.pub
+	and put it into root's authorized_keys file.
+	[This has changed to: copying the line from ~/.ssh/id_dsa into
+		root's authorized_keys file ]
+	Run this command on each of the "test" machines as root:
+
+ssh -v -l myid testmonitor-machine cat /home/myid/.ssh/identity.pub \
+	>> ~root/.ssh/authorized_keys
+
+[For most people, this has changed to:
+  ssh -v -l myid testmonitor-machine cat /home/myid/.ssh/id_dsa \
+	>> ~root/.ssh/authorized_keys
+]
+
+	You will probably have to provide your password, and possibly say
+	"yes" to some questions about accepting the identity of the
+	test machines
+
+You must also do the corresponding update for the testmonitor machine itself
+as root:
+	cat /home/myid/.ssh/identity.pub >> ~root/.ssh/authorized_keys
+
+	To test this, try this command from the testmonitor-machine for each
+	of your testmachines, and for the testmonitor-machine itself.
+
+ssh -l root othermachine
+
+If this works, without prompting for a password, you're in business...
+If not, you need to look at the ssh/openssh documentation and the output from
+the -v options above...

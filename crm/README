@@ -1,0 +1,8 @@
+This directory contains the design documentation and eventually the code
+for the Cluster Resource Manager framework for heartbeat.
+
+We might eventually have several policy engines and other modular
+components (as outlined in the crm.txt), but hopefully only one
+framework they all plug into.
+
+
