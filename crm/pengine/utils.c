@@ -768,7 +768,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			       action->id,
 			       task2text(action->task),
 			       safe_val3(NULL, action, rsc, id),
-			       safe_val7(NULL, action, rsc, color, details, chosen_node, details, id));
+			       safe_val4(NULL, action, node, details, id));
 			
 			break;
 	}
