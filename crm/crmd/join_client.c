@@ -45,6 +45,24 @@ do_cl_join_query(long long action,
 	
 	send_msg_via_ha(fsa_cluster_conn, req);
 
+	/* ok, this is complete garbage
+	 *
+	 * what seems to happen is that this message is sent, but does not
+	 *   arrive at the DC until the next message is sent (which happens to
+	 *   an election vote - since no-one answered this one)
+	 *
+	 * worse is that without the sleep() below, all three messages show
+	 *   up at the same time (12 seconds after the above message is sent)
+	 *
+	 * so for now I'll send a no-op
+	 */
+	sleep(2);
+	
+	req = create_request(CRM_OP_NOOP, NULL, NULL,
+			     CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+	
+	send_msg_via_ha(fsa_cluster_conn, req);
+	
 	return I_NULL;
 }
 
