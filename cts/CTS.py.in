@@ -58,6 +58,9 @@ class RemoteExec:
 
         self.Command = rshcommand
 
+    def _fixcmd(self, cmd):
+	return re.sub("\'", "'\\''", cmd)
+
     def _cmd(self, *args):
 
         '''Compute the string that will run the given command on the
@@ -66,7 +69,9 @@ class RemoteExec:
         args= args[0]
         sysname = args[0]
         command = args[1]
-        return self.Command + " " + sysname + " '" + command + "'"
+        ret = self.Command + " " + sysname + " '" + self._fixcmd(command) + "'"
+        #print ("About to run %s\n" % ret)
+        return ret
 
     def __call__(self, *args):
         '''Run the given command on the given remote system
@@ -75,7 +80,6 @@ class RemoteExec:
         on the remote machine.  The first argument is name of the machine to
         run it on.
         '''
-        #print "Now running %s\n" % self._cmd(args)
         count=0;
         rc = 0;
         while count < 3:
@@ -113,7 +117,7 @@ class RemoteExec:
         return os.system(cpstring) == 0
 
     def noBlock(self, *args):
-        '''Perform a remote exuction as none-block mode'''
+        '''Perform a remote execution without waiting for it to finish'''
         sshnoBlock = self.CommandnoBlock
         for arg in args:
             sshnoBlock = sshnoBlock + " \'" + arg + "\'"
@@ -735,7 +739,7 @@ as they might have been rebooted or crashed for some reason beforehand.
             CM.rsh(node, CM["DelFileCommCmd"]+ "; true")
 
         # Now start the Cluster Manager on all the nodes.
-        CM.log("Starting Cluster Manager on all nodes")
+        CM.log("Starting Cluster Manager on all nodes.")
         CM.startall()
 
 

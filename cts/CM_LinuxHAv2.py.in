@@ -48,9 +48,9 @@ class LinuxHAv2(HeartbeatCM):
         HeartbeatCM.__init__(self, Environment, randseed=randseed)
         self.update({
             "Name"           : "linux-ha-v2",
-            "StartCmd"       : "killall -q9 heartbeat crmd;@libdir@/heartbeat/heartbeat -M >/dev/null 2>&1",
+            "StartCmd"       : "@libdir@/heartbeat/heartbeat >/dev/null 2>&1",
             "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
-            "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null|grep -e S_IDLE -e S_NOT_DC",
+            "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null|egrep '(S_IDLE|S_NOT_DC)'",
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s status 0 0 EVERYTIME 2>/dev/null|grep return",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
