@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.11 2004/12/05 16:32:03 andrew Exp $ */
+/* $Id: unpack.c,v 1.12 2004/12/14 14:46:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,7 +28,8 @@
 #include <lrm/lrm_api.h>
 #include <sys/stat.h>
 
-gboolean process_te_message(xmlNodePtr msg, IPC_Channel *sender);
+cib_t *te_cib_conn = NULL;
+extern gboolean process_te_message(xmlNodePtr msg, IPC_Channel *sender);
 action_t* unpack_action(xmlNodePtr xml_action);
 xmlNodePtr create_shutdown_event(const char *node, int op_status);
 void set_timer_value(te_timer_t *timer, const char *time, int time_default);
@@ -225,11 +226,9 @@ unpack_action(xmlNodePtr xml_action)
 gboolean
 extract_event(xmlNodePtr msg)
 {
-	gboolean abort      = FALSE;
-	xmlNodePtr iter     = NULL;
-	xmlNodePtr cib      = NULL;
-	const char *section = NULL;
-	const char *event_node   = NULL;
+	gboolean abort  = FALSE;
+	xmlNodePtr iter = NULL;
+	const char *event_node = NULL;
 
 /*
 [cib fragment]
@@ -243,30 +242,7 @@ extract_event(xmlNodePtr msg)
 
 	crm_trace("Extracting event");
 	
-	iter = find_xml_node(msg, XML_TAG_FRAGMENT);
-	section = xmlGetProp(iter, XML_ATTR_SECTION);
-
-	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
-		/* ignore - for the moment */
-		crm_debug("Ignoring changes to the %s section",
-			  XML_CIB_TAG_CRMCONFIG);
-		return TRUE;
-		
-	} else if(safe_str_neq(section, XML_CIB_TAG_STATUS)) {
-		/* these too are never expected	 */
-		crm_debug("Ignoring changes outside the %s section",
-			  XML_CIB_TAG_STATUS);
-		return FALSE;
-	}
-	
-	cib = find_xml_node(iter, XML_TAG_CIB);
-	iter = get_object_root(XML_CIB_TAG_STATUS, cib);
-	if(iter != NULL) {
-		iter = iter->children;
-	} else {
-		crm_xml_warn(cib, XML_CIB_TAG_STATUS " section missing?");
-	}
-	
+	iter = msg;
 	
 	while(abort == FALSE && iter != NULL) {
 		xmlNodePtr node_state = iter;
@@ -349,130 +325,6 @@ extract_event(xmlNodePtr msg)
 	
 	return !abort;
 }
-
-gboolean
-process_te_message(xmlNodePtr msg, IPC_Channel *sender)
-{
-	xmlNodePtr graph = NULL;
-	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
-	const char *ref    = xmlGetProp(msg, XML_ATTR_REFERENCE);
-	const char *op     = get_xml_attr(
-		msg, XML_TAG_OPTIONS, XML_ATTR_OP, FALSE);
-
-
-	crm_debug("Recieved %s (%s) message", op, ref);
-
-	if (MSG_LOG) {
-		struct stat buf;
-		char *xml;
-		if(stat(DEVEL_DIR, &buf) != 0) {
-			cl_perror("Stat of %s failed... exiting", DEVEL_DIR);
-			exit(100);
-		}
-
-		if(msg_te_strm == NULL) {
-			msg_te_strm = fopen(DEVEL_DIR"/te.log", "w");
-		}
-		xml = dump_xml_formatted(msg);
-		fprintf(msg_te_strm, "[Input %s]\t%s\n",
-			op, xml);
-		fflush(msg_te_strm);
-		crm_free(xml);
-	}
-
-	if(safe_str_eq(xmlGetProp(msg, XML_ATTR_MSGTYPE), XML_ATTR_RESPONSE)
-	   && safe_str_neq(op, CRM_OP_EVENTCC)) {
-#ifdef MSG_LOG
-	fprintf(msg_te_strm, "[Result ]\tDiscarded\n");
-	fflush(msg_te_strm);
-#endif
-		crm_info("Message was a response not a request.  Discarding");
-		return TRUE;
-	}
-
-	crm_debug("Processing %s (%s) message", op, ref);
-	
-	if(op == NULL){
-		/* error */
-	} else if(strcmp(op, CRM_OP_HELLO) == 0) {
-		/* ignore */
-
-	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
-		crm_verbose("Bad sys-to %s", crm_str(sys_to));
-		return FALSE;
-		
-	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
-
-		crm_trace("Initializing graph...");
-		initialize_graph();
-
-		graph = find_xml_node(msg, "transition_graph");
-		crm_trace("Unpacking graph...");
-		unpack_graph(graph);
-		crm_trace("Initiating transition...");
-
-		in_transition = TRUE;
-
-		if(initiate_transition() == FALSE) {
-			/* nothing to be done.. means we're done. */
-			crm_info("No actions to be taken..."
-			       " transition compelte.");
-		}
-		crm_trace("Processing complete...");
-		
-	} else if(strcmp(op, CRM_OP_TEABORT) == 0) {
-		initialize_graph();
-
-	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
-		crm_err("Received quit message, terminating");
-		exit(0);
-		
-	} else if(in_transition == FALSE) {
-		crm_info("Received event_cc while not in a transition..."
-			 "  Poking the Policy Engine");
-		send_abort("Initiate a transition", NULL);
-		
-	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
-		const char *true_op = get_xml_attr (msg, XML_TAG_OPTIONS,
-						    XML_ATTR_TRUEOP, TRUE);
-		crm_trace("Processing %s...", CRM_OP_EVENTCC);
-		if(true_op == NULL) {
-			crm_err(
-			       "Illegal update,"
-			       " the original operation must be specified");
-			send_abort("Illegal update", msg);
-			
-		} else if(strcmp(true_op, CRM_OP_CIB_CREATE) == 0
-		   || strcmp(true_op, CRM_OP_CIB_DELETE) == 0
-		   || strcmp(true_op, CRM_OP_CIB_REPLACE) == 0
-		   || strcmp(true_op, CRM_OP_WELCOME) == 0
-		   || strcmp(true_op, CRM_OP_SHUTDOWN_REQ) == 0
-		   || strcmp(true_op, CRM_OP_CIB_ERASE) == 0) {
-
-			/* these are always unexpected, trigger the PE */
-			send_abort("Config update", msg);
-			
-		} else if(strcmp(true_op, CRM_OP_CIB_UPDATE) == 0) {
-			/* this may not be un-expected */
-/*			if( */
-			extract_event(msg);
-/*			== FALSE){
-				send_abort(msg);
-			} */
-			
-		} else {
-			crm_err(
-			       "Did not expect copy of action %s", op);
-		}
-		
-	}
-
-	crm_debug("finished processing message");
-	print_state(FALSE);
-	
-	return TRUE;
-}
-		
 
 xmlNodePtr
 create_shutdown_event(const char *node, int op_status)

@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.11 2004/11/12 17:14:34 andrew Exp $ */
+/* $Id: tengine.h,v 1.12 2004/12/14 14:46:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -87,6 +87,7 @@ extern gboolean initiate_transition(void);
 /* utils */
 extern void print_state(gboolean to_file);
 extern void send_success(const char *text);
+/*extern void send_abort(const char *text, struct ha_msg *msg); */
 extern void send_abort(const char *text, xmlNodePtr msg);
 extern gboolean stop_te_timer(te_timer_t *timer);
 extern gboolean start_te_timer(te_timer_t *timer);

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.8 2004/12/05 16:32:03 andrew Exp $ */
+/* $Id: utils.c,v 1.9 2004/12/14 14:46:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,6 +27,7 @@
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
 
+extern cib_t *te_cib_conn;
 extern int global_transition_timer;
 FILE *msg_te_strm = NULL;
 
@@ -35,6 +36,7 @@ void print_action(const char *prefix, action_t *action, gboolean to_file);
 gboolean timer_callback(gpointer data);
 
 void
+/* send_abort(const char *text, struct ha_msg *msg) */
 send_abort(const char *text, xmlNodePtr msg)
 {	
 	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
@@ -78,10 +80,8 @@ send_success(const char *text)
 	crm_info("Sending \"complete\" message: %s", text);
 
 #ifdef MSG_LOG
-	if(msg_te_strm != NULL) {
-		fprintf(msg_te_strm, "[Result ]\tTransition complete\n");
-		fflush(msg_te_strm);
-	}
+	fprintf(msg_te_strm, "[Result ]\tTransition complete\n");
+	fflush(msg_te_strm);
 #endif
 
 	print_state(TRUE);
@@ -224,16 +224,19 @@ do_update_cib(xmlNodePtr xml_action, int status)
 	char *code;
 	char since_epoch[64];
 	xmlNodePtr fragment = NULL;
-	xmlNodePtr options  = NULL;
 	xmlNodePtr state    = NULL;
 	xmlNodePtr rsc      = NULL;
 
-	const char *sys_to = CRM_SYSTEM_DCIB;
+	enum cib_errors rc = cib_ok;
+	
 	const char *task   = xmlGetProp(xml_action, XML_LRM_ATTR_TASK);
 	const char *rsc_id = xmlGetProp(xml_action, XML_LRM_ATTR_RSCID);
 	const char *target = xmlGetProp(xml_action, XML_LRM_ATTR_TARGET);
 	const char *target_uuid =
 		xmlGetProp(xml_action, XML_LRM_ATTR_TARGET_UUID);
+
+	int call_options = cib_scope_local|cib_discard_reply|cib_sync_call;
+	call_options |= cib_inhibit_notify;
 	
 	if(status == LRM_OP_TIMEOUT) {
 		if(xmlGetProp(xml_action, XML_LRM_ATTR_RSCID) != NULL) {
@@ -255,7 +258,6 @@ do_update_cib(xmlNodePtr xml_action, int status)
 */
 
 	fragment = NULL;
-	options  = create_xml_node(NULL, XML_TAG_OPTIONS);
 	state    = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
 #ifdef TESTING
@@ -266,11 +268,6 @@ do_update_cib(xmlNodePtr xml_action, int status)
 	if(status == -1) {
 		status = 0;
 	}
-	sys_to = CRM_SYSTEM_TENGINE;
-	set_xml_property_copy(options, XML_ATTR_OP,     CRM_OP_EVENTCC);
-	set_xml_property_copy(options, XML_ATTR_TRUEOP, CRM_OP_CIB_UPDATE);
-#else
-	set_xml_property_copy(options, XML_ATTR_OP,    CRM_OP_CIB_UPDATE);
 #endif
 	set_xml_property_copy(state,   XML_ATTR_UUID,  target_uuid);
 	set_xml_property_copy(state,   XML_ATTR_UNAME, target);
@@ -329,14 +326,17 @@ do_update_cib(xmlNodePtr xml_action, int status)
 	fflush(msg_te_strm);
 #endif
 	
-	send_ipc_request(crm_ch, options, fragment,
-			 NULL, sys_to, CRM_SYSTEM_TENGINE,
-			 NULL, NULL);
+	rc = te_cib_conn->cmds->modify(
+		te_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, call_options);
+	
 	
 	free_xml(fragment);
-	free_xml(options);
 	free_xml(state);
-	
+
+	if(rc != cib_ok) {
+		return FALSE;
+	}
+
 	return TRUE;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.8 2004/12/10 20:03:20 andrew Exp $ */
+/* $Id: main.c,v 1.9 2004/12/14 14:46:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -20,6 +20,7 @@
 #include <sys/param.h>
 
 #include <crm/crm.h>
+#include <crm/cib.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -47,39 +48,42 @@
 
 GMainLoop*  mainloop = NULL;
 const char* crm_system_name = SYS_NAME;
+extern cib_t *te_cib_conn;
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
 void tengine_shutdown(int nsig);
+extern void te_update_confirm(const char *event, struct ha_msg *msg);
 
 int
 main(int argc, char ** argv)
 {
-    gboolean allow_cores = TRUE;
-    int	req_restart = FALSE;
-    int	req_status = FALSE;
-    int	req_stop = FALSE;
-    int	argerr = 0;
-    int flag;
+	gboolean allow_cores = TRUE;
+	int req_restart = FALSE;
+	int req_status = FALSE;
+	int req_stop = FALSE;
+	int argerr = 0;
+	int flag;
 
-    /* Redirect messages from glib functions to our handler */
-    g_log_set_handler(NULL,
-		      G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
-		      | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
-		      | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
-		      | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
-		      cl_glib_msg_handler, NULL);
-    /* and for good measure... */
-    g_log_set_always_fatal((GLogLevelFlags)0);    
+	/* Redirect messages from glib functions to our handler */
+	g_log_set_handler(NULL,
+			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
+			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
+			  | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
+			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
+			  cl_glib_msg_handler, NULL);
+	/* and for good measure... */
+	g_log_set_always_fatal((GLogLevelFlags)0);    
     
-    cl_log_set_entity(crm_system_name);
-    cl_log_set_facility(LOG_USER);
-    cl_log_set_logfile(DAEMON_LOG);
-    cl_log_set_debugfile(DAEMON_DEBUG);
+	cl_log_set_entity(crm_system_name);
+	cl_log_set_facility(LOG_LOCAL7);
+	cl_log_set_logfile(DAEMON_LOG);
+	cl_log_set_debugfile(DAEMON_DEBUG);
+	CL_SIGNAL(SIGTERM, tengine_shutdown);
 
-    crm_debug("Begining option processing");
+	crm_debug("Begining option processing");
 
-    while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
+	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
 				alter_debug(DEBUG_INC);
@@ -104,42 +108,42 @@ main(int argc, char ** argv)
 				++argerr;
 				break;
 		}
-    }
+	}
     
-    crm_debug("Option processing complete");
+	crm_debug("Option processing complete");
 
-    if (optind > argc) {
+	if (optind > argc) {
 		++argerr;
-    }
+	}
     
-    if (argerr) {
+	if (argerr) {
 		usage(crm_system_name,LSB_EXIT_GENERIC);
-    }
+	}
     
-    /* read local config file */
+	/* read local config file */
 
-    if(allow_cores) {
-	    crm_debug("Enabling coredumps");
-	    cl_set_corerootdir(DEVEL_DIR);	    
-	    cl_enable_coredumps(1);
-	    cl_cdtocoredir();
-	    crm_debug("Coredump processing complete");
-    }
+	if(allow_cores) {
+		crm_debug("Enabling coredumps");
+		cl_set_corerootdir(DEVEL_DIR);	    
+		cl_enable_coredumps(1);
+		cl_cdtocoredir();
+		crm_debug("Coredump processing complete");
+	}
     
-    if (req_status){
+	if (req_status){
 		return init_status(PID_FILE, crm_system_name);
-    }
+	}
   
-    if (req_stop){
+	if (req_stop){
 		return init_stop(PID_FILE);
-    }
+	}
   
-    if (req_restart) { 
+	if (req_restart) { 
 		init_stop(PID_FILE);
-    }
+	}
 
-    crm_debug("Starting...");
-    return init_start();
+	crm_debug("Starting...");
+	return init_start();
 
 }
 
@@ -147,93 +151,96 @@ main(int argc, char ** argv)
 int
 init_start(void)
 {
-	ll_cluster_t*	hb_fd = NULL;
-	int facility;
-#ifdef REALTIME_SUPPORT
-	static int  crm_realtime = 1;
-#endif
-    
-    /* change the logging facility to the one used by heartbeat daemon */
-    hb_fd = ll_cluster_new("heartbeat");
-    
-    crm_info("Switching to Heartbeat logger");
-    if ((facility = hb_fd->llc_ops->get_logfacility(hb_fd))>0) {
-		cl_log_set_facility(facility);
-    }
-    
-    crm_info("Register PID");
-    register_pid(PID_FILE, FALSE, tengine_shutdown);
+	int init_ok = TRUE;
+	
+	init_client_ipc_comms(
+		CRM_SYSTEM_CRMD, subsystem_msg_dispatch,
+		(void*)process_te_message, &crm_ch);
 
-    init_client_ipc_comms(
-	    CRM_SYSTEM_CRMD, subsystem_msg_dispatch,
-	    (void*)process_te_message, &crm_ch);
+	if(crm_ch != NULL) {
+		send_hello_message(crm_ch, "1234", CRM_SYSTEM_TENGINE, "0", "1");
+	} else {
+		init_ok = FALSE;
+		crm_err("Could not connect to the CRMd");
+	}
 
-    if(crm_ch != NULL) {
-	    send_hello_message(crm_ch, "1234", CRM_SYSTEM_TENGINE, "0", "1");
+	if(init_ok) {
+		crm_trace("Creating CIB connection");
+		te_cib_conn = cib_new();
+		if(te_cib_conn == NULL) {
+			init_ok = FALSE;
+		}
+	}
+	
+	if(init_ok) {
+		crm_trace("Connecting to the CIB");
+		if(te_cib_conn->cmds->signon(
+			   te_cib_conn, cib_command) != cib_ok) {
+			init_ok = FALSE;
+		}
+	}
 
-    /* Create the mainloop and run it... */
-	    mainloop = g_main_new(FALSE);
-	    crm_info("Starting %s", crm_system_name);
-	    
-#ifdef REALTIME_SUPPORT
-	    if (crm_realtime == 1){
-		    cl_enable_realtime();
-	    }else if (crm_realtime == 0){
-		    cl_disable_realtime();
-	    }
-	    cl_make_realtime(SCHED_RR, 5, 64, 64);
-#endif
+	if(init_ok) {
+		crm_trace("Setting CIB notification callback");
+		if(te_cib_conn->cmds->add_notify_callback(
+			   te_cib_conn, T_CIB_UPDATE_CONFIRM,
+			   te_update_confirm) != cib_ok) {
+			init_ok = FALSE;
+		}
+	}
 
-	    g_main_run(mainloop);
-	    
-    } else {
-	    crm_err("Could not connect to the CRMd");
-    }
+	if(init_ok) {
+		/* Create the mainloop and run it... */
+		crm_info("Starting %s", crm_system_name);
 
-    return_to_orig_privs();
-    
-    if (unlink(PID_FILE) == 0) {
-		crm_info("[%s] stopped", crm_system_name);
-    }
+		mainloop = g_main_new(FALSE);
+		g_main_run(mainloop);
+		return_to_orig_privs();
 
-    if(crm_ch != NULL)
-	    return 0;
+		crm_info("Exiting %s", crm_system_name);
+		
+	} else {
+		crm_warn("Initialization errors, %s not starting.",
+			 crm_system_name);
+	}
 
-    return 1;
+	if(init_ok) {
+		return 0;
+	}
+	return 1;
 }
-
 
 void
 usage(const char* cmd, int exit_status)
 {
-    FILE* stream;
+	FILE* stream;
 
-    stream = exit_status ? stderr : stdout;
+	stream = exit_status ? stderr : stdout;
 
-    fprintf(stream, "usage: %s [-srkh]"
-			"[-c configure file]\n", cmd);
+	fprintf(stream, "usage: %s [-srkh]"
+		"[-c configure file]\n", cmd);
 /* 	fprintf(stream, "\t-d\tsets debug level\n"); */
 /* 	fprintf(stream, "\t-s\tgets daemon status\n"); */
 /* 	fprintf(stream, "\t-r\trestarts daemon\n"); */
 /* 	fprintf(stream, "\t-k\tstops daemon\n"); */
 /* 	fprintf(stream, "\t-h\thelp message\n"); */
-    fflush(stream);
+	fflush(stream);
 
-    exit(exit_status);
+	exit(exit_status);
 }
 
 void
 tengine_shutdown(int nsig)
 {
-    static int	shuttingdown = 0;
-    CL_SIGNAL(nsig, tengine_shutdown);
+	static int	shuttingdown = 0;
+	CL_SIGNAL(nsig, tengine_shutdown);
   
-    if (!shuttingdown) {
+	if (!shuttingdown) {
 		shuttingdown = 1;
-    }
-    if (mainloop != NULL && g_main_is_running(mainloop)) {
+	}
+	if (mainloop != NULL && g_main_is_running(mainloop)) {
 		g_main_quit(mainloop);
-    }else{
+	}else{
 		exit(LSB_EXIT_OK);
-    }
+	}
 }

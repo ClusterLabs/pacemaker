@@ -53,12 +53,12 @@ halib_PROGRAMS	= ttest tengine
 ## SOURCES
 noinst_HEADERS	= tengine.h
 
-tengine_SOURCES	= tengine.c unpack.c utils.c main.c
+tengine_SOURCES	= tengine.c unpack.c utils.c callbacks.c main.c
 tengine_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 tengine_LDFLAGS	= $(XML_LIBS)
 tengine_LDADD	= $(COMMONLIBS)
 
-ttest_SOURCES	= tengine.c unpack.c utils.c ttest.c
+ttest_SOURCES	= tengine.c unpack.c utils.c callbacks.c ttest.c
 ttest_CFLAGS	= $(XML_FLAGS) -DTESTING=1 -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ttest_LDFLAGS	= $(XML_LIBS)
 ttest_LDADD	= $(COMMONLIBS)
