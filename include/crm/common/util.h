@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.8 2005/01/26 13:21:45 andrew Exp $ */
+/* $Id: util.h,v 1.9 2005/02/02 21:53:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -20,6 +20,9 @@
 #define CRM_COMMON_UTIL__H
 
 #include <signal.h>
+#include <crm/common/xml.h>
+#include <hb_api.h>
+
 #define DEBUG_INC SIGUSR1
 #define DEBUG_DEC SIGUSR2
 
@@ -58,5 +61,8 @@ extern char *generateReference(const char *custom1, const char *custom2);
 extern void alter_debug(int nsig);
 
 extern void g_hash_destroy_str(gpointer data);
+
+extern void set_uuid(
+	ll_cluster_t* hb, crm_data_t *node, const char *attr, const char *uname);
 
 #endif
