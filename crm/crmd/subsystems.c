@@ -156,7 +156,7 @@ do_cib_invoke(long long action,
 
 		}
 
-		if(is_update) {
+		if(AM_I_DC && is_update) {
 			result = I_CIB_UPDATE;	
 		}
 

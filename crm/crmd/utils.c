@@ -415,6 +415,9 @@ fsa_action2string(long long action)
 		case A_NOTHING:
 			actionAsText = "A_NOTHING";
 			break;
+		case A_READCONFIG:
+			actionAsText = "A_READCONFIG";
+			break;
 		case O_SHUTDOWN:
 			actionAsText = "O_SHUTDOWN";
 			break;
