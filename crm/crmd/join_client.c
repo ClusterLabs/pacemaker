@@ -87,8 +87,10 @@ do_cl_join_announce(long long action,
 					* to settle down
 					*/
 		}
+		
+		/* send as a broadcast */
 		send_request(NULL, NULL, CRM_OP_ANNOUNCE,
-			     hb_from, CRM_SYSTEM_DC, NULL);
+			     NULL, CRM_SYSTEM_DC, NULL);
 	} else {
 		/* Delay announce until we have finished local startup */
 		crm_warn("Delaying announce until local startup is complete");
