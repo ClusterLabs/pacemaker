@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.61 2005/03/16 17:11:15 lars Exp $ */
+/* $Id: ccm.c,v 1.62 2005/03/29 06:55:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,7 +50,7 @@ void crmd_ccm_msg_callback(oc_ed_t event,
 gboolean ghash_node_clfree(gpointer key, gpointer value, gpointer user_data);
 void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
 
-#define CCM_EVENT_DETAIL 1
+#define CCM_EVENT_DETAIL 0
 oc_ev_t *fsa_ev_token;
 int num_ccm_register_fails = 0;
 int max_ccm_register_fails = 30;
