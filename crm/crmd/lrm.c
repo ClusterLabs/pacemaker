@@ -711,7 +711,9 @@ xml2list(crm_data_t *parent)
 	if(parent != NULL) {
 		nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
 		if(nvpair_list == NULL) {
-			crm_xml_devel(parent, "No attributes for resource op");
+			crm_debug("No attributes in %s",
+				  crm_element_name(parent));
+			crm_xml_verbose(parent, "No attributes for resource op");
 		}
 	}
 	
@@ -781,6 +783,8 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
+			crm_err("Resource action %s/%s failed: %d",
+				rsc->id, op->op_type, op->op_status);
 			set_xml_property_copy(
 				iter, XML_LRM_ATTR_RSCSTATE, fail_state);
 			break;
