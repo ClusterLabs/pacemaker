@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.17 2005/02/28 11:07:53 andrew Exp $ */
+/* $Id: notify.c,v 1.18 2005/03/08 15:30:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -114,28 +114,20 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	}
 
 	if(do_send) {
+		HA_Message *msg_copy = ha_msg_copy(update_msg);
+
 		crm_debug("Notifying client %s/%s of update (queue=%d)",
 			  client->name, client->channel_name, qlen);
 
-#if 0
-		if(client->channel->should_send_blocking == FALSE) {
-			crm_warn("Client channel %s/%s was not set to"
-				 " \"send blocking\"", client->name,client->id);
-			client->channel->should_send_blocking = TRUE;
-		}
-#endif	
-		if(msg2ipcchan(update_msg, client->channel) != HA_OK) {
+		if(send_ipc_message(client->channel, msg_copy) == FALSE) {
 			crm_warn("Notification of client %s/%s failed",
 				 client->name, client->id);
 		}
-		qlen = client->channel->send_queue->current_qlen;
-		CRM_DEV_ASSERT(is_confirm == FALSE || qlen <= max_qlen);
 		
 	} else {
 		crm_trace("Client %s/%s not interested in %s notifications",
 			  client->name, client->channel_name, type);	
 	}
-	
 }
 
 void

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.28 2005/03/04 15:59:08 alan Exp $ */
+/* $Id: callbacks.c,v 1.29 2005/03/08 15:30:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -192,8 +192,7 @@ cib_client_connect(IPC_Channel *channel, gpointer user_data)
 		ha_msg_add(
 			reg_msg, F_CIB_CALLBACK_TOKEN, new_client->callback_id);
 		
-		msg2ipcchan(reg_msg, channel);
-		crm_msg_del(reg_msg);
+		send_ipc_message(channel, reg_msg);
 		
 		/* make sure we can find ourselves later for sync calls
 		 * redirected to the master instance
@@ -315,10 +314,7 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		ha_msg_add(op_request, F_CIB_OPERATION, CRM_OP_REGISTER);
 		ha_msg_add(op_request, F_CIB_CLIENTID,  cib_client->id);
 		
-		msg2ipcchan(op_request, channel);
-		CRM_DEV_ASSERT(channel->send_queue->current_qlen < channel->send_queue->max_qlen);
-		crm_msg_del(op_request);
-
+		send_ipc_message(channel, op_request);
 	}
 	did_disconnect = cib_process_disconnect(channel, cib_client);	
 	if(did_disconnect) {
@@ -473,15 +469,14 @@ cib_common_callback(
 		} else if(call_options & cib_sync_call) {
  			crm_devel("Sending sync reply to %s op", crm_str(op));
 			crm_log_message(LOG_MSG, op_reply);
-			if(msg2ipcchan(op_reply, channel) != HA_OK) {
+			if(send_ipc_message(channel, op_reply) == FALSE) {
 				crm_err("Sync reply failed: %s",
 					cib_error2string(cib_reply_failed));
 				if(rc == cib_ok) {
 					rc = cib_reply_failed;
 				}
 			}
-			CRM_DEV_ASSERT(channel->send_queue->current_qlen < channel->send_queue->max_qlen);
-
+			
 		} else {
 			enum cib_errors local_rc = cib_ok;
 			/* send reply via client's callback channel */
@@ -498,9 +493,7 @@ cib_common_callback(
 				}
 			}
 		}
-		
-		crm_devel("Cleaning up reply");
-		crm_msg_del(op_reply);
+
 		op_reply = NULL;
 
 		crm_devel("Processing forward cases");
@@ -511,7 +504,6 @@ cib_common_callback(
  			crm_info("Forwarding %s op to all instances", op);
 			ha_msg_add(op_request,
 				   F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
-			cl_log_message(LOG_DEV, op_request);
 			send_ha_message(hb_conn, op_request, NULL);
 			
 		} else {
@@ -659,12 +651,10 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 	}
 	
 	crm_devel("Delivering reply to client %s", token);
-	cl_log_message(LOG_DEV, msg);
-	if(msg2ipcchan(msg, hash_client->channel) != HA_OK) {
+	if(send_ipc_message(hash_client->channel, msg) == FALSE) {
 		crm_err("Delivery of reply to client %s failed", token);
 		return cib_reply_failed;
 	}
-	CRM_DEV_ASSERT(hash_client->channel->send_queue->current_qlen < hash_client->channel->send_queue->max_qlen);
 	return cib_ok;
 }
 
@@ -738,14 +728,12 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 			   cl_get_string(msg, F_CIB_CALLID));
 		ha_msg_add_int(reply, F_CIB_RC, cib_master_timeout);
 
-		msg2ipcchan(reply, client->channel);
-		CRM_DEV_ASSERT(client->channel->send_queue->current_qlen < client->channel->send_queue->max_qlen);
+		send_ipc_message(client->channel, reply);
 
 		list = list->next;
 		client->delegated_calls = g_list_remove(
 			client->delegated_calls, msg);
 
-		crm_msg_del(reply);
 		crm_msg_del(msg);
 	}
 }
