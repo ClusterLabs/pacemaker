@@ -69,6 +69,43 @@ class RandomTests:
             self.Stats[name]=0
         self.Stats[name] = self.Stats[name]+1
 
+    def audit(self, BadNews, test):
+            errcount=0
+	    print ("Looking for BadNews")
+            while errcount < 1000:
+                match=BadNews.look()
+                if match:
+		   add_err = 1
+		   ignorelist=test.errorstoignore()
+                   ignorelist.append(" CTS: ")
+                   for ignore in ignorelist:
+                       if re.search(ignore, match):
+			   add_err = 0
+		   if add_err == 1:
+		       ignorelist=self.CM.errorstoignore()
+		       for ignore in ignorelist:
+			   if re.search(ignore, match):
+			       add_err = 0
+		   if add_err == 1:
+		       self.CM.log(match)
+		       self.incr("BadNews");
+		       errcount=errcount+1
+                else:
+                  break
+            else:
+              self.CM.log("Big problems.  Shutting down.")
+              self.CM.stopall()
+              raise ValueError("Looks like we hit the jackpot!	:-)")
+
+	    print ("Done looking for BadNews")
+
+            for audit in self.Audits:
+                if not audit():
+                    self.CM.log("Audit " + audit.name() + " Failed.")
+                    self.incr("auditfail")
+		    if test:
+			test.incr("auditfail")
+
     def run(self, max=1):
         (
 '''
@@ -87,10 +124,8 @@ random for the selected number of iterations.
         time.sleep(30)
 
 	# This makes sure everything is stabilized before starting...
-        for audit in self.Audits:
-            if not audit():
-                self.CM.log("Audit " + audit.name() + " Failed.")
-                self.incr("auditfail")
+	self.audit(BadNews, None)
+
         while testcount <= max:
             test = self.Env.RandomGen.choice(self.Tests)
 
@@ -120,51 +155,20 @@ random for the selected number of iterations.
                 self.CM.statall()
             stoptime=time.time()
             elapsed_time = stoptime - starttime
+            test_time = stoptime - test.starttime
             if not test.has_key("min_time"):
                 test["elapsed_time"] = elapsed_time
-                test["min_time"] = elapsed_time
-                test["max_time"] = elapsed_time
+                test["min_time"] = test_time
+                test["max_time"] = test_time
             else:
                 test["elapsed_time"] = test["elapsed_time"] + elapsed_time
-                if elapsed_time < test["min_time"]:
-                    test["min_time"] = elapsed_time
-                if elapsed_time > test["max_time"]:
-                    test["max_time"] = elapsed_time
+                if test_time < test["min_time"]:
+                    test["min_time"] = test_time
+                if test_time > test["max_time"]:
+                    test["max_time"] = test_time
+               
+	    self.audit(BadNews, test)
 
-            errcount=0
-            while errcount < 1000:
-                match=BadNews.look()
-                if match:
-		   add_err = 1
-		   ignorelist=test.errorstoignore()
-                   ignorelist.append(" CTS: ")
-                   for ignore in ignorelist:
-                       if re.search(ignore, match):
-			   add_err = 0
-                           break
-		   if add_err == 1:
-		       ignorelist=self.CM.errorstoignore()
-		       for ignore in ignorelist:
-			   if re.search(ignore, match):
-			       add_err = 0
-			       break
-		   if add_err == 1:
-		       self.CM.log(match)
-		       self.incr("BadNews");
-		       errcount=errcount+1
-                else:
-                  break
-            else:
-              self.CM.log("Big problems.  Shutting down.")
-              self.CM.stopall()
-              raise ValueError("Looks like we hit the jackpot!	:-)")
-
-            for audit in self.Audits:
-                if not audit():
-                    self.CM.log("Audit " + audit.name() + " Failed.")
-                    test.incr("auditfail")
-                    self.incr("auditfail")
-                    
         self.Scenario.TearDown(self.CM)
 
         for test in self.Tests:
