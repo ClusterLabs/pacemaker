@@ -95,7 +95,7 @@ gboolean
 crmd_ha_input_dispatch(int fd, gpointer user_data)
 {
 	FNIN();
-    
+
 	ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
     
 	while(hb_cluster->llc_ops->msgready(hb_cluster))
@@ -252,27 +252,27 @@ do_startup(long long action,
 	
 	cib_subsystem->pid = 0;	
 	cib_subsystem->respawn = 1;	
-	cib_subsystem->command = NULL;
 	cib_subsystem->path = ha_strdup(BIN_DIR);
 	cib_subsystem->command = BIN_DIR"/cib";
+	cib_subsystem->flag = R_CIB_CONNECTED;	
 
 	te_subsystem = (struct crm_subsystem_s*)
 		ha_malloc(sizeof(struct crm_subsystem_s));
 	
 	te_subsystem->pid = 0;	
 	te_subsystem->respawn = 1;	
-	te_subsystem->command = NULL;
 	te_subsystem->path = ha_strdup(BIN_DIR);
 	te_subsystem->command = BIN_DIR"/tengine";
+	te_subsystem->flag = R_TE_CONNECTED;	
 
 	pe_subsystem = (struct crm_subsystem_s*)
 		ha_malloc(sizeof(struct crm_subsystem_s));
 	
 	pe_subsystem->pid = 0;	
 	pe_subsystem->respawn = 1;	
-	pe_subsystem->command = NULL;
 	pe_subsystem->path = ha_strdup(BIN_DIR);
 	pe_subsystem->command = BIN_DIR"/pengine";
+	pe_subsystem->flag = R_PE_CONNECTED;	
 
 
 	if(was_error)

@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.7 2004/03/05 14:01:17 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.8 2004/03/10 22:35:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,7 +58,8 @@ struct crm_subsystem_s {
 		const char*	command;	/* What command to run? */
 		const char*	path;		/* Path (argv[0])? */
 /* extras */
-		IPC_Channel *ipc;	/* How can we communicate with it */
+		IPC_Channel	*ipc;	/* How can we communicate with it */
+		long long	flag;	/*  */
 };
 
 typedef struct fsa_timer_s fsa_timer_t;
@@ -113,6 +114,8 @@ extern fsa_timer_t *integration_timer;
 extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;
 extern struct crm_subsystem_s *pe_subsystem;
+
+extern void cleanup_subsystem(struct crm_subsystem_s *the_subsystem);
 
 #define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 
