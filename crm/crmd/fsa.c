@@ -491,6 +491,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	crm_verbose("################# Exiting the FSA (%s) ##################",
 		  fsa_state2string(fsa_state));
 #endif
+	crm_info("Exiting the FSA (%s)", fsa_state2string(fsa_state));
 
 
 	now = time(NULL);
