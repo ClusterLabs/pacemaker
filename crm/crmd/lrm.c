@@ -231,7 +231,6 @@ do_lrm_control(long long action,
 gboolean
 build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 {
-	int lpc = 0, llpc = 0;
 	GList *types            = NULL;
 	GList *classes          = NULL;
 	const char *version     = NULL;
@@ -291,8 +290,6 @@ build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 gboolean
 stop_all_resources(void)
 {
-	int lpc = 0, llpc = 0;
-
 	GList *op_list  = NULL;
 	GList *lrm_list = NULL;
 	state_flag_t cur_state = 0;
@@ -341,8 +338,6 @@ stop_all_resources(void)
 gboolean
 build_active_RAs(xmlNodePtr rsc_list)
 {
-	int lpc = 0, llpc = 0;
-
 	GList *op_list  = NULL;
 	GList *lrm_list = NULL;
 	gboolean found_op = FALSE;
