@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.26 2004/08/18 15:20:22 andrew Exp $ */
+/* $Id: tengine.c,v 1.27 2004/08/27 15:21:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,10 +58,9 @@ gboolean unpack_graph(xmlNodePtr xml_graph);
 gboolean extract_event(xmlNodePtr msg);
 gboolean initiate_transition(void);
 gboolean initiate_action(action_list_t *list);
-gboolean process_graph_event(const char *event_node,
-			     const char *event_rsc, 
-			     const char *event_action, 
-			     const char *event_rc);
+gboolean process_graph_event(
+	const char *event_node,   const char *event_rsc, const char *rsc_state,
+	const char *event_action, const char *event_rc, const char *op_status);
 
 gboolean do_update_cib(xmlNodePtr xml_action, int status);
 
@@ -156,12 +155,15 @@ extract_event(xmlNodePtr msg)
 {
 	gboolean abort      = FALSE;
 	xmlNodePtr iter     = NULL;
+	xmlNodePtr cib      = NULL;
 	const char *section = NULL;
 
 	const char *event_action = NULL;
 	const char *event_node   = NULL;
 	const char *event_rsc    = NULL;
 	const char *event_rc     = NULL;
+	const char *rsc_state    = NULL;
+	const char *op_status    = NULL;
 
 	char *code = NULL;
 
@@ -191,9 +193,16 @@ extract_event(xmlNodePtr msg)
 		return FALSE;
 	}
 	
-	iter = find_xml_node(iter, XML_TAG_CIB);
-	iter = get_object_root(XML_CIB_TAG_STATUS, iter);
-	iter = iter->children;
+	cib = find_xml_node(iter, XML_TAG_CIB);
+	iter = get_object_root(XML_CIB_TAG_STATUS, cib);
+	if(iter != NULL) {
+		iter = iter->children;
+	} else {
+		crm_warn("%s missing? %s",
+			 XML_CIB_TAG_STATUS, dump_xml_node(cib, TRUE));
+		crm_warn("fragment: %s", dump_xml_node(cib, FALSE));
+	}
+	
 	
 	while(abort == FALSE && iter != NULL) {
 		xmlNodePtr node_state = iter;
@@ -212,10 +221,11 @@ extract_event(xmlNodePtr msg)
 			 */
 			crm_trace("Checking for STONITH");
 			code = crm_itoa(LRM_OP_TIMEOUT);
-			event_node = xmlGetProp(node_state, XML_ATTR_ID);
+			event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
 
 			abort = !process_graph_event(
-				event_node, NULL, XML_CIB_ATTR_SHUTDOWN, code);
+				event_node, NULL, CRMD_RSCSTATE_GENERIC_OK,
+				XML_CIB_ATTR_SHUTDOWN, code, "0");
 
 			crm_free(code);
 			
@@ -231,10 +241,11 @@ extract_event(xmlNodePtr msg)
 				continue;
 			}
 			
-			event_node = xmlGetProp(node_state, XML_ATTR_ID);
+			event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
 
 			abort = !process_graph_event(
-				event_node, NULL, XML_CIB_ATTR_SHUTDOWN, code);
+				event_node, NULL, CRMD_RSCSTATE_GENERIC_OK,
+				XML_CIB_ATTR_SHUTDOWN, code, "0");
 			
 			crm_free(code);
 
@@ -251,18 +262,22 @@ extract_event(xmlNodePtr msg)
 				abort = TRUE;
 			}
 			
-			event_node = xmlGetProp(node_state, XML_ATTR_ID);
+			event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
 			while(abort == FALSE && child != NULL) {
 				event_action = xmlGetProp(
 					child, XML_LRM_ATTR_LASTOP);
 				event_rsc    = xmlGetProp(
 					child, XML_ATTR_ID);
 				event_rc     = xmlGetProp(
+					child, XML_LRM_ATTR_RCCODE);
+				rsc_state    = xmlGetProp(
+					child, XML_LRM_ATTR_RSCSTATE);
+				op_status    = xmlGetProp(
 					child, XML_LRM_ATTR_OPCODE);
-				
+
 				abort = !process_graph_event(
-					event_node, event_rsc, event_action,
-					event_rc);
+					event_node, event_rsc, rsc_state,
+					event_action, event_rc, op_status);
 
 				child = child->next;
 			}	
@@ -283,8 +298,9 @@ extract_event(xmlNodePtr msg)
 }
 
 gboolean
-process_graph_event(const char *event_node, const char *event_rsc, 
-		    const char *event_action, const char *event_rc)
+process_graph_event(
+	const char *event_node,   const char *event_rsc, const char *rsc_state,
+	const char *event_action, const char *event_rc, const char *op_status)
 {
 	int lpc;
 	xmlNodePtr action        = NULL; // <rsc_op> or <crm_event>
@@ -324,7 +340,7 @@ process_graph_event(const char *event_node, const char *event_rsc,
 		const char *this_node   = xmlGetProp(
 			action, XML_LRM_ATTR_TARGET);
 		const char *this_rsc    = xmlGetProp(
-			action, "rsc_id");
+			action, XML_LRM_ATTR_RSCID);
 
 		crm_trace("matching against: <%s task=%s node=%s rsc_id=%s/>",
 			  action->name, this_action, this_node, this_rsc);
@@ -360,8 +376,8 @@ process_graph_event(const char *event_node, const char *event_rsc,
 		// unexpected event, trigger a pe-recompute
 		// possibly do this only for certain types of actions
 		crm_err("Unexpected event... matched action list was NULL"
-			" for: task=%s node=%s rsc_id=%s, rc=%s",
-			event_action, event_node, event_rsc, event_rc);
+			" for: task=%s node=%s rsc_id=%s, rc=%s, state=%s",
+			event_action, event_node, event_rsc, event_rc, rsc_state);
 		
 		return FALSE;
 	} else {
@@ -378,7 +394,7 @@ process_graph_event(const char *event_node, const char *event_rsc,
 	op_status_t rsc_code_i = -1;
 
 	if(event_rc != NULL) {
-		rsc_code_i = atoi(event_rc);
+		rsc_code_i = atoi(op_status);
 	}
 	
 	if(rsc_code_i == -1) {
@@ -435,11 +451,11 @@ process_graph_event(const char *event_node, const char *event_rsc,
 			/* last action in that list, check if there are
 			 *  anymore actions at all
 			 */
-			crm_err("Our list is complete... anyone else?");
+			crm_debug("Our list is complete... anyone else?");
 			slist_iter(
 				action_list, action_list_t, graph, lpc,
 				if(action_list->status != TE_LIST_COMPLETE){
-					crm_err("Another list is not yet complete");
+					crm_debug("Another list is not yet complete");
 					return TRUE;
 				}
 				);
@@ -875,11 +891,13 @@ gboolean
 do_update_cib(xmlNodePtr xml_action, int status)
 {
 	const char *task   = xmlGetProp(xml_action, XML_LRM_ATTR_TASK);
+	const char *rsc_id = xmlGetProp(xml_action, XML_LRM_ATTR_RSCID);
 	const char *target = xmlGetProp(xml_action, XML_LRM_ATTR_TARGET);
-	const char *rsc_id = xmlGetProp(xml_action, "rsc_id");
+	const char *target_uuid =
+		xmlGetProp(xml_action, XML_LRM_ATTR_TARGET_UUID);
 
 	if(status == LRM_OP_TIMEOUT) {
-		if(xmlGetProp(xml_action, "rsc_id") != NULL) {
+		if(xmlGetProp(xml_action, XML_LRM_ATTR_RSCID) != NULL) {
 			crm_warn("%s: %s %s on %s timed out",
 				 xml_action->name, task, rsc_id, target);
 		} else {
@@ -903,11 +921,12 @@ do_update_cib(xmlNodePtr xml_action, int status)
 	char since_epoch[64];
 	xmlNodePtr fragment = NULL;
 	xmlNodePtr options  = create_xml_node(NULL, XML_TAG_OPTIONS);
-	xmlNodePtr state    = create_xml_node(NULL, "node_state");
+	xmlNodePtr state    = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	xmlNodePtr rsc      = NULL;
 
-	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_UPDATE);
-	set_xml_property_copy(state,   XML_ATTR_ID, target);
+	set_xml_property_copy(options, XML_ATTR_OP,    CRM_OP_UPDATE);
+	set_xml_property_copy(state,   XML_ATTR_UUID,  target_uuid);
+	set_xml_property_copy(state,   XML_ATTR_UNAME, target);
 	
 	if(status != -1 && (safe_str_eq(task, "shutdown_crm"))) {
 		sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
@@ -920,9 +939,30 @@ do_update_cib(xmlNodePtr xml_action, int status)
 		rsc = create_xml_node(rsc,   "lrm_resources");
 		rsc = create_xml_node(rsc,   "lrm_resource");
 		
-		set_xml_property_copy(rsc,   XML_ATTR_ID, rsc_id);
-		set_xml_property_copy(rsc,   "op_code",   code);
-		set_xml_property_copy(rsc,   "last_op",   task);
+		set_xml_property_copy(rsc, XML_ATTR_ID,         rsc_id);
+		set_xml_property_copy(rsc, XML_LRM_ATTR_TARGET, target);
+		set_xml_property_copy(
+			rsc, XML_LRM_ATTR_TARGET_UUID, target_uuid);
+
+		if(safe_str_eq(CRMD_RSCSTATE_START, task)) {
+			set_xml_property_copy(
+				rsc, XML_LRM_ATTR_RSCSTATE, CRMD_RSCSTATE_START_PENDING);
+
+		} else if(safe_str_eq(CRMD_RSCSTATE_STOP, task)) {
+			set_xml_property_copy(
+				rsc, XML_LRM_ATTR_RSCSTATE, CRMD_RSCSTATE_STOP_PENDING);
+
+		} else {
+			crm_warn("Using status \"pending\" for op \"%s\""
+				 "... this is still in the experimental stage.",
+				 task);
+			set_xml_property_copy(
+				rsc, XML_LRM_ATTR_RSCSTATE, CRMD_RSCSTATE_GENERIC_PENDING);
+		}
+		
+		set_xml_property_copy(rsc, XML_LRM_ATTR_OPCODE, code);
+		set_xml_property_copy(rsc, XML_LRM_ATTR_RCCODE, code);
+		set_xml_property_copy(rsc, XML_LRM_ATTR_LASTOP, task);
 
 		crm_free(code);
 	}

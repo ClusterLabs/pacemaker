@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.38 2004/08/18 10:21:53 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.39 2004/08/27 15:21:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -424,7 +424,9 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 	object_name = new_obj->name;
 	object_id = xmlGetProp(new_obj, XML_ATTR_ID);
 	children = new_obj->children;
-	
+
+	crm_debug("Processing update to <%s id=%s>", object_name, object_id);
+
 	if(object_id == NULL) {
 		// placeholder object
 		equiv_node = find_xml_node(parent, object_name);
@@ -443,6 +445,16 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 		} else if(add_node_copy(parent, new_obj) == NULL) {
 			crm_warn("Failed to add  <%s id=%s>", object_name, object_id);
 			return CIBRES_FAILED_NODECOPY;
+		} else {
+			crm_debug("Added  <%s id=%s>", object_name, object_id);
+
+			if(object_id == NULL) {
+				// placeholder object
+				equiv_node = find_xml_node(parent, object_name);
+				
+			} else {
+				equiv_node = find_entity(parent, object_name, object_id, FALSE);
+			}
 		}
 		
 	} else {
@@ -481,11 +493,14 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 		if(replace != NULL) {
 			xmlNodePtr remove = find_xml_node(equiv_node, replace);
 			if(remove != NULL) {
+				crm_debug("Replacing node <%s> in <%s>",
+					  replace, equiv_node->name);
 				xmlUnlinkNode(remove);
 				remove->doc = NULL;
 				free_xml(remove);	
 			}
 			xmlUnsetProp(new_obj, "replace");
+			xmlUnsetProp(equiv_node, "replace");
 		}
 		
 		if(safe_str_eq(XML_CIB_TAG_STATE, object_name)){
@@ -495,20 +510,33 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 			copy_in_properties(equiv_node, new_obj);
 			
 		}
+
+		crm_debug("Processing children of <%s id=%s>",
+			  object_name, object_id);
 		
-		while(children != NULL) {
+		xml_child_iter(
+			new_obj, a_child, NULL, 
+			crm_debug("Updating child <%s id=%s>",
+				  a_child->name,
+				  xmlGetProp(a_child, XML_ATTR_ID));
+			
 			int tmp_result =
-				update_cib_object(equiv_node, children, force);
+				update_cib_object(equiv_node, a_child, force);
 
 			// only the first error is likely to be interesting
-			if(tmp_result != CIBRES_OK
-			   && result == CIBRES_OK) {
-				result = tmp_result;
+			if(tmp_result != CIBRES_OK) {
+				crm_err("Error updating child <%s id=%s>",
+					a_child->name,
+					xmlGetProp(a_child, XML_ATTR_ID));
+				
+				if(result == CIBRES_OK) {
+					result = tmp_result;
+				}
 			}
-			children = children->next;
-		}
+			);
 		
 	}
+	crm_debug("Finished with <%s id=%s>", object_name, object_id);
 	
 	return result;
 }

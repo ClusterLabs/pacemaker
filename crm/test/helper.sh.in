@@ -25,8 +25,9 @@ INIT_USER=root
 CRMD_USER=root
 ADMIN_USER=root
 
-test_node_1=test1
-test_node_2=test2
+test_node_1=fish
+test_node_2=chips
+test_node_3=mayo
 
 CRM_ERR_SHUTDOWN=0
 
@@ -36,8 +37,10 @@ OUTPUT_CMDS=0
 
 done=0
 
-ip_rsc_1=10.0.6.51
-ip_rsc_2=10.0.6.52
+ip_rsc_1=192.168.9.161
+ip_rsc_2=192.168.9.162
+
+logfile=/var/log/messages
 
 while test "$done" = "0"; do
     case "$1" in
@@ -45,6 +48,8 @@ while test "$done" = "0"; do
 	--stdout  | -o)	OUTPUT_STDOUT=1; shift;;
 	--stderr  | -e)	OUTPUT_STDERR=1; shift;;
 	--verbose | -v)	OUTPUT_CMDS=1; shift;;
+
+	--logfile | -l)	logfile=$2; shift 2;;
 
 	--init    | -i)	INIT_USER=$2; shift 2;;
 	--admin   | -a)	ADMIN_USER=$2; shift 2;;
@@ -55,7 +60,7 @@ while test "$done" = "0"; do
 
 	--ip1)	ip_rsc_1=$2; shift 2;;
 	--ip2)	ip_rsc_2=$2; shift 2;;
-
+	
 	"") done=1;;
 	*) echo "unknown option: $1"; exit 1;;
     esac
@@ -72,7 +77,6 @@ function remote_cmd() {
 
     return $?;
 }
-
 
 function is_state() {
     ret=1
@@ -265,9 +269,9 @@ function err() {
 function do_cmd() {
 
     cmdline=$*
+    old_OUTPUT_STDOUT=$OUTPUT_STDOUT
 
     if [ $OUTPUT_STDERR -eq 1 -o $OUTPUT_STDOUT -eq 1 -o $OUTPUT_CMDS -eq 1 ]; then
-
 	cmd=$1
 	
 	if [ $cmd = "remote_cmd" ]; then
@@ -283,8 +287,15 @@ function do_cmd() {
 	    fi
 	    echo `date` ": Waiting for state $2 on $host (max $3 attempts)";
 	    
+	elif [ $cmd = "./testutils.pl" ]; then
+#	    OUTPUT_STDOUT=1
+	    echo `date` ": Running '$cmdline'";
+	    
 	elif [ $cmd = "echo" ]; then
-	    echo -n ""
+	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
+		echo -n `date` ": "
+		$cmdline
+	    fi
 	else
 	    echo `date` ": Running '$cmdline'";
 	fi
@@ -292,16 +303,23 @@ function do_cmd() {
 
     if [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
 	$cmdline
+	rc=$?
     elif [ $OUTPUT_STDERR -eq 0 -a $OUTPUT_STDOUT -eq 0 ]; then
 	$cmdline 2>&1 >/dev/null
+	rc=$?
     elif [ $OUTPUT_STDOUT -eq 0 ]; then
 	$cmdline >/dev/null
+	rc=$?
     elif [ $OUTPUT_STDERR -eq 0 ]; then
 	$cmdline 2>/dev/null
+	rc=$?
     else
 	$cmdline
+	rc=$?
     fi
 
-    return $?
+    OUTPUT_STDOUT=$old_OUTPUT_STDOUT
+#    echo Result: $rc
+    return $rc
 }
 

@@ -36,6 +36,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 FILE *msg_in_strm = NULL;
+FILE *msg_ipc_strm = NULL;
 
 xmlNodePtr find_xml_in_hamessage(const struct ha_msg* msg);
 gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
@@ -116,6 +117,13 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	crm_verbose("Processing IPC message from %s",
 		   curr_client->table_key);
 
+#ifdef MSG_LOG
+	if(msg_ipc_strm == NULL) {
+		msg_ipc_strm = fopen(DEVEL_DIR"/inbound.ipc.log", "w");
+	}
+#endif
+
+
 	while(client->ops->is_message_pending(client)) {
 		if (client->ch_status == IPC_DISCONNECT) {
 			/* The message which was pending for us is that
@@ -124,18 +132,34 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		}
 		if (client->ops->recv(client, &msg) != IPC_OK) {
 			perror("Receive failure:");
+#ifdef MSG_LOG
+			fprintf(msg_ipc_strm, "[%s] [receive failure]\n",
+				curr_client->table_key);
+			fflush(msg_in_strm);
+#endif
 			return !hack_return_good;
 		}
 		if (msg == NULL) {
+#ifdef MSG_LOG
+			fprintf(msg_ipc_strm, "[%s] [__nothing__]\n",
+				curr_client->table_key);
+			fflush(msg_in_strm);
+#endif
 			crm_err("No message this time");
 			continue;
 		}
 
 		lpc++;
 		buffer = (char*)msg->msg_body;
-		crm_verbose("Processing xml from %s [text=%s]",
+		crm_verbose("Processing xml from %s [text=%s]\n",
 			   curr_client->table_key, buffer);
 	
+#ifdef MSG_LOG
+	fprintf(msg_ipc_strm, "[%s] [text=%s]",
+		curr_client->table_key, buffer);
+	fflush(msg_in_strm);
+#endif
+
 		root_xml_node = find_xml_in_ipcmessage(msg, FALSE);
 		if (root_xml_node != NULL) {
 			if (crmd_authorize_message(
@@ -252,13 +276,22 @@ crmd_client_status_callback(const char * node, const char * client,
 		}
 		
 		fragment = create_cib_fragment(update, NULL);
-		store_request(NULL, fragment,
-			      CRM_OP_UPDATE, CRM_SYSTEM_DCIB);
+//		store_request(NULL, fragment,
+//			      CRM_OP_UPDATE, CRM_SYSTEM_DCIB);
+
+		xmlNodePtr msg_options = set_xml_attr(
+			NULL, XML_TAG_OPTIONS, XML_ATTR_OP, CRM_OP_UPDATE, TRUE);
 		
+//		crm_verbose("Storing op=%s message for later processing", operation);
+		
+		xmlNodePtr request = create_request(
+			msg_options, fragment, NULL, CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
+
 		free_xml(fragment);
 		free_xml(update);
 
-		s_crmd_fsa(C_CRMD_STATUS_CALLBACK, I_NULL, NULL);
+//		s_crmd_fsa(C_CRMD_STATUS_CALLBACK, I_NULL, NULL);
+		s_crmd_fsa(C_CRMD_STATUS_CALLBACK, I_CIB_OP, request);
 		
 	} else {
 		crm_err("Got client status callback in non-DC mode");
@@ -328,8 +361,6 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 	int lpc = 0;
 	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
     
-	
-
 	while(hb_cluster->llc_ops->msgready(hb_cluster)) {
 		lpc++;
 		empty_callbacks = 0;

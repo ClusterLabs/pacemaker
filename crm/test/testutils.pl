@@ -17,19 +17,61 @@
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  #
 
+$in_exp=0;
+$in_err_exp=0;
+$match_all=0;
+$max_lines=0;
+$log_file="/var/log/messages";
 
-if ( $ARGV[0] =~ /--search/ ) {
+@search_for = ();
+@errors     = ();
 
+while ( $_ = @ARGV[0], /^-/ ) {
     shift;
-    print STDOUT "Result: ".string_search(@ARGV)."\n";
+    if ( /^--search/ ) {
+	$do_search = 1 ;
 
-} elsif ( $ARGV[0] =~ /--command/ ) {
-    shift;
-    print STDOUT "Result: ".remote_command(@ARGV)."\n";
+    } elsif ( /^-m/ ) {
+	$max_lines = $ARGV[0];
+	shift;
 
-} else {
-    print STDOUT "Unknown action:".$ARGV[0]."\n"
+    } elsif ( /^-l/ ) {
+	$log_file = $ARGV[0];
+	shift;
 
+    } elsif (  /^-a/ ) {
+	$match_all = 1;
+
+    } elsif ( /^-s/ ) {
+	$this_exp="";
+	while( @ARGV ) {
+	    last if $ARGV[0] =~ /^-/;
+	    $this_exp=$this_exp." ".$ARGV[0];
+	    shift;
+	}
+	$this_exp=substr($this_exp, 1);
+	print STDOUT "Found search expression: _${this_exp}_\n";
+	push @search_for, $this_exp;
+
+    } elsif ( /^-e/ ) {
+	$this_exp="";
+	while( @ARGV ) {
+	    last if $ARGV[0] =~ /^-/;
+	    $this_exp=$this_exp." ".$ARGV[0];
+	    shift;
+	}
+	$this_exp=substr($this_exp, 1);
+	print STDOUT "Found error expression: _${this_exp}_\n";
+	push @errors, $this_exp;
+    } else {
+	print STDOUT "huh? $_\n";
+    }
+}
+
+if( $do_search eq 1 ) {
+    $rc=string_search();
+    print STDOUT "Search returned: $rc\n";
+    exit $rc;
 }
 
 sub remote_command() {
@@ -49,68 +91,65 @@ sub remote_command() {
 
 sub string_search() {
 
-    my ($_search, $find_all, $max_lines, $_errors) = @_;
-
-    my @search_for = split(/,/,$_search);
-    my @errors     = split(/,/,$_errors);
-
     my %results    = {};
     my $num_lines  = 0;
 
-    if($find_all eq "") {
-	$find_all = 0;
-    }
-    if($max_lines eq "") {
-	$max_lines = 0;
-    }
+    print STDOUT "Starting search...\n";
+    open(LOG, $log_file);
 
+    seek LOG, 0, 2;
 
-    print STDOUT "findall: ".$find_all.", max: ".$max_lines."\n";
-
-    foreach $line (<STDIN>)	
+    for(;;)
     {
-	my $lpc = 0;
-	$num_lines = $num_lines + 1;
-
-#	print STDOUT "Checking line[".$num_lines."]: ".$line;
-
-	if($max_lines > 0 && $num_lines > $max_lines) {
-	    return -1000;
-	}
-
-	foreach $regex (@search_for) {
-	    $lpc = $lpc +1;
-	    if ( $line =~ /$regex/ ) {
-		print STDOUT "Found match for (".$regex."): ".$line;
-		if($find_all eq "0") {
-		    return $lpc; 
-		} else {
-		    if( $results{$regex} ne "" ) {
-			$results{$regex} = $results{$regex} + 1;
+	print STDOUT "Checking $log_file for more data...\n";
+	for($curpos = tell LOG; $_ = <LOG>; $curpos = tell LOG) 
+	{
+	    my $lpc = 0;
+	    $line = $_;
+	    $num_lines = $num_lines + 1;
+	    
+#	    print STDOUT "Checking line[".$num_lines."]: ".$line;
+	    
+	    if($max_lines > 0 && $num_lines > $max_lines) {
+		return -1000;
+	    }
+	    
+	    foreach $regex (@search_for) {
+		$lpc = $lpc +1;
+		if ( $line =~ /$regex/ ) {
+		    print STDOUT "Found match for (".$regex."): ".$line;
+		    if($match_all eq "0") {
+			return $lpc; 
 		    } else {
-			$results{$regex} = 1;
-		    }
-		    $found = scalar(keys %results)-1;
-#		    print STDOUT "Found ".$found." keys of ".scalar(@search_for)."\n";
-		    if(scalar(@search_for) < scalar(keys %results)) {
-
-			foreach $key (sort keys %results) {
-			    print STDOUT "Found key \'".$key."\' ".$results{$key}." times.\n" if $results{$key} ne "";
+			if( $results{$regex} ne "" ) {
+			    $results{$regex} = $results{$regex} + 1;
+			} else {
+			    $results{$regex} = 1;
 			}
-			return 0;
+			$found = scalar(keys %results)-1;
+			print STDOUT "Found ".$found." keys of ".scalar(@search_for)."\n";
+			if(scalar(@search_for) < scalar(keys %results)) {
+			    
+			    foreach $key (sort keys %results) {
+				print STDOUT "Found key \'".$key."\' ".$results{$key}." times.\n" if $results{$key} ne "";
+			    }
+			    return 0;
+			}
 		    }
 		}
 	    }
-	}
-
-	$lpc = 0;
-	foreach $regex ( @errors ) {
-	    $lpc = $lpc +1;
-	    if ( $line =~ /$regex/ ) {
-		print STDOUT "Found ERROR match for (".$regex."): ".$line;
-		return 0-$lpc;
+	    
+	    $lpc = 0;
+	    foreach $regex ( @errors ) {
+		$lpc = $lpc +1;
+		if ( $line =~ /$regex/ ) {
+		    print STDOUT "Found ERROR match for (".$regex."): ".$line;
+		    return 0-$lpc;
+		}
 	    }
 	}
+	sleep 3;
+	seek LOG, $curpos, 0;
     }
 #    print STDOUT "No more lines\n";
     return -2000;

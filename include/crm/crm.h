@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.18 2004/08/18 15:20:22 andrew Exp $ */
+/* $Id: crm.h,v 1.19 2004/08/27 15:21:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,10 +96,27 @@
 #define CRMD_JOINSTATE_PENDING	"pending"
 #define CRMD_JOINSTATE_MEMBER	"member"
 
+#define CRMD_RSCSTATE_START		"start"
+#define CRMD_RSCSTATE_START_PENDING	"starting"
+#define CRMD_RSCSTATE_START_OK		"running"
+#define CRMD_RSCSTATE_START_FAIL	"start_failed"
+#define CRMD_RSCSTATE_STOP		"stop"
+#define CRMD_RSCSTATE_STOP_PENDING	"stopping"
+#define CRMD_RSCSTATE_STOP_OK		"stopped"
+#define CRMD_RSCSTATE_STOP_FAIL		"stop_failed"
+#define CRMD_RSCSTATE_MON		"status"
+#define CRMD_RSCSTATE_MON_PENDING	CRMD_RSCSTATE_START_OK
+#define CRMD_RSCSTATE_MON_OK		CRMD_RSCSTATE_START_OK
+#define CRMD_RSCSTATE_MON_FAIL		"status_failed"
+//#define CRMD_RSCSTATE_GENERIC		"pending"
+#define CRMD_RSCSTATE_GENERIC_PENDING	"pending"
+#define CRMD_RSCSTATE_GENERIC_OK	"complete"
+#define CRMD_RSCSTATE_GENERIC_FAIL	"pending_failed"
+
 typedef GList* GListPtr;
 
 #define safe_str_eq(x, y)  (x!=NULL && y!=NULL && strcmp(x,y) == 0)
-#define safe_str_neq(x, y) x != y && (x==NULL || y==NULL || strcmp(x,y) != 0)
+#define safe_str_neq(x, y) (x != y && (x==NULL || y==NULL || strcmp(x,y) != 0))
 
 #define slist_iter(w, x, y, z, a) for(z = 0; z < g_list_length(y);  z++) { \
 		x *w = (x*)g_list_nth_data(y, z);			\

@@ -117,7 +117,7 @@ do_cib_invoke(long long action,
 		const char *sys_from = xmlGetProp(cib_msg, XML_ATTR_SYSFROM);
 		const char *op       = xmlGetProp(options, XML_ATTR_OP);
 		
-		xml_message_debug(cib_msg, "[CIB] Invoking with");
+		crm_debug("[CIB b4]\t%s\n\n", dump_xml_node(cib_msg, FALSE));
 		if(cib_msg == NULL) {
 			crm_err("No message for CIB command");
 			return I_NULL; // I_ERROR
@@ -172,32 +172,37 @@ do_cib_invoke(long long action,
 			
 		}
 		
+		crm_debug("[CIB after]\t%s\n\n", dump_xml_node(cib_msg, FALSE));
 		free_xml(answer);
 		return result;
 
 	} else if(action & A_CIB_BUMPGEN) {
+//		xmlNodePtr options   = find_xml_node(cib_msg, XML_TAG_OPTIONS);
+//		const char *op       = xmlGetProp(options, XML_ATTR_OP);
 
 		if(AM_I_DC == FALSE) {
 			return I_NULL;
 		}
-		
+
  		// check if the response was ok before next bit
 
-		section = get_xml_attr(cib_msg, XML_TAG_OPTIONS,
-				       XML_ATTR_FILTER_TYPE, FALSE);
+//		if(safe_str_neq(op, CRM_OP_WELCOME)) {
+			/* set the section so that we dont always send the
+			 * whole thing
+			 */
+		section = get_xml_attr(
+			cib_msg, XML_TAG_OPTIONS,
+			XML_ATTR_FILTER_TYPE, FALSE);
+//		}
 		
-		/* set the section so that we dont always send the
-		 * whole thing
-		 */
-
 		if(section != NULL) {
-			new_options = set_xml_attr(NULL, XML_TAG_OPTIONS,
-						   XML_ATTR_FILTER_TYPE,
-						   section, TRUE);
+			new_options = set_xml_attr(
+				NULL, XML_TAG_OPTIONS, XML_ATTR_FILTER_TYPE,
+				section, TRUE);
 		}
 		
-		answer = process_cib_request(CRM_OP_BUMP,
-					     new_options, NULL);
+		answer = process_cib_request(
+			CRM_OP_BUMP, new_options, NULL);
 
 		free_xml(new_options);
 
@@ -393,6 +398,7 @@ do_te_copyto(long long action,
 	
 
 	if(data != NULL) {
+		crm_debug("[TE input]\t%s\n\n", dump_xml_node((xmlNodePtr)data, FALSE));
 		message  = copy_xml_node_recursive((xmlNodePtr)data);
 		opts  = find_xml_node(message, XML_TAG_OPTIONS);
 		true_op = xmlGetProp(opts, XML_ATTR_OP);
@@ -400,9 +406,8 @@ do_te_copyto(long long action,
 		set_xml_property_copy(opts, XML_ATTR_OP, CRM_OP_EVENTCC);
 		set_xml_property_copy(opts, XML_ATTR_TRUEOP, true_op);
 
-		set_xml_property_copy(message,
-				      XML_ATTR_SYSTO,
-				      CRM_SYSTEM_TENGINE);
+		set_xml_property_copy(
+			message, XML_ATTR_SYSTO, CRM_SYSTEM_TENGINE);
 	}
 
 	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){

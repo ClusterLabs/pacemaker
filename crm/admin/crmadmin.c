@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.3 2004/08/03 09:17:29 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.4 2004/08/27 15:21:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -624,13 +624,24 @@ do_find_resource(const char *rsc, xmlNodePtr xml_node)
 			const char *id = xmlGetProp(rscstates,XML_ATTR_ID);
 			const char *target =
 				xmlGetProp(rscstates,XML_LRM_ATTR_TARGET);
+			const char *last_op =
+				xmlGetProp(rscstates,XML_LRM_ATTR_LASTOP);
+			const char *op_code =
+				xmlGetProp(rscstates,XML_LRM_ATTR_OPCODE);
 
 			rscstates = rscstates->next;
 			
 			crm_debug("checking %s:%s for %s", target, id, rsc);
 
-			
-			if(safe_str_eq(rsc, id)){
+			if(safe_str_eq("stop", last_op)) {
+				crm_debug("resource %s is stopped on: %s\n",
+					  rsc, target);
+				
+			} else if(safe_str_eq(last_op, "start")
+				  && safe_str_neq(op_code, "0")) {
+				crm_debug("resource %s is failed on: %s\n",
+					  rsc, target);				
+			} else if(safe_str_eq(rsc, id)){
 				printf("resource %s is running on: %s\n",
 				       rsc, target);
 				if(BE_SILENT) {

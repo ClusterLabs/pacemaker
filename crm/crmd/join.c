@@ -60,7 +60,7 @@ do_send_welcome(long long action,
 				NULL, NULL, CRMD_JOINSTATE_PENDING);
 
 			xmlNodePtr tmp1 = create_cib_fragment(update, NULL);
-			store_request(NULL, tmp1, CRM_OP_UPDATE, CRM_SYSTEM_DCIB);
+			invoke_local_cib(NULL, tmp1, CRM_OP_UPDATE);
 
 			send_request(NULL, NULL, CRM_OP_WELCOME,
 				     join_to, CRM_SYSTEM_CRMD, NULL);
@@ -110,7 +110,7 @@ do_send_welcome_all(long long action,
 
 	// catch any nodes that are active in the CIB but not in the CCM list 
 	while(node_entry != NULL){
-		const char *node_id = xmlGetProp(node_entry, XML_ATTR_ID);
+		const char *node_id = xmlGetProp(node_entry, XML_ATTR_UNAME);
 
 		gpointer a_node =
 			g_hash_table_lookup(fsa_membership_copy->members,
@@ -194,11 +194,14 @@ do_ack_welcome(long long action,
 	/* send our status section to the DC */
 	cib_copy = get_cib_copy();
 	tmp1 = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
-	tmp2 = create_cib_fragment(tmp1, NULL);
-	
-	send_ha_reply(fsa_cluster_conn, welcome, tmp2);
+	if(tmp1 != NULL) {
+		tmp2 = create_cib_fragment(tmp1->children, NULL);
+		
+		send_ha_reply(fsa_cluster_conn, welcome, tmp2);
 
-	free_xml(tmp2);
+		free_xml(tmp2);
+	}
+	
 	free_xml(cib_copy);
 	
 	return I_NULL;
@@ -274,7 +277,8 @@ do_process_welcome_ack(long long action,
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
 	const char *ref       = xmlGetProp(join_ack, XML_ATTR_REFERENCE);
 
-	
+	uuid_t uuid_raw;
+	char *uuid_calc = NULL;
 
 	gpointer join_node =
 		g_hash_table_lookup(fsa_membership_copy->members, join_from);
@@ -285,6 +289,9 @@ do_process_welcome_ack(long long action,
 	
 	cib_fragment = find_xml_node(join_ack, XML_TAG_FRAGMENT);
 
+	crm_debug("Welcoming node %s after ACK (ref %s)",
+	       join_from, ref);
+	
 	if(is_a_member == FALSE) {
 		crm_err("Node %s is not known to us (ref %s)",
 		       join_from, ref);
@@ -296,8 +303,15 @@ do_process_welcome_ack(long long action,
 		return I_FAIL;
 	}
 
-	crm_debug("Welcoming node %s after ACK (ref %s)",
-	       join_from, ref);
+	/* Make sure they have the *whole* CIB */
+	tmp1 = get_cib_copy();
+	tmp2 = create_cib_fragment(tmp1, NULL);
+
+	send_request(NULL, tmp2, CRM_OP_REPLACE,
+		     join_from, CRM_SYSTEM_CRMD, NULL);
+
+	free_xml(tmp1);	
+	free_xml(tmp2);
 	
 	/* add them to our list of CRMD_STATE_ACTIVE nodes
 	   TODO: still used?
@@ -313,27 +327,41 @@ do_process_welcome_ack(long long action,
 
 	create_node_entry(join_from, join_from, "member");
 
+	uuid_calc = (char*)crm_malloc(sizeof(char)*50);
+	
+	if(fsa_cluster_conn->llc_ops->get_uuid_by_name(
+		   fsa_cluster_conn, join_from, uuid_raw) == HA_FAIL) {
+		crm_err("Could not calculate UUID for %s", join_from);
+		crm_free(uuid_calc);
+		uuid_calc = crm_strdup(join_from);
+
+	} else {
+		uuid_unparse(uuid_raw, uuid_calc);
+	}
+
 	/* Make changes so that exp_state=active for this node when the update
 	 *  is processed by A_CIB_INVOKE
 	 */
 	msg_cib = find_xml_node(cib_fragment, XML_TAG_CIB);
 	tmp1 = get_object_root(XML_CIB_TAG_STATUS, msg_cib);
-	tmp2 = find_entity(tmp1, XML_CIB_TAG_STATE, join_from, FALSE);
+	tmp2 = find_entity(tmp1, XML_CIB_TAG_STATE, uuid_calc, FALSE);
 
 	if(tmp2 == NULL) {
 		crm_err("Status entry for %s not found in update, adding",
 			join_from);
 		
 		tmp2 = create_xml_node(tmp1, XML_CIB_TAG_STATE);
-		set_xml_property_copy(tmp2, XML_ATTR_ID, join_from);
+		set_xml_property_copy(tmp2, XML_ATTR_UUID,  uuid_calc);
+		set_xml_property_copy(tmp2, XML_ATTR_UNAME, join_from);
 	}
+	
+	crm_free(uuid_calc);	
 	
 	set_xml_property_copy(
 		tmp2, XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
 	set_xml_property_copy(
 		tmp2, XML_CIB_ATTR_JOINSTATE,CRMD_JOINSTATE_MEMBER);
 
-	
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {
 		crm_info("That was the last outstanding join ack");

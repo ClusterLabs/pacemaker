@@ -63,10 +63,10 @@ void dump_rsc_info(void);
 	next_input = y(x, cause, cur_state, last_input, data);		\
 	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
 		fprintf(dot_strm,					\
-			"\t// %s:\t%s\t(data? %s)\t(result=%s)\n",	\
+			"\t// %s:\t%s\t(data? %p)\t(result=%s)\n",	\
 			fsa_input2string(cur_input),			\
 			fsa_action2string(x),				\
-			data==NULL?XML_BOOLEAN_NO:XML_BOOLEAN_YES,	\
+			data,						\
 			fsa_input2string(next_input));			\
 	fflush(dot_strm);						\
 	crm_verbose("Result of action %s was %s",			\
@@ -80,10 +80,10 @@ void dump_rsc_info(void);
 	next_input = y(x, cause, cur_state, last_input, data);		\
 	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
 		fprintf(dot_strm,					\
-			"\t// %s:\t%s\t(data? %s)\t(result=%s)\n",	\
+			"\t// %s:\t%s\t(data? %p)\t(result=%s)\n",	\
 			fsa_input2string(cur_input),			\
 			fsa_action2string(x),				\
-			data==NULL?XML_BOOLEAN_NO:XML_BOOLEAN_YES,	\
+			data,						\
 			fsa_input2string(next_input));			\
 	fflush(dot_strm);						\
      }
@@ -340,8 +340,14 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		/*
 		 * Highest priority actions
 		 */
-		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
+
+		/* the order of these is finiky...
+		 * the status section seems to dissappear after the BUMPGEN!!!
+		 * Yet BUMPGEN is non-destructive
+		 */
 		ELSEIF_FSA_ACTION(A_TE_COPYTO,		do_te_copyto)
+		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
+
 		ELSEIF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
 		ELSEIF_FSA_ACTION(A_RECOVER,		do_recover)
 		ELSEIF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_update_node_status)
@@ -672,18 +678,21 @@ dump_rsc_info(void)
 			rsc = resources;
 			resources = resources->next;
 
-			const char *id       = xmlGetProp(rsc, "id");
-			const char *op_code  = xmlGetProp(rsc, "op_code");
-			const char *rsc_state = xmlGetProp(rsc, "rsc_state");
-			const char *last_op  = xmlGetProp(rsc, "last_op");
-			const char *on_node   = xmlGetProp(rsc, "on_node");
-
-			if(safe_str_eq(rsc_state, "stopped")) {
-				continue;
-			}
+			const char *rsc_id    = xmlGetProp(rsc, XML_ATTR_ID);
+			const char *node_id   = xmlGetProp(rsc, XML_LRM_ATTR_TARGET);
+			const char *rsc_state = xmlGetProp(rsc, XML_LRM_ATTR_RSCSTATE);
+			const char *op_status = xmlGetProp(rsc, XML_LRM_ATTR_OPCODE);
+			const char *last_rc   = xmlGetProp(rsc, XML_LRM_ATTR_RCCODE);
+			const char *last_op   = xmlGetProp(rsc, XML_LRM_ATTR_LASTOP);
 			
-			crm_info("Resource state: %s %s [%s after %s] on %s",
-				 id, rsc_state, op_code, last_op, on_node);
+/* 			if(safe_str_eq(rsc_state, "stopped")) { */
+/* 				continue; */
+/* 			} */
+			
+			crm_info("Resource state: %s %s "
+				 "[%s (rc=%s) after %s] on %s",
+				 rsc_id, rsc_state,
+				 op_status, last_rc, last_op, node_id);
 		}
 	}
 }

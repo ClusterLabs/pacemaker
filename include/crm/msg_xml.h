@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.10 2004/08/18 10:46:04 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.11 2004/08/27 15:22:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -119,14 +119,15 @@
 
 #define XML_LRM_ATTR_TASK		"operation"
 #define XML_LRM_ATTR_TARGET		"on_node"
+#define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
 #define XML_LRM_ATTR_DISCARD		"discard"
 #define XML_LRM_ATTR_RUNNABLE		"runnable"
 #define XML_LRM_ATTR_OPTIONAL		"optional"
-
-#define XML_NODE_ATTR_STATE		"state"
 #define XML_LRM_ATTR_RSCSTATE		"rsc_state"
+#define XML_LRM_ATTR_RSCID		"rsc_id"
 #define XML_LRM_ATTR_LASTOP		"last_op"
-#define XML_LRM_ATTR_OPCODE		"op_code"
+#define XML_LRM_ATTR_OPCODE		"op_status"
+#define XML_LRM_ATTR_RCCODE		"rc_code"
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
 #define XML_NVPAIR_ATTR_VALUE        	"value"
@@ -135,6 +136,8 @@
 #define XML_STRENGTH_VAL_SHOULD		"should"
 #define XML_STRENGTH_VAL_SHOULDNOT	"should_not"
 #define XML_STRENGTH_VAL_MUSTNOT	"must_not"
+
+#define XML_NODE_ATTR_STATE		"state"
 
 #include <libxml/tree.h> 
 

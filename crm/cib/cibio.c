@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.32 2004/08/18 15:20:21 andrew Exp $ */
+/* $Id: cibio.c,v 1.33 2004/08/27 15:21:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -79,6 +79,7 @@ createEmptyCib(void)
 
 	config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
 	status = create_xml_node(cib_root, XML_CIB_TAG_STATUS);
+	create_xml_node(cib_root, XML_CIB_TAG_CRMCONFIG);
 
 	set_node_tstamp(cib_root);
 	set_node_tstamp(config);
@@ -90,14 +91,12 @@ createEmptyCib(void)
 	create_xml_node(config, XML_CIB_TAG_NODES);
 	create_xml_node(config, XML_CIB_TAG_RESOURCES);
 	create_xml_node(config, XML_CIB_TAG_CONSTRAINTS);
-	create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
 	
 	if (verifyCibXml(cib_root)) {
 		return cib_root;
 	}
-	crm_crit(
-	       "The generated CIB did not pass integrity testing!!"
-	       "  All hope is lost.");
+	crm_crit("The generated CIB did not pass integrity testing!!"
+		 "  All hope is lost.");
 	return NULL;
 }
 
@@ -107,7 +106,6 @@ verifyCibXml(xmlNodePtr cib)
 	gboolean is_valid = TRUE;
 	xmlNodePtr tmp_node = NULL;
 	
-
 	if (cib == NULL) {
 		crm_err("XML Buffer was empty.");
 		return FALSE;

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.22 2004/08/18 08:39:38 andrew Exp $ */
+/* $Id: unpack.c,v 1.23 2004/08/27 15:21:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -583,10 +583,12 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 		     GListPtr *actions, GListPtr *node_constraints)
 {
 	xmlNodePtr rsc_entry  = NULL;
+	
 	const char *rsc_id    = NULL;
 	const char *node_id   = NULL;
 	const char *rsc_state = NULL;
-	const char *rsc_code  = NULL;
+	const char *op_status = NULL;
+	const char *last_rc   = NULL;
 	const char *last_op   = NULL;
 	resource_t *rsc_lh    = NULL;
 	op_status_t  rsc_code_i = LRM_OP_ERROR;
@@ -598,8 +600,9 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 		rsc_id    = xmlGetProp(rsc_entry, XML_ATTR_ID);
 		node_id   = xmlGetProp(rsc_entry, XML_LRM_ATTR_TARGET);
 		rsc_state = xmlGetProp(rsc_entry, XML_LRM_ATTR_RSCSTATE);
-		rsc_code  = xmlGetProp(rsc_entry, "op_code");
-		last_op   = xmlGetProp(rsc_entry, "last_op");
+		op_status = xmlGetProp(rsc_entry, XML_LRM_ATTR_OPCODE);
+		last_rc   = xmlGetProp(rsc_entry, XML_LRM_ATTR_RCCODE);
+		last_op   = xmlGetProp(rsc_entry, XML_LRM_ATTR_LASTOP);
 		
 		rsc_lh    = pe_find_resource(rsc_list, rsc_id);
 
@@ -611,7 +614,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 				" %s in %s's status section",
 				rsc_id, node_id);
 			continue;
-		} else if(rsc_code == NULL) {
+		} else if(last_rc == NULL) {
 			crm_err("Invalid resource status entry for %s in %s",
 				rsc_id, node_id);
 			continue;
@@ -630,7 +633,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 			
 		}
 		
-		rsc_code_i = atoi(rsc_code);
+		rsc_code_i = atoi(last_rc);
 
 		if(rsc_code_i == -1) {
 			/*
@@ -648,18 +651,15 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 			 * For now this should do
 			 */
 			if(safe_str_eq(last_op, "stop")) {
-				unpack_failed_resource(
-					node_constraints, actions,
-					rsc_entry,rsc_lh,node);
+				// map this to a timeout so it is re-issued
+				rsc_code_i = LRM_OP_TIMEOUT;
 			} else {
-				unpack_healthy_resource(
-					node_constraints, actions,
-					rsc_entry,rsc_lh,node);
-
+				/* map this to a "done" so it is not marked
+				 * as failed, then make sure it is re-issued
+				 */
+				rsc_code_i = LRM_OP_DONE;
 				rsc_lh->start->optional = FALSE;
 			}
-			
-			continue;
 		}
 
 		switch(rsc_code_i) {
@@ -754,7 +754,6 @@ gboolean
 unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
 			xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node)
 {
-	double weight = 1.0;
 	const char *last_op  = xmlGetProp(rsc_entry, "last_op");
 
 	crm_debug("Unpacking healthy action %s on %s", last_op, rsc_lh->id);
@@ -771,9 +770,6 @@ unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
 			return FALSE;
 			
 		} else {
-			/* we prefer to stay running here */
-			weight = 100.0;
-			
 			/* create the link between this node and the rsc */
 			crm_verbose("Setting cur_node = %s for rsc = %s",
 				    node->details->uname, rsc_lh->id);
@@ -782,18 +778,8 @@ unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
 		}
-		
-	} else {
-		/* we prefer to start where we once ran successfully */
-		weight = 20.0;
 	}
 
-#if 0
-	// redundant now that running and not_running constraint tests exist,
-	// admins should turn this on manually per resource 
-	rsc2node_new(
-		"healthy_generate",rsc_lh, weight, TRUE,node,node_constraints);
-#endif
 	return TRUE;
 }
 

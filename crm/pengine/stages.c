@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.14 2004/08/03 08:54:44 andrew Exp $ */
+/* $Id: stages.c,v 1.15 2004/08/27 15:21:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -253,7 +253,7 @@ stage5(GListPtr resources)
 			rsc->start->optional = FALSE;
 			crm_info("Starting resource %s (%s)",
 				  safe_val(NULL, rsc, id),
-				  safe_val3(NULL, stop_node, details,uname));
+				  safe_val3(NULL,start_node,details,uname));
 
 
 		} else if(start_node == NULL) {

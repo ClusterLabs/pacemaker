@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.29 2004/07/30 15:31:06 andrew Exp $ */
+/* $Id: ptest.c,v 1.30 2004/08/27 15:21:59 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -277,7 +277,6 @@ main(int argc, char **argv)
 #ifdef MCHECK
 	muntrace();
 #endif
-	set_crm_log_level(LOG_INFO);
 
 	msg_buffer = dump_xml_node(graph, FALSE);
 	fprintf(stdout, "%s\n", msg_buffer);

@@ -143,7 +143,8 @@ do_msg_route(long long action,
 		if (crmd_authorize_message(root_xml_node,
 					   msg,
 					   curr_client) == FALSE) {
-			crm_verbose("Message not authorized");
+			crm_debug("Message not authorized\t%s",
+				  dump_xml_node(root_xml_node, FALSE));
 			do_process = FALSE;
 		}
 //	}
@@ -187,21 +188,22 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	     const char *operation, const char *host_to, const char *sys_to,
 	     char **msg_reference)
 {
+	xmlNodePtr local_options = NULL;
 	gboolean was_sent = FALSE;
 	xmlNodePtr request = NULL;
 
-	
 
-	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
-				   XML_ATTR_OP, operation, TRUE);
+	if(msg_options == NULL) {
+		local_options = create_xml_node(NULL, XML_TAG_OPTIONS);
+		msg_options = local_options;
+	}
+
+	set_xml_property_copy(msg_options, XML_ATTR_OP, operation);
 	
-	request = create_request(msg_options,
-				 msg_data,
-				 host_to,
-				 sys_to,
-				 AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD,
-				 NULL,
-				 NULL);
+	request = create_request(
+		msg_options, msg_data, host_to, sys_to,
+		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD,
+		NULL, NULL);
 
 //	xml_message_debug(request, "Final request...");
 
@@ -216,6 +218,7 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	}
 	
 	free_xml(request);
+	free_xml(local_options);
 
 	return was_sent;
 }
@@ -262,7 +265,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	const char *host_to = xmlGetProp(xml_relay_message,XML_ATTR_HOSTTO);
 	const char *sys_to  = xmlGetProp(xml_relay_message,XML_ATTR_SYSTO);
 
-	crm_verbose("Routing message %s",
+	crm_debug("Routing message %s",
 		xmlGetProp(xml_relay_message,XML_ATTR_REFERENCE));
 	
 	if(xml_relay_message == NULL) {
@@ -534,8 +537,8 @@ handle_message(xmlNodePtr stored_msg)
 
 //	xml_message_debug(stored_msg, "Processing message");
 
-	crm_debug("Received %s %s in state %s",
-		  op, type, fsa_state2string(fsa_state));
+	crm_verbose("Received %s %s in state %s",
+		    op, type, fsa_state2string(fsa_state));
 	
 	if(type == NULL || op == NULL) {
 		crm_err("Ignoring message (type=%s), (op=%s)",
@@ -593,10 +596,9 @@ handle_message(xmlNodePtr stored_msg)
 			xmlNodePtr node_state =
 				create_xml_node(NULL, XML_CIB_TAG_STATE);
 
-			crm_info("Creating shutdown request for %s",
-			       host_from);
+			crm_info("Creating shutdown request for %s",host_from);
 			
-			set_uuid(node_state, XML_ATTR_UUID, fsa_our_uname);
+			set_uuid(node_state, XML_ATTR_UUID, host_from);
 			set_xml_property_copy(
 				node_state, XML_ATTR_UNAME, host_from);
 			set_xml_property_copy(

@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.8 2004/08/03 08:50:00 andrew Exp $ */
+/* $Id: xml.c,v 1.9 2004/08/27 15:21:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,62 +41,62 @@ void dump_array(int log_level, const char *message,
 
 
 xmlNodePtr
+find_xml_node(xmlNodePtr root, const char * search_path)
+{
+	if(search_path == NULL) {
+		crm_warn("Will never find <NULL>");
+		return NULL;
+	}
+	
+	xml_child_iter(
+		root, a_child, search_path,
+		crm_trace("returning node (%s).", xmlGetNodePath(a_child));
+		crm_trace("contents\t%s", dump_xml_node(a_child, FALSE));
+		crm_trace("found in\t%s", dump_xml_node(root, FALSE));
+		return a_child;
+		);
+
+	crm_warn("Could not find %s in %s.", search_path, xmlGetNodePath(root));
+	return NULL;
+}
+
+xmlNodePtr
 find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 {
 	int	j;
-	xmlNodePtr child;
-	xmlNodePtr lastMatch;
+	gboolean is_found = TRUE;
+	xmlNodePtr match =  NULL;
+	xmlNodePtr lastMatch = root;
 	
-
-	if (root == NULL) {
-		return NULL;
-	}
-
-	if(search_path == NULL) {
-		crm_trace("Will never find NULL");
+	if(search_path == NULL || search_path[0] == NULL) {
+		crm_warn("Will never find NULL");
 		return NULL;
 	}
 	
-	
-	dump_array(LOG_TRACE,
-		   "Looking for.",
-		   search_path, len);
-	child = root->children, lastMatch = NULL;
+	dump_array(LOG_TRACE, "Looking for.", search_path, len);
+
 	for (j=0; j < len; ++j) {
-		gboolean is_found = FALSE;
 		if (search_path[j] == NULL) {
-			len = j; /* a NULL also means stop searching */
+/* a NULL also means stop searching */
 			break;
 		}
-		
-		while(child != NULL) {
-			const char * child_name = (const char*)child->name;
-			crm_trace("comparing (%s) with (%s).",
-				   search_path[j],
-				   child->name);
-			if (strcmp(child_name, search_path[j]) == 0) {
-				lastMatch = child;
-				child = lastMatch->children;
-				crm_trace("found node (%s) @line (%ld).",
-					   search_path[j],
-					   xmlGetLineNo(child));
-				is_found = TRUE;
-				break;
-			}
-			child = child->next;
-		}
-		if (is_found == FALSE) {
-			crm_trace("No more siblings left... %s cannot be found.",
-				search_path[j]);
+
+		match = find_xml_node(lastMatch, search_path[j]);
+		if(match == NULL) {
+			is_found = FALSE;
 			break;
+		} else {
+			lastMatch = match;
 		}
 	}
 
-	if (j == len
-	    && lastMatch != NULL
-	    && strcmp(lastMatch->name, search_path[j-1]) == 0) {
+	if (is_found) {
 		crm_trace("returning node (%s).",
 			   xmlGetNodePath(lastMatch));
+
+		crm_trace("found\t%s", dump_xml_node(lastMatch, FALSE));
+		crm_trace("in \t%s", dump_xml_node(root, FALSE));
+		
 		return lastMatch;
 	}
 
@@ -170,111 +170,40 @@ get_xml_attr_nested(xmlNodePtr parent,
 }
 
 xmlNodePtr
-set_xml_attr(xmlNodePtr parent,
-	     const char *node_name,
-	     const char *attr_name,
-	     const char *attr_value,
-	     gboolean create)
+set_xml_attr(
+	xmlNodePtr parent,
+	const char *node_name, const char *attr_name, const char *attr_value,
+	gboolean create)
 {
-
-	if(node_name == NULL) {
-		// set it on the current node
-		return set_xml_attr_nested(parent, NULL, 0,
-					   attr_name, attr_value, create);
+	xmlNodePtr node = parent;
+	xmlAttrPtr result = NULL;
+	
+	if(node_name != NULL) {
+		crm_trace("Setting %s=%s at [%s [%s]]",
+			  attr_name, attr_value,
+			  xmlGetNodePath(parent), node_name);
+		node = find_xml_node(parent, node_name);
+		if(node == NULL && create) {
+			node = create_xml_node(parent, node_name);
+			if(parent == NULL) {
+				parent = node;
+			}
+		}
 	}
-	return set_xml_attr_nested(parent, &node_name, 1,
-				   attr_name, attr_value, create);
 
-}
-
-xmlNodePtr
-set_xml_attr_nested(xmlNodePtr parent,
-		    const char **node_path, int length,
-		    const char *attr_name,
-		    const char *attr_value,
-		    gboolean create)
-{
-	xmlAttrPtr result        = NULL;
-	xmlNodePtr attr_parent   = NULL;
-	xmlNodePtr create_parent = NULL;
-	xmlNodePtr tmp;
-
-	if(parent == NULL && create == FALSE) {
-		crm_err("Can not set attribute in NULL parent");
+	if(node == NULL) {
+		crm_warn("Can not set attribute on NULL node");
 		return NULL;
 	} 
 
-	if(attr_name == NULL || strlen(attr_name) == 0) {
-		crm_err("Can not set attribute to %s with no name",
-		       attr_value);
-		return NULL;
-	}
-
-
-	if(length == 0 && parent != NULL) {
-		attr_parent = parent;
-
-	} else if(length == 0 || node_path == NULL
-		  || *node_path == NULL || strlen(*node_path) == 0) {
-		crm_err(
-		       "Can not create parent to set attribute %s=%s on",
-		       attr_name, attr_value);
-		return NULL;
-		
-	} else {
-		attr_parent = find_xml_node_nested(parent, node_path, length);
-	}
-	
-	if(create && attr_parent == NULL) {
-		int j = 0;
-		attr_parent = parent;
-		for (j=0; j < length; ++j) {
-			if (node_path[j] == NULL) {
-				break;
-			}
-			
-			tmp =
-				find_xml_node(attr_parent, node_path[j]);
-
-			if(tmp == NULL) {
-				attr_parent = create_xml_node(attr_parent,
-							      node_path[j]);
-				if(j==0) {
-					create_parent = attr_parent;
-				}
-				
-			} else {
-				attr_parent = tmp;
-			}
-		}
-		
-	} else if(attr_parent == NULL) {
-		crm_err("Can not find parent to set attribute on");
-		return NULL;
-		
-	}
-	
-	result = set_xml_property_copy(attr_parent, attr_name, attr_value);
+	result = set_xml_property_copy(node, attr_name, attr_value);
 	if(result == NULL) {
-		crm_warn(
-		       "Could not set %s=%s at %s",
-		       attr_name, attr_value, xmlGetNodePath(attr_parent));
+		crm_warn("Could not set %s=%s at %s (found in %s)",
+			 attr_name, attr_value,
+			 xmlGetNodePath(node), xmlGetNodePath(parent));
 	}
 
-	if(create_parent != NULL) {
-		return create_parent;
-	}
-	
 	return parent;
-}
-
-
-
-xmlNodePtr
-find_xml_node(xmlNodePtr root, const char * search_path)
-{
-	if(root == NULL) return NULL;
-	return find_xml_node_nested(root, &search_path, 1);
 }
 
 xmlNodePtr
@@ -283,83 +212,21 @@ find_entity(xmlNodePtr parent,
 	    const char *id,
 	    gboolean siblings)
 {
-	return find_entity_nested(parent,
-				  node_name,
-				  NULL,
-				  NULL,
-				  id,
-				  siblings);
-}
-xmlNodePtr
-find_entity_nested(xmlNodePtr parent,
-		   const char *node_name,
-		   const char *elem_filter_name,
-		   const char *elem_filter_value,
-		   const char *id,
-		   gboolean siblings)
-{
-	xmlNodePtr child;
-	xmlChar *child_id = NULL;
-	
-	crm_trace("Looking for %s elem with id=%s.", node_name, id);
 	while(parent != NULL) {
-		crm_trace("examining (%s).", xmlGetNodePath(parent));
-		child = parent->children;
-	
-		while(child != NULL) {
-			crm_trace("looking for (%s) [name].", node_name);
-			if (node_name != NULL
-			    && strcmp(child->name, node_name) != 0) {    
-				crm_trace(
-					"skipping entity (%s=%s) [node_name].",
-					xmlGetNodePath(child), child->name);
-				break;
-			} else if (elem_filter_name != NULL
-				   && elem_filter_value != NULL) {
-				const char* child_value = (const char*)
-					xmlGetProp(child, elem_filter_name);
-				
-				crm_trace(
-				       "comparing (%s) with (%s) [attr_value].",
-				       child_value, elem_filter_value);
-				if (strcmp(child_value, elem_filter_value)) {
-					crm_trace("skipping entity (%s) [attr_value].",
-						   xmlGetNodePath(child));
-					break;
-				}
+		xml_child_iter(
+			parent, a_child, node_name,
+			if(id == NULL || safe_str_eq(id, xmlGetProp(a_child, XML_ATTR_ID))) {
+				crm_debug("returning node (%s).", xmlGetNodePath(a_child));
+				return a_child;
 			}
-		
-			crm_trace(
-			       "looking for entity (%s) in %s.",
-			       id, xmlGetNodePath(child));
-			while(child != NULL) {
-				crm_trace(
-				       "looking for entity (%s) in %s.",
-				       id, xmlGetNodePath(child));
-				child_id = xmlGetProp(child, XML_ATTR_ID);
-
-				if (child_id == NULL) {
-					crm_crit(
-					       "Entity (%s) has id=NULL..."
-					       "Cib not valid!",
-					       xmlGetNodePath(child));
-				} else if (strcmp(id, child_id) == 0) {
-					crm_trace("found entity (%s).", id);
-					return child;
-				}   
-				child = child->next;
-			}
-		}
-
-		if (siblings == TRUE) {
-			crm_trace("Nothing yet... checking siblings");	    
+			);
+		if(siblings) {
 			parent = parent->next;
-		} else
-			parent = NULL;
+		} else {
+			break;
+		}
 	}
-	crm_info(
-	       "Couldnt find anything appropriate for %s elem with id=%s.",
-	       node_name, id);	    
+	crm_warn("node <%s id=%s> not found in %s.", node_name, id, xmlGetNodePath(parent));
 	return NULL;
 }
 
@@ -401,7 +268,6 @@ copy_in_properties(xmlNodePtr target, xmlNodePtr src)
 char * 
 dump_xml(xmlNodePtr msg)
 {
-	
 	return dump_xml_node(msg, FALSE);
 }
 
@@ -441,9 +307,13 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 
 	if (whole_doc) {
 		if (msg->doc == NULL) {
+			xmlNodePtr top = msg;
+/* 			while(top->parent != NULL) { */
+/* 				top = top->parent; */
+/* 			} */
 			xmlDocPtr foo = xmlNewDoc("1.0");
-			xmlDocSetRootElement(foo, msg);
-			xmlSetTreeDoc(msg,foo);
+			xmlDocSetRootElement(foo, top);
+			xmlSetTreeDoc(top,foo);
 		}
 		xmlDocDumpMemory(msg->doc, &xml_message, &msg_size);
 	} else {
@@ -594,90 +464,6 @@ set_node_tstamp(xmlNodePtr a_node)
 }
 
 xmlNodePtr
-find_entity_recursive(xmlNodePtr xml_node,
-		      const char *node_name,
-		      const char *elem_filter_name,
-		      const char *elem_filter_value,
-		      const char *id,
-		      gboolean all)
-{
-	gboolean match = TRUE;
-	xmlNodePtr local_node = NULL, node_iter = NULL, local_child = NULL;
-	if(xml_node == NULL) {
-		return NULL;
-	}
-	
-	if(node_name != NULL
-	   && safe_str_neq((const char *)xml_node->name, node_name)) {
-		crm_devel("entity (%s) did not match node->name %s.",
-			  xmlGetNodePath(xml_node), xml_node->name);
-		match = FALSE;
-	}
-
-	if(match
-	   && id != NULL
-	   && safe_str_neq((const char*)xmlGetProp(xml_node, XML_ATTR_ID), id)) {
-		crm_devel("entity (%s) did not match id %s.",
-			  xmlGetNodePath(xml_node), id);
-		match = FALSE;
-	}
-
-	// check if any other filters apply
-	if (match && elem_filter_name != NULL && elem_filter_value != NULL) {
-		const char* child_value = (const char*)
-			xmlGetProp(xml_node, elem_filter_name);
-		
-		crm_devel("comparing (%s) with (%s) [attr_value].",
-			  child_value, elem_filter_value);
-
-		if (safe_str_neq(child_value, elem_filter_value)) {
-			crm_devel("skipping entity (%s) [attr_value].",
-				  xmlGetNodePath(xml_node));
-			match = FALSE;
-		}
-	}
-
-	if(match) {
-		crm_devel("xml node (%s) matched", xmlGetNodePath(xml_node));
-		return copy_xml_node_recursive(xml_node);
-
-	} else if(xml_node != NULL && xml_node->name != NULL) {
-		// check our children
-		node_iter = xml_node->children;
-		crm_devel("Nothing yet... checking children");	    
-		while(node_iter != NULL) {
-
-			local_child = find_entity_recursive(
-				node_iter, node_name,
-				elem_filter_name, elem_filter_value,
-				id, all);
-
-			node_iter = node_iter->next;
-
-			if(local_child == NULL) {
-				continue;
-			}
-			
-			if(local_node == NULL) {
-				local_node = local_child;
-				if(all == FALSE) {
-					break;
-				}
-				
-			} else {
-				xmlAddSibling(local_node, local_child);
-			}
-		}
-
-		return local_node;
-	}
-
-	crm_devel("Couldnt find anything appropriate for %s elem with id=%s.",
-		  node_name, id);	    
-	return NULL;
-}
-
-xmlNodePtr
 copy_xml_node_recursive(xmlNodePtr src_node)
 {
 #if XML_TRACE
@@ -685,8 +471,6 @@ copy_xml_node_recursive(xmlNodePtr src_node)
 	xmlNodePtr local_node = NULL, node_iter = NULL, local_child = NULL;
 	xmlAttrPtr prop_iter = NULL;
 
-	
-	
 	if(src_node != NULL && src_node->name != NULL) {
 		local_node = create_xml_node(NULL, src_node->name);
 

@@ -512,12 +512,12 @@ do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite)
 		xmlNodePtr fragment =
 			create_cib_fragment(update_data.updates, NULL);
 
-		store_request(NULL, fragment,
-			      CRM_OP_UPDATE, CRM_SYSTEM_DCIB);
+		invoke_local_cib(NULL, fragment, CRM_OP_UPDATE);
 		
 		free_xml(fragment);
 	}
-	
+
+	// so it can be freed
 	return update_data.updates;
 
 }

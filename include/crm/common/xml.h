@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.2 2004/08/03 09:05:47 andrew Exp $ */
+/* $Id: xml.h,v 1.3 2004/08/27 15:22:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,33 +51,10 @@ extern void copy_in_properties(xmlNodePtr target, xmlNodePtr src);
  * On success, returns the sub-fragment described by search_path.
  * On failure, returns NULL.
  */
-extern xmlNodePtr find_xml_node_nested(xmlNodePtr root,
-				       const char **search_path,
-				       int len);
+extern xmlNodePtr find_xml_node_nested(
+	xmlNodePtr root, const char **search_path, int len);
 
 
-/*
- * In <i>parent</i>, find a child named <i>node_name</i> whose value for
- * <i>elem_filter_name</i> is <i>elem_filter_value</i> and or has id set
- * to <i>id</i>.
- *
- * <i>elem_filter_name</i>, <i>elem_filter_value</i> and <i>id</i>.may all
- * be set to NULL, in which case the filter they represent will be ignored.
- *
- * By setting <i>siblings</i>, you also have the option of searching all
- * other nodes at the same level as <i>parent</i>
- *
- * On success, returns parent or the created parent <i>create</i>
- * was specified.
- *
- * On failure, returns NULL.
- */
-extern xmlNodePtr find_entity_nested(xmlNodePtr parent,
-				     const char *node_name,
-				     const char *elem_filter_name,
-				     const char *elem_filter_value,
-				     const char *id,
-				     gboolean siblings);
 /*
  * Find a child named search_path[i] at level i in the XML fragment where i=0
  * is an immediate child of <i>root</i>.
@@ -94,27 +71,6 @@ extern xmlNodePtr find_entity_nested(xmlNodePtr parent,
 extern const char *get_xml_attr_nested(xmlNodePtr parent,
 				       const char **node_path, int length,
 				       const char *attr_name, gboolean error);
-
-/*
- * Find a child named search_path[i] at level i in the XML fragment where i=0
- * is an immediate child of <i>root</i>.
- *
- * Once the last child specified by node_path is found, set the value
- * of attr_name to be attr_value.
- *
- * On success, returns parent or the created parent <i>create</i>
- * was specified.
- *
- * On failure, returns NULL.
- */
-extern xmlNodePtr set_xml_attr_nested(xmlNodePtr parent,
-				      const char **node_path, int length,
-				      const char *attr_name,
-				      const char *attr_value,
-				      gboolean create);
-
-
-
 
 extern char * dump_xml_node(xmlNodePtr msg, gboolean whole_doc);
 
@@ -235,11 +191,20 @@ extern int write_xml_file(xmlNodePtr xml_node, const char *filename);
 
 extern void print_xml_formatted(xmlNodePtr an_xml_node);
 
-extern xmlNodePtr find_entity_recursive(xmlNodePtr parent,
-					const char *node_name,
-					const char *elem_filter_name,
-					const char *elem_filter_value,
-					const char *id,
-					gboolean all);
-	
+#define xml_child_iter(a,b,c,d) if(a != NULL) {			\
+		xmlNodePtr b = a->children;				\
+		while(b != NULL) {					\
+			if(c == NULL || safe_str_eq(c, b->name)) {	\
+				d;					\
+			}						\
+			b=b->next;					\
+		}							\
+	} else {							\
+		crm_trace("Parent of loop was NULL");			\
+	}
+
+/* 			} else {					\ */
+/* 				crm_debug("Ignoring node %s (filter %s)", \ */
+/* 					  b->name, (const char*)c);	\ */
+
 #endif

@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.11 2004/07/20 09:03:39 andrew Exp $ */
+/* $Id: graph.c,v 1.12 2004/08/27 15:21:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -239,7 +239,7 @@ action2xml(action_t *action)
 				action_xml, XML_ATTR_ID, crm_itoa(action->id));
 
 			set_xml_property_copy(
-				action_xml, "rsc_id",
+				action_xml, XML_LRM_ATTR_RSCID,
 				safe_val3("__no_rsc__", action, rsc, id));
 			
 			break;
@@ -248,6 +248,10 @@ action2xml(action_t *action)
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_TARGET,
 		safe_val4("__no_node__", action, node, details, uname));
+
+	set_xml_property_copy(
+		action_xml, XML_LRM_ATTR_TARGET_UUID,
+		safe_val4("__no_node_uuid__", action, node, details, id));
 
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_TASK, task2text(action->task));

@@ -61,7 +61,11 @@ Pre-reqs:
     	Set up remote logging to the node you are running the tests from
 
     Extra-info
-	Its not required yet but probably will be soon
+	Log messages must use the same values as uname -n, not the fully
+	qualified version.
+
+	"test1 heartbeat" == GOOD
+	"test1.your.domain heartbeat" == BAD 
 
     Basic requirement
     =======================

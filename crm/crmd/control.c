@@ -221,18 +221,7 @@ do_startup(long long action,
 		was_error = init_server_ipc_comms(
 			CRM_SYSTEM_CRMD, crmd_client_connect,
 			default_ipc_input_destroy);
-	}
-	
-	if (was_error == 0) {
-		fsa_our_uname = fsa_cluster_conn->llc_ops->get_mynodeid(
-			fsa_cluster_conn);
-		
-		if (fsa_our_uname == NULL) {
-			crm_err("get_mynodeid() failed");
-			was_error = 1;
-		}
-		crm_info("FSA Hostname: %s", fsa_our_uname);
-	}
+	}	
 
 	/* set up the timers */
 	dc_heartbeat     = (fsa_timer_t *)crm_malloc(sizeof(fsa_timer_t));
@@ -512,7 +501,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 					  void* private_data),
 		 GDestroyNotify cleanup_method)
 {
-	const char* ournode = NULL;
 	if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
 	  crm_crit("cluster errmsg function unavailable");
 	}
@@ -528,14 +516,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 		return FALSE;
 	}
   
-	crm_debug("Finding our node name");
-	if ((ournode =
-	     hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
-		crm_err("get_mynodeid() failed");
-		return FALSE;
-	}
-	crm_info("hostname: %s", ournode);
-	
 	crm_debug("Be informed of CRM messages");
 	if (hb_cluster->llc_ops->set_msg_callback(hb_cluster,
 						  "CRM",
@@ -551,13 +531,21 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 		}
 		return FALSE;
 	}
-
+	
 	G_main_add_fd(G_PRIORITY_HIGH, 
 		      hb_cluster->llc_ops->inputfd(hb_cluster),
 		      FALSE, 
 		      dispatch_method, 
 		      hb_cluster,  // usrdata 
 		      cleanup_method);
+
+	crm_debug("Finding our node name");
+	if ((fsa_our_uname =
+	     hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
+		crm_err("get_mynodeid() failed");
+		return FALSE;
+	}
+	crm_info("FSA Hostname: %s", fsa_our_uname);
 
 	return TRUE;
     

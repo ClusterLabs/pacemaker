@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.47 2004/08/18 10:21:53 andrew Exp $ */
+/* $Id: cib.c,v 1.48 2004/08/27 15:21:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,18 +84,30 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 	   || safe_str_eq("all", object_type)) {
 		return the_root;
 		/* get the whole cib */
+
 	} else if(strcmp(object_type, XML_CIB_TAG_STATUS) == 0) {
+		/* these live in a different place */
+		tmp_node = find_xml_node(the_root, XML_CIB_TAG_STATUS);
+
 		node_stack[0] = XML_CIB_TAG_STATUS;
 		node_stack[1] = NULL;
-		/* these live in a different place */
+
+	} else if(strcmp(object_type, XML_CIB_TAG_CRMCONFIG) == 0) {
+		/* these live in a different place too */
+		tmp_node = find_xml_node(the_root, XML_CIB_TAG_CRMCONFIG);
+
+		node_stack[0] = XML_CIB_TAG_CRMCONFIG;
+		node_stack[1] = NULL;
+
+	} else {
+		tmp_node = find_xml_node_nested(the_root, node_stack, 2);
 	}
-	
-	tmp_node = find_xml_node_nested(the_root, node_stack, 2);
+
 	if (tmp_node == NULL) {
-		crm_err(
-		       "[cib] Section cib[%s[%s]] not present",
-		       node_stack[0],
-		       node_stack[1]);
+		crm_err("[cib] Section %s [%s [%s]] not present",
+			the_root->name,
+			node_stack[0],
+			node_stack[1]?node_stack[1]:"");
 	}
 	return tmp_node;
 }
@@ -119,6 +131,7 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 	data = cib_process_request(op, options, fragment, &result);
 
 	crm_info("[cib] operation returned result %d", result);
+	crm_debug("[CIB post-op]\t%s\n\n", dump_xml_node(message, FALSE));
 
 	if(auto_reply) {
 		reply = create_reply(message, data);
@@ -152,7 +165,7 @@ process_cib_request(const char *op,
 
 
 xmlNodePtr
-create_cib_fragment(xmlNodePtr update, const char *section)
+create_cib_fragment_adv(xmlNodePtr update, const char *section, const char *source)
 {
 	gboolean whole_cib = FALSE;
 	xmlNodePtr fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
@@ -192,8 +205,21 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	}
 	
 	xmlAddChild(fragment, cib);
+	set_xml_property_copy(cib, "debug_source", source);
 	
 	crm_free(auto_section);
+
+	crm_debug("Verifying created fragment");
+	if(verifyCibXml(cib) == FALSE) {
+		crm_err("Fragment creation failed");
+		crm_err("[src] %s", dump_xml_node(update, FALSE));
+		crm_err("[created] %s", dump_xml_node(fragment, FALSE));
+		free_xml(fragment);
+		fragment = NULL;
+	}
+	
+	
+
 	return fragment;
 }
 

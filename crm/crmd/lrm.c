@@ -44,8 +44,7 @@ gboolean build_suppported_RAs(
 
 gboolean build_active_RAs(xmlNodePtr rsc_list);
 
-void do_update_resource(
-	lrm_rsc_t *rsc, int status, int rc, const char *op_type);
+void do_update_resource(lrm_rsc_t *rsc, lrm_op_t *op);
 
 enum crmd_fsa_input do_lrm_rsc_op(
 	lrm_rsc_t *rsc, char *rid, const char *operation, xmlNodePtr msg);
@@ -53,6 +52,7 @@ enum crmd_fsa_input do_lrm_rsc_op(
 enum crmd_fsa_input do_fake_lrm_op(gpointer data);
 
 GHashTable *xml2list(xmlNodePtr parent, const char **attr_path, int depth);
+GHashTable *monitors = NULL;
 
 const char *rsc_path[] = 
 {
@@ -77,11 +77,17 @@ do_lrm_control(long long action,
 
 	if(action & A_LRM_DISCONNECT) {
 		fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
+
+		// TODO: Clean up the hashtable
+		
 	}
 
 	if(action & A_LRM_CONNECT) {
 	
 		crm_trace("LRM: connect...");
+
+		monitors = g_hash_table_new(g_str_hash, g_str_equal);
+
 		fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
 		if(NULL == fsa_lrm_conn) {
 			return failed;
@@ -212,7 +218,8 @@ build_active_RAs(xmlNodePtr rsc_list)
 			fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 
 		
-		xmlNodePtr xml_rsc = create_xml_node(rsc_list, "rsc_state");
+		xmlNodePtr xml_rsc = create_xml_node(
+			rsc_list, XML_LRM_TAG_RESOURCE);
 
 		crm_info("Processing lrm_rsc_t entry %s", rid);
 		
@@ -230,29 +237,69 @@ build_active_RAs(xmlNodePtr rsc_list)
 		crm_verbose("\tcurrent state:%s\n",
 			    cur_state==LRM_RSC_IDLE?"Idle":"Busy");
 
-		tmp = crm_itoa(cur_state);
-		set_xml_property_copy(xml_rsc, XML_LRM_ATTR_RSCSTATE, tmp);
-		crm_free(tmp);
+		gboolean found_op = FALSE;
 		
 		slist_iter(
 			op, lrm_op_t, op_list, llpc,
 
 			this_op = op->op_type;
 
-			if(safe_str_neq(this_op, "status")){
-				
+			crm_debug("Processing op %s for %s (status=%d, rc=%d)", 
+				  op->op_type, the_rsc->id, op->op_status, op->rc);
+			
+			if(op->rc != 0
+			   || safe_str_neq(this_op, CRMD_RSCSTATE_MON)){
+				set_xml_property_copy(
+					xml_rsc,
+					XML_LRM_ATTR_RSCSTATE,
+					op->user_data);
+		
 				set_xml_property_copy(
 					xml_rsc, XML_LRM_ATTR_LASTOP, this_op);
 	
+				tmp = crm_itoa(op->rc);
+				set_xml_property_copy(
+					xml_rsc, XML_LRM_ATTR_RCCODE, tmp);
+				crm_free(tmp);
+
 				tmp = crm_itoa(op->op_status);
 				set_xml_property_copy(
 					xml_rsc, XML_LRM_ATTR_OPCODE, tmp);
 				crm_free(tmp);
 				
 				/* we only want the last one */
+				found_op = TRUE;
+				break;
+
+			} else {
+				set_xml_property_copy(
+					xml_rsc,
+					XML_LRM_ATTR_RSCSTATE,
+					CRMD_RSCSTATE_START_OK);
+		
+				set_xml_property_copy(
+					xml_rsc,
+					XML_LRM_ATTR_LASTOP,
+					CRMD_RSCSTATE_START);
+	
+				tmp = crm_itoa(op->rc);
+				set_xml_property_copy(
+					xml_rsc, XML_LRM_ATTR_RCCODE, tmp);
+				crm_free(tmp);
+
+				set_xml_property_copy(
+					xml_rsc, XML_LRM_ATTR_OPCODE, "0");
+
+				/* we only want the last one */
+				found_op = TRUE;
 				break;
 			}
-			)
+			);
+		if(found_op == FALSE) {
+			crm_err("Could not properly determin last op"
+				" for %s from %d entries", the_rsc->id,
+				g_list_length(op_list));
+		}
 
 		g_list_free(op_list);
 		);
@@ -315,7 +362,6 @@ do_update_node_status(long long action,
 		 */
 		invoke_local_cib(NULL, update, CRM_OP_UPDATE);
 
-//	store_request(NULL, update, CRM_OP_UPDATE, CRM_SYSTEM_DC);
 		free_xml(update);
 
 		return I_NULL;
@@ -345,10 +391,6 @@ do_lrm_invoke(long long action,
 	return do_fake_lrm_op(data);
 #endif
 	
-	crm_err("Action %s (%.16llx) only kind of supported\n",
-	       fsa_action2string(action), action);
-
-
 	msg = (xmlNodePtr)data;
 		
 	operation = get_xml_attr_nested(
@@ -380,7 +422,7 @@ do_lrm_invoke(long long action,
 	
 	rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 	
-	if(crm_op != NULL && strcmp(crm_op, "lrm_query") == 0) {
+	if(crm_op != NULL && safe_str_eq(crm_op, "lrm_query")) {
 		xmlNodePtr data, reply;
 
 		data = do_lrm_query(FALSE);
@@ -431,7 +473,7 @@ do_lrm_rsc_op(
 	}
 
 	// now do the op
-	crm_info("performing op %s... on %s", operation, rid);
+	crm_info("Performing op %s on %s", operation, rid);
 	op = g_new(lrm_op_t, 1);
 	op->op_type   = operation;
 	op->params    = xml2list(msg, rsc_path, DIMOF(rsc_path));
@@ -439,24 +481,50 @@ do_lrm_rsc_op(
 	op->interval  = 0;
 	op->user_data = NULL;
 	op->target_rc = EVERYTIME;
+
+	if(safe_str_eq(CRMD_RSCSTATE_START, operation)) {
+		op->user_data = crm_strdup(CRMD_RSCSTATE_START_OK);
+	} else if(safe_str_eq(CRMD_RSCSTATE_STOP, operation)) {
+		op->user_data = crm_strdup(CRMD_RSCSTATE_STOP_OK);
+	} else {
+		crm_warn("Using status \"complete\" for op \"%s\""
+			 "... this is still in the experimental stage.",
+			operation);
+		op->user_data = crm_strdup(CRMD_RSCSTATE_GENERIC_OK);
+	}	
+	
 	rsc->ops->perform_op(rsc, op);
 
-	if(safe_str_eq(operation, "start")) {
+	if(safe_str_eq(operation, CRMD_RSCSTATE_START)) {
 		// initiate the monitor action
 		op = g_new(lrm_op_t, 1);
-		op->op_type   = "status";
+		op->op_type   = CRMD_RSCSTATE_MON;
 		op->params    = NULL;
-		op->user_data = NULL;
+		op->user_data = crm_strdup(CRMD_RSCSTATE_MON_OK);
 		op->timeout   = 0;
-		op->interval  = 1000;
+		op->interval  = 9000;
 		op->target_rc = CHANGED;
 		int monitor_call_id = rsc->ops->perform_op(rsc, op);
 		if(monitor_call_id < 0) {
-			/* just so its used, eventually this needs to be
-			 * recored so that we can stop it eventually
-			 */
+			g_hash_table_insert(
+				monitors, strdup(rsc->id), (gpointer)monitor_call_id);
+		}
+		
+	} else if(safe_str_eq(operation, CRMD_RSCSTATE_STOP)) {
+		gpointer foo = g_hash_table_lookup(monitors, rsc->id);
+		int monitor_call_id = (int)foo;
+		
+		if(monitor_call_id > 0) {
+			crm_info("Stopping status op for %s", rsc->id);
+			rsc->ops->stop_op(rsc, monitor_call_id);
+			g_hash_table_remove(monitors, rsc->id);
+			// TODO: Clean up key
+			
+		} else {
+			crm_err("No monitor operation found for %s", rsc->id);
 		}
 	}
+	
 
 	return I_NULL;
 }
@@ -497,7 +565,7 @@ xml2list(xmlNodePtr parent, const char**attr_path, int depth)
 
 
 void
-do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
+do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 {
 /*
   <status>
@@ -511,8 +579,7 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	char *tmp = NULL;
 	xmlNodePtr fragment;
 	
-	
-	update = create_xml_node(NULL, "node_state");
+	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	set_uuid(update, XML_ATTR_UUID, fsa_our_uname);
 	set_xml_property_copy(update,  XML_ATTR_UNAME, fsa_our_uname);
 
@@ -521,13 +588,37 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	iter = create_xml_node(iter,   "lrm_resource");
 	
 	set_xml_property_copy(iter, XML_ATTR_ID, rsc->id);
-	set_xml_property_copy(iter, XML_LRM_ATTR_LASTOP, op_type);
+	set_xml_property_copy(iter, XML_LRM_ATTR_LASTOP, op->op_type);
+
+	int len = strlen(op->op_type);
+	len += strlen("_failed_");
+	char *fail_state = (char*)crm_malloc(sizeof(char)*len);
+	sprintf(fail_state, "%s_failed", op->op_type);
 	
-	tmp = crm_itoa(status);
-	set_xml_property_copy(iter, XML_LRM_ATTR_RSCSTATE, tmp);
+	switch(op->op_status) {
+		case LRM_OP_CANCELLED:
+			break;
+		case LRM_OP_ERROR:
+		case LRM_OP_TIMEOUT:
+		case LRM_OP_NOTSUPPORTED:
+			crm_err("An LRM operation failed"
+					" or was aborted");
+			set_xml_property_copy(
+				iter, XML_LRM_ATTR_RSCSTATE, fail_state);
+			break;
+		case LRM_OP_DONE:
+			set_xml_property_copy(
+				iter, XML_LRM_ATTR_RSCSTATE, (const char*)op->user_data);
+			break;
+	}
+
+	crm_free(fail_state);
+	
+	tmp = crm_itoa(op->rc);
+	set_xml_property_copy(iter, XML_LRM_ATTR_RCCODE, tmp);
 	crm_free(tmp);
-	
-	tmp = crm_itoa(rc);
+
+	tmp = crm_itoa(op->op_status);
 	set_xml_property_copy(iter, XML_LRM_ATTR_OPCODE, tmp);
 	crm_free(tmp);
 
@@ -555,19 +646,16 @@ do_lrm_event(long long action,
 		lrm_rsc_t* rsc = op->rsc;
 
 		switch(op->op_status) {
+			case LRM_OP_ERROR:
 			case LRM_OP_CANCELLED:
 			case LRM_OP_TIMEOUT:
 			case LRM_OP_NOTSUPPORTED:
-			case LRM_OP_ERROR:
 				crm_err("An LRM operation failed"
 					" or was aborted");
 				// keep going
 			case LRM_OP_DONE:
+				do_update_resource(rsc, op);
 
-				do_update_resource(rsc,
-						   op->op_status,
-						   op->rc,
-						   op->op_type);
 
 				break;
 		}
@@ -614,7 +702,7 @@ do_fake_lrm_op(gpointer data)
 		state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 		iter = create_xml_node(state, XML_CIB_TAG_LRM);
 
-		crm_verbose("performing op %s...", operation);
+		crm_info("Performing %s on %s", operation, id_from_cib);
 
 		// so we can identify where to do the update
 		set_uuid(state, XML_ATTR_UUID, fsa_our_uname);

@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.3 2004/06/01 11:45:39 andrew Exp $ */
+/* $Id: cib.h,v 1.4 2004/08/27 15:21:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,11 +60,15 @@ extern xmlNodePtr process_cib_request(const char *op,
 
 /* Utility functions */
 extern xmlNodePtr get_object_root(const char *object_type,xmlNodePtr the_root);
-extern xmlNodePtr create_cib_fragment(xmlNodePtr update, const char *section);
+extern xmlNodePtr create_cib_fragment_adv(
+			xmlNodePtr update, const char *section, const char *source);
 extern char      *pluralSection(const char *a_section);
 
 /* Error Interpretation*/
 extern const char *cib_error2string(enum cib_result);
 extern const char *cib_op2string(enum cib_op);
+
+#define create_cib_fragment(x,y) create_cib_fragment_adv(x, y, __FUNCTION__)
+
 
 #endif

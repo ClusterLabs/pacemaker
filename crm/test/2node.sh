@@ -24,8 +24,8 @@ CRM_ERR_SHUTDOWN=0
 
 
 # stop all running HAs
-do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat "-k" '2>&1 >/dev/null'
-do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat "-k" '2>&1 >/dev/null'
+do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
+do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
 
 # be *very* sure everything has stopped
 do_cmd remote_cmd $INIT_USER $test_node_1 "killall -q9 heartbeat ccm lrmd crmd"
@@ -35,23 +35,25 @@ do_cmd remote_cmd $INIT_USER $test_node_2 "killall -q9 heartbeat ccm lrmd crmd"
 do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f $HAVAR_DIR/crm/cib*.xml"
 do_cmd remote_cmd $INIT_USER $test_node_2 "rm -f $HAVAR_DIR/crm/cib*.xml"
 
-do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M  '2>&1 >/dev/null'
-#do_cmd remote_cmd $INIT_USER $test_node_1 $HAINIT_DIR/heartbeat start
-do_cmd echo "wait for HA to start"
-sleep 20
+do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
 
-do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd '2>&1 >/dev/null' &
+do_cmd echo "wait for HA to start"
+do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
+cts_assert "Startup of Heartbeat on ${test_node_1} failed."
+
+do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -V "2>&1 >/dev/null" &
 
 do_cmd echo "wait for CRMd to start"
-sleep 20
+do_cmd ./testutils.pl --search  -a -m 1500 -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}"
+cts_assert "CRMd startup on ${test_node_1} failed."
 
-do_cmd wait_for_state S_IDLE 10 $test_node_1 
+do_cmd wait_for_state S_IDLE 30 $test_node_1 
 cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
 
 # Erase the contents of the CIB and wait for things to settle down
 #do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/cibadmin -E 
-do_cmd wait_for_state S_IDLE 10 $test_node_1 
-cts_assert "S_IDLE not reached on $test_node_1 after CIB erase"
+#do_cmd wait_for_state S_IDLE 10 $test_node_1 
+#cts_assert "S_IDLE not reached on $test_node_1 after CIB erase"
 
 # Create the CIB for this test and wait for all transitions to complete
 #do_cmd make_node $test_node_1 $test_node_1
@@ -110,22 +112,27 @@ cts_assert "rsc1 NOT running on $test_node_1"
 do_cmd is_running rsc2 $test_node_1 $test_node_1
 cts_assert "rsc2 NOT running on $test_node_1"
 
-do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat -M  '2>&1 >/dev/null'
-#do_cmd remote_cmd $INIT_USER $test_node_2 $HAINIT_DIR/heartbeat start
+do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
 do_cmd echo "wait for HA to start on $test_node_2"
-sleep 20
+do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_2} ccm(.*) Hostname: ${test_node_2}" -s "${test_node_2} heartbeat(.*): info: Starting (.*)lrmd" -e "${test_node_2} heartbeat(.*) Client (.*) respawning too fast"
+cts_assert "Startup of Heartbeat on ${test_node_2} failed."
 
-do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd '2>&1 >/dev/null' &
+do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd "2>&1 >/dev/null" &
 
 #do_cmd wait_for_state S_INTEGRATION 30 $test_node_1 
 #cts_assert "S_INTEGRATION not reached on $test_node_1 (new node)!"
 do_cmd echo "wait for CRMd to start on $test_node_2"
-sleep 20
+do_cmd ./testutils.pl --search -a -m 1500  -s "${test_node_2} crmd(.*)FSA Hostname: ${test_node_2}" -s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2"
+cts_assert "CRMd startup on ${test_node_2} failed."
 
-do_cmd wait_for_state S_NOT_DC 10 $test_node_2 
+#do_cmd echo "wait for transition to complete"
+#do_cmd ./testutils.pl --search $logfile '"${test_node_2} crmd(.*)erforming op start(.*) on rsc2"' 1 1500
+#cts_assert "Transition of rsc2 to ${test_node_2} failed."
+
+do_cmd wait_for_state S_NOT_DC 30 $test_node_2 
 cts_assert "S_NOT_DC not reached on $test_node_2 (startup - 2)!"
 
-do_cmd wait_for_state S_IDLE 10 $test_node_1 
+do_cmd wait_for_state S_IDLE 30 $test_node_1 
 cts_assert "S_IDLE not reached on $test_node_1 (startup - 2)!"
 
 do_cmd is_running rsc1 $test_node_1
@@ -138,16 +145,13 @@ do_cmd is_running rsc1 $test_node_1 $test_node_1
 cts_assert "rsc1 NOT running on $test_node_1"
 
 do_cmd is_running rsc2 $test_node_1 $test_node_2
-# need to fix the PE first
-#cts_assert "rsc2 NOT running on $test_node_2"
+cts_assert "rsc2 NOT running on $test_node_2"
 
-do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmadmin -K $test_node_1
+do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmadmin -K $test_node_1 &
 
-do_cmd wait_for_state S_ELECTION 30 $test_node_2 
-cts_assert "S_ELECTION not reached on $test_node_2!"
-
-do_cmd wait_for_state S_NOT_DC 30 $test_node_1 
-cts_assert "S_NOT_DC not reached on $test_node_1!"
+do_cmd echo "Looking for transition messages"
+do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_2} crmd(.*) State transition (.*) -> \"S_ELECTION\"" -s "${test_node_1} crmd(.*) State transition (.*) -> \"S_NOT_DC\"" -s "${test_node_1} crmd(.*)State transition (.*) -> \"S_STOPPING\""
+cts_assert "Shutdown of ${test_node_1} followed by stability on ${test_node_2} failed."
 
 do_cmd wait_for_state S_IDLE 30 $test_node_2 
 cts_assert "S_IDLE not reached on $test_node_2!"
@@ -170,10 +174,11 @@ do_cmd wait_for_state S_PENDING 30 $test_node_2
 cts_assert "S_PENDING not reached on $test_node_2!"
 
 # escalate the shutdown
-do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmadmin -K $test_node_2
+do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmadmin -K $test_node_2 &
 
-do_cmd wait_for_state S_STOPPING 30 $test_node_2 
-cts_assert "S_STOPPING not reached on $test_node_2!"
+OUTPUT_STDOUT=1
+do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_2} crmd(.*)State transition \"S_PENDING\" -> \"S_STOPPING\""
+cts_assert "Shutdown of ${test_node_2} failed."
 
 # just in case
 do_cmd remote_cmd $CRMD_USER $test_node_2 killall -9 crmd

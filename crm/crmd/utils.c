@@ -643,6 +643,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	xmlNodePtr tmp2 = NULL;
 	xmlNodePtr tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
+	crm_debug("Creating node entry for %s", uname);
 	set_uuid(tmp1, XML_ATTR_UUID, uname);
 	
 	set_xml_property_copy(tmp1, XML_ATTR_UNAME, uname);
@@ -667,9 +668,10 @@ create_node_state(const char *uuid,
 {
 	xmlNodePtr node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
+	crm_debug("Creating node state entry for %s", uname);
 	set_uuid(node_state, XML_ATTR_UUID, uname);
-	
 	set_xml_property_copy(node_state, XML_ATTR_UNAME, uname);
+
 	if(ccm_state != NULL) {
 		set_xml_property_copy(node_state, XML_CIB_ATTR_INCCM,     ccm_state);
 	}

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.10 2004/08/03 08:51:36 andrew Exp $ */
+/* $Id: utils.c,v 1.11 2004/08/27 15:21:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -214,7 +214,14 @@ unsigned int
 set_crm_log_level(unsigned int level)
 {
 	unsigned int old = crm_log_level;
-	crm_log_level = level;
+
+	while(crm_log_level < level) {
+		alter_debug(DEBUG_INC);
+	}
+	while(crm_log_level > level) {
+		alter_debug(DEBUG_DEC);
+	}
+	
 	return old;
 }
 
@@ -323,32 +330,26 @@ compare_version(const char *version1, const char *version2)
 void
 alter_debug(int nsig) 
 {
-	int level;
-
 	CL_SIGNAL(DEBUG_INC, alter_debug);
 	CL_SIGNAL(DEBUG_DEC, alter_debug);
 	
 	switch(nsig) {
 		case DEBUG_INC:
-			level = get_crm_log_level();
-			set_crm_log_level(level+1);
-			level = get_crm_log_level();
-			fprintf(stderr, "Upped log level to %d\n", level);
-			cl_log(LOG_INFO, "Upped log level to %d\n", level);
+			crm_log_level++;
+			fprintf(stderr, "Upped log level to %d\n", crm_log_level);
+			cl_log(LOG_INFO, "Upped log level to %d\n", crm_log_level);
 			
-			if(level > LOG_INFO) {
+			if(crm_log_level > LOG_INFO) {
 				cl_log_enable_stderr(TRUE);
 			}
 			break;
 
 		case DEBUG_DEC:
-			level = get_crm_log_level();
-			set_crm_log_level(level-1);
-			level = get_crm_log_level();
-			fprintf(stderr, "Reduced log level to %d\n", level);
-			cl_log(LOG_INFO, "Reduced log level to %d\n", level);
+			crm_log_level--;
+			fprintf(stderr, "Reduced log level to %d\n", crm_log_level);
+			cl_log(LOG_INFO, "Reduced log level to %d\n", crm_log_level);
 			
-			if(level < LOG_DEBUG) {
+			if(crm_log_level < LOG_DEBUG) {
 				cl_log_enable_stderr(FALSE);
 			}
 			break;	

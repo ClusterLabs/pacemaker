@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.40 2004/08/18 15:20:22 andrew Exp $ */
+/* $Id: pengine.c,v 1.41 2004/08/27 15:21:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,7 +52,7 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 	crm_verbose("Processing %s op (ref=%s)...", op, ref);
 
 	if(pemsg_strm == NULL) {
-		pemsg_strm = fopen(DEVEL_DIR"/pemsg.log", "w");
+		pemsg_strm = fopen(DEVEL_DIR"/pe.log", "w");
 	}
 
 	msg_buffer = dump_xml_node(msg, FALSE);
@@ -75,10 +75,13 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
 		xmlNodePtr input_cib = find_xml_node(msg, XML_TAG_CIB);
 		xmlNodePtr output = do_calculations(input_cib);
+		msg_buffer = dump_xml_node(output, FALSE);
+		fprintf(pemsg_strm, "%s: %s\n", "[out ]", msg_buffer);
+		fflush(pemsg_strm);
+		crm_free(msg_buffer);
 		if (send_ipc_reply(sender, msg, output) ==FALSE) {
 
-			crm_warn(
-			       "Answer could not be sent");
+			crm_warn("Answer could not be sent");
 		}
 		free_xml(output);
 
