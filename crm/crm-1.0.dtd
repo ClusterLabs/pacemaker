@@ -331,13 +331,15 @@ More details are given in the annotated DTD below.
       floats) before being compared.
       The "version" type is intended to solve the problem of comparing
       1.2 and 1.10
+
+
 -->
 
 <!ELEMENT expression EMPTY>
 <!ATTLIST expression
 	  id	     CDATA		      #REQUIRED
 	  attribute  CDATA		      #REQUIRED
-	  operation  (lt|gt|lte|gte|eq|ne|exists|not_exists|running|not_running|is_dc|not_dc)
+	  operation  (lt|gt|lte|gte|eq|ne|exists|not_exists|running|not_running)
 	  value	     CDATA		      #IMPLIED
 	  type	     (integer|string|version) 'string'>
 
