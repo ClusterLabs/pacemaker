@@ -70,17 +70,17 @@ gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);
 fsa_message_queue_t
 put_message(xmlNodePtr new_message)
 {
-	int old_len = g_slist_length(fsa_message_queue);
+	int old_len = g_list_length(fsa_message_queue);
 
 	// make sure to free it properly later
-	fsa_message_queue = g_slist_append(fsa_message_queue,
+	fsa_message_queue = g_list_append(fsa_message_queue,
 					   copy_xml_node_recursive(new_message));
 
 	crm_verbose("Queue len: %d -> %d", old_len,
-		  g_slist_length(fsa_message_queue));
+		  g_list_length(fsa_message_queue));
 
 	
-	if(old_len == g_slist_length(fsa_message_queue)){
+	if(old_len == g_list_length(fsa_message_queue)){
 		crm_err("Couldnt add message to the queue");
 	}
 	
@@ -91,8 +91,8 @@ put_message(xmlNodePtr new_message)
 xmlNodePtr
 get_message(void)
 {
-	xmlNodePtr message = g_slist_nth_data(fsa_message_queue, 0);
-	fsa_message_queue = g_slist_remove(fsa_message_queue, message);
+	xmlNodePtr message = g_list_nth_data(fsa_message_queue, 0);
+	fsa_message_queue = g_list_remove(fsa_message_queue, message);
 	return message;
 }
 
@@ -100,7 +100,7 @@ get_message(void)
 gboolean
 is_message(void)
 {
-	return (g_slist_length(fsa_message_queue) > 0);
+	return (g_list_length(fsa_message_queue) > 0);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.10 2004/06/02 15:25:09 andrew Exp $ */
+/* $Id: crm.h,v 1.11 2004/06/02 18:41:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,29 +31,22 @@
 #include <crm/common/util.h>
 
 /* Clean these up at some point, some probably should be runtime options */
-#define WORKING_DIR HA_VARLIBDIR"/heartbeat/crm"
-#define BIN_DIR "/usr/lib/heartbeat"
-#define MAXDATASIZE 65535 // ipc comms
-#define SOCKET_LEN    1024
-#define APPNAME_LEN 256
-#define LOG_DIR     "/var/log"
-#define MAX_IPC_FAIL 5
-#define CIB_FILENAME WORKING_DIR"/cib.xml"
-#define CIB_BACKUP   WORKING_DIR"/cib_backup.xml"
+#define WORKING_DIR	HA_VARLIBDIR"/heartbeat/crm"
+#define BIN_DIR		"/usr/lib/heartbeat"
+#define MAXDATASIZE	65535 // ipc comms
+#define SOCKET_LEN	1024
+#define APPNAME_LEN	256
+#define LOG_DIR		"/var/log"
+#define MAX_IPC_FAIL	5
+#define CIB_FILENAME	WORKING_DIR"/cib.xml"
+#define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
 
-#define MSG_LOG 1
-#define INTEGRATED_CIB 1
-#define DOT_FSA_ACTIONS 1
-#define DOT_ALL_FSA_INPUTS 1
-//#define FSA_TRACE 1
-#define USE_FAKE_LRM 1
-/* Throttle announce messages to work around what appears to be a bug in
- * the send_ordered_*_message() code.  node messages are taking approx 15s
- * longer to be sent than their cluster counterparts
- */
-#define THROTTLE_ANNOUNCE 1
-
+#define MSG_LOG			1
+#define DOT_FSA_ACTIONS		1
+#define DOT_ALL_FSA_INPUTS	1
+//#define FSA_TRACE		1
+#define USE_FAKE_LRM		1
 
 /* Sub-systems */
 #define CRM_SYSTEM_DC		"dc"
@@ -98,15 +91,15 @@
 #define CRMD_JOINSTATE_PENDING	"pending"
 #define CRMD_JOINSTATE_MEMBER	"member"
 
-typedef GSList* GSListPtr;
+typedef GList* GListPtr;
 
 #define safe_str_eq(x, y)  x!=NULL && y!=NULL && strcmp(x,y) == 0
 #define safe_str_neq(x, y) x != y && (x==NULL || y==NULL || strcmp(x,y) != 0)
 
-#define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
-				         x *w = (x*)g_slist_nth_data(y, z); \
-					 a;				    \
-				  }
+#define slist_iter(w, x, y, z, a) for(z = 0; z < g_list_length(y);  z++) { \
+		x *w = (x*)g_list_nth_data(y, z);			\
+		a;							\
+	}
 
 /* Developmental debug stuff */
 

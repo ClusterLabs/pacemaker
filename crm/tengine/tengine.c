@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.15 2004/06/02 15:25:12 andrew Exp $ */
+/* $Id: tengine.c,v 1.16 2004/06/02 18:41:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,7 +23,7 @@
 #include <crm/common/xml.h>
 #include <tengine.h>
 
-GSListPtr graph = NULL;
+GListPtr graph = NULL;
 IPC_Channel *crm_ch = NULL;
 
 typedef struct action_list_s 
@@ -31,7 +31,7 @@ typedef struct action_list_s
 		gboolean force;
 		int index;
 		int index_max;
-		GSListPtr actions;
+		GListPtr actions;
 } action_list_t;
 
 void print_state(void);
@@ -52,16 +52,16 @@ void send_abort(xmlNodePtr msg);
 gboolean
 initialize_graph(void)
 {
-	while(g_slist_length(graph) > 0) {
-		action_list_t *action_list = g_slist_nth_data(graph, 0);
-		while(g_slist_length(action_list->actions) > 0) {
+	while(g_list_length(graph) > 0) {
+		action_list_t *action_list = g_list_nth_data(graph, 0);
+		while(g_list_length(action_list->actions) > 0) {
 			xmlNodePtr action =
-				g_slist_nth_data(action_list->actions, 0);
+				g_list_nth_data(action_list->actions, 0);
 			action_list->actions =
-				g_slist_remove(action_list->actions, action);
+				g_list_remove(action_list->actions, action);
 			free_xml(action);
 		}
-		graph = g_slist_remove(graph, action_list);
+		graph = g_list_remove(graph, action_list);
 		crm_free(action_list);
 	}
 
@@ -105,13 +105,13 @@ unpack_graph(xmlNodePtr xml_graph)
 				copy_xml_node_recursive(xml_action);
 
 			action_list->actions =
-				g_slist_append(action_list->actions, action);
+				g_list_append(action_list->actions, action);
 			
 			action_list->index_max++;
 			xml_action = xml_action->next;
 		}
 		
-		graph = g_slist_append(graph, action_list);
+		graph = g_list_append(graph, action_list);
 	}
 	
 
@@ -243,7 +243,7 @@ process_graph_event(const char *event_node,
 // Find the action corresponding to this event
 	slist_iter(
 		action_list, action_list_t, graph, lpc,
-		action = g_slist_nth_data(action_list->actions,
+		action = g_list_nth_data(action_list->actions,
 					  action_list->index);
 
 		if(action == NULL) {
@@ -296,7 +296,7 @@ process_graph_event(const char *event_node,
 	
 	while(matched_action_list->index <= matched_action_list->index_max) {
 		gboolean passed = FALSE;
-		next_action = g_slist_nth_data(matched_action_list->actions,
+		next_action = g_list_nth_data(matched_action_list->actions,
 					       matched_action_list->index);
 		
 		passed = initiate_action(matched_action_list);
@@ -364,7 +364,7 @@ initiate_action(action_list_t *list)
 	while(TRUE) {
 		
 		list->index++;
-		xml_action = g_slist_nth_data(list->actions, list->index);
+		xml_action = g_list_nth_data(list->actions, list->index);
 		
 		if(xml_action == NULL) {
 			crm_info("No tasks left on this list");

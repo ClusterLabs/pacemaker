@@ -397,7 +397,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			|| is_message()) {
 			xmlNodePtr stored_msg = NULL;
 			crm_verbose("Checking messages... %d",
-				  g_slist_length(fsa_message_queue));
+				  g_list_length(fsa_message_queue));
 			
 			stored_msg = get_message();
 			

@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.4 2004/06/02 16:03:34 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.5 2004/06/02 18:41:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,7 +21,7 @@
 
 
 // General utilities
-extern resource_t *pe_find_resource(GSListPtr rsc_list, const char *id_rh);
+extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 
 extern action_t *action_new(int id, resource_t *rsc, enum action_tasks task);
 
@@ -34,32 +34,32 @@ extern rsc_to_node_t *copy_constraint(rsc_to_node_t *constraint);
 // Color helper functions
 extern void add_color_to_rsc(resource_t *rsc, color_t *color);
 
-extern color_t *find_color(GSListPtr candidate_colors, color_t *other_color);
+extern color_t *find_color(GListPtr candidate_colors, color_t *other_color);
 
-extern color_t *create_color(GSListPtr *colors,
-			     GSListPtr nodes,
-			     GSListPtr resources);
+extern color_t *create_color(GListPtr *colors,
+			     GListPtr nodes,
+			     GListPtr resources);
 
 // Node helper functions
 extern gboolean filter_nodes(resource_t *rsc);
 
-extern node_t *pe_find_node(GSListPtr node_list, const char *id);
+extern node_t *pe_find_node(GListPtr node_list, const char *id);
 
 extern node_t *node_copy(node_t *this_node) ;
 
-extern node_t *find_list_node(GSListPtr list, const char *id);
+extern node_t *find_list_node(GListPtr list, const char *id);
 
 
 // Binary like operators for lists of nodes
-extern GSListPtr node_list_dup(GSListPtr list1);
+extern GListPtr node_list_dup(GListPtr list1);
 
-extern GSListPtr node_list_and(GSListPtr list1, GSListPtr list2);
+extern GListPtr node_list_and(GListPtr list1, GListPtr list2);
 
-extern GSListPtr node_list_xor(GSListPtr list1, GSListPtr list2);
+extern GListPtr node_list_xor(GListPtr list1, GListPtr list2);
 
-extern GSListPtr node_list_minus(GSListPtr list1, GSListPtr list2);
+extern GListPtr node_list_minus(GListPtr list1, GListPtr list2);
 
-extern gboolean node_list_eq(GSListPtr list1, GSListPtr list2);
+extern gboolean node_list_eq(GListPtr list1, GListPtr list2);
 
 
 

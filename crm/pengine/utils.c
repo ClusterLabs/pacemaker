@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.22 2004/06/02 16:03:34 andrew Exp $ */
+/* $Id: utils.c,v 1.23 2004/06/02 18:41:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,32 +69,32 @@ copy_constraint(rsc_to_node_t *constraint)
 /* are the contents of list1 and list2 equal */
 /* nodes with weight < 0 are ignored */
 gboolean
-node_list_eq(GSListPtr list1, GSListPtr list2)
+node_list_eq(GListPtr list1, GListPtr list2)
 {
-	GSListPtr result = NULL;
+	GListPtr result = NULL;
  
-	if(g_slist_length(list1) != g_slist_length(list2)) {
+	if(g_list_length(list1) != g_list_length(list2)) {
 		return FALSE;
 	}
   
 	// do stuff
 	crm_err("Not yet implemented");
  
-	return g_slist_length(result) != 0;
+	return g_list_length(result) != 0;
 }
 
 /* the intersection of list1 and list2 
  * when merging weights, nodes set to < 0  in either list will always
  * have their weight set to -1 in the result
  */
-GSListPtr
-node_list_and(GSListPtr list1, GSListPtr list2)
+GListPtr
+node_list_and(GListPtr list1, GListPtr list2)
 {
-	GSListPtr result = NULL;
+	GListPtr result = NULL;
 	int lpc = 0;
 
-	for(lpc = 0; lpc < g_slist_length(list1); lpc++) {
-		node_t *node = (node_t*)g_slist_nth_data(list1, lpc);
+	for(lpc = 0; lpc < g_list_length(list1); lpc++) {
+		node_t *node = (node_t*)g_list_nth_data(list1, lpc);
 		node_t *new_node = NULL;
 		node_t *other_node = find_list_node(list2, node->details->id);
 
@@ -113,14 +113,14 @@ node_list_and(GSListPtr list1, GSListPtr list2)
 				new_node->weight = new_node->weight /2.0;
 			}
 		}
-		result = g_slist_append(result, new_node);
+		result = g_list_append(result, new_node);
 	}
  
 	return result;
 }
 
 node_t *
-find_list_node(GSListPtr list, const char *id)
+find_list_node(GListPtr list, const char *id)
 {
 	int lpc = 0;
 	slist_iter(
@@ -134,10 +134,10 @@ find_list_node(GSListPtr list, const char *id)
 }
 
 /* list1 - list2 */
-GSListPtr
-node_list_minus(GSListPtr list1, GSListPtr list2)
+GListPtr
+node_list_minus(GListPtr list1, GListPtr list2)
 {
-	GSListPtr result = NULL;
+	GListPtr result = NULL;
 	int lpc = 0;
 
 	slist_iter(
@@ -149,20 +149,20 @@ node_list_minus(GSListPtr list1, GSListPtr list2)
 			
 		}
 		node_t *new_node = node_copy(node);
-		result = g_slist_append(result, new_node);
+		result = g_list_append(result, new_node);
 		);
   
 	crm_verbose("Minus result len: %d",
-		      g_slist_length(result));
+		      g_list_length(result));
 
 	return result;
 }
 
 /* list1 + list2 - (intersection of list1 and list2) */
-GSListPtr
-node_list_xor(GSListPtr list1, GSListPtr list2)
+GListPtr
+node_list_xor(GListPtr list1, GListPtr list2)
 {
-	GSListPtr result = NULL;
+	GListPtr result = NULL;
 	int lpc = 0;
 	
 	slist_iter(
@@ -173,7 +173,7 @@ node_list_xor(GSListPtr list1, GSListPtr list2)
 			continue;
 		}
 		node_t *new_node = node_copy(node);
-		result = g_slist_append(result, new_node);
+		result = g_list_append(result, new_node);
 		);
 	
  
@@ -185,23 +185,23 @@ node_list_xor(GSListPtr list1, GSListPtr list2)
 			continue;
 		}
 		node_t *new_node = node_copy(node);
-		result = g_slist_append(result, new_node);
+		result = g_list_append(result, new_node);
 		);
   
-	crm_verbose("Xor result len: %d", g_slist_length(result));
+	crm_verbose("Xor result len: %d", g_list_length(result));
 	return result;
 }
 
-GSListPtr 
-node_list_dup(GSListPtr list1)
+GListPtr 
+node_list_dup(GListPtr list1)
 {
-	GSListPtr result = NULL;
+	GListPtr result = NULL;
 	int lpc = 0;
 	slist_iter(
 		this_node, node_t, list1, lpc,
 		node_t *new_node = node_copy(this_node);
 		if(new_node != NULL) {
-			result = g_slist_append(result, new_node);
+			result = g_list_append(result, new_node);
 		}
 		);
 
@@ -237,7 +237,7 @@ static int color_id = 0;
  *  in that list
  */
 color_t *
-create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
+create_color(GListPtr *colors, GListPtr nodes, GListPtr resources)
 {
 	color_t *new_color = crm_malloc(sizeof(color_t));
 
@@ -251,7 +251,7 @@ create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
 	crm_debug_action(print_color("Created color", new_color, TRUE));
 
 	if(colors != NULL) {
-		*colors = g_slist_append(*colors, new_color);      
+		*colors = g_list_append(*colors, new_color);      
 	}
 	
 	if(resources != NULL) {
@@ -270,7 +270,7 @@ create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
 				color_copy->local_weight = 1.0; 
 
 				rsc->candidate_colors =
-					g_slist_append(rsc->candidate_colors,
+					g_list_append(rsc->candidate_colors,
 						       color_copy);
 			}
 			);
@@ -298,7 +298,7 @@ filter_nodes(resource_t *rsc)
 			  || node->details->type == node_ping) {
 			crm_debug_action(print_node("Removing", node, FALSE));
 			rsc->allowed_nodes =
-				g_slist_remove(rsc->allowed_nodes,node);
+				g_list_remove(rsc->allowed_nodes,node);
 			crm_free(node);
 			lpc2--;
 		}
@@ -308,11 +308,11 @@ filter_nodes(resource_t *rsc)
 }
 
 resource_t *
-pe_find_resource(GSListPtr rsc_list, const char *id_rh)
+pe_find_resource(GListPtr rsc_list, const char *id_rh)
 {
 	int lpc = 0;
-	for(lpc = 0; lpc < g_slist_length(rsc_list); lpc++) {
-		resource_t *rsc = g_slist_nth_data(rsc_list, lpc);
+	for(lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
+		resource_t *rsc = g_list_nth_data(rsc_list, lpc);
 		if(rsc != NULL && safe_str_eq(rsc->id, id_rh)){
 			return rsc;
 		}
@@ -321,12 +321,12 @@ pe_find_resource(GSListPtr rsc_list, const char *id_rh)
 	return NULL;
 }
 node_t *
-pe_find_node(GSListPtr nodes, const char *id)
+pe_find_node(GListPtr nodes, const char *id)
 {
 	int lpc = 0;
   
-	for(lpc = 0; lpc < g_slist_length(nodes); lpc++) {
-		node_t *node = g_slist_nth_data(nodes, lpc);
+	for(lpc = 0; lpc < g_list_length(nodes); lpc++) {
+		node_t *node = g_list_nth_data(nodes, lpc);
 		if(safe_str_eq(node->details->id, id)) {
 			return node;
 		}
@@ -337,9 +337,9 @@ pe_find_node(GSListPtr nodes, const char *id)
 
 gint gslist_color_compare(gconstpointer a, gconstpointer b);
 color_t *
-find_color(GSListPtr candidate_colors, color_t *other_color)
+find_color(GListPtr candidate_colors, color_t *other_color)
 {
-	GSListPtr tmp = g_slist_find_custom(candidate_colors, other_color,
+	GListPtr tmp = g_list_find_custom(candidate_colors, other_color,
 					    gslist_color_compare);
 	if(tmp != NULL) {
 		return (color_t *)tmp->data;
@@ -619,7 +619,7 @@ print_color_details(const char *pre_text,
 	       pre_text==NULL?"":": ",
 	       color->id, 
 	       color->chosen_node==NULL?"<unset>":color->chosen_node->details->id,
-	       g_slist_length(color->candidate_nodes)); 
+	       g_list_length(color->candidate_nodes)); 
 	if(details) {
 		int lpc = 0;
 		slist_iter(node, node_t, color->candidate_nodes, lpc,
@@ -642,7 +642,7 @@ print_color(const char *pre_text, color_t *color, gboolean details)
 	       color->id, 
 	       color->local_weight,
 	       color->details->chosen_node==NULL?"<unset>":color->details->chosen_node->details->id,
-	       g_slist_length(color->details->candidate_nodes)); 
+	       g_list_length(color->details->candidate_nodes)); 
 	if(details) {
 		print_color_details("\t", color->details, details);
 	}
@@ -720,10 +720,10 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 	       safe_val4(NULL, rsc, cur_node, details, id));
 
 	crm_debug("\t%d candidate colors, %d allowed nodes, %d rsc_cons and %d node_cons",
-	       g_slist_length(rsc->candidate_colors),
-	       g_slist_length(rsc->allowed_nodes),
-	       g_slist_length(rsc->rsc_cons),
-	       g_slist_length(rsc->node_cons));
+	       g_list_length(rsc->candidate_colors),
+	       g_list_length(rsc->allowed_nodes),
+	       g_list_length(rsc->rsc_cons),
+	       g_list_length(rsc->node_cons));
 	
 	if(details) {
 		int lpc = 0;
@@ -805,8 +805,8 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 	} else {
 		crm_debug("\t\t(seen=%d, before=%d, after=%d)",
 		       action->seen_count,
-		       g_slist_length(action->actions_before),
-		       g_slist_length(action->actions_after));
+		       g_list_length(action->actions_before),
+		       g_list_length(action->actions_after));
 	}
 }
 
@@ -868,10 +868,10 @@ action2xml(action_t *action)
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 
 void
-pe_free_nodes(GSListPtr nodes)
+pe_free_nodes(GListPtr nodes)
 {
 	while(nodes != NULL){
-		GSListPtr list_item = nodes;
+		GListPtr list_item = nodes;
 		node_t *node = (node_t*)list_item->data;
 		struct node_shared_s *details = node->details;
 		nodes = nodes->next;
@@ -886,7 +886,7 @@ pe_free_nodes(GSListPtr nodes)
 		
 		crm_free(node);
 	}
-	g_slist_free(nodes);
+	g_list_free(nodes);
 }
 
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data)
@@ -898,10 +898,10 @@ gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data)
 
 
 void
-pe_free_colors(GSListPtr colors)
+pe_free_colors(GListPtr colors)
 {
 	while(colors != NULL) {
-		GSListPtr list_item = colors;
+		GListPtr list_item = colors;
 		color_t *color = (color_t *)list_item->data;
 		struct color_shared_s *details = color->details;
 		colors = colors->next;
@@ -913,20 +913,20 @@ pe_free_colors(GSListPtr colors)
 		}
 		crm_free(color);
 	}
-	g_slist_free(colors);
+	g_list_free(colors);
 }
 
 void
-pe_free_shallow(GSListPtr alist)
+pe_free_shallow(GListPtr alist)
 {
 	pe_free_shallow_adv(alist, TRUE);
 }
 
 void
-pe_free_shallow_adv(GSListPtr alist, gboolean with_data)
+pe_free_shallow_adv(GListPtr alist, gboolean with_data)
 {
-	GSListPtr item;
-	GSListPtr item_next = alist;
+	GListPtr item;
+	GListPtr item_next = alist;
 	while(item_next != NULL) {
 		item = item_next;
 		item_next = item_next->next;
@@ -937,14 +937,14 @@ pe_free_shallow_adv(GSListPtr alist, gboolean with_data)
 		
 		item->data = NULL;
 		item->next = NULL;
-		g_slist_free(item);
+		g_list_free(item);
 	}
 }
 
 void
-pe_free_resources(GSListPtr resources)
+pe_free_resources(GListPtr resources)
 { 
-	volatile GSListPtr list_item = NULL;
+	volatile GListPtr list_item = NULL;
 	resource_t *rsc = NULL;
 	
 	while(resources != NULL) {
@@ -968,19 +968,19 @@ pe_free_resources(GSListPtr resources)
 			pe_free_rsc_to_rsc((rsc_to_rsc_t*)rsc->rsc_cons->data);
 			rsc->rsc_cons = rsc->rsc_cons->next;
 		}
-		g_slist_free(rsc->rsc_cons);
+		g_list_free(rsc->rsc_cons);
 		crm_free(rsc);
 	}
-	g_slist_free(resources);
+	g_list_free(resources);
 	
 }
 
 
 void
-pe_free_actions(GSListPtr actions) 
+pe_free_actions(GListPtr actions) 
 {
 	while(actions != NULL) {
-		GSListPtr list_item = actions;
+		GListPtr list_item = actions;
 		action_t *action = (action_t *)list_item->data;
 		actions = actions->next;
 
@@ -990,7 +990,7 @@ pe_free_actions(GSListPtr actions)
 		action->actions_after = NULL;
 		crm_free(action);
 	}
-	g_slist_free(actions);
+	g_list_free(actions);
 }
 
 

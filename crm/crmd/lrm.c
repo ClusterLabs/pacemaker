@@ -118,72 +118,77 @@ gboolean lrm_dispatch(int fd, gpointer user_data)
 xmlNodePtr
 do_lrm_query(void)
 {
-	GList* lrm_list = NULL;
-	GList* element = NULL;
-	GList* op_list = NULL;
-	xmlNodePtr agent = NULL;
-	xmlNodePtr data = create_xml_node(NULL, XML_CIB_TAG_LRM);
-	xmlNodePtr agent_list = create_xml_node(data, "lrm_agents");
-	xmlNodePtr rsc_list;
-	char *rsc_type = NULL;
+	int lpc = 0, llpc = 0;
+
+	GList *types    = NULL;
+	GList *classes  = NULL;
+	GList *op_list  = NULL;
+	GList *lrm_list = NULL;
+
 	state_flag_t cur_state = 0;
 	const char *this_op = NULL;
-	GList* node = NULL;
-	
-	lrm_list = fsa_lrm_conn->lrm_ops->get_ra_supported(fsa_lrm_conn);
-	if (NULL != lrm_list) {
-		GList* element = g_list_first(lrm_list);
-		while (NULL != element) {
-			rsc_type = (char*)element->data;
-			
-			agent =
-				create_xml_node(agent_list, "lrm_agent");
-			
-			set_xml_property_copy(agent, "class",   rsc_type);
 
-			/* we dont have these yet */
-			set_xml_property_copy(agent, XML_ATTR_TYPE,    NULL);
-			set_xml_property_copy(agent, "version", NULL);
-			
-			element = g_list_next(element);
-		}
-	}
+	xmlNodePtr xml_agent = NULL;
+	xmlNodePtr xml_data  = create_xml_node(NULL, XML_CIB_TAG_LRM);
+	xmlNodePtr rsc_list  = create_xml_node(xml_data,XML_LRM_TAG_RESOURCES);
+	xmlNodePtr xml_agent_list = create_xml_node(xml_data, "lrm_agents");
 	
-	g_list_free(lrm_list);
+	/* Build a list of supported agents */
+	classes = fsa_lrm_conn->lrm_ops->get_rsc_class_supported(
+		fsa_lrm_conn);
+
+	slist_iter(
+		class, char, classes, lpc,
+
+		types = fsa_lrm_conn->lrm_ops->get_rsc_type_supported(
+			fsa_lrm_conn, class);
+
+		slist_iter(
+			type, char, types, llpc,
+			
+			xml_agent = create_xml_node(
+				xml_agent_list, "lrm_agent");
+			
+			set_xml_property_copy(xml_agent, "class",       class);
+			set_xml_property_copy(xml_agent, XML_ATTR_TYPE, type);
+
+			/* we dont have this yet */
+			set_xml_property_copy(xml_agent, "version",     NULL);
+
+			)
+		g_list_free(types);
+		);
+
+	g_list_free(classes);
+
+	/* Build a list of active (not always running) resources */
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 
-	rsc_list = create_xml_node(data, XML_LRM_TAG_RESOURCES);
+	slist_iter(
+		the_rsc, lrm_rsc_t, lrm_list, lpc,
 
-	if (NULL != lrm_list) {
-		element = g_list_first(lrm_list);
-	}
-	
-	while (NULL != element) {
-		lrm_rsc_t *the_rsc = (lrm_rsc_t*)element->data;
-		
-/* 				const char*	ra_type; */
 /* 				GHashTable* 	params; */
 		
 		xmlNodePtr xml_rsc = create_xml_node(rsc_list, "rsc_state");
+		const char *status_text = "<unknown>";
 		
-		set_xml_property_copy(xml_rsc, XML_ATTR_ID,     the_rsc->id);
-		set_xml_property_copy(xml_rsc, "rsc_id", the_rsc->name);
-		set_xml_property_copy(xml_rsc, "node_id",fsa_our_uname);
+		set_xml_property_copy(xml_rsc, XML_ATTR_ID, the_rsc->id);
+		set_xml_property_copy(xml_rsc, "type",      the_rsc->type);
+		set_xml_property_copy(xml_rsc, "class",     the_rsc->class);
+		set_xml_property_copy(xml_rsc, "node_id",   fsa_our_uname);
 		
-		op_list = the_rsc->ops->get_cur_state(the_rsc,
-						      &cur_state);
+		op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
+
 		crm_verbose("\tcurrent state:%s\n",
-			  cur_state==LRM_RSC_IDLE?"Idle":"Busy");
-		
-		node = g_list_first(op_list);
-		
-		while(NULL != node){
-			lrm_op_t* op = (lrm_op_t*)node->data;
+			    cur_state==LRM_RSC_IDLE?"Idle":"Busy");
+
+		slist_iter(
+			op, lrm_op_t, op_list, llpc,
+
 			this_op = op->op_type;
-			if(this_op == NULL
-			   || strcmp(this_op, "status") != 0){
-				
-				const char *status_text = "<unknown>";
+			gboolean found = FALSE;
+
+			if(found == FALSE && safe_str_neq(this_op, "status")){
 				switch(op->status) {
 					case LRM_OP_DONE:
 						status_text = "done";
@@ -201,31 +206,25 @@ do_lrm_query(void)
 						status_text = "error";
 						break;
 				}
-				
-				
-				set_xml_property_copy(xml_rsc,
-						      "op_result",
-						      status_text);
-				
-				set_xml_property_copy(xml_rsc,
-						      "rsc_op",
-						      this_op);
-				
-				// we only want the last one
+			}
+
+			if(found) {
+				set_xml_property_copy(
+					xml_rsc, "rsc_op", this_op);
+
+				/* we only want the last one */
 				break;
 			}
-			
-			node = g_list_next(node);
-		}
-		
-		element = g_list_next(element);
-	}
+			)
 
-	if (NULL != lrm_list) {
-		g_list_free(lrm_list);
-	}
+		set_xml_property_copy(xml_rsc, "op_result", status_text);
+		
+		g_list_free(op_list);
+		);
+
+	g_list_free(lrm_list);
 	
-	return data;
+	return xml_data;
 }
 
 

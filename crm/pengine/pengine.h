@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.19 2004/06/02 16:03:34 andrew Exp $ */
+/* $Id: pengine.h,v 1.20 2004/06/02 18:41:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -78,7 +78,7 @@ struct node_shared_s {
 		gboolean online;
 		gboolean unclean;
 		gboolean shutdown;
-		GSListPtr running_rsc; // resource_t*
+		GListPtr running_rsc; // resource_t*
 		
 		GHashTable *attrs;     // char* => char*
 		enum node_type type;
@@ -92,7 +92,7 @@ struct node_s {
  
 struct color_shared_s {
 		int id; 
-		GSListPtr candidate_nodes; // node_t*
+		GListPtr candidate_nodes; // node_t*
 		node_t *chosen_node; 
 };
 
@@ -116,7 +116,7 @@ struct rsc_to_node_s {
 		resource_t	*rsc_lh; 
 
 		float		weight;
-		GSListPtr node_list_rh; // node_t*
+		GListPtr node_list_rh; // node_t*
 		enum con_modifier modifier;
 };
 
@@ -132,10 +132,10 @@ struct resource_s {
 		action_t *stop;
 		action_t *start;
 		
-		GSListPtr candidate_colors; // color_t*
-		GSListPtr allowed_nodes;    // node_t*
-		GSListPtr node_cons;        // rsc_to_node_t* 
-		GSListPtr rsc_cons;         // resource_t*
+		GListPtr candidate_colors; // color_t*
+		GListPtr allowed_nodes;    // node_t*
+		GListPtr node_cons;        // rsc_to_node_t* 
+		GListPtr rsc_cons;         // resource_t*
 
 		color_t *color;
 };
@@ -162,8 +162,8 @@ struct action_s
 
 		int seen_count;
 		
-		GSListPtr actions_before; // action_warpper_t*
-		GSListPtr actions_after;  // action_warpper_t*
+		GListPtr actions_before; // action_warpper_t*
+		GListPtr actions_after;  // action_warpper_t*
 };
 
 struct order_constraint_s 
@@ -176,50 +176,50 @@ struct order_constraint_s
 };
 
 extern gboolean stage0(xmlNodePtr cib,
-		       GSListPtr *nodes,
-		       GSListPtr *rscs,
-		       GSListPtr *cons,
-		       GSListPtr *actions, GSListPtr *action_constraints,
-		       GSListPtr *stonith_list, GSListPtr *shutdown_list);
+		       GListPtr *nodes,
+		       GListPtr *rscs,
+		       GListPtr *cons,
+		       GListPtr *actions, GListPtr *action_constraints,
+		       GListPtr *stonith_list, GListPtr *shutdown_list);
 
-extern gboolean stage1(GSListPtr node_constraints,
-		       GSListPtr nodes,
-		       GSListPtr resources);
+extern gboolean stage1(GListPtr node_constraints,
+		       GListPtr nodes,
+		       GListPtr resources);
 
-extern gboolean stage2(GSListPtr sorted_rscs,
-		       GSListPtr sorted_nodes,
-		       GSListPtr *colors);
+extern gboolean stage2(GListPtr sorted_rscs,
+		       GListPtr sorted_nodes,
+		       GListPtr *colors);
 
-extern gboolean stage3(GSListPtr colors);
+extern gboolean stage3(GListPtr colors);
 
-extern gboolean stage4(GSListPtr colors);
+extern gboolean stage4(GListPtr colors);
 
-extern gboolean stage5(GSListPtr resources);
+extern gboolean stage5(GListPtr resources);
 
-extern gboolean stage6(GSListPtr *actions,
-		       GSListPtr *action_constraints,
-		       GSListPtr stonith,
-		       GSListPtr shutdown);
+extern gboolean stage6(GListPtr *actions,
+		       GListPtr *action_constraints,
+		       GListPtr stonith,
+		       GListPtr shutdown);
 
-extern gboolean stage7(GSListPtr resources,
-		       GSListPtr actions,
-		       GSListPtr action_constraints,
-		       GSListPtr *action_sets);
+extern gboolean stage7(GListPtr resources,
+		       GListPtr actions,
+		       GListPtr action_constraints,
+		       GListPtr *action_sets);
 
-extern gboolean stage8(GSListPtr action_sets, xmlNodePtr *graph);
+extern gboolean stage8(GListPtr action_sets, xmlNodePtr *graph);
 
-extern gboolean summary(GSListPtr resources);
+extern gboolean summary(GListPtr resources);
 
 extern gboolean pe_input_dispatch(IPC_Channel *sender, void *user_data);
 
-extern void pe_free_nodes(GSListPtr nodes);
-extern void pe_free_colors(GSListPtr colors);
+extern void pe_free_nodes(GListPtr nodes);
+extern void pe_free_colors(GListPtr colors);
 extern void pe_free_rsc_to_rsc(rsc_to_rsc_t *cons);
 extern void pe_free_rsc_to_node(rsc_to_node_t *cons);
-extern void pe_free_shallow(GSListPtr alist);
-extern void pe_free_shallow_adv(GSListPtr alist, gboolean with_data);
-extern void pe_free_resources(GSListPtr resources);
-extern void pe_free_actions(GSListPtr actions);
+extern void pe_free_shallow(GListPtr alist);
+extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
+extern void pe_free_resources(GListPtr resources);
+extern void pe_free_actions(GListPtr actions);
 
 extern gboolean pe_debug;
 extern gboolean pe_debug_saved;

@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.18 2004/06/02 15:25:11 andrew Exp $ */
+/* $Id: ptest.c,v 1.19 2004/06/02 18:41:40 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -115,16 +115,16 @@ main(int argc, char **argv)
   
 	crm_info("=#=#=#=#= Stage 0 =#=#=#=#=");
 
-	GSListPtr resources = NULL;
-	GSListPtr nodes = NULL;
-	GSListPtr node_constraints = NULL;
-	GSListPtr actions = NULL;
-	GSListPtr action_constraints = NULL;
-	GSListPtr stonith_list = NULL;
-	GSListPtr shutdown_list = NULL;
+	GListPtr resources = NULL;
+	GListPtr nodes = NULL;
+	GListPtr node_constraints = NULL;
+	GListPtr actions = NULL;
+	GListPtr action_constraints = NULL;
+	GListPtr stonith_list = NULL;
+	GListPtr shutdown_list = NULL;
 
-	GSListPtr colors = NULL;
-	GSListPtr action_sets = NULL;
+	GListPtr colors = NULL;
+	GListPtr action_sets = NULL;
 
 	xmlNodePtr graph = NULL;
 
@@ -227,7 +227,7 @@ main(int argc, char **argv)
 		);
 
 	int lpc2;
-	slist_iter(action_set, GSList, action_sets, lpc,
+	slist_iter(action_set, GList, action_sets, lpc,
 		   crm_info("\t========= Set %d =========", lpc);
 		   slist_iter(action, action_t, action_set, lpc2,
 			      print_action("\t", action, TRUE)));
@@ -244,7 +244,7 @@ main(int argc, char **argv)
 	crm_info("=#=#=#=#= Stage 8 =#=#=#=#=");
 	stage8(action_sets, &graph);
 
-//	GSListPtr action_sets = NULL;
+//	GListPtr action_sets = NULL;
 
 
 	crm_verbose("deleting node cons");
@@ -252,14 +252,14 @@ main(int argc, char **argv)
 		pe_free_rsc_to_node((rsc_to_node_t*)node_constraints->data);
 		node_constraints = node_constraints->next;
 	}
-	g_slist_free(node_constraints);
+	g_list_free(node_constraints);
 
 	crm_verbose("deleting order cons");
 	pe_free_shallow(action_constraints);
 
 	crm_verbose("deleting action sets");
 
-	slist_iter(action_set, GSList, action_sets, lpc,
+	slist_iter(action_set, GList, action_sets, lpc,
 		   pe_free_shallow_adv(action_set, FALSE);
 		);
 	pe_free_shallow_adv(action_sets, FALSE);
@@ -279,8 +279,8 @@ main(int argc, char **argv)
 	crm_verbose("deleting nodes");
 	pe_free_nodes(nodes);
 	
-	g_slist_free(shutdown_list);
-	g_slist_free(stonith_list);
+	g_list_free(shutdown_list);
+	g_list_free(stonith_list);
 
 	pe_debug_off();
 	muntrace();

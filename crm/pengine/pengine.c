@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.31 2004/06/02 15:25:11 andrew Exp $ */
+/* $Id: pengine.c,v 1.32 2004/06/02 18:41:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,83 +34,83 @@ gboolean process_pe_message(xmlNodePtr msg, IPC_Channel *sender);
 
 
 void color_resource(resource_t *lh_resource,
-		    GSListPtr *colors,
-		    GSListPtr resources);
+		    GListPtr *colors,
+		    GListPtr resources);
 
 gboolean create_rsc_to_rsc(const char *id, enum con_strength strength,
 			   resource_t *rsc_lh, resource_t *rsc_rh);
 
 gboolean create_ordering(const char *id, enum con_strength strength,
 			 resource_t *rsc_lh, resource_t *rsc_rh,
-			 GSListPtr *action_constraints);
+			 GListPtr *action_constraints);
 
 gboolean unpack_constraints(xmlNodePtr xml_constraints,
-			    GSListPtr nodes, GSListPtr resources,
-			    GSListPtr *node_constraints,
-			    GSListPtr *action_constraints);
+			    GListPtr nodes, GListPtr resources,
+			    GListPtr *node_constraints,
+			    GListPtr *action_constraints);
 
 gboolean unpack_resources(xmlNodePtr xml_resources,
-			  GSListPtr *resources,
-			  GSListPtr *actions,
-			  GSListPtr *action_cons,
-			  GSListPtr all_nodes);
+			  GListPtr *resources,
+			  GListPtr *actions,
+			  GListPtr *action_cons,
+			  GListPtr all_nodes);
 
-gboolean unpack_nodes(xmlNodePtr xml_nodes, GSListPtr *nodes);
+gboolean unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes);
 
 gboolean unpack_status(xmlNodePtr status,
-		       GSListPtr nodes,
-		       GSListPtr rsc_list,
-		       GSListPtr *node_constraints);
+		       GListPtr nodes,
+		       GListPtr rsc_list,
+		       GListPtr *node_constraints);
 
-gboolean apply_node_constraints(GSListPtr constraints, 
-				GSListPtr resources,
-				GSListPtr nodes);
+gboolean apply_node_constraints(GListPtr constraints, 
+				GListPtr resources,
+				GListPtr nodes);
 
 gboolean is_active(rsc_to_node_t *cons);
 
-gboolean choose_node_from_list(GSListPtr colors,
+gboolean choose_node_from_list(GListPtr colors,
 			       color_t *color,
-			       GSListPtr nodes);
+			       GListPtr nodes);
 
 gboolean unpack_rsc_to_attr(xmlNodePtr xml_obj,
-			    GSListPtr rsc_list,
-			    GSListPtr node_list,
-			    GSListPtr *node_constraints);
+			    GListPtr rsc_list,
+			    GListPtr node_list,
+			    GListPtr *node_constraints);
 
 gboolean unpack_rsc_to_node(xmlNodePtr xml_obj,
-			    GSListPtr rsc_list,
-			    GSListPtr node_list,
-			    GSListPtr *node_constraints);
+			    GListPtr rsc_list,
+			    GListPtr node_list,
+			    GListPtr *node_constraints);
 
 gboolean unpack_rsc_to_rsc(xmlNodePtr xml_obj,
-			   GSListPtr rsc_list,
-			   GSListPtr *action_constraints);
+			   GListPtr rsc_list,
+			   GListPtr *action_constraints);
 
 gboolean choose_color(resource_t *lh_resource);
 
 gboolean strict_postproc(rsc_to_rsc_t *constraint,
 			 color_t *local_color,
 			 color_t *other_color,
-			 GSListPtr *colors,
-			 GSListPtr resources);
+			 GListPtr *colors,
+			 GListPtr resources);
 
 gboolean strict_preproc(rsc_to_rsc_t *constraint,
 			color_t *local_color,
 			color_t *other_color,
-			GSListPtr *colors,
-			GSListPtr resources);
+			GListPtr *colors,
+			GListPtr resources);
 
-gboolean update_node_weight(rsc_to_node_t *cons, char *id, GSListPtr nodes);
+gboolean update_node_weight(rsc_to_node_t *cons, char *id, GListPtr nodes);
 
 gboolean process_node_lrm_state(node_t *node,
 				xmlNodePtr lrm_state,
-				GSListPtr rsc_list,
-				GSListPtr nodes,
-				GSListPtr *node_constraints);
+				GListPtr rsc_list,
+				GListPtr nodes,
+				GListPtr *node_constraints);
 
-GSListPtr match_attrs(xmlNodePtr attr_exp, GSListPtr node_list);
-gboolean update_runnable(GSListPtr actions);
-GSListPtr create_action_set(action_t *action);
+GListPtr match_attrs(xmlNodePtr attr_exp, GListPtr node_list);
+gboolean update_runnable(GListPtr actions);
+GListPtr create_action_set(action_t *action);
 
 color_t *no_color = NULL;
 int max_valid_nodes = 0;
@@ -133,10 +133,10 @@ gboolean pe_debug_saved = FALSE;
  */
 gboolean
 stage0(xmlNodePtr cib,
-       GSListPtr *resources,
-       GSListPtr *nodes, GSListPtr *node_constraints,
-       GSListPtr *actions, GSListPtr *action_constraints,
-       GSListPtr *stonith_list, GSListPtr *shutdown_list)
+       GListPtr *resources,
+       GListPtr *nodes, GListPtr *node_constraints,
+       GListPtr *actions, GListPtr *action_constraints,
+       GListPtr *stonith_list, GListPtr *shutdown_list)
 {
 	int lpc;
 	xmlNodePtr cib_nodes       = get_object_root(
@@ -168,12 +168,12 @@ stage0(xmlNodePtr cib,
 	slist_iter(
 		node, node_t, *nodes, lpc,
 		if(node->details->shutdown) {
-			*shutdown_list = g_slist_append(*shutdown_list, node);
+			*shutdown_list = g_list_append(*shutdown_list, node);
 			crm_verbose("Scheduling Node %s for shutdown",
 			       node->details->id);
 
 		} else if(node->details->unclean) {
-			*stonith_list = g_slist_append(*stonith_list, node);
+			*stonith_list = g_list_append(*stonith_list, node);
 			crm_verbose("Scheduling Node %s for STONITH",
 			       node->details->id);
 
@@ -190,7 +190,7 @@ stage0(xmlNodePtr cib,
  * Apply node constraints (ie. filter the "allowed_nodes" part of resources
  */
 gboolean
-stage1(GSListPtr node_constraints, GSListPtr nodes, GSListPtr resources)
+stage1(GListPtr node_constraints, GListPtr nodes, GListPtr resources)
 {
 	int lpc = 0;
 	
@@ -219,7 +219,7 @@ stage1(GSListPtr node_constraints, GSListPtr nodes, GSListPtr resources)
  *  given the current node stati and constraints.
  */
 gboolean
-stage2(GSListPtr sorted_rscs, GSListPtr sorted_nodes, GSListPtr *colors)
+stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 {
 	int lpc;
 	color_t *current_color = NULL;
@@ -265,12 +265,12 @@ stage2(GSListPtr sorted_rscs, GSListPtr sorted_nodes, GSListPtr *colors)
  *  hook
  */
 gboolean
-stage3(GSListPtr colors)
+stage3(GListPtr colors)
 {
 	// not sure if this is a good idea or not
-	if(g_slist_length(colors) > max_valid_nodes) {
+	if(g_list_length(colors) > max_valid_nodes) {
 		// we need to consolidate some
-	} else if(g_slist_length(colors) < max_valid_nodes) {
+	} else if(g_list_length(colors) < max_valid_nodes) {
 		// we can create a few more
 	}
 	return TRUE;
@@ -283,15 +283,15 @@ stage3(GSListPtr colors)
  * Choose a node for each (if possible) color
  */
 gboolean
-stage4(GSListPtr colors)
+stage4(GListPtr colors)
 {
 	int lpc = 0;
 	color_t *color_n = NULL;
 	color_t *color_n_plus_1 = NULL;
 	
-	for(lpc = 0; lpc < g_slist_length(colors); lpc++) {
+	for(lpc = 0; lpc < g_list_length(colors); lpc++) {
 		color_n = color_n_plus_1;
-		color_n_plus_1 = (color_t*)g_slist_nth_data(colors, lpc);
+		color_n_plus_1 = (color_t*)g_list_nth_data(colors, lpc);
 
 		crm_debug_action(
 			print_color("Choose node for...", color_n, FALSE));
@@ -300,12 +300,12 @@ stage4(GSListPtr colors)
 			continue;
 		}
 
-		GSListPtr xor = node_list_xor(color_n_nodes,
+		GListPtr xor = node_list_xor(color_n_nodes,
 					      color_n_plus_1_nodes);
-		GSListPtr minus = node_list_minus(color_n_nodes,
+		GListPtr minus = node_list_minus(color_n_nodes,
 						  color_n_plus_1_nodes);
 
-		if(g_slist_length(xor) == 0 || g_slist_length(minus) == 0) {
+		if(g_list_length(xor) == 0 || g_list_length(minus) == 0) {
 			crm_verbose("Choose any node from our list");
 			choose_node_from_list(colors, color_n, color_n_nodes);
 
@@ -342,7 +342,7 @@ stage4(GSListPtr colors)
  * Mark unrunnable actions
  */
 gboolean
-stage5(GSListPtr resources)
+stage5(GListPtr resources)
 {
 	
 	crm_verbose("filling in the nodes to perform the actions on");
@@ -422,8 +422,8 @@ stage5(GSListPtr resources)
  * Create dependacies for stonith and shutdown operations
  */
 gboolean
-stage6(GSListPtr *actions, GSListPtr *action_constraints,
-       GSListPtr stonith_nodes, GSListPtr shutdown_nodes)
+stage6(GListPtr *actions, GListPtr *action_constraints,
+       GListPtr stonith_nodes, GListPtr shutdown_nodes)
 {
 	int lpc = 0;
 	int llpc = 0;
@@ -435,7 +435,7 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
 		down_node->node = node;
 		down_node->runnable = TRUE;
 
-		*actions = g_slist_append(*actions, down_node);
+		*actions = g_list_append(*actions, down_node);
 		
 		slist_iter(
 			rsc, resource_t, node->details->running_rsc, llpc,
@@ -457,7 +457,7 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
 					     order->rh_action, FALSE));
 			
 			*action_constraints =
-				g_slist_append(*action_constraints, order);
+				g_list_append(*action_constraints, order);
 			);
 		);
 
@@ -469,7 +469,7 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
 		stonith_node->node = node;
 		stonith_node->runnable = TRUE;
 
-		*actions = g_slist_append(*actions, stonith_node);
+		*actions = g_list_append(*actions, stonith_node);
 
 		slist_iter(
 			rsc, resource_t, node->details->running_rsc, llpc,
@@ -500,7 +500,7 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
 			order->id = order_id++;
 			order->strength = must;
 			*action_constraints =
-				g_slist_append(*action_constraints, order);
+				g_list_append(*action_constraints, order);
 
 			/* stonith before start */
 			order = (order_constraint_t*)
@@ -511,7 +511,7 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
 			order->rh_action = rsc->start;
 			order->strength = must;
 			*action_constraints =
-				g_slist_append(*action_constraints, order);
+				g_list_append(*action_constraints, order);
 			);
 		);
 	
@@ -528,14 +528,14 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
  *
  */
 gboolean
-stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
-	GSListPtr *action_sets)
+stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
+	GListPtr *action_sets)
 {
 	int lpc;
 /*
-	for(lpc = 0; lpc < g_slist_length(action_constraints);  lpc++) {
+	for(lpc = 0; lpc < g_list_length(action_constraints);  lpc++) {
 		order_constraint_t *order = (order_constraint_t*)
-			g_slist_nth_data(action_constraints, lpc);
+			g_list_nth_data(action_constraints, lpc);
 */
 	slist_iter(
 		order, order_constraint_t, action_constraints, lpc,
@@ -554,8 +554,8 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 		wrapper->action = order->rh_action;
 		wrapper->strength = order->strength;
 
-		GSListPtr list = order->lh_action->actions_after;
-		list = g_slist_append(list, wrapper);
+		GListPtr list = order->lh_action->actions_after;
+		list = g_list_append(list, wrapper);
 		order->lh_action->actions_after = list;
 
 		wrapper = (action_wrapper_t*)
@@ -564,7 +564,7 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 		wrapper->strength = order->strength;
 
 		list = order->rh_action->actions_before;
-		list = g_slist_append(list, wrapper);
+		list = g_list_append(list, wrapper);
 		order->rh_action->actions_before = list;
 		);
 //	}
@@ -574,7 +574,7 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 	slist_iter(
 		rsc, resource_t, resources, lpc,	
 
-		GSListPtr action_set = NULL;
+		GListPtr action_set = NULL;
 		/* any non-essential stop actions will be marked redundant by
 		 *  during stage6
 		 */
@@ -582,7 +582,7 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 		if(action_set != NULL) {
 			crm_verbose("Created action set for %s->start",
 			       rsc->id);
-			*action_sets = g_slist_append(*action_sets,
+			*action_sets = g_list_append(*action_sets,
 						      action_set);
 		} else {
 			crm_verbose("No actions resulting from %s->start",
@@ -598,7 +598,7 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
  * Create a dependancy graph to send to the transitioner (via the CRMd)
  */
 gboolean
-stage8(GSListPtr action_sets, xmlNodePtr *graph)
+stage8(GListPtr action_sets, xmlNodePtr *graph)
 {
 	int lpc = 0;
 	xmlNodePtr xml_action_set = NULL;
@@ -613,7 +613,7 @@ stage8(GSListPtr action_sets, xmlNodePtr *graph)
 		);
 */
 	int lpc2;
-	slist_iter(action_set, GSList, action_sets, lpc,
+	slist_iter(action_set, GList, action_sets, lpc,
 		   crm_verbose("Processing Action Set %d", lpc);
 		   xml_action_set = create_xml_node(NULL, "actions");
 		   set_xml_property_copy(
@@ -635,7 +635,7 @@ stage8(GSListPtr action_sets, xmlNodePtr *graph)
  * Print a nice human readable high-level summary of what we're going to do 
  */
 gboolean
-summary(GSListPtr resources)
+summary(GListPtr resources)
 {
 	int lpc = 0;
 	slist_iter(
@@ -686,7 +686,7 @@ summary(GSListPtr resources)
 
 
 gboolean
-choose_node_from_list(GSListPtr colors, color_t *color, GSListPtr nodes)
+choose_node_from_list(GListPtr colors, color_t *color, GListPtr nodes)
 {
 	int lpc;
 	/*
@@ -694,9 +694,9 @@ choose_node_from_list(GSListPtr colors, color_t *color, GSListPtr nodes)
 	  2. color.chosen_node = highest wieghted node 
 	  3. remove color.chosen_node from all other colors
 	*/
-	nodes = g_slist_sort(nodes, sort_node_weight);
+	nodes = g_list_sort(nodes, sort_node_weight);
 	color->details->chosen_node =
-		node_copy((node_t*)g_slist_nth_data(nodes, 0));
+		node_copy((node_t*)g_list_nth_data(nodes, 0));
 
 	if(color->details->chosen_node == NULL) {
 		crm_err("Could not allocate a node for color %d",
@@ -713,7 +713,7 @@ choose_node_from_list(GSListPtr colors, color_t *color, GSListPtr nodes)
 
 		if(color_n != color) {
 			color_n->details->candidate_nodes =
-				g_slist_remove(color_n->details->candidate_nodes,
+				g_list_remove(color_n->details->candidate_nodes,
 					       other_node);
 			//		crm_free(other_node);
 		}	
@@ -724,7 +724,7 @@ choose_node_from_list(GSListPtr colors, color_t *color, GSListPtr nodes)
 
 
 gboolean
-unpack_nodes(xmlNodePtr xml_nodes, GSListPtr *nodes)
+unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 {
 	crm_verbose("Begining unpack...");
 	while(xml_nodes != NULL) {
@@ -785,20 +785,20 @@ unpack_nodes(xmlNodePtr xml_nodes, GSListPtr *nodes)
 
 		crm_debug_action(print_node("Added", new_node, FALSE));
 
-		*nodes = g_slist_append(*nodes, new_node);    
+		*nodes = g_list_append(*nodes, new_node);    
 	}
   
-	*nodes = g_slist_sort(*nodes, sort_node_weight);
+	*nodes = g_list_sort(*nodes, sort_node_weight);
 
 	return TRUE;
 }
 
 gboolean 
 unpack_resources(xmlNodePtr xml_resources,
-		 GSListPtr *resources,
-		 GSListPtr *actions,
-		 GSListPtr *action_cons,
-		 GSListPtr all_nodes)
+		 GListPtr *resources,
+		 GListPtr *actions,
+		 GListPtr *action_cons,
+		 GListPtr all_nodes)
 {
 	crm_verbose("Begining unpack...");
 	while(xml_resources != NULL) {
@@ -835,10 +835,10 @@ unpack_resources(xmlNodePtr xml_resources,
 						    start_rsc);
 
 		new_rsc->stop = action_stop;
-		*actions = g_slist_append(*actions, action_stop);
+		*actions = g_list_append(*actions, action_stop);
 
 		new_rsc->start = action_start;
-		*actions = g_slist_append(*actions, action_start);
+		*actions = g_list_append(*actions, action_start);
 
 		order_constraint_t *order = (order_constraint_t*)
 			crm_malloc(sizeof(order_constraint_t));
@@ -846,12 +846,12 @@ unpack_resources(xmlNodePtr xml_resources,
 		order->lh_action = action_stop;
 		order->rh_action = action_start;
 		order->strength = startstop;
-		*action_cons = g_slist_append(*action_cons, order);
+		*action_cons = g_list_append(*action_cons, order);
 	
 		crm_debug_action(print_resource("Added", new_rsc, FALSE));
-		*resources = g_slist_append(*resources, new_rsc);
+		*resources = g_list_append(*resources, new_rsc);
 	}
-	*resources = g_slist_sort(*resources, sort_rsc_priority);
+	*resources = g_list_sort(*resources, sort_rsc_priority);
 
 	return TRUE;
 }
@@ -860,9 +860,9 @@ unpack_resources(xmlNodePtr xml_resources,
 
 gboolean 
 unpack_constraints(xmlNodePtr xml_constraints,
-		   GSListPtr nodes, GSListPtr resources,
-		   GSListPtr *node_constraints,
-		   GSListPtr *action_constraints)
+		   GListPtr nodes, GListPtr resources,
+		   GListPtr *node_constraints,
+		   GListPtr *action_constraints)
 {
 	crm_verbose("Begining unpack...");
 	while(xml_constraints != NULL) {
@@ -899,9 +899,9 @@ unpack_constraints(xmlNodePtr xml_constraints,
 
 
 gboolean 
-apply_node_constraints(GSListPtr constraints, 
-		       GSListPtr resources,
-		       GSListPtr nodes)
+apply_node_constraints(GListPtr constraints, 
+		       GListPtr resources,
+		       GListPtr nodes)
 {
 	crm_verbose("Applying constraints...");
 	int lpc = 0;
@@ -926,7 +926,7 @@ apply_node_constraints(GSListPtr constraints,
 		}
 
 		cons->rsc_lh->node_cons =
-			g_slist_append(cons->rsc_lh->node_cons, cons);
+			g_list_append(cons->rsc_lh->node_cons, cons);
 
 		if(cons->node_list_rh == NULL) {
 			crm_err("RHS of rsc_to_node (%s) is NULL", cons->id);
@@ -954,9 +954,9 @@ apply_node_constraints(GSListPtr constraints,
 // anything else?
 gboolean
 unpack_status(xmlNodePtr status,
-	      GSListPtr nodes,
-	      GSListPtr rsc_list,
-	      GSListPtr *node_constraints)
+	      GListPtr nodes,
+	      GListPtr rsc_list,
+	      GListPtr *node_constraints)
 {
 	crm_verbose("Begining unpack");
 	while(status != NULL) {
@@ -1079,8 +1079,8 @@ gboolean
 strict_preproc(rsc_to_rsc_t *constraint,
 	       color_t *local_color,
 	       color_t *other_color,
-	       GSListPtr *colors,
-	       GSListPtr resources)
+	       GListPtr *colors,
+	       GListPtr resources)
 {
 	resource_t * lh_resource = constraint->rsc_lh;
 	switch(constraint->strength) {
@@ -1110,11 +1110,11 @@ strict_preproc(rsc_to_rsc_t *constraint,
 					local_color->local_weight * 0.5;
 			}
 			crm_verbose("# Colors %d, Nodes %d",
-				      g_slist_length(*colors),
+				      g_list_length(*colors),
 				      max_valid_nodes);
 			       
-			if(g_slist_length(*colors) < max_valid_nodes
-//			   && g_slist_length(lh_resource->candidate_colors)==1
+			if(g_list_length(*colors) < max_valid_nodes
+//			   && g_list_length(lh_resource->candidate_colors)==1
 				) {
 				create_color(colors,
 					     lh_resource->allowed_nodes,
@@ -1127,7 +1127,7 @@ strict_preproc(rsc_to_rsc_t *constraint,
 			if(constraint->rsc_rh->provisional == FALSE
 				&& local_color->id != no_color->id) {
 				lh_resource->candidate_colors =
-					g_slist_remove(
+					g_list_remove(
 						lh_resource->candidate_colors,
 						local_color);
 				crm_debug_action(
@@ -1150,8 +1150,8 @@ gboolean
 strict_postproc(rsc_to_rsc_t *constraint,
 		color_t *local_color,
 		color_t *other_color,
-		GSListPtr *colors,
-		GSListPtr resources)
+		GListPtr *colors,
+		GListPtr resources)
 {
 	print_rsc_to_rsc("Post processing", constraint, FALSE);
 	
@@ -1207,24 +1207,24 @@ choose_color(resource_t *lh_resource)
 	}
 
 	if(lh_resource->provisional) {
-		GSListPtr sorted_colors =
-			g_slist_sort(lh_resource->candidate_colors,
+		GListPtr sorted_colors =
+			g_list_sort(lh_resource->candidate_colors,
 				     sort_color_weight);
 		
 		lh_resource->candidate_colors = sorted_colors;
 	
 		crm_verbose("Choose a color from %d possibilities",
-		       g_slist_length(sorted_colors));
+		       g_list_length(sorted_colors));
 
 		slist_iter(
 			this_color, color_t,lh_resource->candidate_colors, lpc,
-			GSListPtr intersection = node_list_and(
+			GListPtr intersection = node_list_and(
 				this_color->details->candidate_nodes, 
 				lh_resource->allowed_nodes);
 
-			if(g_slist_length(intersection) != 0) {
+			if(g_list_length(intersection) != 0) {
 				// TODO: merge node weights
-				GSListPtr old_list =
+				GListPtr old_list =
 					this_color->details->candidate_nodes;
 
 				pe_free_shallow(old_list);
@@ -1246,9 +1246,9 @@ choose_color(resource_t *lh_resource)
 
 gboolean
 unpack_rsc_to_node(xmlNodePtr xml_obj,
-		   GSListPtr rsc_list,
-		   GSListPtr node_list,
-		   GSListPtr *node_constraints)	
+		   GListPtr rsc_list,
+		   GListPtr node_list,
+		   GListPtr *node_constraints)	
 {
 	
 	xmlNodePtr node_ref = xml_obj->children;
@@ -1301,7 +1301,7 @@ unpack_rsc_to_node(xmlNodePtr xml_obj,
 		}
 		
 		new_con->node_list_rh =
-			g_slist_append(new_con->node_list_rh,
+			g_list_append(new_con->node_list_rh,
 				       node_rh);
 
 		
@@ -1309,7 +1309,7 @@ unpack_rsc_to_node(xmlNodePtr xml_obj,
 		 *  the information is in the resouce's node list
 		 */
 	}
-	*node_constraints = g_slist_append(*node_constraints, new_con);
+	*node_constraints = g_list_append(*node_constraints, new_con);
 
 	return TRUE;
 }
@@ -1317,9 +1317,9 @@ unpack_rsc_to_node(xmlNodePtr xml_obj,
 
 gboolean
 unpack_rsc_to_attr(xmlNodePtr xml_obj,
-		   GSListPtr rsc_list,
-		   GSListPtr node_list,
-		   GSListPtr *node_constraints)
+		   GListPtr rsc_list,
+		   GListPtr node_list,
+		   GListPtr *node_constraints)
 {
 /*
        <rsc_to_attr id="cons4" from="rsc2" weight="20.0" modifier="inc">
@@ -1390,7 +1390,7 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj,
 				id_rh, attr_exp->name);
 		}
 		crm_debug_action(print_rsc_to_node("Added", new_con, FALSE));
-		*node_constraints = g_slist_append(*node_constraints, new_con);
+		*node_constraints = g_list_append(*node_constraints, new_con);
 
 		/* dont add it to the resource,
 		 *  the information is in the resouce's node list
@@ -1401,7 +1401,7 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj,
 }
 
 gboolean
-update_node_weight(rsc_to_node_t *cons, char *id, GSListPtr nodes)
+update_node_weight(rsc_to_node_t *cons, char *id, GListPtr nodes)
 {
 	node_t *node_rh = pe_find_node(cons->rsc_lh->allowed_nodes, id);
 
@@ -1409,7 +1409,7 @@ update_node_weight(rsc_to_node_t *cons, char *id, GSListPtr nodes)
 		node_t *node_tmp = pe_find_node(nodes, id);
 		node_rh = node_copy(node_tmp);
 		cons->rsc_lh->allowed_nodes =
-			g_slist_append(cons->rsc_lh->allowed_nodes,
+			g_list_append(cons->rsc_lh->allowed_nodes,
 				       node_rh);
 	}
 
@@ -1454,8 +1454,8 @@ update_node_weight(rsc_to_node_t *cons, char *id, GSListPtr nodes)
 
 gboolean
 process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
-		       GSListPtr rsc_list, GSListPtr nodes,
-		       GSListPtr *node_constraints)
+		       GListPtr rsc_list, GListPtr nodes,
+		       GListPtr *node_constraints)
 {
 	while(lrm_state != NULL) {
 		const char *rsc_id    = xmlGetProp(
@@ -1496,7 +1496,7 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
 		rsc_lh->cur_node = node;
 
 		node->details->running_rsc =
-			g_slist_append(node->details->running_rsc, rsc_lh);
+			g_list_append(node->details->running_rsc, rsc_lh);
 
 		if((safe_str_eq(rsc_state, "starting"))
 		   || (safe_str_eq(rsc_state, "started"))) {
@@ -1510,10 +1510,10 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
 			new_cons->rsc_lh = rsc_lh;
 			node_rh = pe_find_node(nodes, node_id);
 			
-			new_cons->node_list_rh = g_slist_append(NULL, node_rh);
+			new_cons->node_list_rh = g_list_append(NULL, node_rh);
 					
 			*node_constraints =
-				g_slist_append(*node_constraints, new_cons);
+				g_list_append(*node_constraints, new_cons);
 			
 			crm_debug_action(print_rsc_to_node(
 					      "Added", new_cons, FALSE));
@@ -1526,11 +1526,11 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
 	return TRUE;
 }
 
-GSListPtr
-match_attrs(xmlNodePtr attr_exp, GSListPtr node_list)
+GListPtr
+match_attrs(xmlNodePtr attr_exp, GListPtr node_list)
 {
 	int lpc = 0;
-	GSListPtr result = NULL;
+	GListPtr result = NULL;
 	slist_iter(
 		node, node_t, node_list, lpc,
 		xmlNodePtr node_match = attr_exp->children;
@@ -1567,7 +1567,7 @@ match_attrs(xmlNodePtr attr_exp, GSListPtr node_list)
 		}
 		
 		if(accept) {
-			result = g_slist_append(result, node);
+			result = g_list_append(result, node);
 			
 		}		   
 		);
@@ -1594,9 +1594,9 @@ create_rsc_to_rsc(const char *id, enum con_strength strength,
 	
 	inverted_con = invert_constraint(new_con);
 
-	rsc_lh->rsc_cons = g_slist_insert_sorted(rsc_lh->rsc_cons,
+	rsc_lh->rsc_cons = g_list_insert_sorted(rsc_lh->rsc_cons,
 						 new_con, sort_cons_strength);
-	rsc_rh->rsc_cons = g_slist_insert_sorted(rsc_rh->rsc_cons,
+	rsc_rh->rsc_cons = g_list_insert_sorted(rsc_rh->rsc_cons,
 						 inverted_con, sort_cons_strength);
 
 	return TRUE;
@@ -1605,7 +1605,7 @@ create_rsc_to_rsc(const char *id, enum con_strength strength,
 gboolean
 create_ordering(const char *id, enum con_strength strength,
 		resource_t *rsc_lh, resource_t *rsc_rh,
-		GSListPtr *action_constraints)
+		GListPtr *action_constraints)
 {
 	if(rsc_lh == NULL || rsc_rh == NULL){
 		// error
@@ -1623,7 +1623,7 @@ create_ordering(const char *id, enum con_strength strength,
 	order->lh_action = lh_stop;
 	order->rh_action = rh_stop;
 	order->strength = strength;
-	*action_constraints = g_slist_append(*action_constraints, order);
+	*action_constraints = g_list_append(*action_constraints, order);
 	
 	order = (order_constraint_t*)
 		crm_malloc(sizeof(order_constraint_t));
@@ -1631,15 +1631,15 @@ create_ordering(const char *id, enum con_strength strength,
 	order->lh_action = rh_start;
 	order->rh_action = lh_start;
 	order->strength = strength;
-	*action_constraints = g_slist_append(*action_constraints, order);
+	*action_constraints = g_list_append(*action_constraints, order);
 
 	return TRUE;
 }
 
 gboolean
 unpack_rsc_to_rsc(xmlNodePtr xml_obj,
-		  GSListPtr rsc_list,
-		  GSListPtr *action_constraints)
+		  GListPtr rsc_list,
+		  GListPtr *action_constraints)
 {
 	const char *id_lh =  xmlGetProp(xml_obj, "from");
 	const char *id =  xmlGetProp(xml_obj, XML_ATTR_ID);
@@ -1680,12 +1680,12 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 }
 
 
-GSListPtr
+GListPtr
 create_action_set(action_t *action)
 {
 	int lpc;
-	GSListPtr tmp = NULL;
-	GSListPtr result = NULL;
+	GListPtr tmp = NULL;
+	GListPtr result = NULL;
 	gboolean preceeding_complete = FALSE;
 
 	if(action->processed) {
@@ -1702,9 +1702,9 @@ create_action_set(action_t *action)
 
 			tmp = create_action_set(other->action);
 			crm_verbose("%d (%d total) \"before\" actions for %d)",
-			       g_slist_length(tmp), g_slist_length(result),
+			       g_list_length(tmp), g_list_length(result),
 			       action->id);
-			result = g_slist_concat(result, tmp);
+			result = g_list_concat(result, tmp);
 			preceeding_complete = TRUE;
 			);
 		
@@ -1718,10 +1718,10 @@ create_action_set(action_t *action)
 			   && other->strength == must) {
 				tmp = create_action_set(other->action);
 				crm_verbose("%d (%d total) \"before\" actions for %d)",
-				       g_slist_length(tmp),
-				       g_slist_length(result),
+				       g_list_length(tmp),
+				       g_list_length(result),
 				       action->id);
-				result = g_slist_concat(result, tmp);
+				result = g_list_concat(result, tmp);
 			}	
 			);
 	}
@@ -1731,7 +1731,7 @@ create_action_set(action_t *action)
 	if(action->runnable) {
 		if(action->processed == FALSE) {
 			crm_verbose("Adding self %d", action->id);
-			result = g_slist_append(result, action);
+			result = g_list_append(result, action);
 		} else {
 			crm_verbose("Already added self %d", action->id);
 		}
@@ -1749,8 +1749,8 @@ create_action_set(action_t *action)
 			
 			tmp = create_action_set(other->action);
 			crm_verbose("%d (%d total) post-self \"before\" actions for %d)",
-			       g_slist_length(tmp), g_slist_length(result),action->id);
-			result = g_slist_concat(result, tmp);
+			       g_list_length(tmp), g_list_length(result),action->id);
+			result = g_list_concat(result, tmp);
 			);
 	}
 
@@ -1768,8 +1768,8 @@ create_action_set(action_t *action)
 		
 		tmp = create_action_set(other->action);
 		crm_verbose("%d (%d total) \"after\" actions for %d)",
-		       g_slist_length(tmp), g_slist_length(result),action->id);
-		result = g_slist_concat(result, tmp);
+		       g_list_length(tmp), g_list_length(result),action->id);
+		result = g_list_concat(result, tmp);
 		);
 	
 	return result;
@@ -1777,7 +1777,7 @@ create_action_set(action_t *action)
 
 
 gboolean
-update_runnable(GSListPtr actions)
+update_runnable(GListPtr actions)
 {
 
 	int lpc = 0, lpc2 = 0;
@@ -1812,7 +1812,7 @@ update_runnable(GSListPtr actions)
 }
 
 void
-color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
+color_resource(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 {
 	int lpc = 0;
 
@@ -1823,7 +1823,7 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 		return;
 	}
 	
-	lh_resource->rsc_cons = g_slist_sort(lh_resource->rsc_cons,
+	lh_resource->rsc_cons = g_list_sort(lh_resource->rsc_cons,
 					     sort_cons_strength);
 
 	crm_verbose("=== Pre-processing");
@@ -1862,11 +1862,11 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 	choose_color(lh_resource);	
   
 	crm_verbose("* Colors %d, Nodes %d",
-		      g_slist_length(*colors),
+		      g_list_length(*colors),
 		      max_valid_nodes);
 	
 	if(lh_resource->provisional
-		&& g_slist_length(*colors) < max_valid_nodes) {
+		&& g_list_length(*colors) < max_valid_nodes) {
 		// Create new color
 		crm_verbose("Create a new color");
 		lh_resource->color = create_color(colors,
@@ -1962,16 +1962,16 @@ do_calculations(xmlNodePtr cib_object)
 {
 	int lpc, lpc2;
 	
-	GSListPtr resources = NULL;
-	GSListPtr nodes = NULL;
-	GSListPtr node_constraints = NULL;
-	GSListPtr actions = NULL;
-	GSListPtr action_constraints = NULL;
-	GSListPtr stonith_list = NULL;
-	GSListPtr shutdown_list = NULL;
+	GListPtr resources = NULL;
+	GListPtr nodes = NULL;
+	GListPtr node_constraints = NULL;
+	GListPtr actions = NULL;
+	GListPtr action_constraints = NULL;
+	GListPtr stonith_list = NULL;
+	GListPtr shutdown_list = NULL;
 
-	GSListPtr colors = NULL;
-	GSListPtr action_sets = NULL;
+	GListPtr colors = NULL;
+	GListPtr action_sets = NULL;
 
 	xmlNodePtr graph = NULL;
 
@@ -2050,7 +2050,7 @@ do_calculations(xmlNodePtr cib_object)
 		);
 
 	crm_debug_action(
-		slist_iter(action_set, GSList, action_sets, lpc,
+		slist_iter(action_set, GList, action_sets, lpc,
 			   crm_verbose("\t========= Set %d =========", lpc);
 			   slist_iter(action, action_t, action_set, lpc2,
 				      print_action("\t", action, TRUE);
@@ -2083,14 +2083,14 @@ do_calculations(xmlNodePtr cib_object)
 		pe_free_rsc_to_node((rsc_to_node_t*)node_constraints->data);
 		node_constraints = node_constraints->next;
 	}
-	g_slist_free(node_constraints);
+	g_list_free(node_constraints);
 
 	crm_verbose("deleting order cons");
 	pe_free_shallow(action_constraints);
 
 	crm_verbose("deleting action sets");
 
-	slist_iter(action_set, GSList, action_sets, lpc,
+	slist_iter(action_set, GList, action_sets, lpc,
 		   pe_free_shallow_adv(action_set, FALSE);
 		);
 	pe_free_shallow_adv(action_sets, FALSE);
@@ -2107,8 +2107,8 @@ do_calculations(xmlNodePtr cib_object)
 	crm_verbose("deleting nodes");
 	pe_free_nodes(nodes);
 	
-	g_slist_free(shutdown_list);
-	g_slist_free(stonith_list);
+	g_list_free(shutdown_list);
+	g_list_free(stonith_list);
 
 	return graph;
 }
