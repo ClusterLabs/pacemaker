@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.13 2004/12/05 16:29:51 andrew Exp $ */
+/* $Id: ipc.c,v 1.14 2004/12/10 20:03:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -234,23 +234,22 @@ init_server_ipc_comms(
 	return 0;
 }
 
-/* GCHSource* */
-IPC_Channel *
+GCHSource*
 init_client_ipc_comms(const char *channel_name,
 		      gboolean (*dispatch)(
 			      IPC_Channel* source_data, gpointer user_data),
-		      void *client_data)
+		      void *client_data, IPC_Channel **ch)
 {
-	IPC_Channel *ch = NULL;
+	*ch = NULL;
 	GCHSource *the_source = NULL;
 	void *callback_data = client_data;
 	if(callback_data == NULL) {
-		callback_data = ch;
+		callback_data = *ch;
 	}
 	
-	ch = init_client_ipc_comms_nodispatch(channel_name);
+	*ch = init_client_ipc_comms_nodispatch(channel_name);
 
-	if(ch == NULL) {
+	if(*ch == NULL) {
 		crm_err("Setup of client connection failed,"
 			" not adding channel to mainloop");
 		
@@ -264,11 +263,11 @@ init_client_ipc_comms(const char *channel_name,
 		crm_debug("Adding dispatch method to channel");
 
 		the_source = G_main_add_IPC_Channel(
-			G_PRIORITY_LOW, ch, FALSE, dispatch, callback_data, 
+			G_PRIORITY_LOW, *ch, FALSE, dispatch, callback_data, 
 			default_ipc_connection_destroy);
 	}
 	
-	return ch;
+	return the_source;
 }
 
 IPC_Channel *

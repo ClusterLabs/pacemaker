@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.4 2004/11/24 15:40:17 andrew Exp $ */
+/* $Id: main.c,v 1.5 2004/12/10 20:03:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -158,9 +158,9 @@ init_start(void)
     crm_info("Register PID");
     register_pid(PID_FILE, FALSE, pengine_shutdown);
 
-    crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
-				   subsystem_msg_dispatch,
-				   (void*)process_pe_message);
+    init_client_ipc_comms(
+	    CRM_SYSTEM_CRMD, subsystem_msg_dispatch,
+	    (void*)process_pe_message, &crm_ch);
 
     if(crm_ch != NULL) {
 	    send_hello_message(crm_ch, "1234", CRM_SYSTEM_PENGINE, "0", "1");

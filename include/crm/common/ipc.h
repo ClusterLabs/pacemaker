@@ -1,4 +1,4 @@
-/* $Id: ipc.h,v 1.4 2004/12/05 16:04:42 andrew Exp $ */
+/* $Id: ipc.h,v 1.5 2004/12/10 20:03:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,11 +39,11 @@ extern gboolean send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg);
 
 extern void default_ipc_connection_destroy(gpointer user_data);
 
-extern xmlNodePtr find_xml_in_ipcmessage(IPC_Message *msg,
-					 gboolean do_free);
+extern xmlNodePtr find_xml_in_ipcmessage(
+	IPC_Message *msg, gboolean do_free);
 
-extern gboolean send_xmlipc_message(IPC_Channel *ipc_client,
-				    xmlNodePtr msg);
+extern gboolean send_xmlipc_message(
+	IPC_Channel *ipc_client, xmlNodePtr msg);
 
 extern int init_server_ipc_comms(
 	char *channel_name,
@@ -51,11 +51,11 @@ extern int init_server_ipc_comms(
 		IPC_Channel *newclient, gpointer user_data),
 	void (*channel_connection_destroy)(gpointer user_data));
 
-/* extern GCHSource *init_client_ipc_comms( */
-extern IPC_Channel *init_client_ipc_comms(
+extern GCHSource *init_client_ipc_comms(
 	const char *channel_name,
-	gboolean (*dispatch)(IPC_Channel* source_data, gpointer user_data),
-	void *client_data);
+	gboolean (*dispatch)(
+		IPC_Channel* source_data, gpointer user_data),
+	void *client_data, IPC_Channel **ch);
 
 extern IPC_Channel *init_client_ipc_comms_nodispatch(const char *channel_name);
 
