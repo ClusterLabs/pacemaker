@@ -109,7 +109,7 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 	}
 
 	if(native->command_channel == NULL) {
-		crm_err("Connection to command channel failed");
+		crm_debug("Connection to command channel failed");
 		rc = cib_connection;
 		
 	} else if(native->command_channel->ch_status != IPC_CONNECT) {
@@ -125,7 +125,7 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 			cib_channel_callback, cib_native_dispatch, cib, &(native->callback_channel));
 		
 		if(native->callback_channel == NULL) {
-			crm_err("Connection to callback channel failed");
+			crm_debug("Connection to callback channel failed");
 			rc = cib_connection;
 		} else if(native->callback_source == NULL) {
 			crm_err("Callback source not recorded");

@@ -79,7 +79,7 @@ do_cib_control(long long action,
 			}
 			if(fsa_cib_conn->cmds->signon(
 				   fsa_cib_conn, cib_command) != cib_ok) {
-				crm_err("Could not connect to the CIB service");
+				crm_warn("Could not connect to the CIB service");
 				
 			} else if(fsa_cib_conn->cmds->add_notify_callback(
 					  fsa_cib_conn, T_CIB_UPDATE_CONFIRM,

@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.19 2005/02/07 11:11:00 andrew Exp $ */
+/* $Id: ipc.c,v 1.20 2005/02/18 15:17:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -202,12 +202,11 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	g_hash_table_destroy(attrs);
 
 	if (ch == NULL) {
-		crm_crit("Could not access channel on: %s", commpath);
+		crm_err("Could not access channel on: %s", commpath);
 		return NULL;
 		
 	} else if (ch->ops->initiate_connection(ch) != IPC_OK) {
-		crm_crit("Could not init comms on: %s", commpath);
-		fprintf(stderr, "Could not init comms on: %s\n", commpath);
+		crm_debug("Could not init comms on: %s", commpath);
 		return NULL;
 	}
 
