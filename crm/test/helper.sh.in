@@ -122,7 +122,7 @@ function remote_cmd() {
     shift
     
     if [ $local_version = "1" ]; then
-	su ${user} -c "$*"
+	su - ${user} -c "$*"
     else
 	`which ssh` ${user}@${host} "$*"
     fi
