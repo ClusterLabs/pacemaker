@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.2 2004/07/30 15:31:04 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.3 2004/08/03 09:21:43 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -277,14 +277,6 @@ handleCibMod(const char *xml)
 		return NULL;
 	}
 	
-	
-	if(strcmp(cib_object->name, obj_type) != 0) {
-		crm_err("Mismatching xml."
-		       "  Expected root element <%s>, got <%s>",
-		       obj_type, cib_object->name);
-		return NULL;
-	}
-
 	attr_name = XML_ATTR_ID;
 	
 	attr_value = xmlGetProp(cib_object, attr_name);
