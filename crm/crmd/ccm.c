@@ -57,7 +57,7 @@ do_ccm_register(long long action,
 	
 	FNIN();
 	// or pass the cluster in through "void *data"?
-	registered = register_with_ccm(fsa_cluster_connection);
+	registered = register_with_ccm(fsa_cluster_conn);
 
 	if(registered == 0)
 		FNRET(I_NULL);

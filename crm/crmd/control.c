@@ -49,13 +49,13 @@ do_ha_register(long long action,
 	
 	FNIN();
 
-	if(fsa_cluster_connection == NULL)
-		fsa_cluster_connection = ll_cluster_new("heartbeat");
+	if(fsa_cluster_conn == NULL)
+		fsa_cluster_conn = ll_cluster_new("heartbeat");
 
 	// make sure we are disconnected first
-	fsa_cluster_connection->llc_ops->signoff(fsa_cluster_connection);
+	fsa_cluster_conn->llc_ops->signoff(fsa_cluster_connection);
 	
-	registered = register_with_ha(fsa_cluster_connection,
+	registered = register_with_ha(fsa_cluster_conn,
 				      crm_system_name,
 				      crmd_ha_input_dispatch,
 				      crmd_ha_input_callback,
@@ -161,13 +161,13 @@ do_startup(long long action,
 	ipc_clients = g_hash_table_new(&g_str_hash, &g_str_equal);
 	
 	/* change the logging facility to the one used by heartbeat daemon */
-	fsa_cluster_connection = ll_cluster_new("heartbeat");
+	fsa_cluster_conn = ll_cluster_new("heartbeat");
 	
 	int facility;
 	cl_log(LOG_INFO, "Switching to Heartbeat logger");
 	if ((facility =
-	     fsa_cluster_connection->llc_ops->get_logfacility(
-		     fsa_cluster_connection)) > 0) {
+	     fsa_cluster_conn->llc_ops->get_logfacility(
+		     fsa_cluster_conn)) > 0) {
 		cl_log_set_facility(facility);
 	}
 	
@@ -184,8 +184,8 @@ do_startup(long long action,
 	
 	if (was_error == 0) {
 		CRM_DEBUG("Finding our node name");
-		fsa_our_uname = fsa_cluster_connection->llc_ops->get_mynodeid(
-			fsa_cluster_connection);
+		fsa_our_uname = fsa_cluster_conn->llc_ops->get_mynodeid(
+			fsa_cluster_conn);
 		
 		if (fsa_our_uname == NULL) {
 			cl_log(LOG_ERR, "get_mynodeid() failed");

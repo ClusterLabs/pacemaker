@@ -525,7 +525,7 @@ send_msg_via_ha(xmlNodePtr action, const char *dest_node)
 //	CRM_DEBUG2("Relaying message to (%s) via HA", dest_node);
 	set_xml_property_copy(action, XML_ATTR_HOSTTO, dest_node);
 
-	send_xmlha_message(fsa_cluster_connection, action);
+	send_xmlha_message(fsa_cluster_conn, action);
 	FNOUT();
 }
 

@@ -363,7 +363,7 @@ do_send_welcome(long long action,
 		set_xml_attr(welcome, XML_TAG_OPTIONS,
 			     XML_ATTR_OP, CRM_OPERATION_WELCOME, FALSE);
 
-		send_ha_reply(fsa_cluster_connection, welcome, NULL);
+		send_ha_reply(fsa_cluster_conn, welcome, NULL);
 
 		FNRET(I_NULL);
 	}
@@ -441,7 +441,7 @@ do_ack_welcome(long long action,
 	set_xml_attr(welcome, XML_TAG_OPTIONS,
 		     XML_ATTR_OP, CRM_OPERATION_JOINACK, FALSE);
 	
-	send_ha_reply(fsa_cluster_connection, welcome, NULL);
+	send_ha_reply(fsa_cluster_conn, welcome, NULL);
 	
 	FNRET(I_NULL);
 }

@@ -133,8 +133,8 @@ static FILE *dot_strm = NULL;
 
 enum crmd_fsa_state fsa_state;
 oc_node_list_t *fsa_membership_copy;
-ll_cluster_t   *fsa_cluster_connection;
-ll_lrm_t       *fsa_lrm_connection;
+ll_cluster_t   *fsa_cluster_conn;
+ll_lrm_t       *fsa_lrm_conn;
 long long       fsa_input_register;
 const char     *fsa_our_uname;
 

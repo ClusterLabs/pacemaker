@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.11 2004/03/27 09:33:57 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.12 2004/03/30 12:19:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -103,8 +103,8 @@ extern gboolean do_dc_heartbeat(gpointer data);
 /* Global FSA stuff */
 extern enum crmd_fsa_state fsa_state;
 extern oc_node_list_t *fsa_membership_copy;
-extern ll_cluster_t   *fsa_cluster_connection;
-extern ll_lrm_t       *fsa_lrm_connection;
+extern ll_cluster_t   *fsa_cluster_conn;
+extern ll_lrm_t       *fsa_lrm_conn;
 extern long long       fsa_input_register;
 extern const char     *fsa_our_uname;
 
