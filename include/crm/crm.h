@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.31 2004/11/12 17:09:56 andrew Exp $ */
+/* $Id: crm.h,v 1.32 2004/12/05 16:03:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -63,13 +63,21 @@
 #define CRM_SYSTEM_TENGINE	"tengine"
 
 /* Valid operations */
-#define CRM_OP_BUMP		"bump"
-#define CRM_OP_QUERY		"query"
-#define CRM_OP_CREATE		"create"
-#define CRM_OP_UPDATE		"update"
-#define CRM_OP_DELETE		"delete"
-#define CRM_OP_ERASE		"erase"
-#define CRM_OP_REPLACE		"replace"
+#define CRM_OP_NOOP		"noop"
+
+/* soon to be moved to cib.h */
+#define CRM_OP_CIB_SLAVE	"cib_slave"
+#define CRM_OP_CIB_MASTER	"cib_master"
+#define CRM_OP_CIB_SYNC		"cib_sync"
+#define CRM_OP_CIB_ISMASTER	"cib_ismaster"
+#define CRM_OP_CIB_BUMP		"cib_bump"
+#define CRM_OP_CIB_QUERY	"cib_query"
+#define CRM_OP_CIB_CREATE	"cib_create"
+#define CRM_OP_CIB_UPDATE	"cib_update"
+#define CRM_OP_CIB_DELETE	"cib_delete"
+#define CRM_OP_CIB_ERASE	"cib_erase"
+#define CRM_OP_CIB_REPLACE	"cib_replace"
+
 #define CRM_OP_RETRIVE_CIB	"retrieve_cib"
 #define CRM_OP_JOINACK		"join_ack_nack"
 #define CRM_OP_WELCOME		"welcome"
@@ -87,6 +95,7 @@
 #define CRM_OP_TRANSITION	"transition"
 #define CRM_OP_TECOMPLETE	"te_complete"
 #define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
+#define CRM_OP_REGISTER		"register"
 
 #define CRMD_STATE_ACTIVE	"member"
 #define CRMD_STATE_INACTIVE	"down"
@@ -129,7 +138,9 @@ typedef GList* GListPtr;
 			__crm_iter_head = __crm_iter_head->next;	\
 			{ a; }						\
 		}							\
-	}								\
+	}
+
+#define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
 
 /* Developmental debug stuff */
 
@@ -205,6 +216,8 @@ typedef GList* GListPtr;
 		if(x == NULL) {				\
 			crm_crit("Out of memory... exiting");	\
 			exit(1);				\
+		} else {					\
+			memset(x, 0, y);			\
 		}						\
 	}							\
 	
