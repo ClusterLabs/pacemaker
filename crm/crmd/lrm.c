@@ -578,7 +578,7 @@ do_lrm_rsc_op(
 
 		provider = get_xml_attr_nested(
 			msg, rsc_path, DIMOF(rsc_path) -2,
-			XML_AGENT_ATTR_PROVIDER, TRUE);
+			XML_AGENT_ATTR_PROVIDER, FALSE);
 	}
 	
 	if(rsc == NULL) {
@@ -631,7 +631,7 @@ do_lrm_rsc_op(
 	}
 
 	op->params = params;
-	op->interval = crm_atoi(g_hash_table_lookup(op->params,"interval"),"0");
+	op->interval = crm_get_msec(g_hash_table_lookup(op->params,"interval"));
 	op->timeout  = crm_get_msec(g_hash_table_lookup(op->params, "timeout"));
 
 	/* sanity */
@@ -903,6 +903,7 @@ do_lrm_event(long long action,
 			crm_warn("LRM operation %s/%s failed (%s)",
 				 crm_str(rsc->id), op->op_type,
 				 execra_code2string(op->rc));
+			crm_debug("Result: %s", op->output);
 			break;
 		case LRM_OP_CANCELLED:
 			crm_warn("LRM operation %s/%s was cancelled",
