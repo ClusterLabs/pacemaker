@@ -71,7 +71,7 @@ class RandomTests:
 
     def audit(self, BadNews, test):
             errcount=0
-	    print ("Looking for BadNews")
+#	    print ("Looking for BadNews")
             while errcount < 1000:
                 match=BadNews.look()
                 if match:
@@ -97,7 +97,7 @@ class RandomTests:
               self.CM.stopall()
               raise ValueError("Looks like we hit the jackpot!	:-)")
 
-	    print ("Done looking for BadNews")
+#	    print ("Done looking for BadNews")
 
             for audit in self.Audits:
                 if not audit():
