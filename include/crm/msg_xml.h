@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.23 2005/01/26 13:21:45 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.24 2005/02/07 11:31:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,8 +30,8 @@
 #define F_CRM_ORIGIN			"origin"
 
 /*---- Common tags/attrs */
-#define XML_ATTR_TAGNAME		"__name__"
-#define XML_ATTR_PARENT			"__parent__"
+#define XML_ATTR_TAGNAME		F_XML_TAGNAME
+#define XML_ATTR_PARENT			F_XML_PARENT
 #define XML_TAG_CIB			"cib"
 #define XML_TAG_FAILED			"failed"
 
