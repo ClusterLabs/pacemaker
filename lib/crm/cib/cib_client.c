@@ -516,13 +516,13 @@ cib_pluralSection(const char *a_section)
 	} else if(strcmp(a_section, XML_CIB_TAG_CONSTRAINT) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, "rsc_location") == 0) {
+	} else if(strcmp(a_section, XML_CONS_TAG_RSC_LOCATION) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, "rsc_dependancy") == 0) {
+	} else if(strcmp(a_section, XML_CONS_TAG_RSC_DEPEND) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, "rsc_order") == 0) {
+	} else if(strcmp(a_section, XML_CONS_TAG_RSC_ORDER) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
 	} else if(strcmp(a_section, XML_CIB_TAG_RESOURCE) == 0) {
