@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.15 2004/12/21 08:15:26 andrew Exp $ */
+/* $Id: unpack.c,v 1.16 2004/12/22 13:31:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -291,22 +291,19 @@ extract_event(xmlNodePtr msg)
 			if(crmd_state != NULL
 			   && safe_str_neq(crmd_state, OFFLINESTATUS)) {
 				/* always recompute */
+				crm_devel("Abort - crmd not offline");
 				abort = TRUE;
 				
-			} else if(crmd_state != NULL) {
-
-				/* regular shutdowns are caught above */
-			} else if(ccm_state != NULL
-				  && safe_str_eq(ccm_state, XML_BOOLEAN_YES)) {
-				abort = TRUE;
-
 			} else if(join_state != NULL
 				  && safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)) {
+				crm_devel("Abort - new CRMD node");
 				abort = TRUE;
+
 			} else {
 				/* this may be called more than once per shutdown
 				 * ie. once per update of each field
 				 */
+				crm_devel("Checking if this was a known shutdown");
 				event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
 				shutdown = create_shutdown_event(event_node, LRM_OP_DONE);
 				
@@ -318,6 +315,9 @@ extract_event(xmlNodePtr msg)
 			if(abort) {
 				crm_xml_debug(
 					node_state, "Update resulted in state-based abort");
+			} else if(ccm_state != NULL
+				  && safe_str_eq(ccm_state, XML_BOOLEAN_YES)) {
+				crm_devel("Ignore - new CCM node");
 			}
 		}
 		if(abort == FALSE && resources != NULL) {

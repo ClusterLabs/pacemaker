@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.10 2004/12/15 10:11:34 andrew Exp $ */
+/* $Id: main.c,v 1.11 2004/12/22 13:31:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -83,7 +83,7 @@ main(int argc, char ** argv)
 
 	CL_SIGNAL(SIGTERM, tengine_shutdown);
 
-/* 	set_crm_log_level(LOG_TRACE); */
+/*  	set_crm_log_level(LOG_DEV); */
 	crm_debug("Begining option processing");
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {

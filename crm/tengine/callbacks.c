@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.1 2004/12/15 07:37:50 andrew Exp $ */
+/* $Id: callbacks.c,v 1.2 2004/12/22 13:31:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,7 +42,8 @@ te_update_confirm(const char *event, struct ha_msg *msg)
 
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 	crm_trace("Processing %s...", event);
-
+	crm_xml_devel(update, "Processing update");
+	
 	if (MSG_LOG && msg_te_strm == NULL) {
 		struct stat buf;
 		if(stat(DEVEL_DIR, &buf) != 0) {
