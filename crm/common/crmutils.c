@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.15 2004/05/12 14:27:16 andrew Exp $ */
+/* $Id: crmutils.c,v 1.16 2004/05/23 19:10:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -276,7 +276,7 @@ char *
 crm_itoa(int an_int)
 {
 	int len = 32;
-	char *buffer = cl_malloc(sizeof(char)*(len+1));
+	char *buffer = crm_malloc(sizeof(char)*(len+1));
 	snprintf(buffer, len, "%d", an_int);
 
 	return buffer;
@@ -288,10 +288,9 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 {
 	int lpc = 0;
 	char *buffer = NULL;
-	xmlDocPtr doc = NULL;
 	IPC_Message *msg = NULL;
 	gboolean all_is_well = TRUE;
-	xmlNodePtr answer = NULL, root_xml_node = NULL;
+	xmlNodePtr root_xml_node = NULL;
 	const char *sys_to;
 	const char *type;
 
@@ -315,22 +314,9 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 
 		lpc++;
 
-		/* the docs say only do this once, but in their code
-		 * they do it every time!
-		 */
-//		xmlInitParser();
 
 		buffer = (char*)msg->msg_body;
-		cl_log(LOG_DEBUG, "Message %d [text=%s]", lpc, buffer);
-		doc = xmlParseMemory(cl_strdup(buffer), strlen(buffer));
-
-		if(doc == NULL) {
-			cl_log(LOG_INFO,
-			       "XML Buffer was not valid...\n Buffer: (%s)",
-			       buffer);
-		}
-
-		root_xml_node = xmlDocGetRootElement(doc);
+		root_xml_node = string2xml(buffer);
 
 		sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
 		type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
@@ -351,7 +337,8 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 			       "  Discarding");
 
 		} else {
-			gboolean (*process_function)(xmlNodePtr msg, IPC_Channel *sender) = NULL;
+			gboolean (*process_function)
+				(xmlNodePtr msg, IPC_Channel *sender) = NULL;
 			process_function = user_data;
 			
 			if(process_function(root_xml_node, sender) == FALSE) {
@@ -361,10 +348,9 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 			}
 			
 		}
-		
-		if(answer != NULL)
-			free_xml(answer);
-		answer = NULL;
+
+		free_xml(root_xml_node);
+		root_xml_node = NULL;
 		
 		msg->msg_done(msg);
 		msg = NULL;
