@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.26 2005/02/01 22:42:12 andrew Exp $ */
+/* $Id: xml.c,v 1.27 2005/02/07 11:17:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,7 +43,7 @@ void dump_array(
 int print_spaces(char *buffer, int spaces);
 
 int log_data_element(
-	int log_level, int depth, crm_data_t *data, gboolean formatted);
+	const char *function, int log_level, int depth, crm_data_t *data, gboolean formatted);
 
 #ifndef USE_LIBXML
 int dump_data_element(
@@ -182,26 +182,19 @@ find_entity(crm_data_t *parent,
 	    const char *id,
 	    gboolean siblings)
 {
-	while(parent != NULL) {
-		xml_child_iter(
-			parent, a_child, node_name,
-			if(id == NULL 
-			   || safe_str_eq(id,crm_element_value(a_child,XML_ATTR_ID))){
-				crm_debug("returning node (%s).", 
-					  xmlGetNodePath(a_child));
-				return a_child;
-			}
-			);
-		if(siblings) {
-#ifdef USE_LIBXML
-			parent = parent->next;
-#else
-			abort();
-#endif
-		} else {
-			break;
+	xml_child_iter(
+		parent, a_child, node_name,
+		if(id == NULL 
+		   || safe_str_eq(id,crm_element_value(a_child,XML_ATTR_ID))){
+			crm_debug("returning node (%s).", 
+				  xmlGetNodePath(a_child));
+			return a_child;
 		}
+		);
+	if(siblings) {
+		abort();
 	}
+
 	crm_warn("node <%s id=%s> not found in %s.",
 		 node_name, id, xmlGetNodePath(parent));
 	return NULL;
@@ -291,7 +284,9 @@ set_xml_property_copy(crm_data_t* node, const char *name, const char *value)
 
 	if (name == NULL || strlen(name) <= 0) {
 		
-	} else if(node == NULL || parent_name == NULL) {
+	} else if(node == NULL) {
+		
+	} else if(parent_name == NULL && strcmp(name, F_XML_TAGNAME) != 0) {
 		
 	} else if (value == NULL || strlen(value) <= 0) {
 		xml_remove_prop(node, name);
@@ -338,12 +333,24 @@ create_xml_node(crm_data_t *parent, const char *name)
 				xmlNewChild(parent, NULL, local_name, NULL);
 		}
 #else
+		local_name = name;
 		ret_value = ha_msg_new(1);
+		CRM_ASSERT(ret_value != NULL);
+		
+		set_xml_property_copy(ret_value, XML_ATTR_TAGNAME, name);
 		crm_validate_data(ret_value);
 		if(parent) {
-			ha_msg_addstruct(parent, name, ret_value);
+			parent_name = crm_element_name(parent);
+			crm_insane("Attaching %s to parent %s",
+				   local_name, parent_name);
+			CRM_ASSERT(HA_OK == ha_msg_addstruct(
+					   parent, name, ret_value));
+			crm_msg_del(ret_value);
+
 			crm_update_parents(parent);
 			crm_validate_data(parent);
+			ret_value = parent->values[parent->nfields-1];
+			crm_validate_data(ret_value);
 		}
 #endif
 	}
@@ -386,7 +393,7 @@ free_xml_fn(crm_data_t *a_node)
 		crm_element_parent(a_node, &parent);
 		if(parent != NULL) {
 			/* delete it from the parent */
-			cl_msg_del_value(parent, crm_element_name(a_node), FT_STRUCT);
+			cl_msg_remove_value(parent, a_node);
 			crm_validate_data(parent);
 
 		} else {
@@ -456,13 +463,14 @@ copy_xml_node_recursive(crm_data_t *src_node)
 	return local_node;
 #   endif		
 #else
-	if(src_node == NULL || src_node->name != NULL) {
+	if(src_node == NULL || crm_element_name(src_node) != NULL) {
 		return NULL;
 	}
 	new_xml = ha_msg_copy(src_node);
 	crm_set_element_parent(new_xml, NULL);
 	crm_update_parents(new_xml);
 	crm_validate_data(new_xml);
+	CRM_ASSERT(new_xml != NULL);
 #endif
 	return new_xml;
 }
@@ -660,18 +668,26 @@ int
 write_xml_file(crm_data_t *xml_node, const char *filename) 
 {
 	int res = 0;
-	char now_str[26];
+	char now_str[30];
 	time_t now;
 
 	crm_debug("Writing XML out to %s", filename);
-
 	if (xml_node == NULL) {
 		return -1;
 	}
 
+	crm_validate_data(xml_node);
+	crm_xml_debug(xml_node, "Writing out");
+	crm_validate_data(xml_node);
+	
 	now = time(NULL);
 	ctime_r(&now, now_str);
+	now_str[24] = EOS; /* replace the newline */
 	set_xml_property_copy(xml_node, "last_written", now_str);
+
+	crm_validate_data(xml_node);
+	crm_xml_debug(xml_node, "Writing out revised xml");
+	crm_validate_data(xml_node);
 	
 #ifdef USE_LIBXML
 	if (xml_node->doc == NULL) {
@@ -716,8 +732,21 @@ print_xml_formatted(int log_level, const char *function,
 
 	do_crm_log(log_level, function, NULL, "%s:",
 		   crm_str(text));
-	log_data_element(log_level, 0, msg, TRUE);
+	log_data_element(function, log_level, 0, msg, TRUE);
 	return;
+}
+
+gboolean
+add_message_xml(HA_Message *msg, const char *field, crm_data_t *xml) 
+{
+#ifdef USE_LIBXML
+	char *buffer = dump_xml_formatted(xml);
+	ha_msg_add(msg, field, buffer);
+	crm_free(buffer);
+#else
+	ha_msg_addstruct(msg, field, xml);
+#endif
+	return TRUE;
 }
 
 
@@ -768,6 +797,7 @@ dump_xml_formatted(crm_data_t *an_xml_node)
 	crm_malloc(buffer, sizeof(char)*30000);
 	mutable_ptr = buffer;
 	
+	crm_validate_data(an_xml_node);
 	if(dump_data_element(0, &mutable_ptr, an_xml_node, TRUE) < 0) {
 		crm_crit("Could not dump the whole message");
 		CRM_ASSERT(FALSE);
@@ -876,7 +906,8 @@ print_spaces(char *buffer, int depth)
 
 int
 log_data_element(
-	int log_level, int depth, crm_data_t *data, gboolean formatted) 
+	const char *function, int log_level, int depth,
+	crm_data_t *data, gboolean formatted) 
 {
 	int printed = 0;
 	int child_result = 0;
@@ -894,7 +925,7 @@ log_data_element(
 		xml_child_iter(
 			data, a_child, NULL,
 			child_result = log_data_element(
-				log_level, depth, a_child, formatted);
+				function, log_level, depth, a_child, formatted);
 			if(child_result < 0) {
 				return child_result;
 			}
@@ -939,7 +970,7 @@ log_data_element(
 
 	printed = sprintf(buffer, "%s>", has_children==0?"/":"");
 	update_buffer_head(buffer, printed);
-	do_crm_log(log_level,  __FUNCTION__, NULL, "%s", print_buffer);
+	do_crm_log(log_level,  function, NULL, "%s", print_buffer);
 	buffer = print_buffer;
 	
 	if(has_children == 0) {
@@ -949,7 +980,7 @@ log_data_element(
 	xml_child_iter(
 		data, a_child, NULL,
 		child_result = log_data_element(
-			log_level, depth+1, a_child, formatted);
+			function, log_level, depth+1, a_child, formatted);
 
 		if(child_result < 0) { return -1; }
 		);
@@ -958,7 +989,7 @@ log_data_element(
 		printed = print_spaces(buffer, depth);
 		update_buffer_head(buffer, printed);
 	}
-	do_crm_log(log_level,  __FUNCTION__, NULL, "%s</%s>",
+	do_crm_log(log_level, function, NULL, "%s</%s>",
 		   print_buffer, name);
 	crm_insane("Dumped %s...", name);
 
@@ -971,13 +1002,12 @@ int
 dump_data_element(
 	int depth, char **buffer, const crm_data_t *data, gboolean formatted) 
 {
-	int lpc = 0;
 	int printed = 0;
 	int child_result = 0;
 	int has_children = 0;
 	const char *name = crm_element_name(data);
 
-	crm_debug("Dumping %s...", name);
+	crm_insane("Dumping %s...", name);
 	if(buffer == NULL || *buffer == NULL) {
 		crm_err("No buffer supplied to dump XML into");
 		return -1;
@@ -1005,27 +1035,24 @@ dump_data_element(
 	
 	if(formatted) {
 		printed = print_spaces(*buffer, depth);
-		update_buffer_head(buffer, printed);
+		update_buffer_head(*buffer, printed);
 	}
 	
 	printed = sprintf(*buffer, "<%s", name);
-	update_buffer_head(buffer, printed);
+	update_buffer_head(*buffer, printed);
 
-	xml_prop_iter(
-		data, prop_name, prop_value,
-
-		if(safe_str_eq(XML_ATTR_TAGNAME, prop_name)) {
-			continue;
-		} else if(safe_str_eq(XML_ATTR_PARENT, prop_name)) {
-			continue;
-		}
-		
-		crm_debug("Dumping <%s %s=\"%s\"...",
+	xml_prop_iter(data, prop_name, prop_value,
+			if(safe_str_eq(XML_ATTR_TAGNAME, prop_name)) {
+				continue;
+			} else if(safe_str_eq(XML_ATTR_PARENT, prop_name)) {
+				continue;
+			}
+			crm_insane("Dumping <%s %s=\"%s\"...",
 			  name, prop_name, prop_value);
-		printed = sprintf(*buffer, " %s=\"%s\"", prop_name, prop_value);
-		update_buffer_head(buffer, printed);
+			printed = sprintf(*buffer, " %s=\"%s\"", prop_name, prop_value);
+			update_buffer_head(*buffer, printed);
 		);
-
+	
 	xml_child_iter(
 		data, child, NULL,
 		if(child != NULL) {
@@ -1036,7 +1063,7 @@ dump_data_element(
 
 	printed = sprintf(*buffer, "%s>%s",
 			  has_children==0?"/":"", formatted?"\n":"");
-	update_buffer_head(buffer, printed);
+	update_buffer_head(*buffer, printed);
 
 	if(has_children == 0) {
 		return 0;
@@ -1052,11 +1079,11 @@ dump_data_element(
 
 	if(formatted) {
 		printed = print_spaces(*buffer, depth);
-		update_buffer_head(buffer, printed);
+		update_buffer_head(*buffer, printed);
 	}
 	printed = sprintf(*buffer, "</%s>%s", name, formatted?"\n":"");
-	update_buffer_head(buffer, printed);
-	crm_debug("Dumped %s...", name);
+	update_buffer_head(*buffer, printed);
+	crm_insane("Dumped %s...", name);
 
 	return has_children;
 }
@@ -1372,7 +1399,9 @@ crm_validate_data(crm_data_t *root)
 	if(root == NULL) {
 		return;
 	}
+	crm_trace("Checking %s is valid", crm_element_name(root));
 	CRM_ASSERT(cl_is_allocated(root) == 1);
+	CRM_ASSERT(root->nfields < 300);
 	
 	for (lpc = 0; lpc < root->nfields; lpc++) {
 		void *child = root->values[lpc];
