@@ -301,7 +301,7 @@ if __name__ == '__main__':
 
     HAdir = "/etc/ha.d"
     LogFile = "/var/log/ha-log-local7"
-    DoStonith = 0
+    DoStonith = 1
     DoStandby = 1
     NumIter = 500
     SuppressMonitoring = None
