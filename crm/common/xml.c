@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.24 2005/01/26 13:30:58 andrew Exp $ */
+/* $Id: xml.c,v 1.25 2005/01/27 09:21:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -425,16 +425,43 @@ crm_data_t*
 copy_xml_node_recursive(crm_data_t *src_node)
 {
 	crm_data_t *new_xml = NULL;
-	if(src_node != NULL) {
+	
 #ifdef USE_LIBXML
-		new_xml = xmlCopyNode(src_node, 1);
-#else
-		new_xml = ha_msg_copy(src_node);
-		crm_set_element_parent(new_xml, NULL);
-		crm_update_parents(new_xml);
-		crm_validate_data(new_xml);
-#endif
+#   if 1
+	return xmlCopyNode(src_node, 1);
+#   else
+	xmlNodePtr local_node = NULL, local_child = NULL;
+
+	if(src_node == NULL || src_node->name == NULL) {
+		return NULL;
 	}
+	
+	local_node = create_xml_node(NULL, src_node->name);
+
+	copy_in_properties(local_node, src_node);
+	
+	xml_child_iter(
+		src_node, node_iter, NULL,
+		local_child = copy_xml_node_recursive(node_iter);
+		if(local_child != NULL) {
+			xmlAddChild(local_node, local_child);
+			crm_insane("Copied node [%s [%s]",
+				   local_node->name, local_child->name);
+		}
+		);
+	
+	crm_insane("Returning [%s]", local_node->name);
+	return local_node;
+#   endif		
+#else
+	if(src_node == NULL || src_node->name != NULL) {
+		return NULL;
+	}
+	new_xml = ha_msg_copy(src_node);
+	crm_set_element_parent(new_xml, NULL);
+	crm_update_parents(new_xml);
+	crm_validate_data(new_xml);
+#endif
 	return new_xml;
 }
 
