@@ -84,11 +84,11 @@ register_fsa_input_adv(
 {
 	unsigned  old_len = g_list_length(fsa_message_queue);
 	fsa_data_t *fsa_data = NULL;
-	
-	crm_debug("%s raised FSA input %s (cause=%s) %s data",
-		  raised_from,fsa_input2string(input),
-		  fsa_cause2string(cause), data?"with":"without");
 
+	crm_verbose("%s raised FSA input %s (cause=%s) %s data",
+		    raised_from,fsa_input2string(input),
+		    fsa_cause2string(cause), data?"with":"without");
+	
 	if(input == I_WAIT_FOR_EVENT) {
 		do_fsa_stall = TRUE;
 		set_bit_inplace(fsa_actions, with_actions);
@@ -124,7 +124,7 @@ register_fsa_input_adv(
 			 *    even in the case that N=2, is no worse than if we
 			 *    had not disarded the vote).
 			 */
-			crm_debug("Vote compression: %d", old_len);
+			crm_verbose("Vote compression: %d", old_len);
 			return;
 		}
 
@@ -133,7 +133,7 @@ register_fsa_input_adv(
 			((ha_msg_input_t*)data)->msg, F_CRM_TASK);
 		if(safe_str_eq(op, CRM_OP_VOTE)) {
 			last_was_vote = TRUE;
-			crm_debug("Added vote: %d", old_len);
+			crm_devel("Added vote: %d", old_len);
 		}
 
 	} else {
@@ -213,7 +213,7 @@ register_fsa_input_adv(
 	crm_verbose("Queue len: %d -> %d", old_len,
 		  g_list_length(fsa_message_queue));
 
-	fsa_dump_queue(LOG_VERBOSE);
+	fsa_dump_queue(LOG_DEV);
 	
 	if(old_len == g_list_length(fsa_message_queue)){
 		crm_err("Couldnt add message to the queue");
@@ -462,6 +462,7 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 	gboolean processing_complete = FALSE;
 	const char *host_to = cl_get_string(relay_message, F_CRM_HOST_TO);
 	const char *sys_to  = cl_get_string(relay_message, F_CRM_SYS_TO);
+	const char *sys_from= cl_get_string(relay_message, F_CRM_SYS_FROM);
 	const char *type    = cl_get_string(relay_message, F_TYPE);
 	const char *msg_error = NULL;
 
@@ -522,7 +523,17 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 			ROUTER_RESULT("Message result: DC/CRMd process");
 			processing_complete = FALSE; /* more to be done by caller */
 				
-		} else if(originated_locally) {
+		} else if(originated_locally
+			  && safe_str_neq(sys_from, CRM_SYSTEM_PENGINE)
+			  && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE)) {
+
+			/* Neither the TE or PE should be sending messages
+			 *   to DC's on other nodes
+			 *
+			 * By definition, if we are no longer the DC, then
+			 *   the PE or TE's data should be discarded
+			 */
+			
 			ROUTER_RESULT("Message result: External relay to DC");
 			send_msg_via_ha(fsa_cluster_conn, relay_message);
 				
@@ -680,7 +691,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		if(table_key == NULL) {
 			table_key = (gpointer)crm_strdup(client_name);
 		}
-		crm_debug("Accepted client %s", crm_str(table_key));
+		crm_verbose("Accepted client %s", crm_str(table_key));
 
 		curr_client->table_key = table_key;
 		curr_client->sub_sys = crm_strdup(client_name);
@@ -694,7 +705,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 				   "n/a", CRM_SYSTEM_CRMD,
 				   "0", "1");
 
-		crm_debug("Updated client list with %s", crm_str(table_key));
+		crm_devel("Updated client list with %s", crm_str(table_key));
 		
 		if(the_subsystem != NULL) {
 			set_bit_inplace(
