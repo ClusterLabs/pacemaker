@@ -21,8 +21,13 @@ testdir=@libdir@/heartbeat/crmtest
 . ${testdir}/helper.sh || exit 1
 
 CRM_ERR_SHUTDOWN=0
+test_nodes=2
 
+while [ $iteration -lt $repeats ]; do
+    iteration=`expr $iteration + 1`
 
+    echo "########### Begining iteration $iteration of $repeats ###########"
+(
 # make *sure* theres nothing left over from last time
 crm-cleanup
 
@@ -202,7 +207,7 @@ cts_assert "Shutdown of ${test_node_1} failed"
 #----
 
 do_cmd echo Various sanity checks - stage 3
-do_cmd wait_for_state S_IDLE 60 $test_node_2 
+do_cmd wait_for_state S_IDLE 60 $test_node_2
 cts_assert "S_IDLE not reached on $test_node_2 after shutdown!"
 
 do_cmd is_running rsc1 $test_node_2
@@ -239,3 +244,5 @@ cts_assert "Shutdown of ${test_node_2} failed."
 do_cmd remote_cmd $CRMD_USER $test_node_2 killall -9 crmd
 
 echo "test: PASSED"
+)
+done

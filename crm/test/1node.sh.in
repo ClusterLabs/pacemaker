@@ -22,6 +22,11 @@ testdir=@libdir@/heartbeat/crmtest
 
 CRM_ERR_SHUTDOWN=1
 
+while [ $iteration -lt $repeats ]; do
+    iteration=`expr $iteration + 1`
+    echo "########### Begining iteration $iteration of $repeats ###########"
+(
+
 # make *sure* theres nothing left over from last time
 crm-cleanup
 
@@ -136,3 +141,6 @@ cts_assert "Shutdown of ${test_node_1} failed."
 do_cmd remote_cmd $CRMD_USER $test_node_1 killall -9q crmd
 
 echo "test: PASSED"
+)
+
+done

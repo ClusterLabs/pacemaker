@@ -24,9 +24,20 @@
 
 # no more exit below here, use return instead; gives more flexibility ...
 
+test_type=`basename $0`
+test_nodes=1
+dump_dir=/home/ha-tests
+
 HALIB_DIR=@libdir@/heartbeat
 HAVAR_DIR=@HA_VARLIBDIR@/heartbeat
 HAINIT_DIR=@INITDIR@
+
+# hack for my local workspace
+if [ `hostname` = "ibook.local" ]; then
+    HALIB_DIR=/usr/lib/heartbeat
+    HAVAR_DIR=/var/lib/heartbeat
+    HAINIT_DIR=/etc/init.d
+fi
 
 INIT_USER=root
 CRMD_USER=root
@@ -42,6 +53,9 @@ OUTPUT_STDERR=0
 OUTPUT_STDOUT=0
 OUTPUT_CMDS=0
 OUTPUT_ECHO=1
+
+repeats=1
+iteration=0
 
 done=0
 
@@ -59,6 +73,9 @@ while test "$done" = "0"; do
 	--verbose | -v)	OUTPUT_CMDS=1; shift;;
 
 	--logfile | -l)	logfile=${2?no logfile??}     shift 2;;
+	--dumpdir | -d)	dump_dir=${2?no dumpdir??}     shift 2;;
+
+	--repeat  | -r)	repeats=${2?no max repetitions??} || return 1; shift 2;;
 
 	--init    | -i)	INIT_USER=${2?no init user??} || return 1; shift 2;;
 	--admin   | -a)	ADMIN_USER=${2?no admin??}    || return 1; shift 2;;
@@ -66,6 +83,7 @@ while test "$done" = "0"; do
 
 	--node1   | -1)	test_node_1=${2?no node1??}   || return 1; shift 2;;
 	--node2   | -2)	test_node_2=${2?no node2??}   || return 1; shift 2;;
+	--node3   | -3)	test_node_3=${2?no node2??}   || return 1; shift 2;;
 
 	--ip1)	ip_rsc_1=${2?no ip1??}                || return 1; shift 2;;
 	--ip2)	ip_rsc_2=${2?no ip2??}                || return 1; shift 2;;
@@ -74,6 +92,12 @@ while test "$done" = "0"; do
 	*) echo "unknown option: $1"; return 1;;
     esac
 done
+
+function test_init() {
+    export date_str=`date "+%Y-%b-%e_%H:%M"`
+    export test_dump_dir="$dump_dir/$test_type/$date_str"
+    mkdir -p "$test_dump_dir"
+}
 
 function remote_cmd() {
     user=$1
@@ -261,9 +285,12 @@ function do_cts_assert() {
     shift
     shift
 
+set -x
     if [ $result -ne $expected ]; then
+set  +x
 	err $*
     fi
+set  +x
 }
 
 function err() {
@@ -275,10 +302,30 @@ function err() {
 	    remote_cmd hacluster $test_node_2 killall -9 crmd
 	fi
     fi
+    
+    echo Dumping test nodes to $dump_dir
+    dump_node 1 $test_node_1
+    dump_node 2 $test_node_2
+    dump_node 3 $test_node_3
 
     echo "test: FAILED"
+    echo "ERROR: $*" > $test_dump_dir/error.txt
+    echo "ERROR: $*" >> $test_dump_dir/test.txt
 
     exit 1
+}
+
+function dump_node() {
+
+    a_node_index=$1
+    a_node=$2
+
+    dump_file="${date_str}-${a_node_index}-${a_node}.tgz"
+    `which ssh` ${ADMIN_USER}@${a_node} \
+	"tar zcvf /tmp/${dump_file} /tmp/crm ~${CRMD_USER}/core"
+
+    scp -r ${ADMIN_USER}@${a_node}:/tmp/${dump_file} $test_dump_dir
+
 }
 
 function do_cmd() {
@@ -297,17 +344,17 @@ function do_cmd() {
 	    user=$2
 	    host=$3
 	    shift 3
-	    echo `date` ": Running '$*' as ${user}@${host}";
+	    echo `date` ": Running '$*' as ${user}@${host}" | tee -a $test_dump_dir/test.txt;
 
 	elif [ $cmd = "wait_for_state" ]; then
 	    host=$4
 	    if [ -z $host ]; then
 		host="the DC"
 	    fi
-	    echo `date` ": Waiting for state $2 on $host (max $3 attempts)";
+	    echo `date` ": Waiting for state $2 on $host (max $3 attempts)" | tee -a $test_dump_dir/test.txt;
 	    
 	elif [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
-	    echo `date` ": Searching '$cmdline'";
+	    echo `date` ": Searching '$cmdline'" | tee -a $test_dump_dir/test.txt;
 	    
 	elif [ $cmd = "echo" ]; then
 	    echo -n ""
@@ -318,39 +365,43 @@ function do_cmd() {
 #		$cmdline		
 #	    fi
 	else
-	    echo `date` ": Running '$cmdline'";
+	    echo `date` ": Running '$cmdline'" | tee -a $test_dump_dir/test.txt;
 	fi
     fi
 
     if [ $cmd = "echo" ]; then
 	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
-		echo -n `date` ": "
+		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
 		echo -n -e "\033[01;33m"
-		$cmdline		
-#		echo -n "\[\033[01;34m\]"
+		$cmdline | tee -a $test_dump_dir/test.txt
 		echo -n -e "\[\033[00m\]"
 	    elif [ $OUTPUT_ECHO -eq 1 -a $OUTPUT_CMDS -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
-		echo -n `date` ": "
+		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
 		echo -n -e "\033[01;33m"
-		$cmdline		
-#		echo -n "\[\033[01;34m\]"
+		$cmdline | tee -a $test_dump_dir/test.txt
 		echo -n -e "\033[00m"
 	    fi
 
-    elif [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
+    elif [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
 	$cmdline
+	rc=$?
+	# for the logs...
+	$cmdline 2>&1 >> $test_dump_dir/test.txt
+
+    elif [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
+	$cmdline 2>&1 >> $test_dump_dir/test.txt
 	rc=$?
     elif [ $OUTPUT_STDERR -eq 0 -a $OUTPUT_STDOUT -eq 0 ]; then
 	$cmdline 2>&1 >/dev/null
 	rc=$?
     elif [ $OUTPUT_STDOUT -eq 0 ]; then
-	$cmdline >/dev/null
+	$cmdline >/dev/null 2>> $test_dump_dir/test.txt
 	rc=$?
     elif [ $OUTPUT_STDERR -eq 0 ]; then
-	$cmdline 2>/dev/null
+	$cmdline 2>/dev/null >> $test_dump_dir/test.txt
 	rc=$?
     else
-	$cmdline
+	$cmdline 2>&1 >> $test_dump_dir/test.txt
 	rc=$?
     fi
 
@@ -391,6 +442,7 @@ function crm-cleanup() {
 	do_cmd remote_cmd $CRMD_USER $test_node_2 "rm -f ~/core"
 	do_cmd remote_cmd $CRMD_USER $test_node_3 "rm -f ~/core"
 
+	test_init
     fi
 }
 
