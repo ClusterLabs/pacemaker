@@ -848,7 +848,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_POLICY_ENGINE	==> */	A_LOG|A_PE_INVOKE,
 		/* S_RECOVERY		==> */	A_LOG|A_RECOVER|O_RELEASE,
 		/* S_RELEASE_DC		==> */	A_LOG|O_RELEASE,
-		/* S_PENDING		==> */	A_LOG|A_STARTUP,
+		/* S_PENDING		==> */	A_LOG,
 		/* S_STOPPING		==> */	A_LOG|O_SHUTDOWN,
 		/* S_TERMINATE		==> */	A_LOG|O_SHUTDOWN,
 		/* S_TRANSITION_ENGINE	==> */	A_LOG|A_TE_INVOKE,
