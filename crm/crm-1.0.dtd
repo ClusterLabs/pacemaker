@@ -123,12 +123,12 @@ More details are given in the annotated DTD below.
      This is expressed as follows: You can have multiple sets of
      'instance attributes'. The one with the highest weight is chosen.
 
-     Otherwise, if a matching node_ref is found, the instance parameters
-     there override the defaults completely; the node_ref list is
+     Otherwise, if a matching attr_expression is found, the instance parameters
+     there override the defaults completely; the attr_expression list is
      evaluated ordered by the no tag. The weight attribute doesn't make
      much sense here.
      -->
-<!ELEMENT instance_attributes (node_ref?, parameters?, timings?)>
+<!ELEMENT instance_attributes (attr_expression?, parameters?, timings?)>
 <!ATTLIST instance_attributes
 	  weight	CDATA #IMPLIED
 	  id		CDATA #REQUIRED>
@@ -207,14 +207,30 @@ More details are given in the annotated DTD below.
      The rsc references, suprisingly, a resource id.
 
   -->
-<!ELEMENT rsc_to_node (node_ref)>
+<!ELEMENT rsc_to_node (node_ref+)>
 <!ATTLIST rsc_to_node
 		lifetime CDATA #IMPLIED
 		timestamp CDATA #IMPLIED
 		id	CDATA #REQUIRED
 		weight  CDATA #IMPLIED
 		modifier (set|inc|dec) 'inc'
-		rsc	CDATA #REQUIRED>
+		from	CDATA #REQUIRED>
+
+<!ELEMENT rsc_to_attr (attr_expression+)>
+<!ATTLIST rsc_to_attr
+		lifetime CDATA #IMPLIED
+		timestamp CDATA #IMPLIED
+		id	CDATA #REQUIRED
+		weight  CDATA #IMPLIED
+		modifier (set|inc|dec) 'inc'
+		from	CDATA #REQUIRED>
+
+<!ELEMENT node_ref>
+<!ATTLIST node_ref
+	  id CDATA #REQUIRED
+	  type (id|uname) 'uname'
+	  name CDATA #REQUIRED
+>
 
 <!-- 
      This is similar, but works in the opposite direction; it allows the
@@ -234,7 +250,7 @@ More details are given in the annotated DTD below.
      emperor: this will make the node a candidate to run all resources
      by default.  -->
 
-<!ELEMENT node_baseweight (node_ref+)>
+<!ELEMENT node_baseweight (attr_expression+)>
 <!ATTLIST node_baseweight
 		lifetime CDATA #IMPLIED
 		timestamp CDATA #IMPLIED
@@ -248,15 +264,15 @@ More details are given in the annotated DTD below.
      (You can express "OR" by having multiple rsc_to_node / node_baseweight
      entries.)
   -->
-<!ELEMENT node_ref (node_match+)>
-<!ATTLIST node_ref
+<!ELEMENT attr_expression (node_match+)>
+<!ATTLIST attr_expression
 		id	CDATA #REQUIRED>
 
 <!ELEMENT node_match EMPTY>
 <!ATTLIST node_match
 		id	CDATA #REQUIRED
 		target	CDATA #REQUIRED
-		type	(id|uname|has_attr|not_attr|attr_value) #REQUIRED
+		type	(has_attr|not_attr|attr_value) #REQUIRED
 		value	CDATA #IMPLIED>
 
 
