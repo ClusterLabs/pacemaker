@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.19 2005/02/10 11:05:29 andrew Exp $ */
+/* $Id: callbacks.c,v 1.20 2005/02/16 18:00:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -294,6 +294,7 @@ cib_common_callback(
 	HA_Message *op_request = NULL;
 	HA_Message *op_reply   = NULL;
 
+	gboolean needs_processing = FALSE;
 	cib_client_t *cib_client = user_data;
 
 	if(cib_client == NULL) {
@@ -319,7 +320,7 @@ cib_common_callback(
 		crm_verbose("Processing IPC message from %s on %s channel",
 			    cib_client->id, cib_client->channel_name);
  		crm_log_message(LOG_MSG, op_request);
-		crm_log_message_adv(LOG_DEBUG, DEVEL_DIR"/cib.client-in.log", op_request);
+		crm_log_message_adv(LOG_DEBUG, "cib.client-in.log", op_request);
 		
 		lpc++;
 		rc = cib_ok;
@@ -346,6 +347,7 @@ cib_common_callback(
 			rc = cib_not_authorized;
 		}
 
+		needs_processing = FALSE;
 		if(rc != cib_ok) {
 			/* TODO: construct error reply */
 			crm_err("Pre-processing of command failed: %s",
@@ -354,17 +356,13 @@ cib_common_callback(
 		} else if(host == NULL && cib_is_master
 			&& !(call_options & cib_scope_local)) {
  			crm_debug("Processing master %s op locally", op);
-			rc = cib_process_command(
-				op_request, &op_reply, privileged);
- 			crm_debug("Processing complete");
+			needs_processing = TRUE;
 
 		} else if(
 			(host == NULL && (call_options & cib_scope_local))
 			  || safe_str_eq(host, cib_our_uname)) {
  			crm_debug("Processing %s op locally", op);
-			rc = cib_process_command(
-				op_request, &op_reply, privileged);
- 			crm_debug("Processing complete");
+			needs_processing = TRUE;
 
 		} else {
 			/* send via HA to other nodes */
@@ -400,6 +398,18 @@ cib_common_callback(
 			continue;
 		}
 
+		if(needs_processing) {
+ 			crm_verbose("Processing %s op", op);
+			rc = cib_process_command(
+				op_request, &op_reply, privileged);
+			crm_debug("Performing local processing: op=%s origin=%s/%s,%s (update=%s)",
+				  op, cib_our_uname, cib_client->id,
+				  cl_get_string(op_request, F_CIB_CALLID),
+				  (rc==cib_ok && cib_server_ops[call_type].modifies_cib)?"true":"false");
+ 			crm_debug("Processing complete");
+		}
+		
+		
 		crm_debug("processing response cases");
 		if(rc != cib_ok) {
 			crm_err("Input message");
@@ -452,7 +462,7 @@ cib_common_callback(
  			crm_info("Forwarding %s op to all instances", op);
 			ha_msg_add(op_request, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 			cl_log_message(LOG_DEBUG, op_request);
-			hb_conn->llc_ops->sendclustermsg(hb_conn, op_request);
+			CRM_DEV_ASSERT(HA_OK == hb_conn->llc_ops->sendclustermsg(hb_conn, op_request));
 
 		} else {
 			if(call_options & cib_scope_local ) {
@@ -842,7 +852,12 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 	crm_trace("Retrieved call options: %d", call_options);
 
 	if(process) {
-		crm_debug("Performing local processing");
+		crm_debug("Performing local processing: op=%s origin=%s/%s,%s (update=%s)",
+			  cl_get_string(msg, F_CIB_OPERATION),
+			  originator,
+			  cl_get_string(msg, F_CIB_CLIENTID),
+			  cl_get_string(msg, F_CIB_CALLID),
+			  update);
 		rc = cib_process_command(msg, &op_reply, TRUE);
 	}
 	
