@@ -75,12 +75,19 @@ class LinuxHAv2(HeartbeatCM):
                 r"CRIT:",
             ),
         })
-	default_cts_cib='''
+	self.default_cts_cib='''
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
    <configuration>
      <crm_config/>
      <nodes/>
      <resources>
+       <resource id="DcIPaddr" class="heartbeat" type="IPaddr2" priority="1.0">
+         <instance_attributes>
+	   <rsc_parameters>
+	     <nvpair name="1" value="127.0.0.10"/>
+	   </rsc_parameters>
+         </instance_attributes>
+       </resource>
      </resources>
      <constraints>
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
@@ -93,24 +100,11 @@ class LinuxHAv2(HeartbeatCM):
    <status/>
 </cib>
 '''
-	a_resource='''
-       <resource id="DcIPaddr" class="heartbeat" type="IPaddr2" priority="1.0">
-         <instance_attributes>
-	   <rsc_parameters>
-	     <nvpair name="1" value="127.0.0.10"/>
-	   </rsc_parameters>
-         </instance_attributes>
-       </resource>
-'''
         # KLUDGE!  Expedient, but a Kludge (FIXME)
 #        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
         CTStests.AllTestClasses = [FlipTest, RestartTest, StartOnebyOne, SimulStart, SimulStop]
 #        CTSaudits.AllAuditClasses = [CrmdStateAudit, HAResourceAudit]
         CTSaudits.AllAuditClasses = [CrmdStateAudit, DcAudit, DcIPaddrAudit]
-	if self.Env["ClobberCIB"] != None:
-	    if self.Env["CIBfilename"] == None:
-		os.system("echo " + default_cts_cib + " > /tmp/cts.default.cib")
-		self.Env["CIBfilename"] = "/tmp/cts.default.cib"
     
     def StataCM(self, node):
 
@@ -146,7 +140,15 @@ class LinuxHAv2(HeartbeatCM):
                 %(self["Name"], node))
 
 	if self.Env["ClobberCIB"] != None:
-	    self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
+	    if self.Env["CIBfilename"] == None:
+		os.system("rm -f /tmp/cts.default.cib")
+		self.log("Installing default CIB")
+		os.system("echo \'" + self.default_cts_cib + "\' > /tmp/cts.default.cib")
+		self.rsh.cp("/tmp/cts.default.cib", self["CIBfile"]%node)
+		os.system("rm -f /tmp/cts.default.cib")
+	    else:
+		self.log("Installing CIB from %s" %(self.Env["CIBfilename"]))
+		self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
 
         self.rsh(node, self["StartCmd"])
         if watch.look():
