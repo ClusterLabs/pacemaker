@@ -489,8 +489,8 @@ crmd_authorize_message(
 		       (char*)table_key);
 		
 		if(the_subsystem != NULL) {
-			set_bit_inplace(&fsa_input_register,
-					the_subsystem->flag);
+			set_bit_inplace(
+				fsa_input_register, the_subsystem->flag);
 		}
 		
 		s_crmd_fsa(C_SUBSYSTEM_CONNECT, I_NULL, NULL);
@@ -580,9 +580,6 @@ handle_request(xmlNodePtr stored_msg)
 		relay_message(wrapper, TRUE);
 		free_xml(wrapper);
 
-	} else if(strcmp(op, CRM_OP_JOINACK) == 0) {
-		next_input = I_JOIN_RESULT;
-				
 	} else if(strcmp(op, "init_shutdown") == 0) {
 		
 		crm_shutdown(SIGTERM);
@@ -615,6 +612,10 @@ handle_request(xmlNodePtr stored_msg)
 				next_input = I_DC_HEARTBEAT;
 			} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
 				next_input = I_JOIN_OFFER;
+				
+			} else if(fsa_our_dc != NULL
+				  && strcmp(op, CRM_OP_JOINACK) == 0) {
+				next_input = I_JOIN_RESULT;
 				
 			} else if(fsa_our_dc != NULL
 				  && strcmp(op, CRM_OP_REPLACE) == 0) {
@@ -710,10 +711,13 @@ handle_response(xmlNodePtr stored_msg)
 	} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
 			next_input = I_JOIN_REQUEST;
 				
-	} else if(strcmp(op, CRM_OP_JOINACK) == 0) {
-			next_input = I_JOIN_RESULT;
+	} else if(AM_I_DC && strcmp(op, CRM_OP_JOINACK) == 0) {
+		next_input = I_JOIN_RESULT;
 				
-	} else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
+ 	} else if(AM_I_DC && strcmp(op, CRM_OP_RETRIVE_CIB) == 0) {
+		next_input = I_CIB_OP;		
+		
+ 	} else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
 
 		if(fsa_state == S_POLICY_ENGINE
 		   && safe_str_eq(msg_ref, fsa_pe_ref)) {
@@ -939,10 +943,10 @@ void
 send_msg_via_ha(xmlNodePtr action, const char *dest_node)
 {
 	
-	if (action == NULL) return;
+	if (action == NULL) {
+		return;
 
-	if (validate_crm_message(action, NULL, NULL, NULL) == NULL)
-	{
+	} else if (validate_crm_message(action, NULL, NULL, NULL) == NULL) {
 		crm_err("Relay message to (%s) via HA was invalid, ignoring",
 			dest_node);
 		return;
@@ -979,8 +983,8 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_CIB) == 0) {
 		crm_err("Sub-system (%s) has been incorporated into the CRMd.",
 			sys);
-		crm_xml_devel(action, "Change the way we handle");
-		relay_message(process_cib_message(action, TRUE), TRUE);
+		crm_xml_err(action, "Change the way we handle");
+/*		relay_message(process_cib_message(action, TRUE), TRUE); */
 		
 	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_LRMD) == 0) {
 
@@ -1003,8 +1007,7 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 #endif
 		
 	} else {
-		crm_err("Unknown Sub-system (%s)... discarding message.",
-			sys);
+		crm_err("Unknown Sub-system (%s)... discarding message.", sys);
 	}    
 	return;
 }	
