@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.20 2004/09/21 19:40:18 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.21 2004/09/28 08:48:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -408,10 +408,8 @@ enum crmd_fsa_input {
 #define	R_THE_DC	0x00000001 /* Are we the DC? */
 #define	R_STARTING	0x00000002 /* Are we starting up? */
 #define	R_SHUTDOWN	0x00000004 /* Are we trying to shut down? */
-#define	R_CIB_DONE	0x00000008 /* Have we calculated the CIB? */
 
 #define R_JOIN_OK	0x00000010 /* Have we completed the join process */
-#define R_HAVE_CIB	0x00000020 /* Do we have an up-to-date CIB */
 #define	R_HAVE_RES	0x00000040 /* Do we have any resources running
 				      locally */
 #define	R_INVOKE_PE	0x00000080 /* Does the PE needed to be invoked at
@@ -433,6 +431,9 @@ enum crmd_fsa_input {
 				      response? if so perhaps we shouldnt
 				      stop yet */
 
+#define	R_CIB_DONE	0x00010000 /* Have we calculated the CIB? */
+#define R_HAVE_CIB	0x00020000 /* Do we have an up-to-date CIB */
+#define R_CIB_ASKED	0x00040000 /* Have we asked for an up-to-date CIB */
 
 enum crmd_fsa_cause
 {

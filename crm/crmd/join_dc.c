@@ -30,9 +30,13 @@
 #include <crm/dmalloc_wrapper.h>
 
 int num_join_invites = 0;
-GHashTable *join_requests = NULL;
-GHashTable *confirmed_nodes = NULL;
+GHashTable *join_requests       = NULL;
+GHashTable *confirmed_nodes     = NULL;
+xmlNodePtr our_generation       = NULL;
+const char *max_generation_from = NULL;
+
 void finalize_join_for(gpointer key, gpointer value, gpointer user_data);
+void initialize_join(void);
 
 
 /*	 A_DC_JOIN_OFFER_ALL	*/
@@ -52,16 +56,8 @@ do_dc_join_offer_all(long long action,
 	/* Give everyone a chance to join before invoking the PolicyEngine */
 	stopTimer(integration_timer);
 	
-	if(join_requests != NULL) {
-		g_hash_table_destroy(join_requests);
-	}
-	join_requests = g_hash_table_new(&g_str_hash, &g_str_equal);
-
-	/* mark ourselves joined */
-	g_hash_table_insert(join_requests, crm_strdup(fsa_our_uname),
-			    crm_strdup(CRMD_JOINSTATE_MEMBER));
-
-
+	initialize_join();
+	
 	/* catch any nodes that are active in the CIB but not in the CCM list*/
 	xml_child_iter(
 		tmp1, node_entry, XML_CIB_TAG_STATE,
@@ -139,9 +135,6 @@ do_dc_join_offer_one(long long action,
 		crm_err("Attempt to send welcome message "
 			 "without a message to reply to!");
 		return I_NULL;
-/*		return do_send_welcome_all( */
-/*			A_JOIN_WELCOME_ALL,cause,cur_state,current_input,data); */
-		
 	}
 
 	welcome = (xmlNodePtr)data;
@@ -188,19 +181,31 @@ do_dc_join_req(long long action,
 	gpointer join_node =
 		g_hash_table_lookup(fsa_membership_copy->members, join_from);
 
+	crm_debug("Processing req from %s", join_from);
+	
 	if(join_node != NULL) {
 		is_a_member = TRUE;
 	}
 	
 	generation = find_xml_node(join_ack, "generation_tuple");
-
-	crm_debug("Welcoming node %s after ACK (ref %s)",
-	       join_from, ref);
+	if(compare_cib_generation(our_generation, generation) < 0) {
+		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
+		max_generation_from = join_from;
+	}
+	
+	crm_debug("Welcoming node %s after ACK (ref %s)", join_from, ref);
 	
 	if(is_a_member == FALSE) {
-		crm_err("Node %s is not known to us (ref %s)",
-		       join_from, ref);
-		/* NACK them */
+		crm_err("Node %s is not known to us (ref %s)", join_from, ref);
+		/* nack them now so they are not counted towards the
+		 * expected responses
+		 */
+		char *local_from = crm_strdup(join_from);
+		char *local_down = crm_strdup("down");
+		finalize_join_for(local_from, local_down, NULL);
+		crm_free(local_from);
+		crm_free(local_down);
+		
 		return I_FAIL;
 
 	} else if(/* some reason */ 0) {
@@ -208,27 +213,26 @@ do_dc_join_req(long long action,
 		ack_nack = "down";
 	}
 	
-	
 	/* add them to our list of CRMD_STATE_ACTIVE nodes
 	   TODO: check its not already there
 	*/
-	g_hash_table_insert(join_requests,
-			    crm_strdup(join_from), crm_strdup(ack_nack));
+	g_hash_table_insert(
+		join_requests, crm_strdup(join_from), crm_strdup(ack_nack));
 
-/* No point hanging around in S_INTEGRATION if we're the only ones here! */
 	if(g_hash_table_size(join_requests)
-		  >= fsa_membership_copy->members_size) {
+	   >= fsa_membership_copy->members_size) {
 		crm_info("That was the last outstanding join ack");
 		return I_SUCCESS;
 	}
 
-	/* dont waste time by invoking the pe yet; */
+	/* dont waste time by invoking the PE yet; */
 	crm_debug("Still waiting on %d outstanding join acks",
 		  fsa_membership_copy->members_size
 		  - g_hash_table_size(join_requests));
 	
 	return I_NULL;
 }
+
 
 
 /*	A_DC_JOIN_FINALIZE	*/
@@ -239,18 +243,51 @@ do_dc_join_finalize(long long action,
 		    enum crmd_fsa_input current_input,
 		    void *data)
 {
-	num_join_invites = 0;
-	g_hash_table_foreach(join_requests, finalize_join_for, NULL);
+	xmlNodePtr tmp1 = NULL;
+	
+	if(! is_set(fsa_input_register, R_HAVE_CIB)) {
+		if(is_set(fsa_input_register, R_CIB_ASKED)) {
+			return I_WAIT_FOR_EVENT;
+		}
+		
+		set_bit_inplace(fsa_input_register, R_CIB_ASKED);
 
-	if(confirmed_nodes != NULL) {
-		g_hash_table_destroy(confirmed_nodes);
-	}
-	confirmed_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
+		/* ask for the agreed best CIB */
+		crm_info("Asking %s for its copy of the CIB",
+			 max_generation_from);
+		
+		send_request(NULL, NULL, CRM_OP_RETRIVE_CIB,
+			     max_generation_from, CRM_SYSTEM_CRMD, NULL);
+
+		return I_NULL;
+	} 
+
+	num_join_invites = 0;
+	crm_debug("Notifying %d clients of join results",
+		  g_hash_table_size(join_requests));
+	g_hash_table_foreach(join_requests, finalize_join_for, NULL);
 
 	/* mark ourselves confirmed */
 	g_hash_table_insert(confirmed_nodes, crm_strdup(fsa_our_uname),
 			    crm_strdup(CRMD_JOINSTATE_MEMBER));
 
+
+	/* update our LRM data */
+	tmp1 = do_lrm_query(TRUE);
+	if(tmp1 != NULL) {
+		invoke_local_cib(NULL, tmp1, CRM_OP_UPDATE);
+	} else {
+		crm_err("Could not build current view of the LRM state");
+	}
+	
+	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
+		crm_info("That was the last outstanding join confirmation");
+		return I_SUCCESS;
+	}
+
+	/* dont waste time by invoking the pe yet; */
+	crm_debug("Still waiting on %d outstanding join confirmations",
+		  num_join_invites - g_hash_table_size(confirmed_nodes));
 
 	return I_NULL;
 }
@@ -268,12 +305,19 @@ do_dc_join_ack(long long action,
 	xmlNodePtr join_ack = (xmlNodePtr)data;
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
 
-	const char *join_state = (const char *)
+	const char *join_state = NULL;
+	crm_debug("Processing ack from %s", join_from);
+
+	join_state = (const char *)
 		g_hash_table_lookup(join_requests, join_from);
 	
-	if(join_state == NULL
-	   || safe_str_neq(join_state, CRMD_JOINSTATE_MEMBER)) {
-		crm_err("Node %s wasnt invited to join the cluster", join_from);
+	if(join_state == NULL) {
+		crm_err("Join not in progress: ignoring join from %s",
+			join_from);
+		return I_FAIL;
+		
+	} else if(safe_str_neq(join_state, CRMD_JOINSTATE_MEMBER)) {
+		crm_err("Node %s wasnt invited to join the cluster",join_from);
 		return I_NULL;
 	}
 	
@@ -310,22 +354,53 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	if(key == NULL || value == NULL) {
 		return;
 	}
-	xmlNodePtr tmp1 = NULL;
+	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
 	const char *join_to = (const char *)key;
 	const char *join_state = (const char *)value;
 
 	/* make sure the node exists in the config section */
 	create_node_entry(join_to, join_to, CRMD_JOINSTATE_MEMBER);
 
+	/* create the ack/nack */
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		num_join_invites++;
+		set_xml_property_copy(
+			options, CRM_OP_JOINACK, XML_BOOLEAN_TRUE);
+
+	} else {
+		set_xml_property_copy(
+			options, CRM_OP_JOINACK, XML_BOOLEAN_FALSE);
 	}
 
-	/* TODO: create a ack or nack in tmp1 */
-	
 	/* send the ack/nack to the node */
-	send_request(NULL, tmp1, CRM_OP_JOINACK,
+	send_request(options, NULL, CRM_OP_JOINACK,
 		     join_to, CRM_SYSTEM_CRMD, NULL);	
-
-	free_xml(tmp1);	
 }
+
+void
+initialize_join(void)
+{
+	/* clear out/reset a bunch of stuff */
+	if(join_requests != NULL) {
+		g_hash_table_destroy(join_requests);
+	}
+	if(confirmed_nodes != NULL) {
+		g_hash_table_destroy(confirmed_nodes);
+	}
+
+	free_xml(our_generation);
+	our_generation  = cib_get_generation();
+
+	max_generation_from = NULL;
+	set_bit_inplace(fsa_input_register, R_HAVE_CIB);
+	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
+
+	join_requests   = g_hash_table_new(&g_str_hash, &g_str_equal);
+	confirmed_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
+
+	/* mark ourselves joined */
+	g_hash_table_insert(join_requests, crm_strdup(fsa_our_uname),
+			    crm_strdup(CRMD_JOINSTATE_MEMBER));
+	
+}
+	
