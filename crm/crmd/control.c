@@ -37,8 +37,7 @@
 extern void crmd_ha_connection_destroy(gpointer user_data);
 extern gboolean stop_all_resources(void);
 
-void crm_shutdown(int nsig);
-/* IPC_WaitConnection *wait_channel_init(char daemonsocket[]); */
+gboolean crm_shutdown(int nsig, gpointer unused);
 gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
 
 
@@ -199,9 +198,11 @@ do_startup(long long action,
 	int was_error = 0;
 	int interval = 1; /* seconds between DC heartbeats */
 
-	crm_info("Register PID");
-	CL_SIGNAL(SIGTERM, crm_shutdown);
-	ipc_clients = g_hash_table_new(&g_str_hash, &g_str_equal);
+	crm_info("Register Signal Handler");
+	G_main_add_SignalHandler(
+		G_PRIORITY_HIGH, SIGTERM, crm_shutdown, NULL, NULL);
+
+	ipc_clients = g_hash_table_new(g_str_hash, g_str_equal);
 	
 	if(was_error == 0) {
 		crm_info("Init server comms");
@@ -334,7 +335,7 @@ do_startup(long long action,
 	}
 
 	if(was_error) {
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 	
 	return I_NULL;
@@ -495,11 +496,9 @@ do_read_config(long long action,
 }
 
 
-void
-crm_shutdown(int nsig)
+gboolean
+crm_shutdown(int nsig, gpointer unused)
 {
-	CL_SIGNAL(nsig, crm_shutdown);
-    
 	if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
 		if(is_set(fsa_input_register, R_SHUTDOWN)) {
 			crm_err("Escalating the shutdown");
@@ -519,7 +518,7 @@ crm_shutdown(int nsig)
 				/* cant rely on this... */
 				startTimer(shutdown_escalation_timer);
 				register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
-				s_crmd_fsa(C_SHUTDOWN);
+			s_crmd_fsa(C_SHUTDOWN);
 
 			} else {
 				crm_err("Could not set R_SHUTDOWN");
@@ -532,7 +531,7 @@ crm_shutdown(int nsig)
 		exit(LSB_EXIT_OK);
 	    
 	}
-	return;
+	return TRUE;
 }
 
 
