@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.12 2004/03/18 10:25:16 andrew Exp $ */
+/* $Id: cibio.c,v 1.13 2004/03/18 13:24:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -192,15 +192,18 @@ readCibXmlFile(const char *filename)
 	int s_res = stat(CIB_FILENAME, &buf);
 	FNIN();
 	
-	cl_log(LOG_DEBUG, "Stat of (%s) was (%d).", CIB_FILENAME, s_res);
-    
 	xmlDocPtr doc = NULL;
 	if (s_res == 0) {
 		doc = xmlParseFile(filename);
 		set_xml_property_copy(xmlDocGetRootElement(doc),
 				      "generated",
 				      "false");
+	} else {
+		cl_log(LOG_WARNING,
+		       "Stat of (%s) failed, file does not exist.",
+		       CIB_FILENAME);
 	}
+	
 	xmlNodePtr root = xmlDocGetRootElement(doc);
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
