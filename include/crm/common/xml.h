@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.14 2005/02/07 12:09:59 andrew Exp $ */
+/* $Id: xml.h,v 1.15 2005/02/09 11:48:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,7 @@
 #include <clplumbing/cl_log.h> 
 
 #define USE_LIBXML 1
+#define XML_PARANOIA_CHECKS 1
 
 #ifdef USE_LIBXML
 #  include <libxml/tree.h> 
@@ -40,7 +41,9 @@
    typedef struct ha_msg crm_data_t;
 #endif
 
-gboolean add_message_xml(HA_Message *msg, const char *field, crm_data_t *xml);
+extern gboolean add_message_xml(
+	HA_Message *msg, const char *field, crm_data_t *xml);
+extern crm_data_t *get_message_xml(HA_Message *msg, const char *field);
 
 /*
  * Replacement function for xmlCopyPropList which at the very least,
@@ -121,7 +124,7 @@ extern crm_data_t *create_xml_node(crm_data_t *parent, const char *name);
  * Returns FALSE on failure and TRUE on success.
  *
  */
-extern gboolean set_xml_property_copy(
+extern const char *set_xml_property_copy(
 	crm_data_t *node, const char *name, const char *value);
 
 /*
@@ -186,19 +189,31 @@ extern crm_data_t *find_entity(crm_data_t *parent,
 extern int write_xml_file(crm_data_t *xml_node, const char *filename);
 
 extern char *dump_xml_formatted(crm_data_t *msg);
+
 extern char *dump_xml_unformatted(crm_data_t *msg);
 
 extern void print_xml_formatted(
 	int log_level, const char *function,
 	crm_data_t *an_xml_node, const char *text);
 
+
+extern crm_data_t *crm_element_parent(crm_data_t *data);
+
+extern void crm_set_element_parent(crm_data_t *data, crm_data_t *parent);
+
+extern const char *crm_element_value(crm_data_t *data, const char *name);
+
+extern const char *crm_element_name(crm_data_t *data);
+
+extern void crm_validate_data(crm_data_t *root);
+
+extern void xml_remove_prop(crm_data_t *obj, const char *name);
+
+extern void crm_update_parents(crm_data_t *root);
+
+extern gboolean xml_has_children(crm_data_t *root);	 		
+
 #ifdef USE_LIBXML
-#   define crm_validate_data(obj) (void)obj
-#   define xml_remove_prop(obj, name) xmlUnsetProp(obj, name)
-#   define xml_has_children(root) (root->children ? TRUE : FALSE)
-#   define crm_element_value(data, name) xmlGetProp(data, name)
-#   define crm_element_name(data) (data ? data->name : NULL)
-#   define crm_element_parent(data, parent) parent=(data?data->parent:NULL)
 #   define xml_child_iter(a,b,c,d) if(a != NULL) {			\
 		crm_data_t *b = NULL;					\
 		crm_data_t *__crm_xml_iter = a->children;		\
@@ -228,23 +243,11 @@ extern void print_xml_formatted(
 	}
 
 #else
-extern void crm_update_parents(crm_data_t *root);
-extern gboolean crm_xml_has_children(crm_data_t *root);
-#   define xml_remove_prop(obj, name) cl_msg_remove(obj, name); \
-	 		crm_validate_data(obj)
-#   define xml_has_children(root) crm_xml_has_children(root)
-#   define xmlGetNodePath(data) cl_get_string(data, XML_ATTR_TAGNAME)
-#   define crm_element_parent(data, parent) ha_msg_value_int(data, XML_ATTR_PARENT, (int*)parent)
-#   define crm_set_element_parent(data, parent) if(parent != NULL) {	\
-		ha_msg_mod_int(data, XML_ATTR_PARENT, (int)parent);	\
-	} else {							\
-		cl_msg_remove(data, XML_ATTR_PARENT);			\
-	}
-#   define crm_element_value(data, name) cl_get_string(data, name)
-#   define crm_element_name(data) cl_get_string(data, XML_ATTR_TAGNAME) 
+#   define xmlGetNodePath(data) crm_element_value(data, XML_ATTR_TAGNAME)
 #   define xml_child_iter(a, b, c, d) if(a != NULL) {			\
 		int __counter = 0;					\
 		crm_data_t *b = NULL;					\
+		crm_validate_data(a);					\
 		for (__counter = 0; __counter < a->nfields; __counter++) { \
 			if(a->types[__counter] != FT_STRUCT) {		\
 				continue;				\
@@ -265,6 +268,7 @@ extern gboolean crm_xml_has_children(crm_data_t *root);
 		const char *prop_name = NULL;				\
 		const char *prop_value = NULL;				\
 		int __counter = 0;					\
+		crm_validate_data(parent);				\
 		crm_insane("Searching %d fields", parent->nfields);	\
 		for (__counter = 0; __counter < parent->nfields; __counter++) { \
 			crm_insane("Searching field %d", __counter);	\
@@ -279,8 +283,6 @@ extern gboolean crm_xml_has_children(crm_data_t *root);
 		crm_trace("Parent of loop was NULL");			\
 	}
 
-extern void crm_validate_data(crm_data_t *root);
 #endif
-
 
 #endif
