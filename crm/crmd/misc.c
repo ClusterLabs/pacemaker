@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <portability.h>
 #include <crm/crm.h>
 #include <crmd_fsa.h>
 
@@ -28,9 +29,10 @@ do_log(long long action,
        enum crmd_fsa_input current_input,
        void *data)
 {
+	int log_type = LOG_DEBUG;
+
 	FNIN();
 
-	int log_type = LOG_DEBUG;
 	if(action & A_LOG) log_type = LOG_INFO;
 	if(action & A_WARN) log_type = LOG_WARNING;
 	if(action & A_ERROR) log_type = LOG_ERR;
