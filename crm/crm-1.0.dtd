@@ -483,7 +483,7 @@ More details are given in the annotated DTD below.
 <!ELEMENT operation (nvpair*)>
 <!ATTLIST operation
 	  op		(noop|query|replace|add|delete)	'noop'
-          verbose	CDATA	#IMPLIED
+          verbose	(true|false)	#IMPLIED
 	  timeout	CDATA	#REQUIRED>
 
 <!-- verbose reply for user consumption, may be useful. -->
