@@ -57,48 +57,60 @@ void dump_rsc_info(void);
 #ifdef DOT_FSA_ACTIONS
 # ifdef FSA_TRACE
 #  define IF_FSA_ACTION(x,y)						\
-     if(is_set(actions,x)) {						\
-	last_action = x;						\
-	actions = clear_bit(actions, x);				\
-	crm_verbose("Invoking action %s (%.16llx)",			\
-		fsa_action2string(x), x);				\
-	next_input = y(x, cause, cur_state, last_input, fsa_data);	\
-	crm_verbose("Action complete: %s (%.16llx)",			\
-		fsa_action2string(x), x);				\
-	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
-		fprintf(dot_strm, "\t// %s\n", fsa_action2string(x));	\
-	fflush(dot_strm);						\
-     }
+   if(is_set(actions,x)) {						\
+	   last_action = x;						\
+	   actions = clear_bit(actions, x);				\
+	   crm_verbose("Invoking action %s (%.16llx)",			\
+		       fsa_action2string(x), x);			\
+	   next_input = y(x, cause, cur_state, last_input, fsa_data);	\
+	   crm_verbose("Action complete: %s (%.16llx)",			\
+		       fsa_action2string(x), x);			\
+	   if(next_input != I_NULL) {					\
+		   crm_warn("Action %s returned %s",			\
+			    fsa_action2string(x),			\
+			    fsa_input2string(next_input));		\
+	   }								\
+	   if((x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT ){ \
+		   fprintf(dot_strm, "\t// %s\n",			\
+			   fsa_action2string(x));			\
+	   }								\
+	   fflush(dot_strm);						\
+   }
 # else
 #  define IF_FSA_ACTION(x,y)						\
-     if(is_set(actions,x)) {						\
-	last_action = x;						\
-	actions = clear_bit(actions, x);				\
-	next_input = y(x, cause, cur_state, last_input, fsa_data);	\
-	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
-		fprintf(dot_strm, "\t// %s\n", fsa_action2string(x));	\
-	fflush(dot_strm);						\
-     }
+   if(is_set(actions,x)) {						\
+	   last_action = x;						\
+	   actions = clear_bit(actions, x);				\
+	   next_input = y(x, cause, cur_state, last_input, fsa_data);	\
+	   if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT ) \
+		   fprintf(dot_strm, "\t// %s\n", fsa_action2string(x)); \
+	   fflush(dot_strm);						\
+   }
 # endif
 #else
 # ifdef FSA_TRACE
 #  define IF_FSA_ACTION(x,y)						\
-     if(is_set(actions,x)) {						\
-	last_action = x;						\
-	actions = clear_bit(actions, x);				\
-	crm_verbose("Invoking action %s (%.16llx)",			\
-		fsa_action2string(x), x);				\
-	next_input = y(x, cause, cur_state, last_input, fsa_data);	\
-	crm_verbose("Action complete: %s (%.16llx)",			\
-		fsa_action2string(x), x);				\
-     }
+   if(is_set(actions,x)) {						\
+	   last_action = x;						\
+	   actions = clear_bit(actions, x);				\
+	   crm_verbose("Invoking action %s (%.16llx)",			\
+		       fsa_action2string(x), x);			\
+	   next_input = y(x, cause, cur_state, last_input, fsa_data);	\
+	   crm_verbose("Action complete: %s (%.16llx)",			\
+		       fsa_action2string(x), x);			\
+	   if(next_input != I_NULL) {					\
+		   crm_warn("Action %s returned %s",			\
+			       fsa_action2string(x),			\
+			       fsa_input2string(next_input));		\
+	   }								\
+   }
 # else
 #  define IF_FSA_ACTION(x,y)						\
-     if(is_set(actions,x)) {						\
-	last_action = x;						\
-	actions = clear_bit(actions, x);				\
-	next_input = y(x, cause, cur_state, last_input, fsa_data);	\
-     }
+   if(is_set(actions,x)) {						\
+	   last_action = x;						\
+	   actions = clear_bit(actions, x);				\
+	   next_input = y(x, cause, cur_state, last_input, fsa_data);	\
+   }
 # endif
 #endif
 
@@ -148,7 +160,7 @@ const char *dot_intro = "digraph \"g\" {\n"
 
 static FILE *dot_strm = NULL;
 
-volatile enum crmd_fsa_state fsa_state;
+volatile enum crmd_fsa_state fsa_state = S_STARTING;
 oc_node_list_t *fsa_membership_copy;
 ll_cluster_t   *fsa_cluster_conn;
 ll_lrm_t       *fsa_lrm_conn;
@@ -289,6 +301,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 			fsa_data->actions   = A_NOTHING;
 			fsa_data->where     = crm_strdup("s_crmd_fsa (enter)");
 			fsa_data->data      = NULL;
+			if(fsa_data->where == NULL) {
+				crm_crit("Out of memory");
+				exit(1);
+			}
+			
 		}
 		
 
@@ -382,18 +399,17 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		else IF_FSA_ACTION(O_PE_RESTART,	do_pe_control)
 		else IF_FSA_ACTION(O_TE_RESTART,	do_te_control)
 		
-		/* DC Timer */
-		else IF_FSA_ACTION(O_DC_TIMER_RESTART,	do_dc_timer_control)
-		else IF_FSA_ACTION(A_DC_TIMER_STOP,	do_dc_timer_control)
-		else IF_FSA_ACTION(A_DC_TIMER_START,	do_dc_timer_control)
+		/* Timers */
+		else IF_FSA_ACTION(O_DC_TIMER_RESTART,      do_timer_control)
+		else IF_FSA_ACTION(A_DC_TIMER_STOP,         do_timer_control)
+		else IF_FSA_ACTION(A_DC_TIMER_START,        do_timer_control)
+		else IF_FSA_ACTION(A_INTEGRATE_TIMER_STOP,  do_timer_control)
+		else IF_FSA_ACTION(A_INTEGRATE_TIMER_START, do_timer_control)
+		else IF_FSA_ACTION(A_FINALIZE_TIMER_STOP,   do_timer_control)
+		else IF_FSA_ACTION(A_FINALIZE_TIMER_START,  do_timer_control)
 		
 		/*
 		 * Highest priority actions
-		 */
-
-		/* the order of these is finiky...
-		 * the status section seems to dissappear after the BUMPGEN!!!
-		 * Yet BUMPGEN is non-destructive
 		 */
 		else IF_FSA_ACTION(A_TE_COPYTO,		do_te_copyto)
 		else IF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
@@ -404,16 +420,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		else IF_FSA_ACTION(A_CL_JOIN_RESULT,	do_cl_join_result)
 		else IF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
 		else IF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)
-		else IF_FSA_ACTION(A_ELECT_TIMER_STOP,	do_election_timer_ctrl)
-		else IF_FSA_ACTION(A_ELECT_TIMER_START,	do_election_timer_ctrl)
 		else IF_FSA_ACTION(A_ELECTION_COUNT,	do_election_count_vote)
-		else IF_FSA_ACTION(A_ELECTION_TIMEOUT,	do_election_timer_ctrl)
 		
 		/*
 		 * "Get this over with" actions
 		 */
 		else IF_FSA_ACTION(A_MSG_STORE,		do_msg_store)
-		
+
 		/*
 		 * High priority actions
 		 * Update the cache first
@@ -544,11 +557,29 @@ do_state_transition(long long actions,
 		fflush(dot_strm);
 	}
 
-	crm_info("State transition \"%s\" -> \"%s\" [ input=%s cause=%s origin=%s %s ]",
-		 state_from, state_to, input, fsa_cause2string(cause), msg_data->where,
+	crm_info("State transition \"%s\" -> \"%s\""
+		 " [ input=%s cause=%s origin=%s %s ]",
+		 state_from, state_to, input,
+		 fsa_cause2string(cause), msg_data->where,
 		 asctime(localtime(&now)));
 
+	if(next_state != S_ELECTION) {
+		stopTimer(election_timeout);
+/* 	} else { */
+/* 		startTimer(election_timeout); */
+	}
+
+	if(is_set(fsa_input_register, R_SHUTDOWN)){
+		set_bit_inplace(tmp, A_DC_TIMER_STOP);
+		
+	} else if(next_state == S_PENDING || next_state == S_NOT_DC) {
+		set_bit_inplace(tmp, A_DC_TIMER_START);
+
+/* 	} else we are the DC and dont want to shut down { */		
+	}
+
 	switch(next_state) {
+		case S_PENDING:
 		case S_ELECTION:
 			crm_info("Resetting our DC to NULL on election");
 			crm_free(fsa_our_dc);
@@ -558,8 +589,9 @@ do_state_transition(long long actions,
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
 				crm_info("(Re)Issuing shutdown request now"
 					 " that we have a new DC");
-				tmp = set_bit(tmp, A_SHUTDOWN_REQ);
+				set_bit_inplace(tmp, A_SHUTDOWN_REQ);
 			}
+
 			if(fsa_our_dc == NULL) {
 				crm_err("Reached S_NOT_DC without a DC"
 					" being recorded");
@@ -570,12 +602,14 @@ do_state_transition(long long actions,
 			break;
 
 		case S_INTEGRATION:
-			startTimer(integration_timer);
-			stopTimer(finalization_timer);
+			set_bit_inplace(tmp, A_INTEGRATE_TIMER_START);
+			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
 			break;
 
 		case S_FINALIZE_JOIN:
-			stopTimer(integration_timer);
+			set_bit_inplace(tmp, A_INTEGRATE_TIMER_STOP);
+			set_bit_inplace(tmp, A_FINALIZE_TIMER_START);
+			
 			if(cause != C_FSA_INTERNAL) {
 				crm_warn("Progressed to state %s after %s",
 					 fsa_state2string(cur_state),
@@ -595,7 +629,7 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_POLICY_ENGINE:
-			stopTimer(finalization_timer);
+			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
 			if(cause != C_FSA_INTERNAL) {
 				crm_warn("Progressed to state %s after %s",
 					 fsa_state2string(cur_state),

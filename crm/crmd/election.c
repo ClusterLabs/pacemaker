@@ -41,7 +41,6 @@ do_election_vote(long long action,
 {
 	gboolean not_voting = FALSE;
 	xmlNodePtr msg_options = NULL;
-	enum crmd_fsa_input election_result = I_NULL;
 	
 	/* dont vote if we're in one of these states or wanting to shut down */
 	switch(cur_state) {
@@ -69,7 +68,6 @@ do_election_vote(long long action,
 	}
 
 	if(not_voting) {
-		stopTimer(election_timeout);
 		if(AM_I_DC) {
 			return I_RELEASE_DC;
 		} else {
@@ -84,8 +82,8 @@ do_election_vote(long long action,
 		     NULL, CRM_SYSTEM_CRMD, NULL);
 
 	startTimer(election_timeout);		
-	
-	return election_result;
+
+	return I_NULL;
 }
 
 gboolean
@@ -184,7 +182,7 @@ do_election_count_vote(long long action,
 		election_data.winning_bornon = -1; /* maximum integer */
 		
 		crm_trace("We might win... we should vote (possibly again)");
-		election_result = I_VOTE; /* new "default" */
+		election_result = I_ELECTION; /* new "default" */
 	}
 	
 	if(we_loose) {
@@ -194,16 +192,11 @@ do_election_count_vote(long long action,
 			
 		} else {
 			crm_debug("We werent the DC anyway");
-			election_result = I_NOT_DC;
+			election_result = I_PENDING;
 			
 		}
 	}
 
-	if(we_loose || election_result == I_ELECTION_DC) {
-		/* cancel timer, its been decided */
-		stopTimer(election_timeout);
-	}
-	
 	return election_result;
 }
 
@@ -216,52 +209,9 @@ do_election_timer_ctrl(long long action,
 		    enum crmd_fsa_input current_input,
 		    fsa_data_t *msg_data)
 {
-	
-
-	if(action & A_ELECT_TIMER_START) {
-		startTimer(election_timeout);
-		
-	} else if(action & A_ELECT_TIMER_STOP || action & A_ELECTION_TIMEOUT) {
-		stopTimer(election_timeout);
-		
-	} else {
-		crm_err("unexpected action %s",
-		       fsa_action2string(action));
-	}
-
-	if(action & A_ELECTION_TIMEOUT) {
-		crm_trace("The election timer went off, we win!");
-	
-		return I_ELECTION_DC;
-		
-	}
-
-	
 	return I_NULL;
 }
 
-/*	A_DC_TIMER_STOP, A_DC_TIMER_START	*/
-enum crmd_fsa_input
-do_dc_timer_control(long long action,
-		   enum crmd_fsa_cause cause,
-		   enum crmd_fsa_state cur_state,
-		   enum crmd_fsa_input current_input,
-		   fsa_data_t *msg_data)
-{
-	gboolean timer_op_ok = TRUE;
-	
-
-	if(action & A_DC_TIMER_STOP) {
-		timer_op_ok = stopTimer(election_trigger);
-	}
-
-	/* dont start a timer that wasnt already running */
-	if(action & A_DC_TIMER_START && timer_op_ok) {
-		startTimer(election_trigger);
-	}
-	
-	return I_NULL;
-}
 
 
 /*	 A_DC_TAKEOVER	*/

@@ -390,7 +390,7 @@ do_started(long long action,
 
 	crm_info("The local CRM is operational");
 	clear_bit_inplace(fsa_input_register, R_STARTING);
-	register_fsa_input_w_actions(msg_data->fsa_cause, I_NULL, NULL, A_DC_TIMER_START);
+	register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
 	
 	return I_NULL;
 }

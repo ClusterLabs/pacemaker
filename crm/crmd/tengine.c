@@ -183,7 +183,7 @@ do_te_invoke(long long action,
 {
 	xmlNodePtr graph = NULL;
 	xmlNodePtr msg = (xmlNodePtr)msg_data->data;
-	
+	enum crmd_fsa_input ret = I_NULL;
 
 	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
 		crm_info("Waiting for the TE to connect");
@@ -194,36 +194,31 @@ do_te_invoke(long long action,
 
 		crmd_fsa_stall();
 		return I_NULL;		
-
 	}
 
 	if(msg == NULL) {
 		msg = te_last_input;
-		te_last_input = NULL;
-		
-	} else {
-		free_xml(te_last_input);
 	}
 	
 	if(action & A_TE_INVOKE) {
 		graph = find_xml_node(msg, "transition_graph");
-		if(graph == NULL) {
-			return I_FAIL;
+		if(graph != NULL) {
+			send_request(NULL, graph, CRM_OP_TRANSITION,
+				     NULL, CRM_SYSTEM_TENGINE, NULL);
+		} else {
+			ret = I_FAIL;
 		}
 	
-		send_request(NULL, graph, CRM_OP_TRANSITION,
-			     NULL, CRM_SYSTEM_TENGINE, NULL);
 	} else {
 		send_request(NULL, graph, CRM_OP_ABORT,
 			     NULL, CRM_SYSTEM_TENGINE, NULL);
 	}
 
 	/* only free it if it was a local copy */
-	if(msg == NULL) {
-		free_xml(msg);
-	}
+	free_xml(te_last_input);
+	te_last_input = NULL;
 	
-	return I_NULL;
+	return ret;
 }
 
 

@@ -674,7 +674,7 @@ crmd_authorize_message(
 				   "0", "1");
 
 		crm_debug("Updated client list with %s",
-		       (char*)table_key);
+			  crm_str(table_key));
 		
 		if(the_subsystem != NULL) {
 			set_bit_inplace(
@@ -741,7 +741,18 @@ handle_request(xmlNodePtr stored_msg)
 
 		/*========== common actions ==========*/
 	} else if(strcmp(op, CRM_OP_VOTE) == 0) {
-		next_input = I_ELECTION;
+		/* count the vote and decide what to do after that */
+		register_fsa_input_w_actions(
+			C_HA_MESSAGE, I_NULL, stored_msg, A_ELECTION_COUNT);
+
+#if 0
+		/* force the DC into an election mode?
+		 * its the old way of doing things but what is gained?
+		 */
+		if(AM_I_DC) {
+			next_input = I_ELECTION;
+		}
+#endif
 		
 	} else if(strcmp(op, "init_shutdown") == 0) {
 		

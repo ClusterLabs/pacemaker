@@ -183,8 +183,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 
 	crm_verbose("Processed %d messages", lpc);
     
-	if (client->ch_status == IPC_DISCONNECT)
-	{
+	if (client->ch_status == IPC_DISCONNECT) {
 		crm_info("received HUP from %s",
 			 curr_client->table_key);
 		if (curr_client != NULL) {
@@ -413,6 +412,7 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 		crm_err("Channel was disconnected");
 
 	} else {
+		crm_debug("Channel connected");
 		crmd_client_t *blank_client = NULL;
 		crm_malloc(blank_client, sizeof(crmd_client_t));
 	

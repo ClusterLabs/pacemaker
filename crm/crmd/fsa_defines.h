@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.24 2004/10/13 20:48:06 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.25 2004/10/19 11:23:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,7 +52,8 @@ enum crmd_fsa_state {
 			 * unset anything that makes us think we are
 			 * special :)
 			 */
-        S_PENDING,	/* we are just starting out */
+	S_STARTING,	/* we are just starting out */
+        S_PENDING,	/* we are not a full/active member yet */
         S_STOPPING,	/* We are in the final stages of shutting down */
         S_TERMINATE,	/* We are going to shutdown, this is the equiv of
 			 * "Sending TERM signal to all processes" in Linux
@@ -216,7 +217,7 @@ enum crmd_fsa_input {
 	I_LRM_EVENT,
 
 /* 30 */
-	I_VOTE,
+	I_PENDING,
 	
 	/*  ------------ Last input found in table is above ----------- */
 	I_ILLEGAL,	/* This is an illegal value for an FSA input */
@@ -261,13 +262,13 @@ enum crmd_fsa_input {
 /* -- Election actions -- */
 #define	A_DC_TIMER_START	0x0000000000000010ULL
 #define	A_DC_TIMER_STOP		0x0000000000000020ULL
+#define	A_ELECTION_COUNT	0x0000000000000040ULL
+#define	A_ELECTION_VOTE		0x0000000000000080ULL
 
-#define	A_ELECT_TIMER_START	0x0000000000000040ULL
-#define	A_ELECT_TIMER_STOP	0x0000000000000080ULL
-
-#define	A_ELECTION_COUNT	0x0000000000000100ULL
-#define	A_ELECTION_TIMEOUT	0x0000000000000200ULL
-#define	A_ELECTION_VOTE		0x0000000000000400ULL
+#define	A_INTEGRATE_TIMER_START	0x0000000000000100ULL
+#define	A_INTEGRATE_TIMER_STOP	0x0000000000000200ULL
+#define	A_FINALIZE_TIMER_START	0x0000000000000400ULL
+#define	A_FINALIZE_TIMER_STOP	0x0000000000000800ULL
 
 /* -- Message processing -- */
 	/* Process the queue of requests */

@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.14 2004/10/12 21:11:59 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.15 2004/10/19 11:23:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -160,7 +160,7 @@ do_election_timer_ctrl(long long action,
 
 /*	A_DC_TIMER_STOP	*/
 enum crmd_fsa_input
-do_dc_timer_control(long long action,
+do_timer_control(long long action,
 		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input cur_input,

@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.6 2004/10/08 18:10:56 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.7 2004/10/19 11:23:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,6 +31,7 @@ extern long long set_bit      (long long  action_list, long long action);
 #define toggle_bit_inplace(word, bit) word = toggle_bit(word, bit)
 
 extern gboolean is_set(long long action_list, long long action);
+extern gboolean is_set_any(long long action_list, long long action);
 
 extern gboolean startTimer(fsa_timer_t *timer);
 extern gboolean stopTimer(fsa_timer_t *timer);

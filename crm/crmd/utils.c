@@ -37,6 +37,49 @@
 
 void copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy);
 
+/*	A_DC_TIMER_STOP, A_DC_TIMER_START,
+ *	A_FINALIZE_TIMER_STOP, A_FINALIZE_TIMER_START
+ *	A_INTEGRATE_TIMER_STOP, A_INTEGRATE_TIMER_START
+ */
+enum crmd_fsa_input
+do_timer_control(long long action,
+		   enum crmd_fsa_cause cause,
+		   enum crmd_fsa_state cur_state,
+		   enum crmd_fsa_input current_input,
+		   fsa_data_t *msg_data)
+{
+	gboolean timer_op_ok = TRUE;
+	
+
+	if(action & A_DC_TIMER_STOP) {
+		timer_op_ok = stopTimer(election_trigger);
+
+	} else if(action & A_FINALIZE_TIMER_STOP) {
+		timer_op_ok = stopTimer(finalization_timer);
+
+	} else if(action & A_INTEGRATE_TIMER_STOP) {
+		timer_op_ok = stopTimer(integration_timer);
+
+/* 	} else if(action & A_ELECTION_TIMEOUT_STOP) { */
+/* 		timer_op_ok = stopTimer(election_timeout); */
+	}
+
+	/* dont start a timer that wasnt already running */
+	if(action & A_DC_TIMER_START && timer_op_ok) {
+		startTimer(election_trigger);
+
+	} else if(action & A_FINALIZE_TIMER_START) {
+		startTimer(finalization_timer);
+
+	} else if(action & A_INTEGRATE_TIMER_START) {
+		startTimer(integration_timer);
+
+/* 	} else if(action & A_ELECTION_TIMEOUT_START) { */
+/* 		startTimer(election_timeout); */
+	}
+	
+	return I_NULL;
+}
 
 gboolean
 timer_popped(gpointer data)
@@ -143,6 +186,13 @@ is_set(long long action_list, long long action)
 	return ((action_list & action) == action);
 }
 
+gboolean
+is_set_any(long long action_list, long long action)
+{
+/*	crm_verbose("Checking bit\t%.16llx", action); */
+	return ((action_list & action) != 0);
+}
+
 const char *
 fsa_input2string(enum crmd_fsa_input input)
 {
@@ -242,8 +292,8 @@ fsa_input2string(enum crmd_fsa_input input)
 		case I_LRM_EVENT:
 			inputAsText = "I_LRM_EVENT";
 			break;
-		case I_VOTE:
-			inputAsText = "I_VOTE";
+		case I_PENDING:
+			inputAsText = "I_PENDING";
 			break;
 		case I_ILLEGAL:
 			inputAsText = "I_ILLEGAL";
@@ -299,6 +349,9 @@ fsa_state2string(enum crmd_fsa_state state)
 			break;
 		case S_TRANSITION_ENGINE:
 			stateAsText = "S_TRANSITION_ENGINE";
+			break;
+		case S_STARTING:
+			stateAsText = "S_STARTING";
 			break;
 		case S_ILLEGAL:
 			stateAsText = "S_ILLEGAL";
@@ -428,15 +481,6 @@ fsa_action2string(long long action)
 			break;
 		case A_ELECTION_COUNT:
 			actionAsText = "A_ELECTION_COUNT";
-			break;
-		case A_ELECTION_TIMEOUT:
-			actionAsText = "A_ELECTION_TIMEOUT";
-			break;
-		case A_ELECT_TIMER_START:
-			actionAsText = "A_ELECT_TIMER_START";
-			break;
-		case A_ELECT_TIMER_STOP:
-			actionAsText = "A_ELECT_TIMER_STOP";
 			break;
 		case A_ELECTION_VOTE:
 			actionAsText = "A_ELECTION_VOTE";
@@ -632,18 +676,6 @@ fsa_dump_actions(long long action, const char *text)
 	if(is_set(action, A_ELECTION_COUNT)) {
 		crm_debug("Action %.16llx (A_ELECTION_COUNT) %s",
 			  A_ELECTION_COUNT, text);
-	}
-	if(is_set(action, A_ELECTION_TIMEOUT)) {
-		crm_debug("Action %.16llx (A_ELECTION_TIMEOUT) %s",
-			  A_ELECTION_TIMEOUT, text);
-	}
-	if(is_set(action, A_ELECT_TIMER_START)) {
-		crm_debug("Action %.16llx (A_ELECT_TIMER_START) %s",
-			  A_ELECT_TIMER_START, text);
-	}
-	if(is_set(action, A_ELECT_TIMER_STOP)) {
-		crm_debug("Action %.16llx (A_ELECT_TIMER_STOP) %s",
-			  A_ELECT_TIMER_STOP, text);
 	}
 	if(is_set(action, A_ELECTION_VOTE)) {
 		crm_debug("Action %.16llx (A_ELECTION_VOTE) %s",

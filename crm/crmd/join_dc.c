@@ -278,7 +278,7 @@ do_dc_join_finalize(long long action,
 	if(! is_set(fsa_input_register, R_HAVE_CIB)) {
 		if(is_set(fsa_input_register, R_CIB_ASKED)) {
 			crm_info("Waiting for the CIB from %s",
-				 max_generation_from);
+				 crm_str(max_generation_from));
 			crmd_fsa_stall();
 			return I_NULL;
 		}
@@ -287,7 +287,7 @@ do_dc_join_finalize(long long action,
 
 		/* ask for the agreed best CIB */
 		crm_info("Asking %s for its copy of the CIB",
-			 max_generation_from);
+			 crm_str(max_generation_from));
 		
 		send_request(NULL, NULL, CRM_OP_RETRIVE_CIB,
 			     max_generation_from, CRM_SYSTEM_CRMD, NULL);
@@ -309,7 +309,6 @@ do_dc_join_finalize(long long action,
 	}
 
 	/* dont waste time by invoking the PE yet; */
-	startTimer(finalization_timer);
 	crm_debug("Still waiting on %d outstanding join confirmations",
 		  num_join_invites - g_hash_table_size(confirmed_nodes));
 
@@ -520,3 +519,4 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 		
 	}
 }
+
