@@ -237,7 +237,7 @@ merge_string_list(GList** old, GList* new)
 	char* newitem;
 	for( item=g_list_first(new); NULL!=item; item=g_list_next(item)){
 		if (!g_list_find_custom(*old, item->data,compare_str)){
-			newitem = strndup(item->data,RA_MAX_NAME_LENGTH);
+			newitem = g_strndup(item->data,RA_MAX_NAME_LENGTH);
 			*old = g_list_append(*old, newitem);
 		}
 	}
@@ -433,3 +433,4 @@ add_OCF_env_vars(GHashTable * env, const char * rsc_id,
 			    	    g_strdup(provider));
 	}
 }
+

@@ -18,7 +18,7 @@ get_ra_pathname(const char* class_path, const char* type, const char* provider,
 	char* type_dup;
 	char* base_name;
 
-	type_dup = strndup(type, RA_MAX_NAME_LENGTH);
+	type_dup = g_strndup(type, RA_MAX_NAME_LENGTH);
 	if (type_dup == NULL) {
 		cl_log(LOG_ERR, "No enough memory to allocate.");
 		pathname[0] = '\0';
@@ -38,10 +38,10 @@ get_ra_pathname(const char* class_path, const char* type, const char* provider,
 		}
 	}else{
 		/*the type includes path, just copy it to pathname*/
-		strncpy(pathname, type, RA_MAX_NAME_LENGTH);
+		g_strlcpy(pathname, type, RA_MAX_NAME_LENGTH);
 	}
 
-	free(type_dup);
+	g_free(type_dup);
 }
 
 /*
