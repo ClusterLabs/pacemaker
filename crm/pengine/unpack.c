@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.57 2005/02/23 15:44:00 andrew Exp $ */
+/* $Id: unpack.c,v 1.58 2005/03/01 10:25:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -618,10 +618,10 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 		action_status_i = atoi(op_status);
 
 		if(node->details->unclean) {
-			crm_info("Node %s (where %s is running) is unclean."
-				 "Further action depends on the value of %s",
-				 node->details->uname, rsc_lh->id,
-				 XML_RSC_ATTR_STOPFAIL);
+			crm_debug("Node %s (where %s is running) is unclean."
+				  " Further action depends on the value of %s",
+				  node->details->uname, rsc_lh->id,
+				  XML_RSC_ATTR_STOPFAIL);
 			
 			/* map the status to an error and then handle as a
 			 * failed resource.

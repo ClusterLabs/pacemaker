@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.18 2005/02/28 10:58:53 andrew Exp $ */
+/* $Id: utils.c,v 1.19 2005/03/01 10:25:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,7 +42,13 @@ send_abort(const char *text, crm_data_t *msg)
 
 	if(msg != NULL) {
 		crm_info("Sending \"abort\" message... details follow");
-		crm_xml_info(msg, text);
+		if(safe_str_eq(crm_element_name(msg), XML_TAG_CIB)) {
+			crm_info("%s... full CIB replace/update", text);
+
+		} else {
+			crm_xml_info(msg, text);
+		}
+
 	} else {
 		crm_info("Sending \"abort\" message... %s", text);
 	}
@@ -96,13 +102,15 @@ void
 print_state(int log_level)
 {
 	
-	do_crm_log(log_level, __FUNCTION__, NULL, "###########");
 	if(graph == NULL) {
-		do_crm_log(log_level, __FUNCTION__, NULL,
+		do_crm_log(LOG_DEBUG, __FUNCTION__, NULL, "###########");
+		do_crm_log(LOG_DEBUG, __FUNCTION__, NULL,
 			   "\tEmpty transition graph");
-		do_crm_log(log_level, __FUNCTION__, NULL, "###########");
+		do_crm_log(LOG_DEBUG, __FUNCTION__, NULL, "###########");
 		return;
 	}
+
+	do_crm_log(log_level, __FUNCTION__, NULL, "###########");
 
 	slist_iter(
 		synapse, synapse_t, graph, lpc,
@@ -185,7 +193,7 @@ print_action(const char *prefix, action_t *action, int log_level)
 	}
 	
 	if(action->complete == FALSE) {
-		crm_log_xml(log_level+2, "\tRaw action", action->xml);
+		crm_log_xml(LOG_VERBOSE, "\tRaw action", action->xml);
 	}
 }
 

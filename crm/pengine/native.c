@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.16 2005/02/23 15:43:59 andrew Exp $ */
+/* $Id: native.c,v 1.17 2005/03/01 10:25:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -263,14 +263,14 @@ void native_create_actions(resource_t *rsc)
 				continue;
 			} else if(chosen != NULL) {
 				/* move */
-				crm_info("Move  resource %s (%s -> %s)", rsc->id,
+				crm_info("Move resource %s (%s -> %s)", rsc->id,
 					 safe_val3(NULL, node, details, uname),
 					 safe_val3(NULL, chosen, details, uname));
 				action_new(rsc, stop_rsc, node);
 				action_new(rsc, start_rsc, chosen);
 
 			} else {
-				crm_info("Stop  resource %s (%s)", rsc->id,
+				crm_info("Stop resource %s (%s)", rsc->id,
 					 safe_val3(NULL, node, details, uname));
 				action_new(rsc, stop_rsc, node);
 			}
@@ -965,7 +965,7 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 
 	if(node_rh->fixed) {
 		/* warning */
-		crm_warn("Constraint %s is irrelevant as the"
+		crm_debug("Constraint %s is irrelevant as the"
 			 " weight of node %s is fixed as %f.",
 			 cons->id,
 			 node_rh->details->uname,
