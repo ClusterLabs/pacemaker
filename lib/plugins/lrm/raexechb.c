@@ -212,6 +212,7 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 {
 	int tmp_len, index;
 	int ht_size = 0;
+	int param_num = 0;
 	char buf_tmp[20];
 	void * value_tmp;
 
@@ -223,14 +224,6 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 		return -1;
 	}
                                                                                         
-	tmp_len = strnlen(rsc_type, MAX_LENGTH_OF_RSCNAME);
-	params_argv[0] = g_strndup(rsc_type, tmp_len);
-	/* Add operation code as the last argument */
-	tmp_len = strnlen(op_type, MAX_LENGTH_OF_OPNAME);
-	params_argv[ht_size+1] = g_strndup(op_type, tmp_len);
-	/* Add the teminating NULL pointer */
-	params_argv[ht_size+2] = NULL;
-
 	/* No actual arguments except op_type */
 	if (ht_size == 0) {
 		return 0;
@@ -241,18 +234,28 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 	 * Moreover, the key is supposed as a string transfered from an integer.
 	 * It may be changed in the future.
 	 */
+
 	for (index = 1; index <= ht_size; index++ ) {
 		snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
 		value_tmp = g_hash_table_lookup(params_ht, buf_tmp);
 		/* suppose the key is consecutive */
 		if ( value_tmp == NULL ) {
-			cl_log(LOG_ERR, "Parameter ordering error in"\
+/*			cl_log(LOG_WARNING, "Parameter ordering error in"\
 				"prepare_cmd_parameters, raexeclsb.c");
-			cl_log(LOG_ERR, "search key=%s.", buf_tmp);
-			return -1;
+			cl_log(LOG_WARNING, "search key=%s.", buf_tmp);
+*/			continue;
                 }
-		params_argv[index] = g_strdup((char *)value_tmp);
+		param_num ++;
+		params_argv[param_num] = g_strdup((char *)value_tmp);
 	}
+
+	tmp_len = strnlen(rsc_type, MAX_LENGTH_OF_RSCNAME);
+	params_argv[0] = g_strndup(rsc_type, tmp_len);
+	/* Add operation code as the last argument */
+	tmp_len = strnlen(op_type, MAX_LENGTH_OF_OPNAME);
+	params_argv[param_num+1] = g_strndup(op_type, tmp_len);
+	/* Add the teminating NULL pointer */
+	params_argv[param_num+2] = NULL;
 	return 0;
 }
 
