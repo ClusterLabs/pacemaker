@@ -141,7 +141,7 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 
 		buffer = (char*)msg->msg_body;
 		cl_log(LOG_DEBUG, "Got xml [text=%s]", buffer);
-		doc = xmlParseMemory(ha_strdup(buffer), strlen(buffer));
+		doc = xmlParseMemory(buffer, strlen(buffer));
 
 		CRM_DEBUG("Finished parsing buffer as XML");
 		if (doc != NULL) {
