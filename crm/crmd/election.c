@@ -322,6 +322,7 @@ do_dc_release(long long action,
 		
 		/* get a new CIB from the new DC */
 		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
+
 	} else if (action & A_DC_RELEASED) {
 
 		if(cur_state == S_STOPPING) {
