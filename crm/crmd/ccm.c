@@ -360,7 +360,8 @@ register_with_ccm(ll_cluster_t *hb_cluster)
 	}
     
 //GFDSource*
-	G_main_add_fd(G_PRIORITY_LOW, fsa_ev_fd, FALSE, ccm_dispatch, fsa_ev_token,
+	G_main_add_fd(G_PRIORITY_LOW, fsa_ev_fd, FALSE, ccm_dispatch,
+		      fsa_ev_token,
 		      default_ipc_input_destroy);
     
 	FNRET(0);
