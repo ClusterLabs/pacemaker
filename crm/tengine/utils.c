@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.6 2004/10/01 13:23:45 andrew Exp $ */
+/* $Id: utils.c,v 1.7 2004/11/12 17:10:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -105,8 +105,6 @@ send_success(const char *text)
 void
 print_state(gboolean to_file)
 {
-	int lpc = 0;
-	int lpc2 = 0;
 	FILE *output = msg_te_strm;
 #ifdef TESTING
 	output = stderr;
@@ -168,25 +166,18 @@ print_input(const char *prefix, action_t *input, gboolean to_file)
 #ifdef TESTING
 	output = stderr;
 #endif
-	crm_debug("%s[Input %d] %s (%d)",
-		  prefix,
-		  input->id,
+	crm_debug("%s[Input %d] %s (%s)", prefix, input->id,
 		  input->complete?"Satisfied":"Pending",
-		  input->type);
+		  actiontype2text(input->type));
 
 	crm_xml_trace(input->xml, "\t  Raw input");
 
 	if(to_file) {
-		fprintf(output,
-			"%s[Input %d] %s (%d)\n",
-			prefix,
-			input->id,
-			input->complete?"Satisfied":"Pending",
-			input->type);
+		fprintf(output, "%s[Input %d] %s\n",
+			prefix, input->id, input->complete?"Satisfied":"Pending");
 		
 		fflush(msg_te_strm);
-	}
-	
+	}	
 }
 
 void
@@ -213,13 +204,15 @@ print_action(const char *prefix, action_t *action, gboolean to_file)
 
 	if(to_file) {
 		fprintf(output,
-			"%s[Action %d] %s (%d - %s fail)\n",
+			"%s[Action %d] %s (%s: %s %s on %s)\n",
 			prefix,
 			action->id,
 			action->complete?"Completed":
 			action->invoked?"In-flight":"Pending",
-			action->type,
-			action->can_fail?"can":"cannot");
+			actiontype2text(action->type),
+			xmlGetProp(action->xml, XML_LRM_ATTR_TASK),
+			xmlGetProp(action->xml, XML_LRM_ATTR_RSCID),
+			xmlGetProp(action->xml, XML_LRM_ATTR_TARGET));
 	
 		fflush(msg_te_strm);
 	}		  
@@ -418,6 +411,10 @@ start_te_timer(te_timer_t *timer)
 gboolean
 stop_te_timer(te_timer_t *timer)
 {
+	if(timer == NULL) {
+		return FALSE;
+	}
+	
 	if(((int)timer->source_id) > 0) {
 		g_source_remove(timer->source_id);
 		timer->source_id = -2;
@@ -429,4 +426,18 @@ stop_te_timer(te_timer_t *timer)
 	return TRUE;
 }
 
+const char *
+actiontype2text(action_type_e type)
+{
+	switch(type) {
+		case action_type_pseudo:
+			return "pseduo";
+		case action_type_rsc:
+			return "rsc";
+		case action_type_crm:
+			return "crm";
+			
+	}
+	return "<unknown>";
+}
 
