@@ -292,7 +292,7 @@ do_dc_join_finalize(long long action,
 	}
 
 	fsa_cib_conn->cmds->bump_epoch(
-		fsa_cib_conn, cib_scope_local|cib_sync_call|cib_discard_reply);
+		fsa_cib_conn, cib_scope_local|cib_sync_call);
 	fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_sync_call);
 	
 	num_join_invites = 0;
@@ -359,6 +359,10 @@ do_dc_join_ack(long long action,
 	update_local_cib(tmp1, TRUE);
 
 	free_xml(tmp1);
+
+	/* update CIB with the current LRM status from the node */
+	tmp1 = find_xml_node(join_ack, XML_TAG_FRAGMENT);
+	update_local_cib(tmp1, TRUE);
 
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
 		crm_info("That was the last outstanding join confirmation");
