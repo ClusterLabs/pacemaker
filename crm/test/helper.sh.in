@@ -380,7 +380,7 @@ function make_resource()
 
     uuid=`uuidgen`
     
-    node_xml="<resource id=\\\"${id}\\\" class=\\\"${class}\\\" type=\\\"${type}\\\""
+    node_xml="<resource id=\\\"${id}\\\" class=\\\"${class}\\\" type=\\\"${type}\\\"  provider=\\\"heartbeat\\\""
 
     if [ ! -z $version -a "x$version" != "x-" ]; then
 	node_xml="$node_xml version=\\\"${version}\\\""
