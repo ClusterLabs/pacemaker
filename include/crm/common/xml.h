@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.15 2005/02/09 11:48:00 andrew Exp $ */
+/* $Id: xml.h,v 1.16 2005/02/09 15:40:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,7 +43,7 @@
 
 extern gboolean add_message_xml(
 	HA_Message *msg, const char *field, crm_data_t *xml);
-extern crm_data_t *get_message_xml(HA_Message *msg, const char *field);
+extern crm_data_t *get_message_xml(const HA_Message *msg, const char *field);
 
 /*
  * Replacement function for xmlCopyPropList which at the very least,
@@ -202,6 +202,7 @@ extern crm_data_t *crm_element_parent(crm_data_t *data);
 extern void crm_set_element_parent(crm_data_t *data, crm_data_t *parent);
 
 extern const char *crm_element_value(crm_data_t *data, const char *name);
+extern char *crm_element_value_copy(crm_data_t *data, const char *name);
 
 extern const char *crm_element_name(crm_data_t *data);
 
@@ -273,6 +274,10 @@ extern gboolean xml_has_children(crm_data_t *root);
 		for (__counter = 0; __counter < parent->nfields; __counter++) { \
 			crm_insane("Searching field %d", __counter);	\
 			if(parent->types[__counter] != FT_STRING) {	\
+				continue;				\
+			} else if(safe_str_eq(parent->names[__counter], F_XML_TAGNAME)) { \
+				continue;				\
+			} else if(safe_str_eq(parent->names[__counter], F_XML_PARENT)) { \
 				continue;				\
 			}						\
 			prop_name = parent->names[__counter];		\
