@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.10 2005/01/26 22:53:21 andrew Exp $ */
+/* $Id: xml.h,v 1.11 2005/02/01 22:35:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -210,6 +210,19 @@ extern void print_xml_formatted(
 	} else {							\
 		crm_trace("Parent of loop was NULL");			\
 	}
+#define xml_prop_iter(parent, prop_name, prop_value, code) if(parent != NULL) { \
+		xmlAttrPtr prop_iter = parent->properties;		\
+		while(prop_iter != NULL) {				\
+			const char *prop_name = prop_iter->name;	\
+			const char *prop_value =			\
+				xmlGetProp(parent, prop_name);		\
+			code;						\
+			prop_iter = prop_iter->next;			\
+		}							\
+	} else {							\
+		crm_trace("Parent of loop was NULL");			\
+	}
+
 #else
 extern void crm_update_parents(crm_data_t *root);
 extern gboolean crm_xml_has_children(crm_data_t *root);
@@ -240,6 +253,21 @@ extern gboolean crm_xml_has_children(crm_data_t *root);
 			} else {					\
 				crm_trace("Skipping <%s../>", a->names[__counter]); \
 			}						\
+		}							\
+	} else {							\
+		crm_trace("Parent of loop was NULL");			\
+	}
+#define xml_prop_iter(parent, prop_name, prop_value, code) if(parent != NULL) { \
+		const char *prop_name = NULL;				\
+		const char *prop_value = NULL;				\
+		int __counter = 0;					\
+		for (__counter = 0; __counter < parent->nfields; __counter++) { \
+			if(parent->types[__counter] != FT_STRING) {	\
+				continue;				\
+			}						\
+			prop_name = a->names[__counter];		\
+			prop_value = a->values[__counter];		\
+			code;						\
 		}							\
 	} else {							\
 		crm_trace("Parent of loop was NULL");			\
