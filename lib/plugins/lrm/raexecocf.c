@@ -315,7 +315,6 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	
 	pclose(file);
 	return data;
-	
 }
 
 static void 
@@ -334,7 +333,7 @@ add_prefix_foreach(gpointer key, gpointer value, gpointer user_data)
 	int prefix = strlen("OCF_RESKEY_");
 	GHashTable * new_hashtable = (GHashTable *) user_data;
 	char * newkey;
-	int keylen = strnlen((char*)key, MAX_LENGTH_OF_ENV-prefix)+prefix;
+	int keylen = strnlen((char*)key, MAX_LENGTH_OF_ENV-prefix)+prefix+1;
 	
 	newkey = g_new(gchar, keylen);
 	strncpy(newkey, "OCF_RESKEY_", keylen);
