@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.17 2004/10/01 12:04:12 lge Exp $ */
+/* $Id: xml.c,v 1.18 2004/10/08 17:56:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -348,7 +348,8 @@ create_xml_node(xmlNodePtr parent, const char *name)
 		}
 	}
 
-	crm_trace("Created node [%s [%s]]", parent_name, local_name);
+	crm_trace("Created node [%s [%s]]",
+		  crm_str(parent_name), crm_str(local_name));
 /*	set_node_tstamp(ret_value); */
 	return ret_value;
 }
