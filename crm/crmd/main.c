@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.15 2005/02/15 08:04:15 andrew Exp $ */
+/* $Id: main.c,v 1.16 2005/02/19 18:16:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -73,7 +73,7 @@ main(int argc, char ** argv)
 #endif
 
     crm_log_init(crm_system_name);
-    set_crm_log_level(LOG_VERBOSE);
+    set_crm_log_level(LOG_DEBUG);
 
     if(stat(DEVEL_DIR, &buf) != 0) {
 	    cl_perror("Stat of %s failed... exiting", DEVEL_DIR);
@@ -103,7 +103,7 @@ main(int argc, char ** argv)
     }
     
     /* read local config file */
-    crm_debug("Enabling coredumps");
+    crm_devel("Enabling coredumps");
     if(cl_enable_coredumps(1) != 0) {
 	    crm_warn("Cannot enable coredumps");
     }

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.15 2005/02/19 18:11:03 andrew Exp $ */
+/* $Id: main.c,v 1.16 2005/02/19 18:16:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,7 +76,7 @@ main(int argc, char ** argv)
 	int flag;
 
 	crm_log_init(crm_system_name);
-	set_crm_log_level(LOG_VERBOSE);
+	set_crm_log_level(LOG_DEBUG);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, cib_shutdown, NULL, NULL);
 
