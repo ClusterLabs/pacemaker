@@ -33,9 +33,6 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-#define DOT_FSA_ACTIONS 1
-#define DOT_ALL_FSA_INPUTS 1
-//#define FSA_TRACE 1
 
 #ifdef DOT_FSA_ACTIONS
 # ifdef FSA_TRACE
@@ -518,8 +515,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			stored_msg = (xmlNodePtr)data;
 
 #ifdef FSA_TRACE
-			xml_message_debug(stored_msg,
-					  "FSA processing message:");
+			xml_message_debug(stored_msg,"FSA processing message");
 #endif
 
 			next_input = handle_message(stored_msg);
@@ -528,7 +524,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			fprintf(dot_strm, "\t(result=%s)\n",
 				fsa_input2string(next_input));
 #endif
-										CRM_DEBUG3("Result of action %s was %s",
+			CRM_DEBUG3("Result of action %s was %s",
 				   fsa_action2string(A_MSG_PROCESS),
 				   fsa_input2string(next_input));	
 	
