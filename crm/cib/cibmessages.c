@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.50 2004/09/04 10:41:55 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.51 2004/09/06 08:18:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -82,7 +82,8 @@ cib_process_request(const char *op,
 	char *new_value = NULL;
 	char *old_value = NULL;
 	int int_value = -1;
-	
+	char *xml_text = NULL;
+
 	*result = CIBRES_OK;
 	verbose = xmlGetProp(options, XML_ATTR_VERBOSE);
 	section = xmlGetProp(options, XML_ATTR_FILTER_TYPE);
@@ -94,8 +95,10 @@ cib_process_request(const char *op,
 		msg_cib_strm = fopen(DEVEL_DIR"/cib.log", "w");
 	}
 	fprintf(msg_cib_strm, "\n====================\n");
-	fprintf(msg_cib_strm, "[Input %s]\t%s\n", op, dump_xml_formatted(fragment));
+	xml_text = dump_xml_formatted(fragment);
+	fprintf(msg_cib_strm, "[Input %s]\t%s\n", op, xml_text);
 	fflush(msg_cib_strm);
+	crm_free(xml_text);
 #endif
 
 	crm_debug("[cib] Processing \"%s\" event", op);
@@ -229,10 +232,11 @@ cib_process_request(const char *op,
 		}
 
 		crm_trace("Activating temporary CIB");
-
+		xml_text = dump_xml_formatted(tmpCib);
 		fprintf(msg_cib_strm, "[Activating CIB (%s - %s)]\t%s\n", op,
 			cib_error2string(*result),
-			dump_xml_formatted(tmpCib));
+			xml_text);
+		crm_free(xml_text);
 		/* if(check_generation(cib_updates, tmpCib) == FALSE) */
 /* 			status = "discarded old update"; */
 /* 		else  */
@@ -243,10 +247,13 @@ cib_process_request(const char *op,
 			*result = CIBRES_FAILED;
 
 		}
+
+		xml_text = dump_xml_formatted(get_the_CIB());
 		fprintf(msg_cib_strm, "[New CIB (%s - %s)]\t%s\n", op,
 			cib_error2string(*result),
-			dump_xml_formatted(get_the_CIB()));
+			xml_text);
 		fflush(msg_cib_strm);
+		crm_free(xml_text);
 		
 		crm_verbose("CIB update status: %d", *result);
 	}
@@ -264,9 +271,10 @@ cib_process_request(const char *op,
 	free_xml(failed);
 
 #ifdef MSG_LOG
+	xml_text = dump_xml_formatted(cib_answer);
 	fprintf(msg_cib_strm, "[Reply (%s:%s)]\t%s\n",
 		op, cib_error2string(*result),
-		dump_xml_formatted(cib_answer));
+		xml_text);
 	fflush(msg_cib_strm);
 #endif
 

@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.42 2004/08/30 03:17:38 msoffen Exp $ */
+/* $Id: pengine.c,v 1.43 2004/09/06 08:18:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,7 +55,7 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 		pemsg_strm = fopen(DEVEL_DIR"/pe.log", "w");
 	}
 
-	msg_buffer = dump_xml_node(msg, FALSE);
+	msg_buffer = dump_xml_formatted(msg);
 	fprintf(pemsg_strm, "%s: %s\n", "[in ]", msg_buffer);
 	fflush(pemsg_strm);
 	crm_free(msg_buffer);
@@ -75,7 +75,7 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
 		xmlNodePtr input_cib = find_xml_node(msg, XML_TAG_CIB);
 		xmlNodePtr output = do_calculations(input_cib);
-		msg_buffer = dump_xml_node(output, FALSE);
+		msg_buffer = dump_xml_formatted(output);
 		fprintf(pemsg_strm, "%s: %s\n", "[out ]", msg_buffer);
 		fflush(pemsg_strm);
 		crm_free(msg_buffer);

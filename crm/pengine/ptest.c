@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.31 2004/08/30 03:17:39 msoffen Exp $ */
+/* $Id: ptest.c,v 1.32 2004/09/06 08:18:26 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -278,7 +278,7 @@ main(int argc, char **argv)
 	muntrace();
 #endif
 
-	msg_buffer = dump_xml_node(graph, FALSE);
+	msg_buffer = dump_xml_formatted(graph);
 	fprintf(stdout, "%s\n", msg_buffer);
 	fflush(stdout);
 	crm_free(msg_buffer);

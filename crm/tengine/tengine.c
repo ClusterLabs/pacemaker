@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.28 2004/08/30 03:17:40 msoffen Exp $ */
+/* $Id: tengine.c,v 1.29 2004/09/06 08:18:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -198,9 +198,10 @@ extract_event(xmlNodePtr msg)
 	if(iter != NULL) {
 		iter = iter->children;
 	} else {
+		char *xml_text = dump_xml_formatted(cib);
 		crm_warn("%s missing? %s",
-			 XML_CIB_TAG_STATUS, dump_xml_node(cib, TRUE));
-		crm_warn("fragment: %s", dump_xml_node(cib, FALSE));
+			 XML_CIB_TAG_STATUS, xml_text);
+		crm_free(xml_text);
 	}
 	
 	
@@ -714,6 +715,9 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
 	const char *ref    = xmlGetProp(msg, XML_ATTR_REFERENCE);
 	xmlNodePtr graph = NULL;
+#ifdef MSG_LOG
+	char *xml_text      = NULL;
+#endif
 
 	crm_debug("Processing %s (%s) message", op, ref);
 
@@ -721,8 +725,9 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 	if(msg_te_strm == NULL) {
 		msg_te_strm = fopen(DEVEL_DIR"/te.log", "w");
 	}
-	fprintf(msg_te_strm, "[Input %s]\t%s\n",
-		op, dump_xml_node(msg, FALSE));
+	xml_text = dump_xml_formatted(msg);
+	fprintf(msg_te_strm, "[Input %s]\t%s\n", op, xml_text);
+	crm_free(xml_text);
 	fflush(msg_te_strm);
 #endif
 
@@ -909,7 +914,9 @@ do_update_cib(xmlNodePtr xml_action, int status)
 	xmlNodePtr options  = NULL;
 	xmlNodePtr state    = NULL;
 	xmlNodePtr rsc      = NULL;
-
+#ifdef MSG_LOG
+	char *xml_text      = NULL;
+#endif
 	const char *task   = xmlGetProp(xml_action, XML_LRM_ATTR_TASK);
 	const char *rsc_id = xmlGetProp(xml_action, XML_LRM_ATTR_RSCID);
 	const char *target = xmlGetProp(xml_action, XML_LRM_ATTR_TARGET);
@@ -987,12 +994,13 @@ do_update_cib(xmlNodePtr xml_action, int status)
 	fragment = create_cib_fragment(state, NULL);
 	
 #ifdef MSG_LOG
+	xml_text = dump_xml_formatted(fragment);
 	fprintf(msg_te_strm,
 		"[Result ]\tUpdate CIB with \"%s\" (%s): %s %s on %s\n",
 		status<0?"new action":"timeout",
 		xml_action->name, task, rsc_id, target);
-	fprintf(msg_te_strm, "[Sent ]\t%s\n",
-		dump_xml_node(fragment, FALSE));
+	fprintf(msg_te_strm, "[Sent ]\t%s\n", xml_text);
+	crm_free(xml_text);
 	fflush(msg_te_strm);
 #endif
 	

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.17 2004/08/30 03:17:39 msoffen Exp $ */
+/* $Id: stages.c,v 1.18 2004/09/06 08:18:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -518,7 +518,7 @@ stage8(GListPtr action_sets, xmlNodePtr *graph)
 		   xmlAddChild(*graph, xml_action_set);
 		);
 
-	xml_message_debug(*graph, "created action list");
+	print_xml_formatted(*graph, "created action list");
 	
 	return TRUE;
 }

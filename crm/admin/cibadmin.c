@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.4 2004/08/30 03:17:36 msoffen Exp $ */
+/* $Id: cibadmin.c,v 1.5 2004/09/06 08:18:25 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -480,13 +480,13 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		received_responses++;
 
 		if(strcmp(CRM_OP_QUERY, cib_action) == 0) {
-			print_xml_formatted(xml_root_node);
+			print_xml_formatted(xml_root_node, cib_action);
 			
 		} else if (strcmp(CRM_OP_ERASE, cib_action) == 0) {
-			print_xml_formatted(xml_root_node);
+			print_xml_formatted(xml_root_node, cib_action);
 		
 		} else if(cib_action != NULL) {
-			print_xml_formatted(xml_root_node);
+			print_xml_formatted(xml_root_node, cib_action);
 		
 		}
 
