@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.18 2004/03/16 17:33:34 andrew Exp $ */
+/* $Id: msgutils.c,v 1.19 2004/03/16 17:54:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -428,11 +428,15 @@ process_hello_message(IPC_Message *hello_message,
 	} else if (strcmp("hello", hello->name) != 0) {
 		FNRET(FALSE);
 	}
+
 	char *local_uid = xmlGetProp(hello, "client_uuid");
 	char *local_client_name = xmlGetProp(hello, "client_name");
 	char *local_major_version = xmlGetProp(hello, "major_version");
 	char *local_minor_version = xmlGetProp(hello, "minor_version");
-    
+
+
+	xml_message_debug(hello, "this is what we think we have");
+	
 	if (local_uid == NULL || strlen(local_uid) == 0) {
 		cl_log(LOG_ERR,
 		       "Hello message was not valid (field %s not found): %s",
