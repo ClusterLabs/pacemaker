@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.14 2004/03/16 10:10:04 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.15 2004/03/16 10:46:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,13 +126,13 @@ processCibRequest(xmlNodePtr command)
 	if(op == NULL)
 		cl_log(LOG_WARNING, "No operation specified\n");
 	else if(strcmp("noop", op) == 0) ;
-	else if (strcmp("ping", op) == 0) {
+	else if (strcmp(CRM_OPERATION_PING, op) == 0) {
 		CRM_DEBUG("Handling a ping");
 		status = "ok";
 		cib_answer =
 			createPingAnswerFragment(CRM_SYSTEM_CIB, status);
 		
-	} else if (strcmp("bump", op) == 0) {
+	} else if (strcmp(CRM_OPERATION_BUMP, op) == 0) {
 		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
 
 		// modify the timestamp
@@ -161,7 +161,7 @@ processCibRequest(xmlNodePtr command)
 		verbose = "true"; 
 		status = "ok";
 		
-	} else if (strcmp("erase", op) == 0) {
+	} else if (strcmp(CRM_OPERATION_ERASE, op) == 0) {
 		xmlNodePtr new_cib = createEmptyCib();
 
 		// Preserve generation counters etc
@@ -172,19 +172,19 @@ processCibRequest(xmlNodePtr command)
 		else
 			status = "ok";
 		
-	} else if (strcmp("create", op) == 0) {
+	} else if (strcmp(CRM_OPERATION_CREATE, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_ADD;
 		
-	} else if (strcmp("update", op) == 0) {
+	} else if (strcmp(CRM_OPERATION_UPDATE, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_MODIFY;
 		
-	} else if (strcmp("delete", op) == 0) {
+	} else if (strcmp(CRM_OPERATION_DELETE, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_DELETE;
 
-	} else if (strcmp("forward", op) == 0) {
+	} else if (strcmp(CRM_OPERATION_FORWARD, op) == 0) {
 		/* force a pick-up of the /entire/ CIB before
 		 * returning
 		 */
@@ -196,7 +196,7 @@ processCibRequest(xmlNodePtr command)
 		 * the message appropriately
 		 */
 		
-	} else if (strcmp("store", op) == 0) {
+	} else if (strcmp(CRM_OPERATION_STORE, op) == 0) {
 		xmlNodePtr cib_updates = NULL;
 		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
 		const char *node_path[2];

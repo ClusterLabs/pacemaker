@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.15 2004/03/10 22:30:29 andrew Exp $ */
+/* $Id: msgutils.c,v 1.16 2004/03/16 10:46:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,7 +80,7 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 	char *msg_type_target =
 		(char*)ha_malloc(sizeof(char)*(msg_type_len));
 	sprintf(msg_type_target, "%s_operation", to);
-	set_xml_property_copy(root_xml_node, msg_type_target, "ping");
+	set_xml_property_copy(root_xml_node, msg_type_target, CRM_OPERATION_PING);
 //    ha_free(msg_type_target);
 
 	FNRET(root_xml_node);

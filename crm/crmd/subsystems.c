@@ -156,11 +156,11 @@ do_cib_invoke(long long action,
 				find_xml_node(cib_msg, XML_TAG_OPTIONS);
 
 			const char *op = xmlGetProp(options, XML_ATTR_OP);
-			if(strcmp(op, "create") == 0
-			  || strcmp(op, "update") == 0
-			  || strcmp(op, "delete") == 0
-			  || strcmp(op, "erase") == 0)
-				send_request(NULL, NULL, "bump", NULL, CRM_SYSTEM_CIB);
+			if(strcmp(op, CRM_OPERATION_CREATE) == 0
+			  || strcmp(op, CRM_OPERATION_UPDATE) == 0
+			  || strcmp(op, CRM_OPERATION_DELETE) == 0
+			  || strcmp(op, CRM_OPERATION_ERASE) == 0)
+				send_request(NULL, NULL, CRM_OPERATION_BUMP, NULL, CRM_SYSTEM_CIB);
 		
 
 		}

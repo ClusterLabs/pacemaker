@@ -1,4 +1,4 @@
-/* $Id: xmlvalues.h,v 1.5 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: xmlvalues.h,v 1.6 2004/03/16 10:46:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,7 +70,6 @@
 
 #define CIB_VAL_SOURCE_DEFAULT  "unknown"
 
-
 #define CRM_SYSTEM_DC       "dc"
 #define CRM_SYSTEM_DCIB     "dcib" // The master CIB
 #define CRM_SYSTEM_CIB      "cib"
@@ -78,3 +77,17 @@
 #define CRM_SYSTEM_LRMD     "lrmd"
 #define CRM_SYSTEM_PENGINE  "pengine"
 #define CRM_SYSTEM_TENGINE  "tengine"
+
+#define CRM_OPERATION_BUMP	"bump"
+#define CRM_OPERATION_CREATE	"create"
+#define CRM_OPERATION_UPDATE	"update"
+#define CRM_OPERATION_DELETE	"delete"
+#define CRM_OPERATION_ERASE	"erase"
+#define CRM_OPERATION_STORE	"store"
+#define CRM_OPERATION_FORWARD	"forward"
+#define CRM_OPERATION_JOINACK	"join_ack"
+#define CRM_OPERATION_WELCOME	"welcome"
+#define CRM_OPERATION_PING	"ping"
+#define CRM_OPERATION_VOTE	"vote"
+#define CRM_OPERATION_ANNOUNCE	"announce"
+#define CRM_OPERATION_HBEAT	"dc_beat"

@@ -63,7 +63,7 @@ do_election_vote(long long action,
 	CRM_DEBUG("Set the election timer... if it goes off, we win.");
 
 	/* host_to = NULL (for broadcast) */
-	send_request(NULL, NULL, "vote", NULL, CRM_SYSTEM_CRMD);
+	send_request(NULL, NULL, CRM_OPERATION_VOTE, NULL, CRM_SYSTEM_CRMD);
 	
 	FNRET(election_result);
 }
@@ -91,7 +91,7 @@ do_dc_heartbeat(gpointer data)
 	cl_log(LOG_INFO, "#!!#!!# Timer %s just popped!",
 	       fsa_input2string(timer->fsa_input));
 
-	gboolean was_sent = send_request(NULL, NULL, "beat", 
+	gboolean was_sent = send_request(NULL, NULL, CRM_OPERATION_HBEAT, 
 					 NULL, CRM_SYSTEM_CRMD);
 
 	if(was_sent == FALSE) {
@@ -325,7 +325,7 @@ do_send_welcome(long long action,
 	} else if(action & A_JOIN_WELCOME) {
 		xmlNodePtr welcome = (xmlNodePtr)data;
 		xmlNodePtr options = find_xml_node(welcome, XML_TAG_OPTIONS);
-		set_xml_property_copy(options, XML_ATTR_OP, "welcome");
+		set_xml_property_copy(options, XML_ATTR_OP, CRM_OPERATION_WELCOME);
 
 		send_ha_reply(fsa_cluster_connection, welcome, NULL);
 
@@ -356,7 +356,7 @@ do_send_welcome(long long action,
 		CRM_DEBUG2("Sending welcome message to %s", new_node);
 		num_sent++;
 		was_sent = was_sent
-			&& send_request(NULL, NULL, "welcome",
+			&& send_request(NULL, NULL, CRM_OPERATION_WELCOME,
 					new_node, CRM_SYSTEM_CRMD);
 	}
 
@@ -403,7 +403,7 @@ do_ack_welcome(long long action,
 
 	xmlNodePtr msg_options = find_xml_node(welcome, XML_TAG_OPTIONS);
 	
-	set_xml_property_copy(msg_options, XML_ATTR_OP, "join_ack");
+	set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OPERATION_JOINACK);
 	
 	send_ha_reply(fsa_cluster_connection,
 		      welcome, NULL);
@@ -433,7 +433,7 @@ do_announce(long long action,
 	} 
 #endif
 
-	send_request(NULL, NULL, "announce", NULL, CRM_SYSTEM_DC);
+	send_request(NULL, NULL, CRM_OPERATION_ANNOUNCE, NULL, CRM_SYSTEM_DC);
 	
 	FNRET(I_NULL);
 }
@@ -493,7 +493,7 @@ do_process_welcome_ack(long long action,
 
 	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
 	set_xml_property_copy(msg_options, "forward_to", join_from);
-	send_request(msg_options, NULL, "forward", NULL, CRM_SYSTEM_CIB);
+	send_request(msg_options, NULL, CRM_OPERATION_FORWARD, NULL, CRM_SYSTEM_CIB);
 	
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {

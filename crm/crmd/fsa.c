@@ -935,29 +935,29 @@ handle_message(xmlNodePtr stored_msg)
 		xml_message_debug(stored_msg, "Bad message");
 		
 	} else if(strcmp(type, XML_ATTR_REQUEST) == 0){
-		if(strcmp(op, "vote") == 0) {
+		if(strcmp(op, CRM_OPERATION_VOTE) == 0) {
 			next_input = I_ELECTION;
 				
-		} else if(strcmp(op, "beat") == 0) {
+		} else if(strcmp(op, CRM_OPERATION_HBEAT) == 0) {
 			next_input = I_DC_HEARTBEAT;
 				
-		} else if(strcmp(op, "welcome") == 0) {
+		} else if(strcmp(op, CRM_OPERATION_WELCOME) == 0) {
 			next_input = I_WELCOME;
 				
-		} else if(strcmp(op, "announce") == 0) {
+		} else if(strcmp(op, CRM_OPERATION_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
 				
-		} else if(strcmp(op, "store") == 0 && AM_I_DC) {
+		} else if(strcmp(op, CRM_OPERATION_STORE) == 0 && AM_I_DC) {
 			next_input = I_RELEASE_DC;
 				
-		} else if(strcmp(op, "store") == 0
-			  || strcmp(op, "create") == 0
-			  || strcmp(op, "update") == 0
-			  || strcmp(op, "delete") == 0
-			  || strcmp(op, "erase") == 0) {
+		} else if(strcmp(op, CRM_OPERATION_STORE) == 0
+			  || strcmp(op, CRM_OPERATION_CREATE) == 0
+			  || strcmp(op, CRM_OPERATION_UPDATE) == 0
+			  || strcmp(op, CRM_OPERATION_DELETE) == 0
+			  || strcmp(op, CRM_OPERATION_ERASE) == 0) {
 			next_input = I_CIB_UPDATE;
 				
-		} else if(strcmp(op, "ping") == 0) {
+		} else if(strcmp(op, CRM_OPERATION_PING) == 0) {
 			/* eventually do some stuff to figure out
 			 * if we /are/ ok
 			 */
@@ -975,28 +975,28 @@ handle_message(xmlNodePtr stored_msg)
 		
 	} else if(strcmp(type, XML_ATTR_RESPONSE) == 0) {
 
-		if(strcmp(op, "welcome") == 0) {
+		if(strcmp(op, CRM_OPERATION_WELCOME) == 0) {
 			next_input = I_WELCOME;
 				
-		} else if(strcmp(op, "join_ack") == 0) {
+		} else if(strcmp(op, CRM_OPERATION_JOINACK) == 0) {
 			next_input = I_WELCOME_ACK;
 				
-		} else if(strcmp(op, "create") == 0
-			  || strcmp(op, "update") == 0
-			  || strcmp(op, "delete") == 0
-			  || strcmp(op, "erase") == 0) {
+		} else if(strcmp(op, CRM_OPERATION_CREATE) == 0
+			  || strcmp(op, CRM_OPERATION_UPDATE) == 0
+			  || strcmp(op, CRM_OPERATION_DELETE) == 0
+			  || strcmp(op, CRM_OPERATION_ERASE) == 0) {
 
 			// perhaps we should do somethign with these replies
 
-		} else if(strcmp(op, "bump") == 0) {
+		} else if(strcmp(op, CRM_OPERATION_BUMP) == 0) {
 
 			xmlNodePtr data = find_xml_node(stored_msg,
 							XML_TAG_FRAGMENT);
 			
-			send_request(NULL, data, "store",
+			send_request(NULL, data, CRM_OPERATION_STORE,
 				     NULL, CRM_SYSTEM_CRMD);
 
-		} else if (AM_I_DC && strcmp(op, "store") == 0) {
+		} else if (AM_I_DC && strcmp(op, CRM_OPERATION_STORE) == 0) {
 
 			/* if there was any result, we need to merge it back
 			 * into our (the DC) copy of the CIB
@@ -1005,15 +1005,15 @@ handle_message(xmlNodePtr stored_msg)
 							XML_TAG_FRAGMENT);
 
 			if(data != NULL) {
-				send_request(NULL, data, "update",
+				send_request(NULL, data, CRM_OPERATION_UPDATE,
 					     NULL, CRM_SYSTEM_CIB);
-				send_request(NULL, NULL, "bump",
+				send_request(NULL, NULL, CRM_OPERATION_BUMP,
 					     NULL, CRM_SYSTEM_CIB);
 			}
 
 
 		} else if(strcmp(sys_from, CRM_SYSTEM_CIB) == 0
-		   && strcmp(op, "forward") == 0
+		   && strcmp(op, CRM_OPERATION_FORWARD) == 0
 		   && AM_I_DC) {
 				
 			/* this is a reply to our earlier command
@@ -1038,7 +1038,7 @@ handle_message(xmlNodePtr stored_msg)
 						      "true");
 			}
 			
-			send_request(local_options, data, "store",
+			send_request(local_options, data, CRM_OPERATION_STORE,
 				     uname, CRM_SYSTEM_CRMD);
 				
 		} else {
