@@ -355,6 +355,10 @@ if __name__ == '__main__':
                usage(args[i+1])
        elif args[i] == "--suppressmonitoring":
            SuppressMonitoring = 1
+       elif args[i] == "-2" or args[i] == "--crm":
+           Version = 2
+       elif args[i] == "-1" or args[i] == "--classic":
+           Version = 1
        else:
            NumIter=int(args[i])
           
