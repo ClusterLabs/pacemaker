@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.20 2005/01/26 13:17:20 andrew Exp $ */
+/* $Id: utils.c,v 1.21 2005/01/27 08:55:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -286,12 +286,11 @@ do_crm_log(int log_level, const char *function,
 	if(do_log) {
 		const char *cur_debugfile = NULL;
 		va_list ap;
-		char	buf[20000];
+		char	*buf = NULL;
 		int	nbytes;
 		
-		memset(buf, EOS, sizeof(buf));
 		va_start(ap, fmt);
-		nbytes=vsnprintf(buf, sizeof(buf)-1, fmt, ap);
+		nbytes=vasprintf(&buf, fmt, ap);
 		va_end(ap);
 		
 		if(alt_debugfile == NULL || nbytes < MAXLINE) {
@@ -312,7 +311,8 @@ do_crm_log(int log_level, const char *function,
 			FILE *fp = fopen(alt_debugfile, "a");
 			fprintf(fp, "%s\n", buf);
 			fclose(fp);
-		}		
+		}
+		free(buf);
 	}
 }
 
