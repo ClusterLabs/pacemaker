@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.12 2005/01/12 13:41:10 andrew Exp $ */
+/* $Id: cib.h,v 1.13 2005/01/13 13:40:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -22,6 +22,9 @@
 #include <libxml/tree.h> 
 #include <clplumbing/ipc.h>
 #include <ha_msg.h>
+
+#define cib_feature_revision 1
+#define cib_feature_revision_s "1"
 
 enum cib_variant {
 	cib_native,
@@ -92,7 +95,9 @@ enum cib_errors {
 	cib_client_gone		= -34,
 	cib_not_master		= -35,
 	cib_client_corrupt	= -36,
-	cib_master_timeout	= -37
+	cib_master_timeout	= -37,
+	cib_revision_unsupported= -38,
+	cib_revision_unknown	= -39
 };
 
 enum cib_op {
@@ -122,8 +127,6 @@ enum cib_section {
 #define F_CIB_SECTION   "cib_section"
 #define F_CIB_HOST	"cib_host"
 #define F_CIB_RC	"cib_rc"
-#define F_CIB_CALLBACK_TOKEN	"cib_callback_token"
-#define F_CIB_GLOBAL_UPDATE	"cib_update"
 #define F_CIB_DELEGATED	"cib_delegated_from"
 #define F_CIB_OBJID	"cib_object"
 #define F_CIB_OBJTYPE	"cib_object_type"
@@ -131,6 +134,8 @@ enum cib_section {
 #define F_CIB_SEENCOUNT	"cib_seen"
 #define F_CIB_TIMEOUT	"cib_timeout"
 #define F_CIB_UPDATE	"cib_update"
+#define F_CIB_CALLBACK_TOKEN	"cib_callback_token"
+#define F_CIB_GLOBAL_UPDATE	"cib_update"
 #define F_CIB_UPDATE_RESULT	"cib_update_result"
 
 #define T_CIB			"cib"

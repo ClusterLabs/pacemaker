@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.20 2005/01/12 15:43:20 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.21 2005/01/13 13:41:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,6 +40,8 @@
 #define XML_ATTR_OP			"op"
 #define XML_ATTR_DC			"is_dc"
 #define XML_ATTR_DC_UUID		"dc_uuid"
+#define XML_ATTR_CIB_REVISION		"cib_feature_revision"
+#define XML_ATTR_CIB_REVISION_MAX	"cib_feature_revision_max"
 
 #define XML_BOOLEAN_TRUE		"true"
 #define XML_BOOLEAN_FALSE		"false"

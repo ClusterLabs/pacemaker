@@ -240,6 +240,7 @@ do_dc_takeover(long long action,
 	enum crmd_fsa_input result = I_NULL;
 	xmlNodePtr cib = createEmptyCib();
 	xmlNodePtr update = NULL;
+	xmlNodePtr output = NULL;
 	int rc = cib_ok;
 	
 	crm_trace("################## Taking over the DC ##################");
@@ -258,24 +259,45 @@ do_dc_takeover(long long action,
 
 	startTimer(dc_heartbeat);
 
-	set_uuid(cib, XML_ATTR_DC_UUID, fsa_our_uname);
-	update = create_cib_fragment(cib, NULL);
-
-	crm_debug("Updating %s to %s",
-		  XML_ATTR_DC_UUID, xmlGetProp(cib, XML_ATTR_DC_UUID));
-
 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none);
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
+
+	crm_debug("Update %s in the CIB to our uuid: %s",
+		  XML_ATTR_DC_UUID, xmlGetProp(cib, XML_ATTR_DC_UUID));
+	
+	set_uuid(cib, XML_ATTR_DC_UUID, fsa_our_uname);
+	set_xml_property_copy(
+		cib, XML_ATTR_CIB_REVISION_MAX, cib_feature_revision_s);
+	update = create_cib_fragment(cib, NULL);
+	free_xml(cib);
+
 	rc = fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, NULL, update, NULL, cib_sync_call);
+		fsa_cib_conn, NULL, update, &output, cib_sync_call);
 	
 	if(rc != cib_ok) {
 		crm_err("DC UUID update failed: %s", cib_error2string(rc));
 		result = I_FAIL;
+
+	} else {
+		int revision_i = -1;
+		const char *revision = NULL;
+
+		crm_debug("Checking our feature revision is allowed: %d",
+			  cib_feature_revision);
+
+		cib = find_xml_node(output, XML_TAG_CIB, TRUE);
+		
+		revision = xmlGetProp(cib, XML_ATTR_CIB_REVISION);
+		revision_i = atoi(revision?revision:"0");
+
+		if(revision_i > cib_feature_revision) {
+			crm_err("Feature revision not permitted");
+			/* go into a stall state */
+			result = I_HALT;
+		}
 	}
 	
 	free_xml(update);
-	free_xml(cib);
 	
 	crm_debug("Requesting an initial dump of CRMD client_status");
 	fsa_cluster_conn->llc_ops->client_status(

@@ -656,6 +656,12 @@ cib_error2string(enum cib_errors return_code)
 		case cib_master_timeout:
 			error_msg = "No master service is currently active";
 			break;
+		case cib_revision_unsupported:
+			error_msg = "The required CIB revision number is not supported";
+			break;
+		case cib_revision_unknown:
+			error_msg = "The CIB revision number could not be determined";
+			break;
 	}
 			
 	if(error_msg == NULL) {
@@ -978,8 +984,10 @@ createEmptyCib(void)
 	set_node_tstamp(config);
 	set_node_tstamp(status);
 	
-	set_xml_property_copy(cib_root, "version", "1");
+/* 	set_xml_property_copy(cib_root, "version", "1"); */
 	set_xml_property_copy(cib_root, "generated", XML_BOOLEAN_TRUE);
+	set_xml_property_copy(
+		cib_root, XML_ATTR_CIB_REVISION, cib_feature_revision_s);
 
 	create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
 	create_xml_node(config, XML_CIB_TAG_NODES);
