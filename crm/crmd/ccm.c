@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.35 2004/09/21 19:40:18 andrew Exp $ */
+/* $Id: ccm.c,v 1.36 2004/10/05 20:50:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,6 +54,8 @@ void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
 
 #define CCM_EVENT_DETAIL 1
 oc_ev_t *fsa_ev_token;
+int num_ccm_register_fails = 0;
+int max_ccm_register_fails = 30;
 
 /*	 A_CCM_CONNECT	*/
 enum crmd_fsa_input
@@ -61,16 +63,13 @@ do_ccm_control(long long action,
 		enum crmd_fsa_cause cause,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input current_input,
-		void *data)
+		fsa_data_t *msg_data)
 {
 	int      ret;
  	int	 fsa_ev_fd; 
     
-	
-
 	if(action & A_CCM_DISCONNECT){
 		oc_ev_unregister(fsa_ev_token);
-
 	}
 
 	if(action & A_CCM_CONNECT) {
@@ -88,9 +87,21 @@ do_ccm_control(long long action,
 		crm_info("Activating CCM token");
 		ret = oc_ev_activate(fsa_ev_token, &fsa_ev_fd);
 		if (ret){
-			crm_info("CCM Activation failed... unregistering");
 			oc_ev_unregister(fsa_ev_token);
-			return(I_FAIL);
+
+			if(++num_ccm_register_fails < max_ccm_register_fails) {
+				crm_warn("CCM Activation failed %d (max) times",
+					 num_ccm_register_fails);
+				if(wait_timer->source_id < 0) {
+					startTimer(wait_timer);
+				}
+				return I_WAIT_FOR_EVENT;
+
+			} else {
+				crm_err("CCM Activation failed %d (max) times",
+					 num_ccm_register_fails);
+				return I_FAIL;
+			}
 		}
 		crm_info("CCM Activation passed... all set to go!");
 
@@ -116,34 +127,42 @@ do_ccm_event(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
-	     void *data)
+	     fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input return_input = I_NULL;
-	const oc_ev_membership_t *oc = ((struct ccm_data *)data)->oc;
-	oc_ed_t event = *((struct ccm_data *)data)->event;
+	oc_ed_t *event = NULL;
+	const oc_ev_membership_t *oc = NULL;
 
+	if(msg_data == NULL || msg_data->data == NULL) {
+		crm_err("No data provided to FSA function");
+		return I_FAIL;
+
+	} else if(msg_data->fsa_cause != C_CCM_CALLBACK) {
+		crm_err("FSA function called in response to incorect input");
+		return I_NULL;
+	}
+
+	event = ((struct ccm_data *)msg_data->data)->event;
+	oc = ((struct ccm_data *)msg_data->data)->oc;
 	
-
 	crm_info("event=%s", 
-	       event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
-	       event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
-	       event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
-	       event==OC_EV_MS_EVICTED?"EVICTED":
+	       *event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
+	       *event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
+	       *event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
+	       *event==OC_EV_MS_EVICTED?"EVICTED":
 	       "NO QUORUM MEMBERSHIP");
 	
 	if(CCM_EVENT_DETAIL) {
-		ccm_event_detail(oc, event);
+		ccm_event_detail(oc, *event);
 	}
 
-	if (OC_EV_MS_EVICTED == event) {
+	if (OC_EV_MS_EVICTED == *event) {
 		/* get out... NOW! */
 		return_input = I_SHUTDOWN;
 
 	}
 	
-	if(return_input == I_SHUTDOWN) {
-		; /* ignore everything, the new DC will handle it */
-	} else {
+	if(return_input != I_SHUTDOWN) {
 		/* My understanding is that we will never get both
 		 * node leaving *and* node joining callbacks at the
 		 * same time.
@@ -153,14 +172,36 @@ do_ccm_event(long long action,
 		 */
 
 		if(oc->m_n_out != 0) {
-			/* delay this until the CIB update to be interpreted by the TE */
-			return_input = I_NULL;
+			if(AM_I_DC) {
+				int lpc = 0;
+				int offset = oc->m_out_idx;
+				for(lpc=0; lpc < oc->m_n_out; lpc++) {
+					oc_node_t *member = NULL;
+					xmlNodePtr node_state = NULL;
+					xmlNodePtr update = NULL;
+					
+					if(member == NULL) {
+						continue;
+					}
+					node_state = create_node_state(
+						NULL,
+						oc->m_array[offset+lpc].node_uname,
+						XML_BOOLEAN_NO, NULL, NULL);
+
+					set_xml_property_copy(
+						node_state,
+						XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_DOWN);
+					update = create_cib_fragment(node_state, NULL);
+					invoke_local_cib(NULL, update, CRM_OP_UPDATE);
+					free_xml(update);
+					free_xml(node_state);
+				}
+			}
 
 		} else if(oc->m_n_in !=0) {
 			/* delay the I_NODE_JOIN until they acknowledge our
 			 * DC status and send us their CIB
 			 */
-			return_input = I_NULL;
 		} else {
 			crm_warn("So why are we here?  What CCM event happened?");
 		}
@@ -179,23 +220,35 @@ do_ccm_update_cache(long long action,
 		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
-		    void *data)
+		    fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input next_input = I_NULL;
 	int lpc, offset;
 	GHashTable *members = NULL;
-	oc_ed_t event = *((struct ccm_data *)data)->event;
-	const oc_ev_membership_t *oc = ((struct ccm_data *)data)->oc;
-
+	oc_ed_t *event = NULL;
+	const oc_ev_membership_t *oc = NULL;
 	oc_node_list_t *tmp = NULL, *membership_copy = NULL;
-	crm_malloc(membership_copy, sizeof(oc_node_list_t));
+
+	if(msg_data == NULL || msg_data->data == NULL) {
+		crm_err("No data provided to FSA function");
+		return I_FAIL;
+
+	} else if(msg_data->fsa_cause != C_CCM_CALLBACK) {
+		crm_err("FSA function called in response to incorect input");
+		return I_NULL;
+	}
+
+	event = ((struct ccm_data *)msg_data->data)->event;
+	oc = ((struct ccm_data *)msg_data->data)->oc;
 
 	crm_info("Updating CCM cache after a \"%s\" event.", 
-	       event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
-	       event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
-	       event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
-	       event==OC_EV_MS_EVICTED?"EVICTED":
+	       *event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
+	       *event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
+	       *event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
+	       *event==OC_EV_MS_EVICTED?"EVICTED":
 	       "NO QUORUM MEMBERSHIP");
+
+	crm_malloc(membership_copy, sizeof(oc_node_list_t));
 
 	if(membership_copy == NULL) {
 		crm_crit("Couldnt create membership copy - out of memory");
@@ -391,7 +444,7 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		       oc->m_array[oc->m_out_idx+lpc].node_born_on);
 		if(fsa_our_uname != NULL
 		   && strcmp(fsa_our_uname,
-			     oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
+			     oc->m_array[oc->m_out_idx+lpc].node_uname)) {
 			crm_err("We're not part of the cluster anymore");
 		}
 	}
@@ -415,14 +468,14 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 
 
 void 
-crmd_ccm_input_callback(oc_ed_t event,
-			void *cookie,
-			size_t size,
-			const void *data)
+crmd_ccm_input_callback(
+	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
 	struct ccm_data *event_data = NULL;
 	
 	if(data != NULL) {
+		set_bit_inplace(fsa_input_register, R_CCM_DATA);
+
 		crm_malloc(event_data, sizeof(struct ccm_data));
 
 		if(event_data != NULL) {
