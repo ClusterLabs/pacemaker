@@ -582,7 +582,7 @@ function do_cmd() {
     elif [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
 	# for the logs...
 	if [ $OUTPUT_STDERR -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_CMDS -eq 0 ]; then
-	    echo " " > /dev/null
+	    : Searching for $cmdline
 #	    echo `date` ": Searching '$cmdline'" | tee -a $test_log_file;
 	fi
 	$cmdline -v 2>&1 >> $test_log_file
