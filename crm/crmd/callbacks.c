@@ -477,8 +477,8 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 		crm_err("Channel was disconnected");
 
 	} else {
-		crm_debug("Channel connected");
 		crmd_client_t *blank_client = NULL;
+		crm_debug("Channel connected");
 		crm_malloc(blank_client, sizeof(crmd_client_t));
 	
 		if (blank_client == NULL) {

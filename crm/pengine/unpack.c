@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.37 2004/10/21 18:25:43 andrew Exp $ */
+/* $Id: unpack.c,v 1.38 2004/10/24 12:38:33 lge Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1190,6 +1190,7 @@ unpack_rsc_location(
 		gboolean first_expr = TRUE;
 		gboolean can_run    = FALSE;
 		gboolean do_and     = TRUE;
+		gboolean rule_has_expressions;
 
 		const char *rule_id = xmlGetProp(rule, XML_ATTR_ID);
 		const char *score   = xmlGetProp(rule, "score");
@@ -1218,7 +1219,7 @@ unpack_rsc_location(
 			continue;
 		}
 		
-		gboolean rule_has_expressions = FALSE;
+		rule_has_expressions = FALSE;
 		xml_child_iter(
 			rule, expr, "expression",
 

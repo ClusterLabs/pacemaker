@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.12 2004/10/21 18:25:43 andrew Exp $ */
+/* $Id: ttest.c,v 1.13 2004/10/24 12:38:33 lge Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -54,6 +54,8 @@ main(int argc, char **argv)
 	int flag;
 	int argerr = 0;
 	xmlNodePtr xml_graph = NULL;
+	xmlNodePtr options = NULL;
+	IPC_Channel* channels[2];
   
 	cl_log_set_entity("ttest");
 	cl_log_set_facility(LOG_USER);
@@ -118,7 +120,6 @@ main(int argc, char **argv)
 #ifdef MTRACE  
 	mtrace();
 #endif
-	IPC_Channel* channels[2];
 	if (ipc_channel_pair(channels) != IPC_OK) {
 		cl_perror("Can't create ipc channel pair");
 		exit(1);
@@ -137,7 +138,7 @@ main(int argc, char **argv)
 	xml_graph = file2xml(stdin);
 
 	/* send transition graph over IPC instead */
-	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
+	options = create_xml_node(NULL, XML_TAG_OPTIONS);
 	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TRANSITION);
 	send_ipc_request(channels[0], options, xml_graph,
 			 NULL, CRM_SYSTEM_TENGINE, CRM_SYSTEM_TENGINE,

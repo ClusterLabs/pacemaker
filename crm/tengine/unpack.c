@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.7 2004/10/01 13:23:45 andrew Exp $ */
+/* $Id: unpack.c,v 1.8 2004/10/24 12:38:33 lge Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -254,6 +254,7 @@ extract_event(xmlNodePtr msg)
 	while(abort == FALSE && iter != NULL) {
 		xmlNodePtr node_state = iter;
 		xmlNodePtr child = iter->children;
+		xmlNodePtr shutdown = NULL;
 		const char *state = xmlGetProp(
 			node_state, XML_CIB_ATTR_CRMDSTATE);
 		iter = iter->next;
@@ -272,7 +273,7 @@ extract_event(xmlNodePtr msg)
 			crm_trace("Checking for STONITH");
 			event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
 
-			xmlNodePtr shutdown = create_shutdown_event(
+			shutdown = create_shutdown_event(
 				event_node, LRM_OP_TIMEOUT);
 
 			process_graph_event(shutdown);
@@ -291,7 +292,7 @@ extract_event(xmlNodePtr msg)
 			}
 			
 			event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
-			xmlNodePtr shutdown = create_shutdown_event(
+			shutdown = create_shutdown_event(
 				event_node, LRM_OP_DONE);
 
 			process_graph_event(shutdown);
@@ -343,24 +344,24 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 
 
 	crm_debug("Recieved %s (%s) message", op, ref);
-	
-#ifdef MSG_LOG
 
-	struct stat buf;
-	if(stat(DEVEL_DIR, &buf) != 0) {
-		cl_perror("Stat of %s failed... exiting", DEVEL_DIR);
-		exit(100);
+	if (MSG_LOG) {
+		struct stat buf;
+		char *xml;
+		if(stat(DEVEL_DIR, &buf) != 0) {
+			cl_perror("Stat of %s failed... exiting", DEVEL_DIR);
+			exit(100);
+		}
+
+		if(msg_te_strm == NULL) {
+			msg_te_strm = fopen(DEVEL_DIR"/te.log", "w");
+		}
+		xml = dump_xml_formatted(msg);
+		fprintf(msg_te_strm, "[Input %s]\t%s\n",
+			op, xml);
+		fflush(msg_te_strm);
+		crm_free(xml);
 	}
-	
-	if(msg_te_strm == NULL) {
-		msg_te_strm = fopen(DEVEL_DIR"/te.log", "w");
-	}
-	char *xml = dump_xml_formatted(msg);
-	fprintf(msg_te_strm, "[Input %s]\t%s\n",
-		op, xml);
-	fflush(msg_te_strm);
-	crm_free(xml);
-#endif
 
 	if(safe_str_eq(xmlGetProp(msg, XML_ATTR_MSGTYPE), XML_ATTR_RESPONSE)
 	   && safe_str_neq(op, CRM_OP_EVENTCC)) {
