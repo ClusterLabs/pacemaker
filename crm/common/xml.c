@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.15 2004/09/20 14:22:31 andrew Exp $ */
+/* $Id: xml.c,v 1.16 2004/09/21 19:16:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -313,11 +313,14 @@ set_xml_property_copy(xmlNodePtr node,
 	} else if (value == NULL || strlen(value) <= 0) {
 		ret_value = NULL;
 		xmlUnsetProp(node, local_name);
+/*		set_node_tstamp(node); */
 		
 	} else {
 		local_value = crm_strdup(value);
 		local_name = crm_strdup(name);
+		xmlUnsetProp(node, local_name);
 		ret_value = xmlSetProp(node, local_name, local_value);
+/*		set_node_tstamp(node); */
 	}
 	
 	return ret_value;
@@ -346,6 +349,7 @@ create_xml_node(xmlNodePtr parent, const char *name)
 	}
 
 	crm_trace("Created node [%s [%s]]", parent_name, local_name);
+//	set_node_tstamp(ret_value);
 	return ret_value;
 }
 
@@ -380,12 +384,18 @@ void
 set_node_tstamp(xmlNodePtr a_node)
 {
 	char *since_epoch = NULL;
+	time_t a_time = time(NULL);
+	
+	if(a_time == (time_t)-1) {
+		cl_perror("set_node_tstamp(): Invalid time returned");
+		return;
+	}
 	
 	crm_malloc(since_epoch, 128*(sizeof(char)));
 	if(since_epoch != NULL) {
-		sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
-		set_xml_property_copy(a_node, XML_ATTR_TSTAMP, since_epoch);
-		crm_free(since_epoch);
+		sprintf(since_epoch, "%ld", (unsigned long)a_time);
+		xmlUnsetProp(a_node, XML_ATTR_TSTAMP);
+		xmlSetProp(a_node, XML_ATTR_TSTAMP, since_epoch);
 	}
 }
 
@@ -431,7 +441,9 @@ copy_xml_node_recursive(xmlNodePtr src_node)
 	crm_trace("Returning null");
 	return NULL;
 #else
-	return xmlCopyNode(src_node, 1);
+	xmlNodePtr new_xml = xmlCopyNode(src_node, 1);
+/*	set_node_tstamp(new_xml); */
+	return new_xml;
 #endif
 }
 
