@@ -63,6 +63,10 @@ The exerciser needs to be able to ssh over to the cluster nodes as root
 without a password challenge.  Configure ssh accordingly.
 	(see the mini-HOWTOs at the end for more details)
 
+The exerciser needs to have the IP addresses of the test machines available
+to it - either by DNS or by /etc/hosts.  It uses this to validate configuration
+information.
+
 The "heartbeat" service (init script) needs to be enabled to
 automatically start in the default run level on the cluster machines. 
 This typically means you need a symlink for /etc/rc.d/rc3.d/S*heartbeat
@@ -82,48 +86,41 @@ CTSaudits.py    - performs audits at the end of each test
 CTSlab.py       - defines the "lab" (test) environment
 CTStests.py     - contains the definitions of the tests
 
-You'll only need to modify the CTSlab.py file...
+You probably should look at the CTSlab.py file, but you should no longer
+need to modify it.
 
-There's a line in the Stonith class for performing a stonith in your lab
-environment.  You'll need to use the ssh stonith type. 
-
-You need to supply the system with your list of nodes:
-
-        Environment = CtsLab(["sgi1", "sgi2"])
-
-is what it looks like now...
-
-This line of code:
-
-    overall, detailed = tests.run(5000)
-
-tells it to run 5000 tests chosen at random from the default list of tests.
-In my environment, each test averages something like 1-2 minutes.  This means
-that the sequence will take the better part of a week to run.
-
-This default list comes from this statement:
-        Tests = TestList(cm)
-
-TestList is defined in CTStests.py  It looks like it has appropriate values.
-
-The one thing you can't test with this version of CTS is cluster partition
-merging.  That's what a couple of our users have been having trouble with.
-That (currently) has to be tested by hand...
 
 OK.  Now assuming you did all this and the stuff described below, what you
 need to do is run CTSlab.py.  This is the same as the file you modified above.
 If you run any other file, it won't test your cluster ;-)
 
 Depending on permissions, etc., this may be either done as:
-	./CTSlab.py
+	./CTSlab.py number-of-tests-to-run
 or as
-	python ./CTSlab.py
+	python ./CTSlab.py number-of-tests-to-run
 
 The test output goes to standard error, so you'll probably want to catch stderr
 with the usual 2>&1 construct like this:
 	./CTSlab.py > outputfile 2>&1 &
 followed by a
 	tail -f outputfile
+
+Options for CTSlab:
+
+	--suppressmonitoring
+		Don't "monitor" resources as part of the audits
+
+	--directory dirname
+		Directory to find config info in.  Defaults to
+			/etc/ha.d
+	--logfile
+		Directory to find logging information in defaults to
+			/var/log/ha-log
+	--stonith (yes|no)
+		Enable/disable STONITH tests
+			/var/log/ha-log
+	--standby (yes|no)
+		Enable/disable standby tests
 
 
 ==============
