@@ -17,6 +17,7 @@
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  #
 
+verbose=$1
 io_dir=testcases
 diff_opts="--ignore-all-space -1 -u"
 failed=.regression.failed
@@ -99,31 +100,35 @@ do_test rsc_rsc8 "Should 3	"
 
 echo ""
 
-do_test rsc_node1 "Rsc1 Node1"
-do_test rsc_node2 "Rsc1 Node2"
+do_test rsc_node1 "Rsc1 Node1	"
+do_test rsc_node2 "Rsc1 Node2	"
 
 echo ""
 
-do_test complex1 "Complex"
+do_test complex1 "Complex	"
 
 echo ""
 
-do_test bad1 "Bad data"
-do_test bad2 "Bad data"
-do_test bad3 "Bad data"
-do_test bad4 "Bad data"
-do_test bad5 "Bad data"
-do_test bad6 "Bad data"
-#do_test bad7 "Bad data"
+do_test bad1 "Bad data	"
+do_test bad2 "Bad data	"
+do_test bad3 "Bad data	"
+do_test bad4 "Bad data	"
+do_test bad5 "Bad data	"
+do_test bad6 "Bad lrm_rsc"
+do_test bad7 "No lrm	"
 
 # Generate these test outputs
 create_mode="true"
-#do_test bad2 "Bad data"
-#do_test bad6 "Bad data"
+#do_test bad7 "Bad data"
 
 if [ -s $failed ]; then
-    echo "Results of failed tests...."
-    cat $failed
+    if [ "$verbose" = "-v" ]; then
+	echo "Results of failed tests...."
+	cat $failed
+    else
+	echo "Results of failed tests are in $failed...."
+	echo "Use $0 -v to display them automatically."
+    fi
 else
     rm $failed
 fi

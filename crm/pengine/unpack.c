@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.6 2004/06/09 16:45:17 andrew Exp $ */
+/* $Id: unpack.c,v 1.7 2004/06/11 09:27:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -541,7 +541,14 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 	 * the resource's list of allowed_nodes
 	 */
 	lrm_agent_t *agent = NULL;
-	xmlNodePtr xml_agent = agent_list->children;
+	xmlNodePtr xml_agent = NULL;
+
+	if(agent_list == NULL) {
+		return FALSE;
+	}
+
+	xml_agent = agent_list->children;
+	
 	while(xml_agent != NULL){
 		agent = (lrm_agent_t*)crm_malloc(sizeof(lrm_agent_t));
 		agent->class = xmlGetProp(xml_agent, "class");
@@ -844,6 +851,25 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	
 	*action_constraints = g_list_append(*action_constraints, order);
 
+	/* make sure the lower priority resource starts after
+	 *  the higher is started
+	 */
+	order = (order_constraint_t*)
+		crm_malloc(sizeof(order_constraint_t));
+	
+	order->id        = order_id++;
+	order->strength  = strength_e;
+
+	if(rsc_lh->priority < rsc_rh->priority) {
+		order->lh_action = rsc_rh->start;
+		order->rh_action = rsc_lh->start;
+	} else {
+		order->lh_action = rsc_lh->start;
+		order->rh_action = rsc_rh->start;
+	}
+	
+	*action_constraints = g_list_append(*action_constraints, order);
+	
 	return create_rsc_to_rsc(id, strength_e, rsc_lh, rsc_rh);
 }
 

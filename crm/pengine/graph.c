@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.4 2004/06/09 14:34:48 andrew Exp $ */
+/* $Id: graph.c,v 1.5 2004/06/11 09:27:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -137,6 +137,18 @@ update_runnable(GListPtr actions)
 				other, action_wrapper_t, action->actions_after, lpc2,
 				if(other->action->runnable == FALSE) {
 					continue;
+					
+				}
+				switch(other->strength) {
+					case should:
+					case should_not:
+					case must_not:
+					case startstop:
+					case ignore:
+						continue;
+						break;
+					case must:
+						break;
 				}
 				
 				change = TRUE;
