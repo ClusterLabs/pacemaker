@@ -199,70 +199,61 @@ build_active_RAs(xmlNodePtr rsc_list)
 
 	state_flag_t cur_state = 0;
 	const char *this_op    = NULL;
-	gboolean found = FALSE;
+	char *tmp = NULL;
 	
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 
 	slist_iter(
-		the_rsc, lrm_rsc_t, lrm_list, lpc,
+		rid, char, lrm_list, lpc,
 
 /* 		GHashTable* 	params; */
+
+		lrm_rsc_t *the_rsc =
+			fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
+
 		
 		xmlNodePtr xml_rsc = create_xml_node(rsc_list, "rsc_state");
-		const char *status_text = "<unknown>";
 
-		crm_info("Processing lrm_rsc_t entry %p", the_rsc);
+		crm_info("Processing lrm_rsc_t entry %s", rid);
 		
 		if(the_rsc == NULL) {
 			crm_err("NULL resource returned from the LRM");
 			continue;
 		}
+
 		set_xml_property_copy(xml_rsc, XML_ATTR_ID, the_rsc->id);
-		set_xml_property_copy(xml_rsc, "type",      the_rsc->type);
-		set_xml_property_copy(xml_rsc, "class",     the_rsc->class);
-		set_xml_property_copy(xml_rsc, "node_id",   fsa_our_uname);
-		
+		set_xml_property_copy(
+			xml_rsc, XML_LRM_ATTR_TARGET, fsa_our_uname);
+
 		op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
 
 		crm_verbose("\tcurrent state:%s\n",
 			    cur_state==LRM_RSC_IDLE?"Idle":"Busy");
 
+		tmp = crm_itoa(cur_state);
+		set_xml_property_copy(xml_rsc, XML_LRM_ATTR_RSCSTATE, tmp);
+		crm_free(tmp);
+		
 		slist_iter(
 			op, lrm_op_t, op_list, llpc,
 
 			this_op = op->op_type;
 
-			if(found == FALSE && safe_str_neq(this_op, "status")){
-				switch(op->op_status) {
-					case LRM_OP_DONE:
-						status_text = "done";
-						break;
-					case LRM_OP_CANCELLED:
-						status_text = "cancelled";
-						break;
-					case LRM_OP_TIMEOUT:
-						status_text = "timeout";
-						break;
-					case LRM_OP_NOTSUPPORTED:
-						status_text = "not suported";
-						break;
-					case LRM_OP_ERROR:
-						status_text = "error";
-						break;
-				}
-			}
-
-			if(found) {
+			if(safe_str_neq(this_op, "status")){
+				
 				set_xml_property_copy(
-					xml_rsc, "rsc_op", this_op);
-
+					xml_rsc, XML_LRM_ATTR_LASTOP, this_op);
+	
+				tmp = crm_itoa(op->op_status);
+				set_xml_property_copy(
+					xml_rsc, XML_LRM_ATTR_OPCODE, tmp);
+				crm_free(tmp);
+				
 				/* we only want the last one */
 				break;
 			}
 			)
 
-		set_xml_property_copy(xml_rsc, "op_result", status_text);
-		
 		g_list_free(op_list);
 		);
 
