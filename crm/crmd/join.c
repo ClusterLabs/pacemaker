@@ -60,14 +60,20 @@ do_send_welcome(long long action,
 			stopTimer(integration_timer);
 
 			/* update node status */
+			crm_debug("Updating node state to %s for %s",
+				  CRMD_JOINSTATE_PENDING, join_to);
+			
 			update = create_node_state(
 				join_to, join_to,
 				NULL, NULL, CRMD_JOINSTATE_PENDING);
 
 			tmp1 = create_cib_fragment(update, NULL);
 			invoke_local_cib(NULL, tmp1, CRM_OP_UPDATE);
+			free_xml(tmp1);	
 			
 			/* Make sure they have the *whole* CIB */
+			crm_debug("Sending complete CIB to %s", join_to);
+			
 			tmp1 = get_cib_copy();
 			tmp2 = create_cib_fragment(tmp1, NULL);
 			
@@ -78,13 +84,15 @@ do_send_welcome(long long action,
 			free_xml(tmp2);
 
 			/* send the welcome */
+			crm_debug("Sending %s to %s", CRM_OP_WELCOME, join_to);
+			
 			send_request(NULL, NULL, CRM_OP_WELCOME,
 				     join_to, CRM_SYSTEM_CRMD, NULL);
 
 			free_xml(update);
-			free_xml(tmp1);
 			
 			/* if this client is sick, we shouldnt wait forever */
+			crm_debug("Restarting the integration timer");
 			startTimer(integration_timer);
 
 		} else {
@@ -121,32 +129,29 @@ do_send_welcome_all(long long action,
 	if(joined_nodes != NULL) {
 		g_hash_table_destroy(joined_nodes);
 		joined_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
-		
 	}
 
-	/* catch any nodes that are active in the CIB but not in the CCM list  */
+	/* catch any nodes that are active in the CIB but not in the CCM list*/
 	xml_child_iter(
 		tmp1, node_entry, XML_CIB_TAG_STATE,
 
 		const char *node_id = xmlGetProp(node_entry, XML_ATTR_UNAME);
-
-		gpointer a_node =
-			g_hash_table_lookup(fsa_membership_copy->members,
-					    node_id);
+		gpointer a_node = g_hash_table_lookup(
+				fsa_membership_copy->members, node_id);
 
 		if(a_node != NULL || (safe_str_eq(fsa_our_uname, node_id))) {
 			/* handled by do_update_cib_node() */
-			continue;
+			xml_iter_continue(node_entry);
 		}
 
-		tmp1 = create_node_state(
+		tmp2 = create_node_state(
 			node_id, node_id,
 			XML_BOOLEAN_NO, NULL, CRMD_JOINSTATE_DOWN);
 
 		if(update == NULL) {
-			update = tmp1;
+			update = tmp2;
 		} else {
-			update = xmlAddSibling(update, tmp1);
+			update = xmlAddSibling(update, tmp2);
 		}
 		);
 
@@ -172,18 +177,23 @@ do_send_welcome_all(long long action,
 		     NULL, CRM_SYSTEM_CRMD, NULL);	
 
 /* No point hanging around in S_INTEGRATION if we're the only ones here! */
-	if(g_hash_table_size(joined_nodes)
-	   == fsa_membership_copy->members_size) {
-		/* that was the last outstanding join ack) */
+	if(joined_nodes == NULL) {
+		if(fsa_membership_copy->members_size == 1) {
+			/* we're the only ones in here */
+			crm_info("Not expecting any join acks");
+			return I_SUCCESS;
+		}
+		
+	} else if(g_hash_table_size(joined_nodes)
+		  >= (fsa_membership_copy->members_size -1)) {
 		crm_info("That was the last outstanding join ack");
 		return I_SUCCESS;
-		
-	} else {
-		crm_debug("Still waiting on %d outstanding join acks",
-			  fsa_membership_copy->members_size
-			  - g_hash_table_size(joined_nodes));
-		/* dont waste time by invoking the pe yet; */
 	}
+
+	/* dont waste time by invoking the pe yet; */
+	crm_debug("Still waiting on %d outstanding join acks",
+		  fsa_membership_copy->members_size
+		  - g_hash_table_size(joined_nodes) - 1);
 	
 	return I_NULL;
 }
@@ -298,7 +308,6 @@ do_process_welcome_ack(long long action,
 	xmlNodePtr msg_cib;
 	xmlNodePtr join_ack = (xmlNodePtr)data;
 
-	int size = 0;
 	gboolean is_a_member  = FALSE;
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
 	const char *ref       = xmlGetProp(join_ack, XML_ATTR_REFERENCE);
@@ -331,6 +340,7 @@ do_process_welcome_ack(long long action,
 	
 	/* add them to our list of CRMD_STATE_ACTIVE nodes
 	   TODO: still used?
+	   TODO: check its not already there
 	*/
 	g_hash_table_insert(joined_nodes, strdup(join_from),strdup(join_from));
 
@@ -372,23 +382,24 @@ do_process_welcome_ack(long long action,
 	}
 	
 	crm_free(uuid_calc);	
-	
+
+	/* make sure these values are correct in the CIB */
 	set_xml_property_copy(
 		tmp2, XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
 	set_xml_property_copy(
 		tmp2, XML_CIB_ATTR_JOINSTATE,CRMD_JOINSTATE_MEMBER);
 
+/* No point hanging around in S_INTEGRATION if we're the only ones here! */
 	if(g_hash_table_size(joined_nodes)
-	   == fsa_membership_copy->members_size) {
+		  >= (fsa_membership_copy->members_size -1)) {
 		crm_info("That was the last outstanding join ack");
 		return I_SUCCESS;
-		/* The update isnt lost, the A_CIB_OP action is part of the
-		 *   matrix for S_INTEGRATION + I_SUCCESS.
-		 */
-
-	} else {
-		crm_debug("Still waiting on %d outstanding join acks", size);
-		/* dont waste time by invoking the pe yet */
 	}
+
+	/* dont waste time by invoking the pe yet; */
+	crm_debug("Still waiting on %d outstanding join acks",
+		  fsa_membership_copy->members_size
+		  - g_hash_table_size(joined_nodes) - 1);
+	
 	return I_CIB_OP;
 }
