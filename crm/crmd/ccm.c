@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.37 2004/10/08 18:10:56 andrew Exp $ */
+/* $Id: ccm.c,v 1.38 2004/10/12 20:56:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,12 +88,10 @@ do_ccm_control(long long action,
 			oc_ev_unregister(fsa_ev_token);
 
 			if(++num_ccm_register_fails < max_ccm_register_fails) {
-				crm_warn("CCM Activation failed %d (max) times",
-					 num_ccm_register_fails);
-				if(wait_timer->source_id < 0) {
-					startTimer(wait_timer);
-				}
-				
+				crm_warn("CCM Activation failed %d (%d max) times",
+					 num_ccm_register_fails, max_ccm_register_fails);
+
+				startTimer(wait_timer);
 				crmd_fsa_stall();
 				return I_NULL;
 
