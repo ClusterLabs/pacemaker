@@ -20,7 +20,7 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
-			-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha
+  			  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha
 
 EXTRA_DIST		= ccdv.c
 
@@ -32,8 +32,8 @@ gliblib			= @GLIBLIB@
 habin_PROGRAMS		= cl_status cl_respawn
 
 ## SOURCES
-ccdv: 	ccdv.c
-	gcc -o ccdv ccdv.c
+ccdv: 	$(top_srcdir)/tools/ccdv.c
+	gcc -o ccdv $(top_srcdir)/tools/ccdv.c
 
 cl_status_SOURCES	= cl_status.c
 # A little trick. Now ccdv can be auto-built but not auto-cleaned.
