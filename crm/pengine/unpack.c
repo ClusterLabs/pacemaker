@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.28 2004/09/17 13:03:10 andrew Exp $ */
+/* $Id: unpack.c,v 1.29 2004/09/17 13:46:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -637,7 +637,6 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 	const char *last_op   = NULL;
 	resource_t *rsc_lh    = NULL;
 	op_status_t  action_status_i = LRM_OP_ERROR;
-	xmlNodePtr stonith_list = NULL;
 
 	while(lrm_rsc != NULL) {
 		rsc_entry = lrm_rsc;
@@ -665,22 +664,18 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 				rsc_id, node_id);
 			continue;
 		}
-
-		xml_child_iter(
-			stonith_list, rsc_entry, "can_fence",
-
-			node_t *node = pe_find_node(
-				nodes, xmlGetProp(stonith_list, "id"));
-
-			rsc_lh->fencable_nodes = g_list_append(
-				rsc_lh->fencable_nodes, node_copy(node));
-			);
 		
 		action_status_i = atoi(op_status);
 
-		if(action_status_i == -1) {
+		if(node->details->unclean) {
+			/* map this to an error and then handle as a
+			 * failed resource.
+			 */
+			action_status_i = LRM_OP_ERROR;
+
+		} else if(action_status_i == -1) {
 			/*
-			 * TODO: this needs more thought
+			 * TODO: this may need some more thought
 			 * Some cases:
 			 * - PE reinvoked with pending action that will succeed
 			 * - PE reinvoked with pending action that will fail
