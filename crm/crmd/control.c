@@ -36,6 +36,7 @@
 
 extern gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
 extern void crmd_ha_input_destroy(gpointer user_data);
+extern gboolean stop_all_resources(void);
 
 void crm_shutdown(int nsig);
 
@@ -134,10 +135,10 @@ do_shutdown(long long action,
 			next_input = I_ERROR;
 			crm_err("Failed to shutdown the Transitioner");
 		}
-		
 	}
 
-	/* TODO: shutdown all remaining resources? */
+	crm_info("Stopping all remaining local resources");
+	stop_all_resources();
 	
 	return next_input;
 }
@@ -259,7 +260,7 @@ do_startup(long long action,
 	if(integration_timer != NULL) {
 		integration_timer->source_id = -1;
 		integration_timer->period_ms = -1;
-		integration_timer->fsa_input = I_INTEGRATION_TIMEOUT;
+		integration_timer->fsa_input = I_INTEGRATED;
 		integration_timer->callback = timer_popped;
 	} else {
 		was_error = TRUE;
@@ -268,7 +269,7 @@ do_startup(long long action,
 	if(finalization_timer != NULL) {
 		finalization_timer->source_id = -1;
 		finalization_timer->period_ms = -1;
-		finalization_timer->fsa_input = I_FINALIZATION_TIMEOUT;
+		finalization_timer->fsa_input = I_FINALIZED;
 		finalization_timer->callback = timer_popped;
 	} else {
 		was_error = TRUE;
