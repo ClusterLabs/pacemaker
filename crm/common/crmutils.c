@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.10 2004/04/02 12:08:36 andrew Exp $ */
+/* $Id: crmutils.c,v 1.11 2004/04/13 13:26:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -180,8 +180,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 					  void* private_data),
 		 GDestroyNotify cleanup_method)
 {
-	cl_log(LOG_DEBUG, "Register with HA");
-
 	cl_log(LOG_INFO, "Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
 		cl_log(LOG_ERR, "Cannot sign on with heartbeat");
@@ -192,7 +190,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 	}
   
 	const char* ournode = NULL;
-	cl_log(LOG_INFO, "Finding our node name");
+	cl_log(LOG_DEBUG, "Finding our node name");
 	if ((ournode =
 	     hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
 		cl_log(LOG_ERR, "get_mynodeid() failed");
@@ -208,7 +206,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 /* 	return FALSE; */
 /*     } */
 
-	cl_log(LOG_INFO, "Be informed of CRM messages");
+	cl_log(LOG_DEBUG, "Be informed of CRM messages");
 	if (hb_cluster->llc_ops->set_msg_callback(hb_cluster,
 						  "CRM",
 						  message_callback,

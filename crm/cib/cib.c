@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.29 2004/04/12 15:34:50 andrew Exp $ */
+/* $Id: cib.c,v 1.30 2004/04/13 13:26:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,7 +50,7 @@ startCib(const char *filename)
 		cl_log(LOG_INFO,
 		       "CIB Initialization completed successfully");
 	} else { 
-		free_xml(cib);
+//		free_xml(cib);
 		cl_log(LOG_WARNING,
 		       "CIB Initialization failed, "
 		       "starting with an empty default.");
@@ -190,9 +190,9 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	if(whole_cib == FALSE) {
 		cib = createEmptyCib();
 		xmlNodePtr object_root = get_object_root(section, cib);
-		xmlAddChild(object_root, update);
+		add_node_copy(object_root, update);
 	} else {
-		cib = update;
+		cib = copy_xml_node_recursive(update);
 	}
 	
 	xmlAddChild(fragment, cib);

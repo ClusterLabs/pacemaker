@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.24 2004/04/06 16:21:45 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.25 2004/04/13 13:26:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -436,6 +436,13 @@ void
 xml_message_debug(xmlNodePtr msg, const char *text)
 {
 	FNIN();
+	if(msg == NULL) {
+		CRM_DEBUG3("%s: %s",
+		   text==NULL?"<null>":text,"<null>");
+		
+		FNOUT();
+	}
+	
 	char *msg_buffer = dump_xml_node(msg, FALSE);
 	CRM_DEBUG3("%s: %s",
 		   text==NULL?"<null>":text,
@@ -558,9 +565,9 @@ create_xml_node(xmlNodePtr parent, const char *name)
 	xmlNodePtr ret_value = NULL;
 	FNIN();
 
-	if (name == NULL)
+	if (name == NULL || strlen(name) < 1) {
 		ret_value = NULL;
-	else {
+	} else {
 		local_name = cl_strdup(name);
 
 		if(parent == NULL) 

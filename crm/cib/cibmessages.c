@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.29 2004/04/12 15:34:50 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.30 2004/04/13 13:26:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -106,7 +106,7 @@ cib_process_request(const char *op,
 			createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
 		
 	} else if (strcmp(CRM_OPERATION_BUMP, op) == 0) {
-		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB());
+		xmlNodePtr tmpCib = get_cib_copy();
 		CRM_DEBUG3("Handling a %s for section=%s of the cib",
 			   CRM_OPERATION_BUMP, section);
 		
@@ -174,11 +174,12 @@ cib_process_request(const char *op,
 		CRM_DEBUG2("Replacing section=%s of the cib", section);
 		xmlNodePtr tmpCib = NULL;
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
-		
+
 		if (section == NULL
 		    || strlen(section) == 0
 		    || strcmp("all", section) == 0) {
-			tmpCib = find_xml_node(fragment, XML_TAG_CIB);
+			tmpCib = copy_xml_node_recursive(
+				find_xml_node(fragment, XML_TAG_CIB));
 
 		} else {
 			tmpCib = copy_xml_node_recursive(get_the_CIB());
@@ -267,6 +268,7 @@ cib_process_request(const char *op,
 	}
 
 	free_xml(failed);
+
 	FNRET(cib_answer);
 }
 
@@ -382,7 +384,7 @@ createCibFragmentAnswer(const char *section, xmlNodePtr failed)
 	}
 
 	if (failed != NULL && failed->children != NULL) {
-		xmlAddChild(fragment, copy_xml_node_recursive(failed));
+		add_node_copy(fragment, failed);
 	}
 		
 	FNRET(fragment);

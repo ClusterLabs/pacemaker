@@ -445,15 +445,11 @@ do_ack_welcome(long long action,
 
 	xmlNodePtr cib_copy = get_cib_copy();
 	xmlNodePtr tmp1 = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
-
-	xmlUnlinkNode(tmp1); /* so that it can be deleted as part
-			      * of the fragment
-			      */
-	tmp1 = create_cib_fragment(tmp1, XML_CIB_TAG_STATUS);
+	xmlNodePtr tmp2 = create_cib_fragment(tmp1, XML_CIB_TAG_STATUS);
 	
-	send_ha_reply(fsa_cluster_conn, welcome, tmp1);
+	send_ha_reply(fsa_cluster_conn, welcome, tmp2);
 
-	free_xml(tmp1);
+	free_xml(tmp2);
 	free_xml(cib_copy);
 	
 	FNRET(I_NULL);

@@ -187,18 +187,9 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 	FNIN();
 
 #ifdef MSG_LOG
-	
 	if(msg_in_strm == NULL) {
 		msg_in_strm = fopen("/tmp/inbound.log", "w");
 	}
-	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n",
-		from,
-		ha_msg_value(msg, F_SEQ),
-		ha_msg_value(msg, F_TYPE),
-		ha_msg_value(msg, "xml")
-		);
-	fflush(msg_in_strm);
-	
 #endif
 
 	if(from == NULL || strcmp(from, fsa_our_uname) == 0) {
@@ -209,18 +200,20 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 #endif
 		FNOUT();
 	}
+	
+#ifdef MSG_LOG
+	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n",
+		from,
+		ha_msg_value(msg, F_SEQ),
+		ha_msg_value(msg, F_TYPE),
+		ha_msg_value(msg, "xml")
+		);
+	fflush(msg_in_strm);
+#endif
 
 	xmlNodePtr root_xml_node = find_xml_in_hamessage(msg);
 	to = xmlGetProp(root_xml_node, XML_ATTR_HOSTTO);
-
-/*
-	if(AM_I_DC == FALSE && (to == NULL || strlen(to) == 0)) {
-		CRM_DEBUG2("Discarding message [F_SEQ=%s] for the DC.",
-			   ha_msg_value(msg, F_SEQ));
-		FNOUT();
-	}
-*/
-
+	
 	if(to != NULL && strlen(to) > 0 && strcmp(to, fsa_our_uname) != 0) {
 #ifdef MSG_LOG
 		fprintf(msg_in_strm, "Discarding message [F_SEQ=%s] for someone else.",
@@ -696,8 +689,8 @@ handle_message(xmlNodePtr stored_msg)
 	const char *sys_to   = get_xml_attr(stored_msg, NULL,
 					    XML_ATTR_SYSTO, TRUE);
 
-	const char *sys_from = get_xml_attr(stored_msg, NULL,
-					    XML_ATTR_SYSFROM, TRUE);
+//	const char *sys_from = get_xml_attr(stored_msg, NULL,
+//					    XML_ATTR_SYSFROM, TRUE);
 
 	const char *type     = get_xml_attr(stored_msg, NULL,
 					    XML_ATTR_MSGTYPE, TRUE);
@@ -777,43 +770,13 @@ handle_message(xmlNodePtr stored_msg)
 			  && (strcmp(op, CRM_OPERATION_CREATE) == 0
 			      || strcmp(op, CRM_OPERATION_UPDATE) == 0
 			      || strcmp(op, CRM_OPERATION_DELETE) == 0
+			      || strcmp(op, CRM_OPERATION_REPLACE) == 0
 			      || strcmp(op, CRM_OPERATION_ERASE) == 0)) {
 
 			// perhaps we should do somethign with these replies
 			fprintf(router_strm, "Message result: CIB Reply\n");
 
 			next_input = I_CIB_UPDATE;
-			
-		} else if(AM_I_DC && strcmp(sys_from, CRM_SYSTEM_CIB) == 0) {
-				
-			/* this is a reply to our earlier command
-			 * Send it to the relevant node(s)
-			 */
-			const char *uname =
-				get_xml_attr(stored_msg, XML_TAG_OPTIONS,
-					     "forward_to", FALSE);
-
-			xmlNodePtr data = find_xml_node(stored_msg,
-							XML_TAG_FRAGMENT);
-
-			xmlNodePtr local_options = NULL;
-			
-			/* If this is part of join request processing,
-			 * ask for the status section, otherwise just blast
-			 * it down to them.
-			 */
-			if(uname != NULL) {
-				local_options = set_xml_attr(NULL,
-							     XML_TAG_OPTIONS,
-							     XML_ATTR_VERBOSE,
-							     "true",
-							     TRUE);
-			}
-			
-			send_request(local_options, data, CRM_OPERATION_REPLACE,
-				     uname, CRM_SYSTEM_CRMD);
-
-			free_xml(local_options);
 			
 		} else {
 			cl_log(LOG_ERR,

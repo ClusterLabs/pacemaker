@@ -155,7 +155,10 @@ do_cib_invoke(long long action,
 			tmp1 = create_cib_fragment(tmp2, XML_CIB_TAG_STATUS);
 			
 			// add to cib_msg
-			xmlAddChild(cib_msg, tmp1);
+			add_node_copy(cib_msg, tmp1);
+
+			free_xml(tmp2);
+			free_xml(tmp1);
 		}
 
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
@@ -197,11 +200,18 @@ do_cib_invoke(long long action,
 		xmlNodePtr answer = process_cib_request(CRM_OPERATION_BUMP,
 							new_options, NULL);
 
+		free_xml(new_options);
+
+		if(answer == NULL) {
+			cl_log(LOG_ERR, "Result of BUMP in %s was NULL",
+			       __FUNCTION__);
+			FNRET(I_FAIL);
+		}
+
 		send_request(NULL, answer, CRM_OPERATION_REPLACE,
 			     NULL, CRM_SYSTEM_CRMD);
-
+		
 		free_xml(answer);
-		free_xml(new_options);
 
   	} else if(action & A_UPDATE_NODESTATUS) {
 
@@ -797,6 +807,7 @@ do_lrm_invoke(long long action,
 
 		relay_message(reply, TRUE);
 
+		free_xml(data);
 		free_xml(reply);
 		free_xml(tmp2);
 		free_xml(tmp1);
@@ -1023,7 +1034,8 @@ void send_cib_lrm_update(xmlNodePtr update, gboolean lrm_replace)
 		send_cib_status_update(tmp1);
 	}
 	
-	free_xml(fragment); // takes tmp1 with it
+	free_xml(fragment);
+	free_xml(tmp1);
 }
 	
 	
@@ -1045,15 +1057,20 @@ void send_cib_status_update(xmlNodePtr update)
 				     XML_ATTR_FILTER_TYPE, XML_CIB_TAG_STATUS,
 				     TRUE);
 		
+		free_xml(answer);
 		answer = process_cib_request(CRM_OPERATION_BUMP,
 					     new_options,
 					     NULL);
 		
-		send_request(NULL, answer, CRM_OPERATION_REPLACE,
-			     NULL, CRM_SYSTEM_CRMD);
-		
 		free_xml(new_options);
 		
+		if(answer == NULL) {
+			cl_log(LOG_ERR, "Result of BUMP in %s was NULL",
+			       __FUNCTION__);
+		} else {
+			send_request(NULL, answer, CRM_OPERATION_REPLACE,
+				     NULL, CRM_SYSTEM_CRMD);
+		}
 		
 	} else {
 		send_request(NULL, answer,
@@ -1062,5 +1079,6 @@ void send_cib_status_update(xmlNodePtr update)
 		
 	}
 
+	free_xml(fragment);
 	free_xml(answer);
 }

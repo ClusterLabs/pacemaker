@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.18 2004/03/29 15:37:55 andrew Exp $ */
+/* $Id: cibio.c,v 1.19 2004/04/13 13:26:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -109,7 +109,7 @@ verifyCibXml(xmlNodePtr cib)
 	FNIN();
 
 	if (cib == NULL) {
-		cl_log(LOG_INFO, "XML Buffer was empty.");
+		cl_log(LOG_ERR, "XML Buffer was empty.");
 		FNRET(FALSE);
 	}
 	
@@ -249,8 +249,10 @@ initializeCib(xmlNodePtr new_cib)
 		CRM_DEBUG("CIB initialized");
 		FNRET(TRUE);
 	}
-	else
-		CRM_DEBUG("CIB Verification failed");
+	else {
+		cl_log(LOG_ERR, "CIB Verification failed");
+	}
+	
 	FNRET(FALSE);
     
 }
@@ -416,14 +418,14 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 	}
 
 // Make sure memory is cleaned up appropriately
-	if (error_code < 0) {
+	if (error_code != 0) {
 //		CRM_DEBUG2("Freeing new CIB %p", new_cib);
 		free_xml(new_cib);
 	} else {
 //		CRM_DEBUG2("Freeing saved CIB %p", saved_cib);
 		free_xml(saved_cib);
 	}
-	
+
 	FNRET(error_code);
     
 }

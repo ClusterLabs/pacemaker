@@ -45,16 +45,17 @@ do_state_transition(long long actions,
 # ifdef FSA_TRACE
 #  define ELSEIF_FSA_ACTION(x,y)					\
      else if(is_set(actions,x)) {					\
-	fprintf(dot_strm, "\t// %s:\t%s\t(data? %s)",			\
-		fsa_input2string(cur_input), fsa_action2string(x),	\
-		data==NULL?"no":"yes");					\
-	fflush(dot_strm);						\
 	CRM_DEBUG3("Invoking action %s (%.16llx)",			\
 		fsa_action2string(x), x);				\
 	actions = clear_bit(actions, x);				\
 	next_input = y(x, cause, cur_state, last_input, data);		\
-	fprintf(dot_strm, "\t(result=%s)\n",				\
-		fsa_input2string(next_input));				\
+	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
+		fprintf(dot_strm,					\
+			"\t// %s:\t%s\t(data? %s)\t(result=%s)\n",	\
+			fsa_input2string(cur_input),			\
+			fsa_action2string(x),				\
+			data==NULL?"no":"yes",				\
+			fsa_input2string(next_input));			\
 	fflush(dot_strm);						\
 	CRM_DEBUG3("Result of action %s was %s",			\
 		fsa_action2string(x), fsa_input2string(next_input));	\
@@ -62,14 +63,15 @@ do_state_transition(long long actions,
 # else
 #  define ELSEIF_FSA_ACTION(x,y)					\
      else if(is_set(actions,x)) {					\
-	fprintf(dot_strm, "\t// %s:\t%s\t(data? %s)",			\
-		fsa_input2string(cur_input), fsa_action2string(x),	\
-		data==NULL?"no":"yes");					\
-	fflush(dot_strm);						\
 	actions = clear_bit(actions, x);				\
 	next_input = y(x, cause, cur_state, last_input, data);		\
-	fprintf(dot_strm, "\t(result=%s)\n",				\
-		fsa_input2string(next_input));				\
+	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
+		fprintf(dot_strm,					\
+			"\t// %s:\t%s\t(data? %s)\t(result=%s)\n",	\
+			fsa_input2string(cur_input),			\
+			fsa_action2string(x),				\
+			data==NULL?"no":"yes",				\
+			fsa_input2string(next_input));			\
 	fflush(dot_strm);						\
      }
 # endif
@@ -319,7 +321,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		fsa_state   = next_state;
 
 		if(new_actions != A_NOTHING) {
-#ifndef FSA_TRACE
+#ifdef FSA_TRACE
 			CRM_DEBUG2("Adding actions %.16llx", new_actions);
 #endif
 			actions |= new_actions;
@@ -486,7 +488,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			} else {
 				fsa_message_queue_t msg = get_message();
 
-				if(msg == NULL || msg->message) {
+				if(msg == NULL || msg->message == NULL) {
 					cl_log(LOG_ERR,
 					       "Invalid stored message");
 					continue;
