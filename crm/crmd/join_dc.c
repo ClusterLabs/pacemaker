@@ -257,7 +257,7 @@ do_dc_join_finalize(long long action,
 		send_request(NULL, NULL, CRM_OP_RETRIVE_CIB,
 			     max_generation_from, CRM_SYSTEM_CRMD, NULL);
 
-		return I_NULL;
+		return I_WAIT_FOR_EVENT;
 	} 
 
 	num_join_invites = 0;
