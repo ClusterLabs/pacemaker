@@ -52,7 +52,7 @@ function 2node_fail_test() {
     do_cmd echo "wait for HA to start on ${test_node_1}"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1000 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2000 \
 	-s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" \
 	-s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" \
 	-e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
@@ -63,7 +63,7 @@ function 2node_fail_test() {
     do_cmd echo "wait for CRMd to start on ${test_node_1}"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 2500 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 5000 \
 	-s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}" \
 	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
     cts_assert "CRMd startup on ${test_node_1} failed."

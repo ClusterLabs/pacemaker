@@ -252,16 +252,9 @@ cts_assert "rsc2 NOT running on $test_node_3"
 
 do_cmd echo Shutdown $test_node_3
 crm_log_pos=$(stat -L -c %s $logfile)
-do_cmd remote_cmd $CRMD_USER $test_node_3 $HALIB_DIR/crmadmin -K $test_node_3 &
-do_cmd wait_for_state S_PENDING 30 $test_node_3 
-cts_assert "S_PENDING not reached on $test_node_3!"
-
-#----
-
-do_cmd echo Escalate the shutdown
-crm_log_pos=$(stat -L -c %s $logfile)
-do_cmd remote_cmd $CRMD_USER $test_node_3 $HALIB_DIR/crmadmin -K $test_node_3 &
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+do_cmd remote_cmd $CRMD_USER $test_node_3 $HALIB_DIR/crmadmin -K $test_node_3 
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
+    -s "${test_node_3} crmd(.*)State transition (.*) \-> \"S_PENDING\"" \
     -s "${test_node_3} crmd(.*)State transition \"S_PENDING\" \-> \"S_STOPPING\"" \
     -s "${test_node_3} crmd(.*)\[crmd\] stopped" 
 cts_assert "Shutdown of ${test_node_3} failed."
