@@ -163,12 +163,21 @@ do_exit(long long action,
 {
 	int exit_code = 0;
 	gboolean do_exit = FALSE;
-
+	
 	if(action & A_EXIT_0) {
-		do_exit = TRUE;
-		crm_info("Performing %s - gracefully exiting the CRMd",
-			 fsa_action2string(action));
-
+		if(is_set(fsa_input_register, R_PE_CONNECTED)) {
+			crm_info("Waiting for the PE to disconnect");
+			crmd_fsa_stall();
+			
+		} else if(is_set(fsa_input_register, R_TE_CONNECTED)) {
+			crm_info("Waiting for the TE to disconnect");
+			crmd_fsa_stall();
+		} else {
+			do_exit = TRUE;
+			crm_info("Performing %s - gracefully exiting the CRMd",
+				 fsa_action2string(action));
+		}
+		
 	} else {
 		do_exit = TRUE;
 		exit_code = 1;
@@ -176,15 +185,15 @@ do_exit(long long action,
 			 fsa_action2string(action));
 	}
 
-	if(is_set(fsa_input_register, R_IN_RECOVERY)) {
-		crm_info("Could not recover from internal error");
-		exit_code = 2;			
-
-	} else if(is_set(fsa_input_register, R_STAYDOWN)) {
-		crm_info("Inhibiting respawn by Heartbeat");
-		exit_code = 100;
-	}
 	if(do_exit) {
+		if(is_set(fsa_input_register, R_IN_RECOVERY)) {
+			crm_info("Could not recover from internal error");
+			exit_code = 2;			
+			
+		} else if(is_set(fsa_input_register, R_STAYDOWN)) {
+			crm_info("Inhibiting respawn by Heartbeat");
+			exit_code = 100;
+		}
 		crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
 		exit(exit_code);
 	}

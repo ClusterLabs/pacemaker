@@ -67,34 +67,10 @@ do_pe_control(long long action,
 	if(action & stop_actions) {
 		if(stop_subsystem(this_subsys) == FALSE) {
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-			
-		} else if(this_subsys->pid > 0) {
-			int lpc = CLIENT_EXIT_WAIT;
-			int pid_status = -1;
-			while(lpc-- > 0 && this_subsys->pid > 0) {
-
-				sleep(1);
-
-				if(! CL_PID_EXISTS(this_subsys->pid)
-				   || waitpid(this_subsys->pid,
-					      &pid_status, WNOHANG) > 0) {
-					this_subsys->pid = -1;
-					break;
-				}
-			}
-			
-			if(this_subsys->pid != -1) {
-				crm_err("Proc %s is still active with pid=%d",
-				       this_subsys->name, this_subsys->pid);
-				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-			} 
 		}
-
-		cleanup_subsystem(this_subsys);
 	}
 
 	if(action & start_actions) {
-
 		if(cur_state != S_STOPPING) {
 			if(start_subsystem(this_subsys) == FALSE) {
 				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
@@ -133,7 +109,14 @@ do_pe_invoke(long long action,
 
 	crm_verbose("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
 
+	CRM_DEV_ASSERT(fsa_cib_conn->state != cib_disconnected);
 	CRM_DEV_ASSERT(local_cib != NULL);
+	if(crm_assert_failed) {
+		/* wait for the congestion to ease? */
+		crm_timer_start(wait_timer);
+		crmd_fsa_stall();
+		return I_NULL;		
+	}
 	CRM_DEV_ASSERT(crm_element_value(local_cib, XML_ATTR_DC_UUID) != NULL);
 	
 	if(fsa_pe_ref) {
