@@ -452,7 +452,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	}
 	
 	now = time(NULL);
-	crm_info(DOT_PREFIX"\t// ### Exiting the FSA (%s%s): %s\n",
+	crm_debug(DOT_PREFIX"\t// ### Exiting the FSA (%s%s): %s\n",
 		  fsa_state2string(fsa_state), do_fsa_stall?": paused":"",
 		  asctime(localtime(&now)));
 
@@ -487,17 +487,13 @@ do_state_transition(long long actions,
 		return A_NOTHING;
 	}
 	
-	if(current_input != I_DC_HEARTBEAT && cur_state != S_NOT_DC){
-		crm_debug(DOT_PREFIX"\t\"%s\" -> \"%s\" [ label=\"%s\" cause=%s origin=%s ] // %s",
-			  state_from, state_to, input, fsa_cause2string(cause), msg_data->origin,
-			  asctime(localtime(&now)));
-	}
-
-	crm_info("State transition \"%s\" -> \"%s\""
-		 " [ input=%s cause=%s origin=%s %s ]",
-		 state_from, state_to, input,
-		 fsa_cause2string(cause), msg_data->origin,
-		 asctime(localtime(&now)));
+	crm_debug(DOT_PREFIX"\t%s -> %s [ label=%s cause=%s origin=%s ] // %s",
+		  state_from, state_to, input, fsa_cause2string(cause),
+		  msg_data->origin, asctime(localtime(&now)));
+	
+	crm_info("State transition %s -> %s [ input=%s cause=%s origin=%s %s ]",
+		 state_from, state_to, input, fsa_cause2string(cause),
+		 msg_data->origin, asctime(localtime(&now)));
 
 	/* the last two clauses might cause trouble later */
 	if(election_timeout != NULL
