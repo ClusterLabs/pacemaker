@@ -166,7 +166,7 @@ More details are given in the annotated DTD below.
 	  id		CDATA #REQUIRED>
 
 <!-- CONSTRAINTS -->
-<!ELEMENT constraints (rsc_to_rsc*,rsc_location*)>
+<!ELEMENT constraints (rsc_dependancy*,rsc_ordering*,rsc_location*)>
 
 <!-- Every constraint entry also has a 'lifetime' attribute, which
      expresses when this is applicable. For example, a constraint could
