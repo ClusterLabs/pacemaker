@@ -23,7 +23,8 @@ void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 #include <ocf/oc_event.h>
 #include <ocf/oc_membership.h>
-
+#include <clplumbing/GSource.h>
+#include <crm/common/ipcutils.h>
 #include <crm/dmalloc_wrapper.h>
 
 int register_with_ccm(ll_cluster_t *hb_cluster);
@@ -36,6 +37,7 @@ void crmd_ccm_input_callback(oc_ed_t event,
 			     const void *data);
 
 void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
+gboolean ccm_dispatch(int fd, gpointer user_data);
 
 static oc_ev_t   * fsa_ev_token;  // for CCM comms
 static int	   fsa_ev_fd;     // for CCM comms
@@ -109,9 +111,6 @@ do_ccm_event(long long action,
 
 		if(oc->m_n_out !=0) {
 			return_input = I_NODE_LEFT;
-			/* set a time in which we expect to hear from the DC
-			 */
-			startTimer(election_trigger);
 
 		} else if(oc->m_n_in !=0) {
 			/* delay the I_NODE_JOIN until they acknowledge our
@@ -119,7 +118,7 @@ do_ccm_event(long long action,
 			 */
 			return_input = I_NULL;
 		} else {
-			;
+			cl_log(LOG_INFO, "So why are we here?  What CCM event happened?");
 			/* so what happened??  why are we here? */
 		}
 	}
@@ -180,6 +179,8 @@ do_ccm_update_cache(long long action,
 			CRM_DEBUG2("Uname: %s", oc->m_array[offset+lpc].node_uname);
 #endif	
 		}
+	} else {
+		membership_copy->members = NULL;
 	}
 	
 
@@ -211,6 +212,8 @@ do_ccm_update_cache(long long action,
 			CRM_DEBUG2("Uname: %s", oc->m_array[offset+lpc].node_uname);
 #endif	
 		}
+	} else {
+		membership_copy->new_members = NULL;
 	}
 	
 
@@ -222,8 +225,8 @@ do_ccm_update_cache(long long action,
 		size = size * sizeof(oc_node_t);
 		membership_copy->dead_members = (oc_node_t *)ha_malloc(size);
 		
-		members = membership_copy->new_members;
-		
+		members = membership_copy->dead_members;
+
 		for(lpc=0; lpc < membership_copy->dead_members_size; lpc++) {
 			members[lpc].node_id =
 				oc->m_array[offset+lpc].node_id;
@@ -237,7 +240,10 @@ do_ccm_update_cache(long long action,
 			CRM_DEBUG2("Uname: %s", oc->m_array[offset+lpc].node_uname);
 #endif			
 		}
+	} else {
+		membership_copy->dead_members = NULL;
 	}
+	
 	
 	tmp = fsa_membership_copy;
 	fsa_membership_copy = membership_copy;
@@ -276,9 +282,16 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	int lpc;
 	int node_list_size = oc->m_n_member;
 	for(lpc=0; lpc<node_list_size; lpc++) {
+#ifdef CCM_UNAME
+		cl_log(LOG_INFO,"\t%s [nodeid=%d, born=%d]",
+		       oc->m_array[oc->m_memb_idx+lpc].node_uname,
+		       oc->m_array[oc->m_memb_idx+lpc].node_id,
+		       oc->m_array[oc->m_memb_idx+lpc].node_born_on);
+#else
 		cl_log(LOG_INFO,"\tnodeid=%d, born=%d",
 		       oc->m_array[oc->m_memb_idx+lpc].node_id,
 		       oc->m_array[oc->m_memb_idx+lpc].node_born_on);
+#endif
 		if (oc_ev_is_my_nodeid(fsa_ev_token, &(oc->m_array[lpc]))) {
 			member = TRUE;
 			member_id = oc->m_array[oc->m_memb_idx+lpc].node_id;
@@ -298,9 +311,16 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		cl_log(LOG_INFO, "\tNONE");
 	
 	for(lpc=0; lpc<oc->m_n_in; lpc++) {
+#ifdef CCM_UNAME
+		cl_log(LOG_INFO,"\t%s [nodeid=%d, born=%d]",
+		       oc->m_array[oc->m_in_idx+lpc].node_uname,
+		       oc->m_array[oc->m_in_idx+lpc].node_id,
+		       oc->m_array[oc->m_in_idx+lpc].node_born_on);
+#else
 		cl_log(LOG_INFO,"\tnodeid=%d, born=%d",
 		       oc->m_array[oc->m_in_idx+lpc].node_id,
 		       oc->m_array[oc->m_in_idx+lpc].node_born_on);
+#endif
 	}
 	
 	cl_log(LOG_INFO, "MEMBERS LOST");
@@ -308,9 +328,16 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		cl_log(LOG_INFO, "\tNONE");
 	
 	for(lpc=0; lpc<oc->m_n_out; lpc++) {
+#ifdef CCM_UNAME
+		cl_log(LOG_INFO,"\t%s [nodeid=%d, born=%d]",
+		       oc->m_array[oc->m_out_idx+lpc].node_uname,
+		       oc->m_array[oc->m_out_idx+lpc].node_id,
+		       oc->m_array[oc->m_out_idx+lpc].node_born_on);
+#else
 		cl_log(LOG_INFO,"\tnodeid=%d, born=%d",
 		       oc->m_array[oc->m_out_idx+lpc].node_id,
 		       oc->m_array[oc->m_out_idx+lpc].node_born_on);
+#endif
 		if (oc_ev_is_my_nodeid(fsa_ev_token, &(oc->m_array[lpc]))) {
 			cl_log(LOG_ERR,
 			       "We're not part of the cluster anymore");
@@ -344,7 +371,9 @@ register_with_ccm(ll_cluster_t *hb_cluster)
 		return(1);
 	}
 	cl_log(LOG_INFO, "CCM Activation passed... all set to go!");
-    
+
+
+
 	FD_ZERO(&rset);
 	FD_SET(fsa_ev_fd, &rset);
     
@@ -353,18 +382,32 @@ register_with_ccm(ll_cluster_t *hb_cluster)
 		return(1);
 	}
     
-	cl_log(LOG_INFO, "Sign up for \"ccmjoin\" messages");
-	if (hb_cluster->llc_ops->set_msg_callback(
-		    hb_cluster,
-		    "ccmjoin",
-		    msg_ccm_join,
-		    hb_cluster) != HA_OK)
-	{
-		cl_log(LOG_ERR, "Cannot set msg_ipfail_join callback");
-	}
+//GFDSource*
+	G_main_add_fd(G_PRIORITY_LOW, fsa_ev_fd, FALSE, ccm_dispatch, fsa_ev_token,
+		      default_ipc_input_destroy);
+
+/* 	cl_log(LOG_INFO, "Sign up for \"ccmjoin\" messages"); */
+/* 	if (hb_cluster->llc_ops->set_msg_callback( */
+/* 		    hb_cluster, */
+/* 		    "ccmjoin", */
+/* 		    msg_ccm_join, */
+/* 		    hb_cluster) != HA_OK) */
+/* 	{ */
+/* 		cl_log(LOG_ERR, "Cannot set msg_ipfail_join callback"); */
+/* 	} */
     
 	FNRET(0);
 }
+
+gboolean ccm_dispatch(int fd, gpointer user_data)
+{
+	CRM_DEBUG("#@#@#@# In ccm_dispatch()");
+	
+	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
+	oc_ev_handle_event(ccm_token);
+	return TRUE;
+}
+
 
 void 
 crmd_ccm_input_callback(oc_ed_t event,
