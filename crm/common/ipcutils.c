@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.25 2004/05/10 21:52:57 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.26 2004/05/18 14:26:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,6 +75,7 @@ LinkStatus(const char * node, const char * lnk,
 gboolean 
 send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 {
+	int log_level = LOG_DEBUG;
 	char *xml_message = NULL;
 	IPC_Message *cib_dump = NULL;
 	gboolean res;
@@ -86,7 +87,18 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 		create_simple_message(xml_message, ipc_client);
 	res = send_ipc_message(ipc_client, cib_dump);
 	cl_free(xml_message);
-	xml_message_debug(msg, "Sent IPC Message");
+
+	if(res == FALSE) {
+		log_level = LOG_ERR;
+	}
+	
+	cl_log(log_level,
+	       "Sending IPC message (ref=%s) to %s@%s %s.",
+	       xmlGetProp(msg, XML_ATTR_REFERENCE), 
+	       xmlGetProp(msg, XML_ATTR_SYSTO),
+	       xmlGetProp(msg, XML_ATTR_HOSTTO),
+	       res?"succeeded":"failed");
+	
 	FNRET(res);
 }
 
@@ -94,14 +106,19 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 gboolean
 send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 {
-	gboolean broadcast = FALSE;
+	int xml_len          = -1;
+	int send_result      = -1;
+	char *xml_text       = NULL;
+	const char *host_to  = NULL;
+	const char *sys_to   = NULL;
+	struct ha_msg *msg   = NULL;
 	gboolean all_is_good = TRUE;
-	int send_result = -1;
-	int xml_len = -1;
-	const char *host_to = NULL;
-	const char *sys_to = NULL;
-	struct ha_msg *msg = NULL;
-	char *xml_text;
+	gboolean broadcast   = FALSE;
+	int log_level        = LOG_DEBUG;
+
+	xmlNodePtr opts = find_xml_node(root, XML_TAG_OPTIONS);
+	const char *op  = xmlGetProp(opts, XML_ATTR_OP);
+
 #ifdef MSG_LOG
 	char *msg_text = NULL;
 #endif
@@ -176,27 +193,20 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		if(send_result != HA_OK) all_is_good = FALSE;
 		
 	}
+	
+	if(all_is_good == FALSE) {
+		log_level = LOG_ERR;
+	}
 
-
-	if(!all_is_good) {
-		cl_log(LOG_ERR,
+	if(log_level == LOG_ERR
+	   || (safe_str_neq(op, CRM_OPERATION_HBEAT))) {
+		cl_log(log_level,
 		       "Sending %s HA message (ref=%s, len=%d) to %s@%s %s.",
 		       broadcast?"broadcast":"directed",
 		       xmlGetProp(root, XML_ATTR_REFERENCE), xml_len,
 		       sys_to, host_to==NULL?"<all>":host_to,
 		       all_is_good?"succeeded":"failed");
-	} else {
-		xmlNodePtr opts = find_xml_node(root, XML_TAG_OPTIONS);
-		const char *op = xmlGetProp(opts, XML_ATTR_OP);
-		if(op == NULL || strcmp(op, CRM_OPERATION_HBEAT) != 0) {
-			cl_log(LOG_DEBUG,
-			       "Sent %s HA message (ref=%s, len=%d) to %s@%s",
-			       broadcast?"broadcast":"directed",
-			       xmlGetProp(root, XML_ATTR_REFERENCE), xml_len,
-			       sys_to, host_to==NULL?"<all>":host_to);
-		}
 	}
-	
 	
 #ifdef MSG_LOG
 	msg_text = dump_xml(root);
@@ -223,8 +233,8 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 gboolean 
 send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 {
-	gboolean all_is_good = TRUE;
 	int lpc = 0;
+	gboolean all_is_good = TRUE;
 	FNIN();
 
 	if (msg == NULL) {
@@ -259,11 +269,9 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 	if (lpc == MAX_IPC_FAIL) {
 		cl_log(LOG_ERR,
 		       "Could not send IPC, message.  Channel is dead.");
-		FNRET(!all_is_good);
+		all_is_good = FALSE;
 	}
-    
-	CRM_DEBUG("Sending of IPC message %s.",
-		   all_is_good?"succeeded":"failed");
+
 	FNRET(all_is_good);
 }
 
