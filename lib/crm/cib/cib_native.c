@@ -366,17 +366,41 @@ cib_native_perform_op(
 		return cib->call_id - 1;
 	}
 
+	rc = IPC_OK;
 	crm_devel("Waiting for a syncronous reply");
-	op_reply = msgfromIPC_noauth(native->command_channel);
-	if (op_reply == NULL) {
-		CRM_DEV_ASSERT(native->command_channel->ops->get_chan_status(
-				       native->command_channel) != IPC_CONNECT);
-		
-		crm_err("No reply message - disconnected");
-		cib->state = cib_disconnected;
-		return cib_not_connected;
+	while(native->command_channel->ops->get_chan_status(
+		      native->command_channel) == IPC_CONNECT) {
+
+		rc = native->command_channel->ops->waitin(
+			native->command_channel);
+
+		if(rc == IPC_OK) {
+			op_reply = msgfromIPC_noauth(native->command_channel);
+			break;
+
+		} else if(rc == IPC_INTR) {
+			crm_devel("a signal arrived, retry the read");
+
+		} else {
+			break;
+		}
 	}
 
+	if(native->command_channel->ops->get_chan_status(
+		   native->command_channel) != IPC_CONNECT) {
+		crm_err("No reply message - disconnected - %d", rc);
+		cib->state = cib_disconnected;
+		return cib_not_connected;
+		
+	} else if(rc != IPC_OK) {
+		crm_err("No reply message - failed - %d", rc);
+		return cib_reply_failed;
+
+	} else if(op_reply == NULL) {
+		crm_err("No reply message - empty - %d", rc);
+		return cib_reply_failed;
+	}
+	
 	crm_devel("Syncronous reply recieved");
  	crm_log_message(LOG_MSG, op_reply);
 	rc = cib_ok;
