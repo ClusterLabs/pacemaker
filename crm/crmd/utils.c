@@ -43,7 +43,7 @@ timer_popped(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
-	crm_info("#!!#!!# Timer %s just popped!",
+	crm_info("Timer %s just popped!",
 		 fsa_input2string(timer->fsa_input));
 	
 	stopTimer(timer); /* make it _not_ go off again */
@@ -59,21 +59,22 @@ timer_popped(gpointer data)
 gboolean
 startTimer(fsa_timer_t *timer)
 {
-	if(((int)timer->source_id) < 0
-		&& timer->period_ms > 0) {
+	if((timer->source_id == (guint)-1 || timer->source_id == (guint)-2)
+	   && timer->period_ms > 0) {
 		timer->source_id =
 			Gmain_timeout_add(timer->period_ms,
 					  timer->callback,
 					  (void*)timer);
-		crm_trace("#!!#!!# Started %s timer (%d)",
-			   fsa_input2string(timer->fsa_input),
-			   timer->source_id);
+		crm_debug("Started %s timer (%d)",
+			  fsa_input2string(timer->fsa_input),
+			  timer->source_id);
+
 	} else if(timer->period_ms < 0) {
 		crm_err("Tried to start timer %s with -ve period",
 			fsa_input2string(timer->fsa_input));
 		
 	} else {
-		crm_debug("#!!#!!# Timer %s already running (%d)",
+		crm_debug("Timer %s already running (%d)",
 			  fsa_input2string(timer->fsa_input),
 			  timer->source_id);
 		return FALSE;		
@@ -85,8 +86,8 @@ startTimer(fsa_timer_t *timer)
 gboolean
 stopTimer(fsa_timer_t *timer)
 {
-	if(((int)timer->source_id) > 0) {
-		crm_devel("#!!#!!# Stopping %s timer (%d)",
+	if(timer->source_id != (guint)-1 && timer->source_id != (guint)-2) {
+		crm_devel("Stopping %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
 		g_source_remove(timer->source_id);
@@ -94,7 +95,7 @@ stopTimer(fsa_timer_t *timer)
 		
 	} else {
 		timer->source_id = -2;
-		crm_debug("#!!#!!# Timer %s already stopped (%d)",
+		crm_debug("Timer %s already stopped (%d)",
 		       fsa_input2string(timer->fsa_input),
 		       timer->source_id);
 		return FALSE;
@@ -129,7 +130,7 @@ clear_bit(long long action_list, long long action)
 long long
 set_bit(long long action_list, long long action)
 {
-	crm_trace("Adding bit\t%.16llx", action);
+	crm_trace("Setting bit\t%.16llx", action);
 	action_list |= action;
 	return action_list;
 }
@@ -141,8 +142,6 @@ is_set(long long action_list, long long action)
 /*	crm_verbose("Checking bit\t%.16llx", action); */
 	return ((action_list & action) == action);
 }
-
-
 
 const char *
 fsa_input2string(enum crmd_fsa_input input)
@@ -183,11 +182,11 @@ fsa_input2string(enum crmd_fsa_input input)
 		case I_FAIL:
 			inputAsText = "I_FAIL";
 			break;
-		case I_INTEGRATION_TIMEOUT:
-			inputAsText = "I_INTEGRATION_TIMEOUT";
+		case I_INTEGRATED:
+			inputAsText = "I_INTEGRATED";
 			break;
-		case I_FINALIZATION_TIMEOUT:
-			inputAsText = "I_INTEGRATION_TIMEOUT";
+		case I_FINALIZED:
+			inputAsText = "I_FINALIZED";
 			break;
 		case I_NODE_JOIN:
 			inputAsText = "I_NODE_JOIN";
@@ -216,8 +215,8 @@ fsa_input2string(enum crmd_fsa_input input)
 		case I_RESTART:
 			inputAsText = "I_RESTART";
 			break;
-		case I_REQUEST:
-			inputAsText = "I_REQUEST";
+		case I_PE_SUCCESS:
+			inputAsText = "I_PE_SUCCESS";
 			break;
 		case I_ROUTER:
 			inputAsText = "I_ROUTER";
@@ -228,8 +227,8 @@ fsa_input2string(enum crmd_fsa_input input)
 		case I_STARTUP:
 			inputAsText = "I_STARTUP";
 			break;
-		case I_SUCCESS:
-			inputAsText = "I_SUCCESS";
+		case I_TE_SUCCESS:
+			inputAsText = "I_TE_SUCCESS";
 			break;
 		case I_TERMINATE:
 			inputAsText = "I_TERMINATE";
@@ -358,6 +357,9 @@ fsa_cause2string(enum crmd_fsa_cause cause)
 			break;
 		case C_HA_DISCONNECT:
 			causeAsText = "C_HA_DISCONNECT";
+			break;
+		case C_FSA_INTERNAL:
+			causeAsText = "C_FSA_INTERNAL";
 			break;
 		case C_ILLEGAL:
 			causeAsText = "C_ILLEGAL";
@@ -982,7 +984,6 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 		oc_node_t a_node      = oc_in->m_array[lpc+offset];
 		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
 		copy_ccm_node(a_node, a_node_copy);
-		
 	}
 	
 	return oc_copy;
