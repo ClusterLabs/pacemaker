@@ -50,18 +50,12 @@ do_election_vote(long long action,
 	switch(cur_state) {
 		case S_RECOVERY:
 		case S_STOPPING:
-		case S_RELEASE_DC:
 		case S_TERMINATE:
 			crm_warn("Not voting in election, we're in state %s",
 				 fsa_state2string(cur_state));
 			not_voting = TRUE;
 			break;
 		default:
- 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
-				crm_warn("Not voting in election,"
-					 " we're shutting down");
-				not_voting = TRUE;
-			}
 			break;
 	}
 
@@ -71,18 +65,7 @@ do_election_vote(long long action,
 		}
 	}	
 
-	vote = create_request(
-		CRM_OP_VOTE, NULL, NULL,
-		CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
-	
-	if(action & A_ELECTION_START) {
-		/* leaving out our version number, no other node out there
-		 * will think we should win the election...
-		 * which is what we want if we are the DC and want to shutdown 
-		 */
-		ha_msg_mod(vote, XML_ATTR_VERSION, "0");
-		
-	} else if(not_voting) {
+	if(not_voting) {
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		if(AM_I_DC) {
 			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
@@ -90,6 +73,16 @@ do_election_vote(long long action,
 		} else {
 			register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
 		}
+		return I_NULL;
+	}
+	
+	vote = create_request(
+		CRM_OP_VOTE, NULL, NULL,
+		CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+
+	if(is_set(fsa_input_register, R_SHUTDOWN)) {
+		crm_warn("Not voting in election, we're shutting down");
+		cl_msg_remove(vote, F_CRM_VERSION);
 	}
 
 	send_request(vote, NULL);
@@ -177,8 +170,8 @@ do_election_count_vote(long long action,
 		
 		/* if your_version == 0, then they're shutting down too */
 	} else if(is_set(fsa_input_register, R_SHUTDOWN)) {
-		if(compare_version(your_version, "0") > 0) {
-			crm_info("Election fail: we are shutting down: %s", crm_str(your_version));
+		if(your_version != NULL) {
+			crm_info("Election fail: we are shutting down");
 			we_loose = TRUE;
 			
 		} else {
@@ -192,6 +185,9 @@ do_election_count_vote(long long action,
 		crm_info("Election fail: we dont exist in CCM");
 		we_loose = TRUE;
 		
+	} else if(your_version == NULL) {
+		crm_info("Election pass: they are shutting down");
+
 	} else if(compare_version(your_version, CRM_VERSION) > 0) {
 		crm_debug("Election fail: version");
 		we_loose = TRUE;
