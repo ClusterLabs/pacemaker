@@ -632,10 +632,10 @@ clear_flags(long long actions,
 	    enum crmd_fsa_input cur_input)
 {
 	long long saved_actions = actions;
-	if(is_set(fsa_input_register, R_SHUTDOWN) && cur_state == S_STARTING) {
-		clear_bit_inplace(
-			actions,
-			A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY|A_DC_TIMER_START);
+	long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
+	
+	if(cur_state == S_STOPPING || is_set(fsa_input_register, R_SHUTDOWN)) {
+		clear_bit_inplace(actions, startup_actions);
 	}
 
 	fsa_dump_actions(actions ^ saved_actions, "Cleared Actions");
