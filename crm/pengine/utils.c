@@ -21,22 +21,21 @@ invert_constraint(rsc_to_rsc_t *constraint)
 
 	inverted_con->id = cl_strdup(constraint->id);
 	inverted_con->strength = constraint->strength;
-//	inverted_con->is_placement = constraint->is_placement;
 
 	// swap the direction
 	inverted_con->rsc_lh = constraint->rsc_rh;
 	inverted_con->rsc_rh = constraint->rsc_lh;
 
-	pdebug_action(print_rsc_to_rsc(
-			      "Inverted constraint", inverted_con, FALSE));
+	pdebug_action(
+		print_rsc_to_rsc("Inverted constraint", inverted_con, FALSE)
+		);
 	return inverted_con;
 }
 
 rsc_to_node_t *
 copy_constraint(rsc_to_node_t *constraint) 
 {
-	rsc_to_node_t *copied_con =
-		cl_malloc(sizeof(rsc_to_node_t));
+	rsc_to_node_t *copied_con = cl_malloc(sizeof(rsc_to_node_t));
 
 	copied_con->id		 = cl_strdup(constraint->id);
 
@@ -61,12 +60,15 @@ node_list_eq(GSListPtr list1, GSListPtr list2)
 	}
   
 	// do stuff
+	cl_log(LOG_ERR, "Not yet implemented");
  
 	return g_slist_length(result) != 0;
 }
 
-/* the intersection of list1 and list2 */
-/* nodes with weight < 0 are ignored */
+/* the intersection of list1 and list2 
+ * when merging weights, nodes set to < 0  in either list will always
+ * have their weight set to -1 in the result
+ */
 GSListPtr
 node_list_and(GSListPtr list1, GSListPtr list2)
 {
@@ -113,7 +115,6 @@ find_list_node(GSListPtr list, const char *id)
 }
 
 /* list1 - list2 */
-/* nodes with weight < 0 are ignored */
 GSListPtr
 node_list_minus(GSListPtr list1, GSListPtr list2)
 {
@@ -127,7 +128,6 @@ node_list_minus(GSListPtr list1, GSListPtr list2)
 		if(node == NULL || other_node != NULL) {
 			continue;
 			
-			// merge node weights
 		}
 		node_t *new_node = node_copy(node);
 		result = g_slist_append(result, new_node);
@@ -140,7 +140,6 @@ node_list_minus(GSListPtr list1, GSListPtr list2)
 }
 
 /* list1 + list2 - (intersection of list1 and list2) */
-/* nodes with weight < 0 are ignored */
 GSListPtr
 node_list_xor(GSListPtr list1, GSListPtr list2)
 {
@@ -153,8 +152,6 @@ node_list_xor(GSListPtr list1, GSListPtr list2)
 
 		if(node == NULL || other_node != NULL) {
 			continue;
-			
-			// merge node weights
 		}
 		node_t *new_node = node_copy(node);
 		result = g_slist_append(result, new_node);
@@ -167,8 +164,6 @@ node_list_xor(GSListPtr list1, GSListPtr list2)
 
 		if(node == NULL || other_node != NULL) {
 			continue;
-			
-			// merge node weights
 		}
 		node_t *new_node = node_copy(node);
 		result = g_slist_append(result, new_node);
@@ -210,6 +205,18 @@ node_copy(node_t *this_node)
 }
 
 static int color_id = 0;
+
+/*
+ * Create a new color with the contents of "nodes" as the list of
+ *  possible nodes that resources with this color can be run on.
+ *
+ * Typically, when creating a color you will provide the node list from
+ *  the resource you will first assign the color to.
+ *
+ * If "colors" != NULL, it will be added to that list
+ * If "resources" != NULL, it will be added to every provisional resource
+ *  in that list
+ */
 color_t *
 create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
 {
@@ -229,13 +236,21 @@ create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
 	}
 	
 	if(resources != NULL) {
-		/*  Add any new color to the list of candidate_colors for
+		/* Add any new color to the list of candidate_colors for
 		 * resources that havent been decided yet 
 		 */
 		slist_iter(
 			rsc, resource_t, resources, lpc,
 			if(rsc->provisional && rsc->runnable) {
-				add_color_to_rsc(rsc, new_color);
+				color_t *color_copy = cl_malloc(sizeof(color_t));
+
+				color_copy->id      = new_color->id;
+				color_copy->details = new_color->details;
+				color_copy->local_weight = 1.0; 
+
+				rsc->candidate_colors =
+					g_slist_append(rsc->candidate_colors,
+						       color_copy);
 			}
 			);
 	}
@@ -244,20 +259,9 @@ create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
 }
 
 
-void
-add_color_to_rsc(resource_t *rsc, color_t *color)
-{
-	if(rsc->provisional) {
-		color_t *color_copy = cl_malloc(sizeof(color_t));
-		color_copy->id = color->id;
-		color_copy->local_weight = 1.0; 
-		color_copy->details = color->details;
-		rsc->candidate_colors = g_slist_append(rsc->candidate_colors, color_copy);
-	}
-}
-
-
-
+/*
+ * Remove any nodes with a -ve weight
+ */
 gboolean
 filter_nodes(resource_t *rsc)
 {
@@ -555,6 +559,9 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 	
 };
 
+/*
+ * Used by the HashTable for-loop
+ */
 void print_str_str(gpointer key, gpointer value, gpointer user_data)
 {
 	cl_log(LOG_DEBUG, "%s%s %s ==> %s",
@@ -784,26 +791,20 @@ action2xml(action_t *action)
 	switch(action->task) {
 		case stonith_op:
 			action_xml = create_xml_node(NULL, "pseduo_event");
-			set_xml_property_copy(action_xml,
-					      "on_node",
-					      safe_val4(NULL, action, node, details, id));
 			break;
 		case shutdown_crm:
 			action_xml = create_xml_node(NULL, "crm_event");
-			set_xml_property_copy(action_xml,
-					      "on_node",
-					      safe_val4(NULL, action, node, details, id));
 			break;
 		default:
 			action_xml = create_xml_node(NULL, "rsc_op");
-			set_xml_property_copy(action_xml,
-					      "on_node",
-					      safe_val7(NULL, action, rsc, color,
-							details, chosen_node, details, id));
 			add_node_copy(action_xml, action->rsc->xml);
 			
 			break;
 	}
+
+	set_xml_property_copy(action_xml,
+			      "on_node",
+			      safe_val4(NULL, action, node, details, id));
 
 	set_xml_property_copy(action_xml,
 			      "id",

@@ -43,6 +43,7 @@ gboolean apply_node_constraints(GSListPtr constraints,
 				GSListPtr nodes);
 
 gboolean is_active(rsc_to_node_t *cons);
+
 gboolean choose_node_from_list(GSListPtr colors,
 			       color_t *color,
 			       GSListPtr nodes);
@@ -109,6 +110,17 @@ int action_id = 1;
 gboolean pe_debug = FALSE;
 gboolean pe_debug_saved = FALSE;
 
+/*
+ * Unpack everything
+ * At the end you'll have:
+ *  - A list of nodes
+ *  - A list of resources (each with any dependancies on other resources)
+ *  - A list of constraints between resources and nodes
+ *  - A list of constraints between start/stop actions
+ *  - A list of nodes that need to be stonith'd
+ *  - A list of nodes that need to be shutdown
+ *  - A list of the possible stop/start actions (without dependancies)
+ */
 gboolean
 stage0(xmlNodePtr cib,
        GSListPtr *resources,
@@ -132,8 +144,7 @@ stage0(xmlNodePtr cib,
 
 	unpack_constraints(safe_val(NULL, cib_constraints, children),
 			   *nodes, *resources,
-			   node_constraints,
-			   action_constraints);
+			   node_constraints, action_constraints);
 
 	slist_iter(
 		node, node_t, *nodes, lpc,
@@ -145,8 +156,14 @@ stage0(xmlNodePtr cib,
 		);
 	
 	return TRUE;
-} 
+}
 
+/*
+ * Count how many valid nodes we have (so we know the maximum number of
+ *  colors we can resolve).
+ *
+ * Apply node constraints (ie. filter the "allowed_nodes" part of resources
+ */
 gboolean
 stage1(GSListPtr node_constraints, GSListPtr nodes, GSListPtr resources)
 {
@@ -168,7 +185,14 @@ stage1(GSListPtr node_constraints, GSListPtr nodes, GSListPtr resources)
 	return TRUE;
 } 
 
-
+/*
+ * Choose a color for all resources from highest priority and "must"
+ *  dependancies to lowest, creating new colors as necessary (returned
+ *  as "colors").
+ *
+ * Some nodes may be colored as a "no_color" meaning that it was unresolvable
+ *  given the current node stati and constraints.
+ */
 gboolean
 stage2(GSListPtr sorted_rscs, GSListPtr sorted_nodes, GSListPtr *colors)
 {
@@ -206,6 +230,11 @@ stage2(GSListPtr sorted_rscs, GSListPtr sorted_nodes, GSListPtr *colors)
 	return TRUE;
 }
 
+/*
+ * not sure if this is a good idea or not, but eventually we might like
+ *  to utilize as many nodes as possible... and this might be a convienient
+ *  hook
+ */
 gboolean
 stage3(GSListPtr colors)
 {
@@ -220,10 +249,13 @@ stage3(GSListPtr colors)
 
 #define color_n_nodes color_n->details->candidate_nodes
 #define color_n_plus_1_nodes color_n_plus_1->details->candidate_nodes
+
+/*
+ * Choose a node for each (if possible) color
+ */
 gboolean
 stage4(GSListPtr colors)
 {
-
 	int lpc = 0;
 	color_t *color_n = NULL;
 	color_t *color_n_plus_1 = NULL;
@@ -233,7 +265,6 @@ stage4(GSListPtr colors)
 		color_n_plus_1 = (color_t*)g_slist_nth_data(colors, lpc);
 
 		pdebug_action(print_color("Choose node for...", color_n, FALSE));
-//		print_color(color_n_plus_1, FALSE);
 		
 		if(color_n == NULL) {
 			continue;
@@ -246,7 +277,7 @@ stage4(GSListPtr colors)
 						  color_n_plus_1_nodes);
 
 		if(g_slist_length(xor) == 0 || g_slist_length(minus) == 0) {
-			pdebug(				      "Choose any node from our list");
+			pdebug("Choose any node from our list");
 			choose_node_from_list(colors, color_n, color_n_nodes);
 
 		} else {
@@ -256,7 +287,7 @@ stage4(GSListPtr colors)
 
 	}
 
-	// chose last color
+	// choose last color
 	if(color_n_plus_1 != NULL) {
 		pdebug_action(print_color("Choose node for last color...",
 				   color_n_plus_1,
@@ -271,6 +302,14 @@ stage4(GSListPtr colors)
 	
 }
 
+/*
+ * Attach nodes to the actions that need to be taken
+ *
+ * Mark actions "optional" if possible (Ie. if the start and stop are
+ *  for the same node)
+ *
+ * Mark unrunnable actions
+ */
 gboolean
 stage5(GSListPtr resources)
 {
@@ -328,6 +367,9 @@ stage5(GSListPtr resources)
 	return TRUE;
 }
 
+/*
+ * Create dependacies for stonith and shutdown operations
+ */
 gboolean
 stage6(GSListPtr *actions, GSListPtr *action_constraints,
        GSListPtr stonith_nodes, GSListPtr shutdown_nodes)
@@ -405,6 +447,15 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
 
 	return TRUE;
 }
+
+
+/*
+ * Determin the sets of independant actions and the correct order for the
+ *  actions in each set.
+ *
+ * Mark dependancies f un-runnable actions un-runnable
+ *
+ */
 gboolean
 stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 	GSListPtr *action_sets)
@@ -467,6 +518,9 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 	return TRUE;
 }
 
+/*
+ * Create a dependancy graph to send to the transitioner (via the CRMd)
+ */
 gboolean
 stage8(GSListPtr action_sets, xmlNodePtr *graph)
 {
@@ -500,8 +554,9 @@ stage8(GSListPtr action_sets, xmlNodePtr *graph)
 	return TRUE;
 }
 
-
-
+/*
+ * Print a nice human readable high-level summary of what we're going to do 
+ */
 gboolean
 summary(GSListPtr resources)
 {
