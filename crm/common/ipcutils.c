@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.12 2004/03/05 13:04:04 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.13 2004/03/10 22:32:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,10 +55,9 @@
 #include <crm/dmalloc_wrapper.h>
 
 #define APPNAME_LEN 256
+#define MSG_LOG	1
 
-// this will come from whoever links with us, so any number of places.
-//extern const char* crm_system_name;// = "crmd";
-
+FILE *msg_out_strm = NULL;
 
 IPC_Message *create_simple_message(char *text, IPC_Channel *ch);
 
@@ -83,6 +82,7 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 	gboolean res = send_ipc_message(ipc_client, cib_dump);
 	CRM_DEBUG2("Sending of IPC message %s.", res?"succeeded":"failed");
 	ha_free(xml_message);
+	xml_message_debug(msg, "IPC Message was: ");
 	FNRET(res);
 }
 
@@ -109,17 +109,23 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		ha_msg_add(msg, F_COMMENT, "A CRM xml message");
 		char *xml_text = dump_xml(root);
 	
-		if (xml_text == NULL)
-		{
-			cl_log(LOG_INFO,
+		if (xml_text == NULL || strlen(xml_text) <= 0) {
+			cl_log(LOG_ERR,
 			       "Failed sending an invalid XML Message via HA");
 			all_is_good = FALSE;
+			xml_message_debug(root, "Bad message was");
+			
+		} else {
+			if(ha_msg_add(msg, "xml", xml_text) == HA_FAIL) {
+				cl_log(LOG_ERR,
+				       "Could not add xml to HA message");
+				all_is_good = FALSE;
+			}
 		}
-		else
-			ha_msg_add(msg, "xml", xml_text);
-
+		
 		CRM_DEBUG2("Adding XML to HA message %s.",
 			   all_is_good?"succeeded":"failed");
+
 	}
 
 	if (all_is_good) {
@@ -138,17 +144,38 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	}
 
 	if (all_is_good) {
+		int send_result = -1;
 		gboolean broadcast = FALSE;
 		CRM_DEBUG("Sending HA Message.");
 		if (host_to == NULL
 		    || strlen(host_to) == 0
 		    || strcmp("dc", sys_to) == 0) {
 			broadcast = TRUE;
-			hb_fd->llc_ops->sendclustermsg(hb_fd, msg);
+			send_result =
+				hb_fd->llc_ops->sendclustermsg(hb_fd, msg);
 		}
 		else
-			hb_fd->llc_ops->sendnodemsg(hb_fd, msg, host_to);
+			send_result =
+				hb_fd->llc_ops->sendnodemsg(hb_fd, msg, host_to);
 
+#ifdef MSG_LOG
+	
+		char *msg_text = dump_xml(root);
+		if(msg_out_strm == NULL) {
+			msg_out_strm = fopen("/tmp/outbound.log", "w");
+		}
+		fprintf(msg_out_strm, "[HA (%s:%d)]\t%s\n",
+			xmlGetProp(root, XML_ATTR_REFERENCE),
+			send_result,
+			msg_text);
+		
+		fflush(msg_out_strm);
+		ha_free(msg_text);
+	
+#endif
+
+		if(send_result != HA_OK) all_is_good = FALSE;
+		
 		CRM_DEBUG2("Sent a %s HA message.",
 			   broadcast?"broadcast":"directed");
 	}
@@ -157,7 +184,8 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 
 	CRM_DEBUG2("Sending of HA message %s.",
 		   all_is_good?"succeeded":"failed");
-
+	xml_message_debug(root, "HA Message was: ");
+	
 	FNRET(all_is_good);
 }
 		    
@@ -242,7 +270,11 @@ default_ipc_input_dispatch(IPC_Channel *client, gpointer user_data)
 		root = find_xml_in_ipcmessage(msg, TRUE);
 		validate_crm_message(root, NULL, NULL, NULL);
 	} else if (client->ch_status == IPC_DISCONNECT) {
+		cl_log(LOG_ERR, "The server has left us: Shutting down...NOW");
 
+		exit(1); /* Server disconnects should be fatal,
+			  * but I will do it a little more gracefully :)
+			  */
 		FNRET(FALSE); /* This conection is hosed */
 	}
 	
@@ -406,7 +438,9 @@ init_client_ipc_comms(const char *child,
 
 	if(callback_data == NULL)
 		callback_data = ch;
-	
+
+	ch->ops->set_recv_qlen(ch, 100);
+	ch->ops->set_send_qlen(ch, 100);
 
 	the_source = G_main_add_IPC_Channel(G_PRIORITY_LOW,
 					    ch,
