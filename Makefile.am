@@ -77,7 +77,7 @@ deb:		dist
 
 # "pkg" format for Solaris etc.
 pkg:
-		(cd pkg && $(MAKE) PWD=`pwd`)
+		(cd pkg && $(MAKE) PWD=`pwd` pkg)
 
 clean:	am_config_clean
 am_config_clean:
