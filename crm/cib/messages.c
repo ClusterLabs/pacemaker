@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.14 2005/01/13 15:38:32 andrew Exp $ */
+/* $Id: messages.c,v 1.15 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -233,14 +233,14 @@ cib_process_erase(
 	result = revision_check(get_the_CIB(), tmpCib, options);		
 	copy_in_properties(tmpCib, get_the_CIB());
 	
-	cib_pre_notify(op, get_the_CIB(), tmpCib);
+	cib_pre_notify(op, the_cib, tmpCib);
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, TRUE);
 		
 	if(result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
 		result = cib_ACTIVATION;
 	}
 
-	cib_post_notify(op, NULL, result, get_the_CIB());
+	cib_post_notify(op, NULL, result, the_cib);
 	*answer = createCibFragmentAnswer(NULL, NULL);
 	
 	return result;
@@ -325,7 +325,7 @@ cib_process_replace(
 	xmlNodePtr tmpCib      = NULL;
 	xmlNodePtr cib_update  = NULL;
 	xmlNodePtr the_update  = NULL;
-	const char *section_name = section;
+	char *section_name = NULL;
 	enum cib_errors result = cib_ok;
 	
 	crm_debug("Processing \"%s\" event", op);
@@ -346,15 +346,18 @@ cib_process_replace(
 	} else if (section == NULL) {
 		tmpCib = copy_xml_node_recursive(cib_update);
 		the_update = cib_update;
-		section_name = tmpCib->name;
+		section_name = crm_strdup(tmpCib->name);
 		
 	} else {
 		tmpCib = copy_xml_node_recursive(get_the_CIB());
-		replace_section(section, tmpCib, input);
-		the_update = get_object_root(section, cib_update);
+		section_name = crm_strdup(section);
+
+		replace_section(section_name, tmpCib, input);
+		the_update = get_object_root(section_name, cib_update);
 	}
 
-	cib_pre_notify(op, get_object_root(section, get_the_CIB()), the_update);
+	cib_pre_notify(
+		op, get_object_root(section_name, get_the_CIB()), the_update);
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
 
 	result = revision_check(the_update, tmpCib, options);		
@@ -366,11 +369,11 @@ cib_process_replace(
 	}
 
 	if (verbose || result != cib_ok) {
-		*answer = createCibFragmentAnswer(section, NULL);
+		*answer = createCibFragmentAnswer(section_name, NULL);
 	}
 	
 	cib_post_notify(op, the_update, result,
-			get_object_root(section, get_the_CIB()));
+			get_object_root(section_name, get_the_CIB()));
 
 	return result;
 }

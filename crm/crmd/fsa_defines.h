@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.31 2005/01/13 13:43:25 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.32 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -408,38 +408,42 @@ enum crmd_fsa_input {
  * These also count as inputs for synthesizing I_*
  *
  *======================================*/
-#define	R_THE_DC	0x00000001 /* Are we the DC? */
-#define	R_STARTING	0x00000002 /* Are we starting up? */
-#define	R_SHUTDOWN	0x00000004 /* Are we trying to shut down? */
+#define	R_THE_DC	0x00000001ULL /* Are we the DC? */
+#define	R_STARTING	0x00000002ULL /* Are we starting up? */
+#define	R_SHUTDOWN	0x00000004ULL /* Are we trying to shut down? */
 
-#define R_JOIN_OK	0x00000010 /* Have we completed the join process */
-#define	R_HAVE_RES	0x00000040 /* Do we have any resources running
-				      locally */
-#define	R_INVOKE_PE	0x00000080 /* Does the PE needed to be invoked at
-				      the next appropriate point? */
+#define R_JOIN_OK	0x00000010ULL /* Have we completed the join process */
+#define	R_HAVE_RES	0x00000040ULL /* Do we have any resources running
+					 locally */
+#define	R_INVOKE_PE	0x00000080ULL /* Does the PE needed to be invoked at
+					 the next appropriate point? */
 
-#define	R_CIB_CONNECTED	0x00000100 /* Is the CIB connected? */
-#define	R_PE_CONNECTED	0x00000200 /* Is the Policy Engine connected? */
-#define	R_TE_CONNECTED	0x00000400 /* Is the Transition Engine connected? */
-#define	R_LRM_CONNECTED	0x00000800 /* Is the Local Resource Manager
-				      connected? */
+#define	R_CIB_CONNECTED	0x00000100ULL /* Is the CIB connected? */
+#define	R_PE_CONNECTED	0x00000200ULL /* Is the Policy Engine connected? */
+#define	R_TE_CONNECTED	0x00000400ULL /* Is the Transition Engine connected? */
+#define	R_LRM_CONNECTED	0x00000800ULL /* Is the Local Resource Manager
+					 connected? */
 
-#define	R_REQ_PEND	0x00001000 /* Are there Requests waiting for
-				      processing? */
-#define	R_PE_PEND	0x00002000 /* Has the PE been invoked and we're
-				      awaiting a reply? */
-#define	R_TE_PEND	0x00004000 /* Has the TE been invoked and we're
-				      awaiting completion? */ 
-#define	R_RESP_PEND	0x00008000 /* Do we have clients waiting on a
-				      response? if so perhaps we shouldnt
-				      stop yet */
+#define	R_CIB_REQUIRED	0x00001000ULL /* Is the CIB required? */
+#define	R_PE_REQUIRED	0x00002000ULL /* Is the Policy Engine required? */
+#define	R_TE_REQUIRED	0x00004000ULL /* Is the Transition Engine required? */
 
-#define	R_CIB_DONE	0x00010000 /* Have we calculated the CIB? */
-#define R_HAVE_CIB	0x00020000 /* Do we have an up-to-date CIB */
-#define R_CIB_ASKED	0x00040000 /* Have we asked for an up-to-date CIB */
+#define	R_REQ_PEND	0x01000000ULL /* Are there Requests waiting for
+					 processing? */
+#define	R_PE_PEND	0x02000000ULL /* Has the PE been invoked and we're
+					 awaiting a reply? */
+#define	R_TE_PEND	0x04000000ULL /* Has the TE been invoked and we're
+					 awaiting completion? */ 
+#define	R_RESP_PEND	0x08000000ULL /* Do we have clients waiting on a
+					 response? if so perhaps we shouldnt
+					 stop yet */
 
-#define R_CCM_DATA	0x00100000 /* Have we got CCM data yet */
-#define R_PEER_DATA	0x00200000 /* Have we got T_CL_STATUS data yet */
+#define	R_CIB_DONE	0x00010000ULL /* Have we calculated the CIB? */
+#define R_HAVE_CIB	0x00020000ULL /* Do we have an up-to-date CIB */
+#define R_CIB_ASKED	0x00040000ULL /* Have we asked for an up-to-date CIB */
+
+#define R_CCM_DATA	0x00100000ULL /* Have we got CCM data yet */
+#define R_PEER_DATA	0x00200000ULL /* Have we got T_CL_STATUS data yet */
 
 enum crmd_fsa_cause
 {

@@ -22,7 +22,7 @@ testdir=@libdir@/heartbeat/crmtest
 
 erase_sync_1="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_1\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\">
     <configuration>
       <crm_config/>
       <nodes/>
@@ -36,7 +36,7 @@ erase_sync_1="<?xml version=\"1.0\"?>
 
 erase_sync_2="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_2\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\">
     <configuration>
       <crm_config/>
       <nodes/>
@@ -50,7 +50,7 @@ erase_sync_2="<?xml version=\"1.0\"?>
 
 erase_sync_3="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_3\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\">
     <configuration>
       <crm_config/>
       <nodes/>
@@ -64,7 +64,7 @@ erase_sync_3="<?xml version=\"1.0\"?>
 
 create_1="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_1\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -81,7 +81,7 @@ create_1="<?xml version=\"1.0\"?>
 
 create_2="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_2\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -98,7 +98,7 @@ create_2="<?xml version=\"1.0\"?>
 
 create_3="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_3\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -115,7 +115,7 @@ create_3="<?xml version=\"1.0\"?>
 
 create_local_1="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_1\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -133,7 +133,7 @@ create_local_1="<?xml version=\"1.0\"?>
 
 create_local_2="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_2\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -150,7 +150,7 @@ create_local_2="<?xml version=\"1.0\"?>
 
 create_local_3="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_3\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -165,9 +165,9 @@ create_local_3="<?xml version=\"1.0\"?>
 </cib_fragment>
 "
 
-bump_1="<?xml version=\"1.0\"?>
+bump_local_1="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_1\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -183,9 +183,9 @@ bump_1="<?xml version=\"1.0\"?>
 </cib_fragment>
 "
 
-bump_2="<?xml version=\"1.0\"?>
+bump_local_2="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_2\">
-  <cib version=\"1\" generated=\"true\" generation=\"1\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\" epoche=\"1\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -200,9 +200,9 @@ bump_2="<?xml version=\"1.0\"?>
 </cib_fragment>
 "
 
-bump_3="<?xml version=\"1.0\"?>
+bump_local_3="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_3\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -219,7 +219,7 @@ bump_3="<?xml version=\"1.0\"?>
 
 bump_remote_1="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_1\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -237,7 +237,7 @@ bump_remote_1="<?xml version=\"1.0\"?>
 
 bump_remote_2="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_2\">
-  <cib version=\"1\" generated=\"true\" generation=\"2\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\" epoche=\"2\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -254,7 +254,7 @@ bump_remote_2="<?xml version=\"1.0\"?>
 
 bump_remote_3="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_3\">
-  <cib version=\"1\" generated=\"true\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -269,9 +269,62 @@ bump_remote_3="<?xml version=\"1.0\"?>
 </cib_fragment>
 "
 
+bump_1="<?xml version=\"1.0\"?>
+<cib_fragment section=\"all\" generated_on=\"$test_node_1\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
+    <configuration>
+      <crm_config/>
+      <nodes>
+        <node uname=\"$test_node_1\" description=\"test node: $test_node_1\" type=\"member\"/>
+        <node uname=\"$test_node_2\" description=\"test node: $test_node_2\" type=\"member\"/>
+        <node uname=\"$test_node_3\" description=\"test node: $test_node_3\" type=\"member\"/>
+      </nodes>
+      <resources/>
+      <constraints/>
+    </configuration>
+    <status/>
+  </cib>
+</cib_fragment>
+"
+
+bump_2="<?xml version=\"1.0\"?>
+<cib_fragment section=\"all\" generated_on=\"$test_node_2\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\" epoche=\"1\">
+    <configuration>
+      <crm_config/>
+      <nodes>
+        <node uname=\"$test_node_1\" description=\"test node: $test_node_1\" type=\"member\"/>
+        <node uname=\"$test_node_2\" description=\"test node: $test_node_2\" type=\"member\"/>
+      </nodes>
+      <resources/>
+      <constraints/>
+    </configuration>
+    <status/>
+  </cib>
+</cib_fragment>
+"
+
+bump_3="<?xml version=\"1.0\"?>
+<cib_fragment section=\"all\" generated_on=\"$test_node_3\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\">
+    <configuration>
+      <crm_config/>
+      <nodes>
+        <node uname=\"$test_node_1\" description=\"test node: $test_node_1\" type=\"member\"/>
+        <node uname=\"$test_node_2\" description=\"test node: $test_node_2\" type=\"member\"/>
+      </nodes>
+      <resources/>
+      <constraints/>
+    </configuration>
+    <status/>
+  </cib>
+</cib_fragment>
+"
+
+
 sync_from_1="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_1\">
-  <cib version=\"1\" generated=\"true\" generation=\"2\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\" epoche=\"2\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -288,7 +341,7 @@ sync_from_1="<?xml version=\"1.0\"?>
 
 sync_from_2="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_2\">
-  <cib version=\"1\" generated=\"true\" generation=\"2\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\" epoche=\"2\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -305,7 +358,7 @@ sync_from_2="<?xml version=\"1.0\"?>
 
 sync_from_3="<?xml version=\"1.0\"?>
 <cib_fragment section=\"all\" generated_on=\"$test_node_3\">
-  <cib version=\"1\" generated=\"true\" generation=\"2\">
+  <cib generated=\"true\" cib_feature_revision=\"1\" debug_source=\"handleCibMod\" epoche=\"2\">
     <configuration>
       <crm_config/>
       <nodes>
@@ -336,7 +389,7 @@ function compare_cibs()
     remote_cmd $CRMD_USER $cib_cmp_host "$HALIB_DIR/cibadmin -Q ${cib_cmp_opts}" > $cib_cmp_output
     cts_assert "compare_cibs(): Could not perform query: opts=$cib_cmp_opts"
     
-    gres ' timestamp=\".*\"' "" ${cib_cmp_output}
+    gres ' timestamp=\"[0123456789]*\"' "" ${cib_cmp_output}
     gres ' id=\"[0123456789abcdef-]*\"' "" ${cib_cmp_output}
 
     # this is the value stored in a variable named $cib_cmp_base
@@ -530,6 +583,17 @@ do_cmd echo "verify the CIB contents on all nodes"
 compare_cibs sync_from_1 $test_node_1 -l
 compare_cibs sync_from_2 $test_node_2 -l
 compare_cibs sync_from_3 $test_node_3 -l
+
+#----
+
+do_cmd remote_cmd $CRMD_USER $test_node_2 "$HALIB_DIR/cibadmin -B -l"
+cts_assert "Could not perform local bump on $test_node_2"
+
+do_cmd echo "verify the CIB contents on all nodes"
+compare_cibs bump_local_1 $test_node_1 -l
+compare_cibs bump_local_2 $test_node_2 -l
+compare_cibs bump_local_3 $test_node_3 -l
+
 
 echo "test: PASSED"
 

@@ -122,6 +122,7 @@ do_pe_invoke(long long action,
 	     fsa_data_t *msg_data)
 {
 	xmlNodePtr local_cib = NULL;
+	HA_Message *cmd = NULL;
 
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
 		
@@ -139,8 +140,12 @@ do_pe_invoke(long long action,
 		fsa_pe_ref = NULL;
 	}
 
-	send_request(NULL, local_cib, CRM_OP_PECALC,
-		     NULL, CRM_SYSTEM_PENGINE, &fsa_pe_ref);
+	cmd = create_request(
+		CRM_OP_PECALC, local_cib, NULL,
+		CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
 
+	send_request(cmd, &fsa_pe_ref);
+	free_xml(local_cib);
+	
 	return I_NULL;
 }

@@ -52,6 +52,5 @@ cl_respawn_LDADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
 install-data-hook:    # install-exec-hook doesn't work (!)
 	-chgrp $(apigid) $(DESTDIR)/$(habindir)/cl_status
 	-chmod g+s,a-w $(DESTDIR)/$(habindir)/cl_status
-	-ln -s _ccdv ccdv
 
 .PHONY: install-exec-hook

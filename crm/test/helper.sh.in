@@ -40,7 +40,7 @@ test_node_1=fish
 test_node_2=chips
 test_node_3=mayo
 
-CRM_OPTS="-VV"
+#CRM_OPTS="-VVVVVV"
 
 CRM_ERR_SHUTDOWN=0
 
@@ -327,11 +327,11 @@ function err() {
     dump_node 3 $test_node_3
 
     crm_test_log_end=$(stat -L -c %s $logfile)
-    $HALIB_DIR/crmtest/testutils.pl --dump -p $crm_test_log_start -ep $crm_test_log_end -l $logfile > $test_dump_dir/cluster.log
     do_cmd echo "ERROR: $*"
     do_cmd echo "test $test_type: FAILED"
     echo "see $test_dump_dir for details..."
     echo "ERROR: $*" > $test_dump_dir/error.txt
+    $HALIB_DIR/crmtest/testutils.pl --dump -p $crm_test_log_start -ep $crm_test_log_end -l $logfile > $test_dump_dir/cluster.log
 
     exit 1
 }
@@ -342,12 +342,18 @@ function dump_node() {
     a_node=$2
 
     dump_file="/tmp/${a_node_index}-${a_node}.tgz"
+
     `which ssh` ${ADMIN_USER}@${a_node} "ps axf > /tmp/crm/processes"
+    `which ssh` ${ADMIN_USER}@${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart -l $logfile > /tmp/crm/cluster-test.log"
+
     `which ssh` ${ADMIN_USER}@${a_node} "ln -s /tmp/crm /tmp/crm-${a_node_index}"
-    `which ssh` ${ADMIN_USER}@${a_node} "tar zcvf ${dump_file} /tmp/crm-${a_node_index}/"
+    `which ssh` ${ADMIN_USER}@${a_node} "tar -zhcvf ${dump_file} /tmp/crm-${a_node_index}/"
     `which ssh` ${ADMIN_USER}@${a_node} "rm -f /tmp/crm-${a_node_index}"
 
-    scp -r ${ADMIN_USER}@${a_node}:${dump_file} $test_dump_dir
+    cd $test_dump_dir
+    scp -r ${ADMIN_USER}@${a_node}:${dump_file} .
+    tar zxvf ${a_node_index}-${a_node}.tgz
+    cd -
     `which ssh` ${ADMIN_USER}@${a_node} "rm ${dump_file}"
 }
 
@@ -457,7 +463,7 @@ function crm-cleanup-node() {
     do_cmd remote_cmd $INIT_USER $ha_host $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
     
 # be *very* sure everything has stopped
-    do_cmd remote_cmd $INIT_USER $ha_host "killall -q9 heartbeat ccm lrmd crmd"
+    do_cmd remote_cmd $INIT_USER $ha_host "killall -q9 heartbeat ccm lrmd crmd crmadmin cibadmin"
 
 # resources too
     do_cmd remote_cmd $INIT_USER $ha_host "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
@@ -469,15 +475,14 @@ function crm-cleanup-node() {
 
 	`which ssh` ${INIT_USER}@${ha_host} "rm -f /tmp/crm/*" 2>/dev/null 
 	remote_cmd $CRMD_USER $ha_host "rm -f /tmp/crm/*/core" 2>&1 > /dev/null
-	do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart"
+	if [ `dirname $logfile` = "/tmp/crm" ]; then
+	    do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart"
+	fi
 	do_cmd remote_cmd $CRMD_USER $ha_host "logger -i -p local7.info __crmtest_${test_type}_log_mark__"
 	do_cmd sleep 2
-
+	remote_cmd $CRMD_USER $ha_host "stat -L -c %s $logfile > /tmp/crm/.logstart"
+	
 # zero out logs, maybe
-	if [ ${test_node_1} = "fish" ]; then
-	    do_cmd remote_cmd $INIT_USER $ha_host "cat /dev/null > /var/log/messages"
-	fi
-	    
     fi
 }
 

@@ -60,8 +60,7 @@ int max_lrm_register_fails = 30;
 
 const char *rsc_path[] = 
 {
-	XML_MSG_TAG_DATA,
-	XML_GRAPH_TAG_RSC_OP,
+/* 	XML_GRAPH_TAG_RSC_OP, */
 	XML_CIB_TAG_RESOURCE,
 	"instance_attributes",
 	"rsc_parameters"
@@ -158,11 +157,12 @@ do_lrm_control(long long action,
 	enum crmd_fsa_input failed = I_FAIL;
 	int ret = HA_OK;
 
+	
 	if(action & A_LRM_DISCONNECT) {
-		fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
-
+		if(fsa_lrm_conn) {
+			fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
+		}
 		/* TODO: Clean up the hashtable */
-		
 	}
 
 	if(action & A_LRM_CONNECT) {
@@ -242,7 +242,11 @@ build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 	xmlNodePtr xml_agent    = NULL;
 	xmlNodePtr xml_metadata = NULL;
 	xmlNodePtr tmp          = NULL;
-
+	
+	if(fsa_lrm_conn == NULL) {
+		return FALSE;
+	}
+	
 	classes = fsa_lrm_conn->lrm_ops->get_rsc_class_supported(fsa_lrm_conn);
 
 	slist_iter(
@@ -302,6 +306,10 @@ stop_all_resources(void)
 	state_flag_t cur_state = 0;
 	const char *this_op    = NULL;
 	
+	if(fsa_lrm_conn == NULL) {
+		return TRUE;
+	}
+
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 
 	slist_iter(
@@ -354,6 +362,10 @@ build_active_RAs(xmlNodePtr rsc_list)
 	const char *this_op    = NULL;
 	char *tmp = NULL;
 	
+	if(fsa_lrm_conn == NULL) {
+		return FALSE;
+	}
+
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 
 	slist_iter(
@@ -492,60 +504,53 @@ do_lrm_invoke(long long action,
 	      enum crmd_fsa_input current_input,
 	      fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input next_input = I_NULL;
-	xmlNodePtr msg;
-	const char *operation = NULL;
-	char rid[64];
-	const char *id_from_cib = NULL;
 	const char *crm_op = NULL;
-	lrm_rsc_t *rsc = NULL;
-
-	msg = (xmlNodePtr)msg_data->data;
+	const char *operation = NULL;
+	enum crmd_fsa_input next_input = I_NULL;
+	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+		
+	crm_op = cl_get_string(input->msg, F_CRM_TASK);
 		
 	operation = get_xml_attr_nested(
-		msg, rsc_path, DIMOF(rsc_path) -3, XML_LRM_ATTR_TASK, TRUE);
-
-/*	xmlNodePtr tmp = find_xml_node_nested(msg, rsc_path, DIMOF(rsc_path) -3); */
-/*	operation = xmlGetProp(tmp, XML_LRM_ATTR_TASK); */
-
-	if(operation == NULL) {
-		crm_err("No value for %s in message at level %d.",
-			XML_LRM_ATTR_TASK, DIMOF(rsc_path) -3);
-		return I_NULL;
-	}
-	
-	id_from_cib = get_xml_attr_nested(
-		msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_ID, TRUE);
-
-	if(id_from_cib == NULL) {
-		crm_err("No value for %s in message at level %d.",
-			XML_ATTR_ID, DIMOF(rsc_path) -2);
-		return I_NULL;
-	}
-	
-	/* only the first 16 chars are used by the LRM */
-	strncpy(rid, id_from_cib, 64);
-	rid[63] = 0;
-	
-	crm_op = get_xml_attr(msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
-	
-	rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
+		input->xml, rsc_path, DIMOF(rsc_path) -3,
+		XML_LRM_ATTR_TASK, FALSE);
 	
 	if(crm_op != NULL && safe_str_eq(crm_op, "lrm_query")) {
-		xmlNodePtr data, reply;
+		xmlNodePtr data = do_lrm_query(FALSE);
+		HA_Message *reply = create_reply(input->msg, data);
 
-		data = do_lrm_query(FALSE);
-		reply = create_reply(msg, data);
-
-		relay_message(reply, TRUE);
-
+		if(relay_message(reply, TRUE) == FALSE) {
+			crm_err("Unable to route reply");
+			cl_log_message(LOG_ERR, reply);
+			ha_msg_del(reply);
+		}
 		free_xml(data);
-		free_xml(reply);
 
 	} else if(operation != NULL) {
-		next_input = do_lrm_rsc_op(rsc, rid, operation, msg);
+		char rid[64];
+		const char *id_from_cib = NULL;
+		lrm_rsc_t *rsc = NULL;
+
+		id_from_cib = get_xml_attr_nested(
+			input->xml, rsc_path, DIMOF(rsc_path) -2,
+			XML_ATTR_ID, TRUE);
+
+		if(id_from_cib == NULL) {
+			crm_err("No value for %s in message at level %d.",
+				XML_ATTR_ID, DIMOF(rsc_path) -2);
+			return I_NULL;
+		}
+		
+		/* only the first 16 chars are used by the LRM */
+		strncpy(rid, id_from_cib, 64);
+		rid[63] = 0;
+		
+		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
+		next_input = do_lrm_rsc_op(rsc, rid, operation, input->xml);
 		
 	} else {
+		crm_err("Operation was neither a lrm_query, nor a rsc op.  %s",
+			crm_str(crm_op));
 		next_input = I_ERROR;
 	}
 
@@ -818,7 +823,7 @@ do_lrm_event(long long action,
 		return I_FAIL;
 	}
 	
-	op = (lrm_op_t*)msg_data->data;
+	op = fsa_typed_data(fsa_dt_lrm);
 	rsc = op->rsc;
 	
 	crm_info("Processing %d event for %s/%s",

@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.19 2005/01/12 15:44:22 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.20 2005/01/18 20:33:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -85,6 +85,7 @@ gboolean BE_SILENT        = FALSE;
 gboolean DO_RESOURCE_LIST = FALSE;
 gboolean DO_OPTION        = FALSE;
 enum debug DO_DEBUG       = debug_none;
+const char *crmd_operation = NULL;
 
 xmlNodePtr msg_options = NULL;
 
@@ -327,12 +328,11 @@ do_work(ll_cluster_t * hb_cluster)
 		
 		if (dest_node != NULL) {
 			sys_to = CRM_SYSTEM_CRMD;
+			crmd_operation = CRM_OP_PING;
+
 			if (BE_VERBOSE) {
 				expected_responses = -1;/* wait until timeout instead */
 			}
-			
-			set_xml_property_copy(
-				msg_options, XML_ATTR_OP, CRM_OP_PING);
 			
 			set_xml_property_copy(
 				msg_options, XML_ATTR_TIMEOUT, "0");
@@ -346,9 +346,7 @@ do_work(ll_cluster_t * hb_cluster)
 		/* tell the local node to initiate an election */
 
 		sys_to = CRM_SYSTEM_CRMD;
-
-		set_xml_property_copy(
-			msg_options, XML_ATTR_OP, CRM_OP_VOTE);
+		crmd_operation = CRM_OP_VOTE;
 		
 		set_xml_property_copy(
 			msg_options, XML_ATTR_TIMEOUT, "0");
@@ -359,9 +357,7 @@ do_work(ll_cluster_t * hb_cluster)
 		
 	} else if(DO_WHOIS_DC) {
 		sys_to = CRM_SYSTEM_DC;
-
-		set_xml_property_copy(
-			msg_options, XML_ATTR_OP, CRM_OP_PING);
+		crmd_operation = CRM_OP_PING;
 			
 		set_xml_property_copy(
 			msg_options, XML_ATTR_TIMEOUT, "0");
@@ -440,9 +436,7 @@ do_work(ll_cluster_t * hb_cluster)
 		 *   local node
 		 */
 		sys_to = CRM_SYSTEM_CRMD;
-
-		set_xml_property_copy(
-			msg_options, XML_ATTR_OP, CRM_OP_LOCAL_SHUTDOWN);
+		crmd_operation = CRM_OP_LOCAL_SHUTDOWN;
 		
 		set_xml_property_copy(
 			msg_options, XML_ATTR_TIMEOUT, "0");
@@ -456,9 +450,7 @@ do_work(ll_cluster_t * hb_cluster)
 		 *   local node
 		 */
 		sys_to = CRM_SYSTEM_CRMD;
-
-		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_DEBUG_UP);
-		set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
+		crmd_operation = CRM_OP_DEBUG_UP;
 		
 		ret = 0; /* no return message */
 		
@@ -469,9 +461,7 @@ do_work(ll_cluster_t * hb_cluster)
 		 *   local node
 		 */
 		sys_to = CRM_SYSTEM_CRMD;
-
-		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_DEBUG_DOWN);
-		set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
+		crmd_operation = CRM_OP_DEBUG_DOWN;
 		
 		ret = 0; /* no return message */
 		
@@ -498,12 +488,18 @@ do_work(ll_cluster_t * hb_cluster)
 		else
 			sys_to = CRM_SYSTEM_DC;				
 	}
-		
-	send_ipc_request(
-		crmd_channel, msg_options, msg_data,
-		dest_node, sys_to, crm_system_name,
-		admin_uuid, this_msg_reference);
+	
+	{
+		HA_Message *cmd = create_request(
+			crmd_operation, msg_data, dest_node, sys_to,
+			crm_system_name, admin_uuid);
 
+		if(this_msg_reference != NULL) {
+			ha_msg_mod(cmd, XML_ATTR_REFERENCE, this_msg_reference);
+		}
+		send_ipc_message(crmd_channel, cmd);
+	}
+	
 	return ret;
 
 }
@@ -550,19 +546,21 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 {
 	int lpc = 0;
 	IPC_Message *msg = NULL;
+	ha_msg_input_t *new_input = NULL;
 	gboolean hack_return_good = TRUE;
 	static int received_responses = 0;
 	char *filename;
 	int filename_len = 0;
 	const char *result = NULL;
-	xmlNodePtr options = NULL;
-	xmlNodePtr xml_root_node = NULL;
-	char *buffer = NULL;
 
 	g_source_remove(message_timer_id);
 
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {
+		if(new_input != NULL) {
+			delete_ha_msg_input(new_input);
+		}
+		
 		if (server->ops->recv(server, &msg) != IPC_OK) {
 			perror("Receive failure:");
 			return !hack_return_good;
@@ -574,28 +572,24 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 		lpc++;
-		buffer =(char *) msg->msg_body;
-		crm_verbose("Got xml [text=%s]", buffer);
-
-		xml_root_node = find_xml_in_ipcmessage(msg, TRUE);
-
-		if (xml_root_node == NULL) {
+		new_input = new_ipc_msg_input(msg);
+		msg->msg_done(msg);
+		cl_log_message(LOG_MSG, new_input->msg);
+		
+		if (new_input->xml == NULL) {
 			crm_info(
 			       "XML in IPC message was not valid... "
 			       "discarding.");
 			continue;
-		} else if (validate_crm_message(xml_root_node,
-					 crm_system_name,
-					 admin_uuid,
-					 XML_ATTR_RESPONSE) == FALSE) {
+		} else if (validate_crm_message(
+				   new_input->msg, crm_system_name, admin_uuid,
+				   XML_ATTR_RESPONSE) == FALSE) {
 			crm_info(
 			       "Message was not a CRM response. Discarding.");
 			continue;
 		}
 
-		options = find_xml_node(xml_root_node, XML_TAG_OPTIONS, FALSE);
-		
-		result = xmlGetProp(options, XML_ATTR_RESULT);
+		result = cl_get_string(new_input->msg, XML_ATTR_RESULT);
 		if(result == NULL || strcmp(result, "ok") == 0) {
 			result = "pass";
 		} else {
@@ -605,24 +599,22 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		received_responses++;
 
 		if(DO_HEALTH) {
-			xmlNodePtr ping = find_xml_node(
-				xml_root_node, XML_CRM_TAG_PING, FALSE);
-
-			const char *state = xmlGetProp(ping, "crmd_state");
+			const char *state = xmlGetProp(
+				new_input->xml, "crmd_state");
 
 			printf("Status of %s@%s: %s (%s)\n",
-			       xmlGetProp(ping, XML_PING_ATTR_SYSFROM),
-			       xmlGetProp(xml_root_node, XML_ATTR_HOSTFROM),
+			       xmlGetProp(new_input->xml,XML_PING_ATTR_SYSFROM),
+			       cl_get_string(new_input->msg, F_CRM_HOST_FROM),
 			       state,
-			       xmlGetProp(ping, XML_PING_ATTR_STATUS));
+			       xmlGetProp(new_input->xml,XML_PING_ATTR_STATUS));
 			
 			if(BE_SILENT && state != NULL) {
 				fprintf(stderr, "%s\n", state);
 			}
 			
 		} else if(DO_WHOIS_DC) {
-			const char *dc = xmlGetProp(
-				xml_root_node, XML_ATTR_HOSTFROM);
+			const char *dc = cl_get_string(
+				new_input->msg, F_CRM_HOST_FROM);
 			
 			printf("Designated Controller is: %s\n", dc);
 			if(BE_SILENT && dc != NULL) {
@@ -642,8 +634,8 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 					received_responses);
 				
 				filename[filename_len - 1] = '\0';
-				if (xmlSaveFormatFile(
-					    filename, xml_root_node->doc, 1) < 0) {
+				if (0 > xmlSaveFormatFile(
+					    filename, new_input->xml->doc, 1)) {
 					crm_crit("Could not save response to"
 						 " %s_%s_%d.xml",
 						 this_msg_reference,

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.11 2004/12/22 13:31:27 andrew Exp $ */
+/* $Id: main.c,v 1.12 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,7 +53,7 @@ extern cib_t *te_cib_conn;
 void usage(const char* cmd, int exit_status);
 int init_start(void);
 void tengine_shutdown(int nsig);
-extern void te_update_confirm(const char *event, struct ha_msg *msg);
+extern void te_update_confirm(const char *event, HA_Message *msg);
 
 int
 main(int argc, char ** argv)
@@ -83,7 +83,7 @@ main(int argc, char ** argv)
 
 	CL_SIGNAL(SIGTERM, tengine_shutdown);
 
-/*  	set_crm_log_level(LOG_DEV); */
+  	set_crm_log_level(LOG_DEV);
 	crm_debug("Begining option processing");
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.45 2005/01/12 13:40:59 andrew Exp $ */
+/* $Id: pengine.h,v 1.46 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,6 +33,7 @@ typedef struct action_wrapper_s action_wrapper_t;
 
 #include <glib.h>
 #include <crm/crm.h>
+#include <crm/common/msg.h>
 #include <complex.h>
 
 enum con_type {
@@ -266,7 +267,8 @@ extern gboolean summary(GListPtr resources);
 
 extern gboolean pe_msg_dispatch(IPC_Channel *sender, void *user_data);
 
-extern gboolean process_pe_message(xmlNodePtr msg, IPC_Channel *sender);
+extern gboolean process_pe_message(
+	HA_Message *msg, xmlNodePtr xml_data, IPC_Channel *sender);
 
 extern gboolean unpack_constraints(xmlNodePtr xml_constraints,
 				   GListPtr nodes, GListPtr resources,

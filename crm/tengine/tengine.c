@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.38 2005/01/12 13:41:08 andrew Exp $ */
+/* $Id: tengine.c,v 1.39 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,7 +44,7 @@ void check_synapse_triggers(synapse_t *synapse, int action_id);
 gboolean in_transition = FALSE;
 te_timer_t *transition_timer = NULL;
 te_timer_t *transition_fuzz_timer = NULL;
-int transition_counter = 0;
+int transition_counter = 1;
 
 gboolean
 initialize_graph(void)
@@ -310,18 +310,13 @@ initiate_action(action_t *action)
 {
 	gboolean ret = FALSE;
 
-	xmlNodePtr options = NULL;
-	xmlNodePtr data    = NULL;
-
 	const char *on_node   = NULL;
 	const char *id        = NULL;
 	const char *task      = NULL;
 	const char *timeout   = NULL;
 	const char *destination = NULL;
-	
-#ifndef TESTING
+	const char *msg_task    = XML_GRAPH_TAG_RSC_OP;
 	xmlNodePtr rsc_op  = NULL;
-#endif
 
 	on_node  = xmlGetProp(action->xml, XML_LRM_ATTR_TARGET);
 	id       = xmlGetProp(action->xml, XML_ATTR_ID);
@@ -355,11 +350,9 @@ initiate_action(action_t *action)
 		crm_info("Executing crm-event (%s): %s on %s",
 			 id, task, on_node);
 #ifndef TESTING
-		data = NULL;
 		action->complete = TRUE;
 		destination = CRM_SYSTEM_CRMD;
-		options = create_xml_node(NULL, XML_TAG_OPTIONS);
-		set_xml_property_copy(options, XML_ATTR_OP, task);
+		msg_task = task;
 #endif			
 		ret = TRUE;
 	} else if(action->type == action_type_rsc){
@@ -377,11 +370,7 @@ initiate_action(action_t *action)
 		  <rsc_op id="operation number" on_node="" task="">
 		  <resource>...</resource>
 		*/
-		data    = create_xml_node(NULL, XML_MSG_TAG_DATA);
-		rsc_op  = create_xml_node(data, XML_GRAPH_TAG_RSC_OP);
-		options = create_xml_node(NULL, XML_TAG_OPTIONS);
-
-		set_xml_property_copy(options, XML_ATTR_OP, XML_GRAPH_TAG_RSC_OP);
+		rsc_op  = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
 		
 		set_xml_property_copy(rsc_op, XML_ATTR_ID, id);
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TASK, task);
@@ -399,41 +388,37 @@ initiate_action(action_t *action)
 			action->xml->name, task, id, on_node);
 	}
 
-	if(ret && options != NULL) {
+	if(ret) {
+		HA_Message *cmd = NULL;
 		char *counter = crm_itoa(transition_counter);
-		set_xml_property_copy(
-			options, "transition_id", crm_str(counter));
+
+		if(rsc_op != NULL) {
+			crm_xml_debug(rsc_op, "Performing");
+		}
+		cmd = create_request(msg_task, rsc_op, on_node, destination,
+				     CRM_SYSTEM_TENGINE, NULL);
+
+		ha_msg_add(cmd, "transition_id", crm_str(counter));
+		send_ipc_message(crm_ch, cmd);
 		crm_free(counter);
 
-		crm_xml_debug(options, "Performing");
-		if(data != NULL) {
-			crm_xml_debug(data, "Performing");
-		}
 #ifdef MSG_LOG
 		if(msg_te_strm != NULL) {
-			char *message = dump_xml_formatted(data);
-			char *ops = dump_xml_formatted(options);
+			char *message = dump_xml_formatted(rsc_op);
 			fprintf(msg_te_strm, "[Action]\t%s\n%s\n",
-				crm_str(ops), crm_str(message));
+				crm_str(counter), crm_str(message));
 			fflush(msg_te_strm);
 			crm_free(message);
-			crm_free(ops);
 		}
 #endif
-		send_ipc_request(
-			crm_ch, options, data, on_node,
-			destination, CRM_SYSTEM_TENGINE, NULL, NULL);
-
+		
 		if(action->timeout > 0) {
 			crm_debug("Setting timer for action %d",action->id);
 			start_te_timer(action->timer);
 		}
 
 	}
-	
-	free_xml(options);
-	free_xml(data);
-	
+	free_xml(rsc_op);
 	return ret;
 }
 

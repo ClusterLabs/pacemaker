@@ -325,7 +325,7 @@ cib_native_perform_op(
 		crm_free(calldata);
 	}
 	
-	if (rc != HA_OK) {
+	if (rc != HA_OK || op_msg == NULL) {
 		ha_msg_del(op_msg);
 		crm_err("Failed to create CIB operation message");
 		return cib_create_msg;
@@ -333,28 +333,36 @@ cib_native_perform_op(
 
 	cib->call_id++;
 
-	crm_debug("Sending message to CIB service");
-/* 	cl_log_message(op_msg); */
+	crm_debug("Sending %s message to CIB service", op);
+ 	cl_log_message(LOG_MSG, op_msg);
 	rc = msg2ipcchan(op_msg, native->command_channel);
-	ha_msg_del(op_msg);
+	crm_debug("Message sent");
+ 	ha_msg_del(op_msg);
+	op_msg = NULL;
 	
 	if (rc != HA_OK) {
+		crm_err("Sending message to CIB service FAILED");
 		return cib_send_failed;
 	}
 
 	if((call_options & cib_discard_reply)) {
+		crm_debug("Discarding reply");
 		return cib_ok;
 
 	} else if(!(call_options & cib_sync_call)) {
+		crm_debug("Async call, returning");
 		return cib->call_id - 1;
 	}
 
+	crm_debug("Waiting for a syncronous reply");
 	op_reply = msgfromIPC_noauth(native->command_channel);
 	if (op_reply == NULL) {
 		crm_err("No reply message");
 		return cib_reply_failed;
 	}
 
+	crm_debug("Syncronous reply recieved");
+ 	cl_log_message(LOG_MSG, op_reply);
 	rc = cib_ok;
 	
 	/* Start processing the reply... */
@@ -363,17 +371,22 @@ cib_native_perform_op(
 	}	
 	
 	if(!(call_options & cib_discard_reply)) {
-		output = cl_get_string(op_msg, F_CIB_CALLDATA);
+		output = cl_get_string(op_reply, F_CIB_CALLDATA);
 	}
 
 	if(output_data == NULL) {
 		/* do nothing more */
 		
 	} else if(output != NULL) {
+		crm_debug("Unpacking response data");
 		*output_data = string2xml(output);
 		if(*output_data == NULL) {
-			rc = cib_output_data;
+			crm_err("Could not unpack response data: %s", output);
+			if(rc == cib_ok) {
+				rc = cib_output_data;
+			}
 		}
+		
 	} else {
 		crm_debug("No output in reply to \"%s\" command %d",
 			  op, cib->call_id - 1);

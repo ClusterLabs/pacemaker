@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.18 2005/01/12 15:44:25 andrew Exp $ */
+/* $Id: unpack.c,v 1.19 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,7 +29,6 @@
 #include <sys/stat.h>
 
 cib_t *te_cib_conn = NULL;
-extern gboolean process_te_message(xmlNodePtr msg, IPC_Channel *sender);
 action_t* unpack_action(xmlNodePtr xml_action);
 xmlNodePtr create_shutdown_event(const char *node, int op_status);
 void set_timer_value(te_timer_t *timer, const char *time, int time_default);
@@ -250,9 +249,12 @@ extract_event(xmlNodePtr msg)
 		xmlNodePtr resources = NULL;
 		xmlNodePtr node_state = iter;
 
-		const char *ccm_state  = xmlGetProp(node_state, XML_CIB_ATTR_INCCM);
-		const char *crmd_state = xmlGetProp(node_state, XML_CIB_ATTR_CRMDSTATE);
-		const char *join_state = xmlGetProp(node_state, XML_CIB_ATTR_JOINSTATE);
+		const char *ccm_state  = xmlGetProp(
+			node_state, XML_CIB_ATTR_INCCM);
+		const char *crmd_state = xmlGetProp(
+			node_state, XML_CIB_ATTR_CRMDSTATE);
+		const char *join_state = xmlGetProp(
+			node_state, XML_CIB_ATTR_JOINSTATE);
 
 		iter = iter->next;
 

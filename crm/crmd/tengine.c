@@ -114,8 +114,6 @@ do_te_control(long long action,
 	return result;
 }
 
-static xmlNodePtr te_last_input = NULL;
-
 /*	 A_TE_INVOKE, A_TE_CANCEL	*/
 enum crmd_fsa_input
 do_te_invoke(long long action,
@@ -124,43 +122,37 @@ do_te_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-	xmlNodePtr graph = NULL;
-	xmlNodePtr msg = (xmlNodePtr)msg_data->data;
+	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 	enum crmd_fsa_input ret = I_NULL;
+	HA_Message *cmd = NULL;
+	
 
 	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
 		crm_info("Waiting for the TE to connect");
-		if(msg != NULL) {
-			free_xml(te_last_input);
-			te_last_input = copy_xml_node_recursive(msg);
-		}
-
 		crmd_fsa_stall();
 		return I_NULL;		
 	}
 
-	if(msg == NULL) {
-		msg = te_last_input;
-	}
-	
 	if(action & A_TE_INVOKE) {
-		graph = find_xml_node(msg, XML_TAG_GRAPH, TRUE);
-		if(graph != NULL) {
-			send_request(NULL, graph, CRM_OP_TRANSITION,
-				     NULL, CRM_SYSTEM_TENGINE, NULL);
+		if(input->xml != NULL) {
+			cmd = create_request(
+				CRM_OP_TRANSITION, input->xml, NULL,
+				CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
+			
+			send_request(cmd, NULL);
+
 		} else {
 			ret = I_FAIL;
 		}
 	
 	} else if(action & A_TE_CANCEL) {
-		send_request(NULL, graph, CRM_OP_TEABORT,
-			     NULL, CRM_SYSTEM_TENGINE, NULL);
+		cmd = create_request(
+			CRM_OP_TEABORT, NULL, NULL,
+			CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
+		
+		send_request(cmd, NULL);
 	}
 
-	/* only free it if it was a local copy */
-	free_xml(te_last_input);
-	te_last_input = NULL;
-	
 	return ret;
 }
 

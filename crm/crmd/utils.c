@@ -96,7 +96,8 @@ timer_popped(gpointer data)
 	stopTimer(timer); /* make it _not_ go off again */
 
 	if(timer->fsa_input != I_NULL) {
-		register_fsa_input(C_TIMER_POPPED, timer->fsa_input, NULL);
+		register_fsa_input_before(
+			C_TIMER_POPPED, timer->fsa_input, NULL);
 	}
 	s_crmd_fsa(C_TIMER_POPPED);
 	
@@ -108,10 +109,9 @@ startTimer(fsa_timer_t *timer)
 {
 	if((timer->source_id == (guint)-1 || timer->source_id == (guint)-2)
 	   && timer->period_ms > 0) {
-		timer->source_id =
-			Gmain_timeout_add(timer->period_ms,
-					  timer->callback,
-					  (void*)timer);
+		timer->source_id = Gmain_timeout_add(
+			timer->period_ms, timer->callback, (void*)timer);
+
 		crm_debug("Started %s timer (%d), period=%dms",
 			  fsa_input2string(timer->fsa_input),
 			  timer->source_id, timer->period_ms);
@@ -158,16 +158,16 @@ stopTimer(fsa_timer_t *timer)
 long long
 toggle_bit(long long action_list, long long action)
 {
-	crm_trace("Toggling bit %.16llx", action);
+	crm_insane("Toggling bit %.16llx", action);
 	action_list ^= action;
-	crm_trace("Result %.16llx", action_list & action);
+	crm_insane("Result %.16llx", action_list & action);
 	return action_list;
 }
 
 long long
 clear_bit(long long action_list, long long action)
 {
-	crm_trace("Clearing bit\t%.16llx", action);
+	crm_insane("Clearing bit\t%.16llx", action);
 
 	/* ensure its set */
 	action_list |= action;
@@ -181,7 +181,7 @@ clear_bit(long long action_list, long long action)
 long long
 set_bit(long long action_list, long long action)
 {
-	crm_trace("Setting bit\t%.16llx", action);
+	crm_insane("Setting bit\t%.16llx", action);
 	action_list |= action;
 	return action_list;
 }
@@ -190,14 +190,14 @@ set_bit(long long action_list, long long action)
 gboolean
 is_set(long long action_list, long long action)
 {
-/*	crm_verbose("Checking bit\t%.16llx", action); */
+	crm_insane("Checking bit\t%.16llx in %.16llx", action, action_list);
 	return ((action_list & action) == action);
 }
 
 gboolean
 is_set_any(long long action_list, long long action)
 {
-/*	crm_verbose("Checking bit\t%.16llx", action); */
+	crm_insane("Checking bit\t%.16llx in %.16llx", action, action_list);
 	return ((action_list & action) != 0);
 }
 
@@ -875,7 +875,6 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	 *   join process (with itself).  We can include a special case
 	 *   later if desired.
 	 */
-	xmlNodePtr tmp2 = NULL;
 	xmlNodePtr tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
 	crm_debug("Creating node entry for %s", uname);
@@ -884,13 +883,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	set_xml_property_copy(tmp1, XML_ATTR_UNAME, uname);
 	set_xml_property_copy(tmp1, XML_ATTR_TYPE, type);
 	
-	tmp2 = create_cib_fragment(tmp1, NULL);
-
-	/* do not forward this to the TE - required still? */
-/* 	update_local_cib(tmp2, FALSE); */
-	update_local_cib(tmp2, TRUE);
-	
-	free_xml(tmp2);
+	update_local_cib(create_cib_fragment(tmp1, NULL));
 	free_xml(tmp1);
 	
 }

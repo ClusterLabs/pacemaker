@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.21 2005/01/13 13:41:00 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.22 2005/01/18 20:33:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,6 +18,15 @@
  */
 #ifndef XML_TAGS__H
 #define XML_TAGS__H
+
+#define F_CRM_TASK			"crm_task"
+#define F_CRM_HOST_TO			"crm_host_to"
+#define F_CRM_MSG_TYPE			F_SUBTYPE
+#define F_CRM_SYS_TO			"crm_sys_to"
+#define F_CRM_SYS_FROM			"crm_sys_from"
+#define F_CRM_HOST_FROM			F_ORIG
+#define F_CRM_REFERENCE			XML_ATTR_REFERENCE
+#define F_CRM_VERSION			XML_ATTR_VERSION
 
 /*---- Common tags/attrs */
 #define XML_TAG_CIB			"cib"
@@ -58,12 +67,6 @@
 
 #define XML_ATTR_UNAME			"uname"
 #define XML_ATTR_UUID			"id"
-#define XML_ATTR_MSGTYPE		"message_type"
-#define XML_ATTR_SYSFROM		"sys_from"
-#define XML_ATTR_SYSTO			"sys_to"
-#define XML_ATTR_SYSCC			"sys_cc"
-#define XML_ATTR_HOSTFROM		"host_from"
-#define XML_ATTR_HOSTTO			"host_to"
 #define XML_ATTR_REFERENCE		"reference"
 
 #define XML_FAIL_TAG_RESOURCE		"failed_resource"

@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.45 2005/01/12 13:40:58 andrew Exp $ */
+/* $Id: ccm.c,v 1.46 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,7 +40,7 @@ void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 int register_with_ccm(ll_cluster_t *hb_cluster);
 
-void msg_ccm_join(const struct ha_msg *msg, void *foo);
+void msg_ccm_join(const HA_Message *msg, void *foo);
 
 void crmd_ccm_msg_callback(oc_ed_t event,
 			     void *cookie,
@@ -150,8 +150,9 @@ do_ccm_event(long long action,
 	enum crmd_fsa_input return_input = I_NULL;
 	oc_ed_t *event = NULL;
 	const oc_ev_membership_t *oc = NULL;
-
-	if(msg_data == NULL || msg_data->data == NULL) {
+	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
+	
+	if(ccm_data == NULL) {
 		crm_err("No data provided to FSA function");
 		return I_FAIL;
 
@@ -160,8 +161,8 @@ do_ccm_event(long long action,
 		return I_NULL;
 	}
 
-	event = ((struct crmd_ccm_data_s *)msg_data->data)->event;
-	oc = ((struct crmd_ccm_data_s *)msg_data->data)->oc;
+	event = ccm_data->event;
+	oc = ccm_data->oc;
 	
 	crm_info("event=%s", 
 	       *event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
@@ -196,7 +197,6 @@ do_ccm_event(long long action,
 		int lpc = 0;
 		int offset = oc->m_out_idx;
 		for(lpc=0; lpc < oc->m_n_out; lpc++) {
-			xmlNodePtr fragment = NULL;
 			xmlNodePtr node_state = NULL;
 			
 			const char *uname = oc->m_array[offset+lpc].node_uname;
@@ -213,15 +213,8 @@ do_ccm_event(long long action,
 				NULL, uname, NULL,
 				XML_BOOLEAN_NO, NULL, NULL, NULL);
 			
-			fragment = create_cib_fragment(node_state, NULL);
-
-			update_local_cib(fragment, TRUE);
-
+			update_local_cib(create_cib_fragment(node_state, NULL));
 			free_xml(node_state);
-			free_xml(fragment);			
-
-			s_crmd_fsa(C_FSA_INTERNAL);
-			
 		}
 		
 	} else if(oc->m_n_in !=0) {
@@ -253,18 +246,15 @@ do_ccm_update_cache(long long action,
 	oc_ed_t *event = NULL;
 	const oc_ev_membership_t *oc = NULL;
 	oc_node_list_t *tmp = NULL, *membership_copy = NULL;
+	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
 
-	if(msg_data == NULL || msg_data->data == NULL) {
+	if(ccm_data == NULL) {
 		crm_err("No data provided to FSA function");
 		return I_FAIL;
-
-	} else if(msg_data->fsa_cause != C_CCM_CALLBACK) {
-		crm_err("FSA function called in response to incorect input");
-		return I_NULL;
 	}
 
-	event = ((struct crmd_ccm_data_s *)msg_data->data)->event;
-	oc = ((struct crmd_ccm_data_s *)msg_data->data)->oc;
+	event = ccm_data->event;
+	oc = ccm_data->oc;
 
 	crm_info("Updating CCM cache after a \"%s\" event.", 
 	       *event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
@@ -513,7 +503,7 @@ register_with_ccm(ll_cluster_t *hb_cluster)
 }
 
 void 
-msg_ccm_join(const struct ha_msg *msg, void *foo)
+msg_ccm_join(const HA_Message *msg, void *foo)
 {
 	
 	crm_verbose("\n###### Recieved ccm_join message...");
@@ -590,12 +580,8 @@ do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite)
 	}
 */
 	if(update_data.updates != NULL) {
-		xmlNodePtr fragment =
-			create_cib_fragment(update_data.updates, NULL);
-
-		update_local_cib(fragment, TRUE);
-		
-		free_xml(fragment);
+		update_local_cib(
+			create_cib_fragment(update_data.updates, NULL));
 	}
 
 	/* so it can be freed */

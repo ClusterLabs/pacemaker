@@ -1,4 +1,4 @@
-/* $Id: ipc.h,v 1.5 2004/12/10 20:03:20 andrew Exp $ */
+/* $Id: ipc.h,v 1.6 2005/01/18 20:33:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,16 +34,9 @@ typedef struct crmd_client_s
 		GCHSource *client_source;
 } crmd_client_t;
 
-
-extern gboolean send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg);
+extern gboolean send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg);
 
 extern void default_ipc_connection_destroy(gpointer user_data);
-
-extern xmlNodePtr find_xml_in_ipcmessage(
-	IPC_Message *msg, gboolean do_free);
-
-extern gboolean send_xmlipc_message(
-	IPC_Channel *ipc_client, xmlNodePtr msg);
 
 extern int init_server_ipc_comms(
 	char *channel_name,

@@ -43,7 +43,7 @@ do_cl_join_announce(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	xmlNodePtr msg = (xmlNodePtr)msg_data->data;
+	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 	
 	/* Once we hear from the DC, we can stop the timer
 	 *
@@ -59,7 +59,8 @@ do_cl_join_announce(long long action,
 	}
 
 	if(AM_I_OPERATIONAL) {
-		const char *hb_from = xmlGetProp(msg, XML_ATTR_HOSTFROM);
+		const char *hb_from = cl_get_string(
+			input->msg, F_CRM_HOST_FROM);
 
 		if(hb_from == NULL) {
 			crm_err("Failed to determin origin of hb message");
@@ -96,8 +97,14 @@ do_cl_join_announce(long long action,
 		
 		reannounce_count = 0;
 		/* send as a broadcast */
-		send_request(NULL, NULL, CRM_OP_ANNOUNCE,
-			     NULL, CRM_SYSTEM_DC, NULL);
+		{
+			HA_Message *req = create_request(
+			CRM_OP_ANNOUNCE, NULL, NULL,
+			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+
+			send_request(req, NULL);
+		}
+	
 	} else {
 		/* Delay announce until we have finished local startup */
 		crm_warn("Delaying announce until local startup is complete");
@@ -119,8 +126,9 @@ do_cl_join_request(long long action,
 	    fsa_data_t *msg_data)
 {
 	xmlNodePtr tmp1;
-	xmlNodePtr welcome = (xmlNodePtr)msg_data->data;
-	const char *welcome_from = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
+	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+	const char *welcome_from = cl_get_string(input->msg, F_CRM_HOST_FROM);
+	HA_Message *reply = NULL;
 	
 #if 0
 	if(we are sick) {
@@ -144,7 +152,10 @@ do_cl_join_request(long long action,
 
 	/* include our CIB generation tuple */
 	tmp1 = cib_get_generation(fsa_cib_conn);
-	send_ha_reply(fsa_cluster_conn, welcome, tmp1);
+	reply = create_reply(input->msg, tmp1);
+
+	send_msg_via_ha(fsa_cluster_conn, reply);
+
 	free_xml(tmp1);
 	
 	return I_NULL;
@@ -159,11 +170,11 @@ do_cl_join_result(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	gboolean   was_nack      = TRUE;
-	xmlNodePtr welcome       = (xmlNodePtr)msg_data->data;
-	xmlNodePtr tmp1          = find_xml_node(welcome, XML_TAG_OPTIONS,TRUE);
-	const char *ack_nack     = xmlGetProp(tmp1, CRM_OP_JOINACK);
-	const char *welcome_from = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
+	gboolean   was_nack   = TRUE;
+	xmlNodePtr tmp1       = NULL;
+	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+	const char *ack_nack     = cl_get_string(input->msg, CRM_OP_JOINACK);
+	const char *welcome_from = cl_get_string(input->msg, F_CRM_HOST_FROM);
 
 	/* calculate if it was an ack or a nack */
 	if(safe_str_eq(ack_nack, XML_BOOLEAN_TRUE)) {
@@ -178,8 +189,10 @@ do_cl_join_result(long long action,
 	/* send our status section to the DC */
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
+		HA_Message *reply = create_reply(input->msg, tmp1);
 		crm_debug("Sending local LRM status");
-		send_ha_reply(fsa_cluster_conn, welcome, tmp1);
+		send_msg_via_ha(fsa_cluster_conn, reply);
+		
 		free_xml(tmp1);
 		
 	} else {

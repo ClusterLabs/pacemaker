@@ -47,7 +47,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 struct crm_subsystem_s *cib_subsystem = NULL;
-void crmd_update_confirm(const char *event, struct ha_msg *msg);
+void crmd_update_confirm(const char *event, HA_Message *msg);
 
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
 enum crmd_fsa_input
@@ -93,7 +93,6 @@ do_cib_control(long long action,
 	return result;
 }
 
-
 /*	 A_CIB_INVOKE, A_CIB_BUMPGEN, A_UPDATE_NODESTATUS	*/
 enum crmd_fsa_input
 do_cib_invoke(long long action,
@@ -102,69 +101,60 @@ do_cib_invoke(long long action,
 	      enum crmd_fsa_input current_input,
 	      fsa_data_t *msg_data)
 {
-	xmlNodePtr cib_msg = NULL;
-	xmlNodePtr answer = NULL;
+	HA_Message *answer = NULL;
 	enum crmd_fsa_input result = I_NULL;
-	
-	if(msg_data->data != NULL) {
-		cib_msg = (xmlNodePtr)msg_data->data;
+	ha_msg_input_t *cib_msg = fsa_typed_data(fsa_dt_ha_msg);
+	const char *sys_from = cl_get_string(cib_msg->msg, F_CRM_SYS_FROM);
+
+	if(action & A_CIB_INVOKE) {
+		if(safe_str_eq(sys_from, CRM_SYSTEM_CRMD)) {
+			action = A_CIB_INVOKE_LOCAL;
+		} else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
+			action = A_CIB_INVOKE_LOCAL;
+		}
 	}
-	
-	
+
 	if(action & A_CIB_INVOKE || action & A_CIB_INVOKE_LOCAL) {
+		int call_options = 0;
 		enum cib_errors rc  = cib_ok;
 		xmlNodePtr cib_frag  = NULL;
-		xmlNodePtr msg_copy = copy_xml_node_recursive(cib_msg);
-		xmlNodePtr options  = find_xml_node(
-			msg_copy, XML_TAG_OPTIONS, TRUE);
 		
-		const char *sys_from = xmlGetProp(msg_copy, XML_ATTR_SYSFROM);
-		const char *type     = xmlGetProp(options, XML_ATTR_MSGTYPE);
-		const char *op       = xmlGetProp(options, XML_ATTR_OP);
+		const char *section  = NULL;
+		const char *op   = cl_get_string(cib_msg->msg, F_CRM_TASK);
+
+		section  = cl_get_string(cib_msg->msg, F_CIB_SECTION);
 		
-		cib_t *cib = NULL;
-		
-		crm_xml_devel(msg_copy, "[CIB update]");
-		if(cib_msg == NULL) {
-			crm_err("No message for CIB command");
-			return I_NULL; /* I_ERROR */
-			
-		} else if(op == NULL) {
-			crm_xml_devel(msg_copy, "Invalid CIB Message");
-			return I_NULL; /* I_ERROR */
-			
+		ha_msg_value_int(cib_msg->msg, F_CIB_CALLOPTS, &call_options);
+
+		cl_log_message(LOG_MSG, cib_msg->msg);
+		crm_xml_devel(cib_msg->xml, "[CIB update]");
+		if(op == NULL) {
+			crm_err("Invalid CIB Message");
+			return I_ERROR;
 		}
 		
-		crm_debug("is dc? %d, type=%s", AM_I_DC, type);
-		rc = cib->cmds->variant_op(
-			cib, op, NULL, NULL, NULL, &cib_frag,
-			cib_scope_local|cib_sync_call);
+		rc = fsa_cib_conn->cmds->variant_op(
+			fsa_cib_conn, op, NULL, section,
+			cib_msg->xml, &cib_frag, call_options);
+
+		if(rc != cib_ok || (action & A_CIB_INVOKE)) {
+			answer = create_reply(cib_msg->msg, cib_frag);
+			ha_msg_add(answer,XML_ATTR_RESULT,cib_error2string(rc));
+		}
 		
-		answer = create_reply(cib_msg, cib_frag);
-		set_xml_attr(answer, XML_TAG_OPTIONS,
-			     XML_ATTR_RESULT, cib_error2string(rc), TRUE);
-		
-		if(AM_I_DC == FALSE) {
+		if(action & A_CIB_INVOKE) {
 			if(relay_message(answer, TRUE) == FALSE) {
 				crm_err("Confused what to do with cib result");
-				crm_xml_devel(answer, "Couldnt route: ");
+				cl_log_message(LOG_ERR, answer);
+				ha_msg_del(answer);
 				result = I_ERROR;
 			}
-		}
-		
-		/* the TENGINE will get CC'd by other means. */
-		if(AM_I_DC
-		   && sys_from != NULL
-		   && safe_str_neq(sys_from, CRM_SYSTEM_CRMD)
-		   && safe_str_neq(sys_from, CRM_SYSTEM_DC)
-		   && relay_message(answer, TRUE) == FALSE) {
-			crm_err("Confused what to do with cib result");
-			crm_xml_devel(answer, "Couldnt route: ");
-			result = I_ERROR;
+		} else if(rc != cib_ok) {
+			register_fsa_input(C_FSA_INTERNAL, I_FAIL, answer);
+			ha_msg_del(answer);
 		}
 		
 		return result;
-
 
 	} else {
 		crm_err("Unexpected action %s in %s",
@@ -174,32 +164,53 @@ do_cib_invoke(long long action,
 	return I_NULL;
 }
 
-enum crmd_fsa_input
-update_local_cib(xmlNodePtr msg_data, gboolean callbacks)
+/* frees fragment as part of delete_ha_msg_input() */
+void
+update_local_cib_adv(
+	xmlNodePtr msg_data, gboolean do_now, const char *raised_from)
 {
-	enum crmd_fsa_input result = I_NULL;
-	enum cib_errors rc = cib_ok;
-	
-	const char *section = xmlGetProp(msg_data, XML_ATTR_SECTION);
+	HA_Message *msg = ha_msg_new(4);
+	ha_msg_input_t *fsa_input = NULL;
 	int call_options = cib_scope_local|cib_sync_call;
-	
-	if(callbacks == FALSE) {
-		call_options |= cib_inhibit_notify;
+
+	crm_malloc(fsa_input, sizeof(ha_msg_input_t));
+
+	fsa_input->msg = msg;
+	fsa_input->xml = msg_data;
+
+	ha_msg_add(msg, F_CRM_TASK,     CRM_OP_CIB_UPDATE);
+	ha_msg_add(msg, F_CRM_SYS_TO,   CRM_SYSTEM_CIB);
+	ha_msg_add(msg, F_CRM_SYS_FROM, CRM_SYSTEM_CRMD);
+	ha_msg_add(msg, F_CIB_SECTION,  xmlGetProp(msg_data, XML_ATTR_SECTION));
+	ha_msg_add_int(msg, F_CIB_CALLOPTS, call_options);
+
+	if(do_now == FALSE) {
+		crm_debug("Registering event with FSA");
+		register_fsa_input_adv(C_FSA_INTERNAL, I_CIB_OP, fsa_input, 0,
+				       FALSE, raised_from);
+	} else {
+		crm_debug("Invoking CIB handler directly");
+		fsa_data_t *op_data = NULL;
+		crm_malloc(op_data, sizeof(fsa_data_t));
+
+		op_data->fsa_cause	= C_FSA_INTERNAL;
+		op_data->fsa_input	= I_CIB_OP;
+		op_data->where		= raised_from;
+		op_data->data		= fsa_input;
+		op_data->data_type	= fsa_dt_ha_msg;
+
+		do_cib_invoke(A_CIB_INVOKE_LOCAL, C_FSA_INTERNAL, fsa_state,
+			      I_CIB_OP, op_data);
+
+		crm_free(op_data);
+		crm_debug("CIB handler completed");
 	}
 	
-	rc = fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, section, msg_data, NULL, call_options);
-	
-	if(rc != cib_ok) {
-		crm_err("Resource state update failed: %s",
-			cib_error2string(result));
-		result = I_FAIL;
-	}
-	return result;
+	delete_ha_msg_input(fsa_input);
 }
 
 void
-crmd_update_confirm(const char *event, struct ha_msg *msg)
+crmd_update_confirm(const char *event, HA_Message *msg)
 {
 	int rc = -1;
 	const char *op = cl_get_string(msg, F_CIB_OPERATION);

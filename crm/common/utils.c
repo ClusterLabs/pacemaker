@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.18 2004/12/05 16:29:51 andrew Exp $ */
+/* $Id: utils.c,v 1.19 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,7 +42,7 @@
 
 static uint ref_counter = 0;
 
-const char *
+char *
 generateReference(const char *custom1, const char *custom2)
 {
 

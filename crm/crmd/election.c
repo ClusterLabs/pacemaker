@@ -41,7 +41,7 @@ do_election_vote(long long action,
 		 fsa_data_t *msg_data)
 {
 	gboolean not_voting = FALSE;
-	xmlNodePtr msg_options = NULL;
+	HA_Message *vote = NULL;
 	
 	/* dont vote if we're in one of these states or wanting to shut down */
 	switch(cur_state) {
@@ -68,12 +68,17 @@ do_election_vote(long long action,
 		}
 	}	
 
+	vote = create_request(
+		CRM_OP_VOTE, NULL, NULL,
+		CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+	
 	if(action & A_ELECTION_START) {
 		/* leaving out our version number, no other node out there
 		 * will think we should win the election...
 		 * which is what we want if we are the DC and want to shutdown 
 		 */
-
+		ha_msg_mod(vote, XML_ATTR_VERSION, "0");
+		
 	} else if(not_voting) {
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		if(AM_I_DC) {
@@ -81,16 +86,9 @@ do_election_vote(long long action,
 		} else {
 			return I_NOT_DC;
 		}
-
-	} else {
-		msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-		set_xml_property_copy(
-			msg_options, XML_ATTR_VERSION, CRM_VERSION);
 	}
-	
-	send_request(msg_options, NULL, CRM_OP_VOTE,
-		     NULL, CRM_SYSTEM_CRMD, NULL);
 
+	send_request(vote, NULL);
 	startTimer(election_timeout);		
 
 	return I_NULL;
@@ -134,11 +132,10 @@ do_election_count_vote(long long action,
 		       fsa_data_t *msg_data)
 {
 	gboolean we_loose = FALSE;
-	xmlNodePtr vote = (xmlNodePtr)msg_data->data;
+	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 	enum crmd_fsa_input election_result = I_NULL;
-	const char *vote_from    = xmlGetProp(vote, XML_ATTR_HOSTFROM);
-	const char *your_version = get_xml_attr(
-		vote, XML_TAG_OPTIONS, XML_ATTR_VERSION, TRUE);
+	const char *vote_from    = cl_get_string(vote->msg, F_CRM_HOST_FROM);
+	const char *your_version = cl_get_string(vote->msg, F_CRM_VERSION);
 	oc_node_t *our_node = NULL, * your_node = NULL;
 	struct election_data_s election_data;
 
@@ -270,7 +267,8 @@ do_dc_takeover(long long action,
 	free_xml(cib);
 
 	rc = fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, NULL, update, &output, cib_sync_call);
+		fsa_cib_conn, NULL, update, &output,
+		cib_sync_call|cib_verbose);
 	
 	if(rc == cib_ok) {
 		int revision_i = -1;

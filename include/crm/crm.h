@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.35 2005/01/12 13:41:10 andrew Exp $ */
+/* $Id: crm.h,v 1.36 2005/01/18 20:33:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -152,6 +152,7 @@ typedef GList* GListPtr;
 #define LOG_DEV      LOG_DEBUG+2
 #define LOG_TRACE    LOG_DEBUG+3
 #define LOG_INSANE   LOG_DEBUG+5
+#define LOG_MSG      LOG_DEBUG
 
 #if 1
 #  define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FUNCTION__, w)

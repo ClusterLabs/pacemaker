@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.5 2005/01/12 13:40:57 andrew Exp $ */
+/* $Id: cibmon.c,v 1.6 2005/01/18 20:33:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -54,9 +54,9 @@ const char *crm_system_name = "cibmon";
 void usage(const char *cmd, int exit_status);
 void cib_connection_destroy(gpointer user_data);
 
-void cibmon_pre_notify(const char *event, struct ha_msg *msg);
-void cibmon_post_notify(const char *event, struct ha_msg *msg);
-void cibmon_update_confirm(const char *event, struct ha_msg *msg);
+void cibmon_pre_notify(const char *event, HA_Message *msg);
+void cibmon_post_notify(const char *event, HA_Message *msg);
+void cibmon_update_confirm(const char *event, HA_Message *msg);
 
 cib_t *the_cib = NULL;
 
@@ -309,7 +309,7 @@ int update_depth = 0;
 gboolean last_notify_pre = TRUE;
 
 void
-cibmon_pre_notify(const char *event, struct ha_msg *msg) 
+cibmon_pre_notify(const char *event, HA_Message *msg) 
 {
 	int rc = -1;
 	const char *op       = cl_get_string(msg, F_CIB_OPERATION);
@@ -368,7 +368,7 @@ cibmon_pre_notify(const char *event, struct ha_msg *msg)
 
 
 void
-cibmon_post_notify(const char *event, struct ha_msg *msg)
+cibmon_post_notify(const char *event, HA_Message *msg)
 {
 	int rc = -1;
 	const char *op       = cl_get_string(msg, F_CIB_OPERATION);
@@ -430,7 +430,7 @@ cibmon_post_notify(const char *event, struct ha_msg *msg)
 }
 
 void
-cibmon_update_confirm(const char *event, struct ha_msg *msg)
+cibmon_update_confirm(const char *event, HA_Message *msg)
 {
 	int rc = -1;
 	const char *op = cl_get_string(msg, F_CIB_OPERATION);

@@ -37,6 +37,11 @@ while ( $_ = @ARGV[0], /^-/ ) {
     } elsif ( /^--dump/ ) {
 	$do_dump = 1;
 
+    } elsif ( /^-pf/ ) {
+	$start_pos = `cat $ARGV[0]`;
+	chop $start_pos;
+	shift;
+	
     } elsif ( /^-p/ ) {
 	$start_pos = $ARGV[0];
 	shift;
@@ -141,13 +146,7 @@ sub file_dup() {
 	    print STDOUT "[".$num_lines."]: ".$line;
 	 }
 
-	$cur_pos = tell LOG;
-#	print STDOUT "[".$num_lines." - ".$cur_pos."]: ".$line;
-	if($end_pos eq -1) {
-	    return;
-	} elsif ($cur_pos gt $end_pos) {
-	    return;
-	}
+	return;
     }
 }
 

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.7 2004/10/19 11:23:45 andrew Exp $ */
+/* $Id: main.c,v 1.8 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,6 +37,7 @@
 #include <clplumbing/realtime.h>
 #include <clplumbing/GSource.h>
 #include <clplumbing/cl_poll.h>
+#include <clplumbing/coredumps.h>
 
 #include <crm/crm.h>
 #include <crm/common/ctrl.h>
@@ -54,7 +55,7 @@ const char* crm_system_name = SYS_NAME;
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
-void crmd_hamsg_callback(const struct ha_msg* msg, void* private_data);
+void crmd_hamsg_callback(const HA_Message * msg, void* private_data);
 gboolean crmd_tickle_apphb(gpointer data);
 
 GMainLoop*  crmd_mainloop = NULL;
@@ -94,6 +95,8 @@ main(int argc, char ** argv)
 	    exit(100);
     }
     
+    set_crm_log_level(LOG_DEV);
+    
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
@@ -126,6 +129,17 @@ main(int argc, char ** argv)
     }
     
     /* read local config file */
+    crm_debug("Enabling coredumps");
+    if(cl_set_corerootdir(DEVEL_DIR) < 0){
+	    cl_perror("cannot set corerootdir");
+    }
+    if(cl_enable_coredumps(1) != 0) {
+	    crm_err("Cannot enable coredumps");
+    }
+    if(cl_cdtocoredir() != 0) {
+	    crm_err("Cannot cd to coredump dir");
+    }
+    
     
     if (req_status){
 	    return init_status(PID_FILE, crm_system_name);

@@ -639,7 +639,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_FINALIZE_JOIN	==> */	A_NOTHING,
 		/* S_NOT_DC		==> */	A_NOTHING,
 		/* S_POLICY_ENGINE	==> */	A_NOTHING,
-		/* S_RECOVERY		==> */	A_RECOVER|O_RELEASE,
+		/* S_RECOVERY		==> */	A_RECOVER,
 		/* S_RELEASE_DC		==> */	A_NOTHING,
 		/* S_STARTING		==> */	A_NOTHING,
 		/* S_PENDING		==> */	A_NOTHING,
@@ -778,7 +778,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 /* Got an I_ELECTION_DC */
 	{
 		/* S_IDLE		==> */	A_WARN|A_ELECTION_VOTE,
-		/* S_ELECTION		==> */	A_LOG|A_DC_TAKEOVER|A_PE_START|A_TE_START|A_DC_JOIN_OFFER_ALL|A_ELECTION_VOTE,
+		/* S_ELECTION		==> */	A_LOG|A_DC_TAKEOVER|A_PE_START|A_TE_START|A_DC_JOIN_OFFER_ALL,
 		/* S_INTEGRATION	==> */	A_WARN|A_ELECTION_VOTE,
 		/* S_FINALIZE_JOIN	==> */	A_WARN|A_ELECTION_VOTE,
 		/* S_NOT_DC		==> */	A_LOG|A_ELECTION_VOTE,

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.7 2005/01/12 13:40:57 andrew Exp $ */
+/* $Id: main.c,v 1.8 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -109,6 +109,7 @@ main(int argc, char ** argv)
 
 	client_list = g_hash_table_new(&g_str_hash, &g_str_equal);
 	peer_hash = g_hash_table_new(&g_str_hash, &g_str_equal);
+	set_crm_log_level(LOG_DEV);
 	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -133,7 +134,6 @@ main(int argc, char ** argv)
 		}
 	}
 
-	set_crm_log_level(LOG_TRACE);
 
 	cl_set_corerootdir(DEVEL_DIR);	    
 	cl_enable_coredumps(1);

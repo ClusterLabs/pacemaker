@@ -34,7 +34,7 @@ crm-cleanup
 do_cmd echo "wait for HA to start"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
-do_cmd ${testdir}/testutils.pl -l ${logfile} -p $crm_log_pos --search -a -m 1500 \
+do_cmd ${testdir}/testutils.pl -l ${logfile} -p $crm_log_pos --search -a -m 100 \
     -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" \
     -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" \
     -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
@@ -45,7 +45,7 @@ cts_assert "Startup of Heartbeat on ${test_node_1} failed."
 do_cmd echo "wait for CRMd to start"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 1500 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 20 \
     -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}"
 cts_assert "CRMd startup on ${test_node_1} failed."
 
@@ -57,7 +57,7 @@ cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
 do_cmd echo Create the first constraint and wait for S_IDLE
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_constraint $test_node_1 rsc1 can
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 100 \
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
 #cts_assert S_IDLE not reached after first constraint created
 
@@ -66,7 +66,7 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500
 do_cmd echo Create the second constraint and wait for S_IDLE
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_constraint $test_node_1 rsc2 can
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 100 \
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
 #cts_assert S_IDLE not reached after second constraint created
 
@@ -76,7 +76,7 @@ do_cmd echo Create the first resource and wait for S_IDLE after start
 args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - - $args
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 200 \
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""  \
     -s "crmd(.*) Performing op start(.*) on rsc1"
 cts_assert S_IDLE not reached after first resource created
@@ -87,7 +87,7 @@ do_cmd echo Create the second resource and wait for S_IDLE after start
 args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - - $args
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 200 \
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""  \
     -s "crmd(.*) Performing op start(.*) on rsc2"
 cts_assert S_IDLE not reached after second resource created
@@ -124,7 +124,7 @@ cts_assert "rsc2 NOT running on $test_node_1"
 do_cmd echo Shutdown $test_node_1
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmadmin -K $test_node_1
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 500 \
     -s "${test_node_1} crmd(.*)State transition (.*) \-> \"S_PENDING\"" \
     -s "${test_node_1} crmd(.*)State transition \"S_PENDING\" \-> \"S_STOPPING\"" \
     -s "${test_node_1} crmd(.*)\[crmd\] stopped" 

@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.33 2004/12/05 16:35:09 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.34 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,7 +60,8 @@ struct crm_subsystem_s {
 		const char*	args;     /* Command arguments */
 
 		IPC_Channel	*ipc;	  /* How can we communicate with it */
-		long long	flag;	  /*  */
+		long long	flag_connected;	  /*  */
+		long long	flag_required;	  /*  */
 };
 
 typedef struct fsa_timer_s fsa_timer_t;
@@ -70,6 +71,14 @@ struct fsa_timer_s
 		int	period_ms;	/* timer period */
 		enum crmd_fsa_input fsa_input;
 		gboolean (*callback)(gpointer data);
+};
+
+enum fsa_data_type {
+	fsa_dt_none,
+	fsa_dt_ha_msg,
+	fsa_dt_xml,
+	fsa_dt_lrm,
+	fsa_dt_ccm
 };
 
 
@@ -82,6 +91,7 @@ struct fsa_data_s
 		long long	    actions;
 		const char	   *where;
 		void		   *data;
+		enum fsa_data_type  data_type;
 };
 
 

@@ -40,18 +40,17 @@ FILE *msg_in_strm = NULL;
 FILE *msg_ipc_strm = NULL;
 #endif
 
-xmlNodePtr find_xml_in_hamessage(const struct ha_msg* msg);
+xmlNodePtr find_xml_in_hamessage(const HA_Message * msg);
 void crmd_ha_connection_destroy(gpointer user_data);
 
 void
-crmd_ha_msg_callback(const struct ha_msg* msg, void* private_data)
+crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 {
-	const char *to = NULL;
-	char *xml_text = NULL;
-	xmlNodePtr root_xml_node = NULL;
 	const char *from = ha_msg_value(msg, F_ORIG);
 	const char *seq  = ha_msg_value(msg, F_SEQ);
-	const char *type  = ha_msg_value(msg, F_TYPE);
+	const char *type = ha_msg_value(msg, F_TYPE);
+	const char *to   = ha_msg_value(msg, F_CRM_HOST_TO);
+	const char *sys_to = ha_msg_value(msg, F_CRM_SYS_TO);
 
 #ifdef MSG_LOG
 	if(msg_in_strm == NULL) {
@@ -73,31 +72,42 @@ crmd_ha_msg_callback(const struct ha_msg* msg, void* private_data)
 			return;
 		} 
 	} 
-	root_xml_node = find_xml_in_hamessage(msg);
-	to = xmlGetProp(root_xml_node, XML_ATTR_HOSTTO);
 
-#ifdef MSG_LOG
-	xml_text = dump_xml_formatted(root_xml_node);
-	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n", crm_str(from),
-		seq, ha_msg_value(msg, F_TYPE), xml_text);
-	fflush(msg_in_strm);
-	crm_free(xml_text);
-#endif
+	cl_log_message(LOG_MSG, msg);
 	
-	if(to != NULL && strlen(to) > 0 && strcmp(to, fsa_our_uname) != 0) {
+#ifdef MSG_LOG
+	
+/* 	xml_text = dump_xml_formatted(root_xml_node); */
+/* 	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n", crm_str(from), */
+/* 		seq, ha_msg_value(msg, F_TYPE), xml_text); */
+/* 	fflush(msg_in_strm); */
+/* 	crm_free(xml_text); */
+#endif
+
+	if(AM_I_DC && safe_str_eq(sys_to, CRM_SYSTEM_DC)) {
+		crm_debug("Processing message for the DC");
+		
+	} else if(to != NULL && strlen(to) != 0
+		  && safe_str_neq(to, fsa_our_uname)) {
 #ifdef MSG_LOG
 		fprintf(msg_in_strm,
 			"Discarding message [F_SEQ=%s] for someone else", seq);
 #endif
 		return;
+	} else {
+		crm_debug("Processing message");
 	}
 
-	set_xml_property_copy(root_xml_node, XML_ATTR_HOSTFROM, from);
-	set_xml_property_copy(root_xml_node, "F_SEQ", seq);
-	register_fsa_input(C_HA_MESSAGE, I_ROUTER, root_xml_node);
+	ha_msg_input_t *new_input = new_ha_msg_input(msg);
+#if 0
+	if(ha_msg_value(msg, XML_ATTR_REFERENCE) == NULL) {
+		ha_msg_add(new_input->msg, XML_ATTR_REFERENCE, seq);
+	}
+#endif
+	register_fsa_input(C_HA_MESSAGE, I_ROUTER, new_input);
+	delete_ha_msg_input(new_input);
+	
 	s_crmd_fsa(C_HA_MESSAGE);
-
-	free_xml(root_xml_node);
 
 	return;
 }
@@ -110,10 +120,9 @@ gboolean
 crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 {
 	int lpc = 0;
-	char *buffer = NULL;
 	IPC_Message *msg = NULL;
+	ha_msg_input_t *new_input = NULL;
 	gboolean hack_return_good = TRUE;
-	xmlNodePtr root_xml_node;
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 
 	crm_verbose("Processing IPC message from %s",
@@ -151,31 +160,25 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		}
 
 		lpc++;
-		buffer = (char*)msg->msg_body;
-		crm_verbose("Processing xml from %s [text=%s]\n",
-			   curr_client->table_key, buffer);
-	
-#ifdef MSG_LOG
-		fprintf(msg_ipc_strm, "[%s] [text=%s]\n",
-			curr_client->table_key, buffer);
-		fflush(msg_in_strm);
-#endif
-
-		root_xml_node = find_xml_in_ipcmessage(msg, FALSE);
-	
-		if (root_xml_node != NULL) {
-			crmd_authorize_message(
-				root_xml_node, msg, curr_client);
-
-		} else {
-			crm_info("IPC Message was not valid... discarding.");
-		}
-		free_xml(root_xml_node);
+		new_input = new_ipc_msg_input(msg);
 		msg->msg_done(msg);
 		
+		crm_verbose("Processing msg from %s", curr_client->table_key);
+		cl_log_message(LOG_MSG, new_input->msg);
+	
+#ifdef MSG_LOG
+		{
+			char *buffer = NULL;
+			fprintf(msg_ipc_strm, "[%s] [text=%s]\n",
+				curr_client->table_key, buffer);
+			fflush(msg_in_strm);
+		}
+#endif
+		crmd_authorize_message(new_input, curr_client);
+		delete_ha_msg_input(new_input);
+		
 		msg = NULL;
-		buffer = NULL;
-		root_xml_node = NULL;
+		new_input = NULL;
 	}
 
 	crm_verbose("Processed %d messages", lpc);
@@ -252,7 +255,6 @@ crmd_ha_status_callback(
 	const char *node, const char * status,	void* private_data)
 {
 	xmlNodePtr update      = NULL;
-	xmlNodePtr fragment    = NULL;
 
 	crm_debug("received callback");
 	crm_notice("Status update: Node %s now has status [%s]\n",node,status);
@@ -273,13 +275,8 @@ crmd_ha_status_callback(
 	set_xml_property_copy(
 		update, XML_CIB_ATTR_CLEAR_SHUTDOWN, XML_BOOLEAN_TRUE);
 	
-	fragment = create_cib_fragment(update, NULL);
-	
-	crm_xml_debug(fragment, "Node status update");
-	
-	update_local_cib(fragment, TRUE);
-
-	free_xml(fragment);
+	update_local_cib(create_cib_fragment(update, NULL));
+	s_crmd_fsa(C_FSA_INTERNAL);
 	free_xml(update);
 }
 
@@ -291,7 +288,6 @@ crmd_client_status_callback(const char * node, const char * client,
 	const char    *join = NULL;
 	const char   *extra = NULL;
 	xmlNodePtr   update = NULL;
-	xmlNodePtr fragment = NULL;
 
 	crm_debug("received callback");
 
@@ -321,19 +317,15 @@ crmd_client_status_callback(const char * node, const char * client,
 	
 	set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
 	
-	fragment = create_cib_fragment(update, NULL);
-	
-	crm_xml_debug(fragment, "Client status update");
-	
-	update_local_cib(fragment, TRUE);
+	update_local_cib(create_cib_fragment(update, NULL));
 
-	free_xml(fragment);
+	s_crmd_fsa(C_CRMD_STATUS_CALLBACK);
 	free_xml(update);
 }
 
 
 xmlNodePtr
-find_xml_in_hamessage(const struct ha_msg* msg)
+find_xml_in_hamessage(const HA_Message * msg)
 {
 	const char *xml;
    	xmlDocPtr doc;
@@ -384,6 +376,9 @@ gboolean lrm_dispatch(int fd, gpointer user_data)
 	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
 	crm_debug("received callback");
 	rc = lrm->lrm_ops->rcvmsg(lrm, FALSE);
+	if(rc != HA_OK) {
+		return FALSE;
+	}
 	return TRUE;
 }
 

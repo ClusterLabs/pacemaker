@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.9 2005/01/12 15:44:22 andrew Exp $ */
+/* $Id: msg.c,v 1.10 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,18 +25,19 @@
 #include <stdlib.h>
 
 #include <clplumbing/cl_log.h>
+#include <ha_msg.h>
 
 #include <time.h> 
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/msg.h>
+#include <crm/common/ipc.h>
 
 #include <crm/dmalloc_wrapper.h>
 
-xmlNodePtr
-create_common_message(xmlNodePtr original_request,
-		      xmlNodePtr xml_response_data);
+HA_Message *create_common_message(
+	HA_Message *original_request, xmlNodePtr xml_response_data);
 
 
 xmlNodePtr
@@ -53,76 +54,28 @@ createPingAnswerFragment(const char *from, const char *status)
 	return ping;
 }
 
-xmlNodePtr
-createPingRequest(const char *crm_msg_reference, const char *to)
-{
-	xmlNodePtr root_xml_node = NULL;
-	int sub_type_len;
-	int msg_type_len;
-	char *sub_type_target;
-	char *msg_type_target;
-
-	
-	
-	/* 2 = "_" + '\0' */
-	sub_type_len = strlen(to) + strlen(XML_ATTR_REQUEST) + 2; 
-	crm_malloc(sub_type_target, sizeof(char)*(sub_type_len));
-
-	if(sub_type_target != NULL) {
-		sprintf(sub_type_target, "%s_%s", to, XML_ATTR_REQUEST);
-	}
-	root_xml_node   = create_xml_node(NULL, sub_type_target);
-	set_xml_property_copy(
-		root_xml_node, XML_ATTR_REFERENCE, crm_msg_reference);
-    
-	msg_type_len = strlen(to) + 10 + 1; /* + "_operation" + '\0' */
-	crm_malloc(msg_type_target, sizeof(char)*(msg_type_len));
-	if(msg_type_target != NULL) {
-		sprintf(msg_type_target, "%s_operation", to);
-	}
-	
-	set_xml_property_copy(root_xml_node, msg_type_target, CRM_OP_PING);
-	crm_free(msg_type_target);
-
-	return root_xml_node;
-}
-
-
-
-xmlNodePtr
-validate_crm_message(xmlNodePtr root_xml_node,
-		     const char *sys,
-		     const char *uuid,
-		     const char *msg_type)
+HA_Message *
+validate_crm_message(
+	HA_Message *msg, const char *sys, const char *uuid, const char *msg_type)
 {
 	const char *from = NULL;
 	const char *to = NULL;
 	const char *type = NULL;
 	const char *crm_msg_reference = NULL;
-	xmlNodePtr action = NULL;
+	HA_Message *action = NULL;
 	const char *true_sys;
 	
 	
-	if (root_xml_node == NULL) {
+	if (msg == NULL) {
 		return NULL;
 	}
 
-	from = xmlGetProp(root_xml_node, XML_ATTR_SYSFROM);
-	to   = xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
-	type = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
+	from = cl_get_string(msg, F_CRM_SYS_FROM);
+	to   = cl_get_string(msg, F_CRM_SYS_TO);
+	type = cl_get_string(msg, F_CRM_MSG_TYPE);
 	
-	crm_msg_reference = xmlGetProp(root_xml_node,
-				       XML_ATTR_REFERENCE);
-/*
-	crm_debug("Recieved XML message with (version=%s)",
-	       xmlGetProp(root_xml_node, XML_ATTR_VERSION));
-	crm_debug("Recieved XML message with (from=%s)", from);
-	crm_debug("Recieved XML message with (to=%s)"  , to);
-	crm_debug("Recieved XML message with (type=%s)", type);
-	crm_debug("Recieved XML message with (ref=%s)" ,
-	       crm_msg_reference);
-*/
-	action = root_xml_node;
+	crm_msg_reference = cl_get_string(msg, XML_ATTR_REFERENCE);
+	action = msg;
 	true_sys = sys;
 
 	if (uuid != NULL) true_sys = generate_hash_key(sys, uuid);
@@ -169,8 +122,7 @@ send_hello_message(IPC_Channel *ipc_client,
 		   const char *minor_version)
 {
 	xmlNodePtr hello_node = NULL;
-	
-	
+	HA_Message *hello = NULL;
 	if (uuid == NULL || strlen(uuid) == 0
 	    || client_name == NULL || strlen(client_name) == 0
 	    || major_version == NULL || strlen(major_version) == 0
@@ -184,15 +136,14 @@ send_hello_message(IPC_Channel *ipc_client,
 	set_xml_property_copy(hello_node, "minor_version", minor_version);
 	set_xml_property_copy(hello_node, "client_name",   client_name);
 	set_xml_property_copy(hello_node, "client_uuid",   uuid);
-	set_xml_property_copy(hello_node, XML_ATTR_OP,     CRM_OP_HELLO);
 
+	crm_trace("creating hello message");
+	hello = create_request(
+		CRM_OP_HELLO, hello_node, NULL, NULL, client_name, uuid);
 
-	send_ipc_request(ipc_client,
-			 hello_node, NULL, 
-			 NULL, NULL,
-			 client_name, uuid,
-			 NULL);
-
+	send_ipc_message(ipc_client, hello);
+	crm_trace("hello message sent");
+	
 	free_xml(hello_node);
 }
 
@@ -204,8 +155,6 @@ process_hello_message(xmlNodePtr hello,
 		      char **major_version,
 		      char **minor_version)
 {
-	xmlNodePtr opts = NULL;
-	const char *op = NULL;
 	const char *local_uuid;
 	const char *local_client_name;
 	const char *local_major_version;
@@ -217,18 +166,12 @@ process_hello_message(xmlNodePtr hello,
 	*major_version = NULL;
 	*minor_version = NULL;
 
-	opts = find_xml_node(hello, XML_TAG_OPTIONS, TRUE);
-	
-	op = xmlGetProp(opts, XML_ATTR_OP);
-	local_uuid = xmlGetProp(opts, "client_uuid");
-	local_client_name = xmlGetProp(opts, "client_name");
-	local_major_version = xmlGetProp(opts, "major_version");
-	local_minor_version = xmlGetProp(opts, "minor_version");
+	local_uuid = xmlGetProp(hello, "client_uuid");
+	local_client_name = xmlGetProp(hello, "client_name");
+	local_major_version = xmlGetProp(hello, "major_version");
+	local_minor_version = xmlGetProp(hello, "minor_version");
 
-	if (op == NULL || strcmp(CRM_OP_HELLO, op) != 0) {
-		return FALSE;
-
-	} else if (local_uuid == NULL || strlen(local_uuid) == 0) {
+	if (local_uuid == NULL || strlen(local_uuid) == 0) {
 		crm_err("Hello message was not valid (field %s not found)",
 		       "uuid");
 		return FALSE;
@@ -256,111 +199,69 @@ process_hello_message(xmlNodePtr hello,
 	*major_version = crm_strdup(local_major_version);
 	*minor_version = crm_strdup(local_minor_version);
 
+	crm_debug("Hello message ok");
 	return TRUE;
 }
 
-xmlNodePtr
-create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
-	       const char *host_to, const char *sys_to,
-	       const char *sys_from, const char *uuid_from,
-	       const char *crm_msg_reference)
+HA_Message *
+create_request(const char *task, xmlNodePtr msg_data,
+	       const char *host_to,  const char *sys_to,
+	       const char *sys_from, const char *uuid_from)
 {
-	const char *true_from = sys_from;
-	xmlNodePtr request;
+	char *true_from = NULL;
+	HA_Message *request = NULL;
+	char *reference = generateReference(task, sys_from);
 
-	if (uuid_from != NULL)
+	if (uuid_from != NULL) {
 		true_from = generate_hash_key(sys_from, uuid_from);
-	/* else make sure we are internal */
-	else {
-		if (strcmp(CRM_SYSTEM_LRMD, sys_from) != 0
-		    && strcmp(CRM_SYSTEM_PENGINE, sys_from) != 0
-		    && strcmp(CRM_SYSTEM_TENGINE, sys_from) != 0
-		    && strcmp(CRM_SYSTEM_DC, sys_from) != 0
-		    && strcmp(CRM_SYSTEM_CRMD, sys_from) != 0) {
-			crm_err("only internal systems can leave"
-				" uuid_from blank");
-			return FALSE;
-		}
-	}
-
-	if (crm_msg_reference == NULL) {
-		crm_msg_reference =
-			generateReference(
-				xmlGetProp(msg_options,XML_ATTR_OP),sys_from);
+	} else if(sys_from != NULL) {
+		true_from = crm_strdup(sys_from);
+	} else {
+		crm_err("No sys from specified");
 	}
 	
 	/* host_from will get set for us if necessary by CRMd when routed */
-	request = create_xml_node(NULL, XML_MSG_TAG);
+	request = ha_msg_new(10);
 
-	set_node_tstamp(request);
+	ha_msg_add(request, F_TYPE,		T_CRM);
+	ha_msg_add(request, F_CRM_VERSION,	CRM_VERSION);
+	ha_msg_add(request, F_CRM_MSG_TYPE,     XML_ATTR_REQUEST);
+	ha_msg_add(request, XML_ATTR_REFERENCE, reference);
+	ha_msg_add(request, F_CRM_TASK,		task);
+	ha_msg_add(request, F_CRM_SYS_TO,       sys_to);
+	ha_msg_add(request, F_CRM_SYS_FROM,     true_from);
 
-	set_xml_property_copy(request, XML_ATTR_VERSION, CRM_VERSION);
-	set_xml_property_copy(request, XML_ATTR_MSGTYPE, XML_ATTR_REQUEST);
-	set_xml_property_copy(request, XML_ATTR_SYSTO,   sys_to);
-	set_xml_property_copy(request, XML_ATTR_SYSFROM, true_from);
-	set_xml_property_copy(request, XML_ATTR_REFERENCE, crm_msg_reference);
-	if(host_to != NULL && strlen(host_to) > 0)
-		set_xml_property_copy(request, XML_ATTR_HOSTTO,  host_to);
-
-	if (msg_options != NULL) {
-		add_node_copy(request, msg_options);
+	/* HOSTTO will be ignored if it is to the DC anyway. */
+	if(host_to != NULL && strlen(host_to) > 0) {
+		ha_msg_add(request, F_CRM_HOST_TO,  host_to);
 	}
 
 	if (msg_data != NULL) {
-		add_node_copy(request, msg_data);
+		char *xml_text = dump_xml_unformatted(msg_data);
+		ha_msg_add(request, F_CRM_DATA, xml_text);
+		crm_free(xml_text);
 	}
-
+	crm_free(reference);
+	crm_free(true_from);
+	
 	return request;
 }
 
 /*
  * This method adds a copy of xml_response_data
  */
-xmlNodePtr
-create_reply(xmlNodePtr original_request,
-	     xmlNodePtr xml_response_data)
+HA_Message *
+create_reply(HA_Message *original_request, xmlNodePtr xml_response_data)
 {
-	const char *host_from = NULL;
-	const char *sys_from  = NULL;
-	const char *sys_to    = NULL;
-	xmlNodePtr reply;
-	
-	
-	host_from = xmlGetProp(original_request, XML_ATTR_HOSTFROM);
-	sys_from  = xmlGetProp(original_request, XML_ATTR_SYSFROM);
-	sys_to  = xmlGetProp(original_request, XML_ATTR_SYSTO);
+	HA_Message *reply = NULL;
 
-	reply = create_common_message(original_request, xml_response_data);
-	
-	set_xml_property_copy(reply, XML_ATTR_MSGTYPE, XML_ATTR_RESPONSE);
-	
-	/* since this is a reply, we reverse the from and to */
-
-	/* HOSTTO will be ignored if it is to the DC anyway. */
-	if(host_from != NULL && strlen(host_from) > 0)
-		set_xml_property_copy(reply, XML_ATTR_HOSTTO,   host_from);
-
-	set_xml_property_copy(reply, XML_ATTR_SYSTO,    sys_from);
-	set_xml_property_copy(reply, XML_ATTR_SYSFROM,  sys_to);
-
-	return reply;
-}
-
-xmlNodePtr
-create_common_message(xmlNodePtr original_request,
-		      xmlNodePtr xml_response_data)
-{
-	const char *crm_msg_reference = NULL;
-	const char *type      = NULL;
-	const char *operation = NULL;
-	xmlNodePtr options = NULL;
-	xmlNodePtr new_message;
-	
-	
-	crm_msg_reference = xmlGetProp(original_request,
-				       XML_ATTR_REFERENCE);
-	type      = xmlGetProp(original_request, XML_ATTR_MSGTYPE);
-	operation = xmlGetProp(original_request, XML_ATTR_OP);
+	const char *host_from= cl_get_string(original_request, F_CRM_HOST_FROM);
+	const char *sys_from = cl_get_string(original_request, F_CRM_SYS_FROM);
+	const char *sys_to   = cl_get_string(original_request, F_CRM_SYS_TO);
+	const char *type     = cl_get_string(original_request, F_CRM_MSG_TYPE);
+	const char *operation= cl_get_string(original_request, F_CRM_TASK);
+	const char *crm_msg_reference = cl_get_string(
+		original_request, XML_ATTR_REFERENCE);
 	
 	if (type == NULL) {
 		crm_err("Cannot create new_message,"
@@ -373,25 +274,89 @@ create_common_message(xmlNodePtr original_request,
 		return NULL;
 #endif
 	}
-	new_message = create_xml_node(NULL, XML_MSG_TAG);
+	reply = ha_msg_new(10);
 
-	set_node_tstamp(new_message);
+	ha_msg_add(reply, F_TYPE,		T_CRM);
+	ha_msg_add(reply, F_CRM_VERSION,	CRM_VERSION);
+	ha_msg_add(reply, F_CRM_MSG_TYPE,	XML_ATTR_RESPONSE);
+	ha_msg_add(reply, XML_ATTR_REFERENCE,	crm_msg_reference);
+	ha_msg_add(reply, F_CRM_TASK,		operation);
 
-	set_xml_property_copy(new_message, XML_ATTR_VERSION, CRM_VERSION);
-	set_xml_property_copy(new_message, XML_ATTR_OP, operation);
+	/* since this is a reply, we reverse the from and to */
+	ha_msg_add(reply, F_CRM_SYS_TO,		sys_from);
+	ha_msg_add(reply, F_CRM_SYS_FROM,	sys_to);
+	
+	/* HOSTTO will be ignored if it is to the DC anyway. */
+	if(host_from != NULL && strlen(host_from) > 0) {
+		ha_msg_add(reply, F_CRM_HOST_TO, host_from);
+	}
 
-	set_xml_property_copy(new_message,
-			      XML_ATTR_REFERENCE,
-			      crm_msg_reference);
-    
 	if (xml_response_data != NULL) {
-		add_node_copy(new_message, xml_response_data);
-	}
-    
-	options = find_xml_node(original_request, XML_TAG_OPTIONS, FALSE);
-	if (options != NULL) {
-		add_node_copy(new_message, options);
+		char *xml_text = dump_xml_unformatted(xml_response_data);
+		ha_msg_add(reply, F_CRM_DATA, xml_text);
+		crm_free(xml_text);
 	}
 
-	return new_message;
+	return reply;
+}
+
+
+/*
+ * This method adds a copy of xml_response_data
+ */
+gboolean
+send_ipc_reply(IPC_Channel *ipc_channel,
+	       HA_Message *request, xmlNodePtr xml_response_data)
+{
+	gboolean was_sent = FALSE;
+	HA_Message *reply = NULL;
+
+	reply = create_reply(request, xml_response_data);
+
+	if (reply != NULL) {
+		was_sent = send_ipc_message(ipc_channel, reply);
+	}
+	return was_sent;
+}
+
+ha_msg_input_t *
+new_ha_msg_input(const HA_Message *orig) 
+{
+	ha_msg_input_t *input_copy = NULL;
+	const char *xml_text = NULL;
+	
+	crm_malloc(input_copy, sizeof(ha_msg_input_t));
+
+	input_copy->msg = ha_msg_copy(orig);
+	xml_text = cl_get_string(orig, F_CRM_DATA);
+	if(xml_text != NULL) {
+		input_copy->xml = string2xml(xml_text);
+	}
+	return input_copy;
+}
+
+ha_msg_input_t *
+new_ipc_msg_input(IPC_Message *orig) 
+{
+	ha_msg_input_t *input_copy = NULL;
+	const char *xml_text = NULL;
+	
+	crm_malloc(input_copy, sizeof(ha_msg_input_t));
+	input_copy->msg = ipcmsg2hamsg(orig);
+	xml_text = cl_get_string(input_copy->msg, F_CRM_DATA);
+	if(xml_text != NULL) {
+		input_copy->xml = string2xml(xml_text);
+	}
+	return input_copy;
+}
+
+void
+delete_ha_msg_input(ha_msg_input_t *orig) 
+{
+	if(orig == NULL) {
+		return;
+	}
+ 	ha_msg_del(orig->msg);
+	free_xml(orig->xml);
+	crm_free(orig);
 }

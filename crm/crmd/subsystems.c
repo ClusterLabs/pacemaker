@@ -50,10 +50,12 @@ gboolean
 stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 {
 	crm_verbose("Stopping sub-system \"%s\"", the_subsystem->name);
+	clear_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 	if (the_subsystem->pid <= 0) {
 		crm_err("Client %s not running yet", the_subsystem->name);
 
-	} else if(! is_set(fsa_input_register, the_subsystem->flag) ) {
+	} else if(FALSE == is_set(
+			  fsa_input_register, the_subsystem->flag_connected)) {
 		/* running but not yet connected */
 		crm_warn("Stopping %s before it had connected",
 			 the_subsystem->name);
@@ -62,9 +64,12 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 		the_subsystem->pid = -1;
 		
 	} else {
+		HA_Message *quit = create_request(
+			CRM_OP_QUIT, NULL, NULL, the_subsystem->name,
+			AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
+	
 		crm_info("Sending quit message to %s.", the_subsystem->name);
-		send_request(NULL,NULL, CRM_OP_QUIT, NULL,
-			     the_subsystem->name, NULL);
+		send_request(quit, NULL);
 	}
 	
 	return TRUE;
@@ -83,6 +88,7 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	
 
 	crm_debug("Starting sub-system \"%s\"", the_subsystem->name);
+	set_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 
 	if (the_subsystem->pid > 0) {
 		crm_warn("Client %s already running as pid %d",
@@ -158,22 +164,28 @@ cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
 {
 	int pid_status = -1;
 	the_subsystem->ipc = NULL;
-	clear_bit_inplace(fsa_input_register, the_subsystem->flag);
 
+	if(FALSE == is_set(fsa_input_register, the_subsystem->flag_connected)) {
+		crm_warn("Duplicate notification that %s left us",
+			 the_subsystem->name);
+		return;
+	}
+	
+	clear_bit_inplace(fsa_input_register, the_subsystem->flag_connected);
+	
 	/* Forcing client to die */
 	kill(the_subsystem->pid, -9);
 	
-	/* cleanup the ps entry */
+		/* cleanup the ps entry */
 	waitpid(the_subsystem->pid, &pid_status, WNOHANG);
 	the_subsystem->pid = -1;
-
+	
 	if(is_set(fsa_input_register, R_THE_DC)) {
 		/* this wasnt supposed to happen */
 		crm_err("The %s subsystem terminated unexpectedly",
 			the_subsystem->name);
 		
-		register_fsa_input(C_IPC_MESSAGE, I_ERROR, NULL);
-		s_crmd_fsa(C_IPC_MESSAGE);
+		register_fsa_input_before(C_IPC_MESSAGE, I_ERROR, NULL);
 	}
 }
 

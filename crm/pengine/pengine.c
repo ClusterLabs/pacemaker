@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.52 2005/01/12 15:44:24 andrew Exp $ */
+/* $Id: pengine.c,v 1.53 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,34 +36,27 @@ int num_synapse = 0;
 
 
 gboolean
-process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
+process_pe_message(HA_Message *msg, xmlNodePtr xml_data, IPC_Channel *sender)
 {
 	char *msg_buffer = NULL;
-	const char *sys_to = NULL;
-	const char *op = get_xml_attr (msg, XML_TAG_OPTIONS,
-				       XML_ATTR_OP, TRUE);
-
-	const char *ref = xmlGetProp(msg, XML_ATTR_REFERENCE);
-
-	if(safe_str_eq(xmlGetProp(msg, XML_ATTR_MSGTYPE), XML_ATTR_REQUEST)) {
-		crm_info(
-		       "Message was a response not a request."
-		       "  Discarding");
-	}
+	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
+	const char *op = cl_get_string(msg, F_CRM_TASK);
+	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
 
 	crm_verbose("Processing %s op (ref=%s)...", op, ref);
 
 	if(pemsg_strm == NULL) {
 		pemsg_strm = fopen(DEVEL_DIR"/pe.log", "w");
 	}
-
 	
-	sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
-
 	if(op == NULL){
 		/* error */
 
 	} else if(strcmp(op, CRM_OP_HELLO) == 0) {
+		/* ignore */
+		
+	} else if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE),
+			      XML_ATTR_RESPONSE)) {
 		/* ignore */
 		
 	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
@@ -72,16 +65,13 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
 		xmlNodePtr output = NULL;
-		xmlNodePtr input_cib = msg;
 		
-		input_cib = find_xml_node(input_cib, XML_TAG_CIB, TRUE);
-
-		msg_buffer = dump_xml_formatted(input_cib);
+		msg_buffer = dump_xml_formatted(xml_data);
 		fprintf(pemsg_strm, "%s: %s\n", "[in ]", msg_buffer);
 		fflush(pemsg_strm);
 		crm_free(msg_buffer);
 
-		output = do_calculations(input_cib);
+		output = do_calculations(xml_data);
 
 		msg_buffer = dump_xml_formatted(output);
 		fprintf(pemsg_strm, "%s: %s\n", "[out ]", msg_buffer);

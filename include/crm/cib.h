@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.13 2005/01/13 13:40:59 andrew Exp $ */
+/* $Id: cib.h,v 1.14 2005/01/18 20:33:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,6 +21,7 @@
 
 #include <libxml/tree.h> 
 #include <clplumbing/ipc.h>
+#include <crm/common/ipc.h>
 #include <ha_msg.h>
 
 #define cib_feature_revision 1
@@ -97,7 +98,8 @@ enum cib_errors {
 	cib_client_corrupt	= -36,
 	cib_master_timeout	= -37,
 	cib_revision_unsupported= -38,
-	cib_revision_unknown	= -39
+	cib_revision_unknown	= -39,
+	cib_missing_data	= -40
 };
 
 enum cib_op {
@@ -145,11 +147,11 @@ enum cib_section {
 #define T_CIB_POST_NOTIFY	"cib_post_notify"
 #define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 
-#define cib_channel_ro	"cib_ro"
-#define cib_channel_rw	"cib_rw"
+#define cib_channel_ro		"cib_ro"
+#define cib_channel_rw		"cib_rw"
 #define cib_channel_callback	"cib_callback"
 
-typedef struct cib_s  cib_t;
+typedef struct cib_s cib_t;
 
 typedef struct cib_api_operations_s
 {
@@ -164,16 +166,16 @@ typedef struct cib_api_operations_s
 
 		int (*set_op_callback)(
 			cib_t *cib, void (*callback)(
-				const struct ha_msg *msg, int callid ,
+				const HA_Message *msg, int callid ,
 				int rc, xmlNodePtr output));
 
 		int (*add_notify_callback)(
 			cib_t *cib, const char *event, void (*callback)(
-				const char *event, struct ha_msg *msg));
+				const char *event, HA_Message *msg));
 
 		int (*del_notify_callback)(
 			cib_t *cib, const char *event, void (*callback)(
-				const char *event, struct ha_msg *msg));
+				const char *event, HA_Message *msg));
 
 		int (*set_connection_dnotify)(
 			cib_t *cib, void (*dnotify)(gpointer user_data));
@@ -230,7 +232,7 @@ struct cib_s
 		void  *variant_opaque;
 
 		GList *notify_list;
-		void (*op_callback)(const struct ha_msg *msg, int call_id,
+		void (*op_callback)(const HA_Message *msg, int call_id,
 				    int rc, xmlNodePtr output);
 
 		cib_api_operations_t *cmds;
@@ -242,7 +244,7 @@ typedef struct cib_notify_client_s
 	const char *obj_id;   /* implement one day */
 	const char *obj_type; /* implement one day */
 	void (*callback)(
-		const char *event, struct ha_msg *msg);
+		const char *event, HA_Message *msg);
 	
 } cib_notify_client_t;
 

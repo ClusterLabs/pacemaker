@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.10 2005/01/12 13:41:08 andrew Exp $ */
+/* $Id: utils.c,v 1.11 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,10 +36,10 @@ void print_action(const char *prefix, action_t *action, gboolean to_file);
 gboolean timer_callback(gpointer data);
 
 void
-/* send_abort(const char *text, struct ha_msg *msg) */
+/* send_abort(const char *text, HA_Message *msg) */
 send_abort(const char *text, xmlNodePtr msg)
 {	
-	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
+	HA_Message *cmd = NULL;
 
 	crm_info("Sending \"abort\" message... details follow");
 	crm_xml_info(msg, text);
@@ -57,20 +57,16 @@ send_abort(const char *text, xmlNodePtr msg)
 	return;
 #endif	
 
-	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TEABORT);
+	cmd = create_request(CRM_OP_TEABORT, NULL, NULL,
+			     CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
 	
-	send_ipc_request(crm_ch, options, msg,
-			 NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE,
-			 NULL, NULL);
-	
-	free_xml(options);
+	send_ipc_message(crm_ch, cmd);
 }
 
 void
 send_success(const char *text)
 {	
-	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
-	
+	HA_Message *cmd = NULL;
 	if(in_transition == FALSE) {
 		crm_warn("Not in transition, not sending message");
 		return;
@@ -92,14 +88,11 @@ send_success(const char *text)
 	return;
 #endif
 	
-	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TECOMPLETE);
-	set_xml_property_copy(options, "message", text);
+	cmd = create_request(CRM_OP_TECOMPLETE, NULL, NULL,
+			     CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
 	
-	send_ipc_request(crm_ch, options, NULL,
-			 NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE,
-			 NULL, NULL);
-	
-	free_xml(options);
+	ha_msg_add(cmd, "message", text);
+	send_ipc_message(crm_ch, cmd);
 }
 
 void

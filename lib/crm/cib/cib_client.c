@@ -307,7 +307,10 @@ int cib_client_sync_from(
 	rc = cib->cmds->query_from(
 		cib, host, section, &current_cib, call_options|cib_sync_call);
 
-	if(rc == cib_ok) {
+	if(current_cib == NULL) {
+		crm_err("Could not retrive current CIB.");
+		
+	} else if(rc == cib_ok) {
 		if(call_options & cib_scope_local) {
 			/* having scope == local makes no sense from here on */
 			call_options ^= cib_scope_local;
@@ -366,6 +369,8 @@ int cib_client_replace(cib_t *cib, const char *section, xmlNodePtr data,
 		return cib_not_connected;
 	} else if(cib->cmds->variant_op == NULL) {
 		return cib_variant;
+	} else if(data == NULL) {
+		return cib_missing_data;
 	}
 	
 	return cib->cmds->variant_op(cib, CRM_OP_CIB_REPLACE, NULL, NULL,
@@ -662,6 +667,9 @@ cib_error2string(enum cib_errors return_code)
 		case cib_revision_unknown:
 			error_msg = "The CIB revision number could not be determined";
 			break;
+		case cib_missing_data:
+			error_msg = "Required data for this CIB API call not found";
+			break;
 	}
 			
 	if(error_msg == NULL) {
@@ -836,6 +844,9 @@ get_cib_copy(cib_t *cib)
 	int options = cib_scope_local|cib_sync_call;
 	if(cib->cmds->query(cib, NULL, &xml_cib, options) != cib_ok) {
 		crm_err("Couldnt retrieve the CIB");
+		return NULL;
+	} else if(xml_cib == NULL) {
+		crm_err("The CIB result was empty");
 		return NULL;
 	}
 	return xml_cib->children;

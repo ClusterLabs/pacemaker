@@ -1,4 +1,4 @@
-/* $Id: msg.h,v 1.2 2004/06/07 10:20:41 andrew Exp $ */
+/* $Id: msg.h,v 1.3 2005/01/18 20:33:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,7 +23,9 @@
 #include <crm/common/util.h>
 #include <clplumbing/ipc.h>
 
-extern xmlNodePtr validate_crm_message(xmlNodePtr root,
+typedef struct ha_msg HA_Message;
+
+extern HA_Message *validate_crm_message(HA_Message *msg,
 				       const char *sys,
 				       const char *uuid,
 				       const char *msg_type);
@@ -46,22 +48,25 @@ extern gboolean process_hello_message(xmlNodePtr hello,
 				      char **major_version,
 				      char **minor_version);
 
-extern gboolean send_ipc_request(IPC_Channel *ipc_channel,
-				 xmlNodePtr xml_options, xmlNodePtr xml_data,
-				 const char *host_to, const char *sys_to,
-				 const char *sys_from, const char *uuid_from,
-				 const char *crm_msg_reference);
+extern gboolean send_ipc_reply(
+	IPC_Channel *ipc_channel, HA_Message *request, xmlNodePtr xml_response_data);
 
-extern gboolean send_ipc_reply(IPC_Channel *ipc_channel,
-			       xmlNodePtr xml_request,
-			       xmlNodePtr xml_response_data);
+extern HA_Message *create_reply(HA_Message *request, xmlNodePtr xml_response_data);
 
-extern xmlNodePtr create_reply(xmlNodePtr xml_request,
-			       xmlNodePtr xml_response_data);
+extern HA_Message *create_request(
+	const char *task, xmlNodePtr xml_data, const char *host_to,
+	const char *sys_to, const char *sys_from, const char *uuid_from);
 
-extern xmlNodePtr create_request(xmlNodePtr xml_options, xmlNodePtr xml_data,
-				 const char *host_to, const char *sys_to,
-				 const char *sys_from, const char *uuid_from,
-				 const char *crm_msg_reference);
+typedef struct ha_msg_input_s 
+{
+		HA_Message *msg;
+		xmlNodePtr xml;
+		
+} ha_msg_input_t;
+
+extern ha_msg_input_t *new_ipc_msg_input(IPC_Message *orig);
+extern ha_msg_input_t *new_ha_msg_input(const HA_Message *orig);
+extern void delete_ha_msg_input(ha_msg_input_t *orig);
+
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.9 2005/01/12 13:40:56 andrew Exp $ */
+/* $Id: callbacks.c,v 1.10 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -79,15 +79,15 @@ cib_operation_t cib_server_ops[] = {
 	{CRM_OP_CIB_ERASE,   TRUE,  TRUE,  TRUE,  FALSE, cib_process_erase}
 };
 
-int send_via_callback_channel(struct ha_msg *msg, const char *token);
+int send_via_callback_channel(HA_Message *msg, const char *token);
 
 enum cib_errors cib_process_command(
-	const struct ha_msg *request, struct ha_msg **reply, gboolean privileged);
+	const HA_Message *request, HA_Message **reply, gboolean privileged);
 
 gboolean cib_common_callback(
 	IPC_Channel *channel, gpointer user_data, gboolean privileged);
 
-enum cib_errors cib_get_operation_id(const struct ha_msg* msg, int *operation);
+enum cib_errors cib_get_operation_id(const HA_Message * msg, int *operation);
 
 gboolean cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client);
 
@@ -180,7 +180,7 @@ cib_client_connect(IPC_Channel *channel, gpointer user_data)
 		 * callback channel
 		 */
 
-		struct ha_msg *reg_msg = ha_msg_new(3);
+		HA_Message *reg_msg = ha_msg_new(3);
 		ha_msg_add(reg_msg, F_CIB_OPERATION, CRM_OP_REGISTER);
 		ha_msg_add(reg_msg, F_CIB_CLIENTID,  new_client->id);
 		ha_msg_add(
@@ -216,7 +216,7 @@ cib_ro_callback(IPC_Channel *channel, gpointer user_data)
 gboolean
 cib_null_callback(IPC_Channel *channel, gpointer user_data)
 {
-	struct ha_msg *op_request = NULL;
+	HA_Message *op_request = NULL;
 	cib_client_t *cib_client = user_data;
 	cib_client_t *hash_client = NULL;
 	const char *type = NULL;
@@ -285,8 +285,8 @@ cib_common_callback(
 	const char *op = NULL;
 	const char *host = NULL;
 	
-	struct ha_msg *op_request = NULL;
-	struct ha_msg *op_reply   = NULL;
+	HA_Message *op_request = NULL;
+	HA_Message *op_reply   = NULL;
 
 	cib_client_t *cib_client = user_data;
 
@@ -312,7 +312,7 @@ cib_common_callback(
 
 		crm_verbose("Processing IPC message from %s on %s channel",
 			    cib_client->id, cib_client->channel_name);
-/* 		cl_log_message(op_request); */
+ 		cl_log_message(LOG_MSG, op_request);
 		
 		lpc++;
 
@@ -362,6 +362,8 @@ cib_common_callback(
 		} else if(host != NULL) {
  			crm_debug("Forwarding %s op to %s", op, host);
 			ha_msg_add(op_request, F_CIB_DELEGATED, cib_our_uname);
+			cl_log_message(LOG_MSG, op_request);
+			
 			hb_conn->llc_ops->send_ordered_nodemsg(
 				hb_conn, op_request, host);
 
@@ -385,6 +387,7 @@ cib_common_callback(
 			/* send via HA to other nodes */
  			crm_info("Forwarding %s op to master instance", op);
 			ha_msg_add(op_request, F_CIB_DELEGATED, cib_our_uname);
+			cl_log_message(LOG_MSG, op_request);
 			
 			hb_conn->llc_ops->sendclustermsg(hb_conn, op_request);
 			if(call_options & cib_discard_reply) {
@@ -409,17 +412,32 @@ cib_common_callback(
 			
 		} else if(call_options & cib_sync_call) {
  			crm_debug("Sending sync reply %p to %s op", op_reply,op);
+			cl_log_message(LOG_MSG, op_reply);
 			if(msg2ipcchan(op_reply, channel) != HA_OK) {
-				rc = cib_reply_failed;
+				crm_err("Sync reply failed: %s",
+					cib_error2string(cib_reply_failed));
+				if(rc == cib_ok) {
+					rc = cib_reply_failed;
+				}
 			}
 
 		} else {
+			enum cib_errors local_rc = cib_ok;
 			/* send reply via client's callback channel */
  			crm_debug("Sending async reply %p to %s op", op_reply, op);
-			rc = send_via_callback_channel(
+			cl_log_message(LOG_MSG, op_reply);
+			local_rc = send_via_callback_channel(
 				op_reply, cib_client->callback_id);
+			if(local_rc != cib_ok) {
+				crm_err("ASync reply failed: %s",
+					cib_error2string(local_rc));
+				if(rc != cib_ok) {
+					local_rc = cib_reply_failed;
+				}
+			}
 		}
-		
+//		ha_msg_del(op_reply);
+
 		if(rc == cib_ok
 		   && cib_server_ops[call_type].modifies_cib
 		   && !(call_options & cib_scope_local)) {
@@ -441,8 +459,7 @@ cib_common_callback(
 			}
 		}
 
-		ha_msg_del(op_request);
-		ha_msg_del(op_reply);
+//		ha_msg_del(op_request);
 	}
 
 	crm_verbose("Processed %d messages", lpc);
@@ -451,8 +468,8 @@ cib_common_callback(
 }
 
 enum cib_errors
-cib_process_command(const struct ha_msg *request, struct ha_msg **reply,
-		    gboolean privileged)
+cib_process_command(
+	const HA_Message *request, HA_Message **reply, gboolean privileged)
 {
 	xmlNodePtr input    = NULL;
 	const char *input_s = NULL;
@@ -485,8 +502,8 @@ cib_process_command(const struct ha_msg *request, struct ha_msg **reply,
 	}
 	
 	if(rc == cib_ok && cib_server_ops[call_type].needs_section) {
-		crm_trace("Unpacking section");
 		section = cl_get_string(request, F_CIB_SECTION);
+		crm_trace("Unpacked section as: %s", section);
 	}
 
 	if(rc == cib_ok && cib_server_ops[call_type].needs_data) {
@@ -548,7 +565,7 @@ cib_process_command(const struct ha_msg *request, struct ha_msg **reply,
 }
 
 int
-send_via_callback_channel(struct ha_msg *msg, const char *token) 
+send_via_callback_channel(HA_Message *msg, const char *token) 
 {
 	cib_client_t *hash_client = NULL;
 	GList *list_item = NULL;
@@ -580,7 +597,7 @@ send_via_callback_channel(struct ha_msg *msg, const char *token)
 
 	if(list_item != NULL) {
 		/* remove it - no need to time it out */
-		struct ha_msg *orig_msg = list_item->data;
+		HA_Message *orig_msg = list_item->data;
 		crm_debug("Removing msg from delegated list");
 		hash_client->delegated_calls = g_list_remove(
 			hash_client->delegated_calls, orig_msg);
@@ -597,8 +614,8 @@ send_via_callback_channel(struct ha_msg *msg, const char *token)
 
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b)
 {
-	const struct ha_msg *a_msg = a;
-	const struct ha_msg *b_msg = b;
+	const HA_Message *a_msg = a;
+	const HA_Message *b_msg = b;
 
 	int msg_a_id = 0;
 	int msg_b_id = 0;
@@ -630,11 +647,11 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 	cib_client_t *client = value;
 
 	GListPtr list = client->delegated_calls;
-	struct ha_msg *msg = NULL;
+	HA_Message *msg = NULL;
 
 
 	while(list != NULL) {
-		struct ha_msg *reply = ha_msg_new(4);
+		HA_Message *reply = ha_msg_new(4);
 		int seen = 0;
 		int timeout = 5; /* 1 iteration == 1 seconds */
 
@@ -732,7 +749,7 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 }
 
 void
-cib_peer_callback(const struct ha_msg* msg, void* private_data)
+cib_peer_callback(const HA_Message * msg, void* private_data)
 {
 	int is_done      = 1;
 	int call_type    = 0;
@@ -743,7 +760,7 @@ cib_peer_callback(const struct ha_msg* msg, void* private_data)
 	gboolean local_notify = FALSE;
 
 	enum cib_errors rc = cib_ok;
-	struct ha_msg *op_reply = NULL;
+	HA_Message *op_reply = NULL;
 	
 	const char *originator = cl_get_string(msg, F_ORIG);
 	const char *request_to = cl_get_string(msg, F_CIB_HOST);
@@ -778,7 +795,7 @@ cib_peer_callback(const struct ha_msg* msg, void* private_data)
 	}
 
 	crm_info("Processing message from peer to %s...", request_to);
-/* 	cl_log_message(msg); */
+ 	cl_log_message(LOG_MSG, msg);
 
 	if(safe_str_eq(update, XML_BOOLEAN_TRUE)
 	   && safe_str_eq(reply_to, cib_our_uname)) {
@@ -911,7 +928,7 @@ cib_peer_callback(const struct ha_msg* msg, void* private_data)
 }
 
 enum cib_errors
-cib_get_operation_id(const struct ha_msg* msg, int *operation) 
+cib_get_operation_id(const HA_Message * msg, int *operation) 
 {
 	int lpc = 0;
 	int max_msg_types = DIMOF(cib_server_ops);

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.6 2004/12/15 10:14:09 andrew Exp $ */
+/* $Id: main.c,v 1.7 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,6 +80,8 @@ main(int argc, char ** argv)
 
 	CL_SIGNAL(SIGTERM, pengine_shutdown);
 
+	set_crm_log_level(LOG_DEV);
+	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
@@ -121,6 +123,7 @@ main(int argc, char ** argv)
 		cl_set_corerootdir(DEVEL_DIR);	    
 		cl_enable_coredumps(1);
 		cl_cdtocoredir();
+		crm_info("Coredumps Enabled");
 	}
      
 	if (req_status){
@@ -135,6 +138,7 @@ main(int argc, char ** argv)
 		init_stop(PID_FILE);
 	}
 
+	crm_devel("do start");
 	return init_start();
 }
 
@@ -144,12 +148,15 @@ init_start(void)
 {
 	IPC_Channel *crm_ch = NULL;
 
+	crm_devel("initialize comms");
 	init_client_ipc_comms(
 		CRM_SYSTEM_CRMD, subsystem_msg_dispatch,
 		(void*)process_pe_message, &crm_ch);
 
 	if(crm_ch != NULL) {
-		send_hello_message(crm_ch, "1234", CRM_SYSTEM_PENGINE, "0", "1");
+		crm_devel("sending hello message");
+		send_hello_message(
+			crm_ch, "1234", CRM_SYSTEM_PENGINE, "0", "1");
 
 		/* Create the mainloop and run it... */
 		crm_info("Starting %s", crm_system_name);

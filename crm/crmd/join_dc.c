@@ -79,11 +79,14 @@ do_dc_join_offer_all(long long action,
 			update = xmlAddSibling(update, tmp2);
 		}
 		);
-
-	/* now process the CCM data */
-	free_xml(do_update_cib_nodes(update, TRUE));
-	free_xml(cib_copy);
-
+	
+	{
+		/* now process the CCM data */
+		xmlNodePtr foo = do_update_cib_nodes(update, TRUE);
+		free_xml(foo);
+		free_xml(cib_copy);
+	}
+	
 #if 0
 	/* Avoid ordered message delays caused when the CRMd proc
 	 * isnt running yet (ie. send as a broadcast msg which are never
@@ -125,18 +128,16 @@ do_dc_join_offer_one(long long action,
 		     fsa_data_t *msg_data)
 {
 	gpointer a_node = NULL;
-	xmlNodePtr welcome = NULL;
+	ha_msg_input_t *welcome = fsa_typed_data(fsa_dt_ha_msg);
 	const char *join_to = NULL;
 
-	if(msg_data->data == NULL) {
+	if(welcome == NULL) {
 		crm_err("Attempt to send welcome message "
 			"without a message to reply to!");
 		return I_NULL;
 	}
-
-	welcome = (xmlNodePtr)msg_data->data;
 	
-	join_to = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
+	join_to = cl_get_string(welcome->msg, F_CRM_HOST_FROM);
 
 	a_node = g_hash_table_lookup(join_requests, join_to);
 	if(a_node != NULL
@@ -193,15 +194,13 @@ do_dc_join_req(long long action,
 	       fsa_data_t *msg_data)
 {
 	xmlNodePtr generation;
-	xmlNodePtr join_ack = (xmlNodePtr)msg_data->data;
+	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 	const char *ack_nack = CRMD_JOINSTATE_MEMBER;
 
 	gboolean is_a_member  = FALSE;
-	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
-	const char *ref       = xmlGetProp(join_ack, XML_ATTR_REFERENCE);
-
-	xmlNodePtr options = find_xml_node(join_ack, XML_TAG_OPTIONS, TRUE);
-	const char *op	   = xmlGetProp(options, XML_ATTR_OP);
+	const char *join_from = cl_get_string(join_ack->msg,F_CRM_HOST_FROM);
+	const char *ref       = cl_get_string(join_ack->msg,XML_ATTR_REFERENCE);
+	const char *op	   = cl_get_string(join_ack->msg, F_CRM_TASK);
 
 	gpointer join_node =
 		g_hash_table_lookup(fsa_membership_copy->members, join_from);
@@ -217,7 +216,7 @@ do_dc_join_req(long long action,
 		is_a_member = TRUE;
 	}
 	
-	generation = find_xml_node(join_ack, XML_CIB_TAG_GENERATION_TUPPLE, TRUE);
+	generation = join_ack->xml;
 	if(cib_compare_generation(our_generation, generation) < 0) {
 		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 		crm_debug("%s has a better generation number than us",
@@ -331,11 +330,10 @@ do_dc_join_ack(long long action,
 	       fsa_data_t *msg_data)
 {
 	/* now update them to "member" */
-	xmlNodePtr tmp1 = NULL, update = NULL;
-	xmlNodePtr join_ack = (xmlNodePtr)msg_data->data;
-	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
-	xmlNodePtr options = find_xml_node(join_ack, XML_TAG_OPTIONS, TRUE);
-	const char *op = xmlGetProp(options, XML_ATTR_OP);
+	xmlNodePtr update = NULL;
+	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
+	const char *join_from = cl_get_string(join_ack->msg, F_CRM_HOST_FROM);
+	const char *op = cl_get_string(join_ack->msg, F_CRM_TASK);
 	const char *join_state = NULL;
 
 
@@ -362,6 +360,13 @@ do_dc_join_ack(long long action,
 	g_hash_table_insert(confirmed_nodes, crm_strdup(join_from),
 			    crm_strdup(CRMD_JOINSTATE_MEMBER));
 
+	/* the updates will actually occur in reverse order because of
+	 * the LIFO nature of the fsa input queue
+	 */
+	
+	/* update CIB with the current LRM status from the node */
+	update_local_cib(copy_xml_node_recursive(join_ack->xml));
+
 	/* update node entry in the status section  */
 	crm_debug("Updating node state to %s for %s", join_state, join_from);
 	update = create_node_state(
@@ -370,15 +375,7 @@ do_dc_join_ack(long long action,
 
 	set_xml_property_copy(update,XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
 
-	tmp1 = create_cib_fragment(update, NULL);
-
-	update_local_cib(tmp1, TRUE);
-
-	free_xml(tmp1);
-
-	/* update CIB with the current LRM status from the node */
-	tmp1 = find_xml_node(join_ack, XML_TAG_FRAGMENT, TRUE);
-	update_local_cib(tmp1, TRUE);
+	update_local_cib(create_cib_fragment(update, NULL));
 
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
 		crm_info("That was the last outstanding join confirmation");
@@ -397,17 +394,15 @@ void
 finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 {
 	xmlNodePtr tmp1 = NULL;
-	xmlNodePtr tmp2 = NULL;
-	xmlNodePtr options     = NULL;
 
 	const char *join_to = NULL;
 	const char *join_state = NULL;
-
+	HA_Message *acknak = NULL;
+	
 	if(key == NULL || value == NULL) {
 		return;
 	}
 
-	options     = create_xml_node(NULL, XML_TAG_OPTIONS);
 	join_to    = (const char *)key;
 	join_state = (const char *)value;
 
@@ -416,35 +411,37 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 
 	/* perhaps we shouldnt special case this... */
 	if(safe_str_eq(join_to, fsa_our_uname)) {
-		/* mark ourselves confirmed */
+		crm_debug("mark ourselves confirmed");
 		g_hash_table_insert(confirmed_nodes, crm_strdup(fsa_our_uname),
 				    crm_strdup(CRMD_JOINSTATE_MEMBER));
 
+
+		/* the updates will actually occur in reverse order because of
+		 * the LIFO nature of the fsa input queue
+		 */
+	
+		/* update our LRM data */
+		tmp1 = do_lrm_query(TRUE);
+		if(tmp1 != NULL) {
+			update_local_cib(tmp1);
+
+		} else {
+			crm_err("Could not determin current LRM state");
+			register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+		}
+		
 		/* make sure our cluster state is set correctly */
 		tmp1 = create_node_state(
 			join_to, join_to, ACTIVESTATUS,
 			NULL, ONLINESTATUS, join_state, join_state);
 
 		if(tmp1 != NULL) {
-			tmp2 = create_cib_fragment(tmp1, NULL);
-			update_local_cib(tmp2, TRUE);
-			free_xml(tmp2);
+			update_local_cib(create_cib_fragment(tmp1, NULL));
 			free_xml(tmp1);
 
 		} else {
 			crm_err("Could not create our node state");
-			/* TODO: raise an error input */
-		}
-
-		/* update our LRM data */
-		tmp1 = do_lrm_query(TRUE);
-		if(tmp1 != NULL) {
-			update_local_cib(tmp1, TRUE);
-			free_xml(tmp1);
-
-		} else {
-			crm_err("Could not determin current LRM state");
-			/* TODO: raise an error input */
+			register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 		}
 
 		num_join_invites++;
@@ -452,25 +449,27 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 		return;
 	}
 	
-	/* create the ack/nack */
+
+	/* send the ack/nack to the node */
+	acknak = create_request(
+		CRM_OP_JOINACK, NULL, join_to,
+		CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
+
+	/* set the ack/nack */
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		crm_info("ACK'ing join request from %s, state %s",
 			 join_to, join_state);
 		num_join_invites++;
-		set_xml_property_copy(
-			options, CRM_OP_JOINACK, XML_BOOLEAN_TRUE);
+		ha_msg_add(acknak, CRM_OP_JOINACK, XML_BOOLEAN_TRUE);
 
 	} else {
 		crm_warn("NACK'ing join request from %s, state %s",
 			 join_to, join_state);
 		
-		set_xml_property_copy(
-			options, CRM_OP_JOINACK, XML_BOOLEAN_FALSE);
+		ha_msg_add(acknak, CRM_OP_JOINACK, XML_BOOLEAN_FALSE);
 	}
-
-	/* send the ack/nack to the node */
-	send_request(options, NULL, CRM_OP_JOINACK,
-		     join_to, CRM_SYSTEM_CRMD, NULL);	
+	
+	send_request(acknak, NULL);
 }
 
 void
@@ -526,11 +525,14 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 			  CRM_OP_WELCOME, join_to);
 
 	} else {
+		HA_Message *offer = create_request(
+			CRM_OP_WELCOME, NULL, join_to,
+			CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
+
 		/* send the welcome */
 		crm_debug("Sending %s to %s", CRM_OP_WELCOME, join_to);
 			
-		send_request(NULL, NULL, CRM_OP_WELCOME,
-			     join_to, CRM_SYSTEM_CRMD, NULL);
+		send_request(offer, NULL);
 
 		g_hash_table_insert(join_offers, crm_strdup(join_to),
 				    crm_strdup(CRMD_JOINSTATE_PENDING));

@@ -1,4 +1,4 @@
-/* $Id: callbacks.h,v 1.3 2005/01/10 14:29:03 andrew Exp $ */
+/* $Id: callbacks.h,v 1.4 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -68,7 +68,7 @@ extern gboolean cib_rw_callback   (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_ro_callback   (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_ha_dispatch   (IPC_Channel *channel, gpointer user_data);
 
-extern void cib_peer_callback(const struct ha_msg* msg, void* private_data);
+extern void cib_peer_callback(const HA_Message * msg, void* private_data);
 extern void cib_client_status_callback(const char * node, const char * client,
 				       const char * status, void * private);
 

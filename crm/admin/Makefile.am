@@ -54,10 +54,8 @@ AM_CFLAGS		= @CFLAGS@					\
 ## libraries
 lib_LTLIBRARIES		= 
 
-
 ## binary progs
 halib_PROGRAMS		= crmadmin cibadmin
-
 
 ## SOURCES
 

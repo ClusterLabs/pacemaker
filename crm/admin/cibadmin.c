@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.15 2005/01/12 13:40:55 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.16 2005/01/18 20:33:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -63,7 +63,7 @@ xmlNodePtr handleCibMod(const char *xml);
 gboolean admin_message_timeout(gpointer data);
 void cib_connection_destroy(gpointer user_data);
 void cibadmin_op_callback(
-	const struct ha_msg *msg, int call_id, int rc, xmlNodePtr output);
+	const HA_Message *msg, int call_id, int rc, xmlNodePtr output);
 
 int command_options = 0;
 const char *cib_action = NULL;
@@ -539,12 +539,12 @@ cib_connection_destroy(gpointer user_data)
 }
 
 void cibadmin_op_callback(
-	const struct ha_msg *msg, int call_id, int rc, xmlNodePtr output)
+	const HA_Message *msg, int call_id, int rc, xmlNodePtr output)
 {
 	char *xml_text = NULL;
 	
 	crm_info("our callback was invoked");
-	cl_log_message(msg);
+	cl_log_message(LOG_MSG, msg);
 	exit_code = rc;
 
 	xml_text = dump_xml_formatted(output);

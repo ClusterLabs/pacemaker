@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.4 2005/01/12 13:40:57 andrew Exp $ */
+/* $Id: notify.c,v 1.5 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,7 +50,7 @@ void
 cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
 
-	struct ha_msg *update_msg = user_data;
+	HA_Message *update_msg = user_data;
 	cib_client_t *client = value;
 
 	if(safe_str_eq(client->channel_name, cib_channel_callback)) {
@@ -65,7 +65,7 @@ void
 cib_pre_notify(
 	const char *op, xmlNodePtr existing, xmlNodePtr update) 
 {
-	struct ha_msg *update_msg = ha_msg_new(6);
+	HA_Message *update_msg = ha_msg_new(6);
 	const char *id = xmlGetProp(update, XML_ATTR_ID);
 	const char *type = NULL;
 
@@ -124,7 +124,7 @@ void
 cib_post_notify(
 	const char *op, xmlNodePtr update, enum cib_errors result, xmlNodePtr new_obj) 
 {
-	struct ha_msg *update_msg = ha_msg_new(8);
+	HA_Message *update_msg = ha_msg_new(8);
 	const char *id = xmlGetProp(new_obj, XML_ATTR_ID);
 	const char *type = NULL;
 	
@@ -137,8 +137,10 @@ cib_post_notify(
 		ha_msg_add(update_msg, F_CIB_OBJID, id);
 	}
 	if(update != NULL) {
+		crm_trace("Setting type to update->name");
 		ha_msg_add(update_msg, F_CIB_OBJTYPE, update->name);
 	} else if(new_obj != NULL) {
+		crm_trace("Setting type to new_obj->name");
 		ha_msg_add(update_msg, F_CIB_OBJTYPE, new_obj->name);
 	}
 

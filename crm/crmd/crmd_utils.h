@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.10 2004/12/05 16:35:09 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.11 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,9 +24,11 @@
 
 #define CLIENT_EXIT_WAIT 30
 
-extern enum crmd_fsa_input update_local_cib(
-	xmlNodePtr msg_data, gboolean callbacks);
 
+extern void update_local_cib_adv(
+	xmlNodePtr msg_data, gboolean do_now, const char *raised_from);
+
+#define update_local_cib(data) update_local_cib_adv(data, TRUE, __FUNCTION__)
 
 extern long long toggle_bit   (long long  action_list, long long action);
 extern long long clear_bit    (long long  action_list, long long action);

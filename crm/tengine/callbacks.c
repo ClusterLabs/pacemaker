@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.4 2005/01/12 15:44:25 andrew Exp $ */
+/* $Id: callbacks.c,v 1.5 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,10 +28,10 @@
 
 #include <tengine.h>
 
-void te_update_confirm(const char *event, struct ha_msg *msg);
+void te_update_confirm(const char *event, HA_Message *msg);
 
 void
-te_update_confirm(const char *event, struct ha_msg *msg)
+te_update_confirm(const char *event, HA_Message *msg)
 {
 	int rc = -1;
 	gboolean done = FALSE;
@@ -104,13 +104,11 @@ te_update_confirm(const char *event, struct ha_msg *msg)
 
 
 gboolean
-process_te_message(xmlNodePtr msg, IPC_Channel *sender)
+process_te_message(HA_Message *msg, xmlNodePtr xml_data, IPC_Channel *sender)
 {
-	xmlNodePtr graph = NULL;
-	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
-	const char *ref    = xmlGetProp(msg, XML_ATTR_REFERENCE);
-	const char *op     = get_xml_attr(
-		msg, XML_TAG_OPTIONS, XML_ATTR_OP, FALSE);
+	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
+	const char *ref    = cl_get_string(msg, XML_ATTR_REFERENCE);
+	const char *op     = cl_get_string(msg, F_CRM_TASK);
 
 	crm_debug("Recieved %s (%s) message", op, ref);
 
@@ -125,15 +123,14 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 
 #ifdef MSG_LOG
 	{
-		char *xml = dump_xml_formatted(msg);
-		fprintf(msg_te_strm, "[Input %s]\t%s\n",
-			op, xml);
+		char *xml = dump_xml_formatted(xml_data);
+		fprintf(msg_te_strm, "[Input %s]\t%s\n", op, xml);
 		fflush(msg_te_strm);
 		crm_free(xml);
 	}
 #endif
 	
-	if(safe_str_eq(xmlGetProp(msg, XML_ATTR_MSGTYPE), XML_ATTR_RESPONSE)
+	if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE), XML_ATTR_RESPONSE)
 	   && safe_str_neq(op, CRM_OP_EVENTCC)) {
 #ifdef MSG_LOG
 	fprintf(msg_te_strm, "[Result ]\tDiscarded\n");
@@ -159,9 +156,8 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		crm_trace("Initializing graph...");
 		initialize_graph();
 
-		graph = find_xml_node(msg, XML_TAG_GRAPH, TRUE);
 		crm_trace("Unpacking graph...");
-		unpack_graph(graph);
+		unpack_graph(xml_data);
 		crm_trace("Initiating transition...");
 
 		in_transition = TRUE;

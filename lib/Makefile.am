@@ -60,7 +60,7 @@ SUBDIRS			=  	\
 	$(EVENTD_DIR)		\
 	$(CMS_DIR)		\
 	$(SWIG_DIR)		\
-	$(USE_CRM_DIR)		\
+	$(USE_CRM_DIR)	\
 	$(LRM_DIR)
 
 DIST_SUBDIRS		=  	\

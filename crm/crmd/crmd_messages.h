@@ -24,15 +24,23 @@
 #include <crmd_fsa.h>
 #include <libxml/tree.h>
 
-void register_fsa_input_adv(
+extern void *fsa_typed_data_adv(
+	fsa_data_t *fsa_data, enum fsa_data_type a_type, const char *caller);
+
+#define fsa_typed_data(x) fsa_typed_data_adv(msg_data, x, __FUNCTION__)
+
+extern void register_fsa_input_adv(
 	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 	void *data, long long with_actions,
 	gboolean after, const char *raised_from);
 
+extern void fsa_dump_queue(int log_level);
 
 #define crmd_fsa_stall() register_fsa_input_adv(msg_data->fsa_cause, I_WAIT_FOR_EVENT, msg_data->data, action, FALSE, __FUNCTION__)
 
 #define register_fsa_input(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
+
+#define register_fsa_input_before(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
 
 #define register_fsa_input_later(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, TRUE, __FUNCTION__)
 
@@ -45,18 +53,14 @@ fsa_data_t *get_message(void);
 gboolean is_message(void);
 gboolean have_wait_message(void);
 
-extern gboolean relay_message(xmlNodePtr xml_relay_message,
-		       gboolean originated_locally);
+extern gboolean relay_message(HA_Message *relay_message, gboolean originated_locally);
 
-extern void crmd_ha_msg_callback(const struct ha_msg* msg,
-				   void* private_data);
+extern void crmd_ha_msg_callback(const HA_Message * msg, void* private_data);
 
-extern gboolean crmd_ipc_msg_callback(IPC_Channel *client,
-					gpointer user_data);
+extern gboolean crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data);
 
-extern void process_message(xmlNodePtr root_xml_node,
-		     gboolean originated_locally,
-		     const char *src_node_name);
+extern void process_message(
+	HA_Message *msg, gboolean originated_locally, const char *src_node_name);
 
 extern gboolean crm_dc_process_message(xmlNodePtr whole_message,
 				       xmlNodePtr action,
@@ -66,38 +70,29 @@ extern gboolean crm_dc_process_message(xmlNodePtr whole_message,
 				       const char *op,
 				       gboolean dc_mode);
 
-extern void send_msg_via_ha(xmlNodePtr action, const char *dest_node);
-extern void send_msg_via_ipc(xmlNodePtr action, const char *sys);
+extern void send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg);
+extern void send_msg_via_ipc(HA_Message *msg, const char *sys);
 
 extern gboolean add_pending_outgoing_reply(const char *originating_node_name,
 					   const char *crm_msg_reference,
 					   const char *sys_to,
 					   const char *sys_from);
 
-extern gboolean crmd_authorize_message(xmlNodePtr root_xml_node,
-				       IPC_Message *client_msg,
-				       crmd_client_t *curr_client);
-extern gboolean send_request(xmlNodePtr msg_options,
-			     xmlNodePtr msg_data, 
-			     const char *operation,
-			     const char *host_to,
-			     const char *sys_to,
-			     char **msg_reference);
+extern gboolean crmd_authorize_message(
+	ha_msg_input_t *client_msg, crmd_client_t *curr_client);
 
-extern gboolean store_request(xmlNodePtr msg_options,
-			      xmlNodePtr msg_data, 
-			      const char *operation,
-			      const char *sys_to);
+extern gboolean send_request(HA_Message *msg, char **msg_reference);
 
-extern enum crmd_fsa_input handle_message(xmlNodePtr stored_msg);
+extern enum crmd_fsa_input handle_message(ha_msg_input_t *stored_msg);
 
 extern gboolean send_ha_reply(ll_cluster_t *hb_cluster,
 			      xmlNodePtr xml_request,
 			      xmlNodePtr xml_response_data);
 
-extern void lrm_op_callback (lrm_op_t* op);
+extern void lrm_op_callback(lrm_op_t* op);
 
 extern char *create_dc_heartbeat(void);
 extern int send_dc_heartbeat(const char *xml_text);
+
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.12 2004/12/14 14:46:45 andrew Exp $ */
+/* $Id: tengine.h,v 1.13 2005/01/18 20:33:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -87,7 +87,7 @@ extern gboolean initiate_transition(void);
 /* utils */
 extern void print_state(gboolean to_file);
 extern void send_success(const char *text);
-/*extern void send_abort(const char *text, struct ha_msg *msg); */
+/*extern void send_abort(const char *text, HA_Message *msg); */
 extern void send_abort(const char *text, xmlNodePtr msg);
 extern gboolean stop_te_timer(te_timer_t *timer);
 extern gboolean start_te_timer(te_timer_t *timer);
@@ -96,7 +96,8 @@ extern gboolean do_update_cib(xmlNodePtr xml_action, int status);
 /* unpack */
 extern gboolean unpack_graph(xmlNodePtr xml_graph);
 extern gboolean extract_event(xmlNodePtr msg);
-extern gboolean process_te_message(xmlNodePtr msg, IPC_Channel *sender);
+extern gboolean process_te_message(
+	HA_Message * msg, xmlNodePtr xml_data, IPC_Channel *sender);
 
 extern uint transition_timeout;
 extern uint transition_fuzz_timeout;

@@ -182,7 +182,6 @@ fsa_timer_t *wait_timer = NULL;
 int fsa_join_reannouce = 0;
 volatile gboolean do_fsa_stall = FALSE;
 
-
 enum crmd_fsa_state
 s_crmd_fsa(enum crmd_fsa_cause cause)
 {
@@ -260,11 +259,14 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 					  stored_msg->where);
 				
 			} else {
+				ha_msg_input_t *ha_input = fsa_typed_data_adv(
+					stored_msg, fsa_dt_ha_msg, __FUNCTION__);
+				
 				crm_devel("FSA processing XML message from %s",
 					  stored_msg->where);
-				
-				crm_xml_devel(stored_msg->data,
-					      "FSA processing message");
+				cl_log_message(LOG_MSG, ha_input->msg);
+				crm_xml_devel(ha_input->xml,
+					      "FSA message data");
 			}
 
 			fsa_data = stored_msg;
@@ -301,8 +303,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 			fsa_data->fsa_input = I_NULL;
 			fsa_data->fsa_cause = cause;
 			fsa_data->actions   = A_NOTHING;
-			fsa_data->where     = crm_strdup("s_crmd_fsa (enter)");
+			fsa_data->where     = "s_crmd_fsa (enter)";
 			fsa_data->data      = NULL;
+			fsa_data->data_type = fsa_dt_none;
 			if(fsa_data->where == NULL) {
 				crm_crit("Out of memory");
 				exit(1);
@@ -324,7 +327,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		new_actions = crmd_fsa_actions[cur_input][cur_state];
 		if(new_actions != A_NOTHING) {
 #ifdef FSA_TRACE
-			crm_verbose("Adding actions %.16llx", new_actions);
+			crm_verbose("Adding actions %.16llx for %s/%s",
+				    new_actions, fsa_input2string(cur_input),
+				    fsa_state2string(cur_state));
 			fsa_dump_actions(new_actions, "\tscheduled");
 #endif
 			actions |= new_actions;
@@ -338,12 +343,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 #ifdef FSA_TRACE
 		crm_verbose("FSA while loop:\tState: %s, Cause: %s,"
 			    " Input: %s, Origin=%s",
-			    fsa_state2string(cur_state),
+			    fsa_state2string(crmd_fsa_state[cur_input][cur_state]),
 			    fsa_cause2string(fsa_data->fsa_cause),
-			    fsa_input2string(fsa_data->fsa_input),
+			    fsa_input2string(cur_input),
 			    fsa_data->where);
 #endif
-		
 
 		/* logging : *before* the state is changed */
 		IF_FSA_ACTION(A_ERROR, do_log)
@@ -508,8 +512,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	{
 		time_t now = time(NULL);
 		fprintf(dot_strm,			
-			"\t// ### Exiting the FSA (%s): %s\n",
-			fsa_state2string(fsa_state), asctime(localtime(&now)));
+			"\t// ### Exiting the FSA (%s%s): %s\n",
+			fsa_state2string(fsa_state), do_fsa_stall?": paused":"",
+			asctime(localtime(&now)));
 		fflush(dot_strm);
 	}
 #endif
@@ -517,11 +522,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	/* cleanup inputs? */
 	fsa_actions = actions;
 	delete_fsa_input(fsa_data);
+	crm_info("Register contents (0x%llx)", fsa_input_register);
+	fsa_dump_queue(LOG_INFO);
 	
 	return fsa_state;
 }
-
-
 
 
 long long 
@@ -631,7 +636,6 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_POLICY_ENGINE:
-			initialize_join(FALSE);
 			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
 			if(cause != C_FSA_INTERNAL) {
 				crm_warn("Progressed to state %s after %s",
@@ -659,6 +663,7 @@ do_state_transition(long long actions,
 					 g_hash_table_size(confirmed_nodes),
 					 fsa_membership_copy->members_size);
 			}
+			initialize_join(FALSE);
 			break;
 			
 		case S_IDLE:
