@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.8 2004/09/17 13:03:09 andrew Exp $ */
+/* $Id: ipc.c,v 1.9 2004/09/20 14:29:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -229,6 +229,7 @@ init_client_ipc_comms(const char *child,
 		
 	} else if (ch->ops->initiate_connection(ch) != IPC_OK) {
 		crm_crit("Could not init comms on: %s", commpath);
+		fprintf(stderr, "Could not init comms on: %s\n", commpath);
 		return NULL;
 	}
 
