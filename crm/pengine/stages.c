@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.21 2004/09/17 15:53:12 andrew Exp $ */
+/* $Id: stages.c,v 1.22 2004/09/20 12:31:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -265,6 +265,7 @@ stage5(GListPtr resources)
 			 */
 			default_node = stop_node;
 			rsc->stop->optional  = FALSE;
+			rsc->start->runnable = FALSE;
 			crm_warn("Stop resource %s (%s)",
 				  safe_val(NULL, rsc, id),
 				  safe_val3(NULL, stop_node, details,uname));
@@ -280,7 +281,6 @@ stage5(GListPtr resources)
 				    safe_val(NULL, rsc, id),
 				    safe_val3(
 					    NULL,default_node,details,uname));
-
 			
 		} else {
 			/* the resource is moving...
@@ -367,14 +367,11 @@ stage6(GListPtr *actions, GListPtr *action_constraints,
 			stonith_node = action_new(NULL,stonith_op);
 			stonith_node->runnable = TRUE;
 			stonith_node->optional = FALSE;
-			choose_fencer(stonith_node, node, resources);
-
+			/* TODO: this needs to be our local node */
+			stonith_node->node = NULL;
+			
 			set_xml_property_copy(stonith_node->args,
 					      "target", node->details->uname);
-			
-			if(stonith_node->node == NULL) {
-				stonith_node->runnable = FALSE;
-			}
 			
 			if(down_node != NULL) {
 				down_node->failure_is_fatal = FALSE;
@@ -482,12 +479,16 @@ stage8(GListPtr actions, xmlNodePtr *graph)
 		set    = create_xml_node(syn, "action_set");
 		in     = create_xml_node(syn, "inputs");
 		
-		xml_action = action2xml(action);
+		xml_action = action2xml(action, FALSE);
 		xmlAddChild(set, xml_action);
 
 		slist_iter(
 			wrapper,action_wrapper_t,action->actions_before,lpc2,
 
+			if(wrapper->action->optional == TRUE) {
+				continue;
+			}
+			
 			switch(wrapper->strength) {
 				case pecs_must_not:
 				case pecs_ignore:
@@ -501,7 +502,8 @@ stage8(GListPtr actions, xmlNodePtr *graph)
 				case pecs_must:
 					input = create_xml_node(in, "trigger");
 					
-					xml_action=action2xml(wrapper->action);
+					xml_action = action2xml(
+						wrapper->action, TRUE);
 					xmlAddChild(input, xml_action);
 					break;
 			}
@@ -590,10 +592,4 @@ choose_node_from_list(color_t *color)
 	}
 	
 	return TRUE;
-}
-
-node_t *
-choose_fencer(action_t *stonith, node_t *a_node, GListPtr resources)
-{
-	return NULL;
 }

@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.12 2004/08/30 03:17:38 msoffen Exp $ */
+/* $Id: pe_utils.h,v 1.13 2004/09/20 12:31:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -67,7 +67,7 @@ extern GListPtr node_list_or(GListPtr list1, GListPtr list2, gboolean filter);
 
 
 /* For creating the transition graph */
-extern xmlNodePtr action2xml(action_t *action);
+extern xmlNodePtr action2xml(action_t *action, gboolean as_input);
 
 /* Printing functions for debug */
 extern void print_node(

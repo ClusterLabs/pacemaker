@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.15 2004/09/17 15:53:12 andrew Exp $ */
+/* $Id: graph.c,v 1.16 2004/09/20 12:31:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,7 +58,7 @@ update_action(action_t *action)
 	slist_iter(
 		other, action_wrapper_t, action->actions_after, lpc,
 
-		if(action->runnable == FALSE) {
+		if(action->runnable == FALSE && action->optional == FALSE) {
 			if(other->action->runnable == FALSE) {
 				continue;
 			} else if (other->strength == pecs_must) {
@@ -66,7 +66,10 @@ update_action(action_t *action)
 				other->action->runnable =FALSE;
 				crm_debug_action(
 					print_action("Marking unrunnable",
-						     other->action, FALSE));
+						     other->action, FALSE);
+					print_action("Reason",
+						     action, FALSE);
+					);
 			}
 			
 		}
@@ -107,13 +110,15 @@ shutdown_constraints(
 	int lpc = 0;
 	action_wrapper_t *wrapper = NULL;
 
-	/* add the shutdown OP to the before lists so it counts as a pre-req */
+	/* add the stop to the before lists so it counts as a pre-req
+	 * for the shutdown
+	 */
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
 
 		crm_malloc(wrapper, sizeof(action_wrapper_t));
 		if(wrapper != NULL) {
-			wrapper->action = rsc->start;
+			wrapper->action = rsc->stop;
 			wrapper->strength = pecs_must;
 			shutdown_op->actions_before = g_list_append(
 				shutdown_op->actions_before, wrapper);
@@ -157,10 +162,36 @@ stonith_constraints(node_t *node,
 		 *  stop let alone reply with failed.
 		 */
 		rsc->stop->failure_is_fatal = FALSE;
+
+		if(rsc->stopfail_type == pesf_block) {
+			/* depend on the stop action which will fail */
+			crm_warn("SHARED RESOURCE %s WILL REMAIN BLOCKED"
+				 " UNTIL CLEANED UP MANUALLY ON NODE %s",
+				 rsc->id, node->details->uname);
+			continue;
+			
+		} else if(rsc->stopfail_type == pesf_ignore) {
+			/* nothing to do here */
+			crm_warn("SHARED RESOURCE %s IS NOT PROTECTED",
+				 rsc->id);
+			continue;
+		}
 		
+		/* case pesf_stonith: */
+		/* remedial action:
+		 *   shutdown (so all other resources are
+		 *   stopped gracefully) and then STONITH node
+		 */
+		if(stonith_enabled == FALSE) {
+			/* depend on an action that will never complete */
+			crm_err("STONITH is not enabled in this"
+				" cluster but is required for "
+				"resource %s after a failed stop",
+				rsc->id);
+		}
 		crm_debug("Adding stonith (%d) as an input to start (%d)",
 			  stonith_op->id, rsc->start->id);
-
+		
 		/* stonith before start */
 		crm_malloc(wrapper, sizeof(action_wrapper_t));
 		if(wrapper != NULL) {
@@ -170,13 +201,28 @@ stonith_constraints(node_t *node,
 				rsc->start->actions_before, wrapper);
 		}
 
+		/* stop before stonith */
+#if 0
+		a pointless optimization?  probably
+		if(shutdown_op != NULL) {
+			/* the next rule is implied */
+			continue;
+		}
+#endif
+		crm_malloc(wrapper, sizeof(action_wrapper_t));
+		if(wrapper != NULL) {
+			wrapper->action = rsc->stop;
+			wrapper->strength = pecs_must;
+			stonith_op->actions_before = g_list_append(
+				stonith_op->actions_before, wrapper);
+		}
 		);
 	
 	return TRUE;
 }
 
 xmlNodePtr
-action2xml(action_t *action)
+action2xml(action_t *action, gboolean as_input)
 {
 	xmlNodePtr action_xml = NULL;
 	
@@ -185,6 +231,7 @@ action2xml(action_t *action)
 	}
 	
 	switch(action->task) {
+		case stonith_op:
 		case shutdown_crm:
 			action_xml = create_xml_node(NULL, "crm_event");
 
@@ -194,9 +241,12 @@ action2xml(action_t *action)
 			break;
 		default:
 			action_xml = create_xml_node(NULL, "rsc_op");
-			add_node_copy(action_xml,
-				      safe_val3(NULL, action, rsc, xml));
-
+			if(!as_input) {
+				add_node_copy(
+					action_xml,
+					safe_val3(NULL, action, rsc, xml));
+			}
+			
 			set_xml_property_copy(
 				action_xml, XML_ATTR_ID, crm_itoa(action->id));
 
@@ -207,35 +257,41 @@ action2xml(action_t *action)
 			break;
 	}
 
-	set_xml_property_copy(
-		action_xml, XML_LRM_ATTR_TARGET,
-		safe_val4("__no_node__", action, node, details, uname));
+	if(action->task != stonith_op) {
+		set_xml_property_copy(
+			action_xml, XML_LRM_ATTR_TARGET,
+			safe_val4("__no_node__", action, node, details,uname));
 
-	set_xml_property_copy(
-		action_xml, XML_LRM_ATTR_TARGET_UUID,
-		safe_val4("__no_node_uuid__", action, node, details, id));
+		set_xml_property_copy(
+			action_xml, XML_LRM_ATTR_TARGET_UUID,
+			safe_val4("__no_uuid__", action, node, details, id));
+	}
 
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_TASK, task2text(action->task));
 
+	
 	set_xml_property_copy(
-		action_xml, XML_LRM_ATTR_RUNNABLE,
-		action->runnable?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
+		action_xml, "allow_fail",
+		action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
 
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_OPTIONAL,
 		action->optional?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
 
 	set_xml_property_copy(
+		action_xml, XML_LRM_ATTR_RUNNABLE,
+		action->runnable?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
+
+	if(as_input) {
+		return action_xml;
+	}
+	
+	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_DISCARD,
 		action->discard?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
-
-	set_xml_property_copy(
-		action_xml, "allow_fail",
-		action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
-
+	
 	add_node_copy(action_xml, action->args);
-
 
 /* 	slist_iter( */
 /* 		wrapper, action_wrapper_t, action->actions_before, lpc, */

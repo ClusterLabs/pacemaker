@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.30 2004/09/17 15:53:13 andrew Exp $ */
+/* $Id: unpack.c,v 1.31 2004/09/20 12:31:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -207,11 +207,11 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 		
 		if(id == NULL) {
 			crm_err("Must specify id tag in <node>");
-			xml_iter_continue(xml_obj);
+			continue;
 		}
 		if(type == NULL) {
 			crm_err("Must specify type tag in <node>");
-			xml_iter_continue(xml_obj);
+			continue;
 		}
 		crm_malloc(new_node, sizeof(node_t));
 		if(new_node == NULL) {
@@ -290,7 +290,7 @@ unpack_resources(xmlNodePtr xml_resources,
 		
 		if(id == NULL) {
 			crm_err("Must specify id tag in <resource>");
-			xml_iter_continue(xml_obj);
+			continue;
 		}
 		crm_malloc(new_rsc, sizeof(resource_t));
 
@@ -383,7 +383,7 @@ unpack_constraints(xmlNodePtr xml_constraints,
 		if(id == NULL) {
 			crm_err("Constraint <%s...> must have an id",
 				xml_obj->name);
-			xml_iter_continue(xml_obj);
+			continue;
 		}
 
 		crm_verbose("Processing constraint %s %s", xml_obj->name,id);
@@ -478,12 +478,12 @@ unpack_status(xmlNodePtr status,
 
 		if(uname == NULL) {
 			/* error */
-			xml_iter_continue(node_state);
+			continue;
 
 		} else if(this_node == NULL) {
 			crm_err("Node %s in status section no longer exists",
 				uname);
-			xml_iter_continue(node_state);
+			continue;
 		}
 		
 		crm_verbose("Adding runtime node attrs");
@@ -730,36 +730,22 @@ unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
 		       xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node)
 {
 	const char *last_op  = xmlGetProp(rsc_entry, "last_op");
-
 	crm_debug("Unpacking failed action %s on %s", last_op, rsc_lh->id);
 	
-	if(safe_str_neq(last_op, "stop")) {
-		/* not running */
-		/* do not run the resource here again */
-		rsc2node_new("dont_run_generate",
-			     rsc_lh, -1.0, FALSE, node, node_constraints);
-
-		/* schedule a stop here just in case? */
-		action_new(rsc_lh, stop_rsc);
-		
+	/* make sure we dont allocate the resource here again*/
+	rsc2node_new("dont_run__generated",
+		     rsc_lh, -1.0, FALSE, node, node_constraints);
+	
+	if(safe_str_eq(last_op, "start")) {
+		/* the resource is not actually running... nothing more to do*/
 		return TRUE;
-		
 	} 
 
 	switch(rsc_lh->stopfail_type) {
 		case pesf_stonith:
-			/* remedial action:
-			 *   shutdown (so all other resources are
-			 *   stopped gracefully) and then STONITH node
+			/* treat it as if it is still running
+			 * but also mark the node as unclean
 			 */
-			
-			if(stonith_enabled == FALSE) {
-				crm_err("STONITH is not enabled in this cluster but is required for resource %s after a failed stop", rsc_lh->id);
-				rsc_lh->start->runnable = FALSE;
-				break;
-			}
-			
-			/* treat it as if it is still running */
 			rsc_lh->cur_node = node;
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
@@ -771,26 +757,17 @@ unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
 			break;
 			
 		case pesf_block:
-			crm_warn("SHARED RESOURCE %s WILL REMAIN BLOCKED"
-				 " UNTIL CLEANED UP MANUALLY ON NODE %s",
-				 rsc_lh->id, node->details->uname);
+ 			/* let this depend on the stop action which will fail
+			 * but make sure the transition continues...
+			 */
 			rsc_lh->cur_node = node;
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
- 			/* let this depend on the stop action instead?
-			 * safer not to i think
-			 */
- 			rsc_lh->start->runnable = FALSE;
+			rsc_lh->stop->timeout = -1; /* wait forever */
 			break;
-			
+	
 		case pesf_ignore:
-			crm_warn("SHARED RESOURCE %s IS NOT PROTECTED",
-				 rsc_lh->id);
-			/* do not run the resource here again */
-			rsc2node_new(
-				"dont_run_generate",
-				rsc_lh, -1.0, FALSE, node, node_constraints);
-
+			/* pretend nothing happened */
 			break;
 	}
 		
@@ -906,7 +883,7 @@ unpack_rsc_dependancy(xmlNodePtr xml_obj,
 	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
 	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
  
-#if 1
+#if 0
 	/* relates to the ifdef below */
 	action_t *before, *after;
 #endif
@@ -936,7 +913,8 @@ unpack_rsc_dependancy(xmlNodePtr xml_obj,
 		crm_err("Unknown value for %s: %s", "type", type);
 		return FALSE;
 	}
-
+#if 0
+	if people want this behaviour, they should add an ordering constraint
 	/* make sure the lower priority resource stops before
 	 *  the higher is started, otherwise they may be both running
 	 *  on the same node when the higher is replacing the lower
@@ -962,7 +940,7 @@ unpack_rsc_dependancy(xmlNodePtr xml_obj,
 		after  = rsc_rh->start;
 	}
 	order_new(before, after, strength_e,action_constraints);
-	
+#endif	
 	return rsc2rsc_new(id, strength_e, same_node, rsc_lh, rsc_rh);
 }
 
@@ -1263,7 +1241,7 @@ unpack_rsc_location(
 				new_con->node_list_rh =	node_list_dup(
 					match_L, FALSE);
 				first_expr = FALSE;
-				xml_iter_continue(expr);
+				continue;
 			}
 
 			old_list = new_con->node_list_rh;
