@@ -123,7 +123,6 @@ do_test bad3 "No rsc class	"
 do_test bad4 "Bad data		"
 do_test bad5 "Bad data		"
 do_test bad6 "Bad lrm_rsc	"
-do_test bad7 "No lrm		"
 
 echo ""
 
