@@ -996,22 +996,21 @@ handle_message(xmlNodePtr stored_msg)
 			send_request(NULL, data, "store",
 				     NULL, CRM_SYSTEM_CRMD);
 
-		} else if (strcmp(op, "store") == 0) {
+		} else if (AM_I_DC && strcmp(op, "store") == 0) {
 
-			if(AM_I_DC == FALSE) {
-				
-				/* we need to merge these results back
-				 * into the DC
-				 */
-				xmlNodePtr data =
-					find_xml_node(stored_msg,
-						      XML_TAG_FRAGMENT);
-				
-				if(data != NULL) {
-					send_request(NULL, data, "update",
-						     NULL, CRM_SYSTEM_CIB);
-				}
+			/* if there was any result, we need to merge it back
+			 * into our (the DC) copy of the CIB
+			 */
+			xmlNodePtr data = find_xml_node(stored_msg,
+							XML_TAG_FRAGMENT);
+
+			if(data != NULL) {
+				send_request(NULL, data, "update",
+					     NULL, CRM_SYSTEM_CIB);
+				send_request(NULL, NULL, "bump",
+					     NULL, CRM_SYSTEM_CIB);
 			}
+
 
 		} else if(strcmp(sys_from, CRM_SYSTEM_CIB) == 0
 		   && strcmp(op, "forward") == 0
@@ -1047,6 +1046,7 @@ handle_message(xmlNodePtr stored_msg)
 			       "Unexpected (response) operation %s", op);
 		}
 	} else {
+		cl_log(LOG_ERR, "Unexpected message type %s", type);
 			
 	}
 		
