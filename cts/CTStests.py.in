@@ -540,6 +540,56 @@ class IPaddrtest(CTSTest):
         return 1
 
 ###################################################################
+class StartOnebyOne(CTSTest):
+###################################################################
+    '''Start all the nodes ~ one by one'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="StartOnebyOne"
+
+    def __call__(self, dummy):
+        '''Perform the 'StartOnebyOne' test. '''
+        self.incr("calls")
+
+        #	We ignore the "node" parameter...
+
+        #	Shut down all the nodes...
+        for node in self.CM.Env["nodes"]:
+          if self.CM.ShouldBeStatus[node] != self.CM["down"]:
+            self.incr("stops")
+            self.stop = StopTest(self.CM)
+            self.stop(node)
+         
+        watchpats = [ ]
+
+        pat = self.CM["Pat:We_started"]
+        for node in self.CM.Env["nodes"]:
+          thispat = (pat % node)
+          watchpats.append(thispat)
+
+        #	Start all the nodes - one by one...
+        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
+        ,	timeout=self.CM["DeadTime"]+10)
+        watch.ReturnOnlyMatch()
+
+        watch.setwatch()
+        for node in self.CM.Env["nodes"]:
+            self.CM.StartaCM(node)
+        if watch.lookforall():
+ 	    return self.success()
+        
+        return self.failure("Did not find start pattern(s): " 
+        +	repr(watch.unmatched))
+
+
+    def is_applicable(self):
+        '''StartOnebyOne is always applicable'''
+        return 1
+
+#	Register StartOnebyOne as a good test to run
+AllTestClasses.append(StartOnebyOne)
+
+###################################################################
 class SimulStart(CTSTest):
 ###################################################################
     '''Start all the nodes ~ simultaneously'''
@@ -574,7 +624,7 @@ class SimulStart(CTSTest):
 
         watch.setwatch()
         for node in self.CM.Env["nodes"]:
-            self.CM.StartaCM(node)
+            self.CM.StartaCMnoBlock(node)
         if watch.lookforall():
  	    return self.success()
         

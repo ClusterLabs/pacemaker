@@ -110,6 +110,12 @@ class RemoteExec:
             cpstring = cpstring + " \'" + arg + "\'"
         return os.system(cpstring) == 0
 
+    def noBlock(self, *args):
+        '''Perform a remote exuction as none-block mode'''
+        sshnoBlock = self.CommandnoBlock
+        for arg in args:
+            sshnoBlock = sshnoBlock + " \'" + arg + "\'"
+        return os.system(sshnoBlock) == 0
 
 
 class LogWatcher:
@@ -334,6 +340,14 @@ class ClusterManager(UserDict):
             %	(self["Name"], node))
         return None
 
+    def StartaCMnoBlock(self, node):
+
+        '''Start up the cluster manager on a given node with none-block mode'''
+
+        self.rsh.noBlock(node, self["StartCmd"])
+        self.ShouldBeStatus[node]=self["up"]
+        return 1
+
     def StopaCM(self, node):
 
         '''Stop the cluster manager on a given node'''
@@ -346,6 +360,14 @@ class ClusterManager(UserDict):
             self.log ("Could not stop %s on node %s"
             %	(self["Name"], node))
         return None
+
+    def StopaCMnoBlock(self, node):
+
+        '''Stop the cluster manager on a given node with none-block mode'''
+
+        self.rsh.noBlock(node, self["StopCmd"])
+        self.ShouldBeStatus[node]=self["down"]
+        return 1
 
     def RereadCM(self, node):
 
