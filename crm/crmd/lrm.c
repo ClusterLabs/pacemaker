@@ -614,12 +614,16 @@ do_lrm_rsc_op(
 	crm_info("Performing op %s on %s", operation, rid);
 	crm_malloc(op, sizeof(lrm_op_t));
 	op->op_type   = crm_strdup(operation);
-	op->params    = xml2list(msg, rsc_path, DIMOF(rsc_path));
 	op->timeout   = action_timeout;
 	op->interval  = 0;
 	op->user_data = NULL;
 	op->target_rc = EVERYTIME;
-
+	if(msg != NULL) {
+		op->params = xml2list(msg, rsc_path, DIMOF(rsc_path));
+	} else {
+		CRM_DEV_ASSERT(safe_str_eq(CRMD_RSCSTATE_STOP, operation));
+	}
+		
 	if(safe_str_eq(CRMD_RSCSTATE_START, operation)) {
 		op->user_data = crm_strdup(CRMD_RSCSTATE_START_OK);
 		
@@ -684,33 +688,32 @@ free_lrm_op(lrm_op_t *op)
 GHashTable *
 xml2list(crm_data_t *parent, const char**attr_path, int depth)
 {
-	crm_data_t *list_root = NULL;
+	crm_data_t *nvpair_list = NULL;
 
 	GHashTable   *nvpair_hash =
 		g_hash_table_new(&g_str_hash, &g_str_equal);
 
+	CRM_DEV_ASSERT(parent != NULL);
 	if(parent != NULL) {
-		list_root = find_xml_node_nested(parent, attr_path, depth);
+		nvpair_list = find_xml_node_nested(parent, attr_path, depth);
+		if(nvpair_list == NULL) {
+			crm_xml_debug(parent, "No attributes for resource op");
+		}
+		
 	}
 	
 	xml_child_iter(
-		list_root, nvpair_list, NULL,
-
-		xml_child_iter(
-			nvpair_list, node_iter, XML_CIB_TAG_NVPAIR,
-			
-			const char *key   = crm_element_value(
-				node_iter, XML_NVPAIR_ATTR_NAME);
-			const char *value = crm_element_value(
-				node_iter, XML_NVPAIR_ATTR_VALUE);
-			
-			crm_verbose("Added %s=%s", key, value);
-			
-			g_hash_table_insert (nvpair_hash,
-					     crm_strdup(key),
-					     crm_strdup(value));
-			);
+		nvpair_list, node_iter, XML_CIB_TAG_NVPAIR,
 		
+		const char *key   = crm_element_value(
+			node_iter, XML_NVPAIR_ATTR_NAME);
+		const char *value = crm_element_value(
+			node_iter, XML_NVPAIR_ATTR_VALUE);
+		
+		crm_verbose("Added %s=%s", key, value);
+		
+		g_hash_table_insert(
+			nvpair_hash,crm_strdup(key), crm_strdup(value));
 		);
 	
 	return nvpair_hash;
