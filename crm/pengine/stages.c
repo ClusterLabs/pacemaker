@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.4 2004/06/09 14:34:48 andrew Exp $ */
+/* $Id: stages.c,v 1.5 2004/06/16 11:12:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -77,25 +77,6 @@ stage0(xmlNodePtr cib,
 			   node_constraints, action_constraints);
 
 //	set_crm_log_level(old_log);
-#if 0
-
-	avoid this loop... just go off the various flags later
-
-	slist_iter(
-		node, node_t, *nodes, lpc,
-		if(node->details->shutdown) {
-			*shutdown_list = g_list_append(*shutdown_list, node);
-			crm_verbose("Scheduling Node %s for shutdown",
-				    node->details->id);
-			
-		} else if(node->details->unclean) {
-			*stonith_list = g_list_append(*stonith_list, node);
-			crm_verbose("Scheduling Node %s for STONITH",
-				    node->details->id);
-			
-		}
-		);
-#endif
 	return TRUE;
 }
 
@@ -217,7 +198,6 @@ stage4(GListPtr colors)
 	int lpc = 0;
 	color_t *color_n = NULL;
 	color_t *color_n_plus_1 = NULL;
-	GListPtr xor = NULL;
 	GListPtr minus = NULL;
 	
 	for(lpc = 0; lpc < g_list_length(colors); lpc++) {
@@ -231,21 +211,20 @@ stage4(GListPtr colors)
 			continue;
 		}
 
-		xor = node_list_xor(color_n_nodes,
-					      color_n_plus_1_nodes);
-		minus = node_list_minus(color_n_nodes,
-						  color_n_plus_1_nodes);
+		minus = node_list_minus(
+			color_n_nodes, color_n_plus_1_nodes, TRUE);
 
-		if(g_list_length(xor) == 0 || g_list_length(minus) == 0) {
-			crm_verbose("Choose any node from our list");
-			choose_node_from_list(colors, color_n, color_n_nodes);
+		if(0 &&
+		   g_list_length(color_n_plus_1_nodes) == 1
+		   && g_list_length(minus) > 0) {
+			crm_warn("Dont choose the only node left for color n+1");
+			choose_node_from_list(colors, color_n, minus);      
 
 		} else {
-			crm_verbose("Choose a node not in n+1");
-			choose_node_from_list(colors, color_n, minus);      
+			crm_verbose("Choose any node from our list");
+			choose_node_from_list(colors, color_n, color_n_nodes);
 		}
 
-		pe_free_shallow(xor);
 		pe_free_shallow(minus);
 	}
 

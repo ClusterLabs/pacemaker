@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.29 2004/06/11 13:27:52 andrew Exp $ */
+/* $Id: utils.c,v 1.30 2004/06/16 11:12:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,7 +57,7 @@ invert_constraint(rsc_to_rsc_t *constraint)
 /* are the contents of list1 and list2 equal */
 /* nodes with weight < 0 are ignored */
 gboolean
-node_list_eq(GListPtr list1, GListPtr list2)
+node_list_eq(GListPtr list1, GListPtr list2, gboolean filter)
 {
 	GListPtr result = NULL;
  
@@ -76,7 +76,7 @@ node_list_eq(GListPtr list1, GListPtr list2)
  * have their weight set to -1 in the result
  */
 GListPtr
-node_list_and(GListPtr list1, GListPtr list2)
+node_list_and(GListPtr list1, GListPtr list2, gboolean filter)
 {
 	GListPtr result = NULL;
 	int lpc = 0;
@@ -101,6 +101,11 @@ node_list_and(GListPtr list1, GListPtr list2)
 				new_node->weight = new_node->weight /2.0;
 			}
 		}
+		if(filter && new_node->weight < 0) {
+			crm_free(new_node);
+			continue;
+		}
+		
 		result = g_list_append(result, new_node);
 	}
  
@@ -114,6 +119,7 @@ find_list_node(GListPtr list, const char *id)
 	slist_iter(
 		thing, node_t, list, lpc,
 		if(safe_str_eq(thing->details->id, id)) {
+			crm_trace("found %s", id);
 			return thing;
 		}
 		);
@@ -123,7 +129,7 @@ find_list_node(GListPtr list, const char *id)
 
 /* list1 - list2 */
 GListPtr
-node_list_minus(GListPtr list1, GListPtr list2)
+node_list_minus(GListPtr list1, GListPtr list2, gboolean filter)
 {
 	GListPtr result = NULL;
 	int lpc = 0;
@@ -132,7 +138,8 @@ node_list_minus(GListPtr list1, GListPtr list2)
 		node, node_t, list1, lpc,
 		node_t *other_node = find_list_node(list2, node->details->id);
 		
-		if(node == NULL || other_node != NULL || node->weight < 0) {
+		if(node == NULL || other_node != NULL
+		   || (filter && node->weight < 0)) {
 			continue;
 			
 		}
@@ -148,7 +155,7 @@ node_list_minus(GListPtr list1, GListPtr list2)
 
 /* list1 + list2 - (intersection of list1 and list2) */
 GListPtr
-node_list_xor(GListPtr list1, GListPtr list2)
+node_list_xor(GListPtr list1, GListPtr list2, gboolean filter)
 {
 	GListPtr result = NULL;
 	int lpc = 0;
@@ -157,7 +164,8 @@ node_list_xor(GListPtr list1, GListPtr list2)
 		node, node_t, list1, lpc,
 		node_t *other_node = (node_t*)find_list_node(list2, node->details->id);
 
-		if(node == NULL || other_node != NULL || node->weight < 0) {
+		if(node == NULL || other_node != NULL
+		   || (filter && node->weight < 0)) {
 			continue;
 		}
 		node_t *new_node = node_copy(node);
@@ -166,10 +174,11 @@ node_list_xor(GListPtr list1, GListPtr list2)
 	
  
 	slist_iter(
-		node, node_t, list1, lpc,
+		node, node_t, list2, lpc,
 		node_t *other_node = (node_t*)find_list_node(list1, node->details->id);
 
-		if(node == NULL || other_node != NULL || node->weight < 0) {
+		if(node == NULL || other_node != NULL
+		   || (filter && node->weight < 0)) {
 			continue;
 		}
 		node_t *new_node = node_copy(node);
@@ -180,14 +189,42 @@ node_list_xor(GListPtr list1, GListPtr list2)
 	return result;
 }
 
+GListPtr
+node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
+{
+	node_t *other_node = NULL;
+	GListPtr result = NULL;
+	int lpc = 0;
+
+	result = node_list_dup(list1, filter);
+
+	slist_iter(
+		node, node_t, list2, lpc,
+
+		if(node == NULL || (filter && node->weight < 0)) {
+			continue;
+		}
+
+		other_node = (node_t*)find_list_node(
+			result, node->details->id);
+
+		if(other_node == NULL) {
+			node_t *new_node = node_copy(node);
+			result = g_list_append(result, new_node);
+		}
+		);
+
+	return result;
+}
+
 GListPtr 
-node_list_dup(GListPtr list1)
+node_list_dup(GListPtr list1, gboolean filter)
 {
 	GListPtr result = NULL;
 	int lpc = 0;
 	slist_iter(
 		this_node, node_t, list1, lpc,
-		if(this_node->weight < 0) {
+		if(filter && this_node->weight < 0) {
 			continue;
 		}
 		
@@ -248,7 +285,7 @@ create_color(GListPtr *colors, GListPtr nodes, GListPtr resources)
 	new_color->details->id = new_color->id; 
 	new_color->details->chosen_node = NULL;
 	crm_trace("populating node list");
-	new_color->details->candidate_nodes = node_list_dup(nodes);
+	new_color->details->candidate_nodes = node_list_dup(nodes, TRUE);
 
 	crm_debug_action(print_color("Created color", new_color, TRUE));
 
@@ -662,16 +699,17 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug("%s%s%s Constraint %s (%p):",
+	crm_debug("%s%s%s Constraint %s (%p) - %d nodes:",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       "rsc_to_node",
-	       cons->id, cons);
+		  cons->id, cons,
+		  g_list_length(cons->node_list_rh));
 
 	if(details == FALSE) {
-		crm_debug("\t%s --> %s, %f (node placement rule)",
+		crm_debug("\t%s %s run (score=%f : node placement rule)",
 			  safe_val3(NULL, cons, rsc_lh, id), 
-			  modifier2text(cons->modifier),
+			  cons->can?"Can":"Cannot",
 			  cons->weight);
 
 		int lpc = 0;

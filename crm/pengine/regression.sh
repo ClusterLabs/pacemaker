@@ -100,17 +100,18 @@ do_test rsc_rsc8 "Should 3	"
 
 echo ""
 
-do_test rsc_node1 "Rsc1 Node1	"
-do_test rsc_node2 "Rsc1 Node2	"
+#do_test rsc_node1 "Rsc1 Node1	"
+#do_test rsc_node2 "Rsc1 Node2	"
+#do_test rsc_node3 "Node Only	"
 
 echo ""
 
-do_test rsc_attr1 "Attr inc	"
-do_test rsc_attr2 "Attr dec	"
-do_test rsc_attr3 "Attr set -	"
-do_test rsc_attr4 "Attr set +	"
-do_test rsc_attr5 "Attr only	"
-do_test rsc_attr6 "Attr multi	"
+#do_test rsc_attr1 "Attr inc	"
+#do_test rsc_attr2 "Attr dec	"
+#do_test rsc_attr3 "Attr set -	"
+#do_test rsc_attr4 "Attr set +	"
+#do_test rsc_attr5 "Attr only	"
+#do_test rsc_attr6 "Attr multi	"
 
 echo ""
 
@@ -118,9 +119,9 @@ do_test complex1 "Complex	"
 
 echo ""
 
-do_test bad1 "Bad data	"
-do_test bad2 "Bad data	"
-do_test bad3 "Bad data	"
+do_test bad1 "Bad node	"
+do_test bad2 "Bad rsc	"
+do_test bad3 "No rsc class"
 do_test bad4 "Bad data	"
 do_test bad5 "Bad data	"
 do_test bad6 "Bad lrm_rsc"

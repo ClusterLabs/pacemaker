@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.6 2004/06/07 10:29:03 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.7 2004/06/16 11:12:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,15 +50,17 @@ extern node_t *find_list_node(GListPtr list, const char *id);
 
 
 // Binary like operators for lists of nodes
-extern GListPtr node_list_dup(GListPtr list1);
+extern GListPtr node_list_dup(GListPtr list1, gboolean filter);
 
-extern GListPtr node_list_and(GListPtr list1, GListPtr list2);
+extern GListPtr node_list_and(GListPtr list1, GListPtr list2, gboolean filter);
 
-extern GListPtr node_list_xor(GListPtr list1, GListPtr list2);
+extern GListPtr node_list_xor(GListPtr list1, GListPtr list2, gboolean filter);
 
-extern GListPtr node_list_minus(GListPtr list1, GListPtr list2);
+extern GListPtr node_list_minus(GListPtr list1,GListPtr list2,gboolean filter);
 
-extern gboolean node_list_eq(GListPtr list1, GListPtr list2);
+extern gboolean node_list_eq(GListPtr list1, GListPtr list2, gboolean filter);
+
+extern GListPtr node_list_or(GListPtr list1, GListPtr list2, gboolean filter);
 
 
 

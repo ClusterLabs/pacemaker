@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.4 2004/06/11 13:27:52 andrew Exp $ */
+/* $Id: color.c,v 1.5 2004/06/16 11:12:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,23 +88,20 @@ apply_node_constraints(GListPtr constraints, GListPtr nodes)
 		if(cons->node_list_rh == NULL) {
 			crm_err("RHS of rsc_to_node (%s) is NULL", cons->id);
 			continue;
-		} else if(cons->modifier == only) {
-			GListPtr intersection = node_list_and(
-				cons->node_list_rh, rsc_lh->allowed_nodes);
-
-			pe_free_shallow(rsc_lh->allowed_nodes);
-			rsc_lh->allowed_nodes = intersection;
-			
-		} else {
-			int llpc = 0;
-			slist_iter(node_rh, node_t, cons->node_list_rh, llpc,
-				   update_node_weight(
-					   cons, node_rh->details->id, nodes));
 		}
+		crm_debug_action(print_resource("before update", rsc_lh,TRUE));
+
+		int llpc = 0;
+		GListPtr or_list = node_list_or(
+			rsc_lh->allowed_nodes, cons->node_list_rh, FALSE);
 		
-		/* dont add it to the resource,
-		 *  the information is in the resouce's node list
-		 */
+		pe_free_shallow(rsc_lh->allowed_nodes);
+		rsc_lh->allowed_nodes = or_list;
+		slist_iter(node_rh, node_t, cons->node_list_rh, llpc,
+			   update_node_weight(cons, node_rh->details->id,
+					      rsc_lh->allowed_nodes));
+
+		crm_debug_action(print_resource("after update", rsc_lh, TRUE));
 		);
 	
 	return TRUE;
@@ -318,7 +315,7 @@ choose_color(resource_t *lh_resource)
 			this_color, color_t,lh_resource->candidate_colors, lpc,
 			GListPtr intersection = node_list_and(
 				this_color->details->candidate_nodes, 
-				lh_resource->allowed_nodes);
+				lh_resource->allowed_nodes, TRUE);
 
 			if(g_list_length(intersection) != 0) {
 				// TODO: merge node weights
@@ -456,14 +453,7 @@ update_node_weight(rsc_to_node_t *cons, const char *id, GListPtr nodes)
 	node_t *node_rh = pe_find_node(cons->rsc_lh->allowed_nodes, id);
 
 	if(node_rh == NULL) {
-		node_t *node_tmp = pe_find_node(nodes, id);
-		node_rh = node_copy(node_tmp);
-		cons->rsc_lh->allowed_nodes =
-			g_list_append(cons->rsc_lh->allowed_nodes, node_rh);
-	}
-
-	if(node_rh == NULL) {
-		// error
+		crm_err("Node not found - cant update");
 		return FALSE;
 	}
 
@@ -477,27 +467,23 @@ update_node_weight(rsc_to_node_t *cons, const char *id, GListPtr nodes)
 		return TRUE;
 	}
 	
-	crm_verbose("Constraint %s: node %s weight %s %f.",
-		      cons->id,
-		      node_rh->details->id,
-		      modifier2text(cons->modifier),
-		      node_rh->weight);
-	
-	switch(cons->modifier) {
-		case set:
-			node_rh->weight = cons->weight;
-			node_rh->fixed = TRUE;
-			break;
-		case inc:
-			node_rh->weight += cons->weight;
-			break;
-		case dec:
-			node_rh->weight -= cons->weight;
-			break;
-		case only:
-		case modifier_none:
-			crm_err("Should not be here");
-			break;
+	crm_verbose("Constraint %s (%s): node %s weight %f.",
+		    cons->id,
+		    cons->can?"can":"cannot",
+		    node_rh->details->id,
+		    node_rh->weight);
+
+	if(cons->can == FALSE) {
+		node_rh->weight = -1;
+	} else {
+		node_rh->weight += cons->weight;
 	}
+
+	if(node_rh->weight < 0) {
+		node_rh->fixed = TRUE;
+	}
+
+	crm_debug_action(print_node("Updated", node_rh, FALSE));
+
 	return TRUE;
 }

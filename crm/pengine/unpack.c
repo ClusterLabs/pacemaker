@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.9 2004/06/11 13:27:52 andrew Exp $ */
+/* $Id: unpack.c,v 1.10 2004/06/16 11:12:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,7 +37,8 @@ int max_valid_nodes = 0;
 int order_id = 1;
 int action_id = 1;
 
-GListPtr match_attrs(xmlNodePtr attr_exp, GListPtr node_list);
+GListPtr match_attrs(
+	const char *attr_exp, GListPtr node_list, gboolean invert);
 
 gboolean unpack_rsc_to_attr(xmlNodePtr xml_obj,
 			    GListPtr rsc_list,
@@ -51,6 +52,10 @@ gboolean unpack_rsc_to_node(xmlNodePtr xml_obj,
 
 gboolean unpack_rsc_to_rsc(
 	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr *action_constraints);
+
+gboolean unpack_rsc_location(
+	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
+	GListPtr *action_constraints);
 
 gboolean unpack_lrm_rsc_state(node_t *node,
 			      xmlNodePtr lrm_state,
@@ -80,7 +85,7 @@ gboolean create_ordering(const char *id, enum con_strength strength,
 
 rsc_to_node_t *rsc2node_new(
 	const char *id, resource_t *rsc,
-	double weight, enum con_modifier modifier, node_t *node,
+	double weight, gboolean can_run, node_t *node,
 	GListPtr *node_constraints);
 
 gboolean
@@ -178,7 +183,7 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->color		= NULL; 
 		new_rsc->runnable	= TRUE; 
 		new_rsc->provisional	= TRUE; 
-		new_rsc->allowed_nodes	= node_list_dup(all_nodes);    
+		new_rsc->allowed_nodes	= NULL;
 		new_rsc->rsc_cons	= NULL; 
 		new_rsc->node_cons	= NULL; 
 		new_rsc->cur_node	= NULL;
@@ -226,7 +231,7 @@ unpack_constraints(xmlNodePtr xml_constraints,
 		if(safe_str_eq("rsc_to_rsc", xml_obj->name)) {
 			unpack_rsc_to_rsc(xml_obj, resources,
 					  action_constraints);
-
+/*
 		} else if(safe_str_eq("rsc_to_node", xml_obj->name)) {
 			unpack_rsc_to_node(xml_obj, resources, nodes,
 					   node_constraints);
@@ -234,10 +239,13 @@ unpack_constraints(xmlNodePtr xml_constraints,
 		} else if(safe_str_eq("rsc_to_attr", xml_obj->name)) {
 			unpack_rsc_to_attr(xml_obj, resources, nodes,
 					   node_constraints);
-			
+*/		
+		} else if(safe_str_eq("rsc_location", xml_obj->name)) {
+			unpack_rsc_location(xml_obj, resources, nodes,
+					    node_constraints);
 		} else {
 			crm_err("Unsupported constraint type: %s",
-			       xml_obj->name);
+				xml_obj->name);
 		}
 	}
 
@@ -246,7 +254,7 @@ unpack_constraints(xmlNodePtr xml_constraints,
 
 rsc_to_node_t *
 rsc2node_new(const char *id, resource_t *rsc,
-	     double weight, enum con_modifier modifier, node_t *node,
+	     double weight, gboolean can, node_t *node,
 	     GListPtr *node_constraints)
 {
 	rsc_to_node_t *new_con = NULL;
@@ -260,10 +268,15 @@ rsc2node_new(const char *id, resource_t *rsc,
 	
 	new_con->id           = id;
 	new_con->rsc_lh       = rsc;
-	new_con->weight       = weight;
 	new_con->node_list_rh = NULL;
-	new_con->modifier     = modifier;
+	new_con->can          = can;
 
+	if(can) {
+		new_con->weight = weight;
+	} else {
+		new_con->weight = -1;
+	}
+	
 	if(node != NULL) {
 		new_con->node_list_rh = g_list_append(NULL, node);
 	}
@@ -304,7 +317,7 @@ unpack_rsc_to_node(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 	}
 
 	new_con = rsc2node_new(
-		id, rsc_lh, weight_f, modifier, NULL, node_constraints);
+		id, rsc_lh, weight_f, TRUE, NULL, node_constraints);
 
 	if(new_con == NULL) {
 		crm_err("Couldnt create con=%s for rsc=%s", id, id_lh);
@@ -409,9 +422,9 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 
 		rsc_to_node_t *new_con = rsc2node_new(
 			xmlGetProp(attr_exp, XML_ATTR_ID), rsc_lh, weight_f,
-			a_modifier, NULL, node_constraints);
+			TRUE, NULL, node_constraints);
 
-		new_con->node_list_rh  = match_attrs(attr_exp, node_list);
+//		new_con->node_list_rh  = match_attrs(attr_exp, node_list);
 		
 		if(new_con->node_list_rh == NULL) {
 			crm_warn("No matching nodes for constraint  %s (%s)",
@@ -664,7 +677,7 @@ unpack_failed_resource(GListPtr *node_constraints,
 		/* not running */
 		/* do not run the resource here again */
 		rsc2node_new("dont_run_generate",
-			     rsc_lh, -1.0, set, node, node_constraints);
+			     rsc_lh, -1.0, FALSE, node, node_constraints);
 
 	} else if(safe_str_eq(last_op, "stop")) {
 		/* must assume still running */
@@ -733,7 +746,7 @@ unpack_healthy_resource(GListPtr *node_constraints,
 	}
 
 	rsc2node_new(
-		"healthy_generate", rsc_lh, weight, inc,node,node_constraints);
+		"healthy_generate", rsc_lh, weight,TRUE,node,node_constraints);
 	
 	return TRUE;
 }
@@ -885,46 +898,38 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 }
 
 GListPtr
-match_attrs(xmlNodePtr attr_exp, GListPtr node_list)
+match_attrs(const char *attr_exp, GListPtr node_list, gboolean invert)
 {
 	int lpc = 0;
 	GListPtr result = NULL;
+	char *name = NULL, *value = NULL;
+	
+	if(decodeNVpair(attr_exp, ':', &name, &value) == FALSE) {
+		return NULL;
+
+	} else if(name == NULL) {
+		crm_err("Attribute %s was invalid", name);
+		return NULL;
+	}
+
 	slist_iter(
 		node, node_t, node_list, lpc,
-		xmlNodePtr node_match = attr_exp->children;
-		gboolean accept = TRUE;
+		gboolean accept = FALSE;
 		
-		while(accept && node_match != NULL) {
-			const char *type = xmlGetProp(
-				node_match, XML_ATTR_TYPE);
-			const char *value= xmlGetProp(
-				node_match, XML_NVPAIR_ATTR_VALUE);
-			const char *name = xmlGetProp(node_match, "target");
+		const char *h_val = (const char*)g_hash_table_lookup(
+			node->details->attrs, name);
 
-			node_match = node_match->next;
-			
-			if(name == NULL || type == NULL) {
-				crm_err("Attribute %s (%s) was invalid",
-					  name, type);
-				continue;
-			}
-			
-			const char *h_val = (const char*)
-				g_hash_table_lookup(node->details->attrs,name);
-			
-			if(h_val != NULL && safe_str_eq(type, "has_attr")){
+		if(h_val != NULL && value == NULL && invert == FALSE) {
+			accept = TRUE;
+
+		} else if(h_val == NULL && value == NULL && invert) {
+			accept = TRUE;
+
+		} else if(h_val != NULL && value != NULL) {
+			if(invert == FALSE && safe_str_eq(value, h_val)) {
 				accept = TRUE;
-				
-			} else if(h_val==NULL && safe_str_eq(type,"not_attr")){
+			} else if(invert && safe_str_neq(value, h_val)) {
 				accept = TRUE;
-				
-			} else if(h_val != NULL
-				  && safe_str_eq(type, "attr_value")
-				  && safe_str_eq(h_val, value)) {
-				accept = TRUE;
-				
-			} else {
-				accept = FALSE;
 			}
 		}
 		
@@ -962,5 +967,154 @@ add_node_attrs(xmlNodePtr attrs, node_t *node)
 		}
 		attrs = attrs->next;
 	}	
+ 	g_hash_table_insert(node->details->attrs,
+			    crm_strdup("uname"),
+			    crm_strdup(node->details->id));
+ 	g_hash_table_insert(node->details->attrs,
+			    crm_strdup("id"),
+			    crm_strdup(node->details->id));
 	return TRUE;
 }
+
+
+
+gboolean
+unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
+		    GListPtr *node_constraints)
+{
+/*
+
+  <constraints>
+     <rsc_location rsc="Filesystem-whatever-1" timestamp="..." lifetime="...">
+     	<rule score="+50.0" result="can">
+       		<node_expression match="san" not_match="uname:node2"/>
+       		<!-- and --><node_expression match="arch:i686" />
+	</rule>
+     	<rule score="+500.0">
+       		<node_expression match="cpu:50GHz" />
+	</rule>
+     	<rule result="cannot">
+       		<node_expression not_match="san"/>
+	</rule>
+...
+
+   Translation:
+
+   Further translation:
+       
+*/
+	xmlNodePtr rules    = xml_obj->children;
+	const char *id_lh   = xmlGetProp(xml_obj, "rsc");
+	const char *id      = xmlGetProp(xml_obj, XML_ATTR_ID);
+	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
+
+	if(rsc_lh == NULL) {
+		crm_err("No resource (con=%s, rsc=%s)",
+		       id, id_lh);
+		return FALSE;
+	}
+			
+	if(rules == NULL) {
+		crm_err("no rules for constraint %s", id);
+	}
+	
+	while(rules != NULL) {
+		gboolean first_expr = TRUE;
+		gboolean   can_run  = FALSE;
+		gboolean   do_and   = TRUE;
+		xmlNodePtr rule     = rules;
+		xmlNodePtr expr     = rule->children;
+		const char *rule_id = xmlGetProp(rule, XML_ATTR_ID);
+		const char *score   = xmlGetProp(rule, "score");
+		const char *result  = xmlGetProp(rule, "result");
+		const char *boolean = xmlGetProp(rule, "boolean");
+		float score_f       = atof(score?score:"0.0");
+
+		rsc_to_node_t *new_con = NULL;
+
+		if(safe_str_eq(boolean, "or")) {
+			do_and = FALSE;
+		}
+
+		rules = rules->next;
+		if(result == NULL || (safe_str_eq(result, "can"))) {
+			can_run = TRUE;
+		}
+
+		new_con = rsc2node_new(rule_id, rsc_lh, score_f,
+				       can_run, NULL, node_constraints);
+
+		if(new_con == NULL) {
+			crm_err("couldnt create constraint %s", rule_id);
+			continue;
+		}
+		
+		/* feels like a hack */
+		if(expr == NULL && can_run) {
+			new_con->node_list_rh = node_list_dup(node_list,FALSE);
+		}
+		
+		while(expr != NULL) {
+			const char *match     = xmlGetProp(expr, "match");
+			const char *not_match = xmlGetProp(expr, "not_match");
+
+			expr = expr->next;
+
+			if(match != NULL) {
+				GListPtr match_L = match_attrs(
+					match, node_list, FALSE);
+
+				if(first_expr) {
+					new_con->node_list_rh =	match_L;
+					first_expr = FALSE;
+					continue;
+				}
+
+				if(do_and) {
+					crm_trace("do_and");
+					
+					new_con->node_list_rh = node_list_and(
+						new_con->node_list_rh,
+						match_L, FALSE);
+				} else {
+					crm_trace("do_or");
+
+					new_con->node_list_rh = node_list_or(
+						new_con->node_list_rh,
+						match_L, FALSE);
+				}
+				pe_free_shallow(match_L);
+			}
+			
+			if(not_match != NULL) {
+				GListPtr not_match_L = match_attrs(
+					not_match, node_list, TRUE);
+
+				if(first_expr) {
+					new_con->node_list_rh =	not_match_L;
+					first_expr = FALSE;
+					continue;
+				}
+
+				if(do_and) {
+					new_con->node_list_rh = node_list_and(
+						new_con->node_list_rh,
+						not_match_L, FALSE);
+				} else {
+					new_con->node_list_rh = node_list_or(
+						new_con->node_list_rh,
+						not_match_L, FALSE);
+				}
+				pe_free_shallow(not_match_L);
+			}	
+		}
+		
+		if(new_con->node_list_rh == NULL) {
+			crm_warn("No matching nodes for constraint/rule %s/%s",
+				 id, rule->name);
+		}
+		crm_debug_action(print_rsc_to_node("Added", new_con, FALSE));
+	}
+	return TRUE;
+}
+

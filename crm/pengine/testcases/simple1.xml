@@ -6,7 +6,11 @@
   <resources>
      <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
   </resources>
-  <constraints/>
+  <constraints>
+      <rsc_location id="run_rsc1" rsc="rsc1">
+	<rule id="can1" result="can"/>
+      </rsc_location>
+  </constraints>
  </configuration>
  <status>
     <node_state id="node1" crmd="offline" join="down" expected="down" timestamp="1086187789" in_ccm="true">
