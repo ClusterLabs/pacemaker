@@ -166,11 +166,10 @@ execra( const char * rsc_type, const char * provider, const char * op_type,
 	} while (params_argv[++index_tmp] != NULL);
 	debug_info->str[debug_info->len-1] = '\0';
 	cl_log(LOG_DEBUG, "Will execute a heartbeat RA: %s", debug_info->str);
-	cl_log(LOG_ERR, "Will execute a heartbeat RA: %s", debug_info->str);
 	g_string_free(debug_info, TRUE);
 	
 	execv(ra_pathname, params_argv);
-	cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
+	cl_log(LOG_ERR, "execv error when to execute a heartbeat RA %s.", rsc_type);
 
 	switch (errno) {
 		case ENOENT:   /* No such file or directory */
