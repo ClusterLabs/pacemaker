@@ -768,8 +768,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			crm_err("An LRM operation failed"
-					" or was aborted");
+			crm_err("An LRM operation failed or was aborted");
 			set_xml_property_copy(
 				iter, XML_LRM_ATTR_RSCSTATE, fail_state);
 			break;
@@ -824,26 +823,40 @@ do_lrm_event(long long action,
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		return I_NULL;
 	}
-	
-	op = fsa_typed_data(fsa_dt_lrm);
-	rsc = op->rsc;
 
-	CRM_DEV_ASSERT(rsc != NULL);
-	crm_info("Processing %d event for %s/%s",
-		 op->op_status, op->op_type, crm_str(rsc?rsc->id:NULL));
+	op = fsa_typed_data(fsa_dt_lrm);
+	
+	CRM_DEV_ASSERT(op != NULL);
+	CRM_DEV_ASSERT(op != NULL && op->rsc != NULL);
+
+	if(op == NULL || op->rsc == NULL) {
+		return I_NULL;
+	}
+
+	rsc = op->rsc;
 	
 	switch(op->op_status) {
 		case LRM_OP_ERROR:
+			crm_err("LRM operation %s/%s failed",
+				crm_str(rsc->id), op->op_type);
+			break;
 		case LRM_OP_CANCELLED:
+			crm_warn("LRM operation %s/%s was cancelled",
+				crm_str(rsc->id), op->op_type);
+			break;
 		case LRM_OP_TIMEOUT:
+			crm_err("LRM operation %s/%s timed out",
+				crm_str(rsc->id), op->op_type);
+			break;
 		case LRM_OP_NOTSUPPORTED:
-			crm_err("An LRM operation failed"
-				" or was aborted");
-			/* fall through */
+			crm_err("LRM operation %s/%s was not suported",
+				crm_str(rsc->id), op->op_type);
+			break;
 		case LRM_OP_DONE:
-			do_update_resource(rsc, op);
+			crm_debug("LRM operation %s/%s passed",
+				crm_str(rsc->id), op->op_type);
 			break;
 	}
-	
+	do_update_resource(rsc, op);
 	return I_NULL;
 }
