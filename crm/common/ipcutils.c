@@ -183,12 +183,19 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 	all_is_good = FALSE;
     }
     CRM_DEBUG2("IPC Client is%s set.", all_is_good?"":" not");
+    int lpc = 0;
     if(all_is_good)
-	while(ipc_client->ops->send(ipc_client, msg) == IPC_FAIL)
+	while(lpc++ < MAX_IPC_FAIL && ipc_client->ops->send(ipc_client, msg) == IPC_FAIL)
 	{
 	    cl_log(LOG_WARNING, "ipc channel blocked");
 	    cl_shortsleep();
 	}
+
+    if(lpc == MAX_IPC_FAIL)
+    {
+	cl_log(LOG_ERR, "Could not send IPC, message.  Channel is dead.");
+	FNRET(!all_is_good);
+    }
     
     CRM_DEBUG2("Sending of IPC message %s.", all_is_good?"succeeded":"failed");
     FNRET(all_is_good);
@@ -369,10 +376,15 @@ init_client_ipc_comms(const char *child,
     FNIN();
     struct IPC_CHANNEL *ch;
     GHashTable * attrs;
-    static char 	path[] = IPC_PATH_ATTR;
-    char    commpath[FIFO_LEN];
-    sprintf(commpath, WORKING_DIR "/%s.fifo", child);
+    int local_fifo_len = 7; // 7 = '/' + ".fifo" + '\0'
+    local_fifo_len += strlen(child);
+    local_fifo_len += strlen(WORKING_DIR);
 
+    static char 	path[] = IPC_PATH_ATTR;
+    char    commpath[local_fifo_len];
+    sprintf(commpath, WORKING_DIR "/%s.fifo", child);
+    commpath[local_fifo_len - 1] = '\0';
+    
     cl_log(LOG_DEBUG, "Attempting to talk on: %s", commpath);
 
     attrs = g_hash_table_new(g_str_hash,g_str_equal);

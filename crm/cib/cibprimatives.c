@@ -306,7 +306,16 @@ addHaNode(xmlNodePtr cib, cibHaNode *xml_node)
     if(findHaNode(cib, ID(xml_node)) != NULL) FNRET(-2);
 
     const char * type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
-    if(type == NULL || strlen(type) < 1) FNRET(-3); // or fill in a default
+    if(type == NULL || strlen(type) < 1)
+    {
+	type = CIB_VAL_NODETYPE_DEFAULT;
+	cl_log(LOG_WARNING,
+	       "You did not specify a value for %s for node (id=%s).  Using default: %s",
+	       XML_CIB_ATTR_NODETYPE, id, CIB_VAL_NODETYPE_DEFAULT);
+	xmlSetProp(xml_node, XML_CIB_ATTR_NODETYPE, CIB_VAL_NODETYPE_DEFAULT);
+	       
+    }
+    //FNRET(-3); // or fill in a default
     
     FNRET(addNode(cib, XML_CIB_TAG_NODES, xml_node));
 }

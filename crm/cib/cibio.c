@@ -304,7 +304,7 @@ activateCibXml(xmlNodePtr cib)
 
 	if(cib->doc == NULL)
 	{
-	    cl_log(LOG_ERR, "Writing of a NULL document will fail, creating a new back link.");
+	    cl_log(LOG_INFO, "Writing of a NULL document will fail, creating a new back link.");
 	    xmlDocPtr foo = xmlNewDoc("1.0");
 	    foo->children = cib;
 	    cib->doc = foo;

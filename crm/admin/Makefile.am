@@ -35,7 +35,10 @@ crmdir			= $(havarlibdir)/crm
 apigid			= @HA_APIGID@
 crmuid			= @HA_CCMUID@
 
-COMMONLIBS		= $(top_builddir)/lib/clplumbing/libplumb.la	\
+## DEBUGFLAGS		= -DDMALLOC_FUNC_CHECK
+## DEBUGLIBS		= -ldmalloc
+COMMONLIBS		= $(DEBUGLIBS) \
+			$(top_builddir)/lib/clplumbing/libplumb.la		\
 			$(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la	\
 			$(top_builddir)/$(CRM_DIR)/cib/libcib.la	\
 			$(top_builddir)/lib/apphb/libapphb.la		\
@@ -45,7 +48,8 @@ COMMONLIBS		= $(top_builddir)/lib/clplumbing/libplumb.la	\
 
 LIBRT 			= @LIBRT@
 AM_CFLAGS		= @CFLAGS@	\
-			-DPIDFILE='"$(PIDFILE)"'
+			-DPIDFILE='"$(PIDFILE)"' \
+			$(DEBUGFLAGS)
 
 ## libraries
 lib_LTLIBRARIES		= 

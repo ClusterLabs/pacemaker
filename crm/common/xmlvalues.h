@@ -61,10 +61,10 @@
 #define CIB_VAL_NODESTATUS_DEFAULT  CIB_VAL_NODESTATUS_DOWN
 
 #define CIB_VAL_CONTYPE_NONE     "none"
-#define CIB_VAL_CONTYPE_AFTER    "StartAfter"
-#define CIB_VAL_CONTYPE_SAME     "SameNode"
-#define CIB_VAL_CONTYPE_BLOCK    "Block"
-#define CIB_VAL_CONTYPE_VAR      "SysVar"
+#define CIB_VAL_CONTYPE_AFTER    "after"
+#define CIB_VAL_CONTYPE_SAME     "same"
+#define CIB_VAL_CONTYPE_BLOCK    "block"
+#define CIB_VAL_CONTYPE_VAR      "sysvar"
 #define CIB_VAL_CONTYPE_DEFAULT  CIB_VAL_CONTYPE_NONE
 
 #define CIB_VAL_SOURCE_DEFAULT  "unknown"

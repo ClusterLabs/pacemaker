@@ -99,7 +99,7 @@
 #define XML_CIB_TAG_STATUS        "status"
 #define XML_CIB_TAG_RESOURCES     "resources"
 #define XML_CIB_TAG_NODES         "nodes"
-#define XML_CIB_TAG_CONSTRAINTS   "contraints"
+#define XML_CIB_TAG_CONSTRAINTS   "constraints"
 
 #define XML_CIB_TAG_STATE         "state"
 #define XML_CIB_TAG_RESOURCE      "resource"

@@ -588,7 +588,11 @@ create_reply(xmlNodePtr xml_request, xmlNodePtr xml_response_data)
     const char *sys_to    = xmlGetProp(xml_request, XML_MSG_ATTR_SYSTO);
     const char *type      = xmlGetProp(xml_request, XML_MSG_ATTR_MSGTYPE);
 
-    if(strcmp("request", type) != 0)
+    if(type == NULL)
+    {
+	FNRET(NULL);
+    }
+    else if(strcmp("request", type) != 0)
     {
 	FNRET(NULL);
     }
@@ -617,7 +621,11 @@ create_forward(xmlNodePtr xml_request, xmlNodePtr xml_response_data, const char 
     const char *sys_from  = xmlGetProp(xml_request, XML_MSG_ATTR_SYSFROM);
     const char *type      = xmlGetProp(xml_request, XML_MSG_ATTR_MSGTYPE);
 
-    if(strcmp("request", type) != 0)
+    if(type == NULL)
+    {
+	FNRET(NULL);
+    }
+    else if(strcmp("request", type) != 0)
     {
 	FNRET(NULL);
     }

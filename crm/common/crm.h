@@ -21,18 +21,23 @@
 #include <stdlib.h>
 #include <ha_config.h>
 
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
+
 #define WORKING_DIR HA_VARLIBDIR"/heartbeat/crm"
 #define MAXDATASIZE 65535 // ipc comms
 #define FIFO_LEN    1024
 #define APPNAME_LEN 256
 #define LOG_DIR     "/var/log"
+#define MAX_IPC_FAIL 5
 
 #define CRM_DEBUG(w)        cl_log(LOG_DEBUG, w)
 #define CRM_DEBUG2(w,x)     cl_log(LOG_DEBUG, w, x)
 #define CRM_DEBUG3(w,x,y)   cl_log(LOG_DEBUG, w, x, y)
 #define CRM_DEBUG4(w,x,y,z) cl_log(LOG_DEBUG, w, x, y, z)
 
-#define FNIN()   cl_log(LOG_DEBUG, "#---#---# Entering function %s...", __FUNCTION__)
+#define FNIN()     cl_log(LOG_DEBUG, "#---#---# Entering function %s...", __FUNCTION__)
 #define FNOUT()  { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return; }
 #define FNRET(x) { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return x; }
 //#define FNRET(x) return x;

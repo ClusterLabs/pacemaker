@@ -215,14 +215,6 @@ crmd_authorize_message(xmlNodePtr root_xml_node, IPC_Message *client_msg, crmd_c
 	curr_client->uid = strdup(uid);
 	
 	g_hash_table_insert (ipc_clients, table_key, curr_client->client_channel);
-
-/* 	IPC_Message        *ack_msg; */
-/* 	char	       str[256]; */
-/* 	snprintf(str, sizeof(str)-1, "I see you have joined us... %d", 1); */
-	
-//	ack_msg = create_simple_message(str, client_channel);
-//	send_ipc_message(client_channel, ack_msg);
-	
     }
     else
 	CRM_DEBUG("Rejected client logon request");
@@ -253,7 +245,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
     gboolean hack_return_good = TRUE;
     crmd_client_t *curr_client = (crmd_client_t*)user_data;
 
-    CRM_DEBUG2("channel: %p", (void*)client);
+    CRM_DEBUG2("channel: %p", client);
 
     CRM_DEBUG2("crmd_ipc_input_callback: processing IPC message from %s", curr_client->table_key);
     CRM_DEBUG2("Client is %s", client == NULL?"NULL":"valid");
@@ -305,8 +297,8 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	if(curr_client != NULL)
 	{
 	    CRM_DEBUG("###-###-### Removing client from hash table");
-/* 	    if(curr_client->table_key != NULL) */
-/* 		g_hash_table_remove(ipc_clients, curr_client->table_key); */
+	    if(curr_client->table_key != NULL)
+		g_hash_table_remove(ipc_clients, curr_client->table_key);
 	    
 	    if(curr_client->sub_sys == NULL) CRM_DEBUG("Client had not registered with us yet");
 	    else if(strcmp(CRM_SYSTEM_LRMD, curr_client->sub_sys) == 0) have_lrmd = FALSE;
@@ -314,11 +306,11 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	    else if(strcmp(CRM_SYSTEM_TENGINE, curr_client->sub_sys) == 0) have_pe = FALSE;
 
 	    CRM_DEBUG("###-###-### Detaching crm_client");
-//	    gboolean det = G_main_del_IPC_Channel(curr_client->client_source);
-//	    CRM_DEBUG2("crm_client was %s detached", det?"successfully":"not");
+	    gboolean det = G_main_del_IPC_Channel(curr_client->client_source);
+	    CRM_DEBUG2("crm_client was %s detached", det?"successfully":"not");
 	    
 	    CRM_DEBUG("###-###-### Freeing crm_client");
-//	    ha_free(curr_client);
+	    ha_free(curr_client);
 	}
 
 /* 	CRM_DEBUG("checking if more messages need to be gotten"); */
@@ -454,6 +446,10 @@ msg_ccm_join(const struct ha_msg *msg, void *foo)
 }
 
 
+
+/*
+ * will free root_xml_node (and src_node_name??) 
+ */
 
 void
 process_message(xmlNodePtr root_xml_node, gboolean originated_locally, const char *src_node_name)

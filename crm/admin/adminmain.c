@@ -65,15 +65,9 @@ xmlNodePtr handleCreate(void);
 xmlNodePtr handleDelete(void);
 xmlNodePtr handleModify(void);
 gboolean decodeNVpair(const char *srcstring, char separator, char **name, char **value);
-gboolean admin_input_dispatch(int fd, gpointer user_data);
 gboolean admin_msg_callback(IPC_Channel* source_data, void* private_data);
 xmlNodePtr wrapUpdate(xmlNodePtr update, const char *section_name, const char *action);
-
-
-// from cibmessages.c
-extern xmlNodePtr createCibRequest(gboolean isLocal, const char *operation, const char *section,
-				   const char *verbose, xmlNodePtr data);
-
+char *pluralSection(void);
 
 
 gboolean DO_DAEMON  = FALSE;
@@ -422,7 +416,11 @@ xmlNodePtr
 handleCreate(void)
 {
     CRM_DEBUG2("Creating new CIB object (%s)", obj_type);
-    if(obj_type == NULL) return NULL;// error
+    if(obj_type == NULL)
+    {
+	cl_log(LOG_ERR, "You must specify an object type.  Use the -o option.");
+	return NULL;// error
+    }
     xmlNodePtr xml_root_node, new_xml_node;
     const char *section_name = NULL;
     
@@ -471,13 +469,24 @@ handleCreate(void)
     {
 	section_name = XML_CIB_TAG_CONSTRAINTS;
 	CRM_DEBUG2("Creating new %s object", section_name);
+
+	if(subtype == NULL)
+	{
+	    cl_log(LOG_ERR, "You must specify a subtype for %s objects.  Use the -s option.", section_name);
+	    return NULL;// error
+	}
+	
 	if(strcmp(CIB_VAL_CONTYPE_BLOCK, subtype) == 0)
 	{
-	    CRM_DEBUG3("Creating new %s (%s) object", section_name, subtype);
-	    if(clear == NULL || description == NULL || resource[0] == NULL || id == NULL) return NULL;
-
+	    CRM_DEBUG3("Creating new %s (%s) object", section_name, CIB_VAL_CONTYPE_BLOCK);
+	    if(clear == NULL || description == NULL || resource[0] == NULL || id == NULL)
+	    {
+		cl_log(LOG_ERR, "Not all required args were filled in.  -c [%s] -D [%s] -r [%s] -i [%s] ", clear, description, resource[0], id);
+		return NULL;
+	    }
+	    
 	    id = (char*)ha_malloc(256*(sizeof(char)));
-	    sprintf(id, "failed-%s-%s-%s", node, resource[0], instance);
+	    sprintf(id, "failed-%s-%s", node, resource[0]);
 	    new_xml_node = newConstraint(id);
 
 	    xmlSetProp(new_xml_node, XML_CIB_ATTR_CONTYPE, CIB_VAL_CONTYPE_BLOCK);
@@ -493,8 +502,12 @@ handleCreate(void)
 	}
 	else if(strcmp(CIB_VAL_CONTYPE_VAR, subtype) == 0)
 	{
-	    CRM_DEBUG3("Creating new %s (%s) object", section_name, subtype);
-	    if(list_add->num_items == 1 || description == NULL ||  id == NULL || num_resources != 1) return NULL;
+	    CRM_DEBUG3("Creating new %s (%s) object", section_name, CIB_VAL_CONTYPE_VAR);
+	    if(list_add->num_items == 1 || description == NULL ||  id == NULL || num_resources != 1)
+	    {
+		cl_log(LOG_ERR, "Not all required args were filled in.  -a [# %d] -D [%s] -r [# %d] -i [%s] ", list_add->num_items, description, num_resources, id);
+		return NULL;
+	    }
 
 	    new_xml_node = newConstraint(id);
 
@@ -524,8 +537,12 @@ handleCreate(void)
 	}
 	else
 	{
-	    CRM_DEBUG3("Creating new %s (%s) object", section_name, subtype);
-	    if(id == NULL || description == NULL ||  num_resources != 2) return NULL;
+	    CRM_DEBUG3("Creating new %s (%s)[any] object", section_name, subtype);
+	    if(id == NULL || description == NULL ||  num_resources != 2)
+	    {
+		cl_log(LOG_ERR, "Not all required args were filled in.  -i [%s] -D [%s] -r [# %d] ", id, description, num_resources);
+		return NULL;
+	    }
 	    new_xml_node = newConstraint(id);
 
 	    xmlSetProp(new_xml_node, XML_CIB_ATTR_CONTYPE, subtype);
@@ -551,8 +568,13 @@ handleCreate(void)
 xmlNodePtr
 handleDelete(void)
 {
-    CRM_DEBUG("Deleting existing CIB object");
-    if(subtype == NULL) return NULL;// error
+    CRM_DEBUG2("Deleting existing CIB object %p",  obj_type);
+    if(obj_type == NULL)
+    {
+	cl_log(LOG_ERR, "You must specify an object type.  Use the -o option.");
+	return NULL;// error
+    }
+    
     xmlNodePtr xml_root_node, new_xml_node = NULL;;
     const char *section_name = NULL;
     
@@ -582,7 +604,7 @@ handleDelete(void)
 	CRM_DEBUG2("Deleting exiting %s object", section_name);
 	if(id == NULL) return NULL;
 
-	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_RESOURCE);
+	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_CONSTRAINT);
 	xmlSetProp(new_xml_node, XML_ATTR_ID, id);
 	if(subtype != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_NODETYPE, subtype);
     }
@@ -605,7 +627,12 @@ xmlNodePtr
 handleModify(void)
 {
     CRM_DEBUG("Modifying existing CIB object");
-    if(subtype == NULL) return NULL;// error
+    if(obj_type == NULL)
+    {
+	cl_log(LOG_ERR, "You must specify an object type.  Use the -o option.");
+	return NULL;// error
+    }
+
     xmlNodePtr xml_root_node, new_xml_node = NULL;
     const char *section_name = NULL;
     
@@ -683,7 +710,7 @@ handleModify(void)
 	CRM_DEBUG3("Modifing existing %s (%s) object", section_name, id);
 
 	if(id == NULL) return NULL;
-	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_RESOURCE);
+	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_CONSTRAINT);
 	xmlSetProp(new_xml_node, XML_ATTR_ID, id);
 
 	if(subtype     != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_CONTYPE, subtype);
@@ -765,7 +792,8 @@ wrapUpdate(xmlNodePtr update, const char *section_name, const char *action)
     xmlNodePtr fragment = xmlNewChild(cib_req, NULL, XML_CIB_TAG_FRAGMENT, NULL);
     xmlSetProp(fragment, XML_CIB_ATTR_SECTION, section_name);
     xmlNodePtr cib = xmlNewChild(fragment, NULL, XML_TAG_CIB, NULL);
-    xmlAddChild(cib, update);
+    xmlNodePtr section = xmlNewChild(cib, NULL, pluralSection(), NULL);
+    xmlAddChild(section, update);
 
     // create the real request
     xmlNodePtr request = xmlNewNode(NULL, XML_REQ_TAG_DC);
@@ -784,6 +812,26 @@ wrapUpdate(xmlNodePtr update, const char *section_name, const char *action)
 }
 
 
+char *
+pluralSection(void)
+{
+    char *obj_type_parent = NULL;
+    if(obj_type == NULL)
+    {
+	obj_type_parent = strdup("all");
+    }
+    else
+    {
+	CRM_DEBUG2("Constructing CIB section from %s", obj_type);
+	obj_type_parent = (char*)ha_malloc(sizeof(char)*
+					   (strlen(obj_type)+1));
+	cl_log(LOG_DEBUG, "Building the request - 1");
+	sprintf(obj_type_parent, "%s%c", obj_type, 's');
+    }
+    return obj_type_parent;
+}
+
+
 int
 do_work(ll_cluster_t *hb_cluster)
 {
@@ -794,21 +842,8 @@ do_work(ll_cluster_t *hb_cluster)
     if(DO_DAEMON == TRUE && DO_QUERY == TRUE)
     {
 	cl_log(LOG_DEBUG, "Querying the CIB");
-	char *obj_type_parent = NULL;
-	if(obj_type == NULL)
-	{
-	    obj_type_parent = strdup("all");
-	}
-	else
-	{
-	    cl_log(LOG_DEBUG, "Building the request - 0");
-
-	    CRM_DEBUG2("Constructing CIB section from %s", obj_type);
-	    obj_type_parent = (char*)ha_malloc(sizeof(char)*
-					       (strlen(obj_type)+1));
-	    cl_log(LOG_DEBUG, "Building the request - 1");
-	    sprintf(obj_type_parent, "%s%c", obj_type, 's');
-	}
+	char *obj_type_parent = pluralSection();
+	
 	CRM_DEBUG2("Querying the CIB for section: %s", obj_type_parent);
 	xml_root_node = xmlNewNode(NULL, XML_REQ_TAG_DC);
 	xmlSetProp(xml_root_node, XML_DC_ATTR_OP, "cib_op");
@@ -877,7 +912,7 @@ do_work(ll_cluster_t *hb_cluster)
 /* send it */
     if(xml_root_node != NULL && crmd_channel != NULL)
     {
-	CRM_DEBUG2("sending message: %s", xml_root_node->name);
+//	CRM_DEBUG2("sending message: %s", xml_root_node->name);
 	const char *sys_to = CRM_SYSTEM_DC;
 	if(dest_node != NULL)
 	    sys_to = CRM_SYSTEM_CRMD;
@@ -953,22 +988,6 @@ usage(const char* cmd, int exit_status)
 }
 
 const char * ournode;
-
-gboolean
-admin_input_dispatch(int fd, gpointer user_data)
-{
-  cl_log(LOG_DEBUG, "input_dispatch...");
-  
-  ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
-
-  while(hb_cluster->llc_ops->msgready(hb_cluster))
-  {
-      cl_log(LOG_DEBUG, "there was another message...");
-      hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);  // invoke the callbacks but dont block
-  }
-  
-  return TRUE;
-}
 
 gboolean
 admin_msg_callback(IPC_Channel* server, void* private_data)
@@ -1051,8 +1070,8 @@ admin_msg_callback(IPC_Channel* server, void* private_data)
     if(recieved_responses >= expected_responses)
     {
 	cl_log(LOG_INFO, "Recieved expected number (%d) of messages from Heartbeat.  Exiting normally.", expected_responses);
-/* 	g_main_quit(mainloop); */
-/* 	return !hack_return_good; */
+ 	g_main_quit(mainloop);
+ 	return !hack_return_good; 
     }
     FNRET(hack_return_good);
 }

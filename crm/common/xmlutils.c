@@ -65,32 +65,42 @@ findDeepNode(xmlNodePtr root, const char **search_path, int len)
 	CRM_DEBUG("Will never find anything in NULL :)");
 	return NULL;
     }
-    
-    
-    xmlNodePtr child = root->children, lastMatch = NULL;
     int	j;
+    CRM_DEBUG("looking for...");
     for (j=0; j < len; ++j)
     {
 	if(search_path[j] == NULL) break;
-	
-	CRM_DEBUG2("looking for (%s).", search_path[j]);
+	CRM_DEBUG2(" --> (%s).", search_path[j]);
+    }
+    
+    xmlNodePtr child = root->children, lastMatch = NULL;
+    for (j=0; j < len; ++j)
+    {
+	gboolean is_found = FALSE;
+	if(search_path[j] == NULL) break;
 	
 	while(child != NULL)
 	{
 	    const char * child_name = (const char*)child->name;
-	    CRM_DEBUG2("comparing with (%s).", child->name);
+	    CRM_DEBUG3("comparing (%s) with (%s).", search_path[j], child->name);
 	    if(strcmp(child_name, search_path[j]) == 0)
 	    {
 		lastMatch = child;
 		child = lastMatch->children;
-		cl_log(LOG_DEBUG, "found node (%s) @line (%ld).", search_path[j], xmlGetLineNo(child));
+		CRM_DEBUG3("found node (%s) @line (%ld).", search_path[j], xmlGetLineNo(child));
+		is_found = TRUE;
 		break;
 	    }
 	    child = child->next;
 	}
+	if(is_found == FALSE)
+	{
+	    CRM_DEBUG2("No more siblings left... %s cannot be found.", search_path[j]);
+	    break;
+	}
     }
 
-    if(j > 0 && lastMatch != NULL && strcmp(lastMatch->name, search_path[j-1]) == 0)
+    if(j == len && lastMatch != NULL && strcmp(lastMatch->name, search_path[j-1]) == 0)
     {
 	CRM_DEBUG2("returning node (%s).", xmlGetNodePath(lastMatch));
 	return lastMatch;
