@@ -229,11 +229,11 @@ class HAResourceAudit(ClusterAudit):
             RunningNodes = self._RscRunningNodes(resource)
             NodeofRsc[resource.rid]=RunningNodes
             if len(RunningNodes) == 0 :
-                print resource.rid + " isn't running anywhere"
+                self.CM.log("%s isn't running anywhere" %resource)
                 passed = 0
             if len(RunningNodes) > 1:
-                print resource.rid + " is running more than once: " \
-                      + str(RunningNodes)
+                self.CM.log("%s is running more than once %s" 
+			    %(resource, str(RunningNodes)))
                 passed = 0
 
         #Make sure the resouces with "must","placement" constraint are running on the same node
