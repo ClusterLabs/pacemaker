@@ -47,7 +47,8 @@ AUTOMAKE_OPTIONS	= foreign
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4
-			 
+coredir = 		@HA_COREDIR@
+hauser = 		@HA_CCMUSER@
 
 ## proc-ha is left out from SUBDIRS (completely obsolete)
 
@@ -80,6 +81,20 @@ deb:		dist
 		tar -zxf $(TARFILE)
 		cd $(distdir) ; dpkg-buildpackage -rfakeroot -us -uc 
 		rm -rf $(distdir)
+
+install-exec-local:
+	-test -p $(DESTDIR)$(coredir) || mkdir -p $(DESTDIR)$(coredir)
+	-chown root $(DESTDIR)$(coredir)
+	-chmod 755 $(DESTDIR)$(coredir)
+	-test -p $(DESTDIR)$(coredir)/root || mkdir -p $(DESTDIR)$(coredir)/root
+	-chown root $(DESTDIR)$(coredir)/root
+	-chmod 700 $(DESTDIR)$(coredir)/root
+	-test -p $(DESTDIR)$(coredir)/nobody || mkdir -p $(DESTDIR)$(coredir)/nobody
+	-chown nobody $(DESTDIR)$(coredir)/nobody
+	-chmod 700 $(DESTDIR)$(coredir)/nobody
+	-test -p $(DESTDIR)$(coredir)/$(hauser) || mkdir -p $(DESTDIR)$(coredir)/$(hauser)
+	-chown $(hauser) $(DESTDIR)$(coredir)/$(hauser)
+	-chmod 700 $(DESTDIR)$(coredir)/$(hauser)
 
 # "pkg" format for Solaris etc.
 pkg:
