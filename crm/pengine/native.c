@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.11 2005/02/01 22:46:41 andrew Exp $ */
+/* $Id: native.c,v 1.12 2005/02/17 16:23:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,22 +52,9 @@ typedef struct native_variant_data_s
 } native_variant_data_t;
 
 #define get_native_variant_data(data, rsc)				\
-	if(rsc->variant == pe_native) {					\
-		data = (native_variant_data_t *)rsc->variant_opaque;	\
-	} else {							\
-		crm_err("Resource %s was not a \"native\" variant",	\
-			rsc->id);					\
-		return;							\
-	}								\
-
-#define get_native_variant_data_boolean(data, rsc)			\
-	if(rsc->variant == pe_native) {					\
-		data = (native_variant_data_t *)rsc->variant_opaque;	\
-	} else {							\
-		crm_err("Resource %s was not a \"native\" variant",	\
-			rsc->id);					\
-		return FALSE;							\
-	}								\
+	CRM_ASSERT(rsc->variant == pe_group);				\
+	CRM_ASSERT(rsc->variant_opaque != NULL);			\
+	data = (native_variant_data_t *)rsc->variant_opaque;
 
 void
 native_add_running(resource_t *rsc, node_t *node)
@@ -727,7 +714,10 @@ void native_rsc_dependancy_rh_must(resource_t *rsc_lh, gboolean update_lh,
 		native_data_rh->color    = copy_color(native_data_lh->color);
 	}
 
-	if(do_merge) {
+	if(update_rh == FALSE && update_lh == FALSE) {
+		CRM_DEV_ASSERT(FALSE);
+		
+	} else if(do_merge) {
 		crm_debug("Merging candidate nodes");
 		old_list = native_data_rh->color->details->candidate_nodes;
 		native_data_rh->color->details->candidate_nodes = merged_node_list;
@@ -859,7 +849,7 @@ native_choose_color(resource_t *rsc)
 {
 	GListPtr sorted_colors = NULL;
 	native_variant_data_t *native_data = NULL;
-	get_native_variant_data_boolean(native_data, rsc);
+	get_native_variant_data(native_data, rsc);
 	
 	if(rsc->runnable == FALSE) {
 		native_assign_color(rsc, no_color);
@@ -1023,8 +1013,8 @@ native_constraint_violated(
 
 	gboolean matched = FALSE;
 
-	get_native_variant_data_boolean(native_data_lh, rsc_lh);
-	get_native_variant_data_boolean(native_data_rh, rsc_rh);
+	get_native_variant_data(native_data_lh, rsc_lh);
+	get_native_variant_data(native_data_rh, rsc_rh);
 
 	color_lh = native_data_lh->color;
 	color_rh = native_data_rh->color;
