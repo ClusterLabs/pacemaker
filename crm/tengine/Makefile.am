@@ -35,6 +35,7 @@ crmdir		= $(havarlibdir)/crm
 COMMONLIBS	= $(CRM_DEBUG_LIBS) 					\
 		$(top_builddir)/lib/clplumbing/libplumb.la		\
 		$(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la 	\
+		$(top_builddir)/$(CRM_DIR)/cib/libcib.la	 	\
 		$(top_builddir)/lib/apphb/libapphb.la			\
 		$(top_builddir)/lib/hbclient/libhbclient.la		\
 		$(GLIBLIB)						\
@@ -50,7 +51,7 @@ halib_PROGRAMS	= tengine
 ## SOURCES
 
 #noinst_HEADERS	= config.h control.h crmd.h
-noinst_HEADERS	= 
+noinst_HEADERS	= tengine.h
 
 tengine_SOURCES	= tengine.c tenginemain.c
 tengine_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'

@@ -57,7 +57,8 @@ halib_PROGRAMS	= crmd
 
 ## SOURCES
 
-noinst_HEADERS	= 
+noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h \
+			fsa_matrix.h fsa_proto.h
 
 crmd_SOURCES	= crmdmain.c crmd.c 					\
 		fsa.c control.c messages.c ccm.c 			\
@@ -70,7 +71,12 @@ crmd_LDADD	= $(COMMONLIBS) 					\
 		  $(top_builddir)/lib/lrm/liblrm.la			\
 		  $(top_builddir)/membership/ccm/libccmclient.la  
 
-#
+# Simple HA client app
+#clnt_SOURCES	= clnt.c
+
+#clnt_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+#clnt_LDFLAGS	= $(XML_LIBS)
+#clnt_LDADD	= $(COMMONLIBS) 
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

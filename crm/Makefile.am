@@ -19,9 +19,10 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 ## Subdirectories
 SUBDIRS			=  common cib crmd pengine tengine admin
-
+EXTRA_DIST		= admin_cib_test.sh
 
 crmdir			= $(HA_VARLIBDIR)/$(HB_PKG)/crm
+noinst_HEADERS 	= dmalloc_wrapper.h
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)$(crmdir)

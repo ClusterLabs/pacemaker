@@ -40,8 +40,8 @@ crmressocket	= $(havarlibdir)/api/crm.rsp
 COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		  $(top_builddir)/lib/clplumbing/libplumb.la		\
 		  $(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la	\
-		  $(top_builddir)/lib/apphb/libapphb.la			\
-		  $(top_builddir)/lib/hbclient/libhbclient.la  		\
+		  $(top_builddir)/lib/apphb/libapphb.la		\
+		  $(top_builddir)/lib/hbclient/libhbclient.la		\
 		  $(GLIBLIB)						\
 		  $(LIBRT)
 
@@ -57,7 +57,7 @@ halib_PROGRAMS	= cib
 
 ## SOURCES
 #noinst_HEADERS		= config.h control.h crmd.h
-noinst_HEADERS		= 
+noinst_HEADERS		= cibio.h  cibmessages.h   cibprimatives.h
 
 libcib_la_SOURCES	= cibio.c cibprimatives.c cibmessages.c cib.c
 libcib_la_LDFLAGS	= -version-info 0:0:0
@@ -66,8 +66,7 @@ libcib_la_CFLAGS	= -I$(top_builddir)
 cib_SOURCES		= cibmain.c
 cib_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cib_LDFLAGS		= $(XML_LIBS)
-cib_LDADD		= $(COMMONLIBS) \
-			  libcib.la
+cib_LDADD		= $(COMMONLIBS) libcib.la
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

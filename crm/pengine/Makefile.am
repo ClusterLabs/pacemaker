@@ -56,7 +56,7 @@ halib_PROGRAMS	= ptest pengine
 
 ## SOURCES
 
-noinst_HEADERS	= 
+noinst_HEADERS	= pe_utils.h pengine.h
 
 ptest_SOURCES	= pengine.c utils.c ptest.c
 
@@ -64,7 +64,7 @@ ptest_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ptest_LDFLAGS	= $(XML_LIBS)
 ptest_LDADD	= $(COMMONLIBS) 
 
-pengine_SOURCES	= pengine.c utils.c messages.c penginemain.c 
+pengine_SOURCES	= pengine.c utils.c penginemain.c 
 
 pengine_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 pengine_LDFLAGS	= $(XML_LIBS)
