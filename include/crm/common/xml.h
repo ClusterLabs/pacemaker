@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.9 2005/01/26 13:21:45 andrew Exp $ */
+/* $Id: xml.h,v 1.10 2005/01/26 22:53:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,7 +92,7 @@ extern const char *get_xml_attr_nested(crm_data_t *parent,
  *
  */
 extern void free_xml_fn(crm_data_t *a_node);
-#if 0
+#if 1
 #  define free_xml(xml_obj) free_xml_fn(xml_obj); xml_obj = NULL
 #else
 #  define free_xml(xml_obj) xml_obj = NULL
