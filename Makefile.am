@@ -46,7 +46,8 @@ AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
-                        DRF/stamp-h.in
+                        DRF/stamp-h.in libtool.m4 ltdl.m4
+			 
 
 ## proc-ha is left out from SUBDIRS (completely obsolete)
 
