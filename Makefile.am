@@ -51,12 +51,12 @@ MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
 
 ## proc-ha is left out from SUBDIRS (completely obsolete)
 
-SUBDIRS                 = libltdl doc debian replace include lib \
+SUBDIRS                 = libltdl doc debian pkg replace include lib \
                         ldirectord heartbeat telecom\
                         cts linux-ha membership contrib config \
 			@SNMP_SUBAGENT_DIR@ @CRM_DIR@ @LRM_DIR@
 
-DIST_SUBDIRS                 = libltdl doc debian replace include lib \
+DIST_SUBDIRS                 = libltdl doc debian pkg replace include lib \
                         ldirectord heartbeat telecom cts linux-ha membership \
 			contrib config @CRM_DIR@ @LRM_DIR@
 
@@ -75,6 +75,10 @@ deb:		dist
 		cd $(distdir) ; dpkg-buildpackage -rfakeroot -us -uc 
 		rm -rf $(distdir)
 
+# "pkg" format for Solaris etc.
+pkg:
+		(cd pkg && $(MAKE) PWD=`pwd`)
+
 clean:	am_config_clean
 am_config_clean:
 		rm -fr $(PACKAGE)-*.tar.gz
@@ -91,4 +95,4 @@ handy-copy:
 
 
 
-.PHONY: rpm handy handy-copy
+.PHONY: rpm pkg handy handy-copy
