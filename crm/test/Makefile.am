@@ -19,7 +19,12 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 testdir			= $(libdir)/heartbeat/crmtest
 
-test_SCRIPTS	=	helper.sh 
+test_SCRIPTS		= helper.sh
 
-test_DATA 	=	1node.sh 2node.sh testutils.pl
+EXTRA_DIST		= 1node.sh 2node.sh testutils.pl
 
+install-exec-local:
+	$(mkinstalldirs) $(DESTDIR)/$(testdir)
+	-chown $(HA_CCMUSER) $(DESTDIR)/$(testdir)
+	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(testdir)
+	-chmod g+w $(DESTDIR)/$(testdir)
