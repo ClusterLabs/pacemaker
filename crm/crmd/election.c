@@ -86,7 +86,7 @@ do_election_vote(long long action,
 			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
 
 		} else {
-			register_fsa_input(C_FSA_INTERNAL, I_NOT_DC, NULL);
+			register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
 		}
 	}
 
@@ -168,21 +168,29 @@ do_election_count_vote(long long action,
 	}
 
 	our_node = (oc_node_t*)
-		g_hash_table_lookup(fsa_membership_copy->members, fsa_our_uname);
+		g_hash_table_lookup(fsa_membership_copy->members,fsa_our_uname);
 
 	your_node = (oc_node_t*)
-		g_hash_table_lookup(fsa_membership_copy->members, vote_from);
+		g_hash_table_lookup(fsa_membership_copy->members,vote_from);
 
+	/* if your_version == 0, then they're shutting down too */
 	if(is_set(fsa_input_register, R_SHUTDOWN)) {
-		crm_debug("Election fail: we are shutting down");
-		we_loose = TRUE;
-
-	} else if(our_node == NULL) {
-		crm_debug("Election fail: we dont exist in the CCM list");
+		if(your_version != 0) {
+			crm_debug("Election fail: we are shutting down");
+			we_loose = TRUE;
+		} else {
+			/* pretend nothing happened, they want to shutdown too*/
+			return I_NULL;
+		}
+		
+	} else if(our_node == NULL
+		|| fsa_membership_copy->last_event == OC_EV_MS_EVICTED) {
+		crm_debug("Election fail: we dont exist in CCM");
 		we_loose = TRUE;
 		
 	} else if(your_node == NULL) {
-		crm_err("The other side doesnt exist in the CCM list");
+		crm_err("The other side doesnt exist in CCM.  Ignoring vote.");
+		return I_NULL;
 		
 	} else if(compare_version(your_version, CRM_VERSION) > 0) {
 		crm_debug("Election fail: version");
