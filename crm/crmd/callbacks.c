@@ -302,11 +302,15 @@ crmd_client_status_callback(const char * node, const char * client,
 
 gboolean lrm_dispatch(int fd, gpointer user_data)
 {
-	int rc = 0;
+	int num_msgs = 0;
 	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
 	crm_debug("received callback");
-	rc = lrm->lrm_ops->rcvmsg(lrm, FALSE);
-	if(rc != HA_OK) {
+	num_msgs = lrm->lrm_ops->rcvmsg(lrm, FALSE);
+	if(num_msgs < 1) {
+		crm_err("lrm->lrm_ops->rcvmsg() failed, connection lost?");
+		clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+		register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+		s_crmd_fsa(C_FSA_INTERNAL);
 		return FALSE;
 	}
 	return TRUE;
