@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.14 2004/09/20 12:21:01 andrew Exp $ */
+/* $Id: xml.c,v 1.15 2004/09/20 14:22:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -647,12 +647,13 @@ dump_xml_formatted(xmlNodePtr an_xml_node) {
 	crm_trace("Cleaning up parser");
 	xmlCleanupParser();
 
-	crm_trace("Moving memory into crm_ space");
+	crm_trace("Copying memory into crm_ space");
 	if(xml_buffer != NULL && len > 0) {
-		xmlFree(xml_buffer);
 		/* copy the text into crm_ memory */ 
 		buffer = crm_strdup(xml_buffer);
+		xmlFree(xml_buffer);
 	}
+	crm_trace("Buffer coppied");
 	
 	free_xml(xml_node);
 
@@ -677,6 +678,7 @@ print_xml_formatted (int log_level, const char *function,
 		   crm_str(text), crm_str(msg_buffer));
 	crm_trace("Freeing char * buffer");
 	crm_free(msg_buffer);
+	crm_trace("Free-d char * buffer");
 
 	return;
 }
