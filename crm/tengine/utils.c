@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.17 2005/02/25 10:32:08 andrew Exp $ */
+/* $Id: utils.c,v 1.18 2005/02/28 10:58:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -110,18 +110,20 @@ print_state(int log_level)
 		do_crm_log(log_level, __FUNCTION__, NULL, "Synapse %d %s",
 			  synapse->id,
 			  synapse->complete?"has completed":"is pending");
-		
+
+		if(synapse->confirmed == FALSE) {
+			slist_iter(
+				action, action_t, synapse->actions, lpc2,
+				print_action("\t", action, log_level);
+				);
+		}
 		if(synapse->complete == FALSE) {
 			slist_iter(
 				input, action_t, synapse->inputs, lpc2,
-				print_input("\t", input, log_level+1);
+				print_input("\t", input, log_level);
 				);
 		}
 		
-		slist_iter(
-			action, action_t, synapse->actions, lpc2,
-			print_action("\t", action, log_level);
-			);
 		);
 	
 	do_crm_log(log_level, __FUNCTION__, NULL, "###########");
@@ -140,25 +142,50 @@ print_input(const char *prefix, action_t *input, int log_level)
 	}
 }
 
+
 void
 print_action(const char *prefix, action_t *action, int log_level) 
 {
-	do_crm_log(log_level, __FUNCTION__, NULL,
-		   "%s[Action %d] %s (%d - %s fail)",
-		   prefix,
-		   action->id,
-		   action->complete?"Completed":
-			action->invoked?"In-flight":"Pending",
-		   action->type,
+	do_crm_log(log_level, __FUNCTION__, NULL, "%s[Action %d] %s (%s fail)",
+		   prefix, action->id, action->complete?"Completed":
+					action->invoked?"In-flight":"Pending",
 		   action->can_fail?"can":"cannot");
-	
-	do_crm_log(log_level, __FUNCTION__, NULL, "%s  timeout=%d, timer=%d",
-		   prefix,
-		   action->timeout,
-		   action->timer->source_id);
+		
+	switch(action->type) {
+		case action_type_pseudo:
+			do_crm_log(log_level, __FUNCTION__, NULL,
+				   "%s\tPseudo Op: %s", prefix,
+				   crm_element_value(
+					   action->xml, XML_LRM_ATTR_TASK));
+			break;
+		case action_type_rsc:
+			do_crm_log(log_level, __FUNCTION__, NULL,
+				   "%s\tResource Op: %s/%s on %s", prefix,
+				   crm_element_value(
+					   action->xml, XML_LRM_ATTR_RSCID),
+				   crm_element_value(
+					   action->xml, XML_LRM_ATTR_TASK),
+				   crm_element_value(
+					   action->xml, XML_LRM_ATTR_TARGET));
+			break;
+		case action_type_crm:	
+			do_crm_log(log_level, __FUNCTION__, NULL,
+				   "%s\tCRM Op: %s on %s", prefix,
+				   crm_element_value(
+					   action->xml, XML_LRM_ATTR_TASK),
+				   crm_element_value(
+					   action->xml, XML_LRM_ATTR_TARGET));
+			break;
+	}
 
+	if(action->timeout > 0 || action->timer->source_id > 0) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "%s\ttimeout=%d, timer=%d", prefix,
+			   action->timeout, action->timer->source_id);
+	}
+	
 	if(action->complete == FALSE) {
-		crm_log_xml(log_level, "\t  Raw action", action->xml);
+		crm_log_xml(log_level+2, "\tRaw action", action->xml);
 	}
 }
 
