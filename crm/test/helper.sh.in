@@ -138,13 +138,18 @@ function start_node() {
     do_cmd echo "wait for HA to start on $ha_node"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd remote_cmd $INIT_USER $ha_node $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
-    do_cmd ${testdir}/testutils.pl -l ${logfile} -p $crm_log_pos --search -a -m 100 \
-	-s "${srch_node}ccm(.*) info: Hostname: ${ha_node}" \
-	-s "${srch_node}cib(.*) Hostname: ${ha_node}" \
-	-s "${srch_node}heartbeat(.*) info: Starting(.*)lrmd" \
-	-e "${srch_node}heartbeat(.*)Client(.*) respawning too fast"
-    cts_assert "Startup of Heartbeat on ${ha_node} failed."
-    
+    if [ $local_version = "1" ]; then
+	do_cmd ${testdir}/testutils.pl -l ${logfile} -p $crm_log_pos --search -a -m 100 \
+	    -s "${srch_node}cib.*Hostname: ${ha_node}"
+	cts_assert "Startup of Heartbeat on ${ha_node} failed."
+    else
+	do_cmd ${testdir}/testutils.pl -l ${logfile} -p $crm_log_pos --search -a -m 100 \
+	    -s "${srch_node}ccm(.*) info: Hostname: ${ha_node}" \
+	    -s "${srch_node}cib(.*) Hostname: ${ha_node}" \
+	    -s "${srch_node}heartbeat(.*) info: Starting(.*)lrmd" \
+	    -e "${srch_node}heartbeat(.*)Client(.*) respawning too fast"
+	cts_assert "Startup of Heartbeat on ${ha_node} failed."
+    fi
 #----
     
     do_cmd echo "Check if CRMd was started too"
@@ -156,7 +161,7 @@ function start_node() {
     fi
 
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 20 \
-	-s "${ha_node} crmd(.*) info:(.*)FSA Hostname: ${ha_node}"
+	-s "${srch_node}crmd(.*) info:(.*)FSA Hostname: ${ha_node}"
     cts_assert "CRMd startup on ${ha_node} failed."
 }
 
