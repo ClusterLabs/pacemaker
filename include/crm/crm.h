@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.2 2004/03/26 14:13:03 andrew Exp $ */
+/* $Id: crm.h,v 1.3 2004/04/06 16:20:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,6 +42,10 @@
 
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_malloc.h>
+#include <string.h>
+
+#define safe_str_eq(x, y)  x!=NULL && y!=NULL && strcmp(x,y) == 0
+#define safe_str_neq(x, y) x!=NULL && y!=NULL && strcmp(x,y) != 0
 
 /* Developmental debug stuff */
 #if 1
