@@ -22,6 +22,7 @@ $in_err_exp=0;
 $match_all=0;
 $max_lines=0;
 $log_file="/var/log/messages";
+$start_pos=-1;
 
 @search_for = ();
 @errors     = ();
@@ -31,6 +32,10 @@ while ( $_ = @ARGV[0], /^-/ ) {
     if ( /^--search/ ) {
 	$do_search = 1 ;
 
+    } elsif ( /^-p/ ) {
+	$start_pos = $ARGV[0];
+	shift;
+
     } elsif ( /^-m/ ) {
 	$max_lines = $ARGV[0];
 	shift;
@@ -38,9 +43,6 @@ while ( $_ = @ARGV[0], /^-/ ) {
     } elsif ( /^-l/ ) {
 	$log_file = $ARGV[0];
 	shift;
-
-    } elsif (  /^->/ ) {
-	last;
 
     } elsif (  /^-a/ ) {
 	$match_all = 1;
@@ -97,10 +99,15 @@ sub string_search() {
     my %results    = {};
     my $num_lines  = 0;
 
-#    print STDOUT "Starting search in $log_file...\n";
     open(LOG, $log_file);
 
-    seek LOG, 0, 2;
+    if( $start_pos > 0 ) {
+	print STDOUT "Starting search in $log_file from position $start_pos...\n";
+	seek LOG, $start_pos, 0
+    } else {
+	print STDOUT "Starting search in $log_file from EOF...\n";
+	seek LOG, 0, 2;
+    }
 
     for(;;)
     {

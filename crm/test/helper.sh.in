@@ -17,6 +17,13 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
+[[ $0 != *helper.sh ]] || {
+	echo >&2 "helper.sh expects to be sourced!"
+	exit 1
+}
+
+# no more exit below here, use return instead; gives more flexibility ...
+
 HALIB_DIR=@libdir@/heartbeat
 HAVAR_DIR=@HA_VARLIBDIR@/heartbeat
 HAINIT_DIR=@INITDIR@
@@ -34,6 +41,7 @@ CRM_ERR_SHUTDOWN=0
 OUTPUT_STDERR=0
 OUTPUT_STDOUT=0
 OUTPUT_CMDS=0
+OUTPUT_ECHO=1
 
 done=0
 
@@ -45,24 +53,25 @@ logfile=/var/log/messages
 while test "$done" = "0"; do
     case "$1" in
 	--debug   | -x)	set -x; shift;;
+	--silent  | -s)	OUTPUT_ECHO=0; shift;;
 	--stdout  | -o)	OUTPUT_STDOUT=1; shift;;
 	--stderr  | -e)	OUTPUT_STDERR=1; shift;;
 	--verbose | -v)	OUTPUT_CMDS=1; shift;;
 
-	--logfile | -l)	logfile=$2; shift 2;;
+	--logfile | -l)	logfile=${2?no logfile??}     shift 2;;
 
-	--init    | -i)	INIT_USER=$2; shift 2;;
-	--admin   | -a)	ADMIN_USER=$2; shift 2;;
-	--crmd    | -c)	CRMD_USER=$2; shift 2;;
+	--init    | -i)	INIT_USER=${2?no init user??} || return 1; shift 2;;
+	--admin   | -a)	ADMIN_USER=${2?no admin??}    || return 1; shift 2;;
+	--crmd    | -c)	CRMD_USER=${2?no crmd user??} || return 1; shift 2;;
 
-	--node1   | -1)	test_node_1=$2; shift 2;;
-	--node2   | -2)	test_node_2=$2; shift 2;;
+	--node1   | -1)	test_node_1=${2?no node1??}   || return 1; shift 2;;
+	--node2   | -2)	test_node_2=${2?no node2??}   || return 1; shift 2;;
 
-	--ip1)	ip_rsc_1=$2; shift 2;;
-	--ip2)	ip_rsc_2=$2; shift 2;;
-	
-	"") done=1;;
-	*) echo "unknown option: $1"; exit 1;;
+	--ip1)	ip_rsc_1=${2?no ip1??}                || return 1; shift 2;;
+	--ip2)	ip_rsc_2=${2?no ip2??}                || return 1; shift 2;;
+ 	
+	""|--) done=1;;
+	*) echo "unknown option: $1"; return 1;;
     esac
 done
 
@@ -99,9 +108,11 @@ function is_running() {
     host=$3
 
     if [ -z $host ]; then
-	output=`remote_cmd $ADMIN_USER $askhost $HALIB_DIR/crmadmin -W $rsc | grep -v $HALIB_DIR/crmadmin | grep -v NOT`
+	output=`remote_cmd $ADMIN_USER $askhost $HALIB_DIR/crmadmin -W $rsc | grep -v $HALIB_DIR/crmadmin`
+	output=`echo $output | grep -v NOT`
     else
-	output=`remote_cmd $ADMIN_USER $askhost $HALIB_DIR/crmadmin -W $rsc | grep -v $HALIB_DIR/crmadmin | grep $host`
+	output=`remote_cmd $ADMIN_USER $askhost $HALIB_DIR/crmadmin -W $rsc | grep -v $HALIB_DIR/crmadmin`
+	output=`echo $output | grep $host`
     fi
 
     if [ -z "$output" ]; then
@@ -140,9 +151,13 @@ function wait_for_state() {
     state=$1
     max=$2
     host=$3
+    target=$4
 
-    if [ -z "$host" ]; then
-	host=`remote_cmd $ADMIN_USER $host $HALIB_DIR/crmadmin -D > /dev/null`
+    sleep 1
+
+    if [ "$host" = "DC" ]; then
+	host=`remote_cmd $ADMIN_USER $target $HALIB_DIR/crmadmin -D`
+	host=${host#*: }
     fi
 
     count=1
@@ -205,7 +220,7 @@ function make_resource()
     fi
     node_xml="$node_xml </resource>'";
     
-    remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o resource -X $node_xml"
+    remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o resource -X $node_xml" 2>&1 > /dev/null
 }
 
 function make_constraint_adv()
@@ -216,7 +231,7 @@ function make_constraint_adv()
 
     node_xml=`echo $node_xml | tr '\n' ' '`
 
-    do_cmd $QUIET remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o constraint -X $node_xml"
+    do_cmd $QUIET remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o constraint -X $node_xml"  2>&1 > /dev/null
 }
 
 function make_constraint()
@@ -270,9 +285,9 @@ function do_cmd() {
 
     cmdline=$*
     old_OUTPUT_STDOUT=$OUTPUT_STDOUT
+    cmd=$1
 
     if [ $OUTPUT_STDERR -eq 1 -o $OUTPUT_STDOUT -eq 1 -o $OUTPUT_CMDS -eq 1 ]; then
-	cmd=$1
 	
 	if [ $cmd = "remote_cmd" ]; then
 	    user=$2
@@ -292,16 +307,28 @@ function do_cmd() {
 	    echo `date` ": Searching '$cmdline'";
 	    
 	elif [ $cmd = "echo" ]; then
-	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
-		echo -n `date` ": "
-		$cmdline
-	    fi
+	    echo -n ""
+#	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
+#		echo -n `date` ": "
+#		$cmdline
+#	    elif [ $OUTPUT_ECHO -eq 1 -a $OUTPUT_CMDS -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
+#		$cmdline		
+#	    fi
 	else
 	    echo `date` ": Running '$cmdline'";
 	fi
     fi
 
-    if [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
+    if [ $cmd = "echo" ]; then
+	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
+		echo -n `date` ": "
+		$cmdline
+	    elif [ $OUTPUT_ECHO -eq 1 -a $OUTPUT_CMDS -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
+		echo -n `date` ": "
+		$cmdline		
+	    fi
+
+    elif [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
 	$cmdline
 	rc=$?
     elif [ $OUTPUT_STDERR -eq 0 -a $OUTPUT_STDOUT -eq 0 ]; then
@@ -324,6 +351,9 @@ function do_cmd() {
 }
 
 function crm-cleanup() {
+    
+    do_cmd echo Cleaning up on $test_node_1, $test_node_2 and  $test_node_3
+
 # stop all running HAs
     do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
     do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
@@ -333,6 +363,14 @@ function crm-cleanup() {
     do_cmd remote_cmd $INIT_USER $test_node_1 "killall -q9 heartbeat ccm lrmd crmd"
     do_cmd remote_cmd $INIT_USER $test_node_2 "killall -q9 heartbeat ccm lrmd crmd"
     do_cmd remote_cmd $INIT_USER $test_node_3 "killall -q9 heartbeat ccm lrmd crmd"
+
+# resources too
+    do_cmd remote_cmd $INIT_USER $test_node_1 "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
+    do_cmd remote_cmd $INIT_USER $test_node_1 "/etc/ha.d/resource.d/IPaddr $ip_rsc_2 stop" 2>&1 > /dev/null
+    do_cmd remote_cmd $INIT_USER $test_node_2 "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
+    do_cmd remote_cmd $INIT_USER $test_node_2 "/etc/ha.d/resource.d/IPaddr $ip_rsc_2 stop" 2>&1 > /dev/null
+    do_cmd remote_cmd $INIT_USER $test_node_3 "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
+    do_cmd remote_cmd $INIT_USER $test_node_3 "/etc/ha.d/resource.d/IPaddr $ip_rsc_2 stop" 2>&1 > /dev/null
     
     if [ -z $1 ]; then
 # make *sure* theres nothing left over from last time
@@ -341,3 +379,11 @@ function crm-cleanup() {
 	do_cmd remote_cmd $INIT_USER $test_node_3 "rm -f $HAVAR_DIR/crm/cib*.xml /tmp/crm/*"
     fi
 }
+
+function mark_log() 
+{
+    export crm_log_pos=$(stat -L -c %s $logfile)
+}
+
+# successfully sourced
+true

@@ -18,7 +18,7 @@
 #
 
 testdir=@libdir@/heartbeat/crmtest
-. ${testdir}/helper.sh
+. ${testdir}/helper.sh  || exit 1
 
 # make *sure* theres nothing left over from last time
 crm-cleanup 0
