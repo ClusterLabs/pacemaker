@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.12 2004/03/05 13:00:37 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.13 2004/03/10 22:29:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,6 +75,7 @@ void replace_section(const char *section,
 		     xmlNodePtr tmpCib,
 		     xmlNodePtr command);
 
+gboolean check_generation(xmlNodePtr newCib, xmlNodePtr oldCib);
 
 
 #define CIB_OP_NONE   0
@@ -127,8 +128,29 @@ processCibRequest(xmlNodePtr command)
 	else if (strcmp("ping", op) == 0) {
 		CRM_DEBUG("Handling a ping");
 		status = "ok";
-		cib_answer = createPingAnswerFragment(CRM_SYSTEM_CIB,
-						      status);
+		cib_answer =
+			createPingAnswerFragment(CRM_SYSTEM_CIB, status);
+		
+	} else if (strcmp("bump", op) == 0) {
+		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
+
+		// modify the timestamp
+		set_node_tstamp(tmpCib);
+		char *new_value = NULL;
+		char *old_value = xmlGetProp(tmpCib, "generation");
+		if(old_value != NULL) {
+			new_value = (char*)ha_malloc(128*(sizeof(char)));
+			int int_value = atoi(old_value);
+			sprintf(new_value, "%d", ++int_value);
+		} else {
+			new_value = ha_strdup("0");
+		}
+		
+		set_xml_property_copy(tmpCib, "generation", new_value);
+		ha_free(new_value);
+
+		activateCibXml(tmpCib);
+		
 	} else if (strcmp("query", op) == 0) {
 		CRM_DEBUG2("Handling a query for section=%s of the cib",
 			   section);
@@ -140,6 +162,10 @@ processCibRequest(xmlNodePtr command)
 		
 	} else if (strcmp("erase", op) == 0) {
 		xmlNodePtr new_cib = createEmptyCib();
+
+		// Preserve generation counters etc
+		copy_in_properties(get_the_CIB(), new_cib);
+		
 		if (activateCibXml(new_cib) < 0)
 			status = "erase of CIB failed";
 		else
@@ -165,43 +191,46 @@ processCibRequest(xmlNodePtr command)
 		verbose = "true"; 
 		status = "ok";
 
-		/* change the op to "store" so that when a reply is created
-		 * the other end will do the right thing with it.
-		 * and change sysfrom to cib so it gets sent there.
+		/* this will reply to the DC and leaves it up to it to direct
+		 * the message appropriately
 		 */
-		// cheat
-		set_xml_property_copy(options, XML_ATTR_OP, "store");
-
+		
 	} else if (strcmp("store", op) == 0) {
+		xmlNodePtr cib_updates = NULL;
+		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
+		const char *node_path[2];
+		
 		CRM_DEBUG("Storing DC copy of the cib");
 
-		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
+		node_path[0] = XML_TAG_FRAGMENT;
+		node_path[1] = XML_TAG_CIB;
+		cib_updates = find_xml_node_nested(command, node_path, 2);
 
+		/* copy in any version tags etc verbatum */
+		copy_in_properties(cib_updates, tmpCib);
+		
 		/* replace the following sections verbatum */
 		replace_section(XML_CIB_TAG_NODES,       tmpCib, command);
 		replace_section(XML_CIB_TAG_RESOURCES,   tmpCib, command);
 		replace_section(XML_CIB_TAG_CONSTRAINTS, tmpCib, command);
-
+		
 		/* incorporate the info from the DC and then send it back */
 		updateList(tmpCib, command, failed, cib_update_op,
 			   XML_CIB_TAG_STATUS);
-		
-		if (activateCibXml(tmpCib) < 0)
+
+		if(check_generation(cib_updates, tmpCib) == FALSE)
+			status = "discarded old update";
+		else if (activateCibXml(tmpCib) < 0)
 			status = "dc update failed";
 		else
 			status = "ok";
 
 		/* Force a pick-up of the merged status section and send it
-		 * back to the DC
+		 * back to the DC (but only if the DC asked for it by
+		 * setting verbose=true)
 		 */
-		verbose = "true"; 
+//		verbose = "true"; 
 		section = XML_CIB_TAG_STATUS;
-
-		/* change the op to "update" so that when a reply is created
-		 * the other end will do the right thing with it.
-		 */
-		// cheat
-		set_xml_property_copy(options, XML_ATTR_OP, "update");
 		
 	} else if (strcmp("replace", op) == 0) {
 		CRM_DEBUG2("Replacing section=%s of the cib", section);
@@ -216,8 +245,11 @@ processCibRequest(xmlNodePtr command)
 			replace_section(section, tmpCib, command);
 		}
 
+		/*if(check_generation(cib_updates, tmpCib) == FALSE)
+			status = "discarded old update";
+			else */
 		if (activateCibXml(tmpCib) < 0)
-				status = "replacement failed";
+			status = "replacement failed";
 		else
 			status = "ok";
 	} else {
@@ -271,6 +303,9 @@ processCibRequest(xmlNodePtr command)
 		}
 		
 		CRM_DEBUG("Activating temporary CIB");
+		/* if(check_generation(cib_updates, tmpCib) == FALSE) */
+/* 			status = "discarded old update"; */
+/* 		else  */
 		if (activateCibXml(tmpCib) < 0)
 			status = "update activation failed";
 		else if (failed->children != NULL)
@@ -290,7 +325,7 @@ processCibRequest(xmlNodePtr command)
 	if (failed->children != NULL || strcmp("ok", status) != 0) {
 		output_section = "all";
 		cib_section = get_object_root(NULL, get_the_CIB());
-	} else if (strcmp("true", verbose) == 0) {
+	} else if (verbose != NULL && strcmp("true", verbose) == 0) {
 		cib_section = get_object_root(output_section, get_the_CIB());
 	}
 
@@ -502,3 +537,19 @@ createCibFragmentAnswer(const char *section,
 	FNRET(fragment);
 }
 
+
+gboolean
+check_generation(xmlNodePtr newCib, xmlNodePtr oldCib)
+{
+	char *new_value = xmlGetProp(newCib, "generation");
+	char *old_value = xmlGetProp(oldCib, "generation");
+	int int_new_value = -1;
+	int int_old_value = -1;
+	if(old_value != NULL) int_old_value = atoi(old_value);
+	if(new_value != NULL) int_new_value = atoi(new_value);
+	
+	if(int_new_value >= int_old_value)
+		return TRUE;
+	return FALSE;
+}
+ 
