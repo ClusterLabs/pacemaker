@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.35 2005/03/18 23:22:16 gshi Exp $ */
+/* $Id: callbacks.c,v 1.36 2005/03/29 06:30:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -541,6 +541,7 @@ cib_process_command(
 	const char *section = NULL;
 	const char *tmp = NULL;
 
+	CRM_DEV_ASSERT(reply != NULL);
 	if(reply) { *reply = NULL; }
 	
 	/* Start processing the request... */
@@ -575,7 +576,12 @@ cib_process_command(
 	}
 
 	crm_trace("Processing reply cases");
-	if((call_options & cib_discard_reply) || reply == NULL) {
+	if(call_options & cib_discard_reply) {
+		crm_debug("No reply needed for call %s", call_id);
+		return rc;
+		
+	} else if(reply == NULL) {
+		crm_debug("No reply possible for call %s", call_id);
 		return rc;
 	}
 
@@ -595,7 +601,10 @@ cib_process_command(
 	crm_trace("Attaching output if necessary");
 	if(output != NULL) {
 		add_message_xml(*reply, F_CIB_CALLDATA, output);
+	} else {
+		crm_debug("No output for call %s", call_id);
 	}
+	
 
 	crm_trace("Cleaning up");
 	free_xml(output);
@@ -1050,7 +1059,7 @@ void
 cib_client_status_callback(const char * node, const char * client,
 			   const char * status, void * private)
 {
-	crm_notice("Status update: Client %s/%s now has status [%s]",
+	crm_debug("Status update: Client %s/%s now has status [%s]",
 		   node, client, status);
 
 	if(safe_str_eq(client, CRM_SYSTEM_CIB)) {
@@ -1082,14 +1091,7 @@ cib_ccm_msg_callback(
 	unsigned lpc = 0;
 	int offset = 0;
 	const oc_ev_membership_t *membership = data;
-	crm_devel("received callback");
-	
-	crm_info("event=%s", 
-	       event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
-	       event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
-	       event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
-	       event==OC_EV_MS_EVICTED?"EVICTED":
-	       "NO QUORUM MEMBERSHIP");
+	crm_devel("received callback");	
 
 	if(event==OC_EV_MS_NEW_MEMBERSHIP 
 	   || event==OC_EV_MS_NOT_PRIMARY
@@ -1099,6 +1101,14 @@ cib_ccm_msg_callback(
 		cib_have_quorum = FALSE;
 	}
 
+	crm_info("Quorum %s after event=%s", 
+		 cib_have_quorum?"(re)attained":"lost",
+		 event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
+		 event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
+		 event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
+		 event==OC_EV_MS_EVICTED?"EVICTED":
+		 "NO QUORUM MEMBERSHIP");
+	
 	if(data == NULL) {
 		return;
 	}
