@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.19 2005/02/09 15:28:58 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.20 2005/02/10 11:06:05 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -546,8 +546,10 @@ void cibadmin_op_callback(
 	crm_log_message(LOG_MSG, msg);
 	exit_code = rc;
 
-	admin_input_xml = dump_xml_formatted(output);
-
+	if(output != NULL) {
+		admin_input_xml = dump_xml_formatted(output);
+	}
+	
 	if(safe_str_eq(cib_action, CRM_OP_CIB_ISMASTER)
 	   && rc == cib_not_master) {
 		crm_info("Local CIB is _not_ the master instance\n");
@@ -565,6 +567,10 @@ void cibadmin_op_callback(
 			cib_action, rc, cib_error2string(rc));
 		fprintf(stdout, "%s\n", admin_input_xml);
 
+	} else if(safe_str_eq(cib_action, CRM_OP_CIB_QUERY) && output==NULL) {
+		crm_err("Output expected in query response");
+		crm_log_message(LOG_ERR, msg);
+
 	} else if(output == NULL) {
 		crm_info("Call passed");
 
@@ -574,7 +580,6 @@ void cibadmin_op_callback(
 	}
 	crm_free(admin_input_xml);
 
-			
 	if(call_id == request_id) {
 		g_main_quit(mainloop);
 
