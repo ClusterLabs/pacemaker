@@ -582,12 +582,6 @@ handle_request(xmlNodePtr stored_msg)
 		relay_message(wrapper, TRUE);
 		free_xml(wrapper);
 
-	} else if(strcmp(op, "init_shutdown") == 0) {
-		
-		crm_shutdown(SIGTERM);
-		/*next_input = I_SHUTDOWN; */
-		next_input = I_NULL;
-
 #if 0
 		/* probably better to do this via signals on the
 		 * local node
