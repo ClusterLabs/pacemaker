@@ -82,6 +82,14 @@ do_cib_control(long long action,
 					  crmd_update_confirm) != cib_ok) {
 				result = I_FAIL;
 				crm_err("Could not set notify callback");
+			} else if(fsa_cib_conn->cmds->set_connection_dnotify(
+					  fsa_cib_conn,
+					  crmd_cib_connection_destroy)!=cib_ok){
+				result = I_FAIL;
+				crm_err("Could not set dnotify callback");
+			} else {
+				set_bit_inplace(
+					fsa_input_register, R_CIB_CONNECTED);
 			}
 			
 		} else {
@@ -117,7 +125,7 @@ do_cib_invoke(long long action,
 	if(action & A_CIB_INVOKE || action & A_CIB_INVOKE_LOCAL) {
 		int call_options = 0;
 		enum cib_errors rc  = cib_ok;
-		xmlNodePtr cib_frag  = NULL;
+		crm_data_t *cib_frag  = NULL;
 		
 		const char *section  = NULL;
 		const char *op   = cl_get_string(cib_msg->msg, F_CRM_TASK);
@@ -138,7 +146,7 @@ do_cib_invoke(long long action,
 			cib_msg->xml, &cib_frag, call_options);
 
 		if(rc != cib_ok || (action & A_CIB_INVOKE)) {
-			answer = create_reply(cib_msg->msg, cib_frag);
+			answer = create_reply(cib_msg->msg, cib_msg->xml);
 			ha_msg_add(answer,XML_ATTR_RESULT,cib_error2string(rc));
 		}
 		
@@ -146,19 +154,21 @@ do_cib_invoke(long long action,
 			if(relay_message(answer, TRUE) == FALSE) {
 				crm_err("Confused what to do with cib result");
 				crm_log_message(LOG_ERR, answer);
-				ha_msg_del(answer);
+				crm_msg_del(answer);
 				result = I_ERROR;
 			}
 
 		} else if(rc != cib_ok) {
-			crm_err("Internal CRM/CIB command from %s:",
-				msg_data->where);
+			crm_err("Internal CRM/CIB command from %s: %s",
+				msg_data->origin, cib_error2string(rc));
 			crm_log_message(LOG_ERR, cib_msg->msg);
 			crm_xml_err(cib_msg->xml, "Command data:");
 			crm_log_message(LOG_ERR, answer);
 			
-			register_fsa_input(C_FSA_INTERNAL, I_FAIL, answer);
-			ha_msg_del(answer);
+			ha_msg_input_t *input = new_ha_msg_input(answer);
+			register_fsa_input(C_FSA_INTERNAL, I_ERROR, input);
+			crm_msg_del(answer);
+			delete_ha_msg_input(input);
 		}
 		
 		return result;
@@ -174,22 +184,26 @@ do_cib_invoke(long long action,
 /* frees fragment as part of delete_ha_msg_input() */
 void
 update_local_cib_adv(
-	xmlNodePtr msg_data, gboolean do_now, const char *raised_from)
+	crm_data_t *msg_data, gboolean do_now, const char *raised_from)
 {
-	HA_Message *msg = ha_msg_new(4);
+	HA_Message *msg = NULL;
 	ha_msg_input_t *fsa_input = NULL;
 	int call_options = cib_scope_local|cib_sync_call;
 
+	CRM_ASSERT(msg_data != NULL);
+	
 	crm_malloc(fsa_input, sizeof(ha_msg_input_t));
+
+	msg = create_request(CRM_OP_CIB_UPDATE, msg_data, NULL,
+			     CRM_SYSTEM_CIB, CRM_SYSTEM_CRMD, NULL);
+
+	ha_msg_add(msg, F_CIB_SECTION,
+		   crm_element_value(msg_data, XML_ATTR_SECTION));
+
+	ha_msg_add_int(msg, F_CIB_CALLOPTS, call_options);
 
 	fsa_input->msg = msg;
 	fsa_input->xml = msg_data;
-
-	ha_msg_add(msg, F_CRM_TASK,     CRM_OP_CIB_UPDATE);
-	ha_msg_add(msg, F_CRM_SYS_TO,   CRM_SYSTEM_CIB);
-	ha_msg_add(msg, F_CRM_SYS_FROM, CRM_SYSTEM_CRMD);
-	ha_msg_add(msg, F_CIB_SECTION,  xmlGetProp(msg_data, XML_ATTR_SECTION));
-	ha_msg_add_int(msg, F_CIB_CALLOPTS, call_options);
 
 	if(do_now == FALSE) {
 		crm_debug("Registering event with FSA");
@@ -202,7 +216,7 @@ update_local_cib_adv(
 
 		op_data->fsa_cause	= C_FSA_INTERNAL;
 		op_data->fsa_input	= I_CIB_OP;
-		op_data->where		= raised_from;
+		op_data->origin		= raised_from;
 		op_data->data		= fsa_input;
 		op_data->data_type	= fsa_dt_ha_msg;
 

@@ -48,18 +48,23 @@ do_dc_join_offer_all(long long action,
 		     fsa_data_t *msg_data)
 {
 	/* reset everyones status back to down or in_ccm in the CIB */
-	xmlNodePtr update     = NULL;
-	xmlNodePtr cib_copy   = get_cib_copy(fsa_cib_conn);
-	xmlNodePtr tmp1       = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
-	xmlNodePtr tmp2       = NULL;
+	crm_data_t *cib_copy   = get_cib_copy(fsa_cib_conn);
+	crm_data_t *fragment   = create_cib_fragment(NULL, NULL);
+	crm_data_t *update     = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+	crm_data_t *tmp1       = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
+	crm_data_t *tmp2       = NULL;
 
 	initialize_join(TRUE);
 	
 	/* catch any nodes that are active in the CIB but not in the CCM list*/
+	
+	update = get_object_root(XML_CIB_TAG_STATUS, update);
+	CRM_ASSERT(update != NULL);
+
 	xml_child_iter(
 		tmp1, node_entry, XML_CIB_TAG_STATE,
 
-		const char *node_id = xmlGetProp(node_entry, XML_ATTR_UNAME);
+		const char *node_id = crm_element_value(node_entry, XML_ATTR_UNAME);
 		gpointer a_node = g_hash_table_lookup(
 			fsa_membership_copy->members, node_id);
 
@@ -75,16 +80,15 @@ do_dc_join_offer_all(long long action,
 		if(update == NULL) {
 			update = tmp2;
 		} else {
-			update = xmlAddSibling(update, tmp2);
+			add_node_copy(update, tmp2);
+			free_xml(tmp2);
 		}
 		);
 	
-	{
-		/* now process the CCM data */
-		xmlNodePtr foo = do_update_cib_nodes(update, TRUE);
-		free_xml(foo);
-		free_xml(cib_copy);
-	}
+	/* now process the CCM data */
+	do_update_cib_nodes(fragment, TRUE);
+	free_xml(cib_copy);
+	free_xml(fragment);
 	
 #if 0
 	/* Avoid ordered message delays caused when the CRMd proc
@@ -192,8 +196,8 @@ do_dc_join_req(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	xmlNodePtr generation = NULL;
-	xmlNodePtr our_generation = NULL;
+	crm_data_t *generation = NULL;
+	crm_data_t *our_generation = NULL;
 
 	gboolean is_a_member = FALSE;
 	const char *ack_nack = CRMD_JOINSTATE_MEMBER;
@@ -336,7 +340,7 @@ do_dc_join_ack(long long action,
 	       fsa_data_t *msg_data)
 {
 	/* now update them to "member" */
-	xmlNodePtr update = NULL;
+	crm_data_t *update = NULL;
 	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 	const char *join_from = cl_get_string(join_ack->msg, F_CRM_HOST_FROM);
 	const char *op = cl_get_string(join_ack->msg, F_CRM_TASK);

@@ -875,7 +875,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	 *   join process (with itself).  We can include a special case
 	 *   later if desired.
 	 */
-	xmlNodePtr tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
+	crm_data_t *tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
 	crm_debug("Creating node entry for %s", uname);
 	set_uuid(tmp1, XML_ATTR_UUID, uname);
@@ -888,7 +888,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	
 }
 
-xmlNodePtr
+crm_data_t*
 create_node_state(const char *uuid,
 		  const char *uname,
 		  const char *ha_state,
@@ -897,7 +897,7 @@ create_node_state(const char *uuid,
 		  const char *join_state,
 		  const char *exp_state)
 {
-	xmlNodePtr node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
 	crm_debug("Creating node state entry for %s", uname);
 	set_uuid(node_state, XML_ATTR_UUID, uname);
@@ -925,7 +925,7 @@ create_node_state(const char *uuid,
 
 
 void
-set_uuid(xmlNodePtr node, const char *attr, const char *uname) 
+set_uuid(crm_data_t *node, const char *attr, const char *uname) 
 {
 	uuid_t uuid_raw;
 	char *uuid_calc = NULL;

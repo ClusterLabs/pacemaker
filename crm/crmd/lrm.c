@@ -42,18 +42,18 @@
 gboolean stop_all_resources(void);
 
 gboolean build_suppported_RAs(
-	xmlNodePtr metadata_list, xmlNodePtr xml_agent_list);
+	crm_data_t *metadata_list, crm_data_t *xml_agent_list);
 
-gboolean build_active_RAs(xmlNodePtr rsc_list);
+gboolean build_active_RAs(crm_data_t *rsc_list);
 
 void do_update_resource(lrm_rsc_t *rsc, lrm_op_t *op);
 
 enum crmd_fsa_input do_lrm_rsc_op(
-	lrm_rsc_t *rsc, char *rid, const char *operation, xmlNodePtr msg);
+	lrm_rsc_t *rsc, char *rid, const char *operation, crm_data_t *msg);
 
 enum crmd_fsa_input do_fake_lrm_op(gpointer data);
 
-GHashTable *xml2list(xmlNodePtr parent, const char **attr_path, int depth);
+GHashTable *xml2list(crm_data_t *parent, const char **attr_path, int depth);
 GHashTable *monitors = NULL;
 int num_lrm_register_fails = 0;
 int max_lrm_register_fails = 30;
@@ -232,16 +232,16 @@ do_lrm_control(long long action,
 
 
 gboolean
-build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
+build_suppported_RAs(crm_data_t *metadata_list, crm_data_t *xml_agent_list)
 {
 	GList *types            = NULL;
 	GList *classes          = NULL;
 	const char *version     = NULL;
 	const char *ra_data     = NULL;
 /*	GHashTable *metadata    = NULL; */
-	xmlNodePtr xml_agent    = NULL;
-	xmlNodePtr xml_metadata = NULL;
-	xmlNodePtr tmp          = NULL;
+	crm_data_t *xml_agent    = NULL;
+	crm_data_t *xml_metadata = NULL;
+	crm_data_t *tmp          = NULL;
 	
 	if(fsa_lrm_conn == NULL) {
 		return FALSE;
@@ -280,7 +280,8 @@ build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 
 				tmp = string2xml(ra_data);
 				if(tmp != NULL) {
-					xmlAddChild(xml_metadata, tmp);
+					add_node_copy(xml_metadata, tmp);
+					free_xml(tmp);
 				}
 				/* extract version */
 			}
@@ -351,7 +352,7 @@ stop_all_resources(void)
 }
 
 gboolean
-build_active_RAs(xmlNodePtr rsc_list)
+build_active_RAs(crm_data_t *rsc_list)
 {
 	GList *op_list  = NULL;
 	GList *lrm_list = NULL;
@@ -377,7 +378,7 @@ build_active_RAs(xmlNodePtr rsc_list)
 			fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 
 		
-		xmlNodePtr xml_rsc = create_xml_node(
+		crm_data_t *xml_rsc = create_xml_node(
 			rsc_list, XML_LRM_TAG_RESOURCE);
 
 		crm_info("Processing lrm_rsc_t entry %s", rid);
@@ -466,15 +467,15 @@ build_active_RAs(xmlNodePtr rsc_list)
 	return TRUE;
 }
 
-xmlNodePtr
+crm_data_t*
 do_lrm_query(gboolean is_replace)
 {
-	xmlNodePtr xml_result= NULL;
-	xmlNodePtr xml_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	xmlNodePtr xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
-	xmlNodePtr rsc_list  = create_xml_node(xml_data,XML_LRM_TAG_RESOURCES);
-	xmlNodePtr xml_agent_list = create_xml_node(xml_data, XML_LRM_TAG_AGENTS);
-	xmlNodePtr xml_metadata_list = create_xml_node(xml_data, "metatdata");
+	crm_data_t *xml_result= NULL;
+	crm_data_t *xml_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	crm_data_t *xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
+	crm_data_t *rsc_list  = create_xml_node(xml_data,XML_LRM_TAG_RESOURCES);
+	crm_data_t *xml_agent_list = create_xml_node(xml_data, XML_LRM_TAG_AGENTS);
+	crm_data_t *xml_metadata_list = create_xml_node(xml_data, "metatdata");
 
 	/* Build a list of supported agents and metadata */
 	build_suppported_RAs(xml_metadata_list, xml_agent_list);
@@ -516,13 +517,13 @@ do_lrm_invoke(long long action,
 		XML_LRM_ATTR_TASK, FALSE);
 	
 	if(crm_op != NULL && safe_str_eq(crm_op, "lrm_query")) {
-		xmlNodePtr data = do_lrm_query(FALSE);
+		crm_data_t *data = do_lrm_query(FALSE);
 		HA_Message *reply = create_reply(input->msg, data);
 
 		if(relay_message(reply, TRUE) == FALSE) {
 			crm_err("Unable to route reply");
 			crm_log_message(LOG_ERR, reply);
-			ha_msg_del(reply);
+			crm_msg_del(reply);
 		}
 		free_xml(data);
 
@@ -560,7 +561,7 @@ do_lrm_invoke(long long action,
 
 enum crmd_fsa_input
 do_lrm_rsc_op(
-	lrm_rsc_t *rsc, char *rid, const char *operation, xmlNodePtr msg)
+	lrm_rsc_t *rsc, char *rid, const char *operation, crm_data_t *msg)
 {
 	lrm_op_t* op        = NULL;
 	int call_id         = 0;
@@ -684,25 +685,26 @@ free_lrm_op(lrm_op_t *op)
 
 
 GHashTable *
-xml2list(xmlNodePtr parent, const char**attr_path, int depth)
+xml2list(crm_data_t *parent, const char**attr_path, int depth)
 {
-	xmlNodePtr node_iter = NULL;
-	xmlNodePtr nvpair_list = NULL;
+	crm_data_t *list_root = NULL;
 
 	GHashTable   *nvpair_hash =
 		g_hash_table_new(&g_str_hash, &g_str_equal);
 
 	if(parent != NULL) {
-		nvpair_list = find_xml_node_nested(parent, attr_path, depth);
+		list_root = find_xml_node_nested(parent, attr_path, depth);
 	}
 	
-	while(nvpair_list != NULL){
-		node_iter = nvpair_list->children;
-		while(node_iter != NULL) {
+	xml_child_iter(
+		list_root, nvpair_list, NULL,
+
+		xml_child_iter(
+			nvpair_list, node_iter, XML_CIB_TAG_NVPAIR,
 			
-			const char *key   = xmlGetProp(
+			const char *key   = crm_element_value(
 				node_iter, XML_NVPAIR_ATTR_NAME);
-			const char *value = xmlGetProp(
+			const char *value = crm_element_value(
 				node_iter, XML_NVPAIR_ATTR_VALUE);
 			
 			crm_verbose("Added %s=%s", key, value);
@@ -710,11 +712,9 @@ xml2list(xmlNodePtr parent, const char**attr_path, int depth)
 			g_hash_table_insert (nvpair_hash,
 					     crm_strdup(key),
 					     crm_strdup(value));
-			
-			node_iter = node_iter->next;
-		}
-		nvpair_list=nvpair_list->next;
-	}
+			);
+		
+		);
 	
 	return nvpair_hash;
 }
@@ -731,9 +731,9 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
   <lrm_resource id=>
   </...>
 */
-	xmlNodePtr update, iter;
+	crm_data_t *update, *iter;
 	char *tmp = NULL;
-	xmlNodePtr fragment;
+	crm_data_t *fragment;
 	int len = 0;
 	char *fail_state = NULL;
 

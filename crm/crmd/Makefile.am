@@ -53,7 +53,7 @@ AM_CFLAGS	= @CFLAGS@						\
 lib_LTLIBRARIES	= 
 
 ## binary progs
-halib_PROGRAMS	= crmd 
+halib_PROGRAMS	= crmd
 
 ## SOURCES
 

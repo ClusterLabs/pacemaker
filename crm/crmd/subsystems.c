@@ -180,7 +180,7 @@ cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
 	waitpid(the_subsystem->pid, &pid_status, WNOHANG);
 	the_subsystem->pid = -1;
 	
-	if(is_set(fsa_input_register, R_THE_DC)) {
+	if(is_set(fsa_input_register, the_subsystem->flag_required)) {
 		/* this wasnt supposed to happen */
 		crm_err("The %s subsystem terminated unexpectedly",
 			the_subsystem->name);

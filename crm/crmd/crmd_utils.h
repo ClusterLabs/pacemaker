@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.11 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.12 2005/01/26 13:30:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,14 +19,14 @@
 #ifndef CRMD_UTILS__H
 #define CRMD_UTILS__H
 
-#include <libxml/tree.h>
 #include <crm/crm.h>
+#include <crm/common/xml.h>
 
 #define CLIENT_EXIT_WAIT 30
 
 
 extern void update_local_cib_adv(
-	xmlNodePtr msg_data, gboolean do_now, const char *raised_from);
+	crm_data_t *msg_data, gboolean do_now, const char *raised_from);
 
 #define update_local_cib(data) update_local_cib_adv(data, TRUE, __FUNCTION__)
 
@@ -47,7 +47,7 @@ extern gboolean timer_popped(gpointer data);
 
 extern void cleanup_subsystem(struct crm_subsystem_s *the_subsystem);
 
-extern xmlNodePtr create_node_state(
+extern crm_data_t *create_node_state(
 	const char *uuid, const char *uname,
 	const char *ha_state, const char *ccm_state,
 	const char *crmd_state, const char *join_state, const char *exp_state);
@@ -55,7 +55,7 @@ extern xmlNodePtr create_node_state(
 extern void create_node_entry(
 	const char *uuid, const char *uname, const char *type);
 
-extern void set_uuid(xmlNodePtr node, const char *attr, const char *uname);
+extern void set_uuid(crm_data_t *node, const char *attr, const char *uname);
 
 extern gboolean stop_subsystem (struct crm_subsystem_s *centry);
 extern gboolean start_subsystem(struct crm_subsystem_s *centry);

@@ -125,7 +125,7 @@ do_cl_join_request(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	xmlNodePtr tmp1;
+	crm_data_t *tmp1;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 	const char *welcome_from = cl_get_string(input->msg, F_CRM_HOST_FROM);
 	HA_Message *reply = NULL;
@@ -171,7 +171,7 @@ do_cl_join_result(long long action,
 	    fsa_data_t *msg_data)
 {
 	gboolean   was_nack   = TRUE;
-	xmlNodePtr tmp1       = NULL;
+	crm_data_t *tmp1       = NULL;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 	const char *ack_nack     = cl_get_string(input->msg, CRM_OP_JOINACK);
 	const char *welcome_from = cl_get_string(input->msg, F_CRM_HOST_FROM);

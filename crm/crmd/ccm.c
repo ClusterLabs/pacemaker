@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.46 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: ccm.c,v 1.47 2005/01/26 13:30:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -197,7 +197,7 @@ do_ccm_event(long long action,
 		int lpc = 0;
 		int offset = oc->m_out_idx;
 		for(lpc=0; lpc < oc->m_n_out; lpc++) {
-			xmlNodePtr node_state = NULL;
+			crm_data_t *node_state = NULL;
 			
 			const char *uname = oc->m_array[offset+lpc].node_uname;
 			
@@ -427,8 +427,10 @@ do_ccm_update_cache(long long action,
 
 	if(AM_I_DC) {
 		/* should be sufficient for only the DC to do this */
+		crm_data_t *foo = NULL;
 		crm_debug("Updating the CIB");
-		free_xml(do_update_cib_nodes(NULL, FALSE));
+		foo = do_update_cib_nodes(NULL, FALSE);
+		free_xml(foo);
 	}
 	
 	set_bit_inplace(fsa_input_register, R_CCM_DATA);
@@ -538,18 +540,28 @@ msg_ccm_join(const HA_Message *msg, void *foo)
 
 struct update_data_s
 {
-		xmlNodePtr updates;
+		crm_data_t *updates;
 		const char *state;
 		const char *join;
 };
 
-xmlNodePtr
-do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite)
+crm_data_t*
+do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 {
-	
 	struct update_data_s update_data;
-	update_data.updates = updates;
+	crm_data_t *fragment = updates;
+	crm_data_t *tmp = NULL;
 	
+	if(updates == NULL) {
+		fragment = create_cib_fragment(NULL, NULL);
+	}
+
+	tmp = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+	tmp = get_object_root(XML_CIB_TAG_STATUS, tmp);
+	CRM_ASSERT(tmp != NULL);
+	
+	update_data.updates = tmp;
+
 	update_data.state = XML_BOOLEAN_NO;
 	update_data.join  = CRMD_JOINSTATE_DOWN;
 	if(fsa_membership_copy->dead_members != NULL) {
@@ -580,8 +592,7 @@ do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite)
 	}
 */
 	if(update_data.updates != NULL) {
-		update_local_cib(
-			create_cib_fragment(update_data.updates, NULL));
+		update_local_cib(fragment);
 	}
 
 	/* so it can be freed */
@@ -592,7 +603,7 @@ do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite)
 void
 ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 {
-	xmlNodePtr tmp1 = NULL;
+	crm_data_t *tmp1 = NULL;
 	const char *node_uname = (const char*)key;
 	struct update_data_s* data = (struct update_data_s*)user_data;
 	const char *state = data->join;
@@ -609,13 +620,9 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	tmp1 = create_node_state(node_uname, node_uname,
 				 NULL, data->state, NULL, state, NULL);
 
-	if(data->updates == NULL) {
-		crm_verbose("Creating first update");
-		data->updates = tmp1;
-	} else {
-		xmlAddNextSibling(data->updates, tmp1);
-	}
-
+	CRM_ASSERT(data->updates != NULL);
+	add_node_copy(data->updates, tmp1);
+	free_xml(tmp1);
 }
 
 gboolean

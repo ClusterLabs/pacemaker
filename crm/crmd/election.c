@@ -102,16 +102,21 @@ do_dc_heartbeat(gpointer data)
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
 /*	crm_debug("#!!#!!# Heartbeat timer just popped!"); */
-	if(dc_hb_msg == NULL) {
-		dc_hb_msg = create_dc_heartbeat();
-	}
+	HA_Message *msg = ha_msg_new(5); 
+	ha_msg_add(msg, F_TYPE,		T_CRM);
+	ha_msg_add(msg, F_SUBTYPE,	XML_ATTR_REQUEST);
+	ha_msg_add(msg, F_CRM_SYS_TO,   CRM_SYSTEM_CRMD);
+	ha_msg_add(msg, F_CRM_SYS_FROM, CRM_SYSTEM_DC);
+	ha_msg_add(msg, F_CRM_TASK,	CRM_OP_HBEAT);
 
-	if(send_dc_heartbeat(dc_hb_msg) != HA_OK) {
+	if(send_msg_via_ha(fsa_cluster_conn, msg) == FALSE) {
 		/* this is bad */
 		stopTimer(timer); /* dont make it go off again */
 
 		register_fsa_input(C_HEARTBEAT_FAILED, I_SHUTDOWN, NULL);
 		s_crmd_fsa(C_HEARTBEAT_FAILED);
+
+		return FALSE;
 	}
 	
 	return TRUE;
@@ -235,9 +240,9 @@ do_dc_takeover(long long action,
 	       fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input result = I_NULL;
-	xmlNodePtr cib = createEmptyCib();
-	xmlNodePtr update = NULL;
-	xmlNodePtr output = NULL;
+	crm_data_t *cib = createEmptyCib();
+	crm_data_t *update = NULL;
+	crm_data_t *output = NULL;
 	int rc = cib_ok;
 	
 	crm_trace("################## Taking over the DC ##################");
@@ -260,7 +265,7 @@ do_dc_takeover(long long action,
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
 
 	crm_debug("Update %s in the CIB to our uuid: %s",
-		  XML_ATTR_DC_UUID, xmlGetProp(cib, XML_ATTR_DC_UUID));
+		  XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
 	
 	set_uuid(cib, XML_ATTR_DC_UUID, fsa_our_uname);
 	update = create_cib_fragment(cib, NULL);
@@ -279,7 +284,7 @@ do_dc_takeover(long long action,
 
 		cib = find_xml_node(output, XML_TAG_CIB, TRUE);
 		
-		revision = xmlGetProp(cib, XML_ATTR_CIB_REVISION);
+		revision = crm_element_value(cib, XML_ATTR_CIB_REVISION);
 		revision_i = atoi(revision?revision:"0");
 
 		if(revision_i > cib_feature_revision) {

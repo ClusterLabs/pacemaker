@@ -19,7 +19,6 @@
 #include <crm/crm.h>
 #include <string.h>
 #include <crmd_fsa.h>
-#include <libxml/tree.h>
 
 #include <heartbeat.h>
 
@@ -35,12 +34,7 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-#ifdef MSG_LOG
-FILE *msg_in_strm = NULL;
-FILE *msg_ipc_strm = NULL;
-#endif
-
-xmlNodePtr find_xml_in_hamessage(const HA_Message * msg);
+crm_data_t *find_xml_in_hamessage(const HA_Message * msg);
 void crmd_ha_connection_destroy(gpointer user_data);
 
 void
@@ -55,26 +49,15 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 	const char *sys_to   = ha_msg_value(msg, F_CRM_SYS_TO);
 	const char *sys_from = ha_msg_value(msg, F_CRM_SYS_FROM);
 
-#ifdef MSG_LOG
-	if(msg_in_strm == NULL) {
-		msg_in_strm = fopen(DEVEL_DIR"/inbound.log", "w");
-	}
-#endif
-
 	CRM_ASSERT(from != NULL);
-	
-#ifdef MSG_LOG
-/* 	xml_text = dump_xml_formatted(root_xml_node); */
-/* 	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n", crm_str(from), */
-/* 		seq, ha_msg_value(msg, F_TYPE), xml_text); */
-/* 	fflush(msg_in_strm); */
-/* 	crm_free(xml_text); */
-#endif
 
 	if(AM_I_DC
 	   && safe_str_eq(sys_from, CRM_SYSTEM_DC)
 	   && safe_str_neq(from, fsa_our_uname)) {
 		crm_err("Another DC detected");
+#ifdef MSG_LOG
+		crm_log_message_adv(LOG_ERR, DEVEL_DIR"/inbound.ha.log", msg);
+#endif
 		crm_log_message(LOG_ERR, msg);
 		new_input = new_ha_msg_input(msg);
 		register_fsa_input(C_HA_MESSAGE, I_ELECTION, new_input);
@@ -82,31 +65,31 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 	} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
 		crm_verbose("Ignoring message for the DC [F_SEQ=%s]", seq);
 #ifdef MSG_LOG
-		fprintf(msg_in_strm,
-			"Ignoring message for the DC [F_SEQ=%s]", seq);
+		crm_log_message_adv(LOG_TRACE, DEVEL_DIR"/inbound.ha.log", msg);
 #endif
 		return;
 
 	} else if(safe_str_eq(from, fsa_our_uname)
 		  && safe_str_eq(op, CRM_OP_VOTE)) {
-		crm_verbose("Ignoring our own vote [F_SEQ=%s]", seq);
 #ifdef MSG_LOG
-		fprintf(msg_in_strm,
-			"Ignoring our own heartbeat [F_SEQ=%s]", seq);
+		crm_log_message_adv(LOG_TRACE, DEVEL_DIR"/inbound.ha.log", msg);
 #endif
+		crm_verbose("Ignoring our own vote [F_SEQ=%s]", seq);
 		return;
 		
 	} else if(AM_I_DC && safe_str_eq(op, CRM_OP_HBEAT)) {
 		crm_verbose("Ignoring our own heartbeat [F_SEQ=%s]", seq);
 #ifdef MSG_LOG
-		fprintf(msg_in_strm,
-			"Ignoring our own heartbeat [F_SEQ=%s]", seq);
+		crm_log_message_adv(LOG_INSANE, DEVEL_DIR"/inbound.ha.log", msg);
 #endif
 		return;
 
 	} else {
 		crm_debug("Processing message");
 		crm_log_message(LOG_MSG, msg);
+#ifdef MSG_LOG
+		crm_log_message_adv(LOG_DEBUG, DEVEL_DIR"/inbound.ha.log", msg);
+#endif
 		new_input = new_ha_msg_input(msg);
 		register_fsa_input(C_HA_MESSAGE, I_ROUTER, new_input);
 	}
@@ -140,12 +123,6 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 	crm_verbose("Processing IPC message from %s",
 		   curr_client->table_key);
 
-#ifdef MSG_LOG
-	if(msg_ipc_strm == NULL) {
-		msg_ipc_strm = fopen(DEVEL_DIR"/inbound.ipc.log", "w");
-	}
-#endif
-
 	while(client->ops->is_message_pending(client)) {
 		if (client->ch_status == IPC_DISCONNECT) {
 			/* The message which was pending for us is that
@@ -154,20 +131,10 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		}
 		if (client->ops->recv(client, &msg) != IPC_OK) {
 			perror("Receive failure:");
-#ifdef MSG_LOG
-			fprintf(msg_ipc_strm, "[%s] [receive failure]\n",
-				curr_client->table_key);
-			fflush(msg_in_strm);
-#endif
+			crm_err("[%s] [receive failure]\n", curr_client->table_key);
 			return !hack_return_good;
-		}
-		if (msg == NULL) {
-#ifdef MSG_LOG
-			fprintf(msg_ipc_strm, "[%s] [__nothing__]\n",
-				curr_client->table_key);
-			fflush(msg_in_strm);
-#endif
-			crm_err("No message this time");
+		} else if (msg == NULL) {
+			crm_err("No message from %s this time", curr_client->table_key);
 			continue;
 		}
 
@@ -179,12 +146,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		crm_log_message(LOG_MSG, new_input->msg);
 	
 #ifdef MSG_LOG
-		{
-			char *buffer = NULL;
-			fprintf(msg_ipc_strm, "[%s] [text=%s]\n",
-				curr_client->table_key, buffer);
-			fflush(msg_in_strm);
-		}
+		crm_log_message_adv(LOG_DEBUG, DEVEL_DIR"/inbound.ipc.log", new_input->msg);
 #endif
 		crmd_authorize_message(new_input, curr_client);
 		delete_ha_msg_input(new_input);
@@ -219,6 +181,8 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 			
 			if(the_subsystem != NULL) {
 				cleanup_subsystem(the_subsystem);
+				s_crmd_fsa(C_FSA_INTERNAL);
+				
 			} /* else that was a transient client */
 			
 			if (curr_client->table_key != NULL) {
@@ -266,7 +230,7 @@ void
 crmd_ha_status_callback(
 	const char *node, const char * status,	void* private_data)
 {
-	xmlNodePtr update      = NULL;
+	crm_data_t *update      = NULL;
 
 	crm_debug("received callback");
 	crm_notice("Status update: Node %s now has status [%s]\n",node,status);
@@ -299,7 +263,7 @@ crmd_client_status_callback(const char * node, const char * client,
 {
 	const char    *join = NULL;
 	const char   *extra = NULL;
-	xmlNodePtr   update = NULL;
+	crm_data_t *  update = NULL;
 
 	crm_debug("received callback");
 
@@ -335,52 +299,6 @@ crmd_client_status_callback(const char * node, const char * client,
 	free_xml(update);
 }
 
-
-xmlNodePtr
-find_xml_in_hamessage(const HA_Message * msg)
-{
-	const char *xml;
-   	xmlDocPtr doc;
-	xmlNodePtr root;
-
-	
-	if (msg == NULL) {
-		crm_info("**** ha_crm_msg_callback called on a NULL message");
-		return NULL;
-	}
-
-#if 0
-	crm_debug("[F_TYPE=%s]", ha_msg_value(msg, F_TYPE));
-	crm_debug("[F_ORIG=%s]", ha_msg_value(msg, F_ORIG));
-	crm_debug("[F_TO=%s]",   ha_msg_value(msg, F_TO));
-	crm_debug("[F_COMMENT=%s]", ha_msg_value(msg, F_COMMENT));
-	crm_debug("[F_XML=%s]",  ha_msg_value(msg, F_CRM_DATA));
-/*    crm_debug("[F_=%s]", ha_msg_value(ha_msg, F_)); */
-#endif
-	
-	if (strcmp(T_CRM, ha_msg_value(msg, F_TYPE)) != 0) {
-		crm_info("Received a (%s) message by mistake.",
-		       ha_msg_value(msg, F_TYPE));
-		return NULL;
-	}
-	xml = ha_msg_value(msg, F_CRM_DATA);
-	if (xml == NULL) {
-		crm_info("No XML attached to this message.");
-		return NULL;
-	}
-	doc = xmlParseMemory(xml, strlen(xml));
-	if (doc == NULL) {
-		crm_info("XML Buffer was not valid.");
-		return NULL;
-	}
-
-	root = xmlDocGetRootElement(doc);
-	if (root == NULL) {
-		crm_info("Root node was NULL.");
-		return NULL;
-	}
-	return root;
-}
 
 gboolean lrm_dispatch(int fd, gpointer user_data)
 {
@@ -520,5 +438,22 @@ crmd_ccm_msg_callback(
 	
 	oc_ev_callback_done(cookie);
 	
+	return;
+}
+
+void
+crmd_cib_connection_destroy(gpointer user_data)
+{
+	if(is_set(fsa_input_register, R_SHUTDOWN)) {
+		crm_info("Connection to the CIB terminated...");
+		return;
+	}
+
+	/* eventually this will trigger a reconnect, not a shutdown */ 
+	crm_err("Connection to the CIB terminated...");
+	register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+	clear_bit_inplace(fsa_input_register, R_CIB_CONNECTED);
+	
+	s_crmd_fsa(C_FSA_INTERNAL);
 	return;
 }

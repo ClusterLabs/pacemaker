@@ -369,7 +369,7 @@ do_started(long long action,
 		msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
 		if(msg != NULL) {
 			crm_debug("There was a HA message");
- 			ha_msg_del(msg);
+ 			crm_msg_del(msg);
 		}
 		
 		startTimer(wait_timer);
@@ -408,14 +408,14 @@ do_read_config(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	xmlNodePtr cib_copy = get_cib_copy(fsa_cib_conn);
-	xmlNodePtr config   = get_object_root(XML_CIB_TAG_CRMCONFIG, cib_copy);
+	crm_data_t *cib_copy = get_cib_copy(fsa_cib_conn);
+	crm_data_t *config   = get_object_root(XML_CIB_TAG_CRMCONFIG, cib_copy);
 
 	xml_child_iter(
 		config, iter, XML_CIB_TAG_NVPAIR,
 
-		const char *name  = xmlGetProp(iter, XML_NVPAIR_ATTR_NAME);
-		const char *value = xmlGetProp(iter, XML_NVPAIR_ATTR_VALUE);
+		const char *name  = crm_element_value(iter, XML_NVPAIR_ATTR_NAME);
+		const char *value = crm_element_value(iter, XML_NVPAIR_ATTR_VALUE);
 
 		if(name == NULL || value == NULL) {
 			continue;

@@ -248,22 +248,22 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 			
 			if(stored_msg->fsa_cause == C_CCM_CALLBACK) {
 				crm_devel("FSA processing CCM callback from %s",
-					  stored_msg->where);
+					  stored_msg->origin);
 
 			} else if(stored_msg->fsa_cause == C_LRM_OP_CALLBACK) {
 				crm_devel("FSA processing LRM callback from %s",
-					  stored_msg->where);
+					  stored_msg->origin);
 
 			} else if(stored_msg->data == NULL) {
 				crm_devel("FSA processing input from %s",
-					  stored_msg->where);
+					  stored_msg->origin);
 				
 			} else {
 				ha_msg_input_t *ha_input = fsa_typed_data_adv(
 					stored_msg, fsa_dt_ha_msg, __FUNCTION__);
 				
 				crm_devel("FSA processing XML message from %s",
-					  stored_msg->where);
+					  stored_msg->origin);
 				crm_log_message(LOG_MSG, ha_input->msg);
 				crm_xml_devel(ha_input->xml,
 					      "FSA message data");
@@ -285,7 +285,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				  fsa_state2string(cur_state),
 				  fsa_cause2string(fsa_data->fsa_cause),
 				  fsa_input2string(fsa_data->fsa_input),
-				  fsa_data->where);
+				  fsa_data->origin);
 #ifdef DOT_FSA_ACTIONS
 			fprintf(dot_strm,
 				"\t// FSA input: State=%s\tCause=%s"
@@ -293,7 +293,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				fsa_state2string(cur_state),
 				fsa_cause2string(fsa_data->fsa_cause),
 				fsa_input2string(fsa_data->fsa_input),
-				fsa_data->where);
+				fsa_data->origin);
 			
 			fflush(dot_strm);
 #endif
@@ -303,10 +303,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 			fsa_data->fsa_input = I_NULL;
 			fsa_data->fsa_cause = cause;
 			fsa_data->actions   = A_NOTHING;
-			fsa_data->where     = "s_crmd_fsa (enter)";
+			fsa_data->origin     = "s_crmd_fsa (enter)";
 			fsa_data->data      = NULL;
 			fsa_data->data_type = fsa_dt_none;
-			if(fsa_data->where == NULL) {
+			if(fsa_data->origin == NULL) {
 				crm_crit("Out of memory");
 				exit(1);
 			}
@@ -346,7 +346,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 			    fsa_state2string(crmd_fsa_state[cur_input][cur_state]),
 			    fsa_cause2string(fsa_data->fsa_cause),
 			    fsa_input2string(cur_input),
-			    fsa_data->where);
+			    fsa_data->origin);
 #endif
 
 		/* logging : *before* the state is changed */
@@ -554,7 +554,7 @@ do_state_transition(long long actions,
 	if(current_input != I_DC_HEARTBEAT && cur_state != S_NOT_DC){
 		fprintf(dot_strm,
 			"\t\"%s\" -> \"%s\" [ label=\"%s\" cause=%s origin=%s ] // %s",
-			state_from, state_to, input, fsa_cause2string(cause), msg_data->where,
+			state_from, state_to, input, fsa_cause2string(cause), msg_data->origin,
 			asctime(localtime(&now)));
 		fflush(dot_strm);
 	}
@@ -562,7 +562,7 @@ do_state_transition(long long actions,
 	crm_info("State transition \"%s\" -> \"%s\""
 		 " [ input=%s cause=%s origin=%s %s ]",
 		 state_from, state_to, input,
-		 fsa_cause2string(cause), msg_data->where,
+		 fsa_cause2string(cause), msg_data->origin,
 		 asctime(localtime(&now)));
 
 	/* the last two clauses might cause trouble later */
@@ -713,9 +713,9 @@ clear_flags(long long actions,
 void
 dump_rsc_info(void)
 {
-	xmlNodePtr local_cib = get_cib_copy(fsa_cib_conn);
-	xmlNodePtr root      = get_object_root(XML_CIB_TAG_STATUS, local_cib);
-	xmlNodePtr resources = NULL;
+	crm_data_t *local_cib = get_cib_copy(fsa_cib_conn);
+	crm_data_t *root      = get_object_root(XML_CIB_TAG_STATUS, local_cib);
+	crm_data_t *resources = NULL;
 	const char *rsc_id    = NULL;
 	const char *node_id   = NULL;
 	const char *rsc_state = NULL;
@@ -737,12 +737,12 @@ dump_rsc_info(void)
 		xml_child_iter(
 			resources, rsc, XML_LRM_TAG_RESOURCE,
 
-			rsc_id    = xmlGetProp(rsc, XML_ATTR_ID);
-			node_id   = xmlGetProp(rsc, XML_LRM_ATTR_TARGET);
-			rsc_state = xmlGetProp(rsc, XML_LRM_ATTR_RSCSTATE);
-			op_status = xmlGetProp(rsc, XML_LRM_ATTR_OPSTATUS);
-			last_rc   = xmlGetProp(rsc, XML_LRM_ATTR_RC);
-			last_op   = xmlGetProp(rsc, XML_LRM_ATTR_LASTOP);
+			rsc_id    = crm_element_value(rsc, XML_ATTR_ID);
+			node_id   = crm_element_value(rsc, XML_LRM_ATTR_TARGET);
+			rsc_state = crm_element_value(rsc, XML_LRM_ATTR_RSCSTATE);
+			op_status = crm_element_value(rsc, XML_LRM_ATTR_OPSTATUS);
+			last_rc   = crm_element_value(rsc, XML_LRM_ATTR_RC);
+			last_op   = crm_element_value(rsc, XML_LRM_ATTR_LASTOP);
 			
 /* 			if(safe_str_eq(rsc_state, "stopped")) { */
 /* 				continue; */

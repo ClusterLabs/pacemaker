@@ -56,3 +56,4 @@ extern void msg_ccm_join(const HA_Message *msg, void *foo);
 extern gboolean crmd_client_connect(
 	IPC_Channel *newclient, gpointer user_data);
 
+extern void crmd_cib_connection_destroy(gpointer user_data);

@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.16 2005/01/12 17:18:17 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.17 2005/01/26 13:30:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -20,7 +20,7 @@
 #ifndef XML_FSA_PROTO__H
 #define XML_FSA_PROTO__H
 
-extern xmlNodePtr do_lrm_query(gboolean);
+extern crm_data_t *do_lrm_query(gboolean);
 
 /*	 A_READCONFIG	*/
 enum crmd_fsa_input

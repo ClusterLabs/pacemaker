@@ -121,7 +121,7 @@ do_pe_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-	xmlNodePtr local_cib = NULL;
+	crm_data_t *local_cib = NULL;
 	HA_Message *cmd = NULL;
 
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){

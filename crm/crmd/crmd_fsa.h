@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.34 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.35 2005/01/26 13:30:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,10 +23,10 @@
 #include <ocf/oc_event.h>
 #include <clplumbing/ipc.h>
 #include <hb_api.h>
-#include <libxml/tree.h>
 #include <lrm/lrm_api.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/common/xml.h>
 
 struct crmd_ccm_data_s 
 {
@@ -89,7 +89,7 @@ struct fsa_data_s
 		enum crmd_fsa_input fsa_input;
 		enum crmd_fsa_cause fsa_cause;
 		long long	    actions;
-		const char	   *where;
+		const char	   *origin;
 		void		   *data;
 		enum fsa_data_type  data_type;
 };
@@ -129,7 +129,7 @@ extern struct crm_subsystem_s *te_subsystem;
 extern struct crm_subsystem_s *pe_subsystem;
 
 /* these two should be moved elsewhere... */
-extern xmlNodePtr do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite);
+extern crm_data_t *do_update_cib_nodes(crm_data_t *updates, gboolean overwrite);
 extern gboolean do_dc_heartbeat(gpointer data);
 
 #define AM_I_DC is_set(fsa_input_register, R_THE_DC)
