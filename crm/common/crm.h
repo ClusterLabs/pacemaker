@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.12 2004/03/18 10:48:51 andrew Exp $ */
+/* $Id: crm.h,v 1.13 2004/03/22 14:22:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,6 +29,15 @@
 #define APPNAME_LEN 256
 #define LOG_DIR     "/var/log"
 #define MAX_IPC_FAIL 5
+#define CIB_FILENAME WORKING_DIR"/cib.xml"
+#define CIB_BACKUP   WORKING_DIR"/cib_backup.xml"
+
+
+#define MSG_LOG 1
+#define INTEGRATED_CIB 1
+#define DOT_FSA_ACTIONS 1
+#define DOT_ALL_FSA_INPUTS 1
+//#define FSA_TRACE 1
 
 #include <clplumbing/cl_log.h>
 
