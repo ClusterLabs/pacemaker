@@ -1,4 +1,4 @@
-/* $Id: xmltags.h,v 1.8 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: xmltags.h,v 1.9 2004/03/16 12:06:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,6 +46,7 @@
 #define XML_ATTR_MSGTYPE		"message_type"
 #define XML_ATTR_SYSFROM		"sys_from"
 #define XML_ATTR_SYSTO			"sys_to"
+#define XML_ATTR_SYSCC			"sys_cc"
 #define XML_ATTR_HOSTFROM		"host_from"
 #define XML_ATTR_HOSTTO			"host_to"
 #define XML_ATTR_REFERENCE		"crm_msg_reference"

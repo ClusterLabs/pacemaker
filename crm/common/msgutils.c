@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.16 2004/03/16 10:46:30 andrew Exp $ */
+/* $Id: msgutils.c,v 1.17 2004/03/16 12:06:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -373,8 +373,7 @@ send_hello_message(IPC_Channel *ipc_client,
 	xmlNodePtr hello_node = NULL;
 	FNIN();
 	
-	if (uid == NULL || strlen(uid) == 0
-	    || client_name == NULL || strlen(client_name) == 0
+	if (client_name == NULL || strlen(client_name) == 0
 	    || major_version == NULL || strlen(major_version) == 0
 	    || minor_version == NULL || strlen(minor_version) == 0) {
 		cl_log(LOG_ERR,
@@ -383,10 +382,12 @@ send_hello_message(IPC_Channel *ipc_client,
 	}
 
 	hello_node = create_xml_node(NULL, "hello");
-	set_xml_property_copy(hello_node, "client_uuid",   uid);
-	set_xml_property_copy(hello_node, "client_name",   client_name);
 	set_xml_property_copy(hello_node, "major_version", major_version);
 	set_xml_property_copy(hello_node, "minor_version", minor_version);
+	set_xml_property_copy(hello_node, "client_name",   client_name);
+	if(uid != NULL) {
+		set_xml_property_copy(hello_node, "client_uuid",   uid);
+	}
 
 	send_xmlipc_message(ipc_client, hello_node);
 

@@ -381,6 +381,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 {
 	const char *host_to = xmlGetProp(xml_relay_message, XML_ATTR_HOSTTO);
 	const char *sys_to  = xmlGetProp(xml_relay_message, XML_ATTR_SYSTO);
+	const char *sys_cc  = xmlGetProp(xml_relay_message, XML_ATTR_SYSCC);
 	gboolean processing_complete = FALSE;
 	int is_for_dc  = 0;
 	int is_for_dcib  = 0;
@@ -426,6 +427,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		is_local=1;
 	}
 
+/*
 	CRM_DEBUG2("is_local    %d", is_local);
 	CRM_DEBUG2("is_for_dcib %d", is_for_dcib);
 	CRM_DEBUG2("is_for_dc   %d", is_for_dc);
@@ -433,7 +435,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	CRM_DEBUG2("AM_I_DC     %d", AM_I_DC);
 	CRM_DEBUG2("sys_to      %s", sys_to);
 	CRM_DEBUG2("host_to     %s", host_to);
-	
+*/
 
 	if(is_for_dc || is_for_dcib) {
 		if(AM_I_DC) {
@@ -457,17 +459,10 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		ROUTER_RESULT("Message result: Local relay");
 		CRM_DEBUG2("Message result: Local relay to %s", sys_to);
 		send_msg_via_ipc(xml_relay_message, sys_to);
-		processing_complete = TRUE;
+		if(sys_cc == NULL || strcmp(sys_cc, CRM_SYSTEM_DC) != 0)
+			processing_complete = TRUE;
+		// else the DC should also get this message
 	} else {
-/* 		const char *sys_from  = */
-/* 			xmlGetProp(xml_relay_message, XML_ATTR_SYSFROM); */
-/* 		if(AM_I_DC && strcmp(CRM_SYSTEM_CIB, sys_from) == 0) { */
-/* 			// we are a special CIB */
-/* 			xmlSetProp(xml_relay_message, */
-/* 				   XML_ATTR_SYSFROM, */
-/* 				   CRM_SYSTEM_DCIB); */
-/* 		} */
-
 		ROUTER_RESULT("Message result: External relay");
 		CRM_DEBUG2("Message result: External relay to %s", host_to);
 
@@ -629,10 +624,16 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		g_hash_table_insert (ipc_clients,
 				     table_key,
 				     curr_client->client_channel);
-	} else
+
+		send_hello_message(curr_client->client_channel,
+				   NULL, CRM_SYSTEM_CRMD,
+				   "0", "1");
+	} else {
 		CRM_DEBUG("Rejected client logon request");
-
-
+		curr_client->client_channel->ops->destroy(
+			curr_client->client_channel);
+	}
+	
 	if(uid != NULL) ha_free(uid);
 	if(client_name != NULL) ha_free(client_name);
 	
