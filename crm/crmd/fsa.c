@@ -22,10 +22,13 @@
 #include <stdio.h>
 
 #include <crm/common/xmlutils.h>
+#include <crm/common/msgutils.h>
 #include <crm/common/xmltags.h>
 #include <clplumbing/Gmain_timeout.h>
 
 #include <crmd_messages.h>
+#include <string.h>
+#include <time.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -36,14 +39,15 @@
 #ifdef DOT_FSA_ACTIONS
 #define ELSEIF_FSA_ACTION(x,y)						\
   else if(is_set(actions,x)) {						\
-	fprintf(dot_strm, "\t\t// %s:\t%s\t(0x%.16llx) with data? %s\n",	\
+/*	if(cur_input != I_DC_HEARTBEAT)				*/	\
+	 fprintf(dot_strm, "\t\t// %s:\t%s\t(0x%.16llx) with data? %s\n",\
 		fsa_input2string(cur_input), fsa_action2string(x), x,	\
 		data==NULL?"no":"yes");					\
 	fflush(dot_strm);						\
 	CRM_DEBUG3("Invoking action %s (%.16llx)",			\
 		fsa_action2string(x), x);				\
 	actions = clear_bit(actions, x);				\
-	next_input = y(x, cur_state, last_input, data);			\
+	next_input = y(x, cause, cur_state, last_input, data);		\
 	CRM_DEBUG3("Result of action %s was %s",			\
 		fsa_action2string(x), fsa_input2string(next_input));	\
   }
@@ -53,11 +57,11 @@
 	CRM_DEBUG3("Invoking action %s (%.16llx)",			\
 		fsa_action2string(x), x);				\
 	actions = clear_bit(actions, x);				\
-	next_input = y(x, cur_state, last_input, data);			\
+	next_input = y(x, cause, cur_state, last_input, data);		\
 	CRM_DEBUG3("Result of action %s was %s",			\
 		fsa_action2string(x), fsa_input2string(next_input));	\
   }
-#endif			
+#endif
 
 const char *dot_intro = "digraph \"g\" {\n"
 "	size = \"30,30\"\n"
@@ -82,7 +86,7 @@ const char *dot_intro = "digraph \"g\" {\n"
 "		color = \"black\"\n"
 "	]\n"
 "// special nodes\n"
-"	\"S_STARTING\" \n"
+"	\"S_PENDING\" \n"
 "	[\n"
 "	 color = \"blue\"\n"
 "	 fontcolor = \"blue\"\n"
@@ -113,6 +117,8 @@ const char     *fsa_our_uname;
 fsa_timer_t *election_trigger = NULL;		/*  */
 fsa_timer_t *election_timeout = NULL;		/*  */
 fsa_timer_t *shutdown_escalation_timmer = NULL;	/*  */
+fsa_timer_t *integration_timer = NULL;
+fsa_timer_t *dc_heartbeat = NULL;
 
 long long
 toggle_bit(long long action_list, long long action)
@@ -154,7 +160,7 @@ toggle_bit_inplace(long long *action_list, long long action)
 void
 clear_bit_inplace(long long *action_list, long long action)
 {
-	*action_list = set_bit(*action_list, action);
+	*action_list = clear_bit(*action_list, action);
 }
 
 void
@@ -169,11 +175,12 @@ gboolean
 is_set(long long action_list, long long action)
 {
 //	CRM_DEBUG2("Checking bit\t%.16llx", action);
-	return ((action_list & action) != 0);
+	return ((action_list & action) == action);
 }
 
 long long
 clear_flags(long long actions,
+	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input cur_input)
 {
@@ -183,24 +190,38 @@ clear_flags(long long actions,
 void
 startTimer(fsa_timer_t *timer)
 {
-	CRM_DEBUG2("#!!#!!# Starting timer with fsa_input=%s",
-		   fsa_input2string(timer->fsa_input));
-	timer->source_id =
-		Gmain_timeout_add(timer->period_ms,
-				  timer_popped,
-				  (void*)timer);
-	CRM_DEBUG2("#!!#!!# Started timer, source_id=%d", timer->source_id);
+	if(((int)timer->source_id) < 0) {
+		timer->source_id =
+			Gmain_timeout_add(timer->period_ms,
+					  timer->callback,
+					  (void*)timer);
+		CRM_DEBUG3("#!!#!!# Started %s timer (%d)",
+			   fsa_input2string(timer->fsa_input),
+			   timer->source_id);
+	} else {
+		CRM_DEBUG3("#!!#!!# Timer %s already running (%d)",
+			   fsa_input2string(timer->fsa_input),
+			   timer->source_id);
+		
+	}
 }
+
 
 void
 stopTimer(fsa_timer_t *timer)
 {
-	CRM_DEBUG2("#!!#!!# Stopping timer, source_id=%d", timer->source_id);
-	if(timer->source_id >= 0) {
-		CRM_DEBUG2("#!!#!!# Stopping timer with fsa_input=%s",
-			   fsa_input2string(timer->fsa_input));
+	if(((int)timer->source_id) > 0) {
+		CRM_DEBUG3("#!!#!!# Stopping %s timer (%d)",
+			   fsa_input2string(timer->fsa_input),
+			   timer->source_id);
 		g_source_remove(timer->source_id);
 		timer->source_id = -2;
+
+	} else {
+		CRM_DEBUG3("#!!#!!# Timer %s already stopped (%d)",
+			   fsa_input2string(timer->fsa_input),
+			   timer->source_id);
+		
 	}
 }
 
@@ -213,18 +234,18 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	enum crmd_fsa_input last_input = initial_input;
 	enum crmd_fsa_input cur_input;
 	enum crmd_fsa_input next_input;
-	enum crmd_fsa_state cur_state, next_state, starting_state;		
+	enum crmd_fsa_state cur_state, next_state, starting_state;
+	
 	FNIN();
 
 	starting_state = fsa_state;
 	cur_input = initial_input;
-	next_input = I_NULL;
+	next_input = initial_input;
 	
 	cur_state = starting_state;
 	next_state = cur_state;
 
-	CRM_DEBUG4("FSA invoked with Cause: %s\n"
-		   "\tState: %s, Input: %s",
+	CRM_DEBUG4("FSA invoked with Cause: %s\n\tState: %s, Input: %s",
 		   fsa_cause2string(cause),
 		   fsa_state2string(cur_state),
 		   fsa_input2string(cur_input));
@@ -237,7 +258,17 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	 * (not replace) existing actions before the next iteration.
 	 *
 	 */
-	while(cur_input != I_NULL || actions != A_NOTHING) {
+	while(next_input != I_NULL || actions != A_NOTHING) {
+
+		if(next_input == I_WAIT_FOR_EVENT) {
+			/* we may be waiting for an a-sync task to "happen"
+			 * and until it does, we cant do anything else
+			 */
+			cl_log(LOG_INFO, "Wait until something else happens");
+			break;
+		}
+
+		cur_input = next_input;
 
 		CRM_DEBUG3("FSA while loop:\tState: %s, Input: %s",
 			   fsa_state2string(cur_state),
@@ -246,41 +277,60 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		/* safe to do every time, I_NULL gets us to the same state */
 		next_state = crmd_fsa_state[cur_input][cur_state];
 
-		if(cur_input != I_NULL) {
-			last_input = cur_input; // only for non I_NULL
-			new_actions =
-				crmd_fsa_actions[cur_input][cur_state];
-
-			CRM_DEBUG2("Adding actions %.16llx", new_actions);
-			actions |= new_actions;
-
+		if(cur_input != I_NULL
+		   && (cur_input != I_DC_HEARTBEAT || cur_state != S_NOT_DC)){
 #ifndef DOT_ALL_FSA_INPUTS
 			if(next_state != cur_state) {
 #endif			
-				const char *state_from = fsa_state2string(cur_state);
-				const char *state_to   = fsa_state2string(next_state);
-				const char *input      = fsa_input2string(cur_input);
-
+				const char *state_from =
+					fsa_state2string(cur_state);
+				const char *state_to =
+					fsa_state2string(next_state);
+				const char *input =
+					fsa_input2string(cur_input);
+				
 				if(dot_strm == NULL) {
-					dot_strm = fopen("live.dot", "w");
+					dot_strm = fopen("/tmp/live.dot", "w");
 					fprintf(dot_strm, "%s", dot_intro);
 				}
+				
+				time_t now = time(NULL);
+				
 				fprintf(dot_strm,
-					"\t\"%s\" -> \"%s\" [ label =\"%s\" ]\n",
-					state_from, state_to, input);
+					"\t\"%s\" -> \"%s\" [ label =\"%s\" ] // %s",
+					state_from, state_to, input,
+					asctime(localtime(&now)));
 				fflush(dot_strm);
+				
 #ifndef DOT_ALL_FSA_INPUTS
 			}
-#endif			
+#endif
 		}
 		
+		new_actions = crmd_fsa_actions[cur_input][cur_state];
+
+		if(new_actions != A_NOTHING) {
+			CRM_DEBUG2("Adding actions %.16llx", new_actions);
+			actions |= new_actions;
+		}
+		
+
+		if(cur_input != I_NULL)
+			last_input = cur_input; // only for non I_NULL
+	
 		cur_state = next_state;
 		fsa_state = cur_state;
 
+#if 0
+		if(fsa_state == S_RECOVERY || fsa_state == S_RECOVERY_DC) {
+			set_bit(actions, A_RECOVER);
+		}
+#endif	
+		
 		/* this is always run, some inputs/states may make various
 		 * actions irrelevant/invalid
 		 */
-		actions = clear_flags(actions, cur_state, cur_input);
+		actions = clear_flags(actions, cause, cur_state, cur_input);
 		
 		/* regular action processing in order of action priority
 		 * and/or ease of processing
@@ -294,38 +344,54 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		/* External connect
 		 * These will drop existing connections if present
 		 */
-	if(actions == A_NOTHING) {
-		cl_log(LOG_INFO, "Nothing to do");
-		next_input = I_NULL;
-	}
+		if(actions == A_NOTHING) {
+
+			cl_log(LOG_INFO, "Nothing to do");
+			next_input = I_NULL;
+		
+			// check registers, see if anything is pending
+			if(is_set(fsa_input_register, R_SHUTDOWN)) {
+				CRM_DEBUG("(Re-)invoking shutdown");
+				next_input = I_SHUTDOWN;
+			} else if(is_set(fsa_input_register, R_INVOKE_PE)) {
+				CRM_DEBUG("Invoke the PE somehow");
+			}
+		
+		}
 	
 	/* logging */
 	ELSEIF_FSA_ACTION(A_ERROR, do_log)
 		ELSEIF_FSA_ACTION(A_WARN, do_log)
 		ELSEIF_FSA_ACTION(A_LOG,  do_log)
-
+		
 		/* get out of here NOW! before anything worse happens */
 		ELSEIF_FSA_ACTION(A_EXIT_1,	do_exit)
-
+		
 		ELSEIF_FSA_ACTION(A_STARTUP,	do_startup)
-
+		
 		ELSEIF_FSA_ACTION(A_CIB_START,  do_cib_control)
 		ELSEIF_FSA_ACTION(A_HA_CONNECT, do_ha_register)
-		ELSEIF_FSA_ACTION(A_CCM_CONNECT,do_ccm_register)
 		ELSEIF_FSA_ACTION(A_LRM_CONNECT,do_lrm_register)
-
+		ELSEIF_FSA_ACTION(A_CCM_CONNECT,do_ccm_register)
+		ELSEIF_FSA_ACTION(A_ANNOUNCE,	do_announce)
+		
 		/* sub-system start */
 		ELSEIF_FSA_ACTION(A_PE_START,	do_pe_control)
 		ELSEIF_FSA_ACTION(A_TE_START,	do_te_control)
-
-		ELSEIF_FSA_ACTION(A_STARTED,	do_started)
 		
 		/* sub-system restart
 		 */
-		ELSEIF_FSA_ACTION(A_CIB_RESTART,do_cib_control)
-		ELSEIF_FSA_ACTION(A_PE_RESTART, do_pe_control)
-		ELSEIF_FSA_ACTION(A_TE_RESTART, do_te_control)
-
+		ELSEIF_FSA_ACTION(O_CIB_RESTART,do_cib_control)
+		ELSEIF_FSA_ACTION(O_PE_RESTART, do_pe_control)
+		ELSEIF_FSA_ACTION(O_TE_RESTART, do_te_control)
+		
+		ELSEIF_FSA_ACTION(A_STARTED,	do_started)
+		
+		/* DC Timer */
+		ELSEIF_FSA_ACTION(O_DC_TIMER_RESTART,	do_dc_timer_control)
+		ELSEIF_FSA_ACTION(A_DC_TIMER_STOP,	do_dc_timer_control)
+		ELSEIF_FSA_ACTION(A_DC_TIMER_START,	do_dc_timer_control)
+		
 		/*
 		 * Highest priority actions
 		 */
@@ -334,31 +400,30 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)
 		ELSEIF_FSA_ACTION(A_ELECTION_COUNT,	do_election_count_vote)
 		ELSEIF_FSA_ACTION(A_ELECTION_TIMEOUT,	do_election_timeout)
-		ELSEIF_FSA_ACTION(A_TICKLE_DC_TIMER,	do_tickle_dc_timer)
-
+		
 		/*
 		 * "Get this over with" actions
 		 */
 		ELSEIF_FSA_ACTION(A_MSG_STORE,		do_msg_store)
 		ELSEIF_FSA_ACTION(A_NODE_BLOCK,		do_node_block)
-
+		
 		/*
 		 * High priority actions
 		 * Update the cache first
 		 */
 		ELSEIF_FSA_ACTION(A_CCM_UPDATE_CACHE,	do_ccm_update_cache)
 		ELSEIF_FSA_ACTION(A_CCM_EVENT,		do_ccm_event)
-
+		
 		/*
 		 * Medium priority actions
 		 */
 		ELSEIF_FSA_ACTION(A_DC_TAKEOVER,	do_dc_takeover)
 		ELSEIF_FSA_ACTION(A_DC_RELEASE,		do_dc_release)
-		ELSEIF_FSA_ACTION(A_JOIN_WELCOME_ALL,	do_join_welcome)
-		ELSEIF_FSA_ACTION(A_JOIN_WELCOME,	do_join_welcome)
-		ELSEIF_FSA_ACTION(A_JOIN_ACK,		do_join_ack)
-		ELSEIF_FSA_ACTION(A_JOIN_PROCESS_ACK,	do_process_join_ack)
-
+		ELSEIF_FSA_ACTION(A_JOIN_WELCOME_ALL,	do_send_welcome)
+		ELSEIF_FSA_ACTION(A_JOIN_WELCOME,	do_send_welcome)
+		ELSEIF_FSA_ACTION(A_JOIN_ACK,		do_ack_welcome)
+		ELSEIF_FSA_ACTION(A_JOIN_PROCESS_ACK,	do_process_welcome_ack)
+		
 		/*
 		 * Low(er) priority actions
 		 * Make sure the CIB is always updated before invoking the
@@ -367,32 +432,109 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_CIB_INVOKE, do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_PE_INVOKE,  do_pe_invoke)
 		ELSEIF_FSA_ACTION(A_TE_INVOKE,  do_te_invoke)
-
+		
 		/* sub-system stop */
 		ELSEIF_FSA_ACTION(A_PE_STOP,	do_pe_control)
 		ELSEIF_FSA_ACTION(A_TE_STOP,	do_te_control)
 		ELSEIF_FSA_ACTION(A_DC_RELEASED,do_dc_release)
 		ELSEIF_FSA_ACTION(A_CIB_STOP,	do_cib_control)
-
+		
 		/* time to go now... */
-
+		
 		/* Some of these can probably be consolidated */
 		ELSEIF_FSA_ACTION(A_SHUTDOWN,   do_shutdown)
 		ELSEIF_FSA_ACTION(A_STOP,	do_stop)
-
+		
 		/* exit gracefully */
 		ELSEIF_FSA_ACTION(A_EXIT_0,	do_exit)
 
 //		ELSEIF_FSA_ACTION(A_, do_)
-			
+		
 		else if(actions & A_MSG_PROCESS) {
-			data = get_message()->message;
-			next_input = I_REQUEST;
+			const char *op = NULL;
+
+			next_input = I_NULL;
+
+			fprintf(dot_strm,
+				"\t\t// %s:\t%s\t(0x%.16llx) with data? %s\n",
+				fsa_input2string(cur_input),
+				fsa_action2string(A_MSG_PROCESS),
+				A_MSG_PROCESS,
+				data==NULL?"no":"yes");
+			fflush(dot_strm);
+
+			CRM_DEBUG3("Invoking action %s (%.16llx)",
+				   fsa_action2string(A_MSG_PROCESS),
+				   A_MSG_PROCESS);
+
 
 			/* any more queued messages? */
-			if(is_message() == FALSE)
+			if(is_message() == FALSE) {
+				CRM_DEBUG("No more messages");
 				actions = clear_bit(actions, A_MSG_PROCESS);
+				continue;
+			} else {
+				data = get_message()->message;
+				if(data == NULL) {
+					cl_log(LOG_ERR,
+					       "Invalid stored message");
+				}
+				
+				char *foo = dump_xml((xmlNodePtr)data);
+				CRM_DEBUG2("FSA processing message: %s", foo);
+			}
 			
+			xmlNodePtr options =
+				find_xml_node((xmlNodePtr)data,
+					      XML_TAG_OPTIONS);
+			op = xmlGetProp(options, XML_ATTR_OP);
+			
+			if(op == NULL)
+				continue;
+			
+			if(strcmp(op, "vote") == 0) {
+				next_input = I_ELECTION;
+				
+			} else if(strcmp(op, "beat") == 0) {
+				next_input = I_DC_HEARTBEAT;
+				
+			} else if(strcmp(op, "welcome") == 0) {
+				next_input = I_WELCOME;
+				
+			} else if(strcmp(op, "announce") == 0) {
+				next_input = I_NODE_JOIN;
+				
+			} else if(strcmp(op, "join_ack") == 0) {
+				next_input = I_WELCOME_ACK;
+				
+			} else if(strcmp(op, "store") == 0
+				  || strcmp(op, "update") == 0) {
+				
+				next_input = I_CIB_UPDATE;
+				
+			} else if(strcmp(op, "ping") == 0) {
+				/* eventually do some stuff to figure out
+				 * if we /are/ ok
+				 */
+				const char *sys_to =
+					xmlGetProp(options, XML_ATTR_SYSTO);
+				
+				xmlNodePtr ping =
+					createPingAnswerFragment(sys_to, "ok");
+				
+				xmlNodePtr wrapper =
+					create_reply((xmlNodePtr)data, ping);
+				relay_message(wrapper, TRUE);
+				free_xml(wrapper);
+				
+			} else {
+				cl_log(LOG_ERR, "Unexpected operation %s", op);
+			}
+			
+			CRM_DEBUG3("Result of action %s was %s",
+				   fsa_action2string(A_MSG_PROCESS),
+				   fsa_input2string(next_input));	
+	
 			/* Error checking and reporting */
 		} else if(cur_input != I_NULL && is_set(actions, A_NOTHING)) {
 			cl_log(LOG_WARNING,
@@ -408,20 +550,15 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		} else {
 			cl_log(LOG_ERR, "Action %s (0x%llx) not supported ",
 			       fsa_action2string(actions), actions);
+			next_input = I_ERROR;
 		}
-	
-		cur_input = next_input;
-
-		if(next_input == I_WAIT_FOR_EVENT) {
-			/* we may be waiting for an a-sync task to "happen"
-			 * and until it does, we cant do anything else
-			 */
-			cl_log(LOG_INFO, "We cant do anything more until something happens");
-			break;
-		}
-		
 	}
+	
+	CRM_DEBUG2("################# Exiting the FSA (%s) ##################",
+		  fsa_state2string(fsa_state));
 
+	// cleanup inputs?
+	
 	FNRET(fsa_state);
 }
 
@@ -429,14 +566,14 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 /*	A_NODE_BLOCK	*/
 enum crmd_fsa_input
 do_node_block(long long action,
+	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input current_input,
 	      void *data)
 {
 
 	xmlNodePtr xml_message = (xmlNodePtr)data;
-	const char *host_from  = xmlGetProp(xml_message,
-					    XML_ATTR_HOSTFROM);
+	const char *host_from  = xmlGetProp(xml_message, XML_ATTR_HOSTFROM);
 
 	FNIN();
 	
@@ -466,6 +603,9 @@ fsa_input2string(int input)
 		case I_DC_TIMEOUT:
 			inputAsText = "I_DC_TIMEOUT";
 			break;
+		case I_ELECTION:
+			inputAsText = "I_ELECTION";
+			break;
 		case I_ELECTION_RELEASE_DC:
 			inputAsText = "I_ELECTION_RELEASE_DC";
 			break;
@@ -477,6 +617,9 @@ fsa_input2string(int input)
 			break;
 		case I_FAIL:
 			inputAsText = "I_FAIL";
+			break;
+		case I_INTEGRATION_TIMEOUT:
+			inputAsText = "I_INTEGRATION_TIMEOUT";
 			break;
 		case I_NODE_JOIN:
 			inputAsText = "I_NODE_JOIN";
@@ -522,6 +665,9 @@ fsa_input2string(int input)
 			break;
 		case I_WELCOME_ACK:
 			inputAsText = "I_WELCOME_ACK";
+			break;
+		case I_DC_HEARTBEAT:
+			inputAsText = "I_DC_HEARTBEAT";
 			break;
 		case I_ILLEGAL:
 			inputAsText = "I_ILLEGAL";
@@ -570,8 +716,8 @@ fsa_state2string(int state)
 		case S_RELEASE_DC:
 			stateAsText = "S_RELEASE_DC";
 			break;
-		case S_STARTING:
-			stateAsText = "S_STARTING";
+		case S_PENDING:
+			stateAsText = "S_PENDING";
 			break;
 		case S_STOPPING:
 			stateAsText = "S_STOPPING";
@@ -626,6 +772,9 @@ fsa_cause2string(int cause)
 		case C_SHUTDOWN:
 			causeAsText = "C_SHUTDOWN";
 			break;
+		case C_HEARTBEAT_FAILED:
+			causeAsText = "C_HEARTBEAT_FAILED";
+			break;
 		case C_ILLEGAL:
 			causeAsText = "C_ILLEGAL";
 			break;
@@ -653,6 +802,12 @@ fsa_action2string(long long action)
 		case A_NOTHING:
 			actionAsText = "A_NOTHING";
 			break;
+		case O_SHUTDOWN:
+			actionAsText = "O_SHUTDOWN";
+			break;
+		case O_RELEASE:
+			actionAsText = "O_RELEASE";
+			break;
 		case A_STARTUP:
 			actionAsText = "A_STARTUP";
 			break;
@@ -665,8 +820,14 @@ fsa_action2string(long long action)
 		case A_LRM_CONNECT:
 			actionAsText = "A_LRM_CONNECT";
 			break;
-		case A_TICKLE_DC_TIMER:
-			actionAsText = "A_TICKLE_DC_TIMER";
+		case O_DC_TIMER_RESTART:
+			actionAsText = "O_DC_TIMER_RESTART";
+			break;
+		case A_DC_TIMER_STOP:
+			actionAsText = "A_DC_TIMER_STOP";
+			break;
+		case A_DC_TIMER_START:
+			actionAsText = "A_DC_TIMER_START";
 			break;
 		case A_ELECTION_COUNT:
 			actionAsText = "A_ELECTION_COUNT";
@@ -734,8 +895,8 @@ fsa_action2string(long long action)
 		case A_CIB_INVOKE:
 			actionAsText = "A_CIB_INVOKE";
 			break;
-		case A_CIB_RESTART:
-			actionAsText = "A_CIB_RESTART";
+		case O_CIB_RESTART:
+			actionAsText = "O_CIB_RESTART";
 			break;
 		case A_CIB_START:
 			actionAsText = "A_CIB_START";
@@ -746,8 +907,8 @@ fsa_action2string(long long action)
 		case A_TE_INVOKE:
 			actionAsText = "A_TE_INVOKE";
 			break;
-		case A_TE_RESTART:
-			actionAsText = "A_TE_RESTART";
+		case O_TE_RESTART:
+			actionAsText = "O_TE_RESTART";
 			break;
 		case A_TE_START:
 			actionAsText = "A_TE_START";
@@ -758,8 +919,8 @@ fsa_action2string(long long action)
 		case A_PE_INVOKE:
 			actionAsText = "A_PE_INVOKE";
 			break;
-		case A_PE_RESTART:
-			actionAsText = "A_PE_RESTART";
+		case O_PE_RESTART:
+			actionAsText = "O_PE_RESTART";
 			break;
 		case A_PE_START:
 			actionAsText = "A_PE_START";

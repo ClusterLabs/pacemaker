@@ -38,6 +38,7 @@ void shutdown(int nsig);
 /*	 A_HA_CONNECT	*/
 enum crmd_fsa_input
 do_ha_register(long long action,
+	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input current_input,
 	       void *data)
@@ -67,15 +68,27 @@ do_ha_register(long long action,
 /*	 A_SHUTDOWN	*/
 enum crmd_fsa_input
 do_shutdown(long long action,
+	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input current_input,
 	    void *data)
 {
+	enum crmd_fsa_input next_input = I_NULL;
+	enum crmd_fsa_input tmp = I_NULL;
+	
 	FNIN();
 
-	cl_log(LOG_ERR, "Action %s ( %.16llx ) not supported\n", fsa_action2string(action), action);
-
-	FNRET(I_NULL);
+	tmp = do_pe_control(A_PE_STOP, cause, cur_state, current_input, data);
+	if(tmp != I_NULL)
+		next_input = I_FAIL;
+	tmp = do_te_control(A_TE_STOP, cause, cur_state, current_input, data);
+	if(tmp != I_NULL)
+		next_input = I_FAIL;
+	tmp = do_cib_control(A_CIB_STOP, cause, cur_state, current_input, data);
+	if(tmp != I_NULL)
+		next_input = I_FAIL;
+	
+	FNRET(next_input);
 }
 
 gboolean
@@ -83,30 +96,31 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 {
 	FNIN();
     
-    ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
+	ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
     
-    while(hb_cluster->llc_ops->msgready(hb_cluster))
-    {
+	while(hb_cluster->llc_ops->msgready(hb_cluster))
+	{
 		CRM_DEBUG("there was another message...");
 		// invoke the callbacks but dont block
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
-    }
+	}
     
-    FNRET(TRUE);
+	FNRET(TRUE);
 }
 
 void
 crmd_ha_input_destroy(gpointer user_data)
 {
-    cl_log(LOG_INFO, "in my hb_input_destroy");
+	cl_log(LOG_INFO, "in my hb_input_destroy");
 }
 
 /*	 A_LRM_CONNECT	*/
 enum crmd_fsa_input
 do_lrm_register(long long action,
-	       enum crmd_fsa_state cur_state,
-	       enum crmd_fsa_input current_input,
-	       void *data)
+		enum crmd_fsa_cause cause,
+		enum crmd_fsa_state cur_state,
+		enum crmd_fsa_input current_input,
+		void *data)
 {
 	FNIN();
 
@@ -118,6 +132,7 @@ do_lrm_register(long long action,
 /*	 A_EXIT_0, A_EXIT_1	*/
 enum crmd_fsa_input
 do_exit(long long action,
+	enum crmd_fsa_cause cause,
 	enum crmd_fsa_state cur_state,
 	enum crmd_fsa_input current_input,
 	void *data)
@@ -139,9 +154,10 @@ do_exit(long long action,
 /*	 A_STARTUP	*/
 enum crmd_fsa_input
 do_startup(long long action,
-	enum crmd_fsa_state cur_state,
-	enum crmd_fsa_input current_input,
-	void *data)
+	   enum crmd_fsa_cause cause,
+	   enum crmd_fsa_state cur_state,
+	   enum crmd_fsa_input current_input,
+	   void *data)
 {
 	FNIN();
 
@@ -152,12 +168,10 @@ do_startup(long long action,
 	
 	cl_log_set_logfile(DAEMON_LOG);
 /*	if (crm_debug()) { */
-		cl_log_set_debugfile(DAEMON_DEBUG);
+	cl_log_set_debugfile(DAEMON_DEBUG);
 /*  		cl_log_enable_stderr(FALSE); 
-	} */
-
+		} */
 	
-	pending_remote_replies = g_hash_table_new(&g_str_hash, &g_str_equal);
 	ipc_clients = g_hash_table_new(&g_str_hash, &g_str_equal);
 	
 	/* change the logging facility to the one used by heartbeat daemon */
@@ -190,28 +204,48 @@ do_startup(long long action,
 		if (fsa_our_uname == NULL) {
 			cl_log(LOG_ERR, "get_mynodeid() failed");
 			was_error = 1;
-	    }
+		}
 		cl_log(LOG_INFO, "Hostname: %s", fsa_our_uname);
 	}
 
 	/* set up the timers */
+	dc_heartbeat     = (fsa_timer_t *)ha_malloc(sizeof(fsa_timer_t));
+	integration_timer= (fsa_timer_t *)ha_malloc(sizeof(fsa_timer_t));
 	election_trigger = (fsa_timer_t *)ha_malloc(sizeof(fsa_timer_t));
 	election_timeout = (fsa_timer_t *)ha_malloc(sizeof(fsa_timer_t));
 	shutdown_escalation_timmer = (fsa_timer_t *)
 		ha_malloc(sizeof(fsa_timer_t));
 
-	election_trigger->source_id = -1;
-	election_trigger->period_ms = 5000;
-	election_trigger->fsa_input = I_DC_TIMEOUT;
 
+	int interval = 3; // seconds between DC heartbeats
+
+	interval = interval * 1000;
+	
+	election_trigger->source_id = -1;
+	election_trigger->period_ms = interval*4;
+	election_trigger->fsa_input = I_DC_TIMEOUT;
+	election_trigger->callback = timer_popped;
+
+	dc_heartbeat->source_id = -1;
+	dc_heartbeat->period_ms = interval;
+	dc_heartbeat->fsa_input = I_NULL;
+	dc_heartbeat->callback = do_dc_heartbeat;
+		
 	election_timeout->source_id = -1;
-	election_timeout->period_ms = 10000;
+	election_timeout->period_ms = interval*6;
 	election_timeout->fsa_input = I_ELECTION_DC;
+	election_timeout->callback = timer_popped;
+
+	integration_timer->source_id = -1;
+	integration_timer->period_ms = interval*6;
+	integration_timer->fsa_input = I_INTEGRATION_TIMEOUT;
+	integration_timer->callback = timer_popped;
 	
 	shutdown_escalation_timmer->source_id = -1;
-	shutdown_escalation_timmer->period_ms = 50000;
+	shutdown_escalation_timmer->period_ms = interval*13;
 	shutdown_escalation_timmer->fsa_input = I_ERROR;
-
+	shutdown_escalation_timmer->callback = timer_popped;
+	
 	/* set up the sub systems */
 	cib_subsystem = (struct crm_subsystem_s*)
 		ha_malloc(sizeof(struct crm_subsystem_s));
@@ -241,14 +275,6 @@ do_startup(long long action,
 	pe_subsystem->command = BIN_DIR"/pengine";
 
 
-	if (was_error == 0) {
-		CRM_DEBUG2("Starting DC timer: %d seconds",
-			  election_trigger->period_ms/1000);
-
-		startTimer(election_trigger);
-	}
-	
-	
 	if(was_error)
 		FNRET(I_FAIL);
 	
@@ -259,6 +285,7 @@ do_startup(long long action,
 /*	 A_STOP	*/
 enum crmd_fsa_input
 do_stop(long long action,
+	enum crmd_fsa_cause cause,
 	enum crmd_fsa_state cur_state,
 	enum crmd_fsa_input current_input,
 	void *data)
@@ -274,9 +301,10 @@ do_stop(long long action,
 /*	 A_STARTED	*/
 enum crmd_fsa_input
 do_started(long long action,
-	enum crmd_fsa_state cur_state,
-	enum crmd_fsa_input current_input,
-	void *data)
+	   enum crmd_fsa_cause cause,
+	   enum crmd_fsa_state cur_state,
+	   enum crmd_fsa_input current_input,
+	   void *data)
 {
 	FNIN();
 
@@ -289,37 +317,38 @@ do_started(long long action,
 /*	 A_RECOVER	*/
 enum crmd_fsa_input
 do_recover(long long action,
-	enum crmd_fsa_state cur_state,
-	enum crmd_fsa_input current_input,
-	void *data)
+	   enum crmd_fsa_cause cause,
+	   enum crmd_fsa_state cur_state,
+	   enum crmd_fsa_input current_input,
+	   void *data)
 {
 	FNIN();
 
 	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n",
 	       fsa_action2string(action), action);
 
-	FNRET(I_NULL);
+	FNRET(I_SHUTDOWN);
 }
 
 void
 shutdown(int nsig)
 {
-    FNIN();
+	FNIN();
     
-    CL_SIGNAL(nsig, shutdown);
+	CL_SIGNAL(nsig, shutdown);
 
-    set_bit_inplace(&fsa_input_register, R_SHUTDOWN);
-    startTimer(shutdown_escalation_timmer);
+	set_bit_inplace(&fsa_input_register, R_SHUTDOWN);
+	startTimer(shutdown_escalation_timmer);
     
-    if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
+	if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
     
-	    CRM_DEBUG("Invoking FSA with I_SHUTDOWN");
-	    s_crmd_fsa(C_SHUTDOWN, I_SHUTDOWN, NULL);
+		CRM_DEBUG("Invoking FSA with I_SHUTDOWN");
+		s_crmd_fsa(C_SHUTDOWN, I_SHUTDOWN, NULL);
 	    
-    } else {
-	    CRM_DEBUG("exit from shutdown");
-	    exit(LSB_EXIT_OK);
+	} else {
+		CRM_DEBUG("exit from shutdown");
+		exit(LSB_EXIT_OK);
 	    
-    }
-    FNOUT();
+	}
+	FNOUT();
 }

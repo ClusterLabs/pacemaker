@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.10 2004/02/27 13:41:45 andrew Exp $ */
+/* $Id: crmdmain.c,v 1.11 2004/03/05 14:01:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -138,10 +138,10 @@ init_start(void)
 	
     xmlInitParser();
     
-    fsa_state = S_STARTING;
+    fsa_state = S_PENDING;
     enum crmd_fsa_state state = s_crmd_fsa(C_STARTUP, I_STARTUP, NULL);
 
-    if (state == S_STARTING) {
+    if (state == S_PENDING) {
 	    /* Create the mainloop and run it... */
 	    crmd_mainloop = g_main_new(FALSE);
 	    cl_log(LOG_INFO, "Starting %s", crm_system_name);
@@ -170,7 +170,7 @@ init_start(void)
 	    cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
     }
     
-    FNRET(state != S_STARTING);
+    FNRET(state != S_PENDING);
 }
 
 

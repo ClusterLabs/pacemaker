@@ -36,9 +36,8 @@ fsa_message_queue_t put_message(xmlNodePtr new_message);
 fsa_message_queue_t get_message(void);
 gboolean is_message(void);
 
-gboolean relay_message(xmlNodePtr xml_relay_message,
-		       gboolean originated_locally,
-		       const char *host_from);
+extern gboolean relay_message(xmlNodePtr xml_relay_message,
+		       gboolean originated_locally);
 
 extern void crmd_ha_input_callback(const struct ha_msg* msg,
 				   void* private_data);
@@ -50,10 +49,6 @@ extern void process_message(xmlNodePtr root_xml_node,
 		     gboolean originated_locally,
 		     const char *src_node_name);
 
-extern gboolean relay_message(xmlNodePtr xml_relay_message,
-			      gboolean originated_locally,
-			      const char *host_from);
-	
 extern gboolean crm_dc_process_message(xmlNodePtr whole_message,
 				       xmlNodePtr action,
 				       const char *host_from,

@@ -27,9 +27,14 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+#define CCM_UNAME 1
+
+GHashTable *joined_nodes = NULL;
+
 /*	A_ELECTION_VOTE	*/
 enum crmd_fsa_input
 do_election_vote(long long action,
+		 enum crmd_fsa_cause cause,
 		 enum crmd_fsa_state cur_state,
 		 enum crmd_fsa_input current_input,
 		 void *data)
@@ -51,18 +56,10 @@ do_election_vote(long long action,
 #else
 	node_uname = "";
 #endif
-	if (strcmp(fsa_our_uname, node_uname) == 0) {
-		cl_log(LOG_INFO, "We are the higest priority node,"
-		       "\n\tso we always win the election.");
-		
-		// bypass the election
-		election_result = I_ELECTION_DC;
-	} else {
-		// set the "we won" timer
-		startTimer(election_timeout);
-		CRM_DEBUG("Set the election timer... if it goes off, we win.");
-	}
-	
+
+	// set the "we won" timer
+	startTimer(election_timeout);
+	CRM_DEBUG("Set the election timer... if it goes off, we win.");
 
 	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
 	set_xml_property_copy(msg_options, XML_ATTR_OP, "vote");
@@ -89,30 +86,62 @@ timer_popped(gpointer data)
 	       fsa_input2string(timer->fsa_input));
 	
 	stopTimer(timer); // dont make it go off again
-	
+
 	s_crmd_fsa(C_TIMER_POPPED, timer->fsa_input, NULL);
 	
 	return TRUE;
 }
 
+gboolean
+do_dc_heartbeat(gpointer data)
+{
+	fsa_timer_t *timer = (fsa_timer_t *)data;
+
+	cl_log(LOG_INFO, "#!!#!!# Timer %s just popped!",
+	       fsa_input2string(timer->fsa_input));
+
+	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
+	set_xml_property_copy(msg_options, XML_ATTR_OP, "beat");
+	
+	gboolean was_sent = send_ha_request(fsa_cluster_connection,
+					    msg_options, NULL,
+					    NULL, CRM_SYSTEM_CRMD,
+					    CRM_SYSTEM_DC, NULL,
+					    NULL);
+
+	if(was_sent == FALSE) {
+		// this is bad
+		stopTimer(timer); // dont make it go off again
+		s_crmd_fsa(C_HEARTBEAT_FAILED, I_SHUTDOWN, NULL);
+	}
+	
+	return TRUE;
+}
+
+
 /*	A_ELECTION_COUNT	*/
 enum crmd_fsa_input
 do_election_count_vote(long long action,
+		       enum crmd_fsa_cause cause,
 		       enum crmd_fsa_state cur_state,
 		       enum crmd_fsa_input current_input,
 		       void *data)
 {
+	gboolean we_loose = FALSE;
 	xmlNodePtr vote = (xmlNodePtr)data;
-	const char *vote_from = xmlGetProp(vote, XML_ATTR_HOSTFROM);
+	unsigned int my_born = -1, your_born = -1;
 	int lpc = 0, my_index = -1, your_index = -1;
 	enum crmd_fsa_input election_result = I_NULL;
+	const char *vote_from = xmlGetProp(vote, XML_ATTR_HOSTFROM);
 	
 	FNIN();
 
-	if(vote_from == NULL) {
-		// our vote
+	if(vote_from == NULL || strcmp(vote_from, fsa_our_uname) == 0) {
+		// dont count our own vote
 		FNRET(election_result);
 	}
+
+	CRM_DEBUG2("Max bornon (%d)", your_born);
 	
 	for(; (your_index < 0 && my_index < 0)
 		    || lpc < fsa_membership_copy->members_size; lpc++) {
@@ -125,30 +154,50 @@ do_election_count_vote(long long action,
 #endif
 		
 		if(node_uname != NULL) {
-			if(strcmp(vote_from, node_uname) == 0)
+			if(strcmp(vote_from, node_uname) == 0) {
+				your_born = fsa_membership_copy->members[lpc].node_born_on;
 				your_index = lpc;
-			else if (strcmp(fsa_our_uname,
-					node_uname) == 0)
+			} else if (strcmp(fsa_our_uname, node_uname) == 0) {
+				my_born = fsa_membership_copy->members[lpc].node_born_on;
 				my_index = lpc;
+			}
 		}
 	}
 	
-	if(your_index > my_index) {
+	CRM_DEBUG3("Their index (%d), our index (%d)",
+		   your_index, my_index);
+
+	CRM_DEBUG3("Their bornon (%d), our bornon (%d)",
+		   your_born, my_born);
+
+	if(your_born < my_born) {
+		we_loose = TRUE;
+	} else if(your_index < my_index) {
+		we_loose = TRUE;
+	} else {
+		CRM_DEBUG("We might win... we should vote (possibly again)");
+			
+		// do vote (it safe to call this multiple times)
+		election_result =
+			do_election_vote(action,
+					 cause,
+					 cur_state,
+					 current_input,
+					 data);
+	}
+
+	if(we_loose) {
+		CRM_DEBUG("We lost the election");
 		if(fsa_input_register & R_THE_DC) {
+			CRM_DEBUG("Give up the DC");
 			election_result = I_ELECTION_RELEASE_DC;
 		} else {
+			CRM_DEBUG("We werent the DC anyway");
 			election_result = I_NOT_DC;
 		}
-	} else if(my_index == 0) {
-		election_result = I_ELECTION_DC;
-	}
-	
-	if(election_result != I_NULL) {
-		// cancel timer, we lost the election
+		
+		// cancel timer, its been decided
 		stopTimer(election_timeout);
-
-		// set a new timer for when the DC goes bad
-		startTimer(election_trigger);
 	}
 	
 	FNRET(election_result);
@@ -158,11 +207,14 @@ do_election_count_vote(long long action,
 // we won
 enum crmd_fsa_input
 do_election_timeout(long long action,
+		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
 		    void *data)
 {
 	FNIN();
+
+	CRM_DEBUG("The election timer went off, that means we win");
 	
 	// cleanup timer
 	stopTimer(election_timeout);
@@ -170,18 +222,21 @@ do_election_timeout(long long action,
 	FNRET(I_ELECTION_DC);
 }
 
-/*	A_TICKLE_DC_TIMER	*/
-/* We saw something from the DC, so we know its alive */
+/*	A_DC_TIMER_STOP, A_DC_TIMER_START	*/
 enum crmd_fsa_input
-do_tickle_dc_timer(long long action,
-		enum crmd_fsa_state cur_state,
-		enum crmd_fsa_input current_input,
-		void *data)
+do_dc_timer_control(long long action,
+		   enum crmd_fsa_cause cause,
+		   enum crmd_fsa_state cur_state,
+		   enum crmd_fsa_input current_input,
+		   void *data)
 {
 	FNIN();
 
-	if(election_trigger->source_id != 0) {
+	if(action & A_DC_TIMER_STOP) {
 		stopTimer(election_trigger);
+	}
+
+	if(action & A_DC_TIMER_START) {
 		startTimer(election_trigger);
 	}
 	
@@ -192,12 +247,14 @@ do_tickle_dc_timer(long long action,
 /*	 A_DC_TAKEOVER	*/
 enum crmd_fsa_input
 do_dc_takeover(long long action,
+	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input current_input,
 	       void *data)
 {
 	FNIN();
 
+	CRM_DEBUG("################## Taking over the DC ##################");
 	set_bit_inplace(&fsa_input_register, R_THE_DC);
 
 	CRM_DEBUG2("Am I the DC? %s", AM_I_DC?"yes":"no");
@@ -208,12 +265,15 @@ do_dc_takeover(long long action,
 	clear_bit_inplace(&fsa_input_register, R_CIB_DONE);
 	clear_bit_inplace(&fsa_input_register, R_HAVE_CIB);
 
+	startTimer(dc_heartbeat);
+	
 	FNRET(I_NULL);
 }
 
 /*	 A_DC_RELEASE	*/
 enum crmd_fsa_input
 do_dc_release(long long action,
+	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input current_input,
 	      void *data)
@@ -221,10 +281,14 @@ do_dc_release(long long action,
 	enum crmd_fsa_input result = I_NULL;
 	FNIN();
 
+	CRM_DEBUG("################## Releasing the DC ##################");
+
+	stopTimer(dc_heartbeat);
+
 	if(action & A_DC_RELEASE) {
 		clear_bit_inplace(&fsa_input_register, R_THE_DC);
 		
-	/* get a new CIB from the new DC */
+		/* get a new CIB from the new DC */
 		clear_bit_inplace(&fsa_input_register, R_HAVE_CIB);
 	} else if (action & A_DC_RELEASED) {
 
@@ -247,37 +311,59 @@ do_dc_release(long long action,
 		       fsa_action2string(action));
 	}
 
+	CRM_DEBUG2("Am I still the DC? %s", AM_I_DC?"yes":"no");
+
 	FNRET(result);
 }
 
-
-
-/*	 A_JOIN_WELCOME	*/
+/*	 A_JOIN_WELCOME, A_JOIN_WELCOME_ALL	*/
 enum crmd_fsa_input
-do_join_welcome(long long action,
+do_send_welcome(long long action,
+		enum crmd_fsa_cause cause,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input current_input,
 		void *data)
 {
-	int lpc = 0;
-	oc_node_t *new_members;
+	int lpc = 0, size = 0, num_sent = 0;
+	oc_node_t *members;
 	gboolean was_sent = TRUE;
-	gboolean any_sent = FALSE;
 	
 	FNIN();
 
-	if(action & A_JOIN_WELCOME_ALL) {
-		new_members = fsa_membership_copy->new_members;
-	} else {
-		new_members = fsa_membership_copy->members;
+
+	startTimer(integration_timer);
+	
+	if(action & A_JOIN_WELCOME && data == NULL) {
+		cl_log(LOG_ERR,
+		       "Attempt to send welcome message "
+		       "without a message to reply to!");
+		FNRET(I_NULL);
+		
+	} else if(action & A_JOIN_WELCOME) {
+		xmlNodePtr welcome = (xmlNodePtr)data;
+		xmlNodePtr options = find_xml_node(welcome, XML_TAG_OPTIONS);
+	
+		set_xml_property_copy(options, XML_ATTR_OP, "welcome");
+		
+		send_ha_reply(fsa_cluster_connection, welcome, NULL);
+		FNRET(I_NULL);
 	}
 	
+	members = fsa_membership_copy->members;
+	size = fsa_membership_copy->members_size;
 	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
 	set_xml_property_copy(msg_options, XML_ATTR_OP, "welcome");
+
+	if(joined_nodes != NULL) {
+		g_hash_table_destroy(joined_nodes);
+		joined_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
+		
+	}
 	
-	for(; new_members != NULL && lpc < fsa_membership_copy->new_members_size; lpc++) {
+
+	for(; members != NULL && lpc < size; lpc++) {
 #ifdef CCM_UNAME
-		const char *new_node = new_members[lpc].node_uname;
+		const char *new_node = members[lpc].node_uname;
 #else
 		const char *new_node = "";
 #endif		
@@ -286,7 +372,8 @@ do_join_welcome(long long action,
 			continue;
 		}
 
-		any_sent = TRUE;
+		CRM_DEBUG2("Sending welcome message to %s", new_node);
+		num_sent++;
 		was_sent = was_sent
 			&& send_ha_request(fsa_cluster_connection,
 					   msg_options, NULL,
@@ -299,28 +386,44 @@ do_join_welcome(long long action,
 	if(was_sent == FALSE)
 		FNRET(I_FAIL);
 
-	if(any_sent == FALSE)
-		FNRET(I_SUCCESS);  // No point hanging around in S_INTEGRATION
+/* No point hanging around in S_INTEGRATION if we're the only ones here! */
+	if(num_sent == 0) {
+		// that was the last outstanding join ack)
+		cl_log(LOG_INFO,"That was the last outstanding join ack");
+		FNRET(I_SUCCESS);
+	} else {
+		cl_log(LOG_DEBUG,
+		       "Still waiting on %d outstanding join acks",
+		       num_sent);
+		//dont waste time by invoking the pe yet;
+	}
 	
 	FNRET(I_NULL);
 }
 
 /*	 A_JOIN_ACK	*/
 enum crmd_fsa_input
-do_join_ack(long long action,
+do_ack_welcome(long long action,
+	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input current_input,
 	    void *data)
 {
 	xmlNodePtr welcome = (xmlNodePtr)data;
 	FNIN();
-
+	
+	/* Once we hear from the DC, we can stop the timer
+	 *
+	 * This timer was started either on startup or when a node
+	 * left the CCM list
+	 */
 #if 0
 	if(we are sick) {
 		log error ;
 		FNRET(I_NULL);
 	} 
 #endif
+
 	xmlNodePtr msg_options = find_xml_node(welcome, XML_TAG_OPTIONS);
 	
 	set_xml_property_copy(msg_options, XML_ATTR_OP, "join_ack");
@@ -331,34 +434,84 @@ do_join_ack(long long action,
 	FNRET(I_NULL);
 }
 
+/*	 A_ANNOUNCE	*/
+enum crmd_fsa_input
+do_announce(long long action,
+	    enum crmd_fsa_cause cause,
+	    enum crmd_fsa_state cur_state,
+	    enum crmd_fsa_input current_input,
+	    void *data)
+{
+	xmlNodePtr welcome = (xmlNodePtr)data;
+	FNIN();
+	
+	/* Once we hear from the DC, we can stop the timer
+	 *
+	 * This timer was started either on startup or when a node
+	 * left the CCM list
+	 */
+#if 0
+	if(we are sick) {
+		log error ;
+		FNRET(I_NULL);
+	} 
+#endif
+
+	xmlNodePtr msg_options = find_xml_node(welcome, XML_TAG_OPTIONS);
+	
+	set_xml_property_copy(msg_options, XML_ATTR_OP, "announce");
+	
+	send_ha_reply(fsa_cluster_connection, welcome, NULL);
+	
+	FNRET(I_NULL);
+}
+
+
 /*	 A_PROCESS_JOIN_ACK	*/
 enum crmd_fsa_input
-do_process_join_ack(long long action,
+do_process_welcome_ack(long long action,
+		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
 		    void *data)
 {
-	int lpc = 0;
+	int lpc = 0, size = 0;
+	oc_node_t *members;
 	gboolean is_a_member = FALSE;
 	xmlNodePtr join_ack = (xmlNodePtr)data;
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
 	FNIN();
+
 	
-	oc_node_t *members = fsa_membership_copy->members;
+	FNIN();
+
+	members = fsa_membership_copy->members;
+	size = fsa_membership_copy->members_size;
 	
-	for(; lpc < fsa_membership_copy->members_size; lpc++) {
+	for(; lpc < size; lpc++) {
 #ifdef CCM_UNAME
-		if(strcmp(join_from, members[lpc].node_uname) == 0) {
+		const char *new_node = members[lpc].node_uname;
+#else
+		const char *new_node = "";
+#endif		
+		if(strcmp(join_from, new_node) == 0) {
 			is_a_member = TRUE;
 		}
-#else
-		(void)members;
-#endif
 	}
+	
 	if(is_a_member == FALSE) {
 		cl_log(LOG_ERR, "Node %s is not known to us", join_from);
 		FNRET(I_NULL);
 	}
+
+	// add them to our list of "active" nodes
+	
+	g_hash_table_insert(joined_nodes, strdup(join_from),strdup(join_from));
+	
+	
+	// TODO: clear their "block" in the CIB
+
+
 	
 	// update their copy of the CIB
 	
@@ -374,13 +527,18 @@ do_process_join_ack(long long action,
 
 	forward_ipc_request(cib_subsystem->ipc,
 			    join_ack, NULL,
-			    CRM_SYSTEM_DCIB, CRM_SYSTEM_CIB);
+			    CRM_SYSTEM_DCIB, CRM_SYSTEM_CRMD);
 
-#if 0
-	if(that was the last outstanding join ack)
+	if(g_hash_table_size(joined_nodes)
+	   == fsa_membership_copy->members_size) {
+		// that was the last outstanding join ack)
+		cl_log(LOG_INFO,"That was the last outstanding join ack");
 		FNRET(I_SUCCESS);
-	else
-		dont waste time by invoking the pe yet
-#endif
+	} else {
+		cl_log(LOG_DEBUG,
+		       "Still waiting on %d outstanding join acks",
+		       size);
+		//dont waste time by invoking the pe yet;
+	}
 	FNRET(I_NULL);
 }

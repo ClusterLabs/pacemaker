@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.2 2004/02/29 20:48:02 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.3 2004/03/05 14:01:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,7 +51,7 @@ enum crmd_fsa_state {
 			 * unset anything that makes us think we are
 			 * special :)
 			 */
-        S_STARTING,	/* we are just starting out */
+        S_PENDING,	/* we are just starting out */
         S_STOPPING,	/* We are in the final stages of shutting down */
         S_TERMINATE,	/* We are going to shutdown, this is the equiv of
 			 * "Sending TERM signal to all processes" in Linux
@@ -157,6 +157,7 @@ enum crmd_fsa_input {
 	
 	I_CIB_UPDATE,	/* An update to the CIB occurred */
 	I_DC_TIMEOUT,	/* We have lost communication with the DC */
+	I_ELECTION,	/* Someone started an election */
 	I_ELECTION_RELEASE_DC,	/* The election completed and we were not
 				 * elected, but we were the DC beforehand
 				 */
@@ -169,6 +170,7 @@ enum crmd_fsa_input {
 			 * our connection to the CIB.
 			 */
 	I_FAIL,		/* The action failed to complete successfully */
+	I_INTEGRATION_TIMEOUT, 
 	I_NODE_JOIN,	/* A node has entered the CCM membership list*/
 	I_NODE_LEFT,	/* A node shutdown (possibly unexpectedly) */
 	I_NODE_LEAVING,	/* A node has asked to be shutdown */
@@ -200,6 +202,8 @@ enum crmd_fsa_input {
 	I_WAIT_FOR_EVENT, /* we may be waiting for an async task to "happen"
 			   * and until it does, we cant do anything else
 			   */
+
+	I_DC_HEARTBEAT,	/* The DC is telling us that it is alive and well */  
 	
 	/*  ------------ Last input found in table is above ----------- */
 	I_ILLEGAL,	/* This is an illegal value for an FSA input */
@@ -266,7 +270,8 @@ A_TE_INVOKE
 A_TE_RESTART
 A_TE_START
 A_TE_STOP
-A_TICKLE_DC_TIMER
+A_DC_TIMER_STOP
+A_DC_TIMER_START
 A_WARN
 */
 
@@ -290,20 +295,24 @@ A_WARN
 #define	A_LRM_CONNECT		0x0000000000000008ULL
 
 /* -- Election actions -- */
-#define	A_TICKLE_DC_TIMER	0x0000000000000010ULL
-#define	A_ELECTION_COUNT	0x0000000000000020ULL
-#define	A_ELECTION_TIMEOUT	0x0000000000000040ULL
-#define	A_ELECTION_VOTE		0x0000000000000080ULL
+#define	A_DC_TIMER_START	0x0000000000000010ULL
+#define	A_DC_TIMER_STOP		0x0000000000000020ULL
+
+#define	A_ELECTION_COUNT	0x0000000000000100ULL
+#define	A_ELECTION_TIMEOUT	0x0000000000000200ULL
+#define	A_ELECTION_VOTE		0x0000000000000400ULL
+
 
 /* -- Join protocol actions -- */
+#define	A_ANNOUNCE		0x0000000000000800ULL
 	/* Acknowledge the DC as our overlord*/
-#define	A_JOIN_ACK		0x0000000000000100ULL
+#define	A_JOIN_ACK		0x0000000000001000ULL
 	/* Send a welcome message to new node(s) */
-#define	A_JOIN_WELCOME		0x0000000000000200ULL
+#define	A_JOIN_WELCOME		0x0000000000002000ULL
 	/* Send a welcome message to all nodes */
-#define	A_JOIN_WELCOME_ALL	0x0000000000000400ULL
+#define	A_JOIN_WELCOME_ALL	0x0000000000004000ULL
 	/* Process the remote node's ack of our join message */ 
-#define	A_JOIN_PROCESS_ACK	0x0000000000000800ULL
+#define	A_JOIN_PROCESS_ACK	0x0000000000008000ULL
 
 /* -- Message processing -- */
 	/* Process the queue of requests */
@@ -351,9 +360,8 @@ A_WARN
 
 /* -- CBI actions -- */
 #define	A_CIB_INVOKE		0x0000010000000000ULL
-#define	A_CIB_RESTART		0x0000020000000000ULL
-#define	A_CIB_START		0x0000040000000000ULL
-#define	A_CIB_STOP		0x0000080000000000ULL
+#define	A_CIB_START		0x0000020000000000ULL
+#define	A_CIB_STOP		0x0000040000000000ULL
 
 /* -- Transition Engine actions -- */
 	/* Attempt to reach the newly  calculated cluster state.  This is 
@@ -365,18 +373,16 @@ A_WARN
 	 * state is reached or no further tasks can be taken.
 	 */
 #define	A_TE_INVOKE		0x0000100000000000ULL
-#define	A_TE_RESTART		0x0000200000000000ULL
-#define	A_TE_START		0x0000400000000000ULL
-#define	A_TE_STOP		0x0000800000000000ULL
+#define	A_TE_START		0x0000200000000000ULL
+#define	A_TE_STOP		0x0000400000000000ULL
 
 /* -- Policy Engine actions -- */
 	/* Calculate the next state for the cluster.  This is only
 	 * invoked once per needed calculation.
 	 */
 #define	A_PE_INVOKE		0x0001000000000000ULL
-#define	A_PE_RESTART		0x0002000000000000ULL
-#define	A_PE_START		0x0004000000000000ULL
-#define	A_PE_STOP		0x0008000000000000ULL
+#define	A_PE_START		0x0002000000000000ULL
+#define	A_PE_STOP		0x0004000000000000ULL
 
 /* -- Misc actions -- */
 	/* Add a system generate "block" so that resources arent moved
@@ -390,10 +396,14 @@ A_WARN
 #define	A_ERROR			0x0200000000000000ULL
 #define	A_WARN			0x0400000000000000ULL
 
-#define O_SHUTDOWN A_SHUTDOWN|A_STOP|A_EXIT_0|A_CIB_STOP
+#define O_SHUTDOWN A_DC_TIMER_STOP|A_SHUTDOWN|A_STOP|A_EXIT_0|A_CIB_STOP
 #define O_RELEASE  A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED
-	
+#define O_DC_TIMER_RESTART	A_DC_TIMER_STOP|A_DC_TIMER_START
+#define	O_PE_RESTART		A_PE_START|A_PE_STOP
+#define	O_TE_RESTART		A_TE_START|A_TE_STOP
+#define	O_CIB_RESTART		A_CIB_START|A_CIB_STOP
 
+#define O_DC_TICKLE O_DC_TIMER_RESTART
 
 /*======================================
  *
@@ -442,6 +452,7 @@ enum crmd_fsa_cause
 	C_CCM_CALLBACK,
 	C_TIMER_POPPED,
 	C_SHUTDOWN,
+	C_HEARTBEAT_FAILED,
 	C_ILLEGAL
 };
 

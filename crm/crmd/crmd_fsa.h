@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.6 2004/02/29 20:48:02 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.7 2004/03/05 14:01:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,6 +49,7 @@ struct oc_node_list_s
  *
  * Plus a couple of other things
  */
+typedef struct oc_node_list_s oc_node_list_t;
 struct crm_subsystem_s {
 		pid_t	pid;		/* Process id of child process */
 		int	respawn;	/* Respawn it if it dies? */
@@ -59,16 +60,16 @@ struct crm_subsystem_s {
 /* extras */
 		IPC_Channel *ipc;	/* How can we communicate with it */
 };
-typedef struct oc_node_list_s oc_node_list_t;
 
+typedef struct fsa_timer_s fsa_timer_t;
 struct fsa_timer_s 
 {
 		guint	source_id;	/* timer source id */
 		uint	period_ms;	/* timer period */
 		enum crmd_fsa_input fsa_input;
+		gboolean (*callback)(gpointer data);
 };
 
-typedef struct fsa_timer_s fsa_timer_t;
 
 
 extern enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause,
@@ -76,7 +77,8 @@ extern enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause,
 				      void *data);
 
 extern long long clear_flags(long long actions,
-			     enum crmd_fsa_state cur_state,
+			     enum crmd_fsa_cause cause,
+enum crmd_fsa_state cur_state,
 			     enum crmd_fsa_input cur_input);
 /* Utilities */
 extern long long toggle_bit   (long long  action_list, long long action);
@@ -92,6 +94,7 @@ extern gboolean is_set(long long action_list, long long action);
 extern void startTimer(fsa_timer_t *timer);
 extern void stopTimer(fsa_timer_t *timer);
 extern gboolean timer_popped(gpointer data);
+extern gboolean do_dc_heartbeat(gpointer data);
 
 
 /* Global FSA stuff */
@@ -104,6 +107,8 @@ extern const char     *fsa_our_uname;
 extern fsa_timer_t *election_trigger;		/*  */
 extern fsa_timer_t *election_timeout;		/*  */
 extern fsa_timer_t *shutdown_escalation_timmer;	/*  */
+extern fsa_timer_t *dc_heartbeat;
+extern fsa_timer_t *integration_timer;
 
 extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;

@@ -18,8 +18,6 @@
 #include <crm/common/crm.h>
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
-/* #include <crmd.h> */
-/* #include <crm/common/crmutils.h> */
 
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
@@ -39,17 +37,17 @@ void crmd_ccm_input_callback(oc_ed_t event,
 
 void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
 
-
-
-
-static oc_ev_t   * fsa_ev_token;     // for CCM comms
+static oc_ev_t   * fsa_ev_token;  // for CCM comms
 static int	   fsa_ev_fd;     // for CCM comms
+
+#define CCM_UNAME 1
 
 #define CCM_EVENT_DETAIL 1
 
 /*	 A_CCM_CONNECT	*/
 enum crmd_fsa_input
 do_ccm_register(long long action,
+		enum crmd_fsa_cause cause,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input current_input,
 		void *data)
@@ -70,6 +68,7 @@ do_ccm_register(long long action,
 /*	 A_CCM_EVENT	*/
 enum crmd_fsa_input
 do_ccm_event(long long action,
+	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
 	     void *data)
@@ -110,6 +109,10 @@ do_ccm_event(long long action,
 
 		if(oc->m_n_out !=0) {
 			return_input = I_NODE_LEFT;
+			/* set a time in which we expect to hear from the DC
+			 */
+			startTimer(election_trigger);
+
 		} else if(oc->m_n_in !=0) {
 			/* delay the I_NODE_JOIN until they acknowledge our
 			 * DC status and send us their CIB
@@ -120,12 +123,14 @@ do_ccm_event(long long action,
 			/* so what happened??  why are we here? */
 		}
 	}
+
 	FNRET(return_input);
 }
 
 /*	 A_CCM_UPDATE_CACHE	*/
 enum crmd_fsa_input
 do_ccm_update_cache(long long action,
+		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
 		    void *data)
@@ -146,10 +151,6 @@ do_ccm_update_cache(long long action,
 	       event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
 	       event==OC_EV_MS_EVICTED?"EVICTED":
 	       "NO QUORUM MEMBERSHIP");
-
-	if(CCM_EVENT_DETAIL) {
-		ccm_event_detail(oc, event);
-	}
 
 	/*--*-- All Member Nodes --*--*/
 	offset = oc->m_memb_idx;
@@ -323,46 +324,46 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 int
 register_with_ccm(ll_cluster_t *hb_cluster)
 {
-    int ret;
-    fd_set rset;
+	int ret;
+	fd_set rset;
     
-    cl_log(LOG_INFO, "Registering with CCM");
-    oc_ev_register(&fsa_ev_token);
+	cl_log(LOG_INFO, "Registering with CCM");
+	oc_ev_register(&fsa_ev_token);
     
-    cl_log(LOG_INFO, "Setting up CCM callbacks");
-    oc_ev_set_callback(fsa_ev_token, OC_EV_MEMB_CLASS,
-					   crmd_ccm_input_callback,
-					   NULL);
-    oc_ev_special(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
+	cl_log(LOG_INFO, "Setting up CCM callbacks");
+	oc_ev_set_callback(fsa_ev_token, OC_EV_MEMB_CLASS,
+			   crmd_ccm_input_callback,
+			   NULL);
+	oc_ev_special(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
     
-    cl_log(LOG_INFO, "Activating CCM token");
-    ret = oc_ev_activate(fsa_ev_token, &fsa_ev_fd);
-    if (ret){
+	cl_log(LOG_INFO, "Activating CCM token");
+	ret = oc_ev_activate(fsa_ev_token, &fsa_ev_fd);
+	if (ret){
 		cl_log(LOG_INFO, "CCM Activation failed... unregistering");
 		oc_ev_unregister(fsa_ev_token);
 		return(1);
-    }
-    cl_log(LOG_INFO, "CCM Activation passed... all set to go!");
+	}
+	cl_log(LOG_INFO, "CCM Activation passed... all set to go!");
     
-    FD_ZERO(&rset);
-    FD_SET(fsa_ev_fd, &rset);
+	FD_ZERO(&rset);
+	FD_SET(fsa_ev_fd, &rset);
     
-    if (oc_ev_handle_event(fsa_ev_token)){
+	if (oc_ev_handle_event(fsa_ev_token)){
 		cl_log(LOG_ERR,"CCM Activation: terminating");
 		return(1);
-    }
+	}
     
-    cl_log(LOG_INFO, "Sign up for \"ccmjoin\" messages");
-    if (hb_cluster->llc_ops->set_msg_callback(
-			hb_cluster,
-			"ccmjoin",
-			msg_ccm_join,
-			hb_cluster) != HA_OK)
-    {
+	cl_log(LOG_INFO, "Sign up for \"ccmjoin\" messages");
+	if (hb_cluster->llc_ops->set_msg_callback(
+		    hb_cluster,
+		    "ccmjoin",
+		    msg_ccm_join,
+		    hb_cluster) != HA_OK)
+	{
 		cl_log(LOG_ERR, "Cannot set msg_ipfail_join callback");
-    }
+	}
     
-    FNRET(0);
+	FNRET(0);
 }
 
 void 

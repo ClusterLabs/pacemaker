@@ -34,6 +34,8 @@
 #include <sys/resource.h>// for getrlimit
 
 #include <crm/common/ipcutils.h>
+#include <crm/common/xmltags.h>
+#include <crm/common/xmlutils.h>
 #include <crmd.h>
 #include <crmd_messages.h>
 #include <string.h>
@@ -60,6 +62,7 @@ struct crm_subsystem_s *pe_subsystem  = NULL;
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
 enum crmd_fsa_input
 do_cib_control(long long action,
+	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input current_input,
 	       void *data)
@@ -67,8 +70,8 @@ do_cib_control(long long action,
 	enum crmd_fsa_input result = I_NULL;
 	struct crm_subsystem_s *this_subsys = cib_subsystem;
 	
-	long long stop_actions = A_CIB_STOP | A_CIB_RESTART;
-	long long start_actions = A_CIB_START | A_CIB_RESTART;
+	long long stop_actions = A_CIB_STOP;
+	long long start_actions = A_CIB_START;
 
 	FNIN();
 	
@@ -111,11 +114,17 @@ do_cib_control(long long action,
 /*	 A_CIB_INVOKE	*/
 enum crmd_fsa_input
 do_cib_invoke(long long action,
+	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input current_input,
 	      void *data)
 {
 	FNIN();
+				
+	set_xml_property_copy((xmlNodePtr)data,
+			      XML_ATTR_SYSTO,
+			      "cib");
+	send_msg_via_ipc((xmlNodePtr)data, "cib");
 	
 	FNRET(I_NULL);
 }
@@ -123,15 +132,16 @@ do_cib_invoke(long long action,
 /*	 A_PE_START, A_PE_STOP, A_TE_RESTART	*/
 enum crmd_fsa_input
 do_pe_control(long long action,
-	    enum crmd_fsa_state cur_state,
-	    enum crmd_fsa_input current_input,
-	    void *data)
+	      enum crmd_fsa_cause cause,
+	      enum crmd_fsa_state cur_state,
+	      enum crmd_fsa_input current_input,
+	      void *data)
 {
 	enum crmd_fsa_input result = I_NULL;
 	struct crm_subsystem_s *this_subsys = pe_subsystem;
 
-	long long stop_actions = A_PE_STOP | A_PE_RESTART;
-	long long start_actions = A_PE_START | A_PE_RESTART;
+	long long stop_actions = A_PE_STOP;
+	long long start_actions = A_PE_START;
 	
 	FNIN();
 
@@ -174,11 +184,16 @@ do_pe_control(long long action,
 /*	 A_PE_INVOKE	*/
 enum crmd_fsa_input
 do_pe_invoke(long long action,
+	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
 	     void *data)
 {
 	FNIN();
+
+	stopTimer(integration_timer);
+	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n",
+	       fsa_action2string(action), action);
 	
 	FNRET(I_NULL);
 }
@@ -192,25 +207,27 @@ do_pe_invoke(long long action,
 /*	 A_TE_START, A_TE_STOP, A_TE_RESTART	*/
 enum crmd_fsa_input
 do_te_control(long long action,
-	    enum crmd_fsa_state cur_state,
-	    enum crmd_fsa_input current_input,
-	    void *data)
+	      enum crmd_fsa_cause cause,
+	      enum crmd_fsa_state cur_state,
+	      enum crmd_fsa_input current_input,
+	      void *data)
 {
 	enum crmd_fsa_input result = I_NULL;
 	struct crm_subsystem_s *this_subsys = te_subsystem;
 	
-	long long stop_actions = A_TE_STOP | A_TE_RESTART;
-	long long start_actions = A_TE_START | A_TE_RESTART;
+	long long stop_actions = A_TE_STOP;
+	long long start_actions = A_TE_START;
 	
 	FNIN();
 
 	if(action & stop_actions) {
 		clear_bit_inplace(&fsa_input_register,R_TE_CONNECTED);
 
-		if(cur_state != S_STOPPING && is_set(fsa_input_register, R_TE_PEND)) {
-			result = I_WAIT_FOR_EVENT;
-			FNRET(result);
-		}
+/* 		if(cur_state != S_STOPPING */
+/* 		   && is_set(fsa_input_register, R_TE_PEND)) { */
+/* 			result = I_WAIT_FOR_EVENT; */
+/* 			FNRET(result); */
+/* 		} */
 		
 		if(stop_subsystem(this_subsys) == FALSE)
 			result = I_FAIL;
@@ -248,11 +265,15 @@ do_te_control(long long action,
 /*	 A_TE_INVOKE	*/
 enum crmd_fsa_input
 do_te_invoke(long long action,
+	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
 	     void *data)
 {
 	FNIN();
+
+	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n",
+	       fsa_action2string(action), action);
 	
 	FNRET(I_NULL);
 }
@@ -325,7 +346,9 @@ start_subsystem(struct crm_subsystem_s*	centry)
 
 
 static gboolean
-run_command(struct crm_subsystem_s *centry, const char *options, gboolean update_pid)
+run_command(struct crm_subsystem_s *centry,
+	    const char *options,
+	    gboolean update_pid)
 {
 	pid_t			pid;
 
@@ -352,21 +375,21 @@ run_command(struct crm_subsystem_s *centry, const char *options, gboolean update
 	switch(pid=fork()) {
 
 		case -1:	cl_log(LOG_ERR
-				,	"start_a_child_client: Cannot fork.");
-				return FALSE;
+				       ,	"start_a_child_client: Cannot fork.");
+			return FALSE;
 
 		default:	/* Parent */
 #if 0
-				NewTrackedProc(pid, 1, PT_LOGVERBOSE
-				,	centry, &ManagedChildTrackOps);
+			NewTrackedProc(pid, 1, PT_LOGVERBOSE
+				       ,	centry, &ManagedChildTrackOps);
 #else
-				if(update_pid)
-					centry->pid = pid;
+			if(update_pid)
+				centry->pid = pid;
 #endif
-				return TRUE;
+			return TRUE;
 
 		case 0:		/* Child */
-				break;
+			break;
 	}
 
 	/* Child process:  start the managed child */

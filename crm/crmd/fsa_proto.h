@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.1 2004/02/27 13:41:45 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.2 2004/03/05 14:01:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -20,9 +20,18 @@
 #ifndef XML_FSA_PROTO__H
 #define XML_FSA_PROTO__H
 
+/*	 A_ANNOUNCE	*/
+enum crmd_fsa_input
+do_announce(long long action,
+	    enum crmd_fsa_cause cause,
+	    enum crmd_fsa_state cur_state,
+	    enum crmd_fsa_input current_input,
+	    void *data);
+
 /*	 A_PE_INVOKE	*/
 enum crmd_fsa_input
 do_pe_invoke(long long action,
+	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
 	     void *data);
@@ -30,6 +39,7 @@ do_pe_invoke(long long action,
 /*	A_ERROR	*/
 enum crmd_fsa_input
 do_error(long long action,
+	 enum crmd_fsa_cause cause,
 	 enum crmd_fsa_state cur_state,
 	 enum crmd_fsa_input cur_input,
 	 void *data);
@@ -37,6 +47,7 @@ do_error(long long action,
 /*	A_LOG	*/
 enum crmd_fsa_input
 do_log(long long action,
+       enum crmd_fsa_cause cause,
        enum crmd_fsa_state cur_state,
        enum crmd_fsa_input cur_input,
        void *data);
@@ -44,6 +55,7 @@ do_log(long long action,
 /*	A_STARTUP	*/
 enum crmd_fsa_input
 do_startup(long long action,
+	   enum crmd_fsa_cause cause,
 	   enum crmd_fsa_state cur_state,
 	   enum crmd_fsa_input cur_input,
 	   void *data);
@@ -51,13 +63,15 @@ do_startup(long long action,
 /*	A_CIB_START, STOP, RESTART	*/
 enum crmd_fsa_input
 do_cib_control(long long action,
-		enum crmd_fsa_state cur_state,
-		enum crmd_fsa_input cur_input,
-		void *data);
+	       enum crmd_fsa_cause cause,
+	       enum crmd_fsa_state cur_state,
+	       enum crmd_fsa_input cur_input,
+	       void *data);
 
 /*	A_HA_CONNECT	*/
 enum crmd_fsa_input
 do_ha_register(long long action,
+	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input cur_input,
 	       void *data);
@@ -65,20 +79,23 @@ do_ha_register(long long action,
 /*	A_CCM_CONNECT	*/
 enum crmd_fsa_input
 do_ccm_register(long long action,
-	       enum crmd_fsa_state cur_state,
-	       enum crmd_fsa_input cur_input,
-	       void *data);
+		enum crmd_fsa_cause cause,
+		enum crmd_fsa_state cur_state,
+		enum crmd_fsa_input cur_input,
+		void *data);
 
 /*	A_LRM_CONNECT	*/
 enum crmd_fsa_input
 do_lrm_register(long long action,
-	       enum crmd_fsa_state cur_state,
-	       enum crmd_fsa_input cur_input,
-	       void *data);
+		enum crmd_fsa_cause cause,
+		enum crmd_fsa_state cur_state,
+		enum crmd_fsa_input cur_input,
+		void *data);
 
 /*	A_PE_START, STOP, RESTART	*/
 enum crmd_fsa_input
 do_pe_control(long long action,
+	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input cur_input,
 	      void *data);
@@ -86,6 +103,7 @@ do_pe_control(long long action,
 /*	A_TE_START, STOP, RESTART	*/
 enum crmd_fsa_input
 do_te_control(long long action,
+	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input cur_input,
 	      void *data);
@@ -93,6 +111,7 @@ do_te_control(long long action,
 /*	A_STARTED	*/
 enum crmd_fsa_input
 do_started(long long action,
+	   enum crmd_fsa_cause cause,
 	   enum crmd_fsa_state cur_state,
 	   enum crmd_fsa_input cur_input,
 	   void *data);
@@ -100,6 +119,7 @@ do_started(long long action,
 /*	A_MSG_ROUTE	*/
 enum crmd_fsa_input
 do_msg_route(long long action,
+	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input cur_input,
 	     void *data);
@@ -107,6 +127,7 @@ do_msg_route(long long action,
 /*	A_RECOVER	*/
 enum crmd_fsa_input
 do_recover(long long action,
+	   enum crmd_fsa_cause cause,
 	   enum crmd_fsa_state cur_state,
 	   enum crmd_fsa_input cur_input,
 	   void *data);
@@ -114,6 +135,7 @@ do_recover(long long action,
 /*	A_ELECTION_VOTE	*/
 enum crmd_fsa_input
 do_election_vote(long long action,
+		 enum crmd_fsa_cause cause,
 		 enum crmd_fsa_state cur_state,
 		 enum crmd_fsa_input cur_input,
 		 void *data);
@@ -121,6 +143,7 @@ do_election_vote(long long action,
 /*	A_ELECTION_COUNT	*/
 enum crmd_fsa_input
 do_election_count_vote(long long action,
+		       enum crmd_fsa_cause cause,
 		       enum crmd_fsa_state cur_state,
 		       enum crmd_fsa_input cur_input,
 		       void *data);
@@ -128,20 +151,23 @@ do_election_count_vote(long long action,
 /*	A_ELECTION_TIMEOUT	*/
 enum crmd_fsa_input
 do_election_timeout(long long action,
+		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input cur_input,
 		    void *data);
 
-/*	A_TICKLE_DC_TIMER	*/
+/*	A_DC_TIMER_STOP	*/
 enum crmd_fsa_input
-do_tickle_dc_timer(long long action,
-		   enum crmd_fsa_state cur_state,
-		   enum crmd_fsa_input cur_input,
-		   void *data);
+do_dc_timer_control(long long action,
+		    enum crmd_fsa_cause cause,
+		    enum crmd_fsa_state cur_state,
+		    enum crmd_fsa_input cur_input,
+		    void *data);
 
 /*	A_MSG_STORE	*/
 enum crmd_fsa_input
 do_msg_store(long long action,
+	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input cur_input,
 	     void *data);
@@ -149,6 +175,7 @@ do_msg_store(long long action,
 /*	A_NODE_BLOCK	*/
 enum crmd_fsa_input
 do_node_block(long long action,
+	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input cur_input,
 	      void *data);
@@ -156,6 +183,7 @@ do_node_block(long long action,
 /*	A_CCM_UPDATE_CACHE	*/
 enum crmd_fsa_input
 do_ccm_update_cache(long long action,
+		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input cur_input,
 		    void *data);
@@ -163,6 +191,7 @@ do_ccm_update_cache(long long action,
 /*	A_CCM_EVENT	*/
 enum crmd_fsa_input
 do_ccm_event(long long action,
+	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input cur_input,
 	     void *data);
@@ -170,6 +199,7 @@ do_ccm_event(long long action,
 /*	A_DC_TAKEOVER	*/
 enum crmd_fsa_input
 do_dc_takeover(long long action,
+	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input cur_input,
 	       void *data);
@@ -177,41 +207,47 @@ do_dc_takeover(long long action,
 /*	A_DC_RELEASE	*/
 enum crmd_fsa_input
 do_dc_release(long long action,
+	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input cur_input,
 	      void *data);
 
 /*	A_JOIN_WELCOME_ALL	*/
 enum crmd_fsa_input
-do_join_welcome(long long action,
+do_send_welcome(long long action,
+		enum crmd_fsa_cause cause,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input cur_input,
 		void *data);
 
 /*	A_JOIN_WELCOME	*/
 enum crmd_fsa_input
-do_join_welcome(long long action,
+do_send_welcome(long long action,
+		enum crmd_fsa_cause cause,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input cur_input,
 		void *data);
 
 /*	A_JOIN_ACK	*/
 enum crmd_fsa_input
-do_join_ack(long long action,
-	    enum crmd_fsa_state cur_state,
-	    enum crmd_fsa_input cur_input,
-	    void *data);
+do_ack_welcome(long long action,
+	       enum crmd_fsa_cause cause,
+	       enum crmd_fsa_state cur_state,
+	       enum crmd_fsa_input cur_input,
+	       void *data);
 
 /*	A_JOIN_PROCESS_ACK	*/
 enum crmd_fsa_input
-do_process_join_ack(long long action,
-		    enum crmd_fsa_state cur_state,
-		    enum crmd_fsa_input cur_input,
-		    void *data);
+do_process_welcome_ack(long long action,
+		       enum crmd_fsa_cause cause,
+		       enum crmd_fsa_state cur_state,
+		       enum crmd_fsa_input cur_input,
+		       void *data);
 
 /*	A_CIB_INVOKE	*/
 enum crmd_fsa_input
 do_cib_invoke(long long action,
+	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input cur_input,
 	      void *data);
@@ -219,6 +255,7 @@ do_cib_invoke(long long action,
 /*	A_PE_INVOKE	*/
 enum crmd_fsa_input
 do_pe_invoke(long long action,
+	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input cur_input,
 	     void *data);
@@ -226,6 +263,7 @@ do_pe_invoke(long long action,
 /*	A_TE_INVOKE	*/
 enum crmd_fsa_input
 do_te_invoke(long long action,
+	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input cur_input,
 	     void *data);
@@ -234,6 +272,7 @@ do_te_invoke(long long action,
 /*	A_SHUTDOWN	*/
 enum crmd_fsa_input
 do_shutdown(long long action,
+	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input cur_input,
 	    void *data);
@@ -241,6 +280,7 @@ do_shutdown(long long action,
 /*	A_STOP	*/
 enum crmd_fsa_input
 do_stop(long long action,
+	enum crmd_fsa_cause cause,
 	enum crmd_fsa_state cur_state,
 	enum crmd_fsa_input cur_input,
 	void *data);
@@ -248,8 +288,9 @@ do_stop(long long action,
 /*	A_EXIT_0, A_EXIT_1	*/
 enum crmd_fsa_input
 do_exit(long long action,
-	 enum crmd_fsa_state cur_state,
-	 enum crmd_fsa_input cur_input,
-	 void *data);
+	enum crmd_fsa_cause cause,
+	enum crmd_fsa_state cur_state,
+	enum crmd_fsa_input cur_input,
+	void *data);
 
 #endif
