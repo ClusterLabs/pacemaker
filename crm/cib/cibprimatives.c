@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.22 2004/04/01 17:04:48 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.23 2004/04/06 16:23:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,7 +54,8 @@
  */
 
 
-void do_status_update(xmlNodePtr old, cibStatus *new);
+void update_node_state(xmlNodePtr existing_node, xmlNodePtr update);
+
 
 
 //--- Resource
@@ -445,8 +446,14 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 			}
 		}
 		
-		copy_in_properties(equiv_node, new_obj);
-
+		if(safe_str_eq(XML_CIB_TAG_STATE, object_name)){
+			update_node_state(equiv_node, new_obj);
+			
+		} else {
+			copy_in_properties(equiv_node, new_obj);
+			
+		}
+		
 		while(children != NULL) {
 			int tmp_result =
 				update_cib_object(equiv_node, children,force);
@@ -465,4 +472,84 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 	}
 	
 	return result;
+}
+
+
+void
+update_node_state(xmlNodePtr target, xmlNodePtr update)
+{
+	gboolean any_updates = FALSE;
+	
+	const char *old_state     = xmlGetProp(target, "state");
+	const char *old_unclean   = xmlGetProp(target, "unclean");
+	const char *source	  = NULL;
+	const char *unclean	  = NULL;
+	const char *exp_state	  = NULL;
+	const char *state	  = NULL;
+	
+	xmlAttrPtr prop_iter = NULL;
+	FNIN();
+	
+	prop_iter = update->properties;
+	while(prop_iter != NULL) {
+		const char *local_prop_name = prop_iter->name;
+		const char *local_prop_value =
+			xmlGetProp(update, local_prop_name);
+
+
+		if(local_prop_name == NULL) {
+			// error
+			
+		} else if(strcmp(local_prop_name, "source") == 0) {
+			source = local_prop_value;
+			
+		} else if(strcmp(local_prop_name, "state") == 0) {
+			state = local_prop_value;
+			
+		} else {
+			any_updates = TRUE;
+			set_xml_property_copy(target,
+					      local_prop_name,
+					      local_prop_value);
+		}
+			  
+		prop_iter = prop_iter->next;
+	}
+	
+	unclean   = xmlGetProp(target, "unclean");
+	exp_state = xmlGetProp(target, "exp_state");
+	
+	if(safe_str_eq(state, "in_ccm")) {
+		if(safe_str_eq(old_state, "active")) {
+			state = "active";
+		} else {
+			any_updates = TRUE;
+		}
+		
+	} else if(safe_str_eq(state, "down")) {
+		any_updates = TRUE;
+		if(safe_str_neq(exp_state, "down")) {
+
+			// TODO: Set the actual time
+			// TODO: Only if not set?
+			if(old_unclean == NULL) {
+				set_xml_property_copy(target,
+						      "unclean",
+						      "time");
+			}
+			
+			// TODO: unset source?
+					
+		}
+	} else if(state != NULL) {
+		any_updates = TRUE;
+	}
+	
+	set_xml_property_copy(target, "state", state);
+	
+	if(any_updates) {
+		set_node_tstamp(target);
+		set_xml_property_copy(target, "source", source);
+	}
+	
 }
