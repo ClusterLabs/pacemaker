@@ -46,9 +46,9 @@ Pre-reqs:
 
     Extra-info
 	By default the following accounts are used:
-	   INIT_USER  = root      (start and stop heartbeat via init script)
-	   CRMD_USER  = hacluster (start and stop crmd executable)
-	   ADMIN_USER = hacluster (run crmd admin commands)
+	   INIT_USER  = root   (start and stop heartbeat via init script)
+	   CRMD_USER  = root   (start and stop crmd executable)
+	   ADMIN_USER = root   (run crmd admin commands)
 
 	Of course feel free to set up your ha.cf differently and login as
 	whoever you like, just be sure to change the above values in helper.sh
@@ -65,7 +65,7 @@ Pre-reqs:
 
     Basic requirement
     =======================
-    	Set up 2 nodes called test1 and test2 on a 192.158.9.x subnet (for the IPaddr resource)
+    	Set up 2 nodes called test1 and test2 on a 10.0.6.x subnet (for the IPaddr resource)
 
     Extra-info
 	You can use different names by specifying --node1 <node> and --node2  <node> on the testing command line.
@@ -86,10 +86,10 @@ Pre-reqs:
 	    auto_failback legacy
 	    node    test1
 	    node    test2
-	    apiauth default gid=haclient 
+	    apiauth default uid=root
+	    apiauth ccm uid=hacluster
 	    respawn hacluster /usr/lib/heartbeat/ccm
 	    respawn root /usr/lib/heartbeat/lrmd
-	    # you'll need to add root to the haclient group
 	
     Basic requirement
     =======================

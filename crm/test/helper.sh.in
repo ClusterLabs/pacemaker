@@ -22,8 +22,8 @@ HAVAR_DIR=@HA_VARLIBDIR@/heartbeat
 HAINIT_DIR=@INITDIR@
 
 INIT_USER=root
-CRMD_USER=hacluster
-ADMIN_USER=hacluster
+CRMD_USER=root
+ADMIN_USER=root
 
 test_node_1=test1
 test_node_2=test2
@@ -36,8 +36,8 @@ OUTPUT_CMDS=0
 
 done=0
 
-ip_rsc_1=192.168.9.61
-ip_rsc_2=192.168.9.62
+ip_rsc_1=10.0.6.51
+ip_rsc_2=10.0.6.52
 
 while test "$done" = "0"; do
     case "$1" in
