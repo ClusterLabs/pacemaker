@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.38 2004/06/01 16:12:49 andrew Exp $ */
+/* $Id: cib.c,v 1.39 2004/06/02 11:48:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,16 +27,14 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <crm/crm.h>
-
 #include <clplumbing/cl_log.h>
-#include <libxml/tree.h>
 
-#include <crm/msg_xml.h>
-
-#include <crm/common/xmlutils.h>
-#include <crm/common/msgutils.h>
+#include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
+#include <crm/common/msg.h>
+
 #include <cibio.h>
 #include <cibmessages.h>
 

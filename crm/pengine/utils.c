@@ -1,10 +1,10 @@
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
-#include <crm/common/xmlutils.h>
-#include <crm/common/crmutils.h>
 #include <crm/cib.h>
+#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
+#include <crm/common/util.h>
+
 #include <glib.h>
-#include <libxml/tree.h>
 
 #include <pengine.h>
 #include <pe_utils.h>

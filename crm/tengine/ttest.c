@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.3 2004/06/01 16:12:50 andrew Exp $ */
+/* $Id: ttest.c,v 1.4 2004/06/02 11:48:10 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -29,20 +29,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <hb_api.h>
-#include <apphb.h>
-
-#include <clplumbing/ipc.h>
-#include <clplumbing/Gmain_timeout.h>
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/lsb_exitcodes.h>
-#include <clplumbing/uids.h>
-#include <clplumbing/realtime.h>
-#include <clplumbing/GSource.h>
-#include <clplumbing/cl_poll.h>
-
-#include <crm/common/xmlutils.h>
+#include <crm/common/xml.h>
 #include <crm/msg_xml.h>
 
 #include <crm/cib.h>

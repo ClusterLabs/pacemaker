@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.20 2004/06/01 16:05:44 andrew Exp $ */
+/* $Id: cibmain.c,v 1.21 2004/06/02 11:48:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,30 +27,19 @@
 #include <fcntl.h>
 
 #include <hb_api.h>
-#include <apphb.h>
+#include <clplumbing/uids.h>
+
+//#include <ocf/oc_event.h>
 
 #include <crm/crm.h>
-
-#include <clplumbing/ipc.h>
-#include <clplumbing/Gmain_timeout.h>
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/lsb_exitcodes.h>
-#include <clplumbing/uids.h>
-#include <clplumbing/realtime.h>
-#include <clplumbing/GSource.h>
-#include <clplumbing/cl_poll.h>
-
-#include <ocf/oc_event.h>
-
-#include <crm/common/ipcutils.h>
-#include <crm/common/crmutils.h>
-#include <crm/common/xmlutils.h>
+#include <crm/cib.h>
 #include <crm/msg_xml.h>
+#include <crm/common/ipc.h>
+#include <crm/common/ctrl.h>
+#include <crm/common/xml.h>
+#include <crm/common/msg.h>
 
 #include <cibio.h>
-#include <crm/cib.h>
-#include <crm/common/msgutils.h>
 
 #include <crm/dmalloc_wrapper.h>
 

@@ -1,4 +1,4 @@
-/* $Id: tenginemain.c,v 1.14 2004/06/01 16:12:50 andrew Exp $ */
+/* $Id: tenginemain.c,v 1.15 2004/06/02 11:48:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,22 +29,10 @@
 #include <fcntl.h>
 
 #include <hb_api.h>
-#include <apphb.h>
-
-#include <clplumbing/ipc.h>
-#include <clplumbing/Gmain_timeout.h>
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/uids.h>
-#include <clplumbing/realtime.h>
-#include <clplumbing/GSource.h>
-#include <clplumbing/cl_poll.h>
 
-#include <crm/common/ipcutils.h>
-#include <crm/common/crmutils.h>
-
-#include <crm/common/msgutils.h>
+#include <crm/common/ctrl.h>
+#include <crm/common/ipc.h>
 
 #include <tengine.h>
 

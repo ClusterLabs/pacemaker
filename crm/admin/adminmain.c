@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.26 2004/06/01 16:12:49 andrew Exp $ */
+/* $Id: adminmain.c,v 1.27 2004/06/02 11:48:10 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -31,23 +31,12 @@
 #include <fcntl.h>
 
 #include <hb_api.h>
-#include <apphb.h>
-
-#include <clplumbing/ipc.h>
-#include <clplumbing/Gmain_timeout.h>
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/uids.h>
-#include <clplumbing/realtime.h>
-#include <clplumbing/GSource.h>
-#include <clplumbing/cl_poll.h>
 
-#include <crm/common/crmutils.h>
-#include <crm/common/msgutils.h>
-#include <crm/common/ipcutils.h>
-#include <crm/common/xmlutils.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml.h>
+#include <crm/common/ctrl.h>
+#include <crm/common/ipc.h>
 
 #include <crm/cib.h>
 
@@ -66,8 +55,7 @@ char *admin_uuid = NULL;
 void usage(const char *cmd, int exit_status);
 ll_cluster_t *do_init(void);
 int do_work(ll_cluster_t * hb_cluster);
-gboolean decodeNVpair(const char *srcstring, char separator,
-		      char **name, char **value);
+
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 char *pluralSection(const char *a_section);
 xmlNodePtr handleCibMod(void);

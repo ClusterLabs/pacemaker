@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.32 2004/06/01 16:04:57 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.33 2004/06/02 11:48:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,18 +26,14 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <crm/crm.h>
 
 #include <clplumbing/cl_log.h>
 
-#include <libxml/tree.h>
-
+#include <crm/crm.h>
+#include <crm/cib.h>
 #include <cibprimatives.h>
 #include <crm/msg_xml.h>
-
-#include <crm/common/xmlutils.h>
-#include <crm/common/crmutils.h>
-#include <crm/cib.h>
+#include <crm/common/xml.h>
 
 #include <crm/dmalloc_wrapper.h>
 

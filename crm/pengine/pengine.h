@@ -1,6 +1,8 @@
 #ifndef PENGINE__H
 #define PENGINE__H
 
+#include <clplumbing/ipc.h>
+
 typedef struct node_s node_t;
 typedef struct color_s color_t;
 typedef struct rsc_to_node_s rsc_to_node_t;

@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.37 2004/06/01 16:12:49 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.38 2004/06/02 11:48:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,26 +26,23 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <crm/crm.h>
-
 #include <clplumbing/cl_log.h>
 
-#include <libxml/tree.h>
 #include <time.h>
 
-#include <crm/common/msgutils.h>
-#include <crm/common/xmlutils.h>
+#include <crm/crm.h>
 #include <crm/cib.h>
-#include <cibio.h>
 #include <crm/msg_xml.h>
+#include <crm/common/msg.h>
+#include <crm/common/xml.h>
 
-#include <clplumbing/cl_log.h>
-#include <cibprimatives.h>
+#include <cibio.h>
 #include <cibmessages.h>
+#include <cibprimatives.h>
 
 #include <crm/dmalloc_wrapper.h>
-FILE *msg_cib_strm = NULL;
 
+FILE *msg_cib_strm = NULL;
 
 enum cib_result updateList(xmlNodePtr local_cib,
 			   xmlNodePtr update_command,
