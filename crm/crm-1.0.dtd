@@ -142,7 +142,7 @@ More details are given in the annotated DTD below.
 	  pre_event_notify  (true|false)                'false'>
 
 
-<!ELEMENT resource_group (resource)>
+<!ELEMENT resource_group (resource+)>
 <!ATTLIST resource_group
           id               CDATA		    #REQUIRED
           description      CDATA                    #IMPLIED
