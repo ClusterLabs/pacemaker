@@ -30,7 +30,7 @@ void register_fsa_input_adv(
 	gboolean after, const char *raised_from);
 
 
-#define crmd_fsa_stall() register_fsa_input_adv(cause, I_WAIT_FOR_EVENT, msg_data->data, action, FALSE, __FUNCTION__)
+#define crmd_fsa_stall() register_fsa_input_adv(msg_data->fsa_cause, I_WAIT_FOR_EVENT, msg_data->data, action, FALSE, __FUNCTION__)
 
 #define register_fsa_input(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
 
