@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.4 2004/06/01 15:56:13 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.5 2004/06/09 14:27:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -121,7 +121,7 @@
 #define XML_LRM_ATTR_RUNNABLE		"runnable"
 #define XML_LRM_ATTR_OPTIONAL		"optional"
 
-#define XML_LRM_ATTR_STATE		"state"
+#define XML_NODE_ATTR_STATE		"state"
 #define XML_LRM_ATTR_LASTOP		"last_op"
 #define XML_LRM_ATTR_OPSTATE		"op_state"
 #define XML_LRM_ATTR_OPCODE		"op_code"
