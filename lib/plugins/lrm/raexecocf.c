@@ -59,18 +59,23 @@ static int execra(const char * ra_name,
 static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op);
 
 static int get_resource_list(GList ** rsc_info);
+
+static char* get_resource_meta(const char* ra_type);
+
 /* The end of exported function list */
  
 /* The begin of internal used function & data list */
 static int raexec_setenv(GHashTable * env_params);
 static void set_env(gpointer key, gpointer value, gpointer user_data);
+
 /* The end of internal function & data list */
 
 /* Rource agent execution plugin operations */
 static struct RAExecOps raops =
 {	execra,
 	map_ra_retvalue,
-	get_resource_list
+	get_resource_list,
+	get_resource_meta
 };
 
 /*
@@ -253,4 +258,9 @@ set_env(gpointer key, gpointer value, gpointer user_data)
 {
 	setenv((const char *)key, (const char *)value, 1);	
 	/*Need to free the memory to which key and value point?*/
+}
+static char*
+get_resource_meta(const char* ra_type)
+{
+	return strdup(ra_type);
 }

@@ -69,6 +69,7 @@ static int prepare_cmd_parameters(const char * raname, const char * op,
 	GHashTable * params, RA_ARGV params_argv);  
 static void params_hash_to_argv(gpointer key, gpointer value, 
 				gpointer user_data);
+static char* get_resource_meta(const char* ra_type);
 static int raexec_setenv(GHashTable * env_params);
 static void set_env(gpointer key, gpointer value, gpointer user_data);
 /* The end of internal function & data list */
@@ -77,7 +78,8 @@ static void set_env(gpointer key, gpointer value, gpointer user_data);
 static struct RAExecOps raops =
 {	execra,
 	map_ra_retvalue,
-	get_resource_list
+	get_resource_list,
+	get_resource_meta
 };
 
 /*
@@ -324,4 +326,9 @@ set_env(gpointer key, gpointer value, gpointer user_data)
 {
         setenv((const char *)key, (const char *)value, 1);
         /*Need to free the memory to which key and value point?*/
+}
+static char*
+get_resource_meta(const char* ra_type)
+{
+	return strdup(ra_type);
 }
