@@ -271,6 +271,7 @@ get_resource_meta(const char* ra_type)
 	GString* g_str_tmp = NULL;
 	char *ra_type_dup, *base_name;
 	GString * ra_dirname;
+	FILE* file = NULL;
 
 	ra_dirname = g_string_new(ra_type);
 	ra_type_dup = strndup(ra_type, RA_MAX_DIRNAME_LENGTH);
@@ -282,7 +283,7 @@ get_resource_meta(const char* ra_type)
 	free(ra_type_dup);
 	g_string_append(ra_dirname, " meta-data");
 
-	FILE* file = popen(ra_dirname->str, "r");
+	file = popen(ra_dirname->str, "r");
 	if (NULL==file) {
 		return NULL;
 	}
