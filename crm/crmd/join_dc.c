@@ -231,6 +231,9 @@ do_dc_join_req(long long action,
 			  join_from);
 		crm_xml_devel(our_generation, "Our generation");
 		crm_xml_devel(generation, "Their generation");
+		if(max_generation_from != NULL) {
+			crm_free(max_generation_from);
+		}
 		max_generation_from = crm_strdup(join_from);
 	}
 	free_xml(our_generation);
@@ -289,6 +292,8 @@ do_dc_join_finalize(long long action,
 		    enum crmd_fsa_input current_input,
 		    fsa_data_t *msg_data)
 {
+	int rc = cib_ok;
+	
 	if(max_generation_from == NULL) {
 		crm_warn("There is no CIB to get..."
 			 " how did R_HAVE_CIB get unset?");
@@ -301,13 +306,32 @@ do_dc_join_finalize(long long action,
 		crm_info("Asking %s for its copy of the CIB",
 			 crm_str(max_generation_from));
 
-		CRM_DEV_ASSERT(cib_ok == fsa_cib_conn->cmds->is_master(fsa_cib_conn));
+		CRM_DEV_ASSERT(cib_not_master != fsa_cib_conn->cmds->is_master(fsa_cib_conn));
+		if(max_generation_from != NULL) {
+			rc = fsa_cib_conn->cmds->sync_from(
+				fsa_cib_conn, max_generation_from,
+				NULL, cib_sync_call);
+		}
+
+		if(max_generation_from != NULL && rc == cib_ok) {
+			crm_data_t *update = NULL;
+			crm_data_t *cib = createEmptyCib();
 			
-		rc = fsa_cib_conn->cmds->sync_from(
-			fsa_cib_conn, max_generation_from, NULL, cib_sync_call);
+			set_uuid(fsa_cluster_conn, cib,
+				 XML_ATTR_DC_UUID, fsa_our_uname);
+			crm_devel("Update %s in the CIB to our uuid: %s",
+				  XML_ATTR_DC_UUID,
+				  crm_element_value(cib, XML_ATTR_DC_UUID));
+			update = create_cib_fragment(cib, NULL);
+			free_xml(cib);
+
+			update_local_cib(update);
+		}
+		
 		if(rc != cib_ok) {
 			crm_err("Sync from %s resulted in an error: %s",
 				max_generation_from, cib_error2string(rc));
+			
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 			return I_NULL;
 		}
@@ -317,8 +341,14 @@ do_dc_join_finalize(long long action,
 		  g_hash_table_size(join_requests));
 	fsa_cib_conn->cmds->bump_epoch(
 		fsa_cib_conn, cib_scope_local|cib_sync_call);
-	CRM_DEV_ASSERT(cib_ok == fsa_cib_conn->cmds->sync(
-			       fsa_cib_conn, NULL, cib_sync_call));
+	rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_sync_call);
+
+	CRM_DEV_ASSERT(cib_not_master != rc);
+	if(rc != cib_ok) {
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		return I_NULL;
+	}
+	
 	
 	num_join_invites = 0;
 	crm_debug("Notifying %d clients of join results",
