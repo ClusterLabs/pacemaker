@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.23 2005/02/02 21:47:21 andrew Exp $ */
+/* $Id: utils.c,v 1.24 2005/02/03 14:20:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -228,6 +228,38 @@ crm_itoa(int an_int)
 
 unsigned int crm_log_level = LOG_INFO;
 
+gboolean
+crm_log_init(const char *entity) 
+{
+	const char *test = "Testing log daemon connection";
+	/* Redirect messages from glib functions to our handler */
+	g_log_set_handler(NULL,
+			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
+			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
+			  | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
+			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
+			  cl_glib_msg_handler, NULL);
+	/* and for good measure... */
+	g_log_set_always_fatal((GLogLevelFlags)0);    
+	
+	cl_log_set_entity(entity);
+	cl_log_set_facility(LOG_LOCAL7);
+
+#if 1
+	cl_log_send_to_logging_daemon(FALSE);
+	if(HA_FAIL == LogToLoggingDaemon(LOG_INFO, test, strlen(test), TRUE)) {
+		crm_warn("Not using log daemon");
+	} else {
+		cl_log_send_to_logging_daemon(TRUE);
+		crm_warn("Enabled log daemon");
+	}
+#endif
+	CL_SIGNAL(DEBUG_INC, alter_debug);
+	CL_SIGNAL(DEBUG_DEC, alter_debug);
+
+	return TRUE;
+}
+
 /* returns the old value */
 unsigned int
 set_crm_log_level(unsigned int level)
@@ -283,7 +315,7 @@ do_crm_log(int log_level, const char *function,
 
 	} else if(log_level <= crm_log_level) {
 		do_log = TRUE;
-		if(log_level != LOG_INFO) {
+		if(log_level > LOG_INFO) {
 			log_as = LOG_DEBUG;
 		}
 	}
@@ -297,12 +329,23 @@ do_crm_log(int log_level, const char *function,
 		nbytes=vasprintf(&buf, fmt, ap);
 		va_end(ap);
 
-		cl_log(LOG_DEBUG, "Dumped %d bytes", nbytes);
-		if(function == NULL) {
-			cl_log(log_as, "[%d] %s%c", log_level, buf, 0);
+		log_level -= LOG_DEBUG;
+		if(log_level > 0) {
+			if(function == NULL) {
+				cl_log(log_as, "[%d] %s", log_level, buf);
+				
+			} else {
+				cl_log(log_as, "%s [%d]: %s",
+				       function, log_level, buf);
+			}
+
 		} else {
-			cl_log(log_as, "(%s [%d]) %s%c",
-			       function, log_level, buf, 0);
+			if(function == NULL) {
+				cl_log(log_as, "%s", buf);
+				
+			} else {
+				cl_log(log_as, "%s: %s", function, buf);
+			}
 		}
 		
 		if(nbytes > MAXLINE) {

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.9 2005/02/01 22:51:14 andrew Exp $ */
+/* $Id: main.c,v 1.10 2005/02/03 14:20:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -71,29 +71,13 @@ main(int argc, char ** argv)
     mkdir(DEVEL_DIR, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 #endif
 
-    /* Redirect messages from glib functions to our handler */
-    g_log_set_handler(NULL,
-		      G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
-		      | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
-		      | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
-		      | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
-		      cl_glib_msg_handler, NULL);
-    /* and for good measure... */
-    g_log_set_always_fatal((GLogLevelFlags)0);    
-
-    cl_log_set_facility(LOG_LOCAL7);
-    cl_log_set_entity(crm_system_name);
-    cl_log_send_to_logging_daemon(TRUE);
-    
-    CL_SIGNAL(DEBUG_INC, alter_debug);
-    CL_SIGNAL(DEBUG_DEC, alter_debug);
+    crm_log_init(crm_system_name);
+    set_crm_log_level(LOG_VERBOSE);
 
     if(stat(DEVEL_DIR, &buf) != 0) {
 	    cl_perror("Stat of %s failed... exiting", DEVEL_DIR);
 	    exit(100);
     }
-    
-    set_crm_log_level(LOG_VERBOSE);
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -119,7 +103,7 @@ main(int argc, char ** argv)
     
     /* read local config file */
     crm_debug("Enabling coredumps");
-    if(cl_set_corerootdir(DEVEL_DIR) < 0){
+    if(cl_set_corerootdir(HA_COREDIR) < 0){
 	    cl_perror("cannot set corerootdir");
     }
     if(cl_enable_coredumps(1) != 0) {
