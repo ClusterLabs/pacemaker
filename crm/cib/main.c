@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.11 2005/02/03 14:20:43 andrew Exp $ */
+/* $Id: main.c,v 1.12 2005/02/09 15:31:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,7 +54,7 @@ extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 GMainLoop*  mainloop = NULL;
 const char* crm_system_name = CRM_SYSTEM_CIB;
-const char *cib_our_uname = NULL;
+char *cib_our_uname = NULL;
 oc_ev_t *cib_ev_token;
 
 void usage(const char* cmd, int exit_status);
@@ -95,7 +95,6 @@ main(int argc, char ** argv)
 				break;
 		}
 	}
-
 
 	cl_set_corerootdir(HA_COREDIR);	    
 	cl_enable_coredumps(1);
@@ -260,6 +259,7 @@ gboolean
 cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
 {
 	int facility;
+	const char *uname = NULL;
 	
 	if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
 		crm_crit("cluster errmsg function unavailable");
@@ -291,11 +291,12 @@ cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	}
 
 	crm_debug("Finding our node name");
-	if ((cib_our_uname =
-	     hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
+	if ((uname = hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
 		crm_err("get_mynodeid() failed");
 		return FALSE;
 	}
+	
+	cib_our_uname = crm_strdup(uname);
 	crm_info("FSA Hostname: %s", cib_our_uname);
 
 	crm_debug("Adding channel to mainloop");
