@@ -57,8 +57,8 @@ More details are given in the annotated DTD below.
      which the CIB validates, the version is implicit... -->
 
 <!ATTLIST cib
-          version      CDATA       #REQUIRED
-          timestamp    CDATA       #REQUIRED>
+	  version      CDATA	   #REQUIRED
+	  timestamp    CDATA	   #REQUIRED>
 
 <!ELEMENT configuration (nodes, resources, constraints, metadata, crm_config)>
 <!-- The most uptodate configuration in the cluster is automatically
@@ -73,14 +73,14 @@ More details are given in the annotated DTD below.
  -->
 
 <!ATTLIST configuration
-          version   CDATA #REQUIRED
-          source    CDATA #REQUIRED
+	  version   CDATA #REQUIRED
+	  source    CDATA #REQUIRED
 	  serial    CDATA #REQUIRED
-          timestamp CDATA #REQUIRED>
+	  timestamp CDATA #REQUIRED>
 
 <!ELEMENT crm_config (nvpair*)>
 
-<!ELEMENT nodes       (node*)>
+<!ELEMENT nodes	      (node*)>
 
 <!-- Each node can have additional attributes, such as "connected to SAN
      subsystem whatever", and then a constraint could include a
@@ -101,11 +101,11 @@ More details are given in the annotated DTD below.
      TODO: Do we need to know about ping nodes...?
      -->
 <!ATTLIST node
-          id            CDATA         #REQUIRED
-	  uname		CDATA         #REQUIRED
-          description   CDATA         #IMPLIED
-	  dc_weight	CDATA         #IMPLIED
-          type          (member|ping) #REQUIRED>
+	  id		CDATA	      #REQUIRED
+	  uname		CDATA	      #REQUIRED
+	  description	CDATA	      #IMPLIED
+	  dc_weight	CDATA	      #IMPLIED
+	  type		(member|ping) #REQUIRED>
 
 <!-- RESOURCES -->
 
@@ -124,55 +124,55 @@ More details are given in the annotated DTD below.
 -->
 <!ELEMENT resource (instance_attributes*)>
 <!ATTLIST resource
-          id                CDATA #REQUIRED
-          description       CDATA #IMPLIED
-          class             (ocf|init|heartbeat|stonith) #REQUIRED
-	  priority          CDATA #IMPLIED
-          type              CDATA #REQUIRED
-	  min_version       CDATA #REQUIRED
+	  id		    CDATA #REQUIRED
+	  description	    CDATA #IMPLIED
+	  class		    (ocf|init|heartbeat|stonith) #REQUIRED
+	  priority	    CDATA #IMPLIED
+	  type		    CDATA #REQUIRED
+	  min_version	    CDATA #REQUIRED
 
-	  start_timeout     CDATA #REQUIRED
-	  stop_timeout      CDATA #REQUIRED
-	  def_timeout       CDATA #REQUIRED
+	  start_timeout	    CDATA #REQUIRED
+	  stop_timeout	    CDATA #REQUIRED
+	  def_timeout	    CDATA #REQUIRED
 
-	  on_stopfail       (ignore|stonith|block)      'block'
-	  restart_type      (ignore|restart|recover)    'ignore'
+	  on_stopfail	    (ignore|stonith|block)	'block'
+	  restart_type	    (ignore|restart|recover)	'ignore'
 
-	  post_event_notify (true|false)                'false'
-	  pre_event_notify  (true|false)                'false'>
+	  post_event_notify (true|false)		'false'
+	  pre_event_notify  (true|false)		'false'>
 
 
 <!ELEMENT resource_group (resource+)>
 <!ATTLIST resource_group
-          id               CDATA		    #REQUIRED
-          description      CDATA                    #IMPLIED
-	  priority         CDATA                    #IMPLIED
-	  on_stopfail      (ignore|stonith|block)   'block'
-	  restart_type     (ignore|restart|recover) 'ignore'>
+	  id		   CDATA		    #REQUIRED
+	  description	   CDATA		    #IMPLIED
+	  priority	   CDATA		    #IMPLIED
+	  on_stopfail	   (ignore|stonith|block)   'block'
+	  restart_type	   (ignore|restart|recover) 'ignore'>
 
 <!ELEMENT incarnation (resource|group)>
 <!ATTLIST incarnation
-          id                    CDATA		         #REQUIRED
-          description           CDATA                    #IMPLIED
-	  priority              CDATA                    #IMPLIED
-	  on_stopfail           (ignore|stonith|block)   'block'
-	  restart_type          (ignore|restart|recover) 'ignore'
-	  ordered	        (true|false)		 'true'
-	  interleave	        (true|false)		 'false'
-	  max_incarnations      CDATA                    #REQUIRED
-	  max_node_incarnations CDATA                    #REQUIRED>
+	  id			CDATA			 #REQUIRED
+	  description		CDATA			 #IMPLIED
+	  priority		CDATA			 #IMPLIED
+	  on_stopfail		(ignore|stonith|block)	 'block'
+	  restart_type		(ignore|restart|recover) 'ignore'
+	  ordered		(true|false)		 'true'
+	  interleave		(true|false)		 'false'
+	  max_incarnations	CDATA			 #REQUIRED
+	  max_node_incarnations CDATA			 #REQUIRED>
 
 <!ELEMENT master_slave (incarnation)>
 <!ATTLIST master_slave
-          id               CDATA		    #REQUIRED
-          description      CDATA                    #IMPLIED
-	  priority         CDATA                    #IMPLIED
-	  on_stopfail      (ignore|stonith|block)   'block'
-	  restart_type     (ignore|restart|recover) 'ignore'
+	  id		   CDATA		    #REQUIRED
+	  description	   CDATA		    #IMPLIED
+	  priority	   CDATA		    #IMPLIED
+	  on_stopfail	   (ignore|stonith|block)   'block'
+	  restart_type	   (ignore|restart|recover) 'ignore'
 	  ordered	   (true|false)		    'true'
 	  interleave	   (true|false)		    'false'
-	  max_masters      CDATA                    #REQUIRED
-	  max_node_masters CDATA                    #REQUIRED>
+	  max_masters	   CDATA		    #REQUIRED
+	  max_node_masters CDATA		    #REQUIRED>
 
 <!--
 
@@ -233,7 +233,7 @@ More details are given in the annotated DTD below.
 	  to	    CDATA #REQUIRED
 	  lifetime  CDATA #IMPLIED
 	  timestamp CDATA #REQUIRED
-	  type      (before|after)>
+	  type	    (before|after)>
 
 <!ELEMENT rsc_dependancy EMPTY>
 <!ATTLIST rsc_dependancy
@@ -242,7 +242,7 @@ More details are given in the annotated DTD below.
 	  to	    CDATA #REQUIRED
 	  lifetime  CDATA #IMPLIED
 	  timestamp CDATA #REQUIRED
-	  type      (must|mustnot) #REQUIRED>
+	  type	    (must|mustnot) #REQUIRED>
 
 <!-- Specify which nodes are eligible for running a given resource. 
      
@@ -267,13 +267,13 @@ More details are given in the annotated DTD below.
 <!ATTLIST rsc_location
 	  id	      CDATA #REQUIRED
 	  description CDATA #IMPLIED
-	  rsc         CDATA #REQUIRED
+	  rsc	      CDATA #REQUIRED
 	  lifetime    CDATA #IMPLIED
 	  timestamp   CDATA #IMPLIED>
 
 <!--
 
-    A special case exists when no node_expressions are present.  In this case
+    A special case exists when no node_expressions are present.	 In this case
     the rule applies to all nodes.
 
     "score" adjusts the prefernce for running on the matched nodes.  Nodes that
@@ -288,10 +288,10 @@ More details are given in the annotated DTD below.
 -->
 <!ELEMENT rule (expression*)>
 <!ATTLIST rule
-	  id         CDATA        #REQUIRED
-	  score      CDATA        #IMPLIED
+	  id	     CDATA	  #REQUIRED
+	  score	     CDATA	  #IMPLIED
 	  result     (can|cannot) #IMPLIED
-	  boolean_op (or|and)     'and'>
+	  boolean_op (or|and)	  'and'>
 
 <!--
     Reference a set of nodes, either by directly specifying a node id,
@@ -310,8 +310,8 @@ More details are given in the annotated DTD below.
     Additionally, the "running" and "not_running" tests checks to see if
       the value specified for "attribute" is a resource that is (not) running
       on the node.  So these would both be valid tests.
-        attribute=myWebServer operation=running, and
-        attribute=myWebServer operation=not_running
+	attribute=myWebServer operation=running, and
+	attribute=myWebServer operation=not_running
 
     "type" determines how the values being tested.
       For "integer", they would be converted into a number format (probably
@@ -322,10 +322,10 @@ More details are given in the annotated DTD below.
 
 <!ELEMENT expression EMPTY>
 <!ATTLIST expression
-	  id         CDATA                    #REQUIRED
-	  attribute  CDATA                    #REQUIRED
+	  id	     CDATA		      #REQUIRED
+	  attribute  CDATA		      #REQUIRED
 	  operation  (lt|gt|lte|gte|eq|ne|exists|notexists|running|not_running)
-	  value      CDATA                    #IMPLIED
+	  value	     CDATA		      #IMPLIED
 	  type	     (integer|string|version) 'string'>
 
 
@@ -352,16 +352,16 @@ More details are given in the annotated DTD below.
 -->
 <!ELEMENT ra_entry (parameters)>
 <!ATTLIST ra_entry 
-	id	   CDATA                        #REQUIRED
+	id	   CDATA			#REQUIRED
 <!-- possibly: version CDATA #REQUIRED -->
-        class      (ocf|init|heartbeat|stonith)	#REQUIRED
-	type	   CDATA                        #REQUIRED>
+	class	   (ocf|init|heartbeat|stonith)	#REQUIRED
+	type	   CDATA			#REQUIRED>
 
 <!-- STATUS SECTION -->
 <!-- Details about the status of each node configured.
 
      In places, a "source" attribute has been added so that the CRM is able
-     to know where this information came from.  This is helpful during the
+     to know where this information came from.	This is helpful during the
      merging process (performed by a new DC and perhaps periodically) as it
      allows the CRM to allow nodes to be authoritive about themselves if
      appropriate (ie. which resources it is running, but perhaps not always
@@ -386,7 +386,7 @@ More details are given in the annotated DTD below.
 	dc_uname   CDATA #REQUIRED>
 
 
-<!-- 	The state of a given node.  
+<!--	The state of a given node.  
 	
 	This information is updated by the DC based on inputs from 
 	sources such as the CCM, status messages from remote LRMs and 
@@ -402,15 +402,15 @@ More details are given in the annotated DTD below.
 	"unclean" is set to the current time when the node leaves the 
 	cluster ungracefully and is an indication that the node 
 	needs to be shot.  Any invokation of the PE while this attibute
-        will result in a STONITH op being sent to the TE (which may or
-        may not get to invoke it if the transition is aborted).
+	will result in a STONITH op being sent to the TE (which may or
+	may not get to invoke it if the transition is aborted).
 
-        Setting "clear_unclean" will unset this field.  Normally this is
-        after the Transitioner has successfully shot the node, OR the node
+	Setting "clear_unclean" will unset this field.	Normally this is
+	after the Transitioner has successfully shot the node, OR the node
 	rejoins the cluster cleanly.
 
-        "shutdown" and "clear_shutdown" operate in the same manner as
-        above but for shutting down the CRMd.
+	"shutdown" and "clear_shutdown" operate in the same manner as
+	above but for shutting down the CRMd.
 
 	"expected" is our expectation of the state. This requires some
 	book-keeping on the part of the other nodes to remember the last
@@ -422,10 +422,10 @@ More details are given in the annotated DTD below.
 	last updated the "node_state" entry.
 
 	There is a period of time between when we recognise the node
-	is unlean and when it is shot.  The "assassin" attribute records the
-        name of the node which has been asked to shoot it.
+	is unlean and when it is shot.	The "assassin" attribute records the
+	name of the node which has been asked to shoot it.
 
- 	A node which is expected == down && join == member is, in
+	A node which is expected == down && join == member is, in
 	fact, going down. The Policy Engine will migrate resources away
 	from it.
 	
@@ -435,15 +435,15 @@ More details are given in the annotated DTD below.
 <!ELEMENT node_state (lrm, attributes)>
 <!ATTLIST node_state
 	id		CDATA			#REQUIRED
-	crmd	  	(online|offline)        'offline'
-	join	  	(pending|member|down)	'down'
+	crmd		(online|offline)	'offline'
+	join		(pending|member|down)	'down'
 	expected	(pending|member|down)	'down'
-	in_ccm	  	(true|false)		'false'
+	in_ccm		(true|false)		'false'
 	unclean		CDATA			#IMPLIED
 	shutdown	CDATA			#IMPLIED
 	clear_unclean	CDATA			#IMPLIED
 	clear_shutdown	CDATA			#IMPLIED
-	assassin        CDATA                   #IMPLIED
+	assassin	CDATA			#IMPLIED
 	source		CDATA			#IMPLIED
 	timestamp	CDATA			#REQUIRED>
 
@@ -453,7 +453,7 @@ More details are given in the annotated DTD below.
      
 <!ELEMENT lrm (lrm_resources,lrm_agents)>
 <!ATTLIST lrm
-        id      CDATA #REQUIRED
+	id	CDATA #REQUIRED
 	version	CDATA #REQUIRED>
 
 <!-- TODO: Need to define howto handle agents provided by multiple
@@ -463,16 +463,16 @@ More details are given in the annotated DTD below.
 
 <!ELEMENT lrm_agent (resource-agent?)>
 <!ATTLIST lrm_agent
-	type	CDATA                        #REQUIRED
+	type	CDATA			     #REQUIRED
 	class	(ocf|init|heartbeat|stonith) #REQUIRED
-	version CDATA                        #REQUIRED>
+	version CDATA			     #REQUIRED>
 
 <!-- TODO: In fact, this should reference the OCF RA DTD for class ==
 	   ocf, but I don't know how to specify that ;-)
 
      "last_op" records the last known operation invoked on a resource/node 
-        combination.  It is either supplied by the LRM or updated by the
-        Transitioner when an action is invoked.
+	combination.  It is either supplied by the LRM or updated by the
+	Transitioner when an action is invoked.
 
      "op_code" is supplied by the LRM and conforms to this enum:
 typedef enum {
@@ -493,19 +493,19 @@ typedef enum {
 
 <!ELEMENT rsc_state (can_fence)*>
 <!ATTLIST rsc_state
-          id		CDATA #REQUIRED
-          rsc_id	CDATA #REQUIRED
-          node_id	CDATA #IMPLIED
+	  id		CDATA #REQUIRED
+	  rsc_id	CDATA #REQUIRED
+	  node_id	CDATA #IMPLIED
 	  ra_state	(stopped|starting|started|fail|restarting|stopping|stop_fail)
-	  			#REQUIRED
+				#REQUIRED
 	  last_op	CDATA #REQUIRED
 	  op_code	CDATA #REQUIRED
-          timestamp	CDATA #REQUIRED>
+	  timestamp	CDATA #REQUIRED>
 
 <!-- id is the uname of the node that can be fenced by this resource -->
 <!ELEMENT can_fence EMPTY>
 <!ATTLIST can_fence
-          id		CDATA #REQUIRED>
+	  id		CDATA #REQUIRED>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
@@ -532,7 +532,7 @@ typedef enum {
 
 <!ELEMENT synapse (inputs,action_set)>
 <!ATTLIST synapse
-	  id	CDATA           #REQUIRED
+	  id	CDATA		#REQUIRED
 	  reset	(no|yes|greedy) 'greedy'>
 
 <!ELEMENT inputs (trigger+)>
@@ -573,7 +573,7 @@ typedef enum {
      "runnable" should probably be removed and is a legacy of development
 
      "optional" indicates to the Transitioner that the action is available
-     but not manditory.  This is useful when resources depend on others which
+     but not manditory.	 This is useful when resources depend on others which
      may or may not need to be moved/restarted.
 
      "discard" may or not be needed - i need to check but the intention was
@@ -588,27 +588,27 @@ typedef enum {
 
 <!ELEMENT rsc_op (resource)>
 <!ATTLIST rsc_op
-	id	   CDATA        #REQUIRED
+	id	   CDATA	#REQUIRED
 	runnable   (true|false) 'true'
 	optional   (true|false) 'false'
-	discard    (true|false) 'false'
+	discard	   (true|false) 'false'
 	allow_fail (true|false) 'false'
-	on_node	   CDATA        #REQUIRED
+	on_node	   CDATA	#REQUIRED
 	operation  CDATA	#REQUIRED>
 
 <!-- For added flexibility, an action can trigger an event, which is
      then consumed somewhere else. Woah. Cool. 
 
 Andrew:
-     not sure these will be required long-term.  right now they are used
+     not sure these will be required long-term.	 right now they are used
      for STONITTH ops but that should change once they become resources.
 -->
 <!ELEMENT pseudo_event EMPTY>
 <!ATTLIST pseudo_event
-	id	   CDATA        #REQUIRED
+	id	   CDATA	#REQUIRED
 	runnable   (true|false) 'true'
 	optional   (true|false) 'false'
-	discard    (true|false) 'false'
+	discard	   (true|false) 'false'
 	allow_fail (true|false) 'false'>
 	
 <!-- crm_event: We can instruct a crmd to shutdown (maybe the whole node?),
@@ -616,12 +616,12 @@ Andrew:
 -->
 <!ELEMENT crm_event EMPTY>
 <!ATTLIST crm_event
-	id	   CDATA        #REQUIRED
+	id	   CDATA	#REQUIRED
 	runnable   (true|false) 'true'
 	optional   (true|false) 'false'
-	discard    (true|false) 'false'
+	discard	   (true|false) 'false'
 	allow_fail (true|false) 'false'
-	on_node	   CDATA        #REQUIRED
+	on_node	   CDATA	#REQUIRED
 	operation (shutdown|signout|signup|election) #REQUIRED>
 
 <!-- ============================================================== -->
@@ -636,11 +636,11 @@ Andrew:
 
 <!ELEMENT crm_message (msg_addr,msg_addr,operation,op_reply?,msg_data)>
 <!ATTLIST crm_message
-          version	CDATA '1'
+	  version	CDATA '1'
 	  type		(request|reply)	#REQUIRED
 	  id		CDATA		#REQUIRED
 	  reference	CDATA		#IMPLIED
-          timestamp	CDATA		#REQUIRED>
+	  timestamp	CDATA		#REQUIRED>
 
 <!ELEMENT msg_addr EMPTY>
 <!ATTLIST msg_addr
@@ -666,15 +666,15 @@ Andrew:
 <!ELEMENT operation (nvpair*)>
 <!ATTLIST operation
 	  op (noop|bump|query|create|update|delete|erase|store|replace|forward|join_ack|welcome|ping|vote|hello|announce|dc_beat|pe_calc|abort|quit|shutdown_crm|event_cc|te_abort|transition|te_complete|req_shutdown) 'noop'
-          verbose	(true|false)	#IMPLIED
-	  timeout	CDATA    	#REQUIRED>
+	  verbose	(true|false)	#IMPLIED
+	  timeout	CDATA		#REQUIRED>
 
 <!-- verbose reply for user consumption, may be useful. -->
 <!ELEMENT op_reply EMPTY>
 <!ATTLIST op_reply
 	  result	(ok|fail)	#REQUIRED
-          verbose	CDATA		#IMPLIED
-          timestamp	CDATA		#REQUIRED>
+	  verbose	CDATA		#IMPLIED
+	  timestamp	CDATA		#REQUIRED>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
@@ -711,18 +711,18 @@ Andrew:
 
 <!ELEMENT parameter (longdesc+,shortdesc+,content)>
 <!ATTLIST parameter
-        name    CDATA   #REQUIRED
-        unique  (1|0)   '0'>
+	name	CDATA	#REQUIRED
+	unique	(1|0)	'0'>
 
 <!ELEMENT longdesc ANY>
 <!ATTLIST longdesc
-        lang    NMTOKEN #IMPLIED>
+	lang	NMTOKEN #IMPLIED>
 
 <!ELEMENT shortdesc ANY>
 <!ATTLIST shortdesc
-        lang    NMTOKEN #IMPLIED>
+	lang	NMTOKEN #IMPLIED>
 
 <!ELEMENT content EMPTY>
 <!ATTLIST content
-        type    (string|integer|boolean) #REQUIRED
-        default CDATA                    #IMPLIED>
+	type	(string|integer|boolean) #REQUIRED
+	default CDATA			 #IMPLIED>
