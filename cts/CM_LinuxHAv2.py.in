@@ -139,18 +139,6 @@ class LinuxHAv2(HeartbeatCM):
 #        CTSaudits.AllAuditClasses = [CrmdStateAudit, HAResourceAudit]
         CTSaudits.AllAuditClasses = [CrmdStateAudit, PartitionAudit]
     
-    def errorstoignore(self):
-        '''Return list of errors which are 'normal' and should be ignored'''
-        if 0:
-            return [ "heartbeat.*ERROR: Respawning client \"/usr/lib/heartbeat/ha_logd\"",
-                     "heartbeat.*ERROR: Irretrievably lost packet",
-                     "heartbeat.*ERROR: Cannot rexmit pkt .*: seqno too low",
-                     "heartbeat.*ERROR: Cannot rexmit pkt .*: seqno not found",
-                     "heartbeat.*ERROR: channel is not connected",
-                     "ccm: .*ERROR: .*dropping message of type.*Is this a Byzantime failure?"
-                     ]
-        return []
-
 
     def StataCM(self, node):
 
