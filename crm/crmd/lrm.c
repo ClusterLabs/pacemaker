@@ -52,6 +52,8 @@ enum crmd_fsa_input do_fake_lrm_op(gpointer data);
 
 GHashTable *xml2list(xmlNodePtr parent, const char **attr_path, int depth);
 GHashTable *monitors = NULL;
+int num_lrm_register_fails = 0;
+int max_lrm_register_fails = 0;
 
 const char *rsc_path[] = 
 {
@@ -69,7 +71,7 @@ do_lrm_control(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input current_input,
-	       void *data)
+	       fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input failed = I_FAIL;
 	int ret = HA_OK;
@@ -97,8 +99,21 @@ do_lrm_control(long long action,
 			fsa_lrm_conn, CRM_SYSTEM_CRMD);
 		
 		if(ret != HA_OK) {
-			crm_err("Failed to sign on to the LRM");
-			return failed;
+			if(++num_lrm_register_fails < max_lrm_register_fails) {
+				crm_warn("Failed to sign on to the LRM %d times",
+					 num_lrm_register_fails);
+				
+				if(wait_timer->source_id < 0) {
+					startTimer(wait_timer);
+				}
+
+				return I_WAIT_FOR_EVENT;
+
+			} else {
+				crm_err("Failed to sign on to the LRM %d (max) times",
+					num_lrm_register_fails);
+				return failed;
+			}
 		}
 		
 		crm_trace("LRM: set_lrm_callback...");
@@ -119,6 +134,8 @@ do_lrm_control(long long action,
 			      lrm_dispatch, fsa_lrm_conn,
 			      default_ipc_input_destroy);
 
+		set_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+		
 	}	
 
 	if(action & ~(A_LRM_CONNECT|A_LRM_DISCONNECT)) {
@@ -344,7 +361,7 @@ do_lrm_invoke(long long action,
 	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input current_input,
-	      void *data)
+	      fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input next_input = I_NULL;
 	xmlNodePtr msg;
@@ -354,11 +371,7 @@ do_lrm_invoke(long long action,
 	const char *crm_op = NULL;
 	lrm_rsc_t *rsc = NULL;
 
-#ifdef USE_FAKE_LRM
-	return do_fake_lrm_op(data);
-#endif
-	
-	msg = (xmlNodePtr)data;
+	msg = (xmlNodePtr)msg_data->data;
 		
 	operation = get_xml_attr_nested(
 		msg, rsc_path, DIMOF(rsc_path) -3, XML_LRM_ATTR_TASK, TRUE);
@@ -617,34 +630,32 @@ do_lrm_event(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input cur_input,
-	     void *data)
+	     fsa_data_t *msg_data)
 {
+	lrm_op_t* op = NULL;
+	lrm_rsc_t* rsc = NULL;
 	
-	if(cause == C_LRM_OP_CALLBACK) {
-		lrm_op_t* op = (lrm_op_t*)data;
-		lrm_rsc_t* rsc = op->rsc;
-
-		crm_debug("Processing %d event for %s/%s",
-			  op->op_status, op->op_type, rsc->id);
-		
-		switch(op->op_status) {
-			case LRM_OP_ERROR:
-			case LRM_OP_CANCELLED:
-			case LRM_OP_TIMEOUT:
-			case LRM_OP_NOTSUPPORTED:
-				crm_err("An LRM operation failed"
-					" or was aborted");
-				/* fall through */
-			case LRM_OP_DONE:
-				do_update_resource(rsc, op);
-
-
-				break;
-		}
-		
-	} else {
-
+	if(msg_data->fsa_cause != C_LRM_OP_CALLBACK) {
 		return I_FAIL;
+	}
+	
+	op = (lrm_op_t*)msg_data->data;
+	rsc = op->rsc;
+	
+	crm_debug("Processing %d event for %s/%s",
+		  op->op_status, op->op_type, rsc->id);
+	
+	switch(op->op_status) {
+		case LRM_OP_ERROR:
+		case LRM_OP_CANCELLED:
+		case LRM_OP_TIMEOUT:
+		case LRM_OP_NOTSUPPORTED:
+			crm_err("An LRM operation failed"
+				" or was aborted");
+			/* fall through */
+		case LRM_OP_DONE:
+			do_update_resource(rsc, op);
+			break;
 	}
 	
 	return I_NULL;
