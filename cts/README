@@ -211,6 +211,55 @@ If not, you need to look at the ssh/openssh documentation and the output from
 the -v options above...
 
 --------------------------------------------------------------------------------
+How to redirect linux-HA logging the way CTS wants it using syslog-ng
+--------------------------------------------------------------------------------
+
+why syslong-ng:
+        Syslog-ng can use tcp and guarantee availability of logs. It is important
+we get every log message or our test may fail with lost of some important messages.
+
+The following instructions apply to RedHat systems:
+
+1)      Redirect each machines to go (at least) to syslog local7:
+
+        Change /etc/ha.d/ha.cf on each test machine to say this:
+
+logfacility local7
+
+
+2)      On all machines: download syslog-ng rpm and install it.
+        Or you can download its source at http://www.balabit.com/products/syslog_ng/,
+        compile and install it.
+
+3)      On all machines: stop syslog and disable it on reboot
+        
+$ /etc/init.d/syslog stop
+$ chkconfig --level 2345 syslog off
+
+4)      In testmonitor-machine, add the source and destination for remote log in the
+        file /etc/syslog-ng/syslong-ng.conf. You can change the port number to
+        other number, but it must be the same with the port number in slave machines
+        (see 4)
+
+source s_tcp { tcp(port(15789) max-connections(10)); }; 
+destination     d_ha  { file("/var/log/ha-log-local7"); };
+log { source(s_tcp); destination(d_ha); };
+
+5)      In slave machines, send log out to a remote machine
+	add the following lines to /etc/syslog-ng/syslong-ng.conf
+        after the definition of f_boot. 
+	Note the port number must be the same with 3)
+	Change the ip to the testmonitor machine's ip
+
+filter          f_boot  { facility(local7); }; /* this line is already in file*/
+destination d_tcp { tcp("192.168.0.3" port(15789));};
+log { source(s_sys); filter(f_boot); destination(d_tcp); };
+        
+6)      start syslog-ng in all machines 
+
+$/etc/init.d/syslog-ng start
+
+--------------------------------------------------------------------------------
 How to redirect linux-HA logging CTS wants with evlog
 --------------------------------------------------------------------------------
 
