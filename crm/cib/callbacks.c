@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.1 2004/12/05 16:14:07 andrew Exp $ */
+/* $Id: callbacks.c,v 1.2 2004/12/05 19:22:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -309,7 +309,7 @@ cib_common_callback(
 
 		if(rc == cib_ok) {
 			crm_trace("Checking call options");
-			cl_get_int(op_request, F_CIB_CALLOPTS, &call_options);
+			ha_msg_value_int(op_request, F_CIB_CALLOPTS, &call_options);
 			crm_trace("Call options: %.8lx", (long)call_options);
 			
 			crm_trace("Retrieving command");
@@ -407,7 +407,7 @@ cib_process_command(const struct ha_msg *request, struct ha_msg **reply,
 	/* Start processing the request... */
 	op = cl_get_string(request, F_CIB_OPERATION);
 	call_id = cl_get_string(request, F_CIB_CALLID);
-	cl_get_int(request, F_CIB_CALLOPTS, &call_options);
+	ha_msg_value_int(request, F_CIB_CALLOPTS, &call_options);
 
 	crm_trace("Processing call id: %s", call_id);
 	
@@ -634,7 +634,7 @@ cib_peer_callback(const struct ha_msg* msg, void* private_data)
 		ha_msg_add(op_reply, F_CIB_ISREPLY, originator);
 	}
 	
-	cl_get_int(msg, F_CIB_CALLOPTS, &call_options);
+	ha_msg_value_int(msg, F_CIB_CALLOPTS, &call_options);
 	crm_trace("Retrieved call options: %d", call_options);
 
 	
