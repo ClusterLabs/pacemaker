@@ -45,9 +45,11 @@
 #define PIL_PLUGINLICENSEURL	URL_PUBDOM
 
 static const char * RA_PATH = HB_RA_DIR;
+static const int status_op_exitcode_map[] = { 0, 11, 12, 13, 14 };
 
 /* The begin of exported function list */
-static int execra(const char * rsc_type,
+static int execra(const char * rsc_id,
+		  const char * rsc_type,
 		  const char * provider,
 		  const char * op_type,
 	 	  GHashTable * params);
@@ -142,8 +144,8 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
  */
 
 static int 
-execra( const char * rsc_type, const char * provider, const char * op_type, 
-	GHashTable * params)
+execra( const char * rsc_id, const char * rsc_type, const char * provider,
+	const char * op_type, GHashTable * params)
 {
 	RA_ARGV params_argv;
 	char ra_pathname[RA_MAX_NAME_LENGTH];
@@ -237,10 +239,21 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 static uniform_ret_execra_t 
 map_ra_retvalue(int ret_execra, const char * op_type)
 {
-	/* Now there is no related specification for Heartbeat standard.
-	 * Temporarily deal as below.
+	/* Now there is no formal related specification for Heartbeat RA 
+	 * scripts. Temporarily deal as LSB init script.
 	 */
-	return ret_execra;
+	/* Except op_type equals 'status', the UNIFORM_RET_EXECRA is compatible
+	   with LSB standard.
+	*/
+	if ( strncmp(op_type, "status", strlen("status")) == 0 ) {
+		if (ret_execra < 0 || ret_execra > 4 ) {
+			ret_execra = 4;
+		}
+		return status_op_exitcode_map[ret_execra];
+	} else
+	{
+		return ret_execra;
+	}
 }
 
 static int 
