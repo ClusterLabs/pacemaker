@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.12 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: cib.c,v 1.13 2004/03/05 12:58:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -174,7 +174,10 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 	
 	CRM_DEBUG2("Processed %d messages", lpc);
 	if (sender->ch_status == IPC_DISCONNECT) {
-		cl_log(LOG_INFO, "the sender has left us: received HUP");
+		cl_log(LOG_ERR, "The server has left us: Shutting down...NOW");
+
+		exit(1); // shutdown properly later
+		
 		FNRET(!all_is_well);
 	}
 	FNRET(all_is_well);
