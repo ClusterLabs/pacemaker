@@ -149,7 +149,7 @@ cts_assert Adding constraint2 did not pass
 #----
 
 do_cmd echo Create the first resource and wait for S_IDLE after start
-args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
+args="<nvpair name=\\\"1\\\" value=\\\"${ip_rsc_1}\\\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - - $args
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
@@ -161,7 +161,7 @@ cts_assert Adding rsc1 did not pass
 #----
 
 do_cmd echo Create the second resource and wait for S_IDLE after start
-args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
+args="<nvpair name=\\\"1\\\" value=\\\"${ip_rsc_2}\\\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - - $args
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
