@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.2 2004/07/30 15:31:04 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.3 2004/08/03 09:17:29 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -674,7 +674,7 @@ do_find_resource_list(xmlNodePtr xml_node)
 		found++;
 	}
 	if(found == 0) {
-		printf("no resources configured\n");
+		printf("NO resources configured\n");
 	}
 					
 	return found;
@@ -694,17 +694,17 @@ do_find_node_list(xmlNodePtr xml_node)
 		xml_node, path, DIMOF(path));
 
 	while(nodes != NULL) {
-		printf("%s node %s: %s\n",
+		printf("%s node: %s (%s)\n",
 		       xmlGetProp(nodes, XML_ATTR_TYPE),
-		       xmlGetProp(nodes, XML_ATTR_ID),
-		       xmlGetProp(nodes, XML_ATTR_UNAME));
+		       xmlGetProp(nodes, XML_ATTR_UNAME),
+		       xmlGetProp(nodes, XML_ATTR_ID));
 
 		nodes = nodes->next;
 
 		found++;
 	}
 	if(found == 0) {
-		printf("No resources configured\n");
+		printf("NO nodes configured\n");
 	}
 					
 	return found;
