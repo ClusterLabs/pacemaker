@@ -369,7 +369,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		else IF_FSA_ACTION(A_DC_JOIN_OFFER_ONE,	 do_dc_join_offer_one)
 		else IF_FSA_ACTION(A_DC_JOIN_PROCESS_REQ,do_dc_join_req)
 		else IF_FSA_ACTION(A_DC_JOIN_PROCESS_ACK,do_dc_join_ack)
-		else IF_FSA_ACTION(A_DC_JOIN_FINALIZE,	 do_dc_join_finalize)
 		
 		/*
 		 * Low(er) priority actions
@@ -378,6 +377,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 */
 		else IF_FSA_ACTION(A_CIB_INVOKE_LOCAL,	do_cib_invoke)
 		else IF_FSA_ACTION(A_CIB_INVOKE,	do_cib_invoke)
+		else IF_FSA_ACTION(A_DC_JOIN_FINALIZE,	do_dc_join_finalize)
 		else IF_FSA_ACTION(A_LRM_INVOKE,	do_lrm_invoke)
 		else IF_FSA_ACTION(A_LRM_EVENT,		do_lrm_event)
 		else IF_FSA_ACTION(A_TE_CANCEL,		do_te_invoke)
