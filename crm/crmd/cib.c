@@ -47,6 +47,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 struct crm_subsystem_s *cib_subsystem = NULL;
+void crmd_update_confirm(const char *event, struct ha_msg *msg);
 
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
 enum crmd_fsa_input
@@ -63,7 +64,9 @@ do_cib_control(long long action,
 	long long start_actions = A_CIB_START;
 
 	if(action & stop_actions) {
-		fsa_cib_conn->cmds->signoff(fsa_cib_conn);
+		if(fsa_cib_conn->state != cib_disconnected) {
+			fsa_cib_conn->cmds->signoff(fsa_cib_conn);
+		}
 	}
 
 	if(action & start_actions) {
@@ -72,6 +75,13 @@ do_cib_control(long long action,
 			if(fsa_cib_conn->cmds->signon(
 				   fsa_cib_conn, cib_command) != cib_ok) {
 				result = I_FAIL;
+				crm_err("Could not connect to the CIB service");
+				
+			} else if(fsa_cib_conn->cmds->add_notify_callback(
+					  fsa_cib_conn, T_CIB_UPDATE_CONFIRM,
+					  crmd_update_confirm) != cib_ok) {
+				result = I_FAIL;
+				crm_err("Could not set notify callback");
 			}
 			
 		} else {
@@ -139,22 +149,11 @@ do_cib_invoke(long long action,
 				crm_xml_devel(answer, "Couldnt route: ");
 				result = I_ERROR;
 			}
-#if 0			
-//			---# do in CIB notify callbacks #---
-				
-		} else if(strcmp(op, CRM_OP_RETRIVE_CIB) == 0) {
-			crm_info("Retrieved latest CIB from %s", host_from);
-			set_bit_inplace(fsa_input_register,R_HAVE_CIB);
-		} else if(strcmp(op, CRM_OP_CIB_ERASE) == 0) {
-			/* regenerate everyone's state and our node entry */
-			register_fsa_input(C_UNKNOWN, I_ELECTION_DC, NULL);
-#endif		
 		}
 		
 		/* the TENGINE will get CC'd by other means. */
 		if(AM_I_DC
 		   && sys_from != NULL
-		   && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE) 
 		   && safe_str_neq(sys_from, CRM_SYSTEM_CRMD)
 		   && safe_str_neq(sys_from, CRM_SYSTEM_DC)
 		   && relay_message(answer, TRUE) == FALSE) {
@@ -194,4 +193,23 @@ update_local_cib(xmlNodePtr msg_data, gboolean callbacks)
 		result = I_FAIL;
 	}
 	return result;
+}
+
+void
+crmd_update_confirm(const char *event, struct ha_msg *msg)
+{
+	int rc = -1;
+	const char *op = cl_get_string(msg, F_CIB_OPERATION);
+
+	ha_msg_value_int(msg, F_CIB_RC, &rc);
+
+	if(rc != cib_ok) {
+		crm_trace("Ignoring failed CIB update");
+		return;
+	}
+	
+	if(safe_str_eq(op, CRM_OP_CIB_ERASE)) {
+		/* regenerate everyone's state and our node entry */
+		register_fsa_input(C_UNKNOWN, I_ELECTION_DC, NULL);
+	}
 }
