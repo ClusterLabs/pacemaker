@@ -176,7 +176,6 @@ cts_assert "S_PENDING not reached on $test_node_2!"
 # escalate the shutdown
 do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmadmin -K $test_node_2 &
 
-OUTPUT_STDOUT=1
 do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_2} crmd(.*)State transition \"S_PENDING\" -> \"S_STOPPING\""
 cts_assert "Shutdown of ${test_node_2} failed."
 

@@ -94,8 +94,8 @@ do_lrm_control(long long action,
 		}
 		
 		crm_trace("LRM: sigon...");
-		ret = fsa_lrm_conn->lrm_ops->signon(fsa_lrm_conn,
-						    CRM_SYSTEM_CRMD);
+		ret = fsa_lrm_conn->lrm_ops->signon(
+			fsa_lrm_conn, CRM_SYSTEM_CRMD);
 		
 		if(ret != HA_OK) {
 			crm_err("Failed to sign on to the LRM");
