@@ -569,7 +569,7 @@ do_state_transition(long long actions,
 			   != fsa_membership_copy->members_size) {
 				crm_warn("Only %d (of %d) cluster nodes are"
 					 " eligable to run resources.",
-					 g_hash_table_size(joined_nodes),
+					 1+g_hash_table_size(joined_nodes),
 					 fsa_membership_copy->members_size);
 			} else {
 				crm_info("All %d clusters nodes are"
