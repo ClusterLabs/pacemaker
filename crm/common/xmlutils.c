@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.28 2004/05/18 09:44:36 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.29 2004/05/23 19:20:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -451,7 +451,7 @@ xml_message_debug(xmlNodePtr msg, const char *text)
 	CRM_DEBUG("%s: %s",
 		   text==NULL?"<null>":text,
 		   msg_buffer==NULL?"<null>":msg_buffer);
-	cl_free(msg_buffer);
+	crm_free(msg_buffer);
 	FNOUT();
 }
 
@@ -478,14 +478,14 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 	} else {
 #ifdef XML_TRACE
 		CRM_DEBUG("mem used by xml: %d", xmlMemUsed());
-#endif    
 		xmlMemoryDump ();
+#endif    
 	
 		xml_buffer = xmlBufferCreate();
 		msg_size = xmlNodeDump(xml_buffer, msg->doc, msg, 0, 0);
 
 		xml_message =
-			(xmlChar*)cl_strdup(xmlBufferContent(xml_buffer)); 
+			(xmlChar*)crm_strdup(xmlBufferContent(xml_buffer)); 
 		xmlBufferFree(xml_buffer);
 
 		if (!xml_message) {
@@ -494,6 +494,8 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 		}
 	}
 
+	xmlCleanupParser();
+	
 	// HA wont send messages with newlines in them.
 	for(; xml_message != NULL && lpc < msg_size; lpc++)
 		if (xml_message[lpc] == '\n')
@@ -554,8 +556,8 @@ set_xml_property_copy(xmlNodePtr node,
 		xmlUnsetProp(node, local_name);
 		
 	} else {
-		local_value = cl_strdup(value);
-		local_name = cl_strdup(name);
+		local_value = crm_strdup(value);
+		local_name = crm_strdup(name);
 		ret_value = xmlSetProp(node, local_name, local_value);
 	}
 	
@@ -573,7 +575,7 @@ create_xml_node(xmlNodePtr parent, const char *name)
 	if (name == NULL || strlen(name) < 1) {
 		ret_value = NULL;
 	} else {
-		local_name = cl_strdup(name);
+		local_name = crm_strdup(name);
 
 		if(parent == NULL) 
 			ret_value = xmlNewNode(NULL, local_name);
@@ -630,11 +632,11 @@ free_xml(xmlNodePtr a_node)
 void
 set_node_tstamp(xmlNodePtr a_node)
 {
-	char *since_epoch = (char*)cl_malloc(128*(sizeof(char)));
+	char *since_epoch = (char*)crm_malloc(128*(sizeof(char)));
 	FNIN();
 	sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
 	set_xml_property_copy(a_node, XML_ATTR_TSTAMP, since_epoch);
-	cl_free(since_epoch);
+	crm_free(since_epoch);
 }
 
 
@@ -730,12 +732,18 @@ string2xml(const char *input)
 	}
 
 	
+	xmlInitParser();
 	the_xml = xmlBufferContent(xml_buffer);
 	doc = xmlParseMemory(the_xml, strlen(the_xml));
+	xmlCleanupParser();
+
 	if (doc == NULL) {
 		cl_log(LOG_ERR, "Malformed XML [xml=%s]", the_xml);
+		xmlBufferFree(xml_buffer);
 		return NULL;
 	}
+
+	xmlBufferFree(xml_buffer);
 	xml_object = xmlDocGetRootElement(doc);
 
 	xml_message_debug(xml_object, "Created fragment");
@@ -789,12 +797,17 @@ file2xml(FILE *input)
 		}
 	}
 
+	xmlInitParser();
 	the_xml = xmlBufferContent(xml_buffer);
 	doc = xmlParseMemory(the_xml, strlen(the_xml));
+	xmlCleanupParser();
+	
 	if (doc == NULL) {
 		cl_log(LOG_ERR, "Malformed XML [xml=%s]", the_xml);
+		xmlBufferFree(xml_buffer);
 		return NULL;
 	}
+	xmlBufferFree(xml_buffer);
 	xml_object = xmlDocGetRootElement(doc);
 
 	xml_message_debug(xml_object, "Created fragment");
