@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.23 2004/07/30 15:31:05 andrew Exp $ */
+/* $Id: crmdmain.c,v 1.24 2004/08/18 15:20:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,6 +19,7 @@
 #include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <stdlib.h>
@@ -65,6 +66,10 @@ main(int argc, char ** argv)
     int	req_stop    = FALSE;
     int	argerr      = 0;
     int flag;
+
+#ifdef DEVEL_DIR
+    mkdir(DEVEL_DIR, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#endif
     
     cl_log_set_entity(crm_system_name);
     cl_log_set_logfile(DAEMON_LOG);

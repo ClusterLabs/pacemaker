@@ -54,7 +54,7 @@ gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);
 
 #    define ROUTER_RESULT(x) char *msg_text = dump_xml(xml_relay_message);\
 	if(router_strm == NULL) {					\
-		router_strm = fopen("/tmp/router.log", "w");		\
+		router_strm = fopen(DEVEL_DIR"/router.log", "w");		\
 	}								\
 	fprintf(router_strm, "[%d RESULT (%s)]\t%s\t%s\n",		\
 		AM_I_DC,						\
@@ -820,7 +820,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 #ifdef MSG_LOG
 	msg_text = dump_xml(root);
 	if(msg_out_strm == NULL) {
-		msg_out_strm = fopen("/tmp/outbound.log", "w");
+		msg_out_strm = fopen(DEVEL_DIR"/outbound.log", "w");
 	}
 	fprintf(msg_out_strm, "[%s HA (%s:%d)]\t%s\n",
 		all_is_good?"succeeded":"failed",

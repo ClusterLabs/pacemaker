@@ -52,7 +52,7 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 
 #ifdef MSG_LOG
 	if(msg_in_strm == NULL) {
-		msg_in_strm = fopen("/tmp/inbound.log", "w");
+		msg_in_strm = fopen(DEVEL_DIR"/inbound.log", "w");
 	}
 #endif
 

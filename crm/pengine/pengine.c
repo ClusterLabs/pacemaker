@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.39 2004/07/20 09:03:39 andrew Exp $ */
+/* $Id: pengine.c,v 1.40 2004/08/18 15:20:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,7 +52,7 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 	crm_verbose("Processing %s op (ref=%s)...", op, ref);
 
 	if(pemsg_strm == NULL) {
-		pemsg_strm = fopen("/tmp/pemsg.log", "w");
+		pemsg_strm = fopen(DEVEL_DIR"/pemsg.log", "w");
 	}
 
 	msg_buffer = dump_xml_node(msg, FALSE);

@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.25 2004/08/18 07:49:34 andrew Exp $ */
+/* $Id: tengine.c,v 1.26 2004/08/18 15:20:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -690,7 +690,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 
 #ifdef MSG_LOG
 	if(msg_te_strm == NULL) {
-		msg_te_strm = fopen("/tmp/te.log", "w");
+		msg_te_strm = fopen(DEVEL_DIR"/te.log", "w");
 	}
 	fprintf(msg_te_strm, "[Input %s]\t%s\n",
 		op, dump_xml_node(msg, FALSE));

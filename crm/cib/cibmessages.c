@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.46 2004/08/18 10:21:53 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.47 2004/08/18 15:20:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,7 +92,7 @@ cib_process_request(const char *op,
 
 #ifdef MSG_LOG
 	if(msg_cib_strm == NULL) {
-		msg_cib_strm = fopen("/tmp/cib.log", "w");
+		msg_cib_strm = fopen(DEVEL_DIR"/cib.log", "w");
 	}
 	fprintf(msg_cib_strm, "[Input %s]\t%s\n", op, dump_xml_node(fragment, FALSE));
 	fflush(msg_cib_strm);

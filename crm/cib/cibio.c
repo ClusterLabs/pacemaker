@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.31 2004/07/30 15:31:05 andrew Exp $ */
+/* $Id: cibio.c,v 1.32 2004/08/18 15:20:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -345,7 +345,9 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 		} else {
 			crm_info("Writing CIB out to %s", CIB_FILENAME);
 			res = write_xml_file(new_cib, CIB_FILENAME);
-			
+#ifdef DEVEL_CIB_COPY
+			write_xml_file(new_cib, DEVEL_DIR"/cib.xml");
+#endif
 			if (res < 0) {
 				// assume 0 is good
 				if (moveFile(filename_bak,

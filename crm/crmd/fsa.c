@@ -204,7 +204,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 
 #ifdef DOT_FSA_ACTIONS
 	if(dot_strm == NULL) {
-		dot_strm = fopen("/tmp/live.dot", "w");
+		dot_strm = fopen(DEVEL_DIR"/live.dot", "w");
 		fprintf(dot_strm, "%s", dot_intro);
 	}
 	fprintf(dot_strm,

@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.17 2004/08/13 21:22:30 andrew Exp $ */
+/* $Id: crm.h,v 1.18 2004/08/18 15:20:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,6 +41,9 @@
 #define MAX_IPC_FAIL	5
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
+
+#define DEVEL_CIB_COPY   1
+#define DEVEL_DIR	"/tmp/crm"
 
 #define CRM_VERSION	"0.5"
 
