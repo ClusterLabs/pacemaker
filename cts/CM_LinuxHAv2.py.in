@@ -130,6 +130,13 @@ class LinuxHAv2(HeartbeatCM):
 #        CTSaudits.AllAuditClasses = [CrmdStateAudit, HAResourceAudit]
         CTSaudits.AllAuditClasses = [CrmdStateAudit, PartitionAudit]
     
+    def errorstoignore(self):
+	'''Return list of errors which are 'normal' and should be ignored'''
+	return [ "heartbeat.*ERROR: Respawning client \"/usr/lib/heartbeat/ha_logd\"",	
+		 "heartbeat.*ERROR: Irretrievably lost packet"
+		 ]
+
+
     def StataCM(self, node):
 
         '''Report the status of the cluster manager on a given node'''

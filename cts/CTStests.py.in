@@ -134,15 +134,23 @@ random for the selected number of iterations.
             while errcount < 1000:
                 match=BadNews.look()
                 if match:
-                   ignorelist=test.errorstoignore()
+		   add_err = 1
+		   ignorelist=test.errorstoignore()
                    ignorelist.append(" CTS: ")
                    for ignore in ignorelist:
                        if re.search(ignore, match):
+			   add_err = 0
                            break
-                   else:
-                       self.CM.log(match)
-                       self.incr("BadNews");
-                       errcount=errcount+1
+		   if add_err == 1:
+		       ignorelist=self.CM.errorstoignore()
+		       for ignore in ignorelist:
+			   if re.search(ignore, match):
+			       add_err = 0
+			       break
+		   if add_err == 1:
+		       self.CM.log(match)
+		       self.incr("BadNews");
+		       errcount=errcount+1
                 else:
                   break
             else:
@@ -640,6 +648,7 @@ class SimulStart(CTSTest):
         watch.ReturnOnlyMatch()
 
         watch.setwatch()
+
         for node in self.CM.Env["nodes"]:
             self.CM.StartaCMnoBlock(node)
         if watch.lookforall():
@@ -699,7 +708,7 @@ class SimulStop(CTSTest):
 
         watch.setwatch()
         for node in self.CM.Env["nodes"]:
-            self.CM.StopaCM(node)
+            self.CM.StopaCMnoBlock(node)
         if watch.lookforall():
 	    return self.success()
 
