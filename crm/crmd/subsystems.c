@@ -131,7 +131,9 @@ do_cib_invoke(long long action,
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
 		answer = process_cib_message(cib_msg, TRUE);
 
+		// the TENGINE will get CC'd by other means.
 		if(sys_from != NULL
+		   && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE) 
 		   && safe_str_neq(sys_from, CRM_SYSTEM_CRMD)
 		   && safe_str_neq(sys_from, CRM_SYSTEM_DC)
 		   && relay_message(answer, TRUE) == FALSE) {
