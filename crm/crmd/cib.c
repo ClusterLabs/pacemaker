@@ -47,7 +47,8 @@
 #include <crm/dmalloc_wrapper.h>
 
 struct crm_subsystem_s *cib_subsystem = NULL;
-void crmd_update_confirm(const char *event, HA_Message *msg);
+void crmd_cib_op_callback(
+	const HA_Message *msg, int call_id, int rc, crm_data_t *output);
 
 int cib_retries = 0;
 
@@ -80,11 +81,9 @@ do_cib_control(long long action,
 			if(cib_ok != fsa_cib_conn->cmds->signon(
 				   fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command)){
 				crm_debug("Could not connect to the CIB service");
-				
-			} else if(fsa_cib_conn->cmds->add_notify_callback(
-					  fsa_cib_conn, T_CIB_UPDATE_CONFIRM,
-					  crmd_update_confirm) != cib_ok) {
-				crm_err("Could not set notify callback");
+			} else if(cib_ok != fsa_cib_conn->cmds->set_op_callback(
+					  fsa_cib_conn, crmd_cib_op_callback)) {
+				crm_err("Could not set op callback");
 
 			} else if(fsa_cib_conn->cmds->set_connection_dnotify(
 					  fsa_cib_conn,
@@ -108,7 +107,7 @@ do_cib_control(long long action,
 					crmd_fsa_stall();
 
 				} else {
-					crm_err("Could complete CIB"
+					crm_err("Could not complete CIB"
 						" registration  %d times..."
 						" hard error", cib_retries);
 					register_fsa_error(
@@ -159,6 +158,7 @@ do_cib_invoke(long long action,
 			action = A_CIB_INVOKE_LOCAL;
 		}
 	}
+	
 
 	if(action & A_CIB_INVOKE || action & A_CIB_INVOKE_LOCAL) {
 		int call_options = 0;
@@ -185,7 +185,7 @@ do_cib_invoke(long long action,
 			fsa_cib_conn, op, NULL, section,
 			cib_msg->xml, &cib_frag, call_options);
 
-		if(rc != cib_ok || (action & A_CIB_INVOKE)) {
+		if(rc < cib_ok || (action & A_CIB_INVOKE)) {
 			answer = create_reply(cib_msg->msg, cib_frag);
 			ha_msg_add(answer,XML_ATTR_RESULT,cib_error2string(rc));
 		}
@@ -198,7 +198,7 @@ do_cib_invoke(long long action,
 				result = I_ERROR;
 			}
 
-		} else if(rc != cib_ok) {
+		} else if(rc < cib_ok) {
 			ha_msg_input_t *input = NULL;
 			crm_err("Internal CRM/CIB command from %s() failed: %s",
 				msg_data->origin, cib_error2string(rc));
@@ -228,7 +228,8 @@ update_local_cib_adv(
 {
 	HA_Message *msg = NULL;
 	ha_msg_input_t *fsa_input = NULL;
-	int call_options = cib_sync_call;
+	int call_options = 0;
+/* 	int call_options = cib_sync_call; */
 
 	CRM_DEV_ASSERT(msg_data != NULL);
 	
@@ -285,21 +286,12 @@ update_local_cib_adv(
 	crm_devel("deleted input");
 }
 
-void
-crmd_update_confirm(const char *event, HA_Message *msg)
+void crmd_cib_op_callback(
+	const HA_Message *msg, int call_id, int rc, crm_data_t *output) 
 {
-	int rc = -1;
-	const char *op = cl_get_string(msg, F_CIB_OPERATION);
-
-	ha_msg_value_int(msg, F_CIB_RC, &rc);
-
 	if(rc != cib_ok) {
-		crm_trace("Ignoring failed CIB update");
+		crm_err("CIB update failed: %s", cib_error2string(rc));
+		crm_log_message_adv(LOG_WARNING, "Failed CIB Update", msg);
 		return;
-	}
-	
-	if(safe_str_eq(op, CRM_OP_CIB_ERASE)) {
-		/* regenerate everyone's state and our node entry */
-		register_fsa_input(C_UNKNOWN, I_ELECTION_DC, NULL);
 	}
 }
