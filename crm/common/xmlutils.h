@@ -1,4 +1,4 @@
-/* $Id: xmlutils.h,v 1.8 2004/03/18 13:32:38 andrew Exp $ */
+/* $Id: xmlutils.h,v 1.9 2004/03/24 12:11:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -77,5 +77,7 @@ extern xmlNodePtr copy_xml_node_recursive(xmlNodePtr src_node,
 extern xmlNodePtr add_node_copy(xmlNodePtr new_parent,
 				xmlNodePtr xml_node);
 
+extern xmlNodePtr file2xml(FILE *input);
+extern xmlNodePtr string2xml(const char *input);
 
 #endif

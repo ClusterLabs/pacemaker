@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.17 2004/03/24 10:18:21 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.18 2004/03/24 12:11:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -339,8 +339,10 @@ add_node_copy(xmlNodePtr new_parent, xmlNodePtr xml_node)
 	if(xml_node != NULL && new_parent != NULL) {
 		node_copy = copy_xml_node_recursive(xml_node, 1);
 		xmlAddChild(new_parent, node_copy);
+
 	} else if(xml_node == NULL) {
 		cl_log(LOG_ERR, "Could not add copy of NULL node");
+
 	} else {
 		cl_log(LOG_ERR, "Could not add copy of node to NULL parent");
 	}
@@ -360,8 +362,10 @@ set_xml_property_copy(xmlNodePtr node,
 	xmlAttrPtr ret_value = NULL;
 	FNIN();
 
-	if(node != NULL)
+	if(node != NULL) {
 		parent_name = node->name;
+	}
+
 	
 #ifdef XML_TRACE
 	CRM_DEBUG4("[%s] Setting %s to %s", parent_name, name, value);
@@ -503,4 +507,111 @@ copy_xml_node_recursive(xmlNodePtr src_node, int recursive)
 #else
 	return xmlCopyNode(src_node, recursive);
 #endif
+}
+
+
+xmlNodePtr
+string2xml(const char *input)
+{
+	char ch = 0;
+	int lpc = 0, input_len = strlen(input);
+	gboolean more = TRUE;
+	gboolean inTag = FALSE;
+	xmlBufferPtr xml_buffer = xmlBufferCreate();
+	
+	for(lpc = 0; (lpc < input_len) && more; lpc++) {
+		ch = input[lpc];
+		switch(ch) {
+			case EOF: 
+			case 0:
+				ch = 0;
+				more = FALSE; 
+				xmlBufferAdd(xml_buffer, &ch, 1);
+				break;
+			case '>':
+			case '<':
+				inTag = TRUE;
+				if(ch == '>') inTag = FALSE;
+				xmlBufferAdd(xml_buffer, &ch, 1);
+				break;
+			case '\n':
+			case '\t':
+			case ' ':
+				ch = ' ';
+				if(inTag) {
+					xmlBufferAdd(xml_buffer, &ch, 1);
+				} 
+				break;
+			default:
+				xmlBufferAdd(xml_buffer, &ch, 1);
+				break;
+		}
+	}
+
+	
+	xmlNodePtr xml_object = NULL;
+	const char *the_xml = xmlBufferContent(xml_buffer);
+	xmlDocPtr doc = xmlParseMemory(the_xml, strlen(the_xml));
+	if (doc == NULL) {
+		cl_log(LOG_ERR, "Malformed XML [xml=%s]", the_xml);
+		return NULL;
+	}
+	xml_object = xmlDocGetRootElement(doc);
+
+	xml_message_debug(xml_object, "Created fragment");
+
+	return xml_object;
+}
+
+xmlNodePtr
+file2xml(FILE *input)
+{
+	char ch = 0;
+	gboolean more = TRUE;
+	gboolean inTag = FALSE;
+	xmlBufferPtr xml_buffer = xmlBufferCreate();
+	
+	while (more) {
+		ch = fgetc(input);
+//		cl_log(LOG_DEBUG, "Got [%c]", ch);
+		switch(ch) {
+			case EOF: 
+			case 0:
+				ch = 0;
+				more = FALSE; 
+				xmlBufferAdd(xml_buffer, &ch, 1);
+				break;
+			case '>':
+			case '<':
+				inTag = TRUE;
+				if(ch == '>') inTag = FALSE;
+				xmlBufferAdd(xml_buffer, &ch, 1);
+				break;
+			case '\n':
+			case '\t':
+			case ' ':
+				ch = ' ';
+				if(inTag) {
+					xmlBufferAdd(xml_buffer, &ch, 1);
+				} 
+				break;
+			default:
+				xmlBufferAdd(xml_buffer, &ch, 1);
+				break;
+		}
+	}
+
+	
+	xmlNodePtr xml_object = NULL;
+	const char *the_xml = xmlBufferContent(xml_buffer);
+	xmlDocPtr doc = xmlParseMemory(the_xml, strlen(the_xml));
+	if (doc == NULL) {
+		cl_log(LOG_ERR, "Malformed XML [xml=%s]", the_xml);
+		return NULL;
+	}
+	xml_object = xmlDocGetRootElement(doc);
+
+	xml_message_debug(xml_object, "Created fragment");
+
+	return xml_object;
 }

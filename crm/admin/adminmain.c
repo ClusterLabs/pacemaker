@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.18 2004/03/24 10:18:20 andrew Exp $ */
+/* $Id: adminmain.c,v 1.19 2004/03/24 12:11:00 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -319,53 +319,12 @@ main(int argc, char **argv)
 xmlNodePtr
 handleCibMod(void)
 {
+	xmlNodePtr cib_object = file2xml(stdin);
 
-	char ch = 0;
-	gboolean more = TRUE;
-	gboolean inTag = FALSE;
-	xmlBufferPtr xml_buffer = xmlBufferCreate();
-	
-	while (more) {
-		ch = fgetc(stdin);
-//		cl_log(LOG_DEBUG, "Got [%c]", ch);
-		switch(ch) {
-			case EOF: 
-			case 0:
-				ch = 0;
-				more = FALSE; 
-				xmlBufferAdd(xml_buffer, &ch, 1);
-				break;
-			case '>':
-			case '<':
-				inTag = TRUE;
-				if(ch == '>') inTag = FALSE;
-				xmlBufferAdd(xml_buffer, &ch, 1);
-				break;
-			case '\n':
-			case '\t':
-			case ' ':
-				ch = ' ';
-				if(inTag) {
-					xmlBufferAdd(xml_buffer, &ch, 1);
-				} 
-				break;
-			default:
-				xmlBufferAdd(xml_buffer, &ch, 1);
-				break;
-		}
-	}
-
-	
-	xmlNodePtr cib_object = NULL;
-	const char *the_xml = xmlBufferContent(xml_buffer);
-	xmlDocPtr doc = xmlParseMemory(the_xml, strlen(the_xml));
-	if (doc == NULL) {
-		cl_log(LOG_ERR, "Malformed XML [xml=%s]", the_xml);
+	if(cib_object == NULL) {
 		return NULL;
 	}
-	cib_object = xmlDocGetRootElement(doc);
-
-	xml_message_debug(cib_object, "Created fragment");
+	
 	
 	if(strcmp(cib_object->name, obj_type) != 0) {
 		cl_log(LOG_ERR, "Mismatching xml."

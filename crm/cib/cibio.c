@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.16 2004/03/24 10:18:21 andrew Exp $ */
+/* $Id: cibio.c,v 1.17 2004/03/24 12:11:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -136,13 +136,7 @@ verifyCibXml(xmlNodePtr cib)
 xmlNodePtr
 readCibXml(char *buffer)
 {
-	xmlDocPtr doc = xmlParseMemory(buffer, strlen(buffer));
-	if (doc == NULL) {
-		cl_log(LOG_INFO,
-		       "XML Buffer was not valid...\n Buffer: %s",
-		       buffer);
-	}
-	xmlNodePtr root = xmlDocGetRootElement(doc);
+	xmlNodePtr root = string2xml(buffer);
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
 		FNRET(createEmptyCib());
@@ -156,23 +150,27 @@ readCibXml(char *buffer)
 xmlNodePtr
 readCibXmlFile(const char *filename)
 {
+	int s_res = -1;
 	struct stat buf;
-	int s_res = stat(CIB_FILENAME, &buf);
+	xmlNodePtr root = NULL;
 	FNIN();
+
+	if(filename != NULL) {
+		s_res = stat(filename, &buf);
+	}
 	
-	xmlDocPtr doc = NULL;
 	if (s_res == 0) {
-		doc = xmlParseFile(filename);
-		set_xml_property_copy(xmlDocGetRootElement(doc),
-				      "generated",
-				      "false");
+		FILE *cib_file = fopen(filename, "r");
+		root = file2xml(cib_file);
+		set_xml_property_copy(root, "generated", "false");
+		fclose(cib_file);
+		
 	} else {
 		cl_log(LOG_WARNING,
 		       "Stat of (%s) failed, file does not exist.",
 		       CIB_FILENAME);
 	}
 	
-	xmlNodePtr root = xmlDocGetRootElement(doc);
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
 //		FNRET(createEmptyCib());
@@ -361,7 +359,7 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 				xmlDocSetRootElement(foo, new_cib);
 				xmlSetTreeDoc(new_cib,foo);
 			}
-	    
+
 	    
 			/* save it.
 			 * set arg 3 to 0 to disable line breaks,1 to enable
@@ -369,7 +367,7 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 			 */
 			res = xmlSaveFormatFile(filename,
 						new_cib->doc,
-						0);
+						1);
 			
 			/* for some reason, reading back after saving with
 			 * line-breaks doesnt go real well 
