@@ -735,7 +735,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			cl_log(LOG_DEBUG, "%s%s%sAction %d: %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
-			       action->runnable?action->optional?"Optional ":action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+			       action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 			       action->id,
 			       task2text(action->task),
 			       safe_val4(NULL, action, node, details, id));
@@ -744,7 +744,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			cl_log(LOG_DEBUG, "%s%s%sAction %d: %s %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
-			       action->runnable?action->optional?"Optional ":action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+			       action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 			       action->id,
 			       task2text(action->task),
 			       safe_val3(NULL, action, rsc, id),
