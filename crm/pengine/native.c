@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.4 2004/11/09 16:54:33 andrew Exp $ */
+/* $Id: native.c,v 1.5 2004/11/09 17:51:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -108,6 +108,13 @@ void native_unpack(resource_t *rsc)
 
 	rsc->variant_opaque = native_data;
 }
+
+resource_t *
+native_find_child(resource_t *rsc, const char *id)
+{
+	return NULL;
+}
+
 
 void native_color(resource_t *rsc, GListPtr *colors)
 {

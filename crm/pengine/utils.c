@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.46 2004/11/09 16:51:07 andrew Exp $ */
+/* $Id: utils.c,v 1.47 2004/11/09 17:51:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -388,15 +388,28 @@ copy_color(color_t *a_color)
 
 
 resource_t *
-pe_find_resource(GListPtr rsc_list, const char *id_rh)
+pe_find_resource(GListPtr rsc_list, const char *id)
 {
 	int lpc = 0;
 	resource_t *rsc = NULL;
+	resource_t *child_rsc = NULL;
 
 	for(lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
 		rsc = g_list_nth_data(rsc_list, lpc);
-		if(rsc != NULL && safe_str_eq(rsc->id, id_rh)){
+		if(rsc != NULL && safe_str_eq(rsc->id, id)){
+			crm_debug("Found a match for %s", id);
 			return rsc;
+		}
+	}
+	for(lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
+		rsc = g_list_nth_data(rsc_list, lpc);
+
+		child_rsc = rsc->fns->find_child(rsc, id);
+		if(child_rsc != NULL) {
+			crm_debug("Found a match for %s in %s",
+				  id, rsc->id);
+			
+			return child_rsc;
 		}
 	}
 	/* error */

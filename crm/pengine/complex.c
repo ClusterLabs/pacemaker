@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.4 2004/11/09 16:52:57 andrew Exp $ */
+/* $Id: complex.c,v 1.5 2004/11/09 17:51:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,6 +31,7 @@ void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 resource_object_functions_t resource_class_functions[] = {
 	{
 		native_unpack,
+		native_find_child,
 		native_color,
 		native_create_actions,
 		native_internal_constraints,
@@ -46,6 +47,7 @@ resource_object_functions_t resource_class_functions[] = {
 	},
 	{
 		group_unpack,
+		group_find_child,
 		group_color,
 		group_create_actions,
 		group_internal_constraints,
@@ -132,8 +134,6 @@ common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 	}
 	
 	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
-	(*rsc)->fns->unpack(*rsc);
-
 	crm_verbose("Processing resource...");
 	
 	(*rsc)->priority	   = atoi(priority?priority:"0"); 
@@ -161,6 +161,8 @@ common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 	} else {
 		(*rsc)->restart_type = pe_restart_ignore;
 	}
+
+	(*rsc)->fns->unpack(*rsc);
 
 	return TRUE;
 }

@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.3 2004/11/09 14:49:14 andrew Exp $ */
+/* $Id: complex.h,v 1.4 2004/11/09 17:51:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,6 +40,7 @@ extern int get_resource_type(const char *name);
 typedef struct resource_object_functions_s 
 {
 		void (*unpack)(resource_t *);
+		resource_t *(*find_child)(resource_t *, const char *);
 		void (*color)(resource_t *, GListPtr *);
 		void (*create_actions)(resource_t *);
 		void (*internal_constraints)(resource_t *, GListPtr *);
@@ -61,6 +62,7 @@ typedef struct resource_object_functions_s
 } resource_object_functions_t;
 
 extern void native_unpack(resource_t *rsc);
+extern resource_t *native_find_child(resource_t *rsc, const char *id);
 extern void native_color(resource_t *rsc, GListPtr *colors);
 extern void native_create_actions(resource_t *rsc);
 extern void native_internal_constraints(
@@ -79,6 +81,7 @@ extern void native_free(resource_t *rsc);
 
 
 extern void group_unpack(resource_t *rsc);
+extern resource_t *group_find_child(resource_t *rsc, const char *id);
 extern void group_color(resource_t *rsc, GListPtr *colors);
 extern void group_create_actions(resource_t *rsc);
 extern void group_internal_constraints(

@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.3 2004/11/09 16:52:23 andrew Exp $ */
+/* $Id: group.c,v 1.4 2004/11/09 17:51:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,6 +84,19 @@ void group_unpack(resource_t *rsc)
 	rsc->variant_opaque = group_data;
 }
 
+resource_t *
+group_find_child(resource_t *rsc, const char *id)
+{
+	group_variant_data_t *group_data = NULL;
+	if(rsc->variant == pe_group) {
+		group_data = (group_variant_data_t *)rsc->variant_opaque;
+	} else {
+		crm_err("Resource %s was not a \"group\" variant", rsc->id);
+		return NULL;
+	}
+	return pe_find_resource(group_data->child_list, id);
+}
+
 void group_color(resource_t *rsc, GListPtr *colors)
 {
 	int lpc;
@@ -124,9 +137,16 @@ void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
+		order_new(child_rsc, stop_rsc, NULL, child_rsc, start_rsc, NULL,
+			  pecs_startstop, ordering_constraints);
+
 		if(last_rsc != NULL) {
 			order_new(last_rsc, start_rsc, NULL,
 				  child_rsc, start_rsc, NULL,
+				  pecs_startstop, ordering_constraints);
+
+			order_new(child_rsc, stop_rsc, NULL,
+				  last_rsc, stop_rsc, NULL,
 				  pecs_startstop, ordering_constraints);
 		}
 		
