@@ -58,6 +58,7 @@ ip_rsc_1=192.168.9.161
 ip_rsc_2=192.168.9.162
 
 logfile=/var/log/messages
+local_version=0
 
 if [ ! -z "$CRM_LOCAL_OPTS" -a -f "$CRM_LOCAL_OPTS" ]; then
     . "$CRM_LOCAL_OPTS"
@@ -70,6 +71,8 @@ while test "$done" = "0"; do
 	--stdout  | -o)	OUTPUT_STDOUT=1; shift;;
 	--stderr  | -e)	OUTPUT_STDERR=1; shift;;
 	--verbose | -v)	OUTPUT_CMDS=1; shift;;
+
+	--local | -L)	local_version=1; shift;;
 
 	--logfile | -l)	logfile=${2?no logfile??}     shift 2;;
 	--dumpdir | -d)	dump_dir=${2?no dumpdir??}     shift 2;;
@@ -109,8 +112,11 @@ function remote_cmd() {
     shift 
     shift
     
-    `which ssh` ${user}@${host} bash -l -c \"$*\"
-
+    if [ $local_version = "1" ]; then
+	su - ${user} -c $*
+    else
+	`which ssh` ${user}@${host} bash -l -c \"$*\"
+    fi
     return $?;
 }
 
@@ -339,9 +345,6 @@ function make_constraint()
 
 function cts_assert() {
     do_cts_assert $? 0 "Assert failed - " $*
-#    do_cmd remote_cmd $ADMIN_USER $test_node_1 "ls -al ${HAVAR_DIR}/cores/*/core*"
-#    do_cmd remote_cmd $ADMIN_USER $test_node_2 "ls -al ${HAVAR_DIR}/cores/*/core*"
-#    do_cmd remote_cmd $ADMIN_USER $test_node_3 "ls -al ${HAVAR_DIR}/cores/*/core*"
 }
 
 function cts_assert_false() {
@@ -357,6 +360,15 @@ function do_cts_assert() {
     if [ $result -ne $expected ]; then
 	do_cmd echo "Expected rc ($expected) != $result"
 	err $*
+    else
+
+	for a_host in $node_list; do
+	    do_cmd remote_cmd $ADMIN_USER $a_host "ls -al ${HAVAR_DIR}/cores/*/core*"
+	    if [ $? -ne 1 ]; then
+		do_cmd echo "Core file found"
+		err $*
+	    fi
+	done
     fi
 }
 
@@ -493,8 +505,6 @@ function crm-cleanup() {
 	test_init
     fi
 
-    do_cmd echo Cleaning up on $node_list
-
     for a_host in $node_list; do
 	crm-cleanup-node $a_host $1
     done
@@ -527,6 +537,7 @@ function crm-cleanup-node() {
 	remote_cmd $CRMD_USER $ha_host "stat -L -c %s $logfile > /tmp/crm/.logstart"
 	do_cmd remote_cmd $ADMIN_USER $ha_host "logger -i -p local7.info __crmtest_${test_type}_log_mark__"
 	do_cmd sleep 2
+	do_cmd remote_cmd $ADMIN_USER $ha_host "echo 1 > /proc/sys/kernel/core_uses_pid"
 	
 # zero out logs, maybe
     fi
