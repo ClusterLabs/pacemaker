@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.24 2005/03/11 14:25:07 andrew Exp $ */
+/* $Id: unpack.c,v 1.25 2005/03/16 19:53:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -236,7 +236,6 @@ extract_event(crm_data_t *msg)
 	xml_child_iter(
 		msg, node_state, XML_CIB_TAG_STATE,
 
-		crm_data_t *shutdown = NULL;
 		crm_data_t *resources = NULL;
 
 		const char *ccm_state  = crm_element_value(
@@ -256,16 +255,19 @@ extract_event(crm_data_t *msg)
 			/* node marked for STONITH
 			 *   possibly by us when a shutdown timmed out
 			 */
+			int action_id = -1;
 			crm_devel("Checking for STONITH");
-			event_node = crm_element_value(
-				node_state, XML_ATTR_UNAME);
-
-			shutdown = create_shutdown_event(
-				event_node, LRM_OP_TIMEOUT);
-
-			process_graph_event(shutdown);
-
-			free_xml(shutdown);
+			event_node = crm_element_value(node_state, XML_ATTR_UNAME);
+			action_id = match_down_event(
+				event_node, CRM_OP_SHUTDOWN, LRM_OP_DONE);
+			
+			if(action_id < 0) {
+				send_abort("Stonith/shutdown event not matched", node_state);
+				break;
+			} else {
+				process_trigger(action_id);
+				check_for_completion();
+			}
 			continue;
 		}
 
@@ -280,14 +282,19 @@ extract_event(crm_data_t *msg)
 			crm_devel("Processing state update");
 			if(crmd_state != NULL
 			   && safe_str_neq(crmd_state, OFFLINESTATUS)) {
-				/* always recompute */
-				send_abort("CRMd not offline", node_state);
-				break;
+				/* the node is comming up,
+				 *  only recompute after the join completes,
+				 *  we dont need to check for this
+				 */
+				continue;
 				
 			} else if(join_state != NULL
 				  && safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)) {
-				send_abort("New CRMd node", node_state);
-				break;
+				/* the node is comming up,
+				 *  only recompute after the join completes,
+				 *  we dont need to check for this
+				 */
+				continue;
 
 			} else {
 				/* this may be called more than once per shutdown

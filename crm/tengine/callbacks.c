@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.17 2005/03/16 17:11:15 lars Exp $ */
+/* $Id: callbacks.c,v 1.18 2005/03/16 19:53:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -82,11 +82,16 @@ te_update_confirm(const char *event, HA_Message *msg)
 		/* ignore - for the moment */
 		crm_devel("Ignoring changes to the %s section", type);
 		
+	} else if(safe_str_eq(type, XML_CIB_TAG_NODES)) {
+		/* ignore new nodes until they sign up */
+		crm_devel("Ignoring changes to the %s section", type);
+
 	} else if(safe_str_eq(type, XML_CIB_TAG_STATUS)) {
 		/* this _may_ not be un-expected */
 		if(extract_event(update) == FALSE) {
 			send_abort("Unexpected status update", update);
 		}
+
 
 	} else if(safe_str_eq(type, XML_CIB_TAG_NODES)
 		|| safe_str_eq(type, XML_CIB_TAG_RESOURCES)
