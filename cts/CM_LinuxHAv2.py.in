@@ -7,7 +7,9 @@ __copyright__='''
 Author: Huang Zhen <zhenhltc@cn.ibm.com>
 Copyright (C) 2004 International Business Machines
 
-Additional Audits: Andrew Beekhof <andrew@beekhof.net>
+Additional Audits, Revised Start action, Default Configuration:
+     Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+
 Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
 '''
 
@@ -55,7 +57,9 @@ class LinuxHAv2(HeartbeatCM):
             "StartCmd"       : "@libdir@/heartbeat/heartbeat >/dev/null 2>&1",
             "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
             "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null",
-            "EpocheCmd"             : "@libdir@/heartbeat/ccm_epoche",
+            "EpocheCmd"      : "@libdir@/heartbeat/ccm_tool -e",
+            "QuorumCmd"      : "@libdir@/heartbeat/ccm_tool -q",
+            "ParitionCmd"    : "@libdir@/heartbeat/ccm_tool -p",
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s status 0 0 EVERYTIME 2>/dev/null|grep return",
             "IsIPAddrRscRunning"   : "",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
@@ -70,8 +74,6 @@ class LinuxHAv2(HeartbeatCM):
                 r"Shutting down\.",
                 r"Forcing shutdown\.",
                 r"Timer I_TERMINATE just popped",
-                r"Both machines own .* resources!",
-                r"No one owns .* resources!",
                 r", exiting\.",
                 r"ERROR:",
                 r"CRIT:",
@@ -127,7 +129,7 @@ class LinuxHAv2(HeartbeatCM):
 #        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
         CTStests.AllTestClasses = [FlipTest, RestartTest, StartOnebyOne, SimulStart, SimulStop]
 #        CTSaudits.AllAuditClasses = [CrmdStateAudit, HAResourceAudit]
-        CTSaudits.AllAuditClasses = [CrmdStateAudit, DcAudit, DcIPaddrAudit]
+        CTSaudits.AllAuditClasses = [CrmdStateAudit, PartitionAudit]
     
     def StataCM(self, node):
 
@@ -141,6 +143,8 @@ class LinuxHAv2(HeartbeatCM):
                     self.log(
                     "Node status for %s is %s but we think it should be %s"
                     %        (node, self["up"], self.ShouldBeStatus[node]))
+                    self.log("Expected: %s. Actual: %s"
+                    %        (self.ShouldBeStatus[node], out))
             else:
                 if self.ShouldBeStatus[node] != self["down"]:
                     self.log(
@@ -163,7 +167,7 @@ class LinuxHAv2(HeartbeatCM):
         if self.any_running() == 1:
             patterns.append(self["Pat:DC_IDLE"])
 
-        watch = CTS.LogWatcher(self["LogFileName"], patterns, 90)
+        watch = CTS.LogWatcher(self["LogFileName"], patterns, 120)
         watch.setwatch()
 
         self.log ("Starting %s on node %s" %(self["Name"], node))
@@ -178,20 +182,36 @@ class LinuxHAv2(HeartbeatCM):
                 self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
 
         self.rsh(node, self["StartCmd"])
+        self.ShouldBeStatus[node]=self["up"]
         if watch.lookforall():
-            self.ShouldBeStatus[node]=self["up"]
             return 1
+
+        # the watch() failed... lets check to see if the start _really_ failed
+        for regex in watch.unmatched:
+            self.log ("Startup pattern not found: %s" %(regex))
 
         out = self.rsh.readaline(node, self["StatusCmd"])
         if string.find(out, 'ok') == -1:
+            # yep, it _really_ failed
             self.ShouldBeStatus[node]=self["down"]        
-            self.log ("Could not start %s on node %s"
-                      %        (self["Name"], node))
-        else:
-            self.ShouldBeStatus[node]=self["up"]        
-            self.log ("%s only partially started on node %s"
-                      %        (self["Name"], node))
+            self.log ("Could not start %s on node %s" %(self["Name"], node))
+            return None
 
+        ret=(string.find(out, 'S_NOT_DC') != -1)
+        if ret:
+            # actually we joined the cluster just fine
+            self.log ("%s on %s joined the cluster" %(self["Name"], node))
+            return 1
+
+        ret= (string.find(out, 'S_IDLE') != -1)
+        if ret:
+            # actually we joined the cluster just fine
+            self.log ("%s on %s joined the cluster as DC" %(self["Name"], node))
+            return 1
+
+        self.log ("%s on %s started but unstable: %s" 
+                  %(self["Name"], node, out))
+#        self.ShouldBeStatus[node]=self["down"]
         return None
 
     def Configuration(self):
@@ -400,10 +420,10 @@ class CrmdStateAudit(ClusterAudit):
                     self.CM.ShouldBeStatus[node] = self.CM["down"]
                     up_are_down = up_are_down + 1
 
-        if up_count > 0 and len(dc_list) != 1:
-            passed = 0
-            self.CM.log("Exactly 1 node should be DC.  We found %d (of %d): %s"
-                     %(len(dc_list), up_count, str(dc_list)))
+#        if up_count > 0 and len(dc_list) != 1:
+#            passed = 0
+#            self.CM.log("Exactly 1 node should be DC.  We found %d (of %d): %s"
+#                     %(len(dc_list), up_count, str(dc_list)))
 
         if len(unstable_list) > 0:
             passed = 0
@@ -427,7 +447,7 @@ class CrmdStateAudit(ClusterAudit):
     def name(self):
         return "CrmdStateAudit"
 
-class DcIPaddrAudit(ClusterAudit):
+class PartitionAudit(ClusterAudit):
     def __init__(self, cm):
         self.CM = cm
         self.Stats = {"calls":0
@@ -435,6 +455,10 @@ class DcIPaddrAudit(ClusterAudit):
         ,        "failure":0
         ,        "skipped":0
         ,        "auditfail":0}
+        self.NodeEpoche={}
+        self.NodeState={}
+        self.NodeQuorum={}
+        self.NodeCCM={}
 
     def has_key(self, key):
         return self.Stats.has_key(key)
@@ -454,100 +478,17 @@ class DcIPaddrAudit(ClusterAudit):
     def __call__(self):
         self.CM.log ("Do Audit %s"%self.name())
         passed = 1
-
-        the_dc = self.find_dc()
-        if the_dc == None:
-            return passed
-
-        #Make sure the resouces are running on one and only one node
-        Resources = self.CM.Resources()
-        for resource in Resources :
-            if resource.rid == "DcIPaddr":
-                if self.audit_ip_addr(resource, the_dc) == 0:
-                    passed = 0
-
-        return passed
-
-    def is_node_dc(self, node):
-        out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
-        return (string.find(out, 'S_IDLE') != -1)
-
-    def audit_ip_addr(self, resource, node):
-        self.CM.log ("Auditing %s"%(resource))
-        RunningNodes = self._RscRunningNodes(resource)
-        if len(RunningNodes) == 0 :
-            self.CM.log("%s is not running" %(resource))
-            for node in self.CM.Env["nodes"]:
-                if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                    out = self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
-                    self.CM.log("%s" %(out))
-            return 0
-
-        if len(RunningNodes) > 1:
-            self.CM.log("%s is running more than once"        %(resource))
-
-        for running_on in RunningNodes:
-            if self.is_node_dc(running_on) == 0:
-                self.CM.log("%s is running on a non-DC node %s" 
-                            %(resource, running_on))
-                return 0
-
-        return 1
-
-    def name(self):
-        return "DcIPaddrAudit"
-
-    def find_dc(self):
-        for node in self.CM.Env["nodes"]:
-            if self.is_node_dc(node):
-                return node
-        return None
-
-    def _RscRunningNodes(self, resource):
-        ResourceNodes = []
-        for node in self.CM.Env["nodes"]:
-            if resource.IsRunningOn(node):
-                ResourceNodes.append(node)
-        return ResourceNodes
-
-class DcAudit(ClusterAudit):
-    def __init__(self, cm):
-        self.CM = cm
-        self.Stats = {"calls":0
-        ,        "success":0
-        ,        "failure":0
-        ,        "skipped":0
-        ,        "auditfail":0}
-        self.NodeEpoche={}
-        self.NodeState={}
-
-    def has_key(self, key):
-        return self.Stats.has_key(key)
-
-    def __setitem__(self, key, value):
-        self.Stats[key] = value
-        
-    def __getitem__(self, key):
-        return self.Stats[key]
-
-    def incr(self, name):
-        '''Increment (or initialize) the value associated with the given name'''
-        if not self.Stats.has_key(name):
-            self.Stats[name]=0
-        self.Stats[name] = self.Stats[name]+1
-
-    def __call__(self):
-        self.CM.log ("Do Audit %s"%self.name())
-        passed = 0
-        lowest_epoche = None
         nodes_up = 0
-
-        dc_allowed_list=[]
+        ccm_partitions = []
 
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == self.CM["up"]:
                 nodes_up = nodes_up + 1
 #                self.PS_State[node] = os.system("@SSH@ root@%s ps -C crmd" %(node))
+                self.NodeQuorum[node] = self.CM.rsh.readaline(
+                    node, self.CM["QuorumCmd"])
+                self.NodeCCM[node] = self.CM.rsh.readaline(
+                    node, self.CM["ParitionCmd"])
                 self.NodeEpoche[node] = self.CM.rsh.readaline(
                     node, self.CM["EpocheCmd"])
                 self.NodeState[node] = self.CM.rsh.readaline(
@@ -558,37 +499,105 @@ class DcAudit(ClusterAudit):
 
                 if len(self.NodeEpoche[node]) > 0:
                     self.NodeEpoche[node] = int(self.NodeEpoche[node][:-1])
-                    if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
-                        lowest_epoche = self.NodeEpoche[node]
+
+                if len(self.NodeQuorum[node]) > 1:
+                    self.NodeQuorum[node] = self.NodeQuorum[node][:-1]
+
+                if len(self.NodeCCM[node]) > 1:
+                    self.NodeCCM[node] = self.NodeCCM[node][:-1]
+                    found = 0
+                    for partition in ccm_partitions:
+                        if partition == self.NodeCCM[node]:
+                            found = 1
+                    if found == 0:
+                        ccm_partitions.append(self.NodeCCM[node])
 
         if nodes_up == 0:
             return 1
 
-        for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                if self.NodeEpoche[node] == lowest_epoche:
-                    dc_allowed_list.append(node)
+#        if len(ccm_partitions) > 1:
+#            self.CM.log("%d cluster partitions detected:" %len(ccm_partitions))
+#            for partition in ccm_partitions:
+#                self.CM.log("\t %s" %partition)
 
-        for node in dc_allowed_list:
-            if self.is_node_dc(self.NodeState[node]):
-                passed = 1
-
-        if passed == 0:
-            self.CM.log("DC not found on any of the %d allowed nodes: %s"
-                        %(len(dc_allowed_list), str(dc_allowed_list)))
-            for node in self.CM.Env["nodes"]:
-                if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                    self.CM.log("epoche %s : %s"  
-                                %(self.NodeEpoche[node], self.NodeState[node]))
-                    
+        for partition in ccm_partitions:
+            partition_passed = 0
+            if self.audit_partition(partition) == 0:
+                passed = 0
 
         return passed
 
+    def audit_partition(self, partition):
+        passed = 0
+        dc_found = []
+        dc_allowed_list = []
+        lowest_epoche = None
+        node_list = partition.split()
+
+        self.CM.log("Auditing partition: %s" %(partition))
+        for node in node_list:
+            if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
+                lowest_epoche = self.NodeEpoche[node]
+                
+        for node in node_list:
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                if self.is_node_dc(self.NodeState[node]):
+                    dc_found.append(node)
+                    if self.NodeEpoche[node] == lowest_epoche:
+                        passed = 1
+                    else:
+                        self.CM.log("DC %s is not the oldest node (%d vs. %d)"
+                            %(node, self.NodeEpoche[node], lowest_epoche))
+                        passed = 0
+
+        if len(dc_found) == 0:
+                self.CM.log("DC not found on any of the %d allowed nodes: %s (of %s)"
+                            %(len(dc_allowed_list), str(dc_allowed_list), str(node_list)))
+        elif len(dc_found) > 1:
+                self.CM.log("%d DCs (%s) found in cluster partition: %s"
+                            %(len(dc_found), str(dc_found), str(node_list)))
+                passed = 0
+
+        if passed == 0:
+            for node in node_list:
+                if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                    self.CM.log("epoche %s : %s"  
+                                %(self.NodeEpoche[node], self.NodeState[node]))
+
+        if self.audit_dc_resources(node_list, dc_found) == 0:
+            passed = 0
+
+        return passed
+
+    def audit_dc_resources(self, node_list, dc_list):
+        passed = 1
+        Resources = self.CM.Resources()
+        for resource in Resources:
+            self.CM.log("Auditing resource: %s" %(resource))
+            if resource.rid == "DcIPaddr":
+                # All DCs are running the resource
+                for dc in dc_list:
+                    if self.NodeQuorum[dc]:
+                        if resource.IsRunningOn(dc) == 0:
+                            self.CM.log("Resource %s not running on DC: %s" 
+                                        %(resource, dc))
+                            passed = 0
+
+                # All nodes running the resource are DCs
+                for node in node_list:
+                    if resource.IsRunningOn(node):
+                        if self.is_node_dc(self.NodeState[node]) == 0:
+                            self.CM.log("Resource %s is running on non-DC node %s"  
+                                        %("DcIPaddr", node))
+                            passed = 0
+
+        return passed
+        
     def is_node_dc(self, status_line):
         return (string.find(status_line, 'S_IDLE') != -1) 
 
     def name(self):
-        return "DcAudit"
+        return "PartitionAudit"
 
 ###################################################################
 class ResourceRecover(CTSTest):
