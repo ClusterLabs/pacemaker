@@ -74,6 +74,7 @@ register_fsa_error_adv(
 		cause, input, new_data, A_NOTHING, FALSE, raised_from);
 }
 
+static gboolean last_was_vote = FALSE;
 
 void
 register_fsa_input_adv(
@@ -95,16 +96,55 @@ register_fsa_input_adv(
 		crm_debug("Stalling the FSA pending further input");
 	}
 
+	if(old_len == 0) {
+		last_was_vote = FALSE;
+	}
+	
 	if(input == I_NULL && with_actions == A_NOTHING /* && data == NULL */){
 		/* no point doing anything */
 		return;
+		
+	} else if(data == NULL) {
+		last_was_vote = FALSE;
+
+	} else if(last_was_vote && cause == C_HA_MESSAGE && input == I_ROUTER) {
+		const char *op = cl_get_string(
+			((ha_msg_input_t*)data)->msg, F_CRM_TASK);
+		if(safe_str_eq(op, CRM_OP_VOTE)) {
+			/* It is always safe to treat N successive votes as
+			 *    a single one
+			 *
+			 * If all the discarded votes are more "loosing" than
+			 *    the first then the result is accurate
+			 *    (win or loose).
+			 *
+			 * If any of the discarded votes are less "loosing" 
+			 *    than the first then we will cast our vote and the
+			 *    eventual winner will vote us down again (which
+			 *    even in the case that N=2, is no worse than if we
+			 *    had not disarded the vote).
+			 */
+			crm_debug("Vote compression: %d", old_len);
+			return;
+		}
+
+	} else if (cause == C_HA_MESSAGE && input == I_ROUTER) {
+		const char *op = cl_get_string(
+			((ha_msg_input_t*)data)->msg, F_CRM_TASK);
+		if(safe_str_eq(op, CRM_OP_VOTE)) {
+			last_was_vote = TRUE;
+			crm_debug("Added vote: %d", old_len);
+		}
+
+	} else {
+		last_was_vote = FALSE;
 	}
-	
+
 	crm_malloc(fsa_data, sizeof(fsa_data_t));
 	fsa_data->id        = ++last_data_id;
 	fsa_data->fsa_input = input;
 	fsa_data->fsa_cause = cause;
-	fsa_data->origin     = raised_from;
+	fsa_data->origin    = raised_from;
 	fsa_data->data      = NULL;
 	fsa_data->data_type = fsa_dt_none;
 	fsa_data->actions   = with_actions;
