@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.15 2005/02/06 05:02:14 alan Exp $ */
+/* $Id: callbacks.c,v 1.16 2005/02/07 11:08:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -410,10 +410,10 @@ cib_common_callback(
 		}
 		
 		if(op_reply == NULL) {
-			crm_trace("No reply is required for op %s", op);
+			crm_trace("No reply is required for op %s", crm_str(op));
 			
 		} else if(call_options & cib_sync_call) {
- 			crm_debug("Sending sync reply to %s op", op);
+ 			crm_debug("Sending sync reply to %s op", crm_str(op));
 			crm_log_message(LOG_MSG, op_reply);
 			if(msg2ipcchan(op_reply, channel) != HA_OK) {
 				crm_err("Sync reply failed: %s",
@@ -426,7 +426,8 @@ cib_common_callback(
 		} else {
 			enum cib_errors local_rc = cib_ok;
 			/* send reply via client's callback channel */
- 			crm_debug("Sending async reply %p to %s op",op_reply,op);
+ 			crm_debug("Sending async reply %p to %s op",
+				  op_reply, crm_str(op));
 			crm_log_message(LOG_MSG, op_reply);
 			local_rc = send_via_callback_channel(
 				op_reply, cib_client->callback_id);
@@ -555,17 +556,7 @@ cib_process_command(
 	
 	/* attach the output if necessary */
 	if(output != NULL) {
-		char *output_s = NULL;
-		crm_debug("Dumping XML");
-		output_s = dump_xml_unformatted(output);
-		if(output_s == NULL) {
-			crm_err("Currupt output in reply to \"%s\" op",op);
-			rc = cib_output_data;
-
-		} else if(ha_msg_add(*reply, F_CIB_CALLDATA, output_s) != HA_OK) {
-			rc = cib_msg_field_add;
-		}
-		crm_free(output_s);
+		add_message_xml(*reply, F_CIB_CALLDATA, output);
 	}
 
 	crm_debug("Cleaning up");
@@ -661,9 +652,9 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 
 
 	while(list != NULL) {
-		HA_Message *reply = ha_msg_new(4);
 		int seen = 0;
 		int timeout = 5; /* 1 iteration == 1 seconds */
+		HA_Message *reply = NULL;
 
 		msg = list->data;
 		ha_msg_value_int(msg, F_CIB_SEENCOUNT, &seen);
@@ -678,15 +669,13 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 			ha_msg_mod_int(msg, F_CIB_SEENCOUNT, seen);
 			ha_msg_value_int(msg, F_CIB_SEENCOUNT, &seen2);
 			list = list->next;
-			if (reply != NULL) {
-				crm_msg_del(reply);
-			}
 			continue;
 		}
 		
 		crm_warn("Sending operation timeout msg to client %s",
 			 client->id);
 		
+		reply = ha_msg_new(4);
 		ha_msg_add(reply, F_TYPE, T_CIB);
 		ha_msg_add(reply, F_CIB_OPERATION,
 			   cl_get_string(msg, F_CIB_OPERATION));
@@ -809,7 +798,6 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 
 	crm_info("Processing message from peer to %s...", request_to);
  	crm_log_message(LOG_DEBUG, msg);
- 	crm_log_message_adv(LOG_DEBUG, DEVEL_DIR"/cib.peer-in.log", msg);
 
 	if(safe_str_eq(update, XML_BOOLEAN_TRUE)
 	   && safe_str_eq(reply_to, cib_our_uname)) {
@@ -841,12 +829,13 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 
 	} else if(request_to != NULL) {
 		/* this is for a specific instance and we're not it */
-		crm_debug("Ignoring msg for instance on %s", request_to);
+		crm_debug("Ignoring msg for instance on %s",
+			  crm_str(request_to));
 		return;
 		
 	} else if(reply_to == NULL && cib_is_master == FALSE) {
 		/* this is for the master instance and we're not it */
-		crm_debug("Ignoring reply to %s", reply_to);
+		crm_debug("Ignoring reply to %s", crm_str(reply_to));
 		return;
 		
 	} else {
@@ -895,7 +884,6 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 
 				send_via_callback_channel(
 					op_reply, client_obj->id);
-/* 				msg2ipcchan(op_reply, client_obj->channel); */
 				
 			} else {
 				crm_debug("Sending async response");
@@ -904,7 +892,8 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 			}
 			
 		} else {
-			crm_warn("Client %s may have left us", client_id);
+			crm_warn("Client %s may have left us",
+				 crm_str(client_id));
 		}
 		if(process == FALSE) {
 			crm_msg_del(op_reply);
@@ -916,11 +905,11 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		 * this was a non-originating slave update
 		 */
 		crm_debug("Completed slave update");
+		crm_msg_del(op_reply);
 		return;
 	}
 	
 	crm_trace("add the originator to message");
-	ha_msg_add(op_reply, F_CIB_ISREPLY, originator);
 
 	/* from now on we are the server */ 
 	if(rc == cib_ok && cib_server_ops[call_type].modifies_cib
@@ -929,15 +918,22 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		 * change needs to be broadcast...
 		 *   send via HA to other nodes
 		 */
+		HA_Message *op_bcast = ha_msg_copy(msg);
 		crm_debug("Sending update request to everyone");
-		hb_conn->llc_ops->sendclustermsg(hb_conn, op_reply);
+		ha_msg_add(op_bcast, F_CIB_ISREPLY, originator);
+		crm_log_message(LOG_DEBUG, op_bcast);
+		hb_conn->llc_ops->sendclustermsg(hb_conn, op_bcast);
+		crm_msg_del(op_bcast);
 		
 	} else {
 		/* send reply via HA to originating node */
 		crm_debug("Sending request result to originator only");
+		ha_msg_add(op_reply, F_CIB_ISREPLY, originator);
+		crm_log_message(LOG_DEBUG, op_reply);
 		hb_conn->llc_ops->send_ordered_nodemsg(
 			hb_conn, op_reply, originator);
 	}
+	crm_msg_del(op_reply);
 
 	return;
 }
