@@ -837,6 +837,12 @@ class Fastdetection(CTSTest):
         '''This test is applicable when auto_failback != legacy'''
         return self.standby.is_applicable()
 
+    def errorstoignore(self):
+        '''Return list of errors which are 'normal' and should be ignored'''
+        return [ "ccm.*ERROR: ccm_control_process:failure to send protoversion request"
+	,	"ccm.*ERROR: Lost connection to heartbeat service. Need to bail out"
+	]
+
 AllTestClasses.append(Fastdetection)
 
 ##############################################################################
