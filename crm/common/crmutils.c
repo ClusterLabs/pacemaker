@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.16 2004/05/23 19:10:06 andrew Exp $ */
+/* $Id: crmutils.c,v 1.17 2004/06/01 15:59:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -331,11 +331,6 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 			cl_log(LOG_ERR, "Value of %s was NULL!!",
 			       XML_ATTR_MSGTYPE);
 			
-		} else if(strcmp(type, XML_ATTR_REQUEST) != 0) {
-			cl_log(LOG_INFO,
-			       "Message was a response not a request."
-			       "  Discarding");
-
 		} else {
 			gboolean (*process_function)
 				(xmlNodePtr msg, IPC_Channel *sender) = NULL;
