@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.33 2005/02/19 18:11:03 andrew Exp $ */
+/* $Id: utils.c,v 1.34 2005/02/20 08:10:15 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -242,8 +242,8 @@ crm_log_init(const char *entity)
 			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
 			  cl_glib_msg_handler, NULL);
 
-	/* and for good measure... */
-	g_log_set_always_fatal((GLogLevelFlags)0);    
+	/* and for good measure... - this enum is a bit field (!) */
+	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 	
 	cl_log_set_entity(entity);
 	cl_log_set_facility(LOG_LOCAL7);
