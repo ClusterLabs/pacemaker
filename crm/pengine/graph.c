@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.29 2005/03/31 07:57:32 andrew Exp $ */
+/* $Id: graph.c,v 1.30 2005/03/31 16:48:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -205,6 +205,7 @@ crm_data_t *
 action2xml(action_t *action, gboolean as_input)
 {
 	crm_data_t * action_xml = NULL;
+	crm_data_t * args_xml = NULL;
 	
 	if(action == NULL) {
 		return NULL;
@@ -265,21 +266,20 @@ action2xml(action_t *action, gboolean as_input)
 	set_xml_property_copy(
 		action_xml, "allow_fail",
 		action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
-
-	set_xml_property_copy(
-		action_xml, XML_ATTR_TIMEOUT, action->timeout);
 	
 	if(as_input) {
 		return action_xml;
 	}
-	
+
+	args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
+	g_hash_table_foreach(action->extra, hash2nvpair, args_xml);
+
 	if(action->rsc != NULL) {
 		g_hash_table_foreach(
-			action->rsc->parameters, hash2nvpair, action->args);
+			action->rsc->parameters, hash2nvpair, args_xml);
 	}
 	
-	crm_xml_debug(action->args, "copied in extra attributes");
-	add_node_copy(action_xml, action->args);
+	crm_xml_debug(args_xml, "copied in extra attributes");
 	
 	return action_xml;
 }
