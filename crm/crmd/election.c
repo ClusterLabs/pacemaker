@@ -147,7 +147,6 @@ do_election_count_vote(long long action,
 	const char *vote_from    = cl_get_string(vote->msg, F_CRM_HOST_FROM);
 	const char *your_version = cl_get_string(vote->msg, F_CRM_VERSION);
 	oc_node_t *our_node = NULL, * your_node = NULL;
-	struct election_data_s election_data;
 
 	if(vote_from == NULL || strcmp(vote_from, fsa_our_uname) == 0) {
 		/* dont count our own vote */
@@ -188,6 +187,9 @@ do_election_count_vote(long long action,
 		crm_debug("Election fail: version");
 		we_loose = TRUE;
 		
+	} else if(compare_version(your_version, CRM_VERSION) < 0) {
+		crm_debug("Election pass: bad foreign version");
+		
 	} else if(your_node->node_born_on < our_node->node_born_on) {
 		crm_debug("Election fail: born_on");
 		we_loose = TRUE;
@@ -196,15 +198,8 @@ do_election_count_vote(long long action,
 		  && strcmp(fsa_our_uname, vote_from) > 0) {
 		crm_debug("Election fail: uname");
 		we_loose = TRUE;
-
-	} else {
-		election_data.winning_uname = NULL;
-		election_data.winning_bornon = -1; /* maximum integer */
-		
-		crm_verbose("We might win... we should vote (possibly again)");
-		election_result = I_ELECTION; /* new "default" */
 	}
-	
+
 	if(we_loose) {
 		stopTimer(election_timeout);
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
@@ -217,7 +212,11 @@ do_election_count_vote(long long action,
 			election_result = I_PENDING;
 			
 		}
+	} else {
+		crm_verbose("We might win... we should vote (possibly again)");
+		election_result = I_ELECTION; /* new "default" */
 	}
+	
 
 	register_fsa_input(C_FSA_INTERNAL, election_result, NULL);
 	return I_NULL;
