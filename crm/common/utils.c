@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.38 2005/03/08 13:57:04 andrew Exp $ */
+/* $Id: utils.c,v 1.39 2005/03/09 16:07:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,7 @@
 #include <stdlib.h>
 
 
+#include <heartbeat.h>
 #include <ha_msg.h>
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_signal.h>
@@ -45,11 +46,16 @@
 #include <crm/common/util.h>
 #include <crm/dmalloc_wrapper.h>
 
-#define MAXLINE 512
+#ifndef MAXLINE
+#    define MAXLINE 512
+#endif
 
 static uint ref_counter = 0;
 gboolean crm_assert_failed = FALSE;
 unsigned int crm_log_level = LOG_INFO;
+
+void crm_set_env_options(void);
+int crm_logfacility_from_name(const char * value);
 
 char *
 generateReference(const char *custom1, const char *custom2)
@@ -232,7 +238,7 @@ extern int LogToLoggingDaemon(int priority, const char * buf, int bstrlen, gbool
 gboolean
 crm_log_init(const char *entity) 
 {
-	const char *test = "Testing log daemon connection";
+/* 	const char *test = "Testing log daemon connection"; */
 	/* Redirect messages from glib functions to our handler */
 /*  	cl_malloc_forced_for_glib(); */
 	g_log_set_handler(NULL,
@@ -251,6 +257,8 @@ crm_log_init(const char *entity)
 	cl_set_corerootdir(HA_COREDIR);	    
 	cl_cdtocoredir();
 	
+	crm_set_env_options();
+#if 0	
 	cl_log_send_to_logging_daemon(FALSE);
 	if(HA_FAIL == LogToLoggingDaemon(LOG_INFO, test, strlen(test), TRUE)) {
 		crm_warn("Not using log daemon");
@@ -259,7 +267,7 @@ crm_log_init(const char *entity)
 		cl_log_send_to_logging_daemon(TRUE);
 		crm_info("Enabled log daemon");
 	}
-
+#endif
 	CL_SIGNAL(DEBUG_INC, alter_debug);
 	CL_SIGNAL(DEBUG_DEC, alter_debug);
 
@@ -541,6 +549,11 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 	char *param_val = NULL;
 	const char *param_name = NULL;
 
+	if(hb_cluster == NULL) {
+		crm_set_env_options();
+		return;
+	}
+	
 	/* change the logging facility to the one used by heartbeat daemon */
 	crm_debug("Switching to Heartbeat logger");
 	if (( facility =
@@ -597,6 +610,158 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 		param_val = NULL;
 	}
 
+}
+
+
+#define ENV_PREFIX "HA_"
+void
+crm_set_env_options(void) 
+{
+	char *param_val = NULL;
+	const char *param_name = NULL;
+	
+	param_name = ENV_PREFIX "" KEY_FACILITY;
+	param_val = getenv(param_name);
+	crm_info("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		int facility = crm_logfacility_from_name(param_val);
+		if(facility > 0) {
+			cl_log_set_facility(facility);
+		}
+		param_val = NULL;
+	}
+
+	param_name = ENV_PREFIX "" KEY_LOGFILE;
+	param_val = getenv(param_name);
+	crm_info("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		cl_log_set_logfile(param_val);
+		param_val = NULL;
+	}
+	
+	param_name = ENV_PREFIX "" KEY_DBGFILE;
+	param_val = getenv(param_name);
+	crm_info("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		cl_log_set_debugfile(param_val);
+		param_val = NULL;
+	}
+	
+	param_name = ENV_PREFIX "" KEY_DEBUGLEVEL;
+	param_val = getenv(param_name);
+	crm_info("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		int debug_level = atoi(param_val);
+		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
+			set_crm_log_level(LOG_INFO + debug_level);
+		}
+		param_val = NULL;
+	}
+
+	param_name = ENV_PREFIX "" KEY_LOGDAEMON;
+	param_val = getenv(param_name);
+	crm_info("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		crm_str_to_boolean(param_val, &use_logging_daemon);
+		param_val = NULL;
+	}
+
+	param_name = ENV_PREFIX "" KEY_CONNINTVAL;
+	param_val = getenv(param_name);
+	crm_devel("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		conn_logd_intval = crm_get_msec(param_val);
+		param_val = NULL;
+	}
+	
+}
+
+struct _syslog_code {
+        const char    *c_name;
+        int     c_val;
+};
+
+
+struct _syslog_code facilitynames[] =
+{
+#ifdef LOG_AUTH
+	{ "auth", LOG_AUTH },
+	{ "security", LOG_AUTH },           /* DEPRECATED */
+#endif
+#ifdef LOG_AUTHPRIV
+	{ "authpriv", LOG_AUTHPRIV },
+#endif
+#ifdef LOG_CRON
+	{ "cron", LOG_CRON },
+#endif
+#ifdef LOG_DAEMON
+	{ "daemon", LOG_DAEMON },
+#endif
+#ifdef LOG_FTP
+	{ "ftp", LOG_FTP },
+#endif
+#ifdef LOG_KERN
+	{ "kern", LOG_KERN },
+#endif
+#ifdef LOG_LPR
+	{ "lpr", LOG_LPR },
+#endif
+#ifdef LOG_MAIL
+	{ "mail", LOG_MAIL },
+#endif
+
+/*	{ "mark", INTERNAL_MARK },           * INTERNAL */
+
+#ifdef LOG_NEWS
+	{ "news", LOG_NEWS },
+#endif
+#ifdef LOG_SYSLOG
+	{ "syslog", LOG_SYSLOG },
+#endif
+#ifdef LOG_USER
+	{ "user", LOG_USER },
+#endif
+#ifdef LOG_UUCP
+	{ "uucp", LOG_UUCP },
+#endif
+#ifdef LOG_LOCAL0
+	{ "local0", LOG_LOCAL0 },
+#endif
+#ifdef LOG_LOCAL1
+	{ "local1", LOG_LOCAL1 },
+#endif
+#ifdef LOG_LOCAL2
+	{ "local2", LOG_LOCAL2 },
+#endif
+#ifdef LOG_LOCAL3
+	{ "local3", LOG_LOCAL3 },
+#endif
+#ifdef LOG_LOCAL4
+	{ "local4", LOG_LOCAL4 },
+#endif
+#ifdef LOG_LOCAL5
+	{ "local5", LOG_LOCAL5 },
+#endif
+#ifdef LOG_LOCAL6
+	{ "local6", LOG_LOCAL6 },
+#endif
+#ifdef LOG_LOCAL7
+	{ "local7", LOG_LOCAL7 },
+#endif
+	{ NULL, -1 }
+};
+
+/* set syslog facility config variable */
+int
+crm_logfacility_from_name(const char * value)
+{
+	int lpc;
+	for(lpc = 0; facilitynames[lpc].c_name != NULL; lpc++) {
+		if(strcmp(value, facilitynames[lpc].c_name) == 0) {
+			return facilitynames[lpc].c_val;
+		}
+	}
+	return -1;
 }
 
 int
