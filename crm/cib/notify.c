@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.19 2005/03/11 14:12:18 andrew Exp $ */
+/* $Id: notify.c,v 1.20 2005/03/14 20:53:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -120,7 +120,6 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	}
 
 	if(do_send) {
-		HA_Message *msg_copy = ha_msg_copy(update_msg);
 
 		crm_debug("Notifying client %s/%s of update (queue=%d)",
 			  client->name, client->channel_name, qlen);
@@ -131,9 +130,13 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 				 is_confirm?"Confirmation":is_post?"Post":"Pre",
 				 client->name, client->id);
 			
-		} else if(send_ipc_message(ipc_client, msg_copy) == FALSE) {
-			crm_warn("Notification of client %s/%s failed",
-				 client->name, client->id);
+		} else {
+			HA_Message *msg_copy = ha_msg_copy(update_msg);
+
+			if(send_ipc_message(ipc_client, msg_copy) == FALSE) {
+				crm_warn("Notification of client %s/%s failed",
+					 client->name, client->id);
+			}
 		}
 		
 	} else {
