@@ -130,6 +130,7 @@ do_dc_join_offer_one(long long action,
 		     enum crmd_fsa_input current_input,
 		     fsa_data_t *msg_data)
 {
+	oc_node_t member;
 	gpointer a_node = NULL;
 	ha_msg_input_t *welcome = fsa_typed_data(fsa_dt_ha_msg);
 	const char *join_to = NULL;
@@ -150,51 +151,21 @@ do_dc_join_offer_one(long long action,
 		 *  however, it will either re-announce itself in due course
 		 *  _or_ we can re-store the original offer on the client.
 		 */
-		crm_warn("Already offered membership to %s... discarding",
-			 join_to);
-
-#if 0
-		/* this isn't as necessary as before
-		 * now there are no DC-heartbeats that the slave will
-		 *	be re-announcing to so there will be a lot less
-		 *	bouncing around than before
-		 */
-		
-		/* Make sure we end up in the correct state again */
-		if((ssize_t)g_hash_table_size(join_requests)
-		   >= fsa_membership_copy->members_size) {
-
-			crm_info("False alarm, returning to %s",
-				 fsa_state2string(S_FINALIZE_JOIN));
-			
-			register_fsa_input(C_FSA_INTERNAL, I_INTEGRATED, NULL);
-			return I_NULL;
-		}
-			
-		crm_debug("Still waiting on %d outstanding join acks",
-			  fsa_membership_copy->members_size
-			  - g_hash_table_size(join_requests));
-		
-	} else {
-#else
+		crm_info("Re-offering membership to %s...", join_to);
 	}
-	{
-#endif
-		oc_node_t member;
 
-		crm_debug("Processing annouce request from %s in state %s",
-			  join_to, fsa_state2string(cur_state));
-		
-		member.node_uname = crm_strdup(join_to);
-		join_send_offer(NULL, &member, NULL);
-		crm_free(member.node_uname);
-
-		/* this was a genuine join request, cancel any existing
-		 * transition and invoke the PE
-		 */
-		register_fsa_input_w_actions(
-			msg_data->fsa_cause, I_NULL, NULL, A_TE_CANCEL);
-	}
+	crm_debug("Processing annouce request from %s in state %s",
+		  join_to, fsa_state2string(cur_state));
+	
+	member.node_uname = crm_strdup(join_to);
+	join_send_offer(NULL, &member, NULL);
+	crm_free(member.node_uname);
+	
+	/* this was a genuine join request, cancel any existing
+	 * transition and invoke the PE
+	 */
+	register_fsa_input_w_actions(
+		msg_data->fsa_cause, I_NULL, NULL, A_TE_CANCEL);
 	
 	return I_NULL;
 }
