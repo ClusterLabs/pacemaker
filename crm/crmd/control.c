@@ -100,7 +100,6 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
     
 	while(hb_cluster->llc_ops->msgready(hb_cluster))
 	{
-		CRM_DEBUG("there was another message...");
 		// invoke the callbacks but dont block
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
