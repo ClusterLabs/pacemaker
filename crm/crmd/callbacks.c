@@ -53,22 +53,25 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 	CRM_DEV_ASSERT(from != NULL);
 
 	if(fsa_membership_copy == NULL) {
-		crm_devel("Ignoring HA messages until we are"
+		crm_debug("Ignoring HA messages until we are"
 			  " connected to the CCM");
+		crm_log_message_adv(
+			LOG_DEBUG, "HA[inbound]: Ignore (No CCM)", msg);
 		return;
 	}
 	
 	from_node = g_hash_table_lookup(fsa_membership_copy->members, from);
 
 	if(from_node == NULL) {
-		crm_devel("Ignoring HA messages from %s: not in our"
+		crm_debug("Ignoring HA messages from %s: not in our"
 			  " membership list", from);
+		crm_log_message_adv(LOG_DEBUG, "HA[inbound]: CCM Discard", msg);
 		
 	} else if(AM_I_DC
 	   && safe_str_eq(sys_from, CRM_SYSTEM_DC)
 	   && safe_str_neq(from, fsa_our_uname)) {
 		crm_err("Another DC detected");
-		crm_log_message_adv(LOG_ERR, "inbound.ha.log", msg);
+		crm_log_message_adv(LOG_ERR, "HA[inbound]: Duplicate DC", msg);
 		new_input = new_ha_msg_input(msg);
 		register_fsa_input(C_HA_MESSAGE, I_ELECTION, new_input);
 
@@ -82,27 +85,27 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 		  && safe_str_neq(from, fsa_our_dc)) {
 		crm_warn("Ignoring message from wrong DC: %s vs. %s ",
 			 from, fsa_our_dc);
-		crm_log_message_adv(LOG_WARNING, "inbound.ha.log", msg);
+		crm_log_message_adv(LOG_WARNING, "HA[inbound]: wrong DC", msg);
 #endif
 	} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
 		crm_verbose("Ignoring message for the DC [F_SEQ=%s]", seq);
-		crm_log_message_adv(LOG_TRACE, "inbound.ha.log", msg);
+		crm_log_message_adv(LOG_TRACE, "HA[inbound]: ignore", msg);
 		return;
 
 	} else if(safe_str_eq(from, fsa_our_uname)
 		  && safe_str_eq(op, CRM_OP_VOTE)) {
-		crm_log_message_adv(LOG_TRACE, "inbound.ha.log", msg);
-		crm_verbose("Ignoring our own vote [F_SEQ=%s]", seq);
+		crm_log_message_adv(LOG_TRACE, "HA[inbound]", msg);
+		crm_verbose("Ignoring our own vote [F_SEQ=%s]: own vote", seq);
 		return;
 		
 	} else if(AM_I_DC && safe_str_eq(op, CRM_OP_HBEAT)) {
 		crm_verbose("Ignoring our own heartbeat [F_SEQ=%s]", seq);
-		crm_log_message_adv(LOG_MSG, "inbound.ha.log", msg);
+		crm_log_message_adv(LOG_MSG, "HA[inbound]: own heartbeat", msg);
 		return;
 
 	} else {
 		crm_devel("Processing message");
-		crm_log_message_adv(LOG_MSG, "inbound.ha.log", msg);
+		crm_log_message_adv(LOG_DEBUG, "HA[inbound]", msg);
 		new_input = new_ha_msg_input(msg);
 		register_fsa_input(C_HA_MESSAGE, I_ROUTER, new_input);
 	}
