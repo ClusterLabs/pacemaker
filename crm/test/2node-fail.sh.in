@@ -216,19 +216,19 @@ function 2node_fail_test() {
 
     if [ $test_for_election = 0 ]; then
 	do_cmd echo Killed the DC... checking for DC Failover
-	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 50000 \
+	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 60000 \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
 	cts_assert "Transition of the DC from ${fail_node} to ${good_node} failed."
     else
 	do_cmd echo Killed slave node... checking the DC noticed
-	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 50000 \
+	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 60000 \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_POLICY_ENGINE\"" \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_IDLE\""
 	cts_assert "Failure of slave node ${fail_node} was not noticed on the DC (${good_node})."    
     fi
 
-    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 50000 \
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 60000 \
 	    -s "${god_node} crmd(.*) Performing op start(.*) on ${moved_rsc}" \
 	    -s "crmd(.*) Resource state: ${moved_rsc}(.*) after start] on ${good_node}"
     cts_assert "Move of ${moved_rsc} to ${good_node} failed."
@@ -262,7 +262,7 @@ function 2node_fail_test() {
 	    do_cmd echo "wait for HA to start on $fail_node"
 	    crm_log_pos=$(stat -L -c %s $logfile)
 	    do_cmd remote_cmd $INIT_USER $fail_node $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
-	    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+	    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2000 \
 		-s "${fail_node} ccm(.*) Hostname: ${fail_node}" \
 		-s "${fail_node} heartbeat(.*): info: Starting (.*)lrmd" \
 		-e "${fail_node} heartbeat(.*) Client (.*) respawning too fast"

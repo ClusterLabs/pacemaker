@@ -186,6 +186,8 @@ cts_assert "rsc2 NOT running"
 do_cmd is_running rsc1 $test_node_1 $test_node_1
 cts_assert "rsc1 NOT running on $test_node_1"
 
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
+    -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_2}"
 do_cmd is_running rsc2 $test_node_1 $test_node_2
 cts_assert "rsc2 NOT running on $test_node_2"
 
@@ -222,6 +224,8 @@ cts_assert "rsc1 NOT running"
 do_cmd is_running rsc2 $test_node_2
 cts_assert "rsc2 NOT running"
 
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
+    -s "crmd(.*) Resource state: rsc1(.*) after start] on ${test_node_2}"
 do_cmd is_running rsc1 $test_node_2 $test_node_1
 cts_assert_false "rsc1 IS running on $test_node_1"
 

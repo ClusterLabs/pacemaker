@@ -19,11 +19,13 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 testdir			= $(libdir)/heartbeat/crmtest
 
-test_SCRIPTS		= helper.sh testutils.pl stop.sh \
-			1node.sh 2node.sh 2node-fail.sh 3node.sh 3node-rapid.sh 3node-fail.sh
+test_SCRIPTS		= helper.sh testutils.pl stop.sh  cib_suite.sh \
+			1node.sh 2node.sh 2node-fail.sh \
+			3node.sh 3node-rapid.sh 3node-fail.sh
 
-EXTRA_DIST		= helper.sh testutils.pl stop.sh \
-			1node.sh 2node.sh 2node-fail.sh 3node.sh 3node-rapid.sh 3node-fail.sh
+EXTRA_DIST		= helper.sh testutils.pl stop.sh  cib_suite.sh \
+			1node.sh 2node.sh 2node-fail.sh \
+			3node.sh 3node-rapid.sh 3node-fail.sh
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(testdir)

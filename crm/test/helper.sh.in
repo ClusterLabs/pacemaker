@@ -216,6 +216,22 @@ function make_node()
 
 }
 
+function make_node_local()
+{
+    host=$1
+    uname=$2
+    type=$3
+    uuid=`uuidgen`
+    
+    if [ -z $type ]; then
+	type="member"
+    fi
+    
+    node_xml="'<node id=\"${uuid}\" uname=\"${uname}\" description=\"test node: ${uname}\" type=\"${type}\"/>'";
+    
+    remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -l -C -o node -X $node_xml"
+}
+
 function make_resource()
 {
     host=$1
@@ -291,6 +307,7 @@ function do_cts_assert() {
     shift
 
     if [ $result -ne $expected ]; then
+	do_cmd echo "Expected rc ($expected) != $result"
 	err $*
     fi
 }
@@ -320,13 +337,12 @@ function dump_node() {
     a_node_index=$1
     a_node=$2
 
-    dump_file="${a_node_index}-${a_node}.tgz"
+    dump_file="/tmp/${a_node_index}-${a_node}.tgz"
     `which ssh` ${ADMIN_USER}@${a_node} "ps axf > /tmp/crm/processes"
-    `which ssh` ${ADMIN_USER}@${a_node} \
-	"tar zcvf /tmp/${dump_file} /tmp/crm ~${CRMD_USER}/core"
+    `which ssh` ${ADMIN_USER}@${a_node} "tar zcvf ${dump_file} /tmp/crm"
 
-    scp -r ${ADMIN_USER}@${a_node}:/tmp/${dump_file} $test_dump_dir
-
+    scp -r ${ADMIN_USER}@${a_node}:${dump_file} $test_dump_dir
+    `which ssh` ${ADMIN_USER}@${a_node} "rm ${dump_file}"
 }
 
 function do_cmd() {
@@ -445,10 +461,11 @@ function crm-cleanup-node() {
 # make *sure* theres nothing left over from last time
 	do_cmd remote_cmd $INIT_USER $ha_host "rm -f $HAVAR_DIR/crm/cib*.xml"
 
-	remote_cmd $INIT_USER $ha_host "rm -f /tmp/crm/*" 2>&1 > /dev/null 
-	remote_cmd $CRMD_USER $ha_host "touch /tmp/crm/cluster.log"
+	`which ssh` ${INIT_USER}@${ha_host} "rm -f /tmp/crm/*" 2>/dev/null 
 	remote_cmd $CRMD_USER $ha_host "rm -f /tmp/crm/*/core" 2>&1 > /dev/null
 	do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart"
+	do_cmd remote_cmd $CRMD_USER $ha_host "logger -i -p local7.info __crmtest_${test_type}_log_mark__"
+	do_cmd sleep 2
 
 # zero out logs, maybe
 	if [ ${test_node_1} = "fish" ]; then
@@ -462,6 +479,39 @@ function crm-cleanup-node() {
 function mark_log() 
 {
     export crm_log_pos=$(stat -L -c %s $logfile)
+}
+
+function gres() 
+{
+    if [ $# -lt "3" ] 
+	then 
+	echo Usage: gres pattern replacement files
+	return 1
+    fi
+    pattern=$1
+    replacement=$2
+    shift; shift;
+    filelist=$*
+    A="`echo | tr '\012' '\001' `"
+    
+    for file in $filelist; do
+	
+	fname=`basename $file`
+	dname=`dirname $file`
+	
+	is_backup=${fname##.gres.}
+	if [ "$is_backup" = "$fname" ]; then
+	    grep -q "$pattern" "$file"
+	    isthere=$?
+	    
+	    if [ $isthere = 0 ]; then
+#		echo Processing $file...
+		cp "$file" "$dname/.gres.$fname" && sed -e "s$A$pattern$A$replacement$A" "$dname/.gres.$fname" > "$file"
+	    fi
+#    else
+#	echo "Ignoring backup of $is_backup in $dname"
+	fi
+    done
 }
 
 # successfully sourced
