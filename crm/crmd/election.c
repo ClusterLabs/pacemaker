@@ -232,6 +232,7 @@ do_dc_takeover(long long action,
 	crm_free(fsa_our_dc);
 	fsa_our_dc = crm_strdup(fsa_our_uname);
 
+	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none);
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
 
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
