@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.53 2005/03/18 07:46:19 andrew Exp $ */
+/* $Id: tengine.c,v 1.54 2005/03/18 10:39:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -491,6 +491,7 @@ initiate_action(action_t *action)
 		} else if (ST_OK == stonithd_node_fence( st_op )) {
 			ret = TRUE;
 		}
+		return ret;
 #endif
 		
 	} else if(on_node == NULL || strlen(on_node) == 0) {
