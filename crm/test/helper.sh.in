@@ -288,7 +288,7 @@ function do_cmd() {
 	    echo `date` ": Waiting for state $2 on $host (max $3 attempts)";
 	    
 	elif [ $cmd = "./testutils.pl" ]; then
-#	    OUTPUT_STDOUT=1
+	    OUTPUT_STDOUT=1
 	    echo `date` ": Running '$cmdline'";
 	    
 	elif [ $cmd = "echo" ]; then

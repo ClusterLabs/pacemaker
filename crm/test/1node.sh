@@ -42,7 +42,7 @@ do_cmd echo "wait for HA to start"
 do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
 cts_assert "Startup of Heartbeat on ${test_node_1} failed."
 
-do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -V "2>&1 >/dev/null" &
+do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
 
 do_cmd echo "wait for CRMd to start"
 do_cmd ./testutils.pl --search  -a -m 1500 -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}"

@@ -41,7 +41,7 @@ do_cmd echo "wait for HA to start"
 do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
 cts_assert "Startup of Heartbeat on ${test_node_1} failed."
 
-do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -V "2>&1 >/dev/null" &
+do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
 
 do_cmd echo "wait for CRMd to start"
 do_cmd ./testutils.pl --search  -a -m 1500 -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}"
@@ -117,7 +117,7 @@ do_cmd echo "wait for HA to start on $test_node_2"
 do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_2} ccm(.*) Hostname: ${test_node_2}" -s "${test_node_2} heartbeat(.*): info: Starting (.*)lrmd" -e "${test_node_2} heartbeat(.*) Client (.*) respawning too fast"
 cts_assert "Startup of Heartbeat on ${test_node_2} failed."
 
-do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd "2>&1 >/dev/null" &
+do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd  "-VVVV" "2>&1 >/dev/null" &
 
 #do_cmd wait_for_state S_INTEGRATION 30 $test_node_1 
 #cts_assert "S_INTEGRATION not reached on $test_node_1 (new node)!"
@@ -153,7 +153,7 @@ do_cmd echo "Looking for transition messages"
 do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_2} crmd(.*) State transition (.*) -> \"S_ELECTION\"" -s "${test_node_1} crmd(.*) State transition (.*) -> \"S_NOT_DC\"" -s "${test_node_1} crmd(.*)State transition (.*) -> \"S_STOPPING\""
 cts_assert "Shutdown of ${test_node_1} followed by stability on ${test_node_2} failed."
 
-do_cmd wait_for_state S_IDLE 30 $test_node_2 
+do_cmd wait_for_state S_IDLE 60 $test_node_2 
 cts_assert "S_IDLE not reached on $test_node_2!"
 
 do_cmd is_running rsc1 $test_node_2
