@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.24 2005/02/03 14:20:45 andrew Exp $ */
+/* $Id: utils.c,v 1.25 2005/02/03 14:33:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -227,6 +227,7 @@ crm_itoa(int an_int)
 }
 
 unsigned int crm_log_level = LOG_INFO;
+extern int LogToLoggingDaemon(int priority, const char * buf, int bstrlen, gboolean use_pri_str);
 
 gboolean
 crm_log_init(const char *entity) 
