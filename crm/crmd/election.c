@@ -62,6 +62,12 @@ do_election_vote(long long action,
 			break;
 	}
 
+	if(not_voting == FALSE) {
+		if(is_set(fsa_input_register, R_STARTING)) {
+			not_voting = TRUE;
+		}
+	}
+
 	if(not_voting) {
 		stopTimer(election_timeout);
 		if(AM_I_DC) {
@@ -77,9 +83,7 @@ do_election_vote(long long action,
 	send_request(msg_options, NULL, CRM_OP_VOTE,
 		     NULL, CRM_SYSTEM_CRMD, NULL);
 
-	if(election_timeout->source_id < 0) {
-		startTimer(election_timeout);		
-	}
+	startTimer(election_timeout);		
 	
 	return election_result;
 }
