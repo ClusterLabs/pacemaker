@@ -542,6 +542,8 @@ gboolean
 register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 {
 	int facility;
+	char *param_val = NULL;
+	const char *param_name = NULL;
 	
 	if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
 		crm_crit("cluster errmsg function unavailable");
@@ -561,8 +563,31 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
 		cl_log_set_facility(facility);
  	}	
-	crm_verbose("Facility: %d", facility);	
-  
+	crm_verbose("Facility: %d", facility);
+	
+	param_name = KEY_LOGFILE;
+	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
+	crm_info("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		cl_log_set_logfile(param_val);
+		cl_free(param_val);
+		param_val = NULL;
+	}
+	param_name = KEY_DBGFILE;
+	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
+	if(param_val != NULL) {
+		cl_log_set_debugfile(param_val);
+		cl_free(param_val);
+		param_val = NULL;
+	}
+	param_name = KEY_DEBUGLEVEL;
+	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
+	crm_info("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		cl_free(param_val);
+		param_val = NULL;
+	}
+	
 	crm_devel("Be informed of CRM messages");
 	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
 		    hb_cluster, T_CRM, crmd_ha_msg_callback, hb_cluster)){
