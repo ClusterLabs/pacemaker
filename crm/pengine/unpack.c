@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.20 2004/07/30 15:31:06 andrew Exp $ */
+/* $Id: unpack.c,v 1.21 2004/08/03 08:56:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -408,7 +408,7 @@ unpack_status(xmlNodePtr status,
 	      GListPtr nodes, GListPtr rsc_list,
 	      GListPtr *actions, GListPtr *node_constraints)
 {
-	const char *id        = NULL;
+	const char *uname     = NULL;
 
 	xmlNodePtr node_state = NULL;
 	xmlNodePtr lrm_rsc    = NULL;
@@ -420,23 +420,24 @@ unpack_status(xmlNodePtr status,
 	while(status != NULL) {
 		node_state = status;
 		status     = status->next;
-		id         = xmlGetProp(node_state, XML_ATTR_ID);
+//		id         = xmlGetProp(node_state, XML_ATTR_ID);
+		uname      = xmlGetProp(node_state,    XML_ATTR_UNAME);
 		attrs      = find_xml_node(node_state, "attributes");
 		lrm_rsc    = find_xml_node(node_state, XML_CIB_TAG_LRM);
 		lrm_agents = find_xml_node(lrm_rsc,    "lrm_agents");
 		lrm_rsc    = find_xml_node(lrm_rsc,    XML_LRM_TAG_RESOURCES);
 		lrm_rsc    = find_xml_node(lrm_rsc,    "lrm_resource");
 
-		crm_verbose("Processing node %s", id);
-		this_node = pe_find_node_id(nodes, id);
+		crm_verbose("Processing node %s", uname);
+		this_node = pe_find_node(nodes, uname);
 
-		if(id == NULL) {
+		if(uname == NULL) {
 			// error
 			continue;
 
 		} else if(this_node == NULL) {
 			crm_err("Node %s in status section no longer exists",
-				id);
+				uname);
 			continue;
 		}
 		
@@ -462,7 +463,7 @@ unpack_status(xmlNodePtr status,
 gboolean
 determine_online_status(xmlNodePtr node_state, node_t *this_node)
 {
-	const char *id	       = xmlGetProp(node_state,XML_ATTR_ID);
+	const char *uname      = xmlGetProp(node_state,XML_ATTR_UNAME);
 	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE);
 	const char *exp_state  = xmlGetProp(node_state,XML_CIB_ATTR_EXPSTATE);
 	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
@@ -498,11 +499,11 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 		}
 
 		if(this_node->details->unclean) {
-			crm_verbose("Node %s is due for STONITH", id);
+			crm_verbose("Node %s is due for STONITH", uname);
 		}
 
 		if(this_node->details->shutdown) {
-			crm_verbose("Node %s is due for shutdown", id);
+			crm_verbose("Node %s is due for shutdown", uname);
 		}
 	}
 	return TRUE;
