@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.3 2004/12/17 09:31:14 andrew Exp $ */
+/* $Id: cibmon.c,v 1.4 2005/01/05 11:21:40 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -196,6 +196,11 @@ main(int argc, char **argv)
 			cib_error2string(exit_code));
 	} 
 
+	if(exit_code == cib_ok) {
+		exit_code = the_cib->cmds->set_connection_dnotify(
+			the_cib, cib_connection_destroy);
+	}
+	
 	if(exit_code == cib_ok && pre_notify) {
 		exit_code = the_cib->cmds->add_notify_callback(
 			the_cib, T_CIB_PRE_NOTIFY, cibmon_pre_notify);
