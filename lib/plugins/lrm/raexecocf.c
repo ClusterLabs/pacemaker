@@ -314,8 +314,10 @@ get_resource_meta(const char* ra_type)
 	data = (char*)g_new(char, g_str_tmp->len+1);
 	data[0] = data[g_str_tmp->len] = 0;
 	strncpy(data, g_str_tmp->str, g_str_tmp->len);
-	g_string_free(g_str_tmp, TRUE);
 
+	g_string_free(g_str_tmp, TRUE);
+	g_string_free(ra_dirname, TRUE);
+	
 	pclose(file);
 	return data;
 	
