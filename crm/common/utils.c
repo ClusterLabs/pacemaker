@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.19 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: utils.c,v 1.20 2005/01/26 13:17:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,6 +25,7 @@
 #include <stdlib.h>
 
 
+#include <ha_msg.h>
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_signal.h>
 
@@ -245,7 +246,30 @@ get_crm_log_level(void)
 }
 
 void
-do_crm_log(int log_level, const char *function, const char *fmt, ...)
+crm_log_message_adv(int level, const char *alt_debugfile, const HA_Message *msg)
+{
+	if(crm_log_level >= level) {
+		const char *cur_debugfile = NULL;
+		if(alt_debugfile) {
+			cur_debugfile = cl_log_get_debugfile();
+			cl_log_set_debugfile(alt_debugfile);
+			do_crm_log(level, NULL, NULL, "#========= message start ==========#");
+		}
+		if(level > LOG_DEBUG) {
+			cl_log_message(LOG_DEBUG, msg);
+		} else {
+			cl_log_message(level, msg);
+		}
+		if(cur_debugfile) {
+			cl_log_set_debugfile(cur_debugfile);
+		}
+	}
+}
+
+
+void
+do_crm_log(int log_level, const char *function,
+	   const char *alt_debugfile, const char *fmt, ...)
 {
 	int log_as = log_level;
 	gboolean do_log = FALSE;
@@ -260,21 +284,35 @@ do_crm_log(int log_level, const char *function, const char *fmt, ...)
 	}
 
 	if(do_log) {
+		const char *cur_debugfile = NULL;
 		va_list ap;
-		char	buf[MAXLINE];
+		char	buf[20000];
 		int	nbytes;
 		
-		memset(buf, EOS, sizeof(buf)-1);
-		/*			buf[MAXLINE-1] = EOS; */
+		memset(buf, EOS, sizeof(buf));
 		va_start(ap, fmt);
 		nbytes=vsnprintf(buf, sizeof(buf)-1, fmt, ap);
 		va_end(ap);
 		
-		if(function == NULL) {
-			cl_log(log_as, "[%d] %s", log_level, buf);
+		if(alt_debugfile == NULL || nbytes < MAXLINE) {
+			if(alt_debugfile) {
+				cur_debugfile = cl_log_get_debugfile();
+				cl_log_set_debugfile(alt_debugfile);
+			}
+			if(function == NULL) {
+				cl_log(log_as, "[%d] %s", log_level, buf);
+			} else {
+				cl_log(log_as, "(%s [%d]) %s",
+				       function, log_level, buf);
+			}
+			if(cur_debugfile) {
+				cl_log_set_debugfile(cur_debugfile);
+			}
 		} else {
-			cl_log(log_as, "(%s [%d]) %s", function,log_level,buf);
-		}
+			FILE *fp = fopen(alt_debugfile, "a");
+			fprintf(fp, "%s\n", buf);
+			fclose(fp);
+		}		
 	}
 }
 
@@ -397,4 +435,32 @@ alter_debug(int nsig)
 void g_hash_destroy_str(gpointer data)
 {
 	crm_free(data);
+}
+
+gboolean
+safe_str_eq(const char *a, const char *b) 
+{
+	if(a == b) {
+		return TRUE;		
+	} else if(a == NULL || b == NULL) {
+		return FALSE;
+	} else if(strcmp(a, b) == 0) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+gboolean
+safe_str_neq(const char *a, const char *b)
+{
+	if(a == b) {
+		return FALSE;
+
+	} else if(a==NULL || b==NULL) {
+		return TRUE;
+
+	} else if(strcmp(a, b) == 0) {
+		return FALSE;
+	}
+	return TRUE;
 }
