@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.2 2004/11/09 11:18:00 andrew Exp $ */
+/* $Id: complex.c,v 1.3 2004/11/09 14:49:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,7 +33,8 @@ resource_object_functions_t resource_class_functions[] = {
 		native_unpack,
 		native_color,
 		native_create_actions,
-		native_internal_ordering,
+		native_internal_constraints,
+		native_agent_constraints,
 		native_rsc_dependancy_lh,
 		native_rsc_dependancy_rh,
 		native_rsc_order_lh,
@@ -47,7 +48,8 @@ resource_object_functions_t resource_class_functions[] = {
 		group_unpack,
 		group_color,
 		group_create_actions,
-		group_internal_ordering,
+		group_internal_constraints,
+		group_agent_constraints,
 		group_rsc_dependancy_lh,
 		group_rsc_dependancy_rh,
 		group_rsc_order_lh,
@@ -78,7 +80,11 @@ int get_resource_type(const char *name)
 {
 	if(safe_str_eq(name, "resource")) {
 		return pe_native;
+
+	} else if(safe_str_eq(name, "resource_group")) {
+		return pe_group;
 	}
+	
 	return pe_unknown;
 }
 
@@ -92,7 +98,11 @@ is_active(rsc_to_node_t *cons)
 gboolean	
 common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 {
-	const char *id = xmlGetProp(xml_obj, XML_ATTR_ID);
+	const char *id       = xmlGetProp(xml_obj, XML_ATTR_ID);
+	const char *stopfail = xmlGetProp(xml_obj, "on_stopfail");
+	const char *restart  = xmlGetProp(xml_obj, "restart_type");
+	const char *timeout  = xmlGetProp(xml_obj, "timeout");
+	const char *priority = xmlGetProp(xml_obj, XML_CIB_ATTR_PRIORITY);	
 	
 	crm_verbose("Processing resource...");
 	
@@ -123,118 +133,38 @@ common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 	
 	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
 	(*rsc)->fns->unpack(*rsc);
-	return TRUE;
-}
 
-gboolean
-update_node_weight(rsc_to_node_t *cons, const char *id, GListPtr nodes)
-{
-	node_t *node_rh = pe_find_node(cons->rsc_lh->allowed_nodes, id);
-
-	if(node_rh == NULL) {
-		crm_err("Node not found - cant update");
-		return FALSE;
-	}
-
-	if(node_rh->fixed) {
-		/* warning */
-		crm_warn("Constraint %s is irrelevant as the"
-			 " weight of node %s is fixed as %f.",
-			 cons->id,
-			 node_rh->details->uname,
-			 node_rh->weight);
-		return TRUE;
-	}
+	crm_verbose("Processing resource...");
 	
-	crm_verbose("Constraint %s (%s): node %s weight %f.",
-		    cons->id,
-		    cons->can?"can":"cannot",
-		    node_rh->details->uname,
-		    node_rh->weight);
-
-	if(cons->can == FALSE) {
-		node_rh->weight = -1;
+	(*rsc)->priority	   = atoi(priority?priority:"0"); 
+	(*rsc)->effective_priority = (*rsc)->priority;
+	(*rsc)->recovery_type      = recovery_stop_start;
+	(*rsc)->runnable	   = TRUE; 
+	(*rsc)->provisional	   = TRUE; 
+	(*rsc)->timeout		   = timeout;
+	(*rsc)->candidate_colors   = NULL;
+	(*rsc)->rsc_cons	   = NULL; 
+	(*rsc)->actions            = NULL;
+	
+	if(safe_str_eq(stopfail, "ignore")) {
+		(*rsc)->stopfail_type = pesf_ignore;
+	} else if(safe_str_eq(stopfail, "stonith")) {
+		(*rsc)->stopfail_type = pesf_stonith;
 	} else {
-		node_rh->weight += cons->weight;
+		(*rsc)->stopfail_type = pesf_block;
 	}
-
-	if(node_rh->weight < 0) {
-		node_rh->fixed = TRUE;
+	
+	if(safe_str_eq(restart, "restart")) {
+		(*rsc)->restart_type = pe_restart_restart;
+	} else if(safe_str_eq(restart, "recover")) {
+		(*rsc)->restart_type = pe_restart_recover;
+	} else {
+		(*rsc)->restart_type = pe_restart_ignore;
 	}
-
-	crm_debug_action(print_node("Updated", node_rh, FALSE));
 
 	return TRUE;
 }
 
-gboolean
-constraint_violated(
-	resource_t *rsc_lh, resource_t *rsc_rh, rsc_dependancy_t *constraint)
-{
-	GListPtr result = NULL;
-	color_t *color_lh = rsc_lh->color;
-	color_t *color_rh = rsc_rh->color;
-
-	GListPtr candidate_nodes_lh = NULL;
-	GListPtr candidate_nodes_rh = NULL;
-
-	gboolean matched = FALSE;
-	if(constraint->strength == pecs_must_not) {
-		matched = TRUE;
-	}
-			
-	if(rsc_lh->provisional || rsc_rh->provisional) {
-		return FALSE;
-	}
-	
-	if(color_lh->details->pending
-	   && color_rh->details->pending) {
-		candidate_nodes_lh = color_lh->details->candidate_nodes;
-		candidate_nodes_rh = color_rh->details->candidate_nodes;
-		
-	} else if(color_lh->details->pending == FALSE
-		  && color_rh->details->pending == FALSE) {
-
-		if(color_lh == NULL && color_rh == NULL) {
-			return matched;
-			
-		} else if(color_lh == NULL || color_rh == NULL) {
-			return !matched;
-
-		} else if(color_lh->details->chosen_node == NULL
-			  && color_rh->details->chosen_node == NULL) {
-			return matched;
-
-		} else if(color_lh->details->chosen_node == NULL
-			  || color_rh->details->chosen_node == NULL) {
-			return !matched;
-
-		} else if(safe_str_eq(
-				  color_lh->details->chosen_node->details->id,
-				  color_rh->details->chosen_node->details->id)) {
-			return matched;
-		}
-		return !matched;
-		
-	} else if(color_lh->details->pending) {
-		candidate_nodes_lh = color_lh->details->candidate_nodes;
-		candidate_nodes_rh = g_list_append(
-			NULL, color_rh->details->chosen_node);
-
-	} else if(color_rh->details->pending) {
-		candidate_nodes_rh = color_rh->details->candidate_nodes;
-		candidate_nodes_lh = g_list_append(
-			NULL, color_lh->details->chosen_node);
-	}
-
-	result = node_list_and(candidate_nodes_lh, candidate_nodes_rh, TRUE);
-
-	if(g_list_length(result) == 0 && constraint->strength == pecs_must) {
-		/* free result */
-		return TRUE;
-	}
-	return FALSE;
-}
 
 void
 order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *order) 
@@ -270,4 +200,40 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 		list = g_list_append(list, wrapper);
 		rh_action->actions_before = list;
 	}
+}
+
+void common_dump(resource_t *rsc, const char *pre_text, gboolean details)
+{
+	crm_debug("%s%s%s%sResource %s: (variant=%s, priority=%f)",
+		  pre_text==NULL?"":pre_text,
+		  pre_text==NULL?"":": ",
+		  rsc->provisional?"Provisional ":"",
+		  rsc->runnable?"":"(Non-Startable) ",
+		  rsc->id,
+		  rsc->xml->name,
+		  (double)rsc->priority);
+}
+
+
+void common_free(resource_t *rsc)
+{
+	if(rsc == NULL) {
+		return;
+	}
+	
+	crm_debug("Freeing %s", rsc->id);
+
+	while(rsc->rsc_cons) {
+		crm_debug("Freeing constraint");
+ 		pe_free_rsc_dependancy(
+			(rsc_dependancy_t*)rsc->rsc_cons->data);
+		rsc->rsc_cons = rsc->rsc_cons->next;
+	}
+	crm_debug("Freeing constraint list");
+	if(rsc->rsc_cons != NULL) {
+		g_list_free(rsc->rsc_cons);
+	}
+
+	crm_free(rsc->variant_opaque);
+	crm_free(rsc);
 }

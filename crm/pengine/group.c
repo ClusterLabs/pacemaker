@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.1 2004/11/09 11:18:00 andrew Exp $ */
+/* $Id: group.c,v 1.2 2004/11/09 14:49:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,14 +21,9 @@
 #include <pe_utils.h>
 #include <crm/msg_xml.h>
 
-extern gboolean choose_color(resource_t *lh_resource);
-extern gboolean assign_color(resource_t *rsc, color_t *color);
-extern gboolean update_node_weight(
-	rsc_to_node_t *cons,const char *id,GListPtr nodes);
-extern gboolean is_active(rsc_to_node_t *cons);
-extern gboolean constraint_violated(
-	resource_t *rsc_lh, resource_t *rsc_rh, rsc_dependancy_t *constraint);
-extern void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
+extern gboolean rsc_dependancy_new(
+	const char *id, enum con_strength strength,
+	resource_t *rsc_lh, resource_t *rsc_rh);
 
 typedef struct group_variant_data_s
 {
@@ -42,8 +37,6 @@ void group_unpack(resource_t *rsc)
 {
 	xmlNodePtr xml_obj = rsc->xml;
 	group_variant_data_t *group_data = NULL;
-
-	native_unpack(rsc);
 
 	crm_malloc(group_data, sizeof(group_variant_data_t));
 	group_data->num_children = 0;
@@ -60,16 +53,11 @@ void group_unpack(resource_t *rsc)
 			group_data->child_list = g_list_append(
 				group_data->child_list, new_rsc);
 			
+			group_data->last_child = new_rsc;
+
 			if(group_data->first_child == NULL) {
 				group_data->first_child = new_rsc;
 			}
-			group_data->last_child = new_rsc;
-
-/* 			crm_debug("Merging node list with new child"); */
-/* 			old_list = rsc->allowed_nodes; */
-/* 			old_list = node_list_and(rsc->allowed_nodes, */
-/* 						 new_rsc->allowed_nodes, FALSE); */
-/* 			pe_free_shallow(old_list); */
 			
 			crm_debug_action(
 				print_resource("Added", new_rsc, FALSE));
@@ -84,17 +72,12 @@ void group_unpack(resource_t *rsc)
 
 void group_color(resource_t *rsc, GListPtr *colors)
 {
-	int lpc;
 	group_variant_data_t *group_data =
 		(group_variant_data_t *)rsc->variant_opaque;
 
-	native_color(rsc, colors);
+	group_data->first_child->fns->color(group_data->first_child, colors);
 
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		child_rsc->color = rsc->color;
-		child_rsc->provisional = FALSE;
-		);
+	/* all others are inferred by vitue of the must constraints */
 }
 
 void group_create_actions(resource_t *rsc)
@@ -105,12 +88,12 @@ void group_create_actions(resource_t *rsc)
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		native_create_actions(child_rsc);
+		child_rsc->fns->create_actions(child_rsc);
 		);
 
 }
 
-void group_internal_ordering(resource_t *rsc, GListPtr *ordering_constraints)
+void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 {
 	int lpc;
 	resource_t *last_rsc = NULL;
@@ -125,10 +108,14 @@ void group_internal_ordering(resource_t *rsc, GListPtr *ordering_constraints)
 				  child_rsc, start_rsc, NULL,
 				  pecs_startstop, ordering_constraints);
 		}
+		
+		if(child_rsc != group_data->first_child) {
+			rsc_dependancy_new("pe_group_internal", pecs_must,
+					   group_data->first_child, child_rsc);
+		}
+		
 		last_rsc = child_rsc;
 		);
-
-
 }
 
 void group_rsc_dependancy_lh(rsc_dependancy_t *constraint)
@@ -165,7 +152,6 @@ void group_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 	crm_verbose("Processing RH of constraint %s", constraint->id);
 	crm_debug_action(print_resource("LHS", rsc_lh, TRUE));
 	
-
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
@@ -210,9 +196,19 @@ void group_rsc_order_rh(
 	}
 }
 
-void group_rsc_location(rsc_to_node_t *constraint)
+void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
-	native_rsc_location(constraint);
+	int lpc;
+	group_variant_data_t *group_data =
+		(group_variant_data_t *)rsc->variant_opaque;
+
+	crm_verbose("Processing actions from %s", rsc->id);
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+
+		child_rsc->fns->rsc_location(child_rsc, constraint);
+		);
 }
 
 void group_expand(resource_t *rsc, xmlNodePtr *graph)
@@ -237,15 +233,13 @@ void group_dump(resource_t *rsc, const char *pre_text, gboolean details)
 	group_variant_data_t *group_data =
 		(group_variant_data_t *)rsc->variant_opaque;
 
-	native_dump(rsc, pre_text, details);
+	common_dump(rsc, pre_text, details);
 	
-	if(details) {
-		slist_iter(
-			child_rsc, resource_t, group_data->child_list, lpc,
-			
-			child_rsc->fns->dump(child_rsc, pre_text, details);
-			);
-	}
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		
+		child_rsc->fns->dump(child_rsc, pre_text, details);
+		);
 }
 
 void group_free(resource_t *rsc)
@@ -264,7 +258,20 @@ void group_free(resource_t *rsc)
 
 	pe_free_shallow_adv(group_data->child_list, FALSE);
 
-	native_free(rsc);
+	common_free(rsc);
 }
 
 
+void
+group_agent_constraints(resource_t *rsc)
+{
+	int lpc;
+	group_variant_data_t *group_data =
+		(group_variant_data_t *)rsc->variant_opaque;
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		
+		child_rsc->fns->agent_constraints(child_rsc);
+		);
+}

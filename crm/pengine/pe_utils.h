@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.15 2004/11/09 09:32:14 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.16 2004/11/09 14:49:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,8 +43,6 @@ extern color_t *create_color(
 extern color_t *copy_color(color_t *a_color);
 
 /* Node helper functions */
-extern gboolean filter_nodes(resource_t *rsc);
-
 extern node_t *pe_find_node(GListPtr node_list, const char *uname);
 
 extern node_t *pe_find_node_id(GListPtr node_list, const char *id);
@@ -104,7 +102,7 @@ extern const char *strength2text(enum con_strength strength);
 /*extern const char *modifier2text(enum con_modifier modifier); */
 extern const char *task2text(enum action_tasks task);
 
-extern GListPtr find_actions_type(
+extern GListPtr find_actions(
 	GListPtr input, enum action_tasks task, node_t *on_node);
 
 /* free the various structures */

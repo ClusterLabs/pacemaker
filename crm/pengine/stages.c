@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.26 2004/11/09 11:18:00 andrew Exp $ */
+/* $Id: stages.c,v 1.27 2004/11/09 14:49:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -184,6 +184,7 @@ stage3(GListPtr colors)
 gboolean
 stage4(GListPtr colors)
 {
+
 	int lpc = 0, lpc2 = 0;
 	crm_info("Processing stage 4");
 
@@ -215,6 +216,7 @@ stage4(GListPtr colors)
 			
 			);
 		);
+
 	crm_verbose("done");
 	return TRUE;
 	
@@ -236,7 +238,7 @@ stage5(GListPtr resources, GListPtr *ordering_constraints)
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 		rsc->fns->create_actions(rsc);
-		rsc->fns->internal_ordering(rsc, ordering_constraints);
+		rsc->fns->internal_constraints(rsc, ordering_constraints);
 		);
 	return TRUE;
 }

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.42 2004/11/09 11:18:00 andrew Exp $ */
+/* $Id: unpack.c,v 1.43 2004/11/09 14:49:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -73,7 +73,7 @@ gboolean add_node_attrs(xmlNodePtr attrs, node_t *node);
 gboolean unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
 	xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node);
 
-gboolean unpack_failed_resource(GListPtr *placement_constraints, GListPtr *actions,
+gboolean unpack_failed_resource(GListPtr *placement_constraints, 
 	xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node);
 
 gboolean determine_online_status(xmlNodePtr node_state, node_t *this_node);
@@ -654,9 +654,8 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 			case LRM_OP_ERROR:
 			case LRM_OP_TIMEOUT:
 			case LRM_OP_NOTSUPPORTED:
-				unpack_failed_resource(
-					placement_constraints, actions, 
-					rsc_entry, rsc_lh,node);
+				unpack_failed_resource(placement_constraints, 
+						       rsc_entry, rsc_lh,node);
 				break;
 			case LRM_OP_CANCELLED:
 				/* do nothing?? */
@@ -668,7 +667,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 }
 
 gboolean
-unpack_failed_resource(GListPtr *placement_constraints, GListPtr *actions,
+unpack_failed_resource(GListPtr *placement_constraints, 
 		       xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node)
 {
 	const char *last_op  = xmlGetProp(rsc_entry, "last_op");
@@ -688,8 +687,7 @@ unpack_failed_resource(GListPtr *placement_constraints, GListPtr *actions,
 			/* treat it as if it is still running
 			 * but also mark the node as unclean
 			 */
-			rsc_lh->running_on = g_list_append(
-				rsc_lh->running_on, node);
+			native_add_running(rsc_lh, node);
 
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
@@ -704,8 +702,7 @@ unpack_failed_resource(GListPtr *placement_constraints, GListPtr *actions,
  			/* let this depend on the stop action which will fail
 			 * but make sure the transition continues...
 			 */
-			rsc_lh->running_on = g_list_append(
-				rsc_lh->running_on, node);
+			native_add_running(rsc_lh, node);
 
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
@@ -732,17 +729,8 @@ unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
 		/* create the link between this node and the rsc */
 		crm_verbose("Setting cur_node = %s for rsc = %s",
 			    node->details->uname, rsc_lh->id);
-		
-		rsc_lh->running_on = g_list_append(
-			rsc_lh->running_on, node);
 
-		if(g_list_length(rsc_lh->running_on) > 1) {
-			crm_warn("Resource %s active on %d nodes.  Latest: %s (%s)",
-				 rsc_lh->id, g_list_length(rsc_lh->running_on),
-				 node->details->id, last_op);
-
-/* 			action_new(rsc_lh, stop_rsc, node); */
-		}
+		native_add_running(rsc_lh, node);
 		
 		node->details->running_rsc = g_list_append(
 			node->details->running_rsc, rsc_lh);
@@ -756,7 +744,7 @@ rsc_dependancy_new(const char *id, enum con_strength strength,
 		   resource_t *rsc_lh, resource_t *rsc_rh)
 {
 	rsc_dependancy_t *new_con      = NULL;
-	rsc_dependancy_t *inverted_con = NULL;
+ 	rsc_dependancy_t *inverted_con = NULL; 
 
 	if(rsc_lh == NULL || rsc_rh == NULL){
 		/* error */

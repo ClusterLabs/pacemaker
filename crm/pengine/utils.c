@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.44 2004/11/09 09:32:14 andrew Exp $ */
+/* $Id: utils.c,v 1.45 2004/11/09 14:49:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -322,7 +322,7 @@ static int color_id = 0;
  *  in that list
  */
 color_t *
-create_color(GListPtr *colors, resource_t *resource, GListPtr resources)
+create_color(GListPtr *colors, resource_t *resource, GListPtr node_list)
 {
 	color_t *new_color = NULL;
 	
@@ -354,7 +354,7 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr resources)
 		crm_trace("populating node list");
 		new_color->details->highest_priority = resource->priority;
 		new_color->details->candidate_nodes  =
-			node_list_dup(resource->allowed_nodes, TRUE);
+			node_list_dup(node_list, TRUE);
 	}
 	
 	crm_debug_action(print_color("Created color", new_color, TRUE));
@@ -386,33 +386,6 @@ copy_color(color_t *a_color)
 }
 
 
-
-/*
- * Remove any nodes with a -ve weight
- */
-gboolean
-filter_nodes(resource_t *rsc)
-{
-	int lpc2 = 0;
-	crm_debug_action(print_resource("Filtering nodes for", rsc, FALSE));
-	slist_iter(
-		node, node_t, rsc->allowed_nodes, lpc2,
-		if(node == NULL) {
-			crm_err("Invalid NULL node");
-			
-		} else if(node->weight < 0.0
-			  || node->details->online == FALSE
-			  || node->details->type == node_ping) {
-			crm_debug_action(print_node("Removing", node, FALSE));
-			rsc->allowed_nodes =
-				g_list_remove(rsc->allowed_nodes,node);
-			crm_free(node);
-			lpc2 = -1; /* restart the loop */
-		}
-		);
-
-	return TRUE;
-}
 
 resource_t *
 pe_find_resource(GListPtr rsc_list, const char *id_rh)
@@ -571,7 +544,7 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 	GListPtr possible_matches = NULL;
 	if(rsc != NULL) {
 		possible_matches =
-			find_actions_type(rsc->actions, task, on_node);
+			find_actions(rsc->actions, task, on_node);
 	}
 
 	if(on_node != NULL && on_node->details->unclean) {
@@ -1066,7 +1039,7 @@ pe_free_rsc_to_node(rsc_to_node_t *cons)
 }
 
 GListPtr
-find_actions_type(GListPtr input, enum action_tasks task, node_t *on_node)
+find_actions(GListPtr input, enum action_tasks task, node_t *on_node)
 {
 	int lpc = 0;
 	GListPtr result = NULL;

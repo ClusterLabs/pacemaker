@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.39 2004/11/09 09:32:14 andrew Exp $ */
+/* $Id: pengine.h,v 1.40 2004/11/09 14:49:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -152,7 +152,6 @@ struct resource_s {
 		float	     priority; 
 		float	     effective_priority; 
 		const char  *timeout;
-		lrm_agent_t *agent;
 		
 		gboolean     is_stonith;
 		gboolean     runnable;
@@ -163,18 +162,14 @@ struct resource_s {
 		enum pe_restart        restart_type;
 
 		GListPtr candidate_colors; /* color_t*        */
-		GListPtr allowed_nodes;    /* node_t*         */
-		GListPtr actions;	   /* action_t*       */
+		GListPtr rsc_cons;         /* rsc_dependancy_t* */
+		GListPtr actions;	   /* action_t*        */
 
 		/* (soon to be) variant specific */
 		int max_instances;
 		int max_node_instances;
 		int max_masters;
 		int max_node_masters;
-		GListPtr node_cons;        /* rsc_to_node_t*    */
-		GListPtr rsc_cons;         /* rsc_dependancy_t* */
-		GListPtr running_on;       /* node_t*           */
-		color_t *color;
 };
 
 struct action_wrapper_s 

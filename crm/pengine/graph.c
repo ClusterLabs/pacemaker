@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.19 2004/10/27 15:30:55 andrew Exp $ */
+/* $Id: graph.c,v 1.20 2004/11/09 14:49:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,8 +70,7 @@ update_action(action_t *action)
 					print_action("Reason",
 						     action, FALSE);
 					);
-			}
-			
+			}	
 		}
 
 		if(action->optional == FALSE && other->action->optional) {
@@ -130,7 +129,6 @@ stonith_constraints(node_t *node,
 		    GListPtr *ordering_constraints)
 {
 	int lpc = 0, lpc2 = 0;
-	GListPtr start_actions = NULL;
 	GListPtr stop_actions = NULL;
 	
 	if(shutdown_op != NULL) {
@@ -154,13 +152,12 @@ stonith_constraints(node_t *node,
 		 *  stop let alone reply with failed.
 		 */
 
-		/* TODO: this probably wont have any effect */
-		stop_actions = find_actions_type(rsc->actions, stop_rsc, NULL);
+		stop_actions = find_actions(rsc->actions, stop_rsc, node);
 		slist_iter(
 			action, action_t, stop_actions, lpc2,
-			action->failure_is_fatal = FALSE;
+			action->discard = TRUE;
 			);
-		
+
 		if(rsc->stopfail_type == pesf_block) {
 			/* depend on the stop action which will fail */
 			crm_warn("SHARED RESOURCE %s WILL REMAIN BLOCKED"
@@ -194,14 +191,6 @@ stonith_constraints(node_t *node,
 		order_new(NULL, stonith_node, stonith_op,
 			  rsc, start_rsc, NULL,
 			  pecs_must, ordering_constraints);
-
-		/* TODO: this probably wont have any effect */
-		start_actions = find_actions_type(rsc->actions, start_rsc, NULL);
-		slist_iter(
-			action, action_t, start_actions, lpc2,
-			action->failure_is_fatal = FALSE;
-			);
-		
 
 /* 		a pointless optimization?  probably */
 /* 		if(shutdown_op != NULL) { */
@@ -322,6 +311,10 @@ graph_element_from_action(action_t *action, xmlNodePtr *graph)
 	} else if(action->dumped) {
 		crm_trace("action %d was already dumped", action->id);
 		return;
+
+	} else if(action->discard) {
+		crm_trace("action %d was discarded", action->id);
+		return;
 	}
 	action->dumped = TRUE;
 	
@@ -335,6 +328,9 @@ graph_element_from_action(action_t *action, xmlNodePtr *graph)
 	slist_iter(wrapper,action_wrapper_t,action->actions_before,lpc,
 			
 		   if(wrapper->action->optional == TRUE) {
+			   continue;
+
+		   } else if(wrapper->action->discard == TRUE) {
 			   continue;
 		   }
 		   
