@@ -62,6 +62,7 @@ class LinuxHAv2(HeartbeatCM):
             # Patterns to look for in the log files for various occasions...
             "Pat:We_started"    : " %s crmd: .* State transition .*-> (S_NOT_DC|S_IDLE)",
             "Pat:They_started"  : " %s crmd: .* State transition .*-> (S_NOT_DC|S_IDLE)",
+            "Pat:DC_IDLE"  : " %s crmd: .* State transition .*-> S_IDLE",
             
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
@@ -76,6 +77,25 @@ class LinuxHAv2(HeartbeatCM):
             ),
         })
 	self.default_cts_cib='''
+<cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
+   <configuration>
+     <crm_config/>
+     <nodes/>
+     <resources>
+     </resources>
+     <constraints>
+      <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
+	<rule id="can_run_DcIPaddr" result="can" boolean_op="and">
+	  <expression attribute="is_dc" operation="eq" value="true"/>
+	</rule>
+      </rsc_location>
+     </constraints>
+   </configuration>
+   <status/>
+</cib>
+'''
+	if 1:
+	    self.default_cts_cib='''
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
    <configuration>
      <crm_config/>
@@ -100,6 +120,7 @@ class LinuxHAv2(HeartbeatCM):
    <status/>
 </cib>
 '''
+
         # KLUDGE!  Expedient, but a Kludge (FIXME)
 #        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
         CTStests.AllTestClasses = [FlipTest, RestartTest, StartOnebyOne, SimulStart, SimulStop]
@@ -133,7 +154,7 @@ class LinuxHAv2(HeartbeatCM):
 
         '''Start up the cluster manager on a given node'''
         watch = CTS.LogWatcher(self["LogFileName"]
-        ,                      [self["Pat:We_started"]%node]
+        ,                      [self["Pat:We_started"]%node, self["Pat:DC_IDLE"]]
         ,                      60)
         watch.setwatch()
         self.log ("CM_LinuxHAv2.py: Starting %s on node %s"
@@ -319,13 +340,13 @@ class CrmdStateAudit(ClusterAudit):
     def __call__(self):
         self.CM.log ("Do Audit %s"%self.name())
         passed = 1
-        dc_count = 0
+        dc_list = []
         up_count = 0
         node_count = 0
         up_are_down = 0
         down_are_up = 0
         slave_count = 0
-        unstable_count = 0
+        unstable_list = []
 
         for node in self.CM.Env["nodes"]:
             out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
@@ -346,9 +367,9 @@ class CrmdStateAudit(ClusterAudit):
                 else:        
                     ret= (string.find(out, 'S_IDLE') != -1)
                     if ret:
-                        dc_count = dc_count + 1
+                        dc_list.append(node)
                     else:
-                        unstable_count = unstable_count + 1
+                        unstable_list.append(node)
             else:
                 if self.CM.ShouldBeStatus[node] == self.CM["up"]:
                     self.CM.log(
@@ -357,15 +378,15 @@ class CrmdStateAudit(ClusterAudit):
                     self.CM.ShouldBeStatus[node] = self.CM["down"]
                     up_are_down = up_are_down + 1
 
-        if up_count > 0 and dc_count != 1:
+        if up_count > 0 and len(dc_list) != 1:
             passed = 0
-            self.CM.log("Exactly 1 node should be DC.  We found %d (of %d)"
-                     %(dc_count, up_count))
+            self.CM.log("Exactly 1 node should be DC.  We found %d (of %d): %s"
+                     %(len(dc_list), up_count, str(dc_list)))
 
-        if unstable_count > 0:
+        if len(unstable_list) > 0:
             passed = 0
-            self.CM.log("Cluster is not stable.  We found %d (of %d) unstable nodes" 
-                     %(unstable_count, up_count))
+            self.CM.log("Cluster is not stable.  We found %d (of %d) unstable nodes: %s" 
+                     %(len(unstable_list), up_count, str(unstable_list)))
 
         if up_are_down > 0:
             passed = 0
