@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.57 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: pengine.c,v 1.58 2005/03/11 14:01:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,7 +31,6 @@
 
 crm_data_t * do_calculations(crm_data_t *cib_object);
 int num_synapse = 0;
-
 
 gboolean
 process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
@@ -105,54 +104,25 @@ do_calculations(crm_data_t * cib_object)
 
 	crm_verbose("=#=#=#=#= Stage 1 =#=#=#=#=");
 	stage1(placement_constraints, nodes, resources);
-
+	
 	crm_verbose("=#=#=#=#= Stage 2 =#=#=#=#=");
 	stage2(resources, nodes, &colors);
-
-	crm_verbose("========= Nodes =========");
-	crm_devel_action(
-		slist_iter(node, node_t, nodes, lpc,
-			   print_node(NULL, node, TRUE)
-			)
-		);
-		
-	crm_verbose("========= Resources =========");
-	crm_devel_action(
-		slist_iter(resource, resource_t, resources, lpc,
-			   print_resource(NULL, resource, TRUE)
-			)
-		);  
-  
+	
 	crm_verbose("=#=#=#=#= Stage 3 =#=#=#=#=");
 	stage3(colors);
-
+	
 	crm_verbose("=#=#=#=#= Stage 4 =#=#=#=#=");
 	stage4(colors);
-	crm_verbose("========= Colors =========");
-	crm_devel_action(
-		slist_iter(color, color_t, colors, lpc,
-		   print_color(NULL, color, FALSE)
-			)
-		);
-
+	
 	crm_verbose("=#=#=#=#= Stage 5 =#=#=#=#=");
 	stage5(resources, &ordering_constraints);
-
+		
 	crm_verbose("=#=#=#=#= Stage 6 =#=#=#=#=");
 	stage6(&actions, &ordering_constraints, nodes, resources);
-
-	crm_verbose("========= Action List =========");
-	crm_devel_action(
-		slist_iter(action, action_t, actions, lpc,
-			   print_action(NULL, action, TRUE)
-			)
-		);
 	
 	crm_verbose("=#=#=#=#= Stage 7 =#=#=#=#=");
 	stage7(resources, actions, ordering_constraints);
 	
-	crm_verbose("========= Action Sets =========");
-
 	crm_verbose("\t========= Set %d (Un-runnable) =========", -1);
 	crm_devel_action(
 		slist_iter(action, action_t, actions, lpc,
@@ -162,16 +132,6 @@ do_calculations(crm_data_t * cib_object)
 			   }
 			)
 		);
-
-	crm_devel_action(
-		slist_iter(action_set, GList, action_sets, lpc,
-			   crm_verbose("\t========= Set %d =========", lpc);
-			   slist_iter(action, action_t, action_set, lpc2,
-				      print_action("\t", action, TRUE);
-				   )
-			)
-		);
-
 	
 	crm_verbose("========= Stonith List =========");
 	crm_devel_action(
@@ -179,20 +139,19 @@ do_calculations(crm_data_t * cib_object)
 			   print_node(NULL, node, FALSE);
 			)
 		);
-  
+	
 	crm_verbose("========= Shutdown List =========");
 	crm_devel_action(
 		slist_iter(node, node_t, shutdown_list, lpc,
 			   print_node(NULL, node, FALSE);
 			)
 		);
-
+	
 	crm_verbose("=#=#=#=#= Stage 8 =#=#=#=#=");
 	stage8(resources, actions, &graph);
-
+	
 	crm_verbose("=#=#=#=#= Cleanup =#=#=#=#=");
 
-	crm_verbose("deleting node cons");
 	while(placement_constraints) {
 		pe_free_rsc_to_node((rsc_to_node_t*)placement_constraints->data);
 		placement_constraints = placement_constraints->next;
@@ -201,26 +160,16 @@ do_calculations(crm_data_t * cib_object)
 		g_list_free(placement_constraints);
 	}
 
-	crm_verbose("deleting order cons");
 	pe_free_shallow(ordering_constraints);
-
-	crm_verbose("deleting action sets");
 
 	slist_iter(action_set, GList, action_sets, lpc,
 		   pe_free_shallow_adv(action_set, FALSE);
 		);
 	pe_free_shallow_adv(action_sets, FALSE);
-	
-	crm_verbose("deleting actions");
+
 	pe_free_actions(actions);
-
-	crm_verbose("deleting resources");
 	pe_free_resources(resources); 
-	
-	crm_verbose("deleting colors");
 	pe_free_colors(colors);
-
-	crm_verbose("deleting nodes");
 	pe_free_nodes(nodes);
 
 	if(shutdown_list != NULL) {
