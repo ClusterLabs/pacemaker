@@ -182,12 +182,10 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 
 /* 		CRM_DEV_ASSERT(native->command_channel->should_send_blocking); */
 
-		if(msg2ipcchan(reg_msg, native->callback_channel) != HA_OK) {
+		if(send_ipc_message(native->callback_channel, reg_msg) == FALSE) {
 			rc = cib_callback_register;
 		}
-		CRM_DEV_ASSERT(native->callback_channel->send_queue->current_qlen < native->callback_channel->send_queue->max_qlen);
 		crm_free(uuid_ticket);
-		crm_msg_del(reg_msg);
 
 	}
 	if(rc == cib_ok) {
@@ -348,23 +346,15 @@ cib_native_perform_op(
 
 	cib->call_id++;
 
-	crm_debug("Sending %s message to CIB service", op);
- 	crm_log_message(LOG_MSG, op_msg);
-	rc = msg2ipcchan(op_msg, native->command_channel);
-	CRM_DEV_ASSERT(native->command_channel->send_queue->current_qlen < native->command_channel->send_queue->max_qlen);
-	
-	if (rc != HA_OK) {
-		crm_err("Sending message to CIB service FAILED: %d", rc);
-/* 		CRM_DEV_ASSERT(native->command_channel->should_send_blocking); */
-		crm_log_message(LOG_ERR, op_msg);
-		crm_msg_del(op_msg);
+	crm_devel("Sending %s message to CIB service", op);
+	if(send_ipc_message(native->command_channel, op_msg) == FALSE) {
+		crm_err("Sending message to CIB service FAILED");
 		return cib_send_failed;
 
 	} else {
 		crm_devel("Message sent");
 	}
 
- 	crm_msg_del(op_msg);
 	op_msg = NULL;
 
 	if((call_options & cib_discard_reply)) {
@@ -605,9 +595,7 @@ cib_native_register_callback(cib_t* cib, const char *callback, int enabled)
 	ha_msg_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
 	ha_msg_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
 	ha_msg_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
-	msg2ipcchan(notify_msg, native->callback_channel);
-	CRM_DEV_ASSERT(native->callback_channel->send_queue->current_qlen < native->callback_channel->send_queue->max_qlen);
-	ha_msg_del(notify_msg);
+	send_ipc_message(native->callback_channel, notify_msg);
 	return cib_ok;
 }
 
