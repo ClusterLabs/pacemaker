@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.10 2004/11/24 15:39:02 andrew Exp $ */
+/* $Id: unpack.c,v 1.11 2004/12/05 16:32:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -442,17 +442,17 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 			       " the original operation must be specified");
 			send_abort("Illegal update", msg);
 			
-		} else if(strcmp(true_op, CRM_OP_CREATE) == 0
-		   || strcmp(true_op, CRM_OP_DELETE) == 0
-		   || strcmp(true_op, CRM_OP_REPLACE) == 0
+		} else if(strcmp(true_op, CRM_OP_CIB_CREATE) == 0
+		   || strcmp(true_op, CRM_OP_CIB_DELETE) == 0
+		   || strcmp(true_op, CRM_OP_CIB_REPLACE) == 0
 		   || strcmp(true_op, CRM_OP_WELCOME) == 0
 		   || strcmp(true_op, CRM_OP_SHUTDOWN_REQ) == 0
-		   || strcmp(true_op, CRM_OP_ERASE) == 0) {
+		   || strcmp(true_op, CRM_OP_CIB_ERASE) == 0) {
 
 			/* these are always unexpected, trigger the PE */
 			send_abort("Config update", msg);
 			
-		} else if(strcmp(true_op, CRM_OP_UPDATE) == 0) {
+		} else if(strcmp(true_op, CRM_OP_CIB_UPDATE) == 0) {
 			/* this may not be un-expected */
 /*			if( */
 			extract_event(msg);

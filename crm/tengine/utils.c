@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.7 2004/11/12 17:10:46 andrew Exp $ */
+/* $Id: utils.c,v 1.8 2004/12/05 16:32:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -268,9 +268,9 @@ do_update_cib(xmlNodePtr xml_action, int status)
 	}
 	sys_to = CRM_SYSTEM_TENGINE;
 	set_xml_property_copy(options, XML_ATTR_OP,     CRM_OP_EVENTCC);
-	set_xml_property_copy(options, XML_ATTR_TRUEOP, CRM_OP_UPDATE);
+	set_xml_property_copy(options, XML_ATTR_TRUEOP, CRM_OP_CIB_UPDATE);
 #else
-	set_xml_property_copy(options, XML_ATTR_OP,    CRM_OP_UPDATE);
+	set_xml_property_copy(options, XML_ATTR_OP,    CRM_OP_CIB_UPDATE);
 #endif
 	set_xml_property_copy(state,   XML_ATTR_UUID,  target_uuid);
 	set_xml_property_copy(state,   XML_ATTR_UNAME, target);
