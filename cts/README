@@ -11,6 +11,11 @@ Three machines:  one test exerciser and two test cluster machines.
 	The test exerciser machine doesn't need to be on the same subnet
 	as the test machines.  Minimal demands are made on the exerciser
 	machine - it just has to stay up during the tests ;-).
+	However, it does need to have a current copy of the cts test
+	scripts.  It is worth noting that these scripts are coordinated
+	with particular versions of linux-ha, so that in general you
+	have to the same version of test scripts as the rest of linux-ha.
+	
 
 Install heartbeat, heartbeat-pils, and heartbeat-stonith on all three
 machines.  Set up the configuration on the cluster machines *and make
