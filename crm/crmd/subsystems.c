@@ -159,6 +159,15 @@ cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
 	/* cleanup the ps entry */
 	waitpid(the_subsystem->pid, &pid_status, WNOHANG);
 	the_subsystem->pid = -1;
+
+	if(is_set(fsa_input_register, R_THE_DC)) {
+		/* this wasnt supposed to happen */
+		crm_err("The %s subsystem terminated unexpectedly",
+			the_subsystem->name);
+		
+		register_fsa_input(C_IPC_MESSAGE, I_ERROR, NULL);
+		s_crmd_fsa(C_IPC_MESSAGE);
+	}
 }
 
 
