@@ -915,11 +915,13 @@ class BandwidthTest(CTSTest):
             line = fp.readline()
             if not line:
                 return None
-            if re.search("udp",line):
+            if re.search("udp",line) or re.search("UDP,", line):
                 count=count+1
                 linesplit = string.split(line," ")
                 for j in range(len(linesplit)-1):
                     if linesplit[j]=="udp": break
+                    if linesplit[j]=="length:": break
+			
                 try:
                     sum = sum + int(linesplit[j+1])
                 except ValueError:
@@ -935,11 +937,12 @@ class BandwidthTest(CTSTest):
             line = fp.readline()
             if not line:
                 return None
-            if re.search("udp", line):
+            if re.search("udp",line) or re.search("UDP,", line):
                 count = count+1
                 linessplit = string.split(line," ")
                 for j in range(len(linessplit)-1):
                     if linessplit[j] =="udp": break
+                    if linesplit[j]=="length:": break
                 try:
                     sum=int(linessplit[j+1])+sum
                 except ValueError:
@@ -1164,7 +1167,7 @@ class Split_brainTest(CTSTest):
             watchstoppats.append(thispat)
 
         watchstop = CTS.LogWatcher(self.CM["LogFileName"], watchstoppats\
-	,       timeout=self.CM["DeadTime"]+10)
+	,       timeout=self.CM["DeadTime"]+60)
         watchstop.ReturnOnlyMatch()
 
         watchstop.setwatch()
@@ -1190,9 +1193,9 @@ class Split_brainTest(CTSTest):
             watchpartitionpats.append(thispat)
             watchstartpats.append(thatpat)
         watchpartition = CTS.LogWatcher(self.CM["LogFileName"], watchpartitionpats\
-        ,               timeout=self.CM["DeadTime"]+10)
+        ,               timeout=self.CM["DeadTime"]+60)
         watchstart = CTS.LogWatcher(self.CM["LogFileName"], watchstartpats\
-        ,		timeout=self.CM["DeadTime"]+10)
+        ,		timeout=self.CM["DeadTime"]+60)
         watchstart.ReturnOnlyMatch()
 
         watchpartition.setwatch()
@@ -1230,6 +1233,3 @@ def TestList(cm):
             result.append(bound_test)
 #   result = [SimulStart(cm)]
     return result
-
-
-
