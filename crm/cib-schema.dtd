@@ -50,6 +50,10 @@ the UUID of it, should we ever need to access it directly.
 
 More details are given in the annotated DTD below.
 
+GLOBAL TODOs:
+	- Versionize DTD so we can validate against a specific version
+	- Timestamps et al should probably not be #CDATA but more
+	  specific types
 -->
 
 <!ELEMENT cib (configuration, status)>
