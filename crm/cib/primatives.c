@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.4 2004/12/10 20:07:07 andrew Exp $ */
+/* $Id: primatives.c,v 1.5 2005/01/05 11:22:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -565,6 +565,7 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 		prop_iter = prop_iter->next;
 	}
 	
+	xmlUnsetProp(target, XML_CIB_ATTR_CLEAR_SHUTDOWN);
 	if(clear_shutdown) {
 		/*  unset XML_CIB_ATTR_SHUTDOWN  */
 		crm_verbose("Clearing %s", XML_CIB_ATTR_SHUTDOWN);
@@ -572,6 +573,7 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 		any_updates = TRUE;
 	}
 
+	xmlUnsetProp(target, XML_CIB_ATTR_CLEAR_STONITH);
 	if(clear_stonith) {
 		/*  unset XML_CIB_ATTR_STONITH */
 		crm_verbose("Clearing %s", XML_CIB_ATTR_STONITH);
