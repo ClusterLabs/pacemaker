@@ -30,6 +30,8 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+uint highest_born_on = -1;
+
 void ghash_count_vote(gpointer key, gpointer value, gpointer user_data);
 
 
@@ -228,9 +230,32 @@ do_election_count_vote(long long action,
 			election_result = I_PENDING;
 			
 		}
+
 	} else {
 		crm_info("Election won over %s", vote_from);
-		election_result = I_ELECTION; /* new "default" */
+#if 0
+		if(cur_state == S_PENDING) {
+			crm_info("We already lost the election");
+			
+		} else if(highest_born_on == 0
+		   || your_node->node_born_on < highest_born_on) {
+			election_result = I_ELECTION;
+			highest_born_on = your_node->node_born_on;
+
+		} else {
+			crm_info("We've already voted down nodes born on %d and"
+				 " later.  %s born on %d", highest_born_on,
+				 vote_from, your_node->node_born_on);
+		}
+#else
+		if(cur_state == S_PENDING) {
+			crm_info("We already lost the election");
+			return I_NULL;
+			
+		} else {
+			election_result = I_ELECTION;
+		}
+#endif
 	}
 	
 
@@ -292,12 +317,12 @@ do_dc_takeover(long long action,
 	
 /* 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none); */
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
-	CRM_DEV_ASSERT(cib_ok == fsa_cib_conn->cmds->is_master(fsa_cib_conn));
+	CRM_DEV_ASSERT(cib_not_master != fsa_cib_conn->cmds->is_master(fsa_cib_conn));
 
+	set_uuid(fsa_cluster_conn, cib, XML_ATTR_DC_UUID, fsa_our_uname);
 	crm_devel("Update %s in the CIB to our uuid: %s",
 		  XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
 	
-	set_uuid(fsa_cluster_conn, cib, XML_ATTR_DC_UUID, fsa_our_uname);
 	update = create_cib_fragment(cib, NULL);
 	free_xml(cib);
 
