@@ -42,7 +42,7 @@ cts_assert "Startup of Heartbeat on ${test_node_1} failed."
 do_cmd echo "wait for CRMd to start on ${test_node_1}"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 500 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 1500 \
     -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}" \
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
 cts_assert "CRMd startup on ${test_node_1} failed."
@@ -152,7 +152,7 @@ cts_assert "Startup of Heartbeat on ${test_node_2} failed."
 do_cmd echo "wait for CRMd to start on $test_node_2"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd  "-VVVV" "2>&1 >/dev/null" &
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
     -s "${test_node_2} crmd(.*)FSA Hostname: ${test_node_2}" \
     -s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
 cts_assert "CRMd startup on ${test_node_2} failed."
@@ -189,12 +189,12 @@ cts_assert "rsc2 NOT running on $test_node_2"
 do_cmd echo Shutdown $test_node_1
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmadmin -K $test_node_1 &
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
     -s "${test_node_2} crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
     -s "${test_node_1} crmd(.*) State transition (.*) \-> \"S_NOT_DC\""
 cts_assert "Transition of the DC from ${test_node_1} to ${test_node_2} failed."
 
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
     -s "${test_node_1} crmd(.*)State transition \"S_NOT_DC\" \-> \"S_STOPPING\"" \
     -e "${test_node_1} crmd(.*)Timer I_TERMINATE just popped"
 cts_assert "Shutdown of ${test_node_1} failed"

@@ -386,6 +386,11 @@ function crm-cleanup() {
 	do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f $HAVAR_DIR/crm/cib*.xml /tmp/crm/*"
 	do_cmd remote_cmd $INIT_USER $test_node_2 "rm -f $HAVAR_DIR/crm/cib*.xml /tmp/crm/*"
 	do_cmd remote_cmd $INIT_USER $test_node_3 "rm -f $HAVAR_DIR/crm/cib*.xml /tmp/crm/*"
+
+	do_cmd remote_cmd $CRMD_USER $test_node_1 "rm -f ~/core"
+	do_cmd remote_cmd $CRMD_USER $test_node_2 "rm -f ~/core"
+	do_cmd remote_cmd $CRMD_USER $test_node_3 "rm -f ~/core"
+
     fi
 }
 
