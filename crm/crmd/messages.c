@@ -81,7 +81,7 @@ register_fsa_input_adv(
 	void *data, long long with_actions,
 	gboolean after, const char *raised_from)
 {
-	size_t old_len = g_list_length(fsa_message_queue);
+	unsigned  old_len = g_list_length(fsa_message_queue);
 	fsa_data_t *fsa_data = NULL;
 	
 	crm_debug("%s raised FSA input %s (cause=%s) %s data",
