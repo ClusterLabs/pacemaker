@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.12 2004/04/15 00:35:19 msoffen Exp $ */
+/* $Id: crmutils.c,v 1.13 2004/05/06 12:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,6 +29,7 @@
 #include <fcntl.h>
 
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
 
 #include <apphb.h>
 
@@ -36,6 +37,7 @@
 #include <clplumbing/Gmain_timeout.h>
 
 #include <crmutils.h>
+#include <xmlutils.h>
 #include <crm/dmalloc_wrapper.h>
 
 
@@ -287,3 +289,109 @@ crm_itoa(int an_int)
 
 	return buffer;
 }
+
+
+gboolean
+subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
+{
+	int lpc = 0;
+	char *buffer = NULL;
+	xmlDocPtr doc = NULL;
+	IPC_Message *msg = NULL;
+	gboolean all_is_well = TRUE;
+	xmlNodePtr answer = NULL, root_xml_node = NULL;
+	const char *sys_to;
+	const char *type;
+
+	
+	FNIN();
+
+	while(sender->ops->is_message_pending(sender)) {
+		if (sender->ch_status == IPC_DISCONNECT) {
+			/* The message which was pending for us is that
+			 * the IPC status is now IPC_DISCONNECT */
+			break;
+		}
+		if (sender->ops->recv(sender, &msg) != IPC_OK) {
+			perror("Receive failure:");
+			FNRET(!all_is_well);
+		}
+		if (msg == NULL) {
+			cl_log(LOG_ERR, "No message this time");
+			continue;
+		}
+
+		lpc++;
+
+		/* the docs say only do this once, but in their code
+		 * they do it every time!
+		 */
+//		xmlInitParser();
+
+		buffer = (char*)msg->msg_body;
+		cl_log(LOG_DEBUG, "Message %d [text=%s]", lpc, buffer);
+		doc = xmlParseMemory(cl_strdup(buffer), strlen(buffer));
+
+		if(doc == NULL) {
+			cl_log(LOG_INFO,
+			       "XML Buffer was not valid...\n Buffer: (%s)",
+			       buffer);
+		}
+
+		root_xml_node = xmlDocGetRootElement(doc);
+
+		sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
+		type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
+		if (root_xml_node == NULL) {
+			cl_log(LOG_ERR, "Root node was NULL!!");
+
+		} else if(sys_to == NULL) {
+			cl_log(LOG_ERR, "Value of %s was NULL!!",
+			       XML_ATTR_SYSTO);
+			
+		} else if(type == NULL) {
+			cl_log(LOG_ERR, "Value of %s was NULL!!",
+			       XML_ATTR_MSGTYPE);
+			
+		} else if(strcmp(type, XML_ATTR_REQUEST) != 0) {
+			cl_log(LOG_INFO,
+			       "Message was a response not a request."
+			       "  Discarding");
+		} else if (strcmp(sys_to, "foo"/*crm_system_name*/) == 0) {
+
+			void (*process_function)(xmlNodePtr msg) = NULL;
+			process_function = user_data;
+			
+			process_function(root_xml_node);
+
+		} else {
+			cl_log(LOG_WARNING,
+			       "Received a message destined for %s by mistake",
+			       sys_to);
+		}
+		
+		if(answer != NULL)
+			free_xml(answer);
+		
+		msg->msg_done(msg);
+		msg = NULL;
+	}
+
+	// clean up after a break
+	if(msg != NULL)
+		msg->msg_done(msg);
+
+	if(root_xml_node != NULL)
+		free_xml(root_xml_node);
+
+	CRM_DEBUG("Processed %d messages", lpc);
+	if (sender->ch_status == IPC_DISCONNECT) {
+		cl_log(LOG_ERR, "The server has left us: Shutting down...NOW");
+
+		exit(1); // shutdown properly later
+		
+		FNRET(!all_is_well);
+	}
+	FNRET(all_is_well);
+}
+
