@@ -73,8 +73,10 @@ do_cib_control(long long action,
 	}
 
 	if(action & start_actions) {
-		
 		if(cur_state != S_STOPPING) {
+			if(fsa_cib_conn == NULL) {
+				fsa_cib_conn = cib_new();
+			}
 			if(fsa_cib_conn->cmds->signon(
 				   fsa_cib_conn, cib_command) != cib_ok) {
 				crm_err("Could not connect to the CIB service");
