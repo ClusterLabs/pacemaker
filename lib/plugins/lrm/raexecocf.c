@@ -236,7 +236,13 @@ get_resource_list(GList ** rsc_info)
 	{
 		while (file_num--) {
 			rsc_info_t * rsc_info_tmp;
-			if (filtered(namelist[file_num]->d_name) == TRUE) {
+			char tmp_buffer[FILENAME_MAX+1];
+
+			tmp_buffer[0] = '\0';
+			tmp_buffer[FILENAME_MAX] = '\0';
+			strncpy(tmp_buffer, RA_PATH, FILENAME_MAX);
+			strncat(tmp_buffer, namelist[file_num]->d_name, FILENAME_MAX);
+			if ( filtered(tmp_buffer) == TRUE ) {
 				rsc_info_tmp = g_new(rsc_info_t, 1);
 				rsc_info_tmp->rsc_type =
 					g_strdup(namelist[file_num]->d_name);
@@ -329,7 +335,7 @@ get_resource_meta(const char* rsc_type)
  *    Return Value:   
  *		     TRUE:  the file is qualified.
  *		     FALSE: the file is unqualified.
- *    Notes: A qalifed file is a regular file with excute bits.
+ *    Notes: A qalifed file is a regular file with execute bits.
  */
 static gboolean 
 filtered(char * file_name)
