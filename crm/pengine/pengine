@@ -1,5 +1,5 @@
 #! /usr/bin/perl -Tw
-my($VERSION)=(qw$Id: pengine,v 1.3 2004/03/16 17:59:27 lars Exp $)[2];
+my($VERSION)=(qw$Id: pengine,v 1.4 2004/03/16 18:26:16 lars Exp $)[2];
 #
 # Copyright (C) 2004 Lars Marowsky-Brée
 #
@@ -75,7 +75,7 @@ if ($DEBUG) {
 &signin();
 
 my $iter = 0;
-while ( ($DEBUG == 0) && $ch->isrconn() && $ch->iswconn()) {
+while ($ch->isrconn() && $ch->iswconn()) {
 	$ch->waitin();
 	if ($ch->ch_status == $IPC_DISCONNECT) {
 		cl_log('info', "Connection with crmd lost");
@@ -121,8 +121,7 @@ sub send_crm_msg {
 	my $xml = XMLout($ref, 
 			ContentKey => '-content',
 			KeepRoot => 1,
-			NoAttr => 1,
-			KeyAttr => { });
+			KeyAttr => { 'hello' => 'client_uuid' });
 	$xml =~ s/>\s+/>/og;
 	$xml =~ s/\s+</</og;
 	
