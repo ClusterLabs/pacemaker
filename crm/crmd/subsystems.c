@@ -59,6 +59,7 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 			 the_subsystem->name);
 		
 		kill(the_subsystem->pid, -9);
+		the_subsystem->pid = -1;
 		
 	} else {
 		crm_info("Sending quit message to %s.", the_subsystem->name);
