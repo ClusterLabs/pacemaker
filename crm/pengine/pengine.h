@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.53 2005/03/31 16:40:07 andrew Exp $ */
+/* $Id: pengine.h,v 1.54 2005/04/01 10:07:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -331,7 +331,7 @@ extern int      action_id;
 extern gboolean stonith_enabled;
 extern gboolean have_quorum;
 extern gboolean require_quorum;
-extern gboolean symetric_cluster;
+extern gboolean symmetric_cluster;
 extern GListPtr agent_defaults;
 extern const char* transition_timeout;
 extern int num_synapse;

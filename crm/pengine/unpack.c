@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.64 2005/03/31 16:50:04 andrew Exp $ */
+/* $Id: unpack.c,v 1.65 2005/04/01 10:07:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -119,12 +119,12 @@ unpack_config(crm_data_t * config)
 	}
 	crm_info("STONITH of failed nodes is %s", stonith_enabled?"enabled":"disabled");
 	
-	value = param_value(config, "symetric_cluster");
+	value = param_value(config, "symmetric_cluster");
 	if(value != NULL) {
-		crm_str_to_boolean(value, &symetric_cluster);
+		crm_str_to_boolean(value, &symmetric_cluster);
 	}
-	if(symetric_cluster) {
-		crm_info("Cluster is symetric"
+	if(symmetric_cluster) {
+		crm_info("Cluster is symmetric"
 			 " - resources can run anywhere by default");
 	}
 
@@ -266,9 +266,15 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 			new_node->details->type = node_member;
 		}
 
-
 		add_node_attrs(xml_obj, new_node);
 
+		if(crm_is_true(g_hash_table_lookup(
+				       new_node->details->attrs, "standby"))) {
+			crm_info("Node %s is in standby-mode",
+				 new_node->details->uname);
+			new_node->weight = -1.0;
+		}
+		
 		*nodes = g_list_append(*nodes, new_node);    
 		crm_verbose("Done with node %s",
 			    crm_element_value(xml_obj, XML_ATTR_UNAME));
@@ -299,9 +305,9 @@ unpack_resources(crm_data_t * xml_resources,
 			crm_devel_action(
 				print_resource("Added", new_rsc, FALSE));
 
-			if(symetric_cluster) {
+			if(symmetric_cluster) {
 				rsc_to_node_t *new_con = rsc2node_new(
-					"symetric_default", new_rsc, 0,
+					"symmetric_default", new_rsc, 0,
 					TRUE, NULL, placement_constraints);
 				new_con->node_list_rh = node_list_dup(all_nodes, FALSE);
 			}
@@ -922,7 +928,7 @@ gboolean
 unpack_rsc_order(
 	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints)
 {
-	gboolean symetrical_bool = TRUE;
+	gboolean symmetrical_bool = TRUE;
 	gboolean action_is_start = TRUE;
 	gboolean type_is_after   = TRUE;
 	
@@ -930,7 +936,7 @@ unpack_rsc_order(
 	const char *id_lh      = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
 	const char *id_rh      = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
 	const char *action     = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
-	const char *symetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMETRICAL);
+	const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMETRICAL);
 	const char *type       = crm_element_value(xml_obj, XML_ATTR_TYPE);
 
 	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
@@ -952,7 +958,7 @@ unpack_rsc_order(
 	
 	}
 
-	crm_str_to_boolean(symetrical, &symetrical_bool);
+	crm_str_to_boolean(symmetrical, &symmetrical_bool);
 	if(safe_str_eq(type, "before")) {
 		type_is_after = FALSE;
 	}
@@ -963,22 +969,22 @@ unpack_rsc_order(
 #if 1
 	if((type_is_after && action_is_start)
 	   || (type_is_after == FALSE && action_is_start == FALSE)){
-		if(symetrical_bool || action_is_start == FALSE) {
+		if(symmetrical_bool || action_is_start == FALSE) {
 			order_new(rsc_lh, stop_rsc, NULL, rsc_rh, stop_rsc, NULL,
 				  pecs_startstop, ordering_constraints);
 		}
 		
-		if(symetrical_bool || action_is_start) {
+		if(symmetrical_bool || action_is_start) {
 			order_new(rsc_rh, start_rsc, NULL, rsc_lh, start_rsc, NULL,
 				  pecs_startstop, ordering_constraints);
 		}
 
 	} else {
-		if(symetrical_bool || action_is_start == FALSE) {
+		if(symmetrical_bool || action_is_start == FALSE) {
 			order_new(rsc_rh, stop_rsc, NULL, rsc_lh, stop_rsc, NULL,
 				  pecs_startstop, ordering_constraints);
 		}
-		if(symetrical_bool || action_is_start) {
+		if(symmetrical_bool || action_is_start) {
 			order_new(rsc_lh, start_rsc, NULL, rsc_rh, start_rsc, NULL,
 				  pecs_startstop, ordering_constraints);
 		}
@@ -1124,7 +1130,7 @@ unpack_rsc_location(
 			pe_free_shallow_adv(old_list, TRUE);
 			);
 
-		if(rule_has_expressions == FALSE && symetric_cluster == FALSE) {
+		if(rule_has_expressions == FALSE && symmetric_cluster == FALSE) {
 			/* feels like a hack */
 			crm_devel("Rule %s had no expressions,"
 				  " adding all nodes", crm_element_value(rule, XML_ATTR_ID));

@@ -90,7 +90,7 @@ More details are given in the annotated DTD below.
 	transition_timeout (period in milliseconds, default=60000):
 		A time after which the transition is deemed failed.
 
-	symetric_cluster (boolean, default=TRUE):
+	symmetric_cluster (boolean, default=TRUE):
 		If true, resources are permitted to run anywhere by default.
 		Otherwise, explict constraints must be created to specify 
 		 where they can run.
@@ -226,11 +226,10 @@ More details are given in the annotated DTD below.
      have its rule satisfied _and_ define an attribute wins.  Subsequent
      values for the attribute are ignored.
 
+     Currently the rule is ignored.  This will change shortly after 2.0.0.
+
 -->
 <!ELEMENT instance_attributes (rule?, attributes)>
-<!ATTLIST instance_attributes
-	  weight	CDATA #IMPLIED
-	  id		CDATA #REQUIRED>
 
 <!-- CONSTRAINTS -->
 <!ELEMENT constraints (rsc_dependancy*,rsc_ordering*,rsc_location*)>
