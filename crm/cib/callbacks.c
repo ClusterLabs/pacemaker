@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.30 2005/03/08 18:59:41 andrew Exp $ */
+/* $Id: callbacks.c,v 1.31 2005/03/10 10:23:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -237,18 +237,19 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 	}
 	
 	while(channel->ops->is_message_pending(channel)) {
-		if (channel->ch_status == IPC_DISCONNECT) {
+		if (channel->ch_status != IPC_CONNECT) {
 			/* The message which was pending for us is that
-			 * the IPC status is now IPC_DISCONNECT
+			 * the channel is no longer fully connected.
+			 *
+			 * Dont read requests from disconnected clients
 			 */
 			break;
 		}
 		op_request = msgfromIPC_noauth(channel);
 
 		type = cl_get_string(op_request, F_CIB_OPERATION);
-		if(safe_str_eq(type, CRM_OP_REGISTER) ) {
-			/* ok */
-		} else if(safe_str_eq(type, T_CIB_NOTIFY) ) {
+		if(safe_str_eq(type, T_CIB_NOTIFY) ) {
+			/* Update the notify filters for this client */
 			int on_off = 0;
 			ha_msg_value_int(
 				op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
@@ -266,7 +267,7 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 			}
 			continue;
 			
-		} else {
+		} else if(safe_str_neq(type, CRM_OP_REGISTER) ) {
 			crm_warn("Discarding IPC message from %s on callback channel",
 				 cib_client->id);
 			crm_msg_del(op_request);
@@ -351,9 +352,12 @@ cib_common_callback(
 		    cib_client->id, cib_client->channel_name);
 
 	while(channel->ops->is_message_pending(channel)) {
-		if (channel->ch_status == IPC_DISCONNECT) {
+		if (channel->ch_status != IPC_CONNECT) {
 			/* The message which was pending for us is that
-			 * the IPC status is now IPC_DISCONNECT */
+			 * the channel is no longer fully connected.
+			 *
+			 * Dont read requests from disconnected clients
+			 */
 			break;
 		}
 		op_request = msgfromIPC(channel);
@@ -459,8 +463,7 @@ cib_common_callback(
 			crm_err("Input message");
 			crm_log_message(LOG_ERR, op_request);
 			crm_err("Output message");
-			crm_log_message(LOG_ERR, op_reply);
-			crm_log_message_adv(LOG_ERR, "cib.out.log", op_reply);
+			crm_log_message_adv(LOG_ERR, "CIB[output]", op_reply);
 		}
 		
 		if(op_reply == NULL) {
@@ -578,14 +581,12 @@ cib_process_command(
 			op, call_options, section, input, &output);
 	}
 
-	crm_devel("Processing reply cases");
-	
+	crm_trace("Processing reply cases");
 	if((call_options & cib_discard_reply) || reply == NULL) {
 		return rc;
 	}
 
-	crm_devel("Creating the reply");
-	/* make the basic reply */
+	crm_trace("Creating a basic reply");
 	*reply = ha_msg_new(8);
 	ha_msg_add(*reply, F_TYPE, T_CIB);
 	ha_msg_add(*reply, F_CIB_OPERATION, op);
@@ -598,12 +599,12 @@ cib_process_command(
 	tmp = cl_get_string(request, F_CIB_CALLOPTS);
 	ha_msg_add(*reply, F_CIB_CALLOPTS, tmp);
 	
-	/* attach the output if necessary */
+	crm_trace("Attaching output if necessary");
 	if(output != NULL) {
 		add_message_xml(*reply, F_CIB_CALLDATA, output);
 	}
 
-	crm_devel("Cleaning up");
+	crm_trace("Cleaning up");
 	free_xml(output);
 	free_xml(input);
 	return rc;
@@ -614,32 +615,47 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 {
 	cib_client_t *hash_client = NULL;
 	GList *list_item = NULL;
+	enum cib_errors rc = cib_ok;
 	
 	crm_devel("Delivering msg %p to client %s", msg, token);
 
+	if(token == NULL) {
+		crm_err("No client id token, cant send message");
+		if(rc == cib_ok) {
+			rc = cib_missing;
+		}
+		
+	} else {
+		/* A client that left before we could reply is not really
+		 * _our_ error.  Warn instead.
+		 */
+		hash_client = g_hash_table_lookup(client_list, token);
+		if(hash_client == NULL) {
+			crm_warn("Cannot find client for token %s", token);
+			rc = cib_client_gone;
+			
+		} else if(hash_client->channel == NULL) {
+			crm_err("Cannot find channel for client %s", token);
+			rc = cib_client_corrupt;
+
+		} else if(hash_client->channel->ops->get_chan_status(
+				  hash_client->channel) != IPC_CONNECT) {
+			crm_warn("Client %s has disconnected", token);
+			rc = cib_client_gone;
+		}
+	}
+
+	/* this is a more important error so overwriting rc is warrented */
 	if(msg == NULL) {
 		crm_err("No message to send");
-		return cib_reply_failed;
+		rc = cib_reply_failed;
+	}
 
-	} else if(token == NULL) {
-		crm_err("No client id token, cant send message");
-		return cib_missing;
+	if(rc == cib_ok) {
+		list_item = g_list_find_custom(
+			hash_client->delegated_calls, msg, cib_GCompareFunc);
 	}
 	
-	hash_client = g_hash_table_lookup(client_list, token);
-
-	if(hash_client == NULL) {
-		crm_err("Cannot find client for token %s", token);
-		return cib_client_gone;
-
-	} else if(hash_client->channel == NULL) {
-		crm_err("Cannot find channel for client %s", token);
-		return cib_client_corrupt;
-	}
-
-	list_item = g_list_find_custom(
-		hash_client->delegated_calls, msg, cib_GCompareFunc);
-
 	if(list_item != NULL) {
 		/* remove it - no need to time it out */
 		HA_Message *orig_msg = list_item->data;
@@ -650,12 +666,22 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 		crm_msg_del(orig_msg);
 	}
 	
-	crm_devel("Delivering reply to client %s", token);
-	if(send_ipc_message(hash_client->channel, msg) == FALSE) {
-		crm_err("Delivery of reply to client %s failed", token);
-		return cib_reply_failed;
+	if(rc == cib_ok) {
+		crm_devel("Delivering reply to client %s", token);
+		if(send_ipc_message(hash_client->channel, msg) == FALSE) {
+			crm_err("Delivery of reply to client %s failed", token);
+			rc = cib_reply_failed;
+		}
+
+	} else {
+		/* be consistent...
+		 * send_ipc_message() will free the message, so we should do
+		 *  so manually if we dont try to send it.
+		 */
+		crm_msg_del(msg);
 	}
-	return cib_ok;
+	
+	return rc;
 }
 
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b)
