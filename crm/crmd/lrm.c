@@ -73,7 +73,7 @@ do_lrm_control(long long action,
 	       enum crmd_fsa_input current_input,
 	       void *data)
 {
-	enum crmd_fsa_input failed = I_NULL;//I_FAIL;
+	enum crmd_fsa_input failed = I_FAIL;
 	int ret = HA_OK;
 
 	if(action & A_LRM_DISCONNECT) {
@@ -254,9 +254,16 @@ do_lrm_query(gboolean is_replace)
 	/* Build a list of active (not always running) resources */
 	build_active_RAs(rsc_list);
 
+#ifndef USE_FAKE_LRM
 	if(is_replace) {
-		set_xml_property_copy(xml_data, "replace", XML_CIB_TAG_LRM);
+		set_xml_property_copy(xml_state, "replace", XML_CIB_TAG_LRM);
 	}
+#else
+	if(is_replace) {
+		set_xml_property_copy(xml_data, "replace", "lrm_agents");
+	}
+#endif
+
 	
 	set_xml_property_copy(xml_state, XML_ATTR_ID, fsa_our_uname);
 	xml_result = create_cib_fragment(xml_state, NULL);
@@ -272,19 +279,12 @@ do_update_node_status(long long action,
 		      enum crmd_fsa_input current_input,
 		      void *data)
 {
-	xmlNodePtr update = NULL,
-		fragment = NULL,
-		tmp1 = NULL;
-		fragment = NULL;
+	xmlNodePtr update = NULL;
+
 	if(action & A_UPDATE_NODESTATUS) {
 
-#ifndef USE_FAKE_LRM
 		update = do_lrm_query(TRUE);
-#else
-		tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
-		set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
-		update = create_cib_fragment(tmp1, NULL);
-#endif
+
 		/* this only happens locally.  the updates are pushed out
 		 * as part of the join process
 		 */
