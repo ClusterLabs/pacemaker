@@ -511,6 +511,8 @@ do_state_transition(long long actions,
 
 	switch(next_state) {
 		case S_PENDING:			
+			set_bit_inplace(tmp, A_DC_TIMER_START);
+			/*fall through*/
 		case S_ELECTION:
 			crm_info("Resetting our DC to NULL on election");
 			crm_free(fsa_our_dc);
@@ -603,6 +605,7 @@ do_state_transition(long long actions,
 			break;
 			
 		default:
+			set_bit_inplace(tmp, A_DC_TIMER_STOP);
 			break;
 	}
 
