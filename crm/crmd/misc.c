@@ -38,9 +38,13 @@ do_log(long long action,
 {
 	int log_type = LOG_DEBUG;	
 
-	if(action & A_LOG) log_type = LOG_INFO;
-	if(action & A_WARN) log_type = LOG_WARNING;
-	if(action & A_ERROR) log_type = LOG_ERR;
+	if(action & A_LOG) {
+		log_type = LOG_INFO;
+	} else if(action & A_WARN) {
+		log_type = LOG_WARNING;
+	} else if(action & A_ERROR) {
+		log_type = LOG_ERR;
+	}
 	
 	do_crm_log(log_type, __FUNCTION__, NULL,
 		   "[[FSA]] Input %s from %s() received in state (%s)",
