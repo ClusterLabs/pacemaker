@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.28 2005/02/20 14:36:56 andrew Exp $ */
+/* $Id: messages.c,v 1.29 2005/02/23 12:23:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -190,7 +190,7 @@ cib_process_query(
 	if(answer != NULL) { *answer = NULL; }	
 	else { return cib_ok; }
 	
-#if 0
+#if 1
 	if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
 		section = NULL;
 	}
@@ -202,7 +202,6 @@ cib_process_query(
 
 	*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
 /*  	set_xml_property_copy(*answer, XML_ATTR_SECTION, section); */
-	set_xml_property_copy(*answer, "generated_on", cib_our_uname);
 
 	obj_root = get_object_root(section, get_the_CIB());
 	
@@ -210,12 +209,14 @@ cib_process_query(
 		result = cib_NOTEXISTS;
 
 	} else if(obj_root == get_the_CIB()) {
+		set_xml_property_copy(obj_root, "origin", cib_our_uname);
 		add_node_copy(*answer, obj_root);
 
 	} else {
 		crm_data_t *cib = createEmptyCib();
 		crm_data_t *query_obj_root = get_object_root(section, cib);
 		copy_in_properties(cib, get_the_CIB());
+		set_xml_property_copy(cib, "origin", cib_our_uname);
 
 		xml_child_iter(
 			obj_root, an_obj, NULL,
