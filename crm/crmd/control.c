@@ -137,7 +137,7 @@ do_shutdown_req(long long action,
 	enum crmd_fsa_input next_input = I_NULL;
 	HA_Message *msg = NULL;
 	
-	crm_info("Sending shutdown request to DC");
+	crm_info("Sending shutdown request to DC: %s", crm_str(fsa_our_dc));
 	msg = create_request(
 		CRM_OP_SHUTDOWN_REQ, NULL, NULL,
 		CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
@@ -570,7 +570,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	crm_devel("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		int debug_level = atoi(param_val);
-		if(debug_level > 0) {
+		if(debug_level > 0 && (debug_level+LOG_INFO) > crm_log_level) {
 			set_crm_log_level(LOG_INFO + debug_level);
 		}
 		cl_free(param_val);
