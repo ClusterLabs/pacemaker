@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.59 2005/03/16 19:39:37 andrew Exp $ */
+/* $Id: utils.c,v 1.60 2005/03/31 08:11:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -545,23 +545,36 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	if(b == NULL) { return -1; }
 	
 	if(node1->weight > node2->weight) {
+		crm_devel("%s (%f) > %s (%f) : weight",
+			  node1->details->id, node1->weight,
+			  node2->details->id, node2->weight);
 		return -1;
 	}
 	
 	if(node1->weight < node2->weight) {
+		crm_devel("%s (%f) < %s (%f) : weight",
+			  node1->details->id, node1->weight,
+			  node2->details->id, node2->weight);
 		return 1;
 	}
 
 	/* now try to balance resources across the cluster */
 	if(node1->details->num_resources
 	   < node2->details->num_resources) {
+		crm_devel("%s (%d) < %s (%d) : resources",
+			  node1->details->id, node1->details->num_resources,
+			  node2->details->id, node2->details->num_resources);
 		return -1;
 		
 	} else if(node1->details->num_resources
 		  > node2->details->num_resources) {
+		crm_devel("%s (%d) > %s (%d) : resources",
+			  node1->details->id, node1->details->num_resources,
+			  node2->details->id, node2->details->num_resources);
 		return 1;
 	}
 	
+	crm_devel("%s = %s", node1->details->id, node2->details->id);
 	return 0;
 }
 
@@ -629,7 +642,7 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 		action->optional   = FALSE;
 		action->seen_count = 0;
 		action->timeout    = NULL;
-		action->args       = create_xml_node(NULL, "args");
+		action->args       = create_xml_node(NULL, XML_TAG_ATTRS);
 		
 		if(rsc != NULL) {
 			crm_devel("Adding created action to its resource");
@@ -1030,6 +1043,9 @@ pe_free_resources(GListPtr resources)
 		resources = resources->next;
 
 		pe_free_shallow_adv(rsc->candidate_colors, TRUE);
+		
+		g_hash_table_destroy(rsc->parameters);
+
 		rsc->fns->free(rsc);
 	}
 	if(resources != NULL) {
