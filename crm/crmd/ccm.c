@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.39 2004/10/20 13:55:55 andrew Exp $ */
+/* $Id: ccm.c,v 1.40 2004/10/21 17:30:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -160,49 +160,69 @@ do_ccm_event(long long action,
 
 	}
 	
-	if(return_input != I_SHUTDOWN) {
-		/* My understanding is that we will never get both
-		 * node leaving *and* node joining callbacks at the
-		 * same time.
-		 *
-		 * This logic would need to change if this is not
-		 * the case
-		 */
+	if(AM_I_DC == FALSE || return_input == I_SHUTDOWN) {
+		return return_input;
+	}
+	
+	/* My understanding is that we will never get both
+	 * node leaving *and* node joining callbacks at the
+	 * same time.
+	 *
+	 * This logic would need to change if this is not
+	 * the case
+	 */
+	
+	if(oc->m_n_out != 0) {
+		int lpc = 0;
+		int offset = oc->m_out_idx;
+		for(lpc=0; lpc < oc->m_n_out; lpc++) {
+			xmlNodePtr request = NULL;
+			xmlNodePtr fragment = NULL;
+			xmlNodePtr node_state = NULL;
+			xmlNodePtr msg_options = NULL;
+			
+			const char *uname = oc->m_array[offset+lpc].node_uname;
+			
+			crm_info("Node %s has left the cluster,"
+				 " updating the CIB.", uname);
 
-		if(oc->m_n_out != 0) {
-			if(AM_I_DC) {
-				int lpc = 0;
-				int offset = oc->m_out_idx;
-				for(lpc=0; lpc < oc->m_n_out; lpc++) {
-					oc_node_t *member = NULL;
-					xmlNodePtr node_state = NULL;
-					xmlNodePtr update = NULL;
-					
-					if(member == NULL) {
-						continue;
-					}
-					node_state = create_node_state(
-						NULL,
-						oc->m_array[offset+lpc].node_uname,
-						XML_BOOLEAN_NO, NULL, NULL, NULL);
-
-					set_xml_property_copy(
-						node_state,
-						XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_DOWN);
-					update = create_cib_fragment(node_state, NULL);
-					invoke_local_cib(NULL, update, CRM_OP_UPDATE);
-					free_xml(update);
-					free_xml(node_state);
-				}
+			if(uname == NULL) {
+				crm_err("CCM node had no name");
+				continue;
 			}
+			
+			node_state = create_node_state(
+				NULL, uname,
+				XML_BOOLEAN_NO, NULL, NULL, NULL);
+			
+			fragment = create_cib_fragment(node_state, NULL);
 
-		} else if(oc->m_n_in !=0) {
-			/* delay the I_NODE_JOIN until they acknowledge our
-			 * DC status and send us their CIB
-			 */
-		} else {
-			crm_warn("So why are we here?  What CCM event happened?");
+			msg_options = set_xml_attr(
+				NULL, XML_TAG_OPTIONS,
+				XML_ATTR_OP, CRM_OP_UPDATE, TRUE);
+	
+			request = create_request(
+				msg_options, fragment, NULL,
+				CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
+	
+			register_fsa_input(
+				C_FSA_INTERNAL, I_CIB_OP, request);
+
+			free_xml(msg_options);
+			free_xml(node_state);
+			free_xml(fragment);			
+			free_xml(request);
+
+			s_crmd_fsa(C_FSA_INTERNAL);
+			
 		}
+		
+	} else if(oc->m_n_in !=0) {
+		/* delay the I_NODE_JOIN until they acknowledge our
+		 * DC status and send us their CIB
+		 */
+	} else {
+		crm_warn("So why are we here?  What CCM event happened?");
 	}
 
 	return return_input;
@@ -445,7 +465,7 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		       oc->m_array[oc->m_memb_idx+lpc].node_id,
 		       oc->m_array[oc->m_memb_idx+lpc].node_born_on);
 
-		crm_verbose("%s ? %s", fsa_our_uname,
+		crm_trace("%s ? %s", fsa_our_uname,
 			  oc->m_array[oc->m_memb_idx+lpc].node_uname);
 		if(safe_str_eq(fsa_our_uname,
 			       oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
@@ -482,7 +502,7 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		       oc->m_array[oc->m_out_idx+lpc].node_id,
 		       oc->m_array[oc->m_out_idx+lpc].node_born_on);
 		if(fsa_our_uname != NULL
-		   && strcmp(fsa_our_uname,
+		   && 0 == strcmp(fsa_our_uname,
 			     oc->m_array[oc->m_out_idx+lpc].node_uname)) {
 			crm_err("We're not part of the cluster anymore");
 		}
