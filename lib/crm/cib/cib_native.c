@@ -503,14 +503,14 @@ cib_native_msgready(cib_t* cib)
 
 	if(native->command_channel->ops->is_message_pending(
 		   native->command_channel)) {
-		crm_verbose("Message pending on command channel");
+		crm_devel("Message pending on command channel");
 	}
 	if(native->callback_channel->ops->is_message_pending(
 		   native->callback_channel)) {
 		crm_trace("Message pending on callback channel");
 		return TRUE;
 	} 
-	crm_verbose("No message pending");
+	crm_devel("No message pending");
 	return FALSE;
 }
 
