@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.15 2004/03/19 10:43:42 andrew Exp $ */
+/* $Id: adminmain.c,v 1.16 2004/03/22 14:25:22 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -48,9 +48,7 @@
 #include <crm/common/xmlutils.h>
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
-#include <crm/cib/cibprimatives.h>
-#include <crm/cib/cibmessages.h>
-#include <crm/cib/cibio.h>
+#include <crm/cib/cib.h>
 
 #define OPTARGS	"V?i:o:D:C:S:HA:U:M:I:EWRFt:m:a:d:w:c:r:p:s:"
 
@@ -390,56 +388,13 @@ handleCibMod(void)
 	CRM_DEBUG("Object creation complete");
 
 	// create the cib request
-	xmlNodePtr cib = NULL, fragment = NULL, object_root = NULL;
+	xmlNodePtr fragment = NULL;
+	fragment = create_cib_fragment(cib_object, NULL);
+
 	set_xml_property_copy(msg_options, XML_ATTR_OP, cib_action);
-	
-	// create the update section
-	char *section_name = pluralSection(obj_type);
-
-	CRM_DEBUG("xml things");
-	fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
-	set_xml_property_copy(fragment, XML_ATTR_SECTION, section_name);
-	set_xml_property_copy(msg_options, XML_ATTR_FILTER_TYPE, section_name);
-
-	cib = createEmptyCib();
-	CRM_DEBUG("get the right section");
-	object_root = get_object_root(section_name, cib);
-	xmlAddChild(object_root, cib_object);
-
-	xmlAddChild(fragment, cib);
-	CRM_DEBUG("Fragment created");
 
 	return fragment;
 }
-
-
-char *
-pluralSection(const char *a_section)
-{
-	char *a_section_parent = NULL;
-	if (a_section == NULL) {
-		a_section_parent = ha_strdup("all");
-
-	} else if(strcmp(a_section, "node") == 0) {
-		a_section_parent = ha_strdup("nodes");
-
-	} else if(strcmp(a_section, "state") == 0) {
-		a_section_parent = ha_strdup("status");
-
-	} else if(strcmp(a_section, "constraint") == 0) {
-		a_section_parent = ha_strdup("constraints");
-		
-	} else if(strcmp(a_section, "resource") == 0) {
-		a_section_parent = ha_strdup("resources");
-
-	} else {
-		cl_log(LOG_ERR, "Unknown section %s", a_section);
-	}
-	
-	CRM_DEBUG2("Plural is %s", a_section_parent);
-	return a_section_parent;
-}
-
 
 
 int
