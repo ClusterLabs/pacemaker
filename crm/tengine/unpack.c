@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.21 2005/02/17 20:35:50 andrew Exp $ */
+/* $Id: unpack.c,v 1.22 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,7 +84,7 @@ unpack_graph(crm_data_t *xml_graph)
 
 		synapse_t *new_synapse = NULL;
 
-		crm_debug("looking in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
+		crm_devel("looking in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
 		
 		crm_malloc(new_synapse, sizeof(synapse_t));
 		new_synapse->id        = num_synapses++;
@@ -95,7 +95,7 @@ unpack_graph(crm_data_t *xml_graph)
 		
 		graph = g_list_append(graph, new_synapse);
 
-		crm_debug("look for actions in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
+		crm_devel("look for actions in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
 
 		xml_child_iter(
 			synapse, actions, "action_set",
@@ -109,7 +109,7 @@ unpack_graph(crm_data_t *xml_graph)
 				if(new_action == NULL) {
 					continue;
 				}
-				crm_debug("Adding action %d to synapse %d",
+				crm_devel("Adding action %d to synapse %d",
 						 new_action->id, new_synapse->id);
 
 				new_synapse->actions = g_list_append(
@@ -119,7 +119,7 @@ unpack_graph(crm_data_t *xml_graph)
 			
 			);
 
-		crm_debug("look for inputs in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
+		crm_devel("look for inputs in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
 
 		xml_child_iter(
 			synapse, inputs, "inputs",
@@ -137,7 +137,7 @@ unpack_graph(crm_data_t *xml_graph)
 						continue;
 					}
 
-					crm_debug("Adding input %d to synapse %d",
+					crm_devel("Adding input %d to synapse %d",
 						 new_input->id, new_synapse->id);
 					
 					new_synapse->inputs = g_list_append(
@@ -202,7 +202,7 @@ unpack_action(crm_data_t *xml_action)
 	if(tmp != NULL) {
 		action->timeout = atoi(tmp);
 	}
-	crm_debug("Action %d has timer set to %d",
+	crm_devel("Action %d has timer set to %d",
 		  action->id, action->timeout);
 	
 	crm_malloc(action->timer, sizeof(te_timer_t));
@@ -309,7 +309,7 @@ extract_event(crm_data_t *msg)
 			}
 			
 			if(abort) {
-				crm_xml_debug(
+				crm_xml_devel(
 					node_state, "Update resulted in state-based abort");
 			} else if(ccm_state != NULL
 				  && safe_str_eq(ccm_state, XML_BOOLEAN_YES)) {

@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.12 2005/02/16 18:03:48 andrew Exp $ */
+/* $Id: notify.c,v 1.13 2005/02/19 18:11:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -142,7 +142,7 @@ cib_post_notify(
 	if(id != NULL) {
 		ha_msg_add(update_msg, F_CIB_OBJID, id);
 	}
-	crm_debug("beekhof");
+
 	if(update != NULL) {
 		crm_trace("Setting type to update->name: %s",
 			    crm_element_name(update));
@@ -169,14 +169,14 @@ cib_post_notify(
 		add_message_xml(update_msg, F_CIB_UPDATE_RESULT, new_obj);
 	}
 
-	crm_debug("Notifying clients");
+	crm_devel("Notifying clients");
 	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
 	
 	pending_updates--;
 
 	if(pending_updates == 0) {
 		ha_msg_mod(update_msg, F_SUBTYPE, T_CIB_UPDATE_CONFIRM);
-		crm_debug("Sending confirmation to clients");
+		crm_devel("Sending confirmation to clients");
 		g_hash_table_foreach(client_list, cib_notify_client, update_msg);
 	}
 
@@ -206,7 +206,7 @@ cib_post_notify(
 	crm_free(type);
 	crm_msg_del(update_msg);
 
-	crm_debug("Notify complete");
+	crm_devel("Notify complete");
 }
 
 void

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.13 2005/02/14 22:36:12 andrew Exp $ */
+/* $Id: complex.c,v 1.14 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -200,10 +200,10 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 	crm_verbose("%d Processing %d -> %d",
 		    order->id, lh_action->id, rh_action->id);
 	
-	crm_debug_action(
+	crm_devel_action(
 		print_action("LH (order_actions)", lh_action, FALSE));
 
-	crm_debug_action(
+	crm_devel_action(
 		print_action("RH (order_actions)", rh_action, FALSE));
 	
 	crm_malloc(wrapper, sizeof(action_wrapper_t));
@@ -229,7 +229,7 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 
 void common_dump(resource_t *rsc, const char *pre_text, gboolean details)
 {
-	crm_debug("%s%s%s%sResource %s: (variant=%s, priority=%f)",
+	crm_devel("%s%s%s%sResource %s: (variant=%s, priority=%f)",
 		  pre_text==NULL?"":pre_text,
 		  pre_text==NULL?"":": ",
 		  rsc->provisional?"Provisional ":"",

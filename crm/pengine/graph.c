@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.26 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: graph.c,v 1.27 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,7 +61,7 @@ update_action(action_t *action)
 			} else if (other->strength == pecs_must) {
 				change = TRUE;
 				other->action->runnable =FALSE;
-				crm_debug_action(
+				crm_devel_action(
 					print_action("Marking unrunnable",
 						     other->action, FALSE);
 					print_action("Reason",
@@ -83,7 +83,7 @@ update_action(action_t *action)
 		case pe_restart_restart:
 			change = TRUE;
 			other->action->optional = FALSE;
-			crm_debug_action(
+			crm_devel_action(
 				print_action("Marking manditory",
 					     other->action, FALSE));
 	}
@@ -128,7 +128,7 @@ stonith_constraints(node_t *node,
 	if(shutdown_op != NULL) {
 		/* shutdown before stonith */
 		/* add the shutdown OP to the before lists so it counts as a pre-req */
-		crm_debug("Adding shutdown (%d) as an input to stonith (%d)",
+		crm_devel("Adding shutdown (%d) as an input to stonith (%d)",
 			  shutdown_op->id, stonith_op->id);
 		
 		order_new(NULL, shutdown_crm, shutdown_op,
@@ -178,7 +178,7 @@ stonith_constraints(node_t *node,
 				"resource %s after a failed stop",
 				rsc->id);
 		}
-		crm_debug("Adding stonith (%d) as an input to start",
+		crm_devel("Adding stonith (%d) as an input to start",
 			  stonith_op->id);
 		
 		/* stonith before start */
@@ -210,7 +210,7 @@ action2xml(action_t *action, gboolean as_input)
 		return NULL;
 	}
 
-	crm_debug("Dumping action%d as XML", action->id);
+	crm_devel("Dumping action%d as XML", action->id);
 	switch(action->task) {
 		case stonith_node:
 		case shutdown_crm:
@@ -271,7 +271,7 @@ action2xml(action_t *action, gboolean as_input)
 		return action_xml;
 	}
 	
-	crm_xml_debug(action->extra_attrs, "copying in extra attributes");
+	crm_xml_devel(action->extra_attrs, "copying in extra attributes");
 	if(action->extra_attrs) {
 		copy_in_properties(action->args, action->extra_attrs);
 	}

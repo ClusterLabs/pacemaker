@@ -350,29 +350,29 @@ cib_native_perform_op(
 		return cib_send_failed;
 
 	} else {
-		crm_debug("Message sent");
+		crm_devel("Message sent");
 	}
 
  	crm_msg_del(op_msg);
 	op_msg = NULL;
 
 	if((call_options & cib_discard_reply)) {
-		crm_debug("Discarding reply");
+		crm_devel("Discarding reply");
 		return cib_ok;
 
 	} else if(!(call_options & cib_sync_call)) {
-		crm_debug("Async call, returning");
+		crm_devel("Async call, returning");
 		return cib->call_id - 1;
 	}
 
-	crm_debug("Waiting for a syncronous reply");
+	crm_devel("Waiting for a syncronous reply");
 	op_reply = msgfromIPC_noauth(native->command_channel);
 	if (op_reply == NULL) {
 		crm_err("No reply message");
 		return cib_reply_failed;
 	}
 
-	crm_debug("Syncronous reply recieved");
+	crm_devel("Syncronous reply recieved");
  	crm_log_message(LOG_MSG, op_reply);
 	rc = cib_ok;
 	
@@ -439,11 +439,11 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 
 	/* if it is not blocking mode and no message in the channel, return */
 	if (blocking == 0 && cib_native_msgready(cib) == FALSE) {
-		crm_debug("No message ready and non-blocking...");
+		crm_devel("No message ready and non-blocking...");
 		return 0;
 
 	} else if (cib_native_msgready(cib) == FALSE) {
-		crm_debug("Waiting for message from CIB service...");
+		crm_devel("Waiting for message from CIB service...");
 		ch->ops->waitin(ch);
 	}
 	
@@ -481,7 +481,7 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 	crm_data_t *output = NULL;
 
 	if(cib->op_callback == NULL) {
-		crm_debug("No OP callback set, ignoring reply");
+		crm_devel("No OP callback set, ignoring reply");
 		return;
 	}
 	
@@ -534,7 +534,7 @@ cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 	int lpc = 0;
 	cib_t *cib = user_data;
 
-	crm_debug("Received callback");
+	crm_devel("Received callback");
 
 	if(user_data == NULL){
 		crm_err("user_data field must contain the CIB struct");
@@ -549,7 +549,7 @@ cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 		}
 	}
 
-	crm_debug("%d CIB messages dispatched", lpc);
+	crm_devel("%d CIB messages dispatched", lpc);
 
 	if (channel && (channel->ch_status == IPC_DISCONNECT)) {
 		crm_crit("Lost connection to the CIB service.");
@@ -577,7 +577,7 @@ int cib_native_set_connection_dnotify(
 					default_ipc_connection_destroy);
 
 	} else {
-		crm_debug("Setting dnotify");
+		crm_devel("Setting dnotify");
 		set_IPC_Channel_dnotify(native->callback_source, dnotify);
 	}
 	return cib_ok;

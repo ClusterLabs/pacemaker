@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.56 2005/02/11 22:11:29 andrew Exp $ */
+/* $Id: pengine.c,v 1.57 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -110,14 +110,14 @@ do_calculations(crm_data_t * cib_object)
 	stage2(resources, nodes, &colors);
 
 	crm_verbose("========= Nodes =========");
-	crm_debug_action(
+	crm_devel_action(
 		slist_iter(node, node_t, nodes, lpc,
 			   print_node(NULL, node, TRUE)
 			)
 		);
 		
 	crm_verbose("========= Resources =========");
-	crm_debug_action(
+	crm_devel_action(
 		slist_iter(resource, resource_t, resources, lpc,
 			   print_resource(NULL, resource, TRUE)
 			)
@@ -129,7 +129,7 @@ do_calculations(crm_data_t * cib_object)
 	crm_verbose("=#=#=#=#= Stage 4 =#=#=#=#=");
 	stage4(colors);
 	crm_verbose("========= Colors =========");
-	crm_debug_action(
+	crm_devel_action(
 		slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE)
 			)
@@ -142,7 +142,7 @@ do_calculations(crm_data_t * cib_object)
 	stage6(&actions, &ordering_constraints, nodes, resources);
 
 	crm_verbose("========= Action List =========");
-	crm_debug_action(
+	crm_devel_action(
 		slist_iter(action, action_t, actions, lpc,
 			   print_action(NULL, action, TRUE)
 			)
@@ -154,7 +154,7 @@ do_calculations(crm_data_t * cib_object)
 	crm_verbose("========= Action Sets =========");
 
 	crm_verbose("\t========= Set %d (Un-runnable) =========", -1);
-	crm_debug_action(
+	crm_devel_action(
 		slist_iter(action, action_t, actions, lpc,
 			   if(action->optional == FALSE
 			      && action->runnable == FALSE) {
@@ -163,7 +163,7 @@ do_calculations(crm_data_t * cib_object)
 			)
 		);
 
-	crm_debug_action(
+	crm_devel_action(
 		slist_iter(action_set, GList, action_sets, lpc,
 			   crm_verbose("\t========= Set %d =========", lpc);
 			   slist_iter(action, action_t, action_set, lpc2,
@@ -174,14 +174,14 @@ do_calculations(crm_data_t * cib_object)
 
 	
 	crm_verbose("========= Stonith List =========");
-	crm_debug_action(
+	crm_devel_action(
 		slist_iter(node, node_t, stonith_list, lpc,
 			   print_node(NULL, node, FALSE);
 			)
 		);
   
 	crm_verbose("========= Shutdown List =========");
-	crm_debug_action(
+	crm_devel_action(
 		slist_iter(node, node_t, shutdown_list, lpc,
 			   print_node(NULL, node, FALSE);
 			)

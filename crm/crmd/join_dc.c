@@ -215,7 +215,7 @@ do_dc_join_req(long long action,
 		return I_NULL;
 	}
 
-	crm_debug("Processing req from %s", join_from);
+	crm_devel("Processing req from %s", join_from);
 	
 	if(join_node != NULL) {
 		is_a_member = TRUE;
@@ -227,15 +227,15 @@ do_dc_join_req(long long action,
 	CRM_ASSERT(our_generation != NULL); /* what to do here? */
 	if(cib_compare_generation(our_generation, generation) <= 0) {
 		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
-		crm_debug("%s has a better generation number than us",
+		crm_devel("%s has a better generation number than us",
 			  join_from);
-		crm_xml_debug(our_generation, "Our generation");
-		crm_xml_debug(generation, "Their generation");
+		crm_xml_devel(our_generation, "Our generation");
+		crm_xml_devel(generation, "Their generation");
 		max_generation_from = crm_strdup(join_from);
 	}
 	free_xml(our_generation);
 	
-	crm_debug("Welcoming node %s after ACK (ref %s)", join_from, ref);
+	crm_devel("Welcoming node %s after ACK (ref %s)", join_from, ref);
 	
 	if(is_a_member == FALSE) {
 		/* nack them now so they are not counted towards the
@@ -313,7 +313,7 @@ do_dc_join_finalize(long long action,
 		}
 	}
 
-	crm_debug("Bumping the epoche and syncing to %d clients",
+	crm_devel("Bumping the epoche and syncing to %d clients",
 		  g_hash_table_size(join_requests));
 	fsa_cib_conn->cmds->bump_epoch(
 		fsa_cib_conn, cib_scope_local|cib_sync_call);
@@ -491,7 +491,7 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 	const char *join_to = NULL;
 	const oc_node_t *member = (const oc_node_t*)value;
 
-	crm_debug("Sending %s offer", CRM_OP_WELCOME);
+	crm_devel("Sending %s offer", CRM_OP_WELCOME);
 	if(member != NULL) {
 		join_to = member->node_uname;
 	}
@@ -505,7 +505,7 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
 
 		/* send the welcome */
-		crm_debug("Sending %s to %s", CRM_OP_WELCOME, join_to);
+		crm_devel("Sending %s to %s", CRM_OP_WELCOME, join_to);
 
 		send_msg_via_ha(fsa_cluster_conn, offer);
 

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.14 2005/02/18 10:59:02 andrew Exp $ */
+/* $Id: native.c,v 1.15 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -283,7 +283,7 @@ void native_create_actions(resource_t *rsc)
 		if(action->extra_attrs == NULL) {
 			action->extra_attrs = create_xml_node(NULL, "extra");
 		}
-		crm_xml_debug(rsc->extra_attrs, "copying in extra attributes");
+		crm_xml_devel(rsc->extra_attrs, "copying in extra attributes");
 		copy_in_properties(action->extra_attrs, rsc->extra_attrs);
 		);
 }
@@ -307,7 +307,7 @@ void native_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 		return;
 		
 	} else {
-		crm_debug("Processing constraints from %s", rsc->id);
+		crm_devel("Processing constraints from %s", rsc->id);
 	}
 	
 	constraint->rsc_rh->fns->rsc_dependancy_rh(rsc, constraint);		
@@ -329,12 +329,12 @@ void native_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 	get_native_variant_data(native_data_rh, rsc_rh);
 	
 	crm_verbose("Processing RH of constraint %s", constraint->id);
-	crm_debug_action(print_resource("LHS", rsc_lh, TRUE));
-	crm_debug_action(print_resource("RHS", rsc_rh, TRUE));
+	crm_devel_action(print_resource("LHS", rsc_lh, TRUE));
+	crm_devel_action(print_resource("RHS", rsc_rh, TRUE));
 	
 	if(constraint->strength == pecs_ignore
 		|| constraint->strength == pecs_startstop){
-		crm_debug("Skipping constraint type %d", constraint->strength);
+		crm_devel("Skipping constraint type %d", constraint->strength);
 		return;
 	}
 	
@@ -345,7 +345,7 @@ void native_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 				rsc_lh, update_lh,rsc_rh, update_rh);
 		} else {
 			/* nothing */
-			crm_debug(
+			crm_devel(
 				"Skipping constraint, both sides provisional");
 		}
 		return;
@@ -392,17 +392,17 @@ void native_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 	
 
 	if(update_lh) {
-		crm_debug("Updating LHS");
+		crm_devel("Updating LHS");
 	}
 	if(update_rh) {
-		crm_debug("Updating RHS");
+		crm_devel("Updating RHS");
 	}		
 
 	if(do_check) {
 		if(native_constraint_violated(
 			   rsc_lh, rsc_rh, constraint) == FALSE) {
 
-			crm_debug("Constraint satisfied");
+			crm_devel("Constraint satisfied");
 			return;
 		}
 		/* else constraint cant be satisified */
@@ -461,7 +461,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 
 	} else if(lh_action == NULL && lh_rsc != NULL) {
 		if(order->strength == pecs_must) {
-			crm_debug("No LH-Side (%s/%s) found for constraint..."
+			crm_devel("No LH-Side (%s/%s) found for constraint..."
 				  " creating",
 				  lh_rsc->id, task2text(order->lh_action_task));
 
@@ -472,9 +472,9 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 			lh_rsc->actions, order->lh_action_task, NULL);
 
 		if(lh_actions == NULL) {
-			crm_debug("No LH-Side (%s/%s) found for constraint",
+			crm_devel("No LH-Side (%s/%s) found for constraint",
 				  lh_rsc->id, task2text(order->lh_action_task));
-			crm_debug("RH-Side was: (%s/%s)",
+			crm_devel("RH-Side was: (%s/%s)",
 				  order->rh_rsc?order->rh_rsc->id:order->rh_action?order->rh_action->rsc->id:"<NULL>",
 				  task2text(order->rh_action_task));
 			return;
@@ -483,7 +483,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 	} else {
 		crm_warn("No LH-Side (%s) specified for constraint",
 			 task2text(order->lh_action_task));
-		crm_debug("RH-Side was: (%s/%s)",
+		crm_devel("RH-Side was: (%s/%s)",
 			  order->rh_rsc?order->rh_rsc->id:order->rh_action?order->rh_action->rsc->id:"<NULL>",
 			  task2text(order->rh_action_task));
 		return;
@@ -538,19 +538,19 @@ void native_rsc_order_rh(
 			rsc->actions, order->rh_action_task, NULL);
 
 		if(rh_actions == NULL) {
-			crm_debug("No RH-Side (%s/%s) found for constraint..."
+			crm_devel("No RH-Side (%s/%s) found for constraint..."
 				  " ignoring",
 				  rsc->id, task2text(order->rh_action_task));
-			crm_debug("LH-Side was: (%s/%s)",
+			crm_devel("LH-Side was: (%s/%s)",
 				  order->lh_rsc?order->lh_rsc->id:order->lh_action?order->lh_action->rsc->id:"<NULL>",
 				  task2text(order->lh_action_task));
 			return;
 		}
 			
 	}  else if(rh_action == NULL) {
-		crm_debug("No RH-Side (%s) specified for constraint..."
+		crm_devel("No RH-Side (%s) specified for constraint..."
 			  " ignoring", task2text(order->rh_action_task));
-		crm_debug("LH-Side was: (%s/%s)",
+		crm_devel("LH-Side was: (%s/%s)",
 			  order->lh_rsc?order->lh_rsc->id:order->lh_action?order->lh_action->rsc->id:"<NULL>",
 			  task2text(order->lh_action_task));
 		return;
@@ -570,7 +570,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	GListPtr or_list;
 	native_variant_data_t *native_data = NULL;
 	
-	crm_debug_action(print_rsc_to_node("Applying", constraint, FALSE));
+	crm_devel_action(print_rsc_to_node("Applying", constraint, FALSE));
 	/* take "lifetime" into account */
 	if(constraint == NULL) {
 		crm_err("Constraint is NULL");
@@ -593,7 +593,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		crm_warn("RHS of constraint %s is NULL", constraint->id);
 		return;
 	}
-	crm_debug_action(print_resource("before update", rsc,TRUE));
+	crm_devel_action(print_resource("before update", rsc,TRUE));
 
 	or_list = node_list_or(
 		native_data->allowed_nodes, constraint->node_list_rh, FALSE);
@@ -605,7 +605,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 			   rsc, constraint, node_rh->details->uname,
 			   native_data->allowed_nodes));
 
-	crm_debug_action(print_resource("after update", rsc, TRUE));
+	crm_devel_action(print_resource("after update", rsc, TRUE));
 
 }
 
@@ -613,7 +613,7 @@ void native_expand(resource_t *rsc, crm_data_t * *graph)
 {
 	slist_iter(
 		action, action_t, rsc->actions, lpc,
-		crm_debug("processing action %d for rsc=%s",
+		crm_devel("processing action %d for rsc=%s",
 			  action->id, rsc->id);
 		graph_element_from_action(action, graph);
 		);
@@ -625,7 +625,7 @@ void native_dump(resource_t *rsc, const char *pre_text, gboolean details)
 	get_native_variant_data(native_data, rsc);
 
 	common_dump(rsc, pre_text, details);
-	crm_debug("\t%d candidate colors, %d allowed nodes,"
+	crm_devel("\t%d candidate colors, %d allowed nodes,"
 		  " %d rsc_cons and %d node_cons",
 		  g_list_length(rsc->candidate_colors),
 		  g_list_length(native_data->allowed_nodes),
@@ -633,19 +633,19 @@ void native_dump(resource_t *rsc, const char *pre_text, gboolean details)
 		  g_list_length(native_data->node_cons));
 	
 	if(details) {
-		crm_debug("\t=== Actions");
+		crm_devel("\t=== Actions");
 		slist_iter(
 			action, action_t, rsc->actions, lpc, 
 			print_action("\trsc action: ", action, FALSE);
 			);
 		
-		crm_debug("\t=== Colors");
+		crm_devel("\t=== Colors");
 		slist_iter(
 			color, color_t, rsc->candidate_colors, lpc,
 			print_color("\t", color, FALSE)
 			);
 
-		crm_debug("\t=== Allowed Nodes");
+		crm_devel("\t=== Allowed Nodes");
 		slist_iter(
 			node, node_t, native_data->allowed_nodes, lpc,
 			print_node("\t", node, FALSE);
@@ -658,7 +658,7 @@ void native_free(resource_t *rsc)
 	native_variant_data_t *native_data =
 		(native_variant_data_t *)rsc->variant_opaque;
 	
-	crm_debug("Freeing Allowed Nodes");
+	crm_devel("Freeing Allowed Nodes");
 	pe_free_shallow(native_data->allowed_nodes);
 	
 	common_free(rsc);	
@@ -716,13 +716,13 @@ void native_rsc_dependancy_rh_must(resource_t *rsc_lh, gboolean update_lh,
 
 	CRM_DEV_ASSERT(update_rh || update_lh);
 	if(crm_assert_failed == FALSE && do_merge) {
-		crm_debug("Merging candidate nodes");
+		crm_devel("Merging candidate nodes");
 		old_list = native_data_rh->color->details->candidate_nodes;
 		native_data_rh->color->details->candidate_nodes = merged_node_list;
 		pe_free_shallow(old_list);
 	}
 		
-	crm_debug("Finished processing pecs_must constraint");
+	crm_devel("Finished processing pecs_must constraint");
 }
 
 void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
@@ -737,7 +737,7 @@ void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 	get_native_variant_data(native_data_lh, rsc_lh);
 	get_native_variant_data(native_data_rh, rsc_rh);
 	
-	crm_debug("Processing pecs_must_not constraint");
+	crm_devel("Processing pecs_must_not constraint");
 	/* pecs_must_not */
 	if(update_lh) {
 		color_rh = native_data_rh->color;
@@ -749,10 +749,10 @@ void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 			rsc_lh->candidate_colors = g_list_remove(
 				rsc_lh->candidate_colors, color_lh);
 			
-			crm_debug_action(
+			crm_devel_action(
 				print_color("Removed LH", color_lh, FALSE));
 			
-			crm_debug_action(
+			crm_devel_action(
 				print_resource("Modified LH", rsc_lh, TRUE));
 			
 			crm_free(color_lh);
@@ -772,10 +772,10 @@ void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 					color_lh->details->candidate_nodes,
 					node_lh);
 			
-			crm_debug_action(
+			crm_devel_action(
 				print_node("Removed LH", node_lh, FALSE));
 
-			crm_debug_action(
+			crm_devel_action(
 				print_color("Modified LH", color_lh, FALSE));
 			
 			crm_free(node_lh);
@@ -794,10 +794,10 @@ void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 			rsc_rh->candidate_colors = g_list_remove(
 				rsc_rh->candidate_colors, color_rh);
 			
-			crm_debug_action(
+			crm_devel_action(
 				print_color("Removed RH", color_rh, FALSE));
 
-			crm_debug_action(
+			crm_devel_action(
 				print_resource("Modified RH", rsc_rh, TRUE));
 			
 			crm_free(color_rh);
@@ -816,10 +816,10 @@ void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 					color_rh->details->candidate_nodes,
 					node_rh);
 			
-			crm_debug_action(
+			crm_devel_action(
 				print_node("Removed RH", node_rh, FALSE));
 
-			crm_debug_action(
+			crm_devel_action(
 				print_color("Modified RH", color_rh, FALSE));
 
 			crm_free(node_rh);
@@ -939,7 +939,7 @@ native_assign_color(resource_t *rsc, color_t *color)
 			crm_verbose("Colored resource %s with new color %d",
 				    rsc->id, native_data->color->id);
 			
-			crm_debug_action(
+			crm_devel_action(
 				print_resource("Colored Resource", rsc, TRUE));
 			
 	} else {
@@ -990,7 +990,7 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 		node_rh->fixed = TRUE;
 	}
 
-	crm_debug_action(print_node("Updated", node_rh, FALSE));
+	crm_devel_action(print_node("Updated", node_rh, FALSE));
 
 	return;
 }
@@ -1084,7 +1084,7 @@ filter_nodes(resource_t *rsc)
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 
-	crm_debug_action(print_resource("Filtering nodes for", rsc, FALSE));
+	crm_devel_action(print_resource("Filtering nodes for", rsc, FALSE));
 	slist_iter(
 		node, node_t, native_data->allowed_nodes, lpc,
 		if(node == NULL) {
@@ -1093,7 +1093,7 @@ filter_nodes(resource_t *rsc)
 		} else if(node->weight < 0.0
 			  || node->details->online == FALSE
 			  || node->details->type == node_ping) {
-			crm_debug_action(print_node("Removing", node, FALSE));
+			crm_devel_action(print_node("Removing", node, FALSE));
 			native_data->allowed_nodes =
 				g_list_remove(native_data->allowed_nodes, node);
 			crm_free(node);

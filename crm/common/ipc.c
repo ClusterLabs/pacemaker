@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.20 2005/02/18 15:17:59 andrew Exp $ */
+/* $Id: ipc.c,v 1.21 2005/02/19 18:11:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -85,10 +85,10 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 		
 	}	
 
-	crm_log_message(all_is_good?LOG_DEBUG:LOG_ERR, msg);
+	crm_log_message(all_is_good?LOG_DEV:LOG_ERR, msg);
 
 #ifdef MSG_LOG
-	crm_log_message_adv(all_is_good?LOG_DEBUG:LOG_ERR,
+	crm_log_message_adv(all_is_good?LOG_DEV:LOG_ERR,
 			    DEVEL_DIR"/outbound.ipc.log", msg);
 #endif
 	
@@ -130,7 +130,7 @@ init_server_ipc_comms(
 		channel_client_connect, channel_name,
 		channel_connection_destroy);
 
-	crm_debug("Listening on: %s", commpath);
+	crm_devel("Listening on: %s", commpath);
 
 	return 0;
 }
@@ -164,7 +164,7 @@ init_client_ipc_comms(const char *channel_name,
 		crm_warn("No dispatch method specified..."
 			 "maybe you meant init_client_ipc_comms_nodispatch()?");
 	} else {
-		crm_debug("Adding dispatch method to channel");
+		crm_devel("Adding dispatch method to channel");
 
 		the_source = G_main_add_IPC_Channel(
 			G_PRIORITY_LOW, a_ch, FALSE, dispatch, callback_data, 
@@ -192,7 +192,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	if(commpath != NULL) {
 		sprintf(commpath, WORKING_DIR "/%s", channel_name);
 		commpath[local_socket_len - 1] = '\0';
-		crm_debug("Attempting to talk on: %s", commpath);
+		crm_devel("Attempting to talk on: %s", commpath);
 	}
 	
 	attrs = g_hash_table_new(g_str_hash,g_str_equal);
@@ -214,7 +214,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	ch->ops->set_send_qlen(ch, 100);
 	ch->should_send_blocking = TRUE;
 
-	crm_debug("Processing of %s complete", commpath);
+	crm_devel("Processing of %s complete", commpath);
 
 	return ch;
 }

@@ -137,7 +137,7 @@ do_shutdown_req(long long action,
 	enum crmd_fsa_input next_input = I_NULL;
 	HA_Message *msg = NULL;
 	
-	crm_debug("Sending shutdown request to DC");
+	crm_info("Sending shutdown request to DC");
 	msg = create_request(
 		CRM_OP_SHUTDOWN_REQ, NULL, NULL,
 		CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
@@ -393,10 +393,10 @@ do_started(long long action,
 		crm_info("Delaying start, Peer data (%.16llx) not recieved",
 			 R_PEER_DATA);
 
-		crm_debug("Looking for a HA message");
+		crm_devel("Looking for a HA message");
 		msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
 		if(msg != NULL) {
-			crm_debug("There was a HA message");
+			crm_devel("There was a HA message");
  			crm_msg_del(msg);
 		}
 		
@@ -560,7 +560,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
  	}	
 	crm_verbose("Facility: %d", facility);	
   
-	crm_debug("Be informed of CRM messages");
+	crm_devel("Be informed of CRM messages");
 	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
 		    hb_cluster, T_CRM, crmd_ha_msg_callback, hb_cluster)){
 		
@@ -570,7 +570,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	}
 
 #if 0
-	crm_debug("Be informed of Node Status changes");
+	crm_devel("Be informed of Node Status changes");
 	if (HA_OK != hb_cluster->llc_ops->set_nstatus_callback(
 		    hb_cluster, crmd_ha_status_callback, hb_cluster)){
 		
@@ -580,7 +580,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	}
 #endif
 	
-	crm_debug("Be informed of CRM Client Status changes");
+	crm_devel("Be informed of CRM Client Status changes");
 	if (HA_OK != hb_cluster->llc_ops->set_cstatus_callback(
 		    hb_cluster, crmd_client_status_callback, hb_cluster)) {
 
@@ -591,13 +591,13 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 
 	crm_info("beekhof: Client Status callback set");
 
-	crm_debug("Adding channel to mainloop");
+	crm_devel("Adding channel to mainloop");
 	G_main_add_IPC_Channel(
 		G_PRIORITY_HIGH, hb_cluster->llc_ops->ipcchan(hb_cluster),
 		FALSE, crmd_ha_msg_dispatch, hb_cluster /* userdata  */,  
 		crmd_ha_connection_destroy);
 
-	crm_debug("Finding our node name");
+	crm_devel("Finding our node name");
 	if ((fsa_our_uname =
 	     hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
 		crm_err("get_mynodeid() failed");
@@ -606,7 +606,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	crm_info("FSA Hostname: %s", fsa_our_uname);
 
 	/* Async get client status information in the cluster */
-	crm_debug("Requesting an initial dump of CRMD client_status");
+	crm_devel("Requesting an initial dump of CRMD client_status");
 	crm_info("beekhof: Requesting Client Status");
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);

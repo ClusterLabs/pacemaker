@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.54 2005/02/18 15:19:17 andrew Exp $ */
+/* $Id: ccm.c,v 1.55 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -294,7 +294,7 @@ do_ccm_update_cache(long long action,
 		return I_NULL;
 	}
 
-	crm_debug("Copying members");
+	crm_devel("Copying members");
 	
 	/*--*-- All Member Nodes --*--*/
 	offset = oc->m_memb_idx;
@@ -307,7 +307,7 @@ do_ccm_update_cache(long long action,
 		
 		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
 			oc_node_t *member = NULL;
-			crm_debug("Copying member %d", lpc);
+			crm_devel("Copying member %d", lpc);
 			crm_malloc(member, sizeof(oc_node_t));
 			
 			if(member == NULL) {
@@ -336,7 +336,7 @@ do_ccm_update_cache(long long action,
 		membership_copy->members = NULL;
 	}
 	
-	crm_debug("Copying new members");
+	crm_devel("Copying new members");
 
 	/*--*-- New Member Nodes --*--*/
 	offset = oc->m_in_idx;
@@ -377,7 +377,7 @@ do_ccm_update_cache(long long action,
 		membership_copy->new_members = NULL;
 	}
 	
-	crm_debug("Copying dead members");
+	crm_devel("Copying dead members");
 
 	/*--*-- Recently Dead Member Nodes --*--*/
 	offset = oc->m_out_idx;
@@ -420,7 +420,7 @@ do_ccm_update_cache(long long action,
 		membership_copy->dead_members = NULL;
 	}
 
-	crm_debug("Replacing old copies");
+	crm_devel("Replacing old copies");
 	tmp = fsa_membership_copy;
 	fsa_membership_copy = membership_copy;
 
@@ -437,12 +437,12 @@ do_ccm_update_cache(long long action,
 				tmp->dead_members, ghash_node_clfree, NULL);
 		crm_free(tmp);
 	}
-	crm_debug("Free'd old copies");
+	crm_devel("Free'd old copies");
 
 	if(AM_I_DC) {
 		/* should be sufficient for only the DC to do this */
 		crm_data_t *foo = NULL;
-		crm_debug("Updating the CIB");
+		crm_devel("Updating the CIB");
 		foo = do_update_cib_nodes(NULL, FALSE);
 		free_xml(foo);
 	}

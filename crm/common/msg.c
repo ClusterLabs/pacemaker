@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.14 2005/02/17 16:29:38 andrew Exp $ */
+/* $Id: msg.c,v 1.15 2005/02/19 18:11:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,7 +84,7 @@ validate_crm_message(
 		crm_info("No sub-system defined.");
 		action = NULL;
 	} else if (true_sys != NULL && strcmp(to, true_sys) != 0) {
-		crm_debug("The message is not for this sub-system (%s != %s).",
+		crm_devel("The message is not for this sub-system (%s != %s).",
 			  to, true_sys);
 		action = NULL;
 	}
@@ -104,10 +104,10 @@ validate_crm_message(
 	}
 /*
  	if(action != NULL) 
-		crm_debug(
+		crm_devel(
 		       "XML is valid and node with message type (%s) found.",
 		       type);
-	crm_debug("Returning node (%s)", xmlGetNodePath(action));
+	crm_devel("Returning node (%s)", xmlGetNodePath(action));
 */
 	
 	return action;
@@ -202,7 +202,7 @@ process_hello_message(crm_data_t *hello,
 	*major_version = crm_strdup(local_major_version);
 	*minor_version = crm_strdup(local_minor_version);
 
-	crm_debug("Hello message ok");
+	crm_devel("Hello message ok");
 	return TRUE;
 }
 

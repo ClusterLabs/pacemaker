@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.35 2005/02/18 10:36:44 andrew Exp $ */
+/* $Id: xml.c,v 1.36 2005/02/19 18:11:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -81,9 +81,9 @@ find_xml_node(crm_data_t *root, const char * search_path, gboolean must_find)
 	if(must_find) {
 		crm_warn("Could not find %s in %s.", search_path, xmlGetNodePath(root));
 	} else if(root != NULL) {
-		crm_debug("Could not find %s in %s.", search_path, xmlGetNodePath(root));
+		crm_devel("Could not find %s in %s.", search_path, xmlGetNodePath(root));
 	} else {
-		crm_debug("Could not find %s in <NULL>.", search_path);
+		crm_devel("Could not find %s in <NULL>.", search_path);
 	}
 	
 	
@@ -159,7 +159,7 @@ get_xml_attr_nested(crm_data_t *parent,
 	}
 	
 	if(parent == NULL) {
-		crm_debug("Can not find attribute %s in NULL parent",attr_name);
+		crm_devel("Can not find attribute %s in NULL parent",attr_name);
 		return NULL;
 	} 
 
@@ -203,7 +203,7 @@ find_entity(crm_data_t *parent,
 		parent, a_child, node_name,
 		if(id == NULL 
 		   || safe_str_eq(id,crm_element_value(a_child,XML_ATTR_ID))){
-			crm_debug("returning node (%s).", 
+			crm_devel("returning node (%s).", 
 				  xmlGetNodePath(a_child));
 			return a_child;
 		}
@@ -586,7 +586,7 @@ file2xml(FILE *input)
 	
 	while (more) {
 		ch = fgetc(input);
-/* 		crm_debug("Got [%c]", ch); */
+/* 		crm_devel("Got [%c]", ch); */
 		switch(ch) {
 			case EOF: 
 			case 0:
@@ -646,7 +646,7 @@ file2xml(FILE *input)
 		return NULL;
 	}
 
-	crm_debug("Reading %d bytes from file", length);
+	crm_devel("Reading %d bytes from file", length);
 	crm_malloc(buffer, sizeof(char) * (length+1));
 	read_len = fread(buffer, sizeof(char), length, input);
 	if(read_len != length) {
@@ -691,14 +691,14 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 	char now_str[30];
 	time_t now;
 
-	crm_debug("Writing XML out to %s", filename);
+	crm_devel("Writing XML out to %s", filename);
 	crm_validate_data(xml_node);
 	if (xml_node == NULL) {
 		return -1;
 	}
 
 	crm_validate_data(xml_node);
-	crm_xml_debug(xml_node, "Writing out");
+	crm_xml_devel(xml_node, "Writing out");
 	crm_validate_data(xml_node);
 	
 	now = time(NULL);
@@ -737,7 +737,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 		crm_free(buffer);
 	}
 #endif
-	crm_debug("Saved %d bytes to the Cib as XML", res);
+	crm_devel("Saved %d bytes to the Cib as XML", res);
 
 	return res;
 }
@@ -787,7 +787,7 @@ add_message_xml(HA_Message *msg, const char *field, crm_data_t *xml)
 	if(buffer != NULL) {
 		CRM_DEV_ASSERT(cl_is_allocated(buffer));
 		ha_msg_add(msg, field, buffer);
-		crm_debug("Added XML to message");
+		crm_devel("Added XML to message");
 		CRM_DEV_ASSERT(cl_is_allocated(buffer));
 		crm_free(buffer);
 	}
@@ -913,11 +913,11 @@ dump_xml_unformatted(crm_data_t *an_xml_node)
 /* 	for(lpc = len - 2; lpc > 0 && lpc < len; lpc++) { */
 	for(lpc = 0; lpc < len; lpc++) {
 		if(buffer[lpc] == '\n') {
-			crm_debug("Reset newline at %d", lpc);
+			crm_devel("Reset newline at %d", lpc);
 			buffer[lpc] = ' ';
 		}
 	}
-	crm_debug("Processed %d chars for newlines", lpc);
+	crm_devel("Processed %d chars for newlines", lpc);
 #else
 	char *mutable_ptr = NULL;
 /* 	crm_malloc(buffer, 2*(an_xml_node->stringlen)); */
@@ -1469,7 +1469,7 @@ parse_xml(const char *input, int *offset)
 	crm_malloc(tag_name, len+1);
 	strncpy(tag_name, our_input, len+1);
 	tag_name[len] = EOS;
-	crm_debug("Processing tag %s", tag_name);
+	crm_devel("Processing tag %s", tag_name);
 	
 	new_obj = ha_msg_new(1);
 	CRM_DEV_ASSERT(cl_is_allocated(new_obj) == 1);
@@ -1493,7 +1493,7 @@ parse_xml(const char *input, int *offset)
 				case '<':
 					if(our_input[lpc+1] != '/') {
 						crm_data_t *child = NULL;
-						crm_debug("Start parsing child...");
+						crm_devel("Start parsing child...");
 						child = parse_xml(our_input, &lpc);
 						if(child == NULL) {
 							error = "error parsing child";
@@ -1501,7 +1501,7 @@ parse_xml(const char *input, int *offset)
 							CRM_DEV_ASSERT(cl_is_allocated(child) == 1);
 							ha_msg_addstruct(
 								new_obj, crm_element_name(child), child);
-							crm_debug("Finished parsing child: %s",
+							crm_devel("Finished parsing child: %s",
 								  crm_element_name(child));
 /* 							lpc++; /\* > *\/ */
 						}
@@ -1518,7 +1518,7 @@ parse_xml(const char *input, int *offset)
 							if(our_input[lpc] != '>') {
 								error = "clase tag cannot contain attrs";
 							}
-							crm_debug("Finished parsing ourselves: %s",
+							crm_devel("Finished parsing ourselves: %s",
 								  crm_element_name(new_obj));
 							
 						} else {
@@ -1542,7 +1542,7 @@ parse_xml(const char *input, int *offset)
 						lpc += len;
 /* 						lpc++; /\* " *\/ */
 
-						crm_debug("creating nvpair: <%s %s=\"%s\"...",
+						crm_devel("creating nvpair: <%s %s=\"%s\"...",
 							  tag_name,
 							  crm_str(attr_name),
 							  crm_str(attr_value));
@@ -1579,7 +1579,7 @@ parse_xml(const char *input, int *offset)
 		return NULL;
 	}
 	
-	crm_debug("Finished processing %s tag", tag_name);
+	crm_devel("Finished processing %s tag", tag_name);
 	crm_free(tag_name);
 	if(offset != NULL) {
 		(*offset) += lpc;

@@ -221,11 +221,11 @@ do_cl_join_result(long long action,
 	} 	
 
 	/* send our status section to the DC */
-	crm_debug("Discovering local LRM status");
+	crm_devel("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
 		HA_Message *reply = create_reply(input->msg, tmp1);
-		crm_debug("Sending local LRM status");
+		crm_devel("Sending local LRM status");
 		send_msg_via_ha(fsa_cluster_conn, reply);
 		
 		free_xml(tmp1);

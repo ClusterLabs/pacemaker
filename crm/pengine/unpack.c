@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.54 2005/02/15 08:10:37 andrew Exp $ */
+/* $Id: unpack.c,v 1.55 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -128,7 +128,7 @@ unpack_config(crm_data_t * config)
 				 "transition_timeout", value);
 		}
 	}
-	crm_debug("%s set to: %s",
+	crm_devel("%s set to: %s",
 		 "transition_timeout", transition_timeout);
 	
 	return TRUE;
@@ -262,7 +262,7 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 		crm_verbose("Done with node %s",
 			    crm_element_value(xml_obj, XML_ATTR_UNAME));
 
-		crm_debug_action(print_node("Added", new_node, FALSE));
+		crm_devel_action(print_node("Added", new_node, FALSE));
 		);
   
 	*nodes = g_list_sort(*nodes, sort_node_weight);
@@ -284,7 +284,7 @@ unpack_resources(crm_data_t * xml_resources,
 		resource_t *new_rsc = NULL;
 		if(common_unpack(xml_obj, &new_rsc)) {
 			*resources = g_list_append(*resources, new_rsc);
-			crm_debug_action(
+			crm_devel_action(
 				print_resource("Added", new_rsc, FALSE));
 		} else {
 			crm_err("Failed unpacking resource %s",
@@ -678,7 +678,7 @@ unpack_failed_resource(GListPtr *placement_constraints,
 		       crm_data_t * rsc_entry, resource_t *rsc_lh, node_t *node)
 {
 	const char *last_op  = crm_element_value(rsc_entry, XML_LRM_ATTR_LASTOP);
-	crm_debug("Unpacking failed action %s on %s", last_op, rsc_lh->id);
+	crm_devel("Unpacking failed action %s on %s", last_op, rsc_lh->id);
 	
 	/* make sure we dont allocate the resource here again*/
 	rsc2node_new("dont_run__generated",
@@ -730,7 +730,7 @@ unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
 {
 	const char *last_op  = crm_element_value(rsc_entry, XML_LRM_ATTR_LASTOP);
 	
-	crm_debug("Unpacking healthy action %s on %s", last_op, rsc_lh->id);
+	crm_devel("Unpacking healthy action %s on %s", last_op, rsc_lh->id);
 
 	if(safe_str_neq(last_op, "stop")) {
 		/* create the link between this node and the rsc */
@@ -767,13 +767,13 @@ rsc_dependancy_new(const char *id, enum con_strength strength,
 		
 		inverted_con = invert_constraint(new_con);
 
-		crm_debug("Adding constraint %s (%p) to %s",
+		crm_devel("Adding constraint %s (%p) to %s",
 			  new_con->id, new_con, rsc_lh->id);
 		
 		rsc_lh->rsc_cons = g_list_insert_sorted(
 			rsc_lh->rsc_cons, new_con, sort_cons_strength);
 		
-		crm_debug("Adding constraint %s (%p) to %s",
+		crm_devel("Adding constraint %s (%p) to %s",
 			  inverted_con->id, inverted_con, rsc_rh->id);
 
 		rsc_rh->rsc_cons = g_list_insert_sorted(
@@ -821,28 +821,28 @@ order_new(resource_t *lh_rsc, enum action_tasks lh_action_task, action_t *lh_act
 		*ordering_constraints, order);
 	
 	if(lh_rsc != NULL && rh_rsc != NULL) {
-		crm_debug("Created ordering constraint %d (%s):"
+		crm_devel("Created ordering constraint %d (%s):"
 			 " %s/%s before %s/%s",
 			 order->id, strength2text(order->strength),
 			 lh_rsc->id, task2text(lh_action_task),
 			 rh_rsc->id, task2text(rh_action_task));
 		
 	} else if(lh_rsc != NULL) {
-		crm_debug("Created ordering constraint %d (%s):"
+		crm_devel("Created ordering constraint %d (%s):"
 			 " %s/%s before action %d (%s)",
 			 order->id, strength2text(order->strength),
 			 lh_rsc->id, task2text(lh_action_task),
 			 rh_action->id, task2text(rh_action_task));
 		
 	} else if(rh_rsc != NULL) {
-		crm_debug("Created ordering constraint %d (%s):"
+		crm_devel("Created ordering constraint %d (%s):"
 			 " action %d (%s) before %s/%s",
 			 order->id, strength2text(order->strength),
 			 lh_action->id, task2text(lh_action_task),
 			 rh_rsc->id, task2text(rh_action_task));
 		
 	} else {
-		crm_debug("Created ordering constraint %d (%s):"
+		crm_devel("Created ordering constraint %d (%s):"
 			 " action %d (%s) before action %d (%s)",
 			 order->id, strength2text(order->strength),
 			 lh_action->id, task2text(lh_action_task),
@@ -1269,7 +1269,7 @@ unpack_rsc_location(
 
 		if(rule_has_expressions == FALSE) {
 			/* feels like a hack */
-			crm_debug("Rule %s had no expressions,"
+			crm_devel("Rule %s had no expressions,"
 				  " adding all nodes", crm_element_value(rule, XML_ATTR_ID));
 			
 			new_con->node_list_rh = node_list_dup(node_list,FALSE);
@@ -1280,7 +1280,7 @@ unpack_rsc_location(
 				 id, crm_element_value(rule, XML_ATTR_ID));
 		}
 		
-		crm_debug_action(print_rsc_to_node("Added", new_con, FALSE));
+		crm_devel_action(print_rsc_to_node("Added", new_con, FALSE));
 		);
 
 	if(were_rules == FALSE) {

@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.12 2005/02/17 16:27:56 andrew Exp $ */
+/* $Id: primatives.c,v 1.13 2005/02/19 18:11:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -446,7 +446,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 		; /* nothing */
 		
 	} else if(equiv_node == NULL) {
-		crm_debug("No node to update, creating %s instead", crm_element_name(new_obj));
+		crm_devel("No node to update, creating %s instead", crm_element_name(new_obj));
 		if(parent == NULL) {
 			crm_warn("Failed to add <%s id=%s> (NULL parent)",
 				 object_name, object_id);
@@ -457,7 +457,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 				 crm_str(object_name), crm_str(object_id));
 			result = cib_NODECOPY;
 		} else {
-			crm_debug("Added  <%s id=%s>",
+			crm_devel("Added  <%s id=%s>",
 				  crm_str(object_name), crm_str(object_id));
 
 			if(object_id == NULL) {
@@ -481,7 +481,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 			crm_data_t *remove = find_xml_node(
 				equiv_node, replace, FALSE);
 			if(remove != NULL) {
-				crm_debug("Replacing node <%s> in <%s>",
+				crm_devel("Replacing node <%s> in <%s>",
 					  replace, crm_element_name(equiv_node));
 #ifdef USE_LIBXML
 				unlink_xml_node(remove);
@@ -499,13 +499,13 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 			copy_in_properties(equiv_node, new_obj);
 		}
 
-		crm_debug("Processing children of <%s id=%s>",
+		crm_devel("Processing children of <%s id=%s>",
 			  crm_str(object_name), crm_str(object_id));
 		
 		xml_child_iter(
 			new_obj, a_child, NULL, 
 			int tmp_result = 0;
-			crm_debug("Updating child <%s id=%s>",
+			crm_devel("Updating child <%s id=%s>",
 				  crm_element_name(a_child),
 				  crm_element_value(a_child, XML_ATTR_ID));
 			
@@ -525,7 +525,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 			);
 		
 	}
-	crm_debug("Finished with <%s id=%s>",
+	crm_devel("Finished with <%s id=%s>",
 		  crm_str(object_name), crm_str(object_id));
 	
 	cib_post_notify(CRM_OP_CIB_UPDATE, new_obj, result, equiv_node);

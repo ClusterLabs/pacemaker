@@ -150,7 +150,7 @@ cib_client_set_op_callback(
 		crm_info("Un-Setting operation callback");
 		
 	} else {
-		crm_debug("Setting operation callback");
+		crm_devel("Setting operation callback");
 	}
 	cib->op_callback = callback;
 	return cib_ok;
@@ -260,7 +260,7 @@ int cib_client_set_master(cib_t *cib, int call_options)
 		return cib_variant;
 	} 
 
-	crm_debug("Adding cib_scope_local to options");
+	crm_devel("Adding cib_scope_local to options");
 	return cib->cmds->variant_op(
 		cib, CRM_OP_CIB_MASTER, NULL,NULL,NULL,NULL,
 		call_options|cib_scope_local);
@@ -302,7 +302,7 @@ int cib_client_sync_from(
 		return cib_variant;
 	}
 
-	crm_debug("Retrieving current CIB from %s", host);
+	crm_devel("Retrieving current CIB from %s", host);
 	rc = cib->cmds->query_from(
 		cib, host, section, &current_cib, call_options|cib_sync_call);
 
@@ -315,8 +315,8 @@ int cib_client_sync_from(
 			call_options ^= cib_scope_local;
 		}
 		
-		crm_debug("Storing current CIB (should trigger a store everywhere)");
-/* 		crm_xml_debug(current_cib, "XML to store"); */
+		crm_devel("Storing current CIB (should trigger a store everywhere)");
+/* 		crm_xml_devel(current_cib, "XML to store"); */
 		rc = cib->cmds->replace(
 			cib, section, current_cib, &stored_cib, call_options);
 	}
@@ -447,7 +447,7 @@ int cib_client_add_notify_callback(
 		cib->notify_list = g_list_append(
 			cib->notify_list, new_client);
 
-		crm_debug("Callback added (%d)", g_list_length(cib->notify_list));
+		crm_devel("Callback added (%d)", g_list_length(cib->notify_list));
 	}
 	return cib_ok;
 }
@@ -474,10 +474,10 @@ int cib_client_del_notify_callback(
 		cib->notify_list =
 			g_list_remove(cib->notify_list, list_client);
 		crm_free(list_client);
-		crm_debug("Removed callback");
+		crm_devel("Removed callback");
 
 	} else {
-		crm_debug("Callback not present");
+		crm_devel("Callback not present");
 	}
 	crm_free(new_client);
 	return cib_ok;
@@ -934,7 +934,7 @@ create_cib_fragment_adv(
 	auto_section = cib_pluralSection(update_name);
 	
 	if(update == NULL && section == NULL) {
-		crm_debug("Creating a blank fragment");
+		crm_devel("Creating a blank fragment");
 		update = createEmptyCib();
 		section = auto_section;
 
@@ -978,7 +978,7 @@ create_cib_fragment_adv(
 	
 	crm_free(auto_section);
 
-	crm_debug("Verifying created fragment");
+	crm_devel("Verifying created fragment");
 	if(verifyCibXml(cib) == FALSE) {
 		crm_err("Fragment creation failed");
 		crm_xml_err(update, "[src]");

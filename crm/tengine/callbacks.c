@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.11 2005/02/18 10:32:07 andrew Exp $ */
+/* $Id: callbacks.c,v 1.12 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,7 +80,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 	
 	if(safe_str_eq(type, XML_CIB_TAG_CRMCONFIG)) {
 		/* ignore - for the moment */
-		crm_debug("Ignoring changes to the %s section", type);
+		crm_devel("Ignoring changes to the %s section", type);
 		
 	} else if(safe_str_eq(type, XML_CIB_TAG_STATUS)) {
 		/* this _may_ not be un-expected */
@@ -117,7 +117,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		return TRUE;
 	}
 
-	crm_debug("Processing %s (%s) message", op, ref);
+	crm_devel("Processing %s (%s) message", op, ref);
 	
 	if(op == NULL){
 		/* error */
@@ -159,8 +159,8 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		send_abort("Initiate a transition", NULL);
 	}
 
-	crm_debug("finished processing message");
-	print_state(LOG_DEBUG);
+	crm_devel("finished processing message");
+	print_state(LOG_DEV);
 	
 	return TRUE;
 }

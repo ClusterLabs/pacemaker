@@ -105,7 +105,7 @@ do_dc_heartbeat(gpointer data)
 #if 0
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
-	crm_debug("Sending DC Heartbeat %d", beat_num);
+	crm_devel("Sending DC Heartbeat %d", beat_num);
 	HA_Message *msg = ha_msg_new(5); 
 	ha_msg_add(msg, F_TYPE,		T_CRM);
 	ha_msg_add(msg, F_SUBTYPE,	XML_ATTR_REQUEST);
@@ -174,36 +174,36 @@ do_election_count_vote(long long action,
 		g_hash_table_lookup(fsa_membership_copy->members, vote_from);
 
 	if(is_set(fsa_input_register, R_SHUTDOWN)) {
-		crm_debug("Election fail: we are shutting down");
+		crm_devel("Election fail: we are shutting down");
 		we_loose = TRUE;
 
 	} else if(our_node == NULL) {
-		crm_debug("Election fail: we dont exist in the CCM list");
+		crm_devel("Election fail: we dont exist in the CCM list");
 		we_loose = TRUE;
 		
 	} else if(your_node == NULL) {
 		crm_err("The other side doesnt exist in the CCM list");
 		
 	} else if(compare_version(your_version, CRM_VERSION) > 0) {
-		crm_debug("Election fail: version");
+		crm_devel("Election fail: version");
 		we_loose = TRUE;
 		
 	} else if(compare_version(your_version, CRM_VERSION) < 0) {
-		crm_debug("Election pass: version");
+		crm_devel("Election pass: version");
 		
 	} else if(your_node->node_born_on < our_node->node_born_on) {
-		crm_debug("Election fail: born_on");
+		crm_devel("Election fail: born_on");
 		we_loose = TRUE;
 
 	} else if(your_node->node_born_on < our_node->node_born_on) {
-		crm_debug("Election pass: born_on");
+		crm_devel("Election pass: born_on");
 		
 	} else if(strcmp(fsa_our_uname, vote_from) > 0) {
-		crm_debug("Election fail: uname");
+		crm_devel("Election fail: uname");
 		we_loose = TRUE;
 
 	} else if(strcmp(fsa_our_uname, vote_from) == 0) {
-		crm_debug("Election ??pass??: dup uname");
+		crm_devel("Election ??pass??: dup uname");
 		CRM_DEV_ASSERT(strcmp(fsa_our_uname, vote_from) != 0);
 	}
 
@@ -211,11 +211,11 @@ do_election_count_vote(long long action,
 		stopTimer(election_timeout);
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		if(fsa_input_register & R_THE_DC) {
-			crm_debug("Give up the DC");
+			crm_devel("Give up the DC");
 			election_result = I_RELEASE_DC;
 			
 		} else {
-			crm_debug("We werent the DC anyway");
+			crm_devel("We werent the DC anyway");
 			election_result = I_PENDING;
 			
 		}
@@ -273,19 +273,19 @@ do_dc_takeover(long long action,
 
 	if(dc_heartbeat->source_id == (guint)-1
 	   || dc_heartbeat->source_id == (guint)-2) {
-		crm_debug("Starting DC Heartbeat timer");
+		crm_devel("Starting DC Heartbeat timer");
 		dc_heartbeat->source_id = Gmain_timeout_add_full(
 			G_PRIORITY_HIGH, dc_heartbeat->period_ms,
 			dc_heartbeat->callback, dc_heartbeat, NULL);
 	} else {
-		crm_debug("DC Heartbeat timer already active");
+		crm_devel("DC Heartbeat timer already active");
 	}
 	
 /* 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none); */
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
 	CRM_DEV_ASSERT(cib_ok == fsa_cib_conn->cmds->is_master(fsa_cib_conn));
 
-	crm_debug("Update %s in the CIB to our uuid: %s",
+	crm_devel("Update %s in the CIB to our uuid: %s",
 		  XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
 	
 	set_uuid(fsa_cluster_conn, cib, XML_ATTR_DC_UUID, fsa_our_uname);
@@ -300,7 +300,7 @@ do_dc_takeover(long long action,
 		int revision_i = -1;
 		const char *revision = NULL;
 
-		crm_debug("Checking our feature revision is allowed: %d",
+		crm_devel("Checking our feature revision is allowed: %d",
 			  cib_feature_revision);
 
 		cib = find_xml_node(output, XML_TAG_CIB, TRUE);
@@ -327,7 +327,7 @@ do_dc_takeover(long long action,
 	
 	free_xml(update);
 	
-	crm_debug("Requesting an initial dump of CRMD client_status");
+	crm_devel("Requesting an initial dump of CRMD client_status");
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 	

@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.7 2005/02/01 22:46:41 andrew Exp $ */
+/* $Id: incarnation.c,v 1.8 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -118,10 +118,10 @@ void incarnation_unpack(resource_t *rsc)
 					child_rsc->extra_attrs,
 					XML_RSC_ATTR_INCARNATION_MAX, inc_max);
 
-				crm_xml_debug(child_rsc->extra_attrs,
+				crm_xml_devel(child_rsc->extra_attrs,
 					     "creating extra attributes");
 
-				crm_debug_action(
+				crm_devel_action(
 					print_resource("Added", child_rsc, FALSE));
 
 				crm_free(inc_num);
@@ -208,7 +208,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 		if(lpc != 0) {
 			child_rh = g_list_nth_data(incarnation_data->child_list, lpc);
 			
-			crm_debug("Incarnation %d will run on a differnt node to 0",
+			crm_devel("Incarnation %d will run on a differnt node to 0",
 				  lpc);
 			
 			rsc_dependancy_new("pe_incarnation_internal_must_not",
@@ -224,7 +224,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 			if(offset >= incarnation_data->incarnation_max) {
 				break;
 			}
-			crm_debug("Incarnation %d will run on the same node as %d",
+			crm_devel("Incarnation %d will run on the same node as %d",
 				  offset, lpc);
 
 			incarnation_data->active_incarnation++;
@@ -240,7 +240,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 		if(lpc < incarnation_data->active_incarnation) {
-			crm_debug("Coloring Incarnation %d", lpc);
+			crm_devel("Coloring Incarnation %d", lpc);
 			child_rsc->fns->color(child_rsc, colors);
 		} else {
 			/* TODO: assign "no color"?  Doesnt seem to need it */
@@ -303,7 +303,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 			  pecs_startstop, ordering_constraints);
 		
 		if(incarnation_data->ordered && last_rsc != NULL) {
-			crm_debug("Ordered version");
+			crm_devel("Ordered version");
 			if(lpc < incarnation_data->active_incarnation) {
 				/* child/child relative start */
 				order_new(last_rsc,  start_rsc, NULL,
@@ -317,7 +317,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 				  pecs_startstop, ordering_constraints);
 
 		} else if(incarnation_data->ordered) {
-			crm_debug("Ordered version (1st node)");
+			crm_devel("Ordered version (1st node)");
 
 			/* child start before global started */
 			order_new(child_rsc,              start_rsc, NULL,
@@ -335,7 +335,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 				  pecs_startstop, ordering_constraints);
 
 		} else {
-			crm_debug("Un-ordered version");
+			crm_devel("Un-ordered version");
 
 			if(lpc < incarnation_data->active_incarnation) {
 				/* child start before global started */
@@ -368,7 +368,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 		);
 
 	if(incarnation_data->ordered && last_rsc != NULL) {
-		crm_debug("Ordered version (last node)");
+		crm_devel("Ordered version (last node)");
 		/* last child start before global started */
 		order_new(last_rsc,         start_rsc, NULL,
 			  incarnation_data->self, started_rsc, NULL,
@@ -401,7 +401,7 @@ void incarnation_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 		return;
 		
 	} else {
-		crm_debug("Processing constraints from %s", rsc->id);
+		crm_devel("Processing constraints from %s", rsc->id);
 	}
 	
 	get_incarnation_variant_data(incarnation_data, rsc);
@@ -409,7 +409,7 @@ void incarnation_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 		
-		crm_debug_action(print_resource("LHS", child_rsc, TRUE));
+		crm_devel_action(print_resource("LHS", child_rsc, TRUE));
 		child_rsc->fns->rsc_dependancy_rh(child_rsc, constraint);
 		);
 }
@@ -434,7 +434,7 @@ void incarnation_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint
 		return;
 		
 	} else {
-		crm_debug_action(print_resource("LHS", rsc, FALSE));
+		crm_devel_action(print_resource("LHS", rsc, FALSE));
 	}
 	
 	get_incarnation_variant_data(incarnation_data, rsc);
@@ -442,7 +442,7 @@ void incarnation_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 		
-		crm_debug_action(print_resource("RHS", child_rsc, FALSE));
+		crm_devel_action(print_resource("RHS", child_rsc, FALSE));
 		child_rsc->fns->rsc_dependancy_rh(child_rsc, constraint);
 		);
 }

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.14 2005/02/17 16:22:11 andrew Exp $ */
+/* $Id: main.c,v 1.15 2005/02/19 18:11:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -137,7 +137,7 @@ init_start(void)
 
 
 	if(was_error == FALSE) {
-		crm_debug("Be informed of CRM Client Status changes");
+		crm_devel("Be informed of CRM Client Status changes");
 		if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(
 			    hb_conn, cib_client_status_callback, hb_conn)) {
 			
@@ -145,7 +145,7 @@ init_start(void)
 				hb_conn->llc_ops->errmsg(hb_conn));
 			was_error = TRUE;
 		} else {
-			crm_debug("Client Status callback set");
+			crm_devel("Client Status callback set");
 		}
 	}
 
@@ -158,7 +158,7 @@ init_start(void)
 		
 		while(did_fail && was_error == FALSE) {
 			did_fail = FALSE;
-			crm_debug("Registering with CCM");
+			crm_devel("Registering with CCM");
 			ret = oc_ev_register(&cib_ev_token);
 			if (ret != 0) {
 				crm_warn("CCM registration failed");
@@ -166,7 +166,7 @@ init_start(void)
 			}
 			
 			if(did_fail == FALSE) {
-				crm_debug("Setting up CCM callbacks");
+				crm_devel("Setting up CCM callbacks");
 				ret = oc_ev_set_callback(
 					cib_ev_token, OC_EV_MEMB_CLASS,
 					cib_ccm_msg_callback, NULL);
@@ -178,7 +178,7 @@ init_start(void)
 			if(did_fail == FALSE) {
 				oc_ev_special(cib_ev_token, OC_EV_MEMB_CLASS, 0);
 				
-				crm_debug("Activating CCM token");
+				crm_devel("Activating CCM token");
 				ret = oc_ev_activate(cib_ev_token, &cib_ev_fd);
 				if (ret != 0){
 					crm_warn("CCM Activation failed");
@@ -205,14 +205,14 @@ init_start(void)
 			}
 		}
 
-		crm_debug("CCM Activation passed... all set to go!");
+		crm_devel("CCM Activation passed... all set to go!");
 		G_main_add_fd(G_PRIORITY_LOW, cib_ev_fd, FALSE, cib_ccm_dispatch,
 			      cib_ev_token, default_ipc_connection_destroy);
 	}
 
 	if(was_error == FALSE) {
 		/* Async get client status information in the cluster */
-		crm_debug("Requesting an initial dump of CRMD client_status");
+		crm_devel("Requesting an initial dump of CRMD client_status");
 		hb_conn->llc_ops->client_status(
 			hb_conn, NULL, CRM_SYSTEM_CRMD, -1);
 
@@ -278,7 +278,7 @@ cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
  	}	
 	crm_verbose("Facility: %d", facility);	
   
-	crm_debug("Be informed of CIB messages");
+	crm_devel("Be informed of CIB messages");
 	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
 		    hb_cluster, T_CIB, cib_peer_callback, hb_cluster)){
 		
@@ -287,7 +287,7 @@ cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		return FALSE;
 	}
 
-	crm_debug("Finding our node name");
+	crm_devel("Finding our node name");
 	if ((uname = hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
 		crm_err("get_mynodeid() failed");
 		return FALSE;
@@ -296,7 +296,7 @@ cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	cib_our_uname = crm_strdup(uname);
 	crm_info("FSA Hostname: %s", cib_our_uname);
 
-	crm_debug("Adding channel to mainloop");
+	crm_devel("Adding channel to mainloop");
 	G_main_add_IPC_Channel(
 		G_PRIORITY_HIGH, hb_cluster->llc_ops->ipcchan(hb_cluster),
 		FALSE, cib_ha_dispatch, hb_cluster /* userdata  */,  

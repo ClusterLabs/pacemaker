@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.17 2005/02/17 16:22:12 andrew Exp $ */
+/* $Id: main.c,v 1.18 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -66,7 +66,7 @@ main(int argc, char ** argv)
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, tengine_shutdown, NULL, NULL);
 
-	crm_debug("Begining option processing");
+	crm_devel("Begining option processing");
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -86,7 +86,7 @@ main(int argc, char ** argv)
 		}
 	}
     
-	crm_debug("Option processing complete");
+	crm_devel("Option processing complete");
 
 	if (optind > argc) {
 		++argerr;
@@ -98,7 +98,7 @@ main(int argc, char ** argv)
     
 	/* read local config file */
     
-	crm_debug("Starting...");
+	crm_devel("Starting...");
 	return init_start();
 
 }

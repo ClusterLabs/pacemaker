@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.54 2005/02/18 10:32:37 andrew Exp $ */
+/* $Id: utils.c,v 1.55 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -59,7 +59,7 @@ invert_constraint(rsc_dependancy_t *constraint)
 	inverted_con->rsc_lh = constraint->rsc_rh;
 	inverted_con->rsc_rh = constraint->rsc_lh;
 
-	crm_debug_action(
+	crm_devel_action(
 		print_rsc_dependancy("Inverted constraint", inverted_con, FALSE));
 	
 	return inverted_con;
@@ -284,12 +284,14 @@ node_copy(node_t *this_node)
 {
 	node_t *new_node  = NULL;
 
+	CRM_DEV_ASSERT(this_node != NULL);
 	if(this_node == NULL) {
 		crm_err("Failed copy of <null> node.");
 		return NULL;
 	}
 	crm_malloc(new_node, sizeof(node_t));
 
+	CRM_DEV_ASSERT(new_node != NULL);
 	if(new_node == NULL) {
 		return NULL;
 	}
@@ -352,7 +354,7 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr node_list)
 			node_list_dup(node_list, TRUE);
 	}
 	
-	crm_debug_action(print_color("Created color", new_color, TRUE));
+	crm_devel_action(print_color("Created color", new_color, TRUE));
 
 	if(colors != NULL) {
 		*colors = g_list_append(*colors, new_color);      
@@ -389,10 +391,11 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 	resource_t *rsc = NULL;
 	resource_t *child_rsc = NULL;
 
+	crm_devel("Looking for %s in %d objects", id, g_list_length(rsc_list));
 	for(lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
 		rsc = g_list_nth_data(rsc_list, lpc);
 		if(rsc != NULL && safe_str_eq(rsc->id, id)){
-			crm_debug("Found a match for %s", id);
+			crm_devel("Found a match for %s", id);
 			return rsc;
 		}
 	}
@@ -401,7 +404,7 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 
 		child_rsc = rsc->fns->find_child(rsc, id);
 		if(child_rsc != NULL) {
-			crm_debug("Found a match for %s in %s",
+			crm_devel("Found a match for %s in %s",
 				  id, rsc->id);
 			
 			return child_rsc;
@@ -577,14 +580,14 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 	if(possible_matches != NULL) {
 
 		if(g_list_length(possible_matches) > 1) {
-			crm_err("Action %s for %s on %s exists %d times",
+			crm_warn("Action %s for %s on %s exists %d times",
 				task2text(task), rsc?rsc->id:"<NULL>",
 				on_node?on_node->details->id:"<NULL>",
 				g_list_length(possible_matches));
 		}
 		
 		action = g_list_nth_data(possible_matches, 0);
-		crm_debug("Returning existing action (%d) %s for %s on %s",
+		crm_devel("Returning existing action (%d) %s for %s on %s",
 			  action->id,
 			  task2text(task), rsc?rsc->id:"<NULL>",
 			  on_node?on_node->details->id:"<NULL>");
@@ -593,7 +596,7 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 		return action;
 	}
 	
-	crm_debug("Creating action %s for %s on %s",
+	crm_devel("Creating action %s for %s on %s",
 		  task2text(task), rsc?rsc->id:"<NULL>",
 		  on_node?on_node->details->id:"<NULL>");
 
@@ -617,7 +620,7 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 		action->args       = create_xml_node(NULL, "args");
 		
 		if(rsc != NULL) {
-			crm_debug("Adding created action to its resource");
+			crm_devel("Adding created action to its resource");
 			rsc->actions = g_list_append(rsc->actions, action);
 			if(task == start_rsc) {
 				rsc->starting = TRUE;
@@ -634,7 +637,7 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 		}
 
 	}
-	crm_debug("Action %d created", action->id);
+	crm_devel("Action %d created", action->id);
 	return action;
 }
 
@@ -699,13 +702,13 @@ void
 print_node(const char *pre_text, node_t *node, gboolean details)
 { 
 	if(node == NULL) {
-		crm_debug("%s%s: <NULL>",
+		crm_devel("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
 	}
 
-	crm_debug("%s%s%sNode %s: (weight=%f, fixed=%s)",
+	crm_devel("%s%s%sNode %s: (weight=%f, fixed=%s)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       node->details==NULL?"error ":node->details->online?"":"Unavailable/Unclean ",
@@ -715,14 +718,14 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 
 	if(details && node->details != NULL) {
 		char *pe_mutable = crm_strdup("\t\t");
-		crm_debug("\t\t===Node Attributes");
+		crm_devel("\t\t===Node Attributes");
 		g_hash_table_foreach(node->details->attrs,
 				     print_str_str, pe_mutable);
 		crm_free(pe_mutable);
 	}
 
 	if(details) {
-		crm_debug("\t\t===Node Attributes");
+		crm_devel("\t\t===Node Attributes");
 		slist_iter(
 			rsc, resource_t, node->details->running_rsc, lpc,
 			print_resource("\t\t", rsc, FALSE);
@@ -736,7 +739,7 @@ print_node(const char *pre_text, node_t *node, gboolean details)
  */
 void print_str_str(gpointer key, gpointer value, gpointer user_data)
 {
-	crm_debug("%s%s %s ==> %s",
+	crm_devel("%s%s %s ==> %s",
 	       user_data==NULL?"":(char*)user_data,
 	       user_data==NULL?"":": ",
 	       (char*)key,
@@ -749,12 +752,12 @@ print_color_details(const char *pre_text,
 		    gboolean details)
 { 
 	if(color == NULL) {
-		crm_debug("%s%s: <NULL>",
+		crm_devel("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug("%s%sColor %d: node=%s (from %d candidates)",
+	crm_devel("%s%sColor %d: node=%s (from %d candidates)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       color->id, 
@@ -770,12 +773,12 @@ void
 print_color(const char *pre_text, color_t *color, gboolean details)
 { 
 	if(color == NULL) {
-		crm_debug("%s%s: <NULL>",
+		crm_devel("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug("%s%sColor %d: (weight=%f, node=%s, possible=%d)",
+	crm_devel("%s%sColor %d: (weight=%f, node=%s, possible=%d)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       color->id, 
@@ -791,12 +794,12 @@ void
 print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 { 
 	if(cons == NULL) {
-		crm_debug("%s%s: <NULL>",
+		crm_devel("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug("%s%s%s Constraint %s (%p) - %d nodes:",
+	crm_devel("%s%s%s Constraint %s (%p) - %d nodes:",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       "rsc_to_node",
@@ -804,7 +807,7 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 		  g_list_length(cons->node_list_rh));
 
 	if(details == FALSE) {
-		crm_debug("\t%s %s run (score=%f : node placement rule)",
+		crm_devel("\t%s %s run (score=%f : node placement rule)",
 			  safe_val3(NULL, cons, rsc_lh, id), 
 			  cons->can?"Can":"Cannot",
 			  cons->weight);
@@ -820,19 +823,19 @@ void
 print_rsc_dependancy(const char *pre_text, rsc_dependancy_t *cons, gboolean details)
 { 
 	if(cons == NULL) {
-		crm_debug("%s%s: <NULL>",
+		crm_devel("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug("%s%s%s Constraint %s (%p):",
+	crm_devel("%s%s%s Constraint %s (%p):",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       XML_CONS_TAG_RSC_DEPEND, cons->id, cons);
 
 	if(details == FALSE) {
 
-		crm_debug("\t%s --> %s, %s",
+		crm_devel("\t%s --> %s, %s",
 			  safe_val3(NULL, cons, rsc_lh, id), 
 			  safe_val3(NULL, cons, rsc_rh, id), 
 			  strength2text(cons->strength));
@@ -843,7 +846,7 @@ void
 print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 { 
 	if(rsc == NULL) {
-		crm_debug("%s%s: <NULL>",
+		crm_devel("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
@@ -857,7 +860,7 @@ void
 print_action(const char *pre_text, action_t *action, gboolean details)
 { 
 	if(action == NULL) {
-		crm_debug("%s%s: <NULL>",
+		crm_devel("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
@@ -866,7 +869,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 	switch(action->task) {
 		case stonith_node:
 		case shutdown_crm:
-			crm_debug("%s%s%sAction %d: %s @ %s",
+			crm_devel("%s%s%sAction %d: %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
 			       action->discard?"Discarded ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
@@ -875,7 +878,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			       safe_val4(NULL, action, node, details, uname));
 			break;
 		default:
-			crm_debug("%s%s%sAction %d: %s %s @ %s",
+			crm_devel("%s%s%sAction %d: %s %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
 			       action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
@@ -889,27 +892,27 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 
 	if(details) {
 #if 1
-		crm_debug("\t\t====== Preceeding Actions");
+		crm_devel("\t\t====== Preceeding Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
 			print_action("\t\t", other->action, FALSE);
 			);
-		crm_debug("\t\t====== Subsequent Actions");
+		crm_devel("\t\t====== Subsequent Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
 			print_action("\t\t", other->action, FALSE);
 			);		
 #else
-		crm_debug("\t\t====== Subsequent Actions");
+		crm_devel("\t\t====== Subsequent Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
 			print_action("\t\t", other->action, FALSE);
 			);		
 #endif
-		crm_debug("\t\t====== End");
+		crm_devel("\t\t====== End");
 
 	} else {
-		crm_debug("\t\t(seen=%d, before=%d, after=%d)",
+		crm_devel("\t\t(seen=%d, before=%d, after=%d)",
 		       action->seen_count,
 		       g_list_length(action->actions_before),
 		       g_list_length(action->actions_after));
@@ -1049,7 +1052,7 @@ void
 pe_free_rsc_dependancy(rsc_dependancy_t *cons)
 { 
 	if(cons != NULL) {
-		crm_debug("Freeing constraint %s (%p)", cons->id, cons);
+		crm_devel("Freeing constraint %s (%p)", cons->id, cons);
 		crm_free(cons);
 	}
 }

@@ -232,12 +232,12 @@ update_local_cib_adv(
 	CRM_DEV_ASSERT(cib_ok == fsa_cib_conn->cmds->is_master(fsa_cib_conn));
 
 	if(do_now == FALSE) {
-		crm_debug("Registering event with FSA");
+		crm_devel("Registering event with FSA");
 		register_fsa_input_adv(C_FSA_INTERNAL, I_CIB_OP, fsa_input, 0,
 				       FALSE, raised_from);
 	} else {
 		fsa_data_t *op_data = NULL;
-		crm_debug("Invoking CIB handler directly");
+		crm_devel("Invoking CIB handler directly");
 		crm_malloc(op_data, sizeof(fsa_data_t));
 
 		op_data->fsa_cause	= C_FSA_INTERNAL;
@@ -250,10 +250,10 @@ update_local_cib_adv(
 			      I_CIB_OP, op_data);
 
 		crm_free(op_data);
-		crm_debug("CIB handler completed");
+		crm_devel("CIB handler completed");
 	}
 	
-	crm_debug("deleting input");
+	crm_devel("deleting input");
 #if 0
 	delete_ha_msg_input(fsa_input);
 #else
@@ -262,7 +262,7 @@ update_local_cib_adv(
 	/* BUG: it should be possible to free this but for some reason I cant */
 /*  	free_xml(fsa_input->xml); */
 #endif
-	crm_debug("deleted input");
+	crm_devel("deleted input");
 }
 
 void

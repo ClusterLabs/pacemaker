@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.32 2005/02/18 10:40:24 andrew Exp $ */
+/* $Id: utils.c,v 1.33 2005/02/19 18:11:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -139,7 +139,7 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 	if(hash_key != NULL) {
 		sprintf(hash_key, "%s_%s", sys?sys:"none", crm_msg_reference);
 		hash_key[ref_len-1] = '\0';
-		crm_debug("created hash key: (%s)", hash_key);
+		crm_devel("created hash key: (%s)", hash_key);
 	}
 	return hash_key;
 }

@@ -88,7 +88,7 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 		return;
 
 	} else {
-		crm_debug("Processing message");
+		crm_devel("Processing message");
 		crm_log_message_adv(LOG_MSG, "inbound.ha.log", msg);
 		new_input = new_ha_msg_input(msg);
 		register_fsa_input(C_HA_MESSAGE, I_ROUTER, new_input);
@@ -217,7 +217,7 @@ void
 lrm_op_callback(lrm_op_t* op)
 {
 	/* todo: free op->rsc */
-	crm_debug("received callback");
+	crm_devel("received callback");
 	register_fsa_input(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
 	s_crmd_fsa(C_LRM_OP_CALLBACK);
 }
@@ -228,15 +228,15 @@ crmd_ha_status_callback(
 {
 	crm_data_t *update      = NULL;
 
-	crm_debug("received callback");
+	crm_devel("received callback");
 	crm_notice("Status update: Node %s now has status [%s]\n",node,status);
 
 	if(AM_I_DC == FALSE) {
-		crm_debug("Got nstatus callback in non-DC mode");
+		crm_devel("Got nstatus callback in non-DC mode");
 		return;
 		
 	} else if(safe_str_neq(status, DEADSTATUS)) {
-		crm_debug("nstatus callback was not for a dead node");
+		crm_devel("nstatus callback was not for a dead node");
 		return;
 	}
 
@@ -261,7 +261,7 @@ crmd_client_status_callback(const char * node, const char * client,
 	const char   *extra = NULL;
 	crm_data_t *  update = NULL;
 
-	crm_debug("received callback");
+	crm_devel("received callback");
 
 	set_bit_inplace(fsa_input_register, R_PEER_DATA);
 	
@@ -284,11 +284,11 @@ crmd_client_status_callback(const char * node, const char * client,
 		register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 		
 	} else if(AM_I_DC == FALSE) {
-		crm_debug("Got client status callback in non-DC mode");
+		crm_devel("Got client status callback in non-DC mode");
 		return;
 		
 	} else {
-		crm_debug("Got client status callback in DC mode");
+		crm_devel("Got client status callback in DC mode");
 		update = create_node_state(
 			node, node, NULL, NULL, status, join, NULL);
 		
@@ -305,7 +305,7 @@ gboolean lrm_dispatch(int fd, gpointer user_data)
 {
 	int num_msgs = 0;
 	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
-	crm_debug("received callback");
+	crm_devel("received callback");
 	num_msgs = lrm->lrm_ops->rcvmsg(lrm, FALSE);
 	if(num_msgs < 1) {
 		crm_err("lrm->lrm_ops->rcvmsg() failed, connection lost?");
@@ -332,7 +332,7 @@ crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
 
-	crm_debug("%d HA messages dispatched", lpc);
+	crm_devel("%d HA messages dispatched", lpc);
 
 	if (channel && (channel->ch_status == IPC_DISCONNECT)) {
 		crm_crit("Lost connection to heartbeat service.");
@@ -364,7 +364,7 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 
 	} else {
 		crmd_client_t *blank_client = NULL;
-		crm_debug("Channel connected");
+		crm_devel("Channel connected");
 		crm_malloc(blank_client, sizeof(crmd_client_t));
 	
 		if (blank_client == NULL) {
@@ -394,7 +394,7 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 {
 	int rc = 0;
 	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
-	crm_debug("received callback");	
+	crm_devel("received callback");	
 	rc = oc_ev_handle_event(ccm_token);
 	if(0 == rc) {
 		return TRUE;
@@ -413,7 +413,7 @@ crmd_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
 	struct crmd_ccm_data_s *event_data = NULL;
-	crm_debug("received callback");
+	crm_devel("received callback");
 	
 	if(data != NULL) {
 		crm_malloc(event_data, sizeof(struct crmd_ccm_data_s));
@@ -423,7 +423,7 @@ crmd_ccm_msg_callback(
 			event_data->oc = copy_ccm_oc_data(
 				(const oc_ev_membership_t *)data);
 
-			crm_debug("Sending callback to the FSA");
+			crm_devel("Sending callback to the FSA");
 			register_fsa_input(
 				C_CCM_CALLBACK, I_CCM_EVENT,
 				(void*)event_data);

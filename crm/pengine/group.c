@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.8 2005/02/17 16:39:26 andrew Exp $ */
+/* $Id: group.c,v 1.9 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -85,7 +85,7 @@ void group_unpack(resource_t *rsc)
 				group_data->first_child = new_rsc;
 			}
 			
-			crm_debug_action(
+			crm_devel_action(
 				print_resource("Added", new_rsc, FALSE));
 		} else {
 			crm_err("Failed unpacking resource %s",
@@ -245,7 +245,7 @@ void group_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 		return;
 		
 	} else {
-		crm_debug("Processing constraints from %s", rsc->id);
+		crm_devel("Processing constraints from %s", rsc->id);
 	}
 
 	get_group_variant_data(group_data, rsc);
@@ -264,7 +264,7 @@ void group_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 	get_group_variant_data(group_data, rsc);
 
 	crm_verbose("Processing RH of constraint %s", constraint->id);
-	crm_debug_action(print_resource("LHS", rsc_lh, TRUE));
+	crm_devel_action(print_resource("LHS", rsc_lh, TRUE));
 
 	if(group_data->self == NULL) {
 		return;

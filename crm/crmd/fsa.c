@@ -193,7 +193,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		} else if((is_message() && fsa_data == NULL)
 			  || (is_message() && fsa_actions == A_NOTHING && next_input == I_NULL)) {
 			fsa_data_t *stored_msg = NULL;
-			crm_debug("Finished with current input..."
+			crm_devel("Finished with current input..."
 				  " Checking messages (%d remaining)",
 				  g_list_length(fsa_message_queue));
 

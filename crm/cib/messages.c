@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.26 2005/02/18 10:36:10 andrew Exp $ */
+/* $Id: messages.c,v 1.27 2005/02/19 18:11:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -697,11 +697,11 @@ update_results(
 		set_xml_property_copy(
 			xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
 
-		crm_debug("Action %s failed: %s (cde=%d)",
+		crm_warn("Action %s failed: %s (cde=%d)",
 			  operation_msg, error_msg, return_code);
 	
 	} else {
-		crm_debug("CIB %s passed", operation_msg);
+		crm_devel("CIB %s passed", operation_msg);
 	}
 
 	return was_error;

@@ -475,7 +475,7 @@ do_lrm_query(gboolean is_replace)
 	set_xml_property_copy(xml_state, XML_ATTR_UNAME, fsa_our_uname);
 	xml_result = create_cib_fragment(xml_state, NULL);
 
-	crm_xml_debug(xml_state, "Current state of the LRM");
+	crm_xml_devel(xml_state, "Current state of the LRM");
 	
 	return xml_result;
 }
@@ -697,7 +697,7 @@ xml2list(crm_data_t *parent, const char**attr_path, int depth)
 	if(parent != NULL) {
 		nvpair_list = find_xml_node_nested(parent, attr_path, depth);
 		if(nvpair_list == NULL) {
-			crm_xml_debug(parent, "No attributes for resource op");
+			crm_xml_devel(parent, "No attributes for resource op");
 		}
 		
 	}

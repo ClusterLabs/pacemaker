@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.35 2005/02/15 08:07:34 andrew Exp $ */
+/* $Id: stages.c,v 1.36 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -105,7 +105,7 @@ stage0(crm_data_t * cib,
 gboolean
 stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
 {
-	crm_debug("Processing stage 1");
+	crm_devel("Processing stage 1");
 	
 	slist_iter(
 		node, node_t, nodes, lpc,
@@ -141,7 +141,7 @@ stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
 gboolean
 stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 {
-	crm_debug("Processing stage 2");
+	crm_devel("Processing stage 2");
 	
 	if(no_color != NULL) {
 		crm_free(no_color->details);
@@ -174,7 +174,7 @@ stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 gboolean
 stage3(GListPtr colors)
 {
-	crm_debug("Processing stage 3");
+	crm_devel("Processing stage 3");
 	/* not sure if this is a good idea or not */
 	if(g_list_length(colors) > max_valid_nodes) {
 		/* we need to consolidate some */
@@ -190,12 +190,12 @@ stage3(GListPtr colors)
 gboolean
 stage4(GListPtr colors)
 {
-	crm_debug("Processing stage 4");
+	crm_devel("Processing stage 4");
 
 	slist_iter(
 		color, color_t, colors, lpc,
 
-		crm_debug("assigning node to color %d", color->id);
+		crm_devel("assigning node to color %d", color->id);
 		
 		if(color == NULL) {
 			crm_err("NULL color detected");
@@ -207,7 +207,7 @@ stage4(GListPtr colors)
 		
 		choose_node_from_list(color);
 
-		crm_debug("assigned %s to color %d",
+		crm_devel("assigned %s to color %d",
 			  safe_val5(NULL, color, details, chosen_node, details, uname),
 			  color->id);
 
@@ -256,7 +256,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 
 	action_t *down_op = NULL;
 	action_t *stonith_op = NULL;
-	crm_debug("Processing stage 6");
+	crm_devel("Processing stage 6");
 
 	slist_iter(
 		node, node_t, nodes, lpc,
@@ -310,7 +310,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 gboolean
 stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 {
-	crm_debug("Processing stage 7");
+	crm_devel("Processing stage 7");
 
 	slist_iter(
 		order, order_constraint_t, ordering_constraints, lpc,
@@ -356,7 +356,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 gboolean
 stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 {
-	crm_debug("Processing stage 8");
+	crm_devel("Processing stage 8");
 	*graph = create_xml_node(NULL, XML_TAG_GRAPH);
 	set_xml_property_copy(
 		*graph, "global_timeout", transition_timeout);
@@ -371,13 +371,13 @@ stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 
-		crm_debug("processing actions for rsc=%s", rsc->id);
+		crm_devel("processing actions for rsc=%s", rsc->id);
 		rsc->fns->expand(rsc, graph);
 		);
 	crm_xml_devel(*graph, "created resource-driven action list");
 
 	/* catch any non-resource specific actions */
-	crm_debug("processing non-resource actions");
+	crm_devel("processing non-resource actions");
 	slist_iter(
 		action, action_t, actions, lpc,
 
@@ -405,8 +405,7 @@ choose_node_from_list(color_t *color)
 	color->details->pending = FALSE;
 
 	if(color->details->chosen_node == NULL) {
-		crm_err("Could not allocate a node for color %d",
-			color->id);
+		crm_err("Could not allocate a node for color %d", color->id);
 		return FALSE;
 	}
 	

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.15 2005/02/15 08:13:09 andrew Exp $ */
+/* $Id: utils.c,v 1.16 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -260,7 +260,7 @@ do_update_cib(crm_data_t *xml_action, int status)
 
 	fragment = create_cib_fragment(state, NULL);
 	
-	do_crm_log(LOG_DEBUG, __FUNCTION__, NULL,
+	do_crm_log(LOG_DEV, __FUNCTION__, NULL,
 		   "Updating CIB with \"%s\" (%s): %s %s on %s",
 		   status<0?"new action":XML_ATTR_TIMEOUT,
 		   crm_element_name(xml_action), crm_str(task), rsc_id, target);
@@ -339,7 +339,7 @@ start_te_timer(te_timer_t *timer)
 		crm_err("Tried to start timer with -ve period");
 		
 	} else {
-		crm_debug("#!!#!!# Timer already running (%d)",
+		crm_devel("#!!#!!# Timer already running (%d)",
 			  timer->source_id);
 	}
 	return FALSE;		

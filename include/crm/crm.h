@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.45 2005/02/18 10:30:47 andrew Exp $ */
+/* $Id: crm.h,v 1.46 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -180,28 +180,23 @@ extern gboolean safe_str_neq(const char *a, const char *b);
 #define LOG_INSANE   LOG_DEBUG+5
 #define LOG_MSG      LOG_TRACE
 
-#if 1
 #  define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FUNCTION__, NULL, w)
 #  define crm_err(w...)     do_crm_log(LOG_ERR,     __FUNCTION__, NULL, w)
 #  define crm_warn(w...)    do_crm_log(LOG_WARNING, __FUNCTION__, NULL, w)
 #  define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FUNCTION__, NULL, w)
 #  define crm_info(w...)    do_crm_log(LOG_INFO,    __FUNCTION__, NULL, w)
+#if 1
 #  define crm_debug(w...)   do_crm_log(LOG_DEBUG,   __FUNCTION__, NULL, w)
 #  define crm_devel(w...)   do_crm_log(LOG_DEV,     __FUNCTION__, NULL, w)
 #  define crm_verbose(w...) do_crm_log(LOG_VERBOSE, __FUNCTION__, NULL, w)
 #  define crm_trace(w...)   do_crm_log(LOG_TRACE,   __FUNCTION__, NULL, w)
 #  define crm_insane(w...)  do_crm_log(LOG_INSANE,  __FUNCTION__, NULL, w)
 #else
-#  define crm_crit(w...)    cl_log(LOG_CRIT,    w)
-#  define crm_err(w...)     cl_log(LOG_ERR,     w)
-#  define crm_warn(w...)    cl_log(LOG_WARNING, w)
-#  define crm_notice(w...)  cl_log(LOG_NOTICE,  w)
-#  define crm_info(w...)    cl_log(LOG_INFO,    w)
-#  define crm_debug(w...)   cl_log(LOG_DEBUG,   w)
-#  define crm_devel(w...)   cl_log(LOG_DEV,     w)
-#  define crm_verbose(w...) cl_log(LOG_VERBOSE, w)
-#  define crm_trace(w...)   cl_log(LOG_TRACE,   w)
-#  define crm_insane(w...)  cl_log(LOG_INSANE,  w)
+#  define crm_debug(w...)   if(0) { do_crm_log(LOG_DEBUG,   NULL, NULL, w); }
+#  define crm_devel(w...)   if(0) { do_crm_log(LOG_DEV,     NULL, NULL, w); }
+#  define crm_verbose(w...) if(0) { do_crm_log(LOG_VERBOSE, NULL, NULL, w); }
+#  define crm_trace(w...)   if(0) { do_crm_log(LOG_TRACE,   NULL, NULL, w); }
+#  define crm_insane(w...)  if(0) { do_crm_log(LOG_INSANE,  NULL, NULL, w); }
 #endif
 
 extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_Message *msg);
@@ -211,8 +206,9 @@ extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_M
 		actions;						\
 	}
 
-#define crm_debug_action(x) crm_do_action(LOG_DEBUG, x)
 #define crm_info_action(x)  crm_do_action(LOG_INFO, x)
+#define crm_debug_action(x) crm_do_action(LOG_DEBUG, x)
+#define crm_devel_action(x) crm_do_action(LOG_DEV, x)
 
 #define crm_log_xml(level, text, xml)   if(crm_log_level >= level) {  \
 		print_xml_formatted(level,  __FUNCTION__, xml, text); \

@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.23 2005/01/26 13:30:59 andrew Exp $ */
+/* $Id: color.c,v 1.24 2005/02/19 18:11:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,14 +70,14 @@ add_color(resource_t *resource, color_t *color)
 	local_color = find_color(resource->candidate_colors, color);
 
 	if(local_color == NULL) {
-		crm_debug("Adding color %d", color->id);
+		crm_devel("Adding color %d", color->id);
 		
 		local_color = copy_color(color);
 		resource->candidate_colors =
 			g_list_append(resource->candidate_colors, local_color);
 
 	} else {
-		crm_debug("Color %d already present", color->id);
+		crm_devel("Color %d already present", color->id);
 	}
 
 	return local_color;
@@ -86,7 +86,7 @@ add_color(resource_t *resource, color_t *color)
 void
 color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
 {
-	crm_debug_action(print_resource("Coloring", rsc, FALSE));
+	crm_devel_action(print_resource("Coloring", rsc, FALSE));
 	
 	if(rsc->provisional == FALSE) {
 		/* already processed this resource */
@@ -96,14 +96,14 @@ color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
 	rsc->rsc_cons = g_list_sort(
 		rsc->rsc_cons, sort_cons_strength);
 
-	crm_debug_action(
+	crm_devel_action(
 		print_resource("Pre-processing", rsc, FALSE));
 
 	/*------ Pre-processing */
 	slist_iter(
 		constraint, rsc_dependancy_t, rsc->rsc_cons, lpc,
 
-		crm_debug_action(
+		crm_devel_action(
 			print_rsc_dependancy(
 				"Pre-Processing constraint", constraint,FALSE));
 		
@@ -116,19 +116,19 @@ color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
 
 	rsc->fns->color(rsc, colors);
 
-	crm_debug_action(
+	crm_devel_action(
 		print_resource("Post-processing", rsc, TRUE));
 
 	/*------ Post-processing */
 	slist_iter(
 		constraint, rsc_dependancy_t, rsc->rsc_cons, lpc,
-		crm_debug_action(
+		crm_devel_action(
 			print_rsc_dependancy(
 				"Post-Processing constraint",constraint,FALSE));
 		rsc->fns->rsc_dependancy_lh(constraint);
 		);
 	
-	crm_debug_action(print_resource("Colored", rsc, TRUE));
+	crm_devel_action(print_resource("Colored", rsc, TRUE));
 }
 
 

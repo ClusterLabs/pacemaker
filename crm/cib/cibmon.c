@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.13 2005/02/16 18:01:41 andrew Exp $ */
+/* $Id: cibmon.c,v 1.14 2005/02/19 18:11:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -227,7 +227,7 @@ main(int argc, char **argv)
 	mainloop = g_main_new(FALSE);
 	crm_info("Starting mainloop");
 	g_main_run(mainloop);
-	crm_debug("%s exiting normally", crm_system_name);
+	crm_devel("%s exiting normally", crm_system_name);
 	fflush(stderr);
 	return -exit_code;
 }
@@ -323,7 +323,7 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	}
 
 	if(update != NULL) {
-		crm_debug(UPDATE_PREFIX"[%s] Performing %s on <%s%s%s>",
+		crm_devel(UPDATE_PREFIX"[%s] Performing %s on <%s%s%s>",
 			    event, op, type, id?" id=":"", id?id:"");
 		print_xml_formatted(LOG_INSANE,  UPDATE_PREFIX,
 				    update, "Update");
@@ -333,7 +333,7 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 			 event, op, crm_str(type));
 	}
 
-	print_xml_formatted(LOG_DEBUG,  UPDATE_PREFIX,
+	print_xml_formatted(LOG_DEV,  UPDATE_PREFIX,
 			    pre_update, "Existing Object");
 }
 
@@ -403,7 +403,7 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 			update, "Update");
 	}
 	print_xml_formatted(
-		rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
+		rc==cib_ok?LOG_DEV:LOG_WARNING, UPDATE_PREFIX,
 		output, "Resulting Object");
 
 	if(update_depth == 0) {
@@ -455,5 +455,5 @@ cibmon_update_confirm(const char *event, HA_Message *msg)
 				 rc, cib_error2string(rc));
 		}
 	}
-	crm_debug(UPDATE_PREFIX"=================================");
+	crm_devel(UPDATE_PREFIX"=================================");
 }
