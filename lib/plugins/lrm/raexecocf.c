@@ -264,9 +264,9 @@ get_resource_list(GList ** rsc_info)
 		merge_string_list(rsc_info,ra_subdir);
 
 		while (NULL != (item = g_list_first(ra_subdir))) {
-			ra_subdir = g_list_remove(ra_subdir, item->data);
+			ra_subdir = g_list_remove_link(ra_subdir, item);
 			g_free(item->data);
-			g_list_free(item);
+			g_list_free_1(item);
 		}
 
 		free(namelist[file_num]);
