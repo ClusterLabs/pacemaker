@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.18 2004/03/24 12:11:01 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.19 2004/03/26 13:01:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,6 +54,12 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		FNRET(NULL);
 	}
 
+	if(search_path == NULL) {
+		CRM_DEBUG("Will never find NULL :)");
+		FNRET(NULL);
+	}
+	
+	
 #ifdef XML_TRACE
 	CRM_DEBUG("looking for...");
 	for (j=0; j < len; ++j) {
@@ -119,9 +125,164 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
     
 }
 
+
+const char *
+get_xml_attr(xmlNodePtr parent,
+	     const char *node_name, const char *attr_name,
+	     gboolean error)
+{
+
+	if(node_name == NULL) {
+		// get it from the current node
+		return get_xml_attr_nested(parent, NULL, 0, attr_name, error);
+	}
+	return get_xml_attr_nested(parent, &node_name, 1, attr_name, error);
+
+}
+
+
+const char *
+get_xml_attr_nested(xmlNodePtr parent,
+		    const char **node_path, int length,
+		    const char *attr_name, gboolean error)
+{
+	const char *attr_value = NULL;
+	xmlNodePtr attr_parent = NULL;
+	
+	if(parent == NULL) {
+		cl_log(LOG_ERR, "Can not find attribute in NULL parent");
+		return NULL;
+	} 
+
+	if(attr_name || strlen(attr_name) == 0) {
+		cl_log(LOG_ERR, "Can not find attribute with no name");
+		return NULL;
+	}
+	
+	if(length == 0) {
+		attr_parent = parent;
+		
+	} else {
+		attr_parent = find_xml_node_nested(parent, node_path, length);
+		if(attr_parent == NULL && error) {
+			cl_log(LOG_ERR, "No node at the path you specified.");
+			return NULL;
+		}
+	}
+	
+	attr_value = xmlGetProp(attr_parent, attr_name);
+	if((attr_value == NULL || strlen(attr_value) == 0) && error) {
+		cl_log(LOG_ERR,
+		       "No value present for %s at %s",
+		       attr_name, xmlGetNodePath(attr_parent));
+		return NULL;
+	}
+	
+	return attr_value;
+}
+
+xmlNodePtr
+set_xml_attr(xmlNodePtr parent,
+	     const char *node_name,
+	     const char *attr_name,
+	     const char *attr_value,
+	     gboolean create)
+{
+
+	if(node_name == NULL) {
+		// set it on the current node
+		return set_xml_attr_nested(parent, NULL, 0,
+					   attr_name, attr_value, create);
+	}
+	return set_xml_attr_nested(parent, &node_name, 1,
+				   attr_name, attr_value, create);
+
+}
+
+
+xmlNodePtr
+set_xml_attr_nested(xmlNodePtr parent,
+		    const char **node_path, int length,
+		    const char *attr_name,
+		    const char *attr_value,
+		    gboolean create)
+{
+	xmlAttrPtr result        = NULL;
+	xmlNodePtr attr_parent   = NULL;
+	xmlNodePtr create_parent = NULL;
+	
+	if(parent == NULL && create == FALSE) {
+		cl_log(LOG_ERR, "Can not set attribute in NULL parent");
+		return NULL;
+	} 
+
+	if(attr_name || strlen(attr_name) == 0) {
+		cl_log(LOG_ERR, "Can not set attribute with no name");
+		return NULL;
+	}
+
+
+	if(length == 0 && parent != NULL) {
+		attr_parent = parent;
+
+	} else if(length == 0 || node_path == NULL
+		  || *node_path == NULL || strlen(*node_path) == 0) {
+		cl_log(LOG_ERR, "Can not create parent to set attribute on");
+		return NULL;
+		
+	} else {
+		attr_parent = find_xml_node_nested(parent, node_path, length);
+	}
+	
+	if(create && attr_parent == NULL) {
+		int j = 0;
+		attr_parent = parent;
+		for (j=0; j < length; ++j) {
+			if (node_path[j] == NULL) {
+				break;
+			}
+			
+			xmlNodePtr tmp =
+				find_xml_node(attr_parent, node_path[j]);
+
+			if(tmp == NULL) {
+				attr_parent = create_xml_node(attr_parent,
+							      node_path[j]);
+				if(j==0) {
+					create_parent = attr_parent;
+				}
+				
+			} else {
+				attr_parent = tmp;
+			}
+		}
+		
+	} else if(attr_parent == NULL) {
+		cl_log(LOG_ERR, "Can not find parent to set attribute on");
+		return NULL;
+		
+	}
+	
+	result = set_xml_property_copy(attr_parent, attr_name, attr_value);
+	if(result == NULL) {
+		cl_log(LOG_WARNING,
+		       "Could not set %s=%s at %s",
+		       attr_name, attr_value, xmlGetNodePath(attr_parent));
+	}
+
+	if(create_parent != NULL) {
+		return create_parent;
+	}
+	
+	return parent;
+}
+
+
+
 xmlNodePtr
 find_xml_node(xmlNodePtr root, const char * search_path)
 {
+	if(root == NULL) return NULL;
 	return find_xml_node_nested(root, &search_path, 1);
 }
 
@@ -298,8 +459,9 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 
 	if (whole_doc) {
 		if (msg->doc == NULL) {
-			cl_log(LOG_ERR, "XML doc was NULL");
-			FNRET(NULL);
+			xmlDocPtr foo = xmlNewDoc("1.0");
+			xmlDocSetRootElement(foo, msg);
+			xmlSetTreeDoc(msg,foo);
 		}
 		xmlDocDumpMemory(msg->doc, &xml_message, &msg_size);
 	} else {

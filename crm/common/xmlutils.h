@@ -1,4 +1,4 @@
-/* $Id: xmlutils.h,v 1.9 2004/03/24 12:11:01 andrew Exp $ */
+/* $Id: xmlutils.h,v 1.10 2004/03/26 13:01:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -79,5 +79,24 @@ extern xmlNodePtr add_node_copy(xmlNodePtr new_parent,
 
 extern xmlNodePtr file2xml(FILE *input);
 extern xmlNodePtr string2xml(const char *input);
+
+extern const char *get_xml_attr(xmlNodePtr parent,
+				const char *node_name, const char *attr_name,
+				gboolean error);
+extern const char *get_xml_attr_nested(xmlNodePtr parent,
+				       const char **node_path, int length,
+				       const char *attr_name, gboolean error);
+
+extern xmlNodePtr set_xml_attr(xmlNodePtr parent,
+			       const char *node_name,
+			       const char *attr_name,
+			       const char *attr_value,
+			       gboolean create);
+
+extern xmlNodePtr set_xml_attr_nested(xmlNodePtr parent,
+				      const char **node_path, int length,
+				      const char *attr_name,
+				      const char *attr_value,
+				      gboolean create);
 
 #endif
