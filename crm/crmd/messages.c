@@ -660,6 +660,8 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 	}
 	
 	if(uuid != NULL) crm_free(uuid);
+	if(minor_version != NULL) crm_free(minor_version);
+	if(major_version != NULL) crm_free(major_version);
 	if(client_name != NULL) crm_free(client_name);
 
 	/* hello messages should never be processed further */
