@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.18 2004/03/19 10:43:42 andrew Exp $ */
+/* $Id: cib.c,v 1.19 2004/03/22 14:20:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,137 +29,228 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <hb_api.h>
-/* #include <apphb.h> */
-
-#include <clplumbing/ipc.h>
-#include <clplumbing/Gmain_timeout.h>
 #include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/lsb_exitcodes.h>
-#include <clplumbing/uids.h>
-#include <clplumbing/realtime.h>
-#include <clplumbing/GSource.h>
-#include <clplumbing/cl_poll.h>
-
-#include <ocf/oc_event.h>
 #include <libxml/tree.h>
 
-#include <crm/common/ipcutils.h>
-#include <crm/common/crmutils.h>
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
-#include <cibprimatives.h>
 #include <crm/common/xmlutils.h>
 #include <crm/common/msgutils.h>
-#include <cibio.h>
 #include <cib.h>
+#include <cibio.h>
 #include <cibmessages.h>
 
 #include <crm/dmalloc_wrapper.h>
 
-// from cibmessages.c
-extern xmlNodePtr processCibRequest(xmlNodePtr command);
 
 gboolean
-cib_msg_callback(IPC_Channel *sender, void *user_data)
+startCib(const char *filename)
 {
-	int lpc = 0;
-	char *buffer = NULL;
-	xmlDocPtr doc = NULL;
-	IPC_Message *msg = NULL;
-	gboolean all_is_well = TRUE;
-	xmlNodePtr answer = NULL, root_xml_node = NULL;
-	
-	FNIN();
-
-	while(sender->ops->is_message_pending(sender)) {
-		if (sender->ch_status == IPC_DISCONNECT) {
-			/* The message which was pending for us is that
-			 * the IPC status is now IPC_DISCONNECT */
-			break;
-		}
-		if (sender->ops->recv(sender, &msg) != IPC_OK) {
-			perror("Receive failure:");
-			FNRET(!all_is_well);
-		}
-		if (msg == NULL) {
-			cl_log(LOG_ERR, "No message this time");
-			continue;
-		}
-
-		lpc++;
-
-		/* the docs say only do this once, but in their code
-		 * they do it every time!
-		 */
-//		xmlInitParser();
-
-		buffer = (char*)msg->msg_body;
-		cl_log(LOG_DEBUG, "Message %d [text=%s]", lpc, buffer);
-		doc = xmlParseMemory(ha_strdup(buffer), strlen(buffer));
-
-		if(doc == NULL) {
-			cl_log(LOG_INFO,
-			       "XML Buffer was not valid...\n Buffer: (%s)",
-			       buffer);
-		}
-
-		root_xml_node = xmlDocGetRootElement(doc);
-
-		const char *sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
-		const char *type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
-		if (root_xml_node == NULL) {
-			cl_log(LOG_ERR, "Root node was NULL!!");
-
-		} else if(sys_to == NULL) {
-			cl_log(LOG_ERR, "Value of %s was NULL!!",
-			       XML_ATTR_SYSTO);
-			
-		} else if(type == NULL) {
-			cl_log(LOG_ERR, "Value of %s was NULL!!",
-			       XML_ATTR_MSGTYPE);
-			
-		} else if(strcmp(type, XML_ATTR_REQUEST) != 0) {
-			cl_log(LOG_INFO,
-			       "Message was a response not a request."
-			       "  Discarding");
-		} else if (strcmp(sys_to, CRM_SYSTEM_CIB) == 0
-			|| strcmp(sys_to, CRM_SYSTEM_DCIB) == 0) {
-
-			answer = processCibRequest(root_xml_node);
-
-			if (send_ipc_reply(sender,root_xml_node,answer)==FALSE)
-				cl_log(LOG_WARNING,
-				       "Cib answer could not be sent");
-		} else {
-			cl_log(LOG_WARNING,
-			       "Received a message destined for %s by mistake",
-			       sys_to);
-		}
-		
-		if(answer != NULL)
-			free_xml(answer);
-		
-		msg->msg_done(msg);
-		msg = NULL;
+	xmlNodePtr cib = readCibXmlFile(filename);
+	if (initializeCib(cib)) {
+		cl_log(LOG_INFO,
+		       "CIB Initialization completed successfully");
+	} else { 
+		free_xml(cib);
+		cl_log(LOG_WARNING,
+		       "CIB Initialization failed, "
+		       "starting with an empty default.");
+		activateCibXml(createEmptyCib(), filename);
 	}
-
-	// clean up after a break
-	if(msg != NULL)
-		msg->msg_done(msg);
-
-	if(root_xml_node != NULL)
-		free_xml(root_xml_node);
-
-	CRM_DEBUG2("Processed %d messages", lpc);
-	if (sender->ch_status == IPC_DISCONNECT) {
-		cl_log(LOG_ERR, "The server has left us: Shutting down...NOW");
-
-		exit(1); // shutdown properly later
-		
-		FNRET(!all_is_well);
-	}
-	FNRET(all_is_well);
+	return TRUE;
 }
 
+
+xmlNodePtr
+get_cib_copy()
+{
+	return copy_xml_node_recursive(get_the_CIB(), 1);
+}
+
+/*
+ * The caller should never free the return value
+ */
+xmlNodePtr
+get_object_root(const char *object_type, xmlNodePtr the_root)
+{
+	const char *node_stack[2];
+	xmlNodePtr tmp_node = NULL;
+	FNIN();
+	
+	node_stack[0] = XML_CIB_TAG_CONFIGURATION;
+	node_stack[1] = object_type;
+
+	if(object_type == NULL || strlen(object_type) == 0) {
+		FNRET(the_root);
+		/* get the whole cib */
+	} else if(strcmp(object_type, XML_CIB_TAG_STATUS) == 0) {
+		node_stack[0] = XML_CIB_TAG_STATUS;
+		node_stack[1] = NULL;
+		/* these live in a different place */
+	}
+	
+	tmp_node = find_xml_node_nested(the_root, node_stack, 2);
+	if (tmp_node == NULL) {
+		cl_log(LOG_ERR,
+		       "[cib] Section cib[%s[%s]] not present",
+		       node_stack[0],
+		       node_stack[1]);
+	}
+	FNRET(tmp_node);
+}
+
+FILE *msg_cib_strm = NULL;
+
+xmlNodePtr
+process_cib_request(xmlNodePtr message, gboolean auto_reply)
+{
+	xmlNodePtr message_copy = copy_xml_node_recursive(message, 1);
+
+#ifdef MSG_LOG
+	if(msg_cib_strm == NULL) {
+		msg_cib_strm = fopen("/tmp/cib.log", "w");
+	}
+	fprintf(msg_cib_strm, "[Input ]\t%s\n", dump_xml_node(message, FALSE));
+	fflush(msg_cib_strm);
+#endif
+	
+	xmlNodePtr data = processCibRequest(message_copy);
+
+	xmlNodePtr options = find_xml_node(message_copy, XML_TAG_OPTIONS);
+
+	const char *result = xmlGetProp(options, XML_ATTR_RESULT);
+
+	CRM_DEBUG2("[cib] operation returned result %s", result);
+
+	set_xml_property_copy(data, XML_ATTR_RESULT, result);
+
+
+	if(auto_reply) {
+
+		xmlNodePtr reply = create_reply(message_copy, data);
+		free_xml(data);
+		free_xml(message_copy);
+
+#ifdef MSG_LOG
+fprintf(msg_cib_strm, "[Reply ]\t%s\n",
+			dump_xml_node(reply, FALSE));
+		fflush(msg_cib_strm);
+#endif
+		return reply;
+
+	}
+	
+#ifdef MSG_LOG
+	fprintf(msg_cib_strm, "[Output]\t%s\n", dump_xml_node(data, FALSE));
+	fflush(msg_cib_strm);
+#endif
+	free_xml(message_copy);
+	return data;
+}
+
+xmlNodePtr
+create_cib_fragment(xmlNodePtr update, const char *section)
+{
+	gboolean whole_cib = FALSE;
+	xmlNodePtr fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
+	xmlNodePtr cib = NULL;
+	char *auto_section = pluralSection(update->name);
+	
+	if(update == NULL) {
+		cl_log(LOG_ERR, "No update to create a fragment for");
+		ha_free(auto_section);
+		return NULL;
+		
+	} else if(section == NULL) {
+		section = auto_section;
+
+	} else if(strcmp(auto_section, section) != 0) {
+		cl_log(LOG_ERR,
+		       "Values for update (tag=%s) and section (%s)"
+		       " were not consistent", update->name, section);
+		ha_free(auto_section);
+		return NULL;
+		
+	}
+
+	if(strcmp(section, "all")==0 && strcmp(update->name, XML_TAG_CIB)==0) {
+		whole_cib = TRUE;
+	}
+	
+	
+	set_xml_property_copy(fragment, XML_ATTR_SECTION, section);
+
+	if(whole_cib == FALSE) {
+		cib = createEmptyCib();
+		xmlNodePtr object_root = get_object_root(section, cib);
+		xmlAddChild(object_root, update);
+	} else {
+		cib = update;
+	}
+	
+	xmlAddChild(fragment, cib);
+	CRM_DEBUG("Fragment created");
+
+	ha_free(auto_section);
+	return fragment;
+}
+
+/*
+ * This method adds a copy of xml_response_data
+ */
+xmlNodePtr
+create_cib_request(xmlNodePtr msg_options,
+		   xmlNodePtr msg_data,
+		   const char *operation)
+{
+	xmlNodePtr request = NULL;
+	FNIN();
+
+	if(operation != NULL) {
+		if(msg_options == NULL)
+			msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
+		
+		set_xml_property_copy(msg_options, XML_ATTR_OP, operation);
+	}
+	
+	request = create_request(msg_options,
+				 msg_data,
+				 NULL,
+				 CRM_SYSTEM_CIB,
+				 CRM_SYSTEM_CRMD,
+				 NULL,
+				 NULL);
+	FNRET(request);
+}
+
+
+char *
+pluralSection(const char *a_section)
+{
+	char *a_section_parent = NULL;
+	if (a_section == NULL) {
+		a_section_parent = ha_strdup("all");
+
+	} else if(strcmp(a_section, XML_TAG_CIB) == 0) {
+		a_section_parent = ha_strdup("all");
+
+	} else if(strcmp(a_section, "node") == 0) {
+		a_section_parent = ha_strdup("nodes");
+
+	} else if(strcmp(a_section, "state") == 0) {
+		a_section_parent = ha_strdup("status");
+
+	} else if(strcmp(a_section, "constraint") == 0) {
+		a_section_parent = ha_strdup("constraints");
+		
+	} else if(strcmp(a_section, "resource") == 0) {
+		a_section_parent = ha_strdup("resources");
+
+	} else {
+		cl_log(LOG_ERR, "Unknown section %s", a_section);
+		a_section_parent = ha_strdup("all");
+	}
+	
+	CRM_DEBUG2("Plural is %s", a_section_parent);
+	return a_section_parent;
+}

@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.10 2004/03/10 22:23:28 andrew Exp $ */
+/* $Id: cibmain.c,v 1.11 2004/03/22 14:20:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,6 +46,7 @@
 #include <crm/common/ipcutils.h>
 #include <crm/common/crmutils.h>
 #include <crm/common/xmlutils.h>
+#include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
 #include <cibio.h>
 #include <cib.h>
@@ -64,7 +65,7 @@ const char* crm_system_name = CRM_SYSTEM_CIB;
 void usage(const char* cmd, int exit_status);
 int init_start(void);
 void shutdown(int nsig);
-
+gboolean cib_msg_callback(IPC_Channel *client, gpointer user_data);
 
 #define OPTARGS	"skrh"
 
@@ -160,18 +161,11 @@ init_start(void)
 		cl_log_set_facility(facility);
 	}    
 
-	xmlNodePtr cib = readCibXmlFile(CIB_FILENAME);
-	if (initializeCib(cib)) {
-		cl_log(LOG_INFO,
-		       "CIB Initialization completed successfully");
-	} else { 
-		free_xml(cib);
-		cl_log(LOG_WARNING,
-		       "CIB Initialization failed, "
-		       "starting with an empty default.");
-		activateCibXml(createEmptyCib());
-		
+	if(startCib(CIB_FILENAME) == FALSE){
+		cl_log(LOG_CRIT, "Cannot start CIB... terminating");
+		exit(1);
 	}
+	
     
 	IPC_Channel *crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
 						    cib_msg_callback,
@@ -214,6 +208,110 @@ init_start(void)
 	}
 	FNRET(0);
 }
+
+
+gboolean
+cib_msg_callback(IPC_Channel *sender, void *user_data)
+{
+	int lpc = 0;
+	char *buffer = NULL;
+	xmlDocPtr doc = NULL;
+	IPC_Message *msg = NULL;
+	gboolean all_is_well = TRUE;
+	xmlNodePtr answer = NULL, root_xml_node = NULL;
+	
+	FNIN();
+
+	while(sender->ops->is_message_pending(sender)) {
+		if (sender->ch_status == IPC_DISCONNECT) {
+			/* The message which was pending for us is that
+			 * the IPC status is now IPC_DISCONNECT */
+			break;
+		}
+		if (sender->ops->recv(sender, &msg) != IPC_OK) {
+			perror("Receive failure:");
+			FNRET(!all_is_well);
+		}
+		if (msg == NULL) {
+			cl_log(LOG_ERR, "No message this time");
+			continue;
+		}
+
+		lpc++;
+
+		/* the docs say only do this once, but in their code
+		 * they do it every time!
+		 */
+//		xmlInitParser();
+
+		buffer = (char*)msg->msg_body;
+		cl_log(LOG_DEBUG, "Message %d [text=%s]", lpc, buffer);
+		doc = xmlParseMemory(ha_strdup(buffer), strlen(buffer));
+
+		if(doc == NULL) {
+			cl_log(LOG_INFO,
+			       "XML Buffer was not valid...\n Buffer: (%s)",
+			       buffer);
+		}
+
+		root_xml_node = xmlDocGetRootElement(doc);
+
+		const char *sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
+		const char *type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
+		if (root_xml_node == NULL) {
+			cl_log(LOG_ERR, "Root node was NULL!!");
+
+		} else if(sys_to == NULL) {
+			cl_log(LOG_ERR, "Value of %s was NULL!!",
+			       XML_ATTR_SYSTO);
+			
+		} else if(type == NULL) {
+			cl_log(LOG_ERR, "Value of %s was NULL!!",
+			       XML_ATTR_MSGTYPE);
+			
+		} else if(strcmp(type, XML_ATTR_REQUEST) != 0) {
+			cl_log(LOG_INFO,
+			       "Message was a response not a request."
+			       "  Discarding");
+		} else if (strcmp(sys_to, CRM_SYSTEM_CIB) == 0
+			|| strcmp(sys_to, CRM_SYSTEM_DCIB) == 0) {
+
+			answer = process_cib_request(root_xml_node, TRUE);
+			if (send_xmlipc_message(sender, answer)==FALSE)
+				cl_log(LOG_WARNING,
+				       "Cib answer could not be sent");
+		} else {
+			cl_log(LOG_WARNING,
+			       "Received a message destined for %s by mistake",
+			       sys_to);
+		}
+		
+		if(answer != NULL)
+			free_xml(answer);
+		
+		msg->msg_done(msg);
+		msg = NULL;
+	}
+
+	// clean up after a break
+	if(msg != NULL)
+		msg->msg_done(msg);
+
+	if(root_xml_node != NULL)
+		free_xml(root_xml_node);
+
+	CRM_DEBUG2("Processed %d messages", lpc);
+	if (sender->ch_status == IPC_DISCONNECT) {
+		cl_log(LOG_ERR, "The server has left us: Shutting down...NOW");
+
+		exit(1); // shutdown properly later
+		
+		FNRET(!all_is_well);
+	}
+	FNRET(all_is_well);
+}
+
+
 
 void
 usage(const char* cmd, int exit_status)

@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.13 2004/03/18 13:24:13 andrew Exp $ */
+/* $Id: cibio.c,v 1.14 2004/03/22 14:20:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,7 @@
 #include <fcntl.h>
 
 #include <libxml/tree.h>
+#include <cib.h>
 #include <cibio.h>
 #include <crm/common/msgutils.h> // for getNow()
 #include <crm/common/xmltags.h>
@@ -130,39 +131,6 @@ verifyCibXml(xmlNodePtr cib)
 }
 
 /*
- * The caller should never free the return value
- */
-xmlNodePtr
-get_object_root(const char *object_type, xmlNodePtr the_root)
-{
-	const char *node_stack[2];
-	xmlNodePtr tmp_node = NULL;
-	FNIN();
-	
-	node_stack[0] = XML_CIB_TAG_CONFIGURATION;
-	node_stack[1] = object_type;
-
-	if(object_type == NULL || strlen(object_type) == 0) {
-		FNRET(the_root);
-		/* get the whole cib */
-	} else if(strcmp(object_type, XML_CIB_TAG_STATUS) == 0) {
-		node_stack[0] = XML_CIB_TAG_STATUS;
-		node_stack[1] = NULL;
-		/* these live in a different place */
-	}
-	
-	tmp_node = find_xml_node_nested(the_root, node_stack, 2);
-	if (tmp_node == NULL) {
-		cl_log(LOG_ERR,
-		       "Section cib[%s[%s]] not present",
-		       node_stack[0],
-		       node_stack[1]);
-	}
-	FNRET(tmp_node);
-}
-
-
-/*
  * It is the callers responsibility to free the output of this function
  */
 xmlNodePtr
@@ -222,31 +190,6 @@ get_the_CIB(void)
 {
 	FNIN();
 	FNRET(the_cib);
-}
-
-/*
- * The caller needs to free the return value, it is a copy of the
- *   true data
- */
-xmlNodePtr
-getCibSection(const char *section)
-{
-	xmlNodePtr res = NULL;
-	FNIN();
-
-	CRM_DEBUG2("Looking for section (%s) of the CIB", section);
-
-	res = get_object_root(section, the_cib);
-
-	// make sure the siblings dont turn up as well
-	if (res != NULL)
-		res = copy_xml_node_recursive(res, 1);
-	else if (the_cib == NULL) {
-		cl_log(LOG_CRIT, "The CIB has not been initialized!");
-	} else
-		cl_log(LOG_ERR, "Section (%s) not found.", section);
-    
-	FNRET(res);
 }
 
 gboolean
@@ -370,14 +313,14 @@ moveFile(const char *oldname,
 
 
 int
-activateCibBuffer(char *buffer)
+activateCibBuffer(char *buffer, const char *filename)
 {
 	int result = -1;
 	xmlNodePtr local_cib = NULL;
 	FNIN();
 	
 	local_cib = readCibXml(buffer);
-	result = activateCibXml(local_cib);
+	result = activateCibXml(local_cib, filename);
 	
 	FNRET(result);
 }
@@ -387,15 +330,17 @@ activateCibBuffer(char *buffer)
  * on failure.
  */
 int
-activateCibXml(xmlNodePtr new_cib)
+activateCibXml(xmlNodePtr new_cib, const char *filename)
 {
 	int error_code = 0;
 	xmlNodePtr saved_cib = get_the_CIB();
-
+	const char *filename_bak = CIB_BACKUP; // calculate
 	FNIN();
+
+	
 	
 	if (initializeCib(new_cib) == TRUE) {
-		int res = moveFile(CIB_FILENAME, CIB_BACKUP, FALSE, NULL);
+		int res = moveFile(filename, filename_bak, FALSE, NULL);
 	
 		if (res  < 0) {
 			cl_log(LOG_INFO,
@@ -422,7 +367,7 @@ activateCibXml(xmlNodePtr new_cib)
 			 * set arg 3 to 0 to disable line breaks,1 to enable
 			 * res == num bytes saved
 			 */
-			res = xmlSaveFormatFile(CIB_FILENAME,
+			res = xmlSaveFormatFile(filename,
 						new_cib->doc,
 						0);
 			
@@ -435,8 +380,8 @@ activateCibXml(xmlNodePtr new_cib)
 	    
 			if (res < 0) {
 				// assume 0 is good
-				if (moveFile(CIB_BACKUP,
-					     CIB_FILENAME,
+				if (moveFile(filename_bak,
+					     filename,
 					     FALSE,
 					     NULL) < -1) {
 					cl_log(LOG_CRIT,

@@ -17,60 +17,57 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
-						-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl 	\
-						-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
-						-I$(top_builddir) -I$(top_srcdir)
+INCLUDES        = -I$(top_builddir)/include  -I$(top_srcdir)/include	\
+		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl 	\
+		  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha	\
+		  -I$(top_builddir)          -I$(top_srcdir)
 
-hadir			= $(sysconfdir)/ha.d
-halibdir		= $(libdir)/@HB_PKG@
-commmoddir		= $(halibdir)/modules/comm
-havarlibdir		= $(localstatedir)/lib/@HB_PKG@
-PIDFILE			= $(localstatedir)/run/crmd.pid
-XML_FLAGS		= `xml2-config --cflags`
-XML_LIBS		= `xml2-config --libs`
+hadir		= $(sysconfdir)/ha.d
+halibdir	= $(libdir)/@HB_PKG@
+commmoddir	= $(halibdir)/modules/comm
+havarlibdir	= $(localstatedir)/lib/@HB_PKG@
+PIDFILE		= $(localstatedir)/run/crmd.pid
+XML_FLAGS	= `xml2-config --cflags`
+XML_LIBS	= `xml2-config --libs`
 
 # sockets with path
-crmdir			= $(havarlibdir)/crm
-apigid			= @HA_APIGID@
-crmuid			= @HA_CCMUID@
-crmreqsocket		= $(havarlibdir)/api/crm.req
-crmressocket		= $(havarlibdir)/api/crm.rsp
+crmdir		= $(havarlibdir)/crm
+apigid		= @HA_APIGID@
+crmuid		= @HA_CCMUID@
+crmreqsocket	= $(havarlibdir)/api/crm.req
+crmressocket	= $(havarlibdir)/api/crm.rsp
 
-COMMONLIBS		= $(CRM_DEBUG_LIBS) 								\
-				$(top_builddir)/lib/clplumbing/libplumb.la			\
-				libcib.la											\
-				$(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la	\
-				$(top_builddir)/lib/apphb/libapphb.la				\
-				$(top_builddir)/heartbeat/libhbclient.la  			\
-				$(GLIBLIB)											\
-				$(LIBRT)
+COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
+		  $(top_builddir)/lib/clplumbing/libplumb.la		\
+		  $(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la	\
+		  $(top_builddir)/lib/apphb/libapphb.la			\
+		  $(top_builddir)/heartbeat/libhbclient.la  		\
+		  $(GLIBLIB)						\
+		  $(LIBRT)
 
-LIBRT 			= @LIBRT@
-AM_CFLAGS		= @CFLAGS@	\
-				-DPIDFILE='"$(PIDFILE)"' \
-				$(CRM_DEBUG_FLAGS)
+LIBRT 		= @LIBRT@
+AM_CFLAGS	= @CFLAGS@ -DPIDFILE='"$(PIDFILE)"' $(CRM_DEBUG_FLAGS)
+
 ## libraries
-lib_LTLIBRARIES		= libcib.la
-
+lib_LTLIBRARIES	= libcib.la
 
 ## binary progs
-halib_PROGRAMS		= cib
+halib_PROGRAMS	= cib
 
 
 ## SOURCES
-
 #noinst_HEADERS		= config.h control.h crmd.h
 noinst_HEADERS		= 
 
-libcib_la_SOURCES	= cibio.c cibprimatives.c cibmessages.c
+libcib_la_SOURCES	= cibio.c cibprimatives.c cibmessages.c cib.c
 libcib_la_LDFLAGS	= -version-info 0:0:0
 libcib_la_CFLAGS	= -I$(top_builddir)
 
-cib_SOURCES		= cibmain.c cib.c
+cib_SOURCES		= cibmain.c
 cib_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cib_LDFLAGS		= $(XML_LIBS)
-cib_LDADD		= $(COMMONLIBS) 				
+cib_LDADD		= $(COMMONLIBS) \
+			  $(top_builddir)/$(CRM_DIR)/cib/libcib.la
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

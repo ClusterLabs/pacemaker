@@ -1,4 +1,4 @@
-/* $Id: cibio.h,v 1.6 2004/03/10 22:23:28 andrew Exp $ */
+/* $Id: cibio.h,v 1.7 2004/03/22 14:20:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,9 +33,6 @@
 #include <clplumbing/cl_log.h> 
 #include <libxml/tree.h> 
 
-#define CIB_FILENAME WORKING_DIR"/cib.xml"
-#define CIB_BACKUP   WORKING_DIR"/cib_backup.xml"
-
 extern gboolean initialized;
 extern xmlNodePtr the_cib;
 extern xmlNodePtr node_search;
@@ -44,9 +41,6 @@ extern xmlNodePtr constraint_search;
 extern xmlNodePtr status_search;
 
 extern xmlNodePtr get_the_CIB(void);
-extern xmlNodePtr getCibSection(const char *section);
-extern xmlNodePtr get_object_root(const char *object_type,
-				  xmlNodePtr the_root);
 
 extern int initializeCib(xmlNodePtr cib);
 extern gboolean uninitializeCib(void);
@@ -54,8 +48,8 @@ extern xmlNodePtr createEmptyCib(void);
 extern gboolean verifyCibXml(xmlNodePtr cib);
 extern xmlNodePtr readCibXml(char *buffer);
 extern xmlNodePtr readCibXmlFile(const char *filename);
-extern int activateCibBuffer(char *buffer);
-extern int activateCibXml(xmlNodePtr doc);
+extern int activateCibBuffer(char *buffer, const char *filename);
+extern int activateCibXml(xmlNodePtr doc, const char *filename);
 
 extern int moveFile(const char *oldname,
 		    const char *newname,

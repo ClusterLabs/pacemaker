@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.16 2004/03/19 10:43:42 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.17 2004/03/22 14:20:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,7 +36,7 @@
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
 #include <crm/common/xmlutils.h>
-#include <cibio.h>
+#include <cib.h>
 
 #include <crm/dmalloc_wrapper.h>
 

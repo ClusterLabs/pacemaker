@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.3 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: cib.h,v 1.4 2004/03/22 14:20:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,8 +19,14 @@
 #ifndef CIB__H
 #define CIB__H
 
-
-gboolean cib_msg_callback(IPC_Channel *client, gpointer user_data);
-
+gboolean   startCib(const char *filename);
+xmlNodePtr get_cib_copy(void);
+xmlNodePtr get_object_root(const char *object_type, xmlNodePtr the_root);
+xmlNodePtr process_cib_request(xmlNodePtr message, gboolean auto_reply);
+xmlNodePtr create_cib_fragment(xmlNodePtr update, const char *section);
+char      *pluralSection(const char *a_section);
+xmlNodePtr create_cib_request(xmlNodePtr msg_options,
+			      xmlNodePtr msg_data,
+			      const char *operation);
 
 #endif
