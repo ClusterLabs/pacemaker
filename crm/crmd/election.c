@@ -243,6 +243,10 @@ do_dc_takeover(long long action,
 
 	startTimer(dc_heartbeat);
 
+	crm_debug("Requesting an initial dump of CRMD client_status");
+	fsa_cluster_conn->llc_ops->client_status(
+		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
+	
 	return I_NULL;
 }
 
