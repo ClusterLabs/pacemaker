@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.21 2004/03/26 13:29:41 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.22 2004/04/01 17:04:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -420,8 +420,13 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 		if(force == FALSE) {
 			const char *ts_existing  = NULL;
 			const char *ts_new       = NULL;
-			
-			gboolean is_update  = FALSE;
+
+			/* default to false?
+			 *
+			 * that would mean every node would have to
+			 * carry a timestamp
+			 */
+			gboolean is_update = TRUE;
 			
 			ts_existing  = TSTAMP(equiv_node);
 			ts_new       = TSTAMP(new_obj);
