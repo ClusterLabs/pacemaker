@@ -153,6 +153,13 @@ do_dc_join_offer_one(long long action,
 		crm_warn("Already offered membership to %s... discarding",
 			 join_to);
 
+#if 0
+		/* this isn't as necessary as before
+		 * now there are no DC-heartbeats that the slave will
+		 *	be re-announcing to so there will be a lot less
+		 *	bouncing around than before
+		 */
+		
 		/* Make sure we end up in the correct state again */
 		if((ssize_t)g_hash_table_size(join_requests)
 		   >= fsa_membership_copy->members_size) {
@@ -169,6 +176,10 @@ do_dc_join_offer_one(long long action,
 			  - g_hash_table_size(join_requests));
 		
 	} else {
+#else
+	}
+	{
+#endif
 		oc_node_t member;
 
 		crm_debug("Processing annouce request from %s in state %s",
@@ -521,7 +532,6 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 	const char *join_to = NULL;
 	const oc_node_t *member = (const oc_node_t*)value;
 
-	crm_devel("Sending %s offer", CRM_OP_WELCOME);
 	if(member != NULL) {
 		join_to = member->node_uname;
 	}
@@ -535,12 +545,15 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
 
 		/* send the welcome */
-		crm_devel("Sending %s to %s", CRM_OP_WELCOME, join_to);
+		crm_info("Sending %s to %s", CRM_OP_WELCOME, join_to);
 
 		send_msg_via_ha(fsa_cluster_conn, offer);
 
-		g_hash_table_insert(join_offers, crm_strdup(join_to),
-				    crm_strdup(CRMD_JOINSTATE_PENDING));
+		void *a_node = g_hash_table_lookup(join_requests, join_to);
+		if(a_node == NULL) {
+			g_hash_table_insert(join_offers, crm_strdup(join_to),
+					    crm_strdup(CRMD_JOINSTATE_PENDING));
+		}
 	}
 }
 
