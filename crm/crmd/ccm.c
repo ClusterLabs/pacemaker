@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.55 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: ccm.c,v 1.56 2005/02/20 14:32:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -610,7 +610,7 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 	}
 
 	/* so it can be freed */
-	return update_data.updates;
+	return fragment;
 
 }
 
