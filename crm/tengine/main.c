@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.15 2005/02/03 14:20:45 andrew Exp $ */
+/* $Id: main.c,v 1.16 2005/02/11 22:09:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,14 +96,6 @@ main(int argc, char ** argv)
 	}
     
 	/* read local config file */
-
-	if(allow_cores) {
-		crm_info("Enabling coredumps");
-		cl_set_corerootdir(HA_COREDIR);	    
-		cl_enable_coredumps(1);
-		cl_cdtocoredir();
-		crm_debug("Coredump processing complete");
-	}
     
 	crm_debug("Starting...");
 	return init_start();

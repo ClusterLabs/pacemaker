@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.12 2005/02/10 11:08:11 andrew Exp $ */
+/* $Id: main.c,v 1.13 2005/02/11 22:09:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -104,14 +104,8 @@ main(int argc, char ** argv)
     
     /* read local config file */
     crm_debug("Enabling coredumps");
-    if(cl_set_corerootdir(HA_COREDIR) < 0){
-	    cl_perror("cannot set corerootdir");
-    }
     if(cl_enable_coredumps(1) != 0) {
-	    crm_err("Cannot enable coredumps");
-    }
-    if(cl_cdtocoredir() != 0) {
-	    crm_err("Cannot cd to coredump dir");
+	    crm_warn("Cannot enable coredumps");
     }
  
     return init_start();

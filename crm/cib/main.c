@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.12 2005/02/09 15:31:24 andrew Exp $ */
+/* $Id: main.c,v 1.13 2005/02/11 22:09:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,10 +96,6 @@ main(int argc, char ** argv)
 		}
 	}
 
-	cl_set_corerootdir(HA_COREDIR);	    
-	cl_enable_coredumps(1);
-	cl_cdtocoredir();
-	
 	if (optind > argc) {
 		++argerr;
 	}
