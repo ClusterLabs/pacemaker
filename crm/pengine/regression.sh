@@ -22,6 +22,7 @@
 create_mode="true"
 echo Generating test outputs for these tests...
 #do_test bad7 "Bad data"
+
 echo ""
 
 echo Done.
@@ -51,6 +52,11 @@ do_test rsc_dep7 "Must 3	"
 #do_test rsc_dep8 "Should 3	"
 do_test rsc_dep10 "Must (cant)"
 #do_test rsc_dep9 "2*MustNot 1*ShouldNot"
+
+echo ""
+do_test order1 "Order start 1"
+do_test order2 "Order start 2"
+do_test order3 "Order stop	"
 
 echo ""
 do_test agent1 "version: lt (empty)"
@@ -91,8 +97,13 @@ do_test rsc_location5 "Score (running/swap 2)	"
 echo ""
 do_test multi1 "Multiple Active (stop/start)"
 
+#echo ""
+#do_test complex1 "Complex	"
+
 echo ""
-do_test complex1 "Complex	"
+do_test group1 "Group	"
+do_test group2 "Group + Native"
+
 
 echo ""
 do_test bad1 "Bad node		"
