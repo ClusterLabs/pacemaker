@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.20 2005/03/16 19:38:34 andrew Exp $ */
+/* $Id: native.c,v 1.21 2005/03/31 08:08:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -77,6 +77,7 @@ void native_unpack(resource_t *rsc)
 {
 	crm_data_t * xml_obj = rsc->xml;
 	native_variant_data_t *native_data = NULL;
+
 	const char *version  = crm_element_value(xml_obj, XML_ATTR_VERSION);
 	
 	crm_verbose("Processing resource %s...", rsc->id);
@@ -87,7 +88,7 @@ void native_unpack(resource_t *rsc)
 	native_data->agent->class	= crm_element_value(xml_obj, "class");
 	native_data->agent->type	= crm_element_value(xml_obj, "type");
 	native_data->agent->version	= version?version:"0.0";
-	
+
 	native_data->color		= NULL; 
 	native_data->allowed_nodes	= NULL;
 	native_data->node_cons		= NULL; 
@@ -96,6 +97,7 @@ void native_unpack(resource_t *rsc)
 	rsc->variant_opaque = native_data;
 }
 
+		
 resource_t *
 native_find_child(resource_t *rsc, const char *id)
 {
@@ -279,15 +281,6 @@ void native_create_actions(resource_t *rsc)
 			
 			);	
 	}
-
-	slist_iter(
-		action, action_t, rsc->actions, lpc,
-		if(action->extra_attrs == NULL) {
-			action->extra_attrs = create_xml_node(NULL, "extra");
-		}
-		crm_xml_devel(rsc->extra_attrs, "copying in extra attributes");
-		copy_in_properties(action->extra_attrs, rsc->extra_attrs);
-		);
 }
 
 void native_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
@@ -371,20 +364,20 @@ void native_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
 
 	} else if(rsc_lh->provisional == FALSE
 		  && native_data_lh->color->details->pending == FALSE) {
-		/* update _us_    : postproc color version */
+		/* update _them_    : postproc color version */
 		update_rh = TRUE;
-
+		
 	} else if(rsc_rh->provisional == FALSE
 		  && native_data_rh->color->details->pending == FALSE) {
-		/* update _them_  : postproc color alt version */
+		/* update _us_  : postproc color alt version */
 		update_lh = TRUE;
 
 	} else if(rsc_lh->provisional == FALSE) {
-		/* update _us_    : preproc version */
+		/* update _them_    : preproc version */
 		update_rh = TRUE;
-
+		
 	} else if(rsc_rh->provisional == FALSE) {
-		/* update _them_  : postproc version */
+		/* update _us_  : postproc version */
 		update_lh = TRUE;
 
 	} else {
@@ -707,13 +700,15 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 		
 	if(update_lh) {
 		crm_free(native_data_lh->color);
-		rsc_lh->runnable = rsc_rh->runnable;
-		native_data_lh->color    = copy_color(native_data_rh->color);
+		rsc_lh->runnable      = rsc_rh->runnable;
+		rsc_lh->provisional   = rsc_rh->provisional;
+		native_data_lh->color = copy_color(native_data_rh->color);
 	}
 	if(update_rh) {
 		crm_free(native_data_rh->color);
-		rsc_rh->runnable = rsc_lh->runnable;
-		native_data_rh->color    = copy_color(native_data_lh->color);
+		rsc_rh->runnable      = rsc_lh->runnable;
+		rsc_rh->provisional   = rsc_lh->provisional;
+		native_data_rh->color = copy_color(native_data_lh->color);
 	}
 
 	if((update_rh || update_lh) && do_merge) {
