@@ -46,11 +46,10 @@ AM_CFLAGS	= @CFLAGS@ -DPIDFILE='"$(PIDFILE)"' $(CRM_DEBUG_FLAGS)
 
 
 ## binary progs
-halib_PROGRAMS	= tengine
+halib_PROGRAMS	= ttest tengine
 
 ## SOURCES
 
-#noinst_HEADERS	= config.h control.h crmd.h
 noinst_HEADERS	= tengine.h
 
 tengine_SOURCES	= tengine.c tenginemain.c
@@ -58,8 +57,14 @@ tengine_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 tengine_LDFLAGS	= $(XML_LIBS)
 tengine_LDADD	= $(COMMONLIBS)
 
+ttest_SOURCES	= tengine.c ttest.c
+ttest_CFLAGS	= $(XML_FLAGS) -DTESTING=1 -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+ttest_LDFLAGS	= $(XML_LIBS)
+ttest_LDADD	= $(COMMONLIBS)
+
+
 clean-generic:
-	rm -f *.log *.debug *.xml *~
+	rm -f *.log *.debug *~
 
 install-exec-local:
 
