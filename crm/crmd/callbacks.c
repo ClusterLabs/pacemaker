@@ -70,8 +70,8 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 	} else if(AM_I_DC
 	   && safe_str_eq(sys_from, CRM_SYSTEM_DC)
 	   && safe_str_neq(from, fsa_our_uname)) {
-		crm_err("Another DC detected");
-		crm_log_message_adv(LOG_ERR, "HA[inbound]: Duplicate DC", msg);
+		crm_err("Another DC detected: %s (op=%s)", from, op);
+		crm_log_message_adv(LOG_WARNING, "HA[inbound]: Duplicate DC", msg);
 		new_input = new_ha_msg_input(msg);
 		register_fsa_input(C_HA_MESSAGE, I_ELECTION, new_input);
 
@@ -100,12 +100,12 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 		
 	} else if(AM_I_DC && safe_str_eq(op, CRM_OP_HBEAT)) {
 		crm_verbose("Ignoring our own heartbeat [F_SEQ=%s]", seq);
-		crm_log_message_adv(LOG_MSG, "HA[inbound]: own heartbeat", msg);
+		crm_log_message_adv(LOG_TRACE, "HA[inbound]: own heartbeat", msg);
 		return;
 
 	} else {
 		crm_devel("Processing message");
-		crm_log_message_adv(LOG_DEBUG, "HA[inbound]", msg);
+		crm_log_message_adv(LOG_MSG, "HA[inbound]", msg);
 		new_input = new_ha_msg_input(msg);
 		register_fsa_input(C_HA_MESSAGE, I_ROUTER, new_input);
 	}
@@ -277,6 +277,9 @@ crmd_client_status_callback(const char * node, const char * client,
 	crm_data_t *  update = NULL;
 
 	crm_devel("received callback");
+	if(safe_str_neq(client, CRM_SYSTEM_CRMD)) {
+		return;
+	}
 
 	set_bit_inplace(fsa_input_register, R_PEER_DATA);
 	
