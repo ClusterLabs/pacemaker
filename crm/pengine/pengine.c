@@ -588,6 +588,7 @@ summary(GSListPtr resources)
 			cl_log(LOG_ERR,
 			       "Could not allocate Resource %s",
 			       rsc_id);
+			pdebug_action(print_resource("Could not allocate", rsc, TRUE));
 			if(node_id != NULL) {
 				
 				cl_log(LOG_WARNING,
@@ -1446,9 +1447,9 @@ create_rsc_to_rsc(const char *id, enum con_strength strength,
 	inverted_con = invert_constraint(new_con);
 
 	rsc_lh->rsc_cons = g_slist_insert_sorted(rsc_lh->rsc_cons,
-						 inverted_con, sort_cons_strength);
-	rsc_rh->rsc_cons = g_slist_insert_sorted(rsc_rh->rsc_cons,
 						 new_con, sort_cons_strength);
+	rsc_rh->rsc_cons = g_slist_insert_sorted(rsc_rh->rsc_cons,
+						 inverted_con, sort_cons_strength);
 
 	return TRUE;
 }
