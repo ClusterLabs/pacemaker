@@ -507,14 +507,14 @@ do_lrm_rsc_op(
 		op->interval  = 9000;
 		op->target_rc = CHANGED;
 		monitor_call_id = rsc->ops->perform_op(rsc, op);
-		if(monitor_call_id < 0) {
+		if (monitor_call_id < 0) {
 			g_hash_table_insert(
-				monitors, strdup(rsc->id), (gpointer)monitor_call_id);
+				monitors, strdup(rsc->id), GINT_TO_POINTER(monitor_call_id));
 		}
 		
 	} else if(safe_str_eq(operation, CRMD_RSCSTATE_STOP)) {
 		gpointer foo = g_hash_table_lookup(monitors, rsc->id);
-		int monitor_call_id = (int)foo;
+		int monitor_call_id = GPOINTER_TO_INT(foo);
 		
 		if(monitor_call_id > 0) {
 			crm_info("Stopping status op for %s", rsc->id);
