@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.10 2005/02/09 11:40:11 andrew Exp $ */
+/* $Id: cibmon.c,v 1.11 2005/02/10 11:04:41 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -340,7 +340,7 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	}
 	
 	fprintf(msg_cibmon_strm, "[%s] Raw update for %s (to %s)\n%s\n",
-		event, op, crm_str(type), xml_text);
+		event, op, crm_str(type), crm_str(xml_text));
 
 	if(update != NULL) {
 		crm_verbose("[%s] Performing %s on <%s%s%s>",
@@ -441,7 +441,7 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 		}
 	}
 	fprintf(msg_cibmon_strm, "[%s] Operation %s result:\n%s\n",
-		event, op, xml_text);
+		event, op, crm_str(xml_text));
 	crm_free(xml_text);
 	crm_xml_verbose(output, "Resulting fragment");
 
