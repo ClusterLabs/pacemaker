@@ -39,7 +39,6 @@ FILE *msg_in_strm = NULL;
 FILE *msg_ipc_strm = NULL;
 
 xmlNodePtr find_xml_in_hamessage(const struct ha_msg* msg);
-gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
 void crmd_ha_input_destroy(gpointer user_data);
 
 void
@@ -279,7 +278,7 @@ crmd_client_status_callback(const char * node, const char * client,
 		crm_debug("Got client status callback in non-DC mode");
 
 	} else {
-		update = create_node_state(node, node, NULL, status, join);
+		update = create_node_state(node, node, NULL, status, join, NULL);
 
 		set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
 		
@@ -360,7 +359,7 @@ gboolean lrm_dispatch(int fd, gpointer user_data)
 int empty_callbacks = 0;
 
 gboolean
-crmd_ha_input_dispatch(int fd, gpointer user_data)
+crmd_ha_input_dispatch(IPC_Channel *channel, gpointer user_data)
 {
 	int lpc = 0;
 	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
@@ -372,6 +371,12 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
 
+	if (channel && (channel->ch_status == IPC_DISCONNECT)) {
+		crm_crit("Lost connection to heartbeat service.");
+		return FALSE;
+	}
+
+#if 0
 	if(lpc == 0) {
 		/* hey what happened?? */
 		crm_warn("We were called but no message was ready."
@@ -386,7 +391,7 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 			return FALSE;
 		}
 	}
-	
+#endif	
     
 	return TRUE;
 }

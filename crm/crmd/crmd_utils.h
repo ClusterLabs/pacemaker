@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.7 2004/10/19 11:23:45 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.8 2004/10/20 13:55:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,10 +39,9 @@ extern gboolean timer_popped(gpointer data);
 
 extern void cleanup_subsystem(struct crm_subsystem_s *the_subsystem);
 
-extern xmlNodePtr create_node_state(const char *uuid, const char *uname,
-				    const char *ccm_state,
-				    const char *crmd_state,
-				    const char *join_state);
+extern xmlNodePtr create_node_state(
+	const char *uuid, const char *uname, const char *ccm_state,
+	const char *crmd_state, const char *join_state, const char *exp_state);
 
 extern void create_node_entry(
 	const char *uuid, const char *uname, const char *type);

@@ -24,30 +24,31 @@ extern gboolean ccm_dispatch(int fd, gpointer user_data);
 extern void crmd_ccm_input_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data);
 
-extern void crmd_ha_input_callback(const struct ha_msg* msg,
-				   void* private_data);
-
 /*
  * Apparently returning TRUE means "stay connected, keep doing stuff".
  * Returning FALSE means "we're all done, close the connection"
  */
-extern gboolean crmd_ipc_input_callback(IPC_Channel *client,
-					gpointer user_data);
 
-gboolean lrm_dispatch(int fd, gpointer user_data);
+extern gboolean crmd_ha_input_dispatch(
+	IPC_Channel *channel, gpointer user_data);
+extern void crmd_ha_input_callback(
+	const struct ha_msg* msg, void* private_data);
+
+extern gboolean crmd_ipc_input_callback(
+	IPC_Channel *client, gpointer user_data);
+
+extern gboolean crmd_ipc_input_callback(
+	IPC_Channel *client, gpointer user_data);
+
+extern gboolean lrm_dispatch(int fd, gpointer user_data);
 
 extern void lrm_op_callback (lrm_op_t* op);
 
-extern void crmd_client_status_callback(const char * node, const char * client,
-			     const char * status, void * private);
+extern void crmd_client_status_callback(
+	const char * node, const char * client, const char * status, void * private);
 
 extern void msg_ccm_join(const struct ha_msg *msg, void *foo);
 
-extern gboolean crmd_client_connect(IPC_Channel *newclient,
-				    gpointer user_data);
+extern gboolean crmd_client_connect(
+	IPC_Channel *newclient, gpointer user_data);
 
-extern void crmd_ha_input_callback(const struct ha_msg* msg,
-				   void* private_data);
-
-extern gboolean crmd_ipc_input_callback(IPC_Channel *client,
-					gpointer user_data);

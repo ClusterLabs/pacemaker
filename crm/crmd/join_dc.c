@@ -71,7 +71,7 @@ do_dc_join_offer_all(long long action,
 
 		tmp2 = create_node_state(
 			node_id, node_id,
-			XML_BOOLEAN_NO, NULL, CRMD_JOINSTATE_DOWN);
+			XML_BOOLEAN_NO, NULL, CRMD_JOINSTATE_PENDING, NULL);
 
 		if(update == NULL) {
 			update = tmp2;
@@ -350,7 +350,7 @@ do_dc_join_ack(long long action,
 	/* update node entry in the status section  */
 	crm_debug("Updating node state to %s for %s", join_state, join_from);
 	update = create_node_state(
-		join_from, join_from, NULL, ONLINESTATUS, join_state);
+		join_from, join_from, NULL, ONLINESTATUS, join_state, join_state);
 
 	set_xml_property_copy(update,XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
 
@@ -404,7 +404,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 
 		/* make sure our cluster state is set correctly */
 		tmp1 = create_node_state(
-			join_to, join_to, NULL, ONLINESTATUS, join_state);
+			join_to, join_to, NULL, ONLINESTATUS, join_state, join_state);
 
 		if(tmp1 != NULL) {
 			tmp2 = create_cib_fragment(tmp1, NULL);

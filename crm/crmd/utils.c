@@ -479,6 +479,18 @@ fsa_action2string(long long action)
 		case A_DC_TIMER_START:
 			actionAsText = "A_DC_TIMER_START";
 			break;
+		case A_INTEGRATE_TIMER_START:
+			actionAsText = "A_INTEGRATE_TIMER_START";
+			break;
+		case A_INTEGRATE_TIMER_STOP:
+			actionAsText = "A_INTEGRATE_TIMER_STOP";
+			break;
+		case A_FINALIZE_TIMER_START:
+			actionAsText = "A_FINALIZE_TIMER_START";
+			break;
+		case A_FINALIZE_TIMER_STOP:
+			actionAsText = "A_FINALIZE_TIMER_STOP";
+			break;
 		case A_ELECTION_COUNT:
 			actionAsText = "A_ELECTION_COUNT";
 			break;
@@ -630,9 +642,6 @@ fsa_action2string(long long action)
 void
 fsa_dump_actions(long long action, const char *text)
 {
-/* 	if(action == A_NOTHING) { */
-/* 		crm_debug("Action %.16llx (A_NOTHING) %s", A_NOTHING, text); */
-/* 	} */
 	if(is_set(action, A_READCONFIG)) {
 		crm_debug("Action %.16llx (A_READCONFIG) %s", A_READCONFIG, text);
 	}
@@ -672,6 +681,22 @@ fsa_dump_actions(long long action, const char *text)
 	if(is_set(action, A_DC_TIMER_START)) {
 		crm_debug("Action %.16llx (A_DC_TIMER_START) %s",
 			  A_DC_TIMER_START, text);
+	}
+	if(is_set(action, A_INTEGRATE_TIMER_START)) {
+		crm_debug("Action %.16llx (A_INTEGRATE_TIMER_START) %s",
+			  A_INTEGRATE_TIMER_START, text);
+	}
+	if(is_set(action, A_INTEGRATE_TIMER_STOP)) {
+		crm_debug("Action %.16llx (A_INTEGRATE_TIMER_STOP) %s",
+			  A_INTEGRATE_TIMER_STOP, text);
+	}
+	if(is_set(action, A_FINALIZE_TIMER_START)) {
+		crm_debug("Action %.16llx (A_FINALIZE_TIMER_START) %s",
+			  A_FINALIZE_TIMER_START, text);
+	}
+	if(is_set(action, A_FINALIZE_TIMER_STOP)) {
+		crm_debug("Action %.16llx (A_FINALIZE_TIMER_STOP) %s",
+			  A_FINALIZE_TIMER_STOP, text);
 	}
 	if(is_set(action, A_ELECTION_COUNT)) {
 		crm_debug("Action %.16llx (A_ELECTION_COUNT) %s",
@@ -871,7 +896,8 @@ create_node_state(const char *uuid,
 		  const char *uname,
 		  const char *ccm_state,
 		  const char *crmd_state,
-		  const char *join_state)
+		  const char *join_state,
+		  const char *exp_state)
 {
 	xmlNodePtr node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
@@ -889,7 +915,7 @@ create_node_state(const char *uuid,
 		node_state, XML_CIB_ATTR_JOINSTATE, join_state);
 	
 	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_EXPSTATE, join_state);
+		node_state, XML_CIB_ATTR_EXPSTATE, exp_state);
 
 	crm_xml_devel(node_state, "created");
 

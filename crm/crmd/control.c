@@ -34,7 +34,6 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-extern gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
 extern void crmd_ha_input_destroy(gpointer user_data);
 extern gboolean stop_all_resources(void);
 
@@ -51,7 +50,7 @@ int init_server_ipc_comms(
 
 gboolean
 register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
-		 gboolean (*dispatch_method)(int fd, gpointer user_data),
+		 gboolean (*dispatch_method)(IPC_Channel *channel, gpointer user_data),
 		 void (*message_callback)(const struct ha_msg* msg,
 					  void* private_data),
 		 GDestroyNotify cleanup_method);
@@ -82,11 +81,10 @@ do_ha_control(long long action,
 		/* make sure we are disconnected first */
 		fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn);
 		
-		registered = register_with_ha(fsa_cluster_conn,
-					      crm_system_name,
-					      crmd_ha_input_dispatch,
-					      crmd_ha_input_callback,
-					      crmd_ha_input_destroy);
+		registered = register_with_ha(
+			fsa_cluster_conn, crm_system_name,
+			crmd_ha_input_dispatch, crmd_ha_input_callback,
+			crmd_ha_input_destroy);
 		
 		if(registered == FALSE) {
 			return I_FAIL;
@@ -572,7 +570,7 @@ init_server_ipc_comms(
 
 gboolean
 register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
-		 gboolean (*dispatch_method)(int fd, gpointer user_data),
+		 gboolean (*dispatch_method)(IPC_Channel *channel, gpointer user_data),
 		 void (*message_callback)(const struct ha_msg* msg,
 					  void* private_data),
 		 GDestroyNotify cleanup_method)
@@ -617,10 +615,14 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 		return FALSE;
 	}
 	
-	G_main_add_fd(G_PRIORITY_HIGH, 
-		      hb_cluster->llc_ops->inputfd(hb_cluster),
-		      FALSE,  dispatch_method,  hb_cluster /* userdata  */,  
-		      cleanup_method);
+	G_main_add_IPC_Channel(G_PRIORITY_HIGH, 
+			       hb_cluster->llc_ops->ipcchan(hb_cluster),
+			       FALSE,  dispatch_method,  hb_cluster /* userdata  */,  
+			       cleanup_method);
+/* 	G_main_add_fd(G_PRIORITY_HIGH,  */
+/* 		      hb_cluster->llc_ops->inputfd(hb_cluster), */
+/* 		      FALSE,  dispatch_method,  hb_cluster /\* userdata  *\/,   */
+/* 		      cleanup_method); */
 
 	crm_debug("Finding our node name");
 	if ((fsa_our_uname =

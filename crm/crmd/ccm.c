@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.38 2004/10/12 20:56:20 andrew Exp $ */
+/* $Id: ccm.c,v 1.39 2004/10/20 13:55:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -184,7 +184,7 @@ do_ccm_event(long long action,
 					node_state = create_node_state(
 						NULL,
 						oc->m_array[offset+lpc].node_uname,
-						XML_BOOLEAN_NO, NULL, NULL);
+						XML_BOOLEAN_NO, NULL, NULL, NULL);
 
 					set_xml_property_copy(
 						node_state,
@@ -607,7 +607,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	} 
 
 	tmp1 = create_node_state(node_uname, node_uname,
-				 data->state, NULL, state);
+				 data->state, NULL, state, NULL);
 
 	if(data->updates == NULL) {
 		crm_verbose("Creating first update");
