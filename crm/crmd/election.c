@@ -23,6 +23,7 @@
 #include <crm/common/xmlutils.h>
 #include <crm/common/ipcutils.h>
 #include <crm/common/msgutils.h>
+#include <crm/cib/cib.h>
 #include <string.h>
 #include <crmd_messages.h>
 
@@ -147,15 +148,23 @@ do_election_count_vote(long long action,
 		}
 	}
 	
-	cl_log(LOG_DEBUG, "%s (index=%d), our index (%d)",
-		   vote_from, your_index, my_index);
+/* 	cl_log(LOG_DEBUG, "%s (index=%d), our index (%d)", */
+/* 		   vote_from, your_index, my_index); */
 
 	cl_log(LOG_DEBUG, "%s (bornon=%d), our bornon (%d)",
 		   vote_from, your_born, my_born);
 
+	cl_log(LOG_DEBUG, "%s %s %s",
+	       fsa_our_uname,
+	       strcmp(fsa_our_uname, vote_from) < 0?"<":">=",
+	       vote_from);
+
 	if(your_born < my_born) {
+		CRM_DEBUG("Election fail: born_on");
 		we_loose = TRUE;
-	} else if(strcmp(fsa_our_uname, vote_from) < 0) {
+	} else if(your_born == my_born
+		  && strcmp(fsa_our_uname, vote_from) < 0) {
+		CRM_DEBUG("Election fail: uname");
 		we_loose = TRUE;
 	} else {
 		CRM_DEBUG("We might win... we should vote (possibly again)");
