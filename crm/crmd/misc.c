@@ -1,4 +1,3 @@
-/* $Id: crmd.h,v 1.5 2004/02/27 13:41:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,20 +15,27 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef CRMD__H
-#define CRMD__H
+#include <crm/common/crm.h>
+#include <crmd_fsa.h>
 
-extern GMainLoop*  crmd_mainloop;
+/*	A_LOG, A_WARN, A_ERROR	*/
+enum crmd_fsa_input
+do_log(long long action,
+	      enum crmd_fsa_state cur_state,
+	      enum crmd_fsa_input current_input,
+	      void *data)
+{
+	FNIN();
 
-extern const char* crm_system_name;
-
-extern GHashTable   *pending_remote_replies;
-extern GHashTable   *ipc_clients;
-
-extern void msg_ccm_join(const struct ha_msg *msg, void *foo);
-extern gboolean crmd_client_connect(IPC_Channel *newclient, gpointer user_data);
-extern void crmd_ha_input_callback(const struct ha_msg* msg, void* private_data);
-extern gboolean crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data);
-    
-
-#endif
+	int log_type = LOG_DEBUG;
+	if(action & A_LOG) log_type = LOG_INFO;
+	if(action & A_WARN) log_type = LOG_WARNING;
+	if(action & A_ERROR) log_type = LOG_ERR;
+	
+	cl_log(log_type,
+	       "Input (%s) was recieved while in state (%s)",
+	       fsa_input2string(current_input),
+	       fsa_state2string(cur_state));
+	
+	FNRET(I_NULL);
+}

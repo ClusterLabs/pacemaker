@@ -59,7 +59,9 @@ halib_PROGRAMS	= crmd
 
 noinst_HEADERS	= 
 
-crmd_SOURCES	= crmdmain.c crmd.c 					
+crmd_SOURCES	= crmdmain.c crmd.c \
+		fsa.c control.c messages.c ccm.c 	\
+		election.c subsystems.c misc.c 
 
 crmd_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crmd_LDFLAGS	= $(XML_LIBS)
@@ -74,3 +76,11 @@ clean-generic:
 install-exec-local:
 
 uninstall-local:
+
+graphs:	fsa_inputs.png fsa_actions.png
+
+%.png: %.dot
+	dot -Tpng $< > $@ 
+
+%.dot : fsa_matrix.h
+	perl make_dot.pl
