@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.19 2005/02/20 14:40:47 andrew Exp $ */
+/* $Id: xml.h,v 1.20 2005/02/25 10:35:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,6 +169,8 @@ extern crm_data_t *add_node_copy(
  *
  */
 extern crm_data_t *file2xml(FILE *input);
+
+extern crm_data_t *stdin2xml(void);
 
 /*
  * Read in the contents of a string and produce an XML fragment (it will
