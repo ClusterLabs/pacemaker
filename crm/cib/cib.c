@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.51 2004/09/20 12:18:17 andrew Exp $ */
+/* $Id: cib.c,v 1.52 2004/09/21 19:14:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,9 +57,17 @@ startCib(const char *filename)
 
 
 xmlNodePtr
-get_cib_copy()
+get_cib_copy(void)
 {
 	return copy_xml_node_recursive(get_the_CIB());
+}
+
+xmlNodePtr
+cib_get_generation(void)
+{
+	xmlNodePtr generation = create_xml_node(NULL, "generation_tuple");
+	copy_in_properties(generation, get_the_CIB());
+	return generation;
 }
 
 /*
@@ -360,3 +368,10 @@ cib_op2string(enum cib_op operation)
 	
 	return operation_msg;
 }
+
+int
+compare_cib_generation(xmlNodePtr left, xmlNodePtr right)
+{
+	return 0;
+}
+
