@@ -491,6 +491,7 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 	output = get_message_xml(msg, F_CIB_CALLDATA);
 	
 	cib->op_callback(msg, call_id, rc, output);
+	free_xml(output);
 	
 	crm_trace("OP callback activated.");
 }
