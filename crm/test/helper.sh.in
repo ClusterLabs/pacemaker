@@ -61,6 +61,7 @@ ip_rsc_2=192.168.9.162
 
 logfile=/var/log/messages
 local_version=0
+crm_only=0
 
 if [ ! -z "$CRM_LOCAL_OPTS" ]; then
     echo "Checking $CRM_LOCAL_OPTS for local options"
@@ -81,6 +82,7 @@ while test "$done" = "0"; do
 	--stderr  | -e)	OUTPUT_STDERR=1; shift;;
 	--verbose | -v)	OUTPUT_CMDS=1; shift;;
 
+	--crm-only | -C) crm_only=1; shift;;
 	--local | -L)	local_version=1; shift;;
 
 	--logfile | -l)	logfile=${2?no logfile??}  || return 1;  shift 2;;
@@ -161,14 +163,14 @@ function stop_node()
     do_cmd echo Shutdown $a_node
     crm_log_pos=$(stat -L -c %s $logfile)
 
-    if [ "$down_cmd" = "crmd" ]; then
+    if [ $crm_only = 1 ]; then
 	do_cmd remote_cmd $CRMD_USER $a_node $HALIB_DIR/crmadmin -K $a_node
     else
 	do_cmd remote_cmd $INIT_USER $a_node $HALIB_DIR/heartbeat -k
     fi
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -t 120 \
 	-s "${a_node} crmd(.*)State transition" \
-	-s "${a_node} crmd(.*)State transition (.*) \-> \"S_STOPPING\"" \
+	-s "${a_node} crmd(.*)State transition (.*) \-> S_STOPPING" \
 	-s "${a_node} crmd(.*)\[crmd\] stopped" \
 	-e "${a_node} crmd(.*)Timer I_TERMINATE just popped"
     cts_assert "Shutdown of ${a_node} failed."

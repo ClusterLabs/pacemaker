@@ -40,13 +40,13 @@ start_node $test_node_1
 
 do_cmd echo "Analyse CRMd startup"
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 90 \
-    -s "crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
-    -s "crmd(.*) State transition (.*) \-> \"S_INTEGRATION\"" 
+    -s "crmd(.*) State transition (.*) \-> S_ELECTION" \
+    -s "crmd(.*) State transition (.*) \-> S_INTEGRATION" 
 cts_assert "DC election on ${test_node_1} failed."
 
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 500 \
     -s "Updating node state to member for ${test_node_1}" \
-    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
+    -s "crmd(.*) State transition (.*) \-> S_IDLE" 
 cts_assert "IDLE and CRMd join on ${test_node_1} failed."
 
 do_cmd wait_for_state S_IDLE 30 $test_node_1 
@@ -68,7 +68,7 @@ node_xml="<rsc_location id=\\\"${uuid1}\\\" rsc=\\\"${rsc}\\\">
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_constraint_adv $test_node_1 $node_xml
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 100 \
-    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+    -s "crmd(.*) State transition (.*) \-> S_IDLE"
 #cts_assert Adding constraint1 did not pass
 
 #----
@@ -87,7 +87,7 @@ node_xml="<rsc_location id=\\\"${uuid1}\\\" rsc=\\\"${rsc}\\\">
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_constraint_adv $test_node_1 $node_xml
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 100 \
-    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+    -s "crmd(.*) State transition (.*) \-> S_IDLE"
 #cts_assert Adding constraint2 did not pass
 
 #----
@@ -97,7 +97,7 @@ args="<nvpair name=\\\"1\\\" value=\\\"${ip_rsc_1}\\\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - - $args
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 200 \
-    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) State transition (.*) \-> S_IDLE" \
     -s "crmd(.*) Performing op start(.*) on rsc1" \
     -s "crmd(.*) Resource state: rsc1(.*) after start"
 cts_assert Adding rsc1 did not pass
@@ -109,7 +109,7 @@ args="<nvpair name=\\\"1\\\" value=\\\"${ip_rsc_2}\\\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - - $args
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 200 \
-    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) State transition (.*) \-> S_IDLE" \
     -s "crmd(.*) Performing op start(.*) on rsc2" \
     -s "crmd(.*) Resource state: rsc2(.*) after start"
 cts_assert Adding rsc2 did not pass
@@ -146,11 +146,11 @@ start_node $test_node_2
 
 do_cmd echo "Analyse CRMd startup"
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 400 \
-    -s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
+    -s "${test_node_2} crmd(.*) State transition S_PENDING \-> S_NOT_DC" 
 cts_assert "CRMd startup on ${test_node_2} failed."
 
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2000 \
-    -s "${test_node_1} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
+    -s "${test_node_1} crmd(.*) State transition(.*) \-> S_IDLE" \
     -s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2" \
     -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_2}"
 cts_assert "rsc2 was not transferred to ${test_node_2} on startup."
@@ -183,8 +183,8 @@ cts_assert "rsc2 NOT running on $test_node_2"
 stop_node $test_node_1 crmd
 
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2000 \
-    -s "${test_node_2} crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
-    -s "${test_node_1} crmd(.*) State transition (.*) \-> \"S_NOT_DC\""
+    -s "${test_node_2} crmd(.*) State transition (.*) \-> S_ELECTION" \
+    -s "${test_node_1} crmd(.*) State transition (.*) \-> S_NOT_DC"
 cts_assert "Transition of the DC from ${test_node_1} to ${test_node_2} failed."
 
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 4000 \

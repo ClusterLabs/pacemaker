@@ -38,13 +38,13 @@ start_node $test_node_1
 
 do_cmd echo "Analyse CRMd startup"
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 90 \
-    -s "crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
-    -s "crmd(.*) State transition (.*) \-> \"S_INTEGRATION\"" 
+    -s "crmd(.*) State transition (.*) \-> S_ELECTION" \
+    -s "crmd(.*) State transition (.*) \-> S_INTEGRATION" 
 cts_assert "DC election on ${test_node_1} failed."
 
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 900 \
     -s "Updating node state to member for ${test_node_1}" \
-    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
+    -s "crmd(.*) State transition (.*) \-> S_IDLE" 
 cts_assert "IDLE and CRMd join on ${test_node_1} failed."
 
 do_cmd wait_for_state S_IDLE 30 $test_node_1 
@@ -57,7 +57,7 @@ crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_constraint $test_node_1 rsc1 can
 cts_assert "Creation of first constraint failed."
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 120 \
-    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
+    -s "crmd(.*) State transition (.*) \-> S_IDLE" 
 #cts_assert S_IDLE not reached after first constraint created
 
 #----
@@ -67,7 +67,7 @@ crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_constraint $test_node_1 rsc2 can
 cts_assert "Creation of second constraint failed."
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 120 \
-    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
+    -s "crmd(.*) State transition (.*) \-> S_IDLE" 
 #cts_assert S_IDLE not reached after second constraint created
 
 #----
@@ -78,7 +78,7 @@ crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - - $args
 cts_assert "Creation of first resource failed."
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 300 \
-    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""  \
+    -s "crmd(.*) State transition (.*) \-> S_IDLE"  \
     -s "crmd(.*) Performing op start(.*) on rsc1" \
     -s "crmd(.*) Resource state: rsc1(.*) after start] on ${test_node_1}"
 cts_assert S_IDLE not reached after first resource created
@@ -91,7 +91,7 @@ crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - - $args
 cts_assert "Creation of second resource failed."
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 300 \
-    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""  \
+    -s "crmd(.*) State transition (.*) \-> S_IDLE"  \
     -s "crmd(.*) Performing op start(.*) on rsc2" \
     -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_1}"
 cts_assert S_IDLE not reached after second resource created

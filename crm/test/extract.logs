@@ -24,6 +24,6 @@ strip_tag="live.dot"
     grep "${strip_tag}:" "${filename}" | awk '{ FS="live.dot:"; print $2 }' > "${dirname}/${strip_tag}.${prefix}"
 strip_tag="cib.updates"
     echo Extracting ${strip_tag}...
-    grep "${strip_tag}:" "${filename}" | awk '{ FS="live.dot:"; print $2 }' > "${dirname}/${strip_tag}.${prefix}"
+    grep "${strip_tag}:" "${filename}" | awk '{ FS="cib.updates:"; print $2 }' > "${dirname}/${strip_tag}.${prefix}"
 #done
 

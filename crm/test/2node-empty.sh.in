@@ -40,7 +40,7 @@ start_node $test_node_1
 
 do_cmd echo "Analyse CRMd startup"
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 1500 \
-    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+    -s "crmd(.*) State transition (.*) \-> S_IDLE"
 cts_assert "CRMd startup on ${test_node_1} failed."
 
 do_cmd wait_for_state S_IDLE 3 $test_node_1 
@@ -67,8 +67,8 @@ start_node $test_node_2
 
 do_cmd echo "Analyse CRMd startup"
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
-    -s "${test_node_1} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
-    -s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
+    -s "${test_node_1} crmd(.*) State transition(.*) \-> S_IDLE" \
+    -s "${test_node_2} crmd(.*) State transition S_PENDING \-> S_NOT_DC" 
 cts_assert "CRMd on ${test_node_2} did not join the cluster."
 
 #----
@@ -91,8 +91,8 @@ cts_assert "$test_node_1 is supposed to be the DC"
 stop_node $test_node_1 crmd
 
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
-    -s "${test_node_2} crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
-    -s "${test_node_1} crmd(.*) State transition (.*) \-> \"S_NOT_DC\""
+    -s "${test_node_2} crmd(.*) State transition (.*) \-> S_ELECTION" \
+    -s "${test_node_1} crmd(.*) State transition (.*) \-> S_NOT_DC"
 cts_assert "Transition of the DC from ${test_node_1} to ${test_node_2} failed."
 
 #----

@@ -66,7 +66,7 @@ function 2node_fail_test() {
     do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 5000 \
 	-s "${test_node_1} crmd(.*) info:(.*)FSA Hostname: ${test_node_1}" \
-	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+	-s "crmd(.*) State transition (.*) \-> S_IDLE"
     cts_assert "CRMd startup on ${test_node_1} failed."
 
     do_cmd wait_for_state S_IDLE 3 $test_node_1 
@@ -88,7 +88,7 @@ function 2node_fail_test() {
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd make_constraint_adv $test_node_1 $node_xml
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
-	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+	-s "crmd(.*) State transition (.*) \-> S_IDLE"
     cts_assert Adding constraint1 did not pass
 
 #----
@@ -107,7 +107,7 @@ function 2node_fail_test() {
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd make_constraint_adv $test_node_1 $node_xml
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
-	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+	-s "crmd(.*) State transition (.*) \-> S_IDLE"
     cts_assert Adding constraint2 did not pass
 
 #----
@@ -117,7 +117,7 @@ function 2node_fail_test() {
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - ignore $args
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
-	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+	-s "crmd(.*) State transition (.*) \-> S_IDLE" \
 	-s "crmd(.*) Performing op start(.*) on rsc1" \
 	-s "crmd(.*) Resource state: rsc1(.*) after start"
     cts_assert Adding rsc1 did not pass
@@ -129,7 +129,7 @@ function 2node_fail_test() {
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - ignore $args
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
-	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+	-s "crmd(.*) State transition (.*) \-> S_IDLE" \
 	-s "crmd(.*) Performing op start(.*) on rsc2" \
 	-s "crmd(.*) Resource state: rsc2(.*) after start"
     cts_assert Adding rsc2 did not pass
@@ -176,11 +176,11 @@ function 2node_fail_test() {
     do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
 	-s "${test_node_2} crmd(.*)FSA Hostname: ${test_node_2}" \
-	-s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
+	-s "${test_node_2} crmd(.*) State transition S_PENDING \-> S_NOT_DC" 
     cts_assert "CRMd startup on ${test_node_2} failed."
 
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 8000 \
-	-s "${test_node_1} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
+	-s "${test_node_1} crmd(.*) State transition(.*) \-> S_IDLE" \
 	-s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2" \
 	-s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_2}"
     cts_assert "rsc2 was not transferred to ${test_node_2} on startup."
@@ -219,15 +219,15 @@ function 2node_fail_test() {
 	do_cmd echo Killed the DC... checking for DC Failover
 	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 90000 \
 	    -s "${good_node} crmd(.*) State transition" \
-	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
-	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
+	    -s "${good_node} crmd(.*) State transition (.*) \-> S_ELECTION" \
+	    -s "${good_node} crmd(.*) State transition (.*) \-> S_IDLE" 
 	cts_assert "Transition of the DC from ${fail_node} to ${good_node} failed."
     else
 	do_cmd echo Killed slave node... checking the DC noticed
 	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 90000 \
 	    -s "${good_node} crmd(.*) State transition" \
-	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_POLICY_ENGINE\"" \
-	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_IDLE\""
+	    -s "${good_node} crmd(.*) State transition (.*) \-> S_POLICY_ENGINE" \
+	    -s "${good_node} crmd(.*) State transition (.*) \-> S_IDLE"
 	cts_assert "Failure of slave node ${fail_node} was not noticed on the DC (${good_node})."    
     fi
 
@@ -279,12 +279,12 @@ function 2node_fail_test() {
 	do_cmd remote_cmd $CRMD_USER $fail_node $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
 	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 20000 \
 	    -s "${fail_node} crmd(.*)FSA Hostname: ${fail_node}" \
-	    -s "${fail_node} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
+	    -s "${fail_node} crmd(.*) State transition S_PENDING \-> S_NOT_DC" 
 	cts_assert "CRMd startup on ${fail_node} failed."
 
 	do_cmd echo "Checking ${moved_rsc} was moved back"
 	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 20000 \
-	    -s "${good_node} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
+	    -s "${good_node} crmd(.*) State transition(.*) \-> S_IDLE" \
 	    -s "${fail_node} crmd(.*) Performing op start(.*) on ${moved_rsc}" \
 	    -s "crmd(.*) Resource state: ${moved_rsc}(.*) after start] on ${fail_node}"
 	cts_assert "$moved_rsc was not transferred to ${fail_node} on startup."
@@ -321,6 +321,7 @@ while [ $iteration -lt $repeats ]; do
     echo -ne "\033]0;$test_type : Iteration $iteration of $repeats\007"
     echo "########### $test_type : Begining iteration $iteration of $repeats ###########"
 (
+    2node_fail_test 2node__failback_DC_All    "heartbeat ccm lrmd crmd" ${test_node_1} ${test_node_2} 1 0
 
     2node_fail_test 2node__fail_DC_All        "heartbeat ccm lrmd crmd" ${test_node_1} ${test_node_2} 0 0
     2node_fail_test 2node__fail_slave_All     "heartbeat ccm lrmd crmd" ${test_node_2} ${test_node_1} 0 0
