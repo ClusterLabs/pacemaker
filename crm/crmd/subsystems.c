@@ -33,7 +33,10 @@
 #include <sys/time.h>	// for getrlimit
 #include <sys/resource.h>// for getrlimit
 
+#include <crm/common/crmutils.h>
 #include <crm/common/ipcutils.h>
+#include <crm/common/msgutils.h>
+
 #include <crm/msg_xml.h>
 #include <crm/common/xmlutils.h>
 
@@ -757,11 +760,33 @@ do_lrm_invoke(long long action,
 	// only the first 16 chars are used by the LRM
 	strncpy(rid, id_from_cib, 16);
 	
+
+	const char *crm_op = get_xml_attr(msg, XML_TAG_OPTIONS, "operation", TRUE);
+
 	lrm_rsc_t *rsc = fsa_lrm_conn->lrm_ops->get_rsc(
 		fsa_lrm_conn, rid);
 	
-	
-	if(operation != NULL && strcmp(operation, "monitor") == 0) {
+	if(crm_op != NULL && strcmp(crm_op, "lrm_query") == 0) {
+
+		xmlNodePtr data, tmp1, tmp2, reply;
+
+		tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
+		set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
+		
+		data = create_cib_fragment(tmp1, NULL);
+
+		tmp2 = do_lrm_startup_query();
+		add_node_copy(tmp1, tmp2);
+
+		reply = create_reply(msg, data);
+
+		relay_message(reply, TRUE);
+
+		free_xml(reply);
+		free_xml(tmp2);
+		free_xml(tmp1);
+
+	} else if(operation != NULL && strcmp(operation, "monitor") == 0) {
 		if(rsc == NULL) {
 			cl_log(LOG_ERR, "Could not find resource to monitor");
 			FNRET(I_FAIL);
@@ -872,9 +897,15 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	iter = create_xml_node(iter, "lrm_resource");
 	
 	set_xml_property_copy(iter, XML_ATTR_ID, rsc->id);
-//	set_xml_property_copy(iter, "op_status", status);
-//	set_xml_property_copy(iter, "op_code", rc);
 	set_xml_property_copy(iter, "last_op", op_type);
+	
+	char *tmp = crm_itoa(status);
+	set_xml_property_copy(iter, "op_status", tmp);
+	cl_free(tmp);
+	
+	tmp = crm_itoa(rc);
+	set_xml_property_copy(iter, "op_code", tmp);
+	cl_free(tmp);
 
 	send_cib_status_update(update, FALSE);
 	free_xml(update);
