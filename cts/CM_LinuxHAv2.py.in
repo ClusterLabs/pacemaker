@@ -353,7 +353,7 @@ class LinuxHAv2(HeartbeatCM):
         return rc
 
     def Configuration(self):
-        if 0!=self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],"%s/cts_cib.xml"%self["TmpDir"]):
+        if 0!=self.rsh.cp("root@"+self["CIBfile"]%self.Env["nodes"][0],"%s/cts_cib.xml"%self["TmpDir"]):
             raise ValueError("Can not copy file to %s, maybe permission denied"%self["TmpDir"])
         cib=parse("%s/cts_cib.xml"%self["TmpDir"])
         return cib.getElementsByTagName('configuration')[0]
