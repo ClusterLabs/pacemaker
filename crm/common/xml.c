@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.36 2005/02/19 18:11:03 andrew Exp $ */
+/* $Id: xml.c,v 1.37 2005/02/20 14:34:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -364,18 +364,25 @@ create_xml_node(crm_data_t *parent, const char *name)
 }
 
 void
-unlink_xml_node(crm_data_t *node)
+free_xml_from_parent(crm_data_t *parent, crm_data_t *a_node)
 {
+	CRM_DEV_ASSERT(parent != NULL);
+	if(parent == NULL) {
+		return;
+	} else if(a_node == NULL) {
+		return;
+	}
+	crm_validate_data(parent);
 #ifdef USE_LIBXML	
-	xmlUnlinkNode(node);
-	/* this helps us with frees and really should be being done by
-	 * the library call
-	 */
+	xmlUnlinkNode(a_node);
 	node->doc = NULL;
+	free_xml_fn(a_node);
 #else
-	abort();
+	cl_msg_remove_value(parent, a_node);	
 #endif
+	crm_validate_data(parent);
 }
+
 
 void
 free_xml_fn(crm_data_t *a_node)
@@ -391,16 +398,15 @@ free_xml_fn(crm_data_t *a_node)
 		xmlFreeNode(a_node);
 #else
 	} else {
-		crm_data_t *parent = NULL;
+		int has_parent = 0;
 		crm_validate_data(a_node);
-		parent = crm_element_parent(a_node);
-		if(parent != NULL) {
-			/* delete it from the parent */
-			crm_validate_data(parent);
-			cl_msg_remove_value(parent, a_node);
-			crm_validate_data(parent);
+		ha_msg_value_int(a_node, XML_ATTR_PARENT, &has_parent);
 
-		} else {
+		/* there is no way in hell we should be deleting anything
+		 * with a parent and without the parent knowning
+		 */
+		CRM_DEV_ASSERT(has_parent == 0);
+		if(has_parent == 0) {
 			crm_validate_data(a_node);
 			crm_msg_del(a_node);
 		}
@@ -1196,33 +1202,19 @@ crm_validate_data(const crm_data_t *xml_root)
 }
 
 
-crm_data_t *
-crm_element_parent(crm_data_t *data)
-{
-#ifdef USE_LIBXML
-	return (data?data->parent:NULL);
-#else
-	crm_data_t *parent = NULL;
-	ha_msg_value_int(data, XML_ATTR_PARENT, (int*)&parent);
-	return parent;
-#endif
-}
-
 /* FIXME!! This whole function is evil!! */
 void
 crm_set_element_parent(crm_data_t *data, crm_data_t *parent)
 {
 #ifdef USE_LIBXML
-	if(data != NULL) {
-		data->parent = parent;
-	}
+	CRM_DEV_ASSERT(FALSE/* not implemented*/);  
 #else
 	crm_validate_data(data);
 	if(parent != NULL) {
-		ha_msg_mod_int(data, XML_ATTR_PARENT, GPOINTER_TO_INT(parent));
+		ha_msg_mod_int(data, XML_ATTR_PARENT, 1);
 		
 	} else if(cl_get_string(data, XML_ATTR_PARENT) != NULL) {
-		cl_msg_remove(data, XML_ATTR_PARENT);
+		ha_msg_mod_int(data, XML_ATTR_PARENT, 0);
 	}
 #endif
 }
