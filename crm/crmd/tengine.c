@@ -71,9 +71,10 @@ do_te_control(long long action,
 /* 		} */
 	
 	if(action & stop_actions) {
-		if(stop_subsystem(this_subsys) == FALSE)
-			result = I_FAIL;
-		else if(this_subsys->pid > 0){
+		if(stop_subsystem(this_subsys) == FALSE) {
+			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+
+		} else if(this_subsys->pid > 0) {
 			lpc = CLIENT_EXIT_WAIT;
 			pid_status = -1;
 			while(lpc-- > 0 && this_subsys->pid > 0) {
@@ -91,7 +92,7 @@ do_te_control(long long action,
 			if(this_subsys->pid != -1) {
 				crm_err("Proc %s is still active with pid=%d",
 				       this_subsys->name, this_subsys->pid);
-				result = I_FAIL;
+				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 			} 
 		}
 
@@ -102,7 +103,7 @@ do_te_control(long long action,
 
 		if(cur_state != S_STOPPING) {
 			if(start_subsystem(this_subsys) == FALSE) {
-				result = I_FAIL;
+				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 				cleanup_subsystem(this_subsys);
 			}
 		} else {
@@ -142,7 +143,7 @@ do_te_invoke(long long action,
 			send_request(cmd, NULL);
 
 		} else {
-			ret = I_FAIL;
+			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		}
 	
 	} else if(action & A_TE_CANCEL) {

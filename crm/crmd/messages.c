@@ -62,6 +62,25 @@ ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
 int last_data_id = 0;
 
 void
+register_fsa_error_adv(
+	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
+	fsa_data_t *cur_data, void *new_data, const char *raised_from)
+{
+	/* save the current actions */
+	register_fsa_input_adv(cur_data?cur_data->fsa_cause:C_FSA_INTERNAL,
+			       I_NULL, cur_data?cur_data->data:NULL,
+			       fsa_actions, FALSE, __FUNCTION__);
+	
+	/* reset the action list */
+	fsa_actions = A_NOTHING;
+
+	/* register the error */
+	register_fsa_input_adv(
+		cause, input, new_data, A_NOTHING, FALSE, raised_from);
+}
+
+
+void
 register_fsa_input_adv(
 	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 	void *data, long long with_actions,
@@ -322,7 +341,7 @@ do_msg_route(long long action,
 {
 	enum crmd_fsa_input result = I_NULL;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-	gboolean routed = FALSE, defer = TRUE, do_process = TRUE;
+	gboolean routed = FALSE;
 
 	if(msg_data->fsa_cause != C_IPC_MESSAGE
 	   && msg_data->fsa_cause != C_HA_MESSAGE) {
@@ -331,48 +350,44 @@ do_msg_route(long long action,
 		return I_NULL;
 	}
 
-	if(do_process) {
-		/* try passing the buck first */
-		crm_trace("Attempting to route message");
-		routed = relay_message(input->msg, cause==C_IPC_MESSAGE);
-
-		if(routed == FALSE) {
-			crm_trace("Message wasn't routed... try handling locally");
-
-			defer = TRUE;
-			/* calculate defer */
-			result = handle_message(input);
-			switch(result) {
-				case I_NULL:
-					defer = FALSE;
-					break;
-				case I_DC_HEARTBEAT:
-					defer = FALSE;
-					break;
-				case I_CIB_OP:
-					defer = FALSE;
-					break;
-					
-					/* what else should go here? */
-				default:
-					crm_trace("Defering local processing of message");
-					register_fsa_input_later(
-						cause, result, msg_data->data);
-
-					result = I_NULL;
-					break;
-			}
-			if( ! defer ) {
-				crm_trace("Message processed");
-			}
+	/* try passing the buck first */
+	crm_trace("Attempting to route message");
+	routed = relay_message(input->msg, cause==C_IPC_MESSAGE);
+	
+	if(routed == FALSE) {
+		crm_trace("Message wasn't routed... try handling locally");
+		
+		/* calculate defer */
+		result = handle_message(input);
+		switch(result) {
+			case I_NULL:
+				break;
+			case I_DC_HEARTBEAT:
+				break;
+			case I_CIB_OP:
+				break;
+				
+				/* what else should go here? */
+			default:
+				crm_trace("Defering local processing of message");
+				register_fsa_input_later(
+					cause, result, msg_data->data);
+				
+				result = I_NULL;
+				break;
+		}
+		if(result == I_NULL) {
+			crm_trace("Message processed");
 			
 		} else {
-			crm_trace("Message routed...");
-			input->msg = NULL;
-		} 
+			register_fsa_input(cause, result, msg_data->data);
+		}
+		
+	} else {
+		crm_trace("Message routed...");
+		input->msg = NULL;
 	}
-	
-	return result;
+	return I_NULL;
 }
 
 
@@ -720,6 +735,7 @@ handle_request(ha_msg_input_t *stored_msg)
 
 		/* Sometimes we _must_ go into S_ELECTION */
 		if(fsa_state == S_HALT) {
+			crm_debug("Forcing an election from S_HALT");
 			next_input = I_ELECTION;
 #if 0
 		} else if(AM_I_DC) {
@@ -777,6 +793,8 @@ handle_request(ha_msg_input_t *stored_msg)
 
 		if(dc_match || fsa_our_dc == NULL) {
 			if(strcmp(op, CRM_OP_HBEAT) == 0) {
+				crm_debug("Received DC heartbeat from %s",
+					  host_from);
 				next_input = I_DC_HEARTBEAT;
 				
 			} else if(fsa_our_dc == NULL) {
@@ -941,7 +959,7 @@ handle_shutdown_request(HA_Message *stored_msg)
 
 	/* will be picked up by the TE as long as its running */
 	if(! is_set(fsa_input_register, R_TE_CONNECTED) ) {
-		return I_PE_CALC;
+		register_fsa_input(C_HA_MESSAGE, I_PE_CALC, NULL);
 	}
 	return I_NULL;
 }
@@ -1008,7 +1026,7 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 	}
 	
 #ifdef MSG_LOG
-	crm_log_message_adv(log_level, DEVEL_DIR"/outbound.log", msg);
+	crm_log_message_adv(log_level, "outbound.log", msg);
 #endif
 
 	crm_msg_del(msg);

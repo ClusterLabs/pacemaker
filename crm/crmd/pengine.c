@@ -67,7 +67,7 @@ do_pe_control(long long action,
 	if(action & stop_actions) {
 		crm_info("Stopping %s", this_subsys->name);
 		if(stop_subsystem(this_subsys) == FALSE) {
-			result = I_FAIL;
+			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 			
 		} else if(this_subsys->pid > 0) {
 			int lpc = CLIENT_EXIT_WAIT;
@@ -87,7 +87,7 @@ do_pe_control(long long action,
 			if(this_subsys->pid != -1) {
 				crm_err("Proc %s is still active with pid=%d",
 				       this_subsys->name, this_subsys->pid);
-				result = I_FAIL;
+				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 			} 
 		}
 
@@ -99,7 +99,7 @@ do_pe_control(long long action,
 		if(cur_state != S_STOPPING) {
 			crm_info("Starting %s", this_subsys->name);
 			if(start_subsystem(this_subsys) == FALSE) {
-				result = I_FAIL;
+				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 				cleanup_subsystem(this_subsys);
 			}
 		} else {

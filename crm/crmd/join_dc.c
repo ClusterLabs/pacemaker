@@ -249,7 +249,8 @@ do_dc_join_req(long long action,
 		crm_free(local_from);
 		crm_free(local_down);
 		
-		return I_FAIL;
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		return I_NULL;
 
 	} else if(/* some reason */ 0) {
 		/* NACK this client */
@@ -305,7 +306,8 @@ do_dc_join_finalize(long long action,
 		if(rc != cib_ok) {
 			crm_err("Sync from %s resulted in an error: %s",
 				max_generation_from, cib_error2string(rc));
-			return I_FAIL;
+			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+			return I_NULL;
 		}
 	}
 
@@ -367,7 +369,8 @@ do_dc_join_ack(long long action,
 	if(join_state == NULL) {
 		crm_err("Join not in progress: ignoring join from %s",
 			join_from);
-		return I_FAIL;
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		return I_NULL;
 		
 	} else if(safe_str_neq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		crm_err("Node %s wasnt invited to join the cluster",join_from);

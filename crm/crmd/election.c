@@ -26,6 +26,7 @@
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
+#include <clplumbing/Gmain_timeout.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -82,9 +83,10 @@ do_election_vote(long long action,
 	} else if(not_voting) {
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		if(AM_I_DC) {
-			return I_RELEASE_DC;
+			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
+
 		} else {
-			return I_NOT_DC;
+			register_fsa_input(C_FSA_INTERNAL, I_NOT_DC, NULL);
 		}
 	}
 
@@ -95,19 +97,22 @@ do_election_vote(long long action,
 }
 
 char *dc_hb_msg = NULL;
+int beat_num = 0;
 
 gboolean
 do_dc_heartbeat(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
-/*	crm_debug("#!!#!!# Heartbeat timer just popped!"); */
+	crm_debug("Sending DC Heartbeat %d", beat_num);
 	HA_Message *msg = ha_msg_new(5); 
 	ha_msg_add(msg, F_TYPE,		T_CRM);
 	ha_msg_add(msg, F_SUBTYPE,	XML_ATTR_REQUEST);
 	ha_msg_add(msg, F_CRM_SYS_TO,   CRM_SYSTEM_CRMD);
 	ha_msg_add(msg, F_CRM_SYS_FROM, CRM_SYSTEM_DC);
 	ha_msg_add(msg, F_CRM_TASK,	CRM_OP_HBEAT);
+	ha_msg_add_int(msg, "dc_beat_seq", beat_num);
+	beat_num++;
 
 	if(send_msg_via_ha(fsa_cluster_conn, msg) == FALSE) {
 		/* this is bad */
@@ -214,7 +219,8 @@ do_election_count_vote(long long action,
 		}
 	}
 
-	return election_result;
+	register_fsa_input(C_FSA_INTERNAL, election_result, NULL);
+	return I_NULL;
 }
 
 /*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT 	*/
@@ -259,8 +265,16 @@ do_dc_takeover(long long action,
 	clear_bit_inplace(fsa_input_register, R_CIB_DONE);
 	clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 
-	startTimer(dc_heartbeat);
-
+	if(dc_heartbeat->source_id == (guint)-1
+	   || dc_heartbeat->source_id == (guint)-2) {
+		crm_debug("Starting DC Heartbeat timer");
+		dc_heartbeat->source_id = Gmain_timeout_add_full(
+			G_PRIORITY_HIGH, dc_heartbeat->period_ms,
+			dc_heartbeat->callback, dc_heartbeat, NULL);
+	} else {
+		crm_debug("DC Heartbeat timer already active");
+	}
+	
 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none);
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
 
@@ -300,8 +314,8 @@ do_dc_takeover(long long action,
 		
 	} else 	if(rc != cib_ok) {
 		crm_err("DC UUID update failed: %s", cib_error2string(rc));
-		result = I_FAIL;
-
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		return I_NULL;
 	}
 	
 	free_xml(update);
@@ -337,8 +351,7 @@ do_dc_release(long long action,
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 
 		if(cur_state == S_STOPPING) {
-			result = I_SHUTDOWN; /* necessary? */
-			result = I_RELEASE_SUCCESS;
+			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
 		}
 #if 0
 		else if( are there errors ) {
@@ -348,7 +361,7 @@ do_dc_release(long long action,
 		}
 #endif
 		else {
-			result = I_RELEASE_SUCCESS;
+			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
 		}
 		
 	} else {

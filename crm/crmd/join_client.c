@@ -64,7 +64,8 @@ do_cl_join_announce(long long action,
 
 		if(hb_from == NULL) {
 			crm_err("Failed to determin origin of hb message");
-			return I_FAIL;
+			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+			return I_NULL;
 		}
 
 		if(fsa_our_dc == NULL) {
@@ -159,7 +160,8 @@ do_cl_join_request(long long action,
 	
 		return I_NULL;
 	}
-	return I_FAIL;
+	register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+	return I_NULL;
 }
 
 /*	A_CL_JOIN_RESULT	*/
@@ -191,7 +193,8 @@ do_cl_join_result(long long action,
 	
 	if(was_nack) {
 		crm_err("Join with %s failed.  NACK'd", welcome_from);
-		return I_ERROR;
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+		return I_NULL;
 	}
 	
 	/* send our status section to the DC */
@@ -203,14 +206,15 @@ do_cl_join_result(long long action,
 		send_msg_via_ha(fsa_cluster_conn, reply);
 		
 		free_xml(tmp1);
+
+		if(AM_I_DC == FALSE) {
+			register_fsa_input(cause, I_NOT_DC, NULL);
+		}
 		
 	} else {
 		crm_err("Could send our LRM state to the DC");
-		return I_FAIL;
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 	}
 
-	if(AM_I_DC == FALSE) {
-		register_fsa_input(cause, I_NOT_DC, NULL);
-	}
 	return I_NULL;
 }

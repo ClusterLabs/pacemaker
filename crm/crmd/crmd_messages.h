@@ -29,6 +29,12 @@ extern void *fsa_typed_data_adv(
 
 #define fsa_typed_data(x) fsa_typed_data_adv(msg_data, x, __FUNCTION__)
 
+extern void register_fsa_error_adv(
+	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
+	fsa_data_t *cur_data, void *new_data, const char *raised_from);
+
+#define register_fsa_error(cause, input, new_data) register_fsa_error_adv(cause, input, msg_data, new_data, __FUNCTION__)
+
 extern void register_fsa_input_adv(
 	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 	void *data, long long with_actions,

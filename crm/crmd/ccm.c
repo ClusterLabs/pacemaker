@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.50 2005/02/10 11:08:11 andrew Exp $ */
+/* $Id: ccm.c,v 1.51 2005/02/15 07:56:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -116,7 +116,8 @@ do_ccm_control(long long action,
 			} else {
 				crm_err("CCM Activation failed %d (max) times",
 					num_ccm_register_fails);
-				return I_FAIL;
+				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+				return I_NULL;
 			}
 		}
 		
@@ -154,10 +155,12 @@ do_ccm_event(long long action,
 	
 	if(ccm_data == NULL) {
 		crm_err("No data provided to FSA function");
-		return I_FAIL;
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		return I_NULL;
 
 	} else if(msg_data->fsa_cause != C_CCM_CALLBACK) {
 		crm_err("FSA function called in response to incorect input");
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		return I_NULL;
 	}
 
@@ -250,7 +253,8 @@ do_ccm_update_cache(long long action,
 
 	if(ccm_data == NULL) {
 		crm_err("No data provided to FSA function");
-		return I_FAIL;
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		return I_NULL;
 	}
 
 	event = ccm_data->event;
@@ -277,7 +281,8 @@ do_ccm_update_cache(long long action,
 
 	if(membership_copy == NULL) {
 		crm_crit("Couldnt create membership copy - out of memory");
-		return I_ERROR;
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+		return I_NULL;
 	}
 
 	crm_debug("Copying members");

@@ -82,10 +82,12 @@ do_cib_control(long long action,
 					  fsa_cib_conn, T_CIB_UPDATE_CONFIRM,
 					  crmd_update_confirm) != cib_ok) {
 				crm_err("Could not set notify callback");
+
 			} else if(fsa_cib_conn->cmds->set_connection_dnotify(
 					  fsa_cib_conn,
 					  crmd_cib_connection_destroy)!=cib_ok){
 				crm_err("Could not set dnotify callback");
+
 			} else {
 				set_bit_inplace(
 					fsa_input_register, R_CIB_CONNECTED);
@@ -102,7 +104,8 @@ do_cib_control(long long action,
 					crm_err("Could complete CIB"
 						" registration  %d times..."
 						" hard error", cib_retries);
-					result = I_ERROR;
+					register_fsa_error(
+						C_FSA_INTERNAL, I_ERROR, NULL);
 				}
 			} else {
 				cib_retries = 0;
@@ -154,7 +157,8 @@ do_cib_invoke(long long action,
 		crm_xml_devel(cib_msg->xml, "[CIB update]");
 		if(op == NULL) {
 			crm_err("Invalid CIB Message");
-			return I_ERROR;
+			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+			return I_NULL;
 		}
 		
 		rc = fsa_cib_conn->cmds->variant_op(

@@ -154,10 +154,8 @@ do_lrm_control(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input failed = I_FAIL;
 	int ret = HA_OK;
 
-	
 	if(action & A_LRM_DISCONNECT) {
 		if(fsa_lrm_conn) {
 			fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
@@ -168,17 +166,21 @@ do_lrm_control(long long action,
 	if(action & A_LRM_CONNECT) {
 	
 		crm_trace("LRM: connect...");
-
+		ret = HA_OK;
+		
 		monitors = g_hash_table_new(g_str_hash, g_str_equal);
 
 		fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
 		if(NULL == fsa_lrm_conn) {
-			return failed;
+			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+			ret = HA_FAIL;
 		}
-		
-		crm_trace("LRM: sigon...");
-		ret = fsa_lrm_conn->lrm_ops->signon(
-			fsa_lrm_conn, CRM_SYSTEM_CRMD);
+
+		if(ret == HA_OK) {
+			crm_trace("LRM: sigon...");
+			ret = fsa_lrm_conn->lrm_ops->signon(
+				fsa_lrm_conn, CRM_SYSTEM_CRMD);
+		}
 		
 		if(ret != HA_OK) {
 			if(++num_lrm_register_fails < max_lrm_register_fails) {
@@ -190,21 +192,23 @@ do_lrm_control(long long action,
 				startTimer(wait_timer);
 				crmd_fsa_stall();
 				return I_NULL;
+			}
+		}
 
-			} else {
-				crm_err("Failed to sign on to the LRM %d"
-					" (max) times", num_lrm_register_fails);
-				register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+		if(ret == HA_OK) {
+			crm_trace("LRM: set_lrm_callback...");
+			ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(
+				fsa_lrm_conn, lrm_op_callback);
+			if(ret != HA_OK) {
+				crm_err("Failed to set LRM callbacks");
 			}
 		}
 		
-		crm_trace("LRM: set_lrm_callback...");
-		ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(
-			fsa_lrm_conn, lrm_op_callback);
-		
 		if(ret != HA_OK) {
-			crm_err("Failed to set LRM callbacks");
-			return failed;
+			crm_err("Failed to sign on to the LRM %d"
+				" (max) times", num_lrm_register_fails);
+			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+			return I_NULL;
 		}
 
 		/* TODO: create a destroy handler that causes
@@ -238,6 +242,8 @@ build_suppported_RAs(crm_data_t *metadata_list, crm_data_t *xml_agent_list)
 	GList *classes          = NULL;
 	const char *version     = NULL;
 	crm_data_t *xml_agent    = NULL;
+	
+/* 	return TRUE; */
 	
 	if(fsa_lrm_conn == NULL) {
 		return FALSE;
@@ -335,7 +341,6 @@ build_active_RAs(crm_data_t *rsc_list)
 	GList *lrm_list = NULL;
 	gboolean found_op = FALSE;
 		
-
 	state_flag_t cur_state = 0;
 	const char *this_op    = NULL;
 	char *tmp = NULL;
@@ -544,6 +549,7 @@ do_lrm_rsc_op(
 	lrm_op_t* op        = NULL;
 	int call_id         = 0;
 	int action_timeout  = 0;
+	fsa_data_t *msg_data = NULL;
 
 	const char *type = NULL;
 	const char *class = NULL;
@@ -576,7 +582,8 @@ do_lrm_rsc_op(
 	
 	if(rsc == NULL) {
 		crm_err("Could not add resource to LRM");
-		return I_FAIL;
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		return I_NULL;
 	}
 
 	if(timeout) {
@@ -632,7 +639,8 @@ do_lrm_rsc_op(
 	
 	if(call_id <= 0) {
 		crm_err("Operation %s on %s failed", operation, rid);
-		return I_FAIL;
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		return I_NULL;
 	}
 	
 	if(safe_str_eq(operation, CRMD_RSCSTATE_START)) {
@@ -809,7 +817,8 @@ do_lrm_event(long long action,
 	lrm_rsc_t* rsc = NULL;
 	
 	if(msg_data->fsa_cause != C_LRM_OP_CALLBACK) {
-		return I_FAIL;
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		return I_NULL;
 	}
 	
 	op = fsa_typed_data(fsa_dt_lrm);
