@@ -761,7 +761,7 @@ get_cib_copy(cib_t *cib)
 		crm_err("Couldnt retrieve the CIB");
 		return NULL;
 	}
-	return xml_cib;
+	return xml_cib->children;
 }
 
 xmlNodePtr
