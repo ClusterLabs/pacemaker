@@ -154,6 +154,7 @@ ll_lrm_t       *fsa_lrm_conn;
 long long       fsa_input_register;
 long long       fsa_actions = A_NOTHING;
 const char     *fsa_our_uname;
+const char     *fsa_our_dc;
 
 fsa_timer_t *election_trigger = NULL;		/*  */
 fsa_timer_t *election_timeout = NULL;		/*  */
@@ -425,11 +426,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 */
 		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_TE_COPYTO,		do_te_copyto)
-		ELSEIF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
 		ELSEIF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
 		ELSEIF_FSA_ACTION(A_RECOVER,		do_recover)
 		ELSEIF_FSA_ACTION(A_JOIN_ACK,		do_ack_welcome)
-		ELSEIF_FSA_ACTION(A_ANNOUNCE,		do_announce)
+		ELSEIF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_lrm_invoke)
+		ELSEIF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
 		ELSEIF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)
 		ELSEIF_FSA_ACTION(A_ELECT_TIMER_STOP,	do_election_timer_ctrl)
 		ELSEIF_FSA_ACTION(A_ELECT_TIMER_START,	do_election_timer_ctrl)
@@ -463,7 +464,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 * Make sure the CIB is always updated before invoking the
 		 * PE, and the PE before the TE
 		 */
-		ELSEIF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_lrm_invoke)
 		ELSEIF_FSA_ACTION(A_CIB_INVOKE_LOCAL,	do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_CIB_INVOKE,		do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_LRM_INVOKE,		do_lrm_invoke)
@@ -471,6 +471,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_TE_CANCEL,		do_te_invoke)
 		ELSEIF_FSA_ACTION(A_PE_INVOKE,		do_pe_invoke)
 		ELSEIF_FSA_ACTION(A_TE_INVOKE,		do_te_invoke)
+		ELSEIF_FSA_ACTION(A_ANNOUNCE,		do_announce)
 		
 		/* sub-system stop */
 		ELSEIF_FSA_ACTION(A_PE_STOP,		do_pe_control)
@@ -1028,37 +1029,53 @@ do_state_transition(long long actions,
 		    enum crmd_fsa_input current_input,
 		    void *data)
 {
-	long long tmp = A_NOTHING;
+	long long tmp = actions;
+	const char *state_from = fsa_state2string(cur_state);
+	const char *state_to   = fsa_state2string(next_state);
+	const char *input      = fsa_input2string(current_input);
 	
-	if(current_input != I_NULL
-	   && (current_input != I_DC_HEARTBEAT || cur_state != S_NOT_DC)){
-		const char *state_from = fsa_state2string(cur_state);
-		const char *state_to   = fsa_state2string(next_state);
-		const char *input      = fsa_input2string(current_input);
-			
-		time_t now = time(NULL);
+	time_t now = time(NULL);
+
+	if(cur_state == next_state) {
+		cl_log(LOG_ERR,
+		       "%s called in state %s with no transtion",
+		       __FUNCTION__, state_from);
+		return A_NOTHING;
+	}
+	
+	
+//	if(current_input != I_NULL
+//	   && (current_input != I_DC_HEARTBEAT || cur_state != S_NOT_DC)){
 		
 		fprintf(dot_strm,
 			"\t\"%s\" -> \"%s\" [ label =\"%s\" ] // %s",
 			state_from, state_to, input,
 			asctime(localtime(&now)));
 		fflush(dot_strm);
-	}
+		//}
+
+	cl_log(LOG_INFO,
+	       "State transition \"%s\" -> \"%s\" [ cause =\"%s\" %s ]",
+	       state_from, state_to, input, asctime(localtime(&now)));
 
 	switch(next_state) {
 		case S_PENDING:
+			break;
 		case S_NOT_DC:
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
-				tmp = set_bit(actions, A_SHUTDOWN_REQ);
+				cl_log(LOG_INFO,
+				       "(Re)Issuing shutdown request now"
+				       " that we have a new DC");
+				tmp = set_bit(tmp, A_SHUTDOWN_REQ);
 			}
-			tmp = clear_bit(actions, A_RECOVER);
+			tmp = clear_bit(tmp, A_RECOVER);
 			break;
 		case S_RECOVERY_DC:
 		case S_RECOVERY:
-			tmp = set_bit(actions, A_RECOVER);
+			tmp = set_bit(tmp, A_RECOVER);
 			break;
 		default:
-			tmp = clear_bit(actions, A_RECOVER);
+			tmp = clear_bit(tmp, A_RECOVER);
 			break;
 	}
 
