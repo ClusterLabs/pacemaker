@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.40 2005/02/25 15:25:36 andrew Exp $ */
+/* $Id: xml.c,v 1.41 2005/02/28 11:08:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -764,7 +764,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 	}
 
 	crm_validate_data(xml_node);
-	crm_xml_devel(xml_node, "Writing out");
+	crm_xml_trace(xml_node, "Writing out");
 	crm_validate_data(xml_node);
 	
 	now = time(NULL);
