@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.4 2004/09/21 19:22:00 andrew Exp $ */
+/* $Id: utils.c,v 1.5 2004/09/29 08:44:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -356,7 +356,7 @@ do_update_cib(xmlNodePtr xml_action, int status)
 	fprintf(msg_te_strm,
 		"[Result ]\tUpdate CIB with \"%s\" (%s): %s %s on %s\n",
 		status<0?"new action":"timeout",
-		xml_action->name, task, rsc_id, target);
+		xml_action->name, crm_str(task), rsc_id, target);
 	fprintf(msg_te_strm, "[Sent ]\t%s\n",
 		dump_xml_formatted(fragment));
 	fflush(msg_te_strm);
