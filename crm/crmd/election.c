@@ -53,11 +53,7 @@ do_election_vote(long long action,
 	} 
 #endif
 
-#ifdef CCM_UNAME
 	node_uname = fsa_membership_copy->members[0].node_uname;
-#else
-	node_uname = "";
-#endif
 
 	// set the "we won" timer
 	startTimer(election_timeout);
@@ -130,12 +126,8 @@ do_election_count_vote(long long action,
 	for(; (your_index < 0 && my_index < 0)
 		    || lpc < fsa_membership_copy->members_size; lpc++) {
 		
-#ifdef CCM_UNAME
 		const char *node_uname =
 			fsa_membership_copy->members[lpc].node_uname;
-#else
-		const char *node_uname = "";
-#endif
 		
 		if(node_uname != NULL) {
 			if(strcmp(vote_from, node_uname) == 0) {
@@ -147,10 +139,8 @@ do_election_count_vote(long long action,
 			}
 		}
 	}
-	
-/* 	cl_log(LOG_DEBUG, "%s (index=%d), our index (%d)", */
-/* 		   vote_from, your_index, my_index); */
 
+#if 0
 	cl_log(LOG_DEBUG, "%s (bornon=%d), our bornon (%d)",
 		   vote_from, your_born, my_born);
 
@@ -158,17 +148,18 @@ do_election_count_vote(long long action,
 	       fsa_our_uname,
 	       strcmp(fsa_our_uname, vote_from) < 0?"<":">=",
 	       vote_from);
-
+#endif
 	if(your_born < my_born) {
-		CRM_DEBUG("Election fail: born_on");
+		cl_log(LOG_DEBUG, "Election fail: born_on");
 		we_loose = TRUE;
 	} else if(your_born == my_born
 		  && strcmp(fsa_our_uname, vote_from) < 0) {
-		CRM_DEBUG("Election fail: uname");
+		cl_log(LOG_DEBUG, "Election fail: uname");
 		we_loose = TRUE;
 	} else {
 		CRM_DEBUG("We might win... we should vote (possibly again)");
-			
+
+#if 0
 		// do vote (it safe to call this multiple times)
 		election_result =
 			do_election_vote(action,
@@ -176,15 +167,17 @@ do_election_count_vote(long long action,
 					 cur_state,
 					 current_input,
 					 data);
+#else
+		election_result = I_DC_TIMEOUT; // vote again
+#endif
 	}
 
 	if(we_loose) {
-		CRM_DEBUG("We lost the election");
 		if(fsa_input_register & R_THE_DC) {
-			CRM_DEBUG("Give up the DC");
+			cl_log(LOG_DEBUG, "Give up the DC");
 			election_result = I_RELEASE_DC;
 		} else {
-			CRM_DEBUG("We werent the DC anyway");
+			cl_log(LOG_DEBUG, "We werent the DC anyway");
 			election_result = I_NOT_DC;
 		}
 		
@@ -331,13 +324,16 @@ do_send_welcome(long long action,
 		
 	} else if(action & A_JOIN_WELCOME) {
 		xmlNodePtr welcome = (xmlNodePtr)data;
-		xmlNodePtr options = find_xml_node(welcome, XML_TAG_OPTIONS);
-		set_xml_property_copy(options, XML_ATTR_OP, CRM_OPERATION_WELCOME);
+
+		set_xml_attr(welcome, XML_TAG_OPTIONS,
+			     XML_ATTR_OP, CRM_OPERATION_WELCOME, FALSE);
 
 		send_ha_reply(fsa_cluster_connection, welcome, NULL);
 
 		FNRET(I_NULL);
 	}
+
+// welcome everyone...
 	
 	members = fsa_membership_copy->members;
 	size = fsa_membership_copy->members_size;
@@ -411,12 +407,10 @@ do_ack_welcome(long long action,
 	} 
 #endif
 
-	xmlNodePtr msg_options = find_xml_node(welcome, XML_TAG_OPTIONS);
+	set_xml_attr(welcome, XML_TAG_OPTIONS,
+		     XML_ATTR_OP, CRM_OPERATION_JOINACK, FALSE);
 	
-	set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OPERATION_JOINACK);
-	
-	send_ha_reply(fsa_cluster_connection,
-		      welcome, NULL);
+	send_ha_reply(fsa_cluster_connection, welcome, NULL);
 	
 	FNRET(I_NULL);
 }
@@ -476,11 +470,7 @@ do_process_welcome_ack(long long action,
 	size = fsa_membership_copy->members_size;
 	
 	for(; lpc < size; lpc++) {
-#ifdef CCM_UNAME
 		const char *new_node = members[lpc].node_uname;
-#else
-		const char *new_node = "";
-#endif		
 		if(strcmp(join_from, new_node) == 0) {
 			is_a_member = TRUE;
 		}
@@ -513,6 +503,8 @@ do_process_welcome_ack(long long action,
 
 	send_request(msg_options, frag, CRM_OPERATION_STORE,
 		     join_from, CRM_SYSTEM_CIB);
+
+	free_xml(msg_options);
 	
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {
