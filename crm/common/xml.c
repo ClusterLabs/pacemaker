@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.7 2004/07/30 15:31:05 andrew Exp $ */
+/* $Id: xml.c,v 1.8 2004/08/03 08:50:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -886,11 +886,11 @@ write_xml_file(xmlNodePtr xml_node, const char *filename)
 		xmlSetTreeDoc(xml_node, foo);
 	}
 
-	time_t now = time(NULL);
-	char *now_str = asctime(localtime(&now));
-	set_xml_property_copy(xml_node, "last_written",now_str);
-	free(now_str);
-	
+	 char now_str[26];
+	 time_t now = time(NULL);
+	 ctime_r(&now, now_str);
+	 set_xml_property_copy(xml_node, "last_written",now_str);
+
 	/* save it.
 	 * set arg 3 to 0 to disable line breaks,1 to enable
 	 * res == num bytes saved
