@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: util.h,v 1.3 2004/07/19 14:22:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,10 +41,13 @@ extern gboolean decode_hash_value(gpointer value,
 				  char **node,
 				  char **subsys);
 
-gboolean decodeNVpair(const char *srcstring,
+extern gboolean decodeNVpair(const char *srcstring,
 		      char separator,
 		      char **name,
 		      char **value);
+
+extern int compare_version(const char *version1, const char *version2);
+
 
 extern const char *generateReference(const char *custom1, const char *custom2);
 
