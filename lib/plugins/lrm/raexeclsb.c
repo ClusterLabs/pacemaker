@@ -53,7 +53,8 @@ static const char * RA_PATH = LSB_RA_DIR;
 static const int status_op_exitcode_map[] = { 0, 11, 12, 13, 14 };
 
 /* The begin of exported function list */
-static int execra(const char * rsc_type,
+static int execra(const char * rsc_id,
+		  const char * rsc_type,
 		  const char * provider,
 		  const char * op_type,
 	 	  GHashTable * params);
@@ -149,8 +150,8 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
  */
 
 static int
-execra( const char * rsc_type, const char * provider, const char * op_type,
-	GHashTable * params)
+execra( const char * rsc_id, const char * rsc_type, const char * provider,
+	const char * op_type, GHashTable * params)
 {
 	uniform_ret_execra_t exit_value;
 	RA_ARGV params_argv;
