@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.34 2004/10/08 18:01:49 andrew Exp $ */
+/* $Id: unpack.c,v 1.35 2004/10/08 18:28:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -429,8 +429,7 @@ rsc2node_new(const char *id, resource_t *rsc,
 	rsc_to_node_t *new_con = NULL;
 
 	if(rsc == NULL || id == NULL) {
-		crm_err("Invalid constraint %s for rsc=%p",
-			crm_str(id), crm_str(rsc));
+		crm_err("Invalid constraint %s for rsc=%p", crm_str(id), rsc);
 		return NULL;
 	}
 
