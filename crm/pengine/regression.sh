@@ -103,6 +103,7 @@ do_test multi1 "Multiple Active (stop/start)"
 echo ""
 do_test group1 "Group	"
 do_test group2 "Group + Native"
+do_test group3 "Group + Group"
 do_test group4 "Group + Native (nothing)"
 do_test group5 "Group + Native (stop)"
 
