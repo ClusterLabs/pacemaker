@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.19 2005/02/09 11:37:05 andrew Exp $ */
+/* $Id: messages.c,v 1.20 2005/02/09 15:32:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -293,13 +293,13 @@ enum cib_errors
 cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 {
 	char *new_value = NULL;
-	const char *old_value = NULL;
+	char *old_value = NULL;
 	int  int_value  = -1;
 
 	/* modify the timestamp */
 	set_node_tstamp(xml_obj);
-	if(reset == FALSE) {
-		old_value = crm_element_value(xml_obj, field);
+	if(reset == FALSE && crm_element_value(xml_obj, field) != NULL) {
+		old_value = crm_element_value_copy(xml_obj, field);
 	}
 	if(old_value != NULL) {
 		crm_malloc(new_value, 128*(sizeof(char)));
@@ -325,6 +325,7 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 		}
 	}
 	
+	crm_free(old_value);
 	return cib_ok;
 }
 
@@ -462,7 +463,7 @@ cib_process_modify(
 	crm_validate_data(the_update);
 	crm_validate_data(tmpCib);
 	
-	result = revision_check(the_update, tmpCib, options);		
+	result = revision_check(cib_update, tmpCib, options);		
 	copy_in_properties(tmpCib, cib_update);
 	
 	/* make changes to a temp copy then activate */
@@ -707,7 +708,8 @@ update_results(
 enum cib_errors
 revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 {
-	const char *revision = crm_element_value(
+	enum cib_errors rc = cib_ok;
+	char *revision = crm_element_value_copy(
 		cib_update, XML_ATTR_CIB_REVISION);
 	const char *cur_revision = crm_element_value(
 		cib_copy, XML_ATTR_CIB_REVISION);
@@ -725,7 +727,7 @@ revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 			cib_copy, XML_ATTR_CIB_REVISION, revision);
 	} else {
 		/* make sure we end up with the right value in the end */
-		revision = set_xml_property_copy(
+		set_xml_property_copy(
 			cib_update, XML_ATTR_CIB_REVISION, cur_revision);
 	}
 	
@@ -735,7 +737,7 @@ revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 				" %s vs %s",
 				revision, cib_feature_revision_s);
 			CRM_ASSERT(FALSE); /* do not commit */
-			return cib_revision_unsupported;
+			rc = cib_revision_unsupported;
 
 		} else if(flags & cib_scope_local) {
 			 /* an admin has forced a local change using a tag we
@@ -744,10 +746,11 @@ revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 			crm_err("Local update uses an unsupported tag/feature:"
 				" %s vs %s",
 				revision, cib_feature_revision_s);
-			return cib_revision_unsupported;
+			rc = cib_revision_unsupported;
 		}
 	}
 	
-	return cib_ok;
+	crm_free(revision);
+	return rc;
 }
 
