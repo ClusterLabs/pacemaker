@@ -54,27 +54,35 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 
 	if(fsa_membership_copy == NULL) {
 		crm_debug("Ignoring HA messages until we are"
-			  " connected to the CCM");
+			  " connected to the CCM (%s op from %s)", op, from);
 		crm_log_message_adv(
-			LOG_DEBUG, "HA[inbound]: Ignore (No CCM)", msg);
+			LOG_MSG, "HA[inbound]: Ignore (No CCM)", msg);
 		return;
 	}
 	
 	from_node = g_hash_table_lookup(fsa_membership_copy->members, from);
 
 	if(from_node == NULL) {
-		crm_debug("Ignoring HA messages from %s: not in our"
-			  " membership list", from);
-		crm_log_message_adv(LOG_DEBUG, "HA[inbound]: CCM Discard", msg);
+		crm_debug("Ignoring HA message (op=%s) from %s: not in our"
+			  " membership list", op, from);
+		crm_log_message_adv(LOG_MSG, "HA[inbound]: CCM Discard", msg);
 		
 	} else if(AM_I_DC
 	   && safe_str_eq(sys_from, CRM_SYSTEM_DC)
 	   && safe_str_neq(from, fsa_our_uname)) {
 		crm_err("Another DC detected: %s (op=%s)", from, op);
-		crm_log_message_adv(LOG_WARNING, "HA[inbound]: Duplicate DC", msg);
+		crm_log_message_adv(
+			LOG_WARNING, "HA[inbound]: Duplicate DC", msg);
 		new_input = new_ha_msg_input(msg);
+#if 1
+		{
+			fsa_data_t *msg_data = NULL;
+			register_fsa_error(C_FSA_INTERNAL, I_ELECTION, new_input);
+		}
+#else
 		register_fsa_input(C_HA_MESSAGE, I_ELECTION, new_input);
-
+#endif
+		
 #if 0
 		/* still thinking about this one...
 		 * could create a timing issue if we dont notice the
@@ -139,7 +147,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		   curr_client->table_key);
 
 	while(client->ops->is_message_pending(client)) {
-		if (client->ch_status == IPC_DISCONNECT) {
+		if (client->ch_status != IPC_CONNECT) {
 			/* The message which was pending for us is that
 			 * the IPC status is now IPC_DISCONNECT */
 			break;
@@ -168,8 +176,8 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 
 	crm_verbose("Processed %d messages", lpc);
     
-	if (client->ch_status == IPC_DISCONNECT) {
-		crm_debug("received HUP from %s", curr_client->table_key);
+	if (client->ch_status != IPC_CONNECT) {
+		crm_verbose("received HUP from %s", curr_client->table_key);
 		if (curr_client != NULL) {
 			struct crm_subsystem_s *the_subsystem = NULL;
 			
@@ -416,17 +424,17 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 {
 	int rc = 0;
 	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
+	gboolean was_error = FALSE;
+	
 	crm_devel("received callback");	
 	rc = oc_ev_handle_event(ccm_token);
-	if(0 == rc) {
-		return TRUE;
-
-	} else {
+	if(rc != 0) {
 		crm_err("CCM connection appears to have failed: rc=%d.", rc);
 		register_fsa_input(C_CCM_CALLBACK, I_ERROR, NULL);
-		s_crmd_fsa(C_CCM_CALLBACK);
-		return FALSE;
+		was_error = TRUE;
 	}
+	s_crmd_fsa(C_CCM_CALLBACK);
+	return !was_error;
 }
 
 
@@ -450,8 +458,6 @@ crmd_ccm_msg_callback(
 				C_CCM_CALLBACK, I_CCM_EVENT,
 				(void*)event_data);
 
-			s_crmd_fsa(C_CCM_CALLBACK);
-			
 			event_data->event = NULL;
 			event_data->oc = NULL;
 
