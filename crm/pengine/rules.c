@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.1 2005/03/31 16:29:35 andrew Exp $ */
+/* $Id: rules.c,v 1.2 2005/04/04 07:18:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -211,11 +211,21 @@ coloc_expression(const char *attr, const char *op, const char *value,
 			);
 	}
 	
-	if(accept) {
+	if(accept && node != NULL) {
 		crm_trace("node %s matched", node->details->uname);
 		return TRUE;
-	} 
-	crm_trace("node %s did not match", node->details->uname);
+		
+	} else if(accept) {
+		crm_trace("node <NULL> matched");
+		return TRUE;
+		
+	} else if(node != NULL) {
+		crm_trace("node %s did not match", node->details->uname);
+
+	} else {
+		crm_trace("node <NULL> not matched");
+	}
+	
 	return FALSE;
 }
 
@@ -276,37 +286,38 @@ attr_expression(const char *attr, const char *op, const char *value,
 	}
 	
 	if(safe_str_eq(op, "defined")) {
-		if(h_val != NULL) accept = TRUE;	
+		if(h_val != NULL) { accept = TRUE; }
 		
 	} else if(safe_str_eq(op, "not_defined")) {
-		if(h_val == NULL) accept = TRUE;
+		if(h_val == NULL) { accept = TRUE; }
 		
 	} else if(safe_str_eq(op, "eq")) {
-		if((h_val == value) || cmp == 0)
+		if((h_val == value) || cmp == 0) {
 			accept = TRUE;
+		}
 		
 	} else if(safe_str_eq(op, "ne")) {
 		if((h_val == NULL && value != NULL)
 		   || (h_val != NULL && value == NULL)
-		   || cmp != 0)
+		   || cmp != 0) {
 			accept = TRUE;
+		}
 		
 	} else if(value == NULL || h_val == NULL) {
 		/* the comparision is meaningless from this point on */
 		accept = FALSE;
 		
 	} else if(safe_str_eq(op, "lt")) {
-		if(cmp < 0) accept = TRUE;
+		if(cmp < 0) { accept = TRUE; }
 		
 	} else if(safe_str_eq(op, "lte")) {
-		if(cmp <= 0) accept = TRUE;
+		if(cmp <= 0) { accept = TRUE; }
 		
 	} else if(safe_str_eq(op, "gt")) {
-		if(cmp > 0) accept = TRUE;
+		if(cmp > 0) { accept = TRUE; }
 		
 	} else if(safe_str_eq(op, "gte")) {
-		if(cmp >= 0) accept = TRUE;
-		
+		if(cmp >= 0) { accept = TRUE; }		
 	}
 	
 	return accept;
