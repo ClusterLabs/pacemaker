@@ -104,8 +104,7 @@ do_cib_invoke(long long action,
 	xmlNodePtr answer = NULL;
 	xmlNodePtr new_options = NULL;
 	const char *section = NULL;
-
-	
+	enum crmd_fsa_input result = I_NULL;
 
 	if(data != NULL) {
 		cib_msg = (xmlNodePtr)data;
@@ -113,52 +112,54 @@ do_cib_invoke(long long action,
 	
 	
 	if(action & A_CIB_INVOKE) {
+		const char *op = get_xml_attr(
+			cib_msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
 
-		const char *op = get_xml_attr(cib_msg, XML_TAG_OPTIONS,
-					      XML_ATTR_OP, TRUE);
+		const char *sys_from = xmlGetProp(cib_msg, XML_ATTR_SYSFROM);
 
 		xml_message_debug(cib_msg, "[CIB] Invoking with");
 		if(cib_msg == NULL) {
 			crm_err("No message for CIB command");
 			return I_NULL; // I_ERROR
+
+		} else if(op == NULL) {
+			xml_message_debug(cib_msg, "Invalid CIB Message");
+			return I_NULL; // I_ERROR
+
 		}
 
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
 		answer = process_cib_message(cib_msg, TRUE);
-		if(relay_message(answer, TRUE) == FALSE) {
+
+		if(sys_from != NULL
+		   && safe_str_neq(sys_from, CRM_SYSTEM_CRMD)
+		   && safe_str_neq(sys_from, CRM_SYSTEM_DC)
+		   && relay_message(answer, TRUE) == FALSE) {
 			crm_err("Confused what to do with cib result");
 			xml_message_debug(answer, "Couldnt route: ");
-		}
+			result = I_ERROR;
 
-
-		if(op != NULL && AM_I_DC
-		   && (strcmp(op, CRM_OP_CREATE) == 0
-		       || strcmp(op, CRM_OP_UPDATE) == 0
-		       || strcmp(op, CRM_OP_DELETE) == 0
-		       || strcmp(op, CRM_OP_REPLACE) == 0
-		       || strcmp(op, CRM_OP_WELCOME) == 0
-		       || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
-		       || strcmp(op, CRM_OP_ERASE) == 0)) {
-			return I_CIB_UPDATE;	
-		}
-
-		if(op == NULL) {
-			xml_message_debug(cib_msg, "Invalid CIB Message");
-		}
-		
-	
-		
-		// check the answer, see if we are interested in it also
+		} else if(AM_I_DC
+			  && (strcmp(op, CRM_OP_CREATE) == 0
+			      || strcmp(op, CRM_OP_UPDATE) == 0
+			      || strcmp(op, CRM_OP_DELETE) == 0
+			      || strcmp(op, CRM_OP_REPLACE) == 0
+			      || strcmp(op, CRM_OP_WELCOME) == 0
+			      || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
+			      || strcmp(op, CRM_OP_ERASE) == 0)) {
+			result = I_CIB_UPDATE;	
 #if 0
-		if(interested in reply) {
+		// check the answer, see if we are interested in it also
+		} else if(interested in reply) {
 			put_message(answer);
-			return I_REQUEST;
-		}
+			result = I_REQUEST;
 #endif
+		}
 
 		free_xml(answer);
+		return result;
 
-		/* experimental */
+	/* experimental */
 	} else if(action & A_CIB_INVOKE_LOCAL) {
 		xml_message_debug(cib_msg, "[CIB] Invoking with");
 		if(cib_msg == NULL) {
