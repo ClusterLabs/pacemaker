@@ -303,7 +303,7 @@ do_dc_join_finalize(long long action,
 		    enum crmd_fsa_input current_input,
 		    fsa_data_t *msg_data)
 {
-	int rc = cib_ok;
+	enum cib_errors rc = cib_ok;
 	
 	if(max_generation_from == NULL) {
 		crm_warn("There is no CIB to get..."
@@ -313,16 +313,25 @@ do_dc_join_finalize(long long action,
 	
 	if(! is_set(fsa_input_register, R_HAVE_CIB)) {
 		/* ask for the agreed best CIB */
-		enum cib_errors rc = cib_ok;
+		int lpc = 0;
 		crm_info("Asking %s for its copy of the CIB",
 			 crm_str(max_generation_from));
 
 		CRM_DEV_ASSERT(cib_not_master != fsa_cib_conn->cmds->is_master(fsa_cib_conn));
-		if(max_generation_from != NULL) {
-			rc = fsa_cib_conn->cmds->sync_from(
-				fsa_cib_conn, max_generation_from,
-				NULL, cib_sync_call);
-		}
+		fsa_cib_conn->call_timeout = 5;
+		do {
+			if(max_generation_from != NULL) {
+				/* this may fail if the other side's CCM list
+				 * is slow to update...
+				 * but that is the only reason to retry
+				 */
+				rc = fsa_cib_conn->cmds->sync_from(
+					fsa_cib_conn, max_generation_from,
+					NULL, cib_sync_call);
+			}
+
+		} while(rc == cib_remote_timeout && lpc++ < 5);
+		fsa_cib_conn->call_timeout = 0; /* back to the default */
 
 		if(max_generation_from != NULL && rc == cib_ok) {
 			crm_data_t *update = NULL;
@@ -342,7 +351,7 @@ do_dc_join_finalize(long long action,
 		if(rc != cib_ok) {
 			crm_err("Sync from %s resulted in an error: %s",
 				max_generation_from, cib_error2string(rc));
-			
+			/* restart the whole join process */
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 			return I_NULL;
 		}
