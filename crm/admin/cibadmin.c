@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.12 2004/12/05 16:30:55 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.13 2004/12/09 14:45:00 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -45,6 +45,7 @@
 #include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
 #include <crm/dmalloc_wrapper.h>
 
+int exit_code = cib_ok;
 int message_timer_id = -1;
 int message_timeout_ms = 30*1000;
 
@@ -52,8 +53,9 @@ GMainLoop *mainloop = NULL;
 const char *crm_system_name = "cibadmin";
 IPC_Channel *crmd_channel = NULL;
 
+const char *host = NULL;
 void usage(const char *cmd, int exit_status);
-gboolean do_init(void);
+enum cib_errors do_init(void);
 int do_work(const char *xml_text, int command_options, xmlNodePtr *output);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
@@ -89,7 +91,7 @@ const char *sys_to = NULL;
 
 cib_t *the_cib = NULL;
 
-#define OPTARGS	"V?i:o:QDUCEX:t:LSrws"
+#define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MB"
 
 int
 main(int argc, char **argv)
@@ -99,7 +101,6 @@ main(int argc, char **argv)
 	int flag;
 	int level = 0;
 	char *xml_text = NULL;
-	enum cib_errors rc = cib_ok;
 	xmlNodePtr output = NULL;
 	
 	static struct option long_options[] = {
@@ -110,16 +111,20 @@ main(int argc, char **argv)
 		{CRM_OP_CIB_REPLACE, 0, 0, 'R'},
 		{CRM_OP_CIB_UPDATE,  0, 0, 'U'},
 		{CRM_OP_CIB_DELETE,  0, 0, 'D'},
-		{CRM_OP_CIB_SYNC,0, 0, 's'},
-		{CRM_OP_CIB_SLAVE,  0, 0, 'r'},
+		{CRM_OP_CIB_BUMP,    0, 0, 'B'},
+		{CRM_OP_CIB_SYNC,    0, 0, 'S'},
+		{CRM_OP_CIB_SLAVE,   0, 0, 'r'},
 		{CRM_OP_CIB_MASTER,  0, 0, 'w'},
-		{"local-call",   0, 0, 'L'},
-		{"sync-call",    0, 0, 'S'},
+		{CRM_OP_CIB_ISMASTER,0, 0, 'M'},
+		
+		{"local",	 0, 0, 'l'},
+		{"sync-call",	 0, 0, 's'},
+		{"host",	 0, 0, 'h'},
 		{"xml",          1, 0, 'X'},
 		{"verbose",      0, 0, 'V'},
 		{"help",         0, 0, '?'},
 		{"reference",    1, 0, 0},
-		{"timeout", 1, 0, 't'},
+		{"timeout",	 1, 0, 't'},
 
 		/* common options */
 		{XML_ATTR_ID, 1, 0, 'i'},
@@ -180,7 +185,7 @@ main(int argc, char **argv)
 			case 'Q':
 				cib_action = crm_strdup(CRM_OP_CIB_QUERY);
 				break;
-			case 's':
+			case 'S':
 				cib_action = crm_strdup(CRM_OP_CIB_SYNC);
 				break;
 			case 'U':
@@ -195,11 +200,19 @@ main(int argc, char **argv)
 			case 'D':
 				cib_action = crm_strdup(CRM_OP_CIB_DELETE);
 				break;
+			case 'M':
+				cib_action = crm_strdup(CRM_OP_CIB_ISMASTER);
+				command_options |= cib_scope_local;
+				break;
+			case 'B':
+				cib_action = crm_strdup(CRM_OP_CIB_BUMP);
+				break;
 			case 'r':
 				cib_action = crm_strdup(CRM_OP_CIB_SLAVE);
 				break;
 			case 'w':
 				cib_action = crm_strdup(CRM_OP_CIB_MASTER);
+				command_options |= cib_scope_local;
 				break;
 			case 'V':
 				level = get_crm_log_level();
@@ -221,10 +234,13 @@ main(int argc, char **argv)
 			case 'X':
 				xml_text = crm_strdup(optarg);
 				break;
-			case 'L':
+			case 'h':
+				host = crm_strdup(optarg);
+				break;
+			case 'l':
 				command_options |= cib_scope_local;
 				break;
-			case 'S':
+			case 's':
 				command_options |= cib_sync_call;
 				break;
 			default:
@@ -247,22 +263,28 @@ main(int argc, char **argv)
 		++argerr;
 	}
 
+	if(cib_action == NULL) {
+		usage(crm_system_name, cib_operation);
+	}
+	
 	if (argerr) {
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
-	if(do_init() == FALSE) {
+	exit_code = do_init();
+	if(exit_code != cib_ok) {
 		crm_err("Init failed, could not perform requested operations");
-		return 1;
+		fprintf(stderr, "Init failed, could not perform requested operations\n");
+		return -exit_code;
 	}
 
-	rc = do_work(xml_text, command_options, &output);
-	if (rc > 0) {
+	exit_code = do_work(xml_text, command_options, &output);
+	if (exit_code > 0) {
 		/* wait for the reply by creating a mainloop and running it until
 		 * the callbacks are invoked...
 		 */
 		IPC_Channel *ch = the_cib->cmds->channel(the_cib);
-		request_id = rc;
+		request_id = exit_code;
 		
 		if(ch == NULL) {
 			crm_err("Connection to CIB is corrupt");
@@ -283,19 +305,22 @@ main(int argc, char **argv)
 		crm_info("Starting mainloop");
 		g_main_run(mainloop);
 		
-	} else if(rc < 0) {
-		crm_err("Call failed: %s", cib_error2string(rc));
-		operation_status = rc;
+	} else if(exit_code < 0) {
+		crm_err("Call failed: %s", cib_error2string(exit_code));
+		fprintf(stderr, "Call failed: %s", cib_error2string(exit_code));
+		operation_status = exit_code;
 
-	} else {
+	}
+
+
+	if(output != NULL) {
 		char *buffer = dump_xml_formatted(output);
-		fprintf(stderr, "%s", crm_str(buffer));
+		fprintf(stdout, "%s", crm_str(buffer));
 		crm_free(buffer);
 	}
 	
-
 	crm_debug("%s exiting normally", crm_system_name);
-	return rc;
+	return -exit_code;
 }
 
 xmlNodePtr
@@ -311,7 +336,6 @@ handleCibMod(const char *xml)
 	} else {
 		cib_object = string2xml(xml);
 	}
-	
 	
 	if(cib_object == NULL) {
 		return NULL;
@@ -347,7 +371,8 @@ do_work(const char *xml_text, int call_options, xmlNodePtr *output)
 		crm_verbose("Querying the CIB for section: %s",
 			    obj_type_parent);
 
-		return the_cib->cmds->query(the_cib, obj_type_parent, output, call_options);
+		return the_cib->cmds->query_from(
+			the_cib, host, obj_type_parent, output, call_options);
 		
 	} else if (strcmp(CRM_OP_CIB_ERASE, cib_action) == 0) {
 		crm_trace("CIB Erase op in progress");
@@ -355,7 +380,7 @@ do_work(const char *xml_text, int call_options, xmlNodePtr *output)
 		
 	} else if (strcmp(CRM_OP_CIB_CREATE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
-		crm_trace("Performing %s_op...", cib_action);
+		crm_trace("Performing %s op...", cib_action);
 		msg_data = handleCibMod(xml_text);
 		rc = the_cib->cmds->create(
 			the_cib, obj_type_parent, msg_data, output, call_options);
@@ -364,7 +389,7 @@ do_work(const char *xml_text, int call_options, xmlNodePtr *output)
 
 	} else if (strcmp(CRM_OP_CIB_UPDATE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
-		crm_trace("Performing %s_op...", cib_action);
+		crm_trace("Performing %s op...", cib_action);
 		msg_data = handleCibMod(xml_text);
 		rc = the_cib->cmds->modify(
 			the_cib, obj_type_parent, msg_data, output, call_options);
@@ -373,7 +398,7 @@ do_work(const char *xml_text, int call_options, xmlNodePtr *output)
 
 	} else if (strcmp(CRM_OP_CIB_DELETE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
-		crm_trace("Performing %s_op...", cib_action);
+		crm_trace("Performing %s op...", cib_action);
 		msg_data = handleCibMod(xml_text);
 		rc = the_cib->cmds->delete(
 			the_cib, obj_type_parent, msg_data, output, call_options);
@@ -381,16 +406,24 @@ do_work(const char *xml_text, int call_options, xmlNodePtr *output)
 		return rc;
 
 	} else if (strcmp(CRM_OP_CIB_SYNC, cib_action) == 0) {
-		enum cib_errors rc = cib_ok;
-		crm_trace("Performing %s_op...", cib_action);
-		rc = the_cib->cmds->sync(
-			the_cib, obj_type_parent, call_options);
-		return rc;
+		crm_trace("Performing %s op...", cib_action);
+		return the_cib->cmds->sync_from(
+			the_cib, host, obj_type_parent, call_options);
+
+	} else if (strcmp(CRM_OP_CIB_SLAVE, cib_action) == 0
+		   && (call_options ^ cib_scope_local) ) {
+		crm_trace("Performing %s op on all nodes...", cib_action);
+		return the_cib->cmds->set_slave_all(the_cib, call_options);
+
+	} else if (strcmp(CRM_OP_CIB_MASTER, cib_action) == 0) {
+		crm_trace("Performing %s op on all nodes...", cib_action);
+		return the_cib->cmds->set_master(the_cib, call_options);
 
 	} else if(cib_action != NULL) {
 		crm_trace("Passing \"%s\" to variant_op...", cib_action);
 		return the_cib->cmds->variant_op(
-			the_cib, cib_action, obj_type_parent, NULL, output, call_options);
+			the_cib, cib_action, host, obj_type_parent,
+			NULL, output, call_options);
 		
 	} else {
 		crm_err("You must specify an operation");
@@ -398,7 +431,7 @@ do_work(const char *xml_text, int call_options, xmlNodePtr *output)
 	return cib_operation;
 }
 
-gboolean
+enum cib_errors
 do_init(void)
 {
 	enum cib_errors rc = cib_ok;
@@ -409,16 +442,22 @@ do_init(void)
 	the_cib = cib_new();
 	rc = the_cib->cmds->signon(the_cib, cib_command);
 	if(rc != cib_ok) {
-		crm_err("Signon to CIB failed: %s", cib_error2string(rc));
-		return FALSE;
-	}
-	rc = the_cib->cmds->set_op_callback(the_cib, cibadmin_op_callback);
-	if(rc != cib_ok) {
-		crm_err("Failed to set callback: %s", cib_error2string(rc));
-		return FALSE;
+		crm_err("Signon to CIB failed: %s",
+			cib_error2string(rc));
+		fprintf(stderr, "Signon to CIB failed: %s\n",
+			cib_error2string(rc));
+	} else {
+		rc = the_cib->cmds->set_op_callback(
+			the_cib, cibadmin_op_callback);
+		if(rc != cib_ok) {
+			crm_err("Failed to set callback: %s",
+				cib_error2string(rc));
+			fprintf(stderr,"Failed to set callback: %s\n",
+				cib_error2string(rc));
+		}
 	}
 	
-	return TRUE;
+	return rc;
 }
 
 
@@ -427,7 +466,7 @@ usage(const char *cmd, int exit_status)
 {
 	FILE *stream;
 
-	stream = exit_status ? stderr : stdout;
+	stream = exit_status != 0 ? stderr : stdout;
 
 	fprintf(stream, "usage: %s [-?Vio] command\n"
 		"\twhere necessary, XML data will be expected using -X"
@@ -442,14 +481,25 @@ usage(const char *cmd, int exit_status)
 		"  additional instance increase verbosity\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
 	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_ERASE, 'E');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_QUERY, 'Q');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_ERASE,  'E');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_QUERY,  'Q');
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_CREATE, 'C');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_REPLACE, 'R');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_REPLACE,'R');
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_UPDATE, 'U');
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_DELETE, 'D');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_BUMP,   'B');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_ISMASTER,'M');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_SYNC,   'S');
 	fprintf(stream, "\nXML data\n");
 	fprintf(stream, "\t--%s (-%c) <string>\t\n", "xml", 'X');
+	fprintf(stream, "\nAdvanced Options\n");
+	fprintf(stream, "\t--%s (-%c)\tsend command to specified host."
+		" Applies to %s and %s commands only\n", "host", 'h',
+		CRM_OP_CIB_QUERY, CRM_OP_CIB_SYNC);
+	fprintf(stream, "\t--%s (-%c)\tcommand only takes effect locally"
+		" on the specified host\n", "local", 'l');
+	fprintf(stream, "\t--%s (-%c)\twait for call to complete before"
+		" returning\n", "sync-call", 's');
 
 	fflush(stream);
 
@@ -460,8 +510,21 @@ usage(const char *cmd, int exit_status)
 gboolean
 admin_message_timeout(gpointer data)
 {
-	fprintf(stderr, "No messages received in %d seconds.. aborting\n", (int)message_timeout_ms/1000);
-	crm_err("No messages received in %d seconds", (int)message_timeout_ms/1000);
+	if(safe_str_eq(cib_action, CRM_OP_CIB_SLAVE)) {
+		exit_code = cib_ok;
+		fprintf(stdout, "CIB service(s) are in slave mode.\n");
+		
+	} else {
+		exit_code = cib_reply_failed;
+		fprintf(stderr,
+			"No messages received in %d seconds.. aborting\n",
+			(int)message_timeout_ms/1000);
+		crm_err("No messages received in %d seconds",
+			(int)message_timeout_ms/1000);
+	}
+	
+	
+	
 	g_main_quit(mainloop);
 	return FALSE;
 }
@@ -478,14 +541,40 @@ cib_connection_destroy(gpointer user_data)
 void cibadmin_op_callback(
 	const struct ha_msg *msg, int call_id, int rc, xmlNodePtr output)
 {
+	char *xml_text = NULL;
+	
 	crm_info("our callback was invoked");
 	cl_log_message(msg);
+	exit_code = rc;
 
-	if(rc != 0) {
-		crm_err("Call failed (%d): %s", rc, cib_error2string(rc));
+	xml_text = dump_xml_formatted(output);
+
+	if(safe_str_eq(cib_action, CRM_OP_CIB_ISMASTER)
+	   && rc == cib_not_master) {
+		crm_info("Local CIB is _not_ the master instance\n");
+		fprintf(stderr, "Local CIB is _not_ the master instance\n");
+		
+	} else if(safe_str_eq(cib_action, CRM_OP_CIB_ISMASTER)
+		  && rc == cib_ok) {
+		crm_info("Local CIB _is_ the master instance\n");
+		fprintf(stderr, "Local CIB _is_ the master instance\n");
+		
+	} else if(rc != 0) {
+		crm_warn("Call %s failed (%d): %s",
+			cib_action, rc, cib_error2string(rc));
+		fprintf(stderr, "Call %s failed (%d): %s\n",
+			cib_action, rc, cib_error2string(rc));
+		fprintf(stdout, "%s\n", xml_text);
+
+	} else if(output == NULL) {
+		crm_info("Call passed");
+
 	} else {
 		crm_info("Call passed");
+		fprintf(stdout, "%s\n", xml_text);
 	}
+	crm_free(xml_text);
+
 			
 	if(call_id == request_id) {
 		g_main_quit(mainloop);
