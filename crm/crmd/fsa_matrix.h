@@ -57,7 +57,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
 	},
 
-/* Got an I_CIB_UPDATE */
+/* Got an I_CIB_OP */
 	{
 		/* S_IDLE		==> */	S_IDLE,
 		/* S_ELECTION		==> */	S_ELECTION,
@@ -71,6 +71,22 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+	},
+
+/* Got an I_CIB_UPDATE */
+	{
+		/* S_IDLE		==> */	S_IDLE,
+		/* S_ELECTION		==> */	S_ELECTION,
+		/* S_INTEGRATION	==> */	S_INTEGRATION,
+		/* S_NOT_DC		==> */	S_RECOVERY,
+		/* S_POLICY_ENGINE	==> */	S_POLICY_ENGINE,
+		/* S_RECOVERY		==> */	S_RECOVERY,
+		/* S_RECOVERY_DC	==> */	S_RECOVERY_DC,
+		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
+		/* S_PENDING		==> */	S_RECOVERY,
+		/* S_STOPPING		==> */	S_STOPPING,
+		/* S_TERMINATE		==> */	S_TERMINATE,
+		/* S_TRANSITION_ENGINE	==> */	S_POLICY_ENGINE,
 	},
 
 /* Got an I_DC_TIMEOUT */
@@ -500,20 +516,36 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_TRANSITION_ENGINE	==> */	A_CCM_EVENT|A_CCM_UPDATE_CACHE,
 	},
 
-/* Got an I_CIB_UPDATE */
+/* Got an I_CIB_OP */
 	{
-		/* S_IDLE		==> */	A_CIB_INVOKE|A_CIB_DISTRIBUTE|A_PE_INVOKE,
+		/* S_IDLE		==> */	A_CIB_INVOKE,
 		/* S_ELECTION		==> */	A_CIB_INVOKE,
-		/* S_INTEGRATION	==> */	A_CIB_INVOKE|A_CIB_DISTRIBUTE|A_PE_INVOKE, 
+		/* S_INTEGRATION	==> */	A_CIB_INVOKE, 
 		/* S_NOT_DC		==> */	A_CIB_INVOKE,
-		/* S_POLICY_ENGINE	==> */	A_CIB_INVOKE|A_CIB_DISTRIBUTE|A_PE_INVOKE,
+		/* S_POLICY_ENGINE	==> */	A_CIB_INVOKE,
 		/* S_RECOVERY		==> */	A_CIB_INVOKE,
-		/* S_RECOVERY_DC	==> */	A_CIB_INVOKE|A_CIB_DISTRIBUTE|A_PE_INVOKE,
+		/* S_RECOVERY_DC	==> */	A_CIB_INVOKE,
 		/* S_RELEASE_DC		==> */	A_CIB_INVOKE,
 		/* S_PENDING		==> */	A_CIB_INVOKE,
 		/* S_STOPPING		==> */	A_CIB_INVOKE,
 		/* S_TERMINATE		==> */	A_CIB_INVOKE,
-		/* S_TRANSITION_ENGINE	==> */	A_CIB_INVOKE|A_CIB_DISTRIBUTE|A_PE_INVOKE,
+		/* S_TRANSITION_ENGINE	==> */	A_CIB_INVOKE,
+	},
+
+/* Got an I_CIB_UPDATE */
+	{
+		/* S_IDLE		==> */	A_CIB_BUMPGEN|A_PE_INVOKE,
+		/* S_ELECTION		==> */	A_LOG,
+		/* S_INTEGRATION	==> */	A_CIB_BUMPGEN|A_PE_INVOKE, 
+		/* S_NOT_DC		==> */	A_WARN,
+		/* S_POLICY_ENGINE	==> */	A_CIB_BUMPGEN|A_PE_INVOKE,
+		/* S_RECOVERY		==> */	A_WARN,
+		/* S_RECOVERY_DC	==> */	A_CIB_BUMPGEN|A_PE_INVOKE,
+		/* S_RELEASE_DC		==> */	A_WARN,
+		/* S_PENDING		==> */	A_WARN,
+		/* S_STOPPING		==> */	A_WARN,
+		/* S_TERMINATE		==> */	A_WARN,
+		/* S_TRANSITION_ENGINE	==> */	A_CIB_BUMPGEN|A_PE_INVOKE,
 	},
 
 /* Got an I_DC_TIMEOUT */

@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.4 2004/03/10 22:42:35 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.5 2004/03/18 10:34:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -155,6 +155,7 @@ enum crmd_fsa_input {
 
 	I_CCM_EVENT,
 	
+	I_CIB_OP,	/* An update to the CIB occurred */
 	I_CIB_UPDATE,	/* An update to the CIB occurred */
 	I_DC_TIMEOUT,	/* We have lost communication with the DC */
 	I_ELECTION,	/* Someone started an election */
@@ -362,7 +363,7 @@ A_WARN
 #define	A_CIB_INVOKE		0x0000010000000000ULL
 #define	A_CIB_START		0x0000020000000000ULL
 #define	A_CIB_STOP		0x0000040000000000ULL
-#define	A_CIB_DISTRIBUTE	0x0000080000000000ULL
+#define	A_CIB_BUMPGEN	0x0000080000000000ULL
 
 /* -- Transition Engine actions -- */
 	/* Attempt to reach the newly  calculated cluster state.  This is 
