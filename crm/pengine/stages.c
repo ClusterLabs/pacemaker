@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.41 2005/03/11 14:19:03 andrew Exp $ */
+/* $Id: stages.c,v 1.42 2005/03/14 21:01:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -90,6 +90,10 @@ stage0(crm_data_t * cib,
 	order_id = 1;
 	action_id = 1;
 	color_id = 0;
+
+	have_quorum      = FALSE;
+	require_quorum   = FALSE;
+	stonith_enabled  = FALSE;
 	
 	unpack_config(config);
 
@@ -305,9 +309,9 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 			stonith_op->runnable = TRUE;
 			
 			set_xml_property_copy(stonith_op->args,
-					      "target", node->details->uname);
+					      XML_LRM_ATTR_TARGET, node->details->uname);
 			set_xml_property_copy(stonith_op->args,
-					      "target_uuid", node->details->id);
+					      XML_LRM_ATTR_TARGET_UUID, node->details->id);
 			
 			if(down_op != NULL) {
 				down_op->failure_is_fatal = FALSE;
