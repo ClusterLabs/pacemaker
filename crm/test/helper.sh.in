@@ -325,10 +325,16 @@ function do_cmd() {
     if [ $cmd = "echo" ]; then
 	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
 		echo -n `date` ": "
-		$cmdline
+		echo -n -e "\033[01;33m"
+		$cmdline		
+#		echo -n "\[\033[01;34m\]"
+		echo -n -e "\[\033[00m\]"
 	    elif [ $OUTPUT_ECHO -eq 1 -a $OUTPUT_CMDS -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
 		echo -n `date` ": "
+		echo -n -e "\033[01;33m"
 		$cmdline		
+#		echo -n "\[\033[01;34m\]"
+		echo -n -e "\033[00m"
 	    fi
 
     elif [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
