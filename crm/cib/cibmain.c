@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.19 2004/05/23 19:16:22 andrew Exp $ */
+/* $Id: cibmain.c,v 1.20 2004/06/01 16:05:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -66,6 +66,7 @@ void usage(const char* cmd, int exit_status);
 int init_start(void);
 void cib_shutdown(int nsig);
 gboolean cib_msg_callback(IPC_Channel *client, gpointer user_data);
+gboolean process_maincib_message(xmlNodePtr msg, IPC_Channel *sender);
 
 #define OPTARGS	"skrh"
 
@@ -169,8 +170,9 @@ init_start(void)
 		exit(1);
 	}
 	
-    
-	crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD, cib_msg_callback,NULL);
+	crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
+				       subsystem_input_dispatch,
+				       (void*)process_maincib_message);
 
 	if(crm_ch != NULL) {
 		send_hello_message(crm_ch, "-", CRM_SYSTEM_CIB, "0", "1");
@@ -178,14 +180,6 @@ init_start(void)
 	/* Create the mainloop and run it... */
 		mainloop = g_main_new(FALSE);
 		cl_log(LOG_INFO, "Starting %s", crm_system_name);
-		
-/* 		G_main_add_IPC_Channel(G_PRIORITY_LOW, */
-/* 				       crm_ch, */
-/* 				       FALSE,  */
-/* 				       cib_msg_callback, */
-/* 				       crm_ch,  */
-/* 				       default_ipc_input_destroy); */
-	
 	
 #ifdef REALTIME_SUPPORT
 		if (crm_realtime == 1) {
@@ -209,93 +203,38 @@ init_start(void)
 	FNRET(0);
 }
 
-
 gboolean
-cib_msg_callback(IPC_Channel *sender, void *user_data)
+process_maincib_message(xmlNodePtr msg, IPC_Channel *sender)
 {
-	int lpc = 0;
-	char *buffer = NULL;
-	IPC_Message *msg = NULL;
-	gboolean all_is_well = TRUE;
-	xmlNodePtr answer = NULL, root_xml_node = NULL;
-	const char *sys_to;
-	const char *type;
+	const char *op = get_xml_attr (msg, XML_TAG_OPTIONS,
+				       XML_ATTR_OP, FALSE);
 
-	
-	FNIN();
+	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
 
-	while(sender->ops->is_message_pending(sender)) {
-		if (sender->ch_status == IPC_DISCONNECT) {
-			/* The message which was pending for us is that
-			 * the IPC status is now IPC_DISCONNECT */
-			break;
-		}
-		if (sender->ops->recv(sender, &msg) != IPC_OK) {
-			perror("Receive failure:");
-			FNRET(!all_is_well);
-		}
-		if (msg == NULL) {
-			cl_log(LOG_ERR, "No message this time");
-			continue;
-		}
+	cl_log(LOG_DEBUG, "Processing %s message", op);
 
-		lpc++;
+	if(safe_str_eq(xmlGetProp(msg, XML_ATTR_MSGTYPE), XML_ATTR_REQUEST)) {
+		cl_log(LOG_INFO,
+		       "Message was a response not a request."
+		       "  Discarding");
 
-		buffer = (char*)msg->msg_body;
-		root_xml_node = string2xml(buffer);
-
-		sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
-		type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
-		if (root_xml_node == NULL) {
-			cl_log(LOG_ERR, "Root node was NULL!!");
-
-		} else if(sys_to == NULL) {
-			cl_log(LOG_ERR, "Value of %s was NULL!!",
-			       XML_ATTR_SYSTO);
-			
-		} else if(type == NULL) {
-			cl_log(LOG_ERR, "Value of %s was NULL!!",
-			       XML_ATTR_MSGTYPE);
-			
-		} else if(strcmp(type, XML_ATTR_REQUEST) != 0) {
-			cl_log(LOG_INFO,
-			       "Message was a response not a request."
-			       "  Discarding");
-		} else if (strcmp(sys_to, CRM_SYSTEM_CIB) == 0
-			|| strcmp(sys_to, CRM_SYSTEM_DCIB) == 0) {
-
-			answer = process_cib_message(root_xml_node, TRUE);
-			if (send_xmlipc_message(sender, answer)==FALSE)
-				cl_log(LOG_WARNING,
-				       "Cib answer could not be sent");
-		} else {
+	} else if (strcmp(sys_to, CRM_SYSTEM_CIB) == 0
+		   || strcmp(sys_to, CRM_SYSTEM_DCIB) == 0) {
+		
+		xmlNodePtr answer = process_cib_message(msg, TRUE);
+		if (send_xmlipc_message(sender, answer)==FALSE)
 			cl_log(LOG_WARNING,
-			       "Received a message destined for %s by mistake",
-			       sys_to);
-		}
-		
+			       "Cib answer could not be sent");
 		free_xml(answer);
-		
-		msg->msg_done(msg);
-		msg = NULL;
+
+	} else {
+		cl_log(LOG_WARNING,
+		       "Received a message destined for %s by mistake",
+		       sys_to);
+		FNRET(FALSE);
 	}
-
-	// clean up after a break
-	if(msg != NULL)
-		msg->msg_done(msg);
-
-	if(root_xml_node != NULL)
-		free_xml(root_xml_node);
-
-	CRM_DEBUG("Processed %d messages", lpc);
-	if (sender->ch_status == IPC_DISCONNECT) {
-		cl_log(LOG_ERR, "The server has left us: Shutting down...NOW");
-
-		exit(1); // shutdown properly later
 		
-		FNRET(!all_is_well);
-	}
-	FNRET(all_is_well);
+	FNRET(TRUE);
 }
 
 
