@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.25 2005/02/17 17:10:56 andrew Exp $ */
+/* $Id: messages.c,v 1.26 2005/02/18 10:36:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -734,11 +734,13 @@ revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 	}
 	
 	if(strcmp(revision, cib_feature_revision_s) > 0) {
+		CRM_DEV_ASSERT(cib_is_master == FALSE);
+		CRM_DEV_ASSERT((flags & cib_scope_local) == 0);
+
 		if(cib_is_master) {
 			crm_err("Update uses an unsupported tag/feature:"
 				" %s vs %s",
 				revision, cib_feature_revision_s);
-			CRM_DEV_ASSERT(FALSE);
 			rc = cib_revision_unsupported;
 
 		} else if(flags & cib_scope_local) {
@@ -748,7 +750,6 @@ revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 			crm_err("Local update uses an unsupported tag/feature:"
 				" %s vs %s",
 				revision, cib_feature_revision_s);
-			CRM_DEV_ASSERT(FALSE);
 			rc = cib_revision_unsupported;
 		}
 	}

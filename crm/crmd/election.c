@@ -203,8 +203,8 @@ do_election_count_vote(long long action,
 		we_loose = TRUE;
 
 	} else if(strcmp(fsa_our_uname, vote_from) == 0) {
-		CRM_DEV_ASSERT(FALSE);
 		crm_debug("Election ??pass??: dup uname");
+		CRM_DEV_ASSERT(strcmp(fsa_our_uname, vote_from) != 0);
 	}
 
 	if(we_loose) {

@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.10 2005/02/17 16:27:26 andrew Exp $ */
+/* $Id: io.c,v 1.11 2005/02/18 10:36:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -318,57 +318,57 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 		error_code = -5;
 
 	} else if(cib_writes_enabled) {
-		int res = 0;
-
 		if(saved_cib != NULL) {
-			res = moveFile(filename, filename_bak, FALSE, NULL);
+
+			CRM_DEV_ASSERT(0 >= moveFile(filename,
+						     filename_bak,
+						     FALSE, NULL));
 			
-			if (res < 0) {
-				crm_warn("Could not make backup of the current Cib "
-					 "(code: %d)... aborting update.", res);
+			if (crm_assert_failed) {
+				crm_warn("Could not make backup of the current"
+					 " Cib... aborting update.");
 				error_code = -1;
-				CRM_DEV_ASSERT(FALSE);
 			}
 		}
 		
 		if(error_code == cib_ok) {
 			crm_debug("Writing CIB out to %s", CIB_FILENAME);
-			res = write_xml_file(new_cib, CIB_FILENAME);
-			if (res < 0) {
+			CRM_DEV_ASSERT(write_xml_file(
+					       new_cib, CIB_FILENAME) >= 0);
+			if (crm_assert_failed) {
 				error_code = -4;
-				CRM_DEV_ASSERT(FALSE);
 			}
 		}
 
 		if(error_code == -4 && saved_cib != NULL) {
-			if (moveFile(filename_bak, filename, FALSE,NULL) < -1){
+			CRM_DEV_ASSERT(moveFile(filename_bak,
+						filename, FALSE, NULL) >= 0);
+			if (crm_assert_failed){
 				crm_crit("Could not restore the backup of the "
-					 " current Cib (code: %d)... panic!",
-					 res);
+					 " current Cib... panic!");
 				error_code = -2;
 				/* should probably exit here  */
-				CRM_DEV_ASSERT(FALSE);
 			}
 		}
 
-		if(saved_cib == NULL && error_code != cib_ok) {
+		CRM_DEV_ASSERT(saved_cib != NULL || error_code == cib_ok);
+		if(crm_assert_failed) {
 			/* oh we are so dead  */
 			crm_crit("Could not write out new CIB and no saved"
 				 " version to revert to");
 				error_code = -3;			
-				CRM_DEV_ASSERT(FALSE);
 
 		} else if(error_code != cib_ok) {
 			crm_crit("Update of Cib failed (%d)... reverting"
 				 " to last known valid version",
 				 error_code);
 
-			if (initializeCib(saved_cib) == FALSE) {
+			CRM_DEV_ASSERT(initializeCib(saved_cib));
+			if (crm_assert_failed) {
 				/* oh we are so dead  */
 				crm_crit("Could not re-initialize with the old"
 					 " CIB.  Can anyone say corruption?");
 				error_code = -3;
-				CRM_DEV_ASSERT(FALSE);
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.52 2005/02/15 09:45:43 andrew Exp $ */
+/* $Id: ccm.c,v 1.53 2005/02/18 10:36:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -228,7 +228,7 @@ do_ccm_event(long long action,
 		 * DC status and send us their CIB
 		 */
 	} else {
-		CRM_DEV_ASSERT(FALSE);
+		CRM_DEV_ASSERT(oc->m_n_in != 0 || oc->m_n_out != 0);
 		crm_warn("So why are we here?  What CCM event happened?");
 	}
 

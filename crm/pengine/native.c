@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.12 2005/02/17 16:23:33 andrew Exp $ */
+/* $Id: native.c,v 1.13 2005/02/18 10:34:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -714,10 +714,8 @@ void native_rsc_dependancy_rh_must(resource_t *rsc_lh, gboolean update_lh,
 		native_data_rh->color    = copy_color(native_data_lh->color);
 	}
 
-	if(update_rh == FALSE && update_lh == FALSE) {
-		CRM_DEV_ASSERT(FALSE);
-		
-	} else if(do_merge) {
+	CRM_DEV_ASSERT(update_rh || update_lh);
+	if(crm_assert_failed == FALSE && do_merge) {
 		crm_debug("Merging candidate nodes");
 		old_list = native_data_rh->color->details->candidate_nodes;
 		native_data_rh->color->details->candidate_nodes = merged_node_list;
