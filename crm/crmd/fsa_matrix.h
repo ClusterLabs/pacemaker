@@ -702,7 +702,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 	
 /* Got an I_RELEASE_DC */
 	{
-		/* S_IDLE		==> */	O_RELEASE|A_ERROR,
+		/* S_IDLE		==> */	O_RELEASE,
 		/* S_ELECTION		==> */	O_RELEASE,
 		/* S_INTEGRATION	==> */	O_RELEASE|A_ERROR,
 		/* S_FINALIZE_JOIN	==> */	O_RELEASE|A_ERROR,
@@ -940,19 +940,19 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_SHUTDOWN */
 	{
-		/* S_IDLE		==> */	O_RELEASE,
+		/* S_IDLE		==> */	O_RELEASE|A_ELECTION_START,
 		/* S_ELECTION		==> */	O_RELEASE,
-		/* S_INTEGRATION	==> */	O_RELEASE,
-		/* S_FINALIZE_JOIN	==> */	O_RELEASE,
+		/* S_INTEGRATION	==> */	O_RELEASE|A_ELECTION_START,
+		/* S_FINALIZE_JOIN	==> */	O_RELEASE|A_ELECTION_START,
 		/* S_NOT_DC		==> */	A_SHUTDOWN_REQ,
-		/* S_POLICY_ENGINE	==> */	O_RELEASE,
+		/* S_POLICY_ENGINE	==> */	O_RELEASE|A_ELECTION_START,
 		/* S_RECOVERY		==> */	A_SHUTDOWN_REQ|O_RELEASE,
 		/* S_RELEASE_DC		==> */	A_SHUTDOWN_REQ,
 		/* S_STARTING		==> */	A_SHUTDOWN_REQ,
 		/* S_PENDING		==> */	A_SHUTDOWN_REQ,
 		/* S_STOPPING		==> */	A_SHUTDOWN_REQ,
 		/* S_TERMINATE		==> */	A_SHUTDOWN_REQ,
-		/* S_TRANSITION_ENGINE	==> */	O_RELEASE,
+		/* S_TRANSITION_ENGINE	==> */	O_RELEASE|A_ELECTION_START,
 	},
 
 /* Got an I_TERMINATE */

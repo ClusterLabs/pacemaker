@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.27 2004/10/24 13:00:11 lge Exp $ */
+/* $Id: fsa_defines.h,v 1.28 2005/01/05 11:27:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -265,23 +265,26 @@ enum crmd_fsa_input {
 #define	A_ELECTION_COUNT	0x0000000000000040ULL
 #define	A_ELECTION_VOTE		0x0000000000000080ULL
 
-#define	A_INTEGRATE_TIMER_START	0x0000000000000100ULL
-#define	A_INTEGRATE_TIMER_STOP	0x0000000000000200ULL
-#define	A_FINALIZE_TIMER_START	0x0000000000000400ULL
-#define	A_FINALIZE_TIMER_STOP	0x0000000000000800ULL
+#define A_ELECTION_START	0x0000000000000100ULL
 
 /* -- Message processing -- */
 	/* Process the queue of requests */
-#define	A_MSG_PROCESS		0x0000000000001000ULL
+#define	A_MSG_PROCESS		0x0000000000000200ULL
 	/* Send the message to the correct recipient */
-#define	A_MSG_ROUTE		0x0000000000002000ULL
+#define	A_MSG_ROUTE		0x0000000000000400ULL
 	/* Put the request into a queue for processing.  We do this every 
 	 * time so that the processing is consistent.  The intent is to 
 	 * allow the DC to keep doing important work while still not
 	 * loosing requests.
 	 * Messages are not considered recieved until processed.
 	 */
-#define	A_MSG_STORE		0x0000000000004000ULL
+#define	A_MSG_STORE		0x0000000000000800ULL
+
+
+#define	A_INTEGRATE_TIMER_START	0x0000000000001000ULL
+#define	A_INTEGRATE_TIMER_STOP	0x0000000000002000ULL
+#define	A_FINALIZE_TIMER_START	0x0000000000004000ULL
+#define	A_FINALIZE_TIMER_STOP	0x0000000000008000ULL
 
 
 /* -- Client Join protocol actions -- */

@@ -31,6 +31,7 @@
 
 void ghash_count_vote(gpointer key, gpointer value, gpointer user_data);
 
+
 /*	A_ELECTION_VOTE	*/
 enum crmd_fsa_input
 do_election_vote(long long action,
@@ -65,19 +66,27 @@ do_election_vote(long long action,
 		if(is_set(fsa_input_register, R_STARTING)) {
 			not_voting = TRUE;
 		}
-	}
+	}	
 
-	if(not_voting) {
+	if(action & A_ELECTION_START) {
+		/* leaving out our version number, no other node out there
+		 * will think we should win the election...
+		 * which is what we want if we are the DC and want to shutdown 
+		 */
+
+	} else if(not_voting) {
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		if(AM_I_DC) {
 			return I_RELEASE_DC;
 		} else {
 			return I_NOT_DC;
 		}
+
+	} else {
+		msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
+		set_xml_property_copy(
+			msg_options, XML_ATTR_VERSION, CRM_VERSION);
 	}
-	
-	msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-	set_xml_property_copy(msg_options, XML_ATTR_VERSION, CRM_VERSION);
 	
 	send_request(msg_options, NULL, CRM_OP_VOTE,
 		     NULL, CRM_SYSTEM_CRMD, NULL);
