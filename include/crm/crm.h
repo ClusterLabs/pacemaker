@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.38 2005/01/26 13:21:45 andrew Exp $ */
+/* $Id: crm.h,v 1.39 2005/02/01 22:34:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -214,6 +214,7 @@ extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_M
 #define crm_xml_devel(xml, text)   crm_log_xml(LOG_DEV,     text, xml)
 #define crm_xml_verbose(xml, text) crm_log_xml(LOG_VERBOSE, text, xml)
 #define crm_xml_trace(xml, text)   crm_log_xml(LOG_TRACE,   text, xml)
+#define crm_xml_insane(xml, text)  crm_log_xml(LOG_INSANE,  text, xml)
 
 #define crm_malloc(new_obj,length)				\
 	{							\
