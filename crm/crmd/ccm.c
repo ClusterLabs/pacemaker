@@ -257,7 +257,9 @@ do_ccm_update_cache(long long action,
 	offset = oc->m_out_idx;
 	membership_copy->dead_members_size = oc->m_n_out;
 	if(membership_copy->dead_members_size > 0) {
-		membership_copy->dead_members = g_hash_table_new(g_str_hash, g_direct_equal);
+		membership_copy->dead_members =
+			g_hash_table_new(g_str_hash, g_direct_equal);
+
 		members = membership_copy->dead_members;
 
 		for(lpc=0; lpc < membership_copy->dead_members_size; lpc++) {
@@ -271,19 +273,21 @@ do_ccm_update_cache(long long action,
 			member->node_uname =
 				cl_strdup(oc->m_array[offset+lpc].node_uname);
 
+			g_hash_table_insert(members, member->node_uname, member);
 		}
+
 	} else {
 		membership_copy->dead_members = NULL;
 	}
+
+	tmp = fsa_membership_copy;
+	fsa_membership_copy = membership_copy;
 
 	if(AM_I_DC) {
 		// should be sufficient for only the DC to do this
 		free_xml(do_update_cib_nodes(NULL));
 	}
 	
-	tmp = fsa_membership_copy;
-	fsa_membership_copy = membership_copy;
-
 	/* Free the old copy */
 	if(tmp != NULL) {
 		if(tmp->members != NULL)
@@ -325,8 +329,10 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		       oc->m_array[oc->m_memb_idx+lpc].node_id,
 		       oc->m_array[oc->m_memb_idx+lpc].node_born_on);
 
-		if(fsa_our_uname != NULL
-		   && strcmp(fsa_our_uname, oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
+		CRM_DEBUG("%s ? %s", fsa_our_uname,
+			  oc->m_array[oc->m_memb_idx+lpc].node_uname);
+		if(safe_str_eq(fsa_our_uname,
+			       oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
 			member = TRUE;
 			member_id = oc->m_array[oc->m_memb_idx+lpc].node_id;
 		}
