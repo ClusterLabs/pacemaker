@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.28 2004/05/19 10:24:00 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.29 2004/05/23 19:54:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -560,7 +560,7 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 				char *now_s = crm_itoa((int)now);
 				
 				set_xml_property_copy(target, "unclean", now_s);
-				cl_free(now_s);
+				crm_free(now_s);
 
 				// unset "shutdown" 
 				set_xml_property_copy(target, "shutdown", NULL);

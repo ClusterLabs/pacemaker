@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.34 2004/05/18 09:43:53 andrew Exp $ */
+/* $Id: cib.c,v 1.35 2004/05/23 19:54:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -168,7 +168,7 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	
 	if(update == NULL) {
 		cl_log(LOG_ERR, "No update to create a fragment for");
-		cl_free(auto_section);
+		crm_free(auto_section);
 		return NULL;
 		
 	} else if(section == NULL) {
@@ -178,7 +178,7 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 		cl_log(LOG_ERR,
 		       "Values for update (tag=%s) and section (%s)"
 		       " were not consistent", update->name, section);
-		cl_free(auto_section);
+		crm_free(auto_section);
 		return NULL;
 		
 	}
@@ -203,7 +203,7 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	xml_message_debug(fragment, "created fragment");
 	
 	
-	cl_free(auto_section);
+	crm_free(auto_section);
 	return fragment;
 }
 
@@ -213,26 +213,26 @@ pluralSection(const char *a_section)
 {
 	char *a_section_parent = NULL;
 	if (a_section == NULL) {
-		a_section_parent = cl_strdup("all");
+		a_section_parent = crm_strdup("all");
 
 	} else if(strcmp(a_section, XML_TAG_CIB) == 0) {
-		a_section_parent = cl_strdup("all");
+		a_section_parent = crm_strdup("all");
 
 	} else if(strcmp(a_section, XML_CIB_TAG_NODE) == 0) {
-		a_section_parent = cl_strdup(XML_CIB_TAG_NODES);
+		a_section_parent = crm_strdup(XML_CIB_TAG_NODES);
 
 	} else if(strcmp(a_section, XML_CIB_TAG_STATE) == 0) {
-		a_section_parent = cl_strdup(XML_CIB_TAG_STATUS);
+		a_section_parent = crm_strdup(XML_CIB_TAG_STATUS);
 
 	} else if(strcmp(a_section, XML_CIB_TAG_CONSTRAINT) == 0) {
-		a_section_parent = cl_strdup(XML_CIB_TAG_CONSTRAINTS);
+		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
 	} else if(strcmp(a_section, XML_CIB_TAG_RESOURCE) == 0) {
-		a_section_parent = cl_strdup(XML_CIB_TAG_RESOURCES);
+		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
 
 	} else {
 		cl_log(LOG_ERR, "Unknown section %s", a_section);
-		a_section_parent = cl_strdup("all");
+		a_section_parent = crm_strdup("all");
 	}
 	
 	CRM_DEBUG("Plural is %s", a_section_parent);

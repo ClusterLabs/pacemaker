@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.14 2004/04/20 20:19:11 msoffen Exp $ */
+/* $Id: crmdmain.c,v 1.15 2004/05/23 19:54:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -136,8 +136,6 @@ init_start(void)
 		exit(LSB_EXIT_OK);
     }
 	
-    xmlInitParser();
-    
     fsa_state = S_PENDING;
     state = s_crmd_fsa(C_STARTUP, I_STARTUP, NULL);
 

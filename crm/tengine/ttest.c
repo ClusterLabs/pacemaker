@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.1 2004/05/18 09:53:38 andrew Exp $ */
+/* $Id: ttest.c,v 1.2 2004/05/23 19:54:04 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -67,8 +67,6 @@ main(int argc, char **argv)
 	cl_log_enable_stderr(TRUE);
 	cl_log_set_facility(LOG_USER);
 
-	xmlInitParser();
- 
 	while (1) {
 		int option_index = 0;
 		static struct option long_options[] = {
@@ -127,15 +125,15 @@ main(int argc, char **argv)
 	cl_log(LOG_INFO, "=#=#=#=#= Getting XML =#=#=#=#=");
   
   
-
+	mtrace();
 
 	CRM_DEBUG("Initializing graph...");
 	initialize_graph();
 	
-	xmlNodePtr graph = file2xml(stdin);
+	xmlNodePtr xml_graph = file2xml(stdin);
 
 	CRM_DEBUG("Unpacking graph...");
-	unpack_graph(graph);
+	unpack_graph(xml_graph);
 	CRM_DEBUG("Initiating transition...");
 
 	if(initiate_transition() == FALSE) {
@@ -143,6 +141,11 @@ main(int argc, char **argv)
 		cl_log(LOG_INFO, "No actions to be taken..."
 		       " transition compelte.");
 	}
+
+	initialize_graph();
+	free_xml(xml_graph);
+	muntrace();
+
 	CRM_DEBUG("Transition complete...");
 
 	return 0;

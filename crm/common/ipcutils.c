@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.26 2004/05/18 14:26:45 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.27 2004/05/23 19:54:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -86,7 +86,7 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 	cib_dump =
 		create_simple_message(xml_message, ipc_client);
 	res = send_ipc_message(ipc_client, cib_dump);
-	cl_free(xml_message);
+	crm_free(xml_message);
 
 	if(res == FALSE) {
 		log_level = LOG_ERR;
@@ -220,7 +220,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		msg_text);
 	
 	fflush(msg_out_strm);
-	cl_free(msg_text);
+	crm_free(msg_text);
 	if(msg != NULL) {
 		ha_msg_del(msg);
 	}
@@ -284,7 +284,7 @@ create_simple_message(char *text, IPC_Channel *ch)
 	FNIN();
 	if (text == NULL) FNRET(NULL);
 
-	ack_msg = (IPC_Message *)cl_malloc(sizeof(IPC_Message));
+	ack_msg = (IPC_Message *)crm_malloc(sizeof(IPC_Message));
     
 	ack_msg->msg_private = NULL;
 	ack_msg->msg_done    = NULL;
@@ -470,7 +470,7 @@ init_client_ipc_comms(const char *child,
 	local_socket_len += strlen(child);
 	local_socket_len += strlen(WORKING_DIR);
 
-	commpath = (char*)cl_malloc(sizeof(char)*local_socket_len);
+	commpath = (char*)crm_malloc(sizeof(char)*local_socket_len);
 	sprintf(commpath, WORKING_DIR "/%s", child);
 	commpath[local_socket_len - 1] = '\0';
     

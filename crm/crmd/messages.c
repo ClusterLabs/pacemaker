@@ -52,7 +52,7 @@ gboolean relay_message(xmlNodePtr xml_relay_message,
 		xmlGetProp(xml_relay_message, XML_ATTR_REFERENCE),\
 		x, msg_text);					\
 	fflush(router_strm);					\
-	cl_free(msg_text);
+	crm_free(msg_text);
 #else
 #    define ROUTER_RESULT(x)	CRM_DEBUG(x);
 #endif
@@ -64,7 +64,7 @@ fsa_message_queue_t
 put_message(xmlNodePtr new_message)
 {
 	fsa_message_queue_t next_message = (fsa_message_queue_t)
-		cl_malloc(sizeof(struct fsa_message_queue_s));
+		crm_malloc(sizeof(struct fsa_message_queue_s));
 
 	CRM_DEBUG("Adding msg to queue");
 
@@ -338,10 +338,10 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 					   det?"successfully":"not");
 			}
 			
-			cl_free(curr_client->table_key);
-			cl_free(curr_client->sub_sys);
-			cl_free(curr_client->uuid);
-			cl_free(curr_client);
+			crm_free(curr_client->table_key);
+			crm_free(curr_client->sub_sys);
+			crm_free(curr_client->uuid);
+			crm_free(curr_client);
 		}
 		CRM_DEBUG("this client has now left the building.");
 		FNRET(!hack_return_good);
@@ -379,7 +379,7 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 //	xml_message_debug(request, "Final request...");
 
 	if(msg_reference != NULL) {
-		*msg_reference = cl_strdup(xmlGetProp(request, XML_ATTR_REFERENCE));
+		*msg_reference = crm_strdup(xmlGetProp(request, XML_ATTR_REFERENCE));
 	}
 	
 	was_sent = relay_message(request, TRUE);
@@ -658,8 +658,8 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 			       miv);
 			result = FALSE;
 		}
-		cl_free(major_version);
-		cl_free(minor_version);
+		crm_free(major_version);
+		crm_free(minor_version);
 	}
 
 	struct crm_subsystem_s *the_subsystem = NULL;
@@ -700,14 +700,14 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	}
 	
 	if(result == TRUE && table_key == NULL)
-		table_key = (gpointer)cl_strdup(client_name);
+		table_key = (gpointer)crm_strdup(client_name);
 
 	if (result == TRUE) {
 		cl_log(LOG_INFO, "Accepted client %s", (char*)table_key);
 
 		curr_client->table_key = table_key;
-		curr_client->sub_sys = cl_strdup(client_name);
-		curr_client->uuid = cl_strdup(uuid);
+		curr_client->sub_sys = crm_strdup(client_name);
+		curr_client->uuid = crm_strdup(uuid);
 	
 		g_hash_table_insert (ipc_clients,
 				     table_key,
@@ -732,8 +732,8 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		curr_client->client_channel->ch_status = IPC_DISC_PENDING;
 	}
 	
-	if(uuid != NULL) cl_free(uuid);
-	if(client_name != NULL) cl_free(client_name);
+	if(uuid != NULL) crm_free(uuid);
+	if(client_name != NULL) crm_free(client_name);
 
 	/* hello messages should never be processed further */
 	return FALSE;
@@ -812,7 +812,7 @@ handle_message(xmlNodePtr stored_msg)
 			xmlAddChild(stored_msg, frag);
 
 			free_xml(node_state);
-			cl_free(now_s);
+			crm_free(now_s);
 			
 			next_input = I_CIB_OP;
 				

@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.23 2004/05/10 21:52:56 andrew Exp $ */
+/* $Id: adminmain.c,v 1.24 2004/05/23 19:54:04 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -186,12 +186,12 @@ main(int argc, char **argv)
 					 || strcmp(CRM_OPERATION_QUERY,
 						   long_options[option_index].name) == 0){
 					
-					cib_action = cl_strdup(long_options[option_index].name);
+					cib_action = crm_strdup(long_options[option_index].name);
 
 				} else if (strcmp("reference",
 						  long_options[option_index].name) == 0) {
 					this_msg_reference =
-						cl_strdup(optarg);
+						crm_strdup(optarg);
 				} else {
 					printf( "?? Long option (--%s) is not yet properly supported ??\n",
 						long_options[option_index].name);
@@ -215,11 +215,11 @@ main(int argc, char **argv)
 				break;
 			case 'i':
 				CRM_DEBUG("Option %c => %s", flag, optarg);
-				id = cl_strdup(optarg);
+				id = crm_strdup(optarg);
 				break;
 			case 'o':
 				CRM_DEBUG("Option %c => %s", flag, optarg);
-				obj_type = cl_strdup(optarg);
+				obj_type = crm_strdup(optarg);
 				break;
 			case 'C':
 				printf("Option %c is not yet supported\n", flag);
@@ -227,7 +227,7 @@ main(int argc, char **argv)
 				break;
 			case 'S':
 				DO_HEALTH = TRUE;
-				status = cl_strdup(optarg);
+				status = crm_strdup(optarg);
 				break;
 			case 'H':
 				DO_HEALTH = TRUE;
@@ -494,7 +494,7 @@ do_init(void)
 		cl_log_set_facility(facility);
 	}
 
-	admin_uuid = cl_malloc(sizeof(char) * 11);
+	admin_uuid = crm_malloc(sizeof(char) * 11);
 	snprintf(admin_uuid, 10, "%d", getpid());
 	admin_uuid[10] = '\0';
 
@@ -602,7 +602,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			/* 31 = "test-_.xml" + an_int_as_string + '\0' */
 			filename_len = 31 + strlen(this_msg_reference);
 
-			filename = cl_malloc(sizeof(char) * filename_len);
+			filename = crm_malloc(sizeof(char) * filename_len);
 			sprintf(filename, "%s-%s_%d.xml",
 				result,
 				this_msg_reference,

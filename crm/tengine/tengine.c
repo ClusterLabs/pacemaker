@@ -30,8 +30,6 @@ gboolean process_graph_event(const char *event_node,
 
 void send_success(void);
 void send_abort(xmlNodePtr msg);
-gboolean process_fake_event(xmlNodePtr msg);
-
 
 gboolean
 initialize_graph(void)
@@ -46,7 +44,7 @@ initialize_graph(void)
 			free_xml(action);
 		}
 		graph = g_slist_remove(graph, action_list);
-		cl_free(action_list);
+		crm_free(action_list);
 	}
 
 	graph = NULL;
@@ -75,7 +73,7 @@ unpack_graph(xmlNodePtr xml_graph)
 		xmlNodePtr xml_obj = xml_action_list;
 		xmlNodePtr xml_action = xml_obj->children;
 		action_list_t *action_list = (action_list_t*)
-			cl_malloc(sizeof(action_list_t));
+			crm_malloc(sizeof(action_list_t));
 
 		xml_action_list = xml_action_list->next;
 
@@ -100,30 +98,6 @@ unpack_graph(xmlNodePtr xml_graph)
 	
 
 	return TRUE;
-}
-
-gboolean
-process_fake_event(xmlNodePtr msg)
-{
-	
-	xmlNodePtr data = find_xml_node(msg, "lrm_resource");
-	CRM_DEBUG("Processing fake LRM event...");
-	const char *last_op = "start";
-	if(safe_str_eq("stopped", xmlGetProp(data, "last_op"))) {
-		last_op = "stop";
-	}
-	CRM_DEBUG("Fake LRM event... %s, %s, %s, %s, %s",
-		  xmlGetProp(data, "op_node"),
-		  xmlGetProp(data, "id"),
-		  last_op,
-		  xmlGetProp(data, "op_status"),
-		  xmlGetProp(data, "op_code"));
-	
-	return process_graph_event(xmlGetProp(data, "op_node"),
-				   xmlGetProp(data, "id"),
-				   xmlGetProp(data, "last_op"),
-				   xmlGetProp(data, "op_status"),
-				   xmlGetProp(data, "op_code"));
 }
 
 gboolean
@@ -225,7 +199,6 @@ extract_event(xmlNodePtr msg)
 	
 	return !abort;
 }
-
 
 gboolean
 process_graph_event(const char *event_node,
@@ -408,19 +381,22 @@ initiate_action(action_list_t *list)
 		if(list->force == FALSE && is_optional) {
 			if(safe_str_eq(xml_action->name, "rsc_op")){
 				cl_log(LOG_INFO,
-				       "Skipping optional rsc-op (%s): %s %s on %s",
+				       "Skipping optional rsc-op (%s):"
+				       " %s %s on %s",
 				       id, task,
 				       xmlGetProp(xml_action->children, "id"),
 				       on_node);
 			} else {
 				cl_log(LOG_INFO,
-				       "Skipping optional command %s (id=%s) on %s",
+				       "Skipping optional command"
+				       " %s (id=%s) on %s",
 				       task, id, on_node);
 			}
 			
 		} else if(safe_str_eq(runnable, "false")) {
 			cl_log(LOG_ERR,
-			       "Terminated transition on un-runnable command: %s (id=%s) on %s",
+			       "Terminated transition on un-runnable command:"
+			       " %s (id=%s) on %s",
 			       task, id, on_node);
 			return FALSE;
 			
@@ -447,7 +423,8 @@ initiate_action(action_list_t *list)
 */
 			} else {
 				cl_log(LOG_ERR,
-				       "Failed on unsupported %s: %s (id=%s) on %s",
+				       "Failed on unsupported %s: "
+				       "%s (id=%s) on %s",
 				       xml_action->name, task, id, on_node);
 				
 				return FALSE;
@@ -508,7 +485,8 @@ initiate_action(action_list_t *list)
 		} else {
 			// error
 			cl_log(LOG_ERR,
-			       "Failed on unsupported command type: %s, %s (id=%s) on %s",
+			       "Failed on unsupported command type: "
+			       "%s, %s (id=%s) on %s",
 			       xml_action->name, task, id, on_node);
 
 			return FALSE;

@@ -191,7 +191,7 @@ do_ccm_update_cache(long long action,
 	const oc_ev_membership_t *oc = ((struct ccm_data *)data)->oc;
 
 	oc_node_list_t *tmp = NULL, *membership_copy = (oc_node_list_t *)
-		cl_malloc(sizeof(oc_node_list_t));
+		crm_malloc(sizeof(oc_node_list_t));
 
 	FNIN();
 
@@ -211,7 +211,7 @@ do_ccm_update_cache(long long action,
 		members = membership_copy->members;
 		
 		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
-			oc_node_t *member = (oc_node_t *)cl_malloc(sizeof(oc_node_t));
+			oc_node_t *member = (oc_node_t *)crm_malloc(sizeof(oc_node_t));
 			member->node_id =
 				oc->m_array[offset+lpc].node_id;
 			
@@ -219,7 +219,7 @@ do_ccm_update_cache(long long action,
 				oc->m_array[offset+lpc].node_born_on;
 			
 			member->node_uname =
-				cl_strdup(oc->m_array[offset+lpc].node_uname);
+				crm_strdup(oc->m_array[offset+lpc].node_uname);
 			
 		}
 	} else {
@@ -235,7 +235,7 @@ do_ccm_update_cache(long long action,
 		members = membership_copy->new_members;
 		
 		for(lpc=0; lpc < membership_copy->new_members_size; lpc++) {
-			oc_node_t *member = (oc_node_t *)cl_malloc(sizeof(oc_node_t));
+			oc_node_t *member = (oc_node_t *)crm_malloc(sizeof(oc_node_t));
 			member->node_id =
 				oc->m_array[offset+lpc].node_id;
 			
@@ -243,7 +243,7 @@ do_ccm_update_cache(long long action,
 				oc->m_array[offset+lpc].node_born_on;
 
 			member->node_uname =
-				cl_strdup(oc->m_array[offset+lpc].node_uname);
+				crm_strdup(oc->m_array[offset+lpc].node_uname);
 
 			g_hash_table_insert(members, member->node_uname, member);
 			
@@ -263,7 +263,7 @@ do_ccm_update_cache(long long action,
 		members = membership_copy->dead_members;
 
 		for(lpc=0; lpc < membership_copy->dead_members_size; lpc++) {
-			oc_node_t *member = (oc_node_t *)cl_malloc(sizeof(oc_node_t));
+			oc_node_t *member = (oc_node_t *)crm_malloc(sizeof(oc_node_t));
 			member->node_id =
 				oc->m_array[offset+lpc].node_id;
 			
@@ -271,7 +271,7 @@ do_ccm_update_cache(long long action,
 				oc->m_array[offset+lpc].node_born_on;
 			
 			member->node_uname =
-				cl_strdup(oc->m_array[offset+lpc].node_uname);
+				crm_strdup(oc->m_array[offset+lpc].node_uname);
 
 			g_hash_table_insert(members, member->node_uname, member);
 		}
@@ -296,7 +296,7 @@ do_ccm_update_cache(long long action,
 			g_hash_table_foreach_remove (tmp->new_members, ghash_node_clfree, NULL);
 		if(tmp->dead_members != NULL)
 			g_hash_table_foreach_remove (tmp->dead_members, ghash_node_clfree, NULL);
-		cl_free(tmp);
+		crm_free(tmp);
 	}
 	
 	FNRET(next_input);
@@ -403,7 +403,7 @@ crmd_ccm_input_callback(oc_ed_t event,
 
 	if(data != NULL) {
 		event_data = (struct ccm_data *)
-			cl_malloc(sizeof(struct ccm_data));
+			crm_malloc(sizeof(struct ccm_data));
 		
 		event_data->event = &event;
 		event_data->oc = (const oc_ev_membership_t *)data;
@@ -413,7 +413,7 @@ crmd_ccm_input_callback(oc_ed_t event,
 		event_data->event = NULL;
 		event_data->oc = NULL;
 
-		cl_free(event_data);
+		crm_free(event_data);
 
 	} else {
 		cl_log(LOG_INFO, "CCM Callback with NULL data... "
@@ -543,10 +543,10 @@ ghash_node_clfree(gpointer key, gpointer value, gpointer user_data)
 {
 	// value->node_uname is free'd as "key"
 	if(key != NULL) {
-		cl_free(key);
+		crm_free(key);
 	}
 	if(value != NULL) {
-		cl_free(value);
+		crm_free(value);
 	}
 	return TRUE;
 }

@@ -293,11 +293,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		   fsa_input2string(cur_input));
 #endif
 
+#ifdef DOT_FSA_ACTIONS
 	if(dot_strm == NULL) {
 		dot_strm = fopen("/tmp/live.dot", "w");
 		fprintf(dot_strm, "%s", dot_intro);
 	}
-	
+#endif
 	/*
 	 * Process actions in order of priority but do only one
 	 * action at a time to avoid complicating the ordering.
