@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.44 2005/03/08 10:54:43 andrew Exp $ */
+/* $Id: xml.c,v 1.45 2005/03/15 11:45:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -339,7 +339,7 @@ create_xml_node(crm_data_t *parent, const char *name)
 		ret_value = ha_msg_new(1);
 		CRM_DEV_ASSERT(ret_value != NULL);
 		
-		set_xml_property_copy(ret_value, XML_ATTR_TAGNAME, name);
+		set_xml_property_copy(ret_value, F_XML_TAGNAME, name);
 		crm_validate_data(ret_value);
 		if(parent) {
 			crm_validate_data(parent);
@@ -401,7 +401,7 @@ free_xml_fn(crm_data_t *a_node)
 	} else {
 		int has_parent = 0;
 		crm_validate_data(a_node);
-		ha_msg_value_int(a_node, XML_ATTR_PARENT, &has_parent);
+		ha_msg_value_int(a_node, F_XML_PARENT, &has_parent);
 
 		/* there is no way in hell we should be deleting anything
 		 * with a parent and without the parent knowning
@@ -1077,9 +1077,9 @@ log_data_element(
 	xml_prop_iter(
 		data, prop_name, prop_value,
 
-		if(safe_str_eq(XML_ATTR_TAGNAME, prop_name)) {
+		if(safe_str_eq(F_XML_TAGNAME, prop_name)) {
 			continue;
-		} else if(safe_str_eq(XML_ATTR_PARENT, prop_name)) {
+		} else if(safe_str_eq(F_XML_PARENT, prop_name)) {
 			continue;
 		}
 		
@@ -1171,9 +1171,9 @@ dump_data_element(
 	update_buffer_head(*buffer, printed);
 
 	xml_prop_iter(data, prop_name, prop_value,
-			if(safe_str_eq(XML_ATTR_TAGNAME, prop_name)) {
+			if(safe_str_eq(F_XML_TAGNAME, prop_name)) {
 				continue;
-			} else if(safe_str_eq(XML_ATTR_PARENT, prop_name)) {
+			} else if(safe_str_eq(F_XML_PARENT, prop_name)) {
 				continue;
 			}
 			crm_insane("Dumping <%s %s=\"%s\"...",
@@ -1279,10 +1279,10 @@ crm_set_element_parent(crm_data_t *data, crm_data_t *parent)
 #else
 	crm_validate_data(data);
 	if(parent != NULL) {
-		ha_msg_mod_int(data, XML_ATTR_PARENT, 1);
+		ha_msg_mod_int(data, F_XML_PARENT, 1);
 		
-	} else if(cl_get_string(data, XML_ATTR_PARENT) != NULL) {
-		ha_msg_mod_int(data, XML_ATTR_PARENT, 0);
+	} else {
+		ha_msg_mod_int(data, F_XML_PARENT, 0);
 	}
 #endif
 }
@@ -1331,7 +1331,7 @@ crm_element_name(crm_data_t *data)
 	return (data ? data->name : NULL);
 #else
 	crm_validate_data(data);
-	return cl_get_string(data, XML_ATTR_TAGNAME);
+	return cl_get_string(data, F_XML_TAGNAME);
 #endif
 }
 
@@ -1534,7 +1534,7 @@ parse_xml(const char *input, int *offset)
 	new_obj = ha_msg_new(1);
 	CRM_DEV_ASSERT(cl_is_allocated(new_obj) == 1);
 	
-	ha_msg_add(new_obj, XML_ATTR_TAGNAME, tag_name);
+	ha_msg_add(new_obj, F_XML_TAGNAME, tag_name);
 	lpc = len;
 
 	for(; more && error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
