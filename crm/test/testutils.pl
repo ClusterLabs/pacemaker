@@ -39,13 +39,18 @@ while ( $_ = @ARGV[0], /^-/ ) {
 
     } elsif ( /^-pf/ ) {
 	$start_pos = `cat $ARGV[0]`;
-	chop $start_pos;
+#	chop $start_pos;
 	shift;
 	
     } elsif ( /^-p/ ) {
 	$start_pos = $ARGV[0];
 	shift;
 	
+    } elsif ( /^-epf/ ) {
+	$end_pos = `cat $ARGV[0]`;
+#	chop $end_pos;
+	shift;
+
     } elsif ( /^-ep/ ) {
 	$end_pos = $ARGV[0];
 	shift;
@@ -144,6 +149,10 @@ sub file_dup() {
 	    $num_lines = $num_lines + 1;
 	    
 	    print STDOUT "[".$num_lines."]: ".$line;
+
+	    if($end_pos > 0 && $curpos > $end_pos) {
+		last;
+	    }
 	 }
 
 	return;

@@ -385,12 +385,13 @@ function dump_node() {
 
     dump_file="/tmp/${a_node_index}-${a_node}.tgz"
 
+    remote_cmd $CRMD_USER ${a_node} "stat -L -c %s $logfile > /tmp/crm/.logend"
     `which ssh` ${ADMIN_USER}@${a_node} "ps axf > /tmp/crm/processes"
-    `which ssh` ${ADMIN_USER}@${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart -l $logfile > /tmp/crm/cluster-test.log"
+    `which ssh` ${ADMIN_USER}@${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart -epf /tmp/crm/.logend -l $logfile > /tmp/crm/cluster-test.log"
 
     `which ssh` ${ADMIN_USER}@${a_node} "ln -s /tmp/crm /tmp/crm-${a_node_index}"
-    `which ssh` ${ADMIN_USER}@${a_node} "ln -s ${HAVAR_DIR}/cores /tmp/crm/cores"
-    `which ssh` ${ADMIN_USER}@${a_node} "tar -zhcvf ${dump_file} /tmp/crm-${a_node_index}/"
+    `which ssh` ${ADMIN_USER}@${a_node} "ln -s ${HAVAR_DIR}/cores /tmp/crm"
+    `which ssh` ${ADMIN_USER}@${a_node} "tar -zhcvf ${dump_file} /tmp/crm-${a_node_index}/ "
     `which ssh` ${ADMIN_USER}@${a_node} "rm -f /tmp/crm-${a_node_index}"
 
     cd $test_dump_dir
@@ -516,14 +517,15 @@ function crm-cleanup-node() {
 # make *sure* theres nothing left over from last time
 	do_cmd remote_cmd $INIT_USER $ha_host "rm -f $HAVAR_DIR/crm/cib*.xml"
 
-	`which ssh` ${INIT_USER}@${ha_host} "rm -f /tmp/crm/*" 2>/dev/null 
-	remote_cmd $INIT_USER $ha_host "rm -f ${HAVAR_DIR}/cores/*/core" 2>&1 > /dev/null
+	`which ssh` ${INIT_USER}@${ha_host} "rm -f ${HAVAR_DIR}/cores/*/*" 2>/dev/null 
+	`which ssh` ${INIT_USER}@${ha_host} "rm -f /tmp/crm/* /tmp/crm/.log*" 2>/dev/null 
+
 	if [ `dirname $logfile` = "/tmp/crm" ]; then
 	    do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart"
 	fi
-	do_cmd remote_cmd $CRMD_USER $ha_host "logger -i -p local7.info __crmtest_${test_type}_log_mark__"
-	do_cmd sleep 2
 	remote_cmd $CRMD_USER $ha_host "stat -L -c %s $logfile > /tmp/crm/.logstart"
+	do_cmd remote_cmd $ADMIN_USER $ha_host "logger -i -p local7.info __crmtest_${test_type}_log_mark__"
+	do_cmd sleep 2
 	
 # zero out logs, maybe
     fi
