@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.16 2004/12/05 16:06:05 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.17 2005/01/06 11:12:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -120,6 +120,8 @@
 #define XML_CIB_ATTR_CLEAR_SHUTDOWN 	"clear_shutdown"
 #define XML_CIB_ATTR_STONITH	    	"stonith"
 #define XML_CIB_ATTR_CLEAR_STONITH  	"clear_stonith"
+#define XML_CIB_ATTR_INCARNATION_MAX	"incarnation_max"
+#define XML_CIB_ATTR_INCARNATION	"incarnation"
 
 #define XML_LRM_ATTR_TASK		"operation"
 #define XML_LRM_ATTR_TARGET		"on_node"
