@@ -50,9 +50,11 @@ class LinuxHAv2(HeartbeatCM):
     '''
     def __init__(self, Environment, randseed=None):
         HeartbeatCM.__init__(self, Environment, randseed=randseed)
+        
         self.update({
             "Name"           : "linux-ha-v2",
-            "DeadTime"       : 90,
+            "DeadTime"       : 600,
+            "StableTime"     : 10,
             "StartCmd"       : "@libdir@/heartbeat/heartbeat >/dev/null 2>&1",
             "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
             "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null",
@@ -60,13 +62,18 @@ class LinuxHAv2(HeartbeatCM):
             "QuorumCmd"      : "@libdir@/heartbeat/ccm_tool -q",
             "ParitionCmd"    : "@libdir@/heartbeat/ccm_tool -p",
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s status 0 0 EVERYTIME 2>/dev/null|grep return",
-            "IsIPAddrRscRunning"   : "",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
+
+            "IsIPAddrRscRunning"   : "",
+
             # Patterns to look for in the log files for various occasions...
-            "Pat:We_started"    : " %s crmd: .* State transition .*-> (S_NOT_DC|S_IDLE)",
-            "Pat:They_started"  : " %s crmd: .* State transition .*-> (S_NOT_DC|S_IDLE)",
-            "Pat:DC_IDLE"  : "crmd: .* State transition .*-> S_IDLE",
+            "Pat:DC_IDLE"      : "crmd:.*State transition.*-> S_IDLE",
+            "Pat:We_started"   : "%s crmd:.*State transition.*-> (S_NOT_DC|S_IDLE)",
+            "Pat:They_started" : "%s crmd:.*State transition.*-> (S_NOT_DC|S_IDLE)",
+            "Pat:We_stopped"   : ("%s heartbeat.*Heartbeat shutdown complete" %(self.OurNode)),
+            "Pat:They_stopped" : "%s heartbeat.*Heartbeat shutdown complete",
+            "Pat:All_stopped"  : "%s heartbeat.*Heartbeat shutdown complete",
             
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
@@ -126,15 +133,23 @@ class LinuxHAv2(HeartbeatCM):
 
         # KLUDGE!  Expedient, but a Kludge (FIXME)
 #        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
-        CTStests.AllTestClasses = [FlipTest, RestartTest, StartOnebyOne, SimulStart, SimulStop]
+#       StartOnebyOne is redundant as it is performed before SimulStop
+        CTStests.AllTestClasses = [FlipTest, RestartTest, SimulStart, SimulStop]
+
 #        CTSaudits.AllAuditClasses = [CrmdStateAudit, HAResourceAudit]
         CTSaudits.AllAuditClasses = [CrmdStateAudit, PartitionAudit]
     
     def errorstoignore(self):
-	'''Return list of errors which are 'normal' and should be ignored'''
-	return [ "heartbeat.*ERROR: Respawning client \"/usr/lib/heartbeat/ha_logd\"",	
-		 "heartbeat.*ERROR: Irretrievably lost packet"
-		 ]
+        '''Return list of errors which are 'normal' and should be ignored'''
+        if 0:
+            return [ "heartbeat.*ERROR: Respawning client \"/usr/lib/heartbeat/ha_logd\"",
+                     "heartbeat.*ERROR: Irretrievably lost packet",
+                     "heartbeat.*ERROR: Cannot rexmit pkt .*: seqno too low",
+                     "heartbeat.*ERROR: Cannot rexmit pkt .*: seqno not found",
+                     "heartbeat.*ERROR: channel is not connected",
+                     "ccm: .*ERROR: .*dropping message of type.*Is this a Byzantime failure?"
+                     ]
+        return []
 
 
     def StataCM(self, node):
