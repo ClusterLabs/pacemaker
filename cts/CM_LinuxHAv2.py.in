@@ -29,6 +29,8 @@ from CM_hb import HeartbeatCM
 from xml.dom.minidom import *
 import CTSaudits
 from CTSaudits import ClusterAudit
+import CTStests
+from CTStests import *
 #######################################################################
 #
 #  LinuxHA v2 dependent modules
@@ -53,10 +55,8 @@ class LinuxHAv2(HeartbeatCM):
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             # Patterns to look for in the log files for various occasions...
-            "Pat:We_started"    : "crmd(.*): info:(.*)FSA Hostname: %s",
-            "Pat:They_started"  : "crmd(.*): info:(.*)FSA Hostname: %s",
-            "Pat:S_IDLE"     : "%s(.*)(S_IDLE)",
-            "Pat:S_NOT_DC"   : "%s(.*)(S_NOT_DC)",
+            "Pat:We_started"    : "%s(.*)(Exiting the FSA \(S_NOT_DC|S_IDLE\))",
+            "Pat:They_started"  : "%s(.*)(Exiting the FSA \(S_NOT_DC|S_IDLE\))",
             
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
@@ -68,6 +68,7 @@ class LinuxHAv2(HeartbeatCM):
             ),
         })
         CTSaudits.AllAuditClasses = [HAResourceAudit]
+        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
     
     def StataCM(self, node):
 
@@ -96,8 +97,7 @@ class LinuxHAv2(HeartbeatCM):
 
         '''Start up the cluster manager on a given node'''
         watch = CTS.LogWatcher(self["LogFileName"]
-        ,                      [self["Pat:S_IDLE"]%node
-        ,                      self["Pat:S_NOT_DC"]%node]
+        ,                      [self["Pat:We_started"]%node]
         ,                      60)
         watch.setwatch()
         self.rsh(node, self["StartCmd"])
@@ -214,7 +214,7 @@ class HAResource(Resource):
         '''
         
         out=self.CM.rsh.readaline(nodename, self.CM["IsRscRunning"]%self.rid)
-        return re.search("11",out)
+        return re.search("0",out)
 
     def _ResourceOperation(self, operation, nodename):
         '''
