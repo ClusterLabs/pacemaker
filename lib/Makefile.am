@@ -34,6 +34,9 @@ endif
 if LRM_BUILD
 LRM_DIR = lrm
 endif
+if CRM_BUILD
+USE_CRM_DIR = @CRM_DIR@
+endif
 
 #
 #	PILS is supposed to be an independent library
@@ -57,6 +60,7 @@ SUBDIRS			=  	\
 	$(CMS_DIR)		\
 	$(SWIG_DIR)		\
 	fencing			\
+	$(USE_CRM_DIR)	\
 	$(LRM_DIR)
 
 DIST_SUBDIRS		=  	\
@@ -72,4 +76,5 @@ DIST_SUBDIRS		=  	\
 	cmsclient		\
 	bindings		\
 	fencing			\
+	crm			\
 	lrm			
