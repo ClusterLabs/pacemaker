@@ -125,8 +125,9 @@ do_cib_invoke(long long action,
 		}
 		
 		crm_debug("is dc? %d, type=%s", AM_I_DC, type);
-		rc = cib->cmds->variant_op(cib, op, NULL, NULL, &cib_frag,
-					   cib_scope_local|cib_sync_call);
+		rc = cib->cmds->variant_op(
+			cib, op, NULL, NULL, NULL, &cib_frag,
+			cib_scope_local|cib_sync_call);
 		
 		answer = create_reply(cib_msg, cib_frag);
 		set_xml_attr(answer, XML_TAG_OPTIONS,
