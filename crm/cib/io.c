@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.13 2005/02/21 13:21:08 andrew Exp $ */
+/* $Id: io.c,v 1.14 2005/02/21 14:23:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -113,7 +113,7 @@ readCibXmlFile(const char *filename)
 	if(root != NULL) {
 		int lpc = 0;
 		crm_data_t *status = get_object_root(XML_CIB_TAG_STATE, root);
-		for (; lpc < status->nfields; ) {
+		for (; status != NULL && lpc < status->nfields; ) {
 			if(status->types[lpc] != FT_STRUCT) {
 				lpc++;
 				continue;

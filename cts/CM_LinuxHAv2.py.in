@@ -142,12 +142,10 @@ class LinuxHAv2(HeartbeatCM):
 	if self.Env["ClobberCIB"] != None:
 	    if self.Env["CIBfilename"] == None:
 		os.system("rm -f /tmp/cts.default.cib")
-		self.log("Installing default CIB")
 		os.system("echo \'" + self.default_cts_cib + "\' > /tmp/cts.default.cib")
 		self.rsh.cp("/tmp/cts.default.cib", self["CIBfile"]%node)
 		os.system("rm -f /tmp/cts.default.cib")
 	    else:
-		self.log("Installing CIB from %s" %(self.Env["CIBfilename"]))
 		self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
 
         self.rsh(node, self["StartCmd"])
@@ -155,7 +153,7 @@ class LinuxHAv2(HeartbeatCM):
             self.ShouldBeStatus[node]=self["up"]
             return 1
 
-	out = self.CM.rsh.readaline(node, self.CM["StatusCmd"])
+	out = self.rsh.readaline(node, self["StatusCmd"])
 	if string.find(out, 'ok') == -1:
 	    self.ShouldBeStatus[node]=self["down"]        
 	    self.log ("Could not start %s on node %s"
@@ -434,6 +432,10 @@ class DcIPaddrAudit(ClusterAudit):
 	RunningNodes = self._RscRunningNodes(resource)
 	if len(RunningNodes) == 0 :
 	    self.CM.log("%s is not running" %(resource))
+	    for node in self.CM.Env["nodes"]:
+		if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+		    out = self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
+		    self.CM.log("%s" %(out))
 	    return 0
 
 	if len(RunningNodes) > 1:
@@ -531,7 +533,8 @@ class DcAudit(ClusterAudit):
 			%(len(dc_allowed_list), str(dc_allowed_list)))
 	    for node in self.CM.Env["nodes"]:
 		if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-		    self.CM.log ("%s : %s : %s"  %(node, self.NodeEpoche[node], self.NodeState[node]))
+		    self.CM.log("epoche %s : %s"  
+				%(self.NodeEpoche[node], self.NodeState[node]))
 		    
 
         return passed
