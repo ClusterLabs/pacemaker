@@ -20,70 +20,120 @@
  *	States the DC/CRMd can be in
  *======================================*/
 enum crmd_fsa_state {
-	S_STARTING = 0,	/* we are just starting out */
-	S_NOT_DC,	/* we are in crmd/slave mode */
-	S_CIB_DISCOVER,	/* we are in the process of calculating the
-			 * most up-to-date CIB
+        S_IDLE = 0,	/* Nothing happening */
+
+        S_ELECTION,	/* Take part in the election algorithm as 
+			 * described below
 			 */
-	S_RESOURCES,	/* Processing resources */
-	S_IDLE,		/* Nothing happening */
-	S_STOPPING,	/* We are trying to shutdown */
-	S_AUDIT,	/* Check everything is ok before continuing
-			 * Attempt to recover if required
+	S_INTEGRATION,	/* integrate that status of new nodes (which is 
+			 * all of them if we have just been elected DC)
+			 * to form a complete and up-to-date picture of
+			 * the CIB
 			 */
-	/*  ------------- Last input found in table is above ------------ */
+        S_NOT_DC,	/* we are in crmd/slave mode */
+        S_POLICY_ENGINE,/* Determin the next stable state of the cluster
+			 */
+        S_RECOVERY,	/* Something bad happened, check everything is ok
+			 * before continuing and attempt to recover if
+			 * required
+			 */
+        S_RECOVERY_DC,	/* Something bad happened to the DC, check
+			 * everything is ok before continuing and attempt
+			 * to recover if required
+			 */
+        S_RELEASE_DC,	/* we were the DC, but now we arent anymore,
+			 * possibly by our own request, and we should 
+			 * release all unnecessary sub-systems, finish
+			 * any pending actions, do general cleanup and
+			 * unset anything that makes us think we are
+			 * special :)
+			 */
+        S_STARTING,	/* we are just starting out */
+        S_STOPPING,	/* We are in the final stages of shutting down */
+        S_TERMINATE,	/* We are going to shutdown, this is the equiv of
+			 * "Sending TERM signal to all processes" in Linux
+			 * and in worst case scenarios could be considered
+			 * a self STONITH
+			 */
+        S_TRANSITION_ENGINE,/* Attempt to make the calculated next stable
+			     * state of the cluster a reality
+			     */
+
+	/*  ----------- Last input found in table is above ---------- */
 	S_ILLEGAL,	/* This is an illegal FSA state */
 			/* (must be last) */
 };
 #define MAXSTATE	S_ILLEGAL
 /*
-             <Starting>
-                  |
-                  |
-                  V
-    Not DC <--> Audit <--> Cib discovery  
-      |		/  A		|
-      |        /   |            |
-      |       /    |            |
-      |      |     \            |
-      V      V      \           V
-      Shutdown <--> Idle <--> Resources
+	A state diagram can be constructed from the dc_fsa.dot with the
+	following command:
 
-      Description:
+	dot -Tpng crmd_fsa.dot > crmd_fsa.png
+
+Description:
 
       Once we start and do some basic sanity checks, we go into the
-      [Audit] state.  Here we check that we are in a fit state to
-      continue.  If anything is broken we may try to fix it or we will
-      shut ourselves (and possibly heartbeat) down.  At this point we
-      also determin our "mode".  That is, are we the DC or a regular
-      CRMd.  If the latter, we go into the [Not DC] state and await
-      instructions from the DC.
+      S_NOT_DC state and await instructions from the DC or input from
+      the CCM which indicates the election algorithm needs to run.
 
-      If we are the DC, we enter the [Cib discovery] state, a 
-      DC-in-waiting state.  We are the DC, but we shouldnt do anything
-      yet because we may not have an up-to-date picture of the cluster.
-      There may of course be times when this fails, so we should go back
-      to the [Audit] stage and check everything is ok.
+      If the election algorithm is triggered we enter the S_ELECTION state
+      from where we can either go back to the S_NOT_DC state or progress
+      to the S_INTEGRATION state (or S_RELEASE_DC if we used to be the DC
+      but arent anymore).
 
-      Once we have the latest CIB, we then enter the [Resources] state.
-      This is where we do things like invoke the Policy Engine and feed
-      its output to the Transition Engine.  This all happens
-      a-synchronously and we may recieve inputs that mean we discard the
-      output from the PE (when it arrives) and have another go.  We may
-      also have to have more than one go at reaching a new stable state.
-      Thats why I gave it it's own state.
+      The election algorithm has been adapted from
+      http://www.cs.indiana.edu/cgi-bin/techreports/TRNNN.cgi?trnum=TR521
 
-      Once all these resources actions have been completed (signaled by
-      the TE saying I'm done and everything is fine), we enter the [Idle]
-      state.
+      Loosly known as the Bully Algorithm, its major points are:
+      - Election is initiated by any node (N) notices that the coordinator
+	is no longer responding
+      - Concurrent multiple elections are possible
+      - Algorithm
+	  + N sends ELECTION messages to all nodes that occur earlier in
+	  the CCM's membership list.
+	  + If no one responds, N wins and becomes coordinator
+	  + N sends out COORDINATOR messages to all other nodes in the
+	  partition
+	  + If one of higher-ups answers, it takes over. N is done.
+      
+      Once the election is complete, if we are the DC, we enter the
+      S_INTEGRATION state which is a DC-in-waiting style state.  We are
+      the DC, but we shouldnt do anything yet because we may not have an
+      up-to-date picture of the cluster.  There may of course be times
+      when this fails, so we should go back to the S_RECOVERY stage and
+      check everything is ok.  We may also end up here if a new node came
+      online, since each node is authorative on itself and we would want
+      to incorporate its information into the CIB.
 
-      Of course we may be asked to shutdown, which it can only do from
-      the Idle or Not DC states.
+      Once we have the latest CIB, we then enter the S_POLICY_ENGINE state
+      where invoke the Policy Engine. It is possible that between
+      invoking the Policy Engine and recieving an answer, that we recieve
+      more input. In this case we would discard the orginal result and
+      invoke it again.
+
+      Once we are satisfied with the output from the Policy Engine we
+      enter S_TRANSITION_ENGINE and feed the Policy Engine's output to the
+      Transition Engine who attempts to make the Policy Engine's
+      calculation a reality.  If the transition completes successfully,
+      we enter S_IDLE, otherwise we go back to S_POLICY_ENGINE with the
+      current unstable state and try again.
+      
+      Of course we may be asked to shutdown at any time, however we must
+      progress to S_NOT_DC before doing so.  Once we have handed over DC
+      duties to another node, we can then shut down like everyone else,
+      that is by asking the DC for permission and waiting it to take all
+      our resources away.
+
+      The case where we are the DC and the only node in the cluster is a
+      special case and handled as an escalation which takes us to
+      S_SHUTDOWN.  Similarly if any other point in the shutdown
+      fails or stalls, this is escalated and we end up in S_TERMINATE.
 
       At any point, the CRMd/DC can relay messages for its sub-systems,
-      but outbound messages should probably be blocked until the [Cib
-      Discovery] stage (for the DC case) or the join protocol has
-      completed (for the CRMd case) 
+      but outbound messages (from sub-systems) should probably be blocked
+      until S_INTEGRATION (for the DC case) or the join protocol has
+      completed (for the CRMd case)
+      
 */
 
 /*======================================
@@ -99,36 +149,44 @@ enum crmd_fsa_state {
  *======================================*/
 enum crmd_fsa_input {
 	I_NULL,		/* Nothing happened */
-	I_SYS_DISCON,	/* A required sub-system "dissappeared" */
-	I_DC_MSG,	/* We recieved a message from "a" DC */
-
-	I_AM_DC,	/* Switch into DC mode */
-	I_SHUTDOWN,	/* We would like to shutdown please */
 	
-	I_AUDIT_FAILED, /* The self-audit FAILED */
-	I_AUDIT_NOT_DC, /* The self-audit passed, but we are not the DC */
-	I_AUDIT_PASSED, /* The self-audit passed, any problems were
-			   rectified */
-
-	I_CIB_DONE,	/* CIB Calculations complete...
-			   lets rock and roll */
-	I_CIB_FAILED,	/* Could not gather a consistent view of the CIB */
-
-	I_CCM_EVENT,	/* The a node left/joined or something generally
-			   changed */
+	I_CIB_UPDATE,	/* An update to the CIB occurred */
+	I_DC_TIMEOUT,	/* We have lost communication with the DC */
+	I_ELECTION_RELEASE_DC,	/* The election completed and we were not
+				 * elected, but we were the DC beforehand
+				 */
+	I_ELECTION_DC,	/* The election completed and we were (re-)elected
+			 * DC
+			 */
+	I_ERROR,	/* Something bad happened (more serious than
+			 * I_FAIL) and may not have been due to the action
+			 * being performed.  For example, we may have lost
+			 * our connection to the CIB.
+			 */
+	I_FAIL,		/* The action failed to complete successfully */
+	I_NODE_JOIN,	/* A node has entered the CCM membership list*/
+	I_NODE_LEFT,	/* A node shutdown (possibly unexpectedly) */
+	I_NODE_LEAVING,	/* A node has asked to be shutdown */
+	I_NOT_DC,	/* We are not and were not the DC before or after
+			 * the current operation or state
+			 */
+	I_RECOVERED,	/* The recovery process completed successfully */
+	I_RELEASE_FAIL,	/* We could not give up DC status for some reason
+			 */
+	I_RELEASE_SUCCESS,	/* We are no longer the DC */
+	I_RESTART,	/* The current set of actions needs to be
+			 * restarted
+			 */
 	I_REQUEST,	/* Some non-resource, non-ccm action is required
 			   of us, eg. ping */
-	I_RESOURCE,	/* Some resource actions are required */
 	I_ROUTER,	/* Do our job as router and forward this to the
 			   right place */
+	I_SHUTDOWN,	/* We need to shutdown */
+	I_SUCCESS,	/* The action completed successfully */
 
-	I_PE_DONE,	/* The Policy Engine has computed the next cluster
-			   state */
-	I_TE_DONE,	/* The Transitioner has completed its current batch
 
-			of work */
 	
-	/*  ------------- Last input found in table is above ------------ */
+	/*  ------------ Last input found in table is above ----------- */
 	I_ILLEGAL,	/* This is an illegal value for an FSA input */
 			/* (must be last) */
 };
@@ -144,51 +202,163 @@ enum crmd_fsa_input {
  * that if they ever do need to be called independantly in the future, it
  * wont be a problem. 
  *
+ * For example, separating A_LRM_CONNECT from A_STARTUP might be useful 
+ * if we ever try to recover from a faulty or disconnected LRM.
+ *
  *======================================*/
 
-/* -- initialization actions -- */
-#define A_CIB_CONNECT	0x00000001  /* Connect to the CIB */
-#define A_HA_CONNECT	0x00000002  /* Connect to Heartbeat */
-#define A_CCM_CONNECT	0x00000004  /* Connect to the CCM */
-#define	A_AUDIT		0x00000008  /* Audit the state of the cluster */
+	 /* Dont do anything */
+#define  A_NOTHING	0x0000000000000000 
 
-/* -- startup / join protocol actions -- */
-#define A_CCM_EVENT	0x00000010  /* Process whatever it is the CCM is
-				       trying to tell us */
-#define A_INIT_AS_DC	0x00000020  /* */
-#define	A_CALC_CIB	0x00000040  /* Calculate the most up to date CIB */
-#define	A_WELCOME_SEND	0x00000080  /* Send a welcome message to new
-				       node(s) */
-#define	A_WELCOME_ACK	0x00000100  /* Acknowledge the DC as our overlord */
-#define	A_SEND_CIB	0x00000200  /* Distribute the CIB */
-#define A_STORE_CIB	0x00000400  /* Store the CIB as sent by the DC */
-/* #define	A_	0x00000800  /\* Unused *\/ */
+/* -- Operational actions -- */
+	/* Hook to perform any actions (other than starting the CIB,
+	 * connecting to HA or the CCM) that might be needed as part
+	 * of the startup.
+	 */
+#define	 A_STARTUP	0x0000000000000001
 
-/* -- operational actions -- */
-#define	A_ROUTE_MSG	0x00001000  /* Send the message to the correct
-				       recipient */
-#define	A_STORE_REQ	0x00002000  /* Put the request into a queue
-				       for processing */
-#define	A_ADD_BLOCK	0x00004000  /* Add a system generate "block" so that
-				       resources arent moved to or are
-				       activly moved away from the affected
-				       node.  This way we can return quickly
-				       even if busy with other things. */
-/* #define	A_	0x00008000  /\* Unused *\/ */
+	/* Shutdown ourselves and Heartbeat */
+#define	 A_SHUTDOWN	0x0000000000000002
 
-/* -- DC resource actions -- */
-#define	A_PROCESS_REQ	0x00010000  /* Process the queue of requests */
-#define	A_INVOKE_PE	0x00020000  /* Calculate the next state for the
-				       cluster */
-#define	A_INVOKE_TE	0x00040000  /* Attempt to reach the newly calculated
-				       cluster state */
-/* #define	A_	0x00080000  /\* Unused *\/ */
+	/* Something bad happened, try to recover */
+#define	 A_RECOVER	0x0000000000000004
 
-/* -- Cleanup/shutdown actions -- */
-#define	A_GIVEUP_DC	0x00000040  /* Give up DC status */
-#define	A_SHUTDOWN	0x00000020  /* Shutdown the CRM */
+	/* Shutdown ourselves, but dont take Heartbeat (or the LRM?)
+	 * with us
+	 */
+#define  A_DISCONNECT	0x0000000000000008
 
 
+	/* Connect to Heartbeat */
+#define	 A_HA_CONNECT	0x0000000000000010
+
+	/* Connect to the CCM */
+#define	 A_CCM_CONNECT	0x0000000000000020
+
+	/* Connect to the Local Resource Manager */
+#define	 A_LRM_CONNECT	0x0000000000000040
+
+
+/* -- CIB actions -- */
+	/* Start the CIB */
+#define	 A_CIB_START	0x0000000000000100
+
+	/* Calculate the most up to date CIB.  This would be called
+	 * mulitple times, once to initiate and every time an
+	 * appropriate response comes from a slave node.
+	 */
+#define	 A_CIB_CALC	0x0000000000000200
+
+	/* Ask the local CIB for information */
+#define	 A_CIB_QUERY	0x0000000000000400
+
+	/* Stop the CIB, it is no longer required */
+#define	 A_CIB_STOP	0x0000000000000800
+
+
+/* -- CIB & Join protocol actions -- */
+	/* Distribute the CIB to the other nodes */
+#define	 A_CIB_SEND	0x0000000000001000
+
+	/* Update the CIB locally */
+#define	 A_CIB_UPDATE	0x0000000000002000
+
+	/* Send a welcome message to new
+				    * node(s)
+				    */
+#define	 A_JOIN_WELCOME	0x0000000000004000
+
+	/* Acknowledge the DC as our overlord*/
+#define	 A_JOIN_ACK	0x0000000000008000
+
+
+/* -- DC related actions -- */
+	/* Process whatever it is the CCM is trying to tell us.
+	 * This will generate inputs such as I_NODE_JOIN,
+	 * I_NODE_LEAVE, I_SHUTDOWN, I_DC_RELEASE, I_DC_TAKEOVER
+	 */
+#define	 A_CCM_EVENT	0x0000000000010000
+
+	/* Hook to perform any actions (apart from starting, the TE, PE
+	 * and gathering the latest CIB) that might be necessary before
+	 * taking over the responsibilities of being the DC.
+	 */
+#define	 A_DC_TAKEOVER	0x0000000000020000
+
+	/* Hook to perform any actions (apart from starting, the TE, PE 
+	 * and gathering the latest CIB) that might be necessary before 
+	 * giving up the responsibilities of being the DC.
+	 */
+#define	 A_DC_RELEASE	0x0000000000040000
+
+	/* Kill another node that is too sick to be the DC or is not
+	 * configured correctly. This may involve just adding a constraint
+	 * and invokeing the PE/TE
+	 */
+#define	 A_DC_ASSASINATE 0x0000000000080000
+
+
+/* -- Message actions -- */
+	/* Put the request into a queue for processing.  We do this every 
+	 * time so that the processing is consistent.  The intent is to 
+	 * allow the DC to keep doing important work while still not
+	 * loosing requests.
+	 * Messages are not considered recieved until processed.
+	 */
+#define	 A_MSG_STORE	0x0000000000100000
+
+	/* Process the queue of requests */
+#define	 A_MSG_PROCESS	0x0000000000200000
+
+	/* Send the message to the correct recipient */
+#define	 A_MSG_ROUTE	0x0000000000400000
+
+	/* Required? Acknowledge or reply to a message */
+#define	 A_MSG_ACK	0x0000000000800000
+
+
+/* -- DC-Only clients -- */
+	/* Start the Policy Engine */
+#define	 A_PE_START	0x0000000001000000
+
+	/* Calculate the next state for the cluster.  This is only
+	 * invoked once per needed calculation.
+	 */
+#define	 A_PE_INVOKE	0x0000000002000000
+
+	/* Stop the Policy Engine, it is no  longer required - Only the
+	 * DC needs to run the PE.
+	 */
+#define	 A_PE_STOP	0x0000000004000000
+
+
+#define	 A_TE_START	0x0000000010000000
+
+	/* Start the Transition Engine */
+#define	 A_TE_INVOKE	0x0000000020000000
+
+	/* Attempt to reach the newly  calculated cluster state.  This is 
+	 * only called once per transition (except if it is asked to
+	 * stop the transition or start a new one).
+	 * Once given a cluster state to reach, the TE will determin
+	 * tasks that can be performed in parallel, execute them, wait
+	 * for replies and then determin the next set until the new
+	 * state is reached or no further tasks can be taken.
+	 */
+#define	 A_TE_STOP	0x0000000040000000
+
+	/* Stop the Transition Engine, it is no longer required - Only
+	 * the DC needs to run the TE.
+	 */
+/* #define  A_ 0x000000000 */
+
+
+/* -- Misc -- */
+	/* Add a system generate "block" so that resources arent moved
+	 * to or are activly moved away from the affected node.  This
+	 * way we can return quickly even if busy with other things.
+	 */
+#define	 A_NODE_BLOCK	0x0000000080000000
 
 /*======================================
  *
@@ -204,9 +374,10 @@ enum crmd_fsa_input {
 #define	R_SHUTDOWN	0x00000004 /* Are we trying to shut down? */
 #define	R_CIB_DONE	0x00000008 /* Have we calculated the CIB? */
 
-#define R_WELCOMED	0x00000010
-#define R_HAVE_CIB	0x00000020
-/* #define	R_	0x00000040 /\* Unused *\/  */
+#define R_JOIN_OK	0x00000010 /* Have we completed the join process */
+#define R_HAVE_CIB	0x00000020 /* Do we have an up-to-date CIB */
+#define	R_HAVE_RES	0x00000040 /* Do we have any resources running
+				      locally */
 #define	R_INVOKE_PE	0x00000080 /* Does the PE needed to be invoked at
 				      the next appropriate point? */
 
@@ -216,7 +387,7 @@ enum crmd_fsa_input {
 #define	R_LRM_CONNECTED	0x00000800 /* Is the Local Resource Manager
 				      connected? */
 
-#define	R_REQ_PEND	0x00001000 /* Are there Requests waiting
+#define	R_REQ_PEND	0x00001000 /* Are there Requests waiting for
 				      processing? */
 #define	R_PE_PEND	0x00002000 /* Has the PE been invoked and we're
 				      awaiting a reply? */
