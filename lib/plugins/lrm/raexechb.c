@@ -48,7 +48,13 @@ static const char * RA_PATH = HB_RA_DIR;
 /* Map to the return code of the 'monitor' operation defined in the OCF RA
  * specification.
  */
-static const int status_op_exitcode_map[] = { 0, 1, 1, 7, 1 };
+static const int status_op_exitcode_map[] = {
+        EXECRA_OK,
+        EXECRA_UNKNOWN_ERROR,
+        EXECRA_UNKNOWN_ERROR,
+        EXECRA_NOT_RUNNING,
+        EXECRA_UNKNOWN_ERROR
+};
 
 /* The begin of exported function list */
 static int execra(const char * rsc_id,
@@ -145,6 +151,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	/* Prepare the call parameter */
 	if (0 > prepare_cmd_parameters(rsc_type, optype_tmp, params, params_argv)) {
 		cl_log(LOG_ERR, "HB RA: Error of preparing parameters");
+		g_free(optype_tmp);
 		return -1;
 	}
 	g_free(optype_tmp);
@@ -237,13 +244,15 @@ map_ra_retvalue(int ret_execra, const char * op_type)
 	*/
 	if ( strncmp(op_type, "status", strlen("status")) == 0 ) {
 		if (ret_execra < 0 || ret_execra > 4 ) {
-			ret_execra = 1;
+			ret_execra = EXECRA_UNKNOWN_ERROR;
 		}
 		return status_op_exitcode_map[ret_execra];
-	} else
-	{
-		return ret_execra;
 	}
+	/* For none-status operation return code */
+	if ( ret_execra < 0 || ret_execra > 7 ) {
+		ret_execra = EXECRA_UNKNOWN_ERROR;
+	}
+	return ret_execra;
 }
 
 static int 

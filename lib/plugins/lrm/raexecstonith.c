@@ -113,6 +113,7 @@ static const char * meta_data2 =
 "  <actions>\n"
 "    <action name=\"start\"   timeout=\"15\" />\n"
 "    <action name=\"stop\"    timeout=\"15\" />\n"
+"    <action name=\"status\"  timeout=\"15\" />\n"
 "    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
 "    <action name=\"meta-data\"  timeout=\"5\" />\n"
 "  </actions>\n"
@@ -188,7 +189,7 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	}
 
 	if (ST_OK != stonithd_signon("STONITH_RA_EXEC")) {
-		cl_log(LOG_ERR, "Can not signon to the stonithd.");
+		cl_log(LOG_ERR, "STONITH_RA_EXEC: Cannot sign on the stonithd.");
 		exit(EXECRA_UNKNOWN_ERROR);
 	}
 
@@ -249,7 +250,15 @@ stonithRA_ops_callback(stonithRA_ops_t * op, void * private_data)
 static uniform_ret_execra_t
 map_ra_retvalue(int ret_execra, const char * op_type)
 {
-	/* Because the UNIFORM_RET_EXECRA is compatible with OCF standard */
+	/* Because the UNIFORM_RET_EXECRA is compatible with OCF standard, no
+	 * actual mapping except validating, which ensure the return code
+	 * will be in the range 0 to 7. Too strict?
+	 */
+	if (ret_execra < 0 || ret_execra > 7) {
+		cl_log(LOG_WARNING, "mapped the invalid return code %d."
+			, ret_execra);
+		ret_execra = EXECRA_UNKNOWN_ERROR;
+	}
 	return ret_execra;
 }
 
