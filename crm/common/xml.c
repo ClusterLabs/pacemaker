@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.5 2004/07/09 15:37:41 msoffen Exp $ */
+/* $Id: xml.c,v 1.6 2004/07/19 14:41:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -476,8 +476,6 @@ xmlNodePtr
 add_node_copy(xmlNodePtr new_parent, xmlNodePtr xml_node)
 {
 	xmlNodePtr node_copy = NULL;
-	
-	
 
 	if(xml_node != NULL && new_parent != NULL) {
 		node_copy = copy_xml_node_recursive(xml_node);

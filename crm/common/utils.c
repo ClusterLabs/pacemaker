@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.6 2004/07/09 15:37:41 msoffen Exp $ */
+/* $Id: utils.c,v 1.7 2004/07/19 14:41:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,7 +80,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 	crm_verbose("Attempting to decode: [%s]", srcstring);
 	if (srcstring != NULL) {
 		len = strlen(srcstring);
-		while(lpc < len) {
+		while(lpc <= len) {
 			if (srcstring[lpc] == separator
 			    || srcstring[lpc] == '\0') {
 				*name = (char*)crm_malloc(sizeof(char)*lpc+1);
@@ -257,4 +257,66 @@ do_crm_log(int log_level, const char *function, const char *fmt, ...)
 				cl_log(log_level, "(%s) %s", function, buf);
 			}
 	}
+}
+
+int
+compare_version(const char *version1, const char *version2)
+{
+	int lpc = 0;
+	char *step1 = NULL, *step2 = NULL;
+	char *rest1 = NULL, *rest2 = NULL;
+
+	if(version1 != NULL) rest1 = crm_strdup(version1);
+	if(version2 != NULL) rest2 = crm_strdup(version2);
+
+	while(1) {
+		int cmp = 0;
+		int step1_i = 0;
+		int step2_i = 0;
+		char *tmp1 = NULL, *tmp2 = NULL;
+		
+		decodeNVpair(rest1, '.', &step1, &tmp1);
+		decodeNVpair(rest2, '.', &step2, &tmp2);
+
+		if(step1 != NULL) {
+			step1_i = atoi(step1);
+		}
+		if(step2 != NULL) {
+			step2_i = atoi(step2);
+		}
+
+		if(step1_i < step2_i){
+			cmp = -1;
+		} else if (step1_i > step2_i){
+			cmp = 1;
+		}
+
+		crm_trace("compare[%d (%d)]: %d(%s)  %d(%s)",
+			  lpc++, cmp,
+			  step1_i, step1, step2_i, step2);
+
+		crm_free(rest1);
+		crm_free(rest2);
+
+		rest1 = tmp1;
+		rest2 = tmp2;
+
+		if(step1 == NULL && step2 == NULL) {
+			break;
+		}
+
+		crm_free(step1);
+		crm_free(step2);
+		
+		if(cmp < 0) {
+			crm_verbose("%s < %s", version1, version2);
+			return -1;
+			
+		} else if(cmp > 0) {
+			crm_verbose("%s > %s", version1, version2);
+			return 1;
+		}
+	}
+	crm_verbose("%s == %s", version1, version2);
+	return 0;
 }
