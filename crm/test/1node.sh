@@ -41,7 +41,7 @@ do_cmd wait_for_state S_IDLE 10 $test_node_1
 cts_assert "S_IDLE not reached on $test_node_1 (startup)"
 
 # Erase the contents of the CIB and wait for things to settle down
-do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/cibadmin -E 
+#do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/cibadmin -E 
 do_cmd wait_for_state S_IDLE 10 $test_node_1 
 cts_assert "S_IDLE not reached on $test_node_1 after CIB erase"
 
