@@ -301,7 +301,7 @@ do_dc_join_finalize(long long action,
 					NULL, cib_sync_call);
 			}
 
-		} while(rc == cib_remote_timeout && lpc++ < 5);
+		} while(rc == cib_remote_timeout && lpc++ < 2);
 		fsa_cib_conn->call_timeout = 0; /* back to the default */
 
 		if(max_generation_from != NULL && rc == cib_ok) {
@@ -319,11 +319,18 @@ do_dc_join_finalize(long long action,
 			update_local_cib(update);
 		}
 		
-		if(rc != cib_ok) {
+		if(rc == cib_remote_timeout) {
 			crm_err("Sync from %s resulted in an error: %s",
 				max_generation_from, cib_error2string(rc));
 			/* restart the whole join process */
-			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+			register_fsa_error(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
+			return I_NULL;
+
+		} else if(rc != cib_ok) {
+			crm_err("Sync from %s resulted in an error: %s",
+				max_generation_from, cib_error2string(rc));
+
+			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 			return I_NULL;
 		}
 	}
