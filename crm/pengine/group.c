@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.7 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: group.c,v 1.8 2005/02/17 16:39:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,11 +37,9 @@ typedef struct group_variant_data_s
 
 
 #define get_group_variant_data(data, rsc)				\
-	if(rsc->variant == pe_group) {					\
-		data = (group_variant_data_t *)rsc->variant_opaque;	\
-	} else {							\
-		abort();						\
-	}
+	CRM_ASSERT(rsc->variant == pe_group);				\
+	CRM_ASSERT(rsc->variant_opaque != NULL);			\
+	data = (group_variant_data_t *)rsc->variant_opaque;		\
 
 void group_unpack(resource_t *rsc)
 {
