@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.15 2004/06/01 12:25:16 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.16 2004/06/02 16:03:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,8 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef XML_FSA_DEFINES__H
-#define XML_FSA_DEFINES__H
+#ifndef FSA_DEFINES__H
+#define FSA_DEFINES__H
 
 /*======================================
  *	States the DC/CRMd can be in

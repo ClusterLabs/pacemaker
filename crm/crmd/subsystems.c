@@ -497,7 +497,7 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 	
 		blank_client->client_channel = client_channel;
 		blank_client->sub_sys   = NULL;
-		blank_client->uuid       = NULL;
+		blank_client->uuid      = NULL;
 		blank_client->table_key = NULL;
 	
 		blank_client->client_source =

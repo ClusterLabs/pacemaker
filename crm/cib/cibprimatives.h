@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.h,v 1.8 2004/03/25 17:11:23 andrew Exp $ */
+/* $Id: cibprimatives.h,v 1.9 2004/06/02 16:03:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,8 +17,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CRMINTERNAL_H
-#define CRMINTERNAL_H
+#ifndef CIB_PRIMATIVES__H
+#define CIB_PRIMATIVES__H
 
 #include <portability.h>
 #include <stdio.h>

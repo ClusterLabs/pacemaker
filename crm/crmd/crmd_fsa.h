@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.20 2004/06/01 12:25:15 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.21 2004/06/02 16:03:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,8 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef XML_CRM_FSA__H
-#define XML_CRM_FSA__H
+#ifndef CRMD_FSA__H
+#define CRMD_FSA__H
 
 #include <fsa_defines.h>
 #include <ocf/oc_event.h>

@@ -1,4 +1,4 @@
-/* $Id: cibio.h,v 1.7 2004/03/22 14:20:49 andrew Exp $ */
+/* $Id: cibio.h,v 1.8 2004/06/02 16:03:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,8 +17,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CRMIO_H
-#define CRMIO_H
+#ifndef CIB_IO__H
+#define CIB_IO__H
 
 #include <portability.h>
 #include <stdio.h>
