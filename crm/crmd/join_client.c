@@ -144,16 +144,17 @@ do_cl_join_result(long long action,
 	    enum crmd_fsa_input current_input,
 	    void *data)
 {
-	xmlNodePtr tmp1;
-	xmlNodePtr tmp2;
-	xmlNodePtr welcome = (xmlNodePtr)data;
-
+	gboolean   was_nack      = TRUE;
+	xmlNodePtr welcome       = (xmlNodePtr)data;
+	xmlNodePtr tmp1          = find_xml_node(welcome, XML_TAG_OPTIONS);
+	const char *ack_nack     = xmlGetProp(tmp1, CRM_OP_JOINACK);
 	const char *welcome_from = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
+	xmlNodePtr tmp2          = NULL;
 
-	gboolean was_nack = FALSE;
-#if 0
-	calculate if it was an ack or a nack
-#endif
+	/* calculate if it was an ack or a nack */
+	if(safe_str_eq(ack_nack, XML_BOOLEAN_TRUE)) {
+		was_nack = FALSE;
+	}
 	
 	if(was_nack) {
 		crm_err("Join with %s failed.  NACK'd", welcome_from);
