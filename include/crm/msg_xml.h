@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.25 2005/02/15 14:20:36 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.26 2005/02/23 16:26:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -171,7 +171,7 @@
 #define XML_EXPR_ATTR_VALUE		"value"
 #define XML_EXPR_ATTR_TYPE		"type"
 
-#define XML_CONS_TAG_RSC_DEPEND		"rsc_dependancy"
+#define XML_CONS_TAG_RSC_DEPEND		"rsc_colocation"
 #define XML_CONS_TAG_RSC_ORDER		"rsc_order"
 #define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
 #define XML_CONS_ATTR_FROM		"from"
