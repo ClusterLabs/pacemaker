@@ -294,7 +294,7 @@ do_startup(long long action,
 	integration_timer->callback = timer_popped;
 	
 	shutdown_escalation_timmer->source_id = -1;
-	shutdown_escalation_timmer->period_ms = interval*13;
+	shutdown_escalation_timmer->period_ms = interval*130;
 	shutdown_escalation_timmer->fsa_input = I_TERMINATE;
 	shutdown_escalation_timmer->callback = timer_popped;
 	
