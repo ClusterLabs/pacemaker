@@ -611,8 +611,8 @@ void
 dump_rsc_info(void)
 {
 	xmlNodePtr local_cib = get_cib_copy();
-	xmlNodePtr root      = get_object_root("status", local_cib);
-	xmlNodePtr nodes     = root->children;
+	xmlNodePtr root      = get_object_root(XML_CIB_TAG_STATUS, local_cib);
+	xmlNodePtr nodes     = NULL;
 	xmlNodePtr node      = NULL;
 	xmlNodePtr resources = NULL;
 	xmlNodePtr rsc       = NULL;
@@ -621,14 +621,23 @@ dump_rsc_info(void)
 		"lrm",
 		"lrm_resources"
 	};
-	
 
+	if(root != NULL) {
+		crm_err("%s section was empty/NULL", XML_CIB_TAG_STATUS);
+	} else {
+		nodes = root->children;
+	}
+	
 	while(nodes != NULL) {
 		node = nodes;
 		nodes = nodes->next;
 		
 		resources = find_xml_node_nested(node, path, DIMOF(path));
-		resources = resources->children;
+
+		if(resources != NULL) {
+			resources = resources->children;
+		}
+		
 		while(resources != NULL) {
 			rsc = resources;
 			resources = resources->next;
