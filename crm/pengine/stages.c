@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.34 2005/02/02 21:56:38 andrew Exp $ */
+/* $Id: stages.c,v 1.35 2005/02/15 08:07:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,7 +32,7 @@
 node_t *choose_fencer(action_t *stonith, node_t *node, GListPtr resources);
 void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 
-const char *dc_uuid = NULL;
+char *dc_uuid = NULL;
 
 /*
  * Unpack everything
@@ -66,7 +66,11 @@ stage0(crm_data_t * cib,
 	crm_data_t * agent_defaults  = NULL;
 	/*get_object_root(XML_CIB_TAG_RA_DEFAULTS, cib); */
 
-	dc_uuid = crm_element_value(cib, XML_ATTR_DC_UUID);
+	crm_free(dc_uuid);
+	dc_uuid = NULL;
+	if(cib != NULL) {
+		dc_uuid = crm_element_value_copy(cib, XML_ATTR_DC_UUID);
+	}
 	
 	/* reset remaining global variables */
 	num_synapse = 0;
