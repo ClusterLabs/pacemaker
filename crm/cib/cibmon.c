@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.9 2005/02/06 05:03:01 alan Exp $ */
+/* $Id: cibmon.c,v 1.10 2005/02/09 11:40:11 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -31,6 +31,7 @@
 #include <fcntl.h>
 
 #include <hb_api.h>
+#include <clplumbing/coredumps.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/Gmain_timeout.h>
 
@@ -90,21 +91,11 @@ main(int argc, char **argv)
 		{0, 0, 0, 0}
 	};
 
-	/* Redirect messages from glib functions to our handler */
-	g_log_set_handler(NULL,
-			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
-			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
-			  | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
-			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
-			  cl_glib_msg_handler, NULL);
-	/* and for good measure... */
-	g_log_set_always_fatal((GLogLevelFlags)0);    
+	crm_log_init(crm_system_name);
+	cl_set_corerootdir(HA_COREDIR);	    
+	cl_enable_coredumps(1);
+	cl_cdtocoredir();
 	
-	cl_log_set_entity(crm_system_name);
-	cl_log_set_facility(LOG_LOCAL7);
-	cl_log_set_debugfile(DEVEL_DIR"/cibmon.debug");
-	cl_log_set_logfile(DEVEL_DIR"/cibmon.log");
-
 #ifdef USE_LIBXML
 	/* docs say only do this once, but in their code they do it every time! */
 	xmlInitParser(); 
@@ -318,8 +309,6 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	const char *op       = NULL;
 	const char *id       = NULL; 
 	const char *type     = NULL;
-	const char *update_s = NULL;
-	const char *pre_update_s = NULL;
 
 	crm_data_t *update     = NULL;
 	crm_data_t *pre_update = NULL;
@@ -333,15 +322,13 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	op       = cl_get_string(msg, F_CIB_OPERATION);
 	id       = cl_get_string(msg, F_CIB_OBJID);
 	type     = cl_get_string(msg, F_CIB_OBJTYPE);
-	update_s = cl_get_string(msg, F_CIB_UPDATE);
-	pre_update_s = cl_get_string(msg, F_CIB_EXISTING);
 
-	crm_debug("converting tags to xml");
-	
-	update     = string2xml(update_s);
-	pre_update = string2xml(pre_update_s);
-	xml_text   = dump_xml_formatted(update);
-	
+	update     = get_message_xml(msg, F_CIB_UPDATE);
+	pre_update = get_message_xml(msg, F_CIB_EXISTING);
+
+	if(update != NULL) {
+		xml_text   = dump_xml_formatted(update);
+	}
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 
 	update_depth++;
@@ -353,32 +340,30 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	}
 	
 	fprintf(msg_cibmon_strm, "[%s] Raw update for %s (to %s)\n%s\n",
-		event, op, crm_str(type), update_s);
+		event, op, crm_str(type), xml_text);
 
 	if(update != NULL) {
 		crm_verbose("[%s] Performing %s on <%s%s%s>",
 			    event, op, type, id?" id=":"", id?id:"");
+		crm_xml_verbose(update, "Update");
 		fprintf(msg_cibmon_strm, "[%s] Performing %s to <%s%s%s>."
 			"  Update follows\n%s\n",
 			event, op, crm_str(type), id?" id=":"", id?id:"",
 			xml_text);
 
-	} else if(update_s == NULL && update == NULL) {
+	} else if(update == NULL) {
 		crm_verbose("[%s] Performing operation %s (on section=%s)",
 			    event, op, type);
 		fprintf(msg_cibmon_strm, "[%s] Performing %s (to %s)\n",
 			event, op, crm_str(type));
-
-	} else {
-		crm_err("[%s] Couldnt convert update for %s (to %s)",
-			event, op, crm_str(type));
-		fprintf(msg_cibmon_strm,
-			"[%s] ERROR: Couldnt convert update for %s (to %s)\n",
-			event, op, crm_str(type));
 	}
 	crm_free(xml_text);
 
-	xml_text = dump_xml_formatted(pre_update);
+	crm_xml_verbose(pre_update, "Existing obejct");
+	
+	if(pre_update != NULL) {
+		xml_text = dump_xml_formatted(pre_update);
+	}
 	fprintf(msg_cibmon_strm, "[%s] Existing object\n%s\n",
 		event, xml_text);
 
@@ -394,8 +379,6 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	const char *op       = NULL;
 	const char *id       = NULL; 
 	const char *type     = NULL;
-	const char *update_s = NULL;
-	const char *output_s = NULL;
 
 	crm_data_t *update = NULL;
 	crm_data_t *output = NULL;
@@ -409,14 +392,14 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	op       = cl_get_string(msg, F_CIB_OPERATION);
 	id       = cl_get_string(msg, F_CIB_OBJID);
 	type     = cl_get_string(msg, F_CIB_OBJTYPE);
-	update_s = cl_get_string(msg, F_CIB_UPDATE);
-	output_s = cl_get_string(msg, F_CIB_UPDATE_RESULT);
+
+	update = get_message_xml(msg, F_CIB_UPDATE);
+	output = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+
+	if(output != NULL) {
+		xml_text = dump_xml_formatted(output);
+	}
 	
-	output = string2xml(output_s);
-	update = string2xml(update_s);
-
-	xml_text = dump_xml_formatted(output);
-
 	update_depth--;
 	if(last_notify_pre == FALSE 
 	   && update_depth > 0
@@ -460,6 +443,7 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	fprintf(msg_cibmon_strm, "[%s] Operation %s result:\n%s\n",
 		event, op, xml_text);
 	crm_free(xml_text);
+	crm_xml_verbose(output, "Resulting fragment");
 
 	fflush(msg_cibmon_strm);
 }
