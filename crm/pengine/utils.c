@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.31 2004/06/21 10:14:00 andrew Exp $ */
+/* $Id: utils.c,v 1.32 2004/06/28 08:29:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,6 +27,8 @@
 
 #include <pengine.h>
 #include <pe_utils.h>
+
+int action_id = 1;
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
@@ -472,10 +474,10 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 }
 
 action_t *
-action_new(int id, resource_t *rsc, enum action_tasks task)
+action_new(resource_t *rsc, enum action_tasks task)
 {
 	action_t *action = (action_t*)crm_malloc(sizeof(action_t));
-	action->id   = id;
+	action->id   = action_id++;
 	action->rsc  = rsc;
 	action->task = task;
 	action->node = NULL; // fill node in later
@@ -483,7 +485,7 @@ action_new(int id, resource_t *rsc, enum action_tasks task)
 	action->actions_after    = NULL;
 	action->failure_is_fatal = TRUE;
 	action->discard    = FALSE;
-	action->runnable   = FALSE;
+	action->runnable   = TRUE;
 	action->processed  = FALSE;
 	action->optional   = TRUE;
 	action->seen_count = 0;

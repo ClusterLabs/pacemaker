@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.6 2004/06/21 10:14:00 andrew Exp $ */
+/* $Id: stages.c,v 1.7 2004/06/28 08:29:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -56,11 +56,19 @@ stage0(xmlNodePtr cib,
 		XML_CIB_TAG_RESOURCES,   cib);
 	xmlNodePtr cib_constraints = get_object_root(
 		XML_CIB_TAG_CONSTRAINTS, cib);
+	xmlNodePtr config          = get_object_root(
+		XML_CIB_TAG_CRMCONFIG,   cib);
+	xmlNodePtr agent_defaults  = NULL;
+	//get_object_root(XML_CIB_TAG_RA_DEFAULTS, cib);
 
 	/* reset remaining global variables */
 	max_valid_nodes = 0;
 	order_id = 1;
 	action_id = 1;
+
+	unpack_config(config);
+	
+	unpack_global_defaults(agent_defaults);
 	
 	unpack_nodes(safe_val(NULL, cib_nodes, children), nodes);
 
@@ -70,7 +78,7 @@ stage0(xmlNodePtr cib,
 	int old_log = 0;
 	old_log = set_crm_log_level(LOG_TRACE);
 	unpack_status(safe_val(NULL, cib_status, children),
-		      *nodes, *resources, node_constraints);
+		      *nodes, *resources, actions, node_constraints);
 
 	unpack_constraints(safe_val(NULL, cib_constraints, children),
 			   *nodes, *resources,
@@ -318,11 +326,11 @@ stage5(GListPtr resources)
 				  safe_val5(NULL, rsc, start,node,details,id));
 		}
 
-		if(rsc->stop->node != NULL) {
-			rsc->stop->runnable = TRUE;
+		if(rsc->stop->node == NULL) {
+			rsc->stop->runnable = FALSE;
 		}
-		if(rsc->start->node != NULL) {
-			rsc->start->runnable = TRUE;
+		if(rsc->start->node == NULL) {
+			rsc->start->runnable = FALSE;
 		}
 
 		);
@@ -347,7 +355,7 @@ stage6(GListPtr *actions, GListPtr *action_constraints, GListPtr nodes)
 			crm_warn("Scheduling Node %s for shutdown",
 				 node->details->id);
 			
-			down_node = action_new(action_id++, NULL,shutdown_crm);
+			down_node = action_new(NULL,shutdown_crm);
 			down_node->node     = node;
 			down_node->runnable = TRUE;
 			down_node->optional = FALSE;
@@ -363,7 +371,7 @@ stage6(GListPtr *actions, GListPtr *action_constraints, GListPtr nodes)
 			crm_warn("Scheduling Node %s for STONITH",
 				 node->details->id);
 
-			stonith_node = action_new(action_id++,NULL,stonith_op);
+			stonith_node = action_new(NULL,stonith_op);
 			stonith_node->node     = node;
 			stonith_node->runnable = TRUE;
 			stonith_node->optional = FALSE;
@@ -397,6 +405,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 	int lpc;
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
+	GListPtr action_set = NULL;
 
 /*
 	for(lpc = 0; lpc < g_list_length(action_constraints);  lpc++) {
@@ -441,7 +450,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 	slist_iter(
 		rsc, resource_t, resources, lpc,	
 
-		GListPtr action_set = NULL;
+		action_set = NULL;
 		/* any non-essential stop actions will be marked redundant by
 		 *  during stage6
 		 */
@@ -456,6 +465,23 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 			       rsc->id);
 		}
 		);
+
+	crm_verbose("Processing unconnected actions");
+	action_set = NULL;
+	slist_iter(
+		action, action_t, actions, lpc,
+
+		if(action->runnable && action->processed == FALSE) {
+			action_set = g_list_append(action_set, action);
+		}
+		);
+	
+	if(action_set != NULL) {
+		crm_verbose("Created action set for unconnected actions");
+		*action_sets = g_list_append(*action_sets, action_set);
+	} else {
+		crm_verbose("No unconnected actions");
+	}
 	
 	
 	return TRUE;

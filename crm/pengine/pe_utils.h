@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.7 2004/06/16 11:12:34 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.8 2004/06/28 08:29:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,7 +23,7 @@
 // General utilities
 extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 
-extern action_t *action_new(int id, resource_t *rsc, enum action_tasks task);
+extern action_t *action_new(resource_t *rsc, enum action_tasks task);
 
 
 // Constraint helper functions

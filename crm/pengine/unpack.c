@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.11 2004/06/21 10:14:00 andrew Exp $ */
+/* $Id: unpack.c,v 1.12 2004/06/28 08:29:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,9 +33,10 @@
 #include <pengine.h>
 #include <pe_utils.h>
 
-int max_valid_nodes = 0;
-int order_id = 1;
-int action_id = 1;
+int      max_valid_nodes = 0;
+int      order_id        = 1;
+GListPtr agent_defaults  = NULL;
+gboolean stonith_enabled = FALSE;
 
 GListPtr match_attrs(
 	const char *attr_exp, GListPtr node_list, gboolean invert);
@@ -57,17 +58,16 @@ gboolean unpack_rsc_location(
 	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 	GListPtr *action_constraints);
 
-gboolean unpack_lrm_rsc_state(node_t *node,
-			      xmlNodePtr lrm_state,
-			      GListPtr rsc_list,
-			      GListPtr *node_constraints);
+gboolean unpack_lrm_rsc_state(
+	node_t *node, xmlNodePtr lrm_state, GListPtr rsc_list,
+	GListPtr *actions, GListPtr *node_constraints);
 
 gboolean add_node_attrs(xmlNodePtr attrs, node_t *node);
 
-gboolean unpack_healthy_resource(GListPtr *node_constraints,
+gboolean unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
 	xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node);
 
-gboolean unpack_failed_resource(GListPtr *node_constraints,
+gboolean unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
 	xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node);
 
 gboolean determine_online_status(xmlNodePtr node_state, node_t *this_node);
@@ -79,14 +79,103 @@ gboolean is_node_unclean(xmlNodePtr node_state);
 gboolean rsc2rsc_new(const char *id, enum con_strength strength,
 			   resource_t *rsc_lh, resource_t *rsc_rh);
 
-gboolean create_ordering(const char *id, enum con_strength strength,
-			 resource_t *rsc_lh, resource_t *rsc_rh,
-			 GListPtr *action_constraints);
+gboolean create_ordering(
+	const char *id, enum con_strength strength,
+	resource_t *rsc_lh, resource_t *rsc_rh, GListPtr *action_constraints);
 
 rsc_to_node_t *rsc2node_new(
 	const char *id, resource_t *rsc,
 	double weight, gboolean can_run, node_t *node,
 	GListPtr *node_constraints);
+
+const char *get_agent_param(resource_t *rsc, const char *param);
+
+const char *get_agent_param_rsc(resource_t *rsc, const char *param);
+
+const void *get_agent_param_metadata(resource_t *rsc, const char *param);
+
+const char *get_agent_param_global(resource_t *rsc, const char *param);
+
+const char *param_value(xmlNodePtr parent, const char *name);
+
+gboolean
+unpack_config(xmlNodePtr config)
+{
+	const char *value = NULL;
+	
+	value = param_value(config, "failed_nodes");
+
+	crm_debug("config %p", config);
+	crm_debug("value %p", value);
+
+	if(safe_str_eq(value, "stonith")) {
+		crm_debug("Enabling STONITH of failed nodes");
+		stonith_enabled = TRUE;
+	} else {
+		stonith_enabled = FALSE;
+	}
+	
+	return TRUE;
+}
+
+const char *
+param_value(xmlNodePtr parent, const char *name) 
+{
+	xmlNodePtr a_default = find_entity(
+		parent, XML_CIB_TAG_NVPAIR, name, FALSE);
+
+	return xmlGetProp(a_default, XML_NVPAIR_ATTR_VALUE);
+}
+
+const char *
+get_agent_param(resource_t *rsc, const char *param)
+{
+	const char *value = NULL;
+
+	if(param == NULL) {
+		return NULL;
+	}
+	
+	value = get_agent_param_rsc(rsc, param);
+	if(value == NULL) {
+		value = get_agent_param_metadata(rsc, param);
+	}
+	if(value == NULL) {
+		value = get_agent_param_global(rsc, param);
+	}
+	
+	return value;
+}
+
+const char *
+get_agent_param_rsc(resource_t *rsc, const char *param)
+{
+	xmlNodePtr xml_rsc = rsc->xml;
+	return xmlGetProp(xml_rsc, param);
+}
+
+const void *
+get_agent_param_metadata(resource_t *rsc, const char *param)
+{
+	return NULL;
+}
+
+const char *
+get_agent_param_global(resource_t *rsc, const char *param)
+{
+	const char * value = NULL;//g_hashtable_lookup(agent_global_defaults, param);
+	if(value == NULL) {
+		crm_err("No global value default for %s", param);
+	}
+	return value;
+}
+
+gboolean
+unpack_global_defaults(xmlNodePtr defaults)
+{
+	return TRUE;
+}
+
 
 gboolean
 unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
@@ -160,11 +249,11 @@ unpack_resources(xmlNodePtr xml_resources,
 		action_t *action_start = NULL;
 		xmlNodePtr xml_obj     = xml_resources;
 		const char *id         = xmlGetProp(xml_obj, XML_ATTR_ID);
+		const char *stopfail   = xmlGetProp(xml_obj, "on_stopfail");
+		const char *version    = xmlGetProp(xml_obj, XML_ATTR_VERSION);
 		const char *priority   = xmlGetProp(
 			xml_obj, XML_CIB_ATTR_PRIORITY);
 		// todo: check for null
-		float priority_f       = atof(priority);
-
 		xml_resources = xml_resources->next;
 
 		crm_verbose("Processing resource...");
@@ -175,10 +264,12 @@ unpack_resources(xmlNodePtr xml_resources,
 		}
 		resource_t *new_rsc = crm_malloc(sizeof(resource_t));
 		new_rsc->id		= id;
-		new_rsc->class		= xmlGetProp(xml_obj, "class");
-		new_rsc->type		= xmlGetProp(xml_obj, "type");
 		new_rsc->xml		= xml_obj;
-		new_rsc->priority	= priority_f; 
+		new_rsc->agent		= crm_malloc(sizeof(lrm_agent_t));
+		new_rsc->agent->class	= xmlGetProp(xml_obj, "class");
+		new_rsc->agent->type	= xmlGetProp(xml_obj, "type");
+		new_rsc->agent->version	= atof(version?version:"0.0");
+		new_rsc->priority	= atof(priority?priority:"0.0"); 
 		new_rsc->candidate_colors = NULL;
 		new_rsc->color		= NULL; 
 		new_rsc->runnable	= TRUE; 
@@ -187,16 +278,22 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->rsc_cons	= NULL; 
 		new_rsc->node_cons	= NULL; 
 		new_rsc->cur_node	= NULL;
-		
-		action_stop = action_new(action_id++, new_rsc, stop_rsc);
 
-		action_start = action_new(action_id++, new_rsc, start_rsc);
+		if(safe_str_eq(stopfail, "ignore")) {
+			new_rsc->stopfail_type = pesf_ignore;
+		} else if(safe_str_eq(stopfail, "stonith")) {
+			new_rsc->stopfail_type = pesf_stonith;
+		} else {
+			new_rsc->stopfail_type = pesf_block;
+		}
 
-		new_rsc->stop = action_stop;
-		*actions = g_list_append(*actions, action_stop);
+		action_stop    = action_new(new_rsc, stop_rsc);
+		*actions       = g_list_append(*actions, action_stop);
+		new_rsc->stop  = action_stop;
 
+		action_start   = action_new(new_rsc, start_rsc);
+		*actions       = g_list_append(*actions, action_start);
 		new_rsc->start = action_start;
-		*actions = g_list_append(*actions, action_start);
 
 		order_new(action_stop, action_start, startstop, action_cons);
 
@@ -294,7 +391,8 @@ rsc2node_new(const char *id, resource_t *rsc,
 // anything else?
 gboolean
 unpack_status(xmlNodePtr status,
-	      GListPtr nodes, GListPtr rsc_list, GListPtr *node_constraints)
+	      GListPtr nodes, GListPtr rsc_list,
+	      GListPtr *actions, GListPtr *node_constraints)
 {
 	const char *id        = NULL;
 
@@ -335,8 +433,8 @@ unpack_status(xmlNodePtr status,
 		determine_online_status(node_state, this_node);
 
 		crm_verbose("Processing lrm resource entries");
-		unpack_lrm_rsc_state(
-			this_node, lrm_rsc, rsc_list, node_constraints);
+		unpack_lrm_rsc_state(this_node, lrm_rsc, rsc_list,
+				     actions, node_constraints);
 
 		crm_verbose("Processing lrm agents");
 		unpack_lrm_agents(this_node, lrm_agents);
@@ -430,8 +528,9 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 	/* if the agent is not listed, remove the node from
 	 * the resource's list of allowed_nodes
 	 */
-	lrm_agent_t *agent = NULL;
+	lrm_agent_t *agent   = NULL;
 	xmlNodePtr xml_agent = NULL;
+	const char *version  = NULL;
 
 	if(agent_list == NULL) {
 		return FALSE;
@@ -443,7 +542,10 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 		agent = (lrm_agent_t*)crm_malloc(sizeof(lrm_agent_t));
 		agent->class = xmlGetProp(xml_agent, "class");
 		agent->type  = xmlGetProp(xml_agent, "type");
+		version      = xmlGetProp(xml_agent, "version");
 
+		agent->version = atof(version?version:"0.0");
+		
 		node->details->agents = g_list_append(
 			node->details->agents, agent);
 		
@@ -455,8 +557,8 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 
 
 gboolean
-unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
-		     GListPtr rsc_list, GListPtr *node_constraints)
+unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc, GListPtr rsc_list,
+		     GListPtr *actions, GListPtr *node_constraints)
 {
 	xmlNodePtr rsc_entry  = NULL;
 	const char *rsc_id    = NULL;
@@ -511,11 +613,14 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 			 * For now this should do
 			 */
 			if(safe_str_eq(last_op, "stop")) {
-				unpack_failed_resource(node_constraints,
-						       rsc_entry,rsc_lh,node);
+				unpack_failed_resource(
+					node_constraints, actions,
+					rsc_entry,rsc_lh,node);
 			} else {
-				unpack_healthy_resource(node_constraints,
-							rsc_entry,rsc_lh,node);
+				unpack_healthy_resource(
+					node_constraints, actions,
+					rsc_entry,rsc_lh,node);
+
 				rsc_lh->start->optional = FALSE;
 			}
 			
@@ -524,14 +629,16 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 
 		switch(rsc_code_i) {
 			case LRM_OP_DONE:
-				unpack_healthy_resource(node_constraints,
-							rsc_entry,rsc_lh,node);
+				unpack_healthy_resource(
+					node_constraints, actions,
+					rsc_entry, rsc_lh,node);
 				break;
 			case LRM_OP_ERROR:
 			case LRM_OP_TIMEOUT:
 			case LRM_OP_NOTSUPPORTED:
-				unpack_failed_resource(node_constraints,
-						       rsc_entry,rsc_lh,node);
+				unpack_failed_resource(
+					node_constraints, actions, 
+					rsc_entry, rsc_lh,node);
 				break;
 			case LRM_OP_CANCELLED:
 				// do nothing??
@@ -543,49 +650,73 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 }
 
 gboolean
-unpack_failed_resource(GListPtr *node_constraints,
+unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
 		       xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node)
 {
 	const char *last_op  = xmlGetProp(rsc_entry, "last_op");
 
 	crm_debug("Unpacking failed action %s on %s", last_op, rsc_lh->id);
 	
-	if(safe_str_eq(last_op, "start")) {
+	if(safe_str_neq(last_op, "stop")) {
 		/* not running */
 		/* do not run the resource here again */
 		rsc2node_new("dont_run_generate",
 			     rsc_lh, -1.0, FALSE, node, node_constraints);
 
-	} else if(safe_str_eq(last_op, "stop")) {
-		/* must assume still running */
-		rsc_lh->cur_node = node;
-		node->details->running_rsc = g_list_append(
-			node->details->running_rsc, rsc_lh);
-
-		/* remedial action:
-		 *   shutdown (so all other resources are stopped gracefully)
-		 *   and then STONITH node
-		 */
-		if(node->details->online) {
-			node->details->shutdown = TRUE;
-		}
-		node->details->unclean  = TRUE;
+		/* schedule a stop here just in case? */
+		action_new(rsc_lh, stop_rsc);
 		
-//	} else if(safe_str_eq(last_op, "???")) {
+		return TRUE;
+		
+	} 
 
-	} else {
-		/* unknown action... */
-		/* remedial action: ???
-		 *   shutdown (so all other resources are stopped gracefully)
-		 *   and then STONITH node
-		 */
+	switch(rsc_lh->stopfail_type) {
+		case pesf_stonith:
+			/* remedial action:
+			 *   shutdown (so all other resources are
+			 *   stopped gracefully) and then STONITH node
+			 */
+			
+			if(stonith_enabled == FALSE) {
+				crm_err("STONITH is not enabled in this cluster but is required for resource %s after a failed stop", rsc_lh->id);
+				rsc_lh->start->runnable = FALSE;
+				break;
+			}
+			
+			/* treat it as if it is still running */
+			rsc_lh->cur_node = node;
+			node->details->running_rsc = g_list_append(
+				node->details->running_rsc, rsc_lh);
+			
+			if(node->details->online) {
+				node->details->shutdown = TRUE;
+			}
+			node->details->unclean  = TRUE;
+			break;
+			
+		case pesf_block:
+			crm_warn("SHARED RESOURCE %s WILL REMAIN BLOCKED"
+				 " UNTIL CLEANED UP MANUALLY ON NODE %s",
+				 rsc_lh->id, node->details->id);
+			rsc_lh->start->runnable = FALSE;
+			break;
+			
+		case pesf_ignore:
+			crm_warn("SHARED RESOURCE %s IS NOT PROTECTED",
+				 rsc_lh->id);
+			/* do not run the resource here again */
+			rsc2node_new(
+				"dont_run_generate",
+				rsc_lh, -1.0, FALSE, node, node_constraints);
+
+			break;
 	}
-
+		
 	return TRUE;
 }
 
 gboolean
-unpack_healthy_resource(GListPtr *node_constraints,
+unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
 			xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node)
 {
 	double weight = 1.0;

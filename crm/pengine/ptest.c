@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.22 2004/06/08 11:47:48 andrew Exp $ */
+/* $Id: ptest.c,v 1.23 2004/06/28 08:29:20 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -132,7 +132,18 @@ main(int argc, char **argv)
 #ifdef MCHECK
 	mtrace();
 #endif
-	set_crm_log_level(LOG_VERBOSE);
+	set_crm_log_level(LOG_TRACE);
+
+/* 	crm_crit("crit %d", LOG_CRIT); */
+/* 	crm_err("err %d", LOG_ERR); */
+/* 	crm_warn("warn %d", LOG_WARNING); */
+/* 	crm_notice("notice %d", LOG_NOTICE); */
+/* 	crm_info("info %d", LOG_INFO); */
+/* 	crm_debug("debug %d", LOG_DEBUG); */
+/* 	crm_devel("devel %d", LOG_DEV); */
+/* 	crm_verbose("verbose %d", LOG_VERBOSE); */
+/* 	crm_trace("trace %d", LOG_TRACE); */
+	
 	
 	stage0(cib_object,
 	       &resources,
@@ -294,6 +305,6 @@ main(int argc, char **argv)
 
 	free_xml(graph);
 	free_xml(cib_object);
-	
+
 	return 0;
 }

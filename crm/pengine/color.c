@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.5 2004/06/16 11:12:34 andrew Exp $ */
+/* $Id: color.c,v 1.6 2004/06/28 08:29:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,7 +30,7 @@
 
 color_t *no_color = NULL;
 
-gboolean has_agent(node_t *a_node, const char *class, const char *type);
+gboolean has_agent(node_t *a_node, lrm_agent_t *agent);
 
 gboolean update_node_weight(rsc_to_node_t *cons,const char *id,GListPtr nodes);
 
@@ -121,8 +121,10 @@ apply_agent_constraints(GListPtr resources)
 			node, node_t, rsc->allowed_nodes, lpc2,
 			
 			crm_trace("Checking if %s supports %s/%s",
-				  node->details->id, rsc->class, rsc->type);
-			if(has_agent(node, rsc->class, rsc->type) == FALSE) {
+				  node->details->id,
+				  rsc->agent->class, rsc->agent->type);
+
+			if(has_agent(node, rsc->agent) == FALSE) {
 				/* remove node from contention */
 				crm_trace("Marking node %s unavailable for %s",
 					  node->details->id, rsc->id);
@@ -149,30 +151,36 @@ apply_agent_constraints(GListPtr resources)
 }
 
 gboolean
-has_agent(node_t *a_node, const char *class, const char *type)
+has_agent(node_t *a_node, lrm_agent_t *an_agent)
 {
 	int lpc;
-	if(a_node == NULL || type == NULL) {
+	if(a_node == NULL || an_agent == NULL || an_agent->type == NULL) {
 		crm_warn("Invalid inputs");
 		return FALSE;
 	}
 	
-
 	slist_iter(
 		agent, lrm_agent_t, a_node->details->agents, lpc,
 
 		crm_trace("Checking against  %s/%s",agent->class, agent->type);
 
-		if(safe_str_eq(type, agent->type)){
-			if(class == NULL) {
+		if(safe_str_eq(an_agent->type, agent->type)){
+			if(an_agent->class == NULL) {
 				return TRUE;
-			} else if(safe_str_eq(class, agent->class)) {
-				return TRUE;
+				
+			} else if(safe_str_eq(an_agent->class, agent->class)) {
+				if(an_agent->version <= agent->version) {
+					return TRUE;
+				} else {
+					return FALSE;
+				}
 			}
 		}
 		);
 	
-	crm_verbose("%s doesnt support %s/%s",a_node->details->id,class,type);
+	crm_verbose("%s doesnt support version %f of %s/%s",
+		    a_node->details->id, an_agent->version,
+		    an_agent->class, an_agent->type);
 	
 	return FALSE;
 }

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.25 2004/06/16 11:12:34 andrew Exp $ */
+/* $Id: pengine.h,v 1.26 2004/06/28 08:29:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -127,29 +127,38 @@ struct rsc_to_node_s {
 struct lrm_agent_s { 
 		const char *class;
 		const char *type;
+		float version;
 };
 
+enum pe_stop_fail {
+	pesf_block,
+	pesf_stonith,
+	pesf_ignore
+};
+
+
 struct resource_s { 
-		const char *id; 
-		xmlNodePtr xml; 
-		int priority; 
-		node_t *cur_node; 
+		const char	*id; 
+		xmlNodePtr	xml; 
+		float		priority; 
+		node_t		*cur_node; 
 
-		const char *class;
-		const char *type;
+		lrm_agent_t	*agent;
 		
-		gboolean runnable;
-		gboolean provisional; 
+		gboolean	runnable;
+		gboolean	provisional;
 
-		action_t *stop;
-		action_t *start;
+		enum pe_stop_fail stopfail_type;
+
+		action_t	*stop;
+		action_t	*start;
 		
-		GListPtr candidate_colors; // color_t*
-		GListPtr allowed_nodes;    // node_t*
-		GListPtr node_cons;        // rsc_to_node_t* 
-		GListPtr rsc_cons;         // resource_t*
+		GListPtr	candidate_colors; // color_t*
+		GListPtr	allowed_nodes;    // node_t*
+		GListPtr	node_cons;        // rsc_to_node_t* 
+		GListPtr	rsc_cons;         // resource_t*
 
-		color_t *color;
+		color_t		*color;
 };
 
 struct action_wrapper_s 
@@ -235,11 +244,18 @@ extern gboolean unpack_resources(xmlNodePtr xml_resources,
 				 GListPtr *action_cons,
 				 GListPtr all_nodes);
 
+extern gboolean unpack_config(xmlNodePtr config);
+
+extern gboolean unpack_config(xmlNodePtr config);
+
+extern gboolean unpack_global_defaults(xmlNodePtr defaults);
+
 extern gboolean unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes);
 
 extern gboolean unpack_status(xmlNodePtr status,
 			      GListPtr nodes,
 			      GListPtr rsc_list,
+			      GListPtr *actions,
 			      GListPtr *node_constraints);
 
 
@@ -273,6 +289,8 @@ extern color_t *no_color;
 extern int      max_valid_nodes;
 extern int      order_id;
 extern int      action_id;
+extern gboolean stonith_enabled;
+extern GListPtr agent_defaults;
 
 #endif
 

@@ -82,10 +82,18 @@ do_test simple1 "Offline	"
 do_test simple2 "Start	"
 do_test simple3 "Start 2	"
 do_test simple4 "Start Failed"
-do_test simple5 "Stop Failed"
 do_test simple6 "Stop Start	"
 do_test simple7 "Shutdown	"
 do_test simple8 "Stonith	"
+do_test simple9 "Lower version"
+do_test simple10 "Higher version"
+
+echo ""
+
+do_test stopfail1 "Stop Failed - STONITH	"
+do_test stopfail2 "Stop Failed - Block	"
+do_test stopfail3 "Stop Failed - Ignore (1 node)"
+do_test stopfail4 "Stop Failed - Ignore (2 node)"
 
 echo ""
 
@@ -131,6 +139,7 @@ echo ""
 # Generate these test outputs
 create_mode="true"
 #do_test bad7 "Bad data"
+do_test stopfail4 "Stop Failed - Ignore (2 node)"
 
 if [ -s $failed ]; then
     if [ "$verbose" = "-v" ]; then

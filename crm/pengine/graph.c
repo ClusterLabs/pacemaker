@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.6 2004/06/11 10:41:45 andrew Exp $ */
+/* $Id: graph.c,v 1.7 2004/06/28 08:29:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -190,35 +190,23 @@ stonith_constraints(node_t *node,
 	
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
-#if 0
-		/*
-		 * Mark the stop as irrelevant
-		 *
-		 * Possibly one day failed actions wont terminate
-		 *   the transition, but not yet
-		 */
-		rsc->stop->discard = TRUE;
-#else			
-		/* need to add timeouts in the TE for actions such as this.
-		 * ie. the node may be cactus and unable to receive the
-		 *  stop let alone reply with failed.
-		 */
-		rsc->stop->failure_is_fatal = FALSE;
-#endif
 
-#if 0
-		obsoleted by shutdown before stonith
+		if(stonith_enabled) {
+			/* make use of timeouts in the TE for cases such
+			 *   as this.
+			 * ie. the node may be cactus and unable to receive the
+			 *  stop let alone reply with failed.
+			 */
+			rsc->stop->failure_is_fatal = FALSE;
+			
+			/* stonith before start */
+			order_new(
+				stonith_op,rsc->start,must,action_constraints);
+		} else {
+			// dont run this anywhere else
+			rsc->start->runnable = FALSE;
+		}
 		
-		/* try stopping the resource before stonithing the node
-		 *
-		 * if the stop succeeds, the transitioner can then
-		 * decided if  stonith is needed
-		 */
-		order_new(rsc->stop, stonith_op, must, action_constraints);
-#endif
-		/* stonith before start */
-		order_new(stonith_op, rsc->start, must, action_constraints);
-
 		);
 	
 	return TRUE;
