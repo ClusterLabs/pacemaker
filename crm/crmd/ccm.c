@@ -501,7 +501,7 @@ do_update_cib_nodes(xmlNodePtr updates)
 		xmlNodePtr fragment = create_cib_fragment(update_data.updates, NULL);
 		
 		send_request(NULL, fragment, CRM_OPERATION_UPDATE,
-			     NULL, CRM_SYSTEM_DCIB);
+			     NULL, CRM_SYSTEM_DCIB, NULL);
 		
 		free_xml(fragment);
 	}

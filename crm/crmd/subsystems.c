@@ -252,7 +252,7 @@ do_cib_invoke(long long action,
 		}
 
 		send_request(NULL, answer, CRM_OPERATION_REPLACE,
-			     NULL, CRM_SYSTEM_CRMD);
+			     NULL, CRM_SYSTEM_CRMD, NULL);
 		
 		free_xml(answer);
 
@@ -324,6 +324,8 @@ do_pe_control(long long action,
 	FNRET(result);
 }
 
+char *fsa_pe_ref = NULL;
+
 /*	 A_PE_INVOKE	*/
 enum crmd_fsa_input
 do_pe_invoke(long long action,
@@ -346,9 +348,14 @@ do_pe_invoke(long long action,
 	xmlNodePtr local_cib = get_cib_copy();
 
 	CRM_DEBUG("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
-	
+
+	if(fsa_pe_ref) {
+		cl_free(fsa_pe_ref);
+		fsa_pe_ref = NULL;
+	}
+
 	send_request(NULL, local_cib, "pecalc",
-		     NULL, CRM_SYSTEM_PENGINE);
+		     NULL, CRM_SYSTEM_PENGINE, &fsa_pe_ref);
 
 	FNRET(I_NULL);
 }
@@ -513,10 +520,10 @@ do_te_invoke(long long action,
 		}
 	
 		send_request(NULL, graph, "transition",
-			     NULL, CRM_SYSTEM_TENGINE);
+			     NULL, CRM_SYSTEM_TENGINE, NULL);
 	} else {
 		send_request(NULL, graph, "abort",
-			     NULL, CRM_SYSTEM_TENGINE);
+			     NULL, CRM_SYSTEM_TENGINE, NULL);
 	}
 
 	// only free it if it was a local copy
@@ -579,7 +586,7 @@ stop_subsystem(struct crm_subsystem_s*	centry)
 
 	} else {
 		cl_log(LOG_INFO, "Sending quit message to %s.", centry->name);
-		send_request(NULL, NULL, "quit", NULL, centry->name);
+		send_request(NULL, NULL, "quit", NULL, centry->name, NULL);
 
 	}
 	
@@ -943,7 +950,7 @@ do_lrm_invoke(long long action,
 		add_node_copy(tmp1, data);
 
 		send_request(NULL, fragment, CRM_OPERATION_UPDATE,
-			     NULL, CRM_SYSTEM_DC);
+			     NULL, CRM_SYSTEM_DC, NULL);
 
 		free_xml(fragment);
 		free_xml(tmp1);
@@ -995,7 +1002,7 @@ do_lrm_invoke(long long action,
 		update = create_cib_fragment(state, NULL);
 		
 		send_request(NULL, update, "update",
-			     NULL, CRM_SYSTEM_DCIB);
+			     NULL, CRM_SYSTEM_DCIB, NULL);
 	}
 	
 	FNRET(I_NULL);
@@ -1173,7 +1180,7 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	fragment = create_cib_fragment(tmp1, NULL);
 
 	send_request(NULL, fragment, CRM_OPERATION_UPDATE,
-		     NULL, CRM_SYSTEM_DCIB);
+		     NULL, CRM_SYSTEM_DCIB, NULL);
 	
 	free_xml(fragment);
 	free_xml(update);

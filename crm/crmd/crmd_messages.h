@@ -72,7 +72,8 @@ extern gboolean send_request(xmlNodePtr msg_options,
 			     xmlNodePtr msg_data, 
 			     const char *operation,
 			     const char *host_to,
-			     const char *sys_to);
+			     const char *sys_to,
+			     char **msg_reference);
 
 extern gboolean store_request(xmlNodePtr msg_options,
 			      xmlNodePtr msg_data, 

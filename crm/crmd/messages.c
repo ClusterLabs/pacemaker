@@ -355,7 +355,8 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
  */
 gboolean
 send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
-	     const char *operation, const char *host_to, const char *sys_to)
+	     const char *operation, const char *host_to, const char *sys_to,
+	     char **msg_reference)
 {
 	gboolean was_sent = FALSE;
 	xmlNodePtr request = NULL;
@@ -376,6 +377,10 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 
 //	xml_message_debug(request, "Final request...");
 
+	if(msg_reference != NULL) {
+		*msg_reference = cl_strdup(xmlGetProp(request, XML_ATTR_REFERENCE));
+	}
+	
 	was_sent = relay_message(request, TRUE);
 
 	if(was_sent == FALSE) {
@@ -741,8 +746,11 @@ handle_message(xmlNodePtr stored_msg)
 	const char *sys_to   = get_xml_attr(stored_msg, NULL,
 					    XML_ATTR_SYSTO, TRUE);
 
-//	const char *sys_from = get_xml_attr(stored_msg, NULL,
-//					    XML_ATTR_SYSFROM, TRUE);
+	const char *sys_from = get_xml_attr(stored_msg, NULL,
+					    XML_ATTR_SYSFROM, TRUE);
+
+	const char *msg_ref  = get_xml_attr(stored_msg, NULL,
+					    XML_ATTR_REFERENCE, TRUE);
 
 	const char *type     = get_xml_attr(stored_msg, NULL,
 					    XML_ATTR_MSGTYPE, TRUE);
@@ -819,8 +827,12 @@ handle_message(xmlNodePtr stored_msg)
 			next_input = I_WELCOME_ACK;
 				
 		} else if(strcmp(op, "pecalc") == 0) {
-			// results int eh TE being invoked
-			next_input = I_SUCCESS;
+			// results in the TE being invoked
+			if(safe_str_eq(msg_ref, fsa_pe_ref)) {
+				next_input = I_SUCCESS;
+			} else {
+				CRM_DEBUG("Skipping superceeded reply from %s", sys_from);
+			}
 			
 		} else if(strcmp(op, CRM_OPERATION_VOTE) == 0
 			  || strcmp(op, CRM_OPERATION_HBEAT) == 0

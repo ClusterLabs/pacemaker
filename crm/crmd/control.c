@@ -139,7 +139,7 @@ do_shutdown_req(long long action,
 	FNIN();
 
 	if(send_request(NULL, NULL, CRM_OPERATION_SHUTDOWN_REQ,
-			NULL, CRM_SYSTEM_DC) == FALSE){
+			NULL, CRM_SYSTEM_DC, NULL) == FALSE){
 		next_input = I_ERROR;
 	}
 

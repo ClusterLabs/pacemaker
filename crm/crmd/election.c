@@ -63,7 +63,7 @@ do_election_vote(long long action,
 			break;
 	}
 	
-	send_request(NULL, NULL, CRM_OPERATION_VOTE, NULL, CRM_SYSTEM_CRMD);
+	send_request(NULL, NULL, CRM_OPERATION_VOTE, NULL, CRM_SYSTEM_CRMD, NULL);
 	
 	FNRET(election_result);
 }
@@ -90,7 +90,7 @@ do_dc_heartbeat(gpointer data)
 //	cl_log(LOG_DEBUG, "#!!#!!# Heartbeat timer just popped!");
 	
 	gboolean was_sent = send_request(NULL, NULL, CRM_OPERATION_HBEAT, 
-					 NULL, CRM_SYSTEM_CRMD);
+					 NULL, CRM_SYSTEM_CRMD, NULL);
 
 	if(was_sent == FALSE) {
 		// this is bad
@@ -359,7 +359,7 @@ do_send_welcome(long long action,
 			send_request(NULL, tmp1, "update", NULL, CRM_SYSTEM_DCIB);
 */			
 			send_request(NULL, NULL, CRM_OPERATION_WELCOME,
-				     join_to, CRM_SYSTEM_CRMD);
+				     join_to, CRM_SYSTEM_CRMD, NULL);
 			
 		}
 		
@@ -519,7 +519,7 @@ do_announce(long long action,
 
 	if(AM_I_OPERATIONAL) {
 		send_request(NULL, NULL, CRM_OPERATION_ANNOUNCE,
-			     NULL, CRM_SYSTEM_DC);
+			     NULL, CRM_SYSTEM_DC, NULL);
 	} else {
 		/* Delay announce until we have finished local startup */
 		FNRET(I_NULL);
@@ -620,7 +620,7 @@ ghash_send_welcome(gpointer key, gpointer value, gpointer user_data)
 	}
 
 	if(send_request(NULL, NULL, CRM_OPERATION_WELCOME,
-			node_uname, CRM_SYSTEM_CRMD)) {
+			node_uname, CRM_SYSTEM_CRMD, NULL)) {
 		*num_sent++;
 		CRM_DEBUG("Sent welcome message to %s", node_uname);
 		

@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.17 2004/05/17 12:25:59 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.18 2004/05/18 14:28:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -106,6 +106,7 @@ extern ll_cluster_t   *fsa_cluster_conn;
 extern ll_lrm_t       *fsa_lrm_conn;
 extern long long       fsa_input_register;
 extern const char     *fsa_our_uname;
+extern char	      *fsa_pe_ref; // the last invocation of the PE
 
 extern fsa_timer_t *election_trigger;		/*  */
 extern fsa_timer_t *election_timeout;		/*  */
