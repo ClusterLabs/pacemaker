@@ -55,9 +55,6 @@
 
 static gboolean stop_subsystem (struct crm_subsystem_s *centry);
 static gboolean start_subsystem(struct crm_subsystem_s *centry);
-static gboolean run_command    (struct crm_subsystem_s *centry,
-				const char *options,
-				gboolean update_pid);
 
 xmlNodePtr do_lrm_query(void);
 
@@ -350,7 +347,7 @@ do_pe_invoke(long long action,
 	CRM_DEBUG("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
 
 	if(fsa_pe_ref) {
-		cl_free(fsa_pe_ref);
+		crm_free(fsa_pe_ref);
 		fsa_pe_ref = NULL;
 	}
 
@@ -547,7 +544,7 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 		cl_log(LOG_ERR, "Channel was disconnected");
 	} else {
 		crmd_client_t *blank_client =
-			(crmd_client_t *)cl_malloc(sizeof(crmd_client_t));
+			(crmd_client_t *)crm_malloc(sizeof(crmd_client_t));
 	
 		if (blank_client == NULL) {
 			cl_log(LOG_ERR,
@@ -597,26 +594,19 @@ stop_subsystem(struct crm_subsystem_s*	centry)
 static gboolean
 start_subsystem(struct crm_subsystem_s*	centry)
 {
+	pid_t			pid;
+	struct stat buf;
+	int s_res,size;
+	char *cmd_with_options = NULL;
+
 	cl_log(LOG_INFO, "Starting sub-system \"%s\"", centry->command);
+
+	return TRUE;
 
 	if (centry->pid != 0) {
 		cl_log(LOG_ERR, "OOPS! client %s already running as pid %d"
 		       ,	centry->command, (int) centry->pid);
 	}
-
-	return run_command(centry, "-r", TRUE);
-}
-
-
-static gboolean
-run_command(struct crm_subsystem_s *centry,
-	    const char *options,
-	    gboolean update_pid)
-{
-	pid_t			pid;
-	struct stat buf;
-	int s_res,size;
-	char *cmd_with_options = NULL;
 
 	/*
 	 * We need to ensure that the exec will succeed before
@@ -639,18 +629,12 @@ run_command(struct crm_subsystem_s *centry,
 	/* We need to fork so we can make child procs not real time */
 	switch(pid=fork()) {
 
-		case -1:	cl_log(LOG_ERR
-				       ,	"start_a_child_client: Cannot fork.");
+		case -1:
+			cl_log(LOG_ERR, "start_a_child_client: Cannot fork.");
 			return FALSE;
 
 		default:	/* Parent */
-#if 0
-			NewTrackedProc(pid, 1, PT_LOGVERBOSE
-				       ,	centry, &ManagedChildTrackOps);
-#else
-			if(update_pid)
-				centry->pid = pid;
-#endif
+			centry->pid = pid;
 			return TRUE;
 
 		case 0:		/* Child */
@@ -667,21 +651,14 @@ run_command(struct crm_subsystem_s *centry,
 		sleep(1);
 	}
 
-	size = strlen(options);
-	size += strlen(centry->command);
-	size += 2; // ' ' + \0
-	
-	cmd_with_options = cl_malloc((1+size)*sizeof(char));
-	sprintf(cmd_with_options, "%s %s", centry->command, options);
 	cmd_with_options[size] = 0;
-	
 
 	cl_log(LOG_INFO, "Executing \"%s\" (pid %d)",
-	       cmd_with_options, (int) getpid());
+	       centry->command, (int) getpid());
 
 	if(CL_SIGINTERRUPT(SIGALRM, 0) < 0) {
 		cl_perror("Cannot set interrupt for child process %s",
-			  cmd_with_options);
+			  centry->command);
 	}else{
 		const char *	devnull = "/dev/null";
 		unsigned int	j;
@@ -701,10 +678,10 @@ run_command(struct crm_subsystem_s *centry,
 		(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
 		(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 
-		(void)execl("/bin/sh", "sh", "-c", cmd_with_options, (const char *)NULL);
+		(void)execl("/bin/sh", "sh", "-c", centry->command, (const char *)NULL);
 
 		/* Should not happen */
-		cl_perror("Cannot exec %s", cmd_with_options);
+		cl_perror("Cannot exec %s", centry->command);
 	}
 	/* Suppress respawning */
 	exit(100);
@@ -1025,7 +1002,7 @@ do_lrm_invoke(long long action,
 		set_xml_property_copy(iter, "op_code",   op_code_s);
 		set_xml_property_copy(iter, "op_node",   fsa_our_uname);
 
-		cl_free(op_code_s);
+		crm_free(op_code_s);
 		
 		update = create_cib_fragment(state, NULL);
 		
@@ -1155,8 +1132,8 @@ xml2list(xmlNodePtr parent, const char**attr_path, int depth)
 			CRM_DEBUG("Added %s=%s", key, value);
 			
 			g_hash_table_insert (nvpair_hash,
-					     cl_strdup(key),
-					     cl_strdup(value));
+					     crm_strdup(key),
+					     crm_strdup(value));
 			
 			node_iter = node_iter->next;
 		}
@@ -1193,11 +1170,11 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	
 	tmp = crm_itoa(status);
 	set_xml_property_copy(iter, "op_status", tmp);
-	cl_free(tmp);
+	crm_free(tmp);
 	
 	tmp = crm_itoa(rc);
 	set_xml_property_copy(iter, "op_code", tmp);
-	cl_free(tmp);
+	crm_free(tmp);
 
 	set_xml_property_copy(iter, "op_node", fsa_our_uname);
 	
