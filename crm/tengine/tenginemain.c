@@ -1,4 +1,4 @@
-/* $Id: tenginemain.c,v 1.12 2004/04/26 12:36:24 msoffen Exp $ */
+/* $Id: tenginemain.c,v 1.13 2004/05/06 12:11:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,6 +45,8 @@
 #include <crm/common/crmutils.h>
 
 #include <crm/common/msgutils.h>
+
+#include <tengine.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -134,7 +136,6 @@ init_start(void)
     long pid;
     ll_cluster_t*	hb_fd = NULL;
     int facility;
-    IPC_Channel *crm_ch = NULL;
 #ifdef REALTIME_SUPPORT
 	    static int  crm_realtime = 1;
 #endif
@@ -161,8 +162,8 @@ init_start(void)
     register_pid(PID_FILE, FALSE, tengine_shutdown);
 
     crm_ch = init_client_ipc_comms("crmd",
-						default_ipc_input_dispatch,
-						NULL);
+				   subsystem_input_dispatch,
+				   (void*)process_te_message);
 
     if(crm_ch != NULL) {
 	    send_hello_message(crm_ch, "1234", CRM_SYSTEM_TENGINE, "0", "1");
