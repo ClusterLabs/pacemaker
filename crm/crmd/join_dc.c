@@ -77,18 +77,19 @@ do_dc_join_offer_all(long long action,
 			node_id, node_id, NULL,
 			XML_BOOLEAN_NO, NULL, CRMD_JOINSTATE_PENDING, NULL);
 
-		if(update == NULL) {
-			update = tmp2;
-		} else {
-			add_node_copy(update, tmp2);
-			free_xml(tmp2);
-		}
+		add_node_copy(update, tmp2);
+		free_xml(tmp2);
 		);
 	
 	/* now process the CCM data */
 	do_update_cib_nodes(fragment, TRUE);
 	free_xml(cib_copy);
-	free_xml(fragment);
+
+/*  	free_xml(fragment);  */
+/* BUG!  This should be able to be freed.
+ * I cant find any reason why it shouldnt be able to be,
+ * but libxml still corrupts memory
+ */
 	
 #if 0
 	/* Avoid ordered message delays caused when the CRMd proc
