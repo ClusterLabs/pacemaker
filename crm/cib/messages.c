@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.3 2004/09/21 19:12:44 andrew Exp $ */
+/* $Id: messages.c,v 1.4 2004/09/28 08:33:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -137,7 +137,7 @@ cib_process_request(const char *op,
 			new_value = crm_strdup("0");
 		}
 
-		crm_debug("Generation %d(%s)->%s",
+		crm_trace("Generation %d(%s)->%s",
 			  int_value, crm_str(old_value), crm_str(new_value));
 		
 		set_xml_property_copy(tmpCib, XML_ATTR_GENERATION, new_value);
@@ -149,9 +149,10 @@ cib_process_request(const char *op,
 			*result = CIBRES_FAILED;
 		}
 		
-	} else if (strcmp("query", op) == 0) {
+	} else if (strcmp(CRM_OP_RETRIVE_CIB, op) == 0
+		   || strcmp(CRM_OP_QUERY, op) == 0) {
 		crm_verbose("Handling a query for section=%s of the cib",
-			   section);
+			    section);
 
 		/* grab the whole section by forcing a pick-up of
 		 * the relevant section before returning
@@ -405,24 +406,14 @@ createCibFragmentAnswer(const char *section, xmlNodePtr failed)
 	return fragment;
 }
 
-
 gboolean
 check_generation(xmlNodePtr newCib, xmlNodePtr oldCib)
 {
-	char *new_value = xmlGetProp(newCib, XML_ATTR_GENERATION);
-	char *old_value = xmlGetProp(oldCib, XML_ATTR_GENERATION);
-	int int_new_value = -1;
-	int int_old_value = -1;
-	if(old_value != NULL) int_old_value = atoi(old_value);
-	if(new_value != NULL) int_new_value = atoi(new_value);
-	
-	if(int_new_value >= int_old_value) {
+	if(compare_cib_generation(newCib, oldCib) >= 0) {
 		return TRUE;
-	} else {
-		crm_err("Generation from update (%d) is older than %d",
-		       int_new_value, int_old_value);
 	}
-	
+
+	crm_warn("Generation from update is older than the existing one");
 	return FALSE;
 }
  
@@ -430,10 +421,10 @@ gboolean
 update_results(
 	xmlNodePtr failed, xmlNodePtr target, int operation, int return_code)
 {
-	gboolean was_error = FALSE;
-	const char *error_msg = NULL;
+	gboolean   was_error      = FALSE;
+	const char *error_msg     = NULL;
 	const char *operation_msg = NULL;
-	xmlNodePtr xml_node;
+	xmlNodePtr xml_node       = NULL;
 	
 	operation_msg = cib_op2string(operation);
     
