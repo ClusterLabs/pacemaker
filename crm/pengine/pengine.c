@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.45 2004/09/17 13:03:10 andrew Exp $ */
+/* $Id: pengine.c,v 1.46 2004/10/08 18:01:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -243,9 +243,13 @@ do_calculations(xmlNodePtr cib_object)
 
 	crm_verbose("deleting nodes");
 	pe_free_nodes(nodes);
-	
-	g_list_free(shutdown_list);
-	g_list_free(stonith_list);
 
+	if(shutdown_list != NULL) {
+		g_list_free(shutdown_list);
+	}
+	if(stonith_list != NULL) {
+		g_list_free(stonith_list);
+	}
+	
 	return graph;
 }

@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.35 2004/09/17 15:53:12 andrew Exp $ */
+/* $Id: ptest.c,v 1.36 2004/10/08 18:01:49 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -268,8 +268,12 @@ main(int argc, char **argv)
 	crm_verbose("deleting nodes");
 	pe_free_nodes(nodes);
 	
-	g_list_free(shutdown_list);
-	g_list_free(stonith_list);
+	if(shutdown_list != NULL) {
+		g_list_free(shutdown_list);
+	}
+	if(stonith_list != NULL) {
+		g_list_free(stonith_list);
+	}
 
 #ifdef MCHECK
 	muntrace();

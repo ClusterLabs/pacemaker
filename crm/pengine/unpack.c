@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.33 2004/10/01 12:04:12 lge Exp $ */
+/* $Id: unpack.c,v 1.34 2004/10/08 18:01:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -429,7 +429,8 @@ rsc2node_new(const char *id, resource_t *rsc,
 	rsc_to_node_t *new_con = NULL;
 
 	if(rsc == NULL || id == NULL) {
-		crm_err("Invalid constraint %s for rsc=%p", id, rsc);
+		crm_err("Invalid constraint %s for rsc=%p",
+			crm_str(id), crm_str(rsc));
 		return NULL;
 	}
 
@@ -543,7 +544,8 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 		this_node->fixed = TRUE;
 
 		crm_verbose("join_state %s, expected %s, shutdown %s",
-			    join_state, exp_state, shutdown);
+			    crm_str(join_state), crm_str(exp_state),
+			    crm_str(shutdown));
 
 		if(unclean != NULL) {
 			this_node->details->unclean = TRUE;
