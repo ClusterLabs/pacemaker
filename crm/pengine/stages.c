@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.37 2005/02/20 22:05:21 andrew Exp $ */
+/* $Id: stages.c,v 1.38 2005/02/21 13:19:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,6 +69,7 @@ stage0(crm_data_t * cib,
 	crm_free(dc_uuid);
 	dc_uuid = NULL;
 	if(cib != NULL) {
+		/* this should always be present */
 		dc_uuid = crm_element_value_copy(cib, XML_ATTR_DC_UUID);
 	}
 	
@@ -77,7 +78,8 @@ stage0(crm_data_t * cib,
 	max_valid_nodes = 0;
 	order_id = 1;
 	action_id = 1;
-
+	color_id = 0;
+	
 	unpack_config(config);
 	
 	unpack_global_defaults(agent_defaults);
@@ -408,7 +410,7 @@ choose_node_from_list(color_t *color)
 	color->details->pending = FALSE;
 
 	if(chosen == NULL) {
-		crm_err("Could not allocate a node for color %d", color->id);
+		crm_debug("Could not allocate a node for color %d", color->id);
 		return FALSE;
 	}
 	

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.47 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: pengine.h,v 1.48 2005/02/21 13:19:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -332,6 +332,7 @@ extern gboolean stonith_enabled;
 extern GListPtr agent_defaults;
 extern const char* transition_timeout;
 extern int num_synapse;
+extern int color_id;
 
 #endif
 

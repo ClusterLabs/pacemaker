@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.55 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: utils.c,v 1.56 2005/02/21 13:19:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,6 +29,7 @@
 #include <pe_utils.h>
 
 int action_id = 1;
+int color_id = 0;
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
@@ -304,8 +305,6 @@ node_copy(node_t *this_node)
 	
 	return new_node;
 }
-
-static int color_id = 0;
 
 /*
  * Create a new color with the contents of "nodes" as the list of
