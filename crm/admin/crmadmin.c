@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.32 2005/03/16 17:11:14 lars Exp $ */
+/* $Id: crmadmin.c,v 1.33 2005/03/18 10:33:39 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -715,7 +715,7 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 			} else {
 				crm_devel("resource %s is running on: %s",
 					  rsc, target);				
-				printf("resource %s is running on: %s",
+				printf("resource %s is running on: %s\n",
 				       rsc, target);
 				if(BE_SILENT) {
 					fprintf(stderr, "%s ", target);
