@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.44 2004/07/30 15:31:05 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.45 2004/08/03 09:19:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -178,9 +178,19 @@ cib_process_request(const char *op,
 	} else if (strcmp(CRM_OP_ERASE, op) == 0) {
 		xmlNodePtr new_cib = createEmptyCib();
 
+		// Preserve the status section
+		xmlNodePtr state_info = copy_xml_node_recursive(
+			get_object_root(XML_CIB_TAG_STATUS, get_the_CIB()));
+
+		xmlNodePtr empty = get_object_root(XML_CIB_TAG_STATUS,new_cib);
+
+		empty->children = state_info->children;
+		state_info->children = NULL;
+		free_xml(state_info);
+
 		// Preserve generation counters etc
 		copy_in_properties(new_cib, get_the_CIB());
-		
+
 		if (activateCibXml(new_cib, CIB_FILENAME) < 0) {
 			*result = CIBRES_FAILED;
 		}
