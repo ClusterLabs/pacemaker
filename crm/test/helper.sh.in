@@ -92,6 +92,8 @@ while test "$done" = "0"; do
     esac
 done
 
+node_list="$test_node_1 $test_node_2 $test_node_3"
+
 function test_init() {
     export date_str=`date "+%Y-%b-%d_%H:%M"`
     export test_dump_dir="$dump_dir/$test_type/$date_str"
@@ -337,6 +339,9 @@ function make_constraint()
 
 function cts_assert() {
     do_cts_assert $? 0 "Assert failed - " $*
+#    do_cmd remote_cmd $ADMIN_USER $test_node_1 "ls -al ${HAVAR_DIR}/cores/*/core*"
+#    do_cmd remote_cmd $ADMIN_USER $test_node_2 "ls -al ${HAVAR_DIR}/cores/*/core*"
+#    do_cmd remote_cmd $ADMIN_USER $test_node_3 "ls -al ${HAVAR_DIR}/cores/*/core*"
 }
 
 function cts_assert_false() {
@@ -356,17 +361,12 @@ function do_cts_assert() {
 }
 
 function err() {
-    if [ ! -z $HOST ]; then
-	if [ $CRM_ERR_SHUTDOWN -eq 1 ]; then
-	    remote_cmd $ADMIN_USER $test_node_1 killall -9 crmd
-	    remote_cmd $ADMIN_USER $test_node_2 killall -9 crmd
-	fi
-    fi
-    
     do_cmd echo Dumping test nodes to $dump_dir
-    dump_node 1 $test_node_1
-    dump_node 2 $test_node_2
-    dump_node 3 $test_node_3
+    node_num=1
+    for a_host in $node_list; do
+	dump_node $node_num $a_host
+	node_num=`expr $node_num + 1`
+    done
 
     crm_test_log_end=$(stat -L -c %s $logfile)
     do_cmd echo "ERROR: $*"
@@ -492,11 +492,12 @@ function crm-cleanup() {
     if [ -z $1 ]; then
 	test_init
     fi
-    do_cmd echo Cleaning up on $test_node_1, $test_node_2 and  $test_node_3
 
-    crm-cleanup-node $test_node_1 $1
-    crm-cleanup-node $test_node_2 $1
-    crm-cleanup-node $test_node_3 $1
+    do_cmd echo Cleaning up on $node_list
+
+    for a_host in $node_list; do
+	crm-cleanup-node $a_host $1
+    done
 }
 
 function crm-cleanup-node() {
