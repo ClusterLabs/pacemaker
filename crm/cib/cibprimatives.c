@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.13 2004/03/16 10:19:25 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.14 2004/03/18 10:26:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -447,11 +447,16 @@ handle_object_children(xmlNodePtr new_parent,
 			
 		cib_delete_node(dest);
 		
-		if (strcmp("add", action) == 0) {
+		if (action == NULL || strcmp("add", action) == 0) {
 			// remove the action property first
-			xmlNodePtr node_copy = add_node_copy(new_parent, node_copy);
-			xmlUnsetProp(node_copy, XML_CIB_ATTR_ACTION);
+			xmlNodePtr node_copy =
+				add_node_copy(new_parent, iter);
+			if(node_copy != NULL) {
+				xmlUnsetProp(node_copy, XML_CIB_ATTR_ACTION);
+			}
 		}
+
+		iter = iter->next;
 	}
 	FNOUT();
 }
