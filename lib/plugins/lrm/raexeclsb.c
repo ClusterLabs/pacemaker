@@ -251,7 +251,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	} while (params_argv[++index_tmp] != NULL);
 
 	debug_info->str[debug_info->len-1] = '\0';
-	cl_log(LOG_DEBUG, "Will execute a lsb RA: %s", debug_info->str);
+	cl_log(LOG_DEBUG, "RA executing: lsb::%s", debug_info->str);
 	g_string_free(debug_info, TRUE);
 
 	execv(ra_pathname, params_argv);
