@@ -333,18 +333,24 @@ stage5(GSListPtr resources)
 		   || safe_val(NULL, rsc, start) == NULL) {
 			// error
 			cl_log(LOG_ERR,
-			       "Either start action (%p) or stop action (%p) were not defined",
+			       "Either start action (%p) or"
+			       " stop action (%p) were not defined",
 			       safe_val(NULL, rsc, stop),
 			       safe_val(NULL, rsc, start));
 			continue;
 		}
 		if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL) {
 			rsc->stop->node = safe_val(NULL, rsc, cur_node);
+			
 			rsc->start->node = NULL;
 			cl_log(LOG_DEBUG,
 			       "Stop resource %s (%s)",
 			       safe_val(NULL, rsc, id),
 			       safe_val5(NULL, rsc, stop, node, details, id));
+
+			pdebug_action(
+				print_action("active", rsc->stop, FALSE));
+			
 			
 		} else if(safe_str_eq(safe_val4(NULL, rsc, cur_node, details, id),
 				      safe_val6(NULL, rsc, color ,details,
@@ -528,9 +534,9 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 		wrapper->action = order->rh_action;
 		wrapper->strength = order->strength;
 
-		GSListPtr list = order->rh_action->actions_after;
+		GSListPtr list = order->lh_action->actions_after;
 		list = g_slist_append(list, wrapper);
-		order->rh_action->actions_after = list;
+		order->lh_action->actions_after = list;
 
 		wrapper = (action_wrapper_t*)
 			crm_malloc(sizeof(action_wrapper_t));
@@ -1007,7 +1013,8 @@ unpack_status(xmlNodePtr status,
 			    * been shutdown (even if heartbeat hasnt)
 			    */
 			   && (safe_str_eq(exp_state, "down"))
-			   && (safe_str_eq(state, "active"))){
+//			   && (safe_str_eq(state, "active"))
+				){
 				// create shutdown req
 				this_node->details->shutdown = TRUE;
 				pdebug("Node %s is due for shutdown", id);
@@ -1432,17 +1439,21 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
 		const char *rsc_state = xmlGetProp(lrm_state, "state");
 		resource_t *rsc_lh = pe_find_resource(rsc_list, rsc_id);
 
-		pdebug("[%s] Processing %s on %s (%s)", lrm_state->name, rsc_id, node_id, rsc_state);
+		pdebug("[%s] Processing %s on %s (%s)",
+		       lrm_state->name, rsc_id, node_id, rsc_state);
 
 		lrm_state = lrm_state->next;
 
 		if(rsc_lh == NULL) {
 			cl_log(LOG_ERR,
-			       "Could not find a match for resource %s in %s's status section",
+			       "Could not find a match for resource"
+			       " %s in %s's status section",
 			       rsc_id, node_id);
 			continue;
 		}
 		
+		pdebug("Setting cur_node = %s for rsc = %s",
+			  node->details->id, rsc_lh->id);
 		
 		rsc_lh->cur_node = node;
 
