@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.28 2005/03/16 19:48:24 andrew Exp $ */
+/* $Id: ipc.c,v 1.29 2005/04/01 12:28:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -111,8 +111,9 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 		crm_err("Could not send IPC, message");
 		all_is_good = FALSE;
 
-		if(ipc_client->ch_status != IPC_CONNECT) {
+		if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
 			crm_err("IPC Channel is no longer connected");
+
 		} else {
 			CRM_DEV_ASSERT(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen);
 		}
