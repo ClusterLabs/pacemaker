@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.52 2004/09/21 19:14:04 andrew Exp $ */
+/* $Id: cib.c,v 1.53 2004/09/28 08:32:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -138,8 +138,7 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 	
 	data = cib_process_request(op, options, fragment, &result);
 
-	crm_info("[cib] operation returned result %d", result);
-	crm_debug("[CIB post-op]\t%s\n\n", dump_xml_formatted(message));
+	crm_debug("[cib] operation returned result %d", result);
 
 	if(auto_reply) {
 		reply = create_reply(message, data);
@@ -155,9 +154,8 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 }
 
 xmlNodePtr
-process_cib_request(const char *op,
-		    const xmlNodePtr options,
-		    const xmlNodePtr fragment)
+process_cib_request(
+	const char *op, const xmlNodePtr options, const xmlNodePtr fragment)
 {
 	enum cib_result result = CIBRES_OK;
 
@@ -173,7 +171,8 @@ process_cib_request(const char *op,
 
 
 xmlNodePtr
-create_cib_fragment_adv(xmlNodePtr update, const char *section, const char *source)
+create_cib_fragment_adv(
+	xmlNodePtr update, const char *section, const char *source)
 {
 	gboolean whole_cib = FALSE;
 	xmlNodePtr fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
@@ -372,6 +371,21 @@ cib_op2string(enum cib_op operation)
 int
 compare_cib_generation(xmlNodePtr left, xmlNodePtr right)
 {
+	int int_gen_l = -1;
+	int int_gen_r = -1;
+	const char *gen_l = xmlGetProp(left, XML_ATTR_GENERATION);
+	const char *gen_r = xmlGetProp(right, XML_ATTR_GENERATION);
+
+	if(gen_l != NULL) int_gen_l = atoi(gen_l);
+	if(gen_r != NULL) int_gen_r = atoi(gen_r);
+
+	if(int_gen_l < int_gen_r) {
+		return -1;
+		
+	} else if(int_gen_l > int_gen_r) {
+		return 1;
+	}
+
 	return 0;
 }
 
