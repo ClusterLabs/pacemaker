@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.30 2004/04/13 13:26:44 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.31 2004/04/15 00:34:06 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,8 +17,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <crm/crm.h>
-
 #include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -27,6 +25,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#include <crm/crm.h>
 
 #include <clplumbing/cl_log.h>
 
@@ -79,6 +79,10 @@ cib_process_request(const char *op,
 
 	gboolean update_the_cib = FALSE;
 	int cib_update_op = CIB_OP_NONE;
+	xmlNodePtr tmpCib;
+	char *new_value = NULL;
+	char *old_value = NULL;
+	int int_value = -1;
 
 	FNIN();
 	
@@ -106,17 +110,15 @@ cib_process_request(const char *op,
 			createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
 		
 	} else if (strcmp(CRM_OPERATION_BUMP, op) == 0) {
-		xmlNodePtr tmpCib = get_cib_copy();
+		tmpCib = get_cib_copy();
 		CRM_DEBUG3("Handling a %s for section=%s of the cib",
 			   CRM_OPERATION_BUMP, section);
 		
 		// modify the timestamp
 		set_node_tstamp(tmpCib);
-		char *new_value = NULL;
-		char *old_value =
+		old_value =
 			xmlGetProp(get_the_CIB(), XML_ATTR_GENERATION);
 		
-		int int_value = -1;
 		if(old_value != NULL) {
 			new_value = (char*)cl_malloc(128*(sizeof(char)));
 			int_value = atoi(old_value);
@@ -172,7 +174,6 @@ cib_process_request(const char *op,
 
 	} else if (strcmp(CRM_OPERATION_REPLACE, op) == 0) {
 		CRM_DEBUG2("Replacing section=%s of the cib", section);
-		xmlNodePtr tmpCib = NULL;
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 
 		if (section == NULL
@@ -198,7 +199,7 @@ cib_process_request(const char *op,
     
 	if (update_the_cib) {
 		CRM_DEBUG("Backing up CIB");
-		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB());
+		tmpCib = copy_xml_node_recursive(get_the_CIB());
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 
 		CRM_DEBUG3("Updating section=%s of the cib (op=%s)",
@@ -417,15 +418,18 @@ update_results(xmlNodePtr failed,
 			int operation,
 			int return_code)
 {
-	FNIN();
 	gboolean was_error = FALSE;
+	const char *error_msg = NULL;
+	const char *operation_msg = NULL;
+	xmlNodePtr xml_node;
+	FNIN();
     
 	if (return_code != CIBRES_OK)
 	{
-		const char *error_msg = cib_error2string(return_code);
-		const char *operation_msg = cib_op2string(operation);
+		error_msg = cib_error2string(return_code);
+		operation_msg = cib_op2string(operation);
 
-		xmlNodePtr xml_node = create_xml_node(failed,
+		xml_node = create_xml_node(failed,
 						      XML_FAIL_TAG_CIB);
 
 		was_error = TRUE;

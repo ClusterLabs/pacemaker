@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.19 2004/04/13 13:26:44 andrew Exp $ */
+/* $Id: cibio.c,v 1.20 2004/04/15 00:34:06 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,8 +17,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <crm/crm.h>
-
 #include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -30,6 +28,8 @@
 
 #include <errno.h>
 #include <fcntl.h>
+
+#include <crm/crm.h>
 
 #include <libxml/tree.h>
 #include <crm/cib.h>
@@ -335,6 +335,7 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 	int error_code = 0;
 	xmlNodePtr saved_cib = get_the_CIB();
 	const char *filename_bak = CIB_BACKUP; // calculate
+	xmlDocPtr foo;
 	FNIN();
 
 	
@@ -357,7 +358,7 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 				       "Writing of a node tree with a NULL "
 				       "document will fail, creating a new "
 				       "back link.");
-				xmlDocPtr foo = xmlNewDoc("1.0");
+				foo = xmlNewDoc("1.0");
 				xmlDocSetRootElement(foo, new_cib);
 				xmlSetTreeDoc(new_cib,foo);
 			}

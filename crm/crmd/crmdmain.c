@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.12 2004/03/24 10:18:22 andrew Exp $ */
+/* $Id: crmdmain.c,v 1.13 2004/04/15 00:37:09 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,8 +16,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <crm/crm.h>
-
 #include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -29,6 +27,8 @@
 
 #include <hb_api.h>
 #include <apphb.h>
+
+#include <crm/crm.h>
 
 #include <clplumbing/ipc.h>
 #include <clplumbing/Gmain_timeout.h>
@@ -69,16 +69,15 @@ int
 main(int argc, char ** argv)
 {
 
-    cl_log_set_entity(crm_system_name);
-    cl_log_enable_stderr(TRUE);
-    cl_log_set_facility(LOG_USER);
-    
     int	req_restart = FALSE;
     int	req_status = FALSE;
     int	req_stop = FALSE;
     int	argerr = 0;
     int flag;
     
+    cl_log_set_entity(crm_system_name);
+    cl_log_enable_stderr(TRUE);
+    cl_log_set_facility(LOG_USER);
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {

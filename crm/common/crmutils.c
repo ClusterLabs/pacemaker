@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.11 2004/04/13 13:26:44 andrew Exp $ */
+/* $Id: crmutils.c,v 1.12 2004/04/15 00:35:19 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,9 +16,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <crm/crm.h>
 
 #include <portability.h>
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#include <crm/crm.h>
 
 #include <apphb.h>
 
@@ -124,14 +126,15 @@ get_running_pid(const char *pid_file, gboolean* anypidfile)
 int
 init_stop(const char *pid_file)
 {
+	long	pid;
+	int	rc = LSB_EXIT_OK;
+
 	FNIN();
 	
 	if (pid_file == NULL) {
 		cl_log(LOG_ERR, "No pid file specified to kill process");
 		return LSB_EXIT_GENERIC;
 	}
-	long	pid;
-	int	rc = LSB_EXIT_OK;
 	pid =	get_running_pid(pid_file, NULL);
 	
 	if (pid > 0) {
@@ -180,6 +183,8 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 					  void* private_data),
 		 GDestroyNotify cleanup_method)
 {
+	const char* ournode = NULL;
+
 	cl_log(LOG_INFO, "Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
 		cl_log(LOG_ERR, "Cannot sign on with heartbeat");
@@ -189,7 +194,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 		return FALSE;
 	}
   
-	const char* ournode = NULL;
 	cl_log(LOG_DEBUG, "Finding our node name");
 	if ((ournode =
 	     hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
@@ -240,11 +244,12 @@ void
 register_with_apphb(const char *client_name,
 		    gboolean(*tickle_fn)(gpointer data))
 {
-	// Register with apphb
-	cl_log(LOG_INFO, "Signing in with AppHb");
 	char	app_instance[APPNAME_LEN];
 	int     hb_intvl_ms = wdt_interval_ms * 2;
 	int     rc = 0;
+
+	// Register with apphb
+	cl_log(LOG_INFO, "Signing in with AppHb");
 	sprintf(app_instance, "%s_%ld", client_name, (long)getpid());
   
 	cl_log(LOG_INFO, "Client %s registering with apphb", app_instance);

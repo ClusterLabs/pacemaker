@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.25 2004/03/26 14:14:25 andrew Exp $ */
+/* $Id: msgutils.c,v 1.26 2004/04/15 00:35:19 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,8 +16,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <crm/crm.h>
-
 #include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -26,6 +24,7 @@
 
 #include <stdlib.h>
 
+#include <crm/crm.h>
 #include <clplumbing/cl_log.h>
 
 #include <time.h> 
@@ -63,11 +62,16 @@ xmlNodePtr
 createPingRequest(const char *crm_msg_reference, const char *to)
 {
 	xmlNodePtr root_xml_node = NULL;
+	int sub_type_len;
+	int msg_type_len;
+	char *sub_type_target;
+	char *msg_type_target;
+
 	FNIN();
 	
 	// 2 = "_" + '\0'
-	int sub_type_len = strlen(to) + strlen(XML_ATTR_REQUEST) + 2; 
-	char *sub_type_target =
+	sub_type_len = strlen(to) + strlen(XML_ATTR_REQUEST) + 2; 
+	sub_type_target =
 		(char*)cl_malloc(sizeof(char)*(sub_type_len));
 
 	sprintf(sub_type_target, "%s_%s", to, XML_ATTR_REQUEST);
@@ -76,8 +80,8 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 			      XML_ATTR_REFERENCE,
 			      crm_msg_reference);
     
-	int msg_type_len = strlen(to) + 10 + 1; // + "_operation" + '\0'
-	char *msg_type_target =
+	msg_type_len = strlen(to) + 10 + 1; // + "_operation" + '\0'
+	msg_type_target =
 		(char*)cl_malloc(sizeof(char)*(msg_type_len));
 	sprintf(msg_type_target, "%s_operation", to);
 	set_xml_property_copy(root_xml_node, msg_type_target, CRM_OPERATION_PING);
@@ -95,6 +99,7 @@ generateReference(const char *custom1, const char *custom2)
 	const char *local_cust1 = custom1;
 	const char *local_cust2 = custom2;
 	int reference_len = 4;
+	char *since_epoch = NULL;
 
 	FNIN();
 	
@@ -107,7 +112,7 @@ generateReference(const char *custom1, const char *custom2)
 	if(local_cust2 == NULL) local_cust2 = "_empty_";
 	reference_len += strlen(local_cust2);
 	
-	char *since_epoch = (char*)cl_malloc(reference_len*(sizeof(char)));
+	since_epoch = (char*)cl_malloc(reference_len*(sizeof(char)));
 	FNIN();
 	sprintf(since_epoch, "%s-%s-%ld-%u",
 		local_cust1, local_cust2,
@@ -129,6 +134,7 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	const char *type = NULL;
 	const char *crm_msg_reference = NULL;
 	xmlNodePtr action = NULL;
+	const char *true_sys;
 	
 	FNIN();
 	if (root_xml_node == NULL)
@@ -150,7 +156,8 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	       crm_msg_reference);
 */
 	action = root_xml_node;
-	const char *true_sys = sys;
+	true_sys = sys;
+
 	if (uuid != NULL) true_sys = generate_hash_key(sys, uuid);
 
 	if (to == NULL) {
@@ -192,13 +199,15 @@ validate_crm_message(xmlNodePtr root_xml_node,
 gboolean
 decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 {
-	FNIN();
 	int lpc = 0;
+	int len = 0;
 	const char *temp = NULL;
+
+	FNIN();
 
 	CRM_DEBUG2("Attempting to decode: [%s]", srcstring);
 	if (srcstring != NULL) {
-		int len = strlen(srcstring);
+		len = strlen(srcstring);
 		while(lpc < len) {
 			if (srcstring[lpc++] == separator) {
 				*name = (char*)cl_malloc(sizeof(char)*lpc);
@@ -232,9 +241,10 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 char *
 generate_hash_key(const char *crm_msg_reference, const char *sys)
 {
-	FNIN();
 	int ref_len = strlen(sys) + strlen(crm_msg_reference) + 2;
 	char *hash_key = (char*)cl_malloc(sizeof(char)*(ref_len));
+
+	FNIN();
 	sprintf(hash_key, "%s_%s", sys, crm_msg_reference);
 	hash_key[ref_len-1] = '\0';
 	cl_log(LOG_INFO, "created hash key: (%s)", hash_key);
@@ -244,10 +254,10 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 char *
 generate_hash_value(const char *src_node, const char *src_subsys)
 {
-	FNIN();
 	int ref_len;
 	char *hash_value;
 
+	FNIN();
 	if (src_node == NULL || src_subsys == NULL) {
 		FNRET(NULL);
 	}
@@ -282,9 +292,10 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 gboolean
 decode_hash_value(gpointer value, char **node, char **subsys)
 {
-	FNIN();
 	char *char_value = (char*)value;
 	int value_len = strlen(char_value);
+
+	FNIN();
     
 	cl_log(LOG_INFO, "Decoding hash value: (%s:%d)",
 	       char_value,
@@ -354,6 +365,13 @@ process_hello_message(IPC_Message *hello_message,
 		      char **major_version,
 		      char **minor_version)
 {
+	xmlNodePtr hello;
+	xmlDocPtr hello_doc;
+	char *local_uuid;
+	char *local_client_name;
+	char *local_major_version;
+	char *local_minor_version;
+
 	FNIN();
 	*uuid = NULL;
 	*client_name = NULL;
@@ -364,7 +382,7 @@ process_hello_message(IPC_Message *hello_message,
 		FNRET(FALSE);
 	}
 
-	xmlDocPtr hello_doc = xmlParseMemory(
+	hello_doc = xmlParseMemory(
 		hello_message->msg_body,
 		strlen(hello_message->msg_body));
 	if (hello_doc == NULL) {
@@ -374,17 +392,17 @@ process_hello_message(IPC_Message *hello_message,
 		FNRET(FALSE);
 	}
     
-	xmlNodePtr hello = xmlDocGetRootElement(hello_doc);
+	hello = xmlDocGetRootElement(hello_doc);
 	if (hello == NULL) {
 		FNRET(FALSE);
 	} else if (strcmp("hello", hello->name) != 0) {
 		FNRET(FALSE);
 	}
 
-	char *local_uuid = xmlGetProp(hello, "client_uuid");
-	char *local_client_name = xmlGetProp(hello, "client_name");
-	char *local_major_version = xmlGetProp(hello, "major_version");
-	char *local_minor_version = xmlGetProp(hello, "minor_version");
+	local_uuid = xmlGetProp(hello, "client_uuid");
+	local_client_name = xmlGetProp(hello, "client_name");
+	local_major_version = xmlGetProp(hello, "major_version");
+	local_minor_version = xmlGetProp(hello, "minor_version");
 
 	if (local_uuid == NULL || strlen(local_uuid) == 0) {
 		cl_log(LOG_ERR,
@@ -423,9 +441,11 @@ forward_ipc_request(IPC_Channel *ipc_channel,
 		    xmlNodePtr xml_request, xmlNodePtr xml_response_data,
 		    const char *sys_to, const char *sys_from)
 {
-	FNIN();
 	gboolean was_sent = FALSE;
-	xmlNodePtr forward = create_forward(xml_request,
+	xmlNodePtr forward;
+
+	FNIN();
+	forward = create_forward(xml_request,
 					    xml_response_data,
 					    sys_to);
 	if (forward != NULL)
@@ -499,6 +519,8 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	       const char *crm_msg_reference)
 {
 	const char *true_from = sys_from;
+	xmlNodePtr request;
+
 	FNIN();
 
 	if (uuid_from != NULL)
@@ -523,7 +545,7 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	}
 	
 	// host_from will get set for us if necessary by CRMd when routed
-	xmlNodePtr request = create_xml_node(NULL, XML_MSG_TAG);
+	request = create_xml_node(NULL, XML_MSG_TAG);
 
 	set_node_tstamp(request);
 
@@ -554,9 +576,11 @@ send_ipc_reply(IPC_Channel *ipc_channel,
 	       xmlNodePtr xml_request,
 	       xmlNodePtr xml_response_data)
 {
-	FNIN();
 	gboolean was_sent = FALSE;
-	xmlNodePtr reply = create_reply(xml_request, xml_response_data);
+	xmlNodePtr reply;
+	FNIN();
+
+	reply = create_reply(xml_request, xml_response_data);
 
 //	xml_message_debug(reply, "Final reply...");
 
@@ -576,9 +600,12 @@ send_ha_reply(ll_cluster_t *hb_cluster,
 	      xmlNodePtr xml_request,
 	      xmlNodePtr xml_response_data)
 {
-	FNIN();
 	gboolean was_sent = FALSE;
-	xmlNodePtr reply = create_reply(xml_request, xml_response_data);
+	xmlNodePtr reply;
+
+	FNIN();
+	was_sent = FALSE;
+	reply = create_reply(xml_request, xml_response_data);
 	if (reply != NULL) {
 		was_sent = send_xmlha_message(hb_cluster, reply);
 		free_xml(reply);
@@ -596,13 +623,14 @@ create_reply(xmlNodePtr original_request,
 	const char *host_from = NULL;
 	const char *sys_from  = NULL;
 	const char *sys_to    = NULL;
+	xmlNodePtr reply;
 	
 	FNIN();
 	host_from = xmlGetProp(original_request, XML_ATTR_HOSTFROM);
 	sys_from  = xmlGetProp(original_request, XML_ATTR_SYSFROM);
 	sys_to  = xmlGetProp(original_request, XML_ATTR_SYSTO);
 
-	xmlNodePtr reply = create_common_message(original_request,
+	reply = create_common_message(original_request,
 						 xml_response_data);
 	
 	set_xml_property_copy(reply, XML_ATTR_MSGTYPE, XML_ATTR_RESPONSE);
@@ -630,13 +658,13 @@ create_forward(xmlNodePtr original_request,
 	const char *host_from = NULL;
 	const char *host_to   = NULL;
 	const char *sys_from  = NULL;
+	xmlNodePtr forward;
 	
 	FNIN();
 	host_from = xmlGetProp(original_request, XML_ATTR_HOSTFROM);
 	host_to   = xmlGetProp(original_request, XML_ATTR_HOSTTO);
 	sys_from  = xmlGetProp(original_request, XML_ATTR_SYSFROM);
-
-	xmlNodePtr forward = create_common_message(original_request,
+	forward = create_common_message(original_request,
 						    xml_response_data);
 	
 	set_xml_property_copy(forward,
@@ -659,10 +687,11 @@ xmlNodePtr
 create_common_message(xmlNodePtr original_request,
 		      xmlNodePtr xml_response_data)
 {
-	xmlNodePtr options = NULL;
 	const char *crm_msg_reference = NULL;
 	const char *type      = NULL;
 	const char *operation = NULL;
+	xmlNodePtr options = NULL;
+	xmlNodePtr new_message;
 	
 	FNIN();
 	crm_msg_reference = xmlGetProp(original_request,
@@ -683,8 +712,7 @@ create_common_message(xmlNodePtr original_request,
 		FNRET(NULL);
 #endif
 	}
-
-	xmlNodePtr new_message = create_xml_node(NULL, XML_MSG_TAG);
+	new_message = create_xml_node(NULL, XML_MSG_TAG);
 
 	set_node_tstamp(new_message);
 

@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.14 2004/03/26 14:14:25 andrew Exp $ */
+/* $Id: cibmain.c,v 1.15 2004/04/15 00:34:06 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,8 +17,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <crm/crm.h>
-
 #include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -30,6 +28,8 @@
 
 #include <hb_api.h>
 #include <apphb.h>
+
+#include <crm/crm.h>
 
 #include <clplumbing/ipc.h>
 #include <clplumbing/Gmain_timeout.h>
@@ -73,16 +73,16 @@ int
 main(int argc, char ** argv)
 {
 
-	cl_log_set_entity(crm_system_name);
-	cl_log_enable_stderr(TRUE);
-	cl_log_set_facility(LOG_USER);
-    
 	int	req_comms_restart = FALSE;
 	int	req_restart = FALSE;
 	int	req_status = FALSE;
 	int	req_stop = FALSE;
 	int	argerr = 0;
 	int flag;
+    
+	cl_log_set_entity(crm_system_name);
+	cl_log_enable_stderr(TRUE);
+	cl_log_set_facility(LOG_USER);
     
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -137,6 +137,12 @@ int
 init_start(void)
 {
 	long pid;
+	ll_cluster_t *hb_fd;
+	int facility;
+	IPC_Channel *crm_ch = NULL;
+#ifdef REALTIME_SUPPORT
+	static int  crm_realtime = 1;
+#endif
 
 	if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
 		cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
@@ -153,9 +159,8 @@ init_start(void)
 	cl_log_set_debugfile(DAEMON_DEBUG);
 //    }
   
-	ll_cluster_t *hb_fd = ll_cluster_new("heartbeat");
+	hb_fd = ll_cluster_new("heartbeat");
 
-	int facility;
 	cl_log(LOG_INFO, "Switching to Heartbeat logger");
 	if ((facility = hb_fd->llc_ops->get_logfacility(hb_fd))>0) {
 		cl_log_set_facility(facility);
@@ -167,7 +172,7 @@ init_start(void)
 	}
 	
     
-	IPC_Channel *crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
+	crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
 						    cib_msg_callback,
 						    NULL);
 
@@ -187,7 +192,6 @@ init_start(void)
 	
 	
 #ifdef REALTIME_SUPPORT
-		static int  crm_realtime = 1;
 		if (crm_realtime == 1) {
 			cl_enable_realtime();
 		} else if (crm_realtime == 0) {
@@ -219,6 +223,9 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 	IPC_Message *msg = NULL;
 	gboolean all_is_well = TRUE;
 	xmlNodePtr answer = NULL, root_xml_node = NULL;
+	const char *sys_to;
+	const char *type;
+
 	
 	FNIN();
 
@@ -256,8 +263,8 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 
 		root_xml_node = xmlDocGetRootElement(doc);
 
-		const char *sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
-		const char *type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
+		sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
+		type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
 		if (root_xml_node == NULL) {
 			cl_log(LOG_ERR, "Root node was NULL!!");
 

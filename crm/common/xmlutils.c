@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.25 2004/04/13 13:26:44 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.26 2004/04/15 00:35:19 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,6 +45,8 @@ xmlNodePtr
 find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 {
 	int	j;
+	xmlNodePtr child;
+	xmlNodePtr lastMatch;
 	FNIN();
 
 	if (root == NULL) {
@@ -62,8 +64,7 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		   "Looking for.",
 		   search_path, len);
 #endif
-	
-	xmlNodePtr child = root->children, lastMatch = NULL;
+	child = root->children, lastMatch = NULL;
 	for (j=0; j < len; ++j) {
 		gboolean is_found = FALSE;
 		if (search_path[j] == NULL) {
@@ -208,6 +209,7 @@ set_xml_attr_nested(xmlNodePtr parent,
 	xmlAttrPtr result        = NULL;
 	xmlNodePtr attr_parent   = NULL;
 	xmlNodePtr create_parent = NULL;
+	xmlNodePtr tmp;
 
 	if(parent == NULL && create == FALSE) {
 		cl_log(LOG_ERR, "Can not set attribute in NULL parent");
@@ -243,7 +245,7 @@ set_xml_attr_nested(xmlNodePtr parent,
 				break;
 			}
 			
-			xmlNodePtr tmp =
+			tmp =
 				find_xml_node(attr_parent, node_path[j]);
 
 			if(tmp == NULL) {
@@ -435,6 +437,8 @@ dump_xml(xmlNodePtr msg)
 void
 xml_message_debug(xmlNodePtr msg, const char *text)
 {
+	char *msg_buffer;
+
 	FNIN();
 	if(msg == NULL) {
 		CRM_DEBUG3("%s: %s",
@@ -443,7 +447,7 @@ xml_message_debug(xmlNodePtr msg, const char *text)
 		FNOUT();
 	}
 	
-	char *msg_buffer = dump_xml_node(msg, FALSE);
+	msg_buffer = dump_xml_node(msg, FALSE);
 	CRM_DEBUG3("%s: %s",
 		   text==NULL?"<null>":text,
 		   msg_buffer==NULL?"<null>":msg_buffer);
@@ -456,9 +460,10 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 {
 	int lpc = 0;
 	int msg_size = -1;
-	FNIN();
-
 	xmlChar *xml_message = NULL;
+	xmlBufferPtr xml_buffer;
+
+	FNIN();
 	if (msg == NULL) FNRET(NULL);
 
 	xmlInitParser();
@@ -476,7 +481,7 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 #endif    
 		xmlMemoryDump ();
 	
-		xmlBufferPtr xml_buffer = xmlBufferCreate();
+		xml_buffer = xmlBufferCreate();
 		msg_size = xmlNodeDump(xml_buffer, msg->doc, msg, 0, 0);
 
 		xml_message =
@@ -689,6 +694,10 @@ string2xml(const char *input)
 	int lpc = 0, input_len = strlen(input);
 	gboolean more = TRUE;
 	gboolean inTag = FALSE;
+	xmlNodePtr xml_object = NULL;
+	const char *the_xml;
+	xmlDocPtr doc;
+
 	xmlBufferPtr xml_buffer = xmlBufferCreate();
 	
 	for(lpc = 0; (lpc < input_len) && more; lpc++) {
@@ -721,9 +730,8 @@ string2xml(const char *input)
 	}
 
 	
-	xmlNodePtr xml_object = NULL;
-	const char *the_xml = xmlBufferContent(xml_buffer);
-	xmlDocPtr doc = xmlParseMemory(the_xml, strlen(the_xml));
+	the_xml = xmlBufferContent(xml_buffer);
+	doc = xmlParseMemory(the_xml, strlen(the_xml));
 	if (doc == NULL) {
 		cl_log(LOG_ERR, "Malformed XML [xml=%s]", the_xml);
 		return NULL;
@@ -741,7 +749,10 @@ file2xml(FILE *input)
 	char ch = 0;
 	gboolean more = TRUE;
 	gboolean inTag = FALSE;
+	xmlNodePtr xml_object = NULL;
 	xmlBufferPtr xml_buffer = xmlBufferCreate();
+	const char *the_xml;
+	xmlDocPtr doc;
 
 	if(input == NULL) {
 		cl_log(LOG_ERR, "File pointer was NULL");
@@ -778,10 +789,8 @@ file2xml(FILE *input)
 		}
 	}
 
-	
-	xmlNodePtr xml_object = NULL;
-	const char *the_xml = xmlBufferContent(xml_buffer);
-	xmlDocPtr doc = xmlParseMemory(the_xml, strlen(the_xml));
+	the_xml = xmlBufferContent(xml_buffer);
+	doc = xmlParseMemory(the_xml, strlen(the_xml));
 	if (doc == NULL) {
 		cl_log(LOG_ERR, "Malformed XML [xml=%s]", the_xml);
 		return NULL;

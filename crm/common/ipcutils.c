@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.21 2004/04/09 16:22:50 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.22 2004/04/15 00:35:19 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,9 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <crm/crm.h>
-
 #include <portability.h>
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -26,6 +25,8 @@
 
 #include <errno.h>
 #include <fcntl.h>
+
+#include <crm/crm.h>
 
 #include <hb_api.h>
 #include <ha_msg.h>
@@ -48,6 +49,10 @@
 //#include <time.h> // for getNow()
 
 #include <ipcutils.h>
+/* 
+#include <crm/common/ipcutils.h>
+#include <crm/common/msgutils.h>
+*/
 #include <xmlutils.h>
 #include <msgutils.h>
 #include <crm/msg_xml.h>
@@ -71,13 +76,15 @@ gboolean
 send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 {
 	char *xml_message = NULL;
+	IPC_Message *cib_dump = NULL;
+	gboolean res;
 	FNIN();
 
 	xml_message = dump_xml(msg);
 	
-	IPC_Message *cib_dump =
+	cib_dump =
 		create_simple_message(xml_message, ipc_client);
-	gboolean res = send_ipc_message(ipc_client, cib_dump);
+	res = send_ipc_message(ipc_client, cib_dump);
 	cl_free(xml_message);
 	xml_message_debug(msg, "Sent IPC Message");
 	FNRET(res);
@@ -93,6 +100,12 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	int xml_len = -1;
 	const char *host_to = NULL;
 	const char *sys_to = NULL;
+	struct ha_msg *msg = NULL;
+	char *xml_text;
+#ifdef MSG_LOG
+	char *msg_text = NULL;
+#endif
+
 	FNIN();
     
 	if (root == NULL) {
@@ -110,12 +123,11 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 //		xmlSetProp(root, XML_ATTR_HOSTTO, "");
 	}
 	
-	struct ha_msg *msg = NULL;
 	if (all_is_good) {
 		msg = ha_msg_new(4); 
 		ha_msg_add(msg, F_TYPE, "CRM");
 		ha_msg_add(msg, F_COMMENT, "A CRM xml message");
-		char *xml_text = dump_xml(root);
+		xml_text = dump_xml(root);
 		xml_len = strlen(xml_text);
 		
 		if (xml_text == NULL || xml_len <= 0) {
@@ -187,8 +199,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	
 	
 #ifdef MSG_LOG
-	
-		char *msg_text = dump_xml(root);
+		msg_text = dump_xml(root);
 		if(msg_out_strm == NULL) {
 			msg_out_strm = fopen("/tmp/outbound.log", "w");
 		}
@@ -200,7 +211,6 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		
 		fflush(msg_out_strm);
 		cl_free(msg_text);
-	
 #endif
 	
 	FNRET(all_is_good);
@@ -210,8 +220,9 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 gboolean 
 send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 {
-	FNIN();
 	gboolean all_is_good = TRUE;
+	int lpc = 0;
+	FNIN();
 
 	if (msg == NULL) {
 		cl_log(LOG_WARNING, "cant send NULL message");
@@ -233,7 +244,6 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 		all_is_good = FALSE;
 	}
 	CRM_DEBUG2("IPC Client is%s set.", all_is_good?"":" not");
-	int lpc = 0;
 	if (all_is_good) {		
 		while(lpc++ < MAX_IPC_FAIL
 		      && ipc_client->ops->send(ipc_client, msg) == IPC_FAIL)
@@ -257,11 +267,11 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 IPC_Message *
 create_simple_message(char *text, IPC_Channel *ch)
 {
-	FNIN();
-	if (text == NULL) FNRET(NULL);
-
 	//    char	       str[256];
 	IPC_Message        *ack_msg = NULL;
+
+	FNIN();
+	if (text == NULL) FNRET(NULL);
 
 	ack_msg = (IPC_Message *)cl_malloc(sizeof(IPC_Message));
     
@@ -279,15 +289,17 @@ gboolean
 default_ipc_input_dispatch(IPC_Channel *client, gpointer user_data)
 {
 	xmlNodePtr root;
+	xmlNodePtr options;
 	IPC_Message *msg = NULL;
+	const char *op;
 	
 	FNIN();
 	msg = get_ipc_message(client);
 	if (msg) {
 		root = find_xml_in_ipcmessage(msg, TRUE);
 		validate_crm_message(root, NULL, NULL, NULL);
-		xmlNodePtr options = find_xml_node(root, XML_TAG_OPTIONS);
-		const char *op = xmlGetProp(options, XML_ATTR_OP);
+		options = find_xml_node(root, XML_TAG_OPTIONS);
+		op = xmlGetProp(options, XML_ATTR_OP);
 		if(op != NULL && strcmp(op, "quit") == 0) {
 			cl_log(LOG_WARNING,
 			       "The CRMd has asked us to exit... complying");
@@ -310,6 +322,10 @@ default_ipc_input_dispatch(IPC_Channel *client, gpointer user_data)
 xmlNodePtr
 find_xml_in_hamessage(const struct ha_msg* msg)
 {
+	const char *xml;
+   	xmlDocPtr doc;
+	xmlNodePtr root;
+
 	FNIN();
 	if (msg == NULL) {
 		cl_log(LOG_INFO,
@@ -331,20 +347,18 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 		       ha_msg_value(msg, F_TYPE));
 		FNRET(NULL);
 	}
-	const char *xml = ha_msg_value(msg, "xml");
+	xml = ha_msg_value(msg, "xml");
 	if (xml == NULL) {
 		cl_log(LOG_INFO, "No XML attached to this message.");
 		FNRET(NULL);
 	}
-    
-	xmlDocPtr doc = xmlParseMemory(xml, strlen(xml));
+	doc = xmlParseMemory(xml, strlen(xml));
 	if (doc == NULL) {
 		cl_log(LOG_INFO, "XML Buffer was not valid.");
 		FNRET(NULL);
 	}
 
-
-	xmlNodePtr root = xmlDocGetRootElement(doc);
+	root = xmlDocGetRootElement(doc);
 	if (root == NULL) {
 		cl_log(LOG_INFO, "Root node was NULL.");
 		FNRET(NULL);
@@ -355,14 +369,18 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 xmlNodePtr
 find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free)
 {
+	char *buffer = NULL;
+	xmlDocPtr doc;
+	xmlNodePtr root;
+
 	FNIN();
 	if (msg == NULL) {
 		CRM_DEBUG("IPC Message was empty...");
 		FNRET(NULL);
 	}
 
-	char *buffer = (char*)msg->msg_body;
-	xmlDocPtr doc = xmlParseMemory(buffer, strlen(buffer));
+	buffer = (char*)msg->msg_body;
+	doc = xmlParseMemory(buffer, strlen(buffer));
 
 	if (do_free) msg->msg_done(msg);
 
@@ -372,7 +390,7 @@ find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free)
 		FNRET(NULL);
 	}
 
-	xmlNodePtr root = xmlDocGetRootElement(doc);
+	root = xmlDocGetRootElement(doc);
 	if (root == NULL) {
 		cl_log(LOG_INFO, "Root node was NULL.");
 		FNRET(NULL);
@@ -396,17 +414,16 @@ init_server_ipc_comms(
 					   gpointer user_data),
 	void (*channel_input_destroy)(gpointer user_data))
 {
-	FNIN();
-
 	/* the clients wait channel is the other source of events.
 	 * This source delivers the clients connection events.
 	 * listen to this source at a relatively lower priority.
 	 */
     
 	char    commpath[SOCKET_LEN];
-	sprintf(commpath, WORKING_DIR "/%s", child);
-
 	IPC_WaitConnection *wait_ch;
+
+	FNIN();
+	sprintf(commpath, WORKING_DIR "/%s", child);
 
 	wait_ch = wait_channel_init(commpath);
 
@@ -430,18 +447,19 @@ init_client_ipc_comms(const char *child,
 					   ,gpointer    user_data),
 		      crmd_client_t *client_data)
 {
-	FNIN();
 	IPC_Channel *ch;
 	GHashTable * attrs;
 	GCHSource *the_source = NULL;
 	void *callback_data = client_data;
 	static char 	path[] = IPC_PATH_ATTR;
-
+	char *commpath = NULL;
 	int local_socket_len = 2; // 2 = '/' + '\0'
+
+	FNIN();
 	local_socket_len += strlen(child);
 	local_socket_len += strlen(WORKING_DIR);
 
-	char *commpath = (char*)cl_malloc(sizeof(char)*local_socket_len);
+	commpath = (char*)cl_malloc(sizeof(char)*local_socket_len);
 	sprintf(commpath, WORKING_DIR "/%s", child);
 	commpath[local_socket_len - 1] = '\0';
     
@@ -487,12 +505,13 @@ init_client_ipc_comms(const char *child,
 IPC_WaitConnection *
 wait_channel_init(char daemonsocket[])
 {
-	FNIN();
 	IPC_WaitConnection *wait_ch;
 	mode_t mask;
 	char path[] = IPC_PATH_ATTR;
-    
-	GHashTable * attrs = g_hash_table_new(g_str_hash,g_str_equal);
+	GHashTable * attrs;
+
+	FNIN();
+	attrs = g_hash_table_new(g_str_hash,g_str_equal);
 	g_hash_table_insert(attrs, path, daemonsocket);
     
 	mask = umask(0);
@@ -512,8 +531,9 @@ wait_channel_init(char daemonsocket[])
 IPC_Message *
 get_ipc_message(IPC_Channel *a_channel)
 {
-	FNIN();
 	IPC_Message *msg = NULL;
+
+	FNIN();
 	if(a_channel->ops->is_message_pending(a_channel) == TRUE) {
 		if (a_channel->ch_status == IPC_DISCONNECT) {
 			/* The pending message was IPC_DISCONNECT */

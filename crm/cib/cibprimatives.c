@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.23 2004/04/06 16:23:03 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.24 2004/04/15 00:34:06 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,8 +17,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <crm/crm.h>
-
 #include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -27,6 +25,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#include <crm/crm.h>
 
 #include <clplumbing/cl_log.h>
 
@@ -64,13 +64,14 @@ int
 addResource(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
 	const char *id = ID(anXmlNode);
+	xmlNodePtr root;
 	if (id == NULL || strlen(id) < 1) {
 		return CIBRES_MISSING_ID;
 	}
 
 	CRM_DEBUG2("Adding " XML_CIB_TAG_RESOURCE " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
+	root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
 	return add_cib_object(root, anXmlNode);
 }
 
@@ -91,13 +92,15 @@ int
 updateResource(xmlNodePtr cib,  xmlNodePtr anXmlNode)
 {
 	const char *id = ID(anXmlNode);
+	xmlNodePtr root;
+
 	if (id == NULL || strlen(id) < 1) {
 		return CIBRES_MISSING_ID;
 	}
 	
 	CRM_DEBUG2("Updating " XML_CIB_TAG_RESOURCE " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
+	root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
 	return update_cib_object(root, anXmlNode, FALSE);
 }
 
@@ -105,13 +108,15 @@ int
 delResource(xmlNodePtr cib, xmlNodePtr delete_spec)
 {
 	const char *id = ID(delete_spec);
+	xmlNodePtr root;
+
 	if(id == NULL || strlen(id) == 0) {
 		return CIBRES_MISSING_ID;
 	} 
 
 	CRM_DEBUG2("Deleting " XML_CIB_TAG_RESOURCE " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
+	root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
 	return delete_cib_object(root, delete_spec);
 }
 
@@ -122,13 +127,15 @@ int
 addConstraint(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
 	const char *id = ID(anXmlNode);
+	xmlNodePtr root;
+
 	if (id == NULL || strlen(id) < 1) {
 		return CIBRES_MISSING_ID;
 	}
 
 	CRM_DEBUG2("Adding " XML_CIB_TAG_CONSTRAINT " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
+	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
 	return add_cib_object(root, anXmlNode);
 }
 
@@ -149,6 +156,7 @@ int
 updateConstraint(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
 	const char *id = ID(anXmlNode);
+	xmlNodePtr root;
 	
 	if (id == NULL || strlen(id) < 1) {
 		return CIBRES_MISSING_ID;
@@ -156,7 +164,7 @@ updateConstraint(xmlNodePtr cib, xmlNodePtr anXmlNode)
 	
 	CRM_DEBUG2("Updating " XML_CIB_TAG_CONSTRAINT " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
+	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
 	return update_cib_object(root, anXmlNode, FALSE);
 }
 
@@ -164,12 +172,14 @@ int
 delConstraint(xmlNodePtr cib, xmlNodePtr delete_spec)
 {
 	const char *id = ID(delete_spec);
+	xmlNodePtr root;
+
 	if(id == NULL || strlen(id) == 0) {
 		return CIBRES_MISSING_ID;
 	} 
 	CRM_DEBUG2("Deleting " XML_CIB_TAG_CONSTRAINT " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
+	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
 	return delete_cib_object(root, delete_spec);
 }
 
@@ -179,13 +189,15 @@ int
 addHaNode(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
 	const char *id = ID(anXmlNode);
+	xmlNodePtr root;
+
 	if (id == NULL || strlen(id) < 1) {
 		return CIBRES_MISSING_ID;
 	}
 
 	CRM_DEBUG2("Adding " XML_CIB_TAG_NODE " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_NODES, cib);
+	root = get_object_root(XML_CIB_TAG_NODES, cib);
 	return add_cib_object(root, anXmlNode);
 }
 
@@ -207,13 +219,15 @@ int
 updateHaNode(xmlNodePtr cib, cibHaNode *anXmlNode)
 {
 	const char *id = ID(anXmlNode);
+	xmlNodePtr root;
+
 	if (id == NULL || strlen(id) < 1) {
 		return CIBRES_MISSING_ID;
 	}
 	
 	CRM_DEBUG2("Updating " XML_CIB_TAG_NODE " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_NODES, cib);
+	root = get_object_root(XML_CIB_TAG_NODES, cib);
 	return update_cib_object(root, anXmlNode, FALSE);
 }
 
@@ -221,13 +235,15 @@ int
 delHaNode(xmlNodePtr cib, xmlNodePtr delete_spec)
 {
 	const char *id = ID(delete_spec);
+	xmlNodePtr root;
+
 	if(id == NULL || strlen(id) == 0) {
 		return CIBRES_MISSING_ID;
 	} 
 
 	CRM_DEBUG2("Deleting " XML_CIB_TAG_NODE " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
+	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
 	return delete_cib_object(root, delete_spec);
 }
 
@@ -237,13 +253,15 @@ int
 addStatus(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
 	const char *id = ID(anXmlNode);
+	xmlNodePtr root;
+
 	if (id == NULL || strlen(id) < 1) {
 		return CIBRES_MISSING_ID;
 	}
 
 	CRM_DEBUG2("Adding " XML_CIB_TAG_NODE " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_STATUS, cib);
+	root = get_object_root(XML_CIB_TAG_STATUS, cib);
 	return add_cib_object(root, anXmlNode);
 }
 
@@ -262,13 +280,15 @@ int
 updateStatus(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
 	const char *id = ID(anXmlNode);
+	xmlNodePtr root;
+
 	if (id == NULL || strlen(id) < 1) {
 		return CIBRES_MISSING_ID;
 	}
 	
 	CRM_DEBUG2("Updating " XML_CIB_TAG_NODE " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_STATUS, cib);
+	root = get_object_root(XML_CIB_TAG_STATUS, cib);
 	return update_cib_object(root, anXmlNode, FALSE);
 }
 
@@ -276,13 +296,15 @@ int
 delStatus(xmlNodePtr cib, xmlNodePtr delete_spec)
 {
 	const char *id = ID(delete_spec);
+	xmlNodePtr root;
+
 	if(id == NULL || strlen(id) == 0) {
 		return CIBRES_MISSING_ID;
 	} 
 
 	CRM_DEBUG2("Deleting " XML_CIB_TAG_STATE " (%s)...", id);
 
-	xmlNodePtr root = get_object_root(XML_CIB_TAG_STATUS, cib);
+	root = get_object_root(XML_CIB_TAG_STATUS, cib);
 	return delete_cib_object(root, delete_spec);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.30 2004/04/13 13:26:44 andrew Exp $ */
+/* $Id: cib.c,v 1.31 2004/04/15 00:34:06 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,8 +18,6 @@
  */
 
 
-#include <crm/crm.h>
-
 #include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -28,6 +26,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#include <crm/crm.h>
 
 #include <clplumbing/cl_log.h>
 #include <libxml/tree.h>
@@ -103,6 +103,8 @@ FILE *msg_cib_strm = NULL;
 xmlNodePtr
 process_cib_message(xmlNodePtr message, gboolean auto_reply)
 {
+	xmlNodePtr data;
+	xmlNodePtr reply;
 	enum cib_result result = CIBRES_OK;
 	xmlNodePtr fragment = find_xml_node(message, XML_TAG_FRAGMENT);
 	xmlNodePtr options  = find_xml_node(message, XML_TAG_OPTIONS);
@@ -117,13 +119,12 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 	fflush(msg_cib_strm);
 #endif
 	
-	xmlNodePtr data = cib_process_request(op, options, fragment, &result);
+	data = cib_process_request(op, options, fragment, &result);
 
 	CRM_DEBUG2("[cib] operation returned result %d", result);
 
 	if(auto_reply) {
-
-		xmlNodePtr reply = create_reply(message, data);
+		reply = create_reply(message, data);
 		free_xml(data);
 
 #ifdef MSG_LOG
@@ -162,6 +163,7 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	gboolean whole_cib = FALSE;
 	xmlNodePtr fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
 	xmlNodePtr cib = NULL;
+	xmlNodePtr object_root  = NULL;
 	char *auto_section = pluralSection(update->name);
 	
 	if(update == NULL) {
@@ -189,7 +191,7 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 
 	if(whole_cib == FALSE) {
 		cib = createEmptyCib();
-		xmlNodePtr object_root = get_object_root(section, cib);
+		object_root = get_object_root(section, cib);
 		add_node_copy(object_root, update);
 	} else {
 		cib = copy_xml_node_recursive(update);
