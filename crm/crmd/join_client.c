@@ -125,6 +125,8 @@ do_cl_join_request(long long action,
 #if 0
 	if(we are sick) {
 		log error ;
+
+		/* save the request for later? */
 		return I_NULL;
 	} 
 #endif
@@ -176,6 +178,7 @@ do_cl_join_result(long long action,
 	/* send our status section to the DC */
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
+		crm_debug("Sending local LRM status");
 		send_ha_reply(fsa_cluster_conn, welcome, tmp1);
 		free_xml(tmp1);
 		
@@ -184,6 +187,6 @@ do_cl_join_result(long long action,
 		return I_FAIL;
 	}
 	
-	register_fsa_input(cause, I_SUCCESS, msg_data->data);
+	register_fsa_input(cause, I_NOT_DC, NULL);
 	return I_NULL;
 }
