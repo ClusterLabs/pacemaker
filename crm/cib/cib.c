@@ -59,7 +59,6 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-/* gboolean waitCh_client_connect(IPC_Channel *newclient, gpointer user_data); */
 int updateCibStatus(xmlNodePtr cib,
 		    const char *res_id,
 		    const char *instanceNum,
@@ -170,9 +169,11 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 					    answer) == FALSE)
 					cl_log(LOG_WARNING,
 					       "Cib answer could not be sent");
-/* 				if(answer != NULL) */
-/* 					free_xml(answer); */
-				
+#if BUG
+				/* currently we get a segfault here */
+				if(answer != NULL)
+					free_xml(answer);
+#endif			
 			} else if (root_xml_node != NULL)
 				cl_log(LOG_INFO,
 				       "Received a message destined for (%s) "
