@@ -764,6 +764,10 @@ handle_message(xmlNodePtr stored_msg)
 
 //	xml_message_debug(stored_msg, "Processing message");
 
+	cl_log(LOG_DEBUG,
+	       "Received %s %s in state %s",
+	       op, type, fsa_state2string(fsa_state));
+	
 	if(type == NULL || op == NULL) {
 		cl_log(LOG_ERR, "Ignoring message (type=%s), (op=%s)",
 		       type, op);
@@ -777,10 +781,19 @@ handle_message(xmlNodePtr stored_msg)
 			next_input = I_PE_CALC;
 				
 		} else if(AM_I_DC
-			  && fsa_state == S_TRANSITION_ENGINE
 			  && strcmp(op, "te_complete") == 0) {
-			next_input = I_SUCCESS;
-				
+			if(fsa_state == S_TRANSITION_ENGINE) {
+				next_input = I_SUCCESS;
+/* silently ignore? probably means the TE is signaling OK too early
+			} else {
+				cl_log(LOG_WARNING,
+				       "Op %s is only valid in state %s (%s)",
+				       op,
+				       fsa_state2string(S_TRANSITION_ENGINE),
+				       fsa_state2string(fsa_state));
+*/
+			}
+	
 		} else if(strcmp(op, CRM_OPERATION_HBEAT) == 0) {
 			next_input = I_DC_HEARTBEAT;
 				
@@ -801,8 +814,8 @@ handle_message(xmlNodePtr stored_msg)
 			xmlNodePtr frag = NULL;
 			time_t now = time(NULL);
 			char *now_s = crm_itoa((int)now);
-			xmlNodePtr node_state = create_xml_node(NULL,
-								XML_CIB_TAG_STATE);
+			xmlNodePtr node_state =
+				create_xml_node(NULL, XML_CIB_TAG_STATE);
 				
 			set_xml_property_copy(node_state, XML_ATTR_ID, host_from);
 			set_xml_property_copy(node_state, "shutdown",  now_s);
@@ -856,12 +869,20 @@ handle_message(xmlNodePtr stored_msg)
 		if(strcmp(op, CRM_OPERATION_WELCOME) == 0) {
 			next_input = I_WELCOME_ACK;
 				
-		} else if(strcmp(op, "pecalc") == 0) {
-			// results in the TE being invoked
-			if(safe_str_eq(msg_ref, fsa_pe_ref)) {
+		} else if(AM_I_DC
+			  && strcmp(op, "pecalc") == 0) {
+
+			if(fsa_state == S_POLICY_ENGINE
+			   && safe_str_eq(msg_ref, fsa_pe_ref)) {
 				next_input = I_SUCCESS;
+			} else if(fsa_state != S_POLICY_ENGINE) {
+				cl_log(LOG_ERR,
+				       "Reply to %s is only valid in state %s",
+				       op, fsa_state2string(S_POLICY_ENGINE));
+				
 			} else {
-				CRM_DEBUG("Skipping superceeded reply from %s", sys_from);
+				CRM_DEBUG("Skipping superceeded reply from %s",
+					  sys_from);
 			}
 			
 		} else if(strcmp(op, CRM_OPERATION_VOTE) == 0
