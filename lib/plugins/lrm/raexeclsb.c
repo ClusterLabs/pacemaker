@@ -297,13 +297,13 @@ fork_and_execra(const char * ra_name, const char * op, RA_ARGV ra_argv,
 		if ( pipe(fd) < 0 ) {
 			cl_log(LOG_ERR,"pipe create error when to execute %s.",
 				 ra_name);
-			exit(-1);
+			return -1;
 		}
 	}
 
 	if ( (cpid=fork()) < 0 ) {
 		cl_log(LOG_ERR, "Fork failed when to execute %s.", ra_name);
-		exit(-1);
+		return -1;
 	}
 
 	if ( cpid > 0 ) {
@@ -317,7 +317,7 @@ fork_and_execra(const char * ra_name, const char * op, RA_ARGV ra_argv,
 			g_hash_table_insert(post_query_ops, 
 				g_intdup(cpid), g_intdup(0));
 		}
-		exit(cpid);
+		return cpid;
 	} else {
 		/* in child process */
 		/* close read fd */
