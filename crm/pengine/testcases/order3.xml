@@ -2,7 +2,9 @@
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <cib>
   <configuration>
-    <crm_config/>
+    <crm_config>
+      <nvpair id="symmetric_cluster" name="symetric_cluster" value="false"/>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
       <node id="uuid2" uname="node2" type="member"/>
@@ -18,22 +20,22 @@
       <rsc_order id="order2" from="rsc2" type="before" to="rsc3"/>
       <rsc_order id="order3" from="rsc2" type="after" to="rsc4"/>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1-1" result="can">
+	<rule id="can1-1" score="1">
 	  <expression attribute="uname" operation="eq" value="node2"/>
 	</rule>
       </rsc_location>
       <rsc_location id="run_rsc2" rsc="rsc2">
-	<rule id="can2-1" result="can">
+	<rule id="can2-1" score="1">
 	  <expression attribute="uname" operation="eq" value="node2"/>
 	</rule>
       </rsc_location>
       <rsc_location id="run_rsc3" rsc="rsc3">
-	<rule id="can3-1" result="can">
+	<rule id="can3-1" score="1">
 	  <expression attribute="uname" operation="eq" value="node2"/>
 	</rule>
       </rsc_location>
       <rsc_location id="run_rsc4" rsc="rsc4">
-	<rule id="can4-1" result="can">
+	<rule id="can4-1" score="1">
 	  <expression attribute="uname" operation="eq" value="node2"/>
 	</rule>
       </rsc_location>

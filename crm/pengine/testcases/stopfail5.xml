@@ -15,12 +15,6 @@
 		on_stopfail="stonith"/>
     </resources>
     <constraints>
-      <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can"/>
-      </rsc_location>
-      <rsc_location id="run_stonith1" rsc="stonith1">
-	<rule id="can1" result="can"/>
-      </rsc_location>
     </constraints>
     <crm_config>
       <nvpair id="failed_nodes" name="failed_nodes" value="stonith"/>
@@ -29,9 +23,6 @@
   <status>
     <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
         <lrm_resources>
           <lrm_resource id="rsc1" last_op="stop" rsc_state="failed" op_status="4" on_node="hadev"/>
         </lrm_resources>
@@ -39,10 +30,6 @@
     </node_state>
     <node_state id="node2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	  <lrm_agent class="stonith" type="uml"/>
-	</lrm_agents>
         <lrm_resources>
           <lrm_resource id="stonith1" last_op="start" rsc_state="started" op_status="0" rc_code="0" on_node="hadev">
 	    <can_fence id="node1"/>

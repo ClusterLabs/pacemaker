@@ -1,42 +1,30 @@
 <?xml version="1.0"?>
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
-<!-- must but cant -->
 <cib>
   <configuration>
-    <crm_config>
-      <nvpair id="symmetric_cluster" name="symetric_cluster" value="false"/>
-    </crm_config>
+    <crm_config/>
     <nodes>
       <node id="node1" uname="node1" type="member"/>
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
       <resource id="rsc1" class="heartbeat" type="apache"/>
-      <resource id="rsc2" class="heartbeat" type="apache"/>
     </resources>
-    <constraints>
-      <rsc_colocation id="same_1" from="rsc1" to="rsc2" type="must"/>
-      <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can2" score="1">
-	  <expression attribute="uname" operation="eq" value="node2"/>
-	</rule>
-      </rsc_location>
-      <rsc_location id="run_rsc2" rsc="rsc2">
-	<rule id="can3" score="1">
-	  <expression attribute="uname" operation="eq" value="node1"/>
-	</rule>
-      </rsc_location>
-    </constraints>
+    <constraints/>
   </configuration>
   <status>
     <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
-        <lrm_resources/>
+        <lrm_resources>
+          <lrm_resource id="rsc1" last_op="start" rsc_state="start_failed" op_status="4" rc_code="4" on_node="node1"/>
+        </lrm_resources>
       </lrm>
     </node_state>
     <node_state id="node2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
-        <lrm_resources/>
+        <lrm_resources>
+          <lrm_resource id="rsc1" last_op="start" rsc_state="start_failed" op_status="4" rc_code="4" on_node="node2"/>
+        </lrm_resources>
       </lrm>
     </node_state>
   </status>

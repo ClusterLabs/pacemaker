@@ -3,7 +3,7 @@
 <cib>
   <configuration>
     <crm_config>
-      <nvpair id="symetric_cluster" name="symetric_cluster" value="false"/>
+      <nvpair id="symmetric_cluster" name="symetric_cluster" value="false"/>
     </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
@@ -14,7 +14,7 @@
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can">
+	<rule id="can1" score="1">
 	  <expression attribute="id" operation="lt" value="uuid3"/>
 	  <expression attribute="uname" operation="gt" value="node1"/>
 	</rule>

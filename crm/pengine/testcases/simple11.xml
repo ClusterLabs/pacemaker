@@ -2,7 +2,7 @@
 <cib>
   <configuration>
     <crm_config>
-      <nvpair id="symetric_cluster" name="symetric_cluster" value="false"/>
+      <nvpair id="symmetric_cluster" name="symetric_cluster" value="false"/>
     </crm_config>
     <nodes>
       <node id="node1" uname="node1" type="member"/>
@@ -26,13 +26,13 @@
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can"/>
+	<rule id="can1" score="1"/>
 	<rule id="score1" score="10.0">
 	  <expression attribute="uname" operation="eq" value="node1"/>
 	</rule>
       </rsc_location>
       <rsc_location id="run_rsc2" rsc="rsc2">
-	<rule id="can2" result="can">
+	<rule id="can2" score="1">
 	  <expression attribute="uname" operation="eq" value="node1"/>
 	</rule>
       </rsc_location>

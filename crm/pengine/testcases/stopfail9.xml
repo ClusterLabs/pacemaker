@@ -12,17 +12,11 @@
 		on_stopfail="block"/>
     </resources>
     <constraints>
-      <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can"/>
-      </rsc_location>
     </constraints>
   </configuration>
   <status>
     <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
         <lrm_resources>
           <lrm_resource id="rsc1" last_op="stop" rsc_state="failed" op_status="4" on_node="node1"/>
         </lrm_resources>

@@ -12,9 +12,6 @@
       <resource id="rsc1" class="heartbeat" type="apache"/>
     </resources>
     <constraints>
-      <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can"/>
-      </rsc_location>
     </constraints>
   </configuration>
   <status>

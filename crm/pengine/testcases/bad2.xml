@@ -26,7 +26,7 @@
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc3">
-	<rule id="can1" result="cannot">
+	<rule id="can1" score="-INFINITY">
 	  <expression attribute="uname" op="eq" value="node1"/>
 	</rule>
       </rsc_location>

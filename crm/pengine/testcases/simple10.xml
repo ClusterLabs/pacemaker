@@ -10,9 +10,6 @@
       <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" version="2.0"/>
     </resources>
     <constraints>
-      <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can"/>
-      </rsc_location>
     </constraints>
   </configuration>
   <status>

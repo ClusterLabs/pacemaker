@@ -3,7 +3,7 @@
 <cib>
   <configuration>
     <crm_config>
-      <nvpair id="symetric_cluster" name="symetric_cluster" value="false"/>
+      <nvpair id="symmetric_cluster" name="symetric_cluster" value="false"/>
     </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
@@ -14,7 +14,7 @@
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" result="can" boolean_op="or">
+	<rule id="can1" score="1" boolean_op="or">
 	  <expression attribute="id" operation="ne" value="uuid1"/>
 	  <expression attribute="uname" operation="ne" value="node2"/>
 	</rule>
@@ -24,17 +24,11 @@
   <status>
     <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
         <lrm_resources/>
       </lrm>
     </node_state>
     <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
         <lrm_resources/>
       </lrm>
     </node_state>
