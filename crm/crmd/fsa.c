@@ -561,11 +561,15 @@ do_state_transition(long long actions,
 	}
 
 	switch(next_state) {
-		case S_PENDING:
+		case S_PENDING:			
 		case S_ELECTION:
 			crm_info("Resetting our DC to NULL on election");
 			crm_free(fsa_our_dc);
 			fsa_our_dc = NULL;
+			break;
+		case S_RELEASE_DC:
+			set_bit_inplace(tmp, A_INTEGRATE_TIMER_STOP);
+			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
 			break;
 		case S_NOT_DC:
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
