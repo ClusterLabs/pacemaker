@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.4 2004/07/09 15:37:41 msoffen Exp $ */
+/* $Id: msg.c,v 1.5 2004/08/17 11:49:42 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -138,7 +138,7 @@ validate_crm_message(xmlNodePtr root_xml_node,
 		crm_info("No message type defined.");
 		return NULL;
 	} else if (msg_type != NULL && strcmp(msg_type, type) != 0) {
-		crm_info("Expecting a (%s) message but receieved a (%s).",
+		crm_info("Expecting a (%s) message but received a (%s).",
 		       msg_type, type);
 		action = NULL;
 	}
