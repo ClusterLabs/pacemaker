@@ -188,16 +188,22 @@ do_election_count_vote(long long action,
 		we_loose = TRUE;
 		
 	} else if(compare_version(your_version, CRM_VERSION) < 0) {
-		crm_debug("Election pass: bad foreign version");
+		crm_debug("Election pass: version");
 		
 	} else if(your_node->node_born_on < our_node->node_born_on) {
 		crm_debug("Election fail: born_on");
 		we_loose = TRUE;
 
-	} else if(your_node->node_born_on == our_node->node_born_on
-		  && strcmp(fsa_our_uname, vote_from) > 0) {
+	} else if(your_node->node_born_on < our_node->node_born_on) {
+		crm_debug("Election pass: born_on");
+		
+	} else if(strcmp(fsa_our_uname, vote_from) > 0) {
 		crm_debug("Election fail: uname");
 		we_loose = TRUE;
+
+	} else if(strcmp(fsa_our_uname, vote_from) == 0) {
+		CRM_DEV_ASSERT(FALSE);
+		crm_debug("Election ??pass??: dup uname");
 	}
 
 	if(we_loose) {
