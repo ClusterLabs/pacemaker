@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.18 2005/03/11 14:19:03 andrew Exp $ */
+/* $Id: native.c,v 1.19 2005/03/14 21:00:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -591,7 +591,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		g_list_append(native_data->node_cons, constraint);
 
 	if(constraint->node_list_rh == NULL) {
-		crm_warn("RHS of constraint %s is NULL", constraint->id);
+		crm_debug("RHS of constraint %s is NULL", constraint->id);
 		return;
 	}
 	crm_devel_action(print_resource("before update", rsc,TRUE));

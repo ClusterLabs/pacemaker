@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.58 2005/03/11 14:01:15 andrew Exp $ */
+/* $Id: pengine.c,v 1.59 2005/03/14 21:00:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,7 +60,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		crm_xml_info(xml_data, "[in ]");
 		output = do_calculations(xml_data);
-		crm_xml_debug(output, "[out]");
+		crm_xml_devel(output, "[out]");
 
 		if (send_ipc_reply(sender, msg, output) ==FALSE) {
 
