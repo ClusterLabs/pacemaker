@@ -37,6 +37,7 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+gboolean stop_all_resources(void);
 
 gboolean build_suppported_RAs(
 	xmlNodePtr metadata_list, xmlNodePtr xml_agent_list);
@@ -209,6 +210,56 @@ build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 	return TRUE;
 }
 
+
+gboolean
+stop_all_resources(void)
+{
+	int lpc = 0, llpc = 0;
+
+	GList *op_list  = NULL;
+	GList *lrm_list = NULL;
+	state_flag_t cur_state = 0;
+	const char *this_op    = NULL;
+	
+	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
+
+	slist_iter(
+		rid, char, lrm_list, lpc,
+
+/* 		GHashTable* 	params; */
+
+		lrm_rsc_t *the_rsc =
+			fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
+
+		crm_info("Processing lrm_rsc_t entry %s", rid);
+		
+		if(the_rsc == NULL) {
+			crm_err("NULL resource returned from the LRM");
+			continue;
+		}
+
+		op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
+
+		crm_verbose("\tcurrent state:%s\n",
+			    cur_state==LRM_RSC_IDLE?"Idle":"Busy");
+
+		slist_iter(
+			op, lrm_op_t, op_list, llpc,
+
+			this_op = op->op_type;
+			crm_debug("Processing op %s for %s (status=%d, rc=%d)",
+				  op->op_type, the_rsc->id,
+				  op->op_status, op->rc);
+			
+			if(safe_str_neq(this_op, CRMD_RSCSTATE_STOP)){
+				do_lrm_rsc_op(the_rsc, the_rsc->id,
+					      CRMD_RSCSTATE_STOP, NULL);
+			}
+			break;
+			);
+		);
+	return TRUE;
+}
 
 gboolean
 build_active_RAs(xmlNodePtr rsc_list)
@@ -516,12 +567,14 @@ GHashTable *
 xml2list(xmlNodePtr parent, const char**attr_path, int depth)
 {
 	xmlNodePtr node_iter = NULL;
+	xmlNodePtr nvpair_list = NULL;
 
 	GHashTable   *nvpair_hash =
 		g_hash_table_new(&g_str_hash, &g_str_equal);
 
-	xmlNodePtr nvpair_list =
-		find_xml_node_nested(parent, attr_path, depth);
+	if(parent != NULL) {
+		nvpair_list = find_xml_node_nested(parent, attr_path, depth);
+	}
 	
 	while(nvpair_list != NULL){
 		node_iter = nvpair_list->children;
