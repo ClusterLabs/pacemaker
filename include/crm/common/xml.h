@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.11 2005/02/01 22:35:39 andrew Exp $ */
+/* $Id: xml.h,v 1.12 2005/02/06 03:11:07 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -191,9 +191,9 @@ extern void print_xml_formatted(
 
 #ifdef USE_LIBXML
 #   define xml_remove_prop(obj, name) xmlUnsetProp(obj, name)
-#   define xml_has_children(root) root->children?TRUE:FALSE
+#   define xml_has_children(root) (root->children ? TRUE : FALSE)
 #   define crm_element_value(data, name) xmlGetProp(data, name)
-#   define crm_element_name(data) data?data->name:NULL
+#   define crm_element_name(data) (data ? data->name : NULL)
 #   define crm_element_parent(data, parent) parent=(data?data->parent:NULL)
 #   define xml_child_iter(a,b,c,d) if(a != NULL) {			\
 		crm_data_t *b = NULL;					\
