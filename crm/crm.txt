@@ -9,11 +9,12 @@ And did I say yet that this is still a DRAFT!!!!!! ?
 
 
 Title: Design of a Cluster Resource Manager
-Revision: $Id: crm.txt,v 1.1 2003/08/08 18:19:47 lars Exp $
+Revision: $Id: crm.txt,v 1.2 2003/12/01 14:10:14 lars Exp $
 Author: Lars Marowsky-Brée <lmb@suse.de>
-Acknowledgements: Alan Robertson <alanr@unix.sh>
+Acknowledgements: Andrew Beekhof <andrew@beekhof.net>
 		  Luis Claudio R. Goncalves <lclaudio@conectiva.com.br>
 		  Fábio Olivé Leite <olive@conectiva.com.br>
+		  Alan Robertson <alanr@unix.sh>
 
 
 XX. Global TODO for this document
@@ -22,22 +23,25 @@ In this section I keep track of tasks which I still want to perform on this
 document; probably of little interest to anyone else, and this section should
 be gone in the final version ;-)
 
-- Convert to docbook
+- Break out major parts (CIB, Policy Engine etc) into their own documents.
 - Add references to sub-features used and do not replicate too much
   information here. References should take the form of the feature id from the
   feature list.
-- Ensure unified use of words and terms when referring to parts.
-- Break out major parts (CIB, Policy Engine etc) into their own documents.
+- Ensure unified use of words and terms when referring to the
+  components.
+- Convert to docbook (not pressing)
 
 
 0. Abstract
 
-This paper outlines the design of a clustered recovery/resource manager, to be
-running on top of and enhancing the OCF infrastructure provided by heartbeat.
+This paper outlines the design of a clustered recovery/resource manager
+to be running on top of and enhancing the Open Clustering Framework
+(OCF) infrastructure provided by heartbeat.
 
-The goal is to allow flexible resource allocation and globally ordered actions
-in a cluster of N nodes and reallocation of resources in case of failures (ie,
-"failover") or administrative changes to the cluster ("switchover").
+The goal is to allow flexible resource allocation and globally ordered
+actions in a cluster of N nodes and dynamic reallocation of resources in
+case of failures (ie, "fail-over") or administrative changes to the
+cluster ("switch-over").
 
 This new Cluster Resource Manager is intended to be a replacement for the
 currently used "resource manager" of heartbeat.
@@ -49,14 +53,23 @@ currently used "resource manager" of heartbeat.
 
 The CRM needs to provide the following functionality:
 
+- Secure.
+- Simple.  
+  
+  heartbeat already provides these two properties; by no means may the
+  new resource manager be more insecure. For sanity and stability - both
+  of the developers, but in particular the users -, complexity needs to
+  be kept at a minimum (but no simpler).
+  
 - Support for more than 2 nodes.
   
-- Reliable in the case of failures.
+- Fault tolerant.
+  (Failures can be node, network or resource failures.)
 
 - Ability to deal with complex policies for resource allocation and
-  dependencies;
+  dependencies. Examples:
   - Support for globally ordered starting order,
-  - Support for feedback in the decision-making process to better support
+  - Support for feedback in the allocation process to better support
     replicated resources,
   - Negated dependencies etc
 
@@ -74,12 +87,21 @@ properties; some of them will be further specified later.
 - The cluster provides a Concensus Membership Layer, as outlined in the OCF
   documents and provided by the CCM implementation by Ram Pai.
 
+  (This provides all nodes in a partition with a common and agreed upon
+  view of cluster membership, which tries to compute the largest set of
+  fully connected nodes.)
+  
+  - It is possible for the nodes in a given partition to order all nodes
+    in the partition in the same way, without the need for a distributed
+    decision. This can be either achieved by having the membership be
+    returned in the same order on all nodes, or by attaching a
+    distinguishing attribute to each node.
+  
 - The cluster provides a communication mechanism for unicast as well as
   broadcast messaging.
   
-  Messages don't necessarily satisfy the virtual synchrony requirement, but
-  they will be delivered without corruption; a correct node will eventually
-  deliver the message; messages are not spuriously generated.
+  Messages don't necessarily satisfy any special ordering, but they are
+  atomic.
   
 - Byzantine failures are rare and self-contained. Stable storage is stable and
   not otherwise corrupted; network packets aren't spuriously generated etc.
@@ -88,43 +110,40 @@ properties; some of them will be further specified later.
   appropriate precautions to prevent them from propagating upwards.
   (Checksums, authentication, error recovery or fail-fast)
   
-- Time is synchronized cluster-wide. Even in the face of a network partition,
-  an upper bound for time diversion can be safely assumed. This can be
-  virtually guaranteed by running NTP across all nodes in the cluster.
+- Time is synchronized cluster-wide. Even in the face of a network
+  partition, an upper bound for time diversion can be safely assumed.
+  This can be virtually guaranteed by running NTP across all nodes in
+  the cluster.
 
 - An IO fencing mechanism is available in the cluster.
 
   The fencing mechanism provides definitive feedback on whether a given
   fencing request succeeded or not.
   
-- A node knows which resources itself currently holds and the state (running /
-  failed) of them; it can provide this information if queried and will inform
-  the CRM of state changes. 
+- A node knows which resources itself currently holds and their state
+  (running / failed / stopped); it can provide this information if
+  queried and will inform the CRM of state changes. 
   
-  This part will be satisfied by the System Resource Manager.
+  (This part will be provided by the Local Resource Manager.)
 
-- It is possible for the nodes in a given partition to order all nodes in the
-  partition in the same way, without the need for a distributed decision. This
-  can be either achieved by having the membership be returned in the same
-  order on all nodes, or by attaching a distinguishing attribute to each node.
 
 
 2.1. Basic algorithm
 
 The basic algorithm can be summarized as follows:
 
-a) Every partition elects a "Designated Coordinator"; this node will activate
-special logic to coordinate the recovery and administrative actions which
-spawn multiple nodes.
+a) Every partition elects a "Designated Coordinator"; this node will
+activate special logic to coordinate the recovery and administrative
+actions on all nodes in the cluster.
 
-a.1) The DC has the full state of the cluster available (or is able to retrieve
-it), as well as an uptodate copy of the administrative policies, information
-about fenced nodes etc; this shall further be referred to as "Cluster
-Information Base".
+a.1) The DC has the full state of the cluster available (or is able to
+retrieve it), as well as an uptodate copy of the administrative
+policies, information about fenced nodes etc; this shall further be
+referred to as "Cluster Information Base".
 
 b) Whenever a cluster event occurs, be it an adminstrative request, a node
 failure by membership services or a resource failure reported by a
-participating SRM, it is forwarded to the "Designated Coordinator".
+participating LRM, it is forwarded to the "Designated Coordinator".
 
 b1) For administrative requests, the DC arbitates whether or not they will be
 accepted into the CIB and serializes these updates. ie, policy changes which
@@ -139,24 +158,34 @@ c.2) The Transition Graph, an dependency-ordered graph of the actions
      
 d) Leading the transition to the target state:
 
-d1) Broadcasting the new CIB.
+d1) Replicating the new CIB to all clients.
 
 d2) Executing each step of the transition graph in dependency order.
-    
-If a failure occurs at any time during this process, the algorithm is invoked
-again from the beginning; certain optimizations are of course possible if the
-failure does not lead to the election of a new DC.
+    (Potentially parallelized.)
+
+e) Exception handling if _any_ event or failure occurs:
+
+e1) The algorithm is aborted cleanly; pending operations are allowed to
+finish, but no new commands are issued to clients (in particular during
+phase d2)
+
+e2) The algorithm is invoked again from scratch.
+
+(It is obvious that there is room for optimization here by only
+recomputing smaller parts of the dependency tree or not broadcasting the
+full CIB every time, in particular if the DC has not been re-elected.
+However, these complicate the implementation and are not necessary for
+the first phase.)
 
 
 2.2) Feature analysis
 
 This meets the requirements listed as follows:
 
-- It is reasonably simple to have a policy engine capable of dealing with more
-  than two nodes.
-
-- Distributed decisions are avoided as far as possible; only a single node
-  leads the transition and coordinates participating nodes.
+- It is reasonably simple to have a policy engine capable of dealing
+  with more than two nodes as distributed decisions are avoided as far
+  as possible; only a single node leads the transition and coordinates
+  participating nodes.
 
   Local nodes are only required to know their own state; whenever the
   coordinator fails, the necessary state can simply be reconstructed by the
@@ -168,6 +197,8 @@ This meets the requirements listed as follows:
 
 - Support for new kinds of policies, types of resources, ... can be added via
   the policy engine.
+
+- The modular design keeps complexity in any single component down.
 
 
 2.3. Stability of the algorithm
@@ -181,30 +212,33 @@ entirely.
 
 2.4. Components
 
-This approach neatly divides the task into various components:
+This approach neatly divides the task into various components: (see
+crm-flowchart.fig!)
 
-[ TODO: Insert nice diagram showing the information and command flow between
-  these components in a cluster context ]
-
-- System Resource Manager
+- Cluster infrastructure
+  - heartbeat
+  - Concensus Cluster Membership
+  - Messaging
 
 - Cluster Resource Manager
   - Policy Engine
+  - Cluster Information Base
+  - Transitioner
 
-- Cluster Information Base
+- Local Resource Manager
+  - Executioner
+  - Resource Agents
 
-- Executioner
 
+3. Local Resource Manager
 
-3. System Resource Manager
-
-Note: This section only documents the requirements on the SRM from the point
+Note: This section only documents the requirements on the LRM from the point
 of view of the cluster-wide resource management. For a more detailled
 explanation, see the documentation by lclaudio.
 
 [ TODO: Add reference to lclaudio's document as soon as available ]
 
-This component knows which resources a node currently holds, their status
+This component knows which resources the node currently holds, their status
 (running, running/failed, stopping, stopped, stopped/failed, etc) and can
 provide this information to the CRM. It can start, restart and stop resources
 on demand. It can provide the CRM with a list of supported resource types.
@@ -229,14 +263,14 @@ The CRM coordinates all non-local interactions in the cluster. It interacts
 with:
   
   - The membership layer
-  - The system resource managers
+  - The local resource managers
   - non-local CRMs
   - Administrative commands
   - Fencing functionality
   
 Only one node is running the "Designated Coordinator" CRM at any given time in
 any given partition.  All other nodes forward their input to this node only,
-and will relay its decisions to the local SRM.
+and will relay its decisions to the local LRM.
 
 The coordinator is a "primus inter pares"; in theory, any CRM can act in this
 fashion, but the arbitation algorithm will distinguish a designated node.
@@ -248,7 +282,9 @@ CRM fails, the underlaying membership algorithm shall take care of this.
 
 If the CRM logic fails, this shall be detected by internal consistency checks
 and local heartbeating to apphbd must stop immediately, effectively committing
-'suicide' and providing a failfast mechanism.
+'suicide' and providing a failfast mechanism. However, for now we will
+assume that the CRM does not fail. Coping with internal failures
+internally is always difficult.
 
 This can later be enhanced by providing 'peer monitoring' of the CRMs among
 eachother and initiating fencing if necessary; however this has many pitfalls
@@ -261,6 +297,11 @@ The election algorithm exploits the fact that there is a global ordering of
 the nodes in a given partition; it will simply select the first one. The node
 will know that it has been "distinguished" and take control.
 
+As the first action in the algorithm is to collect the status from all
+nodes, this will inform any node about the newly elected leader. Should
+any of them have been a DC until the new membership (in the case of
+cluster partitionings healing), he will cease operation and handover
+control in an orderly fashion.
 
 4.3. Consistency audits
 
@@ -274,11 +315,12 @@ The DC can perform a variety of consistency checks:
 - Adminstrative requests (ie, rule additions) can be rejected if it would
   prevent the policy engine from computing a valid target state
 
+Implementing any of the audits is optional.
 
-4.4. Communication between the CRM and SRM
+4.4. Communication between the CRM and LRM
 
 - Every resource in the system is clearly identified in the CIB via a "UUID".
-  This is the key passed around between CRM/SRM. 
+  This is the key passed around between CRM/LRM. 
   
   (This avoids issues like with FailSafe, which used a "resource name / type"
   combination as the key; however, this made it very difficult to have, for
@@ -548,7 +590,7 @@ resource has been started on another node.
 
 6.4.3. Who orders resource operations on a single node
 
-The SRM does not have enough information to order resource operations (start,
+The LRM does not have enough information to order resource operations (start,
 stop etc) even for the local node, because it might - in theory - depend on
 non-local actions (resource operations, fencing etc). 
 
@@ -600,7 +642,7 @@ This would neatly address this part of the requirements list.
 
 7.3. Un-fencing
 
-TODO: Quite a bit.
+Aborting an on-going fencing / STONITH operation is not supported.
 
 7.3.1. After a successful fencing
 
@@ -703,6 +745,8 @@ Issues which need to be addressed / kept in mind:
 - Start order; heartbeat should only join the cluster if the startup of CRM is
   successfully completed locally.
 
+- CRM makes extensive use of heartbeat's libraries (IPC, HBcomm,
+  STONITH, PILS etc).
 ...
 
 
@@ -714,7 +758,7 @@ CRM is a client of CCM; CCM provides the set of nodes in the partition, CRM
 only operates on this data.
 
 It would be nice if CCM enforced policy before allowing a node to join a
-partition; ie, time not vastly desynchronized, CRM/SRM etc running and other
+partition; ie, time not vastly desynchronized, CRM/LRM etc running and other
 ideas come to mind.
 
 
@@ -733,13 +777,13 @@ top of node messaging primitives and filtering these.
 
 In theory, the software should be able to run in any "compliant" environment;
 I'd safely assume that it should be reasonably easy to port on top of the
-Compaq CI, for example.
+Compaq CI, for example, or any Service-Availability Forum AIS.
 
 This would complement the respective feature lists as well as demonstrate that
 such interoperability is in fact possible, providing great leverage for OCF!
 
-TODO: Elaborate, explore; see whether interest on part of CI team exists,
-	lmb to contact Bruce
+TODO: Keep that in mind while designing the code. Encapsulate
+interactions with the lower levels cleanly.
 
 10.5. Integration with cluster-aware applications
 
@@ -764,10 +808,10 @@ basis for OCF discussion.
 
 11.1. Integration with health monitoring
 
-Health monitoring should prevent startup of cluster software on a "sick" node.
-("Hey, I've rebooted 12 times within the last 60 minutes, maybe bringing the
-cluster software online wouldn't be so smart!") Should be handled by System
-Resource Manager?
+Health monitoring should prevent startup of cluster software on a "sick"
+node.  ("Hey, I've rebooted 12 times within the last 60 minutes, maybe
+bringing the cluster software online wouldn't be so smart!") Should be
+handled by Local Resource Manager?
 
 Health monitoring can send events to DC:
 - I'm about to crash, migrate everything while you can
@@ -781,7 +825,8 @@ Monitoring software can query CIB to get access to all data.
 
 TODO: Should traps/events be triggered from inside the different components
 themselves, or might it be a good idea to allow clients to "subscribe" to
-certain parts of the CIB and be notified if a change occurs?
+certain parts of the CIB and be notified if a change occurs? This would
+be helpful for SNMP/CIM traps.
 
 (The later would be somewhat alike FailSafe's cdbd)
 
