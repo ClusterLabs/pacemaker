@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.14 2005/02/06 04:51:36 alan Exp $ */
+/* $Id: callbacks.c,v 1.15 2005/02/06 05:02:14 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -678,6 +678,9 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 			ha_msg_mod_int(msg, F_CIB_SEENCOUNT, seen);
 			ha_msg_value_int(msg, F_CIB_SEENCOUNT, &seen2);
 			list = list->next;
+			if (reply != NULL) {
+				crm_msg_del(reply);
+			}
 			continue;
 		}
 		
