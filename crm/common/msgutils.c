@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.12 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: msgutils.c,v 1.13 2004/03/05 13:08:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -86,13 +86,33 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 	FNRET(root_xml_node);
 }
 
+static uint ref_counter = 0;
+
 const char *
-generateReference(void)
+generateReference(const char *custom1, const char *custom2)
 {
+
+	const char *local_cust1 = custom1;
+	const char *local_cust2 = custom2;
+	int reference_len = 4;
+
 	FNIN();
-	char *since_epoch = (char*)ha_malloc(128*(sizeof(char)));
+	
+	reference_len += 20; // too big
+	reference_len += 40; // too big
+	
+	if(local_cust1 == NULL) local_cust1 = "_empty_";
+	reference_len += strlen(local_cust1);
+	
+	if(local_cust2 == NULL) local_cust2 = "_empty_";
+	reference_len += strlen(local_cust2);
+	
+	char *since_epoch = (char*)ha_malloc(reference_len*(sizeof(char)));
 	FNIN();
-	sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
+	sprintf(since_epoch, "%s-%s-%ld-%u",
+		local_cust1, local_cust2,
+		(unsigned long)time(NULL), ref_counter++);
+
 	FNRET(since_epoch);
 }
 
@@ -538,9 +558,12 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 		}
 	}
 
-	if (crm_msg_reference == NULL)
-		crm_msg_reference = generateReference();
-    
+	if (crm_msg_reference == NULL) {
+		crm_msg_reference =
+			generateReference(
+				xmlGetProp(msg_options,XML_ATTR_OP),sys_from);
+	}
+	
 	// host_from will get set for us if necessary by CRMd when routed
 	xmlNodePtr request = create_xml_node(NULL, XML_MSG_TAG);
 
@@ -632,9 +655,16 @@ create_reply(xmlNodePtr original_request,
 	// HOSTTO will be ignored if it is to the DC anyway.
 	if(host_from != NULL)
 		set_xml_property_copy(reply, XML_ATTR_HOSTTO,   host_from);
+
 	set_xml_property_copy(reply, XML_ATTR_SYSTO,    sys_from);
 	set_xml_property_copy(reply, XML_ATTR_SYSFROM,  sys_to);
 
+	char *req_txt = dump_xml(original_request);
+	char *reply_txt = dump_xml(reply);
+	CRM_DEBUG3("Created (Reply): %s\n\tfrom: %s\n",
+		  reply_txt, req_txt);
+	
+	
 	FNRET(reply);
 }
 
@@ -671,6 +701,11 @@ create_forward(xmlNodePtr original_request,
 	set_xml_property_copy(forward, XML_ATTR_SYSTO,    sys_to);
 	set_xml_property_copy(forward, XML_ATTR_SYSFROM,  sys_from);
 
+	char *req_txt = dump_xml(original_request);
+	char *reply_txt = dump_xml(forward);
+	CRM_DEBUG3("Created (Forward): %s\n\n\tfrom: %s\n",
+		  reply_txt, req_txt);
+
 	FNRET(forward);
 }
 
@@ -693,10 +728,12 @@ create_common_message(xmlNodePtr original_request,
 		cl_log(LOG_ERR,
 		       "Cannot create new_message, no message type in original message");
 		FNRET(NULL);
+#if 0
 	} else if (strcmp(XML_ATTR_REQUEST, type) != 0) {
 		cl_log(LOG_ERR,
 		       "Cannot create new_message, original message was not a request");
 		FNRET(NULL);
+#endif
 	}
 
 	xmlNodePtr new_message = create_xml_node(NULL, XML_MSG_TAG);
