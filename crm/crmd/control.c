@@ -146,6 +146,8 @@ do_shutdown_req(long long action,
 	
 	if(send_request(msg, NULL) == FALSE) {
 		next_input = I_ERROR;
+	} else {
+		crm_timer_start(shutdown_timer);
 	}
 
 	return next_input;
@@ -228,6 +230,7 @@ do_startup(long long action,
 	crm_malloc(election_timeout, sizeof(fsa_timer_t));
 	crm_malloc(shutdown_escalation_timer, sizeof(fsa_timer_t));
 	crm_malloc(wait_timer, sizeof(fsa_timer_t));
+	crm_malloc(shutdown_timer, sizeof(fsa_timer_t));
 
 	interval = interval * 1000;
 
@@ -235,7 +238,8 @@ do_startup(long long action,
 		election_trigger->source_id = -1;
 		election_trigger->period_ms = -1;
 		election_trigger->fsa_input = I_DC_TIMEOUT;
-		election_trigger->callback = timer_popped;
+		election_trigger->callback = crm_timer_popped;
+		election_trigger->repeat = FALSE;
 	} else {
 		was_error = TRUE;
 	}
@@ -245,6 +249,7 @@ do_startup(long long action,
 		dc_heartbeat->period_ms = -1;
 		dc_heartbeat->fsa_input = I_NULL;
 		dc_heartbeat->callback = do_dc_heartbeat;
+		dc_heartbeat->repeat = FALSE;
 	} else {
 		was_error = TRUE;
 	}
@@ -253,7 +258,8 @@ do_startup(long long action,
 		election_timeout->source_id = -1;
 		election_timeout->period_ms = -1;
 		election_timeout->fsa_input = I_ELECTION_DC;
-		election_timeout->callback = timer_popped;
+		election_timeout->callback = crm_timer_popped;
+		election_timeout->repeat = FALSE;
 	} else {
 		was_error = TRUE;
 	}
@@ -262,7 +268,8 @@ do_startup(long long action,
 		integration_timer->source_id = -1;
 		integration_timer->period_ms = -1;
 		integration_timer->fsa_input = I_INTEGRATED;
-		integration_timer->callback = timer_popped;
+		integration_timer->callback = crm_timer_popped;
+		integration_timer->repeat = FALSE;
 	} else {
 		was_error = TRUE;
 	}
@@ -271,7 +278,8 @@ do_startup(long long action,
 		finalization_timer->source_id = -1;
 		finalization_timer->period_ms = -1;
 		finalization_timer->fsa_input = I_FINALIZED;
-		finalization_timer->callback = timer_popped;
+		finalization_timer->callback = crm_timer_popped;
+		finalization_timer->repeat = FALSE;
 	} else {
 		was_error = TRUE;
 	}
@@ -280,7 +288,8 @@ do_startup(long long action,
 		shutdown_escalation_timer->source_id = -1;
 		shutdown_escalation_timer->period_ms = -1;
 		shutdown_escalation_timer->fsa_input = I_TERMINATE;
-		shutdown_escalation_timer->callback = timer_popped;
+		shutdown_escalation_timer->callback = crm_timer_popped;
+		shutdown_escalation_timer->repeat = FALSE;
 	} else {
 		was_error = TRUE;
 	}
@@ -289,7 +298,18 @@ do_startup(long long action,
 		wait_timer->source_id = -1;
 		wait_timer->period_ms = 3*1000;
 		wait_timer->fsa_input = I_NULL;
-		wait_timer->callback = timer_popped;
+		wait_timer->callback = crm_timer_popped;
+		wait_timer->repeat = FALSE;
+	} else {
+		was_error = TRUE;
+	}
+
+	if(shutdown_timer != NULL) {
+		shutdown_timer->source_id = -1;
+		shutdown_timer->period_ms = -1;
+		shutdown_timer->fsa_input = I_SHUTDOWN;
+		shutdown_timer->callback = crm_timer_popped;
+		shutdown_timer->repeat = TRUE;
 	} else {
 		was_error = TRUE;
 	}
@@ -404,7 +424,7 @@ do_started(long long action,
  			crm_msg_del(msg);
 		}
 		
-		startTimer(wait_timer);
+		crm_timer_start(wait_timer);
 		crmd_fsa_stall();
 		return I_NULL;
 	}
@@ -492,10 +512,12 @@ do_read_config(long long action,
 	
 	if(shutdown_escalation_timer->period_ms < 1
 	   || election_timeout->period_ms > shutdown_escalation_timer->period_ms) {
-		/* sensible default */
+		/* sensible default - 32 election cycles */
 		shutdown_escalation_timer->period_ms
-			= election_timeout->period_ms * 3 * 100;
+			= (election_timeout->period_ms + election_trigger->period_ms) * 32;
 	}
+	shutdown_timer->period_ms = election_trigger->period_ms;
+	
 
 	return I_NULL;
 }
@@ -519,7 +541,7 @@ crm_shutdown(int nsig, gpointer unused)
 
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				/* cant rely on this... */
-				startTimer(shutdown_escalation_timer);
+				crm_timer_start(shutdown_escalation_timer);
 				register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 			s_crmd_fsa(C_SHUTDOWN);
 
