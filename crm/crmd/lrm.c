@@ -53,7 +53,7 @@ enum crmd_fsa_input do_fake_lrm_op(gpointer data);
 GHashTable *xml2list(xmlNodePtr parent, const char **attr_path, int depth);
 GHashTable *monitors = NULL;
 int num_lrm_register_fails = 0;
-int max_lrm_register_fails = 0;
+int max_lrm_register_fails = 30;
 
 const char *rsc_path[] = 
 {
@@ -100,13 +100,10 @@ do_lrm_control(long long action,
 		
 		if(ret != HA_OK) {
 			if(++num_lrm_register_fails < max_lrm_register_fails) {
-				crm_warn("Failed to sign on to the LRM %d times",
-					 num_lrm_register_fails);
+				crm_warn("Failed to sign on to the LRM %d (%d max) times",
+					 num_lrm_register_fails, max_lrm_register_fails);
 				
-				if(wait_timer->source_id < 0) {
-					startTimer(wait_timer);
-				}
-
+				startTimer(wait_timer);
 				crmd_fsa_stall();
 				return I_NULL;
 
@@ -487,9 +484,14 @@ do_lrm_rsc_op(
 		op->interval  = 9000;
 		op->target_rc = CHANGED;
 		monitor_call_id = rsc->ops->perform_op(rsc, op);
-		if (monitor_call_id < 0) {
+		if (monitor_call_id > 0) {
+			crm_debug("Adding monitor op for %s", rsc->id);
 			g_hash_table_insert(
-				monitors, strdup(rsc->id), GINT_TO_POINTER(monitor_call_id));
+				monitors, strdup(rsc->id),
+				GINT_TO_POINTER(monitor_call_id));
+		} else {
+			crm_err("Monitor op for %s did not have a call id",
+				rsc->id);
 		}
 		
 	} else if(safe_str_eq(operation, CRMD_RSCSTATE_STOP)) {
@@ -497,16 +499,15 @@ do_lrm_rsc_op(
 		int monitor_call_id = GPOINTER_TO_INT(foo);
 		
 		if(monitor_call_id > 0) {
-			crm_info("Stopping status op for %s", rsc->id);
+			crm_debug("Stopping status op for %s", rsc->id);
 			rsc->ops->stop_op(rsc, monitor_call_id);
 			g_hash_table_remove(monitors, rsc->id);
 			/* TODO: Clean up key */
 			
 		} else {
-			crm_err("No monitor operation found for %s", rsc->id);
+			crm_warn("No monitor operation found for %s", rsc->id);
 		}
 	}
-	
 
 	return I_NULL;
 }
