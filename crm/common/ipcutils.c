@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.16 2004/03/19 10:43:42 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.17 2004/03/22 11:09:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,6 +51,7 @@
 #include <xmlutils.h>
 #include <msgutils.h>
 #include <xmltags.h>
+#include <xmlvalues.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -161,12 +162,27 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		
 	}
 
-	cl_log(LOG_DEBUG, "Sending %s HA message (ref=%s, len=%d) to %s@%s %s.",
-	       broadcast?"broadcast":"directed",
-	       xmlGetProp(root, XML_ATTR_REFERENCE), xml_len,
-	       sys_to, host_to==NULL?"<all>":host_to,
-	       all_is_good?"succeeded":"failed");
 
+	if(!all_is_good) {
+		cl_log(LOG_ERR,
+		       "Sending %s HA message (ref=%s, len=%d) to %s@%s %s.",
+		       broadcast?"broadcast":"directed",
+		       xmlGetProp(root, XML_ATTR_REFERENCE), xml_len,
+		       sys_to, host_to==NULL?"<all>":host_to,
+		       all_is_good?"succeeded":"failed");
+	} else {
+		xmlNodePtr opts = find_xml_node(root, XML_TAG_OPTIONS);
+		const char *op = xmlGetProp(opts, XML_ATTR_OP);
+		if(op == NULL || strcmp(op, CRM_OPERATION_HBEAT) != 0) {
+			cl_log(LOG_DEBUG,
+			       "Sent %s HA message (ref=%s, len=%d) to %s@%s",
+			       broadcast?"broadcast":"directed",
+			       xmlGetProp(root, XML_ATTR_REFERENCE), xml_len,
+			       sys_to, host_to==NULL?"<all>":host_to);
+		}
+	}
+	
+	
 #ifdef MSG_LOG
 	
 		char *msg_text = dump_xml(root);
@@ -183,11 +199,6 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		ha_free(msg_text);
 	
 #endif
-
-
-	if(all_is_good == FALSE)
-		cl_log(LOG_ERR, "Reference of failed HA message %s",
-		       xmlGetProp(root, XML_ATTR_REFERENCE));
 	
 	FNRET(all_is_good);
 }
