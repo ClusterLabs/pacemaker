@@ -152,13 +152,14 @@ do_cl_join_request(long long action,
 
 	/* include our CIB generation tuple */
 	tmp1 = cib_get_generation(fsa_cib_conn);
-	reply = create_reply(input->msg, tmp1);
-
-	send_msg_via_ha(fsa_cluster_conn, reply);
-
-	free_xml(tmp1);
+	if(tmp1 != NULL) {
+		reply = create_reply(input->msg, tmp1);
+		send_msg_via_ha(fsa_cluster_conn, reply);
+		free_xml(tmp1);
 	
-	return I_NULL;
+		return I_NULL;
+	}
+	return I_FAIL;
 }
 
 /*	A_CL_JOIN_RESULT	*/

@@ -57,7 +57,6 @@ do_dc_join_offer_all(long long action,
 	initialize_join(TRUE);
 	
 	/* catch any nodes that are active in the CIB but not in the CCM list*/
-	
 	update = get_object_root(XML_CIB_TAG_STATUS, update);
 	CRM_ASSERT(update != NULL);
 
@@ -225,6 +224,7 @@ do_dc_join_req(long long action,
 	generation = join_ack->xml;
 
 	our_generation = cib_get_generation(fsa_cib_conn);
+	CRM_ASSERT(our_generation != NULL); /* what to do here? */
 	if(cib_compare_generation(our_generation, generation) <= 0) {
 		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 		crm_debug("%s has a better generation number than us",
@@ -397,6 +397,7 @@ do_dc_join_ack(long long action,
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
 		crm_info("That was the last outstanding join confirmation");
 		register_fsa_input_later(C_FSA_INTERNAL, I_FINALIZED, NULL);
+		
 		return I_NULL;
 	}
 
