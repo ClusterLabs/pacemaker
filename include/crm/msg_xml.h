@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.12 2004/08/29 03:01:13 msoffen Exp $ */
+/* $Id: msg_xml.h,v 1.13 2004/09/04 10:40:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -97,6 +97,8 @@
 #define XML_CIB_TAG_LRM		  	"lrm"
 #define XML_LRM_TAG_RESOURCES     	"lrm_resources"
 #define XML_LRM_TAG_RESOURCE     	"lrm_resource"
+#define XML_LRM_TAG_AGENT		"lrm_agent"
+#define XML_LRM_TAG_AGENTS	     	"lrm_agents"
 
 #define XML_CIB_ATTR_HEALTH       	"health"
 #define XML_CIB_ATTR_WEIGHT       	"weight"

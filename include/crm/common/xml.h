@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.3 2004/08/27 15:22:00 andrew Exp $ */
+/* $Id: xml.h,v 1.4 2004/09/04 10:40:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,8 +72,6 @@ extern const char *get_xml_attr_nested(xmlNodePtr parent,
 				       const char **node_path, int length,
 				       const char *attr_name, gboolean error);
 
-extern char * dump_xml_node(xmlNodePtr msg, gboolean whole_doc);
-
 /*
  * Free the XML "stuff" associated with a_node
  *
@@ -86,11 +84,6 @@ extern char * dump_xml_node(xmlNodePtr msg, gboolean whole_doc);
  *
  */
 extern void free_xml(xmlNodePtr a_node);
-
-/*
- * Dump out the message, print some identifying text and clean up afterwards.
- */
-extern void xml_message_debug(xmlNodePtr msg, const char *text);
 
 /*
  * Create a node named "name" as a child of "parent"
@@ -183,13 +176,11 @@ extern xmlNodePtr set_xml_attr(xmlNodePtr parent,
 			       const char *attr_value,
 			       gboolean create);
 
-extern char *dump_xml(xmlNodePtr msg);
-
-extern char *dump_xml_node(xmlNodePtr msg, gboolean whole_doc);
-
 extern int write_xml_file(xmlNodePtr xml_node, const char *filename);
 
-extern void print_xml_formatted(xmlNodePtr an_xml_node);
+extern char *dump_xml_formatted(xmlNodePtr msg);
+
+extern void print_xml_formatted(xmlNodePtr an_xml_node, const char *text);
 
 #define xml_child_iter(a,b,c,d) if(a != NULL) {			\
 		xmlNodePtr b = a->children;				\
