@@ -35,8 +35,8 @@ SUBDIRS			=  	\
 	hbclient		\
 	apphb			\
 	recoverymgr		\
-	checkpointd    		\
 	plugins 		\
 	@EVENTD_DIR@		\
+	@CHECKPOINTD_DIR@	\
 	@SWIG_DIR@		\
 	@LRM_DIR@
