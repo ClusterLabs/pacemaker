@@ -489,7 +489,7 @@ function dump_node() {
 
     dump_file="/tmp/${a_node_index}-${a_node}.tgz"
 
-
+    remote_cmd $ADMIN_USER ${a_node} "mkdir /tmp/crm"
     remote_cmd $ADMIN_USER ${a_node} "stat -L -c %s $logfile > /tmp/crm/.logend"
     remote_cmd ${ADMIN_USER} ${a_node} "ps axf > /tmp/crm/processes"
     remote_cmd ${ADMIN_USER} ${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart  -l $logfile > /tmp/crm/cluster-test.log"
@@ -579,6 +579,14 @@ function do_cmd() {
 		fi
 	    fi
 
+    elif [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
+	# for the logs...
+	if [ $OUTPUT_STDERR -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_CMDS -eq 0 ]; then
+	    echo `date` ": Searching '$cmdline'" >> $test_log_file;
+	fi
+	$cmdline -v 2>&1 >> $test_log_file
+	rc=$?
+
     elif [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
 	$cmdline 2>&1 >> $test_log_file
 	rc=$?
@@ -596,21 +604,8 @@ function do_cmd() {
 	rc=$?
     fi
 
-    if [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
-	# for the logs...
-	if [ $OUTPUT_STDERR -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_CMDS -eq 0 ]; then
-	    echo `date` ": Searching '$cmdline'" >> $test_log_file;
-	fi
-	$cmdline -t 1 -v 2>&1 >> $test_log_file
-
-	if [ $rc -lt 0 ]; then
-	    echo `date` ": Searching '$cmdline'"
-	    $cmdline
-	fi
-    fi
-
     OUTPUT_STDOUT=$old_OUTPUT_STDOUT
-    echo Result: $rc
+#    echo Result: $rc >> $test_log_file
     return $rc
 }
 
@@ -629,19 +624,23 @@ function crm-cleanup-node() {
     ha_host=$1
     do_cmd echo Cleaning up on $ha_host
 
-# be *very* sure everything has stopped
+    # be *very* sure everything has stopped
     do_cmd remote_cmd $INIT_USER $ha_host "killall -q9 heartbeat ccm lrmd crmd crmadmin cibadmin ha_logd stonithd cib pengine tengine"
 
-# resources too
+    # resources too
     do_cmd remote_cmd $INIT_USER $ha_host "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
     do_cmd remote_cmd $INIT_USER $ha_host "/etc/ha.d/resource.d/IPaddr $ip_rsc_2 stop" 2>&1 > /dev/null
 
     if [ -z $2 ]; then
-# make *sure* theres nothing left over from last time
+	# make *sure* theres nothing left over from last time
 	do_cmd remote_cmd $INIT_USER $ha_host "rm -f $HAVAR_DIR/crm/cib*.xml"
 
+	remote_cmd ${INIT_USER} ${ha_host} "rm -f /tmp/crm/cores" 2>/dev/null 
 	remote_cmd ${INIT_USER} ${ha_host} "rm -f ${HAVAR_DIR}/cores/*/*" 2>/dev/null 
+	
+	do_cmd remote_cmd ${INIT_USER} ${ha_host} "ls -al ${HAVAR_DIR}/cores/"
 	remote_cmd ${INIT_USER} ${ha_host} "rm -rf /tmp/crm/* /tmp/crm/.log*" 2>/dev/null 
+	do_cmd remote_cmd ${INIT_USER} ${ha_host} "ls -al ${HAVAR_DIR}/cores/"
 
 	if [ `dirname $logfile` = "/tmp/crm" ]; then
 	    do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart"
