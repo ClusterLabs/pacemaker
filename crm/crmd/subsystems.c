@@ -62,7 +62,7 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 		crm_warn("Stopping %s before it had connected",
 			 the_subsystem->name);
 		
-		kill(the_subsystem->pid, -9);
+		CL_KILL(the_subsystem->pid, -SIGKILL);
 		the_subsystem->pid = -1;
 		
 	} else if(client_channel == NULL
@@ -185,9 +185,9 @@ cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
 	clear_bit_inplace(fsa_input_register, the_subsystem->flag_connected);
 	
 	/* Forcing client to die */
-	kill(the_subsystem->pid, -9);
+	CL_KILL(the_subsystem->pid, -SIGKILL);
 	
-		/* cleanup the ps entry */
+	/* cleanup the ps entry */
 	waitpid(the_subsystem->pid, &pid_status, WNOHANG);
 	the_subsystem->pid = -1;
 	
