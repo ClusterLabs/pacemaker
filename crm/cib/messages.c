@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.8 2004/12/10 20:07:07 andrew Exp $ */
+/* $Id: messages.c,v 1.9 2004/12/17 09:32:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -326,6 +326,10 @@ cib_process_replace(
 	return result;
 }
 
+
+/* FILE *msg_cibup_strm = NULL; */
+
+
 enum cib_errors 
 cib_process_modify(
 	const char *op, int options, const char *section, xmlNodePtr input,
@@ -345,6 +349,10 @@ cib_process_modify(
 
 	char *xml_text  = NULL;
 
+/* 	if(msg_cibup_strm == NULL) { */
+/* 		msg_cibup_strm = fopen(DEVEL_DIR"/cibup.log", "w"); */
+/* 	} */
+	
 	crm_debug("Processing \"%s\" event", op);
 
 	failed  = create_xml_node(NULL, XML_TAG_FAILED);
@@ -385,13 +393,13 @@ cib_process_modify(
 	/* should we be doing this? */
 	/* do logging */
 			
+	the_update = get_object_root(section, cib_update);
 	cib_pre_notify(op, get_object_root(section, get_the_CIB()), the_update);
 	
 	/* make changes to a temp copy then activate */
 	if(section == NULL) {
 		/* order is no longer important here */
 		section_name = tmpCib->name;
-		the_update = cib_update;
 
 		result = updateList(tmpCib, input, failed, cib_update_op,
 				    XML_CIB_TAG_NODES);
@@ -412,7 +420,6 @@ cib_process_modify(
 		}
 
 	} else {
-		the_update = get_object_root(section, cib_update);
 		result = updateList(tmpCib, input, failed,
 				     cib_update_op, section);
 	}
