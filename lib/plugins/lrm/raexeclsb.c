@@ -300,7 +300,7 @@ get_resource_list(GList ** rsc_info)
 	gboolean next_continue, found_begin_tag, is_lsb_script;
 	int rc = 0;
 	GList  *cur, *tmp;
-	const int BUFLEN = 80;
+	const size_t BUFLEN = 80;
 	char buffer[BUFLEN];
 
 	if ((rc = get_runnable_list(RA_PATH, rsc_info))  <= 0) {
@@ -440,7 +440,7 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 	FILE * fp;
 	gboolean next_continue;
 	GString * meta_data;
-	const int BUFLEN = 132;
+	const size_t BUFLEN = 132;
 	char buffer[BUFLEN];
 	char * provides  = NULL,
 	     * req_start = NULL,
