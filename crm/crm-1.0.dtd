@@ -86,9 +86,14 @@ More details are given in the annotated DTD below.
      value. -->
 <!ELEMENT node (attributes?)>
 <!-- 
-     Description is opaque to the CRM, some adminstrative comments.
+     Description in all elements is opaque to the CRM, some
+     adminstrative comments.
 
-     dc_weight is an optional weight for influencing the DC election
+     "id" refers to the node's UUID.
+
+     "uname" is the result of uname -n
+
+     "dc_weight" is an optional weight for influencing the DC election
      process...
 
      TODO: Do we need to know about ping nodes...?
@@ -98,37 +103,47 @@ More details are given in the annotated DTD below.
 	  uname		CDATA #REQUIRED
           description   CDATA #IMPLIED
 	  dc_weight	CDATA #IMPLIED
-          type          (node|ping) #REQUIRED>
+          type          (member|ping) #REQUIRED>
 
 <!-- RESOURCES -->
 
 <!ELEMENT resources   (resource*)>
 
-<!-- TODO: Where should we place a version requirement of the resource
-	   agent? Is that a resource attribute, or a constraint...? 
-	   Same for the resource priority, I guess. -->
+<!-- 
+     
+     "id" is a short name consisting of up to 64 simple ascii characters
+     [a-zA-Z0-9_\-]
+
+     "priority" dictates the order in which resources will be processed
+
+     Version constraints are handled by rsc_location constraints.  
+     Use version=1.2 or version>2.0 etc.
+
+-->
 <!ELEMENT resource (instance_attributes*)>
 <!ATTLIST resource
           id            CDATA #REQUIRED
           description   CDATA #IMPLIED
           class         (ocf|init|heartbeat|stonith)	#REQUIRED
-	  ra_version	CDATA #IMPLIED
 	  priority      CDATA #IMPLIED
           type          CDATA #REQUIRED>
 
-<!-- Some of these may need to be overridden on a per-node /
+<!--
+
+     Some of these may need to be overridden on a per-node /
      per-node-attribute basis (ie, eth1 is eth0 on some nodes...). Same
      is true for timings.
      
      This is expressed as follows: You can have multiple sets of
      'instance attributes'. The one with the highest weight is chosen.
 
-     Otherwise, if a matching rule is found, the instance parameters
+     Otherwise, if a matching rule is found, the instance rsc_parameters
      there override the defaults completely; the attr_expression list is
      evaluated ordered by the no tag. The weight attribute doesn't make
      much sense here.
-     -->
-<!ELEMENT instance_attributes (rule?, parameters)>
+
+-->
+<!ELEMENT instance_attributes (rule?, rsc_parameters)>
 <!ATTLIST instance_attributes
 	  weight	CDATA #IMPLIED
 	  id		CDATA #REQUIRED>
@@ -154,7 +169,9 @@ More details are given in the annotated DTD below.
      An ordering dependency of strength 'must' implies that a resource
      must be started after another one; it will not work without the
      other one being present. If it was 'should' only, the resource will
-     be started afterwards, but still be started if it is not present.
+     try to be started afterwards, but still be started if it is not
+     present and will be started beforehand if required (perhaps if a
+     constraint loop was created).
      
      An ordering dependency of "must not" would imply the opposite; if
      some higher priority resource has led to the 'to' being activated,
@@ -162,9 +179,6 @@ More details are given in the annotated DTD below.
 
      The placement policies work in the same fashion.
 
-     TODO: Are may/may not applicable at all? Should & Must are, because
-     they control whether or not a failure to meet a requirement
-     propagates upwards.
  -->
 <!ELEMENT rsc_to_rsc EMPTY>
 <!ATTLIST rsc_to_rsc
@@ -231,47 +245,28 @@ More details are given in the annotated DTD below.
     
     (You can express "OR" by having multiple rsc_to_node / node_baseweight
     entries.)
-
+    
     "id" is mostly for debug purposes
+    
+    Two builtin attributes will be node id and node uname so that:
+      attribute=id value=8C05CA5C-C9E3-11D8-BEE6-000A95B71D78 operation=eq, and
+      attribute=uname value=test1 operation=eq
+    would both be valid tests
 
-    The syntax of "match" is <attr>:<value>.  This will produce a list of 
-    all nodes where <attr> is set to <value>.  Where no value for <value>
-    is supplied, the expression produces the list of nodes that define
-    <attr> regardless of its value.
-
-   "not_match" returns the negation of the equivalent "match".
-
-    Two builtin attributes will be node id and node uname so that 
-    match=id:8C05CA5C-C9E3-11D8-BEE6-000A95B71D78 and not_match=uname:test1
-    are both legal syntax
-
+    "type" determines how the values being tested.
+      For "integer", they would be converted into a number format (probably
+      floats) before being compared.
+      The "version" type is intended to solve the problem of comparing
+      1.2 and 1.10
 -->
-<!ELEMENT node_expression EMPTY>
-<!ATTLIST node_expression
-	  id        CDATA #REQUIRED
-	  match     CDATA #IMPLIED
-	  not_match CDATA #IMPLIED>
 
-
-<!-- STATUS SECTION -->
-<!-- Details about the status of each node configured.
-
- In places, a "source" attribute has been added so that the CRM is able
- to know where this information came from.  This is helpful during the
- merging process (performed by a new DC and perhaps periodically) as it
- allows the CRM to allow nodes to be authoritive about themselves if
- appropriate (ie. which resources it is running, but perhaps not always
- about its own health). TODO: Clarify meaning.
- 
-  To avoid duplication of data, state entries only carry references to
-  nodes and resources. 
-
-  TODO: Where is the status of on-going STONITH requests tracked?
-  (Andrew: I believe this is now covered by the "unclean" attribute.  
-  Unless "assassin" is also required to track who shot the node.)
-  
--->
-<!ELEMENT status (crm_state,node_state*)>
+<!ELEMENT expression EMPTY>
+<!ATTLIST expression
+	  id         CDATA #REQUIRED
+	  attribute  CDATA #REQUIRED
+	  operation  (lt|gt|lte|gte|eq|ne|exists|notexists)
+	  value      CDATA #IMPLIED
+	  type	     (integer|string|version)    'string'>
 
 <!ELEMENT metadata ra_entry>
 <!--
@@ -293,16 +288,29 @@ More details are given in the annotated DTD below.
       
       Anyone caught breaking this rule will be shot on sight.
 
-    This section needs some work as I dont think the metadata is as simple as
-      an nvpair
-
 -->
-<!ELEMENT ra_entry (nvpair*)>
+<!ELEMENT ra_entry (parameters)>
 <!ATTLIST ra_entry 
 	id	   CDATA #REQUIRED
 <!-- possibly: version CDATA #REQUIRED -->
         class      (ocf|init|heartbeat|stonith)	#REQUIRED
 	type	   CDATA #REQUIRED>
+
+<!-- STATUS SECTION -->
+<!-- Details about the status of each node configured.
+
+     In places, a "source" attribute has been added so that the CRM is able
+     to know where this information came from.  This is helpful during the
+     merging process (performed by a new DC and perhaps periodically) as it
+     allows the CRM to allow nodes to be authoritive about themselves if
+     appropriate (ie. which resources it is running, but perhaps not always
+     about its own health). TODO: Clarify meaning.
+ 
+     To avoid duplication of data, state entries only carry references to
+     nodes and resources. 
+     
+-->
+<!ELEMENT status (crm_state,node_state*)>
 
 <!-- Information about the CRM Layer of the cluster.
 
@@ -323,7 +331,7 @@ More details are given in the annotated DTD below.
 	sources such as the CCM, status messages from remote LRMs and 
 	requests from other nodes. 
 
-	"id" is the node's uname.
+	"id" is the node's UUID.
 
 	"state" is either active (both CRM and CCM are up and the node 
 	is fully active in the cluster), in_ccm (node is around in the 
@@ -332,28 +340,31 @@ More details are given in the annotated DTD below.
 	
 	"unclean" is set to the current time when the node leaves the 
 	cluster ungracefully and is an indication that the node 
-	needs to be shot.  
+	needs to be shot.  Any invokation of the PE while this attibute
+        will result in a STONITH op being sent to the TE (which may or
+        may not get to invoke it if the transition is aborted).
 
         Setting "clear_unclean" will unset this field.  Normally this is
         after the Transitioner has successfully shot the node, OR the node
 	rejoins the cluster cleanly.
 
-	"exp_state" is our expectation of the state. This requires some
+        "shutdown" and "clear_shutdown" operate in the same manner as
+        above but for shutting down the CRMd.
+
+	"expected" is our expectation of the state. This requires some
 	book-keeping on the part of the other nodes to remember the last
 	state of any other node by updating it to the latest relayed to
 	them.
 	
 	"source" then states which node contributed this state entry.
 	If unclean is not set, then "source" refers to the node that
-	last updated the "state" attribute.  Otherwise, it will contain
-	the node who completed the STONITH operation.  
+	last updated the "node_state" entry.
 
-	NOTE: There is a period of time between when we recognise the node
-	is unlean and when it is shot.  Perhaps an "assassin" attribute is 
-	needed or "source" should be unset when a node is detected as being 
-	unclean.
+	There is a period of time between when we recognise the node
+	is unlean and when it is shot.  The "assassin" attribute records the
+        name of the node which has been asked to shoot it.
 
- 	A node which is exp_state == down && state == active is, in
+ 	A node which is expected == down && join == member is, in
 	fact, going down. The Policy Engine will migrate resources away
 	from it.
 	
@@ -371,6 +382,7 @@ More details are given in the annotated DTD below.
 	shutdown	CDATA			#IMPLIED
 	clear_unclean	CDATA			#IMPLIED
 	clear_shutdown	CDATA			#IMPLIED
+	assassin        CDATA                   #IMPLIED
 	source		CDATA			#IMPLIED
 	timestamp	CDATA			#REQUIRED>
 
@@ -561,15 +573,10 @@ Andrew:
      should be merged
      (Andrew) Lets leave it in incase we want to piggyback requests on replies
 
-     TODO: commands to pengine etc still need fleshing out /
-     simplification or merge between various commands, ie "quit",
-     "hello", "compute" etc should all be the same type, just different 
-     contents - maybe generic_op + attributes?
-     (Andrew) Well hurry up then, we dont have all year :)
 -->
 <!ELEMENT msg_data (rsc_op?,rsc_state?,lrm_state?,cib_fragment?,transition_graph?)>
 
-<!-- need to flesh out the types of operations -->
+<!-- need to rationalize the list of operations -->
 <!ELEMENT operation (nvpair*)>
 <!ATTLIST operation
 	  op (noop|bump|query|create|update|delete|erase|store|replace|forward|join_ack|welcome|ping|vote|hello|announce|dc_beat|pe_calc|abort|quit|shutdown_crm|event_cc|te_abort|transition|te_complete|req_shutdown) 'noop'
@@ -597,6 +604,39 @@ Andrew:
 
 <!-- Same same, different names for clarity ;) -->
 <!ELEMENT attributes (nvpair*)>
-<!ELEMENT parameters (nvpair*)>
+<!ELEMENT rsc_parameters (nvpair*)>
 
 
+
+<!-- 
+
+ Shamelessly stolen from:
+
+   http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/ra-api-1.dtd 
+
+ but since it is Resource Agent metadata that we're storing here, 
+ it makes sense.
+
+-->
+
+<!ELEMENT parameters (parameter*)>
+
+<!ELEMENT actions (action*)>
+
+<!ELEMENT parameter (longdesc+,shortdesc+,content)>
+<!ATTLIST parameter
+        name    CDATA   #REQUIRED
+        unique  (1|0)   "0">
+
+<!ELEMENT longdesc ANY>
+<!ATTLIST longdesc
+        lang    NMTOKEN #IMPLIED>
+
+<!ELEMENT shortdesc ANY>
+<!ATTLIST shortdesc
+        lang    NMTOKEN #IMPLIED>
+
+<!ELEMENT content EMPTY>
+<!ATTLIST content
+        type    (string|integer|boolean)        #REQUIRED
+        default CDATA   #IMPLIED>
