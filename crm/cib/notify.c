@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.7 2005/02/07 11:09:47 andrew Exp $ */
+/* $Id: notify.c,v 1.8 2005/02/09 11:38:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -66,9 +66,12 @@ cib_pre_notify(
 	const char *op, crm_data_t *existing, crm_data_t *update) 
 {
 	HA_Message *update_msg = ha_msg_new(6);
-	const char *id = crm_element_value(update, XML_ATTR_ID);
 	const char *type = NULL;
-
+	const char *id = NULL;
+	if(update != NULL) {
+		id = crm_element_value(update, XML_ATTR_ID);
+	}
+	
 	ha_msg_add(update_msg, F_TYPE, T_CIB_NOTIFY);
 	ha_msg_add(update_msg, F_SUBTYPE, T_CIB_PRE_NOTIFY);
 	ha_msg_add(update_msg, F_CIB_OPERATION, op);
@@ -113,8 +116,11 @@ cib_post_notify(
 	const char *op, crm_data_t *update, enum cib_errors result, crm_data_t *new_obj) 
 {
 	HA_Message *update_msg = ha_msg_new(8);
-	const char *id = crm_element_value(new_obj, XML_ATTR_ID);
 	const char *type = NULL;
+	const char *id = NULL;
+	if(update != NULL) {
+		id = crm_element_value(new_obj, XML_ATTR_ID);
+	}
 	
 	ha_msg_add(update_msg, F_TYPE, T_CIB_NOTIFY);
 	ha_msg_add(update_msg, F_SUBTYPE, T_CIB_POST_NOTIFY);
