@@ -79,7 +79,8 @@ deb:		dist
 pkg:
 		(cd pkg && $(MAKE) PWD=`pwd` pkg)
 
-clean:	am_config_clean
+clean-generic: am_config_clean
+
 am_config_clean:
 		rm -fr $(PACKAGE)-*.tar.gz
 
