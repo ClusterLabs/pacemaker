@@ -81,9 +81,11 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	crm_info("Starting sub-system \"%s\"", the_subsystem->command);
 
 	if (the_subsystem->pid > 0) {
-		crm_err("Client %s already running as pid %d",
+		crm_warn("Client %s already running as pid %d",
 			the_subsystem->command, (int) the_subsystem->pid);
-		return FALSE;
+
+		/* starting a started X is not an error */
+		return TRUE;
 	}
 
 	/*
