@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.14 2004/12/10 20:03:20 andrew Exp $ */
+/* $Id: ipc.c,v 1.15 2005/01/03 19:32:52 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -240,9 +240,9 @@ init_client_ipc_comms(const char *channel_name,
 			      IPC_Channel* source_data, gpointer user_data),
 		      void *client_data, IPC_Channel **ch)
 {
-	*ch = NULL;
 	GCHSource *the_source = NULL;
 	void *callback_data = client_data;
+	*ch = NULL;
 	if(callback_data == NULL) {
 		callback_data = *ch;
 	}
