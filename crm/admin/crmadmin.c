@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.26 2005/02/15 12:44:27 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.27 2005/02/17 16:17:48 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -138,7 +138,9 @@ main(int argc, char **argv)
 	};
 
 	crm_system_name = basename(argv[0]);
+	crm_log_level = 0;
 	crm_log_init(crm_system_name);
+	crm_log_level = 0;
 
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
