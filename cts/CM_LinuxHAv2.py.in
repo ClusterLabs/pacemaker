@@ -23,6 +23,7 @@ Copyright (C) 2004 International Business Machines
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+import CTS
 from CTS import *
 from CM_hb import HeartbeatCM
 from xml.dom.minidom import *
@@ -50,9 +51,13 @@ class LinuxHAv2(HeartbeatCM):
             "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null|grep -e S_IDLE -e S_NOT_DC",
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s status 0 0 EVERYTIME 2>/dev/null|grep return",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
+            "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             # Patterns to look for in the log files for various occasions...
             "Pat:We_started"    : "crmd(.*): info:(.*)FSA Hostname: %s",
             "Pat:They_started"  : "crmd(.*): info:(.*)FSA Hostname: %s",
+            "Pat:S_IDLE"     : "%s(.*)(S_IDLE)",
+            "Pat:S_NOT_DC"   : "%s(.*)(S_NOT_DC)",
+            
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
                 r"Shutting down\.",
@@ -90,16 +95,16 @@ class LinuxHAv2(HeartbeatCM):
     def StartaCM(self, node):
 
         '''Start up the cluster manager on a given node'''
-        rc=self.rsh(node, self["StartCmd"])
-        timeout=30
-        while timeout>0:
-            out=self.rsh.readaline(node, self["StatusCmd"]%node)
-            if (string.find(out, 'ok') != -1):
-                self.ShouldBeStatus[node]=self["up"]        
-                return 1
-            time.sleep(2)
-            timeout=timeout-1
-
+        watch = CTS.LogWatcher(self["LogFileName"]
+        ,                      [self["Pat:S_IDLE"]%node
+        ,                      self["Pat:S_NOT_DC"]%node]
+        ,                      60)
+        watch.setwatch()
+        self.rsh(node, self["StartCmd"])
+        if watch.look():
+            self.ShouldBeStatus[node]=self["up"]
+            return 1
+       
         self.ShouldBeStatus[node]=self["down"]        
         self.log ("Could not start %s on node %s"
         %	(self["Name"], node))
@@ -107,7 +112,7 @@ class LinuxHAv2(HeartbeatCM):
         
     def Resources(self):
         ResourceList = []
-        self.rsh.cp("%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml"%self.Env["nodes"][0],"/tmp/")
+        self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],"/tmp/")
         cib=parse("/tmp/cib.xml")
         configuration=cib.getElementsByTagName('configuration')[0]
 
@@ -119,6 +124,25 @@ class LinuxHAv2(HeartbeatCM):
 
         return ResourceList
 
+    def Dependancies(self):
+        DependancyList = []
+
+        self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],"/tmp/")
+        cib=parse("/tmp/cib.xml")
+        configuration=cib.getElementsByTagName('configuration')[0]
+
+        #read dependancy in cib
+        constraints=configuration.getElementsByTagName('constraints')[0]
+        rsc_to_rscs=configuration.getElementsByTagName('rsc_to_rsc')
+        for node in rsc_to_rscs:
+            dependancy = {}
+            dependancy["id"]=node.getAttribute('id')
+            dependancy["from"]=node.getAttribute('from')
+            dependancy["to"]=node.getAttribute('to')
+            dependancy["type"]=node.getAttribute('type')
+            dependancy["strength"]=node.getAttribute('strength')
+            DependancyList.append(dependancy)
+        return DependancyList
         
 class HAResourceAudit(ClusterAudit):
     def __init__(self, cm):
@@ -135,9 +159,13 @@ class HAResourceAudit(ClusterAudit):
     def __call__(self):
         self.CM.log ("Do Audit %s"%self.name())
         passed = 1
+        NodeofRsc = {}
+
+        #Make sure the resouces are running on one and only one node
         Resources = self.CM.Resources()
         for resource in Resources :
             RunningNodes = self._RscRunningNodes(resource)
+            NodeofRsc[resource.rid]=RunningNodes
             if len(RunningNodes) == 0 :
                 print resource.rid + " isn't running anywhere"
                 passed = 0
@@ -145,6 +173,14 @@ class HAResourceAudit(ClusterAudit):
                 print resource.rid + " is running more than once: " \
                       + str(RunningNodes)
                 passed = 0
+
+        #Make sure the resouces with "must","placement" constraint are running on the same node
+        Dependancies = self.CM.Dependancies()
+        for dependancy in Dependancies:
+            if dependancy["type"] == "placement" and dependancy["strength"] == "must":
+                if NodeofRsc[dependancy["from"]] != NodeofRsc[dependancy["to"]]:
+                    print dependancy["from"] + " and " + dependancy["to"] + " should be run on same node"
+                    passed = 0
                  
         return passed
 
