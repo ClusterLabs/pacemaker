@@ -30,6 +30,7 @@ use warnings;
 use heartbeat::clplumbing::ipc;
 use heartbeat::clplumbing::log;
 use Getopt::Std;
+use Data::Dumper;
 use XML::Simple qw(:strict);
 use POSIX qw(setsid);
 use vars qw(	$ch
@@ -42,7 +43,7 @@ use vars qw(	$ch
 
 {
 	no warnings qw(qw);
-	($VERSION) = (qw$Id: pengine,v 1.7 2004/03/18 11:07:08 lars Exp $)[2];
+	($VERSION) = (qw$Id: pengine,v 1.8 2004/03/18 14:25:07 lars Exp $)[2];
 }
 
 $CRM_SOCKET = "/var/lib/heartbeat/crm/crmd";
@@ -55,10 +56,7 @@ $DEBUG = 1;
 );
 
 #######################################################################
-
 cl_log_set_entity("pengine");
-cl_log_set_facility("local0");
-cl_log_set_logfile("/tmp/pengine.log");
 
 getopts("dhvskrS", \%opts);
 
@@ -67,13 +65,11 @@ if (defined($opts{'v'})) {
 	exit 0;
 }
 
-if (defined($opts{'d'})) {
+if (defined($opts{'d'}) || defined($opts{'S'})) {
 	cl_log_enable_stderr(1);
 	$DEBUG++;
 } else {
-	# TODO: No longer needed, should be removed completely, but
-	# maybe I need it again one day ;-)
-	# &daemonize();
+	cl_log_enable_stderr(0);
 }
 
 # Stand-alone debugging mode.
@@ -81,6 +77,9 @@ if (defined($opts{'S'})) {
 	&handle_msgs_from_stdin();
 	exit 0;
 }
+
+cl_log_set_facility("local0");
+cl_log_set_logfile("/tmp/pengine.log");
 
 cl_log('notice', "Policy Engine $VERSION starting...");
 
@@ -112,26 +111,48 @@ while ($ch->isrconn() && $ch->iswconn()) {
 	} 
 }
 
-cl_log("info", "Disconnecting from crmd: R".$ch->isrconn().
-		" W".$ch->iswconn());
-exit 0;
+&shutdown(0, "Mainloop exited.");
 
 #######################################################################
+
+sub shutdown {
+	my ($rc, $msg) = @_;
+	
+	my $log = $rc > 0 ? "err" : "info";
+	cl_log($log, "Shutting down: $msg");
+	if (defined($ch)) {
+		cl_log($log, "Final connection status: R".$ch->isrconn().
+				" W".$ch->iswconn());
+	}
+	exit $rc;
+}
+
 sub handle_msg {
 	my ($m) = @_;
 	my $reply;
 	# Do magic
-	
+
 	if (defined($$m{'hello'})) {
 		cl_log("info", "hello message received from crmd. No reply sent.");
 	} elsif (defined($$m{'crm_message'})) {
 		cl_log("info", "crm_message received");
-		if (defined($$m{crm_message}{ping_item})) {
-			cl_log("info", "ping_message!");
-			$reply = &crm_ping_reply($m);
+		$m = $$m{'crm_message'}[0];
+		my $op;
+		
+		if (defined($op = $$m{'options'}[0]{'operation'})) {
+			if ($op eq 'ping') {
+				cl_log("info", "ping_message (mostly implemented");
+				$reply = &crm_ping_reply($m);
+			} elsif ($op eq 'quit') {
+				&shutdown(0, "Quit request received.");
+			} else {
+				cl_log("warn", 
+					"Unknown operation requested: $op");
+			}
 		} else {
-			cl_log("warn", "unknown crm_message type ignored");
+			cl_log('warn', "crm_message without operation request. Slacking along.");
 		}
+		
 	} else {
 		cl_log("warn", "unknown message type ignored");
 	}
@@ -171,7 +192,7 @@ sub handle_msgs_from_stdin {
 		$xmlout = &encapsulate_msg($reply);
 		print $xmlout."\n";
 	}
-	exit 0;
+	&shutdown(0, "EOF");
 }
 
 sub signin {
@@ -182,8 +203,7 @@ sub signin {
 	$ch = heartbeat::clplumbing::ipc::channel->new($CRM_SOCKET);
 
 	if ($rc = $ch->initiate_connection() != $IPC_OK) {
-		cl_log('err', "Connection to crmd failed with $rc");
-		exit(1);
+		&shutdown(1, "Connection to crmd failed with $rc");
 	}
 
 	cl_log('notice', "Connection to crmd established, signing in");
@@ -219,6 +239,8 @@ sub decapsulate_msg {
 			ForceContent => 1,
 			NormaliseSpace => 1, );
 	
+	print STDERR "Decapsulated message struct: "
+		.Data::Dumper->Dump([$ref], [qw(m)]) if $DEBUG > 1;
 	return $ref;
 }
 
@@ -242,8 +264,7 @@ sub crm_recv_msg {
 	my ($rc, $msg) = $ch->recv();
 	
 	if ($rc != $IPC_OK) {
-		cl_log('err', "Error receiving message from crmd: $rc");
-		exit(1);
+		&shutdown(1, "Error receiving message from crmd: $rc");
 	}
 	
 	cl_log('info', "XML message received: ".$msg->body());
@@ -251,40 +272,6 @@ sub crm_recv_msg {
 	my $ref = &decapsulate_msg($msg->body());
 	
 	return $ref;
-}
-
-sub daemonize {
-	my $pid = fork();
-	if ($pid < 0) {
-		cl_log('err', "fork failed!");
-		exit(1);
-	} elsif ($pid > 0) {
-		exit(0);
-	} else {
-		# Rejoice.
-	}
-	
-	if (POSIX::setsid() < 0) {
-		cl_log("err", "setsid() failed");
-		exit(1);
-	}
-
-	if (chdir("/") < 0 ) {
-		cl_log("err", "chdir failed");
-		exit(1);
-	}
-	
-	cl_log_enable_stderr(0);
-	close(STDIN);
-	close(STDOUT);
-	close(STDERR);
-
-	if (open(STDIN, "</dev/null") < 0 
-		|| open(STDOUT, ">>/dev/console") < 0
-		|| open(STDERR, ">>/dev/console") < 0) {
-		cl_log("err", "Re-opening file handles failed!");
-		exit(1);
-	}
 }
 
 =head1 AUTHOR
