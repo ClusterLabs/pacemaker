@@ -29,8 +29,6 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-#define CCM_UNAME 1
-
 GHashTable *joined_nodes = NULL;
 
 /*	A_ELECTION_VOTE	*/
@@ -41,25 +39,23 @@ do_election_vote(long long action,
 		 enum crmd_fsa_input current_input,
 		 void *data)
 {
-	const char *node_uname = NULL;
 	enum crmd_fsa_input election_result = I_NULL;
 	FNIN();
 
-	// send our vote unless we want to shut down
-#if 0
-	if(we are sick || shutting down) {
-		log error ;
-		FNRET(I_NULL);
-	} 
-#endif
+	/* dont vote if we're in one of these states */
+	switch(cur_state) {
+		case S_RECOVERY:
+		case S_RECOVERY_DC:
+		case S_STOPPING:
+		case S_RELEASE_DC:
+		case S_TERMINATE:
+			FNRET(I_NULL);
+			// log warning
+			break;
+		default:
+			break;
+	}
 
-	node_uname = fsa_membership_copy->members[0].node_uname;
-
-	// set the "we won" timer
-	startTimer(election_timeout);
-	CRM_DEBUG("Set the election timer... if it goes off, we win.");
-
-	/* host_to = NULL (for broadcast) */
 	send_request(NULL, NULL, CRM_OPERATION_VOTE, NULL, CRM_SYSTEM_CRMD);
 	
 	FNRET(election_result);
@@ -113,6 +109,8 @@ do_election_count_vote(long long action,
 	int lpc = 0, my_index = -1, your_index = -1;
 	enum crmd_fsa_input election_result = I_NULL;
 	const char *vote_from = xmlGetProp(vote, XML_ATTR_HOSTFROM);
+	const char *lowest_uname = NULL;
+	int lowest_bornon = 0;
 	
 	FNIN();
 
@@ -121,21 +119,31 @@ do_election_count_vote(long long action,
 		FNRET(election_result);
 	}
 
-	CRM_DEBUG2("Max bornon (%d)", your_born);
-	
 	for(; (your_index < 0 && my_index < 0)
 		    || lpc < fsa_membership_copy->members_size; lpc++) {
 		
 		const char *node_uname =
 			fsa_membership_copy->members[lpc].node_uname;
+		int this_born_on =
+			fsa_membership_copy->members[lpc].node_born_on;
 		
-		if(node_uname != NULL) {
-			if(strcmp(vote_from, node_uname) == 0) {
-				your_born = fsa_membership_copy->members[lpc].node_born_on;
-				your_index = lpc;
-			} else if (strcmp(fsa_our_uname, node_uname) == 0) {
-				my_born = fsa_membership_copy->members[lpc].node_born_on;
-				my_index = lpc;
+		if(node_uname == NULL) {
+			continue;
+		}
+		
+		if(strcmp(vote_from, node_uname) == 0) {
+			your_born = this_born_on;
+			your_index = lpc;
+		} else if (strcmp(fsa_our_uname, node_uname) == 0) {
+			my_born = this_born_on;
+			my_index = lpc;
+		}
+		
+		if(lowest_bornon >= this_born_on) {
+			if(lowest_uname == NULL) {
+				lowest_uname = node_uname;
+			} else if(strcmp(lowest_uname, node_uname) > 0) {
+				lowest_uname = node_uname;
 			}
 		}
 	}
@@ -149,27 +157,21 @@ do_election_count_vote(long long action,
 	       strcmp(fsa_our_uname, vote_from) < 0?"<":">=",
 	       vote_from);
 #endif
-	if(your_born < my_born) {
+
+	if(strcmp(lowest_uname, fsa_our_uname) == 0){
+		cl_log(LOG_DEBUG, "Election win: lowest born_on and uname");
+		election_result = I_ELECTION_DC;
+
+	} else if(your_born < my_born) {
 		cl_log(LOG_DEBUG, "Election fail: born_on");
 		we_loose = TRUE;
 	} else if(your_born == my_born
-		  && strcmp(fsa_our_uname, vote_from) < 0) {
+		  && strcmp(fsa_our_uname, vote_from) > 0) {
 		cl_log(LOG_DEBUG, "Election fail: uname");
 		we_loose = TRUE;
 	} else {
 		CRM_DEBUG("We might win... we should vote (possibly again)");
-
-#if 0
-		// do vote (it safe to call this multiple times)
-		election_result =
-			do_election_vote(action,
-					 cause,
-					 cur_state,
-					 current_input,
-					 data);
-#else
-		election_result = I_DC_TIMEOUT; // vote again
-#endif
+		election_result = I_DC_TIMEOUT;
 	}
 
 	if(we_loose) {
@@ -180,7 +182,9 @@ do_election_count_vote(long long action,
 			cl_log(LOG_DEBUG, "We werent the DC anyway");
 			election_result = I_NOT_DC;
 		}
-		
+	}
+
+	if(we_loose || election_result == I_ELECTION_DC) {
 		// cancel timer, its been decided
 		stopTimer(election_timeout);
 	}
@@ -188,10 +192,11 @@ do_election_count_vote(long long action,
 	FNRET(election_result);
 }
 
-/*	A_ELECTION_TIMEOUT	*/
+
+/*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT 	*/
 // we won
 enum crmd_fsa_input
-do_election_timeout(long long action,
+do_election_timer_ctrl(long long action,
 		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
@@ -199,12 +204,28 @@ do_election_timeout(long long action,
 {
 	FNIN();
 
-	CRM_DEBUG("The election timer went off, that means we win");
+	if(action & A_ELECT_TIMER_START) {
+		CRM_DEBUG("Starting the election timer...");
+		startTimer(election_timeout);
+		
+	} else if(action & A_ELECT_TIMER_STOP || action & A_ELECTION_TIMEOUT) {
+		CRM_DEBUG("Stopping the election timer...");
+		stopTimer(election_timeout);
+		
+	} else {
+		cl_log(LOG_ERR, "unexpected action %s",
+		       fsa_action2string(action));
+	}
+
+	if(action & A_ELECTION_TIMEOUT) {
+		CRM_DEBUG("The election timer went off, we win!");
 	
-	// cleanup timer
-	stopTimer(election_timeout);
+		FNRET(I_ELECTION_DC);
+		
+	}
+
 	
-	FNRET(I_ELECTION_DC);
+	FNRET(I_NULL);
 }
 
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START	*/
@@ -346,11 +367,7 @@ do_send_welcome(long long action,
 	
 
 	for(; members != NULL && lpc < size; lpc++) {
-#ifdef CCM_UNAME
 		const char *new_node = members[lpc].node_uname;
-#else
-		const char *new_node = "";
-#endif		
 		if(strcmp(fsa_our_uname, new_node) == 0) {
 			// dont send one to ourselves
 			continue;

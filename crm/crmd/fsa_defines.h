@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.7 2004/03/26 15:16:38 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.8 2004/03/29 07:57:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -298,6 +298,9 @@ A_WARN
 /* -- Election actions -- */
 #define	A_DC_TIMER_START	0x0000000000000010ULL
 #define	A_DC_TIMER_STOP		0x0000000000000020ULL
+
+#define	A_ELECT_TIMER_START	0x0000000000000040ULL
+#define	A_ELECT_TIMER_STOP	0x0000000000000080ULL
 
 #define	A_ELECTION_COUNT	0x0000000000000100ULL
 #define	A_ELECTION_TIMEOUT	0x0000000000000200ULL

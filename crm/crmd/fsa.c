@@ -432,8 +432,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
 		ELSEIF_FSA_ACTION(A_RECOVER,		do_recover)
 		ELSEIF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)
+		ELSEIF_FSA_ACTION(A_ELECT_TIMER_START,	do_election_timer_ctrl)
+		ELSEIF_FSA_ACTION(A_ELECT_TIMER_STOP,	do_election_timer_ctrl)
 		ELSEIF_FSA_ACTION(A_ELECTION_COUNT,	do_election_count_vote)
-		ELSEIF_FSA_ACTION(A_ELECTION_TIMEOUT,	do_election_timeout)
+		ELSEIF_FSA_ACTION(A_ELECTION_TIMEOUT,	do_election_timer_ctrl)
 		
 		/*
 		 * "Get this over with" actions
