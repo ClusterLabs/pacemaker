@@ -421,6 +421,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		else IF_FSA_ACTION(A_CL_JOIN_REQUEST,	do_cl_join_request)
 		else IF_FSA_ACTION(A_CL_JOIN_RESULT,	do_cl_join_result)
 		else IF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
+
+		else IF_FSA_ACTION(A_ELECTION_START,	do_election_vote)
 		else IF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)
 		else IF_FSA_ACTION(A_ELECTION_COUNT,	do_election_count_vote)
 		
@@ -509,10 +511,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 #endif
 
 #ifdef DOT_FSA_ACTIONS
-	fprintf(dot_strm,			
-		"\t// ### Exiting the FSA (%s)\n",
-		fsa_state2string(fsa_state));
-	fflush(dot_strm);
+	{
+		time_t now = time(NULL);
+		fprintf(dot_strm,			
+			"\t// ### Exiting the FSA (%s): %s\n",
+			fsa_state2string(fsa_state), asctime(localtime(&now)));
+		fflush(dot_strm);
+	}
 #endif
 
 	/* cleanup inputs? */
@@ -674,8 +679,8 @@ do_state_transition(long long actions,
 	}
 	
 	if(tmp != actions) {
-		crm_info("Action b4    %.16llx ", actions);
-		crm_info("Action after %.16llx ", tmp);
+		fsa_dump_actions(actions, "Action b4");
+		fsa_dump_actions(actions ^ tmp, "New action");
 		actions = tmp;
 	}
 

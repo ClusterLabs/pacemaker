@@ -441,6 +441,9 @@ fsa_action2string(long long action)
 		case A_NOTHING:
 			actionAsText = "A_NOTHING";
 			break;
+		case A_ELECTION_START:
+			actionAsText = "A_ELECTION_START";
+			break;
 		case A_READCONFIG:
 			actionAsText = "A_READCONFIG";
 			break;

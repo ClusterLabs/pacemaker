@@ -136,7 +136,7 @@ do_shutdown_req(long long action,
 {
 	enum crmd_fsa_input next_input = I_NULL;
 	
-
+	crm_debug("Sending shutdown request to DC");
 	if(send_request(NULL, NULL, CRM_OP_SHUTDOWN_REQ,
 			NULL, CRM_SYSTEM_DC, NULL) == FALSE){
 		next_input = I_ERROR;
