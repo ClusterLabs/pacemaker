@@ -349,9 +349,9 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 #if 0
 	crm_debug("[F_TYPE=%s]", ha_msg_value(msg, F_TYPE));
 	crm_debug("[F_ORIG=%s]", ha_msg_value(msg, F_ORIG));
-	crm_debug("[F_TO=%s]", ha_msg_value(msg, F_TO));
+	crm_debug("[F_TO=%s]",   ha_msg_value(msg, F_TO));
 	crm_debug("[F_COMMENT=%s]", ha_msg_value(msg, F_COMMENT));
-	crm_debug("[F_XML=%s]", ha_msg_value(msg, "xml"));
+	crm_debug("[F_XML=%s]",  ha_msg_value(msg, "xml"));
 /*    crm_debug("[F_=%s]", ha_msg_value(ha_msg, F_)); */
 #endif
 	
