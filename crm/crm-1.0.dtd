@@ -146,7 +146,6 @@ More details are given in the annotated DTD below.
 	  post_event_notify (true|false)		'false'
 	  pre_event_notify  (true|false)		'false'>
 
-
 <!ELEMENT resource_group (resource+)>
 <!ATTLIST resource_group
 	  id		   CDATA		    #REQUIRED
@@ -165,7 +164,7 @@ More details are given in the annotated DTD below.
 	  ordered		(true|false)		 'true'
 	  interleave		(true|false)		 'false'
 	  incarnation_max	CDATA			 #REQUIRED
-	  incarnation_node_max CDATA			 #REQUIRED>
+	  incarnation_node_max  CDATA			 #REQUIRED>
 
 <!ELEMENT master_slave (incarnation)>
 <!ATTLIST master_slave
@@ -240,8 +239,8 @@ More details are given in the annotated DTD below.
 	  timestamp CDATA #REQUIRED
 	  type	    (before|after)>
 
-<!ELEMENT rsc_dependancy EMPTY>
-<!ATTLIST rsc_dependancy
+<!ELEMENT rsc_colocation EMPTY>
+<!ATTLIST rsc_colocation
 	  id	    CDATA #REQUIRED
 	  from	    CDATA #REQUIRED
 	  to	    CDATA #REQUIRED
@@ -332,14 +331,13 @@ More details are given in the annotated DTD below.
       The "version" type is intended to solve the problem of comparing
       1.2 and 1.10
 
-
 -->
 
 <!ELEMENT expression EMPTY>
 <!ATTLIST expression
 	  id	     CDATA		      #REQUIRED
 	  attribute  CDATA		      #REQUIRED
-	  operation  (lt|gt|lte|gte|eq|ne|exists|not_exists|running|not_running)
+	  operation  (lt|gt|lte|gte|eq|ne|defined|not_defined|colocated|not_colocated)
 	  value	     CDATA		      #IMPLIED
 	  type	     (integer|string|version) 'string'>
 
