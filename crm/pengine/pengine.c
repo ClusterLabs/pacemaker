@@ -967,8 +967,8 @@ unpack_status(xmlNodePtr status,
 			status, XML_CIB_ATTR_EXPSTATE);
 		const char *join_state = xmlGetProp(
 			status, XML_CIB_ATTR_JOINSTATE);
-		const char *crm_state = xmlGetProp(
-			status, XML_CIB_ATTR_CRMDSTATE);
+//		const char *crm_state = xmlGetProp(
+//			status, XML_CIB_ATTR_CRMDSTATE);
 		const char *ccm_state = xmlGetProp(
 			status, XML_CIB_ATTR_INCCM);
 		const char *shutdown  = xmlGetProp(
@@ -1040,11 +1040,8 @@ unpack_status(xmlNodePtr status,
 				this_node->details->shutdown = TRUE;
 
 			} else if(safe_str_eq(exp_state, CRMD_STATE_ACTIVE)
-				  && safe_str_neq(join_state,
-						  CRMD_JOINSTATE_MEMBER)
-				  && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
-				  && crm_state != NULL
-				  && safe_str_neq(crm_state, "offline")
+				  && safe_str_eq(
+					  join_state, CRMD_JOINSTATE_DOWN)
 				){
 
 				// mark unclean in the xml
@@ -1490,18 +1487,23 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
 		
 		pdebug("Setting cur_node = %s for rsc = %s",
 			  node->details->id, rsc_lh->id);
+
+		if(rsc_lh->cur_node != NULL) {
+			cl_log(LOG_ERR,
+			       "Resource %s running on multiple nodes %s & %s",
+			       rsc_lh->id,
+			       rsc_lh->cur_node->details->id,
+			       node->details->id);
+			// TODO: some recovery action!!
+			// like force a stop on the first node?
+			continue;
+		}
 		
 		rsc_lh->cur_node = node;
 
 		node->details->running_rsc =
 			g_slist_append(node->details->running_rsc, rsc_lh);
 
-		/* it is runnable, but depends on a stonith op 
-		if(safe_val3(FALSE, node, details, unclean)) {
-			rsc_lh->runnable = FALSE;
-		}
-		*/
-		
 		if((safe_str_eq(rsc_state, "starting"))
 		   || (safe_str_eq(rsc_state, "started"))) {
 			node_t *node_rh;
