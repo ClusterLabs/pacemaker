@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.14 2004/09/14 05:54:43 andrew Exp $ */
+/* $Id: graph.c,v 1.15 2004/09/17 15:53:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -105,10 +105,20 @@ shutdown_constraints(
 	node_t *node, action_t *shutdown_op, GListPtr *action_constraints)
 {
 	int lpc = 0;
+	action_wrapper_t *wrapper = NULL;
+
+	/* add the shutdown OP to the before lists so it counts as a pre-req */
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
 
-		order_new(rsc->stop, shutdown_op, pecs_must, action_constraints);
+		crm_malloc(wrapper, sizeof(action_wrapper_t));
+		if(wrapper != NULL) {
+			wrapper->action = rsc->start;
+			wrapper->strength = pecs_must;
+			shutdown_op->actions_before = g_list_append(
+				shutdown_op->actions_before, wrapper);
+		}
+/* 		order_new(rsc->stop, shutdown_op, pecs_must, action_constraints); */
 		);	
 
 	return TRUE;	
@@ -120,30 +130,46 @@ stonith_constraints(node_t *node,
 		    GListPtr *action_constraints)
 {
 	int lpc = 0;
+	action_wrapper_t *wrapper = NULL;
 
 	if(shutdown_op != NULL) {
-		order_new(shutdown_op, stonith_op, pecs_must, action_constraints);
+		/* shutdown before stonith */
+		/* add the shutdown OP to the before lists so it counts as a pre-req */
+		crm_debug("Adding shutdown (%d) as an input to stonith (%d)",
+			  shutdown_op->id, stonith_op->id);
+		
+		crm_malloc(wrapper, sizeof(action_wrapper_t));
+		if(wrapper != NULL) {
+			wrapper->action = shutdown_op;
+			wrapper->strength = pecs_must;
+			stonith_op->actions_before = g_list_append(
+				stonith_op->actions_before, wrapper);
+		}
 	}
 	
+	/* add the stonith OP to the before lists so it counts as a pre-req */
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
 
-		if(stonith_enabled) {
-			/* make use of timeouts in the TE for cases such
-			 *   as this.
-			 * ie. the node may be cactus and unable to receive the
-			 *  stop let alone reply with failed.
-			 */
-			rsc->stop->failure_is_fatal = FALSE;
-			
-			/* stonith before start */
-			order_new(
-				stonith_op,rsc->start,pecs_must,action_constraints);
-		} else {
-			/* dont run this anywhere else */
-			rsc->start->runnable = FALSE;
-		}
+		/* make use of timeouts in the TE for cases such
+		 *   as this.
+		 * ie. the node may be cactus and unable to receive the
+		 *  stop let alone reply with failed.
+		 */
+		rsc->stop->failure_is_fatal = FALSE;
 		
+		crm_debug("Adding stonith (%d) as an input to start (%d)",
+			  stonith_op->id, rsc->start->id);
+
+		/* stonith before start */
+		crm_malloc(wrapper, sizeof(action_wrapper_t));
+		if(wrapper != NULL) {
+			wrapper->action = stonith_op;
+			wrapper->strength = pecs_must;
+			rsc->start->actions_before = g_list_append(
+				rsc->start->actions_before, wrapper);
+		}
+
 		);
 	
 	return TRUE;

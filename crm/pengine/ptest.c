@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.34 2004/09/17 13:03:10 andrew Exp $ */
+/* $Id: ptest.c,v 1.35 2004/09/17 15:53:12 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -155,9 +155,7 @@ main(int argc, char **argv)
 		   print_resource(NULL, resource, TRUE));
 
 	crm_debug("=#=#=#=#= Stage 2 =#=#=#=#=");
-/*	pe_debug_on(); */
 	stage2(resources, nodes, &colors);
-/*	pe_debug_off(); */
 
 	crm_debug("========= Nodes =========");
 	slist_iter(node, node_t, nodes, lpc,
@@ -171,11 +169,19 @@ main(int argc, char **argv)
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
   
+	crm_debug("========= Action List =========");
+	slist_iter(action, action_t, actions, lpc,
+		   print_action(NULL, action, FALSE));
+
 	crm_debug("=#=#=#=#= Stage 3 =#=#=#=#=");
 	stage3(colors);
 	crm_debug("========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
+
+	crm_debug("========= Action List =========");
+	slist_iter(action, action_t, actions, lpc,
+		   print_action(NULL, action, TRUE));
 
 	crm_debug("=#=#=#=#= Stage 4 =#=#=#=#=");
 	stage4(colors);
@@ -187,10 +193,15 @@ main(int argc, char **argv)
 	summary(resources);
 	crm_debug("========= Action List =========");
 	slist_iter(action, action_t, actions, lpc,
-		   print_action(NULL, action, FALSE));
+		   print_action(NULL, action, TRUE));
 	
 	crm_debug("=#=#=#=#= Stage 5 =#=#=#=#=");
 	stage5(resources);
+
+	crm_debug("========= All Actions =========");
+	slist_iter(action, action_t, actions, lpc,
+		   print_action("\t", action, TRUE);
+		);
 
 	crm_debug("=#=#=#=#= Stage 6 =#=#=#=#=");
 	stage6(&actions, &action_constraints, nodes, resources);

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.29 2004/09/17 13:46:03 andrew Exp $ */
+/* $Id: unpack.c,v 1.30 2004/09/17 15:53:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -509,7 +509,7 @@ gboolean
 determine_online_status(xmlNodePtr node_state, node_t *this_node)
 {
 	const char *uname      = xmlGetProp(node_state,XML_ATTR_UNAME);
-	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE);
+/*	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE); */
 	const char *exp_state  = xmlGetProp(node_state,XML_CIB_ATTR_EXPSTATE);
 	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
@@ -522,33 +522,35 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 	   && safe_str_eq(crm_state, ONLINESTATUS)
 	   && shutdown == NULL) {
 		this_node->details->online = TRUE;
+		crm_debug("Node %s is online", uname);
 
 	} else {
-		crm_verbose("remove");
 		/* remove node from contention */
 		this_node->weight = -1;
 		this_node->fixed = TRUE;
 
-		crm_verbose("state %s, expected %s, shutdown %s",
-			    state, exp_state, shutdown);
+		crm_verbose("join_state %s, expected %s, shutdown %s",
+			    join_state, exp_state, shutdown);
 
 		if(unclean != NULL) {
 			this_node->details->unclean = TRUE;
 				
-		} else if(shutdown != NULL) {
-			this_node->details->shutdown = TRUE;
-
 		} else if(is_node_unclean(node_state)) {
 			/* report and or take remedial action */
 			this_node->details->unclean = TRUE;
 		}
+		
+		if(shutdown != NULL) {
+			this_node->details->shutdown = TRUE;
+
+		}
 
 		if(this_node->details->unclean) {
-			crm_verbose("Node %s is due for STONITH", uname);
+			crm_warn("Node %s is due for STONITH", uname);
 		}
 
 		if(this_node->details->shutdown) {
-			crm_verbose("Node %s is due for shutdown", uname);
+			crm_info("Node %s is due for shutdown", uname);
 		}
 	}
 	return TRUE;
@@ -557,7 +559,7 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 gboolean
 is_node_unclean(xmlNodePtr node_state)
 {
-	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE);
+//	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE);
 	const char *exp_state  = xmlGetProp(node_state,XML_CIB_ATTR_EXPSTATE);
 	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
@@ -567,18 +569,15 @@ is_node_unclean(xmlNodePtr node_state)
 		return FALSE;
 
 	/* do an actual calculation once STONITH is available */
+	} else if(safe_str_neq(exp_state, CRMD_JOINSTATE_DOWN)) {
 
-	/* } else if(...) { */
+		if(safe_str_eq(crm_state, CRMD_STATE_INACTIVE)
+		   || safe_str_eq(join_state, CRMD_JOINSTATE_DOWN)
+		   || safe_str_eq(ccm_state, OFFLINESTATUS)) {
+			return TRUE;
+		}
 	}
 
-	/* for now... */
-	if(0) {
-		state = NULL;
-		join_state = NULL;
-		crm_state = NULL;
-		ccm_state = NULL;
-	}
-	
 	return FALSE;
 }
 
@@ -668,11 +667,15 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 		action_status_i = atoi(op_status);
 
 		if(node->details->unclean) {
-			/* map this to an error and then handle as a
+			crm_info("Node %s (where %s is running) is unclean."
+				 "Further action depends on the value of on_stopfail",
+				 node->details->uname, rsc_lh->id);
+			
+			/* map the status to an error and then handle as a
 			 * failed resource.
 			 */
 			action_status_i = LRM_OP_ERROR;
-
+			
 		} else if(action_status_i == -1) {
 			/*
 			 * TODO: this may need some more thought
@@ -771,7 +774,13 @@ unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
 			crm_warn("SHARED RESOURCE %s WILL REMAIN BLOCKED"
 				 " UNTIL CLEANED UP MANUALLY ON NODE %s",
 				 rsc_lh->id, node->details->uname);
-			rsc_lh->start->runnable = FALSE;
+			rsc_lh->cur_node = node;
+			node->details->running_rsc = g_list_append(
+				node->details->running_rsc, rsc_lh);
+ 			/* let this depend on the stop action instead?
+			 * safer not to i think
+			 */
+ 			rsc_lh->start->runnable = FALSE;
 			break;
 			
 		case pesf_ignore:

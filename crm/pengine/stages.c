@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.20 2004/09/17 13:03:10 andrew Exp $ */
+/* $Id: stages.c,v 1.21 2004/09/17 15:53:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -319,6 +319,8 @@ stage5(GListPtr resources)
 			}
 
 			if(action->node == NULL) {
+				crm_debug("Marking action %d as unrunnable",
+					action->id);
 				action->runnable = FALSE;
 			}
 			
@@ -358,21 +360,20 @@ stage6(GListPtr *actions, GListPtr *action_constraints,
 			
 		}
 
-		if(node->details->unclean) {
+		if(node->details->unclean && stonith_enabled) {
 			crm_warn("Scheduling Node %s for STONITH",
 				 node->details->uname);
 
 			stonith_node = action_new(NULL,stonith_op);
 			stonith_node->runnable = TRUE;
 			stonith_node->optional = FALSE;
-			choose_fencer(
-				stonith_node, node, resources);
+			choose_fencer(stonith_node, node, resources);
 
 			set_xml_property_copy(stonith_node->args,
 					      "target", node->details->uname);
 			
 			if(stonith_node->node == NULL) {
-				/*stonith_node->runnable = FALSE; */
+				stonith_node->runnable = FALSE;
 			}
 			
 			if(down_node != NULL) {

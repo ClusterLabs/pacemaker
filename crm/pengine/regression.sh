@@ -56,6 +56,10 @@ do_test attrs3 "string: ne (or)	"
 do_test attrs4 "string: exists	"
 do_test attrs5 "string: notexists	"
 
+echo ""
+do_test stopfail1 "Node Failed - Fence	"
+do_test stopfail2 "Node Failed - Block	"
+do_test stopfail3 "Node Failed - Ignore	"
 
 echo ""
 do_test stopfail2 "Stop Failed - Block	"
@@ -89,6 +93,7 @@ echo ""
 create_mode="true"
 echo Generating test outputs for these tests...
 #do_test bad7 "Bad data"
+echo ""
 
 test_results
 
