@@ -17,7 +17,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-. helper.sh
+testdir=@libdir@/heartbeat/crmtest
+. ${testdir}/helper.sh
 
 # make *sure* theres nothing left over from last time
 crm-cleanup 0
