@@ -50,7 +50,7 @@ gboolean relay_message(xmlNodePtr xml_relay_message,
 		xmlGetProp(xml_relay_message, XML_ATTR_REFERENCE),\
 		x, msg_text);					\
 	fflush(router_strm);					\
-	ha_free(msg_text);
+	cl_free(msg_text);
 #else
 #    define ROUTER_RESULT(x)	CRM_DEBUG(x);
 #endif
@@ -62,7 +62,7 @@ fsa_message_queue_t
 put_message(xmlNodePtr new_message)
 {
 	fsa_message_queue_t next_message = (fsa_message_queue_t)
-		ha_malloc(sizeof(struct fsa_message_queue_s));
+		cl_malloc(sizeof(struct fsa_message_queue_s));
 
 	CRM_DEBUG("Adding msg to queue");
 	
@@ -340,10 +340,10 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 					   det?"successfully":"not");
 			}
 			
-			ha_free(curr_client->table_key);
-			ha_free(curr_client->sub_sys);
-			ha_free(curr_client->uuid);
-			ha_free(curr_client);
+			cl_free(curr_client->table_key);
+			cl_free(curr_client->sub_sys);
+			cl_free(curr_client->uuid);
+			cl_free(curr_client);
 		}
 		CRM_DEBUG("this client has now left the building.");
 		FNRET(!hack_return_good);
@@ -613,8 +613,8 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 			       miv);
 			result = FALSE;
 		}
-		ha_free(major_version);
-		ha_free(minor_version);
+		cl_free(major_version);
+		cl_free(minor_version);
 	}
 
 	if (result == TRUE) {
@@ -654,14 +654,14 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	}
 	
 	if(result == TRUE && table_key == NULL)
-		table_key = (gpointer)ha_strdup(client_name);
+		table_key = (gpointer)cl_strdup(client_name);
 
 	if (result == TRUE) {
 		cl_log(LOG_INFO, "Accepted client %s", (char*)table_key);
 
 		curr_client->table_key = table_key;
-		curr_client->sub_sys = ha_strdup(client_name);
-		curr_client->uuid = ha_strdup(uuid);
+		curr_client->sub_sys = cl_strdup(client_name);
+		curr_client->uuid = cl_strdup(uuid);
 	
 		g_hash_table_insert (ipc_clients,
 				     table_key,
@@ -675,8 +675,8 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		curr_client->client_channel->ch_status = IPC_DISC_PENDING;
 	}
 	
-	if(uuid != NULL) ha_free(uuid);
-	if(client_name != NULL) ha_free(client_name);
+	if(uuid != NULL) cl_free(uuid);
+	if(client_name != NULL) cl_free(client_name);
 
 	/* hello messages should never be processed further */
 	FNRET(FALSE);

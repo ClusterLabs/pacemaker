@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.24 2004/03/26 13:34:03 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.25 2004/03/26 14:14:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -118,18 +118,18 @@ cib_process_request(const char *op,
 		
 		int int_value = -1;
 		if(old_value != NULL) {
-			new_value = (char*)ha_malloc(128*(sizeof(char)));
+			new_value = (char*)cl_malloc(128*(sizeof(char)));
 			int_value = atoi(old_value);
 			sprintf(new_value, "%d", ++int_value);
 		} else {
-			new_value = ha_strdup("0");
+			new_value = cl_strdup("0");
 		}
 
 		cl_log(LOG_DEBUG, "Generation %d(%s)->%s",
 		       int_value, old_value, new_value);
 		
 		set_xml_property_copy(tmpCib, XML_ATTR_GENERATION, new_value);
-		ha_free(new_value);
+		cl_free(new_value);
 		
 		if(activateCibXml(tmpCib, CIB_FILENAME) >= 0) {
 			verbose = "true"; 

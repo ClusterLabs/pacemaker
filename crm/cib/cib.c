@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.23 2004/03/26 13:38:25 andrew Exp $ */
+/* $Id: cib.c,v 1.24 2004/03/26 14:14:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -165,7 +165,7 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	
 	if(update == NULL) {
 		cl_log(LOG_ERR, "No update to create a fragment for");
-		ha_free(auto_section);
+		cl_free(auto_section);
 		return NULL;
 		
 	} else if(section == NULL) {
@@ -175,7 +175,7 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 		cl_log(LOG_ERR,
 		       "Values for update (tag=%s) and section (%s)"
 		       " were not consistent", update->name, section);
-		ha_free(auto_section);
+		cl_free(auto_section);
 		return NULL;
 		
 	}
@@ -198,7 +198,7 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	xmlAddChild(fragment, cib);
 	CRM_DEBUG("Fragment created");
 
-	ha_free(auto_section);
+	cl_free(auto_section);
 	return fragment;
 }
 
@@ -208,26 +208,26 @@ pluralSection(const char *a_section)
 {
 	char *a_section_parent = NULL;
 	if (a_section == NULL) {
-		a_section_parent = ha_strdup("all");
+		a_section_parent = cl_strdup("all");
 
 	} else if(strcmp(a_section, XML_TAG_CIB) == 0) {
-		a_section_parent = ha_strdup("all");
+		a_section_parent = cl_strdup("all");
 
 	} else if(strcmp(a_section, "node") == 0) {
-		a_section_parent = ha_strdup("nodes");
+		a_section_parent = cl_strdup("nodes");
 
 	} else if(strcmp(a_section, "state") == 0) {
-		a_section_parent = ha_strdup("status");
+		a_section_parent = cl_strdup("status");
 
 	} else if(strcmp(a_section, "constraint") == 0) {
-		a_section_parent = ha_strdup("constraints");
+		a_section_parent = cl_strdup("constraints");
 		
 	} else if(strcmp(a_section, "resource") == 0) {
-		a_section_parent = ha_strdup("resources");
+		a_section_parent = cl_strdup("resources");
 
 	} else {
 		cl_log(LOG_ERR, "Unknown section %s", a_section);
-		a_section_parent = ha_strdup("all");
+		a_section_parent = cl_strdup("all");
 	}
 	
 	CRM_DEBUG2("Plural is %s", a_section_parent);

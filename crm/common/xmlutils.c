@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.19 2004/03/26 13:01:12 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.20 2004/03/26 14:14:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -441,7 +441,7 @@ xml_message_debug(xmlNodePtr msg, const char *text)
 	CRM_DEBUG3("%s: %s",
 		   text==NULL?"<null>":text,
 		   msg_buffer==NULL?"<null>":msg_buffer);
-	ha_free(msg_buffer);
+	cl_free(msg_buffer);
 	FNOUT();
 }
 
@@ -474,7 +474,7 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 		msg_size = xmlNodeDump(xml_buffer, msg->doc, msg, 0, 0);
 
 		xml_message =
-			(xmlChar*)ha_strdup(xmlBufferContent(xml_buffer)); 
+			(xmlChar*)cl_strdup(xmlBufferContent(xml_buffer)); 
 		xmlBufferFree(xml_buffer);
 
 		if (!xml_message) {
@@ -539,8 +539,8 @@ set_xml_property_copy(xmlNodePtr node,
 	else if (value == NULL || strlen(value) <= 0)
 		ret_value = NULL;
 	else {
-		local_value = ha_strdup(value);
-		local_name = ha_strdup(name);
+		local_value = cl_strdup(value);
+		local_name = cl_strdup(name);
 		ret_value = xmlSetProp(node, local_name, local_value);
 	}
 	
@@ -558,7 +558,7 @@ create_xml_node(xmlNodePtr parent, const char *name)
 	if (name == NULL)
 		ret_value = NULL;
 	else {
-		local_name = ha_strdup(name);
+		local_name = cl_strdup(name);
 
 		if(parent == NULL) 
 			ret_value = xmlNewNode(NULL, local_name);
@@ -615,11 +615,11 @@ free_xml(xmlNodePtr a_node)
 void
 set_node_tstamp(xmlNodePtr a_node)
 {
-	char *since_epoch = (char*)ha_malloc(128*(sizeof(char)));
+	char *since_epoch = (char*)cl_malloc(128*(sizeof(char)));
 	FNIN();
 	sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
 	set_xml_property_copy(a_node, XML_ATTR_TSTAMP, since_epoch);
-	ha_free(since_epoch);
+	cl_free(since_epoch);
 }
 
 

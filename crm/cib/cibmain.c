@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.13 2004/03/24 10:18:21 andrew Exp $ */
+/* $Id: cibmain.c,v 1.14 2004/03/26 14:14:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -246,7 +246,7 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 
 		buffer = (char*)msg->msg_body;
 		cl_log(LOG_DEBUG, "Message %d [text=%s]", lpc, buffer);
-		doc = xmlParseMemory(ha_strdup(buffer), strlen(buffer));
+		doc = xmlParseMemory(cl_strdup(buffer), strlen(buffer));
 
 		if(doc == NULL) {
 			cl_log(LOG_INFO,

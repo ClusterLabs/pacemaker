@@ -210,12 +210,12 @@ do_startup(long long action,
 	}
 
 	/* set up the timers */
-	dc_heartbeat     = (fsa_timer_t *)ha_malloc(sizeof(fsa_timer_t));
-	integration_timer= (fsa_timer_t *)ha_malloc(sizeof(fsa_timer_t));
-	election_trigger = (fsa_timer_t *)ha_malloc(sizeof(fsa_timer_t));
-	election_timeout = (fsa_timer_t *)ha_malloc(sizeof(fsa_timer_t));
+	dc_heartbeat     = (fsa_timer_t *)cl_malloc(sizeof(fsa_timer_t));
+	integration_timer= (fsa_timer_t *)cl_malloc(sizeof(fsa_timer_t));
+	election_trigger = (fsa_timer_t *)cl_malloc(sizeof(fsa_timer_t));
+	election_timeout = (fsa_timer_t *)cl_malloc(sizeof(fsa_timer_t));
 	shutdown_escalation_timmer = (fsa_timer_t *)
-		ha_malloc(sizeof(fsa_timer_t));
+		cl_malloc(sizeof(fsa_timer_t));
 
 
 	int interval = 1; // seconds between DC heartbeats
@@ -249,32 +249,32 @@ do_startup(long long action,
 	
 	/* set up the sub systems */
 	cib_subsystem = (struct crm_subsystem_s*)
-		ha_malloc(sizeof(struct crm_subsystem_s));
+		cl_malloc(sizeof(struct crm_subsystem_s));
 	
 	cib_subsystem->pid = 0;	
 	cib_subsystem->respawn = 1;	
-	cib_subsystem->path = ha_strdup(BIN_DIR);
-	cib_subsystem->name = ha_strdup(CRM_SYSTEM_CIB);
+	cib_subsystem->path = cl_strdup(BIN_DIR);
+	cib_subsystem->name = cl_strdup(CRM_SYSTEM_CIB);
 	cib_subsystem->command = BIN_DIR"/cib";
 	cib_subsystem->flag = R_CIB_CONNECTED;	
 
 	te_subsystem = (struct crm_subsystem_s*)
-		ha_malloc(sizeof(struct crm_subsystem_s));
+		cl_malloc(sizeof(struct crm_subsystem_s));
 	
 	te_subsystem->pid = 0;	
 	te_subsystem->respawn = 1;	
-	te_subsystem->path = ha_strdup(BIN_DIR);
-	cib_subsystem->name = ha_strdup(CRM_SYSTEM_TENGINE);
+	te_subsystem->path = cl_strdup(BIN_DIR);
+	cib_subsystem->name = cl_strdup(CRM_SYSTEM_TENGINE);
 	te_subsystem->command = BIN_DIR"/tengine";
 	te_subsystem->flag = R_TE_CONNECTED;	
 
 	pe_subsystem = (struct crm_subsystem_s*)
-		ha_malloc(sizeof(struct crm_subsystem_s));
+		cl_malloc(sizeof(struct crm_subsystem_s));
 	
 	pe_subsystem->pid = 0;	
 	pe_subsystem->respawn = 1;	
-	pe_subsystem->path = ha_strdup(BIN_DIR);
-	cib_subsystem->name = ha_strdup(CRM_SYSTEM_PENGINE);
+	pe_subsystem->path = cl_strdup(BIN_DIR);
+	cib_subsystem->name = cl_strdup(CRM_SYSTEM_PENGINE);
 	pe_subsystem->command = BIN_DIR"/pengine";
 	pe_subsystem->flag = R_PE_CONNECTED;	
 

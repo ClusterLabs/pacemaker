@@ -361,7 +361,7 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 		cl_log(LOG_ERR, "Channel was disconnected");
 	} else {
 		crmd_client_t *blank_client =
-			(crmd_client_t *)ha_malloc(sizeof(crmd_client_t));
+			(crmd_client_t *)cl_malloc(sizeof(crmd_client_t));
 	
 		if (blank_client == NULL) {
 			cl_log(LOG_ERR,
@@ -485,7 +485,7 @@ run_command(struct crm_subsystem_s *centry,
 	size += strlen(centry->command);
 	size += 2; // ' ' + \0
 	
-	cmd_with_options = ha_malloc((1+size)*sizeof(char));
+	cmd_with_options = cl_malloc((1+size)*sizeof(char));
 	sprintf(cmd_with_options, "%s %s", centry->command, options);
 	cmd_with_options[size] = 0;
 	

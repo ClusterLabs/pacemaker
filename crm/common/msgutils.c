@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.24 2004/03/24 10:18:21 andrew Exp $ */
+/* $Id: msgutils.c,v 1.25 2004/03/26 14:14:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -68,7 +68,7 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 	// 2 = "_" + '\0'
 	int sub_type_len = strlen(to) + strlen(XML_ATTR_REQUEST) + 2; 
 	char *sub_type_target =
-		(char*)ha_malloc(sizeof(char)*(sub_type_len));
+		(char*)cl_malloc(sizeof(char)*(sub_type_len));
 
 	sprintf(sub_type_target, "%s_%s", to, XML_ATTR_REQUEST);
 	root_xml_node   = create_xml_node(NULL, sub_type_target);
@@ -78,10 +78,10 @@ createPingRequest(const char *crm_msg_reference, const char *to)
     
 	int msg_type_len = strlen(to) + 10 + 1; // + "_operation" + '\0'
 	char *msg_type_target =
-		(char*)ha_malloc(sizeof(char)*(msg_type_len));
+		(char*)cl_malloc(sizeof(char)*(msg_type_len));
 	sprintf(msg_type_target, "%s_operation", to);
 	set_xml_property_copy(root_xml_node, msg_type_target, CRM_OPERATION_PING);
-	ha_free(msg_type_target);
+	cl_free(msg_type_target);
 
 	FNRET(root_xml_node);
 }
@@ -107,7 +107,7 @@ generateReference(const char *custom1, const char *custom2)
 	if(local_cust2 == NULL) local_cust2 = "_empty_";
 	reference_len += strlen(local_cust2);
 	
-	char *since_epoch = (char*)ha_malloc(reference_len*(sizeof(char)));
+	char *since_epoch = (char*)cl_malloc(reference_len*(sizeof(char)));
 	FNIN();
 	sprintf(since_epoch, "%s-%s-%ld-%u",
 		local_cust1, local_cust2,
@@ -201,7 +201,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 		int len = strlen(srcstring);
 		while(lpc < len) {
 			if (srcstring[lpc++] == separator) {
-				*name = (char*)ha_malloc(sizeof(char)*lpc);
+				*name = (char*)cl_malloc(sizeof(char)*lpc);
 				CRM_DEBUG2("Malloc ok %d", lpc);
 				strncpy(*name, srcstring, lpc-1);
 				CRM_DEBUG2("Strcpy ok %d", lpc-1);
@@ -210,7 +210,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 
 				// this sucks but as the strtok *is* a bug
 				len = len-lpc+1;
-				*value = (char*)ha_malloc(sizeof(char)*len);
+				*value = (char*)cl_malloc(sizeof(char)*len);
 				CRM_DEBUG2("Malloc ok %d", len);
 				temp = srcstring+lpc;
 				CRM_DEBUG("Doing str copy");
@@ -234,7 +234,7 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 {
 	FNIN();
 	int ref_len = strlen(sys) + strlen(crm_msg_reference) + 2;
-	char *hash_key = (char*)ha_malloc(sizeof(char)*(ref_len));
+	char *hash_key = (char*)cl_malloc(sizeof(char)*(ref_len));
 	sprintf(hash_key, "%s_%s", sys, crm_msg_reference);
 	hash_key[ref_len-1] = '\0';
 	cl_log(LOG_INFO, "created hash key: (%s)", hash_key);
@@ -253,7 +253,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	}
     
 	if (strcmp("dc", src_subsys) == 0) {
-		hash_value = ha_strdup(src_subsys);
+		hash_value = cl_strdup(src_subsys);
 		if (!hash_value) {
 			cl_log(LOG_ERR,
 			       "memory allocation failed in "
@@ -264,7 +264,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	}
     
 	ref_len = strlen(src_subsys) + strlen(src_node) + 2;
-	hash_value = (char*)ha_malloc(sizeof(char)*(ref_len));
+	hash_value = (char*)cl_malloc(sizeof(char)*(ref_len));
 	if (!hash_value) {
 		cl_log(LOG_ERR,
 		       "memory allocation failed in "
@@ -292,7 +292,7 @@ decode_hash_value(gpointer value, char **node, char **subsys)
     	
 	if (strcmp("dc", (char*)value) == 0) {
 		*node = NULL;
-		*subsys = (char*)ha_strdup(char_value);
+		*subsys = (char*)cl_strdup(char_value);
 		if (!*subsys) {
 			cl_log(LOG_ERR, "memory allocation failed in "
 			       "decode_hash_value()\n");
@@ -410,10 +410,10 @@ process_hello_message(IPC_Message *hello_message,
 		FNRET(FALSE);
 	}
     
-	*uuid           = ha_strdup(local_uuid);
-	*client_name   = ha_strdup(local_client_name);
-	*major_version = ha_strdup(local_major_version);
-	*minor_version = ha_strdup(local_minor_version);
+	*uuid           = cl_strdup(local_uuid);
+	*client_name   = cl_strdup(local_client_name);
+	*major_version = cl_strdup(local_major_version);
+	*minor_version = cl_strdup(local_minor_version);
 
 	FNRET(TRUE);
 }

@@ -136,7 +136,7 @@ do_ccm_update_cache(long long action,
 	const oc_ev_membership_t *oc = ((struct ccm_data *)data)->oc;
 
 	oc_node_list_t *tmp = NULL, *membership_copy = (oc_node_list_t *)
-		ha_malloc(sizeof(oc_node_list_t));
+		cl_malloc(sizeof(oc_node_list_t));
 
 	FNIN();
 
@@ -158,7 +158,7 @@ do_ccm_update_cache(long long action,
 		int size = membership_copy->members_size;
 		size = size * sizeof(oc_node_t);
 		CRM_DEBUG2("Allocing %d", size);
-		membership_copy->members = (oc_node_t *)ha_malloc(size);
+		membership_copy->members = (oc_node_t *)cl_malloc(size);
 
 		members = membership_copy->members;
 		
@@ -170,7 +170,7 @@ do_ccm_update_cache(long long action,
 				oc->m_array[offset+lpc].node_born_on;
 			
 			members[lpc].node_uname =
-				ha_strdup(oc->m_array[offset+lpc].node_uname);
+				cl_strdup(oc->m_array[offset+lpc].node_uname);
 		}
 	} else {
 		membership_copy->members = NULL;
@@ -188,7 +188,7 @@ do_ccm_update_cache(long long action,
 
 		CRM_DEBUG2("Allocing %d", size);
 		
-		membership_copy->new_members = (oc_node_t *)ha_malloc(size);
+		membership_copy->new_members = (oc_node_t *)cl_malloc(size);
 		
 		members = membership_copy->new_members;
 		
@@ -200,7 +200,7 @@ do_ccm_update_cache(long long action,
 				oc->m_array[offset+lpc].node_born_on;
 
 			members[lpc].node_uname =
-				ha_strdup(oc->m_array[offset+lpc].node_uname);
+				cl_strdup(oc->m_array[offset+lpc].node_uname);
 		}
 	} else {
 		membership_copy->new_members = NULL;
@@ -213,7 +213,7 @@ do_ccm_update_cache(long long action,
 	if(membership_copy->dead_members_size > 0) {
 		int size = membership_copy->dead_members_size;
 		size = size * sizeof(oc_node_t);
-		membership_copy->dead_members = (oc_node_t *)ha_malloc(size);
+		membership_copy->dead_members = (oc_node_t *)cl_malloc(size);
 		
 		members = membership_copy->dead_members;
 
@@ -225,7 +225,7 @@ do_ccm_update_cache(long long action,
 				oc->m_array[offset+lpc].node_born_on;
 			
 			members[lpc].node_uname =
-				ha_strdup(oc->m_array[offset+lpc].node_uname);
+				cl_strdup(oc->m_array[offset+lpc].node_uname);
 		}
 	} else {
 		membership_copy->dead_members = NULL;
@@ -238,12 +238,12 @@ do_ccm_update_cache(long long action,
 	/* Free the old copy */
 	if(tmp != NULL) {
 		if(tmp->members != NULL)
-			ha_free(tmp->members);
+			cl_free(tmp->members);
 		if(tmp->new_members != NULL)
-			ha_free(tmp->new_members);
+			cl_free(tmp->new_members);
 		if(tmp->dead_members != NULL)
-			ha_free(tmp->dead_members);
-		ha_free(tmp);
+			cl_free(tmp->dead_members);
+		cl_free(tmp);
 	}
 	
 	FNRET(I_NULL);
@@ -383,7 +383,7 @@ crmd_ccm_input_callback(oc_ed_t event,
 
 	if(data != NULL) {
 		event_data = (struct ccm_data *)
-			ha_malloc(sizeof(struct ccm_data));
+			cl_malloc(sizeof(struct ccm_data));
 		
 		event_data->event = &event;
 		event_data->oc = (const oc_ev_membership_t *)data;
@@ -393,7 +393,7 @@ crmd_ccm_input_callback(oc_ed_t event,
 		event_data->event = NULL;
 		event_data->oc = NULL;
 
-		ha_free(event_data);
+		cl_free(event_data);
 
 	} else {
 		cl_log(LOG_INFO, "CCM Callback with NULL data... "

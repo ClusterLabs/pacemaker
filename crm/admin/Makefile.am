@@ -40,7 +40,7 @@ COMMONLIBS		= $(CRM_DEBUG_LIBS) 								\
 				$(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la	\
 				$(top_builddir)/$(CRM_DIR)/cib/libcib.la			\
 				$(top_builddir)/lib/apphb/libapphb.la				\
-				$(top_builddir)/heartbeat/libhbclient.la  			\
+				$(top_builddir)/lib/hbclient/libhbclient.la  			\
 				$(GLIBLIB)											\
 				$(LIBRT)
 

@@ -18,7 +18,7 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 ## Subdirectories
-SUBDIRS			=  common cib crmd lrmd pengine tengine admin
+SUBDIRS			=  common cib crmd pengine tengine admin
 
 
 crmdir			= $(HA_VARLIBDIR)/$(HB_PKG)/crm
