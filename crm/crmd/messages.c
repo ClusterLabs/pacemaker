@@ -366,7 +366,7 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 				 NULL,
 				 NULL);
 
-	xml_message_debug(request, "Final request...");
+//	xml_message_debug(request, "Final request...");
 
 	was_sent = relay_message(request, TRUE);
 
@@ -457,14 +457,14 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		; // more to be done by caller
 	} else if(is_local) {
 		ROUTER_RESULT("Message result: Local relay");
-		CRM_DEBUG2("Message result: Local relay to %s", sys_to);
+//		CRM_DEBUG2("Message result: Local relay to %s", sys_to);
 		send_msg_via_ipc(xml_relay_message, sys_to);
 		if(sys_cc == NULL || strcmp(sys_cc, CRM_SYSTEM_DC) != 0)
 			processing_complete = TRUE;
 		// else the DC should also get this message
 	} else {
 		ROUTER_RESULT("Message result: External relay");
-		CRM_DEBUG2("Message result: External relay to %s", host_to);
+//		CRM_DEBUG2("Message result: External relay to %s", host_to);
 
 		send_msg_via_ha(xml_relay_message, host_to);
 		processing_complete = TRUE;
@@ -486,7 +486,7 @@ send_msg_via_ha(xmlNodePtr action, const char *dest_node)
 		       dest_node);
 		FNOUT();
 	}
-	CRM_DEBUG2("Relaying message to (%s) via HA", dest_node);
+//	CRM_DEBUG2("Relaying message to (%s) via HA", dest_node);
 	set_xml_property_copy(action, XML_ATTR_HOSTTO, dest_node);
 
 	send_xmlha_message(fsa_cluster_connection, action);
@@ -498,7 +498,7 @@ void
 send_msg_via_ipc(xmlNodePtr action, const char *sys)
 {
 	FNIN();
-	cl_log(LOG_DEBUG, "relaying msg to sub_sys=%s via IPC", sys);
+//	cl_log(LOG_DEBUG, "relaying msg to sub_sys=%s via IPC", sys);
 
 	IPC_Channel *client_channel =
 		(IPC_Channel*)g_hash_table_lookup (ipc_clients, sys);
@@ -626,7 +626,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 				     curr_client->client_channel);
 
 		send_hello_message(curr_client->client_channel,
-				   NULL, CRM_SYSTEM_CRMD,
+				   "n/a", CRM_SYSTEM_CRMD,
 				   "0", "1");
 	} else {
 		CRM_DEBUG("Rejected client logon request");
