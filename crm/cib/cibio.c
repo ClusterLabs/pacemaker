@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.17 2004/03/24 12:11:01 andrew Exp $ */
+/* $Id: cibio.c,v 1.18 2004/03/29 15:37:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -127,7 +127,7 @@ verifyCibXml(xmlNodePtr cib)
 
 	// more integrity tests
 
-	FNRET(TRUE);
+	FNRET(is_valid);
 }
 
 /*
