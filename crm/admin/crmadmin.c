@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.23 2005/02/02 09:17:25 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.24 2005/02/03 14:17:20 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -376,24 +376,17 @@ do_work(ll_cluster_t * hb_cluster)
 			return -1;
 			
 		} else if(DO_RESOURCE) {
-			the_cib->cmds->query(
-				the_cib, XML_CIB_TAG_STATUS,
-				&output, call_options);
+			output = get_cib_copy(the_cib);
 			do_find_resource(rsc_name, output);
 
 		} else if(DO_RESOURCE_LIST) {
-			the_cib->cmds->query(
-				the_cib, XML_CIB_TAG_RESOURCES,
-				&output, call_options);
-			
+			output = get_cib_copy(the_cib);
 			do_find_resource_list(output);
 			
 		} else if(DO_NODE_LIST) {
-			the_cib->cmds->query(
-				the_cib, XML_CIB_TAG_NODES,
-				&output, call_options);
-
+			output = get_cib_copy(the_cib);
 			do_find_node_list(output);
+			
 		} else if(DO_OPTION) {
 			char *name = NULL;
 			char *value = NULL;
@@ -679,15 +672,11 @@ int
 do_find_resource(const char *rsc, crm_data_t *xml_node)
 {
 	int found = 0;
-	const char *path[] = {
-		XML_CIB_TAG_STATUS
-	};
+	crm_data_t *nodestates = get_object_root(XML_CIB_TAG_STATUS, xml_node);
 	const char *path2[] = {
 		XML_CIB_TAG_LRM,
 		XML_LRM_TAG_RESOURCES
 	};
-	crm_data_t *nodestates = find_xml_node_nested(
-		xml_node, path, DIMOF(path));
 
 	xml_child_iter(
 		nodestates, a_node, XML_CIB_TAG_STATE,
@@ -778,11 +767,7 @@ int
 do_find_resource_list(crm_data_t *xml_node)
 {
 	int found = 0;
-	const char *path[] = {
-		XML_CIB_TAG_RESOURCES
-	};
-	crm_data_t *rscs = find_xml_node_nested(
-		xml_node, path, DIMOF(path));
+	crm_data_t *rscs = get_object_root(XML_CIB_TAG_RESOURCES, xml_node);
 
 	xml_child_iter(
 		rscs, rsc, XML_CIB_TAG_RESOURCE,
@@ -804,11 +789,7 @@ int
 do_find_node_list(crm_data_t *xml_node)
 {
 	int found = 0;
-	const char *path[] = {
-		XML_CIB_TAG_NODES
-	};
-	crm_data_t *nodes = find_xml_node_nested(
-		xml_node, path, DIMOF(path));
+	crm_data_t *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
 
 	xml_child_iter(
 		nodes, node, XML_CIB_TAG_NODE,	
