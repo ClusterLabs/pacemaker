@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.9 2004/08/11 07:10:00 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.10 2004/08/18 10:46:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,6 +50,7 @@
 #define XML_ATTR_RESPONSE		"response"
 
 #define XML_ATTR_UNAME			"uname"
+#define XML_ATTR_UUID			"id"
 #define XML_ATTR_MSGTYPE		"message_type"
 #define XML_ATTR_SYSFROM		"sys_from"
 #define XML_ATTR_SYSTO			"sys_to"
