@@ -36,6 +36,8 @@
 #include <crm/dmalloc_wrapper.h>
 
 extern int num_join_invites;
+extern GHashTable *join_requests;
+extern GHashTable *confirmed_nodes;
 
 long long
 do_state_transition(long long actions,
@@ -294,6 +296,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		cur_input = next_input;
 		if(cur_input != I_NULL) {
 			/* record the most recent non I_NULL input */
+			crm_devel("Updating last_input to %s",
+				  fsa_input2string(cur_input));
 			last_input = cur_input;
 		}
 		
@@ -340,7 +344,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		if(last_state != cur_state){
 			actions = do_state_transition(
 				actions, cause, last_state, cur_state,
-				last_input, fsa_data);
+				cur_input, fsa_data);
 		}
 
 		/* this is always run, some inputs/states may make various
@@ -562,16 +566,51 @@ do_state_transition(long long actions,
 		case S_RECOVERY:
 			clear_recovery_bit = FALSE;
 			break;
-		case S_POLICY_ENGINE:
-			if(num_join_invites
+			
+		case S_FINALIZE_JOIN:
+			if(cause != C_FSA_INTERNAL) {
+				crm_warn("Progressed to state %s after %s",
+					 fsa_state2string(cur_state),
+					 fsa_cause2string(cause));
+			}
+			if(g_hash_table_size(join_requests)
 			   != fsa_membership_copy->members_size) {
-				crm_warn("Only %d (of %d) cluster nodes are"
-					 " eligable to run resources.",
-					 num_join_invites,
+				crm_warn("Only %d (of %d) cluster nodes "
+					 "responded to the join offer.",
+					 g_hash_table_size(join_requests),
 					 fsa_membership_copy->members_size);
 			} else {
+				crm_info("All %d clusters nodes "
+					 "responded to the join offer.",
+					 fsa_membership_copy->members_size);
+			}
+			break;
+			
+		case S_POLICY_ENGINE:
+			if(cause != C_FSA_INTERNAL) {
+				crm_warn("Progressed to state %s after %s",
+					 fsa_state2string(cur_state),
+					 fsa_cause2string(cause));
+			}
+			
+			if(g_hash_table_size(confirmed_nodes)
+			   == fsa_membership_copy->members_size) {
 				crm_info("All %d clusters nodes are"
 					 " eligable to run resources.",
+					 fsa_membership_copy->members_size);
+
+			} else if(g_hash_table_size(confirmed_nodes)
+				  == num_join_invites) {
+				crm_warn("All %d (%d total) cluster "
+					 "nodes are eligable to run resources",
+					 g_hash_table_size(confirmed_nodes),
+					 fsa_membership_copy->members_size);
+
+			} else {
+				crm_warn("Only %d of %d (%d total) cluster "
+					 "nodes are eligable to run resources",
+					 num_join_invites,
+					 g_hash_table_size(confirmed_nodes),
 					 fsa_membership_copy->members_size);
 			}
 			break;
