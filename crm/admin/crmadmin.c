@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.25 2005/02/11 22:01:22 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.26 2005/02/15 12:44:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -122,6 +122,7 @@ main(int argc, char **argv)
 
 		/* daemon options */
 		{"kill", 1, 0, 'K'},  /* stop a node */
+		{"die", 0, 0, 0},  /* kill a node, no respawn */
 		{"crm_debug_inc", 1, 0, 'i'},
 		{"crm_debug_dec", 1, 0, 'd'},
 		{"status", 1, 0, 'S'},
@@ -161,6 +162,11 @@ main(int argc, char **argv)
 					this_msg_reference =
 						crm_strdup(optarg);
 
+				} else if (strcmp("die",
+						  long_options[option_index].name) == 0) {
+					DO_RESET = TRUE;
+					crmd_operation = CRM_OP_DIE;
+					
 				} else {
 					printf( "?? Long option (--%s) is not yet properly supported ??\n",
 						long_options[option_index].name);
@@ -204,6 +210,7 @@ main(int argc, char **argv)
 				DO_RESET = TRUE;
 				crm_verbose("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
+				crmd_operation = CRM_OP_LOCAL_SHUTDOWN;
 				break;
 			case 'o':
 				DO_OPTION = TRUE;
@@ -418,8 +425,6 @@ do_work(ll_cluster_t * hb_cluster)
 		 *   local node
 		 */
 		sys_to = CRM_SYSTEM_CRMD;
-		crmd_operation = CRM_OP_LOCAL_SHUTDOWN;
-		
 		set_xml_property_copy(
 			msg_options, XML_ATTR_TIMEOUT, "0");
 		
