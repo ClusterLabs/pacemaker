@@ -276,8 +276,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
 			fsa_dump_actions(fsa_data->actions, "\tadded back");
 
-			crm_debug(DOT_PREFIX"\t// FSA input: State=%s\tCause=%s"
-				"\tInput=%s\tOrigin=%s()",
+			crm_debug(DOT_PREFIX"\t// FSA input: State=%s \tCause=%s"
+				" \tInput=%s \tOrigin=%s()",
 				fsa_state2string(cur_state),
 				fsa_cause2string(fsa_data->fsa_cause),
 				fsa_input2string(fsa_data->fsa_input),
