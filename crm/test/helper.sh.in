@@ -46,12 +46,12 @@ while test "$done" = "0"; do
 	--stderr  | -e)	OUTPUT_STDERR=1; shift;;
 	--verbose | -v)	OUTPUT_CMDS=1; shift;;
 
-	--init  | -i)	INIT_USER=$2; shift 2;;
-	--admin | -a)	ADMIN_USER=$2; shift 2;;
-	--crmd  | -c)	CRMD_USER=$2; shift 2;;
+	--init    | -i)	INIT_USER=$2; shift 2;;
+	--admin   | -a)	ADMIN_USER=$2; shift 2;;
+	--crmd    | -c)	CRMD_USER=$2; shift 2;;
 
-	--node1  | -1)	test_node_1=$2; shift 2;;
-	--node2  | -2)	test_node_2=$2; shift 2;;
+	--node1   | -1)	test_node_1=$2; shift 2;;
+	--node2   | -2)	test_node_2=$2; shift 2;;
 
 	--ip1)	ip_rsc_1=$2; shift 2;;
 	--ip2)	ip_rsc_2=$2; shift 2;;

@@ -6,61 +6,53 @@ components (as outlined in the crm.txt), but hopefully only one
 framework they all plug into.
 
 
-===============================
+###################
+
 
 Installation:
+===============================
 run ConfigureMe or bootstrap with the --enable-crm option
 make ; make install
 
-Pids and FIFOs will be in: $HA_VARLIBDIR/heartbeat/crm
-Logs will be in: /var/log
+Pids, sockets and the CIB configuration will be in: $HA_VARLIBDIR/heartbeat/crm
 Executables will be in /usr/lib/heartbeat/ or wherever the heartbeat 
   executable is normally found
+Logs will be in: /var/log
+A couple of developmental trace files will also turn up in /tmp.  
+  In particular live.dot can be used with the dot program to trace the state changes.
+
 
 Startup:
+===============================
 - Add a respawn entry for ccm to ha.cf
+- Add a respawn entry for lrmd to ha.cf
 - Add the appropriate "apiauth" entries to ha.cf
-- Start heartbeat
-- start the cib ($your_bin_dir/cib)
+- Remove entries from haresources
+- Remove any sontih devices from ha.cf
+- Start heartbeat using the -M switch
 - start the crmd ($your_bin_dir/crmd)
 
 
-Testing:
-I recommend the following command for testing:
-admin/crmadmin --daemon --query -o node
+Testing & Configuration:
+===============================
+See 1node.sh and 2node.sh in the testing sub-dir for detailed startup and configuration examples.
 
-It queries the CIB for all the objects of type "node".
+helper.sh contains argument processing for both of these scripts.
 
-To add nodes, use a command like:
-admin/crmadmin --create -V -o node -i node_uname_1 -D "test node: node_uname_1"
 
-Everything works for the resources and constraints, but lets keep it simple
-for the moment :)
+Logging:
+===============================
+By default the CRMd filters out LOG_DEBUG messages and anything more verbose.
+This can be altered by invoking it with multiple -V options to increase this level.
+Alternativly, sending SIGUSR1 and SIGUSR2 will increase and decrease the log level.
+If the log level is more verbose than LOG_INFO, debug info will also be logged to stdout. 
 
-I'll be committing a test script as soon as this IPC "issue" is resolved 
-and I can verify it works.
 
-Notes:
-To help demonstrate my "issue", the admin client has been temporarilty 
-modified to *not* exit.  To reproduce the probelm, 
-1) execute: $your_bin_dir/crmadmin --daemon --query -o node
-2) in another window execute the same command again
-3*) repeat as many times as you like, they should all succeed (as in get 
-    a result back)
-4) Exit any of the crmadmin processes with ctrl-c
-5) re-execute: $your_bin_dir/crmadmin --daemon --query -o node
+Admin Tools:
+===============================
 
-At this point you should notice in the logs that the CRMd got a 
-disconnect for the new client almost straight after the 
-G_main_add_IPC_WaitConnection callback is invoked.
+There are two admin tools: crmadmin and cibadmin.  Run both with -? or no arguments to see up-to-date help information.
 
-Since this only occurs *after* a client has quit, it seems reasonable 
-that whatever the cause is, its occuring in code that is invoked by this 
-event.  In the CRM, this consititutes the 
-if(client->ch_status == IPC_DISCONNECT) block of crmd_ipc_input_callback() 
-and all of default_ipc_input_destroy().
+The crmadmin tool is primarily for controling the cluster and running some common queries.
 
-Currently I have commented out all meaningful code in those blocks and so 
-it is now my belief that the culprit lies elsewhere.  Next steps as I see 
-them are to check the activities of those calling the aforementioned 
-functions, followed by using a debugging version of malloc.
+The cibadmin tool is for configuring the cluster (maintaining the CIB) and running more detailed and custom queries of the CIB.
