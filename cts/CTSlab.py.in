@@ -476,11 +476,4 @@ if __name__ == '__main__':
     tests = RandomTests(scenario, cm, Tests, Audits)
     Environment.RandomTests = tests
     overall, detailed = tests.run(NumIter)
- 
-    cm.log("****************")
-    cm.log("Overall Results:" + repr(overall))
-    cm.log("****************")
-    cm.log("Detailed Results")
-    for test in detailed.keys():
-        cm.log("Test %s:" % test + repr(detailed[test]))
-    cm.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
+    tests.summarize()

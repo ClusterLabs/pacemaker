@@ -102,6 +102,7 @@ class RandomTests:
             else:
               self.CM.log("Big problems.  Shutting down.")
               self.CM.stopall()
+	      self.summarize()
               raise ValueError("Looks like we hit the jackpot!        :-)")
 
 #            print ("Done looking for BadNews")
@@ -112,6 +113,15 @@ class RandomTests:
                     self.incr("auditfail")
                     if test:
                         test.incr("auditfail")
+
+    def summarize(self):
+	self.CM.log("****************")
+	self.CM.log("Overall Results:" + repr(self.Stats))
+	self.CM.log("****************")
+	self.CM.log("Detailed Results")
+        for test in self.Tests:
+	    self.CM.log("Test %s: \t%s" %(test.name, repr(test.Stats)))
+	self.CM.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
     def run(self, max=1):
         (
@@ -1406,6 +1416,7 @@ class ResourceRecover(CTSTest):
         resource.Stop(node[0])
         retrycount=1
 
+	# IDEA: try looking for a start action on the resource instead
         while retrycount<=self.max:
             retrycount += 1
             recovernode=resource.RunningNodes()
@@ -1414,8 +1425,9 @@ class ResourceRecover(CTSTest):
             elif len(recovernode)==0:
                 time.sleep(1)
             else:
-                return self.failure("%s is recovered more than one nodes"%label)
-        return self.failure("%s is not recovered at any node"%label)
+                return self.failure("%s is now active on more than one node: %s"
+				    %(label, str(recovernode)))
+	return self.failure("%s was not recovered and is inactive" %(label))
 
     def is_applicable(self):
         '''ResourceRecover is applicable only when there is any resource running on cluster
