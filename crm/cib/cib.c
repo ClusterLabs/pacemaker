@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.50 2004/09/04 10:41:55 andrew Exp $ */
+/* $Id: cib.c,v 1.51 2004/09/20 12:18:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,12 +92,12 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 		node_stack[0] = XML_CIB_TAG_STATUS;
 		node_stack[1] = NULL;
 
-	} else if(strcmp(object_type, XML_CIB_TAG_CRMCONFIG) == 0) {
-		/* these live in a different place too */
-		tmp_node = find_xml_node(the_root, XML_CIB_TAG_CRMCONFIG);
+/* 	} else if(strcmp(object_type, XML_CIB_TAG_CRMCONFIG) == 0) { */
+/* 		/\* these live in a different place too *\/ */
+/* 		tmp_node = find_xml_node(the_root, XML_CIB_TAG_CRMCONFIG); */
 
-		node_stack[0] = XML_CIB_TAG_CRMCONFIG;
-		node_stack[1] = NULL;
+/* 		node_stack[0] = XML_CIB_TAG_CRMCONFIG; */
+/* 		node_stack[1] = NULL; */
 
 	} else {
 		tmp_node = find_xml_node_nested(the_root, node_stack, 2);
