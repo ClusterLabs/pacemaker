@@ -798,10 +798,41 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 		rc = fsa_cib_conn->cmds->modify(
 			fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
 			cib_sync_call);
-		CRM_DEV_ASSERT(rc == cib_ok);
-		if(rc != cib_ok) {
+
+		/*
+		 * There are a couple of options here...
+		 *
+		 * One is that maybe just the CRMd died.  So this is a
+		 *   callback from last time.
+		 * This can also be triggered by the HA shutdown bug.
+		 *
+		 * Another is that the update occurred while the next DC was
+		 *   being elected.
+		 *
+		 * Either way, as long as one of the conditions below is met,
+		 *   then the resource state will be discovered during
+		 *   the next signup or election.
+		 */
+
+		if(rc == cib_ok) {
+			crm_debug("Resource state update: %s",
+				  cib_error2string(rc));
+			
+		} else if(I_AM_DC) {
 			crm_err("Resource state update failed: %s",
 				cib_error2string(rc));
+			CRM_DEV_ASSERT(rc == cib_ok && I_AM_DC);
+			
+		} else if(rc == cib_master_timeout
+			  && (fsa_state==S_PENDING || fsa_state==S_ELECTION)) {
+			crm_warn("Resource state update failed: %s",
+				cib_error2string(rc));
+			crm_warn("The resource state will be updated during the"
+				 " next transition");
+		} else {
+			crm_err("Resource state update failed: %s",
+				cib_error2string(rc));	
+			CRM_DEV_ASSERT(rc == cib_ok);
 		}
 	}
 	
