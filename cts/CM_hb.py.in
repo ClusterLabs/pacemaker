@@ -401,7 +401,10 @@ class HBConfig:
                 # from the items on other lines
                 values = [values]
             if self.Parameters.has_key(key):
-                self.Parameters[key].append(values[0])
+		if key == "node":
+		    self.Parameters[key].extend(values)
+		else:
+		    self.Parameters[key].append(values[0])
             else:
                 self.Parameters[key] = values
 
