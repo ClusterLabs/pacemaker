@@ -1007,6 +1007,8 @@ createEmptyCib(void)
 	if (verifyCibXml(cib_root)) {
 		return cib_root;
 	}
+
+	crm_msg_del(cib_root);
 	crm_crit("The generated CIB did not pass integrity testing!!"
 		 "  All hope is lost.");
 	return NULL;
@@ -1020,7 +1022,7 @@ verifyCibXml(crm_data_t *cib)
 	crm_data_t *tmp_node = NULL;
 	
 	if (cib == NULL) {
-		crm_warn("XML Buffer was empty.");
+		crm_warn("CIB was empty.");
 		return FALSE;
 	}
 	
