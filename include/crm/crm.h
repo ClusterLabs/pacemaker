@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.4 2004/04/12 15:34:50 andrew Exp $ */
+/* $Id: crm.h,v 1.5 2004/04/29 15:24:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,16 +49,10 @@
 
 /* Developmental debug stuff */
 #if 1
-#   define CRM_DEBUG(w)        cl_log(LOG_DEBUG, w)
-#   define CRM_DEBUG2(w,x)     cl_log(LOG_DEBUG, w, x)
-#   define CRM_DEBUG3(w,x,y)   cl_log(LOG_DEBUG, w, x, y)
-#   define CRM_DEBUG4(w,x,y,z) cl_log(LOG_DEBUG, w, x, y, z)
+#   define CRM_DEBUG(w...)        cl_log(LOG_DEBUG, w)
 #else
 /* these wont work yet, need to cast to void */
-#   define CRM_DEBUG(w)		{ (void)w; }
-#   define CRM_DEBUG2(w,x)     	{ (void)w; (void)x; }
-#   define CRM_DEBUG3(w,x,y)  	{ (void)w; (void)x; (void)y; }
-#   define CRM_DEBUG4(w,x,y,z)	{ (void)w; (void)x; (void)y; (void)z; }
+#   define CRM_DEBUG(w...)		if(0) { cl_log(LOG_DEBUG, w); }
 #endif
 
 /* Seriously detailed debug stuff */
