@@ -141,8 +141,6 @@ do_msg_route(long long action,
 	xmlNodePtr xml_message = (xmlNodePtr)data;
 	gboolean routed = FALSE, defer = TRUE, do_process = TRUE;
 
-	
-
 #if 0
 /*	if(cause == C_IPC_MESSAGE) { */
 		if (crmd_authorize_message(root_xml_node,
@@ -154,6 +152,7 @@ do_msg_route(long long action,
 		}
 /*	} */
 #endif
+
 	if(do_process) {
 		/* try passing the buck first */
 		routed = relay_message(xml_message, cause==C_IPC_MESSAGE);
@@ -168,6 +167,9 @@ do_msg_route(long long action,
 					defer = FALSE;
 					break;
 				case I_DC_HEARTBEAT:
+					defer = FALSE;
+					break;
+				case I_CIB_OP:
 					defer = FALSE;
 					break;
 					
@@ -896,7 +898,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 			   "Sending %sHA message (ref=%s,len=%d) to %s@%s %s.",
 			   broadcast?"broadcast ":"directed ",
 			   xmlGetProp(root, XML_ATTR_REFERENCE), xml_len,
-			   sys_to, host_to==NULL?"<all>":host_to,
+			   crm_str(sys_to), host_to==NULL?"<all>":host_to,
 			   all_is_good?"succeeded":"failed");
 	}
 	
