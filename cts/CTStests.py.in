@@ -1283,6 +1283,7 @@ class ResourceRecover(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name="ResourceRecover"
+        self.start = StartTest(cm)
         self.max=30
 
     def __call__(self, dummy):
