@@ -162,8 +162,6 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 			crm_err("No reply message - empty - %d", rc);
 			rc = cib_reply_failed;
 		}
-		crm_msg_del(reg_msg);
-		reg_msg = NULL;		
 	}
 	
 	if(rc == cib_ok) {
@@ -186,10 +184,13 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 			}
 		}
 
+	}
+
+	if(reg_msg != NULL) {
 		crm_msg_del(reg_msg);
 		reg_msg = NULL;		
 	}
-
+	
 	if(rc == cib_ok) {
 		crm_trace("Registering callback channel with ticket %s",
 			  crm_str(uuid_ticket));
