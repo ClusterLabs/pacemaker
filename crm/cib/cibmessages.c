@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.25 2004/03/26 14:14:25 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.26 2004/03/29 15:40:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,9 +53,9 @@ enum cib_result updateList(xmlNodePtr local_cib,
 
 xmlNodePtr createCibFragmentAnswer(const char *section, xmlNodePtr failed);
 
-void replace_section(const char *section,
-		     xmlNodePtr tmpCib,
-		     xmlNodePtr command);
+gboolean replace_section(const char *section,
+			 xmlNodePtr tmpCib,
+			 xmlNodePtr command);
 
 gboolean check_generation(xmlNodePtr newCib, xmlNodePtr oldCib);
 
@@ -186,6 +186,7 @@ cib_process_request(const char *op,
 		CRM_DEBUG("Storing DC copy of the cib");
 		cib_updates = find_xml_node(fragment, XML_TAG_CIB);
 
+#if 0
 		/* copy in any version tags etc verbatum */
 		copy_in_properties(tmpCib, cib_updates);
 		
@@ -198,30 +199,39 @@ cib_process_request(const char *op,
 		updateList(tmpCib, fragment, failed,
 			   CIB_OP_MODIFY,
 			   XML_CIB_TAG_STATUS);
-
+#endif
 		if(check_generation(cib_updates, tmpCib) == FALSE)
 			*result = CIBRES_FAILED_STALE;
-		else if (activateCibXml(tmpCib, CIB_FILENAME) < 0)
+		else if (activateCibXml(cib_updates, CIB_FILENAME) < 0)
 			*result = CIBRES_FAILED_ACTIVATION;
-
+		else {
+			/* incorporate the info from the DC and then
+			 * send it back
+			 */
+#if 0
+			remove <status id=us><lrm id=*> from cib_updates;
+			query lrm, populate <status id=us><lrm id=*>
+#endif
+		}
+		
 		/* Force a pick-up of the merged status section and send it
 		 * back to the DC (but only if the DC asked for it by
 		 * setting verbose=true)
 		 */
-//		verbose = "true"; 
 		section = XML_CIB_TAG_STATUS;
 		
 	} else if (strcmp("replace", op) == 0) {
 		CRM_DEBUG2("Replacing section=%s of the cib", section);
-		xmlNodePtr tmpCib = find_xml_node(fragment, XML_TAG_CIB);
+		xmlNodePtr tmpCib = NULL;
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 		
-		if (strcmp("all", section) == 0) {
-			replace_section(XML_CIB_TAG_NODES,    tmpCib,fragment);
-			replace_section(XML_CIB_TAG_RESOURCES,tmpCib,fragment);
-			replace_section(XML_CIB_TAG_STATUS,   tmpCib,fragment);
-			replace_section(XML_CIB_TAG_CONSTRAINTS,tmpCib,fragment);
+		if (section == NULL
+		    || strlen(section) == 0
+		    || strcmp("all", section) == 0) {
+			tmpCib = find_xml_node(fragment, XML_TAG_CIB);
+
 		} else {
+			tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
 			replace_section(section, tmpCib, fragment);
 		}
 
@@ -310,7 +320,7 @@ cib_process_request(const char *op,
 	FNRET(cib_answer);
 }
 
-void
+gboolean
 replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 {
 	xmlNodePtr parent = NULL,
@@ -329,13 +339,13 @@ replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 		cl_log(LOG_ERR,
 		       "The CIB is corrupt, cannot replace missing section %s",
 		       section);
-		FNOUT();
+		FNRET(FALSE);
 
 	} else if(new_section == NULL) {
 		cl_log(LOG_ERR,
 		       "The CIB is corrupt, cannot set section %s to nothing",
 		       section);
-		FNOUT();
+		FNRET(FALSE);
 	}
 
 	parent = old_section->parent;
@@ -347,7 +357,7 @@ replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 	/* add the new copy */
 	add_node_copy(parent, new_section);
 	
-	FNOUT();
+	FNRET(TRUE);
 }
 
 
