@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.18 2005/02/07 11:09:47 andrew Exp $ */
+/* $Id: messages.c,v 1.19 2005/02/09 11:37:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -452,10 +452,16 @@ cib_process_modify(
 	cib_update = find_xml_node(input, XML_TAG_CIB, TRUE);
 	
 	/* do logging */
-			
 	the_update = get_object_root(section, cib_update);
-	cib_pre_notify(op, get_object_root(section, get_the_CIB()), the_update);
 
+	crm_validate_data(the_update);
+	crm_validate_data(tmpCib);
+
+	cib_pre_notify(op, get_object_root(section, tmpCib), the_update);
+
+	crm_validate_data(the_update);
+	crm_validate_data(tmpCib);
+	
 	result = revision_check(the_update, tmpCib, options);		
 	copy_in_properties(tmpCib, cib_update);
 	
@@ -544,7 +550,7 @@ replace_section(const char *section, crm_data_t *tmpCib, crm_data_t *fragment)
 		return FALSE;
 	}
 
-	crm_element_parent(old_section, parent);
+	parent = crm_element_parent(old_section);
 	
 	/* unlink and free the old one */
 	unlink_xml_node(old_section);
@@ -701,32 +707,43 @@ update_results(
 enum cib_errors
 revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 {
-	const char *revision = crm_element_value(cib_update, XML_ATTR_CIB_REVISION);
-	const char *cur_revision = crm_element_value(cib_copy, XML_ATTR_CIB_REVISION);
+	const char *revision = crm_element_value(
+		cib_update, XML_ATTR_CIB_REVISION);
+	const char *cur_revision = crm_element_value(
+		cib_copy, XML_ATTR_CIB_REVISION);
 
+	crm_validate_data(cib_update);
+	crm_validate_data(cib_copy);
+	
 	if(revision == NULL) {
 		return cib_ok;
 
-	} else if(cur_revision == NULL || strcmp(revision, cur_revision) > 0) {
+	} else if(cur_revision == NULL
+		  || strcmp(revision, cur_revision) > 0) {
 		crm_info("Updating CIB revision to %s", revision);
 		set_xml_property_copy(
 			cib_copy, XML_ATTR_CIB_REVISION, revision);
 	} else {
 		/* make sure we end up with the right value in the end */
-		set_xml_property_copy(
+		revision = set_xml_property_copy(
 			cib_update, XML_ATTR_CIB_REVISION, cur_revision);
 	}
 	
 	if(strcmp(revision, cib_feature_revision_s) > 0) {
 		if(cib_is_master) {
-			crm_err("Update uses an unsupported tag/feature");
+			crm_err("Update uses an unsupported tag/feature:"
+				" %s vs %s",
+				revision, cib_feature_revision_s);
+			CRM_ASSERT(FALSE); /* do not commit */
 			return cib_revision_unsupported;
 
 		} else if(flags & cib_scope_local) {
 			 /* an admin has forced a local change using a tag we
 			  * dont understand... ERROR
 			  */
-			crm_err("Update uses an unknown tag/feature");
+			crm_err("Local update uses an unsupported tag/feature:"
+				" %s vs %s",
+				revision, cib_feature_revision_s);
 			return cib_revision_unsupported;
 		}
 	}
