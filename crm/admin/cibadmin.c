@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.20 2005/02/10 11:06:05 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.21 2005/02/11 15:26:03 alan Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -565,7 +565,8 @@ void cibadmin_op_callback(
 			cib_action, rc, cib_error2string(rc));
 		fprintf(stderr, "Call %s failed (%d): %s\n",
 			cib_action, rc, cib_error2string(rc));
-		fprintf(stdout, "%s\n", admin_input_xml);
+		fprintf(stdout, "%s\n"
+		,	admin_input_xml ? admin_input_xml : "<null>");
 
 	} else if(safe_str_eq(cib_action, CRM_OP_CIB_QUERY) && output==NULL) {
 		crm_err("Output expected in query response");
