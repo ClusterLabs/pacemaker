@@ -203,8 +203,9 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 
 	if(from == NULL || strcmp(from, fsa_our_uname) == 0) {
 #ifdef MSG_LOG
-		fprintf(msg_in_strm, "Discarding message [F_SEQ=%s] from ourselves.",
-			   ha_msg_value(msg, F_SEQ));
+		fprintf(msg_in_strm,
+			"Discarded message [F_SEQ=%s] from ourselves.\n",
+			ha_msg_value(msg, F_SEQ));
 #endif
 		FNOUT();
 	}

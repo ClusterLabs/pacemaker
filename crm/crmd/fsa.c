@@ -827,6 +827,12 @@ fsa_action2string(long long action)
 		case A_ELECTION_TIMEOUT:
 			actionAsText = "A_ELECTION_TIMEOUT";
 			break;
+		case A_ELECT_TIMER_START:
+			actionAsText = "A_ELECT_TIMER_START";
+			break;
+		case A_ELECT_TIMER_STOP:
+			actionAsText = "A_ELECT_TIMER_STOP";
+			break;
 		case A_ELECTION_VOTE:
 			actionAsText = "A_ELECTION_VOTE";
 			break;
