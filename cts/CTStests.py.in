@@ -1174,9 +1174,10 @@ class RedundantpathTest(CTSTest):
         return self.success()
 
     def is_applicable(self):
-        '''It is always applicable'''
+        '''It is applicable when you have more than one connection'''
         return self.PathCount()[0] > 1
 
+# FIXME!!  Why is this one commented out?
 #AllTestClasses.append(RedundantpathTest)
 
 ##########################################################################
