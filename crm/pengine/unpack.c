@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.35 2004/10/08 18:28:49 andrew Exp $ */
+/* $Id: unpack.c,v 1.36 2004/10/20 13:54:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -521,6 +521,7 @@ unpack_status(xmlNodePtr status,
 gboolean
 determine_online_status(xmlNodePtr node_state, node_t *this_node)
 {
+	gboolean online = FALSE;
 	const char *uname      = xmlGetProp(node_state,XML_ATTR_UNAME);
 /*	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE); */
 	const char *exp_state  = xmlGetProp(node_state,XML_CIB_ATTR_EXPSTATE);
@@ -534,15 +535,18 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 	   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
 	   && safe_str_eq(crm_state, ONLINESTATUS)
 	   && shutdown == NULL) {
-		this_node->details->online = TRUE;
+		if(this_node != NULL) {
+			this_node->details->online = TRUE;
+		}
 		crm_debug("Node %s is online", uname);
-
-	} else {
+		online = TRUE;
+		
+	} else if(this_node != NULL) {
 		/* remove node from contention */
 		this_node->weight = -1;
 		this_node->fixed = TRUE;
 
-		crm_verbose("join_state %s, expected %s, shutdown %s",
+		crm_verbose("join_state=%s, expected=%s, shutdown=%s",
 			    crm_str(join_state), crm_str(exp_state),
 			    crm_str(shutdown));
 
@@ -567,29 +571,36 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 			crm_info("Node %s is due for shutdown", uname);
 		}
 	}
-	return TRUE;
+	return online;
 }
 
 gboolean
 is_node_unclean(xmlNodePtr node_state)
 {
 /*	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE); */
+	const char *uname      = xmlGetProp(node_state,XML_ATTR_UNAME);
 	const char *exp_state  = xmlGetProp(node_state,XML_CIB_ATTR_EXPSTATE);
 	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
 	const char *ccm_state  = xmlGetProp(node_state,XML_CIB_ATTR_INCCM);
 
 	if(safe_str_eq(exp_state, CRMD_STATE_INACTIVE)) {
+		crm_debug("Node %s is safely inactive", uname);
 		return FALSE;
 
 	/* do an actual calculation once STONITH is available */
 	} else if(safe_str_neq(exp_state, CRMD_JOINSTATE_DOWN)) {
 
-		if(safe_str_eq(crm_state, CRMD_STATE_INACTIVE)
+		if(safe_str_eq(crm_state, OFFLINESTATUS)
 		   || safe_str_eq(join_state, CRMD_JOINSTATE_DOWN)
-		   || safe_str_eq(ccm_state, OFFLINESTATUS)) {
+		   || safe_str_eq(ccm_state, XML_BOOLEAN_NO)) {
+			crm_warn("Node %s is un-expectedly down", uname);
 			return TRUE;
 		}
+		crm_debug("Node %s: join=%s, crm=%s, ccm=%s",
+			  uname, join_state, crm_state, ccm_state);
+	} else {
+		crm_debug("Node %s was expected to be down", uname);
 	}
 
 	return FALSE;
