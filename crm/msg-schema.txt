@@ -1,0 +1,190 @@
+Message scenarios:
+##################
+1) Sub-system <--(IPC)--> CRM <--(IPC)--> Sub-system 
+2) Sub-system <--(IPC)--> Local CRM <--(Heartbeat)--> Remote CRM <--(IPC)--> Sub-system 
+3) Admin Client <--(Heartbeat Broadcast)--> Remote CRM <--(IPC)--> Sub-system 
+
+Message examples:
+##################
+1.1) the DC telling the local LRM to start a resource
+1.2) the LRM asking the CIB about a resource
+
+2.1) the DC telling a remote LRM to start a resource
+2.2) the DC asking (all) the CIB(s) to provide their view of the world
+
+3.1) an admin request to add/remove/modify a resource
+3.2) an admin request to force a failover of a resource or a recomputation of the resource dependancies.
+
+Message Notes:
+##################
+Messages may be sent to the CRM from local sub-systems via IPC or from other HA clients via Heartbeat.  It is then the responsibility of the CRM to unpack the message and pass it on to the correct sub-system.  If the destination sub-system is the DC and the DC is not running on the current node, the message is discarded without error.
+
+
+Where the DC recieves a message from another node, it will also keep track of the sending host and the reference number so that it can direct the replies appropriately.  The exception to this is where the message is from the DC.  
+
+Messages to the DC are *always* sent as broadcast messages and the DC *must always* acknowledge the message with either the results of the message or a "thankyou" message.  The reason for this is that the DC may change or a DC election may be in progress.  The implication of this is that the sender should always set a timer and resend dc_messages if they have not been acknowledged.  The DC will be able to detect duplicates by examining the destination sub-system and the reference number and we will rely on HA to ensure the delivery of DC responses.
+
+Only the *_request or *_response piece of the message is passed *to* the relevant sub-system.  However, to make life easier for the CRM (aka. the message broker), all responses *from* the sub-systems are a full crm_message so that the CRM can process messages recieved via IPC and HA in the same way.
+
+Schema Notes:
+###################
+
+Key Attributes
+===============
+reference:	provides the ability to track which request a responce is in relation to and 
+			 where the local CRM should send it.
+*_filter:	allow the operation to be limited to a particular type, id and/or priority
+timeout:	allows the receiver to know how long the sender is expecting the task to 
+			take so we can act and report back accordingly.
+
+Key Operations
+===============
+shutdown:   	enable the CRM to shutdown a particular sub-system
+respawn:    	enable the CRM to restart a particular sub-system
+reconnect,disconnect: 	enable lmb's "CRM disconnect" feature
+noop: 		a sensible default for "constructor functions" to use
+ping:		allow the CRM to determin if a sub-system is alive
+deep_ping:	allow the DC to determin which sub-systems of a remote CRM are alive
+cib_op:		Send a CIB update (most likely an admin request) to the DC's CIB which will 
+			then propogate the change if it is valid.
+validate:	Check if an update to the running cluster will result in failed dependancies.
+validate_clean: Check if an update will result in failed dependancies if all nodes in the cluster 
+			were behaving correctly (Ie. ignore any system generated constraints).
+replace:        Tells the CIB to accept the CIB (or fragment) as sent instead of doing an object by
+		object update. 
+
+Attribute values
+=================
+Where the list ends with |... , the complete list of possibilities will be fleshed out at a later date.
+
+
+Message Schema:
+###################
+
+<!ELEMENT crm_message (request|response)>
+<!ATTLIST crm_message
+          version          #CDATA                       '1'
+	  message_type	   (none|request|response)	'none'
+          src_subsystem    (none|crm|dc|cib|lrm|admin)	'none'
+          dest_subsystem   (none|crm|dc|cib|lrm|admin)	'none'
+	  reference	   #CDATA
+          timestamp        #CDATA                       '0'>
+
+<!ELEMENT request (dc_request|cib_request|lrm_request|pe_request|te_request)+>
+<!ATTLIST request>
+
+<!ELEMENT dc_request cib_request?>
+<!ATTLIST dc_request
+          dc_operation	(noop|ping|deep_ping|dc_query|cib_op)	'noop'
+	  reference	#CDATA
+          timeout       #CDATA          '0'>
+
+<!ELEMENT crm_request cib_request?>
+<!ATTLIST crm_request
+          crm_operation	(noop|ping|deep_ping|dc_query)	'noop'
+	  reference	#CDATA
+          timeout       #CDATA          '0'>
+
+<!ELEMENT lrm_request>
+<!ATTLIST lrm_request
+          lrm_operation    (noop|ping|query|start|stop|restart|shutdown|respawn|disconnect|reconnect)	'noop'
+          type_filter?     #CDATA
+	  id_filter?	   #CDATA
+	  reference	   #CDATA
+          timeout          #CDATA       '0'>
+
+<!ELEMENT pe_request>
+<!ATTLIST pe_request
+          pe_operation    (noop|ping|validate|validate_clean|calculate|shutdown|respawn|disconnect|reconnect)	'noop'
+	  reference	   #CDATA
+          timeout          #CDATA       '0'>
+
+<!ELEMENT te_request (existing_cib,target_cib)>
+<!ATTLIST te_request
+          te_operation    (noop|ping|calculate|shutdown|respawn|disconnect|reconnect)	'noop'
+          type_filter?     #CDATA	<!-- might be useful later -->
+	  id_filter?	   #CDATA	<!-- might be useful later -->
+	  priority_filter? #CDATA	<!-- might be useful later -->
+          timeout          #CDATA       '0'>
+
+<!ELEMENT existing_cib (cib)>
+<!ATTLIST existing_cib>
+
+<!ELEMENT target_cib (cib)>
+<!ATTLIST target_cib>
+
+<!ELEMENT cib_request (cib)>
+<!-- 
+The value for timestamp is the one that should be used for all updates and adds.
+ -->
+<!ATTLIST cib_request
+          cib_operation    (noop|ping|query|add|update|delete|replace|respawn|disconnect|reconnect)	'noop'
+          cib_section      (none|all|nodes|resources|constraints|status)			'none'
+          verbose	   (true|false)								'false'
+	  reference	   #CDATA
+          timeout          #CDATA       '0'>
+
+<!ELEMENT response (dc_response|cib_response|lrm_response|pe_response|te_response)>
+<!ATTLIST response>
+
+<!-- 
+The DC raely has anything interesting to say itself... more it is a broker for the CIB and LRM.
+-->
+<!ELEMENT dc_response (ping_item*|cib_response|lrm_response)>
+<!ATTLIST dc_response
+	  reference	    #CDATA
+	  i_am_dc	    (yes|no)	'no'>
+
+<!ELEMENT crm_response (ping_item*)>
+<!ATTLIST crm_response
+	  reference	    #CDATA
+	  i_am_dc	    (yes|no)	'no'>
+
+<!ELEMENT ping_item>
+<!ATTLIST ping_item
+	  crm_subsystem    (none|crm|dc|cib|lrm)		    'none'
+	  ping_status	   (error|timeout|stopped|running|sick)	    'timeout'>
+
+<!ELEMENT lrm_response (cib_fragment, res_failed?)|ping_item>
+<!ATTLIST lrm_response
+	  reference	   #CDATA>
+
+<!ELEMENT pe_response (cib, res_action_list?, res_failed?)|ping_item>
+<!ATTLIST pe_response
+	  reference	   #CDATA>
+
+<!ELEMENT te_response (cib, res_failed?)|ping_item>
+<!ATTLIST te_response
+	  reference	   #CDATA>
+
+<!ELEMENT res_failed (failed_resource)*>
+<!ATTLIST res_failed>
+
+<!ELEMENT failed_resource>
+<!ATTLIST failed_resource 
+	  res_id		#CDATA
+	  reason?		(unknown|...)					'unknown'
+          lrm_operation         (noop|start|stop|restart)	'noop'
+	  resource_status	(stopped|starting|running|stopping|failed)	'stopped'>
+
+<!-- unless verbose was specified, if everything went well just set action_result=ok -->
+<!ELEMENT cib_response ((cib_fragment,obj_failed?)|(ping_item))?>
+<!ATTLIST cib_response
+	  reference	    #CDATA
+	  action_result	    (ok|failed|...)>
+
+<!-- always describe which part of the cib are being returned -->
+<!ELEMENT cib_fragment (cib)>
+<!ATTLIST cib_fragment
+          cib_section      (none|all|nodes|resources|constraints|status)        'none'>
+
+<!ELEMENT obj_failed (failed_update)*>
+<!ATTLIST obj_failed>
+
+<!ELEMENT failed_update>
+<!ATTLIST failed_update 
+	  id			#CDATA
+          object_type		(none|node|resource|constraint|state)   'none'
+          operation		(none|add|update|delete|replace)        'none'
+	  reason?		(unknown|...)				'unknown'>
+

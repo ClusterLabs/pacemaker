@@ -1,0 +1,126 @@
+Points of Entry
+##################
+
+Inter CRM Messaging
+=======================
+Security relies on the existing systems in place for sending HA Messages.  The assumption here is that once a member node has been compromised, you've pretty much had it anyway.
+
+CRM Internal Messaging
+=======================
+Security relies on the existing systems in place for sending IPC Messages.  Remember, once a member node has been compromised, you've pretty much had it anyway.
+
+Admin client X, Y
+=======================
+Security replies on standard RPC mechanisms of hosts.allow/hosts.deny etc.  It is likely that this would be augmented by adding an identity store (leading candidates would be the CIB and /etc/passwd) and authorization mechanisms to the CRM RPC Server processes.  
+To achieve a moderatly sensible level of security granularity, the API should at least be split up into the following list of RPC Servers:
+cib_delete
+cib_update
+cib_create
+crm_admin
+
+
+Admin client Z
+=======================
+See: Inter CRM Messaging
+
+Potential Exploits
+=======================
+These exclude things like faking HA Messages, hacking IPC fifo's and for the moment packet sniffing of RPC requests.
+.
+The "Measures" section is intended to contain messures to prevent the attack or to at least raise the bar for potential intruders. 
+
+
+Exploit Class #1
+	Desc: Impersonate the DC
+	Requires: Access to the DC
+		  Ability to register with heartbeat as it is currently running[1]
+	Measures: 1, 2, 3, 4, 5
+		    
+Exploit Class #2
+	Desc: Impersonate the local CRMd
+	Requires: Access to the member node
+		  Ability to reconfigure and restart heartbeat 
+	Measures: 4, 5, 7
+	Notes: This attack is pretty much limited to the local node (and any 
+		  shared resources :cringe:) which is no more than they could 
+		  do with access to the node anyway.	    
+
+Exploit Class #3
+	Desc: Impersonate a local CRMd client
+	Requires: Access to a member node
+	Measures: 1, 6
+		    
+Exploit Class #4
+	Desc: Rogue Admin client (Type Z)
+	Requires: Access to a member node
+		  Ability to construct valid XML message
+		  a) Ability to reconfigure and restart heartbeat, or
+		  b) Ability to register with Heartbeat with a currently unused
+		     client name
+	Measures: 8, ?
+	Notes: This is probably the second worst scenario, about all we could potentially do
+	       is implement behavioural pattern recognition and that is :definitly: not 
+	       going to be in 1.0 :)
+
+Exploit Class #5
+	Desc: Rogue Admin client (Type X or Y)
+	Requires: Access to the CRM RPC API
+		  Access to a host with sufficient RPC permissions
+	Measures: 8, 9
+	Notes: This :is: the worst scenario, attackers dont even need access to a member 
+	       node or modify/interrogate the Heartbeat config.  Again, about all we could 
+	       potentially do is implement behavioural pattern recognition.
+
+Exploit Class #6
+	Desc: Data interception - Rogue Admin client (Type Y)
+	Requires: Access to the RPC API
+		  Knowledge of a current, valid and unchecked ticket ID[5]
+	Measures: 8, 9, 10
+	
+Exploit Class #7
+	Desc: Malicious user (Using a Known Admin Client)
+	Requires: Access to a host with sufficient RPC permissions
+		  Access to an existing admin client
+		  a) Access to an identity that the RPC servers deem to have sufficient permissions, or
+		  b) Access to an admin client that passes a pre-defined set of credentials, not the users
+	Measures: 8, 9, 10, 11
+
+List of Measures
+=================
+Measure 1: As the CRMd, verify the "type" attribute when routing IPC messages from 
+	   sub-systems and discard if it is not a response[2]
+
+Measure 2: As the CRMd, verfiy the "from" field on incomming messages and discard 
+	   if it is not "admin" or "dc"
+
+Measure 3: As the CRMd, Verfiy F_ORIG against known value for the DC.  Only the DC 
+	   should be sending us messages[3]
+
+Measure 4: As Heartbeat, only allow clients registered as "crmd" to send messages 
+	   with F_TYPE="CRM"
+
+Measure 5: Respawn the CRMd if it is stopped and drop out of the cluster if
+	   multiple HA clients are trying to register as "crmd"[4]
+
+Measure 6: As CRMd, cause Heartbeat tp drop out of the cluster if multiple clients 
+	   are trying to register as the same sub-system.
+
+Measure 7: As the CIB, detect multiple active registrations and shutdown
+	   when this is detected.
+
+Measure 8: Require the admin clients to provide a credential which must be matched
+	   against an identity store.[6][7]
+
+Measure 9: Configure RPC security appropriatly
+
+Measure 10: Invalidate the ticket and the result set once the ticket has been used.
+
+Measure 11: Dont create admin clients that pass a pre-defined set of credentials
+
+[1] Shutting down Heartbeat to change permissions would mean the DC is assigned elsewhere anyway
+[2] Sub-systems other than the CRMs/DC should not be making requests
+[3] If not implemented, then this exploit would only require acess to any member node
+[4] This is currently reported as an error and the second attempt is denied
+[5]  It is envisioned that in the case of asyncronous RPC calls, that a "ticket" would be issued that the client would use to ask for a result, or perhaps set up a callback.  A second async call would be made to retrieve the result.  Syncronous RPC calls would internally use a different call that would block on this ticket until a result was available.
+[6] Depending on the type of client and where it takes its credentials from, this would either prevent unknown clients or unknown users accessing the CRM (at least until the ID store is hacked)
+[7] After the ID store is decided on, we obviously then need to consider the security surrounding it also

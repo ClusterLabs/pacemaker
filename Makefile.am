@@ -52,11 +52,11 @@ MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
 
 SUBDIRS                 = libltdl doc debian replace include lib \
                         ldirectord heartbeat telecom\
-                        cts linux-ha membership contrib config @SNMP_SUBAGENT_DIR@
+                        cts linux-ha membership contrib config @SNMP_SUBAGENT_DIR@ @CRM_DIR@
 
 DIST_SUBDIRS                 = libltdl doc debian replace include lib \
                         ldirectord heartbeat telecom\
-                        cts linux-ha membership contrib config
+                        cts linux-ha membership contrib config @CRM_DIR@
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
 HBDOCS = doc/heartbeat_api.html
