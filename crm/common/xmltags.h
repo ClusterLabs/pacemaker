@@ -1,4 +1,4 @@
-/* $Id: xmltags.h,v 1.9 2004/03/16 12:06:47 andrew Exp $ */
+/* $Id: xmltags.h,v 1.10 2004/03/18 13:32:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,6 +25,7 @@
 #define XML_TAG_CIB			"cib"
 #define XML_TAG_FAILED			"failed"
 
+#define XML_ATTR_GENERATION		"generation"
 #define XML_ATTR_TIMEOUT		"timeout"
 #define XML_ATTR_TSTAMP			"timestamp"
 #define XML_ATTR_VERSION		"version"

@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.15 2004/03/18 10:29:41 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.16 2004/03/18 13:32:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -232,30 +232,37 @@ find_entity_nested(xmlNodePtr parent,
 
 
 void
-copy_in_properties(xmlNodePtr src, xmlNodePtr target)
+copy_in_properties(xmlNodePtr target, xmlNodePtr src)
 {
-#ifdef XML_TRACE
-	xmlAttrPtr prop_iter = NULL;
-	FNIN();
-
-	prop_iter = src->properties;
-	while(prop_iter != NULL) {
-		const char *local_prop_name = prop_iter->name;
-		const char *local_prop_value =
-			xmlGetProp(src, local_prop_name);
+	if(src == NULL) {
+		cl_log(LOG_WARNING, "No node to copy properties from");
+	} else if (src->properties == NULL) {
+		cl_log(LOG_INFO, "No properties to copy");
+	} else if (target == NULL) {
+		cl_log(LOG_WARNING, "No node to copy properties into");
+	} else {
+#ifndef USE_BUGGY_LIBXML
+		xmlAttrPtr prop_iter = NULL;
+		FNIN();
 		
-		set_xml_property_copy(target,
-				      local_prop_name,
-				      local_prop_value);
-		
-		prop_iter = prop_iter->next;
-		
+		prop_iter = src->properties;
+		while(prop_iter != NULL) {
+			const char *local_prop_name = prop_iter->name;
+			const char *local_prop_value =
+				xmlGetProp(src, local_prop_name);
+			
+			set_xml_property_copy(target,
+					      local_prop_name,
+					      local_prop_value);
+			
+			prop_iter = prop_iter->next;
+		}
+#else
+		xmlCopyPropList(target, src->properties);
+#endif
 	}
 	
 	FNOUT();
-#else
-	xmlCopyPropList(target, src->properties);
-#endif
 }
 
 char * 

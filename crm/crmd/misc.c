@@ -36,7 +36,7 @@ enum crmd_fsa_state cur_state,
 	if(action & A_ERROR) log_type = LOG_ERR;
 	
 	cl_log(log_type,
-	       "Input (%s) was recieved while in state (%s)",
+	       "Input (%s) was received while in state (%s)",
 	       fsa_input2string(current_input),
 	       fsa_state2string(cur_state));
 	

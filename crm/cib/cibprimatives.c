@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.14 2004/03/18 10:26:19 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.15 2004/03/18 13:32:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -155,7 +155,7 @@ updateResource(xmlNodePtr cib, cibResource *anXmlNode)
 		
 		addResource(cib, anXmlNode);
 	} else {
-		copy_in_properties(anXmlNode, res);	
+		copy_in_properties(res, anXmlNode);	
 
 		CRM_DEBUG2("Update: Copying in children for "
 			   XML_CIB_TAG_RESOURCE " (%s).",
@@ -270,7 +270,7 @@ updateConstraint(xmlNodePtr cib, cibConstraint *anXmlNode)
 			   id);
 		addConstraint(cib, anXmlNode);
 	} else {
-		copy_in_properties(anXmlNode, res);	
+		copy_in_properties(res, anXmlNode);	
 
 		CRM_DEBUG2("Update: Copying in children for "
 			   XML_CIB_TAG_CONSTRAINT " (%s).",
@@ -395,7 +395,7 @@ updateHaNode(xmlNodePtr cib, cibHaNode *anXmlNode)
 		       ID(anXmlNode));
 		addHaNode(cib, anXmlNode);
 	} else {
-		copy_in_properties(anXmlNode, res);	
+		copy_in_properties(res, anXmlNode);	
 	}
 	FNRET(0);
 }
@@ -566,7 +566,7 @@ do_status_update(xmlNodePtr old, cibStatus *new)
 	old->children = NULL;
 	
 	the_children = copy_xml_node_recursive(new->children, 1);
-	copy_in_properties(new, old);
+	copy_in_properties(old, new);
 	xmlAddChildList(old, the_children);
 }
 

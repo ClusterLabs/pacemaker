@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.16 2004/03/18 10:21:15 andrew Exp $ */
+/* $Id: cib.c,v 1.17 2004/03/18 13:32:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -94,7 +94,7 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 	xmlNodePtr answer = NULL, root_xml_node = NULL;
 	
 	FNIN();
-		
+
 	while(sender->ops->is_message_pending(sender)) {
 		if (sender->ch_status == IPC_DISCONNECT) {
 			/* The message which was pending for us is that
@@ -121,17 +121,13 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 		cl_log(LOG_DEBUG, "Message %d [text=%s]", lpc, buffer);
 		doc = xmlParseMemory(ha_strdup(buffer), strlen(buffer));
 
-		CRM_DEBUG("Finished parsing buffer as XML");
 		if(doc == NULL) {
 			cl_log(LOG_INFO,
 			       "XML Buffer was not valid...\n Buffer: (%s)",
 			       buffer);
 		}
 
-		CRM_DEBUG("About to interrogate xml");
 		root_xml_node = xmlDocGetRootElement(doc);
-		CRM_DEBUG("Got the root element");
-		
 
 		const char *sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
 		const char *type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
@@ -150,16 +146,8 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 			cl_log(LOG_INFO,
 			       "Message was a response not a request."
 			       "  Discarding");
-		} else if (strcmp(sys_to, CRM_SYSTEM_CIB) == 0) {
-			answer = processCibRequest(root_xml_node);
-			
-			if (send_ipc_reply(sender,
-					   root_xml_node,
-					   answer) == FALSE)
-				cl_log(LOG_WARNING,
-				       "Cib answer could not be sent");
-
-		} else if (strcmp(sys_to, CRM_SYSTEM_DCIB) == 0) {
+		} else if (strcmp(sys_to, CRM_SYSTEM_CIB) == 0
+			|| strcmp(sys_to, CRM_SYSTEM_DCIB) == 0) {
 
 			answer = processCibRequest(root_xml_node);
 
@@ -186,7 +174,6 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 	if(root_xml_node != NULL)
 		free_xml(root_xml_node);
 
-	
 	CRM_DEBUG2("Processed %d messages", lpc);
 	if (sender->ch_status == IPC_DISCONNECT) {
 		cl_log(LOG_ERR, "The server has left us: Shutting down...NOW");

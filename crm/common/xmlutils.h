@@ -1,4 +1,4 @@
-/* $Id: xmlutils.h,v 1.7 2004/03/10 22:34:08 andrew Exp $ */
+/* $Id: xmlutils.h,v 1.8 2004/03/18 13:32:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,7 +32,7 @@
 #include <clplumbing/cl_log.h> 
 #include <libxml/tree.h> 
 
-extern void copy_in_properties(xmlNodePtr src, xmlNodePtr target);
+extern void copy_in_properties(xmlNodePtr target, xmlNodePtr src);
 
 extern xmlNodePtr find_xml_node(xmlNodePtr cib,
 				const char * node_path);

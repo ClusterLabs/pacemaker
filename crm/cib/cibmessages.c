@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.16 2004/03/18 10:48:51 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.17 2004/03/18 13:32:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -139,23 +139,35 @@ processCibRequest(xmlNodePtr command)
 		CRM_DEBUG3("Handling a %s for section=%s of the cib",
 			   CRM_OPERATION_BUMP, section);
 		
+//		copy_in_properties(tmpCib, get_the_CIB()); // not done by copy?!?!?
+		
 		// modify the timestamp
 		set_node_tstamp(tmpCib);
 		char *new_value = NULL;
-		char *old_value = xmlGetProp(tmpCib, "generation");
+		char *old_value = xmlGetProp(get_the_CIB(), XML_ATTR_GENERATION);
+		int int_value = -1;
 		if(old_value != NULL) {
 			new_value = (char*)ha_malloc(128*(sizeof(char)));
-			int int_value = atoi(old_value);
+			int_value = atoi(old_value);
 			sprintf(new_value, "%d", ++int_value);
 		} else {
 			new_value = ha_strdup("0");
 		}
-		
-		set_xml_property_copy(tmpCib, "generation", new_value);
-		ha_free(new_value);
 
-		activateCibXml(tmpCib);
+		cl_log(LOG_DEBUG, "Generation %d(%s)->%s",
+		       int_value, old_value, new_value);
+		
+		set_xml_property_copy(tmpCib, XML_ATTR_GENERATION, new_value);
+		ha_free(new_value);
+		
 		reply_cc = "dc";
+		if(activateCibXml(tmpCib) >= 0) {
+			verbose = "true"; 
+			status = "ok";
+		} else {
+			status = "bump failed";
+		}
+		
 		
 	} else if (strcmp("query", op) == 0) {
 		CRM_DEBUG2("Handling a query for section=%s of the cib",
@@ -170,7 +182,7 @@ processCibRequest(xmlNodePtr command)
 		xmlNodePtr new_cib = createEmptyCib();
 
 		// Preserve generation counters etc
-		copy_in_properties(get_the_CIB(), new_cib);
+		copy_in_properties(new_cib, get_the_CIB());
 		
 		if (activateCibXml(new_cib) < 0)
 			status = "erase of CIB failed";
@@ -215,7 +227,7 @@ processCibRequest(xmlNodePtr command)
 		cib_updates = find_xml_node_nested(command, node_path, 2);
 
 		/* copy in any version tags etc verbatum */
-		copy_in_properties(cib_updates, tmpCib);
+		copy_in_properties(tmpCib, cib_updates);
 		
 		/* replace the following sections verbatum */
 		replace_section(XML_CIB_TAG_NODES,       tmpCib, command);
@@ -539,6 +551,7 @@ createCibFragmentAnswer(const char *section,
 			
 		} else if (strcmp(CRM_SYSTEM_CIB, data->name) == 0
 			   && (section == NULL
+			       || strlen(section) == 0
 			       || strcmp("all", section) == 0)) {
 			CRM_DEBUG("Added entire cib to cib request");
 			add_node_copy(fragment, data);
@@ -569,8 +582,8 @@ createCibFragmentAnswer(const char *section,
 gboolean
 check_generation(xmlNodePtr newCib, xmlNodePtr oldCib)
 {
-	char *new_value = xmlGetProp(newCib, "generation");
-	char *old_value = xmlGetProp(oldCib, "generation");
+	char *new_value = xmlGetProp(newCib, XML_ATTR_GENERATION);
+	char *old_value = xmlGetProp(oldCib, XML_ATTR_GENERATION);
 	int int_new_value = -1;
 	int int_old_value = -1;
 	if(old_value != NULL) int_old_value = atoi(old_value);
