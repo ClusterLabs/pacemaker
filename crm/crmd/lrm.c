@@ -189,7 +189,7 @@ do_lrm_control(long long action,
 					 num_lrm_register_fails,
 					 max_lrm_register_fails);
 				
-				startTimer(wait_timer);
+				crm_timer_start(wait_timer);
 				crmd_fsa_stall();
 				return I_NULL;
 			}
@@ -812,7 +812,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 				call_options);
 			lpc++;
 			
-		} while(call_options != 0 && rc != cib_ok && lpc < 4);
+		} while(rc < cib_ok && lpc < 4);
 		fsa_cib_conn->call_timeout = 0; /* back to the default */		
 
 		/*
@@ -829,7 +829,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 		 *   the next signup or election.
 		 */
 
-		if(call_options == 0) {
+		if(rc > 0) {
 			/* the return code is a call number, not an error
 			 * code
 			 */
