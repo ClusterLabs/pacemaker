@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.19 2004/08/30 03:17:38 msoffen Exp $ */
+/* $Id: fsa_defines.h,v 1.20 2004/09/21 19:40:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,16 +33,17 @@ enum crmd_fsa_state {
 			 * to form a complete and up-to-date picture of
 			 * the CIB
 			 */
+	S_FINALIZE_JOIN,/* integrate that status of new nodes (which is 
+			 * all of them if we have just been elected DC)
+			 * to form a complete and up-to-date picture of
+			 * the CIB
+			 */
         S_NOT_DC,	/* we are in crmd/slave mode */
         S_POLICY_ENGINE,/* Determin the next stable state of the cluster
 			 */
         S_RECOVERY,	/* Something bad happened, check everything is ok
 			 * before continuing and attempt to recover if
 			 * required
-			 */
-        S_RECOVERY_DC,	/* Something bad happened to the DC, check
-			 * everything is ok before continuing and attempt
-			 * to recover if required
 			 */
         S_RELEASE_DC,	/* we were the DC, but now we arent anymore,
 			 * possibly by our own request, and we should 
@@ -175,8 +176,7 @@ enum crmd_fsa_input {
 /* 10 */
 	I_FAIL,		/* The action failed to complete successfully */
 	I_INTEGRATION_TIMEOUT, 
-	I_NODE_JOIN,	/* A node has entered the CCM membership list*/
-	I_NODE_LEFT,	/* A node shutdown (possibly unexpectedly) */
+	I_NODE_JOIN,	/* A node has entered the cluster */
 	I_NOT_DC,	/* We are not and were not the DC before or after
 			 * the current operation or state
 			 */
@@ -199,10 +199,11 @@ enum crmd_fsa_input {
 	I_STARTUP,
 	I_SUCCESS,	/* The action completed successfully */
 
-	I_WELCOME,	/* Welcome a newly joined node */
-	I_WELCOME_ACK,	/* The newly joined node has acknowledged us as
-			   overlord
-			*/
+	I_JOIN_OFFER,	/* The DC is offering membership */
+	I_JOIN_REQUEST,	/* The client is requesting membership */
+	I_JOIN_RESULT,	/* If not the DC: The result of a join request
+			 * Else: A client is responding with its local state info
+			 */
 	
 	I_WAIT_FOR_EVENT, /* we may be waiting for an async task to "happen"
 			   * and until it does, we cant do anything else
@@ -212,6 +213,9 @@ enum crmd_fsa_input {
 
 
 	I_LRM_EVENT,
+
+/* 30 */
+	I_VOTE,
 	
 	/*  ------------ Last input found in table is above ----------- */
 	I_ILLEGAL,	/* This is an illegal value for an FSA input */
@@ -264,30 +268,38 @@ enum crmd_fsa_input {
 #define	A_ELECTION_TIMEOUT	0x0000000000000200ULL
 #define	A_ELECTION_VOTE		0x0000000000000400ULL
 
-
-/* -- Join protocol actions -- */
-#define	A_ANNOUNCE		0x0000000000000800ULL
-	/* Acknowledge the DC as our overlord*/
-#define	A_JOIN_ACK		0x0000000000001000ULL
-	/* Send a welcome message to new node(s) */
-#define	A_JOIN_WELCOME		0x0000000000002000ULL
-	/* Send a welcome message to all nodes */
-#define	A_JOIN_WELCOME_ALL	0x0000000000004000ULL
-	/* Process the remote node's ack of our join message */ 
-#define	A_JOIN_PROCESS_ACK	0x0000000000008000ULL
-
 /* -- Message processing -- */
 	/* Process the queue of requests */
-#define	A_MSG_PROCESS		0x0000000000010000ULL
+#define	A_MSG_PROCESS		0x0000000000001000ULL
 	/* Send the message to the correct recipient */
-#define	A_MSG_ROUTE		0x0000000000020000ULL
+#define	A_MSG_ROUTE		0x0000000000002000ULL
 	/* Put the request into a queue for processing.  We do this every 
 	 * time so that the processing is consistent.  The intent is to 
 	 * allow the DC to keep doing important work while still not
 	 * loosing requests.
 	 * Messages are not considered recieved until processed.
 	 */
-#define	A_MSG_STORE		0x0000000000040000ULL
+#define	A_MSG_STORE		0x0000000000004000ULL
+
+
+/* -- Client Join protocol actions -- */
+#define	A_CL_JOIN_ANNOUNCE	0x0000000000010000ULL
+	/* Request membership to the DC list */
+#define	A_CL_JOIN_REQUEST	0x0000000000020000ULL
+	/* Did the DC accept or reject the request */
+#define	A_CL_JOIN_RESULT	0x0000000000040000ULL
+
+/* -- Server Join protocol actions -- */
+	/* Send a welcome message to new node(s) */
+#define	A_DC_JOIN_OFFER_ONE	0x0000000000080000ULL
+	/* Send a welcome message to all nodes */
+#define	A_DC_JOIN_OFFER_ALL	0x0000000000100000ULL
+	/* Process the remote node's ack of our join message */ 
+#define	A_DC_JOIN_PROCESS_REQ	0x0000000000200000ULL
+	/* Send out the reults of the Join phase */ 
+#define	A_DC_JOIN_FINALIZE	0x0000000000400000ULL
+	/* Send out the reults of the Join phase */ 
+#define	A_DC_JOIN_PROCESS_ACK	0x0000000000800000ULL
 
 /* -- Recovery, DC start/stop -- */
 	/* Something bad happened, try to recover */

@@ -204,8 +204,14 @@ fsa_input2string(enum crmd_fsa_input input)
 		case I_NODE_JOIN:
 			inputAsText = "I_NODE_JOIN";
 			break;
-		case I_NODE_LEFT:
-			inputAsText = "I_NODE_LEFT";
+		case I_JOIN_OFFER:
+			inputAsText = "I_JOIN_OFFER";
+			break;
+		case I_JOIN_REQUEST:
+			inputAsText = "I_JOIN_REQUEST";
+			break;
+		case I_JOIN_RESULT:
+			inputAsText = "I_JOIN_RESULT";
 			break;
 		case I_NOT_DC:
 			inputAsText = "I_NOT_DC";
@@ -240,12 +246,6 @@ fsa_input2string(enum crmd_fsa_input input)
 		case I_TERMINATE:
 			inputAsText = "I_TERMINATE";
 			break;
-		case I_WELCOME:
-			inputAsText = "I_WELCOME";
-			break;
-		case I_WELCOME_ACK:
-			inputAsText = "I_WELCOME_ACK";
-			break;
 		case I_DC_HEARTBEAT:
 			inputAsText = "I_DC_HEARTBEAT";
 			break;
@@ -254,6 +254,9 @@ fsa_input2string(enum crmd_fsa_input input)
 			break;
 		case I_LRM_EVENT:
 			inputAsText = "I_LRM_EVENT";
+			break;
+		case I_VOTE:
+			inputAsText = "I_VOTE";
 			break;
 		case I_ILLEGAL:
 			inputAsText = "I_ILLEGAL";
@@ -283,6 +286,9 @@ fsa_state2string(enum crmd_fsa_state state)
 		case S_INTEGRATION:
 			stateAsText = "S_INTEGRATION";
 			break;
+		case S_FINALIZE_JOIN:
+			stateAsText = "S_FINALIZE_JOIN";
+			break;
 		case S_NOT_DC:
 			stateAsText = "S_NOT_DC";
 			break;
@@ -291,9 +297,6 @@ fsa_state2string(enum crmd_fsa_state state)
 			break;
 		case S_RECOVERY:
 			stateAsText = "S_RECOVERY";
-			break;
-		case S_RECOVERY_DC:
-			stateAsText = "S_RECOVERY_DC";
 			break;
 		case S_RELEASE_DC:
 			stateAsText = "S_RELEASE_DC";
@@ -448,20 +451,29 @@ fsa_action2string(long long action)
 		case A_ELECTION_VOTE:
 			actionAsText = "A_ELECTION_VOTE";
 			break;
-		case A_ANNOUNCE:
-			actionAsText = "A_ANNOUNCE";
+		case A_CL_JOIN_ANNOUNCE:
+			actionAsText = "A_CL_JOIN_ANNOUNCE";
 			break;
-		case A_JOIN_ACK:
-			actionAsText = "A_JOIN_ACK";
+		case A_CL_JOIN_REQUEST:
+			actionAsText = "A_CL_JOIN_REQUEST";
 			break;
-		case A_JOIN_WELCOME:
-			actionAsText = "A_JOIN_WELCOME";
+		case A_CL_JOIN_RESULT:
+			actionAsText = "A_CL_JOIN_RESULT";
 			break;
-		case A_JOIN_WELCOME_ALL:
-			actionAsText = "A_JOIN_WELCOME_ALL";
+		case A_DC_JOIN_OFFER_ALL:
+			actionAsText = "A_DC_JOIN_OFFER_ALL";
 			break;
-		case A_JOIN_PROCESS_ACK:
-			actionAsText = "A_JOIN_PROCESS_ACK";
+		case A_DC_JOIN_OFFER_ONE:
+			actionAsText = "A_DC_JOIN_OFFER_ONE";
+			break;
+		case A_DC_JOIN_PROCESS_REQ:
+			actionAsText = "A_DC_JOIN_PROCESS_REQ";
+			break;
+		case A_DC_JOIN_PROCESS_ACK:
+			actionAsText = "A_DC_JOIN_PROCESS_ACK";
+			break;
+		case A_DC_JOIN_FINALIZE:
+			actionAsText = "A_DC_JOIN_FINALIZE";
 			break;
 		case A_MSG_PROCESS:
 			actionAsText = "A_MSG_PROCESS";

@@ -46,7 +46,7 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-#define CLIENT_EXIT_WAIT 10
+#define CLIENT_EXIT_WAIT 30
 
 static gboolean stop_subsystem (struct crm_subsystem_s *centry);
 static gboolean start_subsystem(struct crm_subsystem_s *centry);

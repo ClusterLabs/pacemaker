@@ -37,7 +37,6 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-xmlNodePtr do_lrm_query(gboolean);
 
 gboolean build_suppported_RAs(
 	xmlNodePtr metadata_list, xmlNodePtr xml_agent_list);
@@ -326,15 +325,9 @@ do_lrm_query(gboolean is_replace)
 	/* Build a list of active (not always running) resources */
 	build_active_RAs(rsc_list);
 
-#ifndef USE_FAKE_LRM
 	if(is_replace) {
 		set_xml_property_copy(xml_state, "replace", XML_CIB_TAG_LRM);
 	}
-#else
-	if(is_replace) {
-		set_xml_property_copy(xml_data, "replace", "lrm_agents");
-	}
-#endif
 
 	set_uuid(xml_state, XML_ATTR_UUID, fsa_our_uname);
 
@@ -343,34 +336,6 @@ do_lrm_query(gboolean is_replace)
 	
 	return xml_result;
 }
-
-/*	A_UPDATE_NODESTATUS */
-enum crmd_fsa_input
-do_update_node_status(long long action,
-		      enum crmd_fsa_cause cause,
-		      enum crmd_fsa_state cur_state,
-		      enum crmd_fsa_input current_input,
-		      void *data)
-{
-	xmlNodePtr update = NULL;
-
-	if(action & A_UPDATE_NODESTATUS) {
-
-		update = do_lrm_query(TRUE);
-
-		/* this only happens locally.  the updates are pushed out
-		 * as part of the join process
-		 */
-		invoke_local_cib(NULL, update, CRM_OP_UPDATE);
-
-		free_xml(update);
-
-		return I_NULL;
-	}
-
-	return I_ERROR;
-}
-
 
 /*	 A_LRM_INVOKE	*/
 enum crmd_fsa_input

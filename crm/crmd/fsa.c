@@ -35,7 +35,7 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-extern GHashTable *joined_nodes;
+extern int num_join_invites;
 
 long long
 do_state_transition(long long actions,
@@ -185,8 +185,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	enum crmd_fsa_input next_input;
 	enum crmd_fsa_state last_state, cur_state, next_state, starting_state;
 	
-	
-
 	starting_state = fsa_state;
 	cur_input  = initial_input;
 	next_input = initial_input;
@@ -247,6 +245,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		/* update input variables */
 		cur_input = next_input;
 		if(cur_input != I_NULL) {
+			/* record the most recent non I_NULL input */
 			last_input = cur_input;
 		}
 
@@ -258,6 +257,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 #endif
 			actions |= new_actions;
 		}
+
 
 		/* logging : *before* the state is changed */
 		IF_FSA_ACTION(A_ERROR, do_log)
@@ -271,7 +271,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		fsa_state   = next_state;
 
 		/* start doing things... */
-
 
 		/*
 		 * Hook for change of state.
@@ -294,43 +293,30 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 * are performed first
 		 */
 		if(actions == A_NOTHING) {
-
-			crm_info("Nothing to do");
+			crm_debug("Nothing to do");
 			next_input = I_NULL;
-		
-/*			// check registers, see if anything is pending
-			if(is_set(fsa_input_register, R_SHUTDOWN)) {
-				crm_verbose("(Re-)invoking shutdown");
-				next_input = I_SHUTDOWN;
-			} else if(is_set(fsa_input_register, R_INVOKE_PE)) {
-				crm_verbose("Invoke the PE somehow");
-			}
-*/
 		}
 	
-	
 		/* get out of here NOW! before anything worse happens */
-	else IF_FSA_ACTION(A_EXIT_1,	do_exit)
-		
-		else IF_FSA_ACTION(A_STARTUP,	do_startup)
-		
-		else IF_FSA_ACTION(A_CIB_START,  do_cib_control)
+		else IF_FSA_ACTION(A_EXIT_1,		do_exit)
+		else IF_FSA_ACTION(A_STARTUP,		do_startup)
+			
+		else IF_FSA_ACTION(A_CIB_START,		do_cib_control)
 		else IF_FSA_ACTION(A_READCONFIG,	do_read_config)
-		else IF_FSA_ACTION(A_HA_CONNECT, do_ha_control)
-		else IF_FSA_ACTION(A_LRM_CONNECT,do_lrm_control)
-		else IF_FSA_ACTION(A_CCM_CONNECT,do_ccm_control)
+		else IF_FSA_ACTION(A_HA_CONNECT,	do_ha_control)
+		else IF_FSA_ACTION(A_LRM_CONNECT,	do_lrm_control)
+		else IF_FSA_ACTION(A_CCM_CONNECT,	do_ccm_control)
 		
 		/* sub-system start */
-		else IF_FSA_ACTION(A_TE_START,	do_te_control)
-		else IF_FSA_ACTION(A_PE_START,	do_pe_control)
+		else IF_FSA_ACTION(A_TE_START,		do_te_control)
+		else IF_FSA_ACTION(A_PE_START,		do_pe_control)
 		
 		/* sub-system restart
 		 */
-		else IF_FSA_ACTION(O_CIB_RESTART,do_cib_control)
-		else IF_FSA_ACTION(O_PE_RESTART, do_pe_control)
-		else IF_FSA_ACTION(O_TE_RESTART, do_te_control)
-		
-		else IF_FSA_ACTION(A_STARTED,	do_started)
+		else IF_FSA_ACTION(O_CIB_RESTART,	do_cib_control)
+		else IF_FSA_ACTION(O_PE_RESTART,	do_pe_control)
+		else IF_FSA_ACTION(O_TE_RESTART,	do_te_control)
+		else IF_FSA_ACTION(A_STARTED,		do_started)
 		
 		/* DC Timer */
 		else IF_FSA_ACTION(O_DC_TIMER_RESTART,	do_dc_timer_control)
@@ -350,8 +336,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 
 		else IF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
 		else IF_FSA_ACTION(A_RECOVER,		do_recover)
-		else IF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_update_node_status)
-		else IF_FSA_ACTION(A_JOIN_ACK,		do_ack_welcome)
+		else IF_FSA_ACTION(A_CL_JOIN_REQUEST,	do_cl_join_request)
+		else IF_FSA_ACTION(A_CL_JOIN_RESULT,	do_cl_join_result)
 		else IF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
 		else IF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)
 		else IF_FSA_ACTION(A_ELECT_TIMER_STOP,	do_election_timer_ctrl)
@@ -374,11 +360,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		/*
 		 * Medium priority actions
 		 */
-		else IF_FSA_ACTION(A_DC_TAKEOVER,	do_dc_takeover)
-		else IF_FSA_ACTION(A_DC_RELEASE,		do_dc_release)
-		else IF_FSA_ACTION(A_JOIN_WELCOME_ALL,	do_send_welcome_all)
-		else IF_FSA_ACTION(A_JOIN_WELCOME,	do_send_welcome)
-		else IF_FSA_ACTION(A_JOIN_PROCESS_ACK,	do_process_welcome_ack)
+		else IF_FSA_ACTION(A_DC_TAKEOVER,	 do_dc_takeover)
+		else IF_FSA_ACTION(A_DC_RELEASE,	 do_dc_release)
+		else IF_FSA_ACTION(A_DC_JOIN_OFFER_ALL,	 do_dc_join_offer_all)
+		else IF_FSA_ACTION(A_DC_JOIN_OFFER_ONE,	 do_dc_join_offer_one)
+		else IF_FSA_ACTION(A_DC_JOIN_PROCESS_REQ,do_dc_join_req)
+		else IF_FSA_ACTION(A_DC_JOIN_PROCESS_ACK,do_dc_join_ack)
+		else IF_FSA_ACTION(A_DC_JOIN_FINALIZE,	 do_dc_join_finalize)
 		
 		/*
 		 * Low(er) priority actions
@@ -386,13 +374,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 * PE, and the PE before the TE
 		 */
 		else IF_FSA_ACTION(A_CIB_INVOKE_LOCAL,	do_cib_invoke)
-		else IF_FSA_ACTION(A_CIB_INVOKE,		do_cib_invoke)
-		else IF_FSA_ACTION(A_LRM_INVOKE,		do_lrm_invoke)
+		else IF_FSA_ACTION(A_CIB_INVOKE,	do_cib_invoke)
+		else IF_FSA_ACTION(A_LRM_INVOKE,	do_lrm_invoke)
 		else IF_FSA_ACTION(A_LRM_EVENT,		do_lrm_event)
 		else IF_FSA_ACTION(A_TE_CANCEL,		do_te_invoke)
 		else IF_FSA_ACTION(A_PE_INVOKE,		do_pe_invoke)
 		else IF_FSA_ACTION(A_TE_INVOKE,		do_te_invoke)
-		else IF_FSA_ACTION(A_ANNOUNCE,		do_announce)
+		else IF_FSA_ACTION(A_CL_JOIN_ANNOUNCE,	do_cl_join_announce)
 		
 		/* sub-system stop */
 		else IF_FSA_ACTION(A_PE_STOP,		do_pe_control)
@@ -402,11 +390,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		else IF_FSA_ACTION(A_HA_DISCONNECT,	do_ha_control)
 		else IF_FSA_ACTION(A_CCM_DISCONNECT,	do_ccm_control)
 		else IF_FSA_ACTION(A_LRM_DISCONNECT,	do_lrm_control)
-		else IF_FSA_ACTION(A_CIB_STOP,		do_cib_control)		
+		else IF_FSA_ACTION(A_CIB_STOP,		do_cib_control)
+
 		/* time to go now... */
 		
 		/* Some of these can probably be consolidated */
-		else IF_FSA_ACTION(A_SHUTDOWN,   do_shutdown)
+		else IF_FSA_ACTION(A_SHUTDOWN,  do_shutdown)
 		else IF_FSA_ACTION(A_STOP,	do_stop)
 		
 		/* exit gracefully */
@@ -537,20 +526,24 @@ do_state_transition(long long actions,
 	}
 	
 	
-/*	if(current_input != I_NULL */
-/*	   && (current_input != I_DC_HEARTBEAT || cur_state != S_NOT_DC)){ */
-		
-	fprintf(dot_strm,
-		"\t\"%s\" -> \"%s\" [ label =\"%s\" ] // %s",
-		state_from, state_to, input,
-		asctime(localtime(&now)));
-	fflush(dot_strm);
-	/*}*/
+	if(current_input != I_DC_HEARTBEAT && cur_state != S_NOT_DC){
+		fprintf(dot_strm,
+			"\t\"%s\" -> \"%s\" [ label =\"%s\" ] // %s",
+			state_from, state_to, input,
+			asctime(localtime(&now)));
+		fflush(dot_strm);
+	}
 
 	crm_info("State transition \"%s\" -> \"%s\" [ cause =\"%s\" %s ]",
 		 state_from, state_to, input, asctime(localtime(&now)));
 
 	switch(next_state) {
+		case S_ELECTION:
+			fsa_our_dc = NULL;
+			break;
+		case S_INTEGRATION:
+			fsa_our_dc = fsa_our_uname;
+			break;
 		case S_PENDING:
 			break;
 		case S_NOT_DC:
@@ -559,17 +552,19 @@ do_state_transition(long long actions,
 					 " that we have a new DC");
 				tmp = set_bit(tmp, A_SHUTDOWN_REQ);
 			}
+			if(fsa_our_dc == NULL) {
+				crm_err("Reached S_NOT_DC without a DC"
+					" being recorded");
+			}
 			break;
-		case S_RECOVERY_DC:
 		case S_RECOVERY:
 			clear_recovery_bit = FALSE;
 			break;
 		case S_POLICY_ENGINE:
-			if(g_hash_table_size(joined_nodes)
-			   != fsa_membership_copy->members_size) {
+			if(num_join_invites != fsa_membership_copy->members_size) {
 				crm_warn("Only %d (of %d) cluster nodes are"
 					 " eligable to run resources.",
-					 1+g_hash_table_size(joined_nodes),
+					 num_join_invites,
 					 fsa_membership_copy->members_size);
 			} else {
 				crm_info("All %d clusters nodes are"
@@ -619,13 +614,13 @@ clear_flags(long long actions,
 			break;
 		case S_INTEGRATION:
 			break;
+		case S_FINALIZE_JOIN:
+			break;
 		case S_NOT_DC:
 			break;
 		case S_POLICY_ENGINE:
 			break;
 		case S_RECOVERY:
-			break;
-		case S_RECOVERY_DC:
 			break;
 		case S_RELEASE_DC:
 			break;

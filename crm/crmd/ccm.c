@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.34 2004/09/17 13:03:09 andrew Exp $ */
+/* $Id: ccm.c,v 1.35 2004/09/21 19:40:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -152,8 +152,9 @@ do_ccm_event(long long action,
 		 * the case
 		 */
 
-		if(oc->m_n_out !=0) {
-			return_input = I_NODE_LEFT;
+		if(oc->m_n_out != 0) {
+			/* delay this until the CIB update to be interpreted by the TE */
+			return_input = I_NULL;
 
 		} else if(oc->m_n_in !=0) {
 			/* delay the I_NODE_JOIN until they acknowledge our

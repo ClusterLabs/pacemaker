@@ -128,8 +128,8 @@ do_send_welcome_all(long long action,
 	
 	if(joined_nodes != NULL) {
 		g_hash_table_destroy(joined_nodes);
-		joined_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
 	}
+	joined_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
 
 	/* catch any nodes that are active in the CIB but not in the CCM list*/
 	xml_child_iter(
@@ -339,10 +339,9 @@ do_process_welcome_ack(long long action,
 	}
 	
 	/* add them to our list of CRMD_STATE_ACTIVE nodes
-	   TODO: still used?
 	   TODO: check its not already there
 	*/
-	g_hash_table_insert(joined_nodes, strdup(join_from),strdup(join_from));
+	g_hash_table_insert(joined_nodes, strdup(join_from), strdup(join_from));
 
 	if(cib_fragment == NULL) {
 		crm_err("No status information was part of the"
@@ -388,7 +387,7 @@ do_process_welcome_ack(long long action,
 	set_xml_property_copy(
 		tmp2, XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
 	set_xml_property_copy(
-		tmp2, XML_CIB_ATTR_JOINSTATE,CRMD_JOINSTATE_MEMBER);
+		tmp2, XML_CIB_ATTR_JOINSTATE, CRMD_JOINSTATE_MEMBER);
 
 /* No point hanging around in S_INTEGRATION if we're the only ones here! */
 	if(g_hash_table_size(joined_nodes)

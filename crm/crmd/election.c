@@ -46,7 +46,6 @@ do_election_vote(long long action,
 	/* dont vote if we're in one of these states or wanting to shut down */
 	switch(cur_state) {
 		case S_RECOVERY:
-		case S_RECOVERY_DC:
 		case S_STOPPING:
 		case S_RELEASE_DC:
 		case S_TERMINATE:
@@ -178,22 +177,7 @@ do_election_count_vote(long long action,
 		election_data.winning_bornon = -1; /* maximum integer */
 		
 		crm_trace("We might win... we should vote (possibly again)");
-		election_result = I_DC_TIMEOUT; /* new "default" */
-
-#if 0
-		/* we dont try to predict the winner anymore */
-		g_hash_table_foreach(fsa_membership_copy->members,
-				     ghash_count_vote, &election_data);
-		
-		crm_debug("Election winner should be %s (born_on=%d)",
-		       election_data.winning_uname, election_data.winning_bornon);
-		
-	
-		if(safe_str_eq(election_data.winning_uname, fsa_our_uname)){
-			crm_debug("Election win: lowest born_on and uname");
-			election_result = I_ELECTION_DC;
-		}
-#endif
+		election_result = I_VOTE; /* new "default" */
 	}
 	
 	if(we_loose) {
@@ -281,9 +265,6 @@ do_dc_takeover(long long action,
 	       enum crmd_fsa_input current_input,
 	       void *data)
 {
-	xmlNodePtr update = NULL, fragment = NULL;
-	
-
 	crm_trace("################## Taking over the DC ##################");
 	set_bit_inplace(&fsa_input_register, R_THE_DC);
 
@@ -298,33 +279,12 @@ do_dc_takeover(long long action,
 
 	startTimer(dc_heartbeat);
 
-	if (fsa_cluster_conn->llc_ops->set_cstatus_callback(
-		    fsa_cluster_conn, crmd_client_status_callback, NULL)!=HA_OK){
+	if (HA_OK != fsa_cluster_conn->llc_ops->set_cstatus_callback(
+		    fsa_cluster_conn, crmd_client_status_callback, NULL)) {
 		crm_err("Cannot set client status callback\n");
 		crm_err("REASON: %s\n",
 		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
 	}
-
-	/* just in case */
-	create_node_entry(fsa_our_uname, fsa_our_uname, "member");
-	
-	/* store our state in the CIB (since some fields will not be
-	 *  filled in because the DC doesnt go through the join process
-	 *  with itself
-	 *
-	 * bypass the TE for now, it will be informed in good time
-	 */
-	update = create_node_state(
-		fsa_our_uname, fsa_our_uname,
-		NULL, ONLINESTATUS, CRMD_JOINSTATE_MEMBER);
-	set_xml_property_copy(
-		update,XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
-	
-	fragment = create_cib_fragment(update, NULL);
-	invoke_local_cib(NULL, fragment, CRM_OP_UPDATE);
-
-	free_xml(update);
-	free_xml(fragment);
 
 	/* Async get client status information in the cluster */
 	fsa_cluster_conn->llc_ops->client_status(

@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.1 2004/09/15 09:16:55 andrew Exp $ */
+/* $Id: primatives.c,v 1.2 2004/09/21 19:40:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,8 +51,6 @@
 
 
 void update_node_state(xmlNodePtr existing_node, xmlNodePtr update);
-
-
 
 /* --- Resource */
 
@@ -456,34 +454,6 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 
 		replace = xmlGetProp(new_obj, "replace");
 		
-		if(force == FALSE) {
-			const char *ts_existing  = NULL;
-			const char *ts_new       = NULL;
-
-			/* default to false?
-			 *
-			 * that would mean every node would have to
-			 * carry a timestamp
-			 */
-			gboolean is_update = TRUE;
-			
-			ts_existing  = TSTAMP(equiv_node);
-			ts_new       = TSTAMP(new_obj);
-			
-			if(ts_new != NULL && ts_existing != NULL) {
-				is_update = (strcmp(ts_new, ts_existing) > 0);
-			}
-			
-			if(is_update == FALSE) {
-				crm_err(
-				       "Ignoring old update to <%s id=\"%s\">"
-				       "(%s vs. %s)",
-				       object_name, object_id,
-				       ts_new, ts_existing);
-				return CIBRES_FAILED_STALE;
-			}
-		}
-
 		if(replace != NULL) {
 			xmlNodePtr remove = find_xml_node(equiv_node, replace);
 			if(remove != NULL) {

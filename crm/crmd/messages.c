@@ -50,6 +50,11 @@ gboolean send_ha_reply(
 
 gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);
 
+enum crmd_fsa_input handle_request(xmlNodePtr stored_msg);
+enum crmd_fsa_input handle_response(xmlNodePtr stored_msg);
+enum crmd_fsa_input handle_shutdown_request(xmlNodePtr stored_msg);
+
+
 #ifdef MSG_LOG
 
 #    define ROUTER_RESULT(x) char *msg_text = dump_xml_formatted(xml_relay_message);\
@@ -505,17 +510,187 @@ crmd_authorize_message(
 enum crmd_fsa_input
 handle_message(xmlNodePtr stored_msg)
 {
+	enum crmd_fsa_input next_input = I_NULL;
+	const char *type     = get_xml_attr(
+		stored_msg, NULL, XML_ATTR_MSGTYPE,   TRUE);
+
+	if(safe_str_eq(type, XML_ATTR_REQUEST)) {
+		next_input = handle_request(stored_msg);
+
+	} else if(safe_str_eq(type, XML_ATTR_RESPONSE)) {
+		next_input = handle_response(stored_msg);
+
+	} else {
+		crm_err("Unknown message type: %s", type);
+	}
+
+/* 	crm_verbose("%s: Next input is %s", __FUNCTION__, */
+/* 		   fsa_input2string(next_input)); */
+	
+	return next_input;
+}
+
+
+enum crmd_fsa_input
+handle_request(xmlNodePtr stored_msg)
+{
 	xmlNodePtr wrapper = NULL;
 	enum crmd_fsa_input next_input = I_NULL;
 
 	const char *sys_to   = get_xml_attr(
-		stored_msg, NULL, XML_ATTR_SYSTO,     TRUE);
+		stored_msg, NULL, XML_ATTR_SYSTO, TRUE);
+
+	const char *host_from= get_xml_attr(
+		stored_msg, NULL, XML_ATTR_HOSTFROM, FALSE);
+
+	const char *op       = get_xml_attr(
+		stored_msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
+
+	crm_verbose("Received %s in state %s",
+		    op, fsa_state2string(fsa_state));
+	
+	if(op == NULL) {
+		crm_xml_err(stored_msg, "Bad message");
+
+		/*========== common actions ==========*/
+	} else if(strcmp(op, CRM_OP_VOTE) == 0) {
+		next_input = I_ELECTION;
+		
+	} else if(strcmp(op, "init_shutdown") == 0) {
+		
+		crm_shutdown(SIGTERM);
+		/*next_input = I_SHUTDOWN; */
+		next_input = I_NULL;
+			
+	} else if(strcmp(op, CRM_OP_QUERY) == 0) {
+		
+		next_input = I_CIB_OP;
+
+	} else if(strcmp(op, CRM_OP_PING) == 0) {
+		/* eventually do some stuff to figure out
+		 * if we /are/ ok
+		 */
+		xmlNodePtr ping = createPingAnswerFragment(sys_to, "ok");
+
+		set_xml_property_copy(ping, "crmd_state",
+				      fsa_state2string(fsa_state));
+		
+		wrapper = create_reply(stored_msg, ping);
+		
+		relay_message(wrapper, TRUE);
+		free_xml(wrapper);
+
+	} else if(strcmp(op, CRM_OP_JOINACK) == 0) {
+		next_input = I_JOIN_RESULT;
+				
+	} else if(strcmp(op, "init_shutdown") == 0) {
+		
+		crm_shutdown(SIGTERM);
+		/*next_input = I_SHUTDOWN; */
+		next_input = I_NULL;
+
+#if 0
+		/* probably better to do this via signals on the
+		 * local node
+		 */
+	} else if(strcmp(op, "debug_inc") == 0) {
+		int level = get_crm_log_level();
+		set_crm_log_level(level+1);
+		crm_info("Debug set to %d (was %d)",
+			 get_crm_log_level(), level);
+		
+	} else if(strcmp(op, "debug_dec") == 0) {
+		int level = get_crm_log_level();
+		set_crm_log_level(level-1);
+		crm_info("Debug set to %d (was %d)",
+			 get_crm_log_level(), level);
+#endif		
+		/*========== (NOT_DC)-Only Actions ==========*/
+	} else if(AM_I_DC == FALSE){
+
+		gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
+
+		if(dc_match || fsa_our_dc == NULL) {
+			if(strcmp(op, CRM_OP_HBEAT) == 0) {
+				next_input = I_DC_HEARTBEAT;
+			} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
+				next_input = I_JOIN_OFFER;
+				
+			} else if(fsa_our_dc != NULL
+				  && strcmp(op, CRM_OP_REPLACE) == 0) {
+				next_input = I_CIB_OP;
+			
+			} else if(fsa_our_dc != NULL
+				  && strcmp(op, CRM_OP_UPDATE) == 0) {
+				next_input = I_CIB_OP;
+			
+			} else if(fsa_our_dc != NULL
+				  && strcmp(op, CRM_OP_SHUTDOWN) == 0) {
+				next_input = I_TERMINATE;
+				
+			} else {
+				crm_err("%s didnt expect request: %s",
+					AM_I_DC?"DC":"CRMd", op);
+			}
+			
+		} else {
+			crm_warn("Discarding %s op from %s", op, host_from);
+		}
+
+		/*========== DC-Only Actions ==========*/
+	} else if(AM_I_DC){
+		if(strcmp(op, CRM_OP_TEABORT) == 0) {
+			if(fsa_state != S_INTEGRATION) {
+				next_input = I_PE_CALC;
+
+			} else {	
+				crm_debug("Ignoring %s in state %s."
+					"  Waiting for the integration to"
+					" complete first.",
+					op, fsa_state2string(fsa_state));
+			}
+				
+		} else if(strcmp(op, CRM_OP_TECOMPLETE) == 0) {
+			if(fsa_state == S_TRANSITION_ENGINE) {
+				next_input = I_SUCCESS;
+			} else {
+				crm_warn("Op %s is only valid in state %s..."
+					 "We are in (%s)",
+					 op,
+					 fsa_state2string(S_TRANSITION_ENGINE),
+					 fsa_state2string(fsa_state));
+			}
+
+		} else if(strcmp(op, CRM_OP_CREATE) == 0
+			      || strcmp(op, CRM_OP_UPDATE) == 0
+			      || strcmp(op, CRM_OP_ERASE) == 0
+			      || strcmp(op, CRM_OP_REPLACE) == 0
+			      || strcmp(op, CRM_OP_DELETE) == 0) {
+			next_input = I_CIB_OP;
+				
+		} else if(strcmp(op, CRM_OP_ANNOUNCE) == 0) {
+			next_input = I_NODE_JOIN;
+			
+		} else if(strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
+			/* a slave wants to shut down */
+			/* create cib fragment and add to message */
+			next_input = handle_shutdown_request(stored_msg);
+			
+		} else {
+			crm_err("Unexpected request (op=%s) sent to the %s",
+				op, AM_I_DC?"DC":"CRMd");
+		}		
+	}
+	return next_input;
+}
+
+enum crmd_fsa_input
+handle_response(xmlNodePtr stored_msg)
+{
+	enum crmd_fsa_input next_input = I_NULL;
 
 	const char *sys_from = get_xml_attr(
 		stored_msg, NULL, XML_ATTR_SYSFROM,   TRUE);
-
-	const char *host_from= get_xml_attr(
-		stored_msg, NULL, XML_ATTR_HOSTFROM,  FALSE);
 
 	const char *msg_ref  = get_xml_attr(
 		stored_msg, NULL, XML_ATTR_REFERENCE, TRUE);
@@ -526,202 +701,98 @@ handle_message(xmlNodePtr stored_msg)
 	const char *op       = get_xml_attr(
 		stored_msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
 
-/*	crm_xml_devel(stored_msg, "Processing message"); */
-
 	crm_verbose("Received %s %s in state %s",
 		    op, type, fsa_state2string(fsa_state));
 	
-	if(type == NULL || op == NULL) {
-		crm_err("Ignoring message (type=%s), (op=%s)",
-		       type, op);
-		crm_xml_devel(stored_msg, "Bad message");
-		
-	} else if(strcmp(type, XML_ATTR_REQUEST) == 0){
-		if(strcmp(op, CRM_OP_HBEAT) == 0) {
-			next_input = I_DC_HEARTBEAT;
+	if(op == NULL) {
+		crm_xml_err(stored_msg, "Bad message");
 
-		} else if(strcmp(op, CRM_OP_VOTE) == 0) {
-			next_input = I_ELECTION;
+	} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
+			next_input = I_JOIN_REQUEST;
 				
-		} else if(AM_I_DC && strcmp(op, CRM_OP_TEABORT) == 0) {
-			if(fsa_state != S_INTEGRATION) {
-				next_input = I_PE_CALC;
+	} else if(strcmp(op, CRM_OP_JOINACK) == 0) {
+			next_input = I_JOIN_RESULT;
+				
+	} else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
 
-			} else {	
-				crm_debug("Ignoring %s in state %s."
-					"  Waiting for the integration to"
-					" complete first.",
-					op, fsa_state2string(fsa_state));
-			}
+		if(fsa_state == S_POLICY_ENGINE
+		   && safe_str_eq(msg_ref, fsa_pe_ref)) {
+			next_input = I_SUCCESS;
+		} else if(fsa_state != S_POLICY_ENGINE) {
+			crm_err("Reply to %s is only valid in state %s",
+				op, fsa_state2string(S_POLICY_ENGINE));
 			
-				
-		} else if(AM_I_DC
-			  && strcmp(op, CRM_OP_TECOMPLETE) == 0) {
-			if(fsa_state == S_TRANSITION_ENGINE) {
-				next_input = I_SUCCESS;
-/* silently ignore? probably means the TE is signaling OK too early
-			} else {
-				crm_warn(
-				       "Op %s is only valid in state %s (%s)",
-				       op,
-				       fsa_state2string(S_TRANSITION_ENGINE),
-				       fsa_state2string(fsa_state));
-*/
-			}	
-				
-		} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
-			next_input = I_WELCOME;
-				
-		} else if(strcmp(op, "init_shutdown") == 0) {
-
-			crm_warn("This method of shutting down is somewhat untested");
-			crm_shutdown(SIGTERM);
-			/*next_input = I_SHUTDOWN; */
-			next_input = I_NULL;
-				
-		} else if(strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
-
-			/* create cib fragment and add to message */
-
-			/* handle here to avoid potential version issues
-			 *   where the shutdown message/proceedure may have
-			 *   been changed in later versions.
-			 *
-			 * This way the DC is always in control of the shutdown
-			 */
-
-			xmlNodePtr frag = NULL;
-			time_t now = time(NULL);
-			char *now_s = crm_itoa((int)now);
-			xmlNodePtr node_state =
-				create_xml_node(NULL, XML_CIB_TAG_STATE);
-
-			crm_info("Creating shutdown request for %s",host_from);
-			
-			set_uuid(node_state, XML_ATTR_UUID, host_from);
-			set_xml_property_copy(
-				node_state, XML_ATTR_UNAME, host_from);
-			set_xml_property_copy(
-				node_state, XML_CIB_ATTR_SHUTDOWN,  now_s);
-			set_xml_property_copy(
-				node_state,
-				XML_CIB_ATTR_EXPSTATE,
-				CRMD_STATE_INACTIVE);
-
-			frag = create_cib_fragment(node_state, NULL);
-			xmlAddChild(stored_msg, frag);
-
-			free_xml(node_state);
-			crm_free(now_s);
-			
-			next_input = I_CIB_OP;
-				
-		} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
-			next_input = I_TERMINATE;
-			
-		} else if(strcmp(op, "debug_inc") == 0) {
-			int level = get_crm_log_level();
-			set_crm_log_level(level+1);
-			crm_info("Debug set to %d (was %d)",
-				 get_crm_log_level(), level);
-
-		} else if(strcmp(op, "debug_dec") == 0) {
-			int level = get_crm_log_level();
-			set_crm_log_level(level-1);
-			crm_info("Debug set to %d (was %d)",
-				 get_crm_log_level(), level);
-			
-		} else if(strcmp(op, CRM_OP_ANNOUNCE) == 0) {
-			next_input = I_NODE_JOIN;
-			
-		} else if(strcmp(op, CRM_OP_REPLACE) == 0
-			|| strcmp(op, CRM_OP_QUERY) == 0
-			|| strcmp(op, CRM_OP_ERASE) == 0) {
-			next_input = I_CIB_OP;
-			fprintf(router_strm, "Message result: CIB Op\n");
-
-		} else if(AM_I_DC
-			  && (strcmp(op, CRM_OP_CREATE) == 0
-			      || strcmp(op, CRM_OP_UPDATE) == 0
-			      || strcmp(op, CRM_OP_DELETE) == 0)) {
-			/* updates should only be performed on the DC */
-			next_input = I_CIB_OP;
-				
-		} else if(strcmp(op, CRM_OP_PING) == 0) {
-			/* eventually do some stuff to figure out
-			 * if we /are/ ok
-			 */
-			xmlNodePtr ping =
-				createPingAnswerFragment(sys_to, "ok");
-
-			set_xml_property_copy(ping, "crmd_state",
-					      fsa_state2string(fsa_state));
-
-			wrapper = create_reply(stored_msg, ping);
-
-			relay_message(wrapper, TRUE);
-			free_xml(wrapper);
-				
 		} else {
-			crm_err("Unexpected request (op=%s) sent to the %s",
-				op, AM_I_DC?"DC":"CRMd");
+			crm_verbose("Skipping superceeded reply from %s",
+				    sys_from);
 		}
 		
-	} else if(strcmp(type, XML_ATTR_RESPONSE) == 0) {
+	} else if(strcmp(op, CRM_OP_VOTE) == 0
+		  || strcmp(op, CRM_OP_HBEAT) == 0
+		  || strcmp(op, CRM_OP_WELCOME) == 0
+		  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
+		  || strcmp(op, CRM_OP_SHUTDOWN) == 0
+		  || strcmp(op, CRM_OP_ANNOUNCE) == 0) {
+		next_input = I_NULL;
+		
+	} else if(strcmp(op, CRM_OP_CREATE) == 0
+		  || strcmp(op, CRM_OP_UPDATE) == 0
+		  || strcmp(op, CRM_OP_DELETE) == 0
+		  || strcmp(op, CRM_OP_REPLACE) == 0
+		  || strcmp(op, CRM_OP_ERASE) == 0) {
+		
+		/* perhaps we should do somethign with these replies,
+		 * especially check that the actions passed
+		 */
+/* 		fprintf(router_strm, "Message result: CIB Reply\n"); */
 
-		if(strcmp(op, CRM_OP_WELCOME) == 0) {
-			next_input = I_WELCOME_ACK;
-				
-		} else if(AM_I_DC
-			  && strcmp(op, CRM_OP_PECALC) == 0) {
-
-			if(fsa_state == S_POLICY_ENGINE
-			   && safe_str_eq(msg_ref, fsa_pe_ref)) {
-				next_input = I_SUCCESS;
-			} else if(fsa_state != S_POLICY_ENGINE) {
-				crm_err("Reply to %s is only valid in state %s",
-					op, fsa_state2string(S_POLICY_ENGINE));
-				
-			} else {
-				crm_verbose("Skipping superceeded reply from %s",
-					  sys_from);
-			}
-			
-		} else if(strcmp(op, CRM_OP_VOTE) == 0
-			  || strcmp(op, CRM_OP_HBEAT) == 0
-			  || strcmp(op, CRM_OP_WELCOME) == 0
-			  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
-			  || strcmp(op, CRM_OP_SHUTDOWN) == 0
-			  || strcmp(op, CRM_OP_ANNOUNCE) == 0) {
-			next_input = I_NULL;
-			
-		} else if(strcmp(op, CRM_OP_CREATE) == 0
-			  || strcmp(op, CRM_OP_UPDATE) == 0
-			  || strcmp(op, CRM_OP_DELETE) == 0
-			  || strcmp(op, CRM_OP_REPLACE) == 0
-			  || strcmp(op, CRM_OP_ERASE) == 0) {
-			
-			/* perhaps we should do somethign with these replies,
-			 * especially check that the actions passed
-			 */
-/* 			fprintf(router_strm, "Message result: CIB Reply\n"); */
-
-		} else {
-			crm_err("Unexpected response (op=%s) sent to the %s",
-				op, AM_I_DC?"DC":"CRMd");
-			next_input = I_NULL;
-		}
 	} else {
-		crm_err("Unexpected message type %s", type);
-			
+		crm_err("Unexpected response (op=%s) sent to the %s",
+			op, AM_I_DC?"DC":"CRMd");
+		next_input = I_NULL;
 	}
-
-/* 	crm_verbose("%s: Next input is %s", __FUNCTION__, */
-/* 		   fsa_input2string(next_input)); */
 	
-		
 	return next_input;
 		
+}
+
+enum crmd_fsa_input
+handle_shutdown_request(xmlNodePtr stored_msg)
+{
+	/* handle here to avoid potential version issues
+	 *   where the shutdown message/proceedure may have
+	 *   been changed in later versions.
+	 *
+	 * This way the DC is always in control of the shutdown
+	 */
+	
+	xmlNodePtr frag = NULL;
+	time_t now = time(NULL);
+	char *now_s = crm_itoa((int)now);
+	xmlNodePtr node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	const char *host_from= get_xml_attr(
+		stored_msg, NULL, XML_ATTR_HOSTFROM,  FALSE);
+	
+	crm_info("Creating shutdown request for %s",host_from);
+	
+	set_uuid(node_state, XML_ATTR_UUID, host_from);
+	set_xml_property_copy(node_state, XML_ATTR_UNAME, host_from);
+	set_xml_property_copy(node_state, XML_CIB_ATTR_SHUTDOWN,  now_s);
+	set_xml_property_copy(
+		node_state, XML_CIB_ATTR_EXPSTATE, CRMD_STATE_INACTIVE);
+	
+	frag = create_cib_fragment(node_state, NULL);
+	
+	/* attach it to the original request
+	 * and make sure its sent to the CIB
+	 */
+	xmlAddChild(stored_msg, frag);
+	
+	/* cleanup intermediate steps */
+	free_xml(node_state);
+	crm_free(now_s);
+
+	return I_CIB_OP;
 }
 
 gboolean
