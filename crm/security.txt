@@ -3,16 +3,26 @@ Points of Entry
 
 Inter CRM Messaging
 =======================
-Security relies on the existing systems in place for sending HA Messages.  The assumption here is that once a member node has been compromised, you've pretty much had it anyway.
+Security relies on the existing systems in place for sending HA
+Messages.  The assumption here is that once a member node has been
+compromised, you've pretty much had it anyway.
 
 CRM Internal Messaging
 =======================
-Security relies on the existing systems in place for sending IPC Messages.  Remember, once a member node has been compromised, you've pretty much had it anyway.
+Security relies on the existing systems in place for sending IPC
+Messages.  Remember, once a member node has been compromised, you've
+pretty much had it anyway.
 
 Admin client X, Y
 =======================
-Security replies on standard RPC mechanisms of hosts.allow/hosts.deny etc.  It is likely that this would be augmented by adding an identity store (leading candidates would be the CIB and /etc/passwd) and authorization mechanisms to the CRM RPC Server processes.  
-To achieve a moderatly sensible level of security granularity, the API should at least be split up into the following list of RPC Servers:
+Security replies on standard RPC mechanisms of hosts.allow/hosts.deny
+etc.  It is likely that this would be augmented by adding an identity
+store (leading candidates would be the CIB and /etc/passwd) and
+authorization mechanisms to the CRM RPC Server processes.  
+
+To achieve a moderatly sensible level of security granularity, the API
+should at least be split up into the following list of RPC Servers:
+
 cib_delete
 cib_update
 cib_create
@@ -25,9 +35,11 @@ See: Inter CRM Messaging
 
 Potential Exploits
 =======================
-These exclude things like faking HA Messages, hacking IPC fifo's and for the moment packet sniffing of RPC requests.
-.
-The "Measures" section is intended to contain messures to prevent the attack or to at least raise the bar for potential intruders. 
+These exclude things like faking HA Messages, hacking IPC fifo's and for
+the moment packet sniffing of RPC requests.
+
+The "Measures" section is intended to contain messures to prevent the
+attack or to at least raise the bar for potential intruders. 
 
 
 Exploit Class #1
@@ -117,10 +129,20 @@ Measure 10: Invalidate the ticket and the result set once the ticket has been us
 
 Measure 11: Dont create admin clients that pass a pre-defined set of credentials
 
-[1] Shutting down Heartbeat to change permissions would mean the DC is assigned elsewhere anyway
+[1] Shutting down Heartbeat to change permissions would mean the DC is 
+    assigned elsewhere anyway
 [2] Sub-systems other than the CRMs/DC should not be making requests
-[3] If not implemented, then this exploit would only require acess to any member node
+[3] If not implemented, then this exploit would only require acess to any
+    member node
 [4] This is currently reported as an error and the second attempt is denied
-[5]  It is envisioned that in the case of asyncronous RPC calls, that a "ticket" would be issued that the client would use to ask for a result, or perhaps set up a callback.  A second async call would be made to retrieve the result.  Syncronous RPC calls would internally use a different call that would block on this ticket until a result was available.
-[6] Depending on the type of client and where it takes its credentials from, this would either prevent unknown clients or unknown users accessing the CRM (at least until the ID store is hacked)
-[7] After the ID store is decided on, we obviously then need to consider the security surrounding it also
+[5] It is envisioned that in the case of asyncronous RPC calls, that a 
+    "ticket" would be issued that the client would use to ask for a result, 
+    or perhaps set up a callback.  A second async call would be made to 
+    retrieve the result.  Syncronous RPC calls would internally use a 
+    different call that would block on this ticket until a result was 
+    available.
+[6] Depending on the type of client and where it takes its credentials from,
+    this would either prevent unknown clients or unknown users accessing the
+    CRM (at least until the ID store is hacked)
+[7] After the ID store is decided on, we obviously then need to consider the
+    security surrounding it also
