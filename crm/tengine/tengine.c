@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.31 2004/09/15 20:24:03 andrew Exp $ */
+/* $Id: tengine.c,v 1.32 2004/09/17 13:00:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -267,7 +267,7 @@ process_graph_event(xmlNodePtr event)
 					action_id);
 				prereq->complete = TRUE;
 
-			} else {
+			} else if(prereq->complete == FALSE) {
 				crm_devel("Inputs for synapse %d not satisfied",
 					synapse->id);
 				prereqs_complete = FALSE;
@@ -347,7 +347,7 @@ initiate_action(action_t *action)
 		  || task == NULL || strlen(task) == 0) {
 		/* error */
 		crm_err("Failed on corrupted command: %s (id=%s) on %s",
-			task, id, on_node);
+			crm_str(task), crm_str(id), crm_str(on_node));
 			
 		return FALSE;
 			
