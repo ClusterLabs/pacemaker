@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.18 2004/05/10 21:52:56 andrew Exp $ */
+/* $Id: cibmain.c,v 1.19 2004/05/23 19:16:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -152,8 +152,6 @@ init_start(void)
 	cl_log(LOG_INFO, "Register PID");
 	register_pid(PID_FILE, FALSE, cib_shutdown);
 
-	xmlInitParser();  // only do this once
-
 	cl_log_set_logfile(DAEMON_LOG);
 //    if (crm_debug()) {
 	cl_log_set_debugfile(DAEMON_DEBUG);
@@ -217,7 +215,6 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 {
 	int lpc = 0;
 	char *buffer = NULL;
-	xmlDocPtr doc = NULL;
 	IPC_Message *msg = NULL;
 	gboolean all_is_well = TRUE;
 	xmlNodePtr answer = NULL, root_xml_node = NULL;
@@ -244,22 +241,8 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 
 		lpc++;
 
-		/* the docs say only do this once, but in their code
-		 * they do it every time!
-		 */
-//		xmlInitParser();
-
 		buffer = (char*)msg->msg_body;
-		cl_log(LOG_DEBUG, "Message %d [text=%s]", lpc, buffer);
-		doc = xmlParseMemory(cl_strdup(buffer), strlen(buffer));
-
-		if(doc == NULL) {
-			cl_log(LOG_INFO,
-			       "XML Buffer was not valid...\n Buffer: (%s)",
-			       buffer);
-		}
-
-		root_xml_node = xmlDocGetRootElement(doc);
+		root_xml_node = string2xml(buffer);
 
 		sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
 		type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
@@ -291,8 +274,7 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 			       sys_to);
 		}
 		
-		if(answer != NULL)
-			free_xml(answer);
+		free_xml(answer);
 		
 		msg->msg_done(msg);
 		msg = NULL;
