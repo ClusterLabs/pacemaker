@@ -317,10 +317,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		}
 
 #ifdef FSA_TRACE
-		crm_verbose("FSA while loop:\tState: %s, Cause: %s, Input: %s",
-			   fsa_state2string(cur_state),
-			   fsa_cause2string(fsa_data->fsa_cause),
-			   fsa_input2string(fsa_data->fsa_input));
+		crm_verbose("FSA while loop:\tState: %s, Cause: %s,"
+			    " Input: %s, Origin=%s",
+			    fsa_state2string(cur_state),
+			    fsa_cause2string(fsa_data->fsa_cause),
+			    fsa_input2string(fsa_data->fsa_input),
+			    fsa_data->where);
 #endif
 		
 
@@ -566,8 +568,14 @@ do_state_transition(long long actions,
 		case S_RECOVERY:
 			clear_recovery_bit = FALSE;
 			break;
-			
+
+		case S_INTEGRATION:
+			startTimer(integration_timer);
+			stopTimer(finalization_timer);
+			break;
+
 		case S_FINALIZE_JOIN:
+			stopTimer(integration_timer);
 			if(cause != C_FSA_INTERNAL) {
 				crm_warn("Progressed to state %s after %s",
 					 fsa_state2string(cur_state),
@@ -587,6 +595,7 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_POLICY_ENGINE:
+			stopTimer(finalization_timer);
 			if(cause != C_FSA_INTERNAL) {
 				crm_warn("Progressed to state %s after %s",
 					 fsa_state2string(cur_state),

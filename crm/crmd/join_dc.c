@@ -54,9 +54,6 @@ do_dc_join_offer_all(long long action,
 	xmlNodePtr tmp1       = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
 	xmlNodePtr tmp2       = NULL;
 
-	/* Give everyone a chance to join before invoking the PolicyEngine */
-	stopTimer(integration_timer);
-	
 	initialize_join();
 	
 	/* catch any nodes that are active in the CIB but not in the CCM list*/
@@ -116,10 +113,6 @@ do_dc_join_offer_all(long long action,
 		  fsa_membership_copy->members_size
 		  - g_hash_table_size(join_requests));
 
-	/* we shouldnt wait forever */
-	crm_debug("Starting the integration timer");
-	startTimer(integration_timer);
-	
 	return I_NULL;
 }
 
@@ -153,15 +146,29 @@ do_dc_join_offer_one(long long action,
 		 */
 		crm_warn("Already offered membership to %s... discarding",
 			 join_to);
+
+		/* Make sure we end up in the correct state again */
+		if(g_hash_table_size(join_requests)
+		   >= fsa_membership_copy->members_size) {
+
+			crm_info("False alarm, returning to %s",
+				 fsa_state2string(S_FINALIZE_JOIN));
+			
+			register_fsa_input(C_FSA_INTERNAL, I_INTEGRATED, NULL);
+			return I_NULL;
+		}
+			
+		crm_debug("Still waiting on %d outstanding join acks",
+			  fsa_membership_copy->members_size
+			  - g_hash_table_size(join_requests));
+
+		
 		
 	} else {
 		oc_node_t member;
 		member.node_uname = crm_strdup(join_to);
 		join_send_offer(NULL, &member, NULL);
 		crm_free(member.node_uname);
-
-		crm_debug("Starting the integration timer");
-		startTimer(integration_timer);
 
 		/* this was a genuine join request, cancel any existing
 		 * transition and invoke the PE
@@ -226,7 +233,6 @@ do_dc_join_req(long long action,
 	} else if(/* some reason */ 0) {
 		/* NACK this client */
 		ack_nack = CRMD_JOINSTATE_DOWN;
-/* 		stopTimer(integration_timer); */
 	}
 	
 	/* add them to our list of CRMD_STATE_ACTIVE nodes
@@ -237,14 +243,12 @@ do_dc_join_req(long long action,
 
 	if(g_hash_table_size(join_requests)
 	   >= fsa_membership_copy->members_size) {
-		stopTimer(integration_timer);
 		crm_info("That was the last outstanding join ack");
 		register_fsa_input(C_FSA_INTERNAL, I_INTEGRATED, NULL);
 		return I_NULL;
 	}
 
 	/* dont waste time by invoking the PE yet; */
-/* 	startTimer(integration_timer); */
 	crm_debug("Still waiting on %d (of %d) outstanding join acks",
 		  fsa_membership_copy->members_size
 		  - g_hash_table_size(join_requests),
@@ -296,13 +300,11 @@ do_dc_join_finalize(long long action,
 		return I_NULL;
 	}
 
-	/* dont waste time by invoking the pe yet; */
+	/* dont waste time by invoking the PE yet; */
+	startTimer(finalization_timer);
 	crm_debug("Still waiting on %d outstanding join confirmations",
 		  num_join_invites - g_hash_table_size(confirmed_nodes));
 
-	crm_debug("Starting the finalization timer");
-	startTimer(finalization_timer);
-	
 	return I_NULL;
 }
 
@@ -353,7 +355,6 @@ do_dc_join_ack(long long action,
 	register_fsa_input(cause, I_CIB_OP, msg_data->data);
 
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
-		stopTimer(finalization_timer);
 		crm_info("That was the last outstanding join confirmation");
 		register_fsa_input_later(C_FSA_INTERNAL, I_FINALIZED, NULL);
 		return I_NULL;

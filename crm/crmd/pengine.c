@@ -64,9 +64,8 @@ do_pe_control(long long action,
 	long long stop_actions = A_PE_STOP;
 	long long start_actions = A_PE_START;
 	
-	
-
 	if(action & stop_actions) {
+		crm_info("Stopping %s", this_subsys->command);
 		if(stop_subsystem(this_subsys) == FALSE) {
 			result = I_FAIL;
 			
@@ -94,6 +93,7 @@ do_pe_control(long long action,
 	if(action & start_actions) {
 
 		if(cur_state != S_STOPPING) {
+			crm_info("Starting %s", this_subsys->command);
 			if(start_subsystem(this_subsys) == FALSE) {
 				result = I_FAIL;
 				cleanup_subsystem(this_subsys);
@@ -118,8 +118,6 @@ do_pe_invoke(long long action,
 	     fsa_data_t *msg_data)
 {
 	xmlNodePtr local_cib = NULL;
-
-	stopTimer(integration_timer);
 
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
 		
