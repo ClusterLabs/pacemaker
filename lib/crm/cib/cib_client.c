@@ -486,7 +486,7 @@ gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
 	if(a_client->callback == b_client->callback
 	   && safe_str_neq(a_client->event, b_client->event)) {
 		return 0;
-	} else if(((int)a_client->callback) < ((int)b_client->callback)) {
+	} else if(((long)a_client->callback) < ((long)b_client->callback)) {
 		return -1;
 	}
 	return 1;
