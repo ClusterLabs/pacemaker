@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.7 2005/02/01 22:48:16 andrew Exp $ */
+/* $Id: callbacks.c,v 1.8 2005/02/03 09:12:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,6 +25,7 @@
 #include <crm/common/xml.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
+#include <heartbeat.h>
 
 #include <tengine.h>
 
@@ -158,7 +159,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	}
 
 	crm_debug("finished processing message");
-	print_state(FALSE);
+	print_state(LOG_DEBUG);
 	
 	return TRUE;
 }
@@ -173,9 +174,49 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		 (char *)op->node_list);
 
 	if(op->op_result == STONITH_SUCCEEDED) {
-		te_action->complete = TRUE;
-		process_trigger(te_action->id);
-		check_for_completion();
+		enum cib_errors rc = cib_ok;
+		crm_data_t *action_args = find_xml_node(
+			te_action->xml, "args", TRUE);
+		const char *target = crm_element_value(action_args, "target");
+		const char *uuid = crm_element_value(action_args,"target_uuid");
+		
+		/* zero out the node-status & remove all LRM status info */
+		crm_data_t *update = NULL;
+		crm_data_t *node_state = create_xml_node(
+			NULL, XML_CIB_TAG_STATE);
+
+		set_xml_property_copy(node_state, XML_ATTR_UUID, uuid);
+		set_xml_property_copy(node_state, XML_ATTR_UNAME, target);
+		set_xml_property_copy(
+			node_state, XML_CIB_ATTR_HASTATE, DEADSTATUS);
+		set_xml_property_copy(
+			node_state, XML_CIB_ATTR_INCCM, XML_BOOLEAN_NO);
+		set_xml_property_copy(
+			node_state, XML_CIB_ATTR_CRMDSTATE, OFFLINESTATUS);
+		set_xml_property_copy(
+			node_state, XML_CIB_ATTR_JOINSTATE,CRMD_JOINSTATE_DOWN);
+		set_xml_property_copy(
+			node_state, XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_DOWN);
+		set_xml_property_copy(
+			node_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
+		create_xml_node(node_state, XML_CIB_TAG_LRM);
+		
+		update = create_cib_fragment(node_state, NULL);
+		free_xml(node_state);
+	
+		rc = te_cib_conn->cmds->modify(
+			te_cib_conn, XML_CIB_TAG_STATUS,update,NULL,cib_none);	
+
+		if(rc == cib_ok) {
+			/* mark the action complete */
+			te_action->complete = TRUE;
+			
+			process_trigger(te_action->id);
+			check_for_completion();
+		} else {
+			send_abort("Couldnt update CIB after stonith", update);
+		}
+		free_xml(update);
 		
 	} else {
 		send_abort("Fencing op failed", NULL);
