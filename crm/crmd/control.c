@@ -35,6 +35,8 @@ gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
 void crmd_ha_input_destroy(gpointer user_data);
 void shutdown(int nsig);
 
+GHashTable   *ipc_clients = NULL;
+
 /*	 A_HA_CONNECT	*/
 enum crmd_fsa_input
 do_ha_register(long long action,
@@ -338,14 +340,22 @@ shutdown(int nsig)
     
 	CL_SIGNAL(nsig, shutdown);
 
-	set_bit_inplace(&fsa_input_register, R_SHUTDOWN);
-	startTimer(shutdown_escalation_timmer);
     
 	if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
-    
-		CRM_DEBUG("Invoking FSA with I_SHUTDOWN");
-		s_crmd_fsa(C_SHUTDOWN, I_SHUTDOWN, NULL);
-	    
+
+		if(is_set(fsa_input_register, R_SHUTDOWN)) {
+			CRM_DEBUG("Escalating the shutdown");
+			s_crmd_fsa(C_SHUTDOWN, I_ERROR, NULL);
+
+		} else {
+			set_bit_inplace(&fsa_input_register, R_SHUTDOWN);
+
+			// cant rely on this...
+			startTimer(shutdown_escalation_timmer);
+
+			s_crmd_fsa(C_SHUTDOWN, I_SHUTDOWN, NULL);
+		}
+		
 	} else {
 		CRM_DEBUG("exit from shutdown");
 		exit(LSB_EXIT_OK);
