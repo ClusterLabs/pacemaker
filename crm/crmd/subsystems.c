@@ -170,7 +170,7 @@ do_cib_invoke(long long action,
 		xmlNodePtr answer = process_cib_request(CRM_OPERATION_BUMP,
 							new_options, NULL);
 
-		send_request(NULL, answer, CRM_OPERATION_STORE,
+		send_request(NULL, answer, CRM_OPERATION_REPLACE,
 			     NULL, CRM_SYSTEM_CRMD);
 
 		free_xml(answer);
