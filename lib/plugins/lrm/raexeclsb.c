@@ -67,13 +67,14 @@ static int get_provider_list(const char* op_type, GList ** providers);
 
 /* The begin of internal used function & data list */
 #define MAX_PARAMETER_NUM 40
+
+const int MAX_LENGTH_OF_RSCNAME = 40,
+	  MAX_LENGTH_OF_OPNAME = 40;
+
 typedef char * RA_ARGV[MAX_PARAMETER_NUM];
 
 static int prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 	GHashTable * params, RA_ARGV params_argv);
-static void params_hash_to_argv(gpointer key, gpointer value,
-				gpointer user_data);
-
 /* The end of internal function & data list */
 
 /* Rource agent execution plugin operations */
@@ -154,12 +155,11 @@ execra( const char * rsc_type, const char * provider, const char * op_type,
 	uniform_ret_execra_t exit_value;
 	RA_ARGV params_argv;
 	char ra_pathname[RA_MAX_NAME_LENGTH];
-
 	GString * debug_info;
 	int index_tmp = 0;
 
 	/* Prepare the call parameter */
-	if (0 > prepare_cmd_parameters(rsc_type, op_type, params, params_argv)) {
+	if ( prepare_cmd_parameters(rsc_type, op_type, params, params_argv) != 0) {
 		cl_log(LOG_ERR, "lsb RA: Error of preparing parameters");
 		return -1;
 	}
@@ -177,18 +177,21 @@ execra( const char * rsc_type, const char * provider, const char * op_type,
 	g_string_free(debug_info, TRUE);
 
 	execv(ra_pathname, params_argv);
+        cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
 
         switch (errno) {
                 case ENOENT:   /* No such file or directory */
+			/* Fall down */
                 case EISDIR:   /* Is a directory */
                         exit_value = EXECRA_NO_RA;
+        		cl_log(LOG_ERR, "Cause: No such file or directory.");
                         break;
 
                 default:
                         exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
+        		cl_log(LOG_ERR, "Cause: execv unknow error.");
         }
 
-        cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
         exit(exit_value);
 }
 
@@ -198,7 +201,7 @@ map_ra_retvalue(int ret_execra, const char * op_type)
 	/* Except op_type equals 'status', the UNIFORM_RET_EXECRA is compatible
 	   with LSB standard.
 	*/
-	if ( strncmp(op_type, "status", 6) == 0 ) {
+	if ( strncmp(op_type, "status", strlen("status")) == 0 ) {
 		if (ret_execra < 0 || ret_execra > 4 ) {
 			ret_execra = 4;
 		}
@@ -219,64 +222,73 @@ static int
 prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 			GHashTable * params_ht, RA_ARGV params_argv)
 {
-	/* For lsb init scripts, no corresponding definite specification
-	 * But for lsb none-init scripts, maybe need it.
-	 */
-
 	int tmp_len;
 	int ht_size = 0;
+#if 0
+	/* Reserve it for possible furture use */
+	int index;
+	void * value_tmp = NULL;
+	char buf_tmp[20];
+#endif
+
 	if (params_ht) {
 		ht_size = g_hash_table_size(params_ht);
 	}
-
+	
+	/* Need 3 additonal spaces for accomodating: 
+	 * argv[0] = RA_file_name(RA_TYPE)
+	 * argv[1] = operation
+	 * a terminal NULL
+	 */
 	if ( ht_size+3 > MAX_PARAMETER_NUM ) {
 		cl_log(LOG_ERR, "Too many parameters");
 		return -1;
 	}
 
-	tmp_len = strnlen(rsc_type, 160) + 1;
-	params_argv[0] = g_new(gchar, tmp_len);
-	strncpy(params_argv[0], rsc_type, tmp_len);
-
-	tmp_len = strnlen(op_type, 160) + 1;
-	params_argv[1] = g_new(gchar, tmp_len);
-	strncpy(params_argv[1], op_type, tmp_len);
+	tmp_len = strnlen(rsc_type, MAX_LENGTH_OF_RSCNAME);
+	params_argv[0] = g_strndup(rsc_type, tmp_len);
+	/* Add operation code as the first argument */
+	tmp_len = strnlen(op_type, MAX_LENGTH_OF_OPNAME);
+	params_argv[1] = g_strndup(op_type, tmp_len);
+	/* Add the teminating NULL pointer */
 	params_argv[ht_size+2] = NULL;
 
-	if (params_ht) {
-		g_hash_table_foreach(params_ht,
-				params_hash_to_argv, params_argv);
+	/* No actual arguments except op_type */
+	if (ht_size != 0) {
+		/* Too strict? maybe */
+		cl_log(LOG_ERR, "For LSB init script, no parameter needed.");
+		return -1;
 	}
+
+/* Actually comment the following code, but I still think it may be used
+ * in the future for LSB none-initial scripts, so reserver it.
+ */
+#if 0
+	/* Now suppose the parameter formate stored in Hashtabe is like
+	 * key="1", value="-Wl,soname=test"
+	 * Moreover, the key is supposed as a string transfered from an integer.
+	 * It may be changed in the future.
+	 */
+	for (index = 1; index <= ht_size; index++ ) {
+		snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
+		value_tmp = g_hash_table_lookup(params_ht, buf_tmp);
+		/* suppose the key is consecutive */
+		if ( value_tmp == NULL ) {
+			cl_log(LOG_ERR, "Parameter ordering error in"\
+				"prepare_cmd_parameters, raexeclsb.c");
+			return -1;
+		}
+		params_argv[index+1] = g_strdup((char *)value_tmp);
+	}
+#endif
 
 	return 0;
-}
-
-static void
-params_hash_to_argv(gpointer key, gpointer value, gpointer user_data)
-{
-        RA_ARGV * ra_argv  = user_data;
-	int param_index;
-
-	if (user_data == NULL) {
-		return;
-	}
-        if (*ra_argv == NULL ) {
-                return;
-        }
-
-	/* the parameter index start from 1 */
-	/* and start from 2 in argv array */
-	param_index = atoi((char *)key);
-	(*ra_argv)[param_index + 1] = g_new(gchar, 21);
-	*((*ra_argv)[param_index + 1] + 20) = '\0';
-        strncpy((*ra_argv)[param_index +1], (char*)value,
-                strnlen((char*)value, 20));
 }
 
 static char*
 get_resource_meta(const char* rsc_type,  const char* provider)
 {
-	return strdup(rsc_type);
+	return g_strndup(rsc_type, strnlen(rsc_type, MAX_LENGTH_OF_RSCNAME));
 }
 
 static int
@@ -285,4 +297,3 @@ get_provider_list(const char* op_type, GList ** providers)
 	*providers = NULL;
 	return 0;
 }
-
