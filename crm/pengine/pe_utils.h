@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.9 2004/07/01 08:52:27 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.10 2004/07/01 16:16:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,7 +37,7 @@ extern void add_color_to_rsc(resource_t *rsc, color_t *color);
 extern color_t *find_color(GListPtr candidate_colors, color_t *other_color);
 
 extern color_t *create_color(
-	GListPtr *colors, GListPtr nodes, GListPtr resources);
+	GListPtr *colors, resource_t *resource, GListPtr resources);
 
 // Node helper functions
 extern gboolean filter_nodes(resource_t *rsc);

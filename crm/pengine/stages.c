@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.8 2004/07/01 08:52:27 andrew Exp $ */
+/* $Id: stages.c,v 1.9 2004/07/01 16:16:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -134,12 +134,9 @@ gboolean
 stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 {
 	int lpc;
-	color_t *current_color = NULL;
 
 	crm_trace("setup");
 	
-	// Set initial color
-	// Set color.candidate_nodes = all active nodes
 	if(no_color != NULL) {
 		crm_free(no_color->details);
 		crm_free(no_color);
@@ -147,21 +144,7 @@ stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 	
 	crm_trace("create \"no color\"");
 	no_color = create_color(NULL, NULL, sorted_rscs);
-	crm_trace("create default color");
-	current_color = create_color(colors, sorted_nodes, sorted_rscs);
 	
-	// Set resource.color = color (all resources)
-	// Set resource.provisional = TRUE (all resources)
-/*
-	slist_iter(
-		this_resource, resource_t, sorted_rscs, lpc,
-
-		this_resource->color = NULL;
-		this_resource->provisional = TRUE;
-		);
-*/
-	crm_verbose("initialized resources to default color");
-  
 	// Take (next) highest resource
 	slist_iter(
 		lh_resource, resource_t, sorted_rscs, lpc,

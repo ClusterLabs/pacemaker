@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.27 2004/07/01 08:52:27 andrew Exp $ */
+/* $Id: pengine.h,v 1.28 2004/07/01 16:16:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,12 +92,13 @@ struct node_s {
 		float	weight; 
 		gboolean fixed;
 		struct node_shared_s *details;
-}; 
- 
+};
+
 struct color_shared_s {
-		int id; 
+		int      id;
+		float    highest_priority;
 		GListPtr candidate_nodes; // node_t*
-		node_t *chosen_node; 
+		node_t  *chosen_node; 
 };
 
 struct color_s { 

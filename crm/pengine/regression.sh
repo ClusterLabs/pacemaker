@@ -87,6 +87,8 @@ do_test simple7 "Shutdown	"
 do_test simple8 "Stonith	"
 do_test simple9 "Lower version"
 do_test simple10 "Higher version"
+do_test simple11 "Priority (ne)"
+do_test simple12 "Priority (eq)"
 
 echo ""
 
@@ -147,7 +149,7 @@ echo ""
 # Generate these test outputs
 create_mode="true"
 #do_test bad7 "Bad data"
-do_test stopfail4 "Stop Failed - Ignore (2 node)"
+do_test simple12 "Priority (eq)"
 
 if [ -s $failed ]; then
     if [ "$verbose" = "-v" ]; then

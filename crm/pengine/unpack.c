@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.13 2004/07/01 08:52:27 andrew Exp $ */
+/* $Id: unpack.c,v 1.14 2004/07/01 16:16:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -897,10 +897,10 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	if(rsc_lh->priority < rsc_rh->priority) {
 		before = rsc_rh->start;
 		after  = rsc_lh->start;
-       } else {
+	} else {
 		before = rsc_lh->start;
 		after  = rsc_rh->start;
-       }
+	}
 	order_new(before, after, strength_e,action_constraints);
 	
 	return rsc2rsc_new(id, strength_e, rsc_lh, rsc_rh);
@@ -916,7 +916,8 @@ match_attrs(const char *attr, const char *op, const char *value,
 	GListPtr result = NULL;
 	
 	if(attr == NULL || op == NULL) {
-		crm_err("Invlaid attribute or operation in expression");
+		crm_err("Invlaid attribute or operation in expression"
+			" (\'%s\' \'%s\' \'%s\')", attr, op, value);
 		return NULL;
 	}
 
@@ -993,7 +994,10 @@ match_attrs(const char *attr, const char *op, const char *value,
 		}
 		
 		if(accept) {
+			crm_trace("node %s matched", node->details->uname);
 			result = g_list_append(result, node);
+		} else {
+			crm_trace("node %s did not match", node->details->uname);
 		}		   
 		);
 	
@@ -1124,6 +1128,8 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 			const char *value = xmlGetProp(expr, "value");
 			const char *type  = xmlGetProp(expr, "type");
 
+			crm_trace("processing expression: %s", xmlGetProp(expr, "id"));
+
 			expr = expr->next;
 
 			GListPtr match_L = match_attrs(
@@ -1156,7 +1162,7 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 		
 		if(new_con->node_list_rh == NULL) {
 			crm_warn("No matching nodes for constraint/rule %s/%s",
-				 id, rule->name);
+				 id, xmlGetProp(rule, "id"));
 		}
 		crm_debug_action(print_rsc_to_node("Added", new_con, FALSE));
 	}

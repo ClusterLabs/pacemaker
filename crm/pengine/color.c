@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.7 2004/07/01 08:52:27 andrew Exp $ */
+/* $Id: color.c,v 1.8 2004/07/01 16:16:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -227,7 +227,7 @@ strict_preproc(rsc_to_rsc_t *constraint,
 
 //			if(g_list_length(lh_resource->candidate_colors)==1)
 			create_color(
-				colors, lh_resource->allowed_nodes, resources);
+				colors, lh_resource, resources);
 			
 			
 			break;
@@ -310,26 +310,41 @@ choose_color(resource_t *lh_resource)
 
 	}
 
-	if(lh_resource->provisional) {
-		GListPtr sorted_colors = g_list_sort(
-			lh_resource->candidate_colors, sort_color_weight);
-		
-		lh_resource->candidate_colors = sorted_colors;
+	if(lh_resource->provisional == FALSE) {
+		return !lh_resource->provisional;
+	}
 	
-		crm_verbose("Choose a color from %d possibilities",
-			    g_list_length(sorted_colors));
+	GListPtr sorted_colors = g_list_sort(
+		lh_resource->candidate_colors, sort_color_weight);
+	
+	lh_resource->candidate_colors = sorted_colors;
+	
+	crm_verbose("Choose a color from %d possibilities",
+		    g_list_length(sorted_colors));
+	
+	slist_iter(
+		this_color, color_t,lh_resource->candidate_colors, lpc,
 
-		slist_iter(
-			this_color, color_t,lh_resource->candidate_colors, lpc,
+		if(lh_resource->priority
+		   < this_color->details->highest_priority) {
+			// lh_resource->priority < this_color->priority
+			if(node_list_eq(this_color->details->candidate_nodes, 
+					lh_resource->allowed_nodes, TRUE)) {
+				
+				lh_resource->color = this_color;
+				lh_resource->provisional = FALSE;
+				break;
+			}
+			
+		} else {
 			GListPtr intersection = node_list_and(
 				this_color->details->candidate_nodes, 
 				lh_resource->allowed_nodes, TRUE);
-
+			   
 			if(g_list_length(intersection) != 0) {
-				// TODO: merge node weights
 				GListPtr old_list =
 					this_color->details->candidate_nodes;
-
+				
 				pe_free_shallow(old_list);
 				
 				this_color->details->candidate_nodes =
@@ -341,9 +356,9 @@ choose_color(resource_t *lh_resource)
 			} else {
 				pe_free_shallow(intersection);
 			}
-			
-			);
-	}
+		}
+		);
+
 	return !lh_resource->provisional;
 }
 
@@ -432,7 +447,7 @@ color_resource(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 	
 		if(lh_resource->provisional) {
 			lh_resource->color = create_color(
-				colors, lh_resource->allowed_nodes, resources);
+				colors, lh_resource, resources);
 		}
 	}
 	
