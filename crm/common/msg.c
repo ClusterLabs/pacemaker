@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.11 2005/01/26 13:30:58 andrew Exp $ */
+/* $Id: msg.c,v 1.12 2005/02/07 11:13:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -239,9 +239,7 @@ create_request_adv(const char *task, crm_data_t *msg_data,
 	}
 
 	if (msg_data != NULL) {
-		char *xml_text = dump_xml_unformatted(msg_data);
-		ha_msg_add(request, F_CRM_DATA, xml_text);
-		crm_free(xml_text);
+		add_message_xml(request, F_CRM_DATA, msg_data);
 	}
 	crm_free(reference);
 	crm_free(true_from);
@@ -296,9 +294,7 @@ create_reply_adv(HA_Message *original_request,
 	}
 
 	if (xml_response_data != NULL) {
-		char *xml_text = dump_xml_unformatted(xml_response_data);
-		ha_msg_add(reply, F_CRM_DATA, xml_text);
-		crm_free(xml_text);
+		add_message_xml(reply, F_CRM_DATA, xml_response_data);
 	}
 
 	return reply;

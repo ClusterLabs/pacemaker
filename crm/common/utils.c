@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.25 2005/02/03 14:33:24 andrew Exp $ */
+/* $Id: utils.c,v 1.26 2005/02/07 11:13:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -240,6 +240,7 @@ crm_log_init(const char *entity)
 			  | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
 			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
 			  cl_glib_msg_handler, NULL);
+
 	/* and for good measure... */
 	g_log_set_always_fatal((GLogLevelFlags)0);    
 	
@@ -250,11 +251,13 @@ crm_log_init(const char *entity)
 	cl_log_send_to_logging_daemon(FALSE);
 	if(HA_FAIL == LogToLoggingDaemon(LOG_INFO, test, strlen(test), TRUE)) {
 		crm_warn("Not using log daemon");
+
 	} else {
 		cl_log_send_to_logging_daemon(TRUE);
-		crm_warn("Enabled log daemon");
+		crm_info("Enabled log daemon");
 	}
 #endif
+
 	CL_SIGNAL(DEBUG_INC, alter_debug);
 	CL_SIGNAL(DEBUG_DEC, alter_debug);
 
@@ -350,8 +353,8 @@ do_crm_log(int log_level, const char *function,
 		}
 		
 		if(nbytes > MAXLINE) {
-			cl_log(LOG_WARNING,
-			       "Log from %s() was truncated", function);
+			cl_log(LOG_WARNING, "Log from %s() was truncated",
+			       crm_str(function));
 		}
 		free(buf);
 	}
@@ -506,6 +509,18 @@ safe_str_neq(const char *a, const char *b)
 	return TRUE;
 }
 
+char *
+crm_strdup(const char *a)
+{
+	char *ret = NULL;
+	CRM_ASSERT(a != NULL);
+	if(a != NULL) {
+		ret = cl_strdup(a);
+	} else {
+		crm_warn("Cannot dup NULL string");
+	}
+	return ret;
+} 
 
 void
 set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname) 
