@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.10 2004/06/16 11:12:34 andrew Exp $ */
+/* $Id: unpack.c,v 1.11 2004/06/21 10:14:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -287,159 +287,6 @@ rsc2node_new(const char *id, resource_t *rsc,
 }
 
 
-gboolean
-unpack_rsc_to_node(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
-		   GListPtr *node_constraints)	
-{
-	xmlNodePtr node_ref        = NULL;
-	rsc_to_node_t *new_con     = NULL;
-	enum con_modifier modifier = modifier_none;
-	
-	const char *id_lh      = xmlGetProp(xml_obj, "from");
-	const char *id         = xmlGetProp(xml_obj, XML_ATTR_ID);
-	const char *mod        = xmlGetProp(xml_obj, "modifier");
-	const char *weight     = xmlGetProp(xml_obj, "weight");
-
-	resource_t *rsc_lh     = pe_find_resource(rsc_list, id_lh);
-	float weight_f         = atof(weight);
-
-	if(safe_str_eq(mod, "set")){
-		modifier = set;
-		
-	} else if(safe_str_eq(mod, "inc")){
-		modifier = inc;
-		
-	} else if(safe_str_eq(mod, "dec")){
-		modifier = dec;
-		
-	} else {
-		crm_err("Unknown modifier %s", mod);
-	}
-
-	new_con = rsc2node_new(
-		id, rsc_lh, weight_f, TRUE, NULL, node_constraints);
-
-	if(new_con == NULL) {
-		crm_err("Couldnt create con=%s for rsc=%s", id, id_lh);
-		return FALSE;
-		
-	} else if(xml_obj != NULL) {
-		node_ref = xml_obj->children;
-	}
-	
-/*
-  <rsc_to_node>
-  <node_ref id= type= name=/>
-  <node_ref id= type= name=/>
-  <node_ref id= type= name=/>
-*/		
-
-	while(node_ref != NULL) {
-		const char *xml_name = node_ref->name;
-
-		const char *id_rh = xmlGetProp(node_ref, XML_NVPAIR_ATTR_NAME);
-		node_t *node_rh   = pe_find_node(node_list, id_rh);
-
-		node_ref = node_ref->next;
-		
-		if(node_rh == NULL) {
-			crm_err("node %s (from %s) not found",id_rh, xml_name);
-			continue;
-		}
-		
-		new_con->node_list_rh =
-			g_list_append(new_con->node_list_rh, node_rh);
-
-		
-		/* dont add it to the resource,
-		 *  the information is in the resouce's node list
-		 */
-	}
-
-	return TRUE;
-}
-
-
-gboolean
-unpack_rsc_to_attr(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
-		   GListPtr *node_constraints)
-{
-/*
-<rsc_to_attr id="cons4" from="rsc2" weight="20.0" modifier="inc">
-<attr_expression id="attr_exp_1"/>
-  <node_match id="node_match_1" type="has_attr" target="cpu"/>
-  <node_match id="node_match_2" type="attr_value" target="kernel" value="2.6"/>
-</attr_expression>
-<attr_expression id="attr_exp_2"/>
-  <node_match id="node_match_3" type="has_attr" target="hdd"/>
-  <node_match id="node_match_4" type="attr_value" target="kernel" value="2.4"/>
-</attr_expression>
-
-   Translation:
-       give any node a +ve weight of 20.0 to run rsc2 if:
-          attr "cpu" is set _and_ "kernel"="2.6", _or_
-	  attr "hdd" is set _and_ "kernel"="2.4"
-
-   Further translation:
-       2 constraints that give any node a +ve weight of 20.0 to run rsc2
-       cons1: attr "cpu" is set and "kernel"="2.6"
-       cons2: attr "hdd" is set and "kernel"="2.4"
-       
-*/
-	
-	xmlNodePtr attr_exp = xml_obj->children;
-	const char *id_lh   = xmlGetProp(xml_obj, "from");
-	const char *mod     = xmlGetProp(xml_obj, "modifier");
-	const char *weight  = xmlGetProp(xml_obj, "weight");
-	const char *id      = xmlGetProp(attr_exp, XML_ATTR_ID);
-	float weight_f      = atof(weight);
-	enum con_modifier a_modifier = modifier_none;
-	
-	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
-	if(rsc_lh == NULL) {
-		crm_err("No resource (con=%s, rsc=%s)",
-		       id, id_lh);
-		return FALSE;
-	}
-			
-	if(safe_str_eq(mod, "set")){
-		a_modifier = set;
-	} else if(safe_str_eq(mod, "inc")){
-		a_modifier = inc;
-	} else if(safe_str_eq(mod, "dec")){
-		a_modifier = dec;
-	} else if(safe_str_eq(mod, "only")){
-		a_modifier = only;
-	} else {
-		crm_err("Unknown modifier %s", mod);
-	}		
-
-	if(attr_exp == NULL) {
-		crm_err("no attrs for constraint %s", id);
-	}
-	
-	while(attr_exp != NULL) {
-
-		rsc_to_node_t *new_con = rsc2node_new(
-			xmlGetProp(attr_exp, XML_ATTR_ID), rsc_lh, weight_f,
-			TRUE, NULL, node_constraints);
-
-//		new_con->node_list_rh  = match_attrs(attr_exp, node_list);
-		
-		if(new_con->node_list_rh == NULL) {
-			crm_warn("No matching nodes for constraint  %s (%s)",
-				 xmlGetProp(attr_exp, XML_NVPAIR_ATTR_NAME),
-				 attr_exp->name);
-		}
-		crm_debug_action(print_rsc_to_node("Added", new_con, FALSE));
-
-		/* dont add it to the resource,
-		 *  the information is in the resouce's node list
-		 */
-		attr_exp = attr_exp->next;
-	}
-	return TRUE;
-}
 
 
 // remove nodes that are down, stopping
@@ -616,6 +463,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 	const char *node_id   = NULL;
 	const char *rsc_state = NULL;
 	const char *rsc_code  = NULL;
+	const char *last_op   = NULL;
 	resource_t *rsc_lh    = NULL;
 	op_status_t  rsc_code_i = LRM_OP_ERROR;
 	
@@ -627,6 +475,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 		node_id   = xmlGetProp(rsc_entry, XML_LRM_ATTR_TARGET);
 		rsc_state = xmlGetProp(rsc_entry, XML_LRM_ATTR_OPSTATE);
 		rsc_code  = xmlGetProp(rsc_entry, "op_code");
+		last_op   = xmlGetProp(rsc_entry, "last_op");
 		
 		rsc_lh    = pe_find_resource(rsc_list, rsc_id);
 
@@ -645,6 +494,34 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 		}
 
 		rsc_code_i = atoi(rsc_code);
+
+		if(rsc_code_i == -1) {
+			/*
+			 * TODO: this needs more thought
+			 * Some cases:
+			 * - PE reinvoked with pending action that will succeed
+			 * - PE reinvoked with pending action that will fail
+			 * - After DC election
+			 * - After startup
+			 *
+			 * pending start - required start
+			 * pending stop  - required stop
+			 * pending <any> on unavailable node - stonith
+			 *
+			 * For now this should do
+			 */
+			if(safe_str_eq(last_op, "stop")) {
+				unpack_failed_resource(node_constraints,
+						       rsc_entry,rsc_lh,node);
+			} else {
+				unpack_healthy_resource(node_constraints,
+							rsc_entry,rsc_lh,node);
+				rsc_lh->start->optional = FALSE;
+			}
+			
+			continue;
+		}
+
 		switch(rsc_code_i) {
 			case LRM_OP_DONE:
 				unpack_healthy_resource(node_constraints,

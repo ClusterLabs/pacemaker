@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.5 2004/06/16 11:12:34 andrew Exp $ */
+/* $Id: stages.c,v 1.6 2004/06/21 10:14:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -274,7 +274,8 @@ stage5(GListPtr resources)
 		if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL){
 			rsc->stop->node = safe_val(NULL, rsc, cur_node);
 			
-			rsc->start->node = NULL;
+			rsc->start->node    = NULL;
+			rsc->stop->optional = FALSE;
 			crm_warn("Stop resource %s (%s)",
 				  safe_val(NULL, rsc, id),
 				  safe_val5(NULL, rsc, stop, node,details,id));
@@ -291,25 +292,26 @@ stage5(GListPtr resources)
 				    safe_val(NULL, rsc, id),
 				    safe_val4(NULL,rsc,cur_node,details,id));
 
-			rsc->stop->optional = TRUE;
-			rsc->start->optional = TRUE;
-			rsc->stop->node = safe_val(NULL, rsc, cur_node);
+			rsc->stop->node  = safe_val(NULL, rsc, cur_node);
 			rsc->start->node = safe_val4(NULL, rsc, color,
 						     details, chosen_node);
 			
 		} else if(safe_val4(NULL, rsc,cur_node,details,id) == NULL) {
-			rsc->stop->optional = TRUE;
 			rsc->start->node = safe_val4(NULL, rsc, color,
 						     details, chosen_node);
 
 			crm_debug("Start resource %s (%s)",
 				  safe_val(NULL, rsc, id),
 				  safe_val5(NULL, rsc, start,node,details,id));
+			rsc->start->optional = FALSE;
 			
 		} else {
 			rsc->stop->node = safe_val(NULL, rsc, cur_node);
 			rsc->start->node = safe_val4(NULL, rsc, color,
 						     details, chosen_node);
+			rsc->start->optional = FALSE;
+			rsc->stop->optional  = FALSE;
+
 			crm_debug("Move resource %s (%s -> %s)",
 				  safe_val(NULL, rsc, id),
 				  safe_val5(NULL, rsc, stop, node,details,id),
@@ -348,6 +350,7 @@ stage6(GListPtr *actions, GListPtr *action_constraints, GListPtr nodes)
 			down_node = action_new(action_id++, NULL,shutdown_crm);
 			down_node->node     = node;
 			down_node->runnable = TRUE;
+			down_node->optional = FALSE;
 			
 			*actions = g_list_append(*actions, down_node);
 			
@@ -363,6 +366,11 @@ stage6(GListPtr *actions, GListPtr *action_constraints, GListPtr nodes)
 			stonith_node = action_new(action_id++,NULL,stonith_op);
 			stonith_node->node     = node;
 			stonith_node->runnable = TRUE;
+			stonith_node->optional = FALSE;
+
+			if(down_node != NULL) {
+				down_node->failure_is_fatal = FALSE;
+			}
 			
 			*actions = g_list_append(*actions, stonith_node);
 			

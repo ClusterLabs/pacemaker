@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.30 2004/06/16 11:12:34 andrew Exp $ */
+/* $Id: utils.c,v 1.31 2004/06/21 10:14:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -485,7 +485,7 @@ action_new(int id, resource_t *rsc, enum action_tasks task)
 	action->discard    = FALSE;
 	action->runnable   = FALSE;
 	action->processed  = FALSE;
-	action->optional   = FALSE;
+	action->optional   = TRUE;
 	action->seen_count = 0;
 
 	return action;
