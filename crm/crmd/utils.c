@@ -1056,11 +1056,15 @@ copy_lrm_op(const lrm_op_t *op)
 	op_copy->app_name  = crm_strdup(op->app_name);
 
 	/*please notice the client needs release the memory of rsc.*/
+	CRM_DEV_ASSERT(op->rsc != NULL);
 	op_copy->rsc = copy_lrm_rsc(op->rsc);
 	if(op_copy->rsc == NULL) {
 		crm_err("Op callback for %s did not contain a resource",
 			crm_str(op_copy->rsc_id));
+	} else {
+		crm_debug("Copied op callback for %s",crm_str(op_copy->rsc_id));
 	}
+	
 
 	return op_copy;
 }
