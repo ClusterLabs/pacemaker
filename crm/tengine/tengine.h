@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.15 2005/02/01 22:48:16 andrew Exp $ */
+/* $Id: tengine.h,v 1.16 2005/02/02 21:58:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -105,6 +105,7 @@ extern uint default_transition_timeout;
 
 extern te_timer_t *transition_timer;
 extern te_timer_t *transition_fuzz_timer;
+extern cib_t *te_cib_conn;
 
 extern const char *actiontype2text(action_type_e type);
 
