@@ -783,6 +783,11 @@ handle_request(ha_msg_input_t *stored_msg)
 	} else if(strcmp(op, CRM_OP_JOINACK) == 0) {
 		next_input = I_JOIN_RESULT;
 				
+	} else if(CRM_DEV_BUILD && strcmp(op, CRM_OP_DIE) == 0) {
+		crm_warn("Test-only code: Killing the CRM without mercy");
+		crm_warn("Inhibiting respawns");
+		exit(100);
+		
 		/*========== (NOT_DC)-Only Actions ==========*/
 	} else if(AM_I_DC == FALSE){
 
