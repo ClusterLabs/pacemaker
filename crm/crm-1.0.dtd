@@ -437,6 +437,62 @@ More details are given in the annotated DTD below.
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
+
+<!-- crm_message: The messages we exchange between components and over
+     the network. 
+
+	For type == reply, reference references the id of the original
+	msg.
+  -->
+
+<!ELEMENT crm_message (msg_addr,msg_addr,msg_data)>
+<!ATTLIST crm_message
+          version	CDATA '1'
+	  type		(request|reply)	#REQUIRED
+	  id		CDATA		#REQUIRED
+	  reference	CDATA		#IMPLIED
+          timestamp	CDATA		#REQUIRED>
+
+<!ELEMENT msg_addr EMPTY>
+<!ATTLIST msg_addr
+	part		(src|dst)	#REQUIRED
+	subsystem	(dc|crmd|cib|pe|te|lrm|admin) #REQUIRED
+	host		CDATA		#REQUIRED>
+
+<!-- What kinds of payload do we carry:
+     op_reply	A generic reply message to a request
+     ping_op	ping a subsystem to check whether its talking to us at
+		all, mainly for debugging
+-->
+<!ELEMENT msg_data (op_reply?,ping_op?,rsc_op?,rsc_state?,lrm_state?,lrm_op?,cib_op?)>
+
+<!ELEMENT ping_op EMPTY>
+<!ATTLIST ping_op
+	  timeout	CDATA	#REQUIRED>
+
+<!-- verbose reply for user consumption, may be useful. -->
+<!ELEMENT op_reply EMPTY>
+<!ATTLIST op_reply
+	  result	(ok|fail)	#REQUIRED
+          verbose	CDATA		#IMPLIED
+          timestamp	CDATA		#REQUIRED>
+
+<!ELEMENT lrm_op EMPTY>
+<!ATTLIST lrm_op
+		operation	(fullstate|listras|restart)>
+
+<!-- Always describes which part of the CIB is being updated or queried.
+     
+     TODO: Should this "section" instead describe the path to the
+	   root element we are retrieving/setting to be more versatile?
+-->
+<!ELEMENT cib_op (cib)>
+<!ATTLIST cib_op
+	  operation	(query|replace|add|delete)	'query'
+          section	(none|all|nodes|resources|constraints|status) 'none'>
+
+<!-- ============================================================== -->
+<!-- ============================================================== -->
 <!-- Common elements -->
 
 <!ELEMENT nvpair EMPTY>
