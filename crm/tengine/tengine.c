@@ -10,6 +10,7 @@ IPC_Channel *crm_ch = NULL;
 
 typedef struct action_list_s 
 {
+		gboolean force;
 		int index;
 		int index_max;
 		GSListPtr actions;
@@ -78,6 +79,7 @@ unpack_graph(xmlNodePtr xml_graph)
 
 		xml_action_list = xml_action_list->next;
 
+		action_list->force = FALSE;
 		action_list->index = -1;
 		action_list->index_max = 0;
 		action_list->actions = NULL;
@@ -337,13 +339,14 @@ initiate_transition(void)
 gboolean
 initiate_action(action_list_t *list) 
 {
+	gboolean is_optional  = TRUE;
 	xmlNodePtr xml_action = NULL;
 	const char *on_node   = NULL;
 	const char *id        = NULL;
 	const char *runnable  = NULL;
 	const char *optional  = NULL;
 	const char *task      = NULL;
-
+	
 	while(TRUE) {
 		
 		list->index++;
@@ -362,16 +365,42 @@ initiate_action(action_list_t *list)
 		runnable = xmlGetProp(xml_action, "runnable");
 		optional = xmlGetProp(xml_action, "optional");
 		task     = xmlGetProp(xml_action, "task");
-
-		cl_log(LOG_INFO,
-		       "Invoking action %s (id=%s) on %s",
-		       task, id, on_node);
-
-		if(safe_str_eq(optional, "true")) {
-			cl_log(LOG_INFO, "Skipping optional command");
 		
+		if(safe_str_neq(optional, "true")) {
+			is_optional = FALSE;
+		}
+		
+		list->force = list->force || !is_optional;
+
+		/*
+		cl_log(LOG_DEBUG,
+		       "Processing action %s (id=%s) on %s",
+		       task, id, on_node);
+		*/
+		
+		if(list->force && is_optional) {
+			cl_log(LOG_INFO,
+			       "Forcing execution of otherwise optional task "
+			       "due to a dependancy on a previous action");
+		}
+		
+		if(list->force == FALSE && is_optional) {
+			if(safe_str_eq(xml_action->name, "rsc_op")){
+				cl_log(LOG_INFO,
+				       "Skipping rsc-op (%s): %s %s on %s",
+				       id, task,
+				       xmlGetProp(xml_action->children, "id"),
+				       on_node);
+			} else {
+				cl_log(LOG_INFO,
+				       "Skipping optional command %s (id=%s) on %s",
+				       task, id, on_node);
+			}
+			
 		} else if(safe_str_eq(runnable, "false")) {
-			cl_log(LOG_ERR, "Skipping un-runnable command");
+			cl_log(LOG_ERR,
+			       "Failed on un-runnable command: %s (id=%s) on %s",
+			       task, id, on_node);
 			return FALSE;
 			
 		} else if(id == NULL || strlen(id) == 0
@@ -379,7 +408,7 @@ initiate_action(action_list_t *list)
 			  || task == NULL || strlen(task) == 0) {
 			// error
 			cl_log(LOG_ERR,
-			       "Command: \"%s (id=%s) on %s\" was corrupted.",
+			       "Failed on corrupted command: %s (id=%s) on %s",
 			       task, id, on_node);
 			
 			return FALSE;
@@ -390,6 +419,10 @@ initiate_action(action_list_t *list)
 			/*
 			  <crm_msg op="task" to="on_node">
 			*/
+			cl_log(LOG_INFO,
+			       "Executing crm-event (%s): %s on %s",
+			       id, task, on_node);
+#ifndef TESTING
 			xmlNodePtr options = create_xml_node(NULL, "options");
 			set_xml_property_copy(options, XML_ATTR_OP, task);
 			
@@ -399,8 +432,14 @@ initiate_action(action_list_t *list)
 			
 			free_xml(options);
 			return TRUE;
-			
+#endif			
 		} else if(safe_str_eq(xml_action->name, "rsc_op")){
+			cl_log(LOG_INFO,
+			       "Executing rsc-op (%s): %s %s on %s",
+			       id, task,
+			       xmlGetProp(xml_action->children, "id"),
+			       on_node);
+#ifndef TESTING
 			/*
 			  <msg_data>
 			  <rsc_op id="operation number" on_node="" task="">
@@ -425,12 +464,14 @@ initiate_action(action_list_t *list)
 			free_xml(options);
 			free_xml(data);
 			return TRUE;
-			
+#endif			
 		} else {
 			// error
-			cl_log(LOG_ERR, "Action %s is not (yet?) supported",
-			       xml_action->name);
-			
+			cl_log(LOG_ERR,
+			       "Failed on unsupported command: %s (id=%s) on %s",
+			       task, id, on_node);
+
+			return FALSE;
 		}
 	}
 	
