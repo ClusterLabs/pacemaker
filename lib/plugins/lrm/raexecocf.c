@@ -37,18 +37,30 @@
 #include <pils/plugin.h>
 #include <lrm/raexec.h>
 
-#define PIL_PLUGINTYPE		RA_EXEC_TYPE
-#define PIL_PLUGIN		ocf
-#define PIL_PLUGINTYPE_S	"RAExec"
-#define PIL_PLUGIN_S		"ocf"
-#define PIL_PLUGINLICENSE	LICENSE_PUBDOM
-#define PIL_PLUGINLICENSEURL	URL_PUBDOM
+# define PIL_PLUGINTYPE		RA_EXEC_TYPE
+# define PIL_PLUGINTYPE_S	"RAExec"
+# define PIL_PLUGINLICENSE	LICENSE_PUBDOM
+# define PIL_PLUGINLICENSEURL	URL_PUBDOM
 
+#ifndef COMPILE_AS_STONITH
+# define PIL_PLUGIN		ocf
+# define PIL_PLUGIN_S		"ocf"
 /* 
  * Are there multiple paths? Now according to OCF spec, the answer is 'no'.
  * But actually or for future?
  */
 static const char * RA_PATH = "/usr/ocf/resource.d/";
+
+#else
+# define PIL_PLUGIN		stonith
+# define PIL_PLUGIN_S		"stonith"
+/* 
+ * Are there multiple paths? Now according to OCF spec, the answer is 'no'.
+ * But actually or for future?
+ */
+static const char * RA_PATH = "/usr/lib/heartbeat/stonith.d/";
+
+#endif
 
 /* The begin of exported function list */
 static int execra(const char * ra_name,  

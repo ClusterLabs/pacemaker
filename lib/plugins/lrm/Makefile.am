@@ -30,11 +30,14 @@ COMMONLIBS			=	$(top_builddir)/lib/clplumbing/libplumb.la   \
 lrmdir				=	$(HA_VARLIBDIR)/$(HB_PKG)/$(LRM_DIR)
 plugindir               	= 	$(halibdir)/plugins/RAExec
 
-plugin_LTLIBRARIES = lsb.la ocf.la heartbeat.la
+plugin_LTLIBRARIES = lsb.la ocf.la heartbeat.la stonith.la
 lsb_la_SOURCES = raexeclsb.c
 lsb_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 ocf_la_SOURCES = raexecocf.c
 ocf_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
+stonith_la_SOURCES = raexecocf.c
+stonith_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
+stonith_la_CFLAGS  = -DCOMPILE_AS_STONITH
 heartbeat_la_SOURCES = raexechb.c
 heartbeat_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 
