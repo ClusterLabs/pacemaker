@@ -24,9 +24,7 @@
 #include <crmd_fsa.h>
 #include <libxml/tree.h>
 
-typedef GList *fsa_message_queue_t;
-
-fsa_message_queue_t put_message(xmlNodePtr new_message);
+GListPtr put_message(xmlNodePtr new_message);
 xmlNodePtr get_message(void);
 gboolean is_message(void);
 

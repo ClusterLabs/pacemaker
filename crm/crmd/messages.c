@@ -36,7 +36,7 @@
 FILE *msg_out_strm = NULL;
 FILE *router_strm = NULL;
 
-fsa_message_queue_t fsa_message_queue = NULL;
+GListPtr fsa_message_queue = NULL;
 
 gboolean relay_message(xmlNodePtr xml_relay_message,
 		       gboolean originated_locally);
@@ -67,7 +67,7 @@ gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);
 
 
 /* returns the current head of the FIFO queue */
-fsa_message_queue_t
+GListPtr
 put_message(xmlNodePtr new_message)
 {
 	int old_len = g_list_length(fsa_message_queue);
