@@ -11,24 +11,29 @@
 
 #include <lrm/racommon.h>
 
-
-
 void
 get_ra_pathname(const char* class_path, const char* type, const char* provider,
 		char pathname[])
 {
 	char* type_dup;
 	char* base_name;
+
 	type_dup = strndup(type, RA_MAX_NAME_LENGTH);
+	if (type_dup == NULL) {
+		cl_log(LOG_ERR, "No enough memory to allocate.");
+		pathname[0] = '\0';
+		return;
+	}
+
 	base_name = basename(type_dup);
 
 	if ( strncmp(type, base_name, RA_MAX_NAME_LENGTH) == 0 ) {
 		/*the type does not include path*/
 		if (provider) {
-			snprintf(pathname, RA_MAX_NAME_LENGTH, "%s%s/%s",
+			snprintf(pathname, RA_MAX_NAME_LENGTH, "%s/%s/%s",
 				class_path, provider, type);
 		}else{
-			snprintf(pathname, RA_MAX_NAME_LENGTH, "%s%s",
+			snprintf(pathname, RA_MAX_NAME_LENGTH, "%s/%s",
 				class_path,type);
 		}
 	}else{
@@ -62,6 +67,7 @@ filtered(char * file_name)
 	}
 	return FALSE;
 }
+
 int
 get_runnable_list(const char* class_path, GList ** rsc_info)
 {
@@ -89,9 +95,8 @@ get_runnable_list(const char* class_path, GList ** rsc_info)
 
 			tmp_buffer[0] = '\0';
 			tmp_buffer[FILENAME_MAX] = '\0';
-			strncpy(tmp_buffer, class_path, FILENAME_MAX);
-			strncat(tmp_buffer, "/", FILENAME_MAX);
-			strncat(tmp_buffer, namelist[file_num]->d_name, FILENAME_MAX);
+			snprintf(tmp_buffer, FILENAME_MAX, "%s/%s", 
+				 class_path, namelist[file_num]->d_name );
 			if ( filtered(tmp_buffer) == TRUE ) {
 				*rsc_info = g_list_append(*rsc_info,
 						g_strdup(namelist[file_num]->d_name));
