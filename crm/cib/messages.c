@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.13 2005/01/13 13:49:28 andrew Exp $ */
+/* $Id: messages.c,v 1.14 2005/01/13 15:38:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -229,12 +229,14 @@ cib_process_erase(
 	if(answer != NULL) *answer = NULL;
 
 	tmpCib = createEmptyCib();
+
+	result = revision_check(get_the_CIB(), tmpCib, options);		
 	copy_in_properties(tmpCib, get_the_CIB());
 	
 	cib_pre_notify(op, get_the_CIB(), tmpCib);
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, TRUE);
 		
-	if(activateCibXml(tmpCib, CIB_FILENAME) < 0) {
+	if(result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
 		result = cib_ACTIVATION;
 	}
 

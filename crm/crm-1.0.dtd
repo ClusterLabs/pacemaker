@@ -57,8 +57,13 @@ More details are given in the annotated DTD below.
      which the CIB validates, the version is implicit... -->
 
 <!ATTLIST cib
-	  version      CDATA	   #REQUIRED
-	  timestamp    CDATA	   #REQUIRED>
+	  num_updates  CDATA	#IMPLIED
+	  num_peers    CDATA	#IMPLIED	
+	  last_written CDATA	#IMPLIED
+	  dc_uuid      CDATA	#IMPLIED
+	  timestamp    CDATA	#REQUIRED
+	  have_quorum  (true|false)	'false'
+	  cib_feature_revision	CDATA	#REQUIRED>
 
 <!ELEMENT configuration (nodes, resources, constraints, metadata, crm_config)>
 <!-- The most uptodate configuration in the cluster is automatically
@@ -577,58 +582,43 @@ typedef enum {
 
      The operation is the command passed to the Resource Agent.
 
-     "runnable" should probably be removed and is a legacy of development
-
-     "optional" indicates to the Transitioner that the action is available
-     but not manditory.	 This is useful when resources depend on others which
-     may or may not need to be moved/restarted.
-
-     "discard" may or not be needed - i need to check but the intention was
-     to not bother with trying to stop a failed resource before stonithing a 
-     node.
-
      "allow_fail" when set to true, the transition isnt aborted when the 
      action fails.  eg. a stop or shutdown isnt fatal when a STONITH is also
      pending for that node.
 
 -->
 
-<!ELEMENT rsc_op (resource)>
+<!ELEMENT rsc_op (resource, attrs)>
 <!ATTLIST rsc_op
-	id	   CDATA	#REQUIRED
-	runnable   (true|false) 'true'
-	optional   (true|false) 'false'
-	discard	   (true|false) 'false'
-	allow_fail (true|false) 'false'
-	on_node	   CDATA	#REQUIRED
-	operation  CDATA	#REQUIRED>
+	id	      CDATA	#REQUIRED
+	operation     CDATA	#REQUIRED
+	on_node	      CDATA	#REQUIRED
+	on_node_uuid  CDATA	#REQUIRED
+	timeout	      CDATA	#REQUIRED
+	allow_fail    (true|false) 'false'>
 
 <!-- For added flexibility, an action can trigger an event, which is
      then consumed somewhere else. Woah. Cool. 
-
-Andrew:
-     not sure these will be required long-term.	 right now they are used
-     for STONITTH ops but that should change once they become resources.
 -->
-<!ELEMENT pseudo_event EMPTY>
+<!ELEMENT pseudo_event (attrs)>
 <!ATTLIST pseudo_event
-	id	   CDATA	#REQUIRED
-	runnable   (true|false) 'true'
-	optional   (true|false) 'false'
-	discard	   (true|false) 'false'
-	allow_fail (true|false) 'false'>
+	id	      CDATA	#REQUIRED
+	operation     CDATA	#REQUIRED
+	on_node	      CDATA	#REQUIRED
+	on_node_uuid  CDATA	#REQUIRED
+	timeout	      CDATA	#REQUIRED
+	allow_fail    (true|false) 'false'>
 	
 <!-- crm_event: We can instruct a crmd to shutdown (maybe the whole node?),
      sign-out cleanly, or to retrigger the DC election.
 -->
-<!ELEMENT crm_event EMPTY>
+<!ELEMENT crm_event (attrs)>
 <!ATTLIST crm_event
-	id	   CDATA	#REQUIRED
-	runnable   (true|false) 'true'
-	optional   (true|false) 'false'
-	discard	   (true|false) 'false'
-	allow_fail (true|false) 'false'
-	on_node	   CDATA	#REQUIRED
+	id	      CDATA	#REQUIRED
+	allow_fail    (true|false) 'false'
+	on_node	      CDATA	#REQUIRED
+	on_node_uuid  CDATA	#REQUIRED
+	timeout	      CDATA	#REQUIRED
 	operation (shutdown|signout|signup|election) #REQUIRED>
 
 <!-- ============================================================== -->
@@ -696,6 +686,7 @@ Andrew:
 	  value		CDATA #IMPLIED>
 
 <!-- Same same, different names for clarity ;) -->
+<!ELEMENT attrs (nvpair*)>
 <!ELEMENT attributes (nvpair*)>
 <!ELEMENT rsc_parameters (nvpair*)>
 

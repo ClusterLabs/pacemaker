@@ -266,19 +266,13 @@ do_dc_takeover(long long action,
 		  XML_ATTR_DC_UUID, xmlGetProp(cib, XML_ATTR_DC_UUID));
 	
 	set_uuid(cib, XML_ATTR_DC_UUID, fsa_our_uname);
-	set_xml_property_copy(
-		cib, XML_ATTR_CIB_REVISION_MAX, cib_feature_revision_s);
 	update = create_cib_fragment(cib, NULL);
 	free_xml(cib);
 
 	rc = fsa_cib_conn->cmds->modify(
 		fsa_cib_conn, NULL, update, &output, cib_sync_call);
 	
-	if(rc != cib_ok) {
-		crm_err("DC UUID update failed: %s", cib_error2string(rc));
-		result = I_FAIL;
-
-	} else {
+	if(rc == cib_ok) {
 		int revision_i = -1;
 		const char *revision = NULL;
 
@@ -295,6 +289,16 @@ do_dc_takeover(long long action,
 			/* go into a stall state */
 			result = I_HALT;
 		}
+
+	} else if(rc == cib_revision_unsupported) {
+		crm_err("Feature revision not permitted");
+		/* go into a stall state */
+		result = I_HALT;
+		
+	} else 	if(rc != cib_ok) {
+		crm_err("DC UUID update failed: %s", cib_error2string(rc));
+		result = I_FAIL;
+
 	}
 	
 	free_xml(update);
