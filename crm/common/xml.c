@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.37 2005/02/20 14:34:16 andrew Exp $ */
+/* $Id: xml.c,v 1.38 2005/02/25 10:28:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -488,6 +488,7 @@ copy_xml_node_recursive(crm_data_t *src_node)
 		return NULL;
 	}
 	
+	crm_validate_data(src_node);
 	new_xml = ha_msg_copy(src_node);
 	crm_set_element_parent(new_xml, NULL);
 	crm_update_parents(new_xml);
@@ -571,6 +572,65 @@ string2xml(const char *input)
 	return output;
 #endif	
 }
+
+crm_data_t *
+stdin2xml(void) 
+{
+#ifdef USE_LIBXML
+	return file2xml(stdin);
+#else
+	int lpc = 0;
+	int MAX_XML_BUFFER = 20000;
+	
+	char ch = 0;
+	gboolean more = TRUE;
+	gboolean inTag = FALSE;
+	FILE *input = stdin;
+
+	char *xml_buffer = NULL;
+	crm_data_t *xml_obj = NULL;
+
+	crm_malloc(xml_buffer, sizeof(char)*(MAX_XML_BUFFER+1));
+	
+	while (more && lpc < MAX_XML_BUFFER) {
+		ch = fgetc(input);
+/* 		crm_devel("Got [%c]", ch); */
+		switch(ch) {
+			case EOF: 
+			case 0:
+				ch = 0;
+				more = FALSE; 
+				xml_buffer[lpc++] = ch;
+				break;
+			case '>':
+			case '<':
+				inTag = TRUE;
+				if(ch == '>') inTag = FALSE;
+				xml_buffer[lpc++] = ch;
+				break;
+			case '\n':
+			case '\t':
+			case ' ':
+				ch = ' ';
+				if(inTag) {
+					xml_buffer[lpc++] = ch;
+				} 
+				break;
+			default:
+				xml_buffer[lpc++] = ch;
+				break;
+		}
+	}
+	
+	xml_buffer[MAX_XML_BUFFER] = 0;
+	xml_obj = string2xml(xml_buffer);
+	crm_free(xml_buffer);
+
+	crm_xml_devel(xml_obj, "Created fragment");
+	return xml_obj;
+#endif
+}
+
 
 crm_data_t*
 file2xml(FILE *input)
