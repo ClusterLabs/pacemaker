@@ -229,8 +229,12 @@ update_local_cib_adv(
 	fsa_input->msg = msg;
 	fsa_input->xml = msg_data;
 
-	CRM_DEV_ASSERT(cib_ok == fsa_cib_conn->cmds->is_master(fsa_cib_conn));
-
+	CRM_DEV_ASSERT(cib_not_master != fsa_cib_conn->cmds->is_master(
+			       fsa_cib_conn));
+	if(AM_I_DC && crm_assert_failed) {	
+/* 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL); */
+	}
+	
 	if(do_now == FALSE) {
 		crm_devel("Registering event with FSA");
 		register_fsa_input_adv(C_FSA_INTERNAL, I_CIB_OP, fsa_input, 0,
