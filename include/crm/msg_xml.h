@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.2 2004/04/02 12:11:47 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.3 2004/06/01 11:45:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,11 +31,18 @@
 #define XML_ATTR_VERSION		"version"
 #define XML_ATTR_DESC			"description"
 #define XML_ATTR_ID			"id"
+#define XML_ATTR_TYPE			"type"
 #define XML_ATTR_FILTER_TYPE		"type_filter"
 #define XML_ATTR_FILTER_ID		"id_filter"
 #define XML_ATTR_FILTER_PRIORITY	"priority_filter"
 #define XML_ATTR_VERBOSE		"verbose"
-#define XML_ATTR_OP			"operation"
+#define XML_ATTR_OP			"op"
+#define XML_ATTR_TRUEOP			"true_op"
+
+#define XML_BOOLEAN_TRUE		"true"
+#define XML_BOOLEAN_FALSE		"false"
+#define XML_BOOLEAN_NO			XML_BOOLEAN_TRUE
+#define XML_BOOLEAN_YES			XML_BOOLEAN_FALSE
 
 #define XML_TAG_OPTIONS			"options"
 
@@ -74,39 +81,57 @@
 #define XML_FAILCIB_ATTR_REASON		"reason"
 
 //---- CIB specific tags/attrs
-#define XML_CIB_TAG_CONFIGURATION "configuration"
-#define XML_CIB_TAG_STATUS        "status"
-#define XML_CIB_TAG_RESOURCES     "resources"
-#define XML_CIB_TAG_NODES         "nodes"
-#define XML_CIB_TAG_CONSTRAINTS   "constraints"
+#define XML_CIB_TAG_CONFIGURATION	"configuration"
+#define XML_CIB_TAG_STATUS       	"status"
+#define XML_CIB_TAG_RESOURCES		"resources"
+#define XML_CIB_TAG_NODES         	"nodes"
+#define XML_CIB_TAG_CONSTRAINTS   	"constraints"
 
-#define XML_CIB_TAG_STATE         "node_state"
-#define XML_CIB_TAG_RESOURCE      "resource"
-#define XML_CIB_TAG_NODE          "node"
-#define XML_CIB_TAG_CONSTRAINT    "constraint"
-#define XML_CIB_TAG_NVPAIR        "nv_pair"
+#define XML_CIB_TAG_STATE         	"node_state"
+#define XML_CIB_TAG_RESOURCE      	"resource"
+#define XML_CIB_TAG_NODE          	"node"
+#define XML_CIB_TAG_CONSTRAINT    	"constraint"
+#define XML_CIB_TAG_NVPAIR        	"nv_pair"
 
-#define XML_CIB_ATTR_HEALTH       "health"
-#define XML_CIB_ATTR_WEIGHT       "weight"
-#define XML_CIB_ATTR_PRIORITY     "priority"
-#define XML_CIB_ATTR_RESTIMEOUT   "res_timeout"
-#define XML_CIB_ATTR_MAXINSTANCE  "max_instances"
-#define XML_CIB_ATTR_INSTANCE     "instance"
-#define XML_CIB_ATTR_RESID        "res_id"
-#define XML_CIB_ATTR_RESID1       "res_id_1"
-#define XML_CIB_ATTR_RESID2       "res_id_2"
-#define XML_CIB_ATTR_CLEAR        "clear_on"
-#define XML_CIB_ATTR_SOURCE       "source"
-#define XML_CIB_ATTR_CONTYPE      "type"
-#define XML_CIB_ATTR_RESTYPE      "type"
-#define XML_CIB_ATTR_RESSTATUS    "resource_status"
-#define XML_CIB_ATTR_NODEID       "node_id"
-#define XML_CIB_ATTR_NODETYPE     "type"
-#define XML_CIB_ATTR_NODESTATUS   "node_status"
-#define XML_CIB_ATTR_VARTYPE      "var_type"
-#define XML_CIB_ATTR_VARVALUE     "var_value"
-#define XML_CIB_ATTR_NODEREF      "node_crm_msg_reference"
-#define XML_CIB_ATTR_ACTION       "action"
+#define XML_CIB_TAG_LRM		  	"lrm"
+#define XML_LRM_TAG_RESOURCES     	"lrm_resources"
+
+#define XML_CIB_ATTR_HEALTH       	"health"
+#define XML_CIB_ATTR_WEIGHT       	"weight"
+#define XML_CIB_ATTR_PRIORITY     	"priority"
+#define XML_CIB_ATTR_RESTIMEOUT   	"res_timeout"
+#define XML_CIB_ATTR_MAXINSTANCE  	"max_instances"
+#define XML_CIB_ATTR_INSTANCE     	"instance"
+#define XML_CIB_ATTR_CLEAR        	"clear_on"
+#define XML_CIB_ATTR_SOURCE       	"source"
+
+#define XML_CIB_ATTR_JOINSTATE    	"join"
+#define XML_CIB_ATTR_EXPSTATE     	"expected"
+#define XML_CIB_ATTR_INCCM        	"in_ccm"
+#define XML_CIB_ATTR_CRMDSTATE    	"crmd"
+
+#define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
+#define XML_CIB_ATTR_CLEAR_SHUTDOWN 	"clear_shutdown"
+#define XML_CIB_ATTR_STONITH	    	"stonith"
+#define XML_CIB_ATTR_CLEAR_STONITH  	"clear_stonith"
+
+#define XML_LRM_ATTR_TASK		"task"
+#define XML_LRM_ATTR_TARGET		"target"
+#define XML_LRM_ATTR_DISCARD		"discard"
+#define XML_LRM_ATTR_RUNNABLE		"runnable"
+#define XML_LRM_ATTR_OPTIONAL		"optional"
+
+#define XML_LRM_ATTR_LASTOP		"last_op"
+#define XML_LRM_ATTR_OPSTATE		"op_state"
+#define XML_LRM_ATTR_OPCODE		"op_code"
+
+#define XML_NVPAIR_ATTR_NAME        	"name"
+#define XML_NVPAIR_ATTR_VALUE        	"value"
+
+#define XML_STRENGTH_VAL_MUST		"must"
+#define XML_STRENGTH_VAL_SHOULD		"should"
+#define XML_STRENGTH_VAL_SHOULDNOT	"should_not"
+#define XML_STRENGTH_VAL_MUSTNOT	"must_not"
 
 #include <libxml/tree.h> 
 

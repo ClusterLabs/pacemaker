@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.7 2004/05/23 18:13:09 andrew Exp $ */
+/* $Id: crm.h,v 1.8 2004/06/01 11:45:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,6 +23,11 @@
 #include <ha_config.h>
 #include <glib.h>
 
+#include <string.h>
+#include <clplumbing/cl_log.h>
+#include <clplumbing/cl_malloc.h>
+#include <mcheck.h>
+
 /* Clean these up at some point, some probably should be runtime options */
 #define WORKING_DIR HA_VARLIBDIR"/heartbeat/crm"
 #define BIN_DIR "/usr/lib/heartbeat"
@@ -41,21 +46,77 @@
 #define DOT_ALL_FSA_INPUTS 1
 //#define FSA_TRACE 1
 #define USE_FAKE_LRM 1
+/* Throttle announce messages to work around what appears to be a bug in
+ * the send_ordered_*_message() code.  node messages are taking approx 15s
+ * longer to be sent than their cluster counterparts
+ */
+#define THROTTLE_ANNOUNCE 1
 
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_malloc.h>
-#include <string.h>
+
+/* Sub-systems */
+#define CRM_SYSTEM_DC		"dc"
+#define CRM_SYSTEM_DCIB		"dcib" // The master CIB
+#define CRM_SYSTEM_CIB		"cib"
+#define CRM_SYSTEM_CRMD		"crmd"
+#define CRM_SYSTEM_LRMD		"lrmd"
+#define CRM_SYSTEM_PENGINE	"pengine"
+#define CRM_SYSTEM_TENGINE	"tengine"
+
+/* Valid operations */
+#define CRM_OP_BUMP		"bump"
+#define CRM_OP_QUERY		"query"
+#define CRM_OP_CREATE		"create"
+#define CRM_OP_UPDATE		"update"
+#define CRM_OP_DELETE		"delete"
+#define CRM_OP_ERASE		"erase"
+#define CRM_OP_STORE		"store"
+#define CRM_OP_REPLACE		"replace"
+#define CRM_OP_FORWARD		"forward"
+#define CRM_OP_JOINACK		"join_ack"
+#define CRM_OP_WELCOME		"welcome"
+#define CRM_OP_PING		"ping"
+#define CRM_OP_VOTE		"vote"
+#define CRM_OP_HELLO		"hello"
+#define CRM_OP_ANNOUNCE		"announce"
+#define CRM_OP_HBEAT		"dc_beat"
+#define CRM_OP_PECALC		"pe_calc"
+#define CRM_OP_ABORT		"abort"
+#define CRM_OP_QUIT		"quit"
+#define CRM_OP_SHUTDOWN 	"shutdown_crm"
+#define CRM_OP_EVENTCC		"event_cc"
+#define CRM_OP_TEABORT		"te_abort"
+#define CRM_OP_TRANSITION	"transition"
+#define CRM_OP_TECOMPLETE	"te_complete"
+#define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
+
+#define CRMD_STATE_ACTIVE	"active"
+#define CRMD_STATE_INACTIVE	"inactive"
+
+#define CRMD_JOINSTATE_DOWN	"down"
+#define CRMD_JOINSTATE_PENDING	"pending"
+#define CRMD_JOINSTATE_MEMBER	"member"
+
+typedef GSList* GSListPtr;
 
 #define safe_str_eq(x, y)  x!=NULL && y!=NULL && strcmp(x,y) == 0
 #define safe_str_neq(x, y) x != y && (x==NULL || y==NULL || strcmp(x,y) != 0)
 
+#define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
+				         x *w = (x*)g_slist_nth_data(y, z); \
+					 a;				    \
+				  }
+
 /* Developmental debug stuff */
-#if 1
-#   define CRM_DEBUG(w...)        cl_log(LOG_DEBUG, w)
-#else
-/* these wont work yet, need to cast to void */
-#   define CRM_DEBUG(w...)		if(0) { cl_log(LOG_DEBUG, w); }
-#endif
+#define CRM_DEBUG(w...) cl_log(LOG_DEBUG, w)
+
+extern gboolean crm_debug_state;
+#define crm_debug(w...)  if(crm_debug_state) {	\
+		cl_log(LOG_DEBUG, w);		\
+	}
+
+#define crm_debug_action(x) if(crm_debug_state) {	\
+		x;					\
+	}
 
 /* Seriously detailed debug stuff */
 #if 0
@@ -68,45 +129,8 @@
 #   define FNRET(x) return x; 
 #endif
 
-/* Sub-systems */
-#define CRM_SYSTEM_DC       "dc"
-#define CRM_SYSTEM_DCIB     "dcib" // The master CIB
-#define CRM_SYSTEM_CIB      "cib"
-#define CRM_SYSTEM_CRMD     "crmd"
-#define CRM_SYSTEM_LRMD     "lrmd"
-#define CRM_SYSTEM_PENGINE  "pengine"
-#define CRM_SYSTEM_TENGINE  "tengine"
-
-/* Valid operations */
-#define CRM_OPERATION_BUMP	"bump"
-#define CRM_OPERATION_QUERY	"query"
-#define CRM_OPERATION_CREATE	"create"
-#define CRM_OPERATION_UPDATE	"update"
-#define CRM_OPERATION_DELETE	"delete"
-#define CRM_OPERATION_ERASE	"erase"
-#define CRM_OPERATION_STORE	"store"
-#define CRM_OPERATION_REPLACE	"replace"
-#define CRM_OPERATION_FORWARD	"forward"
-#define CRM_OPERATION_JOINACK	"join_ack"
-#define CRM_OPERATION_WELCOME	"welcome"
-#define CRM_OPERATION_PING	"ping"
-#define CRM_OPERATION_VOTE	"vote"
-#define CRM_OPERATION_ANNOUNCE	"announce"
-#define CRM_OPERATION_HBEAT	"dc_beat"
-#define CRM_OPERATION_SHUTDOWN	"shutdown"
-#define CRM_OPERATION_SHUTDOWN_REQ	"req_shutdown"
-
-
-typedef GSList* GSListPtr;
-
-#define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
-				         x *w = (x*)g_slist_nth_data(y, z); \
-					 a;				    \
-				  }
-
-#define crm_malloc(x) cl_malloc(x)
-#define crm_free(x)   if(x) { cl_free(x); x=NULL; }
-#define crm_strdup(x) cl_strdup(x)
-#include <mcheck.h>
+#define crm_malloc(x) malloc(x)
+#define crm_free(x)   if(x) { free(x); x=NULL; }
+#define crm_strdup(x) strdup(x)
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.2 2004/03/25 17:06:08 andrew Exp $ */
+/* $Id: cib.h,v 1.3 2004/06/01 11:45:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,6 +18,8 @@
  */
 #ifndef CIB__H
 #define CIB__H
+
+#include <libxml/tree.h> 
 
 enum cib_op {
 	CIB_OP_NONE = 0,
