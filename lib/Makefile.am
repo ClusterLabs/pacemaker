@@ -29,9 +29,14 @@ MAINTAINERCLEANFILES    = Makefile.in
 #
 ## Subdirectories...
 SUBDIRS			=  	\
-	pils stonith 		\
+	pils			\
+	stonith 		\
 	clplumbing		\
-	apphb recoverymgr	\
-	plugins  checkpointd    \
-	@EVENTD_DIR@ @SWIG_DIR@
+	hbclient		\
+	apphb			\
+	recoverymgr		\
+	checkpointd    		\
+	plugins 		\
+	@EVENTD_DIR@		\
+	@SWIG_DIR@
 
