@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.45 2004/11/09 14:49:14 andrew Exp $ */
+/* $Id: utils.c,v 1.46 2004/11/09 16:51:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -989,7 +989,6 @@ pe_free_resources(GListPtr resources)
 
 		pe_free_shallow_adv(rsc->candidate_colors, TRUE);
 		rsc->fns->free(rsc);
-		crm_free(rsc);
 	}
 	if(resources != NULL) {
 		g_list_free(resources);
@@ -1023,6 +1022,7 @@ void
 pe_free_rsc_dependancy(rsc_dependancy_t *cons)
 { 
 	if(cons != NULL) {
+		crm_debug("Freeing constraint %s (%p)", cons->id, cons);
 		crm_free(cons);
 	}
 }
