@@ -33,6 +33,10 @@ char gArgsStr[800];
 int gColumns = 80;
 int gANSIEscapes = 0;
 int gExitStatus = 95;
+
+int main(int argc, char **argv);
+
+
 static void
 DumpFormattedOutput(void)
 {
@@ -70,6 +74,8 @@ DumpFormattedOutput(void)
 	}
 	free(gBuf);
 }	/* DumpFormattedOutput */
+
+#if PROGRESS_TWIRL
 /* Difftime(), only for timeval structures.  */
 static void TimeValSubtract(struct timeval *tdiff, struct timeval *t1, struct timeval *t0)
 {
@@ -80,6 +86,8 @@ static void TimeValSubtract(struct timeval *tdiff, struct timeval *t1, struct ti
 		tdiff->tv_usec += 1000000;
 	}
 }	/* TimeValSubtract */
+#endif
+
 static void
 Wait(void)
 {
@@ -91,16 +99,19 @@ Wait(void)
 	if (WIFEXITED(status))
 		gExitStatus = WEXITSTATUS(status);
 }	/* Wait */
+
 static int
 SlurpProgress(int fd)
 {
 	char s1[71];
 	char *newbuf;
+#if PROGRESS_TWIRL
 	int nready;
+	fd_set ss;
+#endif
 	size_t ntoread;
 	ssize_t nread;
 	struct timeval now, tnext, tleft;
-	fd_set ss;
 	fd_set ss2;
 	const char *trail = "/-\\|", *trailcp;
 	trailcp = trail;
@@ -123,7 +134,7 @@ SlurpProgress(int fd)
 			gNBufAllocated += TEXT_BLOCK_SIZE;
 			gBuf = newbuf;
 		}
-#if 0
+#if PROGRESS_TWIRL
 		for (;;) {
 			ss = ss2;
 			nready = select(fd + 1, &ss, NULL, NULL, &tleft);
@@ -179,6 +190,7 @@ SlurpProgress(int fd)
 	fflush(stdout);
 	return (0);
 }	/* SlurpProgress */
+
 static int
 SlurpAll(int fd)
 {
@@ -213,6 +225,7 @@ SlurpAll(int fd)
 	gDumpCmdArgs = (gExitStatus != 0);	/* print cmd when there are errors */
 	return (0);
 }	/* SlurpAll */
+
 static const char *
 Basename(const char *path)
 {
@@ -222,6 +235,7 @@ Basename(const char *path)
 		return (path);
 	return (cp + 1);
 }	/* Basename */
+
 static const char *
 Extension(const char *path)
 {
@@ -231,6 +245,7 @@ Extension(const char *path)
 		return ("");
 	return (cp);
 }	/* Extension */
+
 static void
 Usage(void)
 {

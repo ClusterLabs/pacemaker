@@ -22,6 +22,8 @@ MAINTAINERCLEANFILES    = Makefile.in
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
 			-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha
 
+EXTRA_DIST		= ccdv.c
+
 apigid			= @HA_APIGID@
 habindir		= @bindir@
 #halibdir		= $(libdir)/@HB_PKG@
@@ -30,7 +32,8 @@ gliblib			= @GLIBLIB@
 habin_PROGRAMS		= cl_status cl_respawn ccdv
 
 ## SOURCES
-ccdv_SOURCES		= ccdv.c
+ccdv: 	ccdv.c
+	gcc -o ccdv ccdv.c
 
 cl_status_SOURCES	= cl_status.c
 cl_status_LDADD		= $(top_builddir)/lib/hbclient/libhbclient.la	\
@@ -47,5 +50,6 @@ cl_respawn_LDADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
 install-data-hook:    # install-exec-hook doesn't work (!)
 	-chgrp $(apigid) $(DESTDIR)/$(habindir)/cl_status
 	-chmod g+s,a-w $(DESTDIR)/$(habindir)/cl_status
+	-ln -s _ccdv ccdv
 
 .PHONY: install-exec-hook
