@@ -32,19 +32,16 @@ plugindir               	= 	$(halibdir)/plugins/RAExec
 
 plugin_LTLIBRARIES = lsb.la ocf.la heartbeat.la stonith.la
 lsb_la_SOURCES = raexeclsb.c
-lsb_la_CFLAGS  = -DLSB_RA_DIR='"@LSB_RA_DIR@"'
 lsb_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 
 ocf_la_SOURCES = raexecocf.c
-ocf_la_CFLAGS  = -DOCF_RA_DIR='"@OCF_RA_DIR@"'
 ocf_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 
 stonith_la_SOURCES = raexecocf.c
 stonith_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
-stonith_la_CFLAGS  = -DCOMPILE_AS_STONITH -DSTONITH_RA_DIR='"@STONITH_RA_DIR@"'
+stonith_la_CFLAGS  = -DCOMPILE_AS_STONITH
 
 heartbeat_la_SOURCES = raexechb.c
-heartbeat_la_CFLAGS  = -DHB_RA_DIR='"@HB_RA_DIR@"'
 heartbeat_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 
 install-exec-local:
