@@ -63,10 +63,10 @@ ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
 	fflush(router_strm);						\
 	crm_free(msg_text);						\
 	crm_devel(x);							\
-	cl_log_message(LOG_MSG, relay_message);
+	crm_log_message(LOG_MSG, relay_message);
 #else
 #    define ROUTER_RESULT(x)	crm_devel("Router result: %s", x);	\
-	cl_log_message(LOG_MSG, relay_message);	
+	crm_log_message(LOG_MSG, relay_message);	
 #endif
 /* debug only, can wrap all it likes */
 int last_data_id = 0;
@@ -182,6 +182,9 @@ register_fsa_input_adv(
 void
 fsa_dump_queue(int log_level) 
 {
+	if(log_level < crm_log_level) {
+		return;
+	}
 	slist_iter(
 		data, fsa_data_t, fsa_message_queue, lpc,
 		do_crm_log(log_level, __FUNCTION__,
@@ -198,12 +201,10 @@ copy_ha_msg_input(ha_msg_input_t *orig)
 	ha_msg_input_t *input_copy = NULL;
 	crm_malloc(input_copy, sizeof(ha_msg_input_t));
 
-	crm_trace("Copying HA msg");
 	input_copy->msg = ha_msg_copy(orig->msg);
 	if(orig->xml != NULL) {
 		input_copy->xml = copy_xml_node_recursive(orig->xml);
 	}
-	crm_trace("Copy complete");
 	return input_copy;
 }
 
@@ -304,17 +305,7 @@ fsa_typed_data_adv(
 			   "Message data was the wrong type! %d vs. requested=%d."
 			   "  Origin: %s",
 			   fsa_data->data_type, a_type, fsa_data->where);
-#if 1
-		/* I want to know about this ASAP and a core helps track
-		 * the source of the problem more easily
-		 *
-		 * Obviously this needs to go away before release
-		 */
-		fsa_data = NULL;
-		if(fsa_data->data == NULL) {
-			crm_err("the above will seg-fault");
-		}
-#endif	
+		CRM_ASSERT(fsa_data->data_type == a_type);
 	} else {
 		ret_val = fsa_data->data;
 	}
@@ -477,7 +468,7 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 	if(msg_error != NULL) {
 		processing_complete = TRUE;
 		crm_err("%s", msg_error);
-		cl_log_message(LOG_ERR, relay_message);
+		crm_log_message(LOG_ERR, relay_message);
 	}
 
 	if(processing_complete) {
@@ -603,7 +594,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 	}
 	
 	crm_debug("received client join msg");
-	cl_log_message(LOG_MSG, client_msg->msg);
+	crm_log_message(LOG_MSG, client_msg->msg);
 	auth_result = process_hello_message(
 		client_msg->xml, &uuid, &client_name,
 		&major_version, &minor_version);
@@ -754,7 +745,7 @@ handle_request(ha_msg_input_t *stored_msg)
 	
 	if(op == NULL) {
 		crm_err("Bad message");
-		cl_log_message(LOG_ERR, stored_msg->msg);
+		crm_log_message(LOG_ERR, stored_msg->msg);
 
 		/*========== common actions ==========*/
 	} else if(strcmp(op, CRM_OP_VOTE) == 0) {
@@ -808,6 +799,12 @@ handle_request(ha_msg_input_t *stored_msg)
 		crm_info("Debug set to %d (was %d)",
 			 get_crm_log_level(), level);
 
+	} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
+		next_input = I_JOIN_OFFER;
+				
+	} else if(strcmp(op, CRM_OP_JOINACK) == 0) {
+		next_input = I_JOIN_RESULT;
+				
 		/*========== (NOT_DC)-Only Actions ==========*/
 	} else if(AM_I_DC == FALSE){
 
@@ -817,26 +814,20 @@ handle_request(ha_msg_input_t *stored_msg)
 			if(strcmp(op, CRM_OP_HBEAT) == 0) {
 				next_input = I_DC_HEARTBEAT;
 				
-			} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
-				next_input = I_JOIN_OFFER;
-				
 			} else if(fsa_our_dc == NULL) {
 				crm_warn("CRMd discarding request: %s"
 					" (DC: %s, from: %s)",
 					op, crm_str(fsa_our_dc), host_from);
 
 				crm_warn("Ignored Request");
-				cl_log_message(LOG_INFO, stored_msg->msg);
-				
-			} else if(strcmp(op, CRM_OP_JOINACK) == 0) {
-				next_input = I_JOIN_RESULT;
+				crm_log_message(LOG_INFO, stored_msg->msg);
 				
 			} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 				next_input = I_TERMINATE;
 				
 			} else {
 				crm_err("CRMd didnt expect request: %s", op);
-				cl_log_message(LOG_ERR, stored_msg->msg);
+				crm_log_message(LOG_ERR, stored_msg->msg);
 			}
 			
 		} else {
@@ -877,7 +868,7 @@ handle_request(ha_msg_input_t *stored_msg)
 			
 		} else {
 			crm_err("Unexpected request (%s) sent to the DC", op);
-			cl_log_message(LOG_ERR, stored_msg->msg);
+			crm_log_message(LOG_ERR, stored_msg->msg);
 		}		
 	}
 	return next_input;
@@ -897,7 +888,7 @@ handle_response(ha_msg_input_t *stored_msg)
 	
 	if(op == NULL) {
 		crm_err("Bad message");
-		cl_log_message(LOG_ERR, stored_msg->msg);
+		crm_log_message(LOG_ERR, stored_msg->msg);
 
 	} else if(AM_I_DC && strcmp(op, CRM_OP_WELCOME) == 0) {
 		next_input = I_JOIN_REQUEST;
@@ -963,7 +954,7 @@ handle_shutdown_request(HA_Message *stored_msg)
 	crm_info("Creating shutdown request for %s",host_from);
 
 	crm_info("stored msg");
-	cl_log_message(LOG_INFO, stored_msg);
+	crm_log_message(LOG_INFO, stored_msg);
 	
 	set_uuid(node_state, XML_ATTR_UUID, host_from);
 	set_xml_property_copy(node_state, XML_ATTR_UNAME, host_from);
@@ -1108,7 +1099,7 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 		crm_err("Sub-system (%s) has been incorporated into the CRMd.",
 			sys);
 		crm_err("Change the way we handle this CIB message");
-		cl_log_message(LOG_ERR, msg);
+		crm_log_message(LOG_ERR, msg);
 		
 	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_LRMD) == 0) {
 		fsa_data_t *fsa_data = NULL;

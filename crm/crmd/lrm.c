@@ -521,7 +521,7 @@ do_lrm_invoke(long long action,
 
 		if(relay_message(reply, TRUE) == FALSE) {
 			crm_err("Unable to route reply");
-			cl_log_message(LOG_ERR, reply);
+			crm_log_message(LOG_ERR, reply);
 			ha_msg_del(reply);
 		}
 		free_xml(data);

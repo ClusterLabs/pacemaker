@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.20 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.21 2005/01/21 10:33:45 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -574,7 +574,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		lpc++;
 		new_input = new_ipc_msg_input(msg);
 		msg->msg_done(msg);
-		cl_log_message(LOG_MSG, new_input->msg);
+		crm_log_message(LOG_MSG, new_input->msg);
 		
 		if (new_input->xml == NULL) {
 			crm_info(

@@ -126,7 +126,7 @@ do_cib_invoke(long long action,
 		
 		ha_msg_value_int(cib_msg->msg, F_CIB_CALLOPTS, &call_options);
 
-		cl_log_message(LOG_MSG, cib_msg->msg);
+		crm_log_message(LOG_MSG, cib_msg->msg);
 		crm_xml_devel(cib_msg->xml, "[CIB update]");
 		if(op == NULL) {
 			crm_err("Invalid CIB Message");
@@ -145,11 +145,18 @@ do_cib_invoke(long long action,
 		if(action & A_CIB_INVOKE) {
 			if(relay_message(answer, TRUE) == FALSE) {
 				crm_err("Confused what to do with cib result");
-				cl_log_message(LOG_ERR, answer);
+				crm_log_message(LOG_ERR, answer);
 				ha_msg_del(answer);
 				result = I_ERROR;
 			}
+
 		} else if(rc != cib_ok) {
+			crm_err("Internal CRM/CIB command from %s:",
+				msg_data->where);
+			crm_log_message(LOG_ERR, cib_msg->msg);
+			crm_xml_err(cib_msg->xml, "Command data:");
+			crm_log_message(LOG_ERR, answer);
+			
 			register_fsa_input(C_FSA_INTERNAL, I_FAIL, answer);
 			ha_msg_del(answer);
 		}

@@ -122,7 +122,6 @@ do_te_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 	enum crmd_fsa_input ret = I_NULL;
 	HA_Message *cmd = NULL;
 	
@@ -134,6 +133,7 @@ do_te_invoke(long long action,
 	}
 
 	if(action & A_TE_INVOKE) {
+		ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 		if(input->xml != NULL) {
 			cmd = create_request(
 				CRM_OP_TRANSITION, input->xml, NULL,

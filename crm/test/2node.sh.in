@@ -157,12 +157,12 @@ cts_assert "Startup of Heartbeat on ${test_node_2} failed."
 do_cmd echo "wait for CRMd to start on $test_node_2"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd  "$CRM_OPTS" "2>&1 >/dev/null" &
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 200 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 400 \
     -s "${test_node_2} crmd(.*)FSA Hostname: ${test_node_2}" \
     -s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
 cts_assert "CRMd startup on ${test_node_2} failed."
 
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 400 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 600 \
     -s "${test_node_1} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
     -s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2" \
     -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_2}"

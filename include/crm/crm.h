@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.36 2005/01/18 20:33:04 andrew Exp $ */
+/* $Id: crm.h,v 1.37 2005/01/21 10:33:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,18 @@
 #include <mcheck.h>
 #endif
 #include <crm/common/util.h>
+
+#define CRM_ASSERT(expr) if(expr == FALSE) {		\
+		crm_crit("Triggered assert at %s:%d",	\
+			 __FILE__, __LINE__);		\
+		abort();				\
+	}
+
+#define CRM_ASSERT_FALSE(expr) if(expr) {		\
+		crm_crit("Triggered assert at %s:%d",	\
+			 __FILE__, __LINE__);		\
+		abort();				\
+	}
 
 /* Clean these up at some point, some probably should be runtime options */
 #define WORKING_DIR	HA_VARLIBDIR"/heartbeat/crm"
@@ -178,54 +190,42 @@ typedef GList* GListPtr;
 #  define crm_insane(w...)  cl_log(LOG_INSANE,  w)
 #endif
 
-#define crm_debug_action(x) if(crm_log_level >= LOG_DEBUG) {	\
-		x;						\
+#define crm_log_message(level, msg) if(crm_log_level >= level) {	\
+		if(level > LOG_DEBUG) {					\
+			cl_log_message(LOG_DEBUG, msg);			\
+		} else {						\
+			cl_log_message(level, msg);			\
+		}							\
+	}								\
+	
+#define crm_do_action(level, actions) if(crm_log_level >= level) {	\
+		actions;						\
 	}
 
-#define crm_info_action(x) if(crm_log_level >= LOG_INFO) {	\
-		x;						\
+#define crm_debug_action(x) crm_do_action(LOG_DEBUG, x)
+#define crm_info_action(x)  crm_do_action(LOG_INFO, x)
+
+#define crm_log_xml(level, text, xml)   if(crm_log_level >= level) {  \
+		print_xml_formatted(level,  __FUNCTION__, xml, text); \
 	}
+#define crm_xml_crit(xml, text)    crm_log_xml(LOG_CRIT,    text, xml)
+#define crm_xml_err(xml, text)     crm_log_xml(LOG_ERR,     text, xml)
+#define crm_xml_warn(xml, text)    crm_log_xml(LOG_WARNING, text, xml)
+#define crm_xml_notice(xml, text)  crm_log_xml(LOG_NOTICE,  text, xml)
+#define crm_xml_info(xml, text)    crm_log_xml(LOG_INFO,    text, xml)
+#define crm_xml_debug(xml, text)   crm_log_xml(LOG_DEBUG,   text, xml)
+#define crm_xml_devel(xml, text)   crm_log_xml(LOG_DEV,     text, xml)
+#define crm_xml_verbose(xml, text) crm_log_xml(LOG_VERBOSE, text, xml)
+#define crm_xml_trace(xml, text)   crm_log_xml(LOG_TRACE,   text, xml)
 
-#define crm_xml_crit(xml, text)    print_xml_formatted(	\
-		LOG_CRIT,   __FUNCTION__, xml, text)
-
-#define crm_xml_err(xml, text)     print_xml_formatted(	\
-		LOG_ERR,    __FUNCTION__, xml, text)
-
-#define crm_xml_warn(xml, text)    print_xml_formatted(	\
-		LOG_WARNING,__FUNCTION__, xml, text)
-
-#define crm_xml_notice(xml, text)  print_xml_formatted(	\
-		LOG_NOTICE, __FUNCTION__, xml, text)
-
-#define crm_xml_info(xml, text)    print_xml_formatted(	\
-		LOG_INFO,   __FUNCTION__, xml, text)
-
-#define crm_xml_debug(xml, text)   if(crm_log_level >= LOG_DEBUG) {	\
-		print_xml_formatted(LOG_DEBUG,  __FUNCTION__, xml, text); \
-			}
-
-#define crm_xml_devel(xml, text)   if(crm_log_level >= LOG_DEV) {      \
-		print_xml_formatted(LOG_DEV,  __FUNCTION__, xml, text);	\
-									\
-			}
-
-#define crm_xml_verbose(xml, text)   if(crm_log_level >= LOG_VERBOSE) {	\
-		print_xml_formatted(LOG_VERBOSE,  __FUNCTION__, xml, text); \
-			}
-
-#define crm_xml_trace(xml, text)   if(crm_log_level >= LOG_TRACE) {	\
-		print_xml_formatted(LOG_TRACE,  __FUNCTION__, xml, text); \
-			}
-
-#define crm_malloc(x,y)						\
+#define crm_malloc(new_obj,length)				\
 	{							\
-		x = cl_malloc(y);				\
-		if(x == NULL) {				\
+		new_obj = cl_malloc(length);			\
+		if(new_obj == NULL) {				\
 			crm_crit("Out of memory... exiting");	\
 			exit(1);				\
 		} else {					\
-			memset(x, 0, y);			\
+			memset(new_obj, 0, length);		\
 		}						\
 	}							\
 	

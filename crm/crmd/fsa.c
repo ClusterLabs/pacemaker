@@ -264,7 +264,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				
 				crm_devel("FSA processing XML message from %s",
 					  stored_msg->where);
-				cl_log_message(LOG_MSG, ha_input->msg);
+				crm_log_message(LOG_MSG, ha_input->msg);
 				crm_xml_devel(ha_input->xml,
 					      "FSA message data");
 			}
@@ -522,8 +522,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	/* cleanup inputs? */
 	fsa_actions = actions;
 	delete_fsa_input(fsa_data);
-	crm_info("Register contents (0x%llx)", fsa_input_register);
-	fsa_dump_queue(LOG_INFO);
+	crm_debug("Register contents (0x%llx)", fsa_input_register);
+	fsa_dump_queue(LOG_DEBUG);
 	
 	return fsa_state;
 }
@@ -659,11 +659,11 @@ do_state_transition(long long actions,
 			} else {
 				crm_warn("Only %d of %d (%d total) cluster "
 					 "nodes are eligable to run resources",
-					 num_join_invites,
 					 g_hash_table_size(confirmed_nodes),
+					 num_join_invites,
 					 fsa_membership_copy->members_size);
 			}
-			initialize_join(FALSE);
+/* 			initialize_join(FALSE); */
 			break;
 			
 		case S_IDLE:

@@ -49,6 +49,17 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 20 
     -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}"
 cts_assert "CRMd startup on ${test_node_1} failed."
 
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 20 \
+    -s "crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
+    -s "crmd(.*) State transition (.*) \-> \"S_INTEGRATION\"" 
+cts_assert "DC election on ${test_node_1} failed."
+
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 200 \
+
+    -s "Updating node state to member for ${test_node_1}" \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
+cts_assert "IDLE and CRMd join on ${test_node_1} failed."
+
 do_cmd wait_for_state S_IDLE 30 $test_node_1 
 cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
 

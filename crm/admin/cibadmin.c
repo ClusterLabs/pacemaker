@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.16 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.17 2005/01/21 10:33:45 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -544,7 +544,7 @@ void cibadmin_op_callback(
 	char *xml_text = NULL;
 	
 	crm_info("our callback was invoked");
-	cl_log_message(LOG_MSG, msg);
+	crm_log_message(LOG_MSG, msg);
 	exit_code = rc;
 
 	xml_text = dump_xml_formatted(output);

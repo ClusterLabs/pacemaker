@@ -102,7 +102,7 @@ do_cl_join_announce(long long action,
 			CRM_OP_ANNOUNCE, NULL, NULL,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
-			send_request(req, NULL);
+			send_msg_via_ha(fsa_cluster_conn, req);
 		}
 	
 	} else {
@@ -175,7 +175,14 @@ do_cl_join_result(long long action,
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 	const char *ack_nack     = cl_get_string(input->msg, CRM_OP_JOINACK);
 	const char *welcome_from = cl_get_string(input->msg, F_CRM_HOST_FROM);
+	const char *type = cl_get_string(input->msg, F_SUBTYPE);
 
+	if(safe_str_eq(type, XML_ATTR_RESPONSE)) {
+		crm_verbose("Ignoring result.");
+		crm_log_message(LOG_VERBOSE, input->msg);
+		return I_NULL;
+	}
+	
 	/* calculate if it was an ack or a nack */
 	if(safe_str_eq(ack_nack, XML_BOOLEAN_TRUE)) {
 		was_nack = FALSE;
@@ -187,6 +194,7 @@ do_cl_join_result(long long action,
 	}
 	
 	/* send our status section to the DC */
+	crm_debug("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
 		HA_Message *reply = create_reply(input->msg, tmp1);
@@ -199,7 +207,9 @@ do_cl_join_result(long long action,
 		crm_err("Could send our LRM state to the DC");
 		return I_FAIL;
 	}
-	
-	register_fsa_input(cause, I_NOT_DC, NULL);
+
+	if(AM_I_DC == FALSE) {
+		register_fsa_input(cause, I_NOT_DC, NULL);
+	}
 	return I_NULL;
 }

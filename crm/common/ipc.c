@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.16 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: ipc.c,v 1.17 2005/01/21 10:33:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -71,8 +71,8 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 	}
 
 	if(ipc_client->should_send_blocking == FALSE) {
-		crm_info("Setting IPC Channel to blocking..."
-			 " least some messages get lost");
+		crm_verbose("Setting IPC Channel to blocking..."
+			    " least some messages get lost");
 		ipc_client->should_send_blocking = TRUE;
 	}
 
@@ -86,7 +86,7 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 		
 	}	
 
-	cl_log_message(all_is_good?LOG_DEBUG:LOG_ERR, msg);
+	crm_log_message(all_is_good?LOG_DEBUG:LOG_ERR, msg);
 	
 	do_crm_log(log_level, __FUNCTION__,
 	       "Sending IPC message (ref=%s) to %s@%s %s.",
@@ -281,7 +281,7 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		lpc++;
 		new_input = new_ipc_msg_input(msg);
 		msg->msg_done(msg);
-		cl_log_message(LOG_MSG, new_input->msg);
+		crm_log_message(LOG_MSG, new_input->msg);
 
 		sys_to = cl_get_string(new_input->msg, F_CRM_SYS_TO);
 		type   = cl_get_string(new_input->msg, F_CRM_MSG_TYPE);

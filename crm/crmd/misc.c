@@ -43,9 +43,43 @@ do_log(long long action,
 	if(action & A_ERROR) log_type = LOG_ERR;
 	
 	do_crm_log(log_type, __FUNCTION__, 
-	       "[[FSA]] Input (%s) was received while in state (%s)",
-	       fsa_input2string(current_input),
-	       fsa_state2string(cur_state));
+		   "[[FSA]] Input %s from %s() received in state (%s)",
+		   fsa_input2string(msg_data->fsa_input),
+		   msg_data->where,
+		   fsa_state2string(cur_state));
+	
+	if(msg_data->data_type == fsa_dt_ha_msg) {
+		ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);
+		crm_log_message(log_type, input->msg);
+		
+	} else if(msg_data->data_type == fsa_dt_xml) {
+		xmlNodePtr input = fsa_typed_data(msg_data->data_type);
+		if(crm_log_level >= log_type) {
+			print_xml_formatted(
+				log_type,  __FUNCTION__, input, NULL);
+		}
+
+	} else if(msg_data->data_type == fsa_dt_lrm) {
+		lrm_op_t *input = fsa_typed_data(msg_data->data_type);
+		do_crm_log(log_type, __FUNCTION__,
+			   "Resource %s: Call ID %d returned %d (%d)."
+			   "  New status if rc=0: %s",
+			   input->rsc_id, input->call_id, input->rc,
+			   input->op_status, (char*)input->user_data);
+		
+	} else if(msg_data->data_type == fsa_dt_ccm) {
+		struct crmd_ccm_data_s *input = fsa_typed_data(
+			msg_data->data_type);
+		int event = *(input->event);
+		do_crm_log(log_type, __FUNCTION__,
+			   "Received \"%s\" event from the CCM.", 
+			   event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
+			   event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
+			   event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
+			   event==OC_EV_MS_EVICTED?"EVICTED":
+			   "NO QUORUM MEMBERSHIP");
+	}
+	
 	
 	return I_NULL;
 }

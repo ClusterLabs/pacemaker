@@ -334,7 +334,7 @@ cib_native_perform_op(
 	cib->call_id++;
 
 	crm_debug("Sending %s message to CIB service", op);
- 	cl_log_message(LOG_MSG, op_msg);
+ 	crm_log_message(LOG_MSG, op_msg);
 	rc = msg2ipcchan(op_msg, native->command_channel);
 	crm_debug("Message sent");
  	ha_msg_del(op_msg);
@@ -362,7 +362,7 @@ cib_native_perform_op(
 	}
 
 	crm_debug("Syncronous reply recieved");
- 	cl_log_message(LOG_MSG, op_reply);
+ 	crm_log_message(LOG_MSG, op_reply);
 	rc = cib_ok;
 	
 	/* Start processing the reply... */

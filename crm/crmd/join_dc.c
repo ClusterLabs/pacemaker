@@ -33,8 +33,7 @@ int num_join_invites = 0;
 GHashTable *join_offers         = NULL;
 GHashTable *join_requests       = NULL;
 GHashTable *confirmed_nodes     = NULL;
-xmlNodePtr our_generation       = NULL;
-const char *max_generation_from = NULL;
+char *max_generation_from = NULL;
 
 void initialize_join(gboolean before);
 void finalize_join_for(gpointer key, gpointer value, gpointer user_data);
@@ -193,11 +192,13 @@ do_dc_join_req(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	xmlNodePtr generation;
-	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
-	const char *ack_nack = CRMD_JOINSTATE_MEMBER;
+	xmlNodePtr generation = NULL;
+	xmlNodePtr our_generation = NULL;
 
-	gboolean is_a_member  = FALSE;
+	gboolean is_a_member = FALSE;
+	const char *ack_nack = CRMD_JOINSTATE_MEMBER;
+	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
+
 	const char *join_from = cl_get_string(join_ack->msg,F_CRM_HOST_FROM);
 	const char *ref       = cl_get_string(join_ack->msg,XML_ATTR_REFERENCE);
 	const char *op	   = cl_get_string(join_ack->msg, F_CRM_TASK);
@@ -217,14 +218,17 @@ do_dc_join_req(long long action,
 	}
 	
 	generation = join_ack->xml;
-	if(cib_compare_generation(our_generation, generation) < 0) {
+
+	our_generation = cib_get_generation(fsa_cib_conn);
+	if(cib_compare_generation(our_generation, generation) <= 0) {
 		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 		crm_debug("%s has a better generation number than us",
 			  join_from);
 		crm_xml_debug(our_generation, "Our generation");
 		crm_xml_debug(generation, "Their generation");
-		max_generation_from = join_from;
+		max_generation_from = crm_strdup(join_from);
 	}
+	free_xml(our_generation);
 	
 	crm_debug("Welcoming node %s after ACK (ref %s)", join_from, ref);
 	
@@ -294,6 +298,8 @@ do_dc_join_finalize(long long action,
 		rc = fsa_cib_conn->cmds->sync_from(
 			fsa_cib_conn, max_generation_from, NULL, cib_sync_call);
 		if(rc != cib_ok) {
+			crm_err("Sync from %s resulted in an error: %s",
+				max_generation_from, cib_error2string(rc));
 			return I_FAIL;
 		}
 	}
@@ -334,11 +340,17 @@ do_dc_join_ack(long long action,
 	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 	const char *join_from = cl_get_string(join_ack->msg, F_CRM_HOST_FROM);
 	const char *op = cl_get_string(join_ack->msg, F_CRM_TASK);
+	const char *type = cl_get_string(join_ack->msg, F_SUBTYPE);
 	const char *join_state = NULL;
 
 
 	if(safe_str_neq(op, CRM_OP_JOINACK)) {
 		crm_warn("Ignoring op=%s message", op);
+		return I_NULL;
+
+	} else if(safe_str_eq(type, XML_ATTR_REQUEST)) {
+		crm_verbose("Ignoring request");
+		crm_log_message(LOG_VERBOSE, join_ack->msg);
 		return I_NULL;
 	}
 	
@@ -368,7 +380,7 @@ do_dc_join_ack(long long action,
 	update_local_cib(copy_xml_node_recursive(join_ack->xml));
 
 	/* update node entry in the status section  */
-	crm_debug("Updating node state to %s for %s", join_state, join_from);
+	crm_info("Updating node state to %s for %s", join_state, join_from);
 	update = create_node_state(
 		join_from, join_from,
 		ACTIVESTATUS, NULL, ONLINESTATUS, join_state, join_state);
@@ -393,8 +405,6 @@ do_dc_join_ack(long long action,
 void
 finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 {
-	xmlNodePtr tmp1 = NULL;
-
 	const char *join_to = NULL;
 	const char *join_state = NULL;
 	HA_Message *acknak = NULL;
@@ -408,47 +418,6 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 
 	/* make sure the node exists in the config section */
 	create_node_entry(join_to, join_to, CRMD_JOINSTATE_MEMBER);
-
-	/* perhaps we shouldnt special case this... */
-	if(safe_str_eq(join_to, fsa_our_uname)) {
-		crm_debug("mark ourselves confirmed");
-		g_hash_table_insert(confirmed_nodes, crm_strdup(fsa_our_uname),
-				    crm_strdup(CRMD_JOINSTATE_MEMBER));
-
-
-		/* the updates will actually occur in reverse order because of
-		 * the LIFO nature of the fsa input queue
-		 */
-	
-		/* update our LRM data */
-		tmp1 = do_lrm_query(TRUE);
-		if(tmp1 != NULL) {
-			update_local_cib(tmp1);
-
-		} else {
-			crm_err("Could not determin current LRM state");
-			register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-		}
-		
-		/* make sure our cluster state is set correctly */
-		tmp1 = create_node_state(
-			join_to, join_to, ACTIVESTATUS,
-			NULL, ONLINESTATUS, join_state, join_state);
-
-		if(tmp1 != NULL) {
-			update_local_cib(create_cib_fragment(tmp1, NULL));
-			free_xml(tmp1);
-
-		} else {
-			crm_err("Could not create our node state");
-			register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-		}
-
-		num_join_invites++;
-		crm_info("Completed local cluster membership");
-		return;
-	}
-	
 
 	/* send the ack/nack to the node */
 	acknak = create_request(
@@ -469,7 +438,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 		ha_msg_add(acknak, CRM_OP_JOINACK, XML_BOOLEAN_FALSE);
 	}
 	
-	send_request(acknak, NULL);
+	send_msg_via_ha(fsa_cluster_conn, acknak);
 }
 
 void
@@ -487,10 +456,10 @@ initialize_join(gboolean before)
 	}
 
 	if(before) {
-		free_xml(our_generation);
-		our_generation  = cib_get_generation(fsa_cib_conn);
-		
-		max_generation_from = NULL;
+		if(max_generation_from != NULL) {
+			crm_free(max_generation_from);
+			max_generation_from = NULL;
+		}
 		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 		clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 	}
@@ -499,10 +468,6 @@ initialize_join(gboolean before)
 	join_requests   = g_hash_table_new(&g_str_hash, &g_str_equal);
 	confirmed_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
 
-	/* mark ourselves joined */
-	g_hash_table_insert(join_requests, crm_strdup(fsa_our_uname),
-			    crm_strdup(CRMD_JOINSTATE_MEMBER));
-	
 }
 
 
@@ -520,10 +485,6 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 	if(join_to == NULL) {
 		crm_err("No recipient for welcome message");
 
-	} else if(safe_str_eq(join_to, fsa_our_uname)) {
-		crm_debug("Skipping %s msg for ourselves (%s)",
-			  CRM_OP_WELCOME, join_to);
-
 	} else {
 		HA_Message *offer = create_request(
 			CRM_OP_WELCOME, NULL, join_to,
@@ -531,12 +492,11 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 
 		/* send the welcome */
 		crm_debug("Sending %s to %s", CRM_OP_WELCOME, join_to);
-			
-		send_request(offer, NULL);
+
+		send_msg_via_ha(fsa_cluster_conn, offer);
 
 		g_hash_table_insert(join_offers, crm_strdup(join_to),
 				    crm_strdup(CRMD_JOINSTATE_PENDING));
-		
 	}
 }
 

@@ -46,37 +46,24 @@ void crmd_ha_connection_destroy(gpointer user_data);
 void
 crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 {
+	ha_msg_input_t *new_input = NULL;
+
 	const char *from = ha_msg_value(msg, F_ORIG);
 	const char *seq  = ha_msg_value(msg, F_SEQ);
-	const char *type = ha_msg_value(msg, F_TYPE);
-	const char *to   = ha_msg_value(msg, F_CRM_HOST_TO);
-	const char *sys_to = ha_msg_value(msg, F_CRM_SYS_TO);
+	const char *op   = ha_msg_value(msg, F_CRM_TASK);
+
+	const char *sys_to   = ha_msg_value(msg, F_CRM_SYS_TO);
+	const char *sys_from = ha_msg_value(msg, F_CRM_SYS_FROM);
 
 #ifdef MSG_LOG
 	if(msg_in_strm == NULL) {
 		msg_in_strm = fopen(DEVEL_DIR"/inbound.log", "w");
 	}
 #endif
-	
-	if(from == NULL) {
-		crm_err("Value of %s was NULL", F_ORIG);
 
-	} else if(safe_str_eq(from, fsa_our_uname)) {
-		if(safe_str_eq(type, T_CRM)) {
-#ifdef MSG_LOG
-			fprintf(msg_in_strm,
-				"Discarded %s message [F_SEQ=%s] from ourselves.\n",
-				T_CRM, seq);
-			fflush(msg_in_strm);
-#endif
-			return;
-		} 
-	} 
-
-	cl_log_message(LOG_MSG, msg);
+	CRM_ASSERT(from != NULL);
 	
 #ifdef MSG_LOG
-	
 /* 	xml_text = dump_xml_formatted(root_xml_node); */
 /* 	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n", crm_str(from), */
 /* 		seq, ha_msg_value(msg, F_TYPE), xml_text); */
@@ -84,29 +71,54 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 /* 	crm_free(xml_text); */
 #endif
 
-	if(AM_I_DC && safe_str_eq(sys_to, CRM_SYSTEM_DC)) {
-		crm_debug("Processing message for the DC");
-		
-	} else if(to != NULL && strlen(to) != 0
-		  && safe_str_neq(to, fsa_our_uname)) {
+	if(AM_I_DC
+	   && safe_str_eq(sys_from, CRM_SYSTEM_DC)
+	   && safe_str_neq(from, fsa_our_uname)) {
+		crm_err("Another DC detected");
+		crm_log_message(LOG_ERR, msg);
+		new_input = new_ha_msg_input(msg);
+		register_fsa_input(C_HA_MESSAGE, I_ELECTION, new_input);
+
+	} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
+		crm_verbose("Ignoring message for the DC [F_SEQ=%s]", seq);
 #ifdef MSG_LOG
 		fprintf(msg_in_strm,
-			"Discarding message [F_SEQ=%s] for someone else", seq);
+			"Ignoring message for the DC [F_SEQ=%s]", seq);
 #endif
 		return;
+
+	} else if(safe_str_eq(from, fsa_our_uname)
+		  && safe_str_eq(op, CRM_OP_VOTE)) {
+		crm_verbose("Ignoring our own vote [F_SEQ=%s]", seq);
+#ifdef MSG_LOG
+		fprintf(msg_in_strm,
+			"Ignoring our own heartbeat [F_SEQ=%s]", seq);
+#endif
+		return;
+		
+	} else if(AM_I_DC && safe_str_eq(op, CRM_OP_HBEAT)) {
+		crm_verbose("Ignoring our own heartbeat [F_SEQ=%s]", seq);
+#ifdef MSG_LOG
+		fprintf(msg_in_strm,
+			"Ignoring our own heartbeat [F_SEQ=%s]", seq);
+#endif
+		return;
+
 	} else {
 		crm_debug("Processing message");
+		crm_log_message(LOG_MSG, msg);
+		new_input = new_ha_msg_input(msg);
+		register_fsa_input(C_HA_MESSAGE, I_ROUTER, new_input);
 	}
 
-	ha_msg_input_t *new_input = new_ha_msg_input(msg);
+	
 #if 0
 	if(ha_msg_value(msg, XML_ATTR_REFERENCE) == NULL) {
 		ha_msg_add(new_input->msg, XML_ATTR_REFERENCE, seq);
 	}
 #endif
-	register_fsa_input(C_HA_MESSAGE, I_ROUTER, new_input);
+
 	delete_ha_msg_input(new_input);
-	
 	s_crmd_fsa(C_HA_MESSAGE);
 
 	return;
@@ -164,7 +176,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		msg->msg_done(msg);
 		
 		crm_verbose("Processing msg from %s", curr_client->table_key);
-		cl_log_message(LOG_MSG, new_input->msg);
+		crm_log_message(LOG_MSG, new_input->msg);
 	
 #ifdef MSG_LOG
 		{

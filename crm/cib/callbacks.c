@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.10 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: callbacks.c,v 1.11 2005/01/21 10:33:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -312,7 +312,7 @@ cib_common_callback(
 
 		crm_verbose("Processing IPC message from %s on %s channel",
 			    cib_client->id, cib_client->channel_name);
- 		cl_log_message(LOG_MSG, op_request);
+ 		crm_log_message(LOG_MSG, op_request);
 		
 		lpc++;
 
@@ -362,7 +362,7 @@ cib_common_callback(
 		} else if(host != NULL) {
  			crm_debug("Forwarding %s op to %s", op, host);
 			ha_msg_add(op_request, F_CIB_DELEGATED, cib_our_uname);
-			cl_log_message(LOG_MSG, op_request);
+			crm_log_message(LOG_MSG, op_request);
 			
 			hb_conn->llc_ops->send_ordered_nodemsg(
 				hb_conn, op_request, host);
@@ -387,7 +387,7 @@ cib_common_callback(
 			/* send via HA to other nodes */
  			crm_info("Forwarding %s op to master instance", op);
 			ha_msg_add(op_request, F_CIB_DELEGATED, cib_our_uname);
-			cl_log_message(LOG_MSG, op_request);
+			crm_log_message(LOG_MSG, op_request);
 			
 			hb_conn->llc_ops->sendclustermsg(hb_conn, op_request);
 			if(call_options & cib_discard_reply) {
@@ -412,7 +412,7 @@ cib_common_callback(
 			
 		} else if(call_options & cib_sync_call) {
  			crm_debug("Sending sync reply %p to %s op", op_reply,op);
-			cl_log_message(LOG_MSG, op_reply);
+			crm_log_message(LOG_MSG, op_reply);
 			if(msg2ipcchan(op_reply, channel) != HA_OK) {
 				crm_err("Sync reply failed: %s",
 					cib_error2string(cib_reply_failed));
@@ -425,7 +425,7 @@ cib_common_callback(
 			enum cib_errors local_rc = cib_ok;
 			/* send reply via client's callback channel */
  			crm_debug("Sending async reply %p to %s op", op_reply, op);
-			cl_log_message(LOG_MSG, op_reply);
+			crm_log_message(LOG_MSG, op_reply);
 			local_rc = send_via_callback_channel(
 				op_reply, cib_client->callback_id);
 			if(local_rc != cib_ok) {
@@ -436,7 +436,7 @@ cib_common_callback(
 				}
 			}
 		}
-//		ha_msg_del(op_reply);
+		ha_msg_del(op_reply);
 
 		if(rc == cib_ok
 		   && cib_server_ops[call_type].modifies_cib
@@ -459,7 +459,7 @@ cib_common_callback(
 			}
 		}
 
-//		ha_msg_del(op_request);
+		ha_msg_del(op_request);
 	}
 
 	crm_verbose("Processed %d messages", lpc);
@@ -795,7 +795,7 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 	}
 
 	crm_info("Processing message from peer to %s...", request_to);
- 	cl_log_message(LOG_MSG, msg);
+ 	crm_log_message(LOG_MSG, msg);
 
 	if(safe_str_eq(update, XML_BOOLEAN_TRUE)
 	   && safe_str_eq(reply_to, cib_our_uname)) {
