@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.45 2005/04/04 07:32:21 andrew Exp $ */
+/* $Id: utils.c,v 1.46 2005/04/06 14:35:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -332,8 +332,8 @@ do_crm_log(int log_level, const char *function,
 		nbytes=vasprintf(&buf, fmt, ap);
 		va_end(ap);
 
-		log_level -= LOG_DEBUG;
-		if(log_level > 0) {
+		log_level -= LOG_INFO;
+		if(log_level > 1) {
 			if(function == NULL) {
 				cl_log(log_as, "[%d] %s", log_level, buf);
 				
@@ -511,14 +511,32 @@ crm_strdup(const char *a)
 	return ret;
 } 
 
+static GHashTable *crm_uuid_cache = NULL;
+
 void
 set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname) 
 {
 #if 1
 	char *uuid_calc = NULL;
 
-	crm_malloc(uuid_calc, sizeof(char)*50);
+	if(crm_uuid_cache == NULL) {
+		crm_uuid_cache = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+	}
+	
+	CRM_DEV_ASSERT(uname != NULL);
+	CRM_DEV_ASSERT(safe_str_neq(uname, "__no_node__"));
 
+	/* avoid blocking calls where possible */
+	uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
+	if(uuid_calc != NULL) {
+		set_xml_property_copy(node, attr, uuid_calc);
+		return;
+	}
+	
+	crm_malloc(uuid_calc, sizeof(char)*50);
+	
 	if(uuid_calc != NULL) {
 		uuid_t uuid_raw;
 		if(hb->llc_ops->get_uuid_by_name(
@@ -529,6 +547,9 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 			
 		} else {
 			uuid_unparse(uuid_raw, uuid_calc);
+			g_hash_table_insert(
+				crm_uuid_cache,
+				crm_strdup(uname), crm_strdup(uuid_calc));
 		}
 		set_xml_property_copy(node, attr, uuid_calc);
 	}
