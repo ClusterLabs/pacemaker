@@ -254,8 +254,6 @@ crmd_ha_status_callback(
 {
 	xmlNodePtr update      = NULL;
 	xmlNodePtr fragment    = NULL;
-	xmlNodePtr msg_options = NULL;
-	xmlNodePtr request     = NULL;
 
 	crm_debug("received callback");
 	crm_notice("Status update: Node %s now has status [%s]\n",node,status);
@@ -278,21 +276,12 @@ crmd_ha_status_callback(
 	
 	fragment = create_cib_fragment(update, NULL);
 	
-	msg_options = set_xml_attr(
-		NULL, XML_TAG_OPTIONS, XML_ATTR_OP, CRM_OP_UPDATE, TRUE);
-	
-	request = create_request(
-		msg_options, fragment, NULL,
-		CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
-	
 	crm_xml_debug(fragment, "Node status update");
 	
+	update_local_cib(fragment, TRUE);
+
 	free_xml(fragment);
 	free_xml(update);
-	
-	register_fsa_input(C_CRMD_STATUS_CALLBACK, I_CIB_OP, request);
-	s_crmd_fsa(C_CRMD_STATUS_CALLBACK);
-	
 }
 
 
@@ -304,8 +293,6 @@ crmd_client_status_callback(const char * node, const char * client,
 	const char   *extra = NULL;
 	xmlNodePtr   update = NULL;
 	xmlNodePtr fragment = NULL;
-	xmlNodePtr msg_options = NULL;
-	xmlNodePtr request = NULL;
 
 	crm_debug("received callback");
 
@@ -337,20 +324,12 @@ crmd_client_status_callback(const char * node, const char * client,
 	
 	fragment = create_cib_fragment(update, NULL);
 	
-	msg_options = set_xml_attr(
-		NULL, XML_TAG_OPTIONS, XML_ATTR_OP, CRM_OP_UPDATE, TRUE);
-	
-	request = create_request(
-		msg_options, fragment, NULL,
-		CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
-	
 	crm_xml_debug(fragment, "Client status update");
 	
+	update_local_cib(fragment, TRUE);
+
 	free_xml(fragment);
 	free_xml(update);
-	
-	register_fsa_input(C_CRMD_STATUS_CALLBACK, I_CIB_OP, request);
-	s_crmd_fsa(C_CRMD_STATUS_CALLBACK);
 }
 
 

@@ -86,6 +86,7 @@ enum crmd_rscstate {
 	crmd_rscstate_GENERIC_FAIL	
 };
 
+void free_lrm_op(lrm_op_t *op);
 
 const char *crmd_rscstate2string(enum crmd_rscstate state);
 
@@ -552,9 +553,8 @@ do_lrm_rsc_op(
 	lrm_rsc_t *rsc, char *rid, const char *operation, xmlNodePtr msg)
 {
 	lrm_op_t* op        = NULL;
-	int op_result       = HA_OK;
-	int monitor_call_id = 0;
-	int action_timeout = 0;
+	int call_id         = 0;
+	int action_timeout  = 0;
 
 	const char *class = get_xml_attr_nested(
 		msg, rsc_path, DIMOF(rsc_path) -2, "class", TRUE);
@@ -563,7 +563,7 @@ do_lrm_rsc_op(
 		msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TYPE, TRUE);
 
 	const char *timeout = get_xml_attr_nested(
-		msg, rsc_path, DIMOF(rsc_path) -2, "timeout", TRUE);
+		msg, rsc_path, DIMOF(rsc_path) -2, "timeout", FALSE);
 	
 	if(rsc == NULL) {
 		/* add it to the list */
@@ -586,10 +586,27 @@ do_lrm_rsc_op(
 		}
 	}
 
+	/* stop the monitor before stopping the resource */
+	if(safe_str_eq(operation, CRMD_RSCSTATE_STOP)) {
+		gpointer foo = g_hash_table_lookup(monitors, rsc->id);
+		call_id = GPOINTER_TO_INT(foo);
+		
+		if(call_id > 0) {
+			crm_debug("Stopping status op for %s", rsc->id);
+			rsc->ops->cancel_op(rsc, call_id);
+			g_hash_table_remove(monitors, rsc->id);
+			/* TODO: Clean up key */
+			
+		} else {
+			crm_warn("No monitor operation found for %s", rsc->id);
+			/* TODO: we probably need to look up the LRM to find it */
+		}
+	}
+
 	/* now do the op */
 	crm_info("Performing op %s on %s", operation, rid);
-	op            = g_new(lrm_op_t, 1);
-	op->op_type   = g_strdup(operation);
+	crm_malloc(op, sizeof(lrm_op_t));
+	op->op_type   = crm_strdup(operation);
 	op->params    = xml2list(msg, rsc_path, DIMOF(rsc_path));
 	op->timeout   = action_timeout;
 	op->interval  = 0;
@@ -610,19 +627,18 @@ do_lrm_rsc_op(
 	}	
 
 	op->user_data_len = 1+strlen(op->user_data);
-	op_result = rsc->ops->perform_op(rsc, op);
-	crm_free(op->user_data);
+	call_id = rsc->ops->perform_op(rsc, op);
+	free_lrm_op(op);		
 	
-	if(op_result != EXECRA_OK) {
-		crm_err("Operation %s on %s failed with code: %d",
-			operation, rid, op_result);
+	if(call_id <= 0) {
+		crm_err("Operation %s on %s failed", operation, rid);
 		return I_FAIL;
 	}
 	
 	if(safe_str_eq(operation, CRMD_RSCSTATE_START)) {
 		/* initiate the monitor action */
-		op = g_new(lrm_op_t, 1);
-		op->op_type   = g_strdup(CRMD_RSCSTATE_MON);
+		crm_malloc(op, sizeof(lrm_op_t));
+		op->op_type   = crm_strdup(CRMD_RSCSTATE_MON);
 		op->params    = NULL;
 		op->user_data = crm_strdup(CRMD_RSCSTATE_MON_OK);
 		op->timeout   = 0;
@@ -630,36 +646,32 @@ do_lrm_rsc_op(
 		op->target_rc = CHANGED;
 		op->user_data_len = 1+strlen(op->user_data);
 		
-		monitor_call_id = rsc->ops->perform_op(rsc, op);
-		crm_free(op->user_data);
+		call_id = rsc->ops->perform_op(rsc, op);
+		free_lrm_op(op);		
 
-		if (monitor_call_id > 0) {
+		if (call_id > 0) {
 			crm_debug("Adding monitor op for %s", rsc->id);
 			g_hash_table_insert(
 				monitors, strdup(rsc->id),
-				GINT_TO_POINTER(monitor_call_id));
+				GINT_TO_POINTER(call_id));
 		} else {
 			crm_err("Monitor op for %s did not have a call id",
 				rsc->id);
 		}
 		
-	} else if(safe_str_eq(operation, CRMD_RSCSTATE_STOP)) {
-		gpointer foo = g_hash_table_lookup(monitors, rsc->id);
-		int monitor_call_id = GPOINTER_TO_INT(foo);
-		
-		if(monitor_call_id > 0) {
-			crm_debug("Stopping status op for %s", rsc->id);
-			rsc->ops->cancel_op(rsc, monitor_call_id);
-			g_hash_table_remove(monitors, rsc->id);
-			/* TODO: Clean up key */
-			
-		} else {
-			crm_warn("No monitor operation found for %s", rsc->id);
-		}
 	}
 
 	return I_NULL;
 }
+
+void
+free_lrm_op(lrm_op_t *op) 
+{
+	crm_free(op->user_data);
+	crm_free(op->op_type);
+	crm_free(op);
+}
+
 
 GHashTable *
 xml2list(xmlNodePtr parent, const char**attr_path, int depth)
@@ -771,7 +783,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	
 	fragment = create_cib_fragment(update, NULL);
 
-	send_request(NULL, fragment, CRM_OP_UPDATE,
+	send_request(NULL, fragment, CRM_OP_CIB_UPDATE,
 		     fsa_our_dc, CRM_SYSTEM_DCIB, NULL);
 	
 	free_xml(fragment);
@@ -887,7 +899,7 @@ do_fake_lrm_op(gpointer data)
 		
 		update = create_cib_fragment(state, NULL);
 		
-		send_request(NULL, update, CRM_OP_UPDATE,
+		send_request(NULL, update, CRM_OP_CIB_UPDATE,
 			     fsa_our_dc, CRM_SYSTEM_DCIB, NULL);
 	}
 	

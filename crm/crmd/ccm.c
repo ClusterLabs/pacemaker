@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.43 2004/11/23 11:18:54 andrew Exp $ */
+/* $Id: ccm.c,v 1.44 2004/12/05 16:35:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -196,10 +196,8 @@ do_ccm_event(long long action,
 		int lpc = 0;
 		int offset = oc->m_out_idx;
 		for(lpc=0; lpc < oc->m_n_out; lpc++) {
-			xmlNodePtr request = NULL;
 			xmlNodePtr fragment = NULL;
 			xmlNodePtr node_state = NULL;
-			xmlNodePtr msg_options = NULL;
 			
 			const char *uname = oc->m_array[offset+lpc].node_uname;
 			
@@ -217,21 +215,10 @@ do_ccm_event(long long action,
 			
 			fragment = create_cib_fragment(node_state, NULL);
 
-			msg_options = set_xml_attr(
-				NULL, XML_TAG_OPTIONS,
-				XML_ATTR_OP, CRM_OP_UPDATE, TRUE);
-	
-			request = create_request(
-				msg_options, fragment, NULL,
-				CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
-	
-			register_fsa_input(
-				C_FSA_INTERNAL, I_CIB_OP, request);
+			update_local_cib(fragment, TRUE);
 
-			free_xml(msg_options);
 			free_xml(node_state);
 			free_xml(fragment);			
-			free_xml(request);
 
 			s_crmd_fsa(C_FSA_INTERNAL);
 			
@@ -620,7 +607,7 @@ do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite)
 		xmlNodePtr fragment =
 			create_cib_fragment(update_data.updates, NULL);
 
-		invoke_local_cib(NULL, fragment, CRM_OP_UPDATE);
+		update_local_cib(fragment, TRUE);
 		
 		free_xml(fragment);
 	}

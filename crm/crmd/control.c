@@ -38,14 +38,9 @@ extern void crmd_ha_connection_destroy(gpointer user_data);
 extern gboolean stop_all_resources(void);
 
 void crm_shutdown(int nsig);
-IPC_WaitConnection *wait_channel_init(char daemonsocket[]);
+/* IPC_WaitConnection *wait_channel_init(char daemonsocket[]); */
 gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
 
-int init_server_ipc_comms(
-	const char *child,
-	gboolean (*channel_client_connect)(
-		IPC_Channel *newclient, gpointer user_data),
-	void (*channel_connection_destroy)(gpointer user_data));
 
 GHashTable   *ipc_clients = NULL;
 
@@ -192,10 +187,15 @@ do_startup(long long action,
 	if(was_error == 0) {
 		crm_info("Init server comms");
 		was_error = init_server_ipc_comms(
-			CRM_SYSTEM_CRMD, crmd_client_connect,
+			crm_strdup(CRM_SYSTEM_CRMD), crmd_client_connect,
 			default_ipc_connection_destroy);
 	}	
 
+	if(was_error == 0) {
+		crm_info("Creating CIB object");
+		fsa_cib_conn = cib_new();
+	}
+	
 	/* set up the timers */
 	crm_malloc(dc_heartbeat, sizeof(fsa_timer_t));
 	crm_malloc(integration_timer, sizeof(fsa_timer_t));
@@ -402,7 +402,7 @@ do_read_config(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	xmlNodePtr cib_copy = get_cib_copy();
+	xmlNodePtr cib_copy = get_cib_copy(fsa_cib_conn);
 	xmlNodePtr config   = get_object_root(XML_CIB_TAG_CRMCONFIG, cib_copy);
 
 	xml_child_iter(
@@ -493,65 +493,6 @@ crm_shutdown(int nsig)
 }
 
 
-IPC_WaitConnection *
-wait_channel_init(char daemonsocket[])
-{
-	IPC_WaitConnection *wait_ch;
-	mode_t mask;
-	char path[] = IPC_PATH_ATTR;
-	GHashTable * attrs;
-
-	
-	attrs = g_hash_table_new(g_str_hash,g_str_equal);
-	g_hash_table_insert(attrs, path, daemonsocket);
-    
-	mask = umask(0);
-	wait_ch = ipc_wait_conn_constructor(IPC_ANYTYPE, attrs);
-	if (wait_ch == NULL) {
-		cl_perror("Can't create wait channel of type %s",
-			  IPC_ANYTYPE);
-		exit(1);
-	}
-	mask = umask(mask);
-    
-	g_hash_table_destroy(attrs);
-    
-	return wait_ch;
-}
-
-int
-init_server_ipc_comms(
-	const char *child,
-	gboolean (*channel_client_connect)(IPC_Channel *newclient,gpointer user_data),
-	void (*channel_connection_destroy)(gpointer user_data))
-{
-	/* the clients wait channel is the other source of events.
-	 * This source delivers the clients connection events.
-	 * listen to this source at a relatively lower priority.
-	 */
-    
-	char    commpath[SOCKET_LEN];
-	IPC_WaitConnection *wait_ch;
-	
-	sprintf(commpath, WORKING_DIR "/%s", child);
-
-	wait_ch = wait_channel_init(commpath);
-
-	if (wait_ch == NULL) {
-		return 1;
-	}
-	
-	G_main_add_IPC_WaitConnection(
-		G_PRIORITY_LOW, wait_ch, NULL, FALSE,
-		channel_client_connect, wait_ch, channel_connection_destroy);
-
-	crm_debug("Listening on: %s", commpath);
-
-	return 0;
-}
-
-#define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
-
 gboolean
 register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 {
@@ -606,6 +547,8 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		return FALSE;
 	}
 
+	crm_info("beekhof: Client Status callback set");
+
 	crm_debug("Adding channel to mainloop");
 	G_main_add_IPC_Channel(
 		G_PRIORITY_HIGH, hb_cluster->llc_ops->ipcchan(hb_cluster),
@@ -622,6 +565,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 
 	/* Async get client status information in the cluster */
 	crm_debug("Requesting an initial dump of CRMD client_status");
+	crm_info("beekhof: Requesting Client Status");
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 

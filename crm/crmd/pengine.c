@@ -130,7 +130,7 @@ do_pe_invoke(long long action,
 		return I_NULL;		
 	}
 	
-	local_cib = get_cib_copy();
+	local_cib = get_cib_copy(fsa_cib_conn);
 
 	crm_verbose("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
 

@@ -143,7 +143,7 @@ do_cl_join_request(long long action,
 	}
 
 	/* include our CIB generation tuple */
-	tmp1 = cib_get_generation();
+	tmp1 = cib_get_generation(fsa_cib_conn);
 	send_ha_reply(fsa_cluster_conn, welcome, tmp1);
 	free_xml(tmp1);
 	

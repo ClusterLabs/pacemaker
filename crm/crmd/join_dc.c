@@ -50,7 +50,7 @@ do_dc_join_offer_all(long long action,
 {
 	/* reset everyones status back to down or in_ccm in the CIB */
 	xmlNodePtr update     = NULL;
-	xmlNodePtr cib_copy   = get_cib_copy();
+	xmlNodePtr cib_copy   = get_cib_copy(fsa_cib_conn);
 	xmlNodePtr tmp1       = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
 	xmlNodePtr tmp2       = NULL;
 
@@ -210,7 +210,7 @@ do_dc_join_req(long long action,
 	}
 	
 	generation = find_xml_node(join_ack, "generation_tuple");
-	if(compare_cib_generation(our_generation, generation) < 0) {
+	if(cib_compare_generation(our_generation, generation) < 0) {
 		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 		crm_debug("%s has a better generation number than us",
 			  join_from);
@@ -279,26 +279,22 @@ do_dc_join_finalize(long long action,
 	}
 	
 	if(! is_set(fsa_input_register, R_HAVE_CIB)) {
-		if(is_set(fsa_input_register, R_CIB_ASKED)) {
-			crm_info("Waiting for the CIB from %s",
-				 crm_str(max_generation_from));
-			crmd_fsa_stall();
-			return I_NULL;
-		}
-		
-		set_bit_inplace(fsa_input_register, R_CIB_ASKED);
-
 		/* ask for the agreed best CIB */
+		enum cib_errors rc = cib_ok;
 		crm_info("Asking %s for its copy of the CIB",
 			 crm_str(max_generation_from));
-		
-		send_request(NULL, NULL, CRM_OP_RETRIVE_CIB,
-			     max_generation_from, CRM_SYSTEM_CRMD, NULL);
-		
-		crmd_fsa_stall();
-		return I_NULL;
-	} 
 
+		rc = fsa_cib_conn->cmds->sync_from(
+			fsa_cib_conn, max_generation_from, NULL, cib_sync_call);
+		if(rc != cib_ok) {
+			return I_FAIL;
+		}
+	}
+
+	fsa_cib_conn->cmds->bump_epoch(
+		fsa_cib_conn, cib_scope_local|cib_sync_call|cib_discard_reply);
+	fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_sync_call);
+	
 	num_join_invites = 0;
 	crm_debug("Notifying %d clients of join results",
 		  g_hash_table_size(join_requests));
@@ -359,11 +355,10 @@ do_dc_join_ack(long long action,
 	set_xml_property_copy(update,XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
 
 	tmp1 = create_cib_fragment(update, NULL);
-	invoke_local_cib(NULL, tmp1, CRM_OP_UPDATE);
+
+	update_local_cib(tmp1, TRUE);
 
 	free_xml(tmp1);
-
-	register_fsa_input(cause, I_CIB_OP, msg_data->data);
 
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
 		crm_info("That was the last outstanding join confirmation");
@@ -413,7 +408,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 
 		if(tmp1 != NULL) {
 			tmp2 = create_cib_fragment(tmp1, NULL);
-			invoke_local_cib(NULL, tmp2, CRM_OP_UPDATE);
+			update_local_cib(tmp2, TRUE);
 			free_xml(tmp2);
 			free_xml(tmp1);
 
@@ -425,7 +420,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 		/* update our LRM data */
 		tmp1 = do_lrm_query(TRUE);
 		if(tmp1 != NULL) {
-			invoke_local_cib(NULL, tmp1, CRM_OP_UPDATE);
+			update_local_cib(tmp1, TRUE);
 			free_xml(tmp1);
 
 		} else {
@@ -453,8 +448,8 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	}
 
 	/* send the CIB to the node */
-	cib_copy = get_cib_copy();
-	send_request(NULL, cib_copy, CRM_OP_REPLACE,
+	cib_copy = get_cib_copy(fsa_cib_conn);
+	send_request(NULL, cib_copy, CRM_OP_CIB_REPLACE,
 		     join_to, CRM_SYSTEM_CRMD, NULL);	
 	free_xml(cib_copy);
 	
@@ -479,7 +474,7 @@ initialize_join(gboolean before)
 
 	if(before) {
 		free_xml(our_generation);
-		our_generation  = cib_get_generation();
+		our_generation  = cib_get_generation(fsa_cib_conn);
 		
 		max_generation_from = NULL;
 		set_bit_inplace(fsa_input_register, R_HAVE_CIB);

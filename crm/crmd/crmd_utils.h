@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.9 2004/10/21 18:25:42 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.10 2004/12/05 16:35:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -22,6 +22,12 @@
 #include <libxml/tree.h>
 #include <crm/crm.h>
 
+#define CLIENT_EXIT_WAIT 30
+
+extern enum crmd_fsa_input update_local_cib(
+	xmlNodePtr msg_data, gboolean callbacks);
+
+
 extern long long toggle_bit   (long long  action_list, long long action);
 extern long long clear_bit    (long long  action_list, long long action);
 extern long long set_bit      (long long  action_list, long long action);
@@ -33,8 +39,8 @@ extern long long set_bit      (long long  action_list, long long action);
 extern gboolean is_set(long long action_list, long long action);
 extern gboolean is_set_any(long long action_list, long long action);
 
+extern gboolean stopTimer (fsa_timer_t *timer);
 extern gboolean startTimer(fsa_timer_t *timer);
-extern gboolean stopTimer(fsa_timer_t *timer);
 extern gboolean timer_popped(gpointer data);
 
 extern void cleanup_subsystem(struct crm_subsystem_s *the_subsystem);
@@ -47,12 +53,7 @@ extern xmlNodePtr create_node_state(
 extern void create_node_entry(
 	const char *uuid, const char *uname, const char *type);
 
-extern enum crmd_fsa_input invoke_local_cib(
-	xmlNodePtr msg_options, xmlNodePtr msg_data, const char *operation);
-
 extern void set_uuid(xmlNodePtr node, const char *attr, const char *uname);
-
-#define CLIENT_EXIT_WAIT 30
 
 extern gboolean stop_subsystem (struct crm_subsystem_s *centry);
 extern gboolean start_subsystem(struct crm_subsystem_s *centry);

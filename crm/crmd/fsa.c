@@ -169,6 +169,7 @@ volatile long long       fsa_input_register;
 volatile long long       fsa_actions = A_NOTHING;
 const char     *fsa_our_uname;
 char	       *fsa_our_dc;
+cib_t	*fsa_cib_conn = NULL;
 
 fsa_timer_t *election_trigger = NULL;		/*  */
 fsa_timer_t *election_timeout = NULL;		/*  */
@@ -560,7 +561,7 @@ do_state_transition(long long actions,
 		 fsa_cause2string(cause), msg_data->where,
 		 asctime(localtime(&now)));
 
-	if(next_state != S_ELECTION) {
+	if(next_state != S_ELECTION && election_timeout != NULL) {
 		stopTimer(election_timeout);
 /* 	} else { */
 /* 		startTimer(election_timeout); */
@@ -705,7 +706,7 @@ clear_flags(long long actions,
 void
 dump_rsc_info(void)
 {
-	xmlNodePtr local_cib = get_cib_copy();
+	xmlNodePtr local_cib = get_cib_copy(fsa_cib_conn);
 	xmlNodePtr root      = get_object_root(XML_CIB_TAG_STATUS, local_cib);
 	xmlNodePtr resources = NULL;
 	const char *rsc_id    = NULL;

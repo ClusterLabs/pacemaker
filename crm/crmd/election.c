@@ -230,10 +230,6 @@ do_dc_takeover(long long action,
 	crm_free(fsa_our_dc);
 	fsa_our_dc = crm_strdup(fsa_our_uname);
 
-	/* Async get client status information in the cluster */
-	fsa_cluster_conn->llc_ops->client_status(
-		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
-
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(fsa_input_register, R_INVOKE_PE);
 	
@@ -241,7 +237,7 @@ do_dc_takeover(long long action,
 	clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 
 	startTimer(dc_heartbeat);
-	
+
 	return I_NULL;
 }
 

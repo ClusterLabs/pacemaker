@@ -129,7 +129,11 @@ startTimer(fsa_timer_t *timer)
 gboolean
 stopTimer(fsa_timer_t *timer)
 {
-	if(timer->source_id != (guint)-1 && timer->source_id != (guint)-2) {
+	if(timer == NULL) {
+		crm_err("Attempted to stop NULL timer");
+		return FALSE;
+		
+	} else if(timer->source_id != (guint)-1 && timer->source_id != (guint)-2) {
 		crm_devel("Stopping %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
@@ -883,8 +887,9 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	
 	tmp2 = create_cib_fragment(tmp1, NULL);
 
-	/* do not forward this to the TE */
-	invoke_local_cib(NULL, tmp2, CRM_OP_UPDATE);
+	/* do not forward this to the TE - required still? */
+/* 	update_local_cib(tmp2, FALSE); */
+	update_local_cib(tmp2, TRUE);
 	
 	free_xml(tmp2);
 	free_xml(tmp1);
@@ -1092,8 +1097,10 @@ copy_lrm_op(const lrm_op_t *op)
 	op_copy->target_rc = op->target_rc; 
 
 	/* in the CRM, this is always an int */
-	op_copy->user_data = op->user_data; 
-
+	if(op->user_data != NULL) {
+		op_copy->user_data = crm_strdup(op->user_data); 
+	}
+	
 	/* output fields */
 	op_copy->op_status = op->op_status; 
 	op_copy->rc        = op->rc; 

@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.32 2004/11/24 15:37:44 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.33 2004/12/05 16:35:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,6 +26,7 @@
 #include <libxml/tree.h>
 #include <lrm/lrm_api.h>
 #include <crm/crm.h>
+#include <crm/cib.h>
 
 struct crmd_ccm_data_s 
 {
@@ -90,15 +91,18 @@ extern enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause);
 /* Global FSA stuff */
 extern volatile gboolean do_fsa_stall;
 extern volatile enum crmd_fsa_state fsa_state;
+extern volatile long long fsa_input_register;
+extern volatile long long fsa_actions;
+
 extern oc_node_list_t *fsa_membership_copy;
 extern ll_cluster_t   *fsa_cluster_conn;
 extern ll_lrm_t       *fsa_lrm_conn;
-extern volatile long long fsa_input_register;
-extern volatile long long fsa_actions;
-extern const char     *fsa_our_uname;
-extern char	      *fsa_pe_ref; /* the last invocation of the PE */
-extern char           *fsa_our_dc;
-extern GListPtr fsa_message_queue;
+extern cib_t	      *fsa_cib_conn;
+
+extern const char *fsa_our_uname;
+extern char	  *fsa_pe_ref; /* the last invocation of the PE */
+extern char       *fsa_our_dc;
+extern GListPtr   fsa_message_queue;
 
 extern fsa_timer_t *election_trigger;		/*  */
 extern fsa_timer_t *election_timeout;		/*  */

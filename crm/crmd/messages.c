@@ -208,7 +208,7 @@ delete_fsa_input(fsa_data_t *fsa_data)
 				crm_free(op->rsc->provider);
 				crm_free(op->rsc);
 
-/* 				crm_free(op->user_data); */
+ 				crm_free(op->user_data);
 				crm_free(op->output);
 				crm_free(op->rsc_id);
 				crm_free(op->app_name);
@@ -759,10 +759,6 @@ handle_request(xmlNodePtr stored_msg)
 		/*next_input = I_SHUTDOWN; */
 		next_input = I_NULL;
 			
-	} else if(strcmp(op, CRM_OP_QUERY) == 0) {
-		
-		next_input = I_CIB_OP;
-
 	} else if(strcmp(op, CRM_OP_PING) == 0) {
 		/* eventually do some stuff to figure out
 		 * if we /are/ ok
@@ -812,18 +808,9 @@ handle_request(xmlNodePtr stored_msg)
 
 				crm_xml_warn(stored_msg, "Ignored Request");
 				
-			} else if(strcmp(op, CRM_OP_RETRIVE_CIB) == 0) {
-				next_input = I_CIB_OP;		
-		
 			} else if(strcmp(op, CRM_OP_JOINACK) == 0) {
 				next_input = I_JOIN_RESULT;
 				
-			} else if(strcmp(op, CRM_OP_REPLACE) == 0) {
-				next_input = I_CIB_OP;
-			
-			} else if(strcmp(op, CRM_OP_UPDATE) == 0) {
-				next_input = I_CIB_OP;
-			
 			} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 				next_input = I_TERMINATE;
 				
@@ -860,13 +847,6 @@ handle_request(xmlNodePtr stored_msg)
 /* 					 fsa_state2string(fsa_state)); */
 /* 			} */
 
-		} else if(strcmp(op, CRM_OP_CREATE) == 0
-			      || strcmp(op, CRM_OP_UPDATE) == 0
-			      || strcmp(op, CRM_OP_ERASE) == 0
-			      || strcmp(op, CRM_OP_REPLACE) == 0
-			      || strcmp(op, CRM_OP_DELETE) == 0) {
-			next_input = I_CIB_OP;
-			
 		} else if(strcmp(op, CRM_OP_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
 			
@@ -912,9 +892,6 @@ handle_response(xmlNodePtr stored_msg)
 	} else if(AM_I_DC && strcmp(op, CRM_OP_JOINACK) == 0) {
 		next_input = I_JOIN_RESULT;
 				
- 	} else if(AM_I_DC && strcmp(op, CRM_OP_RETRIVE_CIB) == 0) {
-		next_input = I_CIB_OP;		
-		
  	} else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
 
 		if(safe_str_eq(msg_ref, fsa_pe_ref)) {
@@ -933,11 +910,11 @@ handle_response(xmlNodePtr stored_msg)
 		  || strcmp(op, CRM_OP_ANNOUNCE) == 0) {
 		next_input = I_NULL;
 		
-	} else if(strcmp(op, CRM_OP_CREATE) == 0
-		  || strcmp(op, CRM_OP_UPDATE) == 0
-		  || strcmp(op, CRM_OP_DELETE) == 0
-		  || strcmp(op, CRM_OP_REPLACE) == 0
-		  || strcmp(op, CRM_OP_ERASE) == 0) {
+	} else if(strcmp(op, CRM_OP_CIB_CREATE) == 0
+		  || strcmp(op, CRM_OP_CIB_UPDATE) == 0
+		  || strcmp(op, CRM_OP_CIB_DELETE) == 0
+		  || strcmp(op, CRM_OP_CIB_REPLACE) == 0
+		  || strcmp(op, CRM_OP_CIB_ERASE) == 0) {
 		
 		/* perhaps we should do somethign with these replies,
 		 * especially check that the actions passed
@@ -990,7 +967,10 @@ handle_shutdown_request(xmlNodePtr stored_msg)
 	free_xml(node_state);
 	crm_free(now_s);
 
-	register_fsa_input(C_IPC_MESSAGE, I_CIB_OP, stored_msg);
+	fsa_cib_conn->cmds->modify(
+		fsa_cib_conn, XML_CIB_TAG_STATUS, stored_msg, NULL,
+		cib_sync_call|cib_discard_reply);
+
 	return I_NULL;
 }
 
