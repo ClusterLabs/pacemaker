@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.10 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: cibio.c,v 1.11 2004/03/10 22:24:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -204,7 +204,8 @@ readCibXmlFile(const char *filename)
 	xmlNodePtr root = xmlDocGetRootElement(doc);
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
-		FNRET(createEmptyCib());
+//		FNRET(createEmptyCib());
+		root = NULL;
 	}
 
 	FNRET(root);
@@ -399,9 +400,6 @@ activateCibXml(xmlNodePtr new_cib)
 			       "(code: %d)... aborting update.", res);
 			error_code = -1;
 		} else {
-			// modify the timestamp
-			set_node_tstamp(new_cib);
-	    
 			cl_log(LOG_INFO,
 			       "Writing CIB out to %s",
 			       CIB_FILENAME);
@@ -445,8 +443,7 @@ activateCibXml(xmlNodePtr new_cib)
 					       res);
 					error_code = -2;
 					// should probably exit here 
-				}
-				else if (initializeCib(saved_cib) == FALSE){
+				} else if (initializeCib(saved_cib) == FALSE) {
 					// oh we are so dead 
 					cl_log(LOG_CRIT,
 					       "Could not re-initialize "
