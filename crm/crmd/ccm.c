@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.41 2004/10/21 18:25:42 andrew Exp $ */
+/* $Id: ccm.c,v 1.42 2004/11/12 16:24:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -434,6 +434,7 @@ do_ccm_update_cache(long long action,
 		free_xml(do_update_cib_nodes(NULL, FALSE));
 	}
 	
+	set_bit_inplace(fsa_input_register, R_CCM_DATA);
 	
 	return next_input;
 }

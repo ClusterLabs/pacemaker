@@ -521,8 +521,6 @@ crmd_ccm_msg_callback(
 	crm_debug("received callback");
 	
 	if(data != NULL) {
-		set_bit_inplace(fsa_input_register, R_CCM_DATA);
-
 		crm_malloc(event_data, sizeof(struct crmd_ccm_data_s));
 
 		if(event_data != NULL) {
