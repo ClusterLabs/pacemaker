@@ -25,6 +25,7 @@
 ##                        $(auxdir)/sys_siglist.m4
 EXTRA_DIST              = bootstrap rc.config.heartbeat \
 				heartbeat.spec.in heartbeat.spec	\
+				specfile				\
 				ConfigureMe autoconf-2.53.diff README.in
 
 RPMREL			= @RPMREL@
@@ -74,6 +75,9 @@ HBDOCS = doc/heartbeat_api.html
 
 # Pass these to configure when running "make distcheck"
 DISTCHECK_CONFIGURE_FLAGS = --with-initdir=prefix
+
+specfile:	heartbeat.spec
+		cp heartbeat.spec specfile
 
 rpm:		dist
 		$(RPM) --nodeps $(RPMFLAGS) $(TARFILE) </dev/null;
