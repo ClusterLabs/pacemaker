@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.35 2005/01/26 13:30:09 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.36 2005/02/24 14:59:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,6 +37,8 @@ struct crmd_ccm_data_s
 
 struct oc_node_list_s
 {
+		oc_ed_t last_event;
+
 		int members_size;
 		GHashTable *members; /* contents: oc_node_t * */
 

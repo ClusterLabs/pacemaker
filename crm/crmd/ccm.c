@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.56 2005/02/20 14:32:00 andrew Exp $ */
+/* $Id: ccm.c,v 1.57 2005/02/24 14:59:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -294,8 +294,10 @@ do_ccm_update_cache(long long action,
 		return I_NULL;
 	}
 
+	membership_copy->last_event = *event;
+
 	crm_devel("Copying members");
-	
+
 	/*--*-- All Member Nodes --*--*/
 	offset = oc->m_memb_idx;
 	membership_copy->members_size = oc->m_n_member;
