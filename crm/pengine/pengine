@@ -1,5 +1,4 @@
-#! /usr/bin/perl -Tw
-my($VERSION)=(qw$Id: pengine,v 1.5 2004/03/18 09:47:31 lars Exp $)[2];
+#! /usr/bin/perl
 #
 # Copyright (C) 2004 Lars Marowsky-Brée
 #
@@ -38,7 +37,13 @@ use vars qw(	$ch
 		$DEBUG
 		%opts
 		%XMLOpts
+		$VERSION
 	);
+
+{
+	no warnings qw(qw);
+	($VERSION) = (qw$Id: pengine,v 1.6 2004/03/18 10:48:31 lars Exp $)[2];
+}
 
 $CRM_SOCKET = "/var/lib/heartbeat/crm/crmd";
 $DEBUG = 1;
@@ -55,7 +60,7 @@ cl_log_set_entity("pengine");
 cl_log_set_facility("local0");
 cl_log_set_logfile("/tmp/pengine.log");
 
-getopts("dhvskr", \%opts);
+getopts("dhvskrS", \%opts);
 
 if (defined($opts{'v'})) {
 	print "Policy Engine $VERSION\n";
@@ -71,11 +76,13 @@ if (defined($opts{'d'})) {
 	# &daemonize();
 }
 
-cl_log('notice', "Policy Engine $VERSION starting...");
-
-if ($DEBUG) {
-	cl_log('warn', "Magic not yet implemented, no cookie!");
+# Stand-alone debugging mode.
+if (defined($opts{'S'})) {
+	&handle_msgs_from_stdin();
+	exit 0;
 }
+
+cl_log('notice', "Policy Engine $VERSION starting...");
 
 # First, connect to daddy. Yes, this sets global vars in a sub function,
 # but it's documented, and there can only be one connection to the CRM
@@ -83,7 +90,6 @@ if ($DEBUG) {
 
 &signin();
 
-my $iter = 0;
 my %regs = ( hello => 0, );
 while ($ch->isrconn() && $ch->iswconn()) {
 	$ch->waitin();
@@ -91,8 +97,12 @@ while ($ch->isrconn() && $ch->iswconn()) {
 	if ($ch->is_message_pending()) {
 		my $msg = &crm_recv_msg();
 		
-		cl_log("info", "Woah, we received message number $iter");
-		$iter++;
+		if (defined($msg)) {
+			my $reply = &handle_msg($msg);
+			if (defined($reply)) {
+				&send_crm_msg($reply);
+			}
+		}
 	} 
 }
 
@@ -101,6 +111,63 @@ cl_log("info", "Disconnecting from crmd: R".$ch->isrconn().
 exit 0;
 
 #######################################################################
+sub handle_msg {
+	my ($m) = @_;
+	my $reply;
+	# Do magic
+	
+	if (defined($$m{'hello'})) {
+		cl_log("info", "hello message received from crmd. No reply sent.");
+	} elsif (defined($$m{'crm_message'})) {
+		cl_log("info", "crm_message received");
+		if (defined($$m{crm_message}{ping_item})) {
+			cl_log("info", "ping_message!");
+			$reply = &crm_ping_reply($m);
+		} else {
+			cl_log("warn", "unknown crm_message type ignored");
+		}
+	} else {
+		cl_log("warn", "unknown message type ignored");
+	}
+	
+	return $reply;
+}
+
+sub crm_ping_reply {
+	my ($m) = @_;
+	my $reply;
+
+	$reply = {
+		crm_message => {
+			version => '1',
+			message_type => 'response',
+			sys_from => 'pengine',
+			sys_to => 'crmd',
+			timestamp => time,
+			options => {
+				result => 'ok',
+			},
+			ping_item => {
+				crm_subsystem => 'pengine',
+				ping_status => 'running',
+			},
+		},
+	};
+
+	return $reply;
+}
+
+sub handle_msgs_from_stdin {
+	my ($xml, $ref, $reply, $xmlout);
+	while ($xml = <STDIN>) {
+		$ref = &decapsulate_msg($xml);
+		$reply = &handle_msg($ref);
+		$xmlout = &encapsulate_msg($reply);
+		print $xmlout."\n";
+	}
+	exit 0;
+}
+
 sub signin {
 	my $rc = 0;
 	
@@ -108,7 +175,7 @@ sub signin {
 
 	$ch = heartbeat::clplumbing::ipc::channel->new($CRM_SOCKET);
 
-	if ($rc = $ch->initiate_connection != $IPC_OK) {
+	if ($rc = $ch->initiate_connection() != $IPC_OK) {
 		cl_log('err', "Connection to crmd failed with $rc");
 		exit(1);
 	}
@@ -124,8 +191,7 @@ sub signin {
 		      } );
 }
 
-
-sub send_crm_msg {
+sub encapsulate_msg {
 	my ($ref) = @_;
 	my $xml = XMLout($ref, 
 			%XMLOpts,
@@ -135,11 +201,33 @@ sub send_crm_msg {
 	$xml =~ s/>\s+/>/og;
 	$xml =~ s/\s+</</og;
 	
+	return $xml;
+}
+
+sub decapsulate_msg {
+	my ($xml) = @_;
+	
+	my $ref = XMLin($xml, 
+			%XMLOpts,
+			ForceArray => 1,
+			ForceContent => 1,
+			NormaliseSpace => 1, );
+	
+	return $ref;
+}
+
+sub send_crm_msg {
+	my ($ref) = @_;
+	
+	my $xml = &encapsulate_msg($ref);
+	
 	cl_log('info', "XML message we are about to sent: ".$xml) if $DEBUG; 
 	
 	my $msg = heartbeat::clplumbing::ipc::message->new($ch, $xml);
-
+	
+	cl_log('info', "Message constructed.");
 	my $rc = $ch->send($msg);
+	cl_log('info', "Message sent: $rc");
 }
 
 sub crm_recv_msg {
@@ -154,11 +242,7 @@ sub crm_recv_msg {
 	
 	cl_log('info', "XML message received: ".$msg->body());
 	
-	my $ref = XMLin($msg->body(), 
-			%XMLOpts,
-			ForceArray => 1,
-			ForceContent => 1,
-			NormaliseSpace => 1, );
+	my $ref = &decapsulate_msg($msg->body());
 	
 	return $ref;
 }
