@@ -267,6 +267,12 @@ do_dc_join_finalize(long long action,
 		    enum crmd_fsa_input current_input,
 		    fsa_data_t *msg_data)
 {
+	if(max_generation_from == NULL) {
+		crm_warn("There is no CIB to get..."
+			 " how did R_HAVE_CIB get unset?");
+		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
+	}
+	
 	if(! is_set(fsa_input_register, R_HAVE_CIB)) {
 		if(is_set(fsa_input_register, R_CIB_ASKED)) {
 			crm_info("Waiting for the CIB from %s",
@@ -374,6 +380,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 		return;
 	}
 	xmlNodePtr tmp1 = NULL;
+	xmlNodePtr tmp2 = NULL;
 	xmlNodePtr cib_copy    = NULL;
 	xmlNodePtr options     = create_xml_node(NULL, XML_TAG_OPTIONS);
 	const char *join_to    = (const char *)key;
@@ -387,11 +394,28 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 		/* mark ourselves confirmed */
 		g_hash_table_insert(confirmed_nodes, crm_strdup(fsa_our_uname),
 				    crm_strdup(CRMD_JOINSTATE_MEMBER));
-		
+
+		/* make sure our cluster state is set correctly */
+		tmp1 = create_node_state(
+			join_to, join_to, NULL, ONLINESTATUS, join_state);
+
+		if(tmp1 != NULL) {
+			tmp2 = create_cib_fragment(tmp1, NULL);
+			invoke_local_cib(NULL, tmp2, CRM_OP_UPDATE);
+			free_xml(tmp2);
+			free_xml(tmp1);
+
+		} else {
+			crm_err("Could not create our node state");
+			/* TODO: raise an error input */
+		}
+
 		/* update our LRM data */
 		tmp1 = do_lrm_query(TRUE);
 		if(tmp1 != NULL) {
 			invoke_local_cib(NULL, tmp1, CRM_OP_UPDATE);
+			free_xml(tmp1);
+
 		} else {
 			crm_err("Could not determin current LRM state");
 			/* TODO: raise an error input */
