@@ -23,10 +23,10 @@
 /*	A_LOG, A_WARN, A_ERROR	*/
 enum crmd_fsa_input
 do_log(long long action,
-	      enum crmd_fsa_cause cause,
-enum crmd_fsa_state cur_state,
-	      enum crmd_fsa_input current_input,
-	      void *data)
+       enum crmd_fsa_cause cause,
+       enum crmd_fsa_state cur_state,
+       enum crmd_fsa_input current_input,
+       void *data)
 {
 	FNIN();
 
@@ -36,7 +36,7 @@ enum crmd_fsa_state cur_state,
 	if(action & A_ERROR) log_type = LOG_ERR;
 	
 	cl_log(log_type,
-	       "Input (%s) was received while in state (%s)",
+	       "[[FSA]] Input (%s) was received while in state (%s)",
 	       fsa_input2string(current_input),
 	       fsa_state2string(cur_state));
 	
