@@ -1393,7 +1393,7 @@ class ComponentFail(CTSTest):
                     return ret;
 
         # select a component to kill
-        complist = ["lrmd","crmd","stonithd","heartbat"]
+        complist = ["lrmd","crmd","stonithd","heartbeat"]
         component = self.CM.Env.RandomGen.choice(complist)
         
         # set the watch for stable
