@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.55 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: unpack.c,v 1.56 2005/02/20 17:00:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -409,7 +409,7 @@ unpack_status(crm_data_t * status,
 			continue;
 
 		} else if(this_node == NULL) {
-			crm_err("Node %s in status section no longer exists",
+			crm_warn("Node %s in status section no longer exists",
 				uname);
 			continue;
 		}
