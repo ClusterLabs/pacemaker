@@ -177,7 +177,7 @@ execra( const char * rsc_type, const char * provider, const char * op_type,
 	g_string_free(debug_info, TRUE);
 
 	execv(ra_pathname, params_argv);
-        cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
+        cl_log(LOG_ERR, "execv error when to execute a LSB RA %s.", rsc_type);
 
         switch (errno) {
                 case ENOENT:   /* No such file or directory */
