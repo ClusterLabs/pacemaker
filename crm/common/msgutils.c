@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.17 2004/03/16 12:06:47 andrew Exp $ */
+/* $Id: msgutils.c,v 1.18 2004/03/16 17:33:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -81,7 +81,7 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 		(char*)ha_malloc(sizeof(char)*(msg_type_len));
 	sprintf(msg_type_target, "%s_operation", to);
 	set_xml_property_copy(root_xml_node, msg_type_target, CRM_OPERATION_PING);
-//    ha_free(msg_type_target);
+	ha_free(msg_type_target);
 
 	FNRET(root_xml_node);
 }
@@ -188,7 +188,7 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	
 	crm_msg_reference = xmlGetProp(root_xml_node,
 				       XML_ATTR_REFERENCE);
-
+/*
 	cl_log(LOG_DEBUG, "Recieved XML message with (version=%s)",
 	       xmlGetProp(root_xml_node, XML_ATTR_VERSION));
 	cl_log(LOG_DEBUG, "Recieved XML message with (from=%s)", from);
@@ -196,7 +196,7 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	cl_log(LOG_DEBUG, "Recieved XML message with (type=%s)", type);
 	cl_log(LOG_DEBUG, "Recieved XML message with (ref=%s)" ,
 	       crm_msg_reference);
-
+*/
 	action = root_xml_node;
 	const char *true_sys = sys;
 	if (uid != NULL) true_sys = generate_hash_key(sys, uid);
@@ -226,14 +226,14 @@ validate_crm_message(xmlNodePtr root_xml_node,
 		cl_log(LOG_INFO, "No message crm_msg_reference defined.");
 		action = NULL;
 	}
-
-	if(action != NULL)
+/*
+ 	if(action != NULL) 
 		cl_log(LOG_DEBUG,
 		       "XML is valid and node with message type (%s) found.",
 		       type);
-
-	
 	cl_log(LOG_DEBUG, "Returning node (%s)", xmlGetNodePath(action));
+*/
+	
 	FNRET(action);
 }
 
@@ -373,7 +373,8 @@ send_hello_message(IPC_Channel *ipc_client,
 	xmlNodePtr hello_node = NULL;
 	FNIN();
 	
-	if (client_name == NULL || strlen(client_name) == 0
+	if (uid == NULL || strlen(uid) == 0
+	    || client_name == NULL || strlen(client_name) == 0
 	    || major_version == NULL || strlen(major_version) == 0
 	    || minor_version == NULL || strlen(minor_version) == 0) {
 		cl_log(LOG_ERR,
@@ -385,9 +386,8 @@ send_hello_message(IPC_Channel *ipc_client,
 	set_xml_property_copy(hello_node, "major_version", major_version);
 	set_xml_property_copy(hello_node, "minor_version", minor_version);
 	set_xml_property_copy(hello_node, "client_name",   client_name);
-	if(uid != NULL) {
-		set_xml_property_copy(hello_node, "client_uuid",   uid);
-	}
+	set_xml_property_copy(hello_node, "client_uuid",   uid);
+
 
 	send_xmlipc_message(ipc_client, hello_node);
 
@@ -433,16 +433,27 @@ process_hello_message(IPC_Message *hello_message,
 	char *local_major_version = xmlGetProp(hello, "major_version");
 	char *local_minor_version = xmlGetProp(hello, "minor_version");
     
-	if (local_uid == NULL || strlen(local_uid) == 0
-	    || local_client_name == NULL
-	    || strlen(local_client_name) == 0
-	    || local_major_version == NULL
-	    || strlen(local_major_version) == 0
-	    || local_minor_version == NULL
-	    || strlen(local_minor_version) == 0){
+	if (local_uid == NULL || strlen(local_uid) == 0) {
 		cl_log(LOG_ERR,
-		       "Hello message was not valid, discarding. Message: %s",
-		       (char*)hello_message->msg_body);
+		       "Hello message was not valid (field %s not found): %s",
+		       "uid", (char*)hello_message->msg_body);
+		FNRET(FALSE);
+	} else if (local_client_name == NULL || strlen(local_client_name) == 0){
+		cl_log(LOG_ERR,
+		       "Hello message was not valid (field %s not found): %s",
+		       "client name", (char*)hello_message->msg_body);
+		FNRET(FALSE);
+	} else if(local_major_version == NULL
+		  || strlen(local_major_version) == 0){
+		cl_log(LOG_ERR,
+		       "Hello message was not valid (field %s not found): %s",
+		       "major version", (char*)hello_message->msg_body);
+		FNRET(FALSE);
+	} else if (local_minor_version == NULL
+		   || strlen(local_minor_version) == 0){
+		cl_log(LOG_ERR,
+		       "Hello message was not valid (field %s not found): %s",
+		       "minor version", (char*)hello_message->msg_body);
 		FNRET(FALSE);
 	}
     
@@ -454,10 +465,6 @@ process_hello_message(IPC_Message *hello_message,
 	FNRET(TRUE);
 }
 
-/*
- * Caution... this method WILL unlink xml_response_data from its
- * current context
- */
 gboolean
 forward_ipc_request(IPC_Channel *ipc_channel,
 		    xmlNodePtr xml_request, xmlNodePtr xml_response_data,
@@ -523,7 +530,7 @@ send_ha_request(ll_cluster_t *hb_fd,
 				 sys_from, uid_from,
 				 crm_msg_reference);
 
-	xml_message_debug(request, "Final request...");
+//	xml_message_debug(request, "Final request...");
 
 	was_sent = send_xmlha_message(hb_fd, request);
 
@@ -712,12 +719,14 @@ create_common_message(xmlNodePtr original_request,
 	
 	if (type == NULL) {
 		cl_log(LOG_ERR,
-		       "Cannot create new_message, no message type in original message");
+		       "Cannot create new_message,"
+		       " no message type in original message");
 		FNRET(NULL);
 #if 0
 	} else if (strcmp(XML_ATTR_REQUEST, type) != 0) {
 		cl_log(LOG_ERR,
-		       "Cannot create new_message, original message was not a request");
+		       "Cannot create new_message,"
+		       " original message was not a request");
 		FNRET(NULL);
 #endif
 	}
