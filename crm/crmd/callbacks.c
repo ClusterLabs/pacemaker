@@ -50,24 +50,28 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 	xmlNodePtr root_xml_node = NULL;
 	const char *from = ha_msg_value(msg, F_ORIG);
 	const char *seq  = ha_msg_value(msg, F_SEQ);
+	const char *type  = ha_msg_value(msg, F_TYPE);
 
 #ifdef MSG_LOG
 	if(msg_in_strm == NULL) {
 		msg_in_strm = fopen(DEVEL_DIR"/inbound.log", "w");
 	}
 #endif
-
-	if(safe_str_eq(from, fsa_our_uname)) {
-#ifdef MSG_LOG
-		fprintf(msg_in_strm,
-			"Discarded message [F_SEQ=%s] from ourselves.\n", seq);
-		fflush(msg_in_strm);
-#endif
-		return;
-	} else if(from == NULL) {
-		crm_err("Value of %s was NULL", F_ORIG);
-	}
 	
+	if(from == NULL) {
+		crm_err("Value of %s was NULL", F_ORIG);
+
+	} else if(safe_str_eq(from, fsa_our_uname)) {
+		if(safe_str_eq(type, T_CRM)) {
+#ifdef MSG_LOG
+			fprintf(msg_in_strm,
+				"Discarded %s message [F_SEQ=%s] from ourselves.\n",
+				T_CRM, seq);
+			fflush(msg_in_strm);
+#endif
+			return;
+		} 
+	} 
 	root_xml_node = find_xml_in_hamessage(msg);
 	to = xmlGetProp(root_xml_node, XML_ATTR_HOSTTO);
 
@@ -257,6 +261,8 @@ crmd_client_status_callback(const char * node, const char * client,
 	xmlNodePtr msg_options = NULL;
 	xmlNodePtr request = NULL;
 
+	set_bit_inplace(fsa_input_register, R_PEER_DATA);
+	
 	if(safe_str_eq(status, JOINSTATUS)){
 		status = ONLINESTATUS;
 		extra  = XML_CIB_ATTR_CLEAR_SHUTDOWN;
@@ -320,7 +326,7 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 /*    crm_debug("[F_=%s]", ha_msg_value(ha_msg, F_)); */
 #endif
 	
-	if (strcmp("CRM", ha_msg_value(msg, F_TYPE)) != 0) {
+	if (strcmp(T_CRM, ha_msg_value(msg, F_TYPE)) != 0) {
 		crm_info("Received a (%s) message by mistake.",
 		       ha_msg_value(msg, F_TYPE));
 		return NULL;
