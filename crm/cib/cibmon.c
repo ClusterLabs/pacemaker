@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.7 2005/01/26 13:30:55 andrew Exp $ */
+/* $Id: cibmon.c,v 1.8 2005/01/27 09:05:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -90,10 +90,6 @@ main(int argc, char **argv)
 		{0, 0, 0, 0}
 	};
 
-	if(argc < 2) {
-		usage(crm_system_name, LSB_EXIT_EINVAL);
-	}
-
 	/* Redirect messages from glib functions to our handler */
 	g_log_set_handler(NULL,
 			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
@@ -106,12 +102,14 @@ main(int argc, char **argv)
 	
 	cl_log_set_entity(crm_system_name);
 	cl_log_set_facility(LOG_LOCAL7);
+	cl_log_set_debugfile(DEVEL_DIR"/cibmon.debug");
+	cl_log_set_logfile(DEVEL_DIR"/cibmon.log");
 
 #ifdef USE_LIBXML
 	/* docs say only do this once, but in their code they do it every time! */
 	xmlInitParser(); 
 #endif
-	msg_cibmon_strm = fopen(DEVEL_DIR"/cibmon.log", "a");
+	msg_cibmon_strm = fopen(DEVEL_DIR"/cibmon.updates", "a");
 
 	while (1) {
 		flag = getopt_long(argc, argv, OPTARGS,
@@ -314,16 +312,33 @@ void
 cibmon_pre_notify(const char *event, HA_Message *msg) 
 {
 	int rc = -1;
-	const char *op       = cl_get_string(msg, F_CIB_OPERATION);
-	const char *id       = cl_get_string(msg, F_CIB_OBJID);
-	const char *type     = cl_get_string(msg, F_CIB_OBJTYPE);
-	const char *update_s = cl_get_string(msg, F_CIB_UPDATE);
-	const char *pre_update_s = cl_get_string(msg, F_CIB_EXISTING);
+	const char *op       = NULL;
+	const char *id       = NULL; 
+	const char *type     = NULL;
+	const char *update_s = NULL;
+	const char *pre_update_s = NULL;
 
-	crm_data_t *update     = string2xml(update_s);
-	crm_data_t *pre_update = string2xml(pre_update_s);
-	char *xml_text        = dump_xml_formatted(update);
+	crm_data_t *update     = NULL;
+	crm_data_t *pre_update = NULL;
+	char *xml_text         = NULL;
 
+	if(msg == NULL) {
+		crm_err("NULL update");
+		return;
+	}
+	
+	op       = cl_get_string(msg, F_CIB_OPERATION);
+	id       = cl_get_string(msg, F_CIB_OBJID);
+	type     = cl_get_string(msg, F_CIB_OBJTYPE);
+	update_s = cl_get_string(msg, F_CIB_UPDATE);
+	pre_update_s = cl_get_string(msg, F_CIB_EXISTING);
+
+	crm_debug("converting tags to xml");
+	
+	update     = string2xml(update_s);
+	pre_update = string2xml(pre_update_s);
+	xml_text   = dump_xml_formatted(update);
+	
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 
 	update_depth++;
@@ -363,7 +378,7 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	xml_text = dump_xml_formatted(pre_update);
 	fprintf(msg_cibmon_strm, "[%s] Existing object\n%s\n",
 		event, xml_text);
-	
+
 	fflush(msg_cibmon_strm);
 	crm_free(xml_text);
 }
@@ -373,16 +388,31 @@ void
 cibmon_post_notify(const char *event, HA_Message *msg)
 {
 	int rc = -1;
-	const char *op       = cl_get_string(msg, F_CIB_OPERATION);
-	const char *id       = cl_get_string(msg, F_CIB_OBJID);
-	const char *type     = cl_get_string(msg, F_CIB_OBJTYPE);
-	const char *update_s = cl_get_string(msg, F_CIB_UPDATE);
-	const char *output_s = cl_get_string(msg, F_CIB_UPDATE_RESULT);
-	
-	crm_data_t *output = string2xml(output_s);
-	crm_data_t *update = string2xml(update_s);
+	const char *op       = NULL;
+	const char *id       = NULL; 
+	const char *type     = NULL;
+	const char *update_s = NULL;
+	const char *output_s = NULL;
 
-	char *xml_text = dump_xml_formatted(output);
+	crm_data_t *update = NULL;
+	crm_data_t *output = NULL;
+	char *xml_text     = NULL;
+
+	if(msg == NULL) {
+		crm_err("NULL update");
+		return;
+	}
+	
+	op       = cl_get_string(msg, F_CIB_OPERATION);
+	id       = cl_get_string(msg, F_CIB_OBJID);
+	type     = cl_get_string(msg, F_CIB_OBJTYPE);
+	update_s = cl_get_string(msg, F_CIB_UPDATE);
+	output_s = cl_get_string(msg, F_CIB_UPDATE_RESULT);
+	
+	output = string2xml(output_s);
+	update = string2xml(update_s);
+
+	xml_text = dump_xml_formatted(output);
 
 	update_depth--;
 	if(last_notify_pre == FALSE 
@@ -435,10 +465,19 @@ void
 cibmon_update_confirm(const char *event, HA_Message *msg)
 {
 	int rc = -1;
-	const char *op = cl_get_string(msg, F_CIB_OPERATION);
-	const char *id = cl_get_string(msg, F_CIB_OBJID);
-	const char *type = cl_get_string(msg, F_CIB_OBJTYPE);
+	const char *op = NULL;
+	const char *id = NULL;
+	const char *type = NULL;
 
+	if(msg == NULL) {
+		crm_err("NULL update");
+		return;
+	}		
+	
+	op = cl_get_string(msg, F_CIB_OPERATION);
+	id = cl_get_string(msg, F_CIB_OBJID);
+	type = cl_get_string(msg, F_CIB_OBJTYPE);
+	
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 
 	if(id == NULL) {
