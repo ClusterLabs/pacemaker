@@ -120,8 +120,10 @@ Options for CTSlab:
 		Enable/disable STONITH tests
 	--standby (yes|no)
 		Enable/disable standby tests
-
-
+	--v2
+		Test the release 2.0 ( include 1.99.*)
+		(see the mini-HOWTOs at the end for more details)
+	
 ==============
 Mini HOWTOs:
 ==============
@@ -448,3 +450,58 @@ It's a file containing binary structure messages, so you should use evlview
 to read them.
 
 Enjoy evlog ;). The end.
+
+--------------------------------------------------------------------------------
+How to configure release 2.*(1.99.*) for cts testing --draft
+--------------------------------------------------------------------------------
+To test release 2.X(1.99.*), we need do following additional work.
+
+1. Please build the source code with --enable-crm option and install it.
+
+2. Configure the ha.cf, and make it same on the test exerciser and all test 
+cluster machines. Please add following lines to ha.cf:
+	apiauth default uid=root
+	apiauth ccm uid=hacluster
+	respawn root /usr/lib/heartbeat/lrmd
+	respawn hacluster /usr/lib/heartbeat/ccm
+	respawn root /usr/lib/heartbeat/crmd -VVVV
+
+3. Add resources and constraints to the cluster:
+  3.1 Start up the heartbeat on all test machines:
+	/usr/lib/heartbeat/heartbeat -M
+
+  3.2 Wait for the heartbeat start complete:
+	Using "/usr/lib/crmadmin -S node" on one test machine to get the states
+	of nodes. Wait for all test machines are in S_IDLE or S_NOT_DC state.
+
+  3.3 Add resources and constraints to cluster.
+	Using "/usr/lib/cibadmin" to add resources and constraints.
+	Please notice you need do this only once on one test node.
+	For examples,
+
+	To add a constraint:
+	/usr/lib/heartbeat/cibadmin -C -o constraint -X \
+	'<rsc_location id="ad66bef2-5a34-49b2-85a9-3fc6dc69e6fb" rsc="rsc1"> \
+		<rule id="2deac01b-35ee-4148-97ab-17970fb710df" result="can"/> \
+		<rule id="84bc3cb2-fcab-4297-bd39-e6587c492fb7" score="1000" boolean_op="or"> \
+			<expression attribute="uname" operation="eq" value="hadev1"/>	\
+		</rule> \
+	</rsc_location>'
+
+	To add a resource:
+	/usr/lib/heartbeat/cibadmin -C -o resource   -X \
+	'<resource id="rsc1" class="heartbeat" type="IPaddr" > \
+		<instance_attributes> \
+			<rsc_parameters> \
+				<nvpair name="1" value="172.30.1.241"/> \
+			</rsc_parameters> \
+		</instance_attributes> \
+	</resource>'
+
+  3.4 Shutdown the heartbeat on all test machines:	
+	/usr/lib/heartbeat/heartbeat -k
+
+4. Now we can tart cts test on the exerciser node:
+		./CTSlab.py -v2 number-of-tests-to-run
+	or as
+		python ./CTSlab.py -v2 number-of-tests-to-run
