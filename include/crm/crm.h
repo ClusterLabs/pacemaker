@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.47 2005/02/24 14:55:00 andrew Exp $ */
+/* $Id: crm.h,v 1.48 2005/03/09 16:10:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -143,10 +143,10 @@ extern gboolean crm_assert_failed;
 #define CRMD_RSCSTATE_STOP_PENDING	"stopping"
 #define CRMD_RSCSTATE_STOP_OK		"stopped"
 #define CRMD_RSCSTATE_STOP_FAIL		"stop_failed"
-#define CRMD_RSCSTATE_MON		"status"
+#define CRMD_RSCSTATE_MON		"monitor"
 #define CRMD_RSCSTATE_MON_PENDING	CRMD_RSCSTATE_START_OK
 #define CRMD_RSCSTATE_MON_OK		CRMD_RSCSTATE_START_OK
-#define CRMD_RSCSTATE_MON_FAIL		"status_failed"
+#define CRMD_RSCSTATE_MON_FAIL		"monitor_failed"
 /* #define CRMD_RSCSTATE_GENERIC		"pending" */
 #define CRMD_RSCSTATE_GENERIC_PENDING	"pending"
 #define CRMD_RSCSTATE_GENERIC_OK	"complete"
