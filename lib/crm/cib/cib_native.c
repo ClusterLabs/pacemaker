@@ -417,7 +417,8 @@ cib_native_perform_op(
 			} else if(reply_id < msg_id) {
 				crm_debug("Recieved old reply: %d (wanted %d)",
 					reply_id, msg_id);
-				crm_log_message(LOG_DEBUG, op_reply);
+				crm_log_message_adv(
+					LOG_MSG, "Old reply", op_reply);
 			}
 
 		} else if(rc == IPC_INTR) {
@@ -466,7 +467,7 @@ cib_native_perform_op(
 	} else if(!(call_options & cib_discard_reply)) {
 		*output_data = get_message_xml(op_reply, F_CIB_CALLDATA);
 		if(*output_data == NULL) {
-			crm_debug("No output in reply to \"%s\" command %d",
+			crm_devel("No output in reply to \"%s\" command %d",
 				  op, cib->call_id - 1);
 		}
 	}

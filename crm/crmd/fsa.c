@@ -57,9 +57,11 @@ long long clear_flags(long long actions,
 void dump_rsc_info(void);
 
 #define DOT_PREFIX "live.dot: "
+#define DOT_LOG    LOG_VERBOSE
+#define do_dot_log(fmt...)  do_crm_log(DOT_LOG,NULL,NULL,fmt)
+#define do_dot_action(fmt...)  do_crm_log(DOT_LOG+1,NULL,NULL,fmt)
 
-#ifdef DOT_FSA_ACTIONS
-#  define IF_FSA_ACTION(x,y)						\
+#define IF_FSA_ACTION(x,y)						\
    if(is_set(fsa_actions,x)) {						\
 	   last_action = x;						\
 	   fsa_actions = clear_bit(fsa_actions, x);			\
@@ -69,21 +71,8 @@ void dump_rsc_info(void);
 	   crm_verbose("Action complete: %s (%.16llx)",			\
 		       fsa_action2string(x), x);			\
 	   CRM_DEV_ASSERT(next_input == I_NULL); 			\
-	   crm_debug(DOT_PREFIX"\t// %s", fsa_action2string(x));	\
+	   do_dot_action(DOT_PREFIX"\t// %s", fsa_action2string(x));	\
    }
-#else
-#  define IF_FSA_ACTION(x,y)						\
-   if(is_set(fsa_actions,x)) {						\
-	   last_action = x;						\
-	   fsa_actions = clear_bit(fsa_actions, x);			\
-	   crm_verbose("Invoking action %s (%.16llx)",			\
-		       fsa_action2string(x), x);			\
-	   next_input = y(x, cause, fsa_state, last_input, fsa_data);	\
-	   crm_verbose("Action complete: %s (%.16llx)",			\
-		       fsa_action2string(x), x);			\
-	   CRM_DEV_ASSERT(next_input == I_NULL); 			\
-   }
-#endif
 
 /* #define ELSEIF_FSA_ACTION(x,y) else IF_FSA_ACTION(x,y) */
 void init_dotfile(void);
@@ -91,45 +80,45 @@ void init_dotfile(void);
 void
 init_dotfile(void)
 {
-	crm_debug(DOT_PREFIX"digraph \"g\" {");
-	crm_debug(DOT_PREFIX"	size = \"30,30\"");
-	crm_debug(DOT_PREFIX"	graph [");
-	crm_debug(DOT_PREFIX"		fontsize = \"12\"");
-	crm_debug(DOT_PREFIX"		fontname = \"Times-Roman\"");
-	crm_debug(DOT_PREFIX"		fontcolor = \"black\"");
-	crm_debug(DOT_PREFIX"		bb = \"0,0,398.922306,478.927856\"");
-	crm_debug(DOT_PREFIX"		color = \"black\"");
-	crm_debug(DOT_PREFIX"	]");
-	crm_debug(DOT_PREFIX"	node [");
-	crm_debug(DOT_PREFIX"		fontsize = \"12\"");
-	crm_debug(DOT_PREFIX"		fontname = \"Times-Roman\"");
-	crm_debug(DOT_PREFIX"		fontcolor = \"black\"");
-	crm_debug(DOT_PREFIX"		shape = \"ellipse\"");
-	crm_debug(DOT_PREFIX"		color = \"black\"");
-	crm_debug(DOT_PREFIX"	]");
-	crm_debug(DOT_PREFIX"	edge [");
-	crm_debug(DOT_PREFIX"		fontsize = \"12\"");
-	crm_debug(DOT_PREFIX"		fontname = \"Times-Roman\"");
-	crm_debug(DOT_PREFIX"		fontcolor = \"black\"");
-	crm_debug(DOT_PREFIX"		color = \"black\"");
-	crm_debug(DOT_PREFIX"	]");
-	crm_debug(DOT_PREFIX"// special nodes");
-	crm_debug(DOT_PREFIX"	\"S_PENDING\" ");
-	crm_debug(DOT_PREFIX"	[");
-	crm_debug(DOT_PREFIX"	 color = \"blue\"");
-	crm_debug(DOT_PREFIX"	 fontcolor = \"blue\"");
-	crm_debug(DOT_PREFIX"	 ]");
-	crm_debug(DOT_PREFIX"	\"S_TERMINATE\" ");
-	crm_debug(DOT_PREFIX"	[");
-	crm_debug(DOT_PREFIX"	 color = \"red\"");
-	crm_debug(DOT_PREFIX"	 fontcolor = \"red\"");
-	crm_debug(DOT_PREFIX"	 ]");
-	crm_debug(DOT_PREFIX"// DC only nodes");
-	crm_debug(DOT_PREFIX"	\"S_INTEGRATION\" [ fontcolor = \"green\" ]");
-	crm_debug(DOT_PREFIX"	\"S_POLICY_ENGINE\" [ fontcolor = \"green\" ]");
-	crm_debug(DOT_PREFIX"	\"S_TRANSITION_ENGINE\" [ fontcolor = \"green\" ]");
-	crm_debug(DOT_PREFIX"	\"S_RELEASE_DC\" [ fontcolor = \"green\" ]");
-	crm_debug(DOT_PREFIX"	\"S_IDLE\" [ fontcolor = \"green\" ]");
+	do_dot_log(DOT_PREFIX"digraph \"g\" {");
+	do_dot_log(DOT_PREFIX"	size = \"30,30\"");
+	do_dot_log(DOT_PREFIX"	graph [");
+	do_dot_log(DOT_PREFIX"		fontsize = \"12\"");
+	do_dot_log(DOT_PREFIX"		fontname = \"Times-Roman\"");
+	do_dot_log(DOT_PREFIX"		fontcolor = \"black\"");
+	do_dot_log(DOT_PREFIX"		bb = \"0,0,398.922306,478.927856\"");
+	do_dot_log(DOT_PREFIX"		color = \"black\"");
+	do_dot_log(DOT_PREFIX"	]");
+	do_dot_log(DOT_PREFIX"	node [");
+	do_dot_log(DOT_PREFIX"		fontsize = \"12\"");
+	do_dot_log(DOT_PREFIX"		fontname = \"Times-Roman\"");
+	do_dot_log(DOT_PREFIX"		fontcolor = \"black\"");
+	do_dot_log(DOT_PREFIX"		shape = \"ellipse\"");
+	do_dot_log(DOT_PREFIX"		color = \"black\"");
+	do_dot_log(DOT_PREFIX"	]");
+	do_dot_log(DOT_PREFIX"	edge [");
+	do_dot_log(DOT_PREFIX"		fontsize = \"12\"");
+	do_dot_log(DOT_PREFIX"		fontname = \"Times-Roman\"");
+	do_dot_log(DOT_PREFIX"		fontcolor = \"black\"");
+	do_dot_log(DOT_PREFIX"		color = \"black\"");
+	do_dot_log(DOT_PREFIX"	]");
+	do_dot_log(DOT_PREFIX"// special nodes");
+	do_dot_log(DOT_PREFIX"	\"S_PENDING\" ");
+	do_dot_log(DOT_PREFIX"	[");
+	do_dot_log(DOT_PREFIX"	 color = \"blue\"");
+	do_dot_log(DOT_PREFIX"	 fontcolor = \"blue\"");
+	do_dot_log(DOT_PREFIX"	 ]");
+	do_dot_log(DOT_PREFIX"	\"S_TERMINATE\" ");
+	do_dot_log(DOT_PREFIX"	[");
+	do_dot_log(DOT_PREFIX"	 color = \"red\"");
+	do_dot_log(DOT_PREFIX"	 fontcolor = \"red\"");
+	do_dot_log(DOT_PREFIX"	 ]");
+	do_dot_log(DOT_PREFIX"// DC only nodes");
+	do_dot_log(DOT_PREFIX"	\"S_INTEGRATION\" [ fontcolor = \"green\" ]");
+	do_dot_log(DOT_PREFIX"	\"S_POLICY_ENGINE\" [ fontcolor = \"green\" ]");
+	do_dot_log(DOT_PREFIX"	\"S_TRANSITION_ENGINE\" [ fontcolor = \"green\" ]");
+	do_dot_log(DOT_PREFIX"	\"S_RELEASE_DC\" [ fontcolor = \"green\" ]");
+	do_dot_log(DOT_PREFIX"	\"S_IDLE\" [ fontcolor = \"green\" ]");
 }
 
 
@@ -161,6 +150,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 {
 	time_t now;
 	fsa_data_t *fsa_data = NULL;
+	long long register_copy = fsa_input_register;
 	long long new_actions = A_NOTHING;
 	long long last_action = A_NOTHING;
 	enum crmd_fsa_input last_input = I_NULL;
@@ -170,9 +160,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	enum crmd_fsa_state last_state = starting_state;
 	enum crmd_fsa_state next_state = starting_state;
 	
-	crm_debug("FSA invoked with Cause: %s\tState: %s",
-		   fsa_cause2string(cause),
-		   fsa_state2string(fsa_state));
+	crm_verbose("FSA invoked with Cause: %s\tState: %s",
+		    fsa_cause2string(cause),
+		    fsa_state2string(fsa_state));
 
 	/*
 	 * Process actions in order of priority but do only one
@@ -243,7 +233,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
 			fsa_dump_actions(fsa_data->actions, "\tadded back");
 
-			crm_debug(DOT_PREFIX"\t// FSA input: State=%s \tCause=%s"
+			do_dot_log(DOT_PREFIX"\t// FSA input: State=%s \tCause=%s"
 				" \tInput=%s \tOrigin=%s()",
 				fsa_state2string(fsa_state),
 				fsa_cause2string(fsa_data->fsa_cause),
@@ -458,14 +448,17 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	}
 	
 	now = time(NULL);
-	crm_debug(DOT_PREFIX"\t// ### Exiting the FSA (%s%s): %s",
+	do_dot_log(DOT_PREFIX"\t// ### Exiting the FSA (%s%s): %s",
 		  fsa_state2string(fsa_state), do_fsa_stall?": paused":"",
 		  asctime(localtime(&now)));
 
 	/* cleanup inputs? */
 	delete_fsa_input(fsa_data);
-	crm_debug("Register contents (0x%llx)", fsa_input_register);
-	fsa_dump_queue(LOG_DEBUG);
+	if(register_copy != fsa_input_register) {
+		fsa_dump_inputs(LOG_DEBUG, fsa_input_register);
+	}
+	
+	fsa_dump_queue(LOG_VERBOSE);
 	
 	return fsa_state;
 }
@@ -493,7 +486,7 @@ do_state_transition(long long actions,
 		return A_NOTHING;
 	}
 	
-	crm_debug(DOT_PREFIX"\t%s -> %s [ label=%s cause=%s origin=%s ] // %s",
+	do_dot_log(DOT_PREFIX"\t%s -> %s [ label=%s cause=%s origin=%s ] // %s",
 		  state_from, state_to, input, fsa_cause2string(cause),
 		  msg_data->origin, asctime(localtime(&now)));
 	

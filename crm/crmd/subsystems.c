@@ -54,7 +54,7 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 	clear_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 	
 	if (the_subsystem->pid <= 0) {
-		crm_debug("Client %s not running yet", the_subsystem->name);
+		crm_verbose("Client %s not running", the_subsystem->name);
 
 	} else if(FALSE == is_set(
 			  fsa_input_register, the_subsystem->flag_connected)) {
@@ -177,8 +177,8 @@ cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
 	the_subsystem->ipc = NULL;
 
 	if(FALSE == is_set(fsa_input_register, the_subsystem->flag_connected)) {
-		crm_debug("Duplicate notification that %s left us",
-			  the_subsystem->name);
+		crm_verbose("Duplicate notification that %s left us",
+			    the_subsystem->name);
 		return;
 	}
 	

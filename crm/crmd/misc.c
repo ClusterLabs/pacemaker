@@ -39,7 +39,7 @@ do_log(long long action,
 	unsigned log_type = LOG_DEV;	
 
 	if(action & A_LOG) {
-		log_type = LOG_DEBUG;
+		log_type = LOG_VERBOSE;
 	} else if(action & A_WARN) {
 		log_type = LOG_WARNING;
 	} else if(action & A_ERROR) {

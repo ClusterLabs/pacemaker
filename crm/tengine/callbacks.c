@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.19 2005/03/18 07:46:19 andrew Exp $ */
+/* $Id: callbacks.c,v 1.20 2005/04/01 10:13:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,7 +42,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 	crm_debug("Processing %s...", event);
-	crm_xml_debug(update, "Processing update");
+	crm_xml_verbose(update, "Processing update");
 	
 	if (MSG_LOG) {
 		struct stat buf;
@@ -80,11 +80,11 @@ te_update_confirm(const char *event, HA_Message *msg)
 	
 	if(safe_str_eq(type, XML_CIB_TAG_CRMCONFIG)) {
 		/* ignore - for the moment */
-		crm_devel("Ignoring changes to the %s section", type);
+		crm_debug("Ignoring changes to the %s section", type);
 		
 	} else if(safe_str_eq(type, XML_CIB_TAG_NODES)) {
 		/* ignore new nodes until they sign up */
-		crm_devel("Ignoring changes to the %s section", type);
+		crm_debug("Ignoring changes to the %s section", type);
 
 	} else if(safe_str_eq(type, XML_CIB_TAG_STATUS)) {
 		/* this _may_ not be un-expected */

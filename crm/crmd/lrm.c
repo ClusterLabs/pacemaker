@@ -814,7 +814,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 		   && AM_I_DC == FALSE
 		   && fsa_our_dc == NULL) {
 			call_options = 0;
-			crm_debug("Possibly nowhere to send resource update to."
+			crm_devel("Possibly nowhere to send resource update to."
 				  "  Performing an async update just in case.");
 		}
 
@@ -845,11 +845,11 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 			/* the return code is a call number, not an error
 			 * code
 			 */
-			crm_debug("Sent resource state update message: %d", rc);
+			crm_devel("Sent resource state update message: %d", rc);
 			
 		} else if(rc == cib_ok) {
-			crm_debug("Resource state update: %s",
-				  cib_error2string(rc));
+			crm_verbose("Resource state update: %s",
+				    cib_error2string(rc));
 			
 		} else if(AM_I_DC) {
 			crm_err("Resource state update failed: %s",

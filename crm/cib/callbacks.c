@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.36 2005/03/29 06:30:05 andrew Exp $ */
+/* $Id: callbacks.c,v 1.37 2005/04/01 10:13:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -306,8 +306,8 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		cib_client->name = crm_strdup(client_name);
 
 		g_hash_table_insert(client_list, cib_client->id, cib_client);
-		crm_debug("Registered %s on %s channel",
-			  cib_client->id, cib_client->channel_name);
+		crm_verbose("Registered %s on %s channel",
+			    cib_client->id, cib_client->channel_name);
 
 		crm_msg_del(op_request);
 
@@ -577,7 +577,7 @@ cib_process_command(
 
 	crm_trace("Processing reply cases");
 	if(call_options & cib_discard_reply) {
-		crm_debug("No reply needed for call %s", call_id);
+		crm_devel("No reply needed for call %s", call_id);
 		return rc;
 		
 	} else if(reply == NULL) {
@@ -602,7 +602,7 @@ cib_process_command(
 	if(output != NULL) {
 		add_message_xml(*reply, F_CIB_CALLDATA, output);
 	} else {
-		crm_debug("No output for call %s", call_id);
+		crm_devel("No output for call %s", call_id);
 	}
 	
 
@@ -1059,10 +1059,9 @@ void
 cib_client_status_callback(const char * node, const char * client,
 			   const char * status, void * private)
 {
-	crm_debug("Status update: Client %s/%s now has status [%s]",
-		   node, client, status);
-
 	if(safe_str_eq(client, CRM_SYSTEM_CIB)) {
+		crm_verbose("Status update: Client %s/%s now has status [%s]",
+			    node, client, status);
 		g_hash_table_replace(peer_hash, crm_strdup(node), crm_strdup(status));
 	}
 	return;

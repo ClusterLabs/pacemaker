@@ -439,8 +439,8 @@ int cib_client_add_notify_callback(
 	GList *list_item = NULL;
 	cib_notify_client_t *new_client = NULL;
 	
-	crm_debug("Adding callback for %s events (%d)",
-		  event, g_list_length(cib->notify_list));
+	crm_verbose("Adding callback for %s events (%d)",
+		    event, g_list_length(cib->notify_list));
 
 	crm_malloc(new_client, sizeof(cib_notify_client_t));
 	new_client->event = event;

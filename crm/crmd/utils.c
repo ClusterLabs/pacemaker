@@ -668,6 +668,9 @@ fsa_action2string(long long action)
 void
 fsa_dump_inputs(int log_level, long long input_register)
 {
+	do_crm_log(log_level, __FUNCTION__, NULL,
+		   "Current register contents: 0x%llx", input_register);
+
 	if(is_set(input_register, R_THE_DC)) {
 		do_crm_log(log_level, __FUNCTION__, NULL,
 			   "Input %.16llx (R_THE_DC)", R_THE_DC);
