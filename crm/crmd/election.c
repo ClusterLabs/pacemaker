@@ -195,7 +195,7 @@ do_election_count_vote(long long action,
 		crm_devel("Election fail: born_on");
 		we_loose = TRUE;
 
-	} else if(your_node->node_born_on < our_node->node_born_on) {
+	} else if(your_node->node_born_on > our_node->node_born_on) {
 		crm_devel("Election pass: born_on");
 		
 	} else if(strcmp(fsa_our_uname, vote_from) > 0) {
