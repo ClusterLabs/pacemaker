@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.44 2005/02/15 11:52:40 andrew Exp $ */
+/* $Id: crm.h,v 1.45 2005/02/18 10:30:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,18 +35,24 @@
 #  define CRM_DEV_BUILD 0
 #endif
 
-#define CRM_ASSERT(expr) if(expr == FALSE) {			\
-		crm_crit("Triggered assert in %s() at %s:%d",	\
-			 __FUNCTION__, __FILE__, __LINE__);	\
-		abort();					\
+#define CRM_ASSERT(expr) if((expr) == FALSE) {			\
+		do_crm_log(LOG_CRIT, __PRETTY_FUNCTION__, NULL,	\
+			   "Triggered dev assert at %s:%d : %s",	\
+			   __FILE__, __LINE__, #expr);			\
+		abort();						\
 	}
 
-#define CRM_DEV_ASSERT(expr) if(expr == FALSE) {			\
+extern gboolean crm_assert_failed;
+
+#define CRM_DEV_ASSERT(expr) crm_assert_failed = FALSE;			\
+	if((expr) == FALSE) {						\
+		crm_assert_failed = TRUE;				\
+		do_crm_log(CRM_DEV_BUILD?LOG_CRIT:LOG_ERR,		\
+			   __PRETTY_FUNCTION__, NULL,			\
+			   "Triggered dev assert at %s:%d : %s", \
+			   __FILE__, __LINE__, #expr);			\
 		if(CRM_DEV_BUILD) {					\
-			CRM_ASSERT(expr);				\
-		} else {						\
-			crm_err("Triggered non-fatal assert in %s() at %s:%d", \
-				__FUNCTION__, __FILE__, __LINE__);	\
+			abort();					\
 		}							\
 	}
 
