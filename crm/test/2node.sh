@@ -54,8 +54,8 @@ do_cmd wait_for_state S_IDLE 10 $test_node_1
 cts_assert "S_IDLE not reached on $test_node_1 after CIB erase"
 
 # Create the CIB for this test and wait for all transitions to complete
-do_cmd make_node $test_node_1 $test_node_1
-do_cmd make_node $test_node_1 $test_node_2
+#do_cmd make_node $test_node_1 $test_node_1
+#do_cmd make_node $test_node_1 $test_node_2
 args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
 do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - $args
 args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
