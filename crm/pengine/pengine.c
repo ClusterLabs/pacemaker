@@ -1916,6 +1916,12 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 
 	const char *ref = xmlGetProp(msg, XML_ATTR_REFERENCE);
 
+	if(safe_str_eq(xmlGetProp(msg, XML_ATTR_MSGTYPE), XML_ATTR_REQUEST)) {
+		cl_log(LOG_INFO,
+		       "Message was a response not a request."
+		       "  Discarding");
+	}
+
 	CRM_DEBUG("Processing %s op (ref=%s)...", op, ref);
 
 	if(pemsg_strm == NULL) {
