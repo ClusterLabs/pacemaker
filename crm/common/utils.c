@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.16 2004/09/17 13:03:09 andrew Exp $ */
+/* $Id: utils.c,v 1.17 2004/09/20 12:19:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,7 +80,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 	int len = 0;
 	const char *temp = NULL;
 
-	crm_verbose("Attempting to decode: [%s]", srcstring);
+	crm_trace("Attempting to decode: [%s]", srcstring);
 	if (srcstring != NULL) {
 		len = strlen(srcstring);
 		while(lpc <= len) {
