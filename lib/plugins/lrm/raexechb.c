@@ -43,7 +43,7 @@
 #define PIL_PLUGINLICENSE	LICENSE_PUBDOM
 #define PIL_PLUGINLICENSEURL	URL_PUBDOM
 
-static const char * RA_PATH = "/etc/ha.d/resource.d/";
+static const char * RA_PATH = HB_RA_DIR;
 
 /* The begin of exported function list */
 static int execra(const char * rsc_type,  

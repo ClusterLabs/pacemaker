@@ -49,7 +49,7 @@
  * Are there multiple paths? Now according to OCF spec, the answer is 'no'.
  * But actually or for future?
  */
-static const char * RA_PATH = "/usr/ocf/resource.d/";
+static const char * RA_PATH = OCF_RA_DIR;
 
 #else
 # define PIL_PLUGIN		stonith
@@ -58,7 +58,7 @@ static const char * RA_PATH = "/usr/ocf/resource.d/";
  * Are there multiple paths? Now according to OCF spec, the answer is 'no'.
  * But actually or for future?
  */
-static const char * RA_PATH = "/usr/lib/heartbeat/stonith.d/";
+static const char * RA_PATH = STONITH_RA_DIR;
 
 #endif
 

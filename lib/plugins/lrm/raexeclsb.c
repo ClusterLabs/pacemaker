@@ -48,7 +48,7 @@
  * Are there multiple paths? Now according to LSB init scripts, the answer 
  * is 'no', but should be 'yes' for lsb none-init scripts?
  */
-static const char * RA_PATH = "/etc/init.d/";
+static const char * RA_PATH = LSB_RA_DIR;
 static const int status_op_exitcode_map[] = { 0, 11, 12, 13, 14 };
 
 /* The begin of exported function list */
@@ -238,7 +238,6 @@ get_resource_list(GList ** rsc_info)
 	}
 
 	file_num = scandir(RA_PATH, &namelist, 0, alphasort);
-	cl_log(LOG_CRIT, "file_num=%d\n", file_num);
 	if (file_num < 0) {
 		cl_log(LOG_ERR, "scandir failed in OCF RA plugin");
 		return -2;
