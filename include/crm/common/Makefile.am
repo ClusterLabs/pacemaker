@@ -18,4 +18,6 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
+includedir=$(base_includedir)/heartbeat
+
 include_HEADERS = xml.h ipc.h msg.h ctrl.h util.h
