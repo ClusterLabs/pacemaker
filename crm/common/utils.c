@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.31 2005/02/17 19:58:55 andrew Exp $ */
+/* $Id: utils.c,v 1.32 2005/02/18 10:40:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,6 +48,7 @@
 #define MAXLINE 512
 
 static uint ref_counter = 0;
+gboolean crm_assert_failed = FALSE;
 
 char *
 generateReference(const char *custom1, const char *custom2)
