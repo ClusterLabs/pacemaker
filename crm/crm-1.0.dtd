@@ -1,0 +1,412 @@
+<?xml version="1.0" ?>
+
+<!-- This document describes the XML elements used by the CRM. 
+  
+  The DTD given here is an annotated syntax definition.
+  
+  GLOBAL TODOs:
+	- Versionize DTD so we can validate against a specific version
+	- Timestamps et al should probably not be CDATA but more
+	  specific types
+-->
+
+<!--
+
+The CIB is described quit well in section 5 of the crm.txt (checked into
+CVS in the crm directory) so it is not repeated here.  Suffice to say
+that it stores the configuration and runtime data required for
+cluster-wide resource managment in XML format.
+
+Because of inter-version compatibility, we cannot directly validate the
+CIB against this DTD; there may be fields present the local node cannot
+deal with. But the DTD can still be used as a tool to validate whether
+the output from the admin frontends is valid, and thus serves as a tool
+for debugging.
+
+CIB: Information Structure
+===========================
+The CIB is divided into two main sections: The "static" configuration
+part and the "dynamic" status.
+
+The configuration contains - suprisingly - the configuration of the
+cluster, namely node attributes, resource instance configuration, and
+the constraints which describe the dependencies between all these. To
+identify the most recent configuration available in the cluster, this
+section is timestamped with the unique timestamp of the last update.
+
+The status part is dynamically generated / updated by the CRM system and
+represents the current status of the cluster; which nodes are up, down
+or crashed, which resources are running where etc. The timestamps here
+represent when the last change went into this section.
+
+All timestamps are given in seconds since the epoch with millisecond
+precision. 
+
+Every information carrying object has an "id" tag, which is basically
+the UUID of it, should we ever need to access it directly.
+
+More details are given in the annotated DTD below.
+
+-->
+
+<!-- Either configuration or status must be present. Why else would you
+     have a CIB? -->
+<!ELEMENT cib (configuration?, status?)>
+
+<!-- TODO: Is the version element necessary? If we flag the DTD against
+     which the CIB validates, the version is implicit... -->
+
+<!ATTLIST cib
+          version      CDATA       #REQUIRED
+          timestamp    CDATA       #REQUIRED>
+
+<!ELEMENT configuration (nodes, resources, constraints)>
+<!-- The most uptodate configuration in the cluster is automatically
+     determined by the CRM via the timestamp; the source indicates
+     which node that was. In case of updates at runtime, the source
+     should be set to the node from which the last update occured.
+
+     The serial gets incremented by one for any update to the
+     configuration.
+
+     TODO: Same comment about the version applies.
+ -->
+
+<!ATTLIST configuration
+          version      CDATA       #REQUIRED
+          source       CDATA       #REQUIRED
+	  serial       CDATA	   #REQUIRED
+          timestamp    CDATA       #REQUIRED>
+
+<!ELEMENT nodes       (node*)>
+
+<!-- Each node can have additional attributes, such as "connected to SAN
+     subsystem whatever", and then a constraint could include a
+     dependency on such an attribute being present or having a specific
+     value. -->
+<!ELEMENT node (attributes?)>
+<!-- 
+     Description is opaque to the CRM, some adminstrative comments.
+     TODO: Do we need to know about ping nodes...?
+     -->
+<!ATTLIST node
+          id            CDATA #REQUIRED
+	  uname		CDATA #REQUIRED
+          description   CDATA #IMPLIED
+          type          (node|ping) #REQUIRED>
+
+<!-- RESOURCES -->
+
+<!ELEMENT resources   (resource*)>
+
+<!-- TODO: Where should we place a version requirement of the resource
+	   agent? Is that a resource attribute, or a constraint...? 
+	   Same for the resource priority, I guess. -->
+<!ELEMENT resource (instance_attributes*)>
+<!ATTLIST resource
+          id            CDATA #REQUIRED
+          description   CDATA #IMPLIED
+          class         (ocf|init|heartbeat)	#REQUIRED
+	  ra_version	CDATA #IMPLIED
+	  priority      CDATA #IMPLIED
+          type          CDATA #REQUIRED>
+
+<!-- Some of these may need to be overridden on a per-node /
+     per-node-attribute basis (ie, eth1 is eth0 on some nodes...). Same
+     is true for timings.
+     
+     This is expressed as follows: You can have multiple sets of
+     'instance attributes'. The one with the highest weight is chosen.
+
+     Otherwise, if a matching node_ref is found, the instance parameters
+     there override the defaults completely; the node_ref list is
+     evaluated ordered by the no tag. The weight attribute doesn't make
+     much sense here.
+     -->
+<!ELEMENT instance_attributes (node_ref?, parameters?, timings*)>
+<!ATTLIST instance_attributes
+	  weight	CDATA #IMPLIED
+	  id		CDATA #REQUIRED>
+
+<!-- Can override the default timeouts or frequencies. Times are given
+     in seconds, millisecond precision is permitted.
+     -->
+<!ELEMENT timings (timing+)>
+
+<!ELEMENT timing EMPTY>
+<!ATTLIST timing
+		id	CDATA #REQUIRED
+		action	CDATA #REQUIRED
+		timeout CDATA #IMPLIED
+		frequency CDATA #IMPLIED>
+
+<!-- CONSTRAINTS -->
+<!ELEMENT constraints
+(rsc_to_rsc*,rsc_to_node*,node_baseweight*,node_track*)>
+
+<!-- Every constraint entry also has a 'lifetime' attribute, which
+     expresses when this is applicable. For example, a constraint could
+     be purged automatically when a node reboots, or after a week.
+
+     TODO: The syntax of this one needs more definition... -->
+
+<!-- Express dependencies between the elements.
+     
+     The type specifies whether or not a resource affects the start/stop
+     ordering (ie, that resource 'from' should be started after 'to'),
+     or whether it's a placement dependency (ie, 'from' should run on the
+     same node as 'to').
+
+     The 'strength' describes how strong the dependency is (RFC-style):
+     
+     An ordering dependency of strength 'must' implies that a resource
+     must be started after another one; it will not work without the
+     other one being present. If it was 'should' only, the resource will
+     be started afterwards, but still be started if it is not present.
+     
+     An ordering dependency of "must not" would imply the opposite; if
+     some higher priority resource has led to the 'to' being activated,
+     this resource will not be run.
+
+     The placement policies work in the same fashion.
+
+     TODO: Are may/may not applicable at all? Should & Must are, because
+     they control whether or not a failure to meet a requirement
+     propagates upwards.
+ -->
+<!ELEMENT rsc_to_rsc EMPTY>
+<!ATTLIST rsc_to_rsc
+		id	CDATA #REQUIRED
+		from	CDATA #REQUIRED
+		to	CDATA #REQUIRED
+		lifetime CDATA #IMPLIED
+		timestamp CDATA #REQUIRED
+		type	(ordering|placement) #REQUIRED
+		strength (must|should|may|maynot|shouldnot|mustnot) #REQUIRED>
+
+<!-- Specify which nodes are eligible for running a given resource. 
+     
+     During processing, all rsc_to_node for a given rsc are evaluated.
+     
+     All nodes start out with their base weight (which defaults to zero,
+     but can be modified via a node_baseweight dependency), and then all
+     matching rsc_to_node constraints modify their weight; it is either
+     in- or decremented accordingly.
+
+     "set" is different, the first set will finalize the score for the
+     matching nodes.
+
+     Then the highest non-zero available node is determined to place the
+     resource.
+     
+     The rsc references, suprisingly, a resource id.
+
+  -->
+<!ELEMENT rsc_to_node (node_ref)>
+<!ATTLIST rsc_to_node
+		lifetime CDATA #IMPLIED
+		timestamp CDATA #IMPLIED
+		id	CDATA #REQUIRED
+		weight  CDATA #IMPLIED
+		modifier (set|inc|dec) 'inc'
+		rsc	CDATA #REQUIRED>
+
+<!-- 
+     This is similar, but works in the opposite direction; it allows the
+     user to express a constraint on a (list of) node(s) identified by
+     attribute or name, and which in turn affects the placement of /all/
+     resources.
+
+     Basically it allows the user to modify the "base weight" of a node.
+
+     The most common case will be to "blacklist" a set of nodes; a
+     negative weight will prevent them from being considered eligible
+     anywhere, ie use a "set" to -1 or somesuch.
+
+     A higher base-weight could be used to express a global preference.
+     All nodes which are eligible to run a given resource will receive
+     this weight as their 'default' weight (instead of 0). Caveat
+     emperor: this will make the node a candidate to run all resources
+     by default.  -->
+
+<!ELEMENT node_baseweight (node_ref+)>
+<!ATTLIST node_baseweight
+		lifetime CDATA #IMPLIED
+		timestamp CDATA #IMPLIED
+		weight	CDATA #REQUIRED
+		modifier (set|inc|dec) 'inc'
+		id	CDATA #REQUIRED>
+
+<!-- Reference a set of nodes, either by directly specifying a node id,
+     uname, or by matching its attributes. All rules need to match.
+     
+     (You can express "OR" by having multiple rsc_to_node / node_baseweight
+     entries.)
+  -->
+<!ELEMENT node_ref (node_match+)>
+<!ATTLIST node_ref
+		id	CDATA #REQUIRED>
+
+<!ELEMENT node_match EMPTY>
+<!ATTLIST node_match
+		id	CDATA #REQUIRED
+		no	CDATA #REQUIRED
+		target	CDATA #REQUIRED
+		type	(id|uname|has_attr|not_attr|attr_value) #REQUIRED
+		value	CDATA #IMPLIED>
+
+
+<!-- STATUS SECTION -->
+<!-- Details about the status of each node configured.
+
+ In places, a "source" attribute has been added so that the CRM is able
+ to know where this information came from.  This is helpful during the
+ merging process (performed by a new DC and perhaps periodically) as it
+ allows the CRM to allow nodes to be authoritive about themselves if
+ appropriate (ie. which resources it is running, but perhaps not always
+ about its own health). TODO: Clarify meaning.
+ 
+  To avoid duplication of data, state entries only carry references to
+  nodes and resources. 
+
+  TODO: Where is the status of on-going STONITH requests tracked?
+  
+-->
+
+<!ELEMENT status (node_state*)>
+
+<!-- 	The state of a given node. 
+
+	uname is clear.
+
+	state is either active (both CRM and CCM are up), in_ccm (node
+	is around in the membership, but CRM is not talking to us), down
+	(neither) or shot (well, you know, it was, but then I threw a
+	lot of stones at it.)
+	
+	exp_state is our expectation of the state. This requires some
+	book-keeping on the part of the other nodes to remember the last
+	state of any other node by updating it to the latest relayed to
+	them.
+	
+	"source" then states which node contributed this state entry.
+	For an active node, source == uname, or something is very wrong
+	;-) For a node which was shot, this should track the node who
+	completed the STONITH operation.
+
+ 	A node which is exp_state == down && state == active is, in
+	fact, going down. The Policy Engine will migrate resources away
+	from it.
+	
+	Ideally, there should be a node_state entry for every entry in
+	the <nodes> list.
+-->
+<!ELEMENT node_state (lrm, attributes)>
+<!ATTLIST node_state
+	id		CDATA #REQUIRED
+	uname   	CDATA #REQUIRED
+	state	  	(active|in_ccm|down|shot) #REQUIRED
+	exp_state	(active|down)      #REQUIRED
+	source		CDATA #IMPLIED
+	timestamp	CDATA #REQUIRED>
+
+<!-- Information from the Local Resource Manager of the node.
+     
+     Running resources, installed Resource Agents etc. -->
+     
+<!ELEMENT lrm (lrm_resources,lrm_agents)>
+<!ATTLIST lrm
+        id      CDATA #REQUIRED
+	version	CDATA #REQUIRED>
+
+<!-- TODO: Need to define howto handle agents provided by multiple
+     sources. The OCF RA spec allows a resource type to be provided by
+     multiple Resource Agents; how do we deal with that? -->
+<!ELEMENT lrm_agents (lrm_agent*)>
+
+<!ELEMENT lrm_agent (resource-agent?)>
+<!ATTLIST lrm_agent
+	type	CDATA #REQUIRED
+	class	(ocf|init|heartbeat) #REQUIRED
+	version CDATA #REQUIRED>
+
+<!-- TODO: In fact, this should reference the OCF RA DTD for class ==
+	   ocf, but I don't know how to specify that ;-) -->
+<!ELEMENT resource_agent EMPTY>
+
+<!ELEMENT lrm_resources (rsc_state*)>
+
+<!ELEMENT rsc_state EMPTY>
+<!ATTLIST rsc_state
+          id		CDATA #REQUIRED
+          rsc_id	CDATA #REQUIRED
+          node_id	CDATA #IMPLIED
+	  rsc_state	(stopped|starting|started|fail|restarting|stopping|stop_fail)
+	  			#REQUIRED
+          timestamp	CDATA #REQUIRED>
+
+<!-- ============================================================== -->
+<!-- ============================================================== -->
+
+<!--
+ The Transition Graph is an ordered list of synapses, which consist of a
+ list of pre-conditions (events) they are waiting for / triggering on
+ and a (list of) actions which are initiated when they "fire". The first
+ synapse to have a matching input "consumes" the event unless specified
+ differently.
+ 
+-->
+
+<!-- Either configuration or status must be present. Why else would you
+     have a CIB? -->
+
+<!ELEMENT transition_graph (synapse+)>
+
+<!-- When all inputs to a synapse are satisfied, the synapse fires the
+     actions -->
+
+<!ELEMENT synapse (inputs,actions)>
+<!ATTLIST synapse
+	  id		CDATA #REQUIRED>
+
+<!ELEMENT inputs (trigger+)>
+
+<!-- event_spec specifies the event we are looking for.
+     This can be anything from "rsc foo started somewhere / on node X",
+     "STONITH of node A completed", "DEFAULT" etc... 
+-->
+<!ELEMENT trigger (rsc_state?,node_state?)>
+<!ATTLIST trigger
+	  id		CDATA #REQUIRED
+	  consumes	(no|yes) 'yes'>
+
+<!ELEMENT actions (action+)>
+
+<!-- operation specifies the action we are kicking off.
+     This can be anything from "start resource foo on node A with these
+     parameters...", "initiate STONITHing node B" to "restart
+     computation" or "shutdown CRM somewhere"
+     TODO: This deserves to be something better than CDATA.
+-->
+<!ELEMENT action EMPTY>
+<!ATTLIST action
+	  id		CDATA #REQUIRED
+	  operation	CDATA #REQUIRED>
+
+<!-- ============================================================== -->
+<!-- ============================================================== -->
+<!-- Common elements -->
+
+<!ELEMENT nvpair EMPTY>
+<!-- No, you don't /have/ to give a value. There's a difference between
+     a key not being present and a key not having a value. -->
+<!ATTLIST nvpair
+	  id		CDATA #REQUIRED
+	  name		CDATA #REQUIRED
+	  value		CDATA #IMPLIED>
+
+<!-- Same same, different names for clarity ;) -->
+<!ELEMENT attributes (nvpair*)>
+<!ELEMENT parameters (nvpair*)>
+
+
