@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.19 2004/06/28 08:39:00 andrew Exp $ */
+/* $Id: tengine.c,v 1.20 2004/06/29 17:06:45 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <sys/param.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>

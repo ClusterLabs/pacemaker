@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.29 2004/06/03 07:52:16 andrew Exp $ */
+/* $Id: adminmain.c,v 1.30 2004/06/29 17:08:30 msoffen Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <portability.h>
+#include <sys/param.h>
 
 #include <crm/crm.h>
 
