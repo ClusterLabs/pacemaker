@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.9 2005/02/07 11:21:41 andrew Exp $ */
+/* $Id: callbacks.c,v 1.10 2005/02/09 11:46:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,8 +38,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 	gboolean done = FALSE;
 	const char *op = cl_get_string(msg, F_CIB_OPERATION);
 	const char *type = cl_get_string(msg, F_CIB_OBJTYPE);
-	const char *update_s = cl_get_string(msg, F_CIB_UPDATE);
-	crm_data_t *update = string2xml(update_s);
+	crm_data_t *update = get_message_xml(msg, F_CIB_UPDATE);
 
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 	crm_trace("Processing %s...", event);
