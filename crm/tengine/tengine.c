@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.51 2005/03/14 21:04:14 andrew Exp $ */
+/* $Id: tengine.c,v 1.52 2005/03/15 09:28:04 zhenh Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -463,7 +463,7 @@ initiate_action(action_t *action)
 /*         <args target="node1"/> */
 		crm_data_t *action_args = find_xml_node(
 			action->xml, "args", TRUE);
-		const char *target = crm_element_value(action_args, "target");
+		const char *target = crm_element_value(action_args, XML_LRM_ATTR_TARGET);
 		
 #ifdef TESTING
 		crm_info("Executing fencing operation (%s) on %s", id, target);
@@ -473,7 +473,7 @@ initiate_action(action_t *action)
 		action->complete = TRUE;
 #else
 		stonith_ops_t * st_op = NULL;
-		const char *uuid = crm_element_value(action_args,"target_uuid");
+		const char *uuid = crm_element_value(action_args,XML_LRM_ATTR_TARGET_UUID);
 		crm_malloc(st_op, sizeof(stonith_ops_t));
 		st_op->optype = RESET;
 		st_op->timeout = crm_atoi(timeout, "100"); /* ten seconds */
