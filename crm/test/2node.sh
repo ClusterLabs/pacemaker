@@ -139,7 +139,8 @@ do_cmd is_running rsc1 $test_node_1 $test_node_1
 cts_assert "rsc1 NOT running on $test_node_1"
 
 do_cmd is_running rsc2 $test_node_1 $test_node_2
-cts_assert "rsc2 NOT running on $test_node_2"
+# need to fix the PE first
+#cts_assert "rsc2 NOT running on $test_node_2"
 
 do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmadmin -K $test_node_1
 
@@ -162,8 +163,7 @@ do_cmd is_running rsc1 $test_node_2 $test_node_1
 cts_assert_false "rsc1 IS running on $test_node_1"
 
 do_cmd is_running rsc2 $test_node_2 $test_node_2
-# need to fix the PE first
-#cts_assert "rsc2 NOT running on $test_node_2"
+cts_assert "rsc2 NOT running on $test_node_2"
 
 do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmadmin -K $test_node_2
 
