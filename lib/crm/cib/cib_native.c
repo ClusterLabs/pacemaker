@@ -342,7 +342,10 @@ cib_native_perform_op(
 		return cib_send_failed;
 	}
 
-	if( !(call_options & cib_sync_call)) {
+	if((call_options & cib_discard_reply)) {
+		return cib_ok;
+
+	} else if(!(call_options & cib_sync_call)) {
 		return cib->call_id - 1;
 	}
 
