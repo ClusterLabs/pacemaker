@@ -53,7 +53,7 @@ do_ha_register(long long action,
 		fsa_cluster_conn = ll_cluster_new("heartbeat");
 
 	// make sure we are disconnected first
-	fsa_cluster_conn->llc_ops->signoff(fsa_cluster_connection);
+	fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn);
 	
 	registered = register_with_ha(fsa_cluster_conn,
 				      crm_system_name,
