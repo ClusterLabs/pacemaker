@@ -87,32 +87,7 @@ static struct RAExecOps raops =
 	get_resource_meta
 };
 
-/*
- * The following two functions are only exported to the plugin infrastructure.
- */
-
-/*
- * raexec_closepi is called as part of shutting down the plugin.
- * If there was any global data allocated, or file descriptors opened, etc.
- * which is associated with the plugin, and not a single interface
- * in particular, here's our chance to clean it up.
- */
-static void raexec_closepi(PILPlugin *pi)
-{
-}
-
-/*
- * raexec_close_intf called as part of shutting down the md5 HBauth interface.
- * If there was any global data allocated, or file descriptors opened, etc.
- * which is associated with the md5 implementation, here's our chance
- * to clean it up.
- */
-static PIL_rc raexec_closeintf(PILInterface *pi, void *pd)
-{
-	return PIL_OK;
-}
-
-PIL_PLUGIN_BOILERPLATE("1.0", Debug, raexec_closepi);
+PIL_PLUGIN_BOILERPLATE2("1.0", Debug);
 
 static const PILPluginImports*  PluginImports;
 static PILPlugin*               OurPlugin;
@@ -141,7 +116,7 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 
 	/*  Register our interfaces */
  	return imports->register_interface(us, PIL_PLUGINTYPE_S,  PIL_PLUGIN_S,
-		&raops, raexec_closeintf, &OurInterface, &OurImports,
+		&raops, NULL, &OurInterface, &OurImports,
 		interfprivate);
 }
 
