@@ -417,6 +417,9 @@ do_te_control(long long action,
 	FNRET(result);
 }
 
+static xmlNodePtr te_last_input = NULL;
+static xmlNodePtr te_lastcc = NULL;
+
 /*	 A_TE_COPYTO	*/
 enum crmd_fsa_input
 do_te_copyto(long long action,
@@ -425,24 +428,53 @@ do_te_copyto(long long action,
 	     enum crmd_fsa_input current_input,
 	     void *data)
 {
-	xmlNodePtr message  = copy_xml_node_recursive((xmlNodePtr)data);
-	xmlNodePtr opts  = find_xml_node(message, "options");
-	const char *true_op = xmlGetProp(opts, XML_ATTR_OP);
+	xmlNodePtr message  = NULL;
+	xmlNodePtr opts     = NULL;
+	const char *true_op = NULL;
 	
 	FNIN();
-	
-	set_xml_property_copy(opts, XML_ATTR_OP, "event");
-	set_xml_property_copy(message, XML_ATTR_SYSTO, CRM_SYSTEM_TENGINE);
-	set_xml_property_copy(opts, "true_op", true_op);
+
+	if(data != NULL) {
+		message  = copy_xml_node_recursive((xmlNodePtr)data);
+		opts  = find_xml_node(message, "options");
+		true_op = xmlGetProp(opts, XML_ATTR_OP);
+		
+		set_xml_property_copy(opts, XML_ATTR_OP, "event");
+		set_xml_property_copy(opts, "true_op", true_op);
+
+		set_xml_property_copy(message,
+				      XML_ATTR_SYSTO,
+				      CRM_SYSTEM_TENGINE);
+	}
+
+	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
+		cl_log(LOG_INFO, "Waiting for the TE to connect");
+		if(data != NULL) {
+			free_xml(te_lastcc);
+			te_lastcc = message;
+		}
+		FNRET(I_WAIT_FOR_EVENT);
+
+	}
+
+	if(message == NULL) {
+		message = te_lastcc;
+		te_lastcc = NULL;
+		
+	} else {
+		free_xml(te_lastcc);
+	}
 	
 	relay_message(message, FALSE);
 
-	free_xml(message);
-
+	// only free it if it was a local copy
+	if(data == NULL) {
+		free_xml(message);
+	}
+	
 	FNRET(I_NULL);
 }
 
-static xmlNodePtr te_last_input = NULL;
 
 /*	 A_TE_INVOKE, A_TE_CANCEL	*/
 enum crmd_fsa_input
@@ -468,6 +500,8 @@ do_te_invoke(long long action,
 
 	if(msg == NULL) {
 		msg = te_last_input;
+		te_last_input = NULL;
+		
 	} else {
 		free_xml(te_last_input);
 	}
@@ -484,7 +518,11 @@ do_te_invoke(long long action,
 		send_request(NULL, graph, "abort",
 			     NULL, CRM_SYSTEM_TENGINE);
 	}
-	
+
+	// only free it if it was a local copy
+	if(data == NULL) {
+		free_xml(msg);
+	}
 	
 	FNRET(I_NULL);
 }
@@ -893,6 +931,12 @@ do_lrm_invoke(long long action,
 
 		tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
 		set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
+		// if we are doing this we are active
+		set_xml_property_copy(tmp1, "state",     "active");
+
+		// either active or shutdown if R_SHUTDOWN is set
+		set_xml_property_copy(tmp1, "exp_state", "active");
+
 		fragment = create_cib_fragment(tmp1, NULL);
 
 		set_xml_property_copy(data, "replace_lrm", "true");
@@ -932,8 +976,10 @@ do_lrm_invoke(long long action,
 		iter = create_xml_node(iter, "lrm_resources");
 
 		iter = create_xml_node(iter, "lrm_resource");
-	
+
+		// so we can identify where to do the update
 		set_xml_property_copy(state, "id", fsa_our_uname);
+
 		set_xml_property_copy(iter, XML_ATTR_ID, id_from_cib);
 		set_xml_property_copy(iter, "last_op", operation);
 

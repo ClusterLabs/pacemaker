@@ -283,9 +283,6 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 				s_crmd_fsa(C_IPC_MESSAGE,
 					   I_ROUTER,
 					   root_xml_node);
-				
-			} else {
-				CRM_DEBUG("Message not authorized");
 			}
 		} else {
 			cl_log(LOG_INFO,
@@ -509,6 +506,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	} else if(is_local) {
 		if(dont_cc) {
 			ROUTER_RESULT("Message result: Local relay");
+
 		} else {
 			/* The DC should also get this message */
 			ROUTER_RESULT("Message result: Local relay with CC");
@@ -625,6 +623,11 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		
 		CRM_DEBUG("Message reply can%s be routed from %s.",
 			   can_reply?"":" not", sys_from);
+
+		if(can_reply == FALSE) {
+			cl_log(LOG_ERR, "Message not authorized");
+		}
+		
 		return can_reply;
 	}
 	

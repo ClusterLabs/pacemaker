@@ -27,7 +27,7 @@ gboolean process_graph_event(const char *event_node,
 			     const char *event_rc);
 
 void send_success(void);
-void send_abort(void);
+void send_abort(xmlNodePtr msg);
 gboolean process_fake_event(xmlNodePtr msg);
 
 
@@ -449,7 +449,7 @@ gboolean
 process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 {
 	const char *op = get_xml_attr (msg, XML_TAG_OPTIONS,
-				       XML_ATTR_OP, TRUE);
+				       XML_ATTR_OP, FALSE);
 
 	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
 
@@ -488,7 +488,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		if(true_op == NULL) {
 			cl_log(LOG_ERR,
 			       "Illegal update, the original operation must be specified");
-			send_abort();
+			send_abort(msg);
 			
 		} else if(strcmp(true_op, CRM_OPERATION_CREATE) == 0
 		   || strcmp(true_op, CRM_OPERATION_DELETE) == 0
@@ -498,12 +498,12 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		   || strcmp(true_op, CRM_OPERATION_ERASE) == 0) {
 
 			// these are always unexpected, trigger the PE
-			send_abort();
+			send_abort(msg);
 			
 		} else if(strcmp(true_op, CRM_OPERATION_UPDATE) == 0) {
 			// this may not be un-expected
 			if(extract_event(msg) == FALSE){
-				send_abort();
+				send_abort(msg);
 			}
 			
 		} else {
@@ -523,12 +523,14 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 }
 
 void
-send_abort(void)
+send_abort(xmlNodePtr msg)
 {	
 	xmlNodePtr options = create_xml_node(NULL, "options");
 
 	CRM_DEBUG("Sending \"abort\" message");
 
+	xml_message_debug(msg, "aborting on this msg");
+	
 	set_xml_property_copy(options, XML_ATTR_OP, "te_abort");
 	
 	send_ipc_request(crm_ch, options, NULL,
