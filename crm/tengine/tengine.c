@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.52 2005/03/15 09:28:04 zhenh Exp $ */
+/* $Id: tengine.c,v 1.53 2005/03/18 07:46:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -463,7 +463,8 @@ initiate_action(action_t *action)
 /*         <args target="node1"/> */
 		crm_data_t *action_args = find_xml_node(
 			action->xml, "args", TRUE);
-		const char *target = crm_element_value(action_args, XML_LRM_ATTR_TARGET);
+		const char *target = crm_element_value(
+			action_args, XML_LRM_ATTR_TARGET);
 		
 #ifdef TESTING
 		crm_info("Executing fencing operation (%s) on %s", id, target);
@@ -473,17 +474,19 @@ initiate_action(action_t *action)
 		action->complete = TRUE;
 #else
 		stonith_ops_t * st_op = NULL;
-		const char *uuid = crm_element_value(action_args,XML_LRM_ATTR_TARGET_UUID);
+		const char *uuid = crm_element_value(
+			action_args,XML_LRM_ATTR_TARGET_UUID);
 		crm_malloc(st_op, sizeof(stonith_ops_t));
 		st_op->optype = RESET;
 		st_op->timeout = crm_atoi(timeout, "100"); /* ten seconds */
 		st_op->node_name = crm_strdup(target);
- 		CRM_DEV_ASSERT(uuid_parse(uuid, st_op->node_uuid) == 0);
+		st_op->node_uuid = crm_strdup(uuid);
 
 		crm_info("Executing fencing operation (%s) on %s", id, target);
 
 		if(stonithd_input_IPC_channel() == NULL) {
-			crm_err("Cannot fence %s - stonith not available", target);
+			crm_err("Cannot fence %s - stonith not available",
+				target);
 			
 		} else if (ST_OK == stonithd_node_fence( st_op )) {
 			ret = TRUE;

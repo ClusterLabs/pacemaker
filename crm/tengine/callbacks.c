@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.18 2005/03/16 19:53:02 andrew Exp $ */
+/* $Id: callbacks.c,v 1.19 2005/03/18 07:46:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -197,19 +197,16 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 	if(op->op_result == STONITH_SUCCEEDED) {
 		enum cib_errors rc = cib_ok;
 		const char *target = op->node_name;
-		char *uuid   = NULL;
+		const char *uuid   = op->node_uuid;
 		
 		/* zero out the node-status & remove all LRM status info */
 		crm_data_t *update = NULL;
 		crm_data_t *node_state = create_xml_node(
 			NULL, XML_CIB_TAG_STATE);
 
-		if(op->node_uuid != NULL) {
-			uuid_unparse(op->node_uuid, uuid);
-		} else {
-			crm_err("UUID must be present in fencing operations!");
-		}
-		
+		CRM_DEV_ASSERT(op->node_name != NULL);
+		CRM_DEV_ASSERT(op->node_uuid != NULL);
+
 		set_xml_property_copy(node_state, XML_ATTR_UUID, uuid);
 		set_xml_property_copy(node_state, XML_ATTR_UNAME, target);
 		set_xml_property_copy(
