@@ -301,6 +301,8 @@ do_dc_join_finalize(long long action,
 		crm_info("Asking %s for its copy of the CIB",
 			 crm_str(max_generation_from));
 
+		CRM_DEV_ASSERT(cib_ok == fsa_cib_conn->cmds->is_master(fsa_cib_conn));
+			
 		rc = fsa_cib_conn->cmds->sync_from(
 			fsa_cib_conn, max_generation_from, NULL, cib_sync_call);
 		if(rc != cib_ok) {
@@ -311,9 +313,12 @@ do_dc_join_finalize(long long action,
 		}
 	}
 
+	crm_debug("Bumping the epoche and syncing to %d clients",
+		  g_hash_table_size(join_requests));
 	fsa_cib_conn->cmds->bump_epoch(
 		fsa_cib_conn, cib_scope_local|cib_sync_call);
-	fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_sync_call);
+	CRM_DEV_ASSERT(cib_ok == fsa_cib_conn->cmds->sync(
+			       fsa_cib_conn, NULL, cib_sync_call));
 	
 	num_join_invites = 0;
 	crm_debug("Notifying %d clients of join results",
