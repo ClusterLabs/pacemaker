@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.19 2005/03/14 21:00:28 andrew Exp $ */
+/* $Id: native.c,v 1.20 2005/03/16 19:38:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -207,11 +207,12 @@ void native_create_actions(resource_t *rsc)
 	if(can_start && g_list_length(native_data->running_on) == 0) {
 		/* create start action */
 		action_t *op = action_new(rsc, start_rsc, chosen);
-		crm_info("Start resource %s (%s)",
-			 rsc->id, safe_val3(NULL, chosen, details, uname));
-
 		if(have_quorum == FALSE && require_quorum == TRUE) {
 			op->runnable = FALSE;
+		} else {
+			crm_info("Start resource %s (%s)",
+				 rsc->id, safe_val3(
+					 NULL, chosen, details, uname));
 		}
 		
 	} else if(g_list_length(native_data->running_on) > 1) {
@@ -922,6 +923,7 @@ native_assign_color(resource_t *rsc, color_t *color)
 	rsc->provisional = FALSE;
 
 	if(local_color != NULL) {
+		(local_color->details->num_resources)++;
 		local_color->details->allocated_resources =
 			g_list_append(
 				local_color->details->allocated_resources,rsc);
