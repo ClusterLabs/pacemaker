@@ -53,12 +53,18 @@ AM_CFLAGS	= @CFLAGS@						\
 lib_LTLIBRARIES	= 
 
 ## binary progs
-halib_PROGRAMS	= crmd
+halib_PROGRAMS	= crmd atest
 
 ## SOURCES
 
 noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
 		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h
+
+atest_SOURCES	= atest.c
+atest_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+atest_LDFLAGS	= $(XML_LIBS)
+atest_LDADD	= $(COMMONLIBS)
+
 
 crmd_SOURCES	= main.c crmd.c 					\
 		fsa.c control.c messages.c ccm.c callbacks.c		\
