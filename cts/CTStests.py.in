@@ -1398,7 +1398,7 @@ class ResourceRecover(CTSTest):
         resourcetype = str(resource.Type())
         node=resource.RunningNodes()
         if node == []:
-            return self.failure("%s is not running on any node"%(resource.id))
+            return self.failure("%s is not running on any node" %(resource))
         self.CM.log("Choice resource [%s] [%s] on (%s)"%(resourcetype,str(resource.rid),node[0]))
 
         # stop a resource
