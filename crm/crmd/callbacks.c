@@ -494,6 +494,7 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 	} else {
 		crm_err("CCM connection appears to have failed: rc=%d.", rc);
 		register_fsa_input(C_CCM_CALLBACK, I_ERROR, NULL);
+		s_crmd_fsa(C_CCM_CALLBACK);
 		return FALSE;
 	}
 }
