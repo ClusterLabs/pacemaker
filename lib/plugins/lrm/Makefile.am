@@ -40,7 +40,8 @@ ocf_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoi
 
 stonith_la_SOURCES = raexecstonith.c racommon.c
 stonith_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version \
-		     -L$(top_builddir)/lib/fencing -lstonithd
+		     -L$(top_builddir)/lib/fencing -lstonithd \
+		     -L$(top_builddir)/lib/stonith -lstonith
 
 heartbeat_la_SOURCES = raexechb.c racommon.c
 heartbeat_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
