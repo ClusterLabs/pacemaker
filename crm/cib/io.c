@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.12 2005/02/19 18:11:03 andrew Exp $ */
+/* $Id: io.c,v 1.13 2005/02/21 13:21:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -103,15 +103,26 @@ readCibXmlFile(const char *filename)
 		root = file2xml(cib_file);
 		set_xml_property_copy(root, "generated", XML_BOOLEAN_FALSE);
 		fclose(cib_file);
+
 		
 	} else {
 		crm_warn("Stat of (%s) failed, file does not exist.",
 			 CIB_FILENAME);
 	}
-	
+
+	if(root != NULL) {
+		int lpc = 0;
+		crm_data_t *status = get_object_root(XML_CIB_TAG_STATE, root);
+		for (; lpc < status->nfields; ) {
+			if(status->types[lpc] != FT_STRUCT) {
+				lpc++;
+				continue;
+			}
+			zap_xml_from_parent(status, status->values[lpc]);
+		}
+	}
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
-/*		return createEmptyCib(); */
 		root = NULL;
 	}
 
