@@ -402,9 +402,10 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 
 gboolean lrm_dispatch(int fd, gpointer user_data)
 {
+	int rc = 0;
 	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
 	crm_debug("received callback");
-	lrm->lrm_ops->rcvmsg(lrm, FALSE);
+	rc = lrm->lrm_ops->rcvmsg(lrm, FALSE);
 	return TRUE;
 }
 
@@ -417,41 +418,18 @@ crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 	int lpc = 0;
 	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
 
-#if 1
 	while(hb_cluster->llc_ops->msgready(hb_cluster)) {
  		lpc++; 
 		/* invoke the callbacks but dont block */
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
-/* 		empty_callbacks = 0; */
 	}
-#else
-	while(hb_cluster->llc_ops->rcvmsg(hb_cluster, 0)) {
- 		lpc++; 
-	}
-#endif
+
 	crm_trace("%d HA messages dispatched", lpc);
 
 	if (channel && (channel->ch_status == IPC_DISCONNECT)) {
 		crm_crit("Lost connection to heartbeat service.");
 		return FALSE;
 	}
-
-#if 0
-	if(lpc == 0) {
-		/* hey what happened?? */
-		crm_warn("We were called but no message was ready."
-		       "  Likely the connection to Heartbeat failed,"
-			" check the logs.");
-
-		if(empty_callbacks++ > MAX_EMPTY_CALLBACKS) {
-			crm_err("%d empty callbacks received..."
-				" considering heartbeat dead",
-				MAX_EMPTY_CALLBACKS);
-
-			return FALSE;
-		}
-	}
-#endif	
     
 	return TRUE;
 }
@@ -506,10 +484,18 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 
 gboolean ccm_dispatch(int fd, gpointer user_data)
 {
+	int rc = 0;
 	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
 	crm_debug("received callback");	
-	oc_ev_handle_event(ccm_token);
-	return TRUE;
+	rc = oc_ev_handle_event(ccm_token);
+	if(0 == rc) {
+		return TRUE;
+
+	} else {
+		crm_err("CCM connection appears to have failed: rc=%d.", rc);
+		register_fsa_input(C_CCM_CALLBACK, I_ERROR, NULL);
+		return FALSE;
+	}
 }
 
 
@@ -528,6 +514,7 @@ crmd_ccm_msg_callback(
 			event_data->oc = copy_ccm_oc_data(
 				(const oc_ev_membership_t *)data);
 
+			crm_debug("Sending callback to the FSA");
 			register_fsa_input(
 				C_CCM_CALLBACK, I_CCM_EVENT,
 				(void*)event_data);
