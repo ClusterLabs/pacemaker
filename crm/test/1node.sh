@@ -20,11 +20,6 @@
 . helper.sh
 #. @libdir@/heartbeat/crmtest/helper.sh
 
-HALIB_DIR=/usr/lib/heartbeat
-HAINIT_DIR=/etc/init.d
-
-test_node_1=hadev
-
 QUIET=$OUTPUT_NONE
 CRM_ERR_SHUTDOWN=1
 
