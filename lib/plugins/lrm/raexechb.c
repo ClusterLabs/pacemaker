@@ -69,17 +69,6 @@ static const char * RA_PATH = HB_RA_DIR;
 "  </special>\n"\
 "</resource-agent>\n"
 
-/* Map to the return code of the 'monitor' operation defined in the OCF RA
- * specification.
- */
-static const int status_op_exitcode_map[] = {
-        EXECRA_OK,
-        EXECRA_UNKNOWN_ERROR,
-        EXECRA_UNKNOWN_ERROR,
-        EXECRA_NOT_RUNNING,
-        EXECRA_UNKNOWN_ERROR
-};
-
 /* The begin of exported function list */
 static int execra(const char * rsc_id,
 		  const char * rsc_type,
@@ -88,7 +77,8 @@ static int execra(const char * rsc_id,
 		  const int    timeout,
 	 	  GHashTable * params);
 
-static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op_type);
+static uniform_ret_execra_t map_ra_retvalue(int ret_execra
+	, const char * op_type, const char * std_output);
 static int get_resource_list(GList ** rsc_info);
 static char* get_resource_meta(const char* rsc_type,  const char* provider);
 static int get_provider_list(const char* ra_type, GList ** providers);
@@ -267,19 +257,41 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 }
 
 static uniform_ret_execra_t 
-map_ra_retvalue(int ret_execra, const char * op_type)
+map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 {
+	
 	/* Now there is no formal related specification for Heartbeat RA 
 	 * scripts. Temporarily deal as LSB init script.
 	 */
 	/* Except op_type equals 'status', the UNIFORM_RET_EXECRA is compatible
 	   with LSB standard.
 	*/
+	const char * stop_pattern1 = "*stopped*",
+		   * stop_pattern2 = "*not*running*",
+		   * running_pattern1 = "*running*",
+		   * running_pattern2 = "*OK*";
+	const char * lower_std_output = NULL;
+	
 	if ( strncmp(op_type, "status", strlen("status")) == 0 ) {
-		if (ret_execra < 0 || ret_execra > 4 ) {
-			ret_execra = EXECRA_UNKNOWN_ERROR;
+		if (std_output == NULL ) {
+			cl_log(LOG_WARNING, "The heartbeat RA may not to output "
+				"status string, such as 'running', to stdout.");
+			return EXECRA_UNKNOWN_ERROR; /* EXECRA_NOT_RUNNING ? */
 		}
-		return status_op_exitcode_map[ret_execra];
+	 	lower_std_output = g_ascii_strdown(std_output, -1);
+
+		if ( TRUE == g_pattern_match_simple(stop_pattern1
+			, lower_std_output) || TRUE ==
+			g_pattern_match_simple(stop_pattern2
+			, lower_std_output) ) {
+			return EXECRA_NOT_RUNNING; /* stopped */
+		}
+		if ( TRUE == g_pattern_match_simple(running_pattern1
+			, lower_std_output) || TRUE ==
+			g_pattern_match_simple(running_pattern2
+			, std_output) ) {
+			return EXECRA_OK; /* running */
+		}
 	}
 	/* For none-status operation return code */
 	if ( ret_execra < 0 || ret_execra > 7 ) {

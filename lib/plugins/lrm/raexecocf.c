@@ -61,7 +61,7 @@ static int execra(const char * rsc_id,
 		  const int    timeout,
 	 	  GHashTable * params);
 static uniform_ret_execra_t map_ra_retvalue(int ret_execra, 
-					    const char * op_type);
+	   const char * op_type, const char * std_output);
 static int get_resource_list(GList ** rsc_info);
 static char* get_resource_meta(const char* rsc_type,  const char* provider);
 static int get_provider_list(const char* ra_type, GList ** providers);
@@ -172,7 +172,7 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 }
 
 static uniform_ret_execra_t
-map_ra_retvalue(int ret_execra, const char * op_type)
+map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 {
 	/* Because the UNIFORM_RET_EXECRA is compatible with OCF standard,
          * no actual mapping except validating, which ensure the return code

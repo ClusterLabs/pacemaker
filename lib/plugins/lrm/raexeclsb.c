@@ -24,7 +24,7 @@
  * Todo
  * 1) Use flex&bison to make the analysis functions for lsb compliant comment?
  * 2) Support multiple paths which contain lsb compliant RAs.
- * 3) Optional and additional actions analysis.
+ * 3) Optional and additional actions analysis?
  */
 
 #include <portability.h>
@@ -140,7 +140,8 @@ static int execra(const char * rsc_id,
 		  const int    timeout,
 	 	  GHashTable * params);
 
-static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op_type);
+static uniform_ret_execra_t map_ra_retvalue(int ret_execra
+	, const char * op_type, const char * std_output);
 static char* get_resource_meta(const char* rsc_type, const char* provider);
 static int get_resource_list(GList ** rsc_info);
 static int get_provider_list(const char* ra_type, GList ** providers);
@@ -273,7 +274,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 }
 
 static uniform_ret_execra_t
-map_ra_retvalue(int ret_execra, const char * op_type)
+map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 {
 	/* Except op_type equals 'status', the UNIFORM_RET_EXECRA is compatible
 	   with LSB standard.
