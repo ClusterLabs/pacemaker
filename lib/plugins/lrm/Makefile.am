@@ -29,6 +29,7 @@ COMMONLIBS			=	$(top_builddir)/lib/clplumbing/libplumb.la   \
 
 lrmdir				=	$(HA_VARLIBDIR)/$(HB_PKG)/$(LRM_DIR)
 plugindir               	= 	$(halibdir)/plugins/RAExec
+apigid                          =       @HA_APIGID@
 
 plugin_LTLIBRARIES = lsb.la ocf.la heartbeat.la stonith.la
 lsb_la_SOURCES = raexeclsb.c racommon.c
