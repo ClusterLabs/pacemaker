@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.10 2005/03/11 14:08:01 andrew Exp $ */
+/* $Id: incarnation.c,v 1.11 2005/03/31 08:06:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,14 +57,15 @@ void incarnation_unpack(resource_t *rsc)
 	incarnation_variant_data_t *incarnation_data = NULL;
 	resource_t *self = NULL;
 
-	const char *ordered         = crm_element_value(
+	const char *ordered    = crm_element_value(
 		xml_obj, XML_RSC_ATTR_ORDERED);
-	const char *interleave      = crm_element_value(
+	const char *interleave = crm_element_value(
 		xml_obj, XML_RSC_ATTR_INTERLEAVE);
-	const char *max_incarn      = crm_element_value(
-		xml_obj, XML_RSC_ATTR_INCARNATION_MAX);
-	const char *max_incarn_node = crm_element_value(
-		xml_obj, XML_RSC_ATTR_INCARNATION_NODEMAX);
+
+	const char *max_incarn      = get_rsc_param(
+		rsc, XML_RSC_ATTR_INCARNATION_MAX);
+	const char *max_incarn_node = get_rsc_param(
+		rsc, XML_RSC_ATTR_INCARNATION_NODEMAX);
 
 	crm_verbose("Processing resource %s...", rsc->id);
 
@@ -111,15 +112,10 @@ void incarnation_unpack(resource_t *rsc)
 				incarnation_data->child_list = g_list_append(
 					incarnation_data->child_list, child_rsc);
 				
-				set_xml_property_copy(
-					child_rsc->extra_attrs,
-					XML_RSC_ATTR_INCARNATION, inc_num);
-				set_xml_property_copy(
-					child_rsc->extra_attrs,
-					XML_RSC_ATTR_INCARNATION_MAX, inc_max);
-
-				crm_xml_devel(child_rsc->extra_attrs,
-					     "creating extra attributes");
+				add_rsc_param(
+					child_rsc, XML_RSC_ATTR_INCARNATION, inc_num);
+				add_rsc_param(
+					child_rsc, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
 
 				crm_devel_action(
 					print_resource("Added", child_rsc, FALSE));
@@ -244,7 +240,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 			child_rsc->fns->color(child_rsc, colors);
 		} else {
 			/* TODO: assign "no color"?  Doesnt seem to need it */
-			crm_warn("Incarnation %d cannot be started", lpc);
+			crm_warn("Incarnation %d cannot be started", lpc+1);
 		} 
 		);
 	crm_info("%d Incarnations are active", incarnation_data->active_incarnation);
