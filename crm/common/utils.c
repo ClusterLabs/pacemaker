@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.40 2005/03/11 14:00:14 andrew Exp $ */
+/* $Id: utils.c,v 1.41 2005/03/15 19:52:24 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -259,12 +259,12 @@ crm_log_init(const char *entity)
 	
 	crm_set_env_options();
 #if 0	
-	cl_log_send_to_logging_daemon(FALSE);
+	cl_log_set_uselogd(FALSE);
 	if(HA_FAIL == LogToLoggingDaemon(LOG_INFO, test, strlen(test), TRUE)) {
 		crm_warn("Not using log daemon");
 
 	} else {
-		cl_log_send_to_logging_daemon(TRUE);
+		cl_log_set_uselogd(TRUE);
 		crm_info("Enabled log daemon");
 	}
 #endif
