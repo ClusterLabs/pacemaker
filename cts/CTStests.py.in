@@ -886,6 +886,30 @@ class RedundantpathTest(CTSTest):
         self.name = "RedundantpathTest"
         self.timeout = timeout 
 
+    def PathCount(self):
+        '''Return number of communication paths'''
+        cf = HBConfig()
+        num = 0
+        for cfp in cf.Parameters:
+            if cfp == "bcast":
+                eths = cf.Parameters["bcast"]
+                for eth in eths:
+                    num = num+1
+            if cfp == "mcast":
+                if cf.Parameters["mcast"][0] not in eths:
+                   eths.append(cf.Parameters["mcast"][0])
+                   num = num+1
+            if cfp == "ucast":
+                if cf.Parameters["ucast"][0] not in eths:
+                    eths.append(cf.Parameters["mcast"][0])
+                    num = num+1
+            if cfp == "serial":
+                serials=cf.Parameters["serial"]
+                for serial in serials:
+                    num = num+1
+
+	return num
+
     def __call__(self,node):
         '''Perform redundant path test'''
         self.incr("calls")
@@ -910,12 +934,12 @@ class RedundantpathTest(CTSTest):
                 if cf.Parameters["ucast"][0] not in eths:
                     eths.append(cf.Parameters["mcast"][0])
                     num = num+1
-           if cfp == "serial":
+            if cfp == "serial":
                 serials=cf.Parameters["serial"]
                 for serial in serials:
                     num = num+1
 
-        if num<=1:
+        if num <= 1:
             return self.failure("There is just one path between the two nodes,please config it again")
 
         for eth in eths:
@@ -951,7 +975,7 @@ class RedundantpathTest(CTSTest):
 
     def is_applicable(self):
         '''It is always applicable'''
-        return 1
+        return self.PathCount() > 1
 
 AllTestClasses.append(RedundantpathTest)
 
