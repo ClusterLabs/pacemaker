@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.25 2004/03/29 15:52:43 andrew Exp $ */
+/* $Id: cib.c,v 1.26 2004/03/30 15:15:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -63,7 +63,7 @@ startCib(const char *filename)
 xmlNodePtr
 get_cib_copy()
 {
-	return copy_xml_node_recursive(get_the_CIB(), 1);
+	return copy_xml_node_recursive(get_the_CIB());
 }
 
 /*

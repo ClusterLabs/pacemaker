@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.26 2004/03/29 15:40:03 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.27 2004/03/30 15:15:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -106,7 +106,7 @@ cib_process_request(const char *op,
 			createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
 		
 	} else if (strcmp(CRM_OPERATION_BUMP, op) == 0) {
-		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
+		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB());
 		CRM_DEBUG3("Handling a %s for section=%s of the cib",
 			   CRM_OPERATION_BUMP, section);
 		
@@ -181,7 +181,7 @@ cib_process_request(const char *op,
 		
 	} else if (strcmp(CRM_OPERATION_STORE, op) == 0) {
 		xmlNodePtr cib_updates = NULL;
-		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
+		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB());
 		
 		CRM_DEBUG("Storing DC copy of the cib");
 		cib_updates = find_xml_node(fragment, XML_TAG_CIB);
@@ -231,7 +231,7 @@ cib_process_request(const char *op,
 			tmpCib = find_xml_node(fragment, XML_TAG_CIB);
 
 		} else {
-			tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
+			tmpCib = copy_xml_node_recursive(get_the_CIB());
 			replace_section(section, tmpCib, fragment);
 		}
 
@@ -247,7 +247,7 @@ cib_process_request(const char *op,
     
 	if (update_the_cib) {
 		CRM_DEBUG("Backing up CIB");
-		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
+		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB());
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 
 		CRM_DEBUG3("Updating section=%s of the cib (op=%s)",
@@ -432,7 +432,7 @@ createCibFragmentAnswer(const char *section, xmlNodePtr failed)
 	}
 
 	if (failed != NULL && failed->children != NULL) {
-		xmlAddChild(fragment, copy_xml_node_recursive(failed, 1));
+		xmlAddChild(fragment, copy_xml_node_recursive(failed));
 	}
 		
 	FNRET(fragment);
