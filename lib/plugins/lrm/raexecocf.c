@@ -36,6 +36,7 @@
 #include <pils/plugin.h>
 #include <dirent.h>
 #include <libgen.h>  /* Add it for compiling on OSX */
+#include <config.h>
 
 #include <lrm/raexec.h>
 
@@ -88,7 +89,7 @@ static gboolean let_remove_eachitem(gpointer key, gpointer value,
 static int get_providers(const char* class_path, const char* op_type,
 			 GList ** providers);
 static void merge_string_list(GList** old, GList* new);
-static gint g_compare_str(gconstpointer a, gconstpointer b);
+static gint compare_str(gconstpointer a, gconstpointer b);
 
 /* The end of internal function & data list */
 
@@ -160,7 +161,7 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 }
 
 /*
- *	Real work starts here ;-)
+ * The function to execute a RA.
  */
 static int
 execra(const char * rsc_type, const char * provider, const char * op_type,
@@ -176,18 +177,32 @@ execra(const char * rsc_type, const char * provider, const char * op_type,
 	tmp_for_setenv = g_hash_table_new(g_str_hash, g_str_equal);
 	add_OCF_prefix(params, tmp_for_setenv);
 
-	/* LRM team: Please cross-check before enabling. */
-#if 0
-	g_hash_table_insert(tmp_for_setenv, "OCF_RA_VERSION_MAJOR", "1");
-	g_hash_table_insert(tmp_for_setenv, "OCF_RA_VERSION_MINOR", "0");
-	g_hash_table_insert(tmp_for_setenv, "OCF_ROOT", "/usr/lib/ocf");
+	g_hash_table_insert(tmp_for_setenv, g_strdup("OCF_RA_VERSION_MAJOR"), 
+			    g_strdup("1"));
+	g_hash_table_insert(tmp_for_setenv, g_strdup("OCF_RA_VERSION_MINOR"), 
+			    g_strdup("0"));
+
+	/* According to OCF specification, OCF_ROOT refer to the root of 
+	 * the OCF directory hierarchy. Now as for current directory
+	 * layout, OCF_ROOT==OCF_RA_DIR?  I'm not very sure, pls fix me.
+	 */
+	g_hash_table_insert(tmp_for_setenv, g_strdup("OCF_ROOT"), 
+			    g_strdup(OCF_RA_DIR));
+
+	/* Currently the rsc_type==rsc_class_name, maybe not correct.
+	 * Please fix me if you are sure what it should be. 
+	 */
+	g_hash_table_insert(tmp_for_setenv, g_strdup("OCF_RESOURCE_TYPE"), 
+			    g_strdup(rsc_type));
+
+	/* Notes: this is not added to specification yet. Sept 10,2004 */
+	g_hash_table_insert(tmp_for_setenv, g_strdup("OCF_RESOURCE_PROVIDER"),
+			    g_strdup(provider));
+
 	/* TODO: This is not passed in currently. */
+#if 0
 	g_hash_table_insert(tmp_for_setenv, "OCF_RESOURCE_INSTANCE", 
 			"FIXME");
-	g_hash_table_insert(tmp_for_setenv, "OCF_RESOURCE_TYPE", 
-			rsc_type);
-	g_hash_table_insert(tmp_for_setenv, "OCF_RESOURCE_PROVIDER", 
-			provider);
 #endif
 	raexec_setenv(tmp_for_setenv);
 	g_hash_table_foreach_remove(tmp_for_setenv, let_remove_eachitem, NULL);
@@ -217,8 +232,9 @@ map_ra_retvalue(int ret_execra, const char * op_type)
 	/* Because the UNIFORM_RET_EXECRA is compatible with OCF standard */
 	return ret_execra;
 }
-gint
-g_compare_str(gconstpointer a, gconstpointer b)
+
+static gint
+compare_str(gconstpointer a, gconstpointer b)
 {
 	return strncmp(a,b,RA_MAX_NAME_LENGTH);
 }
@@ -247,16 +263,13 @@ get_resource_list(GList ** rsc_info)
 	char subdir[FILENAME_MAX+1];
 	while (file_num--) {
 		GList* ra_subdir = NULL;
-		if (DT_DIR != namelist[file_num]->d_type) {
+		if ((DT_DIR != namelist[file_num]->d_type) || 
+		    ('.' == namelist[file_num]->d_name[0])) {
 			free(namelist[file_num]);
 			continue;
 		}
 
-		if ('.' == namelist[file_num]->d_name[0]) {
-			free(namelist[file_num]);
-			continue;
-		}
-		snprintf(subdir,FILENAME_MAX,"%s%s",
+		snprintf(subdir,FILENAME_MAX,"%s/%s",
 			 RA_PATH, namelist[file_num]->d_name);
 			 
 		get_runnable_list(subdir,&ra_subdir);
@@ -275,13 +288,15 @@ get_resource_list(GList ** rsc_info)
 			
 	return 0;
 }
-void
+
+static void
 merge_string_list(GList** old, GList* new)
 {
 	GList* item = NULL;
+	char* newitem;
 	for( item=g_list_first(new); NULL!=item; item=g_list_next(item)){
-		if (!g_list_find_custom(*old, item->data,g_compare_str)){
-			char* newitem = strndup(item->data,RA_MAX_NAME_LENGTH);
+		if (!g_list_find_custom(*old, item->data,compare_str)){
+			newitem = strndup(item->data,RA_MAX_NAME_LENGTH);
 			*old = g_list_append(*old, newitem);
 		}
 	}
@@ -361,7 +376,7 @@ add_prefix_foreach(gpointer key, gpointer value, gpointer user_data)
 	newkey = g_new(gchar, keylen);
 	strncpy(newkey, "OCF_RESKEY_", keylen);
 	strncat(newkey, key, keylen);
-	g_hash_table_insert(new_hashtable, (gpointer)newkey, strdup(value));
+	g_hash_table_insert(new_hashtable, (gpointer)newkey, g_strdup(value));
 }
 
 static gboolean
@@ -372,12 +387,9 @@ let_remove_eachitem(gpointer key, gpointer value, gpointer user_data)
 	return TRUE;
 }
 
-int
+static int
 raexec_setenv(GHashTable * env_params)
 {
-	/* For lsb init scripts, no corresponding definite specification
-	 * But for lsb none-init scripts, maybe need it.
-	 */
         if (env_params) {
         	g_hash_table_foreach(env_params, set_env, NULL);
         }
@@ -390,20 +402,22 @@ set_env(gpointer key, gpointer value, gpointer user_data)
        if (setenv(key, value, 1) != 0) {
 		cl_log(LOG_ERR, "setenv failed in raexecocf.");
 	}
-        /*Need to free the memory to which key and value point?*/
 }
 
-int
+static int
 get_providers(const char* class_path, const char* op_type, GList ** providers)
 {
 	struct dirent **namelist;
 	int file_num;
 
 	if ( providers == NULL ) {
+		cl_log(LOG_ERR, "Parameter error: get_providers");
 		return -2;
 	}
 
 	if ( *providers != NULL ) {
+		cl_log(LOG_ERR, "Parameter error: get_providers."\
+			"will cause memory leak.");
 		*providers = NULL;
 	}
 
@@ -413,16 +427,13 @@ get_providers(const char* class_path, const char* op_type, GList ** providers)
 	}else{
 		char tmp_buffer[FILENAME_MAX+1];
 		while (file_num--) {
-			if (DT_DIR != namelist[file_num]->d_type) {
-				free(namelist[file_num]);
-				continue;
-			}
-			if ('.' == namelist[file_num]->d_name[0]) {
+			if ((DT_DIR != namelist[file_num]->d_type) ||
+			    ('.' == namelist[file_num]->d_name[0])) {
 				free(namelist[file_num]);
 				continue;
 			}
 
-			snprintf(tmp_buffer,FILENAME_MAX,"%s%s/%s",
+			snprintf(tmp_buffer,FILENAME_MAX,"%s/%s/%s",
 				 class_path, namelist[file_num]->d_name, op_type);
 
 			if ( filtered(tmp_buffer) == TRUE ) {
