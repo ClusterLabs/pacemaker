@@ -30,13 +30,12 @@ lrmdir				=	$(HA_VARLIBDIR)/$(HB_PKG)/@LRM_DIR@
 plugindir               	= 	$(halibdir)/plugins/RAExec
 
 plugin_LTLIBRARIES = lsb.la ocf.la heartbeat.la
-raexec_plugin_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 lsb_la_SOURCES = raexeclsb.c
-lsb_la_LDFLAGS = $(raexec_plugin_LDFLAGS)
+lsb_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 ocf_la_SOURCES = raexecocf.c
-ocf_la_LDFLAGS = $(raexec_plugin_LDFLAGS)
+ocf_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 heartbeat_la_SOURCES = raexechb.c
-heartbeat_la_LDFLAGS = $(raexec_plugin_LDFLAGS)
+heartbeat_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)$(lrmdir)
