@@ -274,20 +274,21 @@ process_graph_event(const char *event_node,
 	if(matched_action_list == NULL) {
 		// unexpected event, trigger a pe-recompute
 		// possibly do this only for certain types of actions
-
-		send_abort();
+		cl_log(LOG_ERR,
+		       "Unexpected event... matched action list was NULL");
 		return FALSE;
 	}
 
-	gboolean more_to_do = FALSE;
 	while(matched_action_list->index < matched_action_list->index_max) {
 		next_action = g_slist_nth_data(matched_action_list->actions,
 					       matched_action_list->index);
 
-		gboolean failed = initiate_action(matched_action_list);
+		gboolean passed = initiate_action(matched_action_list);
 
-		if(failed) {
-			send_abort();
+		if(passed == FALSE) {
+			cl_log(LOG_ERR,
+			       "Initiation of next event failed");
+			return FALSE;
 			
 		} else if(matched_action_list->index >
 			  matched_action_list->index_max) {
@@ -298,33 +299,29 @@ process_graph_event(const char *event_node,
 				action_list, action_list_t, graph, lpc,
 				if(action_list->index <=
 				   action_list->index_max){
-					more_to_do = TRUE;
-					break;
+					return TRUE;
 				}
 				);
 		} else {
-			more_to_do = TRUE;
+			return TRUE;
 			
 		}
 
 	}
+	cl_log(LOG_INFO, "Transition complete...");
 	
-	if(more_to_do == FALSE) {
-		// indicate to the CRMd that we're done
-		xmlNodePtr options = create_xml_node(NULL, "options");
-		set_xml_property_copy(options, XML_ATTR_OP,
-				      "te_complete");
-
-		send_ipc_request(crm_ch, options, NULL,
-				 NULL, "dc", "tengine",
-				 NULL, NULL);
-		
-		free_xml(options);
-		
-		return TRUE;
-	} // else wait for the next event
+	// indicate to the CRMd that we're done
+	xmlNodePtr options = create_xml_node(NULL, "options");
+	set_xml_property_copy(options, XML_ATTR_OP,
+			      "te_complete");
 	
-	return FALSE;
+	send_ipc_request(crm_ch, options, NULL,
+			 NULL, "dc", "tengine",
+			 NULL, NULL);
+	
+	free_xml(options);
+	
+	return TRUE;
 }
 
 gboolean
@@ -337,7 +334,7 @@ initiate_transition(void)
 	
 	slist_iter(
 		action_list, action_list_t, graph, lpc,
-		if(initiate_action(action_list) == FALSE) {
+		if(initiate_action(action_list)) {
 			anything = TRUE;
 		}
 		);
@@ -348,7 +345,6 @@ initiate_transition(void)
 gboolean
 initiate_action(action_list_t *list) 
 {
-	gboolean was_error = FALSE;
 	xmlNodePtr xml_action = NULL;
 	const char *on_node   = NULL;
 	const char *id        = NULL;
@@ -365,7 +361,7 @@ initiate_action(action_list_t *list)
 			cl_log(LOG_INFO, "No tasks left on this list");
 			list->index = list->index_max + 1;
 			
-			return was_error;
+			return TRUE;
 		}
 		
 		
@@ -384,7 +380,7 @@ initiate_action(action_list_t *list)
 		
 		} else if(safe_str_eq(runnable, "false")) {
 			cl_log(LOG_ERR, "Skipping un-runnable command");
-			return !was_error;
+			return FALSE;
 			
 		} else if(id == NULL || strlen(id) == 0
 			  || on_node == NULL || strlen(on_node) == 0
@@ -394,7 +390,7 @@ initiate_action(action_list_t *list)
 			       "Command: \"%s (id=%s) on %s\" was corrupted.",
 			       task, id, on_node);
 			
-			return !was_error;
+			return FALSE;
 			
 //	} else if(safe_str_eq(xml_action->name, "pseduo_event")){
 			
@@ -410,7 +406,7 @@ initiate_action(action_list_t *list)
 					 NULL, NULL);
 			
 			free_xml(options);
-			return was_error;
+			return TRUE;
 			
 		} else if(safe_str_eq(xml_action->name, "rsc_op")){
 			/*
@@ -436,7 +432,7 @@ initiate_action(action_list_t *list)
 			
 			free_xml(options);
 			free_xml(data);
-			return was_error;
+			return TRUE;
 			
 		} else {
 			// error
@@ -446,7 +442,7 @@ initiate_action(action_list_t *list)
 		}
 	}
 	
-	return !was_error;
+	return FALSE;
 }
 
 gboolean
@@ -461,6 +457,9 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 	
 	if(op == NULL){
 		// error
+	} else if(strcmp(op, "hello") == 0) {
+		// ignore
+
 	} else if(sys_to == NULL || strcmp(sys_to, "tengine") != 0) {
 		CRM_DEBUG("Bad sys-to %s", sys_to);
 		return FALSE;
