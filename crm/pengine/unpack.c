@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.4 2004/06/09 14:34:48 andrew Exp $ */
+/* $Id: unpack.c,v 1.5 2004/06/09 15:07:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -816,6 +816,27 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 		return create_ordering(
 			id, strength_e, rsc_lh, rsc_rh, action_constraints);
 	}
+
+
+	/* make sure the lower priority resource stops before
+	 *  the higher is started, otherwise they may be both running
+	 *  on the same node when the higher is replacing the lower
+	 */
+	order_constraint_t *order = (order_constraint_t*)
+		crm_malloc(sizeof(order_constraint_t));
+	
+	order->id        = order_id++;
+	order->strength  = strength_e;
+
+	if(rsc_lh->priority >= rsc_rh->priority) {
+		order->lh_action = rsc_rh->stop;
+		order->rh_action = rsc_lh->start;
+	} else {
+		order->lh_action = rsc_lh->stop;
+		order->rh_action = rsc_rh->start;
+	}
+	
+	*action_constraints = g_list_append(*action_constraints, order);
 
 	return create_rsc_to_rsc(id, strength_e, rsc_lh, rsc_rh);
 }

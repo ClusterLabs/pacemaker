@@ -32,19 +32,19 @@ function do_test {
     expected=$io_dir/${base}.exp
 
     if [ ! -f $input ]; then
-	echo "Test $name	($base)...	Error (no input: $input)";
+	echo "Test $name	($base)...	Error ($input)";
 	return;
     fi
 
     if [ "$create_mode" != "true" -a ! -f $expected ]; then
-	echo "Test $name	($base)...	Error (expected output: $expected)";
+	echo "Test $name	($base)...	Error ($expected)";
 	return;
     fi
 
     ./ptest < $input 2>/dev/null 2>/dev/null > $output
 
     if [ ! -s $output ]; then
-	echo "Test $name	($base)...	Error (pe output)";
+	echo "Test $name	($base)...	Error ($output)";
 	rm $output
 	return;
     fi
@@ -52,7 +52,7 @@ function do_test {
     ./fix_xml.pl $output
 
     if [ ! -s $output ]; then
-	echo "Test $name	($base)...	Error (fixed output)";
+	echo "Test $name	($base)...	Error (fixed $output)";
 	rm $output
 	return;
     fi

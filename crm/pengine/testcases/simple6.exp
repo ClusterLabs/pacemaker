@@ -1,12 +1,10 @@
 <transition_graph>
   <actions id="0">
-    <rsc_op id="4" rsc_id="rsc2" target="node1" task="start" runnable="true" optional="false" discard="false" allow_fail="false">
-      <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
-    </rsc_op>
-  </actions>
-  <actions id="1">
     <rsc_op id="1" rsc_id="rsc1" target="node1" task="stop" runnable="true" optional="false" discard="false" allow_fail="false">
       <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
+    </rsc_op>
+    <rsc_op id="4" rsc_id="rsc2" target="node1" task="start" runnable="true" optional="false" discard="false" allow_fail="false">
+      <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
     </rsc_op>
   </actions>
 </transition_graph>
