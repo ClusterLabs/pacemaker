@@ -24,30 +24,15 @@
 
 #include <unistd.h>			// for access
 #include <clplumbing/cl_signal.h>
-#include <clplumbing/realtime.h>
-#include <sys/types.h>	// for calls to open
-#include <sys/stat.h>	// for calls to open
-#include <fcntl.h>	// for calls to open
-#include <pwd.h>	// for getpwuid
-#include <grp.h>	// for initgroups
 
-#include <sys/time.h>	// for getrlimit
-#include <sys/resource.h>// for getrlimit
-
-#include <crm/common/crmutils.h>
-#include <crm/common/ipcutils.h>
-#include <crm/common/msgutils.h>
-
-#include <crm/msg_xml.h>
-#include <crm/common/xmlutils.h>
-
+#include <errno.h>
 
 #include <crm/cib.h>
+#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include <crmd.h>
 #include <crmd_messages.h>
-#include <string.h>
-#include <errno.h>
 
 #include <crm/dmalloc_wrapper.h>
 

@@ -16,19 +16,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include <portability.h>
-#include <crm/crm.h>
-#include <crmd_fsa.h>
-#include <libxml/tree.h>
-#include <crm/msg_xml.h>
-
-#include <crm/common/xmlutils.h>
-#include <crm/common/ipcutils.h>
-#include <crm/common/msgutils.h>
-#include <crm/cib.h>
-#include <string.h>
-#include <crmd_messages.h>
 
 #include <heartbeat.h>
+
+#include <crm/cib.h>
+#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
+#include <crm/crm.h>
+#include <crmd_fsa.h>
+#include <crmd_messages.h>
 
 #include <crm/dmalloc_wrapper.h>
 

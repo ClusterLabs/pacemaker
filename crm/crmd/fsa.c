@@ -16,21 +16,21 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include <portability.h>
-#include <crm/crm.h>
-#include <crmd_fsa.h>
-#include <fsa_matrix.h>
-#include <fsa_proto.h>
 #include <stdio.h>
+#include <string.h>
+#include <time.h>
 
-#include <crm/common/xmlutils.h>
-#include <crm/common/msgutils.h>
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml.h>
+#include <crm/common/msg.h>
 
 #include <clplumbing/Gmain_timeout.h>
 
 #include <crmd_messages.h>
-#include <string.h>
-#include <time.h>
+#include <crmd_fsa.h>
+#include <fsa_proto.h>
+#include <fsa_matrix.h>
 
 #include <crm/dmalloc_wrapper.h>
 

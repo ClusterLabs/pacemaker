@@ -1,4 +1,3 @@
-/* $Id: crmd.h,v 1.6 2004/06/02 12:31:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,29 +15,24 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef CRMD__H
-#define CRMD__H
 
-#include <ha_msg.h>
+#include <hb_api.h>
+#include <clplumbing/ipc.h>
 
-extern GMainLoop  *crmd_mainloop;
-
-extern const char *crm_system_name;
-
-extern GHashTable *ipc_clients;
-
-extern GHashTable *pending_remote_replies;
-
-extern void msg_ccm_join(const struct ha_msg *msg, void *foo);
-
-extern gboolean crmd_client_connect(IPC_Channel *newclient,
-				    gpointer user_data);
 
 extern void crmd_ha_input_callback(const struct ha_msg* msg,
 				   void* private_data);
 
+/*
+ * Apparently returning TRUE means "stay connected, keep doing stuff".
+ * Returning FALSE means "we're all done, close the connection"
+ */
 extern gboolean crmd_ipc_input_callback(IPC_Channel *client,
 					gpointer user_data);
-    
 
-#endif
+extern void lrm_op_callback (lrm_op_t* op);
+
+extern void lrm_monitor_callback (lrm_mon_t* monitor);
+
+extern void CrmdClientStatus(const char * node, const char * client,
+			     const char * status, void * private);

@@ -22,10 +22,10 @@
 #include <libxml/tree.h>
 
 
+#include <hb_api.h>
 #include <crm/msg_xml.h>
-#include <crm/common/crmutils.h>
-#include <crm/common/xmlutils.h>
-#include <crm/common/msgutils.h>
+#include <crm/common/xml.h>
+#include <crm/common/msg.h>
 #include <crm/cib.h>
 
 #include <crmd.h>
@@ -33,13 +33,20 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-FILE *msg_in_strm = NULL;
+FILE *msg_out_strm = NULL;
 FILE *router_strm = NULL;
 
 fsa_message_queue_t fsa_message_queue = NULL;
 
 gboolean relay_message(xmlNodePtr xml_relay_message,
 		       gboolean originated_locally);
+
+
+gboolean send_ha_reply(ll_cluster_t *hb_cluster,
+		       xmlNodePtr xml_request,
+		       xmlNodePtr xml_response_data);
+
+gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);
 
 #ifdef MSG_LOG
 
@@ -167,180 +174,6 @@ do_msg_route(long long action,
 	}
 	
 	FNRET(result);
-}
-
-
-void
-crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
-{
-	const char *from = ha_msg_value(msg, F_ORIG);
-	const char *to = NULL;
-	xmlNodePtr root_xml_node;
-
-	FNIN();
-
-#ifdef MSG_LOG
-	if(msg_in_strm == NULL) {
-		msg_in_strm = fopen("/tmp/inbound.log", "w");
-	}
-#endif
-
-	if(from == NULL || strcmp(from, fsa_our_uname) == 0) {
-#ifdef MSG_LOG
-		fprintf(msg_in_strm,
-			"Discarded message [F_SEQ=%s] from ourselves.\n",
-			ha_msg_value(msg, F_SEQ));
-#endif
-		FNOUT();
-	}
-	
-#ifdef MSG_LOG
-	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n",
-		from,
-		ha_msg_value(msg, F_SEQ),
-		ha_msg_value(msg, F_TYPE),
-		ha_msg_value(msg, "xml")
-		);
-	fflush(msg_in_strm);
-#endif
-
-	root_xml_node = find_xml_in_hamessage(msg);
-	to = xmlGetProp(root_xml_node, XML_ATTR_HOSTTO);
-	
-	if(to != NULL && strlen(to) > 0 && strcmp(to, fsa_our_uname) != 0) {
-#ifdef MSG_LOG
-		fprintf(msg_in_strm,
-			"Discarding message [F_SEQ=%s] for someone else.",
-			ha_msg_value(msg, F_SEQ));
-#endif
-		FNOUT();
-	}
-
-	set_xml_property_copy(root_xml_node, XML_ATTR_HOSTFROM, from);
-	s_crmd_fsa(C_HA_MESSAGE, I_ROUTER, root_xml_node);
-
-	free_xml(root_xml_node);
-
-	FNOUT();
-}
-
-/*
- * Apparently returning TRUE means "stay connected, keep doing stuff".
- * Returning FALSE means "we're all done, close the connection"
- */
-gboolean
-crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
-{
-	int lpc = 0;
-	char *buffer = NULL;
-	IPC_Message *msg = NULL;
-	gboolean hack_return_good = TRUE;
-	xmlNodePtr root_xml_node;
-	crmd_client_t *curr_client = (crmd_client_t*)user_data;
-
-	FNIN();
-	CRM_DEBUG("Processing IPC message from %s",
-		   curr_client->table_key);
-
-	while(client->ops->is_message_pending(client)) {
-		if (client->ch_status == IPC_DISCONNECT) {
-			/* The message which was pending for us is that
-			 * the IPC status is now IPC_DISCONNECT */
-			break;
-		}
-		if (client->ops->recv(client, &msg) != IPC_OK) {
-			perror("Receive failure:");
-			FNRET(!hack_return_good);
-		}
-		if (msg == NULL) {
-			cl_log(LOG_WARNING, "No message this time");
-			continue;
-		}
-
-		lpc++;
-		buffer = (char*)msg->msg_body;
-		CRM_DEBUG("Processing xml from %s [text=%s]",
-			   curr_client->table_key, buffer);
-	
-		root_xml_node =
-			find_xml_in_ipcmessage(msg, FALSE);
-		if (root_xml_node != NULL) {
-
-			if (crmd_authorize_message(root_xml_node,
-						   msg,
-						   curr_client)) {
-				s_crmd_fsa(C_IPC_MESSAGE,
-					   I_ROUTER,
-					   root_xml_node);
-			}
-		} else {
-			cl_log(LOG_INFO,
-			       "IPC Message was not valid... discarding.");
-		}
-		free_xml(root_xml_node);
-		msg->msg_done(msg);
-		
-		msg = NULL;
-		buffer = NULL;
-		root_xml_node = NULL;
-	}
-
-	CRM_DEBUG("Processed %d messages", lpc);
-    
-	if (client->ch_status == IPC_DISCONNECT)
-	{
-		cl_log(LOG_INFO,
-		       "received HUP from %s",
-		       curr_client->table_key);
-		if (curr_client != NULL) {
-			struct crm_subsystem_s *the_subsystem = NULL;
-			
-			if (curr_client->sub_sys == NULL) {
-				cl_log(LOG_WARNING,
-				       "Client had not registered with us yet");
-			} else if (strcmp(CRM_SYSTEM_PENGINE,
-					  curr_client->sub_sys) == 0) {
-				the_subsystem = pe_subsystem;
-			} else if (strcmp(CRM_SYSTEM_TENGINE,
-					  curr_client->sub_sys) == 0) {
-				the_subsystem = te_subsystem;
-			} else if (strcmp(CRM_SYSTEM_CIB,
-					  curr_client->sub_sys) == 0){
-				the_subsystem = cib_subsystem;
-			}
-			
-
-			if(the_subsystem != NULL) {
-				cleanup_subsystem(the_subsystem);
-			} // else that was a transient client
-			
-			if (curr_client->table_key != NULL) {
-				/*
-				 * Key is destroyed below: curr_client->table_key
-				 * Value is cleaned up by G_main_del_IPC_Channel
-				 */
-				g_hash_table_remove(ipc_clients,
-						    curr_client->table_key);
-			}
-
-
-			if(curr_client->client_source != NULL) {
-				gboolean det = G_main_del_IPC_Channel(
-					curr_client->client_source);
-			
-				CRM_DEBUG("crm_client was %s detached",
-					   det?"successfully":"not");
-			}
-			
-			crm_free(curr_client->table_key);
-			crm_free(curr_client->sub_sys);
-			crm_free(curr_client->uuid);
-			crm_free(curr_client);
-		}
-		FNRET(!hack_return_good);
-	}
-    
-	FNRET(hack_return_good);
 }
 
 /*
@@ -528,61 +361,6 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	FNRET(processing_complete);
 }
 
-void
-send_msg_via_ha(xmlNodePtr action, const char *dest_node)
-{
-	FNIN();
-	if (action == NULL) FNOUT();
-
-	if (validate_crm_message(action, NULL, NULL, NULL) == NULL)
-	{
-		cl_log(LOG_ERR,
-		       "Relay message to (%s) via HA was invalid, ignoring",
-		       dest_node);
-		FNOUT();
-	}
-//	CRM_DEBUG("Relaying message to (%s) via HA", dest_node);
-	set_xml_property_copy(action, XML_ATTR_HOSTTO, dest_node);
-
-	send_xmlha_message(fsa_cluster_conn, action);
-	FNOUT();
-}
-
-
-void
-send_msg_via_ipc(xmlNodePtr action, const char *sys)
-{
-	IPC_Channel *client_channel;
-
-	FNIN();
-//	cl_log(LOG_DEBUG, "relaying msg to sub_sys=%s via IPC", sys);
-
-	client_channel =
-		(IPC_Channel*)g_hash_table_lookup (ipc_clients, sys);
-
-	if (client_channel != NULL) {
-		cl_log(LOG_DEBUG, "Sending message via channel %s.", sys);
-		send_xmlipc_message(client_channel, action);
-	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_CIB) == 0) {
-		cl_log(LOG_ERR,
-		       "Sub-system (%s) has been incorporated into the CRMd.",
-		       sys);
-		xml_message_debug(action, "Change the way we handle");
-		relay_message(process_cib_message(action, TRUE), TRUE);
-		
-	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_LRMD) == 0) {
-
-		do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE,
-			      fsa_state, I_MESSAGE, action);
-		
-	} else {
-		cl_log(LOG_ERR,
-		       "Unknown Sub-system (%s)... discarding message.",
-		       sys);
-	}    
-	FNOUT();
-}	
-
 gboolean
 crmd_authorize_message(xmlNodePtr root_xml_node,
 		       IPC_Message *client_msg,
@@ -739,23 +517,23 @@ handle_message(xmlNodePtr stored_msg)
 {
 	enum crmd_fsa_input next_input = I_NULL;
 
-	const char *sys_to   = get_xml_attr(stored_msg, NULL,
-					    XML_ATTR_SYSTO, TRUE);
+	const char *sys_to   = get_xml_attr(
+		stored_msg, NULL, XML_ATTR_SYSTO,     TRUE);
 
-	const char *sys_from = get_xml_attr(stored_msg, NULL,
-					    XML_ATTR_SYSFROM, TRUE);
+	const char *sys_from = get_xml_attr(
+		stored_msg, NULL, XML_ATTR_SYSFROM,   TRUE);
 
-	const char *host_from= get_xml_attr(stored_msg, NULL,
-					    XML_ATTR_HOSTFROM, TRUE);
+	const char *host_from= get_xml_attr(
+		stored_msg, NULL, XML_ATTR_HOSTFROM,  TRUE);
 
-	const char *msg_ref  = get_xml_attr(stored_msg, NULL,
-					    XML_ATTR_REFERENCE, TRUE);
+	const char *msg_ref  = get_xml_attr(
+		stored_msg, NULL, XML_ATTR_REFERENCE, TRUE);
 
-	const char *type     = get_xml_attr(stored_msg, NULL,
-					    XML_ATTR_MSGTYPE, TRUE);
+	const char *type     = get_xml_attr(
+		stored_msg, NULL, XML_ATTR_MSGTYPE,   TRUE);
 	
-	const char *op       = get_xml_attr(stored_msg, XML_TAG_OPTIONS,
-					    XML_ATTR_OP, TRUE);
+	const char *op       = get_xml_attr(
+		stored_msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
 
 //	xml_message_debug(stored_msg, "Processing message");
 
@@ -926,14 +704,200 @@ handle_message(xmlNodePtr stored_msg)
 		
 }
 
-
-void lrm_op_callback (lrm_op_t* op)
+gboolean
+send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 {
-	s_crmd_fsa(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
+	int xml_len          = -1;
+	int send_result      = -1;
+	char *xml_text       = NULL;
+	const char *host_to  = NULL;
+	const char *sys_to   = NULL;
+	struct ha_msg *msg   = NULL;
+	gboolean all_is_good = TRUE;
+	gboolean broadcast   = FALSE;
+	int log_level        = LOG_DEBUG;
+
+	xmlNodePtr opts = find_xml_node(root, XML_TAG_OPTIONS);
+	const char *op  = xmlGetProp(opts, XML_ATTR_OP);
+
+#ifdef MSG_LOG
+	char *msg_text = NULL;
+#endif
+
+	FNIN();
+    
+	if (root == NULL) {
+		cl_log(LOG_ERR, "Attempt to send NULL Message via HA failed.");
+		all_is_good = FALSE;
+	}
+
+	host_to = xmlGetProp(root, XML_ATTR_HOSTTO);
+	sys_to = xmlGetProp(root, XML_ATTR_SYSTO);
+	
+	if (all_is_good) {
+		msg = ha_msg_new(4); 
+		ha_msg_add(msg, F_TYPE, "CRM");
+		ha_msg_add(msg, F_COMMENT, "A CRM xml message");
+		xml_text = dump_xml(root);
+		xml_len = strlen(xml_text);
+		
+		if (xml_text == NULL || xml_len <= 0) {
+			cl_log(LOG_ERR,
+			       "Failed sending an invalid XML Message via HA");
+			all_is_good = FALSE;
+			xml_message_debug(root, "Bad message was");
+			
+		} else {
+			if(ha_msg_add(msg, "xml", xml_text) == HA_FAIL) {
+				cl_log(LOG_ERR,
+				       "Could not add xml to HA message");
+				all_is_good = FALSE;
+			}
+		}
+	}
+
+	if (all_is_good) {
+		if (sys_to == NULL || strlen(sys_to) == 0)
+		{
+			cl_log(LOG_ERR,
+			       "You did not specify a destination sub-system"
+			       " for this message.");
+			all_is_good = FALSE;
+		}
+	}
+
+
+	/* There are a number of messages may not need to be ordered.
+	 * At a later point perhaps we should detect them and send them
+	 *  as unordered messages.
+	 */
+	if (all_is_good) {
+		if (host_to == NULL
+		    || strlen(host_to) == 0) {
+			broadcast = TRUE;
+			send_result =
+				hb_fd->llc_ops->sendclustermsg(hb_fd, msg);
+		}
+		else {
+			send_result = hb_fd->llc_ops->send_ordered_nodemsg(
+				hb_fd, msg, host_to);
+		}
+		
+		if(send_result != HA_OK)
+			all_is_good = FALSE;
+	}
+	
+	if(all_is_good == FALSE) {
+		log_level = LOG_ERR;
+	}
+
+	if(log_level == LOG_ERR
+	   || (safe_str_neq(op, CRM_OP_HBEAT))) {
+		cl_log(log_level,
+		       "Sending %s HA message (ref=%s, len=%d) to %s@%s %s.",
+		       broadcast?"broadcast":"directed",
+		       xmlGetProp(root, XML_ATTR_REFERENCE), xml_len,
+		       sys_to, host_to==NULL?"<all>":host_to,
+		       all_is_good?"succeeded":"failed");
+	}
+	
+#ifdef MSG_LOG
+	msg_text = dump_xml(root);
+	if(msg_out_strm == NULL) {
+		msg_out_strm = fopen("/tmp/outbound.log", "w");
+	}
+	fprintf(msg_out_strm, "[%d HA (%s:%d)]\t%s\n",
+		all_is_good,
+		xmlGetProp(root, XML_ATTR_REFERENCE),
+		send_result,
+		msg_text);
+	
+	fflush(msg_out_strm);
+	crm_free(msg_text);
+	if(msg != NULL) {
+		ha_msg_del(msg);
+	}
+#endif
+		
+	FNRET(all_is_good);
+}
+		    
+
+
+// required?  or just send to self an let relay_message do its thing?
+/*
+ * This method adds a copy of xml_response_data
+ */
+gboolean
+send_ha_reply(ll_cluster_t *hb_cluster,
+	      xmlNodePtr xml_request,
+	      xmlNodePtr xml_response_data)
+{
+	gboolean was_sent = FALSE;
+	xmlNodePtr reply;
+
+	FNIN();
+	was_sent = FALSE;
+	reply = create_reply(xml_request, xml_response_data);
+	if (reply != NULL) {
+		was_sent = send_xmlha_message(hb_cluster, reply);
+		free_xml(reply);
+	}
+	FNRET(was_sent);
 }
 
-void lrm_monitor_callback (lrm_mon_t* monitor)
+
+void
+send_msg_via_ha(xmlNodePtr action, const char *dest_node)
 {
-	s_crmd_fsa(C_LRM_MONITOR_CALLBACK, I_LRM_EVENT, monitor);
+	FNIN();
+	if (action == NULL) FNOUT();
+
+	if (validate_crm_message(action, NULL, NULL, NULL) == NULL)
+	{
+		cl_log(LOG_ERR,
+		       "Relay message to (%s) via HA was invalid, ignoring",
+		       dest_node);
+		FNOUT();
+	}
+//	CRM_DEBUG("Relaying message to (%s) via HA", dest_node);
+	set_xml_property_copy(action, XML_ATTR_HOSTTO, dest_node);
+
+	send_xmlha_message(fsa_cluster_conn, action);
+	FNOUT();
 }
 
+
+void
+send_msg_via_ipc(xmlNodePtr action, const char *sys)
+{
+	IPC_Channel *client_channel;
+
+	FNIN();
+//	cl_log(LOG_DEBUG, "relaying msg to sub_sys=%s via IPC", sys);
+
+	client_channel =
+		(IPC_Channel*)g_hash_table_lookup (ipc_clients, sys);
+
+	if (client_channel != NULL) {
+		cl_log(LOG_DEBUG, "Sending message via channel %s.", sys);
+		send_xmlipc_message(client_channel, action);
+	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_CIB) == 0) {
+		cl_log(LOG_ERR,
+		       "Sub-system (%s) has been incorporated into the CRMd.",
+		       sys);
+		xml_message_debug(action, "Change the way we handle");
+		relay_message(process_cib_message(action, TRUE), TRUE);
+		
+	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_LRMD) == 0) {
+
+		do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE,
+			      fsa_state, I_MESSAGE, action);
+		
+	} else {
+		cl_log(LOG_ERR,
+		       "Unknown Sub-system (%s)... discarding message.",
+		       sys);
+	}    
+	FNOUT();
+}	

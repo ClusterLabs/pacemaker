@@ -20,7 +20,7 @@
 
 
 #include <crm/crm.h>
-#include <crm/common/ipcutils.h>
+#include <crm/common/ipc.h>
 #include <crmd_fsa.h>
 #include <libxml/tree.h>
 
@@ -75,6 +75,10 @@ extern gboolean store_request(xmlNodePtr msg_options,
 			      const char *sys_to);
 
 extern enum crmd_fsa_input handle_message(xmlNodePtr stored_msg);
+
+extern gboolean send_ha_reply(ll_cluster_t *hb_cluster,
+			      xmlNodePtr xml_request,
+			      xmlNodePtr xml_response_data);
 
 extern void lrm_op_callback (lrm_op_t* op);
 extern void lrm_monitor_callback (lrm_mon_t* monitor);

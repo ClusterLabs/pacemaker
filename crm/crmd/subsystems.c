@@ -34,20 +34,14 @@
 #include <sys/time.h>	// for getrlimit
 #include <sys/resource.h>// for getrlimit
 
-#include <crm/common/crmutils.h>
-#include <crm/common/ipcutils.h>
-#include <crm/common/msgutils.h>
+#include <errno.h>
 
 #include <crm/msg_xml.h>
-#include <crm/common/xmlutils.h>
-
+#include <crm/common/xml.h>
+#include <crmd_messages.h>
 
 #include <crm/cib.h>
-
 #include <crmd.h>
-#include <crmd_messages.h>
-#include <string.h>
-#include <errno.h>
 
 #include <crm/dmalloc_wrapper.h>
 

@@ -57,11 +57,11 @@ halib_PROGRAMS	= crmd
 
 ## SOURCES
 
-noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h \
-			fsa_matrix.h fsa_proto.h crmd_utils.h
+noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
+		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h
 
 crmd_SOURCES	= crmdmain.c crmd.c 					\
-		fsa.c control.c messages.c ccm.c 			\
+		fsa.c control.c messages.c ccm.c callbacks.c		\
 		election.c subsystems.c lrm.c join.c utils.c misc.c
 
 crmd_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'

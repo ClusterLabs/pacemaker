@@ -21,20 +21,20 @@
 #include <ocf/oc_event.h>
 #include <ocf/oc_membership.h>
 
+#include <clplumbing/GSource.h>
+#include <string.h>
+
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/cib.h>
+#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
+#include <crmd_messages.h>
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
 
-void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
-
-#include <clplumbing/GSource.h>
-#include <crm/common/ipcutils.h>
-#include <crm/common/xmlutils.h>
-#include <crmd_messages.h>
-#include <string.h>
 #include <crm/dmalloc_wrapper.h>
+
+void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 int register_with_ccm(ll_cluster_t *hb_cluster);
 

@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.17 2004/06/01 16:12:49 andrew Exp $ */
+/* $Id: crmdmain.c,v 1.18 2004/06/02 12:31:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,10 +25,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <hb_api.h>
 #include <apphb.h>
-
-#include <crm/crm.h>
 
 #include <clplumbing/ipc.h>
 #include <clplumbing/Gmain_timeout.h>
@@ -40,19 +37,17 @@
 #include <clplumbing/GSource.h>
 #include <clplumbing/cl_poll.h>
 
-#include <libxml/tree.h>
-
-const char* crm_system_name = CRM_SYSTEM_CRMD;
-
-#include <crm/common/crmutils.h>
-#include <crm/common/ipcutils.h>
+#include <crm/crm.h>
+#include <crm/common/ctrl.h>
+#include <crm/common/ipc.h>
+#include <crm/common/xml.h>
 
 #include <crmd.h>
-
 #include <crmd_fsa.h>
 
 #include <crm/dmalloc_wrapper.h>
 
+const char* crm_system_name = CRM_SYSTEM_CRMD;
 #define PID_FILE     WORKING_DIR"/crm.pid"
 #define OPTARGS	"skrh"
 

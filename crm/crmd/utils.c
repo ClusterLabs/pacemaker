@@ -18,19 +18,14 @@
 #include <portability.h>
 #include <crm/crm.h>
 #include <crmd_fsa.h>
-#include <libxml/tree.h>
-#include <crm/msg_xml.h>
 
 #include <clplumbing/Gmain_timeout.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include <crm/common/xmlutils.h>
-#include <crm/common/ipcutils.h>
-#include <crm/common/msgutils.h>
-#include <crm/cib.h>
-#include <string.h>
-#include <crmd_messages.h>
+#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
+#include <crm/common/msg.h>
 
 #include <crm/dmalloc_wrapper.h>
 
