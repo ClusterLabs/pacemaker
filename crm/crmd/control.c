@@ -164,7 +164,7 @@ do_exit(long long action,
 		g_main_quit(crmd_mainloop);
 #if 0
 		crm_info("[%s] stopped", crm_system_name);
-		exit(0);
+		exit(100);
 #else
 		fsa_actions = A_NOTHING;
 #endif
@@ -172,7 +172,7 @@ do_exit(long long action,
 		crm_warn("Performing %s - forcefully exiting the CRMd\n",
 			fsa_action2string(action));
 		crm_info("[%s] stopped", crm_system_name);
-		exit(1);
+		exit(100);
 	}
 	
 	return I_NULL;

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.13 2005/02/11 22:09:29 andrew Exp $ */
+/* $Id: main.c,v 1.14 2005/02/12 20:26:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -152,7 +152,10 @@ init_start(void)
 	    crm_info("[%s] stopped", crm_system_name);
     }
     
-    return state != S_PENDING;
+    if(state == S_PENDING) {
+	    return 1;
+    }
+    return 100;
 }
 
 
