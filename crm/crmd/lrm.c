@@ -392,7 +392,7 @@ build_active_RAs(xmlNodePtr rsc_list)
 				set_xml_property_copy(
 					xml_rsc,
 					XML_LRM_ATTR_RSCSTATE,
-					crmd_rscstate2string((int)(op->user_data)));
+					op->user_data);
 		
 				set_xml_property_copy(
 					xml_rsc, XML_LRM_ATTR_LASTOP, this_op);
@@ -554,22 +554,24 @@ do_lrm_rsc_op(
 	lrm_op_t* op        = NULL;
 	int op_result       = HA_OK;
 	int monitor_call_id = 0;
+	int action_timeout = 0;
 
+	const char *class = get_xml_attr_nested(
+		msg, rsc_path, DIMOF(rsc_path) -2, "class", TRUE);
+	
+	const char *type = get_xml_attr_nested(
+		msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TYPE, TRUE);
+
+	const char *timeout = get_xml_attr_nested(
+		msg, rsc_path, DIMOF(rsc_path) -2, "timeout", TRUE);
+	
 	if(rsc == NULL) {
 		/* add it to the list */
 		crm_verbose("adding rsc %s before operation", rid);
 		fsa_lrm_conn->lrm_ops->add_rsc(
-			fsa_lrm_conn, rid,
-			get_xml_attr_nested(
-				msg, rsc_path, DIMOF(rsc_path) -2,
-				"class", TRUE),
-			get_xml_attr_nested(
-				msg, rsc_path, DIMOF(rsc_path) -2,
-				XML_ATTR_TYPE, TRUE),
-			NULL,NULL);
+			fsa_lrm_conn, rid, class, type, NULL, NULL);
 		
-		rsc = fsa_lrm_conn->lrm_ops->get_rsc(
-			fsa_lrm_conn, rid);
+		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 	}
 	
 	if(rsc == NULL) {
@@ -577,28 +579,40 @@ do_lrm_rsc_op(
 		return I_FAIL;
 	}
 
+	if(timeout) {
+		action_timeout = atoi(timeout);
+		if(action_timeout < 0) {
+			action_timeout = 0;
+		}
+	}
+
 	/* now do the op */
 	crm_info("Performing op %s on %s", operation, rid);
-	op = g_new(lrm_op_t, 1);
+	op            = g_new(lrm_op_t, 1);
 	op->op_type   = g_strdup(operation);
 	op->params    = xml2list(msg, rsc_path, DIMOF(rsc_path));
-	op->timeout   = 0;
+	op->timeout   = action_timeout;
 	op->interval  = 0;
 	op->user_data = NULL;
 	op->target_rc = EVERYTIME;
 
 	if(safe_str_eq(CRMD_RSCSTATE_START, operation)) {
-		op->user_data = (void*)crmd_rscstate_START_OK;
+		op->user_data = crm_strdup(CRMD_RSCSTATE_START_OK);
+		
 	} else if(safe_str_eq(CRMD_RSCSTATE_STOP, operation)) {
-		op->user_data = (void*)crmd_rscstate_STOP_OK;
+		op->user_data = crm_strdup(CRMD_RSCSTATE_STOP_OK);
+		
 	} else {
 		crm_warn("Using status \"complete\" for op \"%s\""
 			 "... this is still in the experimental stage.",
 			operation);
-		op->user_data = (void*)crmd_rscstate_GENERIC_OK;
+		op->user_data = crm_strdup(CRMD_RSCSTATE_GENERIC_OK);
 	}	
 
+	op->user_data_len = 1+strlen(op->user_data);
 	op_result = rsc->ops->perform_op(rsc, op);
+	crm_free(op->user_data);
+	
 	if(op_result != EXECRA_OK) {
 		crm_err("Operation %s on %s failed with code: %d",
 			operation, rid, op_result);
@@ -610,11 +624,15 @@ do_lrm_rsc_op(
 		op = g_new(lrm_op_t, 1);
 		op->op_type   = g_strdup(CRMD_RSCSTATE_MON);
 		op->params    = NULL;
-		op->user_data = (void*)crmd_rscstate_MON_OK;
+		op->user_data = crm_strdup(CRMD_RSCSTATE_MON_OK);
 		op->timeout   = 0;
 		op->interval  = 9000;
 		op->target_rc = CHANGED;
+		op->user_data_len = 1+strlen(op->user_data);
+		
 		monitor_call_id = rsc->ops->perform_op(rsc, op);
+		crm_free(op->user_data);
+
 		if (monitor_call_id > 0) {
 			crm_debug("Adding monitor op for %s", rsc->id);
 			g_hash_table_insert(
@@ -735,7 +753,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 		case LRM_OP_DONE:
 			set_xml_property_copy(
 				iter, XML_LRM_ATTR_RSCSTATE,
-				crmd_rscstate2string((int)(op->user_data)));
+				op->user_data);
 			break;
 	}
 
@@ -841,16 +859,6 @@ do_fake_lrm_op(gpointer data)
 		set_xml_property_copy(iter, XML_ATTR_ID, id_from_cib);
 		set_xml_property_copy(iter, XML_LRM_ATTR_LASTOP, operation);
 
-
-#if 0
-		/* introduce a 10% chance of an action failing */
-		op_code = random();
-#endif
-		if((op_code % 10) == 1) {
-			op_code = 1;
-		} else {
-			op_code = 0;
-		}
 		op_code_s = crm_itoa(op_code);
 
 		if(op_code) {
@@ -860,6 +868,7 @@ do_fake_lrm_op(gpointer data)
 			} else {
 				op_status = "started";
 			}
+
 		} else {
 			/* pass */
 			if(safe_str_eq(operation, "start")){
@@ -869,7 +878,7 @@ do_fake_lrm_op(gpointer data)
 			}
 		}
 		
-		set_xml_property_copy(iter, XML_LRM_ATTR_RSCSTATE,op_status);
+		set_xml_property_copy(iter, XML_LRM_ATTR_RSCSTATE, op_status);
 		set_xml_property_copy(iter, XML_LRM_ATTR_OPSTATUS, op_code_s);
 		set_xml_property_copy(
 			iter, XML_LRM_ATTR_TARGET, fsa_our_uname);
