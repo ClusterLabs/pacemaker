@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.11 2005/02/09 15:33:50 andrew Exp $ */
+/* $Id: primatives.c,v 1.12 2005/02/17 16:27:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -407,7 +407,7 @@ add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
 	
 	cib_post_notify(CRM_OP_CIB_CREATE, new_obj, result, new_obj);
 
-	return cib_ok;
+	return result;
 }
 
 
