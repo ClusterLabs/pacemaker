@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.9 2005/03/31 07:57:32 andrew Exp $ */
+/* $Id: complex.h,v 1.10 2005/03/31 16:40:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,7 +44,7 @@ typedef struct resource_object_functions_s
 		resource_t *(*find_child)(resource_t *, const char *);
 		int  (*num_allowed_nodes)(resource_t *);
 		void (*color)(resource_t *, GListPtr *);
-		void (*create_actions)(resource_t *);
+		void (*create_actions)(resource_t *, GListPtr *);
 		void (*internal_constraints)(resource_t *, GListPtr *);
 		void (*agent_constraints)(resource_t *);
 
@@ -67,7 +67,8 @@ extern void native_unpack(resource_t *rsc);
 extern resource_t *native_find_child(resource_t *rsc, const char *id);
 extern int  native_num_allowed_nodes(resource_t *rsc);
 extern void native_color(resource_t *rsc, GListPtr *colors);
-extern void native_create_actions(resource_t *rsc);
+extern void native_create_actions(
+	resource_t *rsc, GListPtr *ordering_constraints);
 extern void native_internal_constraints(
 	resource_t *rsc, GListPtr *ordering_constraints);
 extern void native_agent_constraints(resource_t *rsc);
@@ -87,7 +88,8 @@ extern void group_unpack(resource_t *rsc);
 extern resource_t *group_find_child(resource_t *rsc, const char *id);
 extern int  group_num_allowed_nodes(resource_t *rsc);
 extern void group_color(resource_t *rsc, GListPtr *colors);
-extern void group_create_actions(resource_t *rsc);
+extern void group_create_actions(
+	resource_t *rsc, GListPtr *ordering_constraints);
 extern void group_internal_constraints(
 	resource_t *rsc, GListPtr *ordering_constraints);
 extern void group_agent_constraints(resource_t *rsc);
@@ -107,7 +109,8 @@ extern void incarnation_unpack(resource_t *rsc);
 extern resource_t *incarnation_find_child(resource_t *rsc, const char *id);
 extern int  incarnation_num_allowed_nodes(resource_t *rsc);
 extern void incarnation_color(resource_t *rsc, GListPtr *colors);
-extern void incarnation_create_actions(resource_t *rsc);
+extern void incarnation_create_actions(
+	resource_t *rsc, GListPtr *ordering_constraints);
 extern void incarnation_internal_constraints(
 	resource_t *rsc, GListPtr *ordering_constraints);
 extern void incarnation_agent_constraints(resource_t *rsc);

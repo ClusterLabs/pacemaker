@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.45 2005/03/31 08:11:35 andrew Exp $ */
+/* $Id: stages.c,v 1.46 2005/03/31 16:40:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -268,7 +268,7 @@ stage5(GListPtr resources, GListPtr *ordering_constraints)
 {
 	slist_iter(
 		rsc, resource_t, resources, lpc,
-		rsc->fns->create_actions(rsc);
+		rsc->fns->create_actions(rsc, ordering_constraints);
 		rsc->fns->internal_constraints(rsc, ordering_constraints);
 		);
 	return TRUE;
@@ -281,7 +281,6 @@ gboolean
 stage6(GListPtr *actions, GListPtr *ordering_constraints,
        GListPtr nodes, GListPtr resources)
 {
-
 	action_t *down_op = NULL;
 	action_t *stonith_op = NULL;
 	crm_devel("Processing stage 6");
@@ -292,7 +291,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 			crm_info("Scheduling Node %s for shutdown",
 				 node->details->uname);
 			
-			down_op = action_new(NULL, shutdown_crm, node);
+			down_op = action_new(NULL, shutdown_crm, NULL, node);
 			down_op->runnable = TRUE;
 			
 			*actions = g_list_append(*actions, down_op);
@@ -305,13 +304,16 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 			crm_warn("Scheduling Node %s for STONITH",
 				 node->details->uname);
 
-			stonith_op = action_new(NULL, stonith_node, NULL);
+			stonith_op = action_new(NULL, stonith_node,NULL,NULL);
 			stonith_op->runnable = TRUE;
-			
-			set_xml_property_copy(stonith_op->args,
-					      XML_LRM_ATTR_TARGET, node->details->uname);
-			set_xml_property_copy(stonith_op->args,
-					      XML_LRM_ATTR_TARGET_UUID, node->details->id);
+
+			add_hash_param(
+				stonith_op->extra, XML_LRM_ATTR_TARGET,
+				node->details->uname);
+
+			add_hash_param(
+				stonith_op->extra, XML_LRM_ATTR_TARGET_UUID,
+				node->details->id);
 			
 			if(down_op != NULL) {
 				down_op->failure_is_fatal = FALSE;

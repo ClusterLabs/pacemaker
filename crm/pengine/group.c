@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.11 2005/03/31 08:03:37 andrew Exp $ */
+/* $Id: group.c,v 1.12 2005/03/31 16:40:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -142,7 +142,7 @@ void group_color(resource_t *rsc, GListPtr *colors)
  	group_data->self->fns->color(group_data->self, colors);
 }
 
-void group_create_actions(resource_t *rsc)
+void group_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 {
 	gboolean child_starting = FALSE;
 	gboolean child_stopping = FALSE;
@@ -151,21 +151,21 @@ void group_create_actions(resource_t *rsc)
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		child_rsc->fns->create_actions(child_rsc);
+		child_rsc->fns->create_actions(child_rsc, ordering_constraints);
 		child_starting = child_starting || child_rsc->starting;
 		child_stopping = child_stopping || child_rsc->stopping;
 		);
 
 	if(child_starting) {
 		rsc->starting = TRUE;
-		action_new(group_data->self, start_rsc, NULL);
-		action_new(group_data->self, started_rsc, NULL);
+		action_new(group_data->self, start_rsc, NULL, NULL);
+		action_new(group_data->self, started_rsc, NULL, NULL);
 		
 	}
 	if(child_stopping) {
 		rsc->stopping = TRUE;
-		action_new(group_data->self, stop_rsc, NULL);
-		action_new(group_data->self, stopped_rsc, NULL);
+		action_new(group_data->self, stop_rsc, NULL, NULL);
+		action_new(group_data->self, stopped_rsc, NULL, NULL);
 	}
 	
 	if(group_data->self != NULL) {

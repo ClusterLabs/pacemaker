@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.21 2005/03/31 08:08:10 andrew Exp $ */
+/* $Id: native.c,v 1.22 2005/03/31 16:40:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,6 +40,8 @@ void filter_nodes(resource_t *rsc);
 
 int num_allowed_nodes4color(color_t *color);
 
+void create_monitor_actions(resource_t *rsc, action_t *start, node_t *node,
+			    GListPtr *ordering_constraints);
 
 typedef struct native_variant_data_s
 {
@@ -190,7 +192,31 @@ void native_color(resource_t *rsc, GListPtr *colors)
 	
 }
 
-void native_create_actions(resource_t *rsc)
+void
+create_monitor_actions(resource_t *rsc, action_t *start, node_t *node,
+		       GListPtr *ordering_constraints) 
+{
+	action_t *mon = NULL;
+	xml_child_iter(
+		rsc->ops_xml, operation, "op",
+		if(safe_str_neq(
+			   crm_element_value(operation, "name"), CRMD_RSCSTATE_MON)) {
+			continue;
+		}
+		mon = action_new(rsc, monitor_rsc,
+				 crm_element_value(operation, "timeout"), node);
+
+		add_hash_param(mon->extra, "interval",
+			       crm_element_value(operation, "interval"));
+
+ 		unpack_instance_attributes(operation, mon->extra);
+		order_new(NULL, start_rsc, start, NULL, monitor_rsc, mon,
+			  pecs_must, ordering_constraints);
+		);
+	
+}
+
+void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 {
 	gboolean can_start = FALSE;
 	node_t *chosen = NULL;
@@ -208,13 +234,16 @@ void native_create_actions(resource_t *rsc)
 	
 	if(can_start && g_list_length(native_data->running_on) == 0) {
 		/* create start action */
-		action_t *op = action_new(rsc, start_rsc, chosen);
+		action_t *op = action_new(rsc, start_rsc, NULL, chosen);
 		if(have_quorum == FALSE && require_quorum == TRUE) {
 			op->runnable = FALSE;
 		} else {
 			crm_info("Start resource %s (%s)",
 				 rsc->id, safe_val3(
 					 NULL, chosen, details, uname));
+
+			create_monitor_actions(
+				rsc, op, chosen, ordering_constraints);
 		}
 		
 	} else if(g_list_length(native_data->running_on) > 1) {
@@ -230,7 +259,7 @@ void native_create_actions(resource_t *rsc)
 				crm_info("Stop  resource %s (%s)",
 					 rsc->id,
 					 safe_val3(NULL, node, details, uname));
-				action_new(rsc, stop_rsc, node);
+				action_new(rsc, stop_rsc, NULL, node);
 				);
 		}
 		
@@ -238,7 +267,7 @@ void native_create_actions(resource_t *rsc)
 			crm_info("Start resource %s (%s)",
 				 rsc->id,
 				 safe_val3(NULL, chosen, details, uname));
-			action_new(rsc, start_rsc, chosen);
+			action_new(rsc, start_rsc, NULL, chosen);
 		}
 		
 	} else {
@@ -270,13 +299,13 @@ void native_create_actions(resource_t *rsc)
 				crm_info("Move resource %s (%s -> %s)", rsc->id,
 					 safe_val3(NULL, node, details, uname),
 					 safe_val3(NULL, chosen, details, uname));
-				action_new(rsc, stop_rsc, node);
-				action_new(rsc, start_rsc, chosen);
+				action_new(rsc, stop_rsc, NULL, node);
+				action_new(rsc, start_rsc, NULL, chosen);
 
 			} else {
 				crm_info("Stop resource %s (%s)", rsc->id,
 					 safe_val3(NULL, node, details, uname));
-				action_new(rsc, stop_rsc, node);
+				action_new(rsc, stop_rsc, NULL, node);
 			}
 			
 			);	
@@ -460,7 +489,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 				  " creating",
 				  lh_rsc->id, task2text(order->lh_action_task));
 
-			action_new(lh_rsc, order->lh_action_task, NULL);
+			action_new(lh_rsc, order->lh_action_task, NULL, NULL);
 		}
 			
 		lh_actions = find_actions(
@@ -518,6 +547,7 @@ void native_rsc_order_rh(
 		case started_rsc:
 		case stop_rsc:
 		case stopped_rsc:
+		case monitor_rsc:
 			break;
 		default:
 			crm_err("Task \"%s\" from ordering %d isnt a resource action",

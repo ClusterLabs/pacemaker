@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.60 2005/03/31 08:11:35 andrew Exp $ */
+/* $Id: utils.c,v 1.61 2005/03/31 16:40:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,6 +34,7 @@ int color_id = 0;
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean node_merge_weights(node_t *node, node_t *with);
+const char *find_action_timeout(resource_t *rsc, enum action_tasks task);
 
 /* only for rsc_colocation constraints */
 rsc_colocation_t *
@@ -578,14 +579,14 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
-
 action_t *
-action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
+action_new(resource_t *rsc, enum action_tasks task,
+	   const char *timeout, node_t *on_node)
 {
 	action_t *action = NULL;
 
 	GListPtr possible_matches = NULL;
-	if(rsc != NULL) {
+	if(rsc != NULL && task != monitor_rsc) {
 		possible_matches =
 			find_actions(rsc->actions, task, on_node);
 	}
@@ -603,7 +604,6 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 	}
 	
 	if(possible_matches != NULL) {
-
 		if(g_list_length(possible_matches) > 1) {
 			crm_warn("Action %s for %s on %s exists %d times",
 				task2text(task), rsc?rsc->id:"<NULL>",
@@ -619,6 +619,10 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 
 		/* todo: free possible_matches */
 		return action;
+	}
+
+	if(timeout == NULL && rsc != NULL) {
+		timeout = find_action_timeout(rsc, task);
 	}
 	
 	crm_devel("Creating action %s for %s on %s",
@@ -641,22 +645,24 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 		action->processed  = FALSE;
 		action->optional   = FALSE;
 		action->seen_count = 0;
-		action->timeout    = NULL;
-		action->args       = create_xml_node(NULL, XML_TAG_ATTRS);
+
+		action->extra	   = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+
+		if(timeout != NULL) {
+			add_hash_param(action->extra, "timeout", timeout);
+		}
 		
 		if(rsc != NULL) {
 			crm_devel("Adding created action to its resource");
 			rsc->actions = g_list_append(rsc->actions, action);
+
 			if(task == start_rsc) {
 				rsc->starting = TRUE;
-				action->timeout = rsc->start_timeout;
 
 			} else if(task == stop_rsc) {
 				rsc->stopping = TRUE;
-				action->timeout = rsc->stop_timeout;
-
-			} else {
-				action->timeout = rsc->def_timeout;
 			}
 			
 		}
@@ -665,6 +671,29 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 	crm_devel("Action %d created", action->id);
 	return action;
 }
+
+
+const char *
+find_action_timeout(resource_t *rsc, enum action_tasks task)
+{
+	crm_data_t *op = NULL;
+	if(rsc != NULL && rsc->ops_xml != NULL) {
+		xml_child_iter(
+			rsc->ops_xml, a_child, "op",
+			if(safe_str_eq(task2text(task),
+				       crm_element_value(a_child,"name"))) {
+				op = a_child;
+				break;
+			}
+			);
+	}
+	if(op == NULL) {
+		return NULL;
+	}
+	return crm_element_value(op, "timeout");
+}
+
+
 
 const char *
 strength2text(enum con_strength strength)
@@ -716,6 +745,9 @@ task2text(enum action_tasks task)
 			break;
 		case stonith_node:
 			result = XML_CIB_ATTR_STONITH;
+			break;
+		case monitor_rsc:
+			result = CRMD_RSCSTATE_MON;
 			break;
 	}
 	
@@ -1066,7 +1098,7 @@ pe_free_actions(GListPtr actions)
 		pe_free_shallow(action->actions_after); /* action_warpper_t* */
 		action->actions_before = NULL;
 		action->actions_after  = NULL;
-		free_xml(action->args);
+		g_hash_table_destroy(action->extra);
 		crm_free(action);
 	}
 	if(actions != NULL) {

@@ -15,7 +15,10 @@
   <synapse id="1">
     <action_set>
       <crm_event id="3" operation="stonith" allow_fail="false">
-         <attributes on_node="node1" on_node_uuid="8661583D-08B0-11D9-B627-000A95B71D78"/>
+         <attributes>
+           <nvpair name="on_node" value="node1"/>
+           <nvpair name="on_node_uuid" value="8661583D-08B0-11D9-B627-000A95B71D78"/>
+         </attributes>
       </crm_event>
     </action_set>
     <inputs/>

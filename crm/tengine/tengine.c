@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.54 2005/03/18 10:39:15 andrew Exp $ */
+/* $Id: tengine.c,v 1.55 2005/03/31 16:40:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -462,9 +462,25 @@ initiate_action(action_t *action)
 		
 /*         <args target="node1"/> */
 		crm_data_t *action_args = find_xml_node(
-			action->xml, "args", TRUE);
-		const char *target = crm_element_value(
-			action_args, XML_LRM_ATTR_TARGET);
+			action->xml, XML_TAG_ATTRS, TRUE);
+		const char *uuid = NULL;
+		const char *target = NULL;
+		const char *name = NULL;
+
+		xml_child_iter(
+			action_args, nvpair, XML_CIB_TAG_NVPAIR,
+
+			name = crm_element_value(nvpair, XML_NVPAIR_ATTR_NAME);
+			if(safe_str_eq(name, XML_LRM_ATTR_TARGET)) {
+				target = crm_element_value(
+					nvpair, XML_NVPAIR_ATTR_VALUE);
+			} else if(safe_str_eq(name, XML_LRM_ATTR_TARGET_UUID)) {
+				uuid = crm_element_value(
+					nvpair, XML_NVPAIR_ATTR_VALUE);
+			} 
+			);
+		CRM_DEV_ASSERT(target != NULL);
+		CRM_DEV_ASSERT(uuid != NULL);
 		
 #ifdef TESTING
 		crm_info("Executing fencing operation (%s) on %s", id, target);
@@ -474,8 +490,6 @@ initiate_action(action_t *action)
 		action->complete = TRUE;
 #else
 		stonith_ops_t * st_op = NULL;
-		const char *uuid = crm_element_value(
-			action_args,XML_LRM_ATTR_TARGET_UUID);
 		crm_malloc(st_op, sizeof(stonith_ops_t));
 		st_op->optype = RESET;
 		st_op->timeout = crm_atoi(timeout, "100"); /* ten seconds */

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.52 2005/03/31 07:57:32 andrew Exp $ */
+/* $Id: pengine.h,v 1.53 2005/03/31 16:40:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,6 +58,7 @@ enum con_strength {
 
 enum action_tasks {
 	no_action,
+	monitor_rsc,
 	stop_rsc,
 	stopped_rsc,
 	start_rsc,
@@ -150,6 +151,7 @@ struct lrm_agent_s {
 struct resource_s { 
 		const char *id; 
 		crm_data_t * xml; 
+		crm_data_t * ops_xml; 
 
 		void *variant_opaque;
 		enum pe_obj_types variant;
@@ -158,10 +160,6 @@ struct resource_s {
 		float	     priority; 
 		float	     effective_priority; 
 
-		const char  *start_timeout;
-		const char  *stop_timeout;
-		const char  *def_timeout;
-		
 		gboolean     starting;
 		gboolean     stopping;
 		gboolean     is_stonith;
@@ -205,7 +203,8 @@ struct action_s
 		int seen_count;
 		const char *timeout;
 
-		crm_data_t *args;
+/* 		crm_data_t *args; */
+		GHashTable *extra;
 		
 		GListPtr actions_before; /* action_warpper_t* */
 		GListPtr actions_after;  /* action_warpper_t* */

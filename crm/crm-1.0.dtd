@@ -154,7 +154,7 @@ More details are given in the annotated DTD below.
      Use version=1.2 or version>2.0 etc.
 
 -->
-<!ELEMENT resource (instance_attributes*)>
+<!ELEMENT resource (operations, instance_attributes*)>
 <!ATTLIST resource
 	  id		    CDATA #REQUIRED
 	  description	    CDATA #IMPLIED
@@ -205,19 +205,26 @@ More details are given in the annotated DTD below.
 	  max_masters	   CDATA		    #REQUIRED
 	  max_node_masters CDATA		    #REQUIRED>
 
+<!ELEMENT operations (op*)>
+
+<!-- id is the name of the operation.  ie. "start" or "monitor" etc. -->
+<!ELEMENT op (instance_attributes*)>
+<!ATTLIST op
+	  id		CDATA	      #REQUIRED
+	  name		CDATA	      #REQUIRED
+	  description	CDATA	      #IMPLIED
+	  interval	CDATA	      #IMPLIED
+	  timeout	CDATA	      #IMPLIED>
+
 <!--
 
      Some of these may need to be overridden on a per-node /
      per-node-attribute basis (ie, eth1 is eth0 on some nodes...). Same
      is true for timings.
      
-     This is expressed as follows: You can have multiple sets of
-     'instance attributes'. The one with the highest weight is chosen.
-
-     Otherwise, if a matching rule is found, the instance rsc_parameters
-     there override the defaults completely; the attr_expression list is
-     evaluated ordered by the no tag. The weight attribute doesn't make
-     much sense here.
+     You can have multiple sets of 'instance attributes', the first to
+     have its rule satisfied _and_ define an attribute wins.  Subsequent
+     values for the attribute are ignored.
 
 -->
 <!ELEMENT instance_attributes (rule?, attributes)>

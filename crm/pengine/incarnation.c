@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.11 2005/03/31 08:06:44 andrew Exp $ */
+/* $Id: incarnation.c,v 1.12 2005/03/31 16:40:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -246,7 +246,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 	crm_info("%d Incarnations are active", incarnation_data->active_incarnation);
 }
 
-void incarnation_create_actions(resource_t *rsc)
+void incarnation_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 {
 	gboolean child_starting = FALSE;
 	gboolean child_stopping = FALSE;
@@ -255,21 +255,21 @@ void incarnation_create_actions(resource_t *rsc)
 
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
-		child_rsc->fns->create_actions(child_rsc);
+		child_rsc->fns->create_actions(child_rsc, ordering_constraints);
 		child_starting = child_starting || child_rsc->starting;
 		child_stopping = child_stopping || child_rsc->stopping;
 		);
 
 	if(child_starting) {
 		rsc->starting = TRUE;
-		action_new(incarnation_data->self, start_rsc, NULL);
-		action_new(incarnation_data->self, started_rsc, NULL);
+		action_new(incarnation_data->self, start_rsc, NULL, NULL);
+		action_new(incarnation_data->self, started_rsc, NULL, NULL);
 		
 	}
 	if(child_stopping) {
 		rsc->stopping = TRUE;
-		action_new(incarnation_data->self, stop_rsc, NULL);
-		action_new(incarnation_data->self, stopped_rsc, NULL);
+		action_new(incarnation_data->self, stop_rsc, NULL, NULL);
+		action_new(incarnation_data->self, stopped_rsc, NULL, NULL);
 	}
 	
 	slist_iter(

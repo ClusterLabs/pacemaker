@@ -53,6 +53,12 @@ enum crmd_fsa_input do_lrm_rsc_op(
 
 enum crmd_fsa_input do_fake_lrm_op(gpointer data);
 
+void stop_recurring_action(
+	gpointer key, gpointer value, gpointer user_data);
+
+gboolean remove_recurring_action(
+	gpointer key, gpointer value, gpointer user_data);
+
 GHashTable *xml2list(crm_data_t *parent);
 GHashTable *monitors = NULL;
 int num_lrm_register_fails = 0;
@@ -168,7 +174,8 @@ do_lrm_control(long long action,
 		crm_trace("LRM: connect...");
 		ret = HA_OK;
 		
-		monitors = g_hash_table_new(g_str_hash, g_str_equal);
+		monitors = g_hash_table_new_full(
+			g_direct_hash,g_direct_equal,NULL,g_hash_destroy_str);
 
 		fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
 		if(NULL == fsa_lrm_conn) {
@@ -548,12 +555,10 @@ do_lrm_rsc_op(
 {
 	lrm_op_t* op        = NULL;
 	int call_id         = 0;
-	int action_timeout  = 0;
 	fsa_data_t *msg_data = NULL;
 
 	const char *type = NULL;
 	const char *class = NULL;
-	const char *timeout = NULL;
 
 	if(rsc != NULL) {
 		class = rsc->class;
@@ -565,9 +570,6 @@ do_lrm_rsc_op(
 		
 		type = get_xml_attr_nested(
 			msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TYPE, TRUE);
-		
-		timeout = get_xml_attr_nested(
-			msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TIMEOUT, FALSE);
 	}
 	
 	if(rsc == NULL) {
@@ -591,42 +593,39 @@ do_lrm_rsc_op(
 		return I_NULL;
 	}
 
-	if(timeout) {
-		action_timeout = atoi(timeout);
-		if(action_timeout < 0) {
-			action_timeout = 0;
-		}
-	}
-
 	/* stop the monitor before stopping the resource */
 	if(safe_str_eq(operation, CRMD_RSCSTATE_STOP)) {
-		gpointer foo = g_hash_table_lookup(monitors, rsc->id);
-		call_id = GPOINTER_TO_INT(foo);
-		
-		if(call_id > 0) {
-			crm_debug("Stopping status op for %s", rsc->id);
-			rsc->ops->cancel_op(rsc, call_id);
-			g_hash_table_remove(monitors, rsc->id);
-			/* TODO: Clean up key */
-			
-		} else {
-			crm_warn("No monitor operation found for %s", rsc->id);
-			/* TODO: we probably need to look up the LRM to find it */
-		}
+		g_hash_table_foreach(monitors, stop_recurring_action, rsc);
+		g_hash_table_foreach_remove(
+			monitors, remove_recurring_action, rsc);
 	}
 
 	/* now do the op */
 	crm_info("Performing op %s on %s", operation, rid);
 	crm_malloc(op, sizeof(lrm_op_t));
 	op->op_type   = crm_strdup(operation);
-	op->timeout   = action_timeout;
-	op->interval  = 0;
 	op->user_data = NULL;
-	op->target_rc = EVERYTIME;
+
 	if(msg != NULL) {
 		op->params = xml2list(msg);
 	} else {
 		CRM_DEV_ASSERT(safe_str_eq(CRMD_RSCSTATE_STOP, operation));
+	}
+
+	op->interval = crm_atoi(g_hash_table_lookup(op->params,"interval"),"0");
+	op->timeout  = crm_get_msec(g_hash_table_lookup(op->params, "timeout"));
+	if(op->interval < 0) {
+		op->interval = 0;
+	}
+	if(op->timeout < 0) {
+		op->timeout = 0;
+	}
+
+	if(safe_str_eq(operation, CRMD_RSCSTATE_MON)) {
+		op->target_rc = CHANGED;
+
+	} else {
+		op->target_rc = EVERYTIME;
 	}
 		
 	if(safe_str_eq(CRMD_RSCSTATE_START, operation)) {
@@ -634,6 +633,9 @@ do_lrm_rsc_op(
 		
 	} else if(safe_str_eq(CRMD_RSCSTATE_STOP, operation)) {
 		op->user_data = crm_strdup(CRMD_RSCSTATE_STOP_OK);
+		
+	} else if(safe_str_eq(CRMD_RSCSTATE_MON, operation)) {
+		op->user_data = crm_strdup(CRMD_RSCSTATE_MON_OK);
 		
 	} else {
 		crm_warn("Using status \"complete\" for op \"%s\""
@@ -644,42 +646,50 @@ do_lrm_rsc_op(
 
 	op->user_data_len = 1+strlen(op->user_data);
 	call_id = rsc->ops->perform_op(rsc, op);
-	free_lrm_op(op);		
-	
+
 	if(call_id <= 0) {
 		crm_err("Operation %s on %s failed: %d",
 			operation, rid, call_id);
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
-	}
-	
-	if(safe_str_eq(operation, CRMD_RSCSTATE_START)) {
-		/* initiate the monitor action */
-		crm_malloc(op, sizeof(lrm_op_t));
-		op->op_type   = crm_strdup(CRMD_RSCSTATE_MON);
-		op->params    = NULL;
-		op->user_data = crm_strdup(CRMD_RSCSTATE_MON_OK);
-		op->timeout   = 0;
-		op->interval  = 9000;
-		op->target_rc = CHANGED;
-		op->user_data_len = 1+strlen(op->user_data);
-		
-		call_id = rsc->ops->perform_op(rsc, op);
-		free_lrm_op(op);		
 
-		if (call_id > 0) {
-			crm_debug("Adding monitor op for %s", rsc->id);
-			g_hash_table_insert(
-				monitors, strdup(rsc->id),
-				GINT_TO_POINTER(call_id));
-		} else {
-			crm_err("Monitor op for %s did not have a call id",
-				rsc->id);
-		}
-		
+	} else if(call_id > 0 && op->interval > 0) {
+		crm_debug("Adding recurring %s op for %s", operation, rsc->id);
+		g_hash_table_insert(
+			monitors, GINT_TO_POINTER(call_id), strdup(rsc->id));
 	}
 
+	free_lrm_op(op);		
 	return I_NULL;
+}
+
+void
+stop_recurring_action(gpointer key, gpointer value, gpointer user_data)
+{
+	int call_id = 0;
+	lrm_rsc_t *rsc = user_data;
+	if(safe_str_eq(value, rsc->id)) {
+		call_id = GPOINTER_TO_INT(key);
+		
+		if(call_id > 0) {
+			crm_debug("Stopping recurring op %d for %s",
+				  call_id, rsc->id);
+			rsc->ops->cancel_op(rsc, call_id);
+			
+		} else {
+			crm_err("Invalid call_id %d for %s", call_id, rsc->id);
+			/* TODO: we probably need to look up the LRM to find it */
+		}
+	}
+}
+
+gboolean
+remove_recurring_action(gpointer key, gpointer value, gpointer user_data)
+{
+	lrm_rsc_t *rsc = user_data;
+	if(safe_str_eq(value, rsc->id)) {
+		return TRUE;
+	}
+	return FALSE;
 }
 
 void
