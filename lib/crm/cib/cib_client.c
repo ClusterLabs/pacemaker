@@ -1008,7 +1008,7 @@ createEmptyCib(void)
 		return cib_root;
 	}
 
-	crm_msg_del(cib_root);
+	free_xml(cib_root);
 	crm_crit("The generated CIB did not pass integrity testing!!"
 		 "  All hope is lost.");
 	return NULL;

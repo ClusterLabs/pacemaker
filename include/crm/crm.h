@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.40 2005/02/07 11:30:53 andrew Exp $ */
+/* $Id: crm.h,v 1.41 2005/02/07 12:09:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,8 +30,6 @@
 #include <mcheck.h>
 #endif
 #include <crm/common/util.h>
-
-typedef struct ha_msg HA_Message;
 
 #define CRM_ASSERT(expr) if(expr == FALSE) {		\
 		crm_crit("Triggered assert at %s:%d",	\
