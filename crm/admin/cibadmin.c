@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.1 2004/07/27 11:21:44 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.2 2004/07/30 15:31:04 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -40,9 +40,6 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?i:o:"
-//D:C:S:HA:U:M:I:EWRFt:m:a:d:w:c:r:p:s:"
-
 #include <getopt.h>
 #include <ha_msg.h> // someone complaining about _ha_msg_mod not being found
 #include <crm/dmalloc_wrapper.h>
@@ -55,10 +52,10 @@ char *admin_uuid = NULL;
 
 void usage(const char *cmd, int exit_status);
 ll_cluster_t *do_init(void);
-int do_work(ll_cluster_t * hb_cluster);
+int do_work(ll_cluster_t * hb_cluster, const char *xml_text);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
-xmlNodePtr handleCibMod(void);
+xmlNodePtr handleCibMod(const char *xml);
 
 
 gboolean BE_VERBOSE = FALSE;
@@ -90,6 +87,8 @@ char *reset = NULL;
 int operation_status = 0;
 const char *sys_to = NULL;;
 
+#define OPTARGS	"V?i:o:QDSUCEX:"
+
 int
 main(int argc, char **argv)
 {
@@ -98,7 +97,8 @@ main(int argc, char **argv)
 	int flag;
 	ll_cluster_t *hb_cluster = NULL;
 	int level = 0;
-
+	char *xml_text = NULL;
+	
 	static struct option long_options[] = {
 		// Top-level Options
 		{CRM_OP_ERASE,   0, 0, 'E'},
@@ -108,6 +108,7 @@ main(int argc, char **argv)
 		{CRM_OP_STORE,   0, 0, 'S'},
 		{CRM_OP_UPDATE,  0, 0, 'U'},
 		{CRM_OP_DELETE,  0, 0, 'D'},
+		{"xml",          1, 0, 'X'},
 		{"verbose",      0, 0, 'V'},
 		{"help",         0, 0, '?'},
 		{"reference",    1, 0, 0},
@@ -134,42 +135,30 @@ main(int argc, char **argv)
 
 		switch(flag) {
 			case 0:
-				printf("option %s", long_options[option_index].name);
+				printf("option %s",
+				       long_options[option_index].name);
 				if (optarg)
 					printf(" with arg %s", optarg);
 				printf("\n");
 			
-				if (strcmp(CRM_OP_ERASE,
-					   long_options[option_index].name) == 0
-				    || strcmp(CRM_OP_CREATE,
-					      long_options[option_index].name) == 0
-				    || strcmp(CRM_OP_UPDATE,
-					      long_options[option_index].name) == 0
-				    || strcmp(CRM_OP_DELETE,
-					      long_options[option_index].name) == 0
-				    || (safe_str_eq(
-					    CRM_OP_REPLACE,
-					    long_options[option_index].name))
-
-				    || (safe_str_eq(
-					    CRM_OP_STORE,
-					    long_options[option_index].name))
-				    
-				    || (safe_str_eq(
-					    CRM_OP_QUERY,
-					    long_options[option_index].name))){
-					cib_action = crm_strdup(long_options[option_index].name);
+	if ((safe_str_eq(CRM_OP_ERASE,      long_options[option_index].name))
+	    || (safe_str_eq(CRM_OP_CREATE,  long_options[option_index].name))
+	    || (safe_str_eq(CRM_OP_UPDATE,  long_options[option_index].name))
+	    || (safe_str_eq(CRM_OP_DELETE,  long_options[option_index].name))
+	    || (safe_str_eq(CRM_OP_REPLACE, long_options[option_index].name))
+	    || (safe_str_eq(CRM_OP_STORE,   long_options[option_index].name))
+	    || (safe_str_eq(CRM_OP_QUERY,   long_options[option_index].name))){
+		cib_action = crm_strdup(long_options[option_index].name);
 					
-				} else if (strcmp("reference",
-						  long_options[option_index].name) == 0) {
-					this_msg_reference =
-						crm_strdup(optarg);
-				} else {
-					printf("?? Long option (--%s) is not yet properly supported ??\n",
-						long_options[option_index].name);
-					++argerr;
-				}
-				break;
+	} else if (safe_str_eq("reference", long_options[option_index].name)) {
+		this_msg_reference = crm_strdup(optarg);
+
+	} else {
+		printf("Long option (--%s) is not (yet?) properly supported\n",
+		       long_options[option_index].name);
+		++argerr;
+	}
+	break;
 			
 /* a sample test for multiple instance
    if (digit_optind != 0 && digit_optind != this_option_optind)
@@ -177,7 +166,28 @@ main(int argc, char **argv)
    digit_optind = this_option_optind;
    printf ("option %c\n", c);
 */
-			
+				
+			case 'E':
+				cib_action = crm_strdup(CRM_OP_ERASE);
+				break;
+			case 'Q':
+				cib_action = crm_strdup(CRM_OP_QUERY);
+				break;
+			case 'U':
+				cib_action = crm_strdup(CRM_OP_UPDATE);
+				break;
+			case 'R':
+				cib_action = crm_strdup(CRM_OP_REPLACE);
+				break;
+			case 'S':
+				cib_action = crm_strdup(CRM_OP_STORE);
+				break;
+			case 'C':
+				cib_action = crm_strdup(CRM_OP_CREATE);
+				break;
+			case 'D':
+				cib_action = crm_strdup(CRM_OP_DELETE);
+				break;
 			case 'V':
 				level = get_crm_log_level();
 				BE_VERBOSE = TRUE;
@@ -196,8 +206,13 @@ main(int argc, char **argv)
 				crm_verbose("Option %c => %s", flag, optarg);
 				obj_type = crm_strdup(optarg);
 				break;
+			case 'X':
+				xml_text = crm_strdup(optarg);
+				break;
 			default:
-				printf("?? getopt returned character code 0%o ??\n", flag);
+				printf("Argument code 0%o (%c)"
+				       " is not (?yet?) supported\n",
+				       flag, flag);
 				++argerr;
 				break;
 		}
@@ -220,7 +235,7 @@ main(int argc, char **argv)
 
 	hb_cluster = do_init();
 	if (hb_cluster != NULL) {
-		if (do_work(hb_cluster) > 0) {
+		if (do_work(hb_cluster, xml_text) > 0) {
 			/* wait for the reply by creating a mainloop and running it until
 			 * the callbacks are invoked...
 			 */
@@ -244,13 +259,20 @@ main(int argc, char **argv)
 }
 
 xmlNodePtr
-handleCibMod(void)
+handleCibMod(const char *xml)
 {
 	const char *attr_name = NULL;
 	const char *attr_value = NULL;
 	xmlNodePtr fragment = NULL;
-	xmlNodePtr cib_object = file2xml(stdin);
+	xmlNodePtr cib_object = NULL;
 
+	if(xml == NULL) {
+		cib_object = file2xml(stdin);
+	} else {
+		cib_object = string2xml(xml);
+	}
+	
+	
 	if(cib_object == NULL) {
 		return NULL;
 	}
@@ -283,7 +305,7 @@ handleCibMod(void)
 
 
 int
-do_work(ll_cluster_t * hb_cluster)
+do_work(ll_cluster_t * hb_cluster, const char *xml_text)
 {
 	/* construct the request */
 	xmlNodePtr msg_data = NULL;
@@ -303,8 +325,16 @@ do_work(ll_cluster_t * hb_cluster)
 			    obj_type_parent);
 		
 		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_QUERY);
-		set_xml_property_copy(msg_options, XML_ATTR_FILTER_ID,
-				      obj_type_parent);
+
+		if(obj_type_parent != NULL) {
+			set_xml_property_copy(
+				msg_options,
+				XML_ATTR_FILTER_TYPE, obj_type_parent);
+		}
+		if(id != NULL) {
+			set_xml_property_copy(
+				msg_options, XML_ATTR_FILTER_ID, id);
+		}
 		
 		dest_node = status;
 		crm_verbose("CIB query creation %s",
@@ -323,7 +353,7 @@ do_work(ll_cluster_t * hb_cluster)
 		sys_to = CRM_SYSTEM_DCIB;
 		
 	} else if(cib_action != NULL) {
-		msg_data = handleCibMod();
+		msg_data = handleCibMod(xml_text);
 		sys_to = CRM_SYSTEM_DCIB;
 		if(msg_data == NULL)
 			all_is_good = FALSE;
@@ -351,13 +381,10 @@ do_work(ll_cluster_t * hb_cluster)
 			sys_to = CRM_SYSTEM_DC;				
 	}
 		
-	send_ipc_request(crmd_channel,
-			 msg_options,
-			 msg_data,
-			 dest_node, sys_to,
-			 crm_system_name,
-			 admin_uuid,
-			 this_msg_reference);
+	send_ipc_request(
+		crmd_channel, msg_options, msg_data,
+		dest_node, sys_to,
+		crm_system_name, admin_uuid, this_msg_reference);
 
 	return 1;
 
@@ -400,38 +427,6 @@ do_init(void)
 	return NULL;
 }
 
-void
-usage(const char *cmd, int exit_status)
-{
-	FILE *stream;
-
-	stream = exit_status ? stderr : stdout;
-
-	fprintf(stream, "usage: %s [-?Vio] command [xml_data]\n", cmd);
-
-	fprintf(stream, "Options\n");
-	fprintf(stream, "\t--%s (-%c)\tid of the object being operated on\n",
-		XML_ATTR_ID, 'i');
-	fprintf(stream, "\t--%s (-%c)\tobject type being operated on\n",
-		"obj_type", 'o');
-	fprintf(stream, "\t--%s (-%c)\tturn on debug info."
-		"  additional instance increase verbosity\n", "verbose", 'V');
-	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
-	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_ERASE, 'E');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_QUERY, 'Q');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CREATE, 'C');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_REPLACE, 'R');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_STORE, 'S');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_UPDATE, 'U');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_DELETE, 'D');
-
-	fflush(stream);
-
-	exit(exit_status);
-}
-
-const char *ournode;
 
 gboolean
 admin_msg_callback(IPC_Channel * server, void *private_data)
@@ -465,8 +460,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		buffer =(char *) msg->msg_body;
 		crm_verbose("Got xml [text=%s]", buffer);
 
-		xml_root_node =
-			find_xml_in_ipcmessage(msg, TRUE);
+		xml_root_node = find_xml_in_ipcmessage(msg, TRUE);
 
 		if (xml_root_node == NULL) {
 			crm_info(
@@ -482,8 +476,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			continue;
 		}
 
-		options = find_xml_node(xml_root_node,
-						   XML_TAG_OPTIONS);
+		options = find_xml_node(xml_root_node, XML_TAG_OPTIONS);
 		
 		result = xmlGetProp(options, XML_ATTR_RESULT);
 		if(result == NULL || strcmp(result, "ok") == 0) {
@@ -494,7 +487,16 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		
 		received_responses++;
 
-		// do stuff
+		if(strcmp(CRM_OP_QUERY, cib_action) == 0) {
+			print_xml_formatted(xml_root_node);
+			
+		} else if (strcmp(CRM_OP_ERASE, cib_action) == 0) {
+			print_xml_formatted(xml_root_node);
+		
+		} else if(cib_action != NULL) {
+			print_xml_formatted(xml_root_node);
+		
+		}
 
 		if (this_msg_reference != NULL) {
 			// in testing mode...
@@ -508,8 +510,8 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 				received_responses);
 			
 			filename[filename_len - 1] = '\0';
-			if (xmlSaveFormatFile(filename,
-					      xml_root_node->doc, 1) < 0) {
+			if (xmlSaveFormatFile(
+				    filename, xml_root_node->doc, 1) < 0) {
 				crm_crit("Could not save response %s_%s_%d.xml",
 					 this_msg_reference,
 					 result,
@@ -531,4 +533,40 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		return !hack_return_good;
 	}
 	return hack_return_good;
+}
+
+
+void
+usage(const char *cmd, int exit_status)
+{
+	FILE *stream;
+
+	stream = exit_status ? stderr : stdout;
+
+	fprintf(stream, "usage: %s [-?Vio] command\n"
+		"\twhere necessary, XML data will be expected using -X"
+		" or on STDIN if -X isnt specified\n", cmd);
+
+	fprintf(stream, "Options\n");
+	fprintf(stream, "\t--%s (-%c) <id>\tid of the object being operated on\n",
+		XML_ATTR_ID, 'i');
+	fprintf(stream, "\t--%s (-%c) <type>\tobject type being operated on\n",
+		"obj_type", 'o');
+	fprintf(stream, "\t--%s (-%c)\tturn on debug info."
+		"  additional instance increase verbosity\n", "verbose", 'V');
+	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
+	fprintf(stream, "\nCommands\n");
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_ERASE, 'E');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_QUERY, 'Q');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CREATE, 'C');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_REPLACE, 'R');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_STORE, 'S');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_UPDATE, 'U');
+	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_DELETE, 'D');
+	fprintf(stream, "\nXML data\n");
+	fprintf(stream, "\t--%s (-%c) <string>\t\n", "xml", 'X');
+
+	fflush(stream);
+
+	exit(exit_status);
 }

@@ -1,5 +1,7 @@
 #
-# Copyright (C) 2004 Andrew Beekhof
+# heartbeat: Linux-HA heartbeat code
+#
+# Copyright (C) 2001 Michael Moerz
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,15 +19,9 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-## Subdirectories
-SUBDIRS			=  common cib crmd pengine tengine admin test
-#EXTRA_DIST		= admin_cib_test.sh
+testdir			= $(libdir)/heartbeat/crmtest
 
-crmdir			= $(HA_VARLIBDIR)/$(HB_PKG)/crm
-noinst_HEADERS 	= dmalloc_wrapper.h
+#test_SCRIPTS	=	helper.sh 
 
-install-exec-local:
-	$(mkinstalldirs) $(DESTDIR)/$(crmdir)
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(crmdir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crmdir)
-	-chmod g+w $(DESTDIR)/$(crmdir)
+test_DATA 	=	helper.sh
+

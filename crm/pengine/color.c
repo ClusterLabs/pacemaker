@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.12 2004/07/23 08:34:36 andrew Exp $ */
+/* $Id: color.c,v 1.13 2004/07/30 15:31:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -163,6 +163,10 @@ has_agent(node_t *a_node, lrm_agent_t *an_agent)
 		return FALSE;
 	}
 	
+	crm_devel("Checking %d agents on %s",
+		  g_list_length(a_node->details->agents),
+		  a_node->details->uname);
+
 	slist_iter(
 		agent, lrm_agent_t, a_node->details->agents, lpc,
 
@@ -173,16 +177,16 @@ has_agent(node_t *a_node, lrm_agent_t *an_agent)
 				return TRUE;
 				
 			} else if(safe_str_eq(an_agent->class, agent->class)) {
-				if(an_agent->version <= agent->version) {
+				if(compare_version(
+					   an_agent->version, agent->version)
+				   <= 0) {
 					return TRUE;
-				} else {
-					return FALSE;
 				}
 			}
 		}
 		);
 	
-	crm_verbose("%s doesnt support version %f of %s/%s",
+	crm_verbose("%s doesnt support version %s of %s/%s",
 		    a_node->details->uname, an_agent->version,
 		    an_agent->class, an_agent->type);
 	

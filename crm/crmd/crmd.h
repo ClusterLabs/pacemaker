@@ -1,4 +1,4 @@
-/* $Id: crmd.h,v 1.7 2004/06/04 09:18:30 andrew Exp $ */
+/* $Id: crmd.h,v 1.8 2004/07/30 15:31:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -20,6 +20,11 @@
 #define CRMD__H
 
 #include <ha_msg.h>
+
+#define SYS_NAME     CRM_SYSTEM_CRMD
+#define PID_FILE     WORKING_DIR "/"SYS_NAME".pid"
+#define DAEMON_LOG   "/var/log/"SYS_NAME".log"
+#define DAEMON_DEBUG "/var/log/"SYS_NAME".debug"
 
 extern GMainLoop  *crmd_mainloop;
 

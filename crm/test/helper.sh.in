@@ -1,0 +1,150 @@
+#!/bin/bash
+
+HALIB_DIR=@libdir@/heartbeat
+HAINIT_DIR=@INITDIR@
+CRM_ERR_SHUTDOWN=0
+OUTPUT_ALL=3
+OUTPUT_NOOUT=2
+OUTPUT_NOERR=1
+OUTPUT_NONE=0
+
+function remote_cmd() {
+    user=$1
+    host=$2
+
+    shift 
+    shift
+
+    echo "Running '$*' as ${user}@${host}";
+    `which ssh` ${user}@${host} "$*"
+    return $?;
+}
+
+
+function is_state() {
+    ret=1
+    host=$1
+    state=$2
+
+    output=`remote_cmd root $host $HALIB_DIR/crmadmin -S $host | grep $state`
+
+    if [ ! -z "$output" ]; then
+	echo "$host is in $state"
+	return 0
+    fi
+    echo "$host is NOT in $state"
+    return $ret
+}
+
+function is_running() {
+    rsc=$1
+    askhost=$2
+    host=$3
+
+    if [ -z $host ]; then
+	output=`remote_cmd root $askhost $HALIB_DIR/crmadmin -W $rsc | grep -v NOT`
+    else
+	output=`remote_cmd root $askhost $HALIB_DIR/crmadmin -W $rsc | grep $host`
+    fi
+
+    if [ -z "$output" ]; then
+	if [ -z $host ]; then
+	    echo "$rsc is NOT running"
+	else
+	    echo "$rsc is NOT running on host $host"
+	fi
+	return 1
+    fi
+
+    if [ -z $host ]; then
+	echo "$rsc is running"
+    else
+	echo "$rsc is running on host $host"
+    fi
+
+    return 0
+}
+
+function is_dc() {
+    host=$1
+    output=`remote_cmd root $host $HALIB_DIR/crmadmin -S $host | grep -v S_PENDING | grep -v S_NOT_DC | grep -v S_ELECTION | grep -v S_RECOVERY`
+
+    if [ ! -z "$output" ]; then 
+	echo "$host is DC"
+	return 0
+    fi
+
+    echo "$host is NOT DC"
+
+    return 1
+}	
+
+function wait_for_state() {
+    state=$1
+    max=$2
+    host=$3
+
+    if [ -z "$host" ]; then
+	host=`remote_cmd root $host $HALIB_DIR/crmadmin -D > /dev/null`
+    fi
+
+    count=1
+    until is_state $host $state; do
+	if [ $count -gt $max ]; then
+	    echo "Attempt to reach $state on $host failed"
+	    return 1
+	fi
+	count=`expr $count + 1`
+	sleep 1
+    done
+    echo "$state reached on $host"
+    return 0
+}
+
+function cts_assert() {
+    do_cts_assert $? 0 "Assert failed - " $*
+}
+
+function cts_assert_false() {
+    do_cts_assert $? 1 "AssertFalse failed - " $*
+}
+
+function do_cts_assert() {
+    result=$1
+    expected=$2
+    shift
+    shift
+
+    if [ $result -ne $expected ]; then
+	err $*
+    fi
+}
+
+function err() {
+    echo "ERROR: $*"
+
+    if [ $CRM_ERR_SHUTDOWN -eq 1 -a ! -z $HOST ]; then
+	remote_cmd hacluster $HOST killall -9 crmd
+    fi
+
+    echo "test: FAILED"
+
+    exit 1
+}
+
+function do_cmd() {
+    quiet=$1
+    shift
+
+    if [ $quiet -eq $OUTPUT_ALL ]; then
+	$*
+    elif [ $quiet -eq $OUTPUT_NOOUT ]; then
+	$* >/dev/null
+    elif [ $quiet -eq $OUTPUT_NOERR ]; then
+	$* 2>/dev/null
+    else
+	$* 2>&1 >/dev/null
+    fi
+    return $?
+}
+

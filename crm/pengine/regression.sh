@@ -20,7 +20,6 @@
 . regression.core.sh
 
 create_mode="false"
-#create_mode="true"
 do_test simple1 "Offline	"
 do_test simple2 "Start	"
 do_test simple3 "Start 2	"
@@ -34,7 +33,6 @@ do_test simple11 "Priority (ne)"
 do_test simple12 "Priority (eq)"
 
 echo ""
-
 do_test rsc_rsc1 "Must not	"
 do_test rsc_rsc2 "Should not	"
 do_test rsc_rsc3 "Must	"
@@ -47,11 +45,17 @@ do_test rsc_rsc10 "Must (cant)"
 do_test rsc_rsc9 "2*MustNot 1*ShouldNot"
 
 echo ""
+do_test agent1 "version: lt (empty)"
+do_test agent2 "version: eq	"
+do_test agent3 "version: gt	"
+
+echo ""
 do_test attrs1 "string: eq (and)	"
 do_test attrs2 "string: lt / gt (and)"
 do_test attrs3 "string: ne (or)	"
 do_test attrs4 "string: exists	"
 do_test attrs5 "string: notexists	"
+
 
 echo ""
 do_test stopfail2 "Stop Failed - Block	"

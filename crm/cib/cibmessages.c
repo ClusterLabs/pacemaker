@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.43 2004/07/09 15:35:57 msoffen Exp $ */
+/* $Id: cibmessages.c,v 1.44 2004/07/30 15:31:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,6 +72,7 @@ cib_process_request(const char *op,
 
 	const char *verbose        = NULL;
 	const char *section        = NULL;
+	const char *id             = NULL;
 	const char *output_section = NULL;
 	xmlNodePtr failed          = NULL;
 	xmlNodePtr cib_answer      = NULL;
@@ -82,12 +83,11 @@ cib_process_request(const char *op,
 	char *new_value = NULL;
 	char *old_value = NULL;
 	int int_value = -1;
-
-	
 	
 	*result = CIBRES_OK;
 	verbose = xmlGetProp(options, XML_ATTR_VERBOSE);
 	section = xmlGetProp(options, XML_ATTR_FILTER_TYPE);
+	id      = xmlGetProp(options, XML_ATTR_FILTER_ID);
 	failed  = create_xml_node(NULL, XML_TAG_FAILED);
 
 #ifdef MSG_LOG
@@ -146,14 +146,34 @@ cib_process_request(const char *op,
 			*result = CIBRES_FAILED;
 		}
 		
-		
 	} else if (strcmp("query", op) == 0) {
 		crm_verbose("Handling a query for section=%s of the cib",
 			   section);
-		/* force a pick-up of the relevant section before
-		 * returning
-		 */
-		verbose = XML_BOOLEAN_TRUE; 
+
+		if(id != NULL) {
+			cib_answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
+	
+			set_xml_property_copy(
+				cib_answer, XML_ATTR_SECTION, section);
+			set_xml_property_copy(
+				cib_answer, "search_type", "id");
+
+			xmlAddChild(
+				cib_answer, find_entity_recursive(
+					get_object_root(
+						section, get_the_CIB()),
+					NULL, NULL, NULL, id, TRUE));
+/* 				const char *node_name, */
+/* 				const char *elem_filter_name, */
+/* 				const char *elem_filter_value, */
+			
+		} else {
+			/* grab the whole section by forcing a pick-up of
+			 * the relevant section before returning
+			 */
+			verbose = XML_BOOLEAN_TRUE;
+		}
+		
 		
 	} else if (strcmp(CRM_OP_ERASE, op) == 0) {
 		xmlNodePtr new_cib = createEmptyCib();
@@ -376,8 +396,6 @@ xmlNodePtr
 createCibFragmentAnswer(const char *section, xmlNodePtr failed)
 {
 	xmlNodePtr fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
-	
-	
 	
 	set_xml_property_copy(fragment, XML_ATTR_SECTION, section);
 

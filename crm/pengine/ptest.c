@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.28 2004/07/20 09:03:39 andrew Exp $ */
+/* $Id: ptest.c,v 1.29 2004/07/30 15:31:06 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -30,6 +30,7 @@
 #include <fcntl.h>
 
 #include <crm/common/xml.h>
+#include <crm/common/util.h>
 #include <crm/msg_xml.h>
 
 #include <crm/cib.h>
@@ -50,7 +51,7 @@ main(int argc, char **argv)
 	int lpc2 = 0;
 	int argerr = 0;
 	int flag;
-
+		
 	GListPtr resources = NULL;
 	GListPtr nodes = NULL;
 	GListPtr node_constraints = NULL;
@@ -64,7 +65,6 @@ main(int argc, char **argv)
 	char *msg_buffer = NULL;
 
 	cl_log_set_entity("ptest");
-	cl_log_enable_stderr(TRUE);
 	cl_log_set_facility(LOG_USER);
 	
 	while (1) {
@@ -90,15 +90,8 @@ main(int argc, char **argv)
     
 				break;
       
-				/* a sample test for multiple instance
-				   if (digit_optind != 0 && digit_optind != this_option_optind)
-				   printf ("digits occur in two different argv-elements.\n");
-				   digit_optind = this_option_optind;
-				   printf ("option %c\n", c);
-				*/
-      
 			case 'V':
-				printf("option %d", flag);
+				alter_debug(DEBUG_INC);
 				break;
 			default:
 				printf("?? getopt returned character code 0%o ??\n", flag);
@@ -132,18 +125,6 @@ main(int argc, char **argv)
 #ifdef MCHECK
 	mtrace();
 #endif
-	set_crm_log_level(LOG_TRACE);
-	
-/* 	crm_crit("crit %d", LOG_CRIT); */
-/* 	crm_err("err %d", LOG_ERR); */
-/* 	crm_warn("warn %d", LOG_WARNING); */
-/* 	crm_notice("notice %d", LOG_NOTICE); */
-/* 	crm_info("info %d", LOG_INFO); */
-/* 	crm_debug("debug %d", LOG_DEBUG); */
-/* 	crm_devel("devel %d", LOG_DEV); */
-/* 	crm_verbose("verbose %d", LOG_VERBOSE); */
-/* 	crm_trace("trace %d", LOG_TRACE); */
-
 
 	stage0(cib_object,
 	       &resources,

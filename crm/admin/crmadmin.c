@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.1 2004/07/27 11:21:44 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.2 2004/07/30 15:31:04 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -74,6 +74,7 @@ gboolean DO_RESOURCE      = FALSE;
 gboolean DO_ELECT_DC      = FALSE;
 gboolean DO_WHOIS_DC      = FALSE;
 gboolean DO_NODE_LIST     = FALSE;
+gboolean BE_SILENT        = FALSE;
 gboolean DO_RESOURCE_LIST = FALSE;
 enum debug DO_DEBUG       = debug_none;
 
@@ -90,7 +91,7 @@ int operation_status = 0;
 const char *sys_to = NULL;;
 const char *crm_system_name = "crmadmin";
 
-#define OPTARGS	"V?K:S:HE:DW:d:i:RN"
+#define OPTARGS	"V?K:S:HE:DW:d:i:RNs"
 
 int
 main(int argc, char **argv)
@@ -105,6 +106,7 @@ main(int argc, char **argv)
 		// Top-level Options
 		{"verbose", 0, 0, 'V'},
 		{"help", 0, 0, '?'},
+		{"silent", 0, 0, 's'},
 		{"reference", 1, 0, 0},
 
 		// daemon options
@@ -184,6 +186,9 @@ main(int argc, char **argv)
 				DO_RESET = TRUE;
 				crm_verbose("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
+				break;
+			case 's':
+				BE_SILENT = TRUE;
 				break;
 			case 'i':
 				DO_DEBUG = debug_inc;
@@ -523,11 +528,17 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			xmlNodePtr ping = find_xml_node(
 				xml_root_node, XML_CRM_TAG_PING);
 
+			const char *state = xmlGetProp(ping, "crmd_state");
+
 			printf("Status of %s@%s: %s (%s)\n",
 			       xmlGetProp(ping, XML_PING_ATTR_SYSFROM),
 			       xmlGetProp(xml_root_node, XML_ATTR_HOSTFROM),
-			       xmlGetProp(ping, "crmd_state"),
+			       state,
 			       xmlGetProp(ping, XML_PING_ATTR_STATUS));
+			
+			if(BE_SILENT && state != NULL) {
+				fprintf(stderr, "%s\n", state);
+			}
 			
 		} else if(DO_RESOURCE) {
 			do_find_resource(rsc_name, xml_root_node);
@@ -539,8 +550,13 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			do_find_node_list(xml_root_node);
 
 		} else if(DO_WHOIS_DC) {
-			printf("Designated Controller is: %s\n",
-			       xmlGetProp(xml_root_node, XML_ATTR_HOSTFROM));
+			const char *dc = xmlGetProp(
+				xml_root_node, XML_ATTR_HOSTFROM);
+			
+			printf("Designated Controller is: %s\n", dc);
+			if(BE_SILENT && dc != NULL) {
+				fprintf(stderr, "%s\n", dc);
+			}
 		}
 		
 		if (this_msg_reference != NULL) {
@@ -612,12 +628,19 @@ do_find_resource(const char *rsc, xmlNodePtr xml_node)
 			rscstates = rscstates->next;
 			
 			crm_debug("checking %s:%s for %s", target, id, rsc);
+
 			
 			if(safe_str_eq(rsc, id)){
 				printf("resource %s is running on: %s\n",
 				       rsc, target);
+				if(BE_SILENT) {
+					fprintf(stderr, "%s ", target);
+				}
 				found++;
 			}
+		}
+		if(BE_SILENT) {
+			fprintf(stderr, "\n");
 		}
 	}
 	if(found == 0) {
@@ -695,12 +718,13 @@ usage(const char *cmd, int exit_status)
 
 	stream = exit_status ? stderr : stdout;
 
-	fprintf(stream, "usage: %s [-?v] [command] [command args]\n", cmd);
+	fprintf(stream, "usage: %s [-?vs] [command] [command args]\n", cmd);
 
 	fprintf(stream, "Options\n");
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"turn on debug info. additional instances increase verbosity\n",
 		"verbose", 'V');
+	fprintf(stream, "\t--%s (-%c)\t: be very very quiet\n", "silent", 's');
 	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
 	fprintf(stream, "\nCommands\n");
 	fprintf(stream, "\t--%s (-%c) <node>\t: "

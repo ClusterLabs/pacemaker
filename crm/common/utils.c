@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.8 2004/07/27 11:45:24 andrew Exp $ */
+/* $Id: utils.c,v 1.9 2004/07/30 15:31:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,6 +26,7 @@
 
 
 #include <clplumbing/cl_log.h>
+#include <clplumbing/cl_signal.h>
 
 #include <time.h> 
 
@@ -317,4 +318,38 @@ compare_version(const char *version1, const char *version2)
 	}
 	crm_verbose("%s == %s", version1, version2);
 	return 0;
+}
+
+void
+alter_debug(int nsig) 
+{
+	int level;
+
+	CL_SIGNAL(DEBUG_INC, alter_debug);
+	CL_SIGNAL(DEBUG_DEC, alter_debug);
+	
+	switch(nsig) {
+		case DEBUG_INC:
+			level = get_crm_log_level();
+			set_crm_log_level(level+1);
+			level = get_crm_log_level();
+			fprintf(stderr, "Upped log level to %d\n", level);
+			
+			if(level > LOG_INFO) {
+				cl_log_enable_stderr(TRUE);
+			}
+			break;
+		case DEBUG_DEC:
+			level = get_crm_log_level();
+			set_crm_log_level(level-1);
+			level = get_crm_log_level();
+			fprintf(stderr, "Reduced log level to %d\n", level);
+			
+			if(level < LOG_DEBUG) {
+				cl_log_enable_stderr(FALSE);
+			}
+		default:
+			fprintf(stderr, "Unknown signal %d\n", nsig);
+			break;	
+	}
 }

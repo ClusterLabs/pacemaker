@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.6 2004/07/19 14:41:19 andrew Exp $ */
+/* $Id: xml.c,v 1.7 2004/07/30 15:31:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -363,6 +363,7 @@ find_entity_nested(xmlNodePtr parent,
 	return NULL;
 }
 
+
 void
 copy_in_properties(xmlNodePtr target, xmlNodePtr src)
 {
@@ -592,6 +593,89 @@ set_node_tstamp(xmlNodePtr a_node)
 	crm_free(since_epoch);
 }
 
+xmlNodePtr
+find_entity_recursive(xmlNodePtr xml_node,
+		      const char *node_name,
+		      const char *elem_filter_name,
+		      const char *elem_filter_value,
+		      const char *id,
+		      gboolean all)
+{
+	gboolean match = TRUE;
+	xmlNodePtr local_node = NULL, node_iter = NULL, local_child = NULL;
+	if(xml_node == NULL) {
+		return NULL;
+	}
+	
+	if(node_name != NULL
+	   && safe_str_neq((const char *)xml_node->name, node_name)) {
+		crm_devel("entity (%s) did not match node->name %s.",
+			  xmlGetNodePath(xml_node), xml_node->name);
+		match = FALSE;
+	}
+
+	if(match
+	   && id != NULL
+	   && safe_str_neq((const char*)xmlGetProp(xml_node, XML_ATTR_ID), id)) {
+		crm_devel("entity (%s) did not match id %s.",
+			  xmlGetNodePath(xml_node), id);
+		match = FALSE;
+	}
+
+	// check if any other filters apply
+	if (match && elem_filter_name != NULL && elem_filter_value != NULL) {
+		const char* child_value = (const char*)
+			xmlGetProp(xml_node, elem_filter_name);
+		
+		crm_devel("comparing (%s) with (%s) [attr_value].",
+			  child_value, elem_filter_value);
+
+		if (safe_str_neq(child_value, elem_filter_value)) {
+			crm_devel("skipping entity (%s) [attr_value].",
+				  xmlGetNodePath(xml_node));
+			match = FALSE;
+		}
+	}
+
+	if(match) {
+		crm_devel("xml node (%s) matched", xmlGetNodePath(xml_node));
+		return copy_xml_node_recursive(xml_node);
+
+	} else if(xml_node != NULL && xml_node->name != NULL) {
+		// check our children
+		node_iter = xml_node->children;
+		crm_devel("Nothing yet... checking children");	    
+		while(node_iter != NULL) {
+
+			local_child = find_entity_recursive(
+				node_iter, node_name,
+				elem_filter_name, elem_filter_value,
+				id, all);
+
+			node_iter = node_iter->next;
+
+			if(local_child == NULL) {
+				continue;
+			}
+			
+			if(local_node == NULL) {
+				local_node = local_child;
+				if(all == FALSE) {
+					break;
+				}
+				
+			} else {
+				xmlAddSibling(local_node, local_child);
+			}
+		}
+
+		return local_node;
+	}
+
+	crm_devel("Couldnt find anything appropriate for %s elem with id=%s.",
+		  node_name, id);	    
+	return NULL;
+}
 
 xmlNodePtr
 copy_xml_node_recursive(xmlNodePtr src_node)
@@ -784,4 +868,67 @@ dump_array(int log_level, const char *message, const char **array, int depth)
 		if (array[j] == NULL) break;
 		do_crm_log(log_level, __FUNCTION__,  "\t--> (%s).", array[j]);
 	}
+}
+
+int
+write_xml_file(xmlNodePtr xml_node, const char *filename) 
+{
+	int res = 0;
+	crm_debug("Writing XML out to %s", filename);
+	
+	if (xml_node == NULL) {
+		return -1;
+		
+	} else if (xml_node->doc == NULL) {
+		crm_trace("Creating doc pointer for %s", xml_node->name);
+		xmlDocPtr foo = xmlNewDoc("1.0");
+		xmlDocSetRootElement(foo, xml_node);
+		xmlSetTreeDoc(xml_node, foo);
+	}
+
+	time_t now = time(NULL);
+	char *now_str = asctime(localtime(&now));
+	set_xml_property_copy(xml_node, "last_written",now_str);
+	free(now_str);
+	
+	/* save it.
+	 * set arg 3 to 0 to disable line breaks,1 to enable
+	 * res == num bytes saved
+	 */
+	res = xmlSaveFormatFile(filename, xml_node->doc, 1);
+	
+	/* for some reason, reading back after saving with
+	 * line-breaks doesnt go real well 
+	 */
+	crm_debug("Saved %d bytes to the Cib as XML", res);
+
+	return res;
+}
+
+void
+print_xml_formatted(xmlNodePtr an_xml_node) 
+{
+	int len = 0;
+	xmlChar *buffer = NULL;
+	xmlNodePtr xml_node = copy_xml_node_recursive(an_xml_node);
+	
+	if (xml_node == NULL) {
+		return;
+		
+	} else if (xml_node->doc == NULL) {
+		crm_trace("Creating doc pointer for %s", xml_node->name);
+		xmlDocPtr foo = xmlNewDoc("1.0");
+		xmlDocSetRootElement(foo, xml_node);
+		xmlSetTreeDoc(xml_node, foo);
+	}
+
+	xmlDocDumpFormatMemory(xml_node->doc, &buffer, &len,1);
+	
+	printf("%s", buffer);
+	
+	if(buffer != NULL) {
+		xmlFree(buffer);
+	}
+
+	free_xml(xml_node);
 }

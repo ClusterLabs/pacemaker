@@ -58,15 +58,20 @@ function do_test {
 	return;
     fi
 
-    if [ "$create_mode" = "true" ]; then
+    if [ "$create_mode" = "true" -a ! -f $expected ]; then
 	cp "$output" "$expected"
     fi
 
-    diff $diff_opts -q $expected $output >/dev/null
-    rc=$?
+    if [ -f $expected ]; then
+	diff $diff_opts -q $expected $output >/dev/null
+	rc=$?
+    fi
 
     if [ "$create_mode" = "true" ]; then
 	echo "Test $name	($base)...	Created expected output" 
+    elif [ ! -f $expected ]; then
+	echo "==== Raw results for test ($base) ====" >> $failed
+	cat $output 2>/dev/null >> $failed
     elif [ "$rc" = 0 ]; then
 	echo "Test $name	($base)...	Passed";
     elif [ "$rc" = 1 ]; then

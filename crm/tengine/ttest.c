@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.8 2004/07/15 16:29:21 msoffen Exp $ */
+/* $Id: ttest.c,v 1.9 2004/07/30 15:31:07 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -34,7 +34,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?i:o:D:C:S:HA:U:M:I:EWRFt:m:a:d:w:c:r:p:s:"
+#define OPTARGS	"V?"
 
 #include <getopt.h>
 #include <glib.h>
@@ -47,12 +47,11 @@ extern gboolean initialize_graph(void);
 int
 main(int argc, char **argv)
 {
-	int argerr = 0;
 	int flag;
+	int argerr = 0;
 	xmlNodePtr xml_graph = NULL;
   
 	cl_log_set_entity("ttest");
-	cl_log_enable_stderr(TRUE);
 	cl_log_set_facility(LOG_USER);
 
 	while (1) {
@@ -86,7 +85,7 @@ main(int argc, char **argv)
 				*/
       
 			case 'V':
-				printf("option %d", flag);
+				alter_debug(DEBUG_INC);
 				break;
 			default:
 				printf("?? getopt returned character code 0%o ??\n", flag);

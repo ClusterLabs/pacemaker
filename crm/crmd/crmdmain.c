@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.22 2004/07/09 15:40:08 msoffen Exp $ */
+/* $Id: crmdmain.c,v 1.23 2004/07/30 15:31:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,10 +47,8 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-const char* crm_system_name = CRM_SYSTEM_CRMD;
-#define PID_FILE     WORKING_DIR"/crm.pid"
-#define OPTARGS	"skrh"
-
+const char* crm_system_name = SYS_NAME;
+#define OPTARGS	"skrhV"
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
@@ -62,19 +60,24 @@ GMainLoop*  crmd_mainloop = NULL;
 int
 main(int argc, char ** argv)
 {
-
     int	req_restart = FALSE;
-    int	req_status = FALSE;
-    int	req_stop = FALSE;
-    int	argerr = 0;
+    int	req_status  = FALSE;
+    int	req_stop    = FALSE;
+    int	argerr      = 0;
     int flag;
     
     cl_log_set_entity(crm_system_name);
-    cl_log_enable_stderr(TRUE);
+    cl_log_set_logfile(DAEMON_LOG);
+    cl_log_set_debugfile(DAEMON_DEBUG);
     cl_log_set_facility(LOG_USER);
+    CL_SIGNAL(DEBUG_INC, alter_debug);
+    CL_SIGNAL(DEBUG_DEC, alter_debug);
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
+			case 'V':
+				alter_debug(DEBUG_INC);
+				break;
 			case 's':		/* Status */
 				req_status = TRUE;
 				break;

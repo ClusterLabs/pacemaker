@@ -34,10 +34,6 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-#define PID_FILE     WORKING_DIR"/crm.pid"
-#define DAEMON_LOG   LOG_DIR"/crm.log"
-#define DAEMON_DEBUG LOG_DIR"/crm.debug"
-
 extern gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
 extern void crmd_ha_input_destroy(gpointer user_data);
 
@@ -201,19 +197,10 @@ do_startup(long long action,
 	int was_error = 0;
 	int interval = 1; // seconds between DC heartbeats
 
-
-	
-
 	fsa_input_register = 0; // zero out the regester
 	
 	crm_info("Register PID");
 	register_pid(PID_FILE, FALSE, crm_shutdown);
-	
-	cl_log_set_logfile(DAEMON_LOG);
-/*	if (crm_verbose()) { */
-	cl_log_set_debugfile(DAEMON_DEBUG);
-/*  		cl_log_enable_stderr(FALSE); 
-		} */
 	
 	ipc_clients = g_hash_table_new(&g_str_hash, &g_str_equal);
 	
@@ -231,9 +218,9 @@ do_startup(long long action,
 	
 	if(was_error == 0) {
 		crm_info("Init server comms");
-		was_error = init_server_ipc_comms(CRM_SYSTEM_CRMD,
-						  crmd_client_connect,
-						  default_ipc_input_destroy);
+		was_error = init_server_ipc_comms(
+			CRM_SYSTEM_CRMD, crmd_client_connect,
+			default_ipc_input_destroy);
 	}
 	
 	if (was_error == 0) {

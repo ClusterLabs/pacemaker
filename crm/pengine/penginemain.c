@@ -1,4 +1,4 @@
-/* $Id: penginemain.c,v 1.16 2004/06/02 15:25:11 andrew Exp $ */
+/* $Id: penginemain.c,v 1.17 2004/07/30 15:31:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,7 +37,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 #define SYS_NAME CRM_SYSTEM_PENGINE
-#define OPTARGS	"skrh"
+#define OPTARGS	"skrhV"
 #define PID_FILE     WORKING_DIR "/"SYS_NAME".pid"
 #define DAEMON_LOG   "/var/log/"SYS_NAME".log"
 #define DAEMON_DEBUG   "/var/log/"SYS_NAME".debug"
@@ -59,20 +59,20 @@ main(int argc, char ** argv)
     int	req_stop = FALSE;
     int	argerr = 0;
     int flag;
-
+    
     cl_log_set_entity(crm_system_name);
-    cl_log_enable_stderr(TRUE);
     cl_log_set_facility(LOG_USER);
     
+    cl_log_set_logfile(DAEMON_LOG);
+    cl_log_set_debugfile(DAEMON_DEBUG);
+    CL_SIGNAL(DEBUG_INC, alter_debug);
+    CL_SIGNAL(DEBUG_DEC, alter_debug);
 
-    if (0)
-    {
-		send_ipc_message(NULL, NULL);
-    }
-    
-    
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
+			case 'V':
+				alter_debug(DEBUG_INC);
+				break;
 			case 's':		/* Status */
 				req_status = TRUE;
 				break;
@@ -133,12 +133,7 @@ init_start(void)
 		crm_crit("already running: [pid %ld].", pid);
 		exit(LSB_EXIT_OK);
     }
-  
-    cl_log_set_logfile(DAEMON_LOG);
-//    if (crm_verbose()) {
-    cl_log_set_debugfile(DAEMON_DEBUG);
-//    }
-
+    
     /* change the logging facility to the one used by heartbeat daemon */
     hb_fd = ll_cluster_new("heartbeat");
     
@@ -224,3 +219,4 @@ pengine_shutdown(int nsig)
 		exit(LSB_EXIT_OK);
     }
 }
+

@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.30 2004/07/09 15:35:57 msoffen Exp $ */
+/* $Id: cibio.c,v 1.31 2004/07/30 15:31:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -334,10 +334,6 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 	int error_code = 0;
 	xmlNodePtr saved_cib = get_the_CIB();
 	const char *filename_bak = CIB_BACKUP; // calculate
-	xmlDocPtr foo;
-	time_t now;
-	char *now_str = NULL;
-	
 
 	if (initializeCib(new_cib) == TRUE) {
 		int res = moveFile(filename, filename_bak, FALSE, NULL);
@@ -348,32 +344,8 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 			error_code = -1;
 		} else {
 			crm_info("Writing CIB out to %s", CIB_FILENAME);
-	    
-			if (new_cib->doc == NULL) {
-				foo = xmlNewDoc("1.0");
-				xmlDocSetRootElement(foo, new_cib);
-				xmlSetTreeDoc(new_cib,foo);
-			}
-
-			now = time(NULL);
-			now_str = asctime(localtime(&now));
-			set_xml_property_copy(new_cib, "last_written",now_str);
-			free(now_str);
+			res = write_xml_file(new_cib, CIB_FILENAME);
 			
-			/* save it.
-			 * set arg 3 to 0 to disable line breaks,1 to enable
-			 * res == num bytes saved
-			 */
-			res = xmlSaveFormatFile(filename,
-						new_cib->doc,
-						1);
-			
-			/* for some reason, reading back after saving with
-			 * line-breaks doesnt go real well 
-			 */
-			crm_info("Saved %d bytes to the Cib as XML",
-				 res);
-	    
 			if (res < 0) {
 				// assume 0 is good
 				if (moveFile(filename_bak,
@@ -410,7 +382,7 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 		error_code = -5;
 	}
 
-// Make sure memory is cleaned up appropriately
+	// Make sure memory is cleaned up appropriately
 	if (error_code != 0) {
 		crm_trace("Freeing new CIB %p", new_cib);
 		free_xml(new_cib);

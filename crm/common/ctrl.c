@@ -1,4 +1,4 @@
-/* $Id: ctrl.c,v 1.4 2004/07/09 15:37:41 msoffen Exp $ */
+/* $Id: ctrl.c,v 1.5 2004/07/30 15:31:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,7 +48,6 @@ register_pid(const char *pid_file,
 	     gboolean do_fork,
 	     void (*shutdown)(int nsig))
 {
-	int	j;
 	long	pid;
 	FILE *	lockfd;
 
@@ -74,11 +73,13 @@ register_pid(const char *pid_file,
 	}
 
 	umask(022);
-
+/*
+	int	j;
 	for (j=0; j < 3; ++j) {
 		close(j);
 		(void)open("/dev/null", j == 0 ? O_RDONLY : O_RDONLY);
 	}
+*/
 //	CL_IGNORE_SIG(SIGINT);
 //	CL_IGNORE_SIG(SIGHUP);
 	CL_SIGNAL(SIGTERM, shutdown);

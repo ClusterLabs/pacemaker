@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.32 2004/07/20 09:03:39 andrew Exp $ */
+/* $Id: pengine.h,v 1.33 2004/07/30 15:31:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -123,7 +123,7 @@ struct rsc_to_node_s {
 struct lrm_agent_s { 
 		const char *class;
 		const char *type;
-		float version;
+		const char *version;
 };
 
 enum pe_stop_fail {

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.19 2004/07/20 09:03:39 andrew Exp $ */
+/* $Id: unpack.c,v 1.20 2004/07/30 15:31:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -270,7 +270,7 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->agent		= crm_malloc(sizeof(lrm_agent_t));
 		new_rsc->agent->class	= xmlGetProp(xml_obj, "class");
 		new_rsc->agent->type	= xmlGetProp(xml_obj, "type");
-		new_rsc->agent->version	= atof(version?version:"0.0");
+		new_rsc->agent->version	= version?version:"0.0";
 		new_rsc->priority	= atof(priority?priority:"0.0"); 
 		new_rsc->effective_priority = new_rsc->priority;
 		new_rsc->candidate_colors   = NULL;
@@ -558,8 +558,14 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 		agent->type  = xmlGetProp(xml_agent, "type");
 		version      = xmlGetProp(xml_agent, "version");
 
-		agent->version = atof(version?version:"0.0");
-		
+		agent->version = version?version:"0.0";
+
+		crm_trace("Adding agent %s/%s v%s to node %s",
+			  agent->class,
+			  agent->type,
+			  agent->version,
+			  node->details->uname);
+			  
 		node->details->agents = g_list_append(
 			node->details->agents, agent);
 		
