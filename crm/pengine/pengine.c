@@ -94,20 +94,6 @@ GSListPtr match_attrs(xmlNodePtr attr_exp, GSListPtr node_list);
 gboolean update_runnable(GSListPtr actions);
 GSListPtr create_action_set(action_t *action);
 
-/*
-  GSListPtr rsc_list = NULL; 
-GSListPtr node_list = NULL;
-GSListPtr node_cons_list = NULL;
-GSListPtr rsc_cons_list = NULL;
-GSListPtr action_list = NULL;
-GSListPtr action_set_list = NULL;
-GSListPtr action_cons_list = NULL;
-GSListPtr colors = NULL;
-GSListPtr stonith_list = NULL;
-GSListPtr shutdown_list = NULL;
-color_t *current_color = NULL;
-xmlNodePtr xml_set_of_sets = NULL;
-*/
 color_t *no_color = NULL;
 int max_valid_nodes = 0;
 int order_id = 1;
@@ -140,6 +126,12 @@ stage0(xmlNodePtr cib,
 	xmlNodePtr cib_resources   = get_object_root("resources",   cib);
 	xmlNodePtr cib_constraints = get_object_root("constraints", cib);
 
+	/* reset remaining global variables */
+	no_color = NULL;
+	max_valid_nodes = 0;
+	order_id = 1;
+	action_id = 1;
+	
 	unpack_nodes(safe_val(NULL, cib_nodes, children), nodes);
 
 	unpack_resources(safe_val(NULL, cib_resources, children),
@@ -207,7 +199,7 @@ stage2(GSListPtr sorted_rscs, GSListPtr sorted_nodes, GSListPtr *colors)
 	
 	// Set initial color
 	// Set color.candidate_nodes = all active nodes
-	no_color = create_color(colors, NULL, NULL);
+	no_color = create_color(NULL, NULL, NULL);
 	current_color = create_color(colors, sorted_nodes, sorted_rscs);
 	
 	// Set resource.color = color (all resources)
@@ -330,11 +322,19 @@ stage5(GSListPtr resources)
 		if(safe_val(NULL, rsc, stop) == NULL
 		   || safe_val(NULL, rsc, start) == NULL) {
 			// error
+			cl_log(LOG_ERR,
+			       "Either start action (%p) or stop action (%p) were not defined",
+			       safe_val(NULL, rsc, stop),
+			       safe_val(NULL, rsc, start));
 			continue;
 		}
 		if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL) {
 			rsc->stop->node = safe_val(NULL, rsc, cur_node);
 			rsc->start->node = NULL;
+			cl_log(LOG_DEBUG,
+			       "Stop resource %s (%s)",
+			       safe_val(NULL, rsc, id),
+			       safe_val5(NULL, rsc, stop, node, details, id));
 			
 		} else if(safe_str_eq(safe_val4(NULL, rsc, cur_node, details, id),
 				      safe_val6(NULL, rsc, color ,details,
@@ -354,11 +354,21 @@ stage5(GSListPtr resources)
 			rsc->stop->optional = TRUE;
 			rsc->start->node = safe_val4(NULL, rsc, color,
 						     details, chosen_node);
+
+			cl_log(LOG_DEBUG,
+			       "Start resource %s (%s)",
+			       safe_val(NULL, rsc, id),
+			       safe_val5(NULL, rsc, start, node, details, id));
 			
 		} else {
 			rsc->stop->node = safe_val(NULL, rsc, cur_node);
 			rsc->start->node = safe_val4(NULL, rsc, color,
 						     details, chosen_node);
+			cl_log(LOG_DEBUG,
+			       "Move resource %s (%s -> %s)",
+			       safe_val(NULL, rsc, id),
+			       safe_val5(NULL, rsc, stop, node, details, id),
+			       safe_val5(NULL, rsc, start, node, details, id));
 		}
 
 		if(rsc->stop->node != NULL) {
@@ -892,7 +902,7 @@ unpack_status(xmlNodePtr status,
 		xmlNodePtr attrs = find_xml_node(status, "attributes");
 
 		lrm_state = find_xml_node(lrm_state, "lrm_resources");
-		lrm_state = find_xml_node(lrm_state, "rsc_state");
+		lrm_state = find_xml_node(lrm_state, "lrm_resource");
 		status = status->next;
 
 		pdebug("Processing node %s", id);
@@ -1093,7 +1103,7 @@ choose_color(resource_t *lh_resource, GSListPtr candidate_colors)
 		
 		lh_resource->candidate_colors = sorted_colors;
 	
-		pdebug(			      "Choose a color from %d possibilities",
+		pdebug("Choose a color from %d possibilities",
 			      g_slist_length(sorted_colors));
 	}
 
@@ -1302,7 +1312,7 @@ update_node_weight(rsc_to_node_t *cons, char *id, GSListPtr nodes)
 		return TRUE;
 	}
 	
-	pdebug(		      "Constraint %s: node %s weight %s %f.",
+	pdebug("Constraint %s: node %s weight %s %f.",
 		      cons->id,
 		      node_rh->details->id,
 		      modifier2text(cons->modifier),
@@ -1334,11 +1344,23 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
 	pdebug("here %s", __FUNCTION__);
 	
 	while(lrm_state != NULL) {
-		const char *id    = xmlGetProp(lrm_state, "id");
-		const char *rsc_id    = xmlGetProp(lrm_state, "rsc_id");
-		const char *node_id   = xmlGetProp(lrm_state, "node_id");
-		const char *rsc_state = xmlGetProp(lrm_state, "rsc_state");
+		const char *rsc_id    = xmlGetProp(lrm_state, "id");
+		const char *node_id   = xmlGetProp(lrm_state, "op_node");
+		const char *rsc_state = xmlGetProp(lrm_state, "state");
 		resource_t *rsc_lh = pe_find_resource(rsc_list, rsc_id);
+
+		pdebug("[%s] Processing %s on %s (%s)", lrm_state->name, rsc_id, node_id, rsc_state);
+
+		lrm_state = lrm_state->next;
+
+		if(rsc_lh == NULL) {
+			cl_log(LOG_ERR,
+			       "Could not find a match for resource %s in %s's status section",
+			       rsc_id, node_id);
+			continue;
+		}
+		
+		
 		rsc_lh->cur_node = node;
 
 		node->details->running_rsc =
@@ -1352,11 +1374,10 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
 		
 		if((safe_str_eq(rsc_state, "starting"))
 		   || (safe_str_eq(rsc_state, "started"))) {
-			
 			node_t *node_rh;
 			rsc_to_node_t *new_cons =
 				cl_malloc(sizeof(rsc_to_node_t));
-			new_cons->id = cl_strdup(id); // genereate one
+			new_cons->id = cl_strdup("create_me"); // genereate one
 			new_cons->weight = 100.0;
 			new_cons->modifier = inc;
 			
@@ -1375,7 +1396,6 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
 			// do soemthing
 		} // else no preference
 
-		lrm_state = lrm_state->next;
 	}
 	return TRUE;
 }
@@ -1687,7 +1707,8 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 	
 	// filter out nodes with a negative weight
 	filter_nodes(lh_resource);
-  
+
+	
 	/* Choose a color from the candidates or,
 	 *  create a new one if no color is suitable 
 	 * (this may need modification pending further napkin drawings)
@@ -1733,6 +1754,8 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 	pdebug_action(print_resource("Colored", lh_resource, FALSE));
 }
 
+FILE *pemsg_strm = NULL;
+
 gboolean
 process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 {
@@ -1742,6 +1765,15 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 	const char *ref = xmlGetProp(msg, XML_ATTR_REFERENCE);
 
 	CRM_DEBUG("Processing %s op (ref=%s)...", op, ref);
+
+	if(pemsg_strm == NULL) {
+		pemsg_strm = fopen("/tmp/pemsg.log", "w");
+	}
+
+	char *msg_buffer = dump_xml_node(msg, FALSE);
+	fprintf(pemsg_strm, "%s: %s\n", "[in ]", msg_buffer);
+	fflush(pemsg_strm);
+	cl_free(msg_buffer);
 	
 	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
 
@@ -1757,8 +1789,14 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 		
 	} else if(strcmp(op, "pecalc") == 0) {
 		xmlNodePtr input_cib = find_xml_node(msg, XML_TAG_CIB);
-		if (send_ipc_reply(sender, msg,
-				   do_calculations(input_cib)) ==FALSE) {
+		xmlNodePtr output = do_calculations(input_cib);
+
+		char *msg_buffer = dump_xml_node(output, FALSE);
+		fprintf(pemsg_strm, "%s: %s\n", "[out]", msg_buffer);
+		fflush(pemsg_strm);
+		cl_free(msg_buffer);
+
+		if (send_ipc_reply(sender, msg, output) ==FALSE) {
 
 			cl_log(LOG_WARNING,
 			       "Answer could not be sent");
