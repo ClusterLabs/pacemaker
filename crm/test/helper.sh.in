@@ -42,12 +42,12 @@ while test "$done" = "0"; do
 	--stderr  | -e)	OUTPUT_STDERR=1; shift;;
 	--verbose | -v)	OUTPUT_CMDS=1; shift;;
 
-	--init  | -i)	INIT_USER=$2; shift;;
-	--admin | -a)	ADMIN_USER=$2; shift;;
-	--crmd  | -c)	CRMD_USER=$2; shift;;
+	--init  | -i)	INIT_USER=$2; shift 2;;
+	--admin | -a)	ADMIN_USER=$2; shift 2;;
+	--crmd  | -c)	CRMD_USER=$2; shift 2;;
 
-	--node1  | -1)	test_node_1=$2; shift;;
-	--node2  | -2)	test_node_2=$2; shift;;
+	--node1  | -1)	test_node_1=$2; shift 2;;
+	--node2  | -2)	test_node_2=$2; shift 2;;
 
 	"") done=1;;
 	*) echo "unknown option: $1"; exit 1;;
@@ -173,17 +173,26 @@ function make_resource()
     type=$4
     priority=$5
     version=$6
+
+    shift 6
+    
+    args=$*
+
     uuid=`uuidgen`
     
     node_xml="'<resource id=\"${id}\" class=\"${class}\" type=\"${type}\""
 
-    if [ ! -z $version ]; then
+    if [ ! -z $version -a "x$version" != "x-" ]; then
 	node_xml="$node_xml version=${version}\""
     fi
-    if [ ! -z $priority ]; then
+    if [ ! -z $priority -a "x$priority" != "x-" ]; then
 	node_xml="$node_xml priority=${priority}\""
     fi
-    node_xml="$node_xml />'";
+    node_xml="$node_xml >";
+    if [ ! -z "$args" -a "x$args" != "x-" ]; then
+	node_xml="$node_xml <instance_attributes><rsc_parameters>${args}</rsc_parameters></instance_attributes>"
+    fi
+    node_xml="$node_xml </resource>'";
     
     remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o resource -X $node_xml"
 }

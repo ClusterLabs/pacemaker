@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.16 2004/08/03 09:05:47 andrew Exp $ */
+/* $Id: crm.h,v 1.17 2004/08/13 21:22:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,13 +42,13 @@
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
-#define CRM_VERSION	"0.1"
+#define CRM_VERSION	"0.5"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
 #define DOT_ALL_FSA_INPUTS	1
-//#define FSA_TRACE		1
-#define USE_FAKE_LRM		1
+#define FSA_TRACE		1
+//#define USE_FAKE_LRM		1
 
 /* Sub-systems */
 #define CRM_SYSTEM_DC		"dc"

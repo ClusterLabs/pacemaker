@@ -28,7 +28,7 @@ do_cmd remote_cmd $INIT_USER $test_node_1 "killall -q9 heartbeat crmd ccm lrmd"
 do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f $HAVAR_DIR/crm/cib*.xml"
 
 # start HA anew
-do_cmd remote_cmd $INIT_USER $test_node_1 $HAINIT_DIR/heartbeat start
+do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat "-M" '2>&1 >/dev/null'
 do_cmd echo "wait for HA to start"
 sleep 20
 
@@ -47,8 +47,10 @@ cts_assert "S_IDLE not reached on $test_node_1 after CIB erase"
 
 # Create the CIB for this test and wait for all transitions to complete
 do_cmd make_node $test_node_1 $test_node_1
-do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr
-do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr
+args="<nvpair name=\"1\" value=\"192.168.9.61\"/>"
+do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - $args
+args="<nvpair name=\"1\" value=\"192.168.9.62\"/>"
+do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - $args
 do_cmd make_constraint $test_node_1 rsc1 can
 do_cmd make_constraint $test_node_1 rsc2 can
 do_cmd wait_for_state S_IDLE 10 $test_node_1 

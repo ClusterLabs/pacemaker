@@ -194,7 +194,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	next_state = starting_state;
 
 #ifdef FSA_TRACE
-	crm_verbose("FSA invoked with Cause: %s\n\tState: %s, Input: %s",
+	crm_verbose("FSA invoked with Cause: %s\tState: %s, Input: %s",
 		   fsa_cause2string(cause),
 		   fsa_state2string(cur_state),
 		   fsa_input2string(cur_input));
@@ -205,6 +205,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		dot_strm = fopen("/tmp/live.dot", "w");
 		fprintf(dot_strm, "%s", dot_intro);
 	}
+	fprintf(dot_strm,
+		"\t// FSA invoked: Cause=%s\tState=%s\tInput=%s\n",
+		   fsa_cause2string(cause),
+		   fsa_state2string(cur_state),
+		   fsa_input2string(cur_input));
+
+	fflush(dot_strm);
 #endif
 	/*
 	 * Process actions in order of priority but do only one
@@ -448,9 +455,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			fprintf(dot_strm, "\t(result=%s)\n",
 				fsa_input2string(next_input));
 #endif
+#ifdef FSA_TRACE
 			crm_verbose("Result of action %s was %s",
 				   fsa_action2string(A_MSG_PROCESS),
 				   fsa_input2string(next_input));
+#endif
 			
 			/* Error checking and reporting */
 		} else if(cur_input != I_NULL && is_set(actions, A_NOTHING)) {

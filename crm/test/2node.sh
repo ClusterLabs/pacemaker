@@ -35,7 +35,8 @@ do_cmd remote_cmd $INIT_USER $test_node_2 "killall -q9 heartbeat ccm lrmd crmd"
 do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f $HAVAR_DIR/crm/cib*.xml"
 do_cmd remote_cmd $INIT_USER $test_node_2 "rm -f $HAVAR_DIR/crm/cib*.xml"
 
-do_cmd remote_cmd $INIT_USER $test_node_1 $HAINIT_DIR/heartbeat start
+do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M
+#do_cmd remote_cmd $INIT_USER $test_node_1 $HAINIT_DIR/heartbeat start
 do_cmd echo "wait for HA to start"
 sleep 20
 
@@ -56,8 +57,8 @@ cts_assert "S_IDLE not reached on $test_node_1 after CIB erase"
 # Create the CIB for this test and wait for all transitions to complete
 do_cmd make_node $test_node_1 $test_node_1
 do_cmd make_node $test_node_1 $test_node_2
-do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr
-do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr
+do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr "<nvpair name=\"1\" value=\"192.168.6.1\">"
+do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr "<nvpair name=\"1\" value=\"192.168.6.2\">"
 #do_cmd make_constraint $test_node_1 rsc1 can
 
 uuid1=`uuidgen`
@@ -71,7 +72,7 @@ node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\">
 	  <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_1}\"/>
 	</rule>
       </rsc_location>'"
-make_constraint_adv $test_node_1 $node_xml
+do_cmd make_constraint_adv $test_node_1 $node_xml
 
 #do_cmd make_constraint $test_node_1 rsc2 can
 uuid1=`uuidgen`
@@ -80,12 +81,12 @@ uuid3=`uuidgen`
 rsc=rsc2
     
 node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\">
-        <rule id=\"${uuid2}\" result=\"can\"/>
-	<rule id=\"${uuid3}\" score=\"1000\" boolean_op=\"or\">
-	  <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_2}\"/>
-	</rule>
-      </rsc_location>'"
-make_constraint_adv $test_node_1 $node_xml
+	        <rule id=\"${uuid2}\" result=\"can\"/>
+		<rule id=\"${uuid3}\" score=\"1000\" boolean_op=\"or\">
+		   <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_2}\"/>
+		</rule>
+	   </rsc_location>'"
+do_cmd make_constraint_adv $test_node_1 $node_xml
 
 do_cmd wait_for_state S_IDLE 10 $test_node_1 
 cts_assert "S_IDLE not reached on $test_node_1 (CIB create)!"
@@ -108,7 +109,8 @@ cts_assert "rsc1 NOT running on $test_node_1"
 do_cmd is_running rsc2 $test_node_1 $test_node_1
 cts_assert "rsc2 NOT running on $test_node_1"
 
-do_cmd remote_cmd $INIT_USER $test_node_2 $HAINIT_DIR/heartbeat start
+do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat -M
+#do_cmd remote_cmd $INIT_USER $test_node_2 $HAINIT_DIR/heartbeat start
 do_cmd echo "wait for HA to start on $test_node_2"
 sleep 20
 

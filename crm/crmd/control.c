@@ -555,11 +555,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 		      hb_cluster,  // usrdata 
 		      cleanup_method);
 
-	/* it seems we need to poke the message receiving stuff in order for it to
-	 *    start seeing messages.  Its like it gets blocked or something.
-	 */
-	dispatch_method(0, hb_cluster);
-
 	return TRUE;
     
 }

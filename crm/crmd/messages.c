@@ -904,8 +904,23 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 		
 	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_LRMD) == 0) {
 
-		do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE,
-			      fsa_state, I_MESSAGE, action);
+#ifdef FSA_TRACE
+		crm_verbose("Invoking action %s (%.16llx)",
+			    fsa_action2string(A_LRM_INVOKE),
+			    A_LRM_INVOKE);
+#endif
+
+		enum crmd_fsa_input next_input =
+			do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE,
+				      fsa_state, I_MESSAGE, action);
+
+		// todo: feed this back in for anything != I_NULL
+		
+#ifdef FSA_TRACE
+		crm_verbose("Result of action %s was %s",
+			    fsa_action2string(A_LRM_INVOKE),
+			    fsa_input2string(next_input));
+#endif
 		
 	} else {
 		crm_err("Unknown Sub-system (%s)... discarding message.",

@@ -50,8 +50,6 @@ void do_update_resource(
 enum crmd_fsa_input do_lrm_rsc_op(
 	lrm_rsc_t *rsc, char *rid, const char *operation, xmlNodePtr msg);
 
-enum crmd_fsa_input do_lrm_monitor(lrm_rsc_t *rsc);
-
 enum crmd_fsa_input do_fake_lrm_op(gpointer data);
 
 GHashTable *xml2list(xmlNodePtr parent, const char **attr_path, int depth);
@@ -62,7 +60,7 @@ const char *rsc_path[] =
 	"rsc_op",
 	"resource",
 	"instance_attributes",
-	"parameters"
+	"rsc_parameters"
 };
 
 
@@ -340,7 +338,7 @@ do_lrm_invoke(long long action,
 	enum crmd_fsa_input next_input = I_NULL;
 	xmlNodePtr msg;
 	const char *operation = NULL;
-	char *rid;
+	char rid[64];
 	const char *id_from_cib = NULL;
 	const char *crm_op = NULL;
 	lrm_rsc_t *rsc = NULL;
@@ -356,14 +354,29 @@ do_lrm_invoke(long long action,
 	msg = (xmlNodePtr)data;
 		
 	operation = get_xml_attr_nested(
-		msg, rsc_path, DIMOF(rsc_path) -3, XML_ATTR_OP, TRUE);
-	
+		msg, rsc_path, DIMOF(rsc_path) -3, XML_LRM_ATTR_TASK, TRUE);
+
+//	xmlNodePtr tmp = find_xml_node_nested(msg, rsc_path, DIMOF(rsc_path) -3);
+//	operation = xmlGetProp(tmp, XML_LRM_ATTR_TASK);
+
+	if(operation == NULL) {
+		crm_err("No value for %s in message at level %d.",
+			XML_LRM_ATTR_TASK, DIMOF(rsc_path) -3);
+		return I_NULL;
+	}
 	
 	id_from_cib = get_xml_attr_nested(
 		msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_ID, TRUE);
+
+	if(id_from_cib == NULL) {
+		crm_err("No value for %s in message at level %d.",
+			XML_ATTR_ID, DIMOF(rsc_path) -2);
+		return I_NULL;
+	}
 	
 	// only the first 16 chars are used by the LRM
 	strncpy(rid, id_from_cib, 64);
+	rid[63] = 0;
 	
 	crm_op = get_xml_attr(msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
 	
@@ -380,9 +393,6 @@ do_lrm_invoke(long long action,
 		free_xml(data);
 		free_xml(reply);
 
-	} else if(operation != NULL && strcmp(operation, "monitor") == 0) {
-		next_input = do_lrm_monitor(rsc);
-		
 	} else if(operation != NULL) {
 		next_input = do_lrm_rsc_op(rsc, rid, operation, msg);
 		
@@ -415,19 +425,15 @@ do_lrm_rsc_op(
 		
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(
 			fsa_lrm_conn, rid);
-
-		
-
-
 	}
 	
 	if(rsc == NULL) {
 		crm_err("Could not add resource to LRM");
 		return I_FAIL;
 	}
-	
+
 	// now do the op
-	crm_verbose("performing op %s...", operation);
+	crm_info("performing op %s... on %s", operation, rid);
 	op = g_new(lrm_op_t, 1);
 	op->op_type   = operation;
 	op->params    = xml2list(msg, rsc_path, DIMOF(rsc_path));
@@ -448,7 +454,9 @@ do_lrm_rsc_op(
 		op->target_rc = CHANGED;
 		int monitor_call_id = rsc->ops->perform_op(rsc, op);
 		if(monitor_call_id < 0) {
-			// just so its used
+			/* just so its used, eventually this needs to be
+			 * recored so that we can stop it eventually
+			 */
 		}
 	}
 
@@ -466,7 +474,7 @@ xml2list(xmlNodePtr parent, const char**attr_path, int depth)
 	xmlNodePtr nvpair_list =
 		find_xml_node_nested(parent, attr_path, depth);
 	
-	if(nvpair_list != NULL){
+	while(nvpair_list != NULL){
 		node_iter = nvpair_list->children;
 		while(node_iter != NULL) {
 			
@@ -483,6 +491,7 @@ xml2list(xmlNodePtr parent, const char**attr_path, int depth)
 			
 			node_iter = node_iter->next;
 		}
+		nvpair_list=nvpair_list->next;
 	}
 	
 	return nvpair_hash;

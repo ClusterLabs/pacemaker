@@ -436,6 +436,12 @@ fsa_action2string(long long action)
 		case A_LRM_CONNECT:
 			actionAsText = "A_LRM_CONNECT";
 			break;
+		case A_LRM_EVENT:
+			actionAsText = "A_LRM_EVENT";
+			break;
+		case A_LRM_INVOKE:
+			actionAsText = "A_LRM_INVOKE";
+			break;
 		case A_LRM_DISCONNECT:
 			actionAsText = "A_LRM_DISCONNECT";
 			break;
