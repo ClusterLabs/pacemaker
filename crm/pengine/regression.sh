@@ -19,54 +19,80 @@
 
 io_dir=testcases
 diff_opts="--ignore-all-space  --minimal"
+
+# zero out the error log
 > regression.failed
 
 function do_test {
 
     base=$1;
     name=$2;
-    input=$io_dir/${base}.in
+    input=$io_dir/${base}.xml
     output=$io_dir/${base}.out
     expected=$io_dir/${base}.exp
 
     if [ ! -f $input ]; then
-	echo "Test $name ($base)...	Error (no input: $input)";
+	echo "Test $name	($base)...	Error (no input: $input)";
 	return;
     fi
 
-    if [ ! -f $expected ]; then
-	echo "Test $name ($base)...	Error (expected output: $expected)";
+    if [ "$create_mode" != "true" -a ! -f $expected ]; then
+	echo "Test $name	($base)...	Error (expected output: $expected)";
 	return;
     fi
 
     ./ptest < $input 2>/dev/null 2>/dev/null > $output
 
-    if [ ! -f $output ]; then
-	echo "Test $name ($base)...	Error (pe output)";
+    if [ ! -s $output ]; then
+	echo "Test $name	($base)...	Error (pe output)";
+	rm $output
 	return;
     fi
 
     ./fix_xml.pl $output
 
-    if [ ! -f $output ]; then
-	echo "Test $name ($base)...	Error (fixed output)";
+    if [ ! -s $output ]; then
+	echo "Test $name	($base)...	Error (fixed output)";
+	rm $output
 	return;
+    fi
+
+    if [ "$create_mode" = "true" ]; then
+	cp "$output" "$expected"
     fi
 
     diff $diff_opts -q $expected $output
     rc=$?
 
     if [ "$rc" = 0 ]; then
-	echo "Test $name ($base)...	Passed";
+	echo "Test $name	($base)...	Passed";
     elif [ "$rc" = 1 ]; then
-	echo "Test $name ($base)...	Failed";
+	echo "Test $name	($base)...	Failed";
 	diff $diff_opts -C 1 $expected $output >> regression.failed
     else
-	echo "Test $name ($base)...	Error (diff rc=$rc)";
+	echo "Test $name	($base)...	Error (diff: $rc)";
     fi
     
     rm $output
 }
 
-do_test t1 "Simple"
-do_test cib1 "Simple"
+create_mode="false"
+do_test simple1 "Offline	"
+do_test simple2 "Start	"
+do_test simple3 "Start 2	"
+do_test simple4 "Start Failed"
+do_test simple5 "Stop Failed"
+do_test simple6 "Stop Start	"
+do_test simple7 "Shutdown	"
+do_test simple8 "Stonith	"
+
+
+#create_mode="true"
+
+
+if [ -s regression.failed ]; then
+    echo "Results of failed tests...."
+    cat regression.failed
+fi
+
+

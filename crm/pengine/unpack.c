@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.3 2004/06/08 11:47:48 andrew Exp $ */
+/* $Id: unpack.c,v 1.4 2004/06/09 14:34:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -121,7 +121,7 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 		new_node->details->attrs	= g_hash_table_new(
 			g_str_hash, g_str_equal);
 
-		if(safe_str_eq(type, "node")) {
+		if(safe_str_eq(type, "member")) {
 			new_node->details->type = node_member;
 		}
 
@@ -264,11 +264,12 @@ unpack_rsc_to_node(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 		crm_err("No resource (con=%s, rsc=%s)", id, id_lh);
 	}
 
-	new_con         = (rsc_to_node_t*)crm_malloc(sizeof(rsc_to_node_t));
-	new_con->id     = id;
-	new_con->rsc_lh = rsc_lh;
-	new_con->weight = weight_f;
-			
+	new_con = (rsc_to_node_t*)crm_malloc(sizeof(rsc_to_node_t));
+	new_con->id           = id;
+	new_con->rsc_lh       = rsc_lh;
+	new_con->weight       = weight_f;
+	new_con->node_list_rh = NULL;
+	
 	if(safe_str_eq(mod, "set")){
 		new_con->modifier = set;
 		
@@ -459,7 +460,7 @@ gboolean
 determine_online_status(xmlNodePtr node_state, node_t *this_node)
 {
 	const char *id	       = xmlGetProp(node_state,XML_ATTR_ID);
-	const char *state      = xmlGetProp(node_state,XML_LRM_ATTR_STATE);
+	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE);
 	const char *exp_state  = xmlGetProp(node_state,XML_CIB_ATTR_EXPSTATE);
 	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
@@ -507,7 +508,7 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 gboolean
 is_node_unclean(xmlNodePtr node_state)
 {
-	const char *state      = xmlGetProp(node_state,XML_LRM_ATTR_STATE);
+	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE);
 	const char *exp_state  = xmlGetProp(node_state,XML_CIB_ATTR_EXPSTATE);
 	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
@@ -572,7 +573,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 		
 		rsc_id    = xmlGetProp(rsc_entry, XML_ATTR_ID);
 		node_id   = xmlGetProp(rsc_entry, XML_LRM_ATTR_TARGET);
-		rsc_state = xmlGetProp(rsc_entry, XML_LRM_ATTR_STATE);
+		rsc_state = xmlGetProp(rsc_entry, XML_LRM_ATTR_OPSTATE);
 		rsc_code  = xmlGetProp(rsc_entry, "op_code");
 		
 		rsc_lh    = pe_find_resource(rsc_list, rsc_id);
@@ -601,6 +602,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 				break;
 			case LRM_OP_CANCELLED:
 				// do nothing??
+				crm_warn("Dont know what to do for cancelled ops yet");
 				break;
 		}
 	}
@@ -613,6 +615,8 @@ unpack_failed_resource(GListPtr *node_constraints,
 {
 	const char *last_op  = xmlGetProp(rsc_entry, "last_op");
 
+	crm_debug("Unpacking failed action %s on %s", last_op, rsc_lh->id);
+	
 	if(safe_str_eq(last_op, "start")) {
 		/* not running */
 		/* do not run the resource here again */
@@ -627,6 +631,10 @@ unpack_failed_resource(GListPtr *node_constraints,
 
 	} else if(safe_str_eq(last_op, "stop")) {
 		/* must assume still running */
+		rsc_lh->cur_node = node;
+		node->details->running_rsc = g_list_append(
+			node->details->running_rsc, rsc_lh);
+
 		/* remedial action:
 		 *   shutdown (so all other resources are stopped gracefully)
 		 *   and then STONITH node
@@ -644,10 +652,6 @@ unpack_failed_resource(GListPtr *node_constraints,
 		 *   shutdown (so all other resources are stopped gracefully)
 		 *   and then STONITH node
 		 */
-		if(node->details->online) {
-			node->details->shutdown = TRUE;
-		}
-		node->details->unclean  = TRUE;
 	}
 
 	return TRUE;
@@ -660,6 +664,9 @@ unpack_healthy_resource(GListPtr *node_constraints,
 	const char *last_op  = xmlGetProp(rsc_entry, "last_op");
 
 	rsc_to_node_t *new_cons = crm_malloc(sizeof(rsc_to_node_t));
+
+	crm_debug("Unpacking healthy action %s on %s", last_op, rsc_lh->id);
+
 	new_cons->id		= "healthy_generate"; // genereate one
 	new_cons->weight	= 1.0;
 	new_cons->modifier	= inc;
@@ -710,7 +717,7 @@ create_rsc_to_rsc(const char *id, enum con_strength strength,
 		return FALSE;
 	}
 
-	rsc_to_rsc_t *new_con      = crm_malloc(sizeof(rsc_to_node_t));
+	rsc_to_rsc_t *new_con      = crm_malloc(sizeof(rsc_to_rsc_t));
 	rsc_to_rsc_t *inverted_con = NULL;
 
 	new_con->id       = id;

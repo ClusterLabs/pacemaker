@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.3 2004/06/08 11:47:48 andrew Exp $ */
+/* $Id: graph.c,v 1.4 2004/06/09 14:34:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -180,7 +180,8 @@ shutdown_constraints(
 }
 
 gboolean
-stonith_constraints(node_t *node, action_t *stonith_op, action_t *shutdown_op,
+stonith_constraints(node_t *node,
+		    action_t *stonith_op, action_t *shutdown_op,
 		    GListPtr *action_constraints)
 {
 	int lpc = 0;
@@ -264,13 +265,28 @@ action2xml(action_t *action)
 	switch(action->task) {
 		case stonith_op:
 			action_xml = create_xml_node(NULL, "pseduo_event");
+
+			set_xml_property_copy(
+				action_xml, XML_ATTR_ID, crm_itoa(action->id));
+
 			break;
 		case shutdown_crm:
 			action_xml = create_xml_node(NULL, "crm_event");
+
+			set_xml_property_copy(
+				action_xml, XML_ATTR_ID, crm_itoa(action->id));
+
 			break;
 		default:
 			action_xml = create_xml_node(NULL, "rsc_op");
 			add_node_copy(action_xml, action->rsc->xml);
+
+			set_xml_property_copy(
+				action_xml, XML_ATTR_ID, crm_itoa(action->id));
+
+			set_xml_property_copy(
+				action_xml, "rsc_id",
+				safe_val3(NULL, action, rsc, id));
 			
 			break;
 	}
@@ -280,7 +296,7 @@ action2xml(action_t *action)
 		safe_val4(NULL, action, node, details, id));
 
 	set_xml_property_copy(
-		action_xml, XML_ATTR_ID, crm_itoa(action->id));
+		action_xml, XML_LRM_ATTR_TASK, task2text(action->task));
 
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_RUNNABLE,
@@ -289,9 +305,6 @@ action2xml(action_t *action)
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_OPTIONAL,
 		action->optional?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
-
-	set_xml_property_copy(
-		action_xml, XML_LRM_ATTR_TASK, task2text(action->task));
 
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_DISCARD,

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.3 2004/06/08 11:47:48 andrew Exp $ */
+/* $Id: stages.c,v 1.4 2004/06/09 14:34:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -419,7 +419,8 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 	slist_iter(
 		order, order_constraint_t, action_constraints, lpc,
 			
-		crm_verbose("Processing %d -> %d",
+		crm_verbose("%d Processing %d -> %d",
+		       order->id,
 		       order->lh_action->id,
 		       order->rh_action->id);
 
