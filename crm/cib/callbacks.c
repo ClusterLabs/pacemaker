@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.16 2005/02/07 11:08:06 andrew Exp $ */
+/* $Id: callbacks.c,v 1.17 2005/02/07 17:26:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -602,6 +602,7 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 		crm_debug("Removing msg from delegated list");
 		hash_client->delegated_calls = g_list_remove(
 			hash_client->delegated_calls, orig_msg);
+		CRM_ASSERT(orig_msg != msg);
 		crm_msg_del(orig_msg);
 	}
 	
@@ -855,10 +856,13 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 	if(local_notify) {
 		/* send callback to originating child */
 		cib_client_t *client_obj = NULL;
+		HA_Message *client_reply = NULL;
 		crm_trace("find the client");
 
 		if(process == FALSE) {
-			op_reply = ha_msg_copy(msg);
+			client_reply = ha_msg_copy(msg);
+		} else {
+			client_reply = ha_msg_copy(op_reply);
 		}
 		
 		client_id = cl_get_string(msg, F_CIB_CLIENTID);
@@ -883,21 +887,19 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 					  call_options);
 
 				send_via_callback_channel(
-					op_reply, client_obj->id);
-				
+					client_reply, client_obj->id);
+
 			} else {
 				crm_debug("Sending async response");
 				send_via_callback_channel(
-					op_reply, client_obj->callback_id);
+					client_reply, client_obj->callback_id);
 			}
 			
 		} else {
 			crm_warn("Client %s may have left us",
 				 crm_str(client_id));
 		}
-		if(process == FALSE) {
-			crm_msg_del(op_reply);
-		}
+		crm_msg_del(client_reply);
 	}
 
 	if(needs_reply == FALSE) {
