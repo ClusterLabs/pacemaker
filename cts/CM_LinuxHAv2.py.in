@@ -94,7 +94,8 @@ class LinuxHAv2(HeartbeatCM):
    <status/>
 </cib>
 '''
-	if self.Env["CIBResource"]:
+	if self.Env["CIBResource"] == 1:
+	    print("Enabling DC resource")
 	    self.default_cts_cib='''
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
    <configuration>
@@ -164,8 +165,7 @@ class LinuxHAv2(HeartbeatCM):
         watch = CTS.LogWatcher(self["LogFileName"], patterns, 60)
         watch.setwatch()
 
-        self.log ("CM_LinuxHAv2.py: Starting %s on node %s"
-                %(self["Name"], node))
+        self.log ("Starting %s on node %s" %(self["Name"], node))
 
 	if self.Env["ClobberCIB"] != None:
 	    if self.Env["CIBfilename"] == None:
@@ -545,13 +545,12 @@ class DcAudit(ClusterAudit):
 		if len(self.NodeState[node]) > 1:
 		    self.NodeState[node] = self.NodeState[node][:-1]
 
-		if len(self.NodeEpoche[node]) > 1:
-		    self.NodeEpoche[node] = self.NodeEpoche[node][:-1]
+		if len(self.NodeEpoche[node]) > 0:
+		    self.NodeEpoche[node] = int(self.NodeEpoche[node][:-1])
 		    if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
 			lowest_epoche = self.NodeEpoche[node]
 
 	if nodes_up == 0:
-	    print ("No nodes running")
 	    return 1
 
         for node in self.CM.Env["nodes"]:

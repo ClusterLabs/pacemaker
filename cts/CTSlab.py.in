@@ -341,7 +341,7 @@ if __name__ == '__main__':
            skipthis=1
            LimitNodes = int(args[i+1])
        elif args[i] == "-r":
-	   CIBressource = 1
+	   CIBResource = 1
        elif args[i] == "-L" or args[i] == "--logfile":
            skipthis=1
            LogFile = args[i+1]
@@ -397,7 +397,7 @@ if __name__ == '__main__':
     Environment["HAdir"] = HAdir
     Environment["ClobberCIB"] = ClobberCIB
     Environment["CIBfilename"] = CIBfilename
-    Environment["CIBResource"] = CIBResource
+    Environment["CIBResource"] = CIBResource 
     Environment["LogFileName"] = LogFile
     Environment["DoStonith"] = DoStonith
     Environment["DoStandby"] = DoStandby
