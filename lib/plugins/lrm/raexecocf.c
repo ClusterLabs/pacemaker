@@ -151,7 +151,11 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	
 	/* execute the RA */
 	cl_log(LOG_DEBUG, "Will execute OCF RA : %s %s", ra_pathname, op_type);
-	execl(ra_pathname, ra_pathname, op_type, NULL);
+	if ( 0 == strncmp(op_type, "status", strlen("status")) ) {
+		execl(ra_pathname, ra_pathname, "monitor", NULL);
+	} else {
+		execl(ra_pathname, ra_pathname, op_type, NULL);
+	}
 
 	switch (errno) {
 		case ENOENT:   /* No such file or directory */
