@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.15 2005/02/21 13:13:45 andrew Exp $ */
+/* $Id: cibmon.c,v 1.16 2005/02/23 12:24:06 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -58,6 +58,7 @@ void cib_connection_destroy(gpointer user_data);
 void cibmon_pre_notify(const char *event, HA_Message *msg);
 void cibmon_post_notify(const char *event, HA_Message *msg);
 void cibmon_update_confirm(const char *event, HA_Message *msg);
+gboolean cibmon_shutdown(int nsig, gpointer unused);
 
 cib_t *the_cib = NULL;
 
@@ -92,6 +93,10 @@ main(int argc, char **argv)
 	};
 
 	crm_log_init(crm_system_name);
+
+	G_main_add_SignalHandler(
+		G_PRIORITY_HIGH, SIGTERM, cibmon_shutdown, NULL, NULL);
+
 	cl_set_corerootdir(HA_COREDIR);	    
 	cl_cdtocoredir();
 	
@@ -457,4 +462,15 @@ cibmon_update_confirm(const char *event, HA_Message *msg)
 		}
 	}
 	crm_devel(UPDATE_PREFIX"=================================");
+}
+
+gboolean
+cibmon_shutdown(int nsig, gpointer unused)
+{
+	if (mainloop != NULL && g_main_is_running(mainloop)) {
+		g_main_quit(mainloop);
+	} else {
+		exit(LSB_EXIT_OK);
+	}
+	return TRUE;
 }
