@@ -355,9 +355,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		else IF_FSA_ACTION(O_TE_RESTART,	do_te_control)
 		
 		/* Timers */
-		else IF_FSA_ACTION(O_DC_TIMER_RESTART,      do_timer_control)
+/* 		else IF_FSA_ACTION(O_DC_TIMER_RESTART,      do_timer_control) */
 		else IF_FSA_ACTION(A_DC_TIMER_STOP,         do_timer_control)
-		else IF_FSA_ACTION(A_DC_TIMER_START,        do_timer_control)
 		else IF_FSA_ACTION(A_INTEGRATE_TIMER_STOP,  do_timer_control)
 		else IF_FSA_ACTION(A_INTEGRATE_TIMER_START, do_timer_control)
 		else IF_FSA_ACTION(A_FINALIZE_TIMER_STOP,   do_timer_control)
@@ -385,6 +384,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		else IF_FSA_ACTION(A_CCM_UPDATE_CACHE,	do_ccm_update_cache)
 		else IF_FSA_ACTION(A_CCM_EVENT,		do_ccm_event)
 		else IF_FSA_ACTION(A_STARTED,		do_started)
+		else IF_FSA_ACTION(A_CL_JOIN_QUERY,     do_cl_join_query)
+		else IF_FSA_ACTION(A_DC_TIMER_START,    do_timer_control)
 		
 		/*
 		 * Medium priority actions

@@ -31,6 +31,24 @@
 
 int reannounce_count = 0;
 
+/*	A_CL_JOIN_QUERY		*/
+/* is there a DC out there? */
+enum crmd_fsa_input
+do_cl_join_query(long long action,
+	    enum crmd_fsa_cause cause,
+	    enum crmd_fsa_state cur_state,
+	    enum crmd_fsa_input current_input,
+		    fsa_data_t *msg_data)
+{
+	HA_Message *req = create_request(CRM_OP_ANNOUNCE, NULL, NULL,
+					 CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+	
+	send_msg_via_ha(fsa_cluster_conn, req);
+
+	return I_NULL;
+}
+
+
 /*	 A_CL_JOIN_ANNOUNCE	*/
 
 /* this is kind of a workaround for the the fact that we may not be around

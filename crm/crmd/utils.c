@@ -487,8 +487,8 @@ fsa_action2string(long long action)
 		case A_LRM_DISCONNECT:
 			actionAsText = "A_LRM_DISCONNECT";
 			break;
-		case O_DC_TIMER_RESTART:
-			actionAsText = "O_DC_TIMER_RESTART";
+		case A_CL_JOIN_QUERY:
+			actionAsText = "A_CL_JOIN_QUERY";
 			break;
 		case A_DC_TIMER_STOP:
 			actionAsText = "A_DC_TIMER_STOP";

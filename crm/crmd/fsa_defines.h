@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.33 2005/02/15 08:06:38 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.34 2005/02/15 09:45:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -265,44 +265,47 @@ enum crmd_fsa_input {
 #define	A_HA_CONNECT		0x0000000000000004ULL
 #define	A_HA_DISCONNECT		0x0000000000000008ULL
 
-/* -- Election actions -- */
-#define	A_DC_TIMER_START	0x0000000000000010ULL
-#define	A_DC_TIMER_STOP		0x0000000000000020ULL
-#define	A_ELECTION_COUNT	0x0000000000000040ULL
-#define	A_ELECTION_VOTE		0x0000000000000080ULL
+#define	A_INTEGRATE_TIMER_START	0x0000000000000010ULL
+#define	A_INTEGRATE_TIMER_STOP	0x0000000000000020ULL
+#define	A_FINALIZE_TIMER_START	0x0000000000000040ULL
+#define	A_FINALIZE_TIMER_STOP	0x0000000000000080ULL
 
-#define A_ELECTION_START	0x0000000000000100ULL
+/* -- Election actions -- */
+#define	A_DC_TIMER_START	0x0000000000000100ULL
+#define	A_DC_TIMER_STOP		0x0000000000000200ULL
+#define	A_ELECTION_COUNT	0x0000000000000400ULL
+#define	A_ELECTION_VOTE		0x0000000000000800ULL
+
+#define A_ELECTION_START	0x0000000000001000ULL
 
 /* -- Message processing -- */
 	/* Process the queue of requests */
-#define	A_MSG_PROCESS		0x0000000000000200ULL
+#define	A_MSG_PROCESS		0x0000000000002000ULL
 	/* Send the message to the correct recipient */
-#define	A_MSG_ROUTE		0x0000000000000400ULL
+#define	A_MSG_ROUTE		0x0000000000004000ULL
 
-#define	A_INTEGRATE_TIMER_START	0x0000000000001000ULL
-#define	A_INTEGRATE_TIMER_STOP	0x0000000000002000ULL
-#define	A_FINALIZE_TIMER_START	0x0000000000004000ULL
-#define	A_FINALIZE_TIMER_STOP	0x0000000000008000ULL
+	/* Send a welcome message to new node(s) */
+#define	A_DC_JOIN_OFFER_ONE	0x0000000000008000ULL
+
+/* -- Server Join protocol actions -- */
+	/* Send a welcome message to all nodes */
+#define	A_DC_JOIN_OFFER_ALL	0x0000000000010000ULL
+	/* Process the remote node's ack of our join message */ 
+#define	A_DC_JOIN_PROCESS_REQ	0x0000000000020000ULL
+	/* Send out the reults of the Join phase */ 
+#define	A_DC_JOIN_FINALIZE	0x0000000000040000ULL
+	/* Send out the reults of the Join phase */ 
+#define	A_DC_JOIN_PROCESS_ACK	0x0000000000080000ULL
 
 
 /* -- Client Join protocol actions -- */
-#define	A_CL_JOIN_ANNOUNCE	0x0000000000010000ULL
+#define	A_CL_JOIN_QUERY		0x0000000000100000ULL
+#define	A_CL_JOIN_ANNOUNCE	0x0000000000200000ULL
 	/* Request membership to the DC list */
-#define	A_CL_JOIN_REQUEST	0x0000000000020000ULL
+#define	A_CL_JOIN_REQUEST	0x0000000000400000ULL
 	/* Did the DC accept or reject the request */
-#define	A_CL_JOIN_RESULT	0x0000000000040000ULL
+#define	A_CL_JOIN_RESULT	0x0000000000800000ULL
 
-/* -- Server Join protocol actions -- */
-	/* Send a welcome message to new node(s) */
-#define	A_DC_JOIN_OFFER_ONE	0x0000000000080000ULL
-	/* Send a welcome message to all nodes */
-#define	A_DC_JOIN_OFFER_ALL	0x0000000000100000ULL
-	/* Process the remote node's ack of our join message */ 
-#define	A_DC_JOIN_PROCESS_REQ	0x0000000000200000ULL
-	/* Send out the reults of the Join phase */ 
-#define	A_DC_JOIN_FINALIZE	0x0000000000400000ULL
-	/* Send out the reults of the Join phase */ 
-#define	A_DC_JOIN_PROCESS_ACK	0x0000000000800000ULL
 
 /* -- Recovery, DC start/stop -- */
 	/* Something bad happened, try to recover */
@@ -392,7 +395,7 @@ enum crmd_fsa_input {
 
 #define O_SHUTDOWN (A_CCM_DISCONNECT|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_SHUTDOWN|A_STOP|A_EXIT_0|A_CIB_STOP)
 #define O_RELEASE  (A_DC_TIMER_STOP|A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED)
-#define O_DC_TIMER_RESTART	(A_DC_TIMER_STOP|A_DC_TIMER_START)
+#define O_DC_TIMER_RESTART	(A_NOTHING)
 #define	O_PE_RESTART		(A_PE_START|A_PE_STOP)
 #define	O_TE_RESTART		(A_TE_START|A_TE_STOP)
 #define	O_CIB_RESTART		(A_CIB_START|A_CIB_STOP)

@@ -1,4 +1,4 @@
-/* $Id: atest.c,v 1.3 2005/02/10 11:08:11 andrew Exp $ */
+/* $Id: atest.c,v 1.4 2005/02/15 09:45:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -62,6 +62,7 @@ GMainLoop*  mainloop = NULL;
 int
 main(int argc, char ** argv)
 {
+#if 0
 	IPC_Channel* channels[2];
 	crm_data_t *a_cib = NULL;
 	HA_Message *cmd = NULL;
@@ -93,8 +94,11 @@ main(int argc, char ** argv)
 	crm_debug("Starting mainloop");
 	g_main_run(mainloop);
 	
-#if 0
-    /* read local config file */
+#else
+	crm_log_init(crm_system_name);
+	set_crm_log_level(LOG_INSANE-1);
+
+	/* read local config file */
     crm_debug("Enabling coredumps");
     if(cl_set_corerootdir(HA_COREDIR) < 0){
 	    cl_perror("cannot set corerootdir");

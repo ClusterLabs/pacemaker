@@ -282,21 +282,26 @@ crmd_client_status_callback(const char * node, const char * client,
 	crm_notice("Status update: Client %s/%s now has status [%s]\n",
 		   node, client, status);
 
-	if(AM_I_DC == FALSE) {
+	if(safe_str_eq(node, fsa_our_dc) && status == OFFLINESTATUS) {
+		/* did our DC leave us */
+		crm_info("Got client status callback - our DC is dead");
+		register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
+		
+	} else if(AM_I_DC == FALSE) {
 		crm_debug("Got client status callback in non-DC mode");
 		return;
 		
+	} else {
+		crm_debug("Got client status callback in DC mode");
+		update = create_node_state(
+			node, node, NULL, NULL, status, join, NULL);
+		
+		set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
+		update_local_cib(create_cib_fragment(update, NULL));
+		free_xml(update);
 	}
 	
-	update = create_node_state(
-		node, node, NULL, NULL, status, join, NULL);
-	
-	set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
-	
-	update_local_cib(create_cib_fragment(update, NULL));
-
 	s_crmd_fsa(C_CRMD_STATUS_CALLBACK);
-	free_xml(update);
 }
 
 

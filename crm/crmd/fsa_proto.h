@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.17 2005/01/26 13:30:09 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.18 2005/02/15 09:45:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -237,6 +237,15 @@ do_dc_join_finalize(long long action,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input cur_input,
 		    fsa_data_t *msg_data);
+
+/*	A_CL_JOIN_QUERY		*/
+/* is there a DC out there? */
+enum crmd_fsa_input
+do_cl_join_query(long long action,
+		 enum crmd_fsa_cause cause,
+		 enum crmd_fsa_state cur_state,
+		 enum crmd_fsa_input current_input,
+		 fsa_data_t *msg_data);
 
 /*	 A_CL_JOIN_ANNOUNCE	*/
 enum crmd_fsa_input

@@ -201,7 +201,7 @@ do_election_count_vote(long long action,
 		election_data.winning_uname = NULL;
 		election_data.winning_bornon = -1; /* maximum integer */
 		
-		crm_trace("We might win... we should vote (possibly again)");
+		crm_verbose("We might win... we should vote (possibly again)");
 		election_result = I_ELECTION; /* new "default" */
 	}
 	

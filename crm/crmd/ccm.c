@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.51 2005/02/15 07:56:24 andrew Exp $ */
+/* $Id: ccm.c,v 1.52 2005/02/15 09:45:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -180,13 +180,10 @@ do_ccm_event(long long action,
 
 	if (OC_EV_MS_EVICTED == *event) {
 		/* get out... NOW! */
-		return_input = I_SHUTDOWN;
-
+		register_fsa_error(cause, I_SHUTDOWN, msg_data->data);
+		return I_NULL;
 	}
 	
-	if(AM_I_DC == FALSE || return_input == I_SHUTDOWN) {
-		return return_input;
-	}
 	
 	/* My understanding is that we will never get both
 	 * node leaving *and* node joining callbacks at the
@@ -210,14 +207,20 @@ do_ccm_event(long long action,
 			if(uname == NULL) {
 				crm_err("CCM node had no name");
 				continue;
+				
+			} else if(safe_str_eq(uname, fsa_our_dc)) {
+				/* did our DC leave us */
+				register_fsa_input(cause, I_ELECTION, NULL);
+
+			} else if(AM_I_DC) {
+				node_state = create_node_state(
+					NULL, uname, NULL,
+					XML_BOOLEAN_NO, NULL, NULL, NULL);
+				
+				update_local_cib(
+					create_cib_fragment(node_state, NULL));
+				free_xml(node_state);
 			}
-			
-			node_state = create_node_state(
-				NULL, uname, NULL,
-				XML_BOOLEAN_NO, NULL, NULL, NULL);
-			
-			update_local_cib(create_cib_fragment(node_state, NULL));
-			free_xml(node_state);
 		}
 		
 	} else if(oc->m_n_in !=0) {
@@ -225,6 +228,7 @@ do_ccm_event(long long action,
 		 * DC status and send us their CIB
 		 */
 	} else {
+		CRM_DEV_ASSERT(FALSE);
 		crm_warn("So why are we here?  What CCM event happened?");
 	}
 
