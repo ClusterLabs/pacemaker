@@ -145,7 +145,7 @@ gboolean
 stopTimer(fsa_timer_t *timer)
 {
 	if(timer == NULL) {
-		crm_err("Attempted to stop NULL timer");
+		crm_debug("Attempted to stop NULL timer");
 		return FALSE;
 		
 	} else if(timer->source_id != (guint)-1 && timer->source_id != (guint)-2) {
