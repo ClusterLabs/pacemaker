@@ -169,7 +169,9 @@ static void
 set_env(gpointer key, gpointer value, gpointer user_data)
 {
 	cl_log(LOG_DEBUG, "key=%s  value=%s", (char*)key, (char*)value);
-        setenv((const char *)key, (const char *)value, 1);
+        if (setenv((const char *)key, (const char *)value, 1) != 0) {
+		cl_log(LOG_ERR, "setenv failed in raexecocf.");
+	}
         /*Need to free the memory to which key and value point?*/
 }
 
