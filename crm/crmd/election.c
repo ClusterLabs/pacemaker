@@ -102,6 +102,7 @@ int beat_num = 0;
 gboolean
 do_dc_heartbeat(gpointer data)
 {
+#if 0
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
 	crm_debug("Sending DC Heartbeat %d", beat_num);
@@ -116,14 +117,14 @@ do_dc_heartbeat(gpointer data)
 
 	if(send_msg_via_ha(fsa_cluster_conn, msg) == FALSE) {
 		/* this is bad */
-		stopTimer(timer); /* dont make it go off again */
+		stopTimer(timer); /* make it not go off again */
 
 		register_fsa_input(C_HEARTBEAT_FAILED, I_SHUTDOWN, NULL);
 		s_crmd_fsa(C_HEARTBEAT_FAILED);
 
 		return FALSE;
 	}
-	
+#endif
 	return TRUE;
 }
 
@@ -280,8 +281,9 @@ do_dc_takeover(long long action,
 		crm_debug("DC Heartbeat timer already active");
 	}
 	
-	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none);
+/* 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none); */
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
+	CRM_DEV_ASSERT(cib_ok == fsa_cib_conn->cmds->is_master(fsa_cib_conn));
 
 	crm_debug("Update %s in the CIB to our uuid: %s",
 		  XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
