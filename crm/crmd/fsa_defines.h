@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.12 2004/05/10 21:52:57 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.13 2004/05/12 14:22:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -486,9 +486,9 @@ enum crmd_fsa_cause
 	C_ILLEGAL
 };
 
-extern const char *fsa_input2string(int input);
-extern const char *fsa_state2string(int state);
-extern const char *fsa_cause2string(int cause);
+extern const char *fsa_input2string(enum crmd_fsa_input input);
+extern const char *fsa_state2string(enum crmd_fsa_state state);
+extern const char *fsa_cause2string(enum crmd_fsa_cause cause);
 extern const char *fsa_action2string(long long action);
 
 

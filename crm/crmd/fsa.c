@@ -423,6 +423,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		/*
 		 * Highest priority actions
 		 */
+		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_TE_COPYTO,		do_te_copyto)
 		ELSEIF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
 		ELSEIF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
@@ -464,7 +465,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_lrm_invoke)
 		ELSEIF_FSA_ACTION(A_CIB_INVOKE_LOCAL,	do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_CIB_INVOKE,		do_cib_invoke)
-		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_LRM_INVOKE,		do_lrm_invoke)
 		ELSEIF_FSA_ACTION(A_LRM_EVENT,		do_lrm_event)
 		ELSEIF_FSA_ACTION(A_TE_CANCEL,		do_te_invoke)
@@ -610,7 +610,7 @@ do_node_block(long long action,
 
 
 const char *
-fsa_input2string(int input)
+fsa_input2string(enum crmd_fsa_input input)
 {
 	const char *inputAsText = NULL;
 	
@@ -632,6 +632,9 @@ fsa_input2string(int input)
 			break;
 		case I_ELECTION:
 			inputAsText = "I_ELECTION";
+			break;
+		case I_PE_CALC:
+			inputAsText = "I_PE_CALC";
 			break;
 		case I_RELEASE_DC:
 			inputAsText = "I_RELEASE_DC";
@@ -681,9 +684,6 @@ fsa_input2string(int input)
 		case I_SHUTDOWN:
 			inputAsText = "I_SHUTDOWN";
 			break;
-/* 		case I_SHUTDOWN_REQ: */
-/* 			inputAsText = "I_SHUTDOWN_REQ"; */
-/* 			break; */
 		case I_STARTUP:
 			inputAsText = "I_STARTUP";
 			break;
@@ -705,6 +705,9 @@ fsa_input2string(int input)
 		case I_WAIT_FOR_EVENT:
 			inputAsText = "I_WAIT_FOR_EVENT";
 			break;
+		case I_LRM_EVENT:
+			inputAsText = "I_LRM_EVENT";
+			break;
 		case I_ILLEGAL:
 			inputAsText = "I_ILLEGAL";
 			break;
@@ -719,7 +722,7 @@ fsa_input2string(int input)
 }
 
 const char *
-fsa_state2string(int state)
+fsa_state2string(enum crmd_fsa_state state)
 {
 	const char *stateAsText = NULL;
 	
@@ -774,7 +777,7 @@ fsa_state2string(int state)
 }
 
 const char *
-fsa_cause2string(int cause)
+fsa_cause2string(enum crmd_fsa_cause cause)
 {
 	const char *causeAsText = NULL;
 	
@@ -805,6 +808,12 @@ fsa_cause2string(int cause)
 			break;
 		case C_SUBSYSTEM_CONNECT:
 			causeAsText = "C_SUBSYSTEM_CONNECT";
+			break;
+		case C_LRM_OP_CALLBACK:
+			causeAsText = "C_LRM_OP_CALLBACK";
+			break;
+		case C_LRM_MONITOR_CALLBACK:
+			causeAsText = "C_LRM_MONITOR_CALLBACK";
 			break;
 		case C_ILLEGAL:
 			causeAsText = "C_ILLEGAL";
