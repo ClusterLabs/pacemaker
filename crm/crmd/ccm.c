@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.53 2005/02/18 10:36:10 andrew Exp $ */
+/* $Id: ccm.c,v 1.54 2005/02/18 15:19:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -179,8 +179,13 @@ do_ccm_event(long long action,
 	}
 
 	if (OC_EV_MS_EVICTED == *event) {
-		/* get out... NOW! */
-		register_fsa_error(cause, I_SHUTDOWN, msg_data->data);
+		/* todo: drop back to S_PENDING instead */
+		/* get out... NOW!
+		 *
+		 * go via the error recovery process so that HA will
+		 *    restart us if required
+		 */
+		register_fsa_error(cause, I_ERROR, msg_data->data);
 		return I_NULL;
 	}
 	
