@@ -1,0 +1,841 @@
+#!/bin/bash
+#
+# Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+
+testdir=@libdir@/heartbeat/crmtest
+. ${testdir}/helper.sh || exit 1
+
+CRM_ERR_SHUTDOWN=0
+test_nodes=2
+
+while [ $iteration -lt $repeats ]; do
+    iteration=`expr $iteration + 1`
+    echo -ne "\033]0;$test_type : Iteration $iteration of $repeats\007"
+    echo "########### Begining iteration $iteration of $repeats ###########"
+(
+
+######################################################
+#
+# Subtest start: Kill everything  (DC)
+#
+######################################################
+
+# make *sure* theres nothing left over from last time
+crm-cleanup
+
+#----
+
+echo -ne "\033]0;$test_type (Kill everything - DC) : Iteration $iteration of $repeats\007"
+do_cmd echo "Fail type: Kill everything (DC)"
+do_cmd echo "#############################"
+do_cmd echo "wait for HA to start on ${test_node_1}"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 300 \
+    -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" \
+    -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" \
+    -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
+cts_assert "Startup of Heartbeat on ${test_node_1} failed."
+
+#----
+
+do_cmd echo "wait for CRMd to start on ${test_node_1}"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 1500 \
+    -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}" \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert "CRMd startup on ${test_node_1} failed."
+
+do_cmd wait_for_state S_IDLE 3 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
+
+#----
+
+do_cmd echo Create the first constraint and wait for S_IDLE
+rsc=rsc1
+uuid1=`uuidgen`
+uuid2=`uuidgen`
+uuid3=`uuidgen`
+node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\">
+        <rule id=\"${uuid2}\" result=\"can\"/>
+	<rule id=\"${uuid3}\" score=\"1000\" boolean_op=\"or\">
+	  <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_1}\"/>
+	</rule>
+      </rsc_location>'"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_constraint_adv $test_node_1 $node_xml
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert Adding constraint1 did not pass
+
+#----
+
+do_cmd echo Create the second constraint and wait for S_IDLE
+rsc=rsc2
+uuid1=`uuidgen`
+uuid2=`uuidgen`
+uuid3=`uuidgen`
+node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\">
+	        <rule id=\"${uuid2}\" result=\"can\"/>
+		<rule id=\"${uuid3}\" score=\"1000\" boolean_op=\"or\">
+		   <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_2}\"/>
+		</rule>
+	   </rsc_location>'"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_constraint_adv $test_node_1 $node_xml
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert Adding constraint2 did not pass
+
+#----
+
+do_cmd echo Create the first resource and wait for S_IDLE after start
+args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - ignore $args
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) Performing op start(.*) on rsc1" \
+    -s "crmd(.*) Resource state: rsc1(.*) after start"
+cts_assert Adding rsc1 did not pass
+
+#----
+
+do_cmd echo Create the second resource and wait for S_IDLE after start
+args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - ignore $args
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) Performing op start(.*) on rsc2" \
+    -s "crmd(.*) Resource state: rsc2(.*) after start"
+cts_assert Adding rsc2 did not pass
+
+#----
+
+do_cmd echo Various sanity checks - stage 1
+do_cmd wait_for_state S_IDLE 3 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (CIB create)!"
+
+do_cmd is_running rsc1 $test_node_1
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_1
+cts_assert "rsc2 NOT running"
+
+do_cmd is_dc $test_node_1
+cts_assert "$test_node_1 is supposed to be the DC"
+
+do_cmd is_running rsc1 $test_node_1 x$test_node_1
+cts_assert_false "rsc1 IS running on x$test_node_1"
+
+do_cmd is_running rsc1 $test_node_1 $test_node_1
+cts_assert "rsc1 NOT running on $test_node_1"
+
+do_cmd is_running rsc2 $test_node_1 $test_node_1
+cts_assert "rsc2 NOT running on $test_node_1"
+
+#----
+
+do_cmd echo "wait for HA to start on $test_node_2"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "${test_node_2} ccm(.*) Hostname: ${test_node_2}" \
+    -s "${test_node_2} heartbeat(.*): info: Starting (.*)lrmd" \
+    -e "${test_node_2} heartbeat(.*) Client (.*) respawning too fast"
+cts_assert "Startup of Heartbeat on ${test_node_2} failed."
+
+#----
+
+do_cmd echo "wait for CRMd to start on $test_node_2"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd  "-VVVV" "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
+    -s "${test_node_2} crmd(.*)FSA Hostname: ${test_node_2}" \
+    -s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
+cts_assert "CRMd startup on ${test_node_2} failed."
+
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 3500 \
+    -s "${test_node_1} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
+    -s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2" \
+    -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_2}"
+cts_assert "rsc2 was not transferred to ${test_node_2} on startup."
+
+#----
+
+do_cmd echo Various sanity checks - stage 2
+do_cmd wait_for_state S_NOT_DC 30 $test_node_2 
+cts_assert "S_NOT_DC not reached on $test_node_2 (startup - 2)!"
+
+do_cmd wait_for_state S_IDLE 30 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (startup - 2)!"
+
+do_cmd is_running rsc1 $test_node_1
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_1
+cts_assert "rsc2 NOT running"
+
+do_cmd is_running rsc1 $test_node_1 $test_node_1
+cts_assert "rsc1 NOT running on $test_node_1"
+
+do_cmd is_running rsc2 $test_node_1 $test_node_2
+cts_assert "rsc2 NOT running on $test_node_2"
+
+#----
+
+do_cmd echo Killing everything on $test_node_1
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_1 "killall -9 heartbeat ccm crmd lrmd" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 50000 \
+    -s "${test_node_2} crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
+    -s "${test_node_2} crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
+cts_assert "Transition of the DC from ${test_node_1} to ${test_node_2} failed."
+
+#----
+
+do_cmd echo Various sanity checks - stage 3
+do_cmd wait_for_state S_IDLE 60 $test_node_2
+cts_assert "S_IDLE not reached on $test_node_2 after shutdown!"
+
+do_cmd is_running rsc1 $test_node_2
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_2
+cts_assert "rsc2 NOT running"
+
+do_cmd is_running rsc1 $test_node_2 $test_node_1
+cts_assert_false "rsc1 IS running on $test_node_1"
+
+do_cmd is_running rsc2 $test_node_2 $test_node_2
+cts_assert "rsc2 NOT running on $test_node_2"
+
+#----
+
+######################################################
+#
+# Subtest start: Kill crmd (DC)
+#
+######################################################
+
+# make *sure* theres nothing left over from last time
+crm-cleanup
+
+#----
+
+echo -ne "\033]0;$test_type (Kill crmd - DC) : Iteration $iteration of $repeats\007"
+do_cmd echo "Fail type: Kill crmd (DC)"
+do_cmd echo "#############################"
+do_cmd echo "wait for HA to start on ${test_node_1}"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 300 \
+    -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" \
+    -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" \
+    -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
+cts_assert "Startup of Heartbeat on ${test_node_1} failed."
+
+#----
+
+do_cmd echo "wait for CRMd to start on ${test_node_1}"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 1500 \
+    -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}" \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert "CRMd startup on ${test_node_1} failed."
+
+do_cmd wait_for_state S_IDLE 3 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
+
+#----
+
+do_cmd echo Create the first constraint and wait for S_IDLE
+rsc=rsc1
+uuid1=`uuidgen`
+uuid2=`uuidgen`
+uuid3=`uuidgen`
+node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\">
+        <rule id=\"${uuid2}\" result=\"can\"/>
+	<rule id=\"${uuid3}\" score=\"1000\" boolean_op=\"or\">
+	  <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_1}\"/>
+	</rule>
+      </rsc_location>'"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_constraint_adv $test_node_1 $node_xml
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert Adding constraint1 did not pass
+
+#----
+
+do_cmd echo Create the second constraint and wait for S_IDLE
+rsc=rsc2
+uuid1=`uuidgen`
+uuid2=`uuidgen`
+uuid3=`uuidgen`
+node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\">
+	        <rule id=\"${uuid2}\" result=\"can\"/>
+		<rule id=\"${uuid3}\" score=\"1000\" boolean_op=\"or\">
+		   <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_2}\"/>
+		</rule>
+	   </rsc_location>'"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_constraint_adv $test_node_1 $node_xml
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert Adding constraint2 did not pass
+
+#----
+
+do_cmd echo Create the first resource and wait for S_IDLE after start
+args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - ignore $args
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) Performing op start(.*) on rsc1" \
+    -s "crmd(.*) Resource state: rsc1(.*) after start"
+cts_assert Adding rsc1 did not pass
+
+#----
+
+do_cmd echo Create the second resource and wait for S_IDLE after start
+args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - ignore $args
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) Performing op start(.*) on rsc2" \
+    -s "crmd(.*) Resource state: rsc2(.*) after start"
+cts_assert Adding rsc2 did not pass
+
+#----
+
+do_cmd echo Various sanity checks - stage 4
+do_cmd wait_for_state S_IDLE 3 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (CIB create)!"
+
+do_cmd is_running rsc1 $test_node_1
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_1
+cts_assert "rsc2 NOT running"
+
+do_cmd is_dc $test_node_1
+cts_assert "$test_node_1 is supposed to be the DC"
+
+do_cmd is_running rsc1 $test_node_1 x$test_node_1
+cts_assert_false "rsc1 IS running on x$test_node_1"
+
+do_cmd is_running rsc1 $test_node_1 $test_node_1
+cts_assert "rsc1 NOT running on $test_node_1"
+
+do_cmd is_running rsc2 $test_node_1 $test_node_1
+cts_assert "rsc2 NOT running on $test_node_1"
+
+#----
+
+do_cmd echo "wait for HA to start on $test_node_2"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "${test_node_2} ccm(.*) Hostname: ${test_node_2}" \
+    -s "${test_node_2} heartbeat(.*): info: Starting (.*)lrmd" \
+    -e "${test_node_2} heartbeat(.*) Client (.*) respawning too fast"
+cts_assert "Startup of Heartbeat on ${test_node_2} failed."
+
+#----
+
+do_cmd echo "wait for CRMd to start on $test_node_2"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd  "-VVVV" "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
+    -s "${test_node_2} crmd(.*)FSA Hostname: ${test_node_2}" \
+    -s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
+cts_assert "CRMd startup on ${test_node_2} failed."
+
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 3500 \
+    -s "${test_node_1} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
+    -s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2" \
+    -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_2}"
+cts_assert "rsc2 was not transferred to ${test_node_2} on startup."
+
+#----
+
+do_cmd echo Various sanity checks - stage 5
+do_cmd wait_for_state S_NOT_DC 30 $test_node_2 
+cts_assert "S_NOT_DC not reached on $test_node_2 (startup - 2)!"
+
+do_cmd wait_for_state S_IDLE 30 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (startup - 2)!"
+
+do_cmd is_running rsc1 $test_node_1
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_1
+cts_assert "rsc2 NOT running"
+
+do_cmd is_running rsc1 $test_node_1 $test_node_1
+cts_assert "rsc1 NOT running on $test_node_1"
+
+do_cmd is_running rsc2 $test_node_1 $test_node_2
+cts_assert "rsc2 NOT running on $test_node_2"
+
+#----
+
+do_cmd echo Killing crmd on $test_node_1
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_1 "killall -9 crmd" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 50000 \
+    -s "${test_node_2} crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
+    -s "${test_node_2} crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert "Transition of the DC from ${test_node_1} to ${test_node_2} failed."
+
+#----
+
+do_cmd echo Various sanity checks - stage 6
+do_cmd wait_for_state S_IDLE 60 $test_node_2
+cts_assert "S_IDLE not reached on $test_node_2 after shutdown!"
+
+do_cmd is_running rsc1 $test_node_2
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_2
+cts_assert "rsc2 NOT running"
+
+do_cmd is_running rsc1 $test_node_2 $test_node_1
+cts_assert_false "rsc1 IS running on $test_node_1"
+
+do_cmd is_running rsc2 $test_node_2 $test_node_2
+cts_assert "rsc2 NOT running on $test_node_2"
+
+#----
+
+
+######################################################
+#
+# Subtest start: Kill everything (node2)
+#
+######################################################
+
+# make *sure* theres nothing left over from last time
+crm-cleanup
+
+#----
+
+echo -ne "\033]0;$test_type (Kill everything - slave) : Iteration $iteration of $repeats\007"
+do_cmd echo "Fail type: Kill everything (slave)"
+do_cmd echo "#############################"
+do_cmd echo "wait for HA to start on ${test_node_1}"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 300 \
+    -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" \
+    -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" \
+    -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
+cts_assert "Startup of Heartbeat on ${test_node_1} failed."
+
+#----
+
+do_cmd echo "wait for CRMd to start on ${test_node_1}"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 1500 \
+    -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}" \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert "CRMd startup on ${test_node_1} failed."
+
+do_cmd wait_for_state S_IDLE 3 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
+
+#----
+
+do_cmd echo Create the first constraint and wait for S_IDLE
+rsc=rsc1
+uuid1=`uuidgen`
+uuid2=`uuidgen`
+uuid3=`uuidgen`
+node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\">
+        <rule id=\"${uuid2}\" result=\"can\"/>
+	<rule id=\"${uuid3}\" score=\"1000\" boolean_op=\"or\">
+	  <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_1}\"/>
+	</rule>
+      </rsc_location>'"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_constraint_adv $test_node_1 $node_xml
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert Adding constraint1 did not pass
+
+#----
+
+do_cmd echo Create the second constraint and wait for S_IDLE
+rsc=rsc2
+uuid1=`uuidgen`
+uuid2=`uuidgen`
+uuid3=`uuidgen`
+node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\">
+	        <rule id=\"${uuid2}\" result=\"can\"/>
+		<rule id=\"${uuid3}\" score=\"1000\" boolean_op=\"or\">
+		   <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_2}\"/>
+		</rule>
+	   </rsc_location>'"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_constraint_adv $test_node_1 $node_xml
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert Adding constraint2 did not pass
+
+#----
+
+do_cmd echo Create the first resource and wait for S_IDLE after start
+args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - ignore $args
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) Performing op start(.*) on rsc1" \
+    -s "crmd(.*) Resource state: rsc1(.*) after start"
+cts_assert Adding rsc1 did not pass
+
+#----
+
+do_cmd echo Create the second resource and wait for S_IDLE after start
+args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - ignore $args
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) Performing op start(.*) on rsc2" \
+    -s "crmd(.*) Resource state: rsc2(.*) after start"
+cts_assert Adding rsc2 did not pass
+
+#----
+
+do_cmd echo Various sanity checks - stage 10
+do_cmd wait_for_state S_IDLE 3 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (CIB create)!"
+
+do_cmd is_running rsc1 $test_node_1
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_1
+cts_assert "rsc2 NOT running"
+
+do_cmd is_dc $test_node_1
+cts_assert "$test_node_1 is supposed to be the DC"
+
+do_cmd is_running rsc1 $test_node_1 x$test_node_1
+cts_assert_false "rsc1 IS running on x$test_node_1"
+
+do_cmd is_running rsc1 $test_node_1 $test_node_1
+cts_assert "rsc1 NOT running on $test_node_1"
+
+do_cmd is_running rsc2 $test_node_1 $test_node_1
+cts_assert "rsc2 NOT running on $test_node_1"
+
+#----
+
+do_cmd echo "wait for HA to start on $test_node_2"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "${test_node_2} ccm(.*) Hostname: ${test_node_2}" \
+    -s "${test_node_2} heartbeat(.*): info: Starting (.*)lrmd" \
+    -e "${test_node_2} heartbeat(.*) Client (.*) respawning too fast"
+cts_assert "Startup of Heartbeat on ${test_node_2} failed."
+
+#----
+
+do_cmd echo "wait for CRMd to start on $test_node_2"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd  "-VVVV" "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
+    -s "${test_node_2} crmd(.*)FSA Hostname: ${test_node_2}" \
+    -s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
+cts_assert "CRMd startup on ${test_node_2} failed."
+
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 3500 \
+    -s "${test_node_1} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
+    -s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2" \
+    -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_2}"
+cts_assert "rsc2 was not transferred to ${test_node_2} on startup."
+
+#----
+
+do_cmd echo Various sanity checks - stage 11
+do_cmd wait_for_state S_NOT_DC 30 $test_node_2 
+cts_assert "S_NOT_DC not reached on $test_node_2 (startup - 2)!"
+
+do_cmd wait_for_state S_IDLE 30 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (startup - 2)!"
+
+do_cmd is_running rsc1 $test_node_1
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_1
+cts_assert "rsc2 NOT running"
+
+do_cmd is_running rsc1 $test_node_1 $test_node_1
+cts_assert "rsc1 NOT running on $test_node_1"
+
+do_cmd is_running rsc2 $test_node_1 $test_node_2
+cts_assert "rsc2 NOT running on $test_node_2"
+
+#----
+
+do_cmd echo Killing everything on $test_node_2
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_1 "killall -9 heartbeat ccm crmd lrmd" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 50000 \
+    -s "${test_node_1} crmd(.*) State transition (.*) \-> \"S_POLICY_ENGINE\"" \
+    -s "${test_node_1} crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_1}"
+cts_assert "Move of resource back to ${test_node_1} failed."
+
+#----
+
+do_cmd echo Various sanity checks - stage 12
+do_cmd wait_for_state S_IDLE 60 $test_node_1
+cts_assert "S_IDLE not reached on $test_node_1 after shutdown!"
+
+do_cmd is_running rsc1 $test_node_1
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_1
+cts_assert "rsc2 NOT running"
+
+do_cmd is_running rsc1 $test_node_1 $test_node_2
+cts_assert_false "rsc1 IS running on $test_node_2"
+
+do_cmd is_running rsc2 $test_node_1 $test_node_1
+cts_assert "rsc2 NOT running on $test_node_1"
+
+#----
+
+
+######################################################
+#
+# Subtest start: Kill crmd (node2)
+#
+######################################################
+
+# make *sure* theres nothing left over from last time
+crm-cleanup
+
+#----
+
+echo -ne "\033]0;$test_type (Kill crmd - slave) : Iteration $iteration of $repeats\007"
+do_cmd echo "Fail type: Kill crmd (slave)"
+do_cmd echo "#############################"
+do_cmd echo "wait for HA to start on ${test_node_1}"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 300 \
+    -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" \
+    -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" \
+    -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
+cts_assert "Startup of Heartbeat on ${test_node_1} failed."
+
+#----
+
+do_cmd echo "wait for CRMd to start on ${test_node_1}"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 1500 \
+    -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}" \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert "CRMd startup on ${test_node_1} failed."
+
+do_cmd wait_for_state S_IDLE 3 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
+
+#----
+
+do_cmd echo Create the first constraint and wait for S_IDLE
+rsc=rsc1
+uuid1=`uuidgen`
+uuid2=`uuidgen`
+uuid3=`uuidgen`
+node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\">
+        <rule id=\"${uuid2}\" result=\"can\"/>
+	<rule id=\"${uuid3}\" score=\"1000\" boolean_op=\"or\">
+	  <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_1}\"/>
+	</rule>
+      </rsc_location>'"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_constraint_adv $test_node_1 $node_xml
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert Adding constraint1 did not pass
+
+#----
+
+do_cmd echo Create the second constraint and wait for S_IDLE
+rsc=rsc2
+uuid1=`uuidgen`
+uuid2=`uuidgen`
+uuid3=`uuidgen`
+node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\">
+	        <rule id=\"${uuid2}\" result=\"can\"/>
+		<rule id=\"${uuid3}\" score=\"1000\" boolean_op=\"or\">
+		   <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_2}\"/>
+		</rule>
+	   </rsc_location>'"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_constraint_adv $test_node_1 $node_xml
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert Adding constraint2 did not pass
+
+#----
+
+do_cmd echo Create the first resource and wait for S_IDLE after start
+args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - ignore $args
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) Performing op start(.*) on rsc1" \
+    -s "crmd(.*) Resource state: rsc1(.*) after start"
+cts_assert Adding rsc1 did not pass
+
+#----
+
+do_cmd echo Create the second resource and wait for S_IDLE after start
+args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - ignore $args
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) Performing op start(.*) on rsc2" \
+    -s "crmd(.*) Resource state: rsc2(.*) after start"
+cts_assert Adding rsc2 did not pass
+
+#----
+
+do_cmd echo Various sanity checks - stage 13
+do_cmd wait_for_state S_IDLE 3 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (CIB create)!"
+
+do_cmd is_running rsc1 $test_node_1
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_1
+cts_assert "rsc2 NOT running"
+
+do_cmd is_dc $test_node_1
+cts_assert "$test_node_1 is supposed to be the DC"
+
+do_cmd is_running rsc1 $test_node_1 x$test_node_1
+cts_assert_false "rsc1 IS running on x$test_node_1"
+
+do_cmd is_running rsc1 $test_node_1 $test_node_1
+cts_assert "rsc1 NOT running on $test_node_1"
+
+do_cmd is_running rsc2 $test_node_1 $test_node_1
+cts_assert "rsc2 NOT running on $test_node_1"
+
+#----
+
+do_cmd echo "wait for HA to start on $test_node_2"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+    -s "${test_node_2} ccm(.*) Hostname: ${test_node_2}" \
+    -s "${test_node_2} heartbeat(.*): info: Starting (.*)lrmd" \
+    -e "${test_node_2} heartbeat(.*) Client (.*) respawning too fast"
+cts_assert "Startup of Heartbeat on ${test_node_2} failed."
+
+#----
+
+do_cmd echo "wait for CRMd to start on $test_node_2"
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd  "-VVVV" "2>&1 >/dev/null" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
+    -s "${test_node_2} crmd(.*)FSA Hostname: ${test_node_2}" \
+    -s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
+cts_assert "CRMd startup on ${test_node_2} failed."
+
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 3500 \
+    -s "${test_node_1} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
+    -s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2" \
+    -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_2}"
+cts_assert "rsc2 was not transferred to ${test_node_2} on startup."
+
+#----
+
+do_cmd echo Various sanity checks - stage 14
+do_cmd wait_for_state S_NOT_DC 30 $test_node_2 
+cts_assert "S_NOT_DC not reached on $test_node_2 (startup - 2)!"
+
+do_cmd wait_for_state S_IDLE 30 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (startup - 2)!"
+
+do_cmd is_running rsc1 $test_node_1
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_1
+cts_assert "rsc2 NOT running"
+
+do_cmd is_running rsc1 $test_node_1 $test_node_1
+cts_assert "rsc1 NOT running on $test_node_1"
+
+do_cmd is_running rsc2 $test_node_1 $test_node_2
+cts_assert "rsc2 NOT running on $test_node_2"
+
+#----
+
+do_cmd echo Killing crmd on $test_node_2
+crm_log_pos=$(stat -L -c %s $logfile)
+do_cmd remote_cmd $CRMD_USER $test_node_1 "killall -9 crmd" &
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 50000 \
+    -s "${test_node_1} crmd(.*) State transition (.*) \-> \"S_POLICY_ENGINE\"" \
+    -s "${test_node_1} crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+    -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_1}"
+cts_assert "Move of resource back to ${test_node_1} failed."
+
+#----
+
+do_cmd echo Various sanity checks - stage 15
+do_cmd wait_for_state S_IDLE 60 $test_node_1
+cts_assert "S_IDLE not reached on $test_node_1 after shutdown!"
+
+do_cmd is_running rsc1 $test_node_1
+cts_assert "rsc1 NOT running"
+
+do_cmd is_running rsc2 $test_node_1
+cts_assert "rsc2 NOT running"
+
+do_cmd is_running rsc1 $test_node_1 $test_node_2
+cts_assert_false "rsc1 IS running on $test_node_2"
+
+do_cmd is_running rsc2 $test_node_1 $test_node_1
+cts_assert "rsc2 NOT running on $test_node_1"
+
+#----
+
+
+do_cmd remote_cmd $CRMD_USER $test_node_2 killall -9 crmd heartbeat ccm lrmd
+
+echo "test: PASSED"
+)
+done

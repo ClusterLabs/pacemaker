@@ -23,6 +23,7 @@ $match_all=0;
 $max_lines=0;
 $log_file="/var/log/messages";
 $start_pos=-1;
+$verbose=0;
 
 @search_for = ();
 @errors     = ();
@@ -30,11 +31,14 @@ $start_pos=-1;
 while ( $_ = @ARGV[0], /^-/ ) {
     shift;
     if ( /^--search/ ) {
-	$do_search = 1 ;
+	$do_search = 1;
 
     } elsif ( /^-p/ ) {
 	$start_pos = $ARGV[0];
 	shift;
+
+    } elsif ( /^-v/ ) {
+	$verbose = 1;
 
     } elsif ( /^-m/ ) {
 	$max_lines = $ARGV[0];
@@ -73,9 +77,13 @@ while ( $_ = @ARGV[0], /^-/ ) {
     }
 }
 
+push @errors, "__crmtest_manual_abort__";
+
 if( $do_search eq 1 ) {
     $rc=string_search();
-    print STDOUT "Search returned: $rc\n";
+    if( $verbose > 0) {
+	print STDOUT "Search returned: $rc\n";
+    }
     exit $rc;
 }
 
@@ -102,10 +110,14 @@ sub string_search() {
     open(LOG, $log_file);
 
     if( $start_pos > 0 ) {
-	print STDOUT "Starting search in $log_file from position $start_pos...\n";
+	if( $verbose > 0) {
+	    print STDOUT "Starting search in $log_file from position $start_pos...\n";
+	}
 	seek LOG, $start_pos, 0
     } else {
-	print STDOUT "Starting search in $log_file from EOF...\n";
+	if( $verbose > 0) {
+	    print STDOUT "Starting search in $log_file from EOF...\n";
+	}
 	seek LOG, 0, 2;
     }
 
@@ -137,12 +149,15 @@ sub string_search() {
 			    $results{$regex} = 1;
 			}
 			$found = scalar(keys %results)-1;
-			print STDOUT "[line $num_lines]: Found match ".$found." of ".scalar(@search_for)." for (".$regex."): \n\t".$line;
-
+			if( $verbose > 0) {
+			    print STDOUT "[line $num_lines]: Found match ".$found." of ".scalar(@search_for)." for (".$regex."): \n\t".$line;
+			}
 			if(scalar(@search_for) < scalar(keys %results)) {
 			    
-			    foreach $key (sort keys %results) {
-				print STDOUT "Found key \'".$key."\' ".$results{$key}." times.\n" if $results{$key} ne "";
+			    if( $verbose > 0) {
+				foreach $key (sort keys %results) {
+				    print STDOUT "Found key \'".$key."\' ".$results{$key}." times.\n" if $results{$key} ne "";
+				}
 			    }
 			    return 0;
 			}

@@ -167,6 +167,7 @@ function is_dc() {
     fi
 
     echo "$host is NOT DC"
+    remote_cmd $ADMIN_USER $host $HALIB_DIR/crmadmin -S $host
 
     return 1
 }	
@@ -223,8 +224,9 @@ function make_resource()
     type=$4
     priority=$5
     version=$6
+    stopfail=$7
 
-    shift 6
+    shift 7
     
     args=$*
 
@@ -233,10 +235,13 @@ function make_resource()
     node_xml="'<resource id=\"${id}\" class=\"${class}\" type=\"${type}\""
 
     if [ ! -z $version -a "x$version" != "x-" ]; then
-	node_xml="$node_xml version=${version}\""
+	node_xml="$node_xml version=\"${version}\""
     fi
     if [ ! -z $priority -a "x$priority" != "x-" ]; then
-	node_xml="$node_xml priority=${priority}\""
+	node_xml="$node_xml priority=\"${priority}\""
+    fi
+    if [ ! -z $stopfail -a "x$stopfail" != "x-" ]; then
+	node_xml="$node_xml on_stopfail=\"${stopfail}\""
     fi
     node_xml="$node_xml >";
     if [ ! -z "$args" -a "x$args" != "x-" ]; then
@@ -318,6 +323,7 @@ function dump_node() {
     a_node=$2
 
     dump_file="${date_str}-${a_node_index}-${a_node}.tgz"
+    `which ssh` ${ADMIN_USER}@${a_node} "ps axf > /tmp/crm/processes"
     `which ssh` ${ADMIN_USER}@${a_node} \
 	"tar zcvf /tmp/${dump_file} /tmp/crm ~${CRMD_USER}/core"
 
@@ -383,7 +389,7 @@ function do_cmd() {
 	$cmdline
 	rc=$?
 	# for the logs...
-	$cmdline 2>&1 >> $test_dump_dir/test.txt
+	$cmdline -v 2>&1 >> $test_dump_dir/test.txt
 
     elif [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
 	$cmdline 2>&1 >> $test_dump_dir/test.txt

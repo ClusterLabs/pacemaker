@@ -50,9 +50,9 @@ cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
 #do_cmd make_node $test_node_1 $test_node_1
 #do_cmd make_node $test_node_1 $test_node_2
 args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
-do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - $args
+do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - - $args
 args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
-do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - $args
+do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - - $args
 
 #do_cmd make_constraint $test_node_1 rsc1 can
 uuid1=`uuidgen`
