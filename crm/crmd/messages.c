@@ -519,7 +519,7 @@ handle_message(xmlNodePtr stored_msg)
 		stored_msg, NULL, XML_ATTR_SYSFROM,   TRUE);
 
 	const char *host_from= get_xml_attr(
-		stored_msg, NULL, XML_ATTR_HOSTFROM,  TRUE);
+		stored_msg, NULL, XML_ATTR_HOSTFROM,  FALSE);
 
 	const char *msg_ref  = get_xml_attr(
 		stored_msg, NULL, XML_ATTR_REFERENCE, TRUE);
@@ -815,8 +815,8 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	if(msg_out_strm == NULL) {
 		msg_out_strm = fopen("/tmp/outbound.log", "w");
 	}
-	fprintf(msg_out_strm, "[%d HA (%s:%d)]\t%s\n",
-		all_is_good,
+	fprintf(msg_out_strm, "[%s HA (%s:%d)]\t%s\n",
+		all_is_good?"succeeded":"failed",
 		xmlGetProp(root, XML_ATTR_REFERENCE),
 		send_result,
 		msg_text);
