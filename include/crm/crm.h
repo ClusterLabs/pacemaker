@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.43 2005/02/10 15:51:01 andrew Exp $ */
+/* $Id: crm.h,v 1.44 2005/02/15 11:52:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,13 +31,24 @@
 #endif
 #include <crm/common/util.h>
 
-#define CRM_ASSERT(expr) if(expr == FALSE) {		\
-		crm_crit("Triggered assert at %s:%d",	\
-			 __FILE__, __LINE__);		\
-		abort();				\
+#ifndef CRM_DEV_BUILD
+#  define CRM_DEV_BUILD 0
+#endif
+
+#define CRM_ASSERT(expr) if(expr == FALSE) {			\
+		crm_crit("Triggered assert in %s() at %s:%d",	\
+			 __FUNCTION__, __FILE__, __LINE__);	\
+		abort();					\
 	}
 
-#define CRM_DEV_ASSERT(expr) if(1) { CRM_ASSERT(expr); }
+#define CRM_DEV_ASSERT(expr) if(expr == FALSE) {			\
+		if(CRM_DEV_BUILD) {					\
+			CRM_ASSERT(expr);				\
+		} else {						\
+			crm_err("Triggered non-fatal assert in %s() at %s:%d", \
+				__FUNCTION__, __FILE__, __LINE__);	\
+		}							\
+	}
 
 /* Clean these up at some point, some probably should be runtime options */
 #define WORKING_DIR	HA_VARLIBDIR"/heartbeat/crm"
@@ -53,7 +64,7 @@
 #define DEVEL_CIB_COPY   1
 #define DEVEL_DIR	"/tmp/crm"
 
-#define CRM_VERSION	"0.6"
+#define CRM_VERSION	"0.7"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
@@ -87,6 +98,7 @@
 #define CRM_OP_CIB_ERASE	"cib_erase"
 #define CRM_OP_CIB_REPLACE	"cib_replace"
 
+#define CRM_OP_DIE		"die_no_respawn"
 #define CRM_OP_RETRIVE_CIB	"retrieve_cib"
 #define CRM_OP_JOINACK		"join_ack_nack"
 #define CRM_OP_WELCOME		"welcome"
