@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <portability.h>
 #include <crm/crm.h>
 #include <crmd_fsa.h>
 #include <libxml/tree.h>
@@ -434,6 +435,10 @@ do_ack_welcome(long long action,
 	    void *data)
 {
 	xmlNodePtr welcome = (xmlNodePtr)data;
+	xmlNodePtr cib_copy;
+	xmlNodePtr tmp1;
+	xmlNodePtr tmp2;
+
 	FNIN();
 	
 #if 0
@@ -443,9 +448,9 @@ do_ack_welcome(long long action,
 	} 
 #endif
 
-	xmlNodePtr cib_copy = get_cib_copy();
-	xmlNodePtr tmp1 = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
-	xmlNodePtr tmp2 = create_cib_fragment(tmp1, NULL);
+	cib_copy = get_cib_copy();
+	tmp1 = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
+	tmp2 = create_cib_fragment(tmp1, NULL);
 	
 	send_ha_reply(fsa_cluster_conn, welcome, tmp2);
 
@@ -507,8 +512,11 @@ do_process_welcome_ack(long long action,
 	int lpc = 0, size = 0;
 	oc_node_t *members;
 	gboolean is_a_member = FALSE;
+	xmlNodePtr tmp1;
 	xmlNodePtr join_ack = (xmlNodePtr)data;
+	xmlNodePtr cib_fragment;
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
+
 	FNIN();
 
 	
@@ -524,7 +532,7 @@ do_process_welcome_ack(long long action,
 		}
 	}
 	
-	xmlNodePtr cib_fragment = find_xml_node(join_ack, XML_TAG_FRAGMENT);
+	cib_fragment = find_xml_node(join_ack, XML_TAG_FRAGMENT);
 
 	if(is_a_member == FALSE) {
 		cl_log(LOG_ERR, "Node %s is not known to us", join_from);
@@ -551,15 +559,16 @@ do_process_welcome_ack(long long action,
 	}
 	
 	/* TODO: check the fragment is only for the status section
-	const char *section = get_xml_attr(cib_fragment, NULL,
+	= get_xml_attr(cib_fragment, NULL,
 					   XML_ATTR_FILTER_TYPE, TRUE);	*/
 	
 	/* Make changes so that state=active for this node when the update
 	 *  is processed by A_CIB_INVOKE
 	 */
-	xmlNodePtr tmp1 = find_xml_node(cib_fragment, XML_TAG_CIB);
+	tmp1 = find_xml_node(cib_fragment, XML_TAG_CIB);
 	tmp1 = get_object_root(XML_CIB_TAG_STATUS, tmp1);
 	tmp1 = find_entity(tmp1, XML_CIB_TAG_STATE, join_from, FALSE);
+
 	set_xml_property_copy(tmp1, "state", "active");
 	
 	if(g_hash_table_size(joined_nodes)

@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.13 2004/04/15 00:37:09 msoffen Exp $ */
+/* $Id: crmdmain.c,v 1.14 2004/04/20 20:19:11 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -129,6 +129,7 @@ int
 init_start(void)
 {
     long pid;
+    enum crmd_fsa_state state;
 
     if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
 		cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
@@ -138,7 +139,7 @@ init_start(void)
     xmlInitParser();
     
     fsa_state = S_PENDING;
-    enum crmd_fsa_state state = s_crmd_fsa(C_STARTUP, I_STARTUP, NULL);
+    state = s_crmd_fsa(C_STARTUP, I_STARTUP, NULL);
 
     if (state == S_PENDING) {
 	    /* Create the mainloop and run it... */

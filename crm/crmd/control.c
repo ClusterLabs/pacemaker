@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <portability.h>
 #include <crm/crm.h>
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
@@ -148,10 +149,10 @@ do_shutdown_req(long long action,
 gboolean
 crmd_ha_input_dispatch(int fd, gpointer user_data)
 {
-	FNIN();
-
 	ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
     
+	FNIN();
+
 	while(hb_cluster->llc_ops->msgready(hb_cluster))
 	{
 		// invoke the callbacks but dont block
@@ -197,6 +198,11 @@ do_startup(long long action,
 	   enum crmd_fsa_input current_input,
 	   void *data)
 {
+	int facility;
+	int was_error = 0;
+	int interval = 1; // seconds between DC heartbeats
+
+
 	FNIN();
 
 	fsa_input_register = 0; // zero out the regester
@@ -215,7 +221,6 @@ do_startup(long long action,
 	/* change the logging facility to the one used by heartbeat daemon */
 	fsa_cluster_conn = ll_cluster_new("heartbeat");
 	
-	int facility;
 	cl_log(LOG_INFO, "Switching to Heartbeat logger");
 	if ((facility =
 	     fsa_cluster_conn->llc_ops->get_logfacility(
@@ -223,8 +228,6 @@ do_startup(long long action,
 		cl_log_set_facility(facility);
 	}
 	
-	int was_error = 0;
-
 	CRM_DEBUG2("Facility: %d", facility);
 	
 	if(was_error == 0) {
@@ -254,8 +257,6 @@ do_startup(long long action,
 	shutdown_escalation_timmer = (fsa_timer_t *)
 		cl_malloc(sizeof(fsa_timer_t));
 
-
-	int interval = 1; // seconds between DC heartbeats
 
 	interval = interval * 1000;
 	

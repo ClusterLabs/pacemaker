@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <portability.h>
 #include <crm/crm.h>
 #include <string.h>
 #include <crmd_fsa.h>
@@ -183,6 +184,7 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 {
 	const char *from = ha_msg_value(msg, F_ORIG);
 	const char *to = NULL;
+	xmlNodePtr root_xml_node;
 
 	FNIN();
 
@@ -211,7 +213,7 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 	fflush(msg_in_strm);
 #endif
 
-	xmlNodePtr root_xml_node = find_xml_in_hamessage(msg);
+	root_xml_node = find_xml_in_hamessage(msg);
 	to = xmlGetProp(root_xml_node, XML_ATTR_HOSTTO);
 	
 	if(to != NULL && strlen(to) > 0 && strcmp(to, fsa_our_uname) != 0) {
@@ -241,6 +243,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	char *buffer = NULL;
 	IPC_Message *msg = NULL;
 	gboolean hack_return_good = TRUE;
+	xmlNodePtr root_xml_node;
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 
 	FNIN();
@@ -267,7 +270,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		CRM_DEBUG3("Processing xml from %s [text=%s]",
 			   curr_client->table_key, buffer);
 	
-		xmlNodePtr root_xml_node =
+		root_xml_node =
 			find_xml_in_ipcmessage(msg, FALSE);
 		if (root_xml_node != NULL) {
 			if (crmd_authorize_message(root_xml_node,
@@ -356,6 +359,7 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 {
 	gboolean was_sent = FALSE;
 	xmlNodePtr request = NULL;
+
 	FNIN();
 
 
@@ -556,10 +560,12 @@ send_msg_via_ha(xmlNodePtr action, const char *dest_node)
 void
 send_msg_via_ipc(xmlNodePtr action, const char *sys)
 {
+	IPC_Channel *client_channel;
+
 	FNIN();
 //	cl_log(LOG_DEBUG, "relaying msg to sub_sys=%s via IPC", sys);
 
-	IPC_Channel *client_channel =
+	client_channel =
 		(IPC_Channel*)g_hash_table_lookup (ipc_clients, sys);
 
 	if (client_channel != NULL) {
@@ -597,14 +603,15 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	char *client_name = NULL;
 	char *major_version = NULL;
 	char *minor_version = NULL;
-
+	const char *filtered_from;
 	gpointer table_key = NULL;
+	gboolean result;
 	
 	FNIN();
 
 	if (sys_from != NULL) {
 		gboolean can_reply = FALSE; // no-one has registered with this id
-		const char *filtered_from = sys_from;
+		filtered_from = sys_from;
 
 		/* The CIB can have two names on the DC */
 		if(strcmp(sys_from, CRM_SYSTEM_DCIB) == 0)
@@ -625,7 +632,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	       "received client join msg: %s",
 	       (char*)client_msg->msg_body);
 
-	gboolean result = process_hello_message(client_msg,
+	result = process_hello_message(client_msg,
 						&uuid,
 						&client_name,
 						&major_version,

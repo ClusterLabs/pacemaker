@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <portability.h>
 #include <crm/crm.h>
 #include <crmd_fsa.h>
 
@@ -131,6 +132,13 @@ do_cib_invoke(long long action,
 	      void *data)
 {
 	xmlNodePtr cib_msg = NULL;
+	xmlNodePtr answer = NULL;
+	xmlNodePtr tmp1 = NULL;
+	xmlNodePtr tmp2 = NULL;
+	xmlNodePtr new_options = NULL;
+	const char *req_from;
+	const char *section = NULL;
+
 	FNIN();
 
 	if(data != NULL)
@@ -142,10 +150,9 @@ do_cib_invoke(long long action,
 		const char *op = xmlGetProp(cib_msg, XML_ATTR_OP);
 		if(safe_str_eq(op, CRM_OPERATION_SHUTDOWN_REQ)){
 			// create update section
-			xmlNodePtr tmp1 = NULL;
-			xmlNodePtr tmp2 =
+			tmp2 =
 				create_xml_node(NULL, XML_CIB_TAG_STATE);
-			const char *req_from =
+			req_from =
 				xmlGetProp(cib_msg, XML_ATTR_HOSTFROM);
 			
 			set_xml_property_copy(tmp1, "id", req_from);
@@ -162,7 +169,7 @@ do_cib_invoke(long long action,
 		}
 
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
-		xmlNodePtr answer = process_cib_message(cib_msg, TRUE);
+		answer = process_cib_message(cib_msg, TRUE);
 		if(relay_message(answer, TRUE) == FALSE) {
 			cl_log(LOG_ERR, "Confused what to do with cib result");
 			xml_message_debug(answer, "Couldnt route: ");
@@ -192,20 +199,19 @@ do_cib_invoke(long long action,
 
 		/* experimental */
 	} else if(action & A_CIB_INVOKE_LOCAL) {
-		xmlNodePtr answer = process_cib_message(cib_msg, TRUE);
+		answer = process_cib_message(cib_msg, TRUE);
 		put_message(answer);
 		FNRET(I_REQUEST);
 
 	} else if(action & A_CIB_BUMPGEN) {  
  		// check if the response was ok before next bit
 
-		const char *section = get_xml_attr(cib_msg, XML_TAG_OPTIONS,
-						   XML_ATTR_FILTER_TYPE, FALSE);
+		section = get_xml_attr(cib_msg, XML_TAG_OPTIONS,
+				XML_ATTR_FILTER_TYPE, FALSE);
 		
 		/* set the section so that we dont always send the
 		 * whole thing
 		 */
-		xmlNodePtr new_options = NULL;
 
 		if(section != NULL) {
 			new_options = set_xml_attr(NULL, XML_TAG_OPTIONS,
@@ -213,7 +219,7 @@ do_cib_invoke(long long action,
 						   section, TRUE);
 		}
 		
-		xmlNodePtr answer = process_cib_request(CRM_OPERATION_BUMP,
+		answer = process_cib_request(CRM_OPERATION_BUMP,
 							new_options, NULL);
 
 		free_xml(new_options);
@@ -474,6 +480,9 @@ run_command(struct crm_subsystem_s *centry,
 	    gboolean update_pid)
 {
 	pid_t			pid;
+	struct stat buf;
+	int s_res,size;
+	char *cmd_with_options = NULL;
 
 	/*
 	 * We need to ensure that the exec will succeed before
@@ -486,8 +495,7 @@ run_command(struct crm_subsystem_s *centry,
 		return FALSE;
 	}
 
-	struct stat buf;
-	int s_res = stat(centry->command, &buf);
+	s_res = stat(centry->command, &buf);
 	if(s_res != 0) {
 		cl_perror("Cannot (stat) exec %s", centry->command);
 		return FALSE;
@@ -525,8 +533,7 @@ run_command(struct crm_subsystem_s *centry,
 		sleep(1);
 	}
 
-	char *cmd_with_options = NULL;
-	int size = strlen(options);
+	size = strlen(options);
 	size += strlen(centry->command);
 	size += 2; // ' ' + \0
 	
@@ -646,16 +653,20 @@ xmlNodePtr
 do_lrm_query(void)
 {
 	GList* lrm_list = NULL;
+	GList* element = NULL;
+	GList* op_list = NULL;
+	xmlNodePtr agent = NULL;
 	xmlNodePtr data = create_xml_node(NULL, "lrm");
 	xmlNodePtr agent_list = create_xml_node(data, "lrm_agents");
+	char *rsc_type = NULL;
 	
 	lrm_list = fsa_lrm_conn->lrm_ops->get_ra_supported(fsa_lrm_conn);
 	if (NULL != lrm_list) {
 		GList* element = g_list_first(lrm_list);
 		while (NULL != element) {
-			char *rsc_type = (char*)element->data;
+			rsc_type = (char*)element->data;
 			
-			xmlNodePtr agent =
+			agent =
 				create_xml_node(agent_list, "lrm_agent");
 			
 			set_xml_property_copy(agent, "class",   rsc_type);
@@ -672,7 +683,6 @@ do_lrm_query(void)
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 
 	xmlNodePtr rsc_list = create_xml_node(data, "lrm_resources");
-	GList* element = NULL;
 
 	if (NULL != lrm_list) {
 		element = g_list_first(lrm_list);
@@ -694,7 +704,7 @@ do_lrm_query(void)
 		
 		CRM_DEBUG("get_cur_state...");
 		
-		GList* op_list = the_rsc->ops->get_cur_state(the_rsc,
+		op_list = the_rsc->ops->get_cur_state(the_rsc,
 							     &cur_state);
 		CRM_DEBUG2("\tcurrent state:%s\n",
 			   cur_state==LRM_RSC_IDLE?"Idel":"Busy");

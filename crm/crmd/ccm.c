@@ -17,6 +17,7 @@
  */
 
 /* put these first so that uuid_t is defined without conflicts */
+#include <portability.h>
 #include <ocf/oc_event.h>
 #include <ocf/oc_membership.h>
 
@@ -348,6 +349,9 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 {
 	int member_id = -1;
 	gboolean member = FALSE;
+	int lpc;
+	int node_list_size;
+
 	cl_log(LOG_INFO,"trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
 	       "new_idx=%d, old_idx=%d",
 	       oc->m_instance,
@@ -360,8 +364,7 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	
 	cl_log(LOG_INFO, "NODES IN THE PRIMARY MEMBERSHIP");
 	
-	int lpc;
-	int node_list_size = oc->m_n_member;
+	node_list_size = oc->m_n_member;
 	for(lpc=0; lpc<node_list_size; lpc++) {
 		cl_log(LOG_INFO,"\t%s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_memb_idx+lpc].node_uname,
