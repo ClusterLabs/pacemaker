@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.23 2004/04/29 15:33:03 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.24 2004/04/29 15:34:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -199,20 +199,23 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	
 	
 #ifdef MSG_LOG
-		msg_text = dump_xml(root);
-		if(msg_out_strm == NULL) {
-			msg_out_strm = fopen("/tmp/outbound.log", "w");
-		}
-		fprintf(msg_out_strm, "[%d HA (%s:%d)]\t%s\n",
-			all_is_good,
-			xmlGetProp(root, XML_ATTR_REFERENCE),
-			send_result,
-			msg_text);
-		
-		fflush(msg_out_strm);
-		cl_free(msg_text);
-#endif
+	msg_text = dump_xml(root);
+	if(msg_out_strm == NULL) {
+		msg_out_strm = fopen("/tmp/outbound.log", "w");
+	}
+	fprintf(msg_out_strm, "[%d HA (%s:%d)]\t%s\n",
+		all_is_good,
+		xmlGetProp(root, XML_ATTR_REFERENCE),
+		send_result,
+		msg_text);
 	
+	fflush(msg_out_strm);
+	cl_free(msg_text);
+	if(msg != NULL) {
+		ha_msg_del(msg);
+	}
+#endif
+		
 	FNRET(all_is_good);
 }
 		    
