@@ -296,6 +296,7 @@ def usage(arg):
     +  " -D config-directory" \
     +  " --logfile system-logfile-name" \
     +  " -L system-logfile-name" \
+    +  " --choose testcase" \
     +  " -v2"\
     +  " --stonith (1 | 0 | yes | no)" \
     +  " --standby (1 | 0 | yes | no)" \
@@ -326,7 +327,8 @@ if __name__ == '__main__':
     CIBResource = 0
     ClobberCIB = 0
     LimitNodes = 0
-
+    TestCase = None
+    
     #
     # The values of the rest of the parameters are now properly derived from
     # the configuration files.
@@ -397,6 +399,9 @@ if __name__ == '__main__':
        elif args[i] == "--cib-filename":
            skipthis=1
            CIBfilename = args[i+1]
+       elif args[i] == "--choose":
+           skipthis=1
+           TestCase = args[i+1]
        else:
            NumIter=int(args[i])
           
@@ -457,8 +462,15 @@ if __name__ == '__main__':
     cm.log("Cluster nodes: " + repr(config.Parameters["node"]))
 
     Audits = AuditList(cm)
-    Tests = TestList(cm)
-
+    Tests = []
+    
+    if TestCase != None:
+        for test in TestList(cm):
+            if test.name == TestCase:
+                Tests.append(test)
+    else:
+        Tests = TestList(cm)    
+    
     tests = RandomTests(scenario, cm, Tests, Audits)
     Environment.RandomTests = tests
     overall, detailed = tests.run(NumIter)
