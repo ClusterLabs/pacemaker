@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.32 2005/02/10 16:21:58 alan Exp $ */
+/* $Id: xml.c,v 1.33 2005/02/11 22:08:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -251,8 +251,12 @@ add_node_copy(crm_data_t *new_parent, crm_data_t *xml_node)
 		node_copy = copy_xml_node_recursive(xml_node);
 		xmlAddChild(new_parent, node_copy);
 #else
-		ha_msg_addstruct(new_parent, crm_element_name(xml_node), xml_node);
+		const char *name = crm_element_name(xml_node);
+		CRM_DEV_ASSERT(HA_OK == ha_msg_addstruct(
+				       new_parent, name, xml_node));
+		
 		node_copy = find_entity(new_parent, crm_element_name(xml_node), ID(xml_node), FALSE);
+		crm_validate_data(node_copy);
 		crm_update_parents(new_parent);
 		crm_validate_data(new_parent);
 #endif
@@ -770,13 +774,19 @@ get_message_xml(const HA_Message *msg, const char *field)
 gboolean
 add_message_xml(HA_Message *msg, const char *field, crm_data_t *xml) 
 {
+	crm_validate_data(xml);
 #ifdef USE_LIBXML
 	char *buffer = dump_xml_unformatted(xml);
-	ha_msg_add(msg, field, buffer);
-	crm_free(buffer);
+	CRM_DEV_ASSERT(buffer != NULL);
+	if(buffer != NULL) {
+		CRM_DEV_ASSERT(cl_is_allocated(buffer));
+		ha_msg_add(msg, field, buffer);
+		crm_debug("Added XML to message");
+		CRM_DEV_ASSERT(cl_is_allocated(buffer));
+		crm_free(buffer);
+	}
 #else
 	crm_validate_data(msg);
-	crm_validate_data(xml);
 	ha_msg_addstruct(msg, field, xml);
 	crm_update_parents(msg);
 #endif
@@ -1155,7 +1165,7 @@ crm_validate_data(const crm_data_t *xml_root)
 	int lpc = 0;
 	CRM_ASSERT(xml_root != NULL);
 	CRM_ASSERT(cl_is_allocated(xml_root) == 1);
-	CRM_ASSERT(xml_root->nfields < 300);
+	CRM_ASSERT(xml_root->nfields < 500);
 	
 	for (lpc = 0; lpc < xml_root->nfields; lpc++) {
 		void *child = xml_root->values[lpc];
@@ -1330,7 +1340,7 @@ get_tag_name(const char *input)
  				break;
 		}
 	}
-	crm_err("Error parsing token near %.15s: %s", input, error);
+	crm_err("Error parsing token near %.15s: %s", input, crm_str(error));
 	return -1;
 }
 
@@ -1367,7 +1377,7 @@ get_attr_name(const char *input)
  				break;
 		}
 	}
-	crm_err("Error parsing token near %.15s: %s", input, error);
+	crm_err("Error parsing token near %.15s: %s", input, crm_str(error));
 	return -1;
 }
 
@@ -1393,13 +1403,14 @@ get_attr_value(const char *input)
 					lpc++;
 					break;
 				}
+				/*fall through*/
 			case '"':
 				return lpc;
 			default:
  				break;
 		}
 	}
-	crm_err("Error parsing token near %.15s: %s", input, error);
+	crm_err("Error parsing token near %.15s: %s", input, crm_str(error));
 	return -1;
 }
 
@@ -1509,6 +1520,7 @@ parse_xml(const char *input, int *offset)
 					break;
 				case '=':
 					lpc++; /* = */
+					/*fall through*/
 				case '"':
 					lpc++; /* " */
 					len = get_attr_value(our_input+lpc);
