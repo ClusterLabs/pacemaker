@@ -49,7 +49,7 @@ extern fsa_message_queue_t fsa_message_queue;
 # ifdef FSA_TRACE
 #  define IF_FSA_ACTION(x,y)						\
      if(is_set(actions,x)) {						\
-	CRM_DEBUG("Invoking action %s (%.16llx)",			\
+	crm_verbose("Invoking action %s (%.16llx)",			\
 		fsa_action2string(x), x);				\
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
@@ -59,10 +59,10 @@ extern fsa_message_queue_t fsa_message_queue;
 			"\t// %s:\t%s\t(data? %s)\t(result=%s)\n",	\
 			fsa_input2string(cur_input),			\
 			fsa_action2string(x),				\
-			data==NULL?XML_BOOLEAN_NO:XML_BOOLEAN_YES,				\
+			data==NULL?XML_BOOLEAN_NO:XML_BOOLEAN_YES,	\
 			fsa_input2string(next_input));			\
 	fflush(dot_strm);						\
-	CRM_DEBUG("Result of action %s was %s",				\
+	crm_verbose("Result of action %s was %s",			\
 		fsa_action2string(x), fsa_input2string(next_input));	\
      }
 # else
@@ -76,7 +76,7 @@ extern fsa_message_queue_t fsa_message_queue;
 			"\t// %s:\t%s\t(data? %s)\t(result=%s)\n",	\
 			fsa_input2string(cur_input),			\
 			fsa_action2string(x),				\
-			data==NULL?XML_BOOLEAN_NO:XML_BOOLEAN_YES,				\
+			data==NULL?XML_BOOLEAN_NO:XML_BOOLEAN_YES,	\
 			fsa_input2string(next_input));			\
 	fflush(dot_strm);						\
      }
@@ -85,12 +85,12 @@ extern fsa_message_queue_t fsa_message_queue;
 # ifdef FSA_TRACE
 #  define IF_FSA_ACTION(x,y)						\
      if(is_set(actions,x)) {						\
-	CRM_DEBUG("Invoking action %s (%.16llx)",			\
+	crm_verbose("Invoking action %s (%.16llx)",			\
 		fsa_action2string(x), x);				\
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
 	next_input = y(x, cause, cur_state, last_input, data);		\
-	CRM_DEBUG("Result of action %s was %s",				\
+	crm_verbose("Result of action %s was %s",			\
 		fsa_action2string(x), fsa_input2string(next_input));	\
      }
 # else
@@ -189,7 +189,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	next_state = starting_state;
 
 #ifdef FSA_TRACE
-	CRM_DEBUG("FSA invoked with Cause: %s\n\tState: %s, Input: %s",
+	crm_verbose("FSA invoked with Cause: %s\n\tState: %s, Input: %s",
 		   fsa_cause2string(cause),
 		   fsa_state2string(cur_state),
 		   fsa_input2string(cur_input));
@@ -220,12 +220,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 
 			actions |= last_action;
 					
-			cl_log(LOG_INFO, "Wait until something else happens");
+			crm_info("Wait until something else happens");
 			break;
 		}
 
 #ifdef FSA_TRACE
-		CRM_DEBUG("FSA while loop:\tState: %s, Input: %s",
+		crm_verbose("FSA while loop:\tState: %s, Input: %s",
 			   fsa_state2string(cur_state),
 			   fsa_input2string(cur_input));
 #endif
@@ -240,7 +240,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		new_actions = crmd_fsa_actions[cur_input][cur_state];
 		if(new_actions != A_NOTHING) {
 #ifdef FSA_TRACE
-			CRM_DEBUG("Adding actions %.16llx", new_actions);
+			crm_verbose("Adding actions %.16llx", new_actions);
 #endif
 			actions |= new_actions;
 		}
@@ -281,15 +281,15 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 */
 		if(actions == A_NOTHING) {
 
-			cl_log(LOG_INFO, "Nothing to do");
+			crm_info("Nothing to do");
 			next_input = I_NULL;
 		
 /*			// check registers, see if anything is pending
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
-				CRM_DEBUG("(Re-)invoking shutdown");
+				crm_verbose("(Re-)invoking shutdown");
 				next_input = I_SHUTDOWN;
 			} else if(is_set(fsa_input_register, R_INVOKE_PE)) {
-				CRM_DEBUG("Invoke the PE somehow");
+				crm_verbose("Invoke the PE somehow");
 			}
 */
 		}
@@ -396,7 +396,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		else if((actions & A_MSG_PROCESS) != 0
 			|| is_message()) {
 			xmlNodePtr stored_msg = NULL;
-			crm_debug("Checking messages... %d",
+			crm_verbose("Checking messages... %d",
 				  g_slist_length(fsa_message_queue));
 			
 			stored_msg = get_message();
@@ -406,7 +406,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			}
 			
 			if(stored_msg == NULL) {
-				cl_log(LOG_ERR, "Invalid stored message");
+				crm_err("Invalid stored message");
 				continue;
 			}
 
@@ -427,7 +427,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			fflush(dot_strm);
 #endif
 #ifdef FSA_TRACE
-			CRM_DEBUG("Invoking action %s (%.16llx)",
+			crm_verbose("Invoking action %s (%.16llx)",
 				   fsa_action2string(A_MSG_PROCESS),
 				   A_MSG_PROCESS);
 #endif
@@ -442,13 +442,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			fprintf(dot_strm, "\t(result=%s)\n",
 				fsa_input2string(next_input));
 #endif
-			CRM_DEBUG("Result of action %s was %s",
+			crm_verbose("Result of action %s was %s",
 				   fsa_action2string(A_MSG_PROCESS),
 				   fsa_input2string(next_input));
 			
 			/* Error checking and reporting */
 		} else if(cur_input != I_NULL && is_set(actions, A_NOTHING)) {
-			cl_log(LOG_WARNING,
+			crm_warn(
 			       "No action specified for input,state (%s,%s)",
 			       fsa_input2string(cur_input),
 			       fsa_state2string(cur_state));
@@ -457,10 +457,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			
 		} else if(cur_input == I_NULL && is_set(actions, A_NOTHING)) {
 #ifdef FSA_TRACE
-			cl_log(LOG_INFO, "Nothing left to do");
+			crm_info("Nothing left to do");
 #endif			
 		} else {
-			cl_log(LOG_ERR, "Action %s (0x%llx) not supported ",
+			crm_err("Action %s (0x%llx) not supported ",
 			       fsa_action2string(actions), actions);
 			next_input = I_ERROR;
 		}
@@ -471,7 +471,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	}
 	
 #ifdef FSA_TRACE
-	CRM_DEBUG("################# Exiting the FSA (%s) ##################",
+	crm_verbose("################# Exiting the FSA (%s) ##################",
 		  fsa_state2string(fsa_state));
 #endif
 
@@ -507,8 +507,7 @@ do_state_transition(long long actions,
 	time_t now = time(NULL);
 
 	if(cur_state == next_state) {
-		cl_log(LOG_ERR,
-		       "%s called in state %s with no transtion",
+		crm_err("%s called in state %s with no transtion",
 		       __FUNCTION__, state_from);
 		return A_NOTHING;
 	}
@@ -524,18 +523,16 @@ do_state_transition(long long actions,
 		fflush(dot_strm);
 		//}
 
-	cl_log(LOG_INFO,
-	       "State transition \"%s\" -> \"%s\" [ cause =\"%s\" %s ]",
-	       state_from, state_to, input, asctime(localtime(&now)));
+	crm_info("State transition \"%s\" -> \"%s\" [ cause =\"%s\" %s ]",
+		 state_from, state_to, input, asctime(localtime(&now)));
 
 	switch(next_state) {
 		case S_PENDING:
 			break;
 		case S_NOT_DC:
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
-				cl_log(LOG_INFO,
-				       "(Re)Issuing shutdown request now"
-				       " that we have a new DC");
+				crm_info("(Re)Issuing shutdown request now"
+					 " that we have a new DC");
 				tmp = set_bit(tmp, A_SHUTDOWN_REQ);
 			}
 			tmp = clear_bit(tmp, A_RECOVER);
@@ -550,8 +547,8 @@ do_state_transition(long long actions,
 	}
 
 	if(tmp != actions) {
-		cl_log(LOG_INFO, "Action b4    %.16llx ", actions);
-		cl_log(LOG_INFO, "Action after %.16llx ", tmp);
+		crm_info("Action b4    %.16llx ", actions);
+		crm_info("Action after %.16llx ", tmp);
 		actions = tmp;
 	}
 

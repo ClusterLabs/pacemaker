@@ -82,9 +82,8 @@ do_cib_control(long long action,
 				result = I_FAIL;
 
 		} else {
-			cl_log(LOG_INFO,
-			       "Ignoring request to start %s after shutdown",
-			       this_subsys->command);
+			crm_info("Ignoring request to start %s after shutdown",
+				 this_subsys->command);
 		}
 	}
 	
@@ -119,14 +118,14 @@ do_cib_invoke(long long action,
 
 		xml_message_debug(cib_msg, "[CIB] Invoking with");
 		if(cib_msg == NULL) {
-			cl_log(LOG_ERR, "No message for CIB command");
+			crm_err("No message for CIB command");
 			FNRET(I_NULL); // I_ERROR
 		}
 
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
 		answer = process_cib_message(cib_msg, TRUE);
 		if(relay_message(answer, TRUE) == FALSE) {
-			cl_log(LOG_ERR, "Confused what to do with cib result");
+			crm_err("Confused what to do with cib result");
 			xml_message_debug(answer, "Couldnt route: ");
 		}
 
@@ -162,7 +161,7 @@ do_cib_invoke(long long action,
 	} else if(action & A_CIB_INVOKE_LOCAL) {
 		xml_message_debug(cib_msg, "[CIB] Invoking with");
 		if(cib_msg == NULL) {
-			cl_log(LOG_ERR, "No message for CIB command");
+			crm_err("No message for CIB command");
 			FNRET(I_NULL); // I_ERROR
 		}
 		
@@ -192,7 +191,7 @@ do_cib_invoke(long long action,
 		free_xml(new_options);
 
 		if(answer == NULL) {
-			cl_log(LOG_ERR, "Result of BUMP in %s was NULL",
+			crm_err("Result of BUMP in %s was NULL",
 			       __FUNCTION__);
 			FNRET(I_FAIL);
 		}
@@ -203,7 +202,7 @@ do_cib_invoke(long long action,
 		free_xml(answer);
 
 	} else {
-		cl_log(LOG_ERR, "Unexpected action %s in %s",
+		crm_err("Unexpected action %s in %s",
 		       fsa_action2string(action), __FUNCTION__);
 	}
 	
@@ -243,8 +242,7 @@ do_pe_control(long long action,
 			}
 			
 			if(CL_PID_EXISTS(this_subsys->pid)) {
-				cl_log(LOG_ERR,
-				       "Process %s is still active with pid=%d",
+				crm_err("Process %s is still active with pid=%d",
 				       this_subsys->command, this_subsys->pid);
 				result = I_FAIL;
 			} 
@@ -261,8 +259,7 @@ do_pe_control(long long action,
 				cleanup_subsystem(this_subsys);
 			}
 		} else {
-			cl_log(LOG_INFO,
-			       "Ignoring request to start %s while shutting down",
+			crm_info("Ignoring request to start %s while shutting down",
 			       this_subsys->command);
 		}
 	}
@@ -286,14 +283,14 @@ do_pe_invoke(long long action,
 
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
 		
-		cl_log(LOG_INFO, "Waiting for the PE to connect");
+		crm_info("Waiting for the PE to connect");
 		FNRET(I_WAIT_FOR_EVENT);
 		
 	}
 	
 	xmlNodePtr local_cib = get_cib_copy();
 
-	CRM_DEBUG("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
+	crm_verbose("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
 
 	if(fsa_pe_ref) {
 		crm_free(fsa_pe_ref);
@@ -343,8 +340,7 @@ do_te_control(long long action,
 			}
 			
 			if(CL_PID_EXISTS(this_subsys->pid)) {
-				cl_log(LOG_ERR,
-				       "Process %s is still active with pid=%d",
+				crm_err("Process %s is still active with pid=%d",
 				       this_subsys->command, this_subsys->pid);
 				result = I_FAIL;
 			} 
@@ -361,9 +357,8 @@ do_te_control(long long action,
 				cleanup_subsystem(this_subsys);
 			}
 		} else {
-			cl_log(LOG_INFO,
-			       "Ignoring request to start %s while shutting down",
-			       this_subsys->command);
+			crm_info("Ignoring request to start %s while shutting down",
+				 this_subsys->command);
 		}
 	}
 
@@ -401,7 +396,7 @@ do_te_copyto(long long action,
 	}
 
 	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
-		cl_log(LOG_INFO, "Waiting for the TE to connect");
+		crm_info("Waiting for the TE to connect");
 		if(data != NULL) {
 			free_xml(te_lastcc);
 			te_lastcc = message;
@@ -442,7 +437,7 @@ do_te_invoke(long long action,
 	FNIN();
 
 	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
-		cl_log(LOG_INFO, "Waiting for the TE to connect");
+		crm_info("Waiting for the TE to connect");
 		if(data != NULL) {
 			free_xml(te_last_input);
 			te_last_input = copy_xml_node_recursive(msg);
@@ -486,16 +481,15 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 	FNIN();
 
 	if (client_channel == NULL) {
-		cl_log(LOG_ERR, "Channel was NULL");
+		crm_err("Channel was NULL");
 	} else if (client_channel->ch_status == IPC_DISCONNECT) {
-		cl_log(LOG_ERR, "Channel was disconnected");
+		crm_err("Channel was disconnected");
 	} else {
 		crmd_client_t *blank_client =
 			(crmd_client_t *)crm_malloc(sizeof(crmd_client_t));
 	
 		if (blank_client == NULL) {
-			cl_log(LOG_ERR,
-			       "Could not allocate memory for a blank crmd_client_t");
+			crm_err("Could not allocate memory for a blank crmd_client_t");
 			FNRET(FALSE);
 		}
 		client_channel->ops->set_recv_qlen(client_channel, 100);
@@ -521,14 +515,13 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 static gboolean
 stop_subsystem(struct crm_subsystem_s*	centry)
 {
-	cl_log(LOG_INFO, "Stopping sub-system \"%s\"", centry->name);
+	crm_info("Stopping sub-system \"%s\"", centry->name);
 	if (centry->pid <= 0) {
-		cl_log(LOG_ERR,
-		       "OOPS! client %s not running yet",
-		       centry->command);
+		crm_err("OOPS! client %s not running yet",
+			centry->command);
 
 	} else {
-		cl_log(LOG_INFO, "Sending quit message to %s.", centry->name);
+		crm_info("Sending quit message to %s.", centry->name);
 		send_request(NULL, NULL, CRM_OP_QUIT, NULL, centry->name, NULL);
 
 	}
@@ -544,10 +537,10 @@ start_subsystem(struct crm_subsystem_s*	centry)
 	struct stat buf;
 	int s_res;
 
-	cl_log(LOG_INFO, "Starting sub-system \"%s\"", centry->command);
+	crm_info("Starting sub-system \"%s\"", centry->command);
 
 	if (centry->pid != 0) {
-		cl_log(LOG_ERR, "OOPS! client %s already running as pid %d"
+		crm_err("OOPS! client %s already running as pid %d"
 		       ,	centry->command, (int) centry->pid);
 	}
 
@@ -573,7 +566,7 @@ start_subsystem(struct crm_subsystem_s*	centry)
 	switch(pid=fork()) {
 
 		case -1:
-			cl_log(LOG_ERR, "start_a_child_client: Cannot fork.");
+			crm_err("start_a_child_client: Cannot fork.");
 			return FALSE;
 
 		default:	/* Parent */
@@ -594,7 +587,7 @@ start_subsystem(struct crm_subsystem_s*	centry)
 		sleep(1);
 	}
 
-	cl_log(LOG_INFO, "Executing \"%s\" (pid %d)",
+	crm_info("Executing \"%s\" (pid %d)",
 	       centry->command, (int) getpid());
 
 	if(CL_SIGINTERRUPT(SIGALRM, 0) < 0) {

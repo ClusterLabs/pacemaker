@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.30 2004/06/02 11:48:10 andrew Exp $ */
+/* $Id: pengine.c,v 1.31 2004/06/02 15:25:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,12 +169,12 @@ stage0(xmlNodePtr cib,
 		node, node_t, *nodes, lpc,
 		if(node->details->shutdown) {
 			*shutdown_list = g_slist_append(*shutdown_list, node);
-			pdebug("Scheduling Node %s for shutdown",
+			crm_verbose("Scheduling Node %s for shutdown",
 			       node->details->id);
 
 		} else if(node->details->unclean) {
 			*stonith_list = g_slist_append(*stonith_list, node);
-			pdebug("Scheduling Node %s for STONITH",
+			crm_verbose("Scheduling Node %s for STONITH",
 			       node->details->id);
 
 		}
@@ -242,7 +242,7 @@ stage2(GSListPtr sorted_rscs, GSListPtr sorted_nodes, GSListPtr *colors)
 		this_resource->provisional = TRUE;
 		);
 
-	pdebug("initialized resources to default color");
+	crm_verbose("initialized resources to default color");
   
 	// Take (next) highest resource
 	slist_iter(
@@ -293,7 +293,7 @@ stage4(GSListPtr colors)
 		color_n = color_n_plus_1;
 		color_n_plus_1 = (color_t*)g_slist_nth_data(colors, lpc);
 
-		pdebug_action(
+		crm_debug_action(
 			print_color("Choose node for...", color_n, FALSE));
 		
 		if(color_n == NULL) {
@@ -306,11 +306,11 @@ stage4(GSListPtr colors)
 						  color_n_plus_1_nodes);
 
 		if(g_slist_length(xor) == 0 || g_slist_length(minus) == 0) {
-			pdebug("Choose any node from our list");
+			crm_verbose("Choose any node from our list");
 			choose_node_from_list(colors, color_n, color_n_nodes);
 
 		} else {
-			pdebug("Choose a node not in n+1");
+			crm_verbose("Choose a node not in n+1");
 			choose_node_from_list(colors, color_n, minus);      
 		}
 
@@ -320,7 +320,7 @@ stage4(GSListPtr colors)
 
 	// choose last color
 	if(color_n_plus_1 != NULL) {
-		pdebug_action(print_color("Choose node for last color...",
+		crm_debug_action(print_color("Choose node for last color...",
 				   color_n_plus_1,
 				   FALSE));
 
@@ -328,7 +328,7 @@ stage4(GSListPtr colors)
 				      color_n_plus_1, 
 				      color_n_plus_1_nodes);
 	}
-	pdebug("done %s", __FUNCTION__);
+	crm_verbose("done");
 	return TRUE;
 	
 }
@@ -345,7 +345,7 @@ gboolean
 stage5(GSListPtr resources)
 {
 	
-	pdebug("filling in the nodes to perform the actions on");
+	crm_verbose("filling in the nodes to perform the actions on");
 	int lpc = 0;
 	slist_iter(
 		rsc, resource_t, resources, lpc,
@@ -355,34 +355,31 @@ stage5(GSListPtr resources)
 		if(safe_val(NULL, rsc, stop) == NULL
 		   || safe_val(NULL, rsc, start) == NULL) {
 			// error
-			cl_log(LOG_ERR,
-			       "Either start action (%p) or"
-			       " stop action (%p) were not defined",
-			       safe_val(NULL, rsc, stop),
-			       safe_val(NULL, rsc, start));
+			crm_err("Either start action (%p) or"
+				" stop action (%p) were not defined",
+				safe_val(NULL, rsc, stop),
+				safe_val(NULL, rsc, start));
 			continue;
 		}
 		if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL){
 			rsc->stop->node = safe_val(NULL, rsc, cur_node);
 			
 			rsc->start->node = NULL;
-			cl_log(LOG_DEBUG,
-			       "Stop resource %s (%s)",
-			       safe_val(NULL, rsc, id),
-			       safe_val5(NULL, rsc, stop, node, details, id));
+			crm_debug("Stop resource %s (%s)",
+				  safe_val(NULL, rsc, id),
+				  safe_val5(NULL, rsc, stop, node,details,id));
 
-			pdebug_action(
+			crm_debug_action(
 				print_action(
 					CRMD_STATE_ACTIVE, rsc->stop, FALSE));
 			
 			
-		} else if(safe_str_eq(safe_val4(NULL, rsc, cur_node, details, id),
+		} else if(safe_str_eq(safe_val4(NULL, rsc,cur_node,details,id),
 				      safe_val6(NULL, rsc, color ,details,
 						chosen_node, details, id))){
-			cl_log(LOG_DEBUG,
-			       "No change for Resource %s (%s)",
-			       safe_val(NULL, rsc, id),
-			       safe_val4(NULL, rsc, cur_node, details, id));
+			crm_debug("No change for Resource %s (%s)",
+				  safe_val(NULL, rsc, id),
+				  safe_val4(NULL, rsc, cur_node, details, id));
 
 			rsc->stop->optional = TRUE;
 			rsc->start->optional = TRUE;
@@ -390,25 +387,23 @@ stage5(GSListPtr resources)
 			rsc->start->node = safe_val4(NULL, rsc, color,
 						     details, chosen_node);
 			
-		} else if(safe_val4(NULL, rsc, cur_node, details, id) == NULL) {
+		} else if(safe_val4(NULL, rsc,cur_node,details,id) == NULL) {
 			rsc->stop->optional = TRUE;
 			rsc->start->node = safe_val4(NULL, rsc, color,
 						     details, chosen_node);
 
-			cl_log(LOG_DEBUG,
-			       "Start resource %s (%s)",
-			       safe_val(NULL, rsc, id),
-			       safe_val5(NULL, rsc, start, node, details, id));
+			crm_debug("Start resource %s (%s)",
+				  safe_val(NULL, rsc, id),
+				  safe_val5(NULL, rsc, start,node,details,id));
 			
 		} else {
 			rsc->stop->node = safe_val(NULL, rsc, cur_node);
 			rsc->start->node = safe_val4(NULL, rsc, color,
 						     details, chosen_node);
-			cl_log(LOG_DEBUG,
-			       "Move resource %s (%s -> %s)",
-			       safe_val(NULL, rsc, id),
-			       safe_val5(NULL, rsc, stop, node, details, id),
-			       safe_val5(NULL, rsc, start, node, details, id));
+			crm_debug("Move resource %s (%s -> %s)",
+				  safe_val(NULL, rsc, id),
+				  safe_val5(NULL, rsc, stop, node,details,id),
+				  safe_val5(NULL, rsc, start,node,details,id));
 		}
 
 		if(rsc->stop->node != NULL) {
@@ -454,10 +449,10 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
 			order->rh_action = down_node;
 			order->strength = must;
 
-			pdebug_action(
+			crm_debug_action(
 				print_action("LH (Shutdown)",
 					     order->lh_action, FALSE));
-			pdebug_action(
+			crm_debug_action(
 				print_action("RH (Shutdown)",
 					     order->rh_action, FALSE));
 			
@@ -545,13 +540,13 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 	slist_iter(
 		order, order_constraint_t, action_constraints, lpc,
 			
-		pdebug("Processing %d -> %d",
+		crm_verbose("Processing %d -> %d",
 		       order->lh_action->id,
 		       order->rh_action->id);
 
-		pdebug_action(
+		crm_debug_action(
 			print_action("LH (stage7)", order->lh_action, FALSE));
-		pdebug_action(
+		crm_debug_action(
 			print_action("RH (stage7)", order->rh_action, FALSE));
 
 		action_wrapper_t *wrapper = (action_wrapper_t*)
@@ -585,12 +580,12 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 		 */
 		action_set = create_action_set(rsc->start);
 		if(action_set != NULL) {
-			pdebug("Created action set for %s->start",
+			crm_verbose("Created action set for %s->start",
 			       rsc->id);
 			*action_sets = g_slist_append(*action_sets,
 						      action_set);
 		} else {
-			pdebug("No actions resulting from %s->start",
+			crm_verbose("No actions resulting from %s->start",
 			       rsc->id);
 		}
 		);
@@ -619,7 +614,7 @@ stage8(GSListPtr action_sets, xmlNodePtr *graph)
 */
 	int lpc2;
 	slist_iter(action_set, GSList, action_sets, lpc,
-		   pdebug("Processing Action Set %d", lpc);
+		   crm_verbose("Processing Action Set %d", lpc);
 		   xml_action_set = create_xml_node(NULL, "actions");
 		   set_xml_property_copy(
 			   xml_action_set, XML_ATTR_ID, crm_itoa(lpc));
@@ -650,47 +645,38 @@ summary(GSListPtr resources)
 		char *new_node_id = safe_val6(NULL, rsc, color, details,
 					      chosen_node, details, id);
 		if(rsc->runnable == FALSE) {
-			cl_log(LOG_ERR,
-			       "Resource %s was not runnable",
-			       rsc_id);
+			crm_err("Resource %s was not runnable", rsc_id);
 			if(node_id != NULL) {
-				cl_log(LOG_WARNING,
-				       "Stopping Resource (%s) on node %s",
-				       rsc_id,
-				       node_id);
+				crm_warn("Stopping Resource (%s) on node %s",
+					 rsc_id, node_id);
 			}
 
 		} else if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL) {
-			cl_log(LOG_ERR,
-			       "Could not allocate Resource %s",
-			       rsc_id);
-			pdebug_action(print_resource("Could not allocate", rsc, TRUE));
+			crm_err("Could not allocate Resource %s", rsc_id);
+			crm_debug_action(
+				print_resource("Could not allocate",rsc,TRUE));
 			if(node_id != NULL) {
 				
-				cl_log(LOG_WARNING,
-				       "Stopping Resource (%s) on node %s",
-				       rsc_id,
-				       node_id);
+				crm_warn("Stopping Resource (%s) on node %s",
+					 rsc_id,
+					 node_id);
 			}
 			
 		} else if(safe_str_eq(node_id, new_node_id)){
-			cl_log(LOG_DEBUG,
-			       "No change for Resource %s (%s)",
-			       rsc_id,
-			       safe_val4(NULL, rsc, cur_node, details, id));
+			crm_debug("No change for Resource %s (%s)",
+				  rsc_id,
+				  safe_val4(NULL, rsc, cur_node, details, id));
 			
 		} else if(node_id == NULL) {
-			cl_log(LOG_INFO,
-			       "Starting Resource %s on %s",
-			       rsc_id,
-			       new_node_id);
+			crm_info("Starting Resource %s on %s",
+				 rsc_id,
+				 new_node_id);
 			
 		} else {
-			cl_log(LOG_INFO,
-			       "Moving Resource %s from %s to %s",
-			       rsc_id,
-			       node_id,
-			       new_node_id);
+			crm_info("Moving Resource %s from %s to %s",
+				 rsc_id,
+				 node_id,
+				 new_node_id);
 		}
 		);
 	
@@ -713,9 +699,8 @@ choose_node_from_list(GSListPtr colors, color_t *color, GSListPtr nodes)
 		node_copy((node_t*)g_slist_nth_data(nodes, 0));
 
 	if(color->details->chosen_node == NULL) {
-		cl_log(LOG_ERR,
-		       "Could not allocate a node for color %d",
-		       color->id);
+		crm_err("Could not allocate a node for color %d",
+			color->id);
 		return FALSE;
 	}
 
@@ -741,14 +726,14 @@ choose_node_from_list(GSListPtr colors, color_t *color, GSListPtr nodes)
 gboolean
 unpack_nodes(xmlNodePtr xml_nodes, GSListPtr *nodes)
 {
-	pdebug("Begining unpack... %s", __FUNCTION__);
+	crm_verbose("Begining unpack...");
 	while(xml_nodes != NULL) {
 		xmlNodePtr xml_obj = xml_nodes;
 		xmlNodePtr attrs   = xml_obj->children;
 		const char *id     = xmlGetProp(xml_obj, XML_ATTR_ID);
 		const char *type   = xmlGetProp(xml_obj, XML_ATTR_TYPE);
 
-		pdebug("Processing node %s", id);
+		crm_verbose("Processing node %s", id);
 
 		if(attrs != NULL) {
 			attrs = attrs->children;
@@ -757,11 +742,11 @@ unpack_nodes(xmlNodePtr xml_nodes, GSListPtr *nodes)
 		xml_nodes = xml_nodes->next;
 	
 		if(id == NULL) {
-			cl_log(LOG_ERR, "Must specify id tag in <node>");
+			crm_err("Must specify id tag in <node>");
 			continue;
 		}
 		if(type == NULL) {
-			cl_log(LOG_ERR, "Must specify type tag in <node>");
+			crm_err("Must specify type tag in <node>");
 			continue;
 		}
 		node_t *new_node = crm_malloc(sizeof(node_t));
@@ -796,9 +781,9 @@ unpack_nodes(xmlNodePtr xml_nodes, GSListPtr *nodes)
 			attrs = attrs->next;
 		}
 
-		pdebug("Done with node %s", xmlGetProp(xml_obj, "uname"));
+		crm_verbose("Done with node %s", xmlGetProp(xml_obj, "uname"));
 
-		pdebug_action(print_node("Added", new_node, FALSE));
+		crm_debug_action(print_node("Added", new_node, FALSE));
 
 		*nodes = g_slist_append(*nodes, new_node);    
 	}
@@ -815,7 +800,7 @@ unpack_resources(xmlNodePtr xml_resources,
 		 GSListPtr *action_cons,
 		 GSListPtr all_nodes)
 {
-	pdebug("Begining unpack... %s", __FUNCTION__);
+	crm_verbose("Begining unpack...");
 	while(xml_resources != NULL) {
 		xmlNodePtr xml_obj = xml_resources;
 		const char *id = xmlGetProp(xml_obj, XML_ATTR_ID);
@@ -824,10 +809,10 @@ unpack_resources(xmlNodePtr xml_resources,
 
 		xml_resources = xml_resources->next;
 
-		pdebug("Processing resource...");
+		crm_verbose("Processing resource...");
 		
 		if(id == NULL) {
-			cl_log(LOG_ERR, "Must specify id tag in <resource>");
+			crm_err("Must specify id tag in <resource>");
 			continue;
 		}
 		resource_t *new_rsc = crm_malloc(sizeof(resource_t));
@@ -863,7 +848,7 @@ unpack_resources(xmlNodePtr xml_resources,
 		order->strength = startstop;
 		*action_cons = g_slist_append(*action_cons, order);
 	
-		pdebug_action(print_resource("Added", new_rsc, FALSE));
+		crm_debug_action(print_resource("Added", new_rsc, FALSE));
 		*resources = g_slist_append(*resources, new_rsc);
 	}
 	*resources = g_slist_sort(*resources, sort_rsc_priority);
@@ -879,17 +864,17 @@ unpack_constraints(xmlNodePtr xml_constraints,
 		   GSListPtr *node_constraints,
 		   GSListPtr *action_constraints)
 {
-	pdebug("Begining unpack... %s", __FUNCTION__);
+	crm_verbose("Begining unpack...");
 	while(xml_constraints != NULL) {
 		const char *id = xmlGetProp(xml_constraints, XML_ATTR_ID);
 		xmlNodePtr xml_obj = xml_constraints;
 		xml_constraints = xml_constraints->next;
 		if(id == NULL) {
-			cl_log(LOG_ERR, "Constraint must have an id");
+			crm_err("Constraint must have an id");
 			continue;
 		}
 
-		pdebug("Processing constraint %s %s",
+		crm_verbose("Processing constraint %s %s",
 			      xml_obj->name,id);
 		if(safe_str_eq("rsc_to_rsc", xml_obj->name)) {
 			unpack_rsc_to_rsc(xml_obj, resources,
@@ -904,7 +889,7 @@ unpack_constraints(xmlNodePtr xml_constraints,
 					   node_constraints);
 			
 		} else {
-			cl_log(LOG_ERR, "Unsupported constraint type: %s",
+			crm_err("Unsupported constraint type: %s",
 			       xml_obj->name);
 		}
 	}
@@ -918,25 +903,25 @@ apply_node_constraints(GSListPtr constraints,
 		       GSListPtr resources,
 		       GSListPtr nodes)
 {
-	pdebug("Applying constraints... %s", __FUNCTION__);
+	crm_verbose("Applying constraints...");
 	int lpc = 0;
 	slist_iter(
 		cons, rsc_to_node_t, constraints, lpc,
-		pdebug_action(print_rsc_to_node("Applying", cons, FALSE));
+		crm_debug_action(print_rsc_to_node("Applying", cons, FALSE));
 		// take "lifetime" into account
 		if(cons == NULL) {
-			cl_log(LOG_ERR, "Constraint (%d) is NULL", lpc);
+			crm_err("Constraint (%d) is NULL", lpc);
 			continue;
 			
 		} else if(is_active(cons) == FALSE) {
-			cl_log(LOG_INFO, "Constraint (%d) is not active", lpc);
+			crm_info("Constraint (%d) is not active", lpc);
 			// warning
 			continue;
 		}
     
 		resource_t *rsc_lh = cons->rsc_lh;
 		if(rsc_lh == NULL) {
-			cl_log(LOG_ERR, "LHS of rsc_to_node (%s) is NULL", cons->id); 	
+			crm_err("LHS of rsc_to_node (%s) is NULL", cons->id); 	
 			continue;
 		}
 
@@ -944,9 +929,7 @@ apply_node_constraints(GSListPtr constraints,
 			g_slist_append(cons->rsc_lh->node_cons, cons);
 
 		if(cons->node_list_rh == NULL) {
-			cl_log(LOG_ERR,
-			       "RHS of rsc_to_node (%s) is NULL",
-			       cons->id);
+			crm_err("RHS of rsc_to_node (%s) is NULL", cons->id);
 			continue;
 		} else {
 			int llpc = 0;
@@ -975,7 +958,7 @@ unpack_status(xmlNodePtr status,
 	      GSListPtr rsc_list,
 	      GSListPtr *node_constraints)
 {
-	pdebug("Begining unpack %s", __FUNCTION__);
+	crm_verbose("Begining unpack");
 	while(status != NULL) {
 		const char *id        = xmlGetProp(
 			status, XML_ATTR_ID);
@@ -1001,20 +984,19 @@ unpack_status(xmlNodePtr status,
 		lrm_state = find_xml_node(lrm_state, "lrm_resource");
 		status = status->next;
 
-		pdebug("Processing node %s", id);
+		crm_verbose("Processing node %s", id);
 
 		if(id == NULL){
 			// error
 			continue;
 		}
-		pdebug("Processing node attrs");
+		crm_verbose("Processing node attrs");
 		
 		node_t *this_node = pe_find_node(nodes, id);
 
 		if(this_node == NULL) {
-			cl_log(LOG_ERR,
-			       "Node %s in status section no longer exists",
-			       id);
+			crm_err("Node %s in status section no longer exists",
+				id);
 			continue;
 		}
 		
@@ -1027,7 +1009,7 @@ unpack_status(xmlNodePtr status,
 			
 			if(name != NULL && value != NULL
 			   && safe_val(NULL, this_node, details) != NULL) {
-				pdebug("Adding %s => %s", name, value);
+				crm_verbose("Adding %s => %s", name, value);
 				g_hash_table_insert(this_node->details->attrs,
 						    crm_strdup(name),
 						    crm_strdup(value));
@@ -1035,7 +1017,7 @@ unpack_status(xmlNodePtr status,
 			attrs = attrs->next;
 		}
 
-		pdebug("determining node state");
+		crm_verbose("determining node state");
 		
 		if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
 		   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
@@ -1043,12 +1025,12 @@ unpack_status(xmlNodePtr status,
 			// process resource, make +ve preference
 			this_node->details->online = TRUE;
 		} else {
-			pdebug("remove %s", __FUNCTION__);
+			crm_verbose("remove");
 			// remove node from contention
 			this_node->weight = -1;
 			this_node->fixed = TRUE;
 
-			pdebug("state %s, expected %s, shutdown %s",
+			crm_verbose("state %s, expected %s, shutdown %s",
 			       state, exp_state, shutdown);
 
 			if(unclean != NULL) {
@@ -1067,15 +1049,15 @@ unpack_status(xmlNodePtr status,
 			}
 
 			if(this_node->details->unclean) {
-				pdebug("Node %s is due for STONITH", id);
+				crm_verbose("Node %s is due for STONITH", id);
 			}
 
 			if(this_node->details->shutdown) {
-				pdebug("Node %s is due for shutdown", id);
+				crm_verbose("Node %s is due for shutdown", id);
 			}
 		}
 
-		pdebug("Processing node lrm state");
+		crm_verbose("Processing node lrm state");
 		process_node_lrm_state(this_node, lrm_state,
 				       rsc_list,  nodes,
 				       node_constraints);
@@ -1104,14 +1086,13 @@ strict_preproc(rsc_to_rsc_t *constraint,
 	switch(constraint->strength) {
 		case must:
 			if(constraint->rsc_rh->runnable == FALSE) {
-				cl_log(LOG_WARNING,
-				       "Resource %s must run on the same node"
-				       " as %s (cons %s), but %s is not"
-				       " runnable.",
-				       constraint->rsc_lh->id,
-				       constraint->rsc_rh->id,
-				       constraint->id,
-				       constraint->rsc_rh->id);
+				crm_warn("Resource %s must run on the same"
+					 " node as %s (cons %s), but %s is not"
+					 " runnable.",
+					 constraint->rsc_lh->id,
+					 constraint->rsc_rh->id,
+					 constraint->id,
+					 constraint->rsc_rh->id);
 				constraint->rsc_lh->runnable = FALSE;
 			}
 			break;
@@ -1128,7 +1109,7 @@ strict_preproc(rsc_to_rsc_t *constraint,
 				local_color->local_weight = 
 					local_color->local_weight * 0.5;
 			}
-			pdebug("# Colors %d, Nodes %d",
+			crm_verbose("# Colors %d, Nodes %d",
 				      g_slist_length(*colors),
 				      max_valid_nodes);
 			       
@@ -1149,7 +1130,7 @@ strict_preproc(rsc_to_rsc_t *constraint,
 					g_slist_remove(
 						lh_resource->candidate_colors,
 						local_color);
-				pdebug_action(
+				crm_debug_action(
 					print_color("Removed",
 						    local_color,
 						    FALSE));
@@ -1184,14 +1165,13 @@ strict_postproc(rsc_to_rsc_t *constraint,
 			}
 			// else check for error
 			if(constraint->rsc_lh->runnable == FALSE) {
-				cl_log(LOG_WARNING,
-				       "Resource %s must run on the same node"
-				       " as %s (cons %s), but %s is not"
-				       " runnable.",
-				       constraint->rsc_rh->id,
-				       constraint->rsc_lh->id,
-				       constraint->id,
-				       constraint->rsc_lh->id);
+				crm_warn("Resource %s must run on the same"
+					 " node as %s (cons %s), but %s is not"
+					 " runnable.",
+					 constraint->rsc_rh->id,
+					 constraint->rsc_lh->id,
+					 constraint->id,
+					 constraint->rsc_lh->id);
 				constraint->rsc_rh->runnable = FALSE;
 				
 			}
@@ -1233,7 +1213,7 @@ choose_color(resource_t *lh_resource)
 		
 		lh_resource->candidate_colors = sorted_colors;
 	
-		pdebug("Choose a color from %d possibilities",
+		crm_verbose("Choose a color from %d possibilities",
 		       g_slist_length(sorted_colors));
 
 		slist_iter(
@@ -1282,7 +1262,7 @@ unpack_rsc_to_node(xmlNodePtr xml_obj,
 
 	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
 	if(rsc_lh == NULL) {
-		cl_log(LOG_ERR, "No resource (con=%s, rsc=%s)",
+		crm_err("No resource (con=%s, rsc=%s)",
 		       id, id_lh);
 	}
 
@@ -1315,9 +1295,8 @@ unpack_rsc_to_node(xmlNodePtr xml_obj,
 		
 		if(node_rh == NULL) {
 			// error
-			cl_log(LOG_ERR,
-			       "node %s (from %s) not found",
-			       id_rh, xml_name);
+			crm_err("node %s (from %s) not found",
+				id_rh, xml_name);
 			continue;
 		}
 		
@@ -1375,7 +1354,7 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj,
 	
 	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
 	if(rsc_lh == NULL) {
-		cl_log(LOG_ERR, "No resource (con=%s, rsc=%s)",
+		crm_err("No resource (con=%s, rsc=%s)",
 		       id, id_lh);
 		return FALSE;
 	}
@@ -1391,7 +1370,7 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj,
 	}		
 
 	if(attr_exp == NULL) {
-		cl_log(LOG_WARNING, "no attrs for constraint %s", id);
+		crm_err("no attrs for constraint %s", id);
 	}
 	
 	while(attr_exp != NULL) {
@@ -1407,11 +1386,10 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj,
 		
 		if(new_con->node_list_rh == NULL) {
 			// error
-			cl_log(LOG_ERR,
-			       "node %s (from %s) not found",
-			       id_rh, attr_exp->name);
+			crm_err("node %s (from %s) not found",
+				id_rh, attr_exp->name);
 		}
-		pdebug_action(print_rsc_to_node("Added", new_con, FALSE));
+		crm_debug_action(print_rsc_to_node("Added", new_con, FALSE));
 		*node_constraints = g_slist_append(*node_constraints, new_con);
 
 		/* dont add it to the resource,
@@ -1442,16 +1420,15 @@ update_node_weight(rsc_to_node_t *cons, char *id, GSListPtr nodes)
 
 	if(node_rh->fixed) {
 		// warning
-		cl_log(LOG_WARNING,
-		       "Constraint %s is irrelevant as the"
-		       " weight of node %s is fixed as %f.",
-		       cons->id,
-		       node_rh->details->id,
-		       node_rh->weight);
+		crm_warn("Constraint %s is irrelevant as the"
+			 " weight of node %s is fixed as %f.",
+			 cons->id,
+			 node_rh->details->id,
+			 node_rh->weight);
 		return TRUE;
 	}
 	
-	pdebug("Constraint %s: node %s weight %s %f.",
+	crm_verbose("Constraint %s: node %s weight %s %f.",
 		      cons->id,
 		      node_rh->details->id,
 		      modifier2text(cons->modifier),
@@ -1490,24 +1467,23 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
 		
 		resource_t *rsc_lh = pe_find_resource(rsc_list, rsc_id);
 
-		pdebug("[%s] Processing %s on %s (%s)",
+		crm_verbose("[%s] Processing %s on %s (%s)",
 		       lrm_state->name, rsc_id, node_id, rsc_state);
 
 		lrm_state = lrm_state->next;
 
 		if(rsc_lh == NULL) {
-			cl_log(LOG_ERR,
-			       "Could not find a match for resource"
-			       " %s in %s's status section",
-			       rsc_id, node_id);
+			crm_err("Could not find a match for resource"
+				" %s in %s's status section",
+				rsc_id, node_id);
 			continue;
 		}
 		
-		pdebug("Setting cur_node = %s for rsc = %s",
+		crm_verbose("Setting cur_node = %s for rsc = %s",
 			  node->details->id, rsc_lh->id);
 
 		if(rsc_lh->cur_node != NULL) {
-			cl_log(LOG_ERR,
+			crm_err(
 			       "Resource %s running on multiple nodes %s & %s",
 			       rsc_lh->id,
 			       rsc_lh->cur_node->details->id,
@@ -1539,7 +1515,7 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
 			*node_constraints =
 				g_slist_append(*node_constraints, new_cons);
 			
-			pdebug_action(print_rsc_to_node(
+			crm_debug_action(print_rsc_to_node(
 					      "Added", new_cons, FALSE));
 			
 		} else if(safe_str_eq(rsc_state, "stop_fail")) {
@@ -1675,7 +1651,7 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	enum con_strength strength_e = ignore;
 
 	if(rsc_lh == NULL) {
-		cl_log(LOG_ERR, "No resource (con=%s, rsc=%s)",
+		crm_err("No resource (con=%s, rsc=%s)",
 		       id, id_lh);
 		return FALSE;
 	}
@@ -1716,16 +1692,16 @@ create_action_set(action_t *action)
 		return NULL;
 	}
 
-	pdebug_action(print_action("Create action set for", action, FALSE));
+	crm_debug_action(print_action("Create action set for", action, FALSE));
 	
 	// process actions_before
 	if(action->seen_count == 0) {
-		pdebug("Processing \"before\" for action %d", action->id);
+		crm_verbose("Processing \"before\" for action %d", action->id);
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
 
 			tmp = create_action_set(other->action);
-			pdebug("%d (%d total) \"before\" actions for %d)",
+			crm_verbose("%d (%d total) \"before\" actions for %d)",
 			       g_slist_length(tmp), g_slist_length(result),
 			       action->id);
 			result = g_slist_concat(result, tmp);
@@ -1733,15 +1709,15 @@ create_action_set(action_t *action)
 			);
 		
 	} else {
-		pdebug("Already seen action %d", action->id);
-		pdebug("Processing \"before\" for action %d", action->id);
+		crm_verbose("Already seen action %d", action->id);
+		crm_verbose("Processing \"before\" for action %d", action->id);
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
 			
 			if(other->action->seen_count > action->seen_count
 			   && other->strength == must) {
 				tmp = create_action_set(other->action);
-				pdebug("%d (%d total) \"before\" actions for %d)",
+				crm_verbose("%d (%d total) \"before\" actions for %d)",
 				       g_slist_length(tmp),
 				       g_slist_length(result),
 				       action->id);
@@ -1754,14 +1730,14 @@ create_action_set(action_t *action)
 	// add ourselves
 	if(action->runnable) {
 		if(action->processed == FALSE) {
-			pdebug("Adding self %d", action->id);
+			crm_verbose("Adding self %d", action->id);
 			result = g_slist_append(result, action);
 		} else {
-			pdebug("Already added self %d", action->id);
+			crm_verbose("Already added self %d", action->id);
 		}
 		
 	} else {
-		pdebug("Skipping ourselves, we're not runnable");
+		crm_verbose("Skipping ourselves, we're not runnable");
 	}
 	action->processed = TRUE;
 	
@@ -1772,7 +1748,7 @@ create_action_set(action_t *action)
 			other, action_wrapper_t, action->actions_before, lpc,
 			
 			tmp = create_action_set(other->action);
-			pdebug("%d (%d total) post-self \"before\" actions for %d)",
+			crm_verbose("%d (%d total) post-self \"before\" actions for %d)",
 			       g_slist_length(tmp), g_slist_length(result),action->id);
 			result = g_slist_concat(result, tmp);
 			);
@@ -1786,12 +1762,12 @@ create_action_set(action_t *action)
 	 *  indirect hard/XML_STRENGTH_VAL_MUST dependancies on us will have been picked
 	 *  up earlier on in stage 7
 	 */
-	pdebug("Processing \"after\" for action %d", action->id);
+	crm_verbose("Processing \"after\" for action %d", action->id);
 	slist_iter(
 		other, action_wrapper_t, action->actions_after, lpc,
 		
 		tmp = create_action_set(other->action);
-		pdebug("%d (%d total) \"after\" actions for %d)",
+		crm_verbose("%d (%d total) \"after\" actions for %d)",
 		       g_slist_length(tmp), g_slist_length(result),action->id);
 		result = g_slist_concat(result, tmp);
 		);
@@ -1822,7 +1798,7 @@ update_runnable(GSListPtr actions)
 				other, action_wrapper_t, action->actions_after, lpc2,
 				if(other->action->runnable) {
 					change = TRUE;
-					pdebug_action(
+					crm_debug_action(
 						print_action(
 							"Marking unrunnable",
 							other->action,
@@ -1840,7 +1816,7 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 {
 	int lpc = 0;
 
-	pdebug_action(print_resource("Coloring", lh_resource, FALSE));
+	crm_debug_action(print_resource("Coloring", lh_resource, FALSE));
 	
 	if(lh_resource->provisional == FALSE) {
 		// already processed this resource
@@ -1850,7 +1826,7 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 	lh_resource->rsc_cons = g_slist_sort(lh_resource->rsc_cons,
 					     sort_cons_strength);
 
-	pdebug("=== Pre-processing");
+	crm_verbose("=== Pre-processing");
 	//------ Pre-processing
 	slist_iter(
 		constraint, rsc_to_rsc_t, lh_resource->rsc_cons, lpc,
@@ -1859,14 +1835,12 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 		if(lh_resource->runnable == FALSE) {
 			break;
 		}
-		pdebug_action(print_rsc_to_rsc(
+		crm_debug_action(print_rsc_to_rsc(
 				      "Processing constraint",
 				      constraint, FALSE));
 		
 		if(constraint->rsc_rh == NULL) {
-			cl_log(LOG_ERR,
-			       "rsc_rh was NULL for %s",
-			       constraint->id);
+			crm_err("rsc_rh was NULL for %s", constraint->id);
 			continue;
 		}
 		other_color = constraint->rsc_rh->color;
@@ -1887,20 +1861,20 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 	 */
 	choose_color(lh_resource);	
   
-	pdebug("* Colors %d, Nodes %d",
+	crm_verbose("* Colors %d, Nodes %d",
 		      g_slist_length(*colors),
 		      max_valid_nodes);
 	
 	if(lh_resource->provisional
 		&& g_slist_length(*colors) < max_valid_nodes) {
 		// Create new color
-		pdebug("Create a new color");
+		crm_verbose("Create a new color");
 		lh_resource->color = create_color(colors,
 						  lh_resource->allowed_nodes,
 						  resources);
 
 	} else if(lh_resource->provisional) {
-		cl_log(LOG_ERR, "Could not color resource %s", lh_resource->id);
+		crm_err("Could not color resource %s", lh_resource->id);
 		print_resource("ERROR: No color", lh_resource, FALSE);
 		lh_resource->color = find_color(lh_resource->candidate_colors,
 						no_color);
@@ -1908,7 +1882,7 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 
 	lh_resource->provisional = FALSE;
 
-	pdebug_action(print_resource("Post-processing", lh_resource, FALSE));
+	crm_debug_action(print_resource("Post-processing", lh_resource, FALSE));
 
 	//------ Post-processing
 
@@ -1923,7 +1897,7 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 				colors, resources);
 		);
 	
-	pdebug_action(print_resource("Colored", lh_resource, FALSE));
+	crm_debug_action(print_resource("Colored", lh_resource, FALSE));
 }
 
 FILE *pemsg_strm = NULL;
@@ -1937,12 +1911,12 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 	const char *ref = xmlGetProp(msg, XML_ATTR_REFERENCE);
 
 	if(safe_str_eq(xmlGetProp(msg, XML_ATTR_MSGTYPE), XML_ATTR_REQUEST)) {
-		cl_log(LOG_INFO,
+		crm_info(
 		       "Message was a response not a request."
 		       "  Discarding");
 	}
 
-	CRM_DEBUG("Processing %s op (ref=%s)...", op, ref);
+	crm_verbose("Processing %s op (ref=%s)...", op, ref);
 
 	if(pemsg_strm == NULL) {
 		pemsg_strm = fopen("/tmp/pemsg.log", "w");
@@ -1962,7 +1936,7 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 		// ignore
 		
 	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
-		CRM_DEBUG("Bad sys-to %s", sys_to);
+		crm_verbose("Bad sys-to %s", sys_to);
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
@@ -1970,13 +1944,13 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 		xmlNodePtr output = do_calculations(input_cib);
 		if (send_ipc_reply(sender, msg, output) ==FALSE) {
 
-			cl_log(LOG_WARNING,
+			crm_warn(
 			       "Answer could not be sent");
 		}
 		free_xml(output);
 
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
-		cl_log(LOG_WARNING, "Received quit message, terminating");
+		crm_err("Received quit message, terminating");
 		exit(0);
 	}
 	
@@ -2003,7 +1977,7 @@ do_calculations(xmlNodePtr cib_object)
 
 //	pe_debug_on();
 	
-	pdebug("=#=#=#=#= Stage 0 =#=#=#=#=");
+	crm_verbose("=#=#=#=#= Stage 0 =#=#=#=#=");
 		  
 	stage0(cib_object,
 	       &resources,
@@ -2011,62 +1985,62 @@ do_calculations(xmlNodePtr cib_object)
 	       &actions,  &action_constraints,
 	       &stonith_list, &shutdown_list);
 
-	pdebug("=#=#=#=#= Stage 1 =#=#=#=#=");
+	crm_verbose("=#=#=#=#= Stage 1 =#=#=#=#=");
 	stage1(node_constraints, nodes, resources);
 
-	pdebug("=#=#=#=#= Stage 2 =#=#=#=#=");
+	crm_verbose("=#=#=#=#= Stage 2 =#=#=#=#=");
 	stage2(resources, nodes, &colors);
 
-	pdebug("========= Nodes =========");
-	pdebug_action(
+	crm_verbose("========= Nodes =========");
+	crm_debug_action(
 		slist_iter(node, node_t, nodes, lpc,
 			   print_node(NULL, node, TRUE)
 			)
 		);
 		
-	pdebug("========= Resources =========");
-	pdebug_action(
+	crm_verbose("========= Resources =========");
+	crm_debug_action(
 		slist_iter(resource, resource_t, resources, lpc,
 			   print_resource(NULL, resource, TRUE)
 			)
 		);  
   
-	pdebug("=#=#=#=#= Stage 3 =#=#=#=#=");
+	crm_verbose("=#=#=#=#= Stage 3 =#=#=#=#=");
 	stage3(colors);
 
-	pdebug("=#=#=#=#= Stage 4 =#=#=#=#=");
+	crm_verbose("=#=#=#=#= Stage 4 =#=#=#=#=");
 	stage4(colors);
-	pdebug("========= Colors =========");
-	pdebug_action(
+	crm_verbose("========= Colors =========");
+	crm_debug_action(
 		slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE)
 			)
 		);
 
-	pdebug("=#=#=#=#= Stage 5 =#=#=#=#=");
+	crm_verbose("=#=#=#=#= Stage 5 =#=#=#=#=");
 	stage5(resources);
 
-	pdebug("=#=#=#=#= Stage 6 =#=#=#=#=");
+	crm_verbose("=#=#=#=#= Stage 6 =#=#=#=#=");
 	stage6(&actions, &action_constraints,
 	       stonith_list, shutdown_list);
 
-	pdebug("========= Action List =========");
-	pdebug_action(
+	crm_verbose("========= Action List =========");
+	crm_debug_action(
 		slist_iter(action, action_t, actions, lpc,
 			   print_action(NULL, action, TRUE)
 			)
 		);
 	
-	pdebug("=#=#=#=#= Stage 7 =#=#=#=#=");
+	crm_verbose("=#=#=#=#= Stage 7 =#=#=#=#=");
 	stage7(resources, actions, action_constraints, &action_sets);
 	
-	pdebug("=#=#=#=#= Summary =#=#=#=#=");
+	crm_verbose("=#=#=#=#= Summary =#=#=#=#=");
 	summary(resources);
 
-	pdebug("========= Action Sets =========");
+	crm_verbose("========= Action Sets =========");
 
-	pdebug("\t========= Set %d (Un-runnable) =========", -1);
-	pdebug_action(
+	crm_verbose("\t========= Set %d (Un-runnable) =========", -1);
+	crm_debug_action(
 		slist_iter(action, action_t, actions, lpc,
 			   if(action->optional == FALSE
 			      && action->runnable == FALSE) {
@@ -2075,9 +2049,9 @@ do_calculations(xmlNodePtr cib_object)
 			)
 		);
 
-	pdebug_action(
+	crm_debug_action(
 		slist_iter(action_set, GSList, action_sets, lpc,
-			   pdebug("\t========= Set %d =========", lpc);
+			   crm_verbose("\t========= Set %d =========", lpc);
 			   slist_iter(action, action_t, action_set, lpc2,
 				      print_action("\t", action, TRUE);
 				   )
@@ -2085,52 +2059,52 @@ do_calculations(xmlNodePtr cib_object)
 		);
 
 	
-	pdebug("========= Stonith List =========");
-	pdebug_action(
+	crm_verbose("========= Stonith List =========");
+	crm_debug_action(
 		slist_iter(node, node_t, stonith_list, lpc,
 			   print_node(NULL, node, FALSE);
 			)
 		);
   
-	pdebug("========= Shutdown List =========");
-	pdebug_action(
+	crm_verbose("========= Shutdown List =========");
+	crm_debug_action(
 		slist_iter(node, node_t, shutdown_list, lpc,
 			   print_node(NULL, node, FALSE);
 			)
 		);
 
-	pdebug("=#=#=#=#= Stage 8 =#=#=#=#=");
+	crm_verbose("=#=#=#=#= Stage 8 =#=#=#=#=");
 	stage8(action_sets, &graph);
 
-	pdebug("=#=#=#=#= Cleanup =#=#=#=#=");
+	crm_verbose("=#=#=#=#= Cleanup =#=#=#=#=");
 
-	pdebug("deleting node cons");
+	crm_verbose("deleting node cons");
 	while(node_constraints) {
 		pe_free_rsc_to_node((rsc_to_node_t*)node_constraints->data);
 		node_constraints = node_constraints->next;
 	}
 	g_slist_free(node_constraints);
 
-	pdebug("deleting order cons");
+	crm_verbose("deleting order cons");
 	pe_free_shallow(action_constraints);
 
-	pdebug("deleting action sets");
+	crm_verbose("deleting action sets");
 
 	slist_iter(action_set, GSList, action_sets, lpc,
 		   pe_free_shallow_adv(action_set, FALSE);
 		);
 	pe_free_shallow_adv(action_sets, FALSE);
 	
-	pdebug("deleting actions");
+	crm_verbose("deleting actions");
 	pe_free_actions(actions);
 
-	pdebug("deleting resources");
+	crm_verbose("deleting resources");
 	pe_free_resources(resources); 
 	
-	pdebug("deleting colors");
+	crm_verbose("deleting colors");
 	pe_free_colors(colors);
 
-	pdebug("deleting nodes");
+	crm_verbose("deleting nodes");
 	pe_free_nodes(nodes);
 	
 	g_slist_free(shutdown_list);

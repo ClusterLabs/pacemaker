@@ -1,4 +1,4 @@
-/* $Id: ctrl.c,v 1.1 2004/06/02 11:45:28 andrew Exp $ */
+/* $Id: ctrl.c,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -56,7 +56,7 @@ register_pid(const char *pid_file,
 		pid = fork();
 		
 		if (pid < 0) {
-			cl_log(LOG_CRIT, "cannot start daemon");
+			crm_crit("cannot start daemon");
 			exit(LSB_EXIT_GENERIC);
 		}else if (pid > 0) {
 			exit(LSB_EXIT_OK);
@@ -65,7 +65,7 @@ register_pid(const char *pid_file,
     
 	lockfd = fopen(pid_file, "w");
 	if (lockfd == NULL) {
-		cl_log(LOG_CRIT, "cannot create pid file: %s", pid_file);
+		crm_crit("cannot create pid file: %s", pid_file);
 		exit(LSB_EXIT_GENERIC);
 	}else{
 		pid = getpid();
@@ -117,7 +117,7 @@ init_stop(const char *pid_file)
 	FNIN();
 	
 	if (pid_file == NULL) {
-		cl_log(LOG_ERR, "No pid file specified to kill process");
+		crm_err("No pid file specified to kill process");
 		return LSB_EXIT_GENERIC;
 	}
 	pid =	get_running_pid(pid_file, NULL);
@@ -128,7 +128,7 @@ init_stop(const char *pid_file)
 			      ?	LSB_EXIT_EPERM : LSB_EXIT_GENERIC);
 			fprintf(stderr, "Cannot kill pid %ld\n", pid);
 		}else{
-			cl_log(LOG_INFO,
+			crm_info(
 			       "Signal sent to pid=%ld,"
 			       " waiting for process to exit",
 			       pid);
@@ -170,10 +170,10 @@ register_with_apphb(const char *client_name,
 	int     rc = 0;
 
 	// Register with apphb
-	cl_log(LOG_INFO, "Signing in with AppHb");
+	crm_info("Signing in with AppHb");
 	sprintf(app_instance, "%s_%ld", client_name, (long)getpid());
   
-	cl_log(LOG_INFO, "Client %s registering with apphb", app_instance);
+	crm_info("Client %s registering with apphb", app_instance);
 
 	rc = apphb_register(client_name, app_instance);
     
@@ -182,11 +182,10 @@ register_with_apphb(const char *client_name,
 		exit(1);
 	}
   
-	cl_log(LOG_DEBUG, "Client %s registered with apphb", app_instance);
+	crm_debug("Client %s registered with apphb", app_instance);
   
-	cl_log(LOG_INFO, 
-	       "Client %s setting %d ms apphb heartbeat interval"
-	       , app_instance, hb_intvl_ms);
+	crm_info("Client %s setting %d ms apphb heartbeat interval",
+		 app_instance, hb_intvl_ms);
 	rc = apphb_setinterval(hb_intvl_ms);
 	if (rc < 0) {
 		cl_perror("%s setinterval failure", app_instance);
@@ -194,7 +193,7 @@ register_with_apphb(const char *client_name,
 	}
   
 	// regularly tell apphb that we are alive
-	cl_log(LOG_INFO, "Setting up AppHb Heartbeat");
+	crm_info("Setting up AppHb Heartbeat");
 	Gmain_timeout_add(wdt_interval_ms, tickle_fn, NULL);
 }
 

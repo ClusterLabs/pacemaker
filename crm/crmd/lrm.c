@@ -65,27 +65,27 @@ do_lrm_control(long long action,
 
 	if(action & A_LRM_CONNECT) {
 	
-		CRM_NOTE("LRM: connect...");
+		crm_trace("LRM: connect...");
 		fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
 		if(NULL == fsa_lrm_conn) {
 			return failed;
 		}
 		
-		CRM_NOTE("LRM: sigon...");
+		crm_trace("LRM: sigon...");
 		ret = fsa_lrm_conn->lrm_ops->signon(fsa_lrm_conn,
 						    CRM_SYSTEM_CRMD);
 		
 		if(ret != HA_OK) {
-			cl_log(LOG_ERR, "Failed to sign on to the LRM");
+			crm_err("Failed to sign on to the LRM");
 			return failed;
 		}
 		
-		CRM_NOTE("LRM: set_lrm_callback...");
+		crm_trace("LRM: set_lrm_callback...");
 		ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(
 			fsa_lrm_conn, lrm_op_callback, lrm_monitor_callback);
 		
 		if(ret != HA_OK) {
-			cl_log(LOG_ERR, "Failed to set LRM callbacks");
+			crm_err("Failed to set LRM callbacks");
 			return failed;
 		}
 
@@ -100,7 +100,7 @@ do_lrm_control(long long action,
 	}	
 
 	if(action & ~(A_LRM_CONNECT|A_LRM_DISCONNECT)) {
-		cl_log(LOG_ERR, "Unexpected action %s in %s",
+		crm_err("Unexpected action %s in %s",
 		       fsa_action2string(action), __FUNCTION__);
 	}
 		
@@ -172,7 +172,7 @@ do_lrm_query(void)
 		
 		op_list = the_rsc->ops->get_cur_state(the_rsc,
 						      &cur_state);
-		CRM_DEBUG("\tcurrent state:%s\n",
+		crm_verbose("\tcurrent state:%s\n",
 			  cur_state==LRM_RSC_IDLE?"Idle":"Busy");
 		
 		node = g_list_first(op_list);
@@ -306,7 +306,7 @@ do_lrm_invoke(long long action,
 		xmlNodePtr state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 		xmlNodePtr iter = create_xml_node(state, XML_CIB_TAG_LRM);
 
-		CRM_DEBUG("performing op %s...", operation);
+		crm_verbose("performing op %s...", operation);
 
 		// so we can identify where to do the update
 		set_xml_property_copy(state, XML_ATTR_ID, fsa_our_uname);
@@ -362,7 +362,7 @@ do_lrm_invoke(long long action,
 #endif
 
 	
-	cl_log(LOG_WARNING, "Action %s (%.16llx) only kind of supported\n",
+	crm_err("Action %s (%.16llx) only kind of supported\n",
 	       fsa_action2string(action), action);
 
 
@@ -406,7 +406,7 @@ do_lrm_invoke(long long action,
 
 	} else if(operation != NULL && strcmp(operation, "monitor") == 0) {
 		if(rsc == NULL) {
-			cl_log(LOG_ERR, "Could not find resource to monitor");
+			crm_err("Could not find resource to monitor");
 			FNRET(I_FAIL);
 		}
 		
@@ -424,7 +424,7 @@ do_lrm_invoke(long long action,
 	} else if(operation != NULL) {
 		if(rsc == NULL) {
 			// add it to the list
-			CRM_DEBUG("adding rsc %s before operation", rid);
+			crm_verbose("adding rsc %s before operation", rid);
 			fsa_lrm_conn->lrm_ops->add_rsc(
 				fsa_lrm_conn, rid,
 				get_xml_attr_nested(msg, 
@@ -442,12 +442,12 @@ do_lrm_invoke(long long action,
 		}
 
 		if(rsc == NULL) {
-			cl_log(LOG_ERR, "Could not add resource to LRM");
+			crm_err("Could not add resource to LRM");
 			FNRET(I_FAIL);
 		}
 		
 		// now do the op
-		CRM_DEBUG("performing op %s...", operation);
+		crm_verbose("performing op %s...", operation);
 		op = g_new(lrm_op_t, 1);
 		op->op_type = operation;
 		op->params = xml2list(msg, rsc_path, DIMOF(rsc_path));
@@ -479,7 +479,7 @@ xml2list(xmlNodePtr parent, const char**attr_path, int depth)
 			const char *value = xmlGetProp(
 				node_iter, XML_NVPAIR_ATTR_VALUE);
 			
-			CRM_DEBUG("Added %s=%s", key, value);
+			crm_verbose("Added %s=%s", key, value);
 			
 			g_hash_table_insert (nvpair_hash,
 					     crm_strdup(key),
@@ -557,7 +557,7 @@ do_lrm_event(long long action,
 
 		switch(monitor->status) {
 			case LRM_OP_DONE:
-				CRM_NOTE("An LRM monitor operation passed");
+				crm_trace("An LRM monitor operation passed");
 				FNRET(I_NULL);
 				break;
 
@@ -565,9 +565,8 @@ do_lrm_event(long long action,
 			case LRM_OP_TIMEOUT:
 			case LRM_OP_NOTSUPPORTED:
 			case LRM_OP_ERROR:
-				cl_log(LOG_ERR,
-				       "An LRM monitor operation failed"
-				       " or was aborted");
+				crm_err("An LRM monitor operation failed"
+					" or was aborted");
 
 				do_update_resource(rsc,
 						   monitor->status,
@@ -586,9 +585,8 @@ do_lrm_event(long long action,
 			case LRM_OP_TIMEOUT:
 			case LRM_OP_NOTSUPPORTED:
 			case LRM_OP_ERROR:
-				cl_log(LOG_ERR,
-				       "An LRM operation failed"
-				       " or was aborted");
+				crm_err("An LRM operation failed"
+					" or was aborted");
 				// keep going
 			case LRM_OP_DONE:
 

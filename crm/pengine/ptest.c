@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.17 2004/06/02 11:48:10 andrew Exp $ */
+/* $Id: ptest.c,v 1.18 2004/06/02 15:25:11 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -106,14 +106,14 @@ main(int argc, char **argv)
 	}
   
 	if (argerr) {
-		cl_log(LOG_ERR, "%d errors in option parsing", argerr);
+		crm_err("%d errors in option parsing", argerr);
 	}
   
-	cl_log(LOG_INFO, "=#=#=#=#= Getting XML =#=#=#=#=");
+	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
   
 	cib_object = file2xml(stdin);
   
-	cl_log(LOG_INFO, "=#=#=#=#= Stage 0 =#=#=#=#=");
+	crm_info("=#=#=#=#= Stage 0 =#=#=#=#=");
 
 	GSListPtr resources = NULL;
 	GSListPtr nodes = NULL;
@@ -137,89 +137,89 @@ main(int argc, char **argv)
 	       &actions,  &action_constraints,
 	       &stonith_list, &shutdown_list);
 	
-	cl_log(LOG_INFO, "========= Nodes =========");
+	crm_info("========= Nodes =========");
 	slist_iter(node, node_t, nodes, lpc,
 		   print_node(NULL, node, TRUE));
 
-	cl_log(LOG_INFO, "========= Resources =========");
+	crm_info("========= Resources =========");
 	slist_iter(resource, resource_t, resources, lpc,
 		   print_resource(NULL, resource, TRUE));    
 
-	cl_log(LOG_INFO, "========= Constraints =========");
+	crm_info("========= Constraints =========");
 	slist_iter(constraint, rsc_to_node_t, node_constraints, lpc,
 		   print_rsc_to_node(NULL, constraint, FALSE));
     
-	cl_log(LOG_INFO, "=#=#=#=#= Stage 1 =#=#=#=#=");
+	crm_info("=#=#=#=#= Stage 1 =#=#=#=#=");
 	stage1(node_constraints, nodes, resources);
 
-	cl_log(LOG_INFO, "========= Nodes =========");
+	crm_info("========= Nodes =========");
 	slist_iter(node, node_t, nodes, lpc,
 		   print_node(NULL, node, TRUE));
 
-	cl_log(LOG_INFO, "========= Resources =========");
+	crm_info("========= Resources =========");
 	slist_iter(resource, resource_t, resources, lpc,
 		   print_resource(NULL, resource, TRUE));
 
-	cl_log(LOG_INFO, "=#=#=#=#= Stage 2 =#=#=#=#=");
+	crm_info("=#=#=#=#= Stage 2 =#=#=#=#=");
 //	pe_debug_on();
 	stage2(resources, nodes, &colors);
 //	pe_debug_off();
 
-	cl_log(LOG_INFO, "========= Nodes =========");
+	crm_info("========= Nodes =========");
 	slist_iter(node, node_t, nodes, lpc,
 		   print_node(NULL, node, TRUE));
 
-	cl_log(LOG_INFO, "========= Resources =========");
+	crm_info("========= Resources =========");
 	slist_iter(resource, resource_t, resources, lpc,
 		   print_resource(NULL, resource, TRUE));  
   
-	cl_log(LOG_INFO, "========= Colors =========");
+	crm_info("========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
   
-	cl_log(LOG_INFO, "=#=#=#=#= Stage 3 =#=#=#=#=");
+	crm_info("=#=#=#=#= Stage 3 =#=#=#=#=");
 	stage3(colors);
-	cl_log(LOG_INFO, "========= Colors =========");
+	crm_info("========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
 
-	cl_log(LOG_INFO, "=#=#=#=#= Stage 4 =#=#=#=#=");
+	crm_info("=#=#=#=#= Stage 4 =#=#=#=#=");
 	stage4(colors);
-	cl_log(LOG_INFO, "========= Colors =========");
+	crm_info("========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
 
-	cl_log(LOG_INFO, "=#=#=#=#= Summary =#=#=#=#=");
+	crm_info("=#=#=#=#= Summary =#=#=#=#=");
 	summary(resources);
-	cl_log(LOG_INFO, "========= Action List =========");
+	crm_info("========= Action List =========");
 	slist_iter(action, action_t, actions, lpc,
 		   print_action(NULL, action, FALSE));
 	
-	cl_log(LOG_INFO, "=#=#=#=#= Stage 5 =#=#=#=#=");
+	crm_info("=#=#=#=#= Stage 5 =#=#=#=#=");
 	stage5(resources);
 
-	cl_log(LOG_INFO, "=#=#=#=#= Stage 6 =#=#=#=#=");
+	crm_info("=#=#=#=#= Stage 6 =#=#=#=#=");
 	stage6(&actions, &action_constraints,
 	       stonith_list, shutdown_list);
 
-	cl_log(LOG_INFO, "========= Action List =========");
+	crm_info("========= Action List =========");
 	slist_iter(action, action_t, actions, lpc,
 		   print_action(NULL, action, TRUE));
 	
-	cl_log(LOG_INFO, "=#=#=#=#= Stage 7 =#=#=#=#=");
+	crm_info("=#=#=#=#= Stage 7 =#=#=#=#=");
 	stage7(resources, actions, action_constraints, &action_sets);
 
-	cl_log(LOG_INFO, "=#=#=#=#= Summary =#=#=#=#=");
+	crm_info("=#=#=#=#= Summary =#=#=#=#=");
 	summary(resources);
 
-	cl_log(LOG_INFO, "========= All Actions =========");
+	crm_info("========= All Actions =========");
 	slist_iter(action, action_t, actions, lpc,
 		   print_action("\t", action, TRUE);
 		);
 
-	cl_log(LOG_INFO, "========= Action Sets =========");
+	crm_info("========= Action Sets =========");
 
-	cl_log(LOG_INFO, "\t========= Set %d (Un-runnable) =========", -1);
+	crm_info("\t========= Set %d (Un-runnable) =========", -1);
 	slist_iter(action, action_t, actions, lpc,
 		   if(action->optional == FALSE && action->runnable == FALSE) {
 			   print_action("\t", action, TRUE);
@@ -228,55 +228,55 @@ main(int argc, char **argv)
 
 	int lpc2;
 	slist_iter(action_set, GSList, action_sets, lpc,
-		   cl_log(LOG_INFO, "\t========= Set %d =========", lpc);
+		   crm_info("\t========= Set %d =========", lpc);
 		   slist_iter(action, action_t, action_set, lpc2,
 			      print_action("\t", action, TRUE)));
 
 	
-	cl_log(LOG_INFO, "========= Stonith List =========");
+	crm_info("========= Stonith List =========");
 	slist_iter(node, node_t, stonith_list, lpc,
 		   print_node(NULL, node, FALSE));
   
-	cl_log(LOG_INFO, "========= Shutdown List =========");
+	crm_info("========= Shutdown List =========");
 	slist_iter(node, node_t, shutdown_list, lpc,
 		   print_node(NULL, node, FALSE));
 
-	cl_log(LOG_INFO, "=#=#=#=#= Stage 8 =#=#=#=#=");
+	crm_info("=#=#=#=#= Stage 8 =#=#=#=#=");
 	stage8(action_sets, &graph);
 
 //	GSListPtr action_sets = NULL;
 
 
-	pdebug("deleting node cons");
+	crm_verbose("deleting node cons");
 	while(node_constraints) {
 		pe_free_rsc_to_node((rsc_to_node_t*)node_constraints->data);
 		node_constraints = node_constraints->next;
 	}
 	g_slist_free(node_constraints);
 
-	pdebug("deleting order cons");
+	crm_verbose("deleting order cons");
 	pe_free_shallow(action_constraints);
 
-	pdebug("deleting action sets");
+	crm_verbose("deleting action sets");
 
 	slist_iter(action_set, GSList, action_sets, lpc,
 		   pe_free_shallow_adv(action_set, FALSE);
 		);
 	pe_free_shallow_adv(action_sets, FALSE);
 	
-	pdebug("deleting actions");
+	crm_verbose("deleting actions");
 	pe_free_actions(actions);
 
-	pdebug("deleting resources");
+	crm_verbose("deleting resources");
 	pe_free_resources(resources); 
 	
-	pdebug("deleting colors");
+	crm_verbose("deleting colors");
 	pe_free_colors(colors);
 
 	crm_free(no_color->details);
 	crm_free(no_color);
 	
-	pdebug("deleting nodes");
+	crm_verbose("deleting nodes");
 	pe_free_nodes(nodes);
 	
 	g_slist_free(shutdown_list);

@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.9 2004/06/01 15:56:13 andrew Exp $ */
+/* $Id: crm.h,v 1.10 2004/06/02 15:25:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,6 +27,8 @@
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_malloc.h>
 #include <mcheck.h>
+
+#include <crm/common/util.h>
 
 /* Clean these up at some point, some probably should be runtime options */
 #define WORKING_DIR HA_VARLIBDIR"/heartbeat/crm"
@@ -107,24 +109,46 @@ typedef GSList* GSListPtr;
 				  }
 
 /* Developmental debug stuff */
-#define CRM_DEBUG(w, x...) cl_log(LOG_DEBUG, "(%s) " w, __FUNCTION__, x)
 
-#define CRM_NOTE(w) cl_log(LOG_DEBUG, "(%s) " w, __FUNCTION__)
+#define LOG_DEV      LOG_DEBUG+1
+#define LOG_VERBOSE  LOG_DEBUG+2
+#define LOG_TRACE    LOG_DEBUG+3
 
-extern gboolean crm_debug_state;
-#define crm_debug(w...)  if(crm_debug_state) {	\
-		cl_log(LOG_DEBUG, w);		\
+#if 1
+#  define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FUNCTION__, w)
+#  define crm_err(w...)     do_crm_log(LOG_ERR,     __FUNCTION__, w)
+#  define crm_warn(w...)    do_crm_log(LOG_WARNING, __FUNCTION__, w)
+#  define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FUNCTION__, w)
+#  define crm_info(w...)    do_crm_log(LOG_INFO,    __FUNCTION__, w)
+#  define crm_debug(w...)   do_crm_log(LOG_DEBUG,   __FUNCTION__, w)
+#  define crm_devel(w...)   do_crm_log(LOG_DEV,     __FUNCTION__, w)
+#  define crm_verbose(w...) do_crm_log(LOG_VERBOSE, __FUNCTION__, w)
+#  define crm_trace(w...)   do_crm_log(LOG_TRACE,   __FUNCTION__, w)
+#else
+#  define crm_crit(w...)   cl_log(LOG_CRIT,    w)
+#  define crm_err(w...)    cl_log(LOG_ERR,     w)
+#  define crm_warn(w...)   cl_log(LOG_WARNING, w)
+#  define crm_notice(w...) cl_log(LOG_NOTICE,  w)
+#  define crm_info(w...)   cl_log(LOG_INFO,    w)
+#  define crm_debug(w...)  cl_log(LOG_DEBUG,   w)
+#  define crm_devel(w...)  cl_log(LOG_DEV,     w)
+#  define crm_vebose(w...) cl_log(LOG_VERBOSE, w)
+#  define crm_trace(w...)  cl_log(LOG_TRACE,   w)
+#endif
+
+#define crm_debug_action(x) if(crm_log_level >= LOG_DEBUG) {	\
+		x;						\
 	}
 
-#define crm_debug_action(x) if(crm_debug_state) {	\
-		x;					\
+#define crm_info_action(x) if(crm_log_level >= LOG_INFO) {	\
+		x;						\
 	}
 
 /* Seriously detailed debug stuff */
 #if 0
-#   define FNIN()     cl_log(LOG_DEBUG, "#---#---# Entering %s...", __FUNCTION__)
-#   define FNOUT()  { cl_log(LOG_DEBUG, "#---#---# Leaving %s...",  __FUNCTION__); return;   }
-#   define FNRET(x) { cl_log(LOG_DEBUG, "#---#---# Leaving %s...",  __FUNCTION__); return x; }
+#   define FNIN()     crm_trace("#---# Entering")
+#   define FNOUT()  { crm_trace("#---# Leaving"); return; }
+#   define FNRET(x) { crm_trace("#---# Leaving"); return x; }
 #else
 #   define FNIN()   ;
 #   define FNOUT()  return;

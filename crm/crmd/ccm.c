@@ -74,24 +74,24 @@ do_ccm_control(long long action,
 
 	if(action & A_CCM_CONNECT) {
 		
-		cl_log(LOG_INFO, "Registering with CCM");
+		crm_info("Registering with CCM");
 		oc_ev_register(&fsa_ev_token);
 		
-		cl_log(LOG_INFO, "Setting up CCM callbacks");
+		crm_info("Setting up CCM callbacks");
 		oc_ev_set_callback(fsa_ev_token, OC_EV_MEMB_CLASS,
 				   crmd_ccm_input_callback,
 				   NULL);
 
 		oc_ev_special(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
 		
-		cl_log(LOG_INFO, "Activating CCM token");
+		crm_info("Activating CCM token");
 		ret = oc_ev_activate(fsa_ev_token, &fsa_ev_fd);
 		if (ret){
-			cl_log(LOG_INFO, "CCM Activation failed... unregistering");
+			crm_info("CCM Activation failed... unregistering");
 			oc_ev_unregister(fsa_ev_token);
 			return(I_FAIL);
 		}
-		cl_log(LOG_INFO, "CCM Activation passed... all set to go!");
+		crm_info("CCM Activation passed... all set to go!");
 
 //GFDSource*
 		G_main_add_fd(G_PRIORITY_LOW, fsa_ev_fd, FALSE, ccm_dispatch,
@@ -101,7 +101,7 @@ do_ccm_control(long long action,
 	}
 
 	if(action & ~(A_CCM_CONNECT|A_CCM_DISCONNECT)) {
-		cl_log(LOG_ERR, "Unexpected action %s in %s",
+		crm_err("Unexpected action %s in %s",
 		       fsa_action2string(action), __FUNCTION__);
 	}
 	
@@ -123,7 +123,7 @@ do_ccm_event(long long action,
 
 	FNIN();
 
-	cl_log(LOG_INFO,"event=%s", 
+	crm_info("event=%s", 
 	       event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
 	       event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
 	       event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
@@ -160,8 +160,7 @@ do_ccm_event(long long action,
 			 */
 			return_input = I_NULL;
 		} else {
-			cl_log(LOG_INFO,
-			       "So why are we here?  What CCM event happened?");
+			crm_warn("So why are we here?  What CCM event happened?");
 		}
 	}
 
@@ -191,7 +190,7 @@ do_ccm_update_cache(long long action,
 
 	FNIN();
 
-	cl_log(LOG_INFO,"Updating CCM cache after a \"%s\" event.", 
+	crm_info("Updating CCM cache after a \"%s\" event.", 
 	       event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
 	       event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
 	       event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
@@ -318,7 +317,7 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	int lpc;
 	int node_list_size;
 
-	cl_log(LOG_INFO,"trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
+	crm_info("trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
 	       "new_idx=%d, old_idx=%d",
 	       oc->m_instance,
 	       oc->m_n_member,
@@ -328,16 +327,16 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	       oc->m_in_idx,
 	       oc->m_out_idx);
 	
-	cl_log(LOG_INFO, "NODES IN THE PRIMARY MEMBERSHIP");
+	crm_info("NODES IN THE PRIMARY MEMBERSHIP");
 	
 	node_list_size = oc->m_n_member;
 	for(lpc=0; lpc<node_list_size; lpc++) {
-		cl_log(LOG_INFO,"\t%s [nodeid=%d, born=%d]",
+		crm_info("\t%s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_memb_idx+lpc].node_uname,
 		       oc->m_array[oc->m_memb_idx+lpc].node_id,
 		       oc->m_array[oc->m_memb_idx+lpc].node_born_on);
 
-		CRM_DEBUG("%s ? %s", fsa_our_uname,
+		crm_verbose("%s ? %s", fsa_our_uname,
 			  oc->m_array[oc->m_memb_idx+lpc].node_uname);
 		if(safe_str_eq(fsa_our_uname,
 			       oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
@@ -347,41 +346,40 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	}
 	
 	if (member == FALSE) {
-		cl_log(LOG_WARNING,
-		       "MY NODE IS NOT IN CCM THE MEMBERSHIP LIST");
+		crm_warn("MY NODE IS NOT IN CCM THE MEMBERSHIP LIST");
 	} else {
-		cl_log(LOG_INFO, "MY NODE ID IS %d", member_id);
+		crm_info("MY NODE ID IS %d", member_id);
 	}
 	
 	
-	cl_log(LOG_INFO, "NEW MEMBERS");
+	crm_info("NEW MEMBERS");
 	if (oc->m_n_in==0) 
-		cl_log(LOG_INFO, "\tNONE");
+		crm_info("\tNONE");
 	
 	for(lpc=0; lpc<oc->m_n_in; lpc++) {
-		cl_log(LOG_INFO,"\t%s [nodeid=%d, born=%d]",
+		crm_info("\t%s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_in_idx+lpc].node_uname,
 		       oc->m_array[oc->m_in_idx+lpc].node_id,
 		       oc->m_array[oc->m_in_idx+lpc].node_born_on);
 	}
 	
-	cl_log(LOG_INFO, "MEMBERS LOST");
+	crm_info("MEMBERS LOST");
 	if (oc->m_n_out==0) 
-		cl_log(LOG_INFO, "\tNONE");
+		crm_info("\tNONE");
 	
 	for(lpc=0; lpc<oc->m_n_out; lpc++) {
-		cl_log(LOG_INFO,"\t%s [nodeid=%d, born=%d]",
+		crm_info("\t%s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_out_idx+lpc].node_uname,
 		       oc->m_array[oc->m_out_idx+lpc].node_id,
 		       oc->m_array[oc->m_out_idx+lpc].node_born_on);
 		if(fsa_our_uname != NULL
-		   && strcmp(fsa_our_uname, oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
-			cl_log(LOG_ERR,
-			       "We're not part of the cluster anymore");
+		   && strcmp(fsa_our_uname,
+			     oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
+			crm_err("We're not part of the cluster anymore");
 		}
 	}
 	
-	cl_log(LOG_INFO, "-----------------------");
+	crm_info("-----------------------");
 	
 }
 
@@ -424,7 +422,7 @@ crmd_ccm_input_callback(oc_ed_t event,
 		crm_free(event_data);
 
 	} else {
-		cl_log(LOG_INFO, "CCM Callback with NULL data... "
+		crm_info("CCM Callback with NULL data... "
 		       "I dont /think/ this is bad");
 	}
 	
@@ -437,43 +435,32 @@ void
 msg_ccm_join(const struct ha_msg *msg, void *foo)
 {
 	FNIN();
-	cl_log(LOG_INFO, "\n###### Recieved ccm_join message...");
+	crm_verbose("\n###### Recieved ccm_join message...");
 	if (msg != NULL)
 	{
-		cl_log(LOG_INFO,
-		       "[type=%s]",
-		       ha_msg_value(msg, F_TYPE));
-		cl_log(LOG_INFO,
-		       "[orig=%s]",
-		       ha_msg_value(msg, F_ORIG));
-		cl_log(LOG_INFO,
-		       "[to=%s]",
-		       ha_msg_value(msg, F_TO));
-		cl_log(LOG_INFO,
-		       "[status=%s]",
-		       ha_msg_value(msg, F_STATUS));
-		cl_log(LOG_INFO,
-		       "[info=%s]",
-		       ha_msg_value(msg, F_COMMENT));
-		cl_log(LOG_INFO,
-		       "[rsc_hold=%s]",
-		       ha_msg_value(msg, F_RESOURCES));
-		cl_log(LOG_INFO,
-		       "[stable=%s]",
-		       ha_msg_value(msg, F_ISSTABLE));
-		cl_log(LOG_INFO,
-		       "[rtype=%s]",
-		       ha_msg_value(msg, F_RTYPE));
-		cl_log(LOG_INFO,
-		       "[ts=%s]",
-		       ha_msg_value(msg, F_TIME));
-		cl_log(LOG_INFO,
-		       "[seq=%s]",
-		       ha_msg_value(msg, F_SEQ));
-		cl_log(LOG_INFO,
-		       "[generation=%s]",
-		       ha_msg_value(msg, F_HBGENERATION));
-		//      cl_log(LOG_INFO, "[=%s]", ha_msg_value(msg, F_));
+		crm_verbose("[type=%s]",
+			    ha_msg_value(msg, F_TYPE));
+		crm_verbose("[orig=%s]",
+			    ha_msg_value(msg, F_ORIG));
+		crm_verbose("[to=%s]",
+			    ha_msg_value(msg, F_TO));
+		crm_verbose("[status=%s]",
+			    ha_msg_value(msg, F_STATUS));
+		crm_verbose("[info=%s]",
+			    ha_msg_value(msg, F_COMMENT));
+		crm_verbose("[rsc_hold=%s]",
+			    ha_msg_value(msg, F_RESOURCES));
+		crm_verbose("[stable=%s]",
+			    ha_msg_value(msg, F_ISSTABLE));
+		crm_verbose("[rtype=%s]",
+			    ha_msg_value(msg, F_RTYPE));
+		crm_verbose("[ts=%s]",
+			    ha_msg_value(msg, F_TIME));
+		crm_verbose("[seq=%s]",
+			    ha_msg_value(msg, F_SEQ));
+		crm_verbose("[generation=%s]",
+			    ha_msg_value(msg, F_HBGENERATION));
+		//      crm_verbose("[=%s]", ha_msg_value(msg, F_));
 	}
 	FNOUT();
 }
@@ -543,7 +530,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	struct update_data_s* data = (struct update_data_s*)user_data;
 	const char *state = data->join;
 
-	crm_debug("%s processing %s (%s)",
+	crm_verbose("%s processing %s (%s)",
 		  __FUNCTION__, node_uname, data->state);
 
 	if(state != NULL
@@ -555,7 +542,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	tmp1 = create_node_state(node_uname, data->state, NULL, state);
 
 	if(data->updates == NULL) {
-		crm_debug("Creating first update");
+		crm_verbose("Creating first update");
 		data->updates = tmp1;
 	} else {
 		xmlAddNextSibling(data->updates, tmp1);

@@ -98,7 +98,7 @@ do_ha_control(long long action,
 	} 
 	
 	if(action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) {
-		cl_log(LOG_ERR, "Unexpected action %s in %s",
+		crm_err("Unexpected action %s in %s",
 		       fsa_action2string(action), __FUNCTION__);
 	}
 	
@@ -121,24 +121,22 @@ do_shutdown(long long action,
 
 	/* last attempt to shut these down */
 	if(is_set(fsa_input_register, R_PE_CONNECTED)) {
-		cl_log(LOG_WARNING,
-		       "Last attempt to shutdown the PolicyEngine");
+		crm_warn("Last attempt to shutdown the PolicyEngine");
 		tmp = do_pe_control(A_PE_STOP, cause, cur_state,
 				    current_input, data);
 		if(tmp != I_NULL) {
 			next_input = I_ERROR;
-			cl_log(LOG_ERR, "Failed to shutdown the PolicyEngine");
+			crm_err("Failed to shutdown the PolicyEngine");
 		}
 	}
 
 	if(is_set(fsa_input_register, R_TE_CONNECTED)) {
-		cl_log(LOG_WARNING,
-		       "Last attempt to shutdown the Transitioner");
+		crm_warn("Last attempt to shutdown the Transitioner");
 		tmp = do_pe_control(A_TE_STOP, cause, cur_state,
 				    current_input, data);
 		if(tmp != I_NULL) {
 			next_input = I_ERROR;
-			cl_log(LOG_ERR, "Failed to shutdown the Transitioner");
+			crm_err("Failed to shutdown the Transitioner");
 		}
 		
 	}
@@ -184,7 +182,7 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 
 	if(lpc == 0){
 		// hey what happened??
-		cl_log(LOG_ERR, "We were called but no message was ready.\n"
+		crm_err("We were called but no message was ready.\n"
 		       "\tLikely the connection to Heartbeat failed, check the logs");
 
 		// TODO: feed this back into the FSA
@@ -199,7 +197,7 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 void
 crmd_ha_input_destroy(gpointer user_data)
 {
-	cl_log(LOG_INFO, "in my hb_input_destroy");
+	crm_info("in my hb_input_destroy");
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/
@@ -212,7 +210,8 @@ do_exit(long long action,
 {
 	FNIN();
 
-	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n", fsa_action2string(action), action);
+	crm_err("Action %s (%.16llx) not supported\n",
+		fsa_action2string(action), action);
 
 	if(action & A_EXIT_0) {
 		g_main_quit(crmd_mainloop);
@@ -241,11 +240,11 @@ do_startup(long long action,
 
 	fsa_input_register = 0; // zero out the regester
 	
-	cl_log(LOG_INFO, "Register PID");
+	crm_info("Register PID");
 	register_pid(PID_FILE, FALSE, crm_shutdown);
 	
 	cl_log_set_logfile(DAEMON_LOG);
-/*	if (crm_debug()) { */
+/*	if (crm_verbose()) { */
 	cl_log_set_debugfile(DAEMON_DEBUG);
 /*  		cl_log_enable_stderr(FALSE); 
 		} */
@@ -255,17 +254,17 @@ do_startup(long long action,
 	/* change the logging facility to the one used by heartbeat daemon */
 	fsa_cluster_conn = ll_cluster_new("heartbeat");
 	
-	cl_log(LOG_INFO, "Switching to Heartbeat logger");
+	crm_info("Switching to Heartbeat logger");
 	if ((facility =
 	     fsa_cluster_conn->llc_ops->get_logfacility(
 		     fsa_cluster_conn)) > 0) {
 		cl_log_set_facility(facility);
 	}
 	
-	CRM_DEBUG("Facility: %d", facility);
+	crm_verbose("Facility: %d", facility);
 	
 	if(was_error == 0) {
-		cl_log(LOG_INFO, "Init server comms");
+		crm_info("Init server comms");
 		was_error = init_server_ipc_comms(CRM_SYSTEM_CRMD,
 						  crmd_client_connect,
 						  default_ipc_input_destroy);
@@ -276,10 +275,10 @@ do_startup(long long action,
 			fsa_cluster_conn);
 		
 		if (fsa_our_uname == NULL) {
-			cl_log(LOG_ERR, "get_mynodeid() failed");
+			crm_err("get_mynodeid() failed");
 			was_error = 1;
 		}
-		cl_log(LOG_INFO, "FSA Hostname: %s", fsa_our_uname);
+		crm_info("FSA Hostname: %s", fsa_our_uname);
 	}
 
 	/* set up the timers */
@@ -367,7 +366,7 @@ do_stop(long long action,
 {
 	FNIN();
 
-	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n",
+	crm_err("Action %s (%.16llx) not supported\n",
 	       fsa_action2string(action), action);
 
 	FNRET(I_NULL);
@@ -398,7 +397,7 @@ do_recover(long long action,
 {
 	FNIN();
 
-	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n",
+	crm_err("Action %s (%.16llx) not supported\n",
 	       fsa_action2string(action), action);
 
 	FNRET(I_SHUTDOWN);
@@ -415,7 +414,7 @@ crm_shutdown(int nsig)
 	if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
 
 		if(is_set(fsa_input_register, R_SHUTDOWN)) {
-			cl_log(LOG_WARNING, "Escalating the shutdown");
+			crm_err("Escalating the shutdown");
 			s_crmd_fsa(C_SHUTDOWN, I_ERROR, NULL);
 
 		} else {
@@ -428,7 +427,7 @@ crm_shutdown(int nsig)
 		}
 		
 	} else {
-		cl_log(LOG_INFO, "exit from shutdown");
+		crm_info("exit from shutdown");
 		exit(LSB_EXIT_OK);
 	    
 	}
@@ -491,7 +490,7 @@ init_server_ipc_comms(
 				      wait_ch, // user data passed to ??
 				      channel_input_destroy);
 
-	cl_log(LOG_DEBUG, "Listening on: %s", commpath);
+	crm_debug("Listening on: %s", commpath);
 
 	FNRET(0);
 }
@@ -505,33 +504,31 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 {
 	const char* ournode = NULL;
 
-	cl_log(LOG_INFO, "Signing in with Heartbeat");
+	crm_info("Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
-		cl_log(LOG_ERR, "Cannot sign on with heartbeat");
-		cl_log(LOG_ERR,
-		       "REASON: %s",
-		       hb_cluster->llc_ops->errmsg(hb_cluster));
+		crm_err("Cannot sign on with heartbeat");
+		crm_err("REASON: %s",
+			hb_cluster->llc_ops->errmsg(hb_cluster));
 		return FALSE;
 	}
   
-	cl_log(LOG_DEBUG, "Finding our node name");
+	crm_debug("Finding our node name");
 	if ((ournode =
 	     hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
-		cl_log(LOG_ERR, "get_mynodeid() failed");
+		crm_err("get_mynodeid() failed");
 		return FALSE;
 	}
-	cl_log(LOG_INFO, "hostname: %s", ournode);
+	crm_info("hostname: %s", ournode);
 	
-	cl_log(LOG_DEBUG, "Be informed of CRM messages");
+	crm_debug("Be informed of CRM messages");
 	if (hb_cluster->llc_ops->set_msg_callback(hb_cluster,
 						  "CRM",
 						  message_callback,
 						  hb_cluster)
 	    !=HA_OK){
-		cl_log(LOG_ERR, "Cannot set CRM message callback");
-		cl_log(LOG_ERR,
-		       "REASON: %s",
-		       hb_cluster->llc_ops->errmsg(hb_cluster));
+		crm_err("Cannot set CRM message callback");
+		crm_err("REASON: %s",
+			hb_cluster->llc_ops->errmsg(hb_cluster));
 		return FALSE;
 	}
 

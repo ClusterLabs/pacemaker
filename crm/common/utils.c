@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.1 2004/06/02 11:45:28 andrew Exp $ */
+/* $Id: utils.c,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 
+
 #include <clplumbing/cl_log.h>
 
 #include <time.h> 
@@ -36,6 +37,7 @@
 #include <crm/common/util.h>
 #include <crm/dmalloc_wrapper.h>
 
+#define MAXLINE 512
 
 static uint ref_counter = 0;
 
@@ -77,7 +79,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 
 	FNIN();
 
-	CRM_DEBUG("Attempting to decode: [%s]", srcstring);
+	crm_verbose("Attempting to decode: [%s]", srcstring);
 	if (srcstring != NULL) {
 		len = strlen(srcstring);
 		while(lpc < len) {
@@ -113,7 +115,7 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 	FNIN();
 	sprintf(hash_key, "%s_%s", sys?sys:"none", crm_msg_reference);
 	hash_key[ref_len-1] = '\0';
-	cl_log(LOG_INFO, "created hash key: (%s)", hash_key);
+	crm_info("created hash key: (%s)", hash_key);
 	FNRET(hash_key);
 }
 
@@ -131,8 +133,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	if (strcmp(CRM_SYSTEM_DC, src_subsys) == 0) {
 		hash_value = crm_strdup(src_subsys);
 		if (!hash_value) {
-			cl_log(LOG_ERR,
-			       "memory allocation failed in "
+			crm_err("memory allocation failed in "
 			       "generate_hash_value()\n");
 			FNRET(NULL);
 		}
@@ -142,8 +143,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	ref_len = strlen(src_subsys) + strlen(src_node) + 2;
 	hash_value = (char*)crm_malloc(sizeof(char)*(ref_len));
 	if (!hash_value) {
-		cl_log(LOG_ERR,
-		       "memory allocation failed in "
+		crm_err("memory allocation failed in "
 		       "generate_hash_value()\n");
 		FNRET(NULL);
 	}
@@ -151,7 +151,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	snprintf(hash_value, ref_len-1, "%s_%s", src_node, src_subsys);
 	hash_value[ref_len-1] = '\0';// make sure it is null terminated
 
-	cl_log(LOG_INFO, "created hash value: (%s)", hash_value);
+	crm_info("created hash value: (%s)", hash_value);
 	FNRET(hash_value);
 }
 
@@ -163,7 +163,7 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 
 	FNIN();
     
-	cl_log(LOG_INFO, "Decoding hash value: (%s:%d)",
+	crm_info("Decoding hash value: (%s:%d)",
 	       char_value,
 	       value_len);
     	
@@ -171,11 +171,11 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 		*node = NULL;
 		*subsys = (char*)crm_strdup(char_value);
 		if (!*subsys) {
-			cl_log(LOG_ERR, "memory allocation failed in "
+			crm_err("memory allocation failed in "
 			       "decode_hash_value()\n");
 			FNRET(FALSE);
 		}
-		cl_log(LOG_INFO, "Decoded value: (%s:%d)", *subsys, 
+		crm_info("Decoded value: (%s:%d)", *subsys, 
 		       (int)strlen(*subsys));
 		FNRET(TRUE);
 	}
@@ -200,4 +200,61 @@ crm_itoa(int an_int)
 	snprintf(buffer, len, "%d", an_int);
 
 	return buffer;
+}
+
+unsigned int crm_log_level = LOG_VERBOSE;
+
+/* returns the old value */
+unsigned int
+set_crm_log_level(unsigned int level)
+{
+	unsigned int old = crm_log_level;
+	crm_log_level = level;
+	return old;
+}
+
+unsigned int
+get_crm_log_level(unsigned int level)
+{
+	int old = crm_log_level;
+	crm_log_level = level;
+	return old;
+}
+
+void
+do_crm_log(int log_level, const char *function, const char *fmt, ...)
+{
+	gboolean do_log = FALSE;
+	switch(log_level) {
+		case LOG_NOTICE:
+		case LOG_WARNING:
+		case LOG_ERR:
+			do_log = TRUE;
+			break;
+		default:
+			if(log_level >= crm_log_level) {
+				do_log = TRUE;
+				if(log_level != LOG_INFO) {
+					log_level = LOG_DEBUG;
+				}
+			}
+			break;
+	}
+
+	if(do_log) {
+			va_list ap;
+			char	buf[MAXLINE];
+			int	nbytes;
+
+			buf[MAXLINE-1] = EOS;
+			va_start(ap, fmt);
+			nbytes=vsnprintf(buf, sizeof(buf)-1, fmt, ap);
+			va_end(ap);
+
+			if(function == NULL) {
+				cl_log(log_level, "%s", buf);
+			} else {
+				cl_log(log_level, "(%s) %s", function, buf);
+			}
+	}
 }

@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.27 2004/06/02 11:48:10 andrew Exp $ */
+/* $Id: adminmain.c,v 1.28 2004/06/02 15:25:10 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -202,11 +202,11 @@ main(int argc, char **argv)
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
 			case 'i':
-				CRM_DEBUG("Option %c => %s", flag, optarg);
+				crm_verbose("Option %c => %s", flag, optarg);
 				id = crm_strdup(optarg);
 				break;
 			case 'o':
-				CRM_DEBUG("Option %c => %s", flag, optarg);
+				crm_verbose("Option %c => %s", flag, optarg);
 				obj_type = crm_strdup(optarg);
 				break;
 			case 'C':
@@ -285,23 +285,21 @@ main(int argc, char **argv)
 			 * the callbacks are invoked...
 			 */
 			mainloop = g_main_new(FALSE);
-			cl_log(LOG_INFO,
-			       "%s waiting for reply from the local CRM",
-			       crm_system_name);
+			crm_info("%s waiting for reply from the local CRM",
+				 crm_system_name);
 
 			g_main_run(mainloop);
 			return_to_orig_privs();
 		} else {
-			cl_log(LOG_ERR, "No message to send");
+			crm_err("No message to send");
 			operation_status = -1;
 		}
 	} else {
-		cl_log(LOG_ERR,
-		       "Init failed, could not perform requested operations");
+		crm_err("Init failed, could not perform requested operations");
 		operation_status = -2;
 	}
 
-	cl_log(LOG_DEBUG, "%s exiting normally", crm_system_name);
+	crm_debug("%s exiting normally", crm_system_name);
 	return operation_status;
 }
 
@@ -319,7 +317,7 @@ handleCibMod(void)
 	
 	
 	if(strcmp(cib_object->name, obj_type) != 0) {
-		cl_log(LOG_ERR, "Mismatching xml."
+		crm_err("Mismatching xml."
 		       "  Expected root element <%s>, got <%s>",
 		       obj_type, cib_object->name);
 		return NULL;
@@ -329,11 +327,11 @@ handleCibMod(void)
 	
 	attr_value = xmlGetProp(cib_object, attr_name);
 	if(attr_name == NULL || strlen(attr_name) == 0) {
-		cl_log(LOG_ERR, "No value for %s specified.", attr_name);
+		crm_err("No value for %s specified.", attr_name);
 		return NULL;
 	}
 	
-	CRM_NOTE("Object creation complete");
+	crm_trace("Object creation complete");
 
 	// create the cib request
 	fragment = create_cib_fragment(cib_object, NULL);
@@ -362,10 +360,10 @@ do_work(ll_cluster_t * hb_cluster)
 	if (DO_DAEMON == TRUE && cib_action != NULL) {
 
 		if(strcmp(CRM_OP_QUERY, cib_action) == 0) {
-			cl_log(LOG_DEBUG, "Querying the CIB");
+			crm_debug("Querying the CIB");
 			obj_type_parent = pluralSection(obj_type);
 			
-			CRM_DEBUG("Querying the CIB for section: %s",
+			crm_verbose("Querying the CIB for section: %s",
 				   obj_type_parent);
 			
 			set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_QUERY);
@@ -373,7 +371,7 @@ do_work(ll_cluster_t * hb_cluster)
 					      obj_type_parent);
 			
 			dest_node = status;
-			CRM_DEBUG("CIB query creation %s",
+			crm_verbose("CIB query creation %s",
 				   msg_data == NULL ? "failed." : "passed.");
 			
 			sys_to = CRM_SYSTEM_DCIB;
@@ -384,11 +382,11 @@ do_work(ll_cluster_t * hb_cluster)
 					      CRM_OP_ERASE);
 			
 			dest_node = status;
-			CRM_NOTE("CIB Erase op in progress");
+			crm_trace("CIB Erase op in progress");
 			
 			sys_to = CRM_SYSTEM_DCIB;
 		} else {
-			cl_log(LOG_ERR, "Unknown daemon options");
+			crm_err("Unknown daemon options");
 			all_is_good = FALSE;
 		}
 		
@@ -399,7 +397,7 @@ do_work(ll_cluster_t * hb_cluster)
 				all_is_good = FALSE;
 		
 	} else if (DO_DAEMON == TRUE && DO_HEALTH == TRUE) {
-		CRM_NOTE("Querying the system");
+		crm_trace("Querying the system");
 
 		sys_to = CRM_SYSTEM_DC;
 
@@ -424,24 +422,23 @@ do_work(ll_cluster_t * hb_cluster)
 
 			dest_node = status;
 		} else {
-			cl_log(LOG_INFO, "Cluster-wide health not available yet");
+			crm_info("Cluster-wide health not available yet");
 			all_is_good = FALSE;
 		}
 	} else {
-		cl_log(LOG_ERR, "Unknown options");
+		crm_err("Unknown options");
 		all_is_good = FALSE;
 	}
 	
 
 	if(all_is_good == FALSE) {
-		cl_log(LOG_ERR, "Creation of request failed.  No message to send");
+		crm_err("Creation of request failed.  No message to send");
 		return -1;
 	}
 
 /* send it */
 	if (crmd_channel == NULL) {
-		cl_log(LOG_ERR,
-		       "The IPC connection is not valid, cannot send anything");
+		crm_err("The IPC connection is not valid, cannot send anything");
 		return -1;
 	}
 
@@ -476,7 +473,7 @@ do_init(void)
 	/* change the logging facility to the one used by heartbeat daemon */
 	hb_cluster = ll_cluster_new("heartbeat");
 	
-	cl_log(LOG_INFO, "Switching to Heartbeat logger");
+	crm_info("Switching to Heartbeat logger");
 	if (( facility =
 	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
 		cl_log_set_facility(facility);
@@ -546,19 +543,19 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 		if (msg == NULL) {
-			CRM_NOTE("No message this time");
+			crm_trace("No message this time");
 			continue;
 		}
 
 		lpc++;
 		buffer =(char *) msg->msg_body;
-		CRM_DEBUG("Got xml [text=%s]", buffer);
+		crm_verbose("Got xml [text=%s]", buffer);
 
 		xml_root_node =
 			find_xml_in_ipcmessage(msg, TRUE);
 
 		if (xml_root_node == NULL) {
-			cl_log(LOG_INFO,
+			crm_info(
 			       "XML in IPC message was not valid... "
 			       "discarding.");
 			continue;
@@ -566,7 +563,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 					 crm_system_name,
 					 admin_uuid,
 					 "response") == FALSE) {
-			cl_log(LOG_INFO,
+			crm_info(
 			       "Message was not a CRM response. Discarding.");
 			continue;
 		}
@@ -599,22 +596,21 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			filename[filename_len - 1] = '\0';
 			if (xmlSaveFormatFile(filename,
 					      xml_root_node->doc, 1) < 0) {
-				cl_log(LOG_CRIT,
-				       "Could not save response %s_%s_%d.xml",
-				       this_msg_reference,
-				       result,
-				       received_responses);
+				crm_crit("Could not save response %s_%s_%d.xml",
+					 this_msg_reference,
+					 result,
+					 received_responses);
 			}
 		}
 	}
 
 	if (server->ch_status == IPC_DISCONNECT) {
-		cl_log(LOG_INFO, "admin_msg_callback: received HUP");
+		crm_info("admin_msg_callback: received HUP");
 		FNRET(!hack_return_good);
 	}
 
 	if (received_responses >= expected_responses) {
-		cl_log(LOG_INFO,
+		crm_info(
 		       "Recieved expected number (%d) of messages from Heartbeat."
 		       "  Exiting normally.", expected_responses);
 		g_main_quit(mainloop);

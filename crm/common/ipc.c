@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.1 2004/06/02 11:45:28 andrew Exp $ */
+/* $Id: ipc.c,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -73,7 +73,7 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 		log_level = LOG_ERR;
 	}
 	
-	cl_log(log_level,
+	do_crm_log(log_level, __FUNCTION__,
 	       "Sending IPC message (ref=%s) to %s@%s %s.",
 	       xmlGetProp(msg, XML_ATTR_REFERENCE), 
 	       xmlGetProp(msg, XML_ATTR_SYSTO),
@@ -92,37 +92,36 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 	FNIN();
 
 	if (msg == NULL) {
-		cl_log(LOG_WARNING, "cant send NULL message");
+		crm_err("cant send NULL message");
 		all_is_good = FALSE;
 	}
 	else if (msg->msg_len <= 0) {
-		cl_log(LOG_WARNING, "cant send 0 sized message");
+		crm_err("cant send 0 sized message");
 		all_is_good = FALSE;
 	}
 	else if (msg->msg_len > MAXDATASIZE) {
-		cl_log(LOG_WARNING, "cant send msg... too big");
+		crm_err("cant send msg... too big");
 		all_is_good = FALSE;
 	}
     
-/*     CRM_DEBUG("Sending message: %s", (char*)msg->msg_body); */
-	CRM_DEBUG("Message is%s valid to send", all_is_good?"":" not");
+	crm_trace("Sending message: %s", (char*)msg->msg_body); 
+	crm_verbose("Message is%s valid to send", all_is_good?"":" not");
 
 	if (ipc_client == NULL) {
 		all_is_good = FALSE;
 	}
-	CRM_DEBUG("IPC Client is%s set.", all_is_good?"":" not");
+	crm_verbose("IPC Client is%s set.", all_is_good?"":" not");
 	if (all_is_good) {		
 		while(lpc++ < MAX_IPC_FAIL
 		      && ipc_client->ops->send(ipc_client, msg) == IPC_FAIL)
 		{
-			cl_log(LOG_WARNING, "ipc channel blocked");
+			crm_err("ipc channel blocked");
 			cl_shortsleep();
 		}
 	}
 	
 	if (lpc == MAX_IPC_FAIL) {
-		cl_log(LOG_ERR,
-		       "Could not send IPC, message.  Channel is dead.");
+		crm_err("Could not send IPC, message.  Channel is dead.");
 		all_is_good = FALSE;
 	}
 
@@ -160,7 +159,7 @@ find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free)
 
 	FNIN();
 	if (msg == NULL) {
-		CRM_NOTE("IPC Message was empty...");
+		crm_trace("IPC Message was empty...");
 		FNRET(NULL);
 	}
 
@@ -170,14 +169,13 @@ find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free)
 	if (do_free) msg->msg_done(msg);
 
 	if (doc == NULL) {
-		cl_log(LOG_INFO,
-		       "IPC Message did not contain an XML buffer...");
+		crm_info("IPC Message did not contain an XML buffer...");
 		FNRET(NULL);
 	}
 
 	root = xmlDocGetRootElement(doc);
 	if (root == NULL) {
-		cl_log(LOG_INFO, "Root node was NULL.");
+		crm_info("Root node was NULL.");
 		FNRET(NULL);
 	}
 	FNRET(root);
@@ -215,7 +213,7 @@ init_client_ipc_comms(const char *child,
 	sprintf(commpath, WORKING_DIR "/%s", child);
 	commpath[local_socket_len - 1] = '\0';
     
-	cl_log(LOG_DEBUG, "Attempting to talk on: %s", commpath);
+	crm_debug("Attempting to talk on: %s", commpath);
 
 	attrs = g_hash_table_new(g_str_hash,g_str_equal);
 	g_hash_table_insert(attrs, path, commpath);
@@ -224,12 +222,10 @@ init_client_ipc_comms(const char *child,
 	g_hash_table_destroy(attrs);
 
 	if (ch == NULL) {
-		cl_log(LOG_CRIT,
-		       "Could not access channel on: %s",
-		       commpath);
+		crm_crit("Could not access channel on: %s", commpath);
 		
 	} else if (ch->ops->initiate_connection(ch) != IPC_OK) {
-		cl_log(LOG_CRIT, "Could not init comms on: %s", commpath);
+		crm_crit("Could not init comms on: %s", commpath);
 		FNRET(NULL);
 	}
 
@@ -246,7 +242,7 @@ init_client_ipc_comms(const char *child,
 					    callback_data, 
 					    default_ipc_input_destroy);
 
-	cl_log(LOG_DEBUG, "Processing of %s complete", commpath);
+	crm_debug("Processing of %s complete", commpath);
 
 	FNRET(ch);
 }
@@ -271,8 +267,6 @@ send_ipc_request(IPC_Channel *ipc_channel,
 				 sys_from, uuid_from,
 				 crm_msg_reference);
 
-//	xml_message_debug(request, "Final request...");
-
 	was_sent = send_xmlipc_message(ipc_channel, request);
 
 	free_xml(request);
@@ -294,8 +288,6 @@ send_ipc_reply(IPC_Channel *ipc_channel,
 	FNIN();
 
 	reply = create_reply(xml_request, xml_response_data);
-
-//	xml_message_debug(reply, "Final reply...");
 
 	if (reply != NULL) {
 		was_sent = send_xmlipc_message(ipc_channel, reply);
@@ -330,7 +322,7 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 			FNRET(!all_is_well);
 		}
 		if (msg == NULL) {
-			cl_log(LOG_ERR, "No message this time");
+			crm_err("No message this time");
 			continue;
 		}
 
@@ -343,14 +335,14 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 		sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
 		type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
 		if (root_xml_node == NULL) {
-			cl_log(LOG_ERR, "Root node was NULL!!");
+			crm_err("Root node was NULL!!");
 
 		} else if(sys_to == NULL) {
-			cl_log(LOG_ERR, "Value of %s was NULL!!",
+			crm_err("Value of %s was NULL!!",
 			       XML_ATTR_SYSTO);
 			
 		} else if(type == NULL) {
-			cl_log(LOG_ERR, "Value of %s was NULL!!",
+			crm_err("Value of %s was NULL!!",
 			       XML_ATTR_MSGTYPE);
 			
 		} else {
@@ -359,9 +351,8 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 			process_function = user_data;
 			
 			if(process_function(root_xml_node, sender) == FALSE) {
-				cl_log(LOG_WARNING,
-				       "Received a message destined for %s"
-				       " by mistake", sys_to);
+				crm_warn("Received a message destined for %s"
+					 " by mistake", sys_to);
 			}
 			
 		}
@@ -380,9 +371,9 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 	if(root_xml_node != NULL)
 		free_xml(root_xml_node);
 
-	CRM_DEBUG("Processed %d messages", lpc);
+	crm_verbose("Processed %d messages", lpc);
 	if (sender->ch_status == IPC_DISCONNECT) {
-		cl_log(LOG_ERR, "The server has left us: Shutting down...NOW");
+		crm_err("The server has left us: Shutting down...NOW");
 
 		exit(1); // shutdown properly later
 		

@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.14 2004/06/02 11:48:10 andrew Exp $ */
+/* $Id: tengine.c,v 1.15 2004/06/02 15:25:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -279,8 +279,7 @@ process_graph_event(const char *event_node,
 	if(matched_action_list == NULL) {
 		// unexpected event, trigger a pe-recompute
 		// possibly do this only for certain types of actions
-		cl_log(LOG_ERR,
-		       "Unexpected event... matched action list was NULL");
+		crm_err("Unexpected event... matched action list was NULL");
 		return FALSE;
 	}
 	
@@ -288,8 +287,7 @@ process_graph_event(const char *event_node,
 	if(safe_str_neq(event_rc, "0")){
 		if(safe_str_neq((const char*)xmlGetProp(action, "allow_fail"),
 				XML_BOOLEAN_TRUE)) {
-			cl_log(LOG_ERR,
-			       "Action %s to %s on %s resulted in failure..."
+			crm_err("Action %s to %s on %s resulted in failure..."
 			       " aborting transition.",
 			       event_action, event_rsc, event_node);
 			return FALSE;
@@ -304,8 +302,7 @@ process_graph_event(const char *event_node,
 		passed = initiate_action(matched_action_list);
 
 		if(passed == FALSE) {
-			cl_log(LOG_ERR,
-			       "Initiation of next event failed");
+			crm_err("Initiation of next event failed");
 			return FALSE;
 			
 		} else if(matched_action_list->index >
@@ -326,7 +323,7 @@ process_graph_event(const char *event_node,
 		}
 
 	}
-	cl_log(LOG_INFO, "Transition complete...");
+	crm_info("Transition complete...");
 
 	send_success();
 	
@@ -370,7 +367,7 @@ initiate_action(action_list_t *list)
 		xml_action = g_slist_nth_data(list->actions, list->index);
 		
 		if(xml_action == NULL) {
-			cl_log(LOG_INFO, "No tasks left on this list");
+			crm_info("No tasks left on this list");
 			list->index = list->index_max + 1;
 			
 			return TRUE;
@@ -384,11 +381,10 @@ initiate_action(action_list_t *list)
 		task     = xmlGetProp(xml_action, XML_LRM_ATTR_TASK);
 		
 		if(safe_str_eq(discard, XML_BOOLEAN_TRUE)) {
-			cl_log(LOG_INFO,
-			       "Skipping discarded rsc-op (%s): %s %s on %s",
-			       id, task,
-			       xmlGetProp(xml_action->children, XML_ATTR_ID),
-			       on_node);
+			crm_info("Skipping discarded rsc-op (%s): %s %s on %s",
+				 id, task,
+				 xmlGetProp(xml_action->children, XML_ATTR_ID),
+				 on_node);
 			continue;
 		}
 
@@ -398,56 +394,47 @@ initiate_action(action_list_t *list)
 		
 		list->force = list->force || !is_optional;
 
-		/*
-		cl_log(LOG_DEBUG,
-		       "Processing action %s (id=%s) on %s",
+		crm_verbose("Processing action %s (id=%s) on %s",
 		       task, id, on_node);
-		*/
 		
 		if(list->force && is_optional) {
-			cl_log(LOG_INFO,
-			       "Forcing execution of otherwise optional task "
-			       "due to a dependancy on a previous action");
+			crm_info("Forcing execution of otherwise optional task "
+				 "due to a dependancy on a previous action");
 		}
 		
 		if(list->force == FALSE && is_optional) {
 			if(safe_str_eq(xml_action->name, "rsc_op")){
-				cl_log(LOG_INFO,
-				       "Skipping optional rsc-op (%s):"
-				       " %s %s on %s",
-				       id, task,
-				       xmlGetProp(xml_action->children,
-						  XML_ATTR_ID),
+				crm_info("Skipping optional rsc-op (%s):"
+					 " %s %s on %s",
+					 id, task,
+					 xmlGetProp(xml_action->children,
+						    XML_ATTR_ID),
 				       on_node);
 			} else {
-				cl_log(LOG_INFO,
-				       "Skipping optional command"
-				       " %s (id=%s) on %s",
-				       task, id, on_node);
+				crm_info("Skipping optional command"
+					 " %s (id=%s) on %s",
+					 task, id, on_node);
 			}
 			
 		} else if(safe_str_eq(runnable, XML_BOOLEAN_FALSE)) {
-			cl_log(LOG_ERR,
-			       "Terminated transition on un-runnable command:"
-			       " %s (id=%s) on %s",
-			       task, id, on_node);
+			crm_err("Terminated transition on un-runnable command:"
+				" %s (id=%s) on %s",
+				task, id, on_node);
 			return FALSE;
 			
 		} else if(id == NULL || strlen(id) == 0
 			  || on_node == NULL || strlen(on_node) == 0
 			  || task == NULL || strlen(task) == 0) {
 			// error
-			cl_log(LOG_ERR,
-			       "Failed on corrupted command: %s (id=%s) on %s",
-			       task, id, on_node);
+			crm_err("Failed on corrupted command: %s (id=%s) on %s",
+				task, id, on_node);
 			
 			return FALSE;
 			
 		} else if(safe_str_eq(xml_action->name, "pseduo_event")){
 			if(safe_str_eq(task, "stonith")){
-				cl_log(LOG_INFO,
-				       "Executing %s (%s) of node %s",
-				       task, id, on_node);
+				crm_info("Executing %s (%s) of node %s",
+					 task, id, on_node);
 /*
   translate this into a stonith op by deisgnated node
   may need the CIB to determine who is running the stonith resource
@@ -455,10 +442,9 @@ initiate_action(action_list_t *list)
   more liekly, have the pengine find and supply that info 
 */
 			} else {
-				cl_log(LOG_ERR,
-				       "Failed on unsupported %s: "
-				       "%s (id=%s) on %s",
-				       xml_action->name, task, id, on_node);
+				crm_err("Failed on unsupported %s: "
+					"%s (id=%s) on %s",
+					xml_action->name, task, id, on_node);
 				
 				return FALSE;
 			}
@@ -468,9 +454,8 @@ initiate_action(action_list_t *list)
 			/*
 			  <crm_msg op=XML_LRM_ATTR_TASK to=XML_RES_ATTR_TARGET>
 			*/
-			cl_log(LOG_INFO,
-			       "Executing crm-event (%s): %s on %s",
-			       id, task, on_node);
+			crm_info("Executing crm-event (%s): %s on %s",
+				 id, task, on_node);
 #ifndef TESTING
 			xmlNodePtr options = create_xml_node(
 				NULL, XML_TAG_OPTIONS);
@@ -484,11 +469,10 @@ initiate_action(action_list_t *list)
 			return TRUE;
 #endif			
 		} else if(safe_str_eq(xml_action->name, "rsc_op")){
-			cl_log(LOG_INFO,
-			       "Executing rsc-op (%s): %s %s on %s",
-			       id, task,
-			       xmlGetProp(xml_action->children, XML_ATTR_ID),
-			       on_node);
+			crm_info("Executing rsc-op (%s): %s %s on %s",
+				 id, task,
+				 xmlGetProp(xml_action->children, XML_ATTR_ID),
+				 on_node);
 #ifndef TESTING
 			/*
 			  <msg_data>
@@ -521,10 +505,9 @@ initiate_action(action_list_t *list)
 			
 		} else {
 			// error
-			cl_log(LOG_ERR,
-			       "Failed on unsupported command type: "
-			       "%s, %s (id=%s) on %s",
-			       xml_action->name, task, id, on_node);
+			crm_err("Failed on unsupported command type: "
+				"%s, %s (id=%s) on %s",
+				xml_action->name, task, id, on_node);
 
 			return FALSE;
 		}
@@ -544,7 +527,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
 	const char *ref    = xmlGetProp(msg, XML_ATTR_REFERENCE);
 
-	cl_log(LOG_DEBUG, "Processing %s (%s) message", op, ref);
+	crm_debug("Processing %s (%s) message", op, ref);
 
 #ifdef MSG_LOG
 	if(msg_te_strm == NULL) {
@@ -561,8 +544,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 	fprintf(msg_te_strm, "[Result ]\tDiscarded\n");
 	fflush(msg_te_strm);
 #endif
-		cl_log(LOG_INFO,
-		       "Message was a response not a request.  Discarding");
+		crm_info("Message was a response not a request.  Discarding");
 		return TRUE;
 	}
 
@@ -573,32 +555,32 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		// ignore
 
 	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
-		CRM_DEBUG("Bad sys-to %s", sys_to);
+		crm_verbose("Bad sys-to %s", sys_to);
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
 
-		CRM_NOTE("Initializing graph...");
+		crm_trace("Initializing graph...");
 		initialize_graph();
 
 		xmlNodePtr graph = find_xml_node(msg, "transition_graph");
-		CRM_NOTE("Unpacking graph...");
+		crm_trace("Unpacking graph...");
 		unpack_graph(graph);
-		CRM_NOTE("Initiating transition...");
+		crm_trace("Initiating transition...");
 		if(initiate_transition() == FALSE) {
 			// nothing to be done.. means we're done.
-			cl_log(LOG_INFO, "No actions to be taken..."
+			crm_info("No actions to be taken..."
 			       " transition compelte.");
 			send_success();		
 		}
-		CRM_NOTE("Processing complete...");
+		crm_trace("Processing complete...");
 		
 		
 	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
 		const char *true_op = get_xml_attr (msg, XML_TAG_OPTIONS,
 						    XML_ATTR_TRUEOP, TRUE);
 		if(true_op == NULL) {
-			cl_log(LOG_ERR,
+			crm_err(
 			       "Illegal update,"
 			       " the original operation must be specified");
 			send_abort(msg);
@@ -620,7 +602,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 			}
 			
 		} else {
-			cl_log(LOG_ERR,
+			crm_err(
 			       "Did not expect copy of action %s", op);
 		}
 		
@@ -628,7 +610,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		initialize_graph();
 
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
-		cl_log(LOG_WARNING, "Received quit message, terminating");
+		crm_err("Received quit message, terminating");
 		exit(0);
 	}
 	
@@ -642,7 +624,7 @@ send_abort(xmlNodePtr msg)
 
 	print_state();
 	
-	CRM_NOTE("Sending \"abort\" message");
+	crm_trace("Sending \"abort\" message");
 	
 #ifdef MSG_LOG
 	fprintf(msg_te_strm, "[Result ]\tTransition aborted\n");
@@ -665,7 +647,7 @@ send_success(void)
 
 	print_state();
 
-	CRM_NOTE("Sending \"complete\" message");
+	crm_trace("Sending \"complete\" message");
 
 #ifdef MSG_LOG
 	fprintf(msg_te_strm, "[Result ]\tTransition complete\n");
@@ -685,19 +667,18 @@ void
 print_state(void)
 {
 	int lpc = 0;
-	cl_log(LOG_DEBUG, "#!!#!!# Start Transitioner state");
+	crm_debug("#!!#!!# Start Transitioner state");
 	if(graph == NULL) {
-		cl_log(LOG_DEBUG, "\tEmpty transition graph");
+		crm_debug("\tEmpty transition graph");
 	} else {
 		slist_iter(
 			action_list, action_list_t, graph, lpc,
 
-			cl_log(LOG_DEBUG,
-			       "\tAction set %d: %d of %d actions invoked",
-			       lpc, action_list->index,
-			       action_list->index_max);
+			crm_debug("\tAction set %d: %d of %d actions invoked",
+				  lpc, action_list->index,
+				  action_list->index_max);
 			);
 	}
 	
-	cl_log(LOG_DEBUG, "#!!#!!# End Transitioner state");
+	crm_debug("#!!#!!# End Transitioner state");
 }

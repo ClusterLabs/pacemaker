@@ -1,4 +1,4 @@
-/* $Id: penginemain.c,v 1.15 2004/06/02 11:48:10 andrew Exp $ */
+/* $Id: penginemain.c,v 1.16 2004/06/02 15:25:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -130,24 +130,24 @@ init_start(void)
 #endif
 
     if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
-		cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
+		crm_crit("already running: [pid %ld].", pid);
 		exit(LSB_EXIT_OK);
     }
   
     cl_log_set_logfile(DAEMON_LOG);
-//    if (crm_debug()) {
+//    if (crm_verbose()) {
     cl_log_set_debugfile(DAEMON_DEBUG);
 //    }
 
     /* change the logging facility to the one used by heartbeat daemon */
     hb_fd = ll_cluster_new("heartbeat");
     
-    cl_log(LOG_INFO, "Switching to Heartbeat logger");
+    crm_info("Switching to Heartbeat logger");
     if ((facility = hb_fd->llc_ops->get_logfacility(hb_fd))>0) {
 		cl_log_set_facility(facility);
     }
     
-    cl_log(LOG_INFO, "Register PID");
+    crm_info("Register PID");
     register_pid(PID_FILE, FALSE, pengine_shutdown);
 
     crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
@@ -159,7 +159,7 @@ init_start(void)
 
     /* Create the mainloop and run it... */
 	    mainloop = g_main_new(FALSE);
-	    cl_log(LOG_INFO, "Starting %s", crm_system_name);
+	    crm_info("Starting %s", crm_system_name);
 	    
 	    
 #ifdef REALTIME_SUPPORT
@@ -174,13 +174,13 @@ init_start(void)
 	    g_main_run(mainloop);
 
     } else {
-	    cl_log(LOG_ERR, "Could not connect to the CRMd");
+	    crm_err("Could not connect to the CRMd");
     }
 
     return_to_orig_privs();
     
     if (unlink(PID_FILE) == 0) {
-		cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
+		crm_info("[%s] stopped", crm_system_name);
     }
 
     if(crm_ch != NULL)

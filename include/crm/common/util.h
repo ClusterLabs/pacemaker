@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.1 2004/06/02 11:40:50 andrew Exp $ */
+/* $Id: util.h,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,6 +18,16 @@
  */
 #ifndef CRM_COMMON_UTIL__H
 #define CRM_COMMON_UTIL__H
+
+extern unsigned int crm_log_level;
+
+extern void do_crm_log(int log_level, const char *function,
+		       const char *format, ...) G_GNUC_PRINTF(3,4);
+
+/* returns the old value */
+extern unsigned int set_crm_log_level(unsigned int level);
+
+extern unsigned int get_crm_log_level(unsigned int level);
 
 extern char *crm_itoa(int an_int);
 

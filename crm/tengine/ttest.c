@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.4 2004/06/02 11:48:10 andrew Exp $ */
+/* $Id: ttest.c,v 1.5 2004/06/02 15:25:12 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -106,26 +106,26 @@ main(int argc, char **argv)
 	}
   
 	if (argerr) {
-		cl_log(LOG_ERR, "%d errors in option parsing", argerr);
+		crm_err("%d errors in option parsing", argerr);
 	}
   
-	cl_log(LOG_INFO, "=#=#=#=#= Getting XML =#=#=#=#=");
+	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
   
   
 	mtrace();
 
-	CRM_NOTE("Initializing graph...");
+	crm_trace("Initializing graph...");
 	initialize_graph();
 	
 	xmlNodePtr xml_graph = file2xml(stdin);
 
-	CRM_NOTE("Unpacking graph...");
+	crm_trace("Unpacking graph...");
 	unpack_graph(xml_graph);
-	CRM_NOTE("Initiating transition...");
+	crm_trace("Initiating transition...");
 
 	if(initiate_transition() == FALSE) {
 		// nothing to be done.. means we're done.
-		cl_log(LOG_INFO, "No actions to be taken..."
+		crm_info("No actions to be taken..."
 		       " transition compelte.");
 	}
 
@@ -133,7 +133,7 @@ main(int argc, char **argv)
 	free_xml(xml_graph);
 	muntrace();
 
-	CRM_NOTE("Transition complete...");
+	crm_trace("Transition complete...");
 
 	return 0;
 }

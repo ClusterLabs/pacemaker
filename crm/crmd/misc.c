@@ -44,7 +44,7 @@ do_log(long long action,
 	if(action & A_WARN) log_type = LOG_WARNING;
 	if(action & A_ERROR) log_type = LOG_ERR;
 	
-	cl_log(log_type,
+	do_crm_log(log_type, __FUNCTION__, 
 	       "[[FSA]] Input (%s) was received while in state (%s)",
 	       fsa_input2string(current_input),
 	       fsa_state2string(cur_state));

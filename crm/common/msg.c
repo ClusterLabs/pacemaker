@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.1 2004/06/02 11:45:28 andrew Exp $ */
+/* $Id: msg.c,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -112,12 +112,12 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	crm_msg_reference = xmlGetProp(root_xml_node,
 				       XML_ATTR_REFERENCE);
 /*
-	cl_log(LOG_DEBUG, "Recieved XML message with (version=%s)",
+	crm_debug("Recieved XML message with (version=%s)",
 	       xmlGetProp(root_xml_node, XML_ATTR_VERSION));
-	cl_log(LOG_DEBUG, "Recieved XML message with (from=%s)", from);
-	cl_log(LOG_DEBUG, "Recieved XML message with (to=%s)"  , to);
-	cl_log(LOG_DEBUG, "Recieved XML message with (type=%s)", type);
-	cl_log(LOG_DEBUG, "Recieved XML message with (ref=%s)" ,
+	crm_debug("Recieved XML message with (from=%s)", from);
+	crm_debug("Recieved XML message with (to=%s)"  , to);
+	crm_debug("Recieved XML message with (type=%s)", type);
+	crm_debug("Recieved XML message with (ref=%s)" ,
 	       crm_msg_reference);
 */
 	action = root_xml_node;
@@ -126,36 +126,33 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	if (uuid != NULL) true_sys = generate_hash_key(sys, uuid);
 
 	if (to == NULL) {
-		cl_log(LOG_INFO, "No sub-system defined.");
+		crm_info("No sub-system defined.");
 		action = NULL;
 	} else if (true_sys != NULL && strcmp(to, true_sys) != 0) {
-		cl_log(LOG_DEBUG,
-		       "The message is not for this sub-system (%s != %s).",
-		       to,
-		       true_sys);
+		crm_debug("The message is not for this sub-system (%s != %s).",
+			  to, true_sys);
 		action = NULL;
 	}
     
 	if (type == NULL) {
-		cl_log(LOG_INFO, "No message type defined.");
+		crm_info("No message type defined.");
 		FNRET(NULL);
 	} else if (msg_type != NULL && strcmp(msg_type, type) != 0) {
-		cl_log(LOG_INFO,
-		       "Expecting a (%s) message but receieved a (%s).",
+		crm_info("Expecting a (%s) message but receieved a (%s).",
 		       msg_type, type);
 		action = NULL;
 	}
 
 	if (crm_msg_reference == NULL) {
-		cl_log(LOG_INFO, "No message crm_msg_reference defined.");
+		crm_info("No message crm_msg_reference defined.");
 		action = NULL;
 	}
 /*
  	if(action != NULL) 
-		cl_log(LOG_DEBUG,
+		crm_debug(
 		       "XML is valid and node with message type (%s) found.",
 		       type);
-	cl_log(LOG_DEBUG, "Returning node (%s)", xmlGetNodePath(action));
+	crm_debug("Returning node (%s)", xmlGetNodePath(action));
 */
 	
 	FNRET(action);
@@ -176,8 +173,7 @@ send_hello_message(IPC_Channel *ipc_client,
 	    || client_name == NULL || strlen(client_name) == 0
 	    || major_version == NULL || strlen(major_version) == 0
 	    || minor_version == NULL || strlen(minor_version) == 0) {
-		cl_log(LOG_ERR,
-		       "Missing fields, Hello message will not be valid.");
+		crm_err("Missing fields, Hello message will not be valid.");
 		return;
 	}
 
@@ -231,29 +227,25 @@ process_hello_message(xmlNodePtr hello,
 		FNRET(FALSE);
 
 	} else if (local_uuid == NULL || strlen(local_uuid) == 0) {
-		cl_log(LOG_ERR,
-		       "Hello message was not valid (field %s not found)",
+		crm_err("Hello message was not valid (field %s not found)",
 		       "uuid");
 		FNRET(FALSE);
 
 	} else if (local_client_name==NULL || strlen(local_client_name)==0){
-		cl_log(LOG_ERR,
-		       "Hello message was not valid (field %s not found)",
-		       "client name");
+		crm_err("Hello message was not valid (field %s not found)",
+			"client name");
 		FNRET(FALSE);
 
 	} else if(local_major_version == NULL
 		  || strlen(local_major_version) == 0){
-		cl_log(LOG_ERR,
-		       "Hello message was not valid (field %s not found)",
-		       "major version");
+		crm_err("Hello message was not valid (field %s not found)",
+			"major version");
 		FNRET(FALSE);
 
 	} else if (local_minor_version == NULL
 		   || strlen(local_minor_version) == 0){
-		cl_log(LOG_ERR,
-		       "Hello message was not valid (field %s not found)",
-		       "minor version");
+		crm_err("Hello message was not valid (field %s not found)",
+			"minor version");
 		FNRET(FALSE);
 	}
     
@@ -285,8 +277,8 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 		    && strcmp(CRM_SYSTEM_TENGINE, sys_from) != 0
 		    && strcmp(CRM_SYSTEM_DC, sys_from) != 0
 		    && strcmp(CRM_SYSTEM_CRMD, sys_from) != 0) {
-			cl_log(LOG_ERR,
-			       "only internal systems can leave uuid_from blank");
+			crm_err("only internal systems can leave"
+				" uuid_from blank");
 			FNRET(FALSE);
 		}
 	}
@@ -371,15 +363,13 @@ create_common_message(xmlNodePtr original_request,
 	operation = xmlGetProp(original_request, XML_ATTR_OP);
 	
 	if (type == NULL) {
-		cl_log(LOG_ERR,
-		       "Cannot create new_message,"
-		       " no message type in original message");
+		crm_err("Cannot create new_message,"
+			" no message type in original message");
 		FNRET(NULL);
 #if 0
 	} else if (strcmp(XML_ATTR_REQUEST, type) != 0) {
-		cl_log(LOG_ERR,
-		       "Cannot create new_message,"
-		       " original message was not a request");
+		crm_err("Cannot create new_message,"
+			" original message was not a request");
 		FNRET(NULL);
 #endif
 	}

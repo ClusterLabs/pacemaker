@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.25 2004/06/02 11:48:10 andrew Exp $ */
+/* $Id: cibio.c,v 1.26 2004/06/02 15:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -94,7 +94,7 @@ createEmptyCib(void)
 	if (verifyCibXml(cib_root)) {
 		FNRET(cib_root);
 	}
-	cl_log(LOG_CRIT,
+	crm_crit(
 	       "The generated CIB did not pass integrity testing!!"
 	       "  All hope is lost.");
 	FNRET(NULL);
@@ -108,7 +108,7 @@ verifyCibXml(xmlNodePtr cib)
 	FNIN();
 
 	if (cib == NULL) {
-		cl_log(LOG_ERR, "XML Buffer was empty.");
+		crm_err("XML Buffer was empty.");
 		FNRET(FALSE);
 	}
 	
@@ -165,9 +165,8 @@ readCibXmlFile(const char *filename)
 		fclose(cib_file);
 		
 	} else {
-		cl_log(LOG_WARNING,
-		       "Stat of (%s) failed, file does not exist.",
-		       CIB_FILENAME);
+		crm_warn("Stat of (%s) failed, file does not exist.",
+			 CIB_FILENAME);
 	}
 	
 	if (verifyCibXml(root) == FALSE) {
@@ -196,7 +195,7 @@ uninitializeCib(void)
 	FNIN();
 	
 	if(tmp_cib == NULL) {
-		cl_log(LOG_ERR, "The CIB has already been deallocated.");
+		crm_err("The CIB has already been deallocated.");
 		FNRET(FALSE);
 	}
 	
@@ -207,11 +206,11 @@ uninitializeCib(void)
 	constraint_search = NULL;
 	status_search = NULL;
 
-	cl_log(LOG_WARNING, "Deallocating the CIB.");
+	crm_err("Deallocating the CIB.");
 	
 	free_xml(tmp_cib);
 
-	cl_log(LOG_WARNING, "The CIB has been deallocated.");
+	crm_err("The CIB has been deallocated.");
 	
 	FNRET(TRUE);
 }
@@ -245,11 +244,11 @@ initializeCib(xmlNodePtr new_cib)
 		*/
 		initialized = TRUE;
 
-		CRM_NOTE("CIB initialized");
+		crm_trace("CIB initialized");
 		FNRET(TRUE);
 	}
 	else {
-		cl_log(LOG_ERR, "CIB Verification failed");
+		crm_err("CIB Verification failed");
 	}
 	
 	FNRET(FALSE);
@@ -339,14 +338,11 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 		int res = moveFile(filename, filename_bak, FALSE, NULL);
 	
 		if (res  < 0) {
-			cl_log(LOG_INFO,
-			       "Could not make backup of the current Cib "
-			       "(code: %d)... aborting update.", res);
+			crm_info("Could not make backup of the current Cib "
+				 "(code: %d)... aborting update.", res);
 			error_code = -1;
 		} else {
-			cl_log(LOG_INFO,
-			       "Writing CIB out to %s",
-			       CIB_FILENAME);
+			crm_info("Writing CIB out to %s", CIB_FILENAME);
 	    
 			if (new_cib->doc == NULL) {
 				foo = xmlNewDoc("1.0");
@@ -370,9 +366,8 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 			/* for some reason, reading back after saving with
 			 * line-breaks doesnt go real well 
 			 */
-			cl_log(LOG_INFO,
-			       "Saved %d bytes to the Cib as XML",
-			       res);
+			crm_info("Saved %d bytes to the Cib as XML",
+				 res);
 	    
 			if (res < 0) {
 				// assume 0 is good
@@ -380,27 +375,24 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 					     filename,
 					     FALSE,
 					     NULL) < -1) {
-					cl_log(LOG_CRIT,
-					       "Could not restore the "
-					       "backup of the current Cib "
-					       "(code: %d)... panic!",
-					       res);
+					crm_crit("Could not restore the "
+						 "backup of the current Cib "
+						 "(code: %d)... panic!",
+						 res);
 					error_code = -2;
 					// should probably exit here 
 				} else if (initializeCib(saved_cib) == FALSE) {
 					// oh we are so dead 
-					cl_log(LOG_CRIT,
-					       "Could not re-initialize "
-					       "with the old CIB.  "
-					       "Everything is about to go "
-					       "pear shaped");
+					crm_crit("Could not re-initialize "
+						 "with the old CIB.  "
+						 "Everything is about to go "
+						 "pear shaped");
 					error_code = -3;
 				} else {
-					cl_log(LOG_CRIT,
-					       "Update of Cib failed "
-					       "(code: %d)... reverted to "
-					       "last known valid version",
-					       res);
+					crm_crit("Update of Cib failed "
+						 "(code: %d)... reverted to "
+						 "last known valid version",
+						 res);
 					
 					error_code = -4;
 				}
@@ -409,16 +401,16 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 	}
 	else
 	{
-		cl_log(LOG_INFO, "Ignoring invalid or NULL Cib");
+		crm_info("Ignoring invalid or NULL Cib");
 		error_code = -5;
 	}
 
 // Make sure memory is cleaned up appropriately
 	if (error_code != 0) {
-//		CRM_DEBUG("Freeing new CIB %p", new_cib);
+		crm_trace("Freeing new CIB %p", new_cib);
 		free_xml(new_cib);
 	} else {
-//		CRM_DEBUG("Freeing saved CIB %p", saved_cib);
+		crm_trace("Freeing saved CIB %p", saved_cib);
 		free_xml(saved_cib);
 	}
 

@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.1 2004/06/02 11:45:28 andrew Exp $ */
+/* $Id: xml.c,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,16 +53,14 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	}
 
 	if(search_path == NULL) {
-		CRM_NOTE("Will never find NULL");
+		crm_trace("Will never find NULL");
 		FNRET(NULL);
 	}
 	
 	
-#ifdef XML_TRACE
-	dump_array(LOG_DEBUG,
+	dump_array(LOG_TRACE,
 		   "Looking for.",
 		   search_path, len);
-#endif
 	child = root->children, lastMatch = NULL;
 	for (j=0; j < len; ++j) {
 		gboolean is_found = FALSE;
@@ -73,30 +71,23 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		
 		while(child != NULL) {
 			const char * child_name = (const char*)child->name;
-#ifdef XML_TRACE
-			CRM_DEBUG("comparing (%s) with (%s).",
+			crm_trace("comparing (%s) with (%s).",
 				   search_path[j],
 				   child->name);
-#endif
 			if (strcmp(child_name, search_path[j]) == 0) {
 				lastMatch = child;
 				child = lastMatch->children;
-#ifdef XML_TRACE
-				CRM_DEBUG("found node (%s) @line (%ld).",
+				crm_trace("found node (%s) @line (%ld).",
 					   search_path[j],
 					   xmlGetLineNo(child));
-#endif
 				is_found = TRUE;
 				break;
 			}
 			child = child->next;
 		}
 		if (is_found == FALSE) {
-#ifdef XML_TRACE
-			CRM_DEBUG(
-				"No more siblings left... %s cannot be found.",
+			crm_trace("No more siblings left... %s cannot be found.",
 				search_path[j]);
-#endif
 			break;
 		}
 	}
@@ -104,10 +95,8 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	if (j == len
 	    && lastMatch != NULL
 	    && strcmp(lastMatch->name, search_path[j-1]) == 0) {
-#ifdef XML_TRACE
-		CRM_DEBUG("returning node (%s).",
+		crm_trace("returning node (%s).",
 			   xmlGetNodePath(lastMatch));
-#endif
 		FNRET(lastMatch);
 	}
 
@@ -115,7 +104,7 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		   "Could not find the full path to the node you specified.",
 		   search_path, len);
 
-	cl_log(LOG_WARNING,"Closest point was node (%s) starting from %s.",
+	crm_warn("Closest point was node (%s) starting from %s.",
 	       xmlGetNodePath(lastMatch), root?root->name:NULL);
 
 	FNRET(NULL);
@@ -147,13 +136,13 @@ get_xml_attr_nested(xmlNodePtr parent,
 	xmlNodePtr attr_parent = NULL;
 
 	if(parent == NULL) {
-		cl_log(LOG_ERR, "Can not find attribute %s in NULL parent",
+		crm_err("Can not find attribute %s in NULL parent",
 		       attr_name);
 		return NULL;
 	} 
 
 	if(attr_name == NULL || strlen(attr_name) == 0) {
-		cl_log(LOG_ERR, "Can not find attribute with no name in %s",
+		crm_err("Can not find attribute with no name in %s",
 		       xmlGetNodePath(parent));
 		return NULL;
 	}
@@ -164,14 +153,14 @@ get_xml_attr_nested(xmlNodePtr parent,
 	} else {
 		attr_parent = find_xml_node_nested(parent, node_path, length);
 		if(attr_parent == NULL && error) {
-			cl_log(LOG_ERR, "No node at the path you specified.");
+			crm_err("No node at the path you specified.");
 			return NULL;
 		}
 	}
 	
 	attr_value = xmlGetProp(attr_parent, attr_name);
 	if((attr_value == NULL || strlen(attr_value) == 0) && error) {
-		cl_log(LOG_ERR,
+		crm_err(
 		       "No value present for %s at %s",
 		       attr_name, xmlGetNodePath(attr_parent));
 		return NULL;
@@ -211,12 +200,12 @@ set_xml_attr_nested(xmlNodePtr parent,
 	xmlNodePtr tmp;
 
 	if(parent == NULL && create == FALSE) {
-		cl_log(LOG_ERR, "Can not set attribute in NULL parent");
+		crm_err("Can not set attribute in NULL parent");
 		return NULL;
 	} 
 
 	if(attr_name == NULL || strlen(attr_name) == 0) {
-		cl_log(LOG_ERR, "Can not set attribute to %s with no name",
+		crm_err("Can not set attribute to %s with no name",
 		       attr_value);
 		return NULL;
 	}
@@ -227,7 +216,7 @@ set_xml_attr_nested(xmlNodePtr parent,
 
 	} else if(length == 0 || node_path == NULL
 		  || *node_path == NULL || strlen(*node_path) == 0) {
-		cl_log(LOG_ERR,
+		crm_err(
 		       "Can not create parent to set attribute %s=%s on",
 		       attr_name, attr_value);
 		return NULL;
@@ -260,14 +249,14 @@ set_xml_attr_nested(xmlNodePtr parent,
 		}
 		
 	} else if(attr_parent == NULL) {
-		cl_log(LOG_ERR, "Can not find parent to set attribute on");
+		crm_err("Can not find parent to set attribute on");
 		return NULL;
 		
 	}
 	
 	result = set_xml_property_copy(attr_parent, attr_name, attr_value);
 	if(result == NULL) {
-		cl_log(LOG_WARNING,
+		crm_warn(
 		       "Could not set %s=%s at %s",
 		       attr_name, attr_value, xmlGetNodePath(attr_parent));
 	}
@@ -311,69 +300,51 @@ find_entity_nested(xmlNodePtr parent,
 {
 	xmlNodePtr child;
 	FNIN();
-#ifdef XML_TRACE
-	cl_log(LOG_DEBUG, "Looking for %s elem with id=%s.", node_name, id);
-#endif
+	crm_trace("Looking for %s elem with id=%s.", node_name, id);
 	while(parent != NULL) {
-#ifdef XML_TRACE
-		CRM_DEBUG("examining (%s).", xmlGetNodePath(parent));
-#endif
+		crm_trace("examining (%s).", xmlGetNodePath(parent));
 		child = parent->children;
 	
 		while(child != NULL) {
-#ifdef XML_TRACE
-			CRM_DEBUG("looking for (%s) [name].", node_name);
-#endif
+			crm_trace("looking for (%s) [name].", node_name);
 			if (node_name != NULL
 			    && strcmp(child->name, node_name) != 0) {    
-#ifdef XML_TRACE
-				CRM_DEBUG(
+				crm_trace(
 					"skipping entity (%s=%s) [node_name].",
 					xmlGetNodePath(child), child->name);
-#endif
 				break;
 			} else if (elem_filter_name != NULL
 				   && elem_filter_value != NULL) {
 				const char* child_value = (const char*)
 					xmlGetProp(child, elem_filter_name);
 				
-#ifdef XML_TRACE
-				cl_log(LOG_DEBUG,
+				crm_trace(
 				       "comparing (%s) with (%s) [attr_value].",
 				       child_value, elem_filter_value);
-#endif
 				if (strcmp(child_value, elem_filter_value)) {
-#ifdef XML_TRACE
-					CRM_DEBUG("skipping entity (%s) [attr_value].",
+					crm_trace("skipping entity (%s) [attr_value].",
 						   xmlGetNodePath(child));
-#endif
 					break;
 				}
 			}
 		
-#ifdef XML_TRACE
-			cl_log(LOG_DEBUG,
+			crm_trace(
 			       "looking for entity (%s) in %s.",
 			       id, xmlGetNodePath(child));
-#endif
 			while(child != NULL) {
-#ifdef XML_TRACE
-				cl_log(LOG_DEBUG,
+				crm_trace(
 				       "looking for entity (%s) in %s.",
 				       id, xmlGetNodePath(child));
-#endif
 				xmlChar *child_id =
 					xmlGetProp(child, XML_ATTR_ID);
 
 				if (child_id == NULL) {
-					cl_log(LOG_CRIT,
+					crm_crit(
 					       "Entity (%s) has id=NULL..."
 					       "Cib not valid!",
 					       xmlGetNodePath(child));
 				} else if (strcmp(id, child_id) == 0) {
-#ifdef XML_TRACE
-					CRM_DEBUG("found entity (%s).", id);
-#endif
+					crm_trace("found entity (%s).", id);
 					FNRET(child);
 				}   
 				child = child->next;
@@ -381,14 +352,12 @@ find_entity_nested(xmlNodePtr parent,
 		}
 
 		if (siblings == TRUE) {
-#ifdef XML_TRACE
-			CRM_NOTE("Nothing yet... checking siblings");	    
-#endif
+			crm_trace("Nothing yet... checking siblings");	    
 			parent = parent->next;
 		} else
 			parent = NULL;
 	}
-	cl_log(LOG_INFO,
+	crm_info(
 	       "Couldnt find anything appropriate for %s elem with id=%s.",
 	       node_name, id);	    
 	FNRET(NULL);
@@ -398,11 +367,11 @@ void
 copy_in_properties(xmlNodePtr target, xmlNodePtr src)
 {
 	if(src == NULL) {
-		cl_log(LOG_WARNING, "No node to copy properties from");
+		crm_err("No node to copy properties from");
 	} else if (src->properties == NULL) {
-		cl_log(LOG_INFO, "No properties to copy");
+		crm_info("No properties to copy");
 	} else if (target == NULL) {
-		cl_log(LOG_WARNING, "No node to copy properties into");
+		crm_err("No node to copy properties into");
 	} else {
 #ifndef USE_BUGGY_LIBXML
 		xmlAttrPtr prop_iter = NULL;
@@ -442,14 +411,14 @@ xml_message_debug(xmlNodePtr msg, const char *text)
 
 	FNIN();
 	if(msg == NULL) {
-		CRM_DEBUG("%s: %s",
+		crm_verbose("%s: %s",
 		   text==NULL?"<null>":text,"<null>");
 		
 		FNOUT();
 	}
 	
 	msg_buffer = dump_xml_node(msg, FALSE);
-	CRM_DEBUG("%s: %s",
+	crm_verbose("%s: %s",
 		   text==NULL?"<null>":text,
 		   msg_buffer==NULL?"<null>":msg_buffer);
 	crm_free(msg_buffer);
@@ -477,10 +446,8 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 		}
 		xmlDocDumpMemory(msg->doc, &xml_message, &msg_size);
 	} else {
-#ifdef XML_TRACE
-		CRM_DEBUG("mem used by xml: %d", xmlMemUsed());
+		crm_trace("mem used by xml: %d", xmlMemUsed());
 		xmlMemoryDump ();
-#endif    
 	
 		xml_buffer = xmlBufferCreate();
 		msg_size = xmlNodeDump(xml_buffer, msg->doc, msg, 0, 0);
@@ -490,7 +457,7 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 		xmlBufferFree(xml_buffer);
 
 		if (!xml_message) {
-			cl_log(LOG_ERR,
+			crm_err(
 			       "memory allocation failed in dump_xml_node()");
 		}
 	}
@@ -517,10 +484,10 @@ add_node_copy(xmlNodePtr new_parent, xmlNodePtr xml_node)
 		xmlAddChild(new_parent, node_copy);
 
 	} else if(xml_node == NULL) {
-		cl_log(LOG_ERR, "Could not add copy of NULL node");
+		crm_err("Could not add copy of NULL node");
 
 	} else {
-		cl_log(LOG_ERR, "Could not add copy of node to NULL parent");
+		crm_err("Could not add copy of node to NULL parent");
 	}
 	
 	FNRET(node_copy);
@@ -543,9 +510,7 @@ set_xml_property_copy(xmlNodePtr node,
 	}
 
 	
-#ifdef XML_TRACE
-	CRM_DEBUG("[%s] Setting %s to %s", parent_name, name, value);
-#endif
+	crm_trace("[%s] Setting %s to %s", parent_name, name, value);
 	if (name == NULL || strlen(name) <= 0) {
 		ret_value = NULL;
 		
@@ -587,9 +552,7 @@ create_xml_node(xmlNodePtr parent, const char *name)
 		}
 	}
 
-#ifdef XML_TRACE
-	CRM_DEBUG("Created node [%s [%s]]", parent_name, local_name);
-#endif
+	crm_trace("Created node [%s [%s]]", parent_name, local_name);
 	FNRET(ret_value);
 }
 
@@ -615,16 +578,7 @@ free_xml(xmlNodePtr a_node)
 	{
 		/* make sure the node is unlinked first */
 		xmlUnlinkNode(a_node);
-
-#if 0
-	/* set a new doc, wont delete without one? */
-		xmlDocPtr foo = xmlNewDoc("1.0");
-		xmlDocSetRootElement(foo, a_node);
-		xmlSetTreeDoc(a_node,foo);
-		xmlFreeDoc(foo);
-#else
 		xmlFreeNode(a_node);
-#endif
 	}
 	
 	FNOUT();
@@ -673,16 +627,16 @@ copy_xml_node_recursive(xmlNodePtr src_node)
 			local_child = copy_xml_node_recursive(node_iter);
 			if(local_child != NULL) {
 				xmlAddChild(local_node, local_child);
-				CRM_DEBUG("Copied node [%s [%s]", local_name, local_child->name);
+				crm_trace("Copied node [%s [%s]", local_name, local_child->name);
 			} 				
 			node_iter = node_iter->next;
 		}
 
-		CRM_DEBUG("Returning [%s]", local_node->name);
+		crm_trace("Returning [%s]", local_node->name);
 		FNRET(local_node);
 	}
 
-	CRM_NOTE("Returning null");
+	crm_trace("Returning null");
 	FNRET(NULL);
 #else
 	return xmlCopyNode(src_node, 1);
@@ -739,7 +693,7 @@ string2xml(const char *input)
 	xmlCleanupParser();
 
 	if (doc == NULL) {
-		cl_log(LOG_ERR, "Malformed XML [xml=%s]", the_xml);
+		crm_err("Malformed XML [xml=%s]", the_xml);
 		xmlBufferFree(xml_buffer);
 		return NULL;
 	}
@@ -762,13 +716,13 @@ file2xml(FILE *input)
 	xmlDocPtr doc;
 
 	if(input == NULL) {
-		cl_log(LOG_ERR, "File pointer was NULL");
+		crm_err("File pointer was NULL");
 		return NULL;
 	}
 	
 	while (more) {
 		ch = fgetc(input);
-//		cl_log(LOG_DEBUG, "Got [%c]", ch);
+//		crm_debug("Got [%c]", ch);
 		switch(ch) {
 			case EOF: 
 			case 0:
@@ -802,7 +756,7 @@ file2xml(FILE *input)
 	xmlCleanupParser();
 	
 	if (doc == NULL) {
-		cl_log(LOG_ERR, "Malformed XML [xml=%s]", the_xml);
+		crm_err("Malformed XML [xml=%s]", the_xml);
 		xmlBufferFree(xml_buffer);
 		return NULL;
 	}
@@ -820,16 +774,16 @@ dump_array(int log_level, const char *message, const char **array, int depth)
 	int j;
 	
 	if(message != NULL) {
-		cl_log(log_level, "%s", message);
+		do_crm_log(log_level, __FUNCTION__,  "%s", message);
 	}
 
-	cl_log(log_level, "Contents of the array:");
+	do_crm_log(log_level, __FUNCTION__,  "Contents of the array:");
 	if(array == NULL || array[0] == NULL || depth == 0) {
-		cl_log(log_level, "\t<empty>");
+		do_crm_log(log_level, __FUNCTION__,  "\t<empty>");
 	}
 	
 	for (j=0; j < depth && array[j] != NULL; j++) {
 		if (array[j] == NULL) break;
-		cl_log(log_level, "\t--> (%s).", array[j]);
+		do_crm_log(log_level, __FUNCTION__,  "\t--> (%s).", array[j]);
 	}
 }

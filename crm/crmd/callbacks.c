@@ -107,7 +107,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 
 	FNIN();
-	CRM_DEBUG("Processing IPC message from %s",
+	crm_verbose("Processing IPC message from %s",
 		   curr_client->table_key);
 
 	while(client->ops->is_message_pending(client)) {
@@ -121,13 +121,13 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 			FNRET(!hack_return_good);
 		}
 		if (msg == NULL) {
-			cl_log(LOG_WARNING, "No message this time");
+			crm_err("No message this time");
 			continue;
 		}
 
 		lpc++;
 		buffer = (char*)msg->msg_body;
-		CRM_DEBUG("Processing xml from %s [text=%s]",
+		crm_verbose("Processing xml from %s [text=%s]",
 			   curr_client->table_key, buffer);
 	
 		root_xml_node =
@@ -142,8 +142,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 					   root_xml_node);
 			}
 		} else {
-			cl_log(LOG_INFO,
-			       "IPC Message was not valid... discarding.");
+			crm_info("IPC Message was not valid... discarding.");
 		}
 		free_xml(root_xml_node);
 		msg->msg_done(msg);
@@ -153,19 +152,17 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		root_xml_node = NULL;
 	}
 
-	CRM_DEBUG("Processed %d messages", lpc);
+	crm_verbose("Processed %d messages", lpc);
     
 	if (client->ch_status == IPC_DISCONNECT)
 	{
-		cl_log(LOG_INFO,
-		       "received HUP from %s",
-		       curr_client->table_key);
+		crm_info("received HUP from %s",
+			 curr_client->table_key);
 		if (curr_client != NULL) {
 			struct crm_subsystem_s *the_subsystem = NULL;
 			
 			if (curr_client->sub_sys == NULL) {
-				cl_log(LOG_WARNING,
-				       "Client hadn't registered with us yet");
+				crm_warn("Client hadn't registered with us yet");
 
 			} else if (strcmp(CRM_SYSTEM_PENGINE,
 					  curr_client->sub_sys) == 0) {
@@ -201,7 +198,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 				gboolean det = G_main_del_IPC_Channel(
 					curr_client->client_source);
 			
-				CRM_DEBUG("crm_client was %s detached",
+				crm_verbose("crm_client was %s detached",
 					   det?"successfully":"not");
 			}
 			
@@ -248,9 +245,8 @@ CrmdClientStatus(const char * node, const char * client,
 		extra  = XML_CIB_ATTR_CLEAR_SHUTDOWN;
 	}
 	
-	cl_log(LOG_NOTICE,
-	       "Status update: Client %s/%s now has status [%s]\n",
-	       node, client, status);
+	crm_notice("Status update: Client %s/%s now has status [%s]\n",
+		   node, client, status);
 
 	if(AM_I_DC) {
 		update = create_node_state(node, NULL, status, join);
@@ -269,7 +265,7 @@ CrmdClientStatus(const char * node, const char * client,
 		s_crmd_fsa(C_CRMD_STATUS_CALLBACK, I_NULL, NULL);
 		
 	} else {
-		cl_log(LOG_ERR, "Got client status callback in non-DC mode");
+		crm_err("Got client status callback in non-DC mode");
 	}
 }
 
@@ -283,39 +279,38 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 
 	FNIN();
 	if (msg == NULL) {
-		cl_log(LOG_INFO,
-		       "**** ha_crm_msg_callback called on a NULL message");
+		crm_info("**** ha_crm_msg_callback called on a NULL message");
 		FNRET(NULL);
 	}
 
 #if 0
-	cl_log(LOG_DEBUG, "[F_TYPE=%s]", ha_msg_value(msg, F_TYPE));
-	cl_log(LOG_DEBUG, "[F_ORIG=%s]", ha_msg_value(msg, F_ORIG));
-	cl_log(LOG_DEBUG, "[F_TO=%s]", ha_msg_value(msg, F_TO));
-	cl_log(LOG_DEBUG, "[F_COMMENT=%s]", ha_msg_value(msg, F_COMMENT));
-	cl_log(LOG_DEBUG, "[F_XML=%s]", ha_msg_value(msg, "xml"));
-//    cl_log(LOG_DEBUG, "[F_=%s]", ha_msg_value(ha_msg, F_));
+	crm_debug("[F_TYPE=%s]", ha_msg_value(msg, F_TYPE));
+	crm_debug("[F_ORIG=%s]", ha_msg_value(msg, F_ORIG));
+	crm_debug("[F_TO=%s]", ha_msg_value(msg, F_TO));
+	crm_debug("[F_COMMENT=%s]", ha_msg_value(msg, F_COMMENT));
+	crm_debug("[F_XML=%s]", ha_msg_value(msg, "xml"));
+//    crm_debug("[F_=%s]", ha_msg_value(ha_msg, F_));
 #endif
 	
 	if (strcmp("CRM", ha_msg_value(msg, F_TYPE)) != 0) {
-		cl_log(LOG_INFO, "Received a (%s) message by mistake.",
+		crm_info("Received a (%s) message by mistake.",
 		       ha_msg_value(msg, F_TYPE));
 		FNRET(NULL);
 	}
 	xml = ha_msg_value(msg, "xml");
 	if (xml == NULL) {
-		cl_log(LOG_INFO, "No XML attached to this message.");
+		crm_info("No XML attached to this message.");
 		FNRET(NULL);
 	}
 	doc = xmlParseMemory(xml, strlen(xml));
 	if (doc == NULL) {
-		cl_log(LOG_INFO, "XML Buffer was not valid.");
+		crm_info("XML Buffer was not valid.");
 		FNRET(NULL);
 	}
 
 	root = xmlDocGetRootElement(doc);
 	if (root == NULL) {
-		cl_log(LOG_INFO, "Root node was NULL.");
+		crm_info("Root node was NULL.");
 		FNRET(NULL);
 	}
 	FNRET(root);

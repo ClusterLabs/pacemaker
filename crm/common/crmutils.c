@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.17 2004/06/01 15:59:41 andrew Exp $ */
+/* $Id: crmutils.c,v 1.18 2004/06/02 15:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -73,7 +73,7 @@ register_pid(const char *pid_file,
 		pid = fork();
 		
 		if (pid < 0) {
-			cl_log(LOG_CRIT, "cannot start daemon");
+			crm_crit("cannot start daemon");
 			exit(LSB_EXIT_GENERIC);
 		}else if (pid > 0) {
 			exit(LSB_EXIT_OK);
@@ -82,7 +82,7 @@ register_pid(const char *pid_file,
     
 	lockfd = fopen(pid_file, "w");
 	if (lockfd == NULL) {
-		cl_log(LOG_CRIT, "cannot create pid file: %s", pid_file);
+		crm_crit("cannot create pid file: %s", pid_file);
 		exit(LSB_EXIT_GENERIC);
 	}else{
 		pid = getpid();
@@ -134,7 +134,7 @@ init_stop(const char *pid_file)
 	FNIN();
 	
 	if (pid_file == NULL) {
-		cl_log(LOG_ERR, "No pid file specified to kill process");
+		crm_err("No pid file specified to kill process");
 		return LSB_EXIT_GENERIC;
 	}
 	pid =	get_running_pid(pid_file, NULL);
@@ -145,7 +145,7 @@ init_stop(const char *pid_file)
 			      ?	LSB_EXIT_EPERM : LSB_EXIT_GENERIC);
 			fprintf(stderr, "Cannot kill pid %ld\n", pid);
 		}else{
-			cl_log(LOG_INFO,
+			crm_info(
 			       "Signal sent to pid=%ld,"
 			       " waiting for process to exit",
 			       pid);
@@ -187,31 +187,30 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 {
 	const char* ournode = NULL;
 
-	cl_log(LOG_INFO, "Signing in with Heartbeat");
+	crm_info("Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
-		cl_log(LOG_ERR, "Cannot sign on with heartbeat");
-		cl_log(LOG_ERR,
-		       "REASON: %s",
-		       hb_cluster->llc_ops->errmsg(hb_cluster));
+		crm_err("Cannot sign on with heartbeat");
+		crm_err("REASON: %s",
+			hb_cluster->llc_ops->errmsg(hb_cluster));
 		return FALSE;
 	}
   
-	cl_log(LOG_DEBUG, "Finding our node name");
+	crm_debug("Finding our node name");
 	if ((ournode =
 	     hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
-		cl_log(LOG_ERR, "get_mynodeid() failed");
+		crm_err("get_mynodeid() failed");
 		return FALSE;
 	}
-	cl_log(LOG_INFO, "hostname: %s", ournode);
+	crm_info("hostname: %s", ournode);
 	
-	cl_log(LOG_DEBUG, "Be informed of CRM messages");
+	crm_debug("Be informed of CRM messages");
 	if (hb_cluster->llc_ops->set_msg_callback(hb_cluster,
 						  "CRM",
 						  message_callback,
 						  hb_cluster)
 	    !=HA_OK){
-		cl_log(LOG_ERR, "Cannot set CRM message callback");
-		cl_log(LOG_ERR,
+		crm_err("Cannot set CRM message callback");
+		crm_err(
 		       "REASON: %s",
 		       hb_cluster->llc_ops->errmsg(hb_cluster));
 		return FALSE;
@@ -243,10 +242,10 @@ register_with_apphb(const char *client_name,
 	int     rc = 0;
 
 	// Register with apphb
-	cl_log(LOG_INFO, "Signing in with AppHb");
+	crm_info("Signing in with AppHb");
 	sprintf(app_instance, "%s_%ld", client_name, (long)getpid());
   
-	cl_log(LOG_INFO, "Client %s registering with apphb", app_instance);
+	crm_info("Client %s registering with apphb", app_instance);
 
 	rc = apphb_register(client_name, app_instance);
     
@@ -255,9 +254,9 @@ register_with_apphb(const char *client_name,
 		exit(1);
 	}
   
-	cl_log(LOG_DEBUG, "Client %s registered with apphb", app_instance);
+	crm_debug("Client %s registered with apphb", app_instance);
   
-	cl_log(LOG_INFO, 
+	crm_info( 
 	       "Client %s setting %d ms apphb heartbeat interval"
 	       , app_instance, hb_intvl_ms);
 	rc = apphb_setinterval(hb_intvl_ms);
@@ -267,7 +266,7 @@ register_with_apphb(const char *client_name,
 	}
   
 	// regularly tell apphb that we are alive
-	cl_log(LOG_INFO, "Setting up AppHb Heartbeat");
+	crm_info("Setting up AppHb Heartbeat");
 	Gmain_timeout_add(wdt_interval_ms, tickle_fn, NULL);
 }
 
@@ -308,7 +307,7 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 			FNRET(!all_is_well);
 		}
 		if (msg == NULL) {
-			cl_log(LOG_ERR, "No message this time");
+			crm_err("No message this time");
 			continue;
 		}
 
@@ -321,14 +320,14 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 		sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
 		type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
 		if (root_xml_node == NULL) {
-			cl_log(LOG_ERR, "Root node was NULL!!");
+			crm_err("Root node was NULL!!");
 
 		} else if(sys_to == NULL) {
-			cl_log(LOG_ERR, "Value of %s was NULL!!",
+			crm_err("Value of %s was NULL!!",
 			       XML_ATTR_SYSTO);
 			
 		} else if(type == NULL) {
-			cl_log(LOG_ERR, "Value of %s was NULL!!",
+			crm_err("Value of %s was NULL!!",
 			       XML_ATTR_MSGTYPE);
 			
 		} else {
@@ -337,7 +336,7 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 			process_function = user_data;
 			
 			if(process_function(root_xml_node, sender) == FALSE) {
-				cl_log(LOG_WARNING,
+				crm_warn(
 				       "Received a message destined for %s"
 				       " by mistake", sys_to);
 			}
@@ -358,9 +357,9 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 	if(root_xml_node != NULL)
 		free_xml(root_xml_node);
 
-	CRM_DEBUG("Processed %d messages", lpc);
+	crm_verbose("Processed %d messages", lpc);
 	if (sender->ch_status == IPC_DISCONNECT) {
-		cl_log(LOG_ERR, "The server has left us: Shutting down...NOW");
+		crm_err("The server has left us: Shutting down...NOW");
 
 		exit(1); // shutdown properly later
 		

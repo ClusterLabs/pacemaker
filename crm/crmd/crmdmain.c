@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.18 2004/06/02 12:31:34 andrew Exp $ */
+/* $Id: crmdmain.c,v 1.19 2004/06/02 15:25:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,7 +58,7 @@ void crmd_hamsg_callback(const struct ha_msg* msg, void* private_data);
 gboolean crmd_tickle_apphb(gpointer data);
 
 GMainLoop*  crmd_mainloop = NULL;
-gboolean crm_debug_state = TRUE;
+gboolean crm_verbose_state = TRUE;
 
 int
 main(int argc, char ** argv)
@@ -127,7 +127,7 @@ init_start(void)
     enum crmd_fsa_state state;
 
     if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
-		cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
+		crm_crit("already running: [pid %ld].", pid);
 		exit(LSB_EXIT_OK);
     }
 	
@@ -137,7 +137,7 @@ init_start(void)
     if (state == S_PENDING) {
 	    /* Create the mainloop and run it... */
 	    crmd_mainloop = g_main_new(FALSE);
-	    cl_log(LOG_INFO, "Starting %s", crm_system_name);
+	    crm_info("Starting %s", crm_system_name);
 	    
 #ifdef REALTIME_SUPPORT
 	    static int  crm_realtime = 1;
@@ -153,14 +153,14 @@ init_start(void)
 	    return_to_orig_privs();
     } else {
 
-	    cl_log(LOG_ERR, "Startup of CRMd failed.  Current state: %s",
+	    crm_err("Startup of CRMd failed.  Current state: %s",
 		   fsa_state2string(state));
 	    
     }
     
     
     if (unlink(PID_FILE) == 0) {
-	    cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
+	    crm_info("[%s] stopped", crm_system_name);
     }
     
     FNRET(state != S_PENDING);

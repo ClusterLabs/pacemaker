@@ -39,7 +39,6 @@ crmressocket	= $(havarlibdir)/api/crm.rsp
 
 LIBRT 		= @LIBRT@
 AM_CFLAGS	= @CFLAGS@			\
-		  -DPIDFILE='"$(PIDFILE)"' 	\
 		  $(CRM_DEBUG_FLAGS)
 
 ## libraries

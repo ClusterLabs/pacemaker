@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.21 2004/06/02 11:48:10 andrew Exp $ */
+/* $Id: cibmain.c,v 1.22 2004/06/02 15:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -135,27 +135,27 @@ init_start(void)
 #endif
 
 	if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
-		cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
+		crm_crit("already running: [pid %ld].", pid);
 		exit(LSB_EXIT_OK);
 	}
 
-	cl_log(LOG_INFO, "Register PID");
+	crm_info("Register PID");
 	register_pid(PID_FILE, FALSE, cib_shutdown);
 
 	cl_log_set_logfile(DAEMON_LOG);
-//    if (crm_debug()) {
+//    if (crm_verbose()) {
 	cl_log_set_debugfile(DAEMON_DEBUG);
 //    }
   
 	hb_fd = ll_cluster_new("heartbeat");
 
-	cl_log(LOG_INFO, "Switching to Heartbeat logger");
+	crm_info("Switching to Heartbeat logger");
 	if ((facility = hb_fd->llc_ops->get_logfacility(hb_fd))>0) {
 		cl_log_set_facility(facility);
 	}    
 
 	if(startCib(CIB_FILENAME) == FALSE){
-		cl_log(LOG_CRIT, "Cannot start CIB... terminating");
+		crm_crit("Cannot start CIB... terminating");
 		exit(1);
 	}
 	
@@ -168,7 +168,7 @@ init_start(void)
 
 	/* Create the mainloop and run it... */
 		mainloop = g_main_new(FALSE);
-		cl_log(LOG_INFO, "Starting %s", crm_system_name);
+		crm_info("Starting %s", crm_system_name);
 	
 #ifdef REALTIME_SUPPORT
 		if (crm_realtime == 1) {
@@ -182,12 +182,12 @@ init_start(void)
 		g_main_run(mainloop);
 		return_to_orig_privs();
 	} else {
-		cl_log(LOG_ERR, "Connection to CRM not valid, exiting.");
+		crm_err("Connection to CRM not valid, exiting.");
 	}
 	
 	
 	if (unlink(PID_FILE) == 0) {
-		cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
+		crm_info("[%s] stopped", crm_system_name);
 	}
 	FNRET(0);
 }
@@ -200,26 +200,23 @@ process_maincib_message(xmlNodePtr msg, IPC_Channel *sender)
 
 	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
 
-	cl_log(LOG_DEBUG, "Processing %s message", op);
+	crm_debug("Processing %s message", op);
 
 	if(safe_str_eq(xmlGetProp(msg, XML_ATTR_MSGTYPE), XML_ATTR_REQUEST)) {
-		cl_log(LOG_INFO,
-		       "Message was a response not a request."
-		       "  Discarding");
+		crm_info("Message was a response not a request."
+			 "  Discarding");
 
 	} else if (strcmp(sys_to, CRM_SYSTEM_CIB) == 0
 		   || strcmp(sys_to, CRM_SYSTEM_DCIB) == 0) {
 		
 		xmlNodePtr answer = process_cib_message(msg, TRUE);
 		if (send_xmlipc_message(sender, answer)==FALSE)
-			cl_log(LOG_WARNING,
-			       "Cib answer could not be sent");
+			crm_warn("Cib answer could not be sent");
 		free_xml(answer);
 
 	} else {
-		cl_log(LOG_WARNING,
-		       "Received a message destined for %s by mistake",
-		       sys_to);
+		crm_warn("Received a message destined for %s by mistake",
+			 sys_to);
 		FNRET(FALSE);
 	}
 		

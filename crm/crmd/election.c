@@ -69,7 +69,7 @@ gboolean
 do_dc_heartbeat(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
-//	cl_log(LOG_DEBUG, "#!!#!!# Heartbeat timer just popped!");
+//	crm_debug("#!!#!!# Heartbeat timer just popped!");
 	
 	gboolean was_sent = send_request(NULL, NULL, CRM_OP_HBEAT, 
 					 NULL, CRM_SYSTEM_CRMD, NULL);
@@ -122,35 +122,33 @@ do_election_count_vote(long long action,
 		g_hash_table_lookup(fsa_membership_copy->members, vote_from);
 
 #if 0
-	cl_log(LOG_DEBUG, "%s (bornon=%d), our bornon (%d)",
+	crm_debug("%s (bornon=%d), our bornon (%d)",
 		   vote_from, our_node->born, my_born);
 
-	cl_log(LOG_DEBUG, "%s %s %s",
+	crm_debug("%s %s %s",
 	       fsa_our_uname,
 	       strcmp(fsa_our_uname, vote_from) < 0?"<":">=",
 	       vote_from);
 #endif
 	
 	if(is_set(fsa_input_register, R_SHUTDOWN)) {
-		cl_log(LOG_DEBUG,
-		       "Election fail: we are shutting down");
+		crm_debug("Election fail: we are shutting down");
 		we_loose = TRUE;
 
 	} else if(our_node == NULL) {
-		cl_log(LOG_DEBUG,
-		       "Election fail: we dont exist in the CCM list");
+		crm_debug("Election fail: we dont exist in the CCM list");
 		we_loose = TRUE;
 		
 	} else if(your_node == NULL) {
-		cl_log(LOG_ERR, "The other side doesnt exist in the CCM list");
+		crm_err("The other side doesnt exist in the CCM list");
 		
 	} else if(your_node->node_born_on < our_node->node_born_on) {
-		cl_log(LOG_DEBUG, "Election fail: born_on");
+		crm_debug("Election fail: born_on");
 		we_loose = TRUE;
 
 	} else if(your_node->node_born_on == our_node->node_born_on
 		  && strcmp(fsa_our_uname, vote_from) > 0) {
-		cl_log(LOG_DEBUG, "Election fail: uname");
+		crm_debug("Election fail: uname");
 		we_loose = TRUE;
 
 	} else {
@@ -158,29 +156,29 @@ do_election_count_vote(long long action,
 		election_data.winning_uname = NULL;
 		election_data.winning_bornon = -1; // maximum integer
 		
-		CRM_NOTE("We might win... we should vote (possibly again)");
+		crm_trace("We might win... we should vote (possibly again)");
 		election_result = I_DC_TIMEOUT; // new "default"
 
 		g_hash_table_foreach(fsa_membership_copy->members,
 				     ghash_count_vote, &election_data);
 		
-		cl_log(LOG_DEBUG, "Election winner should be %s (born_on=%d)",
+		crm_debug("Election winner should be %s (born_on=%d)",
 		       election_data.winning_uname, election_data.winning_bornon);
 		
 	
 		if(safe_str_eq(election_data.winning_uname, fsa_our_uname)){
-			cl_log(LOG_DEBUG, "Election win: lowest born_on and uname");
+			crm_debug("Election win: lowest born_on and uname");
 			election_result = I_ELECTION_DC;
 		}
 	}
 	
 	if(we_loose) {
 		if(fsa_input_register & R_THE_DC) {
-			cl_log(LOG_DEBUG, "Give up the DC");
+			crm_debug("Give up the DC");
 			election_result = I_RELEASE_DC;
 			
 		} else {
-			cl_log(LOG_DEBUG, "We werent the DC anyway");
+			crm_debug("We werent the DC anyway");
 			election_result = I_NOT_DC;
 			
 		}
@@ -212,12 +210,12 @@ do_election_timer_ctrl(long long action,
 		stopTimer(election_timeout);
 		
 	} else {
-		cl_log(LOG_ERR, "unexpected action %s",
+		crm_err("unexpected action %s",
 		       fsa_action2string(action));
 	}
 
 	if(action & A_ELECTION_TIMEOUT) {
-		CRM_NOTE("The election timer went off, we win!");
+		crm_trace("The election timer went off, we win!");
 	
 		FNRET(I_ELECTION_DC);
 		
@@ -262,10 +260,10 @@ do_dc_takeover(long long action,
 	xmlNodePtr update = NULL, fragment = NULL;
 	FNIN();
 
-	CRM_NOTE("################## Taking over the DC ##################");
+	crm_trace("################## Taking over the DC ##################");
 	set_bit_inplace(&fsa_input_register, R_THE_DC);
 
-	CRM_DEBUG("Am I the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
+	crm_verbose("Am I the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
 	
 	fsa_our_dc = NULL;
 	set_bit_inplace(&fsa_input_register, R_JOIN_OK);
@@ -278,8 +276,8 @@ do_dc_takeover(long long action,
 
 	if (fsa_cluster_conn->llc_ops->set_cstatus_callback(
 		    fsa_cluster_conn, CrmdClientStatus, NULL)!=HA_OK){
-		cl_log(LOG_ERR, "Cannot set client status callback\n");
-		cl_log(LOG_ERR, "REASON: %s\n",
+		crm_err("Cannot set client status callback\n");
+		crm_err("REASON: %s\n",
 		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
 	}
 
@@ -318,13 +316,13 @@ do_dc_release(long long action,
 	enum crmd_fsa_input result = I_NULL;
 	FNIN();
 
-	CRM_NOTE("################## Releasing the DC ##################");
+	crm_trace("################## Releasing the DC ##################");
 
 	stopTimer(dc_heartbeat);
 	if (fsa_cluster_conn->llc_ops->set_cstatus_callback(
 		    fsa_cluster_conn, NULL, NULL)!=HA_OK){
-		cl_log(LOG_ERR, "Cannot unset client status callback\n");
-		cl_log(LOG_ERR, "REASON: %s\n",
+		crm_err("Cannot unset client status callback\n");
+		crm_err("REASON: %s\n",
 		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
 		result = I_ERROR;
 	}
@@ -351,11 +349,11 @@ do_dc_release(long long action,
 			result = I_RELEASE_SUCCESS;
 
 	} else {
-		cl_log(LOG_ERR, "Warning, do_dc_release invoked for action %s",
+		crm_err("Warning, do_dc_release invoked for action %s",
 		       fsa_action2string(action));
 	}
 
-	CRM_DEBUG("Am I still the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
+	crm_verbose("Am I still the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
 
 	FNRET(result);
 }

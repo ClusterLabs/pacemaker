@@ -42,9 +42,8 @@ do_send_welcome(long long action,
 	FNIN();
 
 	if(action & A_JOIN_WELCOME && data == NULL) {
-		cl_log(LOG_ERR,
-		       "Attempt to send welcome message "
-		       "without a message to reply to!");
+		crm_err("Attempt to send welcome message "
+			"without a message to reply to!");
 		FNRET(I_NULL);
 		
 	} else if(action & A_JOIN_WELCOME) {
@@ -66,7 +65,7 @@ do_send_welcome(long long action,
 			free_xml(tmp1);
 			
 		} else {
-			cl_log(LOG_ERR, "No recipient for welcome message");
+			crm_err("No recipient for welcome message");
 		}
 		
 		FNRET(I_NULL);
@@ -141,13 +140,13 @@ do_send_welcome_all(long long action,
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {
 		// that was the last outstanding join ack)
-		cl_log(LOG_INFO,"That was the last outstanding join ack");
+		crm_info("That was the last outstanding join ack");
 		FNRET(I_SUCCESS);
 		
 	} else {
-		cl_log(LOG_DEBUG,
-		       "Still waiting on %d outstanding join acks",
-		       fsa_membership_copy->members_size - g_hash_table_size(joined_nodes));
+		crm_debug("Still waiting on %d outstanding join acks",
+			  fsa_membership_copy->members_size
+			  - g_hash_table_size(joined_nodes));
 		// dont waste time by invoking the pe yet;
 	}
 	
@@ -179,7 +178,7 @@ do_ack_welcome(long long action,
 	fsa_our_dc = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 	
 	if(fsa_our_dc == NULL) {
-		cl_log(LOG_ERR, "Failed to determin our DC");
+		crm_err("Failed to determin our DC");
 		FNRET(I_FAIL);
 	}
 	
@@ -219,9 +218,8 @@ do_announce(long long action,
 		case S_RECOVERY_DC:
 		case S_RELEASE_DC:
 		case S_TERMINATE:
-			cl_log(LOG_WARNING,
-			       "Do not announce ourselves in state %s",
-			       fsa_state2string(cur_state));
+			crm_warn("Do not announce ourselves in state %s",
+				 fsa_state2string(cur_state));
 			FNRET(I_NULL);
 			break;
 		default:
@@ -232,7 +230,7 @@ do_announce(long long action,
 		const char *from = xmlGetProp(msg, XML_ATTR_HOSTFROM);
 
 		if(from == NULL) {
-			cl_log(LOG_ERR, "Failed to origin of ping message");
+			crm_err("Failed to origin of ping message");
 			FNRET(I_FAIL);
 		}
 		
@@ -240,8 +238,7 @@ do_announce(long long action,
 			     from, CRM_SYSTEM_DC, NULL);
 	} else {
 		/* Delay announce until we have finished local startup */
-		cl_log(LOG_WARNING,
-		       "Delaying announce until local startup is complete");
+		crm_warn("Delaying announce until local startup is complete");
 		FNRET(I_NULL);
 	}
 	
@@ -280,7 +277,7 @@ do_process_welcome_ack(long long action,
 	cib_fragment = find_xml_node(join_ack, XML_TAG_FRAGMENT);
 
 	if(is_a_member == FALSE) {
-		cl_log(LOG_ERR, "Node %s is not known to us (ref %s)",
+		crm_err("Node %s is not known to us (ref %s)",
 		       join_from, ref);
 
 		/* make sure any information from this node is discarded,
@@ -290,7 +287,7 @@ do_process_welcome_ack(long long action,
 		FNRET(I_FAIL);
 	}
 
-	cl_log(LOG_DEBUG, "Welcoming node %s after ACK (ref %s)",
+	crm_debug("Welcoming node %s after ACK (ref %s)",
 	       join_from, ref);
 	
 	/* add them to our list of CRMD_STATE_ACTIVE nodes
@@ -299,10 +296,9 @@ do_process_welcome_ack(long long action,
 	g_hash_table_insert(joined_nodes, strdup(join_from),strdup(join_from));
 
 	if(cib_fragment == NULL) {
-		cl_log(LOG_ERR,
-		       "No status information was part of the"
-		       " Welcome ACK from %s",
-		       join_from);
+		crm_err("No status information was part of the"
+			" Welcome ACK from %s",
+			join_from);
 		FNRET(I_NULL);
 	}
 
@@ -335,30 +331,29 @@ do_process_welcome_ack(long long action,
 	tmp2 = find_entity(tmp1, XML_CIB_TAG_STATE, join_from, FALSE);
 
 	if(tmp2 == NULL) {
-		cl_log(LOG_ERR,
-		       "Status entry for %s not found in update, adding",
-		       join_from);
+		crm_err("Status entry for %s not found in update, adding",
+			join_from);
 		
 		tmp2 = create_xml_node(tmp1, XML_CIB_TAG_STATE);
 		set_xml_property_copy(tmp2, XML_ATTR_ID, join_from);
 	}
 	
-	set_xml_property_copy(tmp2, XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
-	set_xml_property_copy(tmp2, XML_CIB_ATTR_JOINSTATE,      CRMD_JOINSTATE_MEMBER);
+	set_xml_property_copy(
+		tmp2, XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
+	set_xml_property_copy(
+		tmp2, XML_CIB_ATTR_JOINSTATE,CRMD_JOINSTATE_MEMBER);
 
 	
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {
-		cl_log(LOG_INFO,"That was the last outstanding join ack");
+		crm_info("That was the last outstanding join ack");
 		FNRET(I_SUCCESS);
 		/* The update isnt lost, the A_CIB_OP action is part of the
 		 *   matrix for S_INTEGRATION + I_SUCCESS.
 		 */
 
 	} else {
-		cl_log(LOG_DEBUG,
-		       "Still waiting on %d outstanding join acks",
-		       size);
+		crm_debug("Still waiting on %d outstanding join acks", size);
 		/* dont waste time by invoking the pe yet */
 	}
 	FNRET(I_CIB_OP);

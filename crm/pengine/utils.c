@@ -15,7 +15,7 @@ void print_str_str(gpointer key, gpointer value, gpointer user_data);
 rsc_to_rsc_t *
 invert_constraint(rsc_to_rsc_t *constraint) 
 {
-	pdebug("Inverting constraint");
+	crm_verbose("Inverting constraint");
 	rsc_to_rsc_t *inverted_con =
 		crm_malloc(sizeof(rsc_to_node_t));
 
@@ -26,7 +26,7 @@ invert_constraint(rsc_to_rsc_t *constraint)
 	inverted_con->rsc_lh = constraint->rsc_rh;
 	inverted_con->rsc_rh = constraint->rsc_lh;
 
-	pdebug_action(
+	crm_debug_action(
 		print_rsc_to_rsc("Inverted constraint", inverted_con, FALSE)
 		);
 	return inverted_con;
@@ -60,7 +60,7 @@ node_list_eq(GSListPtr list1, GSListPtr list2)
 	}
   
 	// do stuff
-	cl_log(LOG_ERR, "Not yet implemented");
+	crm_err("Not yet implemented");
  
 	return g_slist_length(result) != 0;
 }
@@ -134,7 +134,7 @@ node_list_minus(GSListPtr list1, GSListPtr list2)
 		result = g_slist_append(result, new_node);
 		);
   
-	pdebug("Minus result len: %d",
+	crm_verbose("Minus result len: %d",
 		      g_slist_length(result));
 
 	return result;
@@ -170,7 +170,7 @@ node_list_xor(GSListPtr list1, GSListPtr list2)
 		result = g_slist_append(result, new_node);
 		);
   
-	pdebug("Xor result len: %d", g_slist_length(result));
+	crm_verbose("Xor result len: %d", g_slist_length(result));
 	return result;
 }
 
@@ -230,7 +230,7 @@ create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
 	new_color->details->chosen_node = NULL; 
 	new_color->details->candidate_nodes = node_list_dup(nodes);
 
-	pdebug_action(print_color("Created color", new_color, TRUE));
+	crm_debug_action(print_color("Created color", new_color, TRUE));
 
 	if(colors != NULL) {
 		*colors = g_slist_append(*colors, new_color);      
@@ -269,16 +269,16 @@ gboolean
 filter_nodes(resource_t *rsc)
 {
 	int lpc2 = 0;
-	pdebug_action(print_resource("Filtering nodes for", rsc, FALSE));
+	crm_debug_action(print_resource("Filtering nodes for", rsc, FALSE));
 	slist_iter(
 		node, node_t, rsc->allowed_nodes, lpc2,
 		if(node == NULL) {
-			cl_log(LOG_ERR, "Invalid NULL node");
+			crm_err("Invalid NULL node");
 			
 		} else if(node->weight < 0.0
 			  || node->details->online == FALSE
 			  || node->details->type == node_ping) {
-			pdebug_action(print_node("Removing", node, FALSE));
+			crm_debug_action(print_node("Removing", node, FALSE));
 			rsc->allowed_nodes =
 				g_slist_remove(rsc->allowed_nodes,node);
 			crm_free(node);
@@ -540,14 +540,13 @@ void
 print_node(const char *pre_text, node_t *node, gboolean details)
 { 
 	if(node == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
+		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
+		       pre_text==NULL?"":": ");
 		return;
 	}
 
-	cl_log(LOG_DEBUG, "%s%s%sNode %s: (weight=%f, fixed=%s)",
+	crm_debug("%s%s%sNode %s: (weight=%f, fixed=%s)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       node->details==NULL?"error ":node->details->online?"":"Unavailable/Unclean ",
@@ -557,7 +556,7 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 
 	if(details && node->details != NULL) {
 		char *mutable = crm_strdup("\t\t");
-		cl_log(LOG_DEBUG, "\t\t===Node Attributes");
+		crm_debug("\t\t===Node Attributes");
 		g_hash_table_foreach(node->details->attrs,
 				     print_str_str, mutable);
 		crm_free(mutable);
@@ -565,7 +564,7 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 
 	if(details) {
 		int lpc = 0;
-		cl_log(LOG_DEBUG, "\t\t===Node Attributes");
+		crm_debug("\t\t===Node Attributes");
 		slist_iter(
 			rsc, resource_t, node->details->running_rsc, lpc,
 			print_resource("\t\t", rsc, FALSE);
@@ -579,7 +578,7 @@ print_node(const char *pre_text, node_t *node, gboolean details)
  */
 void print_str_str(gpointer key, gpointer value, gpointer user_data)
 {
-	cl_log(LOG_DEBUG, "%s%s %s ==> %s",
+	crm_debug("%s%s %s ==> %s",
 	       user_data==NULL?"":(char*)user_data,
 	       user_data==NULL?"":": ",
 	       (char*)key,
@@ -592,13 +591,12 @@ print_color_details(const char *pre_text,
 		    gboolean details)
 { 
 	if(color == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
+		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
+		       pre_text==NULL?"":": ");
 		return;
 	}
-	cl_log(LOG_DEBUG, "%s%sColor %d: node=%s (from %d candidates)",
+	crm_debug("%s%sColor %d: node=%s (from %d candidates)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       color->id, 
@@ -615,13 +613,12 @@ void
 print_color(const char *pre_text, color_t *color, gboolean details)
 { 
 	if(color == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
+		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
+		       pre_text==NULL?"":": ");
 		return;
 	}
-	cl_log(LOG_DEBUG, "%s%sColor %d: (weight=%f, node=%s, possible=%d)",
+	crm_debug("%s%sColor %d: (weight=%f, node=%s, possible=%d)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       color->id, 
@@ -637,21 +634,19 @@ void
 print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 { 
 	if(cons == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
+		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
+		       pre_text==NULL?"":": ");
 		return;
 	}
-	cl_log(LOG_DEBUG, "%s%s%s Constraint %s (%p):",
+	crm_debug("%s%s%s Constraint %s (%p):",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       "rsc_to_node",
 	       cons->id, cons);
 
 	if(details == FALSE) {
-		cl_log(LOG_DEBUG,
-		       "\t%s --> %s, %f (node placement rule)",
+		crm_debug("\t%s --> %s, %f (node placement rule)",
 		       cons->rsc_lh->id, 
 		       modifier2text(cons->modifier),
 		       cons->weight);
@@ -668,24 +663,22 @@ void
 print_rsc_to_rsc(const char *pre_text, rsc_to_rsc_t *cons, gboolean details)
 { 
 	if(cons == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
+		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
+		       pre_text==NULL?"":": ");
 		return;
 	}
-	cl_log(LOG_DEBUG, "%s%s%s Constraint %s (%p):",
+	crm_debug("%s%s%s Constraint %s (%p):",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       "rsc_to_rsc", cons->id, cons);
 
 	if(details == FALSE) {
 
-		cl_log(LOG_DEBUG,
-		       "\t%s --> %s, %s",
-		       cons->rsc_lh==NULL?"null":cons->rsc_lh->id, 
-		       cons->rsc_rh==NULL?"null":cons->rsc_rh->id, 
-		       strength2text(cons->strength));
+		crm_debug("\t%s --> %s, %s",
+			  cons->rsc_lh==NULL?"null":cons->rsc_lh->id, 
+			  cons->rsc_rh==NULL?"null":cons->rsc_rh->id, 
+			  strength2text(cons->strength));
 	}
 } 
 
@@ -693,14 +686,12 @@ void
 print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 { 
 	if(rsc == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
+		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
+		       pre_text==NULL?"":": ");
 		return;
 	}
-	cl_log(LOG_DEBUG,
-	       "%s%s%s%sResource %s: (priority=%f, color=%d, now=%s)",
+	crm_debug("%s%s%s%sResource %s: (priority=%f, color=%d, now=%s)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       rsc->provisional?"Provisional ":"",
@@ -710,8 +701,7 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 	       safe_val3(-1, rsc, color, id),
 	       safe_val4(NULL, rsc, cur_node, details, id));
 
-	cl_log(LOG_DEBUG,
-	       "\t%d candidate colors, %d allowed nodes, %d rsc_cons and %d node_cons",
+	crm_debug("\t%d candidate colors, %d allowed nodes, %d rsc_cons and %d node_cons",
 	       g_slist_length(rsc->candidate_colors),
 	       g_slist_length(rsc->allowed_nodes),
 	       g_slist_length(rsc->rsc_cons),
@@ -719,16 +709,16 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 	
 	if(details) {
 		int lpc = 0;
-		cl_log(LOG_DEBUG, "\t=== Actions");
+		crm_debug("\t=== Actions");
 		print_action("\tStop: ", rsc->stop, FALSE);
 		print_action("\tStart: ", rsc->start, FALSE);
 		
-		cl_log(LOG_DEBUG, "\t=== Colors");
+		crm_debug("\t=== Colors");
 		slist_iter(
 			color, color_t, rsc->candidate_colors, lpc,
 			print_color("\t", color, FALSE)
 			);
-		cl_log(LOG_DEBUG, "\t=== Allowed Nodes");
+		crm_debug("\t=== Allowed Nodes");
 		slist_iter(
 			node, node_t, rsc->allowed_nodes, lpc,
 			print_node("\t", node, FALSE);
@@ -742,17 +732,16 @@ void
 print_action(const char *pre_text, action_t *action, gboolean details)
 { 
 	if(action == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
+		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
+		       pre_text==NULL?"":": ");
 		return;
 	}
 
 	switch(action->task) {
 		case stonith_op:
 		case shutdown_crm:
-			cl_log(LOG_DEBUG, "%s%s%sAction %d: %s @ %s",
+			crm_debug("%s%s%sAction %d: %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
 			       action->discard?"Discarded ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
@@ -761,7 +750,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			       safe_val4(NULL, action, node, details, id));
 			break;
 		default:
-			cl_log(LOG_DEBUG, "%s%s%sAction %d: %s %s @ %s",
+			crm_debug("%s%s%sAction %d: %s %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
 			       action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
@@ -776,27 +765,27 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 	if(details) {
 		int lpc = 0;
 #if 1
-		cl_log(LOG_DEBUG, "\t\t====== Preceeding Actions");
+		crm_debug("\t\t====== Preceeding Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
 			print_action("\t\t", other->action, FALSE);
 			);
-		cl_log(LOG_DEBUG, "\t\t====== Subsequent Actions");
+		crm_debug("\t\t====== Subsequent Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
 			print_action("\t\t", other->action, FALSE);
 			);		
 #else
-		cl_log(LOG_DEBUG, "\t\t====== Subsequent Actions");
+		crm_debug("\t\t====== Subsequent Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
 			print_action("\t\t", other->action, FALSE);
 			);		
 #endif
-		cl_log(LOG_DEBUG, "\t\t====== End");
+		crm_debug("\t\t====== End");
 
 	} else {
-		cl_log(LOG_DEBUG, "\t\t(seen=%d, before=%d, after=%d)",
+		crm_debug("\t\t(seen=%d, before=%d, after=%d)",
 		       action->seen_count,
 		       g_slist_length(action->actions_before),
 		       g_slist_length(action->actions_after));
@@ -947,7 +936,7 @@ pe_free_resources(GSListPtr resources)
 
 		crm_free(rsc->id);
 		
-//		pdebug("color");
+//		crm_verbose("color");
 //		crm_free(rsc->color);
 
 		int lpc;

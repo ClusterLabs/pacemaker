@@ -35,7 +35,7 @@ timer_popped(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
-	cl_log(LOG_INFO, "#!!#!!# Timer %s just popped!",
+	crm_info("#!!#!!# Timer %s just popped!",
 	       fsa_input2string(timer->fsa_input));
 	
 	stopTimer(timer); // dont make it go off again
@@ -54,12 +54,12 @@ startTimer(fsa_timer_t *timer)
 					  timer->callback,
 					  (void*)timer);
 /*
-		CRM_DEBUG("#!!#!!# Started %s timer (%d)",
+		crm_verbose("#!!#!!# Started %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
 */
 	} else {
-		cl_log(LOG_INFO, "#!!#!!# Timer %s already running (%d)",
+		crm_info("#!!#!!# Timer %s already running (%d)",
 		       fsa_input2string(timer->fsa_input),
 		       timer->source_id);
 		return FALSE;		
@@ -73,7 +73,7 @@ stopTimer(fsa_timer_t *timer)
 {
 	if(((int)timer->source_id) > 0) {
 /*
-		CRM_DEBUG("#!!#!!# Stopping %s timer (%d)",
+		crm_verbose("#!!#!!# Stopping %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
 */
@@ -81,7 +81,7 @@ stopTimer(fsa_timer_t *timer)
 		timer->source_id = -2;
 
 	} else {
-		cl_log(LOG_INFO, "#!!#!!# Timer %s already stopped (%d)",
+		crm_info("#!!#!!# Timer %s already stopped (%d)",
 		       fsa_input2string(timer->fsa_input),
 		       timer->source_id);
 		return FALSE;
@@ -93,16 +93,16 @@ stopTimer(fsa_timer_t *timer)
 long long
 toggle_bit(long long action_list, long long action)
 {
-//	CRM_DEBUG("Toggling bit %.16llx", action);
+	crm_trace("Toggling bit %.16llx", action);
 	action_list ^= action;
-//	CRM_DEBUG("Result %.16llx", action_list & action);
+	crm_trace("Result %.16llx", action_list & action);
 	return action_list;
 }
 
 long long
 clear_bit(long long action_list, long long action)
 {
-//	CRM_DEBUG("Clearing bit\t%.16llx", action);
+	crm_trace("Clearing bit\t%.16llx", action);
 
 	// ensure its set
 	action_list |= action;
@@ -116,7 +116,7 @@ clear_bit(long long action_list, long long action)
 long long
 set_bit(long long action_list, long long action)
 {
-//	CRM_DEBUG("Adding bit\t%.16llx", action);
+	crm_trace("Adding bit\t%.16llx", action);
 	action_list |= action;
 	return action_list;
 }
@@ -144,7 +144,7 @@ set_bit_inplace(long long *action_list, long long action)
 gboolean
 is_set(long long action_list, long long action)
 {
-//	CRM_DEBUG("Checking bit\t%.16llx", action);
+//	crm_verbose("Checking bit\t%.16llx", action);
 	return ((action_list & action) == action);
 }
 
@@ -169,15 +169,6 @@ create_node_state(const char *node,
 	if(join_state != NULL) {
 		set_xml_property_copy(node_state, XML_CIB_ATTR_JOINSTATE,     join_state);
 	}
-
-/* 	if(exp_state != NULL) { */
-/* 		set_xml_property_copy(node_state, XML_CIB_ATTR_EXPSTATE, exp_state); */
-/* 	} */
-	
-/* 	if(lrm_data != NULL) { */
-/* //		set_xml_property_copy(data, "replace", XML_CIB_TAG_LRM); */
-/* 		add_node_copy(node_state, lrm_data); */
-/* 	} */
 
 	xml_message_debug(node_state, "created");
 
@@ -286,7 +277,7 @@ fsa_input2string(enum crmd_fsa_input input)
 	}
 
 	if(inputAsText == NULL) {
-		cl_log(LOG_ERR, "Input %d is unknown", input);
+		crm_err("Input %d is unknown", input);
 		inputAsText = "<UNKNOWN_INPUT>";
 	}
 	
@@ -341,7 +332,7 @@ fsa_state2string(enum crmd_fsa_state state)
 	}
 
 	if(stateAsText == NULL) {
-		cl_log(LOG_ERR, "State %d is unknown", state);
+		crm_err("State %d is unknown", state);
 		stateAsText = "<UNKNOWN_STATE>";
 	}
 	
@@ -396,7 +387,7 @@ fsa_cause2string(enum crmd_fsa_cause cause)
 	}
 
 	if(causeAsText == NULL) {
-		cl_log(LOG_ERR, "Cause %d is unknown", cause);
+		crm_err("Cause %d is unknown", cause);
 		causeAsText = "<UNKNOWN_CAUSE>";
 	}
 	
@@ -587,7 +578,7 @@ fsa_action2string(long long action)
 	}
 
 	if(actionAsText == NULL) {
-		cl_log(LOG_ERR, "Action %.16llx is unknown", action);
+		crm_err("Action %.16llx is unknown", action);
 		actionAsText = "<UNKNOWN_ACTION>";
 	}
 	

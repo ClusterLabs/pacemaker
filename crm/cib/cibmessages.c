@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.38 2004/06/02 11:48:10 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.39 2004/06/02 15:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -98,17 +98,17 @@ cib_process_request(const char *op,
 	fflush(msg_cib_strm);
 #endif
 
-	cl_log(LOG_DEBUG, "[cib] Processing \"%s\" event", op);
+	crm_debug("[cib] Processing \"%s\" event", op);
 	
 	if(op == NULL) {
 		*result = CIBRES_FAILED;
-		cl_log(LOG_ERR, "No operation specified\n");
+		crm_err("No operation specified\n");
 		
 	} else if(strcmp("noop", op) == 0) {
 		;
 		
 	} else if(strcmp(CRM_OP_QUIT, op) == 0) {
-		cl_log(LOG_WARNING,
+		crm_warn(
 		       "The CRMd has asked us to exit... complying");
 		exit(0);
 		
@@ -118,7 +118,7 @@ cib_process_request(const char *op,
 		
 	} else if (strcmp(CRM_OP_BUMP, op) == 0) {
 		tmpCib = get_cib_copy();
-		CRM_DEBUG("Handling a %s for section=%s of the cib",
+		crm_verbose("Handling a %s for section=%s of the cib",
 			   CRM_OP_BUMP, section);
 		
 		// modify the timestamp
@@ -134,7 +134,7 @@ cib_process_request(const char *op,
 			new_value = crm_strdup("0");
 		}
 
-		cl_log(LOG_DEBUG, "Generation %d(%s)->%s",
+		crm_debug("Generation %d(%s)->%s",
 		       int_value, old_value, new_value);
 		
 		set_xml_property_copy(tmpCib, XML_ATTR_GENERATION, new_value);
@@ -148,7 +148,7 @@ cib_process_request(const char *op,
 		
 		
 	} else if (strcmp("query", op) == 0) {
-		CRM_DEBUG("Handling a query for section=%s of the cib",
+		crm_verbose("Handling a query for section=%s of the cib",
 			   section);
 		/* force a pick-up of the relevant section before
 		 * returning
@@ -180,7 +180,7 @@ cib_process_request(const char *op,
 		cib_update_op = CIB_OP_DELETE;
 
 	} else if (strcmp(CRM_OP_REPLACE, op) == 0) {
-		CRM_DEBUG("Replacing section=%s of the cib", section);
+		crm_verbose("Replacing section=%s of the cib", section);
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 
 		if (section == NULL
@@ -201,14 +201,14 @@ cib_process_request(const char *op,
 			*result = CIBRES_FAILED;
 	} else {
 		*result = CIBRES_FAILED_NOTSUPPORTED;
-		cl_log(LOG_ERR, "Action [%s] is not supported by the CIB", op);
+		crm_err("Action [%s] is not supported by the CIB", op);
 	}
     
 	if (update_the_cib) {
 		tmpCib = copy_xml_node_recursive(get_the_CIB());
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 
-		CRM_DEBUG("Updating section=%s of the cib (op=%s)",
+		crm_verbose("Updating section=%s of the cib (op=%s)",
 			   section, op);
 
 			// should we be doing this?
@@ -216,7 +216,7 @@ cib_process_request(const char *op,
 			
 			// make changes to a temp copy then activate
 		if(section == NULL) {
-			cl_log(LOG_ERR, "No section specified in %s",
+			crm_err("No section specified in %s",
 			       XML_ATTR_FILTER_TYPE);
 			*result = CIBRES_FAILED_NOSECTION;
 
@@ -249,7 +249,7 @@ cib_process_request(const char *op,
 					     cib_update_op, section);
 		}
 		
-		CRM_NOTE("Activating temporary CIB");
+		crm_trace("Activating temporary CIB");
 		/* if(check_generation(cib_updates, tmpCib) == FALSE) */
 /* 			status = "discarded old update"; */
 /* 		else  */
@@ -261,7 +261,7 @@ cib_process_request(const char *op,
 
 		}
 		
-		CRM_DEBUG("CIB update status: %d", *result);
+		crm_verbose("CIB update status: %d", *result);
 	}
 	
 	output_section = section;
@@ -301,14 +301,12 @@ replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 	old_section = get_object_root(section, tmpCib);
 
 	if(old_section == NULL) {
-		cl_log(LOG_ERR,
-		       "The CIB is corrupt, cannot replace missing section %s",
+		crm_err("The CIB is corrupt, cannot replace missing section %s",
 		       section);
 		FNRET(FALSE);
 
 	} else if(new_section == NULL) {
-		cl_log(LOG_ERR,
-		       "The CIB is corrupt, cannot set section %s to nothing",
+		crm_err("The CIB is corrupt, cannot set section %s to nothing",
 		       section);
 		FNRET(FALSE);
 	}
@@ -337,13 +335,13 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 	xmlNodePtr xml_section  = get_object_root(section, cib_updates);
 
 	if (section == NULL || xml_section == NULL) {
-		cl_log(LOG_ERR, "Section %s not found in message."
+		crm_err("Section %s not found in message."
 		       "  CIB update is corrupt, ignoring.", section);
 		return CIBRES_FAILED_NOSECTION;
 	}
 
 	if(CIB_OP_NONE > operation > CIB_OP_MAX) {
-		cl_log(LOG_ERR, "Invalid operation on section %s", section);
+		crm_err("Invalid operation on section %s", section);
 		return CIBRES_FAILED;
 	}
 	
@@ -417,7 +415,7 @@ check_generation(xmlNodePtr newCib, xmlNodePtr oldCib)
 	if(int_new_value >= int_old_value) {
 		return TRUE;
 	} else {
-		cl_log(LOG_ERR, "Generation from update (%d) is older than %d",
+		crm_err("Generation from update (%d) is older than %d",
 		       int_new_value, int_old_value);
 	}
 	
@@ -461,7 +459,7 @@ update_results(xmlNodePtr failed,
 				      XML_FAILCIB_ATTR_REASON,
 				      error_msg);
 
-		cl_log(LOG_DEBUG,
+		crm_debug(
 		       "Action %s failed: %s (cde=%d)",
 		       operation_msg,
 		       error_msg,

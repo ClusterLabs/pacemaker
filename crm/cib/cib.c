@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.39 2004/06/02 11:48:10 andrew Exp $ */
+/* $Id: cib.c,v 1.40 2004/06/02 15:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,13 +45,11 @@ startCib(const char *filename)
 {
 	xmlNodePtr cib = readCibXmlFile(filename);
 	if (initializeCib(cib)) {
-		cl_log(LOG_INFO,
-		       "CIB Initialization completed successfully");
+		crm_info("CIB Initialization completed successfully");
 	} else { 
 //		free_xml(cib);
-		cl_log(LOG_WARNING,
-		       "CIB Initialization failed, "
-		       "starting with an empty default.");
+		crm_warn("CIB Initialization failed, "
+			 "starting with an empty default.");
 		activateCibXml(createEmptyCib(), filename);
 	}
 	return TRUE;
@@ -88,7 +86,7 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 	
 	tmp_node = find_xml_node_nested(the_root, node_stack, 2);
 	if (tmp_node == NULL) {
-		cl_log(LOG_ERR,
+		crm_err(
 		       "[cib] Section cib[%s[%s]] not present",
 		       node_stack[0],
 		       node_stack[1]);
@@ -109,7 +107,7 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 	
 	data = cib_process_request(op, options, fragment, &result);
 
-	CRM_DEBUG("[cib] operation returned result %d", result);
+	crm_verbose("[cib] operation returned result %d", result);
 
 	if(auto_reply) {
 		reply = create_reply(message, data);
@@ -146,7 +144,7 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	char *auto_section = pluralSection(update?update->name:NULL);
 	
 	if(update == NULL) {
-		cl_log(LOG_ERR, "No update to create a fragment for");
+		crm_err("No update to create a fragment for");
 		crm_free(auto_section);
 		return NULL;
 		
@@ -154,9 +152,8 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 		section = auto_section;
 
 	} else if(strcmp(auto_section, section) != 0) {
-		cl_log(LOG_ERR,
-		       "Values for update (tag=%s) and section (%s)"
-		       " were not consistent", update->name, section);
+		crm_err("Values for update (tag=%s) and section (%s)"
+			" were not consistent", update->name, section);
 		crm_free(auto_section);
 		return NULL;
 		
@@ -207,11 +204,11 @@ pluralSection(const char *a_section)
 		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
 
 	} else {
-		cl_log(LOG_ERR, "Unknown section %s", a_section);
+		crm_err("Unknown section %s", a_section);
 		a_section_parent = crm_strdup("all");
 	}
 	
-	CRM_DEBUG("Plural is %s", a_section_parent);
+	crm_verbose("Plural is %s", a_section_parent);
 	return a_section_parent;
 }
 
@@ -274,7 +271,7 @@ cib_error2string(enum cib_result return_code)
 	}
 			
 	if(error_msg == NULL) {
-		cl_log(LOG_ERR, "Unknown CIB Error %d", return_code);
+		crm_err("Unknown CIB Error %d", return_code);
 		error_msg = "<unknown error>";
 	}
 	
@@ -305,7 +302,7 @@ cib_op2string(enum cib_op operation)
 	}
 
 	if(operation_msg == NULL) {
-		cl_log(LOG_ERR, "Unknown CIB operation %d", operation);
+		crm_err("Unknown CIB operation %d", operation);
 		operation_msg = "<unknown operation>";
 	}
 	
