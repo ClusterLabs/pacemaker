@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.38 2004/10/24 12:38:33 lge Exp $ */
+/* $Id: unpack.c,v 1.39 2004/10/27 15:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,34 +45,34 @@ GListPtr match_attrs(const char *attr, const char *op, const char *value,
 gboolean unpack_rsc_to_attr(xmlNodePtr xml_obj,
 			    GListPtr rsc_list,
 			    GListPtr node_list,
-			    GListPtr *node_constraints);
+			    GListPtr *placement_constraints);
 
 gboolean unpack_rsc_to_node(xmlNodePtr xml_obj,
 			    GListPtr rsc_list,
 			    GListPtr node_list,
-			    GListPtr *node_constraints);
+			    GListPtr *placement_constraints);
 
 gboolean unpack_rsc_order(
-	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr *action_constraints);
+	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints);
 
 gboolean unpack_rsc_dependancy(
-	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr *action_constraints);
+	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints);
 
 gboolean unpack_rsc_location(
 	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
-	GListPtr *action_constraints);
+	GListPtr *ordering_constraints);
 
 gboolean unpack_lrm_rsc_state(
 	node_t *node, xmlNodePtr lrm_state,
 	GListPtr rsc_list, GListPtr nodes,
-	GListPtr *actions, GListPtr *node_constraints);
+	GListPtr *actions, GListPtr *placement_constraints);
 
 gboolean add_node_attrs(xmlNodePtr attrs, node_t *node);
 
-gboolean unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
+gboolean unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
 	xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node);
 
-gboolean unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
+gboolean unpack_failed_resource(GListPtr *placement_constraints, GListPtr *actions,
 	xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node);
 
 gboolean determine_online_status(xmlNodePtr node_state, node_t *this_node);
@@ -86,12 +86,12 @@ gboolean rsc2rsc_new(const char *id, enum con_strength strength, enum rsc_con_ty
 
 gboolean create_ordering(
 	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh, GListPtr *action_constraints);
+	resource_t *rsc_lh, resource_t *rsc_rh, GListPtr *ordering_constraints);
 
 rsc_to_node_t *rsc2node_new(
 	const char *id, resource_t *rsc,
 	double weight, gboolean can_run, node_t *node,
-	GListPtr *node_constraints);
+	GListPtr *placement_constraints);
 
 const char *get_agent_param(resource_t *rsc, const char *param);
 
@@ -276,8 +276,6 @@ unpack_resources(xmlNodePtr xml_resources,
 	crm_verbose("Begining unpack...");
 	xml_child_iter(
 		xml_resources, xml_obj, XML_CIB_TAG_RESOURCE,
-		action_t *action_stop  = NULL;
-		action_t *action_start = NULL;
 		const char *id         = xmlGetProp(xml_obj, XML_ATTR_ID);
 		const char *stopfail   = xmlGetProp(xml_obj, "on_stopfail");
 		const char *restart    = xmlGetProp(xml_obj, "restart_type");
@@ -318,7 +316,8 @@ unpack_resources(xmlNodePtr xml_resources,
 
 		new_rsc->priority	    = atoi(priority?priority:"0"); 
 		new_rsc->effective_priority = new_rsc->priority;
-
+		new_rsc->recovery_type      = recovery_stop_start;
+		
 		new_rsc->max_instances	    = atoi(
 			max_instances?max_instances:"1"); 
 		new_rsc->max_node_instances = atoi(
@@ -336,7 +335,8 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->allowed_nodes	= NULL;
 		new_rsc->rsc_cons	= NULL; 
 		new_rsc->node_cons	= NULL; 
-		new_rsc->cur_node	= NULL;
+		new_rsc->running_on	= NULL;
+		new_rsc->timeout        = timeout;
 		
 		if(safe_str_eq(stopfail, "ignore")) {
 			new_rsc->stopfail_type = pesf_ignore;
@@ -354,21 +354,8 @@ unpack_resources(xmlNodePtr xml_resources,
 			new_rsc->restart_type = pe_restart_ignore;
 		}
 
-		action_stop    = action_new(new_rsc, stop_rsc);
-		*actions       = g_list_append(*actions, action_stop);
-		new_rsc->stop  = action_stop;
-		new_rsc->actions =
-			g_list_append(new_rsc->actions, action_stop);
-		action_stop->timeout = timeout; 
-
-		action_start   = action_new(new_rsc, start_rsc);
-		*actions       = g_list_append(*actions, action_start);
-		new_rsc->start = action_start;
-		new_rsc->actions =
-			g_list_append(new_rsc->actions, action_start);
-		action_start->timeout = timeout; 
-
-		order_new(action_stop,action_start,pecs_startstop,action_cons);
+		order_new(new_rsc, stop_rsc, NULL, new_rsc, start_rsc, NULL,
+			  pecs_startstop, action_cons);
 
 		*resources = g_list_append(*resources, new_rsc);
 	
@@ -385,8 +372,8 @@ unpack_resources(xmlNodePtr xml_resources,
 gboolean 
 unpack_constraints(xmlNodePtr xml_constraints,
 		   GListPtr nodes, GListPtr resources,
-		   GListPtr *node_constraints,
-		   GListPtr *action_constraints)
+		   GListPtr *placement_constraints,
+		   GListPtr *ordering_constraints)
 {
 	crm_verbose("Begining unpack...");
 	xml_child_iter(
@@ -402,15 +389,15 @@ unpack_constraints(xmlNodePtr xml_constraints,
 		crm_verbose("Processing constraint %s %s", xml_obj->name,id);
 		if(safe_str_eq("rsc_order", xml_obj->name)) {
 			unpack_rsc_order(
-				xml_obj, resources, action_constraints);
+				xml_obj, resources, ordering_constraints);
 
 		} else if(safe_str_eq("rsc_dependancy", xml_obj->name)) {
 			unpack_rsc_dependancy(
-				xml_obj, resources, action_constraints);
+				xml_obj, resources, ordering_constraints);
 
 		} else if(safe_str_eq("rsc_location", xml_obj->name)) {
 			unpack_rsc_location(
-				xml_obj, resources, nodes, node_constraints);
+				xml_obj, resources, nodes, placement_constraints);
 
 		} else {
 			crm_err("Unsupported constraint type: %s",
@@ -424,7 +411,7 @@ unpack_constraints(xmlNodePtr xml_constraints,
 rsc_to_node_t *
 rsc2node_new(const char *id, resource_t *rsc,
 	     double weight, gboolean can, node_t *node,
-	     GListPtr *node_constraints)
+	     GListPtr *placement_constraints)
 {
 	rsc_to_node_t *new_con = NULL;
 
@@ -450,7 +437,7 @@ rsc2node_new(const char *id, resource_t *rsc,
 			new_con->node_list_rh = g_list_append(NULL, node);
 		}
 		
-		*node_constraints = g_list_append(*node_constraints, new_con);
+		*placement_constraints = g_list_append(*placement_constraints, new_con);
 	}
 	
 	return new_con;
@@ -465,7 +452,7 @@ rsc2node_new(const char *id, resource_t *rsc,
 gboolean
 unpack_status(xmlNodePtr status,
 	      GListPtr nodes, GListPtr rsc_list,
-	      GListPtr *actions, GListPtr *node_constraints)
+	      GListPtr *actions, GListPtr *placement_constraints)
 {
 	const char *uname     = NULL;
 
@@ -507,7 +494,7 @@ unpack_status(xmlNodePtr status,
 
 		crm_verbose("Processing lrm resource entries");
 		unpack_lrm_rsc_state(this_node, lrm_rsc, rsc_list, nodes,
-				     actions, node_constraints);
+				     actions, placement_constraints);
 
 		crm_verbose("Processing lrm agents");
 		unpack_lrm_agents(this_node, lrm_agents);
@@ -534,7 +521,7 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 	
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
 	   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
-	   && safe_str_eq(ha_state, ACTIVESTATUS)
+	   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
 	   && safe_str_eq(crm_state, ONLINESTATUS)
 	   && shutdown == NULL) {
 		if(this_node != NULL) {
@@ -595,7 +582,7 @@ is_node_unclean(xmlNodePtr node_state)
 	} else if(safe_str_neq(exp_state, CRMD_JOINSTATE_DOWN)) {
 
 		if(safe_str_eq(crm_state, OFFLINESTATUS)
-		   || safe_str_eq(ha_state, DEADSTATUS)
+		   || (ha_state != NULL && safe_str_eq(ha_state, DEADSTATUS))
 		   || safe_str_eq(join_state, CRMD_JOINSTATE_DOWN)
 		   || safe_str_eq(ccm_state, XML_BOOLEAN_NO)) {
 			crm_warn("Node %s is un-expectedly down", uname);
@@ -653,7 +640,7 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 gboolean
 unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 		     GListPtr rsc_list, GListPtr nodes,
-		     GListPtr *actions, GListPtr *node_constraints)
+		     GListPtr *actions, GListPtr *placement_constraints)
 {
 	xmlNodePtr rsc_entry  = NULL;
 	
@@ -727,22 +714,22 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 				/* map this to a "done" so it is not marked
 				 * as failed, then make sure it is re-issued
 				 */
+				action_new(rsc_lh, start_rsc, NULL);
 				action_status_i = LRM_OP_DONE;
-				rsc_lh->start->optional = FALSE;
 			}
 		}
 
 		switch(action_status_i) {
 			case LRM_OP_DONE:
 				unpack_healthy_resource(
-					node_constraints, actions,
+					placement_constraints, actions,
 					rsc_entry, rsc_lh,node);
 				break;
 			case LRM_OP_ERROR:
 			case LRM_OP_TIMEOUT:
 			case LRM_OP_NOTSUPPORTED:
 				unpack_failed_resource(
-					node_constraints, actions, 
+					placement_constraints, actions, 
 					rsc_entry, rsc_lh,node);
 				break;
 			case LRM_OP_CANCELLED:
@@ -755,7 +742,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 }
 
 gboolean
-unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
+unpack_failed_resource(GListPtr *placement_constraints, GListPtr *actions,
 		       xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node)
 {
 	const char *last_op  = xmlGetProp(rsc_entry, "last_op");
@@ -763,7 +750,7 @@ unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
 	
 	/* make sure we dont allocate the resource here again*/
 	rsc2node_new("dont_run__generated",
-		     rsc_lh, -1.0, FALSE, node, node_constraints);
+		     rsc_lh, -1.0, FALSE, node, placement_constraints);
 	
 	if(safe_str_eq(last_op, "start")) {
 		/* the resource is not actually running... nothing more to do*/
@@ -775,7 +762,9 @@ unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
 			/* treat it as if it is still running
 			 * but also mark the node as unclean
 			 */
-			rsc_lh->cur_node = node;
+			rsc_lh->running_on = g_list_append(
+				rsc_lh->running_on, node);
+
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
 			
@@ -789,10 +778,12 @@ unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
  			/* let this depend on the stop action which will fail
 			 * but make sure the transition continues...
 			 */
-			rsc_lh->cur_node = node;
+			rsc_lh->running_on = g_list_append(
+				rsc_lh->running_on, node);
+
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
-			rsc_lh->stop->timeout = NULL; /* wait forever */
+/* 			rsc_lh->stop->timeout = NULL; /\* wait forever *\/ */
 			break;
 	
 		case pesf_ignore:
@@ -804,33 +795,31 @@ unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
 }
 
 gboolean
-unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
+unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
 			xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node)
 {
 	const char *last_op  = xmlGetProp(rsc_entry, "last_op");
-
+	
 	crm_debug("Unpacking healthy action %s on %s", last_op, rsc_lh->id);
 
 	if(safe_str_neq(last_op, "stop")) {
+		/* create the link between this node and the rsc */
+		crm_verbose("Setting cur_node = %s for rsc = %s",
+			    node->details->uname, rsc_lh->id);
+		
+		rsc_lh->running_on = g_list_append(
+			rsc_lh->running_on, node);
 
-		if(rsc_lh->cur_node != NULL) {
-			crm_err("Resource %s running on multiple nodes %s, %s",
-				rsc_lh->id,
-				rsc_lh->cur_node->details->uname,
-				node->details->uname);
-			/* TODO: some recovery action!! */
-			/* like force a stop on the second node? */
-			return FALSE;
-			
-		} else {
-			/* create the link between this node and the rsc */
-			crm_verbose("Setting cur_node = %s for rsc = %s",
-				    node->details->uname, rsc_lh->id);
-			
-			rsc_lh->cur_node = node;
-			node->details->running_rsc = g_list_append(
-				node->details->running_rsc, rsc_lh);
+		if(g_list_length(rsc_lh->running_on) > 1) {
+			crm_warn("Resource %s active on %d nodes.  Latest: %s (%s)",
+				 rsc_lh->id, g_list_length(rsc_lh->running_on),
+				 node->details->id, last_op);
+
+/* 			action_new(rsc_lh, stop_rsc, node); */
 		}
+		
+		node->details->running_rsc = g_list_append(
+			node->details->running_rsc, rsc_lh);
 	}
 
 	return TRUE;
@@ -871,27 +860,67 @@ rsc2rsc_new(const char *id, enum con_strength strength, enum rsc_con_type type,
 }
 
 gboolean
-order_new(action_t *before, action_t *after, enum con_strength strength,
-	  GListPtr *action_constraints)
+order_new(resource_t *lh_rsc, enum action_tasks lh_action_task, action_t *lh_action,
+	  resource_t *rh_rsc, enum action_tasks rh_action_task, action_t *rh_action,
+	  enum con_strength strength, GListPtr *ordering_constraints)
 {
 	order_constraint_t *order = NULL;
 
-	if(before == NULL || after == NULL || action_constraints == NULL){
-		crm_err("Invalid inputs b=%p, a=%p l=%p",
-			before, after, action_constraints);
+	if((lh_action == NULL && lh_rsc == NULL)
+	   || (rh_action == NULL && rh_rsc == NULL)
+	   || ordering_constraints == NULL){
+		crm_err("Invalid inputs lh_rsc=%p, lh_a=%p,"
+			" rh_rsc=%p, rh_a=%p,  l=%p",
+			lh_rsc, lh_action, rh_rsc, rh_action,
+			ordering_constraints);
 		return FALSE;
 	}
 
 	crm_malloc(order, sizeof(order_constraint_t));
 
 	if(order != NULL) {
-		order->id        = order_id++;
-		order->strength  = strength;
-		order->lh_action = before;
-		order->rh_action = after;
+		order->id             = order_id++;
+		order->strength       = strength;
+		order->lh_rsc         = lh_rsc;
+		order->rh_rsc         = rh_rsc;
+		order->lh_action      = lh_action;
+		order->rh_action      = rh_action;
+		order->lh_action_task = lh_action_task;
+		order->rh_action_task = rh_action_task;
 		
-		*action_constraints = g_list_append(
-			*action_constraints, order);
+		*ordering_constraints = g_list_append(
+			*ordering_constraints, order);
+
+		if(lh_rsc != NULL && rh_rsc != NULL) {
+			crm_debug("Created ordering constraint %d (%s):"
+				  " %s/%s before %s/%s",
+				  order->id, strength2text(order->strength),
+				  lh_rsc->id, task2text(lh_action_task),
+				  rh_rsc->id, task2text(rh_action_task));
+
+		} else if(lh_rsc != NULL) {
+			crm_debug("Created ordering constraint %d (%s):"
+				  " %s/%s before action %d (%s)",
+				  order->id, strength2text(order->strength),
+				  lh_rsc->id, task2text(lh_action_task),
+				  rh_action->id, task2text(rh_action_task));
+
+		} else if(rh_rsc != NULL) {
+			crm_debug("Created ordering constraint %d (%s):"
+				  " action %d (%s) before %s/%s",
+				  order->id, strength2text(order->strength),
+				  lh_action->id, task2text(lh_action_task),
+				  rh_rsc->id, task2text(rh_action_task));
+			
+		} else {
+			crm_debug("Created ordering constraint %d (%s):"
+				  " action %d (%s) before action %d (%s)",
+				  order->id, strength2text(order->strength),
+				  lh_action->id, task2text(lh_action_task),
+				  rh_action->id, task2text(rh_action_task));
+		}
+		
+
 	}
 	
 	return TRUE;
@@ -900,7 +929,7 @@ order_new(action_t *before, action_t *after, enum con_strength strength,
 gboolean
 unpack_rsc_dependancy(xmlNodePtr xml_obj,
 		  GListPtr rsc_list,
-		  GListPtr *action_constraints)
+		  GListPtr *ordering_constraints)
 {
 	enum con_strength strength_e = pecs_ignore;
 
@@ -944,7 +973,7 @@ unpack_rsc_dependancy(xmlNodePtr xml_obj,
 gboolean
 unpack_rsc_order(xmlNodePtr xml_obj,
 		  GListPtr rsc_list,
-		  GListPtr *action_constraints)
+		  GListPtr *ordering_constraints)
 {
 	enum con_strength strength_e = pecs_ignore;
 
@@ -972,16 +1001,16 @@ unpack_rsc_order(xmlNodePtr xml_obj,
 	
 	} else if(safe_str_eq(type, "after")) {
 		rsc2rsc_new(id, strength_e, start_after, rsc_lh, rsc_rh);
-		order_new(rsc_rh->stop, rsc_lh->stop, pecs_must,
-			  action_constraints);
-		order_new(rsc_lh->start, rsc_rh->start, pecs_must,
-			  action_constraints);
+		order_new(rsc_rh, stop_rsc, NULL, rsc_lh, stop_rsc, NULL,
+			  pecs_must, ordering_constraints);
+		order_new(rsc_lh, start_rsc, NULL, rsc_rh, start_rsc, NULL,
+			  pecs_must, ordering_constraints);
 	} else {
 		rsc2rsc_new(id, strength_e, start_before, rsc_lh, rsc_rh);
-		order_new(rsc_lh->stop, rsc_rh->stop, pecs_must,
-			  action_constraints);
-		order_new(rsc_rh->start, rsc_lh->start, pecs_must,
-			  action_constraints);
+		order_new(rsc_lh, stop_rsc, NULL, rsc_rh, stop_rsc, NULL,
+			  pecs_must, ordering_constraints);
+		order_new(rsc_rh, start_rsc, NULL, rsc_lh, start_rsc, NULL,
+			  pecs_must, ordering_constraints);
 	}
 	return TRUE;
 }
@@ -1145,7 +1174,7 @@ add_node_attrs(xmlNodePtr attrs, node_t *node)
 gboolean
 unpack_rsc_location(
 	xmlNodePtr xml_obj,
-	GListPtr rsc_list, GListPtr node_list, GListPtr *node_constraints)
+	GListPtr rsc_list, GListPtr node_list, GListPtr *placement_constraints)
 {
 /*
 
@@ -1213,7 +1242,7 @@ unpack_rsc_location(
 		}
 
 		new_con = rsc2node_new(rule_id, rsc_lh, score_f,
-				       can_run, NULL, node_constraints);
+				       can_run, NULL, placement_constraints);
 
 		if(new_con == NULL) {
 			continue;

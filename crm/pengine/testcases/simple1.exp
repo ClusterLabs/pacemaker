@@ -1,4 +1,4 @@
 <?xml version="1.0"?>
 <!DOCTYPE transition_graph SYSTEM "crm-1.0.dtd">
 <?xml version="1.0"?>
-<transition_graph/>
+<transition_graph global_timeout="60000"/>

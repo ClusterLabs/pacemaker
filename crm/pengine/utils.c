@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.42 2004/09/20 12:23:37 andrew Exp $ */
+/* $Id: utils.c,v 1.43 2004/10/27 15:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -574,28 +574,68 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
+
 action_t *
-action_new(resource_t *rsc, enum action_tasks task)
+action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 {
 	action_t *action = NULL;
+
+	GListPtr possible_matches = NULL;
+	if(rsc != NULL) {
+		possible_matches = find_actions_type(rsc->actions, task, on_node);
+	}
 	
+	if(possible_matches != NULL) {
+
+		if(g_list_length(possible_matches) > 1) {
+			crm_err("Action %s for %s on %s exists %d times",
+				task2text(task), rsc?rsc->id:"<NULL>",
+				on_node?on_node->details->id:"<NULL>",
+				g_list_length(possible_matches));
+		}
+		
+		action = g_list_nth_data(possible_matches, 0);
+		crm_debug("Returning existing action (%d) %s for %s on %s",
+			  action->id,
+			  task2text(task), rsc?rsc->id:"<NULL>",
+			  on_node?on_node->details->id:"<NULL>");
+
+		/* todo: free possible_matches */
+		return action;
+	}
+	
+	crm_debug("Creating action %s for %s on %s",
+		  task2text(task), rsc?rsc->id:"<NULL>",
+		  on_node?on_node->details->id:"<NULL>");
+
 	crm_malloc(action, sizeof(action_t));
 	if(action != NULL) {
 		action->id   = action_id++;
 		action->rsc  = rsc;
 		action->task = task;
-		action->node = NULL; /* fill node in later */
+		action->node = on_node;
 		action->actions_before   = NULL;
 		action->actions_after    = NULL;
 		action->failure_is_fatal = TRUE;
+		action->dumped     = FALSE;
 		action->discard    = FALSE;
 		action->runnable   = TRUE;
 		action->processed  = FALSE;
-		action->optional   = TRUE;
+		action->optional   = FALSE;
 		action->seen_count = 0;
-		action->timeout = 0;
-		action->args = create_xml_node(NULL, "args");
+		action->timeout    = NULL;
+		action->args       = create_xml_node(NULL, "args");
+		
+		if(rsc != NULL) {
+			crm_debug("Adding created action to its resource");
+			rsc->actions = g_list_append(rsc->actions, action);
+			if(rsc->timeout != NULL) {
+				action->timeout = crm_strdup(rsc->timeout);
+			}
+		}
+
 	}
+	crm_debug("Action %d created", action->id);
 	return action;
 }
 
@@ -666,7 +706,7 @@ task2text(enum action_tasks task)
 		case shutdown_crm:
 			result = "shutdown_crm";
 			break;
-		case stonith_op:
+		case stonith_node:
 			result = "stonith";
 			break;
 	}
@@ -831,33 +871,38 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug("%s%s%s%sResource %s: (priority=%f, color=%d, now=%s)",
-	       pre_text==NULL?"":pre_text,
-	       pre_text==NULL?"":": ",
-	       rsc->provisional?"Provisional ":"",
-	       rsc->runnable?"":"(Non-Startable) ",
-	       rsc->id,
-	       (double)rsc->priority,
-	       safe_val3(-1, rsc, color, id),
-	       safe_val4(NULL, rsc, cur_node, details, uname));
+	crm_debug("%s%s%s%sResource %s: (priority=%f, color=%d, now=%d)",
+		  pre_text==NULL?"":pre_text,
+		  pre_text==NULL?"":": ",
+		  rsc->provisional?"Provisional ":"",
+		  rsc->runnable?"":"(Non-Startable) ",
+		  rsc->id,
+		  (double)rsc->priority,
+		  safe_val3(-1, rsc, color, id),
+		  g_list_length(rsc->running_on));
 
-	crm_debug("\t%d candidate colors, %d allowed nodes, %d rsc_cons and %d node_cons",
-	       g_list_length(rsc->candidate_colors),
-	       g_list_length(rsc->allowed_nodes),
-	       g_list_length(rsc->rsc_cons),
-	       g_list_length(rsc->node_cons));
+	crm_debug("\t%d candidate colors, %d allowed nodes,"
+		  " %d rsc_cons and %d node_cons",
+		  g_list_length(rsc->candidate_colors),
+		  g_list_length(rsc->allowed_nodes),
+		  g_list_length(rsc->rsc_cons),
+		  g_list_length(rsc->node_cons));
 	
 	if(details) {
 		int lpc = 0;
+		
 		crm_debug("\t=== Actions");
-		print_action("\tStop: ", rsc->stop, FALSE);
-		print_action("\tStart: ", rsc->start, FALSE);
+		slist_iter(
+			action, action_t, rsc->actions, lpc, 
+			print_action("\trsc action: ", action, FALSE);
+			);
 		
 		crm_debug("\t=== Colors");
 		slist_iter(
 			color, color_t, rsc->candidate_colors, lpc,
 			print_color("\t", color, FALSE)
 			);
+
 		crm_debug("\t=== Allowed Nodes");
 		slist_iter(
 			node, node_t, rsc->allowed_nodes, lpc,
@@ -879,7 +924,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 	}
 
 	switch(action->task) {
-		case stonith_op:
+		case stonith_node:
 		case shutdown_crm:
 			crm_debug("%s%s%sAction %d: %s @ %s",
 			       pre_text==NULL?"":pre_text,
@@ -1087,5 +1132,24 @@ pe_free_rsc_to_node(rsc_to_node_t *cons)
 /*		pe_free_shallow(cons->node_list_rh); */ /* node_t* */
 		crm_free(cons);
 	}
+}
+
+GListPtr
+find_actions_type(GListPtr input, enum action_tasks task, node_t *on_node)
+{
+	int lpc = 0;
+	GListPtr result = NULL;
+	
+	slist_iter(
+		action, action_t, input, lpc,
+		if(action->task == task
+		   && (on_node == NULL
+		       || safe_str_eq(on_node->details->id,
+				      action->node->details->id))) {
+			result = g_list_append(result, action);
+		}
+		);
+
+	return result;
 }
 

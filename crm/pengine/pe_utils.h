@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.13 2004/09/20 12:31:07 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.14 2004/10/27 15:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,7 +23,7 @@
 /* General utilities */
 extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 
-extern action_t *action_new(resource_t *rsc, enum action_tasks task);
+extern action_t *action_new(resource_t *rsc, enum action_tasks task, node_t *on_node);
 
 
 /* Constraint helper functions */
@@ -102,6 +102,9 @@ extern const char *contype2text(enum con_type type);
 extern const char *strength2text(enum con_strength strength);
 /*extern const char *modifier2text(enum con_modifier modifier); */
 extern const char *task2text(enum action_tasks task);
+
+extern GListPtr find_actions_type(
+	GListPtr input, enum action_tasks task, node_t *on_node);
 
 /* free the various structures */
 extern void pe_free_nodes(GListPtr nodes);

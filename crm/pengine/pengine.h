@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.37 2004/10/21 18:25:43 andrew Exp $ */
+/* $Id: pengine.h,v 1.38 2004/10/27 15:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -56,13 +56,19 @@ enum action_tasks {
 	stop_rsc,
 	start_rsc,
 	shutdown_crm,
-	stonith_op
+	stonith_node
 };
 
 enum rsc_con_type {
 	start_before,
 	start_after,
 	same_node
+};
+
+enum rsc_recovery_type {
+	recovery_stop_start,
+	recovery_stop_only,
+	recovery_block
 };
 
 struct node_shared_s { 
@@ -141,7 +147,8 @@ struct resource_s {
 		xmlNodePtr	xml; 
 		float		priority; 
 		float		effective_priority; 
-		node_t		*cur_node; 
+
+		const char      *timeout;
 
 		lrm_agent_t	*agent;
 		
@@ -149,17 +156,14 @@ struct resource_s {
 		gboolean	runnable;
 		gboolean	provisional;
 
-		enum pe_stop_fail stopfail_type;
-		enum pe_restart   restart_type;
+		enum rsc_recovery_type recovery_type;
+		enum pe_stop_fail      stopfail_type;
+		enum pe_restart        restart_type;
 
 		int max_instances;
 		int max_node_instances;
 		int max_masters;
 		int max_node_masters;
-
-		
-		action_t	*stop;
-		action_t	*start;
 		
 		GListPtr	actions;	  /* action_t*       */
 		GListPtr	candidate_colors; /* color_t*        */
@@ -167,6 +171,7 @@ struct resource_s {
 		GListPtr	node_cons;        /* rsc_to_node_t*  */
 		GListPtr	rsc_cons;         /* rsc_to_rsc_t*   */
 		GListPtr	fencable_nodes;   /* node_t*         */
+		GListPtr        running_on;       /* node_t*         */
 
 		color_t		*color;
 };
@@ -186,6 +191,7 @@ struct action_s
 		enum action_tasks task;
 		
 		gboolean runnable;
+		gboolean dumped;
 		gboolean processed;
 		gboolean optional;
 		gboolean discard;
@@ -202,9 +208,18 @@ struct action_s
 
 struct order_constraint_s 
 {
-		int id;
-		action_t *lh_action;
-		action_t *rh_action;
+		int   id;
+
+		resource_t *lh_rsc;
+		action_t   *lh_action;
+		enum action_tasks lh_action_task;
+/* 		int   lh_rsc_incarnation; */
+		
+		resource_t *rh_rsc;
+		action_t   *rh_action;
+		enum action_tasks rh_action_task;
+/* 		int   rh_rsc_incarnation; */
+
 		enum con_strength strength;
 /*		enum action_order order; */
 };
@@ -213,10 +228,10 @@ extern gboolean stage0(xmlNodePtr cib,
 		       GListPtr *nodes,
 		       GListPtr *rscs,
 		       GListPtr *cons,
-		       GListPtr *actions, GListPtr *action_constraints,
+		       GListPtr *actions, GListPtr *ordering_constraints,
 		       GListPtr *stonith_list, GListPtr *shutdown_list);
 
-extern gboolean stage1(GListPtr node_constraints,
+extern gboolean stage1(GListPtr placement_constraints,
 		       GListPtr nodes,
 		       GListPtr resources);
 
@@ -231,15 +246,16 @@ extern gboolean stage4(GListPtr colors);
 extern gboolean stage5(GListPtr resources);
 
 extern gboolean stage6(
-	GListPtr *actions, GListPtr *action_constraints,
+	GListPtr *actions, GListPtr *ordering_constraints,
 	GListPtr nodes, GListPtr resources);
 
 extern gboolean stage7(GListPtr resources,
 		       GListPtr actions,
-		       GListPtr action_constraints,
+		       GListPtr ordering_constraints,
 		       GListPtr *action_sets);
 
-extern gboolean stage8(GListPtr action_sets, xmlNodePtr *graph);
+extern gboolean stage8(
+	GListPtr resources, GListPtr action_sets, xmlNodePtr *graph);
 
 extern gboolean summary(GListPtr resources);
 
@@ -249,8 +265,8 @@ extern gboolean process_pe_message(xmlNodePtr msg, IPC_Channel *sender);
 
 extern gboolean unpack_constraints(xmlNodePtr xml_constraints,
 				   GListPtr nodes, GListPtr resources,
-				   GListPtr *node_constraints,
-				   GListPtr *action_constraints);
+				   GListPtr *placement_constraints,
+				   GListPtr *ordering_constraints);
 
 extern gboolean unpack_resources(xmlNodePtr xml_resources,
 				 GListPtr *resources,
@@ -270,10 +286,10 @@ extern gboolean unpack_status(xmlNodePtr status,
 			      GListPtr nodes,
 			      GListPtr rsc_list,
 			      GListPtr *actions,
-			      GListPtr *node_constraints);
+			      GListPtr *placement_constraints);
 
 
-extern gboolean apply_node_constraints(GListPtr constraints, GListPtr nodes);
+extern gboolean apply_placement_constraints(GListPtr constraints, GListPtr nodes);
 
 extern gboolean apply_agent_constraints(GListPtr resources);
 
@@ -286,18 +302,20 @@ extern gboolean choose_node_from_list(color_t *color);
 extern gboolean update_action_states(GListPtr actions);
 
 extern gboolean shutdown_constraints(
-	node_t *node, action_t *shutdown_op, GListPtr *action_constraints);
+	node_t *node, action_t *shutdown_op, GListPtr *ordering_constraints);
 
 extern gboolean stonith_constraints(
 	node_t *node, action_t *stonith_op, action_t *shutdown_op,
-	GListPtr *action_constraints);
+	GListPtr *ordering_constraints);
 
 extern gboolean order_new(
-	action_t *before, action_t *after, enum con_strength strength,
-	GListPtr *action_constraints);
+	resource_t *lh_rsc, enum action_tasks lh_task, action_t *lh_action,
+	resource_t *rh_rsc, enum action_tasks rh_task, action_t *rh_action,
+	enum con_strength strength, GListPtr *ordering_constraints);
 
 
 extern gboolean process_colored_constraints(resource_t *rsc);
+extern void graph_element_from_action(action_t *action, xmlNodePtr *graph);
 
 extern color_t *no_color;
 extern int      max_valid_nodes;

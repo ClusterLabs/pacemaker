@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.17 2004/09/17 13:03:10 andrew Exp $ */
+/* $Id: color.c,v 1.18 2004/10/27 15:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,7 +58,7 @@ gboolean choose_color(resource_t *lh_resource);
 gboolean assign_color(resource_t *rsc, color_t *color);
 
 gboolean 
-apply_node_constraints(GListPtr constraints, GListPtr nodes)
+apply_placement_constraints(GListPtr constraints, GListPtr nodes)
 {
 	int lpc = 0;
 	int llpc = 0;
@@ -476,6 +476,9 @@ color_resource(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 		crm_err("Could not color resource %s", lh_resource->id);
 		print_resource("ERROR: No color", lh_resource, FALSE);
 		assign_color(lh_resource, no_color);
+		
+	} else {
+		
 	}
 
 	lh_resource->provisional = FALSE;

@@ -89,6 +89,9 @@ do_test rsc_location4 "Score (running/swap)	"
 do_test rsc_location5 "Score (running/swap 2)	"
 
 echo ""
+do_test multi1 "Multiple Active (stop/start)"
+
+echo ""
 do_test complex1 "Complex	"
 
 echo ""

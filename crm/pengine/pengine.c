@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.46 2004/10/08 18:01:49 andrew Exp $ */
+/* $Id: pengine.c,v 1.47 2004/10/27 15:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -100,9 +100,9 @@ do_calculations(xmlNodePtr cib_object)
 	
 	GListPtr resources = NULL;
 	GListPtr nodes = NULL;
-	GListPtr node_constraints = NULL;
+	GListPtr placement_constraints = NULL;
 	GListPtr actions = NULL;
-	GListPtr action_constraints = NULL;
+	GListPtr ordering_constraints = NULL;
 	GListPtr stonith_list = NULL;
 	GListPtr shutdown_list = NULL;
 
@@ -117,12 +117,12 @@ do_calculations(xmlNodePtr cib_object)
 		  
 	stage0(cib_object,
 	       &resources,
-	       &nodes,  &node_constraints,
-	       &actions,  &action_constraints,
+	       &nodes,  &placement_constraints,
+	       &actions,  &ordering_constraints,
 	       &stonith_list, &shutdown_list);
 
 	crm_verbose("=#=#=#=#= Stage 1 =#=#=#=#=");
-	stage1(node_constraints, nodes, resources);
+	stage1(placement_constraints, nodes, resources);
 
 	crm_verbose("=#=#=#=#= Stage 2 =#=#=#=#=");
 	stage2(resources, nodes, &colors);
@@ -157,7 +157,7 @@ do_calculations(xmlNodePtr cib_object)
 	stage5(resources);
 
 	crm_verbose("=#=#=#=#= Stage 6 =#=#=#=#=");
-	stage6(&actions, &action_constraints, nodes, resources);
+	stage6(&actions, &ordering_constraints, nodes, resources);
 
 	crm_verbose("========= Action List =========");
 	crm_debug_action(
@@ -167,7 +167,7 @@ do_calculations(xmlNodePtr cib_object)
 		);
 	
 	crm_verbose("=#=#=#=#= Stage 7 =#=#=#=#=");
-	stage7(resources, actions, action_constraints, &action_sets);
+	stage7(resources, actions, ordering_constraints, &action_sets);
 	
 	crm_verbose("=#=#=#=#= Summary =#=#=#=#=");
 	summary(resources);
@@ -209,21 +209,21 @@ do_calculations(xmlNodePtr cib_object)
 		);
 
 	crm_verbose("=#=#=#=#= Stage 8 =#=#=#=#=");
-	stage8(actions, &graph);
+	stage8(resources, actions, &graph);
 
 	crm_verbose("=#=#=#=#= Cleanup =#=#=#=#=");
 
 	crm_verbose("deleting node cons");
-	while(node_constraints) {
-		pe_free_rsc_to_node((rsc_to_node_t*)node_constraints->data);
-		node_constraints = node_constraints->next;
+	while(placement_constraints) {
+		pe_free_rsc_to_node((rsc_to_node_t*)placement_constraints->data);
+		placement_constraints = placement_constraints->next;
 	}
-	if(node_constraints != NULL) {
-		g_list_free(node_constraints);
+	if(placement_constraints != NULL) {
+		g_list_free(placement_constraints);
 	}
 
 	crm_verbose("deleting order cons");
-	pe_free_shallow(action_constraints);
+	pe_free_shallow(ordering_constraints);
 
 	crm_verbose("deleting action sets");
 

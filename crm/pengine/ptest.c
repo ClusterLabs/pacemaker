@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.36 2004/10/08 18:01:49 andrew Exp $ */
+/* $Id: ptest.c,v 1.37 2004/10/27 15:30:55 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -53,9 +53,9 @@ main(int argc, char **argv)
 		
 	GListPtr resources = NULL;
 	GListPtr nodes = NULL;
-	GListPtr node_constraints = NULL;
+	GListPtr placement_constraints = NULL;
 	GListPtr actions = NULL;
-	GListPtr action_constraints = NULL;
+	GListPtr ordering_constraints = NULL;
 	GListPtr stonith_list = NULL;
 	GListPtr shutdown_list = NULL;
 	GListPtr colors = NULL;
@@ -127,8 +127,8 @@ main(int argc, char **argv)
 
 	stage0(cib_object,
 	       &resources,
-	       &nodes,  &node_constraints,
-	       &actions,  &action_constraints,
+	       &nodes,  &placement_constraints,
+	       &actions,  &ordering_constraints,
 	       &stonith_list, &shutdown_list);
 	
 	crm_debug("========= Nodes =========");
@@ -140,11 +140,11 @@ main(int argc, char **argv)
 		   print_resource(NULL, resource, TRUE));    
 
 	crm_debug("========= Constraints =========");
-	slist_iter(constraint, rsc_to_node_t, node_constraints, lpc,
+	slist_iter(constraint, rsc_to_node_t, placement_constraints, lpc,
 		   print_rsc_to_node(NULL, constraint, FALSE));
     
 	crm_debug("=#=#=#=#= Stage 1 =#=#=#=#=");
-	stage1(node_constraints, nodes, resources);
+	stage1(placement_constraints, nodes, resources);
 
 	crm_debug("========= Nodes =========");
 	slist_iter(node, node_t, nodes, lpc,
@@ -204,14 +204,14 @@ main(int argc, char **argv)
 		);
 
 	crm_debug("=#=#=#=#= Stage 6 =#=#=#=#=");
-	stage6(&actions, &action_constraints, nodes, resources);
+	stage6(&actions, &ordering_constraints, nodes, resources);
 
 	crm_debug("========= Action List =========");
 	slist_iter(action, action_t, actions, lpc,
 		   print_action(NULL, action, TRUE));
 	
 	crm_debug("=#=#=#=#= Stage 7 =#=#=#=#=");
-	stage7(resources, actions, action_constraints, &action_sets);
+	stage7(resources, actions, ordering_constraints, &action_sets);
 
 	crm_debug("=#=#=#=#= Summary =#=#=#=#=");
 	summary(resources);
@@ -230,20 +230,20 @@ main(int argc, char **argv)
 		   print_node(NULL, node, FALSE));
 
 	crm_debug("=#=#=#=#= Stage 8 =#=#=#=#=");
-	stage8(actions, &graph);
+	stage8(resources, actions, &graph);
 
 
 	crm_verbose("deleting node cons");
-	while(node_constraints) {
-		pe_free_rsc_to_node((rsc_to_node_t*)node_constraints->data);
-		node_constraints = node_constraints->next;
+	while(placement_constraints) {
+		pe_free_rsc_to_node((rsc_to_node_t*)placement_constraints->data);
+		placement_constraints = placement_constraints->next;
 	}
-	if(node_constraints != NULL) {
-		g_list_free(node_constraints);
+	if(placement_constraints != NULL) {
+		g_list_free(placement_constraints);
 	}
 	
 	crm_verbose("deleting order cons");
-	pe_free_shallow(action_constraints);
+	pe_free_shallow(ordering_constraints);
 
 	crm_verbose("deleting action sets");
 	slist_iter(action_set, GList, action_sets, lpc,

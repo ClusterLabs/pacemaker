@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.18 2004/09/29 13:38:50 andrew Exp $ */
+/* $Id: graph.c,v 1.19 2004/10/27 15:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -105,10 +105,9 @@ update_action(action_t *action)
 
 gboolean
 shutdown_constraints(
-	node_t *node, action_t *shutdown_op, GListPtr *action_constraints)
+	node_t *node, action_t *shutdown_op, GListPtr *ordering_constraints)
 {
 	int lpc = 0;
-	action_wrapper_t *wrapper = NULL;
 
 	/* add the stop to the before lists so it counts as a pre-req
 	 * for the shutdown
@@ -116,14 +115,10 @@ shutdown_constraints(
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
 
-		crm_malloc(wrapper, sizeof(action_wrapper_t));
-		if(wrapper != NULL) {
-			wrapper->action = rsc->stop;
-			wrapper->strength = pecs_must;
-			shutdown_op->actions_before = g_list_append(
-				shutdown_op->actions_before, wrapper);
-		}
-/* 		order_new(rsc->stop, shutdown_op, pecs_must, action_constraints); */
+		order_new(rsc, stop_rsc, NULL,
+			  NULL, shutdown_crm, shutdown_op,
+			  pecs_must, ordering_constraints);
+
 		);	
 
 	return TRUE;	
@@ -132,24 +127,21 @@ shutdown_constraints(
 gboolean
 stonith_constraints(node_t *node,
 		    action_t *stonith_op, action_t *shutdown_op,
-		    GListPtr *action_constraints)
+		    GListPtr *ordering_constraints)
 {
-	int lpc = 0;
-	action_wrapper_t *wrapper = NULL;
-
+	int lpc = 0, lpc2 = 0;
+	GListPtr start_actions = NULL;
+	GListPtr stop_actions = NULL;
+	
 	if(shutdown_op != NULL) {
 		/* shutdown before stonith */
 		/* add the shutdown OP to the before lists so it counts as a pre-req */
 		crm_debug("Adding shutdown (%d) as an input to stonith (%d)",
 			  shutdown_op->id, stonith_op->id);
 		
-		crm_malloc(wrapper, sizeof(action_wrapper_t));
-		if(wrapper != NULL) {
-			wrapper->action = shutdown_op;
-			wrapper->strength = pecs_must;
-			stonith_op->actions_before = g_list_append(
-				stonith_op->actions_before, wrapper);
-		}
+		order_new(NULL, shutdown_crm, shutdown_op,
+			  NULL, stonith_node, stonith_op,
+			  pecs_must, ordering_constraints);
 	}
 	
 	/* add the stonith OP to the before lists so it counts as a pre-req */
@@ -161,8 +153,14 @@ stonith_constraints(node_t *node,
 		 * ie. the node may be cactus and unable to receive the
 		 *  stop let alone reply with failed.
 		 */
-		rsc->stop->failure_is_fatal = FALSE;
 
+		/* TODO: this probably wont have any effect */
+		stop_actions = find_actions_type(rsc->actions, stop_rsc, NULL);
+		slist_iter(
+			action, action_t, stop_actions, lpc2,
+			action->failure_is_fatal = FALSE;
+			);
+		
 		if(rsc->stopfail_type == pesf_block) {
 			/* depend on the stop action which will fail */
 			crm_warn("SHARED RESOURCE %s WILL REMAIN BLOCKED"
@@ -189,31 +187,32 @@ stonith_constraints(node_t *node,
 				"resource %s after a failed stop",
 				rsc->id);
 		}
-		crm_debug("Adding stonith (%d) as an input to start (%d)",
-			  stonith_op->id, rsc->start->id);
+		crm_debug("Adding stonith (%d) as an input to start",
+			  stonith_op->id);
 		
 		/* stonith before start */
-		crm_malloc(wrapper, sizeof(action_wrapper_t));
-		if(wrapper != NULL) {
-			wrapper->action = stonith_op;
-			wrapper->strength = pecs_must;
-			rsc->start->actions_before = g_list_append(
-				rsc->start->actions_before, wrapper);
-		}
+		order_new(NULL, stonith_node, stonith_op,
+			  rsc, start_rsc, NULL,
+			  pecs_must, ordering_constraints);
 
-		/* stop before stonith */
+		/* TODO: this probably wont have any effect */
+		start_actions = find_actions_type(rsc->actions, start_rsc, NULL);
+		slist_iter(
+			action, action_t, start_actions, lpc2,
+			action->failure_is_fatal = FALSE;
+			);
+		
+
 /* 		a pointless optimization?  probably */
 /* 		if(shutdown_op != NULL) { */
 /* 			/\* the next rule is implied *\/ */
 /* 			continue; */
 /* 		} */
-		crm_malloc(wrapper, sizeof(action_wrapper_t));
-		if(wrapper != NULL) {
-			wrapper->action = rsc->stop;
-			wrapper->strength = pecs_must;
-			stonith_op->actions_before = g_list_append(
-				stonith_op->actions_before, wrapper);
-		}
+
+		/* stop before stonith */
+		order_new(rsc, stop_rsc, NULL,
+			  NULL, stonith_node, stonith_op,
+			  pecs_must, ordering_constraints);
 		);
 	
 	return TRUE;
@@ -227,14 +226,18 @@ action2xml(action_t *action, gboolean as_input)
 	if(action == NULL) {
 		return NULL;
 	}
-	
+
+	crm_debug("Dumping action%d as XML", action->id);
 	switch(action->task) {
-		case stonith_op:
+		case stonith_node:
 		case shutdown_crm:
 			action_xml = create_xml_node(NULL, "crm_event");
 
 			set_xml_property_copy(
 				action_xml, XML_ATTR_ID, crm_itoa(action->id));
+
+			set_xml_property_copy(
+				action_xml, XML_LRM_ATTR_TASK, task2text(action->task));
 
 			break;
 		default:
@@ -251,11 +254,14 @@ action2xml(action_t *action, gboolean as_input)
 			set_xml_property_copy(
 				action_xml, XML_LRM_ATTR_RSCID,
 				safe_val3("__no_rsc__", action, rsc, id));
+
+			set_xml_property_copy(
+				action_xml, XML_LRM_ATTR_TASK, task2text(action->task));
 			
 			break;
 	}
 
-	if(action->task != stonith_op) {
+	if(action->task != stonith_node) {
 		set_xml_property_copy(
 			action_xml, XML_LRM_ATTR_TARGET,
 			safe_val4("__no_node__", action, node, details,uname));
@@ -264,9 +270,6 @@ action2xml(action_t *action, gboolean as_input)
 			action_xml, XML_LRM_ATTR_TARGET_UUID,
 			safe_val4("__no_uuid__", action, node, details, id));
 	}
-
-	set_xml_property_copy(
-		action_xml, XML_LRM_ATTR_TASK, task2text(action->task));
 
 	set_xml_property_copy(
 		action_xml, "allow_fail",
@@ -287,19 +290,72 @@ action2xml(action_t *action, gboolean as_input)
 		return action_xml;
 	}
 	
-	set_xml_property_copy(
-		action_xml, XML_LRM_ATTR_DISCARD,
-		action->discard?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
+/* 	set_xml_property_copy( */
+/* 		action_xml, XML_LRM_ATTR_DISCARD, */
+/* 		action->discard?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE); */
 	
 	add_node_copy(action_xml, action->args);
-
-/* 	slist_iter( */
-/* 		wrapper, action_wrapper_t, action->actions_before, lpc, */
-
-/* 		xmlNodePtr prereq = create_xml_node(action_xml, "trigger"); */
-/* 		set_xml_property_copy(prereq, "action_id", wrapper->action->id); */
-/* 		); */
-
 	
 	return action_xml;
+}
+
+
+void
+graph_element_from_action(action_t *action, xmlNodePtr *graph)
+{
+	int lpc = 0;
+
+	xmlNodePtr syn = NULL;
+	xmlNodePtr set = NULL;
+	xmlNodePtr in  = NULL;
+	xmlNodePtr input = NULL;
+	xmlNodePtr xml_action = NULL;
+	if(action == NULL) {
+		crm_err("Cannot dump NULL action");
+		return;
+	} else if(action->optional) {
+		crm_trace("action %d was optional", action->id);
+		return;
+	} else if(action->runnable == FALSE) {
+		crm_trace("action %d was not runnable", action->id);
+		return;
+	} else if(action->dumped) {
+		crm_trace("action %d was already dumped", action->id);
+		return;
+	}
+	action->dumped = TRUE;
+	
+	syn    = create_xml_node(*graph, "synapse");
+	set    = create_xml_node(syn, "action_set");
+	in     = create_xml_node(syn, "inputs");
+	
+	xml_action = action2xml(action, FALSE);
+	xmlAddChild(set, xml_action);
+	
+	slist_iter(wrapper,action_wrapper_t,action->actions_before,lpc,
+			
+		   if(wrapper->action->optional == TRUE) {
+			   continue;
+		   }
+		   
+		   switch(wrapper->strength) {
+			   case pecs_must_not:
+			   case pecs_ignore:
+				   /* ignore both */
+				   break;
+			   case pecs_startstop:
+				   if(wrapper->action->runnable == FALSE){
+					   break;
+				   }
+				   /* keep going */
+			   case pecs_must:
+				   input = create_xml_node(in, "trigger");
+				   
+				   xml_action = action2xml(
+					   wrapper->action, TRUE);
+				   xmlAddChild(input, xml_action);
+				   break;
+		   }
+		   
+		);
 }
