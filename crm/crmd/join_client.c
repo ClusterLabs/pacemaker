@@ -218,7 +218,14 @@ do_cl_join_result(long long action,
 	if(AM_I_DC == FALSE && safe_str_eq(welcome_from, fsa_our_uname)) {
 		crm_warn("Discarding our own welcome - we're no longer the DC");
 		return I_NULL;
-
+		
+	} else if(g_hash_table_lookup(
+			  fsa_membership_copy->members, welcome_from) == NULL){
+		crm_warn("Discarding welcome from %s."
+			 "  They are no longer part of the cluster",
+			 welcome_from);
+		return I_NULL;
+		
 	} else if(fsa_our_dc == NULL) {
 		crm_info("Set DC to %s", welcome_from);
 		fsa_our_dc = crm_strdup(welcome_from);
