@@ -137,8 +137,7 @@ struct action_s
 		gboolean runnable;
 		gboolean processed;
 		gboolean optional;
-		gboolean failed;
-		gboolean complete;
+		gboolean replaced_by_stonith;
 
 		int seen_count;
 		

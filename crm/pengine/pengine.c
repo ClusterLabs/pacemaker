@@ -431,17 +431,30 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
 		slist_iter(
 			rsc, resource_t, node->details->running_rsc, llpc,
 			
-			order_constraint_t *order = (order_constraint_t*)
-				cl_malloc(sizeof(order_constraint_t));
+			order_constraint_t *order = NULL;
+
+#if 1
+			/*
+			 * Mark the stop as irrelevant
+			 *
+			 * Possibly one day failed actions wont terminate
+			 *   the transition, but not yet
+			 */
+			rsc->stop->replaced_by_stonith = TRUE;
+#else			
+			rsc->stop->optional = TRUE;
+#endif
 
 			/* try stopping the resource before stonithing the node
 			 *
 			 * if the stop succeeds, the transitioner can then
 			 * decided if  stonith is needed
 			 */
-			order->id = order_id++;
+			order = (order_constraint_t*)
+				cl_malloc(sizeof(order_constraint_t));
 			order->lh_action = rsc->stop;
 			order->rh_action = stonith_node;
+			order->id = order_id++;
 			order->strength = must;
 			*action_constraints =
 				g_slist_append(*action_constraints, order);
@@ -450,7 +463,6 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
 			order = (order_constraint_t*)
 				cl_malloc(sizeof(order_constraint_t));
 
-			// try stopping the node first
 			order->id = order_id++;
 			order->lh_action = stonith_node;
 			order->rh_action = rsc->start;
@@ -469,7 +481,7 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
  * Determin the sets of independant actions and the correct order for the
  *  actions in each set.
  *
- * Mark dependancies f un-runnable actions un-runnable
+ * Mark dependancies of un-runnable actions un-runnable
  *
  */
 gboolean
@@ -1652,9 +1664,13 @@ update_runnable(GSListPtr actions)
 			}
 			
 			slist_iter(
-				other, action_wrapper_t, action->actions_before, lpc2,
+				other, action_wrapper_t, action->actions_after, lpc2,
 				if(other->action->runnable) {
 					change = TRUE;
+					pdebug_action(
+						print_action("Marking unrunnable",
+							     other->action,
+							     FALSE));
 				}
 				other->action->runnable = FALSE;
 				);

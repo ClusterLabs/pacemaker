@@ -346,6 +346,7 @@ initiate_action(action_list_t *list)
 	const char *runnable  = NULL;
 	const char *optional  = NULL;
 	const char *task      = NULL;
+	const char *discard   = NULL;
 	
 	while(TRUE) {
 		
@@ -360,12 +361,22 @@ initiate_action(action_list_t *list)
 		}
 		
 		
+		discard  = xmlGetProp(xml_action, "discard");
 		on_node  = xmlGetProp(xml_action, "on_node");
 		id       = xmlGetProp(xml_action, "id");
 		runnable = xmlGetProp(xml_action, "runnable");
 		optional = xmlGetProp(xml_action, "optional");
 		task     = xmlGetProp(xml_action, "task");
 		
+		if(safe_str_eq(discard, "true")) {
+			cl_log(LOG_INFO,
+			       "Skipping rsc-op (%s - replaced by STONITH): %s %s on %s",
+			       id, task,
+			       xmlGetProp(xml_action->children, "id"),
+			       on_node);
+			continue;
+		}
+
 		if(safe_str_neq(optional, "true")) {
 			is_optional = FALSE;
 		}

@@ -405,17 +405,16 @@ action_t *
 action_new(int id, resource_t *rsc, enum action_tasks task)
 {
 	action_t *action = (action_t*)cl_malloc(sizeof(action_t));
-	action->id = id;
-	action->rsc = rsc;
+	action->id   = id;
+	action->rsc  = rsc;
 	action->task = task;
-	action->actions_before = NULL;
-	action->actions_after = NULL;
 	action->node = NULL; // fill node in later
-	action->runnable = FALSE;
-	action->processed = FALSE;
-	action->optional = FALSE;
-	action->failed = FALSE;   // here?
-	action->complete = FALSE; // here?
+	action->actions_before = NULL;
+	action->actions_after  = NULL;
+	action->replaced_by_stonith = FALSE;
+	action->runnable   = FALSE;
+	action->processed  = FALSE;
+	action->optional   = FALSE;
 	action->seen_count = 0;
 
 	return action;
@@ -735,7 +734,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			cl_log(LOG_DEBUG, "%s%s%sAction %d: %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
-			       action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+			       action->replaced_by_stonith?"Replaced ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 			       action->id,
 			       task2text(action->task),
 			       safe_val4(NULL, action, node, details, id));
@@ -822,5 +821,10 @@ action2xml(action_t *action)
 			      "task",
 			      task2text(action->task));
 
+	set_xml_property_copy(action_xml,
+			      "discard",
+			      action->replaced_by_stonith?"true":"false");
+
+	
 	return action_xml;
 }
