@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.11 2005/02/11 22:09:29 andrew Exp $ */
+/* $Id: main.c,v 1.12 2005/02/17 16:22:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,7 +46,7 @@ const char* crm_system_name = SYS_NAME;
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
-void pengine_shutdown(int nsig);
+gboolean pengine_shutdown(int nsig, gpointer unused);
 extern gboolean process_pe_message(crm_data_t * msg, IPC_Channel *sender);
 
 int
@@ -58,7 +58,8 @@ main(int argc, char ** argv)
     
 	crm_log_init(crm_system_name);
 	set_crm_log_level(LOG_VERBOSE);
-	CL_SIGNAL(SIGTERM, pengine_shutdown);
+	G_main_add_SignalHandler(
+		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -141,11 +142,10 @@ usage(const char* cmd, int exit_status)
 	exit(exit_status);
 }
 
-void
-pengine_shutdown(int nsig)
+gboolean
+pengine_shutdown(int nsig, gpointer unused)
 {
 	static int shuttingdown = 0;
-	CL_SIGNAL(nsig, pengine_shutdown);
   
 	if (!shuttingdown) {
 		shuttingdown = 1;
@@ -155,5 +155,6 @@ pengine_shutdown(int nsig)
 	}else{
 		exit(LSB_EXIT_OK);
 	}
+	return TRUE;
 }
 

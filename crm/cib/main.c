@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.13 2005/02/11 22:09:29 andrew Exp $ */
+/* $Id: main.c,v 1.14 2005/02/17 16:22:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,7 +60,7 @@ oc_ev_t *cib_ev_token;
 void usage(const char* cmd, int exit_status);
 int init_start(void);
 gboolean cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name);
-void cib_shutdown(int nsig);
+gboolean cib_shutdown(int nsig, gpointer unused);
 void cib_ha_connection_destroy(gpointer user_data);
 gboolean startCib(const char *filename);
 extern gboolean cib_msg_timeout(gpointer data);
@@ -77,10 +77,11 @@ main(int argc, char ** argv)
 
 	crm_log_init(crm_system_name);
 	set_crm_log_level(LOG_VERBOSE);
-	CL_SIGNAL(SIGTERM,   cib_shutdown);
+	G_main_add_SignalHandler(
+		G_PRIORITY_HIGH, SIGTERM, cib_shutdown, NULL, NULL);
 
-	client_list = g_hash_table_new(&g_str_hash, &g_str_equal);
-	peer_hash = g_hash_table_new(&g_str_hash, &g_str_equal);
+	client_list = g_hash_table_new(g_str_hash, g_str_equal);
+	peer_hash = g_hash_table_new(g_str_hash, g_str_equal);
 	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -310,11 +311,10 @@ cib_ha_connection_destroy(gpointer user_data)
 {
 }
 
-void
-cib_shutdown(int nsig)
+gboolean
+cib_shutdown(int nsig, gpointer unused)
 {
 	static int shuttingdown = 0;
-	CL_SIGNAL(nsig, cib_shutdown);
   
 	if (!shuttingdown) {
 		shuttingdown = 1;
@@ -324,6 +324,7 @@ cib_shutdown(int nsig)
 	} else {
 		exit(LSB_EXIT_OK);
 	}
+	return TRUE;
 }
 
 gboolean

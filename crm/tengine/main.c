@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.16 2005/02/11 22:09:29 andrew Exp $ */
+/* $Id: main.c,v 1.17 2005/02/17 16:22:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,7 +49,7 @@ extern cib_t *te_cib_conn;
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
-void tengine_shutdown(int nsig);
+gboolean tengine_shutdown(int nsig, gpointer unused);
 extern void te_update_confirm(const char *event, HA_Message *msg);
 
 
@@ -63,7 +63,8 @@ main(int argc, char ** argv)
 
 	crm_log_init(crm_system_name);
   	set_crm_log_level(LOG_VERBOSE);
-	CL_SIGNAL(SIGTERM, tengine_shutdown);
+	G_main_add_SignalHandler(
+		G_PRIORITY_HIGH, SIGTERM, tengine_shutdown, NULL, NULL);
 
 	crm_debug("Begining option processing");
 
@@ -210,11 +211,10 @@ usage(const char* cmd, int exit_status)
 	exit(exit_status);
 }
 
-void
-tengine_shutdown(int nsig)
+gboolean
+tengine_shutdown(int nsig, gpointer unused)
 {
 	static int	shuttingdown = 0;
-	CL_SIGNAL(nsig, tengine_shutdown);
   
 	if (!shuttingdown) {
 		shuttingdown = 1;
@@ -224,4 +224,5 @@ tengine_shutdown(int nsig)
 	}else{
 		exit(LSB_EXIT_OK);
 	}
+	return TRUE;
 }
