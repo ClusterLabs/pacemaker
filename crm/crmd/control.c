@@ -72,7 +72,8 @@ do_ha_control(long long action,
 			fsa_cluster_conn, crm_system_name);
 		
 		if(registered == FALSE) {
-			return I_FAIL;
+			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+			return I_NULL;
 		}
 	} 
 	
@@ -142,6 +143,8 @@ do_shutdown_req(long long action,
 		CRM_OP_SHUTDOWN_REQ, NULL, NULL,
 		CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
+	set_bit_inplace(fsa_input_register, R_STAYDOWN);
+	
 	if(send_request(msg, NULL) == FALSE) {
 		next_input = I_ERROR;
 	}
@@ -157,22 +160,28 @@ do_exit(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
-	if(action & A_EXIT_0) {
-		crm_info("Performing %s - gracefully exiting the CRMd\n",
-			fsa_action2string(action));
+	int exit_code = 0;
+	gboolean do_exit = FALSE;
 
-		g_main_quit(crmd_mainloop);
-#if 0
-		crm_info("[%s] stopped", crm_system_name);
-		exit(100);
-#else
-		fsa_actions = A_NOTHING;
-#endif
+	if(action & A_EXIT_0) {
+		do_exit = TRUE;
+		crm_info("Performing %s - gracefully exiting the CRMd",
+			 fsa_action2string(action));
+
 	} else {
-		crm_warn("Performing %s - forcefully exiting the CRMd\n",
-			fsa_action2string(action));
-		crm_info("[%s] stopped", crm_system_name);
-		exit(100);
+		do_exit = TRUE;
+		exit_code = 1;
+		crm_warn("Performing %s - forcefully exiting the CRMd... now!",
+			 fsa_action2string(action));
+	}
+
+	if(is_set(fsa_input_register, R_STAYDOWN)) {
+		crm_info("Inhibiting respawn by Heartbeat");
+		exit_code = 100;
+	}
+	if(do_exit) {
+		crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
+		exit(exit_code);
 	}
 	
 	return I_NULL;
@@ -325,8 +334,9 @@ do_startup(long long action,
 		was_error = TRUE;
 	}
 
-	if(was_error)
-		return I_FAIL;
+	if(was_error) {
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+	}
 	
 	return I_NULL;
 }
@@ -355,13 +365,23 @@ do_started(long long action,
 	   enum crmd_fsa_input current_input,
 	   fsa_data_t *msg_data)
 {
-	if(is_set(fsa_input_register, R_CCM_DATA) == FALSE
-/* 	   || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE */
-/* 	   || is_set(fsa_input_register, R_TE_CONNECTED) == FALSE */
-	   || is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE
-		) {
-		crm_info("Delaying start, some systems not connected %.16llx (%.16llx)",
-			 fsa_input_register, (long long)R_CCM_DATA|R_LRM_CONNECTED);
+	if(is_set(fsa_input_register, R_CCM_DATA) == FALSE) {
+		crm_info("Delaying start, CCM (%.16llx) not connected",
+			 R_CCM_DATA);
+
+		crmd_fsa_stall();
+		return I_NULL;
+
+	} else if(is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE) {
+		crm_info("Delaying start, LRM (%.16llx) not connected",
+			 R_LRM_CONNECTED);
+
+		crmd_fsa_stall();
+		return I_NULL;
+
+	} else if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+		crm_info("Delaying start, CIB (%.16llx) not connected",
+			 R_CIB_CONNECTED);
 
 		crmd_fsa_stall();
 		return I_NULL;
@@ -370,8 +390,8 @@ do_started(long long action,
 		HA_Message *	msg = NULL;
 
 		/* try reading from HA */
-		crm_info("Delaying start, some systems not connected %.16llx (%.16llx)",
-			 fsa_input_register, (long long)R_PEER_DATA);
+		crm_info("Delaying start, Peer data (%.16llx) not recieved",
+			 R_PEER_DATA);
 
 		crm_debug("Looking for a HA message");
 		msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
@@ -405,7 +425,8 @@ do_recover(long long action,
 	crm_err("Action %s (%.16llx) not supported\n",
 	       fsa_action2string(action), action);
 
-	return I_SHUTDOWN;
+	register_fsa_input(C_FSA_INTERNAL, I_SHUTDOWN, NULL);
+	return I_NULL;
 }
 
 /*	 A_READCONFIG	*/
@@ -486,6 +507,7 @@ crm_shutdown(int nsig)
 
 		} else {
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
+			set_bit_inplace(fsa_input_register, R_STAYDOWN);
 
 			/* fast track the case where no-one else is out there */
 			if(AM_I_DC) {

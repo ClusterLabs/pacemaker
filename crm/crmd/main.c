@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.14 2005/02/12 20:26:28 andrew Exp $ */
+/* $Id: main.c,v 1.15 2005/02/15 08:04:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -115,6 +115,7 @@ main(int argc, char ** argv)
 int
 init_start(void)
 {
+    int exit_code = 0;
     enum crmd_fsa_state state;
 
     fsa_state = S_STARTING;
@@ -142,20 +143,19 @@ init_start(void)
 #endif
 	    g_main_run(crmd_mainloop);
 	    return_to_orig_privs();
+	    if(is_set(fsa_input_register, R_STAYDOWN)) {
+		    crm_info("Inhibiting respawn by Heartbeat");
+		    exit_code = 100;
+	    }
 
     } else {
 	    crm_err("Startup of %s failed.  Current state: %s",
 		    crm_system_name, fsa_state2string(state));
+	    exit_code = 1;
     }
     
-    if (unlink(PID_FILE) == 0) {
-	    crm_info("[%s] stopped", crm_system_name);
-    }
-    
-    if(state == S_PENDING) {
-	    return 1;
-    }
-    return 100;
+    crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
+    return exit_code;
 }
 
 
