@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.4 2004/06/21 08:43:23 andrew Exp $ */
+/* $Id: utils.c,v 1.5 2004/06/28 08:18:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -229,20 +229,16 @@ void
 do_crm_log(int log_level, const char *function, const char *fmt, ...)
 {
 	gboolean do_log = FALSE;
-	switch(log_level) {
-		case LOG_NOTICE:
-		case LOG_WARNING:
-		case LOG_ERR:
+	if(log_level < LOG_INFO) {
+		do_log = TRUE;
+
+	} else {
+		if(log_level <= crm_log_level) {
 			do_log = TRUE;
-			break;
-		default:
-			if(log_level <= crm_log_level) {
-				do_log = TRUE;
-				if(log_level != LOG_INFO) {
-					log_level = LOG_DEBUG;
-				}
+			if(log_level != LOG_INFO) {
+				log_level = LOG_DEBUG;
 			}
-			break;
+		}
 	}
 
 	if(do_log) {
