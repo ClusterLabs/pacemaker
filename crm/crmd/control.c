@@ -363,6 +363,7 @@ do_read_config(long long action,
 		const char *value = xmlGetProp(iter, XML_NVPAIR_ATTR_VALUE);
 
 		if(name == NULL || value == NULL) {
+			xml_iter_continue(iter);
 			continue;
 			
 		} else if(safe_str_eq(name, "dc_heartbeat")) {
