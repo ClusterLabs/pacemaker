@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.42 2004/06/28 08:17:46 andrew Exp $ */
+/* $Id: cib.c,v 1.43 2004/07/09 15:35:56 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,7 +18,7 @@
  */
 
 
-#include <portability.h>
+#include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>

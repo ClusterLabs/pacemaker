@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.5 2004/06/28 08:18:25 andrew Exp $ */
+/* $Id: utils.c,v 1.6 2004/07/09 15:37:41 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <portability.h>
+#include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>

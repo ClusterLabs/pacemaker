@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.36 2004/06/21 08:29:41 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.37 2004/07/09 15:35:58 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <portability.h>
+#include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>

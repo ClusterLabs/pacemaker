@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.21 2004/06/09 14:26:38 andrew Exp $ */
+/* $Id: crmdmain.c,v 1.22 2004/07/09 15:40:08 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <portability.h>
+#include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
