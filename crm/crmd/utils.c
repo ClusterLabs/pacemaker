@@ -1048,7 +1048,7 @@ copy_lrm_op(const lrm_op_t *op)
 	op_copy->rsc = copy_lrm_rsc(op->rsc);
 	if(op_copy->rsc == NULL) {
 		crm_err("Op callback for %s did not contain a resource",
-			 op_copy->rsc_id);
+			crm_str(op_copy->rsc_id));
 	}
 
 	return op_copy;
