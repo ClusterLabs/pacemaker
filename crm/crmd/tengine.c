@@ -138,14 +138,13 @@ do_te_copyto(long long action,
 
 		set_xml_property_copy(
 			message_copy, XML_ATTR_SYSTO, CRM_SYSTEM_TENGINE);
-
-		crm_xml_devel(message_copy, "[TE input copy]");
-		crm_xml_devel(message, "[TE input after]");
+/* 		crm_xml_devel(message_copy, "[TE input copy]"); */
 	}
 
 	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
 		crm_info("Waiting for the TE to connect");
 		if(message_copy != NULL) {
+			crm_debug("Freeing old data - 1");
 			free_xml(te_lastcc);
 			te_lastcc = message_copy;
 		}
@@ -159,11 +158,15 @@ do_te_copyto(long long action,
 		te_lastcc = NULL;
 		
 	} else {
+		crm_debug("Freeing old data - 2");
 		free_xml(te_lastcc);
+		te_lastcc = NULL;
 	}
-	
+
+	crm_debug("relaying message to the TE");
 	relay_message(message_copy, FALSE);
 
+	crm_debug("Freeing processed data");
 	free_xml(message_copy);
 	
 	return I_NULL;
