@@ -1,0 +1,37 @@
+<!-- should not -->
+<cib>
+ <configuration>
+  <nodes>
+    <node id="node1" uname="node1" type="member"/>
+    <node id="node2" uname="node2" type="member"/>
+  </nodes>
+  <resources>
+     <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
+     <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
+     <resource id="rsc3" class="heartbeat" type="apache" priority="3.0"/>
+  </resources>
+  <constraints>
+      <rsc_to_rsc id="not_same_1" from="rsc1" to="rsc2" type="placement" strength="should_not"/>    
+      <rsc_to_rsc id="not_same_2" from="rsc1" to="rsc3" type="placement" strength="should_not"/>    
+      <rsc_to_rsc id="not_same_3" from="rsc3" to="rsc2" type="placement" strength="should_not"/>    
+  </constraints>
+ </configuration>
+ <status>
+    <node_state id="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <lrm>
+	<lrm_agents>
+	  <lrm_agent class="heartbeat" type="apache"/>
+	</lrm_agents>
+        <lrm_resources/>
+      </lrm>
+    </node_state>
+    <node_state id="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <lrm>
+	<lrm_agents>
+	  <lrm_agent class="heartbeat" type="apache"/>
+	</lrm_agents>
+        <lrm_resources/>
+      </lrm>
+    </node_state>
+ </status>
+</cib>
