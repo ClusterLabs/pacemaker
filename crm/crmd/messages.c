@@ -23,6 +23,8 @@
 
 
 #include <hb_api.h>
+#include <lrm/lrm_api.h>
+
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
@@ -37,7 +39,6 @@ FILE *msg_out_strm = NULL;
 FILE *router_strm = NULL;
 
 GListPtr fsa_message_queue = NULL;
-
 extern void crm_shutdown(int nsig);
 
 gboolean relay_message(
@@ -71,39 +72,179 @@ enum crmd_fsa_input handle_shutdown_request(xmlNodePtr stored_msg);
 #else
 #    define ROUTER_RESULT(x)	crm_xml_devel(xml_relay_message, x);
 #endif
+/* debug only, can wrap all it likes */
+int last_data_id = 0;
 
-
-
-/* returns the current head of the FIFO queue */
-GListPtr
-put_message(fsa_data_t *new_message)
+void
+register_fsa_input_adv(
+	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
+	void *data, long long with_actions,
+	gboolean after, const char *raised_from)
 {
 	int old_len = g_list_length(fsa_message_queue);
-
 	fsa_data_t *fsa_data = NULL;
-	crm_malloc(fsa_data, sizeof(fsa_data_t));
-	fsa_data->fsa_input = new_message->fsa_input;
-	fsa_data->fsa_cause = new_message->fsa_cause;
-	if(fsa_data->fsa_cause == C_HA_MESSAGE
-	   || fsa_data->fsa_cause == C_IPC_MESSAGE) {
-		fsa_data->data = copy_xml_node_recursive(new_message->data);
+	
+	crm_debug("%s raised FSA input %s (cause=%s) %s data",
+		  raised_from,fsa_input2string(input),
+		  fsa_cause2string(cause), data?"with":"without");
 
-	} else {
-		crm_err("Message type not handled yet");
-		return fsa_message_queue;
+	if(input == I_WAIT_FOR_EVENT) {
+		do_fsa_stall = TRUE;
+		crm_debug("Stalling the FSA pending further input");
+	}
+
+	if(input == I_NULL && with_actions == A_NOTHING /* && data == NULL */){
+		/* no point doing anything */
+		return;
+	}
+	
+	crm_malloc(fsa_data, sizeof(fsa_data_t));
+	fsa_data->id        = ++last_data_id;
+	fsa_data->fsa_input = input;
+	fsa_data->fsa_cause = cause;
+	fsa_data->where     = raised_from;
+	fsa_data->data      = NULL;
+	fsa_data->actions   = with_actions;
+
+	if(with_actions != A_NOTHING) {
+		crm_debug("Adding actions %.16llx to input", with_actions);
+	}
+	
+	if(data != NULL) {
+		switch(cause) {
+			case C_CRMD_STATUS_CALLBACK:
+			case C_IPC_MESSAGE:
+			case C_HA_MESSAGE:
+				crm_debug("Copying %s data from %s as XML",
+					  fsa_cause2string(cause),
+					  raised_from);
+				fsa_data->data = copy_xml_node_recursive(data);
+				break;
+				
+			case C_LRM_OP_CALLBACK:
+				crm_debug("Copying %s data from %s as lrm_op_t",
+					  fsa_cause2string(cause),
+					  raised_from);
+				fsa_data->data = copy_lrm_op((lrm_op_t*)data);
+				break;
+				
+			case C_CCM_CALLBACK:
+				crm_debug("Copying %s data from %s as CCM data",
+					  fsa_cause2string(cause),
+					  raised_from);
+				fsa_data->data = copy_ccm_data(data);
+				break;
+				
+			case C_LRM_MONITOR_CALLBACK:
+			case C_TIMER_POPPED:
+			case C_SHUTDOWN:
+			case C_HEARTBEAT_FAILED:
+			case C_SUBSYSTEM_CONNECT:
+			case C_HA_DISCONNECT:
+			case C_ILLEGAL:
+			case C_UNKNOWN:
+			case C_STARTUP:
+				crm_err("Copying %s data (from %s)"
+					" not implemented",
+					fsa_cause2string(cause), raised_from);
+				exit(1);
+				break;
+		}
+		crm_trace("%s data copied",
+			  fsa_cause2string(fsa_data->fsa_cause));
 	}
 	
 	/* make sure to free it properly later */
-	fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
-
+	if(after) {
+		fsa_message_queue = g_list_append(
+			fsa_message_queue, fsa_data);
+	} else {
+		fsa_message_queue = g_list_prepend(
+			fsa_message_queue, fsa_data);
+	}
+	
 	crm_verbose("Queue len: %d -> %d", old_len,
 		  g_list_length(fsa_message_queue));
 	
 	if(old_len == g_list_length(fsa_message_queue)){
 		crm_err("Couldnt add message to the queue");
+	}	
+
+}
+
+void
+delete_fsa_input(fsa_data_t *fsa_data) 
+{
+	lrm_op_t *op = NULL;
+	struct crmd_ccm_data_s *ccm_input = NULL;
+
+	if(fsa_data == NULL) {
+		return;
 	}
+	crm_trace("About to free %s data",
+		  fsa_cause2string(fsa_data->fsa_cause));
 	
-	return fsa_message_queue;
+	if(fsa_data->data != NULL) {
+		switch(fsa_data->fsa_cause) {
+			case C_CRMD_STATUS_CALLBACK:
+			case C_IPC_MESSAGE:
+			case C_HA_MESSAGE:
+				free_xml(fsa_data->data);
+				break;
+				
+			case C_LRM_OP_CALLBACK:
+				op = (lrm_op_t*)fsa_data->data;
+
+				crm_free(op->rsc->id);
+				crm_free(op->rsc->type);
+				crm_free(op->rsc->class);
+				crm_free(op->rsc->provider);
+				crm_free(op->rsc);
+
+				crm_free(op->user_data);
+				crm_free(op->output);
+				crm_free(op->rsc_id);
+				crm_free(op->app_name);
+				crm_free(op);
+
+				break;
+				
+			case C_CCM_CALLBACK:
+				ccm_input = (struct crmd_ccm_data_s *)
+					fsa_data->data;
+
+				crm_free(ccm_input->oc);
+				crm_free(ccm_input);
+				
+				break;
+				
+			case C_LRM_MONITOR_CALLBACK:
+			case C_TIMER_POPPED:
+			case C_SHUTDOWN:
+			case C_HEARTBEAT_FAILED:
+			case C_SUBSYSTEM_CONNECT:
+			case C_HA_DISCONNECT:
+			case C_ILLEGAL:
+			case C_UNKNOWN:
+			case C_STARTUP:
+				crm_err("Dont know how to free %s data",
+					fsa_cause2string(fsa_data->fsa_cause));
+				exit(1);
+				break;
+		}
+		crm_trace("%s data freed",
+			  fsa_cause2string(fsa_data->fsa_cause));
+	}
+
+	crm_free(fsa_data);
+}
+
+/* returns the current head of the FIFO queue */
+GListPtr
+put_message(fsa_data_t *new_message)
+{
+	crm_err("Not implemented anymore");
+	return NULL;
 }
 
 /* returns the next message */
@@ -114,6 +255,20 @@ get_message(void)
 	fsa_message_queue = g_list_remove(fsa_message_queue, message);
 	return message;
 }
+
+gboolean
+have_wait_message(void)
+{
+	gboolean ret = FALSE;
+	fsa_data_t* message = g_list_nth_data(fsa_message_queue, 0);
+	if(message->fsa_input == I_WAIT_FOR_EVENT) {
+		ret = TRUE;
+/* 		message->fsa_input = I_NULL; */
+	}
+	return ret;
+}
+
+
 
 /* returns the current head of the FIFO queue */
 gboolean
@@ -131,11 +286,7 @@ do_msg_store(long long action,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-/*	xmlNodePtr new_message = (xmlNodePtr)data; */
-	
-
-/*	put_message(new_message); */
-
+	register_fsa_input(cause, current_input, msg_data->data);
 	return I_NULL;
 }
 
@@ -194,12 +345,13 @@ do_msg_route(long long action,
 					/* what else should go here? */
 				default:
 					crm_trace("Defering local processing of message");
+					register_fsa_input(
+						cause, result, msg_data->data);
 
-					put_message(msg_data);
-					result = I_REQUEST;
+					result = I_NULL;
 					break;
 			}
-			if( result != I_REQUEST) {
+			if( ! defer ) {
 				crm_trace("Message processed");
 			}
 			
@@ -245,13 +397,7 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	was_sent = relay_message(request, TRUE);
 
 	if(was_sent == FALSE) {
-		fsa_data_t *fsa_data = NULL;
-		crm_malloc(fsa_data, sizeof(fsa_data_t));
-		fsa_data->fsa_input = I_ROUTER;
-		fsa_data->fsa_cause = C_IPC_MESSAGE;
-		fsa_data->data = request;
-		put_message(fsa_data);
-		crm_free(fsa_data);
+		register_fsa_input(C_IPC_MESSAGE, I_ROUTER, request);
 	}
 	
 	free_xml(request);
@@ -268,7 +414,6 @@ store_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	      const char *operation, const char *sys_to)
 {
 	xmlNodePtr request = NULL;
-	fsa_data_t *fsa_data = NULL;
 
 	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
 				   XML_ATTR_OP, operation, TRUE);
@@ -283,13 +428,7 @@ store_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 				 NULL,
 				 NULL);
 
-	crm_malloc(fsa_data, sizeof(fsa_data_t));
-	fsa_data->fsa_input = I_ROUTER;
-	fsa_data->fsa_cause = C_IPC_MESSAGE;
-	fsa_data->data = request;
-
-	put_message(fsa_data);
-	crm_free(fsa_data);
+	register_fsa_input(C_IPC_MESSAGE, I_ROUTER, request);
 	free_xml(request);
 	
 	return TRUE;
@@ -411,8 +550,6 @@ crmd_authorize_message(
 
 	const char *op = get_xml_attr(
 		root_xml_node, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
-	
-	
 
 	if (safe_str_neq(CRM_OP_HELLO, op)) {
 
@@ -440,6 +577,11 @@ crmd_authorize_message(
 			crm_warn("Message [%s] not authorized",
 				 xmlGetProp(root_xml_node, XML_ATTR_REFERENCE));
 		}
+		
+		register_fsa_input(
+			C_IPC_MESSAGE, I_ROUTER, root_xml_node);
+		
+		s_crmd_fsa(C_IPC_MESSAGE);
 		
 		return can_reply;
 	}
@@ -530,8 +672,7 @@ crmd_authorize_message(
 			set_bit_inplace(
 				fsa_input_register, the_subsystem->flag);
 		}
-		
-		s_crmd_fsa(C_SUBSYSTEM_CONNECT, I_NULL, NULL);
+		s_crmd_fsa(C_SUBSYSTEM_CONNECT);
 
 	} else {
 		crm_err("Rejected client logon request");
@@ -835,7 +976,8 @@ handle_shutdown_request(xmlNodePtr stored_msg)
 	free_xml(node_state);
 	crm_free(now_s);
 
-	return I_CIB_OP;
+	register_fsa_input(C_IPC_MESSAGE, I_CIB_OP, stored_msg);
+	return I_NULL;
 }
 
 gboolean

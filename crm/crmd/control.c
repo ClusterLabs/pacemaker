@@ -202,6 +202,10 @@ do_startup(long long action,
 		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
 	}
 
+	/* Async get client status information in the cluster */
+	fsa_cluster_conn->llc_ops->client_status(
+		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
+
 	ipc_clients = g_hash_table_new(&g_str_hash, &g_str_equal);
 	
 	if(was_error == 0) {
@@ -355,13 +359,32 @@ do_started(long long action,
 /* 	   || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE */
 /* 	   || is_set(fsa_input_register, R_TE_CONNECTED) == FALSE */
 	   || is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE
-/* 	   || is_set(fsa_input_register, R_PEER_DATA) == FALSE */
 		) {
 		crm_info("Delaying start, some systems not connected %.16llx (%.16llx)",
 			 fsa_input_register, (long long)R_CCM_DATA|R_PEER_DATA|R_LRM_CONNECTED);
-		return I_WAIT_FOR_EVENT;
+
+		crmd_fsa_stall();
+		return I_NULL;
 	}
 
+	if(is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
+		/* try reading from HA */
+		crm_debug("Looking for a HA message");
+		struct ha_msg*	msg = NULL;
+		msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
+		if(msg != NULL) {
+			crm_debug("There was a HA message");
+			ha_msg_del(msg);
+		}
+		
+		if(wait_timer->source_id < 0) {
+			startTimer(wait_timer);
+		}
+		crmd_fsa_stall();
+		return I_NULL;
+	}
+
+	crm_info("The local CRM is operational");
 	clear_bit_inplace(fsa_input_register, R_STARTING);
 	
 	return I_NULL;
@@ -454,10 +477,10 @@ crm_shutdown(int nsig)
 	CL_SIGNAL(nsig, crm_shutdown);
     
 	if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
-
 		if(is_set(fsa_input_register, R_SHUTDOWN)) {
 			crm_err("Escalating the shutdown");
-			s_crmd_fsa(C_SHUTDOWN, I_ERROR, NULL);
+			register_fsa_input(C_SHUTDOWN, I_ERROR, NULL);
+			s_crmd_fsa(C_SHUTDOWN);
 
 		} else {
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
@@ -465,7 +488,8 @@ crm_shutdown(int nsig)
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				/* cant rely on this... */
 				startTimer(shutdown_escalation_timer);
-				s_crmd_fsa(C_SHUTDOWN, I_SHUTDOWN, NULL);
+				register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
+				s_crmd_fsa(C_SHUTDOWN);
 
 			} else {
 				crm_err("Could not set R_SHUTDOWN");

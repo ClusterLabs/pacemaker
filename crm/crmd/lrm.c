@@ -107,7 +107,8 @@ do_lrm_control(long long action,
 					startTimer(wait_timer);
 				}
 
-				return I_WAIT_FOR_EVENT;
+				crmd_fsa_stall();
+				return I_NULL;
 
 			} else {
 				crm_err("Failed to sign on to the LRM %d (max) times",

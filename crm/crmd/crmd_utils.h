@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.5 2004/10/01 13:28:17 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.6 2004/10/08 18:10:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,5 +55,13 @@ extern void set_uuid(xmlNodePtr node, const char *attr, const char *uname);
 
 extern gboolean stop_subsystem (struct crm_subsystem_s *centry);
 extern gboolean start_subsystem(struct crm_subsystem_s *centry);
+
+extern lrm_op_t *copy_lrm_op(const lrm_op_t *op);
+extern lrm_rsc_t *copy_lrm_rsc(const lrm_rsc_t *rsc);
+extern struct crmd_ccm_data_s *copy_ccm_data(
+	const struct crmd_ccm_data_s *ccm_input);
+extern oc_ev_membership_t *copy_ccm_oc_data(const oc_ev_membership_t *oc_in) ;
+
+extern void fsa_dump_actions(long long action, const char *text);
 
 #endif

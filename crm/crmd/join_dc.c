@@ -97,7 +97,8 @@ do_dc_join_offer_all(long long action,
 	if(g_hash_table_size(join_requests)
 		  >= fsa_membership_copy->members_size) {
 		crm_info("Not expecting any join acks");
-		return I_SUCCESS;
+		register_fsa_input(cause, I_SUCCESS, msg_data->data);
+		return I_NULL;
 	}
 
 	/* dont waste time by invoking the pe yet; */
@@ -183,6 +184,10 @@ do_dc_join_req(long long action,
 	generation = find_xml_node(join_ack, "generation_tuple");
 	if(compare_cib_generation(our_generation, generation) < 0) {
 		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
+		crm_debug("%s has a better generation number than us",
+			  join_from);
+		crm_xml_debug(our_generation, "Our generation");
+		crm_xml_debug(generation, "Their generation");
 		max_generation_from = join_from;
 	}
 	
@@ -217,7 +222,8 @@ do_dc_join_req(long long action,
 	   >= fsa_membership_copy->members_size) {
 		stopTimer(integration_timer);
 		crm_info("That was the last outstanding join ack");
-		return I_SUCCESS;
+		register_fsa_input(cause, I_SUCCESS, msg_data->data);
+		return I_NULL;
 	}
 
 	/* dont waste time by invoking the PE yet; */
@@ -242,7 +248,10 @@ do_dc_join_finalize(long long action,
 {
 	if(! is_set(fsa_input_register, R_HAVE_CIB)) {
 		if(is_set(fsa_input_register, R_CIB_ASKED)) {
-			return I_WAIT_FOR_EVENT;
+			crm_info("Waiting for the CIB from %s",
+				 max_generation_from);
+			crmd_fsa_stall();
+			return I_NULL;
 		}
 		
 		set_bit_inplace(fsa_input_register, R_CIB_ASKED);
@@ -253,8 +262,9 @@ do_dc_join_finalize(long long action,
 		
 		send_request(NULL, NULL, CRM_OP_RETRIVE_CIB,
 			     max_generation_from, CRM_SYSTEM_CRMD, NULL);
-
-		return I_WAIT_FOR_EVENT;
+		
+		crmd_fsa_stall();
+		return I_NULL;
 	} 
 
 	num_join_invites = 0;
@@ -264,7 +274,9 @@ do_dc_join_finalize(long long action,
 	
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
 		crm_info("Not expecting any join confirmations");
-		return I_SUCCESS;
+		
+		register_fsa_input(cause, I_SUCCESS, msg_data->data);
+		return I_NULL;
 	}
 
 	/* dont waste time by invoking the pe yet; */
@@ -324,14 +336,16 @@ do_dc_join_ack(long long action,
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
 		stopTimer(finalization_timer);
 		crm_info("That was the last outstanding join confirmation");
-		return I_SUCCESS;
+		register_fsa_input(cause, I_SUCCESS, msg_data->data);
+		return I_NULL;
 	}
 
 	/* dont waste time by invoking the pe yet; */
 	crm_debug("Still waiting on %d outstanding join confirmations",
 		  num_join_invites - g_hash_table_size(confirmed_nodes));
 	
-	return I_CIB_OP;
+	register_fsa_input(cause, I_CIB_OP, msg_data->data);
+	return I_NULL;
 }
 
 void

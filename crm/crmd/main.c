@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.4 2004/10/05 20:59:10 andrew Exp $ */
+/* $Id: main.c,v 1.5 2004/10/08 18:10:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,6 +45,7 @@
 
 #include <crmd.h>
 #include <crmd_fsa.h>
+#include <crmd_messages.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -117,25 +118,25 @@ main(int argc, char ** argv)
     }
     
     if (optind > argc) {
-		++argerr;
+	    ++argerr;
     }
     
     if (argerr) {
-		usage(crm_system_name,LSB_EXIT_GENERIC);
+	    usage(crm_system_name,LSB_EXIT_GENERIC);
     }
     
     /* read local config file */
     
     if (req_status){
-		return init_status(PID_FILE, crm_system_name);
+	    return init_status(PID_FILE, crm_system_name);
     }
   
     if (req_stop){
-		return init_stop(PID_FILE);
+	    return init_stop(PID_FILE);
     }
 	
     if (req_restart) { 
-		init_stop(PID_FILE);
+	    init_stop(PID_FILE);
     }
 	
     return init_start();
@@ -149,13 +150,15 @@ init_start(void)
 
     fsa_state = S_PENDING;
     fsa_input_register = 0; /* zero out the regester */
-	
-    state = s_crmd_fsa(C_STARTUP, I_STARTUP, NULL);
+
+    crm_info("Starting %s", crm_system_name);
+    register_fsa_input(C_STARTUP, I_STARTUP, NULL);
+    state = s_crmd_fsa(C_STARTUP);
     
     if (state == S_PENDING) {
 	    /* Create the mainloop and run it... */
 	    crmd_mainloop = g_main_new(FALSE);
-	    crm_info("Starting %s", crm_system_name);
+	    crm_info("Starting %s's mainloop", crm_system_name);
 	    
 #ifdef REALTIME_SUPPORT
 	    static int  crm_realtime = 1;
@@ -166,16 +169,13 @@ init_start(void)
 	    }
 	    cl_make_realtime(SCHED_RR, 5, 64, 64);
 #endif
-
 	    g_main_run(crmd_mainloop);
 	    return_to_orig_privs();
-    } else {
 
-	    crm_err("Startup of CRMd failed.  Current state: %s",
-		   fsa_state2string(state));
-	    
+    } else {
+	    crm_err("Startup of %s failed.  Current state: %s",
+		    crm_system_name, fsa_state2string(state));
     }
-    
     
     if (unlink(PID_FILE) == 0) {
 	    crm_info("[%s] stopped", crm_system_name);

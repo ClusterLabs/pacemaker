@@ -124,8 +124,8 @@ do_pe_invoke(long long action,
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
 		
 		crm_info("Waiting for the PE to connect");
-		return I_WAIT_FOR_EVENT;
-		
+		crmd_fsa_stall();
+		return I_NULL;		
 	}
 	
 	local_cib = get_cib_copy();

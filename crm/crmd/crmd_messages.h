@@ -24,9 +24,26 @@
 #include <crmd_fsa.h>
 #include <libxml/tree.h>
 
+void register_fsa_input_adv(
+	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
+	void *data, long long with_actions,
+	gboolean after, const char *raised_from);
+
+
+#define crmd_fsa_stall() register_fsa_input_adv(cause, I_WAIT_FOR_EVENT, msg_data->data, action, FALSE, __FUNCTION__)
+
+#define register_fsa_input(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
+
+#define register_fsa_input_later(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, TRUE, __FUNCTION__)
+
+#define register_fsa_input_w_actions(cause, input, data, actions) register_fsa_input_adv(cause, input, data, actions, FALSE, __FUNCTION__)
+
+void delete_fsa_input(fsa_data_t *fsa_data);
+
 GListPtr put_message(fsa_data_t *new_message);
 fsa_data_t *get_message(void);
 gboolean is_message(void);
+gboolean have_wait_message(void);
 
 extern gboolean relay_message(xmlNodePtr xml_relay_message,
 		       gboolean originated_locally);

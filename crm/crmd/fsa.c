@@ -56,37 +56,33 @@ void dump_rsc_info(void);
 # ifdef FSA_TRACE
 #  define IF_FSA_ACTION(x,y)						\
      if(is_set(actions,x)) {						\
-	crm_verbose("Invoking action %s (%.16llx)",			\
-		fsa_action2string(x), x);				\
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
-	crm_verbose("Performing action %s", fsa_action2string(x));	\
+	crm_verbose("Invoking action %s (%.16llx)",			\
+		fsa_action2string(x), x);				\
 	next_input = y(x, cause, cur_state, last_input, fsa_data);	\
+	crm_verbose("Action complete: %s (%.16llx)",			\
+		fsa_action2string(x), x);				\
 	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
 		fprintf(dot_strm,					\
-			"\t// %s:\t%s\t(data? %p)\t(result=%s)\n",	\
+			"\t// %s:\t%s\t(data? %p)\n",			\
 			fsa_input2string(cur_input),			\
 			fsa_action2string(x),				\
-			data,						\
-			fsa_input2string(next_input));			\
+			fsa_data->data);				\
 	fflush(dot_strm);						\
-	crm_verbose("Result of action %s was %s",			\
-		fsa_action2string(x), fsa_input2string(next_input));	\
      }
 # else
 #  define IF_FSA_ACTION(x,y)						\
      if(is_set(actions,x)) {						\
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
-	crm_verbose("Performing action %s", fsa_action2string(x));	\
 	next_input = y(x, cause, cur_state, last_input, fsa_data);	\
 	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
 		fprintf(dot_strm,					\
-			"\t// %s:\t%s\t(data? %p)\t(result=%s)\n",	\
+			"\t// %s:\t%s\t(data? %p)\n",			\
 			fsa_input2string(cur_input),			\
 			fsa_action2string(x),				\
-			data,						\
-			fsa_input2string(next_input));			\
+			fsa_data->data);				\
 	fflush(dot_strm);						\
      }
 # endif
@@ -94,14 +90,13 @@ void dump_rsc_info(void);
 # ifdef FSA_TRACE
 #  define IF_FSA_ACTION(x,y)						\
      if(is_set(actions,x)) {						\
-	crm_verbose("Invoking action %s (%.16llx)",			\
-		fsa_action2string(x), x);				\
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
-	crm_verbose("Performing action %s", fsa_action2string(x));	\
+	crm_verbose("Invoking action %s (%.16llx)",			\
+		fsa_action2string(x), x);				\
 	next_input = y(x, cause, cur_state, last_input, fsa_data);	\
-	crm_verbose("Result of action %s was %s",			\
-		fsa_action2string(x), fsa_input2string(next_input));	\
+	crm_verbose("Action complete: %s (%.16llx)",			\
+		fsa_action2string(x), x);				\
      }
 # else
 #  define IF_FSA_ACTION(x,y)						\
@@ -177,55 +172,45 @@ fsa_timer_t *dc_heartbeat = NULL;
 fsa_timer_t *wait_timer = NULL;
 
 int fsa_join_reannouce = 0;
+volatile gboolean do_fsa_stall = FALSE;
+
 
 enum crmd_fsa_state
-s_crmd_fsa(enum crmd_fsa_cause cause,
-	   enum crmd_fsa_input initial_input,
-	   void *data)
+s_crmd_fsa(enum crmd_fsa_cause cause)
 {
 	fsa_data_t *fsa_data = NULL;
 	long long actions = fsa_actions;
 	long long new_actions = A_NOTHING;
 	long long last_action = A_NOTHING;
-	enum crmd_fsa_input last_input = initial_input;
-	enum crmd_fsa_input cur_input;
-	enum crmd_fsa_input next_input;
-	enum crmd_fsa_state last_state, cur_state, next_state, starting_state;
-	
-	starting_state = fsa_state;
-	cur_input  = initial_input;
-	next_input = initial_input;
-	
-	last_state = starting_state;
-	cur_state  = starting_state;
-	next_state = starting_state;
+	enum crmd_fsa_input last_input = I_NULL;
+	enum crmd_fsa_input cur_input  = I_NULL;
+	enum crmd_fsa_input next_input = I_NULL;
+	enum crmd_fsa_state starting_state = fsa_state;
+	enum crmd_fsa_state last_state = starting_state;
+	enum crmd_fsa_state cur_state  = starting_state;
+	enum crmd_fsa_state next_state = starting_state;
 
+	crm_malloc(fsa_data, sizeof(fsa_data_t));
+	fsa_data->fsa_input = I_NULL;
+	fsa_data->fsa_cause = cause;
+	fsa_data->actions   = A_NOTHING;
+	fsa_data->where     = crm_strdup("s_crmd_fsa (enter)");
+	fsa_data->data      = NULL;
+	
 #ifdef FSA_TRACE
-	crm_verbose("FSA invoked with Cause: %s\tState: %s, Input: %s",
+	crm_verbose("FSA invoked with Cause: %s\tState: %s",
 		   fsa_cause2string(cause),
-		   fsa_state2string(cur_state),
-		   fsa_input2string(cur_input));
+		   fsa_state2string(cur_state));
 #endif
 
 #ifdef DOT_FSA_ACTIONS
 	if(dot_strm == NULL) {
 		dot_strm = fopen(DEVEL_DIR"/live.dot", "w");
 		fprintf(dot_strm, "%s", dot_intro);
+		fflush(dot_strm);
 	}
-	fprintf(dot_strm,
-		"\t// FSA invoked: Cause=%s\tState=%s\tInput=%s\n",
-		   fsa_cause2string(cause),
-		   fsa_state2string(cur_state),
-		   fsa_input2string(cur_input));
-
-	fflush(dot_strm);
 #endif
-
-	crm_malloc(fsa_data, sizeof(fsa_data_t));
-	fsa_data->fsa_input = initial_input;
-	fsa_data->fsa_cause = cause;
-	fsa_data->data = data;
-
+	
 	/*
 	 * Process actions in order of priority but do only one
 	 * action at a time to avoid complicating the ordering.
@@ -234,43 +219,52 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	 * (not replace) existing actions before the next iteration.
 	 *
 	 */
+	do_fsa_stall = FALSE;
 	while(next_input != I_NULL || actions != A_NOTHING || is_message()) {
-
-		if(next_input == I_WAIT_FOR_EVENT) {
+		if(do_fsa_stall) {
 			/* we may be waiting for an a-sync task to "happen"
 			 * and until it does, we cant do anything else
-			 *
-			 * Re-add the last action
 			 */
-
-			actions |= last_action;
-					
 			crm_info("Wait until something else happens");
 			break;
 		}
 
-#ifdef FSA_TRACE
-		crm_verbose("FSA while loop:\tState: %s, Input: %s",
-			   fsa_state2string(cur_state),
-			   fsa_input2string(cur_input));
-#endif
-		
 		/* update input variables */
 		cur_input = next_input;
 		if(cur_input != I_NULL) {
 			/* record the most recent non I_NULL input */
 			last_input = cur_input;
 		}
-
+		
 		/* get the next batch of actions */
 		new_actions = crmd_fsa_actions[cur_input][cur_state];
 		if(new_actions != A_NOTHING) {
 #ifdef FSA_TRACE
 			crm_verbose("Adding actions %.16llx", new_actions);
+			fsa_dump_actions(new_actions, "\tscheduled");
 #endif
 			actions |= new_actions;
 		}
 
+		if(fsa_data == NULL) {
+			crm_err("Creating fake input for %s",
+				fsa_input2string(cur_input));
+			
+			crm_malloc(fsa_data, sizeof(fsa_data_t));
+			fsa_data->fsa_input = cur_input;
+			fsa_data->fsa_cause = cause;
+			fsa_data->actions   = A_NOTHING;
+			fsa_data->where     = crm_strdup("s_crmd_fsa");
+			fsa_data->data      = NULL;
+		}
+
+#ifdef FSA_TRACE
+		crm_verbose("FSA while loop:\tState: %s, Cause: %s, Input: %s",
+			   fsa_state2string(cur_state),
+			   fsa_cause2string(fsa_data->fsa_cause),
+			   fsa_input2string(fsa_data->fsa_input));
+#endif
+		
 
 		/* logging : *before* the state is changed */
 		IF_FSA_ACTION(A_ERROR, do_log)
@@ -292,7 +286,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		if(last_state != cur_state){
 			actions = do_state_transition(
 				actions, cause, last_state, cur_state,
-				last_input, data);
+				last_input, fsa_data);
 		}
 
 		/* this is always run, some inputs/states may make various
@@ -305,9 +299,66 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 * Make sure all actions that connect to required systems
 		 * are performed first
 		 */
-		if(actions == A_NOTHING) {
-			crm_debug("Nothing to do");
+		if(actions == A_NOTHING && is_message() == FALSE) {
+			crm_debug("Nothing to do... terminate the loop");
 			next_input = I_NULL;
+			break;
+
+		} else if(actions == A_NOTHING && is_message()) {
+			fsa_data_t *stored_msg = NULL;
+			crm_debug("Finished with current input..."
+				  " Checking messages (%d remaining)",
+				  g_list_length(fsa_message_queue));
+			
+			next_input = I_NULL;
+			stored_msg = get_message();
+			
+			if(is_message() == FALSE) {
+				actions = clear_bit(actions, A_MSG_PROCESS);
+			}
+			
+			if(stored_msg == NULL) {
+				crm_err("Invalid stored message");
+				continue;
+			}
+
+			delete_fsa_input(fsa_data);
+			fsa_data = stored_msg;
+			
+			if(stored_msg->fsa_cause == C_CCM_CALLBACK) {
+				crm_devel("FSA processing CCM callback from %s",
+					fsa_data->where);
+
+			} else if(stored_msg->fsa_cause == C_LRM_OP_CALLBACK) {
+				crm_devel("FSA processing LRM callback from %s",
+					fsa_data->where);
+
+			} else {
+				crm_devel("FSA processing XML message from %s",
+					  fsa_data->where);
+				
+				crm_xml_devel(stored_msg->data,
+					      "FSA processing message");
+			}
+			/* set up the input */
+			next_input = fsa_data->fsa_input;
+			/* add any actions back to the queue */
+			actions |= fsa_data->actions;
+			fsa_dump_actions(fsa_data->actions, "\tadded back");
+			crm_debug("FSA input: State=%s\tCause=%s\tInput=%s\n",
+				fsa_state2string(cur_state),
+				fsa_cause2string(fsa_data->fsa_cause),
+				fsa_input2string(fsa_data->fsa_input));
+#ifdef DOT_FSA_ACTIONS
+			fprintf(dot_strm,
+				"\t// FSA input: State=%s\tCause=%s\tInput=%s\n",
+				fsa_state2string(cur_state),
+				fsa_cause2string(fsa_data->fsa_cause),
+				fsa_input2string(fsa_data->fsa_input));
+			
+			fflush(dot_strm);
+#endif
+
 		}
 	
 		/* get out of here NOW! before anything worse happens */
@@ -324,7 +375,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		else IF_FSA_ACTION(A_CCM_CONNECT,	do_ccm_control)
 		else IF_FSA_ACTION(A_TE_START,		do_te_control)
 		else IF_FSA_ACTION(A_PE_START,		do_pe_control)
-		else IF_FSA_ACTION(A_STARTED,		do_started)
 		
 		/* sub-system restart
 		 */
@@ -370,6 +420,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 */
 		else IF_FSA_ACTION(A_CCM_UPDATE_CACHE,	do_ccm_update_cache)
 		else IF_FSA_ACTION(A_CCM_EVENT,		do_ccm_event)
+		else IF_FSA_ACTION(A_STARTED,		do_started)
 		
 		/*
 		 * Medium priority actions
@@ -417,63 +468,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 
 /*		else IF_FSA_ACTION(A_, do_) */
 		
-		else if((actions & A_MSG_PROCESS) != 0
-			|| is_message()) {
-			fsa_data_t *stored_msg = NULL;
-			crm_verbose("Checking messages... %d",
-				  g_list_length(fsa_message_queue));
-			
-			stored_msg = get_message();
-			
-			if(is_message() == FALSE) {
-				actions = clear_bit(actions, A_MSG_PROCESS);
-			}
-			
-			if(stored_msg == NULL) {
-				crm_err("Invalid stored message");
-				continue;
-			}
-
-			/*
-			 * This is where we should clean up old messages
-			 * The problem is that we dont always know the
-			 * type of the data (and therefore the correct way
-			 * to free it).  A wrapper is probably required.
-			 */
-			fsa_data = stored_msg;
-
-#ifdef DOT_FSA_ACTIONS
-			fprintf(dot_strm,
-				"\t// %s:\t%s\t(data? %s)",	
-				fsa_input2string(cur_input),
-				fsa_action2string(A_MSG_PROCESS),
-				stored_msg==NULL?XML_BOOLEAN_NO:XML_BOOLEAN_YES);
-			fflush(dot_strm);
-#endif
-#ifdef FSA_TRACE
-			crm_verbose("Invoking action %s (%.16llx)",
-				   fsa_action2string(A_MSG_PROCESS),
-				   A_MSG_PROCESS);
-#endif
-
-/*#ifdef FSA_TRACE*/
-			crm_xml_devel(stored_msg->data,"FSA processing message");
-/*#endif*/
-
-			next_input = handle_message(stored_msg->data);
-
-#ifdef DOT_FSA_ACTIONS
-			fprintf(dot_strm, "\t(result=%s)\n",
-				fsa_input2string(next_input));
-#endif
-#ifdef FSA_TRACE
-			crm_verbose("Result of action %s was %s",
-				   fsa_action2string(A_MSG_PROCESS),
-				   fsa_input2string(next_input));
-#endif
-			
 			/* Error checking and reporting */
-		} else if(cur_input != I_NULL && is_set(actions, A_NOTHING)) {
+		else if(cur_input != I_NULL && actions == A_NOTHING) {
 			crm_warn(
 			       "No action specified for input,state (%s,%s)",
 			       fsa_input2string(cur_input),
@@ -481,19 +477,19 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			
 			next_input = I_NULL;
 			
-		} else if(cur_input == I_NULL && is_set(actions, A_NOTHING)) {
+		} else if(cur_input == I_NULL && actions == A_NOTHING) {
 #ifdef FSA_TRACE
-			crm_info("Nothing left to do");
-#endif			
+			crm_info("Nothing left to do...");
+			fsa_dump_actions(actions, "still here");
+#endif
+			break;
+			
 		} else {
 			crm_err("Action %s (0x%llx) not supported ",
 			       fsa_action2string(actions), actions);
 			next_input = I_ERROR;
 		}
 
-		if(is_message()) {
-			actions |= A_MSG_PROCESS;
-		}
 	}
 	
 #ifdef FSA_TRACE
@@ -510,6 +506,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 
 	/* cleanup inputs? */
 	fsa_actions = actions;
+	delete_fsa_input(fsa_data);
 	
 	return fsa_state;
 }
@@ -539,17 +536,17 @@ do_state_transition(long long actions,
 		return A_NOTHING;
 	}
 	
-	
 	if(current_input != I_DC_HEARTBEAT && cur_state != S_NOT_DC){
 		fprintf(dot_strm,
-			"\t\"%s\" -> \"%s\" [ label =\"%s\" ] // %s",
-			state_from, state_to, input,
+			"\t\"%s\" -> \"%s\" [ label=\"%s\" cause=%s from=%s ] // %s",
+			state_from, state_to, input, fsa_cause2string(cause), msg_data->where,
 			asctime(localtime(&now)));
 		fflush(dot_strm);
 	}
 
-	crm_info("State transition \"%s\" -> \"%s\" [ cause =\"%s\" %s ]",
-		 state_from, state_to, input, asctime(localtime(&now)));
+	crm_info("State transition \"%s\" -> \"%s\" [ input=%s cause=%s from=%s %s ]",
+		 state_from, state_to, input, fsa_cause2string(cause), msg_data->where,
+		 asctime(localtime(&now)));
 
 	switch(next_state) {
 		case S_ELECTION:

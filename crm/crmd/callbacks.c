@@ -96,7 +96,8 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 
 	set_xml_property_copy(root_xml_node, XML_ATTR_HOSTFROM, from);
 	set_xml_property_copy(root_xml_node, "F_SEQ", seq);
-	s_crmd_fsa(C_HA_MESSAGE, I_ROUTER, root_xml_node);
+	register_fsa_input(C_HA_MESSAGE, I_ROUTER, root_xml_node);
+	s_crmd_fsa(C_HA_MESSAGE);
 
 	free_xml(root_xml_node);
 
@@ -166,11 +167,8 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		root_xml_node = find_xml_in_ipcmessage(msg, FALSE);
 	
 		if (root_xml_node != NULL) {
-			if (crmd_authorize_message(
-				    root_xml_node, msg, curr_client)) {
-				s_crmd_fsa(
-					C_IPC_MESSAGE,I_ROUTER,root_xml_node);
-			}
+			crmd_authorize_message(
+				root_xml_node, msg, curr_client);
 
 		} else {
 			crm_info("IPC Message was not valid... discarding.");
@@ -247,7 +245,9 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 void
 lrm_op_callback (lrm_op_t* op)
 {
-	s_crmd_fsa(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
+	/* todo: free op->rsc */
+	register_fsa_input(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
+	s_crmd_fsa(C_LRM_OP_CALLBACK);
 }
 
 void
@@ -298,8 +298,8 @@ crmd_client_status_callback(const char * node, const char * client,
 		free_xml(fragment);
 		free_xml(update);
 
-		s_crmd_fsa(C_CRMD_STATUS_CALLBACK, I_CIB_OP, request);
-		
+		register_fsa_input(C_CRMD_STATUS_CALLBACK, I_CIB_OP, request);
+		s_crmd_fsa(C_CRMD_STATUS_CALLBACK);
 	}
 }
 
@@ -384,8 +384,6 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 				" considering heartbeat dead",
 				MAX_EMPTY_CALLBACKS);
 
-			/* s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL); */
-
 			return FALSE;
 		}
 	}
@@ -400,7 +398,8 @@ crmd_ha_input_destroy(gpointer user_data)
 	crm_crit("Heartbeat has left us");
 	/* this is always an error */
 	/* feed this back into the FSA */
-	s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL);
+	register_fsa_input(C_HA_DISCONNECT, I_ERROR, NULL);
+	s_crmd_fsa(C_HA_DISCONNECT);
 }
 
 
@@ -437,4 +436,51 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 	}
     
 	return TRUE;
+}
+
+
+gboolean ccm_dispatch(int fd, gpointer user_data)
+{
+	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
+	oc_ev_handle_event(ccm_token);
+	return TRUE;
+}
+
+
+void 
+crmd_ccm_input_callback(
+	oc_ed_t event, void *cookie, size_t size, const void *data)
+{
+	struct crmd_ccm_data_s *event_data = NULL;
+	
+	if(data != NULL) {
+		set_bit_inplace(fsa_input_register, R_CCM_DATA);
+
+		crm_malloc(event_data, sizeof(struct crmd_ccm_data_s));
+
+		if(event_data != NULL) {
+			event_data->event = &event;
+			event_data->oc = copy_ccm_oc_data(
+				(const oc_ev_membership_t *)data);
+
+			register_fsa_input(
+				C_CCM_CALLBACK, I_CCM_EVENT,
+				(void*)event_data);
+
+			s_crmd_fsa(C_CCM_CALLBACK);
+			
+			event_data->event = NULL;
+			event_data->oc = NULL;
+
+			crm_free(event_data);
+		}
+
+	} else {
+		crm_info("CCM Callback with NULL data... "
+		       "I dont /think/ this is bad");
+	}
+	
+	oc_ev_callback_done(cookie);
+	
+	return;
 }

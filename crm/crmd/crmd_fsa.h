@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.29 2004/10/05 20:59:09 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.30 2004/10/08 18:10:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,9 +27,9 @@
 #include <lrm/lrm_api.h>
 #include <crm/crm.h>
 
-struct ccm_data 
+struct crmd_ccm_data_s 
 {
-		const oc_ev_membership_t *oc;
+		oc_ev_membership_t *oc;
 		oc_ed_t *event;
 };
 
@@ -74,17 +74,20 @@ struct fsa_timer_s
 typedef struct fsa_data_s fsa_data_t;
 struct fsa_data_s 
 {
+		int id;
 		enum crmd_fsa_input fsa_input;
 		enum crmd_fsa_cause fsa_cause;
-		void *data;
+		long long	    actions;
+		const char	   *where;
+		void		   *data;
 };
 
 
 
-extern enum crmd_fsa_state s_crmd_fsa(
-	enum crmd_fsa_cause cause, enum crmd_fsa_input initial_input, void *data);
+extern enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause);
 
 /* Global FSA stuff */
+extern volatile gboolean do_fsa_stall;
 extern volatile enum crmd_fsa_state fsa_state;
 extern oc_node_list_t *fsa_membership_copy;
 extern ll_cluster_t   *fsa_cluster_conn;

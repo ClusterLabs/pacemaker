@@ -19,6 +19,10 @@
 #include <hb_api.h>
 #include <clplumbing/ipc.h>
 
+extern void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
+extern gboolean ccm_dispatch(int fd, gpointer user_data);
+extern void crmd_ccm_input_callback(
+	oc_ed_t event, void *cookie, size_t size, const void *data);
 
 extern void crmd_ha_input_callback(const struct ha_msg* msg,
 				   void* private_data);

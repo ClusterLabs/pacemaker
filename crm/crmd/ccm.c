@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.36 2004/10/05 20:50:56 andrew Exp $ */
+/* $Id: ccm.c,v 1.37 2004/10/08 18:10:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,7 @@
 #include <crmd_messages.h>
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
+#include <crmd_callbacks.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -45,9 +46,6 @@ void crmd_ccm_input_callback(oc_ed_t event,
 			     void *cookie,
 			     size_t size,
 			     const void *data);
-
-void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
-gboolean ccm_dispatch(int fd, gpointer user_data);
 
 gboolean ghash_node_clfree(gpointer key, gpointer value, gpointer user_data);
 void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
@@ -95,7 +93,9 @@ do_ccm_control(long long action,
 				if(wait_timer->source_id < 0) {
 					startTimer(wait_timer);
 				}
-				return I_WAIT_FOR_EVENT;
+				
+				crmd_fsa_stall();
+				return I_NULL;
 
 			} else {
 				crm_err("CCM Activation failed %d (max) times",
@@ -142,8 +142,8 @@ do_ccm_event(long long action,
 		return I_NULL;
 	}
 
-	event = ((struct ccm_data *)msg_data->data)->event;
-	oc = ((struct ccm_data *)msg_data->data)->oc;
+	event = ((struct crmd_ccm_data_s *)msg_data->data)->event;
+	oc = ((struct crmd_ccm_data_s *)msg_data->data)->oc;
 	
 	crm_info("event=%s", 
 	       *event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
@@ -238,8 +238,8 @@ do_ccm_update_cache(long long action,
 		return I_NULL;
 	}
 
-	event = ((struct ccm_data *)msg_data->data)->event;
-	oc = ((struct ccm_data *)msg_data->data)->oc;
+	event = ((struct crmd_ccm_data_s *)msg_data->data)->event;
+	oc = ((struct crmd_ccm_data_s *)msg_data->data)->oc;
 
 	crm_info("Updating CCM cache after a \"%s\" event.", 
 	       *event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
@@ -248,12 +248,24 @@ do_ccm_update_cache(long long action,
 	       *event==OC_EV_MS_EVICTED?"EVICTED":
 	       "NO QUORUM MEMBERSHIP");
 
+	crm_debug("instace=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
+		  "new_idx=%d, old_idx=%d",
+		  oc->m_instance,
+		  oc->m_n_member,
+		  oc->m_n_in,
+		  oc->m_n_out,
+		  oc->m_memb_idx,
+		  oc->m_in_idx,
+		  oc->m_out_idx);
+
 	crm_malloc(membership_copy, sizeof(oc_node_list_t));
 
 	if(membership_copy == NULL) {
 		crm_crit("Couldnt create membership copy - out of memory");
 		return I_ERROR;
 	}
+
+	crm_debug("Copying members");
 	
 	/*--*-- All Member Nodes --*--*/
 	offset = oc->m_memb_idx;
@@ -266,6 +278,7 @@ do_ccm_update_cache(long long action,
 		
 		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
 			oc_node_t *member = NULL;
+			crm_debug("Copying member %d", lpc);
 			crm_malloc(member, sizeof(oc_node_t));
 			
 			if(member == NULL) {
@@ -278,16 +291,24 @@ do_ccm_update_cache(long long action,
 			member->node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
 			
-			member->node_uname =
-				crm_strdup(oc->m_array[offset+lpc].node_uname);
-
-			g_hash_table_insert(members, member->node_uname, member);	
+			member->node_uname = NULL;
+			if(oc->m_array[offset+lpc].node_uname != NULL) {
+				member->node_uname =
+					crm_strdup(oc->m_array[offset+lpc].node_uname);
+			} else {
+				crm_err("Node %d had a NULL uname",
+					member->node_id);
+			}
+			g_hash_table_insert(
+				members, member->node_uname, member);	
 		}
 		
 	} else {
 		membership_copy->members = NULL;
 	}
 	
+	crm_debug("Copying new members");
+
 	/*--*-- New Member Nodes --*--*/
 	offset = oc->m_in_idx;
 	membership_copy->new_members_size = oc->m_n_in;
@@ -305,14 +326,20 @@ do_ccm_update_cache(long long action,
 				continue;
 			}
 			
-			member->node_id =
-				oc->m_array[offset+lpc].node_id;
-			
+			member->node_uname = NULL;
+			member->node_id = oc->m_array[offset+lpc].node_id;
 			member->node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
 
-			member->node_uname =
-				crm_strdup(oc->m_array[offset+lpc].node_uname);
+			if(oc->m_array[offset+lpc].node_uname != NULL) {
+				member->node_uname =
+					crm_strdup(oc->m_array[offset+lpc].node_uname);
+			} else {
+				crm_err("Node %d had a NULL uname",
+					member->node_id);
+			}
+			g_hash_table_insert(
+				members, member->node_uname, member);	
 
 			g_hash_table_insert(members, member->node_uname, member);
 		}
@@ -321,6 +348,8 @@ do_ccm_update_cache(long long action,
 		membership_copy->new_members = NULL;
 	}
 	
+	crm_debug("Copying dead members");
+
 	/*--*-- Recently Dead Member Nodes --*--*/
 	offset = oc->m_out_idx;
 	membership_copy->dead_members_size = oc->m_n_out;
@@ -344,8 +373,16 @@ do_ccm_update_cache(long long action,
 			member->node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
 			
-			member->node_uname =
-				crm_strdup(oc->m_array[offset+lpc].node_uname);
+			member->node_uname = NULL;
+			if(oc->m_array[offset+lpc].node_uname != NULL) {
+				member->node_uname =
+					crm_strdup(oc->m_array[offset+lpc].node_uname);
+			} else {
+				crm_err("Node %d had a NULL uname",
+					member->node_id);
+			}
+			g_hash_table_insert(
+				members, member->node_uname, member);	
 
 			g_hash_table_insert(members, member->node_uname, member);
 		}
@@ -354,14 +391,10 @@ do_ccm_update_cache(long long action,
 		membership_copy->dead_members = NULL;
 	}
 
+	crm_debug("Replacing old copies");
 	tmp = fsa_membership_copy;
 	fsa_membership_copy = membership_copy;
 
-	if(AM_I_DC) {
-		/* should be sufficient for only the DC to do this */
-		free_xml(do_update_cib_nodes(NULL, FALSE));
-	}
-	
 	/* Free the old copy */
 	if(tmp != NULL) {
 		if(tmp->members != NULL)
@@ -375,6 +408,14 @@ do_ccm_update_cache(long long action,
 				tmp->dead_members, ghash_node_clfree, NULL);
 		crm_free(tmp);
 	}
+	crm_debug("Free'd old copies");
+
+	if(AM_I_DC) {
+		/* should be sufficient for only the DC to do this */
+		crm_debug("Updating the CIB");
+		free_xml(do_update_cib_nodes(NULL, FALSE));
+	}
+	
 	
 	return next_input;
 }
@@ -457,47 +498,6 @@ int
 register_with_ccm(ll_cluster_t *hb_cluster)
 {
 	return 0;
-}
-
-gboolean ccm_dispatch(int fd, gpointer user_data)
-{
-	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
-	oc_ev_handle_event(ccm_token);
-	return TRUE;
-}
-
-
-void 
-crmd_ccm_input_callback(
-	oc_ed_t event, void *cookie, size_t size, const void *data)
-{
-	struct ccm_data *event_data = NULL;
-	
-	if(data != NULL) {
-		set_bit_inplace(fsa_input_register, R_CCM_DATA);
-
-		crm_malloc(event_data, sizeof(struct ccm_data));
-
-		if(event_data != NULL) {
-			event_data->event = &event;
-			event_data->oc = (const oc_ev_membership_t *)data;
-			
-			s_crmd_fsa(C_CCM_CALLBACK, I_CCM_EVENT, (void*)event_data);
-			
-			event_data->event = NULL;
-			event_data->oc = NULL;
-
-			crm_free(event_data);
-		}
-
-	} else {
-		crm_info("CCM Callback with NULL data... "
-		       "I dont /think/ this is bad");
-	}
-	
-	oc_ev_callback_done(cookie);
-	
-	return;
 }
 
 void 

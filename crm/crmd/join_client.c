@@ -184,5 +184,6 @@ do_cl_join_result(long long action,
 		return I_FAIL;
 	}
 	
-	return I_SUCCESS;
+	register_fsa_input(cause, I_SUCCESS, msg_data->data);
+	return I_NULL;
 }

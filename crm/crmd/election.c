@@ -76,6 +76,10 @@ do_election_vote(long long action,
 	
 	send_request(msg_options, NULL, CRM_OP_VOTE,
 		     NULL, CRM_SYSTEM_CRMD, NULL);
+
+	if(election_timeout->source_id < 0) {
+		startTimer(election_timeout);		
+	}
 	
 	return election_result;
 }
@@ -93,7 +97,8 @@ do_dc_heartbeat(gpointer data)
 		/* this is bad */
 		stopTimer(timer); /* dont make it go off again */
 
-		s_crmd_fsa(C_HEARTBEAT_FAILED, I_SHUTDOWN, NULL);
+		register_fsa_input(C_HEARTBEAT_FAILED, I_SHUTDOWN, NULL);
+		s_crmd_fsa(C_HEARTBEAT_FAILED);
 	}
 	
 	return TRUE;

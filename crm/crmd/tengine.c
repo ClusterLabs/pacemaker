@@ -149,7 +149,8 @@ do_te_copyto(long long action,
 			free_xml(te_lastcc);
 			te_lastcc = message_copy;
 		}
-		return I_WAIT_FOR_EVENT;
+		crmd_fsa_stall();
+		return I_NULL;		
 
 	}
 
@@ -187,7 +188,9 @@ do_te_invoke(long long action,
 			free_xml(te_last_input);
 			te_last_input = copy_xml_node_recursive(msg);
 		}
-		return I_WAIT_FOR_EVENT;
+
+		crmd_fsa_stall();
+		return I_NULL;		
 
 	}
 
