@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.5 2005/01/26 13:30:55 andrew Exp $ */
+/* $Id: io.c,v 1.6 2005/02/01 22:45:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -273,11 +273,11 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 		int res = moveFile(filename, filename_bak, FALSE, NULL);
 	
 		if (res  < 0) {
-			crm_info("Could not make backup of the current Cib "
+			crm_warn("Could not make backup of the current Cib "
 				 "(code: %d)... aborting update.", res);
 			error_code = -1;
 		} else {
-			crm_info("Writing CIB out to %s", CIB_FILENAME);
+			crm_debug("Writing CIB out to %s", CIB_FILENAME);
 			res = write_xml_file(new_cib, CIB_FILENAME);
 #ifdef DEVEL_CIB_COPY
 			write_xml_file(new_cib, DEVEL_DIR"/cib.xml");
@@ -314,7 +314,7 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 	}
 	else
 	{
-		crm_info("Ignoring invalid or NULL Cib");
+		crm_warn("Ignoring invalid or NULL Cib");
 		error_code = -5;
 	}
 

@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.16 2005/01/26 13:30:55 andrew Exp $ */
+/* $Id: messages.c,v 1.17 2005/02/01 22:45:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -409,12 +409,6 @@ cib_process_modify(
 
 	crm_data_t *tmpCib  = NULL;
 
-	char *xml_text  = NULL;
-
-/* 	if(msg_cibup_strm == NULL) { */
-/* 		msg_cibup_strm = fopen(DEVEL_DIR"/cibup.log", "w"); */
-/* 	} */
-	
 	crm_debug("Processing \"%s\" event", op);
 
 	failed  = create_xml_node(NULL, XML_TAG_FAILED);
@@ -504,10 +498,7 @@ cib_process_modify(
 		if(result == cib_ok) {
 			result = cib_unknown;
 		}
-		crm_xml_info(failed, "CIB Update failures");
-		
-		xml_text = dump_xml_formatted(failed);
-		crm_free(xml_text);
+		crm_xml_err(failed, "CIB Update failures");
 	}
 
 	if (verbose || xml_has_children(failed) || result != cib_ok) {

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.9 2005/01/26 13:30:55 andrew Exp $ */
+/* $Id: main.c,v 1.10 2005/02/01 22:45:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,10 +49,6 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-/* #define REALTIME_SUPPORT 0 */
-#define PID_FILE     WORKING_DIR"/"CRM_SYSTEM_CIB".pid"
-#define DAEMON_LOG   DEVEL_DIR"/"CRM_SYSTEM_CIB".log"
-#define DAEMON_DEBUG DEVEL_DIR"/"CRM_SYSTEM_CIB".debug"
 
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
@@ -71,23 +67,14 @@ extern gboolean cib_msg_timeout(gpointer data);
 
 ll_cluster_t *hb_conn = NULL;
 
-#define OPTARGS	"skrhV"
+#define OPTARGS	"hV"
 
 int
 main(int argc, char ** argv)
 {
-
-	int req_comms_restart = FALSE;
-	int req_restart = FALSE;
-	int req_status = FALSE;
-	int req_stop = FALSE;
 	int argerr = 0;
 	int flag;
     
-#ifdef DEVEL_DIR
-	mkdir(DEVEL_DIR, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-#endif
-	
 	/* Redirect messages from glib functions to our handler */
 	g_log_set_handler(NULL,
 			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
@@ -98,10 +85,9 @@ main(int argc, char ** argv)
 	/* and for good measure... */
 	g_log_set_always_fatal((GLogLevelFlags)0);    
 	
-	cl_log_set_entity   (crm_system_name);
-	cl_log_set_facility (LOG_LOCAL7);
-	cl_log_set_logfile  (DAEMON_LOG);
-	cl_log_set_debugfile(DAEMON_DEBUG);
+	cl_log_set_facility(LOG_LOCAL7);
+	cl_log_set_entity(crm_system_name);
+	cl_log_send_to_logging_daemon(TRUE);
 
 	CL_SIGNAL(DEBUG_INC, alter_debug);
 	CL_SIGNAL(DEBUG_DEC, alter_debug);
@@ -109,21 +95,12 @@ main(int argc, char ** argv)
 
 	client_list = g_hash_table_new(&g_str_hash, &g_str_equal);
 	peer_hash = g_hash_table_new(&g_str_hash, &g_str_equal);
-	set_crm_log_level(LOG_TRACE);
+	set_crm_log_level(LOG_VERBOSE);
 	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
 				alter_debug(DEBUG_INC);
-				break;
-			case 's':		/* Status */
-				req_status = TRUE;
-				break;
-			case 'r':		/* Restart */
-				req_restart = TRUE;
-				break;
-			case 'c':		/* Restart */
-				req_comms_restart = TRUE;
 				break;
 			case 'h':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
@@ -148,19 +125,6 @@ main(int argc, char ** argv)
 	}
     
 	/* read local config file */
-    
-	if (req_status){
-		return init_status(PID_FILE, crm_system_name);
-	}
-  
-	if (req_stop){
-		return init_stop(PID_FILE);
-	}
-  
-	if (req_restart) { 
-		init_stop(PID_FILE);
-	}
-
 	return init_start();
 }
 
@@ -200,7 +164,7 @@ init_start(void)
 				hb_conn->llc_ops->errmsg(hb_conn));
 			was_error = TRUE;
 		} else {
-			crm_info("Client Status callback set");
+			crm_debug("Client Status callback set");
 		}
 	}
 
@@ -213,7 +177,7 @@ init_start(void)
 		
 		while(did_fail && was_error == FALSE) {
 			did_fail = FALSE;
-			crm_info("Registering with CCM");
+			crm_debug("Registering with CCM");
 			ret = oc_ev_register(&cib_ev_token);
 			if (ret != 0) {
 				crm_warn("CCM registration failed");
@@ -221,7 +185,7 @@ init_start(void)
 			}
 			
 			if(did_fail == FALSE) {
-				crm_info("Setting up CCM callbacks");
+				crm_debug("Setting up CCM callbacks");
 				ret = oc_ev_set_callback(
 					cib_ev_token, OC_EV_MEMB_CLASS,
 					cib_ccm_msg_callback, NULL);
@@ -233,7 +197,7 @@ init_start(void)
 			if(did_fail == FALSE) {
 				oc_ev_special(cib_ev_token, OC_EV_MEMB_CLASS, 0);
 				
-				crm_info("Activating CCM token");
+				crm_debug("Activating CCM token");
 				ret = oc_ev_activate(cib_ev_token, &cib_ev_fd);
 				if (ret != 0){
 					crm_warn("CCM Activation failed");
@@ -260,7 +224,7 @@ init_start(void)
 			}
 		}
 
-		crm_info("CCM Activation passed... all set to go!");
+		crm_debug("CCM Activation passed... all set to go!");
 		G_main_add_fd(G_PRIORITY_LOW, cib_ev_fd, FALSE, cib_ccm_dispatch,
 			      cib_ev_token, default_ipc_connection_destroy);
 	}
