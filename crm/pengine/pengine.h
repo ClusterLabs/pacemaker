@@ -10,6 +10,7 @@ enum con_type {
 	none,
 	rsc_to_rsc,
 	rsc_to_node,
+	rsc_to_attr,
 	base_weight
 };
 
@@ -30,7 +31,8 @@ enum con_modifier {
 struct node_s { 
 		char	*id; 
 		float	weight; 
-		gboolean fixed; 
+		gboolean fixed;
+		GHashTable *attrs;
 }; 
  
 struct color_shared_s {
@@ -59,7 +61,7 @@ struct rsc_constraint_s {
 
 		// rsc_to_node
 		float		weight;
-		node_t	*node_rh; 
+		GSListPtr node_list_rh; 
 		enum con_modifier modifier;
 }; 
 
@@ -79,6 +81,7 @@ extern gboolean stage2(GSListPtr sorted_rsc,
 		 GSListPtr sorted_nodes,         
 		 GSListPtr operations);
 extern gboolean stage3(GSListPtr colors);
+extern gboolean stage4(GSListPtr colors);
 
 extern GSListPtr rsc_list; 
 extern GSListPtr node_list;
@@ -91,11 +94,24 @@ extern color_t *current_color;
 				         x *w = (x*)g_slist_nth_data(y, z); \
 					 a;				    \
 				  }
-extern void print_node(node_t *node);
-extern void print_resource(resource_t *rsc, gboolean details);
-extern void print_cons(rsc_constraint_t *cons, gboolean details);
-extern void print_color(color_t *color, gboolean details);
-extern void print_color_details(struct color_shared_s *color, gboolean details);
+extern void print_node(const char *pre_text,
+		       node_t *node);
+
+extern void print_resource(const char *pre_text,
+			   resource_t *rsc,
+			   gboolean details);
+
+extern void print_cons(const char *pre_text,
+		       rsc_constraint_t *cons,
+		       gboolean details);
+
+extern void print_color(const char *pre_text,
+			color_t *color,
+			gboolean details);
+
+extern void print_color_details(const char *pre_text,
+				struct color_shared_s *color,
+				gboolean details);
 
 extern const char *contype2text(enum con_type type);
 extern const char *strength2text(enum con_strength strength);
