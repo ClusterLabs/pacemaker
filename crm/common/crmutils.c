@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.6 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: crmutils.c,v 1.7 2004/02/29 19:40:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -87,9 +87,6 @@ register_pid(const char *pid_file,
 	}
 
 	umask(022);
-/*     if (!crm_debug()) { */
-/* 	cl_log_enable_stderr(FALSE); */
-/*     } */
 
 	for (j=0; j < 3; ++j) {
 		close(j);
@@ -127,6 +124,8 @@ get_running_pid(const char *pid_file, gboolean* anypidfile)
 int
 init_stop(const char *pid_file)
 {
+	FNIN();
+	
 	if (pid_file == NULL) {
 		cl_log(LOG_ERR, "No pid file specified to kill process");
 		return LSB_EXIT_GENERIC;
@@ -141,12 +140,17 @@ init_stop(const char *pid_file)
 			      ?	LSB_EXIT_EPERM : LSB_EXIT_GENERIC);
 			fprintf(stderr, "Cannot kill pid %ld\n", pid);
 		}else{
+			cl_log(LOG_INFO,
+			       "Signal sent to pid=%ld,"
+			       " waiting for process to exit",
+			       pid);
+			
 			while (CL_PID_EXISTS(pid)) {
 				sleep(1);
 			}
 		}
 	}
-	return rc;
+	FNRET(rc);
 }
 int
 init_status(const char *pid_file, const char *client_name)

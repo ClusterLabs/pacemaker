@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.10 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.11 2004/02/29 19:40:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -93,11 +93,11 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	FNIN();
     
 	if (root == NULL) {
-		cl_log(LOG_INFO, "Attempt to send a NULL Message via HA failed.");
+		cl_log(LOG_ERR, "Attempt to send NULL Message via HA failed.");
 		all_is_good = FALSE;
-		CRM_DEBUG2("Supplied XML data was %s.",
-			   all_is_good?"present":"empty");
 	}
+	CRM_DEBUG2("Supplied XML data was %s.",
+		   all_is_good?"present":"empty");
 
 	struct ha_msg *msg = NULL;
 	if (all_is_good) {
@@ -109,7 +109,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		if (xml_text == NULL)
 		{
 			cl_log(LOG_INFO,
-			       "Attempt to send an invalid XML Message via HA failed.");
+			       "Failed sending an invalid XML Message via HA");
 			all_is_good = FALSE;
 		}
 		else
@@ -125,11 +125,13 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		if (sys_to == NULL || strlen(sys_to) == 0)
 		{
 			cl_log(LOG_INFO,
-			       "You did not specify a destination for this message.");
+			       "You did not specify a destination sub-system"
+			       " for this message.");
 			all_is_good = FALSE;
 		}
-		CRM_DEBUG2("Destination of HA message is %s.",
-			   all_is_good?"invalid":sys_to);	
+		CRM_DEBUG3("Destination of HA message is %s@%s",
+			   all_is_good?sys_to:"invalid",
+			   host_to==NULL?"<all>":host_to);	
 	}
 
 	if (all_is_good) {
