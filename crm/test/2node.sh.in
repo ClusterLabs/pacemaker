@@ -218,7 +218,7 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2000
     -s "${test_node_1} crmd(.*) State transition (.*) \-> \"S_NOT_DC\""
 cts_assert "Transition of the DC from ${test_node_1} to ${test_node_2} failed."
 
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2000 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 4000 \
     -s "crmd(.*) Performing op start(.*) on rsc1" \
     -s "crmd(.*) Resource state: rsc1(.*) after start"
 cts_assert "rsc1 was not transferred to ${test_node_2} on shutdown."

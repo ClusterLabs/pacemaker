@@ -74,8 +74,8 @@ while test "$done" = "0"; do
 
 	--local | -L)	local_version=1; shift;;
 
-	--logfile | -l)	logfile=${2?no logfile??}     shift 2;;
-	--dumpdir | -d)	dump_dir=${2?no dumpdir??}     shift 2;;
+	--logfile | -l)	logfile=${2?no logfile??}  || return 1;  shift 2;;
+	--dumpdir | -d)	dump_dir=${2?no dumpdir??} || return 1; shift 2;;
 
 	--repeat  | -r)	repeats=${2?no max repetitions??} || return 1; shift 2;;
 
@@ -113,7 +113,7 @@ function remote_cmd() {
     shift
     
     if [ $local_version = "1" ]; then
-	su - ${user} -c $*
+	su - ${user} -c "$*"
     else
 	`which ssh` ${user}@${host} bash -l -c \"$*\"
     fi
@@ -363,7 +363,7 @@ function do_cts_assert() {
     else
 
 	for a_host in $node_list; do
-	    do_cmd remote_cmd $ADMIN_USER $a_host "ls -al ${HAVAR_DIR}/cores/*/core*"
+	    `which ssh` ${ADMIN_USER}@${a_host} "ls -al ${HAVAR_DIR}/cores/*/core*" 2>/dev/null 
 	    if [ $? -ne 1 ]; then
 		do_cmd echo "Core file found"
 		err $*
@@ -383,7 +383,7 @@ function err() {
     crm_test_log_end=$(stat -L -c %s $logfile)
     do_cmd echo "ERROR: $*"
     do_cmd echo "test $test_type: FAILED"
-    echo "see $test_dump_dir for details..."
+    echo "see ${test_dump_dir}/test.txt for details..."
     echo "ERROR: $*" > $test_dump_dir/error.txt
     $HALIB_DIR/crmtest/testutils.pl --dump -p $crm_test_log_start -ep $crm_test_log_end -l $logfile > $test_dump_dir/cluster.log
 
@@ -486,7 +486,7 @@ function do_cmd() {
 	if [ $OUTPUT_STDERR -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_CMDS -eq 0 ]; then
 	    echo `date` ": Searching '$cmdline'" >> $test_dump_dir/test.txt;
 	fi
-	$cmdline -v 2>&1 >> $test_dump_dir/test.txt
+	$cmdline -t 1 -v 2>&1 >> $test_dump_dir/test.txt
 
 	if [ $rc -lt 0 ]; then
 	    echo `date` ": Searching '$cmdline'"

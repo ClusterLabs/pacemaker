@@ -25,7 +25,7 @@ $log_file="/var/log/messages";
 $start_pos=-1;
 $end_pos=-1;
 $verbose=0;
-
+$timeout=60;
 @search_for = ();
 @errors     = ();
 
@@ -36,6 +36,10 @@ while ( $_ = @ARGV[0], /^-/ ) {
 	
     } elsif ( /^--dump/ ) {
 	$do_dump = 1;
+
+    } elsif ( /^-t/ ) {
+	$timeout = $ARGV[0];
+	shift;
 
     } elsif ( /^-pf/ ) {
 	$start_pos = `cat $ARGV[0]`;
@@ -96,6 +100,7 @@ while ( $_ = @ARGV[0], /^-/ ) {
 }
 
 push @errors, "__crmtest_manual_abort__";
+#
 
 if( $do_search eq 1 ) {
     $rc=string_search();
@@ -165,6 +170,7 @@ sub string_search() {
     my $num_lines  = 0;
 
     open(LOG, $log_file);
+    $max_lines = -1; # turn off line "timeouts" for now
 
     if( $start_pos > 0 ) {
 	if( $verbose > 0) {
@@ -177,9 +183,16 @@ sub string_search() {
 	}
 	seek LOG, 0, 2;
     }
+    $start_time = time;
+    $end_time = $start_time + ${timeout};
 
     for(;;)
     {
+	if($end_time < time) {
+	    print "Ran out of time... ${timeout} seconds\n";
+	    return -3000;
+	}
+	    
 #	print STDOUT "Checking $log_file for more data...\n";
 	for($curpos = tell LOG; $_ = <LOG>; $curpos = tell LOG) 
 	{
@@ -188,7 +201,6 @@ sub string_search() {
 	    $num_lines = $num_lines + 1;
 	    
 #	    print STDOUT "Checking line[".$num_lines."]: ".$line;
-	    
 	    if($max_lines > 0 && $num_lines > $max_lines) {
 		foreach $key (sort keys %results) {
 		    print STDOUT "Found key \'".$key."\' ".$results{$key}." times.\n" if $results{$key} ne "";
