@@ -308,7 +308,10 @@ if __name__ == '__main__':
     SuppressMonitoring = None
     Version = 1
     CIBfilename = None
+    CIBResource = 0
     ClobberCIB = 0
+    LimitNodes = 0
+
     #
     # The values of the rest of the parameters are now properly derived from
     # the configuration files.
@@ -334,6 +337,11 @@ if __name__ == '__main__':
        elif args[i] == "-D" or args[i] == "--directory":
            skipthis=1
            HAdir = args[i+1]
+       elif args[i] == "-l" or args[i] == "--limit-nodes":
+           skipthis=1
+           LimitNodes = int(args[i+1])
+       elif args[i] == "-r":
+	   CIBressource = 1
        elif args[i] == "-L" or args[i] == "--logfile":
            skipthis=1
            LogFile = args[i+1]
@@ -376,11 +384,20 @@ if __name__ == '__main__':
     # for our Copious Spare Time in the future...
     #
     config = CM_hb.HBConfig(HAdir)
+    node_list = config.Parameters["node"]
 
-    Environment = CtsLab(config.Parameters["node"])
+    if LimitNodes > 0:
+	if len(node_list) > LimitNodes:
+	    print("Limiting the number of nodes configured=%d (max=%d)"
+		  %(len(node_list), LimitNodes))
+	    while len(node_list) > LimitNodes:
+		node_list.pop(len(node_list)-1)
+
+    Environment = CtsLab(node_list)
     Environment["HAdir"] = HAdir
     Environment["ClobberCIB"] = ClobberCIB
     Environment["CIBfilename"] = CIBfilename
+    Environment["CIBResource"] = CIBResource
     Environment["LogFileName"] = LogFile
     Environment["DoStonith"] = DoStonith
     Environment["DoStandby"] = DoStandby
