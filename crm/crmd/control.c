@@ -474,6 +474,7 @@ do_read_config(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
+	/* this one probably is worthwhile blocking on */
 	crm_data_t *cib_copy = get_cib_copy(fsa_cib_conn);
 	crm_data_t *config   = get_object_root(XML_CIB_TAG_CRMCONFIG, cib_copy);
 

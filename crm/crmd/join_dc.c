@@ -33,11 +33,17 @@ int num_join_invites = 0;
 GHashTable *join_offers         = NULL;
 GHashTable *join_requests       = NULL;
 GHashTable *confirmed_nodes     = NULL;
+char *max_epoche = NULL;
 char *max_generation_from = NULL;
+crm_data_t *max_generation_xml = NULL;
 
 void initialize_join(gboolean before);
 void finalize_join_for(gpointer key, gpointer value, gpointer user_data);
 void join_send_offer(gpointer key, gpointer value, gpointer user_data);
+void finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
+			    crm_data_t *output, void *user_data);
+void finialize_query_callback(const HA_Message *msg, int call_id, int rc,
+			      crm_data_t *output, void *user_data);
 
 /*	 A_DC_JOIN_OFFER_ALL	*/
 enum crmd_fsa_input
@@ -48,11 +54,13 @@ do_dc_join_offer_all(long long action,
 		     fsa_data_t *msg_data)
 {
 	/* reset everyones status back to down or in_ccm in the CIB */
+#if 0
 	crm_data_t *cib_copy   = get_cib_copy(fsa_cib_conn);
-	crm_data_t *fragment   = create_cib_fragment(NULL, NULL);
-	crm_data_t *update     = find_xml_node(fragment, XML_TAG_CIB, TRUE);
 	crm_data_t *tmp1       = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
 	crm_data_t *tmp2       = NULL;
+#endif
+	crm_data_t *fragment   = create_cib_fragment(NULL, NULL);
+	crm_data_t *update     = find_xml_node(fragment, XML_TAG_CIB, TRUE);
 
 	initialize_join(TRUE);
 	
@@ -60,6 +68,10 @@ do_dc_join_offer_all(long long action,
 	update = get_object_root(XML_CIB_TAG_STATUS, update);
 	CRM_DEV_ASSERT(update != NULL);
 
+#if 0
+	/* dont do this for now... involves too much blocking and I cant
+	 * think of a sensible way to do it asyncronously
+	 */
 	xml_child_iter(
 		tmp1, node_entry, XML_CIB_TAG_STATE,
 
@@ -79,10 +91,11 @@ do_dc_join_offer_all(long long action,
 		add_node_copy(update, tmp2);
 		free_xml(tmp2);
 		);
+	free_xml(cib_copy);
+#endif
 	
 	/* now process the CCM data */
 	do_update_cib_nodes(fragment, TRUE);
-	free_xml(cib_copy);
 
 /*  	free_xml(fragment);  */
 /* BUG!  This should be able to be freed.
@@ -179,7 +192,6 @@ do_dc_join_req(long long action,
 	       fsa_data_t *msg_data)
 {
 	crm_data_t *generation = NULL;
-	crm_data_t *our_generation = NULL;
 
 	gboolean is_a_member = FALSE;
 	const char *ack_nack = CRMD_JOINSTATE_MEMBER;
@@ -205,20 +217,22 @@ do_dc_join_req(long long action,
 	
 	generation = join_ack->xml;
 
-	our_generation = cib_get_generation(fsa_cib_conn);
-	CRM_ASSERT(our_generation != NULL); /* what to do here? */
-	if(cib_compare_generation(our_generation, generation) <= 0) {
-		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
-		crm_devel("%s has a better generation number than us",
-			  join_from);
-		crm_xml_devel(our_generation, "Our generation");
-		crm_xml_devel(generation, "Their generation");
-		if(max_generation_from != NULL) {
-			crm_free(max_generation_from);
-		}
+	if(max_generation_xml == NULL) {
+		max_generation_xml = copy_xml_node_recursive(generation);
 		max_generation_from = crm_strdup(join_from);
+
+	} else if(cib_compare_generation(max_generation_xml, generation) < 0) {
+		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
+		crm_devel("%s has a better generation number than the current max",
+			  join_from);
+		crm_xml_devel(max_generation_xml, "Max generation");
+		crm_xml_devel(generation, "Their generation");
+		crm_free(max_generation_from);
+		free_xml(max_generation_xml);
+		
+		max_generation_from = crm_strdup(join_from);
+		max_generation_xml = copy_xml_node_recursive(join_ack->xml);
 	}
-	free_xml(our_generation);
 	
 	crm_devel("Welcoming node %s after ACK (ref %s)", join_from, ref);
 	
@@ -275,96 +289,119 @@ do_dc_join_finalize(long long action,
 		    fsa_data_t *msg_data)
 {
 	enum cib_errors rc = cib_ok;
-	
-	if(max_generation_from == NULL) {
-		crm_warn("There is no CIB to get..."
-			 " how did R_HAVE_CIB get unset?");
+
+	if(max_generation_from == NULL
+	   || safe_str_eq(max_generation_from, fsa_our_uname)){
 		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	}
 	
-	if(! is_set(fsa_input_register, R_HAVE_CIB)) {
+	if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
 		/* ask for the agreed best CIB */
-		int lpc = 0;
 		crm_info("Asking %s for its copy of the CIB",
 			 crm_str(max_generation_from));
 
-		CRM_DEV_ASSERT(cib_not_master != fsa_cib_conn->cmds->is_master(fsa_cib_conn));
-		fsa_cib_conn->call_timeout = 5;
-		do {
-			if(max_generation_from != NULL) {
-				/* this may fail if the other side's CCM list
-				 * is slow to update...
-				 * but that is the only reason to retry
-				 */
-				rc = fsa_cib_conn->cmds->sync_from(
-					fsa_cib_conn, max_generation_from,
-					NULL, cib_sync_call);
-			}
-
-		} while(rc == cib_remote_timeout && lpc++ < 2);
+		fsa_cib_conn->call_timeout = 10;
+		rc = fsa_cib_conn->cmds->query_from(
+			fsa_cib_conn, max_generation_from, NULL, NULL, 0);
 		fsa_cib_conn->call_timeout = 0; /* back to the default */
-
-		if(max_generation_from != NULL && rc == cib_ok) {
-			crm_data_t *update = NULL;
-			crm_data_t *cib = createEmptyCib();
-			
-			set_uuid(fsa_cluster_conn, cib,
-				 XML_ATTR_DC_UUID, fsa_our_uname);
-			crm_devel("Update %s in the CIB to our uuid: %s",
-				  XML_ATTR_DC_UUID,
-				  crm_element_value(cib, XML_ATTR_DC_UUID));
-			update = create_cib_fragment(cib, NULL);
-			free_xml(cib);
-
-			update_local_cib(update);
-		}
-		
-		if(rc == cib_remote_timeout) {
-			crm_err("Sync from %s resulted in an error: %s",
-				max_generation_from, cib_error2string(rc));
-			/* restart the whole join process */
-			register_fsa_error(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
-			return I_NULL;
-
-		} else if(rc != cib_ok) {
-			crm_err("Sync from %s resulted in an error: %s",
-				max_generation_from, cib_error2string(rc));
-
-			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-			return I_NULL;
-		}
+		add_cib_op_callback(rc, FALSE, crm_strdup(max_generation_from),
+				    finalize_sync_callback);
+		return I_NULL;
 	}
 
 	crm_devel("Bumping the epoche and syncing to %d clients",
 		  g_hash_table_size(join_requests));
-	fsa_cib_conn->cmds->bump_epoch(
-		fsa_cib_conn, cib_scope_local|cib_sync_call);
-	rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_sync_call);
+	fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_scope_local);
+	rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_none);
+	add_cib_op_callback(rc, FALSE, NULL, finalize_sync_callback);
 
-	CRM_DEV_ASSERT(cib_not_master != rc);
-	if(rc != cib_ok) {
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
+	return I_NULL;
+}
+
+void
+finialize_query_callback(const HA_Message *msg, int call_id, int rc,
+			 crm_data_t *output, void *user_data)
+{
+/* 	static int lpc = 0; */
+	crm_data_t *foreign_cib = NULL;
+	char *remote_host = user_data;
+
+	if(AM_I_DC == FALSE) {
+		crm_debug("this call is no longer relevant");
+		crm_free(remote_host);
+		return;
 	}
 	
+	if(rc == cib_ok) {
+		crm_data_t *update = NULL;
+		crm_data_t *cib = createEmptyCib();
+		
+		set_uuid(fsa_cluster_conn, cib,
+			 XML_ATTR_DC_UUID, fsa_our_uname);
+		crm_devel("Update %s in the CIB to our uuid: %s",
+			  XML_ATTR_DC_UUID,
+			  crm_element_value(cib, XML_ATTR_DC_UUID));
+		update = create_cib_fragment(cib, NULL);
+		free_xml(cib);
+		
+		update_local_cib(update);
+	}
+		
+	if(rc == cib_remote_timeout) {
+		crm_err("Sync from %s resulted in an error: %s."
+			"  Use what we have...",
+			remote_host, cib_error2string(rc));
+#if 0
+		/* restart the whole join process */
+		register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC,
+				       NULL, NULL, __FUNCTION__);
+#else
+		rc = cib_ok;
+#endif
+	} else if(rc < cib_ok) {
+		crm_err("Sync from %s resulted in an error: %s",
+			remote_host, cib_error2string(rc));
+		
+		register_fsa_error_adv(
+			C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+
+	} else {
+		foreign_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
+		CRM_DEV_ASSERT(foreign_cib != NULL);
+		if(!crm_assert_failed) {
+			rc = fsa_cib_conn->cmds->replace(
+				fsa_cib_conn, NULL, foreign_cib, NULL, cib_none);
+		}
+	}
+
+	if(rc >= 0) {
+		crm_devel("Bumping the epoche and syncing to %d clients",
+			  g_hash_table_size(join_requests));
+		fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_scope_local);
+		rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_none);
+		add_cib_op_callback(rc, FALSE, NULL, finalize_sync_callback);
+	}
+	
+	crm_free(remote_host);
+	return;
+}
+
+
+void
+finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
+		       crm_data_t *output, void *user_data) 
+{
+	CRM_DEV_ASSERT(cib_not_master != rc);
+	if(rc != cib_ok) {
+		register_fsa_error_adv(C_FSA_INTERNAL, I_FAIL,
+				       NULL, NULL, __FUNCTION__);
+		return;
+	}
 	
 	num_join_invites = 0;
 	crm_debug("Notifying %d clients of join results",
 		  g_hash_table_size(join_requests));
 	g_hash_table_foreach(join_requests, finalize_join_for, NULL);
-	
-	if(num_join_invites <= (ssize_t)g_hash_table_size(confirmed_nodes)) {
-		crm_info("Not expecting any join confirmations");
-		
-		register_fsa_input(C_FSA_INTERNAL, I_FINALIZED, NULL);
-		return I_NULL;
-	}
-
-	/* dont waste time by invoking the PE yet; */
-	crm_debug("Still waiting on %d outstanding join confirmations",
-		  num_join_invites - g_hash_table_size(confirmed_nodes));
-
-	return I_NULL;
 }
 
 /*	A_DC_JOIN_PROCESS_ACK	*/
@@ -502,6 +539,10 @@ initialize_join(gboolean before)
 			crm_free(max_generation_from);
 			max_generation_from = NULL;
 		}
+		if(max_generation_xml != NULL) {
+			free_xml(max_generation_xml);
+			max_generation_xml = NULL;
+		}
 		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 		clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 	}
@@ -509,7 +550,6 @@ initialize_join(gboolean before)
 	join_offers     = g_hash_table_new(g_str_hash, g_str_equal);
 	join_requests   = g_hash_table_new(g_str_hash, g_str_equal);
 	confirmed_nodes = g_hash_table_new(g_str_hash, g_str_equal);
-
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.38 2005/04/04 08:17:36 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.39 2005/04/06 14:33:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -136,6 +136,10 @@ extern struct crm_subsystem_s *pe_subsystem;
 /* these two should be moved elsewhere... */
 extern crm_data_t *do_update_cib_nodes(crm_data_t *updates, gboolean overwrite);
 extern gboolean do_dc_heartbeat(gpointer data);
+
+gboolean add_cib_op_callback(
+	int call_id, gboolean only_success, void *user_data,
+	void (*callback)(const HA_Message*, int, int, crm_data_t*,void*));
 
 #define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.20 2005/03/04 15:59:09 alan Exp $ */
+/* $Id: utils.c,v 1.21 2005/04/06 14:33:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -197,6 +197,13 @@ print_action(const char *prefix, action_t *action, int log_level)
 	}
 }
 
+#if 0
+void
+send_cib_updates(void)
+{
+}
+#endif
+
 gboolean
 do_update_cib(crm_data_t *xml_action, int status)
 {
@@ -214,8 +221,12 @@ do_update_cib(crm_data_t *xml_action, int status)
 	const char *target_uuid =
 		crm_element_value(xml_action, XML_LRM_ATTR_TARGET_UUID);
 
-	int call_options = cib_scope_local|cib_discard_reply|cib_sync_call;
-	call_options |= cib_inhibit_notify;
+	int call_options = cib_scope_local|cib_discard_reply|cib_inhibit_notify;
+
+	if(safe_str_neq(CRMD_RSCSTATE_START, task)) {
+		/* no update required for non-start ops */
+		return TRUE;
+	}
 	
 	if(status == LRM_OP_TIMEOUT) {
 		if(crm_element_value(xml_action, XML_LRM_ATTR_RSCID) != NULL) {
@@ -304,6 +315,7 @@ do_update_cib(crm_data_t *xml_action, int status)
 	rc = te_cib_conn->cmds->modify(
 		te_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, call_options);
 #else
+	call_options = 0;
 	{
 		HA_Message *cmd = ha_msg_new(11);
 		ha_msg_add(cmd, F_TYPE,		T_CRM);

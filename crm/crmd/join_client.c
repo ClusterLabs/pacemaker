@@ -30,6 +30,10 @@
 #include <crm/dmalloc_wrapper.h>
 
 int reannounce_count = 0;
+void join_query_callback(const HA_Message *msg, int call_id, int rc,
+			 crm_data_t *output, void *user_data);
+
+extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
 
 /*	A_CL_JOIN_QUERY		*/
 /* is there a DC out there? */
@@ -42,24 +46,6 @@ do_cl_join_query(long long action,
 {
 	HA_Message *req = create_request(CRM_OP_ANNOUNCE, NULL, NULL,
 					 CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
-	
-	send_msg_via_ha(fsa_cluster_conn, req);
-
-	/* ok, this is complete garbage
-	 *
-	 * what seems to happen is that this message is sent, but does not
-	 *   arrive at the DC until the next message is sent (which happens to
-	 *   an election vote - since no-one answered this one)
-	 *
-	 * worse is that without the sleep() below, all three messages show
-	 *   up at the same time (12 seconds after the above message is sent)
-	 *
-	 * so for now I'll send a no-op
-	 */
-	sleep(2);
-	
-	req = create_request(CRM_OP_NOOP, NULL, NULL,
-			     CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 	
 	send_msg_via_ha(fsa_cluster_conn, req);
 	
@@ -162,10 +148,9 @@ do_cl_join_request(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	crm_data_t *tmp1;
+	int call_id = 0;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 	const char *welcome_from = cl_get_string(input->msg, F_CRM_HOST_FROM);
-	HA_Message *reply = NULL;
 	
 #if 0
 	if(we are sick) {
@@ -187,17 +172,44 @@ do_cl_join_request(long long action,
 		return I_NULL;
 	}
 
-	/* include our CIB generation tuple */
-	tmp1 = cib_get_generation(fsa_cib_conn);
-	if(tmp1 != NULL) {
-		reply = create_reply(input->msg, tmp1);
-		send_msg_via_ha(fsa_cluster_conn, reply);
-		free_xml(tmp1);
-	
-		return I_NULL;
-	}
-	register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+	CRM_DEV_ASSERT(input != NULL);
+	call_id = fsa_cib_conn->cmds->query(
+		fsa_cib_conn, NULL, NULL, cib_scope_local);
+	add_cib_op_callback(
+		call_id, TRUE, copy_ha_msg_input(input), join_query_callback);
 	return I_NULL;
+}
+
+void
+join_query_callback(const HA_Message *msg, int call_id, int rc,
+		    crm_data_t *output, void *user_data)
+{
+	crm_data_t *local_cib = NULL;
+	ha_msg_input_t *input = user_data;
+	crm_data_t *generation = create_xml_node(
+		NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+
+	CRM_DEV_ASSERT(input != NULL);
+	
+	if(rc == cib_ok) {
+		local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
+	}
+	
+	if(local_cib != NULL) {
+		HA_Message *reply = NULL;
+		copy_in_properties(generation, local_cib);
+		reply = create_reply(input->msg, generation);
+		send_msg_via_ha(fsa_cluster_conn, reply);
+
+	} else {
+		crm_err("Could not retrieve Generation to attach to our"
+			" join acknowledgement: %s", cib_error2string(rc));
+		register_fsa_error_adv(
+			C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+	}
+	
+	delete_ha_msg_input(input);
+	free_xml(generation);
 }
 
 /*	A_CL_JOIN_RESULT	*/

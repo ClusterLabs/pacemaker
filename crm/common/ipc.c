@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.30 2005/04/05 15:25:39 andrew Exp $ */
+/* $Id: ipc.c,v 1.31 2005/04/06 14:33:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -273,7 +273,10 @@ wait_channel_init(char daemonsocket[])
 	return wait_ch;
 }
 
-
+longclock_t ipc_call_start = 0;
+longclock_t ipc_call_stop = 0;
+longclock_t ipc_call_diff = 0;
+int ipc_call_diff_ms = 0;
 
 gboolean
 subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
@@ -328,12 +331,26 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 			process_function = user_data;
 #ifdef MSG_LOG
 			crm_log_message_adv(
-				LOG_MSG, NULL, new_input->msg);
+				LOG_MSG, __FUNCTION__, new_input->msg);
 #endif
+			if(ipc_call_diff_max_ms > 0) {
+				ipc_call_start = time_longclock();
+			}
 			if(FALSE == process_function(
 				   new_input->msg, new_input->xml, sender)) {
 				crm_warn("Received a message destined for %s"
 					 " by mistake", sys_to);
+			}
+			if(ipc_call_diff_max_ms > 0) {
+				ipc_call_stop = time_longclock();
+				ipc_call_diff = sub_longclock(
+					ipc_call_start, ipc_call_stop);
+				ipc_call_diff_ms = longclockto_ms(
+					ipc_call_diff);
+				if(ipc_call_diff_ms > ipc_call_diff_max_ms) {
+					crm_err("%s took %dms to complete",
+						sys_to, ipc_call_diff_ms);
+				}
 			}
 		} else {
 #ifdef MSG_LOG

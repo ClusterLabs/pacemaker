@@ -55,11 +55,18 @@ long long clear_flags(long long actions,
 			     enum crmd_fsa_input cur_input);
 
 void dump_rsc_info(void);
+void dump_rsc_info_callback(const HA_Message *msg, int call_id, int rc,
+			    crm_data_t *output, void *user_data);
 
 #define DOT_PREFIX "live.dot: "
-#define DOT_LOG    LOG_VERBOSE
-#define do_dot_log(fmt...)  do_crm_log(DOT_LOG,NULL,NULL,fmt)
-#define do_dot_action(fmt...)  do_crm_log(DOT_LOG+1,NULL,NULL,fmt)
+#define DOT_LOG    LOG_DEBUG
+#define do_dot_log(fmt...)     do_crm_log(DOT_LOG, NULL, NULL, fmt)
+#define do_dot_action(fmt...)  do_crm_log(DOT_LOG+1, NULL, NULL, fmt)
+
+longclock_t action_start = 0;
+longclock_t action_stop = 0;
+longclock_t action_diff = 0;
+int action_diff_ms = 0;
 
 #define IF_FSA_ACTION(x,y)						\
    if(is_set(fsa_actions,x)) {						\
@@ -67,7 +74,20 @@ void dump_rsc_info(void);
 	   fsa_actions = clear_bit(fsa_actions, x);			\
 	   crm_verbose("Invoking action %s (%.16llx)",			\
 		       fsa_action2string(x), x);			\
+	   if(action_diff_max_ms > 0) {					\
+		   action_start = time_longclock();			\
+	   }								\
 	   next_input = y(x, cause, fsa_state, last_input, fsa_data);	\
+	   if(action_diff_max_ms > 0) {					\
+		   action_stop = time_longclock();			\
+		   action_diff = sub_longclock(action_start, action_stop); \
+		   action_diff_ms = longclockto_ms(action_diff);	\
+		   if(action_diff_ms > action_diff_max_ms) {		\
+			   crm_err("Action %s took %dms to complete",	\
+				   fsa_action2string(x),		\
+				   action_diff_ms);			\
+		   }							\
+	   }								\
 	   crm_verbose("Action complete: %s (%.16llx)",			\
 		       fsa_action2string(x), x);			\
 	   CRM_DEV_ASSERT(next_input == I_NULL); 			\
@@ -645,7 +665,16 @@ clear_flags(long long actions,
 void
 dump_rsc_info(void)
 {
-	crm_data_t *local_cib = get_cib_copy(fsa_cib_conn);
+	int call_id = fsa_cib_conn->cmds->query(
+		fsa_cib_conn, NULL, NULL, cib_scope_local);
+	add_cib_op_callback(call_id, TRUE, NULL, dump_rsc_info_callback);
+}
+
+void
+dump_rsc_info_callback(const HA_Message *msg, int call_id, int rc,
+		       crm_data_t *output, void *user_data)
+{
+	crm_data_t *local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
 	crm_data_t *root      = get_object_root(XML_CIB_TAG_STATUS, local_cib);
 	crm_data_t *resources = NULL;
 	const char *rsc_id    = NULL;
@@ -655,7 +684,6 @@ dump_rsc_info(void)
 	const char *last_rc   = NULL;
 	const char *last_op   = NULL;
 
-	
 	const char *path[] = {
 		XML_CIB_TAG_LRM,
 		XML_LRM_TAG_RESOURCES

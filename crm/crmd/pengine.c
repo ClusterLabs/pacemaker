@@ -49,6 +49,8 @@
 #define CLIENT_EXIT_WAIT 30
 
 struct crm_subsystem_s *pe_subsystem  = NULL;
+void do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
+			   crm_data_t *output, void *user_data);
 
 /*	 A_PE_START, A_PE_STOP, A_TE_RESTART	*/
 enum crmd_fsa_input
@@ -95,28 +97,64 @@ do_pe_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-	crm_data_t *local_cib = NULL;
-	HA_Message *cmd = NULL;
+	int call_id = 0;
 
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
+		if(pe_subsystem->pid > 0) {
+			int pid_status = -1;
+			int rc = waitpid(
+				pe_subsystem->pid, &pid_status, WNOHANG);
+
+			if(rc > 0 && WIFEXITED(pid_status)) {
+				clear_bit_inplace(fsa_input_register,
+						  pe_subsystem->flag_connected);
+	
+				if(is_set(fsa_input_register,
+					  pe_subsystem->flag_required)) {
+					/* this wasnt supposed to happen */
+					crm_err("%s[%d] terminated during start",
+						pe_subsystem->name,
+						pe_subsystem->pid);
+					register_fsa_error(
+						C_FSA_INTERNAL, I_ERROR, NULL);
+				}
+				pe_subsystem->pid = -1;
+				return I_NULL;
+			}
+		} 
 		
 		crm_info("Waiting for the PE to connect");
 		crmd_fsa_stall();
 		return I_NULL;		
 	}
+
+	call_id = fsa_cib_conn->cmds->query(
+		fsa_cib_conn, NULL, NULL, cib_scope_local);
+	if(FALSE == add_cib_op_callback(
+		   call_id, TRUE, NULL, do_pe_invoke_callback)) {
+		crm_err("Cant retrieve the CIB to invoke the %s subsystem with",
+			pe_subsystem->name);
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+	}
 	
-	local_cib = get_cib_copy(fsa_cib_conn);
+	return I_NULL;		
+}
+
+void
+do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
+		      crm_data_t *output, void *user_data)
+{
+	HA_Message *cmd = NULL;
+	crm_data_t *local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
+	if(AM_I_DC == FALSE
+	   || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE) {
+		crm_debug("No need to invoke the PE anymore");
+		return;
+	}
 
 	crm_verbose("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
 
-	CRM_DEV_ASSERT(fsa_cib_conn->state != cib_disconnected);
 	CRM_DEV_ASSERT(local_cib != NULL);
-	if(crm_assert_failed) {
-		/* wait for the congestion to ease? */
-		crm_timer_start(wait_timer);
-		crmd_fsa_stall();
-		return I_NULL;		
-	}
 	CRM_DEV_ASSERT(crm_element_value(local_cib, XML_ATTR_DC_UUID) != NULL);
 	
 	if(fsa_pe_ref) {
@@ -129,7 +167,4 @@ do_pe_invoke(long long action,
 		CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
 
 	send_request(cmd, &fsa_pe_ref);
-	free_xml(local_cib);
-	
-	return I_NULL;
 }

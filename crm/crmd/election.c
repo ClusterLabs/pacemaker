@@ -33,6 +33,8 @@
 uint highest_born_on = -1;
 
 void ghash_count_vote(gpointer key, gpointer value, gpointer user_data);
+void revision_check_callback(const HA_Message *msg, int call_id, int rc,
+			     crm_data_t *output, void *user_data);
 
 
 /*	A_ELECTION_VOTE	*/
@@ -266,7 +268,6 @@ do_dc_takeover(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input result = I_NULL;
 	crm_data_t *cib = createEmptyCib();
 	crm_data_t *update = NULL;
 	crm_data_t *output = NULL;
@@ -298,7 +299,6 @@ do_dc_takeover(long long action,
 	
 /* 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none); */
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
-	CRM_DEV_ASSERT(cib_not_master != fsa_cib_conn->cmds->is_master(fsa_cib_conn));
 
 	set_uuid(fsa_cluster_conn, cib, XML_ATTR_DC_UUID, fsa_our_uname);
 	crm_devel("Update %s in the CIB to our uuid: %s",
@@ -308,35 +308,26 @@ do_dc_takeover(long long action,
 	free_xml(cib);
 
 	rc = fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, NULL, update, &output, cib_sync_call);
+		fsa_cib_conn, NULL, update, &output, cib_none);
 	
-	if(rc == cib_ok) {
-		int revision_i = -1;
-		const char *revision = NULL;
-
-		crm_data_t *generation = cib_get_generation(fsa_cib_conn);
-		
-		crm_devel("Checking our feature revision is allowed: %d",
-			  cib_feature_revision);
-
-		revision = crm_element_value(generation, XML_ATTR_CIB_REVISION);
-		revision_i = atoi(revision?revision:"0");
-
-		if(revision_i > cib_feature_revision) {
-			crm_err("Feature revision not permitted");
-			/* go into a stall state */
-			result = I_HALT;
-		}
-
-		free_xml(generation);
-
-	} else if(rc == cib_revision_unsupported) {
+	if(rc == cib_revision_unsupported) {
 		crm_err("Feature revision not permitted");
 		/* go into a stall state */
-		result = I_HALT;
+		register_fsa_error(C_FSA_INTERNAL, I_HALT, NULL);
+		return I_NULL;
 		
-	} else 	if(rc != cib_ok) {
+	} else 	if(rc < cib_ok) {
 		crm_err("DC UUID update failed: %s", cib_error2string(rc));
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		return I_NULL;
+	}
+
+	rc = fsa_cib_conn->cmds->query(
+		fsa_cib_conn, NULL, NULL, cib_scope_local);
+	
+	if(FALSE == add_cib_op_callback(
+		   rc, TRUE, NULL, revision_check_callback)) {
+		crm_err("Retrieval of generation failed");
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		return I_NULL;
 	}
@@ -347,7 +338,30 @@ do_dc_takeover(long long action,
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 	
-	return result;
+	return I_NULL;
+}
+
+
+void
+revision_check_callback(const HA_Message *msg, int call_id, int rc,
+			crm_data_t *output, void *user_data)
+{
+	int revision_i = -1;
+	const char *revision = NULL;
+	crm_data_t *generation = find_xml_node(output, XML_TAG_CIB, TRUE);
+		
+	crm_devel("Checking our feature revision is allowed: %d",
+		  cib_feature_revision);
+	
+	revision = crm_element_value(generation, XML_ATTR_CIB_REVISION);
+	revision_i = atoi(revision?revision:"0");
+	
+	if(revision_i > cib_feature_revision) {
+		crm_err("Feature revision not permitted");
+		/* go into a stall state */
+		register_fsa_error_adv(
+			C_FSA_INTERNAL, I_HALT, NULL, NULL, __FUNCTION__);
+	}
 }
 
 /*	 A_DC_RELEASE	*/

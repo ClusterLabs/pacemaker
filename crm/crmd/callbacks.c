@@ -47,7 +47,7 @@ crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 	int lpc = 0;
 	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
 
-	while(lpc == 0 && hb_cluster->llc_ops->msgready(hb_cluster)) {
+	while(lpc < 2 && hb_cluster->llc_ops->msgready(hb_cluster)) {
 		if(channel->ch_status != IPC_CONNECT) {
 			/* there really is no point continuing */
 			break;
@@ -495,9 +495,25 @@ crmd_cib_connection_destroy(gpointer user_data)
 	return;
 }
 
+longclock_t fsa_start = 0;
+longclock_t fsa_stop = 0;
+longclock_t fsa_diff = 0;
+int fsa_diff_ms = 0;
+
 gboolean
 crm_fsa_trigger(gpointer user_data) 
 {
+	if(fsa_diff_max_ms > 0) {
+		fsa_start = time_longclock();
+	}
 	s_crmd_fsa(C_FSA_INTERNAL);
+	if(fsa_diff_max_ms > 0) {
+		fsa_stop = time_longclock();
+		fsa_diff = sub_longclock(fsa_start, fsa_stop);
+		fsa_diff_ms = longclockto_ms(fsa_diff);
+		if(fsa_diff_ms > fsa_diff_max_ms) {
+			crm_err("FSA took %dms to complete", fsa_diff_ms);
+		}
+	}
 	return TRUE;	
 }
