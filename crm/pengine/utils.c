@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.50 2004/11/23 20:43:08 andrew Exp $ */
+/* $Id: utils.c,v 1.51 2004/11/24 15:41:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1065,11 +1065,22 @@ find_actions(GListPtr input, enum action_tasks task, node_t *on_node)
 	
 	slist_iter(
 		action, action_t, input, lpc,
-		if(action->task == task
-		   && (on_node == NULL
-		       || safe_str_eq(on_node->details->id,
-				      action->node->details->id))) {
-			result = g_list_append(result, action);
+		if(action->task == task) {
+			if(on_node == NULL) {
+				result = g_list_append(result, action);
+
+			} else if(action->node == NULL) {
+				/* skip */
+				crm_warn("While looking for %s action on %s, "
+					  "found an unallocated one.  "
+					  "This could end up creating dups..",
+					  task2text(task),
+					  on_node->details->id);
+				
+			} else if(safe_str_eq(on_node->details->id,
+					      action->node->details->id)) {
+				result = g_list_append(result, action);
+			}
 		}
 		);
 
