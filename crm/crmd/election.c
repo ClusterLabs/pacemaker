@@ -368,8 +368,15 @@ do_send_welcome(long long action,
 
 		const char *join_to = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 		if(join_to != NULL) {
+/*
+			xmlNodePtr update =
+				create_node_state(new_node, "active", "active", NULL);
+			xmlNodePtr tmp1 = create_cib_fragment(update, NULL);
+			send_request(NULL, tmp1, "update", NULL, CRM_SYSTEM_DCIB);
+*/			
 			send_request(NULL, NULL, CRM_OPERATION_WELCOME,
 				     join_to, CRM_SYSTEM_CRMD);
+			
 		}
 		
 		FNRET(I_NULL);
@@ -389,8 +396,35 @@ do_send_welcome(long long action,
 		joined_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
 		
 	}
-	
 
+	// reset everyones status back to down in the CIB
+	xmlNodePtr cib_copy = get_cib_copy();
+	xmlNodePtr tmp1 = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
+	xmlNodePtr node_entry = tmp1->children;
+	xmlNodePtr update = NULL;
+	while(node_entry != NULL){
+		tmp1 = create_node_state(xmlGetProp(node_entry, "id"),
+					 "down", NULL, NULL);
+		node_entry = node_entry->next;
+		
+		if(update == NULL) {
+			update = tmp1;
+		} else {
+			update = xmlAddSibling(update, tmp1);
+		}
+	}
+
+	if(update != NULL) {
+		xml_message_debug(update, "creating fragment for...");
+		tmp1 = create_cib_fragment(update, NULL);
+		send_request(NULL, tmp1, "update", NULL, CRM_SYSTEM_DCIB);
+		
+	}
+	
+	free_xml(tmp1);
+	free_xml(update);
+	free_xml(cib_copy);
+	
 	for(; members != NULL && lpc < size; lpc++) {
 		const char *new_node = members[lpc].node_uname;
 		if(strcmp(fsa_our_uname, new_node) == 0) {
@@ -404,6 +438,7 @@ do_send_welcome(long long action,
 		was_sent = was_sent
 			&& send_request(NULL, NULL, CRM_OPERATION_WELCOME,
 					new_node, CRM_SYSTEM_CRMD);
+
 		CRM_DEBUG("Sent welcome message to %s (%d)",
 			   new_node, was_sent);
 	}
@@ -425,6 +460,29 @@ do_send_welcome(long long action,
 	
 	FNRET(I_NULL);
 }
+
+xmlNodePtr
+create_node_state(const char *node, const char *state,
+		  const char *exp_state, xmlNodePtr lrm_data)
+{
+	xmlNodePtr node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	
+	set_xml_property_copy(node_state, XML_ATTR_ID, node);
+	set_xml_property_copy(node_state, "state",     state);
+	if(exp_state != NULL) {
+		set_xml_property_copy(node_state, "exp_state", exp_state);
+	}
+	
+	if(lrm_data != NULL) {
+//		set_xml_property_copy(data, "replace_lrm", "true");
+		add_node_copy(node_state, lrm_data);
+	}
+
+	xml_message_debug(node_state, "created");
+
+	return node_state;
+}
+
 
 /*	 A_JOIN_ACK	*/
 enum crmd_fsa_input

@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.15 2004/04/15 08:31:13 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.16 2004/05/14 21:15:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -120,6 +120,8 @@ extern struct crm_subsystem_s *pe_subsystem;
 
 extern void cleanup_subsystem(struct crm_subsystem_s *the_subsystem);
 extern enum crmd_fsa_input send_cib_status_update(xmlNodePtr update);
+extern xmlNodePtr create_node_state(const char *node, const char *state,
+				    const char *exp_state, xmlNodePtr lrm_data);
 
 #define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)

@@ -47,8 +47,6 @@ void crmd_ccm_input_callback(oc_ed_t event,
 
 void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
 gboolean ccm_dispatch(int fd, gpointer user_data);
-void new_node_state(xmlNodePtr node_updates,
-		    const char *uname, const char *state);
 
 #define CCM_EVENT_DETAIL 1
 oc_ev_t *fsa_ev_token;
@@ -192,7 +190,8 @@ do_ccm_update_cache(long long action,
 	oc_node_list_t *tmp = NULL, *membership_copy = (oc_node_list_t *)
 		cl_malloc(sizeof(oc_node_list_t));
 
-	xmlNodePtr update_list = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	xmlNodePtr update_list = NULL;
+	xmlNodePtr tmp1 = NULL;
 
 	FNIN();
 	set_xml_property_copy(update_list, XML_ATTR_ID, fsa_our_uname);
@@ -225,8 +224,13 @@ do_ccm_update_cache(long long action,
 			members[lpc].node_uname =
 				cl_strdup(oc->m_array[offset+lpc].node_uname);
 
-			new_node_state(update_list,
-				       members[lpc].node_uname, "in_ccm");
+			tmp1 = create_node_state(members[lpc].node_uname, "in_ccm", NULL, NULL);
+			if(update_list == NULL) {
+				update_list = tmp1;
+			} else {
+				update_list = xmlAddSibling(update_list, tmp1);
+			}
+			
 		}
 	} else {
 		membership_copy->members = NULL;
@@ -255,8 +259,12 @@ do_ccm_update_cache(long long action,
 			members[lpc].node_uname =
 				cl_strdup(oc->m_array[offset+lpc].node_uname);
 
-			new_node_state(update_list,
-				       members[lpc].node_uname, "in_ccm");
+			tmp1 = create_node_state(members[lpc].node_uname, "in_ccm", NULL, NULL);
+			if(update_list == NULL) {
+				update_list = tmp1;
+			} else {
+				update_list = xmlAddSibling(update_list, tmp1);
+			}
 		}
 
 	} else {
@@ -284,8 +292,13 @@ do_ccm_update_cache(long long action,
 			members[lpc].node_uname =
 				cl_strdup(oc->m_array[offset+lpc].node_uname);
 
-			new_node_state(update_list,
-				       members[lpc].node_uname, "down");
+			tmp1 = create_node_state(members[lpc].node_uname, "down", NULL, NULL);
+			if(update_list == NULL) {
+				update_list = tmp1;
+			} else {
+				update_list = xmlAddSibling(update_list, tmp1);
+			}
+
 		}
 	} else {
 		membership_copy->dead_members = NULL;
@@ -317,25 +330,6 @@ do_ccm_update_cache(long long action,
 	
 	FNRET(next_input);
 }
-
-
-/*
- * node_updates must be pre-constructed (non-NULL)
- */
-void
-new_node_state(xmlNodePtr node_updates,
-	       const char *uname, const char *state)
-{
-	xmlNodePtr tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
-
-	set_node_tstamp(tmp1);
-	set_xml_property_copy(tmp1, XML_ATTR_ID, uname);
-	set_xml_property_copy(tmp1, "source",    fsa_our_uname);
-	set_xml_property_copy(tmp1, "state",     state);
-
-	xmlAddSibling(node_updates, tmp1);
-}
-
 
 
 void
