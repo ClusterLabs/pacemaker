@@ -284,7 +284,7 @@ function make_incarnation()
     node_xml="$node_xml </resource>'";
     node_xml="$node_xml </incarnation>";
     
-    do_cmd `which ssh` ${ADMIN_USER}@${host} "$HALIB_DIR/cibadmin -VVVV -C -o resource -X $node_xml"
+    do_cmd remote_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -VVVV -C -o resource -X $node_xml"
 # 2>&1 > /dev/null
 }
 
@@ -321,7 +321,7 @@ function make_resource()
     fi
     node_xml="$node_xml </resource>'";
     
-    do_cmd `which ssh` ${ADMIN_USER}@${host} "$HALIB_DIR/cibadmin -VVVV -C -o resource -X $node_xml"
+    do_cmd remote_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -VVVV -C -o resource -X $node_xml"
 # 2>&1 > /dev/null
 }
 
@@ -333,7 +333,7 @@ function make_constraint_adv()
 
     node_xml=`echo $node_xml | tr '\n' ' '`
 
-    do_cmd `which ssh` ${ADMIN_USER}@${host} "$HALIB_DIR/cibadmin -C -o constraint -VVVV -X $node_xml"
+    do_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -C -o constraint -VVVV -X $node_xml"
 #  2>&1 > /dev/null
 }
 
@@ -370,7 +370,7 @@ function do_cts_assert() {
 	do_err=1
     else
 	for a_host in $node_list; do
-	    `which ssh` ${ADMIN_USER}@${a_host} "ls -al ${HAVAR_DIR}/cores/*/core*" 2>/dev/null 
+	    remote_cmd ${ADMIN_USER} ${a_host} "ls -al ${HAVAR_DIR}/cores/*/core*" 2>/dev/null 
 	    if [ $? -ne 1 ]; then
 		do_cmd echo "Core file(s) found on $a_host"
 		do_err=1
@@ -409,19 +409,24 @@ function dump_node() {
     dump_file="/tmp/${a_node_index}-${a_node}.tgz"
 
     remote_cmd $CRMD_USER ${a_node} "stat -L -c %s $logfile > /tmp/crm/.logend"
-    `which ssh` ${ADMIN_USER}@${a_node} "ps axf > /tmp/crm/processes"
-    `which ssh` ${ADMIN_USER}@${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart -epf /tmp/crm/.logend -l $logfile > /tmp/crm/cluster-test.log"
+    remote_cmd ${ADMIN_USER} ${a_node} "ps axf > /tmp/crm/processes"
+    remote_cmd ${ADMIN_USER} ${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart  -l $logfile > /tmp/crm/cluster-test.log"
+#    `which ssh` ${ADMIN_USER}@${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart -epf /tmp/crm/.logend -l $logfile > /tmp/crm/cluster-test.log"
 
-    `which ssh` ${ADMIN_USER}@${a_node} "ln -s /tmp/crm /tmp/crm-${a_node_index}"
-    `which ssh` ${ADMIN_USER}@${a_node} "ln -s ${HAVAR_DIR}/cores /tmp/crm"
-    `which ssh` ${ADMIN_USER}@${a_node} "tar -zhcvf ${dump_file} /tmp/crm-${a_node_index}/ "
-    `which ssh` ${ADMIN_USER}@${a_node} "rm -f /tmp/crm-${a_node_index}"
+    remote_cmd ${ADMIN_USER} ${a_node} "ln -s /tmp/crm /tmp/crm-${a_node_index}"
+    remote_cmd ${ADMIN_USER} ${a_node} "ln -s ${HAVAR_DIR}/cores /tmp/crm"
+    remote_cmd ${ADMIN_USER} ${a_node} "cp ${HAVAR_DIR}/crm/cib.xml /tmp/crm"
+    remote_cmd ${ADMIN_USER} ${a_node} "tar -zhcvf ${dump_file} /tmp/crm-${a_node_index}/ "
+    remote_cmd ${ADMIN_USER} ${a_node} "rm -f /tmp/crm-${a_node_index}"
 
     cd $test_dump_dir
-    scp -r ${ADMIN_USER}@${a_node}:${dump_file} .
+    scp -r ${ADMIN_USER} ${a_node}:${dump_file} .
     tar zxvf ${a_node_index}-${a_node}.tgz
     cd -
-    `which ssh` ${ADMIN_USER}@${a_node} "rm ${dump_file}"
+    remote_cmd ${ADMIN_USER} ${a_node} "rm ${dump_file}"
+
+    $HALIB_DIR/crmtest/extract.logs ${test_dump_dir} node-${a_node_index} ${test_dump_dir}/tmp/crm-${a_node_index}/cluster-test.log
+    
 }
 
 function do_cmd() {
@@ -539,8 +544,8 @@ function crm-cleanup-node() {
 # make *sure* theres nothing left over from last time
 	do_cmd remote_cmd $INIT_USER $ha_host "rm -f $HAVAR_DIR/crm/cib*.xml"
 
-	`which ssh` ${INIT_USER}@${ha_host} "rm -f ${HAVAR_DIR}/cores/*/*" 2>/dev/null 
-	`which ssh` ${INIT_USER}@${ha_host} "rm -f /tmp/crm/* /tmp/crm/.log*" 2>/dev/null 
+	remote_cmd ${INIT_USER} ${ha_host} "rm -f ${HAVAR_DIR}/cores/*/*" 2>/dev/null 
+	remote_cmd ${INIT_USER} ${ha_host} "rm -rf /tmp/crm/* /tmp/crm/.log*" 2>/dev/null 
 
 	if [ `dirname $logfile` = "/tmp/crm" ]; then
 	    do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart"
@@ -594,6 +599,14 @@ function gres()
 }
 
 # successfully sourced
+if [ $local_version = 1 ]; then
+    test_node_1=`uname -n`
+    test_node_2=""
+    test_node_3=""
+    echo "Set test_node_1=\"$test_node_1\""
+    echo "Unset test_node_2 and test_node_3"
+fi
+
 node_list="$test_node_1 $test_node_2 $test_node_3"
 node_count=0
 for a_host in $node_list; do
