@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.5 2004/06/09 15:07:38 andrew Exp $ */
+/* $Id: unpack.c,v 1.6 2004/06/09 16:45:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -262,6 +262,7 @@ unpack_rsc_to_node(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 
 	if(rsc_lh == NULL) {
 		crm_err("No resource (con=%s, rsc=%s)", id, id_lh);
+		return FALSE;
 	}
 
 	new_con = (rsc_to_node_t*)crm_malloc(sizeof(rsc_to_node_t));
@@ -566,6 +567,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 	const char *rsc_state = NULL;
 	const char *rsc_code  = NULL;
 	resource_t *rsc_lh    = NULL;
+	op_status_t  rsc_code_i = LRM_OP_ERROR;
 	
 	while(lrm_rsc != NULL) {
 		rsc_entry = lrm_rsc;
@@ -586,9 +588,13 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 				" %s in %s's status section",
 				rsc_id, node_id);
 			continue;
+		} else if(rsc_code == NULL) {
+			crm_err("Invalid resource status entry for %s in %s",
+				rsc_id, node_id);
+			continue;
 		}
-		
-		op_status_t  rsc_code_i = atoi(rsc_code);
+
+		rsc_code_i = atoi(rsc_code);
 		switch(rsc_code_i) {
 			case LRM_OP_DONE:
 				unpack_healthy_resource(node_constraints,

@@ -19,9 +19,9 @@
 
 io_dir=testcases
 diff_opts="--ignore-all-space -1 -u"
-
+failed=.regression.failed
 # zero out the error log
-> regression.failed
+> $failed
 
 function do_test {
 
@@ -68,7 +68,7 @@ function do_test {
 	echo "Test $name	($base)...	Passed";
     elif [ "$rc" = 1 ]; then
 	echo "Test $name	($base)...	* Failed";
-	diff $diff_opts $expected $output 2>/dev/null >> regression.failed
+	diff $diff_opts $expected $output 2>/dev/null >> $failed
     else
 	echo "Test $name	($base)...	Error (diff: $rc)";
     fi
@@ -104,6 +104,10 @@ do_test rsc_node2 "Rsc1 Node2"
 
 echo ""
 
+do_test complex1 "Complex"
+
+echo ""
+
 do_test bad1 "Bad data"
 do_test bad2 "Bad data"
 do_test bad3 "Bad data"
@@ -112,12 +116,16 @@ do_test bad5 "Bad data"
 do_test bad6 "Bad data"
 #do_test bad7 "Bad data"
 
+# Generate these test outputs
+create_mode="true"
+#do_test bad2 "Bad data"
+#do_test bad6 "Bad data"
 
-if [ -s regression.failed ]; then
+if [ -s $failed ]; then
     echo "Results of failed tests...."
-    cat regression.failed
+    cat $failed
 else
-    rm regression.failed
+    rm $failed
 fi
 
 

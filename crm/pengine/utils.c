@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.26 2004/06/08 11:47:48 andrew Exp $ */
+/* $Id: utils.c,v 1.27 2004/06/09 16:45:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -659,7 +659,7 @@ print_color(const char *pre_text, color_t *color, gboolean details)
 	       pre_text==NULL?"":": ",
 	       color->id, 
 	       color->local_weight,
-	       color->details->chosen_node==NULL?"<unset>":color->details->chosen_node->details->id,
+		  safe_val5("<unset>",color,details,chosen_node,details,id),
 	       g_list_length(color->details->candidate_nodes)); 
 	if(details) {
 		print_color_details("\t", color->details, details);
@@ -683,9 +683,9 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 
 	if(details == FALSE) {
 		crm_debug("\t%s --> %s, %f (node placement rule)",
-		       cons->rsc_lh->id, 
-		       modifier2text(cons->modifier),
-		       cons->weight);
+			  safe_val3(NULL, cons, rsc_lh, id), 
+			  modifier2text(cons->modifier),
+			  cons->weight);
 
 		int lpc = 0;
 		slist_iter(
@@ -712,8 +712,8 @@ print_rsc_to_rsc(const char *pre_text, rsc_to_rsc_t *cons, gboolean details)
 	if(details == FALSE) {
 
 		crm_debug("\t%s --> %s, %s",
-			  cons->rsc_lh==NULL?"null":cons->rsc_lh->id, 
-			  cons->rsc_rh==NULL?"null":cons->rsc_rh->id, 
+			  safe_val3(NULL, cons, rsc_lh, id), 
+			  safe_val3(NULL, cons, rsc_rh, id), 
 			  strength2text(cons->strength));
 	}
 } 
