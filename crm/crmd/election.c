@@ -266,16 +266,16 @@ do_dc_takeover(long long action,
 	       void *data)
 {
 	crm_trace("################## Taking over the DC ##################");
-	set_bit_inplace(&fsa_input_register, R_THE_DC);
+	set_bit_inplace(fsa_input_register, R_THE_DC);
 
 	crm_verbose("Am I the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
 	
 	fsa_our_dc = NULL;
-	set_bit_inplace(&fsa_input_register, R_JOIN_OK);
-	set_bit_inplace(&fsa_input_register, R_INVOKE_PE);
+	set_bit_inplace(fsa_input_register, R_JOIN_OK);
+	set_bit_inplace(fsa_input_register, R_INVOKE_PE);
 	
-	clear_bit_inplace(&fsa_input_register, R_CIB_DONE);
-	clear_bit_inplace(&fsa_input_register, R_HAVE_CIB);
+	clear_bit_inplace(fsa_input_register, R_CIB_DONE);
+	clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 
 	startTimer(dc_heartbeat);
 
@@ -316,10 +316,10 @@ do_dc_release(long long action,
 	}
 
 	if(action & A_DC_RELEASE) {
-		clear_bit_inplace(&fsa_input_register, R_THE_DC);
+		clear_bit_inplace(fsa_input_register, R_THE_DC);
 		
 		/* get a new CIB from the new DC */
-		clear_bit_inplace(&fsa_input_register, R_HAVE_CIB);
+		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	} else if (action & A_DC_RELEASED) {
 
 		if(cur_state == S_STOPPING) {

@@ -60,6 +60,7 @@ void dump_rsc_info(void);
 		fsa_action2string(x), x);				\
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
+	crm_verbose("Performing action %s", fsa_action2string(x));	\
 	next_input = y(x, cause, cur_state, last_input, data);		\
 	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
 		fprintf(dot_strm,					\
@@ -77,6 +78,7 @@ void dump_rsc_info(void);
      if(is_set(actions,x)) {						\
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
+	crm_verbose("Performing action %s", fsa_action2string(x));	\
 	next_input = y(x, cause, cur_state, last_input, data);		\
 	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
 		fprintf(dot_strm,					\
@@ -96,6 +98,7 @@ void dump_rsc_info(void);
 		fsa_action2string(x), x);				\
 	last_action = x;						\
 	actions = clear_bit(actions, x);				\
+	crm_verbose("Performing action %s", fsa_action2string(x));	\
 	next_input = y(x, cause, cur_state, last_input, data);		\
 	crm_verbose("Result of action %s was %s",			\
 		fsa_action2string(x), fsa_input2string(next_input));	\
@@ -542,9 +545,8 @@ do_state_transition(long long actions,
 			fsa_our_dc = NULL;
 			break;
 		case S_INTEGRATION:
+			/* we are our own DC */
 			fsa_our_dc = fsa_our_uname;
-			break;
-		case S_PENDING:
 			break;
 		case S_NOT_DC:
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
@@ -561,7 +563,8 @@ do_state_transition(long long actions,
 			clear_recovery_bit = FALSE;
 			break;
 		case S_POLICY_ENGINE:
-			if(num_join_invites != fsa_membership_copy->members_size) {
+			if(num_join_invites
+			   != fsa_membership_copy->members_size) {
 				crm_warn("Only %d (of %d) cluster nodes are"
 					 " eligable to run resources.",
 					 num_join_invites,
@@ -575,7 +578,8 @@ do_state_transition(long long actions,
 			
 		case S_IDLE:
 			dump_rsc_info();
-			/* keep going */
+			break;
+			
 		default:
 			break;
 	}
@@ -603,38 +607,9 @@ clear_flags(long long actions,
 {
 
 	if(is_set(fsa_input_register, R_SHUTDOWN)){
-		clear_bit_inplace(&actions, A_DC_TIMER_START);
+		clear_bit_inplace(actions, A_DC_TIMER_START);
 	}
-	
 
-	switch(cur_state) {
-		case S_IDLE:
-			break;
-		case S_ELECTION:
-			break;
-		case S_INTEGRATION:
-			break;
-		case S_FINALIZE_JOIN:
-			break;
-		case S_NOT_DC:
-			break;
-		case S_POLICY_ENGINE:
-			break;
-		case S_RECOVERY:
-			break;
-		case S_RELEASE_DC:
-			break;
-		case S_PENDING:
-			break;
-		case S_STOPPING:
-			break;
-		case S_TERMINATE:
-			break;
-		case S_TRANSITION_ENGINE:
-			break;
-		case S_ILLEGAL:
-			break;
-	}
 	return actions;
 }
 

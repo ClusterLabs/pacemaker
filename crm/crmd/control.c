@@ -348,7 +348,7 @@ do_started(long long action,
 {
 	
 
-	clear_bit_inplace(&fsa_input_register, R_STARTING);
+	clear_bit_inplace(fsa_input_register, R_STARTING);
 	
 	return I_NULL;
 }
@@ -437,7 +437,7 @@ crm_shutdown(int nsig)
 			s_crmd_fsa(C_SHUTDOWN, I_ERROR, NULL);
 
 		} else {
-			set_bit_inplace(&fsa_input_register, R_SHUTDOWN);
+			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
 
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				/* cant rely on this... */
