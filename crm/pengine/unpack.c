@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.62 2005/03/16 19:51:50 andrew Exp $ */
+/* $Id: unpack.c,v 1.63 2005/03/31 08:10:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -122,7 +122,7 @@ unpack_config(crm_data_t * config)
 	}
 	crm_info("STONITH of failed nodes is %s", stonith_enabled?"enabled":"disabled");
 	
-	value = param_value(config, "symetrical_cluster");
+	value = param_value(config, "symetric_cluster");
 	if(value != NULL) {
 		crm_str_to_boolean(value, &symetric_cluster);
 	}
@@ -782,28 +782,28 @@ rsc_colocation_new(const char *id, enum con_strength strength,
 	}
 
 	crm_malloc(new_con, sizeof(rsc_colocation_t));
-	if(new_con != NULL) {
-		new_con->id       = id;
-		new_con->rsc_lh   = rsc_lh;
-		new_con->rsc_rh   = rsc_rh;
-		new_con->strength = strength;
-		
-		inverted_con = invert_constraint(new_con);
-
-		crm_devel("Adding constraint %s (%p) to %s",
-			  new_con->id, new_con, rsc_lh->id);
-		
-		rsc_lh->rsc_cons = g_list_insert_sorted(
-			rsc_lh->rsc_cons, new_con, sort_cons_strength);
-		
-		crm_devel("Adding constraint %s (%p) to %s",
-			  inverted_con->id, inverted_con, rsc_rh->id);
-
-		rsc_rh->rsc_cons = g_list_insert_sorted(
-			rsc_rh->rsc_cons, inverted_con, sort_cons_strength);
-	} else {
+	if(new_con == NULL) {
 		return FALSE;
 	}
+
+	new_con->id       = id;
+	new_con->rsc_lh   = rsc_lh;
+	new_con->rsc_rh   = rsc_rh;
+	new_con->strength = strength;
+	
+	inverted_con = invert_constraint(new_con);
+	
+	crm_devel("Adding constraint %s (%p) to %s",
+		  new_con->id, new_con, rsc_lh->id);
+	
+	rsc_lh->rsc_cons = g_list_insert_sorted(
+		rsc_lh->rsc_cons, new_con, sort_cons_strength);
+	
+	crm_devel("Adding constraint %s (%p) to %s",
+		  inverted_con->id, inverted_con, rsc_rh->id);
+	
+	rsc_rh->rsc_cons = g_list_insert_sorted(
+		rsc_rh->rsc_cons, inverted_con, sort_cons_strength);
 	
 	return TRUE;
 }
@@ -1218,6 +1218,9 @@ unpack_rsc_location(
 			continue;
 		}
 		
+		crm_trace("processing rule: %s",
+			  crm_element_value(rule, XML_ATTR_ID));
+
 		rule_has_expressions = FALSE;
 		xml_child_iter(
 			rule, expr, XML_TAG_EXPRESSION,
