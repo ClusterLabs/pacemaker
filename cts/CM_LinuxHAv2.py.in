@@ -162,7 +162,7 @@ class LinuxHAv2(HeartbeatCM):
 	if self.any_running == 1:
 	    patterns.append(self["Pat:DC_IDLE"])
 
-        watch = CTS.LogWatcher(self["LogFileName"], patterns, 60)
+        watch = CTS.LogWatcher(self["LogFileName"], patterns, 90)
         watch.setwatch()
 
         self.log ("Starting %s on node %s" %(self["Name"], node))
@@ -399,7 +399,7 @@ class CrmdStateAudit(ClusterAudit):
         if len(unstable_list) > 0:
             passed = 0
             self.CM.log("Cluster is not stable: %d (of %d)." 
-                     %(len(unstable_list), up_count, str(unstable_list)))
+                     %(len(unstable_list), up_count))
 	    for status in unstable_list:
 		self.CM.log("%s" %(status))
 
