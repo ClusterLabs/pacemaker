@@ -18,6 +18,7 @@
 #
 
 HALIB_DIR=@libdir@/heartbeat
+HAVAR_DIR=@HA_VARLIBDIR@/heartbeat
 HAINIT_DIR=@INITDIR@
 
 INIT_USER=root
@@ -29,10 +30,29 @@ test_node_2=test2
 
 CRM_ERR_SHUTDOWN=0
 
-OUTPUT_ALL=3
-OUTPUT_NOOUT=2
-OUTPUT_NOERR=1
-OUTPUT_NONE=0
+OUTPUT_STDERR=0
+OUTPUT_STDOUT=0
+OUTPUT_CMDS=0
+
+done=0
+while test "$done" = "0"; do
+    case "$1" in
+	--debug   | -x)	set -x; shift;;
+	--stdout  | -o)	OUTPUT_STDOUT=1; shift;;
+	--stderr  | -e)	OUTPUT_STDERR=1; shift;;
+	--verbose | -v)	OUTPUT_CMDS=1; shift;;
+
+	--init  | -i)	INIT_USER=$2; shift;;
+	--admin | -a)	ADMIN_USER=$2; shift;;
+	--crmd  | -c)	CRMD_USER=$2; shift;;
+
+	--node1  | -1)	test_node_1=$2; shift;;
+	--node2  | -2)	test_node_2=$2; shift;;
+
+	"") done=1;;
+	*) echo "unknown option: $1"; exit 1;;
+    esac
+done
 
 function remote_cmd() {
     user=$1
@@ -40,9 +60,9 @@ function remote_cmd() {
 
     shift 
     shift
-
-    echo "Running '$*' as ${user}@${host}";
+    
     `which ssh` ${user}@${host} "$*"
+
     return $?;
 }
 
@@ -174,6 +194,8 @@ function make_constraint_adv()
     shift
     node_xml=$*
 
+    node_xml=`echo $node_xml | tr '\n' ' '`
+
     do_cmd $QUIET remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o constraint -X $node_xml"
 }
 
@@ -225,18 +247,45 @@ function err() {
 }
 
 function do_cmd() {
-    quiet=$1
-    shift
 
-    if [ $quiet -eq $OUTPUT_ALL ]; then
-	$*
-    elif [ $quiet -eq $OUTPUT_NOOUT ]; then
-	$* >/dev/null
-    elif [ $quiet -eq $OUTPUT_NOERR ]; then
-	$* 2>/dev/null
-    else
-	$* 2>&1 >/dev/null
+    cmdline=$*
+
+    if [ $OUTPUT_STDERR -eq 1 -o $OUTPUT_STDOUT -eq 1 -o $OUTPUT_CMDS -eq 1 ]; then
+
+	cmd=$1
+	
+	if [ $cmd = "remote_cmd" ]; then
+	    user=$2
+	    host=$3
+	    shift 3
+	    echo `date` ": Running '$*' as ${user}@${host}";
+
+	elif [ $cmd = "wait_for_state" ]; then
+	    host=$4
+	    if [ -z $host ]; then
+		host="the DC"
+	    fi
+	    echo `date` ": Waiting for state $2 on $host (max $3 attempts)";
+	    
+	elif [ $cmd = "echo" ]; then
+	    echo -n ""
+	else
+	    echo `date` ": Running '$cmdline'";
+	fi
     fi
+
+    if [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
+	$cmdline
+    elif [ $OUTPUT_STDERR -eq 0 -a $OUTPUT_STDOUT -eq 0 ]; then
+	$cmdline 2>&1 >/dev/null
+    elif [ $OUTPUT_STDOUT -eq 0 ]; then
+	$cmdline >/dev/null
+    elif [ $OUTPUT_STDERR -eq 0 ]; then
+	$cmdline 2>/dev/null
+    else
+	$cmdline
+    fi
+
     return $?
 }
 

@@ -90,6 +90,9 @@ Pre-reqs:
 	    respawn hacluster /usr/lib/heartbeat/ccm
 	    respawn hacluster /usr/lib/heartbeat/lrmd
 	
+    Basic requirement
+    =======================
+    	Heartbeat should not be started by default
 
 I think thats about it... 
  Now just run ./1node.sh and ./2node.sh, they should report if anything went
