@@ -259,14 +259,6 @@ do_dc_release(long long action,
 	crm_trace("################## Releasing the DC ##################");
 
 	stopTimer(dc_heartbeat);
-	if (fsa_cluster_conn->llc_ops->set_cstatus_callback(
-		    fsa_cluster_conn, NULL, NULL)!=HA_OK){
-		crm_err("Cannot unset client status callback\n");
-		crm_err("REASON: %s\n",
-		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
-		result = I_ERROR;
-	}
-
 	if(action & A_DC_RELEASE) {
 		clear_bit_inplace(fsa_input_register, R_THE_DC);
 		
