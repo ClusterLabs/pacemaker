@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1 2004/09/15 09:16:55 andrew Exp $ */
+/* $Id: main.c,v 1.2 2004/09/15 20:17:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,7 +80,6 @@ main(int argc, char ** argv)
 		      cl_glib_msg_handler, NULL);
     /* and for good measure... */
     g_log_set_always_fatal((GLogLevelFlags)0);    
-    
     cl_log_set_entity(crm_system_name);
     cl_log_set_logfile(DAEMON_LOG);
     cl_log_set_debugfile(DAEMON_DEBUG);
@@ -146,13 +145,13 @@ main(int argc, char ** argv)
 int
 init_start(void)
 {
-    long pid;
     enum crmd_fsa_state state;
 
-    if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
-		crm_crit("already running: [pid %ld].", pid);
-		exit(LSB_EXIT_OK);
-    }
+/*     long pid; */
+/*     if ((pid = get_running_pid(PID_FILE, NULL)) > 0) { */
+/* 		crm_crit("already running: [pid %ld].", pid); */
+/* 		exit(LSB_EXIT_OK); */
+/*     } */
 	
     fsa_state = S_PENDING;
     state = s_crmd_fsa(C_STARTUP, I_STARTUP, NULL);
