@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.30 2005/02/09 15:35:00 andrew Exp $ */
+/* $Id: xml.c,v 1.31 2005/02/10 10:53:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -332,7 +332,7 @@ create_xml_node(crm_data_t *parent, const char *name)
 #else
 		local_name = name;
 		ret_value = ha_msg_new(1);
-		CRM_ASSERT(ret_value != NULL);
+		CRM_DEV_ASSERT(ret_value != NULL);
 		
 		set_xml_property_copy(ret_value, XML_ATTR_TAGNAME, name);
 		crm_validate_data(ret_value);
@@ -341,7 +341,7 @@ create_xml_node(crm_data_t *parent, const char *name)
 			parent_name = crm_element_name(parent);
 			crm_insane("Attaching %s to parent %s",
 				   local_name, parent_name);
-			CRM_ASSERT(HA_OK == ha_msg_addstruct(
+			CRM_DEV_ASSERT(HA_OK == ha_msg_addstruct(
 					   parent, name, ret_value));
 			crm_msg_del(ret_value);
 
@@ -468,12 +468,12 @@ copy_xml_node_recursive(crm_data_t *src_node)
 #else
 	if(src_node == NULL) {
 		crm_warn("Attempt to dup NULL XML");
-		CRM_ASSERT(FALSE);
+		CRM_DEV_ASSERT(FALSE);
 		return NULL;
 		
 	} else if(crm_element_name(src_node) == NULL) {
 		crm_xml_err(src_node, "Attempt to dup XML with no name");
-		CRM_ASSERT(FALSE);
+		CRM_DEV_ASSERT(FALSE);
 		return NULL;
 	}
 	
@@ -834,7 +834,7 @@ dump_xml_formatted(crm_data_t *an_xml_node)
 	crm_validate_data(an_xml_node);
 	if(dump_data_element(0, &mutable_ptr, an_xml_node, TRUE) < 0) {
 		crm_crit("Could not dump the whole message");
-		CRM_ASSERT(FALSE);
+		CRM_DEV_ASSERT(FALSE);
 	}
 	crm_trace("Dumped: %s", buffer);
 #endif
@@ -910,7 +910,7 @@ dump_xml_unformatted(crm_data_t *an_xml_node)
 	crm_validate_data(an_xml_node);
 	if(dump_data_element(0, &mutable_ptr, an_xml_node, FALSE) < 0) {
 		crm_crit("Could not dump the whole message");
-		CRM_ASSERT(FALSE);
+		CRM_DEV_ASSERT(FALSE);
 	}
 	crm_trace("Dumped: %s", buffer);
 #endif
@@ -1144,13 +1144,13 @@ xml_has_children(crm_data_t *xml_root)
 
 
 void
-crm_validate_data(crm_data_t *xml_root)
+crm_validate_data(const crm_data_t *xml_root)
 {
 #ifdef USE_LIBXML
-	CRM_ASSERT(xml_root != NULL);
+	CRM_DEV_ASSERT(xml_root != NULL);
 #else
 #  ifndef XML_PARANOIA_CHECKS
-	CRM_ASSERT(xml_root != NULL);
+	CRM_DEV_ASSERT(xml_root != NULL);
 #  else
 	int lpc = 0;
 	CRM_ASSERT(xml_root != NULL);
@@ -1169,7 +1169,7 @@ crm_validate_data(crm_data_t *xml_root)
 		} else if(xml_root->types[lpc] == FT_STRING) {
 			CRM_ASSERT(cl_is_allocated(child) == 1);
 /* 		} else { */
-/* 			CRM_ASSERT(FALSE); */
+/* 			CRM_DEV_ASSERT(FALSE); */
 		}
 	}
 #  endif
@@ -1237,7 +1237,7 @@ crm_element_value_copy(crm_data_t *data, const char *name)
 		cl_is_allocated(value);
 	}
 #endif
- 	CRM_ASSERT(value != NULL);
+ 	CRM_DEV_ASSERT(value != NULL);
 	if(value != NULL) {
 		value_copy = crm_strdup(value);
 	}
@@ -1274,7 +1274,7 @@ crm_update_parents(crm_data_t *xml_root)
 	crm_validate_data(xml_root);
 	xml_child_iter(
 		xml_root, a_child, NULL,
-		crm_set_element_parent(a_child, root);
+		crm_set_element_parent(a_child, xml_root);
 		crm_update_parents(a_child);
 		);
 #endif
@@ -1451,7 +1451,7 @@ parse_xml(const char *input, int *offset)
 	crm_debug("Processing tag %s", tag_name);
 	
 	new_obj = ha_msg_new(1);
-	CRM_ASSERT(cl_is_allocated(new_obj) == 1);
+	CRM_DEV_ASSERT(cl_is_allocated(new_obj) == 1);
 	
 	ha_msg_add(new_obj, XML_ATTR_TAGNAME, tag_name);
 	lpc = len;
@@ -1477,7 +1477,7 @@ parse_xml(const char *input, int *offset)
 						if(child == NULL) {
 							error = "error parsing child";
 						} else {
-							CRM_ASSERT(cl_is_allocated(child) == 1);
+							CRM_DEV_ASSERT(cl_is_allocated(child) == 1);
 							ha_msg_addstruct(
 								new_obj, crm_element_name(child), child);
 							crm_debug("Finished parsing child: %s",
@@ -1561,7 +1561,7 @@ parse_xml(const char *input, int *offset)
 		(*offset) += lpc;
 	}
 	
-	CRM_ASSERT(cl_is_allocated(new_obj) == 1);
+	CRM_DEV_ASSERT(cl_is_allocated(new_obj) == 1);
 	return new_obj;
 }
 
