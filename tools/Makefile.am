@@ -29,14 +29,15 @@ habindir		= @bindir@
 #halibdir		= $(libdir)/@HB_PKG@
 gliblib			= @GLIBLIB@
 
-habin_PROGRAMS		= cl_status cl_respawn ccdv
+habin_PROGRAMS		= cl_status cl_respawn
 
 ## SOURCES
-#ccdv: 	ccdv.c
-#	gcc -o ccdv ccdv.c
-ccdv_SOURCES		= ccdv.c
+ccdv: 	ccdv.c
+	gcc -o ccdv ccdv.c
 
 cl_status_SOURCES	= cl_status.c
+# A little trick. Now ccdv can be auto-built but not auto-cleaned.
+cl_status_DEPENDENCIES  = ccdv
 cl_status_LDADD		= $(top_builddir)/lib/hbclient/libhbclient.la	\
 			  $(top_builddir)/lib/clplumbing/libplumb.la	\
 			  $(gliblib)					\
