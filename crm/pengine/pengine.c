@@ -81,6 +81,7 @@ color_t *no_color = NULL;
 
 int max_valid_nodes = 0;
 int order_id = 1;
+int action_id = 1;
 
 gboolean pe_debug = FALSE;
 gboolean pe_debug_saved = FALSE;
@@ -242,7 +243,7 @@ stage5(GSListPtr resources)
 		}
 		if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL) {
 			rsc->stop->node = safe_val(NULL, rsc, cur_node);
-			rsc->start->runnable = FALSE;
+			rsc->start->node = NULL;
 			
 		} else if(safe_str_eq(safe_val4(NULL, rsc, cur_node, details, id),
 				      safe_val6(NULL, rsc, color ,details,
@@ -276,16 +277,87 @@ stage5(GSListPtr resources)
 			rsc->start->runnable = TRUE;
 		}
 
-		print_action("stage5", rsc->stop, FALSE);
-		print_action("stage5", rsc->start, FALSE);
-		
 		);
 	
 	return TRUE;
 }
 
 gboolean
-stage6(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints)
+stage6(GSListPtr stonith_nodes, GSListPtr shutdown_nodes)
+{
+
+	int lpc = 0;
+	int llpc = 0;
+	slist_iter(
+		node, node_t, shutdown_nodes, lpc,
+
+		action_t *down_node =
+			action_new(action_id++, NULL, shutdown_crm);
+		down_node->node = node;
+		down_node->runnable = TRUE;
+
+		action_list = g_slist_append(action_list, down_node);
+		
+		slist_iter(
+			rsc, resource_t, node->details->running_rsc, llpc,
+			
+			order_constraint_t *order = (order_constraint_t*)
+				cl_malloc(sizeof(order_constraint_t));
+
+			/* stop resources before shutdown */
+			order->id = order_id++;
+			order->lh_action = rsc->stop;
+			order->rh_action = down_node;
+			order->strength = must;
+			action_cons_list = g_slist_append(action_cons_list, order);
+			);
+		);
+
+	slist_iter(
+		node, node_t, stonith_nodes, lpc,
+
+		action_t *stonith_node =
+			action_new(action_id++, NULL, stonith_op);
+		stonith_node->node = node;
+		stonith_node->runnable = TRUE;
+
+		action_list = g_slist_append(action_list, stonith_node);
+
+		slist_iter(
+			rsc, resource_t, node->details->running_rsc, llpc,
+			
+			order_constraint_t *order = (order_constraint_t*)
+				cl_malloc(sizeof(order_constraint_t));
+
+			/* try stopping the resource before stonithing the node
+			 *
+			 * if the stop succeeds, the transitioner can then
+			 * decided if  stonith is needed
+			 */
+			order->id = order_id++;
+			order->lh_action = rsc->stop;
+			order->rh_action = stonith_node;
+			order->strength = must;
+			action_cons_list = g_slist_append(action_cons_list, order);
+
+			/* stonith before start */
+			order = (order_constraint_t*)
+				cl_malloc(sizeof(order_constraint_t));
+
+			// try stopping the node first
+			order->id = order_id++;
+			order->lh_action = stonith_node;
+			order->rh_action = rsc->start;
+			order->strength = must;
+			action_cons_list = g_slist_append(action_cons_list, order);
+			);
+		);
+	
+
+	return TRUE;
+}
+gboolean
+stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints)
 {
 	int lpc = 0;
 
@@ -346,6 +418,30 @@ stage6(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints)
 	
 	return TRUE;
 }
+
+gboolean
+stage8(GSListPtr action_sets)
+{
+	int lpc = 0;
+	cl_log(LOG_INFO, "========= Action Sets =========");
+
+	cl_log(LOG_INFO, "\t========= Set %d (Un-runnable) =========", -1);
+	slist_iter(action, action_t, action_list, lpc,
+		   if(action->optional == FALSE && action->runnable == FALSE) {
+			   print_action("\t", action, TRUE);
+		   }
+		);
+
+	int lpc2;
+	slist_iter(action_set, GSList, action_set_list, lpc,
+		   cl_log(LOG_INFO, "\t========= Set %d =========", lpc);
+		   slist_iter(action, action_t, action_set, lpc2,
+			      print_action("\t", action, TRUE)));
+
+	return TRUE;
+}
+
+
 
 gboolean
 summary(GSListPtr resources)
@@ -498,9 +594,6 @@ unpack_nodes(xmlNodePtr nodes)
 
 	return TRUE;
 }
-
-
-int action_id = 1;
 
 gboolean 
 unpack_resources(xmlNodePtr resources)
@@ -1112,9 +1205,11 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state)
 		node->details->running_rsc =
 			g_slist_append(node->details->running_rsc, rsc_lh);
 
+		/* it is runnable, but depends on a stonith op 
 		if(safe_val3(FALSE, node, details, unclean)) {
 			rsc_lh->runnable = FALSE;
 		}
+		*/
 		
 		if((safe_str_eq(rsc_state, "starting"))
 		   || (safe_str_eq(rsc_state, "started"))) {
@@ -1309,7 +1404,6 @@ create_action_set(action_t *action)
 	}
 
 	pdebug_action(print_action("Create action set for", action, FALSE));
-	pe_debug_on();
 	
 	// process actions_before
 	if(action->seen_count == 0) {

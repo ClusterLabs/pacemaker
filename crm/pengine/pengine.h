@@ -44,6 +44,7 @@ enum action_tasks {
 	stop_rsc,
 	start_rsc,
 	shutdown_crm,
+	stonith_op
 };
 
 enum action_order {
@@ -163,10 +164,10 @@ extern gboolean stage2(GSListPtr sorted_rsc,
 extern gboolean stage3(void);
 extern gboolean stage4(GSListPtr colors);
 extern gboolean stage5(GSListPtr resources);
-extern gboolean stage6(GSListPtr resources,
+extern gboolean stage6(GSListPtr stonith, GSListPtr shutdown);
+extern gboolean stage7(GSListPtr resources,
 		       GSListPtr actions,
 		       GSListPtr action_constraints);
-extern gboolean stage7(GSListPtr resources);
 extern gboolean summary(GSListPtr resources);
 
 extern GSListPtr rsc_list; 

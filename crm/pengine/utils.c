@@ -482,6 +482,9 @@ strength2text(enum con_strength strength)
 		case must_not:
 			result = "must_not";
 			break;
+		case startstop:
+			result = "start/stop";
+			break;
 	}
 	return result;
 };
@@ -525,6 +528,9 @@ task2text(enum action_tasks task)
 			break;
 		case shutdown_crm:
 			result = "shutdown_crm";
+			break;
+		case stonith_op:
+			result = "stonith";
 			break;
 	}
 	
@@ -735,31 +741,39 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 		return;
 	}
 
-	cl_log(LOG_DEBUG, "%s%s%sAction %d: %s %s @ %s",
-	       pre_text==NULL?"":pre_text,
-	       pre_text==NULL?"":": ",
-	       action->runnable?action->optional?"Optional ":action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
-	       action->id,
-	       task2text(action->task),
-	       safe_val3(NULL, action, rsc, id),
-	       safe_val7(NULL, action, rsc, color, details, chosen_node, details, id));
-	
-//	if(details == FALSE) {
-		cl_log(LOG_DEBUG, "\t\t(seen=%d, before=%d, after=%d)",
-		       action->seen_count,
-		       g_slist_length(action->actions_before),
-		       g_slist_length(action->actions_after));
-//	}
+	switch(action->task) {
+		case stonith_op:
+		case shutdown_crm:
+			cl_log(LOG_DEBUG, "%s%s%sAction %d: %s @ %s",
+			       pre_text==NULL?"":pre_text,
+			       pre_text==NULL?"":": ",
+			       action->runnable?action->optional?"Optional ":action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+			       action->id,
+			       task2text(action->task),
+			       safe_val4(NULL, action, node, details, id));
+			break;
+		default:
+			cl_log(LOG_DEBUG, "%s%s%sAction %d: %s %s @ %s",
+			       pre_text==NULL?"":pre_text,
+			       pre_text==NULL?"":": ",
+			       action->runnable?action->optional?"Optional ":action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+			       action->id,
+			       task2text(action->task),
+			       safe_val3(NULL, action, rsc, id),
+			       safe_val7(NULL, action, rsc, color, details, chosen_node, details, id));
+			
+			break;
+	}
 
 	if(details) {
 		int lpc = 0;
-#if 1
+#if 0
 		cl_log(LOG_DEBUG, "\t\t====== Before");
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
 			print_action("\t\t", other->action, FALSE);
 			);
-//#else
+#else
 		cl_log(LOG_DEBUG, "\t\t====== After");
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
@@ -767,7 +781,14 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			);		
 #endif
 		cl_log(LOG_DEBUG, "\t\t====== End");
+
+	} else {
+		cl_log(LOG_DEBUG, "\t\t(seen=%d, before=%d, after=%d)",
+		       action->seen_count,
+		       g_slist_length(action->actions_before),
+		       g_slist_length(action->actions_after));
 	}
+	
 	
 
 }
