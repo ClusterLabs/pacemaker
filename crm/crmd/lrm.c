@@ -751,6 +751,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	crm_data_t *fragment;
 	int len = 0;
 	char *fail_state = NULL;
+	int rc = cib_ok;
 
 	if(op == NULL || rsc == NULL) {
 		crm_err("Either resouce or op was not specified");
@@ -808,68 +809,35 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	set_xml_property_copy(iter, XML_LRM_ATTR_TARGET, fsa_our_uname);
 	
 	fragment = create_cib_fragment(update, NULL);
-	
-	{
-		int lpc = 0;
-		int rc = cib_ok;
-		int call_options = cib_sync_call;
 
-		if(fsa_state != S_NOT_DC
-		   && AM_I_DC == FALSE
-		   && fsa_our_dc == NULL) {
-			call_options = 0;
-			crm_devel("Possibly nowhere to send resource update to."
-				  "  Performing an async update just in case.");
-		}
-
-		do {
-			fsa_cib_conn->call_timeout = 5;
-			rc = fsa_cib_conn->cmds->modify(
-				fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
-				call_options);
+	/* make it an asyncronous call and be done with it
+	 *
+	 * Best case:
+	 *   the resource state will be discovered during
+	 *   the next signup or election.
+	 *
+	 * Bad case:
+	 *   we are shutting down and there is no DC at the time,
+	 *   but then why were we shutting down then anyway?
+	 *   (probably because of an internal error)
+	 *
+	 * Worst case:
+	 *   we get shot for having resources "running" when the really weren't
+	 *
+	 * the alternative however means blocking here for too long, which
+	 * isnt acceptable
+	 */
+	rc = fsa_cib_conn->cmds->modify(
+		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, cib_none);
 			
-		} while(rc < cib_ok && lpc++ < 5);
-		fsa_cib_conn->call_timeout = 0; /* back to the default */
-
-		/*
-		 * There are a couple of options here...
-		 *
-		 * One is that maybe just the CRMd died.  So this is a
-		 *   callback from last time.
-		 *
-		 * Another is that the update occurred while the next DC was
-		 *   being elected.
-		 *
-		 * Either way, as long as one of the conditions below is met,
-		 *   then the resource state will be discovered during
-		 *   the next signup or election.
-		 */
-
-		if(rc > 0) {
-			/* the return code is a call number, not an error
-			 * code
-			 */
-			crm_devel("Sent resource state update message: %d", rc);
-			
-		} else if(rc == cib_ok) {
-			crm_verbose("Resource state update: %s",
-				    cib_error2string(rc));
-			
-		} else if(AM_I_DC) {
-			crm_err("Resource state update failed: %s",
-				cib_error2string(rc));
-			CRM_DEV_ASSERT(rc == cib_ok && AM_I_DC);
-			
-		} else if(rc == cib_master_timeout) {
-			crm_warn("Resource state update failed: %s",
-				cib_error2string(rc));
-			crm_warn("The resource state will be updated during the"
-				 " next transition");
-		} else {
-			crm_err("Resource state update failed: %s",
-				cib_error2string(rc));	
-			CRM_DEV_ASSERT(rc == cib_ok);
-		}
+	if(rc > 0) {
+		/* the return code is a call number, not an error code */
+		crm_devel("Sent resource state update message: %d", rc);
+		
+	} else {
+		crm_err("Resource state update failed: %s",
+			cib_error2string(rc));	
+		CRM_DEV_ASSERT(rc == cib_ok);
 	}
 	
 	free_xml(fragment);
