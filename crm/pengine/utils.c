@@ -1,6 +1,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xmlutils.h>
+#include <crm/common/crmutils.h>
 #include <crm/cib.h>
 #include <glib.h>
 #include <libxml/tree.h>
@@ -436,6 +437,26 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
+action_t *
+action_new(int id, resource_t *rsc, enum action_tasks task)
+{
+	action_t *action = (action_t*)cl_malloc(sizeof(action_t));
+	action->id = id;
+	action->rsc = rsc;
+	action->task = task;
+	action->actions_before = NULL;
+	action->actions_after = NULL;
+	action->node = NULL; // fill node in later
+	action->runnable = FALSE;
+	action->processed = FALSE;
+	action->optional = FALSE;
+	action->failed = FALSE;   // here?
+	action->complete = FALSE; // here?
+	action->seen_count = 0;
+
+	return action;
+}
+
 const char *
 contype2text(enum con_type type)
 {
@@ -768,13 +789,13 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 	if(details) {
 		int lpc = 0;
 #if 0
-		cl_log(LOG_DEBUG, "\t\t====== Before");
+		cl_log(LOG_DEBUG, "\t\t====== Preceeding Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
 			print_action("\t\t", other->action, FALSE);
 			);
 #else
-		cl_log(LOG_DEBUG, "\t\t====== After");
+		cl_log(LOG_DEBUG, "\t\t====== Subsequent Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
 			print_action("\t\t", other->action, FALSE);
@@ -788,26 +809,57 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 		       g_slist_length(action->actions_before),
 		       g_slist_length(action->actions_after));
 	}
-	
-	
-
 }
 
 
-action_t *
-action_new(int id, resource_t *rsc, enum action_tasks task)
+xmlNodePtr
+action2xml(action_t *action)
 {
-	action_t *action = (action_t*)cl_malloc(sizeof(action_t));
-	action->id = id;
-	action->rsc = rsc;
-	action->task = task;
-	action->actions_before = NULL;
-	action->actions_after = NULL;
-	action->node = NULL; // fill node in later
-	action->runnable = FALSE;
-	action->processed = FALSE;
-	action->optional = FALSE;
-	action->failed = FALSE;   // here?
-	action->complete = FALSE; // here?
-	action->seen_count = 0;
+	xmlNodePtr action_xml = NULL;
+	
+	if(action == NULL) {
+		return NULL;
+	}
+	
+	switch(action->task) {
+		case stonith_op:
+			action_xml = create_xml_node(NULL, "pseduo_event");
+			set_xml_property_copy(action_xml,
+					      "on_node",
+					      safe_val4(NULL, action, node, details, id));
+			break;
+		case shutdown_crm:
+			action_xml = create_xml_node(NULL, "crm_event");
+			set_xml_property_copy(action_xml,
+					      "on_node",
+					      safe_val4(NULL, action, node, details, id));
+			break;
+		default:
+			action_xml = create_xml_node(NULL, "rsc_op");
+			set_xml_property_copy(action_xml,
+					      "on_node",
+					      safe_val7(NULL, action, rsc, color,
+							details, chosen_node, details, id));
+			add_node_copy(action_xml, action->rsc->xml);
+			
+			break;
+	}
+
+	set_xml_property_copy(action_xml,
+			      "id",
+			      crm_itoa(action->id));
+
+	set_xml_property_copy(action_xml,
+			      "runnable",
+			      action->runnable?"true":"false");
+
+	set_xml_property_copy(action_xml,
+			      "optional",
+			      action->optional?"true":"false");
+
+	set_xml_property_copy(action_xml,
+			      "task",
+			      task2text(action->task));
+
+	return action_xml;
 }

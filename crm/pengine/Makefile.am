@@ -52,17 +52,24 @@ AM_CFLAGS	= @CFLAGS@						\
 lib_LTLIBRARIES	= 
 
 ## binary progs
-halib_PROGRAMS	= ptest
+halib_PROGRAMS	= ptest pengine
 
 ## SOURCES
 
 noinst_HEADERS	= 
 
-ptest_SOURCES	= pengine.c utils.c ptest.c 
+ptest_SOURCES	= pengine.c utils.c ptest.c
 
 ptest_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ptest_LDFLAGS	= $(XML_LIBS)
 ptest_LDADD	= $(COMMONLIBS) 
+
+pengine_SOURCES	= pengine.c utils.c messages.c penginemain.c 
+
+pengine_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+pengine_LDFLAGS	= $(XML_LIBS)
+pengine_LDADD	= $(COMMONLIBS) \
+		$(top_builddir)/lib/hbclient/libhbclient.la
 
 #
 

@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.11 2004/05/03 12:34:36 andrew Exp $ */
+/* $Id: ptest.c,v 1.12 2004/05/04 11:51:10 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -234,6 +234,9 @@ main(int argc, char **argv)
 	cl_log(LOG_INFO, "========= Shutdown List =========");
 	slist_iter(node, node_t, shutdown_list, lpc,
 		   print_node(NULL, node, FALSE));
+
+	cl_log(LOG_INFO, "=#=#=#=#= Stage 8 =#=#=#=#=");
+	stage8(action_set_list);
 
 	return 0;
 }

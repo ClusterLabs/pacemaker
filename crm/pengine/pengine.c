@@ -1,6 +1,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xmlutils.h>
+#include <crm/common/crmutils.h>
 #include <crm/cib.h>
 #include <glib.h>
 #include <libxml/tree.h>
@@ -78,6 +79,7 @@ GSListPtr stonith_list = NULL;
 GSListPtr shutdown_list = NULL;
 color_t *current_color = NULL;
 color_t *no_color = NULL;
+xmlNodePtr xml_set_of_sets = NULL;
 
 int max_valid_nodes = 0;
 int order_id = 1;
@@ -423,21 +425,31 @@ gboolean
 stage8(GSListPtr action_sets)
 {
 	int lpc = 0;
-	cl_log(LOG_INFO, "========= Action Sets =========");
+	xmlNodePtr xml_action_set = NULL;
 
-	cl_log(LOG_INFO, "\t========= Set %d (Un-runnable) =========", -1);
+	xml_set_of_sets = create_xml_node(NULL, "transition_graph");
+	
 	slist_iter(action, action_t, action_list, lpc,
 		   if(action->optional == FALSE && action->runnable == FALSE) {
-			   print_action("\t", action, TRUE);
+			   print_action("Ignoring", action, TRUE);
 		   }
 		);
 
 	int lpc2;
 	slist_iter(action_set, GSList, action_set_list, lpc,
-		   cl_log(LOG_INFO, "\t========= Set %d =========", lpc);
-		   slist_iter(action, action_t, action_set, lpc2,
-			      print_action("\t", action, TRUE)));
+		   pdebug("Processing Action Set %d", lpc);
+		   xml_action_set = create_xml_node(NULL, "actions");
+		   set_xml_property_copy(xml_action_set, "id", crm_itoa(lpc));
 
+		   slist_iter(action, action_t, action_set, lpc2,
+			      xmlNodePtr xml_action = action2xml(action);
+			      xmlAddChild(xml_action_set, xml_action);
+			   )
+		   xmlAddChild(xml_set_of_sets, xml_action_set);
+		);
+
+	xml_message_debug(xml_set_of_sets, "created action list");
+	
 	return TRUE;
 }
 

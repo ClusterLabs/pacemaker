@@ -168,7 +168,10 @@ extern gboolean stage6(GSListPtr stonith, GSListPtr shutdown);
 extern gboolean stage7(GSListPtr resources,
 		       GSListPtr actions,
 		       GSListPtr action_constraints);
+extern gboolean stage8(GSListPtr action_sets);
 extern gboolean summary(GSListPtr resources);
+
+extern gboolean pe_input_dispatch(IPC_Channel *sender, void *user_data);
 
 extern GSListPtr rsc_list; 
 extern GSListPtr node_list;
@@ -180,41 +183,7 @@ extern GSListPtr colors;
 extern GSListPtr stonith_list;
 extern GSListPtr shutdown_list;
 extern GSListPtr action_set_list;
-
-extern void print_node(const char *pre_text,
-		       node_t *node,
-		       gboolean details);
-
-extern void print_resource(const char *pre_text,
-			   resource_t *rsc,
-			   gboolean details);
-
-extern void print_rsc_to_node(const char *pre_text,
-			      rsc_to_node_t *cons,
-			      gboolean details);
-
-extern void print_rsc_to_rsc(const char *pre_text,
-			     rsc_to_rsc_t *cons,
-			     gboolean details);
-
-extern void print_color(const char *pre_text,
-			color_t *color,
-			gboolean details);
-
-extern void print_color_details(const char *pre_text,
-				struct color_shared_s *color,
-				gboolean details);
-
-extern void print_action(const char *pre_text,
-			 action_t *action,
-			 gboolean details);
-
-extern const char *contype2text(enum con_type type);
-extern const char *strength2text(enum con_strength strength);
-extern const char *modifier2text(enum con_modifier modifier);
-extern const char *task2text(enum action_tasks task);
-
-extern action_t *action_new(int id, resource_t *rsc, enum action_tasks task);
+extern xmlNodePtr xml_set_of_sets;
 
 #define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
 				         x *w = (x*)g_slist_nth_data(y, z); \
@@ -241,3 +210,5 @@ extern gboolean pe_debug_saved;
 #define safe_val5(def, t,u,v,w,x)   safe_val(def, safe_val(NULL, safe_val(NULL, safe_val(NULL, t,u),v),w),x)
 #define safe_val6(def, t,u,v,w,x,y) safe_val(def, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, t,u),v),w),x),y)
 #define safe_val7(def, t,u,v,w,x,y,z) safe_val(def, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, t,u),v),w),x),y),z)
+
+#include <pe_utils.h>
