@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.34 2005/03/16 19:45:09 andrew Exp $ */
+/* $Id: callbacks.c,v 1.35 2005/03/18 23:22:16 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -360,7 +360,7 @@ cib_common_callback(
 			 */
 			break;
 		}
-		op_request = msgfromIPC(channel);
+		op_request = msgfromIPC(channel, 0);
 		if (op_request == NULL) {
 			perror("Receive failure:");
 			break;
