@@ -177,6 +177,8 @@ random for the selected number of iterations.
             self.audit(BadNews, test)
 
         self.Scenario.TearDown(self.CM)
+        
+        self.audit(BadNews, None)
 
         for test in self.Tests:
             self.IndividualStats[test.name] = test.Stats
