@@ -55,7 +55,7 @@ class LinuxHAv2(HeartbeatCM):
             "StartCmd"       : "@libdir@/heartbeat/heartbeat >/dev/null 2>&1",
             "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
             "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null",
-	    "EpocheCmd"	     : "@libdir@/heartbeat/ccm_epoche",
+            "EpocheCmd"             : "@libdir@/heartbeat/ccm_epoche",
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s status 0 0 EVERYTIME 2>/dev/null|grep return",
             "IsIPAddrRscRunning"   : "",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
@@ -77,7 +77,7 @@ class LinuxHAv2(HeartbeatCM):
                 r"CRIT:",
             ),
         })
-	self.default_cts_cib='''
+        self.default_cts_cib='''
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
    <configuration>
      <crm_config/>
@@ -86,18 +86,18 @@ class LinuxHAv2(HeartbeatCM):
      </resources>
      <constraints>
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
-	<rule id="can_run_DcIPaddr" result="can" boolean_op="and">
-	  <expression attribute="is_dc" operation="eq" value="true"/>
-	</rule>
+        <rule id="can_run_DcIPaddr" result="can" boolean_op="and">
+          <expression attribute="is_dc" operation="eq" value="true"/>
+        </rule>
       </rsc_location>
      </constraints>
    </configuration>
    <status/>
 </cib>
 '''
-	if self.Env["CIBResource"] == 1:
-	    print("Enabling DC resource")
-	    self.default_cts_cib='''
+        if self.Env["CIBResource"] == 1:
+            print("Enabling DC resource")
+            self.default_cts_cib='''
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
    <configuration>
      <crm_config/>
@@ -105,17 +105,17 @@ class LinuxHAv2(HeartbeatCM):
      <resources>
        <resource id="DcIPaddr" class="heartbeat" type="IPaddr2" priority="1.0">
          <instance_attributes>
-	   <rsc_parameters>
-	     <nvpair name="1" value="127.0.0.10"/>
-	   </rsc_parameters>
+           <rsc_parameters>
+             <nvpair name="1" value="127.0.0.10"/>
+           </rsc_parameters>
          </instance_attributes>
        </resource>
      </resources>
      <constraints>
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
-	<rule id="can_run_DcIPaddr" result="can" boolean_op="and">
-	  <expression attribute="is_dc" operation="eq" value="true"/>
-	</rule>
+        <rule id="can_run_DcIPaddr" result="can" boolean_op="and">
+          <expression attribute="is_dc" operation="eq" value="true"/>
+        </rule>
       </rsc_location>
      </constraints>
    </configuration>
@@ -155,42 +155,42 @@ class LinuxHAv2(HeartbeatCM):
     def StartaCM(self, node):
 
         '''Start up the cluster manager on a given node'''
-	patterns = []
-	patterns.append(self["Pat:We_started"]%node)
+        patterns = []
+        patterns.append(self["Pat:We_started"]%node)
 
-	# only search for this pattern if there is another node out there
-	# that should be the DC
-	if self.any_running == 1:
-	    patterns.append(self["Pat:DC_IDLE"])
+        # only search for this pattern if there is another node out there
+        # that should be the DC
+        if self.any_running == 1:
+            patterns.append(self["Pat:DC_IDLE"])
 
         watch = CTS.LogWatcher(self["LogFileName"], patterns, 90)
         watch.setwatch()
 
         self.log ("Starting %s on node %s" %(self["Name"], node))
 
-	if self.Env["ClobberCIB"] != None:
-	    if self.Env["CIBfilename"] == None:
-		os.system("rm -f /tmp/cts.default.cib")
-		os.system("echo \'" + self.default_cts_cib + "\' > /tmp/cts.default.cib")
-		self.rsh.cp("/tmp/cts.default.cib", self["CIBfile"]%node)
-		os.system("rm -f /tmp/cts.default.cib")
-	    else:
-		self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
+        if self.Env["ClobberCIB"] != None:
+            if self.Env["CIBfilename"] == None:
+                os.system("rm -f /tmp/cts.default.cib")
+                os.system("echo \'" + self.default_cts_cib + "\' > /tmp/cts.default.cib")
+                self.rsh.cp("/tmp/cts.default.cib", self["CIBfile"]%node)
+                os.system("rm -f /tmp/cts.default.cib")
+            else:
+                self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
 
         self.rsh(node, self["StartCmd"])
         if watch.lookforall():
             self.ShouldBeStatus[node]=self["up"]
             return 1
 
-	out = self.rsh.readaline(node, self["StatusCmd"])
-	if string.find(out, 'ok') == -1:
-	    self.ShouldBeStatus[node]=self["down"]        
-	    self.log ("Could not start %s on node %s"
-		      %        (self["Name"], node))
-	else:
-	    self.ShouldBeStatus[node]=self["up"]        
-	    self.log ("%s only partially started on node %s"
-		      %        (self["Name"], node))
+        out = self.rsh.readaline(node, self["StatusCmd"])
+        if string.find(out, 'ok') == -1:
+            self.ShouldBeStatus[node]=self["down"]        
+            self.log ("Could not start %s on node %s"
+                      %        (self["Name"], node))
+        else:
+            self.ShouldBeStatus[node]=self["up"]        
+            self.log ("%s only partially started on node %s"
+                      %        (self["Name"], node))
 
         return None
 
@@ -228,9 +228,9 @@ class LinuxHAv2(HeartbeatCM):
 
     def any_running(self):
         for node in self.CM.Env["nodes"]:
-	    if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-		return 1
-	return 0
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                return 1
+        return 0
 
 class HAResourceAudit(ClusterAudit):
     def __init__(self, cm):
@@ -409,8 +409,8 @@ class CrmdStateAudit(ClusterAudit):
             passed = 0
             self.CM.log("Cluster is not stable: %d (of %d)." 
                      %(len(unstable_list), up_count))
-	    for status in unstable_list:
-		self.CM.log("%s" %(status))
+            for status in unstable_list:
+                self.CM.log("%s" %(status))
 
         if up_are_down > 0:
             passed = 0
@@ -455,59 +455,59 @@ class DcIPaddrAudit(ClusterAudit):
         self.CM.log ("Do Audit %s"%self.name())
         passed = 1
 
-	the_dc = self.find_dc()
-	if the_dc == None:
-	    return passed
+        the_dc = self.find_dc()
+        if the_dc == None:
+            return passed
 
         #Make sure the resouces are running on one and only one node
         Resources = self.CM.Resources()
         for resource in Resources :
-	    if resource.rid == "DcIPaddr":
-		if self.audit_ip_addr(resource, the_dc) == 0:
-		    passed = 0
+            if resource.rid == "DcIPaddr":
+                if self.audit_ip_addr(resource, the_dc) == 0:
+                    passed = 0
 
         return passed
 
     def is_node_dc(self, node):
-	out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
-	return (string.find(out, 'S_IDLE') != -1)
+        out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
+        return (string.find(out, 'S_IDLE') != -1)
 
     def audit_ip_addr(self, resource, node):
         self.CM.log ("Auditing %s"%(resource))
-	RunningNodes = self._RscRunningNodes(resource)
-	if len(RunningNodes) == 0 :
-	    self.CM.log("%s is not running" %(resource))
-	    for node in self.CM.Env["nodes"]:
-		if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-		    out = self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
-		    self.CM.log("%s" %(out))
-	    return 0
+        RunningNodes = self._RscRunningNodes(resource)
+        if len(RunningNodes) == 0 :
+            self.CM.log("%s is not running" %(resource))
+            for node in self.CM.Env["nodes"]:
+                if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                    out = self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
+                    self.CM.log("%s" %(out))
+            return 0
 
-	if len(RunningNodes) > 1:
-	    self.CM.log("%s is running more than once"	%(resource))
+        if len(RunningNodes) > 1:
+            self.CM.log("%s is running more than once"        %(resource))
 
-	for running_on in RunningNodes:
-	    if self.is_node_dc(running_on) == 0:
-		self.CM.log("%s is running on a non-DC node %s" 
-			    %(resource, running_on))
-		return 0
+        for running_on in RunningNodes:
+            if self.is_node_dc(running_on) == 0:
+                self.CM.log("%s is running on a non-DC node %s" 
+                            %(resource, running_on))
+                return 0
 
-	return 1
+        return 1
 
     def name(self):
         return "DcIPaddrAudit"
 
     def find_dc(self):
         for node in self.CM.Env["nodes"]:
-	    if self.is_node_dc(node):
-		return node
-	return None
+            if self.is_node_dc(node):
+                return node
+        return None
 
     def _RscRunningNodes(self, resource):
         ResourceNodes = []
         for node in self.CM.Env["nodes"]:
-	    if resource.IsRunningOn(node):
-		ResourceNodes.append(node)
+            if resource.IsRunningOn(node):
+                ResourceNodes.append(node)
         return ResourceNodes
 
 class DcAudit(ClusterAudit):
@@ -518,8 +518,8 @@ class DcAudit(ClusterAudit):
         ,        "failure":0
         ,        "skipped":0
         ,        "auditfail":0}
-	self.NodeEpoche={}
-	self.NodeState={}
+        self.NodeEpoche={}
+        self.NodeState={}
 
     def has_key(self, key):
         return self.Stats.has_key(key)
@@ -539,53 +539,53 @@ class DcAudit(ClusterAudit):
     def __call__(self):
         self.CM.log ("Do Audit %s"%self.name())
         passed = 0
-	lowest_epoche = None
-	nodes_up = 0
+        lowest_epoche = None
+        nodes_up = 0
 
-	dc_allowed_list=[]
-
-        for node in self.CM.Env["nodes"]:
-	    if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-		nodes_up = nodes_up + 1
-#		self.PS_State[node] = os.system("@SSH@ root@%s ps -C crmd" %(node))
-		self.NodeEpoche[node] = self.CM.rsh.readaline(
-		    node, self.CM["EpocheCmd"])
-		self.NodeState[node] = self.CM.rsh.readaline(
-		    node, self.CM["StatusCmd"]%node)
-
-		if len(self.NodeState[node]) > 1:
-		    self.NodeState[node] = self.NodeState[node][:-1]
-
-		if len(self.NodeEpoche[node]) > 0:
-		    self.NodeEpoche[node] = int(self.NodeEpoche[node][:-1])
-		    if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
-			lowest_epoche = self.NodeEpoche[node]
-
-	if nodes_up == 0:
-	    return 1
+        dc_allowed_list=[]
 
         for node in self.CM.Env["nodes"]:
-	    if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-		if self.NodeEpoche[node] == lowest_epoche:
-		    dc_allowed_list.append(node)
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                nodes_up = nodes_up + 1
+#                self.PS_State[node] = os.system("@SSH@ root@%s ps -C crmd" %(node))
+                self.NodeEpoche[node] = self.CM.rsh.readaline(
+                    node, self.CM["EpocheCmd"])
+                self.NodeState[node] = self.CM.rsh.readaline(
+                    node, self.CM["StatusCmd"]%node)
 
-	for node in dc_allowed_list:
-	    if self.is_node_dc(self.NodeState[node]):
-		passed = 1
+                if len(self.NodeState[node]) > 1:
+                    self.NodeState[node] = self.NodeState[node][:-1]
 
-	if passed == 0:
-	    self.CM.log("DC not found on any of the %d allowed nodes: %s"
-			%(len(dc_allowed_list), str(dc_allowed_list)))
-	    for node in self.CM.Env["nodes"]:
-		if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-		    self.CM.log("epoche %s : %s"  
-				%(self.NodeEpoche[node], self.NodeState[node]))
-		    
+                if len(self.NodeEpoche[node]) > 0:
+                    self.NodeEpoche[node] = int(self.NodeEpoche[node][:-1])
+                    if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
+                        lowest_epoche = self.NodeEpoche[node]
+
+        if nodes_up == 0:
+            return 1
+
+        for node in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                if self.NodeEpoche[node] == lowest_epoche:
+                    dc_allowed_list.append(node)
+
+        for node in dc_allowed_list:
+            if self.is_node_dc(self.NodeState[node]):
+                passed = 1
+
+        if passed == 0:
+            self.CM.log("DC not found on any of the %d allowed nodes: %s"
+                        %(len(dc_allowed_list), str(dc_allowed_list)))
+            for node in self.CM.Env["nodes"]:
+                if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                    self.CM.log("epoche %s : %s"  
+                                %(self.NodeEpoche[node], self.NodeState[node]))
+                    
 
         return passed
 
     def is_node_dc(self, status_line):
-	return (string.find(status_line, 'S_IDLE') != -1) 
+        return (string.find(status_line, 'S_IDLE') != -1) 
 
     def name(self):
         return "DcAudit"
@@ -610,7 +610,7 @@ class ResourceRecover(CTSTest):
         self.CM.log("Choice resource [%s] [%s] on (%s)"%(resourcetype,str(resource.rid),node[0]))
 
         # stop a resource
-	resource.Stop(node[0])
+        resource.Stop(node[0])
         retrycount=1
 
         while retrycount<=self.max:
