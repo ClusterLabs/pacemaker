@@ -17,42 +17,42 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-INCLUDES       	= -I$(top_builddir)/include -I$(top_srcdir)/include     \
-					-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl   \
-					-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
-					-I$(top_builddir) -I$(top_srcdir)
+INCLUDES       	= -I$(top_builddir)/include  -I$(top_srcdir)/include	\
+		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl   	\
+		  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha 	\
+		  -I$(top_builddir)          -I$(top_srcdir)
 
-hadir			= $(sysconfdir)/ha.d
-halibdir		= $(libdir)/@HB_PKG@
-commmoddir		= $(halibdir)/modules/comm
-havarlibdir		= $(localstatedir)/lib/@HB_PKG@
-PIDFILE			= $(localstatedir)/run/crmd.pid
-XML_FLAGS		= `xml2-config --cflags`
-XML_LIBS		= `xml2-config --libs`
+hadir		= $(sysconfdir)/ha.d
+halibdir	= $(libdir)/@HB_PKG@
+commmoddir	= $(halibdir)/modules/comm
+havarlibdir	= $(localstatedir)/lib/@HB_PKG@
+PIDFILE		= $(localstatedir)/run/crmd.pid
+XML_FLAGS	= `xml2-config --cflags`
+XML_LIBS	= `xml2-config --libs`
 
-# fifos with path
-crmdir			= $(havarlibdir)/crm
-apigid			= @HA_APIGID@
-crmuid			= @HA_CCMUID@
-crmreqfifo		= $(havarlibdir)/api/crm.req
-crmresfifo		= $(havarlibdir)/api/crm.rsp
+# sockets with path
+crmdir		= $(havarlibdir)/crm
+apigid		= @HA_APIGID@
+crmuid		= @HA_CCMUID@
+crmreqsocket	= $(havarlibdir)/api/crm.req
+crmressocket	= $(havarlibdir)/api/crm.rsp
 
-LIBRT 			= @LIBRT@
-AM_CFLAGS		= @CFLAGS@	\
-				-DPIDFILE='"$(PIDFILE)"' \
-				$(CRM_DEBUG_FLAGS)
+LIBRT 		= @LIBRT@
+AM_CFLAGS	= @CFLAGS@			\
+		  -DPIDFILE='"$(PIDFILE)"' 	\
+		  $(CRM_DEBUG_FLAGS)
 
 ## libraries
-lib_LTLIBRARIES		= libcrmcommon.la
+lib_LTLIBRARIES	= libcrmcommon.la
 
 
 ## binary progs
-halib_PROGRAMS		= 
+halib_PROGRAMS	= 
 
 
 ## SOURCES
 
-noinst_HEADERS		= 
+noinst_HEADERS	= 
 
 libcrmcommon_la_SOURCES	= ipcutils.c crmutils.c xmlutils.c msgutils.c
 libcrmcommon_la_LDFLAGS	= -version-info 0:0:0

@@ -30,12 +30,12 @@ PIDFILE			= $(localstatedir)/run/crmd.pid
 XML_FLAGS		= `xml2-config --cflags`
 XML_LIBS		= `xml2-config --libs`
 
-# fifos with path
+# sockets with path
 crmdir			= $(havarlibdir)/crm
 apigid			= @HA_APIGID@
 crmuid			= @HA_CCMUID@
-crmreqfifo		= $(havarlibdir)/api/crm.req
-crmresfifo		= $(havarlibdir)/api/crm.rsp
+crmreqsocket		= $(havarlibdir)/api/crm.req
+crmressocket		= $(havarlibdir)/api/crm.rsp
 
 COMMONLIBS		= $(CRM_DEBUG_LIBS) 								\
 				$(top_builddir)/lib/clplumbing/libplumb.la			\

@@ -30,7 +30,7 @@ PIDFILE		= $(localstatedir)/run/crmd.pid
 XML_FLAGS	= `xml2-config --cflags`
 XML_LIBS	= `xml2-config --libs`
 
-# fifos with path
+# sockets with path
 crmdir		= $(havarlibdir)/crm
 
 COMMONLIBS	= $(CRM_DEBUG_LIBS) 					\
