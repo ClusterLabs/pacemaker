@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.34 2005/02/17 16:31:44 andrew Exp $ */
+/* $Id: xml.c,v 1.35 2005/02/18 10:36:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -470,14 +470,15 @@ copy_xml_node_recursive(crm_data_t *src_node)
 	return local_node;
 #   endif		
 #else
+	CRM_DEV_ASSERT(src_node != NULL);
+	CRM_DEV_ASSERT(crm_element_name(src_node) != NULL);
+
 	if(src_node == NULL) {
 		crm_warn("Attempt to dup NULL XML");
-		CRM_DEV_ASSERT(FALSE);
 		return NULL;
 		
 	} else if(crm_element_name(src_node) == NULL) {
 		crm_xml_err(src_node, "Attempt to dup XML with no name");
-		CRM_DEV_ASSERT(FALSE);
 		return NULL;
 	}
 	
@@ -732,6 +733,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 			res = fprintf(file_output_strm, "%s", buffer);
 			fflush(file_output_strm);
 		}
+		fclose(file_output_strm);
 		crm_free(buffer);
 	}
 #endif
@@ -846,9 +848,10 @@ dump_xml_formatted(crm_data_t *an_xml_node)
 	mutable_ptr = buffer;
 	
 	crm_validate_data(an_xml_node);
-	if(dump_data_element(0, &mutable_ptr, an_xml_node, TRUE) < 0) {
+	CRM_DEV_ASSERT(dump_data_element(
+			       0, &mutable_ptr, an_xml_node, TRUE) >= 0);
+	if(crm_assert_failed) {
 		crm_crit("Could not dump the whole message");
-		CRM_DEV_ASSERT(FALSE);
 	}
 	crm_trace("Dumped: %s", buffer);
 #endif
@@ -922,10 +925,12 @@ dump_xml_unformatted(crm_data_t *an_xml_node)
 	mutable_ptr = buffer;
 	
 	crm_validate_data(an_xml_node);
-	if(dump_data_element(0, &mutable_ptr, an_xml_node, FALSE) < 0) {
+	CRM_DEV_ASSERT(dump_data_element(
+			       0, &mutable_ptr, an_xml_node, TRUE) >= 0);
+	if(crm_assert_failed) {
 		crm_crit("Could not dump the whole message");
-		CRM_DEV_ASSERT(FALSE);
 	}
+
 	crm_trace("Dumped: %s", buffer);
 #endif
 	return buffer;
