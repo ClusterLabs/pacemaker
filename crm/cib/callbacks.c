@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.29 2005/03/08 15:30:53 andrew Exp $ */
+/* $Id: callbacks.c,v 1.30 2005/03/08 18:59:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -961,8 +961,8 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		} else {
 			crm_warn("Client %s may have left us",
 				 crm_str(client_id));
+			crm_msg_del(client_reply);
 		}
-		crm_msg_del(client_reply);
 	}
 
 	if(needs_reply == FALSE) {
