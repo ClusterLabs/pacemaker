@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.3 2004/06/03 07:52:16 andrew Exp $ */
+/* $Id: utils.c,v 1.4 2004/06/21 08:43:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -77,26 +77,32 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 	int len = 0;
 	const char *temp = NULL;
 
-	
-
 	crm_verbose("Attempting to decode: [%s]", srcstring);
 	if (srcstring != NULL) {
 		len = strlen(srcstring);
 		while(lpc < len) {
-			if (srcstring[lpc++] == separator) {
-				*name = (char*)crm_malloc(sizeof(char)*lpc);
-				strncpy(*name, srcstring, lpc-1);
-				(*name)[lpc-1] = '\0';
+			if (srcstring[lpc] == separator
+			    || srcstring[lpc] == '\0') {
+				*name = (char*)crm_malloc(sizeof(char)*lpc+1);
+				strncpy(*name, srcstring, lpc);
+				(*name)[lpc] = '\0';
 
-				// this sucks but as the strtok *is* a bug
-				len = len-lpc+1;
-				*value = (char*)crm_malloc(sizeof(char)*len);
-				temp = srcstring+lpc;
-				strncpy(*value, temp, len-1);
-				(*value)[len-1] = '\0';
+// this sucks but as the strtok manpage says.. it *is* a bug
+				len = len-lpc;
+				len--;
+				if(len > 0) {
+					*value = (char*)crm_malloc(
+						sizeof(char)*len+1);
+					temp = srcstring+lpc+1;
+					strncpy(*value, temp, len);
+					(*value)[len] = '\0';
+				} else {
+					*value = NULL;
+				}
 
 				return TRUE;
 			}
+			lpc++;
 		}
 	}
 
@@ -161,8 +167,6 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 	char *char_value = (char*)value;
 	int value_len = strlen(char_value);
 
-	
-    
 	crm_info("Decoding hash value: (%s:%d)",
 	       char_value,
 	       value_len);
@@ -232,7 +236,7 @@ do_crm_log(int log_level, const char *function, const char *fmt, ...)
 			do_log = TRUE;
 			break;
 		default:
-			if(log_level >= crm_log_level) {
+			if(log_level <= crm_log_level) {
 				do_log = TRUE;
 				if(log_level != LOG_INFO) {
 					log_level = LOG_DEBUG;
