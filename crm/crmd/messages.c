@@ -90,6 +90,11 @@ register_fsa_input_adv(
 
 	if(input == I_WAIT_FOR_EVENT) {
 		do_fsa_stall = TRUE;
+
+		/* zero out the action register but make sure its added back later */
+/* 		with_actions |= fsa_actions; */
+/* 		fsa_actions = A_NOTHING; */
+		
 		crm_debug("Stalling the FSA pending further input");
 	}
 
@@ -135,11 +140,12 @@ register_fsa_input_adv(
 				fsa_data->data = copy_ccm_data(data);
 				break;
 				
+			case C_SUBSYSTEM_CONNECT:
+				
 			case C_LRM_MONITOR_CALLBACK:
 			case C_TIMER_POPPED:
 			case C_SHUTDOWN:
 			case C_HEARTBEAT_FAILED:
-			case C_SUBSYSTEM_CONNECT:
 			case C_HA_DISCONNECT:
 			case C_ILLEGAL:
 			case C_UNKNOWN:
@@ -345,7 +351,7 @@ do_msg_route(long long action,
 					/* what else should go here? */
 				default:
 					crm_trace("Defering local processing of message");
-					register_fsa_input(
+					register_fsa_input_later(
 						cause, result, msg_data->data);
 
 					result = I_NULL;
@@ -428,7 +434,7 @@ store_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 				 NULL,
 				 NULL);
 
-	register_fsa_input(C_IPC_MESSAGE, I_ROUTER, request);
+	register_fsa_input_later(C_IPC_MESSAGE, I_ROUTER, request);
 	free_xml(request);
 	
 	return TRUE;
