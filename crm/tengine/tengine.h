@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.10 2004/10/24 13:00:11 lge Exp $ */
+/* $Id: tengine.h,v 1.11 2004/11/12 17:14:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,6 +35,7 @@ typedef enum {
 
 typedef struct synapse_s {
 		int id;
+		gboolean triggers_complete;
 		gboolean complete;
 		gboolean confirmed;
 		GListPtr actions; /* action_t* */
@@ -103,6 +104,7 @@ extern uint default_transition_timeout;
 extern te_timer_t *transition_timer;
 extern te_timer_t *transition_fuzz_timer;
 
+extern const char *actiontype2text(action_type_e type);
 
 #endif
 

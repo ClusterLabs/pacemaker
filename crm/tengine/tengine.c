@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.35 2004/10/01 13:23:45 andrew Exp $ */
+/* $Id: tengine.c,v 1.36 2004/11/12 17:14:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,15 +27,21 @@
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
 
+gboolean graph_complete = FALSE;
 GListPtr graph = NULL;
 IPC_Channel *crm_ch = NULL;
 uint transition_timeout = 30*1000; /* 30 seconds */
 uint transition_fuzz_timeout = 0;
 uint default_transition_timeout = 30*1000; /* 30 seconds */
+uint next_transition_timeout = 30*1000; /* 30 seconds */
 
+void fire_synapse(synapse_t *synapse);
 gboolean initiate_action(action_t *action);
-gboolean in_transition = FALSE;
+gboolean confirm_synapse(synapse_t *synapse, int action_id);
+void process_trigger(int action_id);
+void check_synapse_triggers(synapse_t *synapse, int action_id);
 
+gboolean in_transition = FALSE;
 te_timer_t *transition_timer = NULL;
 te_timer_t *transition_fuzz_timer = NULL;
 int transition_counter = 0;
@@ -43,9 +49,28 @@ int transition_counter = 0;
 gboolean
 initialize_graph(void)
 {
-	stop_te_timer(transition_timer);
-	stop_te_timer(transition_fuzz_timer);
-
+	if(transition_timer == NULL) {
+		crm_malloc(transition_timer, sizeof(te_timer_t));
+	    
+		transition_timer->timeout   = 10;
+		transition_timer->source_id = -1;
+		transition_timer->reason    = timeout_timeout;
+		transition_timer->action    = NULL;
+	} else {
+		stop_te_timer(transition_timer);
+	}
+	
+	if(transition_fuzz_timer == NULL) {
+		crm_malloc(transition_fuzz_timer, sizeof(te_timer_t));
+	
+		transition_fuzz_timer->timeout   = 10;
+		transition_fuzz_timer->source_id = -1;
+		transition_fuzz_timer->reason    = timeout_fuzz;
+		transition_fuzz_timer->action    = NULL;
+	} else {
+		stop_te_timer(transition_fuzz_timer);
+	}
+	
 	while(g_list_length(graph) > 0) {
 		synapse_t *synapse = g_list_nth_data(graph, 0);
 
@@ -198,12 +223,11 @@ match_graph_event(action_t *action, xmlNodePtr event)
 gboolean
 process_graph_event(xmlNodePtr event)
 {
-	int lpc = 0, lpc2 = 0;
-	int local_transition_timeout = transition_timeout;
 	int action_id          = -1;
 	int op_status_i        = 0;
-	gboolean complete      = TRUE;
 	const char *op_status  = xmlGetProp(event, XML_LRM_ATTR_OPSTATUS);
+
+	next_transition_timeout = transition_timeout;
 	
 	if(op_status != NULL) {
 		op_status_i = atoi(op_status);
@@ -245,108 +269,11 @@ process_graph_event(xmlNodePtr event)
 		return FALSE;
 /*	} else { we dont care, a transition is starting */
 	}
+
+
+	process_trigger(action_id);
 	
-	/* something happened, stop the timer and start it again at the end */
-	stop_te_timer(transition_timer);
-	
-	slist_iter(
-		synapse, synapse_t, graph, lpc,
-		
-		gboolean prereqs_complete = TRUE;
-
-		if(synapse->confirmed) {
-			crm_debug("Skipping confirmed synapse %d", synapse->id);
-			continue;
-			
-		} else if(synapse->complete == FALSE) {
-			crm_debug("Checking pre-reqs for %d", synapse->id);
-			/* lookup prereqs */
-			slist_iter(
-				prereq, action_t, synapse->inputs, lpc2,
-				
-				crm_devel("Processing input %d", prereq->id);
-				
-				if(prereq->id == action_id) {
-					crm_devel("Marking input %d complete",
-						  action_id);
-					prereq->complete = TRUE;
-					
-				} else if(prereq->complete == FALSE) {
-					crm_devel("Inputs for synapse %d not satisfied",
-						  synapse->id);
-					prereqs_complete = FALSE;
-				}
-				
-				);
-		}
-		
-		crm_debug("Initiating outstanding actions for %d", synapse->id);
-		if(synapse->complete) {
-			crm_debug("Skipping complete synapse %d", synapse->id);
-		
-		} else if(prereqs_complete) {
-
-			crm_devel("All inputs for synapse %d satisfied..."
-				  " invoking actions", synapse->id);
-			slist_iter(
-				action, action_t, synapse->actions, lpc2,
-
-				/* allow some leway */
-				int tmp_time = 2 * action->timeout;
-				gboolean passed = FALSE;
-				action->invoked = TRUE;
-
-				/* Invoke the action and start the timer */
-				passed = initiate_action(action);
-
-				if(passed == FALSE) {
-					crm_err("Failed initiating "
-						"<%s id=%d> in synapse %d",
-						action->xml->name, action->id,
-						synapse->id);
-
-					send_abort("Action init failed",
-						   action->xml);
-					break;
-				} 
-				if(tmp_time > local_transition_timeout) {
-					local_transition_timeout = tmp_time;
-				}
-			
-				);
-			synapse->complete = TRUE;
-			crm_debug("Synapse %d complete", synapse->id);
-		}
-		
-		crm_debug("Checking if %d is confirmed", synapse->id);
-		if(synapse->complete == FALSE) {
-			crm_debug("Found an incomplete synapse"
-				  " - transition not complete");
-			/* indicate that the transition is not yet complete */
-			complete = FALSE;
-			
-		} else if(synapse->confirmed == FALSE) {
-			synapse->confirmed = TRUE;
-			slist_iter(
-				action, action_t, synapse->actions, lpc2,
-				
-				if(action->type == action_type_rsc
-				   && action->complete == FALSE) {
-					complete = FALSE;
-					synapse->confirmed = FALSE;
-					crm_debug("Found an incomplete action"
-						  " - transition not complete");
-					break;
-				}
-				);
-		}
-		crm_debug("%d is %s",
-			  synapse->id,
-			  synapse->confirmed?"confirmed":synapse->complete?"complete":"pending");
-		);
-
-
-	if(complete) {
+	if(graph_complete) {
 		/* allow some slack until we are pretty sure nothing
 		 * else is happening
 		 */
@@ -368,13 +295,15 @@ process_graph_event(xmlNodePtr event)
 		/* restart the transition timer again */
 		crm_info("Transition not yet complete");
 		print_state(TRUE);
-		transition_timer->timeout = local_transition_timeout;
+		transition_timer->timeout = next_transition_timeout;
 		start_te_timer(transition_timer);
 	}
-	
-	
+
 	return TRUE;
 }
+
+
+
 
 gboolean
 initiate_action(action_t *action) 
@@ -406,18 +335,24 @@ initiate_action(action_t *action)
 	timeout  = xmlGetProp(action->xml, "timeout");
 
 	if(id == NULL || strlen(id) == 0
-		  || on_node == NULL || strlen(on_node) == 0
-		  || task == NULL || strlen(task) == 0) {
+	   || task == NULL || strlen(task) == 0) {
 		/* error */
-		crm_err("Failed on corrupted command: %s (id=%s) on %s",
-			crm_str(task), crm_str(id), crm_str(on_node));
-			
+		crm_err("Failed on corrupted command: %s (id=%s) %s",
+			action->xml->name, crm_str(id), crm_str(task));
+
 	} else if(action->type == action_type_pseudo){
-		crm_err("Failed on unsupported %s: "
-			"%s (id=%s) on %s",
-			action->xml->name, task, id, on_node);
+		crm_info("Executing pseudo-event (%d): "
+			 "%s on %s", action->id, task, on_node);
 		
 		action->complete = TRUE;
+		process_trigger(action->id);
+		ret = TRUE;
+			
+	} else if(on_node == NULL || strlen(on_node) == 0) {
+		/* error */
+		crm_err("Failed on corrupted command: %s (id=%s) %s on %s",
+			action->xml->name, crm_str(id),
+			crm_str(task), crm_str(on_node));
 			
 	} else if(action->type == action_type_crm){
 		/*
@@ -519,3 +454,151 @@ initiate_transition(void)
 
 	return TRUE;
 }
+
+void
+check_synapse_triggers(synapse_t *synapse, int action_id)
+{
+	synapse->triggers_complete = TRUE;
+			
+	if(synapse->confirmed) {
+		crm_debug("Skipping confirmed synapse %d", synapse->id);
+		return;
+			
+	} else if(synapse->complete == FALSE) {
+		crm_debug("Checking pre-reqs for %d", synapse->id);
+		/* lookup prereqs */
+		slist_iter(
+			prereq, action_t, synapse->inputs, lpc,
+				
+			crm_devel("Processing input %d", prereq->id);
+				
+			if(prereq->id == action_id) {
+				crm_devel("Marking input %d complete",
+					  action_id);
+				prereq->complete = TRUE;
+					
+			} else if(prereq->complete == FALSE) {
+				crm_devel("Inputs for synapse %d not satisfied",
+					  synapse->id);
+				synapse->triggers_complete = FALSE;
+			}
+				
+			);
+	}
+}
+
+void
+fire_synapse(synapse_t *synapse) 
+{
+	if(synapse == NULL) {
+		crm_err("Synapse was NULL!");
+		return;
+	}
+	
+	crm_debug("Checking if synapse %d needs to be fired", synapse->id);
+	if(synapse->complete) {
+		crm_debug("Skipping complete synapse %d", synapse->id);
+		return;
+		
+	} else if(synapse->triggers_complete == FALSE) {
+		crm_debug("Synapse %d not yet satisfied", synapse->id);
+		return;
+	}
+	
+	crm_devel("All inputs for synapse %d satisfied... invoking actions",
+		  synapse->id);
+
+	synapse->complete = TRUE;
+	slist_iter(
+		action, action_t, synapse->actions, lpc,
+
+		/* allow some leway */
+		int tmp_time = 2 * action->timeout;
+		gboolean passed = FALSE;
+		action->invoked = TRUE;
+
+		/* Invoke the action and start the timer */
+		passed = initiate_action(action);
+
+		if(passed == FALSE) {
+			crm_err("Failed initiating <%s id=%d> in synapse %d",
+				action->xml->name, action->id, synapse->id);
+
+			send_abort("Action init failed", action->xml);
+			return;
+		} 
+		if(tmp_time > next_transition_timeout) {
+			next_transition_timeout = tmp_time;
+		}
+			
+		);
+	
+	crm_debug("Synapse %d complete", synapse->id);
+}
+
+gboolean
+confirm_synapse(synapse_t *synapse, int action_id) 
+{
+	gboolean complete = TRUE;
+	synapse->confirmed = TRUE;
+	slist_iter(
+		action, action_t, synapse->actions, lpc,
+		
+		if(action->type == action_type_rsc
+		   && action->complete == FALSE) {
+			complete = FALSE;
+			synapse->confirmed = FALSE;
+			crm_debug("Found an incomplete action"
+				  " - transition not complete");
+			break;
+		}
+		);
+	return complete;
+}
+
+void
+process_trigger(int action_id) 
+{
+	graph_complete = TRUE;
+	
+	crm_debug("Processing trigger from action %d", action_id);
+	
+	/* something happened, stop the timer and start it again at the end */
+	stop_te_timer(transition_timer);
+	
+	slist_iter(
+		synapse, synapse_t, graph, lpc,
+		
+		if(synapse->confirmed) {
+			crm_debug("Skipping confirmed synapse %d", synapse->id);
+			continue;
+		}
+		
+		check_synapse_triggers(synapse, action_id);
+		
+		fire_synapse(synapse);
+
+		if(graph == NULL) {
+			crm_err("Trigger processing aborted after failed synapse");
+			break;
+		}
+		
+		crm_debug("Checking if %d is confirmed", synapse->id);
+		if(synapse->complete == FALSE) {
+			crm_debug("Found an incomplete synapse"
+				  " - transition not complete");
+			/* indicate that the transition is not yet complete */
+			graph_complete = FALSE;
+			
+		} else if(synapse->confirmed == FALSE) {
+			graph_complete = graph_complete
+				&& confirm_synapse(synapse, action_id);
+			
+		}
+
+		crm_debug("%d is %s", synapse->id,
+			  synapse->confirmed?"confirmed":synapse->complete?"complete":"pending");
+		
+		);
+}
+	
