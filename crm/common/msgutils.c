@@ -39,23 +39,13 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-
-
-char *
-getNow(void)
-{
-	char *since_epoch = (char*)ha_malloc(128*(sizeof(char)));
-	FNIN();
-	sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
-	FNRET(since_epoch);
-}
-
-
 xmlNodePtr
 createPingAnswerFragment(const char *from, const char *status)
 {
-	xmlNodePtr ping = create_xml_node(NULL, XML_CRM_TAG_PING);
+	xmlNodePtr ping = NULL;
 	FNIN();
+	
+	ping = create_xml_node(NULL, XML_CRM_TAG_PING);
 	
 	set_xml_property_copy(ping, XML_PING_ATTR_STATUS, status);
 	set_xml_property_copy(ping, XML_PING_ATTR_SYSFROM, from);
@@ -112,9 +102,7 @@ createCrmMsg(xmlNodePtr data, gboolean is_request)
 	set_xml_property_copy(doc->children,
 			      XML_MSG_ATTR_MSGTYPE,
 			      message_type);
-	set_xml_property_copy(doc->children,
-			      XML_ATTR_TSTAMP,
-			      getNow());
+	set_node_tstamp(doc->children);
     
 	// create a place holder for the eventual data
 	xmlNodePtr xml_node   = create_xml_node(doc->children, NULL,
@@ -131,7 +119,10 @@ const char *
 generateReference(void)
 {
 	FNIN();
-	FNRET(getNow());
+	char *since_epoch = (char*)ha_malloc(128*(sizeof(char)));
+	FNIN();
+	sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
+	FNRET(since_epoch);
 }
 
 gboolean
@@ -152,7 +143,7 @@ conditional_add_failure(xmlNodePtr failed,
 		       operation,
 		       return_code);
 	
-		xmlNodePtr xml_node = create_xml_node(NULL,
+		xmlNodePtr xml_node = create_xml_node(failed,
 						      XML_FAIL_TAG_CIB);
 		set_xml_property_copy(xml_node,
 				      XML_FAILCIB_ATTR_ID,
@@ -178,8 +169,6 @@ conditional_add_failure(xmlNodePtr failed,
 		set_xml_property_copy(xml_node,
 				      XML_FAILCIB_ATTR_REASON,
 				      buffer);
-	
-		xmlAddChild(failed, xml_node);
 	}
 
 	FNRET(was_error);
@@ -588,9 +577,7 @@ send_ipc_request(IPC_Channel *ipc_channel, xmlNodePtr xml_msg_node,
 	set_xml_property_copy(doc->children,
 			      XML_MSG_ATTR_MSGTYPE,
 			      message_type);
-	set_xml_property_copy(doc->children,
-			      XML_ATTR_TSTAMP,
-			      getNow());
+	set_node_tstamp(doc->children);
 	set_xml_property_copy(doc->children,
 			      XML_MSG_ATTR_REFERENCE,
 			      crm_msg_reference);
@@ -697,13 +684,15 @@ create_reply(xmlNodePtr original_request,
 	if (type == NULL)
 	{
 		cl_log(LOG_ERR,
-		       "Cannot create reply, no message type in original message");
+		       "Cannot create reply, no message type "
+		       "in original message");
 		FNRET(NULL);
 	}
 	else if (strcmp(XML_MSG_TAG_REQUEST, type) != 0)
 	{
 		cl_log(LOG_ERR,
-		       "Cannot create reply, original message was not a request");
+		       "Cannot create reply, original message "
+		       "was not a request");
 		FNRET(NULL);
 	}
 
@@ -726,9 +715,7 @@ create_reply(xmlNodePtr original_request,
 			      CRM_VERSION);
 	set_xml_property_copy(doc->children,
 			      XML_MSG_ATTR_MSGTYPE, message_type);
-	set_xml_property_copy(doc->children,
-			      XML_ATTR_TSTAMP,
-			      getNow());
+	set_node_tstamp(doc->children);
 
 	/* since this is a reply, we reverse the from and to */
 
@@ -819,9 +806,7 @@ create_forward(xmlNodePtr original_request,
 	set_xml_property_copy(doc->children,
 			      XML_MSG_ATTR_MSGTYPE,
 			      message_type);
-	set_xml_property_copy(doc->children,
-			      XML_ATTR_TSTAMP,
-			      getNow());
+	set_node_tstamp(doc->children);
     
 	// HOSTTO will be ignored if it is to the DC anyway.
 	set_xml_property_copy(doc->children,

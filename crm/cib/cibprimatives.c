@@ -63,6 +63,7 @@ addResource(xmlNodePtr cib, cibResource *xml_node)
 	int add_res = 0;
 	const char * id = NULL;
 	const char * type = NULL;
+	xmlNodePtr new_parent = NULL;
 
 	FNIN();
 	
@@ -75,10 +76,16 @@ addResource(xmlNodePtr cib, cibResource *xml_node)
 		add_res = -2;
 	else if (type == NULL || strlen(type) < 1)
 		add_res = -3;
-	else
-		add_res = add_node_copy(cib,
-					XML_CIB_TAG_RESOURCES,
-					xml_node);
+	else {
+		new_parent = get_object_root(XML_CIB_TAG_RESOURCES, cib);
+
+		if(new_parent == NULL) {
+			// create it?
+			add_res = -4;
+		} else {
+			xmlAddChild(new_parent, xml_node);
+		}
+	}
 
 	FNRET(add_res);
 }
@@ -87,8 +94,13 @@ addResource(xmlNodePtr cib, cibResource *xml_node)
 xmlNodePtr
 findResource(xmlNodePtr cib, const char *id)
 {
-	xmlNodePtr root = find_xml_node(cib, XML_CIB_TAG_RESOURCES);
-	FNRET(find_entity(root, XML_CIB_TAG_RESOURCE, id, FALSE));
+	xmlNodePtr root = NULL, ret = NULL;
+	FNIN();
+	
+	root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
+	ret = find_entity(root, XML_CIB_TAG_RESOURCE, id, FALSE);
+
+	FNRET(ret);
 }
 
 xmlNodePtr
@@ -111,9 +123,7 @@ newResource(const char *id, const char *type,
 	set_xml_property_copy(xml_node,
 			      XML_CIB_ATTR_MAXINSTANCE,
 			      max_instances);
-	set_xml_property_copy(xml_node,
-			      XML_ATTR_TSTAMP,
-			      getNow());
+	set_node_tstamp(xml_node);
     
 	FNRET(xml_node);
 }
@@ -197,6 +207,7 @@ addStatus(xmlNodePtr cib, cibStatus *xml_node)
 	const char *id = NULL;
 	const char *type = NULL;
 	const char *instance = NULL;
+	xmlNodePtr new_parent = NULL;
 
 	FNIN();
 	
@@ -210,8 +221,16 @@ addStatus(xmlNodePtr cib, cibStatus *xml_node)
 		add_res = -2;
 	else if (type == NULL || strlen(type) < 1)
 		add_res = -3;
-	else
-		add_res = add_node_copy(cib, XML_CIB_TAG_STATUS, xml_node);
+	else {
+		new_parent = get_object_root(XML_CIB_TAG_STATUS, cib);
+
+		if(new_parent == NULL) {
+			// create it?
+			add_res = -4;
+		} else {
+			xmlAddChild(new_parent, xml_node);
+		}
+	}
 
 	FNRET(add_res);
 }
@@ -222,7 +241,7 @@ findStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
 	xmlNodePtr root = NULL, ret = NULL;
 	FNIN();
 	
-	root = find_xml_node(cib, XML_CIB_TAG_STATUS);
+	root = get_object_root(XML_CIB_TAG_STATUS, cib);
 	ret = find_entity(root, XML_CIB_TAG_STATE, id, FALSE);
 
 	FNRET(ret);
@@ -285,9 +304,7 @@ newStatus(const char *res_id, const char *node_id, const char *instance)
 			      XML_CIB_ATTR_SOURCE,
 			      "none");
 	
-	set_xml_property_copy(xml_node,
-			      XML_ATTR_TSTAMP,
-			      getNow());
+	set_node_tstamp(xml_node);
 
 	// a sensible default... parent can update later if required 
 	set_xml_property_copy(xml_node,
@@ -321,6 +338,7 @@ addConstraint(xmlNodePtr cib, cibConstraint *xml_node)
 	int add_res = 0;
 	const char * id = NULL;
 	const char * type = NULL;
+	xmlNodePtr new_parent = NULL;
 
 	FNIN();
 	
@@ -333,10 +351,16 @@ addConstraint(xmlNodePtr cib, cibConstraint *xml_node)
 		add_res = -2;
 	else if (type == NULL || strlen(type) < 1)
 		add_res = -3;
-	else
-		add_res = add_node_copy(cib,
-					XML_CIB_TAG_CONSTRAINTS,
-					xml_node);
+	else {
+		new_parent = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
+
+		if(new_parent == NULL) {
+			// create it?
+			add_res = -4;
+		} else {
+			xmlAddChild(new_parent, xml_node);
+		}
+	}
 
 	FNRET(add_res);
 }
@@ -347,7 +371,7 @@ findConstraint(xmlNodePtr cib, const char *id)
 	xmlNodePtr root = NULL, ret = NULL;
 	FNIN();
 	
-	root = find_xml_node(cib, XML_CIB_TAG_CONSTRAINTS);
+	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
 	ret = find_entity(root, XML_CIB_TAG_CONSTRAINT, id, FALSE);
 
 	FNRET(ret);
@@ -372,9 +396,7 @@ newConstraint(const char *id)
 	set_xml_property_copy(xml_node,
 			      XML_CIB_ATTR_CLEAR,
 			      CIB_VAL_CLEARON_DEFAULT);
-	set_xml_property_copy(xml_node,
-			      XML_ATTR_TSTAMP,
-			      getNow());
+	set_node_tstamp(xml_node);
 
 	FNRET(xml_node);
 }
@@ -451,6 +473,7 @@ addHaNode(xmlNodePtr cib, cibHaNode *xml_node)
 	int add_res = 0;
 	const char * id = NULL;
 	const char * type = NULL;
+	xmlNodePtr new_parent = NULL;
 
 	FNIN();
 	
@@ -463,17 +486,30 @@ addHaNode(xmlNodePtr cib, cibHaNode *xml_node)
 		add_res = -2;
 	else if (type == NULL || strlen(type) < 1)
 		add_res = -3;
-	else
-		add_res = add_node_copy(cib, XML_CIB_TAG_NODES, xml_node);
+	else {
+		new_parent = get_object_root(XML_CIB_TAG_NODES, cib);
 
+		if(new_parent == NULL) {
+			// create it?
+			add_res = -4;
+		} else {
+			xmlAddChild(new_parent, xml_node);
+		}
+	}
+	
 	FNRET(add_res);
 }
 
 xmlNodePtr
 findHaNode(xmlNodePtr cib, const char *id)
 {
-	xmlNodePtr root = find_xml_node(cib, XML_CIB_TAG_NODES);
-	FNRET(find_entity(root, XML_CIB_TAG_NODE, id, FALSE));
+	xmlNodePtr root = NULL, ret = NULL;
+	FNIN();
+	
+	root = get_object_root(XML_CIB_TAG_NODES, cib);
+	ret = find_entity(root, XML_CIB_TAG_NODE, id, FALSE);
+
+	FNRET(ret);
 }
 
 
@@ -509,9 +545,7 @@ newHaNode(const char *id, const char *type)
 	set_xml_property_copy(xml_node,
 			      XML_CIB_ATTR_SOURCE,
 			      CIB_VAL_SOURCE_DEFAULT);
-	set_xml_property_copy(xml_node,
-			      XML_ATTR_TSTAMP,
-			      getNow());
+	set_node_tstamp(xml_node);
 
 	FNRET(xml_node);
 }

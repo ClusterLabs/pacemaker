@@ -55,8 +55,6 @@ extern IPC_WaitConnection *wait_channel_init(char daemonfifo[]);
 
 extern IPC_Message *get_ipc_message(IPC_Channel *client);
 
-extern char* getNow(void);
-
 extern char *dump_xml(xmlNodePtr msg);
 
 extern char *dump_xml_node(xmlNodePtr msg, gboolean whole_doc);

@@ -44,17 +44,22 @@ extern xmlNodePtr status_search;
 
 extern xmlNodePtr get_the_CIB(void);
 extern xmlNodePtr getCibSection(const char *section);
+extern xmlNodePtr get_object_root(const char *object_type,
+				  xmlNodePtr the_root);
 
 extern int initializeCib(xmlNodePtr cib);
 extern gboolean uninitializeCib(void);
-extern xmlNodePtr updatedSearchPath(xmlNodePtr cib, const char *path);
 extern xmlNodePtr createEmptyCib(void);
 extern gboolean verifyCibXml(xmlNodePtr cib);
 extern xmlNodePtr readCibXml(char *buffer);
 extern xmlNodePtr readCibXmlFile(const char *filename);
-extern int moveFile(const char *oldname, const char *newname, gboolean backup, char *ext);
 extern int activateCibBuffer(char *buffer);
 extern int activateCibXml(xmlNodePtr doc);
-//xmlDocPtr createTree(void);
+
+extern int moveFile(const char *oldname,
+		    const char *newname,
+		    gboolean backup,
+		    char *ext);
+
 
 #endif

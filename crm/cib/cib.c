@@ -164,22 +164,25 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 	
 			if (msg_xml_node != NULL) {
 				answer = processCibRequest(msg_xml_node);
-				if (send_ipc_reply(client,
-						   root_xml_node,
-						   answer) == FALSE)
+				if (send_ipc_reply(
+					    client,
+					    root_xml_node,
+					    answer) == FALSE)
 					cl_log(LOG_WARNING,
 					       "Cib answer could not be sent");
-				free_xml(answer);
+/* 				if(answer != NULL) */
+/* 					free_xml(answer); */
 				
 			} else if (root_xml_node != NULL)
 				cl_log(LOG_INFO,
-				       "Received a message for (%s) by mistake",
+				       "Received a message destined for (%s) "
+				       "by mistake",
 				       xmlGetProp(root_xml_node,
 						  XML_MSG_ATTR_SYSTO));
 			else
 				cl_log(LOG_INFO, "Root node was NULL!!");
 
-			free_xml(doc->children);
+			free_xml(root_xml_node);
 		} else {
 			cl_log(LOG_INFO,
 			       "XML Buffer was not valid...\n Buffer: (%s)",
@@ -232,9 +235,7 @@ add_xmlnode_to_cibToResource(xmlNodePtr cib,
 		set_xml_property_copy(node_entry,
 				      XML_CIB_ATTR_WEIGHT,
 				      weight);
-		set_xml_property_copy(node_entry,
-				      XML_ATTR_TSTAMP,
-				      getNow());
+		set_node_tstamp(node_entry);
 	}
 	else
 	{

@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <time.h>
 
 #include <stdlib.h>
 #include <errno.h>
@@ -61,8 +62,11 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	xmlNodePtr child = root->children, lastMatch = NULL;
 	for (j=0; j < len; ++j) {
 		gboolean is_found = FALSE;
-		if (search_path[j] == NULL) break;
-	
+		if (search_path[j] == NULL) {
+			len = j; /* a NULL also means stop searching */
+			break;
+		}
+		
 		while(child != NULL) {
 			const char * child_name = (const char*)child->name;
 			CRM_DEBUG3("comparing (%s) with (%s).",
@@ -333,7 +337,7 @@ set_xml_property_copy(xmlNodePtr node,
 	xmlAttrPtr ret_value = NULL;
 	FNIN();
 
-	CRM_DEBUG3("Attempting to set %s to %s", name, value);
+	CRM_DEBUG3("Setting %s to %s", name, value);
 
 	if (name == NULL)
 		ret_value = NULL;
@@ -353,23 +357,25 @@ xmlNodePtr
 create_xml_node(xmlNodePtr parent, const char *name)
 {
 	const char *local_name = NULL;
+	const char *parent_name = NULL;
 	xmlNodePtr ret_value = NULL;
 	FNIN();
-
-	CRM_DEBUG2("Attempting create node set %s", name);
 
 	if (name == NULL)
 		ret_value = NULL;
 	else {
 		local_name = ha_strdup(name);
 
-		if(parent == NULL)
+		if(parent == NULL) 
 			ret_value = xmlNewNode(NULL, local_name);
-		else
+		else {
+			parent_name = parent->name;
 			ret_value =
 				xmlNewChild(parent, NULL, local_name, NULL);
+		}
 	}
-	
+
+	CRM_DEBUG3("Created node [%s [%s]]", parent_name, local_name);
 	FNRET(ret_value);
 }
 
@@ -377,18 +383,20 @@ xmlNodePtr
 create_xml_doc_node(xmlDocPtr parent, const char *name)
 {
 	const char *local_name = NULL;
+	const char *parent_name = NULL;
 	xmlNodePtr ret_value = NULL;
 	FNIN();
 
-	CRM_DEBUG2("Attempting create node set %s", name);
 
 	if (parent == NULL || name == NULL)
 		ret_value = NULL;
 	else {
+		parent_name = parent->name;
 		local_name = ha_strdup(name);
 		ret_value = xmlNewDocNode(parent, NULL, local_name, NULL);
 	}
 	
+	CRM_DEBUG3("Created node [%s [%s]]", parent_name, local_name);
 	FNRET(ret_value);
 }
 
@@ -412,16 +420,41 @@ free_xml(xmlNodePtr a_node)
 		xmlFreeDoc(a_node->doc);
 	else
 	{
+		CRM_DEBUG2("Siblings: %p", a_node->next);
+		CRM_DEBUG2("Parent: %p", a_node->parent);
+		CRM_DEBUG2("Doc: %p", a_node->doc);
+		CRM_DEBUG2("Children: %p", a_node->children);
+		
 		/* make sure the node is unlinked first */
 		xmlUnlinkNode(a_node);
+
+#if 0
+	/* set a new doc, wont delete without one */
 		xmlDocPtr foo = xmlNewDoc("1.0");
+		xmlDocSetRootElement(foo, a_node);
 		xmlSetTreeDoc(a_node,foo);
 
-		CRM_DEBUG2("new doc %s ",
-			   dump_xml(xmlDocGetRootElement(foo)));
-		xmlFreeNode(a_node);
+		CRM_DEBUG2("Siblings: %p", a_node->next);
+		CRM_DEBUG2("Parent: %p", a_node->parent);
+		CRM_DEBUG2("Doc: %p", a_node->doc);
+		CRM_DEBUG2("Children: %p", a_node->children);
+
 		xmlFreeDoc(foo);
+#else
+		xmlFreeNode(a_node);
+#endif
 	}
 	
 	FNOUT();
 }
+
+void
+set_node_tstamp(xmlNodePtr a_node)
+{
+	char *since_epoch = (char*)ha_malloc(128*(sizeof(char)));
+	FNIN();
+	sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
+	set_xml_property_copy(a_node, XML_ATTR_TSTAMP, since_epoch);
+	ha_free(since_epoch);
+}
+

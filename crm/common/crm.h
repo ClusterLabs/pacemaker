@@ -41,7 +41,7 @@
 #   define CRM_DEBUG4(w,x,y,z)
 #endif
 
-#if 0
+#if 1
 #   define FNIN()     cl_log(LOG_DEBUG, "#---#---# Entering function %s...", __FUNCTION__)
 #   define FNOUT()  { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return;   }
 #   define FNRET(x) { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return x; }
@@ -55,7 +55,5 @@
 extern char *ha_strdup(const char *s);
 extern void *ha_malloc(size_t size);
 extern void  ha_free(void *mem);
-
-extern char* getNow(void);
 
 #endif

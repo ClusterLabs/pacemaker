@@ -39,7 +39,6 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-const char *generateReference(void);
 xmlNodePtr createEmptyMsg(const char *crm_msg_reference);
 xmlNodePtr createLrmdRequest(gboolean isLocal, const char *operation, const char *section,
 			    const char *verbose, xmlNodePtr data);
@@ -55,12 +54,6 @@ void addLrmdFragment(xmlNodePtr top, const char *section, xmlNodePtr data);
 void updateList(xmlNodePtr update_command, xmlNodePtr failed, int operation, const char *section);
 gboolean conditional_add_failure(xmlNodePtr failed, xmlNodePtr target, int operation, int return_code);
 
-
-const char *
-generateReference(void)
-{
-    return getNow();
-}
 
 xmlNodePtr
 createEmptyMsg(const char *crm_msg_reference)

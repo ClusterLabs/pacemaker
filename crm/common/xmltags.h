@@ -96,6 +96,7 @@
 #define XML_FAILCIB_ATTR_REASON     "reason"
 
 //---- CIB specific tags/attrs
+#define XML_CIB_TAG_CONFIGURATION "configuration"
 #define XML_CIB_TAG_STATUS        "status"
 #define XML_CIB_TAG_RESOURCES     "resources"
 #define XML_CIB_TAG_NODES         "nodes"
@@ -104,7 +105,7 @@
 #define XML_CIB_TAG_STATE         "state"
 #define XML_CIB_TAG_RESOURCE      "resource"
 #define XML_CIB_TAG_NODE          "node"
-#define XML_CIB_TAG_CONSTRAINT    "contraint"
+#define XML_CIB_TAG_CONSTRAINT    "constraint"
 #define XML_CIB_TAG_NVPAIR        "nv_pair"
 
 #define XML_CIB_ATTR_HEALTH       "health"

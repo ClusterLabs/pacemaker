@@ -30,8 +30,13 @@ ADMIN_BIN=$CRM_ROOT/admin/crmadmin
 
 
 ## probably dont change anything below here
+
 TYPE=all
 OP=daemon
+
+#clear the CIB
+$ADMIN_BIN --$OP --erase --reference=erase_test
+
 # individual node health
 $ADMIN_BIN --$OP --status=$TEST_NODE1 --reference=ping_test_$TEST_NODE1
 #$ADMIN_BIN --$OP --health=$TEST_NODE2 --reference=ping_test_$TEST_NODE2

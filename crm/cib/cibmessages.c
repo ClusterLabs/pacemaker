@@ -79,12 +79,14 @@ xmlNodePtr createCibFragmentAnswer(const char *section,
 xmlNodePtr
 processCibRequest(xmlNodePtr command)
 {
-	const char *status      = "failed";
-	const char *op          = NULL;
-	const char *verbose     = NULL;
-	const char *section     = NULL;
-	xmlNodePtr failed       = NULL;
-	xmlNodePtr cib_answer   = NULL;
+	const char *status         = "failed";
+	const char *op             = NULL;
+	const char *verbose        = NULL;
+	const char *section        = NULL;
+	const char *output_section = NULL;
+	xmlNodePtr failed          = NULL;
+	xmlNodePtr cib_answer      = NULL;
+	xmlNodePtr cib_section     = NULL;
 
 	gboolean update_the_cib = FALSE;
 	int cib_update_operation = CIB_OP_NONE;
@@ -124,16 +126,27 @@ processCibRequest(xmlNodePtr command)
 		 * returning
 		 */
 		verbose = "true"; 
-		if (cib_answer != NULL) status = "ok";
+		status = "ok";
+		
+	} else if (strcmp("erase", op) == 0) {
+		xmlNodePtr new_cib = createEmptyCib();
+		if (activateCibXml(new_cib) < 0)
+			status = "erase of CIB failed";
+		else
+			status = "ok";
+		
 	} else if (strcmp("create", op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_operation = CIB_OP_ADD;
+		
 	} else if (strcmp("update", op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_operation = CIB_OP_MODIFY;
+		
 	} else if (strcmp("delete", op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_operation = CIB_OP_DELETE;
+		
 	} else if (strcmp("replace", op) == 0) {
 		CRM_DEBUG2("Replacing section=%s of the cib", section);
 		if (strcmp("all", section) == 0) {
@@ -225,16 +238,22 @@ processCibRequest(xmlNodePtr command)
 			CRM_DEBUG2("CIB update status: %s", status);
 		}
 	}
-	if (failed->children != NULL || strcmp("ok", status) != 0)
-		xmlAddChild(cib_answer,
-			    createCibFragmentAnswer("all",
-						    getCibSection(NULL),
-						    failed));
-	else if (strcmp("true", verbose) == 0)
-		xmlAddChild(cib_answer,
-			    createCibFragmentAnswer(section,
-						    getCibSection(section),
-						    failed));
+
+	output_section = section;
+
+	/* dont de-allocate cib_section, its the real thing */
+	if (failed->children != NULL || strcmp("ok", status) != 0) {
+		output_section = "all";
+		cib_section = get_object_root(NULL, get_the_CIB());
+	} else if (strcmp("true", verbose) == 0) {
+		cib_section = get_object_root(output_section, get_the_CIB());
+	}
+
+	if(cib_section != NULL) {
+		xmlAddChild(cib_answer, createCibFragmentAnswer(output_section,
+								cib_section,
+								failed));
+	}
     
 	set_xml_property_copy(cib_answer, XML_CIB_ATTR_SECTION, section);
 	set_xml_property_copy(cib_answer, XML_CIB_ATTR_RESULT, status);
@@ -248,16 +267,16 @@ updateList(xmlNodePtr local_cib,
 	   xmlNodePtr update_command, xmlNodePtr failed,
 	   int operation, const char *section)
 {
-	const char *node_path[3];
+	const char *node_path[2];
 	const char *type_check = NULL;
-	xmlNodePtr xml_section = NULL, child = NULL;
+	xmlNodePtr cib_updates = NULL, xml_section = NULL, child = NULL;
 	FNIN();
 	
 	node_path[0] = XML_CIB_TAG_FRAGMENT;
 	node_path[1] = XML_TAG_CIB;
-	node_path[2] = section;
     
-	xml_section = find_xml_node_nested(update_command, node_path, 3);
+	cib_updates = find_xml_node_nested(update_command, node_path, 2);
+	xml_section = get_object_root(section, cib_updates);
 
 	if (section == NULL || xml_section == NULL) {
 		cl_log(LOG_ERR, "Section %s not found in message."
@@ -275,7 +294,7 @@ updateList(xmlNodePtr local_cib,
 		type_check = XML_CIB_TAG_STATE;
 	else {
 		cl_log(LOG_ERR,
-		       "Unknown section %s.  CIB update is corrupt, ignoring.",
+		       "Unknown section %s.CIB update is corrupt, ignoring.",
 		       section);
 		return;
 	}
@@ -283,7 +302,7 @@ updateList(xmlNodePtr local_cib,
 	child = xml_section->children;
     
 	while(child != NULL) {
-		cl_log(LOG_DEBUG, "#---#---# Performing action %d on (%s=%s).",
+		cl_log(LOG_DEBUG, "#-#-# Performing action %d on (%s=%s).",
 		       operation, child->name, ID(child));
 	
 		if (strcmp(type_check, child->name) == 0
@@ -378,11 +397,13 @@ createCibFragmentAnswer(const char *section,
 			       "Data being added had no name, discarding.");
 			
 		} else if (strcmp(CRM_SYSTEM_CIB, data->name) == 0
-			   && strcmp("all", section) == 0) {
+			   && (section == NULL
+			       || strcmp("all", section) == 0)) {
 			CRM_DEBUG("Added entire cib to cib request");
 			xmlAddChild(fragment, xmlCopyNode(data, 1));
 			
-		} else if (strcmp(data->name, section) == 0) {
+		} else if (section != NULL
+			   && strcmp(data->name, section) == 0) {
 			CRM_DEBUG2("Added section (%s) to cib request",
 				   data->name);
 			cib = create_xml_node(fragment, XML_TAG_CIB);

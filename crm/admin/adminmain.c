@@ -49,6 +49,7 @@
 #include <crm/common/xmlvalues.h>
 #include <crm/cib/cibprimatives.h>
 #include <crm/cib/cibmessages.h>
+#include <crm/cib/cibio.h>
 
 #define OPTARGS	"V?i:o:D:C:S:HA:U:M:I:EWRFt:m:a:d:w:c:r:p:s:"
 
@@ -77,18 +78,19 @@ xmlNodePtr wrapUpdate(xmlNodePtr update,
 char *pluralSection(void);
 
 
-gboolean DO_DAEMON = FALSE;
-gboolean DO_CREATE = FALSE;
-gboolean DO_MODIFY = FALSE;
-gboolean DO_DELETE = FALSE;
-gboolean DO_QUERY = FALSE;
+gboolean DO_DAEMON  = FALSE;
+gboolean DO_ERASE   = FALSE;
+gboolean DO_CREATE  = FALSE;
+gboolean DO_MODIFY  = FALSE;
+gboolean DO_DELETE  = FALSE;
+gboolean DO_QUERY   = FALSE;
 gboolean BE_VERBOSE = FALSE;
 int expected_responses = 1;
 
-gboolean DO_HEALTH = FALSE;
-gboolean DO_ELECT_DC = FALSE;
-gboolean DO_WHOIS_DC = FALSE;
-gboolean DO_RECALC_TREE = FALSE;
+gboolean DO_HEALTH       = FALSE;
+gboolean DO_ELECT_DC     = FALSE;
+gboolean DO_WHOIS_DC     = FALSE;
+gboolean DO_RECALC_TREE  = FALSE;
 gboolean DO_FLUSH_RECALC = FALSE;
 
 typedef struct str_list_s
@@ -150,6 +152,7 @@ main(int argc, char **argv)
 		static struct option long_options[] = {
 			// Top-level Options
 			{"daemon", 0, 0, 0},
+			{"erase", 0, 0, 0},
 			{"query", 0, 0, 0},
 			{"create", 0, 0, 0},
 			{"modify", 0, 0, 0},
@@ -206,6 +209,9 @@ main(int argc, char **argv)
 			
 				if (strcmp("daemon", long_options[option_index].name) == 0)
 					DO_DAEMON = TRUE;
+				else if (strcmp("erase",
+						long_options[option_index].name) == 0)
+					DO_ERASE  = TRUE;
 				else if (strcmp("create",
 						long_options[option_index].name) == 0)
 					DO_CREATE = TRUE;
@@ -478,10 +484,7 @@ handleCreate(void)
 						node_entry,
 						XML_CIB_ATTR_WEIGHT,
 						value);
-					set_xml_property_copy(
-						node_entry,
-						XML_ATTR_TSTAMP,
-						getNow());
+					set_node_tstamp(node_entry);
 					set_xml_property_copy(
 						node_entry,
 						XML_CIB_ATTR_ACTION,
@@ -719,7 +722,9 @@ handleModify(void)
 
 	if (strcmp("node", obj_type) == 0) {
 		section_name = XML_CIB_TAG_NODES;
-		CRM_DEBUG3("Modifing existing %s (%s) object", section_name, id);
+		CRM_DEBUG3("Modifing existing %s (%s) object",
+			   section_name,
+			   id);
 		
 		if (id == NULL) return NULL;
 		
@@ -733,7 +738,9 @@ handleModify(void)
 		
 	} else if (strcmp("resource", obj_type) == 0) {
 		section_name = XML_CIB_TAG_RESOURCES;
-		CRM_DEBUG3("Modifing existing %s (%s) object", section_name, id);
+		CRM_DEBUG3("Modifing existing %s (%s) object",
+			   section_name,
+			   id);
 
 		if (id == NULL) return NULL;
 		new_xml_node = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
@@ -759,8 +766,8 @@ handleModify(void)
 			set_xml_property_copy(new_xml_node,
 					      XML_CIB_ATTR_RESTIMEOUT,
 					      res_timeout);
-		
-		set_xml_property_copy(new_xml_node, XML_ATTR_TSTAMP, getNow());
+
+		set_node_tstamp(new_xml_node);
 
 		// TODO: need to handle add/remove of allowed nodes
 		// add Nodes To Resources
@@ -769,15 +776,33 @@ handleModify(void)
 			while (list_del != list_del_last) {
 				char *name = NULL;
 				char *value = NULL;
-				if (decodeNVpair(iter->value, '=', &name, &value)) {
+				if (decodeNVpair(iter->value, '=',
+						 &name,
+						 &value)) {
+					
 					xmlNodePtr node_entry =
-						create_xml_node(NULL, XML_CIB_ATTR_NODEREF);
-					set_xml_property_copy(node_entry, XML_ATTR_ID, name);
-					set_xml_property_copy(node_entry, XML_CIB_ATTR_WEIGHT, value);
-					set_xml_property_copy(node_entry, XML_ATTR_TSTAMP,
-							      getNow());
-					set_xml_property_copy(node_entry, XML_CIB_ATTR_ACTION, "del");
-					xmlAddChild(new_xml_node, node_entry);
+						create_xml_node(
+							NULL,
+							XML_CIB_ATTR_NODEREF);
+					set_xml_property_copy(
+						node_entry,
+						XML_ATTR_ID,
+						name);
+					
+					set_xml_property_copy(
+						node_entry,
+						XML_CIB_ATTR_WEIGHT,
+						value);
+					
+					set_node_tstamp(node_entry);
+					
+					set_xml_property_copy(
+						node_entry,
+						XML_CIB_ATTR_ACTION,
+						"del");
+					
+					xmlAddChild(new_xml_node,
+						    node_entry);
 				}
 				iter = iter->next;
 			}
@@ -788,15 +813,32 @@ handleModify(void)
 			while (list_add != list_add_last) {
 				char *name = NULL;
 				char *value = NULL;
-				if (decodeNVpair(iter->value, '=', &name, &value)) {
+				if (decodeNVpair(iter->value, '=',
+						 &name,
+						 &value)) {
+					
 					xmlNodePtr node_entry =
-						create_xml_node(NULL, XML_CIB_ATTR_NODEREF);
-					set_xml_property_copy(node_entry, XML_ATTR_ID, name);
-					set_xml_property_copy(node_entry, XML_CIB_ATTR_WEIGHT, value);
-					set_xml_property_copy(node_entry, XML_ATTR_TSTAMP,
-							      getNow());
-					set_xml_property_copy(node_entry, XML_CIB_ATTR_ACTION, "add");
-					xmlAddChild(new_xml_node, node_entry);
+						create_xml_node(
+							NULL,
+							XML_CIB_ATTR_NODEREF);
+					set_xml_property_copy(node_entry,
+							      XML_ATTR_ID,
+							      name);
+					
+					set_xml_property_copy(
+						node_entry,
+						XML_CIB_ATTR_WEIGHT,
+						value);
+					
+					set_node_tstamp(node_entry);
+					
+					set_xml_property_copy(
+						node_entry,
+						XML_CIB_ATTR_ACTION,
+						"add");
+					
+					xmlAddChild(new_xml_node,
+						    node_entry);
 				}
 				iter = iter->next;
 			}
@@ -893,9 +935,7 @@ handleModify(void)
 				iter = iter->next;
 			}
 		}
-		set_xml_property_copy(new_xml_node,
-				      XML_ATTR_TSTAMP,
-				      getNow());
+		set_node_tstamp(new_xml_node);
 	} else {
 		cl_log(LOG_INFO,
 		       "Object Type (%s) not supported",
@@ -918,26 +958,33 @@ xmlNodePtr
 wrapUpdate(xmlNodePtr update, const char *section_name,
 	   const char *action)
 {
+	xmlNodePtr dc_req = NULL, cib_req = NULL;
+	xmlNodePtr cib = NULL, fragment = NULL, object_root = NULL;
+	FNIN();
+
 	// create the cib request
-	xmlNodePtr cib_req = create_xml_node(NULL, XML_REQ_TAG_CIB);
+	cib_req = create_xml_node(NULL, XML_REQ_TAG_CIB);
 	set_xml_property_copy(cib_req, XML_CIB_ATTR_OP, action);
 	set_xml_property_copy(cib_req, XML_ATTR_VERBOSE, verbose);
 	set_xml_property_copy(cib_req, XML_CIB_ATTR_SECTION, section_name);
 
 	// create the update section
-	xmlNodePtr fragment = create_xml_node(cib_req, XML_CIB_TAG_FRAGMENT);
+	fragment = create_xml_node(cib_req, XML_CIB_TAG_FRAGMENT);
 	set_xml_property_copy(fragment, XML_CIB_ATTR_SECTION, section_name);
-	xmlNodePtr cib = create_xml_node(fragment, XML_TAG_CIB);
-	xmlNodePtr section = create_xml_node(cib, pluralSection());
-	xmlAddChild(section, update);
+
+	cib = createEmptyCib();
+	object_root = get_object_root(section_name, cib);
+	xmlAddChild(object_root, update);
+
+	xmlAddChild(fragment, cib);
 
 	// create the real request
-	xmlNodePtr request = create_xml_node(NULL, XML_REQ_TAG_DC);
-	set_xml_property_copy(request, XML_DC_ATTR_OP, "cib_op");
-	set_xml_property_copy(request, XML_ATTR_TIMEOUT, "0");
-	xmlAddChild(request, cib_req);
+	dc_req = create_xml_node(NULL, XML_REQ_TAG_DC);
+	set_xml_property_copy(dc_req, XML_DC_ATTR_OP, "cib_op");
+	set_xml_property_copy(dc_req, XML_ATTR_TIMEOUT, "0");
+	xmlAddChild(dc_req, cib_req);
 
-	return request;
+	return dc_req;
 }
 
 
@@ -950,9 +997,8 @@ pluralSection(void)
 	} else {
 		CRM_DEBUG2("Constructing CIB section from %s", obj_type);
 		obj_type_parent =(char *) ha_malloc(sizeof(char) *
-						    (strlen(obj_type) + 1));
-		cl_log(LOG_DEBUG, "Building the request - 1");
-		sprintf(obj_type_parent, "%s%c", obj_type, 's');
+						    (strlen(obj_type) + 2));
+		sprintf(obj_type_parent, "%s%c%c", obj_type, 's', '\0');
 	}
 	return obj_type_parent;
 }
@@ -962,9 +1008,11 @@ int
 do_work(ll_cluster_t * hb_cluster)
 {
 	/* construct the request */
-	xmlNodePtr xml_root_node = NULL;
+	xmlNodePtr xml_root_node = NULL, cib_req = NULL;
 	const char *dest_node = NULL;
+	
 
+	
 	if (DO_DAEMON == TRUE && DO_QUERY == TRUE) {
 		cl_log(LOG_DEBUG, "Querying the CIB");
 		char *obj_type_parent = pluralSection();
@@ -972,24 +1020,30 @@ do_work(ll_cluster_t * hb_cluster)
 		CRM_DEBUG2("Querying the CIB for section: %s",
 			   obj_type_parent);
 		xml_root_node = create_xml_node(NULL, XML_REQ_TAG_DC);
-		set_xml_property_copy(xml_root_node,
-				      XML_DC_ATTR_OP,
-				      "cib_op");
+		set_xml_property_copy(xml_root_node, XML_DC_ATTR_OP, "cib_op");
 
-		create_xml_node(xml_root_node, XML_REQ_TAG_CIB);
-		set_xml_property_copy(xml_root_node->children,
-				      XML_CIB_ATTR_OP,
-				      "query");
-		set_xml_property_copy(xml_root_node->children,
-				      XML_ATTR_VERBOSE,
-				      verbose);
-		set_xml_property_copy(xml_root_node->children,
+		cib_req = create_xml_node(xml_root_node, XML_REQ_TAG_CIB);
+		set_xml_property_copy(cib_req, XML_CIB_ATTR_OP, "query");
+		set_xml_property_copy(cib_req, XML_ATTR_VERBOSE, verbose);
+		set_xml_property_copy(cib_req,
 				      XML_CIB_ATTR_SECTION,
 				      obj_type_parent);
 
 		dest_node = status;
 		CRM_DEBUG2("CIB query creation %s",
 			   xml_root_node == NULL ? "failed." : "passed.");
+	} else if (DO_DAEMON == TRUE && DO_ERASE == TRUE) {
+		xml_root_node = create_xml_node(NULL, XML_REQ_TAG_DC);
+		set_xml_property_copy(xml_root_node, XML_DC_ATTR_OP, "cib_op");
+
+		cib_req = create_xml_node(xml_root_node, XML_REQ_TAG_CIB);
+		set_xml_property_copy(cib_req, XML_CIB_ATTR_OP, "erase");
+		set_xml_property_copy(cib_req, XML_ATTR_VERBOSE, verbose);
+
+		dest_node = status;
+		CRM_DEBUG2("CIB Erase creation %s",
+			   xml_root_node == NULL ? "failed." : "passed.");
+
 	} else if (DO_DAEMON == FALSE && DO_CREATE == TRUE) {
 		xml_root_node = handleCreate();
 	} else if (DO_DAEMON == FALSE && DO_DELETE == TRUE) {
