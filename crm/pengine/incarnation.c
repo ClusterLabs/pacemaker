@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.1 2004/11/11 14:51:26 andrew Exp $ */
+/* $Id: incarnation.c,v 1.2 2004/11/12 17:18:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,6 +70,7 @@ void incarnation_unpack(resource_t *rsc)
 	crm_malloc(incarnation_data, sizeof(incarnation_variant_data_t));
 	incarnation_data->child_list           = NULL;
 	incarnation_data->interleave           = FALSE;
+	incarnation_data->ordered              = FALSE;
 	incarnation_data->active_incarnation   = 0;
 	incarnation_data->max_incarnation      = crm_atoi(max_incarn,     "1");
 	incarnation_data->max_incarnation_node = crm_atoi(max_incarn_node,"1");
@@ -139,7 +140,7 @@ incarnation_find_child(resource_t *rsc, const char *id)
 
 int incarnation_num_allowed_nodes(resource_t *rsc)
 {
-	int lpc = 0, num_nodes = 0;
+	int num_nodes = 0;
 	incarnation_variant_data_t *incarnation_data = NULL;
 	if(rsc->variant == pe_incarnation) {
 		incarnation_data = (incarnation_variant_data_t *)rsc->variant_opaque;
@@ -163,7 +164,7 @@ int incarnation_num_allowed_nodes(resource_t *rsc)
 
 void incarnation_color(resource_t *rsc, GListPtr *colors)
 {
-	int lpc, lpc2, max_nodes = 0;
+	int lpc = 0, lpc2 = 0, max_nodes = 0;
 	resource_t *child_0  = NULL;
 	resource_t *child_lh = NULL;
 	resource_t *child_rh = NULL;
@@ -231,7 +232,6 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 
 void incarnation_create_actions(resource_t *rsc)
 {
-	int lpc;
 	gboolean child_starting = FALSE;
 	gboolean child_stopping = FALSE;
 	incarnation_variant_data_t *incarnation_data = NULL;
@@ -265,7 +265,6 @@ void incarnation_create_actions(resource_t *rsc)
 
 void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 {
-	int lpc;
 	resource_t *last_rsc = NULL;
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
@@ -284,6 +283,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 			  pecs_startstop, ordering_constraints);
 		
 		if(incarnation_data->ordered && last_rsc != NULL) {
+			crm_info("Ordered version");
 			if(lpc < incarnation_data->active_incarnation) {
 				/* child/child relative start */
 				order_new(last_rsc,  start_rsc, NULL,
@@ -296,7 +296,26 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 				  last_rsc,  stop_rsc, NULL,
 				  pecs_startstop, ordering_constraints);
 
-		} else if(last_rsc != NULL) {
+		} else if(incarnation_data->ordered) {
+			crm_info("Ordered version (1st node)");
+
+			/* child start before global started */
+			order_new(child_rsc,              start_rsc, NULL,
+				  incarnation_data->self, started_rsc, NULL,
+				  pecs_startstop, ordering_constraints);
+			
+			/* first child stop before global stopped */
+			order_new(child_rsc,              stop_rsc, NULL,
+				  incarnation_data->self, stopped_rsc, NULL,
+				  pecs_startstop, ordering_constraints);
+			
+			/* global start before first child start */
+			order_new(incarnation_data->self, start_rsc, NULL,
+				  child_rsc,              start_rsc, NULL,
+				  pecs_startstop, ordering_constraints);
+
+		} else {
+			crm_info("Un-ordered version");
 
 			if(lpc < incarnation_data->active_incarnation) {
 				/* child start before global started */
@@ -320,21 +339,6 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 				  child_rsc,               stop_rsc, NULL,
 				  pecs_startstop, ordering_constraints);
 
-		} else {
-			/* child start before global started */
-			order_new(child_rsc,              start_rsc, NULL,
-				  incarnation_data->self, started_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
-			
-			/* first child stop before global stopped */
-			order_new(child_rsc,              stop_rsc, NULL,
-				  incarnation_data->self, stopped_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
-			
-			/* global start before first child start */
-			order_new(incarnation_data->self, start_rsc, NULL,
-				  child_rsc,              start_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
 		}
 
 		if(lpc < incarnation_data->active_incarnation) {
@@ -344,6 +348,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 		);
 
 	if(incarnation_data->ordered && last_rsc != NULL) {
+		crm_info("Ordered version (last node)");
 		/* last child start before global started */
 		order_new(last_rsc,         start_rsc, NULL,
 			  incarnation_data->self, started_rsc, NULL,
@@ -359,7 +364,6 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 
 void incarnation_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 {
-	int lpc;
 	resource_t *rsc = constraint->rsc_lh;
 	incarnation_variant_data_t *incarnation_data = NULL;
 	
@@ -392,7 +396,6 @@ void incarnation_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 
 void incarnation_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 {
-	int lpc;
 	incarnation_variant_data_t *incarnation_data = NULL;
 	
 	crm_verbose("Processing RH of constraint %s", constraint->id);
@@ -455,7 +458,6 @@ void incarnation_rsc_order_rh(
 
 void incarnation_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
-	int lpc;
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
@@ -471,7 +473,6 @@ void incarnation_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 void incarnation_expand(resource_t *rsc, xmlNodePtr *graph)
 {
-	int lpc;
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
@@ -489,7 +490,6 @@ void incarnation_expand(resource_t *rsc, xmlNodePtr *graph)
 
 void incarnation_dump(resource_t *rsc, const char *pre_text, gboolean details)
 {
-	int lpc;
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
@@ -506,7 +506,6 @@ void incarnation_dump(resource_t *rsc, const char *pre_text, gboolean details)
 
 void incarnation_free(resource_t *rsc)
 {
-	int lpc;
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
@@ -530,7 +529,6 @@ void incarnation_free(resource_t *rsc)
 void
 incarnation_agent_constraints(resource_t *rsc)
 {
-	int lpc;
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
