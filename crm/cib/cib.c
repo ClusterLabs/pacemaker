@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.45 2004/08/03 09:20:36 andrew Exp $ */
+/* $Id: cib.c,v 1.46 2004/08/11 06:56:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -71,6 +71,10 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 	const char *node_stack[2];
 	xmlNodePtr tmp_node = NULL;
 	
+	if(the_root == NULL) {
+		crm_err("CIB root object was NULL");
+		return NULL;
+	}
 	
 	node_stack[0] = XML_CIB_TAG_CONFIGURATION;
 	node_stack[1] = object_type;
