@@ -59,7 +59,9 @@ Pre-reqs:
     Basic requirement
     =======================
     	Set up remote logging to the node you are running the tests from.
-	You should only log "info" and higher to this log server. 
+	On this server you should log LOCAL7 (info and higher) to a separate
+	 file.  You should then specify this file on the command-line to
+	 Xnode.sh as "-l /your/log.file" 
 
     Extra-info
 	Log messages must use the same values as uname -n, not the fully
@@ -78,8 +80,10 @@ Pre-reqs:
 
     Basic requirement
     =======================
-    	Set up ha.cf according to the wiki: http://linuxha.trick.ca/ClusterResourceManager/Setup
-	The one exception is that crmd should not be started by default
+    	Set up ha.cf according to the wiki: ClusterResourceManager/Setup
+	The one exception is that crmd should not be started by default.
+	At this time, the use of ha_logd is not supported.  This should
+	  change soon.
 	
     Basic requirement
     =======================
