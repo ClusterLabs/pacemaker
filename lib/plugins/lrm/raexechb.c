@@ -140,7 +140,7 @@ static int
 execra( const char * ra_name, const char * op, 
 	GHashTable * cmd_params, GHashTable * env_params )
 {
-        RA_ARGV params_argv;
+	RA_ARGV params_argv;
 	uniform_ret_execra_t exit_value;
 	char *ra_name_dup, *base_name;
 	GString * ra_dirname;
@@ -168,18 +168,17 @@ execra( const char * ra_name, const char * op,
 	 * Not set calling parameters
 	 */
 	raexec_setenv(env_params);
-	if ( execv(ra_name, params_argv) < 0 ) {
+	if ( execv(ra_dirname->str, params_argv) < 0 ) {
 		cl_log(LOG_ERR, "execl error when to execute RA %s.", ra_name);
 	}
 
-        switch (errno) {
-                case ENOENT:   /* No such file or directory */
-                case EISDIR:   /* Is a directory */
-                        exit_value = EXECRA_NO_RA;
-                        break;
-
-                default:
-                        exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
+	switch (errno) {
+		case ENOENT:   /* No such file or directory */
+		case EISDIR:   /* Is a directory */
+			exit_value = EXECRA_NO_RA;
+			break;
+		default:
+			exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
         }
 
         cl_log(LOG_ERR, "execl error when to execute RA %s.", ra_name);
@@ -194,32 +193,31 @@ prepare_cmd_parameters(const char * raname, const char * op,
 	 * Maybe not need this function? 	
 	 */ 
 	int tmp_len;
-        int ht_size = 0;
+	int ht_size = 0;
 
 	if (params_ht) {
-		g_hash_table_size(params_ht);
+		ht_size = g_hash_table_size(params_ht);
 	}
-        if ( ht_size+3 > MAX_PARAMETER_NUM ) {
-                cl_log(LOG_ERR, "Too many parameters");
-                return -1;
-        }
+	if ( ht_size+3 > MAX_PARAMETER_NUM ) {
+		cl_log(LOG_ERR, "Too many parameters");
+		return -1;
+	}
                                                                                         
 	tmp_len = strnlen(raname, 160) + 1;
-        params_argv[0] = g_new(char, tmp_len);
-        strncpy(params_argv[0], raname, tmp_len);
+	params_argv[0] = g_new(char, tmp_len);
+	strncpy(params_argv[0], raname, tmp_len);
 
 	tmp_len = strnlen(op, 160) + 1;
-        params_argv[1] = g_new(char, tmp_len);
-        strncpy(params_argv[1], op, tmp_len);
+	params_argv[ht_size+1] = g_new(char, tmp_len);
+	strncpy(params_argv[ht_size+1], op, tmp_len);
 
-        params_argv[ht_size+2] = NULL;
+	params_argv[ht_size+2] = NULL;
                                                                                         
 	if (params_ht) {
-        	g_hash_table_foreach(params_ht, params_hash_to_argv, 
-					&params_argv);
+		g_hash_table_foreach(params_ht, params_hash_to_argv, 
+					params_argv);
 	}
-                                                                                        
-        return 0;
+	return 0;
 }
 
 static uniform_ret_execra_t 
@@ -279,19 +277,16 @@ static void
 params_hash_to_argv(gpointer key, gpointer value, gpointer user_data)
 {
 	int param_index;
-        RA_ARGV  * ra_argv = (RA_ARGV *) user_data;
+	char** ra_argv = (char** ) user_data;
 
-        if (ra_argv == NULL ) {
-                return;
-        }
+	if (ra_argv == NULL ) {
+		return;
+	}
 	
-        /* the parameter index start from 1 */
-        /* and start from 2 in argv array */
+	/* the parameter index start from 1 */
+	/* and start from 2 in argv array */
 	param_index = atoi( (char*) key );
-	(*ra_argv)[param_index + 1] = g_new(char, 21);
-	*((*ra_argv)[param_index + 1] + 20) = '\0';
-        strncpy((*ra_argv)[param_index + 1], (char*)value,
-                strnlen((char*)value, 20));
+	ra_argv[param_index] = g_strdup((char*)value);
 }
 
 static int 
