@@ -65,6 +65,7 @@ GSListPtr node_list = NULL;
 GSListPtr cons_list = NULL;
 GSListPtr colors = NULL;
 GSListPtr stonith_list = NULL;
+GSListPtr shutdown_list = NULL;
 color_t *current_color = NULL;
 color_t *no_color = NULL;
 gboolean pe_debug = FALSE;
@@ -593,7 +594,7 @@ apply_node_constraints(GSListPtr constraints,
 gboolean
 unpack_status(xmlNodePtr status)
 {
-	pdebug(cl_log(LOG_DEBUG, "Begining unpack of %s... %s", status->name, __FUNCTION__));
+	pdebug(cl_log(LOG_DEBUG, "Begining unpack %s", __FUNCTION__));
 	while(status != NULL) {
 		const char *id = xmlGetProp(status, "id");
 		const char *state = xmlGetProp(status, "state");
@@ -645,9 +646,11 @@ unpack_status(xmlNodePtr status)
 			pdebug(cl_log(LOG_DEBUG, "state %s, expected %s",
 				      state, exp_state));
 			
-			if(safe_str_eq(exp_state, "down") 
-			   && safe_str_eq(state, "shutdown")){
+			if(safe_str_eq(state, "shutdown")){
 				// create shutdown req
+				shutdown_list = g_slist_append(shutdown_list,
+							       this_node);
+
 			} else if(safe_str_eq(exp_state, "active")
 				  && safe_str_neq(state, "active")) {
 				// mark unclean in the xml
@@ -657,7 +660,8 @@ unpack_status(xmlNodePtr status)
 			}
       
 			if(safe_str_eq(state, "unclean")) {
-				stonith_list = g_slist_append(stonith_list, node_copy(this_node));
+				stonith_list = g_slist_append(stonith_list,
+							      this_node);
 			}
 		}
 	}

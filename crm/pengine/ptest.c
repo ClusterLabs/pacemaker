@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.5 2004/04/28 14:16:34 andrew Exp $ */
+/* $Id: ptest.c,v 1.6 2004/04/28 14:41:06 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -52,8 +52,6 @@
 #include <getopt.h>
 #include <glib.h>
 #include <pengine.h>
-
-void print_str_str(gpointer key, gpointer value, gpointer user_data);
 
 
 int
@@ -170,10 +168,6 @@ main(int argc, char **argv)
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
   
-	cl_log(LOG_INFO, "========= Stonith List =========");
-	slist_iter(node, node_t, stonith_list, lpc,
-		   print_node(NULL, node, FALSE));
-  
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 3 =#=#=#=#=");
 	stage3();
 	cl_log(LOG_INFO, "========= Colors =========");
@@ -189,245 +183,13 @@ main(int argc, char **argv)
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 5 =#=#=#=#=");
 	stage5(rsc_list);
 
+	cl_log(LOG_INFO, "========= Stonith List =========");
+	slist_iter(node, node_t, stonith_list, lpc,
+		   print_node(NULL, node, FALSE));
+  
+	cl_log(LOG_INFO, "========= Shutdown List =========");
+	slist_iter(node, node_t, shutdown_list, lpc,
+		   print_node(NULL, node, FALSE));
+
 	return 0;
 }
-					 
-const char *
-contype2text(enum con_type type)
-{
-	const char *result = "<unknown>";
-	switch(type)
-	{
-		case none:
-			result = "none";
-			break;
-		case rsc_to_rsc:
-			result = "rsc_to_rsc";
-			break;
-		case rsc_to_node:
-			result = "rsc_to_node";
-			break;
-		case rsc_to_attr:
-			result = "rsc_to_attr";
-			break;
-		case base_weight:
-			result = "base_weight";
-			break;
-	}
-	return result;
-};
-
-const char *
-strength2text(enum con_strength strength)
-{
-	const char *result = "<unknown>";
-	switch(strength)
-	{
-		case must:
-			result = "must";
-			break;
-		case should:
-			result = "should";
-			break;
-		case should_not:
-			result = "should_not";
-			break;
-		case must_not:
-			result = "must_not";
-			break;
-	}
-	return result;
-};
-
-const char *
-modifier2text(enum con_modifier modifier)
-{
-	const char *result = "<unknown>";
-	switch(modifier)
-	{
-		case modifier_none:
-			result = "modifier_none";
-			break;
-		case set:
-			result = "set";
-			break;
-		case inc:
-			result = "inc";
-			break;
-		case dec: 
-			result = "dec";
-			break;
-	}
-	return result;
-};
-
-void
-print_node(const char *pre_text, node_t *node, gboolean details)
-{ 
-	if(node == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
-		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
-		return;
-	}
-	cl_log(LOG_DEBUG, "%s%s%sNode %s: (weight=%f, fixed=%s)",
-	       pre_text==NULL?"":pre_text,
-	       pre_text==NULL?"":": ",
-	       node->details==NULL?"error ":node->details->online?"":"Unavailable/Unclean ",
-	       node->id, 
-	       node->weight,
-	       node->fixed?"True":"False"); 
-	if(details && node->details != NULL) {
-		g_hash_table_foreach(node->details->attrs,
-				     print_str_str, cl_strdup("\t\t"));
-	}
-	
-};
-
-void print_str_str(gpointer key, gpointer value, gpointer user_data)
-{
-	cl_log(LOG_DEBUG, "%s%s %s ==> %s",
-	       user_data==NULL?"":(char*)user_data,
-	       user_data==NULL?"":": ",
-	       (char*)key,
-	       (char*)value);
-}
-
-void
-print_color_details(const char *pre_text,
-		    struct color_shared_s *color,
-		    gboolean details)
-{ 
-	if(color == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
-		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
-		return;
-	}
-	cl_log(LOG_DEBUG, "%s%sColor %d: node=%s (from %d candidates)",
-	       pre_text==NULL?"":pre_text,
-	       pre_text==NULL?"":": ",
-	       color->id, 
-	       color->chosen_node==NULL?"<unset>":color->chosen_node->id,
-	       g_slist_length(color->candidate_nodes)); 
-	if(details) {
-		int lpc = 0;
-		slist_iter(node, node_t, color->candidate_nodes, lpc,
-			   print_node("\t", node, FALSE));
-	}
-}
-
-void
-print_color(const char *pre_text, color_t *color, gboolean details)
-{ 
-	if(color == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
-		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
-		return;
-	}
-	cl_log(LOG_DEBUG, "%s%sColor %d: (weight=%f, node=%s, possible=%d)",
-	       pre_text==NULL?"":pre_text,
-	       pre_text==NULL?"":": ",
-	       color->id, 
-	       color->local_weight,
-	       color->details->chosen_node==NULL?"<unset>":color->details->chosen_node->id,
-	       g_slist_length(color->details->candidate_nodes)); 
-	if(details) {
-		print_color_details("\t", color->details, details);
-	}
-}
-void
-print_cons(const char *pre_text, rsc_constraint_t *cons, gboolean details)
-{ 
-	if(cons == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
-		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
-		return;
-	}
-	cl_log(LOG_DEBUG, "%s%s%s Constraint %s (%p):",
-	       pre_text==NULL?"":pre_text,
-	       pre_text==NULL?"":": ",
-	       contype2text(cons->type), cons->id, cons);
-
-	if(details == FALSE) {
-
-		switch(cons->type)
-		{
-			case none:
-				cl_log(LOG_ERR, "must specify a type");
-				break;
-			case rsc_to_rsc:
-				cl_log(LOG_DEBUG,
-				       "\t%s --> %s, %s (%s rule)",
-				       cons->rsc_lh==NULL?"null":cons->rsc_lh->id, 
-				       cons->rsc_rh==NULL?"null":cons->rsc_rh->id, 
-				       strength2text(cons->strength),
-				       cons->is_placement?"placement":"ordering");
-				break;
-			case rsc_to_node:
-			case rsc_to_attr:
-				cl_log(LOG_DEBUG,
-				       "\t%s --> %s, %f (node placement rule)",
-				       cons->rsc_lh->id, 
-				       modifier2text(cons->modifier),
-				       cons->weight);
-				int lpc = 0;
-				slist_iter(
-					node, node_t, cons->node_list_rh, lpc,
-					print_node("\t\t-->", node, FALSE)
-					);
-				break;
-			case base_weight:
-				cl_log(LOG_ERR, "not supported");
-				break;
-		}
-	}
-}; 
-
-void
-print_resource(const char *pre_text, resource_t *rsc, gboolean details)
-{ 
-	if(rsc == NULL) {
-		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
-		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ",
-		       __FUNCTION__);
-		return;
-	}
-	cl_log(LOG_DEBUG, "%s%s%sResource %s: (priority=%f, color=%d, now=%s)",
-	       pre_text==NULL?"":pre_text,
-	       pre_text==NULL?"":": ",
-	       rsc->provisional?"Provisional ":"",
-	       rsc->id,
-	       (double)rsc->priority,
-	       rsc->color==NULL?-1:rsc->color->id,
-	       rsc->cur_node_id);
-
-	cl_log(LOG_DEBUG,
-	       "\t%d candidate colors, %d allowed nodes and %d constraints",
-	       g_slist_length(rsc->candidate_colors),
-	       g_slist_length(rsc->allowed_nodes),
-	       g_slist_length(rsc->constraints));
-
-	if(details) {
-		int lpc = 0;
-		cl_log(LOG_DEBUG, "\t=== Colors");
-		slist_iter(
-			color, color_t, rsc->candidate_colors, lpc,
-			print_color("\t", color, FALSE)
-			);
-		cl_log(LOG_DEBUG, "\t=== Allowed Nodes");
-		slist_iter(
-			node, node_t, rsc->allowed_nodes, lpc,
-			print_node("\t", node, FALSE);
-			);
-	}
-} 
-
-

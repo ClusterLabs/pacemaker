@@ -104,6 +104,7 @@ extern GSListPtr node_list;
 extern GSListPtr cons_list;
 extern GSListPtr colors;
 extern GSListPtr stonith_list;
+extern GSListPtr shutdown_list;
 extern color_t *current_color;
 
 #define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
