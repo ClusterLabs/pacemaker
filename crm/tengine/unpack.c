@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.20 2005/01/26 13:31:01 andrew Exp $ */
+/* $Id: unpack.c,v 1.21 2005/02/17 20:35:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -256,6 +256,7 @@ extract_event(crm_data_t *msg)
 		if(crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
 			crm_devel("Aborting on %s attribute",
 				  XML_CIB_ATTR_SHUTDOWN);
+			abort = TRUE;
 			break;
 			
 		} else if(crm_element_value(node_state, XML_CIB_ATTR_STONITH) != NULL) {
