@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.13 2004/12/15 10:11:34 andrew Exp $ */
+/* $Id: unpack.c,v 1.14 2004/12/17 09:33:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -320,7 +320,7 @@ extract_event(xmlNodePtr msg)
 			
 		} else {
 			/* ignore */
-			crm_err("Ignoring message");
+			crm_xml_warn(node_state,"Ignoring message");
 		}
 	}
 	
