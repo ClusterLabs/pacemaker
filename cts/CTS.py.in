@@ -307,6 +307,10 @@ class ClusterManager(UserDict):
         self.OurNode=string.lower(os.uname()[1])
         self.ShouldBeStatus={}
 
+    def errorstoignore(self):
+	'''Return list of errors which are 'normal' and should be ignored'''
+	return []
+
     def log(self, args):
         self.Env.log(args)
 
@@ -352,6 +356,7 @@ class ClusterManager(UserDict):
 
         '''Start up the cluster manager on a given node with none-block mode'''
 
+        self.log ("Starting %s on node %s" %(self["Name"], node))
         self.rsh.noBlock(node, self["StartCmd"])
         self.ShouldBeStatus[node]=self["up"]
         return 1
@@ -376,6 +381,7 @@ class ClusterManager(UserDict):
 
         '''Stop the cluster manager on a given node with none-block mode'''
 
+        self.log ("Stopping %s on node %s" %(self["Name"], node))
         self.rsh.noBlock(node, self["StopCmd"])
         self.ShouldBeStatus[node]=self["down"]
         return 1
