@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.10 2005/02/03 14:37:14 andrew Exp $ */
+/* $Id: util.h,v 1.11 2005/02/07 11:39:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,8 @@ extern unsigned int set_crm_log_level(unsigned int level);
 extern unsigned int get_crm_log_level(void);
 
 extern char *crm_itoa(int an_int);
+
+extern char *crm_strdup(const char *a);
 
 extern char *generate_hash_key(const char *crm_msg_reference,
 			       const char *sys);
