@@ -330,9 +330,10 @@ do_lrm_query(gboolean is_replace)
 	}
 
 	set_uuid(xml_state, XML_ATTR_UUID, fsa_our_uname);
-
 	set_xml_property_copy(xml_state, XML_ATTR_UNAME, fsa_our_uname);
 	xml_result = create_cib_fragment(xml_state, NULL);
+
+	crm_xml_debug(xml_state, "Current state of the LRM");
 	
 	return xml_result;
 }
