@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.1 2004/09/15 09:16:55 andrew Exp $ */
+/* $Id: io.c,v 1.2 2004/09/20 12:18:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -107,7 +107,7 @@ verifyCibXml(xmlNodePtr cib)
 	xmlNodePtr tmp_node = NULL;
 	
 	if (cib == NULL) {
-		crm_err("XML Buffer was empty.");
+		crm_warn("XML Buffer was empty.");
 		return FALSE;
 	}
 	
@@ -249,7 +249,7 @@ initializeCib(xmlNodePtr new_cib)
 		return TRUE;
 	}
 	else {
-		crm_err("CIB Verification failed");
+		crm_warn("CIB Verification failed");
 	}
 	
 	return FALSE;
