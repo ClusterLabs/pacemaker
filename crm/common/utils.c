@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.29 2005/02/11 22:07:42 andrew Exp $ */
+/* $Id: utils.c,v 1.30 2005/02/17 16:29:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,10 +61,10 @@ generateReference(const char *custom1, const char *custom2)
 	reference_len += 20; /* too big */
 	reference_len += 40; /* too big */
 	
-	if(local_cust1 == NULL) local_cust1 = "_empty_";
+	if(local_cust1 == NULL) { local_cust1 = "_empty_"; }
 	reference_len += strlen(local_cust1);
 	
-	if(local_cust2 == NULL) local_cust2 = "_empty_";
+	if(local_cust2 == NULL) { local_cust2 = "_empty_"; }
 	reference_len += strlen(local_cust2);
 	
 	crm_malloc(since_epoch, reference_len*(sizeof(char)));
@@ -434,30 +434,14 @@ alter_debug(int nsig)
 	
 	switch(nsig) {
 		case DEBUG_INC:
-			if(do_stderr == FALSE && crm_log_level == LOG_INFO) {
-				do_stderr = TRUE;
-				cl_log_enable_stderr(do_stderr);
-				break;
-			}
-
 			crm_log_level++;
-			fprintf(stderr,
-				"Upped log level to %d\n", crm_log_level);
-			cl_log(LOG_INFO,
+			cl_log(LOG_DEBUG,
 			       "Upped log level to %d\n", crm_log_level);
 			break;
 
 		case DEBUG_DEC:
-			if(do_stderr && crm_log_level == LOG_INFO) {
-				do_stderr = FALSE;
-				cl_log_enable_stderr(do_stderr);
-				break;
-			}
-
 			crm_log_level--;
-			fprintf(stderr,
-				"Reduced log level to %d\n", crm_log_level);
-			cl_log(LOG_INFO,
+			cl_log(LOG_DEBUG,
 			       "Reduced log level to %d\n", crm_log_level);
 			break;	
 

@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.13 2005/02/09 11:41:26 andrew Exp $ */
+/* $Id: msg.c,v 1.14 2005/02/17 16:29:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -78,7 +78,7 @@ validate_crm_message(
 	action = msg;
 	true_sys = sys;
 
-	if (uuid != NULL) true_sys = generate_hash_key(sys, uuid);
+	if (uuid != NULL) { true_sys = generate_hash_key(sys, uuid); }
 
 	if (to == NULL) {
 		crm_info("No sub-system defined.");
