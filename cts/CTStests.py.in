@@ -421,7 +421,7 @@ class StonithTest(CTSTest):
     def __init__(self, cm, timeout=600):
         CTSTest.__init__(self,cm)
         self.name="Stonith"
-        self.theystopped  = self.CM["Pat:They_stopped"]
+        self.theystopped  = self.CM["Pat:They_dead"]
         self.allstopped  = self.CM["Pat:All_stopped"]
         self.usstart   = self.CM["Pat:We_started"]
         self.themstart = self.CM["Pat:They_started"]
@@ -1367,7 +1367,7 @@ class Split_brainTest2(CTSTest):
 
         '''isolate nodes, Look for node is dead message'''
         watchdeadpats = [ ]
-        deadpat = self.CM["Pat:They_stopped"]
+        deadpat = self.CM["Pat:They_dead"]
         for member in self.CM.Env["nodes"]:
             thispat = (deadpat % member)
             watchdeadpats.append(thispat)
