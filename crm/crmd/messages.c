@@ -1006,7 +1006,11 @@ handle_shutdown_request(xmlNodePtr stored_msg)
 		cib_sync_call);
 
 	free_xml(frag);
-	
+
+	/* should be picked up by the TE if in anything but S_POLICY_ENGINE */
+	if(fsa_state == S_POLICY_ENGINE) {
+		return I_PE_CALC;
+	}
 	return I_NULL;
 }
 
