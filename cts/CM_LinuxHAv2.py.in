@@ -95,7 +95,8 @@ class LinuxHAv2(HeartbeatCM):
      <crm_config>'''
         cib_options='''
         <nvpair id="require_quorum" name="require_quorum" value="true"/>
-        <nvpair id="symetric_cluster" name="symetric_cluster" value="true"/>'''
+        <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
+        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>'''
         cib_glue_1='''
      </crm_config>
      <nodes/>
@@ -115,20 +116,20 @@ class LinuxHAv2(HeartbeatCM):
         if self.Env["CIBResource"] == 1:
             self.log("Enabling DC resource")
             resources='''
-       <resource id="DcIPaddr" class="heartbeat" type="IPaddr2" provider="heartbeat" priority="1.0">
+       <resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
          <operations>
-           <op id="1" name="monitor" interval="1000" timeout="500"/>
+           <op id="1" name="monitor" interval="5s" timeout="3s"/>
          </operations>
          <instance_attributes>
            <attributes>
-             <nvpair name="1" value="127.0.0.10"/>
+             <nvpair name="ip" value="127.0.0.10"/>
            </attributes>
          </instance_attributes>
        </resource>'''
             # DcIPaddr cant run anywhere but the DC
             constraints='''
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
-        <rule id="cant_run_DcIPaddr" result="can_not" boolean_op="and">
+        <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
           <expression attribute="is_dc" operation="eq" value="false"/>
         </rule>
       </rsc_location>'''
@@ -137,13 +138,13 @@ class LinuxHAv2(HeartbeatCM):
             for node in self.Env["nodes"]:
                 # These resources prefer to run on the node with the same name
                 node_resource=("""
-       <resource id="%s" class="heartbeat" type="IPaddr2" provider="heartbeat" >
+       <resource id="%s" class="ocf" type="IPaddr" provider="heartbeat">
          <operations>
-           <op id="1" name="monitor" interval="1000" timeout="500"/>
+           <op id="1" name="monitor" interval="5s" timeout="3s"/>
          </operations>
          <instance_attributes>
            <attributes>
-             <nvpair name="1" value="127.0.0.%d"/>
+             <nvpair name="ip" value="127.0.0.%d"/>
            </attributes>
          </instance_attributes>
        </resource>""" %(node, ip_num))
@@ -233,6 +234,7 @@ class LinuxHAv2(HeartbeatCM):
         if self.any_running() == 1:
             patterns.append(self["Pat:DC_IDLE"])
             localBadNewsPats.append("input=I_ELECTION ")
+            localBadNewsPats.append("input=I_ELECTION_DC ")
 
         if self.CIBsync.has_key(node):
             self.debug("CIB already installed on node %s" %node)
@@ -255,7 +257,7 @@ class LinuxHAv2(HeartbeatCM):
         localBadNews = CTS.LogWatcher(self["LogFileName"], localBadNewsPats, 0)
         localBadNews.setwatch()
 
-        watch = CTS.LogWatcher(self["LogFileName"], patterns, 120)
+        watch = CTS.LogWatcher(self["LogFileName"], patterns, 180)
         self.debug("Starting %s on node %s" %(self["Name"], node))
         watch.setwatch()
         self.rsh(node, self["StartCmd"])
@@ -353,10 +355,20 @@ class LinuxHAv2(HeartbeatCM):
         return rc
 
     def Configuration(self):
-        local_cib = "%s/cts_cib_%s.xml"%(self["TmpDir"],str(os.getpid()))
-        if 0!=self.rsh.cp("root@"+self["CIBfile"]%self.Env["nodes"][0],local_cib):
-            raise ValueError("Can not copy file to %s, maybe permission denied"%self["TmpDir"])
-        cib=parse(local_cib)
+        if self.Env["ClobberCIB"] == 1:
+            if self.Env["CIBfilename"] == None:
+                os.system("rm -f /tmp/cts.default.cib")
+                os.system("echo \'" + self.default_cts_cib + "\' > /tmp/cts.default.cib")
+		cib=parse("/tmp/cts.default.cib")
+#                os.system("rm -f /tmp/cts.default.cib")
+            else:
+		cib=parse(self.Env["CIBfilename"])
+        else:
+	    local_cib = "%s/cts_cib_%s.xml"%(self["TmpDir"],str(os.getpid()))
+	    if 0!=self.rsh.cp("root@"+self["CIBfile"]%self.Env["nodes"][0],local_cib):
+		raise ValueError("Can not copy file to %s, maybe permission denied"%self["TmpDir"])
+	    cib=parse(local_cib)
+
         return cib.getElementsByTagName('configuration')[0]
     
     def Resources(self):
