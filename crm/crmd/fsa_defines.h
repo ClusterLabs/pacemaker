@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.29 2005/01/12 13:40:59 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.30 2005/01/12 17:18:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -272,14 +272,6 @@ enum crmd_fsa_input {
 #define	A_MSG_PROCESS		0x0000000000000200ULL
 	/* Send the message to the correct recipient */
 #define	A_MSG_ROUTE		0x0000000000000400ULL
-	/* Put the request into a queue for processing.  We do this every 
-	 * time so that the processing is consistent.  The intent is to 
-	 * allow the DC to keep doing important work while still not
-	 * loosing requests.
-	 * Messages are not considered recieved until processed.
-	 */
-#define	A_MSG_STORE		0x0000000000000800ULL
-
 
 #define	A_INTEGRATE_TIMER_START	0x0000000000001000ULL
 #define	A_INTEGRATE_TIMER_STOP	0x0000000000002000ULL

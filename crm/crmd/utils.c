@@ -534,9 +534,6 @@ fsa_action2string(long long action)
 		case A_MSG_ROUTE:
 			actionAsText = "A_MSG_ROUTE";
 			break;
-		case A_MSG_STORE:
-			actionAsText = "A_MSG_STORE";
-			break;
 		case A_RECOVER:
 			actionAsText = "A_RECOVER";
 			break;
@@ -749,10 +746,6 @@ fsa_dump_actions(long long action, const char *text)
 	if(is_set(action, A_MSG_ROUTE)) {
 		crm_debug("Action %.16llx (A_MSG_ROUTE) %s",
 			  A_MSG_ROUTE, text);
-	}
-	if(is_set(action, A_MSG_STORE)) { 
-		crm_debug("Action %.16llx (A_MSG_STORE) %s",
-			  A_MSG_STORE, text);
 	}
 	if(is_set(action, A_RECOVER)) {
 		crm_debug("Action %.16llx (A_RECOVER) %s",

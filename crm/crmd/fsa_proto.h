@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.15 2004/10/19 11:23:45 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.16 2005/01/12 17:18:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -165,14 +165,6 @@ do_timer_control(long long action,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input cur_input,
 		    fsa_data_t *msg_data);
-
-/*	A_MSG_STORE	*/
-enum crmd_fsa_input
-do_msg_store(long long action,
-	     enum crmd_fsa_cause cause,
-	     enum crmd_fsa_state cur_state,
-	     enum crmd_fsa_input cur_input,
-	     fsa_data_t *msg_data);
 
 /*	A_CCM_UPDATE_CACHE	*/
 enum crmd_fsa_input

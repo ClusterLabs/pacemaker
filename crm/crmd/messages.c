@@ -246,14 +246,6 @@ delete_fsa_input(fsa_data_t *fsa_data)
 	crm_free(fsa_data);
 }
 
-/* returns the current head of the FIFO queue */
-GListPtr
-put_message(fsa_data_t *new_message)
-{
-	crm_err("Not implemented anymore");
-	return NULL;
-}
-
 /* returns the next message */
 fsa_data_t *
 get_message(void)
@@ -263,40 +255,12 @@ get_message(void)
 	return message;
 }
 
-gboolean
-have_wait_message(void)
-{
-	gboolean ret = FALSE;
-	fsa_data_t* message = g_list_nth_data(fsa_message_queue, 0);
-	if(message->fsa_input == I_WAIT_FOR_EVENT) {
-		ret = TRUE;
-/* 		message->fsa_input = I_NULL; */
-	}
-	return ret;
-}
-
-
-
 /* returns the current head of the FIFO queue */
 gboolean
 is_message(void)
 {
 	return (g_list_length(fsa_message_queue) > 0);
 }
-
-
-/*	 A_MSG_STORE	*/
-enum crmd_fsa_input
-do_msg_store(long long action,
-	     enum crmd_fsa_cause cause,
-	     enum crmd_fsa_state cur_state,
-	     enum crmd_fsa_input current_input,
-	     fsa_data_t *msg_data)
-{
-	register_fsa_input(cause, current_input, msg_data->data);
-	return I_NULL;
-}
-
 
 /*	A_MSG_ROUTE	*/
 enum crmd_fsa_input
@@ -450,33 +414,6 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	return was_sent;
 }
 
-/*
- * This method adds a copy of xml_response_data
- */
-gboolean
-store_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
-	      const char *operation, const char *sys_to)
-{
-	xmlNodePtr request = NULL;
-
-	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
-				   XML_ATTR_OP, operation, TRUE);
-
-	crm_verbose("Storing op=%s message for later processing", operation);
-	
-	request = create_request(msg_options,
-				 msg_data,
-				 NULL,
-				 sys_to,
-				 AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD,
-				 NULL,
-				 NULL);
-
-	register_fsa_input_later(C_IPC_MESSAGE, I_ROUTER, request);
-	free_xml(request);
-	
-	return TRUE;
-}
 
 gboolean
 relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)

@@ -426,11 +426,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		else IF_FSA_ACTION(A_ELECTION_COUNT,	do_election_count_vote)
 		
 		/*
-		 * "Get this over with" actions
-		 */
-		else IF_FSA_ACTION(A_MSG_STORE,		do_msg_store)
-
-		/*
 		 * High priority actions
 		 * Update the cache first
 		 */
