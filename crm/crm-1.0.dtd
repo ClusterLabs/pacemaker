@@ -413,6 +413,7 @@ More details are given in the annotated DTD below.
 
      The operation is the command passed to the Resource Agent.
 -->
+
 <!ELEMENT rsc_op (resource)>
 <!ATTLIST rsc_op
 	id	CDATA #REQUIRED
@@ -445,7 +446,7 @@ More details are given in the annotated DTD below.
 	msg.
   -->
 
-<!ELEMENT crm_message (msg_addr,msg_addr,msg_data)>
+<!ELEMENT crm_message (msg_addr,msg_addr,operation,op_reply?,msg_data)>
 <!ATTLIST crm_message
           version	CDATA '1'
 	  type		(request|reply)	#REQUIRED
@@ -456,48 +457,41 @@ More details are given in the annotated DTD below.
 <!ELEMENT msg_addr EMPTY>
 <!ATTLIST msg_addr
 	part		(src|dst)	#REQUIRED
-	subsystem	(dc|crmd|cib|pe|te|lrm|admin) #REQUIRED
-	host		CDATA		#REQUIRED>
+	subsystem	(dc|crmd|dcib|cib|pe|te|lrm|admin) #REQUIRED
+	host		CDATA		#IMPLIED>
 
 <!-- What kinds of payload do we carry:
      op_reply	A generic reply message to a request
-     ping_op	ping a subsystem to check whether its talking to us at
-		all, mainly for debugging
+
      TODO: Can msg_data not simply be melted into crm_message, cutting
-     out one level of redirection?
+     out one level of redirection?  
+     (Andrew) Lets leave it separated least crm_message get too cluttered
+
      TODO: crm_message.type == reply is implicit if op_reply is present,
      should be merged
+     (Andrew) Lets leave it in incase we want to piggyback requests on replies
+
      TODO: commands to pengine etc still need fleshing out /
      simplification or merge between various commands, ie "quit",
      "hello", "compute" etc should all be the same type, just different 
      contents - maybe generic_op + attributes?
+     (Andrew) Well hurry up then, we dont have all year :)
 -->
-<!ELEMENT msg_data (op_reply?,hello_op?,ping_op?,rsc_op?,rsc_state?,lrm_state?,lrm_op?,cib_op?)>
+<!ELEMENT msg_data (rsc_op?,rsc_state?,lrm_state?,cib_fragment?)>
 
-<!ELEMENT ping_op EMPTY>
-<!ATTLIST ping_op
+<!-- need to flesh out the types of operations -->
+<!ELEMENT operation (nvpair*)>
+<!ATTLIST operation
+	  op		(noop|query|replace|add|delete)	'noop'
+          verbose	CDATA	#IMPLIED
 	  timeout	CDATA	#REQUIRED>
 
 <!-- verbose reply for user consumption, may be useful. -->
 <!ELEMENT op_reply EMPTY>
 <!ATTLIST op_reply
 	  result	(ok|fail)	#REQUIRED
-          verbose	CDATA		#IMPLIED
+          verbose_reply	CDATA		#IMPLIED
           timestamp	CDATA		#REQUIRED>
-
-<!ELEMENT lrm_op EMPTY>
-<!ATTLIST lrm_op
-		operation	(fullstate|listras|restart)>
-
-<!-- Always describes which part of the CIB is being updated or queried.
-     
-     TODO: Should this "section" instead describe the path to the
-	   root element we are retrieving/setting to be more versatile?
--->
-<!ELEMENT cib_op (cib)>
-<!ATTLIST cib_op
-	  operation	(query|replace|add|delete)	'query'
-          section	(none|all|nodes|resources|constraints|status) 'none'>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
