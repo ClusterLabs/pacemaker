@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.12 2005/03/08 13:57:04 andrew Exp $ */
+/* $Id: util.h,v 1.13 2005/03/11 14:08:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,6 +70,8 @@ extern void set_uuid(
 	ll_cluster_t* hb, crm_data_t *node, const char *attr, const char *uname);
 
 extern void crm_set_ha_options(ll_cluster_t *hb_cluster);
+
+extern gboolean crm_is_true(const char * s);
 
 extern int crm_str_to_boolean(const char * s, int * ret);
 

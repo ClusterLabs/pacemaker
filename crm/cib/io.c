@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.17 2005/02/28 10:51:59 andrew Exp $ */
+/* $Id: io.c,v 1.18 2005/03/11 14:08:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -229,8 +229,8 @@ initializeCib(crm_data_t *new_cib)
 		if(value == NULL) {
 			crm_warn("Option %s not set", option);
 
-		} else if(safe_str_eq(value, XML_BOOLEAN_TRUE)) {
-			cib_writes_enabled = FALSE;
+		} else {
+			crm_str_to_boolean(value, &cib_writes_enabled);
 		}
 
 		if(cib_writes_enabled) {

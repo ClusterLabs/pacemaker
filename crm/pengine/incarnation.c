@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.9 2005/02/23 15:43:59 andrew Exp $ */
+/* $Id: incarnation.c,v 1.10 2005/03/11 14:08:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -87,10 +87,10 @@ void incarnation_unpack(resource_t *rsc)
 		return;
 	}
 
-	if(safe_str_eq(interleave, XML_BOOLEAN_TRUE)) {
+	if(crm_is_true(interleave)) {
 		incarnation_data->interleave = TRUE;
 	}
-	if(safe_str_eq(ordered, XML_BOOLEAN_TRUE)) {
+	if(crm_is_true(ordered)) {
 		incarnation_data->ordered = TRUE;
 	}
 	

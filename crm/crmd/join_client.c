@@ -205,7 +205,7 @@ do_cl_join_result(long long action,
 	}
 	
 	/* calculate if it was an ack or a nack */
-	if(safe_str_eq(ack_nack, XML_BOOLEAN_TRUE)) {
+	if(crm_is_true(ack_nack)) {
 		was_nack = FALSE;
 	}
 	

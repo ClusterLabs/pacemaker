@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.30 2005/02/21 13:13:45 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.31 2005/03/11 14:08:00 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -746,7 +746,7 @@ is_node_online(crm_data_t *node_state)
 
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
 	   && safe_str_eq(ha_state, ACTIVESTATUS)
-	   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
+	   && crm_is_true(ccm_state)
 	   && safe_str_eq(crm_state, ONLINESTATUS)) {
 		crm_devel("Node %s is online", uname);
 		return TRUE;
