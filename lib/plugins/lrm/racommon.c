@@ -123,7 +123,7 @@ get_ra_list(const char* class_path, GList ** rsc_info)
 
 	file_num = scandir(class_path, &namelist, 0, alphasort);
 	if (file_num < 0) {
-		cl_log(LOG_ERR, "scandir failed in OCF RA plugin");
+		cl_log(LOG_ERR, "scandir failed in RA plugin");
 		return -2;
 	} else{
 		while (file_num--) {
@@ -133,6 +133,7 @@ get_ra_list(const char* class_path, GList ** rsc_info)
 			tmp_buffer[0] = '\0';
 			tmp_buffer[FILENAME_MAX] = '\0';
 			strncpy(tmp_buffer, class_path, FILENAME_MAX);
+			strncat(tmp_buffer, "/", FILENAME_MAX);
 			strncat(tmp_buffer, namelist[file_num]->d_name, FILENAME_MAX);
 			if ( filtered(tmp_buffer) == TRUE ) {
 				rsc_info_tmp = g_new(rsc_info_t, 1);
