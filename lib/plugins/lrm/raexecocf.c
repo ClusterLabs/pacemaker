@@ -163,11 +163,7 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	/* cl_log(LOG_DEBUG, "The RA pathname: %s", ra_pathname); */
 	g_string_free(params_gstring, TRUE);
 
-	if ( 0 == strncmp(op_type, "status", strlen("status")) ) {
-		execl(ra_pathname, ra_pathname, "monitor", NULL);
-	} else {
-		execl(ra_pathname, ra_pathname, op_type, NULL);
-	}
+	execl(ra_pathname, ra_pathname, op_type, NULL);
 
 	switch (errno) {
 		case ENOENT:   /* No such file or directory */
@@ -342,7 +338,7 @@ static void
 add_prefix_foreach(gpointer key, gpointer value, gpointer user_data)
 {
 	const int MAX_LENGTH_OF_ENV = 50;
-	int prefix = strlen("OCF_RESKEY_");
+	int prefix = STRLEN_CONST("OCF_RESKEY_");
 	GHashTable * new_hashtable = (GHashTable *) user_data;
 	char * newkey;
 	int keylen = strnlen((char*)key, MAX_LENGTH_OF_ENV-prefix)+prefix+1;
