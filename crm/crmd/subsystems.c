@@ -376,7 +376,7 @@ static gboolean
 stop_subsystem(struct crm_subsystem_s*	centry)
 {
 	cl_log(LOG_INFO, "Stopping sub-system \"%s\"", centry->command);
-	if (centry->pid == 0) {
+	if (centry->pid <= 0) {
 		cl_log(LOG_ERR,
 		       "OOPS! client %s not running yet",
 		       centry->command);
