@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.22 2004/06/08 11:47:48 andrew Exp $ */
+/* $Id: pengine.h,v 1.23 2004/06/11 10:41:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -262,6 +262,9 @@ extern gboolean stonith_constraints(
 	node_t *node, action_t *stonith_op, action_t *shutdown_op,
 	GListPtr *action_constraints);
 
+extern gboolean order_new(
+	action_t *before, action_t *after, enum con_strength strength,
+	GListPtr *action_constraints);
 
 
 extern color_t *no_color;

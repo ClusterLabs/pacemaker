@@ -124,7 +124,7 @@ create_mode="true"
 if [ -s $failed ]; then
     if [ "$verbose" = "-v" ]; then
 	echo "Results of failed tests...."
-	cat $failed
+	less $failed
     else
 	echo "Results of failed tests are in $failed...."
 	echo "Use $0 -v to display them automatically."

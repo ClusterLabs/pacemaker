@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.27 2004/06/09 16:45:17 andrew Exp $ */
+/* $Id: utils.c,v 1.28 2004/06/11 10:41:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,8 +38,7 @@ invert_constraint(rsc_to_rsc_t *constraint)
 	rsc_to_rsc_t *inverted_con = NULL;
 
 	crm_verbose("Inverting constraint");
-	inverted_con =
-		crm_malloc(sizeof(rsc_to_node_t));
+	inverted_con = crm_malloc(sizeof(rsc_to_rsc_t));
 
 	inverted_con->id = crm_strdup(constraint->id);
 	inverted_con->strength = constraint->strength;
@@ -49,24 +48,9 @@ invert_constraint(rsc_to_rsc_t *constraint)
 	inverted_con->rsc_rh = constraint->rsc_lh;
 
 	crm_debug_action(
-		print_rsc_to_rsc("Inverted constraint", inverted_con, FALSE)
-		);
+		print_rsc_to_rsc("Inverted constraint", inverted_con, FALSE));
+	
 	return inverted_con;
-}
-
-rsc_to_node_t *
-copy_constraint(rsc_to_node_t *constraint) 
-{
-	rsc_to_node_t *copied_con = crm_malloc(sizeof(rsc_to_node_t));
-
-	copied_con->id		 = crm_strdup(constraint->id);
-
-	copied_con->rsc_lh	 = constraint->rsc_lh;
-	copied_con->node_list_rh = constraint->node_list_rh;
-	copied_con->modifier	 = constraint->modifier;
-	copied_con->weight	 = constraint->weight;
-  
-	return copied_con;
 }
 
 

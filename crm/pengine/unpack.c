@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.7 2004/06/11 09:27:39 andrew Exp $ */
+/* $Id: unpack.c,v 1.8 2004/06/11 10:41:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -71,13 +71,17 @@ gboolean unpack_lrm_agents(node_t *node, xmlNodePtr agent_list);
 
 gboolean is_node_unclean(xmlNodePtr node_state);
 
-gboolean create_rsc_to_rsc(const char *id, enum con_strength strength,
+gboolean rsc2rsc_new(const char *id, enum con_strength strength,
 			   resource_t *rsc_lh, resource_t *rsc_rh);
 
 gboolean create_ordering(const char *id, enum con_strength strength,
 			 resource_t *rsc_lh, resource_t *rsc_rh,
 			 GListPtr *action_constraints);
 
+rsc_to_node_t *rsc2node_new(
+	const char *id, resource_t *rsc,
+	double weight, enum con_modifier modifier, node_t *node,
+	GListPtr *node_constraints);
 
 gboolean
 unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
@@ -189,15 +193,9 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->start = action_start;
 		*actions = g_list_append(*actions, action_start);
 
-		order_constraint_t *order = (order_constraint_t*)
-			crm_malloc(sizeof(order_constraint_t));
-		order->id	 = order_id++;
-		order->lh_action = action_stop;
-		order->rh_action = action_start;
-		order->strength  = startstop;
+		order_new(action_stop, action_start, startstop, action_cons);
 
-		*action_cons     = g_list_append(*action_cons, order);
-		*resources       = g_list_append(*resources, new_rsc);
+		*resources = g_list_append(*resources, new_rsc);
 	
 		crm_debug_action(print_resource("Added", new_rsc, FALSE));
 	}
@@ -246,50 +244,82 @@ unpack_constraints(xmlNodePtr xml_constraints,
 	return TRUE;
 }
 
+rsc_to_node_t *
+rsc2node_new(const char *id, resource_t *rsc,
+	     double weight, enum con_modifier modifier, node_t *node,
+	     GListPtr *node_constraints)
+{
+	rsc_to_node_t *new_con = NULL;
+
+	if(rsc == NULL || id == NULL) {
+		crm_err("Invalid constraint %s for rsc=%p)", id, rsc);
+		return NULL;
+	}
+
+	new_con = (rsc_to_node_t*)crm_malloc(sizeof(rsc_to_node_t));
+	
+	new_con->id           = id;
+	new_con->rsc_lh       = rsc;
+	new_con->weight       = weight;
+	new_con->node_list_rh = NULL;
+	new_con->modifier     = modifier;
+
+	if(node != NULL) {
+		new_con->node_list_rh = g_list_append(NULL, node);
+	}
+	
+	*node_constraints = g_list_append(*node_constraints, new_con);
+
+	return new_con;
+}
+
 
 gboolean
 unpack_rsc_to_node(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 		   GListPtr *node_constraints)	
 {
-	xmlNodePtr node_ref    = xml_obj->children;
-	rsc_to_node_t *new_con = NULL;
+	xmlNodePtr node_ref        = NULL;
+	rsc_to_node_t *new_con     = NULL;
+	enum con_modifier modifier = modifier_none;
+	
 	const char *id_lh      = xmlGetProp(xml_obj, "from");
 	const char *id         = xmlGetProp(xml_obj, XML_ATTR_ID);
 	const char *mod        = xmlGetProp(xml_obj, "modifier");
 	const char *weight     = xmlGetProp(xml_obj, "weight");
-	float weight_f         = atof(weight);
+
 	resource_t *rsc_lh     = pe_find_resource(rsc_list, id_lh);
+	float weight_f         = atof(weight);
 
-	if(rsc_lh == NULL) {
-		crm_err("No resource (con=%s, rsc=%s)", id, id_lh);
-		return FALSE;
-	}
-
-	new_con = (rsc_to_node_t*)crm_malloc(sizeof(rsc_to_node_t));
-	new_con->id           = id;
-	new_con->rsc_lh       = rsc_lh;
-	new_con->weight       = weight_f;
-	new_con->node_list_rh = NULL;
-	
 	if(safe_str_eq(mod, "set")){
-		new_con->modifier = set;
+		modifier = set;
 		
 	} else if(safe_str_eq(mod, "inc")){
-		new_con->modifier = inc;
+		modifier = inc;
 		
 	} else if(safe_str_eq(mod, "dec")){
-		new_con->modifier = dec;
+		modifier = dec;
 		
 	} else {
-		// error
+		crm_err("Unknown modifier %s", mod);
 	}
+
+	new_con = rsc2node_new(
+		id, rsc_lh, weight_f, modifier, NULL, node_constraints);
+
+	if(new_con == NULL) {
+		crm_err("Couldnt create con=%s for rsc=%s", id, id_lh);
+		return FALSE;
+		
+	} else if(xml_obj != NULL) {
+		node_ref = xml_obj->children;
+	}
+	
 /*
   <rsc_to_node>
   <node_ref id= type= name=/>
   <node_ref id= type= name=/>
   <node_ref id= type= name=/>
 */		
-//			
 
 	while(node_ref != NULL) {
 		const char *xml_name = node_ref->name;
@@ -312,7 +342,6 @@ unpack_rsc_to_node(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 		 *  the information is in the resouce's node list
 		 */
 	}
-	*node_constraints = g_list_append(*node_constraints, new_con);
 
 	return TRUE;
 }
@@ -375,11 +404,11 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 	}
 	
 	while(attr_exp != NULL) {
-		rsc_to_node_t *new_con = crm_malloc(sizeof(rsc_to_node_t));
-		new_con->id            = xmlGetProp(attr_exp, XML_ATTR_ID);
-		new_con->rsc_lh        = rsc_lh;
-		new_con->weight        = weight_f;
-		new_con->modifier      = a_modifier;
+
+		rsc_to_node_t *new_con = rsc2node_new(
+			xmlGetProp(attr_exp, XML_ATTR_ID), rsc_lh, weight_f,
+			a_modifier, NULL, node_constraints);
+
 		new_con->node_list_rh  = match_attrs(attr_exp, node_list);
 		
 		if(new_con->node_list_rh == NULL) {
@@ -388,7 +417,6 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 				 attr_exp->name);
 		}
 		crm_debug_action(print_rsc_to_node("Added", new_con, FALSE));
-		*node_constraints = g_list_append(*node_constraints, new_con);
 
 		/* dont add it to the resource,
 		 *  the information is in the resouce's node list
@@ -633,14 +661,8 @@ unpack_failed_resource(GListPtr *node_constraints,
 	if(safe_str_eq(last_op, "start")) {
 		/* not running */
 		/* do not run the resource here again */
-		rsc_to_node_t *new_cons = crm_malloc(sizeof(rsc_to_node_t));
-		new_cons->id		= "dont_run_generate"; // genereate
-		new_cons->weight	= -1.0;
-		new_cons->modifier	= set;
-		new_cons->rsc_lh	= rsc_lh;
-		new_cons->node_list_rh	= g_list_append(NULL, node);
-		
-		*node_constraints = g_list_append(*node_constraints, new_cons);
+		rsc2node_new("dont_run_generate",
+			     rsc_lh, -1.0, set, node, node_constraints);
 
 	} else if(safe_str_eq(last_op, "stop")) {
 		/* must assume still running */
@@ -674,20 +696,11 @@ gboolean
 unpack_healthy_resource(GListPtr *node_constraints,
 			xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node)
 {
+	double weight = 1.0;
 	const char *last_op  = xmlGetProp(rsc_entry, "last_op");
-
-	rsc_to_node_t *new_cons = crm_malloc(sizeof(rsc_to_node_t));
 
 	crm_debug("Unpacking healthy action %s on %s", last_op, rsc_lh->id);
 
-	new_cons->id		= "healthy_generate"; // genereate one
-	new_cons->weight	= 1.0;
-	new_cons->modifier	= inc;
-	new_cons->rsc_lh	= rsc_lh;
-	new_cons->node_list_rh	= g_list_append(NULL, node);
-	
-	*node_constraints = g_list_append(*node_constraints, new_cons);
-	
 	if(safe_str_neq(last_op, "stop")) {
 
 		if(rsc_lh->cur_node != NULL) {
@@ -697,10 +710,11 @@ unpack_healthy_resource(GListPtr *node_constraints,
 				node->details->id);
 			// TODO: some recovery action!!
 			// like force a stop on the second node?
+			return FALSE;
 			
 		} else {
 			/* we prefer to stay running here */
-			new_cons->weight = 100.0;
+			weight = 100.0;
 			
 			/* create the link between this node and the rsc */
 			crm_verbose("Setting cur_node = %s for rsc = %s",
@@ -713,16 +727,17 @@ unpack_healthy_resource(GListPtr *node_constraints,
 		
 	} else {
 		/* we prefer to start where we once ran successfully */
-		new_cons->weight = 20.0;
+		weight = 20.0;
 	}
 
-	crm_debug_action(print_rsc_to_node("Added", new_cons, FALSE));
+	rsc2node_new(
+		"healthy_generate", rsc_lh, weight, inc,node,node_constraints);
 	
 	return TRUE;
 }
 
 gboolean
-create_rsc_to_rsc(const char *id, enum con_strength strength,
+rsc2rsc_new(const char *id, enum con_strength strength,
 		  resource_t *rsc_lh, resource_t *rsc_rh)
 {
 	if(rsc_lh == NULL || rsc_rh == NULL){
@@ -758,28 +773,28 @@ create_ordering(const char *id, enum con_strength strength,
 		return FALSE;
 	}
 	
-	action_t *lh_stop  = rsc_lh->stop;
-	action_t *lh_start = rsc_lh->start;
-	action_t *rh_stop  = rsc_rh->stop;
-	action_t *rh_start = rsc_rh->start;
-	
-	order_constraint_t *order = (order_constraint_t*)
-		crm_malloc(sizeof(order_constraint_t));
+
+	return TRUE;
+}
+
+gboolean
+order_new(action_t *before, action_t *after, enum con_strength strength,
+	  GListPtr *action_constraints)
+{
+	order_constraint_t *order = NULL;
+
+	if(before == NULL || after == NULL || action_constraints == NULL){
+		crm_err("Invalid inputs b=%p, a=%p l=%p",
+			before, after, action_constraints);
+		return FALSE;
+	}
+
+	order = (order_constraint_t*)crm_malloc(sizeof(order_constraint_t));
 	
 	order->id        = order_id++;
-	order->lh_action = lh_stop;
-	order->rh_action = rh_stop;
 	order->strength  = strength;
-	
-	*action_constraints = g_list_append(*action_constraints, order);
-	
-	order = (order_constraint_t*)
-		crm_malloc(sizeof(order_constraint_t));
-	
-	order->id        = order_id++;
-	order->lh_action = rh_start;
-	order->rh_action = lh_start;
-	order->strength  = strength;
+	order->lh_action = before;
+	order->rh_action = after;
 	
 	*action_constraints = g_list_append(*action_constraints, order);
 
@@ -805,6 +820,9 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	if(rsc_lh == NULL) {
 		crm_err("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
+	} else if(rsc_rh == NULL) {
+		crm_err("No resource (con=%s, rsc=%s)", id, id_rh);
+		return FALSE;
 	}
 	
 	if(safe_str_eq(strength, XML_STRENGTH_VAL_MUST)) {
@@ -826,51 +844,42 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 
 	if(safe_str_eq(type, "ordering")) {
 		// make an action_cons instead
-		return create_ordering(
-			id, strength_e, rsc_lh, rsc_rh, action_constraints);
-	}
-
+		order_new(rsc_lh->stop, rsc_rh->stop, strength_e,
+			  action_constraints);
+		order_new(rsc_rh->start, rsc_lh->start, strength_e,
+			  action_constraints);
+		return TRUE;
+	} 
+		
 
 	/* make sure the lower priority resource stops before
 	 *  the higher is started, otherwise they may be both running
 	 *  on the same node when the higher is replacing the lower
 	 */
-	order_constraint_t *order = (order_constraint_t*)
-		crm_malloc(sizeof(order_constraint_t));
-	
-	order->id        = order_id++;
-	order->strength  = strength_e;
-
+	action_t *before, *after;
 	if(rsc_lh->priority >= rsc_rh->priority) {
-		order->lh_action = rsc_rh->stop;
-		order->rh_action = rsc_lh->start;
+		before = rsc_rh->stop;
+		after  = rsc_lh->start;
 	} else {
-		order->lh_action = rsc_lh->stop;
-		order->rh_action = rsc_rh->start;
+		before = rsc_lh->stop;
+		after  = rsc_rh->start;
 	}
 	
-	*action_constraints = g_list_append(*action_constraints, order);
+	order_new(before, after, strength_e, action_constraints);
 
 	/* make sure the lower priority resource starts after
 	 *  the higher is started
 	 */
-	order = (order_constraint_t*)
-		crm_malloc(sizeof(order_constraint_t));
-	
-	order->id        = order_id++;
-	order->strength  = strength_e;
-
 	if(rsc_lh->priority < rsc_rh->priority) {
-		order->lh_action = rsc_rh->start;
-		order->rh_action = rsc_lh->start;
-	} else {
-		order->lh_action = rsc_lh->start;
-		order->rh_action = rsc_rh->start;
-	}
+		before = rsc_rh->start;
+		after  = rsc_lh->start;
+       } else {
+		before = rsc_lh->start;
+		after  = rsc_rh->start;
+       }
+	order_new(before, after, strength_e,action_constraints);
 	
-	*action_constraints = g_list_append(*action_constraints, order);
-	
-	return create_rsc_to_rsc(id, strength_e, rsc_lh, rsc_rh);
+	return rsc2rsc_new(id, strength_e, rsc_lh, rsc_rh);
 }
 
 GListPtr

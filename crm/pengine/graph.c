@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.5 2004/06/11 09:27:39 andrew Exp $ */
+/* $Id: graph.c,v 1.6 2004/06/11 10:41:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -170,22 +170,8 @@ shutdown_constraints(
 	int lpc = 0;
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
-		
-		order_constraint_t *order = (order_constraint_t*)
-		crm_malloc(sizeof(order_constraint_t));
-		
-		/* stop resources before shutdown */
-		order->id        = order_id++;
-		order->lh_action = rsc->stop;
-		order->rh_action = shutdown_op;
-		order->strength  = must;
 
-		*action_constraints = g_list_append(*action_constraints,order);
-		
-		crm_debug_action(
-			print_action("LH (Shutdown)",order->lh_action, FALSE));
-		crm_debug_action(
-			print_action("RH (Shutdown)",order->rh_action, FALSE));
+		order_new(rsc->stop, shutdown_op, must, action_constraints);
 		);	
 
 	return TRUE;	
@@ -197,20 +183,9 @@ stonith_constraints(node_t *node,
 		    GListPtr *action_constraints)
 {
 	int lpc = 0;
-	order_constraint_t *order = NULL;
 
 	if(shutdown_op != NULL) {
-		order = (order_constraint_t*)
-			crm_malloc(sizeof(order_constraint_t));
-
-		/* shutdown before stonith if both are requested */
-		order->lh_action = shutdown_op;
-		order->rh_action = stonith_op;
-		order->id        = order_id++;
-		order->strength  = must;
-		
-		*action_constraints = g_list_append(
-			*action_constraints, order);
+		order_new(shutdown_op, stonith_op, must, action_constraints);
 	}
 	
 	slist_iter(
@@ -239,26 +214,10 @@ stonith_constraints(node_t *node,
 		 * if the stop succeeds, the transitioner can then
 		 * decided if  stonith is needed
 		 */
-		order = (order_constraint_t*)
-		crm_malloc(sizeof(order_constraint_t));
-
-		order->lh_action = rsc->stop;
-		order->rh_action = stonith_op;
-		order->id        = order_id++;
-		order->strength  = must;
-		
-		*action_constraints = g_list_append(*action_constraints,order);
+		order_new(rsc->stop, stonith_op, must, action_constraints);
 #endif
 		/* stonith before start */
-		order = (order_constraint_t*)
-		crm_malloc(sizeof(order_constraint_t));
-		
-		order->id        = order_id++;
-		order->lh_action = stonith_op;
-		order->rh_action = rsc->start;
-		order->strength  = must;
-		
-		*action_constraints = g_list_append(*action_constraints,order);
+		order_new(stonith_op, rsc->start, must, action_constraints);
 
 		);
 	
