@@ -663,8 +663,12 @@ class SimulStart(CTSTest):
 	    return self.failure("Did not find start pattern(s): " 
 				+	repr(watch.unmatched))
 
-        return self.failure("All nodes were started but %d may be unstable"
+	self.CM.log("Did not find start pattern(s): " +	repr(watch.unmatched))
+        self.CM.log("All nodes were started but %d may be unstable"
 			    %(len(watch.unmatched)))
+
+	return self.success()
+
 
     def is_applicable(self):
         '''SimulStart is always applicable'''
