@@ -307,14 +307,16 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		if (curr_client != NULL) {
 			struct crm_subsystem_s *the_subsystem = NULL;
 			
-			if (curr_client->sub_sys == NULL)
+			if (curr_client->sub_sys == NULL) {
 				CRM_DEBUG("Client had not registered with us yet");
-			else if (strcmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) 
+			} else if (strcmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) {
 				the_subsystem = pe_subsystem;
-			else if (strcmp(CRM_SYSTEM_TENGINE, curr_client->sub_sys) == 0)
+			} else if (strcmp(CRM_SYSTEM_TENGINE, curr_client->sub_sys) == 0) {
 				the_subsystem = te_subsystem;
-			else if (strcmp(CRM_SYSTEM_CIB, curr_client->sub_sys) == 0)
+			} else if (strcmp(CRM_SYSTEM_CIB, curr_client->sub_sys) == 0){
 				the_subsystem = cib_subsystem;
+			}
+			
 
 			if(the_subsystem != NULL) {
 				cleanup_subsystem(the_subsystem);
@@ -816,7 +818,10 @@ handle_message(xmlNodePtr stored_msg)
 			char *now_s = crm_itoa((int)now);
 			xmlNodePtr node_state =
 				create_xml_node(NULL, XML_CIB_TAG_STATE);
-				
+
+			cl_log(LOG_INFO, "Creating shutdown request for %s",
+			       host_from);
+			
 			set_xml_property_copy(node_state, XML_ATTR_ID, host_from);
 			set_xml_property_copy(node_state, "shutdown",  now_s);
 			set_xml_property_copy(node_state, "exp_state", "down");
