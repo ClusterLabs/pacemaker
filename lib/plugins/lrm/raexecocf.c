@@ -74,6 +74,11 @@ static void add_OCF_env_vars(GHashTable * env, const char * rsc_id,
 			     const char * rsc_type, const char * provider);
 static void add_prefix_foreach(gpointer key, gpointer value,
 				   gpointer user_data);
+
+static void hash_to_str(GHashTable * , GString *);
+static void hash_to_str_foreach(gpointer key, gpointer value,
+				   gpointer user_data);
+
 static int raexec_setenv(GHashTable * env_params);
 static void set_env(gpointer key, gpointer value, gpointer user_data);
 				   
@@ -138,6 +143,7 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	uniform_ret_execra_t exit_value;
 	char ra_pathname[RA_MAX_NAME_LENGTH];
 	GHashTable * tmp_for_setenv;
+	GString * params_gstring;
 
 	get_ra_pathname(RA_PATH, rsc_type, provider, ra_pathname);
 
@@ -150,7 +156,12 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	g_hash_table_destroy(tmp_for_setenv);
 	
 	/* execute the RA */
-	cl_log(LOG_DEBUG, "Will execute OCF RA : %s %s", ra_pathname, op_type);
+	params_gstring = g_string_new("");
+	hash_to_str(params, params_gstring);
+	cl_log(LOG_DEBUG, "Will execute OCF RA: %s %s . Enironment vars: {%s}", 
+		ra_pathname, op_type, params_gstring->str);
+	g_string_free(params_gstring, TRUE);
+
 	if ( 0 == strncmp(op_type, "status", strlen("status")) ) {
 		execl(ra_pathname, ra_pathname, "monitor", NULL);
 	} else {
@@ -339,6 +350,24 @@ add_prefix_foreach(gpointer key, gpointer value, gpointer user_data)
 	strncpy(newkey, "OCF_RESKEY_", keylen);
 	strncat(newkey, key, keylen);
 	g_hash_table_insert(new_hashtable, (gpointer)newkey, g_strdup(value));
+}
+
+static void 
+hash_to_str(GHashTable * params , GString * str)
+{
+	if (params) {
+		g_hash_table_foreach(params, hash_to_str_foreach, str);
+	}
+}
+
+static void
+hash_to_str_foreach(gpointer key, gpointer value, gpointer user_data)
+{
+	char buffer_tmp[60];
+	GString * str = (GString *)user_data;
+
+	snprintf(buffer_tmp, 60, "%s=%s ", (char *)key, (char *)value);
+	str = g_string_append(str, buffer_tmp);
 }
 
 static gboolean
