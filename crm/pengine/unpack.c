@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.63 2005/03/31 08:10:24 andrew Exp $ */
+/* $Id: unpack.c,v 1.64 2005/03/31 16:50:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,10 +31,7 @@
 
 #include <pengine.h>
 #include <pe_utils.h>
-
-
-GListPtr match_attrs(const char *attr, const char *op, const char *value,
-		     const char *type, GListPtr node_list);
+#include <pe_rules.h>
 
 gboolean unpack_rsc_to_attr(crm_data_t * xml_obj,
 			    GListPtr rsc_list,
@@ -269,7 +266,9 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 			new_node->details->type = node_member;
 		}
 
-		add_node_attrs(attrs, new_node);
+
+		add_node_attrs(xml_obj, new_node);
+
 		*nodes = g_list_append(*nodes, new_node);    
 		crm_verbose("Done with node %s",
 			    crm_element_value(xml_obj, XML_ATTR_UNAME));
@@ -441,7 +440,7 @@ unpack_status(crm_data_t * status,
 		this_node->details->unclean = FALSE;
 		
 		crm_verbose("Adding runtime node attrs");
-		add_node_attrs(attrs, this_node);
+		add_node_attrs(node_state, this_node);
 
 		crm_verbose("determining node state");
 		determine_online_status(node_state, this_node);
@@ -667,7 +666,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 				/* map this to a "done" so it is not marked
 				 * as failed, then make sure it is re-issued
 				 */
-				action_new(rsc_lh, start_rsc, NULL);
+				action_new(rsc_lh, start_rsc, NULL, NULL);
 				action_status_i = LRM_OP_DONE;
 			}
 		}
@@ -1001,150 +1000,9 @@ unpack_rsc_order(
 	return TRUE;
 }
 
-
-/* do NOT free the nodes returned here */
-GListPtr
-match_attrs(const char *attr, const char *op, const char *value,
-	    const char *type, GListPtr node_list)
-{
-	GListPtr result = NULL;
-	
-	if(attr == NULL || op == NULL) {
-		crm_err("Invlaid attribute or operation in expression"
-			" (\'%s\' \'%s\' \'%s\')",
-			crm_str(attr), crm_str(op), crm_str(value));
-		return NULL;
-	}
-	
-
-	slist_iter(
-		node, node_t, node_list, lpc,
-		gboolean accept = FALSE;
-		
-		int cmp = 0;
-		const char *h_val = (const char*)g_hash_table_lookup(
-			node->details->attrs, attr);
-
-		if(value != NULL && h_val != NULL) {
-			if(type == NULL || (safe_str_eq(type, "string"))) {
-				cmp = strcmp(h_val, value);
-
-			} else if(safe_str_eq(type, "number")) {
-				float h_val_f = atof(h_val);
-				float value_f = atof(value);
-
-				if(h_val_f < value_f) {
-					cmp = -1;
-				} else if(h_val_f > value_f)  {
-					cmp = 1;
-				} else {
-					cmp = 0;
-				}
-				
-			} else if(safe_str_eq(type, "version")) {
-				cmp = compare_version(h_val, value);
-
-			}
-			
-		} else if(value == NULL && h_val == NULL) {
-			cmp = 0;
-		} else if(value == NULL) {
-			cmp = 1;
-		} else {
-			cmp = -1;
-		}
-		
-		if(safe_str_eq(op, "defined")) {
-			if(h_val != NULL) accept = TRUE;	
-
-		} else if(safe_str_eq(op, "not_defined")) {
-			if(h_val == NULL) accept = TRUE;
-
-		} else if(safe_str_eq(op, "colocated")) {
-			GListPtr rsc_list = node->details->running_rsc;
-			slist_iter(
-				rsc, resource_t, rsc_list, lpc2,
-				if(safe_str_eq(rsc->id, attr)) {
-					accept = TRUE;
-				}
-				);
-
-		} else if(safe_str_eq(op, "not_colocated")) {
-			GListPtr rsc_list = node->details->running_rsc;
-			accept = TRUE;
-			slist_iter(
-				rsc, resource_t, rsc_list, lpc2,
-				if(safe_str_eq(rsc->id, attr)) {
-					accept = FALSE;
-					break;
-				}
-				);
-
-		} else if(safe_str_eq(op, "eq")) {
-			if((h_val == value) || cmp == 0)
-				accept = TRUE;
-
-		} else if(safe_str_eq(op, "ne")) {
-			if((h_val == NULL && value != NULL)
-			   || (h_val != NULL && value == NULL)
-			   || cmp != 0)
-				accept = TRUE;
-
-		} else if(value == NULL || h_val == NULL) {
-			/* the comparision is meaningless from this point on */
-			accept = FALSE;
-			
-		} else if(safe_str_eq(op, "lt")) {
-			if(cmp < 0) accept = TRUE;
-			
-		} else if(safe_str_eq(op, "lte")) {
-			if(cmp <= 0) accept = TRUE;
-			
-		} else if(safe_str_eq(op, "gt")) {
-			if(cmp > 0) accept = TRUE;
-			
-		} else if(safe_str_eq(op, "gte")) {
-			if(cmp >= 0) accept = TRUE;
-			
-		}
-		
-		if(accept) {
-			crm_trace("node %s matched", node->details->uname);
-			result = g_list_append(result, node);
-		} else {
-			crm_trace("node %s did not match", node->details->uname);
-		}		   
-		);
-	
-	return result;
-}
-
 gboolean
-add_node_attrs(crm_data_t * attrs, node_t *node)
+add_node_attrs(crm_data_t *xml_obj, node_t *node)
 {
-	const char *name  = NULL;
-	const char *value = NULL;
-
-	xml_child_iter(
-		attrs, attr, NULL,
-		name  = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
-		value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
-			
-		if(name != NULL
-		   && value != NULL
-		   && safe_val(NULL, node, details) != NULL) {
-			crm_verbose("Adding %s => %s", name, value);
-
-			/* this is frustrating... no way to pass in const
-			 *  keys or values yet docs say:
-			 *   Note: If keys and/or values are dynamically
-			 *   allocated, you should free them first.
-			 */
-			g_hash_table_insert(node->details->attrs,
-					    crm_strdup(name),
-					    crm_strdup(value));
-		}
-		);
  	g_hash_table_insert(node->details->attrs,
 			    crm_strdup(XML_ATTR_UNAME),
 			    crm_strdup(node->details->uname));
@@ -1162,7 +1020,8 @@ add_node_attrs(crm_data_t * attrs, node_t *node)
 				    crm_strdup(XML_BOOLEAN_FALSE));
 	}
 	
-			
+	unpack_instance_attributes(xml_obj, node->details->attrs);
+
 	return TRUE;
 }
 
@@ -1238,7 +1097,7 @@ unpack_rsc_location(
 			crm_trace("processing expression: %s",
 				  crm_element_value(expr, XML_ATTR_ID));
 
-			match_L = match_attrs(
+			match_L = apply_node_expression(
 				attr, op, value, type, node_list);
 			
 			if(first_expr) {
