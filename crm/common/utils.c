@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.9 2004/07/30 15:31:05 andrew Exp $ */
+/* $Id: utils.c,v 1.10 2004/08/03 08:51:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -334,22 +334,28 @@ alter_debug(int nsig)
 			set_crm_log_level(level+1);
 			level = get_crm_log_level();
 			fprintf(stderr, "Upped log level to %d\n", level);
+			cl_log(LOG_INFO, "Upped log level to %d\n", level);
 			
 			if(level > LOG_INFO) {
 				cl_log_enable_stderr(TRUE);
 			}
 			break;
+
 		case DEBUG_DEC:
 			level = get_crm_log_level();
 			set_crm_log_level(level-1);
 			level = get_crm_log_level();
 			fprintf(stderr, "Reduced log level to %d\n", level);
+			cl_log(LOG_INFO, "Reduced log level to %d\n", level);
 			
 			if(level < LOG_DEBUG) {
 				cl_log_enable_stderr(FALSE);
 			}
+			break;	
+
 		default:
 			fprintf(stderr, "Unknown signal %d\n", nsig);
+			cl_log(LOG_ERR, "Unknown signal %d\n", nsig);
 			break;	
 	}
 }
