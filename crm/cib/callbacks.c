@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.33 2005/03/16 17:11:14 lars Exp $ */
+/* $Id: callbacks.c,v 1.34 2005/03/16 19:45:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -306,8 +306,8 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		cib_client->name = crm_strdup(client_name);
 
 		g_hash_table_insert(client_list, cib_client->id, cib_client);
-		crm_info("Registered %s on %s channel",
-			    cib_client->id, cib_client->channel_name);
+		crm_debug("Registered %s on %s channel",
+			  cib_client->id, cib_client->channel_name);
 
 		crm_msg_del(op_request);
 
@@ -319,7 +319,7 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 	}
 	did_disconnect = cib_process_disconnect(channel, cib_client);	
 	if(did_disconnect) {
-		crm_info("Client disconnected");
+		crm_debug("Client disconnected");
 	}
 	
 	return did_disconnect;
@@ -457,7 +457,6 @@ cib_common_callback(
  			crm_devel("Processing complete");
 		}
 		
-		
 		crm_devel("processing response cases");
 		if(rc != cib_ok) {
 			crm_err("Input message");
@@ -498,7 +497,7 @@ cib_common_callback(
 		   && cib_server_ops[call_type].modifies_cib
 		   && !(call_options & cib_scope_local)) {
 			/* send via HA to other nodes */
- 			crm_info("Forwarding %s op to all instances", op);
+ 			crm_debug("Forwarding %s op to all instances", op);
 			ha_msg_add(op_request,
 				   F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 			send_ha_message(hb_conn, op_request, NULL);
@@ -721,11 +720,13 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 		int seen = 0;
 		int timeout = 5; /* 1 iteration == 1 seconds */
 		HA_Message *reply = NULL;
-
+		const char *host_to = NULL;
+		
 		msg = list->data;
 		ha_msg_value_int(msg, F_CIB_SEENCOUNT, &seen);
 		ha_msg_value_int(msg, F_CIB_TIMEOUT, &timeout);
-
+		host_to = cl_get_string(msg, F_CIB_HOST);
+		
 		crm_trace("Timeout %d, seen %d", timeout, seen);
 		if(timeout > 0 && seen < timeout) {
 			int seen2 = 0;
@@ -747,8 +748,12 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 			   cl_get_string(msg, F_CIB_OPERATION));
 		ha_msg_add(reply, F_CIB_CALLID,
 			   cl_get_string(msg, F_CIB_CALLID));
-		ha_msg_add_int(reply, F_CIB_RC, cib_master_timeout);
-
+		if(host_to == NULL) {
+			ha_msg_add_int(reply, F_CIB_RC, cib_master_timeout);
+		} else {
+			ha_msg_add_int(reply, F_CIB_RC, cib_remote_timeout);
+		}
+		
 		send_ipc_message(client->channel, reply);
 
 		list = list->next;
@@ -876,7 +881,8 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		is_done = 0;
 	}
 
-	crm_info("Processing message from peer to %s...", request_to);
+	crm_debug("Processing message from peer to %s...",
+		  request_to?request_to:"master");
 	crm_log_message_adv(LOG_DEV, "Peer[inbound]", msg);
 
 	if(crm_is_true(update) && safe_str_eq(reply_to, cib_our_uname)) {
@@ -1047,7 +1053,9 @@ cib_client_status_callback(const char * node, const char * client,
 	crm_notice("Status update: Client %s/%s now has status [%s]",
 		   node, client, status);
 
-	g_hash_table_replace(peer_hash, crm_strdup(node), crm_strdup(status));
+	if(safe_str_eq(client, CRM_SYSTEM_CIB)) {
+		g_hash_table_replace(peer_hash, crm_strdup(node), crm_strdup(status));
+	}
 	return;
 }
 

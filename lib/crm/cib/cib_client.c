@@ -671,6 +671,9 @@ cib_error2string(enum cib_errors return_code)
 		case cib_client_corrupt:
 			error_msg = "Service client not valid";
 			break;
+		case cib_remote_timeout:
+			error_msg = "Remote node did not respond";
+			break;
 		case cib_master_timeout:
 			error_msg = "No master service is currently active";
 			break;

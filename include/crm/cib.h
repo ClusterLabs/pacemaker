@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.19 2005/02/28 11:00:45 andrew Exp $ */
+/* $Id: cib.h,v 1.20 2005/03/16 19:45:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -99,7 +99,8 @@ enum cib_errors {
 	cib_master_timeout	= -37,
 	cib_revision_unsupported= -38,
 	cib_revision_unknown	= -39,
-	cib_missing_data	= -40
+	cib_missing_data	= -40,
+	cib_remote_timeout	= -41
 };
 
 enum cib_op {
