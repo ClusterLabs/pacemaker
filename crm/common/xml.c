@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.13 2004/09/17 13:03:09 andrew Exp $ */
+/* $Id: xml.c,v 1.14 2004/09/20 12:21:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -621,11 +621,12 @@ write_xml_file(xmlNodePtr xml_node, const char *filename)
 
 char *
 dump_xml_formatted(xmlNodePtr an_xml_node) {
-	int len = 0;
-	xmlChar *buffer = NULL;
-	xmlDocPtr foo = NULL;
+	int       len        = 0;
+	xmlChar  *xml_buffer = NULL;
+	char     *buffer     = NULL;
+	xmlDocPtr foo        = NULL;
 
-	xmlNodePtr xml_node = copy_xml_node_recursive(an_xml_node);
+	xmlNodePtr xml_node  = copy_xml_node_recursive(an_xml_node);
 	
 	if (xml_node == NULL) {
 		return NULL;
@@ -642,9 +643,16 @@ dump_xml_formatted(xmlNodePtr an_xml_node) {
 	crm_trace("Initializing Parser");
 	xmlInitParser();
 	crm_trace("Dumping data");
-	xmlDocDumpFormatMemory(xml_node->doc, &buffer, &len,1);
+	xmlDocDumpFormatMemory(xml_node->doc, &xml_buffer, &len,1);
 	crm_trace("Cleaning up parser");
 	xmlCleanupParser();
+
+	crm_trace("Moving memory into crm_ space");
+	if(xml_buffer != NULL && len > 0) {
+		xmlFree(xml_buffer);
+		/* copy the text into crm_ memory */ 
+		buffer = crm_strdup(xml_buffer);
+	}
 	
 	free_xml(xml_node);
 
@@ -662,10 +670,12 @@ print_xml_formatted (int log_level, const char *function,
 			   crm_str(text), "<null>");
 		return;
 	}
-	
+
+	crm_trace("dumping XML to char *");
 	msg_buffer = dump_xml_formatted(msg);
 	do_crm_log(log_level, function, "%s: %s",
 		   crm_str(text), crm_str(msg_buffer));
+	crm_trace("Freeing char * buffer");
 	crm_free(msg_buffer);
 
 	return;
