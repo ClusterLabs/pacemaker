@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.21 2004/03/29 15:32:59 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.22 2004/03/30 15:10:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,12 +36,6 @@
 #include <crm/msg_xml.h>
 
 #include <crm/dmalloc_wrapper.h>
-
-/* int		xmlGetDocCompressMode	(xmlDocPtr doc); */
-/* void		xmlSetDocCompressMode	(xmlDocPtr doc, */
-/* 					 int mode); */
-/* int		xmlGetCompressMode	(void); */
-/* void		xmlSetCompressMode	(int mode); */
 
 xmlNodePtr
 find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
@@ -200,7 +194,6 @@ set_xml_attr(xmlNodePtr parent,
 
 }
 
-
 xmlNodePtr
 set_xml_attr_nested(xmlNodePtr parent,
 		    const char **node_path, int length,
@@ -303,7 +296,6 @@ find_entity(xmlNodePtr parent,
 				  id,
 				  siblings);
 }
-
 xmlNodePtr
 find_entity_nested(xmlNodePtr parent,
 		   const char *node_name,
@@ -394,7 +386,6 @@ find_entity_nested(xmlNodePtr parent,
 	       node_name, id);	    
 	FNRET(NULL);
 }
-
 
 void
 copy_in_properties(xmlNodePtr target, xmlNodePtr src)
@@ -503,7 +494,7 @@ add_node_copy(xmlNodePtr new_parent, xmlNodePtr xml_node)
 	FNIN();
 
 	if(xml_node != NULL && new_parent != NULL) {
-		node_copy = copy_xml_node_recursive(xml_node, 1);
+		node_copy = copy_xml_node_recursive(xml_node);
 		xmlAddChild(new_parent, node_copy);
 
 	} else if(xml_node == NULL) {
@@ -628,7 +619,7 @@ set_node_tstamp(xmlNodePtr a_node)
 
 
 xmlNodePtr
-copy_xml_node_recursive(xmlNodePtr src_node, int recursive)
+copy_xml_node_recursive(xmlNodePtr src_node)
 {
 #if XML_TRACE
 	const char *local_name = NULL;
@@ -656,7 +647,7 @@ copy_xml_node_recursive(xmlNodePtr src_node, int recursive)
 
 		node_iter = src_node->children;
 		while(node_iter != NULL) {
-			local_child = copy_xml_node_recursive(node_iter, 1);
+			local_child = copy_xml_node_recursive(node_iter);
 			if(local_child != NULL) {
 				xmlAddChild(local_node, local_child);
 				CRM_DEBUG3("Copied node [%s [%s]", local_name, local_child->name);
@@ -671,7 +662,7 @@ copy_xml_node_recursive(xmlNodePtr src_node, int recursive)
 	CRM_DEBUG("Returning null");
 	FNRET(NULL);
 #else
-	return xmlCopyNode(src_node, recursive);
+	return xmlCopyNode(src_node, 1);
 #endif
 }
 
@@ -736,6 +727,11 @@ file2xml(FILE *input)
 	gboolean more = TRUE;
 	gboolean inTag = FALSE;
 	xmlBufferPtr xml_buffer = xmlBufferCreate();
+
+	if(input == NULL) {
+		cl_log(LOG_ERR, "File pointer was NULL");
+		return NULL;
+	}
 	
 	while (more) {
 		ch = fgetc(input);
