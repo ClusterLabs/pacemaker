@@ -589,6 +589,55 @@ class SimulStart(CTSTest):
 #	Register SimulStart as a good test to run
 AllTestClasses.append(SimulStart)
 
+class SimulStop(CTSTest):
+###################################################################
+    '''Stop all the nodes ~ simultaneously'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="SimulStop"
+
+    def __call__(self, dummy):
+        '''Perform the 'SimulStop' test. '''
+        self.incr("calls")
+
+        #     We ignore the "node" parameter...
+
+        #     Start up all the nodes...
+        for node in self.CM.Env["nodes"]:
+          if self.CM.ShouldBeStatus[node] != self.CM["up"]:
+            self.incr("started")
+            self.start = StartTest(self.CM)
+            self.start(node)
+
+        watchpats = [ ]
+
+        pat = self.CM["Pat:We_stopped"]
+        for node in self.CM.Env["nodes"]:
+          prefix = ('(%s) .* ' % node)
+          thispat = prefix + pat
+          watchpats.append(thispat)
+
+        #     Stop all the nodes - at about the same time...
+        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
+        ,     timeout=self.CM["DeadTime"]+10)
+        watch.ReturnOnlyMatch()
+
+        watch.setwatch()
+        for node in self.CM.Env["nodes"]:
+            self.CM.StopaCM(node)
+        if watch.lookforall():
+	    return self.success()
+
+        return self.failure("Did not find stop pattern(s): "
+        +     repr(watch.unmatched))
+
+    def is_applicable(self):
+        '''SimulStop is always applicable'''
+        return 1
+
+#     Register SimulStop as a good test to run
+AllTestClasses.append(SimulStop)
+
 ###################################################################
 class StandbyTest(CTSTest):
 ###################################################################
