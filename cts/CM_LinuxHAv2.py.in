@@ -86,60 +86,80 @@ class LinuxHAv2(HeartbeatCM):
                 r"CRIT:",
             ),
         })
-        self.default_cts_cib='''
+	cib_prefix='''
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
    <configuration>
      <crm_config/>
      <nodes/>
-     <resources>
+     <resources>'''
+	cib_middle='''
      </resources>
-     <constraints>
-      <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
-        <rule id="can_run_DcIPaddr" result="can" boolean_op="and">
-          <expression attribute="is_dc" operation="eq" value="true"/>
-        </rule>
-      </rsc_location>
+     <constraints>'''
+	cib_suffix='''
      </constraints>
    </configuration>
    <status/>
 </cib>
 '''
+	resources=''' '''
+	constraints=''' '''
         if self.Env["CIBResource"] == 1:
             print("Enabling DC resource")
-            self.default_cts_cib='''
-<cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
-   <configuration>
-     <crm_config/>
-     <nodes/>
-     <resources>
+	    resources='''
        <resource id="DcIPaddr" class="heartbeat" type="IPaddr2" priority="1.0">
          <instance_attributes>
            <rsc_parameters>
              <nvpair name="1" value="127.0.0.10"/>
            </rsc_parameters>
          </instance_attributes>
-       </resource>
-     </resources>
-     <constraints>
+       </resource>'''
+	    constraints='''
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
         <rule id="can_run_DcIPaddr" result="can" boolean_op="and">
           <expression attribute="is_dc" operation="eq" value="true"/>
         </rule>
-      </rsc_location>
-     </constraints>
-   </configuration>
-   <status/>
-</cib>
-'''
+      </rsc_location>'''
 
+	    ip_num=21
+	    for node in self.Env["nodes"]:
+		node_resource=("""
+       <resource id="%s" class="heartbeat" type="IPaddr2" priority="1.0">
+         <instance_attributes>
+           <rsc_parameters>
+             <nvpair name="1" value="127.0.0.%d"/>
+           </rsc_parameters>
+         </instance_attributes>
+       </resource>""" %(node, ip_num))
+		ip_num=ip_num+1
+		resources = resources + node_resource
+		node_constraint=("""
+      <rsc_location id="run_%s" rsc="%s">
+        <rule id="can_run_%s" result="can" boolean_op="and"/>
+        <rule id="pref_run_%s" score="100" boolean_op="and">
+          <expression attribute="uname" operation="eq" value="%s"/>
+        </rule>
+      </rsc_location>""" % (node, node, node, node, node))
+		constraints = constraints + node_constraint
+
+        self.default_cts_cib=cib_prefix + resources + cib_middle + constraints + cib_suffix
+	print(self.default_cts_cib)
         # KLUDGE!  Expedient, but a Kludge (FIXME)
-#        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
-#       StartOnebyOne is redundant as it is performed before SimulStop
-        CTStests.AllTestClasses = [FlipTest, RestartTest, SimulStart, SimulStop]
+	#        Extra tests: Split_brainTest, BandwidthTest
+        CTStests.AllTestClasses = [FlipTest, RestartTest, SimulStart, SimulStop, StartOnebyOne, StopOnebyOne]
 
 #        CTSaudits.AllAuditClasses = [CrmdStateAudit, HAResourceAudit]
         CTSaudits.AllAuditClasses = [CrmdStateAudit, PartitionAudit]
     
+    def errorstoignore(self):
+	# At some point implement a more elegant solution that 
+	#   also produces a report at the end
+        '''Return list of errors which are known and very noisey should be ignored'''
+        if 0:
+            return [ 
+		"Currently no errors to ignore"
+		]
+        return []
+
 
     def StataCM(self, node):
 
@@ -177,11 +197,6 @@ class LinuxHAv2(HeartbeatCM):
         if self.any_running() == 1:
             patterns.append(self["Pat:DC_IDLE"])
 
-        watch = CTS.LogWatcher(self["LogFileName"], patterns, 120)
-        watch.setwatch()
-
-        self.log ("Starting %s on node %s" %(self["Name"], node))
-
         if self.Env["ClobberCIB"] != None:
             if self.Env["CIBfilename"] == None:
                 os.system("rm -f /tmp/cts.default.cib")
@@ -191,6 +206,9 @@ class LinuxHAv2(HeartbeatCM):
             else:
                 self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
 
+        watch = CTS.LogWatcher(self["LogFileName"], patterns, 120)
+        self.log ("Starting %s on node %s" %(self["Name"], node))
+        watch.setwatch()
         self.rsh(node, self["StartCmd"])
         self.ShouldBeStatus[node]=self["up"]
         if watch.lookforall():
@@ -198,13 +216,12 @@ class LinuxHAv2(HeartbeatCM):
 
         # the watch() failed... lets check to see if the start _really_ failed
         for regex in watch.unmatched:
-            self.log ("Startup pattern not found: %s" %(regex))
+            self.log ("Warn: Startup pattern not found: %s" %(regex))
 
         out = self.rsh.readaline(node, self["StatusCmd"])
         if string.find(out, 'ok') == -1:
             # yep, it _really_ failed
             self.ShouldBeStatus[node]=self["down"]        
-            self.log ("Could not start %s on node %s" %(self["Name"], node))
             return None
 
         ret=(string.find(out, 'S_NOT_DC') != -1)
@@ -222,6 +239,31 @@ class LinuxHAv2(HeartbeatCM):
         self.log ("%s on %s started but unstable: %s" 
                   %(self["Name"], node, out))
 #        self.ShouldBeStatus[node]=self["down"]
+        return None
+
+    def StopaCM(self, node):
+
+        '''Stop the cluster manager on a given node'''
+
+        self.log ("Stopping %s on node %s" %(self["Name"], node))
+
+        rc=self.rsh(node, self["StopCmd"])
+        if rc == 0:
+            self.ShouldBeStatus[node]=self["down"]
+            return 1
+
+	still_running = 0
+	if self.rsh(node, "killall -INT crmd") == 0:
+	    still_running = 1
+	    self.log("%s is still running on node %s" %(self["name"], name))
+	if self.rsh(node, "killall -INT heartbeat") == 0:
+	    still_running = 1
+	    self.log("Heartbeat is still running on node %s" %name)
+
+	if still_running == 0:
+	    self.log ("%s failed, yet nothing is running on node %s" %(self["StopCmd"], self["Name"], node))
+	    return 1
+
         return None
     
     def isolate_node(self, node, allowlist):
@@ -505,7 +547,12 @@ class PartitionAudit(ClusterAudit):
         ccm_partitions = []
 
         for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+            if self.CM.ShouldBeStatus[node] != self.CM["up"]:
+                self.NodeCCM[node]    = None
+                self.NodeState[node]  = None
+                self.NodeEpoche[node] = None
+                self.NodeQuorum[node] = None
+            else:
                 nodes_up = nodes_up + 1
 #                self.PS_State[node] = os.system("@SSH@ root@%s ps -C crmd" %(node))
                 self.NodeQuorum[node] = self.CM.rsh.readaline(
@@ -559,7 +606,10 @@ class PartitionAudit(ClusterAudit):
 
         self.CM.log("Auditing partition: %s" %(partition))
         for node in node_list:
-            if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
+	    if not self.NodeEpoche[node]:
+		self.CM.log("Node %s appeared out of nowhere" %(node))
+		passed = 0
+            elif lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
                 lowest_epoche = self.NodeEpoche[node]
                 
         for node in node_list:
@@ -587,6 +637,15 @@ class PartitionAudit(ClusterAudit):
                     self.CM.log("epoche %s : %s"  
                                 %(self.NodeEpoche[node], self.NodeState[node]))
 
+        if self.CM.Env["CIBResource"] == 1:
+            for node in node_list:
+		for resource in Resources:
+		    if resource.rid == node:
+			self.CM.log("Auditing resource: %s" %(resource))
+			if resource.IsRunningOn(node) == 0:
+			    self.CM.log("Node %s is not running its own resource" %(node))
+			    passed = 0
+		    
         if self.audit_dc_resources(node_list, dc_found) == 0:
             passed = 0
 
