@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.22 2005/02/11 21:57:44 andrew Exp $ */
+/* $Id: messages.c,v 1.23 2005/02/16 18:02:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -185,8 +185,7 @@ cib_process_query(
 	crm_data_t *obj_root = NULL;
 	enum cib_errors result = cib_ok;
 
-	crm_debug("Processing \"%s\" event", op);
-	crm_verbose("Handling a query for section=%s of the cib", section);
+	crm_debug("Processing \"%s\" event for section=%s", op, crm_str(section));
 
 	if(answer != NULL) *answer = NULL;
 	else return cib_ok;
@@ -269,16 +268,14 @@ cib_process_bump(
 	crm_data_t *tmpCib = NULL;
 	enum cib_errors result = cib_ok;
 
-	crm_debug("Processing \"%s\" event", op);
+	crm_debug("Processing \"%s\" event for epoche=%s",
+		  op, crm_str(crm_element_value(the_cib, XML_ATTR_GENERATION)));
+	
 	if(answer != NULL) *answer = NULL;
-
-	tmpCib = copy_xml_node_recursive(the_cib);
 
 	cib_pre_notify(op, get_the_CIB(), NULL);
 
-	crm_verbose("Handling a %s for section=%s of the cib",
-		    CRM_OP_CIB_BUMP, section);
-
+	tmpCib = copy_xml_node_recursive(the_cib);
 	cib_update_counter(tmpCib, XML_ATTR_GENERATION, FALSE);
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
 	
@@ -346,7 +343,7 @@ cib_process_replace(
 	char *section_name = NULL;
 	enum cib_errors result = cib_ok;
 	
-	crm_debug("Processing \"%s\" event", op);
+	crm_debug("Processing \"%s\" event for section=%s", op, crm_str(section));
 	if(answer != NULL) *answer = NULL;
 
 	if (options & cib_verbose) {
@@ -419,7 +416,7 @@ cib_process_modify(
 
 	crm_data_t *tmpCib  = NULL;
 
-	crm_debug("Processing \"%s\" event", op);
+	crm_debug("Processing \"%s\" event for section=%s", op, crm_str(section));
 
 	failed  = create_xml_node(NULL, XML_TAG_FAILED);
 
