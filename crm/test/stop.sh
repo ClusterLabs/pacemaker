@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
 #
@@ -15,18 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
 
-testdir			= $(libdir)/heartbeat/crmtest
+. helper.sh
 
-test_SCRIPTS		= helper.sh testutils.pl \
-			1node.sh 2node.sh 3node.sh 3node-rapid.sh stop.sh
-
-EXTRA_DIST		= helper.sh testutils.pl \
-			1node.sh 2node.sh 3node.sh 3node-rapid.sh stop.sh
-
-install-exec-local:
-	$(mkinstalldirs) $(DESTDIR)/$(testdir)
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(testdir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(testdir)
-	-chmod g+w $(DESTDIR)/$(testdir)
+# make *sure* theres nothing left over from last time
+crm-cleanup 0

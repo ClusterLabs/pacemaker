@@ -21,19 +21,9 @@
 
 CRM_ERR_SHUTDOWN=0
 
-
-
-# stop all running HAs
-do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
-do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
-
-# be *very* sure everything has stopped
-do_cmd remote_cmd $INIT_USER $test_node_1 "killall -q9 heartbeat ccm lrmd crmd"
-do_cmd remote_cmd $INIT_USER $test_node_2 "killall -q9 heartbeat ccm lrmd crmd"
-
 # make *sure* theres nothing left over from last time
-do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f $HAVAR_DIR/crm/cib*.xml"
-do_cmd remote_cmd $INIT_USER $test_node_2 "rm -f $HAVAR_DIR/crm/cib*.xml"
+crm-cleanup
+
 
 do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
 

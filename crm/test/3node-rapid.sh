@@ -21,29 +21,21 @@
 
 CRM_ERR_SHUTDOWN=0
 
-# stop all running HAs
-do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
-do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
-
-# be *very* sure everything has stopped
-do_cmd remote_cmd $INIT_USER $test_node_1 "killall -q9 heartbeat ccm lrmd crmd"
-do_cmd remote_cmd $INIT_USER $test_node_2 "killall -q9 heartbeat ccm lrmd crmd"
-
 # make *sure* theres nothing left over from last time
-do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f $HAVAR_DIR/crm/cib*.xml"
-do_cmd remote_cmd $INIT_USER $test_node_2 "rm -f $HAVAR_DIR/crm/cib*.xml"
-
-do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
+crm-cleanup
 
 do_cmd echo "wait for HA to start"
+do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
 do_cmd ./testutils.pl -l ${logfile} --search -a -m 1500 -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
 cts_assert "Startup of Heartbeat on ${test_node_1} failed."
 
 do_cmd echo "wait for HA to start"
+do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
 do_cmd ./testutils.pl -l ${logfile} --search -a -m 1500 -s "${test_node_2} ccm(.*): info: Hostname: ${test_node_2}" -s "${test_node_2} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_2} heartbeat(.*)Client(.*) respawning too fast"
 cts_assert "Startup of Heartbeat on ${test_node_2} failed."
 
 do_cmd echo "wait for HA to start"
+do_cmd remote_cmd $INIT_USER $test_node_3 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
 do_cmd ./testutils.pl -l ${logfile} --search -a -m 1500 -s "${test_node_3} ccm(.*): info: Hostname: ${test_node_3}" -s "${test_node_3} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_3} heartbeat(.*)Client(.*) respawning too fast"
 cts_assert "Startup of Heartbeat on ${test_node_3} failed."
 
@@ -58,6 +50,12 @@ cts_assert "CRMd startup on failed."
 
 do_cmd wait_for_state S_IDLE 30 $test_node_1 
 cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
+
+do_cmd wait_for_state S_NOT_DC 30 $test_node_2 
+cts_assert "S_NOT_DC not reached on $test_node_2 (startup)!"
+
+do_cmd wait_for_state S_NOT_DC 30 $test_node_3 
+cts_assert "S_NOT_DC not reached on $test_node_3 (startup)!"
 
 # Erase the contents of the CIB and wait for things to settle down
 #do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/cibadmin -E 
