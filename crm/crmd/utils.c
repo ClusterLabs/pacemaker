@@ -959,7 +959,7 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 		  oc_in->m_out_idx);
 
 	offset = oc_in->m_memb_idx;
-	for(lpc = 0; lpc < oc->m_n_member; lpc++) {
+	for(lpc = 0; lpc < oc_in->m_n_member; lpc++) {
 		crm_devel("Copying ccm member node %d", lpc);
 		oc_node_t a_node      = oc_in->m_array[lpc+offset];
 		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
@@ -968,7 +968,7 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 	}
 
 	offset = oc_in->m_in_idx;
-	for(lpc = 0; lpc < oc->m_n_in; lpc++) {
+	for(lpc = 0; lpc < oc_in->m_n_in; lpc++) {
 		crm_devel("Copying ccm new node %d", lpc);
 		oc_node_t a_node      = oc_in->m_array[lpc+offset];
 		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
@@ -977,7 +977,7 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 	}
 
 	offset = oc_in->m_out_idx;
-	for(lpc = 0; lpc < oc->m_n_out; lpc++) {
+	for(lpc = 0; lpc < oc_in->m_n_out; lpc++) {
 		crm_devel("Copying ccm lost node %d", lpc);
 		oc_node_t a_node      = oc_in->m_array[lpc+offset];
 		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
