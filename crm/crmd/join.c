@@ -141,7 +141,7 @@ do_send_welcome_all(long long action,
 
 		if(a_node != NULL || (safe_str_eq(fsa_our_uname, node_id))) {
 			/* handled by do_update_cib_node() */
-			xml_iter_continue(node_entry);
+			continue;
 		}
 
 		tmp2 = create_node_state(

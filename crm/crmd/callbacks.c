@@ -287,7 +287,8 @@ crmd_client_status_callback(const char * node, const char * client,
 /*		crm_verbose("Storing op=%s message for later processing", operation); */
 		
 		request = create_request(
-			msg_options, fragment, NULL, CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
+			msg_options, fragment, NULL,
+			CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
 
 		free_xml(fragment);
 		free_xml(update);
