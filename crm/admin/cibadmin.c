@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.27 2005/03/16 17:11:14 lars Exp $ */
+/* $Id: cibadmin.c,v 1.28 2005/04/06 14:02:04 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -131,6 +131,7 @@ main(int argc, char **argv)
 	};
 
 	crm_log_init(crm_system_name);
+	cl_log_set_facility(LOG_USER);
 	
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
