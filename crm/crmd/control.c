@@ -514,10 +514,8 @@ crm_shutdown(int nsig, gpointer unused)
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
 			set_bit_inplace(fsa_input_register, R_STAYDOWN);
 
-			/* fast track the case where no-one else is out there */
-			if(AM_I_DC) {
-				election_timeout->fsa_input = I_TERMINATE;
-			}
+			/* if we ever win an election we're the last man standing */
+			election_timeout->fsa_input = I_TERMINATE;
 
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				/* cant rely on this... */
