@@ -90,8 +90,19 @@ timer_popped(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
-	crm_info("Timer %s just popped!",
-		 fsa_input2string(timer->fsa_input));
+
+	if(timer == election_trigger) {
+		crm_info("Election Trigger (%s) just popped!",
+			 fsa_input2string(timer->fsa_input));
+
+ 	} else if(timer == election_timeout) {
+		crm_info("Election Timeout (%s) just popped!",
+			 fsa_input2string(timer->fsa_input));
+		
+	} else {
+		crm_info("Timer %s just popped!",
+			 fsa_input2string(timer->fsa_input));
+	}
 	
 	stopTimer(timer); /* make it _not_ go off again */
 
