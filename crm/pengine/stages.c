@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.13 2004/07/20 09:03:39 andrew Exp $ */
+/* $Id: stages.c,v 1.14 2004/08/03 08:54:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,7 +51,6 @@ stage0(xmlNodePtr cib,
        GListPtr *stonith_list, GListPtr *shutdown_list)
 {
 //	int lpc;
-	int old_log = 0;
 	xmlNodePtr cib_nodes       = get_object_root(
 		XML_CIB_TAG_NODES,       cib);
 	xmlNodePtr cib_status      = get_object_root(
@@ -79,7 +78,6 @@ stage0(xmlNodePtr cib,
 	unpack_resources(safe_val(NULL, cib_resources, children),
 			 resources, actions, action_constraints, *nodes);
 
-	old_log = set_crm_log_level(LOG_TRACE);
 	unpack_status(safe_val(NULL, cib_status, children),
 		      *nodes, *resources, actions, node_constraints);
 
@@ -87,7 +85,6 @@ stage0(xmlNodePtr cib,
 			   *nodes, *resources,
 			   node_constraints, action_constraints);
 
-//	set_crm_log_level(old_log);
 	return TRUE;
 }
 
@@ -283,17 +280,16 @@ stage5(GListPtr resources)
 
 			
 		} else {
-			/* the resource is moving... oh god
+			/* the resource is moving...
 			 *
-			 * we'll have to interpret dependancies or something
-			 * to figure out the right node.
+			 * the action was scheduled based on its current
+			 * location and or state, actions other than start
+			 * and stop *must* be run at the existing location
+			 * (ie. stop_node)
 			 *
-			 * For now, put everything on the start node and
-			 * possibly add constraints to make other actions
-			 * occur after the start 
 			 */
 
-			default_node = start_node;
+			default_node = stop_node;
 			rsc->stop->optional  = FALSE;
 			rsc->start->optional = FALSE;
 			
