@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.13 2005/02/19 18:11:03 andrew Exp $ */
+/* $Id: primatives.c,v 1.14 2005/02/20 14:35:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -340,11 +340,7 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 
 	} else if(xml_has_children(delete_spec)) {
 		/*  only leaves are deleted */
-#ifdef USE_LIBXML	
-		unlink_xml_node(equiv_node);
-#endif
-		free_xml(equiv_node);
-		equiv_node = NULL;
+		zap_xml_from_parent(parent, equiv_node);
 
 	} else {
 
@@ -483,10 +479,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 			if(remove != NULL) {
 				crm_devel("Replacing node <%s> in <%s>",
 					  replace, crm_element_name(equiv_node));
-#ifdef USE_LIBXML
-				unlink_xml_node(remove);
-#endif
-				free_xml(remove);	
+				zap_xml_from_parent(equiv_node, remove);
 			}
 			xml_remove_prop(new_obj, XML_CIB_ATTR_REPLACE);
 			xml_remove_prop(equiv_node, XML_CIB_ATTR_REPLACE);
