@@ -81,11 +81,14 @@ class LinuxHAv2(HeartbeatCM):
                 r"Shutting down\.",
                 r"Forcing shutdown\.",
                 r"Timer I_TERMINATE just popped",
+                r"input=I_ERROR",
+                r"input=I_FAIL",
                 r", exiting\.",
                 r"ERROR:",
                 r"CRIT:",
             ),
         })
+	self.CIBsync = {}
         cib_prefix='''
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
    <configuration>
@@ -146,10 +149,10 @@ class LinuxHAv2(HeartbeatCM):
                 constraints = constraints + node_constraint
 
         self.default_cts_cib=cib_prefix + resources + cib_middle + constraints + cib_suffix
-#        print(self.default_cts_cib)
+        self.debug(self.default_cts_cib)
         # KLUDGE!  Expedient, but a Kludge (FIXME)
         #        Extra tests: Split_brainTest, BandwidthTest
-        CTStests.AllTestClasses = [FlipTest, RestartTest, SimulStart, SimulStop, StartOnebyOne, StopOnebyOne]
+        CTStests.AllTestClasses = [FlipTest, RestartTest, SimulStart, SimulStop, StartOnebyOne, StopOnebyOne, RestartOnebyOne]
 
 #        CTSaudits.AllAuditClasses = [CrmdStateAudit, HAResourceAudit]
         CTSaudits.AllAuditClasses = [CrmdStateAudit, PartitionAudit]
@@ -193,6 +196,7 @@ class LinuxHAv2(HeartbeatCM):
     def StartaCM(self, node):
 
         '''Start up the cluster manager on a given node'''
+	localBadNewsPats = []
         patterns = []
         patterns.append(self["Pat:We_started"]%node)
 
@@ -200,29 +204,52 @@ class LinuxHAv2(HeartbeatCM):
         # that should be the DC
         if self.any_running() == 1:
             patterns.append(self["Pat:DC_IDLE"])
+	    localBadNewsPats.append("input=I_ELECTION ")
 
-        if self.Env["ClobberCIB"] != None:
+        if self.CIBsync.has_key(node):
+	    self.debug("CIB already installed on node %s" %node)
+	elif self.Env["ClobberCIB"] == 1:
+	    self.CIBsync[node] = 1
+	    self.debug("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
             if self.Env["CIBfilename"] == None:
                 os.system("rm -f /tmp/cts.default.cib")
                 os.system("echo \'" + self.default_cts_cib + "\' > /tmp/cts.default.cib")
-                self.rsh.cp("/tmp/cts.default.cib", self["CIBfile"]%node)
+                self.rsh.cp("/tmp/cts.default.cib", 
+			    "root@" + (self["CIBfile"]%node))
                 os.system("rm -f /tmp/cts.default.cib")
             else:
-                self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
+                self.rsh.cp(self.Env["CIBfilename"], 
+			    "root@" + (self["CIBfile"]%node))
+
+        localBadNews = CTS.LogWatcher(self["LogFileName"], localBadNewsPats, 0)
+        localBadNews.setwatch()
 
         watch = CTS.LogWatcher(self["LogFileName"], patterns, 120)
-        self.log ("Starting %s on node %s" %(self["Name"], node))
+        self.debug("Starting %s on node %s" %(self["Name"], node))
         watch.setwatch()
         self.rsh(node, self["StartCmd"])
         self.ShouldBeStatus[node]=self["up"]
         if watch.lookforall():
+	    match=localBadNews.look()
+	    while match:
+		if not re.search("CTS:", match):
+		    self.log(match)
+		    self.Env.RandomTests.incr("BadNews")
+		match=localBadNews.look()
             return 1
 
         # the watch() failed... lets check to see if the start _really_ failed
         for regex in watch.unmatched:
             self.log ("Warn: Startup pattern not found: %s" %(regex))
 
-        out = self.rsh.readaline(node, self["StatusCmd"])
+	match=localBadNews.look()
+	while match:
+	    if not re.search("CTS:", match):
+		self.log("Warn: %s" %match)
+		self.Env.RandomTests.incr("BadNews")
+	    match=localBadNews.look()
+
+        out = self.rsh.readaline(node, (self["StatusCmd"] %node) )
         if string.find(out, 'ok') == -1:
             # yep, it _really_ failed
             self.ShouldBeStatus[node]=self["down"]        
@@ -249,7 +276,7 @@ class LinuxHAv2(HeartbeatCM):
 
         '''Stop the cluster manager on a given node'''
 
-        self.log ("Stopping %s on node %s" %(self["Name"], node))
+        self.debug("Stopping %s on node %s" %(self["Name"], node))
 
         rc=self.rsh(node, self["StopCmd"])
         if rc == 0:
@@ -259,13 +286,13 @@ class LinuxHAv2(HeartbeatCM):
         still_running = 0
         if self.rsh(node, "killall -INT crmd") == 0:
             still_running = 1
-            self.log("%s is still running on node %s" %(self["name"], name))
+            self.log("%s is still running on node %s" %(self["name"], node))
         if self.rsh(node, "killall -INT heartbeat") == 0:
             still_running = 1
-            self.log("Heartbeat is still running on node %s" %name)
+            self.log("Heartbeat is still running on node %s" %node)
 
         if still_running == 0:
-            self.log ("%s failed, yet nothing is running on node %s" %(self["StopCmd"], self["Name"], node))
+            self.log ("Warn: %s failed, yet nothing is running on node %s" %(self["StopCmd"], self["Name"], node))
             return 1
 
         return None
@@ -449,7 +476,7 @@ class CrmdStateAudit(ClusterAudit):
         self.Stats[name] = self.Stats[name]+1
 
     def __call__(self):
-        self.CM.log ("Do Audit %s"%self.name())
+        self.CM.debug("Do Audit %s"%self.name())
         passed = 1
         dc_list = []
         up_count = 0
@@ -545,7 +572,7 @@ class PartitionAudit(ClusterAudit):
         self.Stats[name] = self.Stats[name]+1
 
     def __call__(self):
-        self.CM.log ("Do Audit %s"%self.name())
+        self.CM.debug("Do Audit %s"%self.name())
         passed = 1
         nodes_up = 0
         ccm_partitions = []
@@ -608,7 +635,7 @@ class PartitionAudit(ClusterAudit):
         lowest_epoche = None
         node_list = partition.split()
 
-        self.CM.log("Auditing partition: %s" %(partition))
+        self.CM.debug("Auditing partition: %s" %(partition))
         for node in node_list:
             if not self.NodeEpoche[node]:
                 self.CM.log("Warn: Node %s appeared out of nowhere" %(node))
@@ -661,7 +688,7 @@ class PartitionAudit(ClusterAudit):
                             passed = 0
         elif self.CM.Env["CIBResource"] == 1:
             # no quorum means no resource management
-            self.CM.log("Not auditing resources - no quorum")
+            self.CM.debug("Not auditing resources - no quorum")
 
         return passed
 
@@ -670,7 +697,7 @@ class PartitionAudit(ClusterAudit):
         Resources = self.CM.Resources()
         for resource in Resources:
             if resource.rid == "DcIPaddr":
-                self.CM.log("Auditing resource: %s" %(resource))
+                self.CM.debug("Auditing resource: %s" %(resource))
                 # All DCs are running the resource
                 for dc in dc_list:
                     if self.NodeQuorum[dc]:
