@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.23 2004/03/25 17:11:22 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.24 2004/03/26 13:34:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,27 +45,11 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-xmlNodePtr createCibRequest(gboolean isLocal,
-			    const char *operation,
-			    const char *section,
-			    const char *verbose,
-			    xmlNodePtr data);
-
-xmlNodePtr createCibAnswer(const char *crm_msg_reference,
-			   const char *operation,
-			   const char *section,
-			   const char *status,
-			   const char *verbose,
-			   xmlNodePtr data,
-			   xmlNodePtr failed);
-
-void addCibSimpleAnswer(xmlNodePtr answer, const char *status);
-
 enum cib_result updateList(xmlNodePtr local_cib,
-		       xmlNodePtr update_command,
-		       xmlNodePtr failed,
-		       int operation,
-		       const char *section);
+			   xmlNodePtr update_command,
+			   xmlNodePtr failed,
+			   int operation,
+			   const char *section);
 
 xmlNodePtr createCibFragmentAnswer(const char *section, xmlNodePtr failed);
 
@@ -272,7 +256,7 @@ cib_process_request(const char *op,
 			  && cib_update_op == CIB_OP_DELETE) {
 			// delete
 
-			/* order is very important here */
+			/* order is no longer important here */
 			updateList(tmpCib, fragment, failed, cib_update_op,
 				   XML_CIB_TAG_STATUS);
 			updateList(tmpCib, fragment, failed, cib_update_op,
@@ -283,7 +267,7 @@ cib_process_request(const char *op,
 				   XML_CIB_TAG_NODES);
 
 		} else if(strcmp("all", section) == 0) {
-			/* order is very important here */
+			/* order is no longer important here */
 			updateList(tmpCib, fragment, failed, cib_update_op,
 				   XML_CIB_TAG_NODES);
 			updateList(tmpCib, fragment, failed, cib_update_op,
@@ -293,7 +277,8 @@ cib_process_request(const char *op,
 			updateList(tmpCib, fragment, failed, cib_update_op,
 				   XML_CIB_TAG_STATUS);
 		} else {
-			*result = updateList(tmpCib, fragment, failed, cib_update_op, section);
+			*result = updateList(tmpCib, fragment, failed,
+					     cib_update_op, section);
 		}
 		
 		CRM_DEBUG("Activating temporary CIB");
@@ -371,17 +356,11 @@ enum cib_result
 updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 	   int operation, const char *section)
 {
-	const char *type_check = NULL;
+	xmlNodePtr child = NULL;
 	xmlNodePtr this_section = get_object_root(section, local_cib);
-	xmlNodePtr cib_updates = NULL, xml_section = NULL, child = NULL;
+	xmlNodePtr cib_updates  = find_xml_node(update_fragment, XML_TAG_CIB);
+	xmlNodePtr xml_section  = get_object_root(section, cib_updates);
 
-	FNIN();
-    
-	cib_updates = find_xml_node(update_fragment, XML_TAG_CIB);
-	xml_section = get_object_root(section, cib_updates);
-
-	set_node_tstamp(this_section);
-	
 	if (section == NULL || xml_section == NULL) {
 		cl_log(LOG_ERR, "Section %s not found in message."
 		       "  CIB update is corrupt, ignoring.", section);
@@ -389,58 +368,28 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 	}
 
 	if(CIB_OP_NONE > operation > CIB_OP_MAX) {
-		cl_log(LOG_ERR, "Invalid operation on section %s",
-		       section);
+		cl_log(LOG_ERR, "Invalid operation on section %s", section);
+		return CIBRES_FAILED;
 	}
 	
-	if (strcmp(section, XML_CIB_TAG_NODES) == 0)
-		type_check = XML_CIB_TAG_NODE;
-	else if (strcmp(section, XML_CIB_TAG_RESOURCES) == 0)
-		type_check = XML_CIB_TAG_RESOURCE;
-	else if (strcmp(section, XML_CIB_TAG_CONSTRAINTS) == 0)
-		type_check = XML_CIB_TAG_CONSTRAINT;
-	else if (strcmp(section, XML_CIB_TAG_STATUS) == 0)
-		type_check = XML_CIB_TAG_STATE;
-	else {
-		cl_log(LOG_ERR,
-		       "Unknown section %s.CIB update is corrupt, ignoring.",
-		       section);
-		return CIBRES_FAILED_NOTSUPPORTED;
-	}
-    
+	set_node_tstamp(this_section);
 	child = xml_section->children;
     
 	while(child != NULL) {
-		cl_log(LOG_DEBUG, "#-#-# Performing action %d on (%s=%s).",
-		       operation, child->name, ID(child));
-	
-		if (strcmp(type_check, child->name) != 0) {
-			// log error
-			continue;
-		}
-		
-		if(operation == CIB_OP_MODIFY
-		   && strcmp(XML_CIB_TAG_STATE, child->name) == 0) {
+		if(operation == CIB_OP_DELETE) {
 			update_results(failed, child, operation,
-				       updateStatus(local_cib, child));
+				       delete_cib_object(this_section, child));
+
 		} else if(operation == CIB_OP_MODIFY) {
 			update_results(failed, child, operation,
 				       update_cib_object(this_section, child,
 							 FALSE));
 				       
-		} else if(operation == CIB_OP_ADD) {
+		} else {
 			update_results(failed, child, operation,
 				       add_cib_object(this_section, child));
-			
-		} else if(operation == CIB_OP_DELETE) {
-			update_results(failed, child, operation,
-				       delete_cib_object(this_section, child));
-		} else {
-			// log error
-		}
+		} 
 		
-		cl_log(LOG_DEBUG, "#---#---# Action %d on (%s=%s) complete.",
-		       operation, child->name, ID(child));
 		child = child->next;
 	}
 
@@ -513,11 +462,12 @@ update_results(xmlNodePtr failed,
 	{
 		const char *error_msg = cib_error2string(return_code);
 		const char *operation_msg = cib_op2string(operation);
-		was_error = TRUE;
 
 		xmlNodePtr xml_node = create_xml_node(failed,
 						      XML_FAIL_TAG_CIB);
 
+		was_error = TRUE;
+				
 		set_xml_property_copy(xml_node,
 				      XML_FAILCIB_ATTR_ID,
 				      ID(target));
