@@ -55,41 +55,41 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 	   && safe_str_eq(sys_from, CRM_SYSTEM_DC)
 	   && safe_str_neq(from, fsa_our_uname)) {
 		crm_err("Another DC detected");
-#ifdef MSG_LOG
 		crm_log_message_adv(LOG_ERR, "inbound.ha.log", msg);
-#endif
-		crm_log_message(LOG_ERR, msg);
 		new_input = new_ha_msg_input(msg);
 		register_fsa_input(C_HA_MESSAGE, I_ELECTION, new_input);
 
+#if 0
+		/* still thinking about this one...
+		 * could create a timing issue if we dont notice the
+		 * election before a new DC is elected.
+		 */
+	} else if(fsa_our_dc != NULL
+		  && safe_str_eq(sys_from, CRM_SYSTEM_DC)
+		  && safe_str_neq(from, fsa_our_dc)) {
+		crm_warn("Ignoring message from wrong DC: %s vs. %s ",
+			 from, fsa_our_dc);
+		crm_log_message_adv(LOG_WARNING, "inbound.ha.log", msg);
+#endif
 	} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
 		crm_verbose("Ignoring message for the DC [F_SEQ=%s]", seq);
-#ifdef MSG_LOG
 		crm_log_message_adv(LOG_TRACE, "inbound.ha.log", msg);
-#endif
 		return;
 
 	} else if(safe_str_eq(from, fsa_our_uname)
 		  && safe_str_eq(op, CRM_OP_VOTE)) {
-#ifdef MSG_LOG
 		crm_log_message_adv(LOG_TRACE, "inbound.ha.log", msg);
-#endif
 		crm_verbose("Ignoring our own vote [F_SEQ=%s]", seq);
 		return;
 		
 	} else if(AM_I_DC && safe_str_eq(op, CRM_OP_HBEAT)) {
 		crm_verbose("Ignoring our own heartbeat [F_SEQ=%s]", seq);
-#ifdef MSG_LOG
-		crm_log_message_adv(LOG_INSANE, "inbound.ha.log", msg);
-#endif
+		crm_log_message_adv(LOG_MSG, "inbound.ha.log", msg);
 		return;
 
 	} else {
 		crm_debug("Processing message");
-		crm_log_message(LOG_MSG, msg);
-#ifdef MSG_LOG
-		crm_log_message_adv(LOG_DEBUG, "inbound.ha.log", msg);
-#endif
+		crm_log_message_adv(LOG_MSG, "inbound.ha.log", msg);
 		new_input = new_ha_msg_input(msg);
 		register_fsa_input(C_HA_MESSAGE, I_ROUTER, new_input);
 	}
@@ -143,11 +143,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		msg->msg_done(msg);
 		
 		crm_verbose("Processing msg from %s", curr_client->table_key);
-		crm_log_message(LOG_MSG, new_input->msg);
-	
-#ifdef MSG_LOG
-		crm_log_message_adv(LOG_DEBUG, "inbound.ipc.log", new_input->msg);
-#endif
+		crm_log_message_adv(LOG_MSG, "inbound.ipc.log", new_input->msg);
 		crmd_authorize_message(new_input, curr_client);
 		delete_ha_msg_input(new_input);
 		
