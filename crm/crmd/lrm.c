@@ -450,7 +450,7 @@ do_lrm_rsc_op(
 	lrm_rsc_t *rsc, char *rid, const char *operation, xmlNodePtr msg)
 {
 	lrm_op_t* op = NULL;
-	int monitor_call_id = NULL;
+	int monitor_call_id = 0;
 
 	if(rsc == NULL) {
 		/* add it to the list */

@@ -28,7 +28,7 @@ Startup:
 - Add a respawn entry for lrmd to ha.cf
 - Add the appropriate "apiauth" entries to ha.cf
 - Remove entries from haresources
-- Remove any sontih devices from ha.cf
+- Remove any stonith devices from ha.cf
 - Start heartbeat using the -M switch
 - start the crmd ($your_bin_dir/crmd)
 
