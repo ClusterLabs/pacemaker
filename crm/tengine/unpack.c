@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.5 2004/09/29 19:42:49 andrew Exp $ */
+/* $Id: unpack.c,v 1.6 2004/10/01 12:04:12 lge Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -416,11 +416,11 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 			
 		} else if(strcmp(true_op, CRM_OP_UPDATE) == 0) {
 			/* this may not be un-expected */
-//			if(
+/*			if( */
 			extract_event(msg);
-			//== FALSE){
-//				send_abort(msg);
-//			}
+/*			== FALSE){
+				send_abort(msg);
+			} */
 			
 		} else {
 			crm_err(
@@ -443,7 +443,7 @@ create_shutdown_event(const char *node, int op_status)
 	char *code = crm_itoa(op_status);
 
 	set_xml_property_copy(event, XML_LRM_ATTR_TARGET, node);
-//	event_rsc    = set_xml_property_copy(event, XML_ATTR_ID);
+/*	event_rsc    = set_xml_property_copy(event, XML_ATTR_ID); */
 	set_xml_property_copy(event, XML_LRM_ATTR_RC, "0");
 	set_xml_property_copy(
 		event, XML_LRM_ATTR_LASTOP, XML_CIB_ATTR_SHUTDOWN);

@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.16 2004/09/21 19:16:12 andrew Exp $ */
+/* $Id: xml.c,v 1.17 2004/10/01 12:04:12 lge Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -349,7 +349,7 @@ create_xml_node(xmlNodePtr parent, const char *name)
 	}
 
 	crm_trace("Created node [%s [%s]]", parent_name, local_name);
-//	set_node_tstamp(ret_value);
+/*	set_node_tstamp(ret_value); */
 	return ret_value;
 }
 
@@ -644,7 +644,7 @@ dump_xml_formatted(xmlNodePtr an_xml_node) {
 		return NULL;
 		
 	} else {
-	  // reset the doc pointer
+	  /* reset the doc pointer */
 		crm_trace("Creating doc pointer for %s", xml_node->name);
 		foo = xmlNewDoc("1.0");
 		xmlDocSetRootElement(foo, xml_node);

@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.7 2004/09/29 19:42:49 andrew Exp $ */
+/* $Id: tengine.h,v 1.8 2004/10/01 12:04:12 lge Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,8 +61,8 @@ typedef struct action_s {
 /* tengine */
 extern gboolean initialize_graph(void);
 extern gboolean process_graph_event(xmlNodePtr event);
-//	const char *event_node,   const char *event_rsc, const char *rsc_state,
-//	const char *event_action, const char *event_rc, const char *op_status);
+/*	const char *event_node,   const char *event_rsc, const char *rsc_state,
+ *	const char *event_action, const char *event_rc, const char *op_status); */
 extern int match_graph_event(action_t *action, xmlNodePtr event);
 
 extern gboolean initiate_transition(void);

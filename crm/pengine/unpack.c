@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.32 2004/09/21 19:24:37 andrew Exp $ */
+/* $Id: unpack.c,v 1.33 2004/10/01 12:04:12 lge Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -572,7 +572,7 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 gboolean
 is_node_unclean(xmlNodePtr node_state)
 {
-//	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE);
+/*	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE); */
 	const char *exp_state  = xmlGetProp(node_state,XML_CIB_ATTR_EXPSTATE);
 	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
