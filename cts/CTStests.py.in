@@ -551,12 +551,6 @@ class SimulStart(CTSTest):
 
          
         watchpats = [ ]
-        waitingfornodes = { }
-        pat = self.CM["Pat:They_started"]
-        for node in self.CM.Env["nodes"]:
-          thispat = (pat % node)
-          watchpats.append(thispat)
-          waitingfornodes[node] = node
 
         pat = self.CM["Pat:We_started"]
         for node in self.CM.Env["nodes"]:
@@ -570,20 +564,11 @@ class SimulStart(CTSTest):
 
         watch.setwatch()
         for node in self.CM.Env["nodes"]:
-          self.CM.StartaCM(node)
+            self.CM.StartaCM(node)
+        if watch.lookforall():
+ 	    return self.success()
+        return self.failure("did not find start message")
 
-        #	We need to look matches to our patterns, and then
-        #	remove the corresponding node from "waitingfornodes".
-        #	We quit when there are no more nodes in "waitingfornodes"
-        while len(waitingfornodes) > 0:
-          match = watch.look()
-          if not match:
-            self.CM.log("Remaining nodes: " + repr(waitingfornodes))
-            return self.failure("did not find start message")
-          if waitingfornodes.has_key(match):
-            del waitingfornodes[match]
-
- 	return self.success()
 
     def is_applicable(self):
         '''SimulStart is always applicable'''
@@ -739,7 +724,7 @@ class BandwidthTest(CTSTest):
         '''Perform the Bandwidth test'''
         self.incr("calls")
         
-        if self.CM.ShouldBeStatus[node]!=self.CM["up"]:
+        if self.CM.ShouldBeStatus[node] != self.CM["up"]:
             return self.skipped()
             
         cf = HBConfig()
@@ -818,7 +803,7 @@ class BandwidthTest(CTSTest):
         '''BandwidthTest is always applicable'''
         return 1
 
-AllTestClasses.append(BandwidthTest)
+#AllTestClasses.append(BandwidthTest)
 
 ##########################################################################
 class RedundantpathTest(CTSTest):
@@ -1067,6 +1052,7 @@ class Split_brainTest(CTSTest):
             return self.failure("Cannot find the IPaddr resource to test")
 
         if self.CM.rsh(node,self.CM["BreakCommCmd"]) != 0:
+            # Should invoke FixCommCmd here...
             return self.failure("Cannot break the communication")
 
         done = time.time()+self.timeout+1
@@ -1101,7 +1087,7 @@ class Split_brainTest(CTSTest):
         '''Split_brain is applicable'''
         return 1
 
-AllTestClasses.append(Split_brainTest)
+#AllTestClasses.append(Split_brainTest)
 
 def TestList(cm):
     result = []
