@@ -97,6 +97,13 @@ random for the selected number of iterations.
             nodechoice = self.Env.RandomNode()
 
             self.CM.log("Running test %s (%s)	[%d]"  % (test.name, nodechoice, testcount))
+	    os.system("stat -L -c %%s %s > /tmp/cts.%d"
+		      %(self.CM["LogFileName"], testcount))
+
+	    for node in self.Env["nodes"]:
+		self.CM.rsh.readaline(node, "stat -L -c %%s %s > /tmp/cts.%d"
+		      %(self.CM["LogFileName"], testcount))
+
             testcount = testcount + 1
             starttime=time.time()
             ret=test(nodechoice)
@@ -105,6 +112,7 @@ random for the selected number of iterations.
                 self.incr("success");
             else:
                 self.incr("failure");
+		self.CM.log("Test %s (%s)	[FAILED]"  % (test.name, nodechoice))
         	# Better get the current info from the cluster...
                 self.CM.statall()
             stoptime=time.time()
@@ -121,7 +129,7 @@ random for the selected number of iterations.
                     test["max_time"] = elapsed_time
 
             errcount=0
-            while errcount < 100:
+            while errcount < 1000:
                 match=BadNews.look()
                 if match:
                    ignorelist=test.errorstoignore()
@@ -577,9 +585,17 @@ class StartOnebyOne(CTSTest):
         if watch.lookforall():
  	    return self.success()
         
-        return self.failure("Did not find start pattern(s): " 
-        +	repr(watch.unmatched))
+	did_fail=0
+        for node in self.CM.Env["nodes"]:
+	    if self.CM.StataCM(node) == 0:
+		did_fail=1
+		
+	if did_fail:
+	    return self.failure("Did not find start pattern(s): " 
+				+	repr(watch.unmatched))
 
+        return self.failure("All nodes were started but %d may be unstable"
+			    %(len(watch.unmatched)))
 
     def is_applicable(self):
         '''StartOnebyOne is always applicable'''
@@ -627,9 +643,17 @@ class SimulStart(CTSTest):
         if watch.lookforall():
  	    return self.success()
         
-        return self.failure("Did not find start pattern(s): " 
-        +	repr(watch.unmatched))
+	did_fail=0
+        for node in self.CM.Env["nodes"]:
+	    if self.CM.StataCM(node) == 0:
+		did_fail=1
+		
+	if did_fail:
+	    return self.failure("Did not find start pattern(s): " 
+				+	repr(watch.unmatched))
 
+        return self.failure("All nodes were started but %d may be unstable"
+			    %(len(watch.unmatched)))
 
     def is_applicable(self):
         '''SimulStart is always applicable'''
