@@ -68,8 +68,7 @@ static const char * RA_PATH = STONITH_RA_DIR;
 static int execra(const char * rsc_type,
 		  const char * provider,
 		  const char * op_type,
-	 	  GHashTable * cmd_params,
-		  GHashTable * env_params);
+	 	  GHashTable * params);
 static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op_type);
 static int get_resource_list(GList ** rsc_info);
 static char* get_resource_meta(const char* rsc_type,  const char* provider);
@@ -78,8 +77,6 @@ static int get_provider_list(const char* op_type, GList ** providers);
 /* The end of exported function list */
 
 /* The begin of internal used function & data list */
-static int raexec_setenv(GHashTable * env_params);
-static void set_env(gpointer key, gpointer value, gpointer user_data);
 /* The end of internal function & data list */
 
 /* Rource agent execution plugin operations */
@@ -155,24 +152,17 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 
 static int
 execra( const char * rsc_type, const char * provider, const char * op_type,
-	GHashTable * cmd_params, GHashTable * env_params )
+	GHashTable * params)
 {
 	uniform_ret_execra_t exit_value;
 	char ra_pathname[RA_MAX_NAME_LENGTH];
 
-	/* Prepare the call parameter */
-	if (!cmd_params) {
-		if (g_hash_table_size(cmd_params) > 0) {
-			cl_log(LOG_ERR, "OCF RA should have no "\
-				"command-line parameters.");
-		}
-	}
 
 	get_ra_pathname(RA_PATH, rsc_type, provider, ra_pathname);
 
 	/* execute the RA */
 	cl_log(LOG_DEBUG, "Will execute OCF RA : %s %s", ra_pathname, op_type);
-	raexec_setenv(env_params);
+	raexec_setenv(params);
 	execl(ra_pathname, ra_pathname, op_type, NULL);
 
 	switch (errno) {
@@ -214,25 +204,6 @@ get_provider_list(const char* op_type, GList ** providers)
 	return ret;
 }
 
-static int
-raexec_setenv(GHashTable * env_params)
-{
-	if (!env_params) {
-		return -1;
-	}
-
-	g_hash_table_foreach(env_params, set_env, NULL);
-	/* Need to free the env_params ? */
-	return 0;
-}
-
-static void
-set_env(gpointer key, gpointer value, gpointer user_data)
-{
-	cl_log(LOG_INFO, "%s = %s.", (char *)key, (char *)value);
-	setenv((const char *)key, (const char *)value, 1);
-	/*Need to free the memory to which key and value point?*/
-}
 static char*
 get_resource_meta(const char* rsc_type, const char* provider)
 {

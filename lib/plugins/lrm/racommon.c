@@ -11,6 +11,8 @@
 
 #include <lrm/racommon.h>
 
+static void set_env(gpointer key, gpointer value, gpointer user_data);
+
 void
 get_ra_pathname(const char* class_path, const char* type, const char* provider,
 		char pathname[])
@@ -150,3 +152,22 @@ get_ra_list(const char* class_path, GList ** rsc_info)
 	}
 	return g_list_length(*rsc_info);
 }
+int
+raexec_setenv(GHashTable * env_params)
+{
+	/* For lsb init scripts, no corresponding definite specification
+	 * But for lsb none-init scripts, maybe need it.
+	 */
+        if (env_params) {
+        	g_hash_table_foreach(env_params, set_env, NULL);
+        }
+        return 0;
+}
+
+static void
+set_env(gpointer key, gpointer value, gpointer user_data)
+{
+        setenv((const char *)key, (const char *)value, 1);
+        /*Need to free the memory to which key and value point?*/
+}
+

@@ -50,8 +50,7 @@ static const char * RA_PATH = HB_RA_DIR;
 static int execra(const char * rsc_type,
 		  const char * provider,
 		  const char * op_type,
-	 	  GHashTable * cmd_params,
-		  GHashTable * env_params);
+	 	  GHashTable * params);
 
 static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op_type);
 static int get_resource_list(GList ** rsc_info);
@@ -68,8 +67,6 @@ static int prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 		GHashTable * params, RA_ARGV params_argv);
 static void params_hash_to_argv(gpointer key, gpointer value,
                                 gpointer user_data);
-static int raexec_setenv(GHashTable * env_params);
-static void set_env(gpointer key, gpointer value, gpointer user_data);
 /* The end of internal function & data list */
 
 /* Rource agent execution plugin operations */
@@ -145,7 +142,7 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 
 static int 
 execra( const char * rsc_type, const char * provider, const char * op_type, 
-	GHashTable * cmd_params, GHashTable * env_params )
+	GHashTable * params)
 {
 	RA_ARGV params_argv;
 	char ra_pathname[RA_MAX_NAME_LENGTH];
@@ -154,18 +151,13 @@ execra( const char * rsc_type, const char * provider, const char * op_type,
 	int index_tmp = 0;
 
 	/* Prepare the call parameter */
-	if (0 > prepare_cmd_parameters(rsc_type, op_type, cmd_params, params_argv)) {
+	if (0 > prepare_cmd_parameters(rsc_type, op_type, params, params_argv)) {
 		cl_log(LOG_ERR, "HB RA: Error of preparing parameters");
 		return -1;
 	}
 
 	get_ra_pathname(RA_PATH, rsc_type, provider, ra_pathname);
 
-	/* For heartbeat scripts, no definite specification for parameters
-	 * Not set calling parameters
-	 */
-	raexec_setenv(env_params);
-	
 	debug_info = g_string_new("");
 	do {
 		g_string_append(debug_info, params_argv[index_tmp]);
@@ -257,26 +249,6 @@ params_hash_to_argv(gpointer key, gpointer value, gpointer user_data)
 	ra_argv[param_index] = g_strdup((char*)value);
 }
 
-static int 
-raexec_setenv(GHashTable * env_params)
-{
-	/* 
-	 * For heartbeat scripts, no definite specification for environment 
-	 * parameters. Maybe no need to this function? 	
-	 */ 
-        if (env_params) {
-        	g_hash_table_foreach(env_params, set_env, NULL);
-        }
-        /* Need to free the env_params ? */
-        return 0;
-}
-
-static void
-set_env(gpointer key, gpointer value, gpointer user_data)
-{
-        setenv((const char *)key, (const char *)value, 1);
-        /*Need to free the memory to which key and value point?*/
-}
 static char*
 get_resource_meta(const char* rsc_type,  const char* provider)
 {
