@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.26 2004/10/23 11:58:42 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.27 2004/10/24 13:00:11 lge Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,7 +65,7 @@ enum crmd_fsa_state {
 			     */
 
 	/*  ----------- Last input found in table is above ---------- */
-	S_ILLEGAL,	/* This is an illegal FSA state */
+	S_ILLEGAL	/* This is an illegal FSA state */
 			/* (must be last) */
 };
 #define MAXSTATE	S_ILLEGAL
@@ -220,7 +220,7 @@ enum crmd_fsa_input {
 	I_PENDING,
 	
 	/*  ------------ Last input found in table is above ----------- */
-	I_ILLEGAL,	/* This is an illegal value for an FSA input */
+	I_ILLEGAL	/* This is an illegal value for an FSA input */
 			/* (must be last) */
 };
 #define MAXINPUT	I_ILLEGAL

@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.9 2004/10/01 13:23:45 andrew Exp $ */
+/* $Id: tengine.h,v 1.10 2004/10/24 13:00:11 lge Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,8 +30,7 @@ extern gboolean in_transition;
 typedef enum {
 	action_type_pseudo,
 	action_type_rsc,
-	action_type_crm,
-
+	action_type_crm
 } action_type_e;
 
 typedef struct synapse_s {

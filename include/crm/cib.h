@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.6 2004/10/21 18:25:43 andrew Exp $ */
+/* $Id: cib.h,v 1.7 2004/10/24 13:00:12 lge Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,7 +46,7 @@ enum cib_result {
 	CIBRES_FAILED_NOOBJECT,
 	CIBRES_FAILED_NOPARENT,
 	CIBRES_FAILED_NODECOPY,
-	CIBRES_FAILED_NOTSUPPORTED,
+	CIBRES_FAILED_NOTSUPPORTED
 };
 
 

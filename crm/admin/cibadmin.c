@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.10 2004/10/06 19:34:42 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.11 2004/10/24 13:00:11 lge Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -89,7 +89,7 @@ char *subtype = NULL;
 char *reset = NULL;
 
 int operation_status = 0;
-const char *sys_to = NULL;;
+const char *sys_to = NULL;
 
 #define OPTARGS	"V?i:o:QDUCEX:t:"
 

@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.12 2004/10/21 18:25:42 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.13 2004/10/24 13:00:11 lge Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -97,7 +97,7 @@ char *rsc_name   = NULL;
 char *crm_option = NULL;
 
 int operation_status = 0;
-const char *sys_to = NULL;;
+const char *sys_to = NULL;
 const char *crm_system_name = "crmadmin";
 
 #define OPTARGS	"V?K:S:HE:DW:d:i:RNst:o:"

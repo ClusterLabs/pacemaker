@@ -81,7 +81,7 @@ static struct RAExecOps raops =
 	get_resource_meta
 };
 
-PIL_PLUGIN_BOILERPLATE2("1.0", Debug);
+PIL_PLUGIN_BOILERPLATE2("1.0", Debug)
 
 static const PILPluginImports*  PluginImports;
 static PILPlugin*               OurPlugin;
