@@ -243,7 +243,7 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 	return g_strndup(rsc_type, strnlen(rsc_type, MAX_LENGTH_OF_RSCNAME));
 }	
 static int
-get_provider_list(const char* op_type, GList ** providers)
+get_provider_list(const char* ra_type, GList ** providers)
 {
 	*providers = NULL;
 	return 0;

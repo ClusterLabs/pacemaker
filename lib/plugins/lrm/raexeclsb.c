@@ -268,7 +268,7 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 }
 
 static int
-get_provider_list(const char* op_type, GList ** providers)
+get_provider_list(const char* ra_type, GList ** providers)
 {
 	*providers = NULL;
 	return 0;

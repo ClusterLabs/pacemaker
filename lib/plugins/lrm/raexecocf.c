@@ -255,10 +255,10 @@ merge_string_list(GList** old, GList* new)
 }
 
 static int
-get_provider_list(const char* op_type, GList ** providers)
+get_provider_list(const char* ra_type, GList ** providers)
 {
 	int ret;
-	ret = get_providers(RA_PATH, op_type, providers);
+	ret = get_providers(RA_PATH, ra_type, providers);
 	if (0>ret) {
 		cl_log(LOG_ERR, "scandir failed in OCF RA plugin");
 	}
@@ -367,7 +367,7 @@ set_env(gpointer key, gpointer value, gpointer user_data)
 }
 
 static int
-get_providers(const char* class_path, const char* op_type, GList ** providers)
+get_providers(const char* class_path, const char* ra_type, GList ** providers)
 {
 	struct dirent **namelist;
 	int file_num;
@@ -396,7 +396,7 @@ get_providers(const char* class_path, const char* op_type, GList ** providers)
 			}
 
 			snprintf(tmp_buffer,FILENAME_MAX,"%s/%s/%s",
-				 class_path, namelist[file_num]->d_name, op_type);
+				 class_path, namelist[file_num]->d_name, ra_type);
 
 			if ( filtered(tmp_buffer) == TRUE ) {
 				*providers = g_list_append(*providers,
