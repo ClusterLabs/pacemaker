@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.3 2004/09/29 19:40:05 andrew Exp $ */
+/* $Id: main.c,v 1.4 2004/10/01 13:23:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -161,6 +161,18 @@ init_start(void)
 	    mainloop = g_main_new(FALSE);
 	    crm_info("Starting %s", crm_system_name);
 	    
+	    crm_malloc(transition_timer, sizeof(te_timer_t));
+	    crm_malloc(transition_fuzz_timer, sizeof(te_timer_t));
+	    
+	    transition_timer->timeout   = 10;
+	    transition_timer->source_id = -1;
+	    transition_timer->reason    = timeout_timeout;
+	    transition_timer->action    = NULL;
+	    
+	    transition_fuzz_timer->timeout   = 10;
+	    transition_fuzz_timer->source_id = -1;
+	    transition_fuzz_timer->reason    = timeout_fuzz;
+	    transition_fuzz_timer->action    = NULL;
 	    
 #ifdef REALTIME_SUPPORT
 	    if (crm_realtime == 1){

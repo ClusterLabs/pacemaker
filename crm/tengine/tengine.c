@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.34 2004/09/29 19:42:49 andrew Exp $ */
+/* $Id: tengine.c,v 1.35 2004/10/01 13:23:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,17 +29,23 @@
 
 GListPtr graph = NULL;
 IPC_Channel *crm_ch = NULL;
+uint transition_timeout = 30*1000; /* 30 seconds */
+uint transition_fuzz_timeout = 0;
 uint default_transition_timeout = 30*1000; /* 30 seconds */
 
 gboolean initiate_action(action_t *action);
 gboolean in_transition = FALSE;
 
-int global_transition_timer = 0;
+te_timer_t *transition_timer = NULL;
+te_timer_t *transition_fuzz_timer = NULL;
 int transition_counter = 0;
 
 gboolean
 initialize_graph(void)
 {
+	stop_te_timer(transition_timer);
+	stop_te_timer(transition_fuzz_timer);
+
 	while(g_list_length(graph) > 0) {
 		synapse_t *synapse = g_list_nth_data(graph, 0);
 
@@ -48,14 +54,15 @@ initialize_graph(void)
 			synapse->actions = g_list_remove(
 				synapse->actions, action);
 
-			if(action->timer_id > 0) {
+			if(action->timer->source_id > 0) {
 				crm_debug("Removing timer for action: %d",
 					  action->id);
 				
-				g_source_remove(action->timer_id);
+				g_source_remove(action->timer->source_id);
 			}
 
 			free_xml(action->xml);
+			crm_free(action->timer);
 			crm_free(action);
 		}
 
@@ -153,9 +160,7 @@ match_graph_event(action_t *action, xmlNodePtr event)
 	crm_debug("matched");
 
 	/* stop this event's timer if it had one */
-	if(match->timer_id) {
-		g_source_remove(match->timer_id);
-	}
+	stop_te_timer(match->timer);
 
 	/* Process OP status */
 	allow_fail = xmlGetProp(match->xml, "allow_fail");
@@ -194,7 +199,7 @@ gboolean
 process_graph_event(xmlNodePtr event)
 {
 	int lpc = 0, lpc2 = 0;
-	int transition_timeout = default_transition_timeout;
+	int local_transition_timeout = transition_timeout;
 	int action_id          = -1;
 	int op_status_i        = 0;
 	gboolean complete      = TRUE;
@@ -242,10 +247,7 @@ process_graph_event(xmlNodePtr event)
 	}
 	
 	/* something happened, stop the timer and start it again at the end */
-	if(global_transition_timer > 0) {
-		crm_devel("Stopping transition timeout");
-		g_source_remove(global_transition_timer);
-	}
+	stop_te_timer(transition_timer);
 	
 	slist_iter(
 		synapse, synapse_t, graph, lpc,
@@ -281,7 +283,6 @@ process_graph_event(xmlNodePtr event)
 		crm_debug("Initiating outstanding actions for %d", synapse->id);
 		if(synapse->complete) {
 			crm_debug("Skipping complete synapse %d", synapse->id);
-			continue;
 		
 		} else if(prereqs_complete) {
 
@@ -308,8 +309,8 @@ process_graph_event(xmlNodePtr event)
 						   action->xml);
 					break;
 				} 
-				if(tmp_time > transition_timeout) {
-					transition_timeout = tmp_time;
+				if(tmp_time > local_transition_timeout) {
+					local_transition_timeout = tmp_time;
 				}
 			
 				);
@@ -344,13 +345,33 @@ process_graph_event(xmlNodePtr event)
 			  synapse->confirmed?"confirmed":synapse->complete?"complete":"pending");
 		);
 
-	/* restart the transition timer again */
-	global_transition_timer = Gmain_timeout_add(
-		transition_timeout, timer_callback, NULL);
 
 	if(complete) {
-		send_success("complete");
+		/* allow some slack until we are pretty sure nothing
+		 * else is happening
+		 */
+		crm_info("Transition complete");
+		print_state(TRUE);
+		
+		if(transition_fuzz_timer->timeout > 0) {
+			crm_info("Allowing the system to stabilize for %d ms"
+				 " before S_IDLE transition",
+				 transition_fuzz_timer->timeout);
+
+			start_te_timer(transition_fuzz_timer);
+			
+		} else {
+			send_success("complete");
+		}
+		
+	} else {
+		/* restart the transition timer again */
+		crm_info("Transition not yet complete");
+		print_state(TRUE);
+		transition_timer->timeout = local_transition_timeout;
+		start_te_timer(transition_timer);
 	}
+	
 	
 	return TRUE;
 }
@@ -478,8 +499,7 @@ initiate_action(action_t *action)
 
 		if(action->timeout > 0) {
 			crm_debug("Setting timer for action %d",action->id);
-			action->timer_id = Gmain_timeout_add(
-				action->timeout, timer_callback, action);
+			start_te_timer(action->timer);
 		}
 
 	}

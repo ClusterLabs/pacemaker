@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.8 2004/10/01 12:04:12 lge Exp $ */
+/* $Id: tengine.h,v 1.9 2004/10/01 13:23:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,7 +24,6 @@
 extern FILE *msg_te_strm;
 extern IPC_Channel *crm_ch;
 extern GListPtr graph;
-extern uint default_op_timeout;
 extern GMainLoop*  mainloop;
 extern gboolean in_transition;
 
@@ -43,10 +42,12 @@ typedef struct synapse_s {
 		GListPtr inputs;  /* action_t* */
 } synapse_t;
 
+typedef struct te_timer_s te_timer_t;
+
 typedef struct action_s {
 		int id;
 		int timeout;
-		int timer_id;
+		te_timer_t *timer;
 
 		action_type_e type;
 
@@ -57,6 +58,22 @@ typedef struct action_s {
 		xmlNodePtr xml;
 		
 } action_t;
+
+
+enum timer_reason {
+	timeout_action,
+	timeout_timeout,
+	timeout_fuzz
+};
+
+struct te_timer_s
+{
+	int source_id;
+	int timeout;
+	enum timer_reason reason;
+	action_t *action;
+
+};
 
 /* tengine */
 extern gboolean initialize_graph(void);
@@ -71,7 +88,8 @@ extern gboolean initiate_transition(void);
 extern void print_state(gboolean to_file);
 extern void send_success(const char *text);
 extern void send_abort(const char *text, xmlNodePtr msg);
-extern gboolean timer_callback(gpointer data);
+extern gboolean stop_te_timer(te_timer_t *timer);
+extern gboolean start_te_timer(te_timer_t *timer);
 extern gboolean do_update_cib(xmlNodePtr xml_action, int status);
 
 /* unpack */
@@ -79,7 +97,13 @@ extern gboolean unpack_graph(xmlNodePtr xml_graph);
 extern gboolean extract_event(xmlNodePtr msg);
 extern gboolean process_te_message(xmlNodePtr msg, IPC_Channel *sender);
 
+extern uint transition_timeout;
+extern uint transition_fuzz_timeout;
 extern uint default_transition_timeout;
+
+extern te_timer_t *transition_timer;
+extern te_timer_t *transition_fuzz_timer;
+
 
 #endif
 

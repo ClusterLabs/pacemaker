@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.5 2004/09/29 08:44:55 andrew Exp $ */
+/* $Id: utils.c,v 1.6 2004/10/01 13:23:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,7 @@ FILE *msg_te_strm = NULL;
 
 void print_input(const char *prefix, action_t *input, gboolean to_file);
 void print_action(const char *prefix, action_t *action, gboolean to_file);
+gboolean timer_callback(gpointer data);
 
 void
 send_abort(const char *text, xmlNodePtr msg)
@@ -45,14 +46,18 @@ send_abort(const char *text, xmlNodePtr msg)
 	fprintf(msg_te_strm, "[Result ]\tTransition aborted\n");
 	fflush(msg_te_strm);
 #endif
-#ifdef TESTING
+
 	print_state(TRUE);
+	initialize_graph();
+
+#ifdef TESTING
 	g_main_quit(mainloop);
 	return;
 #endif	
+
 	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TEABORT);
 	
-	send_ipc_request(crm_ch, options, NULL,
+	send_ipc_request(crm_ch, options, msg,
 			 NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE,
 			 NULL, NULL);
 	
@@ -63,7 +68,7 @@ void
 send_success(const char *text)
 {	
 	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
-
+	
 	if(in_transition == FALSE) {
 		crm_warn("Not in transition, not sending message");
 		return;
@@ -78,13 +83,17 @@ send_success(const char *text)
 		fflush(msg_te_strm);
 	}
 #endif
-#ifdef TESTING
+
 	print_state(TRUE);
+	initialize_graph();
+
+#ifdef TESTING
 	g_main_quit(mainloop);
 	return;
 #endif
 	
 	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TECOMPLETE);
+	set_xml_property_copy(options, "message", text);
 	
 	send_ipc_request(crm_ch, options, NULL,
 			 NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE,
@@ -198,7 +207,7 @@ print_action(const char *prefix, action_t *action, gboolean to_file)
 	crm_debug("%s  timeout=%d, timer=%d",
 		  prefix,
 		  action->timeout,
-		  action->timer_id);
+		  action->timer->source_id);
 
 	crm_xml_trace(action->xml, "\t  Raw action");
 
@@ -214,41 +223,6 @@ print_action(const char *prefix, action_t *action, gboolean to_file)
 	
 		fflush(msg_te_strm);
 	}		  
-}
-
-gboolean
-timer_callback(gpointer data)
-{
-	if(data == NULL) {
-		/* global timeout - abort the transition */
-		crm_info("Transition timeout reached..."
-			 " marking transition complete.");
-		crm_warn("Some actions may not have been executed.");
-
-		if(global_transition_timer > 0) {
-			crm_devel("Stopping transition timer");
-			g_source_remove(global_transition_timer);
-			global_transition_timer = -1;
-		}
-		
-		send_success("timeout");
-		
-		return TRUE;
-		
-	} else {
-		/* fail the action
-		 * - which may or may not abort the transition
-		 */
-		action_t *action = (action_t*)data;
-		if(action->timer_id > 0) {
-			g_source_remove(action->timer_id);
-		}
-		action->timer_id = -1;
-
-		/* TODO: send a cancel notice to the LRM */
-		/* TODO: use the ack from above to update the CIB */
-		return do_update_cib(action->xml, LRM_OP_TIMEOUT);	
-	}
 }
 
 gboolean
@@ -372,4 +346,87 @@ do_update_cib(xmlNodePtr xml_action, int status)
 	
 	return TRUE;
 }
+
+gboolean
+timer_callback(gpointer data)
+{
+	te_timer_t *timer = NULL;
+	
+	if(data == NULL) {
+		crm_err("Timer popped with no data");
+		return FALSE;
+	}
+	
+	timer = (te_timer_t*)data;
+	if(timer->source_id > 0) {
+		g_source_remove(timer->source_id);
+	}
+	timer->source_id = -1;
+	
+	if(timer->reason == timeout_fuzz) {
+		crm_info("Transition timeout reached..."
+			 " marking transition complete.");
+		send_success("success");
+		return TRUE;
+
+	} else if(timer->reason == timeout_timeout) {
 		
+		/* global timeout - abort the transition */
+		crm_info("Transition timeout reached..."
+			 " marking transition complete.");
+		
+		crm_warn("Some actions may not have been executed.");
+			
+		send_success("timeout");
+		
+		return TRUE;
+		
+	} else if(timer->action == NULL) {
+		crm_err("Action not present!");
+		return FALSE;
+		
+	} else {
+		/* fail the action
+		 * - which may or may not abort the transition
+		 */
+
+		/* TODO: send a cancel notice to the LRM */
+		/* TODO: use the ack from above to update the CIB */
+		return do_update_cib(timer->action->xml, LRM_OP_TIMEOUT);
+	}
+}
+
+gboolean
+start_te_timer(te_timer_t *timer)
+{
+	if(((int)timer->source_id) < 0 && timer->timeout > 0) {
+		timer->source_id = Gmain_timeout_add(
+			timer->timeout, timer_callback, (void*)timer);
+		return TRUE;
+
+	} else if(timer->timeout < 0) {
+		crm_err("Tried to start timer with -ve period");
+		
+	} else {
+		crm_info("#!!#!!# Timer already running (%d)",
+			 timer->source_id);
+	}
+	return FALSE;		
+}
+
+
+gboolean
+stop_te_timer(te_timer_t *timer)
+{
+	if(((int)timer->source_id) > 0) {
+		g_source_remove(timer->source_id);
+		timer->source_id = -2;
+
+	} else {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+

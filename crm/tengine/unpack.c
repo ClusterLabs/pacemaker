@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.6 2004/10/01 12:04:12 lge Exp $ */
+/* $Id: unpack.c,v 1.7 2004/10/01 13:23:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,7 +31,21 @@
 gboolean process_te_message(xmlNodePtr msg, IPC_Channel *sender);
 action_t* unpack_action(xmlNodePtr xml_action);
 xmlNodePtr create_shutdown_event(const char *node, int op_status);
+void set_timer_value(te_timer_t *timer, const char *time, int time_default);
 extern int transition_counter;
+
+void
+set_timer_value(te_timer_t *timer, const char *time, int time_default)
+{
+	timer->timeout = time_default;
+	if(time != NULL) {
+		int tmp_time = atoi(time);
+		if(tmp_time > 0) {
+			timer->timeout = tmp_time;
+		}
+	}
+}
+
 
 gboolean
 unpack_graph(xmlNodePtr xml_graph)
@@ -49,30 +63,28 @@ unpack_graph(xmlNodePtr xml_graph)
 	int num_synapses = 0;
 	int num_actions = 0;
 
-	const char *time = xmlGetProp(xml_graph, "global_timeout");
+	const char *time = xmlGetProp(xml_graph, "transition_timeout");
+	set_timer_value(transition_timer, time, default_transition_timeout);
+	transition_timeout = transition_timer->timeout;
+	
+	time = xmlGetProp(xml_graph, "transition_fuzz");
+	set_timer_value(transition_fuzz_timer, time, transition_fuzz_timeout);
 
 	transition_counter++;
-	
-	if(time != NULL) {
-		int tmp_time = atoi(time);
-		if(time > 0) {
-			default_transition_timeout = tmp_time;
-		}
-	}
 
 	crm_info("Beginning transition %d - timeout set to %d",
-		 transition_counter, default_transition_timeout);
+		 transition_counter, transition_timer->timeout);
 
 	xml_child_iter(
 		xml_graph, synapse, "synapse",
 
 		synapse_t *new_synapse = NULL;
 		crm_malloc(new_synapse, sizeof(synapse_t));
-		new_synapse->id       = num_synapses++;
-		new_synapse->complete = FALSE;
-		new_synapse->confirmed= FALSE;
-		new_synapse->actions  = NULL;
-		new_synapse->inputs   = NULL;
+		new_synapse->id        = num_synapses++;
+		new_synapse->complete  = FALSE;
+		new_synapse->confirmed = FALSE;
+		new_synapse->actions   = NULL;
+		new_synapse->inputs    = NULL;
 		
 		graph = g_list_append(graph, new_synapse);
 
@@ -154,7 +166,7 @@ unpack_action(xmlNodePtr xml_action)
 	
 	action->id       = atoi(tmp);
 	action->timeout  = 0;
-	action->timer_id = -1;
+	action->timer    = NULL;
 	action->invoked  = FALSE;
 	action->complete = FALSE;
 	action->can_fail = FALSE;
@@ -175,6 +187,14 @@ unpack_action(xmlNodePtr xml_action)
 	if(tmp != NULL) {
 		action->timeout = atoi(tmp);
 	}
+	crm_debug("Action %d has timer set to %d",
+		  action->id, action->timeout);
+	
+	crm_malloc(action->timer, sizeof(te_timer_t));
+	action->timer->timeout   = action->timeout;
+	action->timer->source_id = -1;
+	action->timer->reason    = timeout_action;
+	action->timer->action    = action;
 
 	tmp = xmlGetProp(action_copy, "can_fail");
 	if(safe_str_eq(tmp, "true")) {
