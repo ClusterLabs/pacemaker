@@ -36,7 +36,7 @@ GHashTable *confirmed_nodes     = NULL;
 xmlNodePtr our_generation       = NULL;
 const char *max_generation_from = NULL;
 
-void initialize_join(void);
+void initialize_join(gboolean before);
 void finalize_join_for(gpointer key, gpointer value, gpointer user_data);
 void join_send_offer(gpointer key, gpointer value, gpointer user_data);
 
@@ -54,8 +54,6 @@ do_dc_join_offer_all(long long action,
 	xmlNodePtr tmp1       = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
 	xmlNodePtr tmp2       = NULL;
 
-	initialize_join();
-	
 	/* catch any nodes that are active in the CIB but not in the CCM list*/
 	xml_child_iter(
 		tmp1, node_entry, XML_CIB_TAG_STATE,
@@ -138,8 +136,9 @@ do_dc_join_offer_one(long long action,
 	
 	join_to = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 
-	a_node = g_hash_table_lookup(join_offers, join_to);
-	if(a_node != NULL) {
+	a_node = g_hash_table_lookup(join_requests, join_to);
+	if(a_node != NULL
+	   && (cur_state == S_INTEGRATION || cur_state == S_FINALIZE_JOIN)) {
 		/* note: it _is_ possible that a node will have been
 		 *  sick or starting up when the original offer was made.
 		 *  however, it will either re-announce itself in due course
@@ -167,6 +166,10 @@ do_dc_join_offer_one(long long action,
 		
 	} else {
 		oc_node_t member;
+
+		crm_debug("Processing annouce request from %s in state %s",
+			  join_to, fsa_state2string(cur_state));
+		
 		member.node_uname = crm_strdup(join_to);
 		join_send_offer(NULL, &member, NULL);
 		crm_free(member.node_uname);
@@ -461,7 +464,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 }
 
 void
-initialize_join(void)
+initialize_join(gboolean before)
 {
 	/* clear out/reset a bunch of stuff */
 	if(join_offers != NULL) {
@@ -474,13 +477,15 @@ initialize_join(void)
 		g_hash_table_destroy(confirmed_nodes);
 	}
 
-	free_xml(our_generation);
-	our_generation  = cib_get_generation();
-
-	max_generation_from = NULL;
-	set_bit_inplace(fsa_input_register, R_HAVE_CIB);
-	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
-
+	if(before) {
+		free_xml(our_generation);
+		our_generation  = cib_get_generation();
+		
+		max_generation_from = NULL;
+		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
+		clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
+	}
+	
 	join_offers     = g_hash_table_new(&g_str_hash, &g_str_equal);
 	join_requests   = g_hash_table_new(&g_str_hash, &g_str_equal);
 	confirmed_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
@@ -490,6 +495,7 @@ initialize_join(void)
 			    crm_strdup(CRMD_JOINSTATE_MEMBER));
 	
 }
+
 
 void
 join_send_offer(gpointer key, gpointer value, gpointer user_data)

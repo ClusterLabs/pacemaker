@@ -38,6 +38,7 @@
 extern int num_join_invites;
 extern GHashTable *join_requests;
 extern GHashTable *confirmed_nodes;
+extern void initialize_join(gboolean before);
 
 long long
 do_state_transition(long long actions,
@@ -602,8 +603,10 @@ do_state_transition(long long actions,
 			break;
 
 		case S_INTEGRATION:
+			initialize_join(TRUE);
 			set_bit_inplace(tmp, A_INTEGRATE_TIMER_START);
 			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
+	
 			break;
 
 		case S_FINALIZE_JOIN:
@@ -629,6 +632,7 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_POLICY_ENGINE:
+			initialize_join(FALSE);
 			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
 			if(cause != C_FSA_INTERNAL) {
 				crm_warn("Progressed to state %s after %s",
