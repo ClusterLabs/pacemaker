@@ -38,5 +38,5 @@ SUBDIRS			=  	\
 	checkpointd    		\
 	plugins 		\
 	@EVENTD_DIR@		\
-	@SWIG_DIR@
-
+	@SWIG_DIR@		\
+	@LRM_DIR@

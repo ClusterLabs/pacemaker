@@ -21,4 +21,5 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 ## Subdirectories...
-SUBDIRS			= InterfaceMgr HBauth HBcomm stonith AppHBNotification
+SUBDIRS			= InterfaceMgr HBauth HBcomm stonith AppHBNotification \
+			  @LRM_DIR@
