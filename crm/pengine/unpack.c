@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.60 2005/03/11 14:19:03 andrew Exp $ */
+/* $Id: unpack.c,v 1.61 2005/03/14 21:02:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1264,11 +1264,12 @@ unpack_rsc_location(
 			/* feels like a hack */
 			crm_devel("Rule %s had no expressions,"
 				  " adding all nodes", crm_element_value(rule, XML_ATTR_ID));
-			
+
+			new_con->node_list_rh = node_list_dup(node_list,FALSE);
 		}
 		
 		if(new_con->node_list_rh == NULL) {
-			crm_warn("No matching nodes for constraint/rule %s/%s",
+			crm_debug("No matching nodes for constraint/rule %s/%s",
 				 id, crm_element_value(rule, XML_ATTR_ID));
 		}
 		
@@ -1276,7 +1277,7 @@ unpack_rsc_location(
 		);
 
 	if(were_rules == FALSE) {
-		crm_err("no rules for constraint %s", id);
+		crm_debug("no rules for constraint %s", id);
 	}
 	
 	return TRUE;
