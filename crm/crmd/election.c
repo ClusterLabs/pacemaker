@@ -39,6 +39,7 @@ do_election_vote(long long action,
 		 enum crmd_fsa_input current_input,
 		 void *data)
 {
+	gboolean not_voting = FALSE;
 	enum crmd_fsa_input election_result = I_NULL;
 	
 	/* dont vote if we're in one of these states or wanting to shut down */
@@ -50,21 +51,26 @@ do_election_vote(long long action,
 		case S_TERMINATE:
 			crm_warn("Not voting in election, we're in state %s",
 				 fsa_state2string(cur_state));
-			return I_NOT_DC;
+			not_voting = TRUE;
 			break;
 		default:
-			if(is_set(fsa_input_register, R_SHUTDOWN)) {
+ 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				crm_warn("Not voting in election,"
 					 " we're shutting down");
-				if(AM_I_DC) {
-					return I_RELEASE_DC;
-				} else {
-					return I_NOT_DC;
-				}
+				not_voting = TRUE;
 			}
 			break;
 	}
 
+	if(not_voting) {
+		stopTimer(election_timeout);
+		if(AM_I_DC) {
+			return I_RELEASE_DC;
+		} else {
+			return I_NOT_DC;
+		}
+	}
+	
 	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
 	set_xml_property_copy(msg_options, XML_ATTR_VERSION, CRM_VERSION);
 	
@@ -308,12 +314,13 @@ do_dc_takeover(long long action,
 	 * bypass the TE for now, it will be informed in good time
 	 */
 	update = create_node_state(
-		fsa_our_uname, NULL, ONLINESTATUS, CRMD_JOINSTATE_MEMBER);
+		fsa_our_uname, fsa_our_uname,
+		NULL, ONLINESTATUS, CRMD_JOINSTATE_MEMBER);
 	set_xml_property_copy(
 		update,XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
 	
 	fragment = create_cib_fragment(update, NULL);
-	store_request(NULL, fragment, CRM_OP_UPDATE, CRM_SYSTEM_DCIB);
+	invoke_local_cib(NULL, fragment, CRM_OP_UPDATE);
 
 	free_xml(update);
 	free_xml(fragment);

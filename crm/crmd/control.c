@@ -424,12 +424,16 @@ crm_shutdown(int nsig)
 		} else {
 			set_bit_inplace(&fsa_input_register, R_SHUTDOWN);
 
-			// cant rely on this...
-			startTimer(shutdown_escalation_timmer);
-
-			s_crmd_fsa(C_SHUTDOWN, I_SHUTDOWN, NULL);
+			if(is_set(fsa_input_register, R_SHUTDOWN)) {
+				// cant rely on this...
+				startTimer(shutdown_escalation_timmer);
+				
+				s_crmd_fsa(C_SHUTDOWN, I_SHUTDOWN, NULL);
+			} else {
+				crm_err("Could not set R_SHUTDOWN");
+				exit(LSB_EXIT_ENOTSUPPORTED);
+			}
 		}
-		
 	} else {
 		crm_info("exit from shutdown");
 		exit(LSB_EXIT_OK);

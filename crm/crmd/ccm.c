@@ -539,7 +539,8 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 		state = CRMD_JOINSTATE_MEMBER;
 	} 
 
-	tmp1 = create_node_state(node_uname, data->state, NULL, state);
+	tmp1 = create_node_state(node_uname, node_uname,
+				 data->state, NULL, state);
 
 	if(data->updates == NULL) {
 		crm_verbose("Creating first update");

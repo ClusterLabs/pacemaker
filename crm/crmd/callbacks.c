@@ -245,7 +245,7 @@ crmd_client_status_callback(const char * node, const char * client,
 		   node, client, status);
 
 	if(AM_I_DC) {
-		update = create_node_state(node, NULL, status, join);
+		update = create_node_state(node, node, NULL, status, join);
 
 		if(extra != NULL) {
 			set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
@@ -319,7 +319,8 @@ gboolean lrm_dispatch(int fd, gpointer user_data)
 	return TRUE;
 }
 
-
+#define MAX_EMPTY_CALLBACKS 20
+int empty_callbacks = 0;
 
 gboolean
 crmd_ha_input_dispatch(int fd, gpointer user_data)
@@ -331,6 +332,7 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 
 	while(hb_cluster->llc_ops->msgready(hb_cluster)) {
 		lpc++;
+		empty_callbacks = 0;
 		// invoke the callbacks but dont block
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
@@ -339,11 +341,17 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 		// hey what happened??
 		crm_warn("We were called but no message was ready."
 		       "  Likely the connection to Heartbeat failed,"
-			" check the logs");
+			" check the logs.");
 
-//		s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL);
-//		return FALSE;
+		if(empty_callbacks++ > MAX_EMPTY_CALLBACKS) {
+			crm_err("%d empty callbacks received..."
+				" considering heartbeat dead",
+				MAX_EMPTY_CALLBACKS);
 
+			// s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL);
+
+			return FALSE;
+		}
 	}
 	
     
@@ -353,7 +361,7 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 void
 crmd_ha_input_destroy(gpointer user_data)
 {
-	crm_err("Heartbeat has left us");
+	crm_crit("Heartbeat has left us");
 	// this is always an error
 	// feed this back into the FSA
 	s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL);

@@ -25,6 +25,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 
+#include <heartbeat.h>
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -157,31 +158,6 @@ is_set(long long action_list, long long action)
 }
 
 
-xmlNodePtr
-create_node_state(const char *node,
-		  const char *ccm_state,
-		  const char *crmd_state,
-		  const char *join_state)
-{
-	xmlNodePtr node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	
-	set_xml_property_copy(node_state, XML_ATTR_ID, node);
-	if(ccm_state != NULL) {
-		set_xml_property_copy(node_state, XML_CIB_ATTR_INCCM,     ccm_state);
-	}
-
-	if(crmd_state != NULL) {
-		set_xml_property_copy(node_state, XML_CIB_ATTR_CRMDSTATE,     crmd_state);
-	}
-
-	if(join_state != NULL) {
-		set_xml_property_copy(node_state, XML_CIB_ATTR_JOINSTATE,     join_state);
-	}
-
-	xml_message_debug(node_state, "created");
-
-	return node_state;
-}
 
 const char *
 fsa_input2string(enum crmd_fsa_input input)
@@ -666,8 +642,10 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	 */
 	xmlNodePtr tmp2 = NULL;
 	xmlNodePtr tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
-	set_xml_property_copy(tmp1, XML_ATTR_ID, uuid);
-	set_xml_property_copy(tmp1, "uname", uname);
+
+	set_uuid(tmp1, XML_ATTR_UUID, uname);
+	
+	set_xml_property_copy(tmp1, XML_ATTR_UNAME, uname);
 	set_xml_property_copy(tmp1, XML_ATTR_TYPE, type);
 	
 	tmp2 = create_cib_fragment(tmp1, NULL);
@@ -678,4 +656,54 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	free_xml(tmp2);
 	free_xml(tmp1);
 	
+}
+
+xmlNodePtr
+create_node_state(const char *uuid,
+		  const char *uname,
+		  const char *ccm_state,
+		  const char *crmd_state,
+		  const char *join_state)
+{
+	xmlNodePtr node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+
+	set_uuid(node_state, XML_ATTR_UUID, uname);
+	
+	set_xml_property_copy(node_state, XML_ATTR_UNAME, uname);
+	if(ccm_state != NULL) {
+		set_xml_property_copy(node_state, XML_CIB_ATTR_INCCM,     ccm_state);
+	}
+
+	if(crmd_state != NULL) {
+		set_xml_property_copy(node_state, XML_CIB_ATTR_CRMDSTATE,     crmd_state);
+	}
+
+	if(join_state != NULL) {
+		set_xml_property_copy(node_state, XML_CIB_ATTR_JOINSTATE,     join_state);
+	}
+
+	xml_message_debug(node_state, "created");
+
+	return node_state;
+}
+
+
+void
+set_uuid(xmlNodePtr node, const char *attr, const char *uname) 
+{
+	uuid_t uuid_raw;
+	char *uuid_calc = (char*)crm_malloc(sizeof(char)*50);
+	
+	if(fsa_cluster_conn->llc_ops->get_uuid_by_name(
+		   fsa_cluster_conn, uname, uuid_raw) == HA_FAIL) {
+		crm_err("Could not calculate UUID for %s", uname);
+		crm_free(uuid_calc);
+		uuid_calc = crm_strdup(uname);
+
+	} else {
+		uuid_unparse(uuid_raw, uuid_calc);
+	}
+	
+	set_xml_property_copy(node, attr, uuid_calc);
+	crm_free(uuid_calc);
 }

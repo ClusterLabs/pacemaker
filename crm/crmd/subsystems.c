@@ -111,8 +111,8 @@ do_cib_invoke(long long action,
 	}
 	
 	
-	if(action & A_CIB_INVOKE) {
-		gboolean is_update   = FALSE;
+	if(action & A_CIB_INVOKE || action & A_CIB_INVOKE_LOCAL) {
+//		gboolean is_update   = FALSE;
 		xmlNodePtr options   = find_xml_node(cib_msg, XML_TAG_OPTIONS);
 		const char *sys_from = xmlGetProp(cib_msg, XML_ATTR_SYSFROM);
 		const char *op       = xmlGetProp(options, XML_ATTR_OP);
@@ -131,49 +131,49 @@ do_cib_invoke(long long action,
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
 		answer = process_cib_message(cib_msg, TRUE);
 
+		if(action & A_CIB_INVOKE) {
 
-		if(strcmp(op, CRM_OP_CREATE) == 0
-		   || strcmp(op, CRM_OP_UPDATE) == 0
-		   || strcmp(op, CRM_OP_DELETE) == 0
-		   || strcmp(op, CRM_OP_REPLACE) == 0
-		   || strcmp(op, CRM_OP_WELCOME) == 0
-		   || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
-			is_update = TRUE;
-
-		} else if(strcmp(op, CRM_OP_ERASE) == 0) {
-			is_update = TRUE;
+			if(AM_I_DC == FALSE) {
+				if(relay_message(answer, TRUE) == FALSE) {
+					crm_err("Confused what to do with cib result");
+					xml_message_debug(answer, "Couldnt route: ");
+					result = I_ERROR;
+				}
+				
+			} else if(strcmp(op, CRM_OP_CREATE) == 0
+			   || strcmp(op, CRM_OP_UPDATE) == 0
+			   || strcmp(op, CRM_OP_DELETE) == 0
+			   || strcmp(op, CRM_OP_REPLACE) == 0
+			   || strcmp(op, CRM_OP_WELCOME) == 0
+			   || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
+				result = I_CIB_UPDATE;	
+				
+			} else if(strcmp(op, CRM_OP_ERASE) == 0) {
+				/* regenerate everyone's state and our node entry */
+				result = I_ELECTION_DC;	
+			}
+			
+			// the TENGINE will get CC'd by other means.
+			if(AM_I_DC
+			   && sys_from != NULL
+			   && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE) 
+			   && safe_str_neq(sys_from, CRM_SYSTEM_CRMD)
+			   && safe_str_neq(sys_from, CRM_SYSTEM_DC)
+			   && relay_message(answer, TRUE) == FALSE) {
+				crm_err("Confused what to do with cib result");
+				xml_message_debug(answer, "Couldnt route: ");
+				result = I_ERROR;
+				
+			}
+			
+/* 		} else { */
+/* 			put_message(answer); */
+/* 			return I_REQUEST; */
+			
 		}
 		
-		// the TENGINE will get CC'd by other means.
-		if(sys_from != NULL
-		   && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE) 
-		   && safe_str_neq(sys_from, CRM_SYSTEM_CRMD)
-		   && safe_str_neq(sys_from, CRM_SYSTEM_DC)
-		   && relay_message(answer, TRUE) == FALSE) {
-			crm_err("Confused what to do with cib result");
-			xml_message_debug(answer, "Couldnt route: ");
-			result = I_ERROR;
-
-		}
-
-		if(AM_I_DC && is_update) {
-			result = I_CIB_UPDATE;	
-		}
-
 		free_xml(answer);
 		return result;
-
-	/* experimental */
-	} else if(action & A_CIB_INVOKE_LOCAL) {
-		xml_message_debug(cib_msg, "[CIB] Invoking with");
-		if(cib_msg == NULL) {
-			crm_err("No message for CIB command");
-			return I_NULL; // I_ERROR
-		}
-		
-		answer = process_cib_message(cib_msg, TRUE);
-		put_message(answer);
-		return I_REQUEST;
 
 	} else if(action & A_CIB_BUMPGEN) {
 

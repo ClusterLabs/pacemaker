@@ -31,7 +31,7 @@
 
 GHashTable *joined_nodes = NULL;
 
-/*	 A_JOIN_WELCOME, A_JOIN_WELCOME_ALL	*/
+/*	 A_JOIN_WELCOME	*/
 enum crmd_fsa_input
 do_send_welcome(long long action,
 		enum crmd_fsa_cause cause,
@@ -53,9 +53,11 @@ do_send_welcome(long long action,
 
 		const char *join_to = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 		if(join_to != NULL) {
+			stopTimer(integration_timer);
 
 			xmlNodePtr update = create_node_state(
-				join_to, NULL, NULL, CRMD_JOINSTATE_PENDING);
+				join_to, join_to,
+				NULL, NULL, CRMD_JOINSTATE_PENDING);
 
 			xmlNodePtr tmp1 = create_cib_fragment(update, NULL);
 			store_request(NULL, tmp1, CRM_OP_UPDATE, CRM_SYSTEM_DCIB);
@@ -65,7 +67,10 @@ do_send_welcome(long long action,
 
 			free_xml(update);
 			free_xml(tmp1);
-			
+
+			/* if this client is sick, we shouldnt wait forever */
+			startTimer(integration_timer);
+
 		} else {
 			crm_err("No recipient for welcome message");
 		}
@@ -76,7 +81,7 @@ do_send_welcome(long long action,
 	return I_ERROR;
 }
 
-// welcome everyone...
+/*	 A_JOIN_WELCOME_ALL	*/
 
 enum crmd_fsa_input
 do_send_welcome_all(long long action,
@@ -118,7 +123,9 @@ do_send_welcome_all(long long action,
 			continue;
 		}
 
-		tmp1 = create_node_state(node_id, XML_BOOLEAN_NO, NULL, CRMD_JOINSTATE_DOWN);
+		tmp1 = create_node_state(
+			node_id, node_id,
+			XML_BOOLEAN_NO, NULL, CRMD_JOINSTATE_DOWN);
 
 		if(update == NULL) {
 			update = tmp1;

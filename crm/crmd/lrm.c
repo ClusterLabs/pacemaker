@@ -210,7 +210,13 @@ build_active_RAs(xmlNodePtr rsc_list)
 		
 		xmlNodePtr xml_rsc = create_xml_node(rsc_list, "rsc_state");
 		const char *status_text = "<unknown>";
+
+		crm_info("Processing lrm_rsc_t entry %p", the_rsc);
 		
+		if(the_rsc == NULL) {
+			crm_err("NULL resource returned from the LRM");
+			continue;
+		}
 		set_xml_property_copy(xml_rsc, XML_ATTR_ID, the_rsc->id);
 		set_xml_property_copy(xml_rsc, "type",      the_rsc->type);
 		set_xml_property_copy(xml_rsc, "class",     the_rsc->class);
@@ -291,8 +297,8 @@ do_lrm_query(gboolean is_replace)
 	}
 #endif
 
-	
-	set_xml_property_copy(xml_state, XML_ATTR_ID, fsa_our_uname);
+	set_uuid(xml_state, XML_ATTR_UUID, fsa_our_uname);
+
 	set_xml_property_copy(xml_state, XML_ATTR_UNAME, fsa_our_uname);
 	xml_result = create_cib_fragment(xml_state, NULL);
 	
