@@ -243,7 +243,7 @@ $ chkconfig --level 2345 syslog off
 4)      In testmonitor-machine, add the source and destination for remote log in the
         file /etc/syslog-ng/syslong-ng.conf. You can change the port number to
         other number, but it must be the same with the port number in slave machines
-        (see 4)
+        (see 5)
 
 source s_tcp { tcp(port(15789) max-connections(10)); }; 
 destination     d_ha  { file("/var/log/ha-log-local7"); };
@@ -252,7 +252,7 @@ log { source(s_tcp); destination(d_ha); };
 5)      In slave machines, send log out to a remote machine
 	add the following lines to /etc/syslog-ng/syslong-ng.conf
         after the definition of f_boot. 
-	Note the port number must be the same with 3)
+	Note the port number must be the same with 4)
 	Change the ip to the testmonitor machine's ip
 
 filter          f_boot  { facility(local7); }; /* this line is already in file*/
