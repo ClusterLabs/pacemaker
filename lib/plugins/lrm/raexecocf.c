@@ -262,5 +262,46 @@ set_env(gpointer key, gpointer value, gpointer user_data)
 static char*
 get_resource_meta(const char* ra_type)
 {
-	return strdup(ra_type);
+	const int BUFF_LEN=4096;
+	int read_len = 0;
+	char buff[BUFF_LEN];
+	char* data = NULL;
+	GString* g_str_tmp = NULL;
+	char *ra_type_dup, *base_name;
+	GString * ra_dirname;
+
+	ra_dirname = g_string_new(ra_type);
+	ra_type_dup = strndup(ra_type, RA_MAX_DIRNAME_LENGTH);
+	base_name = basename(ra_type_dup);
+
+	if ( strncmp(ra_type, base_name, RA_MAX_BASENAME_LENGTH) == 0 ) {
+		g_string_insert(ra_dirname, 0, RA_PATH);
+	}
+	free(ra_type_dup);
+	g_string_append(ra_dirname, " meta-data");
+
+	FILE* file = popen(ra_dirname->str, "r");
+	if (NULL==file) {
+		return NULL;
+	}
+
+	g_str_tmp = g_string_new("");
+	while(!feof(file)) {
+		memset(buff, 0, BUFF_LEN);
+		read_len = fread(buff, 1, BUFF_LEN, file);
+		if (0<read_len) {
+			g_string_append(g_str_tmp, buff);
+		}
+		else {
+			sleep(1);
+		}
+	}
+	data = (char*)g_new(char, g_str_tmp->len+1);
+	data[0] = data[g_str_tmp->len] = 0;
+	strncpy(data, g_str_tmp->str, g_str_tmp->len);
+	g_string_free(g_str_tmp, TRUE);
+
+	pclose(file);
+	return data;
+	
 }
