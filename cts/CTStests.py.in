@@ -659,7 +659,7 @@ class Fastdetection(CTSTest):
     '''Test the time which one node find out the other node is killed very quickly'''
     def __init__(self,cm,timeout=60):
         CTSTest.__init__(self, cm)
-        self.name = "FastFailureDetection"
+        self.name = "DetectionTime"
         self.they_stopped = self.CM["Pat:They_stopped"]
         self.timeout = timeout
         self.start = StartTest(cm)
@@ -695,7 +695,7 @@ class Fastdetection(CTSTest):
                 Stoptime = os.times()[4]
                 self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
                 Detectiontime = Stoptime-Starttime
-                self.CM.log("Failure detection time is %f seconds" % Detectiontime)
+                self.CM.log("Detection time is %f seconds" % Detectiontime)
                 self.Stats["totaltime"] = self.Stats["totaltime"] + Detectiontime
         	if self.Stats["min"] == 0:
                     self.Stats["min"] = Detectiontime
