@@ -37,6 +37,11 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+/* since the definition of rsc_id_t (uuid_t) has been removed */
+/* rsc_id_t now is char *. Temporarily add the following line */
+/* to avoid comipiling error. Please fix it */
+typedef char * rsc_id_t;
+
 xmlNodePtr do_lrm_query(gboolean);
 
 gboolean build_suppported_RAs(xmlNodePtr xml_agent_list);
