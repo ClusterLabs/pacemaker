@@ -572,7 +572,7 @@ do_state_transition(long long actions,
 					 g_hash_table_size(join_requests),
 					 fsa_membership_copy->members_size);
 			} else {
-				crm_info("All %d clusters nodes "
+				crm_info("All %d cluster nodes "
 					 "responded to the join offer.",
 					 fsa_membership_copy->members_size);
 			}
@@ -587,7 +587,7 @@ do_state_transition(long long actions,
 			
 			if((ssize_t)g_hash_table_size(confirmed_nodes)
 			   == fsa_membership_copy->members_size) {
-				crm_info("All %d clusters nodes are"
+				crm_info("All %d cluster nodes are"
 					 " eligable to run resources.",
 					 fsa_membership_copy->members_size);
 
