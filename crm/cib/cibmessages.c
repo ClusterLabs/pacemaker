@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.21 2004/03/24 10:18:21 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.22 2004/03/24 12:08:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -82,8 +82,8 @@ gboolean conditional_add_failure(xmlNodePtr failed,
 
 xmlNodePtr
 cib_process_request(const char *op,
-		    const xmlNodePtr fragment,
 		    const xmlNodePtr options,
+		    const xmlNodePtr fragment,
 		    enum cib_result *result)
 {
 
