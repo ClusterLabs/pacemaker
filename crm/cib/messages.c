@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.12 2005/01/12 15:44:22 andrew Exp $ */
+/* $Id: messages.c,v 1.13 2005/01/13 13:49:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,7 @@
 #include <clplumbing/cl_log.h>
 
 #include <time.h>
+#include <libxml/tree.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -46,6 +47,9 @@
 #include <crm/dmalloc_wrapper.h>
 
 extern const char *cib_our_uname;
+
+enum cib_errors revision_check(xmlNodePtr cib_update, xmlNodePtr cib_copy, int flags);
+int get_revision(xmlNodePtr xml_obj, int cur_revision);
 
 enum cib_errors updateList(
 	xmlNodePtr local_cib, xmlNodePtr update_command, xmlNodePtr failed,
@@ -351,6 +355,9 @@ cib_process_replace(
 	cib_pre_notify(op, get_object_root(section, get_the_CIB()), the_update);
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
 
+	result = revision_check(the_update, tmpCib, options);		
+	copy_in_properties(tmpCib, cib_update);
+
 	if (result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
 		crm_warn("Replacment of section=%s failed", section);
 		result = cib_ACTIVATION;
@@ -368,7 +375,6 @@ cib_process_replace(
 
 
 /* FILE *msg_cibup_strm = NULL; */
-
 
 enum cib_errors 
 cib_process_modify(
@@ -418,6 +424,7 @@ cib_process_modify(
 	if (options & cib_verbose) {
 		verbose = TRUE;
 	}
+	
 	if(safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
 		section = NULL;
 	}
@@ -430,20 +437,26 @@ cib_process_modify(
 	tmpCib = copy_xml_node_recursive(get_the_CIB());
 	cib_update = find_xml_node(input, XML_TAG_CIB, TRUE);
 	
-	/* should we be doing this? */
 	/* do logging */
 			
 	the_update = get_object_root(section, cib_update);
 	cib_pre_notify(op, get_object_root(section, get_the_CIB()), the_update);
+
+	result = revision_check(the_update, tmpCib, options);		
+	copy_in_properties(tmpCib, cib_update);
 	
 	/* make changes to a temp copy then activate */
 	if(section == NULL) {
 		/* order is no longer important here */
 		section_name = tmpCib->name;
+	
+		if(result == cib_ok) {
 
-		result = updateList(tmpCib, input, failed, cib_update_op,
-				    XML_CIB_TAG_NODES);
-
+			result = updateList(
+				tmpCib, input, failed, cib_update_op,
+				XML_CIB_TAG_NODES);
+		}
+		
 		if(result == cib_ok) {
 			result = updateList(
 				tmpCib, input, failed,
@@ -670,5 +683,41 @@ update_results(
 	}
 
 	return was_error;
+}
+
+enum cib_errors
+revision_check(xmlNodePtr cib_update, xmlNodePtr cib_copy, int flags)
+{
+	const char *revision = xmlGetProp(cib_update, XML_ATTR_CIB_REVISION);
+	const char *cur_revision = xmlGetProp(cib_copy, XML_ATTR_CIB_REVISION);
+
+	if(revision == NULL) {
+		return cib_ok;
+
+	} else if(cur_revision == NULL || strcmp(revision, cur_revision) > 0) {
+		crm_info("Updating CIB revision to %s", revision);
+		set_xml_property_copy(
+			cib_copy, XML_ATTR_CIB_REVISION, revision);
+	} else {
+		/* make sure we end up with the right value in the end */
+		set_xml_property_copy(
+			cib_update, XML_ATTR_CIB_REVISION, cur_revision);
+	}
+	
+	if(strcmp(revision, cib_feature_revision_s) > 0) {
+		if(cib_is_master) {
+			crm_err("Update uses an unsupported tag/feature");
+			return cib_revision_unsupported;
+
+		} else if(flags & cib_scope_local) {
+			 /* an admin has forced a local change using a tag we
+			  * dont understand... ERROR
+			  */
+			crm_err("Update uses an unknown tag/feature");
+			return cib_revision_unsupported;
+		}
+	}
+	
+	return cib_ok;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: cibio.h,v 1.9 2004/12/05 16:14:07 andrew Exp $ */
+/* $Id: cibio.h,v 1.10 2005/01/13 13:49:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,7 @@ extern xmlNodePtr node_search;
 extern xmlNodePtr resource_search;
 extern xmlNodePtr constraint_search;
 extern xmlNodePtr status_search;
+extern GHashTable *tag_revision_hash;
 
 extern xmlNodePtr get_the_CIB(void);
 
