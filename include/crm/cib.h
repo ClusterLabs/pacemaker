@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.18 2005/02/24 14:55:00 andrew Exp $ */
+/* $Id: cib.h,v 1.19 2005/02/28 11:00:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -237,6 +237,7 @@ struct cib_s
 		enum cib_conn_type type;
 
 		int   call_id;
+		int   call_timeout;
 		void  *variant_opaque;
 
 		GList *notify_list;

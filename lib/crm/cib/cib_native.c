@@ -304,7 +304,7 @@ cib_native_perform_op(
 		rc = cib_operation;
 	}
 
-	op_msg = ha_msg_new(7);
+	op_msg = ha_msg_new(8);
 	if (op_msg == NULL) {
 		crm_err("No memory to create HA_Message");
 		return cib_create_msg;
@@ -331,6 +331,10 @@ cib_native_perform_op(
 			  (long)call_options, call_options);
 		rc = ha_msg_add_int(op_msg, F_CIB_CALLOPTS, call_options);
 	}
+	if(rc == HA_OK && cib->call_timeout > 0) {
+		rc = ha_msg_add_int(op_msg, F_CIB_TIMEOUT, cib->call_timeout);
+	}
+
 	if(rc == HA_OK && data != NULL) {
 		add_message_xml(op_msg, F_CIB_CALLDATA, data);
 	}
