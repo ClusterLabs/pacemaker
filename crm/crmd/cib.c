@@ -271,12 +271,11 @@ invoke_local_cib(xmlNodePtr msg_options,
 	fsa_data->data = request;
 
 	result = do_cib_invoke(
-		A_CIB_INVOKE_LOCAL, C_UNKNOWN, fsa_state,
+		A_CIB_INVOKE_LOCAL, C_FSA_INTERNAL, fsa_state,
 		I_CIB_OP, fsa_data);
 
 	crm_free(fsa_data);
 	free_xml(request);
 
-	register_fsa_input(C_UNKNOWN, result, NULL);
 	return I_NULL;
 }
