@@ -46,7 +46,7 @@ cts_assert "Startup of Heartbeat on ${test_node_1} failed."
 
 do_cmd echo "wait for CRMd to start on ${test_node_1}"
 crm_log_pos=$(stat -L -c %s $logfile)
-do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
+do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 1500 \
     -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}" \
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
@@ -156,7 +156,7 @@ cts_assert "Startup of Heartbeat on ${test_node_2} failed."
 
 do_cmd echo "wait for CRMd to start on $test_node_2"
 crm_log_pos=$(stat -L -c %s $logfile)
-do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd  "-VVVV" "2>&1 >/dev/null" &
+do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd  "$CRM_OPTS" "2>&1 >/dev/null" &
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
     -s "${test_node_2} crmd(.*)FSA Hostname: ${test_node_2}" \
     -s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
@@ -204,6 +204,11 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000
     -e "${test_node_1} crmd(.*)Timer I_TERMINATE just popped" \
     -s "${test_node_1} crmd(.*)\[crmd\] stopped" 
 cts_assert "Shutdown of ${test_node_1} failed"
+
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
+    -s "crmd(.*) Performing op start(.*) on rsc1" \
+    -s "crmd(.*) Resource state: rsc1(.*) after start"
+cts_assert "rsc1 was not transferred to ${test_node_2} on shutdown."
 
 #----
 

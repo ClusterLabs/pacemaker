@@ -26,7 +26,7 @@
 
 test_type=`basename $0`
 test_nodes=1
-dump_dir=/home/ha-tests
+dump_dir=~/BUILD/tests
 
 HALIB_DIR=@libdir@/heartbeat
 HAVAR_DIR=@HA_VARLIBDIR@/heartbeat
@@ -40,18 +40,7 @@ test_node_1=fish
 test_node_2=chips
 test_node_3=mayo
 
-# hack for my local workspace
-if [ `hostname` = "powermac.local" ]; then
-    HALIB_DIR=/usr/lib/heartbeat
-    HAVAR_DIR=/var/lib/heartbeat
-    HAINIT_DIR=/etc/init.d
-
-    test_node_1=powermac
-    test_node_2=chips
-    test_node_3=mayo
-
-fi
-
+CRM_OPTS="-VV"
 
 CRM_ERR_SHUTDOWN=0
 
@@ -69,6 +58,10 @@ ip_rsc_1=192.168.9.161
 ip_rsc_2=192.168.9.162
 
 logfile=/var/log/messages
+
+if [ ! -z "$CRM_LOCAL_OPTS" -a -f "$CRM_LOCAL_OPTS" ]; then
+    . "$CRM_LOCAL_OPTS"
+fi
 
 while test "$done" = "0"; do
     case "$1" in
@@ -103,6 +96,7 @@ function test_init() {
     export date_str=`date "+%Y-%b-%d_%H:%M"`
     export test_dump_dir="$dump_dir/$test_type/$date_str"
     mkdir -p "$test_dump_dir"
+    echo Test dir: $test_dump_dir
 }
 
 function remote_cmd() {
@@ -304,8 +298,8 @@ function do_cts_assert() {
 function err() {
     if [ ! -z $HOST ]; then
 	if [ $CRM_ERR_SHUTDOWN -eq 1 ]; then
-	    remote_cmd hacluster $test_node_1 killall -9 crmd
-	    remote_cmd hacluster $test_node_2 killall -9 crmd
+	    remote_cmd $ADMIN_USER $test_node_1 killall -9 crmd
+	    remote_cmd $ADMIN_USER $test_node_2 killall -9 crmd
 	fi
     fi
     
@@ -326,7 +320,7 @@ function dump_node() {
     a_node_index=$1
     a_node=$2
 
-    dump_file="${date_str}-${a_node_index}-${a_node}.tgz"
+    dump_file="${a_node_index}-${a_node}.tgz"
     `which ssh` ${ADMIN_USER}@${a_node} "ps axf > /tmp/crm/processes"
     `which ssh` ${ADMIN_USER}@${a_node} \
 	"tar zcvf /tmp/${dump_file} /tmp/crm ~${CRMD_USER}/core"
@@ -378,7 +372,7 @@ function do_cmd() {
 		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
 		echo -n -e "\033[01;33m"
 		$cmdline | tee -a $test_dump_dir/test.txt
-		echo -n -e "\[\033[00m\]"
+		echo -n -e "\033[00m"
 	    elif [ $OUTPUT_ECHO -eq 1 -a $OUTPUT_CMDS -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
 		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
 		echo -n -e "\033[01;33m"
@@ -423,6 +417,9 @@ function do_cmd() {
 
 function crm-cleanup() {
     
+    if [ -z $1 ]; then
+	test_init
+    fi
     do_cmd echo Cleaning up on $test_node_1, $test_node_2 and  $test_node_3
 
 # stop all running HAs
@@ -445,9 +442,13 @@ function crm-cleanup() {
     
     if [ -z $1 ]; then
 # make *sure* theres nothing left over from last time
-	do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f $HAVAR_DIR/crm/cib*.xml /tmp/crm/*"
-	do_cmd remote_cmd $INIT_USER $test_node_2 "rm -f $HAVAR_DIR/crm/cib*.xml /tmp/crm/*"
-	do_cmd remote_cmd $INIT_USER $test_node_3 "rm -f $HAVAR_DIR/crm/cib*.xml /tmp/crm/*"
+	do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f $HAVAR_DIR/crm/cib*.xml"
+	do_cmd remote_cmd $INIT_USER $test_node_2 "rm -f $HAVAR_DIR/crm/cib*.xml"
+	do_cmd remote_cmd $INIT_USER $test_node_3 "rm -f $HAVAR_DIR/crm/cib*.xml"
+
+	do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f /tmp/crm/*"
+	do_cmd remote_cmd $INIT_USER $test_node_2 "rm -f /tmp/crm/*"
+	do_cmd remote_cmd $INIT_USER $test_node_3 "rm -f /tmp/crm/*"
 
 	do_cmd remote_cmd $CRMD_USER $test_node_1 "rm -f ~/core"
 	do_cmd remote_cmd $CRMD_USER $test_node_2 "rm -f ~/core"
@@ -460,7 +461,6 @@ function crm-cleanup() {
 	    do_cmd remote_cmd $INIT_USER $test_node_3 "cat /dev/null > /var/log/messages"
 	fi
 	    
-	test_init
     fi
 }
 
