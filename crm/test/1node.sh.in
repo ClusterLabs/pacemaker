@@ -73,9 +73,9 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 120 
 #----
 
 do_cmd echo Create the first resource and wait for S_IDLE after start
-args="<nvpair name=\\\"1\\\" value=\\\"${ip_rsc_1}\\\"/>"
+args="<nvpair name=\\\"ip\\\" value=\\\"${ip_rsc_1}\\\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
-do_cmd make_resource $test_node_1 rsc1 ocf Delay - - - $args
+do_cmd make_resource $test_node_1 rsc1 ocf IPaddr - - - $args
 cts_assert "Creation of first resource failed."
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 300 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE"  \
@@ -86,9 +86,9 @@ cts_assert S_IDLE not reached after first resource created
 #----
 
 do_cmd echo Create the second resource and wait for S_IDLE after start
-args="<nvpair name=\\\"1\\\" value=\\\"${ip_rsc_2}\\\"/>"
+args="<nvpair name=\\\"ip\\\" value=\\\"${ip_rsc_2}\\\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
-do_cmd make_resource $test_node_1 rsc2 ocf Delay - - - $args
+do_cmd make_resource $test_node_1 rsc2 ocf IPaddr - - - $args
 cts_assert "Creation of second resource failed."
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 300 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE"  \
