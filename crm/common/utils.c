@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.28 2005/02/10 15:49:17 andrew Exp $ */
+/* $Id: utils.c,v 1.29 2005/02/11 22:07:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,6 +33,7 @@
 #include <ha_msg.h>
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_signal.h>
+#include <clplumbing/coredumps.h>
 
 #include <time.h> 
 
@@ -246,6 +247,9 @@ crm_log_init(const char *entity)
 	cl_log_set_entity(entity);
 	cl_log_set_facility(LOG_LOCAL7);
 
+	cl_set_corerootdir(HA_COREDIR);	    
+	cl_cdtocoredir();
+	
 	cl_log_send_to_logging_daemon(FALSE);
 	if(HA_FAIL == LogToLoggingDaemon(LOG_INFO, test, strlen(test), TRUE)) {
 		crm_warn("Not using log daemon");
@@ -284,22 +288,14 @@ get_crm_log_level(void)
 }
 
 void
-crm_log_message_adv(int level, const char *alt_debugfile, const HA_Message *msg)
+crm_log_message_adv(int level, const char *prefix, const HA_Message *msg)
 {
 	if(crm_log_level >= level) {
-		const char *cur_debugfile = NULL;
-		if(alt_debugfile) {
-			cur_debugfile = cl_log_get_debugfile();
-			cl_log_set_debugfile(alt_debugfile);
-			do_crm_log(level, NULL, NULL, "#========= message start ==========#");
-		}
+		do_crm_log(level, NULL, NULL, "#========= %s message start ==========#", prefix?prefix:"");
 		if(level > LOG_DEBUG) {
 			cl_log_message(LOG_DEBUG, msg);
 		} else {
 			cl_log_message(level, msg);
-		}
-		if(cur_debugfile) {
-			cl_log_set_debugfile(cur_debugfile);
 		}
 	}
 }
