@@ -691,7 +691,7 @@ xml2list(crm_data_t *parent, const char**attr_path, int depth)
 	crm_data_t *nvpair_list = NULL;
 
 	GHashTable   *nvpair_hash =
-		g_hash_table_new(&g_str_hash, &g_str_equal);
+		g_hash_table_new(g_str_hash, g_str_equal);
 
 	CRM_DEV_ASSERT(parent != NULL);
 	if(parent != NULL) {

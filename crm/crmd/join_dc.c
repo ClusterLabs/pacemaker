@@ -478,9 +478,9 @@ initialize_join(gboolean before)
 		clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 	}
 	
-	join_offers     = g_hash_table_new(&g_str_hash, &g_str_equal);
-	join_requests   = g_hash_table_new(&g_str_hash, &g_str_equal);
-	confirmed_nodes = g_hash_table_new(&g_str_hash, &g_str_equal);
+	join_offers     = g_hash_table_new(g_str_hash, g_str_equal);
+	join_requests   = g_hash_table_new(g_str_hash, g_str_equal);
+	confirmed_nodes = g_hash_table_new(g_str_hash, g_str_equal);
 
 }
 
