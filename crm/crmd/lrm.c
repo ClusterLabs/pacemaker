@@ -570,7 +570,12 @@ do_lrm_rsc_op(
 			msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TIMEOUT, FALSE);
 	}
 	
-	
+	if(rsc == NULL) {
+		/* check if its already there */
+		CRM_DEV_ASSERT(rid != NULL);
+		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
+	}
+
 	if(rsc == NULL) {
 		/* add it to the list */
 		crm_verbose("adding rsc %s before operation", rid);
@@ -581,7 +586,7 @@ do_lrm_rsc_op(
 	}
 	
 	if(rsc == NULL) {
-		crm_err("Could not add resource to LRM");
+		crm_err("Could not add resource %s to LRM", rid);
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		return I_NULL;
 	}
