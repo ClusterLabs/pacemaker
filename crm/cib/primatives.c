@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.3 2004/12/05 16:14:07 andrew Exp $ */
+/* $Id: primatives.c,v 1.4 2004/12/10 20:07:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -315,7 +315,6 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 		object_name = delete_spec->name;
 	}
 	object_id = xmlGetProp(delete_spec, XML_ATTR_ID);
-	cib_pre_notify(CRM_OP_CIB_DELETE, object_name, object_id, delete_spec);
 
 	if(delete_spec == NULL) {
 		result = cib_NOOBJECT;
@@ -331,6 +330,7 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 		equiv_node = find_entity(
 			parent, object_name, object_id, FALSE);
 	}
+	cib_pre_notify(CRM_OP_CIB_DELETE, equiv_node, delete_spec);
 
 	if(result != cib_ok) {
 		; /* nothing */
@@ -358,8 +358,7 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 			);
 	}
 
-	cib_post_notify(CRM_OP_CIB_DELETE, delete_spec->name, object_id,
-		       delete_spec, result, equiv_node);
+	cib_post_notify(CRM_OP_CIB_DELETE, delete_spec, result, equiv_node);
 
 	return result;
 }
@@ -376,7 +375,6 @@ add_cib_object(xmlNodePtr parent, xmlNodePtr new_obj)
 		object_name = new_obj->name;
 	}
 	object_id = xmlGetProp(new_obj, XML_ATTR_ID);
-	cib_pre_notify(CRM_OP_CIB_CREATE, object_name, object_id, new_obj);
 
 	if(new_obj == NULL) {
 		result = cib_NOOBJECT;
@@ -392,6 +390,7 @@ add_cib_object(xmlNodePtr parent, xmlNodePtr new_obj)
 		equiv_node = find_entity(
 			parent, object_name, object_id, FALSE);
 	}
+	cib_pre_notify(CRM_OP_CIB_CREATE, equiv_node, new_obj);
 
 	if(result != cib_ok) {
 		; /* do nothing */
@@ -404,8 +403,7 @@ add_cib_object(xmlNodePtr parent, xmlNodePtr new_obj)
 		
 	}
 	
-	cib_post_notify(CRM_OP_CIB_CREATE, object_name, object_id,
-		       new_obj, result, new_obj);
+	cib_post_notify(CRM_OP_CIB_CREATE, new_obj, result, new_obj);
 
 	return cib_ok;
 }
@@ -424,8 +422,6 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 		object_name = new_obj->name;
 	}
 	object_id = xmlGetProp(new_obj, XML_ATTR_ID);
-	cib_pre_notify(CRM_OP_CIB_UPDATE, object_name, object_id,
-			new_obj);
 	
 	if(new_obj == NULL) {
 		result = cib_NOOBJECT;
@@ -440,6 +436,7 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 	} else {
 		equiv_node = find_entity(parent, object_name, object_id, FALSE);
 	}
+	cib_pre_notify(CRM_OP_CIB_UPDATE, equiv_node, new_obj);
 
 	if(result != cib_ok) {
 		; /* nothing */
@@ -520,8 +517,7 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 	}
 	crm_debug("Finished with <%s id=%s>", object_name, object_id);
 	
-	cib_post_notify(CRM_OP_CIB_UPDATE, object_name, object_id,
-			new_obj, result, equiv_node);
+	cib_post_notify(CRM_OP_CIB_UPDATE, new_obj, result, equiv_node);
 
 	return result;
 }

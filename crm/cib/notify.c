@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.1 2004/12/05 16:14:07 andrew Exp $ */
+/* $Id: notify.c,v 1.2 2004/12/10 20:07:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,48 +36,143 @@
 #include <crm/common/msg.h>
 #include <crm/common/xml.h>
 #include <cibio.h>
+#include <callbacks.h>
 #include <notify.h>
 
 #include <crm/dmalloc_wrapper.h>
 
-FILE *msg_cib_strm = NULL;
+extern GHashTable *client_list;
+int pending_updates = 0;
+
+void cib_notify_client(gpointer key, gpointer value, gpointer user_data);
+
+void
+cib_notify_client(gpointer key, gpointer value, gpointer user_data)
+{
+
+	struct ha_msg *update_msg = user_data;
+	cib_client_t *client = value;
+
+	if(safe_str_eq(client->channel_name, "cib_callback")) {
+		crm_trace("Notifying client %s of update", client->id);
+		if(msg2ipcchan(update_msg, client->channel) != HA_OK) {
+			crm_err("Notification of client %s failed", client->id);
+		}
+	}
+}
 
 void
 cib_pre_notify(
-	const char *op,  const char *type, const char *id, xmlNodePtr update) 
+	const char *op, xmlNodePtr existing, xmlNodePtr update) 
 {
-	char *xml_text = NULL;
+	struct ha_msg *update_msg = ha_msg_new(6);
+	const char *id = xmlGetProp(update, XML_ATTR_ID);
+	const char *type = NULL;
 
+	ha_msg_add(update_msg, F_TYPE, T_CIB_NOTIFY);
+	ha_msg_add(update_msg, F_SUBTYPE, T_CIB_PRE_NOTIFY);
+	ha_msg_add(update_msg, F_CIB_OPERATION, op);
+
+	if(id != NULL) {
+		ha_msg_add(update_msg, F_CIB_OBJID, id);
+	}
+
+	if(update != NULL) {
+		ha_msg_add(update_msg, F_CIB_OBJTYPE, update->name);
+	} else if(existing != NULL) {
+		ha_msg_add(update_msg, F_CIB_OBJTYPE, existing->name);
+	}
+
+	type = cl_get_string(update_msg, F_CIB_OBJTYPE);	
+	
+	if(existing != NULL) {
+		char *existing_s = dump_xml_unformatted(existing);
+		if(existing_s != NULL) {
+			ha_msg_add(update_msg, F_CIB_EXISTING, existing_s);
+		} else {
+			crm_debug("Update string was NULL (xml=%p)", update);
+		}
+		crm_free(existing_s);
+	}
+	if(update != NULL) {
+		char *update_s = dump_xml_unformatted(update);
+		if(update_s != NULL) {
+			ha_msg_add(update_msg, F_CIB_UPDATE, update_s);
+		} else {
+			crm_debug("Update string was NULL (xml=%p)", update);
+		}
+		crm_free(update_s);
+	}
+
+	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
+	
+	pending_updates++;
+	
 	if(update == NULL) {
-		crm_verbose("Performing oeration %s (on section=%s)", op, type);
+		crm_verbose("Performing operation %s (on section=%s)",
+			    op, type);
 
 	} else {
-		crm_verbose("Performing %s on <%s %s%s>",
-			    op, type, id?"id=":"", id);
+		crm_verbose("Performing %s on <%s%s%s>",
+			    op, type, id?" id=":"", id?id?"");
 	}
-	
-	if(msg_cib_strm == NULL) {
-		msg_cib_strm = fopen(DEVEL_DIR"/cib.log", "w");
-	}
-
-	xml_text = dump_xml_formatted(update);
-	fprintf(msg_cib_strm, "[Request (%s : %s : %s)]\t%s\n",
-		op, crm_str(type), crm_str(id), xml_text);
-	crm_free(xml_text);
-
-	xml_text = dump_xml_formatted(get_the_CIB());
-	fprintf(msg_cib_strm, "[CIB before %s]\t%s\n", op, xml_text);
-	crm_free(xml_text);
-
-	fflush(msg_cib_strm);
+		
+	ha_msg_del(update_msg);
 }
 
 void
 cib_post_notify(
-	const char *op,  const char *type, const char *id, xmlNodePtr update,
-	enum cib_errors result, xmlNodePtr new_obj) 
+	const char *op, xmlNodePtr update, enum cib_errors result, xmlNodePtr new_obj) 
 {
-	char *xml_text = NULL;
+	struct ha_msg *update_msg = ha_msg_new(8);
+	const char *id = xmlGetProp(new_obj, XML_ATTR_ID);
+	const char *type = NULL;
+	
+	ha_msg_add(update_msg, F_TYPE, T_CIB_NOTIFY);
+	ha_msg_add(update_msg, F_SUBTYPE, T_CIB_POST_NOTIFY);
+	ha_msg_add(update_msg, F_CIB_OPERATION, op);
+	ha_msg_add_int(update_msg, F_CIB_RC, result);
+	
+	if(id != NULL) {
+		ha_msg_add(update_msg, F_CIB_OBJID, id);
+	}
+	if(update != NULL) {
+		ha_msg_add(update_msg, F_CIB_OBJTYPE, update->name);
+	} else if(new_obj != NULL) {
+		ha_msg_add(update_msg, F_CIB_OBJTYPE, new_obj->name);
+	}
+
+	type = cl_get_string(update_msg, F_CIB_OBJTYPE);
+	
+	if(update != NULL) {
+		char *update_s = dump_xml_unformatted(update);
+		if(update_s != NULL) {
+			ha_msg_add(update_msg, F_CIB_UPDATE, update_s);
+		} else {
+			crm_debug("Update string was NULL (xml=%p)", update);
+		}
+		crm_free(update_s);
+	}
+	if(new_obj != NULL) {
+		char *new_obj_s = dump_xml_unformatted(new_obj);
+		if(new_obj_s != NULL) {
+			ha_msg_add(update_msg, F_CIB_UPDATE_RESULT, new_obj_s);
+		} else {
+			crm_debug("Update string was NULL (xml=%p)", new_obj);
+		}
+		crm_free(new_obj_s);
+	}
+	
+	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
+	
+	pending_updates--;
+
+	if(pending_updates == 0) {
+		ha_msg_mod(update_msg, F_SUBTYPE, T_CIB_UPDATE_CONFIRM);
+		g_hash_table_foreach(client_list, cib_notify_client, update_msg);
+	}
+
+	ha_msg_del(update_msg);
 
 	if(update == NULL) {
 		if(result == cib_ok) {
@@ -99,19 +194,4 @@ cib_post_notify(
 				 id?"id=":"", id, cib_error2string(result));
 		}
 	}
-	
-	if(msg_cib_strm == NULL) {
-		msg_cib_strm = fopen(DEVEL_DIR"/cib.log", "w");
-	}
-
-	if(new_obj != NULL) {
-		xml_text = dump_xml_formatted(new_obj);
-	}
-	
-	fprintf(msg_cib_strm, "[Response (%s : %s : %s)]\t%s\n%s\n",
-		op, crm_str(type), crm_str(id),
-		cib_error2string(result), xml_text);
-	crm_free(xml_text);
-
-	fflush(msg_cib_strm);
 }

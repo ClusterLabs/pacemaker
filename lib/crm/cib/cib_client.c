@@ -67,6 +67,16 @@ int cib_client_erase(
 	cib_t *cib, xmlNodePtr *output_data, int call_options);
 int cib_client_quit(cib_t *cib,   int call_options);
 
+int cib_client_add_notify_callback(
+	cib_t *cib, const char *event, void (*callback)(
+		const char *event, struct ha_msg *msg));
+
+int cib_client_del_notify_callback(
+	cib_t *cib, const char *event, void (*callback)(
+		const char *event, struct ha_msg *msg));
+
+gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
+
 extern cib_t *cib_native_new(cib_t *cib);
 
 static enum cib_variant configured_variant = cib_native;
@@ -91,25 +101,31 @@ cib_new(void)
 
 	new_cib->op_callback	= NULL;
 	new_cib->variant_opaque = NULL;
-	new_cib->notify_callback_list = NULL;
+	new_cib->notify_list    = NULL;
 
 	/* the rest will get filled in by the variant constructor */
 	crm_malloc(new_cib->cmds, sizeof(cib_api_operations_t));
 	memset(new_cib->cmds, 0, sizeof(cib_api_operations_t));
 
-	new_cib->cmds->set_op_callback = cib_client_set_op_callback;
-
-	new_cib->cmds->sync    = cib_client_sync;
+	new_cib->cmds->set_op_callback     = cib_client_set_op_callback;
+	new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
+	new_cib->cmds->del_notify_callback = cib_client_del_notify_callback;
+	
 	new_cib->cmds->noop    = cib_client_noop;
 	new_cib->cmds->ping    = cib_client_ping;
 	new_cib->cmds->query   = cib_client_query;
+	new_cib->cmds->sync    = cib_client_sync;
+
 	new_cib->cmds->query_from = cib_client_query_from;
 	new_cib->cmds->sync_from  = cib_client_sync_from;
+	
 	new_cib->cmds->is_master  = cib_client_is_master;
+	new_cib->cmds->set_master = cib_client_set_master;
 	new_cib->cmds->set_slave  = cib_client_set_slave;
 	new_cib->cmds->set_slave_all = cib_client_set_slave_all;
-	new_cib->cmds->set_master = cib_client_set_master;
+
 	new_cib->cmds->bump_epoch = cib_client_bump_epoch;
+
 	new_cib->cmds->create  = cib_client_create;
 	new_cib->cmds->modify  = cib_client_modify;
 	new_cib->cmds->replace = cib_client_replace;
@@ -401,6 +417,79 @@ int cib_client_quit(cib_t *cib, int call_options)
 
 	return cib->cmds->variant_op(
 		cib, CRM_OP_QUIT, NULL, NULL, NULL, NULL, call_options);
+}
+
+int cib_client_add_notify_callback(
+	cib_t *cib, const char *event, void (*callback)(
+		const char *event, struct ha_msg *msg))
+{
+	GList *list_item = NULL;
+	cib_notify_client_t *new_client = NULL;
+	
+	crm_debug("Adding callback for %s events (%d)",
+		  event, g_list_length(cib->notify_list));
+
+	crm_malloc(new_client, sizeof(cib_notify_client_t));
+	new_client->event = event;
+	new_client->callback = callback;
+
+	list_item = g_list_find_custom(
+		cib->notify_list, new_client, cib_GCompareFunc);
+	
+	if(list_item != NULL) {
+		crm_warn("Callback already present");
+
+	} else {
+		cib->notify_list = g_list_append(
+			cib->notify_list, new_client);
+
+		crm_debug("Callback added (%d)", g_list_length(cib->notify_list));
+	}
+	return cib_ok;
+}
+
+
+int cib_client_del_notify_callback(
+	cib_t *cib, const char *event, void (*callback)(
+		const char *event, struct ha_msg *msg))
+{
+	GList *list_item = NULL;
+	cib_notify_client_t *new_client = NULL;
+
+	crm_debug("Removing callback for %s events", event);
+
+	crm_malloc(new_client, sizeof(cib_notify_client_t));
+	new_client->event = event;
+	new_client->callback = callback;
+
+	list_item = g_list_find_custom(
+		cib->notify_list, new_client, cib_GCompareFunc);
+	
+	if(list_item != NULL) {
+		cib_notify_client_t *list_client = list_item->data;
+		cib->notify_list =
+			g_list_remove(cib->notify_list, list_client);
+		crm_free(list_client);
+		crm_debug("Removed callback");
+
+	} else {
+		crm_debug("Callback not present");
+	}
+	crm_free(new_client);
+	return cib_ok;
+}
+
+gint cib_GCompareFunc(gconstpointer a, gconstpointer b)
+{
+	const cib_notify_client_t *a_client = a;
+	const cib_notify_client_t *b_client = b;
+	if(a_client->callback == b_client->callback
+	   && safe_str_neq(a_client->event, b_client->event)) {
+		return 0;
+	} else if(((int)a_client->callback) < ((int)b_client->callback)) {
+		return -1;
+	}
+	return 1;
 }
 
 
@@ -890,6 +979,14 @@ gboolean verify_cib_cmds(cib_t *cib)
 		crm_err("Operation set_op_callback not set");
 		valid = FALSE;
 	}
+	if(cib->cmds->add_notify_callback == NULL) {
+		crm_err("Operation add_notify_callback not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->del_notify_callback == NULL) {
+		crm_err("Operation del_notify_callback not set");
+		valid = FALSE;
+	}
 	if(cib->cmds->set_connection_dnotify == NULL) {
 		crm_err("Operation set_connection_dnotify not set");
 		valid = FALSE;
@@ -982,5 +1079,6 @@ gboolean verify_cib_cmds(cib_t *cib)
 		crm_err("Operation dispatch not set");
 		valid = FALSE;
 	}
+
 	return valid;
 }

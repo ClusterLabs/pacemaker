@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.3 2004/12/09 14:46:21 andrew Exp $ */
+/* $Id: callbacks.c,v 1.4 2004/12/10 20:07:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,7 +49,6 @@ gboolean   cib_is_master  = FALSE;
 GHashTable *client_list   = NULL;
 extern const char *cib_our_uname;
 extern ll_cluster_t *hb_conn;
-extern FILE *msg_cib_strm;
 
 /* technically bump does modify the cib...
  * but we want to split the "bump" from the "sync"
@@ -465,25 +464,8 @@ cib_process_command(const struct ha_msg *request, struct ha_msg **reply,
 	}		
 
 	if(rc == cib_ok) {
-#ifdef MSG_LOG
-		if(msg_cib_strm == NULL) {
-			msg_cib_strm = fopen(DEVEL_DIR"/cib.log", "w");
-		}
-		fprintf(msg_cib_strm, "\n====================\n");
-		fprintf(msg_cib_strm, "[Input %s]\t%s\n", op,
-			dump_xml_formatted(input));
-		fflush(msg_cib_strm);
-#endif
-
 		rc = cib_server_ops[call_type].fn(
 			op, call_options, section, input, &output);
-		
-#ifdef MSG_LOG
-		fprintf(msg_cib_strm, "[Reply (%s:%s)]\t%s\n",
-			op, cib_error2string(rc),
-			dump_xml_formatted(output));
-		fflush(msg_cib_strm);
-#endif
 	}
 	
 	if(call_options & cib_discard_reply || reply == NULL) {

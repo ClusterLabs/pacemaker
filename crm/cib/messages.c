@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.7 2004/12/09 14:47:21 andrew Exp $ */
+/* $Id: messages.c,v 1.8 2004/12/10 20:07:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -95,7 +95,7 @@ cib_process_quit(
 	enum cib_errors result = cib_ok;
 	crm_debug("Processing \"%s\" event", op);
 
-	cib_pre_notify(op, NULL, NULL, get_the_CIB());
+	cib_pre_notify(op, get_the_CIB(), NULL);
 	crm_warn("The CRMd has asked us to exit... complying");
 	exit(0);
 	return result;
@@ -118,7 +118,7 @@ cib_process_readwrite(
 		return result;
 	}
 
-	cib_pre_notify(op, NULL, NULL, NULL);
+	cib_pre_notify(op, get_the_CIB(), NULL);
 	if(safe_str_eq(op, CRM_OP_CIB_MASTER)) {
 		crm_info("We are now in R/W mode");
 		cib_is_master = TRUE;
@@ -126,7 +126,7 @@ cib_process_readwrite(
 		crm_info("We are now in R/O mode");
 		cib_is_master = FALSE;
 	}
-	cib_post_notify(op, NULL, NULL, NULL, result, NULL);
+	cib_post_notify(op, NULL, result, NULL);
 
 	return result;
 }
@@ -198,14 +198,14 @@ cib_process_erase(
 	tmpCib = createEmptyCib();
 	copy_in_properties(tmpCib, get_the_CIB());
 	
-	cib_pre_notify(op, tmpCib->name, NULL, tmpCib);
+	cib_pre_notify(op, get_the_CIB(), tmpCib);
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, TRUE);
 		
 	if(activateCibXml(tmpCib, CIB_FILENAME) < 0) {
 		result = cib_ACTIVATION;
 	}
 
-	cib_post_notify(op, tmpCib->name, NULL, NULL, result, get_the_CIB());
+	cib_post_notify(op, NULL, result, get_the_CIB());
 	*answer = createCibFragmentAnswer(NULL, NULL);
 	
 	return result;
@@ -224,7 +224,7 @@ cib_process_bump(
 
 	tmpCib = copy_xml_node_recursive(the_cib);
 
-	cib_pre_notify(op, tmpCib->name, NULL, NULL);
+	cib_pre_notify(op, get_the_CIB(), NULL);
 
 	crm_verbose("Handling a %s for section=%s of the cib",
 		    CRM_OP_CIB_BUMP, section);
@@ -236,7 +236,7 @@ cib_process_bump(
 		result = cib_ACTIVATION;
 	}
 
-	cib_post_notify(op, tmpCib->name, NULL, NULL, result, get_the_CIB());
+	cib_post_notify(op, NULL, result, get_the_CIB());
 	*answer = createCibFragmentAnswer(NULL, NULL);
 	
 	return result;
@@ -308,7 +308,7 @@ cib_process_replace(
 		the_update = get_object_root(section, cib_update);
 	}
 
-	cib_pre_notify(op, section_name, NULL, the_update);
+	cib_pre_notify(op, get_object_root(section, get_the_CIB()), the_update);
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
 
 	if (result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
@@ -320,8 +320,8 @@ cib_process_replace(
 		*answer = createCibFragmentAnswer(section, NULL);
 	}
 	
-	cib_post_notify(op, section_name, NULL, the_update,
-			result, get_object_root(section, get_the_CIB()));
+	cib_post_notify(op, the_update, result,
+			get_object_root(section, get_the_CIB()));
 
 	return result;
 }
@@ -385,12 +385,13 @@ cib_process_modify(
 	/* should we be doing this? */
 	/* do logging */
 			
+	cib_pre_notify(op, get_object_root(section, get_the_CIB()), the_update);
+	
 	/* make changes to a temp copy then activate */
 	if(section == NULL) {
 		/* order is no longer important here */
 		section_name = tmpCib->name;
 		the_update = cib_update;
-		cib_pre_notify(op, tmpCib->name, NULL, the_update);
 
 		result = updateList(tmpCib, input, failed, cib_update_op,
 				    XML_CIB_TAG_NODES);
@@ -412,8 +413,6 @@ cib_process_modify(
 
 	} else {
 		the_update = get_object_root(section, cib_update);
-			
-		cib_pre_notify(op, section, NULL, the_update);
 		result = updateList(tmpCib, input, failed,
 				     cib_update_op, section);
 	}
@@ -431,8 +430,6 @@ cib_process_modify(
 		crm_xml_info(failed, "CIB Update failures");
 		
 		xml_text = dump_xml_formatted(failed);
-		fprintf(msg_cib_strm, "[CIB %s failures]\t%s\n",
-			op, xml_text);
 		crm_free(xml_text);
 	}
 
@@ -440,8 +437,8 @@ cib_process_modify(
 		*answer = createCibFragmentAnswer(section, failed);
 	}
 
-	cib_post_notify(op, section_name, NULL, the_update,
-			result, get_object_root(section, get_the_CIB()));
+	cib_post_notify(op, the_update, result,
+			get_object_root(section, get_the_CIB()));
 
 	free_xml(failed);
 

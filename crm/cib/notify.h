@@ -1,4 +1,4 @@
-/* $Id: notify.h,v 1.1 2004/12/05 16:14:07 andrew Exp $ */
+/* $Id: notify.h,v 1.2 2004/12/10 20:07:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,10 +29,9 @@ extern FILE *msg_cib_strm;
 
 
 void cib_pre_notify(
-	const char *op,  const char *type, const char *id, xmlNodePtr update);
+	const char *op, xmlNodePtr existing, xmlNodePtr update);
 
 void cib_post_notify(
-	const char *op,  const char *type, const char *id, xmlNodePtr update,
-	enum cib_errors result, xmlNodePtr new_obj);
+	const char *op, xmlNodePtr update, enum cib_errors result, xmlNodePtr new_obj);
 
 

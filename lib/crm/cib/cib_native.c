@@ -35,7 +35,7 @@ typedef struct cib_native_opaque_s
 {
 		IPC_Channel	*command_channel;
 		IPC_Channel	*callback_channel;
-/* 		GCHSource	*callback_source; */
+ 		GCHSource	*callback_source; 
 		
 } cib_native_opaque_t;
 
@@ -56,6 +56,11 @@ gboolean cib_native_dispatch(IPC_Channel *channel, gpointer user_data);
 cib_t *cib_native_new (cib_t *cib);
 int cib_native_set_connection_dnotify(
 	cib_t *cib, void (*dnotify)(gpointer user_data));
+
+void cib_native_notify(gpointer data, gpointer user_data);
+
+void cib_native_callback(cib_t *cib, struct ha_msg *msg);
+
 
 cib_t*
 cib_native_new (cib_t *cib)
@@ -115,10 +120,8 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 
 	if(rc == cib_ok) {
 		crm_trace("Connecting callback channel");
-/* 		native->callback_source = init_client_ipc_comms( */
-		native->callback_channel = init_client_ipc_comms(
-			"cib_callback", cib_native_dispatch, cib);
-/* 		native->callback_channel = native->callback_source->ch; */
+		native->callback_source = init_client_ipc_comms(
+			"cib_callback", cib_native_dispatch, cib, &(native->callback_channel));
 		
 		if(native->callback_channel == NULL) {
 			crm_err("Connection to callback channel failed");
@@ -266,9 +269,6 @@ cib_native_perform_op(
 {
 	int  rc = HA_OK;
 
-	size_t calldata_len  = 0;
-
-	char *calldata     = NULL;
 	const char *output = NULL;
 	
 	struct ha_msg *op_msg   = NULL;
@@ -315,9 +315,8 @@ cib_native_perform_op(
 		crm_free(tmp);
 	}
 	if(rc == HA_OK) {
-		calldata = dump_xml_unformatted(data);
+		char *calldata = dump_xml_unformatted(data);
 		if(calldata != NULL) {
-			calldata_len = strlen(calldata) + 1;
 			rc = ha_msg_add(op_msg, F_CIB_CALLDATA, calldata);
 		} else {
 			crm_debug("Calldata string was NULL (xml=%p)", data);
@@ -409,14 +408,14 @@ cib_native_msgready(cib_t* cib)
 
 	if(native->command_channel->ops->is_message_pending(
 		   native->command_channel)) {
-		crm_warn("Message pending on command channel");
+		crm_verbose("Message pending on command channel");
 	}
 	if(native->callback_channel->ops->is_message_pending(
 		   native->callback_channel)) {
-		crm_info("Message pending on callback channel");
+		crm_trace("Message pending on callback channel");
 		return TRUE;
-	}
-	crm_info("No message pending");
+	} 
+	crm_verbose("No message pending");
 	return FALSE;
 }
 
@@ -447,33 +446,72 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 	/* do callbacks */
 	type = cl_get_string(msg, F_TYPE);
 	crm_trace("Activating %s callbacks...", type);
-	
-	if(cib->op_callback == NULL) {
-		crm_debug("No OP callback set, ignoring reply");
+
+	if(safe_str_eq(type, T_CIB)) {
+		cib_native_callback(cib, msg);
+		
+	} else if(safe_str_eq(type, T_CIB_NOTIFY)) {
+		g_list_foreach(cib->notify_list, cib_native_notify, msg);
 
 	} else {
-		int rc = 0;
-		int call_id = 0;
-		xmlNodePtr output = NULL;
-		const char *output_s = NULL;
-
-		ha_msg_value_int(msg, F_CIB_CALLID, &call_id);
-		ha_msg_value_int(msg, F_CIB_RC, &rc);
-		output_s = cl_get_string(msg, F_CIB_CALLDATA);
-		if(output_s != NULL) {
-			output = string2xml(output_s);
-		}
-
-		cib->op_callback(msg, call_id, rc, output);
-
-		crm_trace("OP callback activated.");
+		crm_err("Unknown message type: %s", type);
 	}
-
+	
 	ha_msg_del(msg);
 
 	return 1;
 }
 
+void
+cib_native_callback(cib_t *cib, struct ha_msg *msg)
+{
+	int rc = 0;
+	int call_id = 0;
+	xmlNodePtr output = NULL;
+	const char *output_s = NULL;
+
+	if(cib->op_callback == NULL) {
+		crm_debug("No OP callback set, ignoring reply");
+		return;
+	}
+	
+	ha_msg_value_int(msg, F_CIB_CALLID, &call_id);
+	ha_msg_value_int(msg, F_CIB_RC, &rc);
+	output_s = cl_get_string(msg, F_CIB_CALLDATA);
+	if(output_s != NULL) {
+		output = string2xml(output_s);
+	}
+	
+	cib->op_callback(msg, call_id, rc, output);
+	
+	crm_trace("OP callback activated.");
+}
+
+
+void
+cib_native_notify(gpointer data, gpointer user_data)
+{
+	struct ha_msg *msg = user_data;
+	cib_notify_client_t *entry = data;
+	const char *event = cl_get_string(msg, F_SUBTYPE);
+
+	if(entry == NULL) {
+		crm_warn("Skipping callback - NULL callback client");
+		return;
+
+	} else if(entry->callback == NULL) {
+		crm_warn("Skipping callback - NULL callback");
+		return;
+
+	} else if(safe_str_neq(entry->event, event)) {
+		crm_trace("Skipping callback - event mismatch %p/%s vs. %s",
+			  entry, entry->event, event);
+		return;
+	}
+	
+	crm_trace("Invoking callback for %p/%s event...", entry, event);
+	entry->callback(event, msg);
+}
 
 gboolean
 cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
@@ -518,17 +556,15 @@ int cib_native_set_connection_dnotify(
 
 	native = cib->variant_opaque;
 
-#if 0
 	if(dnotify == NULL) {
 		crm_warn("Setting dnotify back to default value");
-		native->callback_source->dnotify =
-			default_ipc_connection_destroy;
+		set_IPC_Channel_dnotify(native->callback_source,
+					default_ipc_connection_destroy);
 
 	} else {
 		crm_debug("Setting dnotify");
-		native->callback_source->dnotify = dnotify;
+		set_IPC_Channel_dnotify(native->callback_source, dnotify);
 	}
-#endif
 	return cib_ok;
 }
 

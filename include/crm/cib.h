@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.9 2004/12/09 14:53:41 andrew Exp $ */
+/* $Id: cib.h,v 1.10 2004/12/10 20:07:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -112,7 +112,6 @@ enum cib_section {
 	cib_section_status
 };
 
-#define T_CIB		"cib"
 #define F_CIB_CLIENTID  "cib_clientid"
 #define F_CIB_CALLOPTS  "cib_callopt"
 #define F_CIB_CALLID    "cib_callid"
@@ -125,6 +124,18 @@ enum cib_section {
 #define F_CIB_CALLBACK_TOKEN	"cib_callback_token"
 #define F_CIB_GLOBAL_UPDATE	"cib_update"
 #define F_CIB_DELEGATED	"cib_delegated_from"
+#define F_CIB_OBJID	"cib_object"
+#define F_CIB_OBJTYPE	"cib_object_type"
+#define F_CIB_UPDATE	"cib_update"
+#define F_CIB_UPDATE_RESULT	"cib_update_result"
+#define F_CIB_EXISTING		"cib_existing_object"
+
+#define T_CIB			"cib"
+#define T_CIB_NOTIFY		"cib_notify"
+/* notify sub-types */
+#define T_CIB_PRE_NOTIFY	"cib_pre_notify"
+#define T_CIB_POST_NOTIFY	"cib_post_notify"
+#define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 
 typedef struct cib_s  cib_t;
 
@@ -143,6 +154,14 @@ typedef struct cib_api_operations_s
 			cib_t *cib, void (*callback)(
 				const struct ha_msg *msg, int callid ,
 				int rc, xmlNodePtr output));
+
+		int (*add_notify_callback)(
+			cib_t *cib, const char *event, void (*callback)(
+				const char *event, struct ha_msg *msg));
+
+		int (*del_notify_callback)(
+			cib_t *cib, const char *event, void (*callback)(
+				const char *event, struct ha_msg *msg));
 
 		int (*set_connection_dnotify)(
 			cib_t *cib, void (*dnotify)(gpointer user_data));
@@ -198,12 +217,22 @@ struct cib_s
 		int   call_id;
 		void  *variant_opaque;
 
-		GList *notify_callback_list;
+		GList *notify_list;
 		void (*op_callback)(const struct ha_msg *msg, int call_id,
 				    int rc, xmlNodePtr output);
 
 		cib_api_operations_t *cmds;
 };
+
+typedef struct cib_notify_client_s 
+{
+	const char *event;
+	const char *obj_id;   /* implement one day */
+	const char *obj_type; /* implement one day */
+	void (*callback)(
+		const char *event, struct ha_msg *msg);
+	
+} cib_notify_client_t;
 
 /* Core functions */
 extern cib_t *cib_new(void);

@@ -50,7 +50,7 @@ LIBRT 		= @LIBRT@
 AM_CFLAGS	= @CFLAGS@ -DPIDFILE='"$(PIDFILE)"' $(CRM_DEBUG_FLAGS)
 
 ## binary progs
-halib_PROGRAMS	= cib
+halib_PROGRAMS	= cib cibmon
 
 
 ## SOURCES
@@ -63,6 +63,11 @@ cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c \
 cib_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cib_LDFLAGS		= $(XML_LIBS)
 cib_LDADD		= $(COMMONLIBS)
+
+cibmon_SOURCES		= cibmon.c
+cibmon_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+cibmon_LDFLAGS		= $(XML_LIBS)
+cibmon_LDADD		= $(COMMONLIBS) 				
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
