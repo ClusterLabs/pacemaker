@@ -67,10 +67,11 @@ do_cl_join_announce(long long action,
 		}
 
 		if(fsa_our_dc == NULL) {
-			fsa_our_dc = hb_from;
+			crm_info("Set DC to %s", hb_from);
+			fsa_our_dc = crm_strdup(hb_from);
 
 		} else if(safe_str_eq(hb_from, fsa_our_dc)) {
-			crm_debug("Already announced to %s", hb_from);
+			crm_warn("Already announced to %s", hb_from);
 			return I_NULL;
 
 		} else {
@@ -78,6 +79,9 @@ do_cl_join_announce(long long action,
 				 " now receiving DC Heartbeats from %s",
 				 fsa_our_dc, hb_from);
 			/* reset the fsa_our_dc to NULL */
+			crm_warn("Resetting our DC to NULL after DC_HB"
+				 " from unrecognised node.");
+			crm_free(fsa_our_dc);
 			fsa_our_dc = NULL;
 			return I_NULL; /* for now, wait for the DC's
 					* to settle down
@@ -107,7 +111,6 @@ do_cl_join_request(long long action,
 {
 	xmlNodePtr tmp1;
 	xmlNodePtr welcome = (xmlNodePtr)data;
-
 	const char *welcome_from = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 	
 #if 0
@@ -117,7 +120,8 @@ do_cl_join_request(long long action,
 	} 
 #endif
 	if(fsa_our_dc == NULL) {
-		fsa_our_dc = welcome_from;
+		crm_info("Set DC to %s", welcome_from);
+		fsa_our_dc = crm_strdup(welcome_from);
 
 	} else if(safe_str_neq(welcome_from, fsa_our_dc)) {
 		/* dont do anything until DC's sort themselves out */
@@ -149,7 +153,6 @@ do_cl_join_result(long long action,
 	xmlNodePtr tmp1          = find_xml_node(welcome, XML_TAG_OPTIONS);
 	const char *ack_nack     = xmlGetProp(tmp1, CRM_OP_JOINACK);
 	const char *welcome_from = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
-	xmlNodePtr tmp2          = NULL;
 
 	/* calculate if it was an ack or a nack */
 	if(safe_str_eq(ack_nack, XML_BOOLEAN_TRUE)) {
@@ -164,12 +167,12 @@ do_cl_join_result(long long action,
 	/* send our status section to the DC */
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
-		tmp2 = create_cib_fragment(tmp1, NULL);
-
-		send_ha_reply(fsa_cluster_conn, welcome, tmp2);
-
-		free_xml(tmp2);
+		send_ha_reply(fsa_cluster_conn, welcome, tmp1);
 		free_xml(tmp1);
+		
+	} else {
+		crm_err("Could send our LRM state to the DC");
+		return I_FAIL;
 	}
 	
 	return I_SUCCESS;

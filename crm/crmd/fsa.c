@@ -167,7 +167,7 @@ ll_lrm_t       *fsa_lrm_conn;
 long long       fsa_input_register;
 long long       fsa_actions = A_NOTHING;
 const char     *fsa_our_uname;
-const char     *fsa_our_dc;
+char	       *fsa_our_dc;
 
 fsa_timer_t *election_trigger = NULL;		/*  */
 fsa_timer_t *election_timeout = NULL;		/*  */
@@ -542,11 +542,9 @@ do_state_transition(long long actions,
 
 	switch(next_state) {
 		case S_ELECTION:
+			crm_info("Resetting our DC to NULL on election");
+			crm_free(fsa_our_dc);
 			fsa_our_dc = NULL;
-			break;
-		case S_INTEGRATION:
-			/* we are our own DC */
-			fsa_our_dc = fsa_our_uname;
 			break;
 		case S_NOT_DC:
 			if(is_set(fsa_input_register, R_SHUTDOWN)){

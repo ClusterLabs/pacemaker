@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.53 2004/09/28 08:32:14 andrew Exp $ */
+/* $Id: cib.c,v 1.54 2004/09/28 18:35:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -267,7 +267,9 @@ pluralSection(const char *a_section)
 		a_section_parent = crm_strdup("all");
 	}
 	
-	crm_verbose("Plural is %s", a_section_parent);
+	crm_verbose("Plural of %s is %s",
+		    crm_str(a_section), a_section_parent);
+
 	return a_section_parent;
 }
 

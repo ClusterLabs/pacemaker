@@ -50,7 +50,7 @@ while ( $_ = @ARGV[0], /^-/ ) {
 	    shift;
 	}
 	$this_exp=substr($this_exp, 1);
-	print STDOUT "Found search expression: _${this_exp}_\n";
+#	print STDOUT "Found search expression: _${this_exp}_\n";
 	push @search_for, $this_exp;
 
     } elsif ( /^-e/ ) {
@@ -61,7 +61,7 @@ while ( $_ = @ARGV[0], /^-/ ) {
 	    shift;
 	}
 	$this_exp=substr($this_exp, 1);
-	print STDOUT "Found error expression: _${this_exp}_\n";
+#	print STDOUT "Found error expression: _${this_exp}_\n";
 	push @errors, $this_exp;
     } else {
 	print STDOUT "huh? $_\n";
@@ -117,8 +117,8 @@ sub string_search() {
 	    foreach $regex (@search_for) {
 		$lpc = $lpc +1;
 		if ( $line =~ /$regex/ ) {
-		    print STDOUT "Found match for (".$regex."): \n\t".$line;
 		    if($match_all eq "0") {
+			print STDOUT "Found match for (".$regex."): \n\t".$line;
 			return $lpc; 
 		    } else {
 			if( $results{$regex} ne "" ) {
@@ -127,7 +127,8 @@ sub string_search() {
 			    $results{$regex} = 1;
 			}
 			$found = scalar(keys %results)-1;
-			print STDOUT "Found ".$found." keys of ".scalar(@search_for)."\n";
+			print STDOUT "Found ".$found." of ".scalar(@search_for)." match for (".$regex."): \n\t".$line;
+
 			if(scalar(@search_for) < scalar(keys %results)) {
 			    
 			    foreach $key (sort keys %results) {

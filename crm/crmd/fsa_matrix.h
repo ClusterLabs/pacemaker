@@ -454,7 +454,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_PENDING		==> */	S_PENDING,
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
-		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+		/* S_TRANSITION_ENGINE	==> */	S_POLICY_ENGINE,
 	},	
 
 /* Got an I_WAIT_FOR_EVENT */
@@ -957,13 +957,13 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_INTEGRATION	==> */	A_LOG,
 		/* S_FINALIZE_JOIN	==> */	A_DC_JOIN_PROCESS_ACK,
 		/* S_NOT_DC		==> */	A_LOG,
-		/* S_POLICY_ENGINE	==> */	A_LOG,
+		/* S_POLICY_ENGINE	==> */	A_WARN|A_DC_JOIN_PROCESS_ACK|A_PE_INVOKE,
 		/* S_RECOVERY		==> */	A_LOG,
 		/* S_RELEASE_DC		==> */	A_LOG,
 		/* S_PENDING		==> */	A_CL_JOIN_RESULT,
 		/* S_STOPPING		==> */	A_LOG,
 		/* S_TERMINATE		==> */	A_LOG,
-		/* S_TRANSITION_ENGINE	==> */	A_LOG,
+		/* S_TRANSITION_ENGINE	==> */	A_WARN|A_DC_JOIN_PROCESS_ACK|A_PE_INVOKE,
 	},
 	
 /* Got an I_WAIT_FOR_EVENT */

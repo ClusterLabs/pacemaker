@@ -610,28 +610,35 @@ handle_request(xmlNodePtr stored_msg)
 		if(dc_match || fsa_our_dc == NULL) {
 			if(strcmp(op, CRM_OP_HBEAT) == 0) {
 				next_input = I_DC_HEARTBEAT;
+				
 			} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
 				next_input = I_JOIN_OFFER;
 				
-			} else if(fsa_our_dc != NULL
-				  && strcmp(op, CRM_OP_JOINACK) == 0) {
+			} else if(fsa_our_dc == NULL) {
+				crm_warn("CRMd discarding request: %s"
+					" (DC: %s, from: %s)",
+					op, crm_str(fsa_our_dc), host_from);
+
+				crm_xml_warn(stored_msg, "Ignored Request");
+				
+			} else if(strcmp(op, CRM_OP_RETRIVE_CIB) == 0) {
+				next_input = I_CIB_OP;		
+		
+			} else if(strcmp(op, CRM_OP_JOINACK) == 0) {
 				next_input = I_JOIN_RESULT;
 				
-			} else if(fsa_our_dc != NULL
-				  && strcmp(op, CRM_OP_REPLACE) == 0) {
+			} else if(strcmp(op, CRM_OP_REPLACE) == 0) {
 				next_input = I_CIB_OP;
 			
-			} else if(fsa_our_dc != NULL
-				  && strcmp(op, CRM_OP_UPDATE) == 0) {
+			} else if(strcmp(op, CRM_OP_UPDATE) == 0) {
 				next_input = I_CIB_OP;
 			
-			} else if(fsa_our_dc != NULL
-				  && strcmp(op, CRM_OP_SHUTDOWN) == 0) {
+			} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 				next_input = I_TERMINATE;
 				
 			} else {
-				crm_err("%s didnt expect request: %s",
-					AM_I_DC?"DC":"CRMd", op);
+				crm_err("CRMd didnt expect request: %s", op);
+				crm_xml_err(stored_msg, "Bad Request");
 			}
 			
 		} else {
@@ -678,8 +685,8 @@ handle_request(xmlNodePtr stored_msg)
 			next_input = handle_shutdown_request(stored_msg);
 			
 		} else {
-			crm_err("Unexpected request (op=%s) sent to the %s",
-				op, AM_I_DC?"DC":"CRMd");
+			crm_err("Unexpected request (%s) sent to the DC", op);
+			crm_xml_err(stored_msg, "Bad Request");
 		}		
 	}
 	return next_input;
@@ -708,8 +715,8 @@ handle_response(xmlNodePtr stored_msg)
 	if(op == NULL) {
 		crm_xml_err(stored_msg, "Bad message");
 
-	} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
-			next_input = I_JOIN_REQUEST;
+	} else if(AM_I_DC && strcmp(op, CRM_OP_WELCOME) == 0) {
+		next_input = I_JOIN_REQUEST;
 				
 	} else if(AM_I_DC && strcmp(op, CRM_OP_JOINACK) == 0) {
 		next_input = I_JOIN_RESULT;

@@ -102,7 +102,7 @@ do_dc_join_offer_all(long long action,
 		}
 		
 	} else if(g_hash_table_size(join_requests)
-		  >= (fsa_membership_copy->members_size -1)) {
+		  >= fsa_membership_copy->members_size) {
 		crm_info("That was the last outstanding join ack");
 		return I_SUCCESS;
 	}
@@ -110,7 +110,7 @@ do_dc_join_offer_all(long long action,
 	/* dont waste time by invoking the pe yet; */
 	crm_debug("Still waiting on %d outstanding join acks",
 		  fsa_membership_copy->members_size
-		  - g_hash_table_size(join_requests) - 1);
+		  - g_hash_table_size(join_requests));
 
 	/* we shouldnt wait forever */
 	crm_debug("Starting the integration timer");
@@ -172,7 +172,7 @@ do_dc_join_req(long long action,
 {
 	xmlNodePtr generation;
 	xmlNodePtr join_ack = (xmlNodePtr)data;
-	const char *ack_nack = "memeber";
+	const char *ack_nack = CRMD_JOINSTATE_MEMBER;
 
 	gboolean is_a_member  = FALSE;
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
@@ -201,7 +201,7 @@ do_dc_join_req(long long action,
 		 * expected responses
 		 */
 		char *local_from = crm_strdup(join_from);
-		char *local_down = crm_strdup("down");
+		char *local_down = crm_strdup(CRMD_JOINSTATE_DOWN);
 		finalize_join_for(local_from, local_down, NULL);
 		crm_free(local_from);
 		crm_free(local_down);
@@ -210,7 +210,7 @@ do_dc_join_req(long long action,
 
 	} else if(/* some reason */ 0) {
 		/* NACK this client */
-		ack_nack = "down";
+		ack_nack = CRMD_JOINSTATE_DOWN;
 	}
 	
 	/* add them to our list of CRMD_STATE_ACTIVE nodes
@@ -243,8 +243,6 @@ do_dc_join_finalize(long long action,
 		    enum crmd_fsa_input current_input,
 		    void *data)
 {
-	xmlNodePtr tmp1 = NULL;
-	
 	if(! is_set(fsa_input_register, R_HAVE_CIB)) {
 		if(is_set(fsa_input_register, R_CIB_ASKED)) {
 			return I_WAIT_FOR_EVENT;
@@ -266,22 +264,9 @@ do_dc_join_finalize(long long action,
 	crm_debug("Notifying %d clients of join results",
 		  g_hash_table_size(join_requests));
 	g_hash_table_foreach(join_requests, finalize_join_for, NULL);
-
-	/* mark ourselves confirmed */
-	g_hash_table_insert(confirmed_nodes, crm_strdup(fsa_our_uname),
-			    crm_strdup(CRMD_JOINSTATE_MEMBER));
-
-
-	/* update our LRM data */
-	tmp1 = do_lrm_query(TRUE);
-	if(tmp1 != NULL) {
-		invoke_local_cib(NULL, tmp1, CRM_OP_UPDATE);
-	} else {
-		crm_err("Could not build current view of the LRM state");
-	}
 	
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
-		crm_info("That was the last outstanding join confirmation");
+		crm_info("Not expecting any join confirmations");
 		return I_SUCCESS;
 	}
 
@@ -354,13 +339,35 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	if(key == NULL || value == NULL) {
 		return;
 	}
-	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
-	const char *join_to = (const char *)key;
+	xmlNodePtr tmp1 = NULL;
+	xmlNodePtr cib_copy    = NULL;
+	xmlNodePtr options     = create_xml_node(NULL, XML_TAG_OPTIONS);
+	const char *join_to    = (const char *)key;
 	const char *join_state = (const char *)value;
 
 	/* make sure the node exists in the config section */
 	create_node_entry(join_to, join_to, CRMD_JOINSTATE_MEMBER);
 
+	/* perhaps we shouldnt special case this... */
+	if(safe_str_eq(join_to, fsa_our_uname)) {
+		/* mark ourselves confirmed */
+		g_hash_table_insert(confirmed_nodes, crm_strdup(fsa_our_uname),
+				    crm_strdup(CRMD_JOINSTATE_MEMBER));
+		
+		/* update our LRM data */
+		tmp1 = do_lrm_query(TRUE);
+		if(tmp1 != NULL) {
+			invoke_local_cib(NULL, tmp1, CRM_OP_UPDATE);
+		} else {
+			crm_err("Could not determin current LRM state");
+			/* TODO: raise an error input */
+		}
+
+		num_join_invites++;
+		crm_info("Completed local cluster membership");
+		return;
+	}
+	
 	/* create the ack/nack */
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		num_join_invites++;
@@ -368,10 +375,19 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 			options, CRM_OP_JOINACK, XML_BOOLEAN_TRUE);
 
 	} else {
+		crm_info("NACK'ing join request from %s, state %s",
+			 join_to, join_state);
+		
 		set_xml_property_copy(
 			options, CRM_OP_JOINACK, XML_BOOLEAN_FALSE);
 	}
 
+	/* send the CIB to the node */
+	cib_copy = get_cib_copy();
+	send_request(NULL, cib_copy, CRM_OP_REPLACE,
+		     join_to, CRM_SYSTEM_CRMD, NULL);	
+	free_xml(cib_copy);
+	
 	/* send the ack/nack to the node */
 	send_request(options, NULL, CRM_OP_JOINACK,
 		     join_to, CRM_SYSTEM_CRMD, NULL);	

@@ -287,9 +287,9 @@ function do_cmd() {
 	    fi
 	    echo `date` ": Waiting for state $2 on $host (max $3 attempts)";
 	    
-	elif [ $cmd = "./testutils.pl" ]; then
+	elif [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
 	    OUTPUT_STDOUT=1
-	    echo `date` ": Running '$cmdline'";
+	    echo `date` ": Searching '$cmdline'";
 	    
 	elif [ $cmd = "echo" ]; then
 	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then

@@ -269,8 +269,10 @@ do_dc_takeover(long long action,
 	set_bit_inplace(fsa_input_register, R_THE_DC);
 
 	crm_verbose("Am I the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
+
+	crm_free(fsa_our_dc);
+	fsa_our_dc = crm_strdup(fsa_our_uname);
 	
-	fsa_our_dc = NULL;
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(fsa_input_register, R_INVOKE_PE);
 	
