@@ -27,9 +27,11 @@ habindir		= @bindir@
 #halibdir		= $(libdir)/@HB_PKG@
 gliblib			= @GLIBLIB@
 
-habin_PROGRAMS		= cl_status cl_respawn
+habin_PROGRAMS		= cl_status cl_respawn ccdv
 
 ## SOURCES
+ccdv_SOURCES		= ccdv.c
+
 cl_status_SOURCES	= cl_status.c
 cl_status_LDADD		= $(top_builddir)/lib/hbclient/libhbclient.la	\
 			  $(top_builddir)/lib/clplumbing/libplumb.la	\
