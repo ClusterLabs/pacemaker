@@ -113,19 +113,21 @@ do_cib_invoke(long long action,
 	
 	if(action & A_CIB_INVOKE || action & A_CIB_INVOKE_LOCAL) {
 /*		gboolean is_update   = FALSE; */
-		xmlNodePtr options   = find_xml_node(cib_msg, XML_TAG_OPTIONS);
-		const char *sys_from = xmlGetProp(cib_msg, XML_ATTR_SYSFROM);
-		const char *host_from= xmlGetProp(cib_msg, XML_ATTR_HOSTFROM);
+		xmlNodePtr msg_copy = copy_xml_node_recursive(cib_msg);
+		xmlNodePtr options  = find_xml_node(msg_copy, XML_TAG_OPTIONS);
+
+		const char *sys_from = xmlGetProp(msg_copy, XML_ATTR_SYSFROM);
+		const char *host_from= xmlGetProp(msg_copy, XML_ATTR_HOSTFROM);
 		const char *type     = xmlGetProp(options, XML_ATTR_MSGTYPE);
 		const char *op       = xmlGetProp(options, XML_ATTR_OP);
 		
-		crm_xml_devel(cib_msg, "[CIB update]");
+		crm_xml_devel(msg_copy, "[CIB update]");
 		if(cib_msg == NULL) {
 			crm_err("No message for CIB command");
 			return I_NULL; /* I_ERROR */
 
 		} else if(op == NULL) {
-			crm_xml_devel(cib_msg, "Invalid CIB Message");
+			crm_xml_devel(msg_copy, "Invalid CIB Message");
 			return I_NULL; /* I_ERROR */
 
 		}
@@ -135,12 +137,20 @@ do_cib_invoke(long long action,
 			/* we actually need to process this as a REPLACE,
 			 * not pretty, but fake the op type...
 			 */
+			crm_debug("Mapping %s reply to a %s request",
+				  CRM_OP_RETRIVE_CIB, CRM_OP_REPLACE);
+			
 			set_xml_property_copy(
 				options, XML_ATTR_OP, CRM_OP_REPLACE);
+
+			crm_xml_devel(msg_copy, "[CIB revised update]");
+			
+		} else if(safe_str_eq(op, CRM_OP_RETRIVE_CIB)) {
+			crm_debug("is dc? %d, type=%s", AM_I_DC, type);
 		}
 		
-		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
-		answer = process_cib_message(cib_msg, TRUE);
+		set_xml_property_copy(msg_copy, XML_ATTR_SYSTO, "cib");
+		answer = process_cib_message(msg_copy, TRUE);
 
 		if(action & A_CIB_INVOKE) {
 
@@ -405,49 +415,49 @@ do_te_copyto(long long action,
 	     enum crmd_fsa_input current_input,
 	     void *data)
 {
-	xmlNodePtr message  = NULL;
-	xmlNodePtr opts     = NULL;
-	const char *true_op = NULL;
-	
-	
+	xmlNodePtr message       = (xmlNodePtr)data;
+	xmlNodePtr message_copy  = NULL;
+	xmlNodePtr opts          = NULL;
+	const char *true_op      = NULL;
 
 	if(data != NULL) {
-		crm_xml_devel(data, "[TE imput]");
-		message  = copy_xml_node_recursive((xmlNodePtr)data);
-		opts  = find_xml_node(message, XML_TAG_OPTIONS);
+		crm_xml_devel(data, "[TE input]");
+
+		message_copy = copy_xml_node_recursive(message);
+		opts  = find_xml_node(message_copy, XML_TAG_OPTIONS);
 		true_op = xmlGetProp(opts, XML_ATTR_OP);
 		
 		set_xml_property_copy(opts, XML_ATTR_OP, CRM_OP_EVENTCC);
 		set_xml_property_copy(opts, XML_ATTR_TRUEOP, true_op);
 
 		set_xml_property_copy(
-			message, XML_ATTR_SYSTO, CRM_SYSTEM_TENGINE);
+			message_copy, XML_ATTR_SYSTO, CRM_SYSTEM_TENGINE);
+
+		crm_xml_devel(message_copy, "[TE input copy]");
+		crm_xml_devel(message, "[TE input after]");
 	}
 
 	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
 		crm_info("Waiting for the TE to connect");
-		if(data != NULL) {
+		if(message_copy != NULL) {
 			free_xml(te_lastcc);
-			te_lastcc = message;
+			te_lastcc = message_copy;
 		}
 		return I_WAIT_FOR_EVENT;
 
 	}
 
-	if(message == NULL) {
-		message = te_lastcc;
+	if(message_copy == NULL) {
+		message_copy = te_lastcc;
 		te_lastcc = NULL;
 		
 	} else {
 		free_xml(te_lastcc);
 	}
 	
-	relay_message(message, FALSE);
+	relay_message(message_copy, FALSE);
 
-	/* only free it if it was a local copy */
-	if(data == NULL) {
-		free_xml(message);
-	}
+	free_xml(message_copy);
 	
 	return I_NULL;
 }
