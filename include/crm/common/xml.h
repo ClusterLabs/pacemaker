@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.6 2004/09/15 20:19:23 andrew Exp $ */
+/* $Id: xml.h,v 1.7 2004/09/20 12:16:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -184,25 +184,19 @@ extern char *dump_xml_unformatted(xmlNodePtr msg);
 extern void print_xml_formatted(int log_level, const char *function, xmlNodePtr an_xml_node, const char *text);
 
 #define xml_child_iter(a,b,c,d) if(a != NULL) {			\
-		xmlNodePtr b = a->children;				\
-		while(b != NULL) {					\
+		xmlNodePtr b = NULL;					\
+		xmlNodePtr __crm_xml_iter = a->children;		\
+		while(__crm_xml_iter != NULL) {			\
+			b = __crm_xml_iter;				\
+			__crm_xml_iter = __crm_xml_iter->next;		\
 			if(c == NULL || safe_str_eq(c, b->name)) {	\
 				d;					\
 			} else {					\
 				crm_trace("Skipping <%s../>", b->name);	\
 			}						\
-			b=b->next;					\
 		}							\
 	} else {							\
 		crm_trace("Parent of loop was NULL");			\
 	}
-
-/* 			} else {					\ */
-/* 				crm_debug("Ignoring node %s (filter %s)", \ */
-/* 					  b->name, (const char*)c);	\ */
-
-
-/* make sure the looop progresses before continuing */
-#define xml_iter_continue(a) a=a->next; continue
 
 #endif
