@@ -611,9 +611,15 @@ class PartitionAudit(ClusterAudit):
         self.CM.log("Auditing partition: %s" %(partition))
         for node in node_list:
             if not self.NodeEpoche[node]:
-                self.CM.log("Node %s appeared out of nowhere" %(node))
+                self.CM.log("Warn: Node %s appeared out of nowhere" %(node))
 # not in itself a reason to fail the audit (not what we're checking for in this one)
 #                passed = 0
+                self.CM.ShouldBeStatus[node] = self.CM["up"]
+                self.NodeState[node] = self.CM.rsh.readaline(
+                    node, self.CM["StatusCmd"]%node)
+                if len(self.NodeState[node]) > 1:
+                    self.NodeState[node] = self.NodeState[node][:-1]
+
             elif lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
                 lowest_epoche = self.NodeEpoche[node]
                 
@@ -642,19 +648,20 @@ class PartitionAudit(ClusterAudit):
                     self.CM.log("epoche %s : %s"  
                                 %(self.NodeEpoche[node], self.NodeState[node]))
 
-        # no quorum means no resource management
         if self.CM.Env["CIBResource"] == 1 and len(dc_found) > 0 and self.NodeQuorum[dc_found[0]]:
+            if self.audit_dc_resources(node_list, dc_found) == 0:
+                passed = 0
+
             Resources = self.CM.Resources()
             for node in node_list:
                 for resource in Resources:
                     if resource.rid == node:
-                        self.CM.log("Auditing resource: %s" %(resource))
                         if resource.IsRunningOn(node) == 0:
                             self.CM.log("Node %s is not running its own resource" %(node))
                             passed = 0
-
-        if self.audit_dc_resources(node_list, dc_found) == 0:
-            passed = 0
+        elif self.CM.Env["CIBResource"] == 1:
+            # no quorum means no resource management
+            self.CM.log("Not auditing resources - no quorum")
 
         return passed
 
@@ -675,8 +682,7 @@ class PartitionAudit(ClusterAudit):
                 # All nodes running the resource are DCs
                 for node in node_list:
                     if resource.IsRunningOn(node):
-                        # no quorum means no resource management
-                        if self.NodeQuorum[node] and self.is_node_dc(self.NodeState[node]) == 0:
+                        if self.is_node_dc(self.NodeState[node]) == 0:
                             self.CM.log("Resource %s is running on non-DC node %s"  
                                         %("DcIPaddr", node))
                             passed = 0
