@@ -60,6 +60,7 @@ static int execra(const char * rsc_id,
 		  const char * rsc_type,
 		  const char * provider,
 		  const char * op_type,
+		  const int    timeout,
 	 	  GHashTable * params);
 static uniform_ret_execra_t map_ra_retvalue(int ret_execra, 
 					    const char * op_type);
@@ -182,7 +183,7 @@ close_stonithRA(PILInterface* pif, void* ud_interface)
  */
 static int
 execra(const char * rsc_id, const char * rsc_type, const char * provider,
-       const char * op_type, GHashTable * params)
+       const char * op_type,const int timeout, GHashTable * params)
 {
 	stonithRA_ops_t * op;
 	int call_id = -1;
