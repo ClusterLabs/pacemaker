@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.28 2004/09/28 08:40:55 andrew Exp $ */
+/* $Id: crm.h,v 1.29 2004/10/18 19:03:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -119,9 +119,9 @@ typedef GList* GListPtr;
 
 #define slist_iter(w, x, y, z, a)					\
 	{								\
-		z = 0;							\
 		GListPtr __crm_iter_head = y;				\
 		x *w = NULL;						\
+		z = 0;							\
 		while(__crm_iter_head != NULL) {			\
 			z++;						\
 			w = __crm_iter_head->data;			\
