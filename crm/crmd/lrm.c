@@ -835,7 +835,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 			 */
 			crm_debug("Sent resource state update message: %d", rc);
 			
-		} if(rc == cib_ok) {
+		} else if(rc == cib_ok) {
 			crm_debug("Resource state update: %s",
 				  cib_error2string(rc));
 			
