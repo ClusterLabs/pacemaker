@@ -148,7 +148,7 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 	if (ST_OK != stonithd_signon("STONITH_RA")) {
 		signoned_to_stonithd = TRUE;
 		cl_log(LOG_ERR, "Can not signon to the stonithd.");
-		return PIL_OOPS; /* Should add a new type for this */
+		/* return PIL_OOPS; */ /* Should add a new type for this */
 	}
 
 	/* Register ourself as a plugin */
