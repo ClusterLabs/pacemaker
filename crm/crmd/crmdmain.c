@@ -50,9 +50,9 @@ const char* daemon_name = "crmd";
 #include <crm/common/xmlvalues.h>
 #include <crmd.h>
 
-#define PID_FILE     "/var/lib/heartbeat/crm/crm.pid"
-#define DAEMON_LOG   "crm.log"
-#define DAEMON_DEBUG "crm.debug"
+#define PID_FILE     WORKING_DIR"/crm.pid"
+#define DAEMON_LOG   LOG_DIR"/crm.log"
+#define DAEMON_DEBUG LOG_DIR"/crm.debug"
 #define OPTARGS	"skrh"
 
 void usage(const char* cmd, int exit_status);

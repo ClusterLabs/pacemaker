@@ -55,6 +55,7 @@
 GMainLoop*  mainloop = NULL;
 const char* daemon_name = "crmadmin";
 IPC_Channel *crmd_channel = NULL;
+char *adminuid = NULL;
 
 void usage(const char* cmd, int exit_status);
 void test_messaging(ll_cluster_t* hb_cluster);
@@ -883,7 +884,7 @@ do_work(ll_cluster_t *hb_cluster)
 	
 	send_ipc_request(crmd_channel, xml_root_node,
 			 dest_node, sys_to,
-			 daemon_name, "1234",
+			 daemon_name, adminuid,
 			 msg_reference);
     }
     else if(crmd_channel == NULL)
@@ -922,8 +923,12 @@ do_init(void)
 	cl_log_set_facility(facility);
     }
 
+    adminuid = ha_malloc(sizeof(char)*11);
+    snprintf(adminuid, 10, "%d", getpid());
+    adminuid[10] = '\0';
+
     crmd_channel = init_client_ipc_comms(CRM_SYSTEM_CRMD, admin_msg_callback);
-    send_hello_message(crmd_channel, "1234"/*getpid()*/, daemon_name, "0", "1");
+    send_hello_message(crmd_channel, adminuid, daemon_name, "0", "1");
 
     return hb_cluster;
 }
@@ -1003,7 +1008,7 @@ admin_msg_callback(IPC_Channel* server, void* private_data)
 	    continue;
 	}
 	
-	if(validate_crm_message(xml_root_node, daemon_name, "1234", "response") == FALSE)
+	if(validate_crm_message(xml_root_node, daemon_name, adminuid, "response") == FALSE)
 	{
 	    cl_log(LOG_INFO, "CRM message was not valid... discarding.");
 	    continue;

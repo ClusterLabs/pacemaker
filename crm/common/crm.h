@@ -25,6 +25,7 @@
 #define MAXDATASIZE 65535 // ipc comms
 #define FIFO_LEN    1024
 #define APPNAME_LEN 256
+#define LOG_DIR     "/var/log"
 
 #define CRM_DEBUG(w)        cl_log(LOG_DEBUG, w)
 #define CRM_DEBUG2(w,x)     cl_log(LOG_DEBUG, w, x)
@@ -32,7 +33,7 @@
 #define CRM_DEBUG4(w,x,y,z) cl_log(LOG_DEBUG, w, x, y, z)
 
 #define FNIN()   cl_log(LOG_DEBUG, "#---#---# Entering function %s...", __FUNCTION__)
-#define FNOUT()  cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__)
+#define FNOUT()  { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return; }
 #define FNRET(x) { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return x; }
 //#define FNRET(x) return x;
 

@@ -50,8 +50,8 @@
 
 /* #define REALTIME_SUPPORT 0 */
 #define PID_FILE     WORKING_DIR"/cib.pid"
-#define DAEMON_LOG   "cib.log"
-#define DAEMON_DEBUG "cib.debug"
+#define DAEMON_LOG   LOG_DIR"/cib.log"
+#define DAEMON_DEBUG LOG_DIR"/cib.debug"
 
 GMainLoop*  mainloop = NULL;
 const char* daemon_name = CRM_SYSTEM_CIB;

@@ -305,8 +305,8 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	if(curr_client != NULL)
 	{
 	    CRM_DEBUG("###-###-### Removing client from hash table");
-	    if(curr_client->table_key != NULL)
-		g_hash_table_remove(ipc_clients, curr_client->table_key);
+/* 	    if(curr_client->table_key != NULL) */
+/* 		g_hash_table_remove(ipc_clients, curr_client->table_key); */
 	    
 	    if(curr_client->sub_sys == NULL) CRM_DEBUG("Client had not registered with us yet");
 	    else if(strcmp(CRM_SYSTEM_LRMD, curr_client->sub_sys) == 0) have_lrmd = FALSE;
@@ -332,7 +332,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	// else nothign to do, they never registered
 	    
  	CRM_DEBUG("this client is now gone.");
-	FNRET(!hack_return_good);
+	FNRET(!hack_return_good); // definitly required
     }
     
 	 
