@@ -784,8 +784,7 @@ handle_request(ha_msg_input_t *stored_msg)
 		next_input = I_JOIN_RESULT;
 
 		/* this functionality should only be enabled if this is a development build */
-		/*constant condition*/
-	} else if(CRM_DEV_BUILD && strcmp(op, CRM_OP_DIE) == 0) {
+	} else if(CRM_DEV_BUILD && strcmp(op, CRM_OP_DIE) == 0/*constant condition*/) {
 		crm_warn("Test-only code: Killing the CRM without mercy");
 		crm_warn("Inhibiting respawns");
 		exit(100);
