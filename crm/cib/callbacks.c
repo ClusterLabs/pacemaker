@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.20 2005/02/16 18:00:21 andrew Exp $ */
+/* $Id: callbacks.c,v 1.21 2005/02/17 16:20:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -460,9 +460,11 @@ cib_common_callback(
 		   && !(call_options & cib_scope_local)) {
 			/* send via HA to other nodes */
  			crm_info("Forwarding %s op to all instances", op);
-			ha_msg_add(op_request, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
+			ha_msg_add(op_request,
+				   F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 			cl_log_message(LOG_DEBUG, op_request);
-			CRM_DEV_ASSERT(HA_OK == hb_conn->llc_ops->sendclustermsg(hb_conn, op_request));
+			CRM_DEV_ASSERT(hb_conn->llc_ops->sendclustermsg(
+					       hb_conn, op_request) == HA_OK);
 
 		} else {
 			if(call_options & cib_scope_local ) {
@@ -503,7 +505,7 @@ cib_process_command(
 	const char *section = NULL;
 	const char *tmp = NULL;
 
-	if(reply) *reply = NULL;
+	if(reply) { *reply = NULL; }
 	
 	/* Start processing the request... */
 	op = cl_get_string(request, F_CIB_OPERATION);
@@ -704,10 +706,12 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 {
 	if (channel->ch_status == IPC_DISCONNECT && cib_client != NULL) {
 		crm_info("Cleaning up after %s channel disconnect from client (%p) %s",
-			 cib_client->channel_name, cib_client, cib_client->id);
+			 cib_client->channel_name, cib_client,
+			 crm_str(cib_client->id));
 
-		g_hash_table_remove(client_list, cib_client->id);
-		
+		if(cib_client->id != NULL) {
+			g_hash_table_remove(client_list, cib_client->id);
+		}
 		if(cib_client->source != NULL) {
 			crm_debug("deleting the IPC Channel");
  			G_main_del_IPC_Channel(cib_client->source);
@@ -931,6 +935,7 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		HA_Message *op_bcast = ha_msg_copy(msg);
 		crm_debug("Sending update request to everyone");
 		ha_msg_add(op_bcast, F_CIB_ISREPLY, originator);
+		ha_msg_add(op_bcast, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 		crm_log_message(LOG_DEBUG, op_bcast);
 		hb_conn->llc_ops->sendclustermsg(hb_conn, op_bcast);
 		crm_msg_del(op_bcast);
