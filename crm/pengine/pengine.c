@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.49 2004/11/12 17:20:58 andrew Exp $ */
+/* $Id: pengine.c,v 1.50 2004/12/15 10:14:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,12 +75,17 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
-		xmlNodePtr input_cib = find_xml_node(msg, XML_TAG_CIB);
-		xmlNodePtr output = do_calculations(input_cib);
+		xmlNodePtr output = NULL;
+		xmlNodePtr input_cib = find_xml_node(msg, XML_TAG_FRAGMENT);
+		
+		input_cib = find_xml_node(input_cib, XML_TAG_CIB);
+		output = do_calculations(input_cib);
+
 		msg_buffer = dump_xml_formatted(output);
 		fprintf(pemsg_strm, "%s: %s\n", "[out ]", msg_buffer);
 		fflush(pemsg_strm);
 		crm_free(msg_buffer);
+
 		if (send_ipc_reply(sender, msg, output) ==FALSE) {
 
 			crm_warn("Answer could not be sent");
