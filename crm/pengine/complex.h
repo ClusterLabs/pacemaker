@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.4 2004/11/09 17:51:59 andrew Exp $ */
+/* $Id: complex.h,v 1.5 2004/11/10 16:41:46 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,7 +21,7 @@
 
 #define n_object_classes 3
 
-//#define PE_OBJ_F_	""
+/*#define PE_OBJ_F_	""*/
 
 #define PE_OBJ_T_NATIVE		"native"
 #define PE_OBJ_T_GROUP		"group"
