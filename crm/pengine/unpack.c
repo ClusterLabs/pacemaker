@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.26 2004/09/14 05:54:43 andrew Exp $ */
+/* $Id: unpack.c,v 1.27 2004/09/15 20:24:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -207,11 +207,11 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 		
 		if(id == NULL) {
 			crm_err("Must specify id tag in <node>");
-			continue;
+			xml_iter_continue(xml_obj);
 		}
 		if(type == NULL) {
 			crm_err("Must specify type tag in <node>");
-			continue;
+			xml_iter_continue(xml_obj);
 		}
 		new_node  = crm_malloc(sizeof(node_t));
 		new_node->weight  = 1.0;
@@ -280,7 +280,7 @@ unpack_resources(xmlNodePtr xml_resources,
 		
 		if(id == NULL) {
 			crm_err("Must specify id tag in <resource>");
-			continue;
+			xml_iter_continue(xml_obj);
 		}
 		new_rsc = crm_malloc(sizeof(resource_t));
 		new_rsc->id		= id;
@@ -368,8 +368,7 @@ unpack_constraints(xmlNodePtr xml_constraints,
 		if(id == NULL) {
 			crm_err("Constraint <%s...> must have an id",
 				xml_obj->name);
-			xml_obj = xml_obj->next;
-			continue;
+			xml_iter_continue(xml_obj);
 		}
 
 		crm_verbose("Processing constraint %s %s", xml_obj->name,id);
@@ -463,12 +462,12 @@ unpack_status(xmlNodePtr status,
 
 		if(uname == NULL) {
 			/* error */
-			continue;
+			xml_iter_continue(node_state);
 
 		} else if(this_node == NULL) {
 			crm_err("Node %s in status section no longer exists",
 				uname);
-			continue;
+			xml_iter_continue(node_state);
 		}
 		
 		crm_verbose("Adding runtime node attrs");
@@ -1237,7 +1236,7 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 				new_con->node_list_rh =	node_list_dup(
 					match_L, FALSE);
 				first_expr = FALSE;
-				continue;
+				xml_iter_continue(expr);
 			}
 
 			old_list = new_con->node_list_rh;
