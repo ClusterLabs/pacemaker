@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.6 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: callbacks.c,v 1.7 2005/02/01 22:48:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -100,7 +100,6 @@ te_update_confirm(const char *event, HA_Message *msg)
 	free_xml(update);
 }
 
-
 gboolean
 process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 {
@@ -108,31 +107,10 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	const char *ref    = cl_get_string(msg, XML_ATTR_REFERENCE);
 	const char *op     = cl_get_string(msg, F_CRM_TASK);
 
-	crm_debug("Recieved %s (%s) message", op, ref);
-
-	if (MSG_LOG) {
-		struct stat buf;
-		if(stat(DEVEL_DIR, &buf) != 0) {
-			cl_perror("Stat of %s failed... exiting", DEVEL_DIR);
-			exit(100);
-		}
-	}
-
-#ifdef MSG_LOG
-	{
-		char *xml = dump_xml_formatted(xml_data);
-		do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/te.log",
-			   "[Input %s]\t%s", op, xml);
-		crm_free(xml);
-	}
-#endif
+	crm_log_message(LOG_VERBOSE, msg);
 	
 	if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE), XML_ATTR_RESPONSE)
 	   && safe_str_neq(op, CRM_OP_EVENTCC)) {
-#ifdef MSG_LOG
-		do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/te.log",
-			   "[Result ]\tDiscarded");
-#endif
 		crm_info("Message was a response not a request.  Discarding");
 		return TRUE;
 	}
@@ -182,5 +160,58 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	crm_debug("finished processing message");
 	print_state(FALSE);
 	
+	return TRUE;
+}
+
+void
+tengine_stonith_callback(stonith_ops_t * op, void * private_data)
+{
+	action_t *te_action = private_data;
+
+	crm_info("optype=%d, node_name=%s, result=%d, node_list=%s\n",
+		 op->optype, op->node_name, op->op_result,
+		 (char *)op->node_list);
+
+	if(op->op_result == STONITH_SUCCEEDED) {
+		te_action->complete = TRUE;
+		process_trigger(te_action->id);
+		check_for_completion();
+		
+	} else {
+		send_abort("Fencing op failed", NULL);
+	}
+}
+
+
+void
+tengine_stonith_connection_destroy(gpointer user_data)
+{
+	crm_err("Fencing daemon has left us: Shutting down...NOW");
+	abort(); /* shutdown properly later */
+	return;
+}
+
+gboolean
+tengine_stonith_dispatch(IPC_Channel *sender, void *user_data)
+{
+	int lpc = 0;
+
+	while(stonithd_op_result_ready()) {
+		if (sender->ch_status == IPC_DISCONNECT) {
+			/* The message which was pending for us is that
+			 * the IPC status is now IPC_DISCONNECT */
+			break;
+		}
+		if(ST_FAIL == stonithd_receive_ops_result(FALSE)) {
+			crm_err("stonithd_receive_ops_result() failed");
+		} else {
+			lpc++;
+		}
+	}
+
+	crm_verbose("Processed %d messages", lpc);
+	if (sender->ch_status == IPC_DISCONNECT) {
+		return FALSE;
+	}
 	return TRUE;
 }

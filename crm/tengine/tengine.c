@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.40 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: tengine.c,v 1.41 2005/02/01 22:48:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,7 +38,6 @@ uint next_transition_timeout = 30*1000; /* 30 seconds */
 void fire_synapse(synapse_t *synapse);
 gboolean initiate_action(action_t *action);
 gboolean confirm_synapse(synapse_t *synapse, int action_id);
-void process_trigger(int action_id);
 void check_synapse_triggers(synapse_t *synapse, int action_id);
 
 gboolean in_transition = FALSE;
@@ -272,7 +271,14 @@ process_graph_event(crm_data_t *event)
 
 
 	process_trigger(action_id);
-	
+	check_for_completion();
+
+	return TRUE;
+}
+
+void
+check_for_completion(void)
+{
 	if(graph_complete) {
 		/* allow some slack until we are pretty sure nothing
 		 * else is happening
@@ -298,8 +304,6 @@ process_graph_event(crm_data_t *event)
 		transition_timer->timeout = next_transition_timeout;
 		start_te_timer(transition_timer);
 	}
-
-	return TRUE;
 }
 
 
@@ -336,7 +340,29 @@ initiate_action(action_t *action)
 		action->complete = TRUE;
 		process_trigger(action->id);
 		ret = TRUE;
-			
+
+	} else if(action->type == action_type_crm
+		  && safe_str_eq(task, XML_CIB_ATTR_STONITH)){
+		
+/*         <args target="node1"/> */
+		stonith_ops_t * st_op = NULL;
+		crm_data_t *action_args = find_xml_node(
+			action->xml, "args", TRUE);
+		const char *target = crm_element_value(action_args, "target");
+		
+		crm_malloc(st_op, sizeof(stonith_ops_t));
+		st_op->optype = RESET;
+		st_op->timeout = crm_atoi(timeout, "10"); /* one second */
+		st_op->node_name = crm_strdup(target);
+
+#ifdef TESTING
+		ret = TRUE;
+#else
+		if (ST_OK == stonithd_node_fence( st_op )) {
+			ret = TRUE;
+		}
+#endif			
+		
 	} else if(on_node == NULL || strlen(on_node) == 0) {
 		/* error */
 		crm_err("Failed on corrupted command: %s (id=%s) %s on %s",
@@ -349,12 +375,12 @@ initiate_action(action_t *action)
 		*/
 		crm_info("Executing crm-event (%s): %s on %s",
 			 id, task, on_node);
-#ifndef TESTING
+
 		action->complete = TRUE;
 		destination = CRM_SYSTEM_CRMD;
 		msg_task = task;
-#endif			
 		ret = TRUE;
+
 	} else if(action->type == action_type_rsc){
 #ifdef USE_LIBXML
 		crm_info("Executing rsc-op (%s): %s %s on %s",
@@ -367,7 +393,6 @@ initiate_action(action_t *action)
 		/* let everyone know this was invoked */
 		do_update_cib(action->xml, -1);
 
-#ifndef TESTING
 		/*
 		  <msg_data>
 		  <rsc_op id="operation number" on_node="" task="">
@@ -385,7 +410,6 @@ initiate_action(action_t *action)
 		abort();
 #   endif
 		destination = CRM_SYSTEM_LRMD;
-#endif			
 		ret = TRUE;
 			
 	} else {
@@ -405,19 +429,13 @@ initiate_action(action_t *action)
 				     CRM_SYSTEM_TENGINE, NULL);
 
 		ha_msg_add(cmd, "transition_id", crm_str(counter));
+#ifdef TESTING
 		send_ipc_message(crm_ch, cmd);
+#else
+		cl_log_message(LOG_DEBUG, cmd);
+#endif
 		crm_free(counter);
 
-#ifdef MSG_LOG
-		{
-			char *message = dump_xml_formatted(rsc_op);
-			do_crm_log(LOG_DEBUG, __FUNCTION__, DEVEL_DIR"/te.log",
-				   "[Action]\t%s\n%s",
-				   crm_str(counter), crm_str(message));
-			crm_free(message);
-		}
-#endif
-		
 		if(action->timeout > 0) {
 			crm_debug("Setting timer for action %d",action->id);
 			start_te_timer(action->timer);

@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.14 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: tengine.h,v 1.15 2005/02/01 22:48:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -20,6 +20,7 @@
 #define TENGINE__H
 
 #include <clplumbing/ipc.h>
+#include <fencing/stonithd_api.h>
 
 extern IPC_Channel *crm_ch;
 extern GListPtr graph;
@@ -84,7 +85,7 @@ extern int match_graph_event(action_t *action, crm_data_t *event);
 extern gboolean initiate_transition(void);
 
 /* utils */
-extern void print_state(gboolean to_file);
+extern void print_state(int log_level);
 extern void send_success(const char *text);
 /*extern void send_abort(const char *text, HA_Message *msg); */
 extern void send_abort(const char *text, crm_data_t *msg);
@@ -106,6 +107,12 @@ extern te_timer_t *transition_timer;
 extern te_timer_t *transition_fuzz_timer;
 
 extern const char *actiontype2text(action_type_e type);
+
+extern void tengine_stonith_callback(stonith_ops_t * op, void * private_data);
+extern void tengine_stonith_connection_destroy(gpointer user_data);
+extern gboolean tengine_stonith_dispatch(IPC_Channel *sender, void *user_data);
+extern void check_for_completion(void);
+void process_trigger(int action_id);
 
 #endif
 

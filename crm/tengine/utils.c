@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.12 2005/01/26 13:31:01 andrew Exp $ */
+/* $Id: utils.c,v 1.13 2005/02/01 22:48:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,26 +40,28 @@ send_abort(const char *text, crm_data_t *msg)
 {	
 	HA_Message *cmd = NULL;
 
-	crm_info("Sending \"abort\" message... details follow");
-	crm_xml_info(msg, text);
+	if(msg != NULL) {
+		crm_info("Sending \"abort\" message... details follow");
+		crm_xml_info(msg, text);
+	} else {
+		crm_info("Sending \"abort\" message... %s", text);
+	}
 	
-#ifdef MSG_LOG
-	do_crm_log(LOG_DEBUG, __FUNCTION__, DEVEL_DIR"/te.log",
-		   "[Result ]\tTransition aborted: %s", text);
-#endif
-
 	print_state(TRUE);
 	initialize_graph();
 
-#ifdef TESTING
-	g_main_quit(mainloop);
-	return;
-#endif	
-
 	cmd = create_request(CRM_OP_TEABORT, NULL, NULL,
 			     CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
-	
+	ha_msg_add(cmd, "message", text);
+
+#ifdef TESTING
+	crm_log_message(LOG_ERR, cmd);
+	g_main_quit(mainloop);
+	return;
+#else
 	send_ipc_message(crm_ch, cmd);
+#endif	
+
 }
 
 void
@@ -72,130 +74,92 @@ send_success(const char *text)
 	}
 	in_transition = FALSE;
 
-	crm_info("Sending \"complete\" message: %s", text);
-
-#ifdef MSG_LOG
-	do_crm_log(LOG_DEBUG, __FUNCTION__, DEVEL_DIR"/te.log",
-		   "[Result ]\tTransition complete: %s", text);
-#endif
+	crm_info("Transition \"complete\": %s", text);
 
 	print_state(TRUE);
 	initialize_graph();
 
-#ifdef TESTING
-	g_main_quit(mainloop);
-	return;
-#endif
-	
 	cmd = create_request(CRM_OP_TECOMPLETE, NULL, NULL,
 			     CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
-	
 	ha_msg_add(cmd, "message", text);
+
+#ifdef TESTING
+	crm_log_message(LOG_INFO, cmd);
+	g_main_quit(mainloop);
+	return;
+#else
 	send_ipc_message(crm_ch, cmd);
+#endif	
 }
 
 void
-print_state(gboolean to_file)
+print_state(int log_level)
 {
-	if(to_file) {
-		do_crm_log(LOG_DEBUG, __FUNCTION__, DEVEL_DIR"/te.log",
-			   "Start Transitioner state\n");
-	}
-	crm_debug("#!!#!!# Start Transitioner state");
+	
+	do_crm_log(log_level, __FUNCTION__, NULL, "###########");
 	if(graph == NULL) {
-		crm_debug("\tEmpty transition graph");
-		crm_debug("#!!#!!# End Transitioner state");
-		if(to_file) {
-			do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/te.log",
-				"\tEmpty transition graph\n"
-				"End Transitioner state");
-		}
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "\tEmpty transition graph");
+		do_crm_log(log_level, __FUNCTION__, NULL, "###########");
 		return;
 	}
 
 	slist_iter(
 		synapse, synapse_t, graph, lpc,
 
-		crm_debug("Synapse %d %s",
+		do_crm_log(log_level, __FUNCTION__, NULL, "Synapse %d %s",
 			  synapse->id,
 			  synapse->complete?"has completed":"is pending");
 		
-		if(to_file) {
-			do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/te.log",
-				   "Synapse %d %s",
-				   synapse->id,
-				   synapse->complete?"has completed":"is pending");
-		}
 		if(synapse->complete == FALSE) {
 			slist_iter(
 				input, action_t, synapse->inputs, lpc2,
-				
-				print_input("\t", input, to_file);
-				
+				print_input("\t", input, log_level+1);
 				);
 		}
 		
 		slist_iter(
 			action, action_t, synapse->actions, lpc2,
-
-			print_action("\t", action, to_file);
-
+			print_action("\t", action, log_level);
 			);
 		);
 	
-	crm_debug("#!!#!!# End Transitioner state");	
-	if(to_file) {
-		do_crm_log(LOG_DEBUG, __FUNCTION__, DEVEL_DIR"/te.log",
-			   "End Transitioner state");
+	do_crm_log(log_level, __FUNCTION__, NULL, "###########");
+}
+
+void
+print_input(const char *prefix, action_t *input, int log_level) 
+{
+	do_crm_log(log_level, __FUNCTION__, NULL, "%s[Input %d] %s (%s)",
+		   prefix, input->id,
+		   input->complete?"Satisfied":"Pending",
+		   actiontype2text(input->type));
+
+	if(input->complete == FALSE) {
+		crm_log_xml(log_level, "\t  Raw input", input->xml);
 	}
 }
 
 void
-print_input(const char *prefix, action_t *input, gboolean to_file) 
+print_action(const char *prefix, action_t *action, int log_level) 
 {
-	crm_debug("%s[Input %d] %s (%s)", prefix, input->id,
-		  input->complete?"Satisfied":"Pending",
-		  actiontype2text(input->type));
-
-	crm_xml_trace(input->xml, "\t  Raw input");
-
-	if(to_file) {
-		do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/te.log",
-			   "%s[Input %d] %s",
-			   prefix, input->id, input->complete?"Satisfied":"Pending");
-	}	
-}
-
-void
-print_action(const char *prefix, action_t *action, gboolean to_file) 
-{
-	crm_debug("%s[Action %d] %s (%d - %s fail)",
-		  prefix,
-		  action->id,
-		  action->complete?"Completed":
+	do_crm_log(log_level, __FUNCTION__, NULL,
+		   "%s[Action %d] %s (%d - %s fail)",
+		   prefix,
+		   action->id,
+		   action->complete?"Completed":
 			action->invoked?"In-flight":"Pending",
-		  action->type,
-		  action->can_fail?"can":"cannot");
+		   action->type,
+		   action->can_fail?"can":"cannot");
+	
+	do_crm_log(log_level, __FUNCTION__, NULL, "%s  timeout=%d, timer=%d",
+		   prefix,
+		   action->timeout,
+		   action->timer->source_id);
 
-	crm_debug("%s  timeout=%d, timer=%d",
-		  prefix,
-		  action->timeout,
-		  action->timer->source_id);
-
-	crm_xml_trace(action->xml, "\t  Raw action");
-
-	if(to_file) {
-		do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/te.log",
-			"%s[Action %d] %s (%s: %s %s on %s)",
-			prefix,
-			action->id,
-			action->complete?"Completed":
-			action->invoked?"In-flight":"Pending",
-			actiontype2text(action->type),
-			crm_element_value(action->xml, XML_LRM_ATTR_TASK),
-			crm_element_value(action->xml, XML_LRM_ATTR_RSCID),
-			crm_element_value(action->xml, XML_LRM_ATTR_TARGET));
-	}		  
+	if(action->complete == FALSE) {
+		crm_log_xml(log_level, "\t  Raw action", action->xml);
+	}
 }
 
 gboolean
@@ -296,15 +260,10 @@ do_update_cib(crm_data_t *xml_action, int status)
 
 	fragment = create_cib_fragment(state, NULL);
 	
-#ifdef MSG_LOG
-	do_crm_log(LOG_DEBUG, __FUNCTION__, DEVEL_DIR"/te.log",
-		   "[Result ]\tUpdate CIB with \"%s\" (%s): %s %s on %s",
+	do_crm_log(LOG_DEBUG, __FUNCTION__, NULL,
+		   "Updating CIB with \"%s\" (%s): %s %s on %s",
 		   status<0?"new action":XML_ATTR_TIMEOUT,
 		   crm_element_name(xml_action), crm_str(task), rsc_id, target);
-	do_crm_log(LOG_DEBUG, __FUNCTION__, DEVEL_DIR"/te.log",
-		   "[Sent ]\t%s",
-		   dump_xml_formatted(fragment));
-#endif
 	
 	rc = te_cib_conn->cmds->modify(
 		te_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, call_options);
@@ -336,7 +295,7 @@ timer_callback(gpointer data)
 	timer->source_id = -1;
 	
 	if(timer->reason == timeout_fuzz) {
-		crm_info("Transition timeout reached..."
+		crm_warn("Transition timeout reached..."
 			 " marking transition complete.");
 		send_success("success");
 		return TRUE;
@@ -344,7 +303,7 @@ timer_callback(gpointer data)
 	} else if(timer->reason == timeout_timeout) {
 		
 		/* global timeout - abort the transition */
-		crm_info("Transition timeout reached..."
+		crm_warn("Transition timeout reached..."
 			 " marking transition complete.");
 		
 		crm_warn("Some actions may not have been executed.");
@@ -380,8 +339,8 @@ start_te_timer(te_timer_t *timer)
 		crm_err("Tried to start timer with -ve period");
 		
 	} else {
-		crm_info("#!!#!!# Timer already running (%d)",
-			 timer->source_id);
+		crm_debug("#!!#!!# Timer already running (%d)",
+			  timer->source_id);
 	}
 	return FALSE;		
 }
