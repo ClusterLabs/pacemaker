@@ -37,6 +37,9 @@
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlutils.h>
 #include <crm/common/xmlvalues.h>
+
+#include <crm/cib/cib.h>
+
 #include <crmd.h>
 #include <crmd_messages.h>
 #include <string.h>
@@ -93,9 +96,12 @@ do_cib_control(long long action,
 	FNIN();
 	
 	if(action & stop_actions) {
-		if(stop_subsystem(this_subsys) == FALSE)
+#if INTEGRATED_CIB
+		// dont do anything, its embedded now
+#else
+		if(stop_subsystem(this_subsys) == FALSE) {
 			result = I_FAIL;
-		else {
+		} else {
 			int lpc = CLIENT_EXIT_WAIT;
 			int pid_status = -1;
 			while(lpc-- > 0
@@ -108,25 +114,31 @@ do_cib_control(long long action,
 			
 			if(CL_PID_EXISTS(this_subsys->pid)) {
 				cl_log(LOG_ERR,
-				       "Process %s is still active with pid=%d",
+				       "Process %s is still active [pid=%d]",
 				       this_subsys->command, this_subsys->pid);
 				result = I_FAIL;
 			} 
 		}
 
 		cleanup_subsystem(this_subsys);
+#endif
 	}
 
 	if(action & start_actions) {
 
 		if(cur_state != S_STOPPING) {
+#if INTEGRATED_CIB
+			if(startCib(CIB_FILENAME) == FALSE)
+				result = I_FAIL;
+#else
 			if(start_subsystem(this_subsys) == FALSE) {
 				result = I_FAIL;
 				cleanup_subsystem(this_subsys);
 			}
+#endif
 		} else {
 			cl_log(LOG_INFO,
-			       "Ignoring request to start %s while shutting down",
+			       "Ignoring request to start %s after shutdown",
 			       this_subsys->command);
 		}
 	}
@@ -151,10 +163,19 @@ do_cib_invoke(long long action,
 	
 	if(action & A_CIB_INVOKE) {
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
+#ifdef INTEGRATED_CIB
+		xmlNodePtr answer = process_cib_request(cib_msg, TRUE);
+		if(relay_message(answer, TRUE) == FALSE) {
+			cl_log(LOG_ERR, "Confused what to do with cib result");
+			xml_message_debug(answer, "Couldnt route: ");
+		}
+		free_xml(answer);
+#else
 		if(relay_message(cib_msg, FALSE) == FALSE) {
 			cl_log(LOG_ERR, "Confused what to do with message");
 			xml_message_debug(cib_msg, "Couldnt route: ");
 		}
+#endif	
 
 	} else if(action & A_CIB_BUMPGEN) {  
  		// check if the response was ok before next bit
@@ -166,11 +187,23 @@ do_cib_invoke(long long action,
 		 * whole thing
 		 */
 		xmlSetProp(new_options, XML_ATTR_FILTER_TYPE, section);
+#ifdef INTEGRATED_CIB
+		cib_msg = create_cib_request(new_options, NULL,
+					     CRM_OPERATION_BUMP);
+		
+		xmlNodePtr answer = process_cib_request(cib_msg, FALSE);
+
+		send_request(NULL, answer, CRM_OPERATION_STORE,
+			     NULL, CRM_SYSTEM_CRMD);
+		
+		free_xml(cib_msg);
+		free_xml(answer);
+#else 
 		send_request(new_options, NULL, CRM_OPERATION_BUMP,
 			     NULL, CRM_SYSTEM_CIB);
-		
+#endif	
   	} else if(action & A_UPDATE_NODESTATUS) {
-		
+
 	} else {
 		cl_log(LOG_ERR, "Unexpected action %s",
 		       fsa_action2string(action));

@@ -24,6 +24,7 @@
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlutils.h>
 #include <crm/common/msgutils.h>
+#include <crm/cib/cib.h>
 
 #include <crmd.h>
 #include <crmd_messages.h>
@@ -32,7 +33,6 @@
 
 FILE *msg_in_strm = NULL;
 FILE *router_strm = NULL;
-#define MSG_LOG 1
 
 fsa_message_queue_t fsa_message_queue = NULL;
 
@@ -350,6 +350,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	FNRET(hack_return_good);
 }
 
+
 /*
  * This method adds a copy of xml_response_data
  */
@@ -392,6 +393,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	int is_for_dc	= 0;
 	int is_for_dcib	= 0;
 	int is_for_crm	= 0;
+	int is_for_cib	= 0;
 	int is_local    = 0;
 	gboolean dont_cc= TRUE;
 	gboolean processing_complete = FALSE;
@@ -430,8 +432,9 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		FNRET(TRUE);
 	}
 	
-	is_for_dc   = (strcmp(CRM_SYSTEM_DC, sys_to) == 0);
+	is_for_dc   = (strcmp(CRM_SYSTEM_DC,   sys_to) == 0);
 	is_for_dcib = (strcmp(CRM_SYSTEM_DCIB, sys_to) == 0);
+	is_for_cib  = (strcmp(CRM_SYSTEM_CIB,  sys_to) == 0);
 	is_for_crm  = (strcmp(CRM_SYSTEM_CRMD, sys_to) == 0);
 	
 	is_local = 0;
@@ -456,10 +459,12 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	CRM_DEBUG2("sys_to      %s", sys_to);
 	CRM_DEBUG2("host_to     %s", host_to);
 #endif
-
+/*
 	if(AM_I_DC && sys_cc != NULL && strcmp(sys_cc, CRM_SYSTEM_DC) == 0) {
 		dont_cc = FALSE;
 	}
+*/
+	(void)sys_cc;
 	
 	if(is_for_dc || is_for_dcib) {
 		if(AM_I_DC) {
@@ -476,7 +481,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 			processing_complete = TRUE; // discard
 		}
 		
-	} else if(is_local && is_for_crm) {
+	} else if(is_local && (is_for_crm || is_for_cib)) {
 		ROUTER_RESULT("Message result: CRMd process");
 
 	} else if(is_local) {
@@ -537,12 +542,19 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 	if (client_channel != NULL) {
 		cl_log(LOG_DEBUG, "Sending message via channel %s.", sys);
 		send_xmlipc_message(client_channel, action);
+	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_CIB) == 0) {
+		cl_log(LOG_ERR,
+		       "Sub-system (%s) has been incorporated into the CRMd.",
+		       sys);
+		xml_message_debug(action, "Change the way we handle");
+		relay_message(process_cib_request(action, TRUE), TRUE);
+		
 	} else {
 		cl_log(LOG_ERR,
 		       "Unknown Sub-system (%s)... discarding message.",
 		       sys);
-		FNOUT();
 	}    
+	FNOUT();
 }	
 
 gboolean
@@ -682,6 +694,8 @@ handle_message(xmlNodePtr stored_msg)
 	const char *type     = xmlGetProp(stored_msg, XML_ATTR_MSGTYPE);
 	const char *op       = xmlGetProp(options,    XML_ATTR_OP);
 
+//	xml_message_debug(stored_msg, "Processing message");
+
 	if(type == NULL || op == NULL) {
 		cl_log(LOG_ERR, "Ignoring message (type=%s), (op=%s)",
 		       type, op);
@@ -751,6 +765,7 @@ handle_message(xmlNodePtr stored_msg)
 
 			next_input = I_CIB_UPDATE;
 			
+#ifndef INTEGRATED_CIB
 		} else if(AM_I_DC && strcmp(op, CRM_OPERATION_BUMP) == 0) {
 
 			xmlNodePtr data =
@@ -758,7 +773,8 @@ handle_message(xmlNodePtr stored_msg)
 			
 			send_request(NULL, data, CRM_OPERATION_STORE,
 				     NULL, CRM_SYSTEM_CRMD);
-
+#endif
+			
 		} else if (AM_I_DC && strcmp(op, CRM_OPERATION_STORE) == 0) {
 
 			/* if there was any result, we need to merge it back
@@ -773,8 +789,33 @@ handle_message(xmlNodePtr stored_msg)
 			if(status != NULL
 			   && strcmp(status, "ok") == 0
 			   && data != NULL) {
-				send_request(NULL, data, CRM_OPERATION_UPDATE,
-					     NULL, CRM_SYSTEM_CIB);
+
+				CRM_DEBUG("Updating the CIB with the results of a store");
+				
+#ifdef INTEGRATED_CIB
+				/* do a replace or an update? */
+				xmlNodePtr req =
+					create_cib_request(NULL, data,
+							   CRM_OPERATION_UPDATE);
+				xmlNodePtr resp =
+					process_cib_request(req, FALSE);
+
+				// TODO: check the return status
+
+				next_input = I_CIB_UPDATE;
+				
+				free_xml(resp);
+				free_xml(req);
+				
+#else
+				gboolean sent =
+					send_request(NULL, data,
+						     CRM_OPERATION_UPDATE,
+						     NULL, CRM_SYSTEM_CIB);
+				if(sent == FALSE) {
+					next_input = I_FAIL;
+				}
+#endif
 
 			} else if(data != NULL) {
 				cl_log(LOG_ERR,
@@ -782,7 +823,8 @@ handle_message(xmlNodePtr stored_msg)
 				       status);
 				
 			} else {
-				;
+				CRM_DEBUG3("Status=%s, data=%p",
+					  status, data);
 			}
 			
 
@@ -825,6 +867,10 @@ handle_message(xmlNodePtr stored_msg)
 		cl_log(LOG_ERR, "Unexpected message type %s", type);
 			
 	}
+
+/* 	CRM_DEBUG3("%s: Next input is %s", __FUNCTION__, */
+/* 		   fsa_input2string(next_input)); */
+	
 		
 	return next_input;
 		

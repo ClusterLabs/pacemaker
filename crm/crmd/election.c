@@ -440,13 +440,13 @@ do_announce(long long action,
 	if(we are sick) {
 		log error ;
 		FNRET(I_NULL);
-	} 
+	} else 
 #endif
-
 	if(AM_I_OPERATIONAL) {
-		send_request(NULL, NULL, CRM_OPERATION_ANNOUNCE, NULL, CRM_SYSTEM_DC);
+		send_request(NULL, NULL, CRM_OPERATION_ANNOUNCE,
+			     NULL, CRM_SYSTEM_DC);
 	} else {
-		CRM_DEBUG("Delay announcement until we have finished local startup");
+		/* Delay announce until we have finished local startup */
 		FNRET(I_NULL);
 	}
 	
@@ -505,10 +505,14 @@ do_process_welcome_ack(long long action,
 	 *
 	 * Forward the ack so that the reply will be directed appropriatly
 	 */
+	xmlNodePtr cib_copy = get_cib_copy();
+	xmlNodePtr frag = create_cib_fragment(cib_copy, "all");
 
 	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-	set_xml_property_copy(msg_options, "forward_to", join_from);
-	send_request(msg_options, NULL, CRM_OPERATION_FORWARD, NULL, CRM_SYSTEM_CIB);
+	set_xml_property_copy(msg_options, XML_ATTR_VERBOSE, "true");
+
+	send_request(msg_options, frag, CRM_OPERATION_STORE,
+		     join_from, CRM_SYSTEM_CIB);
 	
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {
