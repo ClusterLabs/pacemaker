@@ -214,13 +214,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 			crm_info("Wait until something else happens");
 			break;
 
-		} else if(actions == A_NOTHING && is_message() == FALSE) {
-			crm_debug("Nothing to do... terminate the loop");
-			next_input = I_NULL;
-			break;
-
-		} else if(is_message() &&
-			  (fsa_data == NULL || actions == A_NOTHING)) {
+		} else if((is_message() && fsa_data == NULL)
+			  || (is_message() && actions == A_NOTHING && next_input == I_NULL)) {
 			fsa_data_t *stored_msg = NULL;
 			crm_debug("Finished with current input..."
 				  " Checking messages (%d remaining)",

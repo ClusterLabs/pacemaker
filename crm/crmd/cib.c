@@ -160,7 +160,8 @@ do_cib_invoke(long long action,
 			   || strcmp(op, CRM_OP_REPLACE) == 0
 			   || strcmp(op, CRM_OP_RETRIVE_CIB) == 0
 			   || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
-				result = I_CIB_UPDATE;
+				register_fsa_input(
+					C_IPC_MESSAGE, I_CIB_UPDATE, cib_msg);
 				
 			} else if(strcmp(op, CRM_OP_RETRIVE_CIB) == 0) {
 				crm_info("Retrieved latest CIB from %s",
@@ -169,7 +170,8 @@ do_cib_invoke(long long action,
 
 			} else if(strcmp(op, CRM_OP_ERASE) == 0) {
 				/* regenerate everyone's state and our node entry */
-				result = I_ELECTION_DC;	
+				register_fsa_input(
+					C_UNKNOWN, I_ELECTION_DC, NULL);
 			}
 			
 			/* the TENGINE will get CC'd by other means. */
@@ -190,6 +192,7 @@ do_cib_invoke(long long action,
 /* 			return I_REQUEST; */
 			
 		}
+		
 		return result;
 
 	} else if(action & A_CIB_BUMPGEN) {
@@ -273,6 +276,7 @@ invoke_local_cib(xmlNodePtr msg_options,
 
 	crm_free(fsa_data);
 	free_xml(request);
-	
-	return result;
+
+	register_fsa_input(C_UNKNOWN, result, NULL);
+	return I_NULL;
 }
