@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.8 2005/02/11 21:58:46 andrew Exp $ */
+/* $Id: io.c,v 1.9 2005/02/15 16:09:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -191,8 +191,41 @@ initializeCib(crm_data_t *new_cib)
 		crm_trace("CIB initialized");
 		return TRUE;
 	}
-	crm_warn("CIB Verification failed");
-	return FALSE;
+
+	if(initialized == FALSE) {
+		crm_warn("CIB Verification failed");
+
+	} else {
+		const char *option = "suppress_cib_writes";
+		const char *value = NULL;
+		crm_data_t *config = get_object_root(
+			XML_CIB_TAG_CRMCONFIG, new_cib);
+		
+		crm_data_t * a_default = find_entity(
+			config, XML_CIB_TAG_NVPAIR, option, FALSE);
+
+		if(a_default != NULL) {
+			value = crm_element_value(
+				a_default, XML_NVPAIR_ATTR_VALUE);
+		}
+
+		cib_writes_enabled = TRUE;
+		if(value == NULL) {
+			crm_warn("Option %s not set", option);
+
+		} else if(safe_str_eq(value, XML_BOOLEAN_TRUE)) {
+			cib_writes_enabled = FALSE;
+		}
+
+		if(cib_writes_enabled) {
+			crm_info("CIB disk writes to %s enabled", CIB_FILENAME);
+		} else {
+			crm_notice("Disabling CIB disk writes");
+		}
+		
+	}
+
+	return initialized;
 }
 
 int
