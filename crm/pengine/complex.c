@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.12 2005/02/11 22:11:29 andrew Exp $ */
+/* $Id: complex.c,v 1.13 2005/02/14 22:36:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -268,7 +268,7 @@ void
 common_agent_constraints(
 	GListPtr node_list, lrm_agent_t *agent, const char *id) 
 {
-#if 1
+#if 0
 	slist_iter(
 		node, node_t, node_list, lpc,
 		

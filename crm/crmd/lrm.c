@@ -451,12 +451,13 @@ do_lrm_query(gboolean is_replace)
 	crm_data_t *xml_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	crm_data_t *xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
 	crm_data_t *rsc_list  = create_xml_node(xml_data,XML_LRM_TAG_RESOURCES);
+
+#if 0
+	/* Build a list of supported agents and metadata */
 	crm_data_t *xml_agent_list = create_xml_node(xml_data, XML_LRM_TAG_AGENTS);
 	crm_data_t *xml_metadata_list = create_xml_node(xml_data, "metatdata");
-
-	/* Build a list of supported agents and metadata */
 	build_suppported_RAs(xml_metadata_list, xml_agent_list);
-	
+#endif
 	/* Build a list of active (not always running) resources */
 	build_active_RAs(rsc_list);
 
