@@ -86,7 +86,7 @@ addResource(xmlNodePtr cib, cibResource *xml_node)
 			// create it?
 			add_res = -4;
 		} else {
-			xmlAddChild(new_parent, xml_node);
+			add_node_copy(new_parent, xml_node);
 		}
 	}
 
@@ -208,7 +208,7 @@ addStatus(xmlNodePtr cib, cibStatus *xml_node)
 			// create it?
 			add_res = -4;
 		} else {
-			xmlAddChild(new_parent, xml_node);
+			add_node_copy(new_parent, xml_node);
 		}
 	}
 
@@ -338,7 +338,7 @@ addConstraint(xmlNodePtr cib, cibConstraint *xml_node)
 			// create it?
 			add_res = -4;
 		} else {
-			xmlAddChild(new_parent, xml_node);
+			add_node_copy(new_parent, xml_node);
 		}
 	}
 
@@ -451,7 +451,7 @@ addHaNode(xmlNodePtr cib, cibHaNode *xml_node)
 			// create it?
 			add_res = -4;
 		} else {
-			xmlAddChild(new_parent, xml_node);
+			add_node_copy(new_parent, xml_node);
 		}
 	}
 	
@@ -577,11 +577,9 @@ handle_object_children(xmlNodePtr new_parent,
 		cib_delete_node(dest);
 		
 		if (strcmp("add", action) == 0) {
-			xmlNodePtr node_copy = xmlCopyNode(iter, 1);
-			
 			// remove the action property first
+			xmlNodePtr node_copy = add_node_copy(new_parent, node_copy);
 			xmlUnsetProp(node_copy, XML_CIB_ATTR_ACTION);
-			xmlAddChild(new_parent, node_copy);
 		}
 	}
 	FNOUT();

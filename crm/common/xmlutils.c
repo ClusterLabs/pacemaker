@@ -202,49 +202,31 @@ find_entity_nested(xmlNodePtr parent,
 }
 
 
-int
-add_xmlnode_to_cib(xmlNodePtr cib,
-		   const char *node_path,
-		   xmlNodePtr xml_node)
-{
-	int ret = -1;
-	xmlNodePtr parent = NULL;
-	FNIN();
-	
-	parent = find_xml_node(cib, node_path);
-
-	if (parent == NULL) {
-		CRM_DEBUG2("could not find parent for new node (%s).",
-			   xml_node->name);
-		ret = -2;
-	} else if (xmlAddChild(parent, xml_node) != NULL) {
-		ret = 0;
-	}
-
-	FNRET(ret);
-}
-
 void
 copy_in_properties(xmlNodePtr src, xmlNodePtr target)
 {
+#if 0
+	xmlAttrPtr prop_iter = NULL;
 	FNIN();
-	xmlCopyPropList(target, src->properties);
-	FNOUT();
-}
 
-// remove this function ?
-xmlNodePtr
-xmlLinkedCopyNoSiblings(xmlNodePtr src, int recursive)
-{
-	xmlNodePtr node_copy = NULL;
-	FNIN();
-	/*
-	 * keep the properties linked so there is only one point of update
-	 *   but we dont want the sibling pointers
-	 */
-	node_copy = xmlCopyNode(src, recursive);
-	//node_copy->properties = src->properties;
-	FNRET(node_copy);
+	prop_iter = src->properties;
+	while(prop_iter != NULL) {
+		const char *local_prop_name = prop_iter->name;
+		const char *local_prop_value =
+			xmlGetProp(src, local_prop_name);
+		
+		set_xml_property_copy(target,
+				      local_prop_name,
+				      local_prop_value);
+		
+		prop_iter = prop_iter->next;
+		
+	}
+	
+	FNOUT();
+#else
+	xmlCopyPropList(target, src->properties);
+#endif
 }
 
 char * 
@@ -263,8 +245,6 @@ xml_message_debug(xmlNodePtr msg)
 	ha_free(msg_buffer);
 	FNOUT();
 }
-
-
 
 char * 
 dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
@@ -314,16 +294,15 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 	FNRET((char*)xml_message); 
 }
 
-int
-add_node_copy(xmlNodePtr cib, const char *node_path, xmlNodePtr xml_node)
+xmlNodePtr
+add_node_copy(xmlNodePtr new_parent, xmlNodePtr xml_node)
 {
-	int ret = -1;
 	xmlNodePtr node_copy = NULL;
 	
 	FNIN();
-	node_copy = xmlCopyNode(xml_node, 1);
-	ret = add_xmlnode_to_cib(cib, node_path, node_copy);
-	FNRET(ret);
+	node_copy = copy_xml_node_recursive(xml_node, 1);
+	xmlAddChild(new_parent, node_copy);
+	FNRET(node_copy);
 }
 
 xmlAttrPtr
@@ -331,15 +310,21 @@ set_xml_property_copy(xmlNodePtr node,
 		      const xmlChar *name,
 		      const xmlChar *value)
 {
+	const char *parent_name = NULL;
 	const char *local_name = NULL;
 	const char *local_value = NULL;
 
 	xmlAttrPtr ret_value = NULL;
 	FNIN();
 
-	CRM_DEBUG3("Setting %s to %s", name, value);
+	if(node != NULL)
+		parent_name = node->name;
+	
+	CRM_DEBUG4("[%s] Setting %s to %s", parent_name, name, value);
 
 	if (name == NULL)
+		ret_value = NULL;
+	else if(node == NULL)
 		ret_value = NULL;
 	else {
 		if (value == NULL)
@@ -379,27 +364,6 @@ create_xml_node(xmlNodePtr parent, const char *name)
 	FNRET(ret_value);
 }
 
-xmlNodePtr
-create_xml_doc_node(xmlDocPtr parent, const char *name)
-{
-	const char *local_name = NULL;
-	const char *parent_name = NULL;
-	xmlNodePtr ret_value = NULL;
-	FNIN();
-
-
-	if (parent == NULL || name == NULL)
-		ret_value = NULL;
-	else {
-		parent_name = parent->name;
-		local_name = ha_strdup(name);
-		ret_value = xmlNewDocNode(parent, NULL, local_name, NULL);
-	}
-	
-	CRM_DEBUG3("Created node [%s [%s]]", parent_name, local_name);
-	FNRET(ret_value);
-}
-
 void
 unlink_xml_node(xmlNodePtr node)
 {
@@ -420,25 +384,14 @@ free_xml(xmlNodePtr a_node)
 		xmlFreeDoc(a_node->doc);
 	else
 	{
-		CRM_DEBUG2("Siblings: %p", a_node->next);
-		CRM_DEBUG2("Parent: %p", a_node->parent);
-		CRM_DEBUG2("Doc: %p", a_node->doc);
-		CRM_DEBUG2("Children: %p", a_node->children);
-		
 		/* make sure the node is unlinked first */
 		xmlUnlinkNode(a_node);
 
 #if 0
-	/* set a new doc, wont delete without one */
+	/* set a new doc, wont delete without one? */
 		xmlDocPtr foo = xmlNewDoc("1.0");
 		xmlDocSetRootElement(foo, a_node);
 		xmlSetTreeDoc(a_node,foo);
-
-		CRM_DEBUG2("Siblings: %p", a_node->next);
-		CRM_DEBUG2("Parent: %p", a_node->parent);
-		CRM_DEBUG2("Doc: %p", a_node->doc);
-		CRM_DEBUG2("Children: %p", a_node->children);
-
 		xmlFreeDoc(foo);
 #else
 		xmlFreeNode(a_node);
@@ -458,3 +411,51 @@ set_node_tstamp(xmlNodePtr a_node)
 	ha_free(since_epoch);
 }
 
+
+xmlNodePtr
+copy_xml_node_recursive(xmlNodePtr src_node, int recursive)
+{
+#if 0
+	const char *local_name = NULL;
+	xmlNodePtr local_node = NULL, node_iter = NULL, local_child = NULL;
+	xmlAttrPtr prop_iter = NULL;
+
+	FNIN();
+	
+	if(src_node != NULL && src_node->name != NULL) {
+		local_node = create_xml_node(NULL, src_node->name);
+
+		prop_iter = src_node->properties;
+		while(prop_iter != NULL) {
+			const char *local_prop_name = prop_iter->name;
+			const char *local_prop_value =
+				xmlGetProp(src_node, local_prop_name);
+
+			set_xml_property_copy(local_node,
+					      local_prop_name,
+					      local_prop_value);
+			
+			prop_iter = prop_iter->next;
+			
+		}
+
+		node_iter = src_node->children;
+		while(node_iter != NULL) {
+			local_child = copy_xml_node_recursive(node_iter, 1);
+			if(local_child != NULL) {
+				xmlAddChild(local_node, local_child);
+				CRM_DEBUG3("Copied node [%s [%s]", local_name, local_child->name);
+			} 				
+			node_iter = node_iter->next;
+		}
+
+		CRM_DEBUG2("Returning [%s]", local_node->name);
+		FNRET(local_node);
+	}
+
+	CRM_DEBUG("Returning null");
+	FNRET(NULL);
+#else
+	return xmlCopyNode(src_node, recursive);
+#endif
+}

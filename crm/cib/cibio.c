@@ -74,11 +74,10 @@ createEmptyCib(void)
 {
 	(void)_ha_msg_h_Id; // until the lmb cleanup
 	// real code...
-	xmlDocPtr cib = xmlNewDoc("1.0");
+
 	xmlNodePtr cib_root = NULL, config = NULL, status = NULL;
 	
-	cib->children = create_xml_doc_node(cib, XML_TAG_CIB);
-	cib_root = cib->children;
+	cib_root = create_xml_node(NULL, XML_TAG_CIB);
 
 	config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
 	status = create_xml_node(cib_root, XML_CIB_TAG_STATUS);
@@ -94,9 +93,8 @@ createEmptyCib(void)
 	create_xml_node(config, XML_CIB_TAG_RESOURCES);
 	create_xml_node(config, XML_CIB_TAG_CONSTRAINTS);
 	
-	xmlNodePtr root = xmlDocGetRootElement(cib);
-	if (verifyCibXml(root)) {
-		FNRET(root);
+	if (verifyCibXml(cib_root)) {
+		FNRET(cib_root);
 	}
 	cl_log(LOG_CRIT,
 	       "The generated CIB did not pass integrity testing!!"
@@ -240,7 +238,7 @@ getCibSection(const char *section)
 
 	// make sure the siblings dont turn up as well
 	if (res != NULL)
-		res = xmlCopyNode(res, 1);
+		res = copy_xml_node_recursive(res, 1);
 	else if (the_cib == NULL) {
 		cl_log(LOG_CRIT, "The CIB has not been initialized!");
 	} else
@@ -255,8 +253,7 @@ uninitializeCib(void)
 	xmlNodePtr tmp_cib = the_cib;
 	FNIN();
 	
-	if(tmp_cib == NULL)
-	{
+	if(tmp_cib == NULL) {
 		cl_log(LOG_ERR, "The CIB has already been deallocated.");
 		FNRET(FALSE);
 	}
@@ -288,13 +285,13 @@ uninitializeCib(void)
 gboolean
 initializeCib(xmlNodePtr new_cib)
 {
-	if (verifyCibXml(new_cib))
-	{
+	if (verifyCibXml(new_cib)) {
 
 		initialized = FALSE;
 		the_cib = new_cib;
 
 		// update search paths
+		/* not used yet...
 		node_search =
 			get_object_root(XML_CIB_TAG_NODES, new_cib);
 		resource_search =
@@ -303,6 +300,7 @@ initializeCib(xmlNodePtr new_cib)
 			get_object_root(XML_CIB_TAG_CONSTRAINTS, new_cib);
 		status_search =
 			get_object_root(XML_CIB_TAG_STATUS, new_cib);
+		*/
 		initialized = TRUE;
 
 		CRM_DEBUG("CIB initialized");
@@ -476,12 +474,18 @@ activateCibXml(xmlNodePtr new_cib)
 		error_code = -5;
 	}
 
-	// Make sure memory is cleaned up appropriately
-	if (error_code < 0)
+	CRM_DEBUG2("New CIB %p", new_cib);
+	CRM_DEBUG2("Saved CIB %p", saved_cib);
+
+// Make sure memory is cleaned up appropriately
+	if (error_code < 0) {
+		CRM_DEBUG2("Freeing new CIB %p", new_cib);
 		free_xml(new_cib);
-	else
+	} else {
+		CRM_DEBUG2("Freeing saved CIB %p", saved_cib);
 		free_xml(saved_cib);
-    
+	}
+	
 	FNRET(error_code);
     
 }

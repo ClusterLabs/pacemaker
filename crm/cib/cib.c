@@ -65,11 +65,6 @@ int updateCibStatus(xmlNodePtr cib,
 		    const char *node_id,
 		    const char *status);
 
-int add_xmlnode_to_cibToResource(xmlNodePtr cib,
-				 const char *res_id,
-				 const char *node_id,
-				 const char *weight);
-
 cibConstraint *createInternalConstraint(const char *res_id_1,
 					const char *instance,
 					const char *node_id,
@@ -146,8 +141,7 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 
 		buffer = (char*)msg->msg_body;
 		cl_log(LOG_DEBUG, "Got xml [text=%s]", buffer);
-		doc = xmlParseMemory(buffer, strlen(buffer));
-		msg->msg_done(msg);
+		doc = xmlParseMemory(ha_strdup(buffer), strlen(buffer));
 
 		CRM_DEBUG("Finished parsing buffer as XML");
 		if (doc != NULL) {
@@ -169,11 +163,9 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 					    answer) == FALSE)
 					cl_log(LOG_WARNING,
 					       "Cib answer could not be sent");
-#if BUG
-				/* currently we get a segfault here */
+
 				if(answer != NULL)
 					free_xml(answer);
-#endif			
 			} else if (root_xml_node != NULL)
 				cl_log(LOG_INFO,
 				       "Received a message destined for (%s) "
@@ -189,6 +181,8 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 			       "XML Buffer was not valid...\n Buffer: (%s)",
 			       buffer);
 		}
+		msg->msg_done(msg);
+
 	}
 	
 	CRM_DEBUG2("Processed %d messages", lpc);
@@ -199,57 +193,6 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 	FNRET(hack_return_good);
 }
 
-
-int
-add_xmlnode_to_cibToResource(xmlNodePtr cib,
-			     const char *res_id,
-			     const char *node_id,
-			     const char *weight)
-{
-	xmlNodePtr resource = NULL, node_entry = NULL;
-	resource = findResource(cib, res_id);
-	if (resource != NULL)
-	{
-		if (findHaNode(cib, node_id) == NULL)
-		{
-			cl_log(LOG_CRIT,
-			       "Node (%s) does not exist, cannot be added "
-			       "to Resource (%s).", node_id, res_id);	
-			FNRET(-1);
-		}
-
-		CRM_DEBUG3("Attempting to add allowed " XML_CIB_TAG_NODE
-			   " (%s) to " XML_CIB_TAG_RESOURCE " (%s).",
-			   node_id, res_id);
-	
-		node_entry = find_entity(resource, "node", node_id, FALSE);
-		if (node_entry == NULL)
-			node_entry = create_xml_node(resource, "node");
-		else
-			CRM_DEBUG3("Allowed node (%s) already present for "
-				   XML_CIB_TAG_RESOURCE " (%s), updating.",
-				   node_id, res_id);
-	
-		set_xml_property_copy(node_entry,
-				      XML_ATTR_ID,
-				      node_id);
-		set_xml_property_copy(node_entry,
-				      XML_CIB_ATTR_WEIGHT,
-				      weight);
-		set_node_tstamp(node_entry);
-	}
-	else
-	{
-		cl_log(LOG_CRIT,
-		       "%s (%s) does not exist, cannot add allowed %s (%s)",
-		       XML_CIB_TAG_RESOURCE,
-		       res_id,
-		       XML_CIB_TAG_NODE,
-		       node_id);
-		FNRET(-2);
-	}
-	FNRET(0);
-}
 
 int
 updateCibStatus(xmlNodePtr cib,

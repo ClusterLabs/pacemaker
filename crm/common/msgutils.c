@@ -80,41 +80,6 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 	FNRET(root_xml_node);
 }
 
-#if 0
-// hopefully deprecated in favour of the send_* functions at the bottom
-xmlNodePtr
-createCrmMsg(xmlNodePtr data, gboolean is_request)
-{
-	xmlDocPtr doc;
-	const char *message_type = XML_MSG_TAG_RESPONSE;
-	FNIN();
-
-	if (is_request) message_type = XML_MSG_TAG_REQUEST;
-    
-	doc = xmlNewDoc("1.0");
-	doc->children = create_xml_doc_node(doc, XML_MSG_TAG);
-
-
-	// the root_xml_node node
-	set_xml_property_copy(doc->children,
-			      XML_ATTR_VERSION,
-			      CRM_VERSION);
-	set_xml_property_copy(doc->children,
-			      XML_MSG_ATTR_MSGTYPE,
-			      message_type);
-	set_node_tstamp(doc->children);
-    
-	// create a place holder for the eventual data
-	xmlNodePtr xml_node   = create_xml_node(doc->children, NULL,
-						message_type, NULL);
-
-	if (data != NULL)
-		xmlAddChild(xml_node, data);
-    
-	FNRET(xmlDocGetRootElement(doc));
-}
-#endif
-
 const char *
 generateReference(void)
 {
@@ -185,6 +150,7 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	const char *to = NULL;
 	const char *type = NULL;
 	const char *crm_msg_reference = NULL;
+	xmlNodePtr message = NULL, action = NULL;
 	
 	FNIN();
 	if (root_xml_node == NULL)
@@ -239,8 +205,8 @@ validate_crm_message(xmlNodePtr root_xml_node,
 		FNRET(NULL);
 	}
     
-	xmlNodePtr action = find_xml_node(root_xml_node, type);
-	if (action == NULL) {
+	message = find_xml_node(root_xml_node, type);
+	if (message == NULL) {
 		cl_log(LOG_INFO,
 		       "Malformed XML.  Message type (%s) not found.",
 		       type);
@@ -261,7 +227,7 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	sprintf(action_target, "%s_%s", action_sys, type);
 	action_target[action_len-1] = '\0';
     
-	action = find_xml_node(action, action_target);
+	action = find_xml_node(message, action_target);
 	if (action == NULL) {
 		cl_log(LOG_ERR,
 		       "Malformed XML.  Message action (%s) not found... "
@@ -425,23 +391,20 @@ send_hello_message(IPC_Channel *ipc_client,
 		return;
 	}
 
-	xmlDocPtr hello = xmlNewDoc("1.0");
-
-	hello->children = create_xml_doc_node(hello, "hello");
-	set_xml_property_copy(hello->children,
+	hello_node = create_xml_node(NULL, "hello");
+	set_xml_property_copy(hello_node,
 			      "client_uuid",
 			      uid);
-	set_xml_property_copy(hello->children,
+	set_xml_property_copy(hello_node,
 			      "client_name",
 			      client_name);
-	set_xml_property_copy(hello->children,
+	set_xml_property_copy(hello_node,
 			      "major_version",
 			      major_version);
-	set_xml_property_copy(hello->children,
+	set_xml_property_copy(hello_node,
 			      "minor_version",
 			      minor_version);
 
-	hello_node = xmlDocGetRootElement(hello);
 	send_xmlipc_message(ipc_client, hello_node);
 
 	free_xml(hello_node);
@@ -567,43 +530,44 @@ send_ipc_request(IPC_Channel *ipc_channel, xmlNodePtr xml_msg_node,
 		crm_msg_reference = generateReference();
     
 	// host_from will get set for us if necessary by CRMd when routed
-	xmlDocPtr doc = xmlNewDoc("1.0");
-	doc->children = create_xml_doc_node(doc, XML_MSG_TAG);
+	xmlNodePtr request = create_xml_node(NULL, XML_MSG_TAG);
 
 	// the root_xml_node node
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(request,
 			      XML_ATTR_VERSION,
 			      CRM_VERSION);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(request,
 			      XML_MSG_ATTR_MSGTYPE,
 			      message_type);
-	set_node_tstamp(doc->children);
-	set_xml_property_copy(doc->children,
+	set_node_tstamp(request);
+	set_xml_property_copy(request,
 			      XML_MSG_ATTR_REFERENCE,
 			      crm_msg_reference);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(request,
 			      XML_MSG_ATTR_HOSTTO,
 			      host_to);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(request,
 			      XML_MSG_ATTR_SYSTO,
 			      sys_to);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(request,
 			      XML_MSG_ATTR_SYSFROM,
 			      true_from);
 
 	// create a place holder for the eventual data
-	xmlNodePtr xml_node = create_xml_node(doc->children, message_type);
+	xmlNodePtr xml_node = create_xml_node(request, message_type);
 
 	CRM_DEBUG("Created request wrapper...");
-	xml_message_debug(xmlDocGetRootElement(doc));
-    
-	if (xml_msg_node != NULL)
-	{
-		xmlAddChild(xml_node, xmlCopyNode(xml_msg_node, 1));
+	xml_message_debug(request);
+	
+	if (xml_msg_node != NULL) {
+		add_node_copy(xml_node, xml_msg_node);
 	}
 
+	CRM_DEBUG("Final request...");
+	xml_message_debug(request);
+
 	was_sent =
-		send_xmlipc_message(ipc_channel, xmlDocGetRootElement(doc));
+		send_xmlipc_message(ipc_channel, request);
 
 	free_xml(xml_node);
     
@@ -706,48 +670,47 @@ create_reply(xmlNodePtr original_request,
 	CRM_DEBUG2("\t%s", type);
 #endif
 	
-	xmlDocPtr doc = xmlNewDoc("1.0");
-	doc->children = create_xml_doc_node(doc, XML_MSG_TAG);
+	xmlNodePtr reply = create_xml_node(NULL, XML_MSG_TAG);
 
 	// the root_xml_node node
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(reply,
 			      XML_ATTR_VERSION,
 			      CRM_VERSION);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(reply,
 			      XML_MSG_ATTR_MSGTYPE, message_type);
-	set_node_tstamp(doc->children);
+	set_node_tstamp(reply);
 
 	/* since this is a reply, we reverse the from and to */
 
 	// HOSTTO will be ignored if it is to the DC anyway.
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(reply,
 			      XML_MSG_ATTR_HOSTTO,
 			      host_from);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(reply,
 			      XML_MSG_ATTR_HOSTFROM,
 			      host_to);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(reply,
 			      XML_MSG_ATTR_SYSTO,
 			      sys_from);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(reply,
 			      XML_MSG_ATTR_SYSFROM,
 			      sys_to);
 
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(reply,
 			      XML_MSG_ATTR_REFERENCE,
 			      crm_msg_reference);
 
 	// create a place holder for the eventual data
-	xmlNodePtr xml_node   = create_xml_node(doc->children, message_type);
+	xmlNodePtr xml_node   = create_xml_node(reply, message_type);
 
 	CRM_DEBUG("Created reply wrapper...");
-	xml_message_debug(xmlDocGetRootElement(doc));
+	xml_message_debug(reply);
     
 	if (xml_response_data != NULL) {
-		xmlAddChild(xml_node, xmlCopyNode(xml_response_data, 1));
+		add_node_copy(xml_node, xml_response_data);
 	}
     
-	FNRET(xmlDocGetRootElement(doc));
+	FNRET(reply);
 }
 
 /*
@@ -776,13 +739,13 @@ create_forward(xmlNodePtr original_request,
 	if (type == NULL)
 	{
 		cl_log(LOG_ERR,
-		       "Cannot create reply, no message type in original message");
+		       "Cannot create forward, no message type in original message");
 		FNRET(NULL);
 	}
 	else if (strcmp(XML_MSG_TAG_REQUEST, type) != 0)
 	{
 		cl_log(LOG_ERR,
-		       "Cannot create reply, original message was not a request");
+		       "Cannot create forward, original message was not a request");
 		FNRET(NULL);
 	}
 
@@ -796,45 +759,44 @@ create_forward(xmlNodePtr original_request,
 	CRM_DEBUG2("\t%s", type);
 #endif
 
-	xmlDocPtr doc = xmlNewDoc("1.0");
-	doc->children = create_xml_doc_node(doc, XML_MSG_TAG);
+	xmlNodePtr forward = create_xml_node(NULL, XML_MSG_TAG);
 
 	// the root_xml_node node
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(forward,
 			      XML_ATTR_VERSION,
 			      CRM_VERSION);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(forward,
 			      XML_MSG_ATTR_MSGTYPE,
 			      message_type);
-	set_node_tstamp(doc->children);
+	set_node_tstamp(forward);
     
 	// HOSTTO will be ignored if it is to the DC anyway.
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(forward,
 			      XML_MSG_ATTR_HOSTTO,
 			      host_to);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(forward,
 			      XML_MSG_ATTR_HOSTFROM,
 			      host_from);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(forward,
 			      XML_MSG_ATTR_SYSTO,
 			      sys_to);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(forward,
 			      XML_MSG_ATTR_SYSFROM,
 			      sys_from);
-	set_xml_property_copy(doc->children,
+	set_xml_property_copy(forward,
 			      XML_MSG_ATTR_REFERENCE,
 			      crm_msg_reference);
     
 	// create a place holder for the eventual data
-	xmlNodePtr xml_node = create_xml_node(doc->children, message_type);
+	xmlNodePtr xml_node = create_xml_node(forward, message_type);
 
 	CRM_DEBUG("Created forward wrapper...");
-	xml_message_debug(xmlDocGetRootElement(doc));
+	xml_message_debug(forward);
     
 	if (xml_response_data != NULL) {
-		xmlAddChild(xml_node, xmlCopyNode(xml_response_data, 1));
+		add_node_copy(xml_node, xml_response_data);
 	}
     
-	FNRET(xmlDocGetRootElement(doc));
+	FNRET(forward);
 }
 

@@ -163,7 +163,7 @@ processCibRequest(xmlNodePtr command)
 			if (new_section != NULL) {
 				// make changes to a temp copy then activate
 				xmlNodePtr tmpCib =
-					xmlCopyNode(get_the_CIB(), 1);
+					copy_xml_node_recursive(get_the_CIB(), 1);
 				xmlNodePtr old_section =
 					find_xml_node(tmpCib, section);
 				xmlReplaceNode(old_section, new_section);
@@ -189,7 +189,7 @@ processCibRequest(xmlNodePtr command)
 			// do logging
 
 			// make changes to a temp copy then activate
-			xmlNodePtr tmpCib = xmlCopyNode(get_the_CIB(), 1);
+			xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
 			if (cib_update_operation == CIB_OP_ADD
 			    || cib_update_operation == CIB_OP_MODIFY) {
 				updateList(tmpCib, command, failed,
@@ -222,7 +222,7 @@ processCibRequest(xmlNodePtr command)
 		} else {
 			// make changes to a temp copy then activate
 			CRM_DEBUG("Backing up CIB");
-			xmlNodePtr tmpCib = xmlCopyNode(get_the_CIB(), 1);
+			xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
 			CRM_DEBUG("Updating temporary CIB");
 			updateList(tmpCib, command, failed,
 				   cib_update_operation,
@@ -241,6 +241,8 @@ processCibRequest(xmlNodePtr command)
 
 	output_section = section;
 
+	CRM_DEBUG2("Playing with cib: %p", get_the_CIB());
+	
 	/* dont de-allocate cib_section, its the real thing */
 	if (failed->children != NULL || strcmp("ok", status) != 0) {
 		output_section = "all";
@@ -400,14 +402,14 @@ createCibFragmentAnswer(const char *section,
 			   && (section == NULL
 			       || strcmp("all", section) == 0)) {
 			CRM_DEBUG("Added entire cib to cib request");
-			xmlAddChild(fragment, xmlCopyNode(data, 1));
+			add_node_copy(fragment, data);
 			
 		} else if (section != NULL
 			   && strcmp(data->name, section) == 0) {
 			CRM_DEBUG2("Added section (%s) to cib request",
 				   data->name);
 			cib = create_xml_node(fragment, XML_TAG_CIB);
-			xmlAddChild(cib, xmlCopyNode(data, 1));
+			add_node_copy(cib, data);
 			
 		} else {
 			cl_log(LOG_INFO,
@@ -419,7 +421,7 @@ createCibFragmentAnswer(const char *section,
 		cl_log(LOG_INFO, "No data to add to cib message");
 
 	if (failed != NULL && failed->children != NULL) {
-		xmlAddChild(fragment, xmlCopyNode(failed, 1));
+		xmlAddChild(fragment, copy_xml_node_recursive(failed, 1));
 	}
 	FNRET(fragment);
 }

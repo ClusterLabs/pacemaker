@@ -31,13 +31,7 @@
 #include <clplumbing/cl_log.h> 
 #include <libxml/tree.h> 
 
-extern int add_xmlnode_to_cib(xmlNodePtr cib,
-			      const char * node_path,
-			      xmlNodePtr xml_node);
-
 extern void copy_in_properties(xmlNodePtr src, xmlNodePtr target);
-
-extern xmlNodePtr xmlLinkedCopyNoSiblings(xmlNodePtr src, int recursive);
 
 extern xmlNodePtr find_xml_node(xmlNodePtr cib,
 				const char * node_path);
@@ -54,8 +48,6 @@ extern xmlNodePtr find_entity_nested(xmlNodePtr parent,
 				     const char *id,
 				     gboolean siblings);
 
-extern xmlDocPtr  createTree(void);
-
 extern xmlNodePtr find_xml_node_nested(xmlNodePtr root,
 				       const char **search_path,
 				       int len);
@@ -66,15 +58,9 @@ extern char * dump_xml_node(xmlNodePtr msg, gboolean whole_doc);
 
 extern void free_xml(xmlNodePtr a_node);
 
-extern int add_node_copy(xmlNodePtr cib,
-			 const char *node_path,
-			 xmlNodePtr xml_node);
-
 extern void xml_message_debug(xmlNodePtr msg);
 
 extern xmlNodePtr create_xml_node(xmlNodePtr parent, const char *name);
-
-extern xmlNodePtr create_xml_doc_node(xmlDocPtr parent, const char *name);
 
 extern xmlAttrPtr set_xml_property_copy(xmlNodePtr node,
 					const xmlChar *name,
@@ -83,5 +69,12 @@ extern xmlAttrPtr set_xml_property_copy(xmlNodePtr node,
 extern void unlink_xml_node(xmlNodePtr node);
 
 extern void set_node_tstamp(xmlNodePtr a_node);
+
+extern xmlNodePtr copy_xml_node_recursive(xmlNodePtr src_node,
+					  int recursive);
+
+extern xmlNodePtr add_node_copy(xmlNodePtr new_parent,
+				xmlNodePtr xml_node);
+
 
 #endif

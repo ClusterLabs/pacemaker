@@ -58,25 +58,33 @@ gboolean conditional_add_failure(xmlNodePtr failed, xmlNodePtr target, int opera
 xmlNodePtr
 createEmptyMsg(const char *crm_msg_reference)
 {
-    xmlDocPtr doc;
+    xmlNodePtr lrm_msg;
     
-    doc = xmlNewDoc("1.0");
-    doc->children = create_xml_doc_node(doc, NULL, XML_MSG_TAG, NULL);
+    lrmd_msg = create_xml_node(NULL, XML_MSG_TAG);
 
-    set_xml_property_copy(doc->children, XML_ATTR_VERSION, CRM_VERSION);
-    set_xml_property_copy(doc->children, XML_MSG_ATTR_SUBSYS, "none");
-    if (crm_msg_reference == NULL)
-    {
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_MSGTYPE, XML_MSG_TAG_REQUEST);
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_REFERENCE, generateReference());
+    set_xml_property_copy(lrmd_msg, XML_ATTR_VERSION, CRM_VERSION);
+    set_xml_property_copy(lrmd_msg, XML_MSG_ATTR_SUBSYS, "none");
+    if (crm_msg_reference == NULL) {
+	set_xml_property_copy(lrmd_msg,
+			      XML_MSG_ATTR_MSGTYPE,
+			      XML_MSG_TAG_REQUEST);
+	set_xml_property_copy(lrmd_msg,
+			      XML_MSG_ATTR_REFERENCE,
+			      generateReference());
     }
     else
     {
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_MSGTYPE, XML_MSG_TAG_RESPONSE);
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_REFERENCE, crm_msg_reference);
+	set_xml_property_copy(lrmd_msg,
+			      XML_MSG_ATTR_MSGTYPE,
+			      XML_MSG_TAG_RESPONSE);
+	set_xml_property_copy(lrmd_msg,
+			      XML_MSG_ATTR_REFERENCE,
+			      crm_msg_reference);
     }
     
-    set_xml_property_copy(doc->children, XML_ATTR_TSTAMP, getNow());
+    set_xml_property_copy(lrmd_msg,
+			  XML_ATTR_TSTAMP,
+			  getNow());
 
     return xmlDocGetRootElement(doc);
 }
@@ -91,9 +99,7 @@ createLrmdRequest(gboolean isLocal, const char *operation,
     const char *crm_msg_reference;
     if (isLocal)
     {
-	xmlDocPtr doc = xmlNewDoc("1.0");
-	doc->children = create_xml_doc_node(doc, NULL, XML_REQ_TAG_CIB, NULL);
-	cmd = doc->children;
+	cmd = create_xml_node(NULL, XML_REQ_TAG_CIB);
 	root = cmd;
 	crm_msg_reference = generateReference();
     }
