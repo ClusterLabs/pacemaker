@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.7 2004/09/17 13:03:09 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.8 2004/09/21 19:10:02 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -488,7 +488,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		received_responses++;
 		crm_xml_devel(xml_root_node, cib_action);
 
-		dump_xml_formatted(xml_root_node);
+		buffer = dump_xml_formatted(xml_root_node);
 		fprintf(stderr, "%s", crm_str(buffer));
 		crm_free(buffer);
 
