@@ -208,7 +208,7 @@ stage2(GSListPtr sorted_rscs, GSListPtr sorted_nodes, GSListPtr *colors)
 		crm_free(no_color->details);
 		crm_free(no_color);
 	}
-	no_color = create_color(NULL, NULL, NULL);
+	no_color = create_color(NULL, NULL, sorted_rscs);
 	current_color = create_color(colors, sorted_nodes, sorted_rscs);
 	
 	// Set resource.color = color (all resources)
@@ -962,6 +962,15 @@ unpack_status(xmlNodePtr status,
 		pdebug("Processing node attrs");
 		
 		node_t *this_node = pe_find_node(nodes, id);
+
+		if(this_node == NULL) {
+			cl_log(LOG_ERR,
+			       "Node %s in status section no longer exists",
+			       id);
+			continue;
+		}
+		
+
 		while(attrs != NULL){
 			const char *name = xmlGetProp(attrs, "name");
 			const char *value = xmlGetProp(attrs, "value");
@@ -1080,11 +1089,17 @@ strict_preproc(rsc_to_rsc_t *constraint,
 			
 			break;
 		case must_not:
-			if(constraint->rsc_rh->provisional == FALSE) {
+			if(constraint->rsc_rh->provisional == FALSE
+				&& local_color->id != no_color->id) {
 				lh_resource->candidate_colors =
 					g_slist_remove(
 						lh_resource->candidate_colors,
 						local_color);
+				pdebug_action(
+					print_color("Removed",
+						    local_color,
+						    FALSE));
+				
 // surely this is required... but mtrace says no...
 //				crm_free(local_color);
 			}
@@ -1759,7 +1774,7 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 	pdebug_action(print_resource("Coloring", lh_resource, FALSE));
 	
 	if(lh_resource->provisional == FALSE) {
-			// already processed this resource
+		// already processed this resource
 		return;
 	}
 	
@@ -1814,16 +1829,15 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 		lh_resource->color = create_color(colors,
 						  lh_resource->allowed_nodes,
 						  resources);
-		lh_resource->provisional = FALSE;
 
 	} else if(lh_resource->provisional) {
 		cl_log(LOG_ERR, "Could not color resource %s", lh_resource->id);
 		print_resource("ERROR: No color", lh_resource, FALSE);
 		lh_resource->color = find_color(lh_resource->candidate_colors,
 						no_color);
-		lh_resource->provisional = FALSE;
-		
 	}
+
+	lh_resource->provisional = FALSE;
 
 	pdebug_action(print_resource("Post-processing", lh_resource, FALSE));
 
