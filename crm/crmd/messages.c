@@ -848,6 +848,26 @@ handle_request(ha_msg_input_t *stored_msg)
 		} else if(strcmp(op, CRM_OP_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
 			
+		} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
+			gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
+			if(dc_match) {
+				crm_err("We didnt ask to be shut down yet our"
+					" TE is telling us too."
+					" Better get out now!");
+				next_input = I_TERMINATE;
+
+			} else if(is_set(fsa_input_register, R_SHUTDOWN)) {
+				crm_err("We asked to be shut down, "
+					" are still the DC, yet another node"
+					" is askin us to shutdown!");
+				next_input = I_TERMINATE;			
+
+			} else if(fsa_state != S_STOPPING) {
+				crm_warn("Another node is asking us to shutdown"
+					" but we think we're ok.");
+				next_input = I_ELECTION;			
+			}
+			
 		} else if(strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
 			/* a slave wants to shut down */
 			/* create cib fragment and add to message */
