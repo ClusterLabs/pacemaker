@@ -87,12 +87,17 @@ More details are given in the annotated DTD below.
 <!ELEMENT node (attributes?)>
 <!-- 
      Description is opaque to the CRM, some adminstrative comments.
+
+     dc_weight is an optional weight for influencing the DC election
+     process...
+
      TODO: Do we need to know about ping nodes...?
      -->
 <!ATTLIST node
           id            CDATA #REQUIRED
 	  uname		CDATA #REQUIRED
           description   CDATA #IMPLIED
+	  dc_weight	CDATA #IMPLIED
           type          (node|ping) #REQUIRED>
 
 <!-- RESOURCES -->
@@ -308,6 +313,7 @@ More details are given in the annotated DTD below.
 	state	  	(active|in_ccm|down|shot) #REQUIRED
 	exp_state	(active|down)      #REQUIRED
 	source		CDATA #IMPLIED
+	is_dc		(yes|no) 'no'
 	timestamp	CDATA #REQUIRED>
 
 <!-- Information from the Local Resource Manager of the node.
@@ -357,41 +363,78 @@ More details are given in the annotated DTD below.
  
 -->
 
-<!-- Either configuration or status must be present. Why else would you
-     have a CIB? -->
-
-<!ELEMENT transition_graph (synapse+)>
+<!ELEMENT transition_graph (synapse*)>
 
 <!-- When all inputs to a synapse are satisfied, the synapse fires the
-     actions -->
+     actions.
+     
+     "reset" states whether after having fired once, the synapse resets
+     and accepts input again. "no": After having fired, the synapse
+     becomes completely inactive. "yes": it completely resets. "greedy":
+     The synapse will still 'consume' input, but not fire again.
+-->
 
 <!ELEMENT synapse (inputs,actions)>
 <!ATTLIST synapse
-	  id		CDATA #REQUIRED>
+	  id	CDATA #REQUIRED
+	  reset	(no|yes|greedy) 'greedy'>
 
 <!ELEMENT inputs (trigger+)>
 
 <!-- event_spec specifies the event we are looking for.
      This can be anything from "rsc foo started somewhere / on node X",
      "STONITH of node A completed", "DEFAULT" etc... 
+
+     If an event is "consumed", no further inputs in other synapses will
+     be triggered by it. If "no", the event will pass through,
+     triggering us but otherwise completely unaltered. If "marks", we
+     simply remember that the event has been accepted somewhere, but
+     pass it on.
+     
 -->
-<!ELEMENT trigger (rsc_state?,node_state?)>
+<!ELEMENT trigger (rsc_state*,node_state*,pseudo_event*,crm_event*)>
 <!ATTLIST trigger
 	  id		CDATA #REQUIRED
-	  consumes	(no|yes) 'yes'>
+	  consumes	(no|yes|marks) 'marks'>
 
-<!ELEMENT actions (action+)>
 
-<!-- operation specifies the action we are kicking off.
-     This can be anything from "start resource foo on node A with these
-     parameters...", "initiate STONITHing node B" to "restart
-     computation" or "shutdown CRM somewhere"
-     TODO: This deserves to be something better than CDATA.
+<!-- STONITH events end up being rsc_ops; remember that we hope to
+     simply invoke 'STONITH Resource Agent' and feed it with appropriate
+     parameters.
+
+  -->
+<!ELEMENT actions (rsc_op*,pseudo_event*,crm_event*)>
+
+<!-- The resource object inside the rsc_op object differs from the
+     resources list only in content, not in syntax.
+     - it is pre-processed, ie there's a maximum of one set of
+       instance_parameters
+     
+     on_node is the uname of the node on which to trigger the operation.
+
+     The operation is the command passed to the Resource Agent.
 -->
-<!ELEMENT action EMPTY>
-<!ATTLIST action
-	  id		CDATA #REQUIRED
-	  operation	CDATA #REQUIRED>
+<!ELEMENT rsc_op (resource)>
+<!ATTLIST rsc_op
+	id	CDATA #REQUIRED
+	on_node	CDATA #REQUIRED
+	operation	CDATA	#REQUIRED>
+
+<!-- For added flexibility, an action can trigger an event, which is
+     then consumed somewhere else. Woah. Cool. -->
+<!ELEMENT pseudo_event EMPTY>
+<!ATTLIST pseudo_event
+	id	CDATA #REQUIRED>
+	
+<!-- crm_event: We can instruct a crmd to sign-out cleanly, or to
+     retrigger the DC election.
+     TODO: What else? We can hardly ask it to come up... ;-)
+-->
+<!ELEMENT crm_event EMPTY>
+<!ATTLIST crm_event
+	id	CDATA #REQUIRED
+	on_node	CDATA #REQUIRED
+	operation (shutdown|election) #REQUIRED>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
