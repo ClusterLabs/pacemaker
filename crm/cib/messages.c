@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.20 2005/02/09 15:32:39 andrew Exp $ */
+/* $Id: messages.c,v 1.21 2005/02/10 11:03:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -206,7 +206,6 @@ cib_process_query(
 	*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
 /*  	set_xml_property_copy(*answer, XML_ATTR_SECTION, section); */
 	set_xml_property_copy(*answer, "generated_on", cib_our_uname);
-	add_node_copy(*answer, the_cib);
 
 	obj_root = get_object_root(section, get_the_CIB());
 	
@@ -736,7 +735,7 @@ revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 			crm_err("Update uses an unsupported tag/feature:"
 				" %s vs %s",
 				revision, cib_feature_revision_s);
-			CRM_ASSERT(FALSE); /* do not commit */
+			CRM_DEV_ASSERT(FALSE);
 			rc = cib_revision_unsupported;
 
 		} else if(flags & cib_scope_local) {
@@ -746,6 +745,7 @@ revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 			crm_err("Local update uses an unsupported tag/feature:"
 				" %s vs %s",
 				revision, cib_feature_revision_s);
+			CRM_DEV_ASSERT(FALSE);
 			rc = cib_revision_unsupported;
 		}
 	}
