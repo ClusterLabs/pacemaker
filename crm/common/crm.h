@@ -18,12 +18,8 @@
 #ifndef CRM__H
 #define CRM__H
 
-//#define DMALLOC 1
-
 #include <stdlib.h>
-
 #include <ha_config.h>
-
 
 #define WORKING_DIR HA_VARLIBDIR"/heartbeat/crm"
 #define MAXDATASIZE 65535 // ipc comms
@@ -47,7 +43,7 @@
 
 #if 0
 #   define FNIN()     cl_log(LOG_DEBUG, "#---#---# Entering function %s...", __FUNCTION__)
-#   define FNOUT()  { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return; }
+#   define FNOUT()  { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return;   }
 #   define FNRET(x) { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return x; }
 #else
 #   define FNIN()   ;

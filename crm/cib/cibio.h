@@ -46,6 +46,7 @@ extern xmlNodePtr get_the_CIB(void);
 extern xmlNodePtr getCibSection(const char *section);
 
 extern int initializeCib(xmlNodePtr cib);
+extern gboolean uninitializeCib(void);
 extern xmlNodePtr updatedSearchPath(xmlNodePtr cib, const char *path);
 extern xmlNodePtr createEmptyCib(void);
 extern gboolean verifyCibXml(xmlNodePtr cib);

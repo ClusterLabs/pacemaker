@@ -31,13 +31,10 @@
 
 #include <libxml/tree.h>
 
-//#define REPLACE
-
 #include <cibprimatives.h>
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
 #include <crm/common/xmlutils.h>
-//#include <crm/common/msgutils.h>
 #include <cibio.h>
 
 #include <crm/dmalloc_wrapper.h>
@@ -55,97 +52,139 @@
  *  but not the function arguments.
  */
 
+
+int cib_delete_node(xmlNodePtr node_to_delete);
+
 //--- Resource
 
 int
 addResource(xmlNodePtr cib, cibResource *xml_node)
 {
-    if (findResource(cib, ID(xml_node)) != NULL) FNRET(-1);
-    FNRET(add_node_copy(cib, XML_CIB_TAG_RESOURCES, xml_node));
+	int add_res = 0;
+	const char * id = NULL;
+	const char * type = NULL;
+
+	FNIN();
+	
+	id = xmlGetProp(xml_node, XML_ATTR_ID);
+	type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
+	
+	if (id == NULL || strlen(id) < 1)
+		add_res = -1;
+	else if (findResource(cib, ID(xml_node)) != NULL)
+		add_res = -2;
+	else if (type == NULL || strlen(type) < 1)
+		add_res = -3;
+	else
+		add_res = add_node_copy(cib,
+					XML_CIB_TAG_RESOURCES,
+					xml_node);
+
+	FNRET(add_res);
 }
 
 
 xmlNodePtr
 findResource(xmlNodePtr cib, const char *id)
 {
-    xmlNodePtr root = find_xml_node(cib, XML_CIB_TAG_RESOURCES);
-    FNRET(find_entity(root, XML_CIB_TAG_RESOURCE, id, FALSE));
+	xmlNodePtr root = find_xml_node(cib, XML_CIB_TAG_RESOURCES);
+	FNRET(find_entity(root, XML_CIB_TAG_RESOURCE, id, FALSE));
 }
 
 xmlNodePtr
 newResource(const char *id, const char *type,
-			const char *name, const char *max_instances)
+	    const char *name, const char *max_instances)
 {
-    CRM_DEBUG2("Creating " XML_CIB_TAG_RESOURCE " (%s).", id);
+	CRM_DEBUG2("Creating " XML_CIB_TAG_RESOURCE " (%s).", id);
 
-    xmlNodePtr xml_node = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+	xmlNodePtr xml_node = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 
-    set_xml_property_copy(xml_node, XML_ATTR_ID,          id);
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_RESTYPE,     type);
-    set_xml_property_copy(xml_node, XML_ATTR_DESC,        name);
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_MAXINSTANCE, max_instances);
-    set_xml_property_copy(xml_node, XML_ATTR_TSTAMP,      getNow());
+	set_xml_property_copy(xml_node,
+			      XML_ATTR_ID,
+			      id);
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_RESTYPE,
+			      type);
+	set_xml_property_copy(xml_node,
+			      XML_ATTR_DESC,
+			      name);
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_MAXINSTANCE,
+			      max_instances);
+	set_xml_property_copy(xml_node,
+			      XML_ATTR_TSTAMP,
+			      getNow());
     
-    FNRET(xml_node);
+	FNRET(xml_node);
 }
 
 
 int
 updateResource(xmlNodePtr cib, cibResource *anXmlNode)
 {
-    CRM_DEBUG2("Updating " XML_CIB_TAG_RESOURCE " (%s)...", ID(anXmlNode));
-    
-    xmlNodePtr res = findResource(cib, ID(anXmlNode));
+	const char *action = NULL;
+	const char *id = NULL;
+	xmlNodePtr res = NULL, dest = NULL;
 
-    if (res == NULL) {
-		CRM_DEBUG2("Update: " XML_CIB_TAG_RESOURCE " (%s) did not exist, adding.",
-				   ID(anXmlNode));
+	FNIN();
+	
+	CRM_DEBUG2("Updating " XML_CIB_TAG_RESOURCE " (%s)...",
+		   ID(anXmlNode));
+    
+	res = findResource(cib, ID(anXmlNode));
+
+	if (res == NULL) {
+		CRM_DEBUG2("Update: " XML_CIB_TAG_RESOURCE
+			   " (%s) did not exist, adding.",
+			   ID(anXmlNode));
+		
 		addResource(cib, anXmlNode);
-    } else {
+	} else {
 		copy_in_properties(anXmlNode, res);	
 
-		CRM_DEBUG2("Update: Copying in children for " XML_CIB_TAG_RESOURCE " (%s).",
-				   ID(anXmlNode));
+		CRM_DEBUG2("Update: Copying in children for "
+			   XML_CIB_TAG_RESOURCE " (%s).",
+			   ID(anXmlNode));
+		
 		xmlNodePtr iter = anXmlNode->children;
 		while(iter != NULL) {
 			if (strcmp(XML_CIB_ATTR_NODEREF, iter->name) == 0) {
-				const char *action = xmlGetProp(iter, XML_CIB_ATTR_ACTION);
-				const char *id = ID(iter);
-				xmlNodePtr dest = find_entity(res, XML_CIB_ATTR_NODEREF, id, FALSE);
+
+				id = ID(iter);
+				action = xmlGetProp(iter,
+						    XML_CIB_ATTR_ACTION);
+				dest = find_entity(res,
+						   XML_CIB_ATTR_NODEREF,
+						   id,
+						   FALSE);
 		
-				if (dest != NULL) {
-					unlink_xml_node(dest);
-					xmlFreeNode(dest);
-				}
+				cib_delete_node(dest);
 		
 				if (strcmp("add", action) == 0) {
-					xmlNodePtr node_copy = xmlCopyNode(iter, 1);
+					xmlNodePtr node_copy =
+						xmlCopyNode(iter, 1);
 
 					// remove the action property first
-					xmlUnsetProp(node_copy, XML_CIB_ATTR_ACTION);
-					
+					xmlUnsetProp(node_copy,
+						     XML_CIB_ATTR_ACTION);
 					xmlAddChild(res, node_copy);
 				}
 			}
 		}
-    }
-    FNRET(0);
+	}
+	FNRET(0);
     
 }
 
 int
 delResource(xmlNodePtr cib, const char *id)
 {
-    xmlNodePtr res = NULL;
+	int del_res = -1;
 	FNIN();
+
+	del_res = cib_delete_node(findResource(cib, id));
 	
-	res = findResource(cib, id);
-    if (res != NULL) {
-		unlink_xml_node(res);
-		xmlFreeNodeList(res);
-    }
-    
-    FNRET(0);
+	FNRET(del_res);
 }
 
 
@@ -154,81 +193,124 @@ delResource(xmlNodePtr cib, const char *id)
 int
 addStatus(xmlNodePtr cib, cibStatus *xml_node)
 {
+	int add_res = 0;
+	const char *id = NULL;
+	const char *type = NULL;
+	const char *instance = NULL;
+
 	FNIN();
-    if (findStatus(cib, ID(xml_node), INSTANCE(xml_node)) != NULL) FNRET(-1);
-    FNRET(add_node_copy(cib, XML_CIB_TAG_STATUS, xml_node));
+	
+	id = xmlGetProp(xml_node, XML_ATTR_ID);
+	type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
+	instance = xmlGetProp(xml_node, XML_CIB_ATTR_INSTANCE);
+	
+	if (id == NULL || strlen(id) < 1)
+		add_res = -1;
+	else if (findStatus(cib, id, instance) != NULL)
+		add_res = -2;
+	else if (type == NULL || strlen(type) < 1)
+		add_res = -3;
+	else
+		add_res = add_node_copy(cib, XML_CIB_TAG_STATUS, xml_node);
+
+	FNRET(add_res);
 }
 
 xmlNodePtr
 findStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
 {
-    xmlNodePtr root = find_xml_node(cib, XML_CIB_TAG_STATUS);
-    FNRET(find_entity(root, XML_CIB_TAG_STATE, id, FALSE));
+	xmlNodePtr root = NULL, ret = NULL;
+	FNIN();
+	
+	root = find_xml_node(cib, XML_CIB_TAG_STATUS);
+	ret = find_entity(root, XML_CIB_TAG_STATE, id, FALSE);
+
+	FNRET(ret);
 }
 
 int
 updateStatus(xmlNodePtr cib, cibStatus *anXmlNode)
 {
-    xmlNodePtr res = findStatus(cib, ID(anXmlNode), INSTANCE(anXmlNode));
-    if (res == NULL) {
-		CRM_DEBUG3("Update: " XML_CIB_TAG_STATE " (%s:%s) did not exist, adding.",
-				   ID(anXmlNode),
-				   INSTANCE(anXmlNode));
+	xmlNodePtr res = NULL;
+	FNIN();
+	
+	res = findStatus(cib, ID(anXmlNode), INSTANCE(anXmlNode));
+
+	if (res == NULL) {
+		CRM_DEBUG4("Update: %s (%s:%s) did not exist, adding.",
+			   XML_CIB_TAG_STATE,
+			   ID(anXmlNode),
+			   INSTANCE(anXmlNode));
 		addStatus(cib, anXmlNode);
-    } else {
+	} else {
 		copy_in_properties(anXmlNode, res);	
-    }
-    FNRET(0);
+	}
+	FNRET(0);
 }
 
 xmlNodePtr
 newStatus(const char *res_id, const char *node_id, const char *instance)
 {
-
-    /* verify the node and resource exist
-	 * get max_instances from resource or update later
+	/* Todo:
+	 * - verify the node and resource exist
+	 * - get max_instances from resource or update later
 	 */
+	xmlNodePtr xml_node = NULL;
+	char *id = (char*)ha_malloc(128*(sizeof(char)));
+	FNIN();
+	
+	sprintf(id, "%s-%s", res_id, instance);
 
-    char *id = (char*)ha_malloc(128*(sizeof(char)));
-    sprintf(id, "%s-%s", res_id, instance);
-
-    CRM_DEBUG2("Creating " XML_CIB_TAG_STATUS " (%s).", id);
+	CRM_DEBUG2("Creating " XML_CIB_TAG_STATUS " (%s).", id);
     
-    
-    xmlNodePtr xml_node = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	xml_node = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
-    set_xml_property_copy(xml_node, XML_ATTR_ID,          id);
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_RESID,       res_id);
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_INSTANCE,    instance);
+	set_xml_property_copy(xml_node,
+			      XML_ATTR_ID,
+			      id);
+	
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_RESID,
+			      res_id);
+	
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_INSTANCE,
+			      instance);
 
-	set_xml_property_copy(xml_node, XML_CIB_ATTR_NODEID,      node_id);
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_SOURCE,      "none");
-    set_xml_property_copy(xml_node, XML_ATTR_TSTAMP,      getNow());
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_NODEID,
+			      node_id);
+	
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_SOURCE,
+			      "none");
+	
+	set_xml_property_copy(xml_node,
+			      XML_ATTR_TSTAMP,
+			      getNow());
 
 	// a sensible default... parent can update later if required 
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_MAXINSTANCE, instance);
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_MAXINSTANCE,
+			      instance);
 
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_RESSTATUS,
-						  CIB_VAL_RESSTATUS_DEFAULT);
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_RESSTATUS,
+			      CIB_VAL_RESSTATUS_DEFAULT);
 
-//    xmlNodePtr xml_node = xmlStringLenGetNodeList(cib, c_object, 1);
-    
-    FNRET(xml_node);
+	ha_free(id);
+	FNRET(xml_node);
 }
 
 int
 delStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
 {
-    xmlNodePtr res = NULL;
+	int del_res = -1;
 	FNIN();
+
+	del_res = cib_delete_node(findStatus(cib, id, instanceNum));
 	
-	res = findStatus(cib, id, instanceNum);
-    if (res != NULL) {
-		unlink_xml_node(res);
-		xmlFreeNodeList(res);
-    }
-    
-    FNRET(0);
+	FNRET(del_res);
 }
 
 //--- Constraint
@@ -236,19 +318,33 @@ delStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
 int
 addConstraint(xmlNodePtr cib, cibConstraint *xml_node)
 {
-	int ret = -1;
+	int add_res = 0;
+	const char * id = NULL;
+	const char * type = NULL;
+
 	FNIN();
+	
+	id = xmlGetProp(xml_node, XML_ATTR_ID);
+	type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
+	
+	if (id == NULL || strlen(id) < 1)
+		add_res = -1;
+	else if (findConstraint(cib, ID(xml_node)) != NULL)
+		add_res = -2;
+	else if (type == NULL || strlen(type) < 1)
+		add_res = -3;
+	else
+		add_res = add_node_copy(cib,
+					XML_CIB_TAG_CONSTRAINTS,
+					xml_node);
 
-	if (findConstraint(cib, ID(xml_node)) == NULL)
-		ret = add_node_copy(cib, XML_CIB_TAG_CONSTRAINTS, xml_node);
-
-	FNRET(ret);
+	FNRET(add_res);
 }
 
 xmlNodePtr
 findConstraint(xmlNodePtr cib, const char *id)
 {
-    xmlNodePtr root = NULL, ret = NULL;
+	xmlNodePtr root = NULL, ret = NULL;
 	FNIN();
 	
 	root = find_xml_node(cib, XML_CIB_TAG_CONSTRAINTS);
@@ -260,164 +356,207 @@ findConstraint(xmlNodePtr cib, const char *id)
 xmlNodePtr
 newConstraint(const char *id)
 {
-    CRM_DEBUG2("Creating " XML_CIB_TAG_CONSTRAINT " (%s)...", id);    
-    xmlNodePtr xml_node = create_xml_node(NULL,  XML_CIB_TAG_CONSTRAINT);
+	xmlNodePtr xml_node = NULL;
+	FNIN();
 
-    set_xml_property_copy(xml_node, XML_ATTR_ID,      id);
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_CONTYPE, CIB_VAL_CONTYPE_DEFAULT);
+	CRM_DEBUG2("Creating " XML_CIB_TAG_CONSTRAINT " (%s)...", id);    
 
-// these should be filled in by the parent as appropriate
-/*     set_xml_property_copy(xml_node, "constraint_type", type); */
-/*     set_xml_property_copy(xml_node, "r_id_1",          r_id_1); */
-/*     if (c_object->r_id_2 != NULL)    set_xml_property_copy(xml_node, "r_id_2",     c_object->r_id_2); */
-/*     if (c_object->var_name != NULL)  set_xml_property_copy(xml_node, "var_name",   c_object->var_name); */
-/*     if (c_object->var_value != NULL) set_xml_property_copy(xml_node, "var_value",  c_object->var_value); */
+	xml_node = create_xml_node(NULL,  XML_CIB_TAG_CONSTRAINT);
 
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_CLEAR,   CIB_VAL_CLEARON_DEFAULT);
-    set_xml_property_copy(xml_node, XML_ATTR_TSTAMP,  getNow());
+	set_xml_property_copy(xml_node,
+			      XML_ATTR_ID,
+			      id);
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_CONTYPE,
+			      CIB_VAL_CONTYPE_DEFAULT);
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_CLEAR,
+			      CIB_VAL_CLEARON_DEFAULT);
+	set_xml_property_copy(xml_node,
+			      XML_ATTR_TSTAMP,
+			      getNow());
 
-    FNRET(xml_node);
+	FNRET(xml_node);
 }
 
 
 int
 updateConstraint(xmlNodePtr cib, cibConstraint *anXmlNode)
 {
-    CRM_DEBUG2("Updating " XML_CIB_TAG_CONSTRAINT " (%s)...", ID(anXmlNode));
-    xmlNodePtr res = findConstraint(cib, ID(anXmlNode));
-    if (res == NULL) {
-		CRM_DEBUG2("Update: " XML_CIB_TAG_CONSTRAINT " (%s) did not exist, adding.", ID(anXmlNode));
+	xmlNodePtr res = NULL, iter = NULL;
+	const char *id = ID(anXmlNode);
+	const char *action = NULL;
+
+	FNIN();
+
+	CRM_DEBUG2("Updating " XML_CIB_TAG_CONSTRAINT " (%s)...",
+		   id);
+	res = findConstraint(cib, id);
+	if (res == NULL) {
+		CRM_DEBUG2("Update: " XML_CIB_TAG_CONSTRAINT
+			   " (%s) did not exist, adding.",
+			   id);
 		addConstraint(cib, anXmlNode);
-    }
-    else
-    {
-#ifdef REPLACE
-		// make a copy first
-		xmlReplaceNode(res, anXmlNode);
-#else
+	} else {
 		copy_in_properties(anXmlNode, res);	
 
-
-		CRM_DEBUG2("Update: Copying in children for " XML_CIB_TAG_CONSTRAINT " (%s).", ID(anXmlNode));
-		xmlNodePtr iter = anXmlNode->children;
-		while(iter != NULL)
-		{
-			if (strcmp(XML_CIB_TAG_NVPAIR, iter->name) == 0)
-			{
-				const char *action = xmlGetProp(iter, XML_CIB_ATTR_ACTION);
-				const char *id = ID(iter);
-				xmlNodePtr dest = find_entity(res, XML_CIB_TAG_NVPAIR, id, FALSE);
+		CRM_DEBUG2("Update: Copying in children for "
+			   XML_CIB_TAG_CONSTRAINT " (%s).",
+			   id);
 		
-				if (dest != NULL)
-				{
-					unlink_xml_node(dest);
-//		    xmlFreeNode(dest);
-				}
-		
-				if (strcmp("add", action) == 0)
-				{
-					xmlNodePtr node_copy = xmlCopyNode(iter, 1);
+		iter = anXmlNode->children;
+		while(iter != NULL) {
+			if (strcmp(XML_CIB_TAG_NVPAIR, iter->name) == 0) {
+				action = xmlGetProp(iter,
+						    XML_CIB_ATTR_ACTION);
+				id = ID(iter);
+				xmlNodePtr dest =
+					find_entity(res,
+						    XML_CIB_TAG_NVPAIR,
+						    id,
+						    FALSE);
 
-					xmlUnsetProp(node_copy, XML_CIB_ATTR_ACTION); // remove the action property
+				cib_delete_node(dest);
+		
+				if (strcmp("add", action) == 0) {
+					xmlNodePtr node_copy =
+						xmlCopyNode(iter, 1);
+					/* remove the action property */
+					xmlUnsetProp(node_copy,
+						     XML_CIB_ATTR_ACTION); 
 					xmlAddChild(res, node_copy);
 				}
 			}
 		}
-#endif
-    }
-    FNRET(0);
+	}
+	FNRET(0);
 }
 
 int
 delConstraint(xmlNodePtr cib, const char *id)
 {
-    xmlNodePtr res = findConstraint(cib, id);
-    if (res != NULL) {
-		unlink_xml_node(res);
-//	xmlFreeNodeList(res);
-    }
-    FNRET(0);
-}
+	int del_res = -1;
+	FNIN();
 
+	del_res = cib_delete_node(findConstraint(cib, id));
+	
+	FNRET(del_res);
+}
 
 //--- HaNode
 
 int
 addHaNode(xmlNodePtr cib, cibHaNode *xml_node)
 {
-    const char * id = xmlGetProp(xml_node, XML_ATTR_ID);
-    if (id == NULL || strlen(id) < 1) FNRET(-1);
+	int add_res = 0;
+	const char * id = NULL;
+	const char * type = NULL;
 
-    if (findHaNode(cib, ID(xml_node)) != NULL) FNRET(-2);
+	FNIN();
+	
+	id = xmlGetProp(xml_node, XML_ATTR_ID);
+	type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
+	
+	if (id == NULL || strlen(id) < 1)
+		add_res = -1;
+	else if (findHaNode(cib, ID(xml_node)) != NULL)
+		add_res = -2;
+	else if (type == NULL || strlen(type) < 1)
+		add_res = -3;
+	else
+		add_res = add_node_copy(cib, XML_CIB_TAG_NODES, xml_node);
 
-    const char * type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
-    if (type == NULL || strlen(type) < 1) {
-		FNRET(-3);
-    }
-    
-    FNRET(add_node_copy(cib, XML_CIB_TAG_NODES, xml_node));
+	FNRET(add_res);
 }
 
 xmlNodePtr
 findHaNode(xmlNodePtr cib, const char *id)
 {
-    xmlNodePtr root = find_xml_node(cib, XML_CIB_TAG_NODES);
-    FNRET(find_entity(root, XML_CIB_TAG_NODE, id, FALSE));
+	xmlNodePtr root = find_xml_node(cib, XML_CIB_TAG_NODES);
+	FNRET(find_entity(root, XML_CIB_TAG_NODE, id, FALSE));
 }
 
 
 xmlNodePtr
 newHaNode(const char *id, const char *type)
 {
-    CRM_DEBUG2("Creating " XML_CIB_TAG_NODE " (%s)...", id);
-    xmlNodePtr xml_node = create_xml_node(NULL, XML_CIB_TAG_NODE);
+	xmlNodePtr xml_node = NULL;
+	FNIN();
+	CRM_DEBUG2("Creating " XML_CIB_TAG_NODE " (%s)...", id);
 
-    if (type == NULL || strlen(type) < 1) {
+	xml_node = create_xml_node(NULL, XML_CIB_TAG_NODE);
+
+	if (type == NULL || strlen(type) < 1) {
 		cl_log(LOG_WARNING,
-			   "You did not specify a value for %s for node (id=%s).  Using default: %s",
-			   XML_CIB_ATTR_NODETYPE, id, CIB_VAL_NODETYPE_DEFAULT);
+		       "You did not specify a value for %s for node (id=%s)."
+		       "  Using default: %s",
+		       XML_CIB_ATTR_NODETYPE, id, CIB_VAL_NODETYPE_DEFAULT);
 		type = CIB_VAL_NODETYPE_DEFAULT;
-    }
+	}
 
-    set_xml_property_copy(xml_node, XML_ATTR_ID,             id);
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_NODETYPE,   type);
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_HEALTH,     CIB_VAL_HEALTH_DEFAULT);
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_NODESTATUS, CIB_VAL_NODESTATUS_DEFAULT);
-    set_xml_property_copy(xml_node, XML_CIB_ATTR_SOURCE,     CIB_VAL_SOURCE_DEFAULT);
-    set_xml_property_copy(xml_node, XML_ATTR_TSTAMP,         getNow());
+	set_xml_property_copy(xml_node,
+			      XML_ATTR_ID,
+			      id);
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_NODETYPE,
+			      type);
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_HEALTH,
+			      CIB_VAL_HEALTH_DEFAULT);
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_NODESTATUS,
+			      CIB_VAL_NODESTATUS_DEFAULT);
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_SOURCE,
+			      CIB_VAL_SOURCE_DEFAULT);
+	set_xml_property_copy(xml_node,
+			      XML_ATTR_TSTAMP,
+			      getNow());
 
-    FNRET(xml_node);
+	FNRET(xml_node);
 }
 
 
 int
 updateHaNode(xmlNodePtr cib, cibHaNode *anXmlNode)
 {
-    CRM_DEBUG2("Update: " XML_CIB_TAG_NODE " (%s).", ID(anXmlNode));
-    xmlNodePtr res = findHaNode(cib, ID(anXmlNode));
-    if (res == NULL) {
-		cl_log(LOG_INFO, "Update: " XML_CIB_TAG_NODE " (%s) did not exist, adding.", ID(anXmlNode));
+	xmlNodePtr res = NULL;
+	FNIN();
+	CRM_DEBUG2("Update: " XML_CIB_TAG_NODE " (%s).", ID(anXmlNode));
+
+	res = findHaNode(cib, ID(anXmlNode));
+	if (res == NULL) {
+		cl_log(LOG_INFO,
+		       "Update: " XML_CIB_TAG_NODE
+		       " (%s) did not exist, adding.",
+		       ID(anXmlNode));
 		addHaNode(cib, anXmlNode);
-    }
-    else
-    {
-#ifdef REPLACE
-		// make a copy first
-		xmlReplaceNode(res, anXmlNode);
-#else
+	} else {
 		copy_in_properties(anXmlNode, res);	
-#endif
-    }
-    FNRET(0);
+	}
+	FNRET(0);
 }
 
 int
 delHaNode(xmlNodePtr cib, const char *id)
 {
-    xmlNodePtr res = findHaNode(cib, id);
-    if (res != NULL) {
-		unlink_xml_node(res);
-//	xmlFreeNodeList(res);
-    }
-    FNRET(0);
+	int del_res = -1;
+	FNIN();
+
+	del_res = cib_delete_node(findHaNode(cib, id));
+	
+	FNRET(del_res);
 }
+
+int
+cib_delete_node(xmlNodePtr node_to_delete)
+{
+	int del_res = -1;
+	if (node_to_delete != NULL) {
+		unlink_xml_node(node_to_delete);
+		free_xml(node_to_delete);
+		del_res = 0;
+	}
+	return del_res;
+}
+

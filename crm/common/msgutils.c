@@ -71,16 +71,18 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 	
 	// 2 = "_" + '\0'
 	int sub_type_len = strlen(to) + strlen(XML_MSG_TAG_REQUEST) + 2; 
-	char *sub_type_target = (char*)ha_malloc(sizeof(char)*(sub_type_len));
+	char *sub_type_target =
+		(char*)ha_malloc(sizeof(char)*(sub_type_len));
 
 	sprintf(sub_type_target, "%s_%s", to, XML_MSG_TAG_REQUEST);
 	root_xml_node   = create_xml_node(NULL, sub_type_target);
 	set_xml_property_copy(root_xml_node,
-						  XML_MSG_ATTR_REFERENCE,
-						  crm_msg_reference);
+			      XML_MSG_ATTR_REFERENCE,
+			      crm_msg_reference);
     
 	int msg_type_len = strlen(to) + 10 + 1; // + "_operation" + '\0'
-	char *msg_type_target = (char*)ha_malloc(sizeof(char)*(msg_type_len));
+	char *msg_type_target =
+		(char*)ha_malloc(sizeof(char)*(msg_type_len));
 	sprintf(msg_type_target, "%s_operation", to);
 	set_xml_property_copy(root_xml_node, msg_type_target, "ping");
 //    ha_free(msg_type_target);
@@ -104,13 +106,19 @@ createCrmMsg(xmlNodePtr data, gboolean is_request)
 
 
 	// the root_xml_node node
-	set_xml_property_copy(doc->children, XML_ATTR_VERSION, CRM_VERSION);
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_MSGTYPE, message_type);
-	set_xml_property_copy(doc->children, XML_ATTR_TSTAMP, getNow());
+	set_xml_property_copy(doc->children,
+			      XML_ATTR_VERSION,
+			      CRM_VERSION);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_MSGTYPE,
+			      message_type);
+	set_xml_property_copy(doc->children,
+			      XML_ATTR_TSTAMP,
+			      getNow());
     
 	// create a place holder for the eventual data
 	xmlNodePtr xml_node   = create_xml_node(doc->children, NULL,
-										message_type, NULL);
+						message_type, NULL);
 
 	if (data != NULL)
 		xmlAddChild(xml_node, data);
@@ -128,9 +136,9 @@ generateReference(void)
 
 gboolean
 conditional_add_failure(xmlNodePtr failed,
-						xmlNodePtr target,
-						int operation,
-						int return_code)
+			xmlNodePtr target,
+			int operation,
+			int return_code)
 {
 	FNIN();
 	gboolean was_error = FALSE;
@@ -140,17 +148,18 @@ conditional_add_failure(xmlNodePtr failed,
 		was_error = TRUE;
 	
 		cl_log(LOG_DEBUG,
-			   "Action %d failed (cde=%d)",
-			   operation,
-			   return_code);
+		       "Action %d failed (cde=%d)",
+		       operation,
+		       return_code);
 	
-		xmlNodePtr xml_node = create_xml_node(NULL, XML_FAIL_TAG_CIB);
+		xmlNodePtr xml_node = create_xml_node(NULL,
+						      XML_FAIL_TAG_CIB);
 		set_xml_property_copy(xml_node,
-							  XML_FAILCIB_ATTR_ID,
-							  ID(target));
+				      XML_FAILCIB_ATTR_ID,
+				      ID(target));
 		set_xml_property_copy(xml_node,
-							  XML_FAILCIB_ATTR_OBJTYPE,
-							  TYPE(target));
+				      XML_FAILCIB_ATTR_OBJTYPE,
+				      TYPE(target));
 	
 		char buffer[20]; // will handle 64 bit integers
 	
@@ -158,13 +167,17 @@ conditional_add_failure(xmlNodePtr failed,
 		 * later, convert it to text 
 		 */
 		sprintf(buffer, "%d", operation);
-		set_xml_property_copy(xml_node, XML_FAILCIB_ATTR_OP, buffer);
+		set_xml_property_copy(xml_node,
+				      XML_FAILCIB_ATTR_OP,
+				      buffer);
 	
 		/* for now just put in the return code
 		 * later, convert it to text based on the operation
 		 */
 		sprintf(buffer, "%d", return_code);
-		set_xml_property_copy(xml_node, XML_FAILCIB_ATTR_REASON, buffer);
+		set_xml_property_copy(xml_node,
+				      XML_FAILCIB_ATTR_REASON,
+				      buffer);
 	
 		xmlAddChild(failed, xml_node);
 	}
@@ -175,9 +188,9 @@ conditional_add_failure(xmlNodePtr failed,
 
 xmlNodePtr
 validate_crm_message(xmlNodePtr root_xml_node,
-					 const char *sys,
-					 const char *uid,
-					 const char *msg_type)
+		     const char *sys,
+		     const char *uid,
+		     const char *msg_type)
 {
 	const char *from = NULL;
 	const char *to = NULL;
@@ -185,20 +198,28 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	const char *crm_msg_reference = NULL;
 	
 	FNIN();
-	if (root_xml_node == NULL) FNRET(NULL);
+	if (root_xml_node == NULL)
+		FNRET(NULL);
 
-	from = xmlGetProp(root_xml_node, XML_MSG_ATTR_SYSFROM);
-	to = xmlGetProp(root_xml_node, XML_MSG_ATTR_SYSTO);
-	type = xmlGetProp(root_xml_node, XML_MSG_ATTR_MSGTYPE);
-	crm_msg_reference = xmlGetProp(root_xml_node, XML_MSG_ATTR_REFERENCE);
+	from = xmlGetProp(root_xml_node,
+			  XML_MSG_ATTR_SYSFROM);
+	
+	to = xmlGetProp(root_xml_node,
+			XML_MSG_ATTR_SYSTO);
+	
+	type = xmlGetProp(root_xml_node,
+			  XML_MSG_ATTR_MSGTYPE);
+	
+	crm_msg_reference = xmlGetProp(root_xml_node,
+				       XML_MSG_ATTR_REFERENCE);
 
 	cl_log(LOG_DEBUG, "Recieved XML message with (version=%s)",
-		   xmlGetProp(root_xml_node, XML_ATTR_VERSION));
+	       xmlGetProp(root_xml_node, XML_ATTR_VERSION));
 	cl_log(LOG_DEBUG, "Recieved XML message with (from=%s)", from);
 	cl_log(LOG_DEBUG, "Recieved XML message with (to=%s)"  , to);
 	cl_log(LOG_DEBUG, "Recieved XML message with (type=%s)", type);
 	cl_log(LOG_DEBUG, "Recieved XML message with (ref=%s)" ,
-		   crm_msg_reference);
+	       crm_msg_reference);
 
 	const char *true_sys = sys;
 	if (uid != NULL) true_sys = generate_hash_key(sys, uid);
@@ -208,9 +229,9 @@ validate_crm_message(xmlNodePtr root_xml_node,
 		FNRET(NULL);
 	} else if (true_sys != NULL && strcmp(to, true_sys) != 0) {
 		cl_log(LOG_DEBUG,
-			   "The message is not for this sub-system (%s != %s).",
-			   to,
-			   true_sys);
+		       "The message is not for this sub-system (%s != %s).",
+		       to,
+		       true_sys);
 		FNRET(NULL);
 	}
     
@@ -218,8 +239,9 @@ validate_crm_message(xmlNodePtr root_xml_node,
 		cl_log(LOG_INFO, "No message type defined.");
 		FNRET(NULL);
 	} else if (msg_type != NULL && strcmp(msg_type, type) != 0) {
-		cl_log(LOG_INFO, "Expecting a (%s) message but receieved a (%s).",
-			   msg_type, type);
+		cl_log(LOG_INFO,
+		       "Expecting a (%s) message but receieved a (%s).",
+		       msg_type, type);
 		FNRET(NULL);
 	}
 
@@ -231,8 +253,8 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	xmlNodePtr action = find_xml_node(root_xml_node, type);
 	if (action == NULL) {
 		cl_log(LOG_INFO,
-			   "Malformed XML.  Message type (%s) not found.",
-			   type);
+		       "Malformed XML.  Message type (%s) not found.",
+		       type);
 		FNRET(NULL);
 	}
 
@@ -252,24 +274,26 @@ validate_crm_message(xmlNodePtr root_xml_node,
     
 	action = find_xml_node(action, action_target);
 	if (action == NULL) {
-		cl_log(LOG_ERR, "Malformed XML.  Message action (%s) not found... "
-			   "discarding message.",
-			   action_target);
+		cl_log(LOG_ERR,
+		       "Malformed XML.  Message action (%s) not found... "
+		       "discarding message.",
+		       action_target);
 		FNRET(NULL);
 	}
 
     
-	cl_log(LOG_DEBUG, "XML is valid and node with message type (%s) found.",
-		   type);
+	cl_log(LOG_DEBUG,
+	       "XML is valid and node with message type (%s) found.",
+	       type);
 	cl_log(LOG_DEBUG, "Returning node (%s)", xmlGetNodePath(action));
 	FNRET(action);
 }
 
 gboolean
 decodeNVpair(const char *srcstring,
-			 char separator,
-			 char **name,
-			 char **value)
+	     char separator,
+	     char **name,
+	     char **value)
 {
 	FNIN();
 	int lpc = 0;
@@ -334,7 +358,8 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	if (strcmp("dc", src_subsys) == 0) {
 		hash_value = ha_strdup(src_subsys);
 		if (!hash_value) {
-			cl_log(LOG_ERR, "memory allocation failed in "
+			cl_log(LOG_ERR,
+			       "memory allocation failed in "
 			       "generate_hash_value()\n");
 			FNRET(NULL);
 		}
@@ -344,7 +369,8 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	ref_len = strlen(src_subsys) + strlen(src_node) + 2;
 	hash_value = (char*)ha_malloc(sizeof(char)*(ref_len));
 	if (!hash_value) {
-		cl_log(LOG_ERR, "memory allocation failed in "
+		cl_log(LOG_ERR,
+		       "memory allocation failed in "
 		       "generate_hash_value()\n");
 		FNRET(NULL);
 	}
@@ -363,7 +389,9 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 	char *char_value = (char*)value;
 	int value_len = strlen(char_value);
     
-	cl_log(LOG_INFO, "Decoding hash value: (%s:%d)", char_value, value_len);
+	cl_log(LOG_INFO, "Decoding hash value: (%s:%d)",
+	       char_value,
+	       value_len);
     	
 	if (strcmp("dc", (char*)value) == 0) {
 		*node = NULL;
@@ -392,16 +420,18 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 
 void
 send_hello_message(IPC_Channel *ipc_client,
-				   const char *uid,
-				   const char *client_name,
-				   const char *major_version,
-				   const char *minor_version)
+		   const char *uid,
+		   const char *client_name,
+		   const char *major_version,
+		   const char *minor_version)
 {
+	xmlNodePtr hello_node = NULL;
 	FNIN();
+	
 	if (uid == NULL || strlen(uid) == 0
-	   || client_name == NULL || strlen(client_name) == 0
-	   || major_version == NULL || strlen(major_version) == 0
-	   || minor_version == NULL || strlen(minor_version) == 0) {
+	    || client_name == NULL || strlen(client_name) == 0
+	    || major_version == NULL || strlen(major_version) == 0
+	    || minor_version == NULL || strlen(minor_version) == 0) {
 		cl_log(LOG_ERR, "Missing fields, Hello message will not be valid.");
 		return;
 	}
@@ -409,21 +439,32 @@ send_hello_message(IPC_Channel *ipc_client,
 	xmlDocPtr hello = xmlNewDoc("1.0");
 
 	hello->children = create_xml_doc_node(hello, "hello");
-	set_xml_property_copy(hello->children, "client_uuid", uid);
-	set_xml_property_copy(hello->children, "client_name", client_name);
-	set_xml_property_copy(hello->children, "major_version", major_version);
-	set_xml_property_copy(hello->children, "minor_version", minor_version);
+	set_xml_property_copy(hello->children,
+			      "client_uuid",
+			      uid);
+	set_xml_property_copy(hello->children,
+			      "client_name",
+			      client_name);
+	set_xml_property_copy(hello->children,
+			      "major_version",
+			      major_version);
+	set_xml_property_copy(hello->children,
+			      "minor_version",
+			      minor_version);
 
-	send_xmlipc_message(ipc_client, xmlDocGetRootElement(hello));
+	hello_node = xmlDocGetRootElement(hello);
+	send_xmlipc_message(ipc_client, hello_node);
+
+	free_xml(hello_node);
 }
 
 
 gboolean
 process_hello_message(IPC_Message *hello_message,
-					  char **uid,
-					  char **client_name,
-					  char **major_version,
-					  char **minor_version)
+		      char **uid,
+		      char **client_name,
+		      char **major_version,
+		      char **minor_version)
 {
 	FNIN();
 	*uid = NULL;
@@ -440,8 +481,8 @@ process_hello_message(IPC_Message *hello_message,
 		strlen(hello_message->msg_body));
 	if (hello_doc == NULL) {
 		cl_log(LOG_ERR,
-			   "Expected a Hello message, Got: %s",
-			   (char*)hello_message->msg_body);
+		       "Expected a Hello message, Got: %s",
+		       (char*)hello_message->msg_body);
 		FNRET(FALSE);
 	}
     
@@ -457,17 +498,20 @@ process_hello_message(IPC_Message *hello_message,
 	char *local_minor_version = xmlGetProp(hello, "minor_version");
     
 	if (local_uid == NULL || strlen(local_uid) == 0
-		|| local_client_name == NULL || strlen(local_client_name) == 0
-		|| local_major_version == NULL || strlen(local_major_version) == 0
-		|| local_minor_version == NULL || strlen(local_minor_version) == 0) {
+	    || local_client_name == NULL
+	    || strlen(local_client_name) == 0
+	    || local_major_version == NULL
+	    || strlen(local_major_version) == 0
+	    || local_minor_version == NULL
+	    || strlen(local_minor_version) == 0){
 		cl_log(LOG_ERR,
-			   "Hello message was not valid, discarding. Message: %s",
-			   (char*)hello_message->msg_body);
+		       "Hello message was not valid, discarding. Message: %s",
+		       (char*)hello_message->msg_body);
 		FNRET(FALSE);
 	}
     
-	*uid = ha_strdup(local_uid);
-	*client_name = ha_strdup(local_client_name);
+	*uid           = ha_strdup(local_uid);
+	*client_name   = ha_strdup(local_client_name);
 	*major_version = ha_strdup(local_major_version);
 	*minor_version = ha_strdup(local_minor_version);
 
@@ -482,20 +526,17 @@ process_hello_message(IPC_Message *hello_message,
  */
 gboolean
 forward_ipc_request(IPC_Channel *ipc_channel,
-					xmlNodePtr xml_request, xmlNodePtr xml_response_data,
-					const char *sys_to, const char *sys_from)
+		    xmlNodePtr xml_request, xmlNodePtr xml_response_data,
+		    const char *sys_to, const char *sys_from)
 {
 	FNIN();
 	gboolean was_sent = FALSE;
 	xmlNodePtr forward = create_forward(xml_request,
-										xml_response_data,
-										sys_to);
+					    xml_response_data,
+					    sys_to);
 	if (forward != NULL)
 	{
 		was_sent = send_xmlipc_message(ipc_channel, forward);
-
-		// unlink xml_response_data from wrapper and free the doc
-		unlink_xml_node(xml_response_data);
 		free_xml(forward);
 	}
 	FNRET(was_sent);
@@ -503,14 +544,13 @@ forward_ipc_request(IPC_Channel *ipc_channel,
 
 
 /*
- * Caution... this method WILL unlink xml_response_data from its
- * current context
+ * This method adds a copy of xml_response_data
  */
 gboolean
 send_ipc_request(IPC_Channel *ipc_channel, xmlNodePtr xml_msg_node,
-				 const char *host_to, const char *sys_to,
-				 const char *sys_from, const char *uid_from,
-				 const char *crm_msg_reference)
+		 const char *host_to, const char *sys_to,
+		 const char *sys_from, const char *uid_from,
+		 const char *crm_msg_reference)
 {
 	FNIN();
 	gboolean was_sent = FALSE;
@@ -523,13 +563,13 @@ send_ipc_request(IPC_Channel *ipc_channel, xmlNodePtr xml_msg_node,
 	else
 	{
 		if (strcmp(CRM_SYSTEM_LRMD, sys_from) != 0
-			&& strcmp(CRM_SYSTEM_PENGINE, sys_from) != 0
-			&& strcmp(CRM_SYSTEM_TENGINE, sys_from) != 0
-			&& strcmp(CRM_SYSTEM_DC, sys_from) != 0
-			&& strcmp(CRM_SYSTEM_CRMD, sys_from) != 0)
+		    && strcmp(CRM_SYSTEM_PENGINE, sys_from) != 0
+		    && strcmp(CRM_SYSTEM_TENGINE, sys_from) != 0
+		    && strcmp(CRM_SYSTEM_DC, sys_from) != 0
+		    && strcmp(CRM_SYSTEM_CRMD, sys_from) != 0)
 		{
 			cl_log(LOG_ERR,
-				   "only internal systems can leave uid_from blank");
+			       "only internal systems can leave uid_from blank");
 			FNRET(FALSE);
 		}
 	}
@@ -543,26 +583,26 @@ send_ipc_request(IPC_Channel *ipc_channel, xmlNodePtr xml_msg_node,
 
 	// the root_xml_node node
 	set_xml_property_copy(doc->children,
-						  XML_ATTR_VERSION,
-						  CRM_VERSION);
+			      XML_ATTR_VERSION,
+			      CRM_VERSION);
 	set_xml_property_copy(doc->children,
-						  XML_MSG_ATTR_MSGTYPE,
-						  message_type);
+			      XML_MSG_ATTR_MSGTYPE,
+			      message_type);
 	set_xml_property_copy(doc->children,
-						  XML_ATTR_TSTAMP,
-						  getNow());
-    set_xml_property_copy(doc->children,
-						  XML_MSG_ATTR_REFERENCE,
-						  crm_msg_reference);
+			      XML_ATTR_TSTAMP,
+			      getNow());
 	set_xml_property_copy(doc->children,
-						  XML_MSG_ATTR_HOSTTO,
-						  host_to);
+			      XML_MSG_ATTR_REFERENCE,
+			      crm_msg_reference);
 	set_xml_property_copy(doc->children,
-						  XML_MSG_ATTR_SYSTO,
-						  sys_to);
+			      XML_MSG_ATTR_HOSTTO,
+			      host_to);
 	set_xml_property_copy(doc->children,
-						  XML_MSG_ATTR_SYSFROM,
-						  true_from);
+			      XML_MSG_ATTR_SYSTO,
+			      sys_to);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_SYSFROM,
+			      true_from);
 
 	// create a place holder for the eventual data
 	xmlNodePtr xml_node = create_xml_node(doc->children, message_type);
@@ -572,23 +612,19 @@ send_ipc_request(IPC_Channel *ipc_channel, xmlNodePtr xml_msg_node,
     
 	if (xml_msg_node != NULL)
 	{
-		unlink_xml_node(xml_msg_node);
-		xmlAddChild(xml_node, xml_msg_node);
+		xmlAddChild(xml_node, xmlCopyNode(xml_msg_node, 1));
 	}
 
 	was_sent =
 		send_xmlipc_message(ipc_channel, xmlDocGetRootElement(doc));
 
-	// unlink xml_msg_node from xml_node and free the doc
-	if (xml_msg_node != NULL) unlink_xml_node(xml_msg_node);
 	free_xml(xml_node);
     
 	FNRET(was_sent);
 }
 
 /*
- * Caution... this method WILL unlink xml_response_data from its
- * current context
+ * This method adds a copy of xml_response_data
  */
 gboolean
 send_ha_request()
@@ -599,61 +635,48 @@ send_ha_request()
 }
 
 /*
- * Caution... this method WILL unlink xml_response_data from its
- * current context
+ * This method adds a copy of xml_response_data
  */
 gboolean
 send_ipc_reply(IPC_Channel *ipc_channel,
-			   xmlNodePtr xml_request,
-			   xmlNodePtr xml_response_data)
+	       xmlNodePtr xml_request,
+	       xmlNodePtr xml_response_data)
 {
 	FNIN();
 	gboolean was_sent = FALSE;
 	xmlNodePtr reply = create_reply(xml_request, xml_response_data);
 	if (reply != NULL) {
 		was_sent = send_xmlipc_message(ipc_channel, reply);
-
-		// unlink xml_response_data from wrapper and free the doc
-		unlink_xml_node(xml_response_data);
-		char *reply_text = dump_xml(reply);
-		CRM_DEBUG2("freeing reply: [%s]", reply_text);
-		ha_free(reply_text);
 		free_xml(reply);
 	}
 	FNRET(was_sent);
 }
 
-
-/*
- * Caution... this method WILL unlink xml_response_data from its
- * current context
- */
 // required?  or just send to self an let relay_message do its thing?
+/*
+ * This method adds a copy of xml_response_data
+ */
 gboolean
 send_ha_reply(ll_cluster_t *hb_cluster,
-			  xmlNodePtr xml_request,
-			  xmlNodePtr xml_response_data)
+	      xmlNodePtr xml_request,
+	      xmlNodePtr xml_response_data)
 {
 	FNIN();
 	gboolean was_sent = FALSE;
 	xmlNodePtr reply = create_reply(xml_request, xml_response_data);
 	if (reply != NULL) {
 		was_sent = send_xmlha_message(hb_cluster, reply);
-
-		// unlink xml_response_data from wrapper and free the doc
-		unlink_xml_node(xml_response_data);
 		free_xml(reply);
 	}
 	FNRET(was_sent);
 }
 
 /*
- * Caution... this method WILL unlink xml_response_data from its
- * current context
+ * This method adds a copy of xml_response_data
  */
 xmlNodePtr
 create_reply(xmlNodePtr original_request,
-			 xmlNodePtr xml_response_data)
+	     xmlNodePtr xml_response_data)
 {
 	const char *message_type = XML_MSG_TAG_RESPONSE;
 	const char *crm_msg_reference = NULL;
@@ -674,13 +697,13 @@ create_reply(xmlNodePtr original_request,
 	if (type == NULL)
 	{
 		cl_log(LOG_ERR,
-			   "Cannot create reply, no message type in original message");
+		       "Cannot create reply, no message type in original message");
 		FNRET(NULL);
 	}
 	else if (strcmp(XML_MSG_TAG_REQUEST, type) != 0)
 	{
 		cl_log(LOG_ERR,
-			   "Cannot create reply, original message was not a request");
+		       "Cannot create reply, original message was not a request");
 		FNRET(NULL);
 	}
 
@@ -698,21 +721,34 @@ create_reply(xmlNodePtr original_request,
 	doc->children = create_xml_doc_node(doc, XML_MSG_TAG);
 
 	// the root_xml_node node
-	set_xml_property_copy(doc->children, XML_ATTR_VERSION,     CRM_VERSION);
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_MSGTYPE, message_type);
-	set_xml_property_copy(doc->children, XML_ATTR_TSTAMP,      getNow());
+	set_xml_property_copy(doc->children,
+			      XML_ATTR_VERSION,
+			      CRM_VERSION);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_MSGTYPE, message_type);
+	set_xml_property_copy(doc->children,
+			      XML_ATTR_TSTAMP,
+			      getNow());
 
 	/* since this is a reply, we reverse the from and to */
 
 	// HOSTTO will be ignored if it is to the DC anyway.
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_HOSTTO,   host_from);
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_HOSTFROM, host_to);
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_SYSTO,    sys_from);
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_SYSFROM,  sys_to);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_HOSTTO,
+			      host_from);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_HOSTFROM,
+			      host_to);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_SYSTO,
+			      sys_from);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_SYSFROM,
+			      sys_to);
 
 	set_xml_property_copy(doc->children,
-						  XML_MSG_ATTR_REFERENCE,
-						  crm_msg_reference);
+			      XML_MSG_ATTR_REFERENCE,
+			      crm_msg_reference);
 
 	// create a place holder for the eventual data
 	xmlNodePtr xml_node   = create_xml_node(doc->children, message_type);
@@ -720,23 +756,20 @@ create_reply(xmlNodePtr original_request,
 	CRM_DEBUG("Created reply wrapper...");
 	xml_message_debug(xmlDocGetRootElement(doc));
     
-	if (xml_response_data != NULL)
-	{
-		unlink_xml_node(xml_response_data);
-		xmlAddChild(xml_node, xml_response_data);
+	if (xml_response_data != NULL) {
+		xmlAddChild(xml_node, xmlCopyNode(xml_response_data, 1));
 	}
     
 	FNRET(xmlDocGetRootElement(doc));
 }
 
 /*
- * Caution... this method WILL unlink xml_response_data from its
- * current context
+ * This method adds a copy of xml_response_data
  */
 xmlNodePtr
 create_forward(xmlNodePtr original_request,
-			   xmlNodePtr xml_response_data,
-			   const char *sys_to)
+	       xmlNodePtr xml_response_data,
+	       const char *sys_to)
 {
 	const char *message_type = XML_MSG_TAG_REQUEST;
 	const char *crm_msg_reference = NULL;
@@ -746,7 +779,8 @@ create_forward(xmlNodePtr original_request,
 	const char *type      = NULL;
 	
 	FNIN();
-	crm_msg_reference = xmlGetProp(original_request, XML_MSG_ATTR_REFERENCE);
+	crm_msg_reference = xmlGetProp(original_request,
+				       XML_MSG_ATTR_REFERENCE);
 	host_from = xmlGetProp(original_request, XML_MSG_ATTR_HOSTFROM);
 	host_to   = xmlGetProp(original_request, XML_MSG_ATTR_HOSTTO);
 	sys_from  = xmlGetProp(original_request, XML_MSG_ATTR_SYSFROM);
@@ -755,13 +789,13 @@ create_forward(xmlNodePtr original_request,
 	if (type == NULL)
 	{
 		cl_log(LOG_ERR,
-			   "Cannot create reply, no message type in original message");
+		       "Cannot create reply, no message type in original message");
 		FNRET(NULL);
 	}
 	else if (strcmp(XML_MSG_TAG_REQUEST, type) != 0)
 	{
 		cl_log(LOG_ERR,
-			   "Cannot create reply, original message was not a request");
+		       "Cannot create reply, original message was not a request");
 		FNRET(NULL);
 	}
 
@@ -779,29 +813,41 @@ create_forward(xmlNodePtr original_request,
 	doc->children = create_xml_doc_node(doc, XML_MSG_TAG);
 
 	// the root_xml_node node
-	set_xml_property_copy(doc->children, XML_ATTR_VERSION,     CRM_VERSION);
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_MSGTYPE, message_type);
-	set_xml_property_copy(doc->children, XML_ATTR_TSTAMP,      getNow());
+	set_xml_property_copy(doc->children,
+			      XML_ATTR_VERSION,
+			      CRM_VERSION);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_MSGTYPE,
+			      message_type);
+	set_xml_property_copy(doc->children,
+			      XML_ATTR_TSTAMP,
+			      getNow());
     
 	// HOSTTO will be ignored if it is to the DC anyway.
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_HOSTTO,   host_to);
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_HOSTFROM, host_from);
-
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_SYSTO,    sys_to);
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_SYSFROM,  sys_from);
-
-	set_xml_property_copy(doc->children, XML_MSG_ATTR_REFERENCE,
-						  crm_msg_reference);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_HOSTTO,
+			      host_to);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_HOSTFROM,
+			      host_from);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_SYSTO,
+			      sys_to);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_SYSFROM,
+			      sys_from);
+	set_xml_property_copy(doc->children,
+			      XML_MSG_ATTR_REFERENCE,
+			      crm_msg_reference);
     
 	// create a place holder for the eventual data
-	xmlNodePtr xml_node   = create_xml_node(doc->children, message_type);
+	xmlNodePtr xml_node = create_xml_node(doc->children, message_type);
 
 	CRM_DEBUG("Created forward wrapper...");
 	xml_message_debug(xmlDocGetRootElement(doc));
     
 	if (xml_response_data != NULL) {
-		unlink_xml_node(xml_response_data);
-		xmlAddChild(xml_node, xml_response_data);
+		xmlAddChild(xml_node, xmlCopyNode(xml_response_data, 1));
 	}
     
 	FNRET(xmlDocGetRootElement(doc));

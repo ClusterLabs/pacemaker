@@ -19,11 +19,10 @@
 #ifndef CRM_DMALLOC__H
 #define CRM_DMALLOC__H
 
-#ifdef DMALLOC
+#include <linux-ha/config.h>
+
+#ifdef CRM_DEBUG_DMALLOC
 #   include "dmalloc.h"
-//#   define	_STRING_H	1
-//#   define	_STDLIB_H	1
-//#else
 #endif
 
 #endif

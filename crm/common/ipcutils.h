@@ -20,32 +20,60 @@
 
 #include <hb_api.h>
 #include <clplumbing/ipc.h>
+#include <clplumbing/GSource.h>
 
 #include <libxml/tree.h>
-extern void LinkStatus(const char * node, const char * lnk, const char * status ,void * private);
+
+typedef struct _crmd_client 
+{
+		char *sub_sys;
+		char *uid;
+		char *table_key;
+		IPC_Channel *client_channel;
+		GCHSource *client_source;
+} crmd_client_t;
+
+extern void LinkStatus(const char * node, const char * lnk,
+		       const char * status ,void * private);
 
 extern gboolean default_ipc_input_dispatch(IPC_Channel *, gpointer);
+
 extern void default_ipc_input_destroy(gpointer user_data);
-extern int init_server_ipc_comms(const char *child,
-				 gboolean (*channel_client_connect)(IPC_Channel *newclient, gpointer user_data),
-				 void (*channel_input_destroy)(gpointer user_data));
-extern IPC_Channel *
-init_client_ipc_comms(const char *child,
-		      gboolean (*dispatch)(IPC_Channel* source_data, gpointer user_data));
+
+extern int init_server_ipc_comms(
+	const char *child,
+	gboolean (*channel_client_connect)(IPC_Channel *newclient,
+					   gpointer user_data),
+	void (*channel_input_destroy)(gpointer user_data));
+
+extern IPC_Channel *init_client_ipc_comms(
+	const char *child,
+	gboolean (*dispatch)(IPC_Channel* source_data, gpointer user_data),
+	crmd_client_t *user_data);
+
 extern IPC_WaitConnection *wait_channel_init(char daemonfifo[]);
+
 extern IPC_Message *get_ipc_message(IPC_Channel *client);
+
 extern char* getNow(void);
+
 extern char *dump_xml(xmlNodePtr msg);
+
 extern char *dump_xml_node(xmlNodePtr msg, gboolean whole_doc);
 
 extern xmlNodePtr find_xml_in_hamessage(const struct ha_msg* msg);
-extern xmlNodePtr find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free);
 
-extern gboolean send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg);
+extern xmlNodePtr find_xml_in_ipcmessage(IPC_Message *msg,
+					 gboolean do_free);
+
+extern gboolean send_xmlipc_message(IPC_Channel *ipc_client,
+				    xmlNodePtr msg);
+
 extern gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);
+
 extern gboolean send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg);
 
-IPC_Message *get_ipc_message(IPC_Channel *client);
+extern IPC_Message *get_ipc_message(IPC_Channel *client);
 
 
 #endif

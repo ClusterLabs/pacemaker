@@ -19,8 +19,6 @@
 #ifndef CRMINTERNAL_H
 #define CRMINTERNAL_H
 
-
-
 #include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -51,37 +49,45 @@ typedef xmlNode cibHaNode;
 /* extern xmlNodePtr status_search; */
 /* extern const char* crm_system_name; */
 
-extern void* ha_malloc(size_t size);
+extern xmlNodePtr get_the_CIB(void);
+extern xmlNodePtr getCibSection(const char *section);
 
-xmlNodePtr get_the_CIB(void);
-xmlNodePtr getCibSection(const char *section);
+extern cibResource   *newResource  (const char *id,
+									const char *type,
+									const char *name,
+									const char *max_instances);
 
-cibResource   *newResource  (const char *id, const char *type, const char *name, const char *max_instances);
-cibStatus     *newStatus    (const char *res_id, const char *node_id, const char *instance);
-cibConstraint *newConstraint(const char *id);
-cibHaNode     *newHaNode    (const char *id, const char *type);
+extern cibConstraint *newConstraint(const char *id);
 
-int addResource  (xmlNodePtr cib, cibResource   *xml_node);
-int addStatus    (xmlNodePtr cib, cibStatus     *xml_node);
-int addConstraint(xmlNodePtr cib, cibConstraint *xml_node);
-int addHaNode    (xmlNodePtr cib, cibHaNode     *xml_node);
+extern cibHaNode     *newHaNode    (const char *id,
+									const char *type);
 
-xmlNodePtr findResource  (xmlNodePtr cib, const char *id);
-xmlNodePtr findStatus    (xmlNodePtr cib, const char *id, const char *instanceNum);
-xmlNodePtr findConstraint(xmlNodePtr cib, const char *id);
-xmlNodePtr findHaNode    (xmlNodePtr cib, const char *id);
+extern cibStatus     *newStatus    (const char *res_id,
+									const char *node_id,
+									const char *instance);
 
-int updateResource  (xmlNodePtr cib, cibResource   *resource);
-int updateStatus    (xmlNodePtr cib, cibStatus     *resource);
-int updateConstraint(xmlNodePtr cib, cibConstraint *resource);
-int updateHaNode    (xmlNodePtr cib, cibHaNode     *resource);
+extern int addResource  (xmlNodePtr cib, cibResource   *xml_node);
+extern int addConstraint(xmlNodePtr cib, cibConstraint *xml_node);
+extern int addHaNode    (xmlNodePtr cib, cibHaNode     *xml_node);
+extern int addStatus    (xmlNodePtr cib, cibStatus     *xml_node);
 
-int delResource  (xmlNodePtr cib, const char *id);
-int delStatus    (xmlNodePtr cib, const char *id, const char *instanceNum);
-int delConstraint(xmlNodePtr cib, const char *id);
-int delHaNode    (xmlNodePtr cib, const char *id);
+extern xmlNodePtr findResource  (xmlNodePtr cib, const char *id);
+extern xmlNodePtr findConstraint(xmlNodePtr cib, const char *id);
+extern xmlNodePtr findHaNode    (xmlNodePtr cib, const char *id);
+extern xmlNodePtr findStatus    (xmlNodePtr cib, const char *id,
+								 const char *instanceNum);
+
+extern int updateResource  (xmlNodePtr cib, cibResource   *resource);
+extern int updateConstraint(xmlNodePtr cib, cibConstraint *resource);
+extern int updateHaNode    (xmlNodePtr cib, cibHaNode     *resource);
+extern int updateStatus    (xmlNodePtr cib, cibStatus     *resource);
+
+extern int delResource  (xmlNodePtr cib, const char *id);
+extern int delConstraint(xmlNodePtr cib, const char *id);
+extern int delHaNode    (xmlNodePtr cib, const char *id);
+extern int delStatus    (xmlNodePtr cib, const char *id,
+						 const char *instanceNum);
 
 int test(void);
-xmlDocPtr createTree(void);
 
 #endif

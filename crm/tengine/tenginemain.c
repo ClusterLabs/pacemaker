@@ -77,50 +77,50 @@ main(int argc, char ** argv)
 
     if (0)
     {
-	send_ipc_message(NULL, NULL);
+		send_ipc_message(NULL, NULL);
     }
     
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
-	switch(flag) {
-	    case 's':		/* Status */
-		req_status = TRUE;
-		break;
-	    case 'k':		/* Stop (kill) */
-		req_stop = TRUE;
-		break;
-	    case 'r':		/* Restart */
-		req_restart = TRUE;
-		break;
-	    case 'h':		/* Help message */
-		usage(crm_system_name, LSB_EXIT_OK);
-		break;
-	    default:
-		++argerr;
-		break;
-	}
+		switch(flag) {
+			case 's':		/* Status */
+				req_status = TRUE;
+				break;
+			case 'k':		/* Stop (kill) */
+				req_stop = TRUE;
+				break;
+			case 'r':		/* Restart */
+				req_restart = TRUE;
+				break;
+			case 'h':		/* Help message */
+				usage(crm_system_name, LSB_EXIT_OK);
+				break;
+			default:
+				++argerr;
+				break;
+		}
     }
     
     if (optind > argc) {
-	++argerr;
+		++argerr;
     }
     
     if (argerr) {
-	usage(crm_system_name,LSB_EXIT_GENERIC);
+		usage(crm_system_name,LSB_EXIT_GENERIC);
     }
     
     // read local config file
     
     if (req_status){
-	return init_status(PID_FILE, crm_system_name);
+		return init_status(PID_FILE, crm_system_name);
     }
   
     if (req_stop){
-	return init_stop(PID_FILE, mainloop);
+		return init_stop(PID_FILE);
     }
   
     if (req_restart) { 
-	init_stop(PID_FILE, mainloop);
+		init_stop(PID_FILE);
     }
 
     return init_start();
@@ -134,8 +134,8 @@ init_start(void)
     long pid;
 
     if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
-	cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
-	exit(LSB_EXIT_OK);
+		cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
+		exit(LSB_EXIT_OK);
     }
   
     cl_log_set_logfile(DAEMON_LOG);
@@ -153,13 +153,15 @@ init_start(void)
     int facility;
     cl_log(LOG_INFO, "Switching to Heartbeat logger");
     if ((facility = hb_fd->llc_ops->get_logfacility(hb_fd))>0) {
-	cl_log_set_facility(facility);
+		cl_log_set_facility(facility);
     }
     
     cl_log(LOG_INFO, "Register PID");
     register_pid(PID_FILE, TRUE, shutdown);
 
-    IPC_Channel *crm_ch = init_client_ipc_comms("crmd", default_ipc_input_dispatch);
+    IPC_Channel *crm_ch = init_client_ipc_comms("crmd",
+												default_ipc_input_dispatch,
+												NULL);
     send_hello_message(crm_ch, "1234", CRM_SYSTEM_TENGINE, "0", "1");
 
     /* Create the mainloop and run it... */
@@ -167,20 +169,20 @@ init_start(void)
     cl_log(LOG_INFO, "Starting %s", crm_system_name);
 
     G_main_add_IPC_Channel(G_PRIORITY_LOW,
-			   crm_ch,
-			   FALSE, 
-			   default_ipc_input_dispatch,
-			   crm_ch, 
-			   default_ipc_input_destroy);
+						   crm_ch,
+						   FALSE, 
+						   default_ipc_input_dispatch,
+						   crm_ch, 
+						   default_ipc_input_destroy);
 
     
     
 #ifdef REALTIME_SUPPORT
-static int  crm_realtime = 1;
+	static int  crm_realtime = 1;
     if (crm_realtime == 1){
-	cl_enable_realtime();
+		cl_enable_realtime();
     }else if (crm_realtime == 0){
-	cl_disable_realtime();
+		cl_disable_realtime();
     }
     cl_make_realtime(SCHED_RR, 5, 64, 64);
 #endif
@@ -189,7 +191,7 @@ static int  crm_realtime = 1;
     return_to_orig_privs();
   
     if (unlink(PID_FILE) == 0) {
-	cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
+		cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
     }
     return 0;
 }
@@ -203,7 +205,7 @@ usage(const char* cmd, int exit_status)
     stream = exit_status ? stderr : stdout;
 
     fprintf(stream, "usage: %s [-srkh]"
-	    "[-c configure file]\n", cmd);
+			"[-c configure file]\n", cmd);
 /* 	fprintf(stream, "\t-d\tsets debug level\n"); */
 /* 	fprintf(stream, "\t-s\tgets daemon status\n"); */
 /* 	fprintf(stream, "\t-r\trestarts daemon\n"); */
@@ -221,11 +223,11 @@ shutdown(int nsig)
     CL_SIGNAL(nsig, shutdown);
   
     if (!shuttingdown) {
-	shuttingdown = 1;
+		shuttingdown = 1;
     }
     if (mainloop != NULL && g_main_is_running(mainloop)) {
-	g_main_quit(mainloop);
+		g_main_quit(mainloop);
     }else{
-	exit(LSB_EXIT_OK);
+		exit(LSB_EXIT_OK);
     }
 }
