@@ -1073,6 +1073,7 @@ class Split_brainTest(CTSTest):
             return self.failure("Could not isolate the nodes")
         if not watchstop.lookforall():
             self.CM.unisolate_node(node)
+            self.CM.log("Patterns not found: " + repr(watchstop.unmatched))
             return self.failure("Didn't find the log 'dead' message")
 
         '''
