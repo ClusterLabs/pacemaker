@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.33 2004/09/21 19:22:00 andrew Exp $ */
+/* $Id: tengine.c,v 1.34 2004/09/29 19:42:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,6 +35,7 @@ gboolean initiate_action(action_t *action);
 gboolean in_transition = FALSE;
 
 int global_transition_timer = 0;
+int transition_counter = 0;
 
 gboolean
 initialize_graph(void)
@@ -228,12 +229,13 @@ process_graph_event(xmlNodePtr event)
 	
 	if(action_id > -1) {
 		crm_xml_devel(event, "Event found");
+		
 	} else if(action_id == -2) {
 		crm_xml_info(event, "Event found but failed");
+		
 	} else if(event != NULL) {
 		/* unexpected event, trigger a pe-recompute */
 		/* possibly do this only for certain types of actions */
-		crm_err("Action not matched, aborting transition");
 		send_abort("Event not matched", event);
 		return FALSE;
 /*	} else { we dont care, a transition is starting */
@@ -249,33 +251,39 @@ process_graph_event(xmlNodePtr event)
 		synapse, synapse_t, graph, lpc,
 		
 		gboolean prereqs_complete = TRUE;
-		if(synapse->complete) {
+
+		if(synapse->confirmed) {
+			crm_debug("Skipping confirmed synapse %d", synapse->id);
 			continue;
-		} else {
-			/* indicate that the transition is not yet complete */
-			complete = FALSE;
+			
+		} else if(synapse->complete == FALSE) {
+			crm_debug("Checking pre-reqs for %d", synapse->id);
+			/* lookup prereqs */
+			slist_iter(
+				prereq, action_t, synapse->inputs, lpc2,
+				
+				crm_devel("Processing input %d", prereq->id);
+				
+				if(prereq->id == action_id) {
+					crm_devel("Marking input %d complete",
+						  action_id);
+					prereq->complete = TRUE;
+					
+				} else if(prereq->complete == FALSE) {
+					crm_devel("Inputs for synapse %d not satisfied",
+						  synapse->id);
+					prereqs_complete = FALSE;
+				}
+				
+				);
 		}
-
-		/* lookup prereqs */
-		slist_iter(
-			prereq, action_t, synapse->inputs, lpc2,
-			
-			crm_devel("Processing input %d", prereq->id);
-
-			if(prereq->id == action_id) {
-				crm_devel("Marking input %d complete",
-					action_id);
-				prereq->complete = TRUE;
-
-			} else if(prereq->complete == FALSE) {
-				crm_devel("Inputs for synapse %d not satisfied",
-					synapse->id);
-				prereqs_complete = FALSE;
-			}
-			
-			);
-
-		if(prereqs_complete) {
+		
+		crm_debug("Initiating outstanding actions for %d", synapse->id);
+		if(synapse->complete) {
+			crm_debug("Skipping complete synapse %d", synapse->id);
+			continue;
+		
+		} else if(prereqs_complete) {
 
 			crm_devel("All inputs for synapse %d satisfied..."
 				  " invoking actions", synapse->id);
@@ -309,6 +317,31 @@ process_graph_event(xmlNodePtr event)
 			crm_debug("Synapse %d complete", synapse->id);
 		}
 		
+		crm_debug("Checking if %d is confirmed", synapse->id);
+		if(synapse->complete == FALSE) {
+			crm_debug("Found an incomplete synapse"
+				  " - transition not complete");
+			/* indicate that the transition is not yet complete */
+			complete = FALSE;
+			
+		} else if(synapse->confirmed == FALSE) {
+			synapse->confirmed = TRUE;
+			slist_iter(
+				action, action_t, synapse->actions, lpc2,
+				
+				if(action->type == action_type_rsc
+				   && action->complete == FALSE) {
+					complete = FALSE;
+					synapse->confirmed = FALSE;
+					crm_debug("Found an incomplete action"
+						  " - transition not complete");
+					break;
+				}
+				);
+		}
+		crm_debug("%d is %s",
+			  synapse->id,
+			  synapse->confirmed?"confirmed":synapse->complete?"complete":"pending");
 		);
 
 	/* restart the transition timer again */
@@ -325,6 +358,11 @@ process_graph_event(xmlNodePtr event)
 gboolean
 initiate_action(action_t *action) 
 {
+	gboolean ret = FALSE;
+
+	xmlNodePtr options = NULL;
+	xmlNodePtr data    = NULL;
+
 	const char *on_node   = NULL;
 	const char *id        = NULL;
 	const char *runnable  = NULL;
@@ -332,9 +370,9 @@ initiate_action(action_t *action)
 	const char *task      = NULL;
 	const char *discard   = NULL;
 	const char *timeout   = NULL;
+	const char *destination = NULL;
+	
 #ifndef TESTING
-	xmlNodePtr options = NULL;
-	xmlNodePtr data    = NULL;
 	xmlNodePtr rsc_op  = NULL;
 #endif
 
@@ -353,52 +391,28 @@ initiate_action(action_t *action)
 		crm_err("Failed on corrupted command: %s (id=%s) on %s",
 			crm_str(task), crm_str(id), crm_str(on_node));
 			
-		return FALSE;
+	} else if(action->type == action_type_pseudo){
+		crm_err("Failed on unsupported %s: "
+			"%s (id=%s) on %s",
+			action->xml->name, task, id, on_node);
+		
+		action->complete = TRUE;
 			
-	} else if(safe_str_eq(action->xml->name, "pseduo_event")){
-		if(safe_str_eq(task, "stonith")){
-			crm_info("Executing %s (%s) of node %s",
-				 task, id, on_node);
-/*
-  translate this into a stonith op by deisgnated node
-  may need the CIB to determine who is running the stonith resource
-  for this node
-  more liekly, have the pengine find and supply that info 
-*/
-		} else {
-			crm_err("Failed on unsupported %s: "
-				"%s (id=%s) on %s",
-				action->xml->name, task, id, on_node);
-				
-			return FALSE;
-		}
-			
-			
-	} else if(safe_str_eq(action->xml->name, "crm_event")){
+	} else if(action->type == action_type_crm){
 		/*
 		  <crm_msg op=XML_LRM_ATTR_TASK to=XML_RES_ATTR_TARGET>
 		*/
 		crm_info("Executing crm-event (%s): %s on %s",
 			 id, task, on_node);
 #ifndef TESTING
-		options = create_xml_node(
-			NULL, XML_TAG_OPTIONS);
+		data = NULL;
+		action->complete = TRUE;
+		destination = CRM_SYSTEM_CRMD;
+		options = create_xml_node(NULL, XML_TAG_OPTIONS);
 		set_xml_property_copy(options, XML_ATTR_OP, task);
-
-		send_ipc_request(
-			crm_ch, options, NULL, on_node,
-			CRM_SYSTEM_CRMD,CRM_SYSTEM_TENGINE,NULL,NULL);
-
-		if(action->timeout > 0) {
-			crm_debug("Setting timer for action %d",action->id);
-			action->timer_id = Gmain_timeout_add(
-				action->timeout, timer_callback, action);
-		}
-		
-		free_xml(options);
 #endif			
-		return TRUE;
-	} else if(safe_str_eq(action->xml->name, "rsc_op")){
+		ret = TRUE;
+	} else if(action->type == action_type_rsc){
 		crm_info("Executing rsc-op (%s): %s %s on %s",
 			 id, task,
 			 xmlGetProp(action->xml->children, XML_ATTR_ID),
@@ -418,37 +432,62 @@ initiate_action(action_t *action)
 		options = create_xml_node(NULL, XML_TAG_OPTIONS);
 
 		set_xml_property_copy(options, XML_ATTR_OP, "rsc_op");
-			
+		
 		set_xml_property_copy(rsc_op, XML_ATTR_ID, id);
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TASK, task);
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TARGET, on_node);
 			
 		add_node_copy(rsc_op, action->xml->children);
 
-		send_ipc_request(crm_ch, options, data,
-				 on_node, "lrmd", CRM_SYSTEM_TENGINE,
-				 NULL, NULL);
+		destination = CRM_SYSTEM_LRMD;
+		
+			
+#endif			
+		ret = TRUE;
+			
+	} else {
+		crm_err("Failed on unsupported command type: "
+			"%s, %s (id=%s) on %s",
+			action->xml->name, task, id, on_node);
+	}
+
+	if(ret && options != NULL) {
+		char *counter = crm_itoa(transition_counter);
+		set_xml_property_copy(
+			options, "transition_id", crm_str(counter));
+		crm_free(counter);
+
+		crm_xml_debug(options, "Performing");
+		if(data != NULL) {
+			crm_xml_debug(data, "Performing");
+		}
+#ifdef MSG_LOG
+		if(msg_te_strm != NULL) {
+			char *message = dump_xml_formatted(data);
+			char *ops = dump_xml_formatted(options);
+			fprintf(msg_te_strm, "[Action]\t%s\n%s\n",
+				crm_str(ops), crm_str(message));
+			fflush(msg_te_strm);
+			crm_free(message);
+			crm_free(ops);
+		}
+#endif
+		send_ipc_request(
+			crm_ch, options, data, on_node,
+			destination, CRM_SYSTEM_TENGINE, NULL, NULL);
 
 		if(action->timeout > 0) {
 			crm_debug("Setting timer for action %d",action->id);
 			action->timer_id = Gmain_timeout_add(
 				action->timeout, timer_callback, action);
 		}
-			
-		free_xml(options);
-		free_xml(data);
-#endif			
-		return TRUE;
-			
-	} else {
-		crm_err("Failed on unsupported command type: "
-			"%s, %s (id=%s) on %s",
-			action->xml->name, task, id, on_node);
 
-		return FALSE;
 	}
 	
-	return FALSE;
+	free_xml(options);
+	free_xml(data);
+	
+	return ret;
 }
 
 gboolean

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.4 2004/09/21 19:22:00 andrew Exp $ */
+/* $Id: unpack.c,v 1.5 2004/09/29 19:42:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,6 +31,7 @@
 gboolean process_te_message(xmlNodePtr msg, IPC_Channel *sender);
 action_t* unpack_action(xmlNodePtr xml_action);
 xmlNodePtr create_shutdown_event(const char *node, int op_status);
+extern int transition_counter;
 
 gboolean
 unpack_graph(xmlNodePtr xml_graph)
@@ -49,6 +50,9 @@ unpack_graph(xmlNodePtr xml_graph)
 	int num_actions = 0;
 
 	const char *time = xmlGetProp(xml_graph, "global_timeout");
+
+	transition_counter++;
+	
 	if(time != NULL) {
 		int tmp_time = atoi(time);
 		if(time > 0) {
@@ -56,8 +60,8 @@ unpack_graph(xmlNodePtr xml_graph)
 		}
 	}
 
-	crm_info("Default transition timeout set to %d",
-		 default_transition_timeout);
+	crm_info("Beginning transition %d - timeout set to %d",
+		 transition_counter, default_transition_timeout);
 
 	xml_child_iter(
 		xml_graph, synapse, "synapse",
@@ -66,6 +70,7 @@ unpack_graph(xmlNodePtr xml_graph)
 		crm_malloc(new_synapse, sizeof(synapse_t));
 		new_synapse->id       = num_synapses++;
 		new_synapse->complete = FALSE;
+		new_synapse->confirmed= FALSE;
 		new_synapse->actions  = NULL;
 		new_synapse->inputs   = NULL;
 		

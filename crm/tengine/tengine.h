@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.6 2004/09/21 19:22:00 andrew Exp $ */
+/* $Id: tengine.h,v 1.7 2004/09/29 19:42:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,6 +38,7 @@ typedef enum {
 typedef struct synapse_s {
 		int id;
 		gboolean complete;
+		gboolean confirmed;
 		GListPtr actions; /* action_t* */
 		GListPtr inputs;  /* action_t* */
 } synapse_t;
