@@ -114,14 +114,30 @@ class RemoteExec:
         cpstring=self.CpCommand
         for arg in args:
             cpstring = cpstring + " \'" + arg + "\'"
-        return os.system(cpstring) == 0
+            
+        count=0;
+        rc = 0;
+        for i in range(3):
+            rc = os.system(cpstring)
+            if rc == 0: 
+                return rc
+            print "Retrying command %s" % cpstring
+        return rc
 
     def noBlock(self, *args):
         '''Perform a remote execution without waiting for it to finish'''
         sshnoBlock = self.CommandnoBlock
         for arg in args:
             sshnoBlock = sshnoBlock + " \'" + arg + "\'"
-        return os.system(sshnoBlock) == 0
+        
+        count=0;
+        rc = 0;
+        for i in range(3):
+            rc = os.system(sshnoBlock)
+            if rc == 0: 
+                return rc
+            print "Retrying command %s" % sshnoBlock
+        return rc
 
 
 class LogWatcher:
