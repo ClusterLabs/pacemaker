@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.29 2005/04/01 12:28:37 andrew Exp $ */
+/* $Id: ipc.c,v 1.30 2005/04/05 15:25:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -347,11 +347,12 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 	}
 
 	/* clean up after a break */
-	if(msg != NULL)
+	if(msg != NULL) {
 		msg->msg_done(msg);
-
+	}
+	
 	crm_verbose("Processed %d messages", lpc);
-	if (sender->ch_status == IPC_DISCONNECT) {
+	if (sender->ch_status != IPC_CONNECT) {
 		crm_err("The server has left us: Shutting down...NOW");
 
 		exit(1); /* shutdown properly later */
