@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.44 2004/11/09 16:50:35 andrew Exp $ */
+/* $Id: unpack.c,v 1.45 2004/11/12 17:18:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -326,8 +326,7 @@ unpack_constraints(xmlNodePtr xml_constraints,
 				xml_obj, resources, nodes, placement_constraints);
 
 		} else {
-			crm_err("Unsupported constraint type: %s",
-				xml_obj->name);
+			crm_err("Unsupported constraint type: %s", xml_obj->name);
 		}
 		);
 
@@ -797,49 +796,49 @@ order_new(resource_t *lh_rsc, enum action_tasks lh_action_task, action_t *lh_act
 
 	crm_malloc(order, sizeof(order_constraint_t));
 
-	if(order != NULL) {
-		order->id             = order_id++;
-		order->strength       = strength;
-		order->lh_rsc         = lh_rsc;
-		order->rh_rsc         = rh_rsc;
-		order->lh_action      = lh_action;
-		order->rh_action      = rh_action;
-		order->lh_action_task = lh_action_task;
-		order->rh_action_task = rh_action_task;
+	if(order == NULL) {
+		return FALSE;
+	}
+	
+	order->id             = order_id++;
+	order->strength       = strength;
+	order->lh_rsc         = lh_rsc;
+	order->rh_rsc         = rh_rsc;
+	order->lh_action      = lh_action;
+	order->rh_action      = rh_action;
+	order->lh_action_task = lh_action_task;
+	order->rh_action_task = rh_action_task;
+	
+	*ordering_constraints = g_list_append(
+		*ordering_constraints, order);
+	
+	if(lh_rsc != NULL && rh_rsc != NULL) {
+		crm_info("Created ordering constraint %d (%s):"
+			 " %s/%s before %s/%s",
+			 order->id, strength2text(order->strength),
+			 lh_rsc->id, task2text(lh_action_task),
+			 rh_rsc->id, task2text(rh_action_task));
 		
-		*ordering_constraints = g_list_append(
-			*ordering_constraints, order);
-
-		if(lh_rsc != NULL && rh_rsc != NULL) {
-			crm_debug("Created ordering constraint %d (%s):"
-				  " %s/%s before %s/%s",
-				  order->id, strength2text(order->strength),
-				  lh_rsc->id, task2text(lh_action_task),
-				  rh_rsc->id, task2text(rh_action_task));
-
-		} else if(lh_rsc != NULL) {
-			crm_debug("Created ordering constraint %d (%s):"
-				  " %s/%s before action %d (%s)",
-				  order->id, strength2text(order->strength),
-				  lh_rsc->id, task2text(lh_action_task),
-				  rh_action->id, task2text(rh_action_task));
-
-		} else if(rh_rsc != NULL) {
-			crm_debug("Created ordering constraint %d (%s):"
-				  " action %d (%s) before %s/%s",
-				  order->id, strength2text(order->strength),
-				  lh_action->id, task2text(lh_action_task),
-				  rh_rsc->id, task2text(rh_action_task));
-			
-		} else {
-			crm_debug("Created ordering constraint %d (%s):"
-				  " action %d (%s) before action %d (%s)",
-				  order->id, strength2text(order->strength),
-				  lh_action->id, task2text(lh_action_task),
-				  rh_action->id, task2text(rh_action_task));
-		}
+	} else if(lh_rsc != NULL) {
+		crm_info("Created ordering constraint %d (%s):"
+			 " %s/%s before action %d (%s)",
+			 order->id, strength2text(order->strength),
+			 lh_rsc->id, task2text(lh_action_task),
+			 rh_action->id, task2text(rh_action_task));
 		
-
+	} else if(rh_rsc != NULL) {
+		crm_info("Created ordering constraint %d (%s):"
+			 " action %d (%s) before %s/%s",
+			 order->id, strength2text(order->strength),
+			 lh_action->id, task2text(lh_action_task),
+			 rh_rsc->id, task2text(rh_action_task));
+		
+	} else {
+		crm_info("Created ordering constraint %d (%s):"
+			 " action %d (%s) before action %d (%s)",
+			 order->id, strength2text(order->strength),
+			 lh_action->id, task2text(lh_action_task),
+			 rh_action->id, task2text(rh_action_task));
 	}
 	
 	return TRUE;
@@ -890,14 +889,19 @@ unpack_rsc_dependancy(xmlNodePtr xml_obj,
 }
 
 gboolean
-unpack_rsc_order(xmlNodePtr xml_obj,
-		  GListPtr rsc_list,
-		  GListPtr *ordering_constraints)
+unpack_rsc_order(
+	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints)
 {
-	const char *id       = xmlGetProp(xml_obj, XML_ATTR_ID);
-	const char *id_lh    = xmlGetProp(xml_obj, "from");
-	const char *id_rh    = xmlGetProp(xml_obj, "to");
-	const char *type     = xmlGetProp(xml_obj, XML_ATTR_TYPE);
+	gboolean symetrical_bool = TRUE;
+	gboolean action_is_start = TRUE;
+	gboolean type_is_after   = TRUE;
+	
+	const char *id         = xmlGetProp(xml_obj, XML_ATTR_ID);
+	const char *id_lh      = xmlGetProp(xml_obj, "from");
+	const char *id_rh      = xmlGetProp(xml_obj, "to");
+	const char *action     = xmlGetProp(xml_obj, "action");
+	const char *symetrical = xmlGetProp(xml_obj, "symetrical");
+	const char *type       = xmlGetProp(xml_obj, XML_ATTR_TYPE);
 
 	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
 	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
@@ -916,7 +920,43 @@ unpack_rsc_order(xmlNodePtr xml_obj,
 			id, rsc_lh, rsc_rh);
 		return FALSE;
 	
-	} else if(safe_str_eq(type, "after")) {
+	}
+
+	if(safe_str_eq(symetrical, "false")) {
+		symetrical_bool = FALSE;
+	}
+	if(safe_str_eq(type, "before")) {
+		type_is_after = FALSE;
+	}
+	if(safe_str_eq(action, "stop")) {
+		action_is_start = FALSE;
+	}
+
+#if 1
+	if(type_is_after && action_is_start) {
+		if(symetrical_bool || action_is_start == FALSE) {
+			order_new(rsc_lh, stop_rsc, NULL, rsc_rh, stop_rsc, NULL,
+				  pecs_startstop, ordering_constraints);
+		}
+		
+		if(symetrical_bool || action_is_start) {
+			order_new(rsc_rh, start_rsc, NULL, rsc_lh, start_rsc, NULL,
+				  pecs_startstop, ordering_constraints);
+		}
+
+	} else if(action_is_start) {
+		if(symetrical_bool || action_is_start == FALSE) {
+			order_new(rsc_rh, stop_rsc, NULL, rsc_lh, stop_rsc, NULL,
+				  pecs_startstop, ordering_constraints);
+		}
+		if(symetrical_bool || action_is_start) {
+			order_new(rsc_lh, start_rsc, NULL, rsc_rh, start_rsc, NULL,
+				  pecs_startstop, ordering_constraints);
+		}
+	}
+	
+#else	
+	if(type_is_after) {
 		order_new(rsc_lh, stop_rsc, NULL, rsc_rh, stop_rsc, NULL,
 			  pecs_startstop, ordering_constraints);
 		order_new(rsc_rh, start_rsc, NULL, rsc_lh, start_rsc, NULL,
@@ -927,6 +967,7 @@ unpack_rsc_order(xmlNodePtr xml_obj,
 		order_new(rsc_lh, start_rsc, NULL, rsc_rh, start_rsc, NULL,
 			  pecs_startstop, ordering_constraints);
 	}
+#endif
 	return TRUE;
 }
 
@@ -936,7 +977,6 @@ GListPtr
 match_attrs(const char *attr, const char *op, const char *value,
 	    const char *type, GListPtr node_list)
 {
-	int lpc = 0, lpc2 = 0;
 	GListPtr result = NULL;
 	
 	if(attr == NULL || op == NULL) {
