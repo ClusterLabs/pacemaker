@@ -538,7 +538,7 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 		cl_log(LOG_DEBUG, "Sending message via channel %s.", sys);
 		send_xmlipc_message(client_channel, action);
 	} else {
-		cl_log(LOG_INFO,
+		cl_log(LOG_ERR,
 		       "Unknown Sub-system (%s)... discarding message.",
 		       sys);
 		FNOUT();
@@ -582,7 +582,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	// otherwise, check if it was a hello message
 
 	cl_log(LOG_INFO,
-	       "recieved client join msg: %s",
+	       "received client join msg: %s",
 	       (char*)client_msg->msg_body);
 
 	gboolean result = process_hello_message(client_msg,
@@ -590,8 +590,6 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 						&client_name,
 						&major_version,
 						&minor_version);
-
-	CRM_DEBUG2("Auth result: %s", result?"good":"bad");
 
 	if (result == TRUE) {
 		// check version
@@ -607,8 +605,6 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		ha_free(major_version);
 		ha_free(minor_version);
 	}
-
-	CRM_DEBUG2("Auth result: %s", result?"good":"bad");
 
 	if (result == TRUE) {
 		/* if we already have one of those clients
@@ -646,14 +642,11 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		
 	}
 	
-
-	CRM_DEBUG2("Auth result: %s", result?"good":"bad");
-
 	if(result == TRUE && table_key == NULL)
 		table_key = (gpointer)ha_strdup(client_name);
 
 	if (result == TRUE) {
-		CRM_DEBUG2("Accepted client %s", (char*)table_key);
+		cl_log(LOG_INFO, "Accepted client %s", (char*)table_key);
 
 		curr_client->table_key = table_key;
 		curr_client->sub_sys = ha_strdup(client_name);
@@ -667,7 +660,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 				   "n/a", CRM_SYSTEM_CRMD,
 				   "0", "1");
 	} else {
-		CRM_DEBUG("Rejected client logon request");
+		cl_log(LOG_ERR, "Rejected client logon request");
 		curr_client->client_channel->ch_status = IPC_DISC_PENDING;
 	}
 	
