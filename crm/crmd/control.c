@@ -63,7 +63,7 @@ do_ha_control(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input current_input,
-	       void *data)
+	       fsa_data_t *msg_data)
 {
 	gboolean registered = FALSE;
 	
@@ -107,18 +107,16 @@ do_shutdown(long long action,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input current_input,
-	    void *data)
+	    fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input next_input = I_NULL;
 	enum crmd_fsa_input tmp = I_NULL;
 	
-	
-
 	/* last attempt to shut these down */
 	if(is_set(fsa_input_register, R_PE_CONNECTED)) {
 		crm_warn("Last attempt to shutdown the PolicyEngine");
 		tmp = do_pe_control(A_PE_STOP, cause, cur_state,
-				    current_input, data);
+				    current_input, msg_data);
 		if(tmp != I_NULL) {
 			next_input = I_ERROR;
 			crm_err("Failed to shutdown the PolicyEngine");
@@ -128,7 +126,7 @@ do_shutdown(long long action,
 	if(is_set(fsa_input_register, R_TE_CONNECTED)) {
 		crm_warn("Last attempt to shutdown the Transitioner");
 		tmp = do_pe_control(A_TE_STOP, cause, cur_state,
-				    current_input, data);
+				    current_input, msg_data);
 		if(tmp != I_NULL) {
 			next_input = I_ERROR;
 			crm_err("Failed to shutdown the Transitioner");
@@ -147,7 +145,7 @@ do_shutdown_req(long long action,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input current_input,
-	    void *data)
+	    fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input next_input = I_NULL;
 	
@@ -166,7 +164,7 @@ do_exit(long long action,
 	enum crmd_fsa_cause cause,
 	enum crmd_fsa_state cur_state,
 	enum crmd_fsa_input current_input,
-	void *data)
+	fsa_data_t *msg_data)
 {
 	
 
@@ -189,16 +187,21 @@ do_startup(long long action,
 	   enum crmd_fsa_cause cause,
 	   enum crmd_fsa_state cur_state,
 	   enum crmd_fsa_input current_input,
-	   void *data)
+	   fsa_data_t *msg_data)
 {
 	int was_error = 0;
 	int interval = 1; /* seconds between DC heartbeats */
 
-	fsa_input_register = 0; /* zero out the regester */
-	
 	crm_info("Register PID");
 	register_pid(PID_FILE, FALSE, crm_shutdown);
 	
+	if (HA_OK != fsa_cluster_conn->llc_ops->set_cstatus_callback(
+		    fsa_cluster_conn, crmd_client_status_callback, NULL)) {
+		crm_err("Cannot set client status callback\n");
+		crm_err("REASON: %s\n",
+		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
+	}
+
 	ipc_clients = g_hash_table_new(&g_str_hash, &g_str_equal);
 	
 	if(was_error == 0) {
@@ -214,7 +217,8 @@ do_startup(long long action,
 	crm_malloc(finalization_timer, sizeof(fsa_timer_t));
 	crm_malloc(election_trigger, sizeof(fsa_timer_t));
 	crm_malloc(election_timeout, sizeof(fsa_timer_t));
-	crm_malloc(shutdown_escalation_timmer, sizeof(fsa_timer_t));
+	crm_malloc(shutdown_escalation_timer, sizeof(fsa_timer_t));
+	crm_malloc(wait_timer, sizeof(fsa_timer_t));
 
 	interval = interval * 1000;
 
@@ -263,11 +267,20 @@ do_startup(long long action,
 		was_error = TRUE;
 	}
 	
-	if(shutdown_escalation_timmer != NULL) {
-		shutdown_escalation_timmer->source_id = -1;
-		shutdown_escalation_timmer->period_ms = -1;
-		shutdown_escalation_timmer->fsa_input = I_TERMINATE;
-		shutdown_escalation_timmer->callback = timer_popped;
+	if(shutdown_escalation_timer != NULL) {
+		shutdown_escalation_timer->source_id = -1;
+		shutdown_escalation_timer->period_ms = -1;
+		shutdown_escalation_timer->fsa_input = I_TERMINATE;
+		shutdown_escalation_timer->callback = timer_popped;
+	} else {
+		was_error = TRUE;
+	}
+	
+	if(wait_timer != NULL) {
+		wait_timer->source_id = -1;
+		wait_timer->period_ms = 3*1000;
+		wait_timer->fsa_input = I_NULL;
+		wait_timer->callback = timer_popped;
 	} else {
 		was_error = TRUE;
 	}
@@ -320,7 +333,7 @@ do_stop(long long action,
 	enum crmd_fsa_cause cause,
 	enum crmd_fsa_state cur_state,
 	enum crmd_fsa_input current_input,
-	void *data)
+	fsa_data_t *msg_data)
 {
 	
 
@@ -336,9 +349,18 @@ do_started(long long action,
 	   enum crmd_fsa_cause cause,
 	   enum crmd_fsa_state cur_state,
 	   enum crmd_fsa_input current_input,
-	   void *data)
+	   fsa_data_t *msg_data)
 {
-	
+	if(is_set(fsa_input_register, R_CCM_DATA) == FALSE
+/* 	   || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE */
+/* 	   || is_set(fsa_input_register, R_TE_CONNECTED) == FALSE */
+	   || is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE
+/* 	   || is_set(fsa_input_register, R_PEER_DATA) == FALSE */
+		) {
+		crm_info("Delaying start, some systems not connected %.16llx (%.16llx)",
+			 fsa_input_register, (long long)R_CCM_DATA|R_PEER_DATA|R_LRM_CONNECTED);
+		return I_WAIT_FOR_EVENT;
+	}
 
 	clear_bit_inplace(fsa_input_register, R_STARTING);
 	
@@ -351,7 +373,7 @@ do_recover(long long action,
 	   enum crmd_fsa_cause cause,
 	   enum crmd_fsa_state cur_state,
 	   enum crmd_fsa_input current_input,
-	   void *data)
+	   fsa_data_t *msg_data)
 {
 	
 
@@ -367,7 +389,7 @@ do_read_config(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input current_input,
-	       void *data)
+	       fsa_data_t *msg_data)
 {
 	xmlNodePtr cib_copy = get_cib_copy();
 	xmlNodePtr config   = get_object_root(XML_CIB_TAG_CRMCONFIG, cib_copy);
@@ -388,7 +410,7 @@ do_read_config(long long action,
 			election_trigger->period_ms = atoi(value);
 
 		} else if(safe_str_eq(name, "shutdown_escalation")) {
-			shutdown_escalation_timmer->period_ms = atoi(value);
+			shutdown_escalation_timer->period_ms = atoi(value);
 
 		} else if(safe_str_eq(name, "join_reannouce")) {
 			fsa_join_reannouce = atoi(value);
@@ -406,9 +428,9 @@ do_read_config(long long action,
 		election_trigger->period_ms = dc_heartbeat->period_ms * 4;
 		
 	}
-	if(shutdown_escalation_timmer->period_ms < 1) {
+	if(shutdown_escalation_timer->period_ms < 1) {
 		/* sensible default */
-		shutdown_escalation_timmer->period_ms
+		shutdown_escalation_timer->period_ms
 			= election_trigger->period_ms * 3 *10;/* 10 for testing */
 	}
 	if(fsa_join_reannouce < 0) {
@@ -442,9 +464,9 @@ crm_shutdown(int nsig)
 
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				/* cant rely on this... */
-				startTimer(shutdown_escalation_timmer);
-				
+				startTimer(shutdown_escalation_timer);
 				s_crmd_fsa(C_SHUTDOWN, I_SHUTDOWN, NULL);
+
 			} else {
 				crm_err("Could not set R_SHUTDOWN");
 				exit(LSB_EXIT_ENOTSUPPORTED);
@@ -553,11 +575,12 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
   
 	crm_debug("Be informed of CRM messages");
 	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
-		    hb_cluster, "CRM", message_callback, hb_cluster)){
+		    hb_cluster, T_CRM, message_callback, hb_cluster)){
 		
 		crm_err("Cannot set CRM message callback");
 		if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
 			crm_crit("cluster errmsg function unavailable");
+
 		} else {
 			crm_err("REASON: %s",
 				hb_cluster->llc_ops->errmsg(hb_cluster));
