@@ -23,7 +23,7 @@
 CRM_ERR_SHUTDOWN=1
 
 # make *sure* theres nothing left over from last time
-do_cmd remote_cmd $INIT_USER $test_node_1 $HAINIT_DIR/heartbeat stop
+do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat "-k" '2>&1 >/dev/null'
 do_cmd remote_cmd $INIT_USER $test_node_1 "killall -q9 heartbeat crmd ccm lrmd"
 do_cmd remote_cmd $INIT_USER $test_node_1 "rm -f $HAVAR_DIR/crm/cib*.xml"
 

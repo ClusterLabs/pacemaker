@@ -24,8 +24,8 @@ CRM_ERR_SHUTDOWN=0
 
 
 # stop all running HAs
-do_cmd remote_cmd $INIT_USER $test_node_1 $HAINIT_DIR/heartbeat stop
-do_cmd remote_cmd $INIT_USER $test_node_2 $HAINIT_DIR/heartbeat stop
+do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat "-k" '2>&1 >/dev/null'
+do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat "-k" '2>&1 >/dev/null'
 
 # be *very* sure everything has stopped
 do_cmd remote_cmd $INIT_USER $test_node_1 "killall -q9 heartbeat ccm lrmd crmd"
