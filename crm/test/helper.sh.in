@@ -187,9 +187,18 @@ function stop_node()
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -t 120 \
 	-s "${srch_node} crmd(.*)State transition" \
 	-s "${srch_node} crmd(.*)State transition (.*) \-> S_STOPPING" \
-	-s "${srch_node} crmd(.*)\[crmd\] stopped" \
 	-e "${srch_node} crmd(.*)Timer I_TERMINATE just popped"
     cts_assert "Shutdown of ${a_node} failed."
+
+# This pattern does not always get printed... most annoying
+#	-s "${srch_node} crmd(.*)\[crmd\] stopped" \
+
+    sleep 5
+    do_cmd echo "Check if CRMd _really_ stopped"
+    do_cmd remote_cmd $INIT_USER $ha_node "killall -INT crmd"
+    cts_assert_false "CRMd is still running on ${a_node}."
+
+
 }
 
 function is_state() {
@@ -539,14 +548,22 @@ function do_cmd() {
     if [ $cmd = "echo" ]; then
 	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
 		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
-		echo -n -e "\033[01;32m"
+		if [ $local_version != "1" ]; then
+		    echo -n -e "\033[01;32m"
+		fi
 		$cmdline | tee -a $test_dump_dir/test.txt
-		echo -n -e "\033[00m"
+		if [ $local_version != "1" ]; then
+		    echo -n -e "\033[00m"
+		fi
 	    elif [ $OUTPUT_ECHO -eq 1 -a $OUTPUT_CMDS -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
 		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
-		echo -n -e "\033[01;32m"
+		if [ $local_version != "1" ]; then
+		    echo -n -e "\033[01;32m"
+		fi
 		$cmdline | tee -a $test_dump_dir/test.txt
-		echo -n -e "\033[00m"
+		if [ $local_version != "1" ]; then
+		    echo -n -e "\033[00m"
+		fi
 	    fi
 
     elif [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
