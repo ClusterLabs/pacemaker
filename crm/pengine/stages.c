@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.46 2005/03/31 16:40:07 andrew Exp $ */
+/* $Id: stages.c,v 1.47 2005/04/01 12:33:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,7 +40,7 @@ GListPtr agent_defaults = NULL;
 gboolean have_quorum      = FALSE;
 gboolean require_quorum   = FALSE;
 gboolean stonith_enabled  = FALSE;
-gboolean symetric_cluster = TRUE;
+gboolean symmetric_cluster = TRUE;
 
 char *dc_uuid = NULL;
 const char* transition_timeout = "60000"; /* 1 minute */
