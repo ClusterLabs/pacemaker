@@ -418,8 +418,9 @@ do_read_config(long long action,
 					   */
 	}
 	
-	election_timeout->period_ms  = dc_heartbeat->period_ms * 6;
-	integration_timer->period_ms = dc_heartbeat->period_ms * 6;
+	election_timeout->period_ms   = dc_heartbeat->period_ms * 6;
+	integration_timer->period_ms  = dc_heartbeat->period_ms * 6;
+	finalization_timer->period_ms = dc_heartbeat->period_ms * 6;
 
 	return I_NULL;
 }
