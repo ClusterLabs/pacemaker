@@ -18,7 +18,7 @@
  #
 
 io_dir=testcases
-diff_opts="--ignore-all-space  --minimal"
+diff_opts="--ignore-all-space -1 -u"
 
 # zero out the error log
 > regression.failed
@@ -61,14 +61,14 @@ function do_test {
 	cp "$output" "$expected"
     fi
 
-    diff $diff_opts -q $expected $output
+    diff $diff_opts -q $expected $output >/dev/null
     rc=$?
 
     if [ "$rc" = 0 ]; then
 	echo "Test $name	($base)...	Passed";
     elif [ "$rc" = 1 ]; then
-	echo "Test $name	($base)...	Failed";
-	diff $diff_opts -C 1 $expected $output >> regression.failed
+	echo "Test $name	($base)...	* Failed";
+	diff $diff_opts $expected $output 2>/dev/null >> regression.failed
     else
 	echo "Test $name	($base)...	Error (diff: $rc)";
     fi
@@ -93,6 +93,8 @@ do_test simple8 "Stonith	"
 if [ -s regression.failed ]; then
     echo "Results of failed tests...."
     cat regression.failed
+else
+    rm regression.failed
 fi
 
 
