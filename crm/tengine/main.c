@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.22 2005/02/25 10:32:08 andrew Exp $ */
+/* $Id: main.c,v 1.23 2005/03/15 11:47:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -213,7 +213,8 @@ usage(const char* cmd, int exit_status)
 gboolean
 tengine_shutdown(int nsig, gpointer unused)
 {
-	static int	shuttingdown = 0;
+#if 0
+	static int shuttingdown = 0;
   
 	if (!shuttingdown) {
 		shuttingdown = 1;
@@ -224,4 +225,7 @@ tengine_shutdown(int nsig, gpointer unused)
 		exit(LSB_EXIT_OK);
 	}
 	return TRUE;
+#else
+	return FALSE;
+#endif
 }
