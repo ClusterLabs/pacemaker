@@ -78,6 +78,9 @@ class SysLog(Logger):
             for line in lines:
                 syslog.syslog(line)
 
+    def name(self):
+	return "Syslog"
+
 class StdErrLog(Logger):
 
     def __init__(self, labinfo):
@@ -92,6 +95,8 @@ class StdErrLog(Logger):
                 sys.__stderr__.writelines([t, line, "\n"])
         sys.__stderr__.flush()
 
+    def name(self):
+	return "StdErrLog"
 
 class FileLog(Logger):
     def __init__(self, labinfo, filename=None):
@@ -113,6 +118,8 @@ class FileLog(Logger):
                 fd.writelines([t, line, "\n"])
         fd.close()
 
+    def name(self):
+	return "FileLog"
 
 class CtsLab(UserDict):
     '''This class defines the Lab Environment for the Cluster Test System.
@@ -200,6 +207,12 @@ class CtsLab(UserDict):
         "Log using each of the supplied logging methods"
         for logfcn in self._logfunctions:
             logfcn(string.strip(args))
+
+    def debug(self, args):
+        "Log using each of the supplied logging methods"
+        for logfcn in self._logfunctions:
+	    if logfcn.name() != "StdErrLog":
+		logfcn(string.strip(args))
 
     def __setitem__(self, key, value):
         '''Since this function gets called whenever we modify the
@@ -435,6 +448,7 @@ if __name__ == '__main__':
     Tests = TestList(cm)
 
     tests = RandomTests(scenario, cm, Tests, Audits)
+    Environment.RandomTests = tests
     overall, detailed = tests.run(NumIter)
  
     cm.log("****************")
