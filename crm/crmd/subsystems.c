@@ -137,8 +137,10 @@ do_cib_invoke(long long action,
 		   || strcmp(op, CRM_OP_DELETE) == 0
 		   || strcmp(op, CRM_OP_REPLACE) == 0
 		   || strcmp(op, CRM_OP_WELCOME) == 0
-		   || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
-		   || strcmp(op, CRM_OP_ERASE) == 0) {
+		   || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
+			is_update = TRUE;
+
+		} else if(strcmp(op, CRM_OP_ERASE) == 0) {
 			is_update = TRUE;
 		}
 		
