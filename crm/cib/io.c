@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.7 2005/02/09 15:30:05 andrew Exp $ */
+/* $Id: io.c,v 1.8 2005/02/11 21:58:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,6 +38,8 @@
 #include <crm/common/util.h>
 
 #include <crm/dmalloc_wrapper.h>
+
+gboolean cib_writes_enabled = TRUE;
 
 const char * local_resource_path[] =
 {
@@ -266,7 +268,7 @@ activateCibBuffer(char *buffer, const char *filename)
 int
 activateCibXml(crm_data_t *new_cib, const char *filename)
 {
-	int error_code = 0;
+	int error_code = cib_ok;
 	crm_data_t *saved_cib = get_the_CIB();
 	const char *filename_bak = CIB_BACKUP; /* calculate */
 
@@ -278,55 +280,68 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 		crm_validate_data(saved_cib);
 	}
 	
-	if (initializeCib(new_cib) == TRUE) {
-		int res = moveFile(filename, filename_bak, FALSE, NULL);
-
-		if (res  < 0) {
-			crm_warn("Could not make backup of the current Cib "
-				 "(code: %d)... aborting update.", res);
-			error_code = -1;
-		} else {
-			crm_debug("Writing CIB out to %s", CIB_FILENAME);
-			res = write_xml_file(new_cib, CIB_FILENAME);
-#ifdef DEVEL_CIB_COPY
-			write_xml_file(new_cib, DEVEL_DIR"/cib.xml");
-#endif
-			if (res < 0) {
-				/* assume 0 is good */
-				if (moveFile(filename_bak,
-					     filename,
-					     FALSE,
-					     NULL) < -1) {
-					crm_crit("Could not restore the "
-						 "backup of the current Cib "
-						 "(code: %d)... panic!",
-						 res);
-					error_code = -2;
-					/* should probably exit here  */
-				} else if (initializeCib(saved_cib) == FALSE) {
-					/* oh we are so dead  */
-					crm_crit("Could not re-initialize "
-						 "with the old CIB.  "
-						 "Everything is about to go "
-						 "pear shaped");
-					error_code = -3;
-				} else {
-					crm_crit("Update of Cib failed "
-						 "(code: %d)... reverted to "
-						 "last known valid version",
-						 res);
-					
-					error_code = -4;
-				}
-			}
-		}
-	} else {
+	if (initializeCib(new_cib) == FALSE) {
 		crm_warn("Ignoring invalid or NULL Cib");
 		error_code = -5;
+
+	} else if(cib_writes_enabled) {
+		int res = 0;
+
+		if(saved_cib != NULL) {
+			res = moveFile(filename, filename_bak, FALSE, NULL);
+			
+			if (res < 0) {
+				crm_warn("Could not make backup of the current Cib "
+					 "(code: %d)... aborting update.", res);
+				error_code = -1;
+				CRM_DEV_ASSERT(FALSE);
+			}
+		}
+		
+		if(error_code == cib_ok) {
+			crm_debug("Writing CIB out to %s", CIB_FILENAME);
+			res = write_xml_file(new_cib, CIB_FILENAME);
+			if (res < 0) {
+				error_code = -4;
+				CRM_DEV_ASSERT(FALSE);
+			}
+		}
+
+		if(error_code == -4 && saved_cib != NULL) {
+			if (moveFile(filename_bak, filename, FALSE,NULL) < -1){
+				crm_crit("Could not restore the backup of the "
+					 " current Cib (code: %d)... panic!",
+					 res);
+				error_code = -2;
+				/* should probably exit here  */
+				CRM_DEV_ASSERT(FALSE);
+			}
+		}
+
+		if(saved_cib == NULL && error_code != cib_ok) {
+			/* oh we are so dead  */
+			crm_crit("Could not write out new CIB and no saved"
+				 " version to revert to");
+				error_code = -3;			
+				CRM_DEV_ASSERT(FALSE);
+
+		} else if(error_code != cib_ok) {
+			crm_crit("Update of Cib failed (%d)... reverting"
+				 " to last known valid version",
+				 error_code);
+
+			if (initializeCib(saved_cib) == FALSE) {
+				/* oh we are so dead  */
+				crm_crit("Could not re-initialize with the old"
+					 " CIB.  Can anyone say corruption?");
+				error_code = -3;
+				CRM_DEV_ASSERT(FALSE);
+			}
+		}
 	}
 
 	/* Make sure memory is cleaned up appropriately */
-	if (error_code != 0) {
+	if (error_code != cib_ok) {
 		crm_trace("Freeing new CIB %p", new_cib);
 		free_xml(new_cib);
 		
