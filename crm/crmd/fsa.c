@@ -512,11 +512,6 @@ do_state_transition(long long actions,
 
 	if(is_set(fsa_input_register, R_SHUTDOWN)){
 		set_bit_inplace(tmp, A_DC_TIMER_STOP);
-		
-	} else if(next_state == S_PENDING || next_state == S_NOT_DC) {
-		set_bit_inplace(tmp, A_DC_TIMER_START);
-
-/* 	} else we are the DC and dont want to shut down { */		
 	}
 
 	switch(next_state) {
@@ -531,22 +526,25 @@ do_state_transition(long long actions,
 			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
 			break;
 		case S_NOT_DC:
+			set_bit_inplace(tmp, A_DC_TIMER_STOP);
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
 				crm_info("(Re)Issuing shutdown request now"
 					 " that we have a new DC");
 				set_bit_inplace(tmp, A_SHUTDOWN_REQ);
 			}
-
+			CRM_DEV_ASSERT(fsa_our_dc != NULL);
 			if(fsa_our_dc == NULL) {
 				crm_err("Reached S_NOT_DC without a DC"
 					" being recorded");
 			}
 			break;
 		case S_RECOVERY:
+			set_bit_inplace(tmp, A_DC_TIMER_STOP);
 			clear_recovery_bit = FALSE;
 			break;
 
 		case S_INTEGRATION:
+			set_bit_inplace(tmp, A_DC_TIMER_STOP);
 			set_bit_inplace(tmp, A_INTEGRATE_TIMER_START);
 			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
 	

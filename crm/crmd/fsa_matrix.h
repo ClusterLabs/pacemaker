@@ -478,7 +478,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 /* Got an I_JOIN_OFFER */
 	{
 		/* S_IDLE		==> */	S_IDLE,
-		/* S_ELECTION		==> */	S_PENDING,
+		/* S_ELECTION		==> */	S_ELECTION,
 		/* S_INTEGRATION	==> */	S_INTEGRATION,
 		/* S_FINALIZE_JOIN	==> */	S_FINALIZE_JOIN,
 		/* S_NOT_DC		==> */	S_NOT_DC,
@@ -778,7 +778,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 /* Got an I_ELECTION_DC */
 	{
 		/* S_IDLE		==> */	A_WARN|A_ELECTION_VOTE,
-		/* S_ELECTION		==> */	A_LOG|A_DC_TAKEOVER|A_PE_START|A_TE_START|A_DC_JOIN_OFFER_ALL,
+		/* S_ELECTION		==> */	A_LOG|A_DC_TAKEOVER|A_PE_START|A_TE_START|A_DC_JOIN_OFFER_ALL|A_DC_TIMER_STOP,
 		/* S_INTEGRATION	==> */	A_WARN|A_ELECTION_VOTE,
 		/* S_FINALIZE_JOIN	==> */	A_WARN|A_ELECTION_VOTE,
 		/* S_NOT_DC		==> */	A_LOG|A_ELECTION_VOTE,
@@ -886,7 +886,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 /* Got an I_NOT_DC */
 	{
 		/* S_IDLE		==> */	O_RELEASE|O_DC_TICKLE,
-		/* S_ELECTION		==> */	A_LOG|O_DC_TICKLE,
+		/* S_ELECTION		==> */	A_LOG|O_DC_TICKLE|A_DC_TIMER_STOP|A_DC_TIMER_START,
 		/* S_INTEGRATION	==> */	O_RELEASE,
 		/* S_FINALIZE_JOIN	==> */	O_RELEASE,
 		/* S_NOT_DC		==> */	A_WARN|O_DC_TICKLE,
@@ -1084,7 +1084,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 /* Got an I_JOIN_OFFER */
 	{
 		/* S_IDLE		==> */	A_CL_JOIN_REQUEST,
-		/* S_ELECTION		==> */	O_RELEASE|A_CL_JOIN_REQUEST,
+		/* S_ELECTION		==> */	A_WARN,
 		/* S_INTEGRATION	==> */	A_CL_JOIN_REQUEST,
 		/* S_FINALIZE_JOIN	==> */	A_CL_JOIN_REQUEST,
 		/* S_NOT_DC		==> */	O_DC_TICKLE|A_CL_JOIN_REQUEST,
