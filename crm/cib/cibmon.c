@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.12 2005/02/11 22:00:54 andrew Exp $ */
+/* $Id: cibmon.c,v 1.13 2005/02/16 18:01:41 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -329,7 +329,7 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 				    update, "Update");
 		
 	} else if(update == NULL) {
-		crm_info("[%s] Performing operation %s (on section=%s)",
+		crm_info(UPDATE_PREFIX"[%s] Performing operation %s (on section=%s)",
 			 event, op, crm_str(type));
 	}
 
@@ -348,6 +348,7 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 
 	crm_data_t *update = NULL;
 	crm_data_t *output = NULL;
+	crm_data_t *generation = NULL;
 
 	if(msg == NULL) {
 		crm_err("NULL update");
@@ -360,6 +361,7 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 
 	update = get_message_xml(msg, F_CIB_UPDATE);
 	output = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+	generation = get_message_xml(msg, "cib_generation");
 
 	update_depth--;
 	if(last_notify_pre == FALSE 
@@ -374,23 +376,23 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	
 	if(update == NULL) {
 		if(rc == cib_ok) {
-			crm_verbose("[%s] %s (to %s) completed",
+			crm_verbose(UPDATE_PREFIX"[%s] %s (to %s) completed",
 				    event, op, crm_str(type));
 			
 		} else {
-			crm_warn("[%s] %s (to %s) FAILED: (%d) %s",
+			crm_warn(UPDATE_PREFIX"[%s] %s (to %s) FAILED: (%d) %s",
 				 event, op, crm_str(type), rc,
 				 cib_error2string(rc));
 		}
 		
 	} else {
 		if(rc == cib_ok) {
-			crm_verbose("[%s] Operation %s to <%s%s%s> completed.",
+			crm_verbose(UPDATE_PREFIX"[%s] Operation %s to <%s%s%s> completed.",
 				    event, op, crm_str(type),
 				    id?" id=":"", id?id:"");
 			
 		} else {
-			crm_warn("[%s] Operation %s to <%s %s%s> FAILED: (%d) %s",
+			crm_warn(UPDATE_PREFIX"[%s] Operation %s to <%s %s%s> FAILED: (%d) %s",
 				event, op, crm_str(type), id?" id=":"", id?id:"",
 				rc, cib_error2string(rc));
 		}
@@ -403,7 +405,14 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	print_xml_formatted(
 		rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
 		output, "Resulting Object");
+
+	if(update_depth == 0) {
+		print_xml_formatted(
+			rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
+			generation, "CIB Generation");
+	}
 }
+
 
 void
 cibmon_update_confirm(const char *event, HA_Message *msg)
@@ -423,28 +432,28 @@ cibmon_update_confirm(const char *event, HA_Message *msg)
 	type = cl_get_string(msg, F_CIB_OBJTYPE);
 	
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
-
+	
 	if(id == NULL) {
 		if(rc == cib_ok) {
-			crm_info("[%s] %s (to section=%s) confirmed.\n",
+			crm_info(UPDATE_PREFIX"[%s] %s (to section=%s) confirmed.\n",
 				 event, op, crm_str(type));
 		} else {
-			crm_warn("[%s] %s (to section=%s) ABORTED: (%d) %s\n",
+			crm_warn(UPDATE_PREFIX"[%s] %s (to section=%s) ABORTED: (%d) %s\n",
 				 event, op, crm_str(type), 
 				 rc, cib_error2string(rc));
 		}
 		
 	} else {
 		if(rc == cib_ok) {
-			crm_info("[%s] %s (to <%s%s%s>) confirmed\n",
+			crm_info(UPDATE_PREFIX"[%s] %s (to <%s%s%s>) confirmed\n",
 				 event, op, crm_str(type),
 				 id?" id=":"", id?id:"");
 		} else {
-			crm_warn("[%s] %s (to <%s%s%s>) ABORTED: (%d) %s\n",
+			crm_warn(UPDATE_PREFIX"[%s] %s (to <%s%s%s>) ABORTED: (%d) %s\n",
 				 event, op, crm_str(type),
 				 id?" id=":"", id?id:"",
 				 rc, cib_error2string(rc));
 		}
 	}
-	crm_debug("\n=================================\n\n");
+	crm_debug(UPDATE_PREFIX"=================================");
 }
