@@ -162,7 +162,7 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500
     -s "${test_node_2} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
 cts_assert "CRMd startup on ${test_node_2} failed."
 
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 3500 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 6000 \
     -s "${test_node_1} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
     -s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2" \
     -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_2}"

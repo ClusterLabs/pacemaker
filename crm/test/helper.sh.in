@@ -326,7 +326,8 @@ function err() {
     dump_node 3 $test_node_3
 
     do_cmd echo "ERROR: $*"
-    echo "test $test_type: FAILED"
+    do_cmd echo "test $test_type: FAILED"
+    echo "see $test_dump_dir for details..."
     echo "ERROR: $*" > $test_dump_dir/error.txt
 
     exit 1

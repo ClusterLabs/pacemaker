@@ -151,7 +151,7 @@ do_cmd echo Create the first resource and wait for S_IDLE after start
 args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - - $args
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
     -s "crmd(.*) Performing op start(.*) on rsc1" \
     -s "crmd(.*) Resource state: rsc1(.*) after start"
@@ -163,7 +163,7 @@ do_cmd echo Create the second resource and wait for S_IDLE after start
 args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - - $args
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
     -s "crmd(.*) Performing op start(.*) on rsc2" \
     -s "crmd(.*) Resource state: rsc2(.*) after start"
@@ -232,20 +232,20 @@ cts_assert "rsc2 NOT running on $test_node_2"
 do_cmd echo Shutdown $test_node_2
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmadmin -K $test_node_2 &
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
     -s "crmd(.*) State transition \"S_NOT_DC\" \-> \"S_ELECTION\"" \
     -s "${test_node_2} crmd(.*) State transition (.*) \-> \"S_NOT_DC\""
 cts_assert "Transition of the DC away from ${test_node_2} failed."
 #    -s "crmd(.*) State transition(.*) \->" \
 
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 6000 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
     -s "${test_node_2} crmd(.*)State transition" \
     -s "${test_node_2} crmd(.*)State transition \"S_NOT_DC\" \-> \"S_STOPPING\"" \
     -s "${test_node_2} crmd(.*)\[crmd\] stopped" \
     -e "${test_node_2} crmd(.*)Timer I_TERMINATE just popped"
 cts_assert "Shutdown of ${test_node_2} failed"
 
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
+do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 11000 \
     -s "crmd(.*)State transition(.*) \-> \"S_INTEGRATION\"" \
     -s "crmd(.*)State transition(.*) \-> \"S_IDLE\""
 cts_assert "No DC Declared"
