@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.37 2005/04/01 10:13:34 andrew Exp $ */
+/* $Id: callbacks.c,v 1.38 2005/04/06 14:42:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -818,7 +818,7 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 	int lpc = 0;
 	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
 
-	while(hb_cluster->llc_ops->msgready(hb_cluster)) {
+	while(lpc < 2 && hb_cluster->llc_ops->msgready(hb_cluster)) {
  		lpc++; 
 		/* invoke the callbacks but dont block */
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
@@ -855,7 +855,7 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 	const char *delegated  = cl_get_string(msg, F_CIB_DELEGATED);
 	const char *client_id  = NULL;
 
-	if(safe_str_eq(originator, cib_our_uname)) {
+	if(originator == NULL || safe_str_eq(originator, cib_our_uname)) {
  		crm_devel("Discarding message %s/%s from ourselves",
 			  cl_get_string(msg, F_CIB_CLIENTID), 
 			  cl_get_string(msg, F_CIB_CALLID));
@@ -884,14 +884,13 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		request_to = NULL;
 	}
 	
-	if(cib_server_ops[call_type].modifies_cib
-	   || (reply_to == NULL && cib_is_master)
-	   || request_to != NULL) {
+	if(cib_server_ops[call_type].modifies_cib || request_to != NULL
+	   || (reply_to == NULL && cib_is_master)) {
 		is_done = 0;
 	}
 
-	crm_debug("Processing message from peer to %s...",
-		  request_to?request_to:"master");
+	crm_debug("Processing message from peer (%s) to %s...",
+		  originator, request_to?request_to:"master");
 	crm_log_message_adv(LOG_DEV, "Peer[inbound]", msg);
 
 	if(crm_is_true(update) && safe_str_eq(reply_to, cib_our_uname)) {
