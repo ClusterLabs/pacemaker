@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.2 2004/09/15 20:17:56 andrew Exp $ */
+/* $Id: main.c,v 1.3 2004/09/20 14:30:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -147,12 +147,6 @@ init_start(void)
 {
     enum crmd_fsa_state state;
 
-/*     long pid; */
-/*     if ((pid = get_running_pid(PID_FILE, NULL)) > 0) { */
-/* 		crm_crit("already running: [pid %ld].", pid); */
-/* 		exit(LSB_EXIT_OK); */
-/*     } */
-	
     fsa_state = S_PENDING;
     state = s_crmd_fsa(C_STARTUP, I_STARTUP, NULL);
 

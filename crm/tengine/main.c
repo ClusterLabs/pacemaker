@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1 2004/09/15 09:16:55 andrew Exp $ */
+/* $Id: main.c,v 1.2 2004/09/20 14:30:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -131,17 +131,11 @@ main(int argc, char ** argv)
 int
 init_start(void)
 {
-    long pid;
-    ll_cluster_t*	hb_fd = NULL;
-    int facility;
+	ll_cluster_t*	hb_fd = NULL;
+	int facility;
 #ifdef REALTIME_SUPPORT
-	    static int  crm_realtime = 1;
+	static int  crm_realtime = 1;
 #endif
-
-    if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
-		crm_crit("already running: [pid %ld].", pid);
-		exit(LSB_EXIT_OK);
-    }
     
     /* change the logging facility to the one used by heartbeat daemon */
     hb_fd = ll_cluster_new("heartbeat");
