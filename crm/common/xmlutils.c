@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.22 2004/03/30 15:10:47 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.23 2004/04/01 15:49:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,6 +37,10 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+void dump_array(int log_level, const char *message,
+		const char **array, int depth);
+
+
 xmlNodePtr
 find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 {
@@ -54,11 +58,9 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	
 	
 #ifdef XML_TRACE
-	CRM_DEBUG("looking for...");
-	for (j=0; j < len; ++j) {
-		if (search_path[j] == NULL) break;
-		CRM_DEBUG2(" --> (%s).", search_path[j]);
-	}
+	dump_array(LOG_DEBUG,
+		   "Looking for.",
+		   search_path, len);
 #endif
 	
 	xmlNodePtr child = root->children, lastMatch = NULL;
@@ -109,9 +111,11 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		FNRET(lastMatch);
 	}
 
-	cl_log(LOG_WARNING,
-	       "Could not find the full path to the node you specified."
-	       "  Closest point was node (%s).",
+	dump_array(LOG_WARNING,
+		   "Could not find the full path to the node you specified.",
+		   search_path, len);
+
+	cl_log(LOG_WARNING,"Closest point was node (%s).",
 	       xmlGetNodePath(lastMatch));
 
 	FNRET(NULL);
@@ -776,4 +780,24 @@ file2xml(FILE *input)
 	xml_message_debug(xml_object, "Created fragment");
 
 	return xml_object;
+}
+
+void
+dump_array(int log_level, const char *message, const char **array, int depth)
+{
+	int j;
+	
+	if(message != NULL) {
+		cl_log(log_level, "%s", message);
+	}
+
+	cl_log(log_level, "Contents of the array:");
+	if(array == NULL || array[0] == NULL || depth == 0) {
+		cl_log(log_level, "\t<empty>");
+	}
+	
+	for (j=0; j < depth && array[j] != NULL; j++) {
+		if (array[j] == NULL) break;
+		cl_log(log_level, "\t--> (%s).", array[j]);
+	}
 }
