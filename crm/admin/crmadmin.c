@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.16 2004/12/14 14:41:12 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.17 2004/12/15 10:21:29 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -688,7 +688,6 @@ do_find_resource(const char *rsc, xmlNodePtr xml_node)
 {
 	int found = 0;
 	const char *path[] = {
-		XML_TAG_FRAGMENT,
 		XML_TAG_CIB,
 		XML_CIB_TAG_STATUS,
 		XML_CIB_TAG_STATE
@@ -736,6 +735,10 @@ do_find_resource(const char *rsc, xmlNodePtr xml_node)
 				crm_debug("resource %s is stopped on: %s\n",
 					  rsc, target);
 				
+			} else if(safe_str_eq(op_code, "-1")) {
+				crm_debug("resource %s is pending on: %s\n",
+					  rsc, target);				
+
 			} else if(safe_str_neq(op_code, "0")) {
 				crm_debug("resource %s is failed on: %s\n",
 					  rsc, target);				
@@ -768,7 +771,7 @@ is_node_online(xmlNodePtr node_state)
 	const char *uname      = xmlGetProp(node_state,XML_ATTR_UNAME);
 	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
-	const char *ha_state  = xmlGetProp(node_state,XML_CIB_ATTR_HASTATE);
+	const char *ha_state   = xmlGetProp(node_state,XML_CIB_ATTR_HASTATE);
 	const char *ccm_state  = xmlGetProp(node_state,XML_CIB_ATTR_INCCM);
 
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
@@ -789,7 +792,6 @@ do_find_resource_list(xmlNodePtr xml_node)
 {
 	int found = 0;
 	const char *path[] = {
-		XML_TAG_FRAGMENT,
 		XML_TAG_CIB,
 		XML_CIB_TAG_RESOURCES,
 		XML_CIB_TAG_RESOURCE
@@ -819,7 +821,6 @@ do_find_node_list(xmlNodePtr xml_node)
 {
 	int found = 0;
 	const char *path[] = {
-		XML_TAG_FRAGMENT,
 		XML_TAG_CIB,
 		XML_CIB_TAG_NODES,
 		XML_CIB_TAG_NODE
