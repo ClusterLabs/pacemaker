@@ -307,6 +307,14 @@ More details are given in the annotated DTD below.
       attribute=uname value=test1 operation=eq
     would both be valid tests.
 
+    An extra builtin attribute called "is_dc" will be set to true or false
+      depending on whether the node is operating as the DC for the cluster.
+      Valid tests would be:
+	attribute=is_dc operation=eq value=true, and
+	attribute=is_dc operation=eq value=false, and
+	attribute=is_dc operation=ne value=false 
+	(for those liking double negatives :)
+
     Additionally, the "running" and "not_running" tests checks to see if
       the value specified for "attribute" is a resource that is (not) running
       on the node.  So these would both be valid tests.

@@ -237,6 +237,11 @@ do_dc_takeover(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
+	enum crmd_fsa_input result = I_NULL;
+	xmlNodePtr cib = createEmptyCib();
+	xmlNodePtr update = NULL;
+	int rc = cib_ok;
+	
 	crm_trace("################## Taking over the DC ##################");
 	set_bit_inplace(fsa_input_register, R_THE_DC);
 
@@ -244,9 +249,6 @@ do_dc_takeover(long long action,
 
 	crm_free(fsa_our_dc);
 	fsa_our_dc = crm_strdup(fsa_our_uname);
-
-	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none);
-	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
 
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(fsa_input_register, R_INVOKE_PE);
@@ -256,11 +258,30 @@ do_dc_takeover(long long action,
 
 	startTimer(dc_heartbeat);
 
+	set_uuid(cib, XML_ATTR_DC_UUID, fsa_our_uname);
+	update = create_cib_fragment(cib, NULL);
+
+	crm_debug("Updating %s to %s",
+		  XML_ATTR_DC_UUID, xmlGetProp(cib, XML_ATTR_DC_UUID));
+
+	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none);
+	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
+	rc = fsa_cib_conn->cmds->modify(
+		fsa_cib_conn, NULL, update, NULL, cib_sync_call);
+	
+	if(rc != cib_ok) {
+		crm_err("DC UUID update failed: %s", cib_error2string(rc));
+		result = I_FAIL;
+	}
+	
+	free_xml(update);
+	free_xml(cib);
+	
 	crm_debug("Requesting an initial dump of CRMD client_status");
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 	
-	return I_NULL;
+	return result;
 }
 
 /*	 A_DC_RELEASE	*/

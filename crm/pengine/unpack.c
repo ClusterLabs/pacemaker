@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.47 2005/01/12 13:41:03 andrew Exp $ */
+/* $Id: unpack.c,v 1.48 2005/01/12 15:43:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,7 @@ GListPtr agent_defaults  = NULL;
 gboolean stonith_enabled = FALSE;
 const char* transition_timeout = "60000"; /* 1 minute */
 
+extern const char *dc_uuid;
 
 GListPtr match_attrs(const char *attr, const char *op, const char *value,
 		     const char *type, GListPtr node_list);
@@ -391,12 +392,14 @@ unpack_status(xmlNodePtr status,
 		status, node_state, XML_CIB_TAG_STATE,
 
 /*		id         = xmlGetProp(node_state, XML_ATTR_ID); */
-		uname      = xmlGetProp(node_state,    XML_ATTR_UNAME);
-		attrs      = find_xml_node(node_state, XML_LRM_TAG_ATTRIBUTES);
-		lrm_rsc    = find_xml_node(node_state, XML_CIB_TAG_LRM);
-		lrm_agents = find_xml_node(lrm_rsc,    XML_LRM_TAG_AGENTS);
-		lrm_rsc    = find_xml_node(lrm_rsc,    XML_LRM_TAG_RESOURCES);
-		lrm_rsc    = find_xml_node(lrm_rsc,    XML_LRM_TAG_RESOURCE);
+		uname = xmlGetProp(node_state,    XML_ATTR_UNAME);
+		attrs = find_xml_node(node_state, XML_LRM_TAG_ATTRIBUTES,FALSE);
+
+		lrm_rsc    = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+		lrm_agents = find_xml_node(lrm_rsc, XML_LRM_TAG_AGENTS, FALSE);
+
+		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCE, FALSE);
 
 		crm_verbose("Processing node %s", uname);
 		this_node = pe_find_node(nodes, uname);
@@ -1052,19 +1055,6 @@ match_attrs(const char *attr, const char *op, const char *value,
 				}
 				);
 
-		} else if(safe_str_eq(op, "is_dc")) {
-			/* TODO: still need to set this during unpack
-			 * based on soemthing
-			 */
-			if(node->details->is_dc) {
-				accept = TRUE;
-			}
-
-		} else if(safe_str_eq(op, "not_dc")) {
-			if(node->details->is_dc == FALSE) {
-				accept = TRUE;
-			}
-
 		} else if(safe_str_eq(op, "eq")) {
 			if((h_val == value) || cmp == 0)
 				accept = TRUE;
@@ -1136,6 +1126,18 @@ add_node_attrs(xmlNodePtr attrs, node_t *node)
  	g_hash_table_insert(node->details->attrs,
 			    crm_strdup(XML_ATTR_ID),
 			    crm_strdup(node->details->id));
+	if(safe_str_eq(node->details->id, dc_uuid)) {
+		node->details->is_dc = TRUE;
+		g_hash_table_insert(node->details->attrs,
+				    crm_strdup(XML_ATTR_DC),
+				    crm_strdup(XML_BOOLEAN_TRUE));
+	} else {
+		g_hash_table_insert(node->details->attrs,
+				    crm_strdup(XML_ATTR_DC),
+				    crm_strdup(XML_BOOLEAN_FALSE));
+	}
+	
+			
 	return TRUE;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.30 2005/01/12 13:40:59 andrew Exp $ */
+/* $Id: stages.c,v 1.31 2005/01/12 15:43:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,6 +33,8 @@
 node_t *choose_fencer(action_t *stonith, node_t *node, GListPtr resources);
 void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 
+const char *dc_uuid = NULL;
+
 /*
  * Unpack everything
  * At the end you'll have:
@@ -65,6 +67,8 @@ stage0(xmlNodePtr cib,
 	xmlNodePtr agent_defaults  = NULL;
 	/*get_object_root(XML_CIB_TAG_RA_DEFAULTS, cib); */
 
+	dc_uuid = xmlGetProp(cib, XML_ATTR_DC_UUID);
+	
 	/* reset remaining global variables */
 	num_synapse = 0;
 	max_valid_nodes = 0;

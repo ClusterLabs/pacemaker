@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.19 2005/01/12 13:41:11 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.20 2005/01/12 15:43:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,6 +38,8 @@
 #define XML_ATTR_FILTER_PRIORITY	"priority_filter"
 #define XML_ATTR_VERBOSE		"verbose"
 #define XML_ATTR_OP			"op"
+#define XML_ATTR_DC			"is_dc"
+#define XML_ATTR_DC_UUID		"dc_uuid"
 
 #define XML_BOOLEAN_TRUE		"true"
 #define XML_BOOLEAN_FALSE		"false"
