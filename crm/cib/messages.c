@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.21 2005/02/10 11:03:56 andrew Exp $ */
+/* $Id: messages.c,v 1.22 2005/02/11 21:57:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -182,8 +182,6 @@ cib_process_query(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t **answer)
 {
-	
-	crm_data_t *cib      = NULL;
 	crm_data_t *obj_root = NULL;
 	enum cib_errors result = cib_ok;
 
@@ -216,9 +214,17 @@ cib_process_query(
 		add_node_copy(*answer, obj_root);
 
 	} else {
-		cib = create_xml_node(*answer, XML_TAG_CIB);
-		add_node_copy(cib, obj_root);
+		crm_data_t *cib = createEmptyCib();
+		crm_data_t *query_obj_root = get_object_root(section, cib);
 		copy_in_properties(cib, get_the_CIB());
+
+		xml_child_iter(
+			obj_root, an_obj, NULL,
+			add_node_copy(query_obj_root, an_obj);
+			);
+
+		add_node_copy(*answer, cib);
+		free_xml(cib);
 	}
 	
 	return result;
