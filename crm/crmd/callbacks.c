@@ -344,7 +344,11 @@ crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 	int lpc = 0;
 	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
 
-	if(hb_cluster->llc_ops->msgready(hb_cluster)) {
+	while(hb_cluster->llc_ops->msgready(hb_cluster)) {
+		if(channel->ch_status != IPC_CONNECT) {
+			/* there really is no point continuing */
+			break;
+		}
  		lpc++; 
 		/* invoke the callbacks but dont block */
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
@@ -352,7 +356,7 @@ crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 
 	crm_devel("%d HA messages dispatched", lpc);
 
-	if (channel && (channel->ch_status == IPC_DISCONNECT)) {
+	if (channel && (channel->ch_status != IPC_CONNECT)) {
 		crm_crit("Lost connection to heartbeat service.");
 		return FALSE;
 	}
