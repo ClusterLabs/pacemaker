@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.14 2004/03/10 22:23:28 andrew Exp $ */
+/* $Id: cib.c,v 1.15 2004/03/16 09:50:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -135,12 +135,18 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 		
 
 		const char *sys_to = xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
+		const char *type   = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
 		if (root_xml_node == NULL) {
-			cl_log(LOG_WARNING, "Root node was NULL!!");
+			cl_log(LOG_ERR, "Root node was NULL!!");
 
 		} else if(sys_to == NULL) {
-			cl_log(LOG_WARNING, "Value of %s was NULL!!", XML_ATTR_SYSTO);
+			cl_log(LOG_ERR, "Value of %s was NULL!!", XML_ATTR_SYSTO);
 			
+		} else if(type == NULL) {
+			cl_log(LOG_ERR, "Value of %s was NULL!!", XML_ATTR_MSGTYPE);
+			
+		} else if(strcmp(type, XML_ATTR_REQUEST) != 0) {
+			cl_log(LOG_INFO, "Message was a response not a request.  Discarding");
 		} else if (strcmp(sys_to, CRM_SYSTEM_CIB) == 0) {
 			answer = processCibRequest(root_xml_node);
 			
