@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.44 2005/02/07 11:21:41 andrew Exp $ */
+/* $Id: tengine.c,v 1.45 2005/02/10 10:48:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -224,8 +224,12 @@ process_graph_event(crm_data_t *event)
 {
 	int action_id          = -1;
 	int op_status_i        = 0;
-	const char *op_status  = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
+	const char *op_status  = NULL;
 
+	if(event != NULL) {
+		op_status  = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
+	}
+	
 	next_transition_timeout = transition_timeout;
 	
 	if(op_status != NULL) {
@@ -254,19 +258,21 @@ process_graph_event(crm_data_t *event)
 			break;
 		}
 		);
-	
-	if(action_id > -1) {
+
+	if(event == NULL) {
+		crm_debug("a transition is starting");
+		
+	} else if(action_id > -1) {
 		crm_xml_devel(event, "Event found");
 		
 	} else if(action_id == -2) {
 		crm_xml_info(event, "Event found but failed");
 		
-	} else if(event != NULL) {
+	} else {
 		/* unexpected event, trigger a pe-recompute */
 		/* possibly do this only for certain types of actions */
 		send_abort("Event not matched", event);
 		return FALSE;
-/*	} else { we dont care, a transition is starting */
 	}
 
 

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.51 2005/02/07 11:21:41 andrew Exp $ */
+/* $Id: unpack.c,v 1.52 2005/02/10 10:48:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -140,6 +140,11 @@ param_value(crm_data_t * parent, const char *name)
 	crm_data_t * a_default = find_entity(
 		parent, XML_CIB_TAG_NVPAIR, name, FALSE);
 
+	if(a_default == NULL) {
+		crm_warn("Option %s not set", name);
+		return NULL;
+	}
+	
 	return crm_element_value(a_default, XML_NVPAIR_ATTR_VALUE);
 }
 
