@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.26 2005/02/23 16:26:32 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.27 2005/03/31 08:12:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -106,6 +106,9 @@
 #define XML_CIB_TAG_NODE          	"node"
 #define XML_CIB_TAG_CONSTRAINT    	"constraint"
 #define XML_CIB_TAG_NVPAIR        	"nvpair"
+
+#define XML_TAG_ATTR_SETS	   	"instance_attributes"
+#define XML_TAG_ATTRS			"attributes"
 
 #define XML_CIB_TAG_RESOURCE	  	"resource"
 #define XML_RSC_ATTR_STOPFAIL	   	"on_stopfail"
