@@ -227,7 +227,16 @@ update_local_cib_adv(
 		crm_debug("CIB handler completed");
 	}
 	
+	crm_debug("deleting input");
+#if 0
 	delete_ha_msg_input(fsa_input);
+#else
+ 	crm_msg_del(fsa_input->msg);
+	/* BUG: it should be possible to free this but for some reason I cant */
+/*  	free_xml(fsa_input->xml); */
+	crm_free(fsa_input);
+#endif
+	crm_debug("deleted input");
 }
 
 void
