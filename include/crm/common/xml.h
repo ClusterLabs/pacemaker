@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.12 2005/02/06 03:11:07 alan Exp $ */
+/* $Id: xml.h,v 1.13 2005/02/07 11:41:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <ha_msg.h>
 #include <clplumbing/cl_log.h> 
 
 #define USE_LIBXML 1
@@ -36,9 +37,11 @@
 #  include <libxml/tree.h> 
    typedef xmlNode crm_data_t;
 #else
-#  include <ha_msg.h>
    typedef struct ha_msg crm_data_t;
 #endif
+
+gboolean add_message_xml(HA_Message *msg, const char *field, crm_data_t *xml);
+
 /*
  * Replacement function for xmlCopyPropList which at the very least,
  * doesnt work the way *I* would expect it to.
@@ -226,7 +229,7 @@ extern void print_xml_formatted(
 #else
 extern void crm_update_parents(crm_data_t *root);
 extern gboolean crm_xml_has_children(crm_data_t *root);
-#   define xml_remove_prop(obj, name) cl_msg_del_value(obj, name, FT_STRING); \
+#   define xml_remove_prop(obj, name) cl_msg_remove(obj, name); \
 	 		crm_validate_data(obj)
 #   define xml_has_children(root) crm_xml_has_children(root)
 #   define xmlGetNodePath(data) cl_get_string(data, XML_ATTR_TAGNAME)
@@ -234,7 +237,7 @@ extern gboolean crm_xml_has_children(crm_data_t *root);
 #   define crm_set_element_parent(data, parent) if(parent != NULL) {	\
 		ha_msg_mod_int(data, XML_ATTR_PARENT, (int)parent);	\
 	} else {							\
-		cl_msg_del_value(data, XML_ATTR_PARENT, FT_STRING);		\
+		cl_msg_remove(data, XML_ATTR_PARENT);			\
 	}
 #   define crm_element_value(data, name) cl_get_string(data, name)
 #   define crm_element_name(data) cl_get_string(data, XML_ATTR_TAGNAME) 
@@ -261,12 +264,14 @@ extern gboolean crm_xml_has_children(crm_data_t *root);
 		const char *prop_name = NULL;				\
 		const char *prop_value = NULL;				\
 		int __counter = 0;					\
+		crm_insane("Searching %d fields", parent->nfields);	\
 		for (__counter = 0; __counter < parent->nfields; __counter++) { \
+			crm_insane("Searching field %d", __counter);	\
 			if(parent->types[__counter] != FT_STRING) {	\
 				continue;				\
 			}						\
-			prop_name = a->names[__counter];		\
-			prop_value = a->values[__counter];		\
+			prop_name = parent->names[__counter];		\
+			prop_value = parent->values[__counter];		\
 			code;						\
 		}							\
 	} else {							\
