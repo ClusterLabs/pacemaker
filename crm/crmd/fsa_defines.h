@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.6 2004/03/19 10:43:42 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.7 2004/03/26 15:16:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -359,11 +359,13 @@ A_WARN
 #define	A_CCM_EVENT		0x0000002000000000ULL
 #define	A_CCM_UPDATE_CACHE	0x0000004000000000ULL
 
+#define	A_CIB_BUMPGEN		0x0000008000000000ULL
+
 /* -- CBI actions -- */
 #define	A_CIB_INVOKE		0x0000010000000000ULL
 #define	A_CIB_START		0x0000020000000000ULL
 #define	A_CIB_STOP		0x0000040000000000ULL
-#define	A_CIB_BUMPGEN	0x0000080000000000ULL
+#define A_CIB_INVOKE_LOCAL	0x0000080000000000ULL
 
 /* -- Transition Engine actions -- */
 	/* Attempt to reach the newly  calculated cluster state.  This is 
@@ -394,6 +396,7 @@ A_WARN
 #define	A_NODE_BLOCK		0x0010000000000000ULL
 	/* Update our information in the local CIB */
 #define A_UPDATE_NODESTATUS	0x0020000000000000ULL
+#define A_LRM_INVOKE		0x0040000000000000ULL
 
 /* -- Logging actions -- */
 #define	A_LOG			0x0100000000000000ULL

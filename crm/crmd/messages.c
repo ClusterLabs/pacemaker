@@ -861,3 +861,7 @@ handle_message(xmlNodePtr stored_msg)
 	return next_input;
 		
 }
+
+
+void lrm_op_callback (lrm_op_t* op);
+void lrm_monitor_callback (lrm_mon_t* monitor);

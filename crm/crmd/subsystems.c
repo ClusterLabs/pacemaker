@@ -150,10 +150,10 @@ do_cib_invoke(long long action,
 		free_xml(answer);
 
 		/* experimental */
-/* 	} else if(action & A_CIB_INVOKE_LOCAL) { */
-/* 		xmlNodePtr answer = process_cib_message(cib_msg, TRUE); */
-/* 		put_message(answer); */
-/* 		FN_RET(I_REQUEST); */
+	} else if(action & A_CIB_INVOKE_LOCAL) {
+		xmlNodePtr answer = process_cib_message(cib_msg, TRUE);
+		put_message(answer);
+		FN_RET(I_REQUEST);
 
 	} else if(action & A_CIB_BUMPGEN) {  
  		// check if the response was ok before next bit
@@ -525,4 +525,120 @@ run_command(struct crm_subsystem_s *centry,
 
 	// never reached
 	return TRUE;
+}
+
+
+/*	 A_LRM_CONNECT	*/
+enum crmd_fsa_input
+do_lrm_register(long long action,
+		enum crmd_fsa_cause cause,
+		enum crmd_fsa_state cur_state,
+		enum crmd_fsa_input current_input,
+		void *data)
+{
+	int ret = HA_OK;
+	FNIN();
+
+	CRM_DEBUG("LRM: connect...");
+	fsa_lrm_connection = ll_lrm_new("lrm");	
+	if(NULL == lrm) {
+		return I_FAIL;
+	}
+	
+	CRM_DEBUG("LRM: sigon...");
+	ret = fsa_lrm_connection->lrm_ops->signon(fsa_lrm_connection,
+						  "crmd");
+
+	if(ret != HA_OK) {
+		cl_log(LOG_ERR, "Failed to sign on to the LRM");
+		return I_FAIL;
+	}
+	
+	CRM_DEBUG("LRM: set_lrm_callback...");
+	ret = fsa_lrm_connection->lrm_ops->set_lrm_callback(fsa_lrm_connection,
+							    lrm_op_callback,
+							    lrm_monitor_callback);
+	
+	if(ret != HA_OK) {
+		cl_log(LOG_ERR, "Failed to set LRM callbacks");
+		return I_FAIL;
+	}
+
+	FNRET(I_NULL);
+}
+
+/*	 A_LRM_INVOKE	*/
+enum crmd_fsa_input
+do_lrm_invoke(long long action,
+	     enum crmd_fsa_cause cause,
+	     enum crmd_fsa_state cur_state,
+	     enum crmd_fsa_input current_input,
+	     void *data)
+{
+	FNIN();
+
+	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n",
+	       fsa_action2string(action), action);
+
+#if 0
+	rsc_id_t rid;
+	puts("add_rsc...");
+	uuid_generate(rid);
+	lrm->lrm_ops->add_rsc(lrm, rid, "lsb", "lsb_initscript_sim.sh", NULL);
+
+	puts("get_rsc...");
+	lrm_rsc_t*	rsc = lrm->lrm_ops->get_rsc(lrm, rid);
+	printf_rsc(rsc);
+
+	
+	puts("set_monitor...");
+	lrm_mon_t* mon = g_new(lrm_mon_t, 1);
+	mon->op_type = "status";
+	mon->params = NULL;
+	mon->timeout = 0;
+	mon->user_data = NULL;
+	mon->mode = LRM_MONITOR_SET;
+	mon->interval = 2;
+	mon->target = 1;
+	rsc->ops->set_monitor(rsc,mon);
+	printf_mon(mon);
+	mon = g_new(lrm_mon_t, 1);
+
+	mon->op_type = "status";
+	mon->params = NULL;
+	mon->timeout = 0;
+	mon->user_data = NULL;
+	mon->mode = LRM_MONITOR_CHANGE;
+	mon->interval = 2;
+	mon->target = 1;
+	rsc->ops->set_monitor(rsc,mon);
+	printf_mon(mon);
+
+	puts("perform_op...");
+	lrm_op_t* op = g_new(lrm_op_t, 1);
+	op->op_type = "start";
+	op->params = NULL;
+	op->timeout = 0;
+	op->user_data = strdup("It is a start op!");
+	rsc->ops->perform_op(rsc,op);
+	printf_op(op);
+
+	sleep(10);
+	
+	op = g_new(lrm_op_t, 1);
+	op->op_type = "stop";
+	op->params = NULL;
+	op->timeout = 0;
+	op->user_data = strdup("It is a stop op!");
+	rsc->ops->perform_op(rsc,op);
+	printf_op(op);
+
+	sleep(10);
+	puts("rcvmsg...");
+	while (TRUE) {
+		lrm->lrm_ops->rcvmsg(lrm,TRUE);
+	}
+#endif
+	
+	FNRET(I_NULL);
 }

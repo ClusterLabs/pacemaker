@@ -134,6 +134,7 @@ static FILE *dot_strm = NULL;
 enum crmd_fsa_state fsa_state;
 oc_node_list_t *fsa_membership_copy;
 ll_cluster_t   *fsa_cluster_connection;
+ll_lrm_t       *fsa_lrm_connection;
 long long       fsa_input_register;
 const char     *fsa_our_uname;
 
@@ -464,6 +465,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 */
 		ELSEIF_FSA_ACTION(A_CIB_INVOKE,		do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
+		ELSEIF_FSA_ACTION(A_LRM_INVOKE,		do_lrm_invoke)
 		ELSEIF_FSA_ACTION(A_PE_INVOKE,		do_pe_invoke)
 		ELSEIF_FSA_ACTION(A_TE_INVOKE,		do_te_invoke)
 		

@@ -115,21 +115,6 @@ crmd_ha_input_destroy(gpointer user_data)
 	cl_log(LOG_INFO, "in my hb_input_destroy");
 }
 
-/*	 A_LRM_CONNECT	*/
-enum crmd_fsa_input
-do_lrm_register(long long action,
-		enum crmd_fsa_cause cause,
-		enum crmd_fsa_state cur_state,
-		enum crmd_fsa_input current_input,
-		void *data)
-{
-	FNIN();
-
-	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n", fsa_action2string(action), action);
-
-	FNRET(I_NULL);
-}
-
 /*	 A_EXIT_0, A_EXIT_1	*/
 enum crmd_fsa_input
 do_exit(long long action,
