@@ -76,8 +76,10 @@ class RandomTests:
                 match=BadNews.look()
                 if match:
 		   add_err = 1
-		   ignorelist=test.errorstoignore()
-                   ignorelist.append(" CTS: ")
+		   ignorelist = []
+		   if test:
+		       ignorelist=test.errorstoignore()
+		   ignorelist.append(" CTS: ")
                    for ignore in ignorelist:
                        if re.search(ignore, match):
 			   add_err = 0
