@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.61 2005/03/14 21:02:29 andrew Exp $ */
+/* $Id: unpack.c,v 1.62 2005/03/16 19:51:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -732,6 +732,7 @@ unpack_failed_resource(GListPtr *placement_constraints,
 			 */
 			native_add_running(rsc_lh, node);
 
+			(node->details->num_resources)++;
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
 /* 			rsc_lh->stop->timeout = NULL; /\* wait forever *\/ */
@@ -759,7 +760,8 @@ unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
 			    node->details->uname, rsc_lh->id);
 
 		native_add_running(rsc_lh, node);
-		
+
+		(node->details->num_resources)++;
 		node->details->running_rsc = g_list_append(
 			node->details->running_rsc, rsc_lh);
 	}
