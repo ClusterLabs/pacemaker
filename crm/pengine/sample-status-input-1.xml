@@ -5,64 +5,7 @@
 <options operation="compute" />
 
 <cib_fragment cib_section="all">
-<cib timestamp="1074250671.000">
-<configuration generation_counter="12345" timestamp="10600000.000"
-	retrieved_from="nodeb">
-
-<nodes>
-	<node uuid="nodea">
-		<attr id="san-12" />
-	</node>
-	<node uuid="nodeb">
-		<attr id="san-12" />
-	</node>
-	<node uuid="nodec">
-		<attr id="whateverelse" />
-	</node>
-</nodes>
-<resources>
-	<resource id="alpha-1" type="IPaddr" class="OCF">
-	<instance_parameters>
-		<parm name="IP">192.168.10.2</parm>
-		<parm name="Interface">auto</parm>
-	</instance_parameters>
-	</resource>
-	<resource id="example-2" type="Filesystem" class="OCF">
-	<instance_parameters>
-		<parm name="Mountpoint">/mnt/ha-1</parm>
-		<parm name="Device">/dev/sdb3</parm>
-		<parm name="FSType">reiserfs</parm>
-		<parm name="mount_options">defaults</parm>
-	</instance_parameters>
-	<dependencies>
-		<node_attr type="MustHave" id="san-12" />
-	</dependencies>
-	</resource>
-	<resource id="example-3" type="Apache" class="OCF">
-	<instance_parameters>
-		<parm name="DocumentRoot">/mnt/ha-1</parm>
-	</instance_parameters>
-	<dependencies>
-		<resource type="SameNodeAfter" id="alpha-1" />
-		<resource type="SameNodeAfter" id="example-2" />
-	</dependencies>
-	</resource>
-</resources>
-</configuration>
-<status timestamp="1074250671.000">
-<node id="nodea" status="up" timestamp="1074250672.000">
-	<lrm node_id="nodea" timestamp="1074250672.000">
-	<!-- Once more, the CIB doesn't need to know what's inside here. 
-	     I imagine it would contain the currently active resources
-	     on the LRM on nodea, their status and a 'history' of which
-	     resources have failed to startup on that node etc, as well
-	     as the node status -->
-	</lrm>
-</node>
-<node id="nodeb" status="down" timestamp="1074250672.000" />
-<node id="nodec" status="failed" timestamp="1074250672.000" />
-</status>
-</cib>
-
+<cib timestamp="1074250671.000" version="1" generated="true">
+<!-- Needs fledging out ... -->
 </cib_fragment>
 </crm_message>

@@ -52,18 +52,21 @@ More details are given in the annotated DTD below.
 
 GLOBAL TODOs:
 	- Versionize DTD so we can validate against a specific version
-	- Timestamps et al should probably not be #CDATA but more
+	- Timestamps et al should probably not be CDATA but more
 	  specific types
 -->
 
-<!ELEMENT cib (configuration, status)>
+<!-- Either configuration or status must be present. Why else would you
+     have a CIB? -->
+
+<!ELEMENT cib (configuration?, status?)>
 
 <!-- TODO: Is the version element necessary? If we flag the DTD against
      which the CIB validates, the version is implicit... -->
 
 <!ATTLIST cib
-          version      #CDATA       #REQUIRED
-          timestamp    #CDATA       '0.000' #REQUIRED>
+          version      CDATA       #REQUIRED
+          timestamp    CDATA       #REQUIRED>
 
 <!ELEMENT configuration (nodes, resources, constraints)>
 <!-- The most uptodate configuration in the cluster is automatically
@@ -71,49 +74,52 @@ GLOBAL TODOs:
      which node that was. In case of updates at runtime, the source
      should be set to the node from which the last update occured.
 
+     The serial gets incremented by one for any update to the
+     configuration.
+
      TODO: Same comment about the version applies.
  -->
 
 <!ATTLIST configuration
-          version      #CDATA       '1' #REQUIRED
-          source       #CDATA       '' #IMPLIED
-          timestamp    #CDATA       '0.000' #REQUIRED>
+          version      CDATA       #REQUIRED
+          source       CDATA       #REQUIRED
+	  serial       CDATA	   #REQUIRED
+          timestamp    CDATA       #REQUIRED>
 
 <!ELEMENT nodes       (node*)>
-<!ATTLIST nodes>
 
-<!ELEMENT node (attributes)>
-<!-- The id is the uname of the node. 
+<!ELEMENT node (attributes?)>
+<!-- 
      Description is opaque to the CRM, some adminstrative comments.
+     TODO: Do we need to know about ping nodes...? 
      -->
 <!ATTLIST node
-          id            #CDATA #REQUIRED
-          description   #CDATA #IMPLIED
-          node_type     (node|ping)	'ping' #REQUIRED>
+          id            CDATA #REQUIRED
+	  uname		CDATA #REQUIRED
+          description   CDATA #IMPLIED
+          type          (node|ping) #REQUIRED>
 
 <!-- Each node can have additional attributes, such as "connected to SAN
      subsystem whatever", and then a constraint could include a
      dependency on such an attribute being present or having a specific
      value. -->
 <!ELEMENT attributes (nvpair*)>
-<!ATTLIST attributes>
 
 <!-- RESOURCES -->
 
 <!ELEMENT resources   (resource*)>
-<!ATTLIST resources>
 
 <!-- TODO: Where should we place a version requirement of the resource
 	   agent? Is that a resource attribute, or a constraint...? 
 	   Same for the resource priority, I guess. -->
-<!ELEMENT resource (instance_parameters,timings)>
+<!ELEMENT resource (instance_parameters?,timings?)>
 <!ATTLIST resource
-          id            #CDATA #REQUIRED
-          description   #CDATA #IMPLIED
-          class         (ocf|init|heartbeat)	'ocf' #REQUIRED
-	  ra_version	#CDATA '1.0' #IMPLIED
-	  priority      #CDATA '0' #IMPLIED
-          type          #CDATA #REQUIRED>
+          id            CDATA #REQUIRED
+          description   CDATA #IMPLIED
+          class         (ocf|init|heartbeat)	#REQUIRED
+	  ra_version	CDATA #IMPLIED
+	  priority      CDATA #IMPLIED
+          type          CDATA #REQUIRED>
 
 <!-- Some of these may need to be overridden on a per-node /
      per-node-attribute basis (ie, eth1 is eth0 on some nodes...).
@@ -129,22 +135,22 @@ GLOBAL TODOs:
      -->
 <!ELEMENT instance_parameters (node_ref*, nvpair*)>
 <!ATTLIST instance_parameters
-	  id		#CDATA #REQUIRED>
+	  id		CDATA #REQUIRED>
 
 <!-- Can override the default timeouts or frequencies. Times are given
-     in seconds. -->
-<!ELEMENT timings (timing)>
-<!ATTLIST timings>
+     in seconds, millisecond precision is permitted.
+     -->
+<!ELEMENT timings (timing+)>
 
-<!ELEMENT timing>
+<!ELEMENT timing EMPTY>
 <!ATTLIST timing
-		action	#CDATA #REQUIRED
-		timeout #CDATA #REQUIRED
-		frequency #CDATA #IMPLIED>
+		id	CDATA #REQUIRED
+		action	CDATA #REQUIRED
+		timeout CDATA #IMPLIED
+		frequency CDATA #IMPLIED>
 
 <!-- CONSTRAINTS -->
 <!ELEMENT constraints (rsc_to_rsc*,rsc_to_node*,node_to_all*)>
-<!ATTLIST constraints)>
 
 <!-- Every constraint entry also has a 'lifetime' attribute, which
      expresses when this is applicable. For example, a constraint could
@@ -175,31 +181,39 @@ GLOBAL TODOs:
      TODO: Are may/may not applicable at all? Should & Must are,
      obviously...
  -->
-<!ELEMENT rsc_to_rsc>
+<!ELEMENT rsc_to_rsc EMPTY>
 <!ATTLIST rsc_to_rsc
-		id	#CDATA #REQUIRED
-		from	#CDATA #REQUIRED
-		to	#CDATA #REQUIRED
-		lifetime #CDATA #IMPLIED
-		type	(ordering, placement) #REQUIRED
-		strength (must,should,may,maynot,shouldnot,mustnot) #REQUIRED>
+		id	CDATA #REQUIRED
+		from	CDATA #REQUIRED
+		to	CDATA #REQUIRED
+		lifetime CDATA #IMPLIED
+		type	(ordering|placement) #REQUIRED
+		strength (must|should|may|maynot|shouldnot|mustnot) #REQUIRED>
 
 <!-- Defines which nodes are eligible for running a given resource. 
      As there can be multiple ones for a given resource and the ordering
      matters, we express them as a sub-list ordered by no.
      
      During processing, all rules are evaluated in this order and the
-     weights are determined. By default, all nodes start with weight 0,
-     so you can increase or modify the weight accordingly.
+     weights are determined. 
+     
+     Iff no rsc_to_node are present for a specific rsc, all nodes are
+     considered eligible with weight 0. If you give a rsc_to_node
+     constraint, only the nodes which are referenced are considered.
+     
+     By default, all nodes referenced start with weight 0, so you can
+     increase or modify the weight accordingly.
 
      Nodes with higher weight are preferred.
      Nodes which end up with a weight < 0 are then discarded.
+
+     TODO: How to express logical expressions between node attributes?
   -->
-<!ELEMENT rsc_to_node (node_ref*)>
+<!ELEMENT rsc_to_node (node_ref+)>
 <!ATTLIST rsc_to_node
-		lifetime #CDATA #IMPLIED
-		id	#CDATA #REQUIRED
-		rsc	#CDATA #REQUIRED>
+		lifetime CDATA #IMPLIED
+		id	CDATA #REQUIRED
+		rsc	CDATA #REQUIRED>
 
 <!-- The "node_constraint" is similar, but works in the opposite
      direction; it allows the user to express a constraint on a (list
@@ -212,8 +226,8 @@ GLOBAL TODOs:
 
 <!ELEMENT node_to_all (node_ref*)>
 <!ATTLIST node_to_all
-		lifetime #CDATA #IMPLIED
-		id	#CDATA #REQUIRED>
+		lifetime CDATA #IMPLIED
+		id	CDATA #REQUIRED>
 
 <!-- Reference a given node (either by name or attribute) and give it a weight. 
      
@@ -227,19 +241,20 @@ GLOBAL TODOs:
 	   dependency (ie, giving a higher weight to the node which is
 	   already running the resource?)
   -->
-<!ELEMENT node_ref>
+<!ELEMENT node_ref EMPTY>
 <!ATTLIST node_ref
-		id	#CDATA #REQUIRED
-		no	#CDATA #REQUIRED
-		target	#CDATA #REQUIRED
-		type	(id, has_attribute, not_attribute) #REQUIRED
-		weight	#CDATA #IMPLIED>
+		id	CDATA #REQUIRED
+		no	CDATA #REQUIRED
+		target	CDATA #REQUIRED
+		type	(id|has_attr|not_attr|attr_value) #REQUIRED
+		value	CDATA #IMPLIED
+		weight	CDATA #IMPLIED>
 
-<!ELEMENT nvpair>
+<!ELEMENT nvpair EMPTY>
 <!ATTLIST nvpair
-	  id		#CDATA #REQUIRED
-	  name		#CDATA #REQUIRED
-	  value		#CDATA #REQUIRED>
+	  id		CDATA #REQUIRED
+	  name		CDATA #REQUIRED
+	  value		CDATA #REQUIRED>
 
 
 <!-- STATUS SECTION -->
@@ -260,48 +275,50 @@ GLOBAL TODOs:
 -->
 
 <!ELEMENT status (node_state*)>
-<!ATTLIST status>
 
 <!-- TODO: Flesh out the node state in more detail based on the diagrams
      we drew in Nbg. -->
 <!ELEMENT node_state (lrm, attributes)>
 <!ATTLIST node_state
-	id	#CDATA #REQUIRED
-	node_id #CDATA #REQUIRED
-	state   (up|down|missing)
-	source	#CDATA #REQUIRED
-	timestamp	#CDATA '0.000' #REQUIRED>
+	id	CDATA #REQUIRED
+	node_id CDATA #REQUIRED
+	state   (up|down|missing) #REQUIRED
+	source	CDATA #REQUIRED
+	timestamp	CDATA #REQUIRED>
 
 <!-- Information from the Local Resource Manager of the node.
      
      Running resources, installed Resource Agents etc. -->
      
-<!ELEMENT lrm (lrm_resources, lrm_agents)>
+<!ELEMENT lrm (lrm_resources,lrm_agents)>
 <!ATTLIST lrm
-        id      #CDATA #REQUIRED
-	version	#CDATA #REQUIRED>
+        id      CDATA #REQUIRED
+	version	CDATA #REQUIRED>
 
 <!-- TODO: Need to define howto handle agents provided by multiple
      sources. The OCF RA spec allows a resource type to be provided by
      multiple Resource Agents; how do we deal with that? -->
 <!ELEMENT lrm_agents (lrm_agent*)>
-<!ELEMENT lrm_agents>
 
-<!ELEMENT lrm_agent>
+<!ELEMENT lrm_agent (resource-agent?)>
 <!ATTLIST lrm_agent
-	type	#CDATA #REQUIRED
+	type	CDATA #REQUIRED
 	class	(ocf|init|heartbeat) #REQUIRED
-	version #CDATA #REQUIRED>
+	version CDATA #REQUIRED>
+
+<!-- TODO: In fact, this should reference the OCF RA DTD for class ==
+	   ocf -->
+<!ELEMENT resource_agent EMPTY>
 
 <!ELEMENT lrm_resources (rsc_state*)>
-<!ATTLIST lrm_resources>
 
-<!ELEMENT rsc_state>
+<!ELEMENT rsc_state EMPTY>
 <!ATTLIST rsc_state
-          id               #CDATA #REQUIRED
-          res_id           #CDATA #REQUIRED
-          node_id          #CDATA #REQUIRED
-          resource_status  (stopped|starting|running|stopping|failed|restarting|stop_failed) 'stopped' #REQUIRED
-          source           #CDATA #REQUIRED
-          timestamp        #CDATA       '0' #REQUIRED>
+          id               CDATA #REQUIRED
+          res_id           CDATA #REQUIRED
+          node_id          CDATA #REQUIRED
+          resource_status  (stopped|starting|running|stopping|failed|restarting|stop_failed)
+	  			#REQUIRED
+          source           CDATA #REQUIRED
+          timestamp        CDATA #REQUIRED>
 
