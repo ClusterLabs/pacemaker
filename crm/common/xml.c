@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.31 2005/02/10 10:53:09 andrew Exp $ */
+/* $Id: xml.c,v 1.32 2005/02/10 16:21:58 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1189,6 +1189,7 @@ crm_element_parent(crm_data_t *data)
 #endif
 }
 
+/* FIXME!! This whole function is evil!! */
 void
 crm_set_element_parent(crm_data_t *data, crm_data_t *parent)
 {
@@ -1199,7 +1200,7 @@ crm_set_element_parent(crm_data_t *data, crm_data_t *parent)
 #else
 	crm_validate_data(data);
 	if(parent != NULL) {
-		ha_msg_mod_int(data, XML_ATTR_PARENT, (int)parent);
+		ha_msg_mod_int(data, XML_ATTR_PARENT, GPOINTER_TO_INT(parent));
 		
 	} else if(cl_get_string(data, XML_ATTR_PARENT) != NULL) {
 		cl_msg_remove(data, XML_ATTR_PARENT);
