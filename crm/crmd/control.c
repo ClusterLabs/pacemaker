@@ -562,11 +562,7 @@ crm_shutdown(int nsig, gpointer unused)
 
 gboolean
 register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
-{
-	int facility;
-	char *param_val = NULL;
-	const char *param_name = NULL;
-	
+{	
 	if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
 		crm_crit("cluster errmsg function unavailable");
 	}
@@ -579,25 +575,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		return FALSE;
 	}
 
-	/* change the logging facility to the one used by heartbeat daemon */
-	crm_debug("Switching to Heartbeat logger");
-	if (( facility =
-	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
-		cl_log_set_facility(facility);
- 	}	
-	crm_verbose("Facility: %d", facility);
-
-	param_name = KEY_DEBUGLEVEL;
-	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_devel("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		int debug_level = atoi(param_val);
-		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
-			set_crm_log_level(LOG_INFO + debug_level);
-		}
-		cl_free(param_val);
-		param_val = NULL;
-	}
+	crm_set_ha_options(hb_cluster);
 	
 	crm_devel("Be informed of CRM messages");
 	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(

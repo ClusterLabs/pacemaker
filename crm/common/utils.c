@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.37 2005/03/04 15:59:08 alan Exp $ */
+/* $Id: utils.c,v 1.38 2005/03/08 13:57:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -531,3 +531,138 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 #endif
 }/*memory leak*/ /* BEAM BUG - this is not a memory leak */
 
+extern int use_logging_daemon;
+extern int conn_logd_intval;
+
+void
+crm_set_ha_options(ll_cluster_t *hb_cluster) 
+{
+	int facility;
+	char *param_val = NULL;
+	const char *param_name = NULL;
+
+	/* change the logging facility to the one used by heartbeat daemon */
+	crm_debug("Switching to Heartbeat logger");
+	if (( facility =
+	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
+		cl_log_set_facility(facility);
+ 	}	
+	crm_verbose("Facility: %d", facility);
+
+	param_name = KEY_LOGFILE;
+	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
+	crm_devel("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		cl_log_set_logfile(param_val);
+		cl_free(param_val);
+		param_val = NULL;
+	}
+	
+	param_name = KEY_DBGFILE;
+	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
+	crm_devel("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		cl_log_set_debugfile(param_val);
+		cl_free(param_val);
+		param_val = NULL;
+	}
+	
+	param_name = KEY_DEBUGLEVEL;
+	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
+	crm_devel("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		int debug_level = atoi(param_val);
+		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
+			set_crm_log_level(LOG_INFO + debug_level);
+		}
+		cl_free(param_val);
+		param_val = NULL;
+	}
+
+	param_name = KEY_LOGDAEMON;
+	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
+	crm_devel("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		crm_str_to_boolean(param_val, &use_logging_daemon);
+		cl_free(param_val);
+		param_val = NULL;
+	}
+
+	param_name = KEY_CONNINTVAL;
+	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
+	crm_devel("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		conn_logd_intval = crm_get_msec(param_val);
+		cl_free(param_val);
+		param_val = NULL;
+	}
+
+}
+
+int
+crm_str_to_boolean(const char * s, int * ret)
+{
+	if (	strcasecmp(s, "true") == 0
+	||	strcasecmp(s, "on") == 0
+	||	strcasecmp(s, "yes") == 0
+	||	strcasecmp(s, "y") == 0
+	||	strcasecmp(s, "1") == 0){
+		*ret = TRUE;
+		return 1;
+	}
+	if (	strcasecmp(s, "false") == 0
+	||	strcasecmp(s, "off") == 0
+	||	strcasecmp(s, "no") == 0
+	||	strcasecmp(s, "n") == 0
+	||	strcasecmp(s, "0") == 0){
+		*ret = FALSE;
+		return 1;
+	}
+	return -1;
+}
+
+#ifndef NUMCHARS
+#    define	NUMCHARS	"0123456789."
+#endif
+
+#ifndef WHITESPACE
+#    define	WHITESPACE	" \t\n\r\f"
+#endif
+
+long
+crm_get_msec(const char * input)
+{
+	const char *	cp = input;
+	const char *	units;
+	long		multiplier = 1000;
+	long		divisor = 1;
+	long		ret = -1;
+	double		dret;
+
+	cp += strspn(cp, WHITESPACE);
+	units = cp + strspn(cp, NUMCHARS);
+	units += strspn(units, WHITESPACE);
+
+	if (strchr(NUMCHARS, *cp) == NULL) {
+		return ret;
+	}
+
+	if (strncasecmp(units, "ms", 2) == 0
+	||	strncasecmp(units, "msec", 4) == 0) {
+		multiplier = 1;
+		divisor = 1;
+	}else if (strncasecmp(units, "us", 2) == 0
+	||	strncasecmp(units, "usec", 4) == 0) {
+		multiplier = 1;
+		divisor = 1000;
+	}else if (*units != EOS && *units != '\n'
+	&&	*units != '\r') {
+		return ret;
+	}
+	dret = atof(cp);
+	dret *= (double)multiplier;
+	dret /= (double)divisor;
+	dret += 0.5;
+	ret = (long)dret;
+	return(ret);
+}
