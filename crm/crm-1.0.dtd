@@ -60,7 +60,7 @@ More details are given in the annotated DTD below.
           version      CDATA       #REQUIRED
           timestamp    CDATA       #REQUIRED>
 
-<!ELEMENT configuration (nodes, resources, constraints)>
+<!ELEMENT configuration (nodes, resources, constraints, metadata)>
 <!-- The most uptodate configuration in the cluster is automatically
      determined by the CRM via the timestamp; the source indicates
      which node that was. In case of updates at runtime, the source
@@ -111,7 +111,7 @@ More details are given in the annotated DTD below.
 <!ATTLIST resource
           id            CDATA #REQUIRED
           description   CDATA #IMPLIED
-          class         (ocf|init|heartbeat)	#REQUIRED
+          class         (ocf|init|heartbeat|stonith)	#REQUIRED
 	  ra_version	CDATA #IMPLIED
 	  priority      CDATA #IMPLIED
           type          CDATA #REQUIRED>
@@ -123,31 +123,18 @@ More details are given in the annotated DTD below.
      This is expressed as follows: You can have multiple sets of
      'instance attributes'. The one with the highest weight is chosen.
 
-     Otherwise, if a matching attr_expression is found, the instance parameters
+     Otherwise, if a matching rule is found, the instance parameters
      there override the defaults completely; the attr_expression list is
      evaluated ordered by the no tag. The weight attribute doesn't make
      much sense here.
      -->
-<!ELEMENT instance_attributes (attr_expression?, parameters?, timings?)>
+<!ELEMENT instance_attributes (rule?, parameters)>
 <!ATTLIST instance_attributes
 	  weight	CDATA #IMPLIED
 	  id		CDATA #REQUIRED>
 
-<!-- Can override the default timeouts or frequencies. Times are given
-     in seconds, millisecond precision is permitted.
-     -->
-<!ELEMENT timings (timing+)>
-
-<!ELEMENT timing EMPTY>
-<!ATTLIST timing
-		id	CDATA #REQUIRED
-		action	CDATA #REQUIRED
-		timeout CDATA #IMPLIED
-		frequency CDATA #IMPLIED>
-
 <!-- CONSTRAINTS -->
-<!ELEMENT constraints
-(rsc_to_rsc*,rsc_to_node*,rsc_to_attr*,node_baseweight*,node_track*)>
+<!ELEMENT constraints (rsc_to_rsc*,rsc_location*)>
 
 <!-- Every constraint entry also has a 'lifetime' attribute, which
      expresses when this is applicable. For example, a constraint could
@@ -181,13 +168,13 @@ More details are given in the annotated DTD below.
  -->
 <!ELEMENT rsc_to_rsc EMPTY>
 <!ATTLIST rsc_to_rsc
-		id	CDATA #REQUIRED
-		from	CDATA #REQUIRED
-		to	CDATA #REQUIRED
-		lifetime CDATA #IMPLIED
+		id	  CDATA #REQUIRED
+		from	  CDATA #REQUIRED
+		to	  CDATA #REQUIRED
+		lifetime  CDATA #IMPLIED
 		timestamp CDATA #REQUIRED
-		type	(ordering|placement) #REQUIRED
-		strength (must|should|may|maynot|shouldnot|mustnot) #REQUIRED>
+		type	  (ordering|placement) #REQUIRED
+		strength  (must|should|shouldnot|mustnot) #REQUIRED>
 
 <!-- Specify which nodes are eligible for running a given resource. 
      
@@ -207,73 +194,63 @@ More details are given in the annotated DTD below.
      The rsc references, suprisingly, a resource id.
 
   -->
-<!ELEMENT rsc_to_node (node_ref+)>
-<!ATTLIST rsc_to_node
-		lifetime CDATA #IMPLIED
-		timestamp CDATA #IMPLIED
-		id	CDATA #REQUIRED
-		weight  CDATA #IMPLIED
-		modifier (set|inc|dec) 'inc'
-		from	CDATA #REQUIRED>
 
-<!ELEMENT rsc_to_attr (attr_expression+)>
-<!ATTLIST rsc_to_attr
-		lifetime CDATA #IMPLIED
-		timestamp CDATA #IMPLIED
-		id	CDATA #REQUIRED
-		weight  CDATA #IMPLIED
-		modifier (set|inc|dec) 'inc'
-		from	CDATA #REQUIRED>
+<!ELEMENT rsc_location (rule+)>
+<!ATTLIST rsc_location
+	  id	      CDATA #REQUIRED
+	  description CDATA #IMPLIED
+	  rsc         CDATA #REQUIRED
+	  lifetime    CDATA #IMPLIED
+	  timestamp   CDATA #IMPLIED>
 
-<!ELEMENT node_ref EMPTY>
-<!ATTLIST node_ref
-	  id CDATA #REQUIRED
-	  type (id|uname) 'uname'
-	  name CDATA #REQUIRED
->
+<!--
 
-<!-- 
-     This is similar, but works in the opposite direction; it allows the
-     user to express a constraint on a (list of) node(s) identified by
-     attribute or name, and which in turn affects the placement of /all/
-     resources.
+    A special case exists when no node_expressions are present.  In this case
+    the rule applies to all nodes.
 
-     Basically it allows the user to modify the "base weight" of a node.
+    "score" adjusts the prefernce for running on the matched nodes.  Nodes that
+    end up with a -ve score will never run the resource.
 
-     The most common case will be to "blacklist" a set of nodes; a
-     negative weight will prevent them from being considered eligible
-     anywhere, ie use a "set" to -1 or somesuch.
+    "result" is optional and determins if matched nodes can or cannot run the
+    resource
 
-     A higher base-weight could be used to express a global preference.
-     All nodes which are eligible to run a given resource will receive
-     this weight as their 'default' weight (instead of 0). Caveat
-     emperor: this will make the node a candidate to run all resources
-     by default.  -->
+    "boolean_op" determins how the results of multiple node_expressions are
+    combined.
 
-<!ELEMENT node_baseweight (attr_expression+)>
-<!ATTLIST node_baseweight
-		lifetime CDATA #IMPLIED
-		timestamp CDATA #IMPLIED
-		weight	CDATA #REQUIRED
-		modifier (set|inc|dec) 'inc'
-		id	CDATA #REQUIRED>
+-->
+<!ELEMENT rule (node_expression*)>
+<!ATTLIST rule
+	  id         CDATA        #REQUIRED
+	  score      CDATA        #IMPLIED
+	  result     (can|cannot) #IMPLIED
+	  boolean_op (or|and)     'and'>
 
-<!-- Reference a set of nodes, either by directly specifying a node id,
-     uname, or by matching its attributes. All rules need to match.
-     
-     (You can express "OR" by having multiple rsc_to_node / node_baseweight
-     entries.)
-  -->
-<!ELEMENT attr_expression (node_match+)>
-<!ATTLIST attr_expression
-		id	CDATA #REQUIRED>
+<!--
+    Reference a set of nodes, either by directly specifying a node id,
+    uname, or by matching its attributes. All rules need to match.
+    
+    (You can express "OR" by having multiple rsc_to_node / node_baseweight
+    entries.)
 
-<!ELEMENT node_match EMPTY>
-<!ATTLIST node_match
-		id	CDATA #REQUIRED
-		target	CDATA #REQUIRED
-		type	(has_attr|not_attr|attr_value) #REQUIRED
-		value	CDATA #IMPLIED>
+    "id" is mostly for debug purposes
+
+    The syntax of "match" is <attr>:<value>.  This will produce a list of 
+    all nodes where <attr> is set to <value>.  Where no value for <value>
+    is supplied, the expression produces the list of nodes that define
+    <attr> regardless of its value.
+
+   "not_match" returns the negation of the equivalent "match".
+
+    Two builtin attributes will be node id and node uname so that 
+    match=id:8C05CA5C-C9E3-11D8-BEE6-000A95B71D78 and not_match=uname:test1
+    are both legal syntax
+
+-->
+<!ELEMENT node_expression EMPTY>
+<!ATTLIST node_expression
+	  id        CDATA #REQUIRED
+	  match     CDATA #IMPLIED
+	  not_match CDATA #IMPLIED>
 
 
 <!-- STATUS SECTION -->
@@ -296,6 +273,36 @@ More details are given in the annotated DTD below.
 -->
 <!ELEMENT status (crm_state,node_state*)>
 
+<!ELEMENT metadata ra_entry>
+<!--
+
+    id is largely ignored except for debug purposes
+
+    class will be one of lsb, ocf, heartbeat or stonith but remains a CDATA
+      in case others are added in the future
+
+    type is (strangely) the type of the RA (something like apache or IPaddr)
+
+    This section is compiled automatically from information supplied by the
+      LRM.  
+
+    In order to reduce bloat and information redundancy the assumption has
+      been made that all instances of an RA in the cluster carry the same
+      metadata values regardless of their version or the node they reside on.
+      The only exception to this is the version tag which can be different.
+      
+      Anyone caught breaking this rule will be shot on sight.
+
+    This section needs some work as I dont think the metadata is as simple as
+      an nvpair
+
+-->
+<!ELEMENT ra_entry (nvpair*)>
+<!ATTLIST ra_entry 
+	id	   CDATA #REQUIRED
+<!-- possibly: version CDATA #REQUIRED -->
+        class      (ocf|init|heartbeat|stonith)	#REQUIRED
+	type	   CDATA #REQUIRED>
 
 <!-- Information about the CRM Layer of the cluster.
 
@@ -324,11 +331,12 @@ More details are given in the annotated DTD below.
 	(neither).
 	
 	"unclean" is set to the current time when the node leaves the 
-	cluster ungracefully and is usually an indication that the node 
+	cluster ungracefully and is an indication that the node 
 	needs to be shot.  
 
-	The DC will unset this field after the Transitioner has successfully 
-	shot the node, OR the node rejoins the cluster cleanly.
+        Setting "clear_unclean" will unset this field.  Normally this is
+        after the Transitioner has successfully shot the node, OR the node
+	rejoins the cluster cleanly.
 
 	"exp_state" is our expectation of the state. This requires some
 	book-keeping on the part of the other nodes to remember the last
@@ -355,9 +363,14 @@ More details are given in the annotated DTD below.
 <!ELEMENT node_state (lrm, attributes)>
 <!ATTLIST node_state
 	id		CDATA			#REQUIRED
-	state	  	(active|in_ccm|down)	#REQUIRED
-	unclean		CDATA			#REQUIRED
-	exp_state	(active|down)		#REQUIRED
+	crmd	  	(online|offline)        'offline'
+	join	  	(pending|member|down)	'down'
+	expected	(pending|member|down)	'down'
+	in_ccm	  	(true|false)		'false'
+	unclean		CDATA			#IMPLIED
+	shutdown	CDATA			#IMPLIED
+	clear_unclean	CDATA			#IMPLIED
+	clear_shutdown	CDATA			#IMPLIED
 	source		CDATA			#IMPLIED
 	timestamp	CDATA			#REQUIRED>
 
@@ -378,11 +391,29 @@ More details are given in the annotated DTD below.
 <!ELEMENT lrm_agent (resource-agent?)>
 <!ATTLIST lrm_agent
 	type	CDATA #REQUIRED
-	class	(ocf|init|heartbeat) #REQUIRED
+	class	(ocf|init|heartbeat|stonith) #REQUIRED
 	version CDATA #REQUIRED>
 
 <!-- TODO: In fact, this should reference the OCF RA DTD for class ==
-	   ocf, but I don't know how to specify that ;-) -->
+	   ocf, but I don't know how to specify that ;-)
+
+     "last_op" records the last known operation invoked on a resource/node 
+        combination.  It is either supplied by the LRM or updated by the
+        Transitioner when an action is invoked.
+
+     "op_code" is supplied by the LRM and conforms to this enum:
+typedef enum {
+	LRM_OP_DONE,
+	LRM_OP_CANCELLED,
+	LRM_OP_TIMEOUT,
+	LRM_OP_NOTSUPPORTED,
+	LRM_OP_ERROR,
+} op_status_t;
+
+     "rsc_state" is really only a guide.  All actions are taken based on
+	"last_op" and "op_code"
+	
+ -->
 <!ELEMENT resource_agent EMPTY>
 
 <!ELEMENT lrm_resources (rsc_state*)>
@@ -394,61 +425,43 @@ More details are given in the annotated DTD below.
           node_id	CDATA #IMPLIED
 	  rsc_state	(stopped|starting|started|fail|restarting|stopping|stop_fail)
 	  			#REQUIRED
+	  last_op	CDATA #REQUIRED
+	  op_code	CDATA #REQUIRED
           timestamp	CDATA #REQUIRED>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
 
-<!--
- The Transition Graph is an ordered list of synapses, which consist of a
- list of pre-conditions (events) they are waiting for / triggering on
- and a (list of) actions which are initiated when they "fire". The first
- synapse to have a matching input "consumes" the event unless specified
- differently.
- 
--->
+<!-- 
+     The transition graph consists of a number of cction sets which contain
+     a self contained list of actions to be performed.
+     
+     No action in one set shall depend on an action in another set and each 
+     action is listed in the order in which it needs to be invoked.
 
+     Action set id=-1 is special in that it lists actions that could not be 
+     started.  These may move to the errors section soon.
+
+     Each action set may have at most 1 pending action at any time and 
+     progression depends on receipt of the action's result or a timeout.
+
+     Failed or timedout actions may or may not be fatal as determined by
+     the action itself.
+
+     Parts of the list may be skipped if marked optional but only until the 
+     first non-optional action is encountered.
+-->
 <!ELEMENT transition_graph (actions*,errors*)>
-
-<!-- When all inputs to a synapse are satisfied, the synapse fires the
-     actions.
-     
-     "reset" states whether after having fired once, the synapse resets
-     and accepts input again. "no": After having fired, the synapse
-     becomes completely inactive. "yes": it completely resets. "greedy":
-     The synapse will still 'consume' input, but not fire again.
--->
-
-<!ELEMENT synapse (inputs,actions)>
-<!ATTLIST synapse
-	  id	CDATA #REQUIRED
-	  reset	(no|yes|greedy) 'greedy'>
-
-<!ELEMENT inputs (trigger+)>
-
-<!-- event_spec specifies the event we are looking for.
-     This can be anything from "rsc foo started somewhere / on node X",
-     "STONITH of node A completed", "DEFAULT" etc... 
-
-     If an event is "consumed", no further inputs in other synapses will
-     be triggered by it. If "no", the event will pass through,
-     triggering us but otherwise completely unaltered. If "marks", we
-     simply remember that the event has been accepted somewhere, but
-     pass it on.
-     
--->
-<!ELEMENT trigger (rsc_state*,node_state*,pseudo_event*,crm_event*)>
-<!ATTLIST trigger
-	  id		CDATA #REQUIRED
-	  consumes	(no|yes|marks) 'marks'>
 
 
 <!-- STONITH events end up being rsc_ops; remember that we hope to
      simply invoke 'STONITH Resource Agent' and feed it with appropriate
      parameters.
-
   -->
-<!ELEMENT actions (rsc_op*,pseudo_event*,crm_event*)>
+
+<!ELEMENT action_set (rsc_op*,pseudo_event*,crm_event*)>
+<!ATTLIST action_set
+	  id CDATA #REQUIRED>
 
 <!-- The resource object inside the rsc_op object differs from the
      resources list only in content, not in syntax.
@@ -458,29 +471,60 @@ More details are given in the annotated DTD below.
      on_node is the uname of the node on which to trigger the operation.
 
      The operation is the command passed to the Resource Agent.
+
+     "runnable" should probably be removed and is a legacy of development
+
+     "optional" indicates to the Transitioner that the action is available
+     but not manditory.  This is useful when resources depend on others which
+     may or may not need to be moved/restarted.
+
+     "discard" may or not be needed - i need to check but the intention was
+     to not bother with trying to stop a failed resource before stonithing a 
+     node.
+
+     "allow_fail" when set to true, the transition isnt aborted when the 
+     action fails.  eg. a stop or shutdown isnt fatal when a STONITH is also
+     pending for that node.
+
 -->
 
 <!ELEMENT rsc_op (resource)>
 <!ATTLIST rsc_op
-	id	CDATA #REQUIRED
-	on_node	CDATA #REQUIRED
-	operation	CDATA	#REQUIRED>
+	id	   CDATA        #REQUIRED
+	runnable   (true|false) 'true'
+	optional   (true|false) 'false'
+	discard    (true|false) 'false'
+	allow_fail (true|false) 'false'
+	on_node	   CDATA        #REQUIRED
+	operation  CDATA	#REQUIRED>
 
 <!-- For added flexibility, an action can trigger an event, which is
-     then consumed somewhere else. Woah. Cool. -->
+     then consumed somewhere else. Woah. Cool. 
+
+Andrew:
+     not sure these will be required long-term.  right now they are used
+     for STONITTH ops but that should change once they become resources.
+-->
 <!ELEMENT pseudo_event EMPTY>
 <!ATTLIST pseudo_event
-	id	CDATA #REQUIRED>
+	id	CDATA #REQUIRED
+	runnable   (true|false) 'true'
+	optional   (true|false) 'false'
+	discard    (true|false) 'false'
+	allow_fail (true|false) 'false'>
 	
-<!-- crm_event: We can instruct a crmd to sign-out cleanly, or to
-     retrigger the DC election.
-     TODO: What else? We can hardly ask it to come up... ;-)
+<!-- crm_event: We can instruct a crmd to shutdown (maybe the whole node?),
+     sign-out cleanly, or to retrigger the DC election.
 -->
 <!ELEMENT crm_event EMPTY>
 <!ATTLIST crm_event
 	id	CDATA #REQUIRED
+	runnable   (true|false) 'true'
+	optional   (true|false) 'false'
+	discard    (true|false) 'false'
+	allow_fail (true|false) 'false'
 	on_node	CDATA #REQUIRED
-	operation (shutdown|signup|election) #REQUIRED>
+	operation (shutdown|signout|signup|election) #REQUIRED>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
@@ -528,7 +572,7 @@ More details are given in the annotated DTD below.
 <!-- need to flesh out the types of operations -->
 <!ELEMENT operation (nvpair*)>
 <!ATTLIST operation
-	  op		(noop|query|replace|add|delete)	'noop'
+	  op (noop|bump|query|create|update|delete|erase|store|replace|forward|join_ack|welcome|ping|vote|hello|announce|dc_beat|pe_calc|abort|quit|shutdown_crm|event_cc|te_abort|transition|te_complete|req_shutdown) 'noop'
           verbose	(true|false)	#IMPLIED
 	  timeout	CDATA	#REQUIRED>
 
