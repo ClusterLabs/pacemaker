@@ -134,7 +134,7 @@ do_dc_join_offer_one(long long action,
 	
 	join_to = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 	if(join_to != NULL) {
-		stopTimer(integration_timer);
+/* 		stopTimer(integration_timer); */
 		
 		/* send the welcome */
 		crm_debug("Sending %s to %s", CRM_OP_WELCOME, join_to);
@@ -146,7 +146,7 @@ do_dc_join_offer_one(long long action,
 			
 		/* if this client is sick, we shouldnt wait forever */
 		crm_debug("Restarting the integration timer");
-		startTimer(integration_timer);
+/* 		startTimer(integration_timer); */
 
 	} else {
 		crm_err("No recipient for welcome message");
@@ -204,6 +204,7 @@ do_dc_join_req(long long action,
 	} else if(/* some reason */ 0) {
 		/* NACK this client */
 		ack_nack = CRMD_JOINSTATE_DOWN;
+/* 		stopTimer(integration_timer); */
 	}
 	
 	/* add them to our list of CRMD_STATE_ACTIVE nodes
@@ -220,9 +221,11 @@ do_dc_join_req(long long action,
 	}
 
 	/* dont waste time by invoking the PE yet; */
-	crm_debug("Still waiting on %d outstanding join acks",
+/* 	startTimer(integration_timer); */
+	crm_debug("Still waiting on %d (of %d) outstanding join acks",
 		  fsa_membership_copy->members_size
-		  - g_hash_table_size(join_requests));
+		  - g_hash_table_size(join_requests),
+		  fsa_membership_copy->members_size);
 	
 	return I_NULL;
 }
