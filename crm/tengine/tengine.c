@@ -123,8 +123,6 @@ extract_event(xmlNodePtr msg)
 	 <rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>
 */
 
-	xml_message_debug(msg, "TE Event");
-	
 	iter = find_xml_node(msg, XML_TAG_FRAGMENT);
 	section = xmlGetProp(iter, XML_ATTR_SECTION);
 
@@ -152,8 +150,6 @@ extract_event(xmlNodePtr msg)
 			/* node state update,
 			 * possibly from a shutdown we requested
 			 */
-			CRM_DEBUG("state no child");
-			
 			event_status = state;
 			event_node   = xmlGetProp(node_state, XML_ATTR_ID);
 			
@@ -171,7 +167,6 @@ extract_event(xmlNodePtr msg)
 						     event_rc);
 
 		} else if(state == NULL && child != NULL) {
-			CRM_DEBUG("child no state");
 			child = find_xml_node(node_state, XML_CIB_TAG_LRM);
 			child = find_xml_node(child, XML_LRM_TAG_RESOURCES);
 
@@ -206,7 +201,6 @@ extract_event(xmlNodePtr msg)
 			 * due to any request we made
 			 */
 			abort = TRUE;
-			CRM_DEBUG("state and child");
 			
 		} else {
 			/* ignore */
@@ -465,7 +459,7 @@ initiate_action(action_list_t *list)
 			set_xml_property_copy(options, XML_ATTR_OP, task);
 			
 			send_ipc_request(crm_ch, options, NULL,
-					 on_node, "crmd", CRM_SYSTEM_TENGINE,
+					 on_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE,
 					 NULL, NULL);
 			
 			free_xml(options);
@@ -521,6 +515,8 @@ initiate_action(action_list_t *list)
 	return FALSE;
 }
 
+FILE *msg_te_strm = NULL;
+
 gboolean
 process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 {
@@ -528,8 +524,30 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 				       XML_ATTR_OP, FALSE);
 
 	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
+	const char *ref    = xmlGetProp(msg, XML_ATTR_REFERENCE);
 
-	cl_log(LOG_DEBUG, "Processing %s message", op);
+	cl_log(LOG_DEBUG, "Processing %s (%s) message", op, ref);
+
+#ifdef MSG_LOG
+	if(msg_te_strm == NULL) {
+		msg_te_strm = fopen("/tmp/te.log", "w");
+	}
+	fprintf(msg_te_strm, "[Input %s]\t%s\n",
+		op, dump_xml_node(msg, FALSE));
+	fflush(msg_te_strm);
+#endif
+
+	if(safe_str_eq(xmlGetProp(msg, XML_ATTR_MSGTYPE), XML_ATTR_RESPONSE)
+	   && safe_str_neq(op, CRM_OP_EVENTCC)) {
+#ifdef MSG_LOG
+	fprintf(msg_te_strm, "[Result ]\tDiscarded\n");
+	fflush(msg_te_strm);
+#endif
+		cl_log(LOG_INFO,
+		       "Message was a response not a request.  Discarding");
+		return TRUE;
+	}
+
 	
 	if(op == NULL){
 		// error
@@ -542,20 +560,20 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		
 	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
 
-		CRM_DEBUG("Initializing graph...");
+		CRM_NOTE("Initializing graph...");
 		initialize_graph();
 
 		xmlNodePtr graph = find_xml_node(msg, "transition_graph");
-		CRM_DEBUG("Unpacking graph...");
+		CRM_NOTE("Unpacking graph...");
 		unpack_graph(graph);
-		CRM_DEBUG("Initiating transition...");
+		CRM_NOTE("Initiating transition...");
 		if(initiate_transition() == FALSE) {
 			// nothing to be done.. means we're done.
 			cl_log(LOG_INFO, "No actions to be taken..."
 			       " transition compelte.");
 			send_success();		
 		}
-		CRM_DEBUG("Processing complete...");
+		CRM_NOTE("Processing complete...");
 		
 		
 	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
@@ -606,9 +624,12 @@ send_abort(xmlNodePtr msg)
 
 	print_state();
 	
-	CRM_DEBUG("Sending \"abort\" message");
+	CRM_NOTE("Sending \"abort\" message");
 	
-	xml_message_debug(msg, "aborting on this msg");
+#ifdef MSG_LOG
+	fprintf(msg_te_strm, "[Result ]\tTransition aborted\n");
+	fflush(msg_te_strm);
+#endif
 	
 	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TEABORT);
 	
@@ -626,7 +647,12 @@ send_success(void)
 
 	print_state();
 
-	CRM_DEBUG("Sending \"complete\" message");
+	CRM_NOTE("Sending \"complete\" message");
+
+#ifdef MSG_LOG
+	fprintf(msg_te_strm, "[Result ]\tTransition complete\n");
+	fflush(msg_te_strm);
+#endif
 	
 	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TECOMPLETE);
 	
