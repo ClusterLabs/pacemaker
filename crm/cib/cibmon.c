@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.18 2005/03/16 17:11:14 lars Exp $ */
+/* $Id: cibmon.c,v 1.19 2005/03/29 06:31:35 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -49,6 +49,7 @@
 #define UPDATE_PREFIX "cib.updates:"
 
 int exit_code = cib_ok;
+int got_signal = 0;
 
 GMainLoop *mainloop = NULL;
 const char *crm_system_name = "cibmon";
@@ -472,6 +473,7 @@ cibmon_update_confirm(const char *event, HA_Message *msg)
 gboolean
 cibmon_shutdown(int nsig, gpointer unused)
 {
+	got_signal = 1;
 	if (mainloop != NULL && g_main_is_running(mainloop)) {
 		g_main_quit(mainloop);
 	} else {
