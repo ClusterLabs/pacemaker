@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.30 2005/03/16 17:11:15 lars Exp $ */
+/* $Id: messages.c,v 1.31 2005/03/29 06:33:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -152,9 +152,14 @@ cib_process_readwrite(
 
 	cib_pre_notify(op, get_the_CIB(), NULL);
 	if(safe_str_eq(op, CRM_OP_CIB_MASTER)) {
-		crm_info("We are now in R/W mode");
-		cib_is_master = TRUE;
-	} else {
+		if(cib_is_master == FALSE) {
+			crm_info("We are now in R/W mode");
+			cib_is_master = TRUE;
+		} else {
+			crm_debug("We are still in R/W mode");
+		}
+		
+	} else if(cib_is_master) {
 		crm_info("We are now in R/O mode");
 		cib_is_master = FALSE;
 	}
@@ -188,7 +193,7 @@ cib_process_query(
 	crm_debug("Processing \"%s\" event for section=%s", op, crm_str(section));
 
 	if(answer != NULL) { *answer = NULL; }	
-	else { return cib_ok; }
+	else { return cib_output_ptr; }
 	
 #if 1
 	if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
@@ -225,6 +230,11 @@ cib_process_query(
 
 		add_node_copy(*answer, cib);
 		free_xml(cib);
+	}
+
+	if(result == cib_ok && *answer == NULL) {
+		crm_err("Error creating query response");
+		result = cib_output_data;
 	}
 	
 	return result;
@@ -641,7 +651,7 @@ createCibFragmentAnswer(const char *section, crm_data_t *failed)
 		crm_data_t *obj_root = get_object_root(section, get_the_CIB());
 
 		if(obj_root != NULL) {
-			cib      = create_xml_node(fragment, XML_TAG_CIB);
+			cib = create_xml_node(fragment, XML_TAG_CIB);
 
 			add_node_copy(cib, obj_root);
 			copy_in_properties(cib, get_the_CIB());
