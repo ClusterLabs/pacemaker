@@ -35,7 +35,7 @@ apigid		= @HA_APIGID@
 crmuid		= @HA_CCMUID@
 
 LIBRT 		= @LIBRT@
-AM_CFLAGS	= @CFLAGS@ -DPIDFILE='"$(PIDFILE)"' $(CRM_DEBUG_FLAGS)
+AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
 
 ## libraries
 lib_LTLIBRARIES	= libcib.la
