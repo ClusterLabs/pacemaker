@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.12 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.13 2004/03/16 10:19:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,6 +58,8 @@ int cib_delete_node(xmlNodePtr node_to_delete);
 void handle_object_children(xmlNodePtr new_parent,
 			    xmlNodePtr children,
 			    const char *filter);
+void do_status_update(xmlNodePtr old, cibStatus *new);
+
 
 //--- Resource
 
@@ -178,134 +180,6 @@ delResource(xmlNodePtr cib, const char *id)
 	FNRET(del_res);
 }
 
-
-//--- Status
-
-int
-addStatus(xmlNodePtr cib, cibStatus *xml_node)
-{
-	int add_res = 0;
-	const char *id = NULL;
-	const char *instance = NULL;
-	xmlNodePtr new_parent = NULL;
-
-	FNIN();
-	
-	id = xmlGetProp(xml_node, XML_ATTR_ID);
-	instance = xmlGetProp(xml_node, XML_CIB_ATTR_INSTANCE);
-	
-	if (id == NULL || strlen(id) < 1)
-		add_res = -1;
-	else if (findStatus(cib, id, instance) != NULL)
-		add_res = -2;
-	else {
-		new_parent = get_object_root(XML_CIB_TAG_STATUS, cib);
-
-		if(new_parent == NULL) {
-			// create it?
-			add_res = -4;
-		} else {
-			add_node_copy(new_parent, xml_node);
-		}
-	}
-
-	FNRET(add_res);
-}
-
-xmlNodePtr
-findStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
-{
-	xmlNodePtr root = NULL, ret = NULL;
-	FNIN();
-	
-	root = get_object_root(XML_CIB_TAG_STATUS, cib);
-	ret = find_entity(root, XML_CIB_TAG_STATE, id, FALSE);
-
-	FNRET(ret);
-}
-
-int
-updateStatus(xmlNodePtr cib, cibStatus *anXmlNode)
-{
-	xmlNodePtr res = NULL;
-	FNIN();
-	
-	res = findStatus(cib, ID(anXmlNode), INSTANCE(anXmlNode));
-
-	if (res == NULL) {
-		CRM_DEBUG4("Update: %s (%s:%s) did not exist, adding.",
-			   XML_CIB_TAG_STATE,
-			   ID(anXmlNode),
-			   INSTANCE(anXmlNode));
-		addStatus(cib, anXmlNode);
-	} else {
-		copy_in_properties(anXmlNode, res);	
-	}
-	FNRET(0);
-}
-
-xmlNodePtr
-newStatus(const char *res_id, const char *node_id, const char *instance)
-{
-	/* Todo:
-	 * - verify the node and resource exist
-	 * - get max_instances from resource or update later
-	 */
-	xmlNodePtr xml_node = NULL;
-	char *id = (char*)ha_malloc(128*(sizeof(char)));
-	FNIN();
-	
-	sprintf(id, "%s-%s", res_id, instance);
-
-	CRM_DEBUG2("Creating " XML_CIB_TAG_STATUS " (%s).", id);
-    
-	xml_node = create_xml_node(NULL, XML_CIB_TAG_STATE);
-
-	set_xml_property_copy(xml_node,
-			      XML_ATTR_ID,
-			      id);
-	
-	set_xml_property_copy(xml_node,
-			      XML_CIB_ATTR_RESID,
-			      res_id);
-	
-	set_xml_property_copy(xml_node,
-			      XML_CIB_ATTR_INSTANCE,
-			      instance);
-
-	set_xml_property_copy(xml_node,
-			      XML_CIB_ATTR_NODEID,
-			      node_id);
-	
-	set_xml_property_copy(xml_node,
-			      XML_CIB_ATTR_SOURCE,
-			      "none");
-	
-	set_node_tstamp(xml_node);
-
-	// a sensible default... parent can update later if required 
-	set_xml_property_copy(xml_node,
-			      XML_CIB_ATTR_MAXINSTANCE,
-			      instance);
-
-	set_xml_property_copy(xml_node,
-			      XML_CIB_ATTR_RESSTATUS,
-			      CIB_VAL_RESSTATUS_DEFAULT);
-
-	ha_free(id);
-	FNRET(xml_node);
-}
-
-int
-delStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
-{
-	int del_res = -1;
-	FNIN();
-
-	del_res = cib_delete_node(findStatus(cib, id, instanceNum));
-	
-	FNRET(del_res);
-}
 
 //--- Constraint
 
@@ -582,3 +456,175 @@ handle_object_children(xmlNodePtr new_parent,
 	FNOUT();
 }
 
+
+
+
+//--- Status
+
+int
+addStatus(xmlNodePtr cib, cibStatus *xml_node)
+{
+	int add_res = 0;
+	const char *id = NULL;
+	const char *instance = NULL;
+	xmlNodePtr new_parent = NULL;
+
+	FNIN();
+	
+	id = xmlGetProp(xml_node, XML_ATTR_ID);
+	instance = xmlGetProp(xml_node, XML_CIB_ATTR_INSTANCE);
+	
+	if (id == NULL || strlen(id) < 1)
+		add_res = -1;
+	else if (findStatus(cib, id, instance) != NULL)
+		add_res = -2;
+	else {
+		new_parent = get_object_root(XML_CIB_TAG_STATUS, cib);
+
+		if(new_parent == NULL) {
+			// create it?
+			add_res = -4;
+		} else {
+			add_node_copy(new_parent, xml_node);
+		}
+	}
+
+	FNRET(add_res);
+}
+
+xmlNodePtr
+findStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
+{
+	xmlNodePtr root = NULL, ret = NULL;
+	FNIN();
+	
+	root = get_object_root(XML_CIB_TAG_STATUS, cib);
+	ret = find_entity(root, XML_CIB_TAG_STATE, id, FALSE);
+
+	FNRET(ret);
+}
+
+int
+updateStatus(xmlNodePtr cib, cibStatus *anXmlNode)
+{
+	xmlNodePtr res = NULL;
+	const char *ts_existing = NULL;
+	const char *ts_new = NULL;
+	const char *src_existing = NULL;
+	const char *src_new = NULL;
+	
+	FNIN();
+	
+	res = findStatus(cib, ID(anXmlNode), INSTANCE(anXmlNode));
+
+	ts_existing  = TSTAMP(res);
+	ts_new       = TSTAMP(anXmlNode);
+	src_existing = xmlGetProp(res, XML_CIB_ATTR_SOURCE);
+	src_new      = xmlGetProp(anXmlNode, XML_CIB_ATTR_SOURCE);
+
+	if (res == NULL) {
+		CRM_DEBUG4("Update: %s (%s:%s) did not exist, adding.",
+			   XML_CIB_TAG_STATE,
+			   ID(anXmlNode),
+			   INSTANCE(anXmlNode));
+		addStatus(cib, anXmlNode);
+
+	// local information always takes priority
+	} else if(src_new != NULL
+		  && src_existing != NULL
+		  && strcmp(src_new, src_existing) == 0) {
+		do_status_update(res, anXmlNode);
+		
+	} else if(ts_new == NULL) {
+		cl_log(LOG_ERR,
+		       "Update did not have a timestamp!  Discarding");
+
+	// only use new data	
+	} else if(ts_existing == NULL || strcmp(ts_new, ts_existing) > 0) {
+		do_status_update(res, anXmlNode);
+
+	} else {
+		cl_log(LOG_WARNING,
+		       "Ignoring old \"update\" (%s vs. %s)",
+		       ts_new, ts_existing);
+	}
+	
+	FNRET(0);
+}
+
+void
+do_status_update(xmlNodePtr old, cibStatus *new)
+{
+	xmlNodePtr the_children = old->children;
+	unlink_xml_node(the_children);
+	free_xml(the_children);
+	old->children = NULL;
+	
+	the_children = copy_xml_node_recursive(new->children, 1);
+	copy_in_properties(new, old);
+	xmlAddChildList(old, the_children);
+}
+
+
+xmlNodePtr
+newStatus(const char *res_id, const char *node_id, const char *instance)
+{
+	/* Todo:
+	 * - verify the node and resource exist
+	 * - get max_instances from resource or update later
+	 */
+	xmlNodePtr xml_node = NULL;
+	char *id = (char*)ha_malloc(128*(sizeof(char)));
+	FNIN();
+	
+	sprintf(id, "%s-%s", res_id, instance);
+
+	CRM_DEBUG2("Creating " XML_CIB_TAG_STATUS " (%s).", id);
+    
+	xml_node = create_xml_node(NULL, XML_CIB_TAG_STATE);
+
+	set_xml_property_copy(xml_node,
+			      XML_ATTR_ID,
+			      id);
+	
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_RESID,
+			      res_id);
+	
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_INSTANCE,
+			      instance);
+
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_NODEID,
+			      node_id);
+	
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_SOURCE,
+			      "none");
+	
+	set_node_tstamp(xml_node);
+
+	// a sensible default... parent can update later if required 
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_MAXINSTANCE,
+			      instance);
+
+	set_xml_property_copy(xml_node,
+			      XML_CIB_ATTR_RESSTATUS,
+			      CIB_VAL_RESSTATUS_DEFAULT);
+
+	ha_free(id);
+	FNRET(xml_node);
+}
+
+int
+delStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
+{
+	int del_res = -1;
+	FNIN();
+
+	del_res = cib_delete_node(findStatus(cib, id, instanceNum));
+	
+	FNRET(del_res);
+}
