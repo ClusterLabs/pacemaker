@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.39 2004/10/27 15:30:55 andrew Exp $ */
+/* $Id: unpack.c,v 1.40 2004/11/08 13:22:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -975,8 +975,6 @@ unpack_rsc_order(xmlNodePtr xml_obj,
 		  GListPtr rsc_list,
 		  GListPtr *ordering_constraints)
 {
-	enum con_strength strength_e = pecs_ignore;
-
 	const char *id       = xmlGetProp(xml_obj, XML_ATTR_ID);
 	const char *id_lh    = xmlGetProp(xml_obj, "from");
 	const char *id_rh    = xmlGetProp(xml_obj, "to");
@@ -1000,13 +998,11 @@ unpack_rsc_order(xmlNodePtr xml_obj,
 		return FALSE;
 	
 	} else if(safe_str_eq(type, "after")) {
-		rsc2rsc_new(id, strength_e, start_after, rsc_lh, rsc_rh);
 		order_new(rsc_rh, stop_rsc, NULL, rsc_lh, stop_rsc, NULL,
 			  pecs_must, ordering_constraints);
 		order_new(rsc_lh, start_rsc, NULL, rsc_rh, start_rsc, NULL,
 			  pecs_must, ordering_constraints);
 	} else {
-		rsc2rsc_new(id, strength_e, start_before, rsc_lh, rsc_rh);
 		order_new(rsc_lh, stop_rsc, NULL, rsc_rh, stop_rsc, NULL,
 			  pecs_must, ordering_constraints);
 		order_new(rsc_rh, start_rsc, NULL, rsc_lh, start_rsc, NULL,
