@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.18 2004/05/18 14:28:04 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.19 2004/05/28 07:55:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,6 +25,7 @@
 #include <hb_api.h>
 #include <libxml/tree.h>
 #include <lrm/lrm_api.h>
+#include <crm/crm.h>
 
 struct ccm_data 
 {
@@ -107,6 +108,7 @@ extern ll_lrm_t       *fsa_lrm_conn;
 extern long long       fsa_input_register;
 extern const char     *fsa_our_uname;
 extern char	      *fsa_pe_ref; // the last invocation of the PE
+extern const char     *fsa_our_dc;
 
 extern fsa_timer_t *election_trigger;		/*  */
 extern fsa_timer_t *election_timeout;		/*  */

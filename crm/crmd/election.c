@@ -286,6 +286,7 @@ do_dc_takeover(long long action,
 
 	CRM_DEBUG("Am I the DC? %s", AM_I_DC?"yes":"no");
 	
+	fsa_our_dc = NULL;
 	set_bit_inplace(&fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(&fsa_input_register, R_INVOKE_PE);
 	
@@ -400,18 +401,21 @@ do_send_welcome(long long action,
 	xmlNodePtr tmp1       = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
 	xmlNodePtr node_entry = tmp1->children;
 
-
 	// catch any nodes that are active in the CIB but not in the CCM list 
 	while(node_entry != NULL){
 		const char *state   = "down";
 		const char *node_id = xmlGetProp(node_entry, "id");
 
 		gpointer a_node =
-			g_hash_table_lookup(fsa_membership_copy->members, node_id);
+			g_hash_table_lookup(fsa_membership_copy->members,
+					    node_id);
 
 		node_entry = node_entry->next;
 
-		if(a_node != NULL || (safe_str_eq(fsa_our_uname, node_id))) {
+		if(safe_str_eq(fsa_our_uname, node_id)) {
+			continue;
+
+		} else if(a_node != NULL) {
 			// handled by do_update_cib_nodes()
 			continue;
 		}
@@ -428,7 +432,14 @@ do_send_welcome(long long action,
 	// now process the CCM data
 	free_xml(do_update_cib_nodes(update));
 	free_xml(cib_copy);
-	
+
+	/* Avoid ordered message delays caused when the CRMd proc
+	 * isnt running yet (ie. send as a broadcast msg which are never
+	 * sent ordered.
+	 */
+	send_request(NULL, NULL, CRM_OPERATION_WELCOME,
+		     NULL, CRM_SYSTEM_CRMD, NULL);
+
 	g_hash_table_foreach(fsa_membership_copy->members,
 				     ghash_send_welcome, &num_sent);
 
@@ -437,6 +448,7 @@ do_send_welcome(long long action,
 		// that was the last outstanding join ack)
 		cl_log(LOG_INFO,"That was the last outstanding join ack");
 		FNRET(I_SUCCESS);
+		
 	} else {
 		cl_log(LOG_DEBUG,
 		       "Still waiting on %d outstanding join acks",
@@ -491,7 +503,14 @@ do_ack_welcome(long long action,
 		FNRET(I_NULL);
 	} 
 #endif
-
+	fsa_our_dc = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
+	
+	if(fsa_our_dc == NULL) {
+		cl_log(LOG_ERR, "Failed to determin our DC");
+		FNRET(I_FAIL);
+	}
+	
+	/* send our status section to the DC */
 	cib_copy = get_cib_copy();
 	tmp1 = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
 	tmp2 = create_cib_fragment(tmp1, NULL);
@@ -512,6 +531,7 @@ do_announce(long long action,
 	    enum crmd_fsa_input current_input,
 	    void *data)
 {
+	xmlNodePtr msg = (xmlNodePtr)data;
 	FNIN();
 	
 	/* Once we hear from the DC, we can stop the timer
@@ -536,8 +556,15 @@ do_announce(long long action,
 	}
 
 	if(AM_I_OPERATIONAL) {
+		const char *from = xmlGetProp(msg, XML_ATTR_HOSTFROM);
+
+		if(from == NULL) {
+			cl_log(LOG_ERR, "Failed to origin of ping message");
+			FNRET(I_FAIL);
+		}
+		
 		send_request(NULL, NULL, CRM_OPERATION_ANNOUNCE,
-			     NULL, CRM_SYSTEM_DC, NULL);
+			     from, CRM_SYSTEM_DC, NULL);
 	} else {
 		/* Delay announce until we have finished local startup */
 		cl_log(LOG_WARNING,
@@ -558,7 +585,9 @@ do_process_welcome_ack(long long action,
 		    void *data)
 {
 	xmlNodePtr tmp1;
+	xmlNodePtr tmp2;
 	xmlNodePtr cib_fragment;
+	xmlNodePtr msg_cib;
 	xmlNodePtr join_ack = (xmlNodePtr)data;
 
 	int size = 0;
@@ -591,9 +620,10 @@ do_process_welcome_ack(long long action,
 	cl_log(LOG_DEBUG, "Welcoming node %s after ACK (ref %s)",
 	       join_from, ref);
 	
-	// add them to our list of "active" nodes
+	/* add them to our list of "active" nodes
+	   TODO: still used?
+	*/
 	g_hash_table_insert(joined_nodes, strdup(join_from),strdup(join_from));
-
 
 	if(cib_fragment == NULL) {
 		cl_log(LOG_ERR,
@@ -602,30 +632,49 @@ do_process_welcome_ack(long long action,
 		       join_from);
 		FNRET(I_NULL);
 	}
-	
-	/* TODO: check the fragment is only for the status section
-	= get_xml_attr(cib_fragment, NULL,
-					   XML_ATTR_FILTER_TYPE, TRUE);	*/
+
+	/* allow both node and status changes to be made */
+	msg_cib = find_xml_node(cib_fragment, XML_TAG_CIB);
+	set_xml_property_copy(msg_cib, XML_ATTR_FILTER_TYPE, "all");	
+
+	tmp1 = get_object_root(XML_CIB_TAG_STATUS, msg_cib);
+	tmp2 = get_object_root(XML_CIB_TAG_NODES, msg_cib);
 	
 	/* Make changes so that state=active for this node when the update
 	 *  is processed by A_CIB_INVOKE
 	 */
-	tmp1 = find_xml_node(cib_fragment, XML_TAG_CIB);
-	tmp1 = get_object_root(XML_CIB_TAG_STATUS, tmp1);
 	tmp1 = find_entity(tmp1, XML_CIB_TAG_STATE, join_from, FALSE);
-
 	set_xml_property_copy(tmp1, "state", "active");
+
+	/* make sure a node entry exists for the new node
+	 *
+	 * this will add anyone except the first ever node in the cluster
+	 *   since it will also be the DC which doesnt go through the
+	 *   join process (with itself).  We can include a special case
+	 *   later if desired.
+	 */
+	if(tmp2 == NULL) {
+		cl_log(LOG_ERR, "Couldnt find NODES sections in fragment");
+	} else {
+		tmp2 = create_xml_node(tmp2, XML_CIB_TAG_NODE);
+		set_xml_property_copy(tmp2, XML_ATTR_ID, join_from);
+		set_xml_property_copy(tmp2, "uname", join_from);
+		set_xml_property_copy(tmp2, XML_CIB_ATTR_NODETYPE, "node");
+	}
 	
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {
-		// that was the last outstanding join ack)
 		cl_log(LOG_INFO,"That was the last outstanding join ack");
 		FNRET(I_SUCCESS);
+		/* The update isnt lost, the A_CIB_OP action is part of the
+		 *   matrix for S_INTEGRATION + I_SUCCESS.
+		 */
+
 	} else {
 		cl_log(LOG_DEBUG,
 		       "Still waiting on %d outstanding join acks",
 		       size);
-		//dont waste time by invoking the pe yet;
+		/* dont waste time by invoking the pe yet */
 	}
 	FNRET(I_CIB_OP);
 }
@@ -642,6 +691,7 @@ ghash_send_welcome(gpointer key, gpointer value, gpointer user_data)
 		return;
 	}
 
+#if 0
 	if(send_request(NULL, NULL, CRM_OPERATION_WELCOME,
 			node_uname, CRM_SYSTEM_CRMD, NULL)) {
 		*num_sent++;
@@ -649,8 +699,13 @@ ghash_send_welcome(gpointer key, gpointer value, gpointer user_data)
 		
 	} else {
 		cl_log(LOG_ERR, "Couldnt send welcome message to %s", node_uname);
-		
 	}
+#else 
+	/* Avoid ordered message delays caused when the CRMd proc
+	 * isnt running yet, for now we just want the counter... 
+	 */
+	*num_sent++;
+#endif
 }
 
 void
