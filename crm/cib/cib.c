@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.33 2004/05/14 21:22:43 andrew Exp $ */
+/* $Id: cib.c,v 1.34 2004/05/18 09:43:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -164,7 +164,7 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	xmlNodePtr fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
 	xmlNodePtr cib = NULL;
 	xmlNodePtr object_root  = NULL;
-	char *auto_section = pluralSection(update->name);
+	char *auto_section = pluralSection(update?update->name:NULL);
 	
 	if(update == NULL) {
 		cl_log(LOG_ERR, "No update to create a fragment for");
