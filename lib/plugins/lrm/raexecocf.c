@@ -234,7 +234,7 @@ fork_and_execra(const char * ra_name, const char * op, const char * cmd_params,
 			g_hash_table_insert(post_query_ops, 
 				g_intdup(cpid), g_intdup(0));
 		}
-		return cpid;
+		exit(cpid);
 	} else {
 		/* in child process */
 		/* close read fd */
