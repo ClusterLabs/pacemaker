@@ -65,21 +65,20 @@ do_pe_control(long long action,
 	long long start_actions = A_PE_START;
 	
 	if(action & stop_actions) {
-		crm_info("Stopping %s", this_subsys->command);
+		crm_info("Stopping %s", this_subsys->name);
 		if(stop_subsystem(this_subsys) == FALSE) {
 			result = I_FAIL;
 			
 		} else if(this_subsys->pid > 0) {
 			int lpc = CLIENT_EXIT_WAIT;
 			int pid_status = -1;
-			while(lpc-- > 0
-			      && this_subsys->pid > 0
-			      && CL_PID_EXISTS(this_subsys->pid)) {
+			while(lpc-- > 0 && this_subsys->pid > 0) {
 
 				sleep(1);
 
-				if(waitpid(this_subsys->pid,
-					   &pid_status, WNOHANG) > 0) {
+				if(! CL_PID_EXISTS(this_subsys->pid)
+				   || waitpid(this_subsys->pid,
+					      &pid_status, WNOHANG) > 0) {
 					this_subsys->pid = -1;
 					break;
 				}
@@ -87,7 +86,7 @@ do_pe_control(long long action,
 			
 			if(this_subsys->pid != -1) {
 				crm_err("Proc %s is still active with pid=%d",
-				       this_subsys->command, this_subsys->pid);
+				       this_subsys->name, this_subsys->pid);
 				result = I_FAIL;
 			} 
 		}
@@ -98,14 +97,14 @@ do_pe_control(long long action,
 	if(action & start_actions) {
 
 		if(cur_state != S_STOPPING) {
-			crm_info("Starting %s", this_subsys->command);
+			crm_info("Starting %s", this_subsys->name);
 			if(start_subsystem(this_subsys) == FALSE) {
 				result = I_FAIL;
 				cleanup_subsystem(this_subsys);
 			}
 		} else {
 			crm_info("Ignoring request to start %s while shutting down",
-			       this_subsys->command);
+			       this_subsys->name);
 		}
 	}
 	
