@@ -1,42 +1,98 @@
 CIB: Purpose
 ==========================
-The CIB is described quit well in section 5 of lmb's crm.txt (checked into CVS in the crm directory) so I wont repeat everything here.  Suffice to say that it stores the configuration and runtime data required for cluster-wide resource managment.
+The CIB is described quit well in section 5 of lmb's crm.txt (checked
+into CVS in the crm directory) so I wont repeat everything here.
+Suffice to say that it stores the configuration and runtime data
+required for cluster-wide resource managment.
 
 CIB: External Representation
 ===========================
-I believe there have been a number of discussions on this and I'm going to take it as given that we are all (if not grudgingly) agreed that the CIB will be passed around as XML.
+I believe there have been a number of discussions on this and I'm going
+to take it as given that we are all (if not grudgingly) agreed that the
+CIB will be passed around as XML.
 
 CIB: Internal Representation
 ===========================
-Internally, the CIB will be stored and manipulated as a libxml2 (as used by stonith code, so this is not a new dependancy) XML document.  This may not be the most efficient data representation but the trade off is that we dont spend half our time encoding/decoding everytime messages are sent/retrieved.  It also means that fields can be added and deprecated more easily if required (ie. no encode/decode methods to rewrite) and, in theory, should allow for better compatibility between CIB versions.
+Internally, the CIB will be stored and manipulated as a libxml2 (as used
+by stonith code, so this is not a new dependancy) XML document.  This
+may not be the most efficient data representation but the trade off is
+that we dont spend half our time encoding/decoding everytime messages
+are sent/retrieved.  It also means that fields can be added and
+deprecated more easily if required (ie. no encode/decode methods to
+rewrite) and, in theory, should allow for better compatibility between
+CIB versions.
 
 CIB: Information Structure
 ===========================
-The CIB is divided up into 4 main sections: nodes, resource, constraints and status.  It contains a version string, a flag to indicate if this was read from a file or generated (possibly should be replaced with a generation number) and a timestamp.
+The CIB is divided up into 4 main sections: nodes, resource, constraints
+and status.  It contains a version string, a flag to indicate if this
+was read from a file or generated (possibly should be replaced with a
+generation number) and a timestamp.
 
-All information carrying elements carry an "id" field which is an alpha-numeric string which must also be unique for that element type, a description to aid administration and a timestamp.  The timestamps are required for the DC (Designated Controller) to determine the latest cluster-wide configuration.  
+All information carrying elements carry an "id" field which is an
+alpha-numeric string which must also be unique for that element type, a
+description to aid administration and a timestamp.  The timestamps are
+required for the DC (Designated Controller) to determine the latest
+cluster-wide configuration.  
 
-Resources carry a "max_instances", an "op_timeout" and a "priority" field.  The op_timeout is intended for use by the LRM and CRM in order to determine when to start worrying about the length of time (in seconds) a start, stop or restart is taking.  The priority is used by the Policy Engine in order to determine the order in which to process dependancies and more drastically to know which resources to leave out if all dependancies can not be satisfied.  The max_instances field is intended to address the replicated resource issue.  When a resource is started, it is told which instance number it has and it is then up to it to decide if it should be a master, a slave or some other variation, as the resource itself is the best equiped to do so (Ie. the resource knows if there can be 1, 2 or 20 masters).
+Resources carry a "max_instances", an "op_timeout" and a "priority"
+field.  The op_timeout is intended for use by the LRM and CRM in order
+to determine when to start worrying about the length of time (in
+seconds) a start, stop or restart is taking.  The priority is used by
+the Policy Engine in order to determine the order in which to process
+dependancies and more drastically to know which resources to leave out
+if all dependancies can not be satisfied.  The max_instances field is
+intended to address the replicated resource issue.  When a resource is
+started, it is told which instance number it has and it is then up to it
+to decide if it should be a master, a slave or some other variation, as
+the resource itself is the best equiped to do so (Ie. the resource knows
+if there can be 1, 2 or 20 masters).
 
-Constraints have their own section as many (such as startAfter, startBefore) will be relevant to more than one resource, making the resource the wrong place to store them.  Constraints may be put in place by the CRM automatically, for example after a failed startup, and these will need to be cleared at some point.  The clear_on attribute is intended to determin when this point should be.
+Constraints have their own section as many (such as startAfter,
+startBefore) will be relevant to more than one resource, making the
+resource the wrong place to store them.  Constraints may be put in place
+by the CRM automatically, for example after a failed startup, and these
+will need to be cleared at some point.  The clear_on attribute is
+intended to determin when this point should be.
 
-Resource state information is also separated out as it this section is "runtime" data and is "compiled" by the DC from information sent by all nodes in the cluster.  An argument could also be made that the same could be done for node_status and health, however the primary source of this data is the CCM (ie. not compiled) and information about "bad" nodes should persist even after all good nodes have exited.  I will leave this a matter for debate if people feel strongly about it.
+Resource state information is also separated out as it this section is
+"runtime" data and is "compiled" by the DC from information sent by all
+nodes in the cluster.  An argument could also be made that the same
+could be done for node_status and health, however the primary source of
+this data is the CCM (ie. not compiled) and information about "bad"
+nodes should persist even after all good nodes have exited.  I will
+leave this a matter for debate if people feel strongly about it.
 
+In places, a "source" attribute has been added so that the CRM is able
+to know where this information came from.  This is helpful during the
+merging process (performed by a new DC and perhaps periodically) as it
+allows the CRM to allow nodes to be authoritive about themselves if
+appropriate (ie. which resources it is running, but perhaps not always
+about its own health).
 
-In places, a "source" attribute has been added so that the CRM is able to know where this information came from.  This is helpful during the merging process (performed by a new DC and perhaps periodically) as it allows the CRM to allow nodes to be authoritive about themselves if appropriate (ie. which resources it is running, but perhaps not always about its own health).
-
-To avoid duplication of data, state entries only carry references to nodes and resources.  Likewise resources and constraints only contain references to the nodes that they can (or explicitly cannot via a negative weight) run on.
+To avoid duplication of data, state entries only carry references to
+nodes and resources.  Likewise resources and constraints only contain
+references to the nodes that they can (or explicitly cannot via a
+negative weight) run on.
 
 CIB: Messaging
 ===========================
-The rationale behind the "cib_operation" and "cib_section" elements of the command is to allow the DC the ability, if desired, to optimise the CIB's performance querying for and updating only certain sections of the CIB.  In the initial prototype, this will most likely not be used.
+The rationale behind the "cib_operation" and "cib_section" elements of
+the command is to allow the DC the ability, if desired, to optimise the
+CIB's performance querying for and updating only certain sections of the
+CIB.  In the initial prototype, this will most likely not be used.
 
 CIB: Schema/DTD
 ===========================
 
-<!--
-Internally to the CIB and when written to disk, "cib" is used as the root element.  However when sent as a message to another node or sub-system (the schema describing this will be available shortly) this will not be the case.  With this in mind, all functions hace been written to operate on xmlNodePtr objects instead of xmlDocPtr objects.
+<!-- 
+  Internally to the CIB and when written to disk, "cib" is used as the
+  root element.  However when sent as a message to another node or
+  sub-system (the schema describing this will be available shortly) this
+  will not be the case.  With this in mind, all functions hace been
+  written to operate on xmlNodePtr objects instead of xmlDocPtr objects.
 -->
+
 <!ELEMENT cib (nodes, resources, constraints, status)>
 
 <!ATTLIST cib
@@ -82,7 +138,8 @@ Internally to the CIB and when written to disk, "cib" is used as the root elemen
 
 <!ELEMENT node_reference>
 <!-- 
-action is only used during CIB updates.  To know if the node_reference should be added or removed from the resource
+  action is only used during CIB updates.  To know if the node_reference
+  should be added or removed from the resource
 --> 
 <!ATTLIST node_reference
           id            #CDATA
@@ -92,7 +149,8 @@ action is only used during CIB updates.  To know if the node_reference should be
 
 <!ELEMENT constraint (nv_pair)*>
 <!--
-  r_id_2, var_name, var_value will only valid/required depending on the value of constraint_type
+  r_id_2, var_name, var_value will only valid/required depending on the
+  value of constraint_type
 -->
 <!ATTLIST constraint
           id                #CDATA
@@ -106,9 +164,11 @@ action is only used during CIB updates.  To know if the node_reference should be
 
 <!ELEMENT nv_pair>
 <!-- 
-for consistency elsewhere, id is the name of the variable.
-type may be used later on to distinguish between variable scopes.
-action is only used during CIB updates.  To know if the nv_pair should be added or removed from the constraint
+  for consistency elsewhere, id is the name of the variable.
+  type may be used later on to distinguish between variable scopes.
+  action is only used during CIB updates.  To know if the nv_pair should
+         be added or removed from the constraint
+
 -->
 <!ATTLIST nv_pair
           id                #CDATA
