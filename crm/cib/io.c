@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.2 2004/09/20 12:18:45 andrew Exp $ */
+/* $Id: io.c,v 1.3 2004/09/20 14:28:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -79,7 +79,6 @@ createEmptyCib(void)
 
 	config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
 	status = create_xml_node(cib_root, XML_CIB_TAG_STATUS);
-	create_xml_node(cib_root, XML_CIB_TAG_CRMCONFIG);
 
 	set_node_tstamp(cib_root);
 	set_node_tstamp(config);
@@ -88,6 +87,7 @@ createEmptyCib(void)
 	set_xml_property_copy(cib_root, "version", "1");
 	set_xml_property_copy(cib_root, "generated", XML_BOOLEAN_TRUE);
 
+	create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
 	create_xml_node(config, XML_CIB_TAG_NODES);
 	create_xml_node(config, XML_CIB_TAG_RESOURCES);
 	create_xml_node(config, XML_CIB_TAG_CONSTRAINTS);
