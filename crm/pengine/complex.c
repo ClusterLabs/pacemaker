@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.14 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: complex.c,v 1.15 2005/02/23 15:43:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,7 +24,7 @@
 gboolean update_node_weight(rsc_to_node_t *cons,const char *id,GListPtr nodes);
 gboolean is_active(rsc_to_node_t *cons);
 gboolean constraint_violated(
-	resource_t *rsc_lh, resource_t *rsc_rh, rsc_dependancy_t *constraint);
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint);
 void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 
 gboolean has_agent(node_t *a_node, lrm_agent_t *an_agent);
@@ -39,8 +39,8 @@ resource_object_functions_t resource_class_functions[] = {
 		native_create_actions,
 		native_internal_constraints,
 		native_agent_constraints,
-		native_rsc_dependancy_lh,
-		native_rsc_dependancy_rh,
+		native_rsc_colocation_lh,
+		native_rsc_colocation_rh,
 		native_rsc_order_lh,
 		native_rsc_order_rh,
 		native_rsc_location,
@@ -56,8 +56,8 @@ resource_object_functions_t resource_class_functions[] = {
 		group_create_actions,
 		group_internal_constraints,
 		group_agent_constraints,
-		group_rsc_dependancy_lh,
-		group_rsc_dependancy_rh,
+		group_rsc_colocation_lh,
+		group_rsc_colocation_rh,
 		group_rsc_order_lh,
 		group_rsc_order_rh,
 		group_rsc_location,
@@ -73,8 +73,8 @@ resource_object_functions_t resource_class_functions[] = {
 		incarnation_create_actions,
 		incarnation_internal_constraints,
 		incarnation_agent_constraints,
-		incarnation_rsc_dependancy_lh,
-		incarnation_rsc_dependancy_rh,
+		incarnation_rsc_colocation_lh,
+		incarnation_rsc_colocation_rh,
 		incarnation_rsc_order_lh,
 		incarnation_rsc_order_rh,
 		incarnation_rsc_location,
@@ -248,8 +248,8 @@ void common_free(resource_t *rsc)
 	crm_trace("Freeing %s", rsc->id);
 
 	while(rsc->rsc_cons) {
- 		pe_free_rsc_dependancy(
-			(rsc_dependancy_t*)rsc->rsc_cons->data);
+ 		pe_free_rsc_colocation(
+			(rsc_colocation_t*)rsc->rsc_cons->data);
 		rsc->rsc_cons = rsc->rsc_cons->next;
 	}
 	crm_trace("Freeing constraint list");

@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.7 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: complex.h,v 1.8 2005/02/23 15:43:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,8 +47,8 @@ typedef struct resource_object_functions_s
 		void (*internal_constraints)(resource_t *, GListPtr *);
 		void (*agent_constraints)(resource_t *);
 
-		void (*rsc_dependancy_lh)(rsc_dependancy_t *);
-		void (*rsc_dependancy_rh)(resource_t *, rsc_dependancy_t *);
+		void (*rsc_colocation_lh)(rsc_colocation_t *);
+		void (*rsc_colocation_rh)(resource_t *, rsc_colocation_t *);
 
 		void (*rsc_order_lh)(resource_t *, order_constraint_t *);
 		void (*rsc_order_rh)(
@@ -70,9 +70,9 @@ extern void native_create_actions(resource_t *rsc);
 extern void native_internal_constraints(
 	resource_t *rsc, GListPtr *ordering_constraints);
 extern void native_agent_constraints(resource_t *rsc);
-extern void native_rsc_dependancy_lh(rsc_dependancy_t *constraint);
-extern void native_rsc_dependancy_rh(
-	resource_t *rsc, rsc_dependancy_t *constraint);
+extern void native_rsc_colocation_lh(rsc_colocation_t *constraint);
+extern void native_rsc_colocation_rh(
+	resource_t *rsc, rsc_colocation_t *constraint);
 extern void native_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
 extern void native_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
@@ -90,9 +90,9 @@ extern void group_create_actions(resource_t *rsc);
 extern void group_internal_constraints(
 	resource_t *rsc, GListPtr *ordering_constraints);
 extern void group_agent_constraints(resource_t *rsc);
-extern void group_rsc_dependancy_lh(rsc_dependancy_t *constraint);
-extern void group_rsc_dependancy_rh(
-	resource_t *rsc, rsc_dependancy_t *constraint);
+extern void group_rsc_colocation_lh(rsc_colocation_t *constraint);
+extern void group_rsc_colocation_rh(
+	resource_t *rsc, rsc_colocation_t *constraint);
 extern void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
 extern void group_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
@@ -110,9 +110,9 @@ extern void incarnation_create_actions(resource_t *rsc);
 extern void incarnation_internal_constraints(
 	resource_t *rsc, GListPtr *ordering_constraints);
 extern void incarnation_agent_constraints(resource_t *rsc);
-extern void incarnation_rsc_dependancy_lh(rsc_dependancy_t *constraint);
-extern void incarnation_rsc_dependancy_rh(
-	resource_t *rsc, rsc_dependancy_t *constraint);
+extern void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint);
+extern void incarnation_rsc_colocation_rh(
+	resource_t *rsc, rsc_colocation_t *constraint);
 extern void incarnation_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
 extern void incarnation_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
@@ -131,7 +131,7 @@ extern void native_add_running(resource_t *rsc, node_t *node);
 extern gboolean is_active(rsc_to_node_t *cons);
 
 extern gboolean native_constraint_violated(
-	resource_t *rsc_lh, resource_t *rsc_rh, rsc_dependancy_t *constraint);
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint);
 
 extern void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 extern void common_agent_constraints(

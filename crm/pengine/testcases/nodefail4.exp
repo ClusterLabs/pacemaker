@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <transition_graph global_timeout="60000">
   <synapse id="0">
     <action_set>
@@ -12,7 +11,7 @@
   <synapse id="1">
     <action_set>
       <crm_event id="3" operation="stonith" allow_fail="false">
-        <args target="node1"/>
+         <args target="node1" target_uuid="8661583D-08B0-11D9-B627-000A95B71D78"/>
       </crm_event>
     </action_set>
     <inputs/>

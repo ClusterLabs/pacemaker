@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.18 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.19 2005/02/23 15:44:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,7 +28,7 @@ extern action_t *action_new(
 
 
 /* Constraint helper functions */
-extern rsc_dependancy_t *invert_constraint(rsc_dependancy_t *constraint);
+extern rsc_colocation_t *invert_constraint(rsc_colocation_t *constraint);
 
 extern rsc_to_node_t *copy_constraint(rsc_to_node_t *constraint);
 
@@ -78,8 +78,8 @@ extern void print_resource(
 extern void print_rsc_to_node(
 	const char *pre_text, rsc_to_node_t *cons, gboolean details);
 
-extern void print_rsc_dependancy(
-	const char *pre_text, rsc_dependancy_t *cons, gboolean details);
+extern void print_rsc_colocation(
+	const char *pre_text, rsc_colocation_t *cons, gboolean details);
 
 extern void print_color(
 	const char *pre_text, color_t *color, gboolean details);
@@ -111,7 +111,7 @@ extern void set_id(crm_data_t *xml_obj, const char *prefix, int child);
 /* free the various structures */
 extern void pe_free_nodes(GListPtr nodes);
 extern void pe_free_colors(GListPtr colors);
-extern void pe_free_rsc_dependancy(rsc_dependancy_t *cons);
+extern void pe_free_rsc_colocation(rsc_colocation_t *cons);
 extern void pe_free_rsc_to_node(rsc_to_node_t *cons);
 extern void pe_free_shallow(GListPtr alist);
 extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);

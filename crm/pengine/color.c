@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.24 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: color.c,v 1.25 2005/02/23 15:43:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -101,13 +101,13 @@ color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
 
 	/*------ Pre-processing */
 	slist_iter(
-		constraint, rsc_dependancy_t, rsc->rsc_cons, lpc,
+		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
 		crm_devel_action(
-			print_rsc_dependancy(
+			print_rsc_colocation(
 				"Pre-Processing constraint", constraint,FALSE));
 		
-		rsc->fns->rsc_dependancy_lh(constraint);
+		rsc->fns->rsc_colocation_lh(constraint);
 		);
 	
 	/* avoid looping through lists when we know this resource
@@ -121,11 +121,11 @@ color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
 
 	/*------ Post-processing */
 	slist_iter(
-		constraint, rsc_dependancy_t, rsc->rsc_cons, lpc,
+		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 		crm_devel_action(
-			print_rsc_dependancy(
+			print_rsc_colocation(
 				"Post-Processing constraint",constraint,FALSE));
-		rsc->fns->rsc_dependancy_lh(constraint);
+		rsc->fns->rsc_colocation_lh(constraint);
 		);
 	
 	crm_devel_action(print_resource("Colored", rsc, TRUE));

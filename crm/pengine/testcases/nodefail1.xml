@@ -2,24 +2,24 @@
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <!-- shutdown then stontih -->
 <cib>
- <configuration>
-  <nodes>
-    <node id="8661583D-08B0-11D9-B627-000A95B71D78" uname="node1" type="member"/>
-    <node id="8661583D-08B0-11D9-B627-000A95B71D79" uname="node2" type="member"/>
-  </nodes>
-  <resources>
-     <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="stonith"/>
-  </resources>
-  <constraints>
+  <configuration>
+    <nodes>
+      <node id="8661583D-08B0-11D9-B627-000A95B71D78" uname="node1" type="member"/>
+      <node id="8661583D-08B0-11D9-B627-000A95B71D79" uname="node2" type="member"/>
+    </nodes>
+    <resources>
+      <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="stonith"/>
+    </resources>
+    <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" result="can"/>
       </rsc_location>
-  </constraints>
-  <crm_config>
-    <nvpair id="failed_nodes" name="failed_nodes" value="stonith"/>
-  </crm_config>
- </configuration>
- <status>
+    </constraints>
+    <crm_config>
+      <nvpair id="failed_nodes" name="failed_nodes" value="stonith"/>
+    </crm_config>
+  </configuration>
+  <status>
     <node_state id="8661583D-08B0-11D9-B627-000A95B71D78" uname="node1" crmd="offline" join="down" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
 	<lrm_agents>
@@ -39,5 +39,5 @@
         </lrm_resources>
       </lrm>
     </node_state>
- </status>
+  </status>
 </cib>

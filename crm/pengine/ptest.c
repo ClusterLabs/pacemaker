@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.42 2005/02/01 22:46:41 andrew Exp $ */
+/* $Id: ptest.c,v 1.43 2005/02/23 15:44:00 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -95,6 +95,7 @@ main(int argc, char **argv)
 				xml_file = crm_strdup(optarg);
 				break;
 			case 'V':
+				cl_log_enable_stderr(TRUE);
 				alter_debug(DEBUG_INC);
 				break;
 			default:
@@ -125,9 +126,10 @@ main(int argc, char **argv)
 	if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
 		cib_object = file2xml(xml_strm);
-		
+#if BROKEN		
 	} else {
 		cib_object = file2xml(stdin);
+#endif
 	}
 	crm_debug("=#=#=#=#= Stage 0 =#=#=#=#=");
 

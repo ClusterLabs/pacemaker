@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.9 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: group.c,v 1.10 2005/02/23 15:43:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,7 +21,7 @@
 #include <pe_utils.h>
 #include <crm/msg_xml.h>
 
-extern gboolean rsc_dependancy_new(
+extern gboolean rsc_colocation_new(
 	const char *id, enum con_strength strength,
 	resource_t *rsc_lh, resource_t *rsc_rh);
 
@@ -213,7 +213,7 @@ void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 				  pecs_startstop, ordering_constraints);
 		}
 		
-		rsc_dependancy_new("pe_group_internal", pecs_must,
+		rsc_colocation_new("pe_group_internal", pecs_must,
 				   group_data->self, child_rsc);
 		
 		last_rsc = child_rsc;
@@ -231,7 +231,7 @@ void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 		
 }
 
-void group_rsc_dependancy_lh(rsc_dependancy_t *constraint)
+void group_rsc_colocation_lh(rsc_colocation_t *constraint)
 {
 	resource_t *rsc = constraint->rsc_lh;
 	group_variant_data_t *group_data = NULL;
@@ -253,11 +253,11 @@ void group_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 		return;
 	}
 
-	group_data->self->fns->rsc_dependancy_rh(group_data->self, constraint);
+	group_data->self->fns->rsc_colocation_rh(group_data->self, constraint);
 	
 }
 
-void group_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
+void group_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
 {
 	resource_t *rsc_lh = rsc;
 	group_variant_data_t *group_data = NULL;
@@ -270,7 +270,7 @@ void group_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 		return;
 	}
 	
-	group_data->self->fns->rsc_dependancy_rh(group_data->self, constraint);
+	group_data->self->fns->rsc_colocation_rh(group_data->self, constraint);
 }
 
 

@@ -1,30 +1,31 @@
 <?xml version="1.0"?>
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <cib>
- <configuration>
-  <nodes>
-    <node id="uuid1" uname="node1" type="member"/>
-    <node id="uuid2" uname="node2" type="member"/>
-  </nodes>
-  <resources>
-    <incarnation id="rsc1" priority="1.0" incarnation_max="5" incarnation_node_max="2">
-      <resource id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
-    </incarnation>
-    <incarnation id="rsc2" priority="1.0" incarnation_max="5" incarnation_node_max="3">
-      <resource id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
-    </incarnation>
-  </resources>
-  <constraints>
-    <rsc_order id="order1" from="rsc1" type="before" to="rsc2"/>
-    <rsc_location id="run_rsc1" rsc="rsc1">
-      <rule id="can1" result="can"/>
-    </rsc_location>
-    <rsc_location id="run_rsc2" rsc="rsc2">
-      <rule id="can2" result="can"/>
-    </rsc_location>
-  </constraints>
- </configuration>
- <status>
+  <configuration>
+    <crm_config/>
+    <nodes>
+      <node id="uuid1" uname="node1" type="member"/>
+      <node id="uuid2" uname="node2" type="member"/>
+    </nodes>
+    <resources>
+      <incarnation id="rsc1" priority="1.0" incarnation_max="5" incarnation_node_max="2">
+	<resource id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
+      </incarnation>
+      <incarnation id="rsc2" priority="1.0" incarnation_max="5" incarnation_node_max="3">
+	<resource id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
+      </incarnation>
+    </resources>
+    <constraints>
+      <rsc_order id="order1" from="rsc1" type="before" to="rsc2"/>
+      <rsc_location id="run_rsc1" rsc="rsc1">
+	<rule id="can1" result="can"/>
+      </rsc_location>
+      <rsc_location id="run_rsc2" rsc="rsc2">
+	<rule id="can2" result="can"/>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
     <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
 	<lrm_agents>
@@ -39,7 +40,7 @@
         </lrm_resources>
       </lrm>
     </node_state>
-     <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
 	<lrm_agents>
 	  <lrm_agent class="heartbeat" type="apache"/>
@@ -53,5 +54,5 @@
         </lrm_resources>
       </lrm>
     </node_state>
- </status>
+  </status>
 </cib>

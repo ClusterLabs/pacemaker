@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.15 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: native.c,v 1.16 2005/02/23 15:43:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,10 +30,10 @@ void native_assign_color(resource_t *rsc, color_t *color);
 void native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 			       const char *id, GListPtr nodes);
 
-void native_rsc_dependancy_rh_must(resource_t *rsc_lh, gboolean update_lh,
+void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh);
 
-void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
+void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 				      resource_t *rsc_rh, gboolean update_rh);
 
 void filter_nodes(resource_t *rsc);
@@ -294,7 +294,7 @@ void native_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints
 		  pecs_startstop, ordering_constraints);
 }
 
-void native_rsc_dependancy_lh(rsc_dependancy_t *constraint)
+void native_rsc_colocation_lh(rsc_colocation_t *constraint)
 {
 	resource_t *rsc = constraint->rsc_lh;
 	
@@ -310,10 +310,10 @@ void native_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 		crm_devel("Processing constraints from %s", rsc->id);
 	}
 	
-	constraint->rsc_rh->fns->rsc_dependancy_rh(rsc, constraint);		
+	constraint->rsc_rh->fns->rsc_colocation_rh(rsc, constraint);		
 }
 
-void native_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
+void native_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
 {
 	gboolean do_check = FALSE;
 	gboolean update_lh = FALSE;
@@ -341,8 +341,8 @@ void native_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 	if(rsc_lh->provisional && rsc_rh->provisional) {
 		if(constraint->strength == pecs_must) {
 			/* update effective_priorities */
-			native_rsc_dependancy_rh_must(
-				rsc_lh, update_lh,rsc_rh, update_rh);
+			native_rsc_colocation_rh_must(
+				rsc_lh, update_lh, rsc_rh, update_rh);
 		} else {
 			/* nothing */
 			crm_devel(
@@ -422,8 +422,8 @@ void native_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 	}
 
 	if(constraint->strength == pecs_must) {
-		native_rsc_dependancy_rh_must(
-			rsc_lh, update_lh,rsc_rh, update_rh);
+		native_rsc_colocation_rh_must(
+			rsc_lh, update_lh, rsc_rh, update_rh);
 		return;
 		
 	} else if(constraint->strength != pecs_must_not) {
@@ -432,7 +432,7 @@ void native_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 		return;
 	}
 
-	native_rsc_dependancy_rh_mustnot(rsc_lh, update_lh,rsc_rh, update_rh);
+	native_rsc_colocation_rh_mustnot(rsc_lh, update_lh,rsc_rh, update_rh);
 }
 
 
@@ -665,7 +665,7 @@ void native_free(resource_t *rsc)
 }
 
 
-void native_rsc_dependancy_rh_must(resource_t *rsc_lh, gboolean update_lh,
+void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh)
 {
 	native_variant_data_t *native_data_lh = NULL;
@@ -714,8 +714,7 @@ void native_rsc_dependancy_rh_must(resource_t *rsc_lh, gboolean update_lh,
 		native_data_rh->color    = copy_color(native_data_lh->color);
 	}
 
-	CRM_DEV_ASSERT(update_rh || update_lh);
-	if(crm_assert_failed == FALSE && do_merge) {
+	if((update_rh || update_lh) && do_merge) {
 		crm_devel("Merging candidate nodes");
 		old_list = native_data_rh->color->details->candidate_nodes;
 		native_data_rh->color->details->candidate_nodes = merged_node_list;
@@ -725,7 +724,7 @@ void native_rsc_dependancy_rh_must(resource_t *rsc_lh, gboolean update_lh,
 	crm_devel("Finished processing pecs_must constraint");
 }
 
-void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
+void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 				      resource_t *rsc_rh, gboolean update_rh)
 {
 	color_t *color_lh = NULL;
@@ -997,7 +996,7 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 
 gboolean
 native_constraint_violated(
-	resource_t *rsc_lh, resource_t *rsc_rh, rsc_dependancy_t *constraint)
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
 	native_variant_data_t *native_data_lh = NULL;
 	native_variant_data_t *native_data_rh = NULL;

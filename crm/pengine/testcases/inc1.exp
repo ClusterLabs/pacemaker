@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <transition_graph global_timeout="60000">
   <synapse id="0">
     <action_set>
@@ -34,7 +33,7 @@
   <synapse id="2">
     <action_set>
       <rsc_op id="1" rsc_id="rsc1:child_rsc1:0" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-        <resource class="heartbeat" type="apache" priority="1.0" id="rsc1:child_rsc1:0"/>
+         <resource id="rsc1:child_rsc1:0" class="heartbeat" type="apache" priority="1.0"/>
         <args incarnation="0" incarnation_max="5"/>
       </rsc_op>
     </action_set>
@@ -47,7 +46,7 @@
   <synapse id="3">
     <action_set>
       <rsc_op id="2" rsc_id="rsc1:child_rsc1:1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
-        <resource class="heartbeat" type="apache" priority="1.0" id="rsc1:child_rsc1:1"/>
+         <resource id="rsc1:child_rsc1:1" class="heartbeat" type="apache" priority="1.0"/>
         <args incarnation="1" incarnation_max="5"/>
       </rsc_op>
     </action_set>
@@ -60,7 +59,7 @@
   <synapse id="4">
     <action_set>
       <rsc_op id="3" rsc_id="rsc1:child_rsc1:2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-        <resource class="heartbeat" type="apache" priority="1.0" id="rsc1:child_rsc1:2"/>
+         <resource id="rsc1:child_rsc1:2" class="heartbeat" type="apache" priority="1.0"/>
         <args incarnation="2" incarnation_max="5"/>
       </rsc_op>
     </action_set>
@@ -73,7 +72,7 @@
   <synapse id="5">
     <action_set>
       <rsc_op id="4" rsc_id="rsc1:child_rsc1:3" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
-        <resource class="heartbeat" type="apache" priority="1.0" id="rsc1:child_rsc1:3"/>
+         <resource id="rsc1:child_rsc1:3" class="heartbeat" type="apache" priority="1.0"/>
         <args incarnation="3" incarnation_max="5"/>
       </rsc_op>
     </action_set>

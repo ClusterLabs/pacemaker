@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.56 2005/02/21 13:19:19 andrew Exp $ */
+/* $Id: utils.c,v 1.57 2005/02/23 15:44:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,11 +35,11 @@ void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean node_merge_weights(node_t *node, node_t *with);
 
-/* only for rsc_dependancy constraints */
-rsc_dependancy_t *
-invert_constraint(rsc_dependancy_t *constraint) 
+/* only for rsc_colocation constraints */
+rsc_colocation_t *
+invert_constraint(rsc_colocation_t *constraint) 
 {
-	rsc_dependancy_t *inverted_con = NULL;
+	rsc_colocation_t *inverted_con = NULL;
 
 	crm_verbose("Inverting constraint");
 	if(constraint == NULL) {
@@ -47,7 +47,7 @@ invert_constraint(rsc_dependancy_t *constraint)
 		return NULL;
 	}
 
-	crm_malloc(inverted_con, sizeof(rsc_dependancy_t));
+	crm_malloc(inverted_con, sizeof(rsc_colocation_t));
 
 	if(inverted_con == NULL) {
 		return NULL;
@@ -61,7 +61,7 @@ invert_constraint(rsc_dependancy_t *constraint)
 	inverted_con->rsc_rh = constraint->rsc_lh;
 
 	crm_devel_action(
-		print_rsc_dependancy("Inverted constraint", inverted_con, FALSE));
+		print_rsc_colocation("Inverted constraint", inverted_con, FALSE));
 	
 	return inverted_con;
 }
@@ -498,8 +498,8 @@ gint sort_rsc_priority(gconstpointer a, gconstpointer b)
 
 gint sort_cons_strength(gconstpointer a, gconstpointer b)
 {
-	const rsc_dependancy_t *rsc_constraint1 = (const rsc_dependancy_t*)a;
-	const rsc_dependancy_t *rsc_constraint2 = (const rsc_dependancy_t*)b;
+	const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t*)a;
+	const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t*)b;
 
 	if(a == NULL) { return 1; }
 	if(b == NULL) { return -1; }
@@ -819,7 +819,7 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 }
 
 void
-print_rsc_dependancy(const char *pre_text, rsc_dependancy_t *cons, gboolean details)
+print_rsc_colocation(const char *pre_text, rsc_colocation_t *cons, gboolean details)
 { 
 	if(cons == NULL) {
 		crm_devel("%s%s: <NULL>",
@@ -1048,7 +1048,7 @@ pe_free_actions(GListPtr actions)
 
 
 void
-pe_free_rsc_dependancy(rsc_dependancy_t *cons)
+pe_free_rsc_colocation(rsc_colocation_t *cons)
 { 
 	if(cons != NULL) {
 		crm_devel("Freeing constraint %s (%p)", cons->id, cons);

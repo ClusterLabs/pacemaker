@@ -1,16 +1,17 @@
 <?xml version="1.0"?>
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <cib>
- <configuration>
-  <nodes>
-    <node id="node1" uname="node1" type="member"/>
-    <node id="node2" uname="node2" type="member"/>
-  </nodes>
-  <resources>
-     <resource id="rsc1" class="heartbeat" type="apache" priority="2.0"/>
-     <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
-  </resources>
-  <constraints>
+  <configuration>
+    <crm_config/>
+    <nodes>
+      <node id="node1" uname="node1" type="member"/>
+      <node id="node2" uname="node2" type="member"/>
+    </nodes>
+    <resources>
+      <resource id="rsc1" class="heartbeat" type="apache" priority="2.0"/>
+      <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
+    </resources>
+    <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" result="can"/>
 	<rule id="score1" score="10.0">
@@ -22,9 +23,9 @@
 	  <expresssion attribute="uname" operation="eq" value="node1"/>
 	</rule>
       </rsc_location>
-   </constraints>
- </configuration>
- <status>
+    </constraints>
+  </configuration>
+  <status>
     <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
 	<lrm_agents>
@@ -41,5 +42,5 @@
         <lrm_resources/>
       </lrm>
     </node_state>
- </status>
+  </status>
 </cib>

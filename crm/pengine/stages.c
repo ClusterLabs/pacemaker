@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.38 2005/02/21 13:19:19 andrew Exp $ */
+/* $Id: stages.c,v 1.39 2005/02/23 15:44:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -68,7 +68,7 @@ stage0(crm_data_t * cib,
 
 	crm_free(dc_uuid);
 	dc_uuid = NULL;
-	if(cib != NULL) {
+	if(cib != NULL && crm_element_value(cib, XML_ATTR_DC_UUID) != NULL) {
 		/* this should always be present */
 		dc_uuid = crm_element_value_copy(cib, XML_ATTR_DC_UUID);
 	}
@@ -216,8 +216,8 @@ stage4(GListPtr colors)
 		slist_iter(
 			rsc, resource_t, color->details->allocated_resources, lpc2,
 			slist_iter(
-				constraint, rsc_dependancy_t, rsc->rsc_cons, lpc,
-				rsc->fns->rsc_dependancy_lh(constraint);
+				constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
+				rsc->fns->rsc_colocation_lh(constraint);
 				);	
 			
 			);

@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.8 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: incarnation.c,v 1.9 2005/02/23 15:43:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,7 +21,7 @@
 #include <pe_utils.h>
 #include <crm/msg_xml.h>
 
-extern gboolean rsc_dependancy_new(
+extern gboolean rsc_colocation_new(
 	const char *id, enum con_strength strength,
 	resource_t *rsc_lh, resource_t *rsc_rh);
 
@@ -211,7 +211,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 			crm_devel("Incarnation %d will run on a differnt node to 0",
 				  lpc);
 			
-			rsc_dependancy_new("pe_incarnation_internal_must_not",
+			rsc_colocation_new("pe_incarnation_internal_must_not",
 					   pecs_must_not, child_lh, child_rh);
 		} else {
 			child_rh = child_0;
@@ -232,7 +232,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 			child_rh = g_list_nth_data(
 				incarnation_data->child_list, offset);
 
-			rsc_dependancy_new("pe_incarnation_internal_must",
+			rsc_colocation_new("pe_incarnation_internal_must",
 					   pecs_must, child_lh, child_rh);
 		}
 	}
@@ -382,7 +382,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 		
 }
 
-void incarnation_rsc_dependancy_lh(rsc_dependancy_t *constraint)
+void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint)
 {
 	resource_t *rsc = constraint->rsc_lh;
 	incarnation_variant_data_t *incarnation_data = NULL;
@@ -410,11 +410,11 @@ void incarnation_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 		
 		crm_devel_action(print_resource("LHS", child_rsc, TRUE));
-		child_rsc->fns->rsc_dependancy_rh(child_rsc, constraint);
+		child_rsc->fns->rsc_colocation_rh(child_rsc, constraint);
 		);
 }
 
-void incarnation_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
+void incarnation_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
 {
 	incarnation_variant_data_t *incarnation_data = NULL;
 	
@@ -443,7 +443,7 @@ void incarnation_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 		
 		crm_devel_action(print_resource("RHS", child_rsc, FALSE));
-		child_rsc->fns->rsc_dependancy_rh(child_rsc, constraint);
+		child_rsc->fns->rsc_colocation_rh(child_rsc, constraint);
 		);
 }
 

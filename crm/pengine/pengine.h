@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.48 2005/02/21 13:19:19 andrew Exp $ */
+/* $Id: pengine.h,v 1.49 2005/02/23 15:44:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,7 +24,7 @@
 typedef struct node_s node_t;
 typedef struct color_s color_t;
 typedef struct rsc_to_node_s rsc_to_node_t;
-typedef struct rsc_dependancy_s rsc_dependancy_t;
+typedef struct rsc_colocation_s rsc_colocation_t;
 typedef struct resource_s resource_t;
 typedef struct lrm_agent_s lrm_agent_t;
 typedef struct order_constraint_s order_constraint_t;
@@ -38,7 +38,7 @@ typedef struct action_wrapper_s action_wrapper_t;
 
 enum con_type {
 	type_none,
-	rsc_dependancy,
+	rsc_colocation,
 	rsc_to_node,
 	rsc_to_attr,
 	base_weight
@@ -121,7 +121,7 @@ struct color_s {
 		float local_weight;
 };
 
-struct rsc_dependancy_s { 
+struct rsc_colocation_s { 
 		const char	*id;
 		resource_t	*rsc_lh; 
 
@@ -171,7 +171,7 @@ struct resource_s {
 		enum pe_restart        restart_type;
 
 		GListPtr candidate_colors; /* color_t*        */
-		GListPtr rsc_cons;         /* rsc_dependancy_t* */
+		GListPtr rsc_cons;         /* rsc_colocation_t* */
 		GListPtr actions;	   /* action_t*        */
 
 		crm_data_t * extra_attrs;

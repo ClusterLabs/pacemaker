@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.56 2005/02/20 17:00:21 andrew Exp $ */
+/* $Id: unpack.c,v 1.57 2005/02/23 15:44:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -56,7 +56,7 @@ gboolean unpack_rsc_to_node(crm_data_t * xml_obj,
 gboolean unpack_rsc_order(
 	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints);
 
-gboolean unpack_rsc_dependancy(
+gboolean unpack_rsc_colocation(
 	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints);
 
 gboolean unpack_rsc_location(
@@ -82,7 +82,7 @@ gboolean unpack_lrm_agents(node_t *node, crm_data_t * agent_list);
 
 gboolean is_node_unclean(crm_data_t * node_state);
 
-gboolean rsc_dependancy_new(
+gboolean rsc_colocation_new(
 	const char *id, enum con_strength strength,
 	resource_t *rsc_lh, resource_t *rsc_rh);
 
@@ -137,9 +137,13 @@ unpack_config(crm_data_t * config)
 const char *
 param_value(crm_data_t * parent, const char *name) 
 {
-	crm_data_t * a_default = find_entity(
-		parent, XML_CIB_TAG_NVPAIR, name, FALSE);
+	crm_data_t * a_default = NULL;
 
+	if(parent != NULL) {
+		a_default = find_entity(
+			parent, XML_CIB_TAG_NVPAIR, name, FALSE);
+	}
+	
 	if(a_default == NULL) {
 		crm_warn("Option %s not set", name);
 		return NULL;
@@ -320,7 +324,7 @@ unpack_constraints(crm_data_t * xml_constraints,
 				xml_obj, resources, ordering_constraints);
 
 		} else if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj))) {
-			unpack_rsc_dependancy(
+			unpack_rsc_colocation(
 				xml_obj, resources, ordering_constraints);
 
 		} else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj))) {
@@ -747,18 +751,18 @@ unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
 }
 
 gboolean
-rsc_dependancy_new(const char *id, enum con_strength strength,
+rsc_colocation_new(const char *id, enum con_strength strength,
 		   resource_t *rsc_lh, resource_t *rsc_rh)
 {
-	rsc_dependancy_t *new_con      = NULL;
- 	rsc_dependancy_t *inverted_con = NULL; 
+	rsc_colocation_t *new_con      = NULL;
+ 	rsc_colocation_t *inverted_con = NULL; 
 
 	if(rsc_lh == NULL || rsc_rh == NULL){
 		/* error */
 		return FALSE;
 	}
 
-	crm_malloc(new_con, sizeof(rsc_dependancy_t));
+	crm_malloc(new_con, sizeof(rsc_colocation_t));
 	if(new_con != NULL) {
 		new_con->id       = id;
 		new_con->rsc_lh   = rsc_lh;
@@ -853,7 +857,7 @@ order_new(resource_t *lh_rsc, enum action_tasks lh_action_task, action_t *lh_act
 }
 
 gboolean
-unpack_rsc_dependancy(crm_data_t * xml_obj,
+unpack_rsc_colocation(crm_data_t * xml_obj,
 		  GListPtr rsc_list,
 		  GListPtr *ordering_constraints)
 {
@@ -893,7 +897,7 @@ unpack_rsc_dependancy(crm_data_t * xml_obj,
 		crm_err("Unknown value for %s: %s", XML_ATTR_TYPE, type);
 		return FALSE;
 	}
-	return rsc_dependancy_new(id, strength_e, rsc_lh, rsc_rh);
+	return rsc_colocation_new(id, strength_e, rsc_lh, rsc_rh);
 }
 
 gboolean
@@ -1033,13 +1037,13 @@ match_attrs(const char *attr, const char *op, const char *value,
 			cmp = -1;
 		}
 		
-		if(safe_str_eq(op, "exists")) {
+		if(safe_str_eq(op, "defined")) {
 			if(h_val != NULL) accept = TRUE;	
 
-		} else if(safe_str_eq(op, "not_exists")) {
+		} else if(safe_str_eq(op, "not_defined")) {
 			if(h_val == NULL) accept = TRUE;
 
-		} else if(safe_str_eq(op, "running")) {
+		} else if(safe_str_eq(op, "colocated")) {
 			GListPtr rsc_list = node->details->running_rsc;
 			slist_iter(
 				rsc, resource_t, rsc_list, lpc2,
@@ -1048,7 +1052,7 @@ match_attrs(const char *attr, const char *op, const char *value,
 				}
 				);
 
-		} else if(safe_str_eq(op, "not_running")) {
+		} else if(safe_str_eq(op, "not_colocated")) {
 			GListPtr rsc_list = node->details->running_rsc;
 			accept = TRUE;
 			slist_iter(
@@ -1152,32 +1156,6 @@ unpack_rsc_location(
 	crm_data_t * xml_obj,
 	GListPtr rsc_list, GListPtr node_list, GListPtr *placement_constraints)
 {
-/*
-
-  <constraints>
-     <rsc_location rsc="Filesystem-whatever-1" timestamp="..." lifetime="...">
-     	<rule score="+50.0" result="can">
-<!ATTLIST node_expression
-	  id         CDATA #REQUIRED
-	  attribute  CDATA #REQUIRED
-	  operation  (lt|gt|lte|gte|eq|ne|exists|not_exists)
-	  value      CDATA #IMPLIED
-	  type	     (integer|string|version)    'string'>
-
-	</rule>
-     	<rule score="+500.0">
-       		<node_expression match="cpu:50GHz" />
-	</rule>
-     	<rule result="cannot">
-       		<node_expression not_match="san"/>
-	</rule>
-...
-
-   Translation:
-
-   Further translation:
-       
-*/
 	gboolean were_rules = FALSE;
 	const char *id_lh   = crm_element_value(xml_obj, "rsc");
 	const char *id      = crm_element_value(xml_obj, XML_ATTR_ID);
