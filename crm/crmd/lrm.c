@@ -463,7 +463,7 @@ do_lrm_rsc_op(
 			get_xml_attr_nested(
 				msg, rsc_path, DIMOF(rsc_path) -2,
 				XML_ATTR_TYPE, TRUE),
-			NULL);
+			NULL,NULL);
 		
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(
 			fsa_lrm_conn, rid);
