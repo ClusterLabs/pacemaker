@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.7 2004/02/29 19:40:56 andrew Exp $ */
+/* $Id: crmutils.c,v 1.8 2004/03/18 10:27:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,8 +92,8 @@ register_pid(const char *pid_file,
 		close(j);
 		(void)open("/dev/null", j == 0 ? O_RDONLY : O_RDONLY);
 	}
-	CL_IGNORE_SIG(SIGINT);
-	CL_IGNORE_SIG(SIGHUP);
+//	CL_IGNORE_SIG(SIGINT);
+//	CL_IGNORE_SIG(SIGHUP);
 	CL_SIGNAL(SIGTERM, shutdown);
 }
 
