@@ -1284,6 +1284,12 @@ class ResourceRecover(CTSTest):
     def __call__(self, dummy):
         '''Perform the 'ResourceRecover' test. '''
         self.incr("calls")
+        
+        for member in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[member] != self.CM["up"]:
+                ret=self.start(member)
+                if not ret:
+                    return ret;
 
         # if there is not resource , return directly
         resourcelist=self.CM.Resources()
@@ -1321,6 +1327,115 @@ class ResourceRecover(CTSTest):
         return 1
 
 
+####################################################################
+class Split_brainTest2(CTSTest):
+####################################################################
+    '''It is used to test split-brain. when the path between the two nodes break
+       check the two nodes both take over the resource'''
+    def __init__(self,cm):
+        CTSTest.__init__(self,cm)
+        self.name = "Split_brain2"
+        self.start = StartTest(cm)
+
+    def __call__(self, node):
+        '''Perform split-brain test'''
+        self.incr("calls")
+        for member in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[member] != self.CM["up"]:
+                ret=self.start(member)
+                if not ret:
+                    return ret;
+        
+        count1 = self.CM.Env.RandomGen.randint(1,len(self.CM.Env["nodes"])-1)
+        partition1 = []
+        while len(partition1) < count1:
+            select = self.CM.Env.RandomGen.choice(self.CM.Env["nodes"])
+            if not select in partition1:
+                partition1.append(select)
+        partition2 = []
+        for member in self.CM.Env["nodes"]:
+            if not member in partition1:
+                partition2.append(member)
+        allownodes1 = ""
+        for member in partition1:
+            allownodes1 += member + " "
+        allownodes2 = ""
+        for member in partition2:
+            allownodes2 += member + " "
+        self.CM.log("Partition1: " + str(partition1))
+        self.CM.log("Partition2: " + str(partition2))
+
+        '''isolate nodes, Look for node is dead message'''
+        watchdeadpats = [ ]
+        deadpat = self.CM["Pat:They_dead"]
+        for member in self.CM.Env["nodes"]:
+            thispat = (deadpat % member)
+            watchdeadpats.append(thispat)
+
+        watchdead = CTS.LogWatcher(self.CM["LogFileName"], watchdeadpats\
+	,       timeout=self.CM["DeadTime"]+60)
+        watchdead.ReturnOnlyMatch()
+        watchdead.setwatch()
+        
+        for member in partition1:
+            if not self.CM.isolate_node(member,allownodes1):
+                return self.failure("Could not isolate the nodes")
+        for member in partition2:
+            if not self.CM.isolate_node(member,allownodes2):
+                return self.failure("Could not isolate the nodes")
+        
+        if not watchdead.lookforall():
+            for member in self.CM.Env["nodes"]:
+                self.CM.unisolate_node(member)
+            self.CM.log("Patterns not found: " + repr(watchdead.unmatched))
+            return self.failure("Didn't find the log 'dead' message")
+        
+        dcnum=0
+        while dcnum < 2:
+            dcnum = 0
+            for member in self.CM.Env["nodes"]:
+                if self.CM.IsDC(member):
+                    dcnum += 1
+            time.sleep(1)  
+                    
+        '''
+	Unisolate the node, look for the return partition message
+	and check whether they restart
+	'''
+        watchpartitionpats = [self.CM["Pat:DC_IDLE"]]
+        partitionpat = self.CM["Pat:Return_partition"]
+        for member in self.CM.Env["nodes"]:
+            thispat = (partitionpat % member)
+            watchpartitionpats.append(thispat)
+        
+        watchpartition = CTS.LogWatcher(self.CM["LogFileName"], watchpartitionpats\
+        ,               timeout=self.CM["DeadTime"]+60)
+        watchpartition.setwatch()
+        
+        for member in self.CM.Env["nodes"]:
+            self.CM.unisolate_node(member)
+
+        if not watchpartition.lookforall():
+            self.CM.log("Patterns not found: " + repr(watchpartition.unmatched))
+            return self.failure("Didn't find return from partition messages")
+        
+        return self.success()
+
+    def is_applicable(self):
+        '''Split_brain2 is applicable with linux-ha v2'''
+        if not self.CM["Name"] == "linux-ha-v2":
+            return None
+        return 1
+
+    def errorstoignore(self):
+        '''Return list of errors which are 'normal' and should be ignored'''
+        return [ "ERROR:.*Both machines own.*resources"
+	,	"ERROR:.*lost a lot of packets!"
+ 	,	"ERROR: Cannot rexmit pkt .*: seqno too low"
+	,	"ERROR: Irretrievably lost packet: node"
+	]
+
+AllTestClasses.append(Split_brainTest2)
 
 def TestList(cm):
     result = []

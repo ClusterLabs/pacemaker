@@ -64,7 +64,7 @@ class LinuxHAv2(HeartbeatCM):
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s status 0 0 EVERYTIME 2>/dev/null|grep return",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
-
+            "BreakCommCmd2"  : "/usr/lib/heartbeat/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
             "IsIPAddrRscRunning"   : "",
 
             # Patterns to look for in the log files for various occasions...
@@ -73,6 +73,7 @@ class LinuxHAv2(HeartbeatCM):
             "Pat:They_started" : "%s crmd:.*State transition.*-> (S_NOT_DC|S_IDLE)",
             "Pat:We_stopped"   : ("%s heartbeat.*Heartbeat shutdown complete" %(self.OurNode)),
             "Pat:They_stopped" : "%s heartbeat.*Heartbeat shutdown complete",
+            "Pat:They_dead"    : "node (%s).*: is dead",
             "Pat:All_stopped"  : "%s heartbeat.*Heartbeat shutdown complete",
             
             # Bad news Regexes.  Should never occur.
@@ -222,6 +223,19 @@ class LinuxHAv2(HeartbeatCM):
                   %(self["Name"], node, out))
 #        self.ShouldBeStatus[node]=self["down"]
         return None
+    
+    def isolate_node(self, node, allowlist):
+        '''isolate the communication between the nodes'''
+        rc = self.rsh(node, self["BreakCommCmd2"]%allowlist)
+        if rc == 0:
+            return 1
+        else:
+            self.log("Could not break the communication from node: %s",node)
+        return None
+        
+    def IsDC(self, node):
+        status = self.rsh.readaline(node, self["StatusCmd"]%node)
+        return (string.find(status, 'S_IDLE') != -1) 
 
     def Configuration(self):
         if not self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],self.Env["HAdir"]):
