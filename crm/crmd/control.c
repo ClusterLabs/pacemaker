@@ -111,6 +111,9 @@ do_shutdown(long long action,
 {
 	enum crmd_fsa_input next_input = I_NULL;
 	enum crmd_fsa_input tmp = I_NULL;
+
+	/* just in case */
+	set_bit_inplace(fsa_input_register, R_SHUTDOWN);
 	
 	/* last attempt to shut these down */
 	if(is_set(fsa_input_register, R_PE_CONNECTED)) {
@@ -166,14 +169,14 @@ do_exit(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
-	
-
-	crm_err("Action %s (%.16llx) not supported\n",
-		fsa_action2string(action), action);
-
 	if(action & A_EXIT_0) {
+		crm_info("Performing %s - gracefully exiting the CRMd\n",
+			fsa_action2string(action));
+
 		g_main_quit(crmd_mainloop);
 	} else {
+		crm_warn("Performing %s - forcefully exiting the CRMd\n",
+			fsa_action2string(action));
 		exit(1);
 	}
 	
@@ -339,11 +342,10 @@ do_stop(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
+	/* nothing to do yet */
+
+	/* todo: shut down any remaining CRM resources */
 	
-
-	crm_err("Action %s (%.16llx) not supported\n",
-	       fsa_action2string(action), action);
-
 	return I_NULL;
 }
 
@@ -361,14 +363,16 @@ do_started(long long action,
 	   || is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE
 		) {
 		crm_info("Delaying start, some systems not connected %.16llx (%.16llx)",
-			 fsa_input_register, (long long)R_CCM_DATA|R_PEER_DATA|R_LRM_CONNECTED);
+			 fsa_input_register, (long long)R_CCM_DATA|R_LRM_CONNECTED);
 
 		crmd_fsa_stall();
 		return I_NULL;
-	}
 
-	if(is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
+	} else if(is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
 		/* try reading from HA */
+		crm_info("Delaying start, some systems not connected %.16llx (%.16llx)",
+			 fsa_input_register, (long long)R_PEER_DATA);
+
 		crm_debug("Looking for a HA message");
 		struct ha_msg*	msg = NULL;
 		msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
@@ -377,15 +381,14 @@ do_started(long long action,
 			ha_msg_del(msg);
 		}
 		
-		if(wait_timer->source_id < 0) {
-			startTimer(wait_timer);
-		}
+		startTimer(wait_timer);
 		crmd_fsa_stall();
 		return I_NULL;
 	}
 
 	crm_info("The local CRM is operational");
 	clear_bit_inplace(fsa_input_register, R_STARTING);
+	register_fsa_input_w_actions(msg_data->fsa_cause, I_NULL, NULL, A_DC_TIMER_START);
 	
 	return I_NULL;
 }
