@@ -113,6 +113,7 @@ do_lrm_control(long long action,
 			      FALSE,
 			      lrm_dispatch, fsa_lrm_conn,
 			      default_ipc_input_destroy);
+
 	}	
 
 	if(action & ~(A_LRM_CONNECT|A_LRM_DISCONNECT)) {
@@ -511,7 +512,7 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 */
 	xmlNodePtr update, iter;
 	char *tmp = NULL;
-	xmlNodePtr fragment, tmp1;
+	xmlNodePtr fragment;
 	
 	
 	update = create_xml_node(NULL, "node_state");
@@ -535,18 +536,13 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 
 	set_xml_property_copy(iter, XML_LRM_ATTR_TARGET, fsa_our_uname);
 	
-	tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
-	add_node_copy(tmp1, update);
-
-	fragment = create_cib_fragment(tmp1, NULL);
+	fragment = create_cib_fragment(update, NULL);
 
 	send_request(NULL, fragment, CRM_OP_UPDATE,
 		     fsa_our_dc, CRM_SYSTEM_DCIB, NULL);
 	
 	free_xml(fragment);
 	free_xml(update);
-	free_xml(tmp1);
 }
 
 enum crmd_fsa_input
