@@ -53,20 +53,14 @@ hauser = 		@HA_CCMUSER@
 
 ## proc-ha is left out from SUBDIRS (completely obsolete)
 
-if CRM_BUILD
-USE_CRM_DIR=@CRM_DIR@
-endif
-if LRM_BUILD
-LRM_DIR = lrm
-endif
 if SNMP_SUBAGENT_BUILD
-SNMP_SUBAGENT_DIR = snmp_subagent
+  SNMP_SUBAGENT_DIR = snmp_subagent
 endif
 
 SUBDIRS                 = libltdl doc debian pkg replace include lib \
                         ldirectord heartbeat membership telecom\
                         cts linux-ha contrib config resources\
-			$(USE_CRM_DIR) $(LRM_DIR) $(SNMP_SUBAGENT_DIR) \
+			crm lrm $(SNMP_SUBAGENT_DIR) \
 			tools logd fencing
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt

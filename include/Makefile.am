@@ -24,20 +24,11 @@ EXTRA_DIST = ha_config.h.in
 
 includedir=$(base_includedir)/heartbeat
 
-if CHECKPOINTD_BUILD
-CHECKPOINTD_DIR = checkpointd
-endif
-if CRM_BUILD
-USE_CRM_DIR = @CRM_DIR@
-endif
-if LRM_BUILD
-LRM_DIR = lrm
-endif
 
 noinst_HEADERS	        = hb_api_core.h
-include_HEADERS	        = apphb.h apphb_notify.h HBauth.h HBcomm.h \
-			  ha_msg.h heartbeat.h hb_api.h ha_config.h \
+include_HEADERS	        = apphb.h apphb_notify.h HBauth.h HBcomm.h	\
+			  ha_msg.h heartbeat.h hb_api.h ha_config.h	\
 			  recoverymgr.h
 
-SUBDIRS                 = clplumbing ocf pils saf $(CHECKPOINTD_DIR) \
-			  stonith fencing $(LRM_DIR) $(USE_CRM_DIR)
+SUBDIRS                 = clplumbing ocf pils saf 			\
+			  stonith fencing lrm crm

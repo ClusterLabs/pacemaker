@@ -19,23 +19,8 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-if EVENTD_BUILD
-EVENTD_DIR = eventd
-endif
-if CHECKPOINTD_BUILD
-CHECKPOINTD_DIR = checkpointd
-endif
-if CMS_BUILD
-CMS_DIR = cmsclient
-endif
 if SWIG_BUILD
 SWIG_DIR = bindings
-endif
-if LRM_BUILD
-LRM_DIR = lrm
-endif
-if CRM_BUILD
-USE_CRM_DIR = @CRM_DIR@
 endif
 
 #
@@ -56,12 +41,9 @@ SUBDIRS			=  	\
 	recoverymgr		\
 	fencing			\
 	plugins 		\
-	$(CHECKPOINTD_DIR)	\
-	$(EVENTD_DIR)		\
-	$(CMS_DIR)		\
 	$(SWIG_DIR)		\
-	$(USE_CRM_DIR)	\
-	$(LRM_DIR)
+	crm			\
+	lrm
 
 DIST_SUBDIRS		=  	\
 	pils			\
@@ -71,9 +53,6 @@ DIST_SUBDIRS		=  	\
 	apphb			\
 	recoverymgr		\
 	plugins 		\
-	checkpointd		\
-	eventd			\
-	cmsclient		\
 	bindings		\
 	fencing			\
 	crm			\
