@@ -275,12 +275,12 @@ fork_and_execra(const char * ra_name, const char * op, RA_ARGV cmd_argv,
 		if ( pipe(fd) < 0 ) {
 			cl_log(LOG_ERR,"pipe create error when to execute %s.", 
 				ra_name);
-			return -1;
+			exit(-1);
 		}
 
 	if ( (cpid=fork()) < 0 ) {
 		cl_log(LOG_ERR, "Fork failed when to execute %s.", ra_name);
-		return -1;
+		exit(-1);
 	}
 
 	if ( cpid > 0 ) {
@@ -306,7 +306,7 @@ fork_and_execra(const char * ra_name, const char * op, RA_ARGV cmd_argv,
 				if (dup2(fd[1], STDOUT_FILENO)!=STDOUT_FILENO) {
 					cl_log(LOG_ERR,"dup2 error when to "\
 						"execute RA.");
-					return -1;
+					exit(-1);
 				}
 			}
 			close(fd[1]);
@@ -321,7 +321,7 @@ fork_and_execra(const char * ra_name, const char * op, RA_ARGV cmd_argv,
 				ra_name);
 		}
 
-		return -1;
+		exit(-1);
      	} 
 }
 
