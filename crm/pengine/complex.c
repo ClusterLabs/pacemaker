@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.9 2005/01/10 14:24:50 andrew Exp $ */
+/* $Id: complex.c,v 1.10 2005/01/12 13:40:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -95,7 +95,7 @@ int get_resource_type(const char *name)
 	} else if(safe_str_eq(name, "resource_group")) {
 		return pe_group;
 
-	} else if(safe_str_eq(name, "incarnation")) {
+	} else if(safe_str_eq(name, XML_RSC_ATTR_INCARNATION)) {
 		return pe_incarnation;
 	}
 	
@@ -113,11 +113,11 @@ gboolean
 common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 {
 	const char *id            = xmlGetProp(xml_obj, XML_ATTR_ID);
-	const char *stopfail      = xmlGetProp(xml_obj, "on_stopfail");
-	const char *restart       = xmlGetProp(xml_obj, "restart_type");
-	const char *def_timeout   = xmlGetProp(xml_obj, "def_timeout");
-	const char *start_timeout = xmlGetProp(xml_obj, "start_timeout");
-	const char *stop_timeout  = xmlGetProp(xml_obj, "stop_timeout");
+	const char *stopfail      = xmlGetProp(xml_obj, XML_RSC_ATTR_STOPFAIL);
+	const char *restart       = xmlGetProp(xml_obj, XML_RSC_ATTR_RESTART);
+	const char *def_timeout   = xmlGetProp(xml_obj, XML_ATTR_TIMEOUT);
+	const char *start_timeout = xmlGetProp(xml_obj, XML_RSC_ATTR_START_TIMEOUT);
+	const char *stop_timeout  = xmlGetProp(xml_obj, XML_RSC_ATTR_STOP_TIMEOUT);
 	const char *priority      = xmlGetProp(xml_obj, XML_CIB_ATTR_PRIORITY);	
 	
 	crm_verbose("Processing resource input...");
@@ -168,7 +168,7 @@ common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 	if(safe_str_eq(stopfail, "ignore")) {
 		(*rsc)->stopfail_type = pesf_ignore;
 		
-	} else if(safe_str_eq(stopfail, "stonith")) {
+	} else if(safe_str_eq(stopfail, XML_CIB_ATTR_STONITH)) {
 		(*rsc)->stopfail_type = pesf_stonith;
 
 	} else {

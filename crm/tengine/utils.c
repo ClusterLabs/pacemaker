@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.9 2004/12/14 14:46:45 andrew Exp $ */
+/* $Id: utils.c,v 1.10 2005/01/12 13:41:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -272,16 +272,16 @@ do_update_cib(xmlNodePtr xml_action, int status)
 	set_xml_property_copy(state,   XML_ATTR_UUID,  target_uuid);
 	set_xml_property_copy(state,   XML_ATTR_UNAME, target);
 	
-	if(status != -1 && (safe_str_eq(task, "shutdown_crm"))) {
+	if(status != -1 && (safe_str_eq(task, CRM_OP_SHUTDOWN))) {
 		sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
-		set_xml_property_copy(rsc, "stonith", since_epoch);
+		set_xml_property_copy(rsc, XML_CIB_ATTR_STONITH, since_epoch);
 		
 	} else {
 		code = crm_itoa(status);
 		
-		rsc = create_xml_node(state, "lrm");
-		rsc = create_xml_node(rsc,   "lrm_resources");
-		rsc = create_xml_node(rsc,   "lrm_resource");
+		rsc = create_xml_node(state, XML_CIB_TAG_LRM);
+		rsc = create_xml_node(rsc,   XML_LRM_TAG_RESOURCES);
+		rsc = create_xml_node(rsc,   XML_LRM_TAG_RESOURCE);
 		
 		set_xml_property_copy(rsc, XML_ATTR_ID,         rsc_id);
 		set_xml_property_copy(rsc, XML_LRM_ATTR_TARGET, target);
@@ -319,7 +319,7 @@ do_update_cib(xmlNodePtr xml_action, int status)
 #ifdef MSG_LOG
 	fprintf(msg_te_strm,
 		"[Result ]\tUpdate CIB with \"%s\" (%s): %s %s on %s\n",
-		status<0?"new action":"timeout",
+		status<0?"new action":XML_ATTR_TIMEOUT,
 		xml_action->name, crm_str(task), rsc_id, target);
 	fprintf(msg_te_strm, "[Sent ]\t%s\n",
 		dump_xml_formatted(fragment));
@@ -370,7 +370,7 @@ timer_callback(gpointer data)
 		
 		crm_warn("Some actions may not have been executed.");
 			
-		send_success("timeout");
+		send_success(XML_ATTR_TIMEOUT);
 		
 		return TRUE;
 		

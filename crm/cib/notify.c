@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.3 2004/12/14 14:43:02 andrew Exp $ */
+/* $Id: notify.c,v 1.4 2005/01/12 13:40:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,7 +53,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	struct ha_msg *update_msg = user_data;
 	cib_client_t *client = value;
 
-	if(safe_str_eq(client->channel_name, "cib_callback")) {
+	if(safe_str_eq(client->channel_name, cib_channel_callback)) {
 		crm_trace("Notifying client %s of update", client->id);
 		if(msg2ipcchan(update_msg, client->channel) != HA_OK) {
 			crm_err("Notification of client %s failed", client->id);

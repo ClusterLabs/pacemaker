@@ -606,9 +606,6 @@ fsa_action2string(long long action)
 		case A_TE_CANCEL:
 			actionAsText = "A_TE_CANCEL";
 			break;
-		case A_TE_COPYTO:
-			actionAsText = "A_TE_COPYTO";
-			break;
 		case A_PE_INVOKE:
 			actionAsText = "A_PE_INVOKE";
 			break;
@@ -833,10 +830,6 @@ fsa_dump_actions(long long action, const char *text)
 	if(is_set(action, A_TE_CANCEL)) {
 		crm_debug("Action %.16llx (A_TE_CANCEL) %s",
 			  A_TE_CANCEL, text);
-	}
-	if(is_set(action, A_TE_COPYTO)) {
-		crm_debug("Action %.16llx (A_TE_COPYTO) %s",
-			  A_TE_COPYTO, text);
 	}
 	if(is_set(action, A_PE_INVOKE)) {
 		crm_debug("Action %.16llx (A_PE_INVOKE) %s",

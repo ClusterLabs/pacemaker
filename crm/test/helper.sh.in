@@ -97,6 +97,7 @@ function test_init() {
     export test_dump_dir="$dump_dir/$test_type/$date_str"
     mkdir -p "$test_dump_dir"
     echo Test dir: $test_dump_dir
+    crm_test_log_start=$(stat -L -c %s $logfile)
 }
 
 function remote_cmd() {
@@ -325,6 +326,8 @@ function err() {
     dump_node 2 $test_node_2
     dump_node 3 $test_node_3
 
+    crm_test_log_end=$(stat -L -c %s $logfile)
+    $HALIB_DIR/crmtest/testutils.pl --dump -p $crm_test_log_start -ep $crm_test_log_end -l $logfile > $test_dump_dir/cluster.log
     do_cmd echo "ERROR: $*"
     do_cmd echo "test $test_type: FAILED"
     echo "see $test_dump_dir for details..."
@@ -340,7 +343,9 @@ function dump_node() {
 
     dump_file="/tmp/${a_node_index}-${a_node}.tgz"
     `which ssh` ${ADMIN_USER}@${a_node} "ps axf > /tmp/crm/processes"
-    `which ssh` ${ADMIN_USER}@${a_node} "tar zcvf ${dump_file} /tmp/crm"
+    `which ssh` ${ADMIN_USER}@${a_node} "ln -s /tmp/crm /tmp/crm-${a_node_index}"
+    `which ssh` ${ADMIN_USER}@${a_node} "tar zcvf ${dump_file} /tmp/crm-${a_node_index}/"
+    `which ssh` ${ADMIN_USER}@${a_node} "rm -f /tmp/crm-${a_node_index}"
 
     scp -r ${ADMIN_USER}@${a_node}:${dump_file} $test_dump_dir
     `which ssh` ${ADMIN_USER}@${a_node} "rm ${dump_file}"
@@ -457,7 +462,7 @@ function crm-cleanup-node() {
 # resources too
     do_cmd remote_cmd $INIT_USER $ha_host "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
     do_cmd remote_cmd $INIT_USER $ha_host "/etc/ha.d/resource.d/IPaddr $ip_rsc_2 stop" 2>&1 > /dev/null
-    
+
     if [ -z $2 ]; then
 # make *sure* theres nothing left over from last time
 	do_cmd remote_cmd $INIT_USER $ha_host "rm -f $HAVAR_DIR/crm/cib*.xml"

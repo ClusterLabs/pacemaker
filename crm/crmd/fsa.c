@@ -66,7 +66,7 @@ void dump_rsc_info(void);
 	   next_input = y(x, cause, cur_state, last_input, fsa_data);	\
 	   crm_verbose("Action complete: %s (%.16llx)",			\
 		       fsa_action2string(x), x);			\
-	   if(next_input != I_NULL) {					\
+	   if(next_input != I_NULL && next_input != I_DC_HEARTBEAT) {	\
 		   crm_warn("Action %s returned %s",			\
 			    fsa_action2string(x),			\
 			    fsa_input2string(next_input));		\
@@ -99,7 +99,7 @@ void dump_rsc_info(void);
 	   next_input = y(x, cause, cur_state, last_input, fsa_data);	\
 	   crm_verbose("Action complete: %s (%.16llx)",			\
 		       fsa_action2string(x), x);			\
-	   if(next_input != I_NULL) {					\
+	   if(next_input != I_NULL && next_input != I_DC_HEARTBEAT) {	\
 		   crm_warn("Action %s returned %s",			\
 			       fsa_action2string(x),			\
 			       fsa_input2string(next_input));		\
@@ -413,7 +413,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		/*
 		 * Highest priority actions
 		 */
-		else IF_FSA_ACTION(A_TE_COPYTO,		do_te_copyto)
 		else IF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
 
 		else IF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
@@ -609,7 +608,6 @@ do_state_transition(long long actions,
 			break;
 
 		case S_INTEGRATION:
-			initialize_join(TRUE);
 			set_bit_inplace(tmp, A_INTEGRATE_TIMER_START);
 			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
 	

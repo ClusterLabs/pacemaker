@@ -634,19 +634,19 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_CIB_UPDATE */
 	{
-		/* S_IDLE		==> */	A_CIB_BUMPGEN|A_TE_COPYTO,
+		/* S_IDLE		==> */	A_LOG,
 		/* S_ELECTION		==> */	A_LOG,
 		/* S_INTEGRATION	==> */	A_WARN,
 		/* S_FINALIZE_JOIN	==> */	A_WARN,
 		/* S_NOT_DC		==> */	A_WARN,
-		/* S_POLICY_ENGINE	==> */	A_CIB_BUMPGEN|A_TE_COPYTO,
+		/* S_POLICY_ENGINE	==> */	A_LOG,
 		/* S_RECOVERY		==> */	A_WARN,
 		/* S_RELEASE_DC		==> */	A_WARN,
 		/* S_STARTING		==> */	A_WARN,
 		/* S_PENDING		==> */	A_WARN,
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	A_CIB_BUMPGEN|A_TE_COPYTO,
+		/* S_TRANSITION_ENGINE	==> */	A_LOG,
 	},
 
 /* Got an I_DC_TIMEOUT */

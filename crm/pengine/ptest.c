@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.39 2004/11/12 17:20:58 andrew Exp $ */
+/* $Id: ptest.c,v 1.40 2005/01/12 13:40:59 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -71,7 +71,7 @@ main(int argc, char **argv)
 		int option_index = 0;
 		static struct option long_options[] = {
 			/* Top-level Options */
-			{"xml",  1, 0, 'X'},
+			{F_CRM_DATA,  1, 0, 'X'},
 			{"help", 0, 0, 0},
       
 			{0, 0, 0, 0}

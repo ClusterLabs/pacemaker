@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.14 2004/12/16 14:34:17 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.15 2005/01/12 13:40:55 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -120,11 +120,11 @@ main(int argc, char **argv)
 		{"local",	 0, 0, 'l'},
 		{"sync-call",	 0, 0, 's'},
 		{"host",	 0, 0, 'h'},
-		{"xml",          1, 0, 'X'},
+		{F_CRM_DATA,          1, 0, 'X'},
 		{"verbose",      0, 0, 'V'},
 		{"help",         0, 0, '?'},
 		{"reference",    1, 0, 0},
-		{"timeout",	 1, 0, 't'},
+		{XML_ATTR_TIMEOUT,	 1, 0, 't'},
 
 		/* common options */
 		{XML_ATTR_ID, 1, 0, 'i'},
@@ -491,7 +491,7 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_ISMASTER,'M');
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_SYNC,   'S');
 	fprintf(stream, "\nXML data\n");
-	fprintf(stream, "\t--%s (-%c) <string>\t\n", "xml", 'X');
+	fprintf(stream, "\t--%s (-%c) <string>\t\n", F_CRM_DATA, 'X');
 	fprintf(stream, "\nAdvanced Options\n");
 	fprintf(stream, "\t--%s (-%c)\tsend command to specified host."
 		" Applies to %s and %s commands only\n", "host", 'h',

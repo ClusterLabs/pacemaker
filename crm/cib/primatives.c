@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.5 2005/01/05 11:22:17 andrew Exp $ */
+/* $Id: primatives.c,v 1.6 2005/01/12 13:40:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -466,7 +466,7 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 	} else {
 		crm_verbose("Found node <%s id=%s> to update", object_name, object_id);
 
-		replace = xmlGetProp(new_obj, "replace");
+		replace = xmlGetProp(new_obj, XML_CIB_ATTR_REPLACE);
 		
 		if(replace != NULL) {
 			xmlNodePtr remove = find_xml_node(equiv_node, replace);
@@ -477,8 +477,8 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 				remove->doc = NULL;
 				free_xml(remove);	
 			}
-			xmlUnsetProp(new_obj, "replace");
-			xmlUnsetProp(equiv_node, "replace");
+			xmlUnsetProp(new_obj, XML_CIB_ATTR_REPLACE);
+			xmlUnsetProp(equiv_node, XML_CIB_ATTR_REPLACE);
 		}
 		
 		if(safe_str_eq(XML_CIB_TAG_STATE, object_name)){
@@ -552,7 +552,7 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 			clear_stonith = TRUE;
 			clear_shutdown = TRUE;			
 			
-		} else if(strcmp(local_prop_name, "source") == 0) {
+		} else if(strcmp(local_prop_name, XML_CIB_ATTR_SOURCE) == 0) {
 			source = local_prop_value;
 			
 		} else {
@@ -583,7 +583,7 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 	
 	if(any_updates) {
 		set_node_tstamp(target);
-		set_xml_property_copy(target, "source", source);
+		set_xml_property_copy(target, XML_CIB_ATTR_SOURCE, source);
 	}
 	
 }

@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.44 2004/12/05 16:35:09 andrew Exp $ */
+/* $Id: ccm.c,v 1.45 2005/01/12 13:40:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -454,7 +454,8 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	int lpc;
 	int node_list_size;
 
-	crm_info("trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
+	crm_info("-----------------------");
+	crm_debug("trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
 	       "new_idx=%d, old_idx=%d",
 	       oc->m_instance,
 	       oc->m_n_member,
@@ -464,17 +465,13 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	       oc->m_in_idx,
 	       oc->m_out_idx);
 	
-	crm_info("NODES IN THE PRIMARY MEMBERSHIP");
-	
 	node_list_size = oc->m_n_member;
 	for(lpc=0; lpc<node_list_size; lpc++) {
-		crm_info("\t%s [nodeid=%d, born=%d]",
+		crm_info("\tCURRENT: %s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_memb_idx+lpc].node_uname,
 		       oc->m_array[oc->m_memb_idx+lpc].node_id,
 		       oc->m_array[oc->m_memb_idx+lpc].node_born_on);
 
-		crm_trace("%s ? %s", fsa_our_uname,
-			  oc->m_array[oc->m_memb_idx+lpc].node_uname);
 		if(safe_str_eq(fsa_our_uname,
 			       oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
 			member = TRUE;
@@ -484,28 +481,17 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	
 	if (member == FALSE) {
 		crm_warn("MY NODE IS NOT IN CCM THE MEMBERSHIP LIST");
-	} else {
-		crm_info("MY NODE ID IS %d", member_id);
 	}
 	
-	
-	crm_info("NEW MEMBERS");
-	if (oc->m_n_in==0) 
-		crm_info("\tNONE");
-	
 	for(lpc=0; lpc<oc->m_n_in; lpc++) {
-		crm_info("\t%s [nodeid=%d, born=%d]",
+		crm_info("\tNEW:     %s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_in_idx+lpc].node_uname,
 		       oc->m_array[oc->m_in_idx+lpc].node_id,
 		       oc->m_array[oc->m_in_idx+lpc].node_born_on);
 	}
 	
-	crm_info("MEMBERS LOST");
-	if (oc->m_n_out==0) 
-		crm_info("\tNONE");
-	
 	for(lpc=0; lpc<oc->m_n_out; lpc++) {
-		crm_info("\t%s [nodeid=%d, born=%d]",
+		crm_info("\tLOST:    %s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_out_idx+lpc].node_uname,
 		       oc->m_array[oc->m_out_idx+lpc].node_id,
 		       oc->m_array[oc->m_out_idx+lpc].node_born_on);

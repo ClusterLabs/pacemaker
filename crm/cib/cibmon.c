@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.4 2005/01/05 11:21:40 andrew Exp $ */
+/* $Id: cibmon.c,v 1.5 2005/01/12 13:40:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -282,7 +282,7 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_ISMASTER,'M');
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_SYNC,   'S');
 	fprintf(stream, "\nXML data\n");
-	fprintf(stream, "\t--%s (-%c) <string>\t\n", "xml", 'X');
+	fprintf(stream, "\t--%s (-%c) <string>\t\n", F_CRM_DATA, 'X');
 	fprintf(stream, "\nAdvanced Options\n");
 	fprintf(stream, "\t--%s (-%c)\tsend command to specified host."
 		" Applies to %s and %s commands only\n", "host", 'h',

@@ -3,7 +3,7 @@
   <synapse id="0">
     <action_set>
       <pseudo_event id="6" rsc_id="rsc1" operation="start" allow_fail="false">
-        <resource id="rsc1" priority="1.0" max_incarnations="5" max_per_node="2"/>
+        <resource id="rsc1" priority="1.0" incarnation_max="5" incarnation_node_max="2"/>
         <args/>
       </pseudo_event>
     </action_set>
@@ -15,8 +15,8 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <pseudo_event id="7" rsc_id="rsc1" operation="started" allow_fail="false">
-        <resource id="rsc1" priority="1.0" max_incarnations="5" max_per_node="2"/>
+      <pseudo_event id="7" rsc_id="rsc1" operation="running" allow_fail="false">
+        <resource id="rsc1" priority="1.0" incarnation_max="5" incarnation_node_max="2"/>
         <args/>
       </pseudo_event>
     </action_set>
@@ -32,7 +32,7 @@
   <synapse id="2">
     <action_set>
       <pseudo_event id="8" rsc_id="rsc1" operation="stop" allow_fail="false">
-        <resource id="rsc1" priority="1.0" max_incarnations="5" max_per_node="2"/>
+        <resource id="rsc1" priority="1.0" incarnation_max="5" incarnation_node_max="2"/>
         <args/>
       </pseudo_event>
     </action_set>
@@ -41,7 +41,7 @@
   <synapse id="3">
     <action_set>
       <pseudo_event id="9" rsc_id="rsc1" operation="stopped" allow_fail="false">
-        <resource id="rsc1" priority="1.0" max_incarnations="5" max_per_node="2"/>
+        <resource id="rsc1" priority="1.0" incarnation_max="5" incarnation_node_max="2"/>
         <args/>
       </pseudo_event>
     </action_set>

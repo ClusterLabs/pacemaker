@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.18 2005/01/10 14:29:03 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.19 2005/01/12 13:41:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,7 +26,7 @@
 #define XML_ATTR_NUMPEERS		"num_peers"
 #define XML_ATTR_HAVE_QUORUM		"have_quorum"
 #define XML_ATTR_GENERATION		"epoche"
-#define XML_ATTR_NUMUPDATES		"updates"
+#define XML_ATTR_NUMUPDATES		"num_updates"
 #define XML_ATTR_TIMEOUT		"timeout"
 #define XML_ATTR_TSTAMP			"timestamp"
 #define XML_ATTR_VERSION		"version"
@@ -38,7 +38,6 @@
 #define XML_ATTR_FILTER_PRIORITY	"priority_filter"
 #define XML_ATTR_VERBOSE		"verbose"
 #define XML_ATTR_OP			"op"
-#define XML_ATTR_TRUEOP			"true_op"
 
 #define XML_BOOLEAN_TRUE		"true"
 #define XML_BOOLEAN_FALSE		"false"
@@ -49,6 +48,7 @@
 
 /*---- top level tags/attrs */
 #define XML_MSG_TAG			"crm_message"
+#define XML_MSG_TAG_DATA		"msg_data"
 #define XML_ATTR_REQUEST		"request"
 #define XML_ATTR_RESPONSE		"response"
 
@@ -60,7 +60,7 @@
 #define XML_ATTR_SYSCC			"sys_cc"
 #define XML_ATTR_HOSTFROM		"host_from"
 #define XML_ATTR_HOSTTO			"host_to"
-#define XML_ATTR_REFERENCE		"crm_msg_reference"
+#define XML_ATTR_REFERENCE		"reference"
 
 #define XML_FAIL_TAG_RESOURCE		"failed_resource"
 
@@ -84,6 +84,7 @@
 #define XML_FAILCIB_ATTR_REASON		"reason"
 
 /*---- CIB specific tags/attrs */
+#define XML_CIB_TAG_SECTION_ALL		"all"
 #define XML_CIB_TAG_CONFIGURATION	"configuration"
 #define XML_CIB_TAG_STATUS       	"status"
 #define XML_CIB_TAG_RESOURCES		"resources"
@@ -92,23 +93,35 @@
 #define XML_CIB_TAG_CRMCONFIG   	"crm_config"
 
 #define XML_CIB_TAG_STATE         	"node_state"
-#define XML_CIB_TAG_RESOURCE      	"resource"
 #define XML_CIB_TAG_NODE          	"node"
 #define XML_CIB_TAG_CONSTRAINT    	"constraint"
 #define XML_CIB_TAG_NVPAIR        	"nv_pair"
 
+#define XML_CIB_TAG_RESOURCE	  	"resource"
+#define XML_RSC_ATTR_STOPFAIL	   	"on_stopfail"
+#define XML_RSC_ATTR_RESTART	  	"restart_type"
+#define XML_RSC_ATTR_START_TIMEOUT	"start_timeout"
+#define XML_RSC_ATTR_STOP_TIMEOUT	"stop_timeout"
+#define XML_RSC_ATTR_ORDERED		"ordered"
+#define XML_RSC_ATTR_INTERLEAVE		"interleave"
+#define XML_RSC_ATTR_INCARNATION	"incarnation"
+#define XML_RSC_ATTR_INCARNATION_MAX	"incarnation_max"
+#define XML_RSC_ATTR_INCARNATION_NODEMAX	"incarnation_node_max"
+
 #define XML_CIB_TAG_LRM		  	"lrm"
 #define XML_LRM_TAG_RESOURCES     	"lrm_resources"
 #define XML_LRM_TAG_RESOURCE     	"lrm_resource"
-#define XML_LRM_TAG_AGENT		"lrm_agent"
 #define XML_LRM_TAG_AGENTS	     	"lrm_agents"
+#define XML_LRM_TAG_AGENT		"lrm_agent"
+#define XML_AGENT_ATTR_CLASS		"class"
+#define XML_LRM_TAG_ATTRIBUTES		"attributes"
+
+#define XML_CIB_ATTR_REPLACE       	"replace"
+#define XML_CIB_ATTR_SOURCE       	"source"
 
 #define XML_CIB_ATTR_HEALTH       	"health"
 #define XML_CIB_ATTR_WEIGHT       	"weight"
 #define XML_CIB_ATTR_PRIORITY     	"priority"
-#define XML_CIB_ATTR_RESTIMEOUT   	"res_timeout"
-#define XML_CIB_ATTR_MAXINSTANCE  	"max_instances"
-#define XML_CIB_ATTR_INSTANCE     	"instance"
 #define XML_CIB_ATTR_CLEAR        	"clear_on"
 #define XML_CIB_ATTR_SOURCE       	"source"
 
@@ -122,20 +135,40 @@
 #define XML_CIB_ATTR_CLEAR_SHUTDOWN 	"clear_shutdown"
 #define XML_CIB_ATTR_STONITH	    	"stonith"
 #define XML_CIB_ATTR_CLEAR_STONITH  	"clear_stonith"
-#define XML_CIB_ATTR_INCARNATION_MAX	"incarnation_max"
-#define XML_CIB_ATTR_INCARNATION	"incarnation"
 
 #define XML_LRM_ATTR_TASK		"operation"
 #define XML_LRM_ATTR_TARGET		"on_node"
 #define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
-#define XML_LRM_ATTR_DISCARD		"discard"
-#define XML_LRM_ATTR_RUNNABLE		"runnable"
-#define XML_LRM_ATTR_OPTIONAL		"optional"
 #define XML_LRM_ATTR_RSCSTATE		"rsc_state"
 #define XML_LRM_ATTR_RSCID		"rsc_id"
 #define XML_LRM_ATTR_LASTOP		"last_op"
 #define XML_LRM_ATTR_OPSTATUS		"op_status"
-#define XML_LRM_ATTR_RC		"rc_code"
+#define XML_LRM_ATTR_RC			"rc_code"
+
+#define XML_TAG_GRAPH			"transition_graph"
+#define XML_GRAPH_TAG_RSC_OP		"rsc_op"
+#define XML_GRAPH_TAG_PSEUDO_EVENT	"pseudo_event"
+#define XML_GRAPH_TAG_CRM_EVENT		"crm_event"
+
+#define XML_TAG_RULE			"rule"
+#define XML_RULE_ATTR_SCORE		"score"
+#define XML_RULE_ATTR_RESULT		"result"
+#define XML_RULE_ATTR_BOOLEAN_OP	"boolean_op"
+
+#define XML_TAG_EXPRESSION		"expression"
+#define XML_EXPR_ATTR_ATTRIBUTE		"attribute"
+#define XML_EXPR_ATTR_OPERATION		"operation"
+#define XML_EXPR_ATTR_VALUE		"value"
+#define XML_EXPR_ATTR_TYPE		"type"
+
+#define XML_CONS_TAG_RSC_DEPEND		"rsc_dependancy"
+#define XML_CONS_TAG_RSC_ORDER		"rsc_order"
+#define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
+#define XML_CONS_ATTR_FROM		"from"
+#define XML_CONS_ATTR_TO		"to"
+#define XML_CONS_ATTR_ACTION		"action"
+#define XML_CONS_ATTR_SYMETRICAL	"symetrical"
+
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
 #define XML_NVPAIR_ATTR_VALUE        	"value"
@@ -146,6 +179,13 @@
 #define XML_STRENGTH_VAL_MUSTNOT	"must_not"
 
 #define XML_NODE_ATTR_STATE		"state"
+
+#define XML_CONFIG_ATTR_DC_BEAT		"dc_heartbeat"
+#define XML_CONFIG_ATTR_DC_DEADTIME	"dc_deadtime"
+#define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown_escalation"
+#define XML_CONFIG_ATTR_REANNOUNCE	"join_reannouce"
+
+#define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 
 #include <libxml/tree.h> 
 

@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.11 2004/12/16 14:34:16 andrew Exp $ */
+/* $Id: cib.h,v 1.12 2005/01/12 13:41:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -139,6 +139,10 @@ enum cib_section {
 #define T_CIB_PRE_NOTIFY	"cib_pre_notify"
 #define T_CIB_POST_NOTIFY	"cib_post_notify"
 #define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
+
+#define cib_channel_ro	"cib_ro"
+#define cib_channel_rw	"cib_rw"
+#define cib_channel_callback	"cib_callback"
 
 typedef struct cib_s  cib_t;
 

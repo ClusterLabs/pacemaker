@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.24 2005/01/10 14:24:50 andrew Exp $ */
+/* $Id: graph.c,v 1.25 2005/01/12 13:40:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -215,7 +215,7 @@ action2xml(action_t *action, gboolean as_input)
 	switch(action->task) {
 		case stonith_node:
 		case shutdown_crm:
-			action_xml = create_xml_node(NULL, "crm_event");
+			action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
 			set_xml_property_copy(
 				action_xml, XML_ATTR_ID, crm_itoa(action->id));
@@ -226,9 +226,9 @@ action2xml(action_t *action, gboolean as_input)
 			break;
 		default:
 			if(action->pseudo) {
-				action_xml = create_xml_node(NULL,"pseudo_event");
+				action_xml = create_xml_node(NULL,XML_GRAPH_TAG_PSEUDO_EVENT);
 			} else {
-				action_xml = create_xml_node(NULL, "rsc_op");
+				action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
 			}
 
 			if(!as_input) {
@@ -266,7 +266,7 @@ action2xml(action_t *action, gboolean as_input)
 		action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
 
 	set_xml_property_copy(
-		action_xml, "timeout", action->timeout);
+		action_xml, XML_ATTR_TIMEOUT, action->timeout);
 	
 	if(as_input) {
 		return action_xml;

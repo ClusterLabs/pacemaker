@@ -351,7 +351,7 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 	crm_debug("[F_ORIG=%s]", ha_msg_value(msg, F_ORIG));
 	crm_debug("[F_TO=%s]",   ha_msg_value(msg, F_TO));
 	crm_debug("[F_COMMENT=%s]", ha_msg_value(msg, F_COMMENT));
-	crm_debug("[F_XML=%s]",  ha_msg_value(msg, "xml"));
+	crm_debug("[F_XML=%s]",  ha_msg_value(msg, F_CRM_DATA));
 /*    crm_debug("[F_=%s]", ha_msg_value(ha_msg, F_)); */
 #endif
 	
@@ -360,7 +360,7 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 		       ha_msg_value(msg, F_TYPE));
 		return NULL;
 	}
-	xml = ha_msg_value(msg, "xml");
+	xml = ha_msg_value(msg, F_CRM_DATA);
 	if (xml == NULL) {
 		crm_info("No XML attached to this message.");
 		return NULL;

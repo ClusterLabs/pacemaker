@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.6 2005/01/10 14:29:03 andrew Exp $ */
+/* $Id: main.c,v 1.7 2005/01/12 13:40:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -179,15 +179,15 @@ init_start(void)
 	}
 	
 	was_error = init_server_ipc_comms(
-		crm_strdup("cib_callback"), cib_client_connect,
+		crm_strdup(cib_channel_callback), cib_client_connect,
 		default_ipc_connection_destroy);
 
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup("cib_ro"), cib_client_connect,
+		crm_strdup(cib_channel_ro), cib_client_connect,
 		default_ipc_connection_destroy);
 
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup("cib_rw"), cib_client_connect,
+		crm_strdup(cib_channel_rw), cib_client_connect,
 		default_ipc_connection_destroy);
 
 

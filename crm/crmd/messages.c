@@ -399,7 +399,7 @@ send_dc_heartbeat(const char *xml_text)
 	struct ha_msg *msg = ha_msg_new(3); 
 	ha_msg_add(msg, F_TYPE, T_CRM);
 	ha_msg_add(msg, F_COMMENT, "A CRM  message");
-	if(ha_msg_add(msg, "xml", xml_text) == HA_FAIL) {
+	if(ha_msg_add(msg, F_CRM_DATA, xml_text) == HA_FAIL) {
 		crm_err("Could not add xml to HA message");
 		return HA_FAIL;
 	}
@@ -790,7 +790,7 @@ handle_request(xmlNodePtr stored_msg)
 		}
 #endif
 		
-	} else if(strcmp(op, "init_shutdown") == 0) {
+	} else if(strcmp(op, CRM_OP_LOCAL_SHUTDOWN) == 0) {
 		
 		crm_shutdown(SIGTERM);
 		/*next_input = I_SHUTDOWN; */
@@ -814,13 +814,13 @@ handle_request(xmlNodePtr stored_msg)
 		/* probably better to do this via signals on the
 		 * local node
 		 */
-	} else if(strcmp(op, "debug_inc") == 0) {
+	} else if(strcmp(op, CRM_OP_DEBUG_UP) == 0) {
 		int level = get_crm_log_level();
 		set_crm_log_level(level+1);
 		crm_info("Debug set to %d (was %d)",
 			 get_crm_log_level(), level);
 		
-	} else if(strcmp(op, "debug_dec") == 0) {
+	} else if(strcmp(op, CRM_OP_DEBUG_DOWN) == 0) {
 		int level = get_crm_log_level();
 		set_crm_log_level(level-1);
 		crm_info("Debug set to %d (was %d)",
@@ -1058,7 +1058,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 			crm_xml_devel(root, "Bad message was");
 			
 		} else {
-			if(ha_msg_add(msg, "xml", xml_text) == HA_FAIL) {
+			if(ha_msg_add(msg, F_CRM_DATA, xml_text) == HA_FAIL) {
 				crm_err("Could not add xml to HA message");
 				all_is_good = FALSE;
 			}

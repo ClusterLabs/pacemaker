@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.2 2004/12/22 13:31:27 andrew Exp $ */
+/* $Id: callbacks.c,v 1.3 2005/01/12 13:41:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -159,7 +159,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		crm_trace("Initializing graph...");
 		initialize_graph();
 
-		graph = find_xml_node(msg, "transition_graph");
+		graph = find_xml_node(msg, XML_TAG_GRAPH);
 		crm_trace("Unpacking graph...");
 		unpack_graph(graph);
 		crm_trace("Initiating transition...");
@@ -177,7 +177,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		initialize_graph();
 
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
-		crm_err("Received quit message, terminating");
+		crm_info("Received quit message, terminating");
 		exit(0);
 		
 	} else if(in_transition == FALSE) {

@@ -100,12 +100,12 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 	if(type == cib_command) {
 		cib->state = cib_connected_command;
 		native->command_channel = init_client_ipc_comms_nodispatch(
-			"cib_rw");
+			cib_channel_rw);
 
 	} else {
 		cib->state = cib_connected_query;
 		native->command_channel = init_client_ipc_comms_nodispatch(
-			"cib_ro");
+			cib_channel_ro);
 	}
 
 	if(native->command_channel == NULL) {
@@ -121,7 +121,7 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 	if(rc == cib_ok) {
 		crm_trace("Connecting callback channel");
 		native->callback_source = init_client_ipc_comms(
-			"cib_callback", cib_native_dispatch, cib, &(native->callback_channel));
+			cib_channel_callback, cib_native_dispatch, cib, &(native->callback_channel));
 		
 		if(native->callback_channel == NULL) {
 			crm_err("Connection to callback channel failed");
@@ -334,7 +334,7 @@ cib_native_perform_op(
 	cib->call_id++;
 
 	crm_debug("Sending message to CIB service");
-	cl_log_message(op_msg);
+/* 	cl_log_message(op_msg); */
 	rc = msg2ipcchan(op_msg, native->command_channel);
 	ha_msg_del(op_msg);
 	

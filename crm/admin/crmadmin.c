@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.17 2004/12/15 10:21:29 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.18 2005/01/12 13:40:55 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -117,7 +117,7 @@ main(int argc, char **argv)
 		{"help", 0, 0, '?'},
 		{"silent", 0, 0, 's'},
 		{"reference", 1, 0, 0},
-		{"timeout", 1, 0, 't'},
+		{XML_ATTR_TIMEOUT, 1, 0, 't'},
 
 		/* daemon options */
 		{"kill", 1, 0, 'K'},  /* stop a node */
@@ -442,7 +442,7 @@ do_work(ll_cluster_t * hb_cluster)
 		sys_to = CRM_SYSTEM_CRMD;
 
 		set_xml_property_copy(
-			msg_options, XML_ATTR_OP, "init_shutdown");
+			msg_options, XML_ATTR_OP, CRM_OP_LOCAL_SHUTDOWN);
 		
 		set_xml_property_copy(
 			msg_options, XML_ATTR_TIMEOUT, "0");
@@ -457,7 +457,7 @@ do_work(ll_cluster_t * hb_cluster)
 		 */
 		sys_to = CRM_SYSTEM_CRMD;
 
-		set_xml_property_copy(msg_options, XML_ATTR_OP, "debug_inc");
+		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_DEBUG_UP);
 		set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
 		
 		ret = 0; /* no return message */
@@ -470,7 +470,7 @@ do_work(ll_cluster_t * hb_cluster)
 		 */
 		sys_to = CRM_SYSTEM_CRMD;
 
-		set_xml_property_copy(msg_options, XML_ATTR_OP, "debug_dec");
+		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_DEBUG_DOWN);
 		set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
 		
 		ret = 0; /* no return message */
@@ -587,7 +587,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		} else if (validate_crm_message(xml_root_node,
 					 crm_system_name,
 					 admin_uuid,
-					 "response") == FALSE) {
+					 XML_ATTR_RESPONSE) == FALSE) {
 			crm_info(
 			       "Message was not a CRM response. Discarding.");
 			continue;
@@ -863,9 +863,9 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
 	fprintf(stream, "\nCommands\n");
 	fprintf(stream, "\t--%s (-%c) <node>\t: "
-		"increment the CRMd debug level on <node>\n", "debug_inc",'i');
+		"increment the CRMd debug level on <node>\n", CRM_OP_DEBUG_UP,'i');
 	fprintf(stream, "\t--%s (-%c) <node>\t: "
-		"decrement the CRMd debug level on <node>\n", "debug_dec",'d');
+		"decrement the CRMd debug level on <node>\n", CRM_OP_DEBUG_DOWN,'d');
 	fprintf(stream, "\t--%s (-%c) <node>\t: "
 		"shutdown the CRMd on <node>\n", "kill", 'K');
 	fprintf(stream, "\t--%s (-%c) <node>\t: "

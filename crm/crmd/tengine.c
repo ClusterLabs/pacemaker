@@ -115,67 +115,6 @@ do_te_control(long long action,
 }
 
 static xmlNodePtr te_last_input = NULL;
-static xmlNodePtr te_lastcc = NULL;
-
-/*	 A_TE_COPYTO	*/
-enum crmd_fsa_input
-do_te_copyto(long long action,
-	     enum crmd_fsa_cause cause,
-	     enum crmd_fsa_state cur_state,
-	     enum crmd_fsa_input current_input,
-	     fsa_data_t *msg_data)
-{
-	xmlNodePtr message       = (xmlNodePtr)msg_data->data;
-	xmlNodePtr message_copy  = NULL;
-	xmlNodePtr opts          = NULL;
-	const char *true_op      = NULL;
-
-	if(message != NULL) {
-		crm_xml_devel(message, "[TE input]");
-
-		message_copy = copy_xml_node_recursive(message);
-		opts  = find_xml_node(message_copy, XML_TAG_OPTIONS);
-		true_op = xmlGetProp(opts, XML_ATTR_OP);
-		
-		set_xml_property_copy(opts, XML_ATTR_OP, CRM_OP_EVENTCC);
-		set_xml_property_copy(opts, XML_ATTR_TRUEOP, true_op);
-
-		set_xml_property_copy(
-			message_copy, XML_ATTR_SYSTO, CRM_SYSTEM_TENGINE);
-/* 		crm_xml_devel(message_copy, "[TE input copy]"); */
-	}
-
-	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
-		crm_info("Waiting for the TE to connect");
-		if(message_copy != NULL) {
-			crm_debug("Freeing old data - 1");
-			free_xml(te_lastcc);
-			te_lastcc = message_copy;
-		}
-		crmd_fsa_stall();
-		return I_NULL;		
-
-	}
-
-	if(message_copy == NULL) {
-		message_copy = te_lastcc;
-		te_lastcc = NULL;
-		
-	} else {
-		crm_debug("Freeing old data - 2");
-		free_xml(te_lastcc);
-		te_lastcc = NULL;
-	}
-
-	crm_debug("relaying message to the TE");
-	relay_message(message_copy, FALSE);
-
-	crm_debug("Freeing processed data");
-	free_xml(message_copy);
-	
-	return I_NULL;
-}
-
 
 /*	 A_TE_INVOKE, A_TE_CANCEL	*/
 enum crmd_fsa_input
@@ -205,7 +144,7 @@ do_te_invoke(long long action,
 	}
 	
 	if(action & A_TE_INVOKE) {
-		graph = find_xml_node(msg, "transition_graph");
+		graph = find_xml_node(msg, XML_TAG_GRAPH);
 		if(graph != NULL) {
 			send_request(NULL, graph, CRM_OP_TRANSITION,
 				     NULL, CRM_SYSTEM_TENGINE, NULL);

@@ -49,7 +49,7 @@
 gboolean
 stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 {
-	crm_info("Stopping sub-system \"%s\"", the_subsystem->name);
+	crm_verbose("Stopping sub-system \"%s\"", the_subsystem->name);
 	if (the_subsystem->pid <= 0) {
 		crm_err("Client %s not running yet", the_subsystem->name);
 
@@ -65,7 +65,6 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 		crm_info("Sending quit message to %s.", the_subsystem->name);
 		send_request(NULL,NULL, CRM_OP_QUIT, NULL,
 			     the_subsystem->name, NULL);
-
 	}
 	
 	return TRUE;

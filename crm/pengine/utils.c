@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.51 2004/11/24 15:41:13 andrew Exp $ */
+/* $Id: utils.c,v 1.52 2005/01/12 13:41:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -665,22 +665,22 @@ task2text(enum action_tasks task)
 			result = "no_action";
 			break;
 		case stop_rsc:
-			result = "stop";
+			result = CRMD_RSCSTATE_STOP;
 			break;
 		case stopped_rsc:
-			result = "stopped";
+			result = CRMD_RSCSTATE_STOP_OK;
 			break;
 		case start_rsc:
-			result = "start";
+			result = CRMD_RSCSTATE_START;
 			break;
 		case started_rsc:
-			result = "started";
+			result = CRMD_RSCSTATE_START_OK;
 			break;
 		case shutdown_crm:
-			result = "shutdown_crm";
+			result = CRM_OP_SHUTDOWN;
 			break;
 		case stonith_node:
-			result = "stonith";
+			result = XML_CIB_ATTR_STONITH;
 			break;
 	}
 	
@@ -821,7 +821,7 @@ print_rsc_dependancy(const char *pre_text, rsc_dependancy_t *cons, gboolean deta
 	crm_debug("%s%s%s Constraint %s (%p):",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
-	       "rsc_dependancy", cons->id, cons);
+	       XML_CONS_TAG_RSC_DEPEND, cons->id, cons);
 
 	if(details == FALSE) {
 
@@ -1095,7 +1095,7 @@ set_id(xmlNodePtr xml_obj, const char *prefix, int child)
 	gboolean use_child = TRUE;
 
 	char *new_id   = NULL;
-	const char *id = xmlGetProp(xml_obj, "id");
+	const char *id = xmlGetProp(xml_obj, XML_ATTR_ID);
 	
 	id_len = 1 + strlen(id);
 
@@ -1127,6 +1127,6 @@ set_id(xmlNodePtr xml_obj, const char *prefix, int child)
 			 use_prefix?prefix:"", use_prefix?":":"", id);
 	}
 	
-	set_xml_property_copy(xml_obj, "id", new_id);
+	set_xml_property_copy(xml_obj, XML_ATTR_ID, new_id);
 	crm_free(new_id);
 }

@@ -133,7 +133,7 @@ More details are given in the annotated DTD below.
 
 	  start_timeout	    CDATA #REQUIRED
 	  stop_timeout	    CDATA #REQUIRED
-	  def_timeout	    CDATA #REQUIRED
+	  timeout	    CDATA #REQUIRED
 
 	  on_stopfail	    (ignore|stonith|block)	'block'
 	  restart_type	    (ignore|restart|recover)	'ignore'
@@ -159,8 +159,8 @@ More details are given in the annotated DTD below.
 	  restart_type		(ignore|restart|recover) 'ignore'
 	  ordered		(true|false)		 'true'
 	  interleave		(true|false)		 'false'
-	  max_incarnations	CDATA			 #REQUIRED
-	  max_node_incarnations CDATA			 #REQUIRED>
+	  incarnation_max	CDATA			 #REQUIRED
+	  incarnation_node_max CDATA			 #REQUIRED>
 
 <!ELEMENT master_slave (incarnation)>
 <!ATTLIST master_slave
@@ -324,10 +324,9 @@ More details are given in the annotated DTD below.
 <!ATTLIST expression
 	  id	     CDATA		      #REQUIRED
 	  attribute  CDATA		      #REQUIRED
-	  operation  (lt|gt|lte|gte|eq|ne|exists|notexists|running|not_running)
+	  operation  (lt|gt|lte|gte|eq|ne|exists|not_exists|running|not_running|is_dc|not_dc)
 	  value	     CDATA		      #IMPLIED
 	  type	     (integer|string|version) 'string'>
-
 
 <!ELEMENT metadata ra_entry>
 <!--
@@ -665,7 +664,7 @@ Andrew:
 <!-- need to rationalize the list of operations -->
 <!ELEMENT operation (nvpair*)>
 <!ATTLIST operation
-	  op (noop|bump|query|create|update|delete|erase|store|replace|forward|join_ack|welcome|ping|vote|hello|announce|dc_beat|pe_calc|abort|quit|shutdown_crm|event_cc|te_abort|transition|te_complete|req_shutdown) 'noop'
+	  op (noop|bump|query|create|update|delete|erase|store|replace|forward|join_ack|welcome|ping|vote|hello|announce|dc_beat|pe_calc|abort|quit|event_cc|te_abort|transition|te_complete|start_shutdown|req_shutdown|do_shutdown) 'noop'
 	  verbose	(true|false)	#IMPLIED
 	  timeout	CDATA		#REQUIRED>
 

@@ -60,9 +60,9 @@ int max_lrm_register_fails = 30;
 
 const char *rsc_path[] = 
 {
-	"msg_data",
-	"rsc_op",
-	"resource",
+	XML_MSG_TAG_DATA,
+	XML_GRAPH_TAG_RSC_OP,
+	XML_CIB_TAG_RESOURCE,
 	"instance_attributes",
 	"rsc_parameters"
 };
@@ -257,9 +257,10 @@ build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 			version = "1";
 
 			xml_agent = create_xml_node(
-				xml_agent_list, "lrm_agent");
+				xml_agent_list, XML_LRM_TAG_AGENT);
 			
-			set_xml_property_copy(xml_agent, "class",       class);
+			set_xml_property_copy(
+				xml_agent, XML_AGENT_ATTR_CLASS, class);
 			set_xml_property_copy(xml_agent, XML_ATTR_TYPE, type);
 
 /*			ra_data = g_hashtable_lookup(metadata, type); */
@@ -267,7 +268,9 @@ build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 				xml_metadata = create_xml_node(
 					xml_metadata, "agent_metadata");
 				set_xml_property_copy(
-					xml_metadata, "class",       class);
+					xml_metadata,
+					XML_AGENT_ATTR_CLASS, class);
+
 				set_xml_property_copy(
 					xml_metadata, XML_ATTR_TYPE, type);
 
@@ -278,7 +281,8 @@ build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 				/* extract version */
 			}
 			
-			set_xml_property_copy(xml_agent, "version",     version);
+			set_xml_property_copy(
+				xml_agent, XML_ATTR_VERSION, version);
 
 			)
 		g_list_free(types);
@@ -457,7 +461,7 @@ do_lrm_query(gboolean is_replace)
 	xmlNodePtr xml_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	xmlNodePtr xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
 	xmlNodePtr rsc_list  = create_xml_node(xml_data,XML_LRM_TAG_RESOURCES);
-	xmlNodePtr xml_agent_list = create_xml_node(xml_data, "lrm_agents");
+	xmlNodePtr xml_agent_list = create_xml_node(xml_data, XML_LRM_TAG_AGENTS);
 	xmlNodePtr xml_metadata_list = create_xml_node(xml_data, "metatdata");
 
 	/* Build a list of supported agents and metadata */
@@ -467,7 +471,8 @@ do_lrm_query(gboolean is_replace)
 	build_active_RAs(rsc_list);
 
 	if(is_replace) {
-		set_xml_property_copy(xml_state, "replace", XML_CIB_TAG_LRM);
+		set_xml_property_copy(
+			xml_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
 	}
 
 	set_uuid(xml_state, XML_ATTR_UUID, fsa_our_uname);
@@ -557,13 +562,13 @@ do_lrm_rsc_op(
 	int action_timeout  = 0;
 
 	const char *class = get_xml_attr_nested(
-		msg, rsc_path, DIMOF(rsc_path) -2, "class", TRUE);
+		msg, rsc_path, DIMOF(rsc_path) -2, XML_AGENT_ATTR_CLASS, TRUE);
 	
 	const char *type = get_xml_attr_nested(
 		msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TYPE, TRUE);
 
 	const char *timeout = get_xml_attr_nested(
-		msg, rsc_path, DIMOF(rsc_path) -2, "timeout", FALSE);
+		msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TIMEOUT, FALSE);
 	
 	if(rsc == NULL) {
 		/* add it to the list */
@@ -740,7 +745,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 
 	iter = create_xml_node(update, XML_CIB_TAG_LRM);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
-	iter = create_xml_node(iter,   "lrm_resource");
+	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
 	
 	set_xml_property_copy(iter, XML_ATTR_ID, rsc->id);
 	set_xml_property_copy(iter, XML_LRM_ATTR_LASTOP, op->op_type);

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.29 2005/01/06 11:02:24 andrew Exp $ */
+/* $Id: stages.c,v 1.30 2005/01/12 13:40:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -98,7 +98,7 @@ stage0(xmlNodePtr cib,
 gboolean
 stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
 {
-	crm_info("Processing stage 1");
+	crm_debug("Processing stage 1");
 	
 	slist_iter(
 		node, node_t, nodes, lpc,
@@ -134,7 +134,7 @@ stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
 gboolean
 stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 {
-	crm_info("Processing stage 2");
+	crm_debug("Processing stage 2");
 	
 	if(no_color != NULL) {
 		crm_free(no_color->details);
@@ -167,7 +167,7 @@ stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 gboolean
 stage3(GListPtr colors)
 {
-	crm_info("Processing stage 3");
+	crm_debug("Processing stage 3");
 	/* not sure if this is a good idea or not */
 	if(g_list_length(colors) > max_valid_nodes) {
 		/* we need to consolidate some */
@@ -183,7 +183,7 @@ stage3(GListPtr colors)
 gboolean
 stage4(GListPtr colors)
 {
-	crm_info("Processing stage 4");
+	crm_debug("Processing stage 4");
 
 	slist_iter(
 		color, color_t, colors, lpc,
@@ -249,7 +249,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 
 	action_t *down_op = NULL;
 	action_t *stonith_op = NULL;
-	crm_info("Processing stage 6");
+	crm_debug("Processing stage 6");
 
 	slist_iter(
 		node, node_t, nodes, lpc,
@@ -301,7 +301,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 gboolean
 stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 {
-	crm_info("Processing stage 7");
+	crm_debug("Processing stage 7");
 
 	slist_iter(
 		order, order_constraint_t, ordering_constraints, lpc,
@@ -347,8 +347,8 @@ stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 gboolean
 stage8(GListPtr resources, GListPtr actions, xmlNodePtr *graph)
 {
-	crm_info("Processing stage 8");
-	*graph = create_xml_node(NULL, "transition_graph");
+	crm_debug("Processing stage 8");
+	*graph = create_xml_node(NULL, XML_TAG_GRAPH);
 	set_xml_property_copy(
 		*graph, "global_timeout", transition_timeout);
 	

@@ -414,16 +414,16 @@ do_read_config(long long action,
 		if(name == NULL || value == NULL) {
 			continue;
 			
-		} else if(safe_str_eq(name, "dc_heartbeat")) {
+		} else if(safe_str_eq(name, XML_CONFIG_ATTR_DC_BEAT)) {
 			dc_heartbeat->period_ms = atoi(value);
 			
-		} else if(safe_str_eq(name, "dc_deadtime")) {
+		} else if(safe_str_eq(name, XML_CONFIG_ATTR_DC_DEADTIME)) {
 			election_trigger->period_ms = atoi(value);
 
-		} else if(safe_str_eq(name, "shutdown_escalation")) {
+		} else if(safe_str_eq(name, XML_CONFIG_ATTR_FORCE_QUIT)) {
 			shutdown_escalation_timer->period_ms = atoi(value);
 
-		} else if(safe_str_eq(name, "join_reannouce")) {
+		} else if(safe_str_eq(name, XML_CONFIG_ATTR_REANNOUNCE)) {
 			fsa_join_reannouce = atoi(value);
 
 		}

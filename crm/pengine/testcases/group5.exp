@@ -44,7 +44,7 @@
   </synapse>
   <synapse id="3">
     <action_set>
-      <pseudo_event id="10" rsc_id="rsc2" operation="started" allow_fail="false">
+      <pseudo_event id="10" rsc_id="rsc2" operation="running" allow_fail="false">
         <resource id="rsc2" priority="1.0"/>
         <args/>
       </pseudo_event>
@@ -186,7 +186,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="10" rsc_id="rsc2" operation="started" allow_fail="false"/>
+        <pseudo_event id="10" rsc_id="rsc2" operation="running" allow_fail="false"/>
       </trigger>
       <trigger>
         <rsc_op id="13" rsc_id="rsc3" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>

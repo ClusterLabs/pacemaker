@@ -12,7 +12,7 @@
   <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" result="can">
-	  <expression attribute="id" operation="notexists"/>
+	  <expression attribute="id" operation="not_exists"/>
 	</rule>
       </rsc_location>
   </constraints>

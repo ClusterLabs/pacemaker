@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.10 2005/01/10 14:29:03 andrew Exp $ */
+/* $Id: messages.c,v 1.11 2005/01/12 13:40:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -192,7 +192,7 @@ cib_process_query(
 	set_xml_property_copy(*answer, XML_ATTR_SECTION, section);
 	set_xml_property_copy(*answer, "generated_on", cib_our_uname);
 
-	if (safe_str_eq("all", section)) {
+	if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
 		section = NULL;
 	} 
 
@@ -300,10 +300,10 @@ cib_update_counter(xmlNodePtr xml_obj, const char *field, gboolean reset)
 		set_connected_peers(xml_obj);
 		if(cib_have_quorum) {
 			set_xml_property_copy(
-				xml_obj, XML_ATTR_HAVE_QUORUM, "true");
+				xml_obj, XML_ATTR_HAVE_QUORUM, XML_BOOLEAN_TRUE);
 		} else {
 			set_xml_property_copy(
-				xml_obj, XML_ATTR_HAVE_QUORUM, "false");
+				xml_obj, XML_ATTR_HAVE_QUORUM, XML_BOOLEAN_FALSE);
 		}
 	}
 	
@@ -328,7 +328,7 @@ cib_process_replace(
 	if (options & cib_verbose) {
 		verbose = TRUE;
 	}
-	if(safe_str_eq("all", section)) {
+	if(safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
 		section = NULL;
 	}
 	
@@ -418,7 +418,7 @@ cib_process_modify(
 	if (options & cib_verbose) {
 		verbose = TRUE;
 	}
-	if(safe_str_eq("all", section)) {
+	if(safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
 		section = NULL;
 	}
 
@@ -592,7 +592,7 @@ createCibFragmentAnswer(const char *section, xmlNodePtr failed)
 
 	if (section == NULL
 		   || strlen(section) == 0
-		   || strcmp("all", section) == 0) {
+		   || strcmp(XML_CIB_TAG_SECTION_ALL, section) == 0) {
 
 		cib = get_the_CIB();
 		if(cib != NULL) {

@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.28 2005/01/05 11:27:19 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.29 2005/01/12 13:40:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -359,15 +359,15 @@ enum crmd_fsa_input {
 #define	A_TE_START		0x0000200000000000ULL
 #define	A_TE_STOP		0x0000400000000000ULL
 #define	A_TE_CANCEL		0x0000800000000000ULL
-#define	A_TE_COPYTO		0x0001000000000000ULL
+
 
 /* -- Policy Engine actions -- */
 	/* Calculate the next state for the cluster.  This is only
 	 * invoked once per needed calculation.
 	 */
-#define	A_PE_INVOKE		0x0002000000000000ULL
-#define	A_PE_START		0x0004000000000000ULL
-#define	A_PE_STOP		0x0008000000000000ULL
+#define	A_PE_INVOKE		0x0001000000000000ULL
+#define	A_PE_START		0x0002000000000000ULL
+#define	A_PE_STOP		0x0004000000000000ULL
 /* -- Misc actions -- */
 	/* Add a system generate "block" so that resources arent moved
 	 * to or are activly moved away from the affected node.  This

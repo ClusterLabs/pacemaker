@@ -69,7 +69,7 @@ do_test attrs1 "string: eq (and)	"
 do_test attrs2 "string: lt / gt (and)"
 do_test attrs3 "string: ne (or)	"
 do_test attrs4 "string: exists	"
-do_test attrs5 "string: notexists	"
+do_test attrs5 "string: not_exists	"
 
 echo ""
 do_test nodefail1 "Node Fail - Fence	"

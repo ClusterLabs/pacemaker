@@ -730,27 +730,95 @@ cib_section2enum(const char *a_section)
 int
 cib_compare_generation(xmlNodePtr left, xmlNodePtr right)
 {
-	int int_gen_l = -1;
-	int int_gen_r = -1;
-	const char *gen_l = xmlGetProp(left, XML_ATTR_GENERATION);
-	const char *gen_r = xmlGetProp(right, XML_ATTR_GENERATION);
+	int int_elem_l = -1;
+	int int_elem_r = -1;
+	const char *elem_l = xmlGetProp(left, XML_ATTR_GENERATION);
+	const char *elem_r = xmlGetProp(right, XML_ATTR_GENERATION);
 
-	if(gen_l != NULL) int_gen_l = atoi(gen_l);
-	if(gen_r != NULL) int_gen_r = atoi(gen_r);
+	if(elem_l != NULL) int_elem_l = atoi(elem_l);
+	if(elem_r != NULL) int_elem_r = atoi(elem_r);
 
 	crm_xml_trace(left, "left");
 	crm_xml_trace(left, "right");
 	
-	if(int_gen_l < int_gen_r) {
-		crm_trace("lt");
+	if(int_elem_l < int_elem_r) {
+		crm_trace("lt - XML_ATTR_GENERATION");
 		return -1;
 		
-	} else if(int_gen_l > int_gen_r) {
-		crm_trace("gt");
+	} else if(int_elem_l > int_elem_r) {
+		crm_trace("gt - XML_ATTR_GENERATION");
 		return 1;
 	}
 
-	crm_trace("eq");
+	int_elem_l = -1;
+	int_elem_r = -1;
+	elem_l = xmlGetProp(left, XML_ATTR_NUMUPDATES);
+	elem_r = xmlGetProp(right, XML_ATTR_NUMUPDATES);
+
+	if(elem_l != NULL) int_elem_l = atoi(elem_l);
+	if(elem_r != NULL) int_elem_r = atoi(elem_r);
+
+	crm_xml_trace(left, "left");
+	crm_xml_trace(left, "right");
+	
+	if(int_elem_l < int_elem_r) {
+		crm_trace("lt - XML_ATTR_NUMUPDATES");
+		return -1;
+		
+	} else if(int_elem_l > int_elem_r) {
+		crm_trace("gt - XML_ATTR_NUMUPDATES");
+		return 1;
+	}
+	
+	crm_trace("eq - XML_ATTR_NUMUPDATES");
+
+	int_elem_l = -1;
+	int_elem_r = -1;
+	elem_l = xmlGetProp(left, XML_ATTR_NUMPEERS);
+	elem_r = xmlGetProp(right, XML_ATTR_NUMPEERS);
+
+	if(elem_l != NULL) int_elem_l = atoi(elem_l);
+	if(elem_r != NULL) int_elem_r = atoi(elem_r);
+
+	crm_xml_trace(left, "left");
+	crm_xml_trace(left, "right");
+	
+	if(int_elem_l < int_elem_r) {
+		crm_trace("lt - XML_ATTR_NUMPEERS");
+		return -1;
+		
+	} else if(int_elem_l > int_elem_r) {
+		crm_trace("gt - XML_ATTR_NUMPEERS");
+		return 1;
+	}
+	
+	crm_trace("eq - XML_ATTR_NUMPEERS");
+
+	elem_l = xmlGetProp(left, XML_ATTR_NUMPEERS);
+	elem_r = xmlGetProp(right, XML_ATTR_NUMPEERS);
+	if(elem_l == NULL && elem_r == NULL) {
+
+	} else if(elem_l == NULL) {
+		crm_trace("lt - XML_ATTR_NUMPEERS");
+		return -1;
+
+	} else if(elem_r == NULL) {
+		crm_trace("gt - XML_ATTR_NUMPEERS");
+		return 1;
+
+	} else if(safe_str_neq(elem_l, elem_r)) {
+
+		if(safe_str_eq(elem_l, XML_BOOLEAN_TRUE)) {
+			crm_trace("gt - XML_ATTR_NUMPEERS");
+			return 1;
+			
+		} else if(safe_str_eq(elem_r, XML_BOOLEAN_TRUE)) {
+			crm_trace("lt - XML_ATTR_NUMPEERS");
+			return -1;
+		}
+	}
+	
+	crm_trace("eq - XML_ATTR_NUMPEERS");
 	return 0;
 }
 
@@ -771,7 +839,7 @@ xmlNodePtr
 cib_get_generation(cib_t *cib)
 {
 	xmlNodePtr the_cib = get_cib_copy(cib);
-	xmlNodePtr generation = create_xml_node(NULL, "generation_tuple");
+	xmlNodePtr generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
 	copy_in_properties(generation, the_cib);
 	free_xml(the_cib);

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.16 2004/12/22 13:31:27 andrew Exp $ */
+/* $Id: unpack.c,v 1.17 2005/01/12 13:41:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -85,7 +85,7 @@ unpack_graph(xmlNodePtr xml_graph)
 
 		synapse_t *new_synapse = NULL;
 
-		crm_debug("looking in synapse %s", xmlGetProp(synapse, "id"));
+		crm_debug("looking in synapse %s", xmlGetProp(synapse, XML_ATTR_ID));
 		
 		crm_malloc(new_synapse, sizeof(synapse_t));
 		new_synapse->id        = num_synapses++;
@@ -96,7 +96,7 @@ unpack_graph(xmlNodePtr xml_graph)
 		
 		graph = g_list_append(graph, new_synapse);
 
-		crm_debug("look for actions in synapse %s", xmlGetProp(synapse, "id"));
+		crm_debug("look for actions in synapse %s", xmlGetProp(synapse, XML_ATTR_ID));
 
 		xml_child_iter(
 			synapse, actions, "action_set",
@@ -121,7 +121,7 @@ unpack_graph(xmlNodePtr xml_graph)
 			
 			);
 
-		crm_debug("look for inputs in synapse %s", xmlGetProp(synapse, "id"));
+		crm_debug("look for inputs in synapse %s", xmlGetProp(synapse, XML_ATTR_ID));
 
 		xml_child_iter(
 			synapse, inputs, "inputs",
@@ -166,7 +166,7 @@ unpack_graph(xmlNodePtr xml_graph)
 action_t*
 unpack_action(xmlNodePtr xml_action) 
 {
-	const char *tmp        = xmlGetProp(xml_action, "id");
+	const char *tmp        = xmlGetProp(xml_action, XML_ATTR_ID);
 	action_t   *action     = NULL;
 	xmlNodePtr action_copy = NULL;
 
@@ -191,17 +191,17 @@ unpack_action(xmlNodePtr xml_action)
 	action->type     = action_type_rsc;
 	action->xml      = action_copy;
 	
-	if(safe_str_eq(action_copy->name, "rsc_op")) {
+	if(safe_str_eq(action_copy->name, XML_GRAPH_TAG_RSC_OP)) {
 		action->type = action_type_rsc;
 
-	} else if(safe_str_eq(action_copy->name, "pseudo_event")) {
+	} else if(safe_str_eq(action_copy->name, XML_GRAPH_TAG_PSEUDO_EVENT)) {
 		action->type = action_type_pseudo;
 
-	} else if(safe_str_eq(action_copy->name, "crm_event")) {
+	} else if(safe_str_eq(action_copy->name, XML_GRAPH_TAG_CRM_EVENT)) {
 		action->type = action_type_crm;
 	}
 
-	tmp = xmlGetProp(action_copy, "timeout");
+	tmp = xmlGetProp(action_copy, XML_ATTR_TIMEOUT);
 	if(tmp != NULL) {
 		action->timeout = atoi(tmp);
 	}
@@ -215,7 +215,7 @@ unpack_action(xmlNodePtr xml_action)
 	action->timer->action    = action;
 
 	tmp = xmlGetProp(action_copy, "can_fail");
-	if(safe_str_eq(tmp, "true")) {
+	if(safe_str_eq(tmp, XML_BOOLEAN_TRUE)) {
 		action->can_fail = TRUE;
 	}
 

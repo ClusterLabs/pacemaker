@@ -23,6 +23,7 @@ $match_all=0;
 $max_lines=0;
 $log_file="/var/log/messages";
 $start_pos=-1;
+$end_pos=-1;
 $verbose=0;
 
 @search_for = ();
@@ -32,9 +33,16 @@ while ( $_ = @ARGV[0], /^-/ ) {
     shift;
     if ( /^--search/ ) {
 	$do_search = 1;
+	
+    } elsif ( /^--dump/ ) {
+	$do_dump = 1;
 
     } elsif ( /^-p/ ) {
 	$start_pos = $ARGV[0];
+	shift;
+	
+    } elsif ( /^-ep/ ) {
+	$end_pos = $ARGV[0];
 	shift;
 
     } elsif ( /^-v/ ) {
@@ -85,6 +93,10 @@ if( $do_search eq 1 ) {
 	print STDOUT "Search returned: $rc\n";
     }
     exit $rc;
+
+} elsif( $do_dump eq 1 ) {
+    file_dup();
+
 }
 
 sub remote_command() {
@@ -101,6 +113,43 @@ sub remote_command() {
     return $rc;
 }
 
+sub file_dup() {
+    open(LOG, $log_file);
+
+    print STDOUT "Duping $log_file from position $start_pos to $end_pos...\n";
+    if( $start_pos > 0 ) {
+	if( $verbose > 0) {
+	    print STDOUT "Starting search in $log_file from position $start_pos...\n";
+	}
+	seek LOG, $start_pos, 0
+    } else {
+	if( $verbose > 0) {
+	    print STDOUT "Starting search in $log_file from EOF...\n";
+	}
+	seek LOG, 0, 2;
+    }
+
+    for(;;)
+    {
+#	print STDOUT "Checking $log_file for more data...\n";
+	for($curpos = tell LOG; $_ = <LOG>; $curpos = tell LOG) 
+	{
+	    my $lpc = 0;
+	    $line = $_;
+	    $num_lines = $num_lines + 1;
+	    
+	    print STDOUT "[".$num_lines."]: ".$line;
+	 }
+
+	$cur_pos = tell LOG;
+#	print STDOUT "[".$num_lines." - ".$cur_pos."]: ".$line;
+	if($end_pos eq -1) {
+	    return;
+	} elsif ($cur_pos gt $end_pos) {
+	    return;
+	}
+    }
+}
 
 sub string_search() {
 

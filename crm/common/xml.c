@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.21 2004/12/15 10:20:26 andrew Exp $ */
+/* $Id: xml.c,v 1.22 2005/01/12 13:40:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -238,9 +238,9 @@ void
 copy_in_properties(xmlNodePtr target, xmlNodePtr src)
 {
 	if(src == NULL) {
-		crm_err("No node to copy properties from");
+		crm_warn("No node to copy properties from");
 	} else if (src->properties == NULL) {
-		crm_info("No properties to copy");
+		crm_debug("No properties to copy");
 	} else if (target == NULL) {
 		crm_err("No node to copy properties into");
 	} else {

@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.37 2004/12/16 14:34:19 andrew Exp $ */
+/* $Id: tengine.c,v 1.38 2005/01/12 13:41:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -161,16 +161,16 @@ match_graph_event(action_t *action, xmlNodePtr event)
 	} else if(safe_str_neq(this_action, event_action)) {	
 		crm_devel("action mismatch: %s", event_action);
 		
-	} else if(safe_str_eq(action->xml->name, "rsc_op")) {
-		crm_devel("rsc_op");
+	} else if(safe_str_eq(action->xml->name, XML_GRAPH_TAG_RSC_OP)) {
+		crm_devel(XML_GRAPH_TAG_RSC_OP);
 		if(safe_str_eq(this_rsc, event_rsc)) {
 			match = action;
 		} else {
 			crm_devel("bad rsc (%s) != (%s)", this_rsc, event_rsc);
 		}
 		
-	} else if(safe_str_eq(action->xml->name, "crm_event")) {
-		crm_devel("crm_event");
+	} else if(safe_str_eq(action->xml->name, XML_GRAPH_TAG_CRM_EVENT)) {
+		crm_devel(XML_GRAPH_TAG_CRM_EVENT);
 		match = action;
 		
 	} else {
@@ -315,10 +315,7 @@ initiate_action(action_t *action)
 
 	const char *on_node   = NULL;
 	const char *id        = NULL;
-	const char *runnable  = NULL;
-	const char *optional  = NULL;
 	const char *task      = NULL;
-	const char *discard   = NULL;
 	const char *timeout   = NULL;
 	const char *destination = NULL;
 	
@@ -326,13 +323,10 @@ initiate_action(action_t *action)
 	xmlNodePtr rsc_op  = NULL;
 #endif
 
-	discard  = xmlGetProp(action->xml, XML_LRM_ATTR_DISCARD);
 	on_node  = xmlGetProp(action->xml, XML_LRM_ATTR_TARGET);
 	id       = xmlGetProp(action->xml, XML_ATTR_ID);
-	runnable = xmlGetProp(action->xml, XML_LRM_ATTR_RUNNABLE);
-	optional = xmlGetProp(action->xml, XML_LRM_ATTR_OPTIONAL);
 	task     = xmlGetProp(action->xml, XML_LRM_ATTR_TASK);
-	timeout  = xmlGetProp(action->xml, "timeout");
+	timeout  = xmlGetProp(action->xml, XML_ATTR_TIMEOUT);
 
 	if(id == NULL || strlen(id) == 0
 	   || task == NULL || strlen(task) == 0) {
@@ -383,11 +377,11 @@ initiate_action(action_t *action)
 		  <rsc_op id="operation number" on_node="" task="">
 		  <resource>...</resource>
 		*/
-		data    = create_xml_node(NULL, "msg_data");
-		rsc_op  = create_xml_node(data, "rsc_op");
+		data    = create_xml_node(NULL, XML_MSG_TAG_DATA);
+		rsc_op  = create_xml_node(data, XML_GRAPH_TAG_RSC_OP);
 		options = create_xml_node(NULL, XML_TAG_OPTIONS);
 
-		set_xml_property_copy(options, XML_ATTR_OP, "rsc_op");
+		set_xml_property_copy(options, XML_ATTR_OP, XML_GRAPH_TAG_RSC_OP);
 		
 		set_xml_property_copy(rsc_op, XML_ATTR_ID, id);
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TASK, task);

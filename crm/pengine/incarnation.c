@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.4 2005/01/10 14:24:50 andrew Exp $ */
+/* $Id: incarnation.c,v 1.5 2005/01/12 13:40:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,8 +29,8 @@ typedef struct incarnation_variant_data_s
 {
 		resource_t *self;
 
-		int max_incarnation;
-		int max_incarnation_node;
+		int incarnation_max;
+		int incarnation_max_node;
 
 		int active_incarnation;
 
@@ -57,10 +57,10 @@ void incarnation_unpack(resource_t *rsc)
 	incarnation_variant_data_t *incarnation_data = NULL;
 	resource_t *self = NULL;
 
-	const char *ordered         = xmlGetProp(xml_obj, "ordered");
-	const char *interleave      = xmlGetProp(xml_obj, "interleave");
-	const char *max_incarn      = xmlGetProp(xml_obj, "max_incarnations");
-	const char *max_incarn_node = xmlGetProp(xml_obj, "max_per_node");
+	const char *ordered         = xmlGetProp(xml_obj, XML_RSC_ATTR_ORDERED);
+	const char *interleave      = xmlGetProp(xml_obj, XML_RSC_ATTR_INTERLEAVE);
+	const char *max_incarn      = xmlGetProp(xml_obj, XML_RSC_ATTR_INCARNATION_MAX);
+	const char *max_incarn_node = xmlGetProp(xml_obj, XML_RSC_ATTR_INCARNATION_NODEMAX);
 
 	crm_verbose("Processing resource %s...", rsc->id);
 
@@ -69,8 +69,8 @@ void incarnation_unpack(resource_t *rsc)
 	incarnation_data->interleave           = FALSE;
 	incarnation_data->ordered              = FALSE;
 	incarnation_data->active_incarnation   = 0;
-	incarnation_data->max_incarnation      = crm_atoi(max_incarn,     "1");
-	incarnation_data->max_incarnation_node = crm_atoi(max_incarn_node,"1");
+	incarnation_data->incarnation_max      = crm_atoi(max_incarn,     "1");
+	incarnation_data->incarnation_max_node = crm_atoi(max_incarn_node,"1");
 
 	/* this is a bit of a hack - but simplifies everything else */
 	copy_in_properties(xml_self, xml_obj);
@@ -83,18 +83,18 @@ void incarnation_unpack(resource_t *rsc)
 		return;
 	}
 
-	if(safe_str_eq(interleave, "true")) {
+	if(safe_str_eq(interleave, XML_BOOLEAN_TRUE)) {
 		incarnation_data->interleave = TRUE;
 	}
-	if(safe_str_eq(ordered, "true")) {
+	if(safe_str_eq(ordered, XML_BOOLEAN_TRUE)) {
 		incarnation_data->ordered = TRUE;
 	}
 	
 	xml_child_iter(
 		xml_obj, xml_obj_child, XML_CIB_TAG_RESOURCE,
 
-		char *inc_max = crm_itoa(incarnation_data->max_incarnation);
-		for(lpc = 0; lpc < incarnation_data->max_incarnation; lpc++) {
+		char *inc_max = crm_itoa(incarnation_data->incarnation_max);
+		for(lpc = 0; lpc < incarnation_data->incarnation_max; lpc++) {
 			resource_t *child_rsc = NULL;
 			xmlNodePtr child_copy = copy_xml_node_recursive(
 				xml_obj_child);
@@ -109,10 +109,10 @@ void incarnation_unpack(resource_t *rsc)
 				
 				set_xml_property_copy(
 					child_rsc->extra_attrs,
-					XML_CIB_ATTR_INCARNATION, inc_num);
+					XML_RSC_ATTR_INCARNATION, inc_num);
 				set_xml_property_copy(
 					child_rsc->extra_attrs,
-					XML_CIB_ATTR_INCARNATION_MAX, inc_max);
+					XML_RSC_ATTR_INCARNATION_MAX, inc_max);
 
 				crm_xml_debug(child_rsc->extra_attrs,
 					     "creating extra attributes");
@@ -134,7 +134,7 @@ void incarnation_unpack(resource_t *rsc)
 		);
 	
 	crm_verbose("Added %d children to resource %s...",
-		    incarnation_data->max_incarnation, rsc->id);
+		    incarnation_data->incarnation_max, rsc->id);
 	
 	rsc->variant_opaque = incarnation_data;
 }
@@ -194,9 +194,9 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 	/* generate up to max_nodes * incarnation_node_max constraints */
 	lpc = 0;
 	crm_info("Distributing %d incarnations over %d nodes",
-		  incarnation_data->max_incarnation, max_nodes);
+		  incarnation_data->incarnation_max, max_nodes);
 
-	for(; lpc < max_nodes && lpc < incarnation_data->max_incarnation; lpc++) {
+	for(; lpc < max_nodes && lpc < incarnation_data->incarnation_max; lpc++) {
 
 		child_lh = child_0;
 		incarnation_data->active_incarnation++;
@@ -215,9 +215,9 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 		
 		child_lh = child_rh;
 		
-		for(lpc2 = 1; lpc2 < incarnation_data->max_incarnation_node; lpc2++) {
+		for(lpc2 = 1; lpc2 < incarnation_data->incarnation_max_node; lpc2++) {
 			int offset = lpc + (lpc2 * max_nodes);
-			if(offset >= incarnation_data->max_incarnation) {
+			if(offset >= incarnation_data->incarnation_max) {
 				break;
 			}
 			crm_info("Incarnation %d will run on the same node as %d",

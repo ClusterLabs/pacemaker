@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.34 2004/12/15 10:20:26 andrew Exp $ */
+/* $Id: crm.h,v 1.35 2005/01/12 13:41:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -90,13 +90,16 @@
 #define CRM_OP_PECALC		"pe_calc"
 #define CRM_OP_ABORT		"abort"
 #define CRM_OP_QUIT		"quit"
-#define CRM_OP_SHUTDOWN 	"shutdown_crm"
+#define CRM_OP_LOCAL_SHUTDOWN 	"start_shutdown"
+#define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
+#define CRM_OP_SHUTDOWN 	"do_shutdown"
 #define CRM_OP_EVENTCC		"event_cc"
 #define CRM_OP_TEABORT		"te_abort"
 #define CRM_OP_TRANSITION	"transition"
 #define CRM_OP_TECOMPLETE	"te_complete"
-#define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
 #define CRM_OP_REGISTER		"register"
+#define CRM_OP_DEBUG_UP		"debug_inc"
+#define CRM_OP_DEBUG_DOWN	"debug_dec"
 
 #define CRMD_STATE_ACTIVE	"member"
 #define CRMD_STATE_INACTIVE	"down"
