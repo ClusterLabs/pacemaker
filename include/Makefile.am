@@ -28,7 +28,7 @@ if CHECKPOINTD_BUILD
 CHECKPOINTD_DIR = checkpointd
 endif
 if CRM_BUILD
-CRM_DIR = crm
+USE_CRM_DIR = @CRM_DIR@
 endif
 if LRM_BUILD
 LRM_DIR = lrm
@@ -40,4 +40,4 @@ include_HEADERS	        = apphb.h apphb_notify.h HBauth.h HBcomm.h \
 			  recoverymgr.h
 
 SUBDIRS                 = clplumbing ocf pils saf $(CHECKPOINTD_DIR) \
-			  stonith $(LRM_DIR) $(CRM_DIR)
+			  stonith $(LRM_DIR) $(USE_CRM_DIR)
