@@ -39,13 +39,13 @@ do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/nu
 
 # start HA anew
 do_cmd echo "wait for HA to start"
-do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
+do_cmd ./testutils.pl -l ${logfile} --search -a -m 1500 -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
 cts_assert "Startup of Heartbeat on ${test_node_1} failed."
 
 do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
 
 do_cmd echo "wait for CRMd to start"
-do_cmd ./testutils.pl --search  -a -m 1500 -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}"
+do_cmd ./testutils.pl -l ${logfile} --search  -a -m 1500 -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}"
 cts_assert "CRMd startup on ${test_node_1} failed."
 
 do_cmd wait_for_state S_IDLE 30 $test_node_1 
@@ -64,6 +64,9 @@ cts_assert "S_IDLE not reached on $test_node_1 after CIB create"
 
 do_cmd is_running rsc1 $test_node_1
 cts_assert "rsc1 NOT running"
+
+do_cmd wait_for_state S_IDLE 30 $test_node_1 
+cts_assert "S_IDLE not maintained on $test_node_1!"
 
 do_cmd is_running rsc2 $test_node_1
 cts_assert "rsc2 NOT running"

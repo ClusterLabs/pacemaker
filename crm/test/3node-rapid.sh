@@ -36,15 +36,15 @@ do_cmd remote_cmd $INIT_USER $test_node_2 "rm -f $HAVAR_DIR/crm/cib*.xml"
 do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
 
 do_cmd echo "wait for HA to start"
-do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
+do_cmd ./testutils.pl -l ${logfile} --search -a -m 1500 -s "${test_node_1} ccm(.*): info: Hostname: ${test_node_1}" -s "${test_node_1} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_1} heartbeat(.*)Client(.*) respawning too fast"
 cts_assert "Startup of Heartbeat on ${test_node_1} failed."
 
 do_cmd echo "wait for HA to start"
-do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_2} ccm(.*): info: Hostname: ${test_node_2}" -s "${test_node_2} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_2} heartbeat(.*)Client(.*) respawning too fast"
+do_cmd ./testutils.pl -l ${logfile} --search -a -m 1500 -s "${test_node_2} ccm(.*): info: Hostname: ${test_node_2}" -s "${test_node_2} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_2} heartbeat(.*)Client(.*) respawning too fast"
 cts_assert "Startup of Heartbeat on ${test_node_2} failed."
 
 do_cmd echo "wait for HA to start"
-do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_3} ccm(.*): info: Hostname: ${test_node_3}" -s "${test_node_3} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_3} heartbeat(.*)Client(.*) respawning too fast"
+do_cmd ./testutils.pl -l ${logfile} --search -a -m 1500 -s "${test_node_3} ccm(.*): info: Hostname: ${test_node_3}" -s "${test_node_3} heartbeat(.*) info: Starting(.*)lrmd" -e "${test_node_3} heartbeat(.*)Client(.*) respawning too fast"
 cts_assert "Startup of Heartbeat on ${test_node_3} failed."
 
 
@@ -53,7 +53,7 @@ do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null
 do_cmd remote_cmd $CRMD_USER $test_node_3 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
 
 do_cmd echo "wait for CRMd to start on each node"
-do_cmd ./testutils.pl --search  -a -m 1500 -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}" -s "${test_node_2} crmd(.*): info:(.*)FSA Hostname: ${test_node_2}" -s "${test_node_3} crmd(.*): info:(.*)FSA Hostname: ${test_node_3}"
+do_cmd ./testutils.pl -l ${logfile} --search  -a -m 1500 -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}" -s "${test_node_2} crmd(.*): info:(.*)FSA Hostname: ${test_node_2}" -s "${test_node_3} crmd(.*): info:(.*)FSA Hostname: ${test_node_3}"
 cts_assert "CRMd startup on failed."
 
 do_cmd wait_for_state S_IDLE 30 $test_node_1 
@@ -123,7 +123,7 @@ cts_assert "rsc2 NOT running on $test_node_2"
 do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmadmin -K $test_node_1 &
 
 do_cmd echo "Looking for transition messages"
-do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_2} crmd(.*) State transition (.*) -> \"S_ELECTION\"" -s "${test_node_1} crmd(.*) State transition (.*) -> \"S_NOT_DC\"" -s "${test_node_1} crmd(.*)State transition (.*) -> \"S_STOPPING\""
+do_cmd ./testutils.pl -l ${logfile} --search -a -m 1500 -s "${test_node_2} crmd(.*) State transition (.*) -> \"S_ELECTION\"" -s "${test_node_1} crmd(.*) State transition (.*) -> \"S_NOT_DC\"" -s "${test_node_1} crmd(.*)State transition (.*) -> \"S_STOPPING\""
 cts_assert "Shutdown of ${test_node_1} followed by stability on ${test_node_2} failed."
 
 do_cmd is_dc $test_node_2 $test_node_2
@@ -141,7 +141,7 @@ cts_assert "rsc2 NOT running on $test_node_2"
 do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmadmin -K $test_node_2 &
 
 do_cmd echo "Looking for transition messages"
-do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_3} crmd(.*) State transition (.*) -> \"S_ELECTION\"" -s "${test_node_2} crmd(.*) State transition (.*) -> \"S_NOT_DC\"" -s "${test_node_2} crmd(.*)State transition (.*) -> \"S_STOPPING\""
+do_cmd ./testutils.pl -l ${logfile} --search -a -m 1500 -s "${test_node_3} crmd(.*) State transition (.*) -> \"S_ELECTION\"" -s "${test_node_2} crmd(.*) State transition (.*) -> \"S_NOT_DC\"" -s "${test_node_2} crmd(.*)State transition (.*) -> \"S_STOPPING\""
 cts_assert "Shutdown of ${test_node_2} followed by stability on ${test_node_3} failed."
 
 do_cmd is_dc $test_node_3
@@ -164,7 +164,7 @@ cts_assert "S_PENDING not reached on $test_node_3!"
 # escalate the shutdown
 do_cmd remote_cmd $CRMD_USER $test_node_3 $HALIB_DIR/crmadmin -K $test_node_3 &
 
-do_cmd ./testutils.pl --search -a -m 1500 -s "${test_node_3} crmd(.*)State transition \"S_PENDING\" -> \"S_STOPPING\""
+do_cmd ./testutils.pl -l ${logfile} --search -a -m 1500 -s "${test_node_3} crmd(.*)State transition \"S_PENDING\" -> \"S_STOPPING\""
 cts_assert "Shutdown of ${test_node_3} failed."
 
 # just in case
