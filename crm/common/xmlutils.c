@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.20 2004/03/26 14:14:25 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.21 2004/03/29 15:32:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,7 +50,6 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	FNIN();
 
 	if (root == NULL) {
-		CRM_DEBUG("Will never find anything in NULL :)");
 		FNRET(NULL);
 	}
 
@@ -148,14 +147,16 @@ get_xml_attr_nested(xmlNodePtr parent,
 {
 	const char *attr_value = NULL;
 	xmlNodePtr attr_parent = NULL;
-	
+
 	if(parent == NULL) {
-		cl_log(LOG_ERR, "Can not find attribute in NULL parent");
+		cl_log(LOG_ERR, "Can not find attribute %s in NULL parent",
+		       attr_name);
 		return NULL;
 	} 
 
-	if(attr_name || strlen(attr_name) == 0) {
-		cl_log(LOG_ERR, "Can not find attribute with no name");
+	if(attr_name == NULL || strlen(attr_name) == 0) {
+		cl_log(LOG_ERR, "Can not find attribute with no name in %s",
+		       xmlGetNodePath(parent));
 		return NULL;
 	}
 	
@@ -210,14 +211,15 @@ set_xml_attr_nested(xmlNodePtr parent,
 	xmlAttrPtr result        = NULL;
 	xmlNodePtr attr_parent   = NULL;
 	xmlNodePtr create_parent = NULL;
-	
+
 	if(parent == NULL && create == FALSE) {
 		cl_log(LOG_ERR, "Can not set attribute in NULL parent");
 		return NULL;
 	} 
 
-	if(attr_name || strlen(attr_name) == 0) {
-		cl_log(LOG_ERR, "Can not set attribute with no name");
+	if(attr_name == NULL || strlen(attr_name) == 0) {
+		cl_log(LOG_ERR, "Can not set attribute to %s with no name",
+		       attr_value);
 		return NULL;
 	}
 
@@ -227,7 +229,9 @@ set_xml_attr_nested(xmlNodePtr parent,
 
 	} else if(length == 0 || node_path == NULL
 		  || *node_path == NULL || strlen(*node_path) == 0) {
-		cl_log(LOG_ERR, "Can not create parent to set attribute on");
+		cl_log(LOG_ERR,
+		       "Can not create parent to set attribute %s=%s on",
+		       attr_name, attr_value);
 		return NULL;
 		
 	} else {
