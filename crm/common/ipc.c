@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.23 2005/02/28 11:04:35 andrew Exp $ */
+/* $Id: ipc.c,v 1.24 2005/03/02 14:02:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -120,13 +120,13 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 
 		if(ipc_client->ch_status != IPC_CONNECT) {
 			crm_err("IPC Channel is no longer connected");
-		} 
-		
+		} else {
+			CRM_DEV_ASSERT(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen);
+		}
 	}	
 
-	crm_log_message_adv(all_is_good?LOG_DEV:LOG_ERR,"outbound.ipc.log",msg);
+	crm_log_message_adv(all_is_good?LOG_DEV:LOG_ERR,"IPC[outbound]",msg);
 
-	CRM_DEV_ASSERT(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen);
 	
 	crm_msg_del(msg);
 	
