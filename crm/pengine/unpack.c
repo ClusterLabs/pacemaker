@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.48 2005/01/12 15:43:20 andrew Exp $ */
+/* $Id: unpack.c,v 1.49 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,7 +26,6 @@
 #include <lrm/lrm_api.h>
 
 #include <glib.h>
-#include <libxml/tree.h>
 
 #include <heartbeat.h> /* for ONLINESTATUS */
 
@@ -44,44 +43,44 @@ extern const char *dc_uuid;
 GListPtr match_attrs(const char *attr, const char *op, const char *value,
 		     const char *type, GListPtr node_list);
 
-gboolean unpack_rsc_to_attr(xmlNodePtr xml_obj,
+gboolean unpack_rsc_to_attr(crm_data_t * xml_obj,
 			    GListPtr rsc_list,
 			    GListPtr node_list,
 			    GListPtr *placement_constraints);
 
-gboolean unpack_rsc_to_node(xmlNodePtr xml_obj,
+gboolean unpack_rsc_to_node(crm_data_t * xml_obj,
 			    GListPtr rsc_list,
 			    GListPtr node_list,
 			    GListPtr *placement_constraints);
 
 gboolean unpack_rsc_order(
-	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints);
+	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints);
 
 gboolean unpack_rsc_dependancy(
-	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints);
+	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints);
 
 gboolean unpack_rsc_location(
-	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
+	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr node_list,
 	GListPtr *ordering_constraints);
 
 gboolean unpack_lrm_rsc_state(
-	node_t *node, xmlNodePtr lrm_state,
+	node_t *node, crm_data_t * lrm_state,
 	GListPtr rsc_list, GListPtr nodes,
 	GListPtr *actions, GListPtr *placement_constraints);
 
-gboolean add_node_attrs(xmlNodePtr attrs, node_t *node);
+gboolean add_node_attrs(crm_data_t * attrs, node_t *node);
 
 gboolean unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
-	xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node);
+	crm_data_t * rsc_entry, resource_t *rsc_lh, node_t *node);
 
 gboolean unpack_failed_resource(GListPtr *placement_constraints, 
-	xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node);
+	crm_data_t * rsc_entry, resource_t *rsc_lh, node_t *node);
 
-gboolean determine_online_status(xmlNodePtr node_state, node_t *this_node);
+gboolean determine_online_status(crm_data_t * node_state, node_t *this_node);
 
-gboolean unpack_lrm_agents(node_t *node, xmlNodePtr agent_list);
+gboolean unpack_lrm_agents(node_t *node, crm_data_t * agent_list);
 
-gboolean is_node_unclean(xmlNodePtr node_state);
+gboolean is_node_unclean(crm_data_t * node_state);
 
 gboolean rsc_dependancy_new(
 	const char *id, enum con_strength strength,
@@ -104,10 +103,10 @@ const void *get_agent_param_metadata(resource_t *rsc, const char *param);
 
 const char *get_agent_param_global(resource_t *rsc, const char *param);
 
-const char *param_value(xmlNodePtr parent, const char *name);
+const char *param_value(crm_data_t * parent, const char *name);
 
 gboolean
-unpack_config(xmlNodePtr config)
+unpack_config(crm_data_t * config)
 {
 	const char *value = NULL;
 	
@@ -136,12 +135,12 @@ unpack_config(xmlNodePtr config)
 }
 
 const char *
-param_value(xmlNodePtr parent, const char *name) 
+param_value(crm_data_t * parent, const char *name) 
 {
-	xmlNodePtr a_default = find_entity(
+	crm_data_t * a_default = find_entity(
 		parent, XML_CIB_TAG_NVPAIR, name, FALSE);
 
-	return xmlGetProp(a_default, XML_NVPAIR_ATTR_VALUE);
+	return crm_element_value(a_default, XML_NVPAIR_ATTR_VALUE);
 }
 
 const char *
@@ -167,8 +166,8 @@ get_agent_param(resource_t *rsc, const char *param)
 const char *
 get_agent_param_rsc(resource_t *rsc, const char *param)
 {
-	xmlNodePtr xml_rsc = rsc->xml;
-	return xmlGetProp(xml_rsc, param);
+	crm_data_t * xml_rsc = rsc->xml;
+	return crm_element_value(xml_rsc, param);
 }
 
 const void *
@@ -188,17 +187,17 @@ get_agent_param_global(resource_t *rsc, const char *param)
 }
 
 gboolean
-unpack_global_defaults(xmlNodePtr defaults)
+unpack_global_defaults(crm_data_t * defaults)
 {
 	return TRUE;
 }
 
 
 gboolean
-unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
+unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 {
 	node_t *new_node   = NULL;
-	xmlNodePtr attrs   = NULL;
+	crm_data_t * attrs   = NULL;
 	const char *id     = NULL;
 	const char *uname  = NULL;
 	const char *type   = NULL;
@@ -207,16 +206,19 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 	xml_child_iter(
 		xml_nodes, xml_obj, XML_CIB_TAG_NODE,
 
-		attrs   = xml_obj->children;
-		id     = xmlGetProp(xml_obj, XML_ATTR_ID);
-		uname  = xmlGetProp(xml_obj, XML_ATTR_UNAME);
-		type   = xmlGetProp(xml_obj, XML_ATTR_TYPE);
-
+		id     = crm_element_value(xml_obj, XML_ATTR_ID);
+		uname  = crm_element_value(xml_obj, XML_ATTR_UNAME);
+		type   = crm_element_value(xml_obj, XML_ATTR_TYPE);
 		crm_verbose("Processing node %s/%s", uname, id);
 
+#ifdef USE_LIBXML
+		attrs   = xml_obj->children;
 		if(attrs != NULL) {
 			attrs = attrs->children;
 		}
+#else
+		abort();
+#endif
 		
 		if(id == NULL) {
 			crm_err("Must specify id tag in <node>");
@@ -259,7 +261,7 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 
 		add_node_attrs(attrs, new_node);
 		*nodes = g_list_append(*nodes, new_node);    
-		crm_verbose("Done with node %s", xmlGetProp(xml_obj, XML_ATTR_UNAME));
+		crm_verbose("Done with node %s", crm_element_value(xml_obj, XML_ATTR_UNAME));
 
 		crm_debug_action(print_node("Added", new_node, FALSE));
 		);
@@ -270,7 +272,7 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 }
 
 gboolean 
-unpack_resources(xmlNodePtr xml_resources,
+unpack_resources(crm_data_t * xml_resources,
 		 GListPtr *resources,
 		 GListPtr *actions,
 		 GListPtr *ordering_constraints,
@@ -287,7 +289,7 @@ unpack_resources(xmlNodePtr xml_resources,
 				print_resource("Added", new_rsc, FALSE));
 		} else {
 			crm_err("Failed unpacking resource %s",
-				xmlGetProp(xml_obj, XML_ATTR_ID));
+				crm_element_value(xml_obj, XML_ATTR_ID));
 		}
 		);
 	
@@ -297,7 +299,7 @@ unpack_resources(xmlNodePtr xml_resources,
 }
 
 gboolean 
-unpack_constraints(xmlNodePtr xml_constraints,
+unpack_constraints(crm_data_t * xml_constraints,
 		   GListPtr nodes, GListPtr resources,
 		   GListPtr *placement_constraints,
 		   GListPtr *ordering_constraints)
@@ -306,28 +308,28 @@ unpack_constraints(xmlNodePtr xml_constraints,
 	xml_child_iter(
 		xml_constraints, xml_obj, NULL,
 
-		const char *id = xmlGetProp(xml_obj, XML_ATTR_ID);
+		const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
 		if(id == NULL) {
 			crm_err("Constraint <%s...> must have an id",
-				xml_obj->name);
+				crm_element_name(xml_obj));
 			continue;
 		}
 
-		crm_verbose("Processing constraint %s %s", xml_obj->name,id);
-		if(safe_str_eq(XML_CONS_TAG_RSC_ORDER, xml_obj->name)) {
+		crm_verbose("Processing constraint %s %s", crm_element_name(xml_obj),id);
+		if(safe_str_eq(XML_CONS_TAG_RSC_ORDER, crm_element_name(xml_obj))) {
 			unpack_rsc_order(
 				xml_obj, resources, ordering_constraints);
 
-		} else if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND, xml_obj->name)) {
+		} else if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj))) {
 			unpack_rsc_dependancy(
 				xml_obj, resources, ordering_constraints);
 
-		} else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION, xml_obj->name)) {
+		} else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj))) {
 			unpack_rsc_location(
 				xml_obj, resources, nodes, placement_constraints);
 
 		} else {
-			crm_err("Unsupported constraint type: %s", xml_obj->name);
+			crm_err("Unsupported constraint type: %s", crm_element_name(xml_obj));
 		}
 		);
 
@@ -376,30 +378,29 @@ rsc2node_new(const char *id, resource_t *rsc,
 /* create +ve rsc_to_node constraints between resources and the nodes they are running on */
 /* anything else? */
 gboolean
-unpack_status(xmlNodePtr status,
+unpack_status(crm_data_t * status,
 	      GListPtr nodes, GListPtr rsc_list,
 	      GListPtr *actions, GListPtr *placement_constraints)
 {
 	const char *uname     = NULL;
 
-	xmlNodePtr lrm_rsc    = NULL;
-	xmlNodePtr lrm_agents = NULL;
-	xmlNodePtr attrs      = NULL;
+	crm_data_t * lrm_rsc    = NULL;
+	crm_data_t * lrm_agents = NULL;
+	crm_data_t * attrs      = NULL;
 	node_t    *this_node  = NULL;
 	
 	crm_verbose("Begining unpack");
 	xml_child_iter(
 		status, node_state, XML_CIB_TAG_STATE,
 
-/*		id         = xmlGetProp(node_state, XML_ATTR_ID); */
-		uname = xmlGetProp(node_state,    XML_ATTR_UNAME);
+/*		id         = crm_element_value(node_state, XML_ATTR_ID); */
+		uname = crm_element_value(node_state,    XML_ATTR_UNAME);
 		attrs = find_xml_node(node_state, XML_LRM_TAG_ATTRIBUTES,FALSE);
 
 		lrm_rsc    = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
 		lrm_agents = find_xml_node(lrm_rsc, XML_LRM_TAG_AGENTS, FALSE);
 
 		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCE, FALSE);
 
 		crm_verbose("Processing node %s", uname);
 		this_node = pe_find_node(nodes, uname);
@@ -434,18 +435,18 @@ unpack_status(xmlNodePtr status,
 }
 
 gboolean
-determine_online_status(xmlNodePtr node_state, node_t *this_node)
+determine_online_status(crm_data_t * node_state, node_t *this_node)
 {
 	gboolean online = FALSE;
-	const char *uname      = xmlGetProp(node_state,XML_ATTR_UNAME);
-/*	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE); */
-	const char *exp_state  = xmlGetProp(node_state,XML_CIB_ATTR_EXPSTATE);
-	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
-	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
-	const char *ccm_state  = xmlGetProp(node_state,XML_CIB_ATTR_INCCM);
-	const char *ha_state   = xmlGetProp(node_state,XML_CIB_ATTR_HASTATE);
-	const char *shutdown   = xmlGetProp(node_state,XML_CIB_ATTR_SHUTDOWN);
-	const char *unclean    = NULL;/*xmlGetProp(node_state,XML_CIB_ATTR_STONITH); */
+	const char *uname      = crm_element_value(node_state,XML_ATTR_UNAME);
+/*	const char *state      = crm_element_value(node_state,XML_NODE_ATTR_STATE); */
+	const char *exp_state  = crm_element_value(node_state,XML_CIB_ATTR_EXPSTATE);
+	const char *join_state = crm_element_value(node_state,XML_CIB_ATTR_JOINSTATE);
+	const char *crm_state  = crm_element_value(node_state,XML_CIB_ATTR_CRMDSTATE);
+	const char *ccm_state  = crm_element_value(node_state,XML_CIB_ATTR_INCCM);
+	const char *ha_state   = crm_element_value(node_state,XML_CIB_ATTR_HASTATE);
+	const char *shutdown   = crm_element_value(node_state,XML_CIB_ATTR_SHUTDOWN);
+	const char *unclean    = NULL;/*crm_element_value(node_state,XML_CIB_ATTR_STONITH); */
 	
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
 	   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
@@ -492,15 +493,15 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 }
 
 gboolean
-is_node_unclean(xmlNodePtr node_state)
+is_node_unclean(crm_data_t * node_state)
 {
-/*	const char *state      = xmlGetProp(node_state,XML_NODE_ATTR_STATE); */
-	const char *uname      = xmlGetProp(node_state,XML_ATTR_UNAME);
-	const char *exp_state  = xmlGetProp(node_state,XML_CIB_ATTR_EXPSTATE);
-	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
-	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
-	const char *ha_state  = xmlGetProp(node_state,XML_CIB_ATTR_HASTATE);
-	const char *ccm_state  = xmlGetProp(node_state,XML_CIB_ATTR_INCCM);
+/*	const char *state      = crm_element_value(node_state,XML_NODE_ATTR_STATE); */
+	const char *uname      = crm_element_value(node_state,XML_ATTR_UNAME);
+	const char *exp_state  = crm_element_value(node_state,XML_CIB_ATTR_EXPSTATE);
+	const char *join_state = crm_element_value(node_state,XML_CIB_ATTR_JOINSTATE);
+	const char *crm_state  = crm_element_value(node_state,XML_CIB_ATTR_CRMDSTATE);
+	const char *ha_state  = crm_element_value(node_state,XML_CIB_ATTR_HASTATE);
+	const char *ccm_state  = crm_element_value(node_state,XML_CIB_ATTR_INCCM);
 
 	if(safe_str_eq(exp_state, CRMD_STATE_INACTIVE)) {
 		crm_debug("Node %s is safely inactive", uname);
@@ -526,7 +527,7 @@ is_node_unclean(xmlNodePtr node_state)
 }
 
 gboolean
-unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
+unpack_lrm_agents(node_t *node, crm_data_t * agent_list)
 {
 	/* if the agent is not listed, remove the node from
 	 * the resource's list of allowed_nodes
@@ -546,9 +547,9 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 			continue;
 		}
 		
-		agent->class   = xmlGetProp(xml_agent, XML_AGENT_ATTR_CLASS);
-		agent->type    = xmlGetProp(xml_agent, XML_ATTR_TYPE);
-		version        = xmlGetProp(xml_agent, XML_ATTR_VERSION);
+		agent->class   = crm_element_value(xml_agent, XML_AGENT_ATTR_CLASS);
+		agent->type    = crm_element_value(xml_agent, XML_ATTR_TYPE);
+		version        = crm_element_value(xml_agent, XML_ATTR_VERSION);
 		agent->version = version?version:"0.0";
 
 		crm_trace("Adding agent %s/%s v%s to node %s",
@@ -566,12 +567,10 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 
 
 gboolean
-unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
+unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 		     GListPtr rsc_list, GListPtr nodes,
 		     GListPtr *actions, GListPtr *placement_constraints)
 {
-	xmlNodePtr rsc_entry  = NULL;
-	
 	const char *rsc_id    = NULL;
 	const char *node_id   = NULL;
 	const char *rsc_state = NULL;
@@ -581,21 +580,20 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 	resource_t *rsc_lh    = NULL;
 	op_status_t  action_status_i = LRM_OP_ERROR;
 
-	while(lrm_rsc != NULL) {
-		rsc_entry = lrm_rsc;
-		lrm_rsc   = lrm_rsc->next;
+	xml_child_iter(
+		lrm_rsc, rsc_entry, XML_LRM_TAG_RESOURCE,
 		
-		rsc_id    = xmlGetProp(rsc_entry, XML_ATTR_ID);
-		node_id   = xmlGetProp(rsc_entry, XML_LRM_ATTR_TARGET);
-		rsc_state = xmlGetProp(rsc_entry, XML_LRM_ATTR_RSCSTATE);
-		op_status = xmlGetProp(rsc_entry, XML_LRM_ATTR_OPSTATUS);
-		last_rc   = xmlGetProp(rsc_entry, XML_LRM_ATTR_RC);
-		last_op   = xmlGetProp(rsc_entry, XML_LRM_ATTR_LASTOP);
+		rsc_id    = crm_element_value(rsc_entry, XML_ATTR_ID);
+		node_id   = crm_element_value(rsc_entry, XML_LRM_ATTR_TARGET);
+		rsc_state = crm_element_value(rsc_entry, XML_LRM_ATTR_RSCSTATE);
+		op_status = crm_element_value(rsc_entry, XML_LRM_ATTR_OPSTATUS);
+		last_rc   = crm_element_value(rsc_entry, XML_LRM_ATTR_RC);
+		last_op   = crm_element_value(rsc_entry, XML_LRM_ATTR_LASTOP);
 		
 		rsc_lh    = pe_find_resource(rsc_list, rsc_id);
 
 		crm_verbose("[%s] Processing %s on %s (%s)",
-			    rsc_entry->name, rsc_id, node_id, rsc_state);
+			    crm_element_name(rsc_entry), rsc_id, node_id, rsc_state);
 
 		if(rsc_lh == NULL) {
 			crm_err("Could not find a match for resource"
@@ -665,15 +663,16 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 				crm_warn("Dont know what to do for cancelled ops yet");
 				break;
 		}
-	}
+		);
+	
 	return TRUE;
 }
 
 gboolean
 unpack_failed_resource(GListPtr *placement_constraints, 
-		       xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node)
+		       crm_data_t * rsc_entry, resource_t *rsc_lh, node_t *node)
 {
-	const char *last_op  = xmlGetProp(rsc_entry, XML_LRM_ATTR_LASTOP);
+	const char *last_op  = crm_element_value(rsc_entry, XML_LRM_ATTR_LASTOP);
 	crm_debug("Unpacking failed action %s on %s", last_op, rsc_lh->id);
 	
 	/* make sure we dont allocate the resource here again*/
@@ -722,9 +721,9 @@ unpack_failed_resource(GListPtr *placement_constraints,
 
 gboolean
 unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
-			xmlNodePtr rsc_entry, resource_t *rsc_lh, node_t *node)
+			crm_data_t * rsc_entry, resource_t *rsc_lh, node_t *node)
 {
-	const char *last_op  = xmlGetProp(rsc_entry, XML_LRM_ATTR_LASTOP);
+	const char *last_op  = crm_element_value(rsc_entry, XML_LRM_ATTR_LASTOP);
 	
 	crm_debug("Unpacking healthy action %s on %s", last_op, rsc_lh->id);
 
@@ -849,16 +848,16 @@ order_new(resource_t *lh_rsc, enum action_tasks lh_action_task, action_t *lh_act
 }
 
 gboolean
-unpack_rsc_dependancy(xmlNodePtr xml_obj,
+unpack_rsc_dependancy(crm_data_t * xml_obj,
 		  GListPtr rsc_list,
 		  GListPtr *ordering_constraints)
 {
 	enum con_strength strength_e = pecs_ignore;
 
-	const char *id_lh    = xmlGetProp(xml_obj, XML_CONS_ATTR_FROM);
-	const char *id       = xmlGetProp(xml_obj, XML_ATTR_ID);
-	const char *id_rh    = xmlGetProp(xml_obj, XML_CONS_ATTR_TO);
-	const char *type     = xmlGetProp(xml_obj, XML_ATTR_TYPE);
+	const char *id_lh    = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
+	const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
+	const char *id_rh    = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
+	const char *type     = crm_element_value(xml_obj, XML_ATTR_TYPE);
 
 	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
 	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
@@ -894,18 +893,18 @@ unpack_rsc_dependancy(xmlNodePtr xml_obj,
 
 gboolean
 unpack_rsc_order(
-	xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints)
+	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints)
 {
 	gboolean symetrical_bool = TRUE;
 	gboolean action_is_start = TRUE;
 	gboolean type_is_after   = TRUE;
 	
-	const char *id         = xmlGetProp(xml_obj, XML_ATTR_ID);
-	const char *id_lh      = xmlGetProp(xml_obj, XML_CONS_ATTR_FROM);
-	const char *id_rh      = xmlGetProp(xml_obj, XML_CONS_ATTR_TO);
-	const char *action     = xmlGetProp(xml_obj, XML_CONS_ATTR_ACTION);
-	const char *symetrical = xmlGetProp(xml_obj, XML_CONS_ATTR_SYMETRICAL);
-	const char *type       = xmlGetProp(xml_obj, XML_ATTR_TYPE);
+	const char *id         = crm_element_value(xml_obj, XML_ATTR_ID);
+	const char *id_lh      = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
+	const char *id_rh      = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
+	const char *action     = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
+	const char *symetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMETRICAL);
+	const char *type       = crm_element_value(xml_obj, XML_ATTR_TYPE);
 
 	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
 	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
@@ -915,7 +914,7 @@ unpack_rsc_order(
 		return FALSE;
 
 	} else if(id == NULL) {
-		crm_err("%s constraint must have an id", xml_obj->name);
+		crm_err("%s constraint must have an id", crm_element_name(xml_obj));
 		return FALSE;
 		
 	} else if(rsc_lh == NULL || rsc_rh == NULL) {
@@ -1095,14 +1094,15 @@ match_attrs(const char *attr, const char *op, const char *value,
 }
 
 gboolean
-add_node_attrs(xmlNodePtr attrs, node_t *node)
+add_node_attrs(crm_data_t * attrs, node_t *node)
 {
 	const char *name  = NULL;
 	const char *value = NULL;
-	
-	while(attrs != NULL){
-		name  = xmlGetProp(attrs, XML_NVPAIR_ATTR_NAME);
-		value = xmlGetProp(attrs, XML_NVPAIR_ATTR_VALUE);
+
+	xml_child_iter(
+		attrs, attr, NULL,
+		name  = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+		value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
 			
 		if(name != NULL
 		   && value != NULL
@@ -1118,8 +1118,7 @@ add_node_attrs(xmlNodePtr attrs, node_t *node)
 					    crm_strdup(name),
 					    crm_strdup(value));
 		}
-		attrs = attrs->next;
-	}	
+		);
  	g_hash_table_insert(node->details->attrs,
 			    crm_strdup(XML_ATTR_UNAME),
 			    crm_strdup(node->details->uname));
@@ -1145,7 +1144,7 @@ add_node_attrs(xmlNodePtr attrs, node_t *node)
 
 gboolean
 unpack_rsc_location(
-	xmlNodePtr xml_obj,
+	crm_data_t * xml_obj,
 	GListPtr rsc_list, GListPtr node_list, GListPtr *placement_constraints)
 {
 /*
@@ -1175,8 +1174,8 @@ unpack_rsc_location(
        
 */
 	gboolean were_rules = FALSE;
-	const char *id_lh   = xmlGetProp(xml_obj, "rsc");
-	const char *id      = xmlGetProp(xml_obj, XML_ATTR_ID);
+	const char *id_lh   = crm_element_value(xml_obj, "rsc");
+	const char *id      = crm_element_value(xml_obj, XML_ATTR_ID);
 	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
 
 	if(rsc_lh == NULL) {
@@ -1193,10 +1192,10 @@ unpack_rsc_location(
 		gboolean do_and     = TRUE;
 		gboolean rule_has_expressions;
 
-		const char *rule_id = xmlGetProp(rule, XML_ATTR_ID);
-		const char *score   = xmlGetProp(rule, XML_RULE_ATTR_SCORE);
-		const char *result  = xmlGetProp(rule, XML_RULE_ATTR_RESULT);
-		const char *boolean = xmlGetProp(rule, XML_RULE_ATTR_BOOLEAN_OP);
+		const char *rule_id = crm_element_value(rule, XML_ATTR_ID);
+		const char *score   = crm_element_value(rule, XML_RULE_ATTR_SCORE);
+		const char *result  = crm_element_value(rule, XML_RULE_ATTR_RESULT);
+		const char *boolean = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
 		GListPtr match_L    = NULL;
 		GListPtr old_list   = NULL;
 		float score_f       = atof(score?score:"0.0");
@@ -1224,18 +1223,18 @@ unpack_rsc_location(
 		xml_child_iter(
 			rule, expr, XML_TAG_EXPRESSION,
 
-			const char *attr  = xmlGetProp(
+			const char *attr  = crm_element_value(
 				expr, XML_EXPR_ATTR_ATTRIBUTE);
-			const char *op    = xmlGetProp(
+			const char *op    = crm_element_value(
 				expr, XML_EXPR_ATTR_OPERATION);
-			const char *value = xmlGetProp(
+			const char *value = crm_element_value(
 				expr, XML_EXPR_ATTR_VALUE);
-			const char *type  = xmlGetProp(
+			const char *type  = crm_element_value(
 				expr, XML_EXPR_ATTR_TYPE);
 			
 			rule_has_expressions = TRUE;
 			crm_trace("processing expression: %s",
-				  xmlGetProp(expr, XML_ATTR_ID));
+				  crm_element_value(expr, XML_ATTR_ID));
 
 			match_L = match_attrs(
 				attr, op, value, type, node_list);
@@ -1267,14 +1266,14 @@ unpack_rsc_location(
 		if(rule_has_expressions == FALSE) {
 			/* feels like a hack */
 			crm_debug("Rule %s had no expressions,"
-				  " adding all nodes", xmlGetProp(rule, XML_ATTR_ID));
+				  " adding all nodes", crm_element_value(rule, XML_ATTR_ID));
 			
 			new_con->node_list_rh = node_list_dup(node_list,FALSE);
 		}
 		
 		if(new_con->node_list_rh == NULL) {
 			crm_warn("No matching nodes for constraint/rule %s/%s",
-				 id, xmlGetProp(rule, XML_ATTR_ID));
+				 id, crm_element_value(rule, XML_ATTR_ID));
 		}
 		
 		crm_debug_action(print_rsc_to_node("Added", new_con, FALSE));

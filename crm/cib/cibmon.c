@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.6 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: cibmon.c,v 1.7 2005/01/26 13:30:55 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -107,9 +107,11 @@ main(int argc, char **argv)
 	cl_log_set_entity(crm_system_name);
 	cl_log_set_facility(LOG_LOCAL7);
 
+#ifdef USE_LIBXML
 	/* docs say only do this once, but in their code they do it every time! */
 	xmlInitParser(); 
-	msg_cibmon_strm = fopen(DEVEL_DIR"/cibmon.log", "w");
+#endif
+	msg_cibmon_strm = fopen(DEVEL_DIR"/cibmon.log", "a");
 
 	while (1) {
 		flag = getopt_long(argc, argv, OPTARGS,
@@ -318,8 +320,8 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	const char *update_s = cl_get_string(msg, F_CIB_UPDATE);
 	const char *pre_update_s = cl_get_string(msg, F_CIB_EXISTING);
 
-	xmlNodePtr update     = string2xml(update_s);
-	xmlNodePtr pre_update = string2xml(pre_update_s);
+	crm_data_t *update     = string2xml(update_s);
+	crm_data_t *pre_update = string2xml(pre_update_s);
 	char *xml_text        = dump_xml_formatted(update);
 
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
@@ -377,8 +379,8 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	const char *update_s = cl_get_string(msg, F_CIB_UPDATE);
 	const char *output_s = cl_get_string(msg, F_CIB_UPDATE_RESULT);
 	
-	xmlNodePtr output = string2xml(output_s);
-	xmlNodePtr update = string2xml(update_s);
+	crm_data_t *output = string2xml(output_s);
+	crm_data_t *update = string2xml(update_s);
 
 	char *xml_text = dump_xml_formatted(output);
 

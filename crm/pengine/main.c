@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.7 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: main.c,v 1.8 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,7 +50,7 @@ const char* crm_system_name = SYS_NAME;
 void usage(const char* cmd, int exit_status);
 int init_start(void);
 void pengine_shutdown(int nsig);
-extern gboolean process_pe_message(xmlNodePtr msg, IPC_Channel *sender);
+extern gboolean process_pe_message(crm_data_t * msg, IPC_Channel *sender);
 
 int
 main(int argc, char ** argv)

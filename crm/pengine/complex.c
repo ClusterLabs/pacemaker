@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.10 2005/01/12 13:40:59 andrew Exp $ */
+/* $Id: complex.c,v 1.11 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -110,17 +110,17 @@ is_active(rsc_to_node_t *cons)
 }
 
 gboolean	
-common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
+common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 {
-	const char *id            = xmlGetProp(xml_obj, XML_ATTR_ID);
-	const char *stopfail      = xmlGetProp(xml_obj, XML_RSC_ATTR_STOPFAIL);
-	const char *restart       = xmlGetProp(xml_obj, XML_RSC_ATTR_RESTART);
-	const char *def_timeout   = xmlGetProp(xml_obj, XML_ATTR_TIMEOUT);
-	const char *start_timeout = xmlGetProp(xml_obj, XML_RSC_ATTR_START_TIMEOUT);
-	const char *stop_timeout  = xmlGetProp(xml_obj, XML_RSC_ATTR_STOP_TIMEOUT);
-	const char *priority      = xmlGetProp(xml_obj, XML_CIB_ATTR_PRIORITY);	
+	const char *id            = crm_element_value(xml_obj, XML_ATTR_ID);
+	const char *stopfail      = crm_element_value(xml_obj, XML_RSC_ATTR_STOPFAIL);
+	const char *restart       = crm_element_value(xml_obj, XML_RSC_ATTR_RESTART);
+	const char *def_timeout   = crm_element_value(xml_obj, XML_ATTR_TIMEOUT);
+	const char *start_timeout = crm_element_value(xml_obj, XML_RSC_ATTR_START_TIMEOUT);
+	const char *stop_timeout  = crm_element_value(xml_obj, XML_RSC_ATTR_STOP_TIMEOUT);
+	const char *priority      = crm_element_value(xml_obj, XML_CIB_ATTR_PRIORITY);	
 	
-	crm_verbose("Processing resource input...");
+	crm_xml_verbose(xml_obj, "Processing resource input...");
 	
 	if(id == NULL) {
 		crm_err("Must specify id tag in <resource>");
@@ -139,10 +139,10 @@ common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 	
 	(*rsc)->id  = id;
 	(*rsc)->xml = xml_obj;
-	(*rsc)->variant = get_resource_type(xml_obj->name);
+	(*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
 	
 	if((*rsc)->variant == pe_unknown) {
-		crm_err("Unknown resource type: %s", xml_obj->name);
+		crm_err("Unknown resource type: %s", crm_element_name(xml_obj));
 		crm_free(*rsc);
 		return FALSE;
 	}
@@ -235,7 +235,7 @@ void common_dump(resource_t *rsc, const char *pre_text, gboolean details)
 		  rsc->provisional?"Provisional ":"",
 		  rsc->runnable?"":"(Non-Startable) ",
 		  rsc->id,
-		  rsc->xml->name,
+		  crm_element_name(rsc->xml),
 		  (double)rsc->priority);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.9 2005/01/12 15:44:24 andrew Exp $ */
+/* $Id: native.c,v 1.10 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,17 +88,17 @@ native_add_running(resource_t *rsc, node_t *node)
 
 void native_unpack(resource_t *rsc)
 {
-	xmlNodePtr xml_obj = rsc->xml;
+	crm_data_t * xml_obj = rsc->xml;
 	native_variant_data_t *native_data = NULL;
-	const char *version  = xmlGetProp(xml_obj, XML_ATTR_VERSION);
+	const char *version  = crm_element_value(xml_obj, XML_ATTR_VERSION);
 	
 	crm_verbose("Processing resource %s...", rsc->id);
 
 	crm_malloc(native_data, sizeof(native_variant_data_t));
 
 	crm_malloc(native_data->agent, sizeof(lrm_agent_t));
-	native_data->agent->class	= xmlGetProp(xml_obj, "class");
-	native_data->agent->type	= xmlGetProp(xml_obj, "type");
+	native_data->agent->class	= crm_element_value(xml_obj, "class");
+	native_data->agent->type	= crm_element_value(xml_obj, "type");
 	native_data->agent->version	= version?version:"0.0";
 	
 	native_data->color		= NULL; 
@@ -624,7 +624,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 }
 
-void native_expand(resource_t *rsc, xmlNodePtr *graph)
+void native_expand(resource_t *rsc, crm_data_t * *graph)
 {
 	slist_iter(
 		action, action_t, rsc->actions, lpc,

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.19 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: unpack.c,v 1.20 2005/01/26 13:31:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,8 +29,8 @@
 #include <sys/stat.h>
 
 cib_t *te_cib_conn = NULL;
-action_t* unpack_action(xmlNodePtr xml_action);
-xmlNodePtr create_shutdown_event(const char *node, int op_status);
+action_t* unpack_action(crm_data_t *xml_action);
+crm_data_t *create_shutdown_event(const char *node, int op_status);
 void set_timer_value(te_timer_t *timer, const char *time, int time_default);
 extern int transition_counter;
 
@@ -52,7 +52,7 @@ set_timer_value(te_timer_t *timer, const char *time, int time_default)
 
 
 gboolean
-unpack_graph(xmlNodePtr xml_graph)
+unpack_graph(crm_data_t *xml_graph)
 {
 /*
 <transition_graph>
@@ -67,11 +67,11 @@ unpack_graph(xmlNodePtr xml_graph)
 	int num_synapses = 0;
 	int num_actions = 0;
 
-	const char *time = xmlGetProp(xml_graph, "transition_timeout");
+	const char *time = crm_element_value(xml_graph, "transition_timeout");
 	set_timer_value(transition_timer, time, default_transition_timeout);
 	transition_timeout = transition_timer->timeout;
 	
-	time = xmlGetProp(xml_graph, "transition_fuzz");
+	time = crm_element_value(xml_graph, "transition_fuzz");
 	set_timer_value(transition_fuzz_timer, time, transition_fuzz_timeout);
 
 	transition_counter++;
@@ -84,7 +84,7 @@ unpack_graph(xmlNodePtr xml_graph)
 
 		synapse_t *new_synapse = NULL;
 
-		crm_debug("looking in synapse %s", xmlGetProp(synapse, XML_ATTR_ID));
+		crm_debug("looking in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
 		
 		crm_malloc(new_synapse, sizeof(synapse_t));
 		new_synapse->id        = num_synapses++;
@@ -95,7 +95,7 @@ unpack_graph(xmlNodePtr xml_graph)
 		
 		graph = g_list_append(graph, new_synapse);
 
-		crm_debug("look for actions in synapse %s", xmlGetProp(synapse, XML_ATTR_ID));
+		crm_debug("look for actions in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
 
 		xml_child_iter(
 			synapse, actions, "action_set",
@@ -107,8 +107,7 @@ unpack_graph(xmlNodePtr xml_graph)
 				num_actions++;
 				
 				if(new_action == NULL) {
-					action = action->next;
-					break;
+					continue;
 				}
 				crm_debug("Adding action %d to synapse %d",
 						 new_action->id, new_synapse->id);
@@ -120,7 +119,7 @@ unpack_graph(xmlNodePtr xml_graph)
 			
 			);
 
-		crm_debug("look for inputs in synapse %s", xmlGetProp(synapse, XML_ATTR_ID));
+		crm_debug("look for inputs in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
 
 		xml_child_iter(
 			synapse, inputs, "inputs",
@@ -135,8 +134,7 @@ unpack_graph(xmlNodePtr xml_graph)
 						unpack_action(input);
 
 					if(new_input == NULL) {
-						input = input->next;
-						break;
+						continue;
 					}
 
 					crm_debug("Adding input %d to synapse %d",
@@ -163,11 +161,11 @@ unpack_graph(xmlNodePtr xml_graph)
 }
 
 action_t*
-unpack_action(xmlNodePtr xml_action) 
+unpack_action(crm_data_t *xml_action) 
 {
-	const char *tmp        = xmlGetProp(xml_action, XML_ATTR_ID);
+	const char *tmp        = crm_element_value(xml_action, XML_ATTR_ID);
 	action_t   *action     = NULL;
-	xmlNodePtr action_copy = NULL;
+	crm_data_t *action_copy = NULL;
 
 	if(tmp == NULL) {
 		crm_err("Actions must have an id!");
@@ -190,17 +188,17 @@ unpack_action(xmlNodePtr xml_action)
 	action->type     = action_type_rsc;
 	action->xml      = action_copy;
 	
-	if(safe_str_eq(action_copy->name, XML_GRAPH_TAG_RSC_OP)) {
+	if(safe_str_eq(crm_element_name(action_copy), XML_GRAPH_TAG_RSC_OP)) {
 		action->type = action_type_rsc;
 
-	} else if(safe_str_eq(action_copy->name, XML_GRAPH_TAG_PSEUDO_EVENT)) {
+	} else if(safe_str_eq(crm_element_name(action_copy), XML_GRAPH_TAG_PSEUDO_EVENT)) {
 		action->type = action_type_pseudo;
 
-	} else if(safe_str_eq(action_copy->name, XML_GRAPH_TAG_CRM_EVENT)) {
+	} else if(safe_str_eq(crm_element_name(action_copy), XML_GRAPH_TAG_CRM_EVENT)) {
 		action->type = action_type_crm;
 	}
 
-	tmp = xmlGetProp(action_copy, XML_ATTR_TIMEOUT);
+	tmp = crm_element_value(action_copy, XML_ATTR_TIMEOUT);
 	if(tmp != NULL) {
 		action->timeout = atoi(tmp);
 	}
@@ -213,7 +211,7 @@ unpack_action(xmlNodePtr xml_action)
 	action->timer->reason    = timeout_action;
 	action->timer->action    = action;
 
-	tmp = xmlGetProp(action_copy, "can_fail");
+	tmp = crm_element_value(action_copy, "can_fail");
 	if(safe_str_eq(tmp, XML_BOOLEAN_TRUE)) {
 		action->can_fail = TRUE;
 	}
@@ -223,10 +221,9 @@ unpack_action(xmlNodePtr xml_action)
 
 
 gboolean
-extract_event(xmlNodePtr msg)
+extract_event(crm_data_t *msg)
 {
 	gboolean abort  = FALSE;
-	xmlNodePtr iter = NULL;
 	const char *event_node = NULL;
 
 /*
@@ -240,38 +237,33 @@ extract_event(xmlNodePtr msg)
 */
 
 	crm_trace("Extracting event");
-	if(msg != NULL) {
-		iter = msg->children;
-	}
-	
-	while(abort == FALSE && iter != NULL) {
-		xmlNodePtr shutdown = NULL;
-		xmlNodePtr resources = NULL;
-		xmlNodePtr node_state = iter;
+	xml_child_iter(
+		msg, iter, XML_CIB_TAG_STATE,
 
-		const char *ccm_state  = xmlGetProp(
+		crm_data_t *shutdown = NULL;
+		crm_data_t *resources = NULL;
+		crm_data_t *node_state = iter;
+
+		const char *ccm_state  = crm_element_value(
 			node_state, XML_CIB_ATTR_INCCM);
-		const char *crmd_state = xmlGetProp(
+		const char *crmd_state = crm_element_value(
 			node_state, XML_CIB_ATTR_CRMDSTATE);
-		const char *join_state = xmlGetProp(
+		const char *join_state = crm_element_value(
 			node_state, XML_CIB_ATTR_JOINSTATE);
-
-		iter = iter->next;
 
 		crm_xml_devel(node_state,"Processing");
 		
-		if(xmlGetProp(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
+		if(crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
 			crm_devel("Aborting on %s attribute",
 				  XML_CIB_ATTR_SHUTDOWN);
-			abort = TRUE;
-			continue;
+			break;
 			
-		} else if(xmlGetProp(node_state, XML_CIB_ATTR_STONITH) != NULL) {
+		} else if(crm_element_value(node_state, XML_CIB_ATTR_STONITH) != NULL) {
 			/* node marked for STONITH
 			 *   possibly by us when a shutdown timmed out
 			 */
 			crm_devel("Checking for STONITH");
-			event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
+			event_node = crm_element_value(node_state, XML_ATTR_UNAME);
 
 			shutdown = create_shutdown_event(
 				event_node, LRM_OP_TIMEOUT);
@@ -307,7 +299,7 @@ extract_event(xmlNodePtr msg)
 				 * ie. once per update of each field
 				 */
 				crm_devel("Checking if this was a known shutdown");
-				event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
+				event_node = crm_element_value(node_state, XML_ATTR_UNAME);
 				shutdown = create_shutdown_event(event_node, LRM_OP_DONE);
 				
 				abort = !process_graph_event(shutdown);
@@ -326,24 +318,29 @@ extract_event(xmlNodePtr msg)
 		if(abort == FALSE && resources != NULL) {
 			/* LRM resource update...
 			 */
-			xmlNodePtr child = resources->children;
-			
-			event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
-			while(abort == FALSE && child != NULL) {
+			xml_child_iter(
+				resources, child, NULL, 
+
 				crm_xml_devel(child, "Processing LRM resource update");
 				abort = !process_graph_event(child);
-				child = child->next;
-			}	
+				if(abort) {
+					break;
+				}
+				);
+			
 		}
-	}
+		if(abort) {
+			break;
+		}
+		);
 	
 	return !abort;
 }
 
-xmlNodePtr
+crm_data_t*
 create_shutdown_event(const char *node, int op_status)
 {
-	xmlNodePtr event = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	crm_data_t *event = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	char *code = crm_itoa(op_status);
 
 	set_xml_property_copy(event, XML_LRM_ATTR_TARGET, node);

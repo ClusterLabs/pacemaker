@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.17 2005/01/21 10:33:45 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.18 2005/01/26 13:30:52 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -56,14 +56,14 @@ IPC_Channel *crmd_channel = NULL;
 const char *host = NULL;
 void usage(const char *cmd, int exit_status);
 enum cib_errors do_init(void);
-int do_work(const char *xml_text, int command_options, xmlNodePtr *output);
+int do_work(const char *xml_text, int command_options, crm_data_t **output);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
-xmlNodePtr handleCibMod(const char *xml);
+crm_data_t *handleCibMod(const char *xml);
 gboolean admin_message_timeout(gpointer data);
 void cib_connection_destroy(gpointer user_data);
 void cibadmin_op_callback(
-	const HA_Message *msg, int call_id, int rc, xmlNodePtr output);
+	const HA_Message *msg, int call_id, int rc, crm_data_t *output);
 
 int command_options = 0;
 const char *cib_action = NULL;
@@ -100,8 +100,8 @@ main(int argc, char **argv)
 	int argerr = 0;
 	int flag;
 	int level = 0;
-	char *xml_text = NULL;
-	xmlNodePtr output = NULL;
+	char *admin_input_xml = NULL;
+	crm_data_t *output = NULL;
 	
 	static struct option long_options[] = {
 		/* Top-level Options */
@@ -232,7 +232,7 @@ main(int argc, char **argv)
 				obj_type = crm_strdup(optarg);
 				break;
 			case 'X':
-				xml_text = crm_strdup(optarg);
+				admin_input_xml = crm_strdup(optarg);
 				break;
 			case 'h':
 				host = crm_strdup(optarg);
@@ -278,7 +278,7 @@ main(int argc, char **argv)
 		return -exit_code;
 	}
 
-	exit_code = do_work(xml_text, command_options, &output);
+	exit_code = do_work(admin_input_xml, command_options, &output);
 	if (exit_code > 0) {
 		/* wait for the reply by creating a mainloop and running it until
 		 * the callbacks are invoked...
@@ -323,13 +323,13 @@ main(int argc, char **argv)
 	return -exit_code;
 }
 
-xmlNodePtr
+crm_data_t*
 handleCibMod(const char *xml)
 {
 	const char *attr_name = NULL;
 	const char *attr_value = NULL;
-	xmlNodePtr fragment = NULL;
-	xmlNodePtr cib_object = NULL;
+	crm_data_t *fragment = NULL;
+	crm_data_t *cib_object = NULL;
 
 	if(xml == NULL) {
 		cib_object = file2xml(stdin);
@@ -343,7 +343,7 @@ handleCibMod(const char *xml)
 	
 	attr_name = XML_ATTR_ID;
 	
-	attr_value = xmlGetProp(cib_object, attr_name);
+	attr_value = crm_element_value(cib_object, attr_name);
 	if(attr_name == NULL || strlen(attr_name) == 0) {
 		crm_err("No value for %s specified.", attr_name);
 		return NULL;
@@ -359,10 +359,10 @@ handleCibMod(const char *xml)
 
 
 int
-do_work(const char *xml_text, int call_options, xmlNodePtr *output) 
+do_work(const char *admin_input_xml, int call_options, crm_data_t **output) 
 {
 	/* construct the request */
-	xmlNodePtr msg_data = NULL;
+	crm_data_t *msg_data = NULL;
 	char *obj_type_parent = NULL;
 
 	obj_type_parent = cib_pluralSection(obj_type);
@@ -381,7 +381,7 @@ do_work(const char *xml_text, int call_options, xmlNodePtr *output)
 	} else if (strcmp(CRM_OP_CIB_CREATE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
 		crm_trace("Performing %s op...", cib_action);
-		msg_data = handleCibMod(xml_text);
+		msg_data = handleCibMod(admin_input_xml);
 		rc = the_cib->cmds->create(
 			the_cib, obj_type_parent, msg_data, output, call_options);
 		free_xml(msg_data);
@@ -390,7 +390,7 @@ do_work(const char *xml_text, int call_options, xmlNodePtr *output)
 	} else if (strcmp(CRM_OP_CIB_UPDATE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
 		crm_trace("Performing %s op...", cib_action);
-		msg_data = handleCibMod(xml_text);
+		msg_data = handleCibMod(admin_input_xml);
 		rc = the_cib->cmds->modify(
 			the_cib, obj_type_parent, msg_data, output, call_options);
 		free_xml(msg_data);
@@ -399,7 +399,7 @@ do_work(const char *xml_text, int call_options, xmlNodePtr *output)
 	} else if (strcmp(CRM_OP_CIB_DELETE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
 		crm_trace("Performing %s op...", cib_action);
-		msg_data = handleCibMod(xml_text);
+		msg_data = handleCibMod(admin_input_xml);
 		rc = the_cib->cmds->delete(
 			the_cib, obj_type_parent, msg_data, output, call_options);
 		free_xml(msg_data);
@@ -436,9 +436,10 @@ do_init(void)
 {
 	enum cib_errors rc = cib_ok;
 	
+#ifdef USE_LIBXML
 	/* docs say only do this once, but in their code they do it every time! */
 	xmlInitParser(); 
-
+#endif
 	the_cib = cib_new();
 	rc = the_cib->cmds->signon(the_cib, cib_command);
 	if(rc != cib_ok) {
@@ -539,15 +540,15 @@ cib_connection_destroy(gpointer user_data)
 }
 
 void cibadmin_op_callback(
-	const HA_Message *msg, int call_id, int rc, xmlNodePtr output)
+	const HA_Message *msg, int call_id, int rc, crm_data_t *output)
 {
-	char *xml_text = NULL;
+	char *admin_input_xml = NULL;
 	
 	crm_info("our callback was invoked");
 	crm_log_message(LOG_MSG, msg);
 	exit_code = rc;
 
-	xml_text = dump_xml_formatted(output);
+	admin_input_xml = dump_xml_formatted(output);
 
 	if(safe_str_eq(cib_action, CRM_OP_CIB_ISMASTER)
 	   && rc == cib_not_master) {
@@ -564,16 +565,16 @@ void cibadmin_op_callback(
 			cib_action, rc, cib_error2string(rc));
 		fprintf(stderr, "Call %s failed (%d): %s\n",
 			cib_action, rc, cib_error2string(rc));
-		fprintf(stdout, "%s\n", xml_text);
+		fprintf(stdout, "%s\n", admin_input_xml);
 
 	} else if(output == NULL) {
 		crm_info("Call passed");
 
 	} else {
 		crm_info("Call passed");
-		fprintf(stdout, "%s\n", xml_text);
+		fprintf(stdout, "%s\n", admin_input_xml);
 	}
-	crm_free(xml_text);
+	crm_free(admin_input_xml);
 
 			
 	if(call_id == request_id) {

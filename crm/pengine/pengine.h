@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.46 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: pengine.h,v 1.47 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -147,7 +147,7 @@ struct lrm_agent_s {
 
 struct resource_s { 
 		const char *id; 
-		xmlNodePtr  xml; 
+		crm_data_t * xml; 
 
 		void *variant_opaque;
 		enum pe_obj_types variant;
@@ -174,7 +174,7 @@ struct resource_s {
 		GListPtr rsc_cons;         /* rsc_dependancy_t* */
 		GListPtr actions;	   /* action_t*        */
 
-		xmlNodePtr  extra_attrs;
+		crm_data_t * extra_attrs;
 };
 
 struct action_wrapper_s 
@@ -203,12 +203,12 @@ struct action_s
 		int seen_count;
 		const char *timeout;
 
-		xmlNodePtr args;
+		crm_data_t *args;
 		
 		GListPtr actions_before; /* action_warpper_t* */
 		GListPtr actions_after;  /* action_warpper_t* */
 
-		xmlNodePtr  extra_attrs;
+		crm_data_t * extra_attrs;
 };
 
 struct order_constraint_s 
@@ -232,7 +232,7 @@ struct order_constraint_s
 };
 
 
-extern gboolean stage0(xmlNodePtr cib,
+extern gboolean stage0(crm_data_t *cib,
 		       GListPtr *nodes,
 		       GListPtr *rscs,
 		       GListPtr *cons,
@@ -261,35 +261,35 @@ extern gboolean stage7(
 	GListPtr resources, GListPtr actions, GListPtr ordering_constraints);
 
 extern gboolean stage8(
-	GListPtr resources, GListPtr action_sets, xmlNodePtr *graph);
+	GListPtr resources, GListPtr action_sets, crm_data_t **graph);
 
 extern gboolean summary(GListPtr resources);
 
 extern gboolean pe_msg_dispatch(IPC_Channel *sender, void *user_data);
 
 extern gboolean process_pe_message(
-	HA_Message *msg, xmlNodePtr xml_data, IPC_Channel *sender);
+	HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender);
 
-extern gboolean unpack_constraints(xmlNodePtr xml_constraints,
+extern gboolean unpack_constraints(crm_data_t *xml_constraints,
 				   GListPtr nodes, GListPtr resources,
 				   GListPtr *placement_constraints,
 				   GListPtr *ordering_constraints);
 
-extern gboolean unpack_resources(xmlNodePtr xml_resources,
+extern gboolean unpack_resources(crm_data_t *xml_resources,
 				 GListPtr *resources,
 				 GListPtr *actions,
 				 GListPtr *ordering_constraints,
 				 GListPtr all_nodes);
 
-extern gboolean unpack_config(xmlNodePtr config);
+extern gboolean unpack_config(crm_data_t *config);
 
-extern gboolean unpack_config(xmlNodePtr config);
+extern gboolean unpack_config(crm_data_t *config);
 
-extern gboolean unpack_global_defaults(xmlNodePtr defaults);
+extern gboolean unpack_global_defaults(crm_data_t *defaults);
 
-extern gboolean unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes);
+extern gboolean unpack_nodes(crm_data_t *xml_nodes, GListPtr *nodes);
 
-extern gboolean unpack_status(xmlNodePtr status,
+extern gboolean unpack_status(crm_data_t *status,
 			      GListPtr nodes,
 			      GListPtr rsc_list,
 			      GListPtr *actions,
@@ -322,7 +322,7 @@ extern gboolean order_new(
 
 
 extern gboolean process_colored_constraints(resource_t *rsc);
-extern void graph_element_from_action(action_t *action, xmlNodePtr *graph);
+extern void graph_element_from_action(action_t *action, crm_data_t **graph);
 
 extern color_t *no_color;
 extern int      max_valid_nodes;

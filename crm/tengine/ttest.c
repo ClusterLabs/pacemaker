@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.15 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: ttest.c,v 1.16 2005/01/26 13:31:01 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -42,7 +42,7 @@
 #include <tengine.h>
 #include <clplumbing/GSource.h>
 
-extern gboolean unpack_graph(xmlNodePtr xml_graph);
+extern gboolean unpack_graph(crm_data_t *xml_graph);
 extern gboolean initiate_transition(void);
 extern gboolean initialize_graph(void);
 
@@ -53,7 +53,7 @@ main(int argc, char **argv)
 {
 	int flag;
 	int argerr = 0;
-	xmlNodePtr xml_graph = NULL;
+	crm_data_t *xml_graph = NULL;
 	HA_Message *cmd = NULL;
 	
 	const char *xml_file = NULL;

@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.17 2005/01/21 10:33:45 andrew Exp $ */
+/* $Id: ipc.c,v 1.18 2005/01/26 13:30:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,7 +54,6 @@
 gboolean 
 send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 {
-	int log_level = LOG_DEBUG;
 	gboolean all_is_good = TRUE;
 
 	if (msg == NULL) {
@@ -87,15 +86,13 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 	}	
 
 	crm_log_message(all_is_good?LOG_DEBUG:LOG_ERR, msg);
-	
-	do_crm_log(log_level, __FUNCTION__,
-	       "Sending IPC message (ref=%s) to %s@%s %s.",
-	       cl_get_string(msg, XML_ATTR_REFERENCE), 
-	       cl_get_string(msg, F_CRM_SYS_TO),
-	       cl_get_string(msg, F_CRM_HOST_TO),
-	       all_is_good?"succeeded":"failed");
 
-	ha_msg_del(msg);
+#ifdef MSG_LOG
+	crm_log_message_adv(all_is_good?LOG_DEBUG:LOG_ERR,
+			    DEVEL_DIR"/outbound.ipc.log", msg);
+#endif
+	
+	crm_msg_del(msg);
 	
 	return all_is_good;
 }
@@ -163,8 +160,6 @@ init_client_ipc_comms(const char *channel_name,
 		return NULL;
 	}
 
-	a_ch->should_send_blocking = TRUE;
-	
 	if(dispatch == NULL) {
 		crm_warn("No dispatch method specified..."
 			 "maybe you meant init_client_ipc_comms_nodispatch()?");
@@ -218,6 +213,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 
 	ch->ops->set_recv_qlen(ch, 100);
 	ch->ops->set_send_qlen(ch, 100);
+	ch->should_send_blocking = TRUE;
 
 	crm_debug("Processing of %s complete", commpath);
 
@@ -301,15 +297,24 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 
 		if(process){
 			gboolean (*process_function)
-				(HA_Message *msg, xmlNodePtr data, IPC_Channel *sender) = NULL;
+				(HA_Message *msg, crm_data_t *data, IPC_Channel *sender) = NULL;
 			process_function = user_data;
-			
+#ifdef MSG_LOG
+			crm_log_message_adv(
+				LOG_DEBUG, DEVEL_DIR"/inbound.client.log", new_input->msg);
+#endif
 			if(FALSE == process_function(
 				   new_input->msg, new_input->xml, sender)) {
 				crm_warn("Received a message destined for %s"
 					 " by mistake", sys_to);
 			}
+		} else {
+#ifdef MSG_LOG
+			crm_log_message_adv(
+				LOG_ERR, DEVEL_DIR"/inbound.client.log", new_input->msg);
+#endif
 		}
+		
 		delete_ha_msg_input(new_input);
 		msg = NULL;
 	}

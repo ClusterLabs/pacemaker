@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.11 2005/01/21 10:33:45 andrew Exp $ */
+/* $Id: callbacks.c,v 1.12 2005/01/26 13:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -187,7 +187,7 @@ cib_client_connect(IPC_Channel *channel, gpointer user_data)
 			reg_msg, F_CIB_CALLBACK_TOKEN, new_client->callback_id);
 		
 		msg2ipcchan(reg_msg, channel);
-		ha_msg_del(reg_msg);
+		crm_msg_del(reg_msg);
 		
 		/* make sure we can find ourselves later for sync calls
 		 * redirected to the master instance
@@ -216,6 +216,7 @@ cib_ro_callback(IPC_Channel *channel, gpointer user_data)
 gboolean
 cib_null_callback(IPC_Channel *channel, gpointer user_data)
 {
+	gboolean did_disconnect = TRUE;
 	HA_Message *op_request = NULL;
 	cib_client_t *cib_client = user_data;
 	cib_client_t *hash_client = NULL;
@@ -241,7 +242,7 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		if(safe_str_neq(type, CRM_OP_REGISTER) ) {
 			crm_warn("Discarding IPC message from %s on callback channel",
 				 cib_client->id);
-			ha_msg_del(op_request);
+			crm_msg_del(op_request);
 			continue;
 		}
 		
@@ -250,7 +251,7 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 
 		if(hash_client != NULL) {
 			crm_err("Duplicate registration request... disconnecting");
-			ha_msg_del(op_request);
+			crm_msg_del(op_request);
 			return FALSE;
 		}
 
@@ -260,17 +261,22 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		crm_info("Registered %s on %s channel",
 			    cib_client->id, cib_client->channel_name);
 
-		ha_msg_del(op_request);
+		crm_msg_del(op_request);
 
 		op_request = ha_msg_new(2);
 		ha_msg_add(op_request, F_CIB_OPERATION, CRM_OP_REGISTER);
 		ha_msg_add(op_request, F_CIB_CLIENTID,  cib_client->id);
 		
 		msg2ipcchan(op_request, channel);
-		ha_msg_del(op_request);
+		crm_msg_del(op_request);
 
 	}
-	return cib_process_disconnect(channel, cib_client);	
+	did_disconnect = cib_process_disconnect(channel, cib_client);	
+	if(did_disconnect) {
+		crm_info("Client disconnected");
+	}
+	
+	return did_disconnect;
 }
 
 gboolean
@@ -313,10 +319,13 @@ cib_common_callback(
 		crm_verbose("Processing IPC message from %s on %s channel",
 			    cib_client->id, cib_client->channel_name);
  		crm_log_message(LOG_MSG, op_request);
+		crm_log_message_adv(LOG_DEBUG, DEVEL_DIR"/cib.client-in.log", op_request);
 		
 		lpc++;
-
-		if(ha_msg_add(op_request, F_CIB_CLIENTID, cib_client->id) != HA_OK) {
+		rc = cib_ok;
+		
+		if(HA_OK != ha_msg_add(
+			   op_request, F_CIB_CLIENTID, cib_client->id)) {
 			crm_err("Couldnt add F_CIB_CLIENTID to message");
 			rc = cib_msg_field_add;
 		}
@@ -324,16 +333,11 @@ cib_common_callback(
 		if(rc == cib_ok) {
 			ha_msg_value_int(
 				op_request, F_CIB_CALLOPTS, &call_options);
-			crm_trace("Call options: %.8lx", (long)call_options);
+			crm_debug("Call options: %.8lx", (long)call_options);
 			
 			host = cl_get_string(op_request, F_CIB_HOST);
-			crm_trace("Destination host: %s", host);
-
 			op = cl_get_string(op_request, F_CIB_OPERATION);
-			crm_trace("Retrieved command: %s", op);
-
 			rc = cib_get_operation_id(op_request, &call_type);
-			crm_trace("Command offset: %d", call_type);
 		}
 		
 		if(rc == cib_ok
@@ -352,66 +356,64 @@ cib_common_callback(
  			crm_debug("Processing master %s op locally", op);
 			rc = cib_process_command(
 				op_request, &op_reply, privileged);
+ 			crm_debug("Processing complete");
 
-		} else if((host == NULL && (call_options & cib_scope_local))
+		} else if(
+			(host == NULL && (call_options & cib_scope_local))
 			  || safe_str_eq(host, cib_our_uname)) {
  			crm_debug("Processing %s op locally", op);
 			rc = cib_process_command(
 				op_request, &op_reply, privileged);
-
-		} else if(host != NULL) {
- 			crm_debug("Forwarding %s op to %s", op, host);
-			ha_msg_add(op_request, F_CIB_DELEGATED, cib_our_uname);
-			crm_log_message(LOG_MSG, op_request);
-			
-			hb_conn->llc_ops->send_ordered_nodemsg(
-				hb_conn, op_request, host);
-
-			if(call_options & cib_discard_reply) {
-				ha_msg_del(op_request);
-
-			} else if(call_options & cib_sync_call) {
-				/* keep track of the request so we can time it
-				 * out if required
-				 */
-				crm_debug("Registering call from %s as delegated", cib_client->id);
-				cib_client->delegated_calls = g_list_append(
-					cib_client->delegated_calls,
-					op_request);
-			} else {
-				ha_msg_del(op_request);
-			}
-			continue;
+ 			crm_debug("Processing complete");
 
 		} else {
 			/* send via HA to other nodes */
- 			crm_info("Forwarding %s op to master instance", op);
 			ha_msg_add(op_request, F_CIB_DELEGATED, cib_our_uname);
 			crm_log_message(LOG_MSG, op_request);
-			
-			hb_conn->llc_ops->sendclustermsg(hb_conn, op_request);
+
+			if(host != NULL) {
+				crm_debug("Forwarding %s op to %s", op, host);
+				hb_conn->llc_ops->send_ordered_nodemsg(
+					hb_conn, op_request, host);
+			} else {
+				crm_info("Forwarding %s op to master instance",
+					 op);
+				hb_conn->llc_ops->sendclustermsg(
+					hb_conn, op_request);
+			}
+
 			if(call_options & cib_discard_reply) {
-				ha_msg_del(op_request);
+				crm_trace("Client not interested in reply");
 
 			} else if(call_options & cib_sync_call) {
 				/* keep track of the request so we can time it
 				 * out if required
 				 */
-				crm_debug("Registering call from %s as delegated", cib_client->id);
+				HA_Message *saved = ha_msg_copy(op_request);
+				crm_debug("Registering delegated call from %s",
+					  cib_client->id);
 				cib_client->delegated_calls = g_list_append(
-					cib_client->delegated_calls,
-					op_request);
-			} else {
-				ha_msg_del(op_request);
+					cib_client->delegated_calls, saved);
 			}
+			crm_msg_del(op_request);
+			op_request = NULL;
 			continue;
 		}
 
+		crm_debug("processing response cases");
+		if(rc != cib_ok) {
+			crm_err("Input message");
+			crm_log_message(LOG_ERR, op_request);
+			crm_err("Output message");
+			crm_log_message(LOG_ERR, op_reply);
+			crm_log_message_adv(LOG_ERR, DEVEL_DIR"/cib.out.log", op_reply);
+		}
+		
 		if(op_reply == NULL) {
 			crm_trace("No reply is required for op %s", op);
 			
 		} else if(call_options & cib_sync_call) {
- 			crm_debug("Sending sync reply %p to %s op", op_reply,op);
+ 			crm_debug("Sending sync reply to %s op", op);
 			crm_log_message(LOG_MSG, op_reply);
 			if(msg2ipcchan(op_reply, channel) != HA_OK) {
 				crm_err("Sync reply failed: %s",
@@ -424,7 +426,7 @@ cib_common_callback(
 		} else {
 			enum cib_errors local_rc = cib_ok;
 			/* send reply via client's callback channel */
- 			crm_debug("Sending async reply %p to %s op", op_reply, op);
+ 			crm_debug("Sending async reply %p to %s op",op_reply,op);
 			crm_log_message(LOG_MSG, op_reply);
 			local_rc = send_via_callback_channel(
 				op_reply, cib_client->callback_id);
@@ -436,8 +438,12 @@ cib_common_callback(
 				}
 			}
 		}
-		ha_msg_del(op_reply);
+		
+		crm_debug("Cleaning up reply");
+		crm_msg_del(op_reply);
+		op_reply = NULL;
 
+		crm_debug("Processing forward cases");
 		if(rc == cib_ok
 		   && cib_server_ops[call_type].modifies_cib
 		   && !(call_options & cib_scope_local)) {
@@ -459,7 +465,9 @@ cib_common_callback(
 			}
 		}
 
-		ha_msg_del(op_request);
+		crm_debug("Cleaning up request");
+		crm_msg_del(op_request);
+		op_request = NULL;
 	}
 
 	crm_verbose("Processed %d messages", lpc);
@@ -471,11 +479,9 @@ enum cib_errors
 cib_process_command(
 	const HA_Message *request, HA_Message **reply, gboolean privileged)
 {
-	xmlNodePtr input    = NULL;
+	crm_data_t *output   = NULL;
+	crm_data_t *input    = NULL;
 	const char *input_s = NULL;
-
-	char *output_s    = NULL;
-	xmlNodePtr output = NULL;
 
 	int call_type      = 0;
 	int call_options   = 0;
@@ -484,7 +490,10 @@ cib_process_command(
 	const char *op = NULL;
 	const char *call_id = NULL;
 	const char *section = NULL;
+	const char *tmp = NULL;
 
+	if(reply) *reply = NULL;
+	
 	/* Start processing the request... */
 	op = cl_get_string(request, F_CIB_OPERATION);
 	call_id = cl_get_string(request, F_CIB_CALLID);
@@ -510,7 +519,7 @@ cib_process_command(
 		crm_trace("Unpacking data in %s", F_CIB_CALLDATA);
 		input_s = cl_get_string(request, F_CIB_CALLDATA);
 		if(input_s != NULL) {
-			crm_trace("Converting to xmlNodePtr");			
+			crm_trace("Converting to crm_data_t*");			
 			input = string2xml(input_s);
 			if(input == NULL) {
 				crm_err("Invalid XML input");
@@ -523,12 +532,14 @@ cib_process_command(
 		rc = cib_server_ops[call_type].fn(
 			op, call_options, section, input, &output);
 	}
+
+	crm_debug("Processing reply cases");
 	
-	if(call_options & cib_discard_reply || reply == NULL) {
-		if(reply) *reply = NULL;
+	if((call_options & cib_discard_reply) || reply == NULL) {
 		return rc;
 	}
 
+	crm_debug("Creating the reply");
 	/* make the basic reply */
 	*reply = ha_msg_new(8);
 	ha_msg_add(*reply, F_TYPE, T_CIB);
@@ -536,29 +547,27 @@ cib_process_command(
 	ha_msg_add(*reply, F_CIB_CALLID, call_id);
 	ha_msg_add_int(*reply, F_CIB_RC, rc);
 
-	{
-		const char *tmp = cl_get_string(request, F_CIB_CLIENTID);
-		ha_msg_add(*reply, F_CIB_CLIENTID, tmp);
-
-		tmp = cl_get_string(request, F_CIB_CALLOPTS);
-		ha_msg_add(*reply, F_CIB_CALLOPTS, tmp);
-
-		tmp = cl_get_string(request, F_CIB_CALLID);
-		ha_msg_add(*reply, F_CIB_CALLID, tmp);
-	}
+	tmp = cl_get_string(request, F_CIB_CLIENTID);
+	ha_msg_add(*reply, F_CIB_CLIENTID, tmp);
+	
+	tmp = cl_get_string(request, F_CIB_CALLOPTS);
+	ha_msg_add(*reply, F_CIB_CALLOPTS, tmp);
 	
 	/* attach the output if necessary */
-	output_s = dump_xml_unformatted(output);
-	if(output != NULL && output_s == NULL) {
-		crm_err("Currupt output in reply to \"%s\" op",op);
-		rc = cib_output_data;
+	if(output != NULL) {
+		crm_debug("Dumping XML");
+		char *output_s = dump_xml_unformatted(output);
+		if(output_s == NULL) {
+			crm_err("Currupt output in reply to \"%s\" op",op);
+			rc = cib_output_data;
 
-	} else if(output_s != NULL
-		  && ha_msg_add(*reply, F_CIB_CALLDATA, output_s) != HA_OK) {
-		rc = cib_msg_field_add;
+		} else if(ha_msg_add(*reply, F_CIB_CALLDATA, output_s) != HA_OK) {
+			rc = cib_msg_field_add;
+		}
+		crm_free(output_s);
 	}
 
-	crm_free(output_s);
+	crm_debug("Cleaning up");
 	free_xml(output);
 	free_xml(input);
 	return rc;
@@ -601,7 +610,7 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 		crm_debug("Removing msg from delegated list");
 		hash_client->delegated_calls = g_list_remove(
 			hash_client->delegated_calls, orig_msg);
-		ha_msg_del(orig_msg);
+		crm_msg_del(orig_msg);
 	}
 	
 	crm_debug("Delivering reply to client %s", token);
@@ -687,8 +696,8 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 		client->delegated_calls = g_list_remove(
 			client->delegated_calls, msg);
 
-		ha_msg_del(reply);
-		ha_msg_del(msg);
+		crm_msg_del(reply);
+		crm_msg_del(msg);
 	}
 }
 
@@ -795,7 +804,8 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 	}
 
 	crm_info("Processing message from peer to %s...", request_to);
- 	crm_log_message(LOG_MSG, msg);
+ 	crm_log_message(LOG_DEBUG, msg);
+ 	crm_log_message_adv(LOG_DEBUG, DEVEL_DIR"/cib.peer-in.log", msg);
 
 	if(safe_str_eq(update, XML_BOOLEAN_TRUE)
 	   && safe_str_eq(reply_to, cib_our_uname)) {
@@ -839,6 +849,7 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		crm_warn("Nothing for us to do?");
 		return;
 	}
+	crm_debug("Finished determining processing actions");
 
 	ha_msg_value_int(msg, F_CIB_CALLOPTS, &call_options);
 	crm_trace("Retrieved call options: %d", call_options);
@@ -892,7 +903,7 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 			crm_warn("Client %s may have left us", client_id);
 		}
 		if(process == FALSE) {
-			ha_msg_del(op_reply);
+			crm_msg_del(op_reply);
 		}
 	}
 

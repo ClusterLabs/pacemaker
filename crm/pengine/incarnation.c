@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.5 2005/01/12 13:40:59 andrew Exp $ */
+/* $Id: incarnation.c,v 1.6 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,15 +52,15 @@ typedef struct incarnation_variant_data_s
 void incarnation_unpack(resource_t *rsc)
 {
 	int lpc = 0;
-	xmlNodePtr xml_obj = rsc->xml;
-	xmlNodePtr xml_self = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+	crm_data_t * xml_obj = rsc->xml;
+	crm_data_t * xml_self = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 	incarnation_variant_data_t *incarnation_data = NULL;
 	resource_t *self = NULL;
 
-	const char *ordered         = xmlGetProp(xml_obj, XML_RSC_ATTR_ORDERED);
-	const char *interleave      = xmlGetProp(xml_obj, XML_RSC_ATTR_INTERLEAVE);
-	const char *max_incarn      = xmlGetProp(xml_obj, XML_RSC_ATTR_INCARNATION_MAX);
-	const char *max_incarn_node = xmlGetProp(xml_obj, XML_RSC_ATTR_INCARNATION_NODEMAX);
+	const char *ordered         = crm_element_value(xml_obj, XML_RSC_ATTR_ORDERED);
+	const char *interleave      = crm_element_value(xml_obj, XML_RSC_ATTR_INTERLEAVE);
+	const char *max_incarn      = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION_MAX);
+	const char *max_incarn_node = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION_NODEMAX);
 
 	crm_verbose("Processing resource %s...", rsc->id);
 
@@ -96,7 +96,7 @@ void incarnation_unpack(resource_t *rsc)
 		char *inc_max = crm_itoa(incarnation_data->incarnation_max);
 		for(lpc = 0; lpc < incarnation_data->incarnation_max; lpc++) {
 			resource_t *child_rsc = NULL;
-			xmlNodePtr child_copy = copy_xml_node_recursive(
+			crm_data_t * child_copy = copy_xml_node_recursive(
 				xml_obj_child);
 
 			set_id(child_copy, rsc->id, lpc);
@@ -124,7 +124,7 @@ void incarnation_unpack(resource_t *rsc)
 				
 			} else {
 				crm_err("Failed unpacking resource %s",
-					xmlGetProp(child_copy, XML_ATTR_ID));
+					crm_element_value(child_copy, XML_ATTR_ID));
 			}
 		}
 		crm_free(inc_max);
@@ -487,7 +487,7 @@ void incarnation_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		);
 }
 
-void incarnation_expand(resource_t *rsc, xmlNodePtr *graph)
+void incarnation_expand(resource_t *rsc, crm_data_t * *graph)
 {
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);

@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.13 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: tengine.h,v 1.14 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,7 +21,6 @@
 
 #include <clplumbing/ipc.h>
 
-extern FILE *msg_te_strm;
 extern IPC_Channel *crm_ch;
 extern GListPtr graph;
 extern GMainLoop*  mainloop;
@@ -55,7 +54,7 @@ typedef struct action_s {
 		gboolean complete;
 		gboolean can_fail;
 		
-		xmlNodePtr xml;
+		crm_data_t *xml;
 		
 } action_t;
 
@@ -77,10 +76,10 @@ struct te_timer_s
 
 /* tengine */
 extern gboolean initialize_graph(void);
-extern gboolean process_graph_event(xmlNodePtr event);
+extern gboolean process_graph_event(crm_data_t *event);
 /*	const char *event_node,   const char *event_rsc, const char *rsc_state,
  *	const char *event_action, const char *event_rc, const char *op_status); */
-extern int match_graph_event(action_t *action, xmlNodePtr event);
+extern int match_graph_event(action_t *action, crm_data_t *event);
 
 extern gboolean initiate_transition(void);
 
@@ -88,16 +87,16 @@ extern gboolean initiate_transition(void);
 extern void print_state(gboolean to_file);
 extern void send_success(const char *text);
 /*extern void send_abort(const char *text, HA_Message *msg); */
-extern void send_abort(const char *text, xmlNodePtr msg);
+extern void send_abort(const char *text, crm_data_t *msg);
 extern gboolean stop_te_timer(te_timer_t *timer);
 extern gboolean start_te_timer(te_timer_t *timer);
-extern gboolean do_update_cib(xmlNodePtr xml_action, int status);
+extern gboolean do_update_cib(crm_data_t *xml_action, int status);
 
 /* unpack */
-extern gboolean unpack_graph(xmlNodePtr xml_graph);
-extern gboolean extract_event(xmlNodePtr msg);
+extern gboolean unpack_graph(crm_data_t *xml_graph);
+extern gboolean extract_event(crm_data_t *msg);
 extern gboolean process_te_message(
-	HA_Message * msg, xmlNodePtr xml_data, IPC_Channel *sender);
+	HA_Message * msg, crm_data_t *xml_data, IPC_Channel *sender);
 
 extern uint transition_timeout;
 extern uint transition_fuzz_timeout;

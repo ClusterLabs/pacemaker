@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.5 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: notify.c,v 1.6 2005/01/26 13:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -63,10 +63,10 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 void
 cib_pre_notify(
-	const char *op, xmlNodePtr existing, xmlNodePtr update) 
+	const char *op, crm_data_t *existing, crm_data_t *update) 
 {
 	HA_Message *update_msg = ha_msg_new(6);
-	const char *id = xmlGetProp(update, XML_ATTR_ID);
+	const char *id = crm_element_value(update, XML_ATTR_ID);
 	const char *type = NULL;
 
 	ha_msg_add(update_msg, F_TYPE, T_CIB_NOTIFY);
@@ -78,9 +78,9 @@ cib_pre_notify(
 	}
 
 	if(update != NULL) {
-		ha_msg_add(update_msg, F_CIB_OBJTYPE, update->name);
+		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
 	} else if(existing != NULL) {
-		ha_msg_add(update_msg, F_CIB_OBJTYPE, existing->name);
+		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(existing));
 	}
 
 	type = cl_get_string(update_msg, F_CIB_OBJTYPE);	
@@ -117,15 +117,15 @@ cib_pre_notify(
 			    op, type, id?" id=":"", id?id:"");
 	}
 		
-	ha_msg_del(update_msg);
+	crm_msg_del(update_msg);
 }
 
 void
 cib_post_notify(
-	const char *op, xmlNodePtr update, enum cib_errors result, xmlNodePtr new_obj) 
+	const char *op, crm_data_t *update, enum cib_errors result, crm_data_t *new_obj) 
 {
 	HA_Message *update_msg = ha_msg_new(8);
-	const char *id = xmlGetProp(new_obj, XML_ATTR_ID);
+	const char *id = crm_element_value(new_obj, XML_ATTR_ID);
 	const char *type = NULL;
 	
 	ha_msg_add(update_msg, F_TYPE, T_CIB_NOTIFY);
@@ -138,10 +138,10 @@ cib_post_notify(
 	}
 	if(update != NULL) {
 		crm_trace("Setting type to update->name");
-		ha_msg_add(update_msg, F_CIB_OBJTYPE, update->name);
+		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
 	} else if(new_obj != NULL) {
 		crm_trace("Setting type to new_obj->name");
-		ha_msg_add(update_msg, F_CIB_OBJTYPE, new_obj->name);
+		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(new_obj));
 	}
 
 	type = cl_get_string(update_msg, F_CIB_OBJTYPE);
@@ -154,8 +154,7 @@ cib_post_notify(
 			crm_debug("Update string was NULL (xml=%p)", update);
 		}
 		crm_free(update_s);
-	}
-	if(new_obj != NULL) {
+	} else if(new_obj != NULL) {
 		char *new_obj_s = dump_xml_unformatted(new_obj);
 		if(new_obj_s != NULL) {
 			ha_msg_add(update_msg, F_CIB_UPDATE_RESULT, new_obj_s);
@@ -164,17 +163,19 @@ cib_post_notify(
 		}
 		crm_free(new_obj_s);
 	}
-	
+
+	crm_debug("Notifying clients");
 	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
 	
 	pending_updates--;
 
 	if(pending_updates == 0) {
 		ha_msg_mod(update_msg, F_SUBTYPE, T_CIB_UPDATE_CONFIRM);
+		crm_debug("Sending confirmation to clients");
 		g_hash_table_foreach(client_list, cib_notify_client, update_msg);
 	}
 
-	ha_msg_del(update_msg);
+	crm_msg_del(update_msg);
 
 	if(update == NULL) {
 		if(result == cib_ok) {
@@ -196,4 +197,5 @@ cib_post_notify(
 				 id?"id=":"", id, cib_error2string(result));
 		}
 	}
+	crm_debug("Notify complete");
 }

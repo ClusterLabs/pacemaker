@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.25 2005/01/12 13:40:59 andrew Exp $ */
+/* $Id: graph.c,v 1.26 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,7 +24,6 @@
 #include <crm/common/msg.h>
 
 #include <glib.h>
-#include <libxml/tree.h>
 
 #include <pengine.h>
 #include <pe_utils.h>
@@ -202,10 +201,10 @@ stonith_constraints(node_t *node,
 	return TRUE;
 }
 
-xmlNodePtr
+crm_data_t *
 action2xml(action_t *action, gboolean as_input)
 {
-	xmlNodePtr action_xml = NULL;
+	crm_data_t * action_xml = NULL;
 	
 	if(action == NULL) {
 		return NULL;
@@ -282,14 +281,14 @@ action2xml(action_t *action, gboolean as_input)
 }
 
 void
-graph_element_from_action(action_t *action, xmlNodePtr *graph)
+graph_element_from_action(action_t *action, crm_data_t * *graph)
 {
 	char *syn_id = NULL;
-	xmlNodePtr syn = NULL;
-	xmlNodePtr set = NULL;
-	xmlNodePtr in  = NULL;
-	xmlNodePtr input = NULL;
-	xmlNodePtr xml_action = NULL;
+	crm_data_t * syn = NULL;
+	crm_data_t * set = NULL;
+	crm_data_t * in  = NULL;
+	crm_data_t * input = NULL;
+	crm_data_t * xml_action = NULL;
 	if(action == NULL) {
 		crm_err("Cannot dump NULL action");
 		return;
@@ -318,7 +317,7 @@ graph_element_from_action(action_t *action, xmlNodePtr *graph)
 	crm_free(syn_id);
 	
 	xml_action = action2xml(action, FALSE);
-	xmlAddChild(set, xml_action);
+	add_node_copy(set, xml_action);
 	
 	slist_iter(wrapper,action_wrapper_t,action->actions_before,lpc,
 			
@@ -344,9 +343,10 @@ graph_element_from_action(action_t *action, xmlNodePtr *graph)
 				   
 				   xml_action = action2xml(
 					   wrapper->action, TRUE);
-				   xmlAddChild(input, xml_action);
+				   add_node_copy(input, xml_action);
 				   break;
 		   }
 		   
 		);
+	free_xml(xml_action);
 }

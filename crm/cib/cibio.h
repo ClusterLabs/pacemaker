@@ -1,4 +1,4 @@
-/* $Id: cibio.h,v 1.11 2005/01/13 15:38:32 andrew Exp $ */
+/* $Id: cibio.h,v 1.12 2005/01/26 13:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,29 +31,29 @@
 
 #include <clplumbing/ipc.h>
 #include <clplumbing/cl_log.h> 
-#include <libxml/tree.h> 
+#include <crm/common/xml.h>
 
 extern gboolean initialized;
-extern xmlNodePtr the_cib;
-extern xmlNodePtr node_search;
-extern xmlNodePtr resource_search;
-extern xmlNodePtr constraint_search;
-extern xmlNodePtr status_search;
+extern crm_data_t *the_cib;
+extern crm_data_t *node_search;
+extern crm_data_t *resource_search;
+extern crm_data_t *constraint_search;
+extern crm_data_t *status_search;
 
-extern xmlNodePtr get_the_CIB(void);
+extern crm_data_t *get_the_CIB(void);
 
-extern int initializeCib(xmlNodePtr cib);
+extern int initializeCib(crm_data_t *cib);
 extern gboolean uninitializeCib(void);
-extern xmlNodePtr createEmptyCib(void);
-extern gboolean verifyCibXml(xmlNodePtr cib);
-extern xmlNodePtr readCibXml(char *buffer);
-extern xmlNodePtr readCibXmlFile(const char *filename);
+extern crm_data_t *createEmptyCib(void);
+extern gboolean verifyCibXml(crm_data_t *cib);
+extern crm_data_t *readCibXml(char *buffer);
+extern crm_data_t *readCibXmlFile(const char *filename);
 extern int activateCibBuffer(char *buffer, const char *filename);
-extern int activateCibXml(xmlNodePtr doc, const char *filename);
+extern int activateCibXml(crm_data_t *doc, const char *filename);
 
 extern int moveFile(const char *oldname, const char *newname,
 		    gboolean backup, char *ext);
 
-/* extern xmlNodePtr server_get_cib_copy(void); */
+/* extern crm_data_t *server_get_cib_copy(void); */
 
 #endif

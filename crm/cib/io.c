@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.4 2004/12/05 16:14:07 andrew Exp $ */
+/* $Id: io.c,v 1.5 2005/01/26 13:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,20 +60,20 @@ const char * constraint_path[] =
 };
 
 gboolean initialized = FALSE;
-xmlNodePtr the_cib = NULL;
-xmlNodePtr node_search = NULL;
-xmlNodePtr resource_search = NULL;
-xmlNodePtr constraint_search = NULL;
-xmlNodePtr status_search = NULL;
+crm_data_t *the_cib = NULL;
+crm_data_t *node_search = NULL;
+crm_data_t *resource_search = NULL;
+crm_data_t *constraint_search = NULL;
+crm_data_t *status_search = NULL;
 
 
 /*
  * It is the callers responsibility to free the output of this function
  */
-xmlNodePtr
+crm_data_t*
 readCibXml(char *buffer)
 {
-	xmlNodePtr root = string2xml(buffer);
+	crm_data_t *root = string2xml(buffer);
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
 		return createEmptyCib();
@@ -84,12 +84,12 @@ readCibXml(char *buffer)
 /*
  * It is the callers responsibility to free the output of this function
  */
-xmlNodePtr
+crm_data_t*
 readCibXmlFile(const char *filename)
 {
 	int s_res = -1;
 	struct stat buf;
-	xmlNodePtr root = NULL;
+	crm_data_t *root = NULL;
 	
 
 	if(filename != NULL) {
@@ -119,7 +119,7 @@ readCibXmlFile(const char *filename)
 /*
  * The caller should never free the return value
  */
-xmlNodePtr
+crm_data_t*
 get_the_CIB(void)
 {
 	return the_cib;
@@ -128,7 +128,7 @@ get_the_CIB(void)
 gboolean
 uninitializeCib(void)
 {
-	xmlNodePtr tmp_cib = the_cib;
+	crm_data_t *tmp_cib = the_cib;
 	
 	
 	if(tmp_cib == NULL) {
@@ -161,7 +161,7 @@ uninitializeCib(void)
  *   and to free the old/bad one depending on what is appropriate.
  */
 gboolean
-initializeCib(xmlNodePtr new_cib)
+initializeCib(crm_data_t *new_cib)
 {
 	if (verifyCibXml(new_cib)) {
 
@@ -249,7 +249,7 @@ int
 activateCibBuffer(char *buffer, const char *filename)
 {
 	int result = -1;
-	xmlNodePtr local_cib = NULL;
+	crm_data_t *local_cib = NULL;
 	
 	
 	local_cib = readCibXml(buffer);
@@ -263,10 +263,10 @@ activateCibBuffer(char *buffer, const char *filename)
  * on failure.
  */
 int
-activateCibXml(xmlNodePtr new_cib, const char *filename)
+activateCibXml(crm_data_t *new_cib, const char *filename)
 {
 	int error_code = 0;
-	xmlNodePtr saved_cib = get_the_CIB();
+	crm_data_t *saved_cib = get_the_CIB();
 	const char *filename_bak = CIB_BACKUP; /* calculate */
 
 	if (initializeCib(new_cib) == TRUE) {

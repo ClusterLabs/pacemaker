@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.6 2004/11/12 17:20:58 andrew Exp $ */
+/* $Id: group.c,v 1.7 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,15 +40,13 @@ typedef struct group_variant_data_s
 	if(rsc->variant == pe_group) {					\
 		data = (group_variant_data_t *)rsc->variant_opaque;	\
 	} else {							\
-		crm_err("Resource %s was not a \"group\" variant",	\
-			rsc->id);					\
-		return;							\
+		abort();						\
 	}
 
 void group_unpack(resource_t *rsc)
 {
-	xmlNodePtr xml_obj = rsc->xml;
-	xmlNodePtr xml_self = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+	crm_data_t * xml_obj = rsc->xml;
+	crm_data_t * xml_self = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 	group_variant_data_t *group_data = NULL;
 	resource_t *self = NULL;
 
@@ -93,7 +91,7 @@ void group_unpack(resource_t *rsc)
 				print_resource("Added", new_rsc, FALSE));
 		} else {
 			crm_err("Failed unpacking resource %s",
-				xmlGetProp(xml_obj, XML_ATTR_ID));
+				crm_element_value(xml_obj, XML_ATTR_ID));
 		}
 		);
 	crm_verbose("Added %d children to resource %s...",
@@ -125,6 +123,9 @@ int group_num_allowed_nodes(resource_t *rsc)
 			rsc->id);
 		return 0;
 	}
+	if(group_data->self == NULL) {
+		return 0;
+	}
  	return group_data->self->fns->num_allowed_nodes(group_data->self);
 }
 
@@ -132,6 +133,10 @@ void group_color(resource_t *rsc, GListPtr *colors)
 {
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
+
+	if(group_data->self == NULL) {
+		return;
+	}
 
  	group_data->self->fns->color(group_data->self, colors);
 	slist_iter(
@@ -166,10 +171,12 @@ void group_create_actions(resource_t *rsc)
 		action_new(group_data->self, stopped_rsc, NULL);
 	}
 	
-	slist_iter(
-		action, action_t, group_data->self->actions, lpc,
-		action->pseudo   = TRUE;
-		);
+	if(group_data->self != NULL) {
+		slist_iter(
+			action, action_t, group_data->self->actions, lpc,
+			action->pseudo   = TRUE;
+			);
+	}
 }
 
 void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
@@ -242,8 +249,12 @@ void group_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 	} else {
 		crm_debug("Processing constraints from %s", rsc->id);
 	}
-	
+
 	get_group_variant_data(group_data, rsc);
+	if(group_data->self == NULL) {
+		return;
+	}
+
 	group_data->self->fns->rsc_dependancy_rh(group_data->self, constraint);
 	
 }
@@ -256,6 +267,10 @@ void group_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 
 	crm_verbose("Processing RH of constraint %s", constraint->id);
 	crm_debug_action(print_resource("LHS", rsc_lh, TRUE));
+
+	if(group_data->self == NULL) {
+		return;
+	}
 	
 	group_data->self->fns->rsc_dependancy_rh(group_data->self, constraint);
 }
@@ -268,7 +283,10 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 
 	crm_verbose("Processing LH of ordering constraint %d", order->id);
 
-	if(order->lh_action_task == start_rsc) {
+	if(group_data->self == NULL) {
+		return;
+
+	} else if(order->lh_action_task == start_rsc) {
 		order->lh_action_task = started_rsc;
 		
 	} else if(order->lh_action_task == stop_rsc) {
@@ -286,6 +304,10 @@ void group_rsc_order_rh(
 
 	crm_verbose("Processing RH of ordering constraint %d", order->id);
 
+	if(group_data->self == NULL) {
+		return;
+	}
+
 	group_data->self->fns->rsc_order_rh(lh_action, group_data->self, order);
 }
 
@@ -296,7 +318,10 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 	crm_verbose("Processing actions from %s", rsc->id);
 
-	group_data->self->fns->rsc_location(group_data->self, constraint);
+	if(group_data->self != NULL) {
+		group_data->self->fns->rsc_location(group_data->self, constraint);
+	}
+
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
@@ -304,7 +329,7 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		);
 }
 
-void group_expand(resource_t *rsc, xmlNodePtr *graph)
+void group_expand(resource_t *rsc, crm_data_t * *graph)
 {
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
@@ -313,6 +338,10 @@ void group_expand(resource_t *rsc, xmlNodePtr *graph)
 
 	group_data->self->fns->expand(group_data->self, graph);
 
+	if(group_data->self == NULL) {
+		return;
+	}
+	
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
@@ -325,6 +354,10 @@ void group_dump(resource_t *rsc, const char *pre_text, gboolean details)
 {
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
+
+	if(group_data->self == NULL) {
+		return;
+	}
 
 	common_dump(rsc, pre_text, details);
 	
@@ -353,7 +386,10 @@ void group_free(resource_t *rsc)
 
 	crm_verbose("Freeing child list");
 	pe_free_shallow_adv(group_data->child_list, FALSE);
-	group_data->self->fns->free(group_data->self);
+
+	if(group_data->self != NULL) {
+		group_data->self->fns->free(group_data->self);
+	}
 
 	common_free(rsc);
 }

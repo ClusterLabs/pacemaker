@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.53 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: pengine.c,v 1.54 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,18 +25,16 @@
 #include <crm/common/msg.h>
 
 #include <glib.h>
-#include <libxml/tree.h>
 
 #include <pengine.h>
 #include <pe_utils.h>
-FILE *pemsg_strm = NULL;
 
-xmlNodePtr do_calculations(xmlNodePtr cib_object);
+crm_data_t * do_calculations(crm_data_t *cib_object);
 int num_synapse = 0;
 
 
 gboolean
-process_pe_message(HA_Message *msg, xmlNodePtr xml_data, IPC_Channel *sender)
+process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 {
 	char *msg_buffer = NULL;
 	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
@@ -44,10 +42,6 @@ process_pe_message(HA_Message *msg, xmlNodePtr xml_data, IPC_Channel *sender)
 	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
 
 	crm_verbose("Processing %s op (ref=%s)...", op, ref);
-
-	if(pemsg_strm == NULL) {
-		pemsg_strm = fopen(DEVEL_DIR"/pe.log", "w");
-	}
 	
 	if(op == NULL){
 		/* error */
@@ -64,18 +58,18 @@ process_pe_message(HA_Message *msg, xmlNodePtr xml_data, IPC_Channel *sender)
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
-		xmlNodePtr output = NULL;
+		crm_data_t * output = NULL;
 		
 		msg_buffer = dump_xml_formatted(xml_data);
-		fprintf(pemsg_strm, "%s: %s\n", "[in ]", msg_buffer);
-		fflush(pemsg_strm);
+		do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/pe.log",
+			   "%s: %s\n", "[in ]", msg_buffer);
 		crm_free(msg_buffer);
 
 		output = do_calculations(xml_data);
 
 		msg_buffer = dump_xml_formatted(output);
-		fprintf(pemsg_strm, "%s: %s\n", "[out ]", msg_buffer);
-		fflush(pemsg_strm);
+		do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/pe.log",
+			   "%s: %s\n", "[out ]", msg_buffer);
 		crm_free(msg_buffer);
 
 		if (send_ipc_reply(sender, msg, output) ==FALSE) {
@@ -92,8 +86,8 @@ process_pe_message(HA_Message *msg, xmlNodePtr xml_data, IPC_Channel *sender)
 	return TRUE;
 }
 
-xmlNodePtr
-do_calculations(xmlNodePtr cib_object)
+crm_data_t *
+do_calculations(crm_data_t * cib_object)
 {
 	GListPtr resources = NULL;
 	GListPtr nodes = NULL;
@@ -106,7 +100,7 @@ do_calculations(xmlNodePtr cib_object)
 	GListPtr colors = NULL;
 	GListPtr action_sets = NULL;
 
-	xmlNodePtr graph = NULL;
+	crm_data_t * graph = NULL;
 
 /*	pe_debug_on(); */
 	

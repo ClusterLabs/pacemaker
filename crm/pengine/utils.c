@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.52 2005/01/12 13:41:03 andrew Exp $ */
+/* $Id: utils.c,v 1.53 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1088,14 +1088,14 @@ find_actions(GListPtr input, enum action_tasks task, node_t *on_node)
 }
 
 void
-set_id(xmlNodePtr xml_obj, const char *prefix, int child) 
+set_id(crm_data_t * xml_obj, const char *prefix, int child) 
 {
 	int id_len = 0;
 	gboolean use_prefix = TRUE;
 	gboolean use_child = TRUE;
 
 	char *new_id   = NULL;
-	const char *id = xmlGetProp(xml_obj, XML_ATTR_ID);
+	const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
 	
 	id_len = 1 + strlen(id);
 

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.8 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: main.c,v 1.9 2005/01/26 13:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -109,7 +109,7 @@ main(int argc, char ** argv)
 
 	client_list = g_hash_table_new(&g_str_hash, &g_str_equal);
 	peer_hash = g_hash_table_new(&g_str_hash, &g_str_equal);
-	set_crm_log_level(LOG_DEV);
+	set_crm_log_level(LOG_TRACE);
 	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -383,7 +383,7 @@ cib_shutdown(int nsig)
 gboolean
 startCib(const char *filename)
 {
-	xmlNodePtr cib = readCibXmlFile(filename);
+	crm_data_t *cib = readCibXmlFile(filename);
 	if (initializeCib(cib)) {
 		crm_info("CIB Initialization completed successfully");
 	} else { 

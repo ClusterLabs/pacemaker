@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.21 2005/01/21 10:33:45 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.22 2005/01/26 13:30:53 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -59,12 +59,12 @@ int do_work(ll_cluster_t * hb_cluster);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 char *pluralSection(const char *a_section);
-xmlNodePtr handleCibMod(void);
-int do_find_resource(const char *rsc, xmlNodePtr xml_node);
-int do_find_resource_list(xmlNodePtr xml_node);
-int do_find_node_list(xmlNodePtr xml_node);
+crm_data_t *handleCibMod(void);
+int do_find_resource(const char *rsc, crm_data_t *xml_node);
+int do_find_resource_list(crm_data_t *xml_node);
+int do_find_node_list(crm_data_t *xml_node);
 gboolean admin_message_timeout(gpointer data);
-gboolean is_node_online(xmlNodePtr node_state);
+gboolean is_node_online(crm_data_t *node_state);
 
 enum debug {
 	debug_none,
@@ -87,7 +87,7 @@ gboolean DO_OPTION        = FALSE;
 enum debug DO_DEBUG       = debug_none;
 const char *crmd_operation = NULL;
 
-xmlNodePtr msg_options = NULL;
+crm_data_t *msg_options = NULL;
 
 const char *admin_verbose = XML_BOOLEAN_FALSE;
 char *id = NULL;
@@ -314,7 +314,7 @@ do_work(ll_cluster_t * hb_cluster)
 {
 	int ret = 1;
 	/* construct the request */
-	xmlNodePtr msg_data = NULL;
+	crm_data_t *msg_data = NULL;
 	gboolean all_is_good = TRUE;
 	
 	msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
@@ -366,7 +366,7 @@ do_work(ll_cluster_t * hb_cluster)
 
 	} else if(DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST || DO_OPTION){
 		cib_t *	the_cib = cib_new();
-		xmlNodePtr output = NULL;
+		crm_data_t *output = NULL;
 		int call_options = cib_sync_call;
 		
 		enum cib_errors rc = the_cib->cmds->signon(
@@ -397,8 +397,8 @@ do_work(ll_cluster_t * hb_cluster)
 		} else if(DO_OPTION) {
 			char *name = NULL;
 			char *value = NULL;
-			xmlNodePtr xml_option = NULL;
-			xmlNodePtr fragment = NULL;
+			crm_data_t *xml_option = NULL;
+			crm_data_t *fragment = NULL;
 
 			if(decodeNVpair(crm_option, '=', &name, &value)==FALSE){
 				crm_err("%s needs to be of the form"
@@ -511,9 +511,10 @@ do_init(void)
 	int facility;
 	ll_cluster_t *hb_cluster = NULL;
 
+#ifdef USE_LIBXML
 	/* docs say only do this once, but in their code they do it every time! */
 	xmlInitParser (); 
-
+#endif
 	/* change the logging facility to the one used by heartbeat daemon */
 	hb_cluster = ll_cluster_new("heartbeat");
 	
@@ -599,14 +600,14 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		received_responses++;
 
 		if(DO_HEALTH) {
-			const char *state = xmlGetProp(
+			const char *state = crm_element_value(
 				new_input->xml, "crmd_state");
 
 			printf("Status of %s@%s: %s (%s)\n",
-			       xmlGetProp(new_input->xml,XML_PING_ATTR_SYSFROM),
+			       crm_element_value(new_input->xml,XML_PING_ATTR_SYSFROM),
 			       cl_get_string(new_input->msg, F_CRM_HOST_FROM),
 			       state,
-			       xmlGetProp(new_input->xml,XML_PING_ATTR_STATUS));
+			       crm_element_value(new_input->xml,XML_PING_ATTR_STATUS));
 			
 			if(BE_SILENT && state != NULL) {
 				fprintf(stderr, "%s\n", state);
@@ -634,12 +635,9 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 					received_responses);
 				
 				filename[filename_len - 1] = '\0';
-				if (0 > xmlSaveFormatFile(
-					    filename, new_input->xml->doc, 1)) {
+				if (0 > write_xml_file(new_input->xml, filename)) {
 					crm_crit("Could not save response to"
-						 " %s_%s_%d.xml",
-						 this_msg_reference,
-						 result, received_responses);
+						 " %s", filename);
 				}
 			}
 		}
@@ -676,45 +674,40 @@ admin_message_timeout(gpointer data)
 
 
 int
-do_find_resource(const char *rsc, xmlNodePtr xml_node)
+do_find_resource(const char *rsc, crm_data_t *xml_node)
 {
 	int found = 0;
 	const char *path[] = {
 		XML_TAG_CIB,
-		XML_CIB_TAG_STATUS,
-		XML_CIB_TAG_STATE
+		XML_CIB_TAG_STATUS
 	};
 	const char *path2[] = {
 		XML_CIB_TAG_LRM,
-		XML_LRM_TAG_RESOURCES,
-		XML_LRM_TAG_RESOURCE
+		XML_LRM_TAG_RESOURCES
 	};
-	xmlNodePtr nodestates = find_xml_node_nested(
+	crm_data_t *nodestates = find_xml_node_nested(
 		xml_node, path, DIMOF(path));
 
-	while(nodestates != NULL) {
-		xmlNodePtr rscstates = NULL;
-		xmlNodePtr a_node = nodestates;
-		nodestates = nodestates->next;
+	xml_child_iter(
+		nodestates, a_node, XML_CIB_TAG_STATE,
+		crm_data_t *rscstates = NULL;
 
 		if(is_node_online(a_node) == FALSE) {
 			crm_debug("Skipping offline node: %s",
-				xmlGetProp(a_node, XML_ATTR_ID));
+				crm_element_value(a_node, XML_ATTR_ID));
 			continue;
 		}
 		
 		rscstates = find_xml_node_nested(a_node, path2, DIMOF(path2));
-		
-		while(rscstates != NULL) {
-			const char *id = xmlGetProp(rscstates,XML_ATTR_ID);
+		xml_child_iter(
+			rscstates, rsc_state, XML_LRM_TAG_RESOURCE,
+			const char *id = crm_element_value(rsc_state,XML_ATTR_ID);
 			const char *target =
-				xmlGetProp(rscstates,XML_LRM_ATTR_TARGET);
+				crm_element_value(rsc_state,XML_LRM_ATTR_TARGET);
 			const char *last_op =
-				xmlGetProp(rscstates,XML_LRM_ATTR_LASTOP);
+				crm_element_value(rsc_state,XML_LRM_ATTR_LASTOP);
 			const char *op_code =
-				xmlGetProp(rscstates,XML_LRM_ATTR_OPSTATUS);
-
-			rscstates = rscstates->next;
+				crm_element_value(rsc_state,XML_LRM_ATTR_OPSTATUS);
 			
 			crm_debug("checking %s:%s for %s", target, id, rsc);
 
@@ -745,11 +738,12 @@ do_find_resource(const char *rsc, xmlNodePtr xml_node)
 				}
 				found++;
 			}
-		}
+			);
 		if(BE_SILENT) {
 			fprintf(stderr, "\n");
 		}
-	}
+		);
+	
 	if(found == 0) {
 		printf("resource %s is NOT running\n", rsc);
 	}
@@ -758,13 +752,13 @@ do_find_resource(const char *rsc, xmlNodePtr xml_node)
 }
 
 gboolean
-is_node_online(xmlNodePtr node_state) 
+is_node_online(crm_data_t *node_state) 
 {
-	const char *uname      = xmlGetProp(node_state,XML_ATTR_UNAME);
-	const char *join_state = xmlGetProp(node_state,XML_CIB_ATTR_JOINSTATE);
-	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
-	const char *ha_state   = xmlGetProp(node_state,XML_CIB_ATTR_HASTATE);
-	const char *ccm_state  = xmlGetProp(node_state,XML_CIB_ATTR_INCCM);
+	const char *uname      = crm_element_value(node_state,XML_ATTR_UNAME);
+	const char *join_state = crm_element_value(node_state,XML_CIB_ATTR_JOINSTATE);
+	const char *crm_state  = crm_element_value(node_state,XML_CIB_ATTR_CRMDSTATE);
+	const char *ha_state   = crm_element_value(node_state,XML_CIB_ATTR_HASTATE);
+	const char *ccm_state  = crm_element_value(node_state,XML_CIB_ATTR_INCCM);
 
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
 	   && safe_str_eq(ha_state, ACTIVESTATUS)
@@ -780,27 +774,25 @@ is_node_online(xmlNodePtr node_state)
 
 
 int
-do_find_resource_list(xmlNodePtr xml_node)
+do_find_resource_list(crm_data_t *xml_node)
 {
 	int found = 0;
 	const char *path[] = {
 		XML_TAG_CIB,
-		XML_CIB_TAG_RESOURCES,
-		XML_CIB_TAG_RESOURCE
+		XML_CIB_TAG_RESOURCES
 	};
-	xmlNodePtr rscs = find_xml_node_nested(
+	crm_data_t *rscs = find_xml_node_nested(
 		xml_node, path, DIMOF(path));
 
-	while(rscs != NULL) {
+	xml_child_iter(
+		rscs, rsc, XML_CIB_TAG_RESOURCE,
 		printf("%s resource: %s (%s)\n",
-		       xmlGetProp(rscs, "class"),
-		       xmlGetProp(rscs, XML_ATTR_ID),
-		       xmlGetProp(rscs, XML_ATTR_TYPE));
-
-		rscs = rscs->next;
+		       crm_element_value(rsc, "class"),
+		       crm_element_value(rsc, XML_ATTR_ID),
+		       crm_element_value(rsc, XML_ATTR_TYPE));
 
 		found++;
-	}
+		);
 	if(found == 0) {
 		printf("NO resources configured\n");
 	}
@@ -809,27 +801,24 @@ do_find_resource_list(xmlNodePtr xml_node)
 }
 
 int
-do_find_node_list(xmlNodePtr xml_node)
+do_find_node_list(crm_data_t *xml_node)
 {
 	int found = 0;
 	const char *path[] = {
 		XML_TAG_CIB,
-		XML_CIB_TAG_NODES,
-		XML_CIB_TAG_NODE
+		XML_CIB_TAG_NODES
 	};
-	xmlNodePtr nodes = find_xml_node_nested(
+	crm_data_t *nodes = find_xml_node_nested(
 		xml_node, path, DIMOF(path));
 
-	while(nodes != NULL) {
+	xml_child_iter(
+		nodes, node, XML_CIB_TAG_NODE,	
 		printf("%s node: %s (%s)\n",
-		       xmlGetProp(nodes, XML_ATTR_TYPE),
-		       xmlGetProp(nodes, XML_ATTR_UNAME),
-		       xmlGetProp(nodes, XML_ATTR_ID));
-
-		nodes = nodes->next;
-
+		       crm_element_value(node, XML_ATTR_TYPE),
+		       crm_element_value(node, XML_ATTR_UNAME),
+		       crm_element_value(node, XML_ATTR_ID));
 		found++;
-	}
+		);
 	if(found == 0) {
 		printf("NO nodes configured\n");
 	}

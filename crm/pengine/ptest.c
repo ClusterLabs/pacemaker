@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.40 2005/01/12 13:40:59 andrew Exp $ */
+/* $Id: ptest.c,v 1.41 2005/01/26 13:31:00 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -46,7 +46,7 @@
 int
 main(int argc, char **argv)
 {
-	xmlNodePtr cib_object = NULL;
+	crm_data_t * cib_object = NULL;
 	int argerr = 0;
 	int flag;
 		
@@ -59,7 +59,7 @@ main(int argc, char **argv)
 	GListPtr shutdown_list = NULL;
 	GListPtr colors = NULL;
 	GListPtr action_sets = NULL;
-	xmlNodePtr graph = NULL;
+	crm_data_t * graph = NULL;
 	char *msg_buffer = NULL;
 
 	const char *xml_file = NULL;

@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.39 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: tengine.c,v 1.40 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -115,7 +115,7 @@ initialize_graph(void)
  *            not allowed to)
  */
 int
-match_graph_event(action_t *action, xmlNodePtr event)
+match_graph_event(action_t *action, crm_data_t *event)
 {
 	const char *allow_fail  = NULL;
 	const char *this_action = NULL;
@@ -137,23 +137,23 @@ match_graph_event(action_t *action, xmlNodePtr event)
 		return -1;
 	}
 	
-	event_node   = xmlGetProp(event, XML_LRM_ATTR_TARGET);
-	event_action = xmlGetProp(event, XML_LRM_ATTR_LASTOP);
-	event_rsc    = xmlGetProp(event, XML_ATTR_ID);
-	event_rc     = xmlGetProp(event, XML_LRM_ATTR_RC);
-	rsc_state    = xmlGetProp(event, XML_LRM_ATTR_RSCSTATE);
-	op_status    = xmlGetProp(event, XML_LRM_ATTR_OPSTATUS);
+	event_node   = crm_element_value(event, XML_LRM_ATTR_TARGET);
+	event_action = crm_element_value(event, XML_LRM_ATTR_LASTOP);
+	event_rsc    = crm_element_value(event, XML_ATTR_ID);
+	event_rc     = crm_element_value(event, XML_LRM_ATTR_RC);
+	rsc_state    = crm_element_value(event, XML_LRM_ATTR_RSCSTATE);
+	op_status    = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
 	
 	if(op_status != NULL) {
 		op_status_i = atoi(op_status);
 	}
 	
-	this_action = xmlGetProp(action->xml, XML_LRM_ATTR_TASK);
-	this_node   = xmlGetProp(action->xml, XML_LRM_ATTR_TARGET);
-	this_rsc    = xmlGetProp(action->xml, XML_LRM_ATTR_RSCID);
+	this_action = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+	this_node   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	this_rsc    = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
 	
 	crm_devel("matching against: <%s task=%s node=%s rsc_id=%s/>",
-		  action->xml->name, this_action, this_node, this_rsc);
+		  crm_element_name(action->xml), this_action, this_node, this_rsc);
 	
 	if(safe_str_neq(this_node, event_node)) {
 		crm_devel("node mismatch: %s", event_node);
@@ -161,7 +161,7 @@ match_graph_event(action_t *action, xmlNodePtr event)
 	} else if(safe_str_neq(this_action, event_action)) {	
 		crm_devel("action mismatch: %s", event_action);
 		
-	} else if(safe_str_eq(action->xml->name, XML_GRAPH_TAG_RSC_OP)) {
+	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP)) {
 		crm_devel(XML_GRAPH_TAG_RSC_OP);
 		if(safe_str_eq(this_rsc, event_rsc)) {
 			match = action;
@@ -169,7 +169,7 @@ match_graph_event(action_t *action, xmlNodePtr event)
 			crm_devel("bad rsc (%s) != (%s)", this_rsc, event_rsc);
 		}
 		
-	} else if(safe_str_eq(action->xml->name, XML_GRAPH_TAG_CRM_EVENT)) {
+	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT)) {
 		crm_devel(XML_GRAPH_TAG_CRM_EVENT);
 		match = action;
 		
@@ -188,7 +188,7 @@ match_graph_event(action_t *action, xmlNodePtr event)
 	stop_te_timer(match->timer);
 
 	/* Process OP status */
-	allow_fail = xmlGetProp(match->xml, "allow_fail");
+	allow_fail = crm_element_value(match->xml, "allow_fail");
 	switch(op_status_i) {
 		case LRM_OP_DONE:
 			break;
@@ -221,11 +221,11 @@ match_graph_event(action_t *action, xmlNodePtr event)
 }
 
 gboolean
-process_graph_event(xmlNodePtr event)
+process_graph_event(crm_data_t *event)
 {
 	int action_id          = -1;
 	int op_status_i        = 0;
-	const char *op_status  = xmlGetProp(event, XML_LRM_ATTR_OPSTATUS);
+	const char *op_status  = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
 
 	next_transition_timeout = transition_timeout;
 	
@@ -316,18 +316,18 @@ initiate_action(action_t *action)
 	const char *timeout   = NULL;
 	const char *destination = NULL;
 	const char *msg_task    = XML_GRAPH_TAG_RSC_OP;
-	xmlNodePtr rsc_op  = NULL;
+	crm_data_t *rsc_op  = NULL;
 
-	on_node  = xmlGetProp(action->xml, XML_LRM_ATTR_TARGET);
-	id       = xmlGetProp(action->xml, XML_ATTR_ID);
-	task     = xmlGetProp(action->xml, XML_LRM_ATTR_TASK);
-	timeout  = xmlGetProp(action->xml, XML_ATTR_TIMEOUT);
+	on_node  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	id       = crm_element_value(action->xml, XML_ATTR_ID);
+	task     = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+	timeout  = crm_element_value(action->xml, XML_ATTR_TIMEOUT);
 
 	if(id == NULL || strlen(id) == 0
 	   || task == NULL || strlen(task) == 0) {
 		/* error */
 		crm_err("Failed on corrupted command: %s (id=%s) %s",
-			action->xml->name, crm_str(id), crm_str(task));
+			crm_element_name(action->xml), crm_str(id), crm_str(task));
 
 	} else if(action->type == action_type_pseudo){
 		crm_info("Executing pseudo-event (%d): "
@@ -340,7 +340,7 @@ initiate_action(action_t *action)
 	} else if(on_node == NULL || strlen(on_node) == 0) {
 		/* error */
 		crm_err("Failed on corrupted command: %s (id=%s) %s on %s",
-			action->xml->name, crm_str(id),
+			crm_element_name(action->xml), crm_str(id),
 			crm_str(task), crm_str(on_node));
 			
 	} else if(action->type == action_type_crm){
@@ -356,11 +356,14 @@ initiate_action(action_t *action)
 #endif			
 		ret = TRUE;
 	} else if(action->type == action_type_rsc){
+#ifdef USE_LIBXML
 		crm_info("Executing rsc-op (%s): %s %s on %s",
 			 id, task,
-			 xmlGetProp(action->xml->children, XML_ATTR_ID),
+			 crm_element_value(action->xml->children, XML_ATTR_ID),
 			 on_node);
-
+#else
+		abort();
+#endif
 		/* let everyone know this was invoked */
 		do_update_cib(action->xml, -1);
 
@@ -375,9 +378,12 @@ initiate_action(action_t *action)
 		set_xml_property_copy(rsc_op, XML_ATTR_ID, id);
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TASK, task);
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TARGET, on_node);
-			
-		add_node_copy(rsc_op, action->xml->children);
 
+#   ifdef USE_LIBXML
+		add_node_copy(rsc_op, action->xml->children);
+#   else
+		abort();
+#   endif
 		destination = CRM_SYSTEM_LRMD;
 #endif			
 		ret = TRUE;
@@ -385,7 +391,7 @@ initiate_action(action_t *action)
 	} else {
 		crm_err("Failed on unsupported command type: "
 			"%s, %s (id=%s) on %s",
-			action->xml->name, task, id, on_node);
+			crm_element_name(action->xml), task, id, on_node);
 	}
 
 	if(ret) {
@@ -403,11 +409,11 @@ initiate_action(action_t *action)
 		crm_free(counter);
 
 #ifdef MSG_LOG
-		if(msg_te_strm != NULL) {
+		{
 			char *message = dump_xml_formatted(rsc_op);
-			fprintf(msg_te_strm, "[Action]\t%s\n%s\n",
-				crm_str(counter), crm_str(message));
-			fflush(msg_te_strm);
+			do_crm_log(LOG_DEBUG, __FUNCTION__, DEVEL_DIR"/te.log",
+				   "[Action]\t%s\n%s",
+				   crm_str(counter), crm_str(message));
 			crm_free(message);
 		}
 #endif
@@ -499,7 +505,7 @@ fire_synapse(synapse_t *synapse)
 
 		if(passed == FALSE) {
 			crm_err("Failed initiating <%s id=%d> in synapse %d",
-				action->xml->name, action->id, synapse->id);
+				crm_element_name(action->xml), action->id, synapse->id);
 
 			send_abort("Action init failed", action->xml);
 			return;

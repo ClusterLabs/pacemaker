@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.31 2005/01/12 15:43:20 andrew Exp $ */
+/* $Id: stages.c,v 1.32 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,7 +25,6 @@
 #include <crm/common/msg.h>
 
 #include <glib.h>
-#include <libxml/tree.h>
 
 #include <pengine.h>
 #include <pe_utils.h>
@@ -47,27 +46,27 @@ const char *dc_uuid = NULL;
  *  - A list of the possible stop/start actions (without dependancies)
  */
 gboolean
-stage0(xmlNodePtr cib,
+stage0(crm_data_t * cib,
        GListPtr *resources,
        GListPtr *nodes, GListPtr *placement_constraints,
        GListPtr *actions, GListPtr *ordering_constraints,
        GListPtr *stonith_list, GListPtr *shutdown_list)
 {
 /*	int lpc; */
-	xmlNodePtr cib_nodes       = get_object_root(
+	crm_data_t * cib_nodes       = get_object_root(
 		XML_CIB_TAG_NODES,       cib);
-	xmlNodePtr cib_status      = get_object_root(
+	crm_data_t * cib_status      = get_object_root(
 		XML_CIB_TAG_STATUS,      cib);
-	xmlNodePtr cib_resources   = get_object_root(
+	crm_data_t * cib_resources   = get_object_root(
 		XML_CIB_TAG_RESOURCES,   cib);
-	xmlNodePtr cib_constraints = get_object_root(
+	crm_data_t * cib_constraints = get_object_root(
 		XML_CIB_TAG_CONSTRAINTS, cib);
-	xmlNodePtr config          = get_object_root(
+	crm_data_t * config          = get_object_root(
 		XML_CIB_TAG_CRMCONFIG,   cib);
-	xmlNodePtr agent_defaults  = NULL;
+	crm_data_t * agent_defaults  = NULL;
 	/*get_object_root(XML_CIB_TAG_RA_DEFAULTS, cib); */
 
-	dc_uuid = xmlGetProp(cib, XML_ATTR_DC_UUID);
+	dc_uuid = crm_element_value(cib, XML_ATTR_DC_UUID);
 	
 	/* reset remaining global variables */
 	num_synapse = 0;
@@ -349,7 +348,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
  * Create a dependancy graph to send to the transitioner (via the CRMd)
  */
 gboolean
-stage8(GListPtr resources, GListPtr actions, xmlNodePtr *graph)
+stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 {
 	crm_debug("Processing stage 8");
 	*graph = create_xml_node(NULL, XML_TAG_GRAPH);

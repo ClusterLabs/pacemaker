@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.22 2004/11/12 17:20:58 andrew Exp $ */
+/* $Id: color.c,v 1.23 2005/01/26 13:30:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,7 +24,6 @@
 #include <crm/common/msg.h>
 
 #include <glib.h>
-#include <libxml/tree.h>
 
 #include <pengine.h>
 #include <pe_utils.h>

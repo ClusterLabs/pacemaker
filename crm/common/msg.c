@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.10 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: msg.c,v 1.11 2005/01/26 13:30:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,13 +37,13 @@
 #include <crm/dmalloc_wrapper.h>
 
 HA_Message *create_common_message(
-	HA_Message *original_request, xmlNodePtr xml_response_data);
+	HA_Message *original_request, crm_data_t *xml_response_data);
 
 
-xmlNodePtr
+crm_data_t*
 createPingAnswerFragment(const char *from, const char *status)
 {
-	xmlNodePtr ping = NULL;
+	crm_data_t *ping = NULL;
 	
 	
 	ping = create_xml_node(NULL, XML_CRM_TAG_PING);
@@ -121,7 +121,7 @@ send_hello_message(IPC_Channel *ipc_client,
 		   const char *major_version,
 		   const char *minor_version)
 {
-	xmlNodePtr hello_node = NULL;
+	crm_data_t *hello_node = NULL;
 	HA_Message *hello = NULL;
 	if (uuid == NULL || strlen(uuid) == 0
 	    || client_name == NULL || strlen(client_name) == 0
@@ -149,7 +149,7 @@ send_hello_message(IPC_Channel *ipc_client,
 
 
 gboolean
-process_hello_message(xmlNodePtr hello,
+process_hello_message(crm_data_t *hello,
 		      char **uuid,
 		      char **client_name,
 		      char **major_version,
@@ -166,10 +166,10 @@ process_hello_message(xmlNodePtr hello,
 	*major_version = NULL;
 	*minor_version = NULL;
 
-	local_uuid = xmlGetProp(hello, "client_uuid");
-	local_client_name = xmlGetProp(hello, "client_name");
-	local_major_version = xmlGetProp(hello, "major_version");
-	local_minor_version = xmlGetProp(hello, "minor_version");
+	local_uuid = crm_element_value(hello, "client_uuid");
+	local_client_name = crm_element_value(hello, "client_name");
+	local_major_version = crm_element_value(hello, "major_version");
+	local_minor_version = crm_element_value(hello, "minor_version");
 
 	if (local_uuid == NULL || strlen(local_uuid) == 0) {
 		crm_err("Hello message was not valid (field %s not found)",
@@ -204,9 +204,10 @@ process_hello_message(xmlNodePtr hello,
 }
 
 HA_Message *
-create_request(const char *task, xmlNodePtr msg_data,
-	       const char *host_to,  const char *sys_to,
-	       const char *sys_from, const char *uuid_from)
+create_request_adv(const char *task, crm_data_t *msg_data,
+		   const char *host_to,  const char *sys_to,
+		   const char *sys_from, const char *uuid_from,
+		   const char *origin)
 {
 	char *true_from = NULL;
 	HA_Message *request = NULL;
@@ -221,8 +222,9 @@ create_request(const char *task, xmlNodePtr msg_data,
 	}
 	
 	/* host_from will get set for us if necessary by CRMd when routed */
-	request = ha_msg_new(10);
+	request = ha_msg_new(11);
 
+	ha_msg_add(request, F_CRM_ORIGIN,	origin);
 	ha_msg_add(request, F_TYPE,		T_CRM);
 	ha_msg_add(request, F_CRM_VERSION,	CRM_VERSION);
 	ha_msg_add(request, F_CRM_MSG_TYPE,     XML_ATTR_REQUEST);
@@ -251,7 +253,8 @@ create_request(const char *task, xmlNodePtr msg_data,
  * This method adds a copy of xml_response_data
  */
 HA_Message *
-create_reply(HA_Message *original_request, xmlNodePtr xml_response_data)
+create_reply_adv(HA_Message *original_request,
+		 crm_data_t *xml_response_data, const char *origin)
 {
 	HA_Message *reply = NULL;
 
@@ -276,6 +279,7 @@ create_reply(HA_Message *original_request, xmlNodePtr xml_response_data)
 	}
 	reply = ha_msg_new(10);
 
+	ha_msg_add(reply, F_CRM_ORIGIN,		origin);
 	ha_msg_add(reply, F_TYPE,		T_CRM);
 	ha_msg_add(reply, F_CRM_VERSION,	CRM_VERSION);
 	ha_msg_add(reply, F_CRM_MSG_TYPE,	XML_ATTR_RESPONSE);
@@ -306,7 +310,7 @@ create_reply(HA_Message *original_request, xmlNodePtr xml_response_data)
  */
 gboolean
 send_ipc_reply(IPC_Channel *ipc_channel,
-	       HA_Message *request, xmlNodePtr xml_response_data)
+	       HA_Message *request, crm_data_t *xml_response_data)
 {
 	gboolean was_sent = FALSE;
 	HA_Message *reply = NULL;
@@ -356,7 +360,7 @@ delete_ha_msg_input(ha_msg_input_t *orig)
 	if(orig == NULL) {
 		return;
 	}
- 	ha_msg_del(orig->msg);
+ 	crm_msg_del(orig->msg);
 	free_xml(orig->xml);
 	crm_free(orig);
 }

@@ -1,4 +1,4 @@
-/* $Id: cibmessages.h,v 1.5 2004/12/05 16:14:07 andrew Exp $ */
+/* $Id: cibmessages.h,v 1.6 2005/01/26 13:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -20,45 +20,45 @@
 #define CIB_MESSAGES__H
 
 
-extern xmlNodePtr createCibRequest(
+extern crm_data_t *createCibRequest(
 	gboolean isLocal, const char *operation, const char *section,
-	const char *verbose, xmlNodePtr data);
+	const char *verbose, crm_data_t *data);
 
 extern enum cib_errors cib_process_default(
-	const char *op, int options, const char *section, xmlNodePtr input,
-	xmlNodePtr *answer);
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t **answer);
 
 extern enum cib_errors cib_process_quit(
-	const char *op, int options, const char *section, xmlNodePtr input,
-	xmlNodePtr *answer);
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t **answer);
 
 extern enum cib_errors cib_process_ping(
-	const char *op, int options, const char *section, xmlNodePtr input,
-	xmlNodePtr *answer);
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t **answer);
 
 extern enum cib_errors cib_process_query(
-	const char *op, int options, const char *section, xmlNodePtr input,
-	xmlNodePtr *answer);
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t **answer);
 
 extern enum cib_errors cib_process_erase(
-	const char *op, int options, const char *section, xmlNodePtr input,
-	xmlNodePtr *answer);
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t **answer);
 
 extern enum cib_errors cib_process_bump(
-	const char *op, int options, const char *section, xmlNodePtr input,
-	xmlNodePtr *answer);
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t **answer);
 
 extern enum cib_errors cib_process_replace(
-	const char *op, int options, const char *section, xmlNodePtr input,
-	xmlNodePtr *answer);
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t **answer);
 
 extern enum cib_errors cib_process_modify(
-	const char *op, int options, const char *section, xmlNodePtr input,
-	xmlNodePtr *answer);
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t **answer);
 
 extern enum cib_errors cib_process_readwrite(
-	const char *op, int options, const char *section, xmlNodePtr input,
-	xmlNodePtr *answer);
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t **answer);
 
 
 #endif

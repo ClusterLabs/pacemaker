@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.5 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: callbacks.c,v 1.6 2005/01/26 13:31:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,20 +38,18 @@ te_update_confirm(const char *event, HA_Message *msg)
 	const char *op = cl_get_string(msg, F_CIB_OPERATION);
 	const char *type = cl_get_string(msg, F_CIB_OBJTYPE);
 	const char *update_s = cl_get_string(msg, F_CIB_UPDATE);
-	xmlNodePtr update = string2xml(update_s);
+	crm_data_t *update = string2xml(update_s);
 
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 	crm_trace("Processing %s...", event);
 	crm_xml_devel(update, "Processing update");
 	
-	if (MSG_LOG && msg_te_strm == NULL) {
+	if (MSG_LOG) {
 		struct stat buf;
 		if(stat(DEVEL_DIR, &buf) != 0) {
 			cl_perror("Stat of %s failed... exiting", DEVEL_DIR);
 			exit(100);
 		}
-
-		msg_te_strm = fopen(DEVEL_DIR"/te.log", "w");
 	}
 	
 	if(op == NULL) {
@@ -104,7 +102,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 
 
 gboolean
-process_te_message(HA_Message *msg, xmlNodePtr xml_data, IPC_Channel *sender)
+process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 {
 	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *ref    = cl_get_string(msg, XML_ATTR_REFERENCE);
@@ -112,20 +110,19 @@ process_te_message(HA_Message *msg, xmlNodePtr xml_data, IPC_Channel *sender)
 
 	crm_debug("Recieved %s (%s) message", op, ref);
 
-	if (MSG_LOG && msg_te_strm == NULL) {
+	if (MSG_LOG) {
 		struct stat buf;
 		if(stat(DEVEL_DIR, &buf) != 0) {
 			cl_perror("Stat of %s failed... exiting", DEVEL_DIR);
 			exit(100);
 		}
-		msg_te_strm = fopen(DEVEL_DIR"/te.log", "w");
 	}
 
 #ifdef MSG_LOG
 	{
 		char *xml = dump_xml_formatted(xml_data);
-		fprintf(msg_te_strm, "[Input %s]\t%s\n", op, xml);
-		fflush(msg_te_strm);
+		do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/te.log",
+			   "[Input %s]\t%s", op, xml);
 		crm_free(xml);
 	}
 #endif
@@ -133,8 +130,8 @@ process_te_message(HA_Message *msg, xmlNodePtr xml_data, IPC_Channel *sender)
 	if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE), XML_ATTR_RESPONSE)
 	   && safe_str_neq(op, CRM_OP_EVENTCC)) {
 #ifdef MSG_LOG
-	fprintf(msg_te_strm, "[Result ]\tDiscarded\n");
-	fflush(msg_te_strm);
+		do_crm_log(LOG_INFO, __FUNCTION__, DEVEL_DIR"/te.log",
+			   "[Result ]\tDiscarded");
 #endif
 		crm_info("Message was a response not a request.  Discarding");
 		return TRUE;

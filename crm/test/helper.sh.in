@@ -107,7 +107,7 @@ function remote_cmd() {
     shift 
     shift
     
-    `which ssh` ${user}@${host} "$*"
+    `which ssh` ${user}@${host} bash -l -c \"$*\"
 
     return $?;
 }
@@ -266,7 +266,8 @@ function make_resource()
     fi
     node_xml="$node_xml </resource>'";
     
-    remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o resource -X $node_xml" 2>&1 > /dev/null
+    do_cmd `which ssh` ${ADMIN_USER}@${host} "$HALIB_DIR/cibadmin -VVVV -C -o resource -X $node_xml"
+# 2>&1 > /dev/null
 }
 
 function make_constraint_adv()
@@ -277,7 +278,8 @@ function make_constraint_adv()
 
     node_xml=`echo $node_xml | tr '\n' ' '`
 
-    do_cmd $QUIET remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o constraint -X $node_xml"  2>&1 > /dev/null
+    do_cmd `which ssh` ${ADMIN_USER}@${host} "$HALIB_DIR/cibadmin -C -o constraint -VVVV -X $node_xml"
+#  2>&1 > /dev/null
 }
 
 function make_constraint()
@@ -474,7 +476,7 @@ function crm-cleanup-node() {
 	do_cmd remote_cmd $INIT_USER $ha_host "rm -f $HAVAR_DIR/crm/cib*.xml"
 
 	`which ssh` ${INIT_USER}@${ha_host} "rm -f /tmp/crm/*" 2>/dev/null 
-	remote_cmd $CRMD_USER $ha_host "rm -f /tmp/crm/*/core" 2>&1 > /dev/null
+	remote_cmd $INIT_USER $ha_host "rm -f /tmp/crm/*/core" 2>&1 > /dev/null
 	if [ `dirname $logfile` = "/tmp/crm" ]; then
 	    do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart"
 	fi

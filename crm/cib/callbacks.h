@@ -1,4 +1,4 @@
-/* $Id: callbacks.h,v 1.4 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: callbacks.h,v 1.5 2005/01/26 13:30:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,7 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/common/xml.h>
 
 extern gboolean   cib_is_master;
 extern gboolean   cib_have_quorum;
@@ -57,7 +58,7 @@ typedef struct cib_operation_s
 		gboolean	needs_section;
 		gboolean	needs_data;
 		enum cib_errors (*fn)(
-		const char *, int, const char *, xmlNodePtr, xmlNodePtr*);
+		const char *, int, const char *, crm_data_t*, crm_data_t**);
 } cib_operation_t;
 
 extern cib_operation_t cib_server_ops[];
