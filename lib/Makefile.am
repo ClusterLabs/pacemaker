@@ -68,5 +68,6 @@ DIST_SUBDIRS		=  	\
 	plugins 		\
 	checkpointd		\
 	eventd			\
+	cmsclient		\
 	bindings		\
 	lrm			
