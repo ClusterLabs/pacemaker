@@ -32,6 +32,8 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
+gboolean verify_cib_cmds(cib_t *cib);
+
 int cib_client_set_op_callback(
 	cib_t *cib, void (*callback)(const struct ha_msg *msg, int call_id,
 				     int rc, xmlNodePtr output));
@@ -49,6 +51,7 @@ int cib_client_sync_from(
 
 gboolean cib_client_is_master(cib_t *cib);
 int cib_client_set_slave(cib_t *cib, int call_options);
+int cib_client_set_slave_all(cib_t *cib, int call_options);
 int cib_client_set_master(cib_t *cib, int call_options);
 
 int cib_client_bump_epoch(cib_t *cib, int call_options);
@@ -104,6 +107,7 @@ cib_new(void)
 	new_cib->cmds->sync_from  = cib_client_sync_from;
 	new_cib->cmds->is_master  = cib_client_is_master;
 	new_cib->cmds->set_slave  = cib_client_set_slave;
+	new_cib->cmds->set_slave_all = cib_client_set_slave_all;
 	new_cib->cmds->set_master = cib_client_set_master;
 	new_cib->cmds->bump_epoch = cib_client_bump_epoch;
 	new_cib->cmds->create  = cib_client_create;
@@ -114,7 +118,10 @@ cib_new(void)
 	new_cib->cmds->quit    = cib_client_quit;
 
 	cib_native_new(new_cib);
-
+	if(verify_cib_cmds(new_cib) == FALSE) {
+		return NULL;
+	}
+	
 	return new_cib;
 }
 
@@ -144,7 +151,7 @@ int cib_client_noop(cib_t *cib, int call_options)
 	}
 	
 	return cib->cmds->variant_op(
-		cib, CRM_OP_NOOP, NULL,NULL,NULL, call_options);
+		cib, CRM_OP_NOOP, NULL, NULL, NULL, NULL, call_options);
 }
 
 int cib_client_ping(cib_t *cib, xmlNodePtr *output_data, int call_options)
@@ -158,7 +165,7 @@ int cib_client_ping(cib_t *cib, xmlNodePtr *output_data, int call_options)
 	}
 	
 	return cib->cmds->variant_op(
-		cib, CRM_OP_PING, NULL,NULL, output_data, call_options);
+		cib, CRM_OP_PING, NULL,NULL,NULL, output_data, call_options);
 }
 
 
@@ -180,8 +187,8 @@ int cib_client_query_from(cib_t *cib, const char *host, const char *section,
 		return cib_variant;
 	}
 	
-	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_QUERY, section, NULL, output_data, call_options);
+	return cib->cmds->variant_op(cib, CRM_OP_CIB_QUERY, host, section,
+				     NULL, output_data, call_options);
 }
 
 
@@ -196,7 +203,7 @@ gboolean cib_client_is_master(cib_t *cib)
 	} 
 
 	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_ISMASTER, NULL,NULL,NULL,
+		cib, CRM_OP_CIB_ISMASTER, NULL, NULL,NULL,NULL,
 		cib_scope_local|cib_sync_call);
 }
 
@@ -211,9 +218,22 @@ int cib_client_set_slave(cib_t *cib, int call_options)
 	} 
 
 	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_SLAVE, NULL,NULL,NULL, call_options);
+		cib, CRM_OP_CIB_SLAVE, NULL,NULL,NULL,NULL, call_options);
 }
 
+int cib_client_set_slave_all(cib_t *cib, int call_options)
+{
+	if(cib == NULL) {
+		return cib_missing;
+	} else if(cib->state == cib_disconnected) {
+		return cib_not_connected;
+	} else if(cib->cmds->variant_op == NULL) {
+		return cib_variant;
+	} 
+
+	return cib->cmds->variant_op(
+		cib, CRM_OP_CIB_SLAVEALL, NULL,NULL,NULL,NULL, call_options);
+}
 
 int cib_client_set_master(cib_t *cib, int call_options)
 {
@@ -225,8 +245,10 @@ int cib_client_set_master(cib_t *cib, int call_options)
 		return cib_variant;
 	} 
 
+	crm_debug("Adding cib_scope_local to options");
 	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_MASTER, NULL,NULL,NULL, call_options);
+		cib, CRM_OP_CIB_MASTER, NULL,NULL,NULL,NULL,
+		call_options|cib_scope_local);
 }
 
 
@@ -242,7 +264,7 @@ int cib_client_bump_epoch(cib_t *cib, int call_options)
 	} 
 
 	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_BUMP, NULL, NULL, NULL, call_options);
+		cib, CRM_OP_CIB_BUMP, NULL, NULL, NULL, NULL, call_options);
 }
 
 int cib_client_sync(cib_t *cib, const char *section, int call_options)
@@ -287,7 +309,6 @@ int cib_client_sync_from(
 	
 }
 
-
 int cib_client_create(cib_t *cib, const char *section, xmlNodePtr data,
 		      xmlNodePtr *output_data, int call_options) 
 {
@@ -299,8 +320,8 @@ int cib_client_create(cib_t *cib, const char *section, xmlNodePtr data,
 		return cib_variant;
 	} 
 
-	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_CREATE, section, data, output_data, call_options);
+	return cib->cmds->variant_op(cib, CRM_OP_CIB_CREATE, NULL, section,
+				     data, output_data, call_options);
 }
 
 
@@ -315,8 +336,8 @@ int cib_client_modify(cib_t *cib, const char *section, xmlNodePtr data,
 		return cib_variant;
 	} 
 
-	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_UPDATE, section, data, output_data, call_options);
+	return cib->cmds->variant_op(cib, CRM_OP_CIB_UPDATE, NULL, section,
+				     data, output_data, call_options);
 }
 
 
@@ -331,8 +352,8 @@ int cib_client_replace(cib_t *cib, const char *section, xmlNodePtr data,
 		return cib_variant;
 	}
 	
-	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_REPLACE, NULL,NULL,NULL, call_options);
+	return cib->cmds->variant_op(cib, CRM_OP_CIB_REPLACE, NULL, NULL,
+				     data, output_data, call_options);
 }
 
 
@@ -347,8 +368,8 @@ int cib_client_delete(cib_t *cib, const char *section, xmlNodePtr data,
 		return cib_variant;
 	}
 	
-	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_DELETE, section, data, output_data, call_options);
+	return cib->cmds->variant_op(cib, CRM_OP_CIB_DELETE, NULL, section,
+				     data, output_data, call_options);
 }
 
 
@@ -363,8 +384,8 @@ int cib_client_erase(
 		return cib_variant;
 	} 
 
-	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_ERASE, NULL,NULL, output_data, call_options);
+	return cib->cmds->variant_op(cib, CRM_OP_CIB_ERASE, NULL, NULL, NULL,
+				     output_data, call_options);
 }
 
 
@@ -379,7 +400,7 @@ int cib_client_quit(cib_t *cib, int call_options)
 	} 
 
 	return cib->cmds->variant_op(
-		cib, CRM_OP_QUIT, NULL,NULL,NULL, call_options);
+		cib, CRM_OP_QUIT, NULL, NULL, NULL, NULL, call_options);
 }
 
 
@@ -537,6 +558,12 @@ cib_error2string(enum cib_errors return_code)
 		case cib_NOTSUPPORTED:
 			error_msg = "Supplied information is not supported";
 			break;
+		case cib_not_master:
+			error_msg = "Local service is not the master instance";
+			break;
+		case cib_client_corrupt:
+			error_msg = "Service client not valid";
+			break;
 	}
 			
 	if(error_msg == NULL) {
@@ -619,13 +646,19 @@ cib_compare_generation(xmlNodePtr left, xmlNodePtr right)
 	if(gen_l != NULL) int_gen_l = atoi(gen_l);
 	if(gen_r != NULL) int_gen_r = atoi(gen_r);
 
+	crm_xml_trace(left, "left");
+	crm_xml_trace(left, "right");
+	
 	if(int_gen_l < int_gen_r) {
+		crm_trace("lt");
 		return -1;
 		
 	} else if(int_gen_l > int_gen_r) {
+		crm_trace("gt");
 		return 1;
 	}
 
+	crm_trace("eq");
 	return 0;
 }
 
@@ -833,3 +866,121 @@ verifyCibXml(xmlNodePtr cib)
 	return is_valid;
 }
 
+
+gboolean verify_cib_cmds(cib_t *cib) 
+{
+	gboolean valid = TRUE;
+	if(cib->cmds->variant_op == NULL) {
+		crm_err("Operation variant_op not set");
+		valid = FALSE;
+	}	
+	if(cib->cmds->signon == NULL) {
+		crm_err("Operation signon not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->signoff == NULL) {
+		crm_err("Operation signoff not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->free == NULL) {
+		crm_err("Operation free not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->set_op_callback == NULL) {
+		crm_err("Operation set_op_callback not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->set_connection_dnotify == NULL) {
+		crm_err("Operation set_connection_dnotify not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->channel == NULL) {
+		crm_err("Operation channel not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->inputfd == NULL) {
+		crm_err("Operation inputfd not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->noop == NULL) {
+		crm_err("Operation noop not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->ping == NULL) {
+		crm_err("Operation ping not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->query == NULL) {
+		crm_err("Operation query not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->query_from == NULL) {
+		crm_err("Operation query_from not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->is_master == NULL) {
+		crm_err("Operation is_master not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->set_master == NULL) {
+		crm_err("Operation set_master not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->set_slave == NULL) {
+		crm_err("Operation set_slave not set");
+		valid = FALSE;
+	}		
+	if(cib->cmds->set_slave_all == NULL) {
+		crm_err("Operation set_slave_all not set");
+		valid = FALSE;
+	}		
+	if(cib->cmds->sync == NULL) {
+		crm_err("Operation sync not set");
+		valid = FALSE;
+	}		if(cib->cmds->sync_from == NULL) {
+		crm_err("Operation sync_from not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->bump_epoch == NULL) {
+		crm_err("Operation bump_epoch not set");
+		valid = FALSE;
+	}		
+	if(cib->cmds->create == NULL) {
+		crm_err("Operation create not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->modify == NULL) {
+		crm_err("Operation modify not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->replace == NULL) {
+		crm_err("Operation replace not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->delete == NULL) {
+		crm_err("Operation delete not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->erase == NULL) {
+		crm_err("Operation erase not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->quit == NULL) {
+		crm_err("Operation quit not set");
+		valid = FALSE;
+	}
+	
+	if(cib->cmds->msgready == NULL) {
+		crm_err("Operation msgready not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->rcvmsg == NULL) {
+		crm_err("Operation rcvmsg not set");
+		valid = FALSE;
+	}
+	if(cib->cmds->dispatch == NULL) {
+		crm_err("Operation dispatch not set");
+		valid = FALSE;
+	}
+	return valid;
+}

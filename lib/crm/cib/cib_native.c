@@ -40,7 +40,7 @@ typedef struct cib_native_opaque_s
 } cib_native_opaque_t;
 
 int cib_native_perform_op(
-	cib_t *cib, const char *op, const char *section,
+	cib_t *cib, const char *op, const char *host, const char *section,
 	xmlNodePtr data, xmlNodePtr *output_data, int call_options);
 
 int cib_native_signon(cib_t* cib, enum cib_conn_type type);
@@ -261,7 +261,7 @@ cib_native_inputfd(cib_t* cib)
 
 int
 cib_native_perform_op(
-	cib_t *cib, const char *op, const char *section,
+	cib_t *cib, const char *op, const char *host, const char *section,
 	xmlNodePtr data, xmlNodePtr *output_data, int call_options) 
 {
 	int  rc = HA_OK;
@@ -284,7 +284,7 @@ cib_native_perform_op(
 		*output_data = NULL;
 	}
 	
-	op_msg = ha_msg_new(5);
+	op_msg = ha_msg_new(7);
 	if(op == NULL) {
 		crm_err("No operation specified");
 		rc = cib_operation;
@@ -295,6 +295,9 @@ cib_native_perform_op(
 	}
 	if(rc == HA_OK) {
 		rc = ha_msg_add(op_msg, F_CIB_OPERATION, op);
+	}
+	if(rc == HA_OK && host != NULL) {
+		rc = ha_msg_add(op_msg, F_CIB_HOST, host);
 	}
 	if(rc == HA_OK && section != NULL) {
 		rc = ha_msg_add(op_msg, F_CIB_SECTION, section);
@@ -316,6 +319,8 @@ cib_native_perform_op(
 		if(calldata != NULL) {
 			calldata_len = strlen(calldata) + 1;
 			rc = ha_msg_add(op_msg, F_CIB_CALLDATA, calldata);
+		} else {
+			crm_debug("Calldata string was NULL (xml=%p)", data);
 		}
 
 		crm_free(calldata);
@@ -328,7 +333,9 @@ cib_native_perform_op(
 	}
 
 	cib->call_id++;
-	
+
+	crm_debug("Sending message to CIB service");
+	cl_log_message(op_msg);
 	rc = msg2ipcchan(op_msg, native->command_channel);
 	ha_msg_del(op_msg);
 	
