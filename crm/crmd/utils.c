@@ -52,41 +52,41 @@ do_timer_control(long long action,
 	enum crmd_fsa_input result = I_NULL;
 	
 	if(action & A_DC_TIMER_STOP) {
-		timer_op_ok = stopTimer(election_trigger);
+		timer_op_ok = crm_timer_stop(election_trigger);
 
 	} else if(action & A_FINALIZE_TIMER_STOP) {
-		timer_op_ok = stopTimer(finalization_timer);
+		timer_op_ok = crm_timer_stop(finalization_timer);
 
 	} else if(action & A_INTEGRATE_TIMER_STOP) {
-		timer_op_ok = stopTimer(integration_timer);
+		timer_op_ok = crm_timer_stop(integration_timer);
 
 /* 	} else if(action & A_ELECTION_TIMEOUT_STOP) { */
-/* 		timer_op_ok = stopTimer(election_timeout); */
+/* 		timer_op_ok = crm_timer_stop(election_timeout); */
 	}
 
 	/* dont start a timer that wasnt already running */
 	if(action & A_DC_TIMER_START && timer_op_ok) {
-		startTimer(election_trigger);
+		crm_timer_start(election_trigger);
 		if(AM_I_DC) {
 			/* there can be only one */
 			result = I_ELECTION;
 		}
 		
 	} else if(action & A_FINALIZE_TIMER_START) {
-		startTimer(finalization_timer);
+		crm_timer_start(finalization_timer);
 
 	} else if(action & A_INTEGRATE_TIMER_START) {
-		startTimer(integration_timer);
+		crm_timer_start(integration_timer);
 
 /* 	} else if(action & A_ELECTION_TIMEOUT_START) { */
-/* 		startTimer(election_timeout); */
+/* 		crm_timer_start(election_timeout); */
 	}
 	
 	return I_NULL;
 }
 
 gboolean
-timer_popped(gpointer data)
+crm_timer_popped(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
@@ -103,9 +103,11 @@ timer_popped(gpointer data)
 		crm_info("Timer %s just popped!",
 			 fsa_input2string(timer->fsa_input));
 	}
-	
-	stopTimer(timer); /* make it _not_ go off again */
 
+	if(timer->repeat == FALSE) {
+		crm_timer_stop(timer); /* make it _not_ go off again */
+	}
+	
 	if(timer->fsa_input != I_NULL) {
 		register_fsa_input_before(
 			C_TIMER_POPPED, timer->fsa_input, NULL);
@@ -116,7 +118,7 @@ timer_popped(gpointer data)
 }
 
 gboolean
-startTimer(fsa_timer_t *timer)
+crm_timer_start(fsa_timer_t *timer)
 {
 	if((timer->source_id == (guint)-1 || timer->source_id == (guint)-2)
 	   && timer->period_ms > 0) {
@@ -142,7 +144,7 @@ startTimer(fsa_timer_t *timer)
 
 
 gboolean
-stopTimer(fsa_timer_t *timer)
+crm_timer_stop(fsa_timer_t *timer)
 {
 	if(timer == NULL) {
 		crm_debug("Attempted to stop NULL timer");

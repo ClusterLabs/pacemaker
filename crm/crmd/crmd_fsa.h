@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.36 2005/02/24 14:59:10 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.37 2005/03/03 16:19:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -73,6 +73,7 @@ struct fsa_timer_s
 		int	period_ms;	/* timer period */
 		enum crmd_fsa_input fsa_input;
 		gboolean (*callback)(gpointer data);
+		gboolean repeat;
 };
 
 enum fsa_data_type {
@@ -119,6 +120,7 @@ extern GListPtr   fsa_message_queue;
 extern fsa_timer_t *election_trigger;		/*  */
 extern fsa_timer_t *election_timeout;		/*  */
 extern fsa_timer_t *shutdown_escalation_timer;	/*  */
+extern fsa_timer_t *shutdown_timer;		/*  */
 extern fsa_timer_t *dc_heartbeat;
 extern fsa_timer_t *integration_timer;
 extern fsa_timer_t *finalization_timer;

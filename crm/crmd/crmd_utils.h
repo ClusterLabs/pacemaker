@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.14 2005/02/24 15:00:54 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.15 2005/03/03 16:19:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,9 +41,9 @@ extern long long set_bit      (long long  action_list, long long action);
 extern gboolean is_set(long long action_list, long long action);
 extern gboolean is_set_any(long long action_list, long long action);
 
-extern gboolean stopTimer (fsa_timer_t *timer);
-extern gboolean startTimer(fsa_timer_t *timer);
-extern gboolean timer_popped(gpointer data);
+extern gboolean crm_timer_stop (fsa_timer_t *timer);
+extern gboolean crm_timer_start(fsa_timer_t *timer);
+extern gboolean crm_timer_popped(gpointer data);
 
 extern void cleanup_subsystem(struct crm_subsystem_s *the_subsystem);
 

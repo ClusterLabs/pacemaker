@@ -147,6 +147,7 @@ cib_t	*fsa_cib_conn = NULL;
 fsa_timer_t *election_trigger = NULL;		/*  */
 fsa_timer_t *election_timeout = NULL;		/*  */
 fsa_timer_t *shutdown_escalation_timer = NULL; /*  */
+fsa_timer_t *shutdown_timer = NULL;		/*  */
 fsa_timer_t *integration_timer = NULL;
 fsa_timer_t *finalization_timer = NULL;
 fsa_timer_t *dc_heartbeat = NULL;
@@ -505,9 +506,9 @@ do_state_transition(long long actions,
 	   && next_state != S_ELECTION
 	   && next_state != S_RELEASE_DC
 	   && next_state != S_PENDING) {
-		stopTimer(election_timeout);
+		crm_timer_stop(election_timeout);
 /* 	} else { */
-/* 		startTimer(election_timeout); */
+/* 		crm_timer_start(election_timeout); */
 	}
 #if 0
 	if(is_set(fsa_input_register, R_SHUTDOWN)){

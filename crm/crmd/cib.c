@@ -104,7 +104,7 @@ do_cib_control(long long action,
 					 cib_retries);
 
 				if(cib_retries < 30) {
-					startTimer(wait_timer);
+					crm_timer_start(wait_timer);
 					crmd_fsa_stall();
 
 				} else {
