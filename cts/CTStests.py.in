@@ -144,9 +144,9 @@ random for the selected number of iterations.
             os.system("stat -L -c %%s %s > /tmp/cts.%d"
                       %(self.CM["LogFileName"], testcount))
 
-            for node in self.Env["nodes"]:
-                self.CM.rsh.readaline(node, "stat -L -c %%s %s > /tmp/cts.%d"
-                      %(self.CM["LogFileName"], testcount))
+#            for node in self.Env["nodes"]:
+#                self.CM.rsh.readaline(node, "stat -L -c %%s %s > /tmp/cts.%d"
+#                      %(self.CM["LogFileName"], testcount))
 
             testcount = testcount + 1
             starttime=time.time()
