@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.14 2004/05/04 15:35:21 andrew Exp $ */
+/* $Id: ptest.c,v 1.15 2004/05/18 09:46:42 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -173,7 +173,9 @@ main(int argc, char **argv)
 		   print_resource(NULL, resource, TRUE));
 
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 2 =#=#=#=#=");
+//	pe_debug_on();
 	stage2(resources, nodes, &colors);
+//	pe_debug_off();
 
 	cl_log(LOG_INFO, "========= Nodes =========");
 	slist_iter(node, node_t, nodes, lpc,
@@ -254,5 +256,11 @@ main(int argc, char **argv)
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 8 =#=#=#=#=");
 	stage8(action_sets, &graph);
 
+	char *msg_buffer = dump_xml_node(graph, FALSE);
+	fprintf(stdout, "%s\n", msg_buffer);
+	fflush(stdout);
+	cl_free(msg_buffer);
+
+	
 	return 0;
 }
