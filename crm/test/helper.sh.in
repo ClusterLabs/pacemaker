@@ -24,9 +24,11 @@
 
 # no more exit below here, use return instead; gives more flexibility ...
 
+required_nodes=0
+
 test_type=`basename $0`
 test_nodes=1
-dump_dir=~/BUILD/tests
+dump_dir=~/ha-tests
 
 HALIB_DIR=@libdir@/heartbeat
 HAVAR_DIR=@HA_VARLIBDIR@/heartbeat
@@ -36,9 +38,9 @@ INIT_USER=root
 CRMD_USER=root
 ADMIN_USER=root
 
-test_node_1=fish
-test_node_2=chips
-test_node_3=mayo
+test_node_1=""
+test_node_2=""
+test_node_3=""
 
 #CRM_OPTS="-VVVVVV"
 
@@ -60,8 +62,15 @@ ip_rsc_2=192.168.9.162
 logfile=/var/log/messages
 local_version=0
 
-if [ ! -z "$CRM_LOCAL_OPTS" -a -f "$CRM_LOCAL_OPTS" ]; then
-    . "$CRM_LOCAL_OPTS"
+if [ ! -z "$CRM_LOCAL_OPTS" ]; then
+    echo "Checking $CRM_LOCAL_OPTS for local options"
+    if [ -f "$CRM_LOCAL_OPTS" ]; then
+	. "$CRM_LOCAL_OPTS"
+    else
+	echo "File $CRM_LOCAL_OPTS does not exist"	
+    fi
+else
+	echo "Hint: Define CRM_LOCAL_OPTS=/config/file/name.path to automatically set options for your environment"	
 fi
 
 while test "$done" = "0"; do
@@ -94,8 +103,6 @@ while test "$done" = "0"; do
 	*) echo "unknown option: $1"; return 1;;
     esac
 done
-
-node_list="$test_node_1 $test_node_2 $test_node_3"
 
 function test_init() {
     export date_str=`date "+%Y-%b-%d_%H:%M"`
@@ -356,19 +363,23 @@ function do_cts_assert() {
     expected=$2
     shift
     shift
+    do_err=0
 
     if [ $result -ne $expected ]; then
 	do_cmd echo "Expected rc ($expected) != $result"
-	err $*
+	do_err=1
     else
-
 	for a_host in $node_list; do
 	    `which ssh` ${ADMIN_USER}@${a_host} "ls -al ${HAVAR_DIR}/cores/*/core*" 2>/dev/null 
 	    if [ $? -ne 1 ]; then
-		do_cmd echo "Core file found"
-		err $*
+		do_cmd echo "Core file(s) found on $a_host"
+		do_err=1
 	    fi
 	done
+    fi
+    
+    if [ $do_err = 1 ]; then
+	err $*
     fi
 }
 
@@ -583,4 +594,16 @@ function gres()
 }
 
 # successfully sourced
+node_list="$test_node_1 $test_node_2 $test_node_3"
+node_count=0
+for a_host in $node_list; do
+    node_count=`expr $node_count + 1`
+done
+
+if [ $node_count -lt $required_nodes ]; then
+    do_cmd echo "$required_nodes required for this test.  You specified only $node_list" 
+    do_cmd echo "test: FAILED" 
+    return false
+fi
+
 true

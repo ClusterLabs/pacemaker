@@ -17,6 +17,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
+required_nodes=2
 testdir=@libdir@/heartbeat/crmtest
 . ${testdir}/helper.sh || exit 1
 
@@ -255,12 +256,6 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000
 cts_assert "Shutdown of ${test_node_2} failed."
 
 #----
-
-do_cmd remote_cmd $CRMD_USER $test_node_1 "ls -al ${HAVAR_DIR}/cores/*/core"
-cts_assert_false "Core file(s) found on $test_node_1"
-
-do_cmd remote_cmd $CRMD_USER $test_node_2 "ls -al ${HAVAR_DIR}/cores/*/core"
-cts_assert_false "Core file(s) found on $test_node_2"
 
 do_cmd remote_cmd $CRMD_USER $test_node_2 killall -9 crmd
 
