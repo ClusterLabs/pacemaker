@@ -475,7 +475,9 @@ do_process_welcome_ack(long long action,
 		cl_log(LOG_ERR, "Node %s is not known to us", join_from);
 		FNRET(I_FAIL);
 	}
-
+	
+	CRM_DEBUG2("Forwarding CIB to %s", join_from);
+	
 	// add them to our list of "active" nodes
 	
 	g_hash_table_insert(joined_nodes, strdup(join_from),strdup(join_from));
