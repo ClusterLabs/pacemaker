@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.3 2004/11/09 14:49:14 andrew Exp $ */
+/* $Id: complex.c,v 1.4 2004/11/09 16:52:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -214,26 +214,27 @@ void common_dump(resource_t *rsc, const char *pre_text, gboolean details)
 		  (double)rsc->priority);
 }
 
-
 void common_free(resource_t *rsc)
 {
 	if(rsc == NULL) {
 		return;
 	}
 	
-	crm_debug("Freeing %s", rsc->id);
+	crm_trace("Freeing %s", rsc->id);
 
 	while(rsc->rsc_cons) {
-		crm_debug("Freeing constraint");
  		pe_free_rsc_dependancy(
 			(rsc_dependancy_t*)rsc->rsc_cons->data);
 		rsc->rsc_cons = rsc->rsc_cons->next;
 	}
-	crm_debug("Freeing constraint list");
+	crm_trace("Freeing constraint list");
 	if(rsc->rsc_cons != NULL) {
 		g_list_free(rsc->rsc_cons);
 	}
 
+	crm_trace("Freeing opaque data");
 	crm_free(rsc->variant_opaque);
+	crm_trace("Freeing resource");
 	crm_free(rsc);
+	crm_trace("Resource freed");
 }
