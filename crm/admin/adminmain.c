@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.28 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: adminmain.c,v 1.29 2004/06/03 07:52:16 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -533,13 +533,13 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	xmlNodePtr xml_root_node = NULL;
 	char *buffer = NULL;
 
-	FNIN();
+	
 
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {
 		if (server->ops->recv(server, &msg) != IPC_OK) {
 			perror("Receive failure:");
-			FNRET(!hack_return_good);
+			return !hack_return_good;
 		}
 
 		if (msg == NULL) {
@@ -606,7 +606,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 	if (server->ch_status == IPC_DISCONNECT) {
 		crm_info("admin_msg_callback: received HUP");
-		FNRET(!hack_return_good);
+		return !hack_return_good;
 	}
 
 	if (received_responses >= expected_responses) {
@@ -616,5 +616,5 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		g_main_quit(mainloop);
 		return !hack_return_good;
 	}
-	FNRET(hack_return_good);
+	return hack_return_good;
 }

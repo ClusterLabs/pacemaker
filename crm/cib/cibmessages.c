@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.39 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.40 2004/06/03 07:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -83,7 +83,7 @@ cib_process_request(const char *op,
 	char *old_value = NULL;
 	int int_value = -1;
 
-	FNIN();
+	
 	
 	*result = CIBRES_OK;
 	verbose = xmlGetProp(options, XML_ATTR_VERBOSE);
@@ -282,7 +282,7 @@ cib_process_request(const char *op,
 	fflush(msg_cib_strm);
 #endif
 
-	FNRET(cib_answer);
+	return cib_answer;
 }
 
 gboolean
@@ -292,7 +292,7 @@ replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 		cib_updates = NULL,
 		new_section = NULL,
 		old_section = NULL;
-	FNIN();
+	
 	
 	cib_updates = find_xml_node(fragment, XML_TAG_CIB);
 
@@ -303,12 +303,12 @@ replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 	if(old_section == NULL) {
 		crm_err("The CIB is corrupt, cannot replace missing section %s",
 		       section);
-		FNRET(FALSE);
+		return FALSE;
 
 	} else if(new_section == NULL) {
 		crm_err("The CIB is corrupt, cannot set section %s to nothing",
 		       section);
-		FNRET(FALSE);
+		return FALSE;
 	}
 
 	parent = old_section->parent;
@@ -320,7 +320,7 @@ replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 	/* add the new copy */
 	add_node_copy(parent, new_section);
 	
-	FNRET(TRUE);
+	return TRUE;
 }
 
 
@@ -378,7 +378,7 @@ createCibFragmentAnswer(const char *section, xmlNodePtr failed)
 {
 	xmlNodePtr fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
 	
-	FNIN();
+	
 	
 	set_xml_property_copy(fragment, XML_ATTR_SECTION, section);
 
@@ -398,7 +398,7 @@ createCibFragmentAnswer(const char *section, xmlNodePtr failed)
 		add_node_copy(fragment, failed);
 	}
 		
-	FNRET(fragment);
+	return fragment;
 }
 
 
@@ -432,7 +432,7 @@ update_results(xmlNodePtr failed,
 	const char *error_msg = NULL;
 	const char *operation_msg = NULL;
 	xmlNodePtr xml_node;
-	FNIN();
+	
     
 	if (return_code != CIBRES_OK)
 	{
@@ -467,6 +467,6 @@ update_results(xmlNodePtr failed,
 	
 	}
 
-	FNRET(was_error);
+	return was_error;
 }
 

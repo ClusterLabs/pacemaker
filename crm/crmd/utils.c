@@ -609,7 +609,7 @@ invoke_local_cib(xmlNodePtr msg_options,
 {
 	enum crmd_fsa_input result = I_NULL;
 	xmlNodePtr request = NULL;
-	FNIN();
+	
 
 	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
 				   XML_ATTR_OP, operation, TRUE);
@@ -630,5 +630,5 @@ invoke_local_cib(xmlNodePtr msg_options,
 
 	free_xml(request);
 	
-	FNRET(result);
+	return result;
 }

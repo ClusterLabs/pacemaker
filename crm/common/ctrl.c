@@ -1,4 +1,4 @@
-/* $Id: ctrl.c,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: ctrl.c,v 1.3 2004/06/03 07:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -114,7 +114,7 @@ init_stop(const char *pid_file)
 	long	pid;
 	int	rc = LSB_EXIT_OK;
 
-	FNIN();
+	
 	
 	if (pid_file == NULL) {
 		crm_err("No pid file specified to kill process");
@@ -138,7 +138,7 @@ init_stop(const char *pid_file)
 			}
 		}
 	}
-	FNRET(rc);
+	return rc;
 }
 
 int

@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: xml.c,v 1.3 2004/06/03 07:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,15 +46,15 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	int	j;
 	xmlNodePtr child;
 	xmlNodePtr lastMatch;
-	FNIN();
+	
 
 	if (root == NULL) {
-		FNRET(NULL);
+		return NULL;
 	}
 
 	if(search_path == NULL) {
 		crm_trace("Will never find NULL");
-		FNRET(NULL);
+		return NULL;
 	}
 	
 	
@@ -97,7 +97,7 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	    && strcmp(lastMatch->name, search_path[j-1]) == 0) {
 		crm_trace("returning node (%s).",
 			   xmlGetNodePath(lastMatch));
-		FNRET(lastMatch);
+		return lastMatch;
 	}
 
 	dump_array(LOG_WARNING,
@@ -107,7 +107,7 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	crm_warn("Closest point was node (%s) starting from %s.",
 	       xmlGetNodePath(lastMatch), root?root->name:NULL);
 
-	FNRET(NULL);
+	return NULL;
     
 }
 
@@ -299,7 +299,7 @@ find_entity_nested(xmlNodePtr parent,
 		   gboolean siblings)
 {
 	xmlNodePtr child;
-	FNIN();
+	
 	crm_trace("Looking for %s elem with id=%s.", node_name, id);
 	while(parent != NULL) {
 		crm_trace("examining (%s).", xmlGetNodePath(parent));
@@ -345,7 +345,7 @@ find_entity_nested(xmlNodePtr parent,
 					       xmlGetNodePath(child));
 				} else if (strcmp(id, child_id) == 0) {
 					crm_trace("found entity (%s).", id);
-					FNRET(child);
+					return child;
 				}   
 				child = child->next;
 			}
@@ -360,7 +360,7 @@ find_entity_nested(xmlNodePtr parent,
 	crm_info(
 	       "Couldnt find anything appropriate for %s elem with id=%s.",
 	       node_name, id);	    
-	FNRET(NULL);
+	return NULL;
 }
 
 void
@@ -375,7 +375,7 @@ copy_in_properties(xmlNodePtr target, xmlNodePtr src)
 	} else {
 #ifndef USE_BUGGY_LIBXML
 		xmlAttrPtr prop_iter = NULL;
-		FNIN();
+		
 		
 		prop_iter = src->properties;
 		while(prop_iter != NULL) {
@@ -394,14 +394,14 @@ copy_in_properties(xmlNodePtr target, xmlNodePtr src)
 #endif
 	}
 	
-	FNOUT();
+	return;
 }
 
 char * 
 dump_xml(xmlNodePtr msg)
 {
-	FNIN();
-	FNRET(dump_xml_node(msg, FALSE));
+	
+	return dump_xml_node(msg, FALSE);
 }
 
 void
@@ -409,12 +409,12 @@ xml_message_debug(xmlNodePtr msg, const char *text)
 {
 	char *msg_buffer;
 
-	FNIN();
+	
 	if(msg == NULL) {
 		crm_verbose("%s: %s",
 		   text==NULL?"<null>":text,"<null>");
 		
-		FNOUT();
+		return;
 	}
 	
 	msg_buffer = dump_xml_node(msg, FALSE);
@@ -422,7 +422,7 @@ xml_message_debug(xmlNodePtr msg, const char *text)
 		   text==NULL?"<null>":text,
 		   msg_buffer==NULL?"<null>":msg_buffer);
 	crm_free(msg_buffer);
-	FNOUT();
+	return;
 }
 
 char * 
@@ -433,8 +433,8 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 	xmlChar *xml_message = NULL;
 	xmlBufferPtr xml_buffer;
 
-	FNIN();
-	if (msg == NULL) FNRET(NULL);
+	
+	if (msg == NULL) return NULL;
 
 	xmlInitParser();
 
@@ -469,7 +469,7 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 		if (xml_message[lpc] == '\n')
 			xml_message[lpc] = ' ';
     
-	FNRET((char*)xml_message); 
+	return (char*)xml_message; 
 }
 
 xmlNodePtr
@@ -477,7 +477,7 @@ add_node_copy(xmlNodePtr new_parent, xmlNodePtr xml_node)
 {
 	xmlNodePtr node_copy = NULL;
 	
-	FNIN();
+	
 
 	if(xml_node != NULL && new_parent != NULL) {
 		node_copy = copy_xml_node_recursive(xml_node);
@@ -490,7 +490,7 @@ add_node_copy(xmlNodePtr new_parent, xmlNodePtr xml_node)
 		crm_err("Could not add copy of node to NULL parent");
 	}
 	
-	FNRET(node_copy);
+	return node_copy;
 }
 
 xmlAttrPtr
@@ -503,7 +503,7 @@ set_xml_property_copy(xmlNodePtr node,
 	const char *local_value = NULL;
 
 	xmlAttrPtr ret_value = NULL;
-	FNIN();
+	
 
 	if(node != NULL) {
 		parent_name = node->name;
@@ -527,7 +527,7 @@ set_xml_property_copy(xmlNodePtr node,
 		ret_value = xmlSetProp(node, local_name, local_value);
 	}
 	
-	FNRET(ret_value);
+	return ret_value;
 }
 
 xmlNodePtr
@@ -536,7 +536,7 @@ create_xml_node(xmlNodePtr parent, const char *name)
 	const char *local_name = NULL;
 	const char *parent_name = NULL;
 	xmlNodePtr ret_value = NULL;
-	FNIN();
+	
 
 	if (name == NULL || strlen(name) < 1) {
 		ret_value = NULL;
@@ -553,7 +553,7 @@ create_xml_node(xmlNodePtr parent, const char *name)
 	}
 
 	crm_trace("Created node [%s [%s]]", parent_name, local_name);
-	FNRET(ret_value);
+	return ret_value;
 }
 
 void
@@ -569,7 +569,7 @@ unlink_xml_node(xmlNodePtr node)
 void
 free_xml(xmlNodePtr a_node)
 {
-	FNIN();
+	
 	if (a_node == NULL)
 		; // nothing to do
 	else if (a_node->doc != NULL)
@@ -581,14 +581,14 @@ free_xml(xmlNodePtr a_node)
 		xmlFreeNode(a_node);
 	}
 	
-	FNOUT();
+	return;
 }
 
 void
 set_node_tstamp(xmlNodePtr a_node)
 {
 	char *since_epoch = (char*)crm_malloc(128*(sizeof(char)));
-	FNIN();
+	
 	sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
 	set_xml_property_copy(a_node, XML_ATTR_TSTAMP, since_epoch);
 	crm_free(since_epoch);
@@ -603,7 +603,7 @@ copy_xml_node_recursive(xmlNodePtr src_node)
 	xmlNodePtr local_node = NULL, node_iter = NULL, local_child = NULL;
 	xmlAttrPtr prop_iter = NULL;
 
-	FNIN();
+	
 	
 	if(src_node != NULL && src_node->name != NULL) {
 		local_node = create_xml_node(NULL, src_node->name);
@@ -633,11 +633,11 @@ copy_xml_node_recursive(xmlNodePtr src_node)
 		}
 
 		crm_trace("Returning [%s]", local_node->name);
-		FNRET(local_node);
+		return local_node;
 	}
 
 	crm_trace("Returning null");
-	FNRET(NULL);
+	return NULL;
 #else
 	return xmlCopyNode(src_node, 1);
 #endif

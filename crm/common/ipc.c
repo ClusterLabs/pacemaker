@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: ipc.c,v 1.3 2004/06/03 07:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,7 +60,7 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 	char *xml_message = NULL;
 	IPC_Message *cib_dump = NULL;
 	gboolean res;
-	FNIN();
+	
 
 	xml_message = dump_xml(msg);
 	
@@ -80,7 +80,7 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 	       xmlGetProp(msg, XML_ATTR_HOSTTO),
 	       res?"succeeded":"failed");
 	
-	FNRET(res);
+	return res;
 }
 
 
@@ -89,7 +89,7 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 {
 	int lpc = 0;
 	gboolean all_is_good = TRUE;
-	FNIN();
+	
 
 	if (msg == NULL) {
 		crm_err("cant send NULL message");
@@ -125,7 +125,7 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 		all_is_good = FALSE;
 	}
 
-	FNRET(all_is_good);
+	return all_is_good;
 }
 
 IPC_Message *
@@ -134,8 +134,8 @@ create_simple_message(char *text, IPC_Channel *ch)
 	//    char	       str[256];
 	IPC_Message        *ack_msg = NULL;
 
-	FNIN();
-	if (text == NULL) FNRET(NULL);
+	
+	if (text == NULL) return NULL;
 
 	ack_msg = (IPC_Message *)crm_malloc(sizeof(IPC_Message));
     
@@ -146,7 +146,7 @@ create_simple_message(char *text, IPC_Channel *ch)
 
 	ack_msg->msg_len = strlen(text)+1;
     
-	FNRET(ack_msg);
+	return ack_msg;
 }
 
 
@@ -157,10 +157,10 @@ find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free)
 	xmlDocPtr doc;
 	xmlNodePtr root;
 
-	FNIN();
+	
 	if (msg == NULL) {
 		crm_trace("IPC Message was empty...");
-		FNRET(NULL);
+		return NULL;
 	}
 
 	buffer = (char*)msg->msg_body;
@@ -170,15 +170,15 @@ find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free)
 
 	if (doc == NULL) {
 		crm_info("IPC Message did not contain an XML buffer...");
-		FNRET(NULL);
+		return NULL;
 	}
 
 	root = xmlDocGetRootElement(doc);
 	if (root == NULL) {
 		crm_info("Root node was NULL.");
-		FNRET(NULL);
+		return NULL;
 	}
-	FNRET(root);
+	return root;
 }
 
 
@@ -186,8 +186,8 @@ find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free)
 void
 default_ipc_input_destroy(gpointer user_data)
 {
-	FNIN();
-	FNOUT();
+	
+	return;
 }
 
 
@@ -205,7 +205,7 @@ init_client_ipc_comms(const char *child,
 	char *commpath = NULL;
 	int local_socket_len = 2; // 2 = '/' + '\0'
 
-	FNIN();
+	
 	local_socket_len += strlen(child);
 	local_socket_len += strlen(WORKING_DIR);
 
@@ -226,7 +226,7 @@ init_client_ipc_comms(const char *child,
 		
 	} else if (ch->ops->initiate_connection(ch) != IPC_OK) {
 		crm_crit("Could not init comms on: %s", commpath);
-		FNRET(NULL);
+		return NULL;
 	}
 
 	if(callback_data == NULL)
@@ -244,7 +244,7 @@ init_client_ipc_comms(const char *child,
 
 	crm_debug("Processing of %s complete", commpath);
 
-	FNRET(ch);
+	return ch;
 }
 
 
@@ -260,7 +260,7 @@ send_ipc_request(IPC_Channel *ipc_channel,
 {
 	gboolean was_sent = FALSE;
 	xmlNodePtr request = NULL;
-	FNIN();
+	
 
 	request = create_request(msg_options, msg_data,
 				 host_to, sys_to,
@@ -271,7 +271,7 @@ send_ipc_request(IPC_Channel *ipc_channel,
 
 	free_xml(request);
 
-	FNRET(was_sent);
+	return was_sent;
 }
 
 
@@ -285,7 +285,7 @@ send_ipc_reply(IPC_Channel *ipc_channel,
 {
 	gboolean was_sent = FALSE;
 	xmlNodePtr reply;
-	FNIN();
+	
 
 	reply = create_reply(xml_request, xml_response_data);
 
@@ -293,7 +293,7 @@ send_ipc_reply(IPC_Channel *ipc_channel,
 		was_sent = send_xmlipc_message(ipc_channel, reply);
 		free_xml(reply);
 	}
-	FNRET(was_sent);
+	return was_sent;
 }
 
 
@@ -309,7 +309,7 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 	const char *type;
 
 	
-	FNIN();
+	
 
 	while(sender->ops->is_message_pending(sender)) {
 		if (sender->ch_status == IPC_DISCONNECT) {
@@ -319,7 +319,7 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 		}
 		if (sender->ops->recv(sender, &msg) != IPC_OK) {
 			perror("Receive failure:");
-			FNRET(!all_is_well);
+			return !all_is_well;
 		}
 		if (msg == NULL) {
 			crm_err("No message this time");
@@ -377,7 +377,7 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 
 		exit(1); // shutdown properly later
 		
-		FNRET(!all_is_well);
+		return !all_is_well;
 	}
-	FNRET(all_is_well);
+	return all_is_well;
 }

@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.22 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: cibmain.c,v 1.23 2004/06/03 07:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -108,18 +108,18 @@ main(int argc, char ** argv)
 	// read local config file
     
 	if (req_status){
-		FNRET(init_status(PID_FILE, crm_system_name));
+		return init_status(PID_FILE, crm_system_name);
 	}
   
 	if (req_stop){
-		FNRET(init_stop(PID_FILE));
+		return init_stop(PID_FILE);
 	}
   
 	if (req_restart) { 
 		init_stop(PID_FILE);
 	}
 
-	FNRET(init_start());
+	return init_start();
 }
 
 
@@ -189,7 +189,7 @@ init_start(void)
 	if (unlink(PID_FILE) == 0) {
 		crm_info("[%s] stopped", crm_system_name);
 	}
-	FNRET(0);
+	return 0;
 }
 
 gboolean
@@ -217,10 +217,10 @@ process_maincib_message(xmlNodePtr msg, IPC_Channel *sender)
 	} else {
 		crm_warn("Received a message destined for %s by mistake",
 			 sys_to);
-		FNRET(FALSE);
+		return FALSE;
 	}
 		
-	FNRET(TRUE);
+	return TRUE;
 }
 
 

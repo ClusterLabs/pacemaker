@@ -178,7 +178,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	enum crmd_fsa_input next_input;
 	enum crmd_fsa_state last_state, cur_state, next_state, starting_state;
 	
-	FNIN();
+	
 
 	starting_state = fsa_state;
 	cur_input  = initial_input;
@@ -485,7 +485,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	// cleanup inputs?
 	fsa_actions = actions;
 	
-	FNRET(fsa_state);
+	return fsa_state;
 }
 
 

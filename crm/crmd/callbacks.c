@@ -45,7 +45,7 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 	const char *to = NULL;
 	xmlNodePtr root_xml_node;
 
-	FNIN();
+	
 
 #ifdef MSG_LOG
 	if(msg_in_strm == NULL) {
@@ -59,7 +59,7 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 			"Discarded message [F_SEQ=%s] from ourselves.\n",
 			ha_msg_value(msg, F_SEQ));
 #endif
-		FNOUT();
+		return;
 	}
 	
 #ifdef MSG_LOG
@@ -81,7 +81,7 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 			"Discarding message [F_SEQ=%s] for someone else.",
 			ha_msg_value(msg, F_SEQ));
 #endif
-		FNOUT();
+		return;
 	}
 
 	set_xml_property_copy(root_xml_node, XML_ATTR_HOSTFROM, from);
@@ -89,7 +89,7 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 
 	free_xml(root_xml_node);
 
-	FNOUT();
+	return;
 }
 
 /*
@@ -106,7 +106,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	xmlNodePtr root_xml_node;
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 
-	FNIN();
+	
 	crm_verbose("Processing IPC message from %s",
 		   curr_client->table_key);
 
@@ -118,7 +118,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		}
 		if (client->ops->recv(client, &msg) != IPC_OK) {
 			perror("Receive failure:");
-			FNRET(!hack_return_good);
+			return !hack_return_good;
 		}
 		if (msg == NULL) {
 			crm_err("No message this time");
@@ -207,10 +207,10 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 			crm_free(curr_client->uuid);
 			crm_free(curr_client);
 		}
-		FNRET(!hack_return_good);
+		return !hack_return_good;
 	}
     
-	FNRET(hack_return_good);
+	return hack_return_good;
 }
 
 
@@ -277,10 +277,10 @@ find_xml_in_hamessage(const struct ha_msg* msg)
    	xmlDocPtr doc;
 	xmlNodePtr root;
 
-	FNIN();
+	
 	if (msg == NULL) {
 		crm_info("**** ha_crm_msg_callback called on a NULL message");
-		FNRET(NULL);
+		return NULL;
 	}
 
 #if 0
@@ -295,23 +295,23 @@ find_xml_in_hamessage(const struct ha_msg* msg)
 	if (strcmp("CRM", ha_msg_value(msg, F_TYPE)) != 0) {
 		crm_info("Received a (%s) message by mistake.",
 		       ha_msg_value(msg, F_TYPE));
-		FNRET(NULL);
+		return NULL;
 	}
 	xml = ha_msg_value(msg, "xml");
 	if (xml == NULL) {
 		crm_info("No XML attached to this message.");
-		FNRET(NULL);
+		return NULL;
 	}
 	doc = xmlParseMemory(xml, strlen(xml));
 	if (doc == NULL) {
 		crm_info("XML Buffer was not valid.");
-		FNRET(NULL);
+		return NULL;
 	}
 
 	root = xmlDocGetRootElement(doc);
 	if (root == NULL) {
 		crm_info("Root node was NULL.");
-		FNRET(NULL);
+		return NULL;
 	}
-	FNRET(root);
+	return root;
 }

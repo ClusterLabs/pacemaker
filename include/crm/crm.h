@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.11 2004/06/02 18:41:39 andrew Exp $ */
+/* $Id: crm.h,v 1.12 2004/06/03 07:52:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -136,17 +136,6 @@ typedef GList* GListPtr;
 #define crm_info_action(x) if(crm_log_level >= LOG_INFO) {	\
 		x;						\
 	}
-
-/* Seriously detailed debug stuff */
-#if 0
-#   define FNIN()     crm_trace("#---# Entering")
-#   define FNOUT()  { crm_trace("#---# Leaving"); return; }
-#   define FNRET(x) { crm_trace("#---# Leaving"); return x; }
-#else
-#   define FNIN()   ;
-#   define FNOUT()  return;
-#   define FNRET(x) return x; 
-#endif
 
 #define crm_malloc(x) malloc(x)
 #define crm_free(x)   if(x) { free(x); x=NULL; }

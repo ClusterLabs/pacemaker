@@ -65,7 +65,7 @@ do_ccm_control(long long action,
 	int      ret;
  	int	 fsa_ev_fd; 
     
-	FNIN();
+	
 
 	if(action & A_CCM_DISCONNECT){
 		oc_ev_unregister(fsa_ev_token);
@@ -105,7 +105,7 @@ do_ccm_control(long long action,
 		       fsa_action2string(action), __FUNCTION__);
 	}
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 
@@ -121,7 +121,7 @@ do_ccm_event(long long action,
 	const oc_ev_membership_t *oc = ((struct ccm_data *)data)->oc;
 	oc_ed_t event = *((struct ccm_data *)data)->event;
 
-	FNIN();
+	
 
 	crm_info("event=%s", 
 	       event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
@@ -164,7 +164,7 @@ do_ccm_event(long long action,
 		}
 	}
 
-	FNRET(return_input);
+	return return_input;
 }
 
 /*	 A_CCM_UPDATE_CACHE	*/
@@ -188,7 +188,7 @@ do_ccm_update_cache(long long action,
 	oc_node_list_t *tmp = NULL, *membership_copy = (oc_node_list_t *)
 		crm_malloc(sizeof(oc_node_list_t));
 
-	FNIN();
+	
 
 	crm_info("Updating CCM cache after a \"%s\" event.", 
 	       event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
@@ -306,7 +306,7 @@ do_ccm_update_cache(long long action,
 		crm_free(tmp);
 	}
 	
-	FNRET(next_input);
+	return next_input;
 }
 
 void
@@ -386,7 +386,7 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 int
 register_with_ccm(ll_cluster_t *hb_cluster)
 {
-	FNRET(0);
+	return 0;
 }
 
 gboolean ccm_dispatch(int fd, gpointer user_data)
@@ -405,7 +405,7 @@ crmd_ccm_input_callback(oc_ed_t event,
 {
 	struct ccm_data *event_data = NULL;
 	
-	FNIN();
+	
 
 	if(data != NULL) {
 		event_data = (struct ccm_data *)
@@ -428,13 +428,13 @@ crmd_ccm_input_callback(oc_ed_t event,
 	
 	oc_ev_callback_done(cookie);
 	
-	FNOUT();
+	return;
 }
 
 void 
 msg_ccm_join(const struct ha_msg *msg, void *foo)
 {
-	FNIN();
+	
 	crm_verbose("\n###### Recieved ccm_join message...");
 	if (msg != NULL)
 	{
@@ -462,7 +462,7 @@ msg_ccm_join(const struct ha_msg *msg, void *foo)
 			    ha_msg_value(msg, F_HBGENERATION));
 		//      crm_verbose("[=%s]", ha_msg_value(msg, F_));
 	}
-	FNOUT();
+	return;
 }
 
 struct update_data_s

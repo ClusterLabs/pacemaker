@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.40 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: cib.c,v 1.41 2004/06/03 07:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,13 +70,13 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 {
 	const char *node_stack[2];
 	xmlNodePtr tmp_node = NULL;
-	FNIN();
+	
 	
 	node_stack[0] = XML_CIB_TAG_CONFIGURATION;
 	node_stack[1] = object_type;
 
 	if(object_type == NULL || strlen(object_type) == 0) {
-		FNRET(the_root);
+		return the_root;
 		/* get the whole cib */
 	} else if(strcmp(object_type, XML_CIB_TAG_STATUS) == 0) {
 		node_stack[0] = XML_CIB_TAG_STATUS;
@@ -91,7 +91,7 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 		       node_stack[0],
 		       node_stack[1]);
 	}
-	FNRET(tmp_node);
+	return tmp_node;
 }
 
 xmlNodePtr

@@ -39,7 +39,7 @@ do_election_vote(long long action,
 		 void *data)
 {
 	enum crmd_fsa_input election_result = I_NULL;
-	FNIN();
+	
 
 	/* dont vote if we're in one of these states or wanting to shut down */
 	switch(cur_state) {
@@ -48,12 +48,12 @@ do_election_vote(long long action,
 		case S_STOPPING:
 		case S_RELEASE_DC:
 		case S_TERMINATE:
-			FNRET(I_NULL);
+			return I_NULL;
 			// log warning
 			break;
 		default:
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
-				FNRET(I_NULL);
+				return I_NULL;
 				// log warning
 			}
 			break;
@@ -62,7 +62,7 @@ do_election_vote(long long action,
 	send_request(NULL, NULL, CRM_OP_VOTE,
 		     NULL, CRM_SYSTEM_CRMD, NULL);
 	
-	FNRET(election_result);
+	return election_result;
 }
 
 gboolean
@@ -102,16 +102,16 @@ do_election_count_vote(long long action,
 	enum crmd_fsa_input election_result = I_NULL;
 	const char *vote_from = xmlGetProp(vote, XML_ATTR_HOSTFROM);
 	
-	FNIN();
+	
 
 	if(vote_from == NULL || strcmp(vote_from, fsa_our_uname) == 0) {
 		// dont count our own vote
-		FNRET(election_result);
+		return election_result;
 	}
 
 	if(fsa_membership_copy->members_size < 1) {
 		// if even we are not in the cluster then we should not vote
-		FNRET(I_FAIL);
+		return I_FAIL;
 		
 	}
 
@@ -189,7 +189,7 @@ do_election_count_vote(long long action,
 		stopTimer(election_timeout);
 	}
 	
-	FNRET(election_result);
+	return election_result;
 }
 
 /*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT 	*/
@@ -201,7 +201,7 @@ do_election_timer_ctrl(long long action,
 		    enum crmd_fsa_input current_input,
 		    void *data)
 {
-	FNIN();
+	
 
 	if(action & A_ELECT_TIMER_START) {
 		startTimer(election_timeout);
@@ -217,12 +217,12 @@ do_election_timer_ctrl(long long action,
 	if(action & A_ELECTION_TIMEOUT) {
 		crm_trace("The election timer went off, we win!");
 	
-		FNRET(I_ELECTION_DC);
+		return I_ELECTION_DC;
 		
 	}
 
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START	*/
@@ -234,7 +234,7 @@ do_dc_timer_control(long long action,
 		   void *data)
 {
 	gboolean timer_op_ok = TRUE;
-	FNIN();
+	
 
 	if(action & A_DC_TIMER_STOP) {
 		timer_op_ok = stopTimer(election_trigger);
@@ -245,7 +245,7 @@ do_dc_timer_control(long long action,
 		startTimer(election_trigger);
 	}
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 
@@ -258,7 +258,7 @@ do_dc_takeover(long long action,
 	       void *data)
 {
 	xmlNodePtr update = NULL, fragment = NULL;
-	FNIN();
+	
 
 	crm_trace("################## Taking over the DC ##################");
 	set_bit_inplace(&fsa_input_register, R_THE_DC);
@@ -302,7 +302,7 @@ do_dc_takeover(long long action,
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 /*	 A_DC_RELEASE	*/
@@ -314,7 +314,7 @@ do_dc_release(long long action,
 	      void *data)
 {
 	enum crmd_fsa_input result = I_NULL;
-	FNIN();
+	
 
 	crm_trace("################## Releasing the DC ##################");
 
@@ -355,7 +355,7 @@ do_dc_release(long long action,
 
 	crm_verbose("Am I still the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
 
-	FNRET(result);
+	return result;
 }
 
 void

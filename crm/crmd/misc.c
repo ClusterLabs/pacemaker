@@ -38,7 +38,7 @@ do_log(long long action,
 {
 	int log_type = LOG_DEBUG;
 
-	FNIN();
+	
 
 	if(action & A_LOG) log_type = LOG_INFO;
 	if(action & A_WARN) log_type = LOG_WARNING;
@@ -49,6 +49,6 @@ do_log(long long action,
 	       fsa_input2string(current_input),
 	       fsa_state2string(cur_state));
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.26 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: cibio.c,v 1.27 2004/06/03 07:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,12 +92,12 @@ createEmptyCib(void)
 	create_xml_node(config, XML_CIB_TAG_CONSTRAINTS);
 	
 	if (verifyCibXml(cib_root)) {
-		FNRET(cib_root);
+		return cib_root;
 	}
 	crm_crit(
 	       "The generated CIB did not pass integrity testing!!"
 	       "  All hope is lost.");
-	FNRET(NULL);
+	return NULL;
 }
 
 gboolean
@@ -105,11 +105,11 @@ verifyCibXml(xmlNodePtr cib)
 {
 	gboolean is_valid = TRUE;
 	xmlNodePtr tmp_node = NULL;
-	FNIN();
+	
 
 	if (cib == NULL) {
 		crm_err("XML Buffer was empty.");
-		FNRET(FALSE);
+		return FALSE;
 	}
 	
 	tmp_node = get_object_root(XML_CIB_TAG_NODES, cib);
@@ -126,7 +126,7 @@ verifyCibXml(xmlNodePtr cib)
 
 	// more integrity tests
 
-	FNRET(is_valid);
+	return is_valid;
 }
 
 /*
@@ -138,9 +138,9 @@ readCibXml(char *buffer)
 	xmlNodePtr root = string2xml(buffer);
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
-		FNRET(createEmptyCib());
+		return createEmptyCib();
 	}
-	FNRET(root);
+	return root;
 }
 
 /*
@@ -152,7 +152,7 @@ readCibXmlFile(const char *filename)
 	int s_res = -1;
 	struct stat buf;
 	xmlNodePtr root = NULL;
-	FNIN();
+	
 
 	if(filename != NULL) {
 		s_res = stat(filename, &buf);
@@ -171,11 +171,11 @@ readCibXmlFile(const char *filename)
 	
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
-//		FNRET(createEmptyCib());
+//		return createEmptyCib();
 		root = NULL;
 	}
 
-	FNRET(root);
+	return root;
 }
 
 /*
@@ -184,19 +184,19 @@ readCibXmlFile(const char *filename)
 xmlNodePtr
 get_the_CIB(void)
 {
-	FNIN();
-	FNRET(the_cib);
+	
+	return the_cib;
 }
 
 gboolean
 uninitializeCib(void)
 {
 	xmlNodePtr tmp_cib = the_cib;
-	FNIN();
+	
 	
 	if(tmp_cib == NULL) {
 		crm_err("The CIB has already been deallocated.");
-		FNRET(FALSE);
+		return FALSE;
 	}
 	
 	initialized = FALSE;
@@ -212,7 +212,7 @@ uninitializeCib(void)
 
 	crm_err("The CIB has been deallocated.");
 	
-	FNRET(TRUE);
+	return TRUE;
 }
 
 
@@ -245,13 +245,13 @@ initializeCib(xmlNodePtr new_cib)
 		initialized = TRUE;
 
 		crm_trace("CIB initialized");
-		FNRET(TRUE);
+		return TRUE;
 	}
 	else {
 		crm_err("CIB Verification failed");
 	}
 	
-	FNRET(FALSE);
+	return FALSE;
     
 }
 
@@ -267,7 +267,7 @@ moveFile(const char *oldname,
 	int res = 0;
 	struct stat tmp;
 	int s_res = stat(newname, &tmp);
-	FNIN();
+	
 	
 	if (s_res >= 0)
 	{
@@ -283,7 +283,7 @@ moveFile(const char *oldname,
 			res = unlink(newname);
 			if (res < 0) {
 				perror("Could not remove the current backup of Cib");
-				FNRET(-1);
+				return -1;
 			}
 		}
 	}
@@ -294,16 +294,16 @@ moveFile(const char *oldname,
 		res = link(oldname, newname);
 		if (res < 0) {
 			perror("Could not create backup of current Cib");
-			FNRET(-2);
+			return -2;
 		}
 		res = unlink(oldname);
 		if (res < 0) {
 			perror("Could not unlink the current Cib");
-			FNRET(-3);
+			return -3;
 		}
 	}
     
-	FNRET(0);
+	return 0;
     
 }
 
@@ -313,12 +313,12 @@ activateCibBuffer(char *buffer, const char *filename)
 {
 	int result = -1;
 	xmlNodePtr local_cib = NULL;
-	FNIN();
+	
 	
 	local_cib = readCibXml(buffer);
 	result = activateCibXml(local_cib, filename);
 	
-	FNRET(result);
+	return result;
 }
 
 /*
@@ -332,7 +332,7 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 	xmlNodePtr saved_cib = get_the_CIB();
 	const char *filename_bak = CIB_BACKUP; // calculate
 	xmlDocPtr foo;
-	FNIN();
+	
 
 	if (initializeCib(new_cib) == TRUE) {
 		int res = moveFile(filename, filename_bak, FALSE, NULL);
@@ -414,6 +414,6 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 		free_xml(saved_cib);
 	}
 
-	FNRET(error_code);
+	return error_code;
     
 }

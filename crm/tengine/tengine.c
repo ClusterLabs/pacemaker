@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.16 2004/06/02 18:41:40 andrew Exp $ */
+/* $Id: tengine.c,v 1.17 2004/06/03 07:52:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -336,7 +336,7 @@ initiate_transition(void)
 	int lpc;
 	gboolean anything = FALSE;
 
-	FNIN();
+	
 	
 	slist_iter(
 		action_list, action_list_t, graph, lpc,
@@ -346,7 +346,7 @@ initiate_transition(void)
 		}
 		);
 
-	FNRET(anything);
+	return anything;
 }
 
 gboolean

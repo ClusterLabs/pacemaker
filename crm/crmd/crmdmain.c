@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.19 2004/06/02 15:25:11 andrew Exp $ */
+/* $Id: crmdmain.c,v 1.20 2004/06/03 07:52:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -105,18 +105,18 @@ main(int argc, char ** argv)
     // read local config file
     
     if (req_status){
-		FNRET(init_status(PID_FILE, crm_system_name));
+		return init_status(PID_FILE, crm_system_name);
     }
   
     if (req_stop){
-		FNRET(init_stop(PID_FILE));
+		return init_stop(PID_FILE);
     }
 	
     if (req_restart) { 
 		init_stop(PID_FILE);
     }
 	
-    FNRET(init_start());
+    return init_start();
 }
 
 
@@ -163,7 +163,7 @@ init_start(void)
 	    crm_info("[%s] stopped", crm_system_name);
     }
     
-    FNRET(state != S_PENDING);
+    return state != S_PENDING;
 }
 
 

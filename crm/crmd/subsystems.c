@@ -69,7 +69,7 @@ do_cib_control(long long action,
 	long long stop_actions = A_CIB_STOP;
 	long long start_actions = A_CIB_START;
 
-	FNIN();
+	
 	
 	if(action & stop_actions) {
 		// dont do anything, its embedded now
@@ -87,7 +87,7 @@ do_cib_control(long long action,
 		}
 	}
 	
-	FNRET(result);
+	return result;
 }
 
 
@@ -104,7 +104,7 @@ do_cib_invoke(long long action,
 	xmlNodePtr new_options = NULL;
 	const char *section = NULL;
 
-	FNIN();
+	
 
 	if(data != NULL) {
 		cib_msg = (xmlNodePtr)data;
@@ -119,7 +119,7 @@ do_cib_invoke(long long action,
 		xml_message_debug(cib_msg, "[CIB] Invoking with");
 		if(cib_msg == NULL) {
 			crm_err("No message for CIB command");
-			FNRET(I_NULL); // I_ERROR
+			return I_NULL; // I_ERROR
 		}
 
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
@@ -138,7 +138,7 @@ do_cib_invoke(long long action,
 		       || strcmp(op, CRM_OP_WELCOME) == 0
 		       || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
 		       || strcmp(op, CRM_OP_ERASE) == 0)) {
-			FNRET(I_CIB_UPDATE);	
+			return I_CIB_UPDATE;	
 		}
 
 		if(op == NULL) {
@@ -151,7 +151,7 @@ do_cib_invoke(long long action,
 #if 0
 		if(interested in reply) {
 			put_message(answer);
-			FNRET(I_REQUEST);
+			return I_REQUEST;
 		}
 #endif
 
@@ -162,12 +162,12 @@ do_cib_invoke(long long action,
 		xml_message_debug(cib_msg, "[CIB] Invoking with");
 		if(cib_msg == NULL) {
 			crm_err("No message for CIB command");
-			FNRET(I_NULL); // I_ERROR
+			return I_NULL; // I_ERROR
 		}
 		
 		answer = process_cib_message(cib_msg, TRUE);
 		put_message(answer);
-		FNRET(I_REQUEST);
+		return I_REQUEST;
 
 	} else if(action & A_CIB_BUMPGEN) {  
  		// check if the response was ok before next bit
@@ -193,7 +193,7 @@ do_cib_invoke(long long action,
 		if(answer == NULL) {
 			crm_err("Result of BUMP in %s was NULL",
 			       __FUNCTION__);
-			FNRET(I_FAIL);
+			return I_FAIL;
 		}
 
 		send_request(NULL, answer, CRM_OP_REPLACE,
@@ -207,7 +207,7 @@ do_cib_invoke(long long action,
 	}
 	
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 
@@ -225,7 +225,7 @@ do_pe_control(long long action,
 	long long stop_actions = A_PE_STOP;
 	long long start_actions = A_PE_START;
 	
-	FNIN();
+	
 
 	if(action & stop_actions) {
 		if(stop_subsystem(this_subsys) == FALSE)
@@ -264,7 +264,7 @@ do_pe_control(long long action,
 		}
 	}
 	
-	FNRET(result);
+	return result;
 }
 
 char *fsa_pe_ref = NULL;
@@ -277,14 +277,14 @@ do_pe_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     void *data)
 {
-	FNIN();
+	
 
 	stopTimer(integration_timer);
 
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
 		
 		crm_info("Waiting for the PE to connect");
-		FNRET(I_WAIT_FOR_EVENT);
+		return I_WAIT_FOR_EVENT;
 		
 	}
 	
@@ -300,7 +300,7 @@ do_pe_invoke(long long action,
 	send_request(NULL, local_cib, CRM_OP_PECALC,
 		     NULL, CRM_SYSTEM_PENGINE, &fsa_pe_ref);
 
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 /*	 A_TE_START, A_TE_STOP, A_TE_RESTART	*/
@@ -317,12 +317,12 @@ do_te_control(long long action,
 	long long stop_actions = A_TE_STOP;
 	long long start_actions = A_TE_START;
 	
-	FNIN();
+	
 
 /* 		if(action & stop_actions && cur_state != S_STOPPING */
 /* 		   && is_set(fsa_input_register, R_TE_PEND)) { */
 /* 			result = I_WAIT_FOR_EVENT; */
-/* 			FNRET(result); */
+/* 			return result; */
 /* 		} */
 	
 	if(action & stop_actions) {
@@ -362,7 +362,7 @@ do_te_control(long long action,
 		}
 	}
 
-	FNRET(result);
+	return result;
 }
 
 static xmlNodePtr te_last_input = NULL;
@@ -380,7 +380,7 @@ do_te_copyto(long long action,
 	xmlNodePtr opts     = NULL;
 	const char *true_op = NULL;
 	
-	FNIN();
+	
 
 	if(data != NULL) {
 		message  = copy_xml_node_recursive((xmlNodePtr)data);
@@ -401,7 +401,7 @@ do_te_copyto(long long action,
 			free_xml(te_lastcc);
 			te_lastcc = message;
 		}
-		FNRET(I_WAIT_FOR_EVENT);
+		return I_WAIT_FOR_EVENT;
 
 	}
 
@@ -420,7 +420,7 @@ do_te_copyto(long long action,
 		free_xml(message);
 	}
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 
@@ -434,7 +434,7 @@ do_te_invoke(long long action,
 {
 	xmlNodePtr graph = NULL;
 	xmlNodePtr msg = (xmlNodePtr)data;
-	FNIN();
+	
 
 	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
 		crm_info("Waiting for the TE to connect");
@@ -442,7 +442,7 @@ do_te_invoke(long long action,
 			free_xml(te_last_input);
 			te_last_input = copy_xml_node_recursive(msg);
 		}
-		FNRET(I_WAIT_FOR_EVENT);
+		return I_WAIT_FOR_EVENT;
 
 	}
 
@@ -457,7 +457,7 @@ do_te_invoke(long long action,
 	if(action & A_TE_INVOKE) {
 		graph = find_xml_node(msg, "transition_graph");
 		if(graph == NULL) {
-			FNRET(I_FAIL);
+			return I_FAIL;
 		}
 	
 		send_request(NULL, graph, CRM_OP_TRANSITION,
@@ -472,13 +472,13 @@ do_te_invoke(long long action,
 		free_xml(msg);
 	}
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 gboolean
 crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 {
-	FNIN();
+	
 
 	if (client_channel == NULL) {
 		crm_err("Channel was NULL");
@@ -490,7 +490,7 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 	
 		if (blank_client == NULL) {
 			crm_err("Could not allocate memory for a blank crmd_client_t");
-			FNRET(FALSE);
+			return FALSE;
 		}
 		client_channel->ops->set_recv_qlen(client_channel, 100);
 		client_channel->ops->set_send_qlen(client_channel, 100);
@@ -509,7 +509,7 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 					       default_ipc_input_destroy);
 	}
     
-	FNRET(TRUE);
+	return TRUE;
 }
 
 static gboolean

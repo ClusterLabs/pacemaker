@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: msg.c,v 1.3 2004/06/03 07:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,14 +43,14 @@ xmlNodePtr
 createPingAnswerFragment(const char *from, const char *status)
 {
 	xmlNodePtr ping = NULL;
-	FNIN();
+	
 	
 	ping = create_xml_node(NULL, XML_CRM_TAG_PING);
 	
 	set_xml_property_copy(ping, XML_PING_ATTR_STATUS, status);
 	set_xml_property_copy(ping, XML_PING_ATTR_SYSFROM, from);
 
-	FNRET(ping);
+	return ping;
 }
 
 xmlNodePtr
@@ -62,7 +62,7 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 	char *sub_type_target;
 	char *msg_type_target;
 
-	FNIN();
+	
 	
 	// 2 = "_" + '\0'
 	sub_type_len = strlen(to) + strlen(XML_ATTR_REQUEST) + 2; 
@@ -82,7 +82,7 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 	set_xml_property_copy(root_xml_node, msg_type_target, CRM_OP_PING);
 	crm_free(msg_type_target);
 
-	FNRET(root_xml_node);
+	return root_xml_node;
 }
 
 
@@ -100,9 +100,9 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	xmlNodePtr action = NULL;
 	const char *true_sys;
 	
-	FNIN();
+	
 	if (root_xml_node == NULL) {
-		FNRET(NULL);
+		return NULL;
 	}
 
 	from = xmlGetProp(root_xml_node, XML_ATTR_SYSFROM);
@@ -136,7 +136,7 @@ validate_crm_message(xmlNodePtr root_xml_node,
     
 	if (type == NULL) {
 		crm_info("No message type defined.");
-		FNRET(NULL);
+		return NULL;
 	} else if (msg_type != NULL && strcmp(msg_type, type) != 0) {
 		crm_info("Expecting a (%s) message but receieved a (%s).",
 		       msg_type, type);
@@ -155,7 +155,7 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	crm_debug("Returning node (%s)", xmlGetNodePath(action));
 */
 	
-	FNRET(action);
+	return action;
 }
 
 
@@ -167,7 +167,7 @@ send_hello_message(IPC_Channel *ipc_client,
 		   const char *minor_version)
 {
 	xmlNodePtr hello_node = NULL;
-	FNIN();
+	
 	
 	if (uuid == NULL || strlen(uuid) == 0
 	    || client_name == NULL || strlen(client_name) == 0
@@ -209,7 +209,7 @@ process_hello_message(xmlNodePtr hello,
 	const char *local_major_version;
 	const char *local_minor_version;
 
-	FNIN();
+	
 	*uuid = NULL;
 	*client_name = NULL;
 	*major_version = NULL;
@@ -224,29 +224,29 @@ process_hello_message(xmlNodePtr hello,
 	local_minor_version = xmlGetProp(opts, "minor_version");
 
 	if (op == NULL || strcmp(CRM_OP_HELLO, op) != 0) {
-		FNRET(FALSE);
+		return FALSE;
 
 	} else if (local_uuid == NULL || strlen(local_uuid) == 0) {
 		crm_err("Hello message was not valid (field %s not found)",
 		       "uuid");
-		FNRET(FALSE);
+		return FALSE;
 
 	} else if (local_client_name==NULL || strlen(local_client_name)==0){
 		crm_err("Hello message was not valid (field %s not found)",
 			"client name");
-		FNRET(FALSE);
+		return FALSE;
 
 	} else if(local_major_version == NULL
 		  || strlen(local_major_version) == 0){
 		crm_err("Hello message was not valid (field %s not found)",
 			"major version");
-		FNRET(FALSE);
+		return FALSE;
 
 	} else if (local_minor_version == NULL
 		   || strlen(local_minor_version) == 0){
 		crm_err("Hello message was not valid (field %s not found)",
 			"minor version");
-		FNRET(FALSE);
+		return FALSE;
 	}
     
 	*uuid          = crm_strdup(local_uuid);
@@ -254,7 +254,7 @@ process_hello_message(xmlNodePtr hello,
 	*major_version = crm_strdup(local_major_version);
 	*minor_version = crm_strdup(local_minor_version);
 
-	FNRET(TRUE);
+	return TRUE;
 }
 
 xmlNodePtr
@@ -266,7 +266,7 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	const char *true_from = sys_from;
 	xmlNodePtr request;
 
-	FNIN();
+	
 
 	if (uuid_from != NULL)
 		true_from = generate_hash_key(sys_from, uuid_from);
@@ -279,7 +279,7 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 		    && strcmp(CRM_SYSTEM_CRMD, sys_from) != 0) {
 			crm_err("only internal systems can leave"
 				" uuid_from blank");
-			FNRET(FALSE);
+			return FALSE;
 		}
 	}
 
@@ -310,7 +310,7 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 		add_node_copy(request, msg_data);
 	}
 
-	FNRET(request);
+	return request;
 }
 
 /*
@@ -325,7 +325,7 @@ create_reply(xmlNodePtr original_request,
 	const char *sys_to    = NULL;
 	xmlNodePtr reply;
 	
-	FNIN();
+	
 	host_from = xmlGetProp(original_request, XML_ATTR_HOSTFROM);
 	sys_from  = xmlGetProp(original_request, XML_ATTR_SYSFROM);
 	sys_to  = xmlGetProp(original_request, XML_ATTR_SYSTO);
@@ -343,7 +343,7 @@ create_reply(xmlNodePtr original_request,
 	set_xml_property_copy(reply, XML_ATTR_SYSTO,    sys_from);
 	set_xml_property_copy(reply, XML_ATTR_SYSFROM,  sys_to);
 
-	FNRET(reply);
+	return reply;
 }
 
 xmlNodePtr
@@ -356,7 +356,7 @@ create_common_message(xmlNodePtr original_request,
 	xmlNodePtr options = NULL;
 	xmlNodePtr new_message;
 	
-	FNIN();
+	
 	crm_msg_reference = xmlGetProp(original_request,
 				       XML_ATTR_REFERENCE);
 	type      = xmlGetProp(original_request, XML_ATTR_MSGTYPE);
@@ -365,12 +365,12 @@ create_common_message(xmlNodePtr original_request,
 	if (type == NULL) {
 		crm_err("Cannot create new_message,"
 			" no message type in original message");
-		FNRET(NULL);
+		return NULL;
 #if 0
 	} else if (strcmp(XML_ATTR_REQUEST, type) != 0) {
 		crm_err("Cannot create new_message,"
 			" original message was not a request");
-		FNRET(NULL);
+		return NULL;
 #endif
 	}
 	new_message = create_xml_node(NULL, XML_MSG_TAG);
@@ -393,5 +393,5 @@ create_common_message(xmlNodePtr original_request,
 		add_node_copy(new_message, options);
 	}
 
-	FNRET(new_message);
+	return new_message;
 }

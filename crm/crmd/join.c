@@ -39,12 +39,12 @@ do_send_welcome(long long action,
 		enum crmd_fsa_input current_input,
 		void *data)
 {
-	FNIN();
+	
 
 	if(action & A_JOIN_WELCOME && data == NULL) {
 		crm_err("Attempt to send welcome message "
 			"without a message to reply to!");
-		FNRET(I_NULL);
+		return I_NULL;
 		
 	} else if(action & A_JOIN_WELCOME) {
 		xmlNodePtr welcome = (xmlNodePtr)data;
@@ -68,10 +68,10 @@ do_send_welcome(long long action,
 			crm_err("No recipient for welcome message");
 		}
 		
-		FNRET(I_NULL);
+		return I_NULL;
 
 	}
-	FNRET(I_ERROR);
+	return I_ERROR;
 }
 
 // welcome everyone...
@@ -83,7 +83,7 @@ do_send_welcome_all(long long action,
 		    enum crmd_fsa_input current_input,
 		    void *data)
 {
-	FNIN();
+	
 
 	// reset everyones status back to down or in_ccm in the CIB
 	xmlNodePtr update     = NULL;
@@ -141,7 +141,7 @@ do_send_welcome_all(long long action,
 	   == fsa_membership_copy->members_size) {
 		// that was the last outstanding join ack)
 		crm_info("That was the last outstanding join ack");
-		FNRET(I_SUCCESS);
+		return I_SUCCESS;
 		
 	} else {
 		crm_debug("Still waiting on %d outstanding join acks",
@@ -150,7 +150,7 @@ do_send_welcome_all(long long action,
 		// dont waste time by invoking the pe yet;
 	}
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 
@@ -167,19 +167,19 @@ do_ack_welcome(long long action,
 	xmlNodePtr tmp1;
 	xmlNodePtr tmp2;
 
-	FNIN();
+	
 	
 #if 0
 	if(we are sick) {
 		log error ;
-		FNRET(I_NULL);
+		return I_NULL;
 	} 
 #endif
 	fsa_our_dc = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 	
 	if(fsa_our_dc == NULL) {
 		crm_err("Failed to determin our DC");
-		FNRET(I_FAIL);
+		return I_FAIL;
 	}
 	
 	/* send our status section to the DC */
@@ -192,7 +192,7 @@ do_ack_welcome(long long action,
 	free_xml(tmp2);
 	free_xml(cib_copy);
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 /*	 A_ANNOUNCE	*/
@@ -204,7 +204,7 @@ do_announce(long long action,
 	    void *data)
 {
 	xmlNodePtr msg = (xmlNodePtr)data;
-	FNIN();
+	
 	
 	/* Once we hear from the DC, we can stop the timer
 	 *
@@ -220,7 +220,7 @@ do_announce(long long action,
 		case S_TERMINATE:
 			crm_warn("Do not announce ourselves in state %s",
 				 fsa_state2string(cur_state));
-			FNRET(I_NULL);
+			return I_NULL;
 			break;
 		default:
 			break;
@@ -231,7 +231,7 @@ do_announce(long long action,
 
 		if(from == NULL) {
 			crm_err("Failed to origin of ping message");
-			FNRET(I_FAIL);
+			return I_FAIL;
 		}
 		
 		send_request(NULL, NULL, CRM_OP_ANNOUNCE,
@@ -239,10 +239,10 @@ do_announce(long long action,
 	} else {
 		/* Delay announce until we have finished local startup */
 		crm_warn("Delaying announce until local startup is complete");
-		FNRET(I_NULL);
+		return I_NULL;
 	}
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 
@@ -265,7 +265,7 @@ do_process_welcome_ack(long long action,
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
 	const char *ref       = xmlGetProp(join_ack, XML_ATTR_REFERENCE);
 
-	FNIN();
+	
 
 	gpointer join_node =
 		g_hash_table_lookup(fsa_membership_copy->members, join_from);
@@ -284,7 +284,7 @@ do_process_welcome_ack(long long action,
 		 * it is invalid
 		 */
 		free_xml(cib_fragment);
-		FNRET(I_FAIL);
+		return I_FAIL;
 	}
 
 	crm_debug("Welcoming node %s after ACK (ref %s)",
@@ -299,7 +299,7 @@ do_process_welcome_ack(long long action,
 		crm_err("No status information was part of the"
 			" Welcome ACK from %s",
 			join_from);
-		FNRET(I_NULL);
+		return I_NULL;
 	}
 
 	/* make sure a node entry exists for the new node
@@ -347,7 +347,7 @@ do_process_welcome_ack(long long action,
 	if(g_hash_table_size(joined_nodes)
 	   == fsa_membership_copy->members_size) {
 		crm_info("That was the last outstanding join ack");
-		FNRET(I_SUCCESS);
+		return I_SUCCESS;
 		/* The update isnt lost, the A_CIB_OP action is part of the
 		 *   matrix for S_INTEGRATION + I_SUCCESS.
 		 */
@@ -356,5 +356,5 @@ do_process_welcome_ack(long long action,
 		crm_debug("Still waiting on %d outstanding join acks", size);
 		/* dont waste time by invoking the pe yet */
 	}
-	FNRET(I_CIB_OP);
+	return I_CIB_OP;
 }

@@ -70,7 +70,7 @@ do_ha_control(long long action,
 {
 	gboolean registered = FALSE;
 	
-	FNIN();
+	
 
 	if(action & A_HA_DISCONNECT) {
 		if(fsa_cluster_conn != NULL) {
@@ -93,7 +93,7 @@ do_ha_control(long long action,
 					      crmd_ha_input_destroy);
 		
 		if(registered == FALSE) {
-			FNRET(I_FAIL);
+			return I_FAIL;
 		}
 	} 
 	
@@ -103,7 +103,7 @@ do_ha_control(long long action,
 	}
 	
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 /*	 A_SHUTDOWN	*/
@@ -117,7 +117,7 @@ do_shutdown(long long action,
 	enum crmd_fsa_input next_input = I_NULL;
 	enum crmd_fsa_input tmp = I_NULL;
 	
-	FNIN();
+	
 
 	/* last attempt to shut these down */
 	if(is_set(fsa_input_register, R_PE_CONNECTED)) {
@@ -143,7 +143,7 @@ do_shutdown(long long action,
 
 	/* TODO: shutdown all remaining resources? */
 	
-	FNRET(next_input);
+	return next_input;
 }
 
 /*	 A_SHUTDOWN_REQ	*/
@@ -155,14 +155,14 @@ do_shutdown_req(long long action,
 	    void *data)
 {
 	enum crmd_fsa_input next_input = I_NULL;
-	FNIN();
+	
 
 	if(send_request(NULL, NULL, CRM_OP_SHUTDOWN_REQ,
 			NULL, CRM_SYSTEM_DC, NULL) == FALSE){
 		next_input = I_ERROR;
 	}
 
-	FNRET(next_input);
+	return next_input;
 }
 
 gboolean
@@ -171,7 +171,7 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 	int lpc = 0;
 	ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
     
-	FNIN();
+	
 
 	while(hb_cluster->llc_ops->msgready(hb_cluster))
 	{
@@ -187,11 +187,11 @@ crmd_ha_input_dispatch(int fd, gpointer user_data)
 
 		// TODO: feed this back into the FSA
 		
-		FNRET(FALSE);
+		return FALSE;
 	}
 	
     
-	FNRET(TRUE);
+	return TRUE;
 }
 
 void
@@ -208,7 +208,7 @@ do_exit(long long action,
 	enum crmd_fsa_input current_input,
 	void *data)
 {
-	FNIN();
+	
 
 	crm_err("Action %s (%.16llx) not supported\n",
 		fsa_action2string(action), action);
@@ -219,7 +219,7 @@ do_exit(long long action,
 		exit(1);
 	}
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 
@@ -236,7 +236,7 @@ do_startup(long long action,
 	int interval = 1; // seconds between DC heartbeats
 
 
-	FNIN();
+	
 
 	fsa_input_register = 0; // zero out the regester
 	
@@ -350,9 +350,9 @@ do_startup(long long action,
 
 
 	if(was_error)
-		FNRET(I_FAIL);
+		return I_FAIL;
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 
@@ -364,12 +364,12 @@ do_stop(long long action,
 	enum crmd_fsa_input current_input,
 	void *data)
 {
-	FNIN();
+	
 
 	crm_err("Action %s (%.16llx) not supported\n",
 	       fsa_action2string(action), action);
 
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 /*	 A_STARTED	*/
@@ -380,11 +380,11 @@ do_started(long long action,
 	   enum crmd_fsa_input current_input,
 	   void *data)
 {
-	FNIN();
+	
 
 	clear_bit_inplace(&fsa_input_register, R_STARTING);
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 /*	 A_RECOVER	*/
@@ -395,18 +395,18 @@ do_recover(long long action,
 	   enum crmd_fsa_input current_input,
 	   void *data)
 {
-	FNIN();
+	
 
 	crm_err("Action %s (%.16llx) not supported\n",
 	       fsa_action2string(action), action);
 
-	FNRET(I_SHUTDOWN);
+	return I_SHUTDOWN;
 }
 
 void
 crm_shutdown(int nsig)
 {
-	FNIN();
+	
     
 	CL_SIGNAL(nsig, crm_shutdown);
 
@@ -431,7 +431,7 @@ crm_shutdown(int nsig)
 		exit(LSB_EXIT_OK);
 	    
 	}
-	FNOUT();
+	return;
 }
 
 
@@ -443,7 +443,7 @@ wait_channel_init(char daemonsocket[])
 	char path[] = IPC_PATH_ATTR;
 	GHashTable * attrs;
 
-	FNIN();
+	
 	attrs = g_hash_table_new(g_str_hash,g_str_equal);
 	g_hash_table_insert(attrs, path, daemonsocket);
     
@@ -458,7 +458,7 @@ wait_channel_init(char daemonsocket[])
     
 	g_hash_table_destroy(attrs);
     
-	FNRET(wait_ch);
+	return wait_ch;
 }
 
 int
@@ -476,12 +476,12 @@ init_server_ipc_comms(
 	char    commpath[SOCKET_LEN];
 	IPC_WaitConnection *wait_ch;
 
-	FNIN();
+	
 	sprintf(commpath, WORKING_DIR "/%s", child);
 
 	wait_ch = wait_channel_init(commpath);
 
-	if (wait_ch == NULL) FNRET(1);
+	if (wait_ch == NULL) return 1;
 	G_main_add_IPC_WaitConnection(G_PRIORITY_LOW,
 				      wait_ch,
 				      NULL,
@@ -492,7 +492,7 @@ init_server_ipc_comms(
 
 	crm_debug("Listening on: %s", commpath);
 
-	FNRET(0);
+	return 0;
 }
 
 gboolean

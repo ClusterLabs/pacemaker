@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.2 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: utils.c,v 1.3 2004/06/03 07:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,7 +50,7 @@ generateReference(const char *custom1, const char *custom2)
 	int reference_len = 4;
 	char *since_epoch = NULL;
 
-	FNIN();
+	
 	
 	reference_len += 20; // too big
 	reference_len += 40; // too big
@@ -62,12 +62,12 @@ generateReference(const char *custom1, const char *custom2)
 	reference_len += strlen(local_cust2);
 	
 	since_epoch = (char*)crm_malloc(reference_len*(sizeof(char)));
-	FNIN();
+	
 	sprintf(since_epoch, "%s-%s-%ld-%u",
 		local_cust1, local_cust2,
 		(unsigned long)time(NULL), ref_counter++);
 
-	FNRET(since_epoch);
+	return since_epoch;
 }
 
 gboolean
@@ -77,7 +77,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 	int len = 0;
 	const char *temp = NULL;
 
-	FNIN();
+	
 
 	crm_verbose("Attempting to decode: [%s]", srcstring);
 	if (srcstring != NULL) {
@@ -95,7 +95,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 				strncpy(*value, temp, len-1);
 				(*value)[len-1] = '\0';
 
-				FNRET(TRUE);
+				return TRUE;
 			}
 		}
 	}
@@ -103,7 +103,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 	*name = NULL;
 	*value = NULL;
     
-	FNRET(FALSE);
+	return FALSE;
 }
 
 char *
@@ -112,11 +112,11 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 	int ref_len = strlen(sys?sys:"none") + strlen(crm_msg_reference) + 2;
 	char *hash_key = (char*)crm_malloc(sizeof(char)*(ref_len));
 
-	FNIN();
+	
 	sprintf(hash_key, "%s_%s", sys?sys:"none", crm_msg_reference);
 	hash_key[ref_len-1] = '\0';
 	crm_info("created hash key: (%s)", hash_key);
-	FNRET(hash_key);
+	return hash_key;
 }
 
 char *
@@ -125,9 +125,9 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	int ref_len;
 	char *hash_value;
 
-	FNIN();
+	
 	if (src_node == NULL || src_subsys == NULL) {
-		FNRET(NULL);
+		return NULL;
 	}
     
 	if (strcmp(CRM_SYSTEM_DC, src_subsys) == 0) {
@@ -135,9 +135,9 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 		if (!hash_value) {
 			crm_err("memory allocation failed in "
 			       "generate_hash_value()\n");
-			FNRET(NULL);
+			return NULL;
 		}
-		FNRET(hash_value);
+		return hash_value;
 	}
     
 	ref_len = strlen(src_subsys) + strlen(src_node) + 2;
@@ -145,14 +145,14 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	if (!hash_value) {
 		crm_err("memory allocation failed in "
 		       "generate_hash_value()\n");
-		FNRET(NULL);
+		return NULL;
 	}
 
 	snprintf(hash_value, ref_len-1, "%s_%s", src_node, src_subsys);
 	hash_value[ref_len-1] = '\0';// make sure it is null terminated
 
 	crm_info("created hash value: (%s)", hash_value);
-	FNRET(hash_value);
+	return hash_value;
 }
 
 gboolean
@@ -161,7 +161,7 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 	char *char_value = (char*)value;
 	int value_len = strlen(char_value);
 
-	FNIN();
+	
     
 	crm_info("Decoding hash value: (%s:%d)",
 	       char_value,
@@ -173,22 +173,22 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 		if (!*subsys) {
 			crm_err("memory allocation failed in "
 			       "decode_hash_value()\n");
-			FNRET(FALSE);
+			return FALSE;
 		}
 		crm_info("Decoded value: (%s:%d)", *subsys, 
 		       (int)strlen(*subsys));
-		FNRET(TRUE);
+		return TRUE;
 	}
 	else if (char_value != NULL) {
 		if (decodeNVpair(char_value, '_', node, subsys)) {
-			FNRET(TRUE);
+			return TRUE;
 		} else {
 			*node = NULL;
 			*subsys = NULL;
-			FNRET(FALSE);
+			return FALSE;
 		}
 	}
-	FNRET(FALSE);
+	return FALSE;
 }
 
 

@@ -57,7 +57,7 @@ do_lrm_control(long long action,
 {
 	enum crmd_fsa_input failed = I_NULL;//I_FAIL;
 	int ret = HA_OK;
-	FNIN();
+	
 
 	if(action & A_LRM_DISCONNECT) {
 		fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
@@ -105,7 +105,7 @@ do_lrm_control(long long action,
 	}
 		
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 gboolean lrm_dispatch(int fd, gpointer user_data)
@@ -255,7 +255,7 @@ do_lrm_invoke(long long action,
 	lrm_mon_t* mon = NULL;
 	lrm_op_t* op = NULL;
 	
-	FNIN();
+	
 
 	if(action & A_UPDATE_NODESTATUS) {
 
@@ -280,12 +280,12 @@ do_lrm_invoke(long long action,
 		free_xml(tmp1);
 		free_xml(data);
 
-		FNRET(next_input);
+		return next_input;
 	}
 
 #ifdef USE_FAKE_LRM
 	if(data == NULL) {
-		FNRET(I_ERROR);
+		return I_ERROR;
 	}
 	
 	msg = (xmlNodePtr)data;
@@ -357,7 +357,7 @@ do_lrm_invoke(long long action,
 			     fsa_our_dc, CRM_SYSTEM_DCIB, NULL);
 	}
 	
-	FNRET(I_NULL);
+	return I_NULL;
 #endif
 
 	
@@ -406,7 +406,7 @@ do_lrm_invoke(long long action,
 	} else if(operation != NULL && strcmp(operation, "monitor") == 0) {
 		if(rsc == NULL) {
 			crm_err("Could not find resource to monitor");
-			FNRET(I_FAIL);
+			return I_FAIL;
 		}
 		
 		mon = g_new(lrm_mon_t, 1);
@@ -442,7 +442,7 @@ do_lrm_invoke(long long action,
 
 		if(rsc == NULL) {
 			crm_err("Could not add resource to LRM");
-			FNRET(I_FAIL);
+			return I_FAIL;
 		}
 		
 		// now do the op
@@ -455,7 +455,7 @@ do_lrm_invoke(long long action,
 		rsc->ops->perform_op(rsc, op);
 	}
 
-	FNRET(next_input);
+	return next_input;
 }
 
 GHashTable *
@@ -548,7 +548,7 @@ do_lrm_event(long long action,
 	     enum crmd_fsa_input cur_input,
 	     void *data)
 {
-	FNIN();
+	
 	if(cause == C_LRM_MONITOR_CALLBACK) {
 		lrm_mon_t* monitor = (lrm_mon_t*)data;
 		lrm_rsc_t* rsc = monitor->rsc;
@@ -557,7 +557,7 @@ do_lrm_event(long long action,
 		switch(monitor->status) {
 			case LRM_OP_DONE:
 				crm_trace("An LRM monitor operation passed");
-				FNRET(I_NULL);
+				return I_NULL;
 				break;
 
 			case LRM_OP_CANCELLED:
@@ -599,8 +599,8 @@ do_lrm_event(long long action,
 		
 	} else {
 
-		FNRET(I_FAIL);
+		return I_FAIL;
 	}
 	
-	FNRET(I_NULL);
+	return I_NULL;
 }

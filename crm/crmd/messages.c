@@ -113,11 +113,11 @@ do_msg_store(long long action,
 	     void *data)
 {
 //	xmlNodePtr new_message = (xmlNodePtr)data;
-	FNIN();
+	
 
 //	put_message(new_message);
 
-	FNRET(I_NULL);
+	return I_NULL;
 }
 
 
@@ -133,7 +133,7 @@ do_msg_route(long long action,
 	xmlNodePtr xml_message = (xmlNodePtr)data;
 	gboolean routed = FALSE, defer = TRUE, do_process = TRUE;
 
-	FNIN();
+	
 
 #if 0
 //	if(cause == C_IPC_MESSAGE) {
@@ -173,7 +173,7 @@ do_msg_route(long long action,
 		} 
 	}
 	
-	FNRET(result);
+	return result;
 }
 
 /*
@@ -187,7 +187,7 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	gboolean was_sent = FALSE;
 	xmlNodePtr request = NULL;
 
-	FNIN();
+	
 
 	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
 				   XML_ATTR_OP, operation, TRUE);
@@ -214,7 +214,7 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	
 	free_xml(request);
 
-	FNRET(was_sent);
+	return was_sent;
 }
 
 /*
@@ -225,7 +225,7 @@ store_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	      const char *operation, const char *sys_to)
 {
 	xmlNodePtr request = NULL;
-	FNIN();
+	
 
 	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
 				   XML_ATTR_OP, operation, TRUE);
@@ -243,7 +243,7 @@ store_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	put_message(request);
 	free_xml(request);
 	
-	FNRET(TRUE);
+	return TRUE;
 }
 
 gboolean
@@ -259,16 +259,16 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	const char *host_to = xmlGetProp(xml_relay_message,XML_ATTR_HOSTTO);
 	const char *sys_to  = xmlGetProp(xml_relay_message,XML_ATTR_SYSTO);
 
-	FNIN();
+	
 
 	if(xml_relay_message == NULL) {
 		crm_err("Cannot route empty message");
-		FNRET(TRUE);
+		return TRUE;
 	}
 
 	if(strcmp(CRM_OP_HELLO, xml_relay_message->name) == 0) {
 		/* quietly ignore */
-		FNRET(TRUE);
+		return TRUE;
 	}
 
 	if(strcmp(XML_MSG_TAG, xml_relay_message->name) != 0) {
@@ -277,7 +277,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 				  "Bad message type, should be crm_message");
 		crm_err("Ignoring message of type %s",
 		       xml_relay_message->name);
-		FNRET(TRUE);
+		return TRUE;
 	}
 	
 
@@ -286,7 +286,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 				  "Message did not have any value for sys_to");
 		crm_err("Message did not have any value for %s",
 		       XML_ATTR_SYSTO);
-		FNRET(TRUE);
+		return TRUE;
 	}
 	
 	is_for_dc   = (strcmp(CRM_SYSTEM_DC,   sys_to) == 0);
@@ -358,7 +358,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		
 	}
 	
-	FNRET(processing_complete);
+	return processing_complete;
 }
 
 gboolean
@@ -379,7 +379,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	const char *op = get_xml_attr(root_xml_node, XML_TAG_OPTIONS,
 				      XML_ATTR_OP, TRUE);
 	
-	FNIN();
+	
 
 	if (safe_str_neq(CRM_OP_HELLO, op)) {
 
@@ -715,7 +715,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	char *msg_text = NULL;
 #endif
 
-	FNIN();
+	
     
 	if (root == NULL) {
 		crm_err("Attempt to send NULL Message via HA failed.");
@@ -808,7 +808,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	}
 #endif
 		
-	FNRET(all_is_good);
+	return all_is_good;
 }
 		    
 
@@ -825,34 +825,34 @@ send_ha_reply(ll_cluster_t *hb_cluster,
 	gboolean was_sent = FALSE;
 	xmlNodePtr reply;
 
-	FNIN();
+	
 	was_sent = FALSE;
 	reply = create_reply(xml_request, xml_response_data);
 	if (reply != NULL) {
 		was_sent = send_xmlha_message(hb_cluster, reply);
 		free_xml(reply);
 	}
-	FNRET(was_sent);
+	return was_sent;
 }
 
 
 void
 send_msg_via_ha(xmlNodePtr action, const char *dest_node)
 {
-	FNIN();
-	if (action == NULL) FNOUT();
+	
+	if (action == NULL) return;
 
 	if (validate_crm_message(action, NULL, NULL, NULL) == NULL)
 	{
 		crm_err("Relay message to (%s) via HA was invalid, ignoring",
 			dest_node);
-		FNOUT();
+		return;
 	}
 //	crm_verbose("Relaying message to (%s) via HA", dest_node);
 	set_xml_property_copy(action, XML_ATTR_HOSTTO, dest_node);
 
 	send_xmlha_message(fsa_cluster_conn, action);
-	FNOUT();
+	return;
 }
 
 
@@ -861,7 +861,7 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 {
 	IPC_Channel *client_channel;
 
-	FNIN();
+	
 //	crm_debug("relaying msg to sub_sys=%s via IPC", sys);
 
 	client_channel =
@@ -885,5 +885,5 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 		crm_err("Unknown Sub-system (%s)... discarding message.",
 			sys);
 	}    
-	FNOUT();
+	return;
 }	

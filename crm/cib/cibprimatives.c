@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.34 2004/06/02 15:25:10 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.35 2004/06/03 07:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -77,12 +77,12 @@ xmlNodePtr
 findResource(xmlNodePtr cib, const char *id)
 {
 	xmlNodePtr root = NULL, ret = NULL;
-	FNIN();
+	
 	
 	root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
 	ret = find_entity(root, XML_CIB_TAG_RESOURCE, id, FALSE);
 
-	FNRET(ret);
+	return ret;
 }
 
 int
@@ -140,12 +140,12 @@ xmlNodePtr
 findConstraint(xmlNodePtr cib, const char *id)
 {
 	xmlNodePtr root = NULL, ret = NULL;
-	FNIN();
+	
 	
 	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
 	ret = find_entity(root, XML_CIB_TAG_CONSTRAINT, id, FALSE);
 
-	FNRET(ret);
+	return ret;
 }
 
 
@@ -202,12 +202,12 @@ xmlNodePtr
 findHaNode(xmlNodePtr cib, const char *id)
 {
 	xmlNodePtr root = NULL, ret = NULL;
-	FNIN();
+	
 	
 	root = get_object_root(XML_CIB_TAG_NODES, cib);
 	ret = find_entity(root, XML_CIB_TAG_NODE, id, FALSE);
 
-	FNRET(ret);
+	return ret;
 }
 
 
@@ -270,7 +270,7 @@ findStatus(xmlNodePtr cib, const char *id)
 	root = get_object_root(XML_CIB_TAG_STATUS, cib);
 	ret = find_entity(root, XML_CIB_TAG_STATE, id, FALSE);
 
-	FNRET(ret);
+	return ret;
 }
 
 int
@@ -506,7 +506,7 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 	gboolean clear_stonith  = FALSE;
 	gboolean clear_shutdown = FALSE;
 
-	FNIN();
+	
 	
 	prop_iter = update->properties;
 	while(prop_iter != NULL) {
