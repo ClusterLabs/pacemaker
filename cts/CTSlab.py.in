@@ -283,6 +283,7 @@ def usage(arg):
     +  " -D config-directory" \
     +  " --logfile system-logfile-name" \
     +  " -L system-logfile-name" \
+    +  " -v2"\
     +  " --stonith (1 | 0 | yes | no)" \
     +  " --standby (1 | 0 | yes | no)"
     +  "  [number-of-iterations]"
@@ -305,6 +306,7 @@ if __name__ == '__main__':
     DoStandby = 1
     NumIter = 500
     SuppressMonitoring = None
+    Version = 1
     #
     # The values of the rest of the parameters are now properly derived from
     # the configuration files.
@@ -333,6 +335,8 @@ if __name__ == '__main__':
        elif args[i] == "-L" or args[i] == "--logfile":
            skipthis=1
            LogFile = args[i+1]
+       elif args[i] == "-v2":
+           Version=2
        elif args[i] == "--stonith":
            skipthis=1
            if args[i+1] == "1" or args[i+1] == "yes":
@@ -368,6 +372,9 @@ if __name__ == '__main__':
     Environment["DoStonith"] = DoStonith
     Environment["DoStandby"] = DoStandby
     Environment["SuppressMonitoring"] = SuppressMonitoring
+    if Version == 2:
+        from CM_LinuxHAv2 import LinuxHAv2
+        Environment['CMclass']=LinuxHAv2
     #Environment["RandSeed"] = (156, 104, 218)
 
     Environment.SupplyDefaults()
