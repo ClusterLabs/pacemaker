@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.26 2005/03/14 20:54:34 andrew Exp $ */
+/* $Id: ipc.c,v 1.27 2005/03/15 18:40:06 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -107,10 +107,10 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 		all_is_good = FALSE;
 
 #if 0
-	} else if(ipc_client->should_send_blocking == FALSE) {
+	} else if(ipc_client->should_send_block == FALSE) {
 		crm_verbose("Setting IPC Channel to blocking..."
 			    " least some messages get lost");
-		ipc_client->should_send_blocking = TRUE;
+		ipc_client->should_send_block = TRUE;
 #endif
 	}
 
@@ -248,7 +248,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 
 	ch->ops->set_recv_qlen(ch, 100);
 	ch->ops->set_send_qlen(ch, 100);
-/* 	ch->should_send_blocking = TRUE; */
+/* 	ch->should_send_block = TRUE; */
 
 	crm_devel("Processing of %s complete", commpath);
 

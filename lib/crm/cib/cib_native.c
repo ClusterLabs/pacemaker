@@ -180,7 +180,7 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 		ha_msg_add(reg_msg, F_CIB_CALLBACK_TOKEN, uuid_ticket);
 		ha_msg_add(reg_msg, F_CIB_CLIENTNAME, name);
 
-/* 		CRM_DEV_ASSERT(native->command_channel->should_send_blocking); */
+/* 		CRM_DEV_ASSERT(native->command_channel->should_send_block); */
 
 		if(send_ipc_message(native->callback_channel, reg_msg) == FALSE) {
 			rc = cib_callback_register;
