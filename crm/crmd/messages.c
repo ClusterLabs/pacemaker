@@ -95,11 +95,8 @@ register_fsa_input_adv(
 
 	if(input == I_WAIT_FOR_EVENT) {
 		do_fsa_stall = TRUE;
-
-		/* zero out the action register but make sure its added back later */
-/* 		with_actions |= fsa_actions; */
-/* 		fsa_actions = A_NOTHING; */
-		
+		set_bit_inplace(fsa_actions, with_actions);
+		with_actions = A_NOTHING;
 		crm_debug("Stalling the FSA pending further input");
 	}
 
