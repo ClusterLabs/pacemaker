@@ -369,8 +369,12 @@ cib_native_perform_op(
 	crm_devel("Waiting for a syncronous reply");
 	op_reply = msgfromIPC_noauth(native->command_channel);
 	if (op_reply == NULL) {
-		crm_err("No reply message");
-		return cib_reply_failed;
+		CRM_DEV_ASSERT(native->command_channel->ops->get_chan_status(
+				       native->command_channel) != IPC_CONNECT);
+		
+		crm_err("No reply message - disconnected");
+		cib->state = cib_disconnected;
+		return cib_not_connected;
 	}
 
 	crm_devel("Syncronous reply recieved");
@@ -382,7 +386,6 @@ cib_native_perform_op(
 		rc = cib_return_code;
 	}	
 	
-
 	if(output_data == NULL) {
 		/* do nothing more */
 		
