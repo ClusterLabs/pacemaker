@@ -382,7 +382,7 @@ class CrmdStateAudit(ClusterAudit):
                     if ret:
                         dc_list.append(node)
                     else:
-                        unstable_list.append(node)
+                        unstable_list.append(out)
             else:
                 if self.CM.ShouldBeStatus[node] == self.CM["up"]:
                     self.CM.log(
@@ -398,8 +398,10 @@ class CrmdStateAudit(ClusterAudit):
 
         if len(unstable_list) > 0:
             passed = 0
-            self.CM.log("Cluster is not stable.  We found %d (of %d) unstable nodes: %s" 
+            self.CM.log("Cluster is not stable: %d (of %d)." 
                      %(len(unstable_list), up_count, str(unstable_list)))
+	    for status in unstable_list:
+		self.CM.log("%s" %(status))
 
         if up_are_down > 0:
             passed = 0
