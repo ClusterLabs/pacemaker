@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.32 2004/06/01 16:03:31 andrew Exp $ */
+/* $Id: msg.c,v 1.1 2004/06/02 11:45:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,18 +24,13 @@
 
 #include <stdlib.h>
 
-#include <crm/crm.h>
 #include <clplumbing/cl_log.h>
 
 #include <time.h> 
 
-#include <msgutils.h>
-
-#include <ha_msg.h>
-#include <ipcutils.h>
-#include <xmlutils.h>
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
-
+#include <crm/common/msg.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -90,37 +85,6 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 	FNRET(root_xml_node);
 }
 
-static uint ref_counter = 0;
-
-const char *
-generateReference(const char *custom1, const char *custom2)
-{
-
-	const char *local_cust1 = custom1;
-	const char *local_cust2 = custom2;
-	int reference_len = 4;
-	char *since_epoch = NULL;
-
-	FNIN();
-	
-	reference_len += 20; // too big
-	reference_len += 40; // too big
-	
-	if(local_cust1 == NULL) local_cust1 = "_empty_";
-	reference_len += strlen(local_cust1);
-	
-	if(local_cust2 == NULL) local_cust2 = "_empty_";
-	reference_len += strlen(local_cust2);
-	
-	since_epoch = (char*)crm_malloc(reference_len*(sizeof(char)));
-	FNIN();
-	sprintf(since_epoch, "%s-%s-%ld-%u",
-		local_cust1, local_cust2,
-		(unsigned long)time(NULL), ref_counter++);
-
-	FNRET(since_epoch);
-}
-
 
 
 xmlNodePtr
@@ -137,8 +101,9 @@ validate_crm_message(xmlNodePtr root_xml_node,
 	const char *true_sys;
 	
 	FNIN();
-	if (root_xml_node == NULL)
+	if (root_xml_node == NULL) {
 		FNRET(NULL);
+	}
 
 	from = xmlGetProp(root_xml_node, XML_ATTR_SYSFROM);
 	to   = xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
@@ -194,129 +159,6 @@ validate_crm_message(xmlNodePtr root_xml_node,
 */
 	
 	FNRET(action);
-}
-
-gboolean
-decodeNVpair(const char *srcstring, char separator, char **name, char **value)
-{
-	int lpc = 0;
-	int len = 0;
-	const char *temp = NULL;
-
-	FNIN();
-
-	CRM_DEBUG("Attempting to decode: [%s]", srcstring);
-	if (srcstring != NULL) {
-		len = strlen(srcstring);
-		while(lpc < len) {
-			if (srcstring[lpc++] == separator) {
-				*name = (char*)crm_malloc(sizeof(char)*lpc);
-				strncpy(*name, srcstring, lpc-1);
-				(*name)[lpc-1] = '\0';
-
-				// this sucks but as the strtok *is* a bug
-				len = len-lpc+1;
-				*value = (char*)crm_malloc(sizeof(char)*len);
-				temp = srcstring+lpc;
-				strncpy(*value, temp, len-1);
-				(*value)[len-1] = '\0';
-
-				FNRET(TRUE);
-			}
-		}
-	}
-
-	*name = NULL;
-	*value = NULL;
-    
-	FNRET(FALSE);
-}
-
-char *
-generate_hash_key(const char *crm_msg_reference, const char *sys)
-{
-	int ref_len = strlen(sys?sys:"none") + strlen(crm_msg_reference) + 2;
-	char *hash_key = (char*)crm_malloc(sizeof(char)*(ref_len));
-
-	FNIN();
-	sprintf(hash_key, "%s_%s", sys?sys:"none", crm_msg_reference);
-	hash_key[ref_len-1] = '\0';
-	cl_log(LOG_INFO, "created hash key: (%s)", hash_key);
-	FNRET(hash_key);
-}
-
-char *
-generate_hash_value(const char *src_node, const char *src_subsys)
-{
-	int ref_len;
-	char *hash_value;
-
-	FNIN();
-	if (src_node == NULL || src_subsys == NULL) {
-		FNRET(NULL);
-	}
-    
-	if (strcmp(CRM_SYSTEM_DC, src_subsys) == 0) {
-		hash_value = crm_strdup(src_subsys);
-		if (!hash_value) {
-			cl_log(LOG_ERR,
-			       "memory allocation failed in "
-			       "generate_hash_value()\n");
-			FNRET(NULL);
-		}
-		FNRET(hash_value);
-	}
-    
-	ref_len = strlen(src_subsys) + strlen(src_node) + 2;
-	hash_value = (char*)crm_malloc(sizeof(char)*(ref_len));
-	if (!hash_value) {
-		cl_log(LOG_ERR,
-		       "memory allocation failed in "
-		       "generate_hash_value()\n");
-		FNRET(NULL);
-	}
-
-	snprintf(hash_value, ref_len-1, "%s_%s", src_node, src_subsys);
-	hash_value[ref_len-1] = '\0';// make sure it is null terminated
-
-	cl_log(LOG_INFO, "created hash value: (%s)", hash_value);
-	FNRET(hash_value);
-}
-
-gboolean
-decode_hash_value(gpointer value, char **node, char **subsys)
-{
-	char *char_value = (char*)value;
-	int value_len = strlen(char_value);
-
-	FNIN();
-    
-	cl_log(LOG_INFO, "Decoding hash value: (%s:%d)",
-	       char_value,
-	       value_len);
-    	
-	if (strcmp(CRM_SYSTEM_DC, (char*)value) == 0) {
-		*node = NULL;
-		*subsys = (char*)crm_strdup(char_value);
-		if (!*subsys) {
-			cl_log(LOG_ERR, "memory allocation failed in "
-			       "decode_hash_value()\n");
-			FNRET(FALSE);
-		}
-		cl_log(LOG_INFO, "Decoded value: (%s:%d)", *subsys, 
-		       (int)strlen(*subsys));
-		FNRET(TRUE);
-	}
-	else if (char_value != NULL) {
-		if (decodeNVpair(char_value, '_', node, subsys)) {
-			FNRET(TRUE);
-		} else {
-			*node = NULL;
-			*subsys = NULL;
-			FNRET(FALSE);
-		}
-	}
-	FNRET(FALSE);
 }
 
 
@@ -423,84 +265,6 @@ process_hello_message(xmlNodePtr hello,
 	FNRET(TRUE);
 }
 
-gboolean
-forward_ipc_request(IPC_Channel *ipc_channel,
-		    xmlNodePtr xml_request, xmlNodePtr xml_response_data,
-		    const char *sys_to, const char *sys_from)
-{
-	gboolean was_sent = FALSE;
-	xmlNodePtr forward;
-
-	FNIN();
-	forward = create_forward(xml_request,
-				 xml_response_data,
-				 sys_to);
-
-	if (forward != NULL)
-	{
-		was_sent = send_xmlipc_message(ipc_channel, forward);
-		free_xml(forward);
-	}
-
-	FNRET(was_sent);
-}
-
-/*
- * This method adds a copy of xml_response_data
- */
-gboolean
-send_ipc_request(IPC_Channel *ipc_channel,
-		 xmlNodePtr msg_options, xmlNodePtr msg_data, 
-		 const char *host_to, const char *sys_to,
-		 const char *sys_from, const char *uuid_from,
-		 const char *crm_msg_reference)
-{
-	gboolean was_sent = FALSE;
-	xmlNodePtr request = NULL;
-	FNIN();
-
-	request = create_request(msg_options, msg_data,
-				 host_to, sys_to,
-				 sys_from, uuid_from,
-				 crm_msg_reference);
-
-//	xml_message_debug(request, "Final request...");
-
-	was_sent = send_xmlipc_message(ipc_channel, request);
-
-	free_xml(request);
-
-	FNRET(was_sent);
-}
-
-/*
- * This method adds a copy of xml_response_data
- */
-gboolean
-send_ha_request(ll_cluster_t *hb_fd,
-		xmlNodePtr msg_options, xmlNodePtr msg_data, 
-		const char *host_to, const char *sys_to,
-		const char *sys_from, const char *uuid_from,
-		const char *crm_msg_reference)
-{
-	gboolean was_sent = FALSE;
-	xmlNodePtr request = NULL;
-	FNIN();
-
-	request = create_request(msg_options, msg_data,
-				 host_to, sys_to,
-				 sys_from, uuid_from,
-				 crm_msg_reference);
-
-//	xml_message_debug(request, "Final request...");
-
-	was_sent = send_xmlha_message(hb_fd, request);
-
-	free_xml(request);
-    
-	FNRET(was_sent);
-}
-
 xmlNodePtr
 create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	       const char *host_to, const char *sys_to,
@@ -560,51 +324,6 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 /*
  * This method adds a copy of xml_response_data
  */
-gboolean
-send_ipc_reply(IPC_Channel *ipc_channel,
-	       xmlNodePtr xml_request,
-	       xmlNodePtr xml_response_data)
-{
-	gboolean was_sent = FALSE;
-	xmlNodePtr reply;
-	FNIN();
-
-	reply = create_reply(xml_request, xml_response_data);
-
-//	xml_message_debug(reply, "Final reply...");
-
-	if (reply != NULL) {
-		was_sent = send_xmlipc_message(ipc_channel, reply);
-		free_xml(reply);
-	}
-	FNRET(was_sent);
-}
-
-// required?  or just send to self an let relay_message do its thing?
-/*
- * This method adds a copy of xml_response_data
- */
-gboolean
-send_ha_reply(ll_cluster_t *hb_cluster,
-	      xmlNodePtr xml_request,
-	      xmlNodePtr xml_response_data)
-{
-	gboolean was_sent = FALSE;
-	xmlNodePtr reply;
-
-	FNIN();
-	was_sent = FALSE;
-	reply = create_reply(xml_request, xml_response_data);
-	if (reply != NULL) {
-		was_sent = send_xmlha_message(hb_cluster, reply);
-		free_xml(reply);
-	}
-	FNRET(was_sent);
-}
-
-/*
- * This method adds a copy of xml_response_data
- */
 xmlNodePtr
 create_reply(xmlNodePtr original_request,
 	     xmlNodePtr xml_response_data)
@@ -619,8 +338,7 @@ create_reply(xmlNodePtr original_request,
 	sys_from  = xmlGetProp(original_request, XML_ATTR_SYSFROM);
 	sys_to  = xmlGetProp(original_request, XML_ATTR_SYSTO);
 
-	reply = create_common_message(original_request,
-						 xml_response_data);
+	reply = create_common_message(original_request, xml_response_data);
 	
 	set_xml_property_copy(reply, XML_ATTR_MSGTYPE, XML_ATTR_RESPONSE);
 	
@@ -634,42 +352,6 @@ create_reply(xmlNodePtr original_request,
 	set_xml_property_copy(reply, XML_ATTR_SYSFROM,  sys_to);
 
 	FNRET(reply);
-}
-
-/*
- * This method adds a copy of xml_response_data
- */
-xmlNodePtr
-create_forward(xmlNodePtr original_request,
-	       xmlNodePtr xml_response_data,
-	       const char *sys_to)
-{
-	const char *host_from = NULL;
-	const char *host_to   = NULL;
-	const char *sys_from  = NULL;
-	xmlNodePtr forward;
-	
-	FNIN();
-	host_from = xmlGetProp(original_request, XML_ATTR_HOSTFROM);
-	host_to   = xmlGetProp(original_request, XML_ATTR_HOSTTO);
-	sys_from  = xmlGetProp(original_request, XML_ATTR_SYSFROM);
-	forward = create_common_message(original_request,
-						    xml_response_data);
-	
-	set_xml_property_copy(forward,
-			      XML_ATTR_MSGTYPE,
-			      XML_ATTR_REQUEST);
-	
-	// HOSTTO will be ignored if it is to the DC anyway.
-	if(host_to != NULL && strlen(host_to) > 0)
-		set_xml_property_copy(forward, XML_ATTR_HOSTTO,   host_to);
-	if(host_from != NULL)
-		set_xml_property_copy(forward, XML_ATTR_HOSTFROM, host_from);
-	
-	set_xml_property_copy(forward, XML_ATTR_SYSTO,    sys_to);
-	set_xml_property_copy(forward, XML_ATTR_SYSFROM,  sys_from);
-
-	FNRET(forward);
 }
 
 xmlNodePtr

@@ -52,9 +52,9 @@ halib_PROGRAMS	=
 
 ## SOURCES
 
-noinst_HEADERS	        = crmutils.h ipcutils.h msgutils.h xmlutils.h
+noinst_HEADERS	        = 
 
-libcrmcommon_la_SOURCES	= ipcutils.c crmutils.c xmlutils.c msgutils.c
+libcrmcommon_la_SOURCES	= ipc.c msg.c utils.c xml.c ctrl.c 
 libcrmcommon_la_LDFLAGS	= -version-info 0:0:0
 
 clean-generic:

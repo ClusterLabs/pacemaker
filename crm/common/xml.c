@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.31 2004/06/01 16:12:49 andrew Exp $ */
+/* $Id: xml.c,v 1.1 2004/06/02 11:45:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,9 +32,8 @@
 #include <clplumbing/cl_log.h> 
 
 #include <crm/crm.h>
-#include <xmlutils.h>
 #include <crm/msg_xml.h>
-
+#include <crm/common/xml.h>
 #include <crm/dmalloc_wrapper.h>
 
 void dump_array(int log_level, const char *message,
