@@ -282,13 +282,13 @@ cts_assert "Shutdown of ${test_node_3} failed."
 
 #----
 
-do_cmd remote_cmd $CRMD_USER $test_node_1 "ls -al /tmp/crm/*/core"
+do_cmd remote_cmd $CRMD_USER $test_node_1 "ls -al /var/lib/heartbeat/cores/*/core"
 cts_assert_false "Core file(s) found on $test_node_1"
 
-do_cmd remote_cmd $CRMD_USER $test_node_2 "ls -al /tmp/crm/*/core"
+do_cmd remote_cmd $CRMD_USER $test_node_2 "ls -al /var/lib/heartbeat/cores/*/core"
 cts_assert_false "Core file(s) found on $test_node_2"
 
-do_cmd remote_cmd $CRMD_USER $test_node_3 "ls -al /tmp/crm/*/core"
+do_cmd remote_cmd $CRMD_USER $test_node_3 "ls -al /var/lib/heartbeat/cores/*/core"
 cts_assert_false "Core file(s) found on $test_node_3"
 
 do_cmd remote_cmd $CRMD_USER $test_node_3 killall -9 crmd
