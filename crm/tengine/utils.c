@@ -1,0 +1,362 @@
+/* $Id: utils.c,v 1.1 2004/09/15 09:22:57 andrew Exp $ */
+/* 
+ * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+#include <sys/param.h>
+#include <crm/crm.h>
+#include <crm/cib.h>
+#include <crm/msg_xml.h>
+#include <crm/common/msg.h>
+#include <crm/common/xml.h>
+#include <tengine.h>
+#include <heartbeat.h>
+#include <clplumbing/Gmain_timeout.h>
+#include <lrm/lrm_api.h>
+
+FILE *msg_te_strm = NULL;
+
+void print_input(const char *prefix, action_t *input, gboolean to_file);
+void print_action(const char *prefix, action_t *action, gboolean to_file);
+
+void
+send_abort(const char *text, xmlNodePtr msg)
+{	
+	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
+
+	crm_info("Sending \"abort\" message... details follow");
+	crm_xml_info(msg, text);
+	
+#ifdef MSG_LOG
+	fprintf(msg_te_strm, "[Result ]\tTransition aborted\n");
+	fflush(msg_te_strm);
+#endif
+#ifdef TESTING
+	print_state(TRUE);
+	g_main_quit(mainloop);
+	return;
+#endif	
+	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TEABORT);
+	
+	send_ipc_request(crm_ch, options, NULL,
+			 NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE,
+			 NULL, NULL);
+	
+	free_xml(options);
+}
+
+void
+send_success(const char *text)
+{	
+	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
+
+	if(in_transition == FALSE) {
+		crm_warn("Not in transition, not sending message");
+		return;
+	}
+	in_transition = FALSE;
+
+	crm_info("Sending \"complete\" message: %s", text);
+
+#ifdef MSG_LOG
+	if(msg_te_strm != NULL) {
+		fprintf(msg_te_strm, "[Result ]\tTransition complete\n");
+		fflush(msg_te_strm);
+	}
+#endif
+#ifdef TESTING
+	print_state(TRUE);
+	g_main_quit(mainloop);
+	return;
+#endif
+	
+	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TECOMPLETE);
+	
+	send_ipc_request(crm_ch, options, NULL,
+			 NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE,
+			 NULL, NULL);
+	
+	free_xml(options);
+}
+
+void
+print_state(gboolean to_file)
+{
+	int lpc = 0;
+	int lpc2 = 0;
+	FILE *output = msg_te_strm;
+#ifdef TESTING
+	output = stderr;
+#endif
+	if(to_file) {
+		fprintf(output, "Start Transitioner state\n");
+	}
+	crm_debug("#!!#!!# Start Transitioner state");
+	if(graph == NULL) {
+		crm_debug("\tEmpty transition graph");
+		crm_debug("#!!#!!# End Transitioner state");
+		if(to_file) {
+			fprintf(output,
+				"\tEmpty transition graph\n"
+				"End Transitioner state\n");
+		}
+		return;
+	}
+
+	slist_iter(
+		synapse, synapse_t, graph, lpc,
+
+		crm_debug("Synapse %d %s",
+			  synapse->id,
+			  synapse->complete?"has completed":"is pending");
+		
+		if(to_file) {
+			fprintf(output, "Synapse %d %s\n",
+				synapse->id,
+				synapse->complete?"has completed":"is pending");
+		}
+		if(synapse->complete == FALSE) {
+			slist_iter(
+				input, action_t, synapse->inputs, lpc2,
+				
+				print_input("\t", input, to_file);
+				
+				);
+		}
+		
+		slist_iter(
+			action, action_t, synapse->actions, lpc2,
+
+			print_action("\t", action, to_file);
+
+			);
+		);
+	
+	crm_debug("#!!#!!# End Transitioner state");	
+	if(to_file) {
+		fprintf(output, "End Transitioner state\n");
+	}
+}
+
+void
+print_input(const char *prefix, action_t *input, gboolean to_file) 
+{
+	FILE *output = msg_te_strm;
+#ifdef TESTING
+	output = stderr;
+#endif
+	crm_debug("%s[Input %d] %s (%d)",
+		  prefix,
+		  input->id,
+		  input->complete?"Satisfied":"Pending",
+		  input->type);
+
+	crm_xml_trace(input->xml, "\t  Raw input");
+
+	if(to_file) {
+		fprintf(output,
+			"%s[Input %d] %s (%d)\n",
+			prefix,
+			input->id,
+			input->complete?"Satisfied":"Pending",
+			input->type);
+		
+		fflush(msg_te_strm);
+	}
+	
+}
+
+void
+print_action(const char *prefix, action_t *action, gboolean to_file) 
+{
+	FILE *output = msg_te_strm;
+#ifdef TESTING
+	output = stderr;
+#endif
+	crm_debug("%s[Action %d] %s (%d - %s fail)",
+		  prefix,
+		  action->id,
+		  action->complete?"Completed":
+			action->invoked?"In-flight":"Pending",
+		  action->type,
+		  action->can_fail?"can":"cannot");
+
+	crm_debug("%s  timeout=%d, timer=%d",
+		  prefix,
+		  action->timeout,
+		  action->timer_id);
+
+	crm_xml_trace(action->xml, "\t  Raw action");
+
+	if(to_file) {
+		fprintf(output,
+			"%s[Action %d] %s (%d - %s fail)\n",
+			prefix,
+			action->id,
+			action->complete?"Completed":
+			action->invoked?"In-flight":"Pending",
+			action->type,
+			action->can_fail?"can":"cannot");
+	
+		fflush(msg_te_strm);
+	}		  
+}
+
+gboolean
+timer_callback(gpointer data)
+{
+	if(data == NULL) {
+		/* global timeout - abort the transition */
+		crm_info("Transition timeout reached..."
+			 " marking transition complete.");
+		crm_warn("Some actions may not have been executed.");
+
+		send_success("timeout");
+		return TRUE;
+		
+	} else {
+		/* fail the action
+		 * - which may or may not abort the transition
+		 */
+		action_t *action = (action_t*)data;
+		action->timer_id = -1;
+
+		return do_update_cib(action->xml, LRM_OP_TIMEOUT);	
+	}
+}
+
+gboolean
+do_update_cib(xmlNodePtr xml_action, int status)
+{
+	char *code;
+	char since_epoch[64];
+	xmlNodePtr fragment = NULL;
+	xmlNodePtr options  = NULL;
+	xmlNodePtr state    = NULL;
+	xmlNodePtr rsc      = NULL;
+
+	const char *sys_to = CRM_SYSTEM_DCIB;
+	const char *task   = xmlGetProp(xml_action, XML_LRM_ATTR_TASK);
+	const char *rsc_id = xmlGetProp(xml_action, XML_LRM_ATTR_RSCID);
+	const char *target = xmlGetProp(xml_action, XML_LRM_ATTR_TARGET);
+	const char *target_uuid =
+		xmlGetProp(xml_action, XML_LRM_ATTR_TARGET_UUID);
+	
+	if(status == LRM_OP_TIMEOUT) {
+		if(xmlGetProp(xml_action, XML_LRM_ATTR_RSCID) != NULL) {
+			crm_warn("%s: %s %s on %s timed out",
+				 xml_action->name, task, rsc_id, target);
+		} else {
+			crm_warn("%s: %s on %s timed out",
+				 xml_action->name, task, target);
+		}
+	}
+	
+/*
+  update the CIB
+
+<node_state id="hadev">
+      <lrm>
+        <lrm_resources>
+          <lrm_resource id="rsc2" last_op="start" op_code="0" target="hadev"/>
+*/
+
+	fragment = NULL;
+	options  = create_xml_node(NULL, XML_TAG_OPTIONS);
+	state    = create_xml_node(NULL, XML_CIB_TAG_STATE);
+
+#ifdef TESTING
+
+	/* turn the "pending" notification into a "op completed" notification
+	 *  when testing... exercises more code this way.
+	 */
+	if(status == -1) {
+		status = 0;
+	}
+	sys_to = CRM_SYSTEM_TENGINE;
+	set_xml_property_copy(options, XML_ATTR_OP,     CRM_OP_EVENTCC);
+	set_xml_property_copy(options, XML_ATTR_TRUEOP, CRM_OP_UPDATE);
+#else
+	set_xml_property_copy(options, XML_ATTR_OP,    CRM_OP_UPDATE);
+#endif
+	set_xml_property_copy(state,   XML_ATTR_UUID,  target_uuid);
+	set_xml_property_copy(state,   XML_ATTR_UNAME, target);
+	
+	if(status != -1 && (safe_str_eq(task, "shutdown_crm"))) {
+		sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
+		set_xml_property_copy(rsc, "stonith", since_epoch);
+		
+	} else {
+		code = crm_itoa(status);
+		
+		rsc = create_xml_node(state, "lrm");
+		rsc = create_xml_node(rsc,   "lrm_resources");
+		rsc = create_xml_node(rsc,   "lrm_resource");
+		
+		set_xml_property_copy(rsc, XML_ATTR_ID,         rsc_id);
+		set_xml_property_copy(rsc, XML_LRM_ATTR_TARGET, target);
+		set_xml_property_copy(
+			rsc, XML_LRM_ATTR_TARGET_UUID, target_uuid);
+
+		if(safe_str_eq(CRMD_RSCSTATE_START, task)) {
+			set_xml_property_copy(
+				rsc, XML_LRM_ATTR_RSCSTATE,
+				CRMD_RSCSTATE_START_PENDING);
+
+		} else if(safe_str_eq(CRMD_RSCSTATE_STOP, task)) {
+			set_xml_property_copy(
+				rsc, XML_LRM_ATTR_RSCSTATE,
+				CRMD_RSCSTATE_STOP_PENDING);
+
+		} else {
+			crm_warn("Using status \"pending\" for op \"%s\""
+				 "... this is still in the experimental stage.",
+				 task);
+			set_xml_property_copy(
+				rsc, XML_LRM_ATTR_RSCSTATE,
+				CRMD_RSCSTATE_GENERIC_PENDING);
+		}
+		
+		set_xml_property_copy(rsc, XML_LRM_ATTR_OPSTATUS, code);
+		set_xml_property_copy(rsc, XML_LRM_ATTR_RC, code);
+		set_xml_property_copy(rsc, XML_LRM_ATTR_LASTOP, task);
+
+		crm_free(code);
+	}
+
+	fragment = create_cib_fragment(state, NULL);
+	
+#ifdef MSG_LOG
+	fprintf(msg_te_strm,
+		"[Result ]\tUpdate CIB with \"%s\" (%s): %s %s on %s\n",
+		status<0?"new action":"timeout",
+		xml_action->name, task, rsc_id, target);
+	fprintf(msg_te_strm, "[Sent ]\t%s\n",
+		dump_xml_formatted(fragment));
+	fflush(msg_te_strm);
+#endif
+	
+	send_ipc_request(crm_ch, options, fragment,
+			 NULL, sys_to, CRM_SYSTEM_TENGINE,
+			 NULL, NULL);
+	
+	free_xml(fragment);
+	free_xml(options);
+	free_xml(state);
+	
+	return TRUE;
+}
+		
