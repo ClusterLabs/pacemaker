@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.4 2004/07/09 15:37:41 msoffen Exp $ */
+/* $Id: ipc.c,v 1.5 2004/08/29 03:01:12 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -131,7 +131,7 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 IPC_Message *
 create_simple_message(char *text, IPC_Channel *ch)
 {
-	//    char	       str[256];
+	/*    char	       str[256]; */
 	IPC_Message        *ack_msg = NULL;
 
 	
@@ -203,7 +203,7 @@ init_client_ipc_comms(const char *child,
 	void *callback_data = client_data;
 	static char 	path[] = IPC_PATH_ATTR;
 	char *commpath = NULL;
-	int local_socket_len = 2; // 2 = '/' + '\0'
+	int local_socket_len = 2; /* 2 = '/' + '\0' */
 
 	
 	local_socket_len += strlen(child);
@@ -364,7 +364,7 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 		msg = NULL;
 	}
 
-	// clean up after a break
+	/* clean up after a break */
 	if(msg != NULL)
 		msg->msg_done(msg);
 
@@ -375,7 +375,7 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 	if (sender->ch_status == IPC_DISCONNECT) {
 		crm_err("The server has left us: Shutting down...NOW");
 
-		exit(1); // shutdown properly later
+		exit(1); /* shutdown properly later */
 		
 		return !all_is_well;
 	}

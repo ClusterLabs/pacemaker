@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.19 2004/08/27 15:21:59 andrew Exp $ */
+/* $Id: crm.h,v 1.20 2004/08/29 03:01:13 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,7 +34,7 @@
 /* Clean these up at some point, some probably should be runtime options */
 #define WORKING_DIR	HA_VARLIBDIR"/heartbeat/crm"
 #define BIN_DIR		"/usr/lib/heartbeat"
-#define MAXDATASIZE	65535 // ipc comms
+#define MAXDATASIZE	65535 /* ipc comms */
 #define SOCKET_LEN	1024
 #define APPNAME_LEN	256
 #define LOG_DIR		"/var/log"
@@ -51,11 +51,11 @@
 #define DOT_FSA_ACTIONS		1
 #define DOT_ALL_FSA_INPUTS	1
 #define FSA_TRACE		1
-//#define USE_FAKE_LRM		1
+/* #define USE_FAKE_LRM		1 */
 
 /* Sub-systems */
 #define CRM_SYSTEM_DC		"dc"
-#define CRM_SYSTEM_DCIB		"dcib" // The master CIB
+#define CRM_SYSTEM_DCIB		"dcib" /*  The master CIB */
 #define CRM_SYSTEM_CIB		"cib"
 #define CRM_SYSTEM_CRMD		"crmd"
 #define CRM_SYSTEM_LRMD		"lrmd"

@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.5 2004/08/17 11:49:42 lars Exp $ */
+/* $Id: msg.c,v 1.6 2004/08/29 03:01:12 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -64,7 +64,7 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 
 	
 	
-	// 2 = "_" + '\0'
+	/* 2 = "_" + '\0' */
 	sub_type_len = strlen(to) + strlen(XML_ATTR_REQUEST) + 2; 
 	sub_type_target =
 		(char*)crm_malloc(sizeof(char)*(sub_type_len));
@@ -75,7 +75,7 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 			      XML_ATTR_REFERENCE,
 			      crm_msg_reference);
     
-	msg_type_len = strlen(to) + 10 + 1; // + "_operation" + '\0'
+	msg_type_len = strlen(to) + 10 + 1; /* + "_operation" + '\0' */
 	msg_type_target =
 		(char*)crm_malloc(sizeof(char)*(msg_type_len));
 	sprintf(msg_type_target, "%s_operation", to);
@@ -270,7 +270,7 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 
 	if (uuid_from != NULL)
 		true_from = generate_hash_key(sys_from, uuid_from);
-	// else make sure we are internal
+	/* else make sure we are internal */
 	else {
 		if (strcmp(CRM_SYSTEM_LRMD, sys_from) != 0
 		    && strcmp(CRM_SYSTEM_PENGINE, sys_from) != 0
@@ -289,7 +289,7 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 				xmlGetProp(msg_options,XML_ATTR_OP),sys_from);
 	}
 	
-	// host_from will get set for us if necessary by CRMd when routed
+	/* host_from will get set for us if necessary by CRMd when routed */
 	request = create_xml_node(NULL, XML_MSG_TAG);
 
 	set_node_tstamp(request);
@@ -336,7 +336,7 @@ create_reply(xmlNodePtr original_request,
 	
 	/* since this is a reply, we reverse the from and to */
 
-	// HOSTTO will be ignored if it is to the DC anyway.
+	/* HOSTTO will be ignored if it is to the DC anyway. */
 	if(host_from != NULL && strlen(host_from) > 0)
 		set_xml_property_copy(reply, XML_ATTR_HOSTTO,   host_from);
 

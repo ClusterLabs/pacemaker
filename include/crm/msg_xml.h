@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.11 2004/08/27 15:22:00 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.12 2004/08/29 03:01:13 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,7 +19,7 @@
 #ifndef XML_TAGS__H
 #define XML_TAGS__H
 
-//---- Common tags/attrs
+/*---- Common tags/attrs */
 #define XML_TAG_CIB			"cib"
 #define XML_TAG_FAILED			"failed"
 
@@ -44,7 +44,7 @@
 
 #define XML_TAG_OPTIONS			"options"
 
-//---- top level tags/attrs
+/*---- top level tags/attrs */
 #define XML_MSG_TAG			"crm_message"
 #define XML_ATTR_REQUEST		"request"
 #define XML_ATTR_RESPONSE		"response"
@@ -80,7 +80,7 @@
 #define XML_FAILCIB_ATTR_OP		"operation"
 #define XML_FAILCIB_ATTR_REASON		"reason"
 
-//---- CIB specific tags/attrs
+/*---- CIB specific tags/attrs */
 #define XML_CIB_TAG_CONFIGURATION	"configuration"
 #define XML_CIB_TAG_STATUS       	"status"
 #define XML_CIB_TAG_RESOURCES		"resources"

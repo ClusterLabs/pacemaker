@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.11 2004/08/27 15:21:58 andrew Exp $ */
+/* $Id: utils.c,v 1.12 2004/08/29 03:01:12 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,8 +53,8 @@ generateReference(const char *custom1, const char *custom2)
 
 	
 	
-	reference_len += 20; // too big
-	reference_len += 40; // too big
+	reference_len += 20; /* too big */
+	reference_len += 40; /* too big */
 	
 	if(local_cust1 == NULL) local_cust1 = "_empty_";
 	reference_len += strlen(local_cust1);
@@ -88,7 +88,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 				strncpy(*name, srcstring, lpc);
 				(*name)[lpc] = '\0';
 
-// this sucks but as the strtok manpage says.. it *is* a bug
+/* this sucks but as the strtok manpage says.. it *is* a bug */
 				len = len-lpc;
 				len--;
 				if(len > 0) {
@@ -156,7 +156,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	}
 
 	snprintf(hash_value, ref_len-1, "%s_%s", src_node, src_subsys);
-	hash_value[ref_len-1] = '\0';// make sure it is null terminated
+	hash_value[ref_len-1] = '\0';/* make sure it is null terminated */
 
 	crm_info("created hash value: (%s)", hash_value);
 	return hash_value;

@@ -1,3 +1,4 @@
+/* $Id: ccm.c,v 1.32 2004/08/29 03:01:12 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -93,7 +94,7 @@ do_ccm_control(long long action,
 		}
 		crm_info("CCM Activation passed... all set to go!");
 
-//GFDSource*
+/* GFDSource* */
 		G_main_add_fd(G_PRIORITY_LOW, fsa_ev_fd, FALSE, ccm_dispatch,
 			      fsa_ev_token,
 			      default_ipc_input_destroy);
@@ -288,7 +289,7 @@ do_ccm_update_cache(long long action,
 	fsa_membership_copy = membership_copy;
 
 	if(AM_I_DC) {
-		// should be sufficient for only the DC to do this
+		/* should be sufficient for only the DC to do this */
 		free_xml(do_update_cib_nodes(NULL, FALSE));
 	}
 	
@@ -460,7 +461,7 @@ msg_ccm_join(const struct ha_msg *msg, void *foo)
 			    ha_msg_value(msg, F_SEQ));
 		crm_verbose("[generation=%s]",
 			    ha_msg_value(msg, F_HBGENERATION));
-		//      crm_verbose("[=%s]", ha_msg_value(msg, F_));
+		/*      crm_verbose("[=%s]", ha_msg_value(msg, F_)); */
 	}
 	return;
 }
@@ -554,7 +555,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 gboolean
 ghash_node_clfree(gpointer key, gpointer value, gpointer user_data)
 {
-	// value->node_uname is free'd as "key"
+	/* value->node_uname is free'd as "key" */
 	if(key != NULL) {
 		crm_free(key);
 	}

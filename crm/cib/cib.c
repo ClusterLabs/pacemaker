@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.48 2004/08/27 15:21:57 andrew Exp $ */
+/* $Id: cib.c,v 1.49 2004/08/29 03:01:12 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,7 +47,7 @@ startCib(const char *filename)
 	if (initializeCib(cib)) {
 		crm_info("CIB Initialization completed successfully");
 	} else { 
-//		free_xml(cib);
+		/* free_xml(cib); */
 		crm_warn("CIB Initialization failed, "
 			 "starting with an empty default.");
 		activateCibXml(createEmptyCib(), filename);

@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.24 2004/07/09 15:35:57 msoffen Exp $ */
+/* $Id: cibmain.c,v 1.25 2004/08/29 03:01:12 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,7 +29,7 @@
 #include <hb_api.h>
 #include <clplumbing/uids.h>
 
-//#include <ocf/oc_event.h>
+/* #include <ocf/oc_event.h> */
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -105,7 +105,7 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
     
-	// read local config file
+	/* read local config file */
     
 	if (req_status){
 		return init_status(PID_FILE, crm_system_name);
@@ -143,9 +143,9 @@ init_start(void)
 	register_pid(PID_FILE, FALSE, cib_shutdown);
 
 	cl_log_set_logfile(DAEMON_LOG);
-//    if (crm_verbose()) {
+/*    if (crm_verbose()) { */
 	cl_log_set_debugfile(DAEMON_DEBUG);
-//    }
+/*    } */
   
 	hb_fd = ll_cluster_new("heartbeat");
 

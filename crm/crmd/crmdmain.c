@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.24 2004/08/18 15:20:22 andrew Exp $ */
+/* $Id: crmdmain.c,v 1.25 2004/08/29 03:01:12 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -109,7 +109,7 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
     }
     
-    // read local config file
+    /* read local config file */
     
     if (req_status){
 		return init_status(PID_FILE, crm_system_name);
