@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.18 2005/01/26 13:30:52 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.19 2005/02/09 15:28:58 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -87,8 +87,6 @@ char *reset = NULL;
 
 int request_id = 0;
 int operation_status = 0;
-const char *sys_to = NULL;
-
 cib_t *the_cib = NULL;
 
 #define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MB"
@@ -180,38 +178,38 @@ main(int argc, char **argv)
 				break;
 				
 			case 'E':
-				cib_action = crm_strdup(CRM_OP_CIB_ERASE);
+				cib_action = CRM_OP_CIB_ERASE;
 				break;
 			case 'Q':
-				cib_action = crm_strdup(CRM_OP_CIB_QUERY);
+				cib_action = CRM_OP_CIB_QUERY;
 				break;
 			case 'S':
-				cib_action = crm_strdup(CRM_OP_CIB_SYNC);
+				cib_action = CRM_OP_CIB_SYNC;
 				break;
 			case 'U':
-				cib_action = crm_strdup(CRM_OP_CIB_UPDATE);
+				cib_action = CRM_OP_CIB_UPDATE;
 				break;
 			case 'R':
-				cib_action = crm_strdup(CRM_OP_CIB_REPLACE);
+				cib_action = CRM_OP_CIB_REPLACE;
 				break;
 			case 'C':
-				cib_action = crm_strdup(CRM_OP_CIB_CREATE);
+				cib_action = CRM_OP_CIB_CREATE;
 				break;
 			case 'D':
-				cib_action = crm_strdup(CRM_OP_CIB_DELETE);
+				cib_action = CRM_OP_CIB_DELETE;
 				break;
 			case 'M':
-				cib_action = crm_strdup(CRM_OP_CIB_ISMASTER);
+				cib_action = CRM_OP_CIB_ISMASTER;
 				command_options |= cib_scope_local;
 				break;
 			case 'B':
-				cib_action = crm_strdup(CRM_OP_CIB_BUMP);
+				cib_action = CRM_OP_CIB_BUMP;
 				break;
 			case 'r':
-				cib_action = crm_strdup(CRM_OP_CIB_SLAVE);
+				cib_action = CRM_OP_CIB_SLAVE;
 				break;
 			case 'w':
-				cib_action = crm_strdup(CRM_OP_CIB_MASTER);
+				cib_action = CRM_OP_CIB_MASTER;
 				command_options |= cib_scope_local;
 				break;
 			case 'V':
