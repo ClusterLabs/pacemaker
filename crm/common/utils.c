@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.42 2005/03/16 17:11:15 lars Exp $ */
+/* $Id: utils.c,v 1.43 2005/03/29 06:34:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -625,7 +625,7 @@ crm_set_env_options(void)
 	
 	param_name = ENV_PREFIX "" KEY_FACILITY;
 	param_val = getenv(param_name);
-	crm_info("%s = %s", param_name, param_val);
+	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		int facility = crm_logfacility_from_name(param_val);
 		if(facility > 0) {
@@ -636,7 +636,7 @@ crm_set_env_options(void)
 
 	param_name = ENV_PREFIX "" KEY_LOGFILE;
 	param_val = getenv(param_name);
-	crm_info("%s = %s", param_name, param_val);
+	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		if(safe_str_eq("/dev/null", param_val)) {
 			param_val = NULL;
@@ -647,7 +647,7 @@ crm_set_env_options(void)
 	
 	param_name = ENV_PREFIX "" KEY_DBGFILE;
 	param_val = getenv(param_name);
-	crm_info("%s = %s", param_name, param_val);
+	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		if(safe_str_eq("/dev/null", param_val)) {
 			param_val = NULL;
@@ -658,7 +658,7 @@ crm_set_env_options(void)
 	
 	param_name = ENV_PREFIX "" KEY_DEBUGLEVEL;
 	param_val = getenv(param_name);
-	crm_info("%s = %s", param_name, param_val);
+	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		int debug_level = atoi(param_val);
 		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
@@ -669,7 +669,7 @@ crm_set_env_options(void)
 
 	param_name = ENV_PREFIX "" KEY_LOGDAEMON;
 	param_val = getenv(param_name);
-	crm_info("%s = %s", param_name, param_val);
+	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		crm_str_to_boolean(param_val, &use_logging_daemon);
 		param_val = NULL;
@@ -677,7 +677,7 @@ crm_set_env_options(void)
 
 	param_name = ENV_PREFIX "" KEY_CONNINTVAL;
 	param_val = getenv(param_name);
-	crm_devel("%s = %s", param_name, param_val);
+	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		conn_logd_intval = crm_get_msec(param_val);
 		param_val = NULL;
