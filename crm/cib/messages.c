@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.27 2005/02/19 18:11:03 andrew Exp $ */
+/* $Id: messages.c,v 1.28 2005/02/20 14:36:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -531,10 +531,9 @@ cib_process_modify(
 gboolean
 replace_section(const char *section, crm_data_t *tmpCib, crm_data_t *fragment)
 {
-	crm_data_t *parent = NULL,
-		*cib_updates = NULL,
-		*new_section = NULL,
-		*old_section = NULL;
+	crm_data_t *cib_updates = NULL;
+	crm_data_t *new_section = NULL;
+	crm_data_t *old_section = NULL;
 	
 	cib_updates = find_xml_node(fragment, XML_TAG_CIB, TRUE);
 
@@ -553,14 +552,17 @@ replace_section(const char *section, crm_data_t *tmpCib, crm_data_t *fragment)
 		return FALSE;
 	}
 
-	parent = crm_element_parent(old_section);
-	
-	/* unlink and free the old one */
-	unlink_xml_node(old_section);
-	free_xml(old_section);
+	xml_child_iter(
+		old_section, a_child, NULL,
+		free_xml_from_parent(old_section, a_child);
+		);
 
-	/* add the new copy */
-	add_node_copy(parent, new_section);
+	copy_in_properties(old_section, new_section);
+
+	xml_child_iter(
+		new_section, a_child, NULL,
+		add_node_copy(old_section, a_child);
+		);
 
 	return TRUE;
 }
