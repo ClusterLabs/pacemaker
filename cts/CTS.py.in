@@ -47,6 +47,8 @@ class RemoteExec:
     def __init__(self):
         #	-n: no stdin, -x: no X11
         self.Command = "@SSH@ -l root -n -x"
+	# 	-f: ssh to background
+        self.CommandnoBlock = "/usr/bin/ssh -f -l root -n -x"
 	#	-B: batch mode, -q: no stats (quiet)
         self.CpCommand = "@SCP@ -B -q"
 
