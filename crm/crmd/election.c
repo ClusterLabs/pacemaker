@@ -267,7 +267,7 @@ do_dc_takeover(long long action,
 	crm_debug("Update %s in the CIB to our uuid: %s",
 		  XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
 	
-	set_uuid(cib, XML_ATTR_DC_UUID, fsa_our_uname);
+	set_uuid(fsa_cluster_conn, cib, XML_ATTR_DC_UUID, fsa_our_uname);
 	update = create_cib_fragment(cib, NULL);
 	free_xml(cib);
 

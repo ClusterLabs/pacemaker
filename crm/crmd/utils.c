@@ -878,7 +878,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	crm_data_t *tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
 	crm_debug("Creating node entry for %s", uname);
-	set_uuid(tmp1, XML_ATTR_UUID, uname);
+	set_uuid(fsa_cluster_conn, tmp1, XML_ATTR_UUID, uname);
 	
 	set_xml_property_copy(tmp1, XML_ATTR_UNAME, uname);
 	set_xml_property_copy(tmp1, XML_ATTR_TYPE, type);
@@ -888,66 +888,6 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	
 }
 
-crm_data_t*
-create_node_state(const char *uuid,
-		  const char *uname,
-		  const char *ha_state,
-		  const char *ccm_state,
-		  const char *crmd_state,
-		  const char *join_state,
-		  const char *exp_state)
-{
-	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-
-	crm_debug("Creating node state entry for %s", uname);
-	set_uuid(node_state, XML_ATTR_UUID, uname);
-	set_xml_property_copy(node_state, XML_ATTR_UNAME, uname);
-
-	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_HASTATE, ha_state);
-
-	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_INCCM, ccm_state);
-
-	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_CRMDSTATE, crmd_state);
-
-	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_JOINSTATE, join_state);
-	
-	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_EXPSTATE, exp_state);
-
-	crm_xml_devel(node_state, "created");
-
-	return node_state;
-}
-
-
-void
-set_uuid(crm_data_t *node, const char *attr, const char *uname) 
-{
-	uuid_t uuid_raw;
-	char *uuid_calc = NULL;
-	
-	crm_malloc(uuid_calc, sizeof(char)*50);
-
-	if(uuid_calc != NULL) {
-		if(fsa_cluster_conn->llc_ops->get_uuid_by_name(
-			   fsa_cluster_conn, uname, uuid_raw) == HA_FAIL) {
-			crm_err("Could not calculate UUID for %s", uname);
-			crm_free(uuid_calc);
-			uuid_calc = crm_strdup(uname);
-			
-		} else {
-			uuid_unparse(uuid_raw, uuid_calc);
-		}
-		
-		set_xml_property_copy(node, attr, uuid_calc);
-	}
-	
-	crm_free(uuid_calc);
-}/*memory leak*/ /* BEAM BUG - this is not a memory leak */
 
 
 
@@ -1145,3 +1085,37 @@ copy_lrm_rsc(const lrm_rsc_t *rsc)
 }
 
 
+crm_data_t*
+create_node_state(const char *uuid,
+		  const char *uname,
+		  const char *ha_state,
+		  const char *ccm_state,
+		  const char *crmd_state,
+		  const char *join_state,
+		  const char *exp_state)
+{
+	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+
+	crm_debug("Creating node state entry for %s", uname);
+	set_uuid(fsa_cluster_conn, node_state, XML_ATTR_UUID, uname);
+	set_xml_property_copy(node_state, XML_ATTR_UNAME, uname);
+
+	set_xml_property_copy(
+		node_state, XML_CIB_ATTR_HASTATE, ha_state);
+
+	set_xml_property_copy(
+		node_state, XML_CIB_ATTR_INCCM, ccm_state);
+
+	set_xml_property_copy(
+		node_state, XML_CIB_ATTR_CRMDSTATE, crmd_state);
+
+	set_xml_property_copy(
+		node_state, XML_CIB_ATTR_JOINSTATE, join_state);
+	
+	set_xml_property_copy(
+		node_state, XML_CIB_ATTR_EXPSTATE, exp_state);
+
+	crm_xml_devel(node_state, "created");
+
+	return node_state;
+}

@@ -324,16 +324,6 @@ do_msg_route(long long action,
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 	gboolean routed = FALSE, defer = TRUE, do_process = TRUE;
 
-#if 0
-/*	if(cause == C_IPC_MESSAGE) { */
-	if (crmd_authorize_message(
-		    root_xml_node, input->msg, curr_client) == FALSE) {
-		crm_debug("Message not authorized\t%s",
-			  dump_xml_formatted(root_xml_node, FALSE));
-		do_process = FALSE;
-	}
-/*	} */
-#endif
 	if(msg_data->fsa_cause != C_IPC_MESSAGE
 	   && msg_data->fsa_cause != C_HA_MESSAGE) {
 		/* dont try and route these */
@@ -480,14 +470,6 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 		is_local=1;
 	}
 
-	crm_trace("is_local    %d", is_local);
-	crm_trace("is_for_dcib %d", is_for_dcib);
-	crm_trace("is_for_dc   %d", is_for_dc);
-	crm_trace("is_for_crm  %d", is_for_crm);
-	crm_trace("AM_I_DC     %d", AM_I_DC);
-	crm_trace("sys_to      %s", crm_str(sys_to));
-	crm_trace("host_to     %s", crm_str(host_to));
-		
 	if(is_for_dc || is_for_dcib) {
 		if(AM_I_DC) {
 			ROUTER_RESULT("Message result: DC/CRMd process");
@@ -937,7 +919,7 @@ handle_shutdown_request(HA_Message *stored_msg)
 	crm_info("stored msg");
 	crm_log_message(LOG_MSG, stored_msg);
 	
-	set_uuid(node_state, XML_ATTR_UUID, host_from);
+	set_uuid(fsa_cluster_conn, node_state, XML_ATTR_UUID, host_from);
 	set_xml_property_copy(node_state, XML_ATTR_UNAME, host_from);
 	set_xml_property_copy(node_state, XML_CIB_ATTR_SHUTDOWN,  now_s);
 	set_xml_property_copy(

@@ -194,7 +194,7 @@ do_lrm_control(long long action,
 			} else {
 				crm_err("Failed to sign on to the LRM %d"
 					" (max) times", num_lrm_register_fails);
-				return failed;
+				register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 			}
 		}
 		
@@ -488,7 +488,7 @@ do_lrm_query(gboolean is_replace)
 			xml_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
 	}
 
-	set_uuid(xml_state, XML_ATTR_UUID, fsa_our_uname);
+	set_uuid(fsa_cluster_conn, xml_state, XML_ATTR_UUID, fsa_our_uname);
 	set_xml_property_copy(xml_state, XML_ATTR_UNAME, fsa_our_uname);
 	xml_result = create_cib_fragment(xml_state, NULL);
 
@@ -745,7 +745,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	crm_info("Updating resouce %s after op %s", rsc->id, op->op_type);
 	
 	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	set_uuid(update, XML_ATTR_UUID, fsa_our_uname);
+	set_uuid(fsa_cluster_conn, update, XML_ATTR_UUID, fsa_our_uname);
 	set_xml_property_copy(update,  XML_ATTR_UNAME, fsa_our_uname);
 
 	iter = create_xml_node(update, XML_CIB_TAG_LRM);
