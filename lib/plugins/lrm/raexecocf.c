@@ -307,7 +307,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	strncat(ra_pathname, " meta-data",RA_MAX_NAME_LENGTH);
 
 	tmp_for_setenv = g_hash_table_new(g_str_hash, g_str_equal);
-	add_OCF_env_vars(tmp_for_setenv, NULL, rsc_type, provider);
+	add_OCF_env_vars(tmp_for_setenv, "DUMMY_INSTANCE", rsc_type, provider);
 	raexec_setenv(tmp_for_setenv);
 	g_hash_table_foreach_remove(tmp_for_setenv, let_remove_eachitem, NULL);
 	g_hash_table_destroy(tmp_for_setenv);
