@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.22 2004/07/23 10:24:12 andrew Exp $ */
+/* $Id: tengine.c,v 1.23 2004/07/27 11:54:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -350,9 +350,9 @@ process_graph_event(const char *event_node, const char *event_rsc,
 		return FALSE;
 	}
 
-	xmlNodePtr this_action = g_list_nth_data(matched_action_list->actions,
+	xmlNodePtr xml_action = g_list_nth_data(matched_action_list->actions,
 						 matched_action_list->index);
-	const char *allow_fail  = xmlGetProp(this_action, "allow_fail");
+	const char *allow_fail  = xmlGetProp(xml_action, "allow_fail");
 
 	/* check for action failure */
 	op_status_t rsc_code_i = -1;
