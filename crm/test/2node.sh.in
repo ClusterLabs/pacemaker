@@ -34,7 +34,7 @@ crm-cleanup
 
 #----
 
-start_crmd $test_node_1
+start_node $test_node_1
 
 #----
 
@@ -140,7 +140,7 @@ cts_assert "rsc2 NOT running on $test_node_1"
 
 #----
 
-start_crmd $test_node_2
+start_node $test_node_2
 
 #----
 

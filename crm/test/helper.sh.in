@@ -127,7 +127,7 @@ function remote_cmd() {
     return $?;
 }
 
-function start_crmd() {
+function start_node() {
     ha_node=$1
     do_cmd echo "wait for HA to start"
     crm_log_pos=$(stat -L -c %s $logfile)
@@ -152,6 +152,26 @@ function start_crmd() {
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 20 \
 	-s "${ha_node} crmd(.*) info:(.*)FSA Hostname: ${ha_node}"
     cts_assert "CRMd startup on ${ha_node} failed."
+}
+
+function stop_node() 
+{
+    a_node=$1; shift;
+    down_cmd=$1; shift;
+    do_cmd echo Shutdown $test_node_1
+    crm_log_pos=$(stat -L -c %s $logfile)
+
+    if [ "$down_cmd" = "crmd" ]; then
+	do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmadmin -K $test_node_1
+    else
+	do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -k
+    fi
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 500 \
+	-s "${test_node_1} crmd(.*)State transition (.*) \-> \"S_PENDING\"" \
+	-s "${test_node_1} crmd(.*)State transition \"S_PENDING\" \-> \"S_STOPPING\"" \
+	-s "${test_node_1} crmd(.*)\[crmd\] stopped" 
+    cts_assert "Shutdown of ${test_node_1} failed."
+
 }
 
 function is_state() {

@@ -25,7 +25,7 @@ $log_file="/var/log/messages";
 $start_pos=-1;
 $end_pos=-1;
 $verbose=0;
-$timeout=60;
+$timeout=90;
 @search_for = ();
 @errors     = ();
 
