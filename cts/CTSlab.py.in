@@ -278,13 +278,15 @@ class CtsLab(UserDict):
 if __name__ == '__main__': 
 
     from CTSaudits import AuditList
-    from CTStests import TestList
-    from CTS import RandomTests, Scenario, InitClusterManager, PingFest
+    from CTStests import TestList,RandomTests
+    from CTS import Scenario, InitClusterManager, PingFest
 
     Environment = CtsLab(["sgi1", "sgi2"])
     #Environment["RandSeed"] = (156, 104, 218)
     Environment["DoStonith"] = 1
     Environment["DoStandby"] = 1
+    Environment["DoResponse"] = 0
+    Environment["DoDrbd"] = 0 
     Environment.SupplyDefaults()
 
     print Environment

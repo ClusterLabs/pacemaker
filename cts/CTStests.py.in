@@ -27,11 +27,126 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import CTS
-import time, os, re, types
-
+from CM_hb import HBConfig
+import CTSaudits
+import time, os, re, types, string
 
 #	List of all class objects for tests which we ought to
 #	consider running.
+
+class RandomTests:
+    '''
+    A collection of tests which are run at random.
+    '''
+    def __init__(self, scenario, cm, tests, Audits):
+
+        self.CM = cm
+        self.Env = cm.Env
+        self.Scenario = scenario
+        self.Tests = []
+
+        for test in tests:
+            if not issubclass(test.__class__, CTSTest):
+                raise ValueError("Init value must be a subclass of CTSTest")
+            if test.is_applicable():
+                self.Tests.append(test)
+
+        if not scenario.IsApplicable():
+                raise ValueError("Scenario not applicable in"
+                " given Environment")
+
+       
+        self.Stats = {"success":0, "failure":0, "BadNews":0}
+        self.IndividualStats= {}
+
+        self.Audits = Audits
+
+    def incr(self, name):
+        '''Increment (or initialize) the value associated with the given name'''
+        if not self.Stats.has_key(name):
+            self.Stats[name]=0
+        self.Stats[name] = self.Stats[name]+1
+
+    def run(self, max=1):
+        (
+'''
+Set up the given scenario, then run the selected tests at
+random for the selected number of iterations.
+''')
+
+        if not self.Scenario.SetUp(self.CM):
+            return None
+
+        BadNews=CTS.LogWatcher(self.CM["LogFileName"], self.CM["BadRegexes"]
+        ,	timeout=0)
+        BadNews.setwatch()
+        testcount=1
+        
+        time.sleep(30)
+
+	# This makes sure everything is stabilized before starting...
+        for audit in self.Audits:
+            if not audit():
+                self.CM.log("Audit " + audit.name() + " Failed.")
+                self.incr("auditfail")
+        while testcount <= max:
+            test = self.Env.RandomGen.choice(self.Tests)
+
+            # Some tests want a node as an argument.
+
+            nodechoice = self.Env.RandomNode()
+            self.CM.log("Running test %s (%s)	[%d]"  % (test.name, nodechoice, testcount))
+            testcount = testcount + 1
+            starttime=time.time()
+            try:
+                ret=test(nodechoice)
+            except TypeError:
+                ret=test()
+
+            if ret:
+                self.incr("success");
+            else:
+                self.incr("failure");
+        	# Better get the current info from the cluster...
+                self.CM.statall()
+            stoptime=time.time()
+            elapsed_time = stoptime - starttime
+            if not test.has_key("min_time"):
+                test["elapsed_time"] = elapsed_time
+                test["min_time"] = elapsed_time
+                test["max_time"] = elapsed_time
+            else:
+                test["elapsed_time"] = test["elapsed_time"] + elapsed_time
+                if elapsed_time < test["min_time"]:
+                    test["min_time"] = elapsed_time
+                if elapsed_time > test["max_time"]:
+                    test["max_time"] = elapsed_time
+
+            for tries in 1,2,3,4,5,6,7,8,9,10:
+                match=BadNews.look()
+                if match:
+                   if not re.search(" CTS: ", match):
+                      self.CM.log(match)
+                      self.incr("BadNews");
+                else:
+                  break
+            else:
+              self.CM.log("Big problems.  Shutting down.")
+              self.CM.stopall()
+              raise ValueError("Looks like we hit the jackpot!	:-)")
+
+            for audit in self.Audits:
+                if not audit():
+                    self.CM.log("Audit " + audit.name() + " Failed.")
+                    test.incr("auditfail")
+                    self.incr("auditfail")
+                    
+        self.Scenario.TearDown(self.CM)
+
+        for test in self.Tests:
+            self.IndividualStats[test.name] = test.Stats
+
+        return self.Stats, self.IndividualStats
 
 AllTestClasses = [ ]
 
@@ -553,6 +668,475 @@ class StandbyTest(CTSTest):
 #	Register StandbyTest as a good test to run
 AllTestClasses.append(StandbyTest)
 
+###############################################################
+class ResponseTest(CTSTest):
+###############################################################
+    '''Test one node's response when the other node fails abnormally'''
+    def __init__(self,cm,timeout=600):
+        CTSTest.__init__(self,cm)
+        self.name="Response"
+        self.theystopped = self.CM["Pat:They_stopped"]
+        self.allstopped = self.CM["Pat:All_stopped"]
+        self.usstart   = self.CM["Pat:We_started"]
+        self.themstart = self.CM["Pat:They_started"]
+        self.timeout=timeout
+
+    def __call__(self,node):
+        '''Perform the 'response' test'''
+        self.incr("calls")
+
+        if self.CM.ShouldBeStatus[node]!=self.CM["up"]:
+            return self.skipped()
+	
+        stopwatch = None
+	
+        if self.CM.upcount() != 1:
+            stopwatch= (self.theystopped % node)
+
+        if (self.CM.upcount() <= 1):
+            uppat = (self.usstart % node)
+        else:
+            uppat=(self.themstart % node)
+
+        upwatch = CTS.LogWatcher(self.CM["LogFileName"], [uppat]
+        ,       timeout=self.timeout)
+        
+        if stopwatch:
+            watch= CTS.LogWatcher(self.CM["LogFileName"], [stopwatch]
+            ,   timeout=self.CM["DeadTime"]+10)
+            watch.setwatch()
+        
+        KillWorked = None
+          
+        if self.CM.rsh(node,self.CM["KillmachineCmd"])==0:
+            KillWorked=1
+        else:
+            return self.failure("The node is not killed")
+        
+	upwatch.setwatch()
+
+        if stopwatch:
+            if watch.look():
+                ret1=1
+            else:
+                reason="Did not find " + stopwatch
+                ret1=0
+        else:
+            ret1=1
+
+        if upwatch.look():
+            ret2=1
+        else:
+            reason = "Did not find " + uppat
+            ret2 = 0
+
+        self.CM.ShouldBeStatus[node] = self.CM["up"]
+
+        if ret1 and ret2:
+            return self.success()
+        else:
+            return self.failure(reason)
+	   
+    def is_applicable(self): 
+        '''ResponseTest is applicable unless suppressed by CM.Env["DoResponse"]=0'''
+        if self.CM.Env.has_key("DoResponse"):
+            return self.CM.Env["DoResponse"]
+        return 1
+
+AllTestClasses.append(ResponseTest)
+
+#######################################################################
+class Fastdetection(CTSTest):
+#######################################################################
+    '''Test the time which one node find out the other node is dead abnormally'''
+    def __init__(self,cm,timeout=60):
+        CTSTest.__init__(self,cm)
+        self.name = "FastFailureDetection"
+        self.they_stopped = self.CM["Pat:They_stopped"]
+        self.timeout = timeout
+
+    def __call__(self,node):
+        '''Perform the fastfailureDetection test'''
+        self.incr("calls")
+        if self.CM.ShouldBeStatus[node] != self.CM["up"]:
+            return self.skipped()
+
+        stoppat = (self.they_stopped%node)
+        stopwatch = CTS.LogWatcher(self.CM["LogFileName"],[stoppat],timeout=self.timeout)
+        stopwatch.setwatch()
+
+        if self.CM.rsh(node,"killall -9 heartbeat")==0:
+            Starttime = time.time()
+            if stopwatch.look():
+                Stoptime = time.time()
+                Detectiontime = Stoptime-Starttime
+                self.CM.log("The detection time is %s s"%Detectiontime)
+                self.CM.rsh(node,self.CM["StartCmd"])
+                return self.success()
+            else:
+                self.CM.rsh(node,self.CM["StartCmd"])
+                self.CM.ShouldBeStatus[node]=self.CM["up"]
+                return self.failure("don't find the log message")
+        else:
+                return self.failure("couldn't stop heartbeat")
+
+    def is_applicable(self):
+        '''this test is always applicable'''
+        return 1
+
+AllTestClasses.append(Fastdetection)
+
+##############################################################################
+class BandwidthTest(CTSTest):
+##############################################################################
+    '''Test the bandwidth which heartbeat uses'''
+    def __init__(self,cm):
+        CTSTest.__init__(self,cm)
+        self.name = "Bandwidth"
+	
+    def __call__(self,node):
+        '''Perform the Bandwidth test'''
+        self.incr("calls")
+        
+        if self.CM.ShouldBeStatus[node]!=self.CM["up"]:
+            return self.skipped()
+            
+        cf = HBConfig()
+        eth = None
+        for cfp in cf.Parameters:
+            if cfp == "bcast":
+                eth=cf.Parameters["bcast"][0]
+                break
+            if cfp == "mcast":
+                eth = cf.Parameters["mcast"][0]
+                break
+            if cfp == "ucast":
+                eth = cf.Parameters["ucast"][0]
+                break
+
+        if eth == None:
+            return self.skipped()
+
+        port=None
+        for cfp in cf.Parameters:
+            if cfp == "udpport":
+                port = cf.Parameters["udpport"][0]
+                break
+        if port == None:
+            port =  694
+        
+        bandwidth = 0.0 
+        for i in 1,2,3,4,5:
+            self.CM.rsh(node,"tcpdump -c 100 -i %s udp port %s > /tmp/band_estimate 2>&1"%(eth,port))
+            self.CM.rsh.cp("%s:/tmp/band_estimate"%node, "/tmp")
+            file = open("/tmp/band_estimate","r")
+            file.seek(0)
+            count = 0
+            while 1:
+                line = file.readline()
+                if re.search("udp",line):
+                    count=count+1
+                    linesplit = string.split(line," ")
+                    for j in range(6):
+                        if linesplit[j]=="udp": break
+                    sum = int(linesplit[j+1])
+                    T1 = linesplit[0]
+                    timesplit = string.split(T1,":")
+                    time2split = string.split(timesplit[2],".")
+                    time1 = (long(timesplit[0])*60+long(timesplit[1]))*60+long(time2split[0])+long(time2split[1])*0.000001
+                    break
+
+            while count < 100:
+                line = file.readline()
+                if re.search("udp", line):
+                    count = count+1
+                    linessplit = string.split(line," ")
+                    for j in range(6):
+                        if linessplit[j] =="udp": break
+                    sum=int(linessplit[j+1])+sum
+
+            T2 = linessplit[0]
+            timesplit = string.split(T2,":")
+            time2split = string.split(timesplit[2],".")
+            time2 = (long(timesplit[0])*60+long(timesplit[1]))*60+long(time2split[0])+long(time2split[1])*0.000001
+            time = time2-time1
+            bandwidth = (sum+28*100)*8/time+bandwidth
+            self.CM.rsh(node,"rm /tmp/band_estimate")
+            os.system("rm /tmp/band_estimate")
+        bandwidth = bandwidth/5
+        
+        if bandwidth != 0.0:
+             self.CM.log("Bandwidth used to heartbeat is %f bit/s"%bandwidth)
+             return self.success()
+        else:
+            return self.failure("no response!")
+
+    def is_applicable(self):
+        '''BandwidthTest is alwayss applicable'''
+        return 1
+
+AllTestClasses.append(BandwidthTest)
+
+##########################################################################
+class RedundantpathTest(CTSTest):
+##########################################################################
+    '''In heartbeat, it has redundantpath to commiunicate between the cluster'''
+    def __init__(self,cm,timeout=60):
+        CTSTest.__init__(self,cm)
+        self.name = "RedundantpathTest"
+        self.timeout = timeout 
+
+    def __call__(self,node):
+        '''Perform redundant path test'''
+        self.incr("calls")
+        if self.CM.ShouldBeStatus[node]!=self.CM["up"]:
+            return self.skipped()
+    
+        cf = HBConfig()
+        num = 0
+        PathDown = None
+        eths = []
+        serials = []
+        for cfp in cf.Parameters:
+            if cfp == "bcast":
+                eths = cf.Parameters["bcast"]
+                for eth in eths:
+                    num = num+1
+            if cfp == "mcast":
+                if cf.Parameters["mcast"][0] not in eths:
+                   eths.append(cf.Parameters["mcast"][0])
+                   num = num+1
+            if cfp == "ucast":
+                if cf.Parameters["ucast"][0] not in eths:
+                    eths.append(cf.Parameters["mcast"][0])
+                    num = num+1
+           if cfp == "serial":
+                serials=cf.Parameters["serial"]
+                for serial in serials:
+                    num = num+1
+
+        if num<=1:
+            return self.failure("There is just one path between the two nodes,please config it again")
+
+        for eth in eths:
+            if self.CM.rsh(node,"ifconfig %s down"%eth)==0:
+                PathDown = "OK"
+                break
+        
+        if PathDown != "OK":
+            for serial in serials:
+                if self.CM.rsh(node,"setserial %s uart none"%serial)==0:
+                    PathDown = "OK"
+                    break
+                   
+        if PathDown!="OK":
+            return self.failure("Cannot break the path")
+        
+        time.sleep(self.timeout)
+
+        for audit in CTSaudits.AuditList(self.CM):
+            if not audit():
+                for eth in eths:
+                    self.CM.rsh(node,"ifconfig %s up" %eth)
+                for serial in serials:
+                    self.CM.rsh(node,"setserial %s uart 16550"%serial) 
+                return self.failure("Redundant path fail")
+
+        for eth in eths:
+            self.CM.rsh(node,"ifconfig %s up"%eth)
+        for serial in serials:
+            self.CM.rsh(node,"setserial %s uart 16550"%serial)
+       
+        return self.success()
+
+    def is_applicable(self):
+        '''It is always applicable'''
+        return 1
+
+AllTestClasses.append(RedundantpathTest)
+
+##########################################################################
+class DRBDTest(CTSTest):
+##########################################################################
+    '''In heartbeat, it provides replicated storage.'''
+    def __init__(self,cm, timeout=10):
+        CTSTest.__init__(self,cm)
+        self.name = "DRBD"
+        self.timeout = timeout
+
+    def __call__(self):
+        '''Perform the 'DRBD' test.'''
+        self.incr("calls")
+        
+        for node in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+                return self.skipped()
+
+        for node in self.CM.Env["nodes"]:
+            done=time.time()+self.timeout+1
+            while (time.time()<done):
+                 line=self.CM.rsh.readaline(node,self.CM["StatusDRBDCmd"])
+                 if re.search("running",line):
+                     break
+                 else:
+                      self.CM.rsh(node,self.CM["StartDRBDCmd"])
+                      time.sleep(1)
+            if time.time()>done:
+                return self.failure("Can't start drbd, please check it") 
+
+        device={}
+        for node in self.CM.Env["nodes"]:
+            device[node]=self.getdevice(node)
+
+        node = self.CM.Env["nodes"][0]
+        done=time.time()+self.timeout+1
+        while 1:
+            if (time.time()>done):
+                return self.failure("the drbd could't sync")
+            self.CM.rsh(node,"cp /proc/drbd /tmp >/dev/null 2>&1")
+            if self.CM.rsh.cp("%s:/tmp/drbd"%node,"/tmp"):
+                line = open("/tmp/drbd").readlines()[2]
+                p = line.find("Primary")
+                s1 = line.find("Secondary")
+                s2 = line.rfind("Secondary")
+                if s1!=s2:
+                    if self.CM.rsh(node,"drbdsetup %s primary"%device[node]):
+                       pass
+                if p!=-1:
+                    if p<s1:
+                        primarynode = node
+                        secondarynode = self.CM.Env["nodes"][1]
+                        break
+                else:
+                    if s1!=-1:
+                        primarynode = self.CM.Env["nodes"][1]
+                        secondarynode = node
+                        break
+                time.sleep(1)
+                 
+        self.CM.rsh(secondarynode, self.CM["StopCmd"])
+        self.CM.rsh(primarynode, self.CM["StopCmd"])
+
+        line1 = self.CM.rsh.readaline(node,"md5sum %s"%device[primarynode])
+        line2 = self.CM.rsh.readaline(node,"md5sum %s"%device[secondarynode])
+
+        self.CM.rsh(primarynode,self.CM["StartCmd"])
+        self.CM.rsh(secondarynode,self.CM["StartCmd"])
+
+        if string.split(line1," ")[0] == string.split(line2, " "):
+            return self.failure("Drbd desnt't work good")
+
+        return self.success()
+
+    def getdevice(self,node):
+        device=None
+        if self.CM.rsh(node,self.CM["DRBDCheckconf"])==0:
+            self.CM.rsh.cp("%s:/tmp/drbdconf"%node, "/tmp")
+            lines=open("/tmp/drbdconf","r")
+            for line in lines:
+                if line.find("%s:device"%node)!=-1:
+                    device=string.split(line," ")[8]
+                    break
+        return device
+
+    def is_applicable(self):
+        '''DRBD is applicable when there are drbd device'''
+
+        if self.CM.Env.has_key("DoDrbd"):
+           return self.CM.Env["DoDrbd"]
+        return 1 
+
+AllTestClasses.append(DRBDTest)
+
+####################################################################
+class Split_brainTest(CTSTest):
+####################################################################
+    '''It is used to test split-brain. when the path between the two nodes break
+       check the two nodes both take over the resource'''
+    def __init__(self,cm,timeout=60):
+        CTSTest.__init__(self,cm)
+        self.name = "Split_brain"
+        self.timeout = timeout
+
+    def __call__(self,node):
+        '''Perform split-brain test'''
+        self.incr("calls")
+
+        for node in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+                return self.skipped()
+
+        cf = HBConfig()
+        
+        IPaddr = None
+        for reslist in cf.ResourceGroups.keys():
+            line = cf.ResourceGroups[reslist]
+            for res in line.resourcelist:
+                token = res.name
+                if re.match("^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$",token):
+                   IPaddr = token
+                   break
+
+        if IPaddr==None:
+            self.failure("Cannot find the IPaddr resource to test")
+
+	'''If there are redundant path, break the paths'''
+        eths = []
+        serials = []
+        for cfp in cf.Parameters:
+            if cfp == "bcast":
+                eths = cf.Parameters["bcast"]
+            if cfp == "mcast":
+                if cf.Parameters["mcast"][0] not in eths:
+                   eths.append(cf.Parameters["mcast"][0])
+            if cfp == "ucast":
+                if cf.Parameters["ucast"][0] not in eths:
+                    eths.append(cf.Parameters["mcast"][0])
+            if cfp == "serial":
+               serials = cf.Parameters["serial"]
+
+        for eth in eths:
+            self.CM.rsh(node,"ifconfig %s down"%eth)
+        for serial in serials:
+            self.CM.rsh(node,"setserial %s uart none"%serial)
+
+        done = time.time()+self.timeout+1
+        for node in self.CM.Env["nodes"]:
+            while (time.time() < done):
+                line = self.CM.rsh.readaline(node,self.CM["IPaddrCmd"]%IPaddr)
+                if re.search("running",line):
+                    break
+                else:
+                    time.sleep(1)
+
+        if eths != []:
+            for eth in eths:
+                self.CM.rsh(node,"ifconfig %s up"%eth)
+        if serials != []:
+            for serial in serials:
+                self.CM.rsh(node,"setserial %s uart 16550"%serial)
+        if time.time() > done():
+            return self.failure("The two nodes don't take over the resource both")
+          
+        done = time.time()+self.timeout+1
+        while time.time() < done:
+            for audit in CTSaudits.AuditList(self.CM):
+                if not audit():
+                   time.sleep(1)
+                   break
+
+        if time.time() > done:
+           for node in self.CM.Env["nodes"]:
+               self.CM.rsh(node,"@sysconfdir@/init.d/heartbeat restart")
+               return self.failure("Split brain")
+
+        return self.success()
+
+    def is_applicable(self):
+        '''Split_brain is applicable'''
+        return 1
+
+AllTestClasses.append(Split_brainTest)
 
 def TestList(cm):
     result = []
@@ -562,3 +1146,6 @@ def TestList(cm):
         	result.append(bound_test)
     # result = [StandbyTest(cm)]
     return result
+
+
+

@@ -35,7 +35,6 @@ import types, string, select, sys, time, re, os, struct, os, signal
 from UserDict import UserDict
 from syslog import *
 from popen2 import Popen3
-import CTStests
 
 
 class RemoteExec:
@@ -244,6 +243,10 @@ class ClusterManager(UserDict):
             "StopCmd"	     : None,
             "StatusCmd"	     : None,
             "RereadCmd"	     : None,
+            "StartDRBDCmd"   : None,
+            "StopDRBDCmd"    : None,
+            "StatusDRBDCmd"  : None,
+            "DRBDCheckconf"  : None,
             "TestConfigDir"  : None,
             "LogFileName"    : None,
 
@@ -724,127 +727,3 @@ According to the manual page for ping:
         os.execvp("ping", Args)
         self.Env.log("Cannot execvp ping: " + repr(Args))
         sys.exit(1)
-
-
-        
-        
-	
-
-
-class RandomTests:
-    '''
-    A collection of tests which are run at random.
-    '''
-    def __init__(self, scenario, cm, tests, Audits):
-
-        self.CM = cm
-        self.Env = cm.Env
-        self.Scenario = scenario
-        self.Tests = []
-
-        for test in tests:
-            if not issubclass(test.__class__, CTStests.CTSTest):
-                raise ValueError("Init value must be a subclass of CTSTest")
-            if test.is_applicable():
-                self.Tests.append(test)
-
-        if not scenario.IsApplicable():
-                raise ValueError("Scenario not applicable in"
-                " given Environment")
-
-       
-        self.Stats = {"success":0, "failure":0, "BadNews":0}
-        self.IndividualStats= {}
-
-        self.Audits = Audits
-
-    def incr(self, name):
-        '''Increment (or initialize) the value associated with the given name'''
-        if not self.Stats.has_key(name):
-            self.Stats[name]=0
-        self.Stats[name] = self.Stats[name]+1
-
-    def run(self, max=1):
-        (
-'''
-Set up the given scenario, then run the selected tests at
-random for the selected number of iterations.
-''')
-
-        if not self.Scenario.SetUp(self.CM):
-            return None
-
-        BadNews=LogWatcher(self.CM["LogFileName"], self.CM["BadRegexes"]
-        ,	timeout=0)
-        BadNews.setwatch()
-        testcount=1
-
-	# This makes sure everything is stabilized before starting...
-        for audit in self.Audits:
-            if not audit():
-                self.CM.log("Audit " + audit.name() + " Failed.")
-                self.incr("auditfail")
-        while testcount <= max:
-            test = self.Env.RandomGen.choice(self.Tests)
-
-            # Some tests want a node as an argument.
-
-            nodechoice = self.Env.RandomNode()
-            self.CM.log("Running test %s (%s)	[%d]"  % (test.name, nodechoice, testcount))
-            testcount = testcount + 1
-            starttime=time.time()
-            try:
-                ret=test(nodechoice)
-            except TypeError:
-                ret=test()
-
-            if ret:
-                self.incr("success");
-            else:
-                self.incr("failure");
-        	# Better get the current info from the cluster...
-                self.CM.statall()
-            stoptime=time.time()
-            elapsed_time = stoptime - starttime
-            if not test.has_key("min_time"):
-                test["elapsed_time"] = elapsed_time
-                test["min_time"] = elapsed_time
-                test["max_time"] = elapsed_time
-            else:
-                test["elapsed_time"] = test["elapsed_time"] + elapsed_time
-                if elapsed_time < test["min_time"]:
-                    test["min_time"] = elapsed_time
-                if elapsed_time > test["max_time"]:
-                    test["max_time"] = elapsed_time
-
-            for tries in 1,2,3,4,5,6,7,8,9,10:
-                match=BadNews.look()
-                if match:
-                   if not re.search(" CTS: ", match):
-                      self.CM.log(match)
-                      self.incr("BadNews");
-                else:
-                  break
-            else:
-              self.CM.log("Big problems.  Shutting down.")
-              self.CM.stopall()
-              raise ValueError("Looks like we hit the jackpot!	:-)")
-
-            for audit in self.Audits:
-                if not audit():
-                    self.CM.log("Audit " + audit.name() + " Failed.")
-                    test.incr("auditfail")
-                    self.incr("auditfail")
-	    #os.system("ssh -l root sgi1 uname -a")
-	    #os.system("ssh -l root sgi1 /sbin/ifconfig eth0:0")
-	    #os.system("ssh -l root sgi1 /sbin/ifconfig eth0:1")
-	    #os.system("ssh -l root sgi2 uname -a")
-	    #os.system("ssh -l root sgi2 /sbin/ifconfig eth0:0")
-	    #os.system("ssh -l root sgi2 /sbin/ifconfig eth0:1")
-
-        self.Scenario.TearDown(self.CM)
-
-        for test in self.Tests:
-            self.IndividualStats[test.name] = test.Stats
-
-        return self.Stats, self.IndividualStats

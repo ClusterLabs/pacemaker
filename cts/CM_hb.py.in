@@ -32,8 +32,6 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 from CTS import *
-from CTStests import *
-from CTSaudits import *
 
 
 class HeartbeatCM(ClusterManager):
@@ -55,6 +53,12 @@ class HeartbeatCM(ClusterManager):
             "StopCmd"	     : "@libdir@/heartbeat/heartbeat -k",
             "StatusCmd"	     : "@libdir@/heartbeat/heartbeat -s",
             "RereadCmd"	     : "@libdir@/heartbeat/heartbeat -r",
+            "KillmachineCmd" : "reboot -n",
+            "StartDRBDCmd"   : "@sysconfdir@/init.d/drbd start >/dev/null 2>&1",
+            "StopDRBDCmd"    : "@sysconfdir@/init.d/drbd stop",
+            "StatusDRBDCmd"  : "@sysconfdir@/init.d/drbd status",
+            "DRBDCheckconf"  : "@sysconfdir@/init.d/drbd checkconfig >/tmp/drbdconf 2>&1",
+            "IPaddrCmd"      : "@sysconfdir@/ha.d/resource.d/IPaddr %s status",
             "Standby"	     : "@libdir@/heartbeat/hb_standby >/dev/null 2>&1",
             "TestConfigDir"  : "@sysconfdir@/ha.d/testconfigs",
             "LogFileName"    : "/var/log/ha-log",
@@ -164,6 +168,7 @@ class HeartbeatCM(ClusterManager):
                     Group.append(Resource)
 
             RscGroups.append(Group)
+            
         file.close()
         return RscGroups
 
@@ -284,6 +289,11 @@ class HBConfig:
         self.ResourceGroups = {}
 
         self._ReadConfig(os.path.join(configdir, "ha.cf"))
+        
+        FirstUp_NodeSelection()
+        LastUp_NodeSelection()
+        no_failback = NoAutoFailbackPolicy()
+        auto_failback = AutoFailbackPolicy()
 
 	#
 	# We allow each resource group to have its own failover/back
@@ -323,7 +333,7 @@ class HBConfig:
                 # from the items on other lines
                 values = [values]
             if self.Parameters.has_key(key):
-                self.Parameters[key].append(values)
+                self.Parameters[key].append(values[0])
             else:
                 self.Parameters[key] = values
 
@@ -443,7 +453,6 @@ NodeSelectionPolicies = {}
 class NodeSelectionPolicy:
     def __init__(self, name):
         self.name = name
-        assert not NodeSelectionPolicies.has_key(name)
         NodeSelectionPolicies[name] = self
 
     def name(self):
@@ -491,7 +500,6 @@ FailbackPolicies = {}
 class FailbackPolicy:
     def __init__(self, name):
         self.name = name
-        assert not FailbackPolicies.has_key(name)
         FailbackPolicies[name] = self
 
     def name(self):
