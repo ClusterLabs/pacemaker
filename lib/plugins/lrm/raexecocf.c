@@ -171,8 +171,9 @@ execra( const char * ra_name, const char * op,
 	free(ra_name_dup);
 
 	/* execute the RA */
+	cl_log(LOG_INFO, "Will execute OCF RA : %s %s", ra_dirname->str, op);
+	cl_log(LOG_INFO, "Its environment parameters is as below.");
 	raexec_setenv(env_params);
-	cl_log(LOG_ERR, "ra_dirname is:%s", ra_dirname->str);
 	execl(ra_dirname->str, ra_dirname->str, op, NULL); 
 	
 	switch (errno) {
@@ -256,6 +257,7 @@ raexec_setenv(GHashTable * env_params)
 static void 
 set_env(gpointer key, gpointer value, gpointer user_data)
 {
+	cl_log(LOG_INFO, "%s = %s.", (char *)key, (char *)value);
 	setenv((const char *)key, (const char *)value, 1);	
 	/*Need to free the memory to which key and value point?*/
 }

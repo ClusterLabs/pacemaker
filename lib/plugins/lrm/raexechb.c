@@ -146,6 +146,8 @@ execra( const char * ra_name, const char * op,
 	uniform_ret_execra_t exit_value;
 	char *ra_name_dup, *base_name;
 	GString * ra_dirname;
+	GString * debug_info;
+	int index_tmp = 0;
 
 	cl_log(LOG_DEBUG, "To execute a RA %s.", ra_name);
 	/* Prepare the call parameter */
@@ -170,6 +172,16 @@ execra( const char * ra_name, const char * op,
 	 * Not set calling parameters
 	 */
 	raexec_setenv(env_params);
+	
+	debug_info = g_string_new("");
+	do {
+		g_string_append(debug_info, params_argv[index_tmp]);
+		g_string_append(debug_info, " ");
+	} while (params_argv[++index_tmp] != NULL);
+	debug_info->str[debug_info->len-1] = '\0';
+	cl_log(LOG_INFO, "Will execute a heartbeat RA: %s", debug_info->str);
+	g_string_free(debug_info, TRUE);
+	
 	if ( execv(ra_dirname->str, params_argv) < 0 ) {
 		cl_log(LOG_ERR, "execl error when to execute RA %s.", ra_name);
 	}
@@ -183,6 +195,7 @@ execra( const char * ra_name, const char * op,
 			exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
         }
 
+	g_string_free(ra_dirname, TRUE);
         cl_log(LOG_ERR, "execl error when to execute RA %s.", ra_name);
         exit(exit_value);
 }
