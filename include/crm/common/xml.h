@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.18 2005/02/10 15:50:36 andrew Exp $ */
+/* $Id: xml.h,v 1.19 2005/02/20 14:40:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -89,10 +89,10 @@ extern const char *get_xml_attr_nested(crm_data_t *parent,
 /*
  * Free the XML "stuff" associated with a_node
  *
- * If a_node is part of a document, free the whole thing
+ * If a_node is part of another XML blob, barf.
+ *   (Should be using free_xml_from_parent)
  *
- * Otherwise, unlink it from its current location and free everything
- * from there down.
+ * Otherwise, free everything recursivly
  *
  * Wont barf on NULL.
  *
@@ -103,6 +103,11 @@ extern void free_xml_fn(crm_data_t *a_node);
 #else
 #  define free_xml(xml_obj) xml_obj = NULL
 #endif
+
+
+void free_xml_from_parent(crm_data_t *parent, crm_data_t *a_node);
+#define zap_xml_from_parent(parent, xml_obj) free_xml_from_parent(parent, xml_obj); xml_obj = NULL
+
 
 /*
  * Create a node named "name" as a child of "parent"
@@ -265,6 +270,7 @@ extern gboolean xml_has_children(crm_data_t *root);
 	} else {							\
 		crm_trace("Parent of loop was NULL");			\
 	}
+
 #define xml_prop_iter(parent, prop_name, prop_value, code) if(parent != NULL) { \
 		const char *prop_name = NULL;				\
 		const char *prop_value = NULL;				\
