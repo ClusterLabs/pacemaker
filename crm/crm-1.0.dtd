@@ -463,8 +463,16 @@ More details are given in the annotated DTD below.
      op_reply	A generic reply message to a request
      ping_op	ping a subsystem to check whether its talking to us at
 		all, mainly for debugging
+     TODO: Can msg_data not simply be melted into crm_message, cutting
+     out one level of redirection?
+     TODO: crm_message.type == reply is implicit if op_reply is present,
+     should be merged
+     TODO: commands to pengine etc still need fleshing out /
+     simplification or merge between various commands, ie "quit",
+     "hello", "compute" etc should all be the same type, just different 
+     contents - maybe generic_op + attributes?
 -->
-<!ELEMENT msg_data (op_reply?,ping_op?,rsc_op?,rsc_state?,lrm_state?,lrm_op?,cib_op?)>
+<!ELEMENT msg_data (op_reply?,hello_op?,ping_op?,rsc_op?,rsc_state?,lrm_state?,lrm_op?,cib_op?)>
 
 <!ELEMENT ping_op EMPTY>
 <!ATTLIST ping_op
