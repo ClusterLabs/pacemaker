@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.14 2004/03/10 22:34:08 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.15 2004/03/18 10:29:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,14 +54,14 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		FNRET(NULL);
 	}
 
-	/*
+#ifdef XML_TRACE
 	CRM_DEBUG("looking for...");
 	for (j=0; j < len; ++j) {
 		if (search_path[j] == NULL) break;
 		CRM_DEBUG2(" --> (%s).", search_path[j]);
 	}
-	*/
-    
+#endif
+	
 	xmlNodePtr child = root->children, lastMatch = NULL;
 	for (j=0; j < len; ++j) {
 		gboolean is_found = FALSE;
@@ -72,28 +72,30 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		
 		while(child != NULL) {
 			const char * child_name = (const char*)child->name;
-/*
+#ifdef XML_TRACE
 			CRM_DEBUG3("comparing (%s) with (%s).",
 				   search_path[j],
 				   child->name);
-*/
+#endif
 			if (strcmp(child_name, search_path[j]) == 0) {
 				lastMatch = child;
 				child = lastMatch->children;
-/*
+#ifdef XML_TRACE
 				CRM_DEBUG3("found node (%s) @line (%ld).",
 					   search_path[j],
 					   xmlGetLineNo(child));
-*/
+#endif
 				is_found = TRUE;
 				break;
 			}
 			child = child->next;
 		}
 		if (is_found == FALSE) {
+#ifdef XML_TRACE
 			CRM_DEBUG2(
 				"No more siblings left... %s cannot be found.",
 				search_path[j]);
+#endif
 			break;
 		}
 	}
@@ -101,12 +103,14 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 	if (j == len
 	    && lastMatch != NULL
 	    && strcmp(lastMatch->name, search_path[j-1]) == 0) {
+#ifdef XML_TRACE
 		CRM_DEBUG2("returning node (%s).",
 			   xmlGetNodePath(lastMatch));
+#endif
 		FNRET(lastMatch);
 	}
 
-	cl_log(LOG_DEBUG,
+	cl_log(LOG_WARNING,
 	       "Could not find the full path to the node you specified."
 	       "  Closest point was node (%s).",
 	       xmlGetNodePath(lastMatch));
@@ -143,55 +147,69 @@ find_entity_nested(xmlNodePtr parent,
 		   const char *id,
 		   gboolean siblings)
 {
-	/* debug tools:
-	 * xmlChar *	xmlGetNodePath		(xmlNodePtr node);
-	 * long		xmlGetLineNo		(xmlNodePtr node);
-	 */
-
-
 	xmlNodePtr child;
 	FNIN();
+#ifdef XML_TRACE
 	cl_log(LOG_DEBUG, "Looking for %s elem with id=%s.", node_name, id);
-
+#endif
 	while(parent != NULL) {
+#ifdef XML_TRACE
 		CRM_DEBUG2("examining (%s).", xmlGetNodePath(parent));
+#endif
 		child = parent->children;
 	
 		while(child != NULL) {
+#ifdef XML_TRACE
 			CRM_DEBUG2("looking for (%s) [name].", node_name);
+#endif
 			if (node_name != NULL
 			    && strcmp(child->name, node_name) != 0) {    
+#ifdef XML_TRACE
 				CRM_DEBUG3(
 					"skipping entity (%s=%s) [node_name].",
 					xmlGetNodePath(child), child->name);
+#endif
 				break;
 			} else if (elem_filter_name != NULL
 				   && elem_filter_value != NULL) {
 				const char* child_value = (const char*)
 					xmlGetProp(child, elem_filter_name);
 				
+#ifdef XML_TRACE
 				cl_log(LOG_DEBUG,
 				       "comparing (%s) with (%s) [attr_value].",
 				       child_value, elem_filter_value);
+#endif
 				if (strcmp(child_value, elem_filter_value)) {
+#ifdef XML_TRACE
 					CRM_DEBUG2("skipping entity (%s) [attr_value].",
 						   xmlGetNodePath(child));
+#endif
 					break;
 				}
 			}
 		
-//	    cl_log(LOG_DEBUG, "looking for entity (%s) in %s.", id, xmlGetNodePath(child));
+#ifdef XML_TRACE
+			cl_log(LOG_DEBUG,
+			       "looking for entity (%s) in %s.",
+			       id, xmlGetNodePath(child));
+#endif
 			while(child != NULL) {
-				cl_log(LOG_DEBUG, "looking for entity (%s) in %s.",
+#ifdef XML_TRACE
+				cl_log(LOG_DEBUG,
+				       "looking for entity (%s) in %s.",
 				       id, xmlGetNodePath(child));
+#endif
 				xmlChar *child_id = xmlGetProp(child, "id");
 				if (child_id == NULL) {
 					cl_log(LOG_CRIT,
-					       "Entity (%s) has id=NULL... Cib not valid!",
+					       "Entity (%s) has id=NULL..."
+					       "Cib not valid!",
 					       xmlGetNodePath(child));
 				} else if (strcmp(id, child_id) == 0) {
-					CRM_DEBUG2("found entity (%s).",
-						   id);
+#ifdef XML_TRACE
+					CRM_DEBUG2("found entity (%s).", id);
+#endif
 					FNRET(child);
 				}   
 				child = child->next;
@@ -199,12 +217,16 @@ find_entity_nested(xmlNodePtr parent,
 		}
 
 		if (siblings == TRUE) {
+#ifdef XML_TRACE
 			CRM_DEBUG("Nothing yet... checking siblings");	    
+#endif
 			parent = parent->next;
 		} else
 			parent = NULL;
 	}
-	CRM_DEBUG("Couldnt find anything appropriate");	    
+	cl_log(LOG_INFO,
+	       "Couldnt find anything appropriate for %s elem with id=%s.",
+	       node_name, id);	    
 	FNRET(NULL);
 }
 
@@ -212,7 +234,7 @@ find_entity_nested(xmlNodePtr parent,
 void
 copy_in_properties(xmlNodePtr src, xmlNodePtr target)
 {
-#if 1
+#ifdef XML_TRACE
 	xmlAttrPtr prop_iter = NULL;
 	FNIN();
 
@@ -274,8 +296,9 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 		}
 		xmlDocDumpMemory(msg->doc, &xml_message, &msg_size);
 	} else {
-//		CRM_DEBUG2("mem used by xml: %d", xmlMemUsed());
-    
+#ifdef XML_TRACE
+		CRM_DEBUG2("mem used by xml: %d", xmlMemUsed());
+#endif    
 		xmlMemoryDump ();
 	
 		xmlBufferPtr xml_buffer = xmlBufferCreate();
@@ -305,8 +328,16 @@ add_node_copy(xmlNodePtr new_parent, xmlNodePtr xml_node)
 	xmlNodePtr node_copy = NULL;
 	
 	FNIN();
-	node_copy = copy_xml_node_recursive(xml_node, 1);
-	xmlAddChild(new_parent, node_copy);
+
+	if(xml_node != NULL && new_parent != NULL) {
+		node_copy = copy_xml_node_recursive(xml_node, 1);
+		xmlAddChild(new_parent, node_copy);
+	} else if(xml_node == NULL) {
+		cl_log(LOG_ERR, "Could not add copy of NULL node");
+	} else {
+		cl_log(LOG_ERR, "Could not add copy of node to NULL parent");
+	}
+	
 	FNRET(node_copy);
 }
 
@@ -325,8 +356,9 @@ set_xml_property_copy(xmlNodePtr node,
 	if(node != NULL)
 		parent_name = node->name;
 	
+#ifdef XML_TRACE
 	CRM_DEBUG4("[%s] Setting %s to %s", parent_name, name, value);
-
+#endif
 	if (name == NULL || strlen(name) <= 0)
 		ret_value = NULL;
 	else if(node == NULL)
@@ -364,7 +396,9 @@ create_xml_node(xmlNodePtr parent, const char *name)
 		}
 	}
 
+#ifdef XML_TRACE
 	CRM_DEBUG3("Created node [%s [%s]]", parent_name, local_name);
+#endif
 	FNRET(ret_value);
 }
 
@@ -419,7 +453,7 @@ set_node_tstamp(xmlNodePtr a_node)
 xmlNodePtr
 copy_xml_node_recursive(xmlNodePtr src_node, int recursive)
 {
-#if 0
+#if XML_TRACE
 	const char *local_name = NULL;
 	xmlNodePtr local_node = NULL, node_iter = NULL, local_child = NULL;
 	xmlAttrPtr prop_iter = NULL;
