@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.15 2004/07/27 11:43:21 andrew Exp $ */
+/* $Id: crm.h,v 1.16 2004/08/03 09:05:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -95,7 +95,7 @@
 
 typedef GList* GListPtr;
 
-#define safe_str_eq(x, y)  x!=NULL && y!=NULL && strcmp(x,y) == 0
+#define safe_str_eq(x, y)  (x!=NULL && y!=NULL && strcmp(x,y) == 0)
 #define safe_str_neq(x, y) x != y && (x==NULL || y==NULL || strcmp(x,y) != 0)
 
 #define slist_iter(w, x, y, z, a) for(z = 0; z < g_list_length(y);  z++) { \
@@ -105,8 +105,8 @@ typedef GList* GListPtr;
 
 /* Developmental debug stuff */
 
-#define LOG_DEV      LOG_DEBUG+1
-#define LOG_VERBOSE  LOG_DEBUG+2
+#define LOG_VERBOSE  LOG_DEBUG+1
+#define LOG_DEV      LOG_DEBUG+2
 #define LOG_TRACE    LOG_DEBUG+3
 
 #if 1

@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.1 2004/06/02 11:40:50 andrew Exp $ */
+/* $Id: xml.h,v 1.2 2004/08/03 09:05:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -231,4 +231,15 @@ extern char *dump_xml(xmlNodePtr msg);
 
 extern char *dump_xml_node(xmlNodePtr msg, gboolean whole_doc);
 
+extern int write_xml_file(xmlNodePtr xml_node, const char *filename);
+
+extern void print_xml_formatted(xmlNodePtr an_xml_node);
+
+extern xmlNodePtr find_entity_recursive(xmlNodePtr parent,
+					const char *node_name,
+					const char *elem_filter_name,
+					const char *elem_filter_value,
+					const char *id,
+					gboolean all);
+	
 #endif

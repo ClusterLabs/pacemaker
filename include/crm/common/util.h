@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.4 2004/07/27 11:43:21 andrew Exp $ */
+/* $Id: util.h,v 1.5 2004/08/03 09:05:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,6 +18,10 @@
  */
 #ifndef CRM_COMMON_UTIL__H
 #define CRM_COMMON_UTIL__H
+
+#include <signal.h>
+#define DEBUG_INC SIGUSR1
+#define DEBUG_DEC SIGUSR2
 
 extern unsigned int crm_log_level;
 
@@ -50,5 +54,7 @@ extern int compare_version(const char *version1, const char *version2);
 
 
 extern const char *generateReference(const char *custom1, const char *custom2);
+
+extern void alter_debug(int nsig);
 
 #endif
