@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.2 2004/11/09 14:49:14 andrew Exp $ */
+/* $Id: group.c,v 1.3 2004/11/09 16:52:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,10 +33,22 @@ typedef struct group_variant_data_s
 		resource_t *last_child;
 } group_variant_data_t;
 
+
+#define get_group_variant_data(data, rsc)				\
+	if(rsc->variant == pe_group) {					\
+		data = (group_variant_data_t *)rsc->variant_opaque;	\
+	} else {							\
+		crm_err("Resource %s was not a \"group\" variant",	\
+			rsc->id);					\
+		return;							\
+	}
+
 void group_unpack(resource_t *rsc)
 {
 	xmlNodePtr xml_obj = rsc->xml;
 	group_variant_data_t *group_data = NULL;
+
+	crm_verbose("Processing resource %s...", rsc->id);
 
 	crm_malloc(group_data, sizeof(group_variant_data_t));
 	group_data->num_children = 0;
@@ -66,25 +78,34 @@ void group_unpack(resource_t *rsc)
 				xmlGetProp(xml_obj, XML_ATTR_ID));
 		}
 		);
+	crm_verbose("Added %d children to resource %s...",
+		    group_data->num_children, rsc->id);
 	
 	rsc->variant_opaque = group_data;
 }
 
 void group_color(resource_t *rsc, GListPtr *colors)
 {
-	group_variant_data_t *group_data =
-		(group_variant_data_t *)rsc->variant_opaque;
+	int lpc;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
 
-	group_data->first_child->fns->color(group_data->first_child, colors);
+/* 	group_data->first_child->fns->color(group_data->first_child, colors); */
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc->fns->color(child_rsc, colors);
+		);
 
-	/* all others are inferred by vitue of the must constraints */
+	/* all others are supposed to be inferred by virtue of
+	 * the must constraints - but this does not seem to happen (yet)
+	 */
 }
 
 void group_create_actions(resource_t *rsc)
 {
 	int lpc;
-	group_variant_data_t *group_data =
-		(group_variant_data_t *)rsc->variant_opaque;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
@@ -97,8 +118,8 @@ void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 {
 	int lpc;
 	resource_t *last_rsc = NULL;
-	group_variant_data_t *group_data =
-		(group_variant_data_t *)rsc->variant_opaque;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
@@ -131,7 +152,7 @@ void group_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 		crm_debug("Processing constraints from %s", rsc->id);
 	}
 	
-	group_data = (group_variant_data_t *)rsc->variant_opaque;
+	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
@@ -146,8 +167,8 @@ void group_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 	int lpc;
 	resource_t *rsc_lh = rsc;
 	resource_t *rsc_rh = constraint->rsc_rh;
-	group_variant_data_t *group_data =
-		(group_variant_data_t *)rsc_rh->variant_opaque;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
 
 	crm_verbose("Processing RH of constraint %s", constraint->id);
 	crm_debug_action(print_resource("LHS", rsc_lh, TRUE));
@@ -163,8 +184,8 @@ void group_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 
 void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 {
-	group_variant_data_t *group_data =
-		(group_variant_data_t *)rsc->variant_opaque;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
 
 	crm_verbose("Processing LH of ordering constraint %d", order->id);
 
@@ -181,8 +202,8 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 void group_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order)
 {
-	group_variant_data_t *group_data =
-		(group_variant_data_t *)rsc->variant_opaque;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
 
 	crm_verbose("Processing RH of ordering constraint %d", order->id);
 
@@ -199,8 +220,8 @@ void group_rsc_order_rh(
 void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
 	int lpc;
-	group_variant_data_t *group_data =
-		(group_variant_data_t *)rsc->variant_opaque;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
 
 	crm_verbose("Processing actions from %s", rsc->id);
 
@@ -214,8 +235,8 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 void group_expand(resource_t *rsc, xmlNodePtr *graph)
 {
 	int lpc;
-	group_variant_data_t *group_data =
-		(group_variant_data_t *)rsc->variant_opaque;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
 
 	crm_verbose("Processing actions from %s", rsc->id);
 
@@ -230,8 +251,8 @@ void group_expand(resource_t *rsc, xmlNodePtr *graph)
 void group_dump(resource_t *rsc, const char *pre_text, gboolean details)
 {
 	int lpc;
-	group_variant_data_t *group_data =
-		(group_variant_data_t *)rsc->variant_opaque;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
 
 	common_dump(rsc, pre_text, details);
 	
@@ -245,17 +266,19 @@ void group_dump(resource_t *rsc, const char *pre_text, gboolean details)
 void group_free(resource_t *rsc)
 {
 	int lpc;
-	group_variant_data_t *group_data =
-		(group_variant_data_t *)rsc->variant_opaque;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
 
 	crm_verbose("Freeing %s", rsc->id);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
+		crm_verbose("Freeing child %s", child_rsc->id);
 		child_rsc->fns->free(child_rsc);
 		);
 
+	crm_verbose("Freeing child list");
 	pe_free_shallow_adv(group_data->child_list, FALSE);
 
 	common_free(rsc);
@@ -266,8 +289,8 @@ void
 group_agent_constraints(resource_t *rsc)
 {
 	int lpc;
-	group_variant_data_t *group_data =
-		(group_variant_data_t *)rsc->variant_opaque;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
