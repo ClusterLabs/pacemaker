@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.21 2004/03/24 10:18:21 andrew Exp $ */
+/* $Id: cib.c,v 1.22 2004/03/25 17:11:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -251,14 +251,23 @@ cib_error2string(enum cib_result return_code)
 		case CIBRES_OBJTYPE_MISMATCH:
 			error_msg = "CIBRES_OBJTYPE_MISMATCH";
 			break;
-		case CIBRES_EXISTS:
+		case CIBRES_FAILED_EXISTS:
 			error_msg = "The object already exists";
 			break;
-		case CIBRES_NOT_EXISTS:
+		case CIBRES_FAILED_NOTEXISTS:
 			error_msg = "The object does not exist";
 			break;
 		case CIBRES_CORRUPT:
 			error_msg = "The CIB is corrupt";
+			break;
+		case CIBRES_FAILED_NOOBJECT:
+			error_msg = "The update was empty";
+			break;
+		case CIBRES_FAILED_NOPARENT:
+			error_msg = "The parent object does not exist";
+			break;
+		case CIBRES_FAILED_NODECOPY:
+			error_msg = "Failed while copying update";
 			break;
 		case CIBRES_OTHER:
 			error_msg = "CIBRES_OTHER";
@@ -269,7 +278,7 @@ cib_error2string(enum cib_result return_code)
 		case CIBRES_FAILED:
 			error_msg = "Failed";
 			break;
-		case CIBRES_FAILED_OLDUPDATE:
+		case CIBRES_FAILED_STALE:
 			error_msg = "Discarded old update";
 			break;
 		case CIBRES_FAILED_ACTIVATION:

@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.22 2004/03/24 12:08:04 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.23 2004/03/25 17:11:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,7 +75,7 @@ void replace_section(const char *section,
 
 gboolean check_generation(xmlNodePtr newCib, xmlNodePtr oldCib);
 
-gboolean conditional_add_failure(xmlNodePtr failed,
+gboolean update_results(xmlNodePtr failed,
 				 xmlNodePtr target,
 				 int operation,
 				 int return_code);
@@ -216,7 +216,7 @@ cib_process_request(const char *op,
 			   XML_CIB_TAG_STATUS);
 
 		if(check_generation(cib_updates, tmpCib) == FALSE)
-			*result = CIBRES_FAILED_OLDUPDATE;
+			*result = CIBRES_FAILED_STALE;
 		else if (activateCibXml(tmpCib, CIB_FILENAME) < 0)
 			*result = CIBRES_FAILED_ACTIVATION;
 
@@ -340,8 +340,21 @@ replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 	new_section = get_object_root(section, cib_updates);
 	old_section = get_object_root(section, tmpCib);
 
-	parent = old_section->parent;
+	if(old_section == NULL) {
+		cl_log(LOG_ERR,
+		       "The CIB is corrupt, cannot replace missing section %s",
+		       section);
+		FNOUT();
 
+	} else if(new_section == NULL) {
+		cl_log(LOG_ERR,
+		       "The CIB is corrupt, cannot set section %s to nothing",
+		       section);
+		FNOUT();
+	}
+
+	parent = old_section->parent;
+	
 	/* unlink and free the old one */
 	unlink_xml_node(old_section);
 	free_xml(old_section);
@@ -359,13 +372,15 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 	   int operation, const char *section)
 {
 	const char *type_check = NULL;
+	xmlNodePtr this_section = get_object_root(section, local_cib);
 	xmlNodePtr cib_updates = NULL, xml_section = NULL, child = NULL;
+
 	FNIN();
     
 	cib_updates = find_xml_node(update_fragment, XML_TAG_CIB);
 	xml_section = get_object_root(section, cib_updates);
 
-	set_node_tstamp(get_object_root(section, local_cib));
+	set_node_tstamp(this_section);
 	
 	if (section == NULL || xml_section == NULL) {
 		cl_log(LOG_ERR, "Section %s not found in message."
@@ -399,73 +414,31 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 		cl_log(LOG_DEBUG, "#-#-# Performing action %d on (%s=%s).",
 		       operation, child->name, ID(child));
 	
-		if (strcmp(type_check, child->name) == 0
-		    && strcmp(XML_CIB_TAG_NODE, child->name) == 0) {
-			if (operation == CIB_OP_ADD)
-				conditional_add_failure(
-					failed, child, operation,
-					addHaNode(local_cib, child));
-			else if (operation == CIB_OP_MODIFY)
-				conditional_add_failure(
-					failed, child, operation,
-					updateHaNode(local_cib, child));
-			else 
-				conditional_add_failure(
-					failed, child, operation,
-					delHaNode(local_cib, ID(child)));
-		} else if (strcmp(type_check, child->name) == 0
-			   && strcmp(XML_CIB_TAG_RESOURCE, child->name) == 0) {
-			if (operation == CIB_OP_ADD)
-				conditional_add_failure(
-					failed, child, operation,
-					addResource(local_cib, child));
-			else if (operation == CIB_OP_MODIFY)
-				conditional_add_failure(
-					failed, child, operation,
-					updateResource(local_cib, child));
-			else 
-				conditional_add_failure(
-					failed, child, operation,
-					delResource(local_cib, ID(child)));
-		} else if (strcmp(type_check, child->name) == 0
-			   && strcmp(XML_CIB_TAG_CONSTRAINT, child->name) == 0) {
-			if (operation == CIB_OP_ADD)
-				conditional_add_failure(
-					failed, child, operation,
-					addConstraint(local_cib, child));
-			else if (operation == CIB_OP_MODIFY)
-				conditional_add_failure(
-					failed, child, operation,
-					updateConstraint(local_cib, child));
-			else 
-				conditional_add_failure(
-					failed, child, operation,
-					delConstraint(local_cib,
-						      ID(child)));
-			
-		} else if (strcmp(type_check, child->name) == 0
-			   && strcmp(XML_CIB_TAG_STATE, child->name) == 0) {
-			if (operation == CIB_OP_ADD)
-				conditional_add_failure(
-					failed, child, operation,
-					addStatus(local_cib, child));
-			else if (operation == CIB_OP_MODIFY)
-				conditional_add_failure(
-					failed, child, operation,
-					updateStatus(local_cib, child));
-			else 
-				conditional_add_failure(
-					failed, child, operation,
-					delStatus(local_cib,
-						  ID(child),
-						  INSTANCE(child)));
-		} else {
-			cl_log(LOG_ERR,
-			       "Object (%s) was not for claimed section (%s)."
-			       "  CIB update is corrupt, ignoring.",
-			       child->name, type_check);
+		if (strcmp(type_check, child->name) != 0) {
+			// log error
+			continue;
 		}
-	
+		
+		if(operation == CIB_OP_MODIFY
+		   && strcmp(XML_CIB_TAG_STATE, child->name) == 0) {
+			update_results(failed, child, operation,
+				       updateStatus(local_cib, child));
+		} else if(operation == CIB_OP_MODIFY) {
+			update_results(failed, child, operation,
+				       update_cib_object(this_section, child,
+							 FALSE));
+				       
+		} else if(operation == CIB_OP_ADD) {
+			update_results(failed, child, operation,
+				       add_cib_object(this_section, child));
+			
+		} else if(operation == CIB_OP_DELETE) {
+			update_results(failed, child, operation,
+				       delete_cib_object(this_section, child));
+		} else {
+			// log error
+		}
+		
 		cl_log(LOG_DEBUG, "#---#---# Action %d on (%s=%s) complete.",
 		       operation, child->name, ID(child));
 		child = child->next;
@@ -528,7 +501,7 @@ check_generation(xmlNodePtr newCib, xmlNodePtr oldCib)
 }
  
 gboolean
-conditional_add_failure(xmlNodePtr failed,
+update_results(xmlNodePtr failed,
 			xmlNodePtr target,
 			int operation,
 			int return_code)
@@ -536,7 +509,7 @@ conditional_add_failure(xmlNodePtr failed,
 	FNIN();
 	gboolean was_error = FALSE;
     
-	if (return_code < 0)
+	if (return_code != CIBRES_OK)
 	{
 		const char *error_msg = cib_error2string(return_code);
 		const char *operation_msg = cib_op2string(operation);

@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.19 2004/03/24 10:18:21 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.20 2004/03/25 17:11:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,46 +54,23 @@
  */
 
 
-int cib_delete_node(xmlNodePtr node_to_delete);
-void handle_object_children(xmlNodePtr new_parent,
-			    xmlNodePtr children,
-			    const char *filter);
 void do_status_update(xmlNodePtr old, cibStatus *new);
 
 
 //--- Resource
 
 int
-addResource(xmlNodePtr cib, cibResource *xml_node)
+addResource(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
-	int add_res = 0;
-	const char * id = NULL;
-	const char * type = NULL;
-	xmlNodePtr new_parent = NULL;
-
-	FNIN();
-	
-	id = xmlGetProp(xml_node, XML_ATTR_ID);
-	type = xmlGetProp(xml_node, XML_CIB_ATTR_RESTYPE);
-	
-	if (id == NULL || strlen(id) < 1)
-		add_res = CIBRES_MISSING_ID;
-	else if (findResource(cib, ID(xml_node)) != NULL)
-		add_res = CIBRES_EXISTS;
-	else if (type == NULL || strlen(type) < 1)
-		add_res = CIBRES_MISSING_TYPE;
-	else {
-		new_parent = get_object_root(XML_CIB_TAG_RESOURCES, cib);
-
-		if(new_parent == NULL) {
-			// create it?
-			add_res = CIBRES_CORRUPT;
-		} else {
-			add_node_copy(new_parent, xml_node);
-		}
+	const char *id = ID(anXmlNode);
+	if (id == NULL || strlen(id) < 1) {
+		return CIBRES_MISSING_ID;
 	}
 
-	FNRET(add_res);
+	CRM_DEBUG2("Adding " XML_CIB_TAG_RESOURCE " (%s)...", id);
+
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
+	return add_cib_object(root, anXmlNode);
 }
 
 
@@ -110,88 +87,48 @@ findResource(xmlNodePtr cib, const char *id)
 }
 
 int
-updateResource(xmlNodePtr cib, cibResource *anXmlNode)
+updateResource(xmlNodePtr cib,  xmlNodePtr anXmlNode)
 {
 	const char *id = ID(anXmlNode);
-	xmlNodePtr res = NULL;
-	
-	FNIN();
-
-	CRM_DEBUG2("Updating " XML_CIB_TAG_RESOURCE " (%s)...",
-		   ID(anXmlNode));
-    
-	res = findResource(cib, id);
-
-	if (res == NULL) {
-		CRM_DEBUG2("Update: " XML_CIB_TAG_RESOURCE
-			   " (%s) did not exist, adding.",
-			   id);
-		
-		addResource(cib, anXmlNode);
-	} else {
-		copy_in_properties(res, anXmlNode);	
-
-		CRM_DEBUG2("Update: Copying in children for "
-			   XML_CIB_TAG_RESOURCE " (%s).",
-			   id);
-
-		handle_object_children(res,
-				       anXmlNode->children,
-				       XML_CIB_ATTR_NODEREF);
+	if (id == NULL || strlen(id) < 1) {
+		return CIBRES_MISSING_ID;
 	}
-	FNRET(0);
-    
+	
+	CRM_DEBUG2("Updating " XML_CIB_TAG_RESOURCE " (%s)...", id);
+
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
+	return update_cib_object(root, anXmlNode, FALSE);
 }
 
 int
-delResource(xmlNodePtr cib, const char *id)
+delResource(xmlNodePtr cib, xmlNodePtr delete_spec)
 {
-	int del_res = CIBRES_OTHER;
-	FNIN();
-
+	const char *id = ID(delete_spec);
 	if(id == NULL || strlen(id) == 0) {
-		del_res = CIBRES_MISSING_ID;
-	} else {
-		del_res = cib_delete_node(findResource(cib, id));
-	}
-	
-	FNRET(del_res);
+		return CIBRES_MISSING_ID;
+	} 
+
+	CRM_DEBUG2("Deleting " XML_CIB_TAG_RESOURCE " (%s)...", id);
+
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
+	return delete_cib_object(root, delete_spec);
 }
 
 
 //--- Constraint
 
 int
-addConstraint(xmlNodePtr cib, cibConstraint *xml_node)
+addConstraint(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
-	int add_res = CIBRES_OK;
-	const char * id = NULL;
-	const char * type = NULL;
-	xmlNodePtr new_parent = NULL;
-
-	FNIN();
-	
-	id = xmlGetProp(xml_node, XML_ATTR_ID);
-	type = xmlGetProp(xml_node, XML_CIB_ATTR_CONTYPE);
-	
-	if (id == NULL || strlen(id) < 1)
-		add_res = CIBRES_MISSING_ID;
-	else if (findConstraint(cib, ID(xml_node)) != NULL)
-		add_res = CIBRES_EXISTS;
-/* 	else if (type == NULL || strlen(type) < 1) */
-/* 		add_res = CIBRES_MISSING_TYPE; */
-	else {
-		new_parent = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-
-		if(new_parent == NULL) {
-			// create it?
-			add_res = CIBRES_CORRUPT;
-		} else {
-			add_node_copy(new_parent, xml_node);
-		}
+	const char *id = ID(anXmlNode);
+	if (id == NULL || strlen(id) < 1) {
+		return CIBRES_MISSING_ID;
 	}
 
-	FNRET(add_res);
+	CRM_DEBUG2("Adding " XML_CIB_TAG_CONSTRAINT " (%s)...", id);
+
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
+	return add_cib_object(root, anXmlNode);
 }
 
 xmlNodePtr
@@ -208,83 +145,47 @@ findConstraint(xmlNodePtr cib, const char *id)
 
 
 int
-updateConstraint(xmlNodePtr cib, cibConstraint *anXmlNode)
+updateConstraint(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
-	xmlNodePtr res = NULL;
 	const char *id = ID(anXmlNode);
-
-	FNIN();
-
-	CRM_DEBUG2("Updating " XML_CIB_TAG_CONSTRAINT " (%s)...",
-		   id);
-	res = findConstraint(cib, id);
-	if (res == NULL) {
-		CRM_DEBUG2("Update: " XML_CIB_TAG_CONSTRAINT
-			   " (%s) did not exist, adding.",
-			   id);
-		addConstraint(cib, anXmlNode);
-	} else {
-		copy_in_properties(res, anXmlNode);	
-
-		CRM_DEBUG2("Update: Copying in children for "
-			   XML_CIB_TAG_CONSTRAINT " (%s).",
-			   id);
-		
-		handle_object_children(res,
-				       anXmlNode->children,
-				       XML_CIB_TAG_NVPAIR);
+	
+	if (id == NULL || strlen(id) < 1) {
+		return CIBRES_MISSING_ID;
 	}
-	FNRET(0);
+	
+	CRM_DEBUG2("Updating " XML_CIB_TAG_CONSTRAINT " (%s)...", id);
+
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
+	return update_cib_object(root, anXmlNode, FALSE);
 }
 
 int
-delConstraint(xmlNodePtr cib, const char *id)
+delConstraint(xmlNodePtr cib, xmlNodePtr delete_spec)
 {
-	int del_res = CIBRES_OTHER;
-	FNIN();
-
+	const char *id = ID(delete_spec);
 	if(id == NULL || strlen(id) == 0) {
-		del_res = CIBRES_MISSING_ID;
-	} else {
-		del_res = cib_delete_node(findConstraint(cib, id));
-	}
-	
-	FNRET(del_res);
+		return CIBRES_MISSING_ID;
+	} 
+	CRM_DEBUG2("Deleting " XML_CIB_TAG_CONSTRAINT " (%s)...", id);
+
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
+	return delete_cib_object(root, delete_spec);
 }
 
 //--- HaNode
 
 int
-addHaNode(xmlNodePtr cib, cibHaNode *xml_node)
+addHaNode(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
-	int add_res = 0;
-	const char * id = NULL;
-	const char * type = NULL;
-	xmlNodePtr new_parent = NULL;
-
-	FNIN();
-	
-	id = xmlGetProp(xml_node, XML_ATTR_ID);
-	type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
-	
-	if (id == NULL || strlen(id) < 1)
-		add_res = CIBRES_MISSING_ID;
-	else if (findHaNode(cib, ID(xml_node)) != NULL)
-		add_res = CIBRES_EXISTS;
-/* 	else if (type == NULL || strlen(type) < 1) */
-/* 		add_res = CIBRES_MISSING_TYPE; */
-	else {
-		new_parent = get_object_root(XML_CIB_TAG_NODES, cib);
-
-		if(new_parent == NULL) {
-			// create it?
-			add_res = CIBRES_CORRUPT;
-		} else {
-			add_node_copy(new_parent, xml_node);
-		}
+	const char *id = ID(anXmlNode);
+	if (id == NULL || strlen(id) < 1) {
+		return CIBRES_MISSING_ID;
 	}
-	
-	FNRET(add_res);
+
+	CRM_DEBUG2("Adding " XML_CIB_TAG_NODE " (%s)...", id);
+
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_NODES, cib);
+	return add_cib_object(root, anXmlNode);
 }
 
 xmlNodePtr
@@ -304,130 +205,51 @@ findHaNode(xmlNodePtr cib, const char *id)
 int
 updateHaNode(xmlNodePtr cib, cibHaNode *anXmlNode)
 {
-	xmlNodePtr res = NULL;
-	FNIN();
-	CRM_DEBUG2("Update: " XML_CIB_TAG_NODE " (%s).", ID(anXmlNode));
-
-	res = findHaNode(cib, ID(anXmlNode));
-	if (res == NULL) {
-		cl_log(LOG_INFO,
-		       "Update: " XML_CIB_TAG_NODE
-		       " (%s) did not exist, adding.",
-		       ID(anXmlNode));
-		addHaNode(cib, anXmlNode);
-	} else {
-		copy_in_properties(res, anXmlNode);	
+	const char *id = ID(anXmlNode);
+	if (id == NULL || strlen(id) < 1) {
+		return CIBRES_MISSING_ID;
 	}
-	FNRET(0);
+	
+	CRM_DEBUG2("Updating " XML_CIB_TAG_NODE " (%s)...", id);
+
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_NODES, cib);
+	return update_cib_object(root, anXmlNode, FALSE);
 }
 
 int
-delHaNode(xmlNodePtr cib, const char *id)
+delHaNode(xmlNodePtr cib, xmlNodePtr delete_spec)
 {
-	int del_res = CIBRES_OTHER;
-	FNIN();
-
+	const char *id = ID(delete_spec);
 	if(id == NULL || strlen(id) == 0) {
-		del_res = CIBRES_MISSING_ID;
-	} else {
-		del_res = cib_delete_node(findHaNode(cib, id));
-	}
-	
-	FNRET(del_res);
+		return CIBRES_MISSING_ID;
+	} 
+
+	CRM_DEBUG2("Deleting " XML_CIB_TAG_NODE " (%s)...", id);
+
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
+	return delete_cib_object(root, delete_spec);
 }
-
-int
-cib_delete_node(xmlNodePtr node_to_delete)
-{
-	int del_res = CIBRES_NOT_EXISTS;
-	if (node_to_delete != NULL) {
-		unlink_xml_node(node_to_delete);
-		free_xml(node_to_delete);
-		del_res = CIBRES_OK;
-	}
-	return del_res;
-}
-
-
-void
-handle_object_children(xmlNodePtr new_parent,
-		       xmlNodePtr children,
-		       const char *filter)
-{
-	const char *id = NULL;
-	const char *action = NULL;
-	xmlNodePtr iter = children, dest = NULL;
-	FNIN();
-	
-	while(iter != NULL) {
-		if (filter != NULL && strcmp(filter, iter->name) != 0)
-			continue;
-
-		id = ID(iter);
-		action = xmlGetProp(iter, XML_CIB_ATTR_ACTION);
-		dest = find_entity(new_parent,
-				   XML_CIB_ATTR_NODEREF,
-				   id,
-				   FALSE);
-			
-		cib_delete_node(dest);
-		
-		if (action == NULL || strcmp("add", action) == 0) {
-			// remove the action property first
-			xmlNodePtr node_copy =
-				add_node_copy(new_parent, iter);
-			if(node_copy != NULL) {
-				xmlUnsetProp(node_copy, XML_CIB_ATTR_ACTION);
-			}
-		}
-
-		iter = iter->next;
-	}
-	FNOUT();
-}
-
-
-
 
 //--- Status
 
 int
-addStatus(xmlNodePtr cib, cibStatus *xml_node)
+addStatus(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
-	int add_res = 0;
-	const char *id = NULL;
-	const char *instance = NULL;
-	xmlNodePtr new_parent = NULL;
-
-	FNIN();
-	
-	id = xmlGetProp(xml_node, XML_ATTR_ID);
-	instance = xmlGetProp(xml_node, XML_CIB_ATTR_INSTANCE);
-	
-	if (id == NULL || strlen(id) < 1)
-		add_res = CIBRES_MISSING_ID;
-	else if (findStatus(cib, id, instance) != NULL)
-		add_res = -2;
-	else {
-		new_parent = get_object_root(XML_CIB_TAG_STATUS, cib);
-
-		if(new_parent == NULL) {
-			// create it?
-			add_res = -4;
-		} else {
-			add_node_copy(new_parent, xml_node);
-		}
+	const char *id = ID(anXmlNode);
+	if (id == NULL || strlen(id) < 1) {
+		return CIBRES_MISSING_ID;
 	}
 
-	FNRET(add_res);
+	CRM_DEBUG2("Adding " XML_CIB_TAG_NODE " (%s)...", id);
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_STATUS, cib);
+	return add_cib_object(root, anXmlNode);
 }
 
 xmlNodePtr
-findStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
+findStatus(xmlNodePtr cib, const char *id)
 {
 	xmlNodePtr root = NULL, ret = NULL;
-	FNIN();
-	
+
 	root = get_object_root(XML_CIB_TAG_STATUS, cib);
 	ret = find_entity(root, XML_CIB_TAG_STATE, id, FALSE);
 
@@ -435,73 +257,225 @@ findStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
 }
 
 int
-updateStatus(xmlNodePtr cib, cibStatus *anXmlNode)
+updateStatus(xmlNodePtr cib, xmlNodePtr anXmlNode)
 {
-	xmlNodePtr res = NULL;
-	const char *ts_existing = NULL;
-	const char *ts_new = NULL;
 	const char *src_existing = NULL;
-	const char *src_new = NULL;
-	
-	FNIN();
-	
-	res = findStatus(cib, ID(anXmlNode), INSTANCE(anXmlNode));
+	const char *src_new	 = NULL;
 
-	ts_existing  = TSTAMP(res);
-	ts_new       = TSTAMP(anXmlNode);
+	gboolean from_owner = FALSE;
+
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_STATUS, cib);
+	xmlNodePtr res = findStatus(cib, ID(anXmlNode));
+
+	if(anXmlNode == NULL) {
+		return CIBRES_FAILED_NOOBJECT;
+		
+	} else if(res == NULL) {
+		return add_cib_object(root, anXmlNode);
+	}
+	
 	src_existing = xmlGetProp(res, XML_CIB_ATTR_SOURCE);
 	src_new      = xmlGetProp(anXmlNode, XML_CIB_ATTR_SOURCE);
 
-	if (res == NULL) {
-		CRM_DEBUG4("Update: %s (%s:%s) did not exist, adding.",
-			   XML_CIB_TAG_STATE,
-			   ID(anXmlNode),
-			   INSTANCE(anXmlNode));
-		addStatus(cib, anXmlNode);
+	if(src_new != NULL && src_existing != NULL) {
+		from_owner = (strcmp(src_new, src_existing) == 0);
+	}
 
-	// local information always takes priority
-	} else if(src_new != NULL
-		  && src_existing != NULL
-		  && strcmp(src_new, src_existing) == 0) {
-		do_status_update(res, anXmlNode);
-		
-	} else if(ts_new == NULL) {
-		cl_log(LOG_ERR,
-		       "Update did not have a timestamp!  Discarding");
+	if(from_owner) {
+		return update_cib_object(root, anXmlNode, TRUE);
 
-	// only use new data	
-	} else if(ts_existing == NULL || strcmp(ts_new, ts_existing) > 0) {
-		do_status_update(res, anXmlNode);
-
-	} else {
-		cl_log(LOG_WARNING,
-		       "Ignoring old \"update\" (%s vs. %s)",
-		       ts_new, ts_existing);
 	}
 	
-	FNRET(0);
-}
-
-void
-do_status_update(xmlNodePtr old, cibStatus *new)
-{
-	xmlNodePtr the_children = old->children;
-	unlink_xml_node(the_children);
-	free_xml(the_children);
-	old->children = NULL;
-	
-	the_children = copy_xml_node_recursive(new->children, 1);
-	copy_in_properties(old, new);
-	xmlAddChildList(old, the_children);
+	return update_cib_object(root, anXmlNode, FALSE);
 }
 
 int
-delStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
+delStatus(xmlNodePtr cib, xmlNodePtr delete_spec)
 {
-	int del_res = -1;
-	FNIN();
+	const char *id = ID(delete_spec);
+	if(id == NULL || strlen(id) == 0) {
+		return CIBRES_MISSING_ID;
+	} 
 
-	del_res = cib_delete_node(findStatus(cib, id, instanceNum));
+	CRM_DEBUG2("Deleting " XML_CIB_TAG_STATE " (%s)...", id);
+
+	xmlNodePtr root = get_object_root(XML_CIB_TAG_STATUS, cib);
+	return delete_cib_object(root, delete_spec);
+}
+
+
+
+
+
+int
+delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
+{
+	const char *object_name = NULL;
+	const char *object_id = NULL;
+	xmlNodePtr equiv_node = NULL;
+	xmlNodePtr children = NULL;
+	int result = CIBRES_OK;
 	
-	FNRET(del_res);
+	if(delete_spec == NULL) {
+		return CIBRES_FAILED_NOOBJECT;
+	} else if(parent == NULL) {
+		return CIBRES_FAILED_NOPARENT;
+	}
+
+	object_name = delete_spec->name;
+	object_id = xmlGetProp(delete_spec, XML_ATTR_ID);
+	children = delete_spec->children;
+	
+	if(object_id == NULL) {
+		// placeholder object
+		equiv_node = find_xml_node(parent, object_name);
+		
+	} else {
+		equiv_node =
+			find_entity(parent, object_name, object_id, FALSE);
+		
+	}
+
+	if(equiv_node == NULL) {
+		return CIBRES_FAILED_NOTEXISTS;
+
+	} else if(children == NULL) {
+
+		// only leaves are deleted
+		unlink_xml_node(equiv_node);
+		free_xml(equiv_node);
+
+	} else {
+
+		while(children != NULL) {
+			int tmp_result =
+				delete_cib_object(equiv_node, children);
+			
+			// only the first error is likely to be interesting
+			if(tmp_result != CIBRES_OK
+			   && result == CIBRES_OK) {
+				result = tmp_result;
+			}
+			children = children->next;
+		}
+	}
+
+	return result;
+}
+
+int
+add_cib_object(xmlNodePtr parent, xmlNodePtr new_obj)
+{
+	const char *object_name = NULL;
+	const char *object_id = NULL;
+	xmlNodePtr equiv_node = NULL;
+	xmlNodePtr children = NULL;
+	
+	if(new_obj == NULL) {
+		return CIBRES_FAILED_NOOBJECT;
+	} else if(parent == NULL) {
+		return CIBRES_FAILED_NOPARENT;
+	}
+
+	object_name = new_obj->name;
+	object_id = xmlGetProp(new_obj, XML_ATTR_ID);
+	children = new_obj->children;
+	
+	if(object_id == NULL) {
+		// placeholder object
+		equiv_node = find_xml_node(parent, object_name);
+		
+	} else {
+		equiv_node =
+			find_entity(parent, object_name, object_id, FALSE);
+		
+	}
+	
+	if(equiv_node != NULL) {
+		return CIBRES_FAILED_EXISTS;
+
+	} else if(add_node_copy(parent, new_obj) == NULL) {
+		return CIBRES_FAILED_NODECOPY;
+		
+	}
+	
+	return CIBRES_OK;
+}
+
+
+int
+update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
+{
+	const char *object_name = NULL;
+	const char *object_id = NULL;
+	xmlNodePtr equiv_node = NULL;
+	xmlNodePtr children = NULL;
+	int result = CIBRES_OK;
+	
+	if(new_obj == NULL) {
+		return CIBRES_FAILED_NOOBJECT;
+
+	} else if(parent == NULL) {
+		return CIBRES_FAILED_NOPARENT;
+
+	}
+
+	object_name = new_obj->name;
+	object_id = xmlGetProp(new_obj, XML_ATTR_ID);
+	children = new_obj->children;
+	
+	if(object_id == NULL) {
+		// placeholder object
+		equiv_node = find_xml_node(parent, object_name);
+
+	} else {
+		equiv_node =
+			find_entity(parent, object_name, object_id, FALSE);
+	}
+	
+	if(equiv_node != NULL) {
+
+		if(force == FALSE) {
+			const char *ts_existing  = NULL;
+			const char *ts_new       = NULL;
+			
+			gboolean is_update  = FALSE;
+			
+			ts_existing  = TSTAMP(equiv_node);
+			ts_new       = TSTAMP(new_obj);
+			
+			if(ts_new != NULL && ts_existing != NULL) {
+				is_update = (strcmp(ts_new, ts_existing) > 0);
+			}
+			
+			if(is_update == FALSE) {
+				cl_log(LOG_ERR,
+				       "Ignoring old update to <%s id=\"%s\">"
+				       "(%s vs. %s)",
+				       object_name, object_id,
+				       ts_new, ts_existing);
+				return CIBRES_FAILED_STALE;
+			}
+		}
+		
+		copy_in_properties(equiv_node, new_obj);
+
+		while(children != NULL) {
+			int tmp_result =
+				update_cib_object(equiv_node, children,force);
+
+			// only the first error is likely to be interesting
+			if(tmp_result != CIBRES_OK
+			   && result == CIBRES_OK) {
+				result = tmp_result;
+			}
+			children = children->next;
+		}
+		
+	} else if(add_node_copy(parent, new_obj) == NULL) {
+		return CIBRES_FAILED_NODECOPY;
+		
+	}
+	
+	return result;
 }

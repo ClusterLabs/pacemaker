@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.h,v 1.7 2004/03/16 10:05:35 andrew Exp $ */
+/* $Id: cibprimatives.h,v 1.8 2004/03/25 17:11:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,44 +51,31 @@ typedef xmlNode cibHaNode;
 /* extern const char* crm_system_name; */
 
 extern xmlNodePtr get_the_CIB(void);
-extern xmlNodePtr getCibSection(const char *section);
 
-extern cibResource   *newResource  (const char *id,
-				    const char *type,
-				    const char *name,
-				    const char *max_instances);
-
-extern cibConstraint *newConstraint(const char *id);
-
-extern cibHaNode     *newHaNode    (const char *id,
-				    const char *type);
-
-extern cibStatus     *newStatus    (const char *res_id,
-				    const char *node_id,
-				    const char *instance);
-
-extern int addResource  (xmlNodePtr cib, cibResource   *xml_node);
-extern int addConstraint(xmlNodePtr cib, cibConstraint *xml_node);
-extern int addHaNode    (xmlNodePtr cib, cibHaNode     *xml_node);
-extern int addStatus    (xmlNodePtr cib, cibStatus     *xml_node);
+extern int addResource  (xmlNodePtr cib, xmlNodePtr anXmlNode);
+extern int addConstraint(xmlNodePtr cib, xmlNodePtr anXmlNode);
+extern int addHaNode    (xmlNodePtr cib, xmlNodePtr anXmlNode);
+extern int addStatus    (xmlNodePtr cib, xmlNodePtr anXmlNode);
 
 extern xmlNodePtr findResource  (xmlNodePtr cib, const char *id);
 extern xmlNodePtr findConstraint(xmlNodePtr cib, const char *id);
 extern xmlNodePtr findHaNode    (xmlNodePtr cib, const char *id);
-extern xmlNodePtr findStatus    (xmlNodePtr cib, const char *id,
-				 const char *instanceNum);
+extern xmlNodePtr findStatus    (xmlNodePtr cib, const char *id);
 
-extern int updateResource  (xmlNodePtr cib, cibResource   *resource);
-extern int updateConstraint(xmlNodePtr cib, cibConstraint *resource);
-extern int updateHaNode    (xmlNodePtr cib, cibHaNode     *resource);
-extern int updateStatus    (xmlNodePtr cib, cibStatus     *resource);
+extern int updateResource  (xmlNodePtr cib, xmlNodePtr anXmlNode);
+extern int updateConstraint(xmlNodePtr cib, xmlNodePtr anXmlNode);
+extern int updateHaNode    (xmlNodePtr cib, xmlNodePtr anXmlNode);
+extern int updateStatus    (xmlNodePtr cib, xmlNodePtr anXmlNode);
 
-extern int delResource  (xmlNodePtr cib, const char *id);
-extern int delConstraint(xmlNodePtr cib, const char *id);
-extern int delHaNode    (xmlNodePtr cib, const char *id);
-extern int delStatus    (xmlNodePtr cib, const char *id,
-			 const char *instanceNum);
+extern int delResource  (xmlNodePtr cib, xmlNodePtr delete_spec);
+extern int delConstraint(xmlNodePtr cib, xmlNodePtr delete_spec);
+extern int delHaNode    (xmlNodePtr cib, xmlNodePtr delete_spec);
+extern int delStatus    (xmlNodePtr cib, xmlNodePtr delete_spec);
 
-int test(void);
+extern int add_cib_object   (xmlNodePtr parent, xmlNodePtr new_obj);
+extern int delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec);
+extern int update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj,
+			     gboolean force);
+
 
 #endif
