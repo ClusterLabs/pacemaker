@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.16 2005/02/09 15:40:22 andrew Exp $ */
+/* $Id: xml.h,v 1.17 2005/02/10 11:08:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -206,7 +206,7 @@ extern char *crm_element_value_copy(crm_data_t *data, const char *name);
 
 extern const char *crm_element_name(crm_data_t *data);
 
-extern void crm_validate_data(crm_data_t *root);
+extern void crm_validate_data(const crm_data_t *root);
 
 extern void xml_remove_prop(crm_data_t *obj, const char *name);
 
