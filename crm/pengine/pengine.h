@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.35 2004/09/14 05:54:43 andrew Exp $ */
+/* $Id: pengine.h,v 1.36 2004/09/21 19:24:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -192,7 +192,7 @@ struct action_s
 		gboolean failure_is_fatal;
 
 		int seen_count;
-		int timeout;
+		const char *timeout;
 
 		xmlNodePtr args;
 		
@@ -305,6 +305,6 @@ extern int      order_id;
 extern int      action_id;
 extern gboolean stonith_enabled;
 extern GListPtr agent_defaults;
-
+extern const char* transition_timeout;
 #endif
 

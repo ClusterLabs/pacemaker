@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.16 2004/09/20 12:31:07 andrew Exp $ */
+/* $Id: graph.c,v 1.17 2004/09/21 19:24:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -270,18 +270,20 @@ action2xml(action_t *action, gboolean as_input)
 	set_xml_property_copy(
 		action_xml, XML_LRM_ATTR_TASK, task2text(action->task));
 
-	
 	set_xml_property_copy(
 		action_xml, "allow_fail",
 		action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
 
 	set_xml_property_copy(
-		action_xml, XML_LRM_ATTR_OPTIONAL,
-		action->optional?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
+		action_xml, "timeout", action->timeout);
 
-	set_xml_property_copy(
-		action_xml, XML_LRM_ATTR_RUNNABLE,
-		action->runnable?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
+/* 	set_xml_property_copy( */
+/* 		action_xml, XML_LRM_ATTR_OPTIONAL, */
+/* 		action->optional?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE); */
+
+/* 	set_xml_property_copy( */
+/* 		action_xml, XML_LRM_ATTR_RUNNABLE, */
+/* 		action->runnable?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE); */
 
 	if(as_input) {
 		return action_xml;

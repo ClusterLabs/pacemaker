@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.22 2004/09/20 12:31:07 andrew Exp $ */
+/* $Id: stages.c,v 1.23 2004/09/21 19:24:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -98,6 +98,7 @@ gboolean
 stage1(GListPtr node_constraints, GListPtr nodes, GListPtr resources)
 {
 	int lpc = 0;
+	crm_info("Processing stage 1");
 	
 	slist_iter(
 		node, node_t, nodes, lpc,
@@ -134,8 +135,7 @@ gboolean
 stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 {
 	int lpc;
-
-	crm_trace("setup");
+	crm_info("Processing stage 2");
 	
 	if(no_color != NULL) {
 		crm_free(no_color->details);
@@ -168,6 +168,7 @@ stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 gboolean
 stage3(GListPtr colors)
 {
+	crm_info("Processing stage 3");
 	/* not sure if this is a good idea or not */
 	if(g_list_length(colors) > max_valid_nodes) {
 		/* we need to consolidate some */
@@ -184,6 +185,7 @@ gboolean
 stage4(GListPtr colors)
 {
 	int lpc = 0, lpc2 = 0;
+	crm_info("Processing stage 4");
 
 	slist_iter(
 		color, color_t, colors, lpc,
@@ -234,6 +236,7 @@ stage5(GListPtr resources)
 	node_t *stop_node = NULL;
 	node_t *default_node = NULL;
 
+	crm_info("Processing stage 5");
 	crm_verbose("filling in the nodes to perform the actions on");
 	slist_iter(
 		rsc, resource_t, resources, lpc,
@@ -341,6 +344,7 @@ stage6(GListPtr *actions, GListPtr *action_constraints,
 	int lpc = 0;
 	action_t *down_node = NULL;
 	action_t *stonith_node = NULL;
+	crm_info("Processing stage 6");
 
 	slist_iter(
 		node, node_t, nodes, lpc,
@@ -402,6 +406,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 	int lpc;
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
+	crm_info("Processing stage 7");
 
 	slist_iter(
 		order, order_constraint_t, action_constraints, lpc,
@@ -456,8 +461,11 @@ stage8(GListPtr actions, xmlNodePtr *graph)
 	xmlNodePtr in  = NULL;
 	xmlNodePtr input = NULL;
 	xmlNodePtr xml_action = NULL;
-	
+
+	crm_info("Processing stage 8");
 	*graph = create_xml_node(NULL, "transition_graph");
+	set_xml_property_copy(
+		*graph, "global_timeout", transition_timeout);
 	
 /* errors...
 	slist_iter(action, action_t, action_list, lpc,

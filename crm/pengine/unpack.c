@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.31 2004/09/20 12:31:07 andrew Exp $ */
+/* $Id: unpack.c,v 1.32 2004/09/21 19:24:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,6 +37,7 @@ int      max_valid_nodes = 0;
 int      order_id        = 1;
 GListPtr agent_defaults  = NULL;
 gboolean stonith_enabled = FALSE;
+const char* transition_timeout = "60000"; /* 1 minute */
 
 GListPtr match_attrs(const char *attr, const char *op, const char *value,
 		     const char *type, GListPtr node_list);
@@ -108,16 +109,25 @@ unpack_config(xmlNodePtr config)
 	const char *value = NULL;
 	
 	value = param_value(config, "failed_nodes");
-
-	crm_debug("config %p", config);
-	crm_debug("value %p", value);
-
 	if(safe_str_eq(value, "stonith")) {
 		crm_debug("Enabling STONITH of failed nodes");
 		stonith_enabled = TRUE;
 	} else {
 		stonith_enabled = FALSE;
 	}
+
+	value = param_value(config, "transition_timeout");
+	if(value != NULL) {
+		int tmp = atoi(value);
+		if(tmp > 0) {
+			transition_timeout = value;
+		} else {
+			crm_warn("Invalid value for %s: %s",
+				 "transition_timeout", value);
+		}
+	}
+	crm_info("%s set to: %s",
+		 "transition_timeout", transition_timeout);
 	
 	return TRUE;
 }
@@ -271,6 +281,7 @@ unpack_resources(xmlNodePtr xml_resources,
 		const char *id         = xmlGetProp(xml_obj, XML_ATTR_ID);
 		const char *stopfail   = xmlGetProp(xml_obj, "on_stopfail");
 		const char *restart    = xmlGetProp(xml_obj, "restart_type");
+		const char *timeout    = xmlGetProp(xml_obj, "timeout");
 
 		const char *max_instances      = xmlGetProp(
 			xml_obj, "max_instances");
@@ -348,12 +359,14 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->stop  = action_stop;
 		new_rsc->actions =
 			g_list_append(new_rsc->actions, action_stop);
+		action_stop->timeout = timeout; 
 
 		action_start   = action_new(new_rsc, start_rsc);
 		*actions       = g_list_append(*actions, action_start);
 		new_rsc->start = action_start;
 		new_rsc->actions =
 			g_list_append(new_rsc->actions, action_start);
+		action_start->timeout = timeout; 
 
 		order_new(action_stop,action_start,pecs_startstop,action_cons);
 
@@ -763,7 +776,7 @@ unpack_failed_resource(GListPtr *node_constraints, GListPtr *actions,
 			rsc_lh->cur_node = node;
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
-			rsc_lh->stop->timeout = -1; /* wait forever */
+			rsc_lh->stop->timeout = NULL; /* wait forever */
 			break;
 	
 		case pesf_ignore:
@@ -878,15 +891,11 @@ unpack_rsc_dependancy(xmlNodePtr xml_obj,
 	const char *id_lh    = xmlGetProp(xml_obj, "from");
 	const char *id       = xmlGetProp(xml_obj, XML_ATTR_ID);
 	const char *id_rh    = xmlGetProp(xml_obj, "to");
-	const char *type = xmlGetProp(xml_obj, XML_ATTR_TYPE);
+	const char *type     = xmlGetProp(xml_obj, XML_ATTR_TYPE);
 
 	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
 	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
  
-#if 0
-	/* relates to the ifdef below */
-	action_t *before, *after;
-#endif
 	if(rsc_lh == NULL) {
 		crm_err("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
@@ -913,34 +922,6 @@ unpack_rsc_dependancy(xmlNodePtr xml_obj,
 		crm_err("Unknown value for %s: %s", "type", type);
 		return FALSE;
 	}
-#if 0
-	if people want this behaviour, they should add an ordering constraint
-	/* make sure the lower priority resource stops before
-	 *  the higher is started, otherwise they may be both running
-	 *  on the same node when the higher is replacing the lower
-	 */
-	if(rsc_lh->priority >= rsc_rh->priority) {
-		before = rsc_rh->stop;
-		after  = rsc_lh->start;
-	} else {
-		before = rsc_lh->stop;
-		after  = rsc_rh->start;
-	}
-	
-	order_new(before, after, strength_e, action_constraints);
-
-	/* make sure the lower priority resource starts after
-	 *  the higher is started
-	 */
-	if(rsc_lh->priority < rsc_rh->priority) {
-		before = rsc_rh->start;
-		after  = rsc_lh->start;
-	} else {
-		before = rsc_lh->start;
-		after  = rsc_rh->start;
-	}
-	order_new(before, after, strength_e,action_constraints);
-#endif	
 	return rsc2rsc_new(id, strength_e, same_node, rsc_lh, rsc_rh);
 }
 
@@ -1280,8 +1261,6 @@ unpack_rsc_location(
 	if(were_rules == FALSE) {
 		crm_err("no rules for constraint %s", id);
 	}
-
 	
 	return TRUE;
 }
-
