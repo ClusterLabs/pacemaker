@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.3 2004/12/05 16:14:07 andrew Exp $ */
+/* $Id: main.c,v 1.4 2004/12/15 16:19:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,8 +48,8 @@
 
 /* #define REALTIME_SUPPORT 0 */
 #define PID_FILE     WORKING_DIR"/"CRM_SYSTEM_CIB".pid"
-#define DAEMON_LOG   LOG_DIR"/"CRM_SYSTEM_CIB".log"
-#define DAEMON_DEBUG LOG_DIR"/"CRM_SYSTEM_CIB".debug"
+#define DAEMON_LOG   DEVEL_DIR"/"CRM_SYSTEM_CIB".log"
+#define DAEMON_DEBUG DEVEL_DIR"/"CRM_SYSTEM_CIB".debug"
 
 GMainLoop*  mainloop = NULL;
 const char* crm_system_name = CRM_SYSTEM_CIB;
@@ -92,7 +92,7 @@ main(int argc, char ** argv)
 	g_log_set_always_fatal((GLogLevelFlags)0);    
 	
 	cl_log_set_entity   (crm_system_name);
-	cl_log_set_facility (LOG_USER);
+	cl_log_set_facility (LOG_LOCAL7);
 	cl_log_set_logfile  (DAEMON_LOG);
 	cl_log_set_debugfile(DAEMON_DEBUG);
 
