@@ -45,6 +45,7 @@ class HeartbeatCM(ClusterManager):
 
         self.ResourceDirs = ["@sysconfdir@/ha.d/resource.d", "@sysconfdir@/rc.d/init.d", "@sysconfdir@/rc.d/"]
         self.ResourceFile = Environment["HAdir"] + "/haresources"
+        self.ConfigFile = Environment["HAdir"]+ "/ha.cf"
         ClusterManager.__init__(self, Environment, randseed=randseed)
         self.update({
             "Name"	     : "heartbeat",
@@ -73,6 +74,7 @@ class HeartbeatCM(ClusterManager):
             "Pat:StandbyOK"        : "Standby resource acquisition done",
             "Pat:StandbyNONE"      : "No reply to standby request",
 	    "Pat:StandbyTRANSIENT" : "standby message.*ignored.*in flux",
+            "Pat:Return_partition" : "Cluster node %s returning after partition",
 
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
@@ -175,6 +177,57 @@ class HeartbeatCM(ClusterManager):
         file.close()
         return RscGroups
 
+    def InternalCommConfig(self):
+        '''
+        Return a list of communication  paths. Each path consists of a tuple like this:
+               mediatype		serial | ip
+	       interface/dev name 	eth0 | /dev/ttyS0...
+               protocol			tcp?? | udp | None 
+               port			Number | None
+        '''
+
+        Path = {"mediatype" : None, "interface": None, "protocol" : None, "port": None}
+        cf =HBConfig()
+
+        for cfp in cf.Parameters:
+            if cfp == "serial":
+                if Path["mediatype"] == None:
+                     Path["mediatype"] = ["serial"]
+                else: Path["mediatype"].append("serial")
+
+                if Path["interface"] == None:
+                     Path["interface"] = cf.Parameters["serial"]
+	        else:
+                    for serial in cf.Parameters["serial"]:
+                         Path["interface"].append(serial)
+
+            if cfp == "bcast" or cfp == "mcast" or cfp == "ucast" :
+	        if Path["mediatype"] == None:
+                    Path["mediatype"] = ["ip"]
+                else: Path["mediatype"].append("ip")
+
+                if cfp == "bcast":
+                    interfaces = cf.Parameters[cfp]
+                if cfp == "ucast":
+                    interfaces = [cf.Parameters[cfp][0]]
+                if cfp == "mcast":
+                    Path["port"] = [cf.Parameters[cfp][0][2]]
+                    Path["protocol"] = "udp"
+                    interfaces = [cf.Parameters[cfp][0][0]]
+
+                if Path["interface"] == None:
+                   Path["interface"] = interfaces
+                else:
+                    for interface in interfaces:
+                        if interface not in Path["interface"]:
+                            Path["interface"].append(interface)
+
+            if cfp == "udpport":
+                Path["port"] = cf.Parameters["udpport"]
+                Path["protocol"] = ["udp"]
+
+        return Path
+		
     def HasQuorum(self):
         (
 '''Return TRUE if the cluster currently has quorum.  According to

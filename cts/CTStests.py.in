@@ -122,12 +122,19 @@ random for the selected number of iterations.
                 if elapsed_time > test["max_time"]:
                     test["max_time"] = elapsed_time
 
-            for tries in 1,2,3,4,5,6,7,8,9,10:
+            errcount=0
+            while errcount < 20:
                 match=BadNews.look()
                 if match:
-                   if not re.search(" CTS: ", match):
-                      self.CM.log(match)
-                      self.incr("BadNews");
+                   ignorelist=test.errorstoignore()
+                   ignorelist.append(" CTS: ")
+                   for ignore in ignorelist:
+                       if re.search(ignore, match):
+                           break
+                   else:
+                       self.CM.log(match)
+                       self.incr("BadNews");
+                       errcount=errcount+1
                 else:
                   break
             else:
@@ -219,6 +226,10 @@ class CTSTest:
     def canrunnow(self):
         '''Return TRUE if we can meaningfully run right now'''
         return 1
+
+    def errorstoignore(self):
+        '''Return list of errors which are 'normal' and should be ignored'''
+        return []
 
 ###################################################################
 class StopTest(CTSTest):
@@ -463,6 +474,11 @@ class StonithTest(CTSTest):
         # I can't remember why I put this in here :-(
 
         time.sleep(10)
+
+        if ret1:
+            self.CM.log("When one node is dead unexpected, the other node gets response")
+        else:
+            self.CM.log("When one node is dead unexpected, the other node doesn't get response")
 
         if ret1 and ret2:
             return self.success()
@@ -737,91 +753,97 @@ class BandwidthTest(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
         self.name = "Bandwidth"
+        self.start = StartTest(cm)
+        self.__setitem__("min",0)
+        self.__setitem__("max",0)
+        self.__setitem__("totalbandwidth",0)
 	
     def __call__(self, node):
         '''Perform the Bandwidth test'''
         self.incr("calls")
         
-        if self.CM.ShouldBeStatus[node] != self.CM["up"]:
-            return self.skipped()
-            
-        cf = self.CM.cf
-        eth = None
-        port = None
-        for cfp in cf.Parameters:
-            if cfp == "bcast":
-                eth=cf.Parameters["bcast"][0]
-                break
-            if cfp == "mcast":
-                eth = cf.Parameters["mcast"][0][0]
-                port = cf.Parameters["mcast"][0][2]
-                break
-            if cfp == "ucast":
-                eth = cf.Parameters["ucast"][0]
-                break
-
-        if eth == None:
+        if self.CM.upcount()<1:
             return self.skipped()
 
+        Path = self.CM.InternalCommConfig()
+        if "ip" not in Path["mediatype"]:
+             return self.skipped()
+
+        port = Path["port"][0]
         if port == None:
-            for cfp in cf.Parameters:
-                if cfp == "udpport":
-                    port = cf.Parameters["udpport"][0]
-                    break
-            if port == None:
-                port =  694
-        
-        bandwidth = 0.0 
-        for i in 1,2,3,4,5:
-            self.CM.rsh(node,"tcpdump -c 100 -i %s udp port %s > /tmp/band_estimate 2>&1" % (eth,port))
-            self.CM.rsh.cp("%s:/tmp/band_estimate" % node, "/tmp")
-            file = open("/tmp/band_estimate","r")
-            file.seek(0)
-            count = 0
-            while 1:
-                line = file.readline()
-                if re.search("udp",line):
-                    count=count+1
-                    linesplit = string.split(line," ")
-                    for j in range(6):
-                        if linesplit[j]=="udp": break
-                    sum = int(linesplit[j+1])
-                    T1 = linesplit[0]
-                    timesplit = string.split(T1,":")
-                    time2split = string.split(timesplit[2],".")
-                    time1 = (long(timesplit[0])*60+long(timesplit[1]))*60+long(time2split[0])+long(time2split[1])*0.000001
-                    break
+            port = 694
 
-            while count < 100:
-                line = file.readline()
-                if re.search("udp", line):
-                    count = count+1
-                    linessplit = string.split(line," ")
-                    for j in range(6):
-                        if linessplit[j] =="udp": break
-                    sum=int(linessplit[j+1])+sum
+        if self.CM.ShouldBeStatus[node] != self.CM["up"]:
+            ret = self.start(node)
+            if not ret:
+                return ret
 
-            T2 = linessplit[0]
-            timesplit = string.split(T2,":")
-            time2split = string.split(timesplit[2],".")
-            time2 = (long(timesplit[0])*60+long(timesplit[1]))*60+long(time2split[0])+long(time2split[1])*0.000001
-            time = time2-time1
-            bandwidth = (sum+28*100)*8/time+bandwidth
+        if self.CM.rsh(node,"tcpdump -c 105 -i any udp port %s > /tmp/band_estimate 2>&1" % port) == 0 :
+            self.CM.rsh.cp("root@%s:/tmp/band_estimate" % node, "/tmp/.")
+            Bandwidth = self.countbandwidth("/tmp/band_estimate")
+            if not Bandwidth:
+                self.CM.log("Could not compute bandwidth.")
+                return self.success()
+            self.CM.log("Bandwidth used to heartbeat is %f bit/s" % Bandwidth)
+            self.Stats["totalbandwidth"] = self.Stats["totalbandwidth"] + Bandwidth
+            if self.Stats["min"] == 0:
+                self.Stats["min"] = Bandwidth
+            if Bandwidth > self.Stats["max"]:
+                self.Stats["max"] = Bandwidth
+            if Bandwidth < self.Stats["min"]:
+                self.Stats["min"] = Bandwidth
             self.CM.rsh(node,"rm /tmp/band_estimate")
             os.system("rm /tmp/band_estimate")
-        bandwidth = bandwidth/5
-        
-        if bandwidth != 0.0:
-             self.CM.log("Bandwidth used to heartbeat is %f bit/s" % bandwidth)
-             return self.success()
+            return self.success()
         else:
             return self.failure("no response!")
+
+    def countbandwidth(self, file):
+        fp = open(file, "r")
+        fp.seek(0)
+        count = 0
+        sum = 0
+        while 1:
+            line = fp.readline()
+            if not line:
+                return None
+            if re.search("udp",line):
+                count=count+1
+                linesplit = string.split(line," ")
+                for j in range(6):
+                    if linesplit[j]=="udp": break
+                sum = int(linesplit[j+1])
+                T1 = linesplit[0]
+                timesplit = string.split(T1,":")
+                time2split = string.split(timesplit[2],".")
+                time1 = (long(timesplit[0])*60+long(timesplit[1]))*60+long(time2split[0])+long(time2split[1])*0.000001
+                break
+
+        while count < 100:
+            line = fp.readline()
+            if not line:
+                return None
+            if re.search("udp", line):
+                count = count+1
+                linessplit = string.split(line," ")
+                for j in range(6):
+                    if linessplit[j] =="udp": break
+                sum=int(linessplit[j+1])+sum
+
+        T2 = linessplit[0]
+        timesplit = string.split(T2,":")
+        time2split = string.split(timesplit[2],".")
+        time2 = (long(timesplit[0])*60+long(timesplit[1]))*60+long(time2split[0])+long(time2split[1])*0.000001
+        time = time2-time1
+        if (time <= 0):
+            return 0
+        return (sum*8)/time
 
     def is_applicable(self):
         '''BandwidthTest is always applicable'''
         return 1
 
-#AllTestClasses.append(BandwidthTest)
+AllTestClasses.append(BandwidthTest)
 
 ##########################################################################
 class RedundantpathTest(CTSTest):
@@ -839,27 +861,18 @@ class RedundantpathTest(CTSTest):
 
     def PathCount(self):
         '''Return number of communication paths'''
+        Path = self.CM.InternalCommConfig()
         cf = self.CM.cf
-	eths = []
-	serials = []
+        eths = []
+        serials = []
         num = 0
-        for cfp in cf.Parameters:
-            if cfp == "bcast":
-                eths = cf.Parameters["bcast"]
-                for eth in eths:
-                    num = num+1
-            if cfp == "mcast":
-                if cf.Parameters["mcast"][0] not in eths:
-                   eths.append(cf.Parameters["mcast"][0])
-                   num = num+1
-            if cfp == "ucast":
-                if cf.Parameters["ucast"][0] not in eths:
-                    eths.append(cf.Parameters["mcast"][0])
-                    num = num+1
-            if cfp == "serial":
-                serials=cf.Parameters["serial"]
-                for serial in serials:
-                    num = num+1
+        for interface in Path["interface"]:
+            if re.search("eth",interface):
+                eths.append(interface)
+                num = num + 1
+            if re.search("/dev",interface):
+                serials.append(interface)
+                num = num + 1
 
 	return (num, eths, serials)
 
@@ -869,32 +882,7 @@ class RedundantpathTest(CTSTest):
         if self.CM.ShouldBeStatus[node]!=self.CM["up"]:
             return self.skipped()
     
-        cf = self.CM.cf
-        num = 0
-        PathDown = None
-        eths = []
-        serials = []
-        for cfp in cf.Parameters:
-            if cfp == "bcast":
-                eths = cf.Parameters["bcast"]
-                for eth in eths:
-                    num = num+1
-            if cfp == "mcast":
-                if cf.Parameters["mcast"][0] not in eths:
-                   eths.append(cf.Parameters["mcast"][0])
-                   num = num+1
-            if cfp == "ucast":
-                if cf.Parameters["ucast"][0] not in eths:
-                    eths.append(cf.Parameters["mcast"][0])
-                    num = num+1
-            if cfp == "serial":
-                serials=cf.Parameters["serial"]
-                for serial in serials:
-                    num = num+1
-
-        (num, eths, serial) = self.PathCount()
-        if num <= 1:
-            return self.failure("There is only one path between the two nodes, please reconfigure.")
+        (num, eths, serials) = self.PathCount()
 
         for eth in eths:
             if self.CM.rsh(node,"ifconfig %s down" % eth)==0:
@@ -1037,75 +1025,79 @@ class Split_brainTest(CTSTest):
 ####################################################################
     '''It is used to test split-brain. when the path between the two nodes break
        check the two nodes both take over the resource'''
-    def __init__(self,cm,timeout=60):
+    def __init__(self,cm):
         CTSTest.__init__(self,cm)
         self.name = "Split_brain"
-        self.timeout = timeout
+        self.start = StartTest(cm)
 
     def __call__(self, node):
         '''Perform split-brain test'''
         self.incr("calls")
 
-        for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["down"]:
-                return self.skipped()
+        for member in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[member] != self.CM["up"]:
+                ret=self.start(member)
+                if not ret:
+                    return ret;
 
-	#
-	#	Tests should not be cluster-manager-specific
-	#	Really need to add an isolate_node() member function to
-	#	the generic cluster manager API.
-	#
-        cf = self.CM.cf
-        
-        IPaddr = None
-        for reslist in cf.ResourceGroups.keys():
-            line = cf.ResourceGroups[reslist]
-            for res in line.resourcelist:
-                token = res.name
-                if re.match("^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$",token):
-                   IPaddr = token
-                   break
+        '''isolate node, Look for node is dead message'''
+        watchstoppats = [ ]
+        stoppat = self.CM["Pat:They_stopped"]
+        for member in self.CM.Env["nodes"]:
+            thispat = (stoppat % member)
+            watchstoppats.append(thispat)
 
-        if IPaddr==None:
-            return self.failure("Cannot find the IPaddr resource to test")
+        watchstop = CTS.LogWatcher(self.CM["LogFileName"], watchstoppats\
+	,       timeout=self.CM["DeadTime"]+10)
+        watchstop.ReturnOnlyMatch()
 
-        if self.CM.rsh(node,self.CM["BreakCommCmd"]) != 0:
-            # Should invoke FixCommCmd here...
-            return self.failure("Cannot break the communication")
+        watchstop.setwatch()
+        if not self.CM.isolate_node(node):
+            return self.failure("Could not isolate the nodes")
+        if not watchstop.lookforall():
+            self.CM.unisolate_node(node)
+            return self.failure("Didn't find the log 'dead' message")
 
-        done = time.time()+self.timeout+1
+        '''
+	Unisolate the node, look for the return partition message
+	and check whether they restart
+	'''
+        watchpartitionpats = [ ]
+        partitionpat = self.CM["Pat:Return_partition"]
+        watchstartpats = [ ]
+        startpat = self.CM["Pat:We_started"]
 
-        for node in self.CM.Env["nodes"]:
-            while (time.time() < done):
-                line = self.CM.rsh.readaline(node,self.CM["IPaddrCmd"] % IPaddr)
-                if re.search("running",line):
-                    break
-                else:
-                    time.sleep(1)
+        for member in self.CM.Env["nodes"]:
+            thispat = (partitionpat % member)
+            thatpat = (startpat % member)
+            watchpartitionpats.append(thispat)
+            watchstartpats.append(thatpat)
+        watchpartition = CTS.LogWatcher(self.CM["LogFileName"], watchpartitionpats\
+        ,               timeout=self.CM["DeadTime"]+10)
+        watchstart = CTS.LogWatcher(self.CM["LogFileName"], watchstartpats\
+        ,		timeout=self.CM["DeadTime"]+10)
+        watchstart.ReturnOnlyMatch()
 
-        if self.CM.rsh(node, self.CM["FixCommCmd"]) != 0:
-            return self.failure("Cannot fix the communication")
+        watchpartition.setwatch()
+        watchstart.setwatch()
+        self.CM.unisolate_node(node)
 
-        done = time.time()+self.timeout+1
+        if not watchpartition.lookforall():
+            return self.failure("Cannot find the return from partition message")
 
-        while time.time() < done:
-            for audit in CTSaudits.AuditList(self.CM):
-                if not audit():
-                   time.sleep(1)
-                   break
-
-        if time.time() > done:
-           for node in self.CM.Env["nodes"]:
-               self.CM.rsh(node,"@sysconfdir@/init.d/heartbeat restart")
-               return self.failure("Split brain")
-
+        if not watchstart.lookforall():
+            return self.failure("they don't restart themselves")
         return self.success()
 
     def is_applicable(self):
         '''Split_brain is applicable'''
         return 1
 
-#AllTestClasses.append(Split_brainTest)
+    def errorstoignore(self):
+        '''Return list of errors which are 'normal' and should be ignored'''
+        return [ "ERROR:.*Both machines own.*resources" ]
+
+AllTestClasses.append(Split_brainTest)
 
 def TestList(cm):
     result = []

@@ -292,7 +292,7 @@ class ClusterManager(UserDict):
         self.rsh = RemoteExec()
 
         self.ShouldBeStatus={}
-        self.OurNode=lower(os.uname()[1])
+        self.OurNode=string.lower(os.uname()[1])
         self.ShouldBeStatus={}
 
     def log(self, args):
@@ -444,6 +444,28 @@ class ClusterManager(UserDict):
                 result[node] = self["down"]
         return result
 
+    def isolate_node(self, node):
+
+        '''isolate the communication between the nodes'''
+
+        rc = self.rsh(node, self["BreakCommCmd"])
+        if rc == 0:
+            return 1
+        else:
+            self.log("Could not break the communication between the nodes frome node: %s" % node)
+        return None
+ 
+    def unisolate_node(self, node):
+
+        '''fix the communication between the nodes'''
+
+        rc = self.rsh(node, self["FixCommCmd"])
+        if rc == 0:
+            return 1
+        else:
+            self.log("Could not fix the communication between the nodes from node: %s" % node)
+        return None
+
     def SyncTestConfigs(self):
         '''Synchronize test configurations throughout the cluster.
         This one's a no-op for FailSafe, since it does that by itself.
@@ -471,6 +493,10 @@ class ClusterManager(UserDict):
     def ResourceGroups(self):
          "Return a list of resource type/instance pairs for the cluster"
          raise ValueError("Abstract Class member (ResourceGroups)")
+
+    def InternalCommConfig(self):
+        "Return a list of paths: each patch consists of a tuple"
+        raise ValueError("Abstract Class member (InternalCommConfig)")
 
     def HasQuorum(self):
          "Return TRUE if the cluster currently has quorum"
