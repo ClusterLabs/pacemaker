@@ -38,7 +38,7 @@
 	  <lrm_agent class="heartbeat" type="apache"/>
 	</lrm_agents>
         <lrm_resources>
-          <lrm_resource id="rsc1" last_op="stop" op_state="failed" op_code="4" target="hadev"/>
+          <lrm_resource id="rsc1" last_op="stop" rsc_state="failed" op_status="4" on_node="hadev"/>
         </lrm_resources>
       </lrm>
     </node_state>
@@ -49,7 +49,7 @@
 	  <lrm_agent class="stonith" type="uml"/>
 	</lrm_agents>
         <lrm_resources>
-          <lrm_resource id="stonith1" last_op="start" op_state="started" op_code="0" target="hadev">
+          <lrm_resource id="stonith1" last_op="start" rsc_state="started" op_status="0" rc_code="0" on_node="hadev">
 	    <can_fence id="node3"/>
 	    <can_fence id="node1"/>
 	  </lrm_resource>
@@ -63,7 +63,7 @@
 	  <lrm_agent class="stonith" type="uml"/>
 	</lrm_agents>
         <lrm_resources>
-          <lrm_resource id="stonith2" last_op="start" op_state="started" op_code="0" target="hadev">
+          <lrm_resource id="stonith2" last_op="start" rsc_state="started" op_status="0" rc_code="0" on_node="hadev">
 	    <can_fence id="node1"/>
 	    <can_fence id="node2"/>
 	  </lrm_resource>

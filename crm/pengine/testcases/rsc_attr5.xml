@@ -20,8 +20,8 @@
      </rsc_to_node>
      <rsc_to_attr id="cons2" from="rsc1" weight="200.0" modifier="only">
        <attr_expression id="attr_exp_2">
-          <node_match id="node_match_3" type="has_attr" target="hdd"/>
-          <node_match id="node_match_4" type="attr_value" target="kernel" value="2.4"/>
+          <node_match id="node_match_3" type="has_attr" on_node="hdd"/>
+          <node_match id="node_match_4" type="attr_value" on_node="kernel" value="2.4"/>
        </attr_expression>
      </rsc_to_attr>
   </constraints>
