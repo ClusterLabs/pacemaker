@@ -68,6 +68,7 @@ do_election_vote(long long action,
 	}
 
 	if(not_voting) {
+		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_none);
 		if(AM_I_DC) {
 			return I_RELEASE_DC;
 		} else {
@@ -186,6 +187,7 @@ do_election_count_vote(long long action,
 	}
 	
 	if(we_loose) {
+		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_none);
 		if(fsa_input_register & R_THE_DC) {
 			crm_debug("Give up the DC");
 			election_result = I_RELEASE_DC;
@@ -230,6 +232,8 @@ do_dc_takeover(long long action,
 	crm_free(fsa_our_dc);
 	fsa_our_dc = crm_strdup(fsa_our_uname);
 
+	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
+
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(fsa_input_register, R_INVOKE_PE);
 	
@@ -262,6 +266,7 @@ do_dc_release(long long action,
 		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 
 	} else if (action & A_DC_RELEASED) {
+		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_none);
 
 		if(cur_state == S_STOPPING) {
 			result = I_SHUTDOWN; /* necessary? */
@@ -274,9 +279,10 @@ do_dc_release(long long action,
 			result = I_SHUTDOWN;
 		}
 #endif
-		else
+		else {
 			result = I_RELEASE_SUCCESS;
-
+		}
+		
 	} else {
 		crm_err("Warning, do_dc_release invoked for action %s",
 		       fsa_action2string(action));
