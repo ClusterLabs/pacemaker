@@ -1,0 +1,216 @@
+#!@PYTHON@
+
+'''CTS: Cluster Testing System: LinuxHA v2 dependent modules...
+'''
+
+__copyright__='''
+Author: Huang Zhen <zhenhltc@cn.ibm.com>
+Copyright (C) 2004 International Business Machines
+'''
+
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+from CTS import *
+from CM_hb import HeartbeatCM
+from xml.dom.minidom import *
+import CTSaudits
+from CTSaudits import ClusterAudit
+#######################################################################
+#
+#  LinuxHA v2 dependent modules
+#
+#######################################################################
+
+
+class LinuxHAv2(HeartbeatCM):
+    '''
+    The linux-ha version 2 cluster manager class.
+    It implements the things we need to talk to and manipulate
+    linux-ha version 2 clusters
+    '''
+    def __init__(self, Environment, randseed=None):
+        HeartbeatCM.__init__(self, Environment, randseed=randseed)
+        self.update({
+            "Name"           : "linux-ha-v2",
+            "StartCmd"       : "rm -f /tmp/crm/*;@libdir@/heartbeat/heartbeat -M >/dev/null 2>&1;true",
+            "StopCmd"        : "@libdir@/heartbeat/crmadmin -K %s;@libdir@/heartbeat/heartbeat -k;"\
+                                "killall -q9 heartbeat ccm lrmd crmd;rm @HA_VARLIBDIR@/heartbeat/crm/crmd",
+            "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null|grep -e S_IDLE -e S_NOT_DC",
+            "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s status 0 0 EVERYTIME 2>/dev/null|grep return",
+            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
+            # Patterns to look for in the log files for various occasions...
+            "Pat:We_started"    : "crmd(.*): info:(.*)FSA Hostname: %s",
+            "Pat:They_started"  : "crmd(.*): info:(.*)FSA Hostname: %s",
+            # Bad news Regexes.  Should never occur.
+            "BadRegexes"   : (
+                r"Shutting down\.",
+                r"Forcing shutdown\.",
+                r"Both machines own .* resources!",
+                r"No one owns .* resources!",
+                r", exiting\.",
+            ),
+        })
+        CTSaudits.AllAuditClasses = [HAResourceAudit]
+    
+    def StataCM(self, node):
+
+        '''Report the status of the cluster manager on a given node'''
+
+        out=self.rsh.readaline(node, self["StatusCmd"]%node)
+        ret= (string.find(out, 'ok') != -1)
+        try:
+            if ret:
+                if self.ShouldBeStatus[node] != self["up"]:
+                    self.log(
+                    "Node status for %s is %s but we think it should be %s"
+                    %	(node, self["up"], self.ShouldBeStatus[node]))
+            else:
+                if self.ShouldBeStatus[node] != self["down"]:
+                    self.log(
+                    "Node status for %s is %s but we think it should be %s"
+                    %	(node, self["down"], self.ShouldBeStatus[node]))
+        except KeyError:	pass
+
+        if ret:	self.ShouldBeStatus[node]=self["up"]
+        else:	self.ShouldBeStatus[node]=self["down"]
+        return ret
+
+    def StartaCM(self, node):
+
+        '''Start up the cluster manager on a given node'''
+        rc=self.rsh(node, self["StartCmd"])
+        timeout=30
+        while timeout>0:
+            out=self.rsh.readaline(node, self["StatusCmd"]%node)
+            if (string.find(out, 'ok') != -1):
+                self.ShouldBeStatus[node]=self["up"]        
+                return 1
+            time.sleep(2)
+            timeout=timeout-1
+
+        self.ShouldBeStatus[node]=self["down"]        
+        self.log ("Could not start %s on node %s"
+        %	(self["Name"], node))
+        return None
+        
+    def Resources(self):
+        ResourceList = []
+        self.rsh.cp("%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml"%self.Env["nodes"][0],"/tmp/")
+        cib=parse("/tmp/cib.xml")
+        configuration=cib.getElementsByTagName('configuration')[0]
+
+        #read resources in cib
+        resources=configuration.getElementsByTagName('resources')[0]
+        rscs=configuration.getElementsByTagName('resource')
+        for rsc in rscs:
+            ResourceList.append(HAResource(self,rsc))
+
+        return ResourceList
+
+        
+class HAResourceAudit(ClusterAudit):
+    def __init__(self, cm):
+        self.CM = cm
+
+    def _RscRunningNodes(self, resource):
+        ResourceNodes = []
+        for node in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                if resource.IsRunningOn(node):
+                    ResourceNodes.append(node)
+        return ResourceNodes
+
+    def __call__(self):
+        self.CM.log ("Do Audit %s"%self.name())
+        passed = 1
+        Resources = self.CM.Resources()
+        print Resources
+        for resource in Resources :
+            RunningNodes = self._RscRunningNodes(resource)
+            if len(RunningNodes) == 0 :
+                print resource.rid + " isn't running anywhere"
+                passed = 0
+            if len(RunningNodes) > 1:
+                print resource.rid + " is running more than once: " \
+                      + str(RunningNodes)
+                passed = 0
+                 
+        return passed
+
+    def name(self):
+        return "HAResourceAudit"
+
+class HAResource(Resource):
+    def __init__(self, cm, node):
+        '''
+        Get information from xml node
+        '''
+        self.rid     = node.getAttribute('id')
+        self.rclass  = node.getAttribute('class')
+        self.rtype   = node.getAttribute('type')
+        self.rparameters = {}
+        
+        attributes  = node.getElementsByTagName('instance_attributes')[0]
+        parameters  = node.getElementsByTagName('rsc_parameters')[0]
+        nvpairs     = node.getElementsByTagName('nvpair')
+        for nvpair in nvpairs:
+            name=nvpair.getAttribute('name')
+            value=nvpair.getAttribute('value')
+            self.rparameters[name]=value
+        Resource.__init__(self, cm, self.rtype, self.rid)
+        
+    def IsRunningOn(self, nodename):
+        '''
+        This member function returns true if our resource is running
+        on the given node in the cluster.
+        We call the status operation for the resource script.
+        '''
+        
+        out=self.CM.rsh.readaline(nodename, self.CM["IsRscRunning"]%self.rid)
+        return re.search("11",out)
+
+    def _ResourceOperation(self, operation, nodename):
+        '''
+        Execute an operation on the resource
+        '''
+        self.CM.rsh.readaline(nodename, self.CM["ExecuteRscOp"]%(self.rid,operation))
+        return self.CM.rsh.lastrc == 0
+
+    def Start(self, nodename):
+        '''
+        This member function starts or activates the resource.
+        '''
+        return self._ResourceOperation("start", nodename)
+
+    def Stop(self, nodename):
+        '''
+        This member function stops or deactivates the resource.
+        '''
+        return self._ResourceOperation("stop", nodename)
+
+    def IsWorkingCorrectly(self, nodename):
+        return self._ResourceOperation("monitor", nodename)
+
+#######################################################################
+#
+#   A little test code...
+#
+#   Which you are advised to completely ignore...
+#
+#######################################################################
+if __name__ == '__main__': 
+    pass
+            
