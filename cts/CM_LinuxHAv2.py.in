@@ -234,12 +234,15 @@ class LinuxHAv2(HeartbeatCM):
             if self.Env["CIBfilename"] == None:
                 os.system("rm -f /tmp/cts.default.cib")
                 os.system("echo \'" + self.default_cts_cib + "\' > /tmp/cts.default.cib")
-                self.rsh.cp("/tmp/cts.default.cib", 
-                            "root@" + (self["CIBfile"]%node))
+                if 0!=self.rsh.cp("/tmp/cts.default.cib",
+                    "root@" + (self["CIBfile"]%node)):
+                    raise ValueError("Can not scp file to %s "%node)
+
                 os.system("rm -f /tmp/cts.default.cib")
             else:
-                self.rsh.cp(self.Env["CIBfilename"], 
-                            "root@" + (self["CIBfile"]%node))
+                if 0!=self.rsh.cp(self.Env["CIBfilename"], 
+                    "root@" + (self["CIBfile"]%node)):
+                    raise ValueError("Can not scp file to %s "%node)
 
         localBadNews = CTS.LogWatcher(self["LogFileName"], localBadNewsPats, 0)
         localBadNews.setwatch()
@@ -331,7 +334,7 @@ class LinuxHAv2(HeartbeatCM):
         return (string.find(status, 'S_IDLE') != -1) 
 
     def Configuration(self):
-        if self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],self.Env["HAdir"]):
+        if 0!=self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],self.Env["HAdir"]):
             raise ValueError("Can not copy file to %s, maybe permission denied"%self.Env["HAdir"])
         cib=parse("%s/cib.xml"%self.Env["HAdir"])
         return cib.getElementsByTagName('configuration')[0]
