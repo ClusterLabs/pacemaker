@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.57 2005/02/24 14:59:10 andrew Exp $ */
+/* $Id: ccm.c,v 1.58 2005/02/28 15:42:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,7 +72,7 @@ do_ccm_control(long long action,
 	}
 
 	if(action & A_CCM_CONNECT) {
-		crm_info("Registering with CCM");
+		crm_devel("Registering with CCM");
 		ret = oc_ev_register(&fsa_ev_token);
 		if (ret != 0) {
 			crm_warn("CCM registration failed");
@@ -80,7 +80,7 @@ do_ccm_control(long long action,
 		}
 
 		if(did_fail == FALSE) {
-			crm_info("Setting up CCM callbacks");
+			crm_devel("Setting up CCM callbacks");
 			ret = oc_ev_set_callback(fsa_ev_token, OC_EV_MEMB_CLASS,
 						 crmd_ccm_msg_callback, NULL);
 			if (ret != 0) {
@@ -91,7 +91,7 @@ do_ccm_control(long long action,
 		if(did_fail == FALSE) {
 			oc_ev_special(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
 			
-			crm_info("Activating CCM token");
+			crm_devel("Activating CCM token");
 			ret = oc_ev_activate(fsa_ev_token, &fsa_ev_fd);
 			if (ret != 0){
 				crm_warn("CCM Activation failed");

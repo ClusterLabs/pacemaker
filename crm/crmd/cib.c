@@ -79,7 +79,7 @@ do_cib_control(long long action,
 			}
 			if(cib_ok != fsa_cib_conn->cmds->signon(
 				   fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command)){
-				crm_warn("Could not connect to the CIB service");
+				crm_debug("Could not connect to the CIB service");
 				
 			} else if(fsa_cib_conn->cmds->add_notify_callback(
 					  fsa_cib_conn, T_CIB_UPDATE_CONFIRM,
@@ -97,9 +97,13 @@ do_cib_control(long long action,
 			}
 
 			if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+
+				cib_retries++;
 				crm_warn("Could complete CIB registration %d"
-					 " time... retry", cib_retries);
-				if(++cib_retries < 30) {
+					 " times... pause and retry",
+					 cib_retries);
+
+				if(cib_retries < 30) {
 					startTimer(wait_timer);
 					crmd_fsa_stall();
 

@@ -36,10 +36,10 @@ do_log(long long action,
        enum crmd_fsa_input current_input,
        fsa_data_t *msg_data)
 {
-	int log_type = LOG_DEBUG;	
+	int log_type = LOG_DEV;	
 
 	if(action & A_LOG) {
-		log_type = LOG_INFO;
+		log_type = LOG_DEBUG;
 	} else if(action & A_WARN) {
 		log_type = LOG_WARNING;
 	} else if(action & A_ERROR) {

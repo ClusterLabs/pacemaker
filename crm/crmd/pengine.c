@@ -65,7 +65,6 @@ do_pe_control(long long action,
 	long long start_actions = A_PE_START;
 	
 	if(action & stop_actions) {
-		crm_info("Stopping %s", this_subsys->name);
 		if(stop_subsystem(this_subsys) == FALSE) {
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 			
@@ -97,7 +96,6 @@ do_pe_control(long long action,
 	if(action & start_actions) {
 
 		if(cur_state != S_STOPPING) {
-			crm_info("Starting %s", this_subsys->name);
 			if(start_subsystem(this_subsys) == FALSE) {
 				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 				cleanup_subsystem(this_subsys);

@@ -549,7 +549,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		crm_crit("cluster errmsg function unavailable");
 	}
 	
-	crm_info("Signing in with Heartbeat");
+	crm_debug("Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
 
 		crm_err("Cannot sign on with heartbeat: %s",
@@ -558,7 +558,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	}
 
 	/* change the logging facility to the one used by heartbeat daemon */
-	crm_info("Switching to Heartbeat logger");
+	crm_debug("Switching to Heartbeat logger");
 	if (( facility =
 	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
 		cl_log_set_facility(facility);
@@ -606,8 +606,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		return FALSE;
 	}
 
-	crm_info("beekhof: Client Status callback set");
-
 	crm_devel("Adding channel to mainloop");
 	G_main_add_IPC_Channel(
 		G_PRIORITY_HIGH, hb_cluster->llc_ops->ipcchan(hb_cluster),
@@ -624,7 +622,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 
 	/* Async get client status information in the cluster */
 	crm_devel("Requesting an initial dump of CRMD client_status");
-	crm_info("beekhof: Requesting Client Status");
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 

@@ -435,7 +435,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		
 			/* Error checking and reporting */
 		else if(cur_input != I_NULL && fsa_actions == A_NOTHING) {
-			crm_warn(
+			crm_debug(
 			       "No action specified for input,state (%s,%s)",
 			       fsa_input2string(cur_input),
 			       fsa_state2string(fsa_state));
@@ -559,9 +559,9 @@ do_state_transition(long long actions,
 			break;
 
 		case S_FINALIZE_JOIN:
-			if(cause != C_FSA_INTERNAL) {
+			if(cause == C_TIMER_POPPED) {
 				crm_warn("Progressed to state %s after %s",
-					 fsa_state2string(cur_state),
+					 fsa_state2string(next_state),
 					 fsa_cause2string(cause));
 			}
 			if(g_hash_table_size(join_requests)
@@ -578,9 +578,9 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_POLICY_ENGINE:
-			if(cause != C_FSA_INTERNAL) {
+			if(cause == C_TIMER_POPPED) {
 				crm_warn("Progressed to state %s after %s",
-					 fsa_state2string(cur_state),
+					 fsa_state2string(next_state),
 					 fsa_cause2string(cause));
 			}
 			

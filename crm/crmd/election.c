@@ -377,7 +377,6 @@ do_dc_release(long long action,
 	      fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input result = I_NULL;
-	
 
 	crm_trace("################## Releasing the DC ##################");
 

@@ -639,7 +639,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		if(table_key == NULL) {
 			table_key = (gpointer)crm_strdup(client_name);
 		}
-		crm_info("Accepted client %s", crm_str(table_key));
+		crm_debug("Accepted client %s", crm_str(table_key));
 
 		curr_client->table_key = table_key;
 		curr_client->sub_sys = crm_strdup(client_name);
@@ -662,7 +662,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		s_crmd_fsa(C_SUBSYSTEM_CONNECT);
 
 	} else {
-		crm_err("Rejected client logon request");
+		crm_warn("Rejected client logon request");
 		curr_client->client_channel->ch_status = IPC_DISC_PENDING;
 	}
 	
@@ -953,7 +953,6 @@ handle_shutdown_request(HA_Message *stored_msg)
 	
 	crm_info("Creating shutdown request for %s",host_from);
 
-	crm_info("stored msg");
 	crm_log_message(LOG_MSG, stored_msg);
 	
 	set_uuid(fsa_cluster_conn, node_state, XML_ATTR_UUID, host_from);

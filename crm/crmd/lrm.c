@@ -384,7 +384,7 @@ build_active_RAs(crm_data_t *rsc_list)
 
 			this_op = op->op_type;
 
-			crm_debug("Processing op %s for %s (status=%d, rc=%d)", 
+			crm_info("Processing op %s for %s (status=%d, rc=%d)", 
 				  op->op_type, the_rsc->id, op->op_status, op->rc);
 			
 			if(op->rc != 0

@@ -52,7 +52,7 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 	crm_verbose("Stopping sub-system \"%s\"", the_subsystem->name);
 	clear_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 	if (the_subsystem->pid <= 0) {
-		crm_warn("Client %s not running yet", the_subsystem->name);
+		crm_debug("Client %s not running yet", the_subsystem->name);
 
 	} else if(FALSE == is_set(
 			  fsa_input_register, the_subsystem->flag_connected)) {
@@ -87,7 +87,7 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	const char 	*devnull = "/dev/null";
 	char *args = NULL;
 
-	crm_debug("Starting sub-system \"%s\"", the_subsystem->name);
+	crm_info("Starting sub-system \"%s\"", the_subsystem->name);
 	set_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 
 	if (the_subsystem->pid > 0) {
@@ -128,8 +128,8 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 			break;
 	}
 
-	crm_info("Executing \"%s %s\" (pid %d)",
-		 the_subsystem->command, the_subsystem->args, (int) getpid());
+	crm_debug("Executing \"%s %s\" (pid %d)",
+		  the_subsystem->command, the_subsystem->args, (int) getpid());
 
 	/* A precautionary measure */
 	getrlimit(RLIMIT_NOFILE, &oflimits);
@@ -170,8 +170,8 @@ cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
 	the_subsystem->ipc = NULL;
 
 	if(FALSE == is_set(fsa_input_register, the_subsystem->flag_connected)) {
-		crm_warn("Duplicate notification that %s left us",
-			 the_subsystem->name);
+		crm_debug("Duplicate notification that %s left us",
+			  the_subsystem->name);
 		return;
 	}
 	

@@ -159,7 +159,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		msg->msg_done(msg);
 		
 		crm_verbose("Processing msg from %s", curr_client->table_key);
-		crm_log_message_adv(LOG_MSG, "inbound.ipc.log", new_input->msg);
+		crm_log_message_adv(LOG_MSG, "CRMd[inbound]", new_input->msg);
 		crmd_authorize_message(new_input, curr_client);
 		delete_ha_msg_input(new_input);
 		
@@ -170,13 +170,12 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 	crm_verbose("Processed %d messages", lpc);
     
 	if (client->ch_status == IPC_DISCONNECT) {
-		crm_info("received HUP from %s",
-			 curr_client->table_key);
+		crm_debug("received HUP from %s", curr_client->table_key);
 		if (curr_client != NULL) {
 			struct crm_subsystem_s *the_subsystem = NULL;
 			
 			if (curr_client->sub_sys == NULL) {
-				crm_warn("Client hadn't registered with us yet");
+				crm_debug("Client hadn't registered with us yet");
 
 			} else if (strcmp(CRM_SYSTEM_PENGINE,
 					  curr_client->sub_sys) == 0) {
