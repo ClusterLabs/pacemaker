@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.10 2005/02/09 11:46:13 andrew Exp $ */
+/* $Id: callbacks.c,v 1.11 2005/02/18 10:32:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,8 +41,8 @@ te_update_confirm(const char *event, HA_Message *msg)
 	crm_data_t *update = get_message_xml(msg, F_CIB_UPDATE);
 
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
-	crm_trace("Processing %s...", event);
-	crm_xml_devel(update, "Processing update");
+	crm_debug("Processing %s...", event);
+	crm_xml_debug(update, "Processing update");
 	
 	if (MSG_LOG) {
 		struct stat buf;
@@ -84,7 +84,9 @@ te_update_confirm(const char *event, HA_Message *msg)
 		
 	} else if(safe_str_eq(type, XML_CIB_TAG_STATUS)) {
 		/* this _may_ not be un-expected */
-		extract_event(update);
+		if(extract_event(update) == FALSE) {
+			send_abort("Unexpected status update", update);
+		}
 
 	} else if(safe_str_eq(type, XML_CIB_TAG_NODES)
 		|| safe_str_eq(type, XML_CIB_TAG_RESOURCES)
