@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.28 2004/07/01 16:16:04 andrew Exp $ */
+/* $Id: pengine.h,v 1.29 2004/07/05 09:51:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,20 +45,12 @@ enum node_type {
 };
 
 enum con_strength {
-	ignore,
-	must,
-	should,
-	should_not,
-	must_not,
-	startstop
-};
-
-enum con_modifier {
-	modifier_none,
-	set,
-	inc,
-	dec,
-	only
+	pecs_ignore,
+	pecs_must,
+	pecs_should,
+	pecs_should_not,
+	pecs_must_not,
+	pecs_startstop
 };
 
 enum action_tasks {
@@ -69,10 +61,10 @@ enum action_tasks {
 	stonith_op
 };
 
-enum action_order {
-	dontcare,
-	before,
-	after
+enum rsc_con_type {
+	start_before,
+	start_after,
+	same_node
 };
 
 struct node_shared_s { 
@@ -98,7 +90,8 @@ struct color_shared_s {
 		int      id;
 		float    highest_priority;
 		GListPtr candidate_nodes; // node_t*
-		node_t  *chosen_node; 
+		node_t  *chosen_node;
+		gboolean pending;
 };
 
 struct color_s { 
@@ -111,7 +104,7 @@ struct rsc_to_rsc_s {
 		const char	*id;
 		resource_t	*rsc_lh; 
 
-//		gboolean	is_placement;
+		enum rsc_con_type variant;
 		resource_t	*rsc_rh; 
 		enum con_strength strength;
 };
@@ -122,7 +115,7 @@ struct rsc_to_node_s {
 
 		float		weight;
 		GListPtr node_list_rh; // node_t*
-		enum con_modifier modifier;
+//		enum con_modifier modifier;
 		gboolean can;
 };
 
@@ -143,10 +136,12 @@ struct resource_s {
 		const char	*id; 
 		xmlNodePtr	xml; 
 		float		priority; 
+		float		effective_priority; 
 		node_t		*cur_node; 
 
 		lrm_agent_t	*agent;
 		
+		gboolean	is_stonith;
 		gboolean	runnable;
 		gboolean	provisional;
 
@@ -269,8 +264,7 @@ extern void color_resource(resource_t *lh_resource,
 			   GListPtr *colors,
 			   GListPtr resources);
 
-extern gboolean choose_node_from_list(
-	GListPtr colors, color_t *color, GListPtr nodes);
+extern gboolean choose_node_from_list(color_t *color);
 
 extern gboolean update_runnable(GListPtr actions);
 extern GListPtr create_action_set(action_t *action);

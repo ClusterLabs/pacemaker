@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.8 2004/07/01 16:16:04 andrew Exp $ */
+/* $Id: color.c,v 1.9 2004/07/05 09:51:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,8 @@
 
 color_t *no_color = NULL;
 
+color_t *add_color(resource_t *rh_resource, color_t *color);
+
 gboolean has_agent(node_t *a_node, lrm_agent_t *agent);
 
 gboolean update_node_weight(rsc_to_node_t *cons,const char *id,GListPtr nodes);
@@ -41,14 +43,10 @@ gboolean rsc_postproc(
 	resource_t *lh_resource, GListPtr *colors, GListPtr resources);
 
 gboolean strict_postproc(rsc_to_rsc_t *constraint,
-			 color_t *local_color,
-			 color_t *other_color,
 			 GListPtr *colors,
 			 GListPtr resources);
 
 gboolean strict_preproc(rsc_to_rsc_t *constraint,
-			color_t *local_color,
-			color_t *other_color,
 			GListPtr *colors,
 			GListPtr resources);
 
@@ -192,83 +190,118 @@ is_active(rsc_to_node_t *cons)
 	return TRUE;
 }
 
+
 gboolean
-strict_preproc(rsc_to_rsc_t *constraint,
-	       color_t *local_color, color_t *other_color,
-	       GListPtr *colors, GListPtr resources)
+strict_preproc(rsc_to_rsc_t *constraint, GListPtr *colors, GListPtr resources)
 {
-	resource_t * lh_resource = constraint->rsc_lh;
+	resource_t *lh_resource = constraint->rsc_lh;
+	resource_t *rh_resource = constraint->rsc_rh;
+
+	color_t *other_color = constraint->rsc_rh->color;
+	color_t *local_color = NULL;
+	
+	float max_pri = lh_resource->effective_priority;
+
 	switch(constraint->strength) {
-		case must:
-			if(constraint->rsc_rh->runnable == FALSE) {
-				crm_warn("Resource %s must run on the same"
-					 " node as %s (cons %s), but %s is not"
-					 " runnable.",
-					 constraint->rsc_lh->id,
-					 constraint->rsc_rh->id,
-					 constraint->id,
-					 constraint->rsc_rh->id);
-				constraint->rsc_lh->runnable = FALSE;
+		case pecs_ignore:
+			break;
+		case pecs_startstop:
+			break;
+		case pecs_must:
+			if(max_pri < rh_resource->effective_priority) {
+				max_pri = rh_resource->effective_priority;
 			}
+			lh_resource->effective_priority = max_pri;
+			rh_resource->effective_priority = max_pri;
 			break;
 			
-			// x * should * should_not = x
-		case should:
-			if(constraint->rsc_rh->provisional == FALSE) {
+		case pecs_should:
+			if(constraint->variant != same_node) {
+				break;
+
+			} else if(constraint->rsc_rh->provisional == FALSE
+				&& constraint->rsc_lh->provisional) {
+				add_color(lh_resource, other_color);
+				local_color = find_color(
+					lh_resource->candidate_colors, other_color);
+
+				if(local_color == NULL) {
+					crm_err("Couldnt add color %d to %s",
+						other_color?other_color->id:NULL,
+						lh_resource->id);
+					break;
+				}
+
+				// x * should * should_not = x
 				local_color->local_weight = 
 					local_color->local_weight * 2.0;
-			}
-				break;
-		case should_not:
-			if(constraint->rsc_rh->provisional == FALSE) {
-				local_color->local_weight = 
-					local_color->local_weight * 0.5;
-			}
-
-//			if(g_list_length(lh_resource->candidate_colors)==1)
-			create_color(
-				colors, lh_resource, resources);
-			
+				
+/* 			} else if(constraint->rsc_lh->provisional == FALSE */
+/* 				&& constraint->rsc_rh->provisional) { */
+/* 				add_color(constraint->rsc_rh, constraint->rsc_lh->color); */
+			} 
 			
 			break;
-		case must_not:
-			if(constraint->rsc_rh->provisional == FALSE
-				&& local_color->id != no_color->id) {
-				lh_resource->candidate_colors =
-					g_list_remove(
-						lh_resource->candidate_colors,
-						local_color);
+
+		case pecs_should_not:
+			if(constraint->variant != same_node) {
+				break;
+			} else if(constraint->rsc_rh->provisional) {
+				break;
+			}
+
+			local_color =
+				find_color(lh_resource->candidate_colors, other_color);
+
+			if(local_color == NULL) {
+				/* currently no reason to have that color */
+
+				/* todo:
+				 * should we add the color so we can mark it down?
+				 */
+				break;
+			}
+
+			local_color->local_weight =
+				local_color->local_weight * 0.5;
+
+			create_color(colors, lh_resource, NULL);
+			
+			break;
+
+		case pecs_must_not:
+			if(constraint->variant != same_node) {
+				break;
+			} else if(constraint->rsc_rh->provisional) {
+				break;
+			} else if(local_color != NULL) {
+				lh_resource->candidate_colors = g_list_remove(
+					lh_resource->candidate_colors, local_color);
+				
 				crm_debug_action(
 					print_color(
 						"Removed",local_color,FALSE));
 				
-// surely this is required... but mtrace says no...
-//				crm_free(local_color);
+				crm_free(local_color);
 			}
-			break;
-		default:
-			// error
 			break;
 	}
 	return TRUE;
 }
 
 gboolean
-strict_postproc(rsc_to_rsc_t *constraint,
-		color_t *local_color, color_t *other_color,
-		GListPtr *colors, GListPtr resources)
+strict_postproc(rsc_to_rsc_t *constraint, GListPtr *colors, GListPtr resources)
 {
 	print_rsc_to_rsc("Post processing", constraint, FALSE);
-	
+
 	switch(constraint->strength) {
-		case must:
-			if(constraint->rsc_rh->provisional == TRUE) {
-				constraint->rsc_rh->color = other_color;
-				constraint->rsc_rh->provisional = FALSE;
-				color_resource(constraint->rsc_rh,
-					       colors, resources);
-			}
-			// else check for error
+		case pecs_ignore:
+		case pecs_startstop:
+		case pecs_should_not:
+		case pecs_should:
+			break;
+
+		case pecs_must:
 			if(constraint->rsc_lh->runnable == FALSE) {
 				crm_warn("Resource %s must run on the same"
 					 " node as %s (cons %s), but %s is not"
@@ -278,24 +311,86 @@ strict_postproc(rsc_to_rsc_t *constraint,
 					 constraint->id,
 					 constraint->rsc_lh->id);
 				constraint->rsc_rh->runnable = FALSE;
+
+			} else if(constraint->variant != same_node) {
+				break;
+
+			} else if(constraint->rsc_rh->provisional == TRUE) {
+
+				resource_t *rh_resource = constraint->rsc_rh;
+
+				rh_resource->color =
+					add_color(rh_resource, constraint->rsc_lh->color);
+				rh_resource->provisional = FALSE;
+
+				color_resource(rh_resource, colors, resources);
+				
+			} else if(constraint->rsc_rh->provisional == FALSE
+				  && constraint->rsc_rh->color->id !=
+				  constraint->rsc_lh->color->id) {
+				crm_err("Resource %s must run on the same"
+					" node as %s (cons %s), but %s is already"
+					" assigned to another color.",
+					constraint->rsc_rh->id,
+					constraint->rsc_lh->id,
+					constraint->id,
+					constraint->rsc_lh->id);
+				constraint->rsc_lh->runnable = FALSE;
+				return FALSE;
 			}
-			
 			break;
 			
-		case should:
-			break;
-		case should_not:
-			break;
-		case must_not:
-			if(constraint->rsc_rh->provisional == TRUE) {
-				// check for error
+		case pecs_must_not:
+			if(constraint->rsc_rh->provisional == FALSE
+			   && constraint->rsc_rh->color->id ==
+			      constraint->rsc_lh->color->id) {
+				crm_err("Resource %s must run on the same"
+					" node as %s (cons %s), but %s is already"
+					" assigned to another color.",
+					constraint->rsc_rh->id,
+					 constraint->rsc_lh->id,
+					constraint->id,
+					constraint->rsc_lh->id);
+				constraint->rsc_lh->runnable = FALSE;
+				return FALSE;
 			}
-			break;
-		default:
-			// error
 			break;
 	}
 	return TRUE;
+}
+
+color_t *
+add_color(resource_t *resource, color_t *color)
+{
+					
+	color_t *local_color = NULL;
+
+	if(color == NULL) {
+		crm_err("Cannot add NULL color");
+		return NULL;
+	}
+	
+	local_color = find_color(resource->candidate_colors, color);
+
+	if(local_color == NULL) {
+		crm_debug("Adding color %d", color->id);
+		
+		local_color = copy_color(color);
+		resource->candidate_colors =
+			g_list_append(resource->candidate_colors, local_color);
+
+		local_color = find_color(resource->candidate_colors, color);
+		if(local_color == NULL) {
+			crm_err("Color could not be added");
+		} else {
+			crm_debug("Color added");
+		}
+
+	} else {
+		crm_debug("Color %d already present", color->id);
+	}
+
+	return local_color;
 }
 
 gboolean
@@ -323,20 +418,29 @@ choose_color(resource_t *lh_resource)
 		    g_list_length(sorted_colors));
 	
 	slist_iter(
-		this_color, color_t,lh_resource->candidate_colors, lpc,
+		this_color, color_t, lh_resource->candidate_colors, lpc,
 
-		if(lh_resource->priority
+		if(this_color == NULL) {
+			crm_err("color was NULL");
+			continue;
+			
+		} else if(lh_resource->effective_priority
 		   < this_color->details->highest_priority) {
+			crm_debug("minus");
 			// lh_resource->priority < this_color->priority
-			if(node_list_eq(this_color->details->candidate_nodes, 
-					lh_resource->allowed_nodes, TRUE)) {
-				
+			GListPtr minus = node_list_minus(
+				this_color->details->candidate_nodes, 
+				lh_resource->allowed_nodes, TRUE);
+
+			if(g_list_length(minus) > 0) {
 				lh_resource->color = this_color;
 				lh_resource->provisional = FALSE;
 				break;
 			}
+			pe_free_shallow(minus);
 			
 		} else {
+			crm_debug("intersection");
 			GListPtr intersection = node_list_and(
 				this_color->details->candidate_nodes, 
 				lh_resource->allowed_nodes, TRUE);
@@ -366,13 +470,8 @@ gboolean
 rsc_preproc(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 {
 	int lpc = 0;
-	color_t *other_color = NULL;
-	color_t *local_color = NULL;
 	slist_iter(
 		constraint, rsc_to_rsc_t, lh_resource->rsc_cons, lpc,
-		if(lh_resource->runnable == FALSE) {
-			return FALSE;
-		}
 
 		crm_debug_action(
 			print_rsc_to_rsc(
@@ -381,13 +480,9 @@ rsc_preproc(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 		if(constraint->rsc_rh == NULL) {
 			crm_err("rsc_rh was NULL for %s", constraint->id);
 			continue;
-		}
-		other_color = constraint->rsc_rh->color;
-		local_color = find_color(
-			lh_resource->candidate_colors, other_color);
+		}		
 
-		strict_preproc(
-			constraint,local_color,other_color,colors,resources);
+		strict_preproc(constraint, colors, resources);
 		);
 	
 	return TRUE;
@@ -397,14 +492,9 @@ gboolean
 rsc_postproc(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 {
 	int lpc = 0;
-	color_t *local_color = lh_resource->color;
 	slist_iter(
 		constraint, rsc_to_rsc_t, lh_resource->rsc_cons, lpc,
-		color_t *other_color = find_color(
-			constraint->rsc_rh->candidate_colors, local_color);
-		
-		strict_postproc(
-			constraint, local_color, other_color,colors,resources);
+		strict_postproc(constraint, colors, resources);
 		);
 	
 	return TRUE;
@@ -429,33 +519,23 @@ color_resource(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 	//------ Pre-processing
 	rsc_preproc(lh_resource, colors, resources);
 	
-	// filter out nodes with a negative weight
-	filter_nodes(lh_resource);
-
 	/* avoid looping through lists when we know this resource
 	 * cant be started
 	 */
-	if(lh_resource->allowed_nodes != NULL) {
-		/* Choose a color from the candidates or,
-		 *  create a new one if no color is suitable 
-		 * (this may need modification pending further napkin drawings)
-		 */
-		choose_color(lh_resource);	
-  
-		crm_verbose("* Colors %d, Nodes %d",
-			    g_list_length(*colors),max_valid_nodes);
-	
-		if(lh_resource->provisional) {
-			lh_resource->color = create_color(
-				colors, lh_resource, resources);
-		}
+	if( choose_color(lh_resource) ) {
+		crm_verbose("Colored resource %s with color %d",
+			    lh_resource->id, lh_resource->color->id);
+		
+	} else if(lh_resource->allowed_nodes != NULL) {
+		// filter out nodes with a negative weight
+		filter_nodes(lh_resource);
+		lh_resource->color = create_color(colors, lh_resource, NULL);
 	}
 	
 	if(lh_resource->color == NULL) {
 		crm_err("Could not color resource %s", lh_resource->id);
 		print_resource("ERROR: No color", lh_resource, FALSE);
-		lh_resource->color = find_color(
-			lh_resource->candidate_colors, no_color);
+		lh_resource->color = no_color;
 	}
 
 	lh_resource->provisional = FALSE;

@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.9 2004/07/01 08:52:27 andrew Exp $ */
+/* $Id: graph.c,v 1.10 2004/07/05 09:51:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -64,7 +64,7 @@ create_action_set(action_t *action)
 			other, action_wrapper_t, action->actions_before, lpc,
 			
 			if(other->action->seen_count > action->seen_count
-			   && other->strength == must) {
+			   && other->strength == pecs_must) {
 				tmp = create_action_set(other->action);
 				result = g_list_concat(result, tmp);
 			}	
@@ -141,14 +141,14 @@ update_runnable(GListPtr actions)
 					
 				}
 				switch(other->strength) {
-					case should:
-					case should_not:
-					case must_not:
-					case startstop:
-					case ignore:
+					case pecs_should:
+					case pecs_should_not:
+					case pecs_must_not:
+					case pecs_startstop:
+					case pecs_ignore:
 						continue;
 						break;
-					case must:
+					case pecs_must:
 						break;
 				}
 				
@@ -172,7 +172,7 @@ shutdown_constraints(
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
 
-		order_new(rsc->stop, shutdown_op, must, action_constraints);
+		order_new(rsc->stop, shutdown_op, pecs_must, action_constraints);
 		);	
 
 	return TRUE;	
@@ -186,7 +186,7 @@ stonith_constraints(node_t *node,
 	int lpc = 0;
 
 	if(shutdown_op != NULL) {
-		order_new(shutdown_op, stonith_op, must, action_constraints);
+		order_new(shutdown_op, stonith_op, pecs_must, action_constraints);
 	}
 	
 	slist_iter(
@@ -202,7 +202,7 @@ stonith_constraints(node_t *node,
 			
 			/* stonith before start */
 			order_new(
-				stonith_op,rsc->start,must,action_constraints);
+				stonith_op,rsc->start,pecs_must,action_constraints);
 		} else {
 			// dont run this anywhere else
 			rsc->start->runnable = FALSE;

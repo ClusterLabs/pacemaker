@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.34 2004/07/01 16:16:05 andrew Exp $ */
+/* $Id: utils.c,v 1.35 2004/07/05 09:51:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,6 +50,18 @@ invert_constraint(rsc_to_rsc_t *constraint)
 	inverted_con->rsc_lh = constraint->rsc_rh;
 	inverted_con->rsc_rh = constraint->rsc_lh;
 
+	switch(constraint->variant) {
+		case same_node:
+			inverted_con->variant = same_node;
+			break;
+		case start_before:
+			inverted_con->variant = start_after;
+			break;
+		case start_after:
+			inverted_con->variant = start_before;
+			break;
+	}
+	
 	crm_debug_action(
 		print_rsc_to_rsc("Inverted constraint", inverted_con, FALSE));
 	
@@ -306,11 +318,12 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr resources)
 	color_t *new_color = NULL;
 	
 	crm_trace("Creating color");
+/*
 	if(colors != NULL && g_list_length(*colors) >= max_valid_nodes) {
 		crm_warn("Created %d colors already", max_valid_nodes);
 		return NULL;
 	}
-
+*/
 	new_color = crm_malloc(sizeof(color_t));
 
 	new_color->id = color_id++;
@@ -321,6 +334,7 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr resources)
 	new_color->details->highest_priority = -1;
 	new_color->details->chosen_node      = NULL;
 	new_color->details->candidate_nodes  = NULL;
+	new_color->details->pending          = TRUE;
 
 	if(resource != NULL) {
 		crm_trace("populating node list");
@@ -336,6 +350,7 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr resources)
 	}
 	
 	if(resources != NULL) {
+#if 0
 		/* Add any new color to the list of candidate_colors for
 		 * resources that havent been decided yet 
 		 */
@@ -343,22 +358,37 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr resources)
 		slist_iter(
 			rsc, resource_t, resources, lpc,
 			if(rsc->provisional && rsc->runnable) {
-				color_t *color_copy = (color_t *)
-					cl_malloc(sizeof(color_t));
-
-				color_copy->id      = new_color->id;
-				color_copy->details = new_color->details;
-				color_copy->local_weight = 1.0; 
+				color_t *color_copy = copy_color(new_color);
 
 				rsc->candidate_colors =
 					g_list_append(rsc->candidate_colors,
 						       color_copy);
 			}
 			);
+#endif
 	}
 	
 	return new_color;
 }
+
+color_t *
+copy_color(color_t *a_color) 
+{
+	color_t *color_copy = NULL;
+
+	if(a_color == NULL) {
+		crm_err("Cannot copy NULL");
+		return NULL;
+	}
+	
+	color_copy = (color_t *)crm_malloc(sizeof(color_t));
+	color_copy->id      = a_color->id;
+	color_copy->details = a_color->details;
+	color_copy->local_weight = 1.0;
+	
+	return color_copy;
+}
+
 
 
 /*
@@ -450,6 +480,8 @@ gint gslist_color_compare(gconstpointer a, gconstpointer b)
 {
 	const color_t *color_a = (const color_t*)a;
 	const color_t *color_b = (const color_t*)b;
+
+//	crm_trace("%d vs. %d", a?color_a->id:-2, b?color_b->id:-2);
 	if(a == b) {
 		return 0;
 	} else if(a == NULL || b == NULL) {
@@ -573,7 +605,7 @@ contype2text(enum con_type type)
 			break;
 	}
 	return result;
-};
+}
 
 const char *
 strength2text(enum con_strength strength)
@@ -581,52 +613,29 @@ strength2text(enum con_strength strength)
 	const char *result = "<unknown>";
 	switch(strength)
 	{
-		case ignore:
+		case pecs_ignore:
 			result = "ignore";
 			break;
-		case must:
+		case pecs_must:
 			result = XML_STRENGTH_VAL_MUST;
 			break;
-		case should:
+		case pecs_should:
 			result = XML_STRENGTH_VAL_SHOULD;
 			break;
-		case should_not:
+		case pecs_should_not:
 			result = XML_STRENGTH_VAL_SHOULDNOT;
 			break;
-		case must_not:
+		case pecs_must_not:
 			result = XML_STRENGTH_VAL_MUSTNOT;
 			break;
-		case startstop:
+		case pecs_startstop:
 			result = "start/stop";
 			break;
 	}
 	return result;
-};
+}
 
-const char *
-modifier2text(enum con_modifier modifier)
-{
-	const char *result = "<unknown>";
-	switch(modifier)
-	{
-		case modifier_none:
-			result = "modifier_none";
-			break;
-		case set:
-			result = "set";
-			break;
-		case inc:
-			result = "inc";
-			break;
-		case dec: 
-			result = "dec";
-			break;
-		case only: 
-			result = "only";
-			break;
-	}
-	return result;
-};
+
 
 const char *
 task2text(enum action_tasks task)
@@ -652,7 +661,7 @@ task2text(enum action_tasks task)
 	}
 	
 	return result;
-};
+}
 
 
 void
@@ -690,7 +699,7 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 			);
 	}
 	
-};
+}
 
 /*
  * Used by the HashTable for-loop

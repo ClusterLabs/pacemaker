@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.9 2004/07/01 16:16:04 andrew Exp $ */
+/* $Id: stages.c,v 1.10 2004/07/05 09:51:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -143,7 +143,7 @@ stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 	}
 	
 	crm_trace("create \"no color\"");
-	no_color = create_color(NULL, NULL, sorted_rscs);
+	no_color = create_color(NULL, NULL, NULL);
 	
 	// Take (next) highest resource
 	slist_iter(
@@ -177,58 +177,71 @@ stage3(GListPtr colors)
 	return TRUE;
 }
 
-#define color_n_nodes color_n->details->candidate_nodes
-#define color_n_plus_1_nodes color_n_plus_1->details->candidate_nodes
-
 /*
  * Choose a node for each (if possible) color
  */
 gboolean
-stage4(GListPtr colors)
+stage4(GListPtr resources)
 {
 	int lpc = 0;
-	color_t *color_n = NULL;
-	color_t *color_n_plus_1 = NULL;
-	GListPtr minus = NULL;
-	
-	for(lpc = 0; lpc < g_list_length(colors); lpc++) {
-		color_n = color_n_plus_1;
-		color_n_plus_1 = (color_t*)g_list_nth_data(colors, lpc);
+	int lpc2 = 0;
+	slist_iter(
+		rsc, resource_t, resources, lpc,
 
-		crm_debug_action(
-			print_color("Choose node for...", color_n, FALSE));
-		
-		if(color_n == NULL) {
+		if(rsc->color == NULL) {
+			crm_err("No color associated with %s", rsc->id);
+			continue;
+			
+		} else if(rsc->color->details->pending == FALSE) {
 			continue;
 		}
+		
+		choose_node_from_list(rsc->color);
+		
+		slist_iter(
+			constraint, rsc_to_rsc_t, rsc->rsc_cons, lpc2,
+			
+			if(constraint->variant != same_node) {
+				continue;
+			}
 
-		minus = node_list_minus(
-			color_n_nodes, color_n_plus_1_nodes, TRUE);
+			/* remove the node from the other color */
+			color_t *other_c = constraint->rsc_rh->color;
+			
+			node_t *other_n = pe_find_node(
+				other_c->details->candidate_nodes,
+				safe_val6(NULL, rsc, color, details,
+					  chosen_node, details, uname));
 
-		if(0 &&
-		   g_list_length(color_n_plus_1_nodes) == 1
-		   && g_list_length(minus) > 0) {
-			crm_warn("Dont choose the only node left for color n+1");
-			choose_node_from_list(colors, color_n, minus);      
+			if(other_c == NULL) {
+				crm_err("No color associated with %s", constraint->id);
+				continue;
+			} else if(other_n == NULL) {
+				crm_err("No node associated with rsc/color %s/%d",
+					rsc->id, rsc->color->id);
+				continue;
+			}
+			
+			switch(constraint->strength) {
+				case pecs_must_not:
+					
+					other_c->details->candidate_nodes =
+						g_list_remove(
+							other_c->details->candidate_nodes,
+							other_n);
+			
+					crm_free(other_n);
+					break;
+				case pecs_should_not:
+					other_n->weight = -1;
+					break;
+				default:
+					break;
+			}
+			
 
-		} else {
-			crm_verbose("Choose any node from our list");
-			choose_node_from_list(colors, color_n, color_n_nodes);
-		}
-
-		pe_free_shallow(minus);
-	}
-
-	// choose last color
-	if(color_n_plus_1 != NULL) {
-		crm_debug_action(print_color("Choose node for last color...",
-				   color_n_plus_1,
-				   FALSE));
-
-		choose_node_from_list(colors,
-				      color_n_plus_1, 
-				      color_n_plus_1_nodes);
-	}
+			);
+		);
 	crm_verbose("done");
 	return TRUE;
 	
@@ -562,39 +575,24 @@ summary(GListPtr resources)
 }
 
 gboolean
-choose_node_from_list(GListPtr colors, color_t *color, GListPtr nodes)
+choose_node_from_list(color_t *color)
 {
-	int lpc;
 	/*
 	  1. Sort by weight
 	  2. color.chosen_node = highest wieghted node 
 	  3. remove color.chosen_node from all other colors
 	*/
+	GListPtr nodes = color->details->candidate_nodes;
 	nodes = g_list_sort(nodes, sort_node_weight);
 	color->details->chosen_node =
 		node_copy((node_t*)g_list_nth_data(nodes, 0));
+	color->details->pending = FALSE;
 
 	if(color->details->chosen_node == NULL) {
 		crm_err("Could not allocate a node for color %d",
 			color->id);
 		return FALSE;
 	}
-
-	slist_iter(
-		color_n, color_t, colors, lpc,
-		
-		node_t *other_node =
-			pe_find_node(color_n->details->candidate_nodes,
-				     color->details->chosen_node->details->uname);
-
-		if(color_n != color) {
-			color_n->details->candidate_nodes =
-				g_list_remove(
-					color_n->details->candidate_nodes,
-					other_node);
-			//		crm_free(other_node);
-		}	
-		);
 	
 	return TRUE;
 }

@@ -107,7 +107,7 @@ do_test rsc_rsc5 "Must not 3	"
 do_test rsc_rsc6 "Should not 3"
 do_test rsc_rsc7 "Must 3	"
 do_test rsc_rsc8 "Should 3	"
-
+do_test rsc_rsc9 "2*MustNot 1*ShouldNot	"
 echo ""
 
 do_test attrs1 "string: eq (and)	"
@@ -149,7 +149,6 @@ echo ""
 # Generate these test outputs
 create_mode="true"
 #do_test bad7 "Bad data"
-do_test simple12 "Priority (eq)"
 
 if [ -s $failed ]; then
     if [ "$verbose" = "-v" ]; then

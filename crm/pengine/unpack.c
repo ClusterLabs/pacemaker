@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.14 2004/07/01 16:16:05 andrew Exp $ */
+/* $Id: unpack.c,v 1.15 2004/07/05 09:51:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,8 +76,8 @@ gboolean unpack_lrm_agents(node_t *node, xmlNodePtr agent_list);
 
 gboolean is_node_unclean(xmlNodePtr node_state);
 
-gboolean rsc2rsc_new(const char *id, enum con_strength strength,
-			   resource_t *rsc_lh, resource_t *rsc_rh);
+gboolean rsc2rsc_new(const char *id, enum con_strength strength, enum rsc_con_type type,
+		     resource_t *rsc_lh, resource_t *rsc_rh);
 
 gboolean create_ordering(
 	const char *id, enum con_strength strength,
@@ -271,8 +271,10 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->agent->type	= xmlGetProp(xml_obj, "type");
 		new_rsc->agent->version	= atof(version?version:"0.0");
 		new_rsc->priority	= atof(priority?priority:"0.0"); 
-		new_rsc->candidate_colors = NULL;
+		new_rsc->effective_priority = new_rsc->priority;
+		new_rsc->candidate_colors   = NULL;
 		new_rsc->color		= NULL; 
+		new_rsc->is_stonith	= FALSE; 
 		new_rsc->runnable	= TRUE; 
 		new_rsc->provisional	= TRUE; 
 		new_rsc->allowed_nodes	= NULL;
@@ -296,7 +298,7 @@ unpack_resources(xmlNodePtr xml_resources,
 		*actions       = g_list_append(*actions, action_start);
 		new_rsc->start = action_start;
 
-		order_new(action_stop, action_start, startstop, action_cons);
+		order_new(action_stop, action_start, pecs_startstop, action_cons);
 
 		*resources = g_list_append(*resources, new_rsc);
 	
@@ -755,14 +757,14 @@ unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
 	}
 
 	rsc2node_new(
-		"healthy_generate", rsc_lh, weight,TRUE,node,node_constraints);
+		"healthy_generate",rsc_lh, weight, TRUE,node,node_constraints);
 	
 	return TRUE;
 }
 
 gboolean
-rsc2rsc_new(const char *id, enum con_strength strength,
-		  resource_t *rsc_lh, resource_t *rsc_rh)
+rsc2rsc_new(const char *id, enum con_strength strength, enum rsc_con_type type,
+	    resource_t *rsc_lh, resource_t *rsc_rh)
 {
 	if(rsc_lh == NULL || rsc_rh == NULL){
 		// error
@@ -776,27 +778,15 @@ rsc2rsc_new(const char *id, enum con_strength strength,
 	new_con->rsc_lh   = rsc_lh;
 	new_con->rsc_rh   = rsc_rh;
 	new_con->strength = strength;
+	new_con->variant  = type;
 	
 	inverted_con = invert_constraint(new_con);
 
 	rsc_lh->rsc_cons = g_list_insert_sorted(
 		rsc_lh->rsc_cons, new_con, sort_cons_strength);
+	
 	rsc_rh->rsc_cons = g_list_insert_sorted(
 		rsc_rh->rsc_cons, inverted_con, sort_cons_strength);
-
-	return TRUE;
-}
-
-gboolean
-create_ordering(const char *id, enum con_strength strength,
-		resource_t *rsc_lh, resource_t *rsc_rh,
-		GListPtr *action_constraints)
-{
-	if(rsc_lh == NULL || rsc_rh == NULL){
-		// error
-		return FALSE;
-	}
-	
 
 	return TRUE;
 }
@@ -830,7 +820,7 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 		  GListPtr rsc_list,
 		  GListPtr *action_constraints)
 {
-	enum con_strength strength_e = ignore;
+	enum con_strength strength_e = pecs_ignore;
 
 	const char *id_lh    = xmlGetProp(xml_obj, "from");
 	const char *id       = xmlGetProp(xml_obj, XML_ATTR_ID);
@@ -850,16 +840,16 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	}
 	
 	if(safe_str_eq(strength, XML_STRENGTH_VAL_MUST)) {
-		strength_e = must;
+		strength_e = pecs_must;
 		
 	} else if(safe_str_eq(strength, XML_STRENGTH_VAL_SHOULD)) {
-		strength_e = should;
+		strength_e = pecs_should;
 		
 	} else if(safe_str_eq(strength, XML_STRENGTH_VAL_SHOULDNOT)) {
-		strength_e = should_not;
+		strength_e = pecs_should_not;
 		
 	} else if(safe_str_eq(strength, XML_STRENGTH_VAL_MUSTNOT)) {
-		strength_e = must_not;
+		strength_e = pecs_must_not;
 
 	} else {
 		crm_err("Unknown value for %s: %s", "strength", strength);
@@ -868,6 +858,7 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 
 	if(safe_str_eq(type, "ordering")) {
 		// make an action_cons instead
+		rsc2rsc_new(id, strength_e, start_before, rsc_lh, rsc_rh);
 		order_new(rsc_lh->stop, rsc_rh->stop, strength_e,
 			  action_constraints);
 		order_new(rsc_rh->start, rsc_lh->start, strength_e,
@@ -903,7 +894,7 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	}
 	order_new(before, after, strength_e,action_constraints);
 	
-	return rsc2rsc_new(id, strength_e, rsc_lh, rsc_rh);
+	return rsc2rsc_new(id, strength_e, same_node, rsc_lh, rsc_rh);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.10 2004/07/01 16:16:04 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.11 2004/07/05 09:51:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,6 +38,8 @@ extern color_t *find_color(GListPtr candidate_colors, color_t *other_color);
 
 extern color_t *create_color(
 	GListPtr *colors, resource_t *resource, GListPtr resources);
+
+extern color_t *copy_color(color_t *a_color);
 
 // Node helper functions
 extern gboolean filter_nodes(resource_t *rsc);
@@ -98,7 +100,7 @@ extern gint sort_node_weight(gconstpointer a, gconstpointer b);
 // enum 2 text functions (mostly used by print_*)
 extern const char *contype2text(enum con_type type);
 extern const char *strength2text(enum con_strength strength);
-extern const char *modifier2text(enum con_modifier modifier);
+//extern const char *modifier2text(enum con_modifier modifier);
 extern const char *task2text(enum action_tasks task);
 
 // free the various structures
