@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.16 2004/11/09 14:49:14 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.17 2004/11/11 14:51:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -104,6 +104,9 @@ extern const char *task2text(enum action_tasks task);
 
 extern GListPtr find_actions(
 	GListPtr input, enum action_tasks task, node_t *on_node);
+
+extern void set_id(xmlNodePtr xml_obj, const char *prefix, int child);
+
 
 /* free the various structures */
 extern void pe_free_nodes(GListPtr nodes);

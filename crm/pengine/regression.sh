@@ -21,7 +21,8 @@
 
 create_mode="true"
 echo Generating test outputs for these tests...
-#do_test bad7 "Bad data"
+#do_test bad7
+do_test inc3
 
 echo ""
 
@@ -57,6 +58,7 @@ echo ""
 do_test order1 "Order start 1"
 do_test order2 "Order start 2"
 do_test order3 "Order stop	"
+do_test order4 "Order (multiple)"
 
 echo ""
 do_test agent1 "version: lt (empty)"
@@ -101,12 +103,17 @@ do_test multi1 "Multiple Active (stop/start)"
 #do_test complex1 "Complex	"
 
 echo ""
-do_test group1 "Group	"
-do_test group2 "Group + Native"
-do_test group3 "Group + Group"
+do_test group1 "Group		"
+do_test group2 "Group + Native	"
+do_test group3 "Group + Group	"
 do_test group4 "Group + Native (nothing)"
-do_test group5 "Group + Native (stop)"
+do_test group5 "Group + Native (move)"
+do_test group6 "Group + Group (move)"
 
+echo ""
+do_test inc1 "Incarnation start					" 
+do_test inc2 "Incarnation silent restart, stop, move		"
+do_test inc3 "Inter-incarnation ordering, silent restart, stop, move"
 
 echo ""
 do_test bad1 "Bad node		"

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.47 2004/11/09 17:51:59 andrew Exp $ */
+/* $Id: utils.c,v 1.48 2004/11/11 14:51:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -604,6 +604,7 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 		action->actions_before   = NULL;
 		action->actions_after    = NULL;
 		action->failure_is_fatal = TRUE;
+		action->pseudo = FALSE;
 		action->dumped     = FALSE;
 		action->discard    = FALSE;
 		action->runnable   = TRUE;
@@ -618,6 +619,12 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 			rsc->actions = g_list_append(rsc->actions, action);
 			if(rsc->timeout != NULL) {
 				action->timeout = crm_strdup(rsc->timeout);
+			}
+			if(task == start_rsc) {
+				rsc->starting = TRUE;
+			}
+			if(task == stop_rsc) {
+				rsc->stopping = TRUE;
 			}
 		}
 
@@ -662,8 +669,14 @@ task2text(enum action_tasks task)
 		case stop_rsc:
 			result = "stop";
 			break;
+		case stopped_rsc:
+			result = "stopped";
+			break;
 		case start_rsc:
 			result = "start";
+			break;
+		case started_rsc:
+			result = "started";
 			break;
 		case shutdown_crm:
 			result = "shutdown_crm";
@@ -1070,3 +1083,46 @@ find_actions(GListPtr input, enum action_tasks task, node_t *on_node)
 	return result;
 }
 
+void
+set_id(xmlNodePtr xml_obj, const char *prefix, int child) 
+{
+	int id_len = 0;
+	gboolean use_prefix = TRUE;
+	gboolean use_child = TRUE;
+
+	char *new_id   = NULL;
+	const char *id = xmlGetProp(xml_obj, "id");
+	
+	id_len = 1 + strlen(id);
+
+	if(child > 999) {
+		crm_err("Are you insane?!?"
+			" The CRM does not support > 1000 children per resource");
+		return;
+		
+	} else if(child < 0) {
+		use_child = FALSE;
+		
+	} else {
+		id_len += 4; /* child */
+	}
+	
+	if(prefix == NULL || safe_str_eq(id, prefix)) {
+		use_prefix = FALSE;
+	} else {
+		id_len += (1 + strlen(prefix));
+	}
+	
+	crm_malloc(new_id, id_len);
+
+	if(use_child) {
+		snprintf(new_id, id_len, "%s%s%s:%d",
+			 use_prefix?prefix:"", use_prefix?":":"", id, child);
+	} else {
+		snprintf(new_id, id_len, "%s%s%s",
+			 use_prefix?prefix:"", use_prefix?":":"", id);
+	}
+	
+	set_xml_property_copy(xml_obj, "id", new_id);
+	crm_free(new_id);
+}

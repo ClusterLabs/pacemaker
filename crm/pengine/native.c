@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.5 2004/11/09 17:51:59 andrew Exp $ */
+/* $Id: native.c,v 1.6 2004/11/11 14:51:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,8 +23,6 @@
 
 extern color_t *add_color(resource_t *rh_resource, color_t *color);
 
-gboolean has_agent(node_t *a_node, lrm_agent_t *an_agent);
-
 gboolean native_choose_color(resource_t *lh_resource);
 
 void native_assign_color(resource_t *rsc, color_t *color);
@@ -39,6 +37,8 @@ void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 				      resource_t *rsc_rh, gboolean update_rh);
 
 void filter_nodes(resource_t *rsc);
+
+int num_allowed_nodes4color(color_t *color);
 
 
 typedef struct native_variant_data_s
@@ -115,6 +115,61 @@ native_find_child(resource_t *rsc, const char *id)
 	return NULL;
 }
 
+int native_num_allowed_nodes(resource_t *rsc)
+{
+	int lpc = 0, num_nodes = 0;
+	native_variant_data_t *native_data = NULL;
+	if(rsc->variant == pe_native) {
+		native_data = (native_variant_data_t *)rsc->variant_opaque;
+	} else {
+		crm_err("Resource %s was not a \"native\" variant",
+			rsc->id);
+		return 0;
+	}
+
+	if(native_data->color) {
+		return num_allowed_nodes4color(native_data->color);
+		
+	} else if(rsc->candidate_colors) {
+		/* TODO: sort colors first */
+		color_t *color = g_list_nth_data(rsc->candidate_colors, 0);
+		return num_allowed_nodes4color(color);
+
+	} else {
+		slist_iter(
+			this_node, node_t, native_data->allowed_nodes, lpc,
+			if(this_node->weight < 0) {
+				continue;
+			}
+			num_nodes++;
+			);
+	}
+	
+	return num_nodes;
+}
+
+int num_allowed_nodes4color(color_t *color) 
+{
+	int lpc = 0, num_nodes = 0;
+
+	if(color->details->pending == FALSE) {
+		if(color->details->chosen_node) {
+			return 1;
+		}
+		return 0;
+	}
+	
+	slist_iter(
+		this_node, node_t, color->details->candidate_nodes, lpc,
+		if(this_node->weight < 0) {
+			continue;
+		}
+		num_nodes++;
+		);
+
+	return num_nodes;
+}
+
 
 void native_color(resource_t *rsc, GListPtr *colors)
 {
@@ -181,7 +236,7 @@ void native_create_actions(resource_t *rsc)
 				node, node_t,
 				native_data->running_on, lpc2,
 				
-				crm_info("Stop resource %s (%s)",
+				crm_info("Stop  resource %s (%s)",
 					 rsc->id,
 					 safe_val3(NULL, node, details, uname));
 				action_new(rsc, stop_rsc, node);
@@ -224,14 +279,14 @@ void native_create_actions(resource_t *rsc)
 				continue;
 			} else if(chosen != NULL) {
 				/* move */
-				crm_info("Move resource %s (%s -> %s)", rsc->id,
+				crm_info("Move  resource %s (%s -> %s)", rsc->id,
 					 safe_val3(NULL, node, details, uname),
 					 safe_val3(NULL, chosen, details, uname));
 				action_new(rsc, stop_rsc, node);
 				action_new(rsc, start_rsc, chosen);
 
 			} else {
-				crm_info("Stop resource %s (%s)", rsc->id,
+				crm_info("Stop  resource %s (%s)", rsc->id,
 					 safe_val3(NULL, node, details, uname));
 				action_new(rsc, stop_rsc, node);
 			}
@@ -252,8 +307,13 @@ void native_rsc_dependancy_lh(rsc_dependancy_t *constraint)
 	resource_t *rsc = constraint->rsc_lh;
 	
 	if(rsc == NULL) {
-		crm_err("No constraints for NULL resource");
+		crm_err("rsc_lh was NULL for %s", constraint->id);
 		return;
+
+	} else if(constraint->rsc_rh == NULL) {
+		crm_err("rsc_rh was NULL for %s", constraint->id);
+		return;
+		
 	} else {
 		crm_debug("Processing constraints from %s", rsc->id);
 	}
@@ -287,8 +347,15 @@ void native_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 	}
 	
 	if(rsc_lh->provisional && rsc_rh->provisional) {
-		/* nothing */
-		crm_debug("Skipping constraint, both sides provisional");
+		if(constraint->strength == pecs_must) {
+			/* update effective_priorities */
+			native_rsc_dependancy_rh_must(
+				rsc_lh, update_lh,rsc_rh, update_rh);
+		} else {
+			/* nothing */
+			crm_debug(
+				"Skipping constraint, both sides provisional");
+		}
 		return;
 
 	} else if( (!rsc_lh->provisional) && (!rsc_rh->provisional)
@@ -385,11 +452,16 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 
 	crm_verbose("Processing LH of ordering constraint %d", order->id);
 
-	if(order->lh_action_task != stop_rsc
-	   && order->lh_action_task != start_rsc) {
-		crm_err("Task %s from ordering %d isnt a resource action",
-			task2text(order->lh_action_task), order->id);
-		return;
+	switch(order->lh_action_task) {
+		case start_rsc:
+		case started_rsc:
+		case stop_rsc:
+		case stopped_rsc:
+			break;
+		default:
+			crm_err("Task \"%s\" from ordering %d isnt a resource action",
+				task2text(order->lh_action_task), order->id);
+			return;
 	}
 
 
@@ -411,12 +483,18 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 		if(lh_actions == NULL) {
 			crm_debug("No LH-Side (%s/%s) found for constraint",
 				  lh_rsc->id, task2text(order->lh_action_task));
+			crm_debug("RH-Side was: (%s/%s)",
+				  order->rh_rsc?order->rh_rsc->id:order->rh_action?order->rh_action->rsc->id:"<NULL>",
+				  task2text(order->rh_action_task));
 			return;
 		}
 
 	} else {
 		crm_warn("No LH-Side (%s) specified for constraint",
 			 task2text(order->lh_action_task));
+		crm_debug("RH-Side was: (%s/%s)",
+			  order->rh_rsc?order->rh_rsc->id:order->rh_action?order->rh_action->rsc->id:"<NULL>",
+			  task2text(order->rh_action_task));
 		return;
 	}
 
@@ -450,6 +528,18 @@ void native_rsc_order_rh(
 
 	crm_verbose("Processing RH of ordering constraint %d", order->id);
 
+	switch(order->rh_action_task) {
+		case start_rsc:
+		case started_rsc:
+		case stop_rsc:
+		case stopped_rsc:
+			break;
+		default:
+			crm_err("Task \"%s\" from ordering %d isnt a resource action",
+				task2text(order->rh_action_task), order->id);
+			return;
+	}
+	
 	if(rh_action != NULL) {
 		rh_actions = g_list_append(NULL, rh_action);
 
@@ -461,12 +551,18 @@ void native_rsc_order_rh(
 			crm_debug("No RH-Side (%s/%s) found for constraint..."
 				  " ignoring",
 				  rsc->id, task2text(order->rh_action_task));
+			crm_debug("LH-Side was: (%s/%s)",
+				  order->lh_rsc?order->lh_rsc->id:order->lh_action?order->lh_action->rsc->id:"<NULL>",
+				  task2text(order->lh_action_task));
 			return;
 		}
 			
 	}  else if(rh_action == NULL) {
 		crm_debug("No RH-Side (%s) specified for constraint..."
 			  " ignoring", task2text(order->rh_action_task));
+		crm_debug("LH-Side was: (%s/%s)",
+			  order->lh_rsc?order->lh_rsc->id:order->lh_action?order->lh_action->rsc->id:"<NULL>",
+			  task2text(order->lh_action_task));
 		return;
 	} 
 
@@ -753,81 +849,12 @@ void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 void
 native_agent_constraints(resource_t *rsc)
 {
-	int lpc;
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 
 	crm_trace("Applying RA restrictions to %s", rsc->id);
-	slist_iter(
-		node, node_t, native_data->allowed_nodes, lpc,
-		
-		crm_trace("Checking if %s supports %s/%s (%s)",
-			  node->details->uname,
-			  native_data->agent->class,
-			  native_data->agent->type,
-			  native_data->agent->version);
-		
-		if(has_agent(node, native_data->agent) == FALSE) {
-			/* remove node from contention */
-			crm_trace("Marking node %s unavailable for %s",
-				  node->details->uname, rsc->id);
-			node->weight = -1.0;
-			node->fixed = TRUE;
-		}
-		if(node->fixed && node->weight < 0) {
-			/* the structure of the list will have changed
-			 * lpc-- might be sufficient
-			 */
-			crm_debug("Removing node %s from %s",
-				  node->details->uname, rsc->id);
-			
-			lpc = -1;
-			native_data->allowed_nodes = g_list_remove(
-				native_data->allowed_nodes, node);
-
-			crm_free(node);
-		}
-		);
-}
-
-gboolean
-has_agent(node_t *a_node, lrm_agent_t *an_agent)
-{
-	int lpc;
-	if(a_node == NULL || an_agent == NULL || an_agent->type == NULL) {
-		crm_warn("Invalid inputs");
-		return FALSE;
-	}
-	
-	crm_devel("Checking %d agents on %s",
-		  g_list_length(a_node->details->agents),
-		  a_node->details->uname);
-
-	slist_iter(
-		agent, lrm_agent_t, a_node->details->agents, lpc,
-
-		crm_trace("Checking against  %s/%s (%s)",
-			  agent->class, agent->type, agent->version);
-
-		if(safe_str_eq(an_agent->type, agent->type)){
-			if(an_agent->class == NULL) {
-				return TRUE;
-				
-			} else if(safe_str_eq(an_agent->class, agent->class)) {
-				if(compare_version(
-					   an_agent->version, agent->version)
-				   <= 0) {
-					return TRUE;
-				}
-			}
-		}
-		);
-	
-	crm_verbose("%s doesnt support version %s of %s/%s",
-		    a_node->details->uname, an_agent->version,
-		    an_agent->class, an_agent->type);
-	
-	return FALSE;
+	common_agent_constraints(
+		native_data->allowed_nodes, native_data->agent, rsc->id);
 }
 gboolean
 native_choose_color(resource_t *rsc)

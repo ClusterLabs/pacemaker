@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.5 2004/11/09 17:51:59 andrew Exp $ */
+/* $Id: complex.c,v 1.6 2004/11/11 14:51:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,11 +27,14 @@ gboolean constraint_violated(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_dependancy_t *constraint);
 void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 
+gboolean has_agent(node_t *a_node, lrm_agent_t *an_agent);
+
 
 resource_object_functions_t resource_class_functions[] = {
 	{
 		native_unpack,
 		native_find_child,
+		native_num_allowed_nodes,
 		native_color,
 		native_create_actions,
 		native_internal_constraints,
@@ -48,6 +51,7 @@ resource_object_functions_t resource_class_functions[] = {
 	{
 		group_unpack,
 		group_find_child,
+		group_num_allowed_nodes,
 		group_color,
 		group_create_actions,
 		group_internal_constraints,
@@ -61,18 +65,23 @@ resource_object_functions_t resource_class_functions[] = {
 		group_dump,
 		group_free
 	},
-/* 	{ */
-/* 		incarnation_expand, */
-/* 		incarnation_n_colors, */
-/* 		incarnation_assign, */
-/* 		incarnation_expand, */
-/* 		incarnation_internal_constraints, */
-/* 		incarnation_rsc_dependancy, */
-/* 		incarnation_rsc_order, */
-/* 		incarnation_rsc_location, */
-/* 		incarnation_dump */
-/* 	}, */
-
+	{
+		incarnation_unpack,
+		incarnation_find_child,
+		incarnation_num_allowed_nodes,
+		incarnation_color,
+		incarnation_create_actions,
+		incarnation_internal_constraints,
+		incarnation_agent_constraints,
+		incarnation_rsc_dependancy_lh,
+		incarnation_rsc_dependancy_rh,
+		incarnation_rsc_order_lh,
+		incarnation_rsc_order_rh,
+		incarnation_rsc_location,
+		incarnation_expand,
+		incarnation_dump,
+		incarnation_free
+	}
 };
 
 /* resource_object_functions_t resource_variants[] = resource_class_functions; */
@@ -85,6 +94,9 @@ int get_resource_type(const char *name)
 
 	} else if(safe_str_eq(name, "resource_group")) {
 		return pe_group;
+
+	} else if(safe_str_eq(name, "incarnation")) {
+		return pe_incarnation;
 	}
 	
 	return pe_unknown;
@@ -106,7 +118,7 @@ common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 	const char *timeout  = xmlGetProp(xml_obj, "timeout");
 	const char *priority = xmlGetProp(xml_obj, XML_CIB_ATTR_PRIORITY);	
 	
-	crm_verbose("Processing resource...");
+	crm_verbose("Processing resource input...");
 	
 	if(id == NULL) {
 		crm_err("Must specify id tag in <resource>");
@@ -131,16 +143,19 @@ common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 		crm_err("Unknown resource type: %s", xml_obj->name);
 		crm_free(*rsc);
 		return FALSE;
+/* 	} else if((*rsc)->variant == pe_native) { */
 	}
 	
 	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
-	crm_verbose("Processing resource...");
+	crm_verbose("Unpacking resource...");
 	
 	(*rsc)->priority	   = atoi(priority?priority:"0"); 
 	(*rsc)->effective_priority = (*rsc)->priority;
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->runnable	   = TRUE; 
 	(*rsc)->provisional	   = TRUE; 
+	(*rsc)->starting	   = FALSE; 
+	(*rsc)->stopping	   = FALSE; 
 	(*rsc)->timeout		   = timeout;
 	(*rsc)->candidate_colors   = NULL;
 	(*rsc)->rsc_cons	   = NULL; 
@@ -148,16 +163,20 @@ common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 	
 	if(safe_str_eq(stopfail, "ignore")) {
 		(*rsc)->stopfail_type = pesf_ignore;
+		
 	} else if(safe_str_eq(stopfail, "stonith")) {
 		(*rsc)->stopfail_type = pesf_stonith;
+
 	} else {
 		(*rsc)->stopfail_type = pesf_block;
 	}
 	
 	if(safe_str_eq(restart, "restart")) {
 		(*rsc)->restart_type = pe_restart_restart;
+
 	} else if(safe_str_eq(restart, "recover")) {
 		(*rsc)->restart_type = pe_restart_recover;
+
 	} else {
 		(*rsc)->restart_type = pe_restart_ignore;
 	}
@@ -239,4 +258,80 @@ void common_free(resource_t *rsc)
 	crm_trace("Freeing resource");
 	crm_free(rsc);
 	crm_trace("Resource freed");
+}
+
+void
+common_agent_constraints(
+	GListPtr node_list, lrm_agent_t *agent, const char *id) 
+{
+	int lpc;
+	slist_iter(
+		node, node_t, node_list, lpc,
+		
+		crm_trace("Checking if %s supports %s/%s (%s)",
+			  node->details->uname,
+			  agent->class, agent->type, agent->version);
+		
+		if(has_agent(node, agent) == FALSE) {
+			/* remove node from contention */
+			crm_trace("Marking node %s unavailable for %s",
+				  node->details->uname, id);
+			node->weight = -1.0;
+			node->fixed = TRUE;
+		}
+/* 		if(node->fixed && node->weight < 0) { */
+/* 			/\* the structure of the list will have changed */
+/* 			 * lpc-- might be sufficient */
+/* 			 *\/ */
+/* 			crm_debug("Removing node %s from %s", */
+/* 				  node->details->uname, rsc->id); */
+			
+/* 			lpc = -1; */
+/* 			native_data->allowed_nodes = g_list_remove( */
+/* 				native_data->allowed_nodes, node); */
+
+/* 			crm_free(node); */
+/* 		} */
+		);
+}
+
+
+gboolean
+has_agent(node_t *a_node, lrm_agent_t *an_agent)
+{
+	int lpc;
+	if(a_node == NULL || an_agent == NULL || an_agent->type == NULL) {
+		crm_warn("Invalid inputs");
+		return FALSE;
+	}
+	
+	crm_devel("Checking %d agents on %s",
+		  g_list_length(a_node->details->agents),
+		  a_node->details->uname);
+
+	slist_iter(
+		agent, lrm_agent_t, a_node->details->agents, lpc,
+
+		crm_trace("Checking against  %s/%s (%s)",
+			  agent->class, agent->type, agent->version);
+
+		if(safe_str_eq(an_agent->type, agent->type)){
+			if(an_agent->class == NULL) {
+				return TRUE;
+				
+			} else if(safe_str_eq(an_agent->class, agent->class)) {
+				if(compare_version(
+					   an_agent->version, agent->version)
+				   <= 0) {
+					return TRUE;
+				}
+			}
+		}
+		);
+	
+	crm_verbose("%s doesnt support version %s of %s/%s",
+		    a_node->details->uname, an_agent->version,
+		    an_agent->class, an_agent->type);
+	
+	return FALSE;
 }

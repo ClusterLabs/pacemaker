@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.20 2004/11/09 14:49:14 andrew Exp $ */
+/* $Id: color.c,v 1.21 2004/11/11 14:51:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -89,57 +89,53 @@ add_color(resource_t *resource, color_t *color)
 }
 
 void
-color_resource(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
+color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
 {
 	int lpc = 0;
 
-	crm_debug_action(print_resource("Coloring", lh_resource, FALSE));
+	crm_debug_action(print_resource("Coloring", rsc, FALSE));
 	
-	if(lh_resource->provisional == FALSE) {
+	if(rsc->provisional == FALSE) {
 		/* already processed this resource */
 		return;
 	}
 	
-	lh_resource->rsc_cons = g_list_sort(
-		lh_resource->rsc_cons, sort_cons_strength);
+	rsc->rsc_cons = g_list_sort(
+		rsc->rsc_cons, sort_cons_strength);
 
 	crm_debug_action(
-		print_resource("Pre-processing", lh_resource, FALSE));
+		print_resource("Pre-processing", rsc, FALSE));
 
 	/*------ Pre-processing */
 	slist_iter(
-		constraint, rsc_dependancy_t, lh_resource->rsc_cons, lpc,
+		constraint, rsc_dependancy_t, rsc->rsc_cons, lpc,
 
 		crm_debug_action(
 			print_rsc_dependancy(
 				"Pre-Processing constraint", constraint,FALSE));
 		
-		if(constraint->rsc_rh == NULL) {
-			crm_err("rsc_rh was NULL for %s", constraint->id);
-			continue;
-		}		
-		lh_resource->fns->rsc_dependancy_lh(constraint);
+		rsc->fns->rsc_dependancy_lh(constraint);
 		);
 	
 	/* avoid looping through lists when we know this resource
 	 * cant be started
 	 */
 
-	lh_resource->fns->color(lh_resource, colors);
+	rsc->fns->color(rsc, colors);
 
 	crm_debug_action(
-		print_resource("Post-processing", lh_resource, TRUE));
+		print_resource("Post-processing", rsc, TRUE));
 
 	/*------ Post-processing */
 	slist_iter(
-		constraint, rsc_dependancy_t, lh_resource->rsc_cons, lpc,
+		constraint, rsc_dependancy_t, rsc->rsc_cons, lpc,
 		crm_debug_action(
 			print_rsc_dependancy(
 				"Post-Processing constraint",constraint,FALSE));
-		lh_resource->fns->rsc_dependancy_lh(constraint);
+		rsc->fns->rsc_dependancy_lh(constraint);
 		);
 	
-	crm_debug_action(print_resource("Colored", lh_resource, TRUE));
+	crm_debug_action(print_resource("Colored", rsc, TRUE));
 }
 
 

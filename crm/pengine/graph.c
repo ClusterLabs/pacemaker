@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.20 2004/11/09 14:49:14 andrew Exp $ */
+/* $Id: graph.c,v 1.21 2004/11/11 14:51:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -225,12 +225,17 @@ action2xml(action_t *action, gboolean as_input)
 			set_xml_property_copy(
 				action_xml, XML_ATTR_ID, crm_itoa(action->id));
 
-			set_xml_property_copy(
-				action_xml, XML_LRM_ATTR_TASK, task2text(action->task));
+			set_xml_property_copy(action_xml, XML_LRM_ATTR_TASK,
+					      task2text(action->task));
 
 			break;
 		default:
-			action_xml = create_xml_node(NULL, "rsc_op");
+			if(action->pseudo) {
+				action_xml = create_xml_node(NULL,"pseduo_op");
+			} else {
+				action_xml = create_xml_node(NULL, "rsc_op");
+			}
+
 			if(!as_input) {
 				add_node_copy(
 					action_xml,
@@ -244,13 +249,14 @@ action2xml(action_t *action, gboolean as_input)
 				action_xml, XML_LRM_ATTR_RSCID,
 				safe_val3("__no_rsc__", action, rsc, id));
 
-			set_xml_property_copy(
-				action_xml, XML_LRM_ATTR_TASK, task2text(action->task));
+			set_xml_property_copy(action_xml, XML_LRM_ATTR_TASK,
+					      task2text(action->task));
 			
 			break;
 	}
 
-	if(action->task != stonith_node) {
+	if(action->task != stonith_node
+	   && (action->pseudo == FALSE && action->node != NULL)) {
 		set_xml_property_copy(
 			action_xml, XML_LRM_ATTR_TARGET,
 			safe_val4("__no_node__", action, node, details,uname));

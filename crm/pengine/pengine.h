@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.40 2004/11/09 14:49:14 andrew Exp $ */
+/* $Id: pengine.h,v 1.41 2004/11/11 14:51:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,7 +58,9 @@ enum con_strength {
 enum action_tasks {
 	no_action,
 	stop_rsc,
+	stopped_rsc,
 	start_rsc,
+	started_rsc,
 	shutdown_crm,
 	stonith_node
 };
@@ -153,6 +155,8 @@ struct resource_s {
 		float	     effective_priority; 
 		const char  *timeout;
 		
+		gboolean     starting;
+		gboolean     stopping;
 		gboolean     is_stonith;
 		gboolean     runnable;
 		gboolean     provisional;
@@ -187,6 +191,7 @@ struct action_s
 		node_t     *node;
 		enum action_tasks task;
 		
+		gboolean pseudo;
 		gboolean runnable;
 		gboolean dumped;
 		gboolean processed;
