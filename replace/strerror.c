@@ -21,7 +21,7 @@
 #include <stdio.h>
 extern const char *	sys_err[];
 extern int	sys_nerr;
-const char *
+char *
 strerror(int errnum)
 {
 	static	char  whaterr[32];
