@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.34 2005/02/20 08:10:15 alan Exp $ */
+/* $Id: utils.c,v 1.35 2005/02/25 10:26:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,6 +49,7 @@
 
 static uint ref_counter = 0;
 gboolean crm_assert_failed = FALSE;
+unsigned int crm_log_level = LOG_DEBUG;
 
 char *
 generateReference(const char *custom1, const char *custom2)
@@ -226,7 +227,6 @@ crm_itoa(int an_int)
 	return buffer;
 }
 
-unsigned int crm_log_level = LOG_INFO;
 extern int LogToLoggingDaemon(int priority, const char * buf, int bstrlen, gboolean use_pri_str);
 
 gboolean
@@ -433,14 +433,12 @@ alter_debug(int nsig)
 	switch(nsig) {
 		case DEBUG_INC:
 			crm_log_level++;
-			cl_log(LOG_DEBUG,
-			       "Upped log level to %d\n", crm_log_level);
+			crm_debug("Upped log level to %d\n", crm_log_level);
 			break;
 
 		case DEBUG_DEC:
 			crm_log_level--;
-			cl_log(LOG_DEBUG,
-			       "Reduced log level to %d\n", crm_log_level);
+			crm_debug("Reduced log level to %d\n", crm_log_level);
 			break;	
 
 		default:
@@ -500,8 +498,9 @@ crm_strdup(const char *a)
 void
 set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname) 
 {
+#if 1
 	char *uuid_calc = NULL;
-	
+
 	crm_malloc(uuid_calc, sizeof(char)*50);
 
 	if(uuid_calc != NULL) {
@@ -519,5 +518,8 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 	}
 	
 	crm_free(uuid_calc);
+#else
+	set_xml_property_copy(node, attr, uname);	
+#endif
 }/*memory leak*/ /* BEAM BUG - this is not a memory leak */
 
