@@ -764,16 +764,55 @@ class StopOnebyOne(CTSTest):
 		did_fail=did_fail + 1
 
 	if did_fail:
-	    return self.failure("Could not find stop %d nodes" %did_fail)
+	    return self.failure("Could not stop %d nodes" %did_fail)
 
         return self.success()
 
     def is_applicable(self):
-        '''SimulStop is always applicable'''
+        '''StopOnebyOne is always applicable'''
         return 1
 
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(StopOnebyOne)
+
+class RestartOnebyOne(CTSTest):
+###################################################################
+    '''Stop all the nodes in order'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="RestartOnebyOne"
+
+    def __call__(self, dummy):
+        '''Perform the 'RestartOnebyOne' test. '''
+        self.incr("calls")
+
+        #     We ignore the "node" parameter...
+
+        #     Start up all the nodes...
+        for node in self.CM.Env["nodes"]:
+          if self.CM.ShouldBeStatus[node] != self.CM["up"]:
+            self.incr("started")
+            self.start = StartTest(self.CM)
+            self.start(node)
+
+	did_fail=0
+	self.starttime=time.time()
+	self.restart = RestartTest(self.CM)
+        for node in self.CM.Env["nodes"]:
+            if not self.restart(node):
+		did_fail=did_fail + 1
+
+	if did_fail:
+	    return self.failure("Could not restart %d nodes" %did_fail)
+
+        return self.success()
+
+    def is_applicable(self):
+        '''RestartOnebyOne is always applicable'''
+        return 1
+
+#     Register StopOnebyOne as a good test to run
+AllTestClasses.append(RestartOnebyOne)
 
 ###################################################################
 class StandbyTest(CTSTest):
