@@ -80,8 +80,12 @@ static int get_provider_list(const char* op_type, GList ** providers);
 static void add_OCF_prefix(GHashTable * params, GHashTable * new_params);
 static void add_prefix_foreach(gpointer key, gpointer value,
 				   gpointer user_data);
+static int raexec_setenv(GHashTable * env_params);
+static void set_env(gpointer key, gpointer value, gpointer user_data);
+				   
 static gboolean let_remove_eachitem(gpointer key, gpointer value,
 				    gpointer user_data);
+
 /* The end of internal function & data list */
 
 /* Rource agent execution plugin operations */
@@ -168,7 +172,6 @@ execra(const char * rsc_type, const char * provider, const char * op_type,
 	/* Setup environment correctly */
 	tmp_for_setenv = g_hash_table_new(g_str_hash, g_str_equal);
 	add_OCF_prefix(params, tmp_for_setenv);
-	add_OCF_environment(tmp_for_setenv);
 
 	/* LRM team: Please cross-check before enabling. */
 #if 0
@@ -285,19 +288,43 @@ static void
 add_prefix_foreach(gpointer key, gpointer value, gpointer user_data)
 {
 	const int MAX_LENGTH_OF_ENV = 50;
+	int prefix = strlen("OCF_RESKEY_");
 	GHashTable * new_hashtable = (GHashTable *) user_data;
 	char * newkey;
-
-	newkey = g_new(gchar, strnlen((char*)key, MAX_LENGTH_OF_ENV-1) + 1);
-	memset(newkey, '\0', strnlen((char*)key, MAX_LENGTH_OF_ENV-1) + 1); 
-	strncat(newkey, "OCF_RESKEY_", 12);
-	strncat(newkey, key, strnlen((char*)key, MAX_LENGTH_OF_ENV-12));
-	g_hash_table_insert(new_hashtable, (gpointer)newkey, value);
+	int keylen = strnlen((char*)key, MAX_LENGTH_OF_ENV-prefix)+prefix;
+	
+	newkey = g_new(gchar, keylen);
+	strncpy(newkey, "OCF_RESKEY_", keylen);
+	strncat(newkey, key, keylen);
+	g_hash_table_insert(new_hashtable, (gpointer)newkey, strdup(value));
 }
 
 static gboolean
 let_remove_eachitem(gpointer key, gpointer value, gpointer user_data)
 {
 	g_free(key);
+	g_free(value);
 	return TRUE;
 }
+
+int
+raexec_setenv(GHashTable * env_params)
+{
+	/* For lsb init scripts, no corresponding definite specification
+	 * But for lsb none-init scripts, maybe need it.
+	 */
+        if (env_params) {
+        	g_hash_table_foreach(env_params, set_env, NULL);
+        }
+        return 0;
+}
+
+static void
+set_env(gpointer key, gpointer value, gpointer user_data)
+{
+       if (setenv(key, value, 1) != 0) {
+		cl_log(LOG_ERR, "setenv failed in raexecocf.");
+	}
+        /*Need to free the memory to which key and value point?*/
+}
+
