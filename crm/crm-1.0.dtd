@@ -60,7 +60,7 @@ More details are given in the annotated DTD below.
           version      CDATA       #REQUIRED
           timestamp    CDATA       #REQUIRED>
 
-<!ELEMENT configuration (nodes, resources, constraints, metadata)>
+<!ELEMENT configuration (nodes, resources, constraints, metadata, crm_config)>
 <!-- The most uptodate configuration in the cluster is automatically
      determined by the CRM via the timestamp; the source indicates
      which node that was. In case of updates at runtime, the source
@@ -77,6 +77,8 @@ More details are given in the annotated DTD below.
           source       CDATA       #REQUIRED
 	  serial       CDATA	   #REQUIRED
           timestamp    CDATA       #REQUIRED>
+
+<!ELEMENT crm_config (nvpair*)>
 
 <!ELEMENT nodes       (node*)>
 
@@ -296,6 +298,7 @@ More details are given in the annotated DTD below.
 	  operation  (lt|gt|lte|gte|eq|ne|exists|notexists|running|not_running)
 	  value      CDATA #IMPLIED
 	  type	     (integer|string|version)    'string'>
+
 
 <!ELEMENT metadata ra_entry>
 <!--
