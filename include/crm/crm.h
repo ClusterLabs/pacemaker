@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.42 2005/02/10 10:42:54 andrew Exp $ */
+/* $Id: crm.h,v 1.43 2005/02/10 15:51:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -222,7 +222,11 @@ extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_M
 	}	
 
 #if 1
-#  define crm_free(x)   if(x) { cl_free(x); x=NULL; }
+#  define crm_free(x)   if(x) {				\
+		CRM_ASSERT(cl_is_allocated(x) == 1);	\
+		cl_free(x);				\
+		x=NULL;				\
+	}
 #else
 #  define crm_free(x)   x=NULL
 #endif
