@@ -655,7 +655,7 @@ do_lrm_rsc_op(
 	} else if(call_id > 0 && op->interval > 0) {
 		crm_debug("Adding recurring %s op for %s", operation, rsc->id);
 		g_hash_table_insert(
-			monitors, GINT_TO_POINTER(call_id), strdup(rsc->id));
+			monitors, GINT_TO_POINTER(call_id), crm_strdup(rsc->id));
 	}
 
 	free_lrm_op(op);		
