@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.7 2004/07/01 08:52:27 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.8 2004/07/27 11:43:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -67,11 +67,11 @@
 #define XML_FAILRES_ATTR_RESSTATUS	"resource_status"
 
 #define XML_CRM_TAG_PING		"ping_response"
-#define XML_PING_ATTR_STATUS		"ping_result"
+#define XML_PING_ATTR_STATUS		"result"
 #define XML_PING_ATTR_SYSFROM		"crm_subsystem"
 
 #define XML_TAG_FRAGMENT		"cib_fragment"
-#define XML_ATTR_RESULT			"cib_action_result"
+#define XML_ATTR_RESULT			"result"
 #define XML_ATTR_SECTION		"section"
 
 #define XML_FAIL_TAG_CIB		"failed_update"
@@ -97,6 +97,7 @@
 
 #define XML_CIB_TAG_LRM		  	"lrm"
 #define XML_LRM_TAG_RESOURCES     	"lrm_resources"
+#define XML_LRM_TAG_RESOURCE     	"lrm_resource"
 
 #define XML_CIB_ATTR_HEALTH       	"health"
 #define XML_CIB_ATTR_WEIGHT       	"weight"

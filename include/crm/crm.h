@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.14 2004/07/19 14:22:54 andrew Exp $ */
+/* $Id: crm.h,v 1.15 2004/07/27 11:43:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -120,15 +120,15 @@ typedef GList* GListPtr;
 #  define crm_verbose(w...) do_crm_log(LOG_VERBOSE, __FUNCTION__, w)
 #  define crm_trace(w...)   do_crm_log(LOG_TRACE,   __FUNCTION__, w)
 #else
-#  define crm_crit(w...)   cl_log(LOG_CRIT,    w)
-#  define crm_err(w...)    cl_log(LOG_ERR,     w)
-#  define crm_warn(w...)   cl_log(LOG_WARNING, w)
-#  define crm_notice(w...) cl_log(LOG_NOTICE,  w)
-#  define crm_info(w...)   cl_log(LOG_INFO,    w)
-#  define crm_debug(w...)  cl_log(LOG_DEBUG,   w)
-#  define crm_devel(w...)  cl_log(LOG_DEV,     w)
-#  define crm_vebose(w...) cl_log(LOG_VERBOSE, w)
-#  define crm_trace(w...)  cl_log(LOG_TRACE,   w)
+#  define crm_crit(w...)    cl_log(LOG_CRIT,    w)
+#  define crm_err(w...)     cl_log(LOG_ERR,     w)
+#  define crm_warn(w...)    cl_log(LOG_WARNING, w)
+#  define crm_notice(w...)  cl_log(LOG_NOTICE,  w)
+#  define crm_info(w...)    cl_log(LOG_INFO,    w)
+#  define crm_debug(w...)   cl_log(LOG_DEBUG,   w)
+#  define crm_devel(w...)   cl_log(LOG_DEV,     w)
+#  define crm_verbose(w...) cl_log(LOG_VERBOSE, w)
+#  define crm_trace(w...)   cl_log(LOG_TRACE,   w)
 #endif
 
 #define crm_debug_action(x) if(crm_log_level >= LOG_DEBUG) {	\
