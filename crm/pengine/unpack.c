@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.43 2004/11/09 14:49:14 andrew Exp $ */
+/* $Id: unpack.c,v 1.44 2004/11/09 16:50:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -759,10 +759,16 @@ rsc_dependancy_new(const char *id, enum con_strength strength,
 		new_con->strength = strength;
 		
 		inverted_con = invert_constraint(new_con);
+
+		crm_debug("Adding constraint %s (%p) to %s",
+			  new_con->id, new_con, rsc_lh->id);
 		
 		rsc_lh->rsc_cons = g_list_insert_sorted(
 			rsc_lh->rsc_cons, new_con, sort_cons_strength);
 		
+		crm_debug("Adding constraint %s (%p) to %s",
+			  inverted_con->id, inverted_con, rsc_rh->id);
+
 		rsc_rh->rsc_cons = g_list_insert_sorted(
 			rsc_rh->rsc_cons, inverted_con, sort_cons_strength);
 	} else {
@@ -911,15 +917,15 @@ unpack_rsc_order(xmlNodePtr xml_obj,
 		return FALSE;
 	
 	} else if(safe_str_eq(type, "after")) {
-		order_new(rsc_rh, stop_rsc, NULL, rsc_lh, stop_rsc, NULL,
-			  pecs_must, ordering_constraints);
-		order_new(rsc_lh, start_rsc, NULL, rsc_rh, start_rsc, NULL,
-			  pecs_must, ordering_constraints);
-	} else {
 		order_new(rsc_lh, stop_rsc, NULL, rsc_rh, stop_rsc, NULL,
-			  pecs_must, ordering_constraints);
+			  pecs_startstop, ordering_constraints);
 		order_new(rsc_rh, start_rsc, NULL, rsc_lh, start_rsc, NULL,
-			  pecs_must, ordering_constraints);
+			  pecs_startstop, ordering_constraints);
+	} else {
+		order_new(rsc_rh, stop_rsc, NULL, rsc_lh, stop_rsc, NULL,
+			  pecs_startstop, ordering_constraints);
+		order_new(rsc_lh, start_rsc, NULL, rsc_rh, start_rsc, NULL,
+			  pecs_startstop, ordering_constraints);
 	}
 	return TRUE;
 }
