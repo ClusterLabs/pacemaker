@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.17 2005/02/07 17:26:12 andrew Exp $ */
+/* $Id: callbacks.c,v 1.18 2005/02/09 15:28:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -482,7 +482,6 @@ cib_process_command(
 {
 	crm_data_t *output   = NULL;
 	crm_data_t *input    = NULL;
-	const char *input_s = NULL;
 
 	int call_type      = 0;
 	int call_options   = 0;
@@ -518,15 +517,7 @@ cib_process_command(
 
 	if(rc == cib_ok && cib_server_ops[call_type].needs_data) {
 		crm_trace("Unpacking data in %s", F_CIB_CALLDATA);
-		input_s = cl_get_string(request, F_CIB_CALLDATA);
-		if(input_s != NULL) {
-			crm_trace("Converting to crm_data_t*");			
-			input = string2xml(input_s);
-			if(input == NULL) {
-				crm_err("Invalid XML input");
-				rc = CIBRES_CORRUPT;
-			}
-		}
+		input = get_message_xml(request, F_CIB_CALLDATA);
 	}		
 
 	if(rc == cib_ok) {
@@ -945,7 +936,7 @@ cib_get_operation_id(const HA_Message * msg, int *operation)
 {
 	int lpc = 0;
 	int max_msg_types = DIMOF(cib_server_ops);
-	const char *op    = cl_get_string(msg, F_CIB_OPERATION);
+	const char *op = cl_get_string(msg, F_CIB_OPERATION);
 
 	for (lpc = 0; lpc < max_msg_types; lpc++) {
 		if (safe_str_eq(op, cib_server_ops[lpc].operation)) {
