@@ -672,13 +672,13 @@ class Fastdetection(CTSTest):
         '''Perform the fastfailureDetection test'''
         self.incr("calls")
 
-        if self.CM.upcount() < 1:
-            return self.skipped()
-
         if self.CM.ShouldBeStatus[node] != self.CM["up"]:
             ret=self.start(node)
             if not ret:
                 return ret;
+
+        if self.CM.upcount() < 2:
+            return self.skipped()
 
 	# Make sure they're not holding any resources
 	ret = self.standby(node)
@@ -696,7 +696,6 @@ class Fastdetection(CTSTest):
                 self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
                 Detectiontime = Stoptime-Starttime
                 self.CM.log("Failure detection time is %f seconds" % Detectiontime)
-                self.CM.rsh(node, self.CM["StartCmd"])
                 self.Stats["totaltime"] = self.Stats["totaltime"] + Detectiontime
         	if self.Stats["min"] == 0:
                     self.Stats["min"] = Detectiontime
@@ -704,15 +703,16 @@ class Fastdetection(CTSTest):
                     self.Stats["max"] = Detectiontime
         	if Detectiontime < self.Stats["min"]:
                     self.Stats["min"] = Detectiontime
+                self.CM.ShouldBeStatus[node] = self.CM["down"]:
+                self.start(node)
                 return self.success()
             else:
-                self.CM.rsh(node, self.CM["StartCmd"])
-                self.CM.ShouldBeStatus[node]=self.CM["up"]
+                self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
+                self.CM.ShouldBeStatus[node] = self.CM["down"]
+                ret=self.start(node)
                 return self.failure("Didn't find the log message")
-            # Can't do this before killing heartbeat, because it will respawn them
-            self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
         else:
-                return self.failure("Couldn't stop heartbeat")
+            return self.failure("Couldn't stop heartbeat")
 
     def is_applicable(self):
         '''this test is always applicable'''
