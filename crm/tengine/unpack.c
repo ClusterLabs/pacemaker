@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.9 2004/11/12 17:11:58 andrew Exp $ */
+/* $Id: unpack.c,v 1.10 2004/11/24 15:39:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -420,7 +420,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		}
 		crm_trace("Processing complete...");
 		
-	} else if(strcmp(op, CRM_OP_ABORT) == 0) {
+	} else if(strcmp(op, CRM_OP_TEABORT) == 0) {
 		initialize_graph();
 
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {

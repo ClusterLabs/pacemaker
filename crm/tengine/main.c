@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.6 2004/11/12 17:14:34 andrew Exp $ */
+/* $Id: main.c,v 1.7 2004/11/24 15:39:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,7 @@
 
 #include <hb_api.h>
 #include <clplumbing/uids.h>
+#include <clplumbing/coredumps.h>
 
 #include <crm/common/ctrl.h>
 #include <crm/common/ipc.h>
@@ -39,14 +40,13 @@
 #include <crm/dmalloc_wrapper.h>
 
 #define SYS_NAME     CRM_SYSTEM_TENGINE
-#define OPTARGS      "skrhV"
+#define OPTARGS      "skrhVc"
 #define PID_FILE     WORKING_DIR "/" SYS_NAME ".pid"
 #define DAEMON_LOG   DEVEL_DIR"/"SYS_NAME".log"
 #define DAEMON_DEBUG DEVEL_DIR"/"SYS_NAME".debug"
 
 GMainLoop*  mainloop = NULL;
 const char* crm_system_name = SYS_NAME;
-
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
@@ -55,6 +55,7 @@ void tengine_shutdown(int nsig);
 int
 main(int argc, char ** argv)
 {
+    gboolean allow_cores = TRUE;
     int	req_restart = FALSE;
     int	req_status = FALSE;
     int	req_stop = FALSE;
@@ -75,11 +76,9 @@ main(int argc, char ** argv)
     cl_log_set_facility(LOG_USER);
     cl_log_set_logfile(DAEMON_LOG);
     cl_log_set_debugfile(DAEMON_DEBUG);
-    CL_SIGNAL(DEBUG_INC, alter_debug);
-    CL_SIGNAL(DEBUG_DEC, alter_debug);
 
-    set_crm_log_level(LOG_DEV);
-    
+    crm_debug("Begining option processing");
+
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
@@ -97,12 +96,18 @@ main(int argc, char ** argv)
 			case 'h':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
+			case 'c':
+				allow_cores = TRUE;
+				break;
+    
 			default:
 				++argerr;
 				break;
 		}
     }
     
+    crm_debug("Option processing complete");
+
     if (optind > argc) {
 		++argerr;
     }
@@ -112,6 +117,14 @@ main(int argc, char ** argv)
     }
     
     /* read local config file */
+
+    if(allow_cores) {
+	    crm_debug("Enabling coredumps");
+	    cl_set_corerootdir(DEVEL_DIR);	    
+	    cl_enable_coredumps(1);
+	    cl_cdtocoredir();
+	    crm_debug("Coredump processing complete");
+    }
     
     if (req_status){
 		return init_status(PID_FILE, crm_system_name);
@@ -125,6 +138,7 @@ main(int argc, char ** argv)
 		init_stop(PID_FILE);
     }
 
+    crm_debug("Starting...");
     return init_start();
 
 }
