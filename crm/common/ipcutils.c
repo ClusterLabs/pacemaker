@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.13 2004/03/10 22:32:29 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.14 2004/03/16 10:20:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -102,6 +102,16 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	CRM_DEBUG2("Supplied XML data was %s.",
 		   all_is_good?"present":"empty");
 
+	host_to = xmlGetProp(root, XML_ATTR_HOSTTO);
+	sys_to = xmlGetProp(root, XML_ATTR_SYSTO);
+	
+	if (sys_to != NULL && strcmp("dc", sys_to) == 0) {
+		cl_log(LOG_INFO,
+		       "Resetting the value of %s to null from %s",
+		       XML_ATTR_HOSTTO, host_to);
+//		xmlSetProp(root, XML_ATTR_HOSTTO, "");
+	}
+	
 	struct ha_msg *msg = NULL;
 	if (all_is_good) {
 		msg = ha_msg_new(4); 
@@ -123,14 +133,13 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 			}
 		}
 		
-		CRM_DEBUG2("Adding XML to HA message %s.",
+		CRM_DEBUG3("Adding XML (%d chars) to HA message %s.",
+			   strlen(xml_text),
 			   all_is_good?"succeeded":"failed");
 
 	}
 
 	if (all_is_good) {
-		host_to = xmlGetProp(root, XML_ATTR_HOSTTO);
-		sys_to = xmlGetProp(root, XML_ATTR_SYSTO);
 		if (sys_to == NULL || strlen(sys_to) == 0)
 		{
 			cl_log(LOG_INFO,
@@ -182,9 +191,12 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 
 //    if(msg) ha_msg_del(msg);
 
+	if(all_is_good == FALSE)
+		cl_log(LOG_ERR, "Sending of HA message %s failed",
+		       xmlGetProp(root, XML_ATTR_TSTAMP));
 	CRM_DEBUG2("Sending of HA message %s.",
 		   all_is_good?"succeeded":"failed");
-	xml_message_debug(root, "HA Message was: ");
+//	xml_message_debug(root, "HA Message was: ");
 	
 	FNRET(all_is_good);
 }
