@@ -32,8 +32,9 @@ gliblib			= @GLIBLIB@
 habin_PROGRAMS		= cl_status cl_respawn ccdv
 
 ## SOURCES
-ccdv: 	ccdv.c
-	gcc -o ccdv ccdv.c
+#ccdv: 	ccdv.c
+#	gcc -o ccdv ccdv.c
+ccdv_SOURCES		= ccdv.c
 
 cl_status_SOURCES	= cl_status.c
 cl_status_LDADD		= $(top_builddir)/lib/hbclient/libhbclient.la	\
