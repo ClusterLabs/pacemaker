@@ -666,9 +666,8 @@ According to the manual page for ping:
     second, whichever is more.  For every ECHO_REQUEST sent a period ``.''
     is printed, while for every ECHO_REPLY received a backspace is printed.
     This provides a rapid display of how many packets are being dropped.
-    Only the super-user may use this option.  This can be very hard on a net­
-    work and should be used with caution.            
-
+    Only the super-user may use this option.  This can be very hard on a net-
+    work and should be used with caution.
 ''' )
 
     def __init__(self, Env):
