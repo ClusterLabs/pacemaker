@@ -217,7 +217,7 @@ do_election_count_vote(long long action,
 	if(we_loose) {
 		crm_timer_stop(election_timeout);
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
-		crm_info("Election lost to %s", vote_from);
+		crm_debug("Election lost to %s", vote_from);
 		if(fsa_input_register & R_THE_DC) {
 			crm_devel("Give up the DC to %s", vote_from);
 			election_result = I_RELEASE_DC;
@@ -229,30 +229,14 @@ do_election_count_vote(long long action,
 		}
 
 	} else {
-		crm_info("Election won over %s", vote_from);
-#if 0
 		if(cur_state == S_PENDING) {
-			crm_info("We already lost the election");
-			
-		} else if(highest_born_on == 0
-		   || your_node->node_born_on < highest_born_on) {
-			election_result = I_ELECTION;
-			highest_born_on = your_node->node_born_on;
-
-		} else {
-			crm_info("We've already voted down nodes born on %d and"
-				 " later.  %s born on %d", highest_born_on,
-				 vote_from, your_node->node_born_on);
-		}
-#else
-		if(cur_state == S_PENDING) {
-			crm_info("Election ignore: We already lost the election");
+			crm_debug("Election ignore: We already lost the election");
 			return I_NULL;
 			
 		} else {
+			crm_info("Election won over %s", vote_from);
 			election_result = I_ELECTION;
 		}
-#endif
 	}
 	
 
