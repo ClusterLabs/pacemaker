@@ -374,11 +374,41 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 
 	was_sent = relay_message(request, TRUE);
 
+	if(was_sent == FALSE) {
+		put_message(request);
+	}
+	
 	free_xml(request);
 
 	FNRET(was_sent);
 }
 
+/*
+ * This method adds a copy of xml_response_data
+ */
+gboolean
+store_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
+	      const char *operation, const char *host_to, const char *sys_to)
+{
+	xmlNodePtr request = NULL;
+	FNIN();
+
+
+	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
+				   XML_ATTR_OP, operation, TRUE);
+	
+	request = create_request(msg_options,
+				 msg_data,
+				 host_to,
+				 sys_to,
+				 AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD,
+				 NULL,
+				 NULL);
+
+	put_message(request);
+	
+	FNRET(TRUE);
+}
 
 gboolean
 relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
@@ -766,22 +796,21 @@ handle_message(xmlNodePtr stored_msg)
 			  || strcmp(op, CRM_OPERATION_ANNOUNCE) == 0) {
 			next_input = I_NULL;
 			
-		} else if(AM_I_DC
-			  && (strcmp(op, CRM_OPERATION_CREATE) == 0
-			      || strcmp(op, CRM_OPERATION_UPDATE) == 0
-			      || strcmp(op, CRM_OPERATION_DELETE) == 0
-			      || strcmp(op, CRM_OPERATION_REPLACE) == 0
-			      || strcmp(op, CRM_OPERATION_ERASE) == 0)) {
+/* 		} else if(AM_I_DC */
+/* 			  && (strcmp(op, CRM_OPERATION_CREATE) == 0 */
+/* 			      || strcmp(op, CRM_OPERATION_UPDATE) == 0 */
+/* 			      || strcmp(op, CRM_OPERATION_DELETE) == 0 */
+/* 			      || strcmp(op, CRM_OPERATION_REPLACE) == 0 */
+/* 			      || strcmp(op, CRM_OPERATION_ERASE) == 0)) { */
 
-			// perhaps we should do somethign with these replies
-			fprintf(router_strm, "Message result: CIB Reply\n");
+/* 			// perhaps we should do somethign with these replies */
+/* 			fprintf(router_strm, "Message result: CIB Reply\n"); */
 
-			next_input = I_CIB_UPDATE;
-			
 		} else {
 			cl_log(LOG_ERR,
 			       "Unexpected response (op=%s) sent to the %s",
 			       op, AM_I_DC?"DC":"CRMd");
+			next_input = I_NULL;
 		}
 	} else {
 		cl_log(LOG_ERR, "Unexpected message type %s", type);

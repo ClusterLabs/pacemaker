@@ -448,7 +448,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 * Make sure the CIB is always updated before invoking the
 		 * PE, and the PE before the TE
 		 */
-		ELSEIF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_cib_invoke)
+		ELSEIF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_lrm_invoke)
 		ELSEIF_FSA_ACTION(A_CIB_INVOKE_LOCAL,	do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_CIB_INVOKE,		do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
@@ -477,25 +477,18 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 
 //		ELSEIF_FSA_ACTION(A_, do_)
 		
-		else if(actions & A_MSG_PROCESS) {
+		else if(is_message()) {
 			xmlNodePtr stored_msg = NULL;
 			
-			/* any more queued messages? */
-			if(is_message() == FALSE) {
-				CRM_DEBUG("No more messages");
-				actions = clear_bit(actions, A_MSG_PROCESS);
+			fsa_message_queue_t msg = get_message();
+			
+			if(msg == NULL || msg->message == NULL) {
+				cl_log(LOG_ERR,
+				       "Invalid stored message");
 				continue;
-			} else {
-				fsa_message_queue_t msg = get_message();
-
-				if(msg == NULL || msg->message == NULL) {
-					cl_log(LOG_ERR,
-					       "Invalid stored message");
-					continue;
-				}
-				
-				data = msg->message;
 			}
+			
+			data = msg->message;
 
 #ifdef DOT_FSA_ACTIONS
 			fprintf(dot_strm,

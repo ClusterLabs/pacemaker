@@ -31,6 +31,7 @@ void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 #include <clplumbing/GSource.h>
 #include <crm/common/ipcutils.h>
 #include <crm/common/xmlutils.h>
+#include <crmd_messages.h>
 #include <string.h>
 #include <crm/dmalloc_wrapper.h>
 
@@ -181,6 +182,7 @@ do_ccm_update_cache(long long action,
 		    enum crmd_fsa_input current_input,
 		    void *data)
 {
+	enum crmd_fsa_input next_input = I_NULL;
 	int lpc, offset;
 	oc_node_t *members = NULL;
 	oc_ed_t event = *((struct ccm_data *)data)->event;
@@ -296,7 +298,12 @@ do_ccm_update_cache(long long action,
 
 	if(AM_I_DC) {
 		// should be sufficient for only the DC to do this
-		send_cib_status_update(update_list);
+		xmlNodePtr fragment = create_cib_fragment(update_list, NULL);
+		
+		send_request(NULL, fragment, CRM_OPERATION_UPDATE,
+			     NULL, CRM_SYSTEM_DCIB);
+		
+		free_xml(fragment);
 	}
 	
 	tmp = fsa_membership_copy;
@@ -313,7 +320,7 @@ do_ccm_update_cache(long long action,
 		cl_free(tmp);
 	}
 	
-	FNRET(I_NULL);
+	FNRET(next_input);
 }
 
 

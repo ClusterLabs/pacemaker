@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.24 2004/04/15 00:34:06 msoffen Exp $ */
+/* $Id: cibprimatives.c,v 1.25 2004/04/15 08:31:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -501,6 +501,7 @@ void
 update_node_state(xmlNodePtr target, xmlNodePtr update)
 {
 	gboolean any_updates = FALSE;
+	gboolean replace_lrm = FALSE;
 	
 	const char *old_state     = xmlGetProp(target, "state");
 	const char *old_unclean   = xmlGetProp(target, "unclean");
@@ -521,6 +522,10 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 
 		if(local_prop_name == NULL) {
 			// error
+			
+		} else if(strcmp(local_prop_name, "replace_lrm") == 0) {
+			replace_lrm = TRUE;
+			any_updates = TRUE;
 			
 		} else if(strcmp(local_prop_name, "source") == 0) {
 			source = local_prop_value;
@@ -566,6 +571,14 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 	} else if(state != NULL) {
 		any_updates = TRUE;
 	}
+
+	if(replace_lrm) {
+		xmlNodePtr lrm = find_xml_node(target, "lrm");
+		xmlUnlinkNode(lrm);
+		free_xml(lrm);
+		
+	}
+	
 	
 	set_xml_property_copy(target, "state", state);
 	

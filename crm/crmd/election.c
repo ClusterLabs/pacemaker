@@ -445,7 +445,7 @@ do_ack_welcome(long long action,
 
 	xmlNodePtr cib_copy = get_cib_copy();
 	xmlNodePtr tmp1 = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
-	xmlNodePtr tmp2 = create_cib_fragment(tmp1, XML_CIB_TAG_STATUS);
+	xmlNodePtr tmp2 = create_cib_fragment(tmp1, NULL);
 	
 	send_ha_reply(fsa_cluster_conn, welcome, tmp2);
 
@@ -535,12 +535,21 @@ do_process_welcome_ack(long long action,
 		free_xml(cib_fragment);
 		FNRET(I_FAIL);
 	}
+
+	cl_log(LOG_DEBUG, "Welcoming node %s after ACK", join_from);
 	
 	// add them to our list of "active" nodes
 	g_hash_table_insert(joined_nodes, strdup(join_from),strdup(join_from));
 
 
-
+	if(cib_fragment == NULL) {
+		cl_log(LOG_ERR,
+		       "No status information was part of the"
+		       " Welcome ACK from %s",
+		       join_from);
+		FNRET(I_NULL);
+	}
+	
 	/* TODO: check the fragment is only for the status section
 	const char *section = get_xml_attr(cib_fragment, NULL,
 					   XML_ATTR_FILTER_TYPE, TRUE);	*/
@@ -564,5 +573,5 @@ do_process_welcome_ack(long long action,
 		       size);
 		//dont waste time by invoking the pe yet;
 	}
-	FNRET(I_NULL);
+	FNRET(I_CIB_OP);
 }
