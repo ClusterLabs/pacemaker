@@ -272,7 +272,7 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 
 	CRM_DEBUG2("Dumped XML into buffer: [%s]", xmlBufferContent(xml_buffer));
 	
-	xml_message = (xmlChar*)strdup(xml_message); 
+	xml_message = (xmlChar*)strdup((char*)xml_buffer->content); 
 	if(!xml_message) {
 		cl_log(LOG_ERR, "memory allocation failed in dump_xml_node()");
 		return NULL;

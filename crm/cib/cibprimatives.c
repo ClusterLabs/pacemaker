@@ -37,7 +37,7 @@
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
 #include <crm/common/xmlutils.h>
-#include <crm/common/msgutils.h>
+//#include <crm/common/msgutils.h>
 #include <cibio.h>
 
 //--- Resource
@@ -45,9 +45,9 @@
 int
 addResource(xmlNodePtr cib, cibResource *xml_node)
 {
-    if(findResource(cib, ID(xml_node)) != NULL) return -1;
+    if(findResource(cib, ID(xml_node)) != NULL) FNRET(-1);
     // make these global constants
-    return addNode(cib, XML_CIB_TAG_RESOURCES, xml_node);
+    FNRET(addNode(cib, XML_CIB_TAG_RESOURCES, xml_node));
 }
 
 
@@ -55,7 +55,7 @@ xmlNodePtr
 findResource(xmlNodePtr cib, const char *id)
 {
     xmlNodePtr root = findNode(cib, XML_CIB_TAG_RESOURCES);
-    return findEntity(root, XML_CIB_TAG_RESOURCE, id, FALSE);
+    FNRET(findEntity(root, XML_CIB_TAG_RESOURCE, id, FALSE));
 }
 
 xmlNodePtr
@@ -71,7 +71,7 @@ newResource(const char *id, const char *type, const char *name, const char *max_
     xmlSetProp(xml_node, XML_CIB_ATTR_MAXINSTANCE, max_instances);
     xmlSetProp(xml_node, XML_ATTR_TSTAMP,      getNow());
     
-    return xml_node;
+    FNRET(xml_node);
 }
 
 
@@ -117,7 +117,7 @@ updateResource(xmlNodePtr cib, cibResource *anXmlNode)
 	}
 #endif
     }
-    return 0;
+    FNRET(0);
     
 }
 
@@ -127,7 +127,7 @@ delResource(xmlNodePtr cib, const char *id)
     xmlNodePtr res = findResource(cib, id);
     if(res != NULL) xmlUnlinkNode(res);
     //need to call?? xmlFreeNodeList(res);
-    return 0;
+    FNRET(0);
 }
 
 
@@ -136,15 +136,15 @@ delResource(xmlNodePtr cib, const char *id)
 int
 addStatus(xmlNodePtr cib, cibStatus *xml_node)
 {
-    if(findStatus(cib, ID(xml_node), INSTANCE(xml_node)) != NULL) return -1;
-    return addNode(cib, XML_CIB_TAG_STATUS, xml_node);
+    if(findStatus(cib, ID(xml_node), INSTANCE(xml_node)) != NULL) FNRET(-1);
+    FNRET(addNode(cib, XML_CIB_TAG_STATUS, xml_node));
 }
 
 xmlNodePtr
 findStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
 {
     xmlNodePtr root = findNode(cib, XML_CIB_TAG_STATUS);
-    return findEntity(root, XML_CIB_TAG_STATE, id, FALSE);
+    FNRET(findEntity(root, XML_CIB_TAG_STATE, id, FALSE));
 }
 
 int
@@ -165,7 +165,7 @@ updateStatus(xmlNodePtr cib, cibStatus *anXmlNode)
 	copyInProperties(anXmlNode, res);	
 #endif
     }
-    return 0;
+    FNRET(0);
 }
 
 xmlNodePtr
@@ -192,7 +192,7 @@ newStatus(const char *res_id, const char *node_id, const char *instance)
     xmlSetProp(xml_node, XML_ATTR_TSTAMP,      getNow());
 //    xmlNodePtr xml_node = xmlStringLenGetNodeList(cib, c_object, 1);
     
-    return xml_node;
+    FNRET(xml_node);
 }
 
 int
@@ -201,7 +201,7 @@ delStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
     xmlNodePtr res = findStatus(cib, id, instanceNum);
     if(res != NULL) xmlUnlinkNode(res);
     //need to call?? xmlFreeNodeList(res);
-    return 0;
+    FNRET(0);
 }
 
 //--- Constraint
@@ -209,15 +209,15 @@ delStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
 int
 addConstraint(xmlNodePtr cib, cibConstraint *xml_node)
 {
-    if(findConstraint(cib, ID(xml_node)) != NULL) return -1;
-    return addNode(cib, XML_CIB_TAG_CONSTRAINTS, xml_node);
+    if(findConstraint(cib, ID(xml_node)) != NULL) FNRET(-1);
+    FNRET(addNode(cib, XML_CIB_TAG_CONSTRAINTS, xml_node));
 }
 
 xmlNodePtr
 findConstraint(xmlNodePtr cib, const char *id)
 {
     xmlNodePtr root = findNode(cib, XML_CIB_TAG_CONSTRAINTS);
-    return findEntity(root, XML_CIB_TAG_CONSTRAINT, id, FALSE);
+    FNRET(findEntity(root, XML_CIB_TAG_CONSTRAINT, id, FALSE));
 }
 
 xmlNodePtr
@@ -239,7 +239,7 @@ newConstraint(const char *id)
     xmlSetProp(xml_node, XML_CIB_ATTR_CLEAR,   CIB_VAL_CLEARON_DEFAULT);
     xmlSetProp(xml_node, XML_ATTR_TSTAMP,  getNow());
 
-    return xml_node;
+    FNRET(xml_node);
 }
 
 
@@ -282,7 +282,7 @@ updateConstraint(xmlNodePtr cib, cibConstraint *anXmlNode)
 	}
 #endif
     }
-    return 0;
+    FNRET(0);
 }
 
 int
@@ -291,7 +291,7 @@ delConstraint(xmlNodePtr cib, const char *id)
     xmlNodePtr res = findConstraint(cib, id);
     if(res != NULL) xmlUnlinkNode(res);
     //need to call?? xmlFreeNodeList(res);
-    return 0;
+    FNRET(0);
 }
 
 
@@ -301,21 +301,21 @@ int
 addHaNode(xmlNodePtr cib, cibHaNode *xml_node)
 {
     const char * id = xmlGetProp(xml_node, XML_ATTR_ID);
-    if(id == NULL || strlen(id) < 1) return -1;
+    if(id == NULL || strlen(id) < 1) FNRET(-1);
 
-    if(findHaNode(cib, ID(xml_node)) != NULL) return -2;
+    if(findHaNode(cib, ID(xml_node)) != NULL) FNRET(-2);
 
     const char * type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
-    if(type == NULL || strlen(type) < 1) return -3; // or fill in a default
+    if(type == NULL || strlen(type) < 1) FNRET(-3); // or fill in a default
     
-    return addNode(cib, XML_CIB_TAG_NODES, xml_node);
+    FNRET(addNode(cib, XML_CIB_TAG_NODES, xml_node));
 }
 
 xmlNodePtr
 findHaNode(xmlNodePtr cib, const char *id)
 {
     xmlNodePtr root = findNode(cib, XML_CIB_TAG_NODES);
-    return findEntity(root, XML_CIB_TAG_NODE, id, FALSE);
+    FNRET(findEntity(root, XML_CIB_TAG_NODE, id, FALSE));
 }
 
 
@@ -332,7 +332,7 @@ newHaNode(const char *id, const char *type)
     xmlSetProp(xml_node, XML_CIB_ATTR_SOURCE,     CIB_VAL_SOURCE_DEFAULT);
     xmlSetProp(xml_node, XML_ATTR_TSTAMP,     getNow());
 
-    return xml_node;
+    FNRET(xml_node);
 }
 
 
@@ -355,7 +355,7 @@ updateHaNode(xmlNodePtr cib, cibHaNode *anXmlNode)
 	copyInProperties(anXmlNode, res);	
 #endif
     }
-    return 0;
+    FNRET(0);
 }
 
 int
@@ -364,5 +364,5 @@ delHaNode(xmlNodePtr cib, const char *id)
     xmlNodePtr res = findHaNode(cib, id);
     if(res != NULL) xmlUnlinkNode(res);
     //need to call?? xmlFreeNodeList(res);
-    return 0;
+    FNRET(0);
 }

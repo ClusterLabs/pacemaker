@@ -64,6 +64,7 @@ xmlNodePtr status_search = NULL;
 xmlNodePtr
 createEmptyCib(void)
 {
+    (void)_ha_msg_h_Id; // until the lmb cleanup
     // real code...
     xmlDocPtr cib = xmlNewDoc("1.0");
 //    xmlNodePtr tree, subtree;
@@ -79,9 +80,12 @@ createEmptyCib(void)
     xmlAddChild(cib->children, xmlNewNode(NULL, XML_CIB_TAG_STATUS));
 
     xmlNodePtr root = xmlDocGetRootElement(cib);
-    if(verifyCibXml(root)) return root;
+    if(verifyCibXml(root))
+    {
+	FNRET(root);
+    }
     cl_log(LOG_CRIT, "The generated CIB did not pass integrity testing!!  All hope is lost.");
-    return NULL;
+    FNRET(NULL);
 }
 
 gboolean
@@ -90,7 +94,7 @@ verifyCibXml(xmlNodePtr cib)
     if(cib == NULL)
     {
 	cl_log(LOG_INFO, "XML Buffer was empty.");
-	return FALSE;
+	FNRET(FALSE);
     }
 
     xmlNodePtr tmp1 = findNode(cib, XML_CIB_TAG_NODES);
@@ -104,12 +108,12 @@ verifyCibXml(xmlNodePtr cib)
 	int size = 0;
 	xmlDocDumpMemory(cib->doc, &mem, &size);
 	cl_log(LOG_CRIT, "Not all required sections were present. Sections [%s, %s, %s, %s]\nCib was: %s", tmp1 == NULL? "ok":"null", tmp2 == NULL? "ok":"null", tmp3 == NULL? "ok":"null", tmp4 == NULL? "ok":"null", (char*)mem);
-	return FALSE;
+	FNRET(FALSE);
     }
 
     // more integrity tests
 
-    return TRUE;
+    FNRET(TRUE);
 }
 
 
@@ -123,8 +127,10 @@ readCibXml(char *buffer)
    }
    xmlNodePtr root = xmlDocGetRootElement(doc);
    if(verifyCibXml(root) == FALSE)
-       return createEmptyCib();
-   return root;
+   {
+       FNRET(createEmptyCib());
+   }
+   FNRET(root);
 }
 
 
@@ -144,20 +150,27 @@ readCibXmlFile(const char *filename)
     }
    xmlNodePtr root = xmlDocGetRootElement(doc);
    if(verifyCibXml(root) == FALSE)
-       return createEmptyCib();
-   return root;
+   {
+       FNRET(createEmptyCib());
+   }
+   FNRET(root);
 }
 
 xmlNodePtr
 theCib(void)
 {
-    return the_cib;
+    FNRET(the_cib);
 }
 
 xmlNodePtr
 getCibSection(const char *section)
 {
     CRM_DEBUG2("Looking for section (%s) of the CIB", section);
+
+    if(section == NULL || strcmp("all", section) == 0)
+    {
+	FNRET(the_cib);
+    }
 
     xmlNodePtr res = findNode(the_cib, section);
 
@@ -170,7 +183,7 @@ getCibSection(const char *section)
     }
     else cl_log(LOG_ERR, "Section (%s) not found.", section);
     
-    return res;
+    FNRET(res);
 }
 
 gboolean
@@ -184,9 +197,9 @@ initializeCib(xmlNodePtr cib)
 	constraint_search = updatedSearchPath(cib, XML_CIB_TAG_CONSTRAINTS);
 	status_search = updatedSearchPath(cib, XML_CIB_TAG_STATUS);
 	initialized = TRUE;
-	return TRUE;
+	FNRET(TRUE);
     }
-    return FALSE;
+    FNRET(FALSE);
     
 }
 
@@ -200,7 +213,7 @@ updatedSearchPath(xmlNodePtr cib, const char *path)
     if(parent == NULL)
 	cl_log(LOG_CRIT, "Updating %s search path failed.", path);
     cl_log(LOG_INFO, "Updating (%s) search path to (%s).", path, xmlGetNodePath(parent) );
-    return parent;
+    FNRET(parent);
 }
 
 
@@ -232,7 +245,7 @@ moveFile(const char *oldname, const char *newname, gboolean backup, char *ext)
 	    if(res < 0)
 	    {
 		perror("Could not remove the current backup of Cib");
-		return -1;
+		FNRET(-1);
 	    }
 	}
     }
@@ -246,17 +259,17 @@ moveFile(const char *oldname, const char *newname, gboolean backup, char *ext)
 	if(res < 0)
 	{
 	    perror("Could not create backup of current Cib");
-	    return -2;
+	    FNRET(-2);
 	}
 	res = unlink(oldname);
 	if(res < 0)
 	{
 	    perror("Could not unlink the current Cib");
-	    return -3;
+	    FNRET(-3);
 	}
     }
     
-    return 0;
+    FNRET(0);
     
 }
 
@@ -265,7 +278,7 @@ int
 activateCibBuffer(char *buffer)
 {
     xmlNodePtr cib = readCibXml(buffer);
-    return activateCibXml(cib);
+    FNRET(activateCibXml(cib));
     
 }
 
@@ -274,14 +287,14 @@ activateCibXml(xmlNodePtr cib)
 {
     if(cib != NULL)
     {
-	if(initializeCib(cib) == FALSE) return -5;
+	if(initializeCib(cib) == FALSE) FNRET(-5);
 	
 	int res = moveFile(CIB_FILENAME, CIB_BACKUP, FALSE, NULL);
 	
 	if(res  < 0)
 	{
 	    cl_log(LOG_INFO, "Could not make backup of the current Cib (code: %d)... aborting update.", res);
-	    return -1;
+	    FNRET(-1);
 	}
 	
  	// modify the timestamp
@@ -311,20 +324,20 @@ activateCibXml(xmlNodePtr cib)
 	    if(moveFile(CIB_BACKUP, CIB_FILENAME, FALSE, NULL) < -1)
 	    {
 		cl_log(LOG_CRIT, "Could not restore the backup of the current Cib (code: %d)... panic!", res);
-		return -2;
+		FNRET(-2);
 		// should probably exit here 
 	    }
 	    
 	    cl_log(LOG_CRIT, "Update of Cib failed (code: %d)... reverted to last known valid version", res);
-	    return -3;
+	    FNRET(-3);
 	}
     }
     else
     {
 	cl_log(LOG_INFO, "Ignoring invalid NULL Cib XML");
-	return -4;
+	FNRET(-4);
     }
 
-    return 0;
+    FNRET(0);
     
 }

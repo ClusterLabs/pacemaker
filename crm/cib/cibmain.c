@@ -42,18 +42,19 @@
 
 #include <ocf/oc_event.h>
 
+#include <crm/common/ipcutils.h>
+#include <crm/common/crmutils.h>
+#include <crm/common/xmlvalues.h>
+#include <cibio.h>
+#include <cib.h>
+
 /* #define REALTIME_SUPPORT 0 */
-#define PID_FILE     "/var/lib/heartbeat/crm/cib.pid"
+#define PID_FILE     WORKING_DIR"/cib.pid"
 #define DAEMON_LOG   "cib.log"
 #define DAEMON_DEBUG "cib.debug"
 
 GMainLoop*  mainloop = NULL;
-const char* daemon_name = "cib";
-
-#include <crm/common/ipcutils.h>
-#include <crm/common/crmutils.h>
-#include <cibio.h>
-#include <cib.h>
+const char* daemon_name = CRM_SYSTEM_CIB;
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
@@ -111,24 +112,24 @@ main(int argc, char ** argv)
     // read local config file
     
     if (req_status){
-	return init_status(PID_FILE, daemon_name);
+	FNRET(init_status(PID_FILE, daemon_name));
     }
   
     if (req_stop){
-	return init_stop(PID_FILE, mainloop);
+	FNRET(init_stop(PID_FILE, mainloop));
     }
   
     if (req_comms_restart) { 
 //	init_stop();
 	// kill the current comms
-	init_server_ipc_comms("cib", cib_client_connect, default_ipc_input_destroy);
+	init_server_ipc_comms(CRM_SYSTEM_CIB, cib_client_connect, default_ipc_input_destroy);
         }
 
     if (req_restart) { 
 	init_stop(PID_FILE, mainloop);
     }
 
-    return init_start();
+    FNRET(init_start());
 }
 
 
@@ -141,7 +142,10 @@ init_start(void)
 	cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
 	exit(LSB_EXIT_OK);
     }
-  
+
+    cl_log(LOG_INFO, "Register PID");
+    register_pid(PID_FILE, TRUE, shutdown);
+
     xmlInitParser();  // only do this once
 
     cl_log_set_logfile(DAEMON_LOG);
@@ -160,10 +164,6 @@ init_start(void)
     if ((facility = hb_fd->llc_ops->get_logfacility(hb_fd))>0) {
 	cl_log_set_facility(facility);
     }    
-    cl_log(LOG_INFO, "Register PID");
-    register_pid(PID_FILE, TRUE, shutdown);
-
-
 
     xmlNodePtr cib = readCibXmlFile(CIB_FILENAME);
     if(initializeCib(cib))
@@ -174,7 +174,7 @@ init_start(void)
 	initializeCib(createEmptyCib());
     }
     
-    init_server_ipc_comms("cib", cib_client_connect, default_ipc_input_destroy);
+    init_server_ipc_comms(CRM_SYSTEM_CIB, cib_client_connect, default_ipc_input_destroy);
     
     /* Create the mainloop and run it... */
     mainloop = g_main_new(FALSE);
@@ -196,7 +196,7 @@ static int  crm_realtime = 1;
     if (unlink(PID_FILE) == 0) {
 	cl_log(LOG_INFO, "[%s] stopped", daemon_name);
     }
-    return 0;
+    FNRET(0);
 }
 
 void

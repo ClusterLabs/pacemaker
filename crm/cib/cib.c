@@ -79,51 +79,39 @@ cib_client_connect(IPC_Channel *newclient, gpointer user_data)
     IPC_Message *client_msg = (IPC_Message *)user_data;
     cl_log(LOG_INFO, "recieved client join msg: %s", (char*)client_msg->msg_body);
 
-
-    IPC_Message        *ack_msg;
-    char	       str[256];
-    snprintf(str, sizeof(str)-1, "I see you have joined us... %s", daemon_name);
-
-    ack_msg = create_simple_message(str, newclient);
-    send_ipc_message(newclient, ack_msg);
-    
-    G_main_add_IPC_Channel(G_PRIORITY_LOW,
-			   newclient,
-			   FALSE, 
-			   cib_input_dispatch,
-			   newclient, 
-			   default_ipc_input_destroy);
-    return TRUE;
+    if(newclient != NULL)
+	G_main_add_IPC_Channel(G_PRIORITY_LOW,
+			       newclient,
+			       FALSE, 
+			       cib_input_dispatch,
+			       newclient, 
+			       default_ipc_input_destroy);
+    FNRET(TRUE);
 }
 
 gboolean
-cib_input_dispatch(IPC_Channel *client, 
-	      gpointer        user_data)
+cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 {
-    if(client->ch_status == IPC_DISCONNECT)
+    int lpc = 0;
+    gboolean hack_return_good = TRUE;
+    
+    IPC_Message *msg = NULL;
+    while(client->ch_status != IPC_DISCONNECT && client->ops->is_message_pending(client) == TRUE)
     {
-	cl_log(LOG_INFO, "cib_input_dispatch: received HUP");
-// client_delete(client);
-// do some equiv instead
-	return FALSE;
-    }
-    else
-    {
-	IPC_Message *msg = NULL;
-	if(client->ops->is_message_pending(client) == TRUE)
+	if(client->ops->recv(client, &msg) != IPC_OK)
 	{
-	    if(client->ops->recv(client, &msg) != IPC_OK)
-	    {
-		perror("Receive failure:");
-		return TRUE;
-	    }
-	    cl_log(LOG_DEBUG, "Got message [body=%s]", (char*)msg->msg_body);
+	    perror("Receive failure:");
+	    FNRET(!hack_return_good);
 	}
+	
 	if(msg == NULL)
 	{
-	    CRM_DEBUG("#### No message this time...");
-	    return TRUE;
+	    CRM_DEBUG("No message this time");
+	    continue;
 	}
+
+	lpc++;
+	CRM_DEBUG2("Got message [body=%s]", (char*)msg->msg_body);
 	
 	char *buffer = (char*)msg->msg_body;
 	cl_log(LOG_DEBUG, "Got xml [text=%s]", buffer);
@@ -133,36 +121,42 @@ cib_input_dispatch(IPC_Channel *client,
 	if(doc == NULL)
 	{
 	    cl_log(LOG_INFO, "XML Buffer was not valid...\n Buffer: (%s)", buffer);
-	    return TRUE;
+	    continue;
 	}
-	else
+	
+	CRM_DEBUG("About to interrogate xml");
+	xmlNodePtr root_xml_node = xmlDocGetRootElement(doc);
+	CRM_DEBUG("Got the root element");
+	
+	xmlNodePtr msg_xml_node = validate_crm_message(root_xml_node,
+						       CRM_SYSTEM_CIB,
+						       NULL,
+						       XML_MSG_TAG_REQUEST);
+	
+	if(msg_xml_node != NULL)
 	{
-	    CRM_DEBUG("About to interrogate xml");
-	    xmlNodePtr root_xml_node = xmlDocGetRootElement(doc);
-	    CRM_DEBUG("Got the root element");
-	    
-	    xmlNodePtr msg_xml_node = validate_crm_message(root_xml_node,
-							   "cib",
-							   XML_MSG_TAG_REQUEST);
-
-	    if(msg_xml_node != NULL)
-	    {
-		CRM_DEBUG("The message is good, processing");
-		xmlNodePtr answer = processCibRequest(msg_xml_node);
-		CRM_DEBUG("Directing reply");
-		const char *src_sys   = xmlGetProp(root_xml_node, XML_MSG_ATTR_SRCSUBSYS);
-		xmlSetProp(answer, XML_MSG_ATTR_SUBSYS, src_sys);
-		CRM_DEBUG("Sending reply");
-		send_xmlipc_message(client, answer);
-	    }
-	    else if(root_xml_node != NULL)
-		cl_log(LOG_INFO, "Received a message for (%s) by mistake", xmlGetProp(root_xml_node, XML_MSG_ATTR_SUBSYS));
-	    else
-		cl_log(LOG_INFO, "Root node was NULL!!");
+	    CRM_DEBUG("The message is good, processing");
+	    xmlNodePtr answer = processCibRequest(msg_xml_node);
+	    CRM_DEBUG("Directing reply");
+	    if(send_ipc_reply(client, root_xml_node, answer) == FALSE)
+		cl_log(LOG_WARNING, "Cib answer could not be sent");
 	}
+	else if(root_xml_node != NULL)
+	    cl_log(LOG_INFO, "Received a message for (%s) by mistake",
+		   xmlGetProp(root_xml_node, XML_MSG_ATTR_SYSTO));
+	else
+	    cl_log(LOG_INFO, "Root node was NULL!!");
+
 	msg->msg_done(msg);
-    }	
-    return TRUE;
+    }
+
+    CRM_DEBUG2("Processed %d messages", lpc);
+    if(client->ch_status == IPC_DISCONNECT)
+    {
+	cl_log(LOG_INFO, "cib_input_dispatch: received HUP (2)");
+	FNRET(!hack_return_good);
+    }
+    FNRET(hack_return_good);
 }
 
 
@@ -175,7 +169,7 @@ addNodeToResource(xmlNodePtr cib, const char *res_id, const char *node_id, const
 	if(findHaNode(cib, node_id) == NULL)
 	{
 	    cl_log(LOG_CRIT, XML_CIB_TAG_NODE " (%s) does not exist, cannot be added to " XML_CIB_TAG_RESOURCE " (%s).", node_id, res_id);	
-	    return -1;
+	    FNRET(-1);
 	}
 
 	CRM_DEBUG3("Attempting to add allowed " XML_CIB_TAG_NODE " (%s) to " XML_CIB_TAG_RESOURCE " (%s).", node_id, res_id);
@@ -192,9 +186,9 @@ addNodeToResource(xmlNodePtr cib, const char *res_id, const char *node_id, const
     else
     {
 	cl_log(LOG_CRIT, XML_CIB_TAG_RESOURCE " (%s) does not exist, cannot add allowed " XML_CIB_TAG_NODE" (%s).", res_id, node_id);
-	return -2;
+	FNRET(-2);
     }
-    return 0;
+    FNRET(0);
 }
 
 
@@ -214,7 +208,7 @@ updateCibStatus(xmlNodePtr cib, const char *res_id, const char *instanceNum, con
 		   node_id,
 		   res_id,
 		   instanceNum);
-	    return -1;
+	    FNRET(-1);
 	}
 
 	/* this could probable be optimized to update the status entry directly instead of creating a new one and doing
@@ -231,9 +225,9 @@ updateCibStatus(xmlNodePtr cib, const char *res_id, const char *instanceNum, con
     else
     {
 	cl_log(LOG_CRIT, XML_CIB_TAG_RESOURCE " (%s) does not exist, cannot add it to the " XML_CIB_TAG_STATUS " list.", res_id);
-	return -2;
+	FNRET(-2);
     }
-    return 0;
+    FNRET(0);
 }
 
 cibConstraint *
@@ -255,7 +249,7 @@ createInternalConstraint(const char *res_id_1, const char *instance, const char 
     xmlSetProp(node_entry, XML_CIB_ATTR_ACTION, "add");
     xmlAddChild(new_con, node_entry);
     
-    return new_con;
+    FNRET(new_con);
 }
 
 cibConstraint *
@@ -267,7 +261,7 @@ createSimpleConstraint(const char *id, const char *type, const char *res_id_1, c
     xmlSetProp(new_con, XML_CIB_ATTR_RESID1, res_id_1);
     xmlSetProp(new_con, XML_CIB_ATTR_RESID2, res_id_2);
 
-    return new_con;
+    FNRET(new_con);
 }
 
 cibConstraint *
@@ -286,7 +280,7 @@ createVariableConstraint(const char *id, const char *type, const char *res_id_1,
     xmlSetProp(node_entry, XML_CIB_ATTR_ACTION, "add");
     xmlAddChild(new_con, node_entry);
 
-    return new_con;
+    FNRET(new_con);
 }
 
 
@@ -335,5 +329,5 @@ test(void)
 
     activateCibXml(cib);
     
-    return 0;
+    FNRET(0);
 }

@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef XMLTAGS_H
-#define XMLTAGS_H
+#ifndef XML_TAGS__H
+#define XML_TAGS__H
 
 #define CRM_VERSION                "0.1"
 
@@ -41,21 +41,23 @@
 #define XML_MSG_TAG_RESPONSE       "response"
 
 #define XML_MSG_ATTR_MSGTYPE       "message_type"
-#define XML_MSG_ATTR_SUBSYS        "dest_subsystem"
-#define XML_MSG_ATTR_SRCSUBSYS     "src_subsystem"
+#define XML_MSG_ATTR_SYSFROM       "sys_from"
+#define XML_MSG_ATTR_SYSTO         "sys_to"
+#define XML_MSG_ATTR_HOSTFROM      "host_from"
+#define XML_MSG_ATTR_HOSTTO        "host_to"
 #define XML_MSG_ATTR_REFERENCE     "reference"
 
 
 //---- request tags/attrs
 #define XML_REQ_TAG_DC             "dc_request"
-#define XML_REQ_TAG_CRM            "crm_request"
+#define XML_REQ_TAG_CRM            "crmd_request"
 #define XML_REQ_TAG_CIB            "cib_request"
 #define XML_REQ_TAG_LRM            "lrm_request"
 #define XML_REQ_TAG_PE             "pe_request"
 #define XML_REQ_TAG_TE             "te_request"
 
 #define XML_DC_ATTR_OP		   "dc_operation"
-#define XML_CRM_ATTR_OP            "crm_operation"
+#define XML_CRM_ATTR_OP            "crmd_operation"
 #define XML_LRM_ATTR_OP            "lrm_operation"
 #define XML_PE_ATTR_OP             "pe_operation"
 #define XML_TE_ATTR_OP             "te_operation"
@@ -68,7 +70,7 @@
 
 //---- response tags/attrs
 #define XML_RESP_TAG_DC             "dc_response"
-#define XML_RESP_TAG_CRM            "crm_response"
+#define XML_RESP_TAG_CRM            "crmd_response"
 #define XML_RESP_TAG_CIB            "cib_response"
 #define XML_RESP_TAG_LRM            "lrm_response"
 #define XML_RESP_TAG_PE             "pe_response"
@@ -81,7 +83,7 @@
 
 #define XML_CRM_TAG_PING            "ping_response"
 #define XML_PING_ATTR_STATUS        "ping_result"
-#define XML_PING_ATTR_SUBSYS        "crm_subsystem"
+#define XML_PING_ATTR_SYSFROM       "crm_subsystem"
 
 #define XML_CIB_TAG_FRAGMENT        "cib_fragment"
 #define XML_CIB_ATTR_RESULT         "cib_action_result"

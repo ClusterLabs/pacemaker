@@ -44,10 +44,10 @@
 
 GMainLoop*  mainloop = NULL;
 const char* daemon_name = "crmd";
-const char* ournode;
 
 #include <crm/common/crmutils.h>
 #include <crm/common/ipcutils.h>
+#include <crm/common/xmlvalues.h>
 #include <crmd.h>
 
 #define PID_FILE     "/var/lib/heartbeat/crm/crm.pid"
@@ -60,8 +60,8 @@ int init_start(void);
 void register_with_apphb(void);
 ll_cluster_t * ha_register(void);
 int register_with_ccm(ll_cluster_t *hb_cluster);
-gboolean crmd_hamsg_input_dispatch(int fd, gpointer user_data);
-void crmd_hamsg_input_destroy(gpointer user_data);
+gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
+void crmd_ha_input_destroy(gpointer user_data);
 void shutdown(int nsig);
 void crmd_hamsg_callback(const struct ha_msg* msg, void* private_data);
 
@@ -111,19 +111,18 @@ main(int argc, char ** argv)
     // read local config file
     
     if (req_status){
-	return init_status(PID_FILE, daemon_name);
+	FNRET(init_status(PID_FILE, daemon_name));
     }
   
     if (req_stop){
-	return init_stop(PID_FILE, mainloop);
+	FNRET(init_stop(PID_FILE, mainloop));
     }
   
     if (req_restart) { 
 	init_stop(PID_FILE, mainloop);
     }
 
-    return init_start();
-
+    FNRET(init_start());
 }
 
 
@@ -136,6 +135,8 @@ init_start(void)
 	cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
 	exit(LSB_EXIT_OK);
     }
+    cl_log(LOG_INFO, "Register PID");
+    register_pid(PID_FILE, TRUE, shutdown);
   
     cl_log_set_logfile(DAEMON_LOG);
 //    if (crm_debug()) {
@@ -143,7 +144,8 @@ init_start(void)
 //    }
 
     xmlInitParser();
-    pending_actions = g_hash_table_new(&g_str_hash, &g_str_equal);
+    pending_remote_replies = g_hash_table_new(&g_str_hash, &g_str_equal);
+    ipc_clients = g_hash_table_new(&g_str_hash, &g_str_equal);
 		    
     /* change the logging facility to the one used by heartbeat daemon */
     hb_cluster = ll_cluster_new("heartbeat");
@@ -157,103 +159,134 @@ init_start(void)
 	cl_log_set_facility(facility);
     }
     
-    cl_log(LOG_INFO, "Register PID");
-    register_pid(PID_FILE, TRUE, shutdown);
 
+    int was_error = 0;
 
-    init_server_ipc_comms("crmd", crmd_client_connect, default_ipc_input_destroy);
-    cib_channel = init_client_ipc_comms("cib", crmd_ipc_input_dispatch);
+    CRM_DEBUG("Init server comms");
+    was_error = init_server_ipc_comms(CRM_SYSTEM_CRMD, crmd_client_connect, default_ipc_input_destroy);
     
-    register_with_ha(hb_cluster,
-		     daemon_name,
-		     crmd_hamsg_input_dispatch,
-		     crmd_hamsg_callback,
-		     crmd_hamsg_input_destroy);
-    register_with_ccm(hb_cluster);
-
-    /* Create the mainloop and run it... */
-    mainloop = g_main_new(FALSE);
-    cl_log(LOG_INFO, "Starting %s", daemon_name);
-  
-#ifdef REALTIME_SUPPORT
-static int  crm_realtime = 1;
-    if (crm_realtime == 1){
-	cl_enable_realtime();
-    }else if (crm_realtime == 0){
-	cl_disable_realtime();
+    if(was_error == 0)
+    {
+	CRM_DEBUG("Signon with the CIB");
+	IPC_Channel *cib_channel = init_client_ipc_comms("cib", crmd_ipc_input_callback);
+	if(cib_channel != NULL)
+	    g_hash_table_insert (ipc_clients, strdup("cib"), (gpointer)cib_channel);
+	else
+	    was_error = 1;
     }
-    cl_make_realtime(SCHED_RR, 5, 64, 64);
-#endif
+    if(was_error == 0)
+    {
+	CRM_DEBUG("Registering with HA");
+	was_error = (register_with_ha(hb_cluster,
+				      daemon_name,
+				      crmd_ha_input_dispatch,
+				      crmd_ha_input_callback,
+				      crmd_ha_input_destroy) == FALSE);
+    }
+    if(was_error == 0)
+    {
+	CRM_DEBUG("Registering with CCM");
+	was_error = register_with_ccm(hb_cluster);
+    }
+    
+    if(was_error == 0)
+    {
+	CRM_DEBUG("Finding our node name");
+	our_uname = hb_cluster->llc_ops->get_mynodeid(hb_cluster);
+	if(our_uname == NULL)
+	{
+	    cl_log(LOG_ERR, "get_mynodeid() failed");
+	    was_error = 1;
+	}
+	cl_log(LOG_INFO, "Hostname: %s", our_uname);
+    }
 
-    g_main_run(mainloop);
-    return_to_orig_privs();
-  
+    if(was_error == 0)
+    {
+	/* Create the mainloop and run it... */
+	mainloop = g_main_new(FALSE);
+	cl_log(LOG_INFO, "Starting %s", daemon_name);
+	
+#ifdef REALTIME_SUPPORT
+	static int  crm_realtime = 1;
+	if (crm_realtime == 1){
+	    cl_enable_realtime();
+	}else if (crm_realtime == 0){
+	    cl_disable_realtime();
+	}
+	cl_make_realtime(SCHED_RR, 5, 64, 64);
+#endif
+	
+	g_main_run(mainloop);
+	return_to_orig_privs();
+    }
+    
     if (unlink(PID_FILE) == 0) {
 	cl_log(LOG_INFO, "[%s] stopped", daemon_name);
     }
-    return 0;
+    FNRET(was_error);
 }
 
 gboolean
-crmd_hamsg_input_dispatch(int fd, gpointer user_data)
+crmd_ha_input_dispatch(int fd, gpointer user_data)
 {
-  cl_log(LOG_DEBUG, "input_dispatch...");
-  
-  ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
-
-  while(hb_cluster->llc_ops->msgready(hb_cluster))
-  {
-      cl_log(LOG_DEBUG, "there was another message...");
-      hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);  // invoke the callbacks but dont block
-  }
-  
-  return TRUE;
+    cl_log(LOG_DEBUG, "input_dispatch...");
+    
+    ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
+    
+    while(hb_cluster->llc_ops->msgready(hb_cluster))
+    {
+	cl_log(LOG_DEBUG, "there was another message...");
+	hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);  // invoke the callbacks but dont block
+    }
+    
+    FNRET(TRUE);
 }
 
 void
-crmd_hamsg_input_destroy(gpointer user_data)
+crmd_ha_input_destroy(gpointer user_data)
 {
-  cl_log(LOG_INFO, "in my hb_input_destroy");
+    cl_log(LOG_INFO, "in my hb_input_destroy");
 }
 
 int
 register_with_ccm(ll_cluster_t *hb_cluster)
 {
-	int ret;
-	fd_set rset;
-
-	cl_log(LOG_INFO, "Registering with CCM");
-	oc_ev_register(&ev_token);
-
-	cl_log(LOG_INFO, "Setting up CCM callbacks");
-	oc_ev_set_callback(ev_token, OC_EV_MEMB_CLASS, my_ms_events, NULL);
-	oc_ev_special(ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
-
-	cl_log(LOG_INFO, "Activating CCM taken");
-	ret = oc_ev_activate(ev_token, &my_ev_fd);
-	if(ret){
-	  cl_log(LOG_INFO, "CCM Activation failed... unregistering");
-		oc_ev_unregister(ev_token);
-		return(1);
-	}
-	cl_log(LOG_INFO, "CCM Activation passed... all set to go!");
-
-	FD_ZERO(&rset);
-	FD_SET(my_ev_fd, &rset);
-	
-	if(oc_ev_handle_event(ev_token)){
-	    cl_log(LOG_ERR,"CCM Activation: terminating");
-	    return(1);
-	}
-	
-	cl_log(LOG_INFO, "Sign up for \"ccmjoin\" messages");
-	if (hb_cluster->llc_ops->set_msg_callback(hb_cluster, "ccmjoin",
-						  msg_ccm_join, hb_cluster) != HA_OK)
-	{
-	    cl_log(LOG_ERR, "Cannot set msg_ipfail_join callback");
-	}
-	
-	return 0;
+    int ret;
+    fd_set rset;
+    
+    cl_log(LOG_INFO, "Registering with CCM");
+    oc_ev_register(&ev_token);
+    
+    cl_log(LOG_INFO, "Setting up CCM callbacks");
+    oc_ev_set_callback(ev_token, OC_EV_MEMB_CLASS, crmd_ccm_input_callback, NULL);
+    oc_ev_special(ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
+    
+    cl_log(LOG_INFO, "Activating CCM taken");
+    ret = oc_ev_activate(ev_token, &my_ev_fd);
+    if(ret){
+	cl_log(LOG_INFO, "CCM Activation failed... unregistering");
+	oc_ev_unregister(ev_token);
+	return(1);
+    }
+    cl_log(LOG_INFO, "CCM Activation passed... all set to go!");
+    
+    FD_ZERO(&rset);
+    FD_SET(my_ev_fd, &rset);
+    
+    if(oc_ev_handle_event(ev_token)){
+	cl_log(LOG_ERR,"CCM Activation: terminating");
+	return(1);
+    }
+    
+    cl_log(LOG_INFO, "Sign up for \"ccmjoin\" messages");
+    if (hb_cluster->llc_ops->set_msg_callback(hb_cluster, "ccmjoin",
+					      msg_ccm_join, hb_cluster) != HA_OK)
+    {
+	cl_log(LOG_ERR, "Cannot set msg_ipfail_join callback");
+    }
+    
+    FNRET(0);
 }
 
 
@@ -293,10 +326,3 @@ shutdown(int nsig)
     }
 }
 
-void
-crmd_hamsg_callback(const struct ha_msg* msg, void* private_data)
-{
-    cl_log(LOG_DEBUG, "crmd_hamsg_callback: processing HA message (%s from %s)", ha_msg_value(msg, F_SEQ), ha_msg_value(msg, F_ORIG));
-    xmlNodePtr root_xml_node = validate_and_decode_hamessage(msg);
-    process_message(root_xml_node, FALSE, ha_msg_value(msg, F_ORIG));
-}

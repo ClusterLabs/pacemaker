@@ -25,15 +25,16 @@ extern gboolean    i_am_dc;
 extern int         i_am_in;
 
 extern ll_cluster_t *hb_cluster;
-extern GHashTable   *pending_actions;
-extern IPC_Channel  *cib_channel;
+extern GHashTable   *pending_remote_replies;
+extern GHashTable   *ipc_clients;
+extern const char *our_uname;
 
-extern gboolean crmd_ipc_input_dispatch(IPC_Channel *client, gpointer user_data);
 extern void msg_ccm_join(const struct ha_msg *msg, void *foo);
-extern void crmd_msg_callback(const struct ha_msg* msg, void* private_data);
-extern void my_ms_events(oc_ed_t event, void *cookie, size_t size, const void *data);
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
-extern void process_message(xmlNodePtr root_xml_node, gboolean from_ipc, const char *src_node_name);
 extern gboolean crmd_client_connect(IPC_Channel *newclient, gpointer user_data);
+extern void crmd_ccm_input_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
+extern void crmd_ha_input_callback(const struct ha_msg* msg, void* private_data);
+extern gboolean crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data);
+    
 
 #endif

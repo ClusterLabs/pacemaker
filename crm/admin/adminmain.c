@@ -54,6 +54,7 @@
 
 GMainLoop*  mainloop = NULL;
 const char* daemon_name = "crmadmin";
+IPC_Channel *crmd_channel = NULL;
 
 void usage(const char* cmd, int exit_status);
 void test_messaging(ll_cluster_t* hb_cluster);
@@ -64,7 +65,7 @@ xmlNodePtr handleDelete(void);
 xmlNodePtr handleModify(void);
 gboolean decodeNVpair(const char *srcstring, char separator, char **name, char **value);
 gboolean admin_input_dispatch(int fd, gpointer user_data);
-void admin_msg_callback(const struct ha_msg* msg, void* private_data);
+gboolean admin_msg_callback(IPC_Channel* source_data, void* private_data);
 xmlNodePtr wrapUpdate(xmlNodePtr update, const char *section_name, const char *action);
 
 
@@ -251,7 +252,7 @@ main(int argc, char ** argv)
 		break;
 	    case 'o':
 		CRM_DEBUG3("Option %c => %s", flag, optarg);
-		node = strdup(obj_type);
+		obj_type = strdup(optarg);
 		break;
 	    case 'D':
 		CRM_DEBUG3("Option %c => %s", flag, optarg);
@@ -421,7 +422,7 @@ handleCreate(void)
 {
     CRM_DEBUG2("Creating new CIB object (%s)", obj_type);
     if(obj_type == NULL) return NULL;// error
-    xmlNodePtr root, new_xml_node;
+    xmlNodePtr xml_root_node, new_xml_node;
     const char *section_name = NULL;
     
     if(strcmp("node", obj_type) == 0)
@@ -540,9 +541,9 @@ handleCreate(void)
     CRM_DEBUG("Object creation complete");
     
     // create the cib request
-    root = wrapUpdate(new_xml_node, section_name, "create");
+    xml_root_node = wrapUpdate(new_xml_node, section_name, "create");
 
-    return root;
+    return xml_root_node;
     
 }
 
@@ -551,7 +552,7 @@ handleDelete(void)
 {
     CRM_DEBUG("Deleting existing CIB object");
     if(subtype == NULL) return NULL;// error
-    xmlNodePtr root, new_xml_node = NULL;;
+    xmlNodePtr xml_root_node, new_xml_node = NULL;;
     const char *section_name = NULL;
     
     if(strcmp("node", obj_type) == 0)
@@ -591,11 +592,11 @@ handleDelete(void)
     }
 
     // create the cib request
-    root = wrapUpdate(new_xml_node, section_name, "delete");
+    xml_root_node = wrapUpdate(new_xml_node, section_name, "delete");
 
     CRM_DEBUG("Creation of removal request complete");
     
-    return root;
+    return xml_root_node;
     
 }
 
@@ -604,7 +605,7 @@ handleModify(void)
 {
     CRM_DEBUG("Modifying existing CIB object");
     if(subtype == NULL) return NULL;// error
-    xmlNodePtr root, new_xml_node = NULL;
+    xmlNodePtr xml_root_node, new_xml_node = NULL;
     const char *section_name = NULL;
     
     if(strcmp("node", obj_type) == 0)
@@ -741,11 +742,11 @@ handleModify(void)
 
     
     // create the cib request
-    root = wrapUpdate(new_xml_node, section_name, "update");
+    xml_root_node = wrapUpdate(new_xml_node, section_name, "update");
     
     CRM_DEBUG("Creation of modify request complete");
 
-    return root;
+    return xml_root_node;
     
 }
 
@@ -753,11 +754,17 @@ handleModify(void)
 xmlNodePtr
 wrapUpdate(xmlNodePtr update, const char *section_name, const char *action)
 {
-    // create the update section
-    xmlNodePtr section = xmlNewNode(NULL, section_name);
-    xmlAddChild(section, update);
+    // create the cib request
+    xmlNodePtr cib_req = xmlNewNode(NULL, XML_REQ_TAG_CIB); 
+    xmlSetProp(cib_req, XML_CIB_ATTR_OP       , action);
+    xmlSetProp(cib_req, XML_ATTR_VERBOSE      , verbose);
+    xmlSetProp(cib_req, XML_CIB_ATTR_SECTION  , section_name);
 
-    xmlNodePtr cib_req = createCibRequest(TRUE, action, section_name, verbose, section);
+    // create the update section
+    xmlNodePtr fragment = xmlNewChild(cib_req, NULL, XML_CIB_TAG_FRAGMENT, NULL);
+    xmlSetProp(fragment, XML_CIB_ATTR_SECTION, section_name);
+    xmlNodePtr cib = xmlNewChild(fragment, NULL, XML_TAG_CIB, NULL);
+    xmlAddChild(cib, update);
 
     // create the real request
     xmlNodePtr request = xmlNewNode(NULL, XML_REQ_TAG_DC);
@@ -765,14 +772,14 @@ wrapUpdate(xmlNodePtr update, const char *section_name, const char *action)
     xmlSetProp(request, XML_ATTR_TIMEOUT, "0");
     xmlAddChild(request, cib_req);
     
-    // create the real message
-    xmlNodePtr xml_root = createCrmMsg(msg_reference, "admin", "dc", request, TRUE);
+/*   // create the real message */
+/*     xmlNodePtr xml_xml_root_node = createCrmMsg(msg_reference, "admin", "dc", request, TRUE); */
 
-    const char *local_reference = xmlGetProp(xml_root, XML_MSG_ATTR_REFERENCE);
-    xmlSetProp(request, XML_MSG_ATTR_REFERENCE, local_reference);
-    xmlSetProp(cib_req, XML_MSG_ATTR_REFERENCE, local_reference);
+/*     const char *local_reference = xmlGetProp(xml_xml_root_node, XML_MSG_ATTR_REFERENCE); */
+/*     xmlSetProp(request, XML_MSG_ATTR_REFERENCE, local_reference); */
+/*     xmlSetProp(cib_req, XML_MSG_ATTR_REFERENCE, local_reference); */
 
-    return xml_root;
+    return request;
 }
 
 
@@ -780,7 +787,7 @@ int
 do_work(ll_cluster_t *hb_cluster)
 {
     /* construct the request */
-    xmlNodePtr root = NULL;
+    xmlNodePtr xml_root_node = NULL;
     const char *dest_node = NULL;
 
     if(DO_DAEMON == TRUE && DO_QUERY == TRUE)
@@ -790,45 +797,40 @@ do_work(ll_cluster_t *hb_cluster)
 	if(obj_type == NULL)
 	{
 	    obj_type_parent = strdup("all");
-	    if (obj_type_parent == NULL) {
-		    return -1;
-	    }
 	}
 	else
 	{
-	    obj_type_parent = (char*)ha_malloc(sizeof(char)*
-			    (strlen(obj_type)+1));
-	    if (obj_type_parent == NULL) {
-		    return -1;
-	    }
 	    cl_log(LOG_DEBUG, "Building the request - 0");
+
+	    CRM_DEBUG2("Constructing CIB section from %s", obj_type);
+	    obj_type_parent = (char*)ha_malloc(sizeof(char)*
+					       (strlen(obj_type)+1));
+	    cl_log(LOG_DEBUG, "Building the request - 1");
 	    sprintf(obj_type_parent, "%s%c", obj_type, 's');
 	}
-	cl_log(LOG_DEBUG, "Building the request - 1");
-	xmlNodePtr request = createCibRequest(TRUE, "query", obj_type_parent, "false", NULL);
+	CRM_DEBUG2("Querying the CIB for section: %s", obj_type_parent);
+	xml_root_node = xmlNewNode(NULL, XML_REQ_TAG_DC);
+	xmlSetProp(xml_root_node, XML_DC_ATTR_OP, "cib_op");
 
-	
-	cl_log(LOG_DEBUG, "Building the request - 2");
-	root = createCrmMsg(msg_reference, "admin", "cib", request, TRUE);
+	xmlNewChild(xml_root_node, NULL, XML_REQ_TAG_CIB, NULL);
+	xmlSetProp(xml_root_node->children, XML_CIB_ATTR_OP       , "query");
+	xmlSetProp(xml_root_node->children, XML_ATTR_VERBOSE      , verbose);
+	xmlSetProp(xml_root_node->children, XML_CIB_ATTR_SECTION, obj_type_parent);
 
-	cl_log(LOG_DEBUG, "Building the request - 3");
-	const char *local_reference = xmlGetProp(root, XML_MSG_ATTR_REFERENCE);
-	xmlSetProp(request, XML_MSG_ATTR_REFERENCE, local_reference);
-
-	cl_log(LOG_DEBUG, "Building the request - 4");
 	dest_node = status;
+	CRM_DEBUG2("CIB query creation %s", xml_root_node==NULL?"failed.":"passed.");
     }
     else if(DO_DAEMON == FALSE && DO_CREATE == TRUE)
     {
-	root = handleCreate();
+	xml_root_node = handleCreate();
     }
     else if(DO_DAEMON == FALSE && DO_DELETE == TRUE)
     {
-	root = handleDelete();
+	xml_root_node = handleDelete();
     }
     else if(DO_DAEMON == FALSE && DO_MODIFY == TRUE)
     {
-	root = handleModify();
+	xml_root_node = handleModify();
     }
     else if(DO_DAEMON == TRUE && DO_HEALTH == TRUE)
     {
@@ -838,7 +840,7 @@ do_work(ll_cluster_t *hb_cluster)
           dc_operation	(noop|ping|deep_ping|dc_query|cib_op)	'noop'
 	  reference	#CDATA
           timeout       #CDATA          '0'>
-	*/
+*/
 	if(status != NULL)
 	{
 	    const char* ping_type = "ping";
@@ -849,33 +851,45 @@ do_work(ll_cluster_t *hb_cluster)
 		else expected_responses = -1; // wait until timeout instead
 	    }
 	    
-	    xmlNodePtr request = NULL;
 	    if(status != NULL)
 	    {
-		request = xmlNewNode(NULL, XML_REQ_TAG_CRM);
-		xmlSetProp(request, XML_CRM_ATTR_OP, ping_type);
+		xml_root_node = xmlNewNode(NULL, XML_REQ_TAG_CRM);
+		xmlSetProp(xml_root_node, XML_CRM_ATTR_OP, ping_type);
+		xmlSetProp(xml_root_node, XML_MSG_ATTR_SYSTO, CRM_SYSTEM_CRMD);
 	    }
 	    else
 	    {
-		request = xmlNewNode(NULL, XML_REQ_TAG_DC);
-		xmlSetProp(request, XML_DC_ATTR_OP, ping_type);
+		xml_root_node = xmlNewNode(NULL, XML_REQ_TAG_DC);
+		xmlSetProp(xml_root_node, XML_DC_ATTR_OP, ping_type);
+		xmlSetProp(xml_root_node, XML_MSG_ATTR_SYSTO, CRM_SYSTEM_DC);
 	    }
 
-	    xmlSetProp(request, XML_ATTR_TIMEOUT, "0");
-
-	    root = createCrmMsg(msg_reference, "admin", "crm", request, TRUE);
+	    xmlSetProp(xml_root_node, XML_ATTR_TIMEOUT, "0");
 	    dest_node = status;
 	}
 	else
 	    cl_log(LOG_INFO, "Cluster-wide health not available yet");
     }
-    
-    /* send it */
-    if(root != NULL)
+
+    CRM_DEBUG2("Creation of request %s", xml_root_node==NULL?"failed.  Aborting.":"passed.  Sending.");
+
+/* send it */
+    if(xml_root_node != NULL && crmd_channel != NULL)
     {
-	cl_log(LOG_DEBUG, "sending: message");
-	xmlSetProp(root, XML_MSG_ATTR_SRCSUBSYS, "admin");
-	send_xmlha_message(hb_cluster, root, dest_node, "crmd");
+	CRM_DEBUG2("sending message: %s", xml_root_node->name);
+	const char *sys_to = CRM_SYSTEM_DC;
+	if(dest_node != NULL)
+	    sys_to = CRM_SYSTEM_CRMD;
+	
+	send_ipc_request(crmd_channel, xml_root_node,
+			 dest_node, sys_to,
+			 daemon_name, "1234",
+			 msg_reference);
+    }
+    else if(crmd_channel == NULL)
+    {
+	cl_log(LOG_ERR, "The IPC connection is not valid, cannot send anything");
+	return -1;
     }
     else
     {
@@ -908,12 +922,8 @@ do_init(void)
 	cl_log_set_facility(facility);
     }
 
-    register_with_ha(hb_cluster,
-		     daemon_name,
-		     admin_input_dispatch,
-		     admin_msg_callback,
-		     default_ipc_input_destroy);
-
+    crmd_channel = init_client_ipc_comms(CRM_SYSTEM_CRMD, admin_msg_callback);
+    send_hello_message(crmd_channel, "1234"/*getpid()*/, daemon_name, "0", "1");
 
     return hb_cluster;
 }
@@ -955,56 +965,90 @@ admin_input_dispatch(int fd, gpointer user_data)
   return TRUE;
 }
 
-
-void
-admin_msg_callback(const struct ha_msg* msg, void* private_data)
+gboolean
+admin_msg_callback(IPC_Channel* server, void* private_data)
 {
+    FNIN();
+    int lpc = 0;
+    IPC_Message *msg = NULL;
+    gboolean hack_return_good = TRUE;
     static int recieved_responses = 0;
 
-    cl_log(LOG_DEBUG, "admin_msg_callback: processing HA message");
-    xmlNodePtr root = validate_and_decode_hamessage(msg);
-    if(root == NULL)
-    {
-	cl_log(LOG_INFO, "Message (%s from %s) was not valid... discarding message.", ha_msg_value(msg, F_SEQ), ha_msg_value(msg, F_ORIG));
-	return;
-    }
+    CRM_DEBUG("admin_msg_callback: in IPC callback");
 
-    if(validate_crm_message(root, "admin", "response") == FALSE)
+    while(server->ch_status != IPC_DISCONNECT && server->ops->is_message_pending(server) == TRUE)
     {
-	cl_log(LOG_INFO, "Message (%s from %s) was not valid... discarding message.", ha_msg_value(msg, F_SEQ), ha_msg_value(msg, F_ORIG));
-	return;
-    }
+	if(server->ops->recv(server, &msg) != IPC_OK)
+	{
+	    perror("Receive failure:");
+	    FNRET(!hack_return_good);
+	}
+	
+	if(msg == NULL)
+	{
+	    CRM_DEBUG("No message this time");
+	    continue;
+	}
 
-    if(strcmp("response", xmlGetProp(root, XML_MSG_ATTR_MSGTYPE)) != 0)
-    {
-	cl_log(LOG_ERR, "The admin client does not accept requests");
-	return;
-    }
+	lpc++;
+	char *buffer = (char*)msg->msg_body;
+	CRM_DEBUG2("Got xml [text=%s]", buffer);
+	
+	CRM_DEBUG("crmd_ipc_input_dispatch: validating and decoding");
+	xmlNodePtr xml_root_node = validate_and_decode_ipcmessage(msg, TRUE);
 
-    recieved_responses++;
+	if(xml_root_node == NULL)
+	{
+	    cl_log(LOG_INFO, "IPC message was not valid... discarding.");
+	    continue;
+	}
+	
+	if(validate_crm_message(xml_root_node, daemon_name, "1234", "response") == FALSE)
+	{
+	    cl_log(LOG_INFO, "CRM message was not valid... discarding.");
+	    continue;
+	}
+	
+	if(strcmp("response", xmlGetProp(xml_root_node, XML_MSG_ATTR_MSGTYPE)) != 0)
+	{
+	    cl_log(LOG_ERR, "The admin client does not accept requests");
+	    continue;
+	}
+	
+	recieved_responses++;
+	CRM_DEBUG2("upated counter to %d", recieved_responses);
 
     // do stuff
 
-    if(msg_reference != NULL)
-    {
-	// in testing mode...
-	char *filename;
-	int filename_len = 31 + strlen(msg_reference); // 31 = "test-_.xml" + an_int_as_string + '\0'
-	filename = ha_malloc(sizeof(char)*filename_len);
-	sprintf(filename, "test-%s_%d.xml", msg_reference, recieved_responses);
-	filename[filename_len-1] = '\0';
-	if(xmlSaveFormatFile(filename, root->doc, 1) < 0)
+	if(msg_reference != NULL)
 	{
-	    cl_log(LOG_CRIT, "Couuld not save response to file test-%s_%d.xml", msg_reference, recieved_responses);
+	    // in testing mode...
+	    char *filename;
+	    int filename_len = 31 + strlen(msg_reference); // 31 = "test-_.xml" + an_int_as_string + '\0'
+	    filename = ha_malloc(sizeof(char)*filename_len);
+	    sprintf(filename, "test-%s_%d.xml", msg_reference, recieved_responses);
+	    filename[filename_len-1] = '\0';
+	    if(xmlSaveFormatFile(filename, xml_root_node->doc, 1) < 0)
+	    {
+		cl_log(LOG_CRIT, "Couuld not save response to file test-%s_%d.xml", msg_reference, recieved_responses);
+	    }   
 	}
-	
     }
+    
+    if(server->ch_status == IPC_DISCONNECT)
+    {
+	cl_log(LOG_INFO, "admin_msg_callback: received HUP");
+	FNRET(!hack_return_good);
+    }
+
+    cl_log(LOG_DEBUG, "admin_msg_callback: processing IPC message");
 
     if(recieved_responses >= expected_responses)
     {
 	cl_log(LOG_INFO, "Recieved expected number (%d) of messages from Heartbeat.  Exiting normally.", expected_responses);
-	g_main_quit(mainloop);
+/* 	g_main_quit(mainloop); */
+/* 	return !hack_return_good; */
     }
-    
+    FNRET(hack_return_good);
 }
 

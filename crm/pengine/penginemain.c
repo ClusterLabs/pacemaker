@@ -42,6 +42,8 @@
 
 #include <crm/common/ipcutils.h>
 #include <crm/common/crmutils.h>
+#include <crm/common/xmlvalues.h>
+#include <crm/common/msgutils.h>
 
 #define IPC_COMMS        1
 #define FORK_CHILD       1
@@ -158,13 +160,7 @@ init_start(void)
     register_pid(PID_FILE, TRUE, shutdown);
 
     IPC_Channel *crm_ch = init_client_ipc_comms("crmd", default_ipc_input_dispatch);
-
-    IPC_Message        *msg;
-    char	       str[256];
-    snprintf(str, sizeof(str)-1, "I am the pengine with pid: %ld", (long int)getpid());
-
-    msg = create_simple_message(str, crm_ch);
-    send_ipc_message(crm_ch, msg);
+    send_hello_message(crm_ch, "1234", CRM_SYSTEM_PENGINE, "0", "1");
 
     /* Create the mainloop and run it... */
     mainloop = g_main_new(FALSE);

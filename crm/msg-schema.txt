@@ -131,8 +131,10 @@ Message Schema:
 <!ATTLIST crm_message
           version          #CDATA                       '1'
 	  message_type	   (none|request|response)	'none'
-          src_subsystem    (none|crm|dc|cib|lrm|admin)	'none'
-          dest_subsystem   (none|crm|dc|cib|lrm|admin)	'none'
+          sys_from         (none|crm|dc|cib|lrm|admin)	'none'
+          sys_to           (none|crm|dc|cib|lrm|admin)	'none'
+	  host_from	   #CDATA
+	  host_to	   #CDATA
 	  reference	   #CDATA
           timestamp        #CDATA                       '0'>
 

@@ -68,3 +68,11 @@
 #define CIB_VAL_CONTYPE_DEFAULT  CIB_VAL_CONTYPE_NONE
 
 #define CIB_VAL_SOURCE_DEFAULT  "unknown"
+
+
+#define CRM_SYSTEM_DC       "dc"
+#define CRM_SYSTEM_CIB      "cib"
+#define CRM_SYSTEM_CRMD     "crmd"
+#define CRM_SYSTEM_LRMD     "lrmd"
+#define CRM_SYSTEM_PENGINE  "pengine"
+#define CRM_SYSTEM_TENGINE  "tengine"
