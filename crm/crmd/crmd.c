@@ -238,7 +238,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 
     if(strcmp("dc", src_subsys) == 0)
     {
-	    hash_value = ha_strdup(src_subsys);
+	    hash_value = strdup(src_subsys);
 	    if (!hash_value) {
 		    cl_log(LOG_ERR, "memory allocation failed in "
 				    "generate_hash_value()\n");
@@ -274,7 +274,7 @@ decode_hash_value(gpointer value, char **node, char **subsys)
     if(strcmp("dc", (char*)value) == 0) 
     {
     	    *node = NULL;
-    	    *subsys = (char*)ha_strdup(char_value);
+    	    *subsys = (char*)strdup(char_value);
 	    if (!*subsys) {
 		    cl_log(LOG_ERR, "memory allocation failed in "
 				    "decode_hash_value()\n");

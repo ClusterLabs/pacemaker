@@ -212,7 +212,7 @@ main(int argc, char ** argv)
 		else if(strcmp("query"  , long_options[option_index].name) == 0) DO_QUERY   = TRUE;
 		else if(strcmp("instance"  , long_options[option_index].name) == 0)
 		{
-		     	instance = ha_strdup(optarg);
+		     	instance = strdup(optarg);
 			if (!instance) {
 			     	printf ("?? instance option memory "
 			    			"allocation failed ??\n");
@@ -221,7 +221,7 @@ main(int argc, char ** argv)
 		}
 		else if(strcmp("node"  , long_options[option_index].name) == 0)
 		{
-			node = ha_strdup(optarg);
+			node = strdup(optarg);
 			if (!node) {
 			     	printf ("?? node option memory "
 			    			"allocation failed ??\n");
@@ -249,14 +249,14 @@ main(int argc, char ** argv)
 		usage(daemon_name, LSB_EXIT_OK);
 		break;
 	    case 'i':
-		id = ha_strdup(optarg);
+		id = strdup(optarg);
 		if (!id) {
 			printf ("?? id option memory allocation failed ??\n");
 			argerr++;
 		}
 		break;
 	    case 'o':
-		node = ha_strdup(obj_type);
+		node = strdup(obj_type);
 		if (!node) {
 			printf ("?? obj_type option memory "
 					"allocation failed ??\n");
@@ -264,7 +264,7 @@ main(int argc, char ** argv)
 		}
 		break;
 	    case 'D':
-		description = ha_strdup(optarg);
+		description = strdup(optarg);
 		if (!description) {
 			printf ("?? description option memory "
 					"allocation failed ??\n");
@@ -277,7 +277,7 @@ main(int argc, char ** argv)
 		break;
 	    case 'S':
 		DO_HEALTH       = TRUE;
-		status = ha_strdup(optarg);
+		status = strdup(optarg);
 		if (!status) {
 			printf ("?? status option memory "
 					"allocation failed ??\n");
@@ -324,7 +324,7 @@ main(int argc, char ** argv)
 		++argerr;
 		break;
 	    case 'm':
-		max_instances = ha_strdup(optarg);
+		max_instances = strdup(optarg);
 		if (!max_instances) {
 			printf ("?? max_instances option memory "
 					"allocation failed ??\n");
@@ -336,7 +336,7 @@ main(int argc, char ** argv)
 		if(list_add->num_items != 1)
 		    list_add_last->next = (str_list_t *)ha_malloc(
 				    sizeof(str_list_t));
-		list_add_last->value = ha_strdup(optarg);
+		list_add_last->value = strdup(optarg);
 		if (!list_add_last->value) {
 			printf ("?? option memory allocation failed ??\n");
 			argerr++;
@@ -348,7 +348,7 @@ main(int argc, char ** argv)
 		list_del->num_items++;
 		if(list_del->num_items != 1)
 		    list_del_last->next = (str_list_t *)ha_malloc(sizeof(str_list_t));
-		list_add_last->value = ha_strdup(optarg);
+		list_add_last->value = strdup(optarg);
 		if (!list_add_last->value) {
 			printf ("?? option memory allocation failed ??\n");
 			argerr++;
@@ -360,7 +360,7 @@ main(int argc, char ** argv)
 		list_wipe = TRUE;
 		break;
 	    case 'c':
-		clear = ha_strdup(optarg);
+		clear = strdup(optarg);
 		if (!clear) {
 			printf ("?? clear option memory "
 					"allocation failed ??\n");
@@ -373,7 +373,7 @@ main(int argc, char ** argv)
 			argerr++;
 			break;
 		}
-	    	resource[num_resources] = ha_strdup(optarg);
+	    	resource[num_resources] = strdup(optarg);
 		if (!resource[num_resources]) {
 			printf ("?? resource[%d] option memory allocation "
 					"failed ??\n", num_resources);
@@ -384,7 +384,7 @@ main(int argc, char ** argv)
 		}
 		break;
 	    case 't':
-		res_timeout = ha_strdup(optarg);
+		res_timeout = strdup(optarg);
 		if (!res_timeout) {
 			printf ("?? res_timeout option memory "
 					"allocation failed ??\n");
@@ -392,7 +392,7 @@ main(int argc, char ** argv)
 		}
 		break;
 	    case 'p':
-		priority = ha_strdup(optarg);
+		priority = strdup(optarg);
 		if (!priority) {
 			printf ("?? priority option memory "
 					"allocation failed ??\n");
@@ -400,7 +400,7 @@ main(int argc, char ** argv)
 		}
 		break;
 	    case 's':
-		subtype = ha_strdup(optarg);
+		subtype = strdup(optarg);
 		if (!subtype) {
 			printf ("?? subtype option memory "
 					"allocation failed ??\n");
@@ -808,7 +808,7 @@ do_work(ll_cluster_t *hb_fd)
 	char *obj_type_parent = NULL;
 	if(obj_type == NULL)
 	{
-	    obj_type_parent = ha_strdup("all");
+	    obj_type_parent = strdup("all");
 	    if (obj_type_parent == NULL) {
 		    return -1;
 	    }
