@@ -67,6 +67,84 @@ const char *rsc_path[] =
 	"rsc_parameters"
 };
 
+enum crmd_rscstate {
+	crmd_rscstate_NULL,
+	crmd_rscstate_START,
+	crmd_rscstate_START_PENDING,
+	crmd_rscstate_START_OK,	
+	crmd_rscstate_START_FAIL,	
+	crmd_rscstate_STOP,
+	crmd_rscstate_STOP_PENDING,
+	crmd_rscstate_STOP_OK,	
+	crmd_rscstate_STOP_FAIL,		
+	crmd_rscstate_MON,
+	crmd_rscstate_MON_PENDING,
+	crmd_rscstate_MON_OK,
+	crmd_rscstate_MON_FAIL,		
+	crmd_rscstate_GENERIC_PENDING,
+	crmd_rscstate_GENERIC_OK,
+	crmd_rscstate_GENERIC_FAIL	
+};
+
+
+const char *crmd_rscstate2string(enum crmd_rscstate state);
+
+const char *
+crmd_rscstate2string(enum crmd_rscstate state) 
+{
+	switch(state) {
+		case crmd_rscstate_NULL:
+			return NULL;
+			
+		case crmd_rscstate_START:
+			return CRMD_RSCSTATE_START;
+			
+		case crmd_rscstate_START_PENDING:
+			return CRMD_RSCSTATE_START_PENDING;
+			
+		case crmd_rscstate_START_OK:
+			return CRMD_RSCSTATE_START_OK;
+			
+		case crmd_rscstate_START_FAIL:
+			return CRMD_RSCSTATE_START_FAIL;
+			
+		case crmd_rscstate_STOP:
+			return CRMD_RSCSTATE_STOP;
+			
+		case crmd_rscstate_STOP_PENDING:
+			return CRMD_RSCSTATE_STOP_PENDING;
+			
+		case crmd_rscstate_STOP_OK:
+			return CRMD_RSCSTATE_STOP_OK;
+			
+		case crmd_rscstate_STOP_FAIL:
+			return CRMD_RSCSTATE_STOP_FAIL;
+			
+		case crmd_rscstate_MON:
+			return CRMD_RSCSTATE_MON;
+			
+		case crmd_rscstate_MON_PENDING:
+			return CRMD_RSCSTATE_MON_PENDING;
+			
+		case crmd_rscstate_MON_OK:
+			return CRMD_RSCSTATE_MON_OK;
+			
+		case crmd_rscstate_MON_FAIL:
+			return CRMD_RSCSTATE_MON_FAIL;
+			
+		case crmd_rscstate_GENERIC_PENDING:
+			return CRMD_RSCSTATE_GENERIC_PENDING;
+			
+		case crmd_rscstate_GENERIC_OK:
+			return CRMD_RSCSTATE_GENERIC_OK;
+			
+		case crmd_rscstate_GENERIC_FAIL:
+			return CRMD_RSCSTATE_GENERIC_FAIL;
+			
+	}
+	return "<unknown>";
+}
+
 
 /*	 A_LRM_CONNECT	*/
 enum crmd_fsa_input
@@ -317,7 +395,7 @@ build_active_RAs(xmlNodePtr rsc_list)
 				set_xml_property_copy(
 					xml_rsc,
 					XML_LRM_ATTR_RSCSTATE,
-					op->user_data);
+					crmd_rscstate2string((int)(op->user_data)));
 		
 				set_xml_property_copy(
 					xml_rsc, XML_LRM_ATTR_LASTOP, this_op);
@@ -513,14 +591,14 @@ do_lrm_rsc_op(
 	op->target_rc = EVERYTIME;
 
 	if(safe_str_eq(CRMD_RSCSTATE_START, operation)) {
-		op->user_data = crm_strdup(CRMD_RSCSTATE_START_OK);
+		op->user_data = (void*)crmd_rscstate_START_OK;
 	} else if(safe_str_eq(CRMD_RSCSTATE_STOP, operation)) {
-		op->user_data = crm_strdup(CRMD_RSCSTATE_STOP_OK);
+		op->user_data = (void*)crmd_rscstate_STOP_OK;
 	} else {
 		crm_warn("Using status \"complete\" for op \"%s\""
 			 "... this is still in the experimental stage.",
 			operation);
-		op->user_data = crm_strdup(CRMD_RSCSTATE_GENERIC_OK);
+		op->user_data = (void*)crmd_rscstate_GENERIC_OK;
 	}	
 
 	op_result = rsc->ops->perform_op(rsc, op);
@@ -535,7 +613,7 @@ do_lrm_rsc_op(
 		op = g_new(lrm_op_t, 1);
 		op->op_type   = g_strdup(CRMD_RSCSTATE_MON);
 		op->params    = NULL;
-		op->user_data = crm_strdup(CRMD_RSCSTATE_MON_OK);
+		op->user_data = (void*)crmd_rscstate_MON_OK;
 		op->timeout   = 0;
 		op->interval  = 9000;
 		op->target_rc = CHANGED;
@@ -660,7 +738,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 		case LRM_OP_DONE:
 			set_xml_property_copy(
 				iter, XML_LRM_ATTR_RSCSTATE,
-				(const char*)op->user_data);
+				crmd_rscstate2string((int)(op->user_data)));
 			break;
 	}
 

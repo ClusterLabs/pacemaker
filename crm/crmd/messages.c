@@ -208,7 +208,7 @@ delete_fsa_input(fsa_data_t *fsa_data)
 				crm_free(op->rsc->provider);
 				crm_free(op->rsc);
 
-				crm_free(op->user_data);
+/* 				crm_free(op->user_data); */
 				crm_free(op->output);
 				crm_free(op->rsc_id);
 				crm_free(op->app_name);

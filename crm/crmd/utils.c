@@ -1091,8 +1091,8 @@ copy_lrm_op(const lrm_op_t *op)
 	op_copy->interval  = op->interval; 
 	op_copy->target_rc = op->target_rc; 
 
-	/* in the CRM, this is always a char* */
-	op_copy->user_data = crm_strdup((char*)op->user_data); 
+	/* in the CRM, this is always an int */
+	op_copy->user_data = op->user_data; 
 
 	/* output fields */
 	op_copy->op_status = op->op_status; 
