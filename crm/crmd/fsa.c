@@ -221,11 +221,11 @@ startTimer(fsa_timer_t *timer)
 			Gmain_timeout_add(timer->period_ms,
 					  timer->callback,
 					  (void*)timer);
-
+/*
 		CRM_DEBUG3("#!!#!!# Started %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
-
+*/
 	} else {
 		cl_log(LOG_INFO, "#!!#!!# Timer %s already running (%d)",
 		       fsa_input2string(timer->fsa_input),
@@ -239,11 +239,11 @@ void
 stopTimer(fsa_timer_t *timer)
 {
 	if(((int)timer->source_id) > 0) {
-
+/*
 		CRM_DEBUG3("#!!#!!# Stopping %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
-
+*/
 		g_source_remove(timer->source_id);
 		timer->source_id = -2;
 
