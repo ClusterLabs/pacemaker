@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.12 2005/02/07 11:13:07 andrew Exp $ */
+/* $Id: msg.c,v 1.13 2005/02/09 11:41:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -160,12 +160,15 @@ process_hello_message(crm_data_t *hello,
 	const char *local_major_version;
 	const char *local_minor_version;
 
-	
 	*uuid = NULL;
 	*client_name = NULL;
 	*major_version = NULL;
 	*minor_version = NULL;
 
+	if(hello == NULL) {
+		return FALSE;
+	}
+	
 	local_uuid = crm_element_value(hello, "client_uuid");
 	local_client_name = crm_element_value(hello, "client_name");
 	local_major_version = crm_element_value(hello, "major_version");
@@ -323,15 +326,10 @@ ha_msg_input_t *
 new_ha_msg_input(const HA_Message *orig) 
 {
 	ha_msg_input_t *input_copy = NULL;
-	const char *xml_text = NULL;
-	
 	crm_malloc(input_copy, sizeof(ha_msg_input_t));
 
 	input_copy->msg = ha_msg_copy(orig);
-	xml_text = cl_get_string(orig, F_CRM_DATA);
-	if(xml_text != NULL) {
-		input_copy->xml = string2xml(xml_text);
-	}
+	input_copy->xml = get_message_xml(input_copy->msg, F_CRM_DATA);
 	return input_copy;
 }
 
@@ -339,14 +337,10 @@ ha_msg_input_t *
 new_ipc_msg_input(IPC_Message *orig) 
 {
 	ha_msg_input_t *input_copy = NULL;
-	const char *xml_text = NULL;
 	
 	crm_malloc(input_copy, sizeof(ha_msg_input_t));
 	input_copy->msg = ipcmsg2hamsg(orig);
-	xml_text = cl_get_string(input_copy->msg, F_CRM_DATA);
-	if(xml_text != NULL) {
-		input_copy->xml = string2xml(xml_text);
-	}
+	input_copy->xml = get_message_xml(input_copy->msg, F_CRM_DATA);
 	return input_copy;
 }
 
