@@ -578,7 +578,7 @@ class SimulStart(CTSTest):
         if watch.lookforall():
  	    return self.success()
         
-        return self.failure("did not find start pattern(s): " 
+        return self.failure("Did not find start pattern(s): " 
         +	repr(watch.unmatched))
 
 
@@ -715,7 +715,8 @@ class Fastdetection(CTSTest):
                 Stoptime = os.times()[4]
                 self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
                 Detectiontime = Stoptime-Starttime
-                self.CM.log("Detection time is %f seconds" % Detectiontime)
+		detectms = int(Detectiontime*1000+0.5)
+                self.CM.log("...failure detection time: %d ms" % detectms)
                 self.Stats["totaltime"] = self.Stats["totaltime"] + Detectiontime
         	if self.Stats["min"] == 0:
                     self.Stats["min"] = Detectiontime
@@ -774,15 +775,16 @@ class BandwidthTest(CTSTest):
             ret = self.start(node)
             if not ret:
                 return ret
+            time.sleep(5)  # We get extra messages right after startup.
 
-        if self.CM.rsh(node,"tcpdump -c 102 -i any udp port %s > /tmp/band_estimate 2>&1" % port) == 0 :
+        if self.CM.rsh(node,"tcpdump -p -c 102 -i any udp port %s > /tmp/band_estimate 2>&1" % port) == 0 :
             self.CM.rsh.cp("root@%s:/tmp/band_estimate" % node, "/tmp/.")
             Bandwidth = self.countbandwidth("/tmp/band_estimate")
             if not Bandwidth:
                 self.CM.log("Could not compute bandwidth.")
                 return self.success()
             intband = int(Bandwidth + 0.5)
-            self.CM.log("Bandwidth used to heartbeat is %d bits/sec" % intband)
+            self.CM.log("...heartbeat bandwidth: %d bits/sec" % intband)
             self.Stats["totalbandwidth"] = self.Stats["totalbandwidth"] + Bandwidth
             if self.Stats["min"] == 0:
                 self.Stats["min"] = Bandwidth
@@ -1089,10 +1091,12 @@ class Split_brainTest(CTSTest):
         self.CM.unisolate_node(node)
 
         if not watchpartition.lookforall():
-            return self.failure("Cannot find the return from partition message")
+            self.CM.log("Patterns not found: " + repr(watchpartition.unmatched))
+            return self.failure("Didn't find return from partition messages")
 
         if not watchstart.lookforall():
-            return self.failure("they don't restart themselves")
+            self.CM.log("Patterns not found: " + repr(watchstart.unmatched))
+            return self.failure("Both nodes didn't restart")
         return self.success()
 
     def is_applicable(self):
