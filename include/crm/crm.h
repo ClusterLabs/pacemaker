@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.48 2005/03/09 16:10:50 andrew Exp $ */
+/* $Id: crm.h,v 1.49 2005/03/29 06:08:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,7 +58,7 @@ extern gboolean crm_assert_failed;
 
 /* Clean these up at some point, some probably should be runtime options */
 #define WORKING_DIR	HA_VARLIBDIR"/heartbeat/crm"
-#define BIN_DIR		"/usr/lib/heartbeat"
+#define BIN_DIR		HA_LIBDIR"/heartbeat"
 #define MAXDATASIZE	65535 /* ipc comms */
 #define SOCKET_LEN	1024
 #define APPNAME_LEN	256
