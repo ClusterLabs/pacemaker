@@ -162,7 +162,7 @@ do_election_count_vote(long long action,
 		election_data.winning_uname = NULL;
 		election_data.winning_bornon = -1; // maximum integer
 		
-		CRM_DEBUG("We might win... we should vote (possibly again)");
+		CRM_NOTE("We might win... we should vote (possibly again)");
 		election_result = I_DC_TIMEOUT; // new "default"
 
 		g_hash_table_foreach(fsa_membership_copy->members,
@@ -210,11 +210,9 @@ do_election_timer_ctrl(long long action,
 	FNIN();
 
 	if(action & A_ELECT_TIMER_START) {
-		CRM_DEBUG("Starting the election timer...");
 		startTimer(election_timeout);
 		
 	} else if(action & A_ELECT_TIMER_STOP || action & A_ELECTION_TIMEOUT) {
-		CRM_DEBUG("Stopping the election timer...");
 		stopTimer(election_timeout);
 		
 	} else {
@@ -223,7 +221,7 @@ do_election_timer_ctrl(long long action,
 	}
 
 	if(action & A_ELECTION_TIMEOUT) {
-		CRM_DEBUG("The election timer went off, we win!");
+		CRM_NOTE("The election timer went off, we win!");
 	
 		FNRET(I_ELECTION_DC);
 		
@@ -265,9 +263,10 @@ do_dc_takeover(long long action,
 	       enum crmd_fsa_input current_input,
 	       void *data)
 {
+	xmlNodePtr update = NULL, fragment = NULL;
 	FNIN();
 
-	CRM_DEBUG("################## Taking over the DC ##################");
+	CRM_NOTE("################## Taking over the DC ##################");
 	set_bit_inplace(&fsa_input_register, R_THE_DC);
 
 	CRM_DEBUG("Am I the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
@@ -288,9 +287,26 @@ do_dc_takeover(long long action,
 		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
 	}
 
+	/* store our state in the CIB (since some fields will not be
+	 *  filled in because the DC doesnt go through the join process
+	 *  with itself
+	 *
+	 * bypass the TE for now, it will be informed in good time
+	 */
+	update = create_node_state(
+		fsa_our_uname, NULL, ONLINESTATUS, CRMD_JOINSTATE_MEMBER);
+	set_xml_property_copy(
+		update,XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
+	
+	fragment = create_cib_fragment(update, NULL);
+	store_request(NULL, fragment, CRM_OP_UPDATE, CRM_SYSTEM_DCIB);
+
+	free_xml(update);
+	free_xml(fragment);
+
 	/* Async get client status information in the cluster */
-	fsa_cluster_conn->llc_ops->client_status(fsa_cluster_conn,
-						 NULL, "crmd", -1);
+	fsa_cluster_conn->llc_ops->client_status(
+		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 	
 	FNRET(I_NULL);
 }
@@ -306,7 +322,7 @@ do_dc_release(long long action,
 	enum crmd_fsa_input result = I_NULL;
 	FNIN();
 
-	CRM_DEBUG("################## Releasing the DC ##################");
+	CRM_NOTE("################## Releasing the DC ##################");
 
 	stopTimer(dc_heartbeat);
 	if (fsa_cluster_conn->llc_ops->set_cstatus_callback(
