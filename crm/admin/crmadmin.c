@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.8 2004/10/05 20:45:26 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.9 2004/10/06 19:34:42 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -192,6 +192,7 @@ main(int argc, char **argv)
 				if(message_timeout_ms < 1) {
 					message_timeout_ms = 30*1000;
 				}
+				break;
 				
 			case '?':
 				usage(crm_system_name, LSB_EXIT_OK);
@@ -268,13 +269,13 @@ main(int argc, char **argv)
 			/* wait for the reply by creating a mainloop and running it until
 			 * the callbacks are invoked...
 			 */
-			message_timer_id = Gmain_timeout_add(
-				message_timeout_ms, admin_message_timeout, NULL);
-			
 			mainloop = g_main_new(FALSE);
 			crm_verbose("%s waiting for reply from the local CRM",
 				 crm_system_name);
 
+			message_timer_id = Gmain_timeout_add(
+				message_timeout_ms, admin_message_timeout, NULL);
+			
 			g_main_run(mainloop);
 			return_to_orig_privs();
 			
