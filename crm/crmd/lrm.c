@@ -477,7 +477,7 @@ do_lrm_rsc_op(
 	/* now do the op */
 	crm_info("Performing op %s on %s", operation, rid);
 	op = g_new(lrm_op_t, 1);
-	op->op_type   = operation;
+	op->op_type   = g_strdup(operation);
 	op->params    = xml2list(msg, rsc_path, DIMOF(rsc_path));
 	op->timeout   = 0;
 	op->interval  = 0;
@@ -500,7 +500,7 @@ do_lrm_rsc_op(
 	if(safe_str_eq(operation, CRMD_RSCSTATE_START)) {
 		/* initiate the monitor action */
 		op = g_new(lrm_op_t, 1);
-		op->op_type   = CRMD_RSCSTATE_MON;
+		op->op_type   = g_strdup(CRMD_RSCSTATE_MON);
 		op->params    = NULL;
 		op->user_data = crm_strdup(CRMD_RSCSTATE_MON_OK);
 		op->timeout   = 0;
