@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.42 2005/02/02 21:57:50 andrew Exp $ */
+/* $Id: tengine.c,v 1.43 2005/02/03 14:29:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -403,11 +403,11 @@ initiate_action(action_t *action)
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TASK, task);
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TARGET, on_node);
 
-#   ifdef USE_LIBXML
+#ifdef USE_LIBXML
 		add_node_copy(rsc_op, action->xml->children);
-#   else
+#else
 		abort();
-#   endif
+#endif
 		destination = CRM_SYSTEM_LRMD;
 		ret = TRUE;
 			
@@ -428,7 +428,7 @@ initiate_action(action_t *action)
 				     CRM_SYSTEM_TENGINE, NULL);
 
 		ha_msg_add(cmd, "transition_id", crm_str(counter));
-#ifdef TESTING
+#ifndef TESTING
 		send_ipc_message(crm_ch, cmd);
 #else
 		cl_log_message(LOG_DEBUG, cmd);
