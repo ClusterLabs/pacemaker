@@ -115,6 +115,9 @@ class LinuxHAv2(HeartbeatCM):
             self.log("Enabling DC resource")
             resources='''
        <resource id="DcIPaddr" class="heartbeat" type="IPaddr2" priority="1.0">
+         <operations>
+           <op id="1" name="monitor" interval="1000" timeout="500"/>
+         </operations>
          <instance_attributes>
            <attributes>
              <nvpair name="1" value="127.0.0.10"/>
@@ -134,6 +137,9 @@ class LinuxHAv2(HeartbeatCM):
                 # These resources prefer to run on the node with the same name
                 node_resource=("""
        <resource id="%s" class="heartbeat" type="IPaddr2">
+         <operations>
+           <op id="1" name="monitor" interval="1000" timeout="500"/>
+         </operations>
          <instance_attributes>
            <attributes>
              <nvpair name="1" value="127.0.0.%d"/>
