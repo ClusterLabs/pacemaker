@@ -638,6 +638,7 @@ class PartitionAudit(ClusterAudit):
                                 %(self.NodeEpoche[node], self.NodeState[node]))
 
         if self.CM.Env["CIBResource"] == 1:
+            Resources = self.CM.Resources()
             for node in node_list:
                 for resource in Resources:
                     if resource.rid == node:
