@@ -58,10 +58,11 @@ static gboolean run_command    (struct crm_subsystem_s *centry,
 				const char *options,
 				gboolean update_pid);
 
-xmlNodePtr do_lrm_startup_query(void);
+xmlNodePtr do_lrm_query(void);
 GHashTable *xml2list(xmlNodePtr parent, const char **attr_path, int depth);
 gboolean lrm_dispatch(int fd, gpointer user_data);
-void send_cib_status_update(xmlNodePtr update, gboolean do_delete);
+void send_cib_status_update(xmlNodePtr update);
+void send_cib_lrm_update(xmlNodePtr update, gboolean do_delete);
 void do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type);
 
 
@@ -185,9 +186,9 @@ do_cib_invoke(long long action,
 
   	} else if(action & A_UPDATE_NODESTATUS) {
 
-		xmlNodePtr data = do_lrm_startup_query();
+		xmlNodePtr data = do_lrm_query();
 
-		send_cib_status_update(data, TRUE);
+		send_cib_lrm_update(data, TRUE);
 		free_xml(data);
 		
 	} else {
@@ -590,28 +591,8 @@ gboolean lrm_dispatch(int fd, gpointer user_data)
 
 
 xmlNodePtr
-do_lrm_startup_query(void)
+do_lrm_query(void)
 {
-/*
-	<node_state id=node1 ...>
-	id		CDATA #REQUIRED
-	uname   	CDATA #REQUIRED
-	state	  	(active|in_ccm|down|shot) #REQUIRED
-	exp_state	(active|down)      #REQUIRED
-	source		CDATA #IMPLIED
-	is_dc		(yes|no) 'no'
-	timestamp	CDATA #REQUIRED>
-
-	    <lrm>
-		 <lrm_agents>
-			<lrm_agent class=ocf type=drbd  .../>
-		 </lrm_agents>
-		 <lrm_resources>
-			<rsc_state id=rsc1 rsc_id= node_id= rsc_state=.../>
-		</lrm_resources>
-	    </lrm>
-		 </node_state>
-*/
 	GList* lrm_list = NULL;
 	xmlNodePtr data = create_xml_node(NULL, "lrm");
 	xmlNodePtr agent_list = create_xml_node(data, "lrm_agents");
@@ -775,7 +756,7 @@ do_lrm_invoke(long long action,
 		
 		data = create_cib_fragment(tmp1, NULL);
 
-		tmp2 = do_lrm_startup_query();
+		tmp2 = do_lrm_query();
 		add_node_copy(tmp1, tmp2);
 
 		reply = create_reply(msg, data);
@@ -907,7 +888,7 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	set_xml_property_copy(iter, "op_code", tmp);
 	cl_free(tmp);
 
-	send_cib_status_update(update, FALSE);
+	send_cib_lrm_update(update, FALSE);
 	free_xml(update);
 
 }
@@ -980,35 +961,46 @@ do_lrm_event(long long action,
 
 
 
-void send_cib_status_update(xmlNodePtr update, gboolean do_delete)
+void send_cib_lrm_update(xmlNodePtr update,
+			 gboolean do_delete)
 {
-	xmlNodePtr command, tmp1, tmp2, answer, options;
+	xmlNodePtr fragment, tmp1, tmp2;
 	
-//	command = create_xml_node(NULL, "status");
 	tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
-	command = create_cib_fragment(tmp1, NULL);
+	fragment = create_cib_fragment(tmp1, NULL);
 
-	
-
-	if(do_delete) {
+	if(do_delete && AM_I_DC) {
 		tmp2 = create_xml_node(tmp1, "lrm");
-		process_cib_request(CRM_OPERATION_DELETE, NULL, command);
+		process_cib_request(CRM_OPERATION_DELETE, NULL, fragment);
+		free_xml(tmp2);
+			
+	} else if(do_delete) {
+		tmp2 = create_xml_node(tmp1, "lrm");
+		send_request(NULL, fragment, CRM_OPERATION_DELETE,
+			     NULL, CRM_SYSTEM_DCIB);
 		free_xml(tmp2);
 	}
 	
 	add_node_copy(tmp1, update);
 
-	options = create_xml_node(NULL, XML_TAG_OPTIONS);
+	send_cib_status_update(tmp1);
+	
+	free_xml(fragment); // takes tmp1 with it
+}
+	
+	
+void send_cib_status_update(xmlNodePtr update)
+{
+	xmlNodePtr answer;
+	xmlNodePtr fragment = create_cib_fragment(update, NULL);
+	xmlNodePtr options  = create_xml_node(NULL, XML_TAG_OPTIONS);
 	set_xml_property_copy(options, XML_ATTR_VERBOSE, "true");
-	
+
 	// set verbose
-	answer = process_cib_request(CRM_OPERATION_UPDATE, options, command);
-	
-	free_xml(command); // takes iter with it
-	
+	answer = process_cib_request(CRM_OPERATION_UPDATE, options, fragment);
+
 	// distribute the answer
-	
 	if(AM_I_DC) {
 		
 		xmlNodePtr new_options =
@@ -1016,7 +1008,6 @@ void send_cib_status_update(xmlNodePtr update, gboolean do_delete)
 				     XML_ATTR_FILTER_TYPE, XML_CIB_TAG_STATUS,
 				     TRUE);
 		
-		free_xml(answer);
 		answer = process_cib_request(CRM_OPERATION_BUMP,
 					     new_options,
 					     NULL);
