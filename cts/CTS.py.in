@@ -138,7 +138,7 @@ class LogWatcher:
           Call look() to scan the log looking for the patterns
     '''
 
-    def __init__(self, log, regexes, timeout=10, debug=0):
+    def __init__(self, log, regexes, timeout=10, debug=None):
         '''This is the constructor for the LogWatcher class.  It takes a
         log name to watch, and a list of regular expressions to watch for."
         '''

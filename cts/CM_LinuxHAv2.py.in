@@ -68,9 +68,10 @@ class LinuxHAv2(HeartbeatCM):
                 r", exiting\.",
             ),
         })
+	# KLUDGE!  Expedient, but a Kludge (FIXME)
         CTSaudits.AllAuditClasses = [HAResourceAudit]
-#        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
-        CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop]
+#       CTStests.AllTestClasses = [FlipTest,RestartTest,StartOnebyOne,SimulStart,SimulStop,Split_brainTest,BandwidthTest]
+        CTStests.AllTestClasses = [FlipTest, RestartTest, StartOnebyOne, SimulStart, SimulStop]
     
     def StataCM(self, node):
 
@@ -100,7 +101,7 @@ class LinuxHAv2(HeartbeatCM):
         '''Start up the cluster manager on a given node'''
         watch = CTS.LogWatcher(self["LogFileName"]
         ,                      [self["Pat:We_started"]%node]
-        ,                      60, 1)
+        ,                      60)
         watch.setwatch()
         self.log ("CM_LinuxHAv2.py: Starting %s on node %s"
 		  %	(self["Name"], node))
