@@ -30,7 +30,7 @@ get_ra_pathname(const char* class_path, const char* type, const char* provider,
 		}else{
 			snprintf(pathname, RA_MAX_NAME_LENGTH, "%s%s",
 				class_path,type);
-		}			
+		}
 	}else{
 		/*the type includes path, just copy it to pathname*/
 		strncpy(pathname, type, RA_MAX_NAME_LENGTH);
@@ -38,7 +38,7 @@ get_ra_pathname(const char* class_path, const char* type, const char* provider,
 
 	free(type_dup);
 }
-	
+
 /*
  *    Description:   Filter a file.
  *    Return Value:
@@ -63,49 +63,7 @@ filtered(char * file_name)
 	return FALSE;
 }
 int
-get_providers(const char* class_path, const char* op_type, GList ** providers)
-{
-	struct dirent **namelist;
-	int file_num;
-
-	if ( providers == NULL ) {
-		return -2;
-	}
-
-	if ( *providers != NULL ) {
-		*providers = NULL;
-	}
-
-	file_num = scandir(class_path, &namelist, 0, alphasort);
-	if (file_num < 0) {
-		return -2;
-	}else{
-		char tmp_buffer[FILENAME_MAX+1];
-		while (file_num--) {
-			if (DT_DIR != namelist[file_num]->d_type) {
-				free(namelist[file_num]);
-				continue;
-			}
-			if ('.' == namelist[file_num]->d_name[0]) {
-				free(namelist[file_num]);
-				continue;
-			}
-
-			snprintf(tmp_buffer,FILENAME_MAX,"%s%s/%s",
-				 class_path, namelist[file_num]->d_name, op_type);
-
-			if ( filtered(tmp_buffer) == TRUE ) {
-				*providers = g_list_append(*providers,
-					g_strdup(namelist[file_num]->d_name));
-			}
-			free(namelist[file_num]);
-		}
-		free(namelist);
-	}
-	return g_list_length(*providers);
-}
-int
-get_ra_list(const char* class_path, GList ** rsc_info)
+get_runnable_list(const char* class_path, GList ** rsc_info)
 {
 	struct dirent **namelist;
 	int file_num;
@@ -127,7 +85,6 @@ get_ra_list(const char* class_path, GList ** rsc_info)
 		return -2;
 	} else{
 		while (file_num--) {
-			rsc_info_t * rsc_info_tmp = NULL;
 			char tmp_buffer[FILENAME_MAX+1];
 
 			tmp_buffer[0] = '\0';
@@ -136,16 +93,8 @@ get_ra_list(const char* class_path, GList ** rsc_info)
 			strncat(tmp_buffer, "/", FILENAME_MAX);
 			strncat(tmp_buffer, namelist[file_num]->d_name, FILENAME_MAX);
 			if ( filtered(tmp_buffer) == TRUE ) {
-				rsc_info_tmp = g_new(rsc_info_t, 1);
-				rsc_info_tmp->rsc_type =
-					g_strdup(namelist[file_num]->d_name);
-			/*
-			 * Since the version definition isn't cleat yet,
-			 * the version is setted 1.0.
-			 */
-				rsc_info_tmp->version = g_strdup("1.0");
 				*rsc_info = g_list_append(*rsc_info,
-						(gpointer)rsc_info_tmp);
+						g_strdup(namelist[file_num]->d_name));
 			}
 			free(namelist[file_num]);
 		}
