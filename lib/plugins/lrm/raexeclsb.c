@@ -57,6 +57,7 @@ static int execra(const char * rsc_id,
 		  const char * rsc_type,
 		  const char * provider,
 		  const char * op_type,
+		  const int    timeout,
 	 	  GHashTable * params);
 
 static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op_type);
@@ -126,7 +127,7 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 
 static int
 execra( const char * rsc_id, const char * rsc_type, const char * provider,
-	const char * op_type, GHashTable * params)
+	const char * op_type, const int timeout, GHashTable * params)
 {
 	uniform_ret_execra_t exit_value;
 	RA_ARGV params_argv;
