@@ -48,7 +48,7 @@ class LinuxHAv2(HeartbeatCM):
         HeartbeatCM.__init__(self, Environment, randseed=randseed)
         self.update({
             "Name"           : "linux-ha-v2",
-	    "DeadTime"	     : 90,
+            "DeadTime"       : 90,
             "StartCmd"       : "@libdir@/heartbeat/heartbeat >/dev/null 2>&1",
             "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
             "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null",
@@ -104,7 +104,7 @@ class LinuxHAv2(HeartbeatCM):
         ,                      60)
         watch.setwatch()
         self.log ("CM_LinuxHAv2.py: Starting %s on node %s"
-		  %	(self["Name"], node))
+                %(self["Name"], node))
         self.rsh(node, self["StartCmd"])
         if watch.look():
             self.ShouldBeStatus[node]=self["up"]
@@ -114,29 +114,26 @@ class LinuxHAv2(HeartbeatCM):
         self.log ("Could not start %s on node %s"
         %	(self["Name"], node))
         return None
-        
+    
+    def Configuration(self):
+        self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],self.Env["HAdir"])
+        cib=parse("%s/cib.xml"%self.Env["HAdir"])
+        return cib.getElementsByTagName('configuration')[0]
+    
     def Resources(self):
         ResourceList = []
-        self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],"/tmp/")
-        cib=parse("/tmp/cib.xml")
-        configuration=cib.getElementsByTagName('configuration')[0]
-
         #read resources in cib
+        configuration=self.Configuration()
         resources=configuration.getElementsByTagName('resources')[0]
         rscs=configuration.getElementsByTagName('resource')
         for rsc in rscs:
             ResourceList.append(HAResource(self,rsc))
-
         return ResourceList
 
     def Dependancies(self):
         DependancyList = []
-
-        self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],"/tmp/")
-        cib=parse("/tmp/cib.xml")
-        configuration=cib.getElementsByTagName('configuration')[0]
-
         #read dependancy in cib
+        configuration=self.Configuration()
         constraints=configuration.getElementsByTagName('constraints')[0]
         rsc_to_rscs=configuration.getElementsByTagName('rsc_to_rsc')
         for node in rsc_to_rscs:
