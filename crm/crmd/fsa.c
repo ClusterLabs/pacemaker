@@ -739,11 +739,18 @@ dump_rsc_info(void)
 /* 			if(safe_str_eq(rsc_state, "stopped")) { */
 /* 				continue; */
 /* 			} */
+
+			if(safe_str_neq(op_status, "-1")) {
+				crm_info("Resource state: %s %s "
+					 "[%s (rc=%s) after %s] on %s",
+					 rsc_id, rsc_state,
+					 op_status, last_rc, last_op, node_id);
+			} else {
+				crm_warn("Resource state: %s %s "
+					 "[pending %s] on %s",
+					 rsc_id, rsc_state, last_op, node_id);
+			}
 			
-			crm_info("Resource state: %s %s "
-				 "[%s (rc=%s) after %s] on %s",
-				 rsc_id, rsc_state,
-				 op_status, last_rc, last_op, node_id);
 			);
 		);
 }
