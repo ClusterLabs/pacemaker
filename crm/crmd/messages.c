@@ -473,7 +473,7 @@ crmd_authorize_message(
 	}
 	
 	if (result == TRUE) {
-		crm_info("Accepted client %s", (char*)table_key);
+		crm_info("Accepted client %s", crm_str(table_key));
 
 		curr_client->table_key = table_key;
 		curr_client->sub_sys = crm_strdup(client_name);
