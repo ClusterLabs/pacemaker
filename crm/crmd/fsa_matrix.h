@@ -411,18 +411,18 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 
 /* Got an I_WELCOME */
 	{
-		/* S_IDLE		==> */	S_RECOVERY,
+		/* S_IDLE		==> */	S_RELEASE_DC,
 		/* S_ELECTION		==> */	S_RELEASE_DC,
-		/* S_INTEGRATION	==> */	S_RECOVERY,
+		/* S_INTEGRATION	==> */	S_RELEASE_DC,
 		/* S_NOT_DC		==> */	S_NOT_DC,
-		/* S_POLICY_ENGINE	==> */	S_RECOVERY,
+		/* S_POLICY_ENGINE	==> */	S_RELEASE_DC,
 		/* S_RECOVERY		==> */	S_RECOVERY,
 		/* S_RECOVERY_DC	==> */	S_RELEASE_DC,
 		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
 		/* S_PENDING		==> */	S_NOT_DC,
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
-		/* S_TRANSITION_ENGINE	==> */	S_RECOVERY,
+		/* S_TRANSITION_ENGINE	==> */	S_RELEASE_DC,
 	},
 
 /* Got an I_WELCOME_ACK */
