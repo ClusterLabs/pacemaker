@@ -13,29 +13,50 @@ Message examples:
 2.2) the DC asking (all) the CIB(s) to provide their view of the world
 
 3.1) an admin request to add/remove/modify a resource
-3.2) an admin request to force a failover of a resource or a recomputation of the resource dependancies.
+3.2) an admin request to force a failover of a resource or a
+recomputation of the resource dependancies.
 
 Message Notes:
 ##################
-Messages may be sent to the CRM from local sub-systems via IPC or from other HA clients via Heartbeat.  It is then the responsibility of the CRM to unpack the message and pass it on to the correct sub-system.  If the destination sub-system is the DC and the DC is not running on the current node, the message is discarded without error.
+Messages may be sent to the CRM from local sub-systems via IPC or from
+other HA clients via Heartbeat.  It is then the responsibility of the
+CRM to unpack the message and pass it on to the correct sub-system.  If
+the destination sub-system is the DC and the DC is not running on the
+current node, the message is discarded without error.
 
+Where the DC recieves a message from another node, it will also keep
+track of the sending host and the reference number so that it can direct
+the replies appropriately.  The exception to this is where the message
+is from the DC.  
 
-Where the DC recieves a message from another node, it will also keep track of the sending host and the reference number so that it can direct the replies appropriately.  The exception to this is where the message is from the DC.  
+Messages to the DC are *always* sent as broadcast messages and the DC
+*must always* acknowledge the message with either the results of the
+message or a "thankyou" message.  The reason for this is that the DC may
+change or a DC election may be in progress.  The implication of this is
+that the sender should always set a timer and resend dc_messages if they
+have not been acknowledged.  The DC will be able to detect duplicates by
+examining the destination sub-system and the reference number and we
+will rely on HA to ensure the delivery of DC responses.
 
-Messages to the DC are *always* sent as broadcast messages and the DC *must always* acknowledge the message with either the results of the message or a "thankyou" message.  The reason for this is that the DC may change or a DC election may be in progress.  The implication of this is that the sender should always set a timer and resend dc_messages if they have not been acknowledged.  The DC will be able to detect duplicates by examining the destination sub-system and the reference number and we will rely on HA to ensure the delivery of DC responses.
-
-Only the *_request or *_response piece of the message is passed *to* the relevant sub-system.  However, to make life easier for the CRM (aka. the message broker), all responses *from* the sub-systems are a full crm_message so that the CRM can process messages recieved via IPC and HA in the same way.
+Only the *_request or *_response piece of the message is passed *to* the
+relevant sub-system.  However, to make life easier for the CRM (aka. the
+message broker), all responses *from* the sub-systems are a full
+crm_message so that the CRM can process messages recieved via IPC and HA
+in the same way.
 
 Schema Notes:
 ###################
 
 Key Attributes
 ===============
-reference:	provides the ability to track which request a responce is in relation to and 
-			 where the local CRM should send it.
-*_filter:	allow the operation to be limited to a particular type, id and/or priority
-timeout:	allows the receiver to know how long the sender is expecting the task to 
-			take so we can act and report back accordingly.
+
+reference:	provides the ability to track which request a responce
+		is in relation to and where the local CRM should send it.
+*_filter:	allow the operation to be limited to a particular type,
+		id and/or priority
+timeout:	allows the receiver to know how long the sender is
+		expecting the task to take so we can act and report back 
+		accordingly.
 
 Key Operations
 ===============
@@ -44,19 +65,22 @@ respawn:    	enable the CRM to restart a particular sub-system
 reconnect,disconnect: 	enable lmb's "CRM disconnect" feature
 noop: 		a sensible default for "constructor functions" to use
 ping:		allow the CRM to determin if a sub-system is alive
-deep_ping:	allow the DC to determin which sub-systems of a remote CRM are alive
-cib_op:		Send a CIB update (most likely an admin request) to the DC's CIB which will 
-			then propogate the change if it is valid.
-validate:	Check if an update to the running cluster will result in failed dependancies.
-validate_clean: Check if an update will result in failed dependancies if all nodes in the cluster 
-			were behaving correctly (Ie. ignore any system generated constraints).
-replace:        Tells the CIB to accept the CIB (or fragment) as sent instead of doing an object by
-		object update. 
+deep_ping:	allow the DC to determin which sub-systems of a remote CRM 
+		are alive
+cib_op:		Send a CIB update (most likely an admin request) to the DC's 
+		CIB which will then propogate the change if it is valid.
+validate:	Check if an update to the running cluster will result in 
+		failed dependancies.
+validate_clean: Check if an update will result in failed dependancies if all
+		nodes in the cluster were behaving correctly (Ie. ignore any 
+		system generated constraints).
+replace:        Tells the CIB to accept the CIB (or fragment) as sent instead
+		of doing an object by object update. 
 
 Attribute values
 =================
-Where the list ends with |... , the complete list of possibilities will be fleshed out at a later date.
-
+Where the list ends with |... , the complete list of possibilities will be 
+fleshed out at a later date.
 
 Message Schema:
 ###################
