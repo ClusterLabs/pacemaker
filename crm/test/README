@@ -81,7 +81,7 @@ Pre-reqs:
 	    deadtime 5
 	    warntime 3
 	    initdead 10
-	    udpport 691
+	    udpport 694
 	    bcast   eth0
 	    auto_failback legacy
 	    node    test1
