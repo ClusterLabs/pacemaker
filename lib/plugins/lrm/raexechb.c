@@ -217,6 +217,8 @@ prepare_cmd_parameters(const char * raname, const char * op,
 	 * Maybe not need this function? 	
 	 */ 
         int ht_size = 0;
+	int tmp_len;
+
 	if (params_ht) {
 		g_hash_table_size(params_ht);
 	}
@@ -225,7 +227,6 @@ prepare_cmd_parameters(const char * raname, const char * op,
                 return -1;
         }
                                                                                         
-	int tmp_len;
 	tmp_len = strnlen(raname, 160) + 1;
         params_argv[0] = g_new(char, tmp_len);
         strncpy(params_argv[0], raname, tmp_len);
@@ -247,14 +248,15 @@ prepare_cmd_parameters(const char * raname, const char * op,
 static void
 params_hash_to_argv(gpointer key, gpointer value, gpointer user_data)
 {
+	int param_index;
         RA_ARGV  * ra_argv = (RA_ARGV *) user_data;
+
         if (ra_argv == NULL ) {
                 return;
         }
 	
         /* the parameter index start from 1 */
         /* and start from 2 in argv array */
-	int param_index;
 	param_index = atoi( (char*) key );
 	(*ra_argv)[param_index + 1] = g_new(char, 21);
 	*((*ra_argv)[param_index + 1] + 20) = '\0';

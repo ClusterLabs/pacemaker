@@ -217,6 +217,8 @@ prepare_cmd_parameters(const char * raname, const char * op,
 	 */ 
 
 	int ht_size = 0;
+	int tmp_len;
+
 	if (params_ht) {
 		ht_size = g_hash_table_size(params_ht);
 	}
@@ -226,7 +228,6 @@ prepare_cmd_parameters(const char * raname, const char * op,
 		return -1;
 	}
 	
-	int tmp_len;
 	tmp_len = strnlen(raname, 160) + 1;
 	params_argv[0] = g_new(gchar, tmp_len); 
 	strncpy(params_argv[0], raname, tmp_len);
@@ -247,17 +248,15 @@ prepare_cmd_parameters(const char * raname, const char * op,
 static void
 params_hash_to_argv(gpointer key, gpointer value, gpointer user_data)
 {
-	if (user_data == NULL) {
-		return;
-	}
+	int param_index;
         RA_ARGV * ra_argv  = user_data;
+
         if (*ra_argv == NULL ) {
                 return;
         }
 
 	/* the parameter index start from 1 */
 	/* and start from 2 in argv array */
-	int param_index;
 	param_index = atoi((char *)key);
 	(*ra_argv)[param_index + 1] = g_new(gchar, 21);
 	*((*ra_argv)[param_index + 1] + 20) = '\0';
