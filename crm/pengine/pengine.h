@@ -74,14 +74,18 @@ struct resource_s {
 		gboolean provisional; 
 		GSListPtr allowed_nodes; 
 		GSListPtr constraints; 
+		char *cur_node_id; 
 }; 
 
-extern gboolean stage1(xmlNodePtr cib);
+extern gboolean stage0(xmlNodePtr cib);
+extern gboolean stage1(GSListPtr nodes);
 extern gboolean stage2(GSListPtr sorted_rsc, 
 		 GSListPtr sorted_nodes,         
 		 GSListPtr operations);
 extern gboolean stage3(GSListPtr colors);
 extern gboolean stage4(GSListPtr colors);
+extern gboolean stage5(GSListPtr resources);
+
 
 extern GSListPtr rsc_list; 
 extern GSListPtr node_list;
@@ -94,6 +98,12 @@ extern color_t *current_color;
 				         x *w = (x*)g_slist_nth_data(y, z); \
 					 a;				    \
 				  }
+
+extern gboolean pe_debug;
+#define pdebug(x) if(pe_debug) {		\
+		x;				\
+	}
+
 extern void print_node(const char *pre_text,
 		       node_t *node);
 

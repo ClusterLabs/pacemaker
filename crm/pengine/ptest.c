@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.3 2004/04/27 19:14:18 andrew Exp $ */
+/* $Id: ptest.c,v 1.4 2004/04/27 21:40:10 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -126,9 +126,8 @@ main(int argc, char **argv)
   
 	cib_object = file2xml(stdin);
   
-	cl_log(LOG_INFO, "=#=#=#=#= Stage 1 =#=#=#=#=");
-	stage1(cib_object);
-
+	cl_log(LOG_INFO, "=#=#=#=#= Stage 0 =#=#=#=#=");
+	stage0(cib_object);
 
 	cl_log(LOG_INFO, "========= Nodes =========");
 	slist_iter(node, node_t, node_list, lpc,
@@ -143,6 +142,16 @@ main(int argc, char **argv)
 	slist_iter(constraint, rsc_constraint_t, cons_list, lpc,
 		   print_cons(NULL, constraint, FALSE));
     
+	cl_log(LOG_INFO, "=#=#=#=#= Stage 1 =#=#=#=#=");
+	stage1(node_list);
+
+	cl_log(LOG_INFO, "========= Nodes =========");
+	slist_iter(node, node_t, node_list, lpc,
+		   print_node(NULL, node));
+
+	cl_log(LOG_INFO, "========= Resources =========");
+	slist_iter(resource, resource_t, rsc_list, lpc,
+		   print_resource(NULL, resource, TRUE));
 
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 2 =#=#=#=#=");
 	stage2(rsc_list, node_list, NULL);
@@ -153,8 +162,7 @@ main(int argc, char **argv)
 
 	cl_log(LOG_INFO, "========= Resources =========");
 	slist_iter(resource, resource_t, rsc_list, lpc,
-		   print_resource(NULL, resource, TRUE));
-  
+		   print_resource(NULL, resource, TRUE));  
   
 	cl_log(LOG_INFO, "========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
@@ -175,6 +183,9 @@ main(int argc, char **argv)
 	cl_log(LOG_INFO, "========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
+
+	cl_log(LOG_INFO, "=#=#=#=#= Stage 5 =#=#=#=#=");
+	stage5(rsc_list);
 
 	return 0;
 }
@@ -359,12 +370,13 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 		       __FUNCTION__);
 		return;
 	}
-	cl_log(LOG_DEBUG, "%s %sResource %s: (priority=%f, color=%d)",
+	cl_log(LOG_DEBUG, "%s %sResource %s: (priority=%f, color=%d, now=%s)",
 	       pre_text==NULL?"":pre_text,
 	       rsc->provisional?"Provisional ":"",
 	       rsc->id,
 	       (double)rsc->priority,
-	       rsc->color==NULL?-1:rsc->color->id);
+	       rsc->color==NULL?-1:rsc->color->id,
+	       rsc->cur_node_id);
 
 	cl_log(LOG_DEBUG,
 	       "\t%d candidate colors, %d allowed nodes and %d constraints",
