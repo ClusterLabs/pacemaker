@@ -272,9 +272,11 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 
 	CRM_DEBUG2("Dumped XML into buffer: [%s]", xmlBufferContent(xml_buffer));
 	
-	xml_message = (xmlChar*)ha_malloc(sizeof(xmlChar)*(msg_size+1)); 
-	strncpy(xml_message, (const char*)xmlBufferContent(xml_buffer), msg_size); 
-	xml_message[msg_size] = '\0';
+	xml_message = (xmlChar*)ha_strdup(xml_message); 
+	if(!xml_message) {
+		cl_log(LOG_ERR, "memory allocation failed in dump_xml_node()");
+		return NULL;
+	}
 	
 	CRM_DEBUG2("Before free: [%s]", xml_message);
 	xmlBufferFree(xml_buffer);

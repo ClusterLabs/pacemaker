@@ -229,19 +229,34 @@ generate_hash_key(const char *reference, const char *sys)
 char *
 generate_hash_value(const char *src_node, const char *src_subsys)
 {
-    if(src_node == NULL || src_subsys == NULL) return NULL;
-    int ref_len = strlen(src_subsys) + 1;
+    int ref_len;
+    char *hash_value;
+
+    if(src_node == NULL || src_subsys == NULL) {
+	    return NULL;
+    }
+
     if(strcmp("dc", src_subsys) == 0)
     {
-	char *subsys = (char*)ha_malloc(sizeof(char)* ref_len);
-	strncpy(subsys, src_subsys, strlen(src_subsys));
-	subsys[strlen(src_subsys)] ='\0';
-	return subsys;
+	    hash_value = ha_strdup(src_subsys);
+	    if (!hash_value) {
+		    cl_log(LOG_ERR, "memory allocation failed in "
+				    "generate_hash_value()\n");
+		    return NULL;
+	
+	    }
+	    return hash_value;
     }
     
-    ref_len += strlen(src_node)+1;
-    char *hash_value = (char*)ha_malloc(sizeof(char)*(ref_len));
-    sprintf(hash_value, "%s_%s", src_node, src_subsys);
+    ref_len = strlen(src_subsys) + strlen(src_node) + 2;
+    hash_value = (char*)ha_malloc(sizeof(char)*(ref_len));
+    if (!hash_value) {
+	    cl_log(LOG_ERR, "memory allocation failed in "
+			    "generate_hash_value()\n");
+	    return NULL;
+    }
+
+    snprintf(hash_value, ref_len-1, "%s_%s", src_node, src_subsys);
     hash_value[ref_len-1] = '\0';// i want to make sure it is null terminated
 
     cl_log(LOG_INFO, "created hash value: (%s)", hash_value);
@@ -258,12 +273,16 @@ decode_hash_value(gpointer value, char **node, char **subsys)
     	
     if(strcmp("dc", (char*)value) == 0) 
     {
-	*node = NULL;
-	*subsys = (char*)ha_malloc(sizeof(char)* (value_len+1));
-	strncpy(*subsys, char_value, value_len);
-	(*subsys)[value_len] ='\0';
-	cl_log(LOG_INFO, "Decoded value: (%s:%d)", *subsys, strlen(*subsys));
-	return TRUE;
+    	    *node = NULL;
+    	    *subsys = (char*)ha_strdup(char_value);
+	    if (!*subsys) {
+		    cl_log(LOG_ERR, "memory allocation failed in "
+				    "decode_hash_value()\n");
+		    return FALSE;
+	    }
+	    cl_log(LOG_INFO, "Decoded value: (%s:%d)", *subsys, 
+			    strlen(*subsys));
+	    return TRUE;
     }
     else if(char_value != NULL)
     {

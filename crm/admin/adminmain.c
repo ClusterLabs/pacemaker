@@ -199,9 +199,6 @@ main(int argc, char ** argv)
 	if (flag == -1)
 	    break;
 	
-	int arglen = -1;
-	if(optarg != NULL) arglen = strlen(optarg);
-	
 	switch(flag) {
 	    case 0:
 		printf ("option %s", long_options[option_index].name);
@@ -215,13 +212,21 @@ main(int argc, char ** argv)
 		else if(strcmp("query"  , long_options[option_index].name) == 0) DO_QUERY   = TRUE;
 		else if(strcmp("instance"  , long_options[option_index].name) == 0)
 		{
-		    instance = (char*)ha_malloc(sizeof(char)*arglen);
-		    strncpy(instance, optarg, arglen);
+		     	instance = ha_strdup(optarg);
+			if (!instance) {
+			     	printf ("?? instance option memory "
+			    			"allocation failed ??\n");
+				argerr++;
+			}
 		}
 		else if(strcmp("node"  , long_options[option_index].name) == 0)
 		{
-		    node = (char*)ha_malloc(sizeof(char)*arglen);
-		    strncpy(node, optarg, arglen);
+			node = ha_strdup(optarg);
+			if (!node) {
+			     	printf ("?? node option memory "
+			    			"allocation failed ??\n");
+				argerr++;
+			}
 		}
 		else 
 		{
@@ -244,16 +249,27 @@ main(int argc, char ** argv)
 		usage(daemon_name, LSB_EXIT_OK);
 		break;
 	    case 'i':
-		id = (char*)ha_malloc(sizeof(char)*arglen);
-		strncpy(id, optarg, arglen);
+		id = ha_strdup(optarg);
+		if (!id) {
+			printf ("?? id option memory allocation failed ??\n");
+			argerr++;
+		}
 		break;
 	    case 'o':
-		obj_type = (char*)ha_malloc(sizeof(char)*arglen);
-		strncpy(obj_type, optarg, arglen);
+		node = ha_strdup(obj_type);
+		if (!node) {
+			printf ("?? obj_type option memory "
+					"allocation failed ??\n");
+			argerr++;
+		}
 		break;
 	    case 'D':
-		description = (char*)ha_malloc(sizeof(char)*arglen);
-		strncpy(description, optarg, arglen);
+		description = ha_strdup(optarg);
+		if (!description) {
+			printf ("?? description option memory "
+					"allocation failed ??\n");
+			argerr++;
+		}
 		break;
 	    case 'C':
 		printf ("Option %c is not yet supported\n", flag);
@@ -261,8 +277,12 @@ main(int argc, char ** argv)
 		break;
 	    case 'S':
 		DO_HEALTH       = TRUE;
-		status = (char*)ha_malloc(sizeof(char)*arglen);
-		strncpy(status, optarg, arglen);
+		status = ha_strdup(optarg);
+		if (!status) {
+			printf ("?? status option memory "
+					"allocation failed ??\n");
+			argerr++;
+		}
 		break;
 	    case 'H':
 		DO_HEALTH       = TRUE;
@@ -304,51 +324,88 @@ main(int argc, char ** argv)
 		++argerr;
 		break;
 	    case 'm':
-		max_instances = (char*)ha_malloc(sizeof(char)*arglen);
-		strncpy(max_instances, optarg, arglen);
+		max_instances = ha_strdup(optarg);
+		if (!max_instances) {
+			printf ("?? max_instances option memory "
+					"allocation failed ??\n");
+			argerr++;
+		}
 		break;
 	    case 'a':
 		list_add->num_items++;
 		if(list_add->num_items != 1)
-		    list_add_last->next = (str_list_t *)ha_malloc(sizeof(str_list_t));
-		list_add_last->value = (char*)ha_malloc(sizeof(char)*arglen);
-		strncpy(list_add_last->value, optarg, arglen);
+		    list_add_last->next = (str_list_t *)ha_malloc(
+				    sizeof(str_list_t));
+		list_add_last->value = ha_strdup(optarg);
+		if (!list_add_last->value) {
+			printf ("?? option memory allocation failed ??\n");
+			argerr++;
+			break;
+		}
 		list_add_last->next = NULL;
 		break;
 	    case 'd':
 		list_del->num_items++;
 		if(list_del->num_items != 1)
 		    list_del_last->next = (str_list_t *)ha_malloc(sizeof(str_list_t));
-		list_del_last->value = (char*)ha_malloc(sizeof(char)*arglen);
-		strncpy(list_del_last->value, optarg, arglen);
+		list_add_last->value = ha_strdup(optarg);
+		if (!list_add_last->value) {
+			printf ("?? option memory allocation failed ??\n");
+			argerr++;
+			break;
+		}
 		list_del_last->next = NULL;
 		break;
 	    case 'w':
 		list_wipe = TRUE;
 		break;
 	    case 'c':
-		clear = (char*)ha_malloc(sizeof(char)*arglen);
-		strncpy(clear, optarg, arglen);
+		clear = ha_strdup(optarg);
+		if (!clear) {
+			printf ("?? clear option memory "
+					"allocation failed ??\n");
+			argerr++;
+		}
 		break;
 	    case 'r':
-		if(num_resources < 2)
-		{
-		    resource[num_resources] = (char*)ha_malloc(sizeof(char)*arglen);
-		    strncpy(resource[num_resources], optarg, arglen);
-		    num_resources++;
+		if(num_resources > 1) {
+			printf ("?? too many (> 2) resources ?? \n");
+			argerr++;
+			break;
+		}
+	    	resource[num_resources] = ha_strdup(optarg);
+		if (!resource[num_resources]) {
+			printf ("?? resource[%d] option memory allocation "
+					"failed ??\n", num_resources);
+			argerr++;
+		}
+		else {
+			num_resources++;
 		}
 		break;
 	    case 't':
-		res_timeout = (char*)ha_malloc(sizeof(char)*arglen);
-		strncpy(res_timeout, optarg, arglen);
+		res_timeout = ha_strdup(optarg);
+		if (!res_timeout) {
+			printf ("?? res_timeout option memory "
+					"allocation failed ??\n");
+			argerr++;
+		}
 		break;
 	    case 'p':
-		priority = (char*)ha_malloc(sizeof(char)*arglen);
-		strncpy(priority, optarg, arglen);
+		priority = ha_strdup(optarg);
+		if (!priority) {
+			printf ("?? priority option memory "
+					"allocation failed ??\n");
+			argerr++;
+		}
 		break;
 	    case 's':
-		subtype = (char*)ha_malloc(sizeof(char)*arglen);
-		strncpy(subtype, optarg, arglen);
+		subtype = ha_strdup(optarg);
+		if (!subtype) {
+			printf ("?? subtype option memory "
+					"allocation failed ??\n");
+			argerr++;
+		}
 		break;
 	    default:
 		printf ("?? getopt returned character code 0%o ??\n", flag);
@@ -751,13 +808,18 @@ do_work(ll_cluster_t *hb_fd)
 	char *obj_type_parent = NULL;
 	if(obj_type == NULL)
 	{
-	    obj_type_parent = (char*)ha_malloc(sizeof(char)*4);
-	    sprintf(obj_type_parent, "%s", "all");
-
+	    obj_type_parent = ha_strdup("all");
+	    if (obj_type_parent == NULL) {
+		    return -1;
+	    }
 	}
 	else
 	{
-	    obj_type_parent = (char*)ha_malloc(sizeof(char)*(strlen(obj_type)+1));
+	    obj_type_parent = (char*)ha_malloc(sizeof(char)*
+			    (strlen(obj_type)+1));
+	    if (obj_type_parent == NULL) {
+		    return -1;
+	    }
 	    cl_log(LOG_DEBUG, "Building the request - 0");
 	    sprintf(obj_type_parent, "%s%c", obj_type, 's');
 	}
