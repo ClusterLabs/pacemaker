@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.14 2004/03/05 14:13:08 andrew Exp $ */
+/* $Id: msgutils.c,v 1.15 2004/03/10 22:30:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -494,8 +494,7 @@ send_ipc_request(IPC_Channel *ipc_channel,
 				 sys_from, uid_from,
 				 crm_msg_reference);
 
-	CRM_DEBUG("Final request...");
-	xml_message_debug(request);
+	xml_message_debug(request, "Final request...");
 
 	was_sent = send_xmlipc_message(ipc_channel, request);
 
@@ -523,8 +522,7 @@ send_ha_request(ll_cluster_t *hb_fd,
 				 sys_from, uid_from,
 				 crm_msg_reference);
 
-	CRM_DEBUG("Final request...");
-	xml_message_debug(request);
+	xml_message_debug(request, "Final request...");
 
 	was_sent = send_xmlha_message(hb_fd, request);
 
@@ -539,7 +537,6 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	       const char *sys_from, const char *uid_from,
 	       const char *crm_msg_reference)
 {
-	const char *message_type = XML_ATTR_REQUEST;
 	const char *true_from = sys_from;
 	FNIN();
 
@@ -569,12 +566,12 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 
 	set_node_tstamp(request);
 
-	set_xml_property_copy(request, XML_ATTR_VERSION,     CRM_VERSION);
-	set_xml_property_copy(request, XML_ATTR_MSGTYPE, message_type);
+	set_xml_property_copy(request, XML_ATTR_VERSION, CRM_VERSION);
+	set_xml_property_copy(request, XML_ATTR_MSGTYPE, XML_ATTR_REQUEST);
 	set_xml_property_copy(request, XML_ATTR_SYSTO,   sys_to);
 	set_xml_property_copy(request, XML_ATTR_SYSFROM, true_from);
 	set_xml_property_copy(request, XML_ATTR_REFERENCE, crm_msg_reference);
-	if(host_to != NULL)
+	if(host_to != NULL && strlen(host_to) > 0)
 		set_xml_property_copy(request, XML_ATTR_HOSTTO,  host_to);
 
 	if (msg_options != NULL) {
@@ -600,8 +597,7 @@ send_ipc_reply(IPC_Channel *ipc_channel,
 	gboolean was_sent = FALSE;
 	xmlNodePtr reply = create_reply(xml_request, xml_response_data);
 
-	CRM_DEBUG("Final reply...");
-	xml_message_debug(reply);
+	xml_message_debug(reply, "Final reply...");
 
 	if (reply != NULL) {
 		was_sent = send_xmlipc_message(ipc_channel, reply);
@@ -653,7 +649,7 @@ create_reply(xmlNodePtr original_request,
 	/* since this is a reply, we reverse the from and to */
 
 	// HOSTTO will be ignored if it is to the DC anyway.
-	if(host_from != NULL)
+	if(host_from != NULL && strlen(host_from) > 0)
 		set_xml_property_copy(reply, XML_ATTR_HOSTTO,   host_from);
 
 	set_xml_property_copy(reply, XML_ATTR_SYSTO,    sys_from);
@@ -687,7 +683,7 @@ create_forward(xmlNodePtr original_request,
 			      XML_ATTR_REQUEST);
 	
 	// HOSTTO will be ignored if it is to the DC anyway.
-	if(host_to != NULL)
+	if(host_to != NULL && strlen(host_to) > 0)
 		set_xml_property_copy(forward, XML_ATTR_HOSTTO,   host_to);
 	if(host_from != NULL)
 		set_xml_property_copy(forward, XML_ATTR_HOSTFROM, host_from);
