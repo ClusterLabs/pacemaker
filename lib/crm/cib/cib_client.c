@@ -900,10 +900,10 @@ get_object_root(const char *object_type, crm_data_t *the_root)
 	}
 
 	if (tmp_node == NULL) {
-		crm_err("[cib] Section %s [%s [%s]] not present",
-			crm_element_name(the_root),
+		crm_err("Section [%s [%s]] not present in %s",
 			node_stack[0],
-			node_stack[1]?node_stack[1]:"");
+			node_stack[1]?node_stack[1]:"",
+			crm_element_name(the_root));
 	}
 	return tmp_node;
 }
