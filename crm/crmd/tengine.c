@@ -107,24 +107,25 @@ do_te_invoke(long long action,
 	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
 		if(te_subsystem->pid > 0) {
 			int pid_status = -1;
-			waitpid(te_subsystem->pid, &pid_status, WNOHANG);
-			if(WIFSIGNALED(pid_status) || WIFEXITED(pid_status)) {
-				te_subsystem->pid = -1;
+			int rc = waitpid(
+				te_subsystem->pid, &pid_status, WNOHANG);
+
+			if(rc > 0 && WIFEXITED(pid_status)) {
 				clear_bit_inplace(fsa_input_register,
 						  te_subsystem->flag_connected);
 	
 				if(is_set(fsa_input_register,
 					  te_subsystem->flag_required)) {
 					/* this wasnt supposed to happen */
-					crm_err("The %s subsystem terminated"
-						" during start",
-						te_subsystem->name);
+					crm_err("%s[%d] terminated during start",
+						te_subsystem->name,
+						te_subsystem->pid);
 					register_fsa_error(
-						C_IPC_MESSAGE, I_ERROR, NULL);
+						C_FSA_INTERNAL, I_ERROR, NULL);
 				}
+				te_subsystem->pid = -1;
 				return I_NULL;
 			}
-
 		} 
 
 		crm_info("Waiting for the TE to connect");
