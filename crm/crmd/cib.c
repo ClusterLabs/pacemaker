@@ -66,7 +66,8 @@ do_cib_control(long long action,
 	long long start_actions = A_CIB_START;
 
 	if(action & stop_actions) {
-		if(fsa_cib_conn->state != cib_disconnected) {
+		if(fsa_cib_conn != NULL
+		   && fsa_cib_conn->state != cib_disconnected) {
 			fsa_cib_conn->cmds->signoff(fsa_cib_conn);
 		}
 	}
@@ -209,7 +210,7 @@ update_local_cib_adv(
 {
 	HA_Message *msg = NULL;
 	ha_msg_input_t *fsa_input = NULL;
-	int call_options = cib_scope_local|cib_sync_call;
+	int call_options = cib_sync_call;
 
 	CRM_DEV_ASSERT(msg_data != NULL);
 	
@@ -220,11 +221,13 @@ update_local_cib_adv(
 
 	ha_msg_add(msg, F_CIB_SECTION,
 		   crm_element_value(msg_data, XML_ATTR_SECTION));
-
 	ha_msg_add_int(msg, F_CIB_CALLOPTS, call_options);
+	ha_msg_add(msg, "call_origin", raised_from);
 
 	fsa_input->msg = msg;
 	fsa_input->xml = msg_data;
+
+	CRM_DEV_ASSERT(cib_ok == fsa_cib_conn->cmds->is_master(fsa_cib_conn));
 
 	if(do_now == FALSE) {
 		crm_debug("Registering event with FSA");
