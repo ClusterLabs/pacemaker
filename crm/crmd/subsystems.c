@@ -49,8 +49,10 @@
 gboolean
 stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 {
+	IPC_Channel *client_channel = the_subsystem->ipc;
 	crm_verbose("Stopping sub-system \"%s\"", the_subsystem->name);
 	clear_bit_inplace(fsa_input_register, the_subsystem->flag_required);
+	
 	if (the_subsystem->pid <= 0) {
 		crm_debug("Client %s not running yet", the_subsystem->name);
 
@@ -63,13 +65,19 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 		kill(the_subsystem->pid, -9);
 		the_subsystem->pid = -1;
 		
+	} else if(client_channel == NULL
+		  || client_channel->ops->get_chan_status(
+			  client_channel) != IPC_CONNECT) {
+		crm_err("Temporary error, dont log a bugzilla."
+			"  Client %s has already quit", the_subsystem->name);
+		
 	} else {
 		HA_Message *quit = create_request(
 			CRM_OP_QUIT, NULL, NULL, the_subsystem->name,
 			AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
 	
 		crm_info("Sending quit message to %s.", the_subsystem->name);
-		send_request(quit, NULL);
+		send_ipc_message(client_channel, quit);
 	}
 	
 	return TRUE;
