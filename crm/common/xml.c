@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.25 2005/01/27 09:21:30 andrew Exp $ */
+/* $Id: xml.c,v 1.26 2005/02/01 22:42:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,10 +40,12 @@
 void dump_array(
 	int log_level, const char *message, const char **array, int depth);
 
-#ifndef USE_LIBXML
-
 int print_spaces(char *buffer, int spaces);
 
+int log_data_element(
+	int log_level, int depth, crm_data_t *data, gboolean formatted);
+
+#ifndef USE_LIBXML
 int dump_data_element(
 	int depth, char **buffer, const crm_data_t *data, gboolean formatted);
 
@@ -65,8 +67,8 @@ find_xml_node(crm_data_t *root, const char * search_path, gboolean must_find)
 	xml_child_iter(
 		root, a_child, search_path,
 /* 		crm_insane("returning node (%s).", xmlGetNodePath(a_child)); */
-		crm_insane("contents\t%s", dump_xml_formatted(a_child));
-		crm_insane("found in\t%s", dump_xml_formatted(root));
+		crm_xml_insane(a_child, "contents\t%s");
+		crm_xml_insane(root, "found in\t%s");
 		return a_child;
 		);
 
@@ -113,8 +115,8 @@ find_xml_node_nested(crm_data_t *root, const char **search_path, int len)
 		crm_insane("returning node (%s).",
 			   xmlGetNodePath(lastMatch));
 
-		crm_insane("found\t%s", dump_xml_formatted(lastMatch));
-		crm_insane("in \t%s", dump_xml_formatted(root));
+		crm_xml_insane(lastMatch, "found\t%s");
+		crm_xml_insane(root, "in \t%s");
 		
 		return lastMatch;
 	}
@@ -706,22 +708,15 @@ void
 print_xml_formatted(int log_level, const char *function,
 		    crm_data_t *msg, const char *text)
 {
-	char *msg_buffer = NULL;
-
 	if(msg == NULL) {
 		do_crm_log(log_level, function, NULL, "%s: %s",
 			   crm_str(text), "<null>");
 		return;
 	}
 
-	crm_insane("dumping XML to char *");
-	msg_buffer = dump_xml_formatted(msg);
-	do_crm_log(log_level, function, NULL, "%s: %s",
-		   crm_str(text), crm_str(msg_buffer));
-	crm_insane("Freeing char * buffer");
-	crm_free(msg_buffer);
-	crm_insane("Free-d char * buffer");
-
+	do_crm_log(log_level, function, NULL, "%s:",
+		   crm_str(text));
+	log_data_element(log_level, 0, msg, TRUE);
 	return;
 }
 
@@ -858,10 +853,117 @@ dump_xml_unformatted(crm_data_t *an_xml_node)
 }
 
 #define update_buffer_head(buffer, len) if(len < 0) {	\
-		(**buffer) = EOS; return -1;		\
+		(*buffer) = EOS; return -1;		\
 	} else {					\
-		(*buffer) += len;			\
+		buffer += len;				\
 	}
+
+
+int
+print_spaces(char *buffer, int depth) 
+{
+	int lpc = 0;
+	int spaces = 2*depth;
+	/* <= so that we always print 1 space - prevents problems with syslog */
+	for(lpc = 0; lpc <= spaces; lpc++) {
+		if(sprintf(buffer, "%c", ' ') < 1) {
+			return -1;
+		}
+		buffer += 1;
+	}
+	return lpc;
+}
+
+int
+log_data_element(
+	int log_level, int depth, crm_data_t *data, gboolean formatted) 
+{
+	int printed = 0;
+	int child_result = 0;
+	int has_children = 0;
+	char print_buffer[1000];
+	char *buffer = print_buffer;
+	const char *name = crm_element_name(data);
+
+	crm_insane("Dumping %s...", name);
+	if(data == NULL) {
+		crm_warn("No data to dump as XML");
+		return 0;
+
+	} else if(name == NULL && depth == 0) {
+		xml_child_iter(
+			data, a_child, NULL,
+			child_result = log_data_element(
+				log_level, depth, a_child, formatted);
+			if(child_result < 0) {
+				return child_result;
+			}
+			);
+		return 0;
+
+	} else if(name == NULL) {
+		crm_err("Cannot dump NULL element at depth %d", depth);
+		return -1;
+	}
+	
+	if(formatted) {
+		printed = print_spaces(buffer, depth);
+		update_buffer_head(buffer, printed);
+	}
+	
+	printed = sprintf(buffer, "<%s", name);
+	update_buffer_head(buffer, printed);
+
+	xml_prop_iter(
+		data, prop_name, prop_value,
+
+		if(safe_str_eq(XML_ATTR_TAGNAME, prop_name)) {
+			continue;
+		} else if(safe_str_eq(XML_ATTR_PARENT, prop_name)) {
+			continue;
+		}
+		
+		crm_insane("Dumping <%s %s=\"%s\"...",
+			  name, prop_name, prop_value);
+		printed = sprintf(buffer, " %s=\"%s\"", prop_name, prop_value);
+		update_buffer_head(buffer, printed);
+		);
+
+	xml_child_iter(
+		data, child, NULL,
+		if(child != NULL) {
+			has_children++;
+			break;
+		}
+		);
+
+	printed = sprintf(buffer, "%s>", has_children==0?"/":"");
+	update_buffer_head(buffer, printed);
+	do_crm_log(log_level,  __FUNCTION__, NULL, "%s", print_buffer);
+	buffer = print_buffer;
+	
+	if(has_children == 0) {
+		return 0;
+	}
+	
+	xml_child_iter(
+		data, a_child, NULL,
+		child_result = log_data_element(
+			log_level, depth+1, a_child, formatted);
+
+		if(child_result < 0) { return -1; }
+		);
+
+	if(formatted) {
+		printed = print_spaces(buffer, depth);
+		update_buffer_head(buffer, printed);
+	}
+	do_crm_log(log_level,  __FUNCTION__, NULL, "%s</%s>",
+		   print_buffer, name);
+	crm_insane("Dumped %s...", name);
+
+	return has_children;
+}
 
 #ifndef USE_LIBXML
 
@@ -902,58 +1004,54 @@ dump_data_element(
 	}
 	
 	if(formatted) {
-		printed = print_spaces(*buffer, 3*depth);
+		printed = print_spaces(*buffer, depth);
 		update_buffer_head(buffer, printed);
 	}
 	
 	printed = sprintf(*buffer, "<%s", name);
 	update_buffer_head(buffer, printed);
 
-	for (lpc = 0; lpc < data->nfields; lpc++) {
-		if(data->types[lpc] == FT_STRING) {
-			/* attribute */
-			if(safe_str_eq(XML_ATTR_TAGNAME, data->names[lpc])) {
-				continue;
-			} else if(safe_str_eq(XML_ATTR_PARENT, data->names[lpc])) {
-				continue;
-			}
-			
-			crm_debug("Dumping <%s %s=\"%s\"...",
-				  name, data->names[lpc], (const char*)data->values[lpc]);
-			printed = sprintf(*buffer, " %s=\"%s\"",
-					  data->names[lpc], (char*)data->values[lpc]);
-			update_buffer_head(buffer, printed);
-			
-		} else if(data->types[lpc] == FT_STRUCT) {
-			/* children */
-			has_children++;
-			
-		} else if(data->types[lpc] == FT_LIST) {
-			/* needed? */
-		} else {
-			CRM_ASSERT(FALSE);
-		}
-	}
+	xml_prop_iter(
+		data, prop_name, prop_value,
 
-	printed = sprintf(*buffer, "%s>%s", has_children==0?"/":"", formatted?"\n":"");
+		if(safe_str_eq(XML_ATTR_TAGNAME, prop_name)) {
+			continue;
+		} else if(safe_str_eq(XML_ATTR_PARENT, prop_name)) {
+			continue;
+		}
+		
+		crm_debug("Dumping <%s %s=\"%s\"...",
+			  name, prop_name, prop_value);
+		printed = sprintf(*buffer, " %s=\"%s\"", prop_name, prop_value);
+		update_buffer_head(buffer, printed);
+		);
+
+	xml_child_iter(
+		data, child, NULL,
+		if(child != NULL) {
+			has_children++;
+			break;
+		}
+		);
+
+	printed = sprintf(*buffer, "%s>%s",
+			  has_children==0?"/":"", formatted?"\n":"");
 	update_buffer_head(buffer, printed);
 
 	if(has_children == 0) {
 		return 0;
 	}
-	for (lpc = 0; has_children && lpc < data->nfields; lpc++) {
-		if(data->types[lpc] != FT_STRUCT) {
-			continue;
-		}
-		
+	
+	xml_child_iter(
+		data, child, NULL,
 		child_result = dump_data_element(
-			depth+1, buffer, data->values[lpc], formatted);
+			depth+1, buffer, child, formatted);
 
 		if(child_result < 0) { return -1; }
-	}
+		);
 
 	if(formatted) {
-		printed = print_spaces(*buffer, 3*depth);
+		printed = print_spaces(*buffer, depth);
 		update_buffer_head(buffer, printed);
 	}
 	printed = sprintf(*buffer, "</%s>%s", name, formatted?"\n":"");
@@ -961,19 +1059,6 @@ dump_data_element(
 	crm_debug("Dumped %s...", name);
 
 	return has_children;
-}
-
-int
-print_spaces(char *buffer, int spaces) 
-{
-	int lpc = 0;
-	for(lpc = 0; lpc < spaces; lpc++) {
-		if(sprintf(buffer, "%c", ' ') < 1) {
-			return -1;
-		}
-		buffer += 1;
-	}
-	return lpc;
 }
 
 int
