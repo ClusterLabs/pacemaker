@@ -768,7 +768,6 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			crm_err("An LRM operation failed or was aborted");
 			set_xml_property_copy(
 				iter, XML_LRM_ATTR_RSCSTATE, fail_state);
 			break;
@@ -795,16 +794,25 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	
 	{
 		int rc = cib_ok;
+		int call_options = cib_sync_call;
+
+		if(fsa_state != S_NOT_DC
+		   && AM_I_DC == FALSE
+		   && fsa_our_dc == NULL) {
+			call_options = 0;
+			crm_debug("Possibly nowhere to send resource update to."
+				  "  Performing an async update just in case.");
+		}
+		
 		rc = fsa_cib_conn->cmds->modify(
 			fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
-			cib_sync_call);
+			call_options);
 
 		/*
 		 * There are a couple of options here...
 		 *
 		 * One is that maybe just the CRMd died.  So this is a
 		 *   callback from last time.
-		 * This can also be triggered by the HA shutdown bug.
 		 *
 		 * Another is that the update occurred while the next DC was
 		 *   being elected.
