@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.17 2004/03/22 11:09:53 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.18 2004/03/22 14:00:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,9 +54,6 @@
 #include <xmlvalues.h>
 
 #include <crm/dmalloc_wrapper.h>
-
-#define APPNAME_LEN 256
-#define MSG_LOG	1
 
 FILE *msg_out_strm = NULL;
 
