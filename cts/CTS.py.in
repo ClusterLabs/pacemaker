@@ -456,7 +456,7 @@ class Resource:
         self.ResourceType = rsctype
         self.Instance = instance
 
-    def Type(self, nodename):
+    def Type(self):
         return self.ResourceType
 
     def Instance(self, nodename):

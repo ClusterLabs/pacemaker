@@ -1017,9 +1017,11 @@ class DRBDTest(CTSTest):
     def is_applicable(self):
         '''DRBD is applicable when there are drbd device'''
 
-        if self.CM.Env.has_key("DoDrbd"):
-           return self.CM.Env["DoDrbd"]
-        return 0
+        for group in self.CM.ResourceGroups():
+            for resource in group:
+                if resource.Type() == "datadisk":
+                    return 1
+        return None
 
 AllTestClasses.append(DRBDTest)
 

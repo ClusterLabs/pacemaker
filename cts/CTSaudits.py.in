@@ -26,6 +26,7 @@ Licensed under the GNU GPL.
 import time
 import CTS
 import os
+import popen2
 
 
 class ClusterAudit:
@@ -119,14 +120,32 @@ class ResourceAudit(ClusterAudit):
                     Fatal = 1
 
 
-		# Is the resource actually working?
+		# Is the resource working correctly ?
 
                 if not Fatal and len(ResourceNodes) == 1:
+                    beforearpchild = popen2.Popen3("date;/sbin/arp -n|cut -c1-15,26-50,75-"
+                    ,		None)
+                    beforearpchild.tochild.close()   # /dev/null
                     if not resource.IsWorkingCorrectly(ResourceNodes[0]):
-                      result.append("Resource " + repr(resource)
-                      +	" not operating properly."
-                      + "  Resource is running on " + ResourceNodes[0]);
-                      Fatal = 1
+                        afterarpchild = popen2.Popen3("/sbin/arp -n|cut -c1-15,26-50,75-"
+                        ,		None)
+                        afterarpchild.tochild.close()   # /dev/null
+                        result.append("Resource " + repr(resource)
+                        +  " not operating properly."
+                        +  "  Resource is running on " + ResourceNodes[0]);
+                        Fatal = 1
+                        beforearpchild.wait()
+                        afterarpchild.wait()
+                        self.CM.log("ARP table before failure ========");
+                        for line in beforearpchild.fromchild.readlines():
+                            self.CM.log(line)
+                        self.CM.log("ARP table after failure  ========");
+                        for line in afterarpchild.fromchild.readlines():
+                            self.CM.log(line)
+                        self.CM.log("End of ARP tables        ========");
+                        afterarpchild.fromchild.close()
+                    beforearpchild.fromchild.close()
+                    
                 lastResource = resource
 
         if (Fatal):
