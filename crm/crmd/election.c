@@ -174,44 +174,45 @@ do_election_count_vote(long long action,
 		g_hash_table_lookup(fsa_membership_copy->members, vote_from);
 
 	if(is_set(fsa_input_register, R_SHUTDOWN)) {
-		crm_devel("Election fail: we are shutting down");
+		crm_debug("Election fail: we are shutting down");
 		we_loose = TRUE;
 
 	} else if(our_node == NULL) {
-		crm_devel("Election fail: we dont exist in the CCM list");
+		crm_debug("Election fail: we dont exist in the CCM list");
 		we_loose = TRUE;
 		
 	} else if(your_node == NULL) {
 		crm_err("The other side doesnt exist in the CCM list");
 		
 	} else if(compare_version(your_version, CRM_VERSION) > 0) {
-		crm_devel("Election fail: version");
+		crm_debug("Election fail: version");
 		we_loose = TRUE;
 		
 	} else if(compare_version(your_version, CRM_VERSION) < 0) {
-		crm_devel("Election pass: version");
+		crm_debug("Election pass: version");
 		
 	} else if(your_node->node_born_on < our_node->node_born_on) {
-		crm_devel("Election fail: born_on");
+		crm_debug("Election fail: born_on");
 		we_loose = TRUE;
 
 	} else if(your_node->node_born_on > our_node->node_born_on) {
-		crm_devel("Election pass: born_on");
+		crm_debug("Election pass: born_on");
 		
 	} else if(strcmp(fsa_our_uname, vote_from) > 0) {
-		crm_devel("Election fail: uname");
+		crm_debug("Election fail: uname");
 		we_loose = TRUE;
 
 	} else if(strcmp(fsa_our_uname, vote_from) == 0) {
-		crm_devel("Election ??pass??: dup uname");
+		crm_debug("Election ??pass??: dup uname");
 		CRM_DEV_ASSERT(strcmp(fsa_our_uname, vote_from) != 0);
 	}
 
 	if(we_loose) {
 		stopTimer(election_timeout);
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
+		crm_info("Election lost to %s", vote_from);
 		if(fsa_input_register & R_THE_DC) {
-			crm_devel("Give up the DC");
+			crm_devel("Give up the DC to %s", vote_from);
 			election_result = I_RELEASE_DC;
 			
 		} else {
@@ -220,7 +221,7 @@ do_election_count_vote(long long action,
 			
 		}
 	} else {
-		crm_verbose("We might win... we should vote (possibly again)");
+		crm_info("Election won over %s", vote_from);
 		election_result = I_ELECTION; /* new "default" */
 	}
 	
