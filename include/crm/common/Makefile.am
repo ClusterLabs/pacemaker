@@ -15,8 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES	= Makefile.in
 
-include_HEADERS		= crm.h cib.h msg_xml.h
+MAINTAINERCLEANFILES = Makefile.in
 
-SUBDIRS                 = common
+include_HEADERS = xml.h ipc.h msg.h ctrl.h util.h
