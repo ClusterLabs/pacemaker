@@ -34,3 +34,14 @@ extern const char *task2text(enum action_tasks task);
 
 extern action_t *action_new(int id, resource_t *rsc, enum action_tasks task);
 extern xmlNodePtr action2xml(action_t *action);
+
+extern color_t *create_color(GSListPtr *colors,
+			     GSListPtr nodes,
+			     GSListPtr resources);
+
+extern void add_color_to_rsc(resource_t *rsc, color_t *color);
+
+gint sort_rsc_priority(gconstpointer a, gconstpointer b);
+gint sort_cons_strength(gconstpointer a, gconstpointer b);
+gint sort_color_weight(gconstpointer a, gconstpointer b);
+gint sort_node_weight(gconstpointer a, gconstpointer b);

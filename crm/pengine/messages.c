@@ -137,32 +137,50 @@ xmlNodePtr
 do_calculations(xmlNodePtr cib_object)
 {
 	int lpc, lpc2;
+	
+	GSListPtr resources = NULL;
+	GSListPtr nodes = NULL;
+	GSListPtr node_constraints = NULL;
+	GSListPtr actions = NULL;
+	GSListPtr action_constraints = NULL;
+	GSListPtr stonith_list = NULL;
+	GSListPtr shutdown_list = NULL;
+
+	GSListPtr colors = NULL;
+	GSListPtr action_sets = NULL;
+
+	xmlNodePtr graph = NULL;
 
 	pdebug("=#=#=#=#= Stage 0 =#=#=#=#=");
-	stage0(cib_object);
+		  
+	stage0(cib_object,
+	       &resources,
+	       &nodes,  &node_constraints,
+	       &actions,  &action_constraints,
+	       &stonith_list, &shutdown_list);
 
 	pdebug("=#=#=#=#= Stage 1 =#=#=#=#=");
-	stage1(node_cons_list, node_list, rsc_list);
+	stage1(node_constraints, nodes, resources);
 
 	pdebug("=#=#=#=#= Stage 2 =#=#=#=#=");
-	stage2(rsc_list, node_list, NULL);
+	stage2(resources, nodes, &colors);
 
 	pdebug("========= Nodes =========");
 	pdebug_action(
-		slist_iter(node, node_t, node_list, lpc,
+		slist_iter(node, node_t, nodes, lpc,
 			   print_node(NULL, node, TRUE)
 			)
 		);
 		
 	pdebug("========= Resources =========");
 	pdebug_action(
-		slist_iter(resource, resource_t, rsc_list, lpc,
+		slist_iter(resource, resource_t, resources, lpc,
 			   print_resource(NULL, resource, TRUE)
 			)
 		);  
   
 	pdebug("=#=#=#=#= Stage 3 =#=#=#=#=");
-	stage3();
+	stage3(colors);
 
 	pdebug("=#=#=#=#= Stage 4 =#=#=#=#=");
 	stage4(colors);
@@ -174,29 +192,30 @@ do_calculations(xmlNodePtr cib_object)
 		);
 
 	pdebug("=#=#=#=#= Stage 5 =#=#=#=#=");
-	stage5(rsc_list);
+	stage5(resources);
 
 	pdebug("=#=#=#=#= Stage 6 =#=#=#=#=");
-	stage6(stonith_list, shutdown_list);
+	stage6(&actions, &action_constraints,
+	       stonith_list, shutdown_list);
 
 	pdebug("========= Action List =========");
 	pdebug_action(
-		slist_iter(action, action_t, action_list, lpc,
+		slist_iter(action, action_t, actions, lpc,
 			   print_action(NULL, action, TRUE)
 			)
 		);
 	
 	pdebug("=#=#=#=#= Stage 7 =#=#=#=#=");
-	stage7(rsc_list, action_list, action_cons_list);
+	stage7(resources, actions, action_constraints, &action_sets);
 	
 	pdebug("=#=#=#=#= Summary =#=#=#=#=");
-	summary(rsc_list);
+	summary(resources);
 
 	pdebug("========= Action Sets =========");
 
 	pdebug("\t========= Set %d (Un-runnable) =========", -1);
 	pdebug_action(
-		slist_iter(action, action_t, action_list, lpc,
+		slist_iter(action, action_t, actions, lpc,
 			   if(action->optional == FALSE
 			      && action->runnable == FALSE) {
 				   print_action("\t", action, TRUE);
@@ -205,7 +224,7 @@ do_calculations(xmlNodePtr cib_object)
 		);
 
 	pdebug_action(
-		slist_iter(action_set, GSList, action_set_list, lpc,
+		slist_iter(action_set, GSList, action_sets, lpc,
 			   pdebug("\t========= Set %d =========", lpc);
 			   slist_iter(action, action_t, action_set, lpc2,
 				      print_action("\t", action, TRUE);
@@ -229,7 +248,7 @@ do_calculations(xmlNodePtr cib_object)
 		);
 
 	pdebug("=#=#=#=#= Stage 8 =#=#=#=#=");
-	stage8(action_set_list);
+	stage8(action_sets, &graph);
 
-	return xml_set_of_sets;
+	return graph;
 }

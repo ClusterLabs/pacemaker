@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.12 2004/05/04 11:51:10 andrew Exp $ */
+/* $Id: ptest.c,v 1.13 2004/05/04 15:16:38 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -128,44 +128,58 @@ main(int argc, char **argv)
 	cib_object = file2xml(stdin);
   
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 0 =#=#=#=#=");
-	stage0(cib_object);
 
+	GSListPtr resources = NULL;
+	GSListPtr nodes = NULL;
+	GSListPtr node_constraints = NULL;
+	GSListPtr actions = NULL;
+	GSListPtr action_constraints = NULL;
+	GSListPtr stonith_list = NULL;
+	GSListPtr shutdown_list = NULL;
+
+	GSListPtr colors = NULL;
+	GSListPtr action_sets = NULL;
+
+	xmlNodePtr graph = NULL;
+		  
+	stage0(cib_object,
+	       &resources,
+	       &nodes,  &node_constraints,
+	       &actions,  &action_constraints,
+	       &stonith_list, &shutdown_list);
+	
 	cl_log(LOG_INFO, "========= Nodes =========");
-	slist_iter(node, node_t, node_list, lpc,
+	slist_iter(node, node_t, nodes, lpc,
 		   print_node(NULL, node, TRUE));
 
 	cl_log(LOG_INFO, "========= Resources =========");
-	slist_iter(resource, resource_t, rsc_list, lpc,
+	slist_iter(resource, resource_t, resources, lpc,
 		   print_resource(NULL, resource, TRUE));    
 
 	cl_log(LOG_INFO, "========= Constraints =========");
-	slist_iter(constraint, rsc_to_node_t, node_cons_list, lpc,
+	slist_iter(constraint, rsc_to_node_t, node_constraints, lpc,
 		   print_rsc_to_node(NULL, constraint, FALSE));
-	slist_iter(constraint, rsc_to_rsc_t, rsc_cons_list, lpc,
-		   print_rsc_to_rsc(NULL, constraint, FALSE));
     
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 1 =#=#=#=#=");
-	stage1(node_cons_list, node_list, rsc_list);
+	stage1(node_constraints, nodes, resources);
 
 	cl_log(LOG_INFO, "========= Nodes =========");
-	slist_iter(node, node_t, node_list, lpc,
+	slist_iter(node, node_t, nodes, lpc,
 		   print_node(NULL, node, TRUE));
 
 	cl_log(LOG_INFO, "========= Resources =========");
-	slist_iter(resource, resource_t, rsc_list, lpc,
+	slist_iter(resource, resource_t, resources, lpc,
 		   print_resource(NULL, resource, TRUE));
 
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 2 =#=#=#=#=");
-	pe_debug_on();
-	stage2(rsc_list, node_list, NULL);
-	pe_debug_off();
+	stage2(resources, nodes, &colors);
 
 	cl_log(LOG_INFO, "========= Nodes =========");
-	slist_iter(node, node_t, node_list, lpc,
+	slist_iter(node, node_t, nodes, lpc,
 		   print_node(NULL, node, TRUE));
 
 	cl_log(LOG_INFO, "========= Resources =========");
-	slist_iter(resource, resource_t, rsc_list, lpc,
+	slist_iter(resource, resource_t, resources, lpc,
 		   print_resource(NULL, resource, TRUE));  
   
 	cl_log(LOG_INFO, "========= Colors =========");
@@ -173,7 +187,7 @@ main(int argc, char **argv)
 		   print_color(NULL, color, FALSE));
   
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 3 =#=#=#=#=");
-	stage3();
+	stage3(colors);
 	cl_log(LOG_INFO, "========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
@@ -185,43 +199,44 @@ main(int argc, char **argv)
 		   print_color(NULL, color, FALSE));
 
 	cl_log(LOG_INFO, "=#=#=#=#= Summary =#=#=#=#=");
-	summary(rsc_list);
+	summary(resources);
 	cl_log(LOG_INFO, "========= Action List =========");
-	slist_iter(action, action_t, action_list, lpc,
+	slist_iter(action, action_t, actions, lpc,
 		   print_action(NULL, action, FALSE));
 	
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 5 =#=#=#=#=");
-	stage5(rsc_list);
+	stage5(resources);
 
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 6 =#=#=#=#=");
-	stage6(stonith_list, shutdown_list);
+	stage6(&actions, &action_constraints,
+	       stonith_list, shutdown_list);
 
 	cl_log(LOG_INFO, "========= Action List =========");
-	slist_iter(action, action_t, action_list, lpc,
+	slist_iter(action, action_t, actions, lpc,
 		   print_action(NULL, action, TRUE));
 	
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 7 =#=#=#=#=");
-	stage7(rsc_list, action_list, action_cons_list);
-	
+	stage7(resources, actions, action_constraints, &action_sets);
+
 	cl_log(LOG_INFO, "=#=#=#=#= Summary =#=#=#=#=");
-	summary(rsc_list);
+	summary(resources);
 
 	cl_log(LOG_INFO, "========= All Actions =========");
-	slist_iter(action, action_t, action_list, lpc,
+	slist_iter(action, action_t, actions, lpc,
 		   print_action("\t", action, TRUE);
 		);
 
 	cl_log(LOG_INFO, "========= Action Sets =========");
 
 	cl_log(LOG_INFO, "\t========= Set %d (Un-runnable) =========", -1);
-	slist_iter(action, action_t, action_list, lpc,
+	slist_iter(action, action_t, actions, lpc,
 		   if(action->optional == FALSE && action->runnable == FALSE) {
 			   print_action("\t", action, TRUE);
 		   }
 		);
 
 	int lpc2;
-	slist_iter(action_set, GSList, action_set_list, lpc,
+	slist_iter(action_set, GSList, action_sets, lpc,
 		   cl_log(LOG_INFO, "\t========= Set %d =========", lpc);
 		   slist_iter(action, action_t, action_set, lpc2,
 			      print_action("\t", action, TRUE)));
@@ -236,7 +251,7 @@ main(int argc, char **argv)
 		   print_node(NULL, node, FALSE));
 
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 8 =#=#=#=#=");
-	stage8(action_set_list);
+	stage8(action_sets, &graph);
 
 	return 0;
 }

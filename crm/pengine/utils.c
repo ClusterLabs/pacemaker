@@ -10,16 +10,7 @@
 
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
-
-color_t *create_color(GSListPtr nodes, gboolean create_only);
 void add_color_to_rsc(resource_t *rsc, color_t *color);
-
-gint sort_rsc_priority(gconstpointer a, gconstpointer b);
-gint sort_cons_strength(gconstpointer a, gconstpointer b);
-gint sort_color_weight(gconstpointer a, gconstpointer b);
-gint sort_node_weight(gconstpointer a, gconstpointer b);
-
-
 
 gboolean is_active(rsc_to_node_t *cons);
 rsc_to_rsc_t *invert_constraint(rsc_to_rsc_t *constraint);
@@ -253,7 +244,7 @@ node_copy(node_t *this_node)
 
 static int color_id = 0;
 color_t *
-create_color(GSListPtr nodes, gboolean create_only)
+create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
 {
 	int lpc = 0;
 	color_t *new_color = cl_malloc(sizeof(color_t));
@@ -266,14 +257,16 @@ create_color(GSListPtr nodes, gboolean create_only)
 
 	pdebug_action(print_color("Created color", new_color, TRUE));
 
-	if(create_only == FALSE) {
-		colors = g_slist_append(colors, new_color);      
-		
+	if(colors != NULL) {
+		*colors = g_slist_append(*colors, new_color);      
+	}
+	
+	if(resources != NULL) {
 		/*  Add any new color to the list of candidate_colors for
 		 * resources that havent been decided yet 
 		 */
 		slist_iter(
-			rsc, resource_t, rsc_list, lpc,
+			rsc, resource_t, resources, lpc,
 			if(rsc->provisional && rsc->runnable) {
 				add_color_to_rsc(rsc, new_color);
 			}

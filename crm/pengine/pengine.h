@@ -57,6 +57,7 @@ struct node_shared_s {
 		char	*id; 
 		gboolean online;
 		gboolean unclean;
+		gboolean shutdown;
 		GSListPtr running_rsc; // resource_t*
 		
 		GHashTable *attrs;     // char* => char*
@@ -154,36 +155,42 @@ struct order_constraint_s
 //		enum action_order order;
 };
 
-extern gboolean stage0(xmlNodePtr cib);
+extern gboolean stage0(xmlNodePtr cib,
+		       GSListPtr *nodes,
+		       GSListPtr *rscs,
+		       GSListPtr *cons,
+		       GSListPtr *actions, GSListPtr *action_constraints,
+		       GSListPtr *stonith_list, GSListPtr *shutdown_list);
+
 extern gboolean stage1(GSListPtr node_constraints,
 		       GSListPtr nodes,
 		       GSListPtr resources);
-extern gboolean stage2(GSListPtr sorted_rsc, 
-		       GSListPtr sorted_nodes,         
-		       GSListPtr operations);
-extern gboolean stage3(void);
+
+extern gboolean stage2(GSListPtr sorted_rscs,
+		       GSListPtr sorted_nodes,
+		       GSListPtr *colors);
+
+extern gboolean stage3(GSListPtr colors);
+
 extern gboolean stage4(GSListPtr colors);
+
 extern gboolean stage5(GSListPtr resources);
-extern gboolean stage6(GSListPtr stonith, GSListPtr shutdown);
+
+extern gboolean stage6(GSListPtr *actions,
+		       GSListPtr *action_constraints,
+		       GSListPtr stonith,
+		       GSListPtr shutdown);
+
 extern gboolean stage7(GSListPtr resources,
 		       GSListPtr actions,
-		       GSListPtr action_constraints);
-extern gboolean stage8(GSListPtr action_sets);
+		       GSListPtr action_constraints,
+		       GSListPtr *action_sets);
+
+extern gboolean stage8(GSListPtr action_sets, xmlNodePtr *graph);
+
 extern gboolean summary(GSListPtr resources);
 
 extern gboolean pe_input_dispatch(IPC_Channel *sender, void *user_data);
-
-extern GSListPtr rsc_list; 
-extern GSListPtr node_list;
-extern GSListPtr rsc_cons_list;
-extern GSListPtr node_cons_list;
-extern GSListPtr action_list;
-extern GSListPtr action_cons_list;
-extern GSListPtr colors;
-extern GSListPtr stonith_list;
-extern GSListPtr shutdown_list;
-extern GSListPtr action_set_list;
-extern xmlNodePtr xml_set_of_sets;
 
 #define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
 				         x *w = (x*)g_slist_nth_data(y, z); \
