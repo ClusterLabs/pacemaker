@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.26 2004/07/05 13:52:03 andrew Exp $ */
+/* $Id: ptest.c,v 1.27 2004/07/19 14:30:06 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -66,7 +66,7 @@ main(int argc, char **argv)
 	cl_log_set_entity("ptest");
 	cl_log_enable_stderr(TRUE);
 	cl_log_set_facility(LOG_USER);
-
+	
 	while (1) {
 		int option_index = 0;
 		static struct option long_options[] = {
@@ -133,7 +133,7 @@ main(int argc, char **argv)
 	mtrace();
 #endif
 	set_crm_log_level(LOG_TRACE);
-
+	
 /* 	crm_crit("crit %d", LOG_CRIT); */
 /* 	crm_err("err %d", LOG_ERR); */
 /* 	crm_warn("warn %d", LOG_WARNING); */

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.17 2004/07/16 16:50:00 andrew Exp $ */
+/* $Id: unpack.c,v 1.18 2004/07/19 14:30:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -458,7 +458,7 @@ determine_online_status(xmlNodePtr node_state, node_t *this_node)
 	const char *crm_state  = xmlGetProp(node_state,XML_CIB_ATTR_CRMDSTATE);
 	const char *ccm_state  = xmlGetProp(node_state,XML_CIB_ATTR_INCCM);
 	const char *shutdown   = xmlGetProp(node_state,XML_CIB_ATTR_SHUTDOWN);
-	const char *unclean    = xmlGetProp(node_state,XML_CIB_ATTR_STONITH);
+	const char *unclean    = NULL;//xmlGetProp(node_state,XML_CIB_ATTR_STONITH);
 	
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
 	   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
@@ -598,6 +598,19 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc, GListPtr rsc_list,
 			continue;
 		}
 
+		xmlNodePtr stonith_list = rsc_entry->children;
+		while(stonith_list != NULL) {
+
+			node_t *node = pe_find_node(
+				rsc_list, xmlGetProp(stonith_list, "id"));
+
+			stonith_list = stonith_list->next;
+
+			rsc_lh->fencable_nodes = g_list_append(
+				rsc_lh->fencable_nodes, node_copy(node));
+			
+		}
+		
 		rsc_code_i = atoi(rsc_code);
 
 		if(rsc_code_i == -1) {
@@ -756,9 +769,12 @@ unpack_healthy_resource(GListPtr *node_constraints, GListPtr *actions,
 		weight = 20.0;
 	}
 
+#if 0
+	// redundant now that running and not_running constraint tests exist,
+	// admins should turn this on manually per resource 
 	rsc2node_new(
 		"healthy_generate",rsc_lh, weight, TRUE,node,node_constraints);
-	
+#endif
 	return TRUE;
 }
 
@@ -857,16 +873,17 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	}
 
 	if(safe_str_eq(type, "ordering")) {
-		// make an action_cons instead
 		rsc2rsc_new(id, strength_e, start_before, rsc_lh, rsc_rh);
 		order_new(rsc_lh->stop, rsc_rh->stop, strength_e,
 			  action_constraints);
 		order_new(rsc_rh->start, rsc_lh->start, strength_e,
 			  action_constraints);
 		return TRUE;
-	} 
+	}
 		
-
+#if 1
+	// eventually move to the new rsc_location "running|not_running" constraints
+	
 	/* make sure the lower priority resource stops before
 	 *  the higher is started, otherwise they may be both running
 	 *  on the same node when the higher is replacing the lower
@@ -895,6 +912,7 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	order_new(before, after, strength_e,action_constraints);
 	
 	return rsc2rsc_new(id, strength_e, same_node, rsc_lh, rsc_rh);
+#endif
 }
 
 
@@ -903,7 +921,7 @@ GListPtr
 match_attrs(const char *attr, const char *op, const char *value,
 	    const char *type, GListPtr node_list)
 {
-	int lpc = 0;
+	int lpc = 0, lpc2 = 0;
 	GListPtr result = NULL;
 	
 	if(attr == NULL || op == NULL) {
@@ -911,6 +929,7 @@ match_attrs(const char *attr, const char *op, const char *value,
 			" (\'%s\' \'%s\' \'%s\')", attr, op, value);
 		return NULL;
 	}
+	
 
 	slist_iter(
 		node, node_t, node_list, lpc,
@@ -920,14 +939,13 @@ match_attrs(const char *attr, const char *op, const char *value,
 		const char *h_val = (const char*)g_hash_table_lookup(
 			node->details->attrs, attr);
 
-
 		if(value != NULL && h_val != NULL) {
 			if(type == NULL || (safe_str_eq(type, "string"))) {
 				cmp = strcmp(h_val, value);
 
 			} else if(safe_str_eq(type, "number")) {
-				float value_f = atof(value);
 				float h_val_f = atof(h_val);
+				float value_f = atof(value);
 
 				if(h_val_f < value_f) {
 					cmp = -1;
@@ -938,8 +956,8 @@ match_attrs(const char *attr, const char *op, const char *value,
 				}
 				
 			} else if(safe_str_eq(type, "version")) {
-				crm_err("Version comparisions are not yet supported");
-				continue;
+				cmp = compare_version(h_val, value);
+
 			}
 			
 		} else if(value == NULL && h_val == NULL) {
@@ -955,6 +973,26 @@ match_attrs(const char *attr, const char *op, const char *value,
 
 		} else if(safe_str_eq(op, "notexists")) {
 			if(h_val == NULL) accept = TRUE;
+
+		} else if(safe_str_eq(op, "running")) {
+			GListPtr rsc_list = node->details->running_rsc;
+			slist_iter(
+				rsc, resource_t, rsc_list, lpc2,
+				if(safe_str_eq(rsc->id, attr)) {
+					accept = TRUE;
+				}
+				);
+
+		} else if(safe_str_eq(op, "not_running")) {
+			GListPtr rsc_list = node->details->running_rsc;
+			accept = TRUE;
+			slist_iter(
+				rsc, resource_t, rsc_list, lpc2,
+				if(safe_str_eq(rsc->id, attr)) {
+					accept = FALSE;
+					break;
+				}
+				);
 
 		} else if(safe_str_eq(op, "eq")) {
 			if((h_val == value) || cmp == 0)

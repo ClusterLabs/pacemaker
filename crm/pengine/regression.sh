@@ -65,12 +65,14 @@ function do_test {
     diff $diff_opts -q $expected $output >/dev/null
     rc=$?
 
-    if [ "$rc" = 0 ]; then
+    if [ "$create_mode" = "true" ]; then
+	echo "Test $name	($base)...	Created expected output" 
+    elif [ "$rc" = 0 ]; then
 	echo "Test $name	($base)...	Passed";
     elif [ "$rc" = 1 ]; then
 	echo "Test $name	($base)...	* Failed";
 	diff $diff_opts $expected $output 2>/dev/null >> $failed
-    else
+    else 
 	echo "Test $name	($base)...	Error (diff: $rc)";
 	echo "==== Raw results for test ($base) ====" >> $failed
 	cat $output 2>/dev/null >> $failed
@@ -86,18 +88,11 @@ do_test simple3 "Start 2	"
 do_test simple4 "Start Failed"
 do_test simple6 "Stop Start	"
 do_test simple7 "Shutdown	"
-do_test simple8 "Stonith	"
+#do_test simple8 "Stonith	"
 do_test simple9 "Lower version"
 do_test simple10 "Higher version"
 do_test simple11 "Priority (ne)"
 do_test simple12 "Priority (eq)"
-
-echo ""
-
-do_test stopfail1 "Stop Failed - STONITH	"
-do_test stopfail2 "Stop Failed - Block	"
-do_test stopfail3 "Stop Failed - Ignore (1 node)"
-do_test stopfail4 "Stop Failed - Ignore (2 node)"
 
 echo ""
 
@@ -109,10 +104,10 @@ do_test rsc_rsc5 "Must not 3	"
 do_test rsc_rsc6 "Should not 3"
 do_test rsc_rsc7 "Must 3	"
 do_test rsc_rsc8 "Should 3	"
-do_test rsc_rsc9 "2*MustNot 1*ShouldNot	"
 do_test rsc_rsc10 "Must (cant)"
-echo ""
+do_test rsc_rsc9 "2*MustNot 1*ShouldNot"
 
+echo ""
 do_test attrs1 "string: eq (and)	"
 do_test attrs2 "string: lt / gt (and)"
 do_test attrs3 "string: ne (or)	"
@@ -120,11 +115,22 @@ do_test attrs4 "string: exists	"
 do_test attrs5 "string: notexists	"
 
 echo ""
+do_test stopfail1 "Stop Failed - STONITH	"
+do_test stopfail2 "Stop Failed - Block	"
+do_test stopfail3 "Stop Failed - Ignore (1 node)"
+do_test stopfail4 "Stop Failed - Ignore (2 node)"
 
+echo ""
+do_test rsc_location1 "Score (not running)	"
+do_test rsc_location2 "Score (running)		"
+do_test rsc_location3 "Score (not running/no swap)"
+do_test rsc_location4 "Score (running/swap)	"
+do_test rsc_location5 "Score (running/swap 2)	"
+
+echo ""
 do_test complex1 "Complex	"
 
 echo ""
-
 do_test bad1 "Bad node	"
 do_test bad2 "Bad rsc	"
 do_test bad3 "No rsc class"
@@ -134,8 +140,8 @@ do_test bad6 "Bad lrm_rsc"
 do_test bad7 "No lrm	"
 
 echo ""
-# Generate these test outputs
 create_mode="true"
+echo Generating test outputs for these tests...
 #do_test bad7 "Bad data"
 
 if [ -s $failed ]; then

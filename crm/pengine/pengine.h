@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.30 2004/07/05 13:52:03 andrew Exp $ */
+/* $Id: pengine.h,v 1.31 2004/07/19 14:30:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -155,6 +155,7 @@ struct resource_s {
 		GListPtr	allowed_nodes;    // node_t*
 		GListPtr	node_cons;        // rsc_to_node_t* 
 		GListPtr	rsc_cons;         // resource_t*
+		GListPtr	fencable_nodes;    // node_t*
 
 		color_t		*color;
 };
