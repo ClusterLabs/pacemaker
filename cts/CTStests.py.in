@@ -29,7 +29,7 @@ Licensed under the GNU GPL.
 import CTS
 from CM_hb import HBConfig
 import CTSaudits
-import time, os, re, types, string
+import time, os, re, types, string, tempfile
 
 #	List of all class objects for tests which we ought to
 #	consider running.
@@ -755,6 +755,7 @@ class BandwidthTest(CTSTest):
         self.__setitem__("min",0)
         self.__setitem__("max",0)
         self.__setitem__("totalbandwidth",0)
+        self.tempfile = tempfile.mktemp(".cts")
 	
     def __call__(self, node):
         '''Perform the Bandwidth test'''
@@ -770,6 +771,7 @@ class BandwidthTest(CTSTest):
         port = Path["port"][0]
         if port == None:
             port = 694
+	port = int(port)
 
         if self.CM.ShouldBeStatus[node] != self.CM["up"]:
             ret = self.start(node)
@@ -777,9 +779,16 @@ class BandwidthTest(CTSTest):
                 return ret
             time.sleep(5)  # We get extra messages right after startup.
 
-        if self.CM.rsh(node,"tcpdump -p -c 102 -i any udp port %s > /tmp/band_estimate 2>&1" % port) == 0 :
-            self.CM.rsh.cp("root@%s:/tmp/band_estimate" % node, "/tmp/.")
-            Bandwidth = self.countbandwidth("/tmp/band_estimate")
+
+        fstmpfile = "/tmp/band_estimate"
+        dumpcmd = "tcpdump -p -n -c 102 -i any udp port %d > %s 2>&1" \
+	%		(port, fstmpfile);
+ 
+        rc = self.CM.rsh(node, dumpcmd)
+        if rc == 0:
+            farfile = "root@%s:%s" % (node, fstmpfile)
+            self.CM.rsh.cp(farfile, self.tempfile)
+            Bandwidth = self.countbandwidth(self.tempfile)
             if not Bandwidth:
                 self.CM.log("Could not compute bandwidth.")
                 return self.success()
@@ -792,11 +801,11 @@ class BandwidthTest(CTSTest):
                 self.Stats["max"] = Bandwidth
             if Bandwidth < self.Stats["min"]:
                 self.Stats["min"] = Bandwidth
-            self.CM.rsh(node,"rm /tmp/band_estimate")
-            os.system("rm /tmp/band_estimate")
+            self.CM.rsh(node, "rm -f %s" % fstmpfile)
+            os.unlink(self.tempfile)
             return self.success()
         else:
-            return self.failure("no response!")
+            return self.failure("no response from tcpdump command [%d]!" % rc)
 
     def countbandwidth(self, file):
         fp = open(file, "r")
