@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.27 2005/02/10 10:57:18 andrew Exp $ */
+/* $Id: utils.c,v 1.28 2005/02/10 15:49:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -232,7 +232,7 @@ crm_log_init(const char *entity)
 {
 	const char *test = "Testing log daemon connection";
 	/* Redirect messages from glib functions to our handler */
- 	cl_malloc_forced_for_glib();
+/*  	cl_malloc_forced_for_glib(); */
 	g_log_set_handler(NULL,
 			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
 			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
