@@ -266,7 +266,6 @@ cib_native_channel(cib_t* cib)
 	return NULL;
 }
 
-
 int
 cib_native_inputfd(cib_t* cib)
 {
@@ -280,8 +279,6 @@ cib_native_perform_op(
 	crm_data_t *data, crm_data_t **output_data, int call_options) 
 {
 	int  rc = HA_OK;
-
-	const char *output = NULL;
 	
 	struct ha_msg *op_msg   = NULL;
 	struct ha_msg *op_reply = NULL;
@@ -398,33 +395,16 @@ cib_native_perform_op(
 		rc = cib_return_code;
 	}	
 	
-	if(!(call_options & cib_discard_reply)) {
-		output = cl_get_string(op_reply, F_CIB_CALLDATA);
-	}
 
 	if(output_data == NULL) {
 		/* do nothing more */
 		
-	} else if(output != NULL) {
-		crm_data_t *some_xml = NULL;
-		crm_debug("Unpacking response data");
-		some_xml = string2xml(output);
-		if(some_xml == NULL) {
-			crm_err("Could not unpack response data: %s", output);
-			if(rc == cib_ok) {
-				rc = cib_output_data;
-			}
-		} else {
-#ifndef USE_LIBXML
-			CRM_ASSERT(cl_is_allocated(some_xml) == 1);
-#endif
-			*output_data = some_xml;
+	} else if(!(call_options & cib_discard_reply)) {
+		*output_data = get_message_xml(op_reply, F_CIB_CALLDATA);
+		if(*output_data == NULL) {
+			crm_debug("No output in reply to \"%s\" command %d",
+				  op, cib->call_id - 1);
 		}
-		
-		
-	} else {
-		crm_debug("No output in reply to \"%s\" command %d",
-			  op, cib->call_id - 1);
 	}
 	
 	crm_msg_del(op_reply);

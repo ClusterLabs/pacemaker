@@ -747,13 +747,16 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 	int int_elem_l = -1;
 	int int_elem_r = -1;
 	const char *elem_l = crm_element_value(left, XML_ATTR_GENERATION);
-	const char *elem_r = crm_element_value(right, XML_ATTR_GENERATION);
-
-	if(elem_l != NULL) int_elem_l = atoi(elem_l);
-	if(elem_r != NULL) int_elem_r = atoi(elem_r);
+	const char *elem_r = NULL;
 
 	crm_xml_trace(left, "left");
-	crm_xml_trace(left, "right");
+	if(right != NULL) {
+		elem_r = crm_element_value(right, XML_ATTR_GENERATION);
+		crm_xml_trace(right, "right");
+	}
+	
+	if(elem_l != NULL) int_elem_l = atoi(elem_l);
+	if(elem_r != NULL) int_elem_r = atoi(elem_r);
 	
 	if(int_elem_l < int_elem_r) {
 		crm_verbose("lt - XML_ATTR_GENERATION");
@@ -767,8 +770,10 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 	int_elem_l = -1;
 	int_elem_r = -1;
 	elem_l = crm_element_value(left, XML_ATTR_NUMUPDATES);
-	elem_r = crm_element_value(right, XML_ATTR_NUMUPDATES);
-
+	if(right != NULL) {
+		elem_r = crm_element_value(right, XML_ATTR_NUMUPDATES);
+	}
+	
 	if(elem_l != NULL) int_elem_l = atoi(elem_l);
 	if(elem_r != NULL) int_elem_r = atoi(elem_r);
 
@@ -789,14 +794,13 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 	int_elem_l = -1;
 	int_elem_r = -1;
 	elem_l = crm_element_value(left, XML_ATTR_NUMPEERS);
-	elem_r = crm_element_value(right, XML_ATTR_NUMPEERS);
-
+	if(right != NULL) {
+		elem_r = crm_element_value(right, XML_ATTR_NUMPEERS);
+	}
+	
 	if(elem_l != NULL) int_elem_l = atoi(elem_l);
 	if(elem_r != NULL) int_elem_r = atoi(elem_r);
 
-	crm_xml_trace(left, "left");
-	crm_xml_trace(left, "right");
-	
 	if(int_elem_l < int_elem_r) {
 		crm_verbose("lt - XML_ATTR_NUMPEERS");
 		return -1;
@@ -809,7 +813,10 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 	crm_verbose("eq - XML_ATTR_NUMPEERS");
 
 	elem_l = crm_element_value(left, XML_ATTR_NUMPEERS);
-	elem_r = crm_element_value(right, XML_ATTR_NUMPEERS);
+	if(right != NULL) {
+		elem_r = crm_element_value(right, XML_ATTR_NUMPEERS);
+	}
+	
 	if(elem_l == NULL && elem_r == NULL) {
 
 	} else if(elem_l == NULL) {
@@ -849,17 +856,20 @@ get_cib_copy(cib_t *cib)
 		crm_err("The CIB result was empty");
 		return NULL;
 	}
-	return find_xml_node(xml_cib, XML_TAG_CIB, FALSE);
+	return find_xml_node(xml_cib, XML_TAG_CIB, TRUE);
 }
 
 crm_data_t*
 cib_get_generation(cib_t *cib)
 {
 	crm_data_t *the_cib = get_cib_copy(cib);
-	crm_data_t *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+	crm_data_t *generation = create_xml_node(
+		NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
-	copy_in_properties(generation, the_cib);
-	free_xml(the_cib);
+	if(the_cib != NULL) {
+		copy_in_properties(generation, the_cib);
+		free_xml(the_cib);
+	}
 	
 	return generation;
 }
@@ -917,7 +927,12 @@ create_cib_fragment_adv(
 	gboolean whole_cib = FALSE;
 	crm_data_t *fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
 	crm_data_t *object_root  = NULL;
-	char *auto_section = cib_pluralSection(crm_element_name(update));
+	char *auto_section = NULL;
+	const char *update_name = NULL;
+	if(update != NULL) {
+		update_name = crm_element_name(update);
+	}
+	auto_section = cib_pluralSection(update_name);
 	
 	if(update == NULL && section == NULL) {
 		crm_debug("Creating a blank fragment");
