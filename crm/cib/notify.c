@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.8 2005/02/09 11:38:47 andrew Exp $ */
+/* $Id: notify.c,v 1.9 2005/02/10 11:02:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -116,10 +116,10 @@ cib_post_notify(
 	const char *op, crm_data_t *update, enum cib_errors result, crm_data_t *new_obj) 
 {
 	HA_Message *update_msg = ha_msg_new(8);
-	const char *type = NULL;
-	const char *id = NULL;
-	if(update != NULL) {
-		id = crm_element_value(new_obj, XML_ATTR_ID);
+	char *type = NULL;
+	char *id = NULL;
+	if(update != NULL && crm_element_value(new_obj, XML_ATTR_ID) != NULL){
+		id = crm_element_value_copy(new_obj, XML_ATTR_ID);
 	}
 	
 	ha_msg_add(update_msg, F_TYPE, T_CIB_NOTIFY);
@@ -130,15 +130,23 @@ cib_post_notify(
 	if(id != NULL) {
 		ha_msg_add(update_msg, F_CIB_OBJID, id);
 	}
+	crm_debug("beekhof");
 	if(update != NULL) {
-		crm_trace("Setting type to update->name");
+		crm_trace("Setting type to update->name: %s",
+			    crm_element_name(update));
 		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
+		type = crm_strdup(crm_element_name(update));
+
 	} else if(new_obj != NULL) {
-		crm_trace("Setting type to new_obj->name");
+		crm_trace("Setting type to new_obj->name: %s",
+			    crm_element_name(new_obj));
 		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(new_obj));
+		type = crm_strdup(crm_element_name(new_obj));
+		
+	} else {
+		crm_trace("Not Setting type");
 	}
 
-	type = cl_get_string(update_msg, F_CIB_OBJTYPE);
 	
 	if(update != NULL) {
 		add_message_xml(update_msg, F_CIB_UPDATE, update);
@@ -157,8 +165,6 @@ cib_post_notify(
 		crm_debug("Sending confirmation to clients");
 		g_hash_table_foreach(client_list, cib_notify_client, update_msg);
 	}
-
-	crm_msg_del(update_msg);
 
 	if(update == NULL) {
 		if(result == cib_ok) {
@@ -180,5 +186,10 @@ cib_post_notify(
 				 id?"id=":"", id?id:"", cib_error2string(result));
 		}
 	}
+
+	crm_free(id);
+	crm_free(type);
+	crm_msg_del(update_msg);
+
 	crm_debug("Notify complete");
 }
