@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.13 2005/02/01 22:48:16 andrew Exp $ */
+/* $Id: main.c,v 1.14 2005/02/02 08:44:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -181,7 +181,8 @@ init_start(void)
 	if(init_ok) {
 		IPC_Channel *fence_ch = stonithd_input_IPC_channel();
 
-		if(NULL == G_main_add_IPC_Channel(
+		if(fence_ch == NULL) {
+		} else if(NULL == G_main_add_IPC_Channel(
 			G_PRIORITY_LOW, fence_ch, FALSE,
 			tengine_stonith_dispatch, NULL,
 			tengine_stonith_connection_destroy)) {
