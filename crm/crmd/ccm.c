@@ -40,8 +40,6 @@ void crmd_ccm_input_callback(oc_ed_t event,
 void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
 gboolean ccm_dispatch(int fd, gpointer user_data);
 
-#define CCM_UNAME 1
-
 #define CCM_EVENT_DETAIL 1
 
 /*	 A_CCM_CONNECT	*/
@@ -171,11 +169,8 @@ do_ccm_update_cache(long long action,
 			members[lpc].node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
 			
-#ifdef CCM_UNAME
 			members[lpc].node_uname =
 				ha_strdup(oc->m_array[offset+lpc].node_uname);
-			CRM_DEBUG2("Uname: %s", oc->m_array[offset+lpc].node_uname);
-#endif	
 		}
 	} else {
 		membership_copy->members = NULL;
@@ -203,12 +198,9 @@ do_ccm_update_cache(long long action,
 			
 			members[lpc].node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
-			
-#ifdef CCM_UNAME
+
 			members[lpc].node_uname =
 				ha_strdup(oc->m_array[offset+lpc].node_uname);
-			CRM_DEBUG2("Uname: %s", oc->m_array[offset+lpc].node_uname);
-#endif	
 		}
 	} else {
 		membership_copy->new_members = NULL;
@@ -232,11 +224,8 @@ do_ccm_update_cache(long long action,
 			members[lpc].node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
 			
-#ifdef CCM_UNAME
 			members[lpc].node_uname =
 				ha_strdup(oc->m_array[offset+lpc].node_uname);
-			CRM_DEBUG2("Uname: %s", oc->m_array[offset+lpc].node_uname);
-#endif			
 		}
 	} else {
 		membership_copy->dead_members = NULL;
@@ -280,17 +269,11 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	int lpc;
 	int node_list_size = oc->m_n_member;
 	for(lpc=0; lpc<node_list_size; lpc++) {
-#ifdef CCM_UNAME
 		cl_log(LOG_INFO,"\t%s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_memb_idx+lpc].node_uname,
 		       oc->m_array[oc->m_memb_idx+lpc].node_id,
 		       oc->m_array[oc->m_memb_idx+lpc].node_born_on);
-		
-#else
-		cl_log(LOG_INFO,"\tnodeid=%d, born=%d",
-		       oc->m_array[oc->m_memb_idx+lpc].node_id,
-		       oc->m_array[oc->m_memb_idx+lpc].node_born_on);
-#endif
+
 		if(fsa_our_uname != NULL
 		   && strcmp(fsa_our_uname, oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
 			member = TRUE;
@@ -311,16 +294,10 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		cl_log(LOG_INFO, "\tNONE");
 	
 	for(lpc=0; lpc<oc->m_n_in; lpc++) {
-#ifdef CCM_UNAME
 		cl_log(LOG_INFO,"\t%s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_in_idx+lpc].node_uname,
 		       oc->m_array[oc->m_in_idx+lpc].node_id,
 		       oc->m_array[oc->m_in_idx+lpc].node_born_on);
-#else
-		cl_log(LOG_INFO,"\tnodeid=%d, born=%d",
-		       oc->m_array[oc->m_in_idx+lpc].node_id,
-		       oc->m_array[oc->m_in_idx+lpc].node_born_on);
-#endif
 	}
 	
 	cl_log(LOG_INFO, "MEMBERS LOST");
@@ -328,16 +305,10 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		cl_log(LOG_INFO, "\tNONE");
 	
 	for(lpc=0; lpc<oc->m_n_out; lpc++) {
-#ifdef CCM_UNAME
 		cl_log(LOG_INFO,"\t%s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_out_idx+lpc].node_uname,
 		       oc->m_array[oc->m_out_idx+lpc].node_id,
 		       oc->m_array[oc->m_out_idx+lpc].node_born_on);
-#else
-		cl_log(LOG_INFO,"\tnodeid=%d, born=%d",
-		       oc->m_array[oc->m_out_idx+lpc].node_id,
-		       oc->m_array[oc->m_out_idx+lpc].node_born_on);
-#endif
 		if(fsa_our_uname != NULL
 		   && strcmp(fsa_our_uname, oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
 			cl_log(LOG_ERR,
@@ -423,6 +394,7 @@ crmd_ccm_input_callback(oc_ed_t event,
 		event_data->oc = NULL;
 
 		ha_free(event_data);
+
 	} else {
 		cl_log(LOG_INFO, "CCM Callback with NULL data... "
 		       "I dont /think/ this is bad");
