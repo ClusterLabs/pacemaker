@@ -21,6 +21,8 @@
 #include <ocf/oc_membership.h>
 
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
+#include <crm/cib.h>
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
 
@@ -28,6 +30,7 @@ void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 #include <clplumbing/GSource.h>
 #include <crm/common/ipcutils.h>
+#include <crm/common/xmlutils.h>
 #include <string.h>
 #include <crm/dmalloc_wrapper.h>
 
@@ -42,6 +45,8 @@ void crmd_ccm_input_callback(oc_ed_t event,
 
 void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
 gboolean ccm_dispatch(int fd, gpointer user_data);
+void new_node_state(xmlNodePtr node_updates,
+		    const char *uname, const char *state);
 
 #define CCM_EVENT_DETAIL 1
 
@@ -126,6 +131,10 @@ do_ccm_event(long long action,
 }
 
 /*	 A_CCM_UPDATE_CACHE	*/
+/*
+ * Take the opportunity to update the node status in the CIB as well
+ *  (but only if we are the DC)
+ */
 enum crmd_fsa_input
 do_ccm_update_cache(long long action,
 		    enum crmd_fsa_cause cause,
@@ -141,7 +150,10 @@ do_ccm_update_cache(long long action,
 	oc_node_list_t *tmp = NULL, *membership_copy = (oc_node_list_t *)
 		cl_malloc(sizeof(oc_node_list_t));
 
+	xmlNodePtr update_list = create_xml_node(NULL, XML_CIB_TAG_STATE);
+
 	FNIN();
+	set_xml_property_copy(update_list, XML_ATTR_ID, fsa_our_uname);
 
 	cl_log(LOG_INFO,"Updating CCM cache after a \"%s\" event.", 
 	       event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
@@ -153,7 +165,6 @@ do_ccm_update_cache(long long action,
 	/*--*-- All Member Nodes --*--*/
 	offset = oc->m_memb_idx;
 	membership_copy->members_size = oc->m_n_member;
-
 
 	CRM_DEBUG2("Number of members: %d", membership_copy->members_size);
 	
@@ -174,6 +185,9 @@ do_ccm_update_cache(long long action,
 			
 			members[lpc].node_uname =
 				cl_strdup(oc->m_array[offset+lpc].node_uname);
+
+			new_node_state(update_list,
+				       members[lpc].node_uname, "in_ccm");
 		}
 	} else {
 		membership_copy->members = NULL;
@@ -204,7 +218,11 @@ do_ccm_update_cache(long long action,
 
 			members[lpc].node_uname =
 				cl_strdup(oc->m_array[offset+lpc].node_uname);
+
+			new_node_state(update_list,
+				       members[lpc].node_uname, "in_ccm");
 		}
+
 	} else {
 		membership_copy->new_members = NULL;
 	}
@@ -229,11 +247,18 @@ do_ccm_update_cache(long long action,
 			
 			members[lpc].node_uname =
 				cl_strdup(oc->m_array[offset+lpc].node_uname);
+
+			new_node_state(update_list,
+				       members[lpc].node_uname, "down");
 		}
 	} else {
 		membership_copy->dead_members = NULL;
 	}
-	
+
+	if(AM_I_DC) {
+		// should be sufficient for only the DC to do this
+		send_cib_status_update(update_list);
+	}
 	
 	tmp = fsa_membership_copy;
 	fsa_membership_copy = membership_copy;
@@ -251,6 +276,26 @@ do_ccm_update_cache(long long action,
 	
 	FNRET(I_NULL);
 }
+
+
+/*
+ * node_updates must be pre-constructed (non-NULL)
+ */
+void
+new_node_state(xmlNodePtr node_updates,
+	       const char *uname, const char *state)
+{
+	xmlNodePtr tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
+
+	set_node_tstamp(tmp1);
+	set_xml_property_copy(tmp1, XML_ATTR_ID, uname);
+	set_xml_property_copy(tmp1, "source",    fsa_our_uname);
+	set_xml_property_copy(tmp1, "state",     state);
+
+	xmlAddSibling(node_updates, tmp1);
+}
+
+
 
 void
 ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
