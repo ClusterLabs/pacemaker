@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.15 2004/05/18 09:46:42 andrew Exp $ */
+/* $Id: ptest.c,v 1.16 2004/05/23 20:13:46 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -67,8 +67,6 @@ main(int argc, char **argv)
 	cl_log_enable_stderr(TRUE);
 	cl_log_set_facility(LOG_USER);
 
-	xmlInitParser();
- 
 	while (1) {
 		int option_index = 0;
 		static struct option long_options[] = {
@@ -142,7 +140,10 @@ main(int argc, char **argv)
 	GSListPtr action_sets = NULL;
 
 	xmlNodePtr graph = NULL;
-		  
+
+	mtrace();
+	pe_debug_on();
+	
 	stage0(cib_object,
 	       &resources,
 	       &nodes,  &node_constraints,
@@ -256,10 +257,51 @@ main(int argc, char **argv)
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 8 =#=#=#=#=");
 	stage8(action_sets, &graph);
 
+//	GSListPtr action_sets = NULL;
+
+
+	pdebug("deleting node cons");
+	while(node_constraints) {
+		pe_free_rsc_to_node((rsc_to_node_t*)node_constraints->data);
+		node_constraints = node_constraints->next;
+	}
+	g_slist_free(node_constraints);
+
+	pdebug("deleting order cons");
+	pe_free_shallow(action_constraints);
+
+	pdebug("deleting action sets");
+
+	slist_iter(action_set, GSList, action_sets, lpc,
+		   pe_free_shallow_adv(action_set, FALSE);
+		);
+	pe_free_shallow_adv(action_sets, FALSE);
+	
+	pdebug("deleting actions");
+	pe_free_actions(actions);
+
+	pdebug("deleting resources");
+	pe_free_resources(resources); 
+	
+	pdebug("deleting colors");
+	pe_free_colors(colors);
+
+	crm_free(no_color->details);
+	crm_free(no_color);
+	
+	pdebug("deleting nodes");
+	pe_free_nodes(nodes);
+	
+	g_slist_free(shutdown_list);
+	g_slist_free(stonith_list);
+
+	pe_debug_off();
+	muntrace();
+
 	char *msg_buffer = dump_xml_node(graph, FALSE);
 	fprintf(stdout, "%s\n", msg_buffer);
 	fflush(stdout);
-	cl_free(msg_buffer);
+	crm_free(msg_buffer);
 
 	
 	return 0;

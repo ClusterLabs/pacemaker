@@ -192,8 +192,19 @@ extern gboolean summary(GSListPtr resources);
 
 extern gboolean pe_input_dispatch(IPC_Channel *sender, void *user_data);
 
+extern void pe_free_nodes(GSListPtr nodes);
+extern void pe_free_colors(GSListPtr colors);
+extern void pe_free_rsc_to_rsc(rsc_to_rsc_t *cons);
+extern void pe_free_rsc_to_node(rsc_to_node_t *cons);
+extern void pe_free_shallow(GSListPtr alist);
+extern void pe_free_shallow_adv(GSListPtr alist, gboolean with_data);
+extern void pe_free_resources(GSListPtr resources);
+extern void pe_free_actions(GSListPtr actions);
+
 extern gboolean pe_debug;
 extern gboolean pe_debug_saved;
+extern color_t *no_color;
+
 #define pdebug_action(x) if(pe_debug) {		\
 		x;				\
 	}
@@ -206,12 +217,11 @@ extern gboolean pe_debug_saved;
 #define pe_debug_off() pe_debug_saved = pe_debug; pe_debug = FALSE;
 #define pe_debug_restore() pe_debug = pe_debug_saved;
 
-#define safe_val(def, x,y)          (x==NULL?def:x->y)
-#define safe_val3(def, t,u,v)       safe_val(def, safe_val(NULL, t,u),v)
-#define safe_val4(def, t,u,v,w)     safe_val(def, safe_val(NULL, safe_val(NULL, t,u),v),w)
-#define safe_val5(def, t,u,v,w,x)   safe_val(def, safe_val(NULL, safe_val(NULL, safe_val(NULL, t,u),v),w),x)
-#define safe_val6(def, t,u,v,w,x,y) safe_val(def, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, t,u),v),w),x),y)
-#define safe_val7(def, t,u,v,w,x,y,z) safe_val(def, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, t,u),v),w),x),y),z)
-
+#define safe_val(def, x,y)          (x?x->y:def)
+#define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
+#define safe_val4(def, t,u,v,w)     (t?t->u?t->u->v?t->u->v->w:def:def:def)
+#define safe_val5(def, t,u,v,w,x)   (t?t->u?t->u->v?t->u->v->w?t->u->v->w->x:def:def:def:def)
+#define safe_val6(def, t,u,v,w,x,y) (t?t->u?t->u->v?t->u->v->w?t->u->v->w->x?t->u->v->w->x->y:def:def:def:def:def)
+#define safe_val7(def, t,u,v,w,x,y,z) (t?t->u?t->u->v?t->u->v->w?t->u->v->w->x?t->u->v->w->x->y?t->u->v->w->x->y->z:def:def:def:def:def:def)
 
 #endif

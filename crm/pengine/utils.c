@@ -17,9 +17,9 @@ invert_constraint(rsc_to_rsc_t *constraint)
 {
 	pdebug("Inverting constraint");
 	rsc_to_rsc_t *inverted_con =
-		cl_malloc(sizeof(rsc_to_node_t));
+		crm_malloc(sizeof(rsc_to_node_t));
 
-	inverted_con->id = cl_strdup(constraint->id);
+	inverted_con->id = crm_strdup(constraint->id);
 	inverted_con->strength = constraint->strength;
 
 	// swap the direction
@@ -35,9 +35,9 @@ invert_constraint(rsc_to_rsc_t *constraint)
 rsc_to_node_t *
 copy_constraint(rsc_to_node_t *constraint) 
 {
-	rsc_to_node_t *copied_con = cl_malloc(sizeof(rsc_to_node_t));
+	rsc_to_node_t *copied_con = crm_malloc(sizeof(rsc_to_node_t));
 
-	copied_con->id		 = cl_strdup(constraint->id);
+	copied_con->id		 = crm_strdup(constraint->id);
 
 	copied_con->rsc_lh = constraint->rsc_lh;
 	copied_con->node_list_rh = constraint->node_list_rh;
@@ -77,7 +77,7 @@ node_list_and(GSListPtr list1, GSListPtr list2)
 
 	for(lpc = 0; lpc < g_slist_length(list1); lpc++) {
 		node_t *node = (node_t*)g_slist_nth_data(list1, lpc);
-		node_t *new_node = node_copy(node);
+		node_t *new_node = NULL;
 		node_t *other_node = find_list_node(list2, node->details->id);
 
 		if(node == NULL || other_node == NULL) {
@@ -85,8 +85,10 @@ node_list_and(GSListPtr list1, GSListPtr list2)
 			
 			// merge node weights
 		} else if(node->weight < 0 || other_node->weight < 0) {
+			new_node = node_copy(node);
 			new_node->weight = -1;
 		} else {
+			new_node = node_copy(node);
 			new_node->weight = 
 				node->weight + other_node->weight;
 			if(new_node->weight != 0) {
@@ -95,7 +97,6 @@ node_list_and(GSListPtr list1, GSListPtr list2)
 		}
 		result = g_slist_append(result, new_node);
 	}
-  
  
 	return result;
 }
@@ -196,7 +197,7 @@ node_copy(node_t *this_node)
 		print_node("Failed copy of", this_node, TRUE);
 		return NULL;
 	}
-	node_t *new_node = cl_malloc(sizeof(node_t));
+	node_t *new_node = crm_malloc(sizeof(node_t));
 	new_node->weight = this_node->weight; 
 	new_node->fixed  = this_node->fixed;
 	new_node->details = this_node->details; 
@@ -220,12 +221,11 @@ static int color_id = 0;
 color_t *
 create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
 {
-	int lpc = 0;
-	color_t *new_color = cl_malloc(sizeof(color_t));
+	color_t *new_color = crm_malloc(sizeof(color_t));
 
 	new_color->id = color_id++;
 	new_color->local_weight = 1.0;
-	new_color->details = cl_malloc(sizeof(struct color_shared_s));
+	new_color->details = crm_malloc(sizeof(struct color_shared_s));
 	new_color->details->chosen_node = NULL; 
 	new_color->details->candidate_nodes = node_list_dup(nodes);
 
@@ -239,6 +239,7 @@ create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
 		/* Add any new color to the list of candidate_colors for
 		 * resources that havent been decided yet 
 		 */
+		int lpc;
 		slist_iter(
 			rsc, resource_t, resources, lpc,
 			if(rsc->provisional && rsc->runnable) {
@@ -278,6 +279,7 @@ filter_nodes(resource_t *rsc)
 			pdebug_action(print_node("Removing", node, FALSE));
 			rsc->allowed_nodes =
 				g_slist_remove(rsc->allowed_nodes,node);
+			crm_free(node);
 			lpc2--;
 		}
 		);
@@ -313,24 +315,25 @@ pe_find_node(GSListPtr nodes, const char *id)
 	return NULL;
 }
 
-
-
+gint gslist_color_compare(gconstpointer a, gconstpointer b);
 color_t *
 find_color(GSListPtr candidate_colors, color_t *other_color)
 {
-	int lpc = 0;
-	if(other_color == NULL) {
-		cl_log(LOG_ERR, "Cannot find NULL color");
-		return NULL;
-	}
-	
-	slist_iter(color, color_t, candidate_colors, lpc,
-		   if(color->id == other_color->id) {
-			   return color;
-		   }
-		);
-	return NULL;
+	return (color_t *)g_slist_find_custom(candidate_colors, other_color,
+				   gslist_color_compare);
 }
+
+
+gint gslist_color_compare(gconstpointer a, gconstpointer b)
+{
+	const color_t *color_a = (const color_t*)a;
+	const color_t *color_b = (const color_t*)b;
+	if(color_a->id == color_b->id) {
+		return 0;
+	}
+	return 1;
+}
+
 
 
 gint sort_rsc_priority(gconstpointer a, gconstpointer b)
@@ -404,7 +407,7 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 action_t *
 action_new(int id, resource_t *rsc, enum action_tasks task)
 {
-	action_t *action = (action_t*)cl_malloc(sizeof(action_t));
+	action_t *action = (action_t*)crm_malloc(sizeof(action_t));
 	action->id   = id;
 	action->rsc  = rsc;
 	action->task = task;
@@ -543,9 +546,11 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 	       node->fixed?"True":"False"); 
 
 	if(details && node->details != NULL) {
+		char *mutable = crm_strdup("\t\t");
 		cl_log(LOG_DEBUG, "\t\t===Node Attributes");
 		g_hash_table_foreach(node->details->attrs,
-				     print_str_str, cl_strdup("\t\t"));
+				     print_str_str, mutable);
+		crm_free(mutable);
 	}
 
 	if(details) {
@@ -640,13 +645,14 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 		       cons->rsc_lh->id, 
 		       modifier2text(cons->modifier),
 		       cons->weight);
+
 		int lpc = 0;
 		slist_iter(
 			node, node_t, cons->node_list_rh, lpc,
 			print_node("\t\t-->", node, FALSE)
 			);
 	}
-}; 
+}
 
 void
 print_rsc_to_rsc(const char *pre_text, rsc_to_rsc_t *cons, gboolean details)
@@ -671,7 +677,7 @@ print_rsc_to_rsc(const char *pre_text, rsc_to_rsc_t *cons, gboolean details)
 		       cons->rsc_rh==NULL?"null":cons->rsc_rh->id, 
 		       strength2text(cons->strength));
 	}
-}; 
+} 
 
 void
 print_resource(const char *pre_text, resource_t *rsc, gboolean details)
@@ -703,6 +709,10 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 	
 	if(details) {
 		int lpc = 0;
+		cl_log(LOG_DEBUG, "\t=== Actions");
+		print_action("\tStop: ", rsc->stop, FALSE);
+		print_action("\tStart: ", rsc->start, FALSE);
+		
 		cl_log(LOG_DEBUG, "\t=== Colors");
 		slist_iter(
 			color, color_t, rsc->candidate_colors, lpc,
@@ -755,12 +765,17 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 
 	if(details) {
 		int lpc = 0;
-#if 0
+#if 1
 		cl_log(LOG_DEBUG, "\t\t====== Preceeding Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
 			print_action("\t\t", other->action, FALSE);
 			);
+		cl_log(LOG_DEBUG, "\t\t====== Subsequent Actions");
+		slist_iter(
+			other, action_wrapper_t, action->actions_after, lpc,
+			print_action("\t\t", other->action, FALSE);
+			);		
 #else
 		cl_log(LOG_DEBUG, "\t\t====== Subsequent Actions");
 		slist_iter(
@@ -832,3 +847,153 @@ action2xml(action_t *action)
 
 	return action_xml;
 }
+
+gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
+
+void
+pe_free_nodes(GSListPtr nodes)
+{
+	while(nodes != NULL){
+		GSListPtr list_item = nodes;
+		node_t *node = (node_t*)list_item->data;
+		struct node_shared_s *details = node->details;
+		nodes = nodes->next;
+
+		if(details != NULL) {
+			crm_free(details->id);
+			g_hash_table_foreach_remove(details->attrs,
+						    ghash_free_str_str, NULL);
+
+			crm_free(details);
+		}
+		
+		crm_free(node);
+	}
+	g_slist_free(nodes);
+}
+
+gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data)
+{
+	crm_free(key);
+	crm_free(value);
+	return TRUE;
+}
+
+
+void
+pe_free_colors(GSListPtr colors)
+{
+	while(colors != NULL) {
+		GSListPtr list_item = colors;
+		color_t *color = (color_t *)list_item->data;
+		struct color_shared_s *details = color->details;
+		colors = colors->next;
+		
+		if(details != NULL) {
+			pe_free_shallow(details->candidate_nodes);
+			crm_free(details->chosen_node);
+			crm_free(details);
+		}
+		crm_free(color);
+	}
+	g_slist_free(colors);
+}
+
+void
+pe_free_shallow(GSListPtr alist)
+{
+	pe_free_shallow_adv(alist, TRUE);
+}
+
+void
+pe_free_shallow_adv(GSListPtr alist, gboolean with_data)
+{
+	GSListPtr item;
+	GSListPtr item_next = alist;
+	while(item_next != NULL) {
+		item = item_next;
+		item_next = item_next->next;
+		
+		if(with_data) {
+			crm_free(item->data);
+		}
+		
+		item->data = NULL;
+		item->next = NULL;
+		g_slist_free(item);
+	}
+}
+
+void
+pe_free_resources(GSListPtr resources)
+{ 
+	volatile GSListPtr list_item = NULL;
+	resource_t *rsc = NULL;
+	
+	while(resources != NULL) {
+		list_item = resources;
+		rsc = (resource_t *)list_item->data;
+		resources = resources->next;
+
+		crm_free(rsc->id);
+		
+//		pdebug("color");
+//		crm_free(rsc->color);
+
+		int lpc;
+		slist_iter(clr, color_t, rsc->candidate_colors, lpc,
+			   print_color("deleting", clr, FALSE));
+		
+//		pe_free_shallow(rsc->candidate_colors);
+		pe_free_shallow(rsc->allowed_nodes);
+
+		while(rsc->rsc_cons) {
+			pe_free_rsc_to_rsc((rsc_to_rsc_t*)rsc->rsc_cons->data);
+			rsc->rsc_cons = rsc->rsc_cons->next;
+		}
+		g_slist_free(rsc->rsc_cons);
+		crm_free(rsc);
+	}
+	g_slist_free(resources);
+	
+}
+
+
+void
+pe_free_actions(GSListPtr actions) 
+{
+	while(actions != NULL) {
+		GSListPtr list_item = actions;
+		action_t *action = (action_t *)list_item->data;
+		actions = actions->next;
+
+		pe_free_shallow(action->actions_before); // action_warpper_t*
+		pe_free_shallow(action->actions_after); // action_warpper_t*
+		action->actions_before = NULL;
+		action->actions_after = NULL;
+		crm_free(action);
+	}
+	g_slist_free(actions);
+}
+
+
+
+void
+pe_free_rsc_to_rsc(rsc_to_rsc_t *cons)
+{ 
+	if(cons != NULL) {
+		crm_free(cons->id);
+		crm_free(cons);
+	}
+}
+
+void
+pe_free_rsc_to_node(rsc_to_node_t *cons)
+{
+	if(cons != NULL) {
+		crm_free(cons->id);
+		pe_free_shallow(cons->node_list_rh); // node_t*
+		crm_free(cons);
+	}
+}
+
