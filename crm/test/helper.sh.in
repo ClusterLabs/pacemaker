@@ -61,6 +61,7 @@ ip_rsc_2=192.168.9.162
 
 logfile=/var/log/messages
 local_version=0
+bsc_mode=0
 crm_only=0
 
 if [ ! -z "$CRM_LOCAL_OPTS" ]; then
@@ -84,6 +85,7 @@ while test "$done" = "0"; do
 
 	--crm-only | -C) crm_only=1; shift;;
 	--local | -L)	local_version=1; shift;;
+	--bsc   | -B)	local_version=1; bsc_mode=1; shift;;
 
 	--logfile | -l)	logfile=${2?no logfile??}  || return 1;  shift 2;;
 	--dumpdir | -d)	dump_dir=${2?no dumpdir??} || return 1; shift 2;;
@@ -472,10 +474,11 @@ function err() {
     crm_test_log_end=$(stat -L -c %s $logfile)
     do_cmd echo "ERROR: $*"
     do_cmd echo "test $test_type: FAILED"
-    echo "see ${test_dump_dir}/test.txt for details..."
-    echo "ERROR: $*" > $test_dump_dir/error.txt
-    $HALIB_DIR/crmtest/testutils.pl --dump -p $crm_test_log_start -ep $crm_test_log_end -l $logfile > $test_dump_dir/cluster.log
-
+    if [ $bsc_mode = 0 ]; then
+	echo "see ${test_dump_dir}/test.txt for details..."
+	echo "ERROR: $*" > $test_dump_dir/error.txt
+	$HALIB_DIR/crmtest/testutils.pl --dump -p $crm_test_log_start -ep $crm_test_log_end -l $logfile > $test_dump_dir/cluster.log
+    fi
     exit 1
 }
 
@@ -508,8 +511,9 @@ function dump_node() {
     cd -
     remote_cmd ${ADMIN_USER} ${a_node} "rm ${dump_file}"
 
-    $HALIB_DIR/crmtest/extract.logs ${test_dump_dir} node-${a_node_index} ${test_dump_dir}/tmp/crm-${a_node_index}/cluster-test.log
-    
+    if [ $bsc_mode = 0 ]; then
+	$HALIB_DIR/crmtest/extract.logs ${test_dump_dir} node-${a_node_index} ${test_dump_dir}/tmp/crm-${a_node_index}/cluster-test.log
+    fi
 }
 
 function do_cmd() {
@@ -518,6 +522,10 @@ function do_cmd() {
     old_OUTPUT_STDOUT=$OUTPUT_STDOUT
     cmd=$1
 
+    test_log_file=$test_dump_dir/test.txt
+    if [ $bsc_mode = 1 ]; then
+	test_log_file=/tmp/linux-ha.testlog
+    fi
 
     if [ $OUTPUT_STDERR -eq 1 -o $OUTPUT_STDOUT -eq 1 -o $OUTPUT_CMDS -eq 1 ]; then
 	
@@ -525,17 +533,17 @@ function do_cmd() {
 	    user=$2
 	    host=$3
 	    shift 3
-	    echo `date` ": Running '$*' as ${user}@${host}" | tee -a $test_dump_dir/test.txt;
+	    echo `date` ": Running '$*' as ${user}@${host}" | tee -a $test_log_file;
 
 	elif [ $cmd = "wait_for_state" ]; then
 	    host=$4
 	    if [ -z $host ]; then
 		host="the DC"
 	    fi
-	    echo `date` ": Waiting for state $2 on $host (max $3 attempts)" | tee -a $test_dump_dir/test.txt;
+	    echo `date` ": Waiting for state $2 on $host (max $3 attempts)" | tee -a $test_log_file;
 	    
 	elif [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
-	    echo `date` ": Searching '$cmdline'" | tee -a $test_dump_dir/test.txt;
+	    echo `date` ": Searching '$cmdline'" | tee -a $test_log_file;
 	    
 	elif [ $cmd = "echo" ]; then
 	    echo -n ""
@@ -546,54 +554,54 @@ function do_cmd() {
 #		$cmdline		
 #	    fi
 	else
-	    echo `date` ": Running '$cmdline'" | tee -a $test_dump_dir/test.txt;
+	    echo `date` ": Running '$cmdline'" | tee -a $test_log_file;
 	fi
     fi
 
     if [ $cmd = "echo" ]; then
 	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
-		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
+		echo -n `date` ": " | tee -a $test_log_file
 		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[01;32m"
 		fi
-		$cmdline | tee -a $test_dump_dir/test.txt
+		$cmdline | tee -a $test_log_file
 		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[00m"
 		fi
 	    elif [ $OUTPUT_ECHO -eq 1 -a $OUTPUT_CMDS -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
-		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
+		echo -n `date` ": " | tee -a $test_log_file
 		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[01;32m"
 		fi
-		$cmdline | tee -a $test_dump_dir/test.txt
+		$cmdline | tee -a $test_log_file
 		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[00m"
 		fi
 	    fi
 
     elif [ $OUTPUT_STDERR -eq 1 -a $OUTPUT_STDOUT -eq 1 ]; then
-	$cmdline 2>&1 >> $test_dump_dir/test.txt
+	$cmdline 2>&1 >> $test_log_file
 	rc=$?
     elif [ $OUTPUT_STDERR -eq 0 -a $OUTPUT_STDOUT -eq 0 ]; then
 	$cmdline 2>&1 >/dev/null
 	rc=$?
     elif [ $OUTPUT_STDOUT -eq 0 ]; then
-	$cmdline >/dev/null 2>> $test_dump_dir/test.txt
+	$cmdline >/dev/null 2>> $test_log_file
 	rc=$?
     elif [ $OUTPUT_STDERR -eq 0 ]; then
-	$cmdline 2>/dev/null >> $test_dump_dir/test.txt
+	$cmdline 2>/dev/null >> $test_log_file
 	rc=$?
     else
-	$cmdline 2>&1 >> $test_dump_dir/test.txt
+	$cmdline 2>&1 >> $test_log_file
 	rc=$?
     fi
 
     if [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
 	# for the logs...
 	if [ $OUTPUT_STDERR -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_CMDS -eq 0 ]; then
-	    echo `date` ": Searching '$cmdline'" >> $test_dump_dir/test.txt;
+	    echo `date` ": Searching '$cmdline'" >> $test_log_file;
 	fi
-	$cmdline -t 1 -v 2>&1 >> $test_dump_dir/test.txt
+	$cmdline -t 1 -v 2>&1 >> $test_log_file
 
 	if [ $rc -lt 0 ]; then
 	    echo `date` ": Searching '$cmdline'"
