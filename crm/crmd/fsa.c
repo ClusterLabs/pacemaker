@@ -69,7 +69,7 @@ void dump_rsc_info(void);
 	   crm_verbose("Action complete: %s (%.16llx)",			\
 		       fsa_action2string(x), x);			\
 	   CRM_DEV_ASSERT(next_input == I_NULL); 			\
-	   crm_debug(DOT_PREFIX"\t// %s\n", fsa_action2string(x));	\
+	   crm_debug(DOT_PREFIX"\t// %s", fsa_action2string(x));	\
    }
 #else
 #  define IF_FSA_ACTION(x,y)						\
@@ -458,7 +458,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	}
 	
 	now = time(NULL);
-	crm_debug(DOT_PREFIX"\t// ### Exiting the FSA (%s%s): %s\n",
+	crm_debug(DOT_PREFIX"\t// ### Exiting the FSA (%s%s): %s",
 		  fsa_state2string(fsa_state), do_fsa_stall?": paused":"",
 		  asctime(localtime(&now)));
 

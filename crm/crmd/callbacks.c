@@ -147,7 +147,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		}
 		if (client->ops->recv(client, &msg) != IPC_OK) {
 			perror("Receive failure:");
-			crm_err("[%s] [receive failure]\n", curr_client->table_key);
+			crm_err("[%s] [receive failure]", curr_client->table_key);
 			return !hack_return_good;
 		} else if (msg == NULL) {
 			crm_err("No message from %s this time", curr_client->table_key);
@@ -244,7 +244,7 @@ crmd_ha_status_callback(
 	crm_data_t *update      = NULL;
 
 	crm_devel("received callback");
-	crm_notice("Status update: Node %s now has status [%s]\n",node,status);
+	crm_notice("Status update: Node %s now has status [%s]",node,status);
 
 	if(AM_I_DC == FALSE) {
 		crm_devel("Got nstatus callback in non-DC mode");
@@ -290,7 +290,7 @@ crmd_client_status_callback(const char * node, const char * client,
 		extra  = XML_CIB_ATTR_CLEAR_SHUTDOWN;
 	}
 	
-	crm_notice("Status update: Client %s/%s now has status [%s]\n",
+	crm_notice("Status update: Client %s/%s now has status [%s]",
 		   node, client, status);
 
 	if(safe_str_eq(node, fsa_our_dc) && status == OFFLINESTATUS) {

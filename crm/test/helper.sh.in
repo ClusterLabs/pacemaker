@@ -560,6 +560,12 @@ function do_cmd() {
 
     if [ $cmd = "echo" ]; then
 	    if [ $OUTPUT_CMDS -eq 1 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
+<<<<<<< helper.sh.in
+		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
+		# echo -n -e "\033[01;32m"
+		$cmdline | tee -a $test_dump_dir/test.txt
+		# echo -n -e "\033[00m"
+=======
 		echo -n `date` ": " | tee -a $test_log_file
 		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[01;32m"
@@ -568,7 +574,14 @@ function do_cmd() {
 		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[00m"
 		fi
+>>>>>>> 1.59
 	    elif [ $OUTPUT_ECHO -eq 1 -a $OUTPUT_CMDS -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_STDERR -eq 0  ]; then
+<<<<<<< helper.sh.in
+		echo -n `date` ": " | tee -a $test_dump_dir/test.txt
+		# echo -n -e "\033[01;32m"
+		$cmdline | tee -a $test_dump_dir/test.txt
+		# echo -n -e "\033[00m"
+=======
 		echo -n `date` ": " | tee -a $test_log_file
 		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[01;32m"
@@ -577,6 +590,7 @@ function do_cmd() {
 		if [ $local_version != 1 ]; then
 		    echo -n -e "\033[00m"
 		fi
+>>>>>>> 1.59
 	    fi
 
     elif [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then

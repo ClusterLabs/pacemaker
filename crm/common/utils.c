@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.41 2005/03/15 19:52:24 gshi Exp $ */
+/* $Id: utils.c,v 1.42 2005/03/16 17:11:15 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -165,7 +165,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 		hash_value = crm_strdup(src_subsys);
 		if (!hash_value) {
 			crm_err("memory allocation failed in "
-			       "generate_hash_value()\n");
+			       "generate_hash_value()");
 			return NULL;
 		}
 		return hash_value;
@@ -175,7 +175,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	crm_malloc(hash_value, sizeof(char)*(ref_len));
 	if (!hash_value) {
 		crm_err("memory allocation failed in "
-		       "generate_hash_value()\n");
+		       "generate_hash_value()");
 		return NULL;
 	}
 
@@ -199,7 +199,7 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 		*subsys = (char*)crm_strdup(char_value);
 		if (*subsys == NULL) {
 			crm_err("memory allocation failed in "
-			       "decode_hash_value()\n");
+			       "decode_hash_value()");
 			return FALSE;
 		}
 		crm_info("Decoded value: (%s:%d)", *subsys,
@@ -449,17 +449,17 @@ alter_debug(int nsig)
 	switch(nsig) {
 		case DEBUG_INC:
 			crm_log_level++;
-			crm_debug("Upped log level to %d\n", crm_log_level);
+			crm_debug("Upped log level to %d", crm_log_level);
 			break;
 
 		case DEBUG_DEC:
 			crm_log_level--;
-			crm_debug("Reduced log level to %d\n", crm_log_level);
+			crm_debug("Reduced log level to %d", crm_log_level);
 			break;	
 
 		default:
 			fprintf(stderr, "Unknown signal %d\n", nsig);
-			cl_log(LOG_ERR, "Unknown signal %d\n", nsig);
+			cl_log(LOG_ERR, "Unknown signal %d", nsig);
 			break;	
 	}
 }

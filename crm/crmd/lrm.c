@@ -313,7 +313,7 @@ stop_all_resources(void)
 
 		op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
 
-		crm_verbose("\tcurrent state:%s\n",
+		crm_verbose("\tcurrent state:%s",
 			    cur_state==LRM_RSC_IDLE?"Idle":"Busy");
 
 		slist_iter(
@@ -376,7 +376,7 @@ build_active_RAs(crm_data_t *rsc_list)
 
 		op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
 
-		crm_verbose("\tcurrent state:%s\n",
+		crm_verbose("\tcurrent state:%s",
 			    cur_state==LRM_RSC_IDLE?"Idle":"Busy");
 
 		slist_iter(

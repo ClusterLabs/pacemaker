@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.17 2005/03/11 13:58:19 andrew Exp $ */
+/* $Id: cibmon.c,v 1.18 2005/03/16 17:11:14 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -446,21 +446,21 @@ cibmon_update_confirm(const char *event, HA_Message *msg)
 	
 	if(id == NULL) {
 		if(rc == cib_ok) {
-			crm_info(UPDATE_PREFIX"[%s] %s (to section=%s) confirmed.\n",
+			crm_info(UPDATE_PREFIX"[%s] %s (to section=%s) confirmed.",
 				 event, op, crm_str(type));
 		} else {
-			crm_warn(UPDATE_PREFIX"[%s] %s (to section=%s) ABORTED: (%d) %s\n",
+			crm_warn(UPDATE_PREFIX"[%s] %s (to section=%s) ABORTED: (%d) %s",
 				 event, op, crm_str(type), 
 				 rc, cib_error2string(rc));
 		}
 		
 	} else {
 		if(rc == cib_ok) {
-			crm_info(UPDATE_PREFIX"[%s] %s (to <%s%s%s>) confirmed\n",
+			crm_info(UPDATE_PREFIX"[%s] %s (to <%s%s%s>) confirmed",
 				 event, op, crm_str(type),
 				 id?" id=":"", id?id:"");
 		} else {
-			crm_warn(UPDATE_PREFIX"[%s] %s (to <%s%s%s>) ABORTED: (%d) %s\n",
+			crm_warn(UPDATE_PREFIX"[%s] %s (to <%s%s%s>) ABORTED: (%d) %s",
 				 event, op, crm_str(type),
 				 id?" id=":"", id?id:"",
 				 rc, cib_error2string(rc));

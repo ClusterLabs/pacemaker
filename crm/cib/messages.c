@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.29 2005/02/23 12:23:42 andrew Exp $ */
+/* $Id: messages.c,v 1.30 2005/03/16 17:11:15 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -107,7 +107,7 @@ cib_process_default(
 
 	if(op == NULL) {
 		result = cib_operation;
-		crm_err("No operation specified\n");
+		crm_err("No operation specified");
 		
 	} else if(strcmp(CRM_OP_NOOP, op) == 0) {
 		;

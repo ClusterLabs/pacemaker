@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.22 2005/03/08 13:57:03 andrew Exp $ */
+/* $Id: main.c,v 1.23 2005/03/16 17:11:15 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -145,7 +145,7 @@ init_start(void)
 		if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(
 			    hb_conn, cib_client_status_callback, hb_conn)) {
 			
-			crm_err("Cannot set cstatus callback: %s\n",
+			crm_err("Cannot set cstatus callback: %s",
 				hb_conn->llc_ops->errmsg(hb_conn));
 			was_error = TRUE;
 		} else {

@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.60 2005/03/04 15:59:08 alan Exp $ */
+/* $Id: ccm.c,v 1.61 2005/03/16 17:11:15 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -524,7 +524,7 @@ void
 msg_ccm_join(const HA_Message *msg, void *foo)
 {
 	
-	crm_verbose("\n###### Recieved ccm_join message...");
+	crm_verbose("###### Received ccm_join message...");
 	if (msg != NULL)
 	{
 		crm_verbose("[type=%s]",

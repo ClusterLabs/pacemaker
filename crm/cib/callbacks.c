@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.32 2005/03/11 14:12:18 andrew Exp $ */
+/* $Id: callbacks.c,v 1.33 2005/03/16 17:11:14 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1044,7 +1044,7 @@ void
 cib_client_status_callback(const char * node, const char * client,
 			   const char * status, void * private)
 {
-	crm_notice("Status update: Client %s/%s now has status [%s]\n",
+	crm_notice("Status update: Client %s/%s now has status [%s]",
 		   node, client, status);
 
 	g_hash_table_replace(peer_hash, crm_strdup(node), crm_strdup(status));

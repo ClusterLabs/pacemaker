@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.16 2005/03/11 14:25:07 andrew Exp $ */
+/* $Id: callbacks.c,v 1.17 2005/03/16 17:11:15 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -182,7 +182,7 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		return;
 	}
 	
-	crm_info("optype=%d, node_name=%s, result=%d, node_list=%s\n",
+	crm_info("optype=%d, node_name=%s, result=%d, node_list=%s",
 		 op->optype, op->node_name, op->op_result,
 		 (char *)op->node_list);
 

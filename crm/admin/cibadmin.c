@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.26 2005/02/21 13:13:44 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.27 2005/03/16 17:11:14 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -542,11 +542,11 @@ void cibadmin_op_callback(
 		fprintf(stderr, "Local CIB is _not_ the master instance\n");
 		
 	} else if(safe_str_eq(cib_action, CRM_OP_CIB_ISMASTER)) {
-		crm_info("Local CIB _is_ the master instance\n");
+		crm_info("Local CIB _is_ the master instance");
 		fprintf(stderr, "Local CIB _is_ the master instance\n");
 		
 	} else if(rc != 0) {
-		crm_warn("Call %s failed (%d): %s\n",
+		crm_warn("Call %s failed (%d): %s",
 			cib_action, rc, cib_error2string(rc));
 		fprintf(stderr, "Call %s failed (%d): %s\n",
 			cib_action, rc, cib_error2string(rc));

@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.31 2005/03/11 14:08:00 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.32 2005/03/16 17:11:14 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -701,21 +701,21 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 			}
 			
 			if(safe_str_eq("stop", last_op)) {
-				crm_devel("resource %s is stopped on: %s\n",
+				crm_devel("resource %s is stopped on: %s",
 					  rsc, target);
 				
 			} else if(safe_str_eq(op_code, "-1")) {
-				crm_devel("resource %s is pending on: %s\n",
+				crm_devel("resource %s is pending on: %s",
 					  rsc, target);				
 
 			} else if(safe_str_neq(op_code, "0")) {
-				crm_devel("resource %s is failed on: %s\n",
+				crm_devel("resource %s is failed on: %s",
 					  rsc, target);				
 
 			} else {
-				crm_devel("resource %s is running on: %s\n",
+				crm_devel("resource %s is running on: %s",
 					  rsc, target);				
-				printf("resource %s is running on: %s\n",
+				printf("resource %s is running on: %s",
 				       rsc, target);
 				if(BE_SILENT) {
 					fprintf(stderr, "%s ", target);

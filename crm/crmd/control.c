@@ -445,7 +445,7 @@ do_recover(long long action,
 	   fsa_data_t *msg_data)
 {
 	set_bit_inplace(fsa_input_register, R_IN_RECOVERY);
-	crm_err("Action %s (%.16llx) not supported\n",
+	crm_err("Action %s (%.16llx) not supported",
 	       fsa_action2string(action), action);
 
 	register_fsa_input(C_FSA_INTERNAL, I_SHUTDOWN, NULL);
@@ -601,7 +601,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	if (HA_OK != hb_cluster->llc_ops->set_cstatus_callback(
 		    hb_cluster, crmd_client_status_callback, hb_cluster)) {
 
-		crm_err("Cannot set cstatus callback: %s\n",
+		crm_err("Cannot set cstatus callback: %s",
 			hb_cluster->llc_ops->errmsg(hb_cluster));
 		return FALSE;
 	}

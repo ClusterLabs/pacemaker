@@ -23,7 +23,7 @@ testdir=@libdir@/heartbeat/crmtest
 
 while [ $iteration -lt $repeats ]; do
     iteration=`expr $iteration + 1`
-    echo -ne "\033]0;$test_type : Iteration $iteration of $repeats\007"
+    echo -ne "$test_type : Iteration $iteration of $repeats"
     echo "########### Begining iteration $iteration of $repeats ###########"
 (
 
