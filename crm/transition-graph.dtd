@@ -1,0 +1,56 @@
+<?xml version="1.0" ?>
+
+<!--
+
+ The Transition Graph is an ordered list of synapses, which consist of a
+ list of pre-conditions (events) they are waiting for / triggering on
+ and a (list of) actions which are initiated when they "fire". The first
+ synapse to have a matching input "consumes" the event unless specified
+ differently.
+ 
+GLOBAL TODOs:
+	- Versionize DTD so we can validate against a specific version
+	- Timestamps et al should probably not be CDATA but more
+	  specific types
+-->
+
+<!-- Either configuration or status must be present. Why else would you
+     have a CIB? -->
+
+<!ELEMENT transition_graph (synapse+)>
+
+<!-- When all inputs to a synapse are satisfied, the synapse fires the
+     actions -->
+
+<!ELEMENT synapse (inputs,actions)>
+<!ATTLIST synapse
+	  id		CDATA #REQUIRED>
+
+<!ELEMENT inputs (trigger+)>
+
+<!-- event_spec specifies the event we are looking for.
+     This can be anything from "rsc foo started somewhere / on node X",
+     "STONITH of node A completed", "DEFAULT" etc... 
+     TODO: This deserves to be something better and more clearly defined
+           than CDATA
+-->
+<!ELEMENT trigger EMPTY>
+<!ATTLIST trigger
+	  id		CDATA #REQUIRED
+	  consumes	(no|yes) 'yes'
+	  event_spec	CDATA #REQUIRED>
+
+<!ELEMENT actions (action+)>
+
+<!-- operation specifies the action we are kicking off.
+     This can be anything from "start resource foo on node A with these
+     parameters...", "initiate STONITHing node B" to "restart
+     computation" or "shutdown CRM somewhere"
+     TODO: This deserves to be something better than CDATA.
+-->
+<!ELEMENT action EMPTY>
+<!ATTLIST action
+	  id		CDATA #REQUIRED
+	  operation	CDATA #REQUIRED>
+
+
