@@ -317,7 +317,9 @@ do_update_node_status(long long action,
 		/* this only happens locally.  the updates are pushed out
 		 * as part of the join process
 		 */
-		store_request(NULL, update, CRM_OP_UPDATE, CRM_SYSTEM_DC);
+		invoke_local_cib(NULL, update, CRM_OP_UPDATE);
+
+//	store_request(NULL, update, CRM_OP_UPDATE, CRM_SYSTEM_DC);
 		free_xml(update);
 
 		return I_NULL;
