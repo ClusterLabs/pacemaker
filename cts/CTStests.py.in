@@ -1371,6 +1371,56 @@ class ResourceRecover(CTSTest):
             return None
         return 1
 
+AllTestClasses.append(ResourceRecover)
+
+###################################################################
+class ComponentFail(CTSTest):
+###################################################################
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="ComponentFail"
+        self.start = StartTest(cm)
+
+    def __call__(self, node):
+        '''Perform the 'ComponentFail' test. '''
+        self.incr("calls")
+        
+        # start all nodes
+        for member in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[member] != self.CM["up"]:
+                ret=self.start(member)
+                if not ret:
+                    return ret;
+
+        # select a component to kill
+        complist = ["lrmd","crmd","stonithd","heartbat"]
+        component = self.CM.Env.RandomGen.choice(complist)
+        
+        # set the watch for stable
+        watch = CTS.LogWatcher(self.CM["LogFileName"], [self.CM["Pat:DC_IDLE"]]
+        ,     timeout=self.CM["DeadTime"]+10)
+        watch.setwatch()
+        
+        # kill the component
+        self.CM.log("Kill %s on %s"%(component,node))
+        self.CM.rsh.readaline(node, "killall -9 %s"%component)
+        
+        # wait for stable
+        if watch.look():
+            return self.success()
+        else:
+            return self.failure("no match against %s "% pat)
+
+    def is_applicable(self):
+        '''ResourceRecover is applicable only when there is any resource running on cluster
+        and environment is linux-ha-v2'''
+        if not self.CM["Name"] == "linux-ha-v2":
+            self.CM.log("[ComponentFail] will not run because it only run at linux-ha-v2")
+            return None
+        return 1
+    
+AllTestClasses.append(ComponentFail)
+
 
 ####################################################################
 class Split_brainTest2(CTSTest):
