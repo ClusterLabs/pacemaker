@@ -1,3 +1,27 @@
 <?xml version="1.0"?>
 <!DOCTYPE transition_graph SYSTEM "crm-1.0.dtd">
-<transition_graph/>
+<?xml version="1.0"?>
+<transition_graph>
+  <synapse>
+    <action_set>
+      <rsc_op id="1" rsc_id="rsc1" on_node="node1" on_node_uuid="node1" operation="stop" allow_fail="false" optional="false" runnable="true" discard="false">
+        <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="block"/>
+        <args/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse>
+    <action_set>
+      <rsc_op id="2" rsc_id="rsc1" on_node="node2" on_node_uuid="node2" operation="start" allow_fail="false" optional="false" runnable="true" discard="false">
+        <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="block"/>
+        <args/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="1" rsc_id="rsc1" on_node="node1" on_node_uuid="node1" operation="stop" allow_fail="false" optional="false" runnable="true"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

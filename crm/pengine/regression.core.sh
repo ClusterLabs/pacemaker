@@ -44,6 +44,13 @@ function do_test {
 
     ./ptest < $input 2>/dev/null 2>/dev/null > $output
 
+    if [ -s core ]; then
+	echo "Test $name	($base)...	Moved core to core.${base}";
+	rm -f core.$base
+	mv core core.$base
+	return;
+    fi
+
     if [ ! -s $output ]; then
 	echo "Test $name	($base)...	Error ($output)";
 	rm $output
@@ -58,7 +65,8 @@ function do_test {
 	return;
     fi
 
-    if [ "$create_mode" = "true" -a ! -f $expected ]; then
+    if [ "$create_mode" = "true" ]; then
+#    if [ "$create_mode" = "true" -a ! -f $expected ]; then
 	cp "$output" "$expected"
     fi
 

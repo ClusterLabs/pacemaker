@@ -5,7 +5,7 @@
   <synapse>
     <action_set>
       <rsc_op id="1" rsc_id="rsc1" on_node="node1" on_node_uuid="8661583D-08B0-11D9-B627-000A95B71D78" operation="stop" allow_fail="true" optional="false" runnable="true" discard="false">
-        <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="stonith"/>
+        <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="block"/>
         <args/>
       </rsc_op>
     </action_set>
@@ -14,14 +14,11 @@
   <synapse>
     <action_set>
       <rsc_op id="2" rsc_id="rsc1" on_node="node2" on_node_uuid="8661583D-08B0-11D9-B627-000A95B71D79" operation="start" allow_fail="false" optional="false" runnable="true" discard="false">
-        <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="stonith"/>
+        <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="block"/>
         <args/>
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <crm_event id="3" operation="stonith" allow_fail="false" optional="false" runnable="true"/>
-      </trigger>
       <trigger>
         <rsc_op id="1" rsc_id="rsc1" on_node="node1" on_node_uuid="8661583D-08B0-11D9-B627-000A95B71D78" operation="stop" allow_fail="true" optional="false" runnable="true"/>
       </trigger>
@@ -33,10 +30,6 @@
         <args target="node1"/>
       </crm_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="1" rsc_id="rsc1" on_node="node1" on_node_uuid="8661583D-08B0-11D9-B627-000A95B71D78" operation="stop" allow_fail="true" optional="false" runnable="true"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
 </transition_graph>

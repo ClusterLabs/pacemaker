@@ -16,7 +16,6 @@
       </rsc_location>
   </constraints>
   <crm_config>
-    <nv_pair id="failed_nodes" name="failed_nodes" value="stonith"/>
   </crm_config>
  </configuration>
  <status>

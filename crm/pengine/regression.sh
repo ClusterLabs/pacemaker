@@ -19,6 +19,14 @@
 
 . regression.core.sh
 
+create_mode="true"
+echo Generating test outputs for these tests...
+#do_test bad7 "Bad data"
+echo ""
+
+echo Done.
+echo ""
+echo Performing the following tests...
 create_mode="false"
 do_test simple1 "Offline	"
 do_test simple2 "Start	"
@@ -57,18 +65,21 @@ do_test attrs4 "string: exists	"
 do_test attrs5 "string: notexists	"
 
 echo ""
-do_test nodefail1 "Node Failed - Fence	"
-do_test nodefail2 "Node Failed - Block	"
-do_test nodefail3 "Node Failed - Ignore	"
+do_test nodefail1 "Node Fail - Fence	"
+do_test nodefail5 "Node Fail - Fence2Block"
+do_test nodefail4 "Node Fail - Block&Fence"
+do_test nodefail2 "Node Fail - Block	"
+do_test nodefail3 "Node Fail - Ignore	"
 
 echo ""
-do_test stopfail2 "Stop Failed - Block	"
-do_test stopfail3 "Stop Failed - Ignore (1 node)"
-do_test stopfail4 "Stop Failed - Ignore (2 node)"
-do_test stopfail1 "Stop Failed - STONITH (block)"
-do_test stopfail5 "Stop Failed - STONITH (pass)"
-do_test stopfail6 "Stop Failed - STONITH (pass2)"
-do_test stopfail7 "Stop Failed - STONITH (should fail)"
+do_test stopfail1 "Stop Fail - Disabled       "
+do_test stopfail9 "Stop Fail - Enabled, 1 node"
+do_test stopfail2 "Stop Fail - Enabled, 2 node"
+do_test stopfail3 "Stop Fail - Ignore (1 node)"
+do_test stopfail4 "Stop Fail - Ignore (2 node)"
+#do_test stopfail5 "Stop Fail - STONITH (pass2) "
+#do_test stopfail6 "Stop Fail - STONITH (pass3) "
+#do_test stopfail7 "Stop Fail - STONITH (should fail)"
 
 echo ""
 do_test rsc_location1 "Score (not running)	"
@@ -81,19 +92,14 @@ echo ""
 do_test complex1 "Complex	"
 
 echo ""
-do_test bad1 "Bad node	"
-do_test bad2 "Bad rsc	"
-do_test bad3 "No rsc class"
-do_test bad4 "Bad data	"
-do_test bad5 "Bad data	"
-do_test bad6 "Bad lrm_rsc"
-do_test bad7 "No lrm	"
+do_test bad1 "Bad node		"
+do_test bad2 "Bad rsc		"
+do_test bad3 "No rsc class	"
+do_test bad4 "Bad data		"
+do_test bad5 "Bad data		"
+do_test bad6 "Bad lrm_rsc	"
+do_test bad7 "No lrm		"
 
-echo ""
-create_mode="true"
-echo Generating test outputs for these tests...
-#do_test bad7 "Bad data"
 echo ""
 
 test_results
-

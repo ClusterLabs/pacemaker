@@ -4,7 +4,7 @@
 <transition_graph>
   <synapse>
     <action_set>
-      <rsc_op id="1" rsc_id="rsc1" on_node="node1" on_node_uuid="node1" operation="stop" allow_fail="false" optional="false" runnable="true" discard="false">
+      <rsc_op id="2" rsc_id="rsc1" on_node="node1" on_node_uuid="node1" operation="start" allow_fail="false" optional="false" runnable="true" discard="false">
         <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
         <args/>
       </rsc_op>
@@ -15,6 +15,15 @@
     <action_set>
       <rsc_op id="4" rsc_id="rsc2" on_node="node1" on_node_uuid="node1" operation="start" allow_fail="false" optional="false" runnable="true" discard="false">
         <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
+        <args/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse>
+    <action_set>
+      <rsc_op id="6" rsc_id="rsc3" on_node="node1" on_node_uuid="node1" operation="start" allow_fail="false" optional="false" runnable="true" discard="false">
+        <resource id="rsc3" class="heartbeat" type="apache" priority="3.0"/>
         <args/>
       </rsc_op>
     </action_set>

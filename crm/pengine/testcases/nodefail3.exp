@@ -4,7 +4,7 @@
 <transition_graph>
   <synapse>
     <action_set>
-      <rsc_op id="2" rsc_id="rsc1" on_node="node2" on_node_uuid="8661583D-08B0-11D9-B627-000A95B71D79" operation="start" runnable="true" optional="false" discard="false" allow_fail="false">
+      <rsc_op id="2" rsc_id="rsc1" on_node="node2" on_node_uuid="8661583D-08B0-11D9-B627-000A95B71D79" operation="start" allow_fail="false" optional="false" runnable="true" discard="false">
         <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="ignore"/>
         <args/>
       </rsc_op>
