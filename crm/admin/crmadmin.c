@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.6 2004/09/14 05:54:42 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.7 2004/09/17 13:03:09 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -461,10 +461,12 @@ do_init(void)
 		cl_log_set_facility(facility);
 	}
 
-	admin_uuid = crm_malloc(sizeof(char) * 11);
-	snprintf(admin_uuid, 10, "%d", getpid());
-	admin_uuid[10] = '\0';
-
+	crm_malloc(admin_uuid, sizeof(char) * 11);
+	if(admin_uuid != NULL) {
+		snprintf(admin_uuid, 10, "%d", getpid());
+		admin_uuid[10] = '\0';
+	}
+	
 	crmd_channel = init_client_ipc_comms(
 		CRM_SYSTEM_CRMD, admin_msg_callback, NULL);
 
@@ -574,19 +576,20 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			/* 31 = "test-_.xml" + an_int_as_string + '\0' */
 			filename_len = 31 + strlen(this_msg_reference);
 
-			filename = crm_malloc(sizeof(char) * filename_len);
-			sprintf(filename, "%s-%s_%d.xml",
-				result,
-				this_msg_reference,
-				received_responses);
-			
-			filename[filename_len - 1] = '\0';
-			if (xmlSaveFormatFile(filename,
-					      xml_root_node->doc, 1) < 0) {
-				crm_crit("Could not save response %s_%s_%d.xml",
-					 this_msg_reference,
-					 result,
-					 received_responses);
+			crm_malloc(filename, sizeof(char) * filename_len);
+			if(filename != NULL) {
+				sprintf(filename, "%s-%s_%d.xml",
+					result, this_msg_reference,
+					received_responses);
+				
+				filename[filename_len - 1] = '\0';
+				if (xmlSaveFormatFile(
+					    filename, xml_root_node->doc, 1) < 0) {
+					crm_crit("Could not save response to"
+						 " %s_%s_%d.xml",
+						 this_msg_reference,
+						 result, received_responses);
+				}
 			}
 		}
 	}

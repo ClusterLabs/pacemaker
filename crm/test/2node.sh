@@ -91,7 +91,7 @@ node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\">
 	   </rsc_location>'"
 do_cmd make_constraint_adv $test_node_1 $node_xml
 
-do_cmd wait_for_state S_IDLE 10 $test_node_1 
+do_cmd wait_for_state S_IDLE 30 $test_node_1 
 cts_assert "S_IDLE not reached on $test_node_1 (CIB create)!"
 
 do_cmd is_running rsc1 $test_node_1

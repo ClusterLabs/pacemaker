@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.23 2004/09/15 20:19:23 andrew Exp $ */
+/* $Id: crm.h,v 1.24 2004/09/17 13:03:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,8 +169,11 @@ typedef GList* GListPtr;
 #define crm_xml_verbose(x,y) print_xml_formatted(LOG_VERBOSE,__FUNCTION__, x,y)
 #define crm_xml_trace(x,y)   print_xml_formatted(LOG_TRACE,  __FUNCTION__, x,y)
 
-#define crm_malloc(x) malloc(x)
+#define crm_malloc(x,y) x = malloc(y);	\
+	if(x == NULL) {			\
+		crm_crit("out of memory");	\
+	}
 #define crm_strdup(x) strdup(x)
 #define crm_free(x)   if(x) { free(x); x=NULL; }
-
+#define crm_str(x)    (const char*)(x?x:"<null>")
 #endif

@@ -110,7 +110,7 @@ void dump_rsc_info(void);
 # endif
 #endif
 
-#define ELSEIF_FSA_ACTION(x,y) else IF_FSA_ACTION(x,y)
+/* #define ELSEIF_FSA_ACTION(x,y) else IF_FSA_ACTION(x,y) */
 
 const char *dot_intro = "digraph \"g\" {\n"
 "	size = \"30,30\"\n"
@@ -168,7 +168,7 @@ const char     *fsa_our_dc;
 
 fsa_timer_t *election_trigger = NULL;		/*  */
 fsa_timer_t *election_timeout = NULL;		/*  */
-fsa_timer_t *shutdown_escalation_timmer = NULL;	/*  */
+fsa_timer_t *shutdown_escalation_timmer = NULL; /*  */
 fsa_timer_t *integration_timer = NULL;
 fsa_timer_t *dc_heartbeat = NULL;
 
@@ -261,8 +261,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 
 		/* logging : *before* the state is changed */
 		IF_FSA_ACTION(A_ERROR, do_log)
-		ELSEIF_FSA_ACTION(A_WARN, do_log)
-		ELSEIF_FSA_ACTION(A_LOG,  do_log)
+		else IF_FSA_ACTION(A_WARN, do_log)
+		else IF_FSA_ACTION(A_LOG,  do_log)
 
 		/* update state variables */
 		next_state  = crmd_fsa_state[cur_input][cur_state];
@@ -310,32 +310,32 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	
 	
 		/* get out of here NOW! before anything worse happens */
-	ELSEIF_FSA_ACTION(A_EXIT_1,	do_exit)
+	else IF_FSA_ACTION(A_EXIT_1,	do_exit)
 		
-		ELSEIF_FSA_ACTION(A_STARTUP,	do_startup)
+		else IF_FSA_ACTION(A_STARTUP,	do_startup)
 		
-		ELSEIF_FSA_ACTION(A_CIB_START,  do_cib_control)
-		ELSEIF_FSA_ACTION(A_READCONFIG,	do_read_config)
-		ELSEIF_FSA_ACTION(A_HA_CONNECT, do_ha_control)
-		ELSEIF_FSA_ACTION(A_LRM_CONNECT,do_lrm_control)
-		ELSEIF_FSA_ACTION(A_CCM_CONNECT,do_ccm_control)
+		else IF_FSA_ACTION(A_CIB_START,  do_cib_control)
+		else IF_FSA_ACTION(A_READCONFIG,	do_read_config)
+		else IF_FSA_ACTION(A_HA_CONNECT, do_ha_control)
+		else IF_FSA_ACTION(A_LRM_CONNECT,do_lrm_control)
+		else IF_FSA_ACTION(A_CCM_CONNECT,do_ccm_control)
 		
 		/* sub-system start */
-		ELSEIF_FSA_ACTION(A_TE_START,	do_te_control)
-		ELSEIF_FSA_ACTION(A_PE_START,	do_pe_control)
+		else IF_FSA_ACTION(A_TE_START,	do_te_control)
+		else IF_FSA_ACTION(A_PE_START,	do_pe_control)
 		
 		/* sub-system restart
 		 */
-		ELSEIF_FSA_ACTION(O_CIB_RESTART,do_cib_control)
-		ELSEIF_FSA_ACTION(O_PE_RESTART, do_pe_control)
-		ELSEIF_FSA_ACTION(O_TE_RESTART, do_te_control)
+		else IF_FSA_ACTION(O_CIB_RESTART,do_cib_control)
+		else IF_FSA_ACTION(O_PE_RESTART, do_pe_control)
+		else IF_FSA_ACTION(O_TE_RESTART, do_te_control)
 		
-		ELSEIF_FSA_ACTION(A_STARTED,	do_started)
+		else IF_FSA_ACTION(A_STARTED,	do_started)
 		
 		/* DC Timer */
-		ELSEIF_FSA_ACTION(O_DC_TIMER_RESTART,	do_dc_timer_control)
-		ELSEIF_FSA_ACTION(A_DC_TIMER_STOP,	do_dc_timer_control)
-		ELSEIF_FSA_ACTION(A_DC_TIMER_START,	do_dc_timer_control)
+		else IF_FSA_ACTION(O_DC_TIMER_RESTART,	do_dc_timer_control)
+		else IF_FSA_ACTION(A_DC_TIMER_STOP,	do_dc_timer_control)
+		else IF_FSA_ACTION(A_DC_TIMER_START,	do_dc_timer_control)
 		
 		/*
 		 * Highest priority actions
@@ -345,74 +345,74 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 * the status section seems to dissappear after the BUMPGEN!!!
 		 * Yet BUMPGEN is non-destructive
 		 */
-		ELSEIF_FSA_ACTION(A_TE_COPYTO,		do_te_copyto)
-		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
+		else IF_FSA_ACTION(A_TE_COPYTO,		do_te_copyto)
+		else IF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
 
-		ELSEIF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
-		ELSEIF_FSA_ACTION(A_RECOVER,		do_recover)
-		ELSEIF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_update_node_status)
-		ELSEIF_FSA_ACTION(A_JOIN_ACK,		do_ack_welcome)
-		ELSEIF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
-		ELSEIF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)
-		ELSEIF_FSA_ACTION(A_ELECT_TIMER_STOP,	do_election_timer_ctrl)
-		ELSEIF_FSA_ACTION(A_ELECT_TIMER_START,	do_election_timer_ctrl)
-		ELSEIF_FSA_ACTION(A_ELECTION_COUNT,	do_election_count_vote)
-		ELSEIF_FSA_ACTION(A_ELECTION_TIMEOUT,	do_election_timer_ctrl)
+		else IF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
+		else IF_FSA_ACTION(A_RECOVER,		do_recover)
+		else IF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_update_node_status)
+		else IF_FSA_ACTION(A_JOIN_ACK,		do_ack_welcome)
+		else IF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
+		else IF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)
+		else IF_FSA_ACTION(A_ELECT_TIMER_STOP,	do_election_timer_ctrl)
+		else IF_FSA_ACTION(A_ELECT_TIMER_START,	do_election_timer_ctrl)
+		else IF_FSA_ACTION(A_ELECTION_COUNT,	do_election_count_vote)
+		else IF_FSA_ACTION(A_ELECTION_TIMEOUT,	do_election_timer_ctrl)
 		
 		/*
 		 * "Get this over with" actions
 		 */
-		ELSEIF_FSA_ACTION(A_MSG_STORE,		do_msg_store)
+		else IF_FSA_ACTION(A_MSG_STORE,		do_msg_store)
 		
 		/*
 		 * High priority actions
 		 * Update the cache first
 		 */
-		ELSEIF_FSA_ACTION(A_CCM_UPDATE_CACHE,	do_ccm_update_cache)
-		ELSEIF_FSA_ACTION(A_CCM_EVENT,		do_ccm_event)
+		else IF_FSA_ACTION(A_CCM_UPDATE_CACHE,	do_ccm_update_cache)
+		else IF_FSA_ACTION(A_CCM_EVENT,		do_ccm_event)
 		
 		/*
 		 * Medium priority actions
 		 */
-		ELSEIF_FSA_ACTION(A_DC_TAKEOVER,	do_dc_takeover)
-		ELSEIF_FSA_ACTION(A_DC_RELEASE,		do_dc_release)
-		ELSEIF_FSA_ACTION(A_JOIN_WELCOME_ALL,	do_send_welcome_all)
-		ELSEIF_FSA_ACTION(A_JOIN_WELCOME,	do_send_welcome)
-		ELSEIF_FSA_ACTION(A_JOIN_PROCESS_ACK,	do_process_welcome_ack)
+		else IF_FSA_ACTION(A_DC_TAKEOVER,	do_dc_takeover)
+		else IF_FSA_ACTION(A_DC_RELEASE,		do_dc_release)
+		else IF_FSA_ACTION(A_JOIN_WELCOME_ALL,	do_send_welcome_all)
+		else IF_FSA_ACTION(A_JOIN_WELCOME,	do_send_welcome)
+		else IF_FSA_ACTION(A_JOIN_PROCESS_ACK,	do_process_welcome_ack)
 		
 		/*
 		 * Low(er) priority actions
 		 * Make sure the CIB is always updated before invoking the
 		 * PE, and the PE before the TE
 		 */
-		ELSEIF_FSA_ACTION(A_CIB_INVOKE_LOCAL,	do_cib_invoke)
-		ELSEIF_FSA_ACTION(A_CIB_INVOKE,		do_cib_invoke)
-		ELSEIF_FSA_ACTION(A_LRM_INVOKE,		do_lrm_invoke)
-		ELSEIF_FSA_ACTION(A_LRM_EVENT,		do_lrm_event)
-		ELSEIF_FSA_ACTION(A_TE_CANCEL,		do_te_invoke)
-		ELSEIF_FSA_ACTION(A_PE_INVOKE,		do_pe_invoke)
-		ELSEIF_FSA_ACTION(A_TE_INVOKE,		do_te_invoke)
-		ELSEIF_FSA_ACTION(A_ANNOUNCE,		do_announce)
+		else IF_FSA_ACTION(A_CIB_INVOKE_LOCAL,	do_cib_invoke)
+		else IF_FSA_ACTION(A_CIB_INVOKE,		do_cib_invoke)
+		else IF_FSA_ACTION(A_LRM_INVOKE,		do_lrm_invoke)
+		else IF_FSA_ACTION(A_LRM_EVENT,		do_lrm_event)
+		else IF_FSA_ACTION(A_TE_CANCEL,		do_te_invoke)
+		else IF_FSA_ACTION(A_PE_INVOKE,		do_pe_invoke)
+		else IF_FSA_ACTION(A_TE_INVOKE,		do_te_invoke)
+		else IF_FSA_ACTION(A_ANNOUNCE,		do_announce)
 		
 		/* sub-system stop */
-		ELSEIF_FSA_ACTION(A_PE_STOP,		do_pe_control)
-		ELSEIF_FSA_ACTION(A_TE_STOP,		do_te_control)
-		ELSEIF_FSA_ACTION(A_DC_RELEASED,	do_dc_release)
+		else IF_FSA_ACTION(A_PE_STOP,		do_pe_control)
+		else IF_FSA_ACTION(A_TE_STOP,		do_te_control)
+		else IF_FSA_ACTION(A_DC_RELEASED,	do_dc_release)
 
-		ELSEIF_FSA_ACTION(A_HA_DISCONNECT,	do_ha_control)
-		ELSEIF_FSA_ACTION(A_CCM_DISCONNECT,	do_ccm_control)
-		ELSEIF_FSA_ACTION(A_LRM_DISCONNECT,	do_lrm_control)
-		ELSEIF_FSA_ACTION(A_CIB_STOP,		do_cib_control)		
+		else IF_FSA_ACTION(A_HA_DISCONNECT,	do_ha_control)
+		else IF_FSA_ACTION(A_CCM_DISCONNECT,	do_ccm_control)
+		else IF_FSA_ACTION(A_LRM_DISCONNECT,	do_lrm_control)
+		else IF_FSA_ACTION(A_CIB_STOP,		do_cib_control)		
 		/* time to go now... */
 		
 		/* Some of these can probably be consolidated */
-		ELSEIF_FSA_ACTION(A_SHUTDOWN,   do_shutdown)
-		ELSEIF_FSA_ACTION(A_STOP,	do_stop)
+		else IF_FSA_ACTION(A_SHUTDOWN,   do_shutdown)
+		else IF_FSA_ACTION(A_STOP,	do_stop)
 		
 		/* exit gracefully */
-		ELSEIF_FSA_ACTION(A_EXIT_0,	do_exit)
+		else IF_FSA_ACTION(A_EXIT_0,	do_exit)
 
-/*		ELSEIF_FSA_ACTION(A_, do_) */
+/*		else IF_FSA_ACTION(A_, do_) */
 		
 		else if((actions & A_MSG_PROCESS) != 0
 			|| is_message()) {

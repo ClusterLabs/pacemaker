@@ -499,11 +499,10 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 	} else if (client_channel->ch_status == IPC_DISCONNECT) {
 		crm_err("Channel was disconnected");
 	} else {
-		crmd_client_t *blank_client =
-			(crmd_client_t *)crm_malloc(sizeof(crmd_client_t));
+		crmd_client_t *blank_client = NULL;
+		crm_malloc(blank_client, sizeof(crmd_client_t));
 	
 		if (blank_client == NULL) {
-			crm_err("Could not allocate memory for a blank crmd_client_t");
 			return FALSE;
 		}
 		client_channel->ops->set_recv_qlen(client_channel, 100);

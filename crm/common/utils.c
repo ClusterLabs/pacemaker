@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.15 2004/09/15 20:16:48 andrew Exp $ */
+/* $Id: utils.c,v 1.16 2004/09/17 13:03:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -62,11 +62,13 @@ generateReference(const char *custom1, const char *custom2)
 	if(local_cust2 == NULL) local_cust2 = "_empty_";
 	reference_len += strlen(local_cust2);
 	
-	since_epoch = (char*)crm_malloc(reference_len*(sizeof(char)));
-	
-	sprintf(since_epoch, "%s-%s-%ld-%u",
-		local_cust1, local_cust2,
-		(unsigned long)time(NULL), ref_counter++);
+	crm_malloc(since_epoch, reference_len*(sizeof(char)));
+
+	if(since_epoch != NULL) {
+		sprintf(since_epoch, "%s-%s-%ld-%u",
+			local_cust1, local_cust2,
+			(unsigned long)time(NULL), ref_counter++);
+	}
 
 	return since_epoch;
 }
@@ -84,21 +86,29 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 		while(lpc <= len) {
 			if (srcstring[lpc] == separator
 			    || srcstring[lpc] == '\0') {
-				*name = (char*)crm_malloc(sizeof(char)*lpc+1);
+				crm_malloc(*name, sizeof(char)*lpc+1);
+				if(*name == NULL) {
+					break; /* and return FALSE */
+				}
 				strncpy(*name, srcstring, lpc);
 				(*name)[lpc] = '\0';
 
-/* this sucks but as the strtok manpage says.. it *is* a bug */
-				len = len-lpc;
-				len--;
-				if(len > 0) {
-					*value = (char*)crm_malloc(
-						sizeof(char)*len+1);
+/* this sucks but as the strtok manpage says..
+ * it *is* a bug
+ */
+				len = len-lpc; len--;
+				if(len <= 0) {
+					*value = NULL;
+				} else {
+
+					crm_malloc(*value, sizeof(char)*len+1);
+					if(*value == NULL) {
+						crm_free(*name);
+						break; /* and return FALSE */
+					}
 					temp = srcstring+lpc+1;
 					strncpy(*value, temp, len);
 					(*value)[len] = '\0';
-				} else {
-					*value = NULL;
 				}
 
 				return TRUE;
@@ -117,12 +127,14 @@ char *
 generate_hash_key(const char *crm_msg_reference, const char *sys)
 {
 	int ref_len = strlen(sys?sys:"none") + strlen(crm_msg_reference) + 2;
-	char *hash_key = (char*)crm_malloc(sizeof(char)*(ref_len));
+	char *hash_key = NULL;
+	crm_malloc(hash_key, sizeof(char)*(ref_len));
 
-	
-	sprintf(hash_key, "%s_%s", sys?sys:"none", crm_msg_reference);
-	hash_key[ref_len-1] = '\0';
-	crm_debug("created hash key: (%s)", hash_key);
+	if(hash_key != NULL) {
+		sprintf(hash_key, "%s_%s", sys?sys:"none", crm_msg_reference);
+		hash_key[ref_len-1] = '\0';
+		crm_debug("created hash key: (%s)", hash_key);
+	}
 	return hash_key;
 }
 
@@ -131,7 +143,6 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 {
 	int ref_len;
 	char *hash_value;
-
 	
 	if (src_node == NULL || src_subsys == NULL) {
 		return NULL;
@@ -148,7 +159,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	}
     
 	ref_len = strlen(src_subsys) + strlen(src_node) + 2;
-	hash_value = (char*)crm_malloc(sizeof(char)*(ref_len));
+	crm_malloc(hash_value, sizeof(char)*(ref_len));
 	if (!hash_value) {
 		crm_err("memory allocation failed in "
 		       "generate_hash_value()\n");
@@ -168,23 +179,21 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 	char *char_value = (char*)value;
 	int value_len = strlen(char_value);
 
-	crm_info("Decoding hash value: (%s:%d)",
-	       char_value,
-	       value_len);
+	crm_info("Decoding hash value: (%s:%d)", char_value, value_len);
     	
 	if (strcmp(CRM_SYSTEM_DC, (char*)value) == 0) {
 		*node = NULL;
 		*subsys = (char*)crm_strdup(char_value);
-		if (!*subsys) {
+		if (*subsys == NULL) {
 			crm_err("memory allocation failed in "
 			       "decode_hash_value()\n");
 			return FALSE;
 		}
-		crm_info("Decoded value: (%s:%d)", *subsys, 
-		       (int)strlen(*subsys));
+		crm_info("Decoded value: (%s:%d)", *subsys,
+			 (int)strlen(*subsys));
 		return TRUE;
-	}
-	else if (char_value != NULL) {
+		
+	} else if (char_value != NULL) {
 		if (decodeNVpair(char_value, '_', node, subsys)) {
 			return TRUE;
 		} else {
@@ -201,9 +210,13 @@ char *
 crm_itoa(int an_int)
 {
 	int len = 32;
-	char *buffer = crm_malloc(sizeof(char)*(len+1));
-	snprintf(buffer, len, "%d", an_int);
-
+	char *buffer = NULL;
+	
+	crm_malloc(buffer, sizeof(char)*(len+1));
+	if(buffer != NULL) {
+		snprintf(buffer, len, "%d", an_int);
+	}
+	
 	return buffer;
 }
 
@@ -272,9 +285,17 @@ compare_version(const char *version1, const char *version2)
 	char *step1 = NULL, *step2 = NULL;
 	char *rest1 = NULL, *rest2 = NULL;
 
-	if(version1 != NULL) rest1 = crm_strdup(version1);
-	if(version2 != NULL) rest2 = crm_strdup(version2);
-
+	if(version1 != NULL) {
+		rest1 = crm_strdup(version1);
+	} else {
+		version1 = "<null>";
+	}
+	if(version2 != NULL) {
+		rest2 = crm_strdup(version2);
+	} else {
+		version2 = "<null>";
+	}
+	
 	while(1) {
 		int cmp = 0;
 		int step1_i = 0;
@@ -299,7 +320,8 @@ compare_version(const char *version1, const char *version2)
 
 		crm_trace("compare[%d (%d)]: %d(%s)  %d(%s)",
 			  lpc++, cmp,
-			  step1_i, step1, step2_i, step2);
+			  step1_i, crm_str(step1),
+			  step2_i, crm_str(step2));
 
 		crm_free(rest1);
 		crm_free(rest2);

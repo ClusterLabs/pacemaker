@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.27 2004/09/15 20:24:53 andrew Exp $ */
+/* $Id: unpack.c,v 1.28 2004/09/17 13:03:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -199,7 +199,7 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 		uname  = xmlGetProp(xml_obj, XML_ATTR_UNAME);
 		type   = xmlGetProp(xml_obj, XML_ATTR_TYPE);
 
-		crm_verbose("Processing node %s", id);
+		crm_verbose("Processing node %s/%s", uname, id);
 
 		if(attrs != NULL) {
 			attrs = attrs->children;
@@ -213,11 +213,22 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 			crm_err("Must specify type tag in <node>");
 			xml_iter_continue(xml_obj);
 		}
-		new_node  = crm_malloc(sizeof(node_t));
+		crm_malloc(new_node, sizeof(node_t));
+		if(new_node == NULL) {
+			return FALSE;
+		}
+		
 		new_node->weight  = 1.0;
 		new_node->fixed   = FALSE;
-		new_node->details = (struct node_shared_s*)
-			crm_malloc(sizeof(struct node_shared_s));
+		crm_malloc(new_node->details,
+			   sizeof(struct node_shared_s));
+
+		if(new_node->details == NULL) {
+			crm_free(new_node);
+			return FALSE;
+		}
+
+		crm_verbose("Creaing node for entry %s/%s", uname, id);
 		new_node->details->id		= id;
 		new_node->details->uname	= uname;
 		new_node->details->type		= node_ping;
@@ -226,16 +237,15 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 		new_node->details->shutdown	= FALSE;
 		new_node->details->running_rsc	= NULL;
 		new_node->details->agents	= NULL;
-		new_node->details->attrs	= g_hash_table_new(
+		new_node->details->attrs        = g_hash_table_new(
 			g_str_hash, g_str_equal);
-
+		
 		if(safe_str_eq(type, "member")) {
 			new_node->details->type = node_member;
 		}
 
 		add_node_attrs(attrs, new_node);
 		*nodes = g_list_append(*nodes, new_node);    
-
 		crm_verbose("Done with node %s", xmlGetProp(xml_obj, "uname"));
 
 		crm_debug_action(print_node("Added", new_node, FALSE));
@@ -282,10 +292,15 @@ unpack_resources(xmlNodePtr xml_resources,
 			crm_err("Must specify id tag in <resource>");
 			xml_iter_continue(xml_obj);
 		}
-		new_rsc = crm_malloc(sizeof(resource_t));
+		crm_malloc(new_rsc, sizeof(resource_t));
+
+		if(new_rsc == NULL) {
+			return FALSE;
+		}
+		
 		new_rsc->id		= id;
 		new_rsc->xml		= xml_obj;
-		new_rsc->agent		= crm_malloc(sizeof(lrm_agent_t));
+		crm_malloc(new_rsc->agent, sizeof(lrm_agent_t));
 		new_rsc->agent->class	= xmlGetProp(xml_obj, "class");
 		new_rsc->agent->type	= xmlGetProp(xml_obj, "type");
 		new_rsc->agent->version	= version?version:"0.0";
@@ -401,29 +416,30 @@ rsc2node_new(const char *id, resource_t *rsc,
 	rsc_to_node_t *new_con = NULL;
 
 	if(rsc == NULL || id == NULL) {
-		crm_err("Invalid constraint %s for rsc=%p)", id, rsc);
+		crm_err("Invalid constraint %s for rsc=%p", id, rsc);
 		return NULL;
 	}
 
-	new_con = (rsc_to_node_t*)crm_malloc(sizeof(rsc_to_node_t));
-	
-	new_con->id           = id;
-	new_con->rsc_lh       = rsc;
-	new_con->node_list_rh = NULL;
-	new_con->can          = can;
-
-	if(can) {
-		new_con->weight = weight;
-	} else {
-		new_con->weight = -1;
+	crm_malloc(new_con, sizeof(rsc_to_node_t));
+	if(new_con != NULL) {
+		new_con->id           = id;
+		new_con->rsc_lh       = rsc;
+		new_con->node_list_rh = NULL;
+		new_con->can          = can;
+		
+		if(can) {
+			new_con->weight = weight;
+		} else {
+			new_con->weight = -1;
+		}
+		
+		if(node != NULL) {
+			new_con->node_list_rh = g_list_append(NULL, node);
+		}
+		
+		*node_constraints = g_list_append(*node_constraints, new_con);
 	}
 	
-	if(node != NULL) {
-		new_con->node_list_rh = g_list_append(NULL, node);
-	}
-	
-	*node_constraints = g_list_append(*node_constraints, new_con);
-
 	return new_con;
 }
 
@@ -582,11 +598,14 @@ unpack_lrm_agents(node_t *node, xmlNodePtr agent_list)
 	xml_child_iter(
 		agent_list, xml_agent, XML_LRM_TAG_AGENT,
 
-		agent = (lrm_agent_t*)crm_malloc(sizeof(lrm_agent_t));
-		agent->class = xmlGetProp(xml_agent, "class");
-		agent->type  = xmlGetProp(xml_agent, "type");
-		version      = xmlGetProp(xml_agent, "version");
-
+		crm_malloc(agent, sizeof(lrm_agent_t));
+		if(agent == NULL) {
+			continue;
+		}
+		
+		agent->class   = xmlGetProp(xml_agent, "class");
+		agent->type    = xmlGetProp(xml_agent, "type");
+		version        = xmlGetProp(xml_agent, "version");
 		agent->version = version?version:"0.0";
 
 		crm_trace("Adding agent %s/%s v%s to node %s",
@@ -819,22 +838,25 @@ rsc2rsc_new(const char *id, enum con_strength strength, enum rsc_con_type type,
 		return FALSE;
 	}
 
-	new_con      = crm_malloc(sizeof(rsc_to_rsc_t));
-
-	new_con->id       = id;
-	new_con->rsc_lh   = rsc_lh;
-	new_con->rsc_rh   = rsc_rh;
-	new_con->strength = strength;
-	new_con->variant  = type;
+	crm_malloc(new_con, sizeof(rsc_to_rsc_t));
+	if(new_con != NULL) {
+		new_con->id       = id;
+		new_con->rsc_lh   = rsc_lh;
+		new_con->rsc_rh   = rsc_rh;
+		new_con->strength = strength;
+		new_con->variant  = type;
+		
+		inverted_con = invert_constraint(new_con);
+		
+		rsc_lh->rsc_cons = g_list_insert_sorted(
+			rsc_lh->rsc_cons, new_con, sort_cons_strength);
+		
+		rsc_rh->rsc_cons = g_list_insert_sorted(
+			rsc_rh->rsc_cons, inverted_con, sort_cons_strength);
+	} else {
+		return FALSE;
+	}
 	
-	inverted_con = invert_constraint(new_con);
-
-	rsc_lh->rsc_cons = g_list_insert_sorted(
-		rsc_lh->rsc_cons, new_con, sort_cons_strength);
-	
-	rsc_rh->rsc_cons = g_list_insert_sorted(
-		rsc_rh->rsc_cons, inverted_con, sort_cons_strength);
-
 	return TRUE;
 }
 
@@ -850,15 +872,18 @@ order_new(action_t *before, action_t *after, enum con_strength strength,
 		return FALSE;
 	}
 
-	order = (order_constraint_t*)crm_malloc(sizeof(order_constraint_t));
-	
-	order->id        = order_id++;
-	order->strength  = strength;
-	order->lh_action = before;
-	order->rh_action = after;
-	
-	*action_constraints = g_list_append(*action_constraints, order);
+	crm_malloc(order, sizeof(order_constraint_t));
 
+	if(order != NULL) {
+		order->id        = order_id++;
+		order->strength  = strength;
+		order->lh_action = before;
+		order->rh_action = after;
+		
+		*action_constraints = g_list_append(
+			*action_constraints, order);
+	}
+	
 	return TRUE;
 }
 
@@ -993,7 +1018,8 @@ match_attrs(const char *attr, const char *op, const char *value,
 	
 	if(attr == NULL || op == NULL) {
 		crm_err("Invlaid attribute or operation in expression"
-			" (\'%s\' \'%s\' \'%s\')", attr, op, value);
+			" (\'%s\' \'%s\' \'%s\')",
+			crm_str(attr), crm_str(op), crm_str(value));
 		return NULL;
 	}
 	
@@ -1138,8 +1164,9 @@ add_node_attrs(xmlNodePtr attrs, node_t *node)
 
 
 gboolean
-unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
-		    GListPtr *node_constraints)
+unpack_rsc_location(
+	xmlNodePtr xml_obj,
+	GListPtr rsc_list, GListPtr node_list, GListPtr *node_constraints)
 {
 /*
 
@@ -1209,15 +1236,10 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 				       can_run, NULL, node_constraints);
 
 		if(new_con == NULL) {
-			crm_err("couldnt create constraint %s", rule_id);
 			continue;
 		}
 		
-		/* feels like a hack */
-		if(rule->children == NULL && can_run) {
-			new_con->node_list_rh = node_list_dup(node_list,FALSE);
-		}
-
+		gboolean rule_has_expressions = FALSE;
 		xml_child_iter(
 			rule, expr, "expression",
 
@@ -1225,7 +1247,8 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 			const char *op    = xmlGetProp(expr, "operation");
 			const char *value = xmlGetProp(expr, "value");
 			const char *type  = xmlGetProp(expr, "type");
-
+			
+			rule_has_expressions = TRUE;
 			crm_trace("processing expression: %s",
 				  xmlGetProp(expr, "id"));
 
@@ -1255,11 +1278,20 @@ unpack_rsc_location(xmlNodePtr xml_obj, GListPtr rsc_list, GListPtr node_list,
 			pe_free_shallow_adv(match_L,  FALSE);
 			pe_free_shallow_adv(old_list, TRUE);
 			);
+
+		if(rule_has_expressions == FALSE) {
+			/* feels like a hack */
+			crm_debug("Rule %s had no expressions,"
+				  " adding all nodes", xmlGetProp(rule, "id"));
+			
+			new_con->node_list_rh = node_list_dup(node_list,FALSE);
+		}
 		
 		if(new_con->node_list_rh == NULL) {
 			crm_warn("No matching nodes for constraint/rule %s/%s",
 				 id, xmlGetProp(rule, "id"));
 		}
+		
 		crm_debug_action(print_rsc_to_node("Added", new_con, FALSE));
 		);
 

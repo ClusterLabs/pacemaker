@@ -94,14 +94,14 @@ sub string_search() {
     my %results    = {};
     my $num_lines  = 0;
 
-    print STDOUT "Starting search...\n";
+    print STDOUT "Starting search in $log_file...\n";
     open(LOG, $log_file);
 
     seek LOG, 0, 2;
 
     for(;;)
     {
-	print STDOUT "Checking $log_file for more data...\n";
+#	print STDOUT "Checking $log_file for more data...\n";
 	for($curpos = tell LOG; $_ = <LOG>; $curpos = tell LOG) 
 	{
 	    my $lpc = 0;
@@ -117,7 +117,7 @@ sub string_search() {
 	    foreach $regex (@search_for) {
 		$lpc = $lpc +1;
 		if ( $line =~ /$regex/ ) {
-		    print STDOUT "Found match for (".$regex."): ".$line;
+		    print STDOUT "Found match for (".$regex."): \n\t".$line;
 		    if($match_all eq "0") {
 			return $lpc; 
 		    } else {

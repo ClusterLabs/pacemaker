@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.1 2004/09/15 09:16:55 andrew Exp $ */
+/* $Id: messages.c,v 1.2 2004/09/17 13:03:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -123,19 +123,21 @@ cib_process_request(const char *op,
 		
 		/* modify the timestamp */
 		set_node_tstamp(tmpCib);
-		old_value =
-			xmlGetProp(get_the_CIB(), XML_ATTR_GENERATION);
+		old_value = xmlGetProp(get_the_CIB(), XML_ATTR_GENERATION);
 		
 		if(old_value != NULL) {
-			new_value = (char*)crm_malloc(128*(sizeof(char)));
-			int_value = atoi(old_value);
-			sprintf(new_value, "%d", ++int_value);
+			crm_malloc(new_value, 128*(sizeof(char)));
+			if(new_value != NULL) {
+				int_value = atoi(old_value);
+				sprintf(new_value, "%d", ++int_value);
+			}
+			
 		} else {
 			new_value = crm_strdup("0");
 		}
 
 		crm_debug("Generation %d(%s)->%s",
-		       int_value, old_value, new_value);
+			  int_value, crm_str(old_value), crm_str(new_value));
 		
 		set_xml_property_copy(tmpCib, XML_ATTR_GENERATION, new_value);
 		crm_free(new_value);
@@ -325,12 +327,13 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 	
 	if (section == NULL || xml_section == NULL) {
 		crm_err("Section %s not found in message."
-		       "  CIB update is corrupt, ignoring.", section);
+			"  CIB update is corrupt, ignoring.",
+			crm_str(section));
 		return CIBRES_FAILED_NOSECTION;
 	}
 
 	if(CIB_OP_NONE > operation > CIB_OP_MAX) {
-		crm_err("Invalid operation on section %s", section);
+		crm_err("Invalid operation on section %s", crm_str(section));
 		return CIBRES_FAILED;
 	}
 

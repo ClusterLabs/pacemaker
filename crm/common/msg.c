@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.6 2004/08/29 03:01:12 msoffen Exp $ */
+/* $Id: msg.c,v 1.7 2004/09/17 13:03:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -66,19 +66,21 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 	
 	/* 2 = "_" + '\0' */
 	sub_type_len = strlen(to) + strlen(XML_ATTR_REQUEST) + 2; 
-	sub_type_target =
-		(char*)crm_malloc(sizeof(char)*(sub_type_len));
+	crm_malloc(sub_type_target, sizeof(char)*(sub_type_len));
 
-	sprintf(sub_type_target, "%s_%s", to, XML_ATTR_REQUEST);
+	if(sub_type_target != NULL) {
+		sprintf(sub_type_target, "%s_%s", to, XML_ATTR_REQUEST);
+	}
 	root_xml_node   = create_xml_node(NULL, sub_type_target);
-	set_xml_property_copy(root_xml_node,
-			      XML_ATTR_REFERENCE,
-			      crm_msg_reference);
+	set_xml_property_copy(
+		root_xml_node, XML_ATTR_REFERENCE, crm_msg_reference);
     
 	msg_type_len = strlen(to) + 10 + 1; /* + "_operation" + '\0' */
-	msg_type_target =
-		(char*)crm_malloc(sizeof(char)*(msg_type_len));
-	sprintf(msg_type_target, "%s_operation", to);
+	crm_malloc(msg_type_target, sizeof(char)*(msg_type_len));
+	if(msg_type_target != NULL) {
+		sprintf(msg_type_target, "%s_operation", to);
+	}
+	
 	set_xml_property_copy(root_xml_node, msg_type_target, CRM_OP_PING);
 	crm_free(msg_type_target);
 

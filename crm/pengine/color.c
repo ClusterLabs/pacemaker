@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.16 2004/09/14 05:54:43 andrew Exp $ */
+/* $Id: color.c,v 1.17 2004/09/17 13:03:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -90,7 +90,7 @@ apply_node_constraints(GListPtr constraints, GListPtr nodes)
 			g_list_append(cons->rsc_lh->node_cons, cons);
 
 		if(cons->node_list_rh == NULL) {
-			crm_err("RHS of rsc_to_node (%s) is NULL", cons->id);
+			crm_err("RHS of constraint %s is NULL", cons->id);
 			continue;
 		}
 		crm_debug_action(print_resource("before update", rsc_lh,TRUE));

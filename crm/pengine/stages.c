@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.19 2004/09/14 05:54:43 andrew Exp $ */
+/* $Id: stages.c,v 1.20 2004/09/17 13:03:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -405,14 +405,6 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
 
-// compress(action1, action2)
-
-	
-/*
-	for(lpc = 0; lpc < g_list_length(action_constraints);  lpc++) {
-		order_constraint_t *order = (order_constraint_t*)
-			g_list_nth_data(action_constraints, lpc);
-*/
 	slist_iter(
 		order, order_constraint_t, action_constraints, lpc,
 			
@@ -426,25 +418,26 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 		crm_debug_action(
 			print_action("RH (stage7)", order->rh_action, FALSE));
 
-		wrapper = (action_wrapper_t*)
-			crm_malloc(sizeof(action_wrapper_t));
-		wrapper->action = order->rh_action;
-		wrapper->strength = order->strength;
-
-		list = order->lh_action->actions_after;
-		list = g_list_append(list, wrapper);
-		order->lh_action->actions_after = list;
-
-		wrapper = (action_wrapper_t*)
-			crm_malloc(sizeof(action_wrapper_t));
-		wrapper->action = order->lh_action;
-		wrapper->strength = order->strength;
-
-		list = order->rh_action->actions_before;
-		list = g_list_append(list, wrapper);
-		order->rh_action->actions_before = list;
+		crm_malloc(wrapper, sizeof(action_wrapper_t));
+		if(wrapper != NULL) {
+			wrapper->action = order->rh_action;
+			wrapper->strength = order->strength;
+			
+			list = order->lh_action->actions_after;
+			list = g_list_append(list, wrapper);
+			order->lh_action->actions_after = list;
+		}
+		
+		crm_malloc(wrapper, sizeof(action_wrapper_t));
+		if(wrapper != NULL) {
+			wrapper->action = order->lh_action;
+			wrapper->strength = order->strength;
+			
+			list = order->rh_action->actions_before;
+			list = g_list_append(list, wrapper);
+			order->rh_action->actions_before = list;
+		}
 		);
-/*	} */
 
 	update_action_states(actions);
 

@@ -224,72 +224,96 @@ do_startup(long long action,
 	}	
 
 	/* set up the timers */
-	dc_heartbeat     = (fsa_timer_t *)crm_malloc(sizeof(fsa_timer_t));
-	integration_timer= (fsa_timer_t *)crm_malloc(sizeof(fsa_timer_t));
-	election_trigger = (fsa_timer_t *)crm_malloc(sizeof(fsa_timer_t));
-	election_timeout = (fsa_timer_t *)crm_malloc(sizeof(fsa_timer_t));
-	shutdown_escalation_timmer = (fsa_timer_t *)
-		crm_malloc(sizeof(fsa_timer_t));
-
+	crm_malloc(dc_heartbeat, sizeof(fsa_timer_t));
+	crm_malloc(integration_timer, sizeof(fsa_timer_t));
+	crm_malloc(election_trigger, sizeof(fsa_timer_t));
+	crm_malloc(election_timeout, sizeof(fsa_timer_t));
+	crm_malloc(shutdown_escalation_timmer, sizeof(fsa_timer_t));
 
 	interval = interval * 1000;
-	
-	election_trigger->source_id = -1;
-	election_trigger->period_ms = -1;
-	election_trigger->fsa_input = I_DC_TIMEOUT;
-	election_trigger->callback = timer_popped;
 
-	dc_heartbeat->source_id = -1;
-	dc_heartbeat->period_ms = -1;
-	dc_heartbeat->fsa_input = I_NULL;
-	dc_heartbeat->callback = do_dc_heartbeat;
-		
-	election_timeout->source_id = -1;
-	election_timeout->period_ms = -1;
-	election_timeout->fsa_input = I_ELECTION_DC;
-	election_timeout->callback = timer_popped;
-
-	integration_timer->source_id = -1;
-	integration_timer->period_ms = -1;
-	integration_timer->fsa_input = I_INTEGRATION_TIMEOUT;
-	integration_timer->callback = timer_popped;
+	if(election_trigger != NULL) {
+		election_trigger->source_id = -1;
+		election_trigger->period_ms = -1;
+		election_trigger->fsa_input = I_DC_TIMEOUT;
+		election_trigger->callback = timer_popped;
+	} else {
+		was_error = TRUE;
+	}
 	
-	shutdown_escalation_timmer->source_id = -1;
-	shutdown_escalation_timmer->period_ms = -1;
-	shutdown_escalation_timmer->fsa_input = I_TERMINATE;
-	shutdown_escalation_timmer->callback = timer_popped;
+	if(dc_heartbeat != NULL) {
+		dc_heartbeat->source_id = -1;
+		dc_heartbeat->period_ms = -1;
+		dc_heartbeat->fsa_input = I_NULL;
+		dc_heartbeat->callback = do_dc_heartbeat;
+	} else {
+		was_error = TRUE;
+	}
+	
+	if(election_timeout != NULL) {
+		election_timeout->source_id = -1;
+		election_timeout->period_ms = -1;
+		election_timeout->fsa_input = I_ELECTION_DC;
+		election_timeout->callback = timer_popped;
+	} else {
+		was_error = TRUE;
+	}
+	
+	if(integration_timer != NULL) {
+		integration_timer->source_id = -1;
+		integration_timer->period_ms = -1;
+		integration_timer->fsa_input = I_INTEGRATION_TIMEOUT;
+		integration_timer->callback = timer_popped;
+	} else {
+		was_error = TRUE;
+	}
+	
+	if(shutdown_escalation_timmer != NULL) {
+		shutdown_escalation_timmer->source_id = -1;
+		shutdown_escalation_timmer->period_ms = -1;
+		shutdown_escalation_timmer->fsa_input = I_TERMINATE;
+		shutdown_escalation_timmer->callback = timer_popped;
+	} else {
+		was_error = TRUE;
+	}
 	
 	/* set up the sub systems */
-	cib_subsystem = (struct crm_subsystem_s*)
-		crm_malloc(sizeof(struct crm_subsystem_s));
-	
-	cib_subsystem->pid = 0;	
-	cib_subsystem->respawn = 1;	
-	cib_subsystem->path = crm_strdup(BIN_DIR);
-	cib_subsystem->name = crm_strdup(CRM_SYSTEM_CIB);
-	cib_subsystem->command = BIN_DIR"/cib";
-	cib_subsystem->flag = R_CIB_CONNECTED;	
+	crm_malloc(cib_subsystem, sizeof(struct crm_subsystem_s));
+	crm_malloc(te_subsystem,  sizeof(struct crm_subsystem_s));
+	crm_malloc(pe_subsystem,  sizeof(struct crm_subsystem_s));
 
-	te_subsystem = (struct crm_subsystem_s*)
-		crm_malloc(sizeof(struct crm_subsystem_s));
+	if(cib_subsystem != NULL) {
+		cib_subsystem->pid = 0;	
+		cib_subsystem->respawn = 1;	
+		cib_subsystem->path = crm_strdup(BIN_DIR);
+		cib_subsystem->name = crm_strdup(CRM_SYSTEM_CIB);
+		cib_subsystem->command = BIN_DIR"/cib";
+		cib_subsystem->flag = R_CIB_CONNECTED;	
+	} else {
+		was_error = TRUE;
+	}
 	
-	te_subsystem->pid = 0;	
-	te_subsystem->respawn = 1;	
-	te_subsystem->path = crm_strdup(BIN_DIR);
-	te_subsystem->name = crm_strdup(CRM_SYSTEM_TENGINE);
-	te_subsystem->command = BIN_DIR"/tengine";
-	te_subsystem->flag = R_TE_CONNECTED;	
-
-	pe_subsystem = (struct crm_subsystem_s*)
-		crm_malloc(sizeof(struct crm_subsystem_s));
+	if(te_subsystem != NULL) {
+		te_subsystem->pid = 0;	
+		te_subsystem->respawn = 1;	
+		te_subsystem->path = crm_strdup(BIN_DIR);
+		te_subsystem->name = crm_strdup(CRM_SYSTEM_TENGINE);
+		te_subsystem->command = BIN_DIR"/tengine";
+		te_subsystem->flag = R_TE_CONNECTED;	
+	} else {
+		was_error = TRUE;
+	}
 	
-	pe_subsystem->pid = 0;	
-	pe_subsystem->respawn = 1;	
-	pe_subsystem->path = crm_strdup(BIN_DIR);
-	pe_subsystem->name = crm_strdup(CRM_SYSTEM_PENGINE);
-	pe_subsystem->command = BIN_DIR"/pengine";
-	pe_subsystem->flag = R_PE_CONNECTED;	
-
+	if(pe_subsystem != NULL) {
+		pe_subsystem->pid = 0;	
+		pe_subsystem->respawn = 1;	
+		pe_subsystem->path = crm_strdup(BIN_DIR);
+		pe_subsystem->name = crm_strdup(CRM_SYSTEM_PENGINE);
+		pe_subsystem->command = BIN_DIR"/pengine";
+		pe_subsystem->flag = R_PE_CONNECTED;	
+	} else {
+		was_error = TRUE;
+	}
 
 	if(was_error)
 		return I_FAIL;

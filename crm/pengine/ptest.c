@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.33 2004/09/14 05:54:43 andrew Exp $ */
+/* $Id: ptest.c,v 1.34 2004/09/17 13:03:10 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -227,7 +227,9 @@ main(int argc, char **argv)
 		pe_free_rsc_to_node((rsc_to_node_t*)node_constraints->data);
 		node_constraints = node_constraints->next;
 	}
-	g_list_free(node_constraints);
+	if(node_constraints != NULL) {
+		g_list_free(node_constraints);
+	}
 	
 	crm_verbose("deleting order cons");
 	pe_free_shallow(action_constraints);

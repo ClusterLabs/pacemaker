@@ -70,8 +70,7 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 	}
 	
 #ifdef MSG_LOG
-	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n",
-		from,
+	fprintf(msg_in_strm, "[%s (%s:%s)]\t%s\n", crm_str(from),
 		ha_msg_value(msg, F_SEQ),
 		ha_msg_value(msg, F_TYPE),
 		ha_msg_value(msg, "xml")

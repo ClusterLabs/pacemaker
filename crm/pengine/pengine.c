@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.44 2004/09/14 05:54:43 andrew Exp $ */
+/* $Id: pengine.c,v 1.45 2004/09/17 13:03:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,7 +69,7 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 		/* ignore */
 		
 	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
-		crm_verbose("Bad sys-to %s", sys_to);
+		crm_verbose("Bad sys-to %s", crm_str(sys_to));
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
@@ -218,7 +218,9 @@ do_calculations(xmlNodePtr cib_object)
 		pe_free_rsc_to_node((rsc_to_node_t*)node_constraints->data);
 		node_constraints = node_constraints->next;
 	}
-	g_list_free(node_constraints);
+	if(node_constraints != NULL) {
+		g_list_free(node_constraints);
+	}
 
 	crm_verbose("deleting order cons");
 	pe_free_shallow(action_constraints);

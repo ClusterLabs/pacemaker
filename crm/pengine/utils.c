@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.40 2004/09/14 05:54:43 andrew Exp $ */
+/* $Id: utils.c,v 1.41 2004/09/17 13:03:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,8 +41,17 @@ invert_constraint(rsc_to_rsc_t *constraint)
 	rsc_to_rsc_t *inverted_con = NULL;
 
 	crm_verbose("Inverting constraint");
-	inverted_con = crm_malloc(sizeof(rsc_to_rsc_t));
+	if(constraint == NULL) {
+		crm_err("Cannot invert NULL constraint");
+		return NULL;
+	}
 
+	crm_malloc(inverted_con, sizeof(rsc_to_rsc_t));
+
+	if(inverted_con == NULL) {
+		return NULL;
+	}
+	
 	inverted_con->id = crm_strdup(constraint->id);
 	inverted_con->strength = constraint->strength;
 
@@ -293,11 +302,17 @@ node_copy(node_t *this_node)
 	node_t *new_node  = NULL;
 
 	if(this_node == NULL) {
-		print_node("Failed copy of", this_node, TRUE);
+		crm_err("Failed copy of <null> node.");
 		return NULL;
 	}
-	new_node  = (node_t*)crm_malloc(sizeof(node_t));
-	crm_trace("copying %p (%s) to %p", this_node, this_node->details->uname, new_node);
+	crm_malloc(new_node, sizeof(node_t));
+
+	if(new_node == NULL) {
+		return NULL;
+	}
+	
+	crm_trace("Copying %p (%s) to %p",
+		  this_node, this_node->details->uname, new_node);
 	new_node->weight  = this_node->weight; 
 	new_node->fixed   = this_node->fixed;
 	new_node->details = this_node->details; 
@@ -324,19 +339,29 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr resources)
 	color_t *new_color = NULL;
 	
 	crm_trace("Creating color");
-	new_color = crm_malloc(sizeof(color_t));
+	crm_malloc(new_color, sizeof(color_t));
+	if(new_color == NULL) {
+		return NULL;
+	}
+	
 	new_color->id           = color_id++;
 	new_color->local_weight = 1.0;
 	
 	crm_trace("Creating color details");
-	new_color->details = crm_malloc(sizeof(struct color_shared_s));
+	crm_malloc(new_color->details, sizeof(struct color_shared_s));
+
+	if(new_color->details == NULL) {
+		crm_free(new_color);
+		return NULL;
+	}
+		
 	new_color->details->id                  = new_color->id;
 	new_color->details->highest_priority    = -1;
 	new_color->details->chosen_node         = NULL;
 	new_color->details->candidate_nodes     = NULL;
 	new_color->details->allocated_resources = NULL;
 	new_color->details->pending             = TRUE;
-
+	
 	if(resource != NULL) {
 		crm_trace("populating node list");
 		new_color->details->highest_priority = resource->priority;
@@ -363,11 +388,12 @@ copy_color(color_t *a_color)
 		return NULL;
 	}
 	
-	color_copy = (color_t *)crm_malloc(sizeof(color_t));
-	color_copy->id      = a_color->id;
-	color_copy->details = a_color->details;
-	color_copy->local_weight = 1.0;
-	
+	crm_malloc(color_copy, sizeof(color_t));
+	if(color_copy != NULL) {
+		color_copy->id      = a_color->id;
+		color_copy->details = a_color->details;
+		color_copy->local_weight = 1.0;
+	}
 	return color_copy;
 }
 
@@ -551,22 +577,25 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 action_t *
 action_new(resource_t *rsc, enum action_tasks task)
 {
-	action_t *action = (action_t*)crm_malloc(sizeof(action_t));
-	action->id   = action_id++;
-	action->rsc  = rsc;
-	action->task = task;
-	action->node = NULL; /* fill node in later */
-	action->actions_before   = NULL;
-	action->actions_after    = NULL;
-	action->failure_is_fatal = TRUE;
-	action->discard    = FALSE;
-	action->runnable   = TRUE;
-	action->processed  = FALSE;
-	action->optional   = TRUE;
-	action->seen_count = 0;
-	action->timeout = 0;
-	action->args = create_xml_node(NULL, "args");
+	action_t *action = NULL;
 	
+	crm_malloc(action, sizeof(action_t));
+	if(action != NULL) {
+		action->id   = action_id++;
+		action->rsc  = rsc;
+		action->task = task;
+		action->node = NULL; /* fill node in later */
+		action->actions_before   = NULL;
+		action->actions_after    = NULL;
+		action->failure_is_fatal = TRUE;
+		action->discard    = FALSE;
+		action->runnable   = TRUE;
+		action->processed  = FALSE;
+		action->optional   = TRUE;
+		action->seen_count = 0;
+		action->timeout = 0;
+		action->args = create_xml_node(NULL, "args");
+	}
 	return action;
 }
 
@@ -929,7 +958,9 @@ pe_free_nodes(GListPtr nodes)
 		}
 		
 	}
-	g_list_free(nodes);
+	if(nodes != NULL) {
+		g_list_free(nodes);
+	}
 }
 
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data)
@@ -957,7 +988,9 @@ pe_free_colors(GListPtr colors)
 		}
 		crm_free(color);
 	}
-	g_list_free(colors);
+	if(colors != NULL) {
+		g_list_free(colors);
+	}
 }
 
 void
@@ -1004,11 +1037,14 @@ pe_free_resources(GListPtr resources)
 			pe_free_rsc_to_rsc((rsc_to_rsc_t*)rsc->rsc_cons->data);
 			rsc->rsc_cons = rsc->rsc_cons->next;
 		}
-		g_list_free(rsc->rsc_cons);
+		if(rsc->rsc_cons != NULL) {
+			g_list_free(rsc->rsc_cons);
+		}
 		crm_free(rsc);
 	}
-	g_list_free(resources);
-	
+	if(resources != NULL) {
+		g_list_free(resources);
+	}
 }
 
 
@@ -1020,14 +1056,16 @@ pe_free_actions(GListPtr actions)
 		action_t *action = (action_t *)list_item->data;
 		actions = actions->next;
 
-		pe_free_shallow(action->actions_before); /* action_warpper_t* */
+		pe_free_shallow(action->actions_before);/* action_warpper_t* */
 		pe_free_shallow(action->actions_after); /* action_warpper_t* */
 		action->actions_before = NULL;
 		action->actions_after  = NULL;
 		free_xml(action->args);
 		crm_free(action);
 	}
-	g_list_free(actions);
+	if(actions != NULL) {
+		g_list_free(actions);
+	}
 }
 
 

@@ -694,18 +694,23 @@ void
 set_uuid(xmlNodePtr node, const char *attr, const char *uname) 
 {
 	uuid_t uuid_raw;
-	char *uuid_calc = (char*)crm_malloc(sizeof(char)*50);
+	char *uuid_calc = NULL;
 	
-	if(fsa_cluster_conn->llc_ops->get_uuid_by_name(
-		   fsa_cluster_conn, uname, uuid_raw) == HA_FAIL) {
-		crm_err("Could not calculate UUID for %s", uname);
-		crm_free(uuid_calc);
-		uuid_calc = crm_strdup(uname);
+	crm_malloc(uuid_calc, sizeof(char)*50);
 
-	} else {
-		uuid_unparse(uuid_raw, uuid_calc);
+	if(uuid_calc != NULL) {
+		if(fsa_cluster_conn->llc_ops->get_uuid_by_name(
+			   fsa_cluster_conn, uname, uuid_raw) == HA_FAIL) {
+			crm_err("Could not calculate UUID for %s", uname);
+			crm_free(uuid_calc);
+			uuid_calc = crm_strdup(uname);
+			
+		} else {
+			uuid_unparse(uuid_raw, uuid_calc);
+		}
+		
+		set_xml_property_copy(node, attr, uuid_calc);
 	}
 	
-	set_xml_property_copy(node, attr, uuid_calc);
 	crm_free(uuid_calc);
 }

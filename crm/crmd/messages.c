@@ -315,8 +315,8 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	crm_trace("is_for_dc   %d", is_for_dc);
 	crm_trace("is_for_crm  %d", is_for_crm);
 	crm_trace("AM_I_DC     %d", AM_I_DC);
-	crm_trace("sys_to      %s", sys_to);
-	crm_trace("host_to     %s", host_to);
+	crm_trace("sys_to      %s", crm_str(sys_to));
+	crm_trace("host_to     %s", crm_str(host_to));
 	
 	if(is_for_dc || is_for_dcib) {
 		if(AM_I_DC) {
@@ -457,7 +457,7 @@ crmd_authorize_message(
 		} else {
 			result = FALSE;
 			crm_err("Bad client details (client_name=%s, uuid=%s)",
-			       client_name, uuid);
+				crm_str(client_name), uuid);
 		}
 	}
 	
@@ -544,7 +544,16 @@ handle_message(xmlNodePtr stored_msg)
 			next_input = I_ELECTION;
 				
 		} else if(AM_I_DC && strcmp(op, CRM_OP_TEABORT) == 0) {
-			next_input = I_PE_CALC;
+			if(fsa_state != S_INTEGRATION) {
+				next_input = I_PE_CALC;
+
+			} else {	
+				crm_debug("Ignoring %s in state %s."
+					"  Waiting for the integration to"
+					" complete first.",
+					op, fsa_state2string(fsa_state));
+			}
+			
 				
 		} else if(AM_I_DC
 			  && strcmp(op, CRM_OP_TECOMPLETE) == 0) {
@@ -802,11 +811,11 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	if(log_level == LOG_ERR
 	   || (safe_str_neq(op, CRM_OP_HBEAT))) {
 		do_crm_log(log_level, __FUNCTION__, 
-		       "Sending %s HA message (ref=%s, len=%d) to %s@%s %s.",
-		       broadcast?"broadcast":"directed",
-		       xmlGetProp(root, XML_ATTR_REFERENCE), xml_len,
-		       sys_to, host_to==NULL?"<all>":host_to,
-		       all_is_good?"succeeded":"failed");
+			   "Sending %sHA message (ref=%s,len=%d) to %s@%s %s.",
+			   broadcast?"broadcast ":"directed ",
+			   xmlGetProp(root, XML_ATTR_REFERENCE), xml_len,
+			   sys_to, host_to==NULL?"<all>":host_to,
+			   all_is_good?"succeeded":"failed");
 	}
 	
 #ifdef MSG_LOG

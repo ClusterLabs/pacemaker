@@ -59,7 +59,7 @@ args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
 do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - $args
 do_cmd make_constraint $test_node_1 rsc1 can
 do_cmd make_constraint $test_node_1 rsc2 can
-do_cmd wait_for_state S_IDLE 10 $test_node_1 
+do_cmd wait_for_state S_IDLE 30 $test_node_1 
 cts_assert "S_IDLE not reached on $test_node_1 after CIB create"
 
 do_cmd is_running rsc1 $test_node_1

@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.12 2004/09/14 05:54:43 andrew Exp $ */
+/* $Id: xml.c,v 1.13 2004/09/17 13:03:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -301,13 +301,13 @@ set_xml_property_copy(xmlNodePtr node,
 	if(node != NULL) {
 		parent_name = node->name;
 	}
-
 	
-	crm_trace("[%s] Setting %s to %s", parent_name, name, value);
+	crm_trace("[%s] Setting %s to %s",crm_str(parent_name), name, value);
+
 	if (name == NULL || strlen(name) <= 0) {
 		ret_value = NULL;
 		
-	} else if(node == NULL) {
+	} else if(node == NULL || parent_name == NULL) {
 		ret_value = NULL;
 		
 	} else if (value == NULL || strlen(value) <= 0) {
@@ -364,13 +364,13 @@ free_xml(xmlNodePtr a_node)
 {
 	
         if(a_node == NULL) {
-	  ; /*  nothing to do */
+		; /*  nothing to do */
 	} else if (a_node->doc != NULL) {
-	  xmlFreeDoc(a_node->doc);
+		xmlFreeDoc(a_node->doc);
 	} else {
-	  /* make sure the node is unlinked first */
-	  xmlUnlinkNode(a_node);
-	  xmlFreeNode(a_node);
+		/* make sure the node is unlinked first */
+		xmlUnlinkNode(a_node);
+		xmlFreeNode(a_node);
 	}
 	
 	return;
@@ -379,11 +379,14 @@ free_xml(xmlNodePtr a_node)
 void
 set_node_tstamp(xmlNodePtr a_node)
 {
-	char *since_epoch = (char*)crm_malloc(128*(sizeof(char)));
+	char *since_epoch = NULL;
 	
-	sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
-	set_xml_property_copy(a_node, XML_ATTR_TSTAMP, since_epoch);
-	crm_free(since_epoch);
+	crm_malloc(since_epoch, 128*(sizeof(char)));
+	if(since_epoch != NULL) {
+		sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
+		set_xml_property_copy(a_node, XML_ATTR_TSTAMP, since_epoch);
+		crm_free(since_epoch);
+	}
 }
 
 xmlNodePtr
@@ -569,6 +572,7 @@ dump_array(int log_level, const char *message, const char **array, int depth)
 	do_crm_log(log_level, __FUNCTION__,  "Contents of the array:");
 	if(array == NULL || array[0] == NULL || depth == 0) {
 		do_crm_log(log_level, __FUNCTION__,  "\t<empty>");
+		return;
 	}
 	
 	for (j=0; j < depth && array[j] != NULL; j++) {
@@ -655,14 +659,13 @@ print_xml_formatted (int log_level, const char *function,
 
 	if(msg == NULL) {
 		do_crm_log(log_level, function, "%s: %s",
-			   text==NULL?"<null>":text, "<null>");
+			   crm_str(text), "<null>");
 		return;
 	}
 	
 	msg_buffer = dump_xml_formatted(msg);
 	do_crm_log(log_level, function, "%s: %s",
-		   text==NULL?"<null>":text,
-		   msg_buffer==NULL?"<null>":msg_buffer);
+		   crm_str(text), crm_str(msg_buffer));
 	crm_free(msg_buffer);
 
 	return;

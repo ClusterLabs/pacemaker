@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.2 2004/09/15 20:22:33 andrew Exp $ */
+/* $Id: utils.c,v 1.3 2004/09/17 13:03:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -333,9 +333,9 @@ do_update_cib(xmlNodePtr xml_action, int status)
 				CRMD_RSCSTATE_STOP_PENDING);
 
 		} else {
-			crm_warn("Using status \"pending\" for op \"%s\""
-				 "... this is still in the experimental stage.",
-				 task);
+			crm_warn("Using status \"pending\" for op \"%s\"..."
+				 " this is still in the experimental stage.",
+				 crm_str(task));
 			set_xml_property_copy(
 				rsc, XML_LRM_ATTR_RSCSTATE,
 				CRMD_RSCSTATE_GENERIC_PENDING);

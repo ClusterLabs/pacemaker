@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.2 2004/09/15 20:23:18 andrew Exp $ */
+/* $Id: unpack.c,v 1.3 2004/09/17 13:03:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,8 +51,8 @@ unpack_graph(xmlNodePtr xml_graph)
 	xml_child_iter(
 		xml_graph, synapse, "synapse",
 
-		synapse_t *new_synapse = (synapse_t*)
-			crm_malloc(sizeof(synapse_t));
+		synapse_t *new_synapse = NULL;
+		crm_malloc(new_synapse, sizeof(synapse_t));
 		new_synapse->id       = num_synapses++;
 		new_synapse->complete = FALSE;
 		new_synapse->actions  = NULL;
@@ -131,8 +131,11 @@ unpack_action(xmlNodePtr xml_action)
 	}
 	
 	action_copy = copy_xml_node_recursive(xml_action);
-	action = crm_malloc(sizeof(action_t));
-
+	crm_malloc(action, sizeof(action_t));
+	if(action == NULL) {
+		return NULL;
+	}
+	
 	action->id       = atoi(tmp);
 	action->timeout  = 0;
 	action->timer_id = -1;
@@ -140,7 +143,7 @@ unpack_action(xmlNodePtr xml_action)
 	action->complete = FALSE;
 	action->can_fail = FALSE;
 	action->type     = action_type_rsc;
- 	action->xml      = action_copy;
+	action->xml      = action_copy;
 	
 	if(safe_str_eq(action_copy->name, "rsc_op")) {
 		action->type = action_type_rsc;
@@ -342,7 +345,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		/* ignore */
 
 	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
-		crm_verbose("Bad sys-to %s", sys_to);
+		crm_verbose("Bad sys-to %s", crm_str(sys_to));
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {

@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.7 2004/09/14 05:54:43 andrew Exp $ */
+/* $Id: ipc.c,v 1.8 2004/09/17 13:03:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,7 +88,6 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 {
 	int lpc = 0;
 	gboolean all_is_good = TRUE;
-	
 
 	if (msg == NULL) {
 		crm_err("cant send NULL message");
@@ -102,8 +101,8 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 		crm_err("cant send msg... too big");
 		all_is_good = FALSE;
 	}
-    
-	crm_trace("Sending message: %s", (char*)msg->msg_body); 
+	
+	crm_trace("Sending message: %s", crm_str(msg->msg_body)); 
 	crm_verbose("Message is%s valid to send", all_is_good?"":" not");
 
 	if (ipc_client == NULL) {
@@ -134,17 +133,20 @@ create_simple_message(char *text, IPC_Channel *ch)
 	IPC_Message        *ack_msg = NULL;
 
 	
-	if (text == NULL) return NULL;
+	if (text == NULL) {
+		return NULL;
+	}
+	crm_malloc(ack_msg, sizeof(IPC_Message));
 
-	ack_msg = (IPC_Message *)crm_malloc(sizeof(IPC_Message));
-    
-	ack_msg->msg_private = NULL;
-	ack_msg->msg_done    = NULL;
-	ack_msg->msg_body    = text;
-	ack_msg->msg_ch      = ch;
-
-	ack_msg->msg_len = strlen(text)+1;
-    
+	if(ack_msg != NULL) {
+		ack_msg->msg_private = NULL;
+		ack_msg->msg_done    = NULL;
+		ack_msg->msg_body    = text;
+		ack_msg->msg_ch      = ch;
+		
+		ack_msg->msg_len = strlen(text)+1;
+	}
+	
 	return ack_msg;
 }
 
@@ -208,12 +210,13 @@ init_client_ipc_comms(const char *child,
 	local_socket_len += strlen(child);
 	local_socket_len += strlen(WORKING_DIR);
 
-	commpath = (char*)crm_malloc(sizeof(char)*local_socket_len);
-	sprintf(commpath, WORKING_DIR "/%s", child);
-	commpath[local_socket_len - 1] = '\0';
-    
-	crm_debug("Attempting to talk on: %s", commpath);
-
+	crm_malloc(commpath, sizeof(char)*local_socket_len);
+	if(commpath != NULL) {
+		sprintf(commpath, WORKING_DIR "/%s", child);
+		commpath[local_socket_len - 1] = '\0';
+		crm_debug("Attempting to talk on: %s", commpath);
+	}
+	
 	attrs = g_hash_table_new(g_str_hash,g_str_equal);
 	g_hash_table_insert(attrs, path, commpath);
 
@@ -222,6 +225,7 @@ init_client_ipc_comms(const char *child,
 
 	if (ch == NULL) {
 		crm_crit("Could not access channel on: %s", commpath);
+		return NULL;
 		
 	} else if (ch->ops->initiate_connection(ch) != IPC_OK) {
 		crm_crit("Could not init comms on: %s", commpath);

@@ -353,18 +353,19 @@ do_process_welcome_ack(long long action,
 
 	create_node_entry(join_from, join_from, "member");
 
-	uuid_calc = (char*)crm_malloc(sizeof(char)*50);
-	
-	if(fsa_cluster_conn->llc_ops->get_uuid_by_name(
-		   fsa_cluster_conn, join_from, uuid_raw) == HA_FAIL) {
-		crm_err("Could not calculate UUID for %s", join_from);
-		crm_free(uuid_calc);
-		uuid_calc = crm_strdup(join_from);
-
-	} else {
-		uuid_unparse(uuid_raw, uuid_calc);
+	crm_malloc(uuid_calc, sizeof(char)*50);
+	if(uuid_calc != NULL) {
+		if(fsa_cluster_conn->llc_ops->get_uuid_by_name(
+			   fsa_cluster_conn, join_from, uuid_raw) == HA_FAIL) {
+			crm_err("Could not calculate UUID for %s", join_from);
+			crm_free(uuid_calc);
+			uuid_calc = crm_strdup(join_from);
+			
+		} else {
+			uuid_unparse(uuid_raw, uuid_calc);
+		}
 	}
-
+	
 	/* Make changes so that exp_state=active for this node when the update
 	 *  is processed by A_CIB_INVOKE
 	 */
@@ -380,7 +381,7 @@ do_process_welcome_ack(long long action,
 		set_xml_property_copy(tmp2, XML_ATTR_UUID,  uuid_calc);
 		set_xml_property_copy(tmp2, XML_ATTR_UNAME, join_from);
 	}
-	
+
 	crm_free(uuid_calc);	
 
 	/* make sure these values are correct in the CIB */

@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.33 2004/08/30 03:17:38 msoffen Exp $ */
+/* $Id: ccm.c,v 1.34 2004/09/17 13:03:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -186,10 +186,8 @@ do_ccm_update_cache(long long action,
 	oc_ed_t event = *((struct ccm_data *)data)->event;
 	const oc_ev_membership_t *oc = ((struct ccm_data *)data)->oc;
 
-	oc_node_list_t *tmp = NULL, *membership_copy = (oc_node_list_t *)
-		crm_malloc(sizeof(oc_node_list_t));
-
-	
+	oc_node_list_t *tmp = NULL, *membership_copy = NULL;
+	crm_malloc(membership_copy, sizeof(oc_node_list_t));
 
 	crm_info("Updating CCM cache after a \"%s\" event.", 
 	       event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
@@ -198,6 +196,11 @@ do_ccm_update_cache(long long action,
 	       event==OC_EV_MS_EVICTED?"EVICTED":
 	       "NO QUORUM MEMBERSHIP");
 
+	if(membership_copy == NULL) {
+		crm_crit("Couldnt create membership copy - out of memory");
+		return I_ERROR;
+	}
+	
 	/*--*-- All Member Nodes --*--*/
 	offset = oc->m_memb_idx;
 	membership_copy->members_size = oc->m_n_member;
@@ -208,9 +211,13 @@ do_ccm_update_cache(long long action,
 		members = membership_copy->members;
 		
 		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
-			oc_node_t *member = (oc_node_t *)
-				crm_malloc(sizeof(oc_node_t));
+			oc_node_t *member = NULL;
+			crm_malloc(member, sizeof(oc_node_t));
 			
+			if(member == NULL) {
+				continue;
+			}
+
 			member->node_id =
 				oc->m_array[offset+lpc].node_id;
 			
@@ -237,8 +244,12 @@ do_ccm_update_cache(long long action,
 		members = membership_copy->new_members;
 		
 		for(lpc=0; lpc < membership_copy->new_members_size; lpc++) {
-			oc_node_t *member = (oc_node_t *)
-				crm_malloc(sizeof(oc_node_t));
+			oc_node_t *member = NULL;
+			crm_malloc(member, sizeof(oc_node_t));
+
+			if(member == NULL) {
+				continue;
+			}
 			
 			member->node_id =
 				oc->m_array[offset+lpc].node_id;
@@ -266,8 +277,12 @@ do_ccm_update_cache(long long action,
 		members = membership_copy->dead_members;
 
 		for(lpc=0; lpc < membership_copy->dead_members_size; lpc++) {
-			oc_node_t *member = (oc_node_t *)
-				crm_malloc(sizeof(oc_node_t));
+			oc_node_t *member = NULL;
+			crm_malloc(member, sizeof(oc_node_t));
+
+			if(member == NULL) {
+				continue;
+			}
 			
 			member->node_id =
 				oc->m_array[offset+lpc].node_id;
@@ -406,21 +421,20 @@ crmd_ccm_input_callback(oc_ed_t event,
 {
 	struct ccm_data *event_data = NULL;
 	
-	
-
 	if(data != NULL) {
-		event_data = (struct ccm_data *)
-			crm_malloc(sizeof(struct ccm_data));
-		
-		event_data->event = &event;
-		event_data->oc = (const oc_ev_membership_t *)data;
-		
-		s_crmd_fsa(C_CCM_CALLBACK, I_CCM_EVENT, (void*)event_data);
-		
-		event_data->event = NULL;
-		event_data->oc = NULL;
+		crm_malloc(event_data, sizeof(struct ccm_data));
 
-		crm_free(event_data);
+		if(event_data != NULL) {
+			event_data->event = &event;
+			event_data->oc = (const oc_ev_membership_t *)data;
+			
+			s_crmd_fsa(C_CCM_CALLBACK, I_CCM_EVENT, (void*)event_data);
+			
+			event_data->event = NULL;
+			event_data->oc = NULL;
+
+			crm_free(event_data);
+		}
 
 	} else {
 		crm_info("CCM Callback with NULL data... "

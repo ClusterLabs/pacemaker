@@ -582,6 +582,12 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	xmlNodePtr fragment;
 	int len = 0;
 	char *fail_state = NULL;
+
+
+	if(op == NULL || rsc == NULL) {
+		crm_err("Either resouce or op was not specified");
+		return;
+	}
 	
 	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	set_uuid(update, XML_ATTR_UUID, fsa_our_uname);
@@ -596,8 +602,10 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 
 	len = strlen(op->op_type);
 	len += strlen("_failed_");
-	fail_state = (char*)crm_malloc(sizeof(char)*len);
-	sprintf(fail_state, "%s_failed", op->op_type);
+	crm_malloc(fail_state, sizeof(char)*len);
+	if(fail_state != NULL) {
+		sprintf(fail_state, "%s_failed", op->op_type);
+	}
 	
 	switch(op->op_status) {
 		case LRM_OP_CANCELLED:
@@ -612,7 +620,8 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 			break;
 		case LRM_OP_DONE:
 			set_xml_property_copy(
-				iter, XML_LRM_ATTR_RSCSTATE, (const char*)op->user_data);
+				iter, XML_LRM_ATTR_RSCSTATE,
+				(const char*)op->user_data);
 			break;
 	}
 
@@ -656,7 +665,7 @@ do_lrm_event(long long action,
 			case LRM_OP_NOTSUPPORTED:
 				crm_err("An LRM operation failed"
 					" or was aborted");
-				/* keep going */
+				/* fall through */
 			case LRM_OP_DONE:
 				do_update_resource(rsc, op);
 
