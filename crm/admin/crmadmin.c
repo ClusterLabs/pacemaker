@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.15 2004/12/10 20:03:20 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.16 2004/12/14 14:41:12 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -340,37 +340,7 @@ do_work(ll_cluster_t * hb_cluster)
 		} else {
 			crm_info("Cluster-wide health not available yet");
 			all_is_good = FALSE;
-		}
-		
-	} else if(DO_OPTION) {
-		char *name = NULL;
-		char *value = NULL;
-		xmlNodePtr xml_option = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
-
-		sys_to = CRM_SYSTEM_DCIB;
-
-		set_xml_property_copy(
-			msg_options, XML_ATTR_OP, CRM_OP_CIB_UPDATE);
-		
-		set_xml_property_copy(
-			msg_options, XML_ATTR_TIMEOUT, "0");
-
-		if(decodeNVpair(crm_option, '=', &name, &value) == FALSE) {
-			crm_err("%s needs to be of the form <name>=<value>",
-				crm_option);
-			all_is_good = FALSE;
-		} else {
-			set_xml_property_copy(
-				xml_option, XML_NVPAIR_ATTR_NAME, name);
-			set_xml_property_copy(
-				xml_option, XML_NVPAIR_ATTR_VALUE, value);
-			
-			msg_data = create_cib_fragment(xml_option, NULL);
-			
-			free_xml(xml_option);
-			crm_free(name);
-			crm_free(value);
-		}
+		}		
 		
 	} else if(DO_ELECT_DC) {
 		/* tell the local node to initiate an election */
@@ -397,29 +367,72 @@ do_work(ll_cluster_t * hb_cluster)
 			msg_options, XML_ATTR_TIMEOUT, "0");
 
 		dest_node = NULL;
-		
-		
-	} else if(DO_RESOURCE) {
-		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_CIB_QUERY);
-		set_xml_property_copy(
-			msg_options, XML_ATTR_FILTER_TYPE, XML_CIB_TAG_STATUS);
-		
-		sys_to = CRM_SYSTEM_CIB;
 
-	} else if(DO_RESOURCE_LIST) {
-		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_CIB_QUERY);
-		set_xml_property_copy(
-			msg_options, XML_ATTR_FILTER_TYPE, XML_CIB_TAG_RESOURCES);
+	} else if(DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST || DO_OPTION){
+		cib_t *	the_cib = cib_new();
+		xmlNodePtr output = NULL;
+		int call_options = cib_sync_call;
 		
-		sys_to = CRM_SYSTEM_CIB;
+		enum cib_errors rc = the_cib->cmds->signon(
+			the_cib, cib_command);
 
-	} else if(DO_NODE_LIST) {
-		set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_CIB_QUERY);
-		set_xml_property_copy(
-			msg_options, XML_ATTR_FILTER_TYPE, XML_CIB_TAG_NODES);
+		if(rc != cib_ok) {
+			return -1;
+			
+		} else if(DO_RESOURCE) {
+			the_cib->cmds->query(
+				the_cib, XML_CIB_TAG_STATUS,
+				&output, call_options);
+			do_find_resource(rsc_name, output);
+
+		} else if(DO_RESOURCE_LIST) {
+			the_cib->cmds->query(
+				the_cib, XML_CIB_TAG_RESOURCES,
+				&output, call_options);
+			
+			do_find_resource_list(output);
+			
+		} else if(DO_NODE_LIST) {
+			the_cib->cmds->query(
+				the_cib, XML_CIB_TAG_NODES,
+				&output, call_options);
+
+			do_find_node_list(output);
+		} else if(DO_OPTION) {
+			char *name = NULL;
+			char *value = NULL;
+			xmlNodePtr xml_option = NULL;
+			xmlNodePtr fragment = NULL;
+
+			if(decodeNVpair(crm_option, '=', &name, &value)==FALSE){
+				crm_err("%s needs to be of the form"
+					" <name>=<value>", crm_option);
+				return -1;
+			}
+			
+			xml_option = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
+			set_xml_property_copy(
+				xml_option, XML_NVPAIR_ATTR_NAME, name);
+			set_xml_property_copy(
+				xml_option, XML_NVPAIR_ATTR_VALUE, value);
+			
+			fragment = create_cib_fragment(xml_option, NULL);
+
+			free_xml(xml_option);
+			crm_free(name);
+			crm_free(value);
+			
+			rc = the_cib->cmds->modify(
+				the_cib, XML_CIB_TAG_CRMCONFIG, fragment,
+				NULL, call_options|cib_discard_reply);
+			
+			free_xml(fragment);
+		}
+
+		free_xml(output);
+		the_cib->cmds->signoff(the_cib);
+		return rc;
 		
-		sys_to = CRM_SYSTEM_CIB;
-
 	} else if(DO_RESET) {
 		/* tell dest_node to initiate the shutdown proceedure
 		 *
@@ -607,15 +620,6 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 				fprintf(stderr, "%s\n", state);
 			}
 			
-		} else if(DO_RESOURCE) {
-			do_find_resource(rsc_name, xml_root_node);
-			
-		} else if(DO_RESOURCE_LIST) {
-			do_find_resource_list(xml_root_node);
-
-		} else if(DO_NODE_LIST) {
-			do_find_node_list(xml_root_node);
-
 		} else if(DO_WHOIS_DC) {
 			const char *dc = xmlGetProp(
 				xml_root_node, XML_ATTR_HOSTFROM);
