@@ -175,7 +175,7 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 		ha_msg_add(reg_msg, F_CIB_OPERATION, CRM_OP_REGISTER);
 		ha_msg_add(reg_msg, F_CIB_CALLBACK_TOKEN, uuid_ticket);
 
-		CRM_ASSERT(native->command_channel->should_send_blocking);
+		CRM_DEV_ASSERT(native->command_channel->should_send_blocking);
 
 		if(msg2ipcchan(reg_msg, native->callback_channel) != HA_OK) {
 			rc = cib_callback_register;
@@ -311,11 +311,10 @@ cib_native_perform_op(
 		rc = ha_msg_add(op_msg, F_CIB_OPERATION, op);
 	}
 	if(rc == HA_OK && host != NULL) {
-		CRM_ASSERT(cl_is_allocated(host) == 1);
+		CRM_DEV_ASSERT(cl_is_allocated(host) == 1);
 		rc = ha_msg_add(op_msg, F_CIB_HOST, host);
 	}
 	if(rc == HA_OK && section != NULL) {
-/* 		CRM_ASSERT(cl_is_allocated(section) == 1); */
 		rc = ha_msg_add(op_msg, F_CIB_SECTION, section);
 	}
 	if(rc == HA_OK) {
@@ -327,20 +326,7 @@ cib_native_perform_op(
 		rc = ha_msg_add_int(op_msg, F_CIB_CALLOPTS, call_options);
 	}
 	if(rc == HA_OK && data != NULL) {
-		char *calldata = NULL;
-#ifndef USE_LIBXML
-		CRM_ASSERT(cl_is_allocated(data) == 1);
-#endif
-			
-		calldata = dump_xml_unformatted(data);
-
-		if(calldata != NULL) {
-			CRM_ASSERT(cl_is_allocated(calldata) == 1);
-			rc = ha_msg_add(op_msg, F_CIB_CALLDATA, calldata);
-			crm_free(calldata);
-		} else {
-			crm_debug("Calldata string was NULL (xml=%p)", data);
-		}
+		add_message_xml(op_msg, F_CIB_CALLDATA, data);
 	}
 	
 	if (rc != HA_OK) {
@@ -358,7 +344,7 @@ cib_native_perform_op(
 	
 	if (rc != HA_OK) {
 		crm_err("Sending message to CIB service FAILED: %d", rc);
-		CRM_ASSERT(native->command_channel->should_send_blocking);
+		CRM_DEV_ASSERT(native->command_channel->should_send_blocking);
 		crm_log_message(LOG_ERR, op_msg);
 		crm_msg_del(op_msg);
 		return cib_send_failed;
@@ -493,7 +479,6 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 	int rc = 0;
 	int call_id = 0;
 	crm_data_t *output = NULL;
-	const char *output_s = NULL;
 
 	if(cib->op_callback == NULL) {
 		crm_debug("No OP callback set, ignoring reply");
@@ -502,10 +487,7 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 	
 	ha_msg_value_int(msg, F_CIB_CALLID, &call_id);
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
-	output_s = cl_get_string(msg, F_CIB_CALLDATA);
-	if(output_s != NULL) {
-		output = string2xml(output_s);
-	}
+	output = get_message_xml(msg, F_CIB_CALLDATA);
 	
 	cib->op_callback(msg, call_id, rc, output);
 	
