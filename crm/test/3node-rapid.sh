@@ -49,23 +49,12 @@ cts_assert "Startup of Heartbeat on ${test_node_3} failed."
 
 
 do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
-
-do_cmd echo "wait for CRMd to start"
-do_cmd ./testutils.pl --search  -a -m 1500 -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}"
-cts_assert "CRMd startup on ${test_node_1} failed."
-
 do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
-
-do_cmd echo "wait for CRMd to start"
-do_cmd ./testutils.pl --search  -a -m 1500 -s "${test_node_2} crmd(.*): info:(.*)FSA Hostname: ${test_node_2}"
-cts_assert "CRMd startup on ${test_node_2} failed."
-
 do_cmd remote_cmd $CRMD_USER $test_node_3 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
 
-do_cmd echo "wait for CRMd to start"
-do_cmd ./testutils.pl --search  -a -m 1500 -s "${test_node_3} crmd(.*): info:(.*)FSA Hostname: ${test_node_3}"
-cts_assert "CRMd startup on ${test_node_3} failed."
-
+do_cmd echo "wait for CRMd to start on each node"
+do_cmd ./testutils.pl --search  -a -m 1500 -s "${test_node_1} crmd(.*): info:(.*)FSA Hostname: ${test_node_1}" -s "${test_node_2} crmd(.*): info:(.*)FSA Hostname: ${test_node_2}" -s "${test_node_3} crmd(.*): info:(.*)FSA Hostname: ${test_node_3}"
+cts_assert "CRMd startup on failed."
 
 do_cmd wait_for_state S_IDLE 30 $test_node_1 
 cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
