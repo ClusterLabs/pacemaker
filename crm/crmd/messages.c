@@ -721,6 +721,9 @@ handle_request(ha_msg_input_t *stored_msg)
 		crm_log_message(LOG_ERR, stored_msg->msg);
 
 		/*========== common actions ==========*/
+	} else if(strcmp(op, CRM_OP_NOOP) == 0) {
+		crm_debug("no-op");
+
 	} else if(strcmp(op, CRM_OP_VOTE) == 0) {
 		/* count the vote and decide what to do after that */
 		register_fsa_input_w_actions(
