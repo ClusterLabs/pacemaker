@@ -130,25 +130,6 @@ set_bit(long long action_list, long long action)
 	return action_list;
 }
 
-void
-toggle_bit_inplace(long long *action_list, long long action)
-{
-	*action_list = toggle_bit(*action_list, action);
-}
-
-void
-clear_bit_inplace(long long *action_list, long long action)
-{
-	*action_list = clear_bit(*action_list, action);
-}
-
-void
-set_bit_inplace(long long *action_list, long long action)
-{
-	*action_list = set_bit(*action_list, action);
-}
-
-
 
 gboolean
 is_set(long long action_list, long long action)
@@ -599,8 +580,7 @@ cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
 {
 	int pid_status = -1;
 	the_subsystem->ipc = NULL;
-	clear_bit_inplace(&fsa_input_register,
-			  the_subsystem->flag);
+	clear_bit_inplace(fsa_input_register, the_subsystem->flag);
 
 	/* Forcing client to die */
 	kill(the_subsystem->pid, -9);

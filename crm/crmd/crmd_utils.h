@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.3 2004/08/18 10:25:13 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.4 2004/09/28 08:34:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,9 +26,9 @@ extern long long toggle_bit   (long long  action_list, long long action);
 extern long long clear_bit    (long long  action_list, long long action);
 extern long long set_bit      (long long  action_list, long long action);
 
-extern void toggle_bit_inplace(long long *action_list, long long action);
-extern void clear_bit_inplace (long long *action_list, long long action);
-extern void set_bit_inplace   (long long *action_list, long long action);
+#define set_bit_inplace(word, bit)    word = set_bit(word, bit)
+#define clear_bit_inplace(word, bit)  word = clear_bit(word, bit)
+#define toggle_bit_inplace(word, bit) word = toggle_bit(word, bit)
 
 extern gboolean is_set(long long action_list, long long action);
 
