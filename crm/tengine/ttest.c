@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.7 2004/06/07 21:28:39 msoffen Exp $ */
+/* $Id: ttest.c,v 1.8 2004/07/15 16:29:21 msoffen Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <portability.h>
+#include <sys/param.h>
 #include <crm/crm.h>
 
 #include <stdio.h>
