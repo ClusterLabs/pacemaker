@@ -622,9 +622,10 @@ do_lrm_startup_query(void)
 			xmlNodePtr agent =
 				create_xml_node(agent_list, "lrm_agent");
 			
-			set_xml_property_copy(agent, "type", rsc_type);
+			set_xml_property_copy(agent, "class",   rsc_type);
+
 			/* we dont have these yet */
-			set_xml_property_copy(agent, "class", NULL);
+			set_xml_property_copy(agent, "type",    NULL);
 			set_xml_property_copy(agent, "version", NULL);
 			
 			element = g_list_next(element);
@@ -635,97 +636,84 @@ do_lrm_startup_query(void)
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 
 	xmlNodePtr rsc_list = create_xml_node(data, "lrm_resources");
+	GList* element = NULL;
+
 	if (NULL != lrm_list) {
-		GList* element = g_list_first(lrm_list);
-		while (NULL != element) {
-			lrm_rsc_t *the_rsc = (lrm_rsc_t*)element->data;
-			
+		element = g_list_first(lrm_list);
+	}
+	
+	while (NULL != element) {
+		lrm_rsc_t *the_rsc = (lrm_rsc_t*)element->data;
+		
 /* 				const char*	ra_type; */
 /* 				GHashTable* 	params; */
-			
-			xmlNodePtr xml_rsc =
-				create_xml_node(rsc_list, "rsc_state");
-			
-			set_xml_property_copy(xml_rsc,
-					      "id",
-					      the_rsc->id);
-			
-			set_xml_property_copy(xml_rsc,
-					      "rsc_id",
-					      the_rsc->name);
-			
-			set_xml_property_copy(xml_rsc,
-					      "node_id",
-					      fsa_our_uname);
-			
-			state_flag_t cur_state = 0;
-
-			CRM_DEBUG("get_cur_state...");
-
-			GList* op_list = the_rsc->ops->get_cur_state(
-				the_rsc, &cur_state);
-			printf("\tcurrent state:%s\n",cur_state==LRM_RSC_IDLE?"Idel":"Busy");
-			
-			const char *this_op = NULL;
-			GList* node = g_list_first(op_list);
-			
-			while(NULL != node){
-				lrm_op_t* op = (lrm_op_t*)node->data;
-				this_op = op->op_type;
-
-/* 	const char* 		op_type; */
-/* 	GHashTable*		params; */
-/* 	int			timeout; */
-/* 	gpointer		user_data; */
-
-/* 	/\*output fields*\/ */
-/* 	lrm_rsc_t*		rsc; */
-/* 	op_status_t		status; */
-/* 	char*			app_name; */
-/* 	char*			data; */
-/* 	int			rc; */
-/* 	int			call_id; */
+		
+		xmlNodePtr xml_rsc = create_xml_node(rsc_list, "rsc_state");
+		
+		set_xml_property_copy(xml_rsc, "id",     the_rsc->id);
+		set_xml_property_copy(xml_rsc, "rsc_id", the_rsc->name);
+		set_xml_property_copy(xml_rsc, "node_id",fsa_our_uname);
+		
+		state_flag_t cur_state = 0;
+		
+		CRM_DEBUG("get_cur_state...");
+		
+		GList* op_list = the_rsc->ops->get_cur_state(the_rsc,
+							     &cur_state);
+		CRM_DEBUG2("\tcurrent state:%s\n",
+			   cur_state==LRM_RSC_IDLE?"Idel":"Busy");
+		
+		const char *this_op = NULL;
+		GList* node = g_list_first(op_list);
+		
+		while(NULL != node){
+			lrm_op_t* op = (lrm_op_t*)node->data;
+			this_op = op->op_type;
+			if(this_op == NULL
+			   || strcmp(this_op, "status") != 0){
 				
-				if(this_op == NULL
-				   || strcmp(this_op, "status") != 0){
-
-					const char *status_text = "<unknown>";
-					switch(op->status) {
-						case LRM_OP_DONE:
-							status_text = "done";
-							break;
-						case LRM_OP_CANCELLED:
-							status_text = "cancelled";
-							break;
-						case LRM_OP_TIMEOUT:
-							status_text = "timeout";
-							break;
-						case LRM_OP_NOTSUPPORTED:
-							status_text = "not suported";
-							break;
-						case LRM_OP_ERROR:
-							status_text = "error";
-							break;
-					}
-					
-					
-					set_xml_property_copy(xml_rsc,
-							      "op_result",
-							      status_text);
-			
-					set_xml_property_copy(xml_rsc,
-							      "rsc_op",
-							      this_op);
+				const char *status_text = "<unknown>";
+				switch(op->status) {
+					case LRM_OP_DONE:
+						status_text = "done";
+						break;
+					case LRM_OP_CANCELLED:
+						status_text = "cancelled";
+						break;
+					case LRM_OP_TIMEOUT:
+						status_text = "timeout";
+						break;
+					case LRM_OP_NOTSUPPORTED:
+						status_text = "not suported";
+						break;
+					case LRM_OP_ERROR:
+						status_text = "error";
+						break;
 				}
-
-				node = g_list_next(node);
+				
+				
+				set_xml_property_copy(xml_rsc,
+						      "op_result",
+						      status_text);
+				
+				set_xml_property_copy(xml_rsc,
+						      "rsc_op",
+						      this_op);
+				
+				// we only want the last one
+				break;
 			}
-
-			element = g_list_next(element);
+			
+			node = g_list_next(node);
 		}
+		
+		element = g_list_next(element);
 	}
-	g_list_free(lrm_list);
 
+	if (NULL != lrm_list) {
+		g_list_free(lrm_list);
+	}
+	
 	return data;
 }
 
@@ -963,19 +951,22 @@ do_lrm_event(long long action,
 
 void send_cib_status_update(xmlNodePtr update, gboolean do_delete)
 {
-	xmlNodePtr command, iter, answer, options;
+	xmlNodePtr command, tmp1, tmp2, answer, options;
 	
-	iter = create_xml_node(NULL, "node_state");
-	set_xml_property_copy(iter, XML_ATTR_ID, fsa_our_uname);
-	iter = create_xml_node(iter, "lrm");
+//	command = create_xml_node(NULL, "status");
+	tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
+	command = create_cib_fragment(tmp1, NULL);
+
 	
-	command = create_cib_fragment(iter, "status");
 
 	if(do_delete) {
+		tmp2 = create_xml_node(tmp1, "lrm");
 		process_cib_request(CRM_OPERATION_DELETE, NULL, command);
+		free_xml(tmp2);
 	}
 	
-	add_node_copy(iter, update);
+	add_node_copy(tmp1, update);
 
 	options = create_xml_node(NULL, XML_TAG_OPTIONS);
 	set_xml_property_copy(options, XML_ATTR_VERBOSE, "true");
@@ -991,7 +982,7 @@ void send_cib_status_update(xmlNodePtr update, gboolean do_delete)
 		
 		xmlNodePtr new_options =
 			set_xml_attr(NULL, XML_TAG_OPTIONS,
-				     XML_ATTR_FILTER_TYPE, "status",
+				     XML_ATTR_FILTER_TYPE, XML_CIB_TAG_STATUS,
 				     TRUE);
 		
 		free_xml(answer);
