@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 
 <!-- This document describes the XML elements used by the CRM. 
   
@@ -225,7 +225,7 @@ More details are given in the annotated DTD below.
 		modifier (set|inc|dec) 'inc'
 		from	CDATA #REQUIRED>
 
-<!ELEMENT node_ref>
+<!ELEMENT node_ref EMPTY>
 <!ATTLIST node_ref
 	  id CDATA #REQUIRED
 	  type (id|uname) 'uname'

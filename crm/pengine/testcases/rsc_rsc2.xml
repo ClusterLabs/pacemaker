@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <!-- should not -->
 <cib>
  <configuration>

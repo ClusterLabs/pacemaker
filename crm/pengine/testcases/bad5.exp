@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE transition_graph SYSTEM "crm-1.0.dtd">
 <transition_graph>
   <actions id="0">
     <rsc_op id="2" rsc_id="rsc1" target="node1" task="start" runnable="true" optional="false" discard="false" allow_fail="false">
