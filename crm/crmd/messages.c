@@ -630,8 +630,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 				   "0", "1");
 	} else {
 		CRM_DEBUG("Rejected client logon request");
-		curr_client->client_channel->ops->destroy(
-			curr_client->client_channel);
+		curr_client->client_channel->ch_status = IPC_DISC_PENDING;
 	}
 	
 	if(uid != NULL) ha_free(uid);
