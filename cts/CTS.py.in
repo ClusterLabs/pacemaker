@@ -343,14 +343,31 @@ class ClusterManager(UserDict):
 
         self.log ("Starting %s on node %s"
 		  %	(self["Name"], node))
-        rc=self.rsh(node, self["StartCmd"])
-        if rc == 0:
-            self.ShouldBeStatus[node]=self["up"]
-            return 1
+
+        if node == self.OurNode or self.upcount() < 1:
+            pat = (self["Pat:We_started"] % node)
         else:
+            pat = (self["Pat:They_started"] % node)
+
+        watch = CTS.LogWatcher(self["LogFileName"], [pat]
+        ,	timeout=self["StartTime"]+10)
+        watch.setwatch()
+
+        rc=self.rsh(node, self["StartCmd"])
+        if rc != 0:
             self.log ("Could not start %s on node %s"
             %	(self["Name"], node))
-        return None
+	    return None
+
+	self.ShouldBeStatus[node]=self["up"]
+
+        if watch.look():
+            return 1
+
+	self.CM.log("START FAILURE: did not find pattern " + pat)
+	self.CM.log("START TIMEOUT = %d " % self.CM["StartTime"])
+	
+	return None
 
     def StartaCMnoBlock(self, node):
 
