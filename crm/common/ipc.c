@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.18 2005/01/26 13:30:58 andrew Exp $ */
+/* $Id: ipc.c,v 1.19 2005/02/07 11:11:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,10 +38,11 @@
 #include <clplumbing/GSource.h>
 #include <clplumbing/cl_poll.h>
 
-
-#include <libxml/xmlmemory.h>
-#include <libxml/parser.h>
-#include <libxml/xpath.h>
+#ifdef USE_LIBXML
+#  include <libxml/xmlmemory.h>
+#  include <libxml/parser.h>
+#  include <libxml/xpath.h>
+#endif
 
 #include <crm/common/ipc.h>
 #include <crm/msg_xml.h>
@@ -67,9 +68,8 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 	} else if(ipc_client->ch_status != IPC_CONNECT) {
 		crm_err("IPC Channel is not connected");
 		all_is_good = FALSE;
-	}
 
-	if(ipc_client->should_send_blocking == FALSE) {
+	} else if(ipc_client->should_send_blocking == FALSE) {
 		crm_verbose("Setting IPC Channel to blocking..."
 			    " least some messages get lost");
 		ipc_client->should_send_blocking = TRUE;
@@ -167,7 +167,7 @@ init_client_ipc_comms(const char *channel_name,
 		crm_debug("Adding dispatch method to channel");
 
 		the_source = G_main_add_IPC_Channel(
-			G_PRIORITY_LOW, *ch, FALSE, dispatch, callback_data, 
+			G_PRIORITY_LOW, a_ch, FALSE, dispatch, callback_data, 
 			default_ipc_connection_destroy);
 	}
 	
@@ -256,7 +256,7 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 	ha_msg_input_t *new_input = NULL;
 	gboolean all_is_well = TRUE;
 	const char *sys_to;
-	const char *type;
+	const char *task;
 
 	while(sender->ops->is_message_pending(sender)) {
 		gboolean process = FALSE;
@@ -280,16 +280,16 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		crm_log_message(LOG_MSG, new_input->msg);
 
 		sys_to = cl_get_string(new_input->msg, F_CRM_SYS_TO);
-		type   = cl_get_string(new_input->msg, F_CRM_MSG_TYPE);
+		task   = cl_get_string(new_input->msg, F_CRM_TASK);
 
-		if(safe_str_eq(type, CRM_OP_HELLO)) {
+		if(safe_str_eq(task, CRM_OP_HELLO)) {
 			process = TRUE;
 
 		} else if(sys_to == NULL) {
 			crm_err("Value of %s was NULL!!", F_CRM_SYS_TO);
 			
-		} else if(type == NULL) {
-			crm_err("Value of %s was NULL!!", F_CRM_MSG_TYPE);
+		} else if(task == NULL) {
+			crm_err("Value of %s was NULL!!", F_CRM_TASK);
 			
 		} else {
 			process = TRUE;
@@ -301,7 +301,7 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 			process_function = user_data;
 #ifdef MSG_LOG
 			crm_log_message_adv(
-				LOG_DEBUG, DEVEL_DIR"/inbound.client.log", new_input->msg);
+				LOG_MSG, NULL, new_input->msg);
 #endif
 			if(FALSE == process_function(
 				   new_input->msg, new_input->xml, sender)) {
@@ -311,7 +311,7 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		} else {
 #ifdef MSG_LOG
 			crm_log_message_adv(
-				LOG_ERR, DEVEL_DIR"/inbound.client.log", new_input->msg);
+				LOG_ERR, NULL, new_input->msg);
 #endif
 		}
 		
