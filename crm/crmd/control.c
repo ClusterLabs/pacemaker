@@ -469,16 +469,6 @@ do_read_config(long long action,
 		dc_heartbeat->period_ms = 1000;
 		
 	}
-	if(election_trigger->period_ms < 1) {
-		/* sensible default */
-		election_trigger->period_ms = dc_heartbeat->period_ms * 4;
-		
-	}
-	if(shutdown_escalation_timer->period_ms < 1) {
-		/* sensible default */
-		shutdown_escalation_timer->period_ms
-			= election_trigger->period_ms * 3 * 100;
-	}
 	if(fsa_join_reannouce < 0) {
 		fsa_join_reannouce = 100; /* how many times should we let
 					   * go by before reannoucning
@@ -489,6 +479,19 @@ do_read_config(long long action,
 	election_timeout->period_ms   = dc_heartbeat->period_ms * 6;
 	integration_timer->period_ms  = dc_heartbeat->period_ms * 6;
 	finalization_timer->period_ms = dc_heartbeat->period_ms * 6;
+	
+	if(election_trigger->period_ms < 1
+	   || election_trigger->period_ms > election_timeout->period_ms) {
+		/* sensible default */
+		election_trigger->period_ms = election_timeout->period_ms * 2;
+	}
+	
+	if(shutdown_escalation_timer->period_ms < 1
+	   || election_timeout->period_ms > shutdown_escalation_timer->period_ms) {
+		/* sensible default */
+		shutdown_escalation_timer->period_ms
+			= election_timeout->period_ms * 3 * 100;
+	}
 
 	return I_NULL;
 }
