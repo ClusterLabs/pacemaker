@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.14 2005/02/21 17:21:39 andrew Exp $ */
+/* $Id: main.c,v 1.15 2005/03/14 20:58:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,6 +60,14 @@ main(int argc, char ** argv)
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL);
 
+	/*
+	 * generally we dont need the PE to be as verbose as the rest
+	 * of the system... drop it one notch but dont hide LOG_INFO
+	 */
+	if(crm_log_level > LOG_INFO) {
+		crm_log_level--;
+	}
+	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
