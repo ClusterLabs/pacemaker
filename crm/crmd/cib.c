@@ -163,13 +163,14 @@ do_cib_invoke(long long action,
 			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 			return I_NULL;
 		}
-		
+
+		cib_frag = NULL;
 		rc = fsa_cib_conn->cmds->variant_op(
 			fsa_cib_conn, op, NULL, section,
 			cib_msg->xml, &cib_frag, call_options);
 
 		if(rc != cib_ok || (action & A_CIB_INVOKE)) {
-			answer = create_reply(cib_msg->msg, cib_msg->xml);
+			answer = create_reply(cib_msg->msg, cib_frag);
 			ha_msg_add(answer,XML_ATTR_RESULT,cib_error2string(rc));
 		}
 		
@@ -183,11 +184,10 @@ do_cib_invoke(long long action,
 
 		} else if(rc != cib_ok) {
 			ha_msg_input_t *input = NULL;
-			crm_err("Internal CRM/CIB command from %s: %s",
+			crm_err("Internal CRM/CIB command from %s() failed: %s",
 				msg_data->origin, cib_error2string(rc));
-			crm_log_message(LOG_ERR, cib_msg->msg);
-			crm_xml_err(cib_msg->xml, "Command data:");
-			crm_log_message(LOG_ERR, answer);
+			crm_log_message_adv(LOG_ERR, "CIB Input", cib_msg->msg);
+			crm_log_message_adv(LOG_ERR, "CIB Reply", answer);
 			
 			input = new_ha_msg_input(answer);
 			register_fsa_input(C_FSA_INTERNAL, I_ERROR, input);
