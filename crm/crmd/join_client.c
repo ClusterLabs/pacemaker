@@ -161,7 +161,7 @@ do_cl_join_result(long long action,
 {
 	gboolean   was_nack      = TRUE;
 	xmlNodePtr welcome       = (xmlNodePtr)msg_data->data;
-	xmlNodePtr tmp1          = find_xml_node(welcome, XML_TAG_OPTIONS);
+	xmlNodePtr tmp1          = find_xml_node(welcome, XML_TAG_OPTIONS,TRUE);
 	const char *ack_nack     = xmlGetProp(tmp1, CRM_OP_JOINACK);
 	const char *welcome_from = xmlGetProp(welcome, XML_ATTR_HOSTFROM);
 

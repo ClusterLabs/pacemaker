@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.11 2005/01/12 13:40:57 andrew Exp $ */
+/* $Id: messages.c,v 1.12 2005/01/12 15:44:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -332,7 +332,7 @@ cib_process_replace(
 		section = NULL;
 	}
 	
-	cib_update = find_xml_node(input, XML_TAG_CIB);
+	cib_update = find_xml_node(input, XML_TAG_CIB, TRUE);
 	
 	if (cib_update == NULL) {
 		result = cib_NOOBJECT;
@@ -428,7 +428,7 @@ cib_process_modify(
 	}
 	
 	tmpCib = copy_xml_node_recursive(get_the_CIB());
-	cib_update = find_xml_node(input, XML_TAG_CIB);
+	cib_update = find_xml_node(input, XML_TAG_CIB, TRUE);
 	
 	/* should we be doing this? */
 	/* do logging */
@@ -501,7 +501,7 @@ replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 		new_section = NULL,
 		old_section = NULL;
 	
-	cib_updates = find_xml_node(fragment, XML_TAG_CIB);
+	cib_updates = find_xml_node(fragment, XML_TAG_CIB, TRUE);
 
 	/* find the old and new versions of the section */
 	new_section = get_object_root(section, cib_updates);
@@ -541,7 +541,7 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 	xmlNodePtr cib_updates  = NULL;
 	xmlNodePtr xml_section  = NULL;
 
-	cib_updates  = find_xml_node(update_fragment, XML_TAG_CIB);
+	cib_updates  = find_xml_node(update_fragment, XML_TAG_CIB, TRUE);
 	xml_section  = get_object_root(section, cib_updates);
 	
 	if (section == NULL || xml_section == NULL) {

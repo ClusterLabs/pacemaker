@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.3 2005/01/12 13:41:06 andrew Exp $ */
+/* $Id: callbacks.c,v 1.4 2005/01/12 15:44:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -159,7 +159,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		crm_trace("Initializing graph...");
 		initialize_graph();
 
-		graph = find_xml_node(msg, XML_TAG_GRAPH);
+		graph = find_xml_node(msg, XML_TAG_GRAPH, TRUE);
 		crm_trace("Unpacking graph...");
 		unpack_graph(graph);
 		crm_trace("Initiating transition...");

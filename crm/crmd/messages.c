@@ -1027,7 +1027,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	gboolean broadcast   = FALSE;
 	int log_level        = LOG_DEBUG;
 
-	xmlNodePtr opts = find_xml_node(root, XML_TAG_OPTIONS);
+	xmlNodePtr opts = find_xml_node(root, XML_TAG_OPTIONS, TRUE);
 	const char *op  = xmlGetProp(opts, XML_ATTR_OP);
 
 #ifdef MSG_LOG

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.17 2005/01/12 13:41:08 andrew Exp $ */
+/* $Id: unpack.c,v 1.18 2005/01/12 15:44:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -280,8 +280,9 @@ extract_event(xmlNodePtr msg)
 			continue;
 		}
 
-		resources = find_xml_node(node_state, XML_CIB_TAG_LRM);
-		resources = find_xml_node(resources, XML_LRM_TAG_RESOURCES);
+		resources = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+		resources = find_xml_node(
+			resources, XML_LRM_TAG_RESOURCES, FALSE);
 
 		if(crmd_state != NULL || ccm_state != NULL || join_state != NULL) {
 			/* simple node state update...

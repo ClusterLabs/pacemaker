@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.22 2005/01/12 13:40:57 andrew Exp $ */
+/* $Id: xml.c,v 1.23 2005/01/12 15:44:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,7 +41,7 @@ void dump_array(int log_level, const char *message,
 
 
 xmlNodePtr
-find_xml_node(xmlNodePtr root, const char * search_path)
+find_xml_node(xmlNodePtr root, const char * search_path, gboolean must_find)
 {
 	if(search_path == NULL) {
 		crm_warn("Will never find <NULL>");
@@ -56,7 +56,12 @@ find_xml_node(xmlNodePtr root, const char * search_path)
 		return a_child;
 		);
 
-	crm_warn("Could not find %s in %s.", search_path, xmlGetNodePath(root));
+	if(must_find) {
+		crm_warn("Could not find %s in %s.", search_path, xmlGetNodePath(root));
+	} else {
+		crm_debug("Could not find %s in %s.", search_path, xmlGetNodePath(root));
+	}
+	
 	return NULL;
 }
 
@@ -81,7 +86,7 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 			break;
 		}
 
-		match = find_xml_node(lastMatch, search_path[j]);
+		match = find_xml_node(lastMatch, search_path[j], FALSE);
 		if(match == NULL) {
 			is_found = FALSE;
 			break;
@@ -136,8 +141,7 @@ get_xml_attr_nested(xmlNodePtr parent,
 	xmlNodePtr attr_parent = NULL;
 
 	if(parent == NULL) {
-		crm_err("Can not find attribute %s in NULL parent",
-		       attr_name);
+		crm_debug("Can not find attribute %s in NULL parent",attr_name);
 		return NULL;
 	} 
 
@@ -182,7 +186,7 @@ set_xml_attr(
 		crm_insane("Setting %s=%s at [%s [%s]]",
 			  attr_name, attr_value,
 			  xmlGetNodePath(parent), node_name);
-		node = find_xml_node(parent, node_name);
+		node = find_xml_node(parent, node_name, FALSE);
 		if(node == NULL && create) {
 			node = create_xml_node(parent, node_name);
 			if(parent == NULL) {

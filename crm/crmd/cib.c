@@ -115,7 +115,8 @@ do_cib_invoke(long long action,
 		enum cib_errors rc  = cib_ok;
 		xmlNodePtr cib_frag  = NULL;
 		xmlNodePtr msg_copy = copy_xml_node_recursive(cib_msg);
-		xmlNodePtr options  = find_xml_node(msg_copy, XML_TAG_OPTIONS);
+		xmlNodePtr options  = find_xml_node(
+			msg_copy, XML_TAG_OPTIONS, TRUE);
 		
 		const char *sys_from = xmlGetProp(msg_copy, XML_ATTR_SYSFROM);
 		const char *type     = xmlGetProp(options, XML_ATTR_MSGTYPE);

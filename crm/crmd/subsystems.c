@@ -82,7 +82,7 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	const char 	*devnull = "/dev/null";
 	
 
-	crm_info("Starting sub-system \"%s\"", the_subsystem->name);
+	crm_debug("Starting sub-system \"%s\"", the_subsystem->name);
 
 	if (the_subsystem->pid > 0) {
 		crm_warn("Client %s already running as pid %d",

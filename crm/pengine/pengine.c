@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.51 2004/12/15 16:25:29 andrew Exp $ */
+/* $Id: pengine.c,v 1.52 2005/01/12 15:44:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -74,7 +74,7 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 		xmlNodePtr output = NULL;
 		xmlNodePtr input_cib = msg;
 		
-		input_cib = find_xml_node(input_cib, XML_TAG_CIB);
+		input_cib = find_xml_node(input_cib, XML_TAG_CIB, TRUE);
 
 		msg_buffer = dump_xml_formatted(input_cib);
 		fprintf(pemsg_strm, "%s: %s\n", "[in ]", msg_buffer);

@@ -742,11 +742,11 @@ cib_compare_generation(xmlNodePtr left, xmlNodePtr right)
 	crm_xml_trace(left, "right");
 	
 	if(int_elem_l < int_elem_r) {
-		crm_trace("lt - XML_ATTR_GENERATION");
+		crm_verbose("lt - XML_ATTR_GENERATION");
 		return -1;
 		
 	} else if(int_elem_l > int_elem_r) {
-		crm_trace("gt - XML_ATTR_GENERATION");
+		crm_verbose("gt - XML_ATTR_GENERATION");
 		return 1;
 	}
 
@@ -762,15 +762,15 @@ cib_compare_generation(xmlNodePtr left, xmlNodePtr right)
 	crm_xml_trace(left, "right");
 	
 	if(int_elem_l < int_elem_r) {
-		crm_trace("lt - XML_ATTR_NUMUPDATES");
+		crm_verbose("lt - XML_ATTR_NUMUPDATES");
 		return -1;
 		
 	} else if(int_elem_l > int_elem_r) {
-		crm_trace("gt - XML_ATTR_NUMUPDATES");
+		crm_verbose("gt - XML_ATTR_NUMUPDATES");
 		return 1;
 	}
 	
-	crm_trace("eq - XML_ATTR_NUMUPDATES");
+	crm_verbose("eq - XML_ATTR_NUMUPDATES");
 
 	int_elem_l = -1;
 	int_elem_r = -1;
@@ -784,41 +784,41 @@ cib_compare_generation(xmlNodePtr left, xmlNodePtr right)
 	crm_xml_trace(left, "right");
 	
 	if(int_elem_l < int_elem_r) {
-		crm_trace("lt - XML_ATTR_NUMPEERS");
+		crm_verbose("lt - XML_ATTR_NUMPEERS");
 		return -1;
 		
 	} else if(int_elem_l > int_elem_r) {
-		crm_trace("gt - XML_ATTR_NUMPEERS");
+		crm_verbose("gt - XML_ATTR_NUMPEERS");
 		return 1;
 	}
 	
-	crm_trace("eq - XML_ATTR_NUMPEERS");
+	crm_verbose("eq - XML_ATTR_NUMPEERS");
 
 	elem_l = xmlGetProp(left, XML_ATTR_NUMPEERS);
 	elem_r = xmlGetProp(right, XML_ATTR_NUMPEERS);
 	if(elem_l == NULL && elem_r == NULL) {
 
 	} else if(elem_l == NULL) {
-		crm_trace("lt - XML_ATTR_NUMPEERS");
+		crm_verbose("lt - XML_ATTR_NUMPEERS");
 		return -1;
 
 	} else if(elem_r == NULL) {
-		crm_trace("gt - XML_ATTR_NUMPEERS");
+		crm_verbose("gt - XML_ATTR_NUMPEERS");
 		return 1;
 
 	} else if(safe_str_neq(elem_l, elem_r)) {
 
 		if(safe_str_eq(elem_l, XML_BOOLEAN_TRUE)) {
-			crm_trace("gt - XML_ATTR_NUMPEERS");
+			crm_verbose("gt - XML_ATTR_NUMPEERS");
 			return 1;
 			
 		} else if(safe_str_eq(elem_r, XML_BOOLEAN_TRUE)) {
-			crm_trace("lt - XML_ATTR_NUMPEERS");
+			crm_verbose("lt - XML_ATTR_NUMPEERS");
 			return -1;
 		}
 	}
 	
-	crm_trace("eq - XML_ATTR_NUMPEERS");
+	crm_verbose("eq - XML_ATTR_NUMPEERS");
 	return 0;
 }
 
@@ -876,7 +876,7 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 
 	} else if(strcmp(object_type, XML_CIB_TAG_STATUS) == 0) {
 		/* these live in a different place */
-		tmp_node = find_xml_node(the_root, XML_CIB_TAG_STATUS);
+		tmp_node = find_xml_node(the_root, XML_CIB_TAG_STATUS, TRUE);
 
 		node_stack[0] = XML_CIB_TAG_STATUS;
 		node_stack[1] = NULL;

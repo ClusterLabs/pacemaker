@@ -144,7 +144,7 @@ do_te_invoke(long long action,
 	}
 	
 	if(action & A_TE_INVOKE) {
-		graph = find_xml_node(msg, XML_TAG_GRAPH);
+		graph = find_xml_node(msg, XML_TAG_GRAPH, TRUE);
 		if(graph != NULL) {
 			send_request(NULL, graph, CRM_OP_TRANSITION,
 				     NULL, CRM_SYSTEM_TENGINE, NULL);

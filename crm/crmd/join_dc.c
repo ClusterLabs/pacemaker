@@ -200,7 +200,7 @@ do_dc_join_req(long long action,
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
 	const char *ref       = xmlGetProp(join_ack, XML_ATTR_REFERENCE);
 
-	xmlNodePtr options = find_xml_node(join_ack, XML_TAG_OPTIONS);
+	xmlNodePtr options = find_xml_node(join_ack, XML_TAG_OPTIONS, TRUE);
 	const char *op	   = xmlGetProp(options, XML_ATTR_OP);
 
 	gpointer join_node =
@@ -217,7 +217,7 @@ do_dc_join_req(long long action,
 		is_a_member = TRUE;
 	}
 	
-	generation = find_xml_node(join_ack, XML_CIB_TAG_GENERATION_TUPPLE);
+	generation = find_xml_node(join_ack, XML_CIB_TAG_GENERATION_TUPPLE, TRUE);
 	if(cib_compare_generation(our_generation, generation) < 0) {
 		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 		crm_debug("%s has a better generation number than us",
@@ -334,7 +334,7 @@ do_dc_join_ack(long long action,
 	xmlNodePtr tmp1 = NULL, update = NULL;
 	xmlNodePtr join_ack = (xmlNodePtr)msg_data->data;
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
-	xmlNodePtr options = find_xml_node(join_ack, XML_TAG_OPTIONS);
+	xmlNodePtr options = find_xml_node(join_ack, XML_TAG_OPTIONS, TRUE);
 	const char *op = xmlGetProp(options, XML_ATTR_OP);
 	const char *join_state = NULL;
 
@@ -377,7 +377,7 @@ do_dc_join_ack(long long action,
 	free_xml(tmp1);
 
 	/* update CIB with the current LRM status from the node */
-	tmp1 = find_xml_node(join_ack, XML_TAG_FRAGMENT);
+	tmp1 = find_xml_node(join_ack, XML_TAG_FRAGMENT, TRUE);
 	update_local_cib(tmp1, TRUE);
 
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {

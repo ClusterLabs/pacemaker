@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.6 2005/01/12 13:40:57 andrew Exp $ */
+/* $Id: primatives.c,v 1.7 2005/01/12 15:44:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -324,7 +324,7 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 
 	} else if(object_id == NULL) {
 		/*  placeholder object */
-		equiv_node = find_xml_node(parent, object_name);
+		equiv_node = find_xml_node(parent, object_name, FALSE);
 		
 	} else {
 		equiv_node = find_entity(
@@ -384,7 +384,7 @@ add_cib_object(xmlNodePtr parent, xmlNodePtr new_obj)
 
 	} else if(object_id == NULL) {
 		/*  placeholder object */
-		equiv_node = find_xml_node(parent, object_name);
+		equiv_node = find_xml_node(parent, object_name, FALSE);
 		
 	} else {
 		equiv_node = find_entity(
@@ -431,7 +431,7 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 
 	} else if(object_id == NULL) {
 		/*  placeholder object */
-		equiv_node = find_xml_node(parent, object_name);
+		equiv_node = find_xml_node(parent, object_name, FALSE);
 
 	} else {
 		equiv_node = find_entity(parent, object_name, object_id, FALSE);
@@ -456,7 +456,7 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 
 			if(object_id == NULL) {
 				/*  placeholder object */
-				equiv_node = find_xml_node(parent, object_name);
+				equiv_node = find_xml_node(parent, object_name, TRUE);
 				
 			} else {
 				equiv_node = find_entity(parent, object_name, object_id, FALSE);
@@ -469,7 +469,7 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 		replace = xmlGetProp(new_obj, XML_CIB_ATTR_REPLACE);
 		
 		if(replace != NULL) {
-			xmlNodePtr remove = find_xml_node(equiv_node, replace);
+			xmlNodePtr remove = find_xml_node(equiv_node, replace, FALSE);
 			if(remove != NULL) {
 				crm_debug("Replacing node <%s> in <%s>",
 					  replace, equiv_node->name);

@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.18 2005/01/12 13:40:55 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.19 2005/01/12 15:44:22 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -593,7 +593,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			continue;
 		}
 
-		options = find_xml_node(xml_root_node, XML_TAG_OPTIONS);
+		options = find_xml_node(xml_root_node, XML_TAG_OPTIONS, FALSE);
 		
 		result = xmlGetProp(options, XML_ATTR_RESULT);
 		if(result == NULL || strcmp(result, "ok") == 0) {
@@ -606,7 +606,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 		if(DO_HEALTH) {
 			xmlNodePtr ping = find_xml_node(
-				xml_root_node, XML_CRM_TAG_PING);
+				xml_root_node, XML_CRM_TAG_PING, FALSE);
 
 			const char *state = xmlGetProp(ping, "crmd_state");
 

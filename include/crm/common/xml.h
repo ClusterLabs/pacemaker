@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.7 2004/09/20 12:16:35 andrew Exp $ */
+/* $Id: xml.h,v 1.8 2005/01/12 15:44:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -159,7 +159,7 @@ extern xmlNodePtr string2xml(const char *input);
 
 
 /* convience "wrapper" functions */
-extern xmlNodePtr find_xml_node(xmlNodePtr cib, const char * node_path);
+extern xmlNodePtr find_xml_node(xmlNodePtr cib, const char * node_path, gboolean must_find);
 
 extern xmlNodePtr find_entity(xmlNodePtr parent,
 			      const char *node_name,

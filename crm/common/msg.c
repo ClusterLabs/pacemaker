@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.8 2004/10/21 18:25:42 andrew Exp $ */
+/* $Id: msg.c,v 1.9 2005/01/12 15:44:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -217,7 +217,7 @@ process_hello_message(xmlNodePtr hello,
 	*major_version = NULL;
 	*minor_version = NULL;
 
-	opts = find_xml_node(hello, XML_TAG_OPTIONS);
+	opts = find_xml_node(hello, XML_TAG_OPTIONS, TRUE);
 	
 	op = xmlGetProp(opts, XML_ATTR_OP);
 	local_uuid = xmlGetProp(opts, "client_uuid");
@@ -388,7 +388,7 @@ create_common_message(xmlNodePtr original_request,
 		add_node_copy(new_message, xml_response_data);
 	}
     
-	options = find_xml_node(original_request, XML_TAG_OPTIONS);
+	options = find_xml_node(original_request, XML_TAG_OPTIONS, FALSE);
 	if (options != NULL) {
 		add_node_copy(new_message, options);
 	}
