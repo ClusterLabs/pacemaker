@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.23 2004/04/01 15:49:37 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.24 2004/04/06 16:21:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -531,13 +531,17 @@ set_xml_property_copy(xmlNodePtr node,
 #ifdef XML_TRACE
 	CRM_DEBUG4("[%s] Setting %s to %s", parent_name, name, value);
 #endif
-	if (name == NULL || strlen(name) <= 0)
+	if (name == NULL || strlen(name) <= 0) {
 		ret_value = NULL;
-	else if(node == NULL)
+		
+	} else if(node == NULL) {
 		ret_value = NULL;
-	else if (value == NULL || strlen(value) <= 0)
+		
+	} else if (value == NULL || strlen(value) <= 0) {
 		ret_value = NULL;
-	else {
+		xmlUnsetProp(node, local_name);
+		
+	} else {
 		local_value = cl_strdup(value);
 		local_name = cl_strdup(name);
 		ret_value = xmlSetProp(node, local_name, local_value);
