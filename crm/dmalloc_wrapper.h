@@ -1,4 +1,4 @@
-/* $Id: dmalloc_wrapper.h,v 1.3 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: dmalloc_wrapper.h,v 1.4 2004/02/29 20:26:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,7 +23,7 @@
 #include <linux-ha/config.h>
 
 #ifdef CRM_DEBUG_DMALLOC
-#   include "dmalloc.h"
+#   include <dmalloc.h>
 #endif
 
 #endif
