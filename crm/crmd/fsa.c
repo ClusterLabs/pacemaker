@@ -504,26 +504,37 @@ do_state_transition(long long actions,
 /* 	} else { */
 /* 		startTimer(election_timeout); */
 	}
-
+#if 0
 	if(is_set(fsa_input_register, R_SHUTDOWN)){
 		set_bit_inplace(tmp, A_DC_TIMER_STOP);
 	}
-
+#endif
+	if(next_state == S_INTEGRATION) {
+		set_bit_inplace(tmp, A_INTEGRATE_TIMER_START);
+	} else {
+		set_bit_inplace(tmp, A_INTEGRATE_TIMER_STOP);
+	}
+	
+	if(next_state == S_FINALIZE_JOIN) {
+		set_bit_inplace(tmp, A_FINALIZE_TIMER_START);
+	} else {
+		set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
+	}
+	
+	if(next_state == S_PENDING) {
+		set_bit_inplace(tmp, A_DC_TIMER_START);
+	} else {
+		set_bit_inplace(tmp, A_DC_TIMER_STOP);
+	}
+	
 	switch(next_state) {
 		case S_PENDING:			
-			set_bit_inplace(tmp, A_DC_TIMER_START);
-			/*fall through*/
 		case S_ELECTION:
 			crm_info("Resetting our DC to NULL on election");
 			crm_free(fsa_our_dc);
 			fsa_our_dc = NULL;
-			/*fall through*/
-		case S_RELEASE_DC:
-			set_bit_inplace(tmp, A_INTEGRATE_TIMER_STOP);
-			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
 			break;
 		case S_NOT_DC:
-			set_bit_inplace(tmp, A_DC_TIMER_STOP);
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
 				crm_info("(Re)Issuing shutdown request now"
 					 " that we have a new DC");
@@ -536,21 +547,10 @@ do_state_transition(long long actions,
 			}
 			break;
 		case S_RECOVERY:
-			set_bit_inplace(tmp, A_DC_TIMER_STOP);
 			clear_recovery_bit = FALSE;
 			break;
 
-		case S_INTEGRATION:
-			set_bit_inplace(tmp, A_DC_TIMER_STOP);
-			set_bit_inplace(tmp, A_INTEGRATE_TIMER_START);
-			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
-	
-			break;
-
 		case S_FINALIZE_JOIN:
-			set_bit_inplace(tmp, A_INTEGRATE_TIMER_STOP);
-			set_bit_inplace(tmp, A_FINALIZE_TIMER_START);
-			
 			if(cause != C_FSA_INTERNAL) {
 				crm_warn("Progressed to state %s after %s",
 					 fsa_state2string(cur_state),
@@ -570,7 +570,6 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_POLICY_ENGINE:
-			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
 			if(cause != C_FSA_INTERNAL) {
 				crm_warn("Progressed to state %s after %s",
 					 fsa_state2string(cur_state),
@@ -605,7 +604,6 @@ do_state_transition(long long actions,
 			break;
 			
 		default:
-			set_bit_inplace(tmp, A_DC_TIMER_STOP);
 			break;
 	}
 
