@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.34 2004/05/23 19:54:04 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.35 2004/05/28 06:09:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,6 +44,8 @@
 #include <cibmessages.h>
 
 #include <crm/dmalloc_wrapper.h>
+FILE *msg_cib_strm = NULL;
+
 
 enum cib_result updateList(xmlNodePtr local_cib,
 			   xmlNodePtr update_command,
@@ -90,6 +92,14 @@ cib_process_request(const char *op,
 	verbose = xmlGetProp(options, XML_ATTR_VERBOSE);
 	section = xmlGetProp(options, XML_ATTR_FILTER_TYPE);
 	failed  = create_xml_node(NULL, XML_TAG_FAILED);
+
+#ifdef MSG_LOG
+	if(msg_cib_strm == NULL) {
+		msg_cib_strm = fopen("/tmp/cib.log", "w");
+	}
+	fprintf(msg_cib_strm, "[Input %s]\t%s\n", op, dump_xml_node(fragment, FALSE));
+	fflush(msg_cib_strm);
+#endif
 
 	cl_log(LOG_DEBUG, "[cib] Processing \"%s\" event", op);
 	
@@ -269,6 +279,12 @@ cib_process_request(const char *op,
 	}
 
 	free_xml(failed);
+
+#ifdef MSG_LOG
+	fprintf(msg_cib_strm, "[Reply (%s)]\t%s\n",
+		op, dump_xml_node(cib_answer, FALSE));
+	fflush(msg_cib_strm);
+#endif
 
 	FNRET(cib_answer);
 }

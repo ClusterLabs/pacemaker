@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.35 2004/05/23 19:54:04 andrew Exp $ */
+/* $Id: cib.c,v 1.36 2004/05/28 06:09:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -98,8 +98,6 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 	FNRET(tmp_node);
 }
 
-FILE *msg_cib_strm = NULL;
-
 xmlNodePtr
 process_cib_message(xmlNodePtr message, gboolean auto_reply)
 {
@@ -110,14 +108,6 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 	xmlNodePtr options  = find_xml_node(message, XML_TAG_OPTIONS);
 	const char *op      = get_xml_attr (message, XML_TAG_OPTIONS,
 					    XML_ATTR_OP, TRUE);
-
-#ifdef MSG_LOG
-	if(msg_cib_strm == NULL) {
-		msg_cib_strm = fopen("/tmp/cib.log", "w");
-	}
-	fprintf(msg_cib_strm, "[Input ]\t%s\n", dump_xml_node(message, FALSE));
-	fflush(msg_cib_strm);
-#endif
 	
 	data = cib_process_request(op, options, fragment, &result);
 
@@ -127,22 +117,13 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 		reply = create_reply(message, data);
 		free_xml(data);
 
-#ifdef MSG_LOG
-		fprintf(msg_cib_strm, "[Reply ]\t%s\n",
-			dump_xml_node(reply, FALSE));
-		fflush(msg_cib_strm);
-#endif
+		// TODO: put real result in here
 		set_xml_attr(reply, XML_TAG_OPTIONS,
-			     XML_ATTR_RESULT, "ok", TRUE); // put real result in here
+			     XML_ATTR_RESULT, "ok", TRUE);
 		
 		return reply;
-
 	}
 	
-#ifdef MSG_LOG
-	fprintf(msg_cib_strm, "[Output]\t%s\n", dump_xml_node(data, FALSE));
-	fflush(msg_cib_strm);
-#endif
 	return data;
 }
 
