@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.2 2004/12/10 20:07:07 andrew Exp $ */
+/* $Id: notify.c,v 1.3 2004/12/14 14:43:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -114,7 +114,7 @@ cib_pre_notify(
 
 	} else {
 		crm_verbose("Performing %s on <%s%s%s>",
-			    op, type, id?" id=":"", id?id?"");
+			    op, type, id?" id=":"", id?id:"");
 	}
 		
 	ha_msg_del(update_msg);

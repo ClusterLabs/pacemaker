@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.1 2004/12/10 20:07:07 andrew Exp $ */
+/* $Id: cibmon.c,v 1.2 2004/12/14 14:43:02 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -394,7 +394,7 @@ cibmon_post_notify(const char *event, struct ha_msg *msg)
 	} else {
 		if(rc == cib_ok) {
 			crm_verbose("Completed %s of <%s%s%s>",
-				    op, type, id?" id=":"", id);
+				    op, type, id?" id=":"", id?id:"");
 			fprintf(msg_cib_strm, "[%s] Operation %s to <%s%s%s> completed.\n",
 				event, op, crm_str(type), id?" id=":"", id?id:"");
 			

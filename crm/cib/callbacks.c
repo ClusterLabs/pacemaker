@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.4 2004/12/10 20:07:07 andrew Exp $ */
+/* $Id: callbacks.c,v 1.5 2004/12/14 14:43:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -367,16 +367,19 @@ cib_common_callback(
 			ha_msg_del(op_request);
 			continue;
 		}
-		
-		if(call_options & cib_sync_call) {
- 			crm_info("Sending sync reply to %s op", op);
+
+		if(op_reply == NULL) {
+			crm_trace("No reply is required for op %s", op);
+			
+		} else if(call_options & cib_sync_call) {
+ 			crm_info("Sending sync reply %p to %s op", op_reply,op);
 			if(msg2ipcchan(op_reply, channel) != HA_OK) {
 				rc = cib_reply_failed;
 			}
 
 		} else {
 			/* send reply via client's callback channel */
- 			crm_info("Sending async reply to %s op", op);
+ 			crm_info("Sending async reply %p to %s op", op_reply, op);
 			rc = send_via_callback_channel(
 				op_reply, cib_client->callback_id);
 		}
@@ -478,12 +481,8 @@ cib_process_command(const struct ha_msg *request, struct ha_msg **reply,
 	ha_msg_add(*reply, F_TYPE, "cib");
 	ha_msg_add(*reply, F_CIB_OPERATION, op);
 	ha_msg_add(*reply, F_CIB_CALLID, call_id);
-	
-	{
-		char *tmp = crm_itoa(rc);
-		ha_msg_add(*reply, F_CIB_RC, tmp);
-		crm_free(tmp);
-	}
+	ha_msg_add_int(*reply, F_CIB_RC, rc);
+
 	{
 		const char *tmp = cl_get_string(request, F_CIB_CLIENTID);
 		ha_msg_add(*reply, F_CIB_CLIENTID, tmp);
@@ -517,6 +516,8 @@ send_via_callback_channel(struct ha_msg *msg, const char *token)
 {
 	cib_client_t *hash_client = NULL;
 	
+	crm_debug("Delivering msg %p to client %s", msg, token);
+
 	if(msg == NULL) {
 		crm_err("No message to send");
 		return cib_reply_failed;
