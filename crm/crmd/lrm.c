@@ -237,11 +237,7 @@ build_suppported_RAs(crm_data_t *metadata_list, crm_data_t *xml_agent_list)
 	GList *types            = NULL;
 	GList *classes          = NULL;
 	const char *version     = NULL;
-	const char *ra_data     = NULL;
-/*	GHashTable *metadata    = NULL; */
 	crm_data_t *xml_agent    = NULL;
-	crm_data_t *xml_metadata = NULL;
-	crm_data_t *tmp          = NULL;
 	
 	if(fsa_lrm_conn == NULL) {
 		return FALSE;
@@ -267,25 +263,6 @@ build_suppported_RAs(crm_data_t *metadata_list, crm_data_t *xml_agent_list)
 				xml_agent, XML_AGENT_ATTR_CLASS, class);
 			set_xml_property_copy(xml_agent, XML_ATTR_TYPE, type);
 
-/*			ra_data = g_hashtable_lookup(metadata, type); */
-			if(ra_data != NULL) {
-				xml_metadata = create_xml_node(
-					xml_metadata, "agent_metadata");
-				set_xml_property_copy(
-					xml_metadata,
-					XML_AGENT_ATTR_CLASS, class);
-
-				set_xml_property_copy(
-					xml_metadata, XML_ATTR_TYPE, type);
-
-				tmp = string2xml(ra_data);
-				if(tmp != NULL) {
-					add_node_copy(xml_metadata, tmp);
-					free_xml(tmp);
-				}
-				/* extract version */
-			}
-			
 			set_xml_property_copy(
 				xml_agent, XML_ATTR_VERSION, version);
 
