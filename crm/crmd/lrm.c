@@ -783,8 +783,9 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	
 	fragment = create_cib_fragment(update, NULL);
 
-	send_request(NULL, fragment, CRM_OP_CIB_UPDATE,
-		     fsa_our_dc, CRM_SYSTEM_DCIB, NULL);
+	fsa_cib_conn->cmds->modify(
+		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
+		cib_discard_reply);
 	
 	free_xml(fragment);
 	free_xml(update);
@@ -821,86 +822,6 @@ do_lrm_event(long long action,
 		case LRM_OP_DONE:
 			do_update_resource(rsc, op);
 			break;
-	}
-	
-	return I_NULL;
-}
-
-enum crmd_fsa_input
-do_fake_lrm_op(gpointer data)
-{
-	xmlNodePtr msg          = NULL;
-	const char *crm_op      = NULL;
-	const char *operation   = NULL;
-	const char *id_from_cib = NULL;
-	long int op_code = 0;
-	const char *op_status = NULL;
-	xmlNodePtr update = NULL;
-	xmlNodePtr state = NULL;
-	xmlNodePtr iter = NULL;
-	char *op_code_s = NULL;
-
-	
-	if(data == NULL) {
-		return I_ERROR;
-	}
-	
-	msg = (xmlNodePtr)data;
-	
-	operation = get_xml_attr_nested(
-		msg, rsc_path, DIMOF(rsc_path) -3, XML_LRM_ATTR_TASK, TRUE);
-	
-	id_from_cib = get_xml_attr_nested(
-		msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_ID, TRUE);
-	
-	crm_op = get_xml_attr(msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
-
-	if(safe_str_eq(crm_op, "rsc_op")) {
-
-		state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-		iter = create_xml_node(state, XML_CIB_TAG_LRM);
-
-		crm_info("Performing %s on %s", operation, id_from_cib);
-
-		/* so we can identify where to do the update */
-		set_uuid(state, XML_ATTR_UUID, fsa_our_uname);
-
-		iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
-		iter = create_xml_node(iter, "lrm_resource");
-
-		set_xml_property_copy(iter, XML_ATTR_ID, id_from_cib);
-		set_xml_property_copy(iter, XML_LRM_ATTR_LASTOP, operation);
-
-		op_code_s = crm_itoa(op_code);
-
-		if(op_code) {
-			/* fail */
-			if(safe_str_eq(operation, "start")){
-				op_status = "stopped";
-			} else {
-				op_status = "started";
-			}
-
-		} else {
-			/* pass */
-			if(safe_str_eq(operation, "start")){
-				op_status = "started";
-			} else {
-				op_status = "stopped";
-			}
-		}
-		
-		set_xml_property_copy(iter, XML_LRM_ATTR_RSCSTATE, op_status);
-		set_xml_property_copy(iter, XML_LRM_ATTR_OPSTATUS, op_code_s);
-		set_xml_property_copy(
-			iter, XML_LRM_ATTR_TARGET, fsa_our_uname);
-
-		crm_free(op_code_s);
-		
-		update = create_cib_fragment(state, NULL);
-		
-		send_request(NULL, update, CRM_OP_CIB_UPDATE,
-			     fsa_our_dc, CRM_SYSTEM_DCIB, NULL);
 	}
 	
 	return I_NULL;
