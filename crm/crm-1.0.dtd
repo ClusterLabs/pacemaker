@@ -274,29 +274,66 @@ More details are given in the annotated DTD below.
   nodes and resources. 
 
   TODO: Where is the status of on-going STONITH requests tracked?
+  (Andrew: I believe this is now covered by the "unclean" attribute.  
+  Unless "assassin" is also required to track who shot the node.)
   
 -->
+<!ELEMENT status (crm_state,node_state*)>
 
-<!ELEMENT status (node_state*)>
 
-<!-- 	The state of a given node. 
+<!-- Information about the CRM Layer of the cluster.
 
-	uname is clear.
+	"dc_uname" is the uname of the currently elected as DC.
 
-	state is either active (both CRM and CCM are up), in_ccm (node
-	is around in the membership, but CRM is not talking to us), down
-	(neither) or shot (well, you know, it was, but then I threw a
-	lot of stones at it.)
+	More attributes may be added later point.
+
+-->
+<!ELEMENT crm_status EMPTY>
+<!ATTLIST crm_status 
+	id	   CDATA #REQUIRED
+	dc_uname   CDATA #REQUIRED>
+
+
+<!-- 	The state of a given node.  
 	
-	exp_state is our expectation of the state. This requires some
+	This information is updated by the DC based on inputs from 
+	sources such as the CCM, status messages from remote LRMs and 
+	requests from other nodes. 
+
+	"id" is the node's uname.
+
+	"state" is either active (both CRM and CCM are up and the node 
+	is fully active in the cluster), in_ccm (node is around in the 
+	membership, but not taking part in CRM activities) or down
+	(neither).
+	
+	"unclean" is set to the current time when the node leaves the 
+	cluster ungracefully and is usually an indication that the node 
+	needs to be shot.  
+
+	The DC will unset this field after the Transitioner has successfully 
+	shot the node, OR the node rejoins the cluster cleanly.
+
+	"exp_state" is our expectation of the state. This requires some
 	book-keeping on the part of the other nodes to remember the last
 	state of any other node by updating it to the latest relayed to
 	them.
 	
 	"source" then states which node contributed this state entry.
-	For an active node, source == uname, or something is very wrong
-	;-) For a node which was shot, this should track the node who
-	completed the STONITH operation.
+	If unclean is not set, then "source" refers to the node that
+	last updated the "state" attribute.  Otherwise, it will contain
+	the node who completed the STONITH operation.  
+
+	NOTE: There is a period of time between when we recognise the node
+	is unlean and when it is shot.  Perhaps an "assassin" attribute is 
+	needed or "source" should be unset when a node is detected as being 
+	unclean.
+
+	"health" the list of possible values for this attribute need 
+	to be fleshed out but the intention is to allow the PE to 
+	differentiate (when trying to place resources) between a healthy
+	node in the active state and one that is overloaded or performing 
+	recovery activities.
 
  	A node which is exp_state == down && state == active is, in
 	fact, going down. The Policy Engine will migrate resources away
@@ -307,13 +344,13 @@ More details are given in the annotated DTD below.
 -->
 <!ELEMENT node_state (lrm, attributes)>
 <!ATTLIST node_state
-	id		CDATA #REQUIRED
-	uname   	CDATA #REQUIRED
-	state	  	(active|in_ccm|down|shot) #REQUIRED
-	exp_state	(active|down)      #REQUIRED
-	source		CDATA #IMPLIED
-	is_dc		(yes|no) 'no'
-	timestamp	CDATA #REQUIRED>
+	id		CDATA			#REQUIRED
+	state	  	(active|in_ccm|down)	#REQUIRED
+	unclean		CDATA			#REQUIRED
+	exp_state	(active|down)		#REQUIRED
+	source		CDATA			#IMPLIED
+	health		(ok|overloaded|recovery|sick)	'ok'
+	timestamp	CDATA			#REQUIRED>
 
 <!-- Information from the Local Resource Manager of the node.
      
