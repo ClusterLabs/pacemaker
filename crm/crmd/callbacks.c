@@ -56,13 +56,16 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 	}
 #endif
 
-	if(from == NULL || strcmp(from, fsa_our_uname) == 0) {
+	if(safe_str_eq(from, fsa_our_uname)) {
 #ifdef MSG_LOG
 		fprintf(msg_in_strm,
 			"Discarded message [F_SEQ=%s] from ourselves.\n",
 			ha_msg_value(msg, F_SEQ));
+		fflush(msg_in_strm);
 #endif
 		return;
+	} else if(from == NULL) {
+		crm_err("Value of %s was NULL", F_ORIG);
 	}
 	
 #ifdef MSG_LOG

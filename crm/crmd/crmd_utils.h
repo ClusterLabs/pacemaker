@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.1 2004/06/01 12:25:15 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.2 2004/08/11 07:17:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,8 +43,10 @@ extern xmlNodePtr create_node_state(const char *node,
 				    const char *crmd_state,
 				    const char *join_state);
 
-extern enum crmd_fsa_input invoke_local_cib(xmlNodePtr msg_options,
-					    xmlNodePtr msg_data,
-					    const char *operation);
+extern enum crmd_fsa_input invoke_local_cib(
+	xmlNodePtr msg_options, xmlNodePtr msg_data, const char *operation);
+
+extern void create_node_entry(
+	const char *uuid, const char *uname, const char *type);
 
 #endif

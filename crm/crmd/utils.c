@@ -17,6 +17,7 @@
  */
 #include <sys/param.h>
 #include <crm/crm.h>
+#include <crm/cib.h>
 #include <crmd_fsa.h>
 
 #include <clplumbing/Gmain_timeout.h>
@@ -641,4 +642,31 @@ invoke_local_cib(xmlNodePtr msg_options,
 	free_xml(request);
 	
 	return result;
+}
+
+void
+create_node_entry(const char *uuid, const char *uname, const char *type)
+{
+	
+	/* make sure a node entry exists for the new node
+	 *
+	 * this will add anyone except the first ever node in the cluster
+	 *   since it will also be the DC which doesnt go through the
+	 *   join process (with itself).  We can include a special case
+	 *   later if desired.
+	 */
+	xmlNodePtr tmp2 = NULL;
+	xmlNodePtr tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
+	set_xml_property_copy(tmp1, XML_ATTR_ID, uuid);
+	set_xml_property_copy(tmp1, "uname", uname);
+	set_xml_property_copy(tmp1, XML_ATTR_TYPE, type);
+	
+	tmp2 = create_cib_fragment(tmp1, NULL);
+
+	/* do not forward this to the TE */
+	invoke_local_cib(NULL, tmp2, CRM_OP_UPDATE);
+	
+	free_xml(tmp2);
+	free_xml(tmp1);
+	
 }
