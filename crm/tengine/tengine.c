@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.50 2005/03/11 14:25:07 andrew Exp $ */
+/* $Id: tengine.c,v 1.51 2005/03/14 21:04:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -154,7 +154,7 @@ match_graph_event(action_t *action, crm_data_t *event)
 	crm_devel("matching against: <%s task=%s node=%s rsc_id=%s/>",
 		  crm_element_name(action->xml), this_action, this_node, this_rsc);
 	if(safe_str_neq(this_action, event_action)) {	
-		crm_devel("action mismatch: %s", event_action);
+		crm_info("Action %d : Action mismatch %s", action->id, event_action);
 		
 	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT)) {
 		if(safe_str_eq(this_action, XML_CIB_ATTR_STONITH)) {
@@ -170,14 +170,15 @@ match_graph_event(action_t *action, crm_data_t *event)
 		match = action;
 		
 	} else if(safe_str_neq(this_node, event_node)) {
-		crm_devel("node mismatch: %s", event_node);
+		crm_info("Action %d : Node mismatch %s", action->id, event_node);
 
 	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP)) {
 		crm_devel(XML_GRAPH_TAG_RSC_OP);
 		if(safe_str_eq(this_rsc, event_rsc)) {
 			match = action;
 		} else {
-			crm_devel("bad rsc (%s) != (%s)", this_rsc, event_rsc);
+			crm_info("Action %d : bad rsc (%s) != (%s)",
+				 action->id, this_rsc, event_rsc);
 		}
 		
 	} else {
@@ -258,17 +259,22 @@ match_down_event(const char *target, const char *filter, int rc)
 				action_args = find_xml_node(
 					action->xml, "args", TRUE);
 				this_node = crm_element_value(
-					action_args, "target");
+					action_args, XML_LRM_ATTR_TARGET);
 
 			} else if(safe_str_eq(this_action, CRM_OP_SHUTDOWN)) {
+				   crm_element_value(
+					   action->xml, XML_LRM_ATTR_TASK);
 				this_node = crm_element_value(
-					action->xml, "target");
+					action->xml, XML_LRM_ATTR_TARGET);
 			} else {
+				crm_info("Action %d : Bad action %s",
+					 action->id, this_action);
 				continue;
 			}
 			
 			if(safe_str_neq(this_node, target)) {
-				crm_devel("node mismatch: %s", this_node);
+				crm_info("Action %d : Node mismatch: %s",
+					 action->id, this_node);
 				continue;
 			}
 
@@ -470,7 +476,7 @@ initiate_action(action_t *action)
 		const char *uuid = crm_element_value(action_args,"target_uuid");
 		crm_malloc(st_op, sizeof(stonith_ops_t));
 		st_op->optype = RESET;
-		st_op->timeout = crm_atoi(timeout, "10"); /* one second */
+		st_op->timeout = crm_atoi(timeout, "100"); /* ten seconds */
 		st_op->node_name = crm_strdup(target);
  		CRM_DEV_ASSERT(uuid_parse(uuid, st_op->node_uuid) == 0);
 
