@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.41 2005/02/01 22:48:16 andrew Exp $ */
+/* $Id: tengine.c,v 1.42 2005/02/02 21:57:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -284,7 +284,6 @@ check_for_completion(void)
 		 * else is happening
 		 */
 		crm_info("Transition complete");
-		print_state(TRUE);
 		
 		if(transition_fuzz_timer->timeout > 0) {
 			crm_info("Allowing the system to stabilize for %d ms"
@@ -299,8 +298,8 @@ check_for_completion(void)
 		
 	} else {
 		/* restart the transition timer again */
-		crm_info("Transition not yet complete");
-		print_state(TRUE);
+		crm_debug("Transition not yet complete");
+		print_state(LOG_DEBUG);
 		transition_timer->timeout = next_transition_timeout;
 		start_te_timer(transition_timer);
 	}
