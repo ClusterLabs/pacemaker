@@ -517,7 +517,7 @@ function crm-cleanup-node() {
 	do_cmd remote_cmd $INIT_USER $ha_host "rm -f $HAVAR_DIR/crm/cib*.xml"
 
 	`which ssh` ${INIT_USER}@${ha_host} "rm -f /tmp/crm/*" 2>/dev/null 
-	remote_cmd $INIT_USER $ha_host "rm -f /var/lib/heartbeat/cores/*/core" 2>&1 > /dev/null
+	remote_cmd $INIT_USER $ha_host "rm -f ${HAVAR_DIR}/cores/*/core" 2>&1 > /dev/null
 	if [ `dirname $logfile` = "/tmp/crm" ]; then
 	    do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart"
 	fi
