@@ -559,17 +559,26 @@ do_lrm_rsc_op(
 
 	const char *type = NULL;
 	const char *class = NULL;
+	const char *provider = NULL;
 
+	GHashTable *params = NULL;
+	
 	if(rsc != NULL) {
 		class = rsc->class;
 		type = rsc->type;
 		
 	} else if(msg != NULL) {
 		class = get_xml_attr_nested(
-			msg, rsc_path, DIMOF(rsc_path) -2, XML_AGENT_ATTR_CLASS, TRUE);
+			msg, rsc_path, DIMOF(rsc_path) -2,
+			XML_AGENT_ATTR_CLASS, TRUE);
 		
 		type = get_xml_attr_nested(
-			msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TYPE, TRUE);
+			msg, rsc_path, DIMOF(rsc_path) -2,
+			XML_ATTR_TYPE, TRUE);
+
+		provider = get_xml_attr_nested(
+			msg, rsc_path, DIMOF(rsc_path) -2,
+			XML_AGENT_ATTR_PROVIDER, TRUE);
 	}
 	
 	if(rsc == NULL) {
@@ -581,8 +590,14 @@ do_lrm_rsc_op(
 	if(rsc == NULL) {
 		/* add it to the list */
 		crm_verbose("adding rsc %s before operation", rid);
+		if(msg != NULL) {
+			params = xml2list(msg);
+
+		} else {
+			CRM_DEV_ASSERT(safe_str_eq(CRMD_RSCSTATE_STOP, operation));
+		}
 		fsa_lrm_conn->lrm_ops->add_rsc(
-			fsa_lrm_conn, rid, class, type, NULL, NULL);
+			fsa_lrm_conn, rid, class, type, provider, params);
 		
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 	}
@@ -606,14 +621,20 @@ do_lrm_rsc_op(
 	op->op_type   = crm_strdup(operation);
 	op->user_data = NULL;
 
-	if(msg != NULL) {
-		op->params = xml2list(msg);
-	} else {
-		CRM_DEV_ASSERT(safe_str_eq(CRMD_RSCSTATE_STOP, operation));
+	if(params == NULL) {
+		if(msg != NULL) {
+			params = xml2list(msg);
+		} else {
+			CRM_DEV_ASSERT(safe_str_eq(
+					       CRMD_RSCSTATE_STOP, operation));
+		}
 	}
 
+	op->params = params;
 	op->interval = crm_atoi(g_hash_table_lookup(op->params,"interval"),"0");
 	op->timeout  = crm_get_msec(g_hash_table_lookup(op->params, "timeout"));
+
+	/* sanity */
 	if(op->interval < 0) {
 		op->interval = 0;
 	}
@@ -879,7 +900,7 @@ do_lrm_event(long long action,
 	
 	switch(op->op_status) {
 		case LRM_OP_ERROR:
-			crm_warn("LRM operation %s/%s (rc=%s) failed",
+			crm_warn("LRM operation %s/%s failed (%s)",
 				 crm_str(rsc->id), op->op_type,
 				 execra_code2string(op->rc));
 			break;
