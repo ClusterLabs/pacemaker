@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.9 2004/09/20 14:29:33 andrew Exp $ */
+/* $Id: ipc.c,v 1.10 2004/09/29 08:46:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,17 +92,15 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 	if (msg == NULL) {
 		crm_err("cant send NULL message");
 		all_is_good = FALSE;
-	}
-	else if (msg->msg_len <= 0) {
+	} else if (msg->msg_len <= 0) {
 		crm_err("cant send 0 sized message");
 		all_is_good = FALSE;
-	}
-	else if (msg->msg_len > MAXDATASIZE) {
+	} else if (msg->msg_len > MAXDATASIZE) {
 		crm_err("cant send msg... too big");
 		all_is_good = FALSE;
 	}
 	
-	crm_trace("Sending message: %s", crm_str(msg->msg_body)); 
+	crm_trace("Sending message: %s", crm_str(msg?msg->msg_body:NULL)); 
 	crm_verbose("Message is%s valid to send", all_is_good?"":" not");
 
 	if (ipc_client == NULL) {
