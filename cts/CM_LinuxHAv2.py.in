@@ -62,6 +62,7 @@ class LinuxHAv2(HeartbeatCM):
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s status 0 0 EVERYTIME 2>/dev/null|grep return",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
+            "TmpDir"         : "/tmp",
             "BreakCommCmd2"  : "/usr/lib/heartbeat/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
             "IsIPAddrRscRunning"   : "",
 
@@ -352,9 +353,9 @@ class LinuxHAv2(HeartbeatCM):
         return rc
 
     def Configuration(self):
-        if 0!=self.rsh.cp("root@"+self["CIBfile"]%self.Env["nodes"][0],self.Env["HAdir"]):
-            raise ValueError("Can not copy file to %s, maybe permission denied"%self.Env["HAdir"])
-        cib=parse("%s/cib.xml"%self.Env["HAdir"])
+        if 0!=self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],"%s/cts_cib.xml"%self["TmpDir"]):
+            raise ValueError("Can not copy file to %s, maybe permission denied"%self["TmpDir"])
+        cib=parse("%s/cts_cib.xml"%self["TmpDir"])
         return cib.getElementsByTagName('configuration')[0]
     
     def Resources(self):
