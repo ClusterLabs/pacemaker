@@ -87,16 +87,19 @@ do_election_vote(long long action,
 	return I_NULL;
 }
 
+char *dc_hb_msg = NULL;
+
 gboolean
 do_dc_heartbeat(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
-	gboolean was_sent = send_request(NULL, NULL, CRM_OP_HBEAT, 
-					 NULL, CRM_SYSTEM_CRMD, NULL);
 
 /*	crm_debug("#!!#!!# Heartbeat timer just popped!"); */
-	
-	if(was_sent == FALSE) {
+	if(dc_hb_msg == NULL) {
+		dc_hb_msg = create_dc_heartbeat();
+	}
+
+	if(send_dc_heartbeat(dc_hb_msg) != HA_OK) {
 		/* this is bad */
 		stopTimer(timer); /* dont make it go off again */
 

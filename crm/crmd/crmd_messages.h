@@ -97,4 +97,7 @@ extern gboolean send_ha_reply(ll_cluster_t *hb_cluster,
 
 extern void lrm_op_callback (lrm_op_t* op);
 
+extern char *create_dc_heartbeat(void);
+extern int send_dc_heartbeat(const char *xml_text);
+
 #endif

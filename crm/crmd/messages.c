@@ -370,6 +370,43 @@ do_msg_route(long long action,
 	return result;
 }
 
+char *
+create_dc_heartbeat(void)
+{
+	xmlNodePtr local_options = NULL;
+	xmlNodePtr request = NULL;
+	char *xml_text = NULL;
+	
+	local_options = create_xml_node(NULL, XML_TAG_OPTIONS);
+
+	set_xml_property_copy(local_options, XML_ATTR_OP, CRM_OP_HBEAT);
+	
+	request = create_request(
+		local_options, NULL, NULL, CRM_SYSTEM_CRMD,
+		CRM_SYSTEM_DC, NULL, NULL);
+
+	xml_text = dump_xml_unformatted(request);
+	
+	free_xml(request);
+	free_xml(local_options);
+
+	return xml_text;
+}
+
+int
+send_dc_heartbeat(const char *xml_text)
+{
+	struct ha_msg *msg = ha_msg_new(3); 
+	ha_msg_add(msg, F_TYPE, T_CRM);
+	ha_msg_add(msg, F_COMMENT, "A CRM  message");
+	if(ha_msg_add(msg, "xml", xml_text) == HA_FAIL) {
+		crm_err("Could not add xml to HA message");
+		return HA_FAIL;
+	}
+	return fsa_cluster_conn->llc_ops->sendclustermsg(fsa_cluster_conn, msg);
+}
+
+
 /*
  * This method adds a copy of xml_response_data
  */
