@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.43 2005/03/04 15:59:08 alan Exp $ */
+/* $Id: xml.c,v 1.44 2005/03/08 10:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -606,7 +606,7 @@ stdin2xml(void)
 			case '>':
 			case '<':
 				inTag = TRUE;
-				if(ch == '>') inTag = FALSE;
+				if(ch == '>') { inTag = FALSE; }
 				xml_buffer[lpc++] = ch;
 				break;
 			case '\n':
@@ -802,9 +802,12 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 			
 		} else if(buffer != NULL && strlen(buffer) > 0) {
 			res = fprintf(file_output_strm, "%s", buffer);
+		}
+		if(file_output_strm != NULL) {
 			fflush(file_output_strm);
 			fclose(file_output_strm);
 		}
+		
 		crm_free(buffer);
 	}
 #endif
