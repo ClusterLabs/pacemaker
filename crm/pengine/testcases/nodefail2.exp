@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE transition_graph SYSTEM "crm-1.0.dtd">
+<?xml version="1.0"?>
+<transition_graph>
+  <synapse>
+    <action_set>
+      <rsc_op id="1" rsc_id="rsc1" on_node="node1" on_node_uuid="8661583D-08B0-11D9-B627-000A95B71D78" operation="stop" runnable="true" optional="false" discard="false" allow_fail="true">
+        <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" on_stopfail="block"/>
+        <args/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>

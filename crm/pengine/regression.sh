@@ -57,9 +57,9 @@ do_test attrs4 "string: exists	"
 do_test attrs5 "string: notexists	"
 
 echo ""
-do_test stopfail1 "Node Failed - Fence	"
-do_test stopfail2 "Node Failed - Block	"
-do_test stopfail3 "Node Failed - Ignore	"
+do_test nodefail1 "Node Failed - Fence	"
+do_test nodefail2 "Node Failed - Block	"
+do_test nodefail3 "Node Failed - Ignore	"
 
 echo ""
 do_test stopfail2 "Stop Failed - Block	"
