@@ -62,9 +62,6 @@ class ResourceAudit(ClusterAudit):
         Fatal = 0
         result = []
 
-        ## KLUDGE!!  FIXME!  Workaround for kernel bug!!
-        os.system("ssh -l root localhost /sbin/arp -d 10.10.10.201 >/dev/null 2>&1");
-        os.system("ssh -l root localhost /sbin/arp -d 10.10.10.202 >/dev/null 2>&1");
 
         Groups = self.CM.ResourceGroups()
         for group in Groups:
@@ -127,10 +124,8 @@ class ResourceAudit(ClusterAudit):
                 if not Fatal and len(ResourceNodes) == 1:
                     if not resource.IsWorkingCorrectly(ResourceNodes[0]):
                       result.append("Resource " + repr(resource)
-                      +	" not operating properly.  "
-                      + "Resource is running on " + ResourceNodes[0]);
-                      result.append("Resource is running on " + ResourceNodes[0]);
-                      os.system("/sbin/arp | sed 's%^%ARP: %'|/bin/logger -p local7.warning&")
+                      +	" not operating properly."
+                      + "  Resource is running on " + ResourceNodes[0]);
                       Fatal = 1
                 lastResource = resource
 
