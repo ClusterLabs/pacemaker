@@ -4,11 +4,13 @@
   <actions id="0">
     <rsc_op id="4" rsc_id="rsc2" on_node="node1" operation="start" runnable="true" optional="false" discard="false" allow_fail="false">
       <resource id="rsc2" class="heartbeat" type="apache" priority="2.0"/>
+      <args/>
     </rsc_op>
   </actions>
   <actions id="1">
     <rsc_op id="2" rsc_id="rsc1" on_node="node2" operation="start" runnable="true" optional="false" discard="false" allow_fail="false">
       <resource id="rsc1" class="heartbeat" type="apache" priority="2.0"/>
+      <args/>
     </rsc_op>
   </actions>
 </transition_graph>

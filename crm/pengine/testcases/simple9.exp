@@ -4,6 +4,7 @@
   <actions id="0">
     <rsc_op id="2" rsc_id="rsc1" on_node="node1" operation="start" runnable="true" optional="false" discard="false" allow_fail="false">
       <resource id="rsc1" class="heartbeat" type="apache" priority="1.0" version="2.0"/>
+      <args/>
     </rsc_op>
   </actions>
 </transition_graph>
