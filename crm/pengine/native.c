@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.22 2005/03/31 16:40:07 andrew Exp $ */
+/* $Id: native.c,v 1.23 2005/04/06 13:54:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -980,6 +980,7 @@ void
 native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 			  const char *id, GListPtr nodes)
 {
+	float old_weight = 0.0;
 	node_t *node_rh = NULL;
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
@@ -991,6 +992,13 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 		return;
 	}
 
+	if(node_rh->weight >= INFINITY && cons->weight == -INFINITY) {
+		crm_err("Constraint %s mixes +/- INFINITY", cons->id);
+		
+	} else if(node_rh->weight <= -INFINITY && cons->weight == INFINITY) {
+		crm_err("Constraint %s mixes +/- INFINITY", cons->id);
+	}
+
 	if(node_rh->fixed) {
 		/* warning */
 		crm_debug("Constraint %s is irrelevant as the"
@@ -1000,17 +1008,46 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 			 node_rh->weight);
 		return;
 	}
-	
-	crm_verbose("Constraint %s (%s): node %s weight %f.",
-		    cons->id,
-		    cons->can?"can":"cannot",
-		    node_rh->details->uname,
-		    node_rh->weight);
 
-	if(cons->can == FALSE) {
-		node_rh->weight = -1;
+	if(cons->weight != INFINITY && cons->weight != -INFINITY) {
+		crm_verbose("Constraint %s (%f): node %s weight %f.",
+			    cons->id,
+			    cons->weight,
+			    node_rh->details->uname,
+			    node_rh->weight);
+	} else if(cons->weight == -INFINITY) {
+		crm_verbose("Constraint %s (-INFINITY): node %s weight %f.",
+			    cons->id,
+			    node_rh->details->uname,
+			    node_rh->weight);
 	} else {
-		node_rh->weight += cons->weight;
+		crm_verbose("Constraint %s (+INFINITY): node %s weight %f.",
+			    cons->id,
+			    node_rh->details->uname,
+			    node_rh->weight);
+	}
+	
+	
+	node_rh->weight += cons->weight;
+
+	/* detect wrap-around */
+	if(old_weight >= 0) {
+		if(cons->weight >= 0 && node_rh->weight < 0) {
+			node_rh->weight = INFINITY;
+		}
+		
+	} else if(cons->weight <= 0 && node_rh->weight > 0) {
+		node_rh->weight = -INFINITY;
+	}
+
+	/* detect +/- INFINITY */
+	if(node_rh->weight >= INFINITY) {
+		node_rh->weight = INFINITY;
+		node_rh->fixed = TRUE;
+		
+	} else if(node_rh->weight <= -INFINITY) {
+		node_rh->weight = -INFINITY;
+		node_rh->fixed = TRUE;
 	}
 
 	if(node_rh->weight < 0) {

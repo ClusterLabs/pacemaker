@@ -159,13 +159,8 @@ More details are given in the annotated DTD below.
 	  id		    CDATA #REQUIRED
 	  description	    CDATA #IMPLIED
 	  class		    (ocf|init|heartbeat|stonith) #REQUIRED
-	  priority	    CDATA #IMPLIED
 	  type		    CDATA #REQUIRED
-	  min_version	    CDATA #REQUIRED
-
-	  start_timeout	    CDATA #REQUIRED
-	  stop_timeout	    CDATA #REQUIRED
-	  timeout	    CDATA #REQUIRED
+	  provider	    CDATA #IMPLIED
 
 	  on_stopfail	    (ignore|stonith|block)	'block'
 	  restart_type	    (ignore|restart|recover)	'ignore'
@@ -316,10 +311,13 @@ More details are given in the annotated DTD below.
     "score" adjusts the prefernce for running on the matched nodes.  Nodes that
     end up with a -ve score will never run the resource.
 
-    "result" is optional and determins if matched nodes can or cannot run the
-    resource
+    Two special values of "score" exist: INFINITY and -INFINITY
+    Processing of these special values is as follows:
+      INFINITY +/- -INFINITY :  ERROR
+      INFINITY +/-  int      :  INFINITY
+     -INFINITY +/-  int      : -INFINITY
 
-    "boolean_op" determins how the results of multiple node_expressions are
+    "boolean_op" determins how the results of multiple expressions are
     combined.
 
 -->
@@ -327,7 +325,6 @@ More details are given in the annotated DTD below.
 <!ATTLIST rule
 	  id	     CDATA	  #REQUIRED
 	  score	     CDATA	  #IMPLIED
-	  result     (can|cannot) #IMPLIED
 	  boolean_op (or|and)	  'and'>
 
 <!--

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.61 2005/03/31 16:40:07 andrew Exp $ */
+/* $Id: utils.c,v 1.62 2005/04/06 13:54:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -864,9 +864,8 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 		  g_list_length(cons->node_list_rh));
 
 	if(details == FALSE) {
-		crm_devel("\t%s %s run (score=%f : node placement rule)",
+		crm_devel("\t%s (score=%f : node placement rule)",
 			  safe_val3(NULL, cons, rsc_lh, id), 
-			  cons->can?"Can":"Cannot",
 			  cons->weight);
 
 		slist_iter(

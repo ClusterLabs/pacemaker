@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.54 2005/04/01 10:07:21 andrew Exp $ */
+/* $Id: pengine.h,v 1.55 2005/04/06 13:54:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -138,8 +138,6 @@ struct rsc_to_node_s {
 
 		float		weight;
 		GListPtr node_list_rh; /* node_t* */
-/*		enum con_modifier modifier; */
-		gboolean can;
 };
 
 struct lrm_agent_s { 

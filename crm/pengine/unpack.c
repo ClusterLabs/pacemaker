@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.66 2005/04/01 12:41:16 andrew Exp $ */
+/* $Id: unpack.c,v 1.67 2005/04/06 13:54:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -378,13 +378,7 @@ rsc2node_new(const char *id, resource_t *rsc,
 		new_con->id           = id;
 		new_con->rsc_lh       = rsc;
 		new_con->node_list_rh = NULL;
-		new_con->can          = can;
-		
-		if(can) {
-			new_con->weight = weight;
-		} else {
-			new_con->weight = -1;
-		}
+		new_con->weight = weight;
 		
 		if(node != NULL) {
 			new_con->node_list_rh = g_list_append(NULL, node);
@@ -708,7 +702,7 @@ unpack_failed_resource(GListPtr *placement_constraints,
 	
 	/* make sure we dont allocate the resource here again*/
 	rsc2node_new("dont_run__generated",
-		     rsc_lh, -1.0, FALSE, node, placement_constraints);
+		     rsc_lh, -INFINITY, FALSE, node, placement_constraints);
 	
 	if(safe_str_eq(last_op, "start")) {
 		/* the resource is not actually running... nothing more to do*/
@@ -1058,21 +1052,33 @@ unpack_rsc_location(
 
 		const char *rule_id = crm_element_value(rule, XML_ATTR_ID);
 		const char *score   = crm_element_value(rule, XML_RULE_ATTR_SCORE);
-		const char *result  = crm_element_value(rule, XML_RULE_ATTR_RESULT);
 		const char *boolean = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
 		GListPtr match_L    = NULL;
 		GListPtr old_list   = NULL;
-		float score_f       = atof(score?score:"0.0");
 
+		float score_f       = 0.0;
 		rsc_to_node_t *new_con = NULL;
 
 		were_rules = TRUE;
+
+		if(score == NULL) {
+			score_f = 0.0;
+			
+		} else if(safe_str_eq(score, MINUS_INFINITY_S)) {
+			score_f = -INFINITY;
+
+		} else if(safe_str_eq(score, INFINITY_S)) {
+			score_f = INFINITY;
+
+		} else {
+			score_f = atof(score);
+		}
 		
 		if(safe_str_eq(boolean, "or")) {
 			do_and = FALSE;
 		}
 
-		if(result == NULL || (safe_str_eq(result, "can"))) {
+		if(score_f >= 0.0) {
 			can_run = TRUE;
 		}
 
