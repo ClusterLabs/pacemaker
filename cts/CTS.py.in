@@ -314,6 +314,8 @@ class ClusterManager(UserDict):
     def log(self, args):
         self.Env.log(args)
 
+    def debug(self, args):
+        self.Env.debug(args)
 
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
@@ -341,7 +343,7 @@ class ClusterManager(UserDict):
 
         '''Start up the cluster manager on a given node'''
 
-        self.log ("Starting %s on node %s"
+        self.debug("Starting %s on node %s"
 		  %	(self["Name"], node))
 
         if node == self.OurNode or self.upcount() < 1:
@@ -373,7 +375,7 @@ class ClusterManager(UserDict):
 
         '''Start up the cluster manager on a given node with none-block mode'''
 
-        self.log ("Starting %s on node %s" %(self["Name"], node))
+        self.debug("Starting %s on node %s" %(self["Name"], node))
         self.rsh.noBlock(node, self["StartCmd"])
         self.ShouldBeStatus[node]=self["up"]
         return 1
@@ -382,7 +384,7 @@ class ClusterManager(UserDict):
 
         '''Stop the cluster manager on a given node'''
 
-        self.log ("Stopping %s on node %s"
+        self.debug("Stopping %s on node %s"
 		  %	(self["Name"], node))
 
         rc=self.rsh(node, self["StopCmd"])
@@ -398,7 +400,7 @@ class ClusterManager(UserDict):
 
         '''Stop the cluster manager on a given node with none-block mode'''
 
-        self.log ("Stopping %s on node %s" %(self["Name"], node))
+        self.debug("Stopping %s on node %s" %(self["Name"], node))
         self.rsh.noBlock(node, self["StopCmd"])
         self.ShouldBeStatus[node]=self["down"]
         return 1
