@@ -117,6 +117,7 @@ register_fsa_input_adv(
 	
 	if(data != NULL) {
 		switch(cause) {
+			case C_FSA_INTERNAL:
 			case C_CRMD_STATUS_CALLBACK:
 			case C_IPC_MESSAGE:
 			case C_HA_MESSAGE:
@@ -139,9 +140,8 @@ register_fsa_input_adv(
 					  raised_from);
 				fsa_data->data = copy_ccm_data(data);
 				break;
-				
+
 			case C_SUBSYSTEM_CONNECT:
-			case C_FSA_INTERNAL:
 			case C_LRM_MONITOR_CALLBACK:
 			case C_TIMER_POPPED:
 			case C_SHUTDOWN:
@@ -151,7 +151,7 @@ register_fsa_input_adv(
 			case C_UNKNOWN:
 			case C_STARTUP:
 				crm_err("Copying %s data (from %s)"
-					" not implemented",
+					" not yet implemented",
 					fsa_cause2string(cause), raised_from);
 				exit(1);
 				break;
@@ -192,6 +192,7 @@ delete_fsa_input(fsa_data_t *fsa_data)
 	
 	if(fsa_data->data != NULL) {
 		switch(fsa_data->fsa_cause) {
+			case C_FSA_INTERNAL:
 			case C_CRMD_STATUS_CALLBACK:
 			case C_IPC_MESSAGE:
 			case C_HA_MESSAGE:
@@ -221,10 +222,8 @@ delete_fsa_input(fsa_data_t *fsa_data)
 
 				crm_free(ccm_input->oc);
 				crm_free(ccm_input);
-				
 				break;
 				
-			case C_FSA_INTERNAL:
 			case C_LRM_MONITOR_CALLBACK:
 			case C_TIMER_POPPED:
 			case C_SHUTDOWN:
