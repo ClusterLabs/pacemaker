@@ -60,9 +60,8 @@ do_election_vote(long long action,
 			break;
 	}
 
-	xmlNodePtr msg_options =
-		set_xml_attr(NULL, XML_TAG_OPTIONS,
-			     XML_ATTR_VERSION, CRM_VERSION, TRUE);
+	xmlNodePtr msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
+	set_xml_property_copy(msg_options, XML_ATTR_VERSION, CRM_VERSION);
 	
 	send_request(msg_options, NULL, CRM_OP_VOTE,
 		     NULL, CRM_SYSTEM_CRMD, NULL);
@@ -149,7 +148,7 @@ do_election_count_vote(long long action,
 	} else if(your_node == NULL) {
 		crm_err("The other side doesnt exist in the CCM list");
 		
-	} else if(compare_version(your_version, CRM_VERSION) < 0) {
+	} else if(compare_version(your_version, CRM_VERSION) > 0) {
 		crm_debug("Election fail: version");
 		we_loose = TRUE;
 		
@@ -294,6 +293,9 @@ do_dc_takeover(long long action,
 		       fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
 	}
 
+	// just in case
+	create_node_entry(fsa_our_uname, fsa_our_uname, "member");
+	
 	/* store our state in the CIB (since some fields will not be
 	 *  filled in because the DC doesnt go through the join process
 	 *  with itself
