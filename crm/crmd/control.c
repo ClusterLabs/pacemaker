@@ -567,23 +567,30 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	
 	param_name = KEY_LOGFILE;
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_info("%s = %s", param_name, param_val);
+	crm_devel("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		cl_log_set_logfile(param_val);
 		cl_free(param_val);
 		param_val = NULL;
 	}
+
 	param_name = KEY_DBGFILE;
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
+	crm_devel("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		cl_log_set_debugfile(param_val);
 		cl_free(param_val);
 		param_val = NULL;
 	}
+
 	param_name = KEY_DEBUGLEVEL;
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_info("%s = %s", param_name, param_val);
+	crm_devel("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
+		int debug_level = atoi(param_val);
+		if(debug_level > 0) {
+			set_crm_log_level(LOG_INFO + debug_level);
+		}
 		cl_free(param_val);
 		param_val = NULL;
 	}
