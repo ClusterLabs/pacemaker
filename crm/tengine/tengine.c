@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.56 2005/04/01 12:34:05 andrew Exp $ */
+/* $Id: tengine.c,v 1.57 2005/04/05 15:02:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -522,15 +522,11 @@ initiate_action(action_t *action)
 			crm_str(task), crm_str(on_node));
 			
 	} else if(action->type == action_type_crm){
-		/*
-		  <crm_msg op=XML_LRM_ATTR_TASK to=XML_RES_ATTR_TARGET>
-		*/
 #ifdef TESTING
 		fprintf(stderr, "Executing crm-event (%s): %s on %s\n",
 			 id, task, on_node);
 #endif
-		crm_info("Executing crm-event (%s): %s on %s",
-			 id, task, on_node);
+		crm_info("Executing crm-event (%s): %s on %s",id,task,on_node);
 
 		action->complete = TRUE;
 		destination = CRM_SYSTEM_CRMD;
@@ -547,13 +543,17 @@ initiate_action(action_t *action)
 			 on_node);
 #endif
 		crm_info("Executing rsc-op (%s): %s %s on %s",
-			 id, task,
-			 crm_element_value(rsc, XML_ATTR_ID),
-			 on_node);
+			 id, task, crm_element_value(rsc,XML_ATTR_ID), on_node);
 
 		/* let everyone know this was invoked */
-		do_update_cib(action->xml, -1);
-
+		if(safe_str_eq(CRMD_RSCSTATE_MON, task)) {
+			/* no update required for monitor ops */
+			action->complete = TRUE;
+			
+		} else {
+			do_update_cib(action->xml, -1);
+		}
+		
 		/*
 		  <msg_data>
 		  <rsc_op id="operation number" on_node="" task="">
