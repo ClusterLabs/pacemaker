@@ -115,6 +115,8 @@ do_cib_invoke(long long action,
 /*		gboolean is_update   = FALSE; */
 		xmlNodePtr options   = find_xml_node(cib_msg, XML_TAG_OPTIONS);
 		const char *sys_from = xmlGetProp(cib_msg, XML_ATTR_SYSFROM);
+		const char *host_from= xmlGetProp(cib_msg, XML_ATTR_HOSTFROM);
+		const char *type     = xmlGetProp(options, XML_ATTR_MSGTYPE);
 		const char *op       = xmlGetProp(options, XML_ATTR_OP);
 		
 		crm_xml_devel(cib_msg, "[CIB b4]");
@@ -127,7 +129,16 @@ do_cib_invoke(long long action,
 			return I_NULL; /* I_ERROR */
 
 		}
-
+		if(AM_I_DC
+		   && safe_str_eq(op, CRM_OP_RETRIVE_CIB)
+		   && safe_str_eq(type, XML_ATTR_RESPONSE)) {
+			/* we actually need to process this as a REPLACE,
+			 * not pretty, but fake the op type...
+			 */
+			set_xml_property_copy(
+				options, XML_ATTR_OP, CRM_OP_REPLACE);
+		}
+		
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
 		answer = process_cib_message(cib_msg, TRUE);
 
@@ -144,10 +155,16 @@ do_cib_invoke(long long action,
 			   || strcmp(op, CRM_OP_UPDATE) == 0
 			   || strcmp(op, CRM_OP_DELETE) == 0
 			   || strcmp(op, CRM_OP_REPLACE) == 0
+			   || strcmp(op, CRM_OP_RETRIVE_CIB) == 0
 			   || strcmp(op, CRM_OP_WELCOME) == 0
 			   || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
-				result = I_CIB_UPDATE;	
+				result = I_CIB_UPDATE;
 				
+			} else if(strcmp(op, CRM_OP_RETRIVE_CIB) == 0) {
+				crm_info("Retrieved latest CIB from %s",
+					host_from);
+				set_bit_inplace(fsa_input_register,R_HAVE_CIB);
+
 			} else if(strcmp(op, CRM_OP_ERASE) == 0) {
 				/* regenerate everyone's state and our node entry */
 				result = I_ELECTION_DC;	
@@ -243,9 +260,10 @@ do_pe_control(long long action,
 	
 
 	if(action & stop_actions) {
-		if(stop_subsystem(this_subsys) == FALSE)
+		if(stop_subsystem(this_subsys) == FALSE) {
 			result = I_FAIL;
-		else  if(this_subsys->pid > 0){
+			
+		} else if(this_subsys->pid > 0) {
 			int lpc = CLIENT_EXIT_WAIT;
 			int pid_status = -1;
 			while(lpc-- > 0
@@ -514,12 +532,10 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 		blank_client->table_key = NULL;
 	
 		blank_client->client_source =
-			G_main_add_IPC_Channel(G_PRIORITY_LOW,
-					       client_channel,
-					       FALSE, 
-					       crmd_ipc_input_callback,
-					       blank_client,
-					       default_ipc_input_destroy);
+			G_main_add_IPC_Channel(
+				G_PRIORITY_LOW, client_channel,
+				FALSE,  crmd_ipc_input_callback,
+				blank_client, default_ipc_input_destroy);
 	}
     
 	return TRUE;
@@ -530,12 +546,16 @@ stop_subsystem(struct crm_subsystem_s*	centry)
 {
 	crm_info("Stopping sub-system \"%s\"", centry->name);
 	if (centry->pid <= 0) {
-		crm_err("OOPS! client %s not running yet",
-			centry->command);
+		crm_err("OOPS! client %s not running yet", centry->command);
 
+	} else if(! is_set(fsa_input_register, centry->flag) ) {
+		/* running but not yet connected */
+		/* TODO: send kill signal */
+		crm_warn("Stopping %s before it had connected", centry->name);
+		
 	} else {
 		crm_info("Sending quit message to %s.", centry->name);
-		send_request(NULL, NULL, CRM_OP_QUIT, NULL, centry->name, NULL);
+		send_request(NULL,NULL, CRM_OP_QUIT,NULL, centry->name,NULL);
 
 	}
 	
@@ -546,9 +566,9 @@ stop_subsystem(struct crm_subsystem_s*	centry)
 static gboolean
 start_subsystem(struct crm_subsystem_s*	centry)
 {
-	pid_t			pid;
+	pid_t       pid;
 	struct stat buf;
-	int s_res;
+	int         s_res;
 
 	crm_info("Starting sub-system \"%s\"", centry->command);
 
