@@ -58,7 +58,7 @@ halib_PROGRAMS	= crmd
 ## SOURCES
 
 noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h \
-			fsa_matrix.h fsa_proto.h
+			fsa_matrix.h fsa_proto.h crmd_utils.h
 
 crmd_SOURCES	= crmdmain.c crmd.c 					\
 		fsa.c control.c messages.c ccm.c 			\
