@@ -616,14 +616,15 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 					  fsa_input_register);
 				crm_err("Client %s is already connected",
 					client_name);
+
 			} else if(FALSE == is_set(fsa_input_register,
 					 the_subsystem->flag_required)) {
 				auth_result = FALSE;
 				crm_warn("Bit\t%.16llx not set in %.16llx",
 					  the_subsystem->flag_connected,
 					  fsa_input_register);
-				crm_err("Client %s joined without us asking",
-					client_name);
+				crm_warn("Client %s joined but we dont need it",
+					 client_name);
 			} else {
 				the_subsystem->ipc =
 					curr_client->client_channel;
