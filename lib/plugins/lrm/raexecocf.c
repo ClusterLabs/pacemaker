@@ -162,7 +162,6 @@ execra( const char * rsc_type, const char * op_type,
 
 	uniform_ret_execra_t exit_value;
 
-	cl_log(LOG_DEBUG, "To execute a RA %s", rsc_type);
 	/* Prepare the call parameter */
 	if (!cmd_params) {
 		if (g_hash_table_size(cmd_params) > 0) {
@@ -184,8 +183,7 @@ execra( const char * rsc_type, const char * op_type,
 	free(ra_name_dup);
 
 	/* execute the RA */
-	cl_log(LOG_INFO, "Will execute OCF RA : %s %s", ra_dirname->str, op_type);
-	cl_log(LOG_INFO, "Its environment parameters is as below.");
+	cl_log(LOG_DEBUG, "Will execute OCF RA : %s %s", ra_dirname->str, op_type);
 	raexec_setenv(env_params);
 	execl(ra_dirname->str, ra_dirname->str, op_type, NULL);
 

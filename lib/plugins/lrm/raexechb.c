@@ -151,7 +151,6 @@ execra( const char * rsc_type, const char * op_type,
 	GString * debug_info;
 	int index_tmp = 0;
 
-	cl_log(LOG_DEBUG, "To execute a RA %s.", rsc_type);
 	/* Prepare the call parameter */
 	if (0 > prepare_cmd_parameters(rsc_type, op_type, cmd_params, params_argv)) {
 		cl_log(LOG_ERR, "HB RA: Error of preparing parameters");
@@ -181,7 +180,7 @@ execra( const char * rsc_type, const char * op_type,
 		g_string_append(debug_info, " ");
 	} while (params_argv[++index_tmp] != NULL);
 	debug_info->str[debug_info->len-1] = '\0';
-	cl_log(LOG_INFO, "Will execute a heartbeat RA: %s", debug_info->str);
+	cl_log(LOG_DEBUG, "Will execute a heartbeat RA: %s", debug_info->str);
 	g_string_free(debug_info, TRUE);
 	
 	if ( execv(ra_dirname->str, params_argv) < 0 ) {
