@@ -20,7 +20,11 @@
 . helper.sh
 #. @libdir@/heartbeat/crmtest/helper.sh
 
-HOST=hadev
+HALIB_DIR=/usr/lib/heartbeat
+HAINIT_DIR=/etc/init.d
+
+test_node_1=hadev
+
 QUIET=$OUTPUT_NONE
 CRM_ERR_SHUTDOWN=1
 
@@ -34,33 +38,55 @@ elif [ "x$1" = "x-x" ]; then
     set -x
 fi
 
-#node1->CRM->install_cib(filename_or_text_or_whatever_is_easiest)
-do_cmd $QUIET remote_cmd hacluster $HOST $HALIB_DIR/crmd '2>&1 >/dev/null' &
+#do_cmd $QUIET remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd '2>&1 >/dev/null' &
 
 do_cmd $QUIET echo "wait for CRMd to start"
 sleep 20
 
-do_cmd $QUIET wait_for_state S_IDLE 10 $HOST 
-cts_assert "S_IDLE not reached on $HOST!"
+do_cmd $QUIET wait_for_state S_IDLE 10 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 (startup)"
 
-do_cmd $QUIET is_running rsc1 $HOST
+# Erase the contents of the CIB and wait for things to settle down
+do_cmd $QUIET remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/cibadmin -E 
+do_cmd $QUIET wait_for_state S_IDLE 10 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 after CIB erase"
+
+# Create the CIB for this test and wait for all transitions to complete
+do_cmd $QUIET make_node $test_node_1 $test_node_1
+do_cmd $QUIET make_resource $test_node_1 rsc1 heartbeat IPaddr
+do_cmd $QUIET make_resource $test_node_1 rsc2 heartbeat IPaddr
+do_cmd $QUIET make_constraint $test_node_1 rsc1 can
+do_cmd $QUIET make_constraint $test_node_1 rsc2 can
+do_cmd $QUIET wait_for_state S_IDLE 10 $test_node_1 
+cts_assert "S_IDLE not reached on $test_node_1 after CIB create"
+
+do_cmd $QUIET is_running rsc1 $test_node_1
 cts_assert "rsc1 NOT running"
 
-do_cmd $QUIET is_running rsc2 $HOST
+do_cmd $QUIET is_running rsc2 $test_node_1
 cts_assert "rsc2 NOT running"
 
-do_cmd $QUIET is_dc $HOST
-cts_assert "$HOST is supposed to be the DC"
+do_cmd $QUIET is_dc $test_node_1
+cts_assert "$test_node_1 is supposed to be the DC"
 
-do_cmd $QUIET is_running rsc1 $HOST x$HOST
-cts_assert_false "rsc1 IS running on x$HOST"
+do_cmd $QUIET is_running rsc1 $test_node_1 x$test_node_1
+cts_assert_false "rsc1 IS running on x$test_node_1"
 
-do_cmd $QUIET is_running rsc1 $HOST $HOST
-cts_assert "rsc1 NOT running on $HOST"
+do_cmd $QUIET is_running rsc1 $test_node_1 $test_node_1
+cts_assert "rsc1 NOT running on $test_node_1"
 
-do_cmd $QUIET is_running rsc2 $HOST $HOST
-cts_assert "rsc2 NOT running on $HOST"
+do_cmd $QUIET is_running rsc2 $test_node_1 $test_node_1
+cts_assert "rsc2 NOT running on $test_node_1"
 
-do_cmd $QUIET remote_cmd root $HOST $HALIB_DIR/crmadmin -K $HOST
+# shutdown
+do_cmd $QUIET remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmadmin -K $test_node_1
+do_cmd $QUIET wait_for_state S_PENDING 30 $test_node_1 
+cts_assert "S_PENDING not reached on $test_node_1!"
+
+# escalate the shutdown
+do_cmd $QUIET remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmadmin -K $test_node_1
+
+# just in case
+do_cmd $QUIET remote_cmd $CRMD_USER $test_node_1 killall -9 crmd
 
 echo "test: PASSED"

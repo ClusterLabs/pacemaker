@@ -19,7 +19,16 @@
 
 HALIB_DIR=@libdir@/heartbeat
 HAINIT_DIR=@INITDIR@
+
+INIT_USER=root
+CRMD_USER=hacluster
+ADMIN_USER=hacluster
+
+test_node_1=test1
+test_node_2=test2
+
 CRM_ERR_SHUTDOWN=0
+
 OUTPUT_ALL=3
 OUTPUT_NOOUT=2
 OUTPUT_NOERR=1
@@ -43,7 +52,7 @@ function is_state() {
     host=$1
     state=$2
 
-    output=`remote_cmd root $host $HALIB_DIR/crmadmin -S $host | grep $state`
+    output=`remote_cmd $ADMIN_USER $host $HALIB_DIR/crmadmin -S $host | grep $state`
 
     if [ ! -z "$output" ]; then
 	echo "$host is in $state"
@@ -59,9 +68,9 @@ function is_running() {
     host=$3
 
     if [ -z $host ]; then
-	output=`remote_cmd root $askhost $HALIB_DIR/crmadmin -W $rsc | grep -v NOT`
+	output=`remote_cmd $ADMIN_USER $askhost $HALIB_DIR/crmadmin -W $rsc | grep -v $HALIB_DIR/crmadmin | grep -v NOT`
     else
-	output=`remote_cmd root $askhost $HALIB_DIR/crmadmin -W $rsc | grep $host`
+	output=`remote_cmd $ADMIN_USER $askhost $HALIB_DIR/crmadmin -W $rsc | grep -v $HALIB_DIR/crmadmin | grep $host`
     fi
 
     if [ -z "$output" ]; then
@@ -84,7 +93,7 @@ function is_running() {
 
 function is_dc() {
     host=$1
-    output=`remote_cmd root $host $HALIB_DIR/crmadmin -S $host | grep -v S_PENDING | grep -v S_NOT_DC | grep -v S_ELECTION | grep -v S_RECOVERY`
+    output=`remote_cmd $ADMIN_USER $host $HALIB_DIR/crmadmin -S $host | grep -v S_PENDING | grep -v S_NOT_DC | grep -v S_ELECTION | grep -v S_RECOVERY`
 
     if [ ! -z "$output" ]; then 
 	echo "$host is DC"
@@ -102,7 +111,7 @@ function wait_for_state() {
     host=$3
 
     if [ -z "$host" ]; then
-	host=`remote_cmd root $host $HALIB_DIR/crmadmin -D > /dev/null`
+	host=`remote_cmd $ADMIN_USER $host $HALIB_DIR/crmadmin -D > /dev/null`
     fi
 
     count=1
@@ -116,6 +125,69 @@ function wait_for_state() {
     done
     echo "$state reached on $host"
     return 0
+}
+
+
+function make_node()
+{
+    host=$1
+    uname=$2
+    type=$3
+    uuid=`uuidgen`
+    
+    if [ -z $type ]; then
+	type="member"
+    fi
+    
+    node_xml="'<node id=\"${uuid}\" uname=\"${uname}\" description=\"test node: ${uname}\" type=\"${type}\"/>'";
+    
+    remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o node -X $node_xml"
+
+}
+
+function make_resource()
+{
+    host=$1
+    id=$2
+    class=$3
+    type=$4
+    priority=$5
+    version=$6
+    uuid=`uuidgen`
+    
+    node_xml="'<resource id=\"${id}\" class=\"${class}\" type=\"${type}\""
+
+    if [ ! -z $version ]; then
+	node_xml="$node_xml version=${version}\""
+    fi
+    if [ ! -z $priority ]; then
+	node_xml="$node_xml priority=${priority}\""
+    fi
+    node_xml="$node_xml />'";
+    
+    remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o resource -X $node_xml"
+}
+
+function make_constraint_adv()
+{
+    host=$1
+    shift
+    node_xml=$*
+
+    do_cmd $QUIET remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o constraint -X $node_xml"
+}
+
+function make_constraint()
+{
+    host=$1
+    rsc=$2
+    result=$3
+    uuid1=`uuidgen`
+    uuid2=`uuidgen`
+    
+    node_xml="'<rsc_location id=\"${uuid1}\" rsc=\"${rsc}\"><rule id=\"${uuid2}\" result=\"${result}\"/></rsc_location>'"
+
+    make_constraint_adv $host $node_xml
 }
 
 function cts_assert() {
@@ -140,8 +212,11 @@ function do_cts_assert() {
 function err() {
     echo "ERROR: $*"
 
-    if [ $CRM_ERR_SHUTDOWN -eq 1 -a ! -z $HOST ]; then
-	remote_cmd hacluster $HOST killall -9 crmd
+    if [ ! -z $HOST ]; then
+	if [ $CRM_ERR_SHUTDOWN -eq 1 ]; then
+	    remote_cmd hacluster $test_node_1 killall -9 crmd
+	    remote_cmd hacluster $test_node_2 killall -9 crmd
+	fi
     fi
 
     echo "test: FAILED"

@@ -19,7 +19,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 testdir			= $(libdir)/heartbeat/crmtest
 
-#test_SCRIPTS	=	helper.sh 
+test_SCRIPTS	=	helper.sh 
 
-test_DATA 	=	helper.sh
+test_DATA 	=	1node.sh 2node.sh testutils.pl
 
