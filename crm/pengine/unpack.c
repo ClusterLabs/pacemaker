@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.21 2004/08/03 08:56:09 andrew Exp $ */
+/* $Id: unpack.c,v 1.22 2004/08/18 08:39:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -185,7 +185,7 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 	while(xml_nodes != NULL) {
 		xmlNodePtr xml_obj = xml_nodes;
 		xmlNodePtr attrs   = xml_obj->children;
-		const char *id     = xmlGetProp(xml_obj, XML_ATTR_ID);
+		const char *id     = xmlGetProp(xml_obj, XML_ATTR_UUID);
 		const char *uname  = xmlGetProp(xml_obj, XML_ATTR_UNAME);
 		const char *type   = xmlGetProp(xml_obj, XML_ATTR_TYPE);
 
