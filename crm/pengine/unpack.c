@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.52 2005/02/10 10:48:08 andrew Exp $ */
+/* $Id: unpack.c,v 1.53 2005/02/11 22:11:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1178,8 +1178,7 @@ unpack_rsc_location(
 	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
 
 	if(rsc_lh == NULL) {
-		crm_err("No resource (con=%s, rsc=%s)",
-		       id, id_lh);
+		crm_warn("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 	}
 			

@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.55 2005/02/01 22:46:41 andrew Exp $ */
+/* $Id: pengine.c,v 1.56 2005/02/11 22:11:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,7 +70,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		free_xml(output);
 
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
-		crm_err("Received quit message, terminating");
+		crm_warn("Received quit message, terminating");
 		exit(0);
 	}
 	

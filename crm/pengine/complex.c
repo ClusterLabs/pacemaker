@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.11 2005/01/26 13:31:00 andrew Exp $ */
+/* $Id: complex.c,v 1.12 2005/02/11 22:11:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -268,6 +268,7 @@ void
 common_agent_constraints(
 	GListPtr node_list, lrm_agent_t *agent, const char *id) 
 {
+#if 1
 	slist_iter(
 		node, node_t, node_list, lpc,
 		
@@ -282,20 +283,8 @@ common_agent_constraints(
 			node->weight = -1.0;
 			node->fixed = TRUE;
 		}
-/* 		if(node->fixed && node->weight < 0) { */
-/* 			/\* the structure of the list will have changed */
-/* 			 * lpc-- might be sufficient */
-/* 			 *\/ */
-/* 			crm_debug("Removing node %s from %s", */
-/* 				  node->details->uname, rsc->id); */
-			
-/* 			lpc = -1; */
-/* 			native_data->allowed_nodes = g_list_remove( */
-/* 				native_data->allowed_nodes, node); */
-
-/* 			crm_free(node); */
-/* 		} */
 		);
+#endif
 }
 
 
