@@ -57,6 +57,8 @@
 #include <cib.h>
 #include <cibmessages.h>
 
+#include <crm/dmalloc_wrapper.h>
+
 /* gboolean waitCh_client_connect(IPC_Channel *newclient, gpointer user_data); */
 int updateCibStatus(xmlNodePtr cib, const char *res_id, const char *instanceNum, const char *node_id, const char *status);
 int add_xmlnode_to_cibToResource(xmlNodePtr cib, const char *res_id, const char *node_id, const char *weight);
@@ -64,7 +66,7 @@ int add_xmlnode_to_cibToResource(xmlNodePtr cib, const char *res_id, const char 
 cibConstraint *createInternalConstraint(const char *res_id_1, const char *instance, const char *node_id, const char *expires);
 cibConstraint *createSimpleConstraint(const char *id, const char *type, const char *res_id_1, const char *res_id_2);
 cibConstraint *createVariableConstraint(const char *id, const char *type, const char *res_id_1,
-					const char *var_name, const char *var_value);
+										const char *var_name, const char *var_value);
 
 // from cibmessages.c
 extern xmlNodePtr processCibRequest(xmlNodePtr command);
@@ -79,13 +81,13 @@ cib_client_connect(IPC_Channel *newclient, gpointer user_data)
     IPC_Message *client_msg = (IPC_Message *)user_data;
     cl_log(LOG_INFO, "recieved client join msg: %s", (char*)client_msg->msg_body);
 
-    if(newclient != NULL)
-	G_main_add_IPC_Channel(G_PRIORITY_LOW,
-			       newclient,
-			       FALSE, 
-			       cib_input_dispatch,
-			       newclient, 
-			       default_ipc_input_destroy);
+    if (newclient != NULL)
+		G_main_add_IPC_Channel(G_PRIORITY_LOW,
+							   newclient,
+							   FALSE, 
+							   cib_input_dispatch,
+							   newclient, 
+							   default_ipc_input_destroy);
     FNRET(TRUE);
 }
 
@@ -98,97 +100,108 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
     IPC_Message *msg = NULL;
     while(client->ch_status != IPC_DISCONNECT && client->ops->is_message_pending(client) == TRUE)
     {
-	if(client->ops->recv(client, &msg) != IPC_OK)
-	{
-	    perror("Receive failure:");
-	    FNRET(!hack_return_good);
-	}
+		if (client->ops->recv(client, &msg) != IPC_OK)
+		{
+			perror("Receive failure:");
+			FNRET(!hack_return_good);
+		}
 	
-	if(msg == NULL)
-	{
-	    CRM_DEBUG("No message this time");
-	    continue;
-	}
+		if (msg == NULL)
+		{
+			CRM_DEBUG("No message this time");
+			continue;
+		}
 
-	lpc++;
-	CRM_DEBUG2("Got message [body=%s]", (char*)msg->msg_body);
+		lpc++;
+		CRM_DEBUG2("Got message [body=%s]", (char*)msg->msg_body);
 	
-	char *buffer = (char*)msg->msg_body;
-	cl_log(LOG_DEBUG, "Got xml [text=%s]", buffer);
-	xmlInitParser(); // docs say only do this once, but in their code they do it every time!
-	xmlDocPtr doc = xmlParseMemory(buffer, strlen(buffer));
-	CRM_DEBUG("Finished parsing buffer as XML");
-	if(doc == NULL)
-	{
-	    cl_log(LOG_INFO, "XML Buffer was not valid...\n Buffer: (%s)", buffer);
-	    continue;
-	}
+		char *buffer = (char*)msg->msg_body;
+		cl_log(LOG_DEBUG, "Got xml [text=%s]", buffer);
+		xmlInitParser(); // docs say only do this once, but in their code they do it every time!
+		xmlDocPtr doc = xmlParseMemory(buffer, strlen(buffer));
+		CRM_DEBUG("Finished parsing buffer as XML");
+		if (doc == NULL)
+		{
+			cl_log(LOG_INFO, "XML Buffer was not valid...\n Buffer: (%s)", buffer);
+			continue;
+		}
 	
-	CRM_DEBUG("About to interrogate xml");
-	xmlNodePtr root_xml_node = xmlDocGetRootElement(doc);
-	CRM_DEBUG("Got the root element");
+		CRM_DEBUG("About to interrogate xml");
+		xmlNodePtr root_xml_node = xmlDocGetRootElement(doc);
+		CRM_DEBUG("Got the root element");
 	
-	xmlNodePtr msg_xml_node = validate_crm_message(root_xml_node,
-						       CRM_SYSTEM_CIB,
-						       NULL,
-						       XML_MSG_TAG_REQUEST);
+		xmlNodePtr msg_xml_node = validate_crm_message(root_xml_node,
+													   CRM_SYSTEM_CIB,
+													   NULL,
+													   XML_MSG_TAG_REQUEST);
 	
-	if(msg_xml_node != NULL)
-	{
-	    CRM_DEBUG("The message is good, processing");
-	    xmlNodePtr answer = processCibRequest(msg_xml_node);
-	    CRM_DEBUG("Directing reply");
-	    if(send_ipc_reply(client, root_xml_node, answer) == FALSE)
-		cl_log(LOG_WARNING, "Cib answer could not be sent");
-	    free_xml(answer);//xmlFreeNode(answer);
-	}
-	else if(root_xml_node != NULL)
-	    cl_log(LOG_INFO, "Received a message for (%s) by mistake",
-		   xmlGetProp(root_xml_node, XML_MSG_ATTR_SYSTO));
-	else
-	    cl_log(LOG_INFO, "Root node was NULL!!");
+		if (msg_xml_node != NULL)
+		{
+			CRM_DEBUG("The message is good, processing");
+			xmlNodePtr answer = processCibRequest(msg_xml_node);
+			CRM_DEBUG("Directing reply");
+			if (send_ipc_reply(client, root_xml_node, answer) == FALSE)
+				cl_log(LOG_WARNING, "Cib answer could not be sent");
+			free_xml(answer);//xmlFreeNode(answer);
+		}
+		else if (root_xml_node != NULL)
+			cl_log(LOG_INFO, "Received a message for (%s) by mistake",
+				   xmlGetProp(root_xml_node, XML_MSG_ATTR_SYSTO));
+		else
+			cl_log(LOG_INFO, "Root node was NULL!!");
 
-	free_xml(root_xml_node);
-	msg->msg_done(msg);
+		free_xml(root_xml_node);
+		msg->msg_done(msg);
     }
 
     CRM_DEBUG2("Processed %d messages", lpc);
-    if(client->ch_status == IPC_DISCONNECT)
+    if (client->ch_status == IPC_DISCONNECT)
     {
-	cl_log(LOG_INFO, "cib_input_dispatch: received HUP (2)");
-	FNRET(!hack_return_good);
+		cl_log(LOG_INFO, "cib_input_dispatch: received HUP (2)");
+		FNRET(!hack_return_good);
     }
     FNRET(hack_return_good);
 }
 
 
 int
-add_xmlnode_to_cibToResource(xmlNodePtr cib, const char *res_id, const char *node_id, const char *weight)
+add_xmlnode_to_cibToResource(xmlNodePtr cib,
+							 const char *res_id,
+							 const char *node_id,
+							 const char *weight)
 {
     xmlNodePtr resource = findResource(cib, res_id);
-    if(resource != NULL)
+    if (resource != NULL)
     {
-	if(findHaNode(cib, node_id) == NULL)
-	{
-	    cl_log(LOG_CRIT, XML_CIB_TAG_NODE " (%s) does not exist, cannot be added to " XML_CIB_TAG_RESOURCE " (%s).", node_id, res_id);	
-	    FNRET(-1);
-	}
+		if (findHaNode(cib, node_id) == NULL)
+		{
+			cl_log(LOG_CRIT,
+				   XML_CIB_TAG_NODE" (%s) does not exist, cannot be added to "
+				   XML_CIB_TAG_RESOURCE " (%s).", node_id, res_id);	
+			FNRET(-1);
+		}
 
-	CRM_DEBUG3("Attempting to add allowed " XML_CIB_TAG_NODE " (%s) to " XML_CIB_TAG_RESOURCE " (%s).", node_id, res_id);
-	xmlNodePtr node_entry = find_entity(resource, "node", node_id, FALSE);
-	if(node_entry == NULL)
-	    node_entry = xmlNewChild(resource, NULL, "node", NULL);
-	else
-	    CRM_DEBUG3("Allowed " XML_CIB_TAG_NODE " (%s) already present for " XML_CIB_TAG_RESOURCE " (%s), updating.", node_id, res_id);
+		CRM_DEBUG3("Attempting to add allowed " XML_CIB_TAG_NODE
+				   " (%s) to " XML_CIB_TAG_RESOURCE " (%s).",
+				   node_id, res_id);
 	
-	set_xml_property_copy(node_entry, XML_ATTR_ID, node_id);
-	set_xml_property_copy(node_entry, XML_CIB_ATTR_WEIGHT, weight);
-	set_xml_property_copy(node_entry, XML_ATTR_TSTAMP, getNow());
+		xmlNodePtr node_entry = find_entity(resource, "node", node_id, FALSE);
+		if (node_entry == NULL)
+			node_entry = create_xml_node(resource, "node");
+		else
+			CRM_DEBUG3("Allowed " XML_CIB_TAG_NODE " (%s) already present for "
+					   XML_CIB_TAG_RESOURCE " (%s), updating.", node_id, res_id);
+	
+		set_xml_property_copy(node_entry, XML_ATTR_ID, node_id);
+		set_xml_property_copy(node_entry, XML_CIB_ATTR_WEIGHT, weight);
+		set_xml_property_copy(node_entry, XML_ATTR_TSTAMP, getNow());
     }
     else
     {
-	cl_log(LOG_CRIT, XML_CIB_TAG_RESOURCE " (%s) does not exist, cannot add allowed " XML_CIB_TAG_NODE" (%s).", res_id, node_id);
-	FNRET(-2);
+		cl_log(LOG_CRIT,
+			   XML_CIB_TAG_RESOURCE " (%s) does not exist, cannot add allowed "
+			   XML_CIB_TAG_NODE" (%s).", res_id, node_id);
+		FNRET(-2);
     }
     FNRET(0);
 }
@@ -199,41 +212,47 @@ updateCibStatus(xmlNodePtr cib, const char *res_id, const char *instanceNum, con
 {
     CRM_DEBUG4("Update: " XML_CIB_TAG_STATE " (%s:%s)@(%s).", res_id, instanceNum, node_id);
     xmlNodePtr resource = findResource(cib, res_id);
-    if(resource != NULL)
+    if (resource != NULL)
     {
-	CRM_DEBUG4("Attempting to set allocated " XML_CIB_TAG_NODE " for " XML_CIB_TAG_RESOURCE " (%s:%s) to (%s).", res_id, instanceNum, node_id);
-	xmlNodePtr node = findHaNode(cib, node_id);
+		CRM_DEBUG4("Attempting to set allocated " XML_CIB_TAG_NODE " for " XML_CIB_TAG_RESOURCE " (%s:%s) to (%s).", res_id, instanceNum, node_id);
+		xmlNodePtr node = findHaNode(cib, node_id);
 
-	if(node == NULL)
-	{
-	    cl_log(LOG_CRIT, XML_CIB_TAG_NODE " (%s) does not exist, cannot assign " XML_CIB_TAG_RESOURCE " (%s:%s) to it in the status list.",
-		   node_id,
-		   res_id,
-		   instanceNum);
-	    FNRET(-1);
-	}
+		if (node == NULL)
+		{
+			cl_log(LOG_CRIT, XML_CIB_TAG_NODE " (%s) does not exist, cannot assign " XML_CIB_TAG_RESOURCE " (%s:%s) to it in the status list.",
+				   node_id,
+				   res_id,
+				   instanceNum);
+			FNRET(-1);
+		}
 
-	/* this could probable be optimized to update the status entry directly instead of creating a new one and doing
-	 *   the update with that... but for now, lets make it work.
-	 */
-	cibStatus *new_status = newStatus(res_id, node_id, instanceNum);
-	set_xml_property_copy(new_status, XML_CIB_ATTR_MAXINSTANCE, xmlGetProp(resource, XML_CIB_ATTR_MAXINSTANCE));
-	set_xml_property_copy(new_status, XML_CIB_ATTR_RESSTATUS, status);
-	// TODO: set the source of the info
-	//new_status.source = "nodeX";
+		/* this could probable be optimized to update the status entry directly instead of creating a new one and doing
+		 *   the update with that... but for now, lets make it work.
+		 */
+		cibStatus *new_status = newStatus(res_id, node_id, instanceNum);
+		set_xml_property_copy(new_status, XML_CIB_ATTR_MAXINSTANCE, xmlGetProp(resource, XML_CIB_ATTR_MAXINSTANCE));
+		set_xml_property_copy(new_status, XML_CIB_ATTR_RESSTATUS, status);
+		// TODO: set the source of the info
+		//new_status.source = "nodeX";
 
-	updateStatus(cib, new_status);
+		updateStatus(cib, new_status);
     }
     else
     {
-	cl_log(LOG_CRIT, XML_CIB_TAG_RESOURCE " (%s) does not exist, cannot add it to the " XML_CIB_TAG_STATUS " list.", res_id);
-	FNRET(-2);
+		cl_log(LOG_CRIT,
+			   XML_CIB_TAG_RESOURCE
+			   " (%s) does not exist, cannot add it to the " XML_CIB_TAG_STATUS
+			   " list.", res_id);
+		FNRET(-2);
     }
     FNRET(0);
 }
 
 cibConstraint *
-createInternalConstraint(const char *res_id_1, const char *instance, const char *node_id, const char *expires)
+createInternalConstraint(const char *res_id_1,
+						 const char *instance,
+						 const char *node_id,
+						 const char *expires)
 {
     char *id = (char*)ha_malloc(256*(sizeof(char)));
     sprintf(id, "failed-%s-%s-%s", node_id, res_id_1, instance);
@@ -244,7 +263,7 @@ createInternalConstraint(const char *res_id_1, const char *instance, const char 
     set_xml_property_copy(new_con, XML_CIB_ATTR_RESID1, res_id_1);
     set_xml_property_copy(new_con, XML_CIB_ATTR_CLEAR, expires);
 
-    xmlNodePtr node_entry = xmlNewNode(NULL, XML_CIB_TAG_NVPAIR);			
+    xmlNodePtr node_entry = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);			
     set_xml_property_copy(node_entry, XML_ATTR_ID, "blockHost");
 //			set_xml_property_copy(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
     set_xml_property_copy(node_entry, XML_CIB_ATTR_VARVALUE, node_id);
@@ -255,7 +274,10 @@ createInternalConstraint(const char *res_id_1, const char *instance, const char 
 }
 
 cibConstraint *
-createSimpleConstraint(const char *id, const char *type, const char *res_id_1, const char *res_id_2)
+createSimpleConstraint(const char *id,
+					   const char *type,
+					   const char *res_id_1,
+					   const char *res_id_2)
 {
     cibConstraint *new_con = newConstraint(id);
 
@@ -268,14 +290,14 @@ createSimpleConstraint(const char *id, const char *type, const char *res_id_1, c
 
 cibConstraint *
 createVariableConstraint(const char *id, const char *type, const char *res_id_1,
-			 const char *var_name, const char *var_value)
+						 const char *var_name, const char *var_value)
 {
     cibConstraint *new_con = newConstraint(id);
 
     set_xml_property_copy(new_con, XML_CIB_ATTR_CONTYPE, type);
     set_xml_property_copy(new_con, XML_CIB_ATTR_RESID1, res_id_1);
 
-    xmlNodePtr node_entry = xmlNewNode(NULL, XML_CIB_TAG_NVPAIR);			
+    xmlNodePtr node_entry = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);			
     set_xml_property_copy(node_entry, XML_ATTR_ID, var_name);
 //			set_xml_property_copy(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
     set_xml_property_copy(node_entry, XML_CIB_ATTR_VARVALUE, var_value);
@@ -314,7 +336,7 @@ test(void)
     
     updateConstraint(cib, createSimpleConstraint("con1", CIB_VAL_CONTYPE_AFTER, "res1", "res2"));
     updateConstraint(cib, createVariableConstraint("con2", CIB_VAL_CONTYPE_VAR, "res1",
-						   "KERNEL_RELEASE", "2.4.20-gentoo-r9"));
+												   "KERNEL_RELEASE", "2.4.20-gentoo-r9"));
 
     updateCibStatus(cib, "res2", "1", "node1", CIB_VAL_RESSTATUS_STARTING);
     updateCibStatus(cib, "res3", "1", "node4", CIB_VAL_RESSTATUS_RUNNING);

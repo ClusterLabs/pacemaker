@@ -18,9 +18,9 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
-			-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl \
-			-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
-			-I$(top_builddir) -I$(top_srcdir)
+						-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl   \
+						-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
+						-I$(top_builddir) -I$(top_srcdir)
 
 hadir			= $(sysconfdir)/ha.d
 halibdir		= $(libdir)/@HB_PKG@
@@ -32,22 +32,19 @@ XML_LIBS		= `xml2-config --libs`
 
 # fifos with path
 crmdir			= $(havarlibdir)/crm
-apigid			= @HA_APIGID@
-crmuid			= @HA_CCMUID@
-crmreqfifo		= $(havarlibdir)/api/crm.req
-crmresfifo		= $(havarlibdir)/api/crm.rsp
 
-
-COMMONLIBS		= $(top_builddir)/lib/clplumbing/libplumb.la	\
-			$(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la	\
-			$(top_builddir)/lib/apphb/libapphb.la		\
-			$(top_builddir)/heartbeat/libhbclient.la  	\
-			$(GLIBLIB)					\
-			$(LIBRT)
+COMMONLIBS		= $(CRM_DEBUG_LIBS) 								\
+				$(top_builddir)/lib/clplumbing/libplumb.la			\
+				$(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la	\
+				$(top_builddir)/lib/apphb/libapphb.la				\
+				$(top_builddir)/heartbeat/libhbclient.la  			\
+				$(GLIBLIB)											\
+				$(LIBRT)
 
 LIBRT 			= @LIBRT@
-AM_CFLAGS		= @CFLAGS@	\
-			-DPIDFILE='"$(PIDFILE)"'
+AM_CFLAGS		= @CFLAGS@											\
+				-DPIDFILE='"$(PIDFILE)"' 							\
+				$(CRM_DEBUG_FLAGS)
 
 ## libraries
 lib_LTLIBRARIES		=
@@ -64,11 +61,10 @@ noinst_HEADERS		=
 
 
 lrmd_SOURCES		= lrmdmain.c
-lrmd_CFLAGS		= $(XML_FLAGS) -I$(top_builddir) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+lrmd_CFLAGS			= $(XML_FLAGS) -I$(top_builddir) 			\
+						-DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 lrmd_LDFLAGS		= $(XML_LIBS)
-lrmd_LDADD		= $(COMMONLIBS) 				\
-			$(top_builddir)/libltdl/libltdlc.la 		\
-			$(top_builddir)/replace/libreplace.la		
+lrmd_LDADD			= $(COMMONLIBS) 							
 
 
 clean-generic:

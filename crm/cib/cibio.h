@@ -42,7 +42,7 @@ extern xmlNodePtr resource_search;
 extern xmlNodePtr constraint_search;
 extern xmlNodePtr status_search;
 
-extern xmlNodePtr theCib(void);
+extern xmlNodePtr get_the_CIB(void);
 extern xmlNodePtr getCibSection(const char *section);
 
 extern int initializeCib(xmlNodePtr cib);

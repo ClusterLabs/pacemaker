@@ -24,7 +24,9 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+#include <string.h>
 #include <stdlib.h>
+
 #include <errno.h>
 #include <fcntl.h>
 
@@ -33,6 +35,8 @@
 #include <crm/common/msgutils.h> // for getNow()
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlutils.h>
+
+#include <crm/dmalloc_wrapper.h>
 
 const char * local_resource_path[] =
 {
@@ -73,20 +77,20 @@ createEmptyCib(void)
     xmlDocPtr cib = xmlNewDoc("1.0");
 //    xmlNodePtr tree, subtree;
 
-    cib->children = xmlNewDocNode(cib, NULL, "cib", NULL);
+    cib->children = create_xml_doc_node(cib, "cib");
     set_xml_property_copy(cib->children, "version", "1");
     set_xml_property_copy(cib->children, "generated", "true");
     set_xml_property_copy(cib->children, XML_ATTR_TSTAMP, getNow());        
 
-    xmlAddChild(cib->children, xmlNewNode(NULL, XML_CIB_TAG_NODES));
-    xmlAddChild(cib->children, xmlNewNode(NULL, XML_CIB_TAG_RESOURCES));
-    xmlAddChild(cib->children, xmlNewNode(NULL, XML_CIB_TAG_CONSTRAINTS));
-    xmlAddChild(cib->children, xmlNewNode(NULL, XML_CIB_TAG_STATUS));
+    xmlAddChild(cib->children, create_xml_node(NULL, XML_CIB_TAG_NODES));
+    xmlAddChild(cib->children, create_xml_node(NULL, XML_CIB_TAG_RESOURCES));
+    xmlAddChild(cib->children, create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS));
+    xmlAddChild(cib->children, create_xml_node(NULL, XML_CIB_TAG_STATUS));
 
     xmlNodePtr root = xmlDocGetRootElement(cib);
-    if(verifyCibXml(root))
+    if (verifyCibXml(root))
     {
-	FNRET(root);
+		FNRET(root);
     }
     cl_log(LOG_CRIT, "The generated CIB did not pass integrity testing!!  All hope is lost.");
     FNRET(NULL);
@@ -95,26 +99,26 @@ createEmptyCib(void)
 gboolean
 verifyCibXml(xmlNodePtr cib)
 {
-    if(cib == NULL)
+    if (cib == NULL)
     {
-	cl_log(LOG_INFO, "XML Buffer was empty.");
-	FNRET(FALSE);
+		cl_log(LOG_INFO, "XML Buffer was empty.");
+		FNRET(FALSE);
     }
 
-    xmlNodePtr tmp1 = find_xmlnode(cib, XML_CIB_TAG_NODES);
-    xmlNodePtr tmp2 = find_xmlnode(cib, XML_CIB_TAG_RESOURCES);
-    xmlNodePtr tmp3 = find_xmlnode(cib, XML_CIB_TAG_CONSTRAINTS);
-    xmlNodePtr tmp4 = find_xmlnode(cib, XML_CIB_TAG_STATUS);
+    xmlNodePtr tmp1 = find_xml_node(cib, XML_CIB_TAG_NODES);
+    xmlNodePtr tmp2 = find_xml_node(cib, XML_CIB_TAG_RESOURCES);
+    xmlNodePtr tmp3 = find_xml_node(cib, XML_CIB_TAG_CONSTRAINTS);
+    xmlNodePtr tmp4 = find_xml_node(cib, XML_CIB_TAG_STATUS);
     
-    if(tmp1 == NULL || tmp2 == NULL || tmp3 == NULL || tmp4 == NULL)
+    if (tmp1 == NULL || tmp2 == NULL || tmp3 == NULL || tmp4 == NULL)
     {
-	xmlChar *mem = NULL;
-	int size = 0;
+		xmlChar *mem = NULL;
+		int size = 0;
 
-	// check for memory leak
-	xmlDocDumpMemory(cib->doc, &mem, &size);
-	cl_log(LOG_CRIT, "Not all required sections were present. Sections [%s, %s, %s, %s]\nCib was: %s", tmp1 == NULL? "ok":"null", tmp2 == NULL? "ok":"null", tmp3 == NULL? "ok":"null", tmp4 == NULL? "ok":"null", (char*)mem);
-	FNRET(FALSE);
+		// check for memory leak
+		xmlDocDumpMemory(cib->doc, &mem, &size);
+		cl_log(LOG_CRIT, "Not all required sections were present. Sections [%s, %s, %s, %s]\nCib was: %s", tmp1 == NULL? "ok":"null", tmp2 == NULL? "ok":"null", tmp3 == NULL? "ok":"null", tmp4 == NULL? "ok":"null", (char*)mem);
+		FNRET(FALSE);
     }
 
     // more integrity tests
@@ -129,18 +133,18 @@ verifyCibXml(xmlNodePtr cib)
 xmlNodePtr
 readCibXml(char *buffer)
 {
-   xmlDocPtr doc = xmlParseMemory(buffer, strlen(buffer));
-   if(doc == NULL)
-   {
-       cl_log(LOG_INFO, "XML Buffer was not valid...\n Buffer: %s", buffer);
-   }
-   xmlNodePtr root = xmlDocGetRootElement(doc);
-   if(verifyCibXml(root) == FALSE)
-   {
-       free_xml(root);
-       FNRET(createEmptyCib());
-   }
-   FNRET(root);
+	xmlDocPtr doc = xmlParseMemory(buffer, strlen(buffer));
+	if (doc == NULL)
+	{
+		cl_log(LOG_INFO, "XML Buffer was not valid...\n Buffer: %s", buffer);
+	}
+	xmlNodePtr root = xmlDocGetRootElement(doc);
+	if (verifyCibXml(root) == FALSE)
+	{
+		free_xml(root);
+		FNRET(createEmptyCib());
+	}
+	FNRET(root);
 }
 
 /*
@@ -155,25 +159,25 @@ readCibXmlFile(const char *filename)
     cl_log(LOG_DEBUG, "Stat of (%s) was (%d).", CIB_FILENAME, s_res);
     
     xmlDocPtr doc = NULL;
-    if(s_res == 0)
+    if (s_res == 0)
     {
-	doc = xmlParseFile(filename);
-	set_xml_property_copy(xmlDocGetRootElement(doc), "generated", "false");
+		doc = xmlParseFile(filename);
+		set_xml_property_copy(xmlDocGetRootElement(doc), "generated", "false");
     }
-   xmlNodePtr root = xmlDocGetRootElement(doc);
-   if(verifyCibXml(root) == FALSE)
-   {
-       free_xml(root);
-       FNRET(createEmptyCib());
-   }
-   FNRET(root);
+	xmlNodePtr root = xmlDocGetRootElement(doc);
+	if (verifyCibXml(root) == FALSE)
+	{
+		free_xml(root);
+		FNRET(createEmptyCib());
+	}
+	FNRET(root);
 }
 
 /*
  * The caller should never free the return value
  */
 xmlNodePtr
-theCib(void)
+get_the_CIB(void)
 {
     FNRET(the_cib);
 }
@@ -186,18 +190,18 @@ getCibSection(const char *section)
 {
     CRM_DEBUG2("Looking for section (%s) of the CIB", section);
 
-    if(section == NULL || strcmp("all", section) == 0)
+    if (section == NULL || strcmp("all", section) == 0)
     {
-	FNRET(the_cib);
+		FNRET(the_cib);
     }
 
-    xmlNodePtr res = find_xmlnode(the_cib, section);
+    xmlNodePtr res = find_xml_node(the_cib, section);
 
     // make sure the siblings dont turn up as well
-    if(res != NULL) res = xmlLinkedCopyNoSiblings(res, 1);
-    else if(the_cib == NULL)
+    if (res != NULL) res = xmlLinkedCopyNoSiblings(res, 1);
+    else if (the_cib == NULL)
     {
-	cl_log(LOG_CRIT, "The CIB has not been initialized!");
+		cl_log(LOG_CRIT, "The CIB has not been initialized!");
 	
     }
     else cl_log(LOG_ERR, "Section (%s) not found.", section);
@@ -214,21 +218,28 @@ getCibSection(const char *section)
 gboolean
 initializeCib(xmlNodePtr new_cib)
 {
-    if(verifyCibXml(new_cib))
+    if (verifyCibXml(new_cib))
     {
 
-	initialized = FALSE;
-	the_cib = new_cib;
+		initialized = FALSE;
+		the_cib = new_cib;
 
-	// update search paths
-	node_search = updatedSearchPath(new_cib, XML_CIB_TAG_NODES);
-	resource_search = updatedSearchPath(new_cib, XML_CIB_TAG_RESOURCES);
-	constraint_search = updatedSearchPath(new_cib, XML_CIB_TAG_CONSTRAINTS);
-	status_search = updatedSearchPath(new_cib, XML_CIB_TAG_STATUS);
-	initialized = TRUE;
+		// update search paths
+		node_search =
+			updatedSearchPath(new_cib, XML_CIB_TAG_NODES);
+		resource_search =
+			updatedSearchPath(new_cib, XML_CIB_TAG_RESOURCES);
+		constraint_search =
+			updatedSearchPath(new_cib, XML_CIB_TAG_CONSTRAINTS);
+		status_search =
+			updatedSearchPath(new_cib, XML_CIB_TAG_STATUS);
+		initialized = TRUE;
 
-	FNRET(TRUE);
+		CRM_DEBUG("CIB initialized");
+		FNRET(TRUE);
     }
+	else
+		CRM_DEBUG("CIB Verification failed");
     FNRET(FALSE);
     
 }
@@ -242,9 +253,9 @@ updatedSearchPath(xmlNodePtr cib, const char *path)
 {
 //    const char *last_path = path[DIMOF(path)-1];
     cl_log(LOG_INFO, "Updating (%s) search path.", path);
-    xmlNodePtr parent = find_xmlnode(cib, path);
-    if(parent == NULL)
-	cl_log(LOG_CRIT, "Updating %s search path failed.", path);
+    xmlNodePtr parent = find_xml_node(cib, path);
+    if (parent == NULL)
+		cl_log(LOG_CRIT, "Updating %s search path failed.", path);
     cl_log(LOG_INFO, "Updating (%s) search path to (%s).", path, xmlGetNodePath(parent) );
     FNRET(parent);
 }
@@ -261,45 +272,45 @@ moveFile(const char *oldname, const char *newname, gboolean backup, char *ext)
     int s_res = stat(newname, &tmp);
 
     cl_log(LOG_INFO, "Stat of %s (code: %d).", newname, s_res);
-    if(s_res >= 0)
+    if (s_res >= 0)
     {
-	if(backup == TRUE)
-	{
-	    char backname[1024];
-	    static const char *back_ext = "bak";
-	    if(ext != NULL) back_ext = (char*)ext;
+		if (backup == TRUE)
+		{
+			char backname[1024];
+			static const char *back_ext = "bak";
+			if (ext != NULL) back_ext = (char*)ext;
 	    
-	    snprintf(backname, sizeof(backname)-1, "%s.%s", newname, back_ext);
-	    moveFile(newname, backname, FALSE, NULL);
-	}
-	else
-	{
-	    res = unlink(newname);
-	    if(res < 0)
-	    {
-		perror("Could not remove the current backup of Cib");
-		FNRET(-1);
-	    }
-	}
+			snprintf(backname, sizeof(backname)-1, "%s.%s", newname, back_ext);
+			moveFile(newname, backname, FALSE, NULL);
+		}
+		else
+		{
+			res = unlink(newname);
+			if (res < 0)
+			{
+				perror("Could not remove the current backup of Cib");
+				FNRET(-1);
+			}
+		}
     }
     
     s_res = stat(oldname, &tmp);
     cl_log(LOG_INFO, "Stat of %s (code: %d).", oldname, s_res);
 
-    if(s_res >= 0)
+    if (s_res >= 0)
     {
-	res = link(oldname, newname);
-	if(res < 0)
-	{
-	    perror("Could not create backup of current Cib");
-	    FNRET(-2);
-	}
-	res = unlink(oldname);
-	if(res < 0)
-	{
-	    perror("Could not unlink the current Cib");
-	    FNRET(-3);
-	}
+		res = link(oldname, newname);
+		if (res < 0)
+		{
+			perror("Could not create backup of current Cib");
+			FNRET(-2);
+		}
+		res = unlink(oldname);
+		if (res < 0)
+		{
+			perror("Could not unlink the current Cib");
+			FNRET(-3);
+		}
     }
     
     FNRET(0);
@@ -316,88 +327,99 @@ activateCibBuffer(char *buffer)
 }
 
 /*
- * This method will free the old CIB pointer on success and the new one on failure.
+ * This method will free the old CIB pointer on success and the new one
+ * on failure.
  */
 int
 activateCibXml(xmlNodePtr new_cib)
 {
     int error_code = 0;
-    xmlNodePtr saved_cib = theCib();
+    xmlNodePtr saved_cib = get_the_CIB();
 
-    if(initializeCib(new_cib) == FALSE)
-    {
-	int res = moveFile(CIB_FILENAME, CIB_BACKUP, FALSE, NULL);
+	FNIN();
 	
-	if(res  < 0)
-	{
-	    cl_log(LOG_INFO, "Could not make backup of the current Cib (code: %d)... aborting update.", res);
-	    error_code = -1;
-	}
-	else
-	{
-	    // modify the timestamp
-	    set_xml_property_copy(new_cib, XML_ATTR_TSTAMP, getNow());        
-	    
-	    cl_log(LOG_INFO, "Writing CIB out to %s", CIB_FILENAME);
-	    
-	    if(new_cib->doc == NULL)
-	    {
-		cl_log(LOG_INFO, "Writing of a node tree with a NULL document will fail, creating a new back link.");
-		xmlDocPtr foo = xmlNewDoc("1.0");
-		xmlSetTreeDoc(new_cib,foo);
-	    }
-	    
-	    
-	    /* save it.  set arg 3 to 0 to disable line breaks, 1 to enable
-	     * res == num bytes saved
-	     */
-	    res = xmlSaveFormatFile(CIB_FILENAME, new_cib->doc, 0);
-	    // for some reason, reading back after saving with line-breaks doesnt go real well 
-	    
-	    cl_log(LOG_INFO, "Saved %d bytes to the Cib as XML", res);
-	    
-	    if(res < 0) // assume 0 is good
-	    {
-		if(moveFile(CIB_BACKUP, CIB_FILENAME, FALSE, NULL) < -1)
+    if (initializeCib(new_cib) == TRUE)
+    {
+		int res = moveFile(CIB_FILENAME, CIB_BACKUP, FALSE, NULL);
+	
+		if (res  < 0)
 		{
-		    cl_log(LOG_CRIT, "Could not restore the backup of the current Cib (code: %d)... panic!", res);
-		    error_code = -2;
-		    // should probably exit here 
+			cl_log(LOG_INFO,
+				   "Could not make backup of the current Cib (code: %d)... "
+				   "aborting update.", res);
+			error_code = -1;
 		}
 		else
 		{
-		    cl_log(LOG_CRIT,
-			   "Update of Cib failed (code: %d)... reverted to last known valid version",
-			   res);
+			// modify the timestamp
+			set_xml_property_copy(new_cib, XML_ATTR_TSTAMP, getNow());        
+	    
+			cl_log(LOG_INFO, "Writing CIB out to %s", CIB_FILENAME);
+	    
+			if (new_cib->doc == NULL)
+			{
+				cl_log(LOG_INFO,
+					   "Writing of a node tree with a NULL document will "
+					   "fail, creating a new back link.");
+				xmlDocPtr foo = xmlNewDoc("1.0");
+				xmlSetTreeDoc(new_cib,foo);
+			}
+	    
+	    
+			/* save it.  set arg 3 to 0 to disable line breaks, 1 to enable
+			 * res == num bytes saved
+			 */
+			res = xmlSaveFormatFile(CIB_FILENAME, new_cib->doc, 0);
+			/* for some reason, reading back after saving with line-breaks
+			 * doesnt go real well 
+			 */
+			cl_log(LOG_INFO, "Saved %d bytes to the Cib as XML", res);
+	    
+			if (res < 0) // assume 0 is good
+			{
+				if (moveFile(CIB_BACKUP, CIB_FILENAME, FALSE, NULL) < -1)
+				{
+					cl_log(LOG_CRIT, "Could not restore the backup of the "
+						   "current Cib (code: %d)... panic!", res);
+					error_code = -2;
+					// should probably exit here 
+				}
+				else
+				{
+					cl_log(LOG_CRIT,
+						   "Update of Cib failed (code: %d)... "
+						   "reverted to last known valid version",
+						   res);
 
-		    if(initializeCib(saved_cib) == FALSE)
-		    {
-			// oh we are so dead
-			cl_log(LOG_CRIT,
-			       "Could not re-initialize with the old CIB.  Everything is about to go pear shaped");
-			error_code = -3;
-		    }
-		    else
-		    {
-			cl_log(LOG_INFO,
-			       "Re-initializing with the old CIB succeeded.  Recovery complete.");
-			error_code = -4;
-		    }
+					if (initializeCib(saved_cib) == FALSE) {
+						// oh we are so dead 
+						cl_log(LOG_CRIT,
+							   "Could not re-initialize with the old CIB."
+							   "  Everything is about to go pear shaped");
+						error_code = -3;
+					}
+					else
+					{
+						cl_log(LOG_INFO,
+							   "Re-initializing with the old CIB succeeded."
+							   "  Recovery complete.");
+						error_code = -4;
+					}
+				}
+			}
 		}
-	    }
-	}
     }
     else
     {
-	cl_log(LOG_INFO, "Ignoring invalid or NULL Cib");
-	error_code = -5;
+		cl_log(LOG_INFO, "Ignoring invalid or NULL Cib");
+		error_code = -5;
     }
 
     // Make sure memory is cleaned up appropriately
-    if(error_code < 0)
-	free_xml(new_cib);
+    if (error_code < 0)
+		free_xml(new_cib);
     else
-	free_xml(saved_cib);
+		free_xml(saved_cib);
     
     FNRET(error_code);
     

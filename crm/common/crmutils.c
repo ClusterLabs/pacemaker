@@ -33,9 +33,12 @@
 #include <clplumbing/Gmain_timeout.h>
 
 #include <crmutils.h>
+#include <crm/dmalloc_wrapper.h>
 
 
 static int  wdt_interval_ms = 10000;
+
+extern void dmalloc_error(const char *func);
 
 gboolean
 tickle_apphb_template(gpointer data)
@@ -47,6 +50,7 @@ tickle_apphb_template(gpointer data)
     rc = apphb_hb();
     if (rc < 0) {
 		cl_perror("%s apphb_hb failure", app_instance);
+
 		exit(3);
     }
     return TRUE;
@@ -60,7 +64,7 @@ register_pid(const char *pid_file, gboolean do_fork, void (*shutdown)(int nsig))
     long	pid;
     FILE *	lockfd;
 
-    if(do_fork) {
+    if (do_fork) {
 		pid = fork();
 		
 		if (pid < 0) {
@@ -82,7 +86,6 @@ register_pid(const char *pid_file, gboolean do_fork, void (*shutdown)(int nsig))
     }
 
     umask(022);
-// dont this is required:    getsid(0);
 /*     if (!crm_debug()) { */
 /* 	cl_log_enable_stderr(FALSE); */
 /*     } */
@@ -123,7 +126,7 @@ get_running_pid(const char *pid_file, gboolean* anypidfile)
 int
 init_stop(const char *pid_file, GMainLoop*  mainloop )
 {
-    if(pid_file == NULL) {
+    if (pid_file == NULL) {
 		cl_log(LOG_ERR, "No pid file specified to kill process");
 		return LSB_EXIT_GENERIC;
     }
@@ -186,12 +189,12 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *crm_system_name,
   
     const char* ournode = NULL;
     cl_log(LOG_INFO, "Finding our node name");
-    if((ournode = hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
+    if ((ournode = hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
 		cl_log(LOG_ERR, "get_mynodeid() failed");
 		return FALSE;
     }
     cl_log(LOG_INFO, "Hostname: %s", ournode);
-  
+	
 /*     cl_log(LOG_INFO, "Be informed of link status changes"); */
 /*     if (hb_cluster->llc_ops->set_ifstatus_callback(hb_cluster, LinkStatus, NULL) */
 /* 	!=HA_OK){ */
@@ -213,10 +216,8 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *crm_system_name,
 				  hb_cluster->llc_ops->inputfd(hb_cluster),
 				  FALSE, 
 				  dispatch_method, 
-//		  hb_input_dispatch, 
 				  hb_cluster,  // usrdata 
 				  cleanup_method);
-//		  hb_input_destroy);
 
     /* it seems we need to poke the message receiving stuff in order for it to
      *    start seeing messages.  Its like it gets blocked or something.

@@ -17,9 +17,10 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
-			-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl \
-			-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha
+INCLUDES       	= -I$(top_builddir)/include -I$(top_srcdir)/include     \
+					-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl   \
+					-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
+					-I$(top_builddir) -I$(top_srcdir)
 
 hadir			= $(sysconfdir)/ha.d
 halibdir		= $(libdir)/@HB_PKG@
@@ -38,7 +39,8 @@ crmresfifo		= $(havarlibdir)/api/crm.rsp
 
 LIBRT 			= @LIBRT@
 AM_CFLAGS		= @CFLAGS@	\
-			-DPIDFILE='"$(PIDFILE)"'
+				-DPIDFILE='"$(PIDFILE)"' \
+				$(CRM_DEBUG_FLAGS)
 
 ## libraries
 lib_LTLIBRARIES		= libcrmcommon.la
@@ -50,7 +52,6 @@ halib_PROGRAMS		=
 
 ## SOURCES
 
-#noinst_HEADERS		= config.h control.h crmd.h
 noinst_HEADERS		= 
 
 libcrmcommon_la_SOURCES	= ipcutils.c crmutils.c xmlutils.c msgutils.c
@@ -60,18 +61,5 @@ clean-generic:
 	rm -f *.log *.debug *.xml *~
 
 install-exec-local:
-#	$(mkinstalldirs) $(DESTDIR)$(crmdir)
-#	-chgrp $(apigid) $(DESTDIR)/$(crmdir)
-#	-chown $(ccmuid) $(DESTDIR)/$(crmdir)
-#	chmod 750 $(DESTDIR)/$(crmdir)
-#	test -p $(DESTDIR)$(crmreqfifo) || mkfifo -m 200 $(DESTDIR)$(crmreqfifo)
-#	test -p $(DESTDIR)$(crmresfifo) || mkfifo -m 600 $(DESTDIR)$(crmresfifo)
-#	-chgrp $(apigid) $(DESTDIR)/$(crmreqfifo)
-#	-chgrp $(apigid) $(DESTDIR)/$(crmresfifo)
-#	-chown $(crmuid) $(DESTDIR)/$(crmreqfifo)
-#	-chown $(crmuid) $(DESTDIR)/$(crmresfifo)
 
 uninstall-local:
-#	-test -p $(DESTDIR)$(crmreqfifo) && rm $(DESTDIR)$(crmreqfifo)
-#	-test -p $(DESTDIR)$(crmresfifo) && rm $(DESTDIR)$(crmresfifo)
-#	rm -fr $(DESTDIR)$(crmdir)

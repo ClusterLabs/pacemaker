@@ -17,10 +17,10 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
-			-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl \
-			-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
-			-I$(top_builddir) -I$(top_srcdir)
+INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include \
+				-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl 	\
+				-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
+				-I$(top_builddir) -I$(top_srcdir)
 
 hadir			= $(sysconfdir)/ha.d
 halibdir		= $(libdir)/@HB_PKG@
@@ -35,21 +35,19 @@ crmdir			= $(havarlibdir)/crm
 apigid			= @HA_APIGID@
 crmuid			= @HA_CCMUID@
 
-## CRM_DEBUG_FLAGS		= -DDMALLOC_FUNC_CHECK
-## CRM_DEBUG_LIBS		= -ldmalloc
-COMMONLIBS		= $(CRM_DEBUG_LIBS) \
-			$(top_builddir)/lib/clplumbing/libplumb.la		\
-			$(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la	\
-			$(top_builddir)/$(CRM_DIR)/cib/libcib.la	\
-			$(top_builddir)/lib/apphb/libapphb.la		\
-			$(top_builddir)/heartbeat/libhbclient.la  	\
-			$(GLIBLIB)					\
-			$(LIBRT)
+COMMONLIBS		= $(CRM_DEBUG_LIBS) 								\
+				$(top_builddir)/lib/clplumbing/libplumb.la			\
+				$(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la	\
+				$(top_builddir)/$(CRM_DIR)/cib/libcib.la			\
+				$(top_builddir)/lib/apphb/libapphb.la				\
+				$(top_builddir)/heartbeat/libhbclient.la  			\
+				$(GLIBLIB)											\
+				$(LIBRT)
 
 LIBRT 			= @LIBRT@
-AM_CFLAGS		= @CFLAGS@	\
-			-DPIDFILE='"$(PIDFILE)"' \
-			$(CRM_DEBUG_FLAGS)
+AM_CFLAGS		= @CFLAGS@											\
+				-DPIDFILE='"$(PIDFILE)"' 							\
+				$(CRM_DEBUG_FLAGS)
 
 ## libraries
 lib_LTLIBRARIES		= 
@@ -64,13 +62,10 @@ halib_PROGRAMS		= crmadmin
 #noinst_HEADERS		= config.h control.h crmd.h
 noinst_HEADERS		= 
 
-crmadmin_SOURCES		= adminmain.c
-crmadmin_CFLAGS		= $(XML_FLAGS) -I$(top_builddir) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-crmadmin_LDFLAGS		= $(XML_LIBS)
-crmadmin_LDADD		= $(COMMONLIBS) 				\
-			$(top_builddir)/libltdl/libltdlc.la 		\
-			$(top_builddir)/replace/libreplace.la		\
-			$(LIBRT)
+crmadmin_SOURCES	= adminmain.c
+crmadmin_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+crmadmin_LDFLAGS	= $(XML_LIBS)
+crmadmin_LDADD		= $(COMMONLIBS) 				
 
 
 clean-generic:

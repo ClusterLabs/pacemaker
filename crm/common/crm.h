@@ -18,12 +18,12 @@
 #ifndef CRM__H
 #define CRM__H
 
+//#define DMALLOC 1
+
 #include <stdlib.h>
+
 #include <ha_config.h>
 
-#ifdef DMALLOC
-#   include "dmalloc.h"
-#endif
 
 #define WORKING_DIR HA_VARLIBDIR"/heartbeat/crm"
 #define MAXDATASIZE 65535 // ipc comms

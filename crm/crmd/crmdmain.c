@@ -50,6 +50,8 @@ const char* crm_system_name = "crmd";
 #include <crm/common/xmlvalues.h>
 #include <crmd.h>
 
+#include <crm/dmalloc_wrapper.h>
+
 #define PID_FILE     WORKING_DIR"/crm.pid"
 #define DAEMON_LOG   LOG_DIR"/crm.log"
 #define DAEMON_DEBUG LOG_DIR"/crm.debug"
@@ -136,7 +138,8 @@ init_start(void)
 		exit(LSB_EXIT_OK);
     }
     cl_log(LOG_INFO, "Register PID");
-    register_pid(PID_FILE, TRUE, shutdown);
+    register_pid(PID_FILE, FALSE, shutdown);
+//    register_pid(PID_FILE, TRUE, shutdown);
 	
     cl_log_set_logfile(DAEMON_LOG);
 //    if (crm_debug()) {
@@ -165,16 +168,16 @@ init_start(void)
     CRM_DEBUG("Init server comms");
     was_error = init_server_ipc_comms(CRM_SYSTEM_CRMD, crmd_client_connect, default_ipc_input_destroy);
     
-    if(was_error == 0)
+    if (was_error == 0)
     {
 	CRM_DEBUG("Signon with the CIB");
 	IPC_Channel *cib_channel = init_client_ipc_comms("cib", crmd_ipc_input_callback);
-	if(cib_channel != NULL)
-	    g_hash_table_insert (ipc_clients, strdup("cib"), (gpointer)cib_channel);
+	if (cib_channel != NULL)
+	    g_hash_table_insert (ipc_clients, ha_strdup("cib"), (gpointer)cib_channel);
 	else
 	    was_error = 1;
     }
-    if(was_error == 0)
+    if (was_error == 0)
     {
 	CRM_DEBUG("Registering with HA");
 	was_error = (register_with_ha(hb_cluster,
@@ -183,17 +186,17 @@ init_start(void)
 				      crmd_ha_input_callback,
 				      crmd_ha_input_destroy) == FALSE);
     }
-    if(was_error == 0)
+    if (was_error == 0)
     {
 	CRM_DEBUG("Registering with CCM");
 	was_error = register_with_ccm(hb_cluster);
     }
     
-    if(was_error == 0)
+    if (was_error == 0)
     {
 	CRM_DEBUG("Finding our node name");
 	our_uname = hb_cluster->llc_ops->get_mynodeid(hb_cluster);
-	if(our_uname == NULL)
+	if (our_uname == NULL)
 	{
 	    cl_log(LOG_ERR, "get_mynodeid() failed");
 	    was_error = 1;
@@ -201,7 +204,7 @@ init_start(void)
 	cl_log(LOG_INFO, "Hostname: %s", our_uname);
     }
 
-    if(was_error == 0)
+    if (was_error == 0)
     {
 	/* Create the mainloop and run it... */
 	mainloop = g_main_new(FALSE);
@@ -264,7 +267,7 @@ register_with_ccm(ll_cluster_t *hb_cluster)
     
     cl_log(LOG_INFO, "Activating CCM taken");
     ret = oc_ev_activate(ev_token, &my_ev_fd);
-    if(ret){
+    if (ret){
 		cl_log(LOG_INFO, "CCM Activation failed... unregistering");
 		oc_ev_unregister(ev_token);
 		return(1);
@@ -274,7 +277,7 @@ register_with_ccm(ll_cluster_t *hb_cluster)
     FD_ZERO(&rset);
     FD_SET(my_ev_fd, &rset);
     
-    if(oc_ev_handle_event(ev_token)){
+    if (oc_ev_handle_event(ev_token)){
 		cl_log(LOG_ERR,"CCM Activation: terminating");
 		return(1);
     }

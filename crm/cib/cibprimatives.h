@@ -53,7 +53,7 @@ typedef xmlNode cibHaNode;
 
 extern void* ha_malloc(size_t size);
 
-xmlNodePtr theCib(void);
+xmlNodePtr get_the_CIB(void);
 xmlNodePtr getCibSection(const char *section);
 
 cibResource   *newResource  (const char *id, const char *type, const char *name, const char *max_instances);

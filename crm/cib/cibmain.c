@@ -49,6 +49,8 @@
 #include <cibio.h>
 #include <cib.h>
 
+#include <crm/dmalloc_wrapper.h>
+
 /* #define REALTIME_SUPPORT 0 */
 #define PID_FILE     WORKING_DIR"/cib.pid"
 #define DAEMON_LOG   LOG_DIR"/cib.log"
@@ -80,54 +82,54 @@ main(int argc, char ** argv)
     int flag;
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
-	switch(flag) {
-	    case 's':		/* Status */
-		req_status = TRUE;
-		break;
-	    case 'k':		/* Stop (kill) */
-		req_stop = TRUE;
-		break;
-	    case 'r':		/* Restart */
-		req_restart = TRUE;
-		break;
-	    case 'c':		/* Restart */
-		req_comms_restart = TRUE;
-		break;
-	    case 'h':		/* Help message */
-		usage(crm_system_name, LSB_EXIT_OK);
-		break;
-	    default:
-		++argerr;
-		break;
-	}
+		switch(flag) {
+			case 's':		/* Status */
+				req_status = TRUE;
+				break;
+			case 'k':		/* Stop (kill) */
+				req_stop = TRUE;
+				break;
+			case 'r':		/* Restart */
+				req_restart = TRUE;
+				break;
+			case 'c':		/* Restart */
+				req_comms_restart = TRUE;
+				break;
+			case 'h':		/* Help message */
+				usage(crm_system_name, LSB_EXIT_OK);
+				break;
+			default:
+				++argerr;
+				break;
+		}
     }
     
     if (optind > argc) {
-	++argerr;
+		++argerr;
     }
     
     if (argerr) {
-	usage(crm_system_name,LSB_EXIT_GENERIC);
+		usage(crm_system_name,LSB_EXIT_GENERIC);
     }
     
     // read local config file
     
     if (req_status){
-	FNRET(init_status(PID_FILE, crm_system_name));
+		FNRET(init_status(PID_FILE, crm_system_name));
     }
   
     if (req_stop){
-	FNRET(init_stop(PID_FILE, mainloop));
+		FNRET(init_stop(PID_FILE, mainloop));
     }
   
     if (req_comms_restart) { 
 //	init_stop();
-	// kill the current comms
-	init_server_ipc_comms(CRM_SYSTEM_CIB, cib_client_connect, default_ipc_input_destroy);
-        }
+		// kill the current comms
+		init_server_ipc_comms(CRM_SYSTEM_CIB, cib_client_connect, default_ipc_input_destroy);
+	}
 
     if (req_restart) { 
-	init_stop(PID_FILE, mainloop);
+		init_stop(PID_FILE, mainloop);
     }
 
     FNRET(init_start());
@@ -140,12 +142,12 @@ init_start(void)
     long pid;
 
     if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
-	cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
-	exit(LSB_EXIT_OK);
+		cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
+		exit(LSB_EXIT_OK);
     }
 
     cl_log(LOG_INFO, "Register PID");
-    register_pid(PID_FILE, TRUE, shutdown);
+    register_pid(PID_FILE, FALSE, shutdown);
 
     xmlInitParser();  // only do this once
 
@@ -163,17 +165,16 @@ init_start(void)
     int facility;
     cl_log(LOG_INFO, "Switching to Heartbeat logger");
     if ((facility = hb_fd->llc_ops->get_logfacility(hb_fd))>0) {
-	cl_log_set_facility(facility);
+		cl_log_set_facility(facility);
     }    
 
     xmlNodePtr cib = readCibXmlFile(CIB_FILENAME);
-    if(initializeCib(cib))
-	cl_log(LOG_INFO, "CIB Initialization completed successfully");
-    else
-    {
-	free_xml(cib);
-	cl_log(LOG_CRIT, "CIB Initialization failed, starting with an empty default.");
-	initializeCib(createEmptyCib());
+    if (initializeCib(cib)) {
+		cl_log(LOG_INFO, "CIB Initialization completed successfully");
+    } else { 
+		free_xml(cib);
+		cl_log(LOG_CRIT, "CIB Initialization failed, starting with an empty default.");
+		initializeCib(createEmptyCib());
     }
     
     init_server_ipc_comms(CRM_SYSTEM_CIB, cib_client_connect, default_ipc_input_destroy);
@@ -183,11 +184,11 @@ init_start(void)
     cl_log(LOG_INFO, "Starting %s", crm_system_name);
   
 #ifdef REALTIME_SUPPORT
-static int  crm_realtime = 1;
-    if (crm_realtime == 1){
-	cl_enable_realtime();
-    }else if (crm_realtime == 0){
-	cl_disable_realtime();
+	static int  crm_realtime = 1;
+    if (crm_realtime == 1) {
+		cl_enable_realtime();
+    } else if (crm_realtime == 0) {
+		cl_disable_realtime();
     }
     cl_make_realtime(SCHED_RR, 5, 64, 64);
 #endif
@@ -196,7 +197,7 @@ static int  crm_realtime = 1;
     return_to_orig_privs();
   
     if (unlink(PID_FILE) == 0) {
-	cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
+		cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
     }
     FNRET(0);
 }
@@ -209,7 +210,7 @@ usage(const char* cmd, int exit_status)
     stream = exit_status ? stderr : stdout;
 
     fprintf(stream, "usage: %s [-srkh]"
-	    "[-c configure file]\n", cmd);
+			"[-c configure file]\n", cmd);
 /* 	fprintf(stream, "\t-d\tsets debug level\n"); */
 /* 	fprintf(stream, "\t-s\tgets daemon status\n"); */
 /* 	fprintf(stream, "\t-r\trestarts daemon\n"); */
@@ -227,11 +228,11 @@ shutdown(int nsig)
     CL_SIGNAL(nsig, shutdown);
   
     if (!shuttingdown) {
-	shuttingdown = 1;
+		shuttingdown = 1;
     }
     if (mainloop != NULL && g_main_is_running(mainloop)) {
-	g_main_quit(mainloop);
-    }else{
-	exit(LSB_EXIT_OK);
+		g_main_quit(mainloop);
+    } else {
+		exit(LSB_EXIT_OK);
     }
 }

@@ -51,6 +51,8 @@
 #include <crm/common/xmlvalues.h>
 #include <crm/common/msgutils.h>
 
+#include <crm/dmalloc_wrapper.h>
+
 GMainLoop*  mainloop = NULL;
 const char* crm_system_name = "lrmd";
 
@@ -73,7 +75,7 @@ main(int argc, char ** argv)
     int	argerr = 0;
     int flag;
 
-    if(0)
+    if (0)
     {
 	send_ipc_message(NULL, NULL);
     }

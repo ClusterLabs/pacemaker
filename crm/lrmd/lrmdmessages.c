@@ -37,6 +37,8 @@
 #include <clplumbing/cl_log.h>
 #include <cibprimatives.h>
 
+#include <crm/dmalloc_wrapper.h>
+
 const char *generateReference(void);
 xmlNodePtr createEmptyMsg(const char *crm_msg_reference);
 xmlNodePtr createLrmdRequest(gboolean isLocal, const char *operation, const char *section,
@@ -66,11 +68,11 @@ createEmptyMsg(const char *crm_msg_reference)
     xmlDocPtr doc;
     
     doc = xmlNewDoc("1.0");
-    doc->children = xmlNewDocNode(doc, NULL, XML_MSG_TAG, NULL);
+    doc->children = create_xml_doc_node(doc, NULL, XML_MSG_TAG, NULL);
 
     set_xml_property_copy(doc->children, XML_ATTR_VERSION, CRM_VERSION);
     set_xml_property_copy(doc->children, XML_MSG_ATTR_SUBSYS, "none");
-    if(crm_msg_reference == NULL)
+    if (crm_msg_reference == NULL)
     {
 	set_xml_property_copy(doc->children, XML_MSG_ATTR_MSGTYPE, XML_MSG_TAG_REQUEST);
 	set_xml_property_copy(doc->children, XML_MSG_ATTR_REFERENCE, generateReference());
@@ -94,10 +96,10 @@ createLrmdRequest(gboolean isLocal, const char *operation,
     xmlNodePtr root = NULL, cmd = NULL;
 
     const char *crm_msg_reference;
-    if(isLocal)
+    if (isLocal)
     {
 	xmlDocPtr doc = xmlNewDoc("1.0");
-	doc->children = xmlNewDocNode(doc, NULL, XML_REQ_TAG_CIB, NULL);
+	doc->children = create_xml_doc_node(doc, NULL, XML_REQ_TAG_CIB, NULL);
 	cmd = doc->children;
 	root = cmd;
 	crm_msg_reference = generateReference();
@@ -107,8 +109,8 @@ createLrmdRequest(gboolean isLocal, const char *operation,
 	xmlNodePtr request;
 	root = createEmptyMsg(NULL);
 	set_xml_property_copy(root, XML_MSG_ATTR_SUBSYS, "cib");
-	request   = xmlNewChild(root, NULL, XML_MSG_TAG_REQUEST, NULL);
-	cmd       = xmlNewChild(request, NULL, XML_REQ_TAG_LRM, NULL);
+	request   = create_xml_node(root, NULL, XML_MSG_TAG_REQUEST, NULL);
+	cmd       = create_xml_node(request, NULL, XML_REQ_TAG_LRM, NULL);
 	crm_msg_reference = xmlGetProp(root, XML_MSG_ATTR_REFERENCE);
     }
     set_xml_property_copy(cmd, XML_MSG_ATTR_REFERENCE, crm_msg_reference);
@@ -128,12 +130,12 @@ xmlNodePtr
 processLrmdRequest(xmlNodePtr command)
 {
     // sanity check
-    if(command == NULL)
+    if (command == NULL)
     {
 	cl_log(LOG_INFO, "The (%s) received an empty message", "cib");
 	return NULL;
     }
-    else if(strcmp(XML_REQ_TAG_LRM, command->name) != 0)
+    else if (strcmp(XML_REQ_TAG_LRM, command->name) != 0)
     {
 	cl_log(LOG_INFO, "The (%s) received an invalid message of type (%s)", "cib", command->name);
 	return NULL;
@@ -141,7 +143,7 @@ processLrmdRequest(xmlNodePtr command)
 
     const char *status      = "failed";
     xmlNodePtr data         = NULL;
-    xmlNodePtr failed       = xmlNewNode(NULL, XML_TAG_FAILED);
+    xmlNodePtr failed       = create_xml_node(NULL, XML_TAG_FAILED);
     const char *op          = xmlGetProp(command, XML_LRM_ATTR_OP);
     const char *id_filter   = set_xml_property_copy(command, XML_LRM_ATTR_IDFILTE);
     const char *type_filter = set_xml_property_copy(command, XML_LRM_ATTR_TYPEFILTE);
@@ -160,38 +162,38 @@ processLrmdRequest(xmlNodePtr command)
           timeout          #CDATA       '0'>
 */
 
-    if(strcmp("noop", op) == 0) ;
-    else if(strcmp("ping", op) == 0)
+    if (strcmp("noop", op) == 0) ;
+    else if (strcmp("ping", op) == 0)
     {
 	status = "ok";
     }
-    else if(strcmp("query", op) == 0)
+    else if (strcmp("query", op) == 0)
     {
-	if(data != NULL) status = "ok";
+	if (data != NULL) status = "ok";
 // let createLrmdAnswer() fill in the LRM's local view of things
     }
-    else if(strcmp("stop", op) == 0 || strcmp("restart", op))
+    else if (strcmp("stop", op) == 0 || strcmp("restart", op))
     {
 	stop_resource = TRUE;
-	if(strcmp("restart", op) == 0)
+	if (strcmp("restart", op) == 0)
 	    start_resource = TRUE;
     }
-    else if(strcmp("start", op) == 0)
+    else if (strcmp("start", op) == 0)
     {
       start_resource = TRUE;
     }
     else
 	status = "not supported (yet)";
 
-    if(stop_resource == TRUE || start_resource == TRUE)
+    if (stop_resource == TRUE || start_resource == TRUE)
     {
 	xmlNodePtr resourceList = retrieveResourceList(id_filter, type_filter);
-	if(stop_resource == TRUE)
+	if (stop_resource == TRUE)
 	{
 	    actionRequest(resourceList, op, failed);
 	}
 	
-	if(start_resource == TRUE)
+	if (start_resource == TRUE)
 	{
 	    startResources(resourceList, failed);
 	}
@@ -213,8 +215,8 @@ retrieveResourceList(const char *id_filter, const char *type_filter)
 void
 actionRequest(xmlNodePtr update_command, const char *operation, xmlNodePtr failed)
 {
-  xmlNodePtr xml_section = find_xmlnode(update_command, XML_TAG_CIB);
-  xml_section = find_xmlnode(update_command, XML_CIB_TAG_RESOURCES);
+  xmlNodePtr xml_section = find_xml_node(update_command, XML_TAG_CIB);
+  xml_section = find_xml_node(update_command, XML_CIB_TAG_RESOURCES);
   xmlNodePtr child = xml_section->children;
   
   while(child != NULL)
@@ -226,20 +228,20 @@ actionRequest(xmlNodePtr update_command, const char *operation, xmlNodePtr faile
       const char *new_state = old_state;
 
       // set timers etc.
-      if(strcmp("stop", op) == 0)
+      if (strcmp("stop", op) == 0)
       {
 	  // result = try to stop the resource
-	  if(result == 0)
+	  if (result == 0)
 	  {
 	      new_state = CIB_VAL_RESSTATUS_STOPED;
 	      // update internal lists
 	  }
 	  // may want to put into a particular state depending on result code
       }
-      else if(strcmp("start", op) == 0)
+      else if (strcmp("start", op) == 0)
       {
 	  // result = try to stop the resource
-	  if(result == 0)
+	  if (result == 0)
 	  {
 	      new_state = CIB_VAL_RESSTATUS_STARTED;
 	      // update internal lists
@@ -264,13 +266,13 @@ conditional_add_failure(xmlNodePtr failed, xmlNodePtr target, const char *operat
 {
   gboolean was_error = FALSE;
 
-  if(return_code < 0)
+  if (return_code < 0)
     {
       was_error = TRUE;
 
       // do some fabulous logging
       
-      xmlNodePtr xml_node = xmlNewNode(NULL, XML_FAIL_TAG_RESOURCE);
+      xmlNodePtr xml_node = create_xml_node(NULL, XML_FAIL_TAG_RESOURCE);
       set_xml_property_copy(xml_node, XML_FAILCIB_ATTR_RESID, ID(target));
       set_xml_property_copy(xml_node, XML_LRM_ATTR_OP, operation);
       set_xml_property_copy(xml_node, XML_LRM_ATTR_RESSTATUS, status);
@@ -304,22 +306,22 @@ createLrmdAnswer(const char *crm_msg_reference, const char *operation,
     
     root = createEmptyMsg(crm_msg_reference);
     set_xml_property_copy(root, XML_MSG_ATTR_SRCSUBSYS, "lrm");
-    response = xmlNewChild(root, NULL, XML_MSG_TAG_RESPONSE, NULL);
-    answer = xmlNewChild(response, NULL, XML_RESP_TAG_LRM, NULL);
+    response = create_xml_node(root, NULL, XML_MSG_TAG_RESPONSE, NULL);
+    answer = create_xml_node(response, NULL, XML_RESP_TAG_LRM, NULL);
 
-    if(operation == NULL) return root;
+    if (operation == NULL) return root;
     
-    if(strcmp("ping", operation) == 0)
+    if (strcmp("ping", operation) == 0)
     {
 	addLrmdPingAnswer(answer, status);
     }
     else
     {
-	xmlNodePtr fragment = xmlNewChild(answer, NULL, XML_CIB_TAG_FRAGMENT, NULL);
+	xmlNodePtr fragment = create_xml_node(answer, NULL, XML_CIB_TAG_FRAGMENT, NULL);
 	set_xml_property_copy(fragment, XML_CIB_ATTR_SECTION, "status");
 	addLrmdFragment(fragment);
 	
-	if(failed != NULL && failed->children != NULL)
+	if (failed != NULL && failed->children != NULL)
 	{
 	    xmlAddChild(answer, failed);
 	}
@@ -330,7 +332,7 @@ createLrmdAnswer(const char *crm_msg_reference, const char *operation,
 void
 addLrmdPingAnswer(xmlNodePtr answer, const char *status)
 {
-    xmlNodePtr ping = xmlNewChild(answer, NULL, XML_CRM_TAG_PING, NULL);
+    xmlNodePtr ping = create_xml_node(answer, NULL, XML_CRM_TAG_PING, NULL);
     set_xml_property_copy(ping, XML_PING_ATTR_STATUS, status);
 }
 
