@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.1 2004/04/23 15:32:11 andrew Exp $ */
+/* $Id: ptest.c,v 1.2 2004/04/26 12:36:20 msoffen Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -18,9 +18,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <portability.h>
 #include <crm/crm.h>
 
-#include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -64,6 +64,8 @@ void print_color_details(struct color_shared_s *color, gboolean details);
 int
 main(int argc, char **argv)
 {
+	xmlNodePtr cib_object = NULL;
+	int lpc = 0;
 	int argerr = 0;
 	int flag;
   
@@ -130,12 +132,11 @@ main(int argc, char **argv)
   
 	cl_log(LOG_INFO, "=#=#=#=#= Getting XML =#=#=#=#=");
   
-	xmlNodePtr cib_object = file2xml(stdin);
+	cib_object = file2xml(stdin);
   
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 1 =#=#=#=#=");
 	stage1(cib_object);
 
-	int lpc = 0;
 
 	cl_log(LOG_INFO, "========= Nodes =========");
 	slist_iter(node, node_t, node_list, lpc,

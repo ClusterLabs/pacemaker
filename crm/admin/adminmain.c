@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.20 2004/03/26 14:14:25 andrew Exp $ */
+/* $Id: adminmain.c,v 1.21 2004/04/26 12:36:05 msoffen Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -18,9 +18,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <portability.h>
+
 #include <crm/crm.h>
 
-#include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -112,50 +113,50 @@ const char *sys_to = NULL;;
 int
 main(int argc, char **argv)
 {
+	int option_index = 0;
+	int argerr = 0;
+	int flag;
+	ll_cluster_t *hb_cluster = NULL;
+
+	static struct option long_options[] = {
+		// Top-level Options
+		{"daemon", 0, 0, 0},
+		{CRM_OPERATION_ERASE, 0, 0, 0},
+		{CRM_OPERATION_QUERY, 0, 0, 0},
+		{CRM_OPERATION_CREATE, 0, 0, 0},
+		{CRM_OPERATION_REPLACE, 0, 0, 0},
+		{CRM_OPERATION_STORE, 0, 0, 0},
+		{CRM_OPERATION_UPDATE, 0, 0, 0},
+		{CRM_OPERATION_DELETE, 0, 0, 0},
+		{"verbose", 0, 0, 'V'},
+		{"help", 0, 0, '?'},
+		{"reference", 1, 0, 0},
+
+		// common options
+		{"id", 1, 0, 'i'},
+		{"obj_type", 1, 0, 'o'},
+
+		// daemon options
+		{"reset", 1, 0, 'C'},
+		{"status", 1, 0, 'S'},
+		{"health", 0, 0, 'H'},
+		{"disconnect", 1, 0, 'A'},
+		{"unload_ha", 1, 0, 'U'},
+		{"migrate_from", 1, 0, 'M'},
+		{"migrate_res", 1, 0, 'I'},
+		{"elect_dc", 0, 0, 'E'},
+		{"whois_dc", 0, 0, 'W'},
+		{"recalc_tree", 0, 0, 'R'},
+		{"flush_recalc_tree", 0, 0, 'F'},
+
+		{0, 0, 0, 0}
+	};
 
 	cl_log_set_entity(crm_system_name);
 	cl_log_enable_stderr(TRUE);
 	cl_log_set_facility(LOG_USER);
 
-	int argerr = 0;
-	int flag;
-
 	while (1) {
-		int option_index = 0;
-		static struct option long_options[] = {
-			// Top-level Options
-			{"daemon", 0, 0, 0},
-			{CRM_OPERATION_ERASE, 0, 0, 0},
-			{CRM_OPERATION_QUERY, 0, 0, 0},
-			{CRM_OPERATION_CREATE, 0, 0, 0},
-			{CRM_OPERATION_REPLACE, 0, 0, 0},
-			{CRM_OPERATION_STORE, 0, 0, 0},
-			{CRM_OPERATION_UPDATE, 0, 0, 0},
-			{CRM_OPERATION_DELETE, 0, 0, 0},
-			{"verbose", 0, 0, 'V'},
-			{"help", 0, 0, '?'},
-			{"reference", 1, 0, 0},
-
-			// common options
-			{"id", 1, 0, 'i'},
-			{"obj_type", 1, 0, 'o'},
-
-			// daemon options
-			{"reset", 1, 0, 'C'},
-			{"status", 1, 0, 'S'},
-			{"health", 0, 0, 'H'},
-			{"disconnect", 1, 0, 'A'},
-			{"unload_ha", 1, 0, 'U'},
-			{"migrate_from", 1, 0, 'M'},
-			{"migrate_res", 1, 0, 'I'},
-			{"elect_dc", 0, 0, 'E'},
-			{"whois_dc", 0, 0, 'W'},
-			{"recalc_tree", 0, 0, 'R'},
-			{"flush_recalc_tree", 0, 0, 'F'},
-
-			{0, 0, 0, 0}
-		};
-
 		flag = getopt_long(argc, argv, OPTARGS,
 				   long_options, &option_index);
 		if (flag == -1)
@@ -289,7 +290,7 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
-	ll_cluster_t *hb_cluster = do_init();
+	hb_cluster = do_init();
 	if (hb_cluster != NULL) {
 		if (do_work(hb_cluster) > 0) {
 			/* wait for the reply by creating a mainloop and running it until
@@ -319,6 +320,9 @@ main(int argc, char **argv)
 xmlNodePtr
 handleCibMod(void)
 {
+	const char *attr_name = NULL;
+	const char *attr_value = NULL;
+	xmlNodePtr fragment = NULL;
 	xmlNodePtr cib_object = file2xml(stdin);
 
 	if(cib_object == NULL) {
@@ -333,9 +337,6 @@ handleCibMod(void)
 		return NULL;
 	}
 
-	const char *attr_name = NULL;
-	const char *attr_value = NULL;
-
 	attr_name = XML_ATTR_ID;
 	
 	attr_value = xmlGetProp(cib_object, attr_name);
@@ -347,7 +348,6 @@ handleCibMod(void)
 	CRM_DEBUG("Object creation complete");
 
 	// create the cib request
-	xmlNodePtr fragment = NULL;
 	fragment = create_cib_fragment(cib_object, NULL);
 
 	set_xml_property_copy(msg_options, XML_ATTR_OP, cib_action);
@@ -363,6 +363,8 @@ do_work(ll_cluster_t * hb_cluster)
 	xmlNodePtr msg_data = NULL;
 	const char *dest_node = NULL;
 	gboolean all_is_good = TRUE;
+	char *obj_type_parent = NULL;
+	const char *ping_type = NULL;
 	
 	msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
 	set_xml_property_copy(msg_options, XML_ATTR_VERBOSE, verbose);
@@ -373,7 +375,7 @@ do_work(ll_cluster_t * hb_cluster)
 
 		if(strcmp(CRM_OPERATION_QUERY, cib_action) == 0) {
 			cl_log(LOG_DEBUG, "Querying the CIB");
-			char *obj_type_parent = pluralSection(obj_type);
+			obj_type_parent = pluralSection(obj_type);
 			
 			CRM_DEBUG2("Querying the CIB for section: %s",
 				   obj_type_parent);
@@ -415,7 +417,7 @@ do_work(ll_cluster_t * hb_cluster)
 
 		if (status != NULL) {
 			sys_to = CRM_SYSTEM_CRMD;
-			const char *ping_type = CRM_OPERATION_PING;
+			ping_type = CRM_OPERATION_PING;
 			if (BE_VERBOSE) {
 				ping_type = "ping_deep";
 				if (status != NULL)
@@ -477,14 +479,15 @@ do_work(ll_cluster_t * hb_cluster)
 ll_cluster_t *
 do_init(void)
 {
+	int facility;
+	ll_cluster_t *hb_cluster = NULL;
 
 	/* docs say only do this once, but in their code they do it every time! */
 	xmlInitParser (); 
 
 	/* change the logging facility to the one used by heartbeat daemon */
-	ll_cluster_t *hb_cluster = ll_cluster_new("heartbeat");
+	hb_cluster = ll_cluster_new("heartbeat");
 	
-	int facility;
 	cl_log(LOG_INFO, "Switching to Heartbeat logger");
 	if (( facility =
 	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
@@ -535,11 +538,18 @@ const char *ournode;
 gboolean
 admin_msg_callback(IPC_Channel * server, void *private_data)
 {
-	FNIN();
 	int lpc = 0;
 	IPC_Message *msg = NULL;
 	gboolean hack_return_good = TRUE;
 	static int received_responses = 0;
+	char *filename;
+	int filename_len = 0;
+	const char *result = NULL;
+	xmlNodePtr options = NULL;
+	xmlNodePtr xml_root_node = NULL;
+	char *buffer = NULL;
+
+	FNIN();
 
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {
@@ -554,10 +564,10 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 		lpc++;
-		char *buffer =(char *) msg->msg_body;
+		buffer =(char *) msg->msg_body;
 		CRM_DEBUG2("Got xml [text=%s]", buffer);
 
-		xmlNodePtr xml_root_node =
+		xml_root_node =
 			find_xml_in_ipcmessage(msg, TRUE);
 
 		if (xml_root_node == NULL) {
@@ -574,10 +584,10 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			continue;
 		}
 
-		xmlNodePtr options = find_xml_node(xml_root_node,
+		options = find_xml_node(xml_root_node,
 						   XML_TAG_OPTIONS);
 		
-		const char *result = xmlGetProp(options, XML_ATTR_RESULT);
+		result = xmlGetProp(options, XML_ATTR_RESULT);
 		if(result == NULL || strcmp(result, "ok") == 0) {
 			result = "pass";
 		} else {
@@ -590,9 +600,8 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 		if (this_msg_reference != NULL) {
 			// in testing mode...
-			char *filename;
 			/* 31 = "test-_.xml" + an_int_as_string + '\0' */
-			int filename_len = 31 + strlen(this_msg_reference);
+			filename_len = 31 + strlen(this_msg_reference);
 
 			filename = cl_malloc(sizeof(char) * filename_len);
 			sprintf(filename, "%s-%s_%d.xml",

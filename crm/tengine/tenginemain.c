@@ -1,4 +1,4 @@
-/* $Id: tenginemain.c,v 1.11 2004/04/21 18:50:28 andrew Exp $ */
+/* $Id: tenginemain.c,v 1.12 2004/04/26 12:36:24 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,10 +17,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <portability.h>
 
 #include <crm/crm.h>
-
-#include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -65,16 +64,16 @@ void tengine_shutdown(int nsig);
 int
 main(int argc, char ** argv)
 {
-
-    cl_log_set_entity(crm_system_name);
-    cl_log_enable_stderr(TRUE);
-    cl_log_set_facility(LOG_USER);
-    
     int	req_restart = FALSE;
     int	req_status = FALSE;
     int	req_stop = FALSE;
     int	argerr = 0;
     int flag;
+
+    cl_log_set_entity(crm_system_name);
+    cl_log_enable_stderr(TRUE);
+    cl_log_set_facility(LOG_USER);
+    
 
     if (0)
     {
@@ -133,6 +132,12 @@ int
 init_start(void)
 {
     long pid;
+    ll_cluster_t*	hb_fd = NULL;
+    int facility;
+    IPC_Channel *crm_ch = NULL;
+#ifdef REALTIME_SUPPORT
+	    static int  crm_realtime = 1;
+#endif
 
     if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
 		cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
@@ -145,9 +150,8 @@ init_start(void)
 //    }
 
     /* change the logging facility to the one used by heartbeat daemon */
-    ll_cluster_t*	hb_fd = ll_cluster_new("heartbeat");
+    hb_fd = ll_cluster_new("heartbeat");
     
-    int facility;
     cl_log(LOG_INFO, "Switching to Heartbeat logger");
     if ((facility = hb_fd->llc_ops->get_logfacility(hb_fd))>0) {
 		cl_log_set_facility(facility);
@@ -156,7 +160,7 @@ init_start(void)
     cl_log(LOG_INFO, "Register PID");
     register_pid(PID_FILE, FALSE, tengine_shutdown);
 
-    IPC_Channel *crm_ch = init_client_ipc_comms("crmd",
+    crm_ch = init_client_ipc_comms("crmd",
 						default_ipc_input_dispatch,
 						NULL);
 
@@ -169,7 +173,6 @@ init_start(void)
 	    
 	    
 #ifdef REALTIME_SUPPORT
-	    static int  crm_realtime = 1;
 	    if (crm_realtime == 1){
 		    cl_enable_realtime();
 	    }else if (crm_realtime == 0){
