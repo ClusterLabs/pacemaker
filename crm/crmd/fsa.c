@@ -566,7 +566,7 @@ do_state_transition(long long actions,
 			crm_info("Resetting our DC to NULL on election");
 			crm_free(fsa_our_dc);
 			fsa_our_dc = NULL;
-			break;
+			/*fall through*/
 		case S_RELEASE_DC:
 			set_bit_inplace(tmp, A_INTEGRATE_TIMER_STOP);
 			set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
