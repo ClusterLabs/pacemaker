@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.32 2005/01/18 20:33:03 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.33 2005/02/15 08:06:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -411,6 +411,7 @@ enum crmd_fsa_input {
 #define	R_THE_DC	0x00000001ULL /* Are we the DC? */
 #define	R_STARTING	0x00000002ULL /* Are we starting up? */
 #define	R_SHUTDOWN	0x00000004ULL /* Are we trying to shut down? */
+#define	R_STAYDOWN	0x00000008ULL /* Should we restart? */
 
 #define R_JOIN_OK	0x00000010ULL /* Have we completed the join process */
 #define	R_HAVE_RES	0x00000040ULL /* Do we have any resources running
