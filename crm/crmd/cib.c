@@ -180,7 +180,7 @@ update_local_cib(xmlNodePtr msg_data, gboolean callbacks)
 	enum cib_errors rc = cib_ok;
 	
 	const char *section = xmlGetProp(msg_data, XML_ATTR_SECTION);
-	int call_options = cib_scope_local|cib_discard_reply|cib_sync_call;
+	int call_options = cib_scope_local|cib_sync_call;
 	
 	if(callbacks == FALSE) {
 		call_options |= cib_inhibit_notify;
@@ -190,6 +190,8 @@ update_local_cib(xmlNodePtr msg_data, gboolean callbacks)
 		fsa_cib_conn, section, msg_data, NULL, call_options);
 	
 	if(rc != cib_ok) {
+		crm_err("Resource state update failed: %s",
+			cib_error2string(result));
 		result = I_FAIL;
 	}
 	return result;
