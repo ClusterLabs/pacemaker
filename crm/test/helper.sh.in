@@ -446,9 +446,9 @@ function crm-cleanup-node() {
 	do_cmd remote_cmd $INIT_USER $ha_host "rm -f $HAVAR_DIR/crm/cib*.xml"
 
 	remote_cmd $INIT_USER $ha_host "rm -f /tmp/crm/*" 2>&1 > /dev/null 
-	do_cmd remote_cmd $CRMD_USER $ha_host "touch /tmp/crm/cluster.log 2>&1 > /dev/null"
-	do_cmd remote_cmd $CRMD_USER $ha_host "rm -f ~/core 2>&1 > /dev/null"
-	do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart 2>&1 > /dev/null"
+	remote_cmd $CRMD_USER $ha_host "touch /tmp/crm/cluster.log"
+	remote_cmd $CRMD_USER $ha_host "rm -f /tmp/crm/*/core" 2>&1 > /dev/null
+	do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart"
 
 # zero out logs, maybe
 	if [ ${test_node_1} = "fish" ]; then
