@@ -69,6 +69,8 @@ static int get_provider_list(const char* ra_type, GList ** providers);
 
 /* The begin of internal used function & data list */
 #define MAX_PARAMETER_NUM 40
+#define LSB_INITSCRIPT_BEGIN_TAG "### BEGIN INIT INFO"
+#define LSB_INITSCRIPT_END_TAG "### END INIT INFO"
 
 const int MAX_LENGTH_OF_RSCNAME = 40,
 	  MAX_LENGTH_OF_OPNAME = 40;
@@ -192,7 +194,75 @@ map_ra_retvalue(int ret_execra, const char * op_type)
 static int
 get_resource_list(GList ** rsc_info)
 {
-	return get_runnable_list(RA_PATH, rsc_info);
+	char ra_pathname[RA_MAX_NAME_LENGTH];
+	FILE * fp;
+	gboolean next_continue, found_begin_tag, is_lsb_script;
+	int rc = 0;
+	GList  *cur, *tmp;
+	const int BUFLEN = 80;
+	char buffer[BUFLEN];
+
+	if ((rc = get_runnable_list(RA_PATH, rsc_info))  <= 0) {
+		return rc;
+	}
+
+	/* Use the following comment line as the filter patterns to choose
+	 * the real LSB-compliant scripts.
+	 *  "### BEGIN INIT INFO" and "### END INIT INFO"
+	 */
+	cur = g_list_first(*rsc_info);
+	while ( cur != NULL ) {
+		get_ra_pathname(RA_PATH, cur->data, NULL, ra_pathname);
+		if ( (fp = fopen(ra_pathname, "r")) == NULL ) {
+			tmp = g_list_next(cur);
+			*rsc_info = g_list_remove(*rsc_info, cur->data);
+			g_free(cur->data);
+			cur = tmp;
+			continue;
+		}
+		is_lsb_script = FALSE;
+		next_continue = FALSE;
+		found_begin_tag = FALSE;
+		while (NULL != fgets(buffer, BUFLEN, fp)) {
+			/* Handle the lines over BUFLEN(80) columns, only
+			 * the first part is compared.
+			 */
+			if ( next_continue == TRUE ) {
+				continue;
+			}
+			if (strlen(buffer) == BUFLEN ) {
+				next_continue = TRUE;
+			} else {
+				next_continue = FALSE;
+			}
+			/* Shorte the search time */
+			if (buffer[0] != '#' && buffer[0] != ' '
+				&& buffer[0] != '\n') {
+				break; /* donnot find */
+			}
+	
+			if (found_begin_tag == TRUE && 0 == strncmp(buffer
+		    		, LSB_INITSCRIPT_END_TAG
+				, strlen(LSB_INITSCRIPT_END_TAG)) ) {
+				is_lsb_script = TRUE;
+				break;
+			}
+			if (found_begin_tag == FALSE && 0 == strncmp(buffer
+				, LSB_INITSCRIPT_BEGIN_TAG
+				, strlen(LSB_INITSCRIPT_BEGIN_TAG)) ) {
+				found_begin_tag = TRUE;	
+			}
+		}
+		fclose(fp);
+		tmp = g_list_next(cur);
+		if ( is_lsb_script != TRUE ) {
+			*rsc_info = g_list_remove(*rsc_info, cur->data);
+			g_free(cur->data);
+		}
+		cur = tmp;
+	}
+
+	return g_list_length(*rsc_info);
 }
 
 static int
