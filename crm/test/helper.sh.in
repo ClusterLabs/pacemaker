@@ -296,8 +296,6 @@ function do_cts_assert() {
 }
 
 function err() {
-    echo "ERROR: $*"
-
     if [ ! -z $HOST ]; then
 	if [ $CRM_ERR_SHUTDOWN -eq 1 ]; then
 	    remote_cmd hacluster $test_node_1 killall -9 crmd
@@ -305,14 +303,14 @@ function err() {
 	fi
     fi
     
-    echo Dumping test nodes to $dump_dir
+    do_cmd echo Dumping test nodes to $dump_dir
     dump_node 1 $test_node_1
     dump_node 2 $test_node_2
     dump_node 3 $test_node_3
 
-    echo "test: FAILED"
+    do_cmd echo "ERROR: $*"
+    echo "test $test_type: FAILED"
     echo "ERROR: $*" > $test_dump_dir/error.txt
-    echo "ERROR: $*" >> $test_dump_dir/test.txt
 
     exit 1
 }
@@ -337,9 +335,6 @@ function do_cmd() {
     old_OUTPUT_STDOUT=$OUTPUT_STDOUT
     cmd=$1
 
-    if [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
-	OUTPUT_STDOUT=1
-    fi
 
     if [ $OUTPUT_STDERR -eq 1 -o $OUTPUT_STDOUT -eq 1 -o $OUTPUT_CMDS -eq 1 ]; then
 	
@@ -404,8 +399,15 @@ function do_cmd() {
 
     if [ $cmd = "${HALIB_DIR}/crmtest/testutils.pl" ]; then
 	# for the logs...
+	if [ $OUTPUT_STDERR -eq 0 -a $OUTPUT_STDOUT -eq 0 -a $OUTPUT_CMDS -eq 0 ]; then
+	    echo `date` ": Searching '$cmdline'" >> $test_dump_dir/test.txt;
+	fi
 	$cmdline -v 2>&1 >> $test_dump_dir/test.txt
 
+	if [ $rc -lt 0 ]; then
+	    echo `date` ": Searching '$cmdline'"
+	    $cmdline
+	fi
     fi
 
     OUTPUT_STDOUT=$old_OUTPUT_STDOUT

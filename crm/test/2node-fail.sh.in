@@ -30,15 +30,25 @@ function 2node_fail_test() {
     fail_pieces=$2
     fail_node=$3
     good_node=$4
-    
-# make *sure* theres nothing left over from last time
-    crm-cleanup
+    do_failback=$5
+    accelerated=$6
+
+    if [ $fail_node = $test_node_1 ]; then
+	moved_rsc=rsc1
+    else
+	moved_rsc=rsc2
+    fi
     
 #----
 
     echo -ne "\033]0;$test_type: Iteration $iteration of $repeats\007"
     do_cmd echo "#############################"
     do_cmd echo "$test_type: Iteration $iteration of $repeats"
+# make *sure* theres nothing left over from last time
+    crm-cleanup
+    
+#----
+
     do_cmd echo "wait for HA to start on ${test_node_1}"
     crm_log_pos=$(stat -L -c %s $logfile)
     do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
@@ -197,7 +207,7 @@ function 2node_fail_test() {
 
 #----
 
-    is_dc $fail_node
+    is_dc $fail_node 2>&1 > /dev/null
     test_for_election=$?
 
     do_cmd echo Killing $fail_pieces on $fail_node
@@ -205,13 +215,13 @@ function 2node_fail_test() {
     do_cmd remote_cmd $CRMD_USER $fail_node "killall -9 $fail_pieces" &
 
     if [ $test_for_election = 0 ]; then
-	do_cmd echo Checking for DC Failover
+	do_cmd echo Killed the DC... checking for DC Failover
 	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 50000 \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_ELECTION\"" \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_IDLE\"" 
 	cts_assert "Transition of the DC from ${fail_node} to ${good_node} failed."
     else
-	do_cmd echo Checking the DC noticed
+	do_cmd echo Killed slave node... checking the DC noticed
 	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 50000 \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_POLICY_ENGINE\"" \
 	    -s "${good_node} crmd(.*) State transition (.*) \-> \"S_IDLE\""
@@ -219,8 +229,9 @@ function 2node_fail_test() {
     fi
 
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 50000 \
-	-s "crmd(.*) Resource state: rsc2(.*) after start] on ${good_node}"
-    cts_assert "Move of resource to ${good_node} failed."
+	    -s "${god_node} crmd(.*) Performing op start(.*) on ${moved_rsc}" \
+	    -s "crmd(.*) Resource state: ${moved_rsc}(.*) after start] on ${good_node}"
+    cts_assert "Move of ${moved_rsc} to ${good_node} failed."
 
 #----
 
@@ -242,6 +253,61 @@ function 2node_fail_test() {
 
 #----
 
+    if [ $do_failback = 1 ]; then
+	do_cmd echo "Re-Starting on failed node $fail_node"
+
+	if [  "$fail_pieces" = "crmd" ]; then
+	    do_cmd echo "HA still running, skipping restart"
+	else
+	    do_cmd echo "wait for HA to start on $fail_node"
+	    crm_log_pos=$(stat -L -c %s $logfile)
+	    do_cmd remote_cmd $INIT_USER $fail_node $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
+	    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
+		-s "${fail_node} ccm(.*) Hostname: ${fail_node}" \
+		-s "${fail_node} heartbeat(.*): info: Starting (.*)lrmd" \
+		-e "${fail_node} heartbeat(.*) Client (.*) respawning too fast"
+	    cts_assert "Startup of Heartbeat on ${fail_node} failed."
+	fi
+
+#----
+
+	do_cmd echo "wait for CRMd to start on $fail_node"
+	crm_log_pos=$(stat -L -c %s $logfile)
+	do_cmd remote_cmd $CRMD_USER $fail_node $HALIB_DIR/crmd  "-VVVV" "2>&1 >/dev/null" &
+	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
+	    -s "${fail_node} crmd(.*)FSA Hostname: ${fail_node}" \
+	    -s "${fail_node} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
+	cts_assert "CRMd startup on ${fail_node} failed."
+
+	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
+	    -s "${good_node} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
+	    -s "${fail_node} crmd(.*) Performing op start(.*) on ${moved_rsc}" \
+	    -s "crmd(.*) Resource state: ${moved_rsc}(.*) after start] on ${fail_node}"
+	cts_assert "$moved_rsc was not transferred to ${fail_node} on startup."
+
+	do_cmd echo Various sanity checks - stage 4
+	do_cmd wait_for_state S_NOT_DC 30 $fail_node 
+	cts_assert "S_NOT_DC not reached on $fail_node (restart)!"
+
+	do_cmd wait_for_state S_IDLE 30 $good_node
+	cts_assert "S_IDLE not reached on $good_node (restart)!"
+
+	do_cmd is_running rsc1 $test_node_1
+	cts_assert "rsc1 NOT running"
+
+	do_cmd is_running rsc2 $test_node_1
+	cts_assert "rsc2 NOT running"
+
+	do_cmd is_running rsc1 $test_node_1 $test_node_1
+	cts_assert "rsc1 NOT running on $test_node_1"
+
+	do_cmd is_running rsc2 $test_node_1 $test_node_2
+	cts_assert "rsc2 NOT running on $test_node_2"
+
+    fi
+
+#----
+
     do_cmd echo "test ${test_type}: PASSED"
 
 }
@@ -253,13 +319,18 @@ while [ $iteration -lt $repeats ]; do
     echo "########### $test_type : Begining iteration $iteration of $repeats ###########"
 (
 
-    2node_fail_test 2node__fail_DC_All "heartbeat ccm lrmd crmd" ${test_node_1} ${test_node_2}
-    2node_fail_test 2node__fail_DC_CRMd "crmd" ${test_node_1} ${test_node_2}
-#2node_fail_test 2node__fail_DC_LRM "lrmd"  ${test_node_1} ${test_node_2}
+    2node_fail_test 2node__fail_DC_All        "heartbeat ccm lrmd crmd" ${test_node_1} ${test_node_2} 0 0
+    2node_fail_test 2node__fail_slave_All     "heartbeat ccm lrmd crmd" ${test_node_2} ${test_node_1} 0 0
+    2node_fail_test 2node__failback_DC_All    "heartbeat ccm lrmd crmd" ${test_node_1} ${test_node_2} 1 0
+    2node_fail_test 2node__failback_slave_All "heartbeat ccm lrmd crmd" ${test_node_2} ${test_node_1} 1 0
 
-    2node_fail_test 2node__fail_slave_All "heartbeat ccm lrmd crmd" ${test_node_2} ${test_node_1}
-    2node_fail_test 2node__fail_slave_CRMd "crmd" ${test_node_2} ${test_node_1}
+    2node_fail_test 2node__fail_DC_CRMd        "crmd" ${test_node_1} ${test_node_2} 0 0
+    2node_fail_test 2node__fail_slave_CRMd     "crmd" ${test_node_2} ${test_node_1} 0 0
+    2node_fail_test 2node__failback_DC_CRMd    "crmd" ${test_node_1} ${test_node_2} 1 0
+    2node_fail_test 2node__failback_slave_CRMd "crmd" ${test_node_2} ${test_node_1} 1 0
+
 #2node_fail_test 2node__fail_slave_LRM "lrmd" ${test_node_2} ${test_node_1}
+#2node_fail_test 2node__fail_DC_LRM "lrmd"  ${test_node_1} ${test_node_2}
 
     echo "test suite: PASSED"
 )

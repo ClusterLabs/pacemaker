@@ -133,6 +133,9 @@ sub string_search() {
 #	    print STDOUT "Checking line[".$num_lines."]: ".$line;
 	    
 	    if($max_lines > 0 && $num_lines > $max_lines) {
+		foreach $key (sort keys %results) {
+		    print STDOUT "Found key \'".$key."\' ".$results{$key}." times.\n" if $results{$key} ne "";
+		}
 		return -1000;
 	    }
 	    
