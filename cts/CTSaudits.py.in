@@ -137,8 +137,10 @@ class ResourceAudit(ClusterAudit):
                         +  " not operating properly."
                         +  "  Resource is running on " + ResourceNodes[0]);
                         Fatal = 1
-                        beforearpchild.wait()
-                        afterarpchild.wait()
+                        try:
+                            beforearpchild.wait()
+                            afterarpchild.wait()
+                        except OSError:	pass
                         self.CM.log("ARP table before failure ========");
                         for line in beforearpchild.fromchild.readlines():
                             self.CM.log(line)
