@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.38 2004/10/27 15:30:55 andrew Exp $ */
+/* $Id: pengine.h,v 1.39 2004/11/09 09:32:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,16 +24,20 @@
 typedef struct node_s node_t;
 typedef struct color_s color_t;
 typedef struct rsc_to_node_s rsc_to_node_t;
-typedef struct rsc_to_rsc_s rsc_to_rsc_t;
+typedef struct rsc_dependancy_s rsc_dependancy_t;
 typedef struct resource_s resource_t;
 typedef struct lrm_agent_s lrm_agent_t;
 typedef struct order_constraint_s order_constraint_t;
 typedef struct action_s action_t;
 typedef struct action_wrapper_s action_wrapper_t;
 
+#include <glib.h>
+#include <crm/crm.h>
+#include <complex.h>
+
 enum con_type {
 	type_none,
-	rsc_to_rsc,
+	rsc_dependancy,
 	rsc_to_node,
 	rsc_to_attr,
 	base_weight
@@ -59,17 +63,25 @@ enum action_tasks {
 	stonith_node
 };
 
-enum rsc_con_type {
-	start_before,
-	start_after,
-	same_node
-};
-
 enum rsc_recovery_type {
 	recovery_stop_start,
 	recovery_stop_only,
 	recovery_block
 };
+
+
+enum pe_stop_fail {
+	pesf_block,
+	pesf_stonith,
+	pesf_ignore
+};
+
+enum pe_restart {
+	pe_restart_restart,
+	pe_restart_recover,
+	pe_restart_ignore
+};
+
 
 struct node_shared_s { 
 		const char *id; 
@@ -105,11 +117,10 @@ struct color_s {
 		float local_weight;
 };
 
-struct rsc_to_rsc_s { 
+struct rsc_dependancy_s { 
 		const char	*id;
 		resource_t	*rsc_lh; 
 
-		enum rsc_con_type variant;
 		resource_t	*rsc_rh; 
 		enum con_strength strength;
 };
@@ -130,50 +141,40 @@ struct lrm_agent_s {
 		const char *version;
 };
 
-enum pe_stop_fail {
-	pesf_block,
-	pesf_stonith,
-	pesf_ignore
-};
-
-enum pe_restart {
-	pe_restart_restart,
-	pe_restart_recover,
-	pe_restart_ignore
-};
-
 struct resource_s { 
-		const char	*id; 
-		xmlNodePtr	xml; 
-		float		priority; 
-		float		effective_priority; 
+		const char *id; 
+		xmlNodePtr  xml; 
 
-		const char      *timeout;
+		void *variant_opaque;
+		enum pe_obj_types variant;
+		resource_object_functions_t *fns;
 
-		lrm_agent_t	*agent;
+		float	     priority; 
+		float	     effective_priority; 
+		const char  *timeout;
+		lrm_agent_t *agent;
 		
-		gboolean	is_stonith;
-		gboolean	runnable;
-		gboolean	provisional;
+		gboolean     is_stonith;
+		gboolean     runnable;
+		gboolean     provisional;
 
 		enum rsc_recovery_type recovery_type;
 		enum pe_stop_fail      stopfail_type;
 		enum pe_restart        restart_type;
 
+		GListPtr candidate_colors; /* color_t*        */
+		GListPtr allowed_nodes;    /* node_t*         */
+		GListPtr actions;	   /* action_t*       */
+
+		/* (soon to be) variant specific */
 		int max_instances;
 		int max_node_instances;
 		int max_masters;
 		int max_node_masters;
-		
-		GListPtr	actions;	  /* action_t*       */
-		GListPtr	candidate_colors; /* color_t*        */
-		GListPtr	allowed_nodes;    /* node_t*         */
-		GListPtr	node_cons;        /* rsc_to_node_t*  */
-		GListPtr	rsc_cons;         /* rsc_to_rsc_t*   */
-		GListPtr	fencable_nodes;   /* node_t*         */
-		GListPtr        running_on;       /* node_t*         */
-
-		color_t		*color;
+		GListPtr node_cons;        /* rsc_to_node_t*    */
+		GListPtr rsc_cons;         /* rsc_dependancy_t* */
+		GListPtr running_on;       /* node_t*           */
+		color_t *color;
 };
 
 struct action_wrapper_s 
@@ -185,9 +186,10 @@ struct action_wrapper_s
 
 struct action_s 
 {
-		int id;
+		int         id;
 		resource_t *rsc;
-		node_t *node;
+		void       *rsc_opaque;
+		node_t     *node;
 		enum action_tasks task;
 		
 		gboolean runnable;
@@ -204,25 +206,31 @@ struct action_s
 		
 		GListPtr actions_before; /* action_warpper_t* */
 		GListPtr actions_after;  /* action_warpper_t* */
+
+		/* (soon to be) variant specific */
+		int	    incarnation;
 };
 
 struct order_constraint_s 
 {
-		int   id;
+		int id;
+		enum con_strength strength;
 
+		void *lh_opaque;
 		resource_t *lh_rsc;
 		action_t   *lh_action;
 		enum action_tasks lh_action_task;
-/* 		int   lh_rsc_incarnation; */
 		
+		void *rh_opaque;
 		resource_t *rh_rsc;
 		action_t   *rh_action;
 		enum action_tasks rh_action_task;
-/* 		int   rh_rsc_incarnation; */
 
-		enum con_strength strength;
-/*		enum action_order order; */
+		/* (soon to be) variant specific */
+/* 		int   lh_rsc_incarnation; */
+/* 		int   rh_rsc_incarnation; */
 };
+
 
 extern gboolean stage0(xmlNodePtr cib,
 		       GListPtr *nodes,
@@ -243,16 +251,14 @@ extern gboolean stage3(GListPtr colors);
 
 extern gboolean stage4(GListPtr colors);
 
-extern gboolean stage5(GListPtr resources);
+extern gboolean stage5(GListPtr resources, GListPtr *ordering_constraints);
 
 extern gboolean stage6(
 	GListPtr *actions, GListPtr *ordering_constraints,
 	GListPtr nodes, GListPtr resources);
 
-extern gboolean stage7(GListPtr resources,
-		       GListPtr actions,
-		       GListPtr ordering_constraints,
-		       GListPtr *action_sets);
+extern gboolean stage7(
+	GListPtr resources, GListPtr actions, GListPtr ordering_constraints);
 
 extern gboolean stage8(
 	GListPtr resources, GListPtr action_sets, xmlNodePtr *graph);
@@ -271,7 +277,7 @@ extern gboolean unpack_constraints(xmlNodePtr xml_constraints,
 extern gboolean unpack_resources(xmlNodePtr xml_resources,
 				 GListPtr *resources,
 				 GListPtr *actions,
-				 GListPtr *action_cons,
+				 GListPtr *ordering_constraints,
 				 GListPtr all_nodes);
 
 extern gboolean unpack_config(xmlNodePtr config);

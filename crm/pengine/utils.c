@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.43 2004/10/27 15:30:55 andrew Exp $ */
+/* $Id: utils.c,v 1.44 2004/11/09 09:32:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,11 +34,11 @@ void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean node_merge_weights(node_t *node, node_t *with);
 
-/* only for rsc_to_rsc constraints */
-rsc_to_rsc_t *
-invert_constraint(rsc_to_rsc_t *constraint) 
+/* only for rsc_dependancy constraints */
+rsc_dependancy_t *
+invert_constraint(rsc_dependancy_t *constraint) 
 {
-	rsc_to_rsc_t *inverted_con = NULL;
+	rsc_dependancy_t *inverted_con = NULL;
 
 	crm_verbose("Inverting constraint");
 	if(constraint == NULL) {
@@ -46,7 +46,7 @@ invert_constraint(rsc_to_rsc_t *constraint)
 		return NULL;
 	}
 
-	crm_malloc(inverted_con, sizeof(rsc_to_rsc_t));
+	crm_malloc(inverted_con, sizeof(rsc_dependancy_t));
 
 	if(inverted_con == NULL) {
 		return NULL;
@@ -59,20 +59,8 @@ invert_constraint(rsc_to_rsc_t *constraint)
 	inverted_con->rsc_lh = constraint->rsc_rh;
 	inverted_con->rsc_rh = constraint->rsc_lh;
 
-	switch(constraint->variant) {
-		case same_node:
-			inverted_con->variant = same_node;
-			break;
-		case start_before:
-			inverted_con->variant = start_after;
-			break;
-		case start_after:
-			inverted_con->variant = start_before;
-			break;
-	}
-	
 	crm_debug_action(
-		print_rsc_to_rsc("Inverted constraint", inverted_con, FALSE));
+		print_rsc_dependancy("Inverted constraint", inverted_con, FALSE));
 	
 	return inverted_con;
 }
@@ -525,8 +513,8 @@ gint sort_rsc_priority(gconstpointer a, gconstpointer b)
 
 gint sort_cons_strength(gconstpointer a, gconstpointer b)
 {
-	const rsc_to_rsc_t *rsc_constraint1 = (const rsc_to_rsc_t*)a;
-	const rsc_to_rsc_t *rsc_constraint2 = (const rsc_to_rsc_t*)b;
+	const rsc_dependancy_t *rsc_constraint1 = (const rsc_dependancy_t*)a;
+	const rsc_dependancy_t *rsc_constraint2 = (const rsc_dependancy_t*)b;
 
 	if(a == NULL) return 1;
 	if(b == NULL) return -1;
@@ -582,7 +570,20 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 
 	GListPtr possible_matches = NULL;
 	if(rsc != NULL) {
-		possible_matches = find_actions_type(rsc->actions, task, on_node);
+		possible_matches =
+			find_actions_type(rsc->actions, task, on_node);
+	}
+
+	if(on_node != NULL && on_node->details->unclean) {
+		crm_warn("Not creating action  %s for %s because %s is unclean",
+			 task2text(task), rsc?rsc->id:"<NULL>",
+			 on_node->details->id);
+	}
+
+	if(on_node != NULL && on_node->details->unclean) {
+		crm_warn("Not creating action  %s for %s because %s is unclean",
+			 task2text(task), rsc?rsc->id:"<NULL>",
+			 on_node->details->id);
 	}
 	
 	if(possible_matches != NULL) {
@@ -637,31 +638,6 @@ action_new(resource_t *rsc, enum action_tasks task, node_t *on_node)
 	}
 	crm_debug("Action %d created", action->id);
 	return action;
-}
-
-const char *
-contype2text(enum con_type type)
-{
-	const char *result = "<unknown>";
-	switch(type)
-	{
-		case type_none:
-			result = "none";
-			break;
-		case rsc_to_rsc:
-			result = "rsc_to_rsc";
-			break;
-		case rsc_to_node:
-			result = "rsc_to_node";
-			break;
-		case rsc_to_attr:
-			result = "rsc_to_attr";
-			break;
-		case base_weight:
-			result = "base_weight";
-			break;
-	}
-	return result;
 }
 
 const char *
@@ -840,7 +816,7 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 }
 
 void
-print_rsc_to_rsc(const char *pre_text, rsc_to_rsc_t *cons, gboolean details)
+print_rsc_dependancy(const char *pre_text, rsc_dependancy_t *cons, gboolean details)
 { 
 	if(cons == NULL) {
 		crm_debug("%s%s: <NULL>",
@@ -851,7 +827,7 @@ print_rsc_to_rsc(const char *pre_text, rsc_to_rsc_t *cons, gboolean details)
 	crm_debug("%s%s%s Constraint %s (%p):",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
-	       "rsc_to_rsc", cons->id, cons);
+	       "rsc_dependancy", cons->id, cons);
 
 	if(details == FALSE) {
 
@@ -871,44 +847,7 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug("%s%s%s%sResource %s: (priority=%f, color=%d, now=%d)",
-		  pre_text==NULL?"":pre_text,
-		  pre_text==NULL?"":": ",
-		  rsc->provisional?"Provisional ":"",
-		  rsc->runnable?"":"(Non-Startable) ",
-		  rsc->id,
-		  (double)rsc->priority,
-		  safe_val3(-1, rsc, color, id),
-		  g_list_length(rsc->running_on));
-
-	crm_debug("\t%d candidate colors, %d allowed nodes,"
-		  " %d rsc_cons and %d node_cons",
-		  g_list_length(rsc->candidate_colors),
-		  g_list_length(rsc->allowed_nodes),
-		  g_list_length(rsc->rsc_cons),
-		  g_list_length(rsc->node_cons));
-	
-	if(details) {
-		int lpc = 0;
-		
-		crm_debug("\t=== Actions");
-		slist_iter(
-			action, action_t, rsc->actions, lpc, 
-			print_action("\trsc action: ", action, FALSE);
-			);
-		
-		crm_debug("\t=== Colors");
-		slist_iter(
-			color, color_t, rsc->candidate_colors, lpc,
-			print_color("\t", color, FALSE)
-			);
-
-		crm_debug("\t=== Allowed Nodes");
-		slist_iter(
-			node, node_t, rsc->allowed_nodes, lpc,
-			print_node("\t", node, FALSE);
-			);
-	}
+	rsc->fns->dump(rsc, pre_text, details);
 }
 
 
@@ -1076,15 +1015,7 @@ pe_free_resources(GListPtr resources)
 		resources = resources->next;
 
 		pe_free_shallow_adv(rsc->candidate_colors, TRUE);
-		pe_free_shallow(rsc->allowed_nodes);
-
-		while(rsc->rsc_cons) {
-			pe_free_rsc_to_rsc((rsc_to_rsc_t*)rsc->rsc_cons->data);
-			rsc->rsc_cons = rsc->rsc_cons->next;
-		}
-		if(rsc->rsc_cons != NULL) {
-			g_list_free(rsc->rsc_cons);
-		}
+		rsc->fns->free(rsc);
 		crm_free(rsc);
 	}
 	if(resources != NULL) {
@@ -1116,7 +1047,7 @@ pe_free_actions(GListPtr actions)
 
 
 void
-pe_free_rsc_to_rsc(rsc_to_rsc_t *cons)
+pe_free_rsc_dependancy(rsc_dependancy_t *cons)
 { 
 	if(cons != NULL) {
 		crm_free(cons);

@@ -58,15 +58,17 @@ halib_PROGRAMS	= ptest pengine
 
 ## SOURCES
 
-noinst_HEADERS	= pe_utils.h pengine.h
+noinst_HEADERS	= pe_utils.h pengine.h complex.h
 
-ptest_SOURCES	= pengine.c stages.c unpack.c color.c graph.c utils.c ptest.c
+ptest_SOURCES	= pengine.c stages.c unpack.c color.c graph.c utils.c ptest.c \
+		complex.c native.c
 
 ptest_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ptest_LDFLAGS	= $(XML_LIBS)
 ptest_LDADD	= $(COMMONLIBS) 
 
-pengine_SOURCES	= pengine.c stages.c unpack.c color.c graph.c utils.c main.c 
+pengine_SOURCES	= pengine.c stages.c unpack.c color.c graph.c utils.c main.c \
+		complex.c native.c
 
 pengine_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 pengine_LDFLAGS	= $(XML_LIBS)

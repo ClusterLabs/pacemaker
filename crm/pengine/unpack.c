@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.40 2004/11/08 13:22:05 andrew Exp $ */
+/* $Id: unpack.c,v 1.41 2004/11/09 09:32:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -81,8 +81,9 @@ gboolean unpack_lrm_agents(node_t *node, xmlNodePtr agent_list);
 
 gboolean is_node_unclean(xmlNodePtr node_state);
 
-gboolean rsc2rsc_new(const char *id, enum con_strength strength, enum rsc_con_type type,
-		     resource_t *rsc_lh, resource_t *rsc_rh);
+gboolean rsc_dependancy_new(
+	const char *id, enum con_strength strength,
+	resource_t *rsc_lh, resource_t *rsc_rh);
 
 gboolean create_ordering(
 	const char *id, enum con_strength strength,
@@ -270,30 +271,14 @@ gboolean
 unpack_resources(xmlNodePtr xml_resources,
 		 GListPtr *resources,
 		 GListPtr *actions,
-		 GListPtr *action_cons,
+		 GListPtr *ordering_constraints,
 		 GListPtr all_nodes)
 {
 	crm_verbose("Begining unpack...");
 	xml_child_iter(
 		xml_resources, xml_obj, XML_CIB_TAG_RESOURCE,
 		const char *id         = xmlGetProp(xml_obj, XML_ATTR_ID);
-		const char *stopfail   = xmlGetProp(xml_obj, "on_stopfail");
-		const char *restart    = xmlGetProp(xml_obj, "restart_type");
-		const char *timeout    = xmlGetProp(xml_obj, "timeout");
-
-		const char *max_instances      = xmlGetProp(
-			xml_obj, "max_instances");
-		const char *max_node_instances = xmlGetProp(
-			xml_obj, "max_node_instances");
-		const char *max_masters      = xmlGetProp(
-			xml_obj, "max_masters");
-		const char *max_node_masters = xmlGetProp(
-			xml_obj, "max_node_masters");
-
-		const char *version    = xmlGetProp(xml_obj, XML_ATTR_VERSION);
 		resource_t *new_rsc = NULL;
-		const char *priority   = xmlGetProp(
-			xml_obj, XML_CIB_ATTR_PRIORITY);
 
 		crm_verbose("Processing resource...");
 		
@@ -307,56 +292,13 @@ unpack_resources(xmlNodePtr xml_resources,
 			return FALSE;
 		}
 		
-		new_rsc->id		= id;
-		new_rsc->xml		= xml_obj;
-		crm_malloc(new_rsc->agent, sizeof(lrm_agent_t));
-		new_rsc->agent->class	= xmlGetProp(xml_obj, "class");
-		new_rsc->agent->type	= xmlGetProp(xml_obj, "type");
-		new_rsc->agent->version	= version?version:"0.0";
+		new_rsc->id	 = id;
+		new_rsc->xml	 = xml_obj;
+		new_rsc->variant = get_resource_type(xml_obj->name);
+		new_rsc->fns     = &resource_class_functions[new_rsc->variant];
 
-		new_rsc->priority	    = atoi(priority?priority:"0"); 
-		new_rsc->effective_priority = new_rsc->priority;
-		new_rsc->recovery_type      = recovery_stop_start;
+		new_rsc->fns->unpack(new_rsc);
 		
-		new_rsc->max_instances	    = atoi(
-			max_instances?max_instances:"1"); 
-		new_rsc->max_node_instances = atoi(
-			max_node_instances?max_node_instances:"1"); 
-		new_rsc->max_masters	    = atoi(
-			max_masters?max_masters:"0"); 
-		new_rsc->max_node_masters   = atoi(
-			max_node_masters?max_node_masters:"0"); 
-
-		new_rsc->candidate_colors   = NULL;
-		new_rsc->actions            = NULL;
-		new_rsc->color		= NULL; 
-		new_rsc->runnable	= TRUE; 
-		new_rsc->provisional	= TRUE; 
-		new_rsc->allowed_nodes	= NULL;
-		new_rsc->rsc_cons	= NULL; 
-		new_rsc->node_cons	= NULL; 
-		new_rsc->running_on	= NULL;
-		new_rsc->timeout        = timeout;
-		
-		if(safe_str_eq(stopfail, "ignore")) {
-			new_rsc->stopfail_type = pesf_ignore;
-		} else if(safe_str_eq(stopfail, "stonith")) {
-			new_rsc->stopfail_type = pesf_stonith;
-		} else {
-			new_rsc->stopfail_type = pesf_block;
-		}
-
-		if(safe_str_eq(restart, "restart")) {
-			new_rsc->restart_type = pe_restart_restart;
-		} else if(safe_str_eq(restart, "recover")) {
-			new_rsc->restart_type = pe_restart_recover;
-		} else {
-			new_rsc->restart_type = pe_restart_ignore;
-		}
-
-		order_new(new_rsc, stop_rsc, NULL, new_rsc, start_rsc, NULL,
-			  pecs_startstop, action_cons);
-
 		*resources = g_list_append(*resources, new_rsc);
 	
 		crm_debug_action(print_resource("Added", new_rsc, FALSE));
@@ -826,24 +768,23 @@ unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
 }
 
 gboolean
-rsc2rsc_new(const char *id, enum con_strength strength, enum rsc_con_type type,
-	    resource_t *rsc_lh, resource_t *rsc_rh)
+rsc_dependancy_new(const char *id, enum con_strength strength,
+		   resource_t *rsc_lh, resource_t *rsc_rh)
 {
-	rsc_to_rsc_t *new_con      = NULL;
-	rsc_to_rsc_t *inverted_con = NULL;
+	rsc_dependancy_t *new_con      = NULL;
+	rsc_dependancy_t *inverted_con = NULL;
 
 	if(rsc_lh == NULL || rsc_rh == NULL){
 		/* error */
 		return FALSE;
 	}
 
-	crm_malloc(new_con, sizeof(rsc_to_rsc_t));
+	crm_malloc(new_con, sizeof(rsc_dependancy_t));
 	if(new_con != NULL) {
 		new_con->id       = id;
 		new_con->rsc_lh   = rsc_lh;
 		new_con->rsc_rh   = rsc_rh;
 		new_con->strength = strength;
-		new_con->variant  = type;
 		
 		inverted_con = invert_constraint(new_con);
 		
@@ -967,7 +908,7 @@ unpack_rsc_dependancy(xmlNodePtr xml_obj,
 		crm_err("Unknown value for %s: %s", "type", type);
 		return FALSE;
 	}
-	return rsc2rsc_new(id, strength_e, same_node, rsc_lh, rsc_rh);
+	return rsc_dependancy_new(id, strength_e, rsc_lh, rsc_rh);
 }
 
 gboolean

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.24 2004/10/27 15:30:55 andrew Exp $ */
+/* $Id: stages.c,v 1.25 2004/11/09 09:32:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,6 +31,7 @@
 #include <pe_utils.h>
 
 node_t *choose_fencer(action_t *stonith, node_t *node, GListPtr resources);
+void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 
 /*
  * Unpack everything
@@ -75,14 +76,13 @@ stage0(xmlNodePtr cib,
 	
 	unpack_nodes(cib_nodes, nodes);
 
-	unpack_resources(cib_resources,
-			 resources, actions, ordering_constraints, *nodes);
+	unpack_resources(cib_resources, resources, actions,
+			 ordering_constraints, *nodes);
 
-	unpack_status(cib_status,
-		      *nodes, *resources, actions, placement_constraints);
+	unpack_status(cib_status, *nodes, *resources, actions,
+		      placement_constraints);
 
-	unpack_constraints(cib_constraints,
-			   *nodes, *resources,
+	unpack_constraints(cib_constraints, *nodes, *resources,
 			   placement_constraints, ordering_constraints);
 
 	return TRUE;
@@ -208,8 +208,10 @@ stage4(GListPtr colors)
 
 		slist_iter(
 			rsc, resource_t, color->details->allocated_resources, lpc2,
-
-			process_colored_constraints(rsc);
+			slist_iter(
+				constraint, rsc_dependancy_t, rsc->rsc_cons, lpc,
+				rsc->fns->rsc_dependancy_lh(constraint);
+				);	
 			
 			);
 		);
@@ -228,98 +230,13 @@ stage4(GListPtr colors)
  * Mark unrunnable actions
  */
 gboolean
-stage5(GListPtr resources)
+stage5(GListPtr resources, GListPtr *ordering_constraints)
 {
-	int lpc, lpc2, lpc3;
+	int lpc;
 	slist_iter(
 		rsc, resource_t, resources, lpc,
-		action_t *start_op = NULL;
-		gboolean can_start = FALSE;
-		node_t *chosen = rsc->color->details->chosen_node;
-		
-		if(rsc->color != NULL && chosen != NULL) {
-			can_start = TRUE;
-		}
-		
-		if(can_start && g_list_length(rsc->running_on) == 0) {
-			/* create start action */
-			crm_info("Start resource %s (%s)",
-				 rsc->id,
-				 safe_val3(NULL, chosen, details, uname));
-			start_op = action_new(rsc, start_rsc, chosen);
-			
-		} else if(g_list_length(rsc->running_on) > 1) {
-			crm_info("Attempting recovery of resource %s",
-				 rsc->id);
-			
-			if(rsc->recovery_type == recovery_stop_start
-			   || rsc->recovery_type == recovery_stop_only) {
-				slist_iter(
-					node, node_t,
-					rsc->running_on, lpc2,
-					
-					crm_info("Stop resource %s (%s)",
-						 rsc->id,
-						 safe_val3(NULL, node, details, uname));
-					action_new(rsc, stop_rsc, node);
-					);
-			}
-			
-			if(rsc->recovery_type == recovery_stop_start && can_start) {
-				crm_info("Start resource %s (%s)",
-					 rsc->id,
-					 safe_val3(NULL, chosen, details, uname));
-				start_op = action_new(
-					rsc, start_rsc, chosen);
-			}
-			
-		} else {
-			/* stop and or possible restart */
-			crm_debug("Stop and possible restart of %s", rsc->id);
-			
-			slist_iter(
-				node, node_t, rsc->running_on, lpc2,				
-
-				if(chosen != NULL && safe_str_eq(
-					   node->details->id,
-					   chosen->details->id)) {
-					/* restart */
-					crm_info("Leave resource %s alone (%s)",
-						 rsc->id,
-						 safe_val3(NULL, chosen, details, uname));
-					
-						 
-					/* in case the actions already exist */
-					slist_iter(
-						action, action_t, rsc->actions, lpc3,
-
-						if(action->task == start_rsc
-						   || action->task == stop_rsc){
-							action->optional = TRUE;
-						}
-						);
-					
-					continue;
-				} else if(chosen != NULL) {
-					/* move */
-					crm_info("Move resource %s (%s -> %s)",
-						  rsc->id,
-						  safe_val3(NULL, node, details, uname),
-						  safe_val3(NULL, chosen, details, uname));
-					action_new(rsc, stop_rsc, node);
-					action_new(rsc, start_rsc, chosen);
-
-				} else {
-					crm_info("Stop resource %s (%s)",
-						  rsc->id,
-						  safe_val3(NULL, node, details, uname));
-					action_new(rsc, stop_rsc, node);
-				}
-				
-				);
-				
-		}
-
+		rsc->fns->create_actions(rsc);
+		rsc->fns->internal_ordering(rsc, ordering_constraints);
 		);
 	return TRUE;
 }
@@ -385,117 +302,42 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
  *
  */
 gboolean
-stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints,
-	GListPtr *action_sets)
+stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 {
 	int lpc;
-	int lpc2;
-	int lpc3;
-	action_wrapper_t *wrapper = NULL;
-	GListPtr list = NULL;
 	crm_info("Processing stage 7");
 
 	slist_iter(
 		order, order_constraint_t, ordering_constraints, lpc,
 
-		action_t *lh_action = order->lh_action;
-		action_t *rh_action = order->rh_action;
-		GListPtr lh_actions = NULL;
-		GListPtr rh_actions = NULL;
-
-		crm_verbose("Processing ordering constraint %d", order->id);
-
-		if(lh_action != NULL) {
-			lh_actions = g_list_append(NULL, lh_action);
-
-		} else if(lh_action == NULL && order->lh_rsc != NULL) {
-			if(order->strength == pecs_must) {
-				crm_debug("No RH-Side (%s/%s) found for constraint..."
-					  " creating",
-					  order->lh_rsc->id, task2text(order->lh_action_task));
-
-				action_new(order->lh_rsc, order->lh_action_task, NULL);
-			}
-			
-
-			lh_actions = find_actions_type(
-				order->lh_rsc->actions, order->lh_action_task, NULL);
-			if(lh_actions == NULL) {
-				crm_debug("No LH-Side (%s/%s) found for constraint",
-					  order->lh_rsc->id,
-					  task2text(order->lh_action_task));
-				continue;
-			}
-
-		} else {
-			crm_warn("No LH-Side (%s) specified for constraint",
-				 task2text(order->lh_action_task));
+		/* try rsc_action-to-rsc_action */
+		resource_t *rsc = order->lh_rsc;
+		if(rsc == NULL && order->lh_action) {
+			rsc = order->lh_action->rsc;
+		}
+		
+		if(rsc != NULL) {
+			rsc->fns->rsc_order_lh(order);
 			continue;
+			
 		}
 
-		if(rh_action != NULL) {
-			rh_actions = g_list_append(NULL, rh_action);
-
-		} else if(rh_action == NULL && order->rh_rsc != NULL) {
-			rh_actions = find_actions_type(
-				order->rh_rsc->actions, order->rh_action_task, NULL);
-
-			if(rh_actions == NULL) {
-				crm_debug("No RH-Side (%s/%s) found for constraint..."
-					  " ignoring",
-					  order->rh_rsc->id, task2text(order->rh_action_task));
-				continue;
-			}
-			
-		}  else if(rh_action == NULL) {
-			crm_debug("No RH-Side (%s) specified for constraint..."
-				  " ignoring", task2text(order->rh_action_task));
-			continue;
-		} 
+		/* try action-to-rsc_action */
 		
+		/* que off the rh resource */
+		rsc = order->rh_rsc;
+		if(rsc == NULL && order->rh_action) {
+			rsc = order->rh_action->rsc;
+		}
 		
-
-		slist_iter(
-			lh_action_iter, action_t, lh_actions, lpc2,
-
-			slist_iter(
-				rh_action_iter, action_t, rh_actions, lpc3,
-				crm_verbose("%d Processing %d -> %d",
-					    order->id,
-					    lh_action_iter->id,
-					    rh_action_iter->id);
-
-				crm_debug_action(
-					print_action("LH (stage7)",
-						     lh_action_iter, FALSE));
-				crm_debug_action(
-					print_action("RH (stage7)",
-						     rh_action_iter, FALSE));
-
-				crm_malloc(wrapper, sizeof(action_wrapper_t));
-				if(wrapper != NULL) {
-					wrapper->action = rh_action_iter;
-					wrapper->strength = order->strength;
-					
-					list = lh_action_iter->actions_after;
-					list = g_list_append(list, wrapper);
-					lh_action_iter->actions_after = list;
-				}
-				
-				crm_malloc(wrapper, sizeof(action_wrapper_t));
-				if(wrapper != NULL) {
-					wrapper->action = lh_action_iter;
-					wrapper->strength = order->strength;
-					
-					list = rh_action_iter->actions_before;
-					list = g_list_append(list, wrapper);
-					rh_action_iter->actions_before = list;
-				}
-				);
-			);
-
-		pe_free_shallow_adv(lh_actions, FALSE);
-		pe_free_shallow_adv(rh_actions, FALSE);
+		if(rsc != NULL) {
+			rsc->fns->rsc_order_rh(order->lh_action, order);
+		} else {
+			/* fall back to action-to-action */
+			order_actions(
+				order->lh_action, order->rh_action, order);
+		}
+		
 		);
 
 	update_action_states(actions);
@@ -509,7 +351,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints,
 gboolean
 stage8(GListPtr resources, GListPtr actions, xmlNodePtr *graph)
 {
-	int lpc = 0, lpc2 = 0;
+	int lpc = 0;
 
 	crm_info("Processing stage 8");
 	*graph = create_xml_node(NULL, "transition_graph");
@@ -527,12 +369,7 @@ stage8(GListPtr resources, GListPtr actions, xmlNodePtr *graph)
 		rsc, resource_t, resources, lpc,
 
 		crm_debug("processing actions for rsc=%s", rsc->id);
-		slist_iter(
-			action, action_t, rsc->actions, lpc2,
-			crm_debug("processing action %d for rsc=%s",
-				  action->id, rsc->id);
-			graph_element_from_action(action, graph);
-			);
+		rsc->fns->expand(rsc, graph);
 		);
 	crm_xml_devel(*graph, "created resource-driven action list");
 

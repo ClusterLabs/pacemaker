@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.37 2004/10/27 15:30:55 andrew Exp $ */
+/* $Id: ptest.c,v 1.38 2004/11/09 09:32:14 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -35,7 +35,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?i:o:D:C:S:HA:U:M:I:EWRFt:m:a:d:w:c:r:p:s:"
+#define OPTARGS	"V?X:"
 
 #include <getopt.h>
 #include <glib.h>
@@ -63,6 +63,8 @@ main(int argc, char **argv)
 	xmlNodePtr graph = NULL;
 	char *msg_buffer = NULL;
 
+	const char *xml_file = NULL;
+	
 	cl_log_set_entity("ptest");
 	cl_log_set_facility(LOG_USER);
 	
@@ -70,6 +72,7 @@ main(int argc, char **argv)
 		int option_index = 0;
 		static struct option long_options[] = {
 			/* Top-level Options */
+			{"xml",  1, 0, 'X'},
 			{"help", 0, 0, 0},
       
 			{0, 0, 0, 0}
@@ -89,6 +92,9 @@ main(int argc, char **argv)
     
 				break;
       
+			case 'X':
+				xml_file = crm_strdup(optarg);
+				break;
 			case 'V':
 				alter_debug(DEBUG_INC);
 				break;
@@ -116,10 +122,15 @@ main(int argc, char **argv)
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
   
-	cib_object = file2xml(stdin);
-  
-	crm_info("=#=#=#=#= Stage 0 =#=#=#=#=");
 
+	if(xml_file != NULL) {
+		FILE *xml_strm = fopen(xml_file, "r");
+		cib_object = file2xml(xml_strm);
+		
+	} else {
+		cib_object = file2xml(stdin);
+	}
+	crm_info("=#=#=#=#= Stage 0 =#=#=#=#=");
 
 #ifdef MCHECK
 	mtrace();
@@ -196,7 +207,7 @@ main(int argc, char **argv)
 		   print_action(NULL, action, TRUE));
 	
 	crm_debug("=#=#=#=#= Stage 5 =#=#=#=#=");
-	stage5(resources);
+	stage5(resources, &ordering_constraints);
 
 	crm_debug("========= All Actions =========");
 	slist_iter(action, action_t, actions, lpc,
@@ -211,7 +222,7 @@ main(int argc, char **argv)
 		   print_action(NULL, action, TRUE));
 	
 	crm_debug("=#=#=#=#= Stage 7 =#=#=#=#=");
-	stage7(resources, actions, ordering_constraints, &action_sets);
+	stage7(resources, actions, ordering_constraints);
 
 	crm_debug("=#=#=#=#= Summary =#=#=#=#=");
 	summary(resources);

@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.14 2004/10/27 15:30:55 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.15 2004/11/09 09:32:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,11 +23,12 @@
 /* General utilities */
 extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 
-extern action_t *action_new(resource_t *rsc, enum action_tasks task, node_t *on_node);
+extern action_t *action_new(
+	resource_t *rsc, enum action_tasks task, node_t *on_node);
 
 
 /* Constraint helper functions */
-extern rsc_to_rsc_t *invert_constraint(rsc_to_rsc_t *constraint);
+extern rsc_dependancy_t *invert_constraint(rsc_dependancy_t *constraint);
 
 extern rsc_to_node_t *copy_constraint(rsc_to_node_t *constraint);
 
@@ -79,8 +80,8 @@ extern void print_resource(
 extern void print_rsc_to_node(
 	const char *pre_text, rsc_to_node_t *cons, gboolean details);
 
-extern void print_rsc_to_rsc(
-	const char *pre_text, rsc_to_rsc_t *cons, gboolean details);
+extern void print_rsc_dependancy(
+	const char *pre_text, rsc_dependancy_t *cons, gboolean details);
 
 extern void print_color(
 	const char *pre_text, color_t *color, gboolean details);
@@ -109,7 +110,7 @@ extern GListPtr find_actions_type(
 /* free the various structures */
 extern void pe_free_nodes(GListPtr nodes);
 extern void pe_free_colors(GListPtr colors);
-extern void pe_free_rsc_to_rsc(rsc_to_rsc_t *cons);
+extern void pe_free_rsc_dependancy(rsc_dependancy_t *cons);
 extern void pe_free_rsc_to_node(rsc_to_node_t *cons);
 extern void pe_free_shallow(GListPtr alist);
 extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
