@@ -115,8 +115,21 @@ GLOBAL TODOs:
 	  priority      #CDATA '0' #IMPLIED
           type          #CDATA #REQUIRED>
 
-<!ELEMENT instance_parameters (nvpair*)>
-<!ATTLIST instance_parameters>
+<!-- Some of these may need to be overridden on a per-node /
+     per-node-attribute basis (ie, eth1 is eth0 on some nodes...).
+     
+     This is expressed as follows: You can have multiple sets of
+     'instance parameters'. If you have one set without any node_ref
+     declarations, this is the default.
+
+     Otherwise, if a matching node_ref is found, the instance parameters
+     there override the defaults completely; the node_ref list is
+     evaluated ordered by the no tag. The weight attribute doesn't make
+     much sense here.
+     -->
+<!ELEMENT instance_parameters (node_ref*, nvpair*)>
+<!ATTLIST instance_parameters
+	  id		#CDATA #REQUIRED>
 
 <!-- Can override the default timeouts or frequencies. Times are given
      in seconds. -->
@@ -269,7 +282,8 @@ GLOBAL TODOs:
 	version	#CDATA #REQUIRED>
 
 <!-- TODO: Need to define howto handle agents provided by multiple
-     sources -->
+     sources. The OCF RA spec allows a resource type to be provided by
+     multiple Resource Agents; how do we deal with that? -->
 <!ELEMENT lrm_agents (lrm_agent*)>
 <!ELEMENT lrm_agents>
 
