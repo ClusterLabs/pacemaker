@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.9 2005/02/02 21:53:57 andrew Exp $ */
+/* $Id: util.h,v 1.10 2005/02/03 14:37:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,6 +27,8 @@
 #define DEBUG_DEC SIGUSR2
 
 extern unsigned int crm_log_level;
+
+extern gboolean crm_log_init(const char *entity);
 
 extern void do_crm_log(int log_level, const char *function,
 		       const char *alt_debugfile, const char *format, ...) G_GNUC_PRINTF(4,5);
