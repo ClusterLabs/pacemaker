@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.24 2005/02/17 16:27:26 andrew Exp $ */
+/* $Id: messages.c,v 1.25 2005/02/17 17:10:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -188,7 +188,7 @@ cib_process_query(
 	crm_debug("Processing \"%s\" event for section=%s", op, crm_str(section));
 
 	if(answer != NULL) { *answer = NULL; }	
-	else { return cib_ok };
+	else { return cib_ok; }
 	
 #if 0
 	if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
