@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.12 2004/12/14 14:46:45 andrew Exp $ */
+/* $Id: unpack.c,v 1.13 2004/12/15 10:11:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -241,8 +241,9 @@ extract_event(xmlNodePtr msg)
 */
 
 	crm_trace("Extracting event");
-	
-	iter = msg;
+	if(msg != NULL) {
+		iter = msg->children;
+	}
 	
 	while(abort == FALSE && iter != NULL) {
 		xmlNodePtr node_state = iter;
@@ -255,7 +256,7 @@ extract_event(xmlNodePtr msg)
 		crm_xml_devel(node_state,"Processing");
 		
 		if(xmlGetProp(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
-			crm_trace("Aborting on %s attribute",
+			crm_devel("Aborting on %s attribute",
 				  XML_CIB_ATTR_SHUTDOWN);
 			abort = TRUE;
 			
@@ -263,7 +264,7 @@ extract_event(xmlNodePtr msg)
 			/* node marked for STONITH
 			 *   possibly by us when a shutdown timmed out
 			 */
-			crm_trace("Checking for STONITH");
+			crm_devel("Checking for STONITH");
 			event_node = xmlGetProp(node_state, XML_ATTR_UNAME);
 
 			shutdown = create_shutdown_event(
@@ -277,7 +278,7 @@ extract_event(xmlNodePtr msg)
 			/* simple node state update...
 			 *   possibly from a shutdown we requested
 			 */
-			crm_trace("Processing simple state update");
+			crm_devel("Processing simple state update");
 			if(safe_str_neq(state, OFFLINESTATUS)) {
 				/* always recompute */
 				abort = TRUE;
@@ -295,7 +296,7 @@ extract_event(xmlNodePtr msg)
 		} else if(state == NULL && child != NULL) {
 			/* LRM resource update...
 			 */
-			crm_trace("Processing LRM resource update");
+			crm_devel("Processing LRM resource update");
 			child = find_xml_node(node_state, XML_CIB_TAG_LRM);
 			child = find_xml_node(child, XML_LRM_TAG_RESOURCES);
 
@@ -314,7 +315,7 @@ extract_event(xmlNodePtr msg)
 			/* this is a complex event and could not be completely
 			 * due to any request we made
 			 */
-			crm_trace("Aborting on complex update");
+			crm_devel("Aborting on complex update");
 			abort = TRUE;
 			
 		} else {

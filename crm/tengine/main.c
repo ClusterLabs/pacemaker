@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.9 2004/12/14 14:46:45 andrew Exp $ */
+/* $Id: main.c,v 1.10 2004/12/15 10:11:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -77,10 +77,13 @@ main(int argc, char ** argv)
     
 	cl_log_set_entity(crm_system_name);
 	cl_log_set_facility(LOG_LOCAL7);
+
 	cl_log_set_logfile(DAEMON_LOG);
 	cl_log_set_debugfile(DAEMON_DEBUG);
+
 	CL_SIGNAL(SIGTERM, tengine_shutdown);
 
+/* 	set_crm_log_level(LOG_TRACE); */
 	crm_debug("Begining option processing");
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
@@ -123,7 +126,7 @@ main(int argc, char ** argv)
 	/* read local config file */
 
 	if(allow_cores) {
-		crm_debug("Enabling coredumps");
+		crm_info("Enabling coredumps");
 		cl_set_corerootdir(DEVEL_DIR);	    
 		cl_enable_coredumps(1);
 		cl_cdtocoredir();
