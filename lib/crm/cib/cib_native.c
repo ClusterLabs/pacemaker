@@ -41,7 +41,7 @@ typedef struct cib_native_opaque_s
 
 int cib_native_perform_op(
 	cib_t *cib, const char *op, const char *host, const char *section,
-	xmlNodePtr data, xmlNodePtr *output_data, int call_options);
+	crm_data_t *data, crm_data_t **output_data, int call_options);
 
 int cib_native_signon(cib_t* cib, enum cib_conn_type type);
 int cib_native_signoff(cib_t* cib);
@@ -117,6 +117,7 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 			" but authentication to command channel failed");
 		rc = cib_authentication;
 	}
+	
 
 	if(rc == cib_ok) {
 		crm_trace("Connecting callback channel");
@@ -138,6 +139,7 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 	if(rc == cib_ok) {
 		const char *msg_type = NULL;
 		crm_trace("Waiting for msg on command channel");
+
 		reg_msg = msgfromIPC_noauth(native->command_channel);
 
 		msg_type = cl_get_string(reg_msg, F_CIB_OPERATION);
@@ -158,7 +160,7 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 			}
 		}
 
-		ha_msg_del(reg_msg);
+		crm_msg_del(reg_msg);
 		reg_msg = NULL;		
 	}
 
@@ -168,11 +170,14 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 		reg_msg = ha_msg_new(2);
 		ha_msg_add(reg_msg, F_CIB_OPERATION, CRM_OP_REGISTER);
 		ha_msg_add(reg_msg, F_CIB_CALLBACK_TOKEN, uuid_ticket);
+
+		CRM_ASSERT(native->command_channel->should_send_blocking);
+
 		if(msg2ipcchan(reg_msg, native->callback_channel) != HA_OK) {
 			rc = cib_callback_register;
 		}
 		crm_free(uuid_ticket);
-		ha_msg_del(reg_msg);
+		crm_msg_del(reg_msg);
 
 	}
 	if(rc == cib_ok) {
@@ -183,7 +188,7 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 			crm_err("Connection to callback channel not maintined");
 			rc = cib_connection;
 		}
-		ha_msg_del(reg_msg);
+		crm_msg_del(reg_msg);
 	}
 	
 	if(rc == cib_ok) {
@@ -265,7 +270,7 @@ cib_native_inputfd(cib_t* cib)
 int
 cib_native_perform_op(
 	cib_t *cib, const char *op, const char *host, const char *section,
-	xmlNodePtr data, xmlNodePtr *output_data, int call_options) 
+	crm_data_t *data, crm_data_t **output_data, int call_options) 
 {
 	int  rc = HA_OK;
 
@@ -284,10 +289,15 @@ cib_native_perform_op(
 		*output_data = NULL;
 	}
 	
-	op_msg = ha_msg_new(7);
 	if(op == NULL) {
 		crm_err("No operation specified");
 		rc = cib_operation;
+	}
+
+	op_msg = ha_msg_new(7);
+	if (op_msg == NULL) {
+		crm_err("No memory to create HA_Message");
+		return cib_create_msg;
 	}
 	
 	if(rc == HA_OK) {
@@ -297,37 +307,42 @@ cib_native_perform_op(
 		rc = ha_msg_add(op_msg, F_CIB_OPERATION, op);
 	}
 	if(rc == HA_OK && host != NULL) {
+		CRM_ASSERT(cl_is_allocated(host) == 1);
 		rc = ha_msg_add(op_msg, F_CIB_HOST, host);
 	}
 	if(rc == HA_OK && section != NULL) {
+/* 		CRM_ASSERT(cl_is_allocated(section) == 1); */
 		rc = ha_msg_add(op_msg, F_CIB_SECTION, section);
 	}
 	if(rc == HA_OK) {
-		char *tmp = crm_itoa(cib->call_id);
-		rc = ha_msg_add(op_msg, F_CIB_CALLID, tmp);
-		crm_free(tmp);
+		rc = ha_msg_add_int(op_msg, F_CIB_CALLID, cib->call_id);
 	}
 	if(rc == HA_OK) {
-		char *tmp = crm_itoa(call_options);
-		crm_trace("Sending call options: %.8lx, %d, %s",
-			  (long)call_options, call_options, tmp);
-		rc = ha_msg_add(op_msg, F_CIB_CALLOPTS, tmp);
-		crm_free(tmp);
+		crm_trace("Sending call options: %.8lx, %d",
+			  (long)call_options, call_options);
+		rc = ha_msg_add_int(op_msg, F_CIB_CALLOPTS, call_options);
 	}
-	if(rc == HA_OK) {
-		char *calldata = dump_xml_unformatted(data);
+	if(rc == HA_OK && data != NULL) {
+		char *calldata = NULL;
+#ifndef USE_LIBXML
+		CRM_ASSERT(cl_is_allocated(data) == 1);
+#endif
+			
+		calldata = dump_xml_unformatted(data);
+
 		if(calldata != NULL) {
+			CRM_ASSERT(cl_is_allocated(calldata) == 1);
 			rc = ha_msg_add(op_msg, F_CIB_CALLDATA, calldata);
+			crm_free(calldata);
 		} else {
 			crm_debug("Calldata string was NULL (xml=%p)", data);
 		}
-
-		crm_free(calldata);
 	}
 	
-	if (rc != HA_OK || op_msg == NULL) {
-		ha_msg_del(op_msg);
+	if (rc != HA_OK) {
 		crm_err("Failed to create CIB operation message");
+		crm_log_message(LOG_ERR, op_msg);
+		crm_msg_del(op_msg);
 		return cib_create_msg;
 	}
 
@@ -336,14 +351,20 @@ cib_native_perform_op(
 	crm_debug("Sending %s message to CIB service", op);
  	crm_log_message(LOG_MSG, op_msg);
 	rc = msg2ipcchan(op_msg, native->command_channel);
-	crm_debug("Message sent");
- 	ha_msg_del(op_msg);
-	op_msg = NULL;
 	
 	if (rc != HA_OK) {
-		crm_err("Sending message to CIB service FAILED");
+		crm_err("Sending message to CIB service FAILED: %d", rc);
+		CRM_ASSERT(native->command_channel->should_send_blocking);
+		crm_log_message(LOG_ERR, op_msg);
+		crm_msg_del(op_msg);
 		return cib_send_failed;
+
+	} else {
+		crm_debug("Message sent");
 	}
+
+ 	crm_msg_del(op_msg);
+	op_msg = NULL;
 
 	if((call_options & cib_discard_reply)) {
 		crm_debug("Discarding reply");
@@ -378,21 +399,28 @@ cib_native_perform_op(
 		/* do nothing more */
 		
 	} else if(output != NULL) {
+		crm_data_t *some_xml = NULL;
 		crm_debug("Unpacking response data");
-		*output_data = string2xml(output);
-		if(*output_data == NULL) {
+		some_xml = string2xml(output);
+		if(some_xml == NULL) {
 			crm_err("Could not unpack response data: %s", output);
 			if(rc == cib_ok) {
 				rc = cib_output_data;
 			}
+		} else {
+#ifndef USE_LIBXML
+			CRM_ASSERT(cl_is_allocated(some_xml) == 1);
+#endif
+			*output_data = some_xml;
 		}
+		
 		
 	} else {
 		crm_debug("No output in reply to \"%s\" command %d",
 			  op, cib->call_id - 1);
 	}
 	
-	ha_msg_del(op_reply);
+	crm_msg_del(op_reply);
 
 	return rc;
 }
@@ -467,7 +495,7 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 		crm_err("Unknown message type: %s", type);
 	}
 	
-	ha_msg_del(msg);
+	crm_msg_del(msg);
 
 	return 1;
 }
@@ -477,7 +505,7 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 {
 	int rc = 0;
 	int call_id = 0;
-	xmlNodePtr output = NULL;
+	crm_data_t *output = NULL;
 	const char *output_s = NULL;
 
 	if(cib->op_callback == NULL) {

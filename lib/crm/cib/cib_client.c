@@ -36,14 +36,14 @@ gboolean verify_cib_cmds(cib_t *cib);
 
 int cib_client_set_op_callback(
 	cib_t *cib, void (*callback)(const struct ha_msg *msg, int call_id,
-				     int rc, xmlNodePtr output));
+				     int rc, crm_data_t *output));
 int cib_client_noop(cib_t *cib, int call_options);
-int cib_client_ping(cib_t *cib, xmlNodePtr *output_data, int call_options);
+int cib_client_ping(cib_t *cib, crm_data_t **output_data, int call_options);
 
 int cib_client_query(cib_t *cib, const char *section,
-	     xmlNodePtr *output_data, int call_options);
+	     crm_data_t **output_data, int call_options);
 int cib_client_query_from(cib_t *cib, const char *host, const char *section,
-			  xmlNodePtr *output_data, int call_options);
+			  crm_data_t **output_data, int call_options);
 
 int cib_client_sync(cib_t *cib, const char *section, int call_options);
 int cib_client_sync_from(
@@ -55,16 +55,16 @@ int cib_client_set_slave_all(cib_t *cib, int call_options);
 int cib_client_set_master(cib_t *cib, int call_options);
 
 int cib_client_bump_epoch(cib_t *cib, int call_options);
-int cib_client_create(cib_t *cib, const char *section, xmlNodePtr data,
-	      xmlNodePtr *output_data, int call_options) ;
-int cib_client_modify(cib_t *cib, const char *section, xmlNodePtr data,
-	      xmlNodePtr *output_data, int call_options) ;
-int cib_client_replace(cib_t *cib, const char *section, xmlNodePtr data,
-	       xmlNodePtr *output_data, int call_options) ;
-int cib_client_delete(cib_t *cib, const char *section, xmlNodePtr data,
-	      xmlNodePtr *output_data, int call_options) ;
+int cib_client_create(cib_t *cib, const char *section, crm_data_t *data,
+	      crm_data_t **output_data, int call_options) ;
+int cib_client_modify(cib_t *cib, const char *section, crm_data_t *data,
+	      crm_data_t **output_data, int call_options) ;
+int cib_client_replace(cib_t *cib, const char *section, crm_data_t *data,
+	       crm_data_t **output_data, int call_options) ;
+int cib_client_delete(cib_t *cib, const char *section, crm_data_t *data,
+	      crm_data_t **output_data, int call_options) ;
 int cib_client_erase(
-	cib_t *cib, xmlNodePtr *output_data, int call_options);
+	cib_t *cib, crm_data_t **output_data, int call_options);
 int cib_client_quit(cib_t *cib,   int call_options);
 
 int cib_client_add_notify_callback(
@@ -144,7 +144,7 @@ cib_new(void)
 int
 cib_client_set_op_callback(
 	cib_t *cib, void (*callback)(const struct ha_msg *msg, int call_id,
-				     int rc, xmlNodePtr output)) 
+				     int rc, crm_data_t *output)) 
 {
 	if(callback == NULL) {
 		crm_info("Un-Setting operation callback");
@@ -170,7 +170,7 @@ int cib_client_noop(cib_t *cib, int call_options)
 		cib, CRM_OP_NOOP, NULL, NULL, NULL, NULL, call_options);
 }
 
-int cib_client_ping(cib_t *cib, xmlNodePtr *output_data, int call_options)
+int cib_client_ping(cib_t *cib, crm_data_t **output_data, int call_options)
 {
 	if(cib == NULL) {
 		return cib_missing;
@@ -186,14 +186,14 @@ int cib_client_ping(cib_t *cib, xmlNodePtr *output_data, int call_options)
 
 
 int cib_client_query(cib_t *cib, const char *section,
-		     xmlNodePtr *output_data, int call_options)
+		     crm_data_t **output_data, int call_options)
 {
 	return cib->cmds->query_from(
 		cib, NULL, section, output_data, call_options);
 }
 
 int cib_client_query_from(cib_t *cib, const char *host, const char *section,
-			  xmlNodePtr *output_data, int call_options)
+			  crm_data_t **output_data, int call_options)
 {
 	if(cib == NULL) {
 		return cib_missing;
@@ -292,8 +292,8 @@ int cib_client_sync_from(
 	cib_t *cib, const char *host, const char *section, int call_options)
 {
 	enum cib_errors rc = cib_ok;
-	xmlNodePtr stored_cib  = NULL;
-	xmlNodePtr current_cib = NULL;
+	crm_data_t *stored_cib  = NULL;
+	crm_data_t *current_cib = NULL;
 
 	if(cib == NULL) {
 		return cib_missing;
@@ -328,8 +328,8 @@ int cib_client_sync_from(
 	
 }
 
-int cib_client_create(cib_t *cib, const char *section, xmlNodePtr data,
-		      xmlNodePtr *output_data, int call_options) 
+int cib_client_create(cib_t *cib, const char *section, crm_data_t *data,
+		      crm_data_t **output_data, int call_options) 
 {
 	if(cib == NULL) {
 		return cib_missing;
@@ -344,8 +344,8 @@ int cib_client_create(cib_t *cib, const char *section, xmlNodePtr data,
 }
 
 
-int cib_client_modify(cib_t *cib, const char *section, xmlNodePtr data,
-	   xmlNodePtr *output_data, int call_options) 
+int cib_client_modify(cib_t *cib, const char *section, crm_data_t *data,
+	   crm_data_t **output_data, int call_options) 
 {
 	if(cib == NULL) {
 		return cib_missing;
@@ -360,8 +360,8 @@ int cib_client_modify(cib_t *cib, const char *section, xmlNodePtr data,
 }
 
 
-int cib_client_replace(cib_t *cib, const char *section, xmlNodePtr data,
-	    xmlNodePtr *output_data, int call_options) 
+int cib_client_replace(cib_t *cib, const char *section, crm_data_t *data,
+	    crm_data_t **output_data, int call_options) 
 {
 	if(cib == NULL) {
 		return cib_missing;
@@ -373,13 +373,13 @@ int cib_client_replace(cib_t *cib, const char *section, xmlNodePtr data,
 		return cib_missing_data;
 	}
 	
-	return cib->cmds->variant_op(cib, CRM_OP_CIB_REPLACE, NULL, NULL,
+	return cib->cmds->variant_op(cib, CRM_OP_CIB_REPLACE, NULL, section,
 				     data, output_data, call_options);
 }
 
 
-int cib_client_delete(cib_t *cib, const char *section, xmlNodePtr data,
-	   xmlNodePtr *output_data, int call_options) 
+int cib_client_delete(cib_t *cib, const char *section, crm_data_t *data,
+	   crm_data_t **output_data, int call_options) 
 {
 	if(cib == NULL) {
 		return cib_missing;
@@ -395,7 +395,7 @@ int cib_client_delete(cib_t *cib, const char *section, xmlNodePtr data,
 
 
 int cib_client_erase(
-	cib_t *cib, xmlNodePtr *output_data, int call_options)
+	cib_t *cib, crm_data_t **output_data, int call_options)
 {
 	if(cib == NULL) {
 		return cib_missing;
@@ -742,12 +742,12 @@ cib_section2enum(const char *a_section)
 
 
 int
-cib_compare_generation(xmlNodePtr left, xmlNodePtr right)
+cib_compare_generation(crm_data_t *left, crm_data_t *right)
 {
 	int int_elem_l = -1;
 	int int_elem_r = -1;
-	const char *elem_l = xmlGetProp(left, XML_ATTR_GENERATION);
-	const char *elem_r = xmlGetProp(right, XML_ATTR_GENERATION);
+	const char *elem_l = crm_element_value(left, XML_ATTR_GENERATION);
+	const char *elem_r = crm_element_value(right, XML_ATTR_GENERATION);
 
 	if(elem_l != NULL) int_elem_l = atoi(elem_l);
 	if(elem_r != NULL) int_elem_r = atoi(elem_r);
@@ -766,8 +766,8 @@ cib_compare_generation(xmlNodePtr left, xmlNodePtr right)
 
 	int_elem_l = -1;
 	int_elem_r = -1;
-	elem_l = xmlGetProp(left, XML_ATTR_NUMUPDATES);
-	elem_r = xmlGetProp(right, XML_ATTR_NUMUPDATES);
+	elem_l = crm_element_value(left, XML_ATTR_NUMUPDATES);
+	elem_r = crm_element_value(right, XML_ATTR_NUMUPDATES);
 
 	if(elem_l != NULL) int_elem_l = atoi(elem_l);
 	if(elem_r != NULL) int_elem_r = atoi(elem_r);
@@ -788,8 +788,8 @@ cib_compare_generation(xmlNodePtr left, xmlNodePtr right)
 
 	int_elem_l = -1;
 	int_elem_r = -1;
-	elem_l = xmlGetProp(left, XML_ATTR_NUMPEERS);
-	elem_r = xmlGetProp(right, XML_ATTR_NUMPEERS);
+	elem_l = crm_element_value(left, XML_ATTR_NUMPEERS);
+	elem_r = crm_element_value(right, XML_ATTR_NUMPEERS);
 
 	if(elem_l != NULL) int_elem_l = atoi(elem_l);
 	if(elem_r != NULL) int_elem_r = atoi(elem_r);
@@ -808,8 +808,8 @@ cib_compare_generation(xmlNodePtr left, xmlNodePtr right)
 	
 	crm_verbose("eq - XML_ATTR_NUMPEERS");
 
-	elem_l = xmlGetProp(left, XML_ATTR_NUMPEERS);
-	elem_r = xmlGetProp(right, XML_ATTR_NUMPEERS);
+	elem_l = crm_element_value(left, XML_ATTR_NUMPEERS);
+	elem_r = crm_element_value(right, XML_ATTR_NUMPEERS);
 	if(elem_l == NULL && elem_r == NULL) {
 
 	} else if(elem_l == NULL) {
@@ -837,10 +837,10 @@ cib_compare_generation(xmlNodePtr left, xmlNodePtr right)
 }
 
 
-xmlNodePtr
+crm_data_t*
 get_cib_copy(cib_t *cib)
 {
-	xmlNodePtr xml_cib;
+	crm_data_t *xml_cib;
 	int options = cib_scope_local|cib_sync_call;
 	if(cib->cmds->query(cib, NULL, &xml_cib, options) != cib_ok) {
 		crm_err("Couldnt retrieve the CIB");
@@ -849,14 +849,14 @@ get_cib_copy(cib_t *cib)
 		crm_err("The CIB result was empty");
 		return NULL;
 	}
-	return xml_cib->children;
+	return find_xml_node(xml_cib, XML_TAG_CIB, FALSE);
 }
 
-xmlNodePtr
+crm_data_t*
 cib_get_generation(cib_t *cib)
 {
-	xmlNodePtr the_cib = get_cib_copy(cib);
-	xmlNodePtr generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+	crm_data_t *the_cib = get_cib_copy(cib);
+	crm_data_t *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
 	copy_in_properties(generation, the_cib);
 	free_xml(the_cib);
@@ -867,19 +867,15 @@ cib_get_generation(cib_t *cib)
 /*
  * The caller should never free the return value
  */
-xmlNodePtr
-get_object_root(const char *object_type, xmlNodePtr the_root)
+crm_data_t*
+get_object_root(const char *object_type, crm_data_t *the_root)
 {
 	const char *node_stack[2];
-	xmlNodePtr tmp_node = NULL;
+	crm_data_t *tmp_node = NULL;
 	
 	if(the_root == NULL) {
 		crm_err("CIB root object was NULL");
 		return NULL;
-
-	} else if(object_type == NULL) {
-		crm_debug("Returning the whole CIB");
-		return the_root;
 	}
 	
 	node_stack[0] = XML_CIB_TAG_CONFIGURATION;
@@ -887,9 +883,10 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 
 	if(object_type == NULL
 	   || strlen(object_type) == 0
-	   || safe_str_eq("all", object_type)) {
-		return the_root;
+	   || safe_str_eq("all", object_type)
+	   || safe_str_eq(XML_TAG_CIB, object_type)) {
 		/* get the whole cib */
+		return the_root;
 
 	} else if(strcmp(object_type, XML_CIB_TAG_STATUS) == 0) {
 		/* these live in a different place */
@@ -898,20 +895,13 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 		node_stack[0] = XML_CIB_TAG_STATUS;
 		node_stack[1] = NULL;
 
-/* 	} else if(strcmp(object_type, XML_CIB_TAG_CRMCONFIG) == 0) { */
-/* 		/\* these live in a different place too *\/ */
-/* 		tmp_node = find_xml_node(the_root, XML_CIB_TAG_CRMCONFIG); */
-
-/* 		node_stack[0] = XML_CIB_TAG_CRMCONFIG; */
-/* 		node_stack[1] = NULL; */
-
 	} else {
 		tmp_node = find_xml_node_nested(the_root, node_stack, 2);
 	}
 
 	if (tmp_node == NULL) {
 		crm_err("[cib] Section %s [%s [%s]] not present",
-			the_root->name,
+			crm_element_name(the_root),
 			node_stack[0],
 			node_stack[1]?node_stack[1]:"");
 	}
@@ -919,19 +909,24 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 }
 
 
-xmlNodePtr
+crm_data_t*
 create_cib_fragment_adv(
-	xmlNodePtr update, const char *section, const char *source)
+	crm_data_t *update, const char *section, const char *source)
 {
+	crm_data_t *cib = NULL;
 	gboolean whole_cib = FALSE;
-	xmlNodePtr fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
-	xmlNodePtr cib = NULL;
-	xmlNodePtr object_root  = NULL;
-	char *auto_section = cib_pluralSection(update?update->name:NULL);
+	crm_data_t *fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
+	crm_data_t *object_root  = NULL;
+	char *auto_section = cib_pluralSection(crm_element_name(update));
 	
-	if(update == NULL) {
+	if(update == NULL && section == NULL) {
+		crm_debug("Creating a blank fragment");
+		update = createEmptyCib();
+		section = auto_section;
+
+	} else if(update == NULL) {
 		crm_err("No update to create a fragment for");
-		crm_free(auto_section);
+		cib = createEmptyCib();
 		return NULL;
 		
 	} else if(section == NULL) {
@@ -939,13 +934,14 @@ create_cib_fragment_adv(
 
 	} else if(strcmp(auto_section, section) != 0) {
 		crm_err("Values for update (tag=%s) and section (%s)"
-			" were not consistent", update->name, section);
+			" were not consistent", crm_element_name(update), section);
 		crm_free(auto_section);
 		return NULL;
 		
 	}
 
-	if(strcmp(section, "all")==0 && strcmp(update->name, XML_TAG_CIB)==0) {
+	if(safe_str_eq(section, "all")
+	   && safe_str_eq(crm_element_name(update), XML_TAG_CIB)) {
 		whole_cib = TRUE;
 	}
 	
@@ -953,15 +949,18 @@ create_cib_fragment_adv(
 
 	if(whole_cib == FALSE) {
 		cib = createEmptyCib();
+		set_xml_property_copy(cib, "debug_source", source);
 		object_root = get_object_root(section, cib);
-		xmlAddChildList(object_root, xmlCopyNodeList(update));
+		add_node_copy(object_root, update);
+		add_node_copy(fragment, cib);
+		free_xml(cib);
+		cib = find_xml_node(fragment, XML_TAG_CIB, TRUE);
 
 	} else {
-		cib = xmlCopyNodeList(update);
+		add_node_copy(fragment, update);
+		cib = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+		set_xml_property_copy(cib, "debug_source", source);
 	}
-	
-	xmlAddChild(fragment, cib);
-	set_xml_property_copy(cib, "debug_source", source);
 	
 	crm_free(auto_section);
 
@@ -981,10 +980,10 @@ create_cib_fragment_adv(
  * It is the callers responsibility to free both the new CIB (output)
  *     and the new CIB (input)
  */
-xmlNodePtr
+crm_data_t*
 createEmptyCib(void)
 {
-	xmlNodePtr cib_root = NULL, config = NULL, status = NULL;
+	crm_data_t *cib_root = NULL, *config = NULL, *status = NULL;
 	
 	cib_root = create_xml_node(NULL, XML_TAG_CIB);
 
@@ -1015,10 +1014,10 @@ createEmptyCib(void)
 
 
 gboolean
-verifyCibXml(xmlNodePtr cib)
+verifyCibXml(crm_data_t *cib)
 {
 	gboolean is_valid = TRUE;
-	xmlNodePtr tmp_node = NULL;
+	crm_data_t *tmp_node = NULL;
 	
 	if (cib == NULL) {
 		crm_warn("XML Buffer was empty.");
