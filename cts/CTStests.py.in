@@ -1367,7 +1367,7 @@ class Split_brainTest2(CTSTest):
 
         '''isolate nodes, Look for node is dead message'''
         watchdeadpats = [ ]
-        deadpat = self.CM["Pat:They_dead"]
+        deadpat = self.CM["Pat:They_stopped"]
         for member in self.CM.Env["nodes"]:
             thispat = (deadpat % member)
             watchdeadpats.append(thispat)

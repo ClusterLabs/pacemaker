@@ -72,8 +72,6 @@ class LinuxHAv2(HeartbeatCM):
             "Pat:We_started"   : "%s crmd:.*State transition.*-> (S_NOT_DC|S_IDLE)",
             "Pat:They_started" : "%s crmd:.*State transition.*-> (S_NOT_DC|S_IDLE)",
             "Pat:We_stopped"   : ("%s heartbeat.*Heartbeat shutdown complete" %(self.OurNode)),
-            "Pat:They_stopped" : "%s heartbeat.*Heartbeat shutdown complete",
-            "Pat:They_dead"    : "node (%s).*: is dead",
             "Pat:All_stopped"  : "%s heartbeat.*Heartbeat shutdown complete",
             
             # Bad news Regexes.  Should never occur.
