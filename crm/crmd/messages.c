@@ -76,17 +76,28 @@ enum crmd_fsa_input handle_shutdown_request(xmlNodePtr stored_msg);
 
 /* returns the current head of the FIFO queue */
 GListPtr
-put_message(xmlNodePtr new_message)
+put_message(fsa_data_t *new_message)
 {
 	int old_len = g_list_length(fsa_message_queue);
 
+	fsa_data_t *fsa_data = NULL;
+	crm_malloc(fsa_data, sizeof(fsa_data_t));
+	fsa_data->fsa_input = new_message->fsa_input;
+	fsa_data->fsa_cause = new_message->fsa_cause;
+	if(fsa_data->fsa_cause == C_HA_MESSAGE
+	   || fsa_data->fsa_cause == C_IPC_MESSAGE) {
+		fsa_data->data = copy_xml_node_recursive(new_message->data);
+
+	} else {
+		crm_err("Message type not handled yet");
+		return fsa_message_queue;
+	}
+	
 	/* make sure to free it properly later */
-	fsa_message_queue = g_list_append(fsa_message_queue,
-					   copy_xml_node_recursive(new_message));
+	fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
 
 	crm_verbose("Queue len: %d -> %d", old_len,
 		  g_list_length(fsa_message_queue));
-
 	
 	if(old_len == g_list_length(fsa_message_queue)){
 		crm_err("Couldnt add message to the queue");
@@ -96,10 +107,10 @@ put_message(xmlNodePtr new_message)
 }
 
 /* returns the next message */
-xmlNodePtr
+fsa_data_t *
 get_message(void)
 {
-	xmlNodePtr message = g_list_nth_data(fsa_message_queue, 0);
+	fsa_data_t* message = g_list_nth_data(fsa_message_queue, 0);
 	fsa_message_queue = g_list_remove(fsa_message_queue, message);
 	return message;
 }
@@ -118,7 +129,7 @@ do_msg_store(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
-	     void *data)
+	     fsa_data_t *msg_data)
 {
 /*	xmlNodePtr new_message = (xmlNodePtr)data; */
 	
@@ -135,29 +146,36 @@ do_msg_route(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
-	     void *data)
+	     fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input result = I_NULL;
-	xmlNodePtr xml_message = (xmlNodePtr)data;
+	xmlNodePtr xml_message = (xmlNodePtr)(msg_data->data);
 	gboolean routed = FALSE, defer = TRUE, do_process = TRUE;
 
 #if 0
 /*	if(cause == C_IPC_MESSAGE) { */
-		if (crmd_authorize_message(root_xml_node,
-					   msg,
-					   curr_client) == FALSE) {
-			crm_debug("Message not authorized\t%s",
-				  dump_xml_formatted(root_xml_node, FALSE));
-			do_process = FALSE;
-		}
+	if (crmd_authorize_message(
+		    root_xml_node, msg, curr_client) == FALSE) {
+		crm_debug("Message not authorized\t%s",
+			  dump_xml_formatted(root_xml_node, FALSE));
+		do_process = FALSE;
+	}
 /*	} */
 #endif
+	if(msg_data->fsa_cause != C_IPC_MESSAGE
+	   && msg_data->fsa_cause != C_HA_MESSAGE) {
+		/* dont try and route these */
+		crm_warn("Can only process HA and IPC messages");
+		return I_NULL;
+	}
 
 	if(do_process) {
 		/* try passing the buck first */
+		crm_trace("Attempting to route message");
 		routed = relay_message(xml_message, cause==C_IPC_MESSAGE);
 
 		if(routed == FALSE) {
+			crm_trace("Message wasn't routed... try handling locally");
 
 			defer = TRUE;
 			/* calculate defer */
@@ -177,10 +195,16 @@ do_msg_route(long long action,
 				default:
 					crm_trace("Defering local processing of message");
 
-					put_message(xml_message);
+					put_message(msg_data);
 					result = I_REQUEST;
 					break;
 			}
+			if( result != I_REQUEST) {
+				crm_trace("Message processed");
+			}
+			
+		} else {
+			crm_trace("Message routed...");
 		} 
 	}
 	
@@ -221,7 +245,13 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	was_sent = relay_message(request, TRUE);
 
 	if(was_sent == FALSE) {
-		put_message(request);
+		fsa_data_t *fsa_data = NULL;
+		crm_malloc(fsa_data, sizeof(fsa_data_t));
+		fsa_data->fsa_input = I_ROUTER;
+		fsa_data->fsa_cause = C_IPC_MESSAGE;
+		fsa_data->data = request;
+		put_message(fsa_data);
+		crm_free(fsa_data);
 	}
 	
 	free_xml(request);
@@ -238,7 +268,7 @@ store_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	      const char *operation, const char *sys_to)
 {
 	xmlNodePtr request = NULL;
-	
+	fsa_data_t *fsa_data = NULL;
 
 	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
 				   XML_ATTR_OP, operation, TRUE);
@@ -253,7 +283,13 @@ store_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 				 NULL,
 				 NULL);
 
-	put_message(request);
+	crm_malloc(fsa_data, sizeof(fsa_data_t));
+	fsa_data->fsa_input = I_ROUTER;
+	fsa_data->fsa_cause = C_IPC_MESSAGE;
+	fsa_data->data = request;
+
+	put_message(fsa_data);
+	crm_free(fsa_data);
 	free_xml(request);
 	
 	return TRUE;
@@ -834,8 +870,8 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	
 	if (all_is_good) {
 		msg = ha_msg_new(4); 
-		ha_msg_add(msg, F_TYPE, "CRM");
-		ha_msg_add(msg, F_COMMENT, "A CRM xml message");
+		ha_msg_add(msg, F_TYPE, T_CRM);
+		ha_msg_add(msg, F_COMMENT, "A CRM  message");
 		xml_text = dump_xml_unformatted(root);
 		xml_len = strlen(xml_text);
 		
@@ -967,7 +1003,8 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 {
 	IPC_Channel *client_channel;
 	enum crmd_fsa_input next_input;
-
+	fsa_data_t *fsa_data = NULL;
+	
 	crm_trace("relaying msg to sub_sys=%s via IPC", sys);
 
 	client_channel =
@@ -997,10 +1034,17 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 			    A_LRM_INVOKE);
 #endif
 
+		crm_malloc(fsa_data, sizeof(fsa_data_t));
+		fsa_data->fsa_input = I_MESSAGE;
+		fsa_data->fsa_cause = C_IPC_MESSAGE;
+		fsa_data->data = action;
+		
 		next_input =
 			do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE,
-				      fsa_state, I_MESSAGE, action);
+				      fsa_state, I_MESSAGE, fsa_data);
 
+		crm_free(fsa_data);
+		
 		/* todo: feed this back in for anything != I_NULL */
 		
 #ifdef FSA_TRACE
