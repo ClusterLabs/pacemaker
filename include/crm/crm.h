@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.39 2005/02/01 22:34:54 andrew Exp $ */
+/* $Id: crm.h,v 1.40 2005/02/07 11:30:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -225,9 +225,7 @@ extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_M
 		} else {					\
 			memset(new_obj, 0, length);		\
 		}						\
-	}							\
-	
-#define crm_strdup(x) cl_strdup(x)
+	}	
 
 #if 1
 #  define crm_free(x)   if(x) { cl_free(x); x=NULL; }
@@ -237,9 +235,9 @@ extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_M
 #define crm_str(x)    (const char*)(x?x:"<null>")
 
 #if 1
-#  define crm_msg_del(msg) ha_msg_del(msg)
+#  define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); }
 #else
-#  define crm_msg_del(msg) msg =  NULL
+#  define crm_msg_del(msg) msg = NULL
 #endif
 
 #endif
