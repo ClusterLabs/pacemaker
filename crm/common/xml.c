@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.41 2005/02/28 11:08:56 andrew Exp $ */
+/* $Id: xml.c,v 1.42 2005/03/02 14:03:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -212,8 +212,9 @@ find_entity(crm_data_t *parent,
 		abort();
 	}
 
-	crm_warn("node <%s id=%s> not found in %s.",
-		 node_name, id, xmlGetNodePath(parent));
+	
+	crm_debug("node <%s id=%s> not found in %s.",
+		  node_name, id, xmlGetNodePath(parent));
 	return NULL;
 }
 
