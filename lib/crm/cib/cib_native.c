@@ -162,6 +162,8 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 			crm_err("No reply message - empty - %d", rc);
 			rc = cib_reply_failed;
 		}
+		crm_msg_del(reg_msg);
+		reg_msg = NULL;		
 	}
 	
 	if(rc == cib_ok) {
@@ -433,10 +435,12 @@ cib_native_perform_op(
 		   native->command_channel) != IPC_CONNECT) {
 		crm_err("No reply message - disconnected - %d", rc);
 		cib->state = cib_disconnected;
+		crm_msg_del(op_reply);
 		return cib_not_connected;
 		
 	} else if(rc != IPC_OK) {
 		crm_err("No reply message - failed - %d", rc);
+		crm_msg_del(op_reply);
 		return cib_reply_failed;
 
 	} else if(op_reply == NULL) {
