@@ -41,7 +41,6 @@ do_election_vote(long long action,
 {
 	enum crmd_fsa_input election_result = I_NULL;
 	
-
 	/* dont vote if we're in one of these states or wanting to shut down */
 	switch(cur_state) {
 		case S_RECOVERY:
@@ -49,13 +48,19 @@ do_election_vote(long long action,
 		case S_STOPPING:
 		case S_RELEASE_DC:
 		case S_TERMINATE:
-			return I_NULL;
-			// log warning
+			crm_warn("Not voting in election, we're in state %s",
+				 fsa_state2string(cur_state));
+			return I_NOT_DC;
 			break;
 		default:
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
-				return I_NULL;
-				// log warning
+				crm_warn("Not voting in election,"
+					 " we're shutting down");
+				if(AM_I_DC) {
+					return I_RELEASE_DC;
+				} else {
+					return I_NOT_DC;
+				}
 			}
 			break;
 	}
