@@ -1,3 +1,4 @@
+/* $Id: alphasort.c,v 1.6 2004/02/17 22:12:01 lars Exp $ */
 /*
  *
  * alphasort - replacement for alphasort functions.

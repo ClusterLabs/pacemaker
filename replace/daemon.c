@@ -1,3 +1,4 @@
+/* $Id: daemon.c,v 1.2 2004/02/17 22:12:01 lars Exp $ */
 /*-
  *
  * daemon - replacement for daemon function.

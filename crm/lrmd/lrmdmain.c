@@ -1,3 +1,4 @@
+/* $Id: lrmdmain.c,v 1.7 2004/02/17 22:11:57 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -143,12 +144,8 @@ init_start(void)
     cl_log_set_debugfile(DAEMON_DEBUG);
 //    }
 
-    (void)_ha_msg_h_Id;
-    
     /* change the logging facility to the one used by heartbeat daemon */
     ll_cluster_t*	hb_fd = ll_cluster_new("heartbeat");
-    
-    //	(void)_heartbeat_h_Id;
     
     int facility;
     cl_log(LOG_INFO, "Switching to Heartbeat logger");

@@ -1,3 +1,4 @@
+/* $Id: crmutils.h,v 1.5 2004/02/17 22:11:56 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

@@ -1,3 +1,4 @@
+/* $Id: cibmain.c,v 1.8 2004/02/17 22:11:56 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -159,7 +160,6 @@ init_start(void)
 //    }
   
 	ll_cluster_t *hb_fd = ll_cluster_new("heartbeat");
-	(void)_ha_msg_h_Id;
 
 	int facility;
 	cl_log(LOG_INFO, "Switching to Heartbeat logger");

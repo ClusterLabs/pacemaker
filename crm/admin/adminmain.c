@@ -1,3 +1,4 @@
+/* $Id: adminmain.c,v 1.12 2004/02/17 22:11:56 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -1133,8 +1134,6 @@ do_init(void)
 	/* docs say only do this once, but in their code they do it every time! */
 	xmlInitParser (); 
 
-	( void) _ha_msg_h_Id;
-	
 	/* change the logging facility to the one used by heartbeat daemon */
 	ll_cluster_t *hb_cluster = ll_cluster_new("heartbeat");
 	

@@ -1,3 +1,4 @@
+/* $Id: crmutils.c,v 1.6 2004/02/17 22:11:56 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -177,10 +178,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 {
 	cl_log(LOG_DEBUG, "Register with HA");
 
-	//	(void)_heartbeat_h_Id;
-	(void)_ha_msg_h_Id;
-  
-  
 	cl_log(LOG_INFO, "Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
 		cl_log(LOG_ERR, "Cannot sign on with heartbeat");

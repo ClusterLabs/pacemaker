@@ -1,3 +1,4 @@
+/* $Id: unsetenv.c,v 1.3 2004/02/17 22:12:01 lars Exp $ */
 /*
  * Copyright (C) 2001 Alan Robertson <alanr@unix.sh>
  * This software licensed under the GNU LGPL.

@@ -1,3 +1,4 @@
+/* $Id: cibmessages.c,v 1.10 2004/02/17 22:11:56 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -91,8 +92,6 @@ processCibRequest(xmlNodePtr command)
 	gboolean update_the_cib = FALSE;
 	int cib_update_operation = CIB_OP_NONE;
 
-	(void)_ha_msg_h_Id; // mumble mumble mumble
-    
 	// sanity check
 	if (command == NULL) {
 		cl_log(LOG_INFO,

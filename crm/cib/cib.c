@@ -1,3 +1,4 @@
+/* $Id: cib.c,v 1.11 2004/02/17 22:11:56 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -319,6 +320,5 @@ createVariableConstraint(const char *id,
 int
 test(void)
 {
-	(void)_ha_msg_h_Id;
 	FNRET(0);
 }

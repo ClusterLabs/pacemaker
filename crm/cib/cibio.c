@@ -1,3 +1,4 @@
+/* $Id: cibio.c,v 1.10 2004/02/17 22:11:56 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,9 +73,6 @@ xmlNodePtr status_search = NULL;
 xmlNodePtr
 createEmptyCib(void)
 {
-	(void)_ha_msg_h_Id; // until the lmb cleanup
-	// real code...
-
 	xmlNodePtr cib_root = NULL, config = NULL, status = NULL;
 	
 	cib_root = create_xml_node(NULL, XML_TAG_CIB);

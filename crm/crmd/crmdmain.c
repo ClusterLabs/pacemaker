@@ -1,3 +1,4 @@
+/* $Id: crmdmain.c,v 1.8 2004/02/17 22:11:57 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -152,9 +153,6 @@ init_start(void)
 	
     /* change the logging facility to the one used by heartbeat daemon */
     hb_cluster = ll_cluster_new("heartbeat");
-	
-    //	(void)_heartbeat_h_Id;
-    (void)_ha_msg_h_Id;
 	
     int facility;
     cl_log(LOG_INFO, "Switching to Heartbeat logger");

@@ -1,3 +1,4 @@
+/* $Id: ipcutils.c,v 1.9 2004/02/17 22:11:56 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -161,7 +162,6 @@ gboolean
 send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 {
 	FNIN();
-	(void)_ha_msg_h_Id; /* Make the compiler happy */
 	gboolean all_is_good = TRUE;
 
 	if (msg == NULL) {

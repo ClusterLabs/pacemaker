@@ -1,3 +1,4 @@
+/* $Id: scandir.c,v 1.8 2004/02/17 22:12:01 lars Exp $ */
 /* scandir: Scan a directory, collecting all (selected) items into a an array.
  *
  * This code borrowed from 'libit', which can be found here:

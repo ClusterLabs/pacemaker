@@ -1,3 +1,4 @@
+/* $Id: msgutils.c,v 1.11 2004/02/17 22:11:56 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -467,8 +468,6 @@ process_hello_message(IPC_Message *hello_message,
 	*major_version = ha_strdup(local_major_version);
 	*minor_version = ha_strdup(local_minor_version);
 
-	(void)_ha_msg_h_Id; // until the lmb cleanup
-    
 	FNRET(TRUE);
 }
 
