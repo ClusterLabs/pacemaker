@@ -135,6 +135,7 @@ do_pe_invoke(long long action,
 
 	crm_verbose("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
 
+	CRM_DEV_ASSERT(local_cib != NULL);
 	CRM_DEV_ASSERT(crm_element_value(local_cib, XML_ATTR_DC_UUID) != NULL);
 	
 	if(fsa_pe_ref) {
