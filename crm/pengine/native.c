@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.13 2005/02/18 10:34:27 andrew Exp $ */
+/* $Id: native.c,v 1.14 2005/02/18 10:59:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,7 +52,7 @@ typedef struct native_variant_data_s
 } native_variant_data_t;
 
 #define get_native_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc->variant == pe_group);				\
+	CRM_ASSERT(rsc->variant == pe_native);				\
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (native_variant_data_t *)rsc->variant_opaque;
 
