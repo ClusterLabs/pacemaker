@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.6 2004/12/05 16:14:07 andrew Exp $ */
+/* $Id: messages.c,v 1.7 2004/12/09 14:47:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,6 +43,8 @@
 #include <callbacks.h>
 
 #include <crm/dmalloc_wrapper.h>
+
+extern const char *cib_our_uname;
 
 enum cib_errors updateList(
 	xmlNodePtr local_cib, xmlNodePtr update_command, xmlNodePtr failed,
@@ -107,6 +109,15 @@ cib_process_readwrite(
 	enum cib_errors result = cib_ok;
 	crm_debug("Processing \"%s\" event", op);
 
+	if(safe_str_eq(op, CRM_OP_CIB_ISMASTER)) {
+		if(cib_is_master == TRUE) {
+			result = cib_ok;
+		} else {
+			result = cib_not_master;
+		}
+		return result;
+	}
+
 	cib_pre_notify(op, NULL, NULL, NULL);
 	if(safe_str_eq(op, CRM_OP_CIB_MASTER)) {
 		crm_info("We are now in R/W mode");
@@ -150,6 +161,7 @@ cib_process_query(
 
 	*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
 	set_xml_property_copy(*answer, XML_ATTR_SECTION, section);
+	set_xml_property_copy(*answer, "generated_on", cib_our_uname);
 
 	if (safe_str_eq("all", section)) {
 		section = NULL;
@@ -177,11 +189,26 @@ cib_process_erase(
 	const char *op, int options, const char *section, xmlNodePtr input,
 	xmlNodePtr *answer)
 {
+	xmlNodePtr tmpCib = NULL;
+	enum cib_errors result = cib_ok;
+
 	crm_debug("Processing \"%s\" event", op);
 	if(answer != NULL) *answer = NULL;
 
-	crm_err("Op %s is not currently supported", op);
-	return cib_NOTSUPPORTED;
+	tmpCib = createEmptyCib();
+	copy_in_properties(tmpCib, get_the_CIB());
+	
+	cib_pre_notify(op, tmpCib->name, NULL, tmpCib);
+	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, TRUE);
+		
+	if(activateCibXml(tmpCib, CIB_FILENAME) < 0) {
+		result = cib_ACTIVATION;
+	}
+
+	cib_post_notify(op, tmpCib->name, NULL, NULL, result, get_the_CIB());
+	*answer = createCibFragmentAnswer(NULL, NULL);
+	
+	return result;
 }
 
 enum cib_errors 
@@ -232,7 +259,7 @@ cib_update_counter(xmlNodePtr xml_obj, const char *field, gboolean reset)
 		int_value = atoi(old_value);
 		sprintf(new_value, "%d", ++int_value);
 	} else {
-		new_value = crm_strdup("0");
+		new_value = crm_strdup("1");
 	}
 
 	crm_trace("%s %d(%s)->%s",
@@ -544,6 +571,7 @@ createCibFragmentAnswer(const char *section, xmlNodePtr failed)
 	}
 		
 	set_xml_property_copy(fragment, XML_ATTR_SECTION, section);
+	set_xml_property_copy(fragment, "generated_on", cib_our_uname);
 	return fragment;
 }
 
