@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.3 2004/11/09 14:49:14 andrew Exp $ */
+/* $Id: native.c,v 1.4 2004/11/09 16:54:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,12 +27,10 @@ gboolean has_agent(node_t *a_node, lrm_agent_t *an_agent);
 
 gboolean native_choose_color(resource_t *lh_resource);
 
-gboolean native_assign_color(resource_t *rsc, color_t *color);
+void native_assign_color(resource_t *rsc, color_t *color);
 
-gboolean native_update_node_weight(
-	rsc_to_node_t *cons, const char *id, GListPtr nodes);
-
-
+void native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
+			       const char *id, GListPtr nodes);
 
 void native_rsc_dependancy_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh);
@@ -40,7 +38,7 @@ void native_rsc_dependancy_rh_must(resource_t *rsc_lh, gboolean update_lh,
 void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 				      resource_t *rsc_rh, gboolean update_rh);
 
-gboolean filter_nodes(resource_t *rsc);
+void filter_nodes(resource_t *rsc);
 
 
 typedef struct native_variant_data_s
@@ -53,11 +51,29 @@ typedef struct native_variant_data_s
 
 } native_variant_data_t;
 
+#define get_native_variant_data(data, rsc)				\
+	if(rsc->variant == pe_native) {					\
+		data = (native_variant_data_t *)rsc->variant_opaque;	\
+	} else {							\
+		crm_err("Resource %s was not a \"native\" variant",	\
+			rsc->id);					\
+		return;							\
+	}								\
+
+#define get_native_variant_data_boolean(data, rsc)			\
+	if(rsc->variant == pe_native) {					\
+		data = (native_variant_data_t *)rsc->variant_opaque;	\
+	} else {							\
+		crm_err("Resource %s was not a \"native\" variant",	\
+			rsc->id);					\
+		return FALSE;							\
+	}								\
+
 void
 native_add_running(resource_t *rsc, node_t *node)
 {
-	native_variant_data_t *native_data =
-		(native_variant_data_t *)rsc->variant_opaque;
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
 	
 	native_data->running_on = g_list_append(native_data->running_on, node);
 
@@ -76,7 +92,7 @@ void native_unpack(resource_t *rsc)
 	native_variant_data_t *native_data = NULL;
 	const char *version  = xmlGetProp(xml_obj, XML_ATTR_VERSION);
 	
-	crm_verbose("Processing resource...");
+	crm_verbose("Processing resource %s...", rsc->id);
 
 	crm_malloc(native_data, sizeof(native_variant_data_t));
 
@@ -96,9 +112,10 @@ void native_unpack(resource_t *rsc)
 void native_color(resource_t *rsc, GListPtr *colors)
 {
 	color_t *new_color = NULL;
-	native_variant_data_t *native_data =
-		(native_variant_data_t *)rsc->variant_opaque;
+	native_variant_data_t *native_data = NULL;
 
+	get_native_variant_data(native_data, rsc);
+	
 	if( native_choose_color(rsc) ) {
 		crm_verbose("Colored resource %s with color %d",
 			    rsc->id, native_data->color->id);
@@ -128,8 +145,9 @@ void native_create_actions(resource_t *rsc)
 	action_t *start_op = NULL;
 	gboolean can_start = FALSE;
 	node_t *chosen = NULL;
-	native_variant_data_t *native_data =
-		(native_variant_data_t *)rsc->variant_opaque;
+	native_variant_data_t *native_data = NULL;
+
+	get_native_variant_data(native_data, rsc);
 
 	if(native_data->color != NULL) {
 		chosen = native_data->color->details->chosen_node;
@@ -245,11 +263,11 @@ void native_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 	resource_t *rsc_lh = rsc;
 	resource_t *rsc_rh = constraint->rsc_rh;
 
-	native_variant_data_t *native_data_lh =
-		(native_variant_data_t *)rsc_lh->variant_opaque;
+	native_variant_data_t *native_data_lh = NULL;
+	native_variant_data_t *native_data_rh = NULL;
 
-	native_variant_data_t *native_data_rh =
-		(native_variant_data_t *)rsc_rh->variant_opaque;
+	get_native_variant_data(native_data_lh, rsc_lh);
+	get_native_variant_data(native_data_rh, rsc_rh);
 	
 	crm_verbose("Processing RH of constraint %s", constraint->id);
 	crm_debug_action(print_resource("LHS", rsc_lh, TRUE));
@@ -458,9 +476,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
 	int lpc;
 	GListPtr or_list;
-	resource_t *rsc_lh = rsc;
-	native_variant_data_t *native_data =
-		(native_variant_data_t *)rsc_lh->variant_opaque;
+	native_variant_data_t *native_data = NULL;
 	
 	crm_debug_action(print_rsc_to_node("Applying", constraint, FALSE));
 	/* take "lifetime" into account */
@@ -472,13 +488,12 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		crm_info("Constraint (%s) is not active", constraint->id);
 		/* warning */
 		return;
-	}
-    
-	rsc_lh = constraint->rsc_lh;
-	if(rsc_lh == NULL) {
+	} else if(rsc == NULL) {
 		crm_err("LHS of rsc_to_node (%s) is NULL", constraint->id);
 		return;
 	}
+    
+	get_native_variant_data(native_data, rsc);
 
 	native_data->node_cons =
 		g_list_append(native_data->node_cons, constraint);
@@ -487,7 +502,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		crm_err("RHS of constraint %s is NULL", constraint->id);
 		return;
 	}
-	crm_debug_action(print_resource("before update", rsc_lh,TRUE));
+	crm_debug_action(print_resource("before update", rsc,TRUE));
 
 	or_list = node_list_or(
 		native_data->allowed_nodes, constraint->node_list_rh, FALSE);
@@ -496,10 +511,10 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	native_data->allowed_nodes = or_list;
 	slist_iter(node_rh, node_t, constraint->node_list_rh, lpc,
 		   native_update_node_weight(
-			   constraint, node_rh->details->uname,
+			   rsc, constraint, node_rh->details->uname,
 			   native_data->allowed_nodes));
 
-	crm_debug_action(print_resource("after update", rsc_lh, TRUE));
+	crm_debug_action(print_resource("after update", rsc, TRUE));
 
 }
 
@@ -516,8 +531,8 @@ void native_expand(resource_t *rsc, xmlNodePtr *graph)
 
 void native_dump(resource_t *rsc, const char *pre_text, gboolean details)
 {
-	native_variant_data_t *native_data =
-		(native_variant_data_t *)rsc->variant_opaque;
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
 
 	common_dump(rsc, pre_text, details);
 	crm_debug("\t%d candidate colors, %d allowed nodes,"
@@ -565,11 +580,8 @@ void native_free(resource_t *rsc)
 void native_rsc_dependancy_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh)
 {
-	native_variant_data_t *native_data_lh =
-		(native_variant_data_t *)rsc_lh->variant_opaque;
-
-	native_variant_data_t *native_data_rh =
-		(native_variant_data_t *)rsc_rh->variant_opaque;
+	native_variant_data_t *native_data_lh = NULL;
+	native_variant_data_t *native_data_rh = NULL;
 
 	gboolean do_merge = FALSE;
 	GListPtr old_list = NULL;
@@ -580,6 +592,9 @@ void native_rsc_dependancy_rh_must(resource_t *rsc_lh, gboolean update_lh,
 	}
 	rsc_lh->effective_priority = max_pri;
 	rsc_rh->effective_priority = max_pri;
+	
+	get_native_variant_data(native_data_lh, rsc_lh);
+	get_native_variant_data(native_data_rh, rsc_rh);
 
 	if(native_data_lh->color && native_data_rh->color) {
 		do_merge = TRUE;
@@ -627,11 +642,11 @@ void native_rsc_dependancy_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 	color_t *color_lh = NULL;
 	color_t *color_rh = NULL;
 
-	native_variant_data_t *native_data_lh =
-		(native_variant_data_t *)rsc_lh->variant_opaque;
+	native_variant_data_t *native_data_lh = NULL;
+	native_variant_data_t *native_data_rh = NULL;
 
-	native_variant_data_t *native_data_rh =
-		(native_variant_data_t *)rsc_rh->variant_opaque;
+	get_native_variant_data(native_data_lh, rsc_lh);
+	get_native_variant_data(native_data_rh, rsc_rh);
 	
 	crm_debug("Processing pecs_must_not constraint");
 	/* pecs_must_not */
@@ -732,8 +747,8 @@ void
 native_agent_constraints(resource_t *rsc)
 {
 	int lpc;
-	native_variant_data_t *native_data =
-		(native_variant_data_t *)rsc->variant_opaque;
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
 
 	crm_trace("Applying RA restrictions to %s", rsc->id);
 	slist_iter(
@@ -812,9 +827,9 @@ native_choose_color(resource_t *rsc)
 {
 	int lpc = 0;
 	GListPtr sorted_colors = NULL;
-	native_variant_data_t *native_data =
-		(native_variant_data_t *)rsc->variant_opaque;
-
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data_boolean(native_data, rsc);
+	
 	if(rsc->runnable == FALSE) {
 		native_assign_color(rsc, no_color);
 	}
@@ -875,14 +890,14 @@ native_choose_color(resource_t *rsc)
 }
 
 
-gboolean
+void
 native_assign_color(resource_t *rsc, color_t *color) 
 {
 	color_t *local_color = add_color(rsc, color);
 	GListPtr intersection = NULL;
 	GListPtr old_list = NULL;
-	native_variant_data_t *native_data =
-		(native_variant_data_t *)rsc->variant_opaque;
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
 
 	native_data->color = local_color;
 	rsc->provisional = FALSE;
@@ -908,25 +923,26 @@ native_assign_color(resource_t *rsc, color_t *color)
 			crm_debug_action(
 				print_resource("Colored Resource", rsc, TRUE));
 			
-		return TRUE;
 	} else {
 		crm_err("local color was NULL");
 	}
 	
-	return FALSE;
+	return;
 }
 
-gboolean
-native_update_node_weight(rsc_to_node_t *cons, const char *id, GListPtr nodes)
+void
+native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
+			  const char *id, GListPtr nodes)
 {
-	native_variant_data_t *native_data =
-		(native_variant_data_t *)cons->rsc_lh->variant_opaque;
+	node_t *node_rh = NULL;
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
 
-	node_t *node_rh = pe_find_node(native_data->allowed_nodes, id);
+	node_rh = pe_find_node(native_data->allowed_nodes, id);
 
 	if(node_rh == NULL) {
 		crm_err("Node not found - cant update");
-		return FALSE;
+		return;
 	}
 
 	if(node_rh->fixed) {
@@ -936,7 +952,7 @@ native_update_node_weight(rsc_to_node_t *cons, const char *id, GListPtr nodes)
 			 cons->id,
 			 node_rh->details->uname,
 			 node_rh->weight);
-		return TRUE;
+		return;
 	}
 	
 	crm_verbose("Constraint %s (%s): node %s weight %f.",
@@ -957,27 +973,31 @@ native_update_node_weight(rsc_to_node_t *cons, const char *id, GListPtr nodes)
 
 	crm_debug_action(print_node("Updated", node_rh, FALSE));
 
-	return TRUE;
+	return;
 }
 
 gboolean
 native_constraint_violated(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_dependancy_t *constraint)
 {
-	native_variant_data_t *native_data_lh =
-		(native_variant_data_t *)rsc_lh->variant_opaque;
-
-	native_variant_data_t *native_data_rh =
-		(native_variant_data_t *)rsc_rh->variant_opaque;
+	native_variant_data_t *native_data_lh = NULL;
+	native_variant_data_t *native_data_rh = NULL;
 
 	GListPtr result = NULL;
-	color_t *color_lh = native_data_lh->color;
-	color_t *color_rh = native_data_rh->color;
+	color_t *color_lh = NULL;
+	color_t *color_rh = NULL;
 
 	GListPtr candidate_nodes_lh = NULL;
 	GListPtr candidate_nodes_rh = NULL;
 
 	gboolean matched = FALSE;
+
+	get_native_variant_data_boolean(native_data_lh, rsc_lh);
+	get_native_variant_data_boolean(native_data_rh, rsc_rh);
+
+	color_lh = native_data_lh->color;
+	color_rh = native_data_rh->color;
+
 	if(constraint->strength == pecs_must_not) {
 		matched = TRUE;
 	}
@@ -1039,12 +1059,12 @@ native_constraint_violated(
 /*
  * Remove any nodes with a -ve weight
  */
-gboolean
+void
 filter_nodes(resource_t *rsc)
 {
 	int lpc2 = 0;
-	native_variant_data_t *native_data =
-		(native_variant_data_t *)rsc->variant_opaque;
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
 
 	crm_debug_action(print_resource("Filtering nodes for", rsc, FALSE));
 	slist_iter(
@@ -1062,6 +1082,4 @@ filter_nodes(resource_t *rsc)
 			lpc2 = -1; /* restart the loop */
 		}
 		);
-
-	return TRUE;
 }
