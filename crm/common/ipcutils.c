@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.20 2004/03/26 14:14:25 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.21 2004/04/09 16:22:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -143,18 +143,24 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		}
 	}
 
+
+	/* There are a number of messages may not need to be ordered.
+	 * At a later point perhaps we should detect them and send them
+	 *  as unordered messages.
+	 */
 	if (all_is_good) {
 		if (host_to == NULL
 		    || strlen(host_to) == 0
 		    || strcmp("dc", sys_to) == 0) {
 			broadcast = TRUE;
 			send_result =
-				hb_fd->llc_ops->sendclustermsg(hb_fd, msg);
+				hb_fd->llc_ops->send_ordered_clustermsg(hb_fd, msg);
 		}
-		else
+		else {
 			send_result =
-				hb_fd->llc_ops->sendnodemsg(hb_fd, msg, host_to);
-
+				hb_fd->llc_ops->send_ordered_nodemsg(hb_fd, msg, host_to);
+		}
+		
 		if(send_result != HA_OK) all_is_good = FALSE;
 		
 	}
