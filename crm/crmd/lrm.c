@@ -567,14 +567,25 @@ do_lrm_rsc_op(
 	int call_id         = 0;
 	int action_timeout  = 0;
 
-	const char *class = get_xml_attr_nested(
-		msg, rsc_path, DIMOF(rsc_path) -2, XML_AGENT_ATTR_CLASS, TRUE);
-	
-	const char *type = get_xml_attr_nested(
-		msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TYPE, TRUE);
+	const char *type = NULL;
+	const char *class = NULL;
+	const char *timeout = NULL;
 
-	const char *timeout = get_xml_attr_nested(
-		msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TIMEOUT, FALSE);
+	if(rsc != NULL) {
+		class = rsc->class;
+		type = rsc->type;
+		
+	} else if(msg != NULL) {
+		class = get_xml_attr_nested(
+			msg, rsc_path, DIMOF(rsc_path) -2, XML_AGENT_ATTR_CLASS, TRUE);
+		
+		type = get_xml_attr_nested(
+			msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TYPE, TRUE);
+		
+		timeout = get_xml_attr_nested(
+			msg, rsc_path, DIMOF(rsc_path) -2, XML_ATTR_TIMEOUT, FALSE);
+	}
+	
 	
 	if(rsc == NULL) {
 		/* add it to the list */
