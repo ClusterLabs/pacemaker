@@ -539,6 +539,7 @@ void
 join_send_offer(gpointer key, gpointer value, gpointer user_data)
 {
 	const char *join_to = NULL;
+	void *a_node = NULL;
 	const oc_node_t *member = (const oc_node_t*)value;
 
 	if(member != NULL) {
@@ -558,7 +559,7 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 
 		send_msg_via_ha(fsa_cluster_conn, offer);
 
-		void *a_node = g_hash_table_lookup(join_requests, join_to);
+		a_node = g_hash_table_lookup(join_requests, join_to);
 		if(a_node == NULL) {
 			g_hash_table_insert(join_offers, crm_strdup(join_to),
 					    crm_strdup(CRMD_JOINSTATE_PENDING));
