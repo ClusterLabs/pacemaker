@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.41 2004/09/04 10:41:55 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.42 2004/10/21 16:18:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -591,7 +591,10 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 		crm_verbose("Clearing %s", XML_CIB_ATTR_STONITH);
 		xmlUnsetProp(target, XML_CIB_ATTR_STONITH);
 		any_updates = TRUE;
-	}	
+	}
+	
+	xmlUnsetProp(target, XML_CIB_ATTR_CLEAR_STONITH);
+	xmlUnsetProp(target, XML_CIB_ATTR_CLEAR_SHUTDOWN);
 	
 	if(any_updates) {
 		set_node_tstamp(target);
