@@ -496,14 +496,16 @@ do_update_cib_nodes(xmlNodePtr updates)
 		g_hash_table_foreach(fsa_membership_copy->new_members,
 				     ghash_update_cib_node, &update_data);
 	}
-	
-	xmlNodePtr fragment = create_cib_fragment(update_data.updates, NULL);
-	
-	send_request(NULL, fragment, CRM_OPERATION_UPDATE,
-		     NULL, CRM_SYSTEM_DCIB);
-	
-	free_xml(fragment);
 
+	if(update_data.updates != NULL) {
+		xmlNodePtr fragment = create_cib_fragment(update_data.updates, NULL);
+		
+		send_request(NULL, fragment, CRM_OPERATION_UPDATE,
+			     NULL, CRM_SYSTEM_DCIB);
+		
+		free_xml(fragment);
+	}
+	
 	return update_data.updates;
 
 }
