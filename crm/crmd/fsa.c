@@ -175,6 +175,8 @@ fsa_timer_t *shutdown_escalation_timmer = NULL; /*  */
 fsa_timer_t *integration_timer = NULL;
 fsa_timer_t *dc_heartbeat = NULL;
 
+int fsa_join_reannouce = 0;
+
 enum crmd_fsa_state
 s_crmd_fsa(enum crmd_fsa_cause cause,
 	   enum crmd_fsa_input initial_input,

@@ -398,10 +398,12 @@ do_read_config(long long action,
 		} else if(safe_str_eq(name, "shutdown_escalation")) {
 			shutdown_escalation_timmer->period_ms = atoi(value);
 
+		} else if(safe_str_eq(name, "join_reannouce")) {
+			fsa_join_reannouce = atoi(value);
+
 		}
 		);
-	
-	
+		
 	if(dc_heartbeat->period_ms < 1) {
 		/* sensible default */
 		dc_heartbeat->period_ms = 1000;
@@ -416,6 +418,12 @@ do_read_config(long long action,
 		/* sensible default */
 		shutdown_escalation_timmer->period_ms
 			= election_trigger->period_ms * 3 *10;/* 10 for testing */
+	}
+	if(fsa_join_reannouce < 0) {
+		fsa_join_reannouce = 100; /* how many times should we let
+					   * go by before reannoucning
+					   * ourselves to the DC
+					   */
 	}
 	
 	election_timeout->period_ms  = dc_heartbeat->period_ms * 6;

@@ -29,7 +29,7 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-
+int reannounce_count = 0;
 
 /*	 A_CL_JOIN_ANNOUNCE	*/
 
@@ -71,9 +71,15 @@ do_cl_join_announce(long long action,
 			fsa_our_dc = crm_strdup(hb_from);
 
 		} else if(safe_str_eq(hb_from, fsa_our_dc)) {
-			crm_warn("Already announced to %s", hb_from);
-			return I_NULL;
-
+			reannounce_count++;
+			if(fsa_join_reannouce > 0
+			   && reannounce_count < fsa_join_reannouce) {
+				crm_warn("Already announced to %s", hb_from);
+				return I_NULL;
+			}
+			crm_warn("Re-announcing ourselves to %s (%d times)",
+				 hb_from, reannounce_count);
+			
 		} else {
 			crm_warn("We announced ourselves to %s, but are"
 				 " now receiving DC Heartbeats from %s",
@@ -88,6 +94,7 @@ do_cl_join_announce(long long action,
 					*/
 		}
 		
+		reannounce_count = 0;
 		/* send as a broadcast */
 		send_request(NULL, NULL, CRM_OP_ANNOUNCE,
 			     NULL, CRM_SYSTEM_DC, NULL);

@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.26 2004/09/28 18:35:37 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.27 2004/09/29 19:39:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -93,6 +93,8 @@ extern fsa_timer_t *election_timeout;		/*  */
 extern fsa_timer_t *shutdown_escalation_timmer;	/*  */
 extern fsa_timer_t *dc_heartbeat;
 extern fsa_timer_t *integration_timer;
+
+extern int fsa_join_reannouce;
 
 extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;
