@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.35 2005/02/25 10:26:38 andrew Exp $ */
+/* $Id: utils.c,v 1.36 2005/03/03 19:37:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,7 +49,7 @@
 
 static uint ref_counter = 0;
 gboolean crm_assert_failed = FALSE;
-unsigned int crm_log_level = LOG_DEBUG;
+unsigned int crm_log_level = LOG_INFO;
 
 char *
 generateReference(const char *custom1, const char *custom2)
@@ -358,6 +358,14 @@ compare_version(const char *version1, const char *version2)
 	char *step1 = NULL, *step2 = NULL;
 	char *rest1 = NULL, *rest2 = NULL;
 
+	if(version1 == NULL && version2 == NULL) {
+		return 0;
+	} else if(version1 == NULL) {
+		return -1;
+	} else if(version2 == NULL) {
+		return 1;
+	}
+	
 	if(version1 != NULL) {
 		rest1 = crm_strdup(version1);
 	} else {
