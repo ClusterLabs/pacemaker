@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.6 2004/05/06 12:09:35 andrew Exp $ */
+/* $Id: crm.h,v 1.7 2004/05/23 18:13:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -104,5 +104,9 @@ typedef GSList* GSListPtr;
 					 a;				    \
 				  }
 
+#define crm_malloc(x) cl_malloc(x)
+#define crm_free(x)   if(x) { cl_free(x); x=NULL; }
+#define crm_strdup(x) cl_strdup(x)
+#include <mcheck.h>
 
 #endif
