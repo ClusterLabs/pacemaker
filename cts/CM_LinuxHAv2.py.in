@@ -92,7 +92,7 @@ class LinuxHAv2(HeartbeatCM):
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
    <configuration>
      <crm_config>'''
-	cib_options='''
+        cib_options='''
         <nvpair id="require_quorum" name="require_quorum" value="true"/>
         <nvpair id="symetric_cluster" name="symetric_cluster" value="true"/>'''
         cib_glue_1='''
@@ -116,9 +116,9 @@ class LinuxHAv2(HeartbeatCM):
             resources='''
        <resource id="DcIPaddr" class="heartbeat" type="IPaddr2" priority="1.0">
          <instance_attributes>
-           <rsc_parameters>
+           <attributes>
              <nvpair name="1" value="127.0.0.10"/>
-           </rsc_parameters>
+           </attributes>
          </instance_attributes>
        </resource>'''
             # DcIPaddr cant run anywhere but the DC
@@ -133,11 +133,11 @@ class LinuxHAv2(HeartbeatCM):
             for node in self.Env["nodes"]:
                 # These resources prefer to run on the node with the same name
                 node_resource=("""
-       <resource id="%s" class="heartbeat" type="IPaddr2" priority="1.0">
+       <resource id="%s" class="heartbeat" type="IPaddr2">
          <instance_attributes>
-           <rsc_parameters>
+           <attributes>
              <nvpair name="1" value="127.0.0.%d"/>
-           </rsc_parameters>
+           </attributes>
          </instance_attributes>
        </resource>""" %(node, ip_num))
                 ip_num=ip_num+1
@@ -156,17 +156,23 @@ class LinuxHAv2(HeartbeatCM):
                 nodelist = ""
                 for node in self.Env["nodes"]:
                     nodelist += node + " "
-		stonith_resource=("""
-       <incarnation id="DoFencing" priority="1.0" incarnation_max="%d" incarnation_node_max="1">
-         <resource id="child_DoFencing" class="stonith" type="ssh" priority="1.0">
+                stonith_resource=("""
+       <incarnation id="DoFencing" incarnation_max="%d" incarnation_node_max="1">
+         <instance_attributes>
+           <attributes>
+             <nvpair name="incarnation_max" value="%d"/>
+             <nvpair name="incarnation_node_max" value="%d"/>
+           </attributes>
+         </instance_attributes>
+         <resource id="child_DoFencing" class="stonith" type="ssh">
            <instance_attributes>
-             <rsc_parameters>
+             <attributes>
                <nvpair name="hostlist" value="%s"/>
-             </rsc_parameters>
+             </attributes>
            </instance_attributes>
          </resource>
-       </incarnation>""" %(len(nodelist), nodelist))
-		resources = resources + stonith_resource
+       </incarnation>""" %(len(nodelist), len(nodelist), nodelist))
+                resources = resources + stonith_resource
         
         self.default_cts_cib=cib_prefix + cib_options + cib_glue_1 + \
                resources + cib_glue_2 + constraints + cib_suffix
@@ -325,19 +331,19 @@ class LinuxHAv2(HeartbeatCM):
         return None
         
     def IsDC(self, node):
-	rc = 0
+        rc = 0
         status_line = self.rsh.readaline(node, self["StatusCmd"]%node)
-	if string.find(status_line, 'S_IDLE') == 0:
-	    rc = 1
-	elif string.find(status_line, 'S_INTEGRATION') == 0: 
-	    rc = 1
-	elif string.find(status_line, 'S_FINALIZE_JOIN') == 0: 
-	    rc = 1
-	elif string.find(status_line, 'S_POLICY_ENGINE') == 0: 
-	    rc = 1
-	elif string.find(status_line, 'S_TRANSITION_ENGINE') == 0: 
-	    rc = 1
-	return rc
+        if string.find(status_line, 'S_IDLE') != -1:
+            rc = 1
+        elif string.find(status_line, 'S_INTEGRATION') != -1: 
+            rc = 1
+        elif string.find(status_line, 'S_FINALIZE_JOIN') != -1: 
+            rc = 1
+        elif string.find(status_line, 'S_POLICY_ENGINE') != -1: 
+            rc = 1
+        elif string.find(status_line, 'S_TRANSITION_ENGINE') != -1: 
+            rc = 1
+        return rc
 
     def Configuration(self):
         if 0!=self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],self.Env["HAdir"]):
@@ -388,7 +394,7 @@ class HAResource(Resource):
         self.rparameters = {}
         
         attributes  = node.getElementsByTagName('instance_attributes')[0]
-        parameters  = node.getElementsByTagName('rsc_parameters')[0]
+        parameters  = node.getElementsByTagName('attributes')[0]
         nvpairs     = node.getElementsByTagName('nvpair')
         for nvpair in nvpairs:
             name=nvpair.getAttribute('name')
