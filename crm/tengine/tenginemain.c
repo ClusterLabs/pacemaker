@@ -1,4 +1,4 @@
-/* $Id: tenginemain.c,v 1.8 2004/02/26 12:58:58 andrew Exp $ */
+/* $Id: tenginemain.c,v 1.9 2004/02/29 20:24:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -159,38 +159,41 @@ init_start(void)
     IPC_Channel *crm_ch = init_client_ipc_comms("crmd",
 						default_ipc_input_dispatch,
 						NULL);
-    send_hello_message(crm_ch, "1234", CRM_SYSTEM_TENGINE, "0", "1");
+
+    if(crm_ch != NULL) {
+	    send_hello_message(crm_ch, "1234", CRM_SYSTEM_TENGINE, "0", "1");
 
     /* Create the mainloop and run it... */
-    mainloop = g_main_new(FALSE);
-    cl_log(LOG_INFO, "Starting %s", crm_system_name);
-
-    G_main_add_IPC_Channel(G_PRIORITY_LOW,
-			   crm_ch,
-			   FALSE, 
-			   default_ipc_input_dispatch,
-			   crm_ch, 
-			   default_ipc_input_destroy);
-    
-    
-    
+	    mainloop = g_main_new(FALSE);
+	    cl_log(LOG_INFO, "Starting %s", crm_system_name);
+	    
+	    
 #ifdef REALTIME_SUPPORT
-	static int  crm_realtime = 1;
-    if (crm_realtime == 1){
-		cl_enable_realtime();
-    }else if (crm_realtime == 0){
-		cl_disable_realtime();
-    }
-    cl_make_realtime(SCHED_RR, 5, 64, 64);
+	    static int  crm_realtime = 1;
+	    if (crm_realtime == 1){
+		    cl_enable_realtime();
+	    }else if (crm_realtime == 0){
+		    cl_disable_realtime();
+	    }
+	    cl_make_realtime(SCHED_RR, 5, 64, 64);
 #endif
 
-    g_main_run(mainloop);
+	    g_main_run(mainloop);
+
+    } else {
+	    cl_log(LOG_ERR, "Could not connect to the CRMd");
+    }
+
     return_to_orig_privs();
-  
+    
     if (unlink(PID_FILE) == 0) {
 		cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
     }
-    return 0;
+
+    if(crm_ch != NULL)
+	    return 0;
+
+    return 1;
 }
 
 
