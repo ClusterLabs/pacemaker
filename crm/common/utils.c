@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.26 2005/02/07 11:13:07 andrew Exp $ */
+/* $Id: utils.c,v 1.27 2005/02/10 10:57:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,8 +57,6 @@ generateReference(const char *custom1, const char *custom2)
 	int reference_len = 4;
 	char *since_epoch = NULL;
 
-	
-	
 	reference_len += 20; /* too big */
 	reference_len += 40; /* too big */
 	
@@ -234,6 +232,7 @@ crm_log_init(const char *entity)
 {
 	const char *test = "Testing log daemon connection";
 	/* Redirect messages from glib functions to our handler */
+ 	cl_malloc_forced_for_glib();
 	g_log_set_handler(NULL,
 			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
 			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
@@ -247,7 +246,6 @@ crm_log_init(const char *entity)
 	cl_log_set_entity(entity);
 	cl_log_set_facility(LOG_LOCAL7);
 
-#if 1
 	cl_log_send_to_logging_daemon(FALSE);
 	if(HA_FAIL == LogToLoggingDaemon(LOG_INFO, test, strlen(test), TRUE)) {
 		crm_warn("Not using log daemon");
@@ -256,7 +254,6 @@ crm_log_init(const char *entity)
 		cl_log_send_to_logging_daemon(TRUE);
 		crm_info("Enabled log daemon");
 	}
-#endif
 
 	CL_SIGNAL(DEBUG_INC, alter_debug);
 	CL_SIGNAL(DEBUG_DEC, alter_debug);
@@ -339,7 +336,7 @@ do_crm_log(int log_level, const char *function,
 				cl_log(log_as, "[%d] %s", log_level, buf);
 				
 			} else {
-				cl_log(log_as, "%s [%d]: %s",
+				cl_log(log_as, "fn(%s [%d]): %s",
 				       function, log_level, buf);
 			}
 
@@ -348,7 +345,7 @@ do_crm_log(int log_level, const char *function,
 				cl_log(log_as, "%s", buf);
 				
 			} else {
-				cl_log(log_as, "%s: %s", function, buf);
+				cl_log(log_as, "fn(%s): %s", function, buf);
 			}
 		}
 		
@@ -513,7 +510,7 @@ char *
 crm_strdup(const char *a)
 {
 	char *ret = NULL;
-	CRM_ASSERT(a != NULL);
+	CRM_DEV_ASSERT(a != NULL);
 	if(a != NULL) {
 		ret = cl_strdup(a);
 	} else {
