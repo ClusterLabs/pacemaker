@@ -596,12 +596,9 @@ start_subsystem(struct crm_subsystem_s*	centry)
 {
 	pid_t			pid;
 	struct stat buf;
-	int s_res,size;
-	char *cmd_with_options = NULL;
+	int s_res;
 
 	cl_log(LOG_INFO, "Starting sub-system \"%s\"", centry->command);
-
-	return TRUE;
 
 	if (centry->pid != 0) {
 		cl_log(LOG_ERR, "OOPS! client %s already running as pid %d"
@@ -650,8 +647,6 @@ start_subsystem(struct crm_subsystem_s*	centry)
 		alarm(0);
 		sleep(1);
 	}
-
-	cmd_with_options[size] = 0;
 
 	cl_log(LOG_INFO, "Executing \"%s\" (pid %d)",
 	       centry->command, (int) getpid());
