@@ -127,7 +127,11 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 		if(native->callback_channel == NULL) {
 			crm_err("Connection to callback channel failed");
 			rc = cib_connection;
+		} else if(native->callback_source == NULL) {
+			crm_err("Callback source not recorded");
+			rc = cib_connection;
 		}
+		
 		
 	} else if(rc == cib_ok
 		  && native->callback_channel->ch_status != IPC_CONNECT) {
@@ -166,7 +170,7 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 
 	if(rc == cib_ok) {
 		crm_trace("Registering callback channel with ticket %s",
-			uuid_ticket);
+			  crm_str(uuid_ticket));
 		reg_msg = ha_msg_new(2);
 		ha_msg_add(reg_msg, F_CIB_OPERATION, CRM_OP_REGISTER);
 		ha_msg_add(reg_msg, F_CIB_CALLBACK_TOKEN, uuid_ticket);
@@ -214,8 +218,11 @@ cib_native_signoff(cib_t* cib)
 		native->command_channel = NULL;
 	}
 	if (native->callback_channel != NULL) {
+		G_main_del_IPC_Channel(native->callback_source);
+#ifdef BUG
  		native->callback_channel->ops->destroy(
 			native->callback_channel);
+#endif
 		native->callback_channel = NULL;
 	}
 	cib->state = cib_disconnected;
