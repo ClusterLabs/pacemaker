@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.10 2004/07/05 13:52:02 andrew Exp $ */
+/* $Id: color.c,v 1.11 2004/07/15 15:32:49 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <sys/param.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -59,8 +60,12 @@ gboolean assign_color(resource_t *rsc, color_t *color);
 gboolean 
 apply_node_constraints(GListPtr constraints, GListPtr nodes)
 {
-	crm_verbose("Applying constraints...");
 	int lpc = 0;
+	int llpc = 0;
+	resource_t *rsc_lh = NULL;
+	GListPtr or_list = NULL;
+
+	crm_verbose("Applying constraints...");
 	slist_iter(
 		cons, rsc_to_node_t, constraints, lpc,
 		crm_debug_action(print_rsc_to_node("Applying", cons, FALSE));
@@ -75,7 +80,7 @@ apply_node_constraints(GListPtr constraints, GListPtr nodes)
 			continue;
 		}
     
-		resource_t *rsc_lh = cons->rsc_lh;
+		rsc_lh = cons->rsc_lh;
 		if(rsc_lh == NULL) {
 			crm_err("LHS of rsc_to_node (%s) is NULL", cons->id);
 			continue;
@@ -90,8 +95,8 @@ apply_node_constraints(GListPtr constraints, GListPtr nodes)
 		}
 		crm_debug_action(print_resource("before update", rsc_lh,TRUE));
 
-		int llpc = 0;
-		GListPtr or_list = node_list_or(
+		llpc = 0;
+		or_list = node_list_or(
 			rsc_lh->allowed_nodes, cons->node_list_rh, FALSE);
 		
 		pe_free_shallow(rsc_lh->allowed_nodes);

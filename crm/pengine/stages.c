@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.11 2004/07/05 13:52:03 andrew Exp $ */
+/* $Id: stages.c,v 1.12 2004/07/15 15:32:49 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <sys/param.h>
+
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -47,6 +49,7 @@ stage0(xmlNodePtr cib,
        GListPtr *stonith_list, GListPtr *shutdown_list)
 {
 //	int lpc;
+	int old_log = 0;
 	xmlNodePtr cib_nodes       = get_object_root(
 		XML_CIB_TAG_NODES,       cib);
 	xmlNodePtr cib_status      = get_object_root(
@@ -74,7 +77,6 @@ stage0(xmlNodePtr cib,
 	unpack_resources(safe_val(NULL, cib_resources, children),
 			 resources, actions, action_constraints, *nodes);
 
-	int old_log = 0;
 	old_log = set_crm_log_level(LOG_TRACE);
 	unpack_status(safe_val(NULL, cib_status, children),
 		      *nodes, *resources, actions, node_constraints);
@@ -228,8 +230,9 @@ gboolean
 stage5(GListPtr resources)
 {
 	
-	crm_verbose("filling in the nodes to perform the actions on");
 	int lpc = 0;
+
+	crm_verbose("filling in the nodes to perform the actions on");
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 
@@ -470,8 +473,8 @@ stage8(GListPtr action_sets, xmlNodePtr *graph)
 		   }
 		);
 */
-	int lpc2;
 	slist_iter(action_set, GList, action_sets, lpc,
+	           int lpc2;
 		   crm_verbose("Processing Action Set %d", lpc);
 		   xml_action_set = create_xml_node(NULL, "actions");
 		   set_xml_property_copy(
