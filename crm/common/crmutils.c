@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.9 2004/03/24 10:18:21 andrew Exp $ */
+/* $Id: crmutils.c,v 1.10 2004/04/02 12:08:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -272,4 +272,15 @@ register_with_apphb(const char *client_name,
 	// regularly tell apphb that we are alive
 	cl_log(LOG_INFO, "Setting up AppHb Heartbeat");
 	Gmain_timeout_add(wdt_interval_ms, tickle_fn, NULL);
+}
+
+
+char *
+crm_itoa(int an_int)
+{
+	int len = 32;
+	char *buffer = cl_malloc(sizeof(char)*(len+1));
+	snprintf(buffer, len, "%d", an_int);
+
+	return buffer;
 }

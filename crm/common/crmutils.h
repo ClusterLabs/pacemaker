@@ -1,4 +1,4 @@
-/* $Id: crmutils.h,v 1.5 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: crmutils.h,v 1.6 2004/04/02 12:08:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,5 +47,7 @@ extern gboolean register_with_ha(
 extern void register_with_apphb(
 	const char *client_name,
 	gboolean(*tickle_fn)(gpointer data));
+
+extern char *crm_itoa(int an_int);
 
 #endif
