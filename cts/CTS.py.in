@@ -45,11 +45,11 @@ class RemoteExec:
     '''
 
     def __init__(self):
-        #	-n: no stdin, -x: no X11
+        #        -n: no stdin, -x: no X11
         self.Command = "@SSH@ -l root -n -x"
-	# 	-f: ssh to background
+        #         -f: ssh to background
         self.CommandnoBlock = "@SSH@ -f -l root -n -x"
-	#	-B: batch mode, -q: no stats (quiet)
+        #        -B: batch mode, -q: no stats (quiet)
         self.CpCommand = "@SCP@ -B -q"
 
     def setcmd(self, rshcommand):
@@ -59,7 +59,7 @@ class RemoteExec:
         self.Command = rshcommand
 
     def _fixcmd(self, cmd):
-	return re.sub("\'", "'\\''", cmd)
+        return re.sub("\'", "'\\''", cmd)
 
     def _cmd(self, *args):
 
@@ -237,7 +237,7 @@ class LogWatcher:
         It starts looking from the place marked by setwatch().
 
         We return when the timeout is reached, or when we have found
-	ALL of the regexes that were part of the watch
+        ALL of the regexes that were part of the watch
         '''
 
         if timeout == None: timeout = self.Timeout
@@ -275,7 +275,7 @@ class ClusterManager(UserDict):
     def __InitialConditions(self):
         #if os.geteuid() != 0:
         #  raise ValueError("Must Be Root!")
-	None
+        None
 
     def _finalConditions(self):
         for key in self.keys():
@@ -287,19 +287,19 @@ class ClusterManager(UserDict):
         self.Env = Environment
         self.__InitialConditions()
         self.data = {
-            "up"	     : "up",	# Status meaning up
-            "down"	     : "down",  # Status meaning down
+            "up"             : "up",        # Status meaning up
+            "down"           : "down",  # Status meaning down
             "StonithCmd"     : "@sbindir@/stonith -t baytech -p '10.10.10.100 admin admin' %s",
-            "DeadTime"	     : 30,	# Max time to detect dead node...
-            "StartTime"	     : 90,	# Max time to start up
+            "DeadTime"       : 30,        # Max time to detect dead node...
+            "StartTime"      : 90,        # Max time to start up
     #
     # These next values need to be overridden in the derived class.
     #
-            "Name"	     : None,
-            "StartCmd"	     : None,
-            "StopCmd"	     : None,
-            "StatusCmd"	     : None,
-            "RereadCmd"	     : None,
+            "Name"           : None,
+            "StartCmd"       : None,
+            "StopCmd"        : None,
+            "StatusCmd"      : None,
+            "RereadCmd"      : None,
             "StartDRBDCmd"   : None,
             "StopDRBDCmd"    : None,
             "StatusDRBDCmd"  : None,
@@ -314,7 +314,7 @@ class ClusterManager(UserDict):
             "Pat:We_stopped"   : None,
             "Pat:They_stopped" : None,
 
-            "BadRegexes"     : None,	# A set of "bad news" regexes
+            "BadRegexes"     : None,        # A set of "bad news" regexes
                                         # to apply to the log
         }
         self.rsh = RemoteExec()
@@ -324,8 +324,8 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus={}
 
     def errorstoignore(self):
-	'''Return list of errors which are 'normal' and should be ignored'''
-	return []
+        '''Return list of errors which are 'normal' and should be ignored'''
+        return []
 
     def log(self, args):
         self.Env.log(args)
@@ -360,7 +360,7 @@ class ClusterManager(UserDict):
         '''Start up the cluster manager on a given node'''
 
         self.debug("Starting %s on node %s"
-		  %	(self["Name"], node))
+                  %        (self["Name"], node))
 
         if node == self.OurNode or self.upcount() < 1:
             pat = (self["Pat:We_started"] % node)
@@ -368,24 +368,24 @@ class ClusterManager(UserDict):
             pat = (self["Pat:They_started"] % node)
 
         watch = CTS.LogWatcher(self["LogFileName"], [pat]
-        ,	timeout=self["StartTime"]+10)
+        ,        timeout=self["StartTime"]+10)
         watch.setwatch()
 
         rc=self.rsh(node, self["StartCmd"])
         if rc != 0:
             self.log ("Could not start %s on node %s"
-            %	(self["Name"], node))
-	    return None
+            %        (self["Name"], node))
+            return None
 
-	self.ShouldBeStatus[node]=self["up"]
+        self.ShouldBeStatus[node]=self["up"]
 
         if watch.look():
             return 1
 
-	self.CM.log("START FAILURE: did not find pattern " + pat)
-	self.CM.log("START TIMEOUT = %d " % self.CM["StartTime"])
-	
-	return None
+        self.CM.log("START FAILURE: did not find pattern " + pat)
+        self.CM.log("START TIMEOUT = %d " % self.CM["StartTime"])
+        
+        return None
 
     def StartaCMnoBlock(self, node):
 
@@ -401,7 +401,7 @@ class ClusterManager(UserDict):
         '''Stop the cluster manager on a given node'''
 
         self.debug("Stopping %s on node %s"
-		  %	(self["Name"], node))
+                  %        (self["Name"], node))
 
         rc=self.rsh(node, self["StopCmd"])
         if rc == 0:
@@ -409,7 +409,7 @@ class ClusterManager(UserDict):
             return 1
         else:
             self.log ("Could not stop %s on node %s"
-            %	(self["Name"], node))
+            %        (self["Name"], node))
         return None
 
     def StopaCMnoBlock(self, node):
@@ -432,7 +432,7 @@ class ClusterManager(UserDict):
             return 1
         else:
             self.log ("Could not force %s on node %s to reread its config"
-            %	(self["Name"], node))
+            %        (self["Name"], node))
         return None
 
 
@@ -448,16 +448,16 @@ class ClusterManager(UserDict):
                 if self.ShouldBeStatus[node] != self["up"]:
                     self.log(
                     "Node status for %s is %s but we think it should be %s"
-                    %	(node, self["up"], self.ShouldBeStatus[node]))
+                    %        (node, self["up"], self.ShouldBeStatus[node]))
             else:
                 if self.ShouldBeStatus[node] != self["down"]:
                     self.log(
                     "Node status for %s is %s but we think it should be %s"
-                    %	(node, self["down"], self.ShouldBeStatus[node]))
-        except KeyError:	pass
+                    %        (node, self["down"], self.ShouldBeStatus[node]))
+        except KeyError:        pass
 
-        if ret:	self.ShouldBeStatus[node]=self["up"]
-        else:	self.ShouldBeStatus[node]=self["down"]
+        if ret:        self.ShouldBeStatus[node]=self["up"]
+        else:        self.ShouldBeStatus[node]=self["down"]
         return ret
 
     def startall(self, nodelist=None):
@@ -551,7 +551,7 @@ class ClusterManager(UserDict):
             raise ValueError("Directory [" + fromdir + "] not accessible (rwx)")
 
         for node in self.Env["nodes"]:
-            if node == self.OurNode:	continue
+            if node == self.OurNode:        continue
             self.log("Syncing test configurations on " + node)
             # Perhaps I ought to use rsync...
             self.rsh.cp("-r", fromdir, node + ":" + fromdir)
@@ -631,20 +631,20 @@ class Resource:
         return None
 
     def __repr__(self):
-	if (self.Instance and len(self.Instance) > 1):
-		return "{" + self.ResourceType + "::" + self.Instance + "}"
-	else:
-		return "{" + self.ResourceType + "}"
+        if (self.Instance and len(self.Instance) > 1):
+                return "{" + self.ResourceType + "::" + self.Instance + "}"
+        else:
+                return "{" + self.ResourceType + "}"
 
 class ScenarioComponent:
 
     def __init__(self, Env):
-	self.Env = Env
+        self.Env = Env
 
     def IsApplicable(self):
         '''Return TRUE if the current ScenarioComponent is applicable
-	in the given LabEnvironment given to the constructor.
-	'''
+        in the given LabEnvironment given to the constructor.
+        '''
 
         raise ValueError("Abstract Class member (IsApplicable)")
 
@@ -655,8 +655,8 @@ class ScenarioComponent:
     def TearDown(self, CM):
         '''Tear down (undo) the given ScenarioComponent'''
         raise ValueError("Abstract Class member (Setup)")
-	
-	
+        
+        
 
 class Scenario:
     (
@@ -679,7 +679,7 @@ A partially set up scenario is torn down if it fails during setup.
 
             if not issubclass(comp.__class__, ScenarioComponent):
                 raise ValueError("Init value must be subclass of"
-		" ScenarioComponent")
+                " ScenarioComponent")
         self.Components = Components
 
 
@@ -733,17 +733,17 @@ as they might have been rebooted or crashed for some reason beforehand.
 
 
     def _IsNodeBooted(self, node):
-	'''Return TRUE if the given node is booted (responds to pings'''
+        '''Return TRUE if the given node is booted (responds to pings'''
         return os.system("@PING@ -nq -c1 @PING_TIMEOUT_OPT@ %s >/dev/null 2>&1" % node) == 0
 
 
     def _WaitForNodeToComeUp(self, node, Timeout=300):
 
-	'''Return TRUE when given node comes up, or FALSE if timeout'''
+        '''Return TRUE when given node comes up, or FALSE if timeout'''
 
         timeout=Timeout
         anytimeouts=0
-	while timeout > 0:
+        while timeout > 0:
             if self._IsNodeBooted(node):
                 if anytimeouts:
                      # Fudge to wait for the system to finish coming up
@@ -762,7 +762,7 @@ as they might have been rebooted or crashed for some reason beforehand.
         return None
 
     def _WaitForAllNodesToComeUp(self, nodes, timeout=300):
-	'''Return TRUE when all nodes come up, or FALSE if timeout'''
+        '''Return TRUE when all nodes come up, or FALSE if timeout'''
 
         for node in nodes:
             if not self._WaitForNodeToComeUp(node, timeout):
@@ -778,7 +778,7 @@ as they might have been rebooted or crashed for some reason beforehand.
             return None
         CM.prepare()
 
-        #	Clear out the cobwebs ;-)
+        #        Clear out the cobwebs ;-)
 
         self.TearDown(CM)
 
@@ -821,11 +821,11 @@ According to the manual page for ping:
 ''' )
 
     def __init__(self, Env):
-	self.Env = Env
+        self.Env = Env
 
     def IsApplicable(self):
         '''PingFests are always applicable ;-)
-	'''
+        '''
 
         return 1
 
@@ -834,7 +834,7 @@ According to the manual page for ping:
 
         self.PingSize=1024
         if CM.Env.has_key("PingSize"):
-		self.PingSize=CM.Env["PingSize"]
+                self.PingSize=CM.Env["PingSize"]
 
         CM.log("Starting %d byte flood pings" % self.PingSize)
 
@@ -851,7 +851,7 @@ According to the manual page for ping:
         for pid in self.PingPids:
             if pid != None:
                 CM.log("Stopping ping process %d" % pid)
-	        os.kill(pid, signal.SIGKILL)
+                os.kill(pid, signal.SIGKILL)
 
     def _pingchild(self, node):
 

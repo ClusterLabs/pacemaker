@@ -23,7 +23,7 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import time
+import time, os, popen2, string
 import CTS
 import os
 import popen2
@@ -36,9 +36,16 @@ class ClusterAudit:
 
     def __call__(self):
          raise ValueError("Abstract Class member (__call__)")
+    
+    def is_applicable(self):
+        '''Return TRUE if we are applicable in the current test configuration'''
+        raise ValueError("Abstract Class member (is_applicable)")
+        return 1
 
     def name(self):
          raise ValueError("Abstract Class member (name)")
+
+AllAuditClasses = [ ]
 
 class ResourceAudit(ClusterAudit):
 
@@ -71,51 +78,51 @@ class ResourceAudit(ClusterAudit):
 
             for resource in group:
 
-		#
-		# _doauditRsc returns the set of nodes serving
-		# the given resource.  This is normally a single node.
-		#
+                #
+                # _doauditRsc returns the set of nodes serving
+                # the given resource.  This is normally a single node.
+                #
 
                 ResourceNodes = self._doauditRsc(resource)
 
 
-		#	Is the resource served without quorum present?
+                #        Is the resource served without quorum present?
 
                 if not self.CM.HasQuorum() and len(ResourceNodes) != 0:
 
                     result.append("Resource " + repr(resource)
-                    +	" active without Quorum: "
-                    +	repr(ResourceNodes))
+                    +        " active without Quorum: "
+                    +        repr(ResourceNodes))
 
-		#	Is the resource served at all?
+                #        Is the resource served at all?
 
                 elif len(ResourceNodes) == 0 and self.CM.HasQuorum():
                     result.append("Resource " + repr(resource)
-                    +	" not served anywhere.")
+                    +        " not served anywhere.")
 
-		# Is the resource served too many times?
+                # Is the resource served too many times?
 
                 elif len(ResourceNodes) > 1:
                     result.append("Resource " + repr(resource)
-                    +	" served too many times: "
-                    +	repr(ResourceNodes))
+                    +        " served too many times: "
+                    +        repr(ResourceNodes))
                     self.CM.log("Resource " + repr(resource)
-                    +	" served too many times: "
-                    +	repr(ResourceNodes))
+                    +        " served too many times: "
+                    +        repr(ResourceNodes))
                     Fatal = 1
                 elif GrpServedBy == None:
                     GrpServedBy = ResourceNodes
 
-		# Are all the members of the Rsc Grp served by the same node?
+                # Are all the members of the Rsc Grp served by the same node?
 
                 elif GrpServedBy != ResourceNodes:
                     result.append("Resource group resources" + repr(resource)
-                    +	" running on different nodes: "
-                    +	repr(ResourceNodes)+" vs "+repr(GrpServedBy)
+                    +        " running on different nodes: "
+                    +        repr(ResourceNodes)+" vs "+repr(GrpServedBy)
                     +   "(otherRsc = " + repr(lastResource) + ")")
                     self.CM.log("Resource group resources" + repr(resource)
-                    +	" running on different nodes: "
-                    +	repr(ResourceNodes)+" vs "+repr(GrpServedBy)
+                    +        " running on different nodes: "
+                    +        repr(ResourceNodes)+" vs "+repr(GrpServedBy)
                     +   "(otherRsc = " + repr(lastResource) + ")")
                     Fatal = 1
 
@@ -123,15 +130,15 @@ class ResourceAudit(ClusterAudit):
                 self.CM.Env["SuppressMonitoring"]:
                     continue
 
-		# Is the resource working correctly ?
+                # Is the resource working correctly ?
 
                 if not Fatal and len(ResourceNodes) == 1:
                     beforearpchild = popen2.Popen3("date;/sbin/arp -n|cut -c1-15,26-50,75-"
-                    ,		None)
+                    ,                None)
                     beforearpchild.tochild.close()   # /dev/null
                     if not resource.IsWorkingCorrectly(ResourceNodes[0]):
                         afterarpchild = popen2.Popen3("/sbin/arp -n|cut -c1-15,26-50,75-"
-                        ,		None)
+                        ,                None)
                         afterarpchild.tochild.close()   # /dev/null
                         result.append("Resource " + repr(resource)
                         +  " not operating properly."
@@ -147,7 +154,7 @@ class ResourceAudit(ClusterAudit):
                         try:
                             beforearpchild.wait()
                             afterarpchild.wait()
-                        except OSError:	pass
+                        except OSError:        pass
                         afterarpchild.fromchild.close()
                     beforearpchild.fromchild.close()
                     
@@ -192,8 +199,347 @@ class ResourceAudit(ClusterAudit):
             self.CM.log("Fatal Audit error: " + repr(audresult))
 
         return (len(audresult) == 0)
+    
+    def is_applicable(self):
+        if self.CM["Name"] == "heartbeat":
+            return 1
+        return 0
 
-AllAuditClasses = [ ResourceAudit ]
+AllAuditClasses.append(ResourceAudit)
+
+class HAResourceAudit(ClusterAudit):
+    def __init__(self, cm):
+        self.CM = cm
+
+    def _RscRunningNodes(self, resource):
+        ResourceNodes = []
+        for node in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                if resource.IsRunningOn(node):
+                    ResourceNodes.append(node)
+        return ResourceNodes
+
+    def __call__(self):
+        passed = 1
+        NodeofRsc = {}
+
+        #Make sure the resouces are running on one and only one node
+        Resources = self.CM.Resources()
+        for resource in Resources :
+            RunningNodes = self._RscRunningNodes(resource)
+            NodeofRsc[resource.rid]=RunningNodes
+            if len(RunningNodes) == 0 :
+                print resource.rid + " isn't running anywhere"
+                passed = 0
+            if len(RunningNodes) > 1:
+                print resource.rid + " is running more than once: " \
+                      + str(RunningNodes)
+                passed = 0
+
+        #Make sure the resouces with "must","placement" constraint are running on the same node
+        Dependancies = self.CM.Dependancies()
+        for dependancy in Dependancies:
+            if dependancy["type"] == "placement" and dependancy["strength"] == "must":
+                if NodeofRsc[dependancy["from"]] != NodeofRsc[dependancy["to"]]:
+                    print dependancy["from"] + " and " + dependancy["to"] + " should be run on same node"
+                    passed = 0
+                 
+        return passed
+    
+    def is_applicable(self):
+        if self.CM["Name"] == "linux-ha-v2":
+            return 1
+        return 0
+
+    def name(self):
+        return "HAResourceAudit"
+    
+#AllAuditClasses.append(HAResourceAudit)
+
+class CrmdStateAudit(ClusterAudit):
+    def __init__(self, cm):
+        self.CM = cm
+        self.Stats = {"calls":0
+        ,        "success":0
+        ,        "failure":0
+        ,        "skipped":0
+        ,        "auditfail":0}
+
+    def has_key(self, key):
+        return self.Stats.has_key(key)
+
+    def __setitem__(self, key, value):
+        self.Stats[key] = value
+        
+    def __getitem__(self, key):
+        return self.Stats[key]
+
+    def incr(self, name):
+        '''Increment (or initialize) the value associated with the given name'''
+        if not self.Stats.has_key(name):
+            self.Stats[name]=0
+        self.Stats[name] = self.Stats[name]+1
+
+    def __call__(self):
+        self.CM.debug("Do Audit %s"%self.name())
+        passed = 1
+        dc_list = []
+        up_count = 0
+        node_count = 0
+        up_are_down = 0
+        down_are_up = 0
+        slave_count = 0
+        unstable_list = []
+
+        for node in self.CM.Env["nodes"]:
+            out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
+            ret = (string.find(out, 'ok') != -1)
+            node_count = node_count + 1
+            if ret:
+                up_count = up_count + 1
+                if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+                    self.CM.log(
+                        "Node %s %s when it should be %s"
+                        %        (node, self.CM["up"], self.CM.ShouldBeStatus[node]))
+                    self.CM.ShouldBeStatus[node] = self.CM["up"]
+                    down_are_up = down_are_up + 1
+
+                ret= (string.find(out, 'S_NOT_DC') != -1)
+                if ret:
+                    slave_count = slave_count + 1
+                else:        
+                    ret= (string.find(out, 'S_IDLE') != -1)
+                    if ret:
+                        dc_list.append(node)
+                    else:
+                        unstable_list.append(out)
+            else:
+                if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                    self.CM.log(
+                        "Node %s %s when it should be %s"
+                        %        (node, self.CM["down"], self.CM.ShouldBeStatus[node]))
+                    self.CM.ShouldBeStatus[node] = self.CM["down"]
+                    up_are_down = up_are_down + 1
+
+#        if up_count > 0 and len(dc_list) != 1:
+#            passed = 0
+#            self.CM.log("Exactly 1 node should be DC.  We found %d (of %d): %s"
+#                     %(len(dc_list), up_count, str(dc_list)))
+
+        if len(unstable_list) > 0:
+            passed = 0
+            self.CM.log("Cluster is not stable: %d (of %d)." 
+                     %(len(unstable_list), up_count))
+            for status in unstable_list:
+                self.CM.log("%s" %(status))
+
+        if up_are_down > 0:
+            passed = 0
+            self.CM.log("%d (of %d) nodes expected to be up were down."
+                     %(up_are_down, node_count))
+
+        if down_are_up > 0:
+            passed = 0
+            self.CM.log("%d (of %d) nodes expected to be down were up." 
+                     %(down_are_up, node_count))
+            
+        return passed
+
+    def name(self):
+        return "CrmdStateAudit"
+    
+    def is_applicable(self):
+        if self.CM["Name"] == "linux-ha-v2":
+            return 1
+        return 0
+
+AllAuditClasses.append(CrmdStateAudit)
+
+class PartitionAudit(ClusterAudit):
+    def __init__(self, cm):
+        self.CM = cm
+        self.Stats = {"calls":0
+        ,        "success":0
+        ,        "failure":0
+        ,        "skipped":0
+        ,        "auditfail":0}
+        self.NodeEpoche={}
+        self.NodeState={}
+        self.NodeQuorum={}
+        self.NodeCCM={}
+
+    def has_key(self, key):
+        return self.Stats.has_key(key)
+
+    def __setitem__(self, key, value):
+        self.Stats[key] = value
+        
+    def __getitem__(self, key):
+        return self.Stats[key]
+
+    def incr(self, name):
+        '''Increment (or initialize) the value associated with the given name'''
+        if not self.Stats.has_key(name):
+            self.Stats[name]=0
+        self.Stats[name] = self.Stats[name]+1
+
+    def __call__(self):
+        self.CM.debug("Do Audit %s"%self.name())
+        passed = 1
+        nodes_up = 0
+        ccm_partitions = []
+
+        for node in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[node] != self.CM["up"]:
+                self.NodeCCM[node]    = None
+                self.NodeState[node]  = None
+                self.NodeEpoche[node] = None
+                self.NodeQuorum[node] = None
+            else:
+                nodes_up = nodes_up + 1
+#                self.PS_State[node] = os.system("@SSH@ root@%s ps -C crmd" %(node))
+                self.NodeQuorum[node] = self.CM.rsh.readaline(
+                    node, self.CM["QuorumCmd"])
+                self.NodeCCM[node] = self.CM.rsh.readaline(
+                    node, self.CM["ParitionCmd"])
+                self.NodeEpoche[node] = self.CM.rsh.readaline(
+                    node, self.CM["EpocheCmd"])
+                self.NodeState[node] = self.CM.rsh.readaline(
+                    node, self.CM["StatusCmd"]%node)
+
+                if len(self.NodeState[node]) > 1:
+                    self.NodeState[node] = self.NodeState[node][:-1]
+
+                if len(self.NodeEpoche[node]) > 0:
+                    self.NodeEpoche[node] = int(self.NodeEpoche[node][:-1])
+
+                if len(self.NodeQuorum[node]) > 1:
+                    self.NodeQuorum[node] = self.NodeQuorum[node][:-1]
+
+                if len(self.NodeCCM[node]) > 1:
+                    self.NodeCCM[node] = self.NodeCCM[node][:-1]
+                    found = 0
+                    for partition in ccm_partitions:
+                        if partition == self.NodeCCM[node]:
+                            found = 1
+                    if found == 0:
+                        ccm_partitions.append(self.NodeCCM[node])
+
+        if nodes_up == 0:
+            return 1
+
+#        if len(ccm_partitions) > 1:
+#            self.CM.log("%d cluster partitions detected:" %len(ccm_partitions))
+#            for partition in ccm_partitions:
+#                self.CM.log("\t %s" %partition)
+
+        for partition in ccm_partitions:
+            partition_passed = 0
+            if self.audit_partition(partition) == 0:
+                passed = 0
+
+        return passed
+
+    def audit_partition(self, partition):
+        passed = 0
+        dc_found = []
+        dc_allowed_list = []
+        lowest_epoche = None
+        node_list = partition.split()
+
+        self.CM.debug("Auditing partition: %s" %(partition))
+        for node in node_list:
+            if not self.NodeEpoche[node]:
+                self.CM.log("Warn: Node %s appeared out of nowhere" %(node))
+# not in itself a reason to fail the audit (not what we're checking for in this one)
+#                passed = 0
+                self.CM.ShouldBeStatus[node] = self.CM["up"]
+                self.NodeState[node] = self.CM.rsh.readaline(
+                    node, self.CM["StatusCmd"]%node)
+                if len(self.NodeState[node]) > 1:
+                    self.NodeState[node] = self.NodeState[node][:-1]
+
+            elif lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
+                lowest_epoche = self.NodeEpoche[node]
+                
+        for node in node_list:
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                if self.is_node_dc(self.NodeState[node]):
+                    dc_found.append(node)
+                    if self.NodeEpoche[node] == lowest_epoche:
+                        passed = 1
+                    else:
+                        self.CM.log("DC %s is not the oldest node (%d vs. %d)"
+                            %(node, self.NodeEpoche[node], lowest_epoche))
+                        passed = 0
+
+        if len(dc_found) == 0:
+                self.CM.log("DC not found on any of the %d allowed nodes: %s (of %s)"
+                            %(len(dc_allowed_list), str(dc_allowed_list), str(node_list)))
+        elif len(dc_found) > 1:
+                self.CM.log("%d DCs (%s) found in cluster partition: %s"
+                            %(len(dc_found), str(dc_found), str(node_list)))
+                passed = 0
+
+        if passed == 0:
+            for node in node_list:
+                if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                    self.CM.log("epoche %s : %s"  
+                                %(self.NodeEpoche[node], self.NodeState[node]))
+
+        if self.CM.Env["CIBResource"] == 1 and len(dc_found) > 0 and self.NodeQuorum[dc_found[0]]:
+            if self.audit_dc_resources(node_list, dc_found) == 0:
+                passed = 0
+
+            Resources = self.CM.Resources()
+            for node in node_list:
+                for resource in Resources:
+                    if resource.rid == node:
+                        if resource.IsRunningOn(node) == 0:
+                            self.CM.log("Node %s is not running its own resource" %(node))
+                            passed = 0
+        elif self.CM.Env["CIBResource"] == 1:
+            # no quorum means no resource management
+            self.CM.debug("Not auditing resources - no quorum")
+
+        return passed
+
+    def audit_dc_resources(self, node_list, dc_list):
+        passed = 1
+        Resources = self.CM.Resources()
+        for resource in Resources:
+            if resource.rid == "DcIPaddr":
+                self.CM.debug("Auditing resource: %s" %(resource))
+                # All DCs are running the resource
+                for dc in dc_list:
+                    if self.NodeQuorum[dc]:
+                        if resource.IsRunningOn(dc) == 0:
+                            self.CM.log("Resource %s not running on DC: %s" 
+                                        %(resource, dc))
+                            passed = 0
+
+                # All nodes running the resource are DCs
+                for node in node_list:
+                    if resource.IsRunningOn(node):
+                        if self.is_node_dc(self.NodeState[node]) == 0:
+                            self.CM.log("Resource %s is running on non-DC node %s"  
+                                        %("DcIPaddr", node))
+                            passed = 0
+
+        return passed
+        
+    def is_node_dc(self, status_line):
+        return (string.find(status_line, 'S_IDLE') != -1) 
+
+    def name(self):
+        return "PartitionAudit"
+    
+    def is_applicable(self):
+        if self.CM["Name"] == "linux-ha-v2":
+            return 1
+        return 0
+
+AllAuditClasses.append(PartitionAudit)
 
 def AuditList(cm):
     result = []
