@@ -14,6 +14,11 @@ enum con_type {
 	base_weight
 };
 
+enum node_type {
+	node_ping,
+	node_member
+};
+
 enum con_strength {
 	must,
 	should,
@@ -22,17 +27,24 @@ enum con_strength {
 };
 
 enum con_modifier {
-  modifier_none,
+	modifier_none,
 	set,
 	inc,
 	dec
 };
-  
+
+struct node_shared_s { 
+		char	*id; 
+		gboolean online;
+		GHashTable *attrs;
+		enum node_type type;
+}; 
+
 struct node_s { 
 		char	*id; 
 		float	weight; 
 		gboolean fixed;
-		GHashTable *attrs;
+		struct node_shared_s *details;
 }; 
  
 struct color_shared_s {
@@ -82,7 +94,7 @@ extern gboolean stage1(GSListPtr nodes);
 extern gboolean stage2(GSListPtr sorted_rsc, 
 		 GSListPtr sorted_nodes,         
 		 GSListPtr operations);
-extern gboolean stage3(GSListPtr colors);
+extern gboolean stage3(void);
 extern gboolean stage4(GSListPtr colors);
 extern gboolean stage5(GSListPtr resources);
 
@@ -100,12 +112,18 @@ extern color_t *current_color;
 				  }
 
 extern gboolean pe_debug;
+extern gboolean pe_debug_saved;
 #define pdebug(x) if(pe_debug) {		\
 		x;				\
 	}
 
+#define pe_debug_on()  pe_debug_saved = pe_debug; pe_debug = TRUE;
+#define pe_debug_off() pe_debug_saved = pe_debug; pe_debug = FALSE;
+#define pe_debug_restore() pe_debug = pe_debug_saved;
+
 extern void print_node(const char *pre_text,
-		       node_t *node);
+		       node_t *node,
+		       gboolean details);
 
 extern void print_resource(const char *pre_text,
 			   resource_t *rsc,

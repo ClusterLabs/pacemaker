@@ -7,7 +7,7 @@
 
 #include <pengine.h>
 
-color_t *create_color(GSListPtr nodes);
+color_t *create_color(GSListPtr nodes, gboolean create_only);
 void add_color_to_rsc(resource_t *rsc, color_t *color);
 
 gint sort_rsc_priority(gconstpointer a, gconstpointer b);
@@ -67,8 +67,8 @@ invert_constraint(rsc_constraint_t *constraint)
 	inverted_con->rsc_rh = constraint->rsc_lh;
 
 	inverted_con->node_list_rh = NULL;
-	inverted_con->modifier = modifier_none;
-	inverted_con->weight = 0.0;
+	inverted_con->modifier     = modifier_none;
+	inverted_con->weight       = 0.0;
   
 	pdebug(print_cons("Inverted constraint", inverted_con, FALSE));
 	return inverted_con;
@@ -80,9 +80,9 @@ copy_constraint(rsc_constraint_t *constraint)
 	rsc_constraint_t *copied_con =
 		cl_malloc(sizeof(rsc_constraint_t));
 
-	copied_con->id = cl_strdup(constraint->id);
-	copied_con->type = constraint->type;
-	copied_con->strength = constraint->strength;
+	copied_con->id		 = cl_strdup(constraint->id);
+	copied_con->type	 = constraint->type;
+	copied_con->strength	 = constraint->strength;
 	copied_con->is_placement = constraint->is_placement;
 
 	// swap the direction
@@ -90,8 +90,8 @@ copy_constraint(rsc_constraint_t *constraint)
 	copied_con->rsc_rh = constraint->rsc_rh;
 
 	copied_con->node_list_rh = constraint->node_list_rh;
-	copied_con->modifier = constraint->modifier;
-	copied_con->weight = constraint->weight;
+	copied_con->modifier	 = constraint->modifier;
+	copied_con->weight	 = constraint->weight;
   
 	return copied_con;
 }
@@ -232,16 +232,19 @@ node_list_dup(GSListPtr list1)
 {
 	GSListPtr result = NULL;
 	int lpc = 0;
-	if(list1 == NULL) {
-		return NULL;
-	}
-	for(lpc = 0; lpc < g_slist_length(list1); lpc++) {
-		node_t *this_node = (node_t*)g_slist_nth_data(list1, lpc);
+	slist_iter(
+		this_node, node_t, list1, lpc,
 		node_t *new_node = node_copy(this_node);
 		if(new_node != NULL) {
 			result = g_slist_append(result, new_node);
 		}
-	}
+		);
+
+	pdebug(cl_log(LOG_DEBUG, "node list dup %p", result)); 
+	pdebug(slist_iter(
+		       this_node, node_t, result, lpc,
+		       print_node("dup", this_node, TRUE);
+		       ));
   
 	return result;
 }
@@ -250,42 +253,45 @@ node_t *
 node_copy(node_t *this_node) 
 {
 	if(this_node == NULL) {
-		print_node("Failed copy of", this_node);
+		print_node("Failed copy of", this_node, TRUE);
 		return NULL;
 	}
 	node_t *new_node = cl_malloc(sizeof(node_t));
 	new_node->id     = cl_strdup(this_node->id); 
 	new_node->weight = this_node->weight; 
-	new_node->fixed  = this_node->fixed; 
+	new_node->fixed  = this_node->fixed;
+	new_node->details = this_node->details; 
 
 	return new_node;
 }
 
 static int color_id = 0;
 color_t *
-create_color(GSListPtr nodes)
+create_color(GSListPtr nodes, gboolean create_only)
 {
 	int lpc = 0;
 	color_t *new_color = cl_malloc(sizeof(color_t));
+
 	new_color->id = color_id++;
-	new_color->local_weight = 0; // not used here
+	new_color->local_weight = 1.0;
 	new_color->details = cl_malloc(sizeof(struct color_shared_s));
 	new_color->details->chosen_node = NULL; 
 	new_color->details->candidate_nodes = node_list_dup(nodes);
-    
-	colors = g_slist_append(colors, new_color);      
 
-	pdebug(print_color("Created color", new_color, FALSE));
-	/*  Add any new color to the list of candidate_colors for
-	 * resources that havent been decided yet 
-	 */
-	for(lpc = 0; lpc < g_slist_length(rsc_list); lpc++) {
-		resource_t *rh_resource = 
-			(resource_t*)g_slist_nth_data(rsc_list, lpc);
-		add_color_to_rsc(rh_resource, new_color);
+	pdebug(print_color("Created color", new_color, TRUE));
+
+	if(create_only == FALSE) {
+		colors = g_slist_append(colors, new_color);      
+		
+		/*  Add any new color to the list of candidate_colors for
+		 * resources that havent been decided yet 
+		 */
+		for(lpc = 0; lpc < g_slist_length(rsc_list); lpc++) {
+			resource_t *rh_resource = 
+				(resource_t*)g_slist_nth_data(rsc_list, lpc);
+			add_color_to_rsc(rh_resource, new_color);
+		}
 	}
-
-	
 	
 	return new_color;
 }
@@ -315,9 +321,13 @@ filter_nodes(resource_t *rsc)
 		if(node == NULL) {
 			cl_log(LOG_ERR, "Invalid NULL node");
 			
-		} else if(node->weight < 0.0) {
-			pdebug(print_node("Removing", node));
-			rsc->allowed_nodes = g_slist_remove(rsc->allowed_nodes,node);
+		} else if(node->weight < 0.0
+			  || node->details->online == FALSE
+			  || node->details->type == node_ping) {
+			pdebug(print_node("Removing", node, FALSE));
+			rsc->allowed_nodes =
+				g_slist_remove(rsc->allowed_nodes,node);
+			lpc2--;
 		}
 		);
 

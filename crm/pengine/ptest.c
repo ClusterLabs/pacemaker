@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.4 2004/04/27 21:40:10 andrew Exp $ */
+/* $Id: ptest.c,v 1.5 2004/04/28 14:16:34 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -52,6 +52,9 @@
 #include <getopt.h>
 #include <glib.h>
 #include <pengine.h>
+
+void print_str_str(gpointer key, gpointer value, gpointer user_data);
+
 
 int
 main(int argc, char **argv)
@@ -131,12 +134,11 @@ main(int argc, char **argv)
 
 	cl_log(LOG_INFO, "========= Nodes =========");
 	slist_iter(node, node_t, node_list, lpc,
-		   print_node(NULL, node));
+		   print_node(NULL, node, TRUE));
 
 	cl_log(LOG_INFO, "========= Resources =========");
 	slist_iter(resource, resource_t, rsc_list, lpc,
-		   print_resource(NULL, resource, FALSE));
-    
+		   print_resource(NULL, resource, TRUE));    
 
 	cl_log(LOG_INFO, "========= Constraints =========");
 	slist_iter(constraint, rsc_constraint_t, cons_list, lpc,
@@ -147,7 +149,7 @@ main(int argc, char **argv)
 
 	cl_log(LOG_INFO, "========= Nodes =========");
 	slist_iter(node, node_t, node_list, lpc,
-		   print_node(NULL, node));
+		   print_node(NULL, node, TRUE));
 
 	cl_log(LOG_INFO, "========= Resources =========");
 	slist_iter(resource, resource_t, rsc_list, lpc,
@@ -158,7 +160,7 @@ main(int argc, char **argv)
 
 	cl_log(LOG_INFO, "========= Nodes =========");
 	slist_iter(node, node_t, node_list, lpc,
-		   print_node(NULL, node));
+		   print_node(NULL, node, TRUE));
 
 	cl_log(LOG_INFO, "========= Resources =========");
 	slist_iter(resource, resource_t, rsc_list, lpc,
@@ -170,10 +172,10 @@ main(int argc, char **argv)
   
 	cl_log(LOG_INFO, "========= Stonith List =========");
 	slist_iter(node, node_t, stonith_list, lpc,
-		   print_node(NULL, node));
+		   print_node(NULL, node, FALSE));
   
 	cl_log(LOG_INFO, "=#=#=#=#= Stage 3 =#=#=#=#=");
-	stage3(colors);
+	stage3();
 	cl_log(LOG_INFO, "========= Colors =========");
 	slist_iter(color, color_t, colors, lpc,
 		   print_color(NULL, color, FALSE));
@@ -260,37 +262,60 @@ modifier2text(enum con_modifier modifier)
 };
 
 void
-print_node(const char *pre_text, node_t *node)
+print_node(const char *pre_text, node_t *node, gboolean details)
 { 
 	if(node == NULL) {
-		cl_log(LOG_DEBUG, "%s: <NULL>", __FUNCTION__);
-		return;
-	}
-	cl_log(LOG_DEBUG, "%s Node %s: (weight=%f, fixed=%s)",
-	       pre_text==NULL?"":pre_text,
-	       node->id, 
-	       node->weight,
-	       node->fixed?"True":"False"); 
-}; 
- 
-void
-print_color_details(const char *pre_text, struct color_shared_s *color, gboolean details)
-{ 
-	if(color == NULL) {
-		cl_log(LOG_DEBUG, "%s %s: <NULL>",
+		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
+		       pre_text==NULL?"":": ",
 		       __FUNCTION__);
 		return;
 	}
-	cl_log(LOG_DEBUG, "%s Color %d: node=%s (from %d candidates)",
+	cl_log(LOG_DEBUG, "%s%s%sNode %s: (weight=%f, fixed=%s)",
 	       pre_text==NULL?"":pre_text,
+	       pre_text==NULL?"":": ",
+	       node->details==NULL?"error ":node->details->online?"":"Unavailable/Unclean ",
+	       node->id, 
+	       node->weight,
+	       node->fixed?"True":"False"); 
+	if(details && node->details != NULL) {
+		g_hash_table_foreach(node->details->attrs,
+				     print_str_str, cl_strdup("\t\t"));
+	}
+	
+};
+
+void print_str_str(gpointer key, gpointer value, gpointer user_data)
+{
+	cl_log(LOG_DEBUG, "%s%s %s ==> %s",
+	       user_data==NULL?"":(char*)user_data,
+	       user_data==NULL?"":": ",
+	       (char*)key,
+	       (char*)value);
+}
+
+void
+print_color_details(const char *pre_text,
+		    struct color_shared_s *color,
+		    gboolean details)
+{ 
+	if(color == NULL) {
+		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
+		       pre_text==NULL?"":pre_text,
+		       pre_text==NULL?"":": ",
+		       __FUNCTION__);
+		return;
+	}
+	cl_log(LOG_DEBUG, "%s%sColor %d: node=%s (from %d candidates)",
+	       pre_text==NULL?"":pre_text,
+	       pre_text==NULL?"":": ",
 	       color->id, 
-	       color->chosen_node->id,
+	       color->chosen_node==NULL?"<unset>":color->chosen_node->id,
 	       g_slist_length(color->candidate_nodes)); 
 	if(details) {
 		int lpc = 0;
 		slist_iter(node, node_t, color->candidate_nodes, lpc,
-			   print_node("\t", node));
+			   print_node("\t", node, FALSE));
 	}
 }
 
@@ -298,13 +323,15 @@ void
 print_color(const char *pre_text, color_t *color, gboolean details)
 { 
 	if(color == NULL) {
-		cl_log(LOG_DEBUG, "%s %s: <NULL>",
+		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
+		       pre_text==NULL?"":": ",
 		       __FUNCTION__);
 		return;
 	}
-	cl_log(LOG_DEBUG, "%s Color %d: (weight=%f, node=%s, possible=%d)",
+	cl_log(LOG_DEBUG, "%s%sColor %d: (weight=%f, node=%s, possible=%d)",
 	       pre_text==NULL?"":pre_text,
+	       pre_text==NULL?"":": ",
 	       color->id, 
 	       color->local_weight,
 	       color->details->chosen_node==NULL?"<unset>":color->details->chosen_node->id,
@@ -317,13 +344,15 @@ void
 print_cons(const char *pre_text, rsc_constraint_t *cons, gboolean details)
 { 
 	if(cons == NULL) {
-		cl_log(LOG_DEBUG, "%s %s: <NULL>",
+		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
+		       pre_text==NULL?"":": ",
 		       __FUNCTION__);
 		return;
 	}
-	cl_log(LOG_DEBUG, "%s %s Constraint %s (%p):",
+	cl_log(LOG_DEBUG, "%s%s%s Constraint %s (%p):",
 	       pre_text==NULL?"":pre_text,
+	       pre_text==NULL?"":": ",
 	       contype2text(cons->type), cons->id, cons);
 
 	if(details == FALSE) {
@@ -351,7 +380,7 @@ print_cons(const char *pre_text, rsc_constraint_t *cons, gboolean details)
 				int lpc = 0;
 				slist_iter(
 					node, node_t, cons->node_list_rh, lpc,
-					print_node("\t\t-->", node)
+					print_node("\t\t-->", node, FALSE)
 					);
 				break;
 			case base_weight:
@@ -365,13 +394,15 @@ void
 print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 { 
 	if(rsc == NULL) {
-		cl_log(LOG_DEBUG, "%s %s: <NULL>",
+		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
+		       pre_text==NULL?"":": ",
 		       __FUNCTION__);
 		return;
 	}
-	cl_log(LOG_DEBUG, "%s %sResource %s: (priority=%f, color=%d, now=%s)",
+	cl_log(LOG_DEBUG, "%s%s%sResource %s: (priority=%f, color=%d, now=%s)",
 	       pre_text==NULL?"":pre_text,
+	       pre_text==NULL?"":": ",
 	       rsc->provisional?"Provisional ":"",
 	       rsc->id,
 	       (double)rsc->priority,
@@ -386,9 +417,15 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 
 	if(details) {
 		int lpc = 0;
+		cl_log(LOG_DEBUG, "\t=== Colors");
 		slist_iter(
 			color, color_t, rsc->candidate_colors, lpc,
 			print_color("\t", color, FALSE)
+			);
+		cl_log(LOG_DEBUG, "\t=== Allowed Nodes");
+		slist_iter(
+			node, node_t, rsc->allowed_nodes, lpc,
+			print_node("\t", node, FALSE);
 			);
 	}
 } 
