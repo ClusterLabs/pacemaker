@@ -77,7 +77,7 @@ sub make_inputs_dot
 		color = "black"
 	]
 // special nodes
-	"S_STARTING" 
+	"S_PENDING" 
 	[
 	 color = "blue"
 	 fontcolor = "blue"
@@ -190,6 +190,7 @@ sub make_inputs_dot
 	    
 	    $color="black";
 	    $color="red"    if $role =~ /STOPPING/;
+	    $color="blue"    if $role =~ /PENDING/;
 	    $color="purple"  if $role =~ /ELECTION/;
 	    $color="royalblue"   if $role =~ /POLICY/;
 	    $color="orange" if $role =~ /RECOVERY/;
@@ -320,9 +321,10 @@ sub make_actions_dot
 		
 		foreach $action ( sort @actions )
 		{
-		    $key1 = $action;
-		    $key2 = $input;
-		    $value = $state1;
+
+		    $key1 = $state1;
+		    $key2 = $input." {".$state1."}";
+		    $value = $action;
 
 		    if( exists($HoH{$key1}) )
 		    {
@@ -356,6 +358,45 @@ sub make_actions_dot
 		    {
 			$rec->{$key2} = $value;
 		    }
+
+		    $key1 = $action;
+		    $key2 = $state1." {".$action."}";
+		    $value = $input;
+
+		    if( exists($HoH{$key1}) )
+		    {
+			$rec = $HoH{$key1};
+		    }
+		    else
+		    {
+			$rec = {};
+			$HoH{$key1} = $rec;
+		    }
+
+		    if($action =~ /A_NOTHING/)
+		    {
+			$nothing_links = $nothing_links + 1;
+		    }
+		    elsif($action =~ /A_WARN/)
+		    {
+			$warn_links = $warn_links + 1;
+		    }
+		    elsif($action =~ /A_LOG/)
+		    {
+			$log_links = $log_links + 1;
+		    }
+		    elsif( $HoH{$key1}{$key2} ne "" )
+		    {
+			$oldval = $HoH{$key1}{$key2};
+			$rec->{$key2} = $oldval.",\\n".$value;
+			$duplicate_edges = $duplicate_edges + 1;
+		    }
+		    else
+		    {
+			$rec->{$key2} = $value;
+		    }
+
+
 		}
 	    }
 	    
