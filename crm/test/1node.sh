@@ -47,9 +47,9 @@ cts_assert "S_IDLE not reached on $test_node_1 after CIB erase"
 
 # Create the CIB for this test and wait for all transitions to complete
 do_cmd make_node $test_node_1 $test_node_1
-args="<nvpair name=\"1\" value=\"192.168.9.61\"/>"
+args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
 do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - $args
-args="<nvpair name=\"1\" value=\"192.168.9.62\"/>"
+args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
 do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - $args
 do_cmd make_constraint $test_node_1 rsc1 can
 do_cmd make_constraint $test_node_1 rsc2 can

@@ -65,11 +65,11 @@ Pre-reqs:
 
     Basic requirement
     =======================
-    	Set up 2 nodes called test1 and test2
+    	Set up 2 nodes called test1 and test2 on a 192.158.9.x subnet (for the IPaddr resource)
 
     Extra-info
-	You can use different names, but be sure to update the values for
-	test_node_1 and test_node_1 in helper.sh
+	You can use different names by specifying --node1 <node> and --node2  <node> on the testing command line.
+	Changing the IPs can be done with --ip1 and --ip2.
 
     Basic requirement
     =======================
@@ -88,7 +88,8 @@ Pre-reqs:
 	    node    test2
 	    apiauth default gid=haclient 
 	    respawn hacluster /usr/lib/heartbeat/ccm
-	    respawn hacluster /usr/lib/heartbeat/lrmd
+	    respawn root /usr/lib/heartbeat/lrmd
+	    # you'll need to add root to the haclient group
 	
     Basic requirement
     =======================
@@ -96,7 +97,7 @@ Pre-reqs:
 
 I think thats about it... 
  Now just run ./1node.sh and ./2node.sh, they should report if anything went
- wrong.  Try running with -o to get a running log of what the tests are doing. 
+ wrong.  Try running with -v to get a running log of what the tests are doing. 
 
 
 Please send all feedback via the -dev list.

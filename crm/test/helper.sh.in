@@ -35,6 +35,10 @@ OUTPUT_STDOUT=0
 OUTPUT_CMDS=0
 
 done=0
+
+ip_rsc_1=192.168.9.61
+ip_rsc_2=192.168.9.62
+
 while test "$done" = "0"; do
     case "$1" in
 	--debug   | -x)	set -x; shift;;
@@ -48,6 +52,9 @@ while test "$done" = "0"; do
 
 	--node1  | -1)	test_node_1=$2; shift 2;;
 	--node2  | -2)	test_node_2=$2; shift 2;;
+
+	--ip1)	ip_rsc_1=$2; shift 2;;
+	--ip2)	ip_rsc_2=$2; shift 2;;
 
 	"") done=1;;
 	*) echo "unknown option: $1"; exit 1;;
