@@ -15,6 +15,11 @@ gint sort_cons_strength(gconstpointer a, gconstpointer b);
 gint sort_color_weight(gconstpointer a, gconstpointer b);
 gint sort_node_weight(gconstpointer a, gconstpointer b);
 
+gboolean create_rsc_to_rsc(const char *id, enum con_strength strength,
+			   resource_t *rsc_lh, resource_t *rsc_rh);
+
+gboolean create_ordering(const char *id, enum con_strength strength,
+			 resource_t *rsc_lh, resource_t *rsc_rh);
 
 gboolean unpack_constraints(xmlNodePtr constraints);
 gboolean unpack_resources(xmlNodePtr resources);
@@ -58,12 +63,15 @@ gboolean strict_preproc(rsc_to_rsc_t *constraint,
 gboolean update_node_weight(rsc_to_node_t *cons, node_t *node_rh);
 gboolean process_node_lrm_state(node_t *node, xmlNodePtr lrm_state);
 GSListPtr match_attrs(xmlNodePtr attr_exp, GSListPtr node_list);
+gboolean update_runnable(GSListPtr actions);
+GSListPtr create_action_set(action_t *action);
 
 GSListPtr rsc_list = NULL; 
 GSListPtr node_list = NULL;
 GSListPtr node_cons_list = NULL;
 GSListPtr rsc_cons_list = NULL;
 GSListPtr action_list = NULL;
+GSListPtr action_set_list = NULL;
 GSListPtr action_cons_list = NULL;
 GSListPtr colors = NULL;
 GSListPtr stonith_list = NULL;
@@ -72,6 +80,7 @@ color_t *current_color = NULL;
 color_t *no_color = NULL;
 
 int max_valid_nodes = 0;
+int order_id = 1;
 
 gboolean pe_debug = FALSE;
 gboolean pe_debug_saved = FALSE;
@@ -79,140 +88,43 @@ gboolean pe_debug_saved = FALSE;
 gboolean
 stage0(xmlNodePtr cib)
 {
-	xmlNodePtr cib_nodes = get_object_root("nodes", cib);
-	xmlNodePtr cib_resources = get_object_root("resources", cib);
+	xmlNodePtr cib_nodes       = get_object_root("nodes",       cib);
+	xmlNodePtr cib_status      = get_object_root("status",      cib);
+	xmlNodePtr cib_resources   = get_object_root("resources",   cib);
 	xmlNodePtr cib_constraints = get_object_root("constraints", cib);
-	xmlNodePtr cib_status = get_object_root("status", cib);
 
-	unpack_nodes(cib_nodes->children);
-	unpack_resources(cib_resources->children);
-	unpack_status(cib_status->children);
-	unpack_constraints(cib_constraints->children);
+	unpack_nodes      (safe_val(NULL, cib_nodes,       children));
+	unpack_resources  (safe_val(NULL, cib_resources,   children));
+	unpack_status     (safe_val(NULL, cib_status,      children));
+	unpack_constraints(safe_val(NULL, cib_constraints, children));
 
 	return TRUE;
 } 
 
 gboolean
-stage1(GSListPtr nodes)
+stage1(GSListPtr node_constraints, GSListPtr nodes, GSListPtr resources)
 {
 	int lpc = 0;
-	// filter out unavailable nodes
-	slist_iter(
-		node, node_t, node_list, lpc,
-		pdebug_action(print_node("Before", node, FALSE));
-		);
 	
 	slist_iter(
 		node, node_t, nodes, lpc,
 		if(node == NULL) {
 			// error
-		} else if(node->weight < 0.0
-			  || node->details->online == FALSE
-			  || node->details->type == node_ping) {
-/* 			pdebug_action(print_node("Removing", node)); */
-/* 			nodes = g_slist_remove(nodes, node); */
-/* 			lpc--; */
-		} else {
+		} else if(node->weight >= 0.0
+			  && node->details->online
+			  && node->details->type == node_member) {
 			max_valid_nodes++;
 		}	
 		);
 
-	node_list = nodes;
-	apply_node_constraints(node_cons_list, node_list, rsc_list);
+	apply_node_constraints(node_constraints, nodes, resources);
 
 	return TRUE;
 } 
 
-void
-color_resource(resource_t *lh_resource)
-{
-	int lpc = 0;
-
-	pdebug_action(print_resource("Coloring", lh_resource, FALSE));
-	
-	if(lh_resource->provisional == FALSE) {
-			// already processed this resource
-		return;
-	}
-	
-	lh_resource->rsc_cons = g_slist_sort(lh_resource->rsc_cons,
-					     sort_cons_strength);
-
-	pdebug("=== Pre-processing");
-	//------ Pre-processing
-	slist_iter(
-		constraint, rsc_to_rsc_t, lh_resource->rsc_cons, lpc,
-		color_t *other_color = NULL;
-		color_t *local_color = NULL;
-		if(lh_resource->runnable == FALSE) {
-			break;
-		}
-		pdebug_action(print_rsc_to_rsc(
-				      "Processing constraint",
-				      constraint, FALSE));
-		
-		if(constraint->rsc_rh == NULL) {
-			cl_log(LOG_ERR,
-			       "rsc_rh was NULL for %s",
-			       constraint->id);
-			continue;
-		}
-		other_color = constraint->rsc_rh->color;
-		local_color = find_color(lh_resource->candidate_colors,
-					 other_color);
-		strict_preproc(constraint, local_color, other_color);
-		);
-
-	
-	// filter out nodes with a negative weight
-	filter_nodes(lh_resource);
-  
-	/* Choose a color from the candidates or,
-	 *  create a new one if no color is suitable 
-	 * (this may need modification pending further napkin drawings)
-	 */
-	choose_color(lh_resource, lh_resource->candidate_colors);	
-  
-	pdebug("* Colors %d, Nodes %d",
-		      g_slist_length(colors),
-		      max_valid_nodes);
-	
-	if(lh_resource->provisional
-		&& g_slist_length(colors) < max_valid_nodes) {
-		// Create new color
-		pdebug("Create a new color");
-		current_color = create_color(lh_resource->allowed_nodes, FALSE);
-		lh_resource->color = current_color;
-		lh_resource->provisional = FALSE;
-	} else if(lh_resource->provisional) {
-		cl_log(LOG_ERR, "Could not color resource %s", lh_resource->id);
-		print_resource("ERROR: No color", lh_resource, FALSE);
-		lh_resource->color = no_color;
-		lh_resource->provisional = FALSE;
-		
-	}
-
-	pdebug_action(print_resource("Post-processing", lh_resource, FALSE));
-
-	//------ Post-processing
-
-	color_t *local_color = lh_resource->color;
-	slist_iter(
-		constraint, rsc_to_rsc_t, lh_resource->rsc_cons, lpc,
-		color_t *other_color =
-			find_color(constraint->rsc_rh->candidate_colors,
-				   local_color);
-
-		strict_postproc(constraint, local_color, other_color);
-		);
-	
-	pdebug_action(print_resource("Colored", lh_resource, FALSE));
-}
 
 gboolean
-stage2(GSListPtr sorted_rsc, 
-       GSListPtr sorted_nodes, 
-       GSListPtr operations)
+stage2(GSListPtr sorted_rsc, GSListPtr sorted_nodes, GSListPtr operations)
 {
 	int lpc = 0; 
 	// Set initial color
@@ -237,12 +149,11 @@ stage2(GSListPtr sorted_rsc,
 		resource_t *lh_resource = (resource_t*)g_slist_nth_data(sorted_rsc, lpc);
 
 		// if resource.provisional == FALSE, repeat 
-		if(lh_resource->provisional == FALSE
-		   || lh_resource->runnable == FALSE) {
+		if(lh_resource->provisional == FALSE) {
 			// already processed this resource
 			continue;
 		}
-    
+
 		color_resource(lh_resource);
 		// next resource
 	}
@@ -252,70 +163,12 @@ stage2(GSListPtr sorted_rsc,
 gboolean
 stage3(void)
 {
-	// not sure if this is a good ide aor not
+	// not sure if this is a good idea or not
 	if(g_slist_length(colors) > max_valid_nodes) {
 		// we need to consolidate some
 	} else if(g_slist_length(colors) < max_valid_nodes) {
 		// we can create a few more
 	}
-	
-	
-	return TRUE;
-}
-
-gboolean
-stage5(GSListPtr resources)
-{
-	int lpc = 0;
-	slist_iter(
-		rsc, resource_t, resources, lpc,
-		if(rsc->runnable == FALSE) {
-			cl_log(LOG_ERR,
-			       "Resource %s was not runnable",
-			       rsc->id);
-			if(rsc->cur_node_id != NULL) {
-				
-				cl_log(LOG_WARNING,
-				       "Stopping Resource (%s) on node %s",
-				       rsc->id,
-				       rsc->cur_node_id);
-			}
-
-		} else if(rsc->color->details->chosen_node == NULL) {
-			cl_log(LOG_ERR,
-			       "Could not allocate Resource %s",
-			       rsc->id);
-			if(rsc->cur_node_id != NULL) {
-				
-				cl_log(LOG_WARNING,
-				       "Stopping Resource (%s) on node %s",
-				       rsc->id,
-				       rsc->cur_node_id);
-			}
-			
-		} else if(safe_str_eq(rsc->cur_node_id,
-				      rsc->color->details->chosen_node->details->id)){
-			cl_log(LOG_DEBUG,
-			       "No change for Resource %s (%s)",
-			       rsc->id,
-			       rsc->cur_node_id);
-			
-		} else if(rsc->cur_node_id == NULL) {
-			cl_log(LOG_INFO,
-			       "Starting Resource %s on %s",
-			       rsc->id,
-			       rsc->color->details->chosen_node->details->id);
-			
-		} else {
-			cl_log(LOG_INFO,
-			       "Moving Resource %s from %s to %s",
-			       rsc->id,
-			       rsc->cur_node_id,
-			       rsc->color->details->chosen_node->details->id);
-		}
-		);
-	
-	
 	return TRUE;
 }
 
@@ -370,6 +223,159 @@ stage4(GSListPtr colors)
 	return TRUE;
 	
 }
+
+gboolean
+stage5(GSListPtr resources)
+{
+	// fill in the nodes to perform the actions on
+	int lpc = 0;
+	slist_iter(
+		rsc, resource_t, resources, lpc,
+
+		print_resource("Processing", rsc, FALSE);
+		
+		if(safe_val(NULL, rsc, stop) == NULL
+		   || safe_val(NULL, rsc, start) == NULL) {
+			// error
+			continue;
+		}
+		if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL) {
+			rsc->stop->node = safe_val(NULL, rsc, cur_node);
+			rsc->start->runnable = FALSE;
+			
+		} else if(safe_str_eq(safe_val4(NULL, rsc, cur_node, details, id),
+				      safe_val6(NULL, rsc, color ,details,
+						chosen_node, details, id))){
+			cl_log(LOG_DEBUG,
+			       "No change for Resource %s (%s)",
+			       safe_val(NULL, rsc, id),
+			       safe_val4(NULL, rsc, cur_node, details, id));
+
+			rsc->stop->optional = TRUE;
+			rsc->start->optional = TRUE;
+			rsc->stop->node = safe_val(NULL, rsc, cur_node);
+			rsc->start->node = safe_val4(NULL, rsc, color,
+						     details, chosen_node);
+			
+		} else if(safe_val4(NULL, rsc, cur_node, details, id) == NULL) {
+			rsc->stop->optional = TRUE;
+			rsc->start->node = safe_val4(NULL, rsc, color,
+						     details, chosen_node);
+			
+		} else {
+			rsc->stop->node = safe_val(NULL, rsc, cur_node);
+			rsc->start->node = safe_val4(NULL, rsc, color,
+						     details, chosen_node);
+		}
+
+		if(rsc->stop->node != NULL) {
+			rsc->stop->runnable = TRUE;
+		}
+		if(rsc->start->node != NULL) {
+			rsc->start->runnable = TRUE;
+		}
+
+		);
+	
+	return TRUE;
+}
+
+gboolean
+stage6(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints)
+{
+	int lpc = 0;
+
+	slist_iter(
+		order, order_constraint_t, action_constraints, lpc,
+
+		order->lh_action->actions_before =
+			g_slist_append(order->lh_action->actions_before,
+				       order->rh_action);
+
+		order->rh_action->actions_after =
+			g_slist_append(order->rh_action->actions_after,
+				       order->lh_action);
+
+		);
+
+	update_runnable(actions);
+	
+	slist_iter(
+		rsc, resource_t, resources, lpc,
+		GSListPtr action_set = NULL;
+		if(rsc->start->runnable) {
+			action_set = create_action_set(rsc->start);
+		} else if(rsc->stop->runnable) {
+			action_set = create_action_set(rsc->stop);
+		}
+		if(action_set) {
+			action_set_list =
+				g_slist_append(action_set_list, action_set);
+		}
+		
+		);
+	
+	return TRUE;
+}
+
+gboolean
+summary(GSListPtr resources)
+{
+	int lpc = 0;
+	slist_iter(
+		rsc, resource_t, resources, lpc,
+		char *rsc_id = safe_val(NULL, rsc, id);
+		char *node_id = safe_val4(NULL, rsc, cur_node, details, id);
+		char *new_node_id = safe_val6(NULL, rsc, color, details,
+					      chosen_node, details, id);
+		if(rsc->runnable == FALSE) {
+			cl_log(LOG_ERR,
+			       "Resource %s was not runnable",
+			       rsc_id);
+			if(node_id != NULL) {
+				cl_log(LOG_WARNING,
+				       "Stopping Resource (%s) on node %s",
+				       rsc_id,
+				       node_id);
+			}
+
+		} else if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL) {
+			cl_log(LOG_ERR,
+			       "Could not allocate Resource %s",
+			       rsc_id);
+			if(node_id != NULL) {
+				
+				cl_log(LOG_WARNING,
+				       "Stopping Resource (%s) on node %s",
+				       rsc_id,
+				       node_id);
+			}
+			
+		} else if(safe_str_eq(node_id, new_node_id)){
+			cl_log(LOG_DEBUG,
+			       "No change for Resource %s (%s)",
+			       rsc_id,
+			       safe_val4(NULL, rsc, cur_node, details, id));
+			
+		} else if(node_id == NULL) {
+			cl_log(LOG_INFO,
+			       "Starting Resource %s on %s",
+			       rsc_id,
+			       new_node_id);
+			
+		} else {
+			cl_log(LOG_INFO,
+			       "Moving Resource %s from %s to %s",
+			       rsc_id,
+			       node_id,
+			       new_node_id);
+		}
+		);
+	
+	
+	return TRUE;
+}
+
 
 gboolean
 choose_node_from_list(color_t *color, GSListPtr nodes)
@@ -465,6 +471,8 @@ unpack_nodes(xmlNodePtr nodes)
 }
 
 
+int action_id = 1;
+
 gboolean 
 unpack_resources(xmlNodePtr resources)
 {
@@ -483,7 +491,7 @@ unpack_resources(xmlNodePtr resources)
 			continue;
 		}
 		resource_t *new_rsc = cl_malloc(sizeof(resource_t));
-		new_rsc->xml = xml_obj; // copy first 
+		new_rsc->xml = xml_obj; // copy first
 		new_rsc->priority = priority_f; 
 		new_rsc->candidate_colors = NULL;
 		new_rsc->color = NULL; 
@@ -494,9 +502,50 @@ unpack_resources(xmlNodePtr resources)
 		new_rsc->node_cons = NULL; 
 		new_rsc->id = cl_strdup(id);
 
+		
+		action_t *action_start = (action_t*)cl_malloc(sizeof(action_t));
+		action_t *action_stop = (action_t*)cl_malloc(sizeof(action_t));
+		action_start->id = action_id++;
+		action_start->rsc = new_rsc;
+		action_start->task = start_rsc;
+		action_start->actions_before = NULL;
+		action_start->actions_after = NULL;
+		action_start->node = NULL; // fill node in later
+		action_start->runnable = FALSE;
+		action_start->processed = FALSE;
+		action_start->optional = FALSE;
+		action_start->failed = FALSE;   // here?
+		action_start->complete = FALSE; // here?
+		action_start->seen_count = 0;
+
+		new_rsc->start = action_start;
+		action_list = g_slist_append(action_list, action_start);
+		
+		action_stop->id = action_id++;
+		action_stop->rsc = new_rsc;
+		action_stop->task = stop_rsc;
+		action_stop->actions_before = NULL;
+		action_stop->actions_after = NULL;
+		action_stop->node = NULL; // fill node in later
+		action_stop->runnable = FALSE;
+		action_stop->processed = FALSE;
+		action_stop->optional = FALSE;
+		action_stop->failed = FALSE;   // here?
+		action_stop->complete = FALSE; // here?
+		action_stop->seen_count = 0;
+
+		new_rsc->stop = action_stop;
+		action_list = g_slist_append(action_list, action_stop);
+
+		order_constraint_t *order = (order_constraint_t*)
+			cl_malloc(sizeof(order_constraint_t));
+		order->id = order_id++;
+		order->lh_action = action_start;
+		order->rh_action = action_stop;
+		action_cons_list = g_slist_append(action_cons_list, order);
+	
 		pdebug_action(print_resource("Added", new_rsc, FALSE));
 		rsc_list = g_slist_append(rsc_list, new_rsc);
-
 	}
 	rsc_list = g_slist_sort(rsc_list, sort_rsc_priority);
 
@@ -621,7 +670,8 @@ unpack_status(xmlNodePtr status)
 			const char *name = xmlGetProp(attrs, "name");
 			const char *value = xmlGetProp(attrs, "value");
 			
-			if(name != NULL && value != NULL) {
+			if(name != NULL && value != NULL
+			   && safe_val(NULL, this_node, details) != NULL) {
 				pdebug("Adding %s => %s",
 					      name, value);
 				g_hash_table_insert(this_node->details->attrs,
@@ -1048,12 +1098,12 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state)
 		const char *node_id   = xmlGetProp(lrm_state, "node_id");
 		const char *rsc_state = xmlGetProp(lrm_state, "rsc_state");
 		resource_t *rsc_lh = pe_find_resource(rsc_list, rsc_id);
-		rsc_lh->cur_node_id = cl_strdup(node_id);
+		rsc_lh->cur_node = node;
 
 		node->details->running_rsc =
 			g_slist_append(node->details->running_rsc, rsc_lh);
 
-		if(node->details->unclean) {
+		if(safe_val3(FALSE, node, details, unclean)) {
 			rsc_lh->runnable = FALSE;
 		}
 		
@@ -1134,52 +1184,21 @@ match_attrs(xmlNodePtr attr_exp, GSListPtr node_list)
 }
 
 gboolean
-unpack_rsc_to_rsc(xmlNodePtr xml_obj)
+create_rsc_to_rsc(const char *id, enum con_strength strength,
+		  resource_t *rsc_lh, resource_t *rsc_rh)
 {
+	if(rsc_lh == NULL || rsc_rh == NULL){
+		// error
+		return FALSE;
+	}
+
 	rsc_to_rsc_t *new_con = cl_malloc(sizeof(rsc_to_node_t));
 	rsc_to_rsc_t *inverted_con = NULL;
-	const char *id_lh =  xmlGetProp(xml_obj, "from");
-	const char *id =  xmlGetProp(xml_obj, "id");
-	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
-	const char *id_rh = xmlGetProp(xml_obj, "to");
-	resource_t *rsc_rh = pe_find_resource(rsc_list, id_rh);
-	const char *strength = xmlGetProp(xml_obj, "strength");
-
-	const char *type = xmlGetProp(xml_obj, "type");
-	if(safe_str_eq(type, "ordering")) {
-		// make an action_cons instead
-		
-	}
-
-	if(rsc_lh == NULL) {
-		cl_log(LOG_ERR, "No resource (con=%s, rsc=%s)",
-		       id, id_lh);
-		return FALSE;
-	}
 
 	new_con->id = cl_strdup(id);
-	new_con->rsc_lh = rsc_lh;			
-
-	if(safe_str_eq(strength, "must")) {
-		new_con->strength = must;
-		
-	} else if(safe_str_eq(strength, "should")) {
-		new_con->strength = should;
-		
-	} else if(safe_str_eq(strength, "should_not")) {
-		new_con->strength = should_not;
-		
-	} else if(safe_str_eq(strength, "must_not")) {
-		new_con->strength = must_not;
-	} else {
-		// error
-	}
-	
-	if(rsc_rh == NULL) {
-		cl_log(LOG_ERR, "No rh resource found with id %s", id_rh);
-		return FALSE;
-	}
+	new_con->rsc_lh = rsc_lh;
 	new_con->rsc_rh = rsc_rh;
+	new_con->strength = strength;
 	
 	inverted_con = invert_constraint(new_con);
 	rsc_cons_list = g_slist_insert_sorted(rsc_cons_list,
@@ -1192,6 +1211,259 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj)
 	rsc_rh->rsc_cons = g_slist_insert_sorted(rsc_rh->rsc_cons,
 						 new_con, sort_cons_strength);
 
-	
 	return TRUE;
+}
+
+gboolean
+create_ordering(const char *id, enum con_strength strength,
+		resource_t *rsc_lh, resource_t *rsc_rh)
+{
+	if(rsc_lh == NULL || rsc_rh == NULL){
+		// error
+		return FALSE;
+	}
+	
+	action_t *lh_stop = rsc_lh->stop;
+	action_t *lh_start = rsc_lh->start;
+	action_t *rh_stop = rsc_rh->stop;
+	action_t *rh_start = rsc_rh->start;
+	
+	/* lh start after rh */
+	
+	order_constraint_t *order = (order_constraint_t*)
+		cl_malloc(sizeof(order_constraint_t));
+	order->id = order_id++;
+	order->lh_action = lh_stop;
+	order->rh_action = rh_stop;
+	action_cons_list = g_slist_append(action_cons_list, order);
+	
+	order = (order_constraint_t*)
+		cl_malloc(sizeof(order_constraint_t));
+	order->id = order_id++;
+	order->lh_action = rh_start;
+	order->rh_action = lh_start;
+	action_cons_list = g_slist_append(action_cons_list, order);
+
+	return TRUE;
+}
+
+gboolean
+unpack_rsc_to_rsc(xmlNodePtr xml_obj)
+{
+	const char *id_lh =  xmlGetProp(xml_obj, "from");
+	const char *id =  xmlGetProp(xml_obj, "id");
+	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
+	const char *id_rh = xmlGetProp(xml_obj, "to");
+	resource_t *rsc_rh = pe_find_resource(rsc_list, id_rh);
+	const char *strength = xmlGetProp(xml_obj, "strength");
+	const char *type = xmlGetProp(xml_obj, "type");
+	enum con_strength strength_e = ignore;
+
+	if(rsc_lh == NULL) {
+		cl_log(LOG_ERR, "No resource (con=%s, rsc=%s)",
+		       id, id_lh);
+		return FALSE;
+	}
+	if(safe_str_eq(strength, "must")) {
+		strength_e = must;
+		
+	} else if(safe_str_eq(strength, "should")) {
+		strength_e = should;
+		
+	} else if(safe_str_eq(strength, "should_not")) {
+		strength_e = should_not;
+		
+	} else if(safe_str_eq(strength, "must_not")) {
+		strength_e = must_not;
+	} else {
+		// error
+	}
+
+	if(safe_str_eq(type, "ordering")) {
+		// make an action_cons instead
+		return create_ordering(id, strength_e, rsc_lh, rsc_rh);
+	}
+
+	return create_rsc_to_rsc(id, strength_e, rsc_lh, rsc_rh);
+}
+
+
+GSListPtr
+create_action_set(action_t *action)
+{
+	int lpc = 0;
+	GSListPtr result = NULL;
+
+	if(action->processed) {
+		return NULL;
+	}
+
+	print_action("Processing", action, FALSE);
+
+	action->seen_count = action->seen_count + 1;
+	// process actions_before
+	if(action->seen_count == 1) {
+		slist_iter(
+			other, action_t, action->actions_before, lpc,
+			result = create_action_set(other);
+			);
+
+		// add ourselves
+		if(action->processed == FALSE) {
+			result = g_slist_append(result, action);
+			action->processed = TRUE;
+		}
+		
+	} else {
+		slist_iter(
+			other, action_t, action->actions_before, lpc,
+			
+			if(other->seen_count > action->seen_count
+			   // && strength == MUST
+				) {
+				result = g_slist_concat(
+					result, create_action_set(other));
+			}
+			
+			);
+
+		// add ourselves
+		if(action->processed == FALSE) {
+			result = g_slist_append(result, action);
+			action->processed = TRUE;
+		}
+
+		// add strength == !MUST
+		slist_iter(
+			other, action_t, action->actions_before, lpc,
+			
+			result = g_slist_concat(result,
+						create_action_set(other));
+			);
+	}
+	
+	
+	// process actions_after
+	slist_iter(
+		other, action_t, action->actions_after, lpc,
+		result = g_slist_concat(result,
+					create_action_set(other));
+		);
+	
+	return result;
+}
+
+
+gboolean
+update_runnable(GSListPtr actions)
+{
+
+	int lpc = 0, lpc2 = 0;
+	gboolean change = TRUE;
+
+	while(change) {
+		change = FALSE;
+		slist_iter(
+			action, action_t, actions, lpc,
+
+			if(action->runnable) {
+				continue;
+			}
+			
+			slist_iter(
+				other, action_t, action->actions_before, lpc2,
+				if(other->runnable) {
+					change = TRUE;
+				}
+				other->runnable = FALSE;
+				);
+			);
+	}
+	return TRUE;
+}
+
+void
+color_resource(resource_t *lh_resource)
+{
+	int lpc = 0;
+
+	pdebug_action(print_resource("Coloring", lh_resource, FALSE));
+	
+	if(lh_resource->provisional == FALSE) {
+			// already processed this resource
+		return;
+	}
+	
+	lh_resource->rsc_cons = g_slist_sort(lh_resource->rsc_cons,
+					     sort_cons_strength);
+
+	pdebug("=== Pre-processing");
+	//------ Pre-processing
+	slist_iter(
+		constraint, rsc_to_rsc_t, lh_resource->rsc_cons, lpc,
+		color_t *other_color = NULL;
+		color_t *local_color = NULL;
+		if(lh_resource->runnable == FALSE) {
+			break;
+		}
+		pdebug_action(print_rsc_to_rsc(
+				      "Processing constraint",
+				      constraint, FALSE));
+		
+		if(constraint->rsc_rh == NULL) {
+			cl_log(LOG_ERR,
+			       "rsc_rh was NULL for %s",
+			       constraint->id);
+			continue;
+		}
+		other_color = constraint->rsc_rh->color;
+		local_color = find_color(lh_resource->candidate_colors,
+					 other_color);
+		strict_preproc(constraint, local_color, other_color);
+		);
+
+	
+	// filter out nodes with a negative weight
+	filter_nodes(lh_resource);
+  
+	/* Choose a color from the candidates or,
+	 *  create a new one if no color is suitable 
+	 * (this may need modification pending further napkin drawings)
+	 */
+	choose_color(lh_resource, lh_resource->candidate_colors);	
+  
+	pdebug("* Colors %d, Nodes %d",
+		      g_slist_length(colors),
+		      max_valid_nodes);
+	
+	if(lh_resource->provisional
+		&& g_slist_length(colors) < max_valid_nodes) {
+		// Create new color
+		pdebug("Create a new color");
+		current_color = create_color(lh_resource->allowed_nodes, FALSE);
+		lh_resource->color = current_color;
+		lh_resource->provisional = FALSE;
+	} else if(lh_resource->provisional) {
+		cl_log(LOG_ERR, "Could not color resource %s", lh_resource->id);
+		print_resource("ERROR: No color", lh_resource, FALSE);
+		lh_resource->color = no_color;
+		lh_resource->provisional = FALSE;
+		
+	}
+
+	pdebug_action(print_resource("Post-processing", lh_resource, FALSE));
+
+	//------ Post-processing
+
+	color_t *local_color = lh_resource->color;
+	slist_iter(
+		constraint, rsc_to_rsc_t, lh_resource->rsc_cons, lpc,
+		color_t *other_color =
+			find_color(constraint->rsc_rh->candidate_colors,
+				   local_color);
+
+		strict_postproc(constraint, local_color, other_color);
+		);
+	
+	pdebug_action(print_resource("Colored", lh_resource, FALSE));
 }

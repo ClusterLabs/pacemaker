@@ -23,6 +23,7 @@ enum node_type {
 };
 
 enum con_strength {
+	ignore,
 	must,
 	should,
 	should_not,
@@ -99,16 +100,18 @@ struct resource_s {
 		char *id; 
 		xmlNodePtr xml; 
 		int priority; 
-		char *cur_node_id; // change this to a node_t* one day
+		node_t *cur_node; 
 
 		gboolean runnable;
 		gboolean provisional; 
 
+		action_t *stop;
+		action_t *start;
+		
 		GSListPtr candidate_colors; 
 		GSListPtr allowed_nodes; 
 		GSListPtr node_cons; 
 		GSListPtr rsc_cons; 
-		GSListPtr actions; 
 
 		color_t *color;
 };
@@ -119,6 +122,17 @@ struct action_s
 		resource_t *rsc;
 		node_t *node;
 		enum action_tasks task;
+		
+		gboolean runnable;
+		gboolean processed;
+		gboolean optional;
+		gboolean failed;
+		gboolean complete;
+
+		int seen_count;
+		
+		GSListPtr actions_before;
+		GSListPtr actions_after;
 };
 
 struct order_constraint_s 
@@ -126,17 +140,25 @@ struct order_constraint_s
 		int id;
 		action_t *lh_action;
 		action_t *rh_action;
-		enum action_order order;
+		enum con_strength strength;
+//		enum action_order order;
 };
 
 extern gboolean stage0(xmlNodePtr cib);
-extern gboolean stage1(GSListPtr nodes);
+extern gboolean stage1(GSListPtr node_constraints,
+		       GSListPtr nodes,
+		       GSListPtr resources);
 extern gboolean stage2(GSListPtr sorted_rsc, 
-		 GSListPtr sorted_nodes,         
-		 GSListPtr operations);
+		       GSListPtr sorted_nodes,         
+		       GSListPtr operations);
 extern gboolean stage3(void);
 extern gboolean stage4(GSListPtr colors);
 extern gboolean stage5(GSListPtr resources);
+extern gboolean stage6(GSListPtr resources,
+		       GSListPtr actions,
+		       GSListPtr action_constraints);
+extern gboolean stage7(GSListPtr resources);
+extern gboolean summary(GSListPtr resources);
 
 extern GSListPtr rsc_list; 
 extern GSListPtr node_list;
@@ -147,6 +169,7 @@ extern GSListPtr action_cons_list;
 extern GSListPtr colors;
 extern GSListPtr stonith_list;
 extern GSListPtr shutdown_list;
+extern GSListPtr action_set_list;
 
 extern void print_node(const char *pre_text,
 		       node_t *node,
@@ -172,9 +195,14 @@ extern void print_color_details(const char *pre_text,
 				struct color_shared_s *color,
 				gboolean details);
 
+extern void print_action(const char *pre_text,
+			 action_t *action,
+			 gboolean details);
+
 extern const char *contype2text(enum con_type type);
 extern const char *strength2text(enum con_strength strength);
 extern const char *modifier2text(enum con_modifier modifier);
+extern const char *task2text(enum action_tasks task);
 
 #define slist_iter(w, x, y, z, a) for(z = 0; z < g_slist_length(y);  z++) { \
 				         x *w = (x*)g_slist_nth_data(y, z); \
@@ -195,6 +223,9 @@ extern gboolean pe_debug_saved;
 #define pe_debug_off() pe_debug_saved = pe_debug; pe_debug = FALSE;
 #define pe_debug_restore() pe_debug = pe_debug_saved;
 
-#define val(x,y) (x==NULL?NULL:x->y)
-#define val_bool(x,y) (x==NULL?FALSE:x->y)
-#define val_int(x,y) (x==NULL?0:x->y)
+#define safe_val(def, x,y)          (x==NULL?def:x->y)
+#define safe_val3(def, t,u,v)       safe_val(def, safe_val(NULL, t,u),v)
+#define safe_val4(def, t,u,v,w)     safe_val(def, safe_val(NULL, safe_val(NULL, t,u),v),w)
+#define safe_val5(def, t,u,v,w,x)   safe_val(def, safe_val(NULL, safe_val(NULL, safe_val(NULL, t,u),v),w),x)
+#define safe_val6(def, t,u,v,w,x,y) safe_val(def, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, t,u),v),w),x),y)
+#define safe_val7(def, t,u,v,w,x,y,z) safe_val(def, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, t,u),v),w),x),y),z)

@@ -466,6 +466,9 @@ strength2text(enum con_strength strength)
 	const char *result = "<unknown>";
 	switch(strength)
 	{
+		case ignore:
+			result = "ignore";
+			break;
 		case must:
 			result = "must";
 			break;
@@ -503,6 +506,30 @@ modifier2text(enum con_modifier modifier)
 	}
 	return result;
 };
+
+const char *
+task2text(enum action_tasks task)
+{
+	const char *result = "<unknown>";
+	switch(task)
+	{
+		case no_action:
+			result = "no_action";
+			break;
+		case stop_rsc:
+			result = "stop_rsc";
+			break;
+		case start_rsc:
+			result = "start_rsc";
+			break;
+		case shutdown_crm:
+			result = "shutdown_crm";
+			break;
+	}
+	
+	return result;
+};
+
 
 void
 print_node(const char *pre_text, node_t *node, gboolean details)
@@ -661,15 +688,16 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 		       __FUNCTION__);
 		return;
 	}
-	cl_log(LOG_DEBUG, "%s%s%s%sResource %s: (priority=%f, color=%d, now=%s)",
+	cl_log(LOG_DEBUG,
+	       "%s%s%s%sResource %s: (priority=%f, color=%d, now=%s)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       rsc->provisional?"Provisional ":"",
 	       rsc->runnable?"":"(Non-Startable) ",
 	       rsc->id,
 	       (double)rsc->priority,
-	       rsc->color==NULL?-1:rsc->color->id,
-	       rsc->cur_node_id);
+	       safe_val3(-1, rsc, color, id),
+	       safe_val4(NULL, rsc, cur_node, details, id));
 
 	cl_log(LOG_DEBUG,
 	       "\t%d candidate colors, %d allowed nodes, %d rsc_cons and %d node_cons",
@@ -691,4 +719,32 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 			print_node("\t", node, FALSE);
 			);
 	}
+}
+
+
+
+void
+print_action(const char *pre_text, action_t *action, gboolean details)
+{ 
+	if(action == NULL) {
+		cl_log(LOG_DEBUG, "%s%s%s: <NULL>",
+		       pre_text==NULL?"":pre_text,
+		       pre_text==NULL?"":": ",
+		       __FUNCTION__);
+		return;
+	}
+
+	cl_log(LOG_DEBUG, "%s%s%sAction %d: (action=%s to %s on %s)",
+	       pre_text==NULL?"":pre_text,
+	       pre_text==NULL?"":": ",
+	       action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+	       action->id,
+	       task2text(action->task),
+	       safe_val3(NULL, action, rsc, id),
+	       safe_val7(NULL, action, rsc, color, details, chosen_node, details, id));
+	
+	cl_log(LOG_DEBUG, "\t(seen=%d, before=%d, after=%d)",
+	       action->seen_count,
+	       g_slist_length(action->actions_before),
+	       g_slist_length(action->actions_after));
 }
