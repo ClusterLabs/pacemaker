@@ -770,7 +770,7 @@ class Fastdetection(CTSTest):
             if stopwatch.look():
                 Stoptime = time.time()
                 Detectiontime = Stoptime-Starttime
-                self.CM.log("The detection time is %s s"%Detectiontime)
+                self.CM.log("The detection time is %s s" % Detectiontime)
                 self.CM.rsh(node,self.CM["StartCmd"])
                 return self.success()
             else:
@@ -827,8 +827,8 @@ class BandwidthTest(CTSTest):
         
         bandwidth = 0.0 
         for i in 1,2,3,4,5:
-            self.CM.rsh(node,"tcpdump -c 100 -i %s udp port %s > /tmp/band_estimate 2>&1"%(eth,port))
-            self.CM.rsh.cp("%s:/tmp/band_estimate"%node, "/tmp")
+            self.CM.rsh(node,"tcpdump -c 100 -i %s udp port %s > /tmp/band_estimate 2>&1" % (eth,port))
+            self.CM.rsh.cp("%s:/tmp/band_estimate" % node, "/tmp")
             file = open("/tmp/band_estimate","r")
             file.seek(0)
             count = 0
@@ -866,7 +866,7 @@ class BandwidthTest(CTSTest):
         bandwidth = bandwidth/5
         
         if bandwidth != 0.0:
-             self.CM.log("Bandwidth used to heartbeat is %f bit/s"%bandwidth)
+             self.CM.log("Bandwidth used to heartbeat is %f bit/s" % bandwidth)
              return self.success()
         else:
             return self.failure("no response!")
@@ -880,7 +880,7 @@ AllTestClasses.append(BandwidthTest)
 ##########################################################################
 class RedundantpathTest(CTSTest):
 ##########################################################################
-    '''In heartbeat, it has redundantpath to commiunicate between the cluster'''
+    '''In heartbeat, it has redundant path to communicate between the cluster'''
     def __init__(self,cm,timeout=60):
         CTSTest.__init__(self,cm)
         self.name = "RedundantpathTest"
@@ -889,6 +889,8 @@ class RedundantpathTest(CTSTest):
     def PathCount(self):
         '''Return number of communication paths'''
         cf = HBConfig()
+	eths = []
+	serials = []
         num = 0
         for cfp in cf.Parameters:
             if cfp == "bcast":
@@ -908,7 +910,7 @@ class RedundantpathTest(CTSTest):
                 for serial in serials:
                     num = num+1
 
-	return num
+	return (num, eths, serials)
 
     def __call__(self,node):
         '''Perform redundant path test'''
@@ -939,21 +941,22 @@ class RedundantpathTest(CTSTest):
                 for serial in serials:
                     num = num+1
 
+        (num, eths, serial) = PathCount()
         if num <= 1:
-            return self.failure("There is just one path between the two nodes,please config it again")
+            return self.failure("There is only one path between the two nodes, please reconfigure.")
 
         for eth in eths:
-            if self.CM.rsh(node,"ifconfig %s down"%eth)==0:
+            if self.CM.rsh(node,"ifconfig %s down" % eth)==0:
                 PathDown = "OK"
                 break
         
         if PathDown != "OK":
             for serial in serials:
-                if self.CM.rsh(node,"setserial %s uart none"%serial)==0:
+                if self.CM.rsh(node,"setserial %s uart none" % serial)==0:
                     PathDown = "OK"
                     break
                    
-        if PathDown!="OK":
+        if PathDown != "OK":
             return self.failure("Cannot break the path")
         
         time.sleep(self.timeout)
@@ -961,21 +964,21 @@ class RedundantpathTest(CTSTest):
         for audit in CTSaudits.AuditList(self.CM):
             if not audit():
                 for eth in eths:
-                    self.CM.rsh(node,"ifconfig %s up" %eth)
+                    self.CM.rsh(node,"ifconfig %s up" % eth)
                 for serial in serials:
-                    self.CM.rsh(node,"setserial %s uart 16550"%serial) 
+                    self.CM.rsh(node,"setserial %s uart 16550" % serial) 
                 return self.failure("Redundant path fail")
 
         for eth in eths:
-            self.CM.rsh(node,"ifconfig %s up"%eth)
+            self.CM.rsh(node,"ifconfig %s up" % eth)
         for serial in serials:
-            self.CM.rsh(node,"setserial %s uart 16550"%serial)
+            self.CM.rsh(node,"setserial %s uart 16550" % serial)
        
         return self.success()
 
     def is_applicable(self):
         '''It is always applicable'''
-        return self.PathCount() > 1
+        return self.PathCount()[0] > 1
 
 AllTestClasses.append(RedundantpathTest)
 
@@ -1018,13 +1021,13 @@ class DRBDTest(CTSTest):
             if (time.time()>done):
                 return self.failure("the drbd could't sync")
             self.CM.rsh(node,"cp /proc/drbd /tmp >/dev/null 2>&1")
-            if self.CM.rsh.cp("%s:/tmp/drbd"%node,"/tmp"):
+            if self.CM.rsh.cp("%s:/tmp/drbd" % node,"/tmp"):
                 line = open("/tmp/drbd").readlines()[2]
                 p = line.find("Primary")
                 s1 = line.find("Secondary")
                 s2 = line.rfind("Secondary")
                 if s1!=s2:
-                    if self.CM.rsh(node,"drbdsetup %s primary"%device[node]):
+                    if self.CM.rsh(node,"drbdsetup %s primary" % device[node]):
                        pass
                 if p!=-1:
                     if p<s1:
@@ -1041,8 +1044,8 @@ class DRBDTest(CTSTest):
         self.CM.rsh(secondarynode, self.CM["StopCmd"])
         self.CM.rsh(primarynode, self.CM["StopCmd"])
 
-        line1 = self.CM.rsh.readaline(node,"md5sum %s"%device[primarynode])
-        line2 = self.CM.rsh.readaline(node,"md5sum %s"%device[secondarynode])
+        line1 = self.CM.rsh.readaline(node,"md5sum %s" % device[primarynode])
+        line2 = self.CM.rsh.readaline(node,"md5sum %s" % device[secondarynode])
 
         self.CM.rsh(primarynode,self.CM["StartCmd"])
         self.CM.rsh(secondarynode,self.CM["StartCmd"])
@@ -1055,10 +1058,10 @@ class DRBDTest(CTSTest):
     def getdevice(self,node):
         device=None
         if self.CM.rsh(node,self.CM["DRBDCheckconf"])==0:
-            self.CM.rsh.cp("%s:/tmp/drbdconf"%node, "/tmp")
+            self.CM.rsh.cp("%s:/tmp/drbdconf" % node, "/tmp")
             lines=open("/tmp/drbdconf","r")
             for line in lines:
-                if line.find("%s:device"%node)!=-1:
+                if line.find("%s:device" % node)!=-1:
                     device=string.split(line," ")[8]
                     break
         return device
@@ -1082,7 +1085,7 @@ class Split_brainTest(CTSTest):
         self.name = "Split_brain"
         self.timeout = timeout
 
-    def __call__(self,node):
+    def __call__(self, node):
         '''Perform split-brain test'''
         self.incr("calls")
 
@@ -1120,14 +1123,21 @@ class Split_brainTest(CTSTest):
                serials = cf.Parameters["serial"]
 
         for eth in eths:
-            self.CM.rsh(node,"ifconfig %s down"%eth)
+            self.CM.rsh(node,"ifconfig %s down" % eth)
         for serial in serials:
-            self.CM.rsh(node,"setserial %s uart none"%serial)
+            self.CM.rsh(node,"setserial %s uart none" % serial)
 
         done = time.time()+self.timeout+1
+
+	# FIXME: This next loop should probably be redone
+	# be using the resource operations and objects not some
+	# hard-wired command and output.  You may need to
+	# hardwire the resource type, but not the command, output, etc.
+	# in fact, this will fail to work even for heartbeat in the future.
+
         for node in self.CM.Env["nodes"]:
             while (time.time() < done):
-                line = self.CM.rsh.readaline(node,self.CM["IPaddrCmd"]%IPaddr)
+                line = self.CM.rsh.readaline(node,self.CM["IPaddrCmd"] % IPaddr)
                 if re.search("running",line):
                     break
                 else:
@@ -1135,12 +1145,12 @@ class Split_brainTest(CTSTest):
 
         if eths != []:
             for eth in eths:
-                self.CM.rsh(node,"ifconfig %s up"%eth)
+                self.CM.rsh(node,"ifconfig %s up" % eth)
         if serials != []:
             for serial in serials:
-                self.CM.rsh(node,"setserial %s uart 16550"%serial)
+                self.CM.rsh(node,"setserial %s uart 16550" % serial)
         if time.time() > done():
-            return self.failure("The two nodes don't take over the resource both")
+            return self.failure("Both nodes don't both take over resources.")
           
         done = time.time()+self.timeout+1
         while time.time() < done:
