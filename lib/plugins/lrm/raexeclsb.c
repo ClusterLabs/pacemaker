@@ -52,24 +52,24 @@ static const char * RA_PATH = "/etc/init.d/";
 static const int status_op_exitcode_map[] = { 0, 11, 12, 13, 14 };
 
 /* The begin of exported function list */
-static int execra(const char * ra_name,  
-		  const char * op,
+static int execra(const char * rsc_type,
+		  const char * op_type,
 	 	  GHashTable * cmd_params,
 		  GHashTable * env_params);
 
-static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op);
+static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op_type);
 static int get_resource_list(GList ** rsc_info);
 /* The end of exported function list */
 
 /* The begin of internal used function & data list */
-#define MAX_PARAMETER_NUM 40 
+#define MAX_PARAMETER_NUM 40
 typedef char * RA_ARGV[MAX_PARAMETER_NUM];
 
-static int prepare_cmd_parameters(const char * raname, const char * op, 
-	GHashTable * params, RA_ARGV params_argv);  
-static void params_hash_to_argv(gpointer key, gpointer value, 
+static int prepare_cmd_parameters(const char * rsc_type, const char * op_type,
+	GHashTable * params, RA_ARGV params_argv);
+static void params_hash_to_argv(gpointer key, gpointer value,
 				gpointer user_data);
-static char* get_resource_meta(const char* ra_type);
+static char* get_resource_meta(const char* rsc_type);
 static int raexec_setenv(GHashTable * env_params);
 static void set_env(gpointer key, gpointer value, gpointer user_data);
 /* The end of internal function & data list */
@@ -132,20 +132,20 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 	OurPlugin = us;
 
 	/* Register ourself as a plugin */
-	imports->register_plugin(us, &OurPIExports);  
+	imports->register_plugin(us, &OurPIExports);
 
 	/*  Register our interfaces */
- 	return imports->register_interface(us, PIL_PLUGINTYPE_S,  PIL_PLUGIN_S,	
+ 	return imports->register_interface(us, PIL_PLUGINTYPE_S,  PIL_PLUGIN_S,
 		&raops, raexec_closeintf, &OurInterface, &OurImports,
-		interfprivate); 
+		interfprivate);
 }
 
 /*
  *	Real work starts here ;-)
  */
 
-static int 
-execra( const char * ra_name, const char * op, 
+static int
+execra( const char * rsc_type, const char * op_type,
 	GHashTable * cmd_params, GHashTable * env_params )
 {
 	uniform_ret_execra_t exit_value;
@@ -155,25 +155,25 @@ execra( const char * ra_name, const char * op,
 	GString * debug_info;
 	int index_tmp = 0;
 
-	cl_log(LOG_DEBUG, "To execute a RA %s.", ra_name);
+	cl_log(LOG_DEBUG, "To execute a RA %s.", rsc_type);
 	/* Prepare the call parameter */
-	if (0 > prepare_cmd_parameters(ra_name, op, cmd_params, params_argv)) {
+	if (0 > prepare_cmd_parameters(rsc_type, op_type, cmd_params, params_argv)) {
 		cl_log(LOG_ERR, "lsb RA: Error of preparing parameters");
 		return -1;
 	}
-	
-	ra_dirname = g_string_new(ra_name);
-	ra_name_dup = strndup(ra_name, RA_MAX_DIRNAME_LENGTH);
+
+	ra_dirname = g_string_new(rsc_type);
+	ra_name_dup = strndup(rsc_type, RA_MAX_DIRNAME_LENGTH);
 	base_name = basename(ra_name_dup);
 	/*
-	 * If ra_name only contains basename, then append RA_PATH.
-	 * If ra_name is a pathname, then don't deal with it.
+	 * If rsc_type only contains basename, then append RA_PATH.
+	 * If rsc_type is a pathname, then don't deal with it.
 	 */
-	if ( strncmp(ra_name, base_name, RA_MAX_BASENAME_LENGTH) == 0 ) {
+	if ( strncmp(rsc_type, base_name, RA_MAX_BASENAME_LENGTH) == 0 ) {
 		g_string_insert(ra_dirname, 0, RA_PATH);
 	}
 	free(ra_name_dup);
-	
+
 	raexec_setenv(env_params);
 
 	debug_info = g_string_new("");
@@ -181,7 +181,7 @@ execra( const char * ra_name, const char * op,
 		g_string_append(debug_info, params_argv[index_tmp]);
 		g_string_append(debug_info, " ");
 	} while (params_argv[++index_tmp] != NULL);
-	
+
 	debug_info->str[debug_info->len-1] = '\0';
 	cl_log(LOG_INFO, "Will execute a lsb RA: %s", debug_info->str);
 	g_string_free(debug_info, TRUE);
@@ -199,28 +199,28 @@ execra( const char * ra_name, const char * op,
         }
 
 	g_string_free(ra_dirname, TRUE);
-        cl_log(LOG_ERR, "execl error when to execute RA %s.", ra_name);
+        cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
         exit(exit_value);
 }
 
-static uniform_ret_execra_t 
-map_ra_retvalue(int ret_execra, const char * op)
+static uniform_ret_execra_t
+map_ra_retvalue(int ret_execra, const char * op_type)
 {
-	/* Except op equals 'status', the UNIFORM_RET_EXECRA is compatible 
-	   with LSB standard. 
+	/* Except op_type equals 'status', the UNIFORM_RET_EXECRA is compatible
+	   with LSB standard.
 	*/
-	if ( strncmp(op, "status", 6) == 0 ) {
+	if ( strncmp(op_type, "status", 6) == 0 ) {
 		if (ret_execra < 0 || ret_execra > 4 ) {
 			ret_execra = 4;
 		}
-		return status_op_exitcode_map[ret_execra];	
+		return status_op_exitcode_map[ret_execra];
 	} else
 	{
 		return ret_execra;
 	}
 }
 
-static int 
+static int
 get_resource_list(GList ** rsc_info)
 {
 	struct dirent **namelist;
@@ -236,42 +236,42 @@ get_resource_list(GList ** rsc_info)
 			"will cause memory leak.");
 		*rsc_info = NULL;
 	}
- 
+
 	file_num = scandir(RA_PATH, &namelist, 0, alphasort);
 	cl_log(LOG_CRIT, "file_num=%d\n", file_num);
 	if (file_num < 0) {
 		cl_log(LOG_ERR, "scandir failed in OCF RA plugin");
 		return -2;
-	} else 
+	} else
 	{
 		while (file_num--) {
 			rsc_info_t * rsc_info_tmp;
 			if (*(namelist[file_num]->d_name) != '.') {
-				rsc_info_tmp = g_new(rsc_info_t, 1);	
-				rsc_info_tmp->rsc_type = 
+				rsc_info_tmp = g_new(rsc_info_t, 1);
+				rsc_info_tmp->rsc_type =
 					g_strdup(namelist[file_num]->d_name);
-			/* 
+			/*
 			 * Since the version definition isn't cleat yet,
 			 * the version is setted 1.0.
 			 */
 				rsc_info_tmp->version = g_strdup("1.0");
-				*rsc_info = g_list_append(*rsc_info, 
+				*rsc_info = g_list_append(*rsc_info,
 						(gpointer)rsc_info_tmp);
 			}
 			free(namelist[file_num]);
 		}
 		free(namelist);
 	}
-	return g_list_length(*rsc_info);			
+	return g_list_length(*rsc_info);
 }
 
-static int 
-prepare_cmd_parameters(const char * raname, const char * op, 
+static int
+prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 			GHashTable * params_ht, RA_ARGV params_argv)
 {
 	/* For lsb init scripts, no corresponding definite specification
 	 * But for lsb none-init scripts, maybe need it.
-	 */ 
+	 */
 
 	int tmp_len;
 	int ht_size = 0;
@@ -283,18 +283,18 @@ prepare_cmd_parameters(const char * raname, const char * op,
 		cl_log(LOG_ERR, "Too many parameters");
 		return -1;
 	}
-	
-	tmp_len = strnlen(raname, 160) + 1;
-	params_argv[0] = g_new(gchar, tmp_len); 
-	strncpy(params_argv[0], raname, tmp_len);
 
-	tmp_len = strnlen(op, 160) + 1;
-	params_argv[1] = g_new(gchar, tmp_len); 
-	strncpy(params_argv[1], op, tmp_len);
-	params_argv[ht_size+2] = NULL; 
-	
+	tmp_len = strnlen(rsc_type, 160) + 1;
+	params_argv[0] = g_new(gchar, tmp_len);
+	strncpy(params_argv[0], rsc_type, tmp_len);
+
+	tmp_len = strnlen(op_type, 160) + 1;
+	params_argv[1] = g_new(gchar, tmp_len);
+	strncpy(params_argv[1], op_type, tmp_len);
+	params_argv[ht_size+2] = NULL;
+
 	if (params_ht) {
-		g_hash_table_foreach(params_ht, 
+		g_hash_table_foreach(params_ht,
 				params_hash_to_argv, params_argv);
 	}
 
@@ -323,12 +323,12 @@ params_hash_to_argv(gpointer key, gpointer value, gpointer user_data)
                 strnlen((char*)value, 20));
 }
 
-static int 
+static int
 raexec_setenv(GHashTable * env_params)
 {
 	/* For lsb init scripts, no corresponding definite specification
 	 * But for lsb none-init scripts, maybe need it.
-	 */ 
+	 */
         if (env_params) {
         	g_hash_table_foreach(env_params, set_env, NULL);
         }
@@ -342,7 +342,7 @@ set_env(gpointer key, gpointer value, gpointer user_data)
         /*Need to free the memory to which key and value point?*/
 }
 static char*
-get_resource_meta(const char* ra_type)
+get_resource_meta(const char* rsc_type)
 {
-	return strdup(ra_type);
+	return strdup(rsc_type);
 }

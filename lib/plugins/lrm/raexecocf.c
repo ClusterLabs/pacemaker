@@ -63,19 +63,19 @@ static const char * RA_PATH = "/usr/lib/heartbeat/stonith.d/";
 #endif
 
 /* The begin of exported function list */
-static int execra(const char * ra_name,  
-		  const char * op,
+static int execra(const char * rsc_type,
+		  const char * op_type,
 	 	  GHashTable * cmd_params,
 		  GHashTable * env_params);
 
-static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op);
+static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op_type);
 
 static int get_resource_list(GList ** rsc_info);
 
-static char* get_resource_meta(const char* ra_type);
+static char* get_resource_meta(const char* rsc_type);
 
 /* The end of exported function list */
- 
+
 /* The begin of internal used function & data list */
 static int raexec_setenv(GHashTable * env_params);
 static void set_env(gpointer key, gpointer value, gpointer user_data);
@@ -140,28 +140,28 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 	OurPlugin = us;
 
 	/* Register ourself as a plugin */
-	imports->register_plugin(us, &OurPIExports);  
+	imports->register_plugin(us, &OurPIExports);
 
 	/*  Register our interfaces */
- 	return imports->register_interface(us, PIL_PLUGINTYPE_S,  PIL_PLUGIN_S,	
+ 	return imports->register_interface(us, PIL_PLUGINTYPE_S,  PIL_PLUGIN_S,
 		&raops, raexec_closeintf, &OurInterface, &OurImports,
-		interfprivate); 
+		interfprivate);
 }
 
 /*
  *	Real work starts here ;-)
  */
 
-static int 
-execra( const char * ra_name, const char * op, 
+static int
+execra( const char * rsc_type, const char * op_type,
 	GHashTable * cmd_params, GHashTable * env_params )
 {
 	char *ra_name_dup, *base_name;
 	GString * ra_dirname;
-	
+
 	uniform_ret_execra_t exit_value;
 
-	cl_log(LOG_DEBUG, "To execute a RA %s", ra_name);
+	cl_log(LOG_DEBUG, "To execute a RA %s", rsc_type);
 	/* Prepare the call parameter */
 	if (!cmd_params) {
 		if (g_hash_table_size(cmd_params) > 0) {
@@ -169,25 +169,25 @@ execra( const char * ra_name, const char * op,
 				"command-line parameters.");
 		}
 	}
-	
-	ra_dirname = g_string_new(ra_name);
-	ra_name_dup = strndup(ra_name, RA_MAX_DIRNAME_LENGTH);
+
+	ra_dirname = g_string_new(rsc_type);
+	ra_name_dup = strndup(rsc_type, RA_MAX_DIRNAME_LENGTH);
 	base_name = basename(ra_name_dup);
-	/* 
-	 * If ra_name only contains basename, then append RA_PATH.
-	 * If ra_name is a pathname, then don't deal with it.
+	/*
+	 * If rsc_type only contains basename, then append RA_PATH.
+	 * If rsc_type is a pathname, then don't deal with it.
 	 */
-	if ( strncmp(ra_name, base_name, RA_MAX_BASENAME_LENGTH) == 0 ) {
-		g_string_insert(ra_dirname, 0, RA_PATH);		
-	} 
+	if ( strncmp(rsc_type, base_name, RA_MAX_BASENAME_LENGTH) == 0 ) {
+		g_string_insert(ra_dirname, 0, RA_PATH);
+	}
 	free(ra_name_dup);
 
 	/* execute the RA */
-	cl_log(LOG_INFO, "Will execute OCF RA : %s %s", ra_dirname->str, op);
+	cl_log(LOG_INFO, "Will execute OCF RA : %s %s", ra_dirname->str, op_type);
 	cl_log(LOG_INFO, "Its environment parameters is as below.");
 	raexec_setenv(env_params);
-	execl(ra_dirname->str, ra_dirname->str, op, NULL); 
-	
+	execl(ra_dirname->str, ra_dirname->str, op_type, NULL);
+
 	switch (errno) {
 		case ENOENT:   /* No such file or directory */
 		case EISDIR:   /* Is a directory */
@@ -198,19 +198,19 @@ execra( const char * ra_name, const char * op,
 			exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
 	}
 
-	cl_log(LOG_ERR, "execl error when to execute RA %s.", ra_name);
+	cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
 	g_string_free(ra_dirname, TRUE);
 	exit(exit_value);
 }
 
-static uniform_ret_execra_t 
-map_ra_retvalue(int ret_execra, const char * op)
+static uniform_ret_execra_t
+map_ra_retvalue(int ret_execra, const char * op_type)
 {
 	/* Because the UNIFORM_RET_EXECRA is compatible with OCF standard */
 	return ret_execra;
 }
 
-static int 
+static int
 get_resource_list(GList ** rsc_info)
 {
 	struct dirent **namelist;
@@ -226,35 +226,35 @@ get_resource_list(GList ** rsc_info)
 			"will cause memory leak.");
 		*rsc_info = NULL;
 	}
- 
+
 	file_num = scandir(RA_PATH, &namelist, 0, alphasort);
 	if (file_num < 0) {
 		cl_log(LOG_ERR, "scandir failed in OCF RA plugin");
 		return -2;
-	} else 
+	} else
 	{
 		while (file_num--) {
 			rsc_info_t * rsc_info_tmp;
 			if (*(namelist[file_num]->d_name) != '.') {
-				rsc_info_tmp = g_new(rsc_info_t, 1);	
-				rsc_info_tmp->rsc_type = 
+				rsc_info_tmp = g_new(rsc_info_t, 1);
+				rsc_info_tmp->rsc_type =
 					g_strdup(namelist[file_num]->d_name);
-			/* 
+			/*
 			 * Since the version definition isn't cleat yet,
 			 * the version is setted 1.0.
 			 */
 				rsc_info_tmp->version = g_strdup("1.0");
-				*rsc_info = g_list_append(*rsc_info, 
+				*rsc_info = g_list_append(*rsc_info,
 						(gpointer)rsc_info_tmp);
 			}
 			free(namelist[file_num]);
 		}
 		free(namelist);
 	}
-	return g_list_length(*rsc_info);			
+	return g_list_length(*rsc_info);
 }
 
-static int 
+static int
 raexec_setenv(GHashTable * env_params)
 {
 	if (!env_params) {
@@ -266,15 +266,15 @@ raexec_setenv(GHashTable * env_params)
 	return 0;
 }
 
-static void 
+static void
 set_env(gpointer key, gpointer value, gpointer user_data)
 {
 	cl_log(LOG_INFO, "%s = %s.", (char *)key, (char *)value);
-	setenv((const char *)key, (const char *)value, 1);	
+	setenv((const char *)key, (const char *)value, 1);
 	/*Need to free the memory to which key and value point?*/
 }
 static char*
-get_resource_meta(const char* ra_type)
+get_resource_meta(const char* rsc_type)
 {
 	const int BUFF_LEN=4096;
 	int read_len = 0;
@@ -285,11 +285,11 @@ get_resource_meta(const char* ra_type)
 	GString * ra_dirname;
 	FILE* file = NULL;
 
-	ra_dirname = g_string_new(ra_type);
-	ra_type_dup = strndup(ra_type, RA_MAX_DIRNAME_LENGTH);
+	ra_dirname = g_string_new(rsc_type);
+	ra_type_dup = strndup(rsc_type, RA_MAX_DIRNAME_LENGTH);
 	base_name = basename(ra_type_dup);
 
-	if ( strncmp(ra_type, base_name, RA_MAX_BASENAME_LENGTH) == 0 ) {
+	if ( strncmp(rsc_type, base_name, RA_MAX_BASENAME_LENGTH) == 0 ) {
 		g_string_insert(ra_dirname, 0, RA_PATH);
 	}
 	free(ra_type_dup);

@@ -46,12 +46,12 @@
 static const char * RA_PATH = "/etc/ha.d/resource.d/";
 
 /* The begin of exported function list */
-static int execra(const char * ra_name,  
-		  const char * op,
+static int execra(const char * rsc_type,  
+		  const char * op_type,
 	 	  GHashTable * cmd_params,
 		  GHashTable * env_params);
 
-static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op);
+static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op_type);
 static int get_resource_list(GList ** rsc_info);
 /* The end of exported function list */
  
@@ -59,11 +59,11 @@ static int get_resource_list(GList ** rsc_info);
 #define MAX_PARAMETER_NUM 40
 typedef char * RA_ARGV[MAX_PARAMETER_NUM];
 
-static int prepare_cmd_parameters(const char * ra_name, const char * op, 
+static int prepare_cmd_parameters(const char * rsc_type, const char * op_type, 
 		GHashTable * params, RA_ARGV params_argv);
 static void params_hash_to_argv(gpointer key, gpointer value,
                                 gpointer user_data);
-static char* get_resource_meta(const char* ra_type);                                
+static char* get_resource_meta(const char* rsc_type);                                
 static int raexec_setenv(GHashTable * env_params);
 static void set_env(gpointer key, gpointer value, gpointer user_data);
 /* The end of internal function & data list */
@@ -139,7 +139,7 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
  */
 
 static int 
-execra( const char * ra_name, const char * op, 
+execra( const char * rsc_type, const char * op_type, 
 	GHashTable * cmd_params, GHashTable * env_params )
 {
 	RA_ARGV params_argv;
@@ -149,21 +149,21 @@ execra( const char * ra_name, const char * op,
 	GString * debug_info;
 	int index_tmp = 0;
 
-	cl_log(LOG_DEBUG, "To execute a RA %s.", ra_name);
+	cl_log(LOG_DEBUG, "To execute a RA %s.", rsc_type);
 	/* Prepare the call parameter */
-	if (0 > prepare_cmd_parameters(ra_name, op, cmd_params, params_argv)) {
+	if (0 > prepare_cmd_parameters(rsc_type, op_type, cmd_params, params_argv)) {
 		cl_log(LOG_ERR, "HB RA: Error of preparing parameters");
 		return -1;
 	}
 
-	ra_dirname = g_string_new(ra_name);
-	ra_name_dup = strndup(ra_name, RA_MAX_DIRNAME_LENGTH);
+	ra_dirname = g_string_new(rsc_type);
+	ra_name_dup = strndup(rsc_type, RA_MAX_DIRNAME_LENGTH);
 	base_name = basename(ra_name_dup);
 	/*
-	 * If ra_name only contains basename, then append RA_PATH.
-	 * If ra_name is a pathname, then don't deal with it.
+	 * If rsc_type only contains basename, then append RA_PATH.
+	 * If rsc_type is a pathname, then don't deal with it.
 	 */
-	if ( strncmp(ra_name, base_name, RA_MAX_BASENAME_LENGTH) == 0 ) {
+	if ( strncmp(rsc_type, base_name, RA_MAX_BASENAME_LENGTH) == 0 ) {
 		g_string_insert(ra_dirname, 0, RA_PATH);
 	}
 	free(ra_name_dup);
@@ -183,7 +183,7 @@ execra( const char * ra_name, const char * op,
 	g_string_free(debug_info, TRUE);
 	
 	if ( execv(ra_dirname->str, params_argv) < 0 ) {
-		cl_log(LOG_ERR, "execl error when to execute RA %s.", ra_name);
+		cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
 	}
 
 	switch (errno) {
@@ -196,12 +196,12 @@ execra( const char * ra_name, const char * op,
         }
 
 	g_string_free(ra_dirname, TRUE);
-        cl_log(LOG_ERR, "execl error when to execute RA %s.", ra_name);
+        cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
         exit(exit_value);
 }
 
 static int 
-prepare_cmd_parameters(const char * raname, const char * op,
+prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 	GHashTable * params_ht, RA_ARGV params_argv)
 {
 	/* For heartbeat scripts, no corresponding definite specification
@@ -218,13 +218,13 @@ prepare_cmd_parameters(const char * raname, const char * op,
 		return -1;
 	}
                                                                                         
-	tmp_len = strnlen(raname, 160) + 1;
+	tmp_len = strnlen(rsc_type, 160) + 1;
 	params_argv[0] = g_new(char, tmp_len);
-	strncpy(params_argv[0], raname, tmp_len);
+	strncpy(params_argv[0], rsc_type, tmp_len);
 
-	tmp_len = strnlen(op, 160) + 1;
+	tmp_len = strnlen(op_type, 160) + 1;
 	params_argv[ht_size+1] = g_new(char, tmp_len);
-	strncpy(params_argv[ht_size+1], op, tmp_len);
+	strncpy(params_argv[ht_size+1], op_type, tmp_len);
 
 	params_argv[ht_size+2] = NULL;
                                                                                         
@@ -236,7 +236,7 @@ prepare_cmd_parameters(const char * raname, const char * op,
 }
 
 static uniform_ret_execra_t 
-map_ra_retvalue(int ret_execra, const char * op)
+map_ra_retvalue(int ret_execra, const char * op_type)
 {
 	/* Now there is no related specification for Heartbeat standard.
 	 * Temporarily deal as below.
@@ -325,7 +325,7 @@ set_env(gpointer key, gpointer value, gpointer user_data)
         /*Need to free the memory to which key and value point?*/
 }
 static char*
-get_resource_meta(const char* ra_type)
+get_resource_meta(const char* rsc_type)
 {
-	return strdup(ra_type);
+	return strdup(rsc_type);
 }	
