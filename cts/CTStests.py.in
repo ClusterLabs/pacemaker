@@ -108,6 +108,7 @@ random for the selected number of iterations.
 
             testcount = testcount + 1
             starttime=time.time()
+            test.starttime=starttime
             ret=test(nodechoice)
 
             if ret:
@@ -196,6 +197,7 @@ class CTSTest:
 #            raise ValueError("Must be a ClusterManager object")
         self.CM = cm
         self.timeout=120
+	self.starttime=0
 
     def has_key(self, key):
         return self.Stats.has_key(key)
@@ -296,36 +298,25 @@ class StartTest(CTSTest):
     def __init__(self, cm, debug=None):
         CTSTest.__init__(self,cm)
         self.name="start"
-        self.uspat   = self.CM["Pat:We_started"]
-        self.thempat = self.CM["Pat:They_started"]
         self.debug = debug
 
     def __call__(self, node):
         '''Perform the 'start' test. '''
         self.incr("calls")
 
+        if node == self.CM.OurNode or self.CM.upcount() < 1:
+            self.incr("us")
+        else:
+            self.incr("them")
+
         if self.CM.ShouldBeStatus[node] != self.CM["down"]:
             return self.skipped()
 
-        if node == self.CM.OurNode or self.CM.upcount() < 1:
-            self.incr("us")
-            pat = (self.uspat % node)
-        else:
-            self.incr("them")
-            pat = (self.thempat % node)
-
-        watch = CTS.LogWatcher(self.CM["LogFileName"], [pat]
-        ,	timeout=self.CM["StartTime"]+10, debug=self.debug)
-        watch.setwatch()
-
-        self.CM.StartaCM(node)
-
-        if watch.look():
+        elif self.CM.StartaCM(node) == 1:
             return self.success()
-        else:
-            self.CM.log("START FAILURE: did not find pattern " + pat)
-            self.CM.log("START TIMEOUT = %d " % self.CM["StartTime"])
-            return self.failure("did not find pattern " + pat)
+
+	return self.failure("Startup %s on node %s failed"
+			    %(self.CM["Name"], node))
 
     def is_applicable(self):
         '''StartTest is always applicable'''
@@ -391,19 +382,23 @@ class RestartTest(CTSTest):
         self.incr("calls")
 
         self.incr("node:" + node)
-
+	
+	ret1 = 1
         if self.CM.ShouldBeStatus[node] == self.CM["down"]:
             self.incr("WasStopped")
-            self.start(node)
+            ret1 = self.start(node)
 
-        ret1 = self.stop(node)
+	self.starttime=time.time()
+        ret2 = self.stop(node)
         # Give the cluster time to recognize we're gone...
         time.sleep(self.CM["StableTime"])
-        ret2 = self.start(node)
+        ret3 = self.start(node)
 
         if not ret1:
-            return self.failure("stop failure")
+            return self.failure("start (setup) failure")
         if not ret2:
+            return self.failure("stop failure")
+        if not ret3:
             return self.failure("start failure")
         return self.success()
 
@@ -422,10 +417,10 @@ class StonithTest(CTSTest):
         CTSTest.__init__(self,cm)
         self.name="Stonith"
         self.theystopped  = self.CM["Pat:They_dead"]
-        self.allstopped  = self.CM["Pat:All_stopped"]
-        self.usstart   = self.CM["Pat:We_started"]
-        self.themstart = self.CM["Pat:They_started"]
-        self.timeout = timeout
+        self.allstopped   = self.CM["Pat:All_stopped"]
+        self.usstart      = self.CM["Pat:We_started"]
+        self.themstart    = self.CM["Pat:They_started"]
+        self.timeout      = timeout
 
     def __call__(self, node):
         '''Perform the 'stonith' test. (whack the node)'''
@@ -590,6 +585,7 @@ class StartOnebyOne(CTSTest):
         watch.ReturnOnlyMatch()
 
         watch.setwatch()
+	self.starttime=time.time()
         for node in self.CM.Env["nodes"]:
             self.CM.StartaCM(node)
         if watch.lookforall():
@@ -649,6 +645,7 @@ class SimulStart(CTSTest):
 
         watch.setwatch()
 
+	self.starttime=time.time()
         for node in self.CM.Env["nodes"]:
             self.CM.StartaCMnoBlock(node)
         if watch.lookforall():
@@ -663,7 +660,7 @@ class SimulStart(CTSTest):
 	    return self.failure("Did not find start pattern(s): " 
 				+	repr(watch.unmatched))
 
-	self.CM.log("Did not find start pattern(s): " +	repr(watch.unmatched))
+	self.CM.log("Warn: Did not find start pattern(s): " +	repr(watch.unmatched))
         self.CM.log("All nodes were started but %d may be unstable"
 			    %(len(watch.unmatched)))
 
@@ -708,6 +705,7 @@ class SimulStop(CTSTest):
         ,     timeout=self.CM["DeadTime"]+10)
 
         watch.setwatch()
+	self.starttime=time.time()
         for node in self.CM.Env["nodes"]:
             self.CM.StopaCMnoBlock(node)
         if watch.lookforall():
@@ -722,7 +720,7 @@ class SimulStop(CTSTest):
 	    return self.failure("Did not find stop pattern(s): "
 				+     repr(watch.unmatched))
 
-        self.CM.log("All nodes stopped but CTS didnt detect these patterns: " 
+        self.CM.log("Warn: All nodes stopped but CTS didnt detect these patterns: " 
 		    + repr(watch.unmatched))
         return self.success()
 
@@ -732,6 +730,44 @@ class SimulStop(CTSTest):
 
 #     Register SimulStop as a good test to run
 AllTestClasses.append(SimulStop)
+
+class StopOnebyOne(CTSTest):
+###################################################################
+    '''Stop all the nodes in order'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="StopOnebyOne"
+
+    def __call__(self, dummy):
+        '''Perform the 'StopOnebyOne' test. '''
+        self.incr("calls")
+
+        #     We ignore the "node" parameter...
+
+        #     Start up all the nodes...
+        for node in self.CM.Env["nodes"]:
+          if self.CM.ShouldBeStatus[node] != self.CM["up"]:
+            self.incr("started")
+            self.start = StartTest(self.CM)
+            self.start(node)
+
+	did_fail=0
+	self.starttime=time.time()
+        for node in self.CM.Env["nodes"]:
+            if not self.CM.StopaCM(node):
+		did_fail=did_fail + 1
+
+	if did_fail:
+	    return self.failure("Could not find stop %d nodes" %did_fail)
+
+        return self.success()
+
+    def is_applicable(self):
+        '''SimulStop is always applicable'''
+        return 1
+
+#     Register StopOnebyOne as a good test to run
+AllTestClasses.append(StopOnebyOne)
 
 ###################################################################
 class StandbyTest(CTSTest):
