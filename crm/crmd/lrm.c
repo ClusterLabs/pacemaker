@@ -874,13 +874,11 @@ do_lrm_event(long long action,
 
 	rsc = op->rsc;
 
-	if(op->rc != EXECRA_OK) {
-		if(op->op_status != LRM_OP_ERROR) {
-			crm_warn("Mapping operation %d status with a rc=%d"
-				 " to status %d",
-				 op->op_status, op->rc, LRM_OP_ERROR);
-			op->op_status = LRM_OP_ERROR;
-		}
+	if(op->op_status == LRM_OP_DONE && op->rc != EXECRA_OK) {
+		crm_warn("Mapping operation %d status with a rc=%d"
+			 " to status %d",
+			 op->op_status, op->rc, LRM_OP_ERROR);
+		op->op_status = LRM_OP_ERROR;
 	}
 	
 	switch(op->op_status) {

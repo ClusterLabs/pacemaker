@@ -335,6 +335,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		/* get out of here NOW! before anything worse happens */
 		IF_FSA_ACTION(A_EXIT_1,		do_exit)
 
+		else IF_FSA_ACTION(A_ERROR, do_log)
+		else IF_FSA_ACTION(A_WARN, do_log)
+		else IF_FSA_ACTION(A_LOG,  do_log)
+
 		/* essential start tasks */
 		else IF_FSA_ACTION(A_HA_CONNECT,	do_ha_control)
 		else IF_FSA_ACTION(A_STARTUP,		do_startup)
