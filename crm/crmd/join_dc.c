@@ -107,7 +107,7 @@ do_dc_join_offer_all(long long action,
 	if(g_hash_table_size(join_requests)
 	   >= fsa_membership_copy->members_size) {
 		crm_info("Not expecting any join acks");
-		register_fsa_input(cause, I_SUCCESS, msg_data->data);
+		register_fsa_input(C_FSA_INTERNAL, I_INTEGRATED, NULL);
 		return I_NULL;
 	}
 
@@ -239,7 +239,7 @@ do_dc_join_req(long long action,
 	   >= fsa_membership_copy->members_size) {
 		stopTimer(integration_timer);
 		crm_info("That was the last outstanding join ack");
-		register_fsa_input(cause, I_SUCCESS, msg_data->data);
+		register_fsa_input(C_FSA_INTERNAL, I_INTEGRATED, NULL);
 		return I_NULL;
 	}
 
@@ -292,7 +292,7 @@ do_dc_join_finalize(long long action,
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
 		crm_info("Not expecting any join confirmations");
 		
-		register_fsa_input(cause, I_SUCCESS, msg_data->data);
+		register_fsa_input(C_FSA_INTERNAL, I_FINALIZED, NULL);
 		return I_NULL;
 	}
 
@@ -350,10 +350,12 @@ do_dc_join_ack(long long action,
 
 	free_xml(tmp1);
 
+	register_fsa_input(cause, I_CIB_OP, msg_data->data);
+
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
 		stopTimer(finalization_timer);
 		crm_info("That was the last outstanding join confirmation");
-		register_fsa_input(cause, I_SUCCESS, msg_data->data);
+		register_fsa_input_later(C_FSA_INTERNAL, I_FINALIZED, NULL);
 		return I_NULL;
 	}
 
@@ -361,7 +363,6 @@ do_dc_join_ack(long long action,
 	crm_debug("Still waiting on %d outstanding join confirmations",
 		  num_join_invites - g_hash_table_size(confirmed_nodes));
 	
-	register_fsa_input(cause, I_CIB_OP, msg_data->data);
 	return I_NULL;
 }
 
