@@ -199,7 +199,7 @@ cib_native_signon(cib_t* cib, enum cib_conn_type type)
 		crm_info("Connection to CIB successful");
 		return cib_ok;
 	}
-	crm_err("Connection to CIB failed: %s", cib_error2string(rc));
+	crm_warn("Connection to CIB failed: %s", cib_error2string(rc));
 	cib_native_signoff(cib);
 	return rc;
 }
