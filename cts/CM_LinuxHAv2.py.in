@@ -55,8 +55,8 @@ class LinuxHAv2(HeartbeatCM):
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             # Patterns to look for in the log files for various occasions...
-            "Pat:We_started"    : "%s(.*)(Exiting the FSA \(S_NOT_DC|S_IDLE\))",
-            "Pat:They_started"  : "%s(.*)(Exiting the FSA \(S_NOT_DC|S_IDLE\))",
+            "Pat:We_started"    : " %s crmd: .* State transition .*-> .(S_NOT_DC|S_IDLE). ",
+            "Pat:They_started"  : " %s crmd: .* State transition .*-> .(S_NOT_DC|S_IDLE). ",
             
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
