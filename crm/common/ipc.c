@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.27 2005/03/15 18:40:06 gshi Exp $ */
+/* $Id: ipc.c,v 1.28 2005/03/16 19:48:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -74,6 +74,7 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node)
 		all_is_good = FALSE;
 		crm_err("Broadcast Send failed");
 		CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
+
 	} else if(node != NULL
 		  && hb_conn->llc_ops->send_ordered_nodemsg(
 			  hb_conn, msg, node) != HA_OK) {
@@ -83,10 +84,9 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node)
 		CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
 	}
 
-	crm_log_message_adv(all_is_good?LOG_MSG:LOG_ERR,"HA[outbound]",msg);
+	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"HA[outbound]",msg);
 	return all_is_good;
 }
-
 
 /* frees msg */
 gboolean 
@@ -105,13 +105,6 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 	} else if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
 		crm_err("IPC Channel is not connected");
 		all_is_good = FALSE;
-
-#if 0
-	} else if(ipc_client->should_send_block == FALSE) {
-		crm_verbose("Setting IPC Channel to blocking..."
-			    " least some messages get lost");
-		ipc_client->should_send_block = TRUE;
-#endif
 	}
 
 	if(all_is_good && msg2ipcchan(msg, ipc_client) != HA_OK) {
@@ -126,8 +119,6 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 	}	
 
 	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"IPC[outbound]",msg);
-
-	
 	crm_msg_del(msg);
 	
 	return all_is_good;
