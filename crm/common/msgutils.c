@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.22 2004/03/22 14:01:48 andrew Exp $ */
+/* $Id: msgutils.c,v 1.23 2004/03/24 09:59:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -116,103 +116,6 @@ generateReference(const char *custom1, const char *custom2)
 	FNRET(since_epoch);
 }
 
-gboolean
-conditional_add_failure(xmlNodePtr failed,
-			xmlNodePtr target,
-			int operation,
-			int return_code)
-{
-	FNIN();
-	gboolean was_error = FALSE;
-    
-	if (return_code < 0)
-	{
-		const char *error_msg = NULL;
-		const char *operation_msg = NULL;
-		was_error = TRUE;
-
-		switch(return_code) {
-			case CIB_ERROR_MISSING_ID:
-				error_msg = "CIB_ERROR_MISSING_ID";
-				break;
-			case CIB_ERROR_MISSING_TYPE:
-				error_msg = "CIB_ERROR_MISSING_TYPE";
-				break;
-			case CIB_ERROR_MISSING_FIELD:
-				error_msg = "CIB_ERROR_MISSING_FIELD";
-				break;
-			case CIB_ERROR_OBJTYPE_MISMATCH:
-				error_msg = "CIB_ERROR_OBJTYPE_MISMATCH";
-				break;
-			case CIB_ERROR_EXISTS:
-				error_msg = "CIB_ERROR_EXISTS";
-				break;
-			case CIB_ERROR_NOT_EXISTS:
-				error_msg = "CIB_ERROR_NOT_EXISTS";
-				break;
-			case CIB_ERROR_CORRUPT:
-				error_msg = "CIB_ERROR_CORRUPT";
-				break;
-			case CIB_ERROR_OTHER:
-				error_msg = "CIB_ERROR_OTHER";
-				break;
-			default:
-				cl_log(LOG_ERR,
-				       "Unknown CIB Error %d", return_code);
-				error_msg = "<unknown error>";
-				break;				
-		}
-
-		switch(operation) {
-			case 0:
-				operation_msg = "CIB_OP_NONE";
-				break;
-			case 1:
-				operation_msg = "CIB_OP_ADD";
-				break;
-			case 2:
-				operation_msg = "CIB_OP_MODIFY";
-				break;
-			case 3:
-				operation_msg = "CIB_OP_DELETE";
-				break;
-			default:
-				cl_log(LOG_ERR,
-				       "Unknown CIB operation %d", operation);
-				operation_msg = "<unknown operation>";
-				break;				
-		}
-		
-		
-		xmlNodePtr xml_node = create_xml_node(failed,
-						      XML_FAIL_TAG_CIB);
-
-		set_xml_property_copy(xml_node,
-				      XML_FAILCIB_ATTR_ID,
-				      ID(target));
-
-		set_xml_property_copy(xml_node,
-				      XML_FAILCIB_ATTR_OBJTYPE,
-				      TYPE(target));
-
-		set_xml_property_copy(xml_node,
-				      XML_FAILCIB_ATTR_OP,
-				      operation_msg);
-	
-		set_xml_property_copy(xml_node,
-				      XML_FAILCIB_ATTR_REASON,
-				      error_msg);
-
-		cl_log(LOG_DEBUG,
-		       "Action %s failed: %s (cde=%d)",
-		       operation_msg,
-		       error_msg,
-		       return_code);
-	
-	}
-
-	FNRET(was_error);
-}
 
 
 xmlNodePtr

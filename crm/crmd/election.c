@@ -23,7 +23,7 @@
 #include <crm/common/xmlutils.h>
 #include <crm/common/ipcutils.h>
 #include <crm/common/msgutils.h>
-#include <crm/cib/cib.h>
+#include <crm/cib.h>
 #include <string.h>
 #include <crmd_messages.h>
 

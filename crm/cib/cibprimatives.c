@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.17 2004/03/22 14:20:49 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.18 2004/03/24 09:59:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,7 +36,7 @@
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
 #include <crm/common/xmlutils.h>
-#include <cib.h>
+#include <crm/cib.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -77,17 +77,17 @@ addResource(xmlNodePtr cib, cibResource *xml_node)
 	type = xmlGetProp(xml_node, XML_CIB_ATTR_RESTYPE);
 	
 	if (id == NULL || strlen(id) < 1)
-		add_res = CIB_ERROR_MISSING_ID;
+		add_res = CIBRES_MISSING_ID;
 	else if (findResource(cib, ID(xml_node)) != NULL)
-		add_res = CIB_ERROR_EXISTS;
+		add_res = CIBRES_EXISTS;
 	else if (type == NULL || strlen(type) < 1)
-		add_res = CIB_ERROR_MISSING_TYPE;
+		add_res = CIBRES_MISSING_TYPE;
 	else {
 		new_parent = get_object_root(XML_CIB_TAG_RESOURCES, cib);
 
 		if(new_parent == NULL) {
 			// create it?
-			add_res = CIB_ERROR_CORRUPT;
+			add_res = CIBRES_CORRUPT;
 		} else {
 			add_node_copy(new_parent, xml_node);
 		}
@@ -146,11 +146,11 @@ updateResource(xmlNodePtr cib, cibResource *anXmlNode)
 int
 delResource(xmlNodePtr cib, const char *id)
 {
-	int del_res = CIB_ERROR_OTHER;
+	int del_res = CIBRES_OTHER;
 	FNIN();
 
 	if(id == NULL || strlen(id) == 0) {
-		del_res = CIB_ERROR_MISSING_ID;
+		del_res = CIBRES_MISSING_ID;
 	} else {
 		del_res = cib_delete_node(findResource(cib, id));
 	}
@@ -164,7 +164,7 @@ delResource(xmlNodePtr cib, const char *id)
 int
 addConstraint(xmlNodePtr cib, cibConstraint *xml_node)
 {
-	int add_res = CIB_ERROR_NONE;
+	int add_res = CIBRES_OK;
 	const char * id = NULL;
 	const char * type = NULL;
 	xmlNodePtr new_parent = NULL;
@@ -175,17 +175,17 @@ addConstraint(xmlNodePtr cib, cibConstraint *xml_node)
 	type = xmlGetProp(xml_node, XML_CIB_ATTR_CONTYPE);
 	
 	if (id == NULL || strlen(id) < 1)
-		add_res = CIB_ERROR_MISSING_ID;
+		add_res = CIBRES_MISSING_ID;
 	else if (findConstraint(cib, ID(xml_node)) != NULL)
-		add_res = CIB_ERROR_EXISTS;
+		add_res = CIBRES_EXISTS;
 /* 	else if (type == NULL || strlen(type) < 1) */
-/* 		add_res = CIB_ERROR_MISSING_TYPE; */
+/* 		add_res = CIBRES_MISSING_TYPE; */
 	else {
 		new_parent = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
 
 		if(new_parent == NULL) {
 			// create it?
-			add_res = CIB_ERROR_CORRUPT;
+			add_res = CIBRES_CORRUPT;
 		} else {
 			add_node_copy(new_parent, xml_node);
 		}
@@ -240,11 +240,11 @@ updateConstraint(xmlNodePtr cib, cibConstraint *anXmlNode)
 int
 delConstraint(xmlNodePtr cib, const char *id)
 {
-	int del_res = CIB_ERROR_OTHER;
+	int del_res = CIBRES_OTHER;
 	FNIN();
 
 	if(id == NULL || strlen(id) == 0) {
-		del_res = CIB_ERROR_MISSING_ID;
+		del_res = CIBRES_MISSING_ID;
 	} else {
 		del_res = cib_delete_node(findConstraint(cib, id));
 	}
@@ -268,17 +268,17 @@ addHaNode(xmlNodePtr cib, cibHaNode *xml_node)
 	type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
 	
 	if (id == NULL || strlen(id) < 1)
-		add_res = CIB_ERROR_MISSING_ID;
+		add_res = CIBRES_MISSING_ID;
 	else if (findHaNode(cib, ID(xml_node)) != NULL)
-		add_res = CIB_ERROR_EXISTS;
+		add_res = CIBRES_EXISTS;
 /* 	else if (type == NULL || strlen(type) < 1) */
-/* 		add_res = CIB_ERROR_MISSING_TYPE; */
+/* 		add_res = CIBRES_MISSING_TYPE; */
 	else {
 		new_parent = get_object_root(XML_CIB_TAG_NODES, cib);
 
 		if(new_parent == NULL) {
 			// create it?
-			add_res = CIB_ERROR_CORRUPT;
+			add_res = CIBRES_CORRUPT;
 		} else {
 			add_node_copy(new_parent, xml_node);
 		}
@@ -324,11 +324,11 @@ updateHaNode(xmlNodePtr cib, cibHaNode *anXmlNode)
 int
 delHaNode(xmlNodePtr cib, const char *id)
 {
-	int del_res = CIB_ERROR_OTHER;
+	int del_res = CIBRES_OTHER;
 	FNIN();
 
 	if(id == NULL || strlen(id) == 0) {
-		del_res = CIB_ERROR_MISSING_ID;
+		del_res = CIBRES_MISSING_ID;
 	} else {
 		del_res = cib_delete_node(findHaNode(cib, id));
 	}
@@ -339,11 +339,11 @@ delHaNode(xmlNodePtr cib, const char *id)
 int
 cib_delete_node(xmlNodePtr node_to_delete)
 {
-	int del_res = CIB_ERROR_NOT_EXISTS;
+	int del_res = CIBRES_NOT_EXISTS;
 	if (node_to_delete != NULL) {
 		unlink_xml_node(node_to_delete);
 		free_xml(node_to_delete);
-		del_res = CIB_ERROR_NONE;
+		del_res = CIBRES_OK;
 	}
 	return del_res;
 }
@@ -405,7 +405,7 @@ addStatus(xmlNodePtr cib, cibStatus *xml_node)
 	instance = xmlGetProp(xml_node, XML_CIB_ATTR_INSTANCE);
 	
 	if (id == NULL || strlen(id) < 1)
-		add_res = CIB_ERROR_MISSING_ID;
+		add_res = CIBRES_MISSING_ID;
 	else if (findStatus(cib, id, instance) != NULL)
 		add_res = -2;
 	else {

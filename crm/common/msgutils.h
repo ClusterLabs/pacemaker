@@ -1,4 +1,4 @@
-/* $Id: msgutils.h,v 1.9 2004/03/18 10:48:51 andrew Exp $ */
+/* $Id: msgutils.h,v 1.10 2004/03/24 09:59:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,11 +24,6 @@
 #include <hb_api.h>
 
 extern const char *generateReference(const char *custom1, const char *custom2);
-
-extern gboolean conditional_add_failure(xmlNodePtr failed,
-					xmlNodePtr target,
-					int operation,
-					int return_code);
 
 extern xmlNodePtr validate_crm_message(xmlNodePtr root,
 				       const char *sys,

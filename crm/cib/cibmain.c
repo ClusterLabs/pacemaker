@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.11 2004/03/22 14:20:49 andrew Exp $ */
+/* $Id: cibmain.c,v 1.12 2004/03/24 09:59:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,7 +49,7 @@
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
 #include <cibio.h>
-#include <cib.h>
+#include <crm/cib.h>
 #include <crm/common/msgutils.h>
 
 #include <crm/dmalloc_wrapper.h>
@@ -276,7 +276,7 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 		} else if (strcmp(sys_to, CRM_SYSTEM_CIB) == 0
 			|| strcmp(sys_to, CRM_SYSTEM_DCIB) == 0) {
 
-			answer = process_cib_request(root_xml_node, TRUE);
+			answer = process_cib_message(root_xml_node, TRUE);
 			if (send_xmlipc_message(sender, answer)==FALSE)
 				cl_log(LOG_WARNING,
 				       "Cib answer could not be sent");

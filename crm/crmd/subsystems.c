@@ -38,7 +38,7 @@
 #include <crm/common/xmlutils.h>
 #include <crm/common/xmlvalues.h>
 
-#include <crm/cib/cib.h>
+#include <crm/cib.h>
 
 #include <crmd.h>
 #include <crmd_messages.h>
@@ -164,7 +164,7 @@ do_cib_invoke(long long action,
 	if(action & A_CIB_INVOKE) {
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
 #ifdef INTEGRATED_CIB
-		xmlNodePtr answer = process_cib_request(cib_msg, TRUE);
+		xmlNodePtr answer = process_cib_message(cib_msg, TRUE);
 		if(relay_message(answer, TRUE) == FALSE) {
 			cl_log(LOG_ERR, "Confused what to do with cib result");
 			xml_message_debug(answer, "Couldnt route: ");
@@ -188,15 +188,12 @@ do_cib_invoke(long long action,
 		 */
 		xmlSetProp(new_options, XML_ATTR_FILTER_TYPE, section);
 #ifdef INTEGRATED_CIB
-		cib_msg = create_cib_request(new_options, NULL,
-					     CRM_OPERATION_BUMP);
-		
-		xmlNodePtr answer = process_cib_request(cib_msg, FALSE);
+		xmlNodePtr answer = process_cib_request(CRM_OPERATION_BUMP,
+							NULL, NULL);
 
 		send_request(NULL, answer, CRM_OPERATION_STORE,
 			     NULL, CRM_SYSTEM_CRMD);
-		
-		free_xml(cib_msg);
+
 		free_xml(answer);
 #else 
 		send_request(new_options, NULL, CRM_OPERATION_BUMP,

@@ -24,7 +24,7 @@
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlutils.h>
 #include <crm/common/msgutils.h>
-#include <crm/cib/cib.h>
+#include <crm/cib.h>
 
 #include <crmd.h>
 #include <crmd_messages.h>
@@ -547,7 +547,7 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 		       "Sub-system (%s) has been incorporated into the CRMd.",
 		       sys);
 		xml_message_debug(action, "Change the way we handle");
-		relay_message(process_cib_request(action, TRUE), TRUE);
+		relay_message(process_cib_message(action, TRUE), TRUE);
 		
 	} else {
 		cl_log(LOG_ERR,
@@ -794,18 +794,14 @@ handle_message(xmlNodePtr stored_msg)
 				
 #ifdef INTEGRATED_CIB
 				/* do a replace or an update? */
-				xmlNodePtr req =
-					create_cib_request(NULL, data,
-							   CRM_OPERATION_UPDATE);
-				xmlNodePtr resp =
-					process_cib_request(req, FALSE);
+				xmlNodePtr resp = process_cib_request(
+					CRM_OPERATION_UPDATE, NULL, data);
 
 				// TODO: check the return status
 
 				next_input = I_CIB_UPDATE;
 				
 				free_xml(resp);
-				free_xml(req);
 				
 #else
 				gboolean sent =

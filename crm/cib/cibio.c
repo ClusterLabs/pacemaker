@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.14 2004/03/22 14:20:49 andrew Exp $ */
+/* $Id: cibio.c,v 1.15 2004/03/24 09:59:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,7 +32,7 @@
 #include <fcntl.h>
 
 #include <libxml/tree.h>
-#include <cib.h>
+#include <crm/cib.h>
 #include <cibio.h>
 #include <crm/common/msgutils.h> // for getNow()
 #include <crm/common/xmltags.h>

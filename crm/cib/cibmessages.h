@@ -1,4 +1,4 @@
-/* $Id: cibmessages.h,v 1.2 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: cibmessages.h,v 1.3 2004/03/24 09:59:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,10 +18,15 @@
  */
 #ifndef CIB_MESSAGES__H
 #define CIB_MESSAGES__H
-extern xmlNodePtr processCibRequest(xmlNodePtr command);
-extern xmlNodePtr
-createCibRequest(gboolean isLocal, const char *operation, const char *section,
-		 const char *verbose, xmlNodePtr data);
+
+extern xmlNodePtr cib_process_request(const char *op,
+				      const xmlNodePtr fragment,
+				      const xmlNodePtr options,
+				      enum cib_result *result);
+
+extern xmlNodePtr createCibRequest(gboolean isLocal, const char *operation,
+				   const char *section, const char *verbose,
+				   xmlNodePtr data);
 
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: xmlvalues.h,v 1.7 2004/03/19 10:43:42 andrew Exp $ */
+/* $Id: xmlvalues.h,v 1.8 2004/03/24 09:59:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,12 +49,3 @@
 #define CRM_OPERATION_ANNOUNCE	"announce"
 #define CRM_OPERATION_HBEAT	"dc_beat"
 
-#define CIB_ERROR_NONE			0
-#define CIB_ERROR_MISSING_ID		-1
-#define CIB_ERROR_MISSING_TYPE		-2
-#define CIB_ERROR_MISSING_FIELD		-3
-#define CIB_ERROR_OBJTYPE_MISMATCH	-4
-#define CIB_ERROR_EXISTS		-5
-#define CIB_ERROR_NOT_EXISTS		-6
-#define CIB_ERROR_CORRUPT		-7
-#define CIB_ERROR_OTHER			-8

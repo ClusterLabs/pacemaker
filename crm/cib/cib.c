@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.19 2004/03/22 14:20:49 andrew Exp $ */
+/* $Id: cib.c,v 1.20 2004/03/24 09:59:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,12 +36,11 @@
 #include <crm/common/xmlvalues.h>
 #include <crm/common/xmlutils.h>
 #include <crm/common/msgutils.h>
-#include <cib.h>
+#include <crm/cib.h>
 #include <cibio.h>
 #include <cibmessages.h>
 
 #include <crm/dmalloc_wrapper.h>
-
 
 gboolean
 startCib(const char *filename)
@@ -102,9 +101,12 @@ get_object_root(const char *object_type, xmlNodePtr the_root)
 FILE *msg_cib_strm = NULL;
 
 xmlNodePtr
-process_cib_request(xmlNodePtr message, gboolean auto_reply)
+process_cib_message(xmlNodePtr message, gboolean auto_reply)
 {
-	xmlNodePtr message_copy = copy_xml_node_recursive(message, 1);
+	xmlNodePtr fragment = find_xml_node(message, XML_TAG_FRAGMENT);
+	xmlNodePtr options = find_xml_node(message, XML_TAG_OPTIONS);
+	const char *op = xmlGetProp(options, XML_ATTR_OP);
+	enum cib_result result = CIBRES_OK;
 
 #ifdef MSG_LOG
 	if(msg_cib_strm == NULL) {
@@ -114,28 +116,23 @@ process_cib_request(xmlNodePtr message, gboolean auto_reply)
 	fflush(msg_cib_strm);
 #endif
 	
-	xmlNodePtr data = processCibRequest(message_copy);
+	xmlNodePtr data = cib_process_request(op, options, fragment, &result);
 
-	xmlNodePtr options = find_xml_node(message_copy, XML_TAG_OPTIONS);
-
-	const char *result = xmlGetProp(options, XML_ATTR_RESULT);
-
-	CRM_DEBUG2("[cib] operation returned result %s", result);
-
-	set_xml_property_copy(data, XML_ATTR_RESULT, result);
-
+	CRM_DEBUG2("[cib] operation returned result %d", result);
 
 	if(auto_reply) {
 
-		xmlNodePtr reply = create_reply(message_copy, data);
+		xmlNodePtr reply = create_reply(message, data);
 		free_xml(data);
-		free_xml(message_copy);
 
 #ifdef MSG_LOG
-fprintf(msg_cib_strm, "[Reply ]\t%s\n",
+		fprintf(msg_cib_strm, "[Reply ]\t%s\n",
 			dump_xml_node(reply, FALSE));
 		fflush(msg_cib_strm);
 #endif
+		options = find_xml_node(reply, XML_TAG_OPTIONS);
+		set_xml_property_copy(options, XML_ATTR_RESULT, "ok"); // put real result in here
+		
 		return reply;
 
 	}
@@ -144,9 +141,19 @@ fprintf(msg_cib_strm, "[Reply ]\t%s\n",
 	fprintf(msg_cib_strm, "[Output]\t%s\n", dump_xml_node(data, FALSE));
 	fflush(msg_cib_strm);
 #endif
-	free_xml(message_copy);
 	return data;
 }
+
+xmlNodePtr
+process_cib_request(const char *op,
+		    const xmlNodePtr options,
+		    const xmlNodePtr fragment)
+{
+	enum cib_result result = CIBRES_OK;
+
+	return cib_process_request(op, fragment, options, &result);
+}
+
 
 xmlNodePtr
 create_cib_fragment(xmlNodePtr update, const char *section)
@@ -195,34 +202,6 @@ create_cib_fragment(xmlNodePtr update, const char *section)
 	return fragment;
 }
 
-/*
- * This method adds a copy of xml_response_data
- */
-xmlNodePtr
-create_cib_request(xmlNodePtr msg_options,
-		   xmlNodePtr msg_data,
-		   const char *operation)
-{
-	xmlNodePtr request = NULL;
-	FNIN();
-
-	if(operation != NULL) {
-		if(msg_options == NULL)
-			msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-		
-		set_xml_property_copy(msg_options, XML_ATTR_OP, operation);
-	}
-	
-	request = create_request(msg_options,
-				 msg_data,
-				 NULL,
-				 CRM_SYSTEM_CIB,
-				 CRM_SYSTEM_CRMD,
-				 NULL,
-				 NULL);
-	FNRET(request);
-}
-
 
 char *
 pluralSection(const char *a_section)
@@ -253,4 +232,92 @@ pluralSection(const char *a_section)
 	
 	CRM_DEBUG2("Plural is %s", a_section_parent);
 	return a_section_parent;
+}
+
+const char *
+cib_error2string(enum cib_result return_code)
+{
+	const char *error_msg = NULL;
+	switch(return_code) {
+		case CIBRES_MISSING_ID:
+			error_msg = "The id field is missing";
+			break;
+		case CIBRES_MISSING_TYPE:
+			error_msg = "The type field is missing";
+			break;
+		case CIBRES_MISSING_FIELD:
+			error_msg = "A required field is missing";
+			break;
+		case CIBRES_OBJTYPE_MISMATCH:
+			error_msg = "CIBRES_OBJTYPE_MISMATCH";
+			break;
+		case CIBRES_EXISTS:
+			error_msg = "The object already exists";
+			break;
+		case CIBRES_NOT_EXISTS:
+			error_msg = "The object does not exist";
+			break;
+		case CIBRES_CORRUPT:
+			error_msg = "The CIB is corrupt";
+			break;
+		case CIBRES_OTHER:
+			error_msg = "CIBRES_OTHER";
+			break;
+		case CIBRES_OK:
+			error_msg = "ok";
+			break;
+		case CIBRES_FAILED:
+			error_msg = "Failed";
+			break;
+		case CIBRES_FAILED_OLDUPDATE:
+			error_msg = "Discarded old update";
+			break;
+		case CIBRES_FAILED_ACTIVATION:
+			error_msg = "Activation Failed";
+			break;
+		case CIBRES_FAILED_NOSECTION:
+			error_msg = "Required section was missing";
+			break;
+		case CIBRES_FAILED_NOTSUPPORTED:
+			error_msg = "Supplied information is not supported";
+			break;
+	}
+			
+	if(error_msg == NULL) {
+		cl_log(LOG_ERR, "Unknown CIB Error %d", return_code);
+		error_msg = "<unknown error>";
+	}
+	
+	return error_msg;
+}
+
+const char *
+cib_op2string(enum cib_op operation)
+{
+	const char *operation_msg = NULL;
+	switch(operation) {
+		case 0:
+			operation_msg = "none";
+			break;
+		case 1:
+			operation_msg = "add";
+			break;
+		case 2:
+			operation_msg = "modify";
+			break;
+		case 3:
+			operation_msg = "delete";
+			break;
+		case CIB_OP_MAX:
+			operation_msg = "invalid operation";
+			break;
+			
+	}
+
+	if(operation_msg == NULL) {
+		cl_log(LOG_ERR, "Unknown CIB operation %d", operation);
+		operation_msg = "<unknown operation>";
+	}
+	
+	return operation_msg;
 }

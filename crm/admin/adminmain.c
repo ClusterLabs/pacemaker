@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.16 2004/03/22 14:25:22 andrew Exp $ */
+/* $Id: adminmain.c,v 1.17 2004/03/24 09:59:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -48,7 +48,7 @@
 #include <crm/common/xmlutils.h>
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
-#include <crm/cib/cib.h>
+#include <crm/cib.h>
 
 #define OPTARGS	"V?i:o:D:C:S:HA:U:M:I:EWRFt:m:a:d:w:c:r:p:s:"
 
