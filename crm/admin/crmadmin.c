@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.7 2004/09/17 13:03:09 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.8 2004/10/05 20:45:26 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -33,6 +33,7 @@
 
 #include <hb_api.h>
 #include <clplumbing/uids.h>
+#include <clplumbing/Gmain_timeout.h>
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -43,6 +44,9 @@
 
 #include <getopt.h>
 #include <crm/dmalloc_wrapper.h>
+
+int message_timer_id = -1;
+int message_timeout_ms = 30*1000;
 
 GMainLoop *mainloop = NULL;
 IPC_Channel *crmd_channel = NULL;
@@ -58,6 +62,7 @@ xmlNodePtr handleCibMod(void);
 int do_find_resource(const char *rsc, xmlNodePtr xml_node);
 int do_find_resource_list(xmlNodePtr xml_node);
 int do_find_node_list(xmlNodePtr xml_node);
+gboolean admin_message_timeout(gpointer data);
 
 enum debug {
 	debug_none,
@@ -91,7 +96,7 @@ int operation_status = 0;
 const char *sys_to = NULL;;
 const char *crm_system_name = "crmadmin";
 
-#define OPTARGS	"V?K:S:HE:DW:d:i:RNs"
+#define OPTARGS	"V?K:S:HE:DW:d:i:RNst:"
 
 int
 main(int argc, char **argv)
@@ -108,6 +113,7 @@ main(int argc, char **argv)
 		{"help", 0, 0, '?'},
 		{"silent", 0, 0, 's'},
 		{"reference", 1, 0, 0},
+		{"timeout", 1, 0, 't'},
 
 		/* daemon options */
 		{"kill", 1, 0, 'K'},  /* stop a node */
@@ -181,6 +187,12 @@ main(int argc, char **argv)
 				cl_log_enable_stderr(TRUE);
 				set_crm_log_level(level+1);
 				break;
+			case 't':
+				message_timeout_ms = atoi(optarg);
+				if(message_timeout_ms < 1) {
+					message_timeout_ms = 30*1000;
+				}
+				
 			case '?':
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
@@ -256,6 +268,9 @@ main(int argc, char **argv)
 			/* wait for the reply by creating a mainloop and running it until
 			 * the callbacks are invoked...
 			 */
+			message_timer_id = Gmain_timeout_add(
+				message_timeout_ms, admin_message_timeout, NULL);
+			
 			mainloop = g_main_new(FALSE);
 			crm_verbose("%s waiting for reply from the local CRM",
 				 crm_system_name);
@@ -430,13 +445,10 @@ do_work(ll_cluster_t * hb_cluster)
 			sys_to = CRM_SYSTEM_DC;				
 	}
 		
-	send_ipc_request(crmd_channel,
-			 msg_options,
-			 msg_data,
-			 dest_node, sys_to,
-			 crm_system_name,
-			 admin_uuid,
-			 this_msg_reference);
+	send_ipc_request(
+		crmd_channel, msg_options, msg_data,
+		dest_node, sys_to, crm_system_name,
+		admin_uuid, this_msg_reference);
 
 	return ret;
 
@@ -492,6 +504,8 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	xmlNodePtr options = NULL;
 	xmlNodePtr xml_root_node = NULL;
 	char *buffer = NULL;
+
+	g_source_remove(message_timer_id);
 
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {
@@ -606,8 +620,23 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		g_main_quit(mainloop);
 		return !hack_return_good;
 	}
+
+	message_timer_id = Gmain_timeout_add(
+		message_timeout_ms, admin_message_timeout, NULL);
+	
+	
 	return hack_return_good;
 }
+
+gboolean
+admin_message_timeout(gpointer data)
+{
+	fprintf(stderr, "No messages received in %d seconds.. aborting\n", (int)message_timeout_ms/1000);
+	crm_err("No messages received in %d seconds", (int)message_timeout_ms/1000);
+	g_main_quit(mainloop);
+	return FALSE;
+}
+
 
 int
 do_find_resource(const char *rsc, xmlNodePtr xml_node)
