@@ -754,8 +754,8 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 		crm_xml_trace(right, "right");
 	}
 	
-	if(elem_l != NULL) int_elem_l = atoi(elem_l);
-	if(elem_r != NULL) int_elem_r = atoi(elem_r);
+	if(elem_l != NULL) { int_elem_l = atoi(elem_l); }
+	if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
 	
 	if(int_elem_l < int_elem_r) {
 		crm_verbose("lt - XML_ATTR_GENERATION");
@@ -773,8 +773,8 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 		elem_r = crm_element_value(right, XML_ATTR_NUMUPDATES);
 	}
 	
-	if(elem_l != NULL) int_elem_l = atoi(elem_l);
-	if(elem_r != NULL) int_elem_r = atoi(elem_r);
+	if(elem_l != NULL) { int_elem_l = atoi(elem_l); }
+	if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
 
 	crm_xml_trace(left, "left");
 	crm_xml_trace(left, "right");
@@ -797,8 +797,8 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 		elem_r = crm_element_value(right, XML_ATTR_NUMPEERS);
 	}
 	
-	if(elem_l != NULL) int_elem_l = atoi(elem_l);
-	if(elem_r != NULL) int_elem_r = atoi(elem_r);
+	if(elem_l != NULL) { int_elem_l = atoi(elem_l); }
+	if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
 
 	if(int_elem_l < int_elem_r) {
 		crm_verbose("lt - XML_ATTR_NUMPEERS");
@@ -1041,19 +1041,19 @@ verifyCibXml(crm_data_t *cib)
 	}
 	
 	tmp_node = get_object_root(XML_CIB_TAG_NODES, cib);
-	if (tmp_node == NULL) is_valid = FALSE;
+	if (tmp_node == NULL) { is_valid = FALSE; }
 
 	tmp_node = get_object_root(XML_CIB_TAG_RESOURCES, cib);
-	if (tmp_node == NULL) is_valid = FALSE;
+	if (tmp_node == NULL) { is_valid = FALSE; }
 
 	tmp_node = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	if (tmp_node == NULL) is_valid = FALSE;
+	if (tmp_node == NULL) { is_valid = FALSE; }
 
 	tmp_node = get_object_root(XML_CIB_TAG_STATUS, cib);
- 	if (tmp_node == NULL) is_valid = FALSE;
+	if (tmp_node == NULL) { is_valid = FALSE; }
 
 	tmp_node = get_object_root(XML_CIB_TAG_CRMCONFIG, cib);
- 	if (tmp_node == NULL) is_valid = FALSE;
+	if (tmp_node == NULL) { is_valid = FALSE; }
 
 	/* more integrity tests */
 
