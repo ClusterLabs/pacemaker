@@ -139,12 +139,12 @@ do_election_count_vote(long long action,
 		 * the question is how we managed to get here.
 		 */
 		crm_err("Membership copy was NULL");
-		return I_FAIL;
+		return I_NULL;
 		
 	} else if(fsa_membership_copy->members_size < 1) {
 		
 		/* if even we are not in the cluster then we should not vote */
-		return I_FAIL;
+		return I_NULL;
 	}
 
 	our_node = (oc_node_t*)
