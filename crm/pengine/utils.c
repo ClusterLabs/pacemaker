@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.41 2004/09/17 13:03:10 andrew Exp $ */
+/* $Id: utils.c,v 1.42 2004/09/20 12:23:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -694,11 +694,11 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 	       node->fixed?"True":"False"); 
 
 	if(details && node->details != NULL) {
-		char *mutable = crm_strdup("\t\t");
+		char *pe_mutable = crm_strdup("\t\t");
 		crm_debug("\t\t===Node Attributes");
 		g_hash_table_foreach(node->details->attrs,
-				     print_str_str, mutable);
-		crm_free(mutable);
+				     print_str_str, pe_mutable);
+		crm_free(pe_mutable);
 	}
 
 	if(details) {
