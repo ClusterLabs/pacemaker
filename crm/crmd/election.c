@@ -119,8 +119,16 @@ do_election_count_vote(long long action,
 		FNRET(election_result);
 	}
 
-	for(; (your_index < 0 && my_index < 0)
-		    || lpc < fsa_membership_copy->members_size; lpc++) {
+	if(fsa_membership_copy->members_size < 1) {
+		// if even we are not in the cluster then we should not vote
+		FNRET(I_FAIL);
+		
+	}
+	
+	lowest_uname = fsa_membership_copy->members[0].node_uname;
+	lowest_bornon = fsa_membership_copy->members[0].node_born_on;
+	
+	for(; lpc < fsa_membership_copy->members_size; lpc++) {
 		
 		const char *node_uname =
 			fsa_membership_copy->members[lpc].node_uname;
@@ -139,12 +147,14 @@ do_election_count_vote(long long action,
 			my_index = lpc;
 		}
 		
-		if(lowest_bornon >= this_born_on) {
-			if(lowest_uname == NULL) {
-				lowest_uname = node_uname;
-			} else if(strcmp(lowest_uname, node_uname) > 0) {
-				lowest_uname = node_uname;
-			}
+		if(lowest_bornon > this_born_on) {
+			lowest_uname = node_uname;
+			lowest_bornon = this_born_on;
+			
+		} else if(lowest_bornon == this_born_on
+			  && strcmp(lowest_uname, node_uname) > 0) {
+			lowest_uname = node_uname;
+			lowest_bornon = this_born_on;
 		}
 	}
 
@@ -158,7 +168,11 @@ do_election_count_vote(long long action,
 	       vote_from);
 #endif
 
-	if(strcmp(lowest_uname, fsa_our_uname) == 0){
+	cl_log(LOG_DEBUG, "Election winner should be %s (born_on=%d)",
+	       lowest_uname, lowest_bornon);
+	
+	
+	if(lowest_uname != NULL && strcmp(lowest_uname, fsa_our_uname) == 0){
 		cl_log(LOG_DEBUG, "Election win: lowest born_on and uname");
 		election_result = I_ELECTION_DC;
 
