@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.29 2005/02/09 11:43:29 andrew Exp $ */
+/* $Id: xml.c,v 1.30 2005/02/09 15:35:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -226,39 +226,13 @@ copy_in_properties(crm_data_t* target, crm_data_t *src)
 		crm_warn("No node to copy properties from");
 	} else if (target == NULL) {
 		crm_err("No node to copy properties into");
-#ifdef USE_LIBXML
-	} else if (src->properties == NULL) {
-		crm_debug("No properties to copy");
 	} else {
-		xmlAttrPtr prop_iter = NULL;
-		
-		prop_iter = src->properties;
-		while(prop_iter != NULL) {
-			const char *local_prop_name = prop_iter->name;
-			const char *local_prop_value =
-				xmlGetProp(src, local_prop_name);
-
-			prop_iter = prop_iter->next;
-			
-			set_xml_property_copy(target,
-					      local_prop_name,
-					      local_prop_value);
-		}
-#else
-	} else {
-		int lpc = 0;
-		for (lpc = 0; lpc < src->nfields; lpc++) {
-			if(src->types[lpc] != FT_STRING) {
-				continue;
-			} else if(safe_str_eq(
-					  src->names[lpc], XML_ATTR_TAGNAME)) {
-				continue;
-			}
-			
-			ha_msg_mod(target, src->names[lpc], src->values[lpc]);
-		}
+		xml_prop_iter(
+			src, local_prop_name, local_prop_value,
+			set_xml_property_copy(
+				target, local_prop_name, local_prop_value);
+			);
 		crm_validate_data(target);
-#endif
 	}
 	
 	return;
@@ -268,13 +242,15 @@ crm_data_t*
 add_node_copy(crm_data_t *new_parent, crm_data_t *xml_node)
 {
 	crm_data_t *node_copy = NULL;
-
+	
+	crm_validate_data(new_parent);
+	crm_validate_data(xml_node);
+		
 	if(xml_node != NULL && new_parent != NULL) {
 #ifdef USE_LIBXML
 		node_copy = copy_xml_node_recursive(xml_node);
 		xmlAddChild(new_parent, node_copy);
 #else
-		crm_validate_data(new_parent);
 		ha_msg_addstruct(new_parent, crm_element_name(xml_node), xml_node);
 		node_copy = find_entity(new_parent, crm_element_name(xml_node), ID(xml_node), FALSE);
 		crm_update_parents(new_parent);
@@ -774,7 +750,7 @@ print_xml_formatted(int log_level, const char *function,
 }
 
 crm_data_t *
-get_message_xml(HA_Message *msg, const char *field) 
+get_message_xml(const HA_Message *msg, const char *field) 
 {
 	crm_data_t *xml_node = NULL;
 #ifdef USE_LIBXML
@@ -1245,6 +1221,27 @@ crm_element_value(crm_data_t *data, const char *name)
 	}
 	return value;
 #endif
+}
+
+char *
+crm_element_value_copy(crm_data_t *data, const char *name)
+{
+	const char *value = NULL;
+	char *value_copy = NULL;
+#ifdef USE_LIBXML
+	value = xmlGetProp(data, name);
+#else
+	crm_validate_data(data);
+	value = cl_get_string(data, name);
+	if(value != NULL) {
+		cl_is_allocated(value);
+	}
+#endif
+ 	CRM_ASSERT(value != NULL);
+	if(value != NULL) {
+		value_copy = crm_strdup(value);
+	}
+	return value_copy;
 }
 
 const char *
