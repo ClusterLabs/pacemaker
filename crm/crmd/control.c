@@ -313,7 +313,7 @@ do_startup(long long action,
 		te_subsystem->path     = BIN_DIR;
 		te_subsystem->name     = CRM_SYSTEM_TENGINE;
 		te_subsystem->command  = BIN_DIR"/"CRM_SYSTEM_TENGINE;
-		te_subsystem->args     = "-VVc";
+		te_subsystem->args     = NULL;
 		te_subsystem->flag_connected = R_TE_CONNECTED;	
 		te_subsystem->flag_required  = R_TE_REQUIRED;	
 		
@@ -326,7 +326,7 @@ do_startup(long long action,
 		pe_subsystem->path     = BIN_DIR;
 		pe_subsystem->name     = CRM_SYSTEM_PENGINE;
 		pe_subsystem->command  = BIN_DIR"/"CRM_SYSTEM_PENGINE;
-		pe_subsystem->args     = "-VVc";
+		pe_subsystem->args     = NULL;
 		pe_subsystem->flag_connected = R_PE_CONNECTED;	
 		pe_subsystem->flag_required  = R_PE_REQUIRED;	
 		

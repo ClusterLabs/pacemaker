@@ -85,7 +85,7 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	unsigned int	j;
 	struct rlimit	oflimits;
 	const char 	*devnull = "/dev/null";
-	
+	char *args = NULL;
 
 	crm_debug("Starting sub-system \"%s\"", the_subsystem->name);
 	set_bit_inplace(fsa_input_register, the_subsystem->flag_required);
@@ -141,13 +141,17 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
 	(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 	
+	if(the_subsystem->args != NULL) {
+		args = crm_strdup(the_subsystem->args);
+	}
 	{
 		char* const start_args[] = {
-			crm_strdup(the_subsystem->args),
+			crm_strdup(the_subsystem->command),
+			args,
 			NULL
 		};
 		
-		(void)execv(the_subsystem->command, start_args);
+		(void)execvp(the_subsystem->command, start_args);
 	}
 	
 	/* Should not happen */
