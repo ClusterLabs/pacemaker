@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.1 2004/11/09 09:32:14 andrew Exp $ */
+/* $Id: complex.h,v 1.2 2004/11/09 11:18:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,8 +47,9 @@ typedef struct resource_object_functions_s
 		void (*rsc_dependancy_lh)(rsc_dependancy_t *);
 		void (*rsc_dependancy_rh)(resource_t *, rsc_dependancy_t *);
 
-		void (*rsc_order_lh)(order_constraint_t *);
-		void (*rsc_order_rh)(action_t *, order_constraint_t *);
+		void (*rsc_order_lh)(resource_t *, order_constraint_t *);
+		void (*rsc_order_rh)(
+			action_t *, resource_t *, order_constraint_t *);
 
 		void (*rsc_location)(rsc_to_node_t *);
 
@@ -66,13 +67,32 @@ extern void native_internal_ordering(
 extern void native_rsc_dependancy_lh(rsc_dependancy_t *constraint);
 extern void native_rsc_dependancy_rh(
 	resource_t *rsc, rsc_dependancy_t *constraint);
-extern void native_rsc_order_lh(order_constraint_t *order);
-extern void native_rsc_order_rh(action_t *lh_action, order_constraint_t *order);
+extern void native_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
+extern void native_rsc_order_rh(
+	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void native_rsc_location(rsc_to_node_t *constraint);
 extern void native_expand(resource_t *rsc, xmlNodePtr *graph);
 extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details);
 extern void native_free(resource_t *rsc);
 
+
+extern void group_unpack(resource_t *rsc);
+extern void group_color(resource_t *rsc, GListPtr *colors);
+extern void group_create_actions(resource_t *rsc);
+extern void group_internal_ordering(
+	resource_t *rsc, GListPtr *ordering_constraints);
+extern void group_rsc_dependancy_lh(rsc_dependancy_t *constraint);
+extern void group_rsc_dependancy_rh(
+	resource_t *rsc, rsc_dependancy_t *constraint);
+extern void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
+extern void group_rsc_order_rh(
+	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
+extern void group_rsc_location(rsc_to_node_t *constraint);
+extern void group_expand(resource_t *rsc, xmlNodePtr *graph);
+extern void group_dump(resource_t *rsc, const char *pre_text, gboolean details);
+extern void group_free(resource_t *rsc);
+
+
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_object_functions_t resource_class_functions[];
-
+extern gboolean common_unpack(xmlNodePtr xml_obj, resource_t **rsc);

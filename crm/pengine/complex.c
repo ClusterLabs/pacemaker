@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.1 2004/11/09 09:32:14 andrew Exp $ */
+/* $Id: complex.c,v 1.2 2004/11/09 11:18:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,6 +19,8 @@
 
 #include <pengine.h>
 #include <pe_utils.h>
+#include <crm/msg_xml.h>
+
 gboolean update_node_weight(rsc_to_node_t *cons,const char *id,GListPtr nodes);
 gboolean is_active(rsc_to_node_t *cons);
 gboolean constraint_violated(
@@ -40,18 +42,21 @@ resource_object_functions_t resource_class_functions[] = {
 		native_expand,
 		native_dump,
 		native_free
-	}
-/* 	{ */
-/* 		group_expand, */
-/* 		group_n_colors, */
-/* 		group_assign, */
-/* 		group_expand, */
-/* 		group_internal_constraints, */
-/* 		group_rsc_dependancy, */
-/* 		group_rsc_order, */
-/* 		group_rsc_location, */
-/* 		group_dump */
-/* 	}, */
+	},
+	{
+		group_unpack,
+		group_color,
+		group_create_actions,
+		group_internal_ordering,
+		group_rsc_dependancy_lh,
+		group_rsc_dependancy_rh,
+		group_rsc_order_lh,
+		group_rsc_order_rh,
+		group_rsc_location,
+		group_expand,
+		group_dump,
+		group_free
+	},
 /* 	{ */
 /* 		incarnation_expand, */
 /* 		incarnation_n_colors, */
@@ -84,6 +89,42 @@ is_active(rsc_to_node_t *cons)
 	return TRUE;
 }
 
+gboolean	
+common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
+{
+	const char *id = xmlGetProp(xml_obj, XML_ATTR_ID);
+	
+	crm_verbose("Processing resource...");
+	
+	if(id == NULL) {
+		crm_err("Must specify id tag in <resource>");
+		return FALSE;
+		
+	} else if(rsc == NULL) {
+		crm_err("Nowhere to unpack resource into");
+		return FALSE;
+		
+	}
+	crm_malloc(*rsc, sizeof(resource_t));
+	
+	if(*rsc == NULL) {
+		return FALSE;
+	}
+	
+	(*rsc)->id  = id;
+	(*rsc)->xml = xml_obj;
+	(*rsc)->variant = get_resource_type(xml_obj->name);
+	
+	if((*rsc)->variant == pe_unknown) {
+		crm_err("Unknown resource type: %s", xml_obj->name);
+		crm_free(*rsc);
+		return FALSE;
+	}
+	
+	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
+	(*rsc)->fns->unpack(*rsc);
+	return TRUE;
+}
 
 gboolean
 update_node_weight(rsc_to_node_t *cons, const char *id, GListPtr nodes)

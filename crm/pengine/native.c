@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.1 2004/11/09 09:32:14 andrew Exp $ */
+/* $Id: native.c,v 1.2 2004/11/09 11:18:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -341,7 +341,7 @@ void native_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 }
 
 
-void native_rsc_order_lh(order_constraint_t *order)
+void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 {
 	int lpc;
 	GListPtr lh_actions = NULL;
@@ -349,26 +349,32 @@ void native_rsc_order_lh(order_constraint_t *order)
 
 	crm_verbose("Processing LH of ordering constraint %d", order->id);
 
+	if(order->lh_action_task != stop_rsc
+	   && order->lh_action_task != start_rsc) {
+		crm_err("Task %s from ordering %d isnt a resource action",
+			task2text(order->lh_action_task), order->id);
+		return;
+	}
+
+
 	if(lh_action != NULL) {
 		lh_actions = g_list_append(NULL, lh_action);
 
-	} else if(lh_action == NULL && order->lh_rsc != NULL) {
+	} else if(lh_action == NULL && lh_rsc != NULL) {
 		if(order->strength == pecs_must) {
 			crm_debug("No LH-Side (%s/%s) found for constraint..."
 				  " creating",
-				  order->lh_rsc->id,
-				  task2text(order->lh_action_task));
+				  lh_rsc->id, task2text(order->lh_action_task));
 
-			action_new(order->lh_rsc, order->lh_action_task, NULL);
+			action_new(lh_rsc, order->lh_action_task, NULL);
 		}
 			
 		lh_actions = find_actions_type(
-			order->lh_rsc->actions, order->lh_action_task, NULL);
+			lh_rsc->actions, order->lh_action_task, NULL);
 
 		if(lh_actions == NULL) {
 			crm_debug("No LH-Side (%s/%s) found for constraint",
-				  order->lh_rsc->id,
-				  task2text(order->lh_action_task));
+				  lh_rsc->id, task2text(order->lh_action_task));
 			return;
 		}
 
@@ -381,8 +387,14 @@ void native_rsc_order_lh(order_constraint_t *order)
 	slist_iter(
 		lh_action_iter, action_t, lh_actions, lpc,
 
-		if(order->rh_rsc) {
-			order->rh_rsc->fns->rsc_order_rh(lh_action_iter, order);
+		resource_t *rh_rsc = order->rh_rsc;
+		if(rh_rsc == NULL && order->rh_action) {
+			rh_rsc = order->rh_action->rsc;
+		}
+		
+		if(rh_rsc) {
+			rh_rsc->fns->rsc_order_rh(
+				lh_action_iter, rh_rsc, order);
 
 		} else if(order->rh_action) {
 			order_actions(lh_action_iter, order->rh_action, order); 
@@ -393,7 +405,8 @@ void native_rsc_order_lh(order_constraint_t *order)
 	pe_free_shallow_adv(lh_actions, FALSE);
 }
 
-void native_rsc_order_rh(action_t *lh_action, order_constraint_t *order)
+void native_rsc_order_rh(
+	action_t *lh_action, resource_t *rsc, order_constraint_t *order)
 {
 	int lpc;
 	GListPtr rh_actions = NULL;
@@ -404,15 +417,14 @@ void native_rsc_order_rh(action_t *lh_action, order_constraint_t *order)
 	if(rh_action != NULL) {
 		rh_actions = g_list_append(NULL, rh_action);
 
-	} else if(rh_action == NULL && order->rh_rsc != NULL) {
+	} else if(rh_action == NULL && rsc != NULL) {
 		rh_actions = find_actions_type(
-			order->rh_rsc->actions, order->rh_action_task, NULL);
+			rsc->actions, order->rh_action_task, NULL);
 
 		if(rh_actions == NULL) {
 			crm_debug("No RH-Side (%s/%s) found for constraint..."
 				  " ignoring",
-				  order->rh_rsc->id,
-				  task2text(order->rh_action_task));
+				  rsc->id, task2text(order->rh_action_task));
 			return;
 		}
 			
@@ -545,7 +557,9 @@ void native_free(resource_t *rsc)
 	if(rsc->rsc_cons != NULL) {
 		g_list_free(rsc->rsc_cons);
 	}
-	/* free ourselves? */
+
+	crm_free(rsc->variant_opaque);
+	crm_free(rsc);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.25 2004/11/09 09:32:14 andrew Exp $ */
+/* $Id: stages.c,v 1.26 2004/11/09 11:18:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -317,7 +317,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 		}
 		
 		if(rsc != NULL) {
-			rsc->fns->rsc_order_lh(order);
+			rsc->fns->rsc_order_lh(rsc, order);
 			continue;
 			
 		}
@@ -331,7 +331,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 		}
 		
 		if(rsc != NULL) {
-			rsc->fns->rsc_order_rh(order->lh_action, order);
+			rsc->fns->rsc_order_rh(order->lh_action, rsc, order);
 		} else {
 			/* fall back to action-to-action */
 			order_actions(

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.41 2004/11/09 09:32:14 andrew Exp $ */
+/* $Id: unpack.c,v 1.42 2004/11/09 11:18:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,6 +38,7 @@ int      order_id        = 1;
 GListPtr agent_defaults  = NULL;
 gboolean stonith_enabled = FALSE;
 const char* transition_timeout = "60000"; /* 1 minute */
+
 
 GListPtr match_attrs(const char *attr, const char *op, const char *value,
 		     const char *type, GListPtr node_list);
@@ -276,40 +277,23 @@ unpack_resources(xmlNodePtr xml_resources,
 {
 	crm_verbose("Begining unpack...");
 	xml_child_iter(
-		xml_resources, xml_obj, XML_CIB_TAG_RESOURCE,
-		const char *id         = xmlGetProp(xml_obj, XML_ATTR_ID);
+		xml_resources, xml_obj, NULL,
+
 		resource_t *new_rsc = NULL;
-
-		crm_verbose("Processing resource...");
-		
-		if(id == NULL) {
-			crm_err("Must specify id tag in <resource>");
-			continue;
+		if(common_unpack(xml_obj, &new_rsc)) {
+			*resources = g_list_append(*resources, new_rsc);
+			crm_debug_action(
+				print_resource("Added", new_rsc, FALSE));
+		} else {
+			crm_err("Failed unpacking resource %s",
+				xmlGetProp(xml_obj, XML_ATTR_ID));
 		}
-		crm_malloc(new_rsc, sizeof(resource_t));
-
-		if(new_rsc == NULL) {
-			return FALSE;
-		}
-		
-		new_rsc->id	 = id;
-		new_rsc->xml	 = xml_obj;
-		new_rsc->variant = get_resource_type(xml_obj->name);
-		new_rsc->fns     = &resource_class_functions[new_rsc->variant];
-
-		new_rsc->fns->unpack(new_rsc);
-		
-		*resources = g_list_append(*resources, new_rsc);
-	
-		crm_debug_action(print_resource("Added", new_rsc, FALSE));
 		);
 	
 	*resources = g_list_sort(*resources, sort_rsc_priority);
 
 	return TRUE;
 }
-
-
 
 gboolean 
 unpack_constraints(xmlNodePtr xml_constraints,
