@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.8 2004/06/01 11:45:39 andrew Exp $ */
+/* $Id: crm.h,v 1.9 2004/06/01 15:56:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -89,8 +89,8 @@
 #define CRM_OP_TECOMPLETE	"te_complete"
 #define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
 
-#define CRMD_STATE_ACTIVE	"active"
-#define CRMD_STATE_INACTIVE	"inactive"
+#define CRMD_STATE_ACTIVE	"member"
+#define CRMD_STATE_INACTIVE	"down"
 
 #define CRMD_JOINSTATE_DOWN	"down"
 #define CRMD_JOINSTATE_PENDING	"pending"
@@ -107,7 +107,9 @@ typedef GSList* GSListPtr;
 				  }
 
 /* Developmental debug stuff */
-#define CRM_DEBUG(w...) cl_log(LOG_DEBUG, w)
+#define CRM_DEBUG(w, x...) cl_log(LOG_DEBUG, "(%s) " w, __FUNCTION__, x)
+
+#define CRM_NOTE(w) cl_log(LOG_DEBUG, "(%s) " w, __FUNCTION__)
 
 extern gboolean crm_debug_state;
 #define crm_debug(w...)  if(crm_debug_state) {	\

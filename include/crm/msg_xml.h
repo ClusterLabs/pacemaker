@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.3 2004/06/01 11:45:39 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.4 2004/06/01 15:56:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,8 +41,8 @@
 
 #define XML_BOOLEAN_TRUE		"true"
 #define XML_BOOLEAN_FALSE		"false"
-#define XML_BOOLEAN_NO			XML_BOOLEAN_TRUE
-#define XML_BOOLEAN_YES			XML_BOOLEAN_FALSE
+#define XML_BOOLEAN_YES			XML_BOOLEAN_TRUE
+#define XML_BOOLEAN_NO			XML_BOOLEAN_FALSE
 
 #define XML_TAG_OPTIONS			"options"
 
@@ -121,6 +121,7 @@
 #define XML_LRM_ATTR_RUNNABLE		"runnable"
 #define XML_LRM_ATTR_OPTIONAL		"optional"
 
+#define XML_LRM_ATTR_STATE		"state"
 #define XML_LRM_ATTR_LASTOP		"last_op"
 #define XML_LRM_ATTR_OPSTATE		"op_state"
 #define XML_LRM_ATTR_OPCODE		"op_code"
