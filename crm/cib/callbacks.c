@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.21 2005/02/17 16:20:12 andrew Exp $ */
+/* $Id: callbacks.c,v 1.22 2005/02/19 15:06:07 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -718,8 +718,8 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 			cib_client->source = NULL;
 		}
 		
-		crm_debug("Freeing the cib client");
-		crm_debug("Freeing the cib client %s", cib_client->id);
+		crm_debug("Freeing the cib client %s",
+			  crm_str(cib_client->id));
 /* 		crm_free(cib_client->callback_id); */
 /*  		crm_free(cib_client->id); */
   		crm_free(cib_client);
