@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.18 2005/02/25 14:11:05 andrew Exp $ */
+/* $Id: main.c,v 1.19 2005/02/25 15:26:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -115,10 +115,12 @@ init_start(void)
 	gboolean was_error = FALSE;
 
 	hb_conn = ll_cluster_new("heartbeat");
-	cib_register_ha(hb_conn, CRM_SYSTEM_CIB);
+	if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
+		crm_crit("Cannot sign in to heartbeat... terminating");
+		fprintf(stderr, "Cannot sign in to heartbeat... terminating");
+		exit(1);
+	}
 
-	
-	
 	if(startCib(CIB_FILENAME) == FALSE){
 		crm_crit("Cannot start CIB... terminating");
 		exit(1);
