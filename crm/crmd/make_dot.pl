@@ -24,7 +24,8 @@
 $do_links2self=1;
 
 make_inputs_dot("fsa_matrix.h", "fsa_inputs.dot", "const enum crmd_fsa_state crmd_fsa_state", "const long long crmd_fsa_actions");
-make_actions_dot("fsa_matrix.h", "fsa_actions.dot", "const long long crmd_fsa_actions", "ELSEIF_INVOKE_FSA_ACTION");
+
+make_actions_dot("fsa_matrix.h", "fsa_actions_by_state.dot", "fsa_inputs_by_action.dot", "const long long crmd_fsa_actions", "ELSEIF_INVOKE_FSA_ACTION");
 
 sub make_inputs_dot
 {
@@ -39,13 +40,6 @@ sub make_inputs_dot
     my $filename=$input;
     my $filedesc=INPUT_FD;
     unless (open($filedesc, $filename)) {
-	print STDERR "Can't open $filename: $!\n";
-    }
-    
-    $filename=$output;
-    $filedesc=DOT_FD;
-    
-    unless (open($filedesc, '>',$filename)) {
 	print STDERR "Can't open $filename: $!\n";
     }
     
@@ -102,6 +96,12 @@ sub make_inputs_dot
 ';
     
     
+    $filename=$output;
+    $filedesc=DOT_FD;
+    
+    unless (open($filedesc, '>',$filename)) {
+	print STDERR "Can't open $filename: $!\n";
+    }
     print DOT_FD $intro;
     
     
@@ -217,7 +217,7 @@ sub make_inputs_dot
 
 sub make_actions_dot
 {
-    my ($input, $output, $start, $stop) = @_;
+    my ($input, $output1, $output2, $start, $stop) = @_;
 
     my $duplicate_edges;
     my $self_links;
@@ -230,18 +230,12 @@ sub make_actions_dot
     unless (open($filedesc, $filename)) {
 	print STDERR "Can't open $filename: $!\n";
     }
-    
-    $filename=$output;
-    $filedesc=DOT_FD;
-    
-    unless (open($filedesc, '>',$filename)) {
-	print STDERR "Can't open $filename: $!\n";
-    }
-    
+     
     my $seen_start = 0;
     my $input = "";
     my @lines = <INPUT_FD>;
     my %HoH = {};
+    my %HoH2 = {};
     
     my $intro = 'digraph "g" {
 	rankdir = LR
@@ -272,8 +266,6 @@ sub make_actions_dot
     $outro = '}
 ';
     
-    
-    print DOT_FD $intro;
     
     
     foreach $line (@lines)	
@@ -363,14 +355,14 @@ sub make_actions_dot
 		    $key2 = $state1." {".$action."}";
 		    $value = $input;
 
-		    if( exists($HoH{$key1}) )
+		    if( exists($HoH2{$key1}) )
 		    {
-			$rec = $HoH{$key1};
+			$rec = $HoH2{$key1};
 		    }
 		    else
 		    {
 			$rec = {};
-			$HoH{$key1} = $rec;
+			$HoH2{$key1} = $rec;
 		    }
 
 		    if($action =~ /A_NOTHING/)
@@ -385,9 +377,9 @@ sub make_actions_dot
 		    {
 			$log_links = $log_links + 1;
 		    }
-		    elsif( $HoH{$key1}{$key2} ne "" )
+		    elsif( $HoH2{$key1}{$key2} ne "" )
 		    {
-			$oldval = $HoH{$key1}{$key2};
+			$oldval = $HoH2{$key1}{$key2};
 			$rec->{$key2} = $oldval.",\\n".$value;
 			$duplicate_edges = $duplicate_edges + 1;
 		    }
@@ -403,7 +395,15 @@ sub make_actions_dot
 	}
     }
 
+    $filename=$output1;
+    $filedesc=DOT_FD;
+    
+    unless (open($filedesc, '>',$filename)) {
+	print STDERR "Can't open $filename: $!\n";
+    }
 
+    print DOT_FD $intro;
+    
 # print the whole thing  somewhat sorted
     foreach $family ( sort keys %HoH ) {
 #     print "$family: { ";
@@ -427,6 +427,40 @@ sub make_actions_dot
     print DOT_FD $outro;
 
     close(DOT_FD);
+
+    $filename=$output2;
+    $filedesc=DOT_FD;
+    
+    unless (open($filedesc, '>',$filename)) {
+	print STDERR "Can't open $filename: $!\n";
+    }
+
+    print DOT_FD $intro;
+    
+# print the whole thing  somewhat sorted
+    foreach $family ( sort keys %HoH2 ) {
+#     print "$family: { ";
+	for $role ( sort keys %{ $HoH2{$family} } ) {
+
+# aid readability
+	    $color="black";
+	    $color="red"    if $role =~ /ERROR/;
+	    $color="green"  if $role =~ /ELECTION/;
+	    $color="blue"   if $role =~ /RESTART/;
+	    $color="cyan"   if $role =~ /TIMEOUT/;
+	    $color="orange" if $role =~ /FAIL/;
+	    $color="gray" if $role =~ /UPDATE/;
+
+	    print DOT_FD "\"".$family."\" -> \"".$role."\" [ color=\"$color\" fontcolor=\"$color\" label = \"$HoH2{$family}{$role}\" ]\n";    
+#         print "$role=$HoH{$family}{$role} ";
+	}
+#     print "}\n";
+    }
+    
+    print DOT_FD $outro;
+
+    close(DOT_FD);
+
     close(INPUT_FD);
 
     print "\n$output Done...\n";

@@ -79,7 +79,7 @@ install-exec-local:
 
 uninstall-local:
 
-graphs:	fsa_inputs.png fsa_actions.png
+graphs:	fsa_inputs.png fsa_inputs_by_action.png fsa_actions_by_state.png
 
 %.png: %.dot
 	dot -Tpng $< > $@ 
