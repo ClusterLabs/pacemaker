@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <errno.h>
+#include <dirent.h>
 #include <glib.h>
 #include <clplumbing/cl_log.h>
 #include <pils/plugin.h>
@@ -40,34 +42,33 @@
 #define PIL_PLUGINLICENSE	LICENSE_PUBDOM
 #define PIL_PLUGINLICENSEURL	URL_PUBDOM
 
+/* 
+ * Are there multiple paths? Now according to OCF spec, the answer is 'no'.
+ * But actually or for future?
+ */
+static const char * RA_PATH = "/usr/ocf/resource.d/";
 
 /* The begin of exported function list */
 static int execra(const char * ra_name,  
 		  const char * op,
 	 	  GHashTable * cmd_params,
-		  GHashTable * env_params,
-		  gboolean need_metadata,
-		  int * call_key);
+		  GHashTable * env_params);
 
-static int post_query_result(int exec_key, int * result, char ** meta_data);
+static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op);
+
+static int get_resource_list(GList ** rsc_info);
 /* The end of exported function list */
  
 /* The begin of internal used function & data list */
 static int raexec_setenv(GHashTable * env_params);
-static int fork_and_execra(const char * ra_name, const char * op, 
-			const char * cmd_params, GHashTable * env_params, 
-			gboolean need_metadata);
-static int read_pipe(int fd, char ** meta_data);
-static int * g_intdup(gint value); 
 static void set_env(gpointer key, gpointer value, gpointer user_data);
-
-static GHashTable * post_query_ops = NULL;
 /* The end of internal function & data list */
 
 /* Rource agent execution plugin operations */
 static struct RAExecOps raops =
 {	execra,
-	post_query_result
+	map_ra_retvalue,
+	get_resource_list
 };
 
 /*
@@ -82,9 +83,6 @@ static struct RAExecOps raops =
  */
 static void raexec_closepi(PILPlugin *pi)
 {
-	if ( post_query_ops != NULL ) { 
-		g_hash_table_destroy(post_query_ops);
-	}
 }
 
 /*
@@ -125,8 +123,6 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 	/* Register ourself as a plugin */
 	imports->register_plugin(us, &OurPIExports);  
 
-	post_query_ops = g_hash_table_new(g_int_hash, g_int_equal);
-
 	/*  Register our interfaces */
  	return imports->register_interface(us, PIL_PLUGINTYPE_S,  PIL_PLUGIN_S,	
 		&raops, raexec_closeintf, &OurInterface, &OurImports,
@@ -138,168 +134,102 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
  */
 
 static int 
-execra( const char * ra_name, const char * op, GHashTable * cmd_params,
-	GHashTable * env_params, gboolean need_metadata, int * call_key)
+execra( const char * ra_name, const char * op, 
+	GHashTable * cmd_params, GHashTable * env_params )
 {
+	char *ra_name_dup, *base_name;
+	GString * ra_dirname;
+	
+	uniform_ret_execra_t exit_value;
+
 	cl_log(LOG_DEBUG, "To execute a RA %s", ra_name);
 	/* Prepare the call parameter */
 	if (!cmd_params) {
-		cl_log(LOG_ERR, "OCF RA should have no command-line \
-			 parameters.");
+		if (g_hash_table_size(cmd_params) > 0) {
+			cl_log(LOG_ERR, "OCF RA should have no "\
+				"command-line parameters.");
+		}
 	}
-
-	/* Fork a child and execute the RA */
-	*call_key = fork_and_execra(ra_name, op, NULL,
-				env_params, need_metadata);
-
-	if (*call_key <= 0) { 
-		return -1;
-	}
-	else {
-		return 0;  /* return ok */
-	}
-}
-
-static int
-post_query_result(int exec_key, int * result, char ** meta_data)
-{
-	int ret;
-	gpointer org_key, org_value;
-	gboolean found = FALSE;
-
-	if ( post_query_ops == NULL ) {
-		 return -1;
-	}
-
-	found = g_hash_table_lookup_extended(post_query_ops, 
-			&exec_key, &org_key, &org_value); 		
-	if ( !found ) { 
-		cl_log(LOG_ERR,"No this child %d need post query.", exec_key);
-		return -1;
-	}
-	ret = waitpid(exec_key, result, WNOHANG);
-	if ( ret == 0 ) {
-		cl_log(LOG_DEBUG, "process %d don't exit yet.", exec_key);
-                /* return at once to avoid remove item in 'post_query_ops' */
-		return 0;  
-	}
-
-	if ( ret == -1 ) {
-		cl_log(LOG_ERR, "error when fetching %d  exit status.",
-			exec_key);
-	}
-
-	if ((ret > 0) && (*(int*)org_value > 0) && ( meta_data != NULL )) {
-		read_pipe(*(int*)org_value, meta_data);
-	}
-
-	g_free(org_key);
-	g_free(org_value);
-	g_hash_table_remove(post_query_ops, &exec_key);
 	
-	return ret;
+	ra_dirname = g_string_new(ra_name);
+	ra_name_dup = strndup(ra_name, RA_MAX_DIRNAME_LENGTH);
+	base_name = basename(ra_name_dup);
+	/* 
+	 * If ra_name only contains basename, then append RA_PATH.
+	 * If ra_name is a pathname, then don't deal with it.
+	 */
+	if ( strncmp(ra_name, base_name, RA_MAX_BASENAME_LENGTH) == 0 ) {
+		g_string_insert(ra_dirname, 0, RA_PATH);		
+	} 
+	free(ra_name_dup);
+
+	/* execute the RA */
+	raexec_setenv(env_params);
+	cl_log(LOG_ERR, "ra_dirname is:%s", ra_dirname->str);
+	execl(ra_dirname->str, ra_dirname->str, op, NULL); 
+	
+	switch (errno) {
+		case ENOENT:   /* No such file or directory */
+		case EISDIR:   /* Is a directory */
+			exit_value = EXECRA_NO_RA;
+			break;
+
+		default:
+			exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
+	}
+
+	cl_log(LOG_ERR, "execl error when to execute RA %s.", ra_name);
+	g_string_free(ra_dirname, TRUE);
+	exit(exit_value);
 }
 
-/* Possible bug for pipe using such as exceeding the buffer length ? */
+static uniform_ret_execra_t 
+map_ra_retvalue(int ret_execra, const char * op)
+{
+	/* Because the UNIFORM_RET_EXECRA is compatible with OCF standard */
+	return ret_execra;
+}
+
 static int 
-fork_and_execra(const char * ra_name, const char * op, const char * cmd_params,
-		GHashTable * env_params, gboolean need_metadata)
+get_resource_list(GList ** rsc_info)
 {
-	int cpid;
-	int fd[2];	
+	struct dirent **namelist;
+	int file_num;
 
-	cl_log(LOG_DEBUG, "Will to execute RA %s.", ra_name);
-	if (need_metadata == TRUE) {
-		if ( pipe(fd) < 0 ) {
-			cl_log(LOG_ERR,"pipe create error when to execute %s.",
-				 ra_name);
-			return -1;
-		}
+	if ( rsc_info == NULL ) {
+		cl_log(LOG_ERR, "Parameter error: get_resource_list");
+		return -2;
 	}
 
-	if ( (cpid=fork()) < 0 ) {
-		cl_log(LOG_ERR, "Fork failed when to execute %s.", ra_name);
-		return -1;
-	} 
-
-	if ( cpid > 0 ) {
-		/* In parent process */
-		/* close write fd */
-		if ( need_metadata == TRUE ) {
-			close(fd[1]);
-			g_hash_table_insert(post_query_ops, 
-				g_intdup(cpid), g_intdup(fd[0]));
-		}
-		else {
-			g_hash_table_insert(post_query_ops, 
-				g_intdup(cpid), g_intdup(0));
-		}
-		return cpid;
-	} else {
-		/* in child process */
-		/* close read fd */
-		cl_log(LOG_DEBUG, "In forked child %d.", getpid());
-
-		if ( need_metadata == TRUE ) {
-			close(fd[0]);
-			if ( fd[1] != STDOUT_FILENO ) {
-				if (dup2(fd[1], STDOUT_FILENO)!=STDOUT_FILENO) {
-					cl_log(LOG_ERR,"dup2 error when to "\
-						"execute RA.");
-					exit(-1);
-				}
+	if ( *rsc_info != NULL ) {
+		cl_log(LOG_ERR, "Parameter error: get_resource_list."\
+			"will cause memory leak.");
+		*rsc_info = NULL;
+	}
+ 
+	file_num = scandir(RA_PATH, &namelist, 0, alphasort);
+	if (file_num < 0) {
+		cl_log(LOG_ERR, "scandir failed in OCF RA plugin");
+		return -2;
+	} else 
+	{
+		while (file_num--) {
+			rsc_info_t * rsc_info_tmp;
+			if (*(namelist[file_num]->d_name) != '.') {
+				rsc_info_tmp = g_new(rsc_info_t, 1);	
+				rsc_info_tmp->rsc_type = 
+					g_strdup(namelist[file_num]->d_name);
+			/* 
+			 * Since the version definition isn't cleat yet,
+			 * the version is setted 1.0.
+			 */
+				rsc_info_tmp->version = g_strdup("1.0");
 			}
-			close(fd[1]);
+			free(namelist[file_num]);
 		}
-
-		raexec_setenv(env_params);
-		if ( execl(ra_name, ra_name, op, NULL) < 0 ) {
-			cl_log(LOG_ERR, "execl error when to execute RA %s.", 
-				ra_name);
-		}
-		exit(-1);
-     	} 
-}
-
-static int
-read_pipe(int fd, char ** meta_data)
-{
-	const int BUFFLEN = 81;
-	char buffer[BUFFLEN];
-	int readlen;
-	GString * gstr_tmp;
-
-	*meta_data = NULL;
-	gstr_tmp = g_string_new("");
-	do {
-		memset(buffer, 0, BUFFLEN);
-		readlen = read(fd, buffer, BUFFLEN - 1);
-		if ( readlen > 0 ) {
-			g_string_append(gstr_tmp, buffer);
-		}
-	} while (readlen == BUFFLEN - 1); 
-	close(fd);
-
-	if (readlen < 0) {
-		cl_log(LOG_ERR, "read pipe error when execute RA."); 
-		return -1;
+		free(namelist);
 	}
-	if ( gstr_tmp->len == 0 ) {
-		cl_log(LOG_INFO, "read 0 byte from this pipe when execute RA."); 
-		return 0;
-	}
-
-	*meta_data = malloc(gstr_tmp->len + 1);
-	if ( *meta_data == NULL ) {
-		cl_log(LOG_ERR, "malloc error in read_pipe.");
-		return -1;
-	} 
-
-	(*meta_data)[0] = '\0'; 
-	(*meta_data)[gstr_tmp->len] = '\0'; 
-	strncpy(*meta_data, gstr_tmp->str, gstr_tmp->len);
-	g_string_free(gstr_tmp, TRUE);	
-	return 0;
+	return 0;			
 }
 
 static int 
@@ -312,15 +242,6 @@ raexec_setenv(GHashTable * env_params)
 	g_hash_table_foreach(env_params, set_env, NULL);
 	/* Need to free the env_params ? */
 	return 0;
-}
-
-static int * 
-g_intdup(gint value)
-{
-	gint * tmp;
-	tmp = g_new(gint,1);
-	*tmp = value;
-	return tmp;
 }
 
 static void 
