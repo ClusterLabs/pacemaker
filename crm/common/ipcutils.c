@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.11 2004/02/29 19:40:56 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.12 2004/03/05 13:04:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,11 +75,14 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 {
 	char *xml_message = NULL;
 	FNIN();
+
 	xml_message = dump_xml(msg);
+	
 	IPC_Message *cib_dump =
 		create_simple_message(xml_message, ipc_client);
 	gboolean res = send_ipc_message(ipc_client, cib_dump);
 	CRM_DEBUG2("Sending of IPC message %s.", res?"succeeded":"failed");
+	ha_free(xml_message);
 	FNRET(res);
 }
 
@@ -139,8 +142,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		CRM_DEBUG("Sending HA Message.");
 		if (host_to == NULL
 		    || strlen(host_to) == 0
-		    || strcmp("dc", sys_to) == 0)
-		{
+		    || strcmp("dc", sys_to) == 0) {
 			broadcast = TRUE;
 			hb_fd->llc_ops->sendclustermsg(hb_fd, msg);
 		}
@@ -187,14 +189,15 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 	}
 	CRM_DEBUG2("IPC Client is%s set.", all_is_good?"":" not");
 	int lpc = 0;
-	if (all_is_good)
+	if (all_is_good) {		
 		while(lpc++ < MAX_IPC_FAIL
 		      && ipc_client->ops->send(ipc_client, msg) == IPC_FAIL)
 		{
 			cl_log(LOG_WARNING, "ipc channel blocked");
 			cl_shortsleep();
 		}
-
+	}
+	
 	if (lpc == MAX_IPC_FAIL) {
 		cl_log(LOG_ERR,
 		       "Could not send IPC, message.  Channel is dead.");
@@ -238,8 +241,11 @@ default_ipc_input_dispatch(IPC_Channel *client, gpointer user_data)
 	if (msg) {
 		root = find_xml_in_ipcmessage(msg, TRUE);
 		validate_crm_message(root, NULL, NULL, NULL);
-	}
+	} else if (client->ch_status == IPC_DISCONNECT) {
 
+		FNRET(FALSE); /* This conection is hosed */
+	}
+	
 	FNRET(TRUE); /* TOBEDONE */
 }
 
