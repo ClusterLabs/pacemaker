@@ -8,6 +8,7 @@
 #include <libxml/tree.h>
 
 #include <pengine.h>
+#include <pe_utils.h>
 
 xmlNodePtr process_pe_message(xmlNodePtr msg);
 xmlNodePtr do_calculations(xmlNodePtr msg);

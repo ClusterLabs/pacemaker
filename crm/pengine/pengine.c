@@ -7,6 +7,7 @@
 #include <libxml/tree.h>
 
 #include <pengine.h>
+#include <pe_utils.h>
 
 void color_resource(resource_t *lh_resource,
 		    GSListPtr *colors,
@@ -41,25 +42,10 @@ gboolean apply_node_constraints(GSListPtr constraints,
 				GSListPtr resources,
 				GSListPtr nodes);
 
-color_t *find_color(GSListPtr candidate_colors, color_t *other_color);
 gboolean is_active(rsc_to_node_t *cons);
-rsc_to_rsc_t *invert_constraint(rsc_to_rsc_t *constraint);
-gboolean filter_nodes(resource_t *rsc);
-resource_t *pe_find_resource(GSListPtr rsc_list, const char *id_rh);
-node_t *pe_find_node(GSListPtr node_list, const char *id);
 gboolean choose_node_from_list(GSListPtr colors,
 			       color_t *color,
 			       GSListPtr nodes);
-rsc_to_node_t *copy_constraint(rsc_to_node_t *constraint);
-
-GSListPtr node_list_dup(GSListPtr list1);
-GSListPtr node_list_and(GSListPtr list1, GSListPtr list2);
-GSListPtr node_list_xor(GSListPtr list1, GSListPtr list2);
-GSListPtr node_list_minus(GSListPtr list1, GSListPtr list2);
-gboolean node_list_eq(GSListPtr list1, GSListPtr list2);
-node_t *node_copy(node_t *this_node) ;
-node_t *find_list_node(GSListPtr list, const char *id);
-
 
 gboolean unpack_rsc_to_attr(xmlNodePtr xml_obj,
 			    GSListPtr rsc_list,

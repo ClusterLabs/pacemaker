@@ -1,3 +1,6 @@
+#ifndef PENGINE__H
+#define PENGINE__H
+
 typedef GSList* GSListPtr;
 
 
@@ -218,4 +221,5 @@ extern gboolean pe_debug_saved;
 #define safe_val6(def, t,u,v,w,x,y) safe_val(def, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, t,u),v),w),x),y)
 #define safe_val7(def, t,u,v,w,x,y,z) safe_val(def, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, safe_val(NULL, t,u),v),w),x),y),z)
 
-#include <pe_utils.h>
+
+#endif

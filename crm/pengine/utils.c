@@ -7,42 +7,9 @@
 #include <libxml/tree.h>
 
 #include <pengine.h>
-
+#include <pe_utils.h>
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
-void add_color_to_rsc(resource_t *rsc, color_t *color);
-
-gboolean is_active(rsc_to_node_t *cons);
-rsc_to_rsc_t *invert_constraint(rsc_to_rsc_t *constraint);
-gboolean filter_nodes(resource_t *rsc);
-color_t *find_color(GSListPtr candidate_colors, color_t *other_color);
-resource_t *pe_find_resource(GSListPtr rsc_list, const char *id_rh);
-node_t *pe_find_node(GSListPtr node_list, const char *id);
-gboolean choose_node_from_list(GSListPtr colors,
-			       color_t *color,
-			       GSListPtr nodes);
-rsc_to_node_t *copy_constraint(rsc_to_node_t *constraint);
-
-GSListPtr node_list_dup(GSListPtr list1);
-GSListPtr node_list_and(GSListPtr list1, GSListPtr list2);
-GSListPtr node_list_xor(GSListPtr list1, GSListPtr list2);
-GSListPtr node_list_minus(GSListPtr list1, GSListPtr list2);
-gboolean node_list_eq(GSListPtr list1, GSListPtr list2);
-node_t *node_copy(node_t *this_node) ;
-node_t *find_list_node(GSListPtr list, const char *id);
-
-
-gboolean unpack_rsc_to_attr(xmlNodePtr xml_obj);
-gboolean unpack_rsc_to_node(xmlNodePtr xml_obj);
-gboolean choose_color(resource_t *lh_resource, GSListPtr candidate_colors);
-gboolean strict_postproc(rsc_to_node_t *constraint,
-			 color_t *local_color,
-			 color_t *other_color);
-gboolean strict_preproc(rsc_to_node_t *constraint,
-			color_t *local_color,
-			color_t *other_color);
-gboolean update_node_weight(rsc_to_node_t *cons, node_t *node_rh);
-gboolean process_node_lrm_state(xmlNodePtr lrm_state);
 
 /* only for rsc_to_rsc constraints */
 rsc_to_rsc_t *

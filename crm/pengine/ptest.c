@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.13 2004/05/04 15:16:38 andrew Exp $ */
+/* $Id: ptest.c,v 1.14 2004/05/04 15:35:21 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -52,6 +52,7 @@
 #include <getopt.h>
 #include <glib.h>
 #include <pengine.h>
+#include <pe_utils.h>
 
 
 int
