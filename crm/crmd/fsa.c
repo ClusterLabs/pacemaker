@@ -173,6 +173,7 @@ fsa_timer_t *election_trigger = NULL;		/*  */
 fsa_timer_t *election_timeout = NULL;		/*  */
 fsa_timer_t *shutdown_escalation_timmer = NULL; /*  */
 fsa_timer_t *integration_timer = NULL;
+fsa_timer_t *finalization_timer = NULL;
 fsa_timer_t *dc_heartbeat = NULL;
 
 int fsa_join_reannouce = 0;
@@ -304,15 +305,16 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	
 		/* get out of here NOW! before anything worse happens */
 		else IF_FSA_ACTION(A_EXIT_1,		do_exit)
+
+		/* essential start tasks */
+		else IF_FSA_ACTION(A_HA_CONNECT,	do_ha_control)
 		else IF_FSA_ACTION(A_STARTUP,		do_startup)
-			
 		else IF_FSA_ACTION(A_CIB_START,		do_cib_control)
 		else IF_FSA_ACTION(A_READCONFIG,	do_read_config)
-		else IF_FSA_ACTION(A_HA_CONNECT,	do_ha_control)
+
+		/* sub-system start/connect */
 		else IF_FSA_ACTION(A_LRM_CONNECT,	do_lrm_control)
 		else IF_FSA_ACTION(A_CCM_CONNECT,	do_ccm_control)
-		
-		/* sub-system start */
 		else IF_FSA_ACTION(A_TE_START,		do_te_control)
 		else IF_FSA_ACTION(A_PE_START,		do_pe_control)
 		

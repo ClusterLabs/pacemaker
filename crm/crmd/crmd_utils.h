@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.4 2004/09/28 08:34:24 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.5 2004/10/01 13:28:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,5 +50,10 @@ extern enum crmd_fsa_input invoke_local_cib(
 	xmlNodePtr msg_options, xmlNodePtr msg_data, const char *operation);
 
 extern void set_uuid(xmlNodePtr node, const char *attr, const char *uname);
+
+#define CLIENT_EXIT_WAIT 30
+
+extern gboolean stop_subsystem (struct crm_subsystem_s *centry);
+extern gboolean start_subsystem(struct crm_subsystem_s *centry);
 
 #endif

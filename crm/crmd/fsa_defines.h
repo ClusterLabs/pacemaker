@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.21 2004/09/28 08:48:15 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.22 2004/10/01 13:28:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -176,6 +176,7 @@ enum crmd_fsa_input {
 /* 10 */
 	I_FAIL,		/* The action failed to complete successfully */
 	I_INTEGRATION_TIMEOUT, 
+	I_FINALIZATION_TIMEOUT, 
 	I_NODE_JOIN,	/* A node has entered the cluster */
 	I_NOT_DC,	/* We are not and were not the DC before or after
 			 * the current operation or state

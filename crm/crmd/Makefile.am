@@ -62,7 +62,8 @@ noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
 
 crmd_SOURCES	= main.c crmd.c 					\
 		fsa.c control.c messages.c ccm.c callbacks.c		\
-		election.c subsystems.c lrm.c join_client.c join_dc.c	\
+		election.c join_client.c join_dc.c subsystems.c 	\
+		cib.c pengine.c tengine.c lrm.c 			\
 		utils.c misc.c
 
 crmd_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'

@@ -94,16 +94,9 @@ do_dc_join_offer_all(long long action,
 		     NULL, CRM_SYSTEM_CRMD, NULL);	
 
 /* No point hanging around in S_INTEGRATION if we're the only ones here! */
-	if(join_requests == NULL) {
-		if(fsa_membership_copy->members_size == 1) {
-			/* we're the only ones in here */
-			crm_info("Not expecting any join acks");
-			return I_SUCCESS;
-		}
-		
-	} else if(g_hash_table_size(join_requests)
+	if(g_hash_table_size(join_requests)
 		  >= fsa_membership_copy->members_size) {
-		crm_info("That was the last outstanding join ack");
+		crm_info("Not expecting any join acks");
 		return I_SUCCESS;
 	}
 
@@ -221,6 +214,7 @@ do_dc_join_req(long long action,
 
 	if(g_hash_table_size(join_requests)
 	   >= fsa_membership_copy->members_size) {
+		stopTimer(integration_timer);
 		crm_info("That was the last outstanding join ack");
 		return I_SUCCESS;
 	}
@@ -274,6 +268,9 @@ do_dc_join_finalize(long long action,
 	crm_debug("Still waiting on %d outstanding join confirmations",
 		  num_join_invites - g_hash_table_size(confirmed_nodes));
 
+	crm_debug("Starting the finalization timer");
+	startTimer(finalization_timer);
+	
 	return I_NULL;
 }
 
@@ -322,6 +319,7 @@ do_dc_join_ack(long long action,
 	free_xml(tmp1);
 
 	if(num_join_invites <= g_hash_table_size(confirmed_nodes)) {
+		stopTimer(finalization_timer);
 		crm_info("That was the last outstanding join confirmation");
 		return I_SUCCESS;
 	}

@@ -67,8 +67,6 @@ do_ha_control(long long action,
 {
 	gboolean registered = FALSE;
 	
-	
-
 	if(action & A_HA_DISCONNECT) {
 		if(fsa_cluster_conn != NULL) {
 			fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn);
@@ -193,7 +191,6 @@ do_startup(long long action,
 	   enum crmd_fsa_input current_input,
 	   void *data)
 {
-	int facility;
 	int was_error = 0;
 	int interval = 1; /* seconds between DC heartbeats */
 
@@ -203,18 +200,6 @@ do_startup(long long action,
 	register_pid(PID_FILE, FALSE, crm_shutdown);
 	
 	ipc_clients = g_hash_table_new(&g_str_hash, &g_str_equal);
-	
-	/* change the logging facility to the one used by heartbeat daemon */
-	fsa_cluster_conn = ll_cluster_new("heartbeat");
-	
-	crm_info("Switching to Heartbeat logger");
-	if ((facility =
-	     fsa_cluster_conn->llc_ops->get_logfacility(
-		     fsa_cluster_conn)) > 0) {
-		cl_log_set_facility(facility);
-	}
-	
-	crm_verbose("Facility: %d", facility);
 	
 	if(was_error == 0) {
 		crm_info("Init server comms");
@@ -226,6 +211,7 @@ do_startup(long long action,
 	/* set up the timers */
 	crm_malloc(dc_heartbeat, sizeof(fsa_timer_t));
 	crm_malloc(integration_timer, sizeof(fsa_timer_t));
+	crm_malloc(finalization_timer, sizeof(fsa_timer_t));
 	crm_malloc(election_trigger, sizeof(fsa_timer_t));
 	crm_malloc(election_timeout, sizeof(fsa_timer_t));
 	crm_malloc(shutdown_escalation_timmer, sizeof(fsa_timer_t));
@@ -268,6 +254,15 @@ do_startup(long long action,
 		was_error = TRUE;
 	}
 	
+	if(finalization_timer != NULL) {
+		finalization_timer->source_id = -1;
+		finalization_timer->period_ms = -1;
+		finalization_timer->fsa_input = I_FINALIZATION_TIMEOUT;
+		finalization_timer->callback = timer_popped;
+	} else {
+		was_error = TRUE;
+	}
+	
 	if(shutdown_escalation_timmer != NULL) {
 		shutdown_escalation_timmer->source_id = -1;
 		shutdown_escalation_timmer->period_ms = -1;
@@ -284,7 +279,6 @@ do_startup(long long action,
 
 	if(cib_subsystem != NULL) {
 		cib_subsystem->pid = 0;	
-		cib_subsystem->respawn = 1;	
 		cib_subsystem->path = crm_strdup(BIN_DIR);
 		cib_subsystem->name = crm_strdup(CRM_SYSTEM_CIB);
 		cib_subsystem->command = BIN_DIR"/cib";
@@ -295,7 +289,6 @@ do_startup(long long action,
 	
 	if(te_subsystem != NULL) {
 		te_subsystem->pid = 0;	
-		te_subsystem->respawn = 1;	
 		te_subsystem->path = crm_strdup(BIN_DIR);
 		te_subsystem->name = crm_strdup(CRM_SYSTEM_TENGINE);
 		te_subsystem->command = BIN_DIR"/tengine";
@@ -306,7 +299,6 @@ do_startup(long long action,
 	
 	if(pe_subsystem != NULL) {
 		pe_subsystem->pid = 0;	
-		pe_subsystem->respawn = 1;	
 		pe_subsystem->path = crm_strdup(BIN_DIR);
 		pe_subsystem->name = crm_strdup(CRM_SYSTEM_PENGINE);
 		pe_subsystem->command = BIN_DIR"/pengine";
@@ -495,8 +487,7 @@ wait_channel_init(char daemonsocket[])
 int
 init_server_ipc_comms(
 	const char *child,
-	gboolean (*channel_client_connect)(IPC_Channel *newclient,
-					   gpointer user_data),
+	gboolean (*channel_client_connect)(IPC_Channel *newclient,gpointer user_data),
 	void (*channel_input_destroy)(gpointer user_data))
 {
 	/* the clients wait channel is the other source of events.
@@ -512,14 +503,13 @@ init_server_ipc_comms(
 
 	wait_ch = wait_channel_init(commpath);
 
-	if (wait_ch == NULL) return 1;
-	G_main_add_IPC_WaitConnection(G_PRIORITY_LOW,
-				      wait_ch,
-				      NULL,
-				      FALSE,
-				      channel_client_connect,
-				      wait_ch, /* user data passed to ?? */
-				      channel_input_destroy);
+	if (wait_ch == NULL) {
+		return 1;
+	}
+	
+	G_main_add_IPC_WaitConnection(
+		G_PRIORITY_LOW, wait_ch, NULL, FALSE,
+		channel_client_connect, wait_ch, channel_input_destroy);
 
 	crm_debug("Listening on: %s", commpath);
 
@@ -535,6 +525,8 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 					  void* private_data),
 		 GDestroyNotify cleanup_method)
 {
+	int facility;
+	
 	if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
 	  crm_crit("cluster errmsg function unavailable");
 	}
@@ -549,13 +541,19 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 		}
 		return FALSE;
 	}
+
+	/* change the logging facility to the one used by heartbeat daemon */
+	crm_info("Switching to Heartbeat logger");
+	if (( facility =
+	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
+		cl_log_set_facility(facility);
+ 	}	
+	crm_verbose("Facility: %d", facility);	
   
 	crm_debug("Be informed of CRM messages");
-	if (hb_cluster->llc_ops->set_msg_callback(hb_cluster,
-						  "CRM",
-						  message_callback,
-						  hb_cluster)
-	    !=HA_OK){
+	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
+		    hb_cluster, "CRM", message_callback, hb_cluster)){
+		
 		crm_err("Cannot set CRM message callback");
 		if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
 			crm_crit("cluster errmsg function unavailable");
@@ -568,9 +566,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 	
 	G_main_add_fd(G_PRIORITY_HIGH, 
 		      hb_cluster->llc_ops->inputfd(hb_cluster),
-		      FALSE, 
-		      dispatch_method, 
-		      hb_cluster,  /* usrdata  */
+		      FALSE,  dispatch_method,  hb_cluster /* userdata  */,  
 		      cleanup_method);
 
 	crm_debug("Finding our node name");

@@ -270,34 +270,30 @@ crmd_client_status_callback(const char * node, const char * client,
 	crm_notice("Status update: Client %s/%s now has status [%s]\n",
 		   node, client, status);
 
-	if(AM_I_DC) {
+	if(AM_I_DC == FALSE) {
+		crm_debug("Got client status callback in non-DC mode");
+
+	} else {
 		update = create_node_state(node, node, NULL, status, join);
 
-		if(extra != NULL) {
-			set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
-		}
+		set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
 		
 		fragment = create_cib_fragment(update, NULL);
-/*		store_request(NULL, fragment, */
-/*			      CRM_OP_UPDATE, CRM_SYSTEM_DCIB); */
 
 		msg_options = set_xml_attr(
 			NULL, XML_TAG_OPTIONS, XML_ATTR_OP, CRM_OP_UPDATE, TRUE);
-		
-/*		crm_verbose("Storing op=%s message for later processing", operation); */
 		
 		request = create_request(
 			msg_options, fragment, NULL,
 			CRM_SYSTEM_DCIB, CRM_SYSTEM_DC, NULL, NULL);
 
+		crm_xml_debug(fragment, "Client status update");
+		
 		free_xml(fragment);
 		free_xml(update);
 
-/*		s_crmd_fsa(C_CRMD_STATUS_CALLBACK, I_NULL, NULL); */
 		s_crmd_fsa(C_CRMD_STATUS_CALLBACK, I_CIB_OP, request);
 		
-	} else {
-		crm_err("Got client status callback in non-DC mode");
 	}
 }
 
@@ -399,4 +395,40 @@ crmd_ha_input_destroy(gpointer user_data)
 	/* this is always an error */
 	/* feed this back into the FSA */
 	s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL);
+}
+
+
+gboolean
+crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
+{
+	if (client_channel == NULL) {
+		crm_err("Channel was NULL");
+
+	} else if (client_channel->ch_status == IPC_DISCONNECT) {
+		crm_err("Channel was disconnected");
+
+	} else {
+		crmd_client_t *blank_client = NULL;
+		crm_malloc(blank_client, sizeof(crmd_client_t));
+	
+		if (blank_client == NULL) {
+			return FALSE;
+		}
+		
+		client_channel->ops->set_recv_qlen(client_channel, 100);
+		client_channel->ops->set_send_qlen(client_channel, 100);
+	
+		blank_client->client_channel = client_channel;
+		blank_client->sub_sys   = NULL;
+		blank_client->uuid      = NULL;
+		blank_client->table_key = NULL;
+	
+		blank_client->client_source =
+			G_main_add_IPC_Channel(
+				G_PRIORITY_LOW, client_channel,
+				FALSE,  crmd_ipc_input_callback,
+				blank_client, default_ipc_input_destroy);
+	}
+    
+	return TRUE;
 }

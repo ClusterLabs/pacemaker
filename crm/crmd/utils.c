@@ -182,6 +182,9 @@ fsa_input2string(enum crmd_fsa_input input)
 		case I_INTEGRATION_TIMEOUT:
 			inputAsText = "I_INTEGRATION_TIMEOUT";
 			break;
+		case I_FINALIZATION_TIMEOUT:
+			inputAsText = "I_INTEGRATION_TIMEOUT";
+			break;
 		case I_NODE_JOIN:
 			inputAsText = "I_NODE_JOIN";
 			break;
@@ -576,52 +579,6 @@ fsa_action2string(long long action)
 
 
 void
-cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
-{
-	int pid_status = -1;
-	the_subsystem->ipc = NULL;
-	clear_bit_inplace(fsa_input_register, the_subsystem->flag);
-
-	/* Forcing client to die */
-	kill(the_subsystem->pid, -9);
-	
-	/* cleanup the ps entry */
-	waitpid(the_subsystem->pid, &pid_status, WNOHANG);
-	the_subsystem->pid = -1;
-}
-
-enum crmd_fsa_input
-invoke_local_cib(xmlNodePtr msg_options,
-		 xmlNodePtr msg_data,
-		 const char *operation)
-{
-	enum crmd_fsa_input result = I_NULL;
-	xmlNodePtr request = NULL;
-	
-
-	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
-				   XML_ATTR_OP, operation, TRUE);
-
-	request = create_request(msg_options,
-				 msg_data,
-				 NULL,
-				 CRM_SYSTEM_CIB,
-				 AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD,
-				 NULL,
-				 NULL);
-
-	result = do_cib_invoke(A_CIB_INVOKE_LOCAL,
-			       C_UNKNOWN,
-			       fsa_state,
-			       I_CIB_OP,
-			       request);
-
-	free_xml(request);
-	
-	return result;
-}
-
-void
 create_node_entry(const char *uuid, const char *uname, const char *type)
 {
 	
@@ -712,3 +669,4 @@ set_uuid(xmlNodePtr node, const char *attr, const char *uname)
 	
 	crm_free(uuid_calc);
 }/*memory leak*/ /* BEAM BUG - this is not a memory leak */
+

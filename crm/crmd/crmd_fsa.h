@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.27 2004/09/29 19:39:14 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.28 2004/10/01 13:28:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,9 +53,6 @@ struct oc_node_list_s
 typedef struct oc_node_list_s oc_node_list_t;
 struct crm_subsystem_s {
 		pid_t	pid;		/* Process id of child process */
-		int	respawn;	/* Respawn it if it dies? */
-		int	respawncount;	/* Last time we respawned this command */
-		int	shortrcount;	/* How many times has it respawned too fast? */
 		const char*	command;	/* What command to run? */
 		const char*	path;		/* Path (argv[0])? */
 /* extras */
@@ -93,6 +90,7 @@ extern fsa_timer_t *election_timeout;		/*  */
 extern fsa_timer_t *shutdown_escalation_timmer;	/*  */
 extern fsa_timer_t *dc_heartbeat;
 extern fsa_timer_t *integration_timer;
+extern fsa_timer_t *finalization_timer;
 
 extern int fsa_join_reannouce;
 
