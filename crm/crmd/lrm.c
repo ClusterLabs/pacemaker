@@ -294,6 +294,7 @@ do_lrm_query(gboolean is_replace)
 
 	
 	set_xml_property_copy(xml_state, XML_ATTR_ID, fsa_our_uname);
+	set_xml_property_copy(xml_state, XML_ATTR_UNAME, fsa_our_uname);
 	xml_result = create_cib_fragment(xml_state, NULL);
 	
 	return xml_result;
@@ -506,7 +507,9 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	
 	
 	update = create_xml_node(NULL, "node_state");
-	set_xml_property_copy(update,  XML_ATTR_ID, fsa_our_uname);
+	set_xml_property_copy(update,  XML_ATTR_ID,    fsa_our_uname);
+	set_xml_property_copy(update,  XML_ATTR_UNAME, fsa_our_uname);
+
 	iter = create_xml_node(update, XML_CIB_TAG_LRM);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
 	iter = create_xml_node(iter,   "lrm_resource");
