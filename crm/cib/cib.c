@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.13 2004/03/05 12:58:45 andrew Exp $ */
+/* $Id: cib.c,v 1.14 2004/03/10 22:23:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -133,28 +133,34 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 		root_xml_node = xmlDocGetRootElement(doc);
 		CRM_DEBUG("Got the root element");
 		
-		const char *sys_to = xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
 
+		const char *sys_to = xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
 		if (root_xml_node == NULL) {
 			cl_log(LOG_WARNING, "Root node was NULL!!");
 
-		} else if (strcmp(sys_to, CRM_SYSTEM_CIB) != 0
-			&& strcmp(sys_to, CRM_SYSTEM_DCIB) != 0) {
+		} else if(sys_to == NULL) {
+			cl_log(LOG_WARNING, "Value of %s was NULL!!", XML_ATTR_SYSTO);
 			
-			cl_log(LOG_WARNING,
-			       "Received a message destined for %s by mistake",
-			       sys_to);
-
-		} else {
-
+		} else if (strcmp(sys_to, CRM_SYSTEM_CIB) == 0) {
 			answer = processCibRequest(root_xml_node);
 			
 			if (send_ipc_reply(sender,
 					   root_xml_node,
 					   answer) == FALSE)
-				
 				cl_log(LOG_WARNING,
 				       "Cib answer could not be sent");
+
+		} else if (strcmp(sys_to, CRM_SYSTEM_DCIB) == 0) {
+
+			answer = processCibRequest(root_xml_node);
+			
+			if (send_ipc_reply(sender,root_xml_node,answer)==FALSE)
+				cl_log(LOG_WARNING,
+				       "Cib answer could not be sent");
+		} else {
+			cl_log(LOG_WARNING,
+			       "Received a message destined for %s by mistake",
+			       sys_to);
 		}
 		
 		if(answer != NULL)

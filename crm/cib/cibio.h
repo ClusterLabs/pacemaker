@@ -1,4 +1,4 @@
-/* $Id: cibio.h,v 1.5 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: cibio.h,v 1.6 2004/03/10 22:23:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,8 +33,8 @@
 #include <clplumbing/cl_log.h> 
 #include <libxml/tree.h> 
 
-#define CIB_FILENAME "cib.xml"
-#define CIB_BACKUP   "cib_backup.xml"
+#define CIB_FILENAME WORKING_DIR"/cib.xml"
+#define CIB_BACKUP   WORKING_DIR"/cib_backup.xml"
 
 extern gboolean initialized;
 extern xmlNodePtr the_cib;

@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.9 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: cibmain.c,v 1.10 2004/03/10 22:23:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -166,10 +166,11 @@ init_start(void)
 		       "CIB Initialization completed successfully");
 	} else { 
 		free_xml(cib);
-		cl_log(LOG_CRIT,
+		cl_log(LOG_WARNING,
 		       "CIB Initialization failed, "
 		       "starting with an empty default.");
-		initializeCib(createEmptyCib());
+		activateCibXml(createEmptyCib());
+		
 	}
     
 	IPC_Channel *crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
