@@ -967,8 +967,8 @@ create_cib_fragment_adv(
 	crm_debug("Verifying created fragment");
 	if(verifyCibXml(cib) == FALSE) {
 		crm_err("Fragment creation failed");
-		crm_err("[src] %s", dump_xml_formatted(update));
-		crm_err("[created] %s", dump_xml_formatted(fragment));
+		crm_xml_err(update, "[src]");
+		crm_xml_err(fragment, "[created]");
 		free_xml(fragment);
 		fragment = NULL;
 	}
