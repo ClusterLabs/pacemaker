@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.43 2005/03/29 06:34:15 andrew Exp $ */
+/* $Id: utils.c,v 1.44 2005/03/31 16:25:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -824,6 +824,10 @@ crm_get_msec(const char * input)
 	long		ret = -1;
 	double		dret;
 
+	if(input == NULL) {
+		return 0;
+	}
+	
 	cp += strspn(cp, WHITESPACE);
 	units = cp + strspn(cp, NUMCHARS);
 	units += strspn(units, WHITESPACE);
