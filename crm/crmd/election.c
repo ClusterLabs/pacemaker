@@ -149,7 +149,20 @@ do_election_count_vote(long long action,
 	       vote_from);
 #endif
 	
-	if(your_node->node_born_on < our_node->node_born_on) {
+	if(is_set(fsa_input_register, R_SHUTDOWN)) {
+		cl_log(LOG_DEBUG,
+		       "Election fail: we are shutting down");
+		we_loose = TRUE;
+
+	} else if(our_node == NULL) {
+		cl_log(LOG_DEBUG,
+		       "Election fail: we dont exist in the CCM list");
+		we_loose = TRUE;
+		
+	} else if(your_node == NULL) {
+		cl_log(LOG_ERR, "The other side doesnt exist in the CCM list");
+		
+	} else if(your_node->node_born_on < our_node->node_born_on) {
 		cl_log(LOG_DEBUG, "Election fail: born_on");
 		we_loose = TRUE;
 
@@ -361,7 +374,10 @@ do_send_welcome(long long action,
 			send_request(NULL, NULL, CRM_OPERATION_WELCOME,
 				     join_to, CRM_SYSTEM_CRMD, NULL);
 			
+		} else {
+			cl_log(LOG_ERR, "No recipient for welcome message");
 		}
+		
 		
 		FNRET(I_NULL);
 	}
@@ -510,8 +526,10 @@ do_announce(long long action,
 		case S_RECOVERY_DC:
 		case S_RELEASE_DC:
 		case S_TERMINATE:
+			cl_log(LOG_WARNING,
+			       "Do not announce ourselves in state %s",
+			       fsa_state2string(cur_state));
 			FNRET(I_NULL);
-			// log warning
 			break;
 		default:
 			break;
@@ -522,6 +540,8 @@ do_announce(long long action,
 			     NULL, CRM_SYSTEM_DC, NULL);
 	} else {
 		/* Delay announce until we have finished local startup */
+		cl_log(LOG_WARNING,
+		       "Delaying announce until local startup is complete");
 		FNRET(I_NULL);
 	}
 	
@@ -544,6 +564,7 @@ do_process_welcome_ack(long long action,
 	int size = 0;
 	gboolean is_a_member  = FALSE;
 	const char *join_from = xmlGetProp(join_ack, XML_ATTR_HOSTFROM);
+	const char *ref       = xmlGetProp(join_ack, XML_ATTR_REFERENCE);
 
 	FNIN();
 
@@ -557,7 +578,8 @@ do_process_welcome_ack(long long action,
 	cib_fragment = find_xml_node(join_ack, XML_TAG_FRAGMENT);
 
 	if(is_a_member == FALSE) {
-		cl_log(LOG_ERR, "Node %s is not known to us", join_from);
+		cl_log(LOG_ERR, "Node %s is not known to us (ref %s)",
+		       join_from, ref);
 
 		/* make sure any information from this node is discarded,
 		 * it is invalid
@@ -566,7 +588,8 @@ do_process_welcome_ack(long long action,
 		FNRET(I_FAIL);
 	}
 
-	cl_log(LOG_DEBUG, "Welcoming node %s after ACK", join_from);
+	cl_log(LOG_DEBUG, "Welcoming node %s after ACK (ref %s)",
+	       join_from, ref);
 	
 	// add them to our list of "active" nodes
 	g_hash_table_insert(joined_nodes, strdup(join_from),strdup(join_from));
