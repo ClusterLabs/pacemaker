@@ -349,7 +349,7 @@ cib_native_perform_op(
 	rc = cib_ok;
 	
 	/* Start processing the reply... */
-	if(cl_get_int(op_reply, F_CIB_RC, &rc) != HA_OK) {
+	if(ha_msg_value_int(op_reply, F_CIB_RC, &rc) != HA_OK) {
 		rc = cib_return_code;
 	}
 	
@@ -450,8 +450,8 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 		xmlNodePtr output = NULL;
 		const char *output_s = NULL;
 
-		cl_get_int(msg, F_CIB_CALLID, &call_id);
-		cl_get_int(msg, F_CIB_RC, &rc);
+		ha_msg_value_int(msg, F_CIB_CALLID, &call_id);
+		ha_msg_value_int(msg, F_CIB_RC, &rc);
 		output_s = cl_get_string(msg, F_CIB_CALLDATA);
 		if(output_s != NULL) {
 			output = string2xml(output_s);
