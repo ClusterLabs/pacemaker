@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.27 2004/05/23 19:54:03 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.28 2004/05/28 07:07:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -133,13 +133,6 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	host_to = xmlGetProp(root, XML_ATTR_HOSTTO);
 	sys_to = xmlGetProp(root, XML_ATTR_SYSTO);
 	
-	if (sys_to != NULL && strcmp("dc", sys_to) == 0) {
-		cl_log(LOG_INFO,
-		       "Resetting the value of %s to null from %s",
-		       XML_ATTR_HOSTTO, host_to);
-//		xmlSetProp(root, XML_ATTR_HOSTTO, "");
-	}
-	
 	if (all_is_good) {
 		msg = ha_msg_new(4); 
 		ha_msg_add(msg, F_TYPE, "CRM");
@@ -179,19 +172,18 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	 */
 	if (all_is_good) {
 		if (host_to == NULL
-		    || strlen(host_to) == 0
-		    || strcmp("dc", sys_to) == 0) {
+		    || strlen(host_to) == 0) {
 			broadcast = TRUE;
 			send_result =
-				hb_fd->llc_ops->send_ordered_clustermsg(hb_fd, msg);
+				hb_fd->llc_ops->sendclustermsg(hb_fd, msg);
 		}
 		else {
-			send_result =
-				hb_fd->llc_ops->send_ordered_nodemsg(hb_fd, msg, host_to);
+			send_result = hb_fd->llc_ops->send_ordered_nodemsg(
+				hb_fd, msg, host_to);
 		}
 		
-		if(send_result != HA_OK) all_is_good = FALSE;
-		
+		if(send_result != HA_OK)
+			all_is_good = FALSE;
 	}
 	
 	if(all_is_good == FALSE) {
