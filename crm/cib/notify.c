@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.9 2005/02/10 11:02:20 andrew Exp $ */
+/* $Id: notify.c,v 1.10 2005/02/11 15:28:33 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -167,13 +167,14 @@ cib_post_notify(
 	}
 
 	if(update == NULL) {
+		const char * typeornull = type ? type : "<null>";
 		if(result == cib_ok) {
 			crm_verbose("Operation %s (on section=%s) completed",
-				    op, type);
+				    op, typeornull);
 			
 		} else {
 			crm_warn("Operation %s (on section=%s) FAILED: (%d) %s",
-				 op, type, result, cib_error2string(result));
+				 op, typeornull, result, cib_error2string(result));
 		}
 		
 	} else {
