@@ -115,10 +115,9 @@ Options for CTSlab:
 			/etc/ha.d
 	--logfile
 		Directory to find logging information in defaults to
-			/var/log/ha-log
+			/var/log/ha-log-local7
 	--stonith (yes|no)
 		Enable/disable STONITH tests
-			/var/log/ha-log
 	--standby (yes|no)
 		Enable/disable standby tests
 
@@ -156,10 +155,10 @@ local7.*                                @testmonitor-machine
 SYSLOGD_PARAMS="-r"
 
 4)	Change on the testmonitor-machine to redirect messages
-	from local7 into /var/log/ha-log by adding this line to
+	from local7 into /var/log/ha-log-local7 by adding this line to
 	/etc/syslog.conf 
 
-local7.*			-/var/log/ha-log
+local7.*			-/var/log/ha-log-local7
 
 	and then (on SuSE) run this command:
 
@@ -178,7 +177,7 @@ logged in as root on the test machine
 1)	Grab your key from the testmonitor-machine:
 	take the single line out of ~/.ssh/identity.pub
 	and put it into root's authorized_keys file.
-	[This has changed to: copying the line from ~/.ssh/id_dsa into
+	[This has changed to: copying the line from ~/.ssh/id_dsa.pub into
 		root's authorized_keys file ]
 	Run this command on each of the "test" machines as root:
 
@@ -186,7 +185,7 @@ ssh -v -l myid testmonitor-machine cat /home/myid/.ssh/identity.pub \
 	>> ~root/.ssh/authorized_keys
 
 [For most people, this has changed to:
-  ssh -v -l myid testmonitor-machine cat /home/myid/.ssh/id_dsa \
+  ssh -v -l myid testmonitor-machine cat /home/myid/.ssh/id_dsa.pub \
 	>> ~root/.ssh/authorized_keys
 ]
 
