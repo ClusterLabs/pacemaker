@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.17 2004/06/28 08:23:52 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.18 2004/07/27 11:52:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -436,6 +436,7 @@ enum crmd_fsa_cause
 	C_SHUTDOWN,
 	C_HEARTBEAT_FAILED,
 	C_SUBSYSTEM_CONNECT,
+	C_HA_DISCONNECT,
 	C_ILLEGAL
 };
 

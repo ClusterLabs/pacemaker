@@ -38,9 +38,8 @@
 #define DAEMON_LOG   LOG_DIR"/crm.log"
 #define DAEMON_DEBUG LOG_DIR"/crm.debug"
 
-gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
-
-void crmd_ha_input_destroy(gpointer user_data);
+extern gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
+extern void crmd_ha_input_destroy(gpointer user_data);
 
 void crm_shutdown(int nsig);
 
@@ -165,41 +164,6 @@ do_shutdown_req(long long action,
 	}
 
 	return next_input;
-}
-
-gboolean
-crmd_ha_input_dispatch(int fd, gpointer user_data)
-{
-	int lpc = 0;
-	ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
-    
-	
-
-	while(hb_cluster->llc_ops->msgready(hb_cluster))
-	{
-		lpc++;
-		// invoke the callbacks but dont block
-		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
-	}
-
-	if(lpc == 0){
-		// hey what happened??
-		crm_err("We were called but no message was ready.\n"
-		       "\tLikely the connection to Heartbeat failed, check the logs");
-
-		// TODO: feed this back into the FSA
-		
-		return FALSE;
-	}
-	
-    
-	return TRUE;
-}
-
-void
-crmd_ha_input_destroy(gpointer user_data)
-{
-	crm_info("in my hb_input_destroy");
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/
@@ -558,7 +522,9 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 		 GDestroyNotify cleanup_method)
 {
 	const char* ournode = NULL;
-
+	if(safe_val3(NULL, hb_cluster, llc_ops, errmsg) == NULL) {
+	  crm_crit("cluster errmsg function unavailable");
+	}
 	crm_info("Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
 		crm_err("Cannot sign on with heartbeat");

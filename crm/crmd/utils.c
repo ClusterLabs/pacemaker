@@ -388,6 +388,9 @@ fsa_cause2string(enum crmd_fsa_cause cause)
 		case C_CRMD_STATUS_CALLBACK:
 			causeAsText = "C_CRMD_STATUS_CALLBACK";
 			break;
+		case C_HA_DISCONNECT:
+			causeAsText = "C_HA_DISCONNECT";
+			break;
 		case C_ILLEGAL:
 			causeAsText = "C_ILLEGAL";
 			break;

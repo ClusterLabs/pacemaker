@@ -628,23 +628,23 @@ dump_rsc_info(void)
 		nodes = nodes->next;
 		
 		resources = find_xml_node_nested(node, path, DIMOF(path));
+		resources = resources->children;
 		while(resources != NULL) {
 			rsc = resources;
 			resources = resources->next;
 
-//          <lrm_resource id="rsc1" last_op="start" op_state="started" op_code="0" target="node1"/>
 			const char *id       = xmlGetProp(rsc, "id");
 			const char *op_code  = xmlGetProp(rsc, "op_code");
-			const char *op_state  = xmlGetProp(rsc, "op_state");
+			const char *rsc_state = xmlGetProp(rsc, "rsc_state");
 			const char *last_op  = xmlGetProp(rsc, "last_op");
-			const char *target   = xmlGetProp(rsc, "target");
+			const char *on_node   = xmlGetProp(rsc, "on_node");
 
-			if(safe_str_eq(op_state, "stopped")) {
+			if(safe_str_eq(rsc_state, "stopped")) {
 				continue;
 			}
 			
 			crm_info("Resource state: %s %s [%s after %s] on %s",
-				 id, op_state, op_code, last_op, target);
+				 id, rsc_state, op_code, last_op, on_node);
 		}
 	}
 }

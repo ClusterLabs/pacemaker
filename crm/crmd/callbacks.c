@@ -38,6 +38,8 @@
 FILE *msg_in_strm = NULL;
 
 xmlNodePtr find_xml_in_hamessage(const struct ha_msg* msg);
+gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
+void crmd_ha_input_destroy(gpointer user_data);
 
 void
 crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
@@ -131,17 +133,14 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		crm_verbose("Processing xml from %s [text=%s]",
 			   curr_client->table_key, buffer);
 	
-		root_xml_node =
-			find_xml_in_ipcmessage(msg, FALSE);
+		root_xml_node = find_xml_in_ipcmessage(msg, FALSE);
 		if (root_xml_node != NULL) {
-
-			if (crmd_authorize_message(root_xml_node,
-						   msg,
-						   curr_client)) {
-				s_crmd_fsa(C_IPC_MESSAGE,
-					   I_ROUTER,
-					   root_xml_node);
+			if (crmd_authorize_message(
+				    root_xml_node, msg, curr_client)) {
+				s_crmd_fsa(
+					C_IPC_MESSAGE,I_ROUTER,root_xml_node);
 			}
+
 		} else {
 			crm_info("IPC Message was not valid... discarding.");
 		}
@@ -178,7 +177,6 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 				the_subsystem = cib_subsystem;
 			}
 			
-
 			if(the_subsystem != NULL) {
 				cleanup_subsystem(the_subsystem);
 			} // else that was a transient client
@@ -325,3 +323,39 @@ gboolean lrm_dispatch(int fd, gpointer user_data)
 }
 
 
+
+gboolean
+crmd_ha_input_dispatch(int fd, gpointer user_data)
+{
+	int lpc = 0;
+	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
+    
+	
+
+	while(hb_cluster->llc_ops->msgready(hb_cluster)) {
+		lpc++;
+		// invoke the callbacks but dont block
+		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
+	}
+
+	if(lpc == 0) {
+		// hey what happened??
+		crm_crit("We were called but no message was ready."
+		       "  Likely the connection to Heartbeat failed,"
+			" check the logs");
+
+		// feed this back into the FSA
+		s_crmd_fsa(C_HA_DISCONNECT, I_ERROR, NULL);
+
+		return FALSE;
+	}
+	
+    
+	return TRUE;
+}
+
+void
+crmd_ha_input_destroy(gpointer user_data)
+{
+	crm_info("in my hb_input_destroy");
+}

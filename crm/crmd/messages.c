@@ -51,17 +51,18 @@ gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);
 #ifdef MSG_LOG
 
 #    define ROUTER_RESULT(x) char *msg_text = dump_xml(xml_relay_message);\
-	if(router_strm == NULL) {				\
-		router_strm = fopen("/tmp/router.log", "w");	\
-	}							\
-	fprintf(router_strm, "[%d RESULT (%s)]\t%s\t%s\n",	\
-		AM_I_DC,					\
-		xmlGetProp(xml_relay_message, XML_ATTR_REFERENCE),\
-		x, msg_text);					\
-	fflush(router_strm);					\
-	crm_free(msg_text);
+	if(router_strm == NULL) {					\
+		router_strm = fopen("/tmp/router.log", "w");		\
+	}								\
+	fprintf(router_strm, "[%d RESULT (%s)]\t%s\t%s\n",		\
+		AM_I_DC,						\
+		xmlGetProp(xml_relay_message, XML_ATTR_REFERENCE),	\
+		x, msg_text);						\
+	fflush(router_strm);						\
+	crm_free(msg_text);						\
+	crm_verbose(x);
 #else
-#    define ROUTER_RESULT(x)	crm_verbose(x, NULL);
+#    define ROUTER_RESULT(x)	crm_verbose(x);
 #endif
 
 
@@ -259,8 +260,9 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	const char *host_to = xmlGetProp(xml_relay_message,XML_ATTR_HOSTTO);
 	const char *sys_to  = xmlGetProp(xml_relay_message,XML_ATTR_SYSTO);
 
+	crm_verbose("Routing message %s",
+		xmlGetProp(xml_relay_message,XML_ATTR_REFERENCE));
 	
-
 	if(xml_relay_message == NULL) {
 		crm_err("Cannot route empty message");
 		return TRUE;
@@ -307,15 +309,13 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		is_local=1;
 	}
 
-#if 0
-	crm_verbose("is_local    %d", is_local);
-	crm_verbose("is_for_dcib %d", is_for_dcib);
-	crm_verbose("is_for_dc   %d", is_for_dc);
-	crm_verbose("is_for_crm  %d", is_for_crm);
-	crm_verbose("AM_I_DC     %d", AM_I_DC);
-	crm_verbose("sys_to      %s", sys_to);
-	crm_verbose("host_to     %s", host_to);
-#endif
+	crm_trace("is_local    %d", is_local);
+	crm_trace("is_for_dcib %d", is_for_dcib);
+	crm_trace("is_for_dc   %d", is_for_dc);
+	crm_trace("is_for_crm  %d", is_for_crm);
+	crm_trace("AM_I_DC     %d", AM_I_DC);
+	crm_trace("sys_to      %s", sys_to);
+	crm_trace("host_to     %s", host_to);
 	
 	if(is_for_dc || is_for_dcib) {
 		if(AM_I_DC) {
@@ -334,6 +334,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		
 	} else if(is_local && (is_for_crm || is_for_cib)) {
 		ROUTER_RESULT("Message result: CRMd process");
+		processing_complete = FALSE; // more to be done by caller
 
 	} else if(is_local) {
 		if(dont_cc) {
@@ -355,7 +356,6 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		}
 		send_msg_via_ha(xml_relay_message, host_to);
 		processing_complete = TRUE & dont_cc;
-		
 	}
 	
 	return processing_complete;
@@ -541,7 +541,10 @@ handle_message(xmlNodePtr stored_msg)
 		xml_message_debug(stored_msg, "Bad message");
 		
 	} else if(strcmp(type, XML_ATTR_REQUEST) == 0){
-		if(strcmp(op, CRM_OP_VOTE) == 0) {
+		if(strcmp(op, CRM_OP_HBEAT) == 0) {
+			next_input = I_DC_HEARTBEAT;
+
+		} else if(strcmp(op, CRM_OP_VOTE) == 0) {
 			next_input = I_ELECTION;
 				
 		} else if(AM_I_DC && strcmp(op, CRM_OP_TEABORT) == 0) {
@@ -559,13 +562,13 @@ handle_message(xmlNodePtr stored_msg)
 				       fsa_state2string(S_TRANSITION_ENGINE),
 				       fsa_state2string(fsa_state));
 */
-			}
-	
-		} else if(strcmp(op, CRM_OP_HBEAT) == 0) {
-			next_input = I_DC_HEARTBEAT;
+			}	
 				
 		} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
 			next_input = I_WELCOME;
+				
+		} else if(strcmp(op, "init_shutdown") == 0) {
+			next_input = I_SHUTDOWN;
 				
 		} else if(strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
 
@@ -607,10 +610,23 @@ handle_message(xmlNodePtr stored_msg)
 		} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 			next_input = I_TERMINATE;
 			
+		} else if(strcmp(op, "debug_inc") == 0) {
+			int level = get_crm_log_level();
+			set_crm_log_level(level+1);
+			crm_info("Debug set to %d (was %d)",
+				 get_crm_log_level(), level);
+
+		} else if(strcmp(op, "debug_dec") == 0) {
+			int level = get_crm_log_level();
+			set_crm_log_level(level-1);
+			crm_info("Debug set to %d (was %d)",
+				 get_crm_log_level(), level);
+			
 		} else if(strcmp(op, CRM_OP_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
 			
 		} else if(strcmp(op, CRM_OP_REPLACE) == 0
+			|| strcmp(op, CRM_OP_QUERY) == 0
 			|| strcmp(op, CRM_OP_ERASE) == 0) {
 			next_input = I_CIB_OP;
 			fprintf(router_strm, "Message result: CIB Op\n");
@@ -628,8 +644,12 @@ handle_message(xmlNodePtr stored_msg)
 			 */
 			xmlNodePtr ping =
 				createPingAnswerFragment(sys_to, "ok");
-				
+
+			set_xml_property_copy(ping, "crmd_state",
+					      fsa_state2string(fsa_state));
+
 			xmlNodePtr wrapper = create_reply(stored_msg, ping);
+
 			relay_message(wrapper, TRUE);
 			free_xml(wrapper);
 				
@@ -861,15 +881,21 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 {
 	IPC_Channel *client_channel;
 
-	
-//	crm_debug("relaying msg to sub_sys=%s via IPC", sys);
+	crm_trace("relaying msg to sub_sys=%s via IPC", sys);
 
 	client_channel =
 		(IPC_Channel*)g_hash_table_lookup (ipc_clients, sys);
 
+	if(xmlGetProp(action, XML_ATTR_HOSTFROM) == NULL) {
+		set_xml_property_copy(
+			action, XML_ATTR_HOSTFROM, fsa_our_uname);
+	}
+	
 	if (client_channel != NULL) {
 		crm_debug("Sending message via channel %s.", sys);
+		
 		send_xmlipc_message(client_channel, action);
+		
 	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_CIB) == 0) {
 		crm_err("Sub-system (%s) has been incorporated into the CRMd.",
 			sys);
