@@ -556,7 +556,7 @@ do_lrm_rsc_op(
 		
 		if(monitor_call_id > 0) {
 			crm_debug("Stopping status op for %s", rsc->id);
-			rsc->ops->stop_op(rsc, monitor_call_id);
+			rsc->ops->cancel_op(rsc, monitor_call_id);
 			g_hash_table_remove(monitors, rsc->id);
 			/* TODO: Clean up key */
 			
