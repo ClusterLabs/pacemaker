@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.10 2005/02/11 15:28:33 alan Exp $ */
+/* $Id: notify.c,v 1.11 2005/02/11 22:06:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,8 +53,18 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	HA_Message *update_msg = user_data;
 	cib_client_t *client = value;
 
-	if(safe_str_eq(client->channel_name, cib_channel_callback)) {
+	CRM_DEV_ASSERT(client != NULL);
+	CRM_DEV_ASSERT(update_msg != NULL);
+
+	if(client != NULL
+	   && safe_str_eq(client->channel_name, cib_channel_callback)) {
 		crm_trace("Notifying client %s of update", client->id);
+		
+		if(client->channel->should_send_blocking == FALSE) {
+			crm_warn("Client channel %s was not set to \"send blocking\"", client->id);
+			client->channel->should_send_blocking = TRUE;
+		}
+		
 		if(msg2ipcchan(update_msg, client->channel) != HA_OK) {
 			crm_err("Notification of client %s failed", client->id);
 		}
@@ -167,23 +177,23 @@ cib_post_notify(
 	}
 
 	if(update == NULL) {
-		const char * typeornull = type ? type : "<null>";
 		if(result == cib_ok) {
 			crm_verbose("Operation %s (on section=%s) completed",
-				    op, typeornull);
+				    op, crm_str(type));
 			
 		} else {
 			crm_warn("Operation %s (on section=%s) FAILED: (%d) %s",
-				 op, typeornull, result, cib_error2string(result));
+				 op, crm_str(type), result,
+				 cib_error2string(result));
 		}
 		
 	} else {
 		if(result == cib_ok) {
 			crm_verbose("Completed %s of <%s %s%s>",
-				    op, type, id?"id=":"", id?id:"");
+				    op, crm_str(type), id?"id=":"", id?id:"");
 			
 		} else {
-			crm_warn("%s of <%s %s%s> FAILED: %s", op, type,
+			crm_warn("%s of <%s %s%s> FAILED: %s", op,crm_str(type),
 				 id?"id=":"", id?id:"", cib_error2string(result));
 		}
 	}
