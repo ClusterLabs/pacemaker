@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.17 2004/04/29 15:33:03 andrew Exp $ */
+/* $Id: cibmain.c,v 1.18 2004/05/10 21:52:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -172,9 +172,7 @@ init_start(void)
 	}
 	
     
-	crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD,
-						    cib_msg_callback,
-						    NULL);
+	crm_ch = init_client_ipc_comms(CRM_SYSTEM_CRMD, cib_msg_callback,NULL);
 
 	if(crm_ch != NULL) {
 		send_hello_message(crm_ch, "-", CRM_SYSTEM_CIB, "0", "1");

@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.22 2004/04/29 15:33:02 andrew Exp $ */
+/* $Id: adminmain.c,v 1.23 2004/05/10 21:52:56 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -499,9 +499,8 @@ do_init(void)
 	admin_uuid[10] = '\0';
 
 	crmd_channel =
-		init_client_ipc_comms(CRM_SYSTEM_CRMD,
-				      admin_msg_callback,
-				      NULL);
+		init_client_ipc_comms(CRM_SYSTEM_CRMD,admin_msg_callback,NULL);
+
 	if(crmd_channel != NULL) {
 		send_hello_message(crmd_channel,
 				   admin_uuid,

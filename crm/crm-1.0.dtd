@@ -408,7 +408,7 @@ More details are given in the annotated DTD below.
  
 -->
 
-<!ELEMENT transition_graph (synapse*)>
+<!ELEMENT transition_graph (actions*,errors*)>
 
 <!-- When all inputs to a synapse are satisfied, the synapse fires the
      actions.
@@ -523,7 +523,7 @@ More details are given in the annotated DTD below.
      contents - maybe generic_op + attributes?
      (Andrew) Well hurry up then, we dont have all year :)
 -->
-<!ELEMENT msg_data (rsc_op?,rsc_state?,lrm_state?,cib_fragment?)>
+<!ELEMENT msg_data (rsc_op?,rsc_state?,lrm_state?,cib_fragment?,transition_graph?)>
 
 <!-- need to flesh out the types of operations -->
 <!ELEMENT operation (nvpair*)>

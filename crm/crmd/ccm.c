@@ -208,12 +208,9 @@ do_ccm_update_cache(long long action,
 	offset = oc->m_memb_idx;
 	membership_copy->members_size = oc->m_n_member;
 
-	CRM_DEBUG("Number of members: %d", membership_copy->members_size);
-	
 	if(membership_copy->members_size > 0) {
 		int size = membership_copy->members_size;
 		size = size * sizeof(oc_node_t);
-		CRM_DEBUG("Allocing %d", size);
 		membership_copy->members = (oc_node_t *)cl_malloc(size);
 
 		members = membership_copy->members;
@@ -240,13 +237,10 @@ do_ccm_update_cache(long long action,
 	offset = oc->m_in_idx;
 	membership_copy->new_members_size = oc->m_n_in;
 
-	CRM_DEBUG("Number of new members: %d", membership_copy->new_members_size);
 	if(membership_copy->new_members_size > 0) {
 		int size = membership_copy->new_members_size;
 		size = size * sizeof(oc_node_t);
 
-		CRM_DEBUG("Allocing %d", size);
-		
 		membership_copy->new_members = (oc_node_t *)cl_malloc(size);
 		
 		members = membership_copy->new_members;
@@ -303,7 +297,7 @@ do_ccm_update_cache(long long action,
 		
 		send_request(NULL, fragment, CRM_OPERATION_UPDATE,
 			     NULL, CRM_SYSTEM_DCIB);
-		
+
 		free_xml(fragment);
 	}
 	

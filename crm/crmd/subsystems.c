@@ -176,15 +176,21 @@ do_cib_invoke(long long action,
 		}
 
 
-		if(AM_I_DC && (strcmp(op, CRM_OPERATION_CREATE) == 0
-			       || strcmp(op, CRM_OPERATION_UPDATE) == 0
-			       || strcmp(op, CRM_OPERATION_DELETE) == 0
-			       || strcmp(op, CRM_OPERATION_REPLACE) == 0
-			       || strcmp(op, CRM_OPERATION_WELCOME) == 0
-			       || strcmp(op, CRM_OPERATION_SHUTDOWN_REQ) == 0
-			       || strcmp(op, CRM_OPERATION_ERASE) == 0)) {
+		if(op != NULL && AM_I_DC
+		   && (strcmp(op, CRM_OPERATION_CREATE) == 0
+		       || strcmp(op, CRM_OPERATION_UPDATE) == 0
+		       || strcmp(op, CRM_OPERATION_DELETE) == 0
+		       || strcmp(op, CRM_OPERATION_REPLACE) == 0
+		       || strcmp(op, CRM_OPERATION_WELCOME) == 0
+		       || strcmp(op, CRM_OPERATION_SHUTDOWN_REQ) == 0
+		       || strcmp(op, CRM_OPERATION_ERASE) == 0)) {
 			FNRET(I_CIB_UPDATE);	
 		}
+
+		if(op == NULL) {
+			xml_message_debug(cib_msg, "Invalid CIB Message");
+		}
+		
 	
 		
 		// check the answer, see if we are interested in it also
@@ -207,7 +213,7 @@ do_cib_invoke(long long action,
  		// check if the response was ok before next bit
 
 		section = get_xml_attr(cib_msg, XML_TAG_OPTIONS,
-				XML_ATTR_FILTER_TYPE, FALSE);
+				       XML_ATTR_FILTER_TYPE, FALSE);
 		
 		/* set the section so that we dont always send the
 		 * whole thing
@@ -220,7 +226,7 @@ do_cib_invoke(long long action,
 		}
 		
 		answer = process_cib_request(CRM_OPERATION_BUMP,
-							new_options, NULL);
+					     new_options, NULL);
 
 		free_xml(new_options);
 
@@ -314,9 +320,21 @@ do_pe_invoke(long long action,
 	FNIN();
 
 	stopTimer(integration_timer);
-	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n",
-	       fsa_action2string(action), action);
+
+	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
+		
+		cl_log(LOG_INFO, "Waiting for the PE to connect");
+		FNRET(I_WAIT_FOR_EVENT);
+		
+	}
 	
+	xmlNodePtr local_cib = get_cib_copy();
+
+	CRM_DEBUG("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
+	
+	send_request(NULL, local_cib, "pecalc",
+		     NULL, CRM_SYSTEM_PENGINE);
+
 	FNRET(I_NULL);
 }
 
@@ -384,7 +402,34 @@ do_te_control(long long action,
 	FNRET(result);
 }
 
-/*	 A_TE_INVOKE	*/
+/*	 A_TE_COPYTO	*/
+enum crmd_fsa_input
+do_te_copyto(long long action,
+	     enum crmd_fsa_cause cause,
+	     enum crmd_fsa_state cur_state,
+	     enum crmd_fsa_input current_input,
+	     void *data)
+{
+	xmlNodePtr message  = copy_xml_node_recursive((xmlNodePtr)data);
+	xmlNodePtr opts  = find_xml_node(message, "options");
+	const char *true_op = xmlGetProp(opts, XML_ATTR_OP);
+	
+	FNIN();
+	
+	set_xml_property_copy(opts, XML_ATTR_OP, "event");
+	set_xml_property_copy(message, XML_ATTR_SYSTO, CRM_SYSTEM_TENGINE);
+	set_xml_property_copy(opts, "true_op", true_op);
+	
+	relay_message(message, FALSE);
+
+	free_xml(message);
+
+	FNRET(I_NULL);
+}
+
+static xmlNodePtr te_last_input = NULL;
+
+/*	 A_TE_INVOKE, A_TE_CANCEL	*/
 enum crmd_fsa_input
 do_te_invoke(long long action,
 	     enum crmd_fsa_cause cause,
@@ -392,10 +437,39 @@ do_te_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     void *data)
 {
+	xmlNodePtr graph = NULL;
+	xmlNodePtr msg = (xmlNodePtr)data;
 	FNIN();
 
-	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n",
-	       fsa_action2string(action), action);
+	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
+		cl_log(LOG_INFO, "Waiting for the TE to connect");
+		if(data != NULL) {
+			free_xml(te_last_input);
+			te_last_input = copy_xml_node_recursive(msg);
+		}
+		FNRET(I_WAIT_FOR_EVENT);
+
+	}
+
+	if(msg == NULL) {
+		msg = te_last_input;
+	} else {
+		free_xml(te_last_input);
+	}
+	
+	if(action & A_TE_INVOKE) {
+		graph = find_xml_node(msg, "transition_graph");
+		if(graph == NULL) {
+			FNRET(I_FAIL);
+		}
+	
+		send_request(NULL, graph, "transition",
+			     NULL, CRM_SYSTEM_TENGINE);
+	} else {
+		send_request(NULL, graph, "abort",
+			     NULL, CRM_SYSTEM_TENGINE);
+	}
+	
 	
 	FNRET(I_NULL);
 }
@@ -583,10 +657,10 @@ run_command(struct crm_subsystem_s *centry,
 /*	 A_LRM_CONNECT	*/
 enum crmd_fsa_input
 do_lrm_control(long long action,
-		enum crmd_fsa_cause cause,
-		enum crmd_fsa_state cur_state,
-		enum crmd_fsa_input current_input,
-		void *data)
+	       enum crmd_fsa_cause cause,
+	       enum crmd_fsa_state cur_state,
+	       enum crmd_fsa_input current_input,
+	       void *data)
 {
 	enum crmd_fsa_input failed = I_NULL;//I_FAIL;
 	int ret = HA_OK;
@@ -707,9 +781,9 @@ do_lrm_query(void)
 		CRM_DEBUG("get_cur_state...");
 		
 		op_list = the_rsc->ops->get_cur_state(the_rsc,
-							     &cur_state);
+						      &cur_state);
 		CRM_DEBUG("\tcurrent state:%s\n",
-			   cur_state==LRM_RSC_IDLE?"Idel":"Busy");
+			  cur_state==LRM_RSC_IDLE?"Idel":"Busy");
 		
 		node = g_list_first(op_list);
 		
@@ -768,10 +842,10 @@ do_lrm_query(void)
 /*	 A_LRM_INVOKE	*/
 enum crmd_fsa_input
 do_lrm_invoke(long long action,
-	     enum crmd_fsa_cause cause,
-	     enum crmd_fsa_state cur_state,
-	     enum crmd_fsa_input current_input,
-	     void *data)
+	      enum crmd_fsa_cause cause,
+	      enum crmd_fsa_state cur_state,
+	      enum crmd_fsa_input current_input,
+	      void *data)
 {
 	enum crmd_fsa_input next_input = I_NULL;
 	xmlNodePtr fragment, tmp1;
@@ -794,6 +868,42 @@ do_lrm_invoke(long long action,
 	
 	FNIN();
 
+#ifdef USE_FAKE_LRM
+	msg = (xmlNodePtr)data;
+		
+	operation = get_xml_attr_nested(msg, rsc_path, DIMOF(rsc_path) -3,
+					XML_ATTR_OP, TRUE);
+	
+	id_from_cib = get_xml_attr_nested(msg, rsc_path, DIMOF(rsc_path) -2,
+					  "id", TRUE);
+	
+	crm_op = get_xml_attr(msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
+
+
+	if(safe_str_eq(crm_op, "rsc_op")) {
+	
+		CRM_DEBUG("performing op %s...", operation);
+
+		xmlNodePtr iter = create_xml_node(iter, "lrm_resource");
+	
+		set_xml_property_copy(iter, XML_ATTR_ID, id_from_cib);
+		set_xml_property_copy(iter, "last_op", operation);
+
+		if(safe_str_eq(operation, "start")){
+			set_xml_property_copy(iter, "op_status", "started");
+		} else {
+			set_xml_property_copy(iter, "op_status", "stopped");
+		}
+		
+		set_xml_property_copy(iter, "op_code", "0");
+		set_xml_property_copy(iter, "op_node", fsa_our_uname);
+
+		send_request(NULL, iter, "event",
+			     NULL, CRM_SYSTEM_TENGINE);
+	}
+	
+	FNRET(I_NULL);
+#endif
 
 	if(action & A_UPDATE_NODESTATUS) {
 
@@ -817,33 +927,26 @@ do_lrm_invoke(long long action,
 		FNRET(next_input);
 	}
 	
-
-	
-	cl_log(LOG_ERR, "Action %s (%.16llx) not supported\n",
+	cl_log(LOG_WARNING, "Action %s (%.16llx) only kind of supported\n",
 	       fsa_action2string(action), action);
 
 
 	msg = (xmlNodePtr)data;
 		
-	operation = get_xml_attr_nested(msg,
-						    rsc_path,
-						    DIMOF(rsc_path) -3,
-						    "operation", TRUE);
-
+	operation = get_xml_attr_nested(msg, rsc_path, DIMOF(rsc_path) -3,
+					XML_ATTR_OP, TRUE);
 	
-	id_from_cib = get_xml_attr_nested(msg,
-						      rsc_path,
-						      DIMOF(rsc_path) -2,
-						      "id",
-						      TRUE);
+	
+	id_from_cib = get_xml_attr_nested(msg, rsc_path, DIMOF(rsc_path) -2,
+					  "id", TRUE);
+	
 	// only the first 16 chars are used by the LRM
 	strncpy(rid, id_from_cib, 16);
 	
-
-	crm_op = get_xml_attr(msg, XML_TAG_OPTIONS, "operation", TRUE);
-
-	rsc = fsa_lrm_conn->lrm_ops->get_rsc(
-		fsa_lrm_conn, rid);
+	
+	crm_op = get_xml_attr(msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
+	
+	rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 	
 	if(crm_op != NULL && strcmp(crm_op, "lrm_query") == 0) {
 
@@ -957,12 +1060,12 @@ void
 do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 {
 /*
-<status>
-    <nodes_status id=uname>
-        <lrm>
-	   <lrm_resources>
-	       <lrm_resource id=>
-	   </...>
+  <status>
+  <nodes_status id=uname>
+  <lrm>
+  <lrm_resources>
+  <lrm_resource id=>
+  </...>
 */
 	xmlNodePtr update, iter;
 	char *tmp = NULL;
@@ -986,6 +1089,7 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	set_xml_property_copy(iter, "op_code", tmp);
 	cl_free(tmp);
 
+	set_xml_property_copy(iter, "op_node", fsa_our_uname);
 	
 	tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
@@ -995,7 +1099,7 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 
 	send_request(NULL, fragment, CRM_OPERATION_UPDATE,
 		     NULL, CRM_SYSTEM_DCIB);
-
+	
 	free_xml(fragment);
 	free_xml(update);
 	free_xml(tmp1);
@@ -1032,6 +1136,7 @@ do_lrm_event(long long action,
 						   monitor->status,
 						   monitor->rc,
 						   monitor->op_type);
+
 				break;
 		}	
 

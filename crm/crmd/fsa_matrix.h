@@ -86,7 +86,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_PENDING		==> */	S_RECOVERY,
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
-		/* S_TRANSITION_ENGINE	==> */	S_POLICY_ENGINE,
+		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
 	},
 
 /* Got an I_DC_TIMEOUT */
@@ -119,6 +119,22 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_ELECTION,
+	},
+
+/* Got an I_PE_CALC */
+	{
+		/* S_IDLE		==> */	S_POLICY_ENGINE,
+		/* S_ELECTION		==> */	S_ELECTION,
+		/* S_INTEGRATION	==> */	S_POLICY_ENGINE,
+		/* S_NOT_DC		==> */	S_RECOVERY,
+		/* S_POLICY_ENGINE	==> */	S_POLICY_ENGINE,
+		/* S_RECOVERY		==> */	S_RECOVERY,
+		/* S_RECOVERY_DC	==> */	S_RECOVERY_DC,
+		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
+		/* S_PENDING		==> */	S_RECOVERY,
+		/* S_STOPPING		==> */	S_STOPPING,
+		/* S_TERMINATE		==> */	S_TERMINATE,
+		/* S_TRANSITION_ENGINE	==> */	S_POLICY_ENGINE,
 	},
 
 /* Got an I_RELEASE_DC */
@@ -565,18 +581,18 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_CIB_UPDATE */
 	{
-		/* S_IDLE		==> */	A_CIB_BUMPGEN|A_PE_INVOKE,
+		/* S_IDLE		==> */	A_CIB_BUMPGEN|A_TE_COPYTO,
 		/* S_ELECTION		==> */	A_LOG,
-		/* S_INTEGRATION	==> */	A_CIB_BUMPGEN|A_PE_INVOKE, 
+		/* S_INTEGRATION	==> */	A_CIB_BUMPGEN|A_TE_COPYTO, 
 		/* S_NOT_DC		==> */	A_WARN,
-		/* S_POLICY_ENGINE	==> */	A_CIB_BUMPGEN|A_PE_INVOKE,
+		/* S_POLICY_ENGINE	==> */	A_CIB_BUMPGEN|A_TE_COPYTO,
 		/* S_RECOVERY		==> */	A_WARN,
-		/* S_RECOVERY_DC	==> */	A_CIB_BUMPGEN|A_PE_INVOKE,
+		/* S_RECOVERY_DC	==> */	A_CIB_BUMPGEN|A_TE_COPYTO,
 		/* S_RELEASE_DC		==> */	A_WARN,
 		/* S_PENDING		==> */	A_WARN,
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	A_CIB_BUMPGEN|A_PE_INVOKE,
+		/* S_TRANSITION_ENGINE	==> */	A_CIB_BUMPGEN|A_TE_COPYTO,
 	},
 
 /* Got an I_DC_TIMEOUT */
@@ -611,6 +627,21 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_TRANSITION_ENGINE	==> */	A_ELECTION_COUNT,
 	},
 
+/* Got an I_PE_CALC */
+	{
+		/* S_IDLE		==> */	A_PE_INVOKE,
+		/* S_ELECTION		==> */	A_WARN,
+		/* S_INTEGRATION	==> */	A_PE_INVOKE,
+		/* S_NOT_DC		==> */	A_ERROR,
+		/* S_POLICY_ENGINE	==> */	A_PE_INVOKE,
+		/* S_RECOVERY		==> */	A_ERROR,
+		/* S_RECOVERY_DC	==> */	A_PE_INVOKE,
+		/* S_RELEASE_DC		==> */	A_WARN,
+		/* S_PENDING		==> */	A_ERROR,
+		/* S_STOPPING		==> */	A_WARN,
+		/* S_TERMINATE		==> */	A_WARN,
+		/* S_TRANSITION_ENGINE	==> */	A_PE_INVOKE|A_TE_CANCEL,
+	},
 	
 /* Got an I_RELEASE_DC */
 	{
@@ -694,50 +725,50 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_NODE_JOIN */
 	{
-		/* S_IDLE		==> */	A_JOIN_WELCOME|A_PE_INVOKE,
+		/* S_IDLE		==> */	A_TE_CANCEL|A_JOIN_WELCOME|A_PE_INVOKE,
 		/* S_ELECTION		==> */	A_WARN,
-		/* S_INTEGRATION	==> */	A_JOIN_WELCOME|A_PE_INVOKE,
+		/* S_INTEGRATION	==> */	A_TE_CANCEL|A_JOIN_WELCOME|A_PE_INVOKE,
 		/* S_NOT_DC		==> */	A_WARN,
-		/* S_POLICY_ENGINE	==> */	A_JOIN_WELCOME|A_PE_INVOKE,
+		/* S_POLICY_ENGINE	==> */	A_TE_CANCEL|A_JOIN_WELCOME|A_PE_INVOKE,
 		/* S_RECOVERY		==> */	A_WARN,
-		/* S_RECOVERY_DC	==> */	A_JOIN_WELCOME|A_PE_INVOKE,
+		/* S_RECOVERY_DC	==> */	A_TE_CANCEL|A_JOIN_WELCOME|A_PE_INVOKE,
 		/* S_RELEASE_DC		==> */	A_WARN,
 		/* S_PENDING		==> */	A_WARN,
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	A_JOIN_WELCOME|A_PE_INVOKE,
+		/* S_TRANSITION_ENGINE	==> */	A_TE_CANCEL|A_JOIN_WELCOME|A_PE_INVOKE,
 	},
 
 /* Got an I_NODE_LEFT */
 	{
-		/* S_IDLE		==> */	A_PE_INVOKE,
+		/* S_IDLE		==> */	A_LOG,
 		/* S_ELECTION		==> */	A_WARN,
-		/* S_INTEGRATION	==> */	A_PE_INVOKE,
+		/* S_INTEGRATION	==> */	A_LOG,
 		/* S_NOT_DC		==> */	A_WARN,
-		/* S_POLICY_ENGINE	==> */	A_PE_INVOKE,
+		/* S_POLICY_ENGINE	==> */	A_LOG,
 		/* S_RECOVERY		==> */	A_WARN,
-		/* S_RECOVERY_DC	==> */	A_PE_INVOKE,
+		/* S_RECOVERY_DC	==> */	A_LOG,
 		/* S_RELEASE_DC		==> */	A_WARN,
 		/* S_PENDING		==> */	A_WARN,
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	A_PE_INVOKE,
+		/* S_TRANSITION_ENGINE	==> */	A_LOG,
 	},
 
 /* Got an I_NODE_LEAVING */
 	{
-		/* S_IDLE		==> */	A_NODE_BLOCK|A_PE_INVOKE,
+		/* S_IDLE		==> */	A_NODE_BLOCK|A_PE_INVOKE|A_TE_CANCEL,
 		/* S_ELECTION		==> */	A_WARN,
-		/* S_INTEGRATION	==> */	A_NODE_BLOCK|A_PE_INVOKE,
+		/* S_INTEGRATION	==> */	A_NODE_BLOCK|A_PE_INVOKE|A_TE_CANCEL,
 		/* S_NOT_DC		==> */	A_WARN,
-		/* S_POLICY_ENGINE	==> */	A_NODE_BLOCK|A_PE_INVOKE,
+		/* S_POLICY_ENGINE	==> */	A_NODE_BLOCK|A_PE_INVOKE|A_TE_CANCEL,
 		/* S_RECOVERY		==> */	A_WARN,
-		/* S_RECOVERY_DC	==> */	A_NODE_BLOCK|A_PE_INVOKE,
+		/* S_RECOVERY_DC	==> */	A_NODE_BLOCK|A_PE_INVOKE|A_TE_CANCEL,
 		/* S_RELEASE_DC		==> */	A_WARN,
 		/* S_PENDING		==> */	A_WARN,
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	A_NODE_BLOCK|A_PE_INVOKE,
+		/* S_TRANSITION_ENGINE	==> */	A_NODE_BLOCK|A_PE_INVOKE|A_TE_CANCEL,
 	},
 
 /* Got an I_NOT_DC */
@@ -822,18 +853,18 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_REQUEST */
 	{
-		/* S_IDLE		==> */	A_MSG_STORE|A_MSG_PROCESS,
-		/* S_ELECTION		==> */	A_MSG_STORE|A_MSG_PROCESS,
-		/* S_INTEGRATION	==> */	A_MSG_STORE|A_MSG_PROCESS,
-		/* S_NOT_DC		==> */	A_MSG_STORE|A_MSG_PROCESS,
-		/* S_POLICY_ENGINE	==> */	A_MSG_STORE|A_MSG_PROCESS,
-		/* S_RECOVERY		==> */	A_MSG_STORE|A_MSG_PROCESS,
-		/* S_RECOVERY_DC	==> */	A_MSG_STORE|A_MSG_PROCESS,
-		/* S_RELEASE_DC		==> */	A_MSG_STORE|A_MSG_PROCESS,
-		/* S_PENDING		==> */	A_MSG_STORE|A_MSG_PROCESS,
-		/* S_STOPPING		==> */	A_LOG|A_MSG_STORE|A_MSG_PROCESS,
-		/* S_TERMINATE		==> */	A_LOG|A_MSG_STORE|A_MSG_PROCESS,
-		/* S_TRANSITION_ENGINE	==> */	A_MSG_STORE|A_MSG_PROCESS,
+		/* S_IDLE		==> */	A_MSG_PROCESS,
+		/* S_ELECTION		==> */	A_MSG_PROCESS,
+		/* S_INTEGRATION	==> */	A_MSG_PROCESS,
+		/* S_NOT_DC		==> */	A_MSG_PROCESS,
+		/* S_POLICY_ENGINE	==> */	A_MSG_PROCESS,
+		/* S_RECOVERY		==> */	A_MSG_PROCESS,
+		/* S_RECOVERY_DC	==> */	A_MSG_PROCESS,
+		/* S_RELEASE_DC		==> */	A_MSG_PROCESS,
+		/* S_PENDING		==> */	A_MSG_PROCESS,
+		/* S_STOPPING		==> */	A_LOG|A_MSG_PROCESS,
+		/* S_TERMINATE		==> */	A_LOG|A_MSG_PROCESS,
+		/* S_TRANSITION_ENGINE	==> */	A_MSG_PROCESS,
 	},
 
 /* Got an I_ROUTER */

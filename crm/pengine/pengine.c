@@ -2,12 +2,18 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xmlutils.h>
 #include <crm/common/crmutils.h>
+#include <crm/common/msgutils.h>
 #include <crm/cib.h>
 #include <glib.h>
 #include <libxml/tree.h>
 
 #include <pengine.h>
 #include <pe_utils.h>
+
+xmlNodePtr do_calculations(xmlNodePtr cib_object);
+
+gboolean process_pe_message(xmlNodePtr msg, IPC_Channel *sender);
+
 
 void color_resource(resource_t *lh_resource,
 		    GSListPtr *colors,
@@ -1724,4 +1730,159 @@ color_resource(resource_t *lh_resource, GSListPtr *colors, GSListPtr resources)
 		);
 	
 	pdebug_action(print_resource("Colored", lh_resource, FALSE));
+}
+
+gboolean
+process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
+{
+	const char *op = get_xml_attr (msg, XML_TAG_OPTIONS,
+				       XML_ATTR_OP, TRUE);
+
+	const char *ref = xmlGetProp(msg, XML_ATTR_REFERENCE);
+
+	CRM_DEBUG("Processing %s op (ref=%s)...", op, ref);
+	
+	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
+
+	if(op == NULL){
+		// error
+	} else if(sys_to == NULL || strcmp(sys_to, "pengine") != 0) {
+		CRM_DEBUG("Bad sys-to %s", sys_to);
+		return FALSE;
+		
+	} else if(strcmp(op, "pecalc") == 0) {
+		xmlNodePtr input_cib = find_xml_node(msg, XML_TAG_CIB);
+		if (send_ipc_reply(sender, msg,
+				   do_calculations(input_cib)) ==FALSE) {
+
+			cl_log(LOG_WARNING,
+			       "Answer could not be sent");
+		}
+
+	} else if(strcmp(op, "quit") == 0) {
+		cl_log(LOG_WARNING, "Received quit message, terminating");
+		exit(0);
+	}
+	
+	return TRUE;
+}
+
+xmlNodePtr
+do_calculations(xmlNodePtr cib_object)
+{
+	int lpc, lpc2;
+	
+	GSListPtr resources = NULL;
+	GSListPtr nodes = NULL;
+	GSListPtr node_constraints = NULL;
+	GSListPtr actions = NULL;
+	GSListPtr action_constraints = NULL;
+	GSListPtr stonith_list = NULL;
+	GSListPtr shutdown_list = NULL;
+
+	GSListPtr colors = NULL;
+	GSListPtr action_sets = NULL;
+
+	xmlNodePtr graph = NULL;
+
+	pdebug("=#=#=#=#= Stage 0 =#=#=#=#=");
+		  
+	stage0(cib_object,
+	       &resources,
+	       &nodes,  &node_constraints,
+	       &actions,  &action_constraints,
+	       &stonith_list, &shutdown_list);
+
+	pdebug("=#=#=#=#= Stage 1 =#=#=#=#=");
+	stage1(node_constraints, nodes, resources);
+
+	pdebug("=#=#=#=#= Stage 2 =#=#=#=#=");
+	stage2(resources, nodes, &colors);
+
+	pdebug("========= Nodes =========");
+	pdebug_action(
+		slist_iter(node, node_t, nodes, lpc,
+			   print_node(NULL, node, TRUE)
+			)
+		);
+		
+	pdebug("========= Resources =========");
+	pdebug_action(
+		slist_iter(resource, resource_t, resources, lpc,
+			   print_resource(NULL, resource, TRUE)
+			)
+		);  
+  
+	pdebug("=#=#=#=#= Stage 3 =#=#=#=#=");
+	stage3(colors);
+
+	pdebug("=#=#=#=#= Stage 4 =#=#=#=#=");
+	stage4(colors);
+	pdebug("========= Colors =========");
+	pdebug_action(
+		slist_iter(color, color_t, colors, lpc,
+		   print_color(NULL, color, FALSE)
+			)
+		);
+
+	pdebug("=#=#=#=#= Stage 5 =#=#=#=#=");
+	stage5(resources);
+
+	pdebug("=#=#=#=#= Stage 6 =#=#=#=#=");
+	stage6(&actions, &action_constraints,
+	       stonith_list, shutdown_list);
+
+	pdebug("========= Action List =========");
+	pdebug_action(
+		slist_iter(action, action_t, actions, lpc,
+			   print_action(NULL, action, TRUE)
+			)
+		);
+	
+	pdebug("=#=#=#=#= Stage 7 =#=#=#=#=");
+	stage7(resources, actions, action_constraints, &action_sets);
+	
+	pdebug("=#=#=#=#= Summary =#=#=#=#=");
+	summary(resources);
+
+	pdebug("========= Action Sets =========");
+
+	pdebug("\t========= Set %d (Un-runnable) =========", -1);
+	pdebug_action(
+		slist_iter(action, action_t, actions, lpc,
+			   if(action->optional == FALSE
+			      && action->runnable == FALSE) {
+				   print_action("\t", action, TRUE);
+			   }
+			)
+		);
+
+	pdebug_action(
+		slist_iter(action_set, GSList, action_sets, lpc,
+			   pdebug("\t========= Set %d =========", lpc);
+			   slist_iter(action, action_t, action_set, lpc2,
+				      print_action("\t", action, TRUE);
+				   )
+			)
+		);
+
+	
+	pdebug("========= Stonith List =========");
+	pdebug_action(
+		slist_iter(node, node_t, stonith_list, lpc,
+			   print_node(NULL, node, FALSE);
+			)
+		);
+  
+	pdebug("========= Shutdown List =========");
+	pdebug_action(
+		slist_iter(node, node_t, shutdown_list, lpc,
+			   print_node(NULL, node, FALSE);
+			)
+		);
+
+	pdebug("=#=#=#=#= Stage 8 =#=#=#=#=");
+	stage8(action_sets, &graph);
+
+	return graph;
 }

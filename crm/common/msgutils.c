@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.27 2004/04/29 15:33:03 andrew Exp $ */
+/* $Id: msgutils.c,v 1.28 2004/05/10 21:52:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -446,13 +446,15 @@ forward_ipc_request(IPC_Channel *ipc_channel,
 
 	FNIN();
 	forward = create_forward(xml_request,
-					    xml_response_data,
-					    sys_to);
+				 xml_response_data,
+				 sys_to);
+
 	if (forward != NULL)
 	{
 		was_sent = send_xmlipc_message(ipc_channel, forward);
 		free_xml(forward);
 	}
+
 	FNRET(was_sent);
 }
 

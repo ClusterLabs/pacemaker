@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.24 2004/04/29 15:34:22 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.25 2004/05/10 21:52:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -478,6 +478,7 @@ init_client_ipc_comms(const char *child,
 		cl_log(LOG_CRIT,
 		       "Could not access channel on: %s",
 		       commpath);
+		
 	} else if (ch->ops->initiate_connection(ch) != IPC_OK) {
 		cl_log(LOG_CRIT, "Could not init comms on: %s", commpath);
 		FNRET(NULL);
@@ -496,11 +497,8 @@ init_client_ipc_comms(const char *child,
 					    callback_data, 
 					    default_ipc_input_destroy);
 
-	if(client_data != NULL) {
-		client_data->client_source = the_source;
-		client_data->client_channel = ch;
-	}
-	
+	cl_log(LOG_DEBUG, "Processing of %s complete", commpath);
+
 	FNRET(ch);
 }
 

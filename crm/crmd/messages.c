@@ -218,8 +218,9 @@ crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 	
 	if(to != NULL && strlen(to) > 0 && strcmp(to, fsa_our_uname) != 0) {
 #ifdef MSG_LOG
-		fprintf(msg_in_strm, "Discarding message [F_SEQ=%s] for someone else.",
-			   ha_msg_value(msg, F_SEQ));
+		fprintf(msg_in_strm,
+			"Discarding message [F_SEQ=%s] for someone else.",
+			ha_msg_value(msg, F_SEQ));
 #endif
 		FNOUT();
 	}
@@ -424,10 +425,8 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	int is_local    = 0;
 	gboolean dont_cc= TRUE;
 	gboolean processing_complete = FALSE;
-	const char *host_to = xmlGetProp(xml_relay_message, XML_ATTR_HOSTTO);
-	const char *sys_to  = xmlGetProp(xml_relay_message, XML_ATTR_SYSTO);
-	const char *sys_cc  = get_xml_attr(xml_relay_message, XML_TAG_OPTIONS,
-					   XML_ATTR_SYSCC, FALSE);
+	const char *host_to = xmlGetProp(xml_relay_message,XML_ATTR_HOSTTO);
+	const char *sys_to  = xmlGetProp(xml_relay_message,XML_ATTR_SYSTO);
 
 	FNIN();
 
@@ -486,12 +485,6 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	CRM_DEBUG("sys_to      %s", sys_to);
 	CRM_DEBUG("host_to     %s", host_to);
 #endif
-/*
-	if(AM_I_DC && sys_cc != NULL && strcmp(sys_cc, CRM_SYSTEM_DC) == 0) {
-		dont_cc = FALSE;
-	}
-*/
-	(void)sys_cc;
 	
 	if(is_for_dc || is_for_dcib) {
 		if(AM_I_DC) {
@@ -633,10 +626,10 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	       (char*)client_msg->msg_body);
 
 	result = process_hello_message(client_msg,
-						&uuid,
-						&client_name,
-						&major_version,
-						&minor_version);
+				       &uuid,
+				       &client_name,
+				       &major_version,
+				       &minor_version);
 
 	if (result == TRUE) {
 		// check version
@@ -653,12 +646,13 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		cl_free(minor_version);
 	}
 
+	struct crm_subsystem_s *the_subsystem = NULL;
+
 	if (result == TRUE) {
 		/* if we already have one of those clients
 		 * only applies to te, pe etc.  not admin clients
 		 */
 
-		struct crm_subsystem_s *the_subsystem = NULL;
 		
 		if (client_name == NULL)
 			CRM_DEBUG("Client had not registered with us yet");
@@ -671,11 +665,11 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 
 		if (the_subsystem != NULL) {
 			// do we already have one?
-			result = (fsa_input_register & the_subsystem->flag) == 0;
-			set_bit_inplace(&fsa_input_register, the_subsystem->flag);
-
+			result =(fsa_input_register & the_subsystem->flag)==0;
 			if(result) {
-				the_subsystem->ipc = curr_client->client_channel;
+				the_subsystem->ipc =
+					curr_client->client_channel;
+
 			} // else we didnt ask for the client to start
 
 		} else if(client_name != NULL && uuid != NULL) {
@@ -683,10 +677,10 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 				generate_hash_key(client_name, uuid);
 		} else {
 			result = FALSE;
-			cl_log(LOG_ERR, "Bad client details (client_name=%s, uuid=%s)",
+			cl_log(LOG_ERR,
+			       "Bad client details (client_name=%s, uuid=%s)",
 			       client_name, uuid);
 		}
-		
 	}
 	
 	if(result == TRUE && table_key == NULL)
@@ -706,6 +700,17 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		send_hello_message(curr_client->client_channel,
 				   "n/a", CRM_SYSTEM_CRMD,
 				   "0", "1");
+
+		cl_log(LOG_INFO, "Updated client list with %s",
+		       (char*)table_key);
+		
+		if(the_subsystem != NULL) {
+			set_bit_inplace(&fsa_input_register,
+					the_subsystem->flag);
+		}
+		
+		s_crmd_fsa(C_SUBSYSTEM_CONNECT, I_NULL, NULL);
+
 	} else {
 		cl_log(LOG_ERR, "Rejected client logon request");
 		curr_client->client_channel->ch_status = IPC_DISC_PENDING;
@@ -745,6 +750,14 @@ handle_message(xmlNodePtr stored_msg)
 	} else if(strcmp(type, XML_ATTR_REQUEST) == 0){
 		if(strcmp(op, CRM_OPERATION_VOTE) == 0) {
 			next_input = I_ELECTION;
+				
+		} else if(AM_I_DC && strcmp(op, "te_abort") == 0) {
+			next_input = I_PE_CALC;
+				
+		} else if(AM_I_DC
+			  && fsa_state == S_TRANSITION_ENGINE
+			  && strcmp(op, "te_complete") == 0) {
+			next_input = I_SUCCESS;
 				
 		} else if(strcmp(op, CRM_OPERATION_HBEAT) == 0) {
 			next_input = I_DC_HEARTBEAT;
@@ -795,6 +808,10 @@ handle_message(xmlNodePtr stored_msg)
 		if(strcmp(op, CRM_OPERATION_WELCOME) == 0) {
 			next_input = I_WELCOME_ACK;
 				
+		} else if(strcmp(op, "pecalc") == 0) {
+			// results int eh TE being invoked
+			next_input = I_SUCCESS;
+			
 		} else if(strcmp(op, CRM_OPERATION_VOTE) == 0
 			  || strcmp(op, CRM_OPERATION_HBEAT) == 0
 			  || strcmp(op, CRM_OPERATION_WELCOME) == 0

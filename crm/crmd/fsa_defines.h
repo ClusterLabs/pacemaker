@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.11 2004/04/13 13:26:45 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.12 2004/05/10 21:52:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,14 +151,16 @@ Description:
  *
  *======================================*/
 enum crmd_fsa_input {
+// 0
 	I_NULL,		/* Nothing happened */
-
+// 1
 	I_CCM_EVENT,
 	
 	I_CIB_OP,	/* An update to the CIB occurred */
 	I_CIB_UPDATE,	/* An update to the CIB occurred */
 	I_DC_TIMEOUT,	/* We have lost communication with the DC */
 	I_ELECTION,	/* Someone started an election */
+	I_PE_CALC,	/* The Policy Engine needs to be invoked */
 	I_RELEASE_DC,	/* The election completed and we were not
 				 * elected, but we were the DC beforehand
 				 */
@@ -170,6 +172,7 @@ enum crmd_fsa_input {
 			 * being performed.  For example, we may have lost
 			 * our connection to the CIB.
 			 */
+// 10
 	I_FAIL,		/* The action failed to complete successfully */
 	I_INTEGRATION_TIMEOUT, 
 	I_NODE_JOIN,	/* A node has entered the CCM membership list*/
@@ -185,6 +188,7 @@ enum crmd_fsa_input {
 	I_RESTART,	/* The current set of actions needs to be
 			 * restarted
 			 */
+// 20
 	I_REQUEST,	/* Some non-resource, non-ccm action is required
 			 * of us, eg. ping
 			 */
@@ -386,14 +390,16 @@ A_WARN
 #define	A_TE_INVOKE		0x0000100000000000ULL
 #define	A_TE_START		0x0000200000000000ULL
 #define	A_TE_STOP		0x0000400000000000ULL
+#define	A_TE_CANCEL		0x0000800000000000ULL
+#define	A_TE_COPYTO		0x0001000000000000ULL
 
 /* -- Policy Engine actions -- */
 	/* Calculate the next state for the cluster.  This is only
 	 * invoked once per needed calculation.
 	 */
-#define	A_PE_INVOKE		0x0001000000000000ULL
-#define	A_PE_START		0x0002000000000000ULL
-#define	A_PE_STOP		0x0004000000000000ULL
+#define	A_PE_INVOKE		0x0002000000000000ULL
+#define	A_PE_START		0x0004000000000000ULL
+#define	A_PE_STOP		0x0008000000000000ULL
 /* -- Misc actions -- */
 	/* Add a system generate "block" so that resources arent moved
 	 * to or are activly moved away from the affected node.  This
@@ -476,6 +482,7 @@ enum crmd_fsa_cause
 	C_TIMER_POPPED,
 	C_SHUTDOWN,
 	C_HEARTBEAT_FAILED,
+	C_SUBSYSTEM_CONNECT,
 	C_ILLEGAL
 };
 

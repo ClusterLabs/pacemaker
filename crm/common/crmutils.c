@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.13 2004/05/06 12:05:24 andrew Exp $ */
+/* $Id: crmutils.c,v 1.14 2004/05/10 21:52:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -202,16 +202,8 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name,
 		cl_log(LOG_ERR, "get_mynodeid() failed");
 		return FALSE;
 	}
-	cl_log(LOG_INFO, "Hostname: %s", ournode);
+	cl_log(LOG_INFO, "hostname: %s", ournode);
 	
-/*     cl_log(LOG_INFO, "Be informed of link status changes"); */
-/*     if (hb_cluster->llc_ops->set_ifstatus_callback(hb_cluster, LinkStatus, NULL) */
-/* 	!=HA_OK){ */
-/* 	cl_log(LOG_ERR, "Cannot set if status callback"); */
-/* 	cl_log(LOG_ERR, "REASON: %s", hb_cluster->llc_ops->errmsg(hb_cluster)); */
-/* 	return FALSE; */
-/*     } */
-
 	cl_log(LOG_DEBUG, "Be informed of CRM messages");
 	if (hb_cluster->llc_ops->set_msg_callback(hb_cluster,
 						  "CRM",
@@ -345,6 +337,9 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 		if (root_xml_node == NULL) {
 			cl_log(LOG_ERR, "Root node was NULL!!");
 
+		} else if (safe_str_eq(root_xml_node->name, "hello")) {
+			cl_log(LOG_WARNING, "HACK: Ignore hello messages");
+
 		} else if(sys_to == NULL) {
 			cl_log(LOG_ERR, "Value of %s was NULL!!",
 			       XML_ATTR_SYSTO);
@@ -357,21 +352,22 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 			cl_log(LOG_INFO,
 			       "Message was a response not a request."
 			       "  Discarding");
-		} else if (strcmp(sys_to, "foo"/*crm_system_name*/) == 0) {
-
-			void (*process_function)(xmlNodePtr msg) = NULL;
-			process_function = user_data;
-			
-			process_function(root_xml_node);
 
 		} else {
-			cl_log(LOG_WARNING,
-			       "Received a message destined for %s by mistake",
-			       sys_to);
+			gboolean (*process_function)(xmlNodePtr msg, IPC_Channel *sender) = NULL;
+			process_function = user_data;
+			
+			if(process_function(root_xml_node, sender) == FALSE) {
+				cl_log(LOG_WARNING,
+				       "Received a message destined for %s"
+				       " by mistake", sys_to);
+			}
+			
 		}
 		
 		if(answer != NULL)
 			free_xml(answer);
+		answer = NULL;
 		
 		msg->msg_done(msg);
 		msg = NULL;

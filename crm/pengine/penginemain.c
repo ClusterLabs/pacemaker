@@ -1,4 +1,4 @@
-/* $Id: penginemain.c,v 1.11 2004/05/04 11:51:10 andrew Exp $ */
+/* $Id: penginemain.c,v 1.12 2004/05/10 21:52:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,7 +61,7 @@ const char* crm_system_name = SYS_NAME;
 void usage(const char* cmd, int exit_status);
 int init_start(void);
 void pengine_shutdown(int nsig);
-extern gboolean pe_input_dispatch(IPC_Channel *sender, void *user_data);
+extern gboolean process_pe_message(xmlNodePtr msg, IPC_Channel *sender);
 
 int
 main(int argc, char ** argv)
@@ -162,7 +162,9 @@ init_start(void)
     cl_log(LOG_INFO, "Register PID");
     register_pid(PID_FILE, FALSE, pengine_shutdown);
 
-    crm_ch = init_client_ipc_comms("crmd", pe_input_dispatch, NULL);
+    crm_ch = init_client_ipc_comms("crmd",
+				   subsystem_input_dispatch,
+				   (void*)process_pe_message);
 
     if(crm_ch != NULL) {
 	    send_hello_message(crm_ch, "1234", CRM_SYSTEM_PENGINE, "0", "1");

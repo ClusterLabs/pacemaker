@@ -149,15 +149,28 @@ do_shutdown_req(long long action,
 gboolean
 crmd_ha_input_dispatch(int fd, gpointer user_data)
 {
+	int lpc = 0;
 	ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
     
 	FNIN();
 
 	while(hb_cluster->llc_ops->msgready(hb_cluster))
 	{
+		lpc++;
 		// invoke the callbacks but dont block
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
+
+	if(lpc == 0){
+		// hey what happened??
+		cl_log(LOG_ERR, "We were called but no message was ready.\n"
+		       "\tLikely the connection to Heartbeat failed, check the logs");
+
+		// TODO: feed this back into the FSA
+		
+		FNRET(FALSE);
+	}
+	
     
 	FNRET(TRUE);
 }
@@ -246,7 +259,7 @@ do_startup(long long action,
 			cl_log(LOG_ERR, "get_mynodeid() failed");
 			was_error = 1;
 		}
-		cl_log(LOG_INFO, "Hostname: %s", fsa_our_uname);
+		cl_log(LOG_INFO, "FSA Hostname: %s", fsa_our_uname);
 	}
 
 	/* set up the timers */

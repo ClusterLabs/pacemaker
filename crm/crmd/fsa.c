@@ -44,10 +44,11 @@ do_state_transition(long long actions,
 
 #ifdef DOT_FSA_ACTIONS
 # ifdef FSA_TRACE
-#  define ELSEIF_FSA_ACTION(x,y)					\
-     else if(is_set(actions,x)) {					\
+#  define IF_FSA_ACTION(x,y)						\
+     if(is_set(actions,x)) {						\
 	CRM_DEBUG("Invoking action %s (%.16llx)",			\
 		fsa_action2string(x), x);				\
+	last_action = x;						\
 	actions = clear_bit(actions, x);				\
 	next_input = y(x, cause, cur_state, last_input, data);		\
 	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
@@ -58,12 +59,13 @@ do_state_transition(long long actions,
 			data==NULL?"no":"yes",				\
 			fsa_input2string(next_input));			\
 	fflush(dot_strm);						\
-	CRM_DEBUG("Result of action %s was %s",			\
+	CRM_DEBUG("Result of action %s was %s",				\
 		fsa_action2string(x), fsa_input2string(next_input));	\
      }
 # else
-#  define ELSEIF_FSA_ACTION(x,y)					\
-     else if(is_set(actions,x)) {					\
+#  define IF_FSA_ACTION(x,y)						\
+     if(is_set(actions,x)) {						\
+	last_action = x;						\
 	actions = clear_bit(actions, x);				\
 	next_input = y(x, cause, cur_state, last_input, data);		\
 	if( (x & O_DC_TICKLE) == 0 && next_input != I_DC_HEARTBEAT )	\
@@ -78,23 +80,27 @@ do_state_transition(long long actions,
 # endif
 #else
 # ifdef FSA_TRACE
-#  define ELSEIF_FSA_ACTION(x,y)					\
-     else if(is_set(actions,x)) {					\
+#  define IF_FSA_ACTION(x,y)						\
+     if(is_set(actions,x)) {						\
 	CRM_DEBUG("Invoking action %s (%.16llx)",			\
 		fsa_action2string(x), x);				\
+	last_action = x;						\
 	actions = clear_bit(actions, x);				\
 	next_input = y(x, cause, cur_state, last_input, data);		\
-	CRM_DEBUG("Result of action %s was %s",			\
+	CRM_DEBUG("Result of action %s was %s",				\
 		fsa_action2string(x), fsa_input2string(next_input));	\
      }
 # else
-#  define ELSEIF_FSA_ACTION(x,y)					\
-     else if(is_set(actions,x)) {					\
+#  define IF_FSA_ACTION(x,y)						\
+     if(is_set(actions,x)) {						\
+	last_action = x;						\
 	actions = clear_bit(actions, x);				\
 	next_input = y(x, cause, cur_state, last_input, data);		\
      }
 # endif
 #endif
+
+#define ELSEIF_FSA_ACTION(x,y) else IF_FSA_ACTION(x,y)
 
 const char *dot_intro = "digraph \"g\" {\n"
 "	size = \"30,30\"\n"
@@ -146,6 +152,7 @@ oc_node_list_t *fsa_membership_copy;
 ll_cluster_t   *fsa_cluster_conn;
 ll_lrm_t       *fsa_lrm_conn;
 long long       fsa_input_register;
+long long       fsa_actions = A_NOTHING;
 const char     *fsa_our_uname;
 
 fsa_timer_t *election_trigger = NULL;		/*  */
@@ -261,7 +268,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	   enum crmd_fsa_input initial_input,
 	   void *data)
 {
-	long long           actions = A_NOTHING, new_actions = A_NOTHING;
+	long long actions = fsa_actions;
+	long long new_actions = A_NOTHING;
+	long long last_action = A_NOTHING;
 	enum crmd_fsa_input last_input = initial_input;
 	enum crmd_fsa_input cur_input;
 	enum crmd_fsa_input next_input;
@@ -302,25 +311,30 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		if(next_input == I_WAIT_FOR_EVENT) {
 			/* we may be waiting for an a-sync task to "happen"
 			 * and until it does, we cant do anything else
+			 *
+			 * Re-add the last action
 			 */
+
+			actions |= last_action;
+					
 			cl_log(LOG_INFO, "Wait until something else happens");
 			break;
 		}
-
-		cur_input = next_input;
 
 #ifdef FSA_TRACE
 		CRM_DEBUG("FSA while loop:\tState: %s, Input: %s",
 			   fsa_state2string(cur_state),
 			   fsa_input2string(cur_input));
-#endif		
+#endif
+		
+		/* update input variables */
+		cur_input = next_input;
+		if(cur_input != I_NULL) {
+			last_input = cur_input;
+		}
 
+		/* get the next batch of actions */
 		new_actions = crmd_fsa_actions[cur_input][cur_state];
-		next_state  = crmd_fsa_state[cur_input][cur_state];
-		last_state  = cur_state;
-		cur_state   = next_state;
-		fsa_state   = next_state;
-
 		if(new_actions != A_NOTHING) {
 #ifdef FSA_TRACE
 			CRM_DEBUG("Adding actions %.16llx", new_actions);
@@ -328,19 +342,19 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			actions |= new_actions;
 		}
 
-		switch(cur_input) {
-			case I_NULL:
-				break;
-#if 0
-			case I_SOME_EVENT:
-			case I_SOME_OTHER_EVENT:
-				cc_transitioner(cur_input, data);
-				/* flow through... */
-#endif
-			default:
-				last_input = cur_input;
-				break;
-		}
+		/* logging : *before* the state is changed */
+		IF_FSA_ACTION(A_ERROR, do_log)
+		ELSEIF_FSA_ACTION(A_WARN, do_log)
+		ELSEIF_FSA_ACTION(A_LOG,  do_log)
+
+		/* update state variables */
+		next_state  = crmd_fsa_state[cur_input][cur_state];
+		last_state  = cur_state;
+		cur_state   = next_state;
+		fsa_state   = next_state;
+
+		/* start doing things... */
+
 
 		/*
 		 * Hook for change of state.
@@ -374,15 +388,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			} else if(is_set(fsa_input_register, R_INVOKE_PE)) {
 				CRM_DEBUG("Invoke the PE somehow");
 			}
-*/	}
+*/
+		}
 	
-	/* logging */
-	ELSEIF_FSA_ACTION(A_ERROR, do_log)
-		ELSEIF_FSA_ACTION(A_WARN, do_log)
-		ELSEIF_FSA_ACTION(A_LOG,  do_log)
-		
+	
 		/* get out of here NOW! before anything worse happens */
-		ELSEIF_FSA_ACTION(A_EXIT_1,	do_exit)
+	ELSEIF_FSA_ACTION(A_EXIT_1,	do_exit)
 		
 		ELSEIF_FSA_ACTION(A_STARTUP,	do_startup)
 		
@@ -412,6 +423,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		/*
 		 * Highest priority actions
 		 */
+		ELSEIF_FSA_ACTION(A_TE_COPYTO,		do_te_copyto)
 		ELSEIF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
 		ELSEIF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
 		ELSEIF_FSA_ACTION(A_RECOVER,		do_recover)
@@ -455,6 +467,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_LRM_INVOKE,		do_lrm_invoke)
 		ELSEIF_FSA_ACTION(A_LRM_EVENT,		do_lrm_event)
+		ELSEIF_FSA_ACTION(A_TE_CANCEL,		do_te_invoke)
 		ELSEIF_FSA_ACTION(A_PE_INVOKE,		do_pe_invoke)
 		ELSEIF_FSA_ACTION(A_TE_INVOKE,		do_te_invoke)
 		
@@ -482,6 +495,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			xmlNodePtr stored_msg = NULL;
 			
 			fsa_message_queue_t msg = get_message();
+
+			if(is_message() == FALSE) {
+				actions = clear_bit(actions, A_MSG_PROCESS);
+			}
 			
 			if(msg == NULL || msg->message == NULL) {
 				cl_log(LOG_ERR,
@@ -519,8 +536,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 #endif
 			CRM_DEBUG("Result of action %s was %s",
 				   fsa_action2string(A_MSG_PROCESS),
-				   fsa_input2string(next_input));	
-	
+				   fsa_input2string(next_input));
+			
 			/* Error checking and reporting */
 		} else if(cur_input != I_NULL && is_set(actions, A_NOTHING)) {
 			cl_log(LOG_WARNING,
@@ -545,7 +562,16 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	CRM_DEBUG("################# Exiting the FSA (%s) ##################",
 		  fsa_state2string(fsa_state));
 #endif
+
+#ifdef DOT_FSA_ACTIONS
+	fprintf(dot_strm,			
+		"\t// ### Exiting the FSA (%s)\n",
+		fsa_state2string(fsa_state));
+	fflush(dot_strm);
+#endif
+
 	// cleanup inputs?
+	fsa_actions = actions;
 	
 	FNRET(fsa_state);
 }
@@ -665,6 +691,9 @@ fsa_input2string(int input)
 		case I_DC_HEARTBEAT:
 			inputAsText = "I_DC_HEARTBEAT";
 			break;
+		case I_WAIT_FOR_EVENT:
+			inputAsText = "I_WAIT_FOR_EVENT";
+			break;
 		case I_ILLEGAL:
 			inputAsText = "I_ILLEGAL";
 			break;
@@ -762,6 +791,9 @@ fsa_cause2string(int cause)
 			break;
 		case C_HEARTBEAT_FAILED:
 			causeAsText = "C_HEARTBEAT_FAILED";
+			break;
+		case C_SUBSYSTEM_CONNECT:
+			causeAsText = "C_SUBSYSTEM_CONNECT";
 			break;
 		case C_ILLEGAL:
 			causeAsText = "C_ILLEGAL";
