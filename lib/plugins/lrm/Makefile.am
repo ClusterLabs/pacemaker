@@ -17,7 +17,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 MAINTAINERCLEANFILES = Makefile.in
-
+LRM_DIR = lrm
 INCLUDES 			=	-I$(top_builddir)/include -I$(top_srcdir)/include \
 					-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
 					-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
@@ -27,7 +27,7 @@ havarlibdir			=	$(localstatedir)/lib/@HB_PKG@
 COMMONLIBS			=	$(top_builddir)/lib/clplumbing/libplumb.la   \
                         		$(GLIBLIB)
 
-lrmdir				=	$(HA_VARLIBDIR)/$(HB_PKG)/@LRM_DIR@
+lrmdir				=	$(HA_VARLIBDIR)/$(HB_PKG)/$(LRM_DIR)
 plugindir               	= 	$(halibdir)/plugins/RAExec
 
 plugin_LTLIBRARIES = lsb.la ocf.la heartbeat.la
