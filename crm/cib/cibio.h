@@ -1,4 +1,4 @@
-/* $Id: cibio.h,v 1.8 2004/06/02 16:03:34 andrew Exp $ */
+/* $Id: cibio.h,v 1.9 2004/12/05 16:14:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,10 +51,9 @@ extern xmlNodePtr readCibXmlFile(const char *filename);
 extern int activateCibBuffer(char *buffer, const char *filename);
 extern int activateCibXml(xmlNodePtr doc, const char *filename);
 
-extern int moveFile(const char *oldname,
-		    const char *newname,
-		    gboolean backup,
-		    char *ext);
+extern int moveFile(const char *oldname, const char *newname,
+		    gboolean backup, char *ext);
 
+/* extern xmlNodePtr server_get_cib_copy(void); */
 
 #endif

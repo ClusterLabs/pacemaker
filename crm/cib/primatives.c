@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.2 2004/09/21 19:40:18 andrew Exp $ */
+/* $Id: primatives.c,v 1.3 2004/12/05 16:14:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,6 +31,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <cibprimatives.h>
+#include <notify.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
@@ -302,45 +303,46 @@ delStatus(xmlNodePtr cib, xmlNodePtr delete_spec)
 	return delete_cib_object(root, delete_spec);
 }
 
-
-
-
-
 int
 delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 {
 	const char *object_name = NULL;
 	const char *object_id = NULL;
 	xmlNodePtr equiv_node = NULL;
-	int result = CIBRES_OK;
+	int result = cib_ok;
 	
-	if(delete_spec == NULL) {
-		return CIBRES_FAILED_NOOBJECT;
-	} else if(parent == NULL) {
-		return CIBRES_FAILED_NOPARENT;
+	if(delete_spec != NULL) {
+		object_name = delete_spec->name;
 	}
-
-	object_name = delete_spec->name;
 	object_id = xmlGetProp(delete_spec, XML_ATTR_ID);
-	
-	if(object_id == NULL) {
+	cib_pre_notify(CRM_OP_CIB_DELETE, object_name, object_id, delete_spec);
+
+	if(delete_spec == NULL) {
+		result = cib_NOOBJECT;
+
+	} else if(parent == NULL) {
+		result = cib_NOPARENT;
+
+	} else if(object_id == NULL) {
 		/*  placeholder object */
 		equiv_node = find_xml_node(parent, object_name);
 		
 	} else {
-		equiv_node =
-			find_entity(parent, object_name, object_id, FALSE);
-		
+		equiv_node = find_entity(
+			parent, object_name, object_id, FALSE);
 	}
 
-	if(equiv_node == NULL) {
-		return CIBRES_FAILED_NOTEXISTS;
+	if(result != cib_ok) {
+		; /* nothing */
+		
+	} else if(equiv_node == NULL) {
+		result = cib_NOTEXISTS;
 
 	} else if(delete_spec->children == NULL) {
-
 		/*  only leaves are deleted */
 		unlink_xml_node(equiv_node);
 		free_xml(equiv_node);
+		equiv_node = NULL;
 
 	} else {
 
@@ -350,11 +352,14 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 			int tmp_result = delete_cib_object(equiv_node, child);
 			
 			/*  only the first error is likely to be interesting */
-			if(tmp_result != CIBRES_OK && result == CIBRES_OK) {
+			if(tmp_result != cib_ok && result == cib_ok) {
 				result = tmp_result;
 			}
 			);
 	}
+
+	cib_post_notify(CRM_OP_CIB_DELETE, delete_spec->name, object_id,
+		       delete_spec, result, equiv_node);
 
 	return result;
 }
@@ -362,38 +367,47 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 int
 add_cib_object(xmlNodePtr parent, xmlNodePtr new_obj)
 {
+	enum cib_errors result = cib_ok;
 	const char *object_name = NULL;
 	const char *object_id = NULL;
 	xmlNodePtr equiv_node = NULL;
 	
-	if(new_obj == NULL) {
-		return CIBRES_FAILED_NOOBJECT;
-	} else if(parent == NULL) {
-		return CIBRES_FAILED_NOPARENT;
+	if(new_obj != NULL) {
+		object_name = new_obj->name;
 	}
-
-	object_name = new_obj->name;
 	object_id = xmlGetProp(new_obj, XML_ATTR_ID);
-	
-	if(object_id == NULL) {
+	cib_pre_notify(CRM_OP_CIB_CREATE, object_name, object_id, new_obj);
+
+	if(new_obj == NULL) {
+		result = cib_NOOBJECT;
+
+	} else if(parent == NULL) {
+		result = cib_NOPARENT;
+
+	} else if(object_id == NULL) {
 		/*  placeholder object */
 		equiv_node = find_xml_node(parent, object_name);
 		
 	} else {
-		equiv_node =
-			find_entity(parent, object_name, object_id, FALSE);
-		
+		equiv_node = find_entity(
+			parent, object_name, object_id, FALSE);
 	}
-	
-	if(equiv_node != NULL) {
-		return CIBRES_FAILED_EXISTS;
+
+	if(result != cib_ok) {
+		; /* do nothing */
+		
+	} else if(equiv_node != NULL) {
+		result = cib_EXISTS;
 
 	} else if(add_node_copy(parent, new_obj) == NULL) {
-		return CIBRES_FAILED_NODECOPY;
+		result = cib_NODECOPY;
 		
 	}
 	
-	return CIBRES_OK;
+	cib_post_notify(CRM_OP_CIB_CREATE, object_name, object_id,
+		       new_obj, result, new_obj);
+
+	return cib_ok;
 }
 
 
@@ -404,39 +418,42 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 	const char *object_name = NULL;
 	const char *object_id = NULL;
 	xmlNodePtr equiv_node = NULL;
-	int result = CIBRES_OK;
+	int result = cib_ok;
+	
+	if(new_obj != NULL) {
+		object_name = new_obj->name;
+	}
+	object_id = xmlGetProp(new_obj, XML_ATTR_ID);
+	cib_pre_notify(CRM_OP_CIB_UPDATE, object_name, object_id,
+			new_obj);
 	
 	if(new_obj == NULL) {
-		return CIBRES_FAILED_NOOBJECT;
+		result = cib_NOOBJECT;
 
 	} else if(parent == NULL) {
-		return CIBRES_FAILED_NOPARENT;
+		result = cib_NOPARENT;
 
-	}
-
-	object_name = new_obj->name;
-	object_id = xmlGetProp(new_obj, XML_ATTR_ID);
-
-	crm_debug("Processing update to <%s id=%s>", object_name, object_id);
-
-	if(object_id == NULL) {
+	} else if(object_id == NULL) {
 		/*  placeholder object */
 		equiv_node = find_xml_node(parent, object_name);
 
 	} else {
 		equiv_node = find_entity(parent, object_name, object_id, FALSE);
 	}
-	
-	if(equiv_node == NULL) {
+
+	if(result != cib_ok) {
+		; /* nothing */
+		
+	} else if(equiv_node == NULL) {
 		crm_debug("No node to update, creating %s instead", new_obj->name);
 		if(parent == NULL) {
 			crm_warn("Failed to add <%s id=%s> (NULL parent)",
 				 object_name, object_id);
-			return CIBRES_FAILED_NODECOPY;
+			result = cib_NODECOPY;
 			
 		} else if(add_node_copy(parent, new_obj) == NULL) {
 			crm_warn("Failed to add  <%s id=%s>", object_name, object_id);
-			return CIBRES_FAILED_NODECOPY;
+			result = cib_NODECOPY;
 		} else {
 			crm_debug("Added  <%s id=%s>", object_name, object_id);
 
@@ -489,12 +506,12 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 				update_cib_object(equiv_node, a_child, force);
 
 			/*  only the first error is likely to be interesting */
-			if(tmp_result != CIBRES_OK) {
+			if(tmp_result != cib_ok) {
 				crm_err("Error updating child <%s id=%s>",
 					a_child->name,
 					xmlGetProp(a_child, XML_ATTR_ID));
 				
-				if(result == CIBRES_OK) {
+				if(result == cib_ok) {
 					result = tmp_result;
 				}
 			}
@@ -503,6 +520,9 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 	}
 	crm_debug("Finished with <%s id=%s>", object_name, object_id);
 	
+	cib_post_notify(CRM_OP_CIB_UPDATE, object_name, object_id,
+			new_obj, result, equiv_node);
+
 	return result;
 }
 

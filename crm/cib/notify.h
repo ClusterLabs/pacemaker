@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.56 2004/12/05 16:14:07 andrew Exp $ */
+/* $Id: notify.h,v 1.1 2004/12/05 16:14:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,28 +17,22 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-
-#include <sys/param.h>
-#include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-
-#include <clplumbing/cl_log.h>
 
 #include <crm/crm.h>
-#include <crm/cib.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/msg.h>
 
-#include <cibio.h>
-#include <cibmessages.h>
+extern FILE *msg_cib_strm;
 
-#include <crm/dmalloc_wrapper.h>
 
+void cib_pre_notify(
+	const char *op,  const char *type, const char *id, xmlNodePtr update);
+
+void cib_post_notify(
+	const char *op,  const char *type, const char *id, xmlNodePtr update,
+	enum cib_errors result, xmlNodePtr new_obj);
 
 

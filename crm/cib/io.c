@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.3 2004/09/20 14:28:34 andrew Exp $ */
+/* $Id: io.c,v 1.4 2004/12/05 16:14:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -66,70 +66,6 @@ xmlNodePtr resource_search = NULL;
 xmlNodePtr constraint_search = NULL;
 xmlNodePtr status_search = NULL;
 
-/*
- * It is the callers responsibility to free both the new CIB (output)
- *     and the new CIB (input)
- */
-xmlNodePtr
-createEmptyCib(void)
-{
-	xmlNodePtr cib_root = NULL, config = NULL, status = NULL;
-	
-	cib_root = create_xml_node(NULL, XML_TAG_CIB);
-
-	config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
-	status = create_xml_node(cib_root, XML_CIB_TAG_STATUS);
-
-	set_node_tstamp(cib_root);
-	set_node_tstamp(config);
-	set_node_tstamp(status);
-	
-	set_xml_property_copy(cib_root, "version", "1");
-	set_xml_property_copy(cib_root, "generated", XML_BOOLEAN_TRUE);
-
-	create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
-	create_xml_node(config, XML_CIB_TAG_NODES);
-	create_xml_node(config, XML_CIB_TAG_RESOURCES);
-	create_xml_node(config, XML_CIB_TAG_CONSTRAINTS);
-	
-	if (verifyCibXml(cib_root)) {
-		return cib_root;
-	}
-	crm_crit("The generated CIB did not pass integrity testing!!"
-		 "  All hope is lost.");
-	return NULL;
-}
-
-gboolean
-verifyCibXml(xmlNodePtr cib)
-{
-	gboolean is_valid = TRUE;
-	xmlNodePtr tmp_node = NULL;
-	
-	if (cib == NULL) {
-		crm_warn("XML Buffer was empty.");
-		return FALSE;
-	}
-	
-	tmp_node = get_object_root(XML_CIB_TAG_NODES, cib);
-	if (tmp_node == NULL) is_valid = FALSE;
-
-	tmp_node = get_object_root(XML_CIB_TAG_RESOURCES, cib);
-	if (tmp_node == NULL) is_valid = FALSE;
-
-	tmp_node = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	if (tmp_node == NULL) is_valid = FALSE;
-
-	tmp_node = get_object_root(XML_CIB_TAG_STATUS, cib);
- 	if (tmp_node == NULL) is_valid = FALSE;
-
-	tmp_node = get_object_root(XML_CIB_TAG_CRMCONFIG, cib);
- 	if (tmp_node == NULL) is_valid = FALSE;
-
-	/* more integrity tests */
-
-	return is_valid;
-}
 
 /*
  * It is the callers responsibility to free the output of this function

@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.5 2004/09/28 18:35:37 andrew Exp $ */
+/* $Id: messages.c,v 1.6 2004/12/05 16:14:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,250 +39,388 @@
 #include <cibio.h>
 #include <cibmessages.h>
 #include <cibprimatives.h>
+#include <notify.h>
+#include <callbacks.h>
 
 #include <crm/dmalloc_wrapper.h>
 
-FILE *msg_cib_strm = NULL;
-
-enum cib_result updateList(xmlNodePtr local_cib,
-			   xmlNodePtr update_command,
-			   xmlNodePtr failed,
-			   int operation,
-			   const char *section);
+enum cib_errors updateList(
+	xmlNodePtr local_cib, xmlNodePtr update_command, xmlNodePtr failed,
+	int operation, const char *section);
 
 xmlNodePtr createCibFragmentAnswer(const char *section, xmlNodePtr failed);
 
-gboolean replace_section(const char *section,
-			 xmlNodePtr tmpCib,
-			 xmlNodePtr command);
+gboolean replace_section(
+	const char *section, xmlNodePtr tmpCib, xmlNodePtr command);
 
 gboolean check_generation(xmlNodePtr newCib, xmlNodePtr oldCib);
 
-gboolean update_results(xmlNodePtr failed,
-				 xmlNodePtr target,
-				 int operation,
-				 int return_code);
+gboolean update_results(
+	xmlNodePtr failed, xmlNodePtr target, int operation, int return_code);
 
-xmlNodePtr
-cib_process_request(const char *op,
-		    const xmlNodePtr options,
-		    const xmlNodePtr fragment,
-		    enum cib_result *result)
+enum cib_errors cib_update_counter(
+	xmlNodePtr xml_obj, const char *field, gboolean reset);
+
+
+enum cib_errors 
+cib_process_default(
+	const char *op, int options, const char *section, xmlNodePtr input,
+	xmlNodePtr *answer)
 {
-	const char *verbose        = NULL;
-	const char *section        = NULL;
-	const char *id             = NULL;
-	const char *output_section = NULL;
-	xmlNodePtr failed          = NULL;
-	xmlNodePtr cib_answer      = NULL;
+	enum cib_errors result = cib_ok;
+	crm_debug("Processing \"%s\" event", op);
+	if(answer != NULL) *answer = NULL;
 
-	gboolean update_the_cib = FALSE;
-	int cib_update_op = CIB_OP_NONE;
-	xmlNodePtr tmpCib;
-	char *new_value = NULL;
-	char *old_value = NULL;
-	int int_value = -1;
-	char *xml_text = NULL;
-	
-	*result = CIBRES_OK;
-	verbose = xmlGetProp(options, XML_ATTR_VERBOSE);
-	section = xmlGetProp(options, XML_ATTR_FILTER_TYPE);
-	id      = xmlGetProp(options, XML_ATTR_FILTER_ID);
-	failed  = create_xml_node(NULL, XML_TAG_FAILED);
-
-#ifdef MSG_LOG
-	if(msg_cib_strm == NULL) {
-		msg_cib_strm = fopen(DEVEL_DIR"/cib.log", "w");
-	}
-	fprintf(msg_cib_strm, "\n====================\n");
-	fprintf(msg_cib_strm, "[Input %s]\t%s\n", op, dump_xml_formatted(fragment));
-	fflush(msg_cib_strm);
-#endif
-
-	crm_debug("[cib] Processing \"%s\" event", op);
-	
 	if(op == NULL) {
-		*result = CIBRES_FAILED;
+		result = cib_operation;
 		crm_err("No operation specified\n");
 		
-	} else if(strcmp("noop", op) == 0) {
+	} else if(strcmp(CRM_OP_NOOP, op) == 0) {
 		;
-		
-	} else if(strcmp(CRM_OP_QUIT, op) == 0) {
-		crm_warn(
-		       "The CRMd has asked us to exit... complying");
-		exit(0);
-		
-	} else if (strcmp(CRM_OP_PING, op) == 0) {
-		cib_answer =
-			createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
-		
-	} else if (strcmp(CRM_OP_BUMP, op) == 0) {
-		tmpCib = get_cib_copy();
-		crm_verbose("Handling a %s for section=%s of the cib",
-			   CRM_OP_BUMP, section);
-		
-		/* modify the timestamp */
-		set_node_tstamp(tmpCib);
-		old_value = xmlGetProp(get_the_CIB(), XML_ATTR_GENERATION);
-		
-		if(old_value != NULL) {
-			crm_malloc(new_value, 128*(sizeof(char)));
-			if(new_value != NULL) {
-				int_value = atoi(old_value);
-				sprintf(new_value, "%d", ++int_value);
-			}
-			
-		} else {
-			new_value = crm_strdup("0");
-		}
 
-		crm_trace("Generation %d(%s)->%s",
-			  int_value, crm_str(old_value), crm_str(new_value));
-		
-		set_xml_property_copy(tmpCib, XML_ATTR_GENERATION, new_value);
-		crm_free(new_value);
-		
-		if(activateCibXml(tmpCib, CIB_FILENAME) >= 0) {
-			verbose = XML_BOOLEAN_TRUE; 
-		} else {
-			*result = CIBRES_FAILED;
-		}
-		
-	} else if (strcmp(CRM_OP_RETRIVE_CIB, op) == 0
-		   || strcmp(CRM_OP_QUERY, op) == 0) {
-		crm_verbose("Handling a query for section=%s of the cib",
-			    section);
-
-		/* grab the whole section by forcing a pick-up of
-		 * the relevant section before returning
-		 */
-		verbose = XML_BOOLEAN_TRUE;
-		
-	} else if (strcmp(CRM_OP_ERASE, op) == 0) {
-
-		crm_err("Op %s is not currently supported", op);
-		*result = CIBRES_FAILED_NOTSUPPORTED;
-
-	} else if (strcmp(CRM_OP_CREATE, op) == 0) {
-		update_the_cib = TRUE;
-		cib_update_op = CIB_OP_ADD;
-		
-	} else if (strcmp(CRM_OP_UPDATE, op) == 0
-		   || strcmp(CRM_OP_JOINACK, op) == 0
-		   || strcmp(CRM_OP_SHUTDOWN_REQ, op) == 0) {
-		update_the_cib = TRUE;
-		cib_update_op = CIB_OP_MODIFY;
-		
-	} else if (strcmp(CRM_OP_DELETE, op) == 0) {
-		update_the_cib = TRUE;
-		cib_update_op = CIB_OP_DELETE;
-
-	} else if (strcmp(CRM_OP_REPLACE, op) == 0) {
-		crm_verbose("Replacing section=%s of the cib", section);
-
-		if (section == NULL
-		    || strlen(section) == 0
-		    || strcmp("all", section) == 0) {
-			tmpCib = copy_xml_node_recursive(
-				find_xml_node(fragment, XML_TAG_CIB));
-
-		} else {
-			tmpCib = copy_xml_node_recursive(get_the_CIB());
-			replace_section(section, tmpCib, fragment);
-		}
-
-		/*if(check_generation(cib_updates, tmpCib) == FALSE)
-			*result = "discarded old update";
-			else */
-		if (activateCibXml(tmpCib, CIB_FILENAME) < 0)
-			*result = CIBRES_FAILED;
 	} else {
-		*result = CIBRES_FAILED_NOTSUPPORTED;
+		result = cib_NOTSUPPORTED;
 		crm_err("Action [%s] is not supported by the CIB", op);
 	}
-    
-	if (update_the_cib) {
-		tmpCib = copy_xml_node_recursive(get_the_CIB());
+	return result;
+}
 
-		crm_verbose("Updating section=%s of the cib (op=%s)",
-			   section, op);
+enum cib_errors 
+cib_process_quit(
+	const char *op, int options, const char *section, xmlNodePtr input,
+	xmlNodePtr *answer)
+{
+	enum cib_errors result = cib_ok;
+	crm_debug("Processing \"%s\" event", op);
 
-			/* should we be doing this? */
-			/* do logging */
-			
-			/* make changes to a temp copy then activate */
-		if(section == NULL) {
-			crm_err("No section specified in %s",
-			       XML_ATTR_FILTER_TYPE);
-			*result = CIBRES_FAILED_NOSECTION;
+	cib_pre_notify(op, NULL, NULL, get_the_CIB());
+	crm_warn("The CRMd has asked us to exit... complying");
+	exit(0);
+	return result;
+}
 
-		} else if(strcmp("all", section) == 0) {
-			/* order is no longer important here */
-			updateList(tmpCib, fragment, failed, cib_update_op,
-				   XML_CIB_TAG_NODES);
-			updateList(tmpCib, fragment, failed, cib_update_op,
-				   XML_CIB_TAG_RESOURCES);
-			updateList(tmpCib, fragment, failed, cib_update_op,
-				   XML_CIB_TAG_CONSTRAINTS);
-			updateList(tmpCib, fragment, failed, cib_update_op,
-				   XML_CIB_TAG_STATUS);
-		} else {
-			*result = updateList(tmpCib, fragment, failed,
-					     cib_update_op, section);
-		}
+enum cib_errors 
+cib_process_readwrite(
+	const char *op, int options, const char *section, xmlNodePtr input,
+	xmlNodePtr *answer)
+{
+	enum cib_errors result = cib_ok;
+	crm_debug("Processing \"%s\" event", op);
 
-		crm_trace("Activating temporary CIB");
+	cib_pre_notify(op, NULL, NULL, NULL);
+	if(safe_str_eq(op, CRM_OP_CIB_MASTER)) {
+		crm_info("We are now in R/W mode");
+		cib_is_master = TRUE;
+	} else {
+		crm_info("We are now in R/O mode");
+		cib_is_master = FALSE;
+	}
+	cib_post_notify(op, NULL, NULL, NULL, result, NULL);
 
-		fprintf(msg_cib_strm, "[Activating CIB (%s - %s)]\t%s\n", op,
-			cib_error2string(*result),
-			dump_xml_formatted(tmpCib));
-		/* if(check_generation(cib_updates, tmpCib) == FALSE) */
-/* 			status = "discarded old update"; */
-/* 		else  */
-		if (activateCibXml(tmpCib, CIB_FILENAME) < 0) {
-			*result = CIBRES_FAILED_ACTIVATION;
-			
-		} else if (failed->children != NULL) {
-			*result = CIBRES_FAILED;
-			crm_xml_info(failed, "CIB Update failures");
+	return result;
+}
 
-			xml_text = dump_xml_formatted(failed);
-			fprintf(msg_cib_strm, "[CIB %s failures]\t%s\n",
-				op, xml_text);
-			crm_free(xml_text);
-			
-		}
-		xml_text = dump_xml_formatted(get_the_CIB());
-		fprintf(msg_cib_strm, "[New CIB (%s - %s)]\t%s\n", op,
-			cib_error2string(*result), xml_text);
-		crm_free(xml_text);
-		fflush(msg_cib_strm);
+enum cib_errors 
+cib_process_ping(
+	const char *op, int options, const char *section, xmlNodePtr input,
+	xmlNodePtr *answer)
+{
+	enum cib_errors result = cib_ok;
+	crm_debug("Processing \"%s\" event", op);
+	if(answer != NULL) *answer = NULL;
+
+	*answer = createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
+	return result;
+}
+
+
+enum cib_errors 
+cib_process_query(
+	const char *op, int options, const char *section, xmlNodePtr input,
+	xmlNodePtr *answer)
+{
+	xmlNodePtr cib      = NULL;
+	xmlNodePtr obj_root = NULL;
+	enum cib_errors result = cib_ok;
+
+	if(answer != NULL) *answer = NULL;
+	
+	crm_debug("Processing \"%s\" event", op);
+	crm_verbose("Handling a query for section=%s of the cib", section);
+
+	*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
+	set_xml_property_copy(*answer, XML_ATTR_SECTION, section);
+
+	if (safe_str_eq("all", section)) {
+		section = NULL;
+	} 
+
+	obj_root = get_object_root(section, get_the_CIB());
+	
+	if(obj_root == NULL) {
+		result = cib_NOTEXISTS;
+
+	} else if(obj_root == get_the_CIB()) {
+		add_node_copy(*answer, obj_root);
+
+	} else {
+		cib = create_xml_node(*answer, XML_TAG_CIB);
+		add_node_copy(cib, obj_root);
+		copy_in_properties(cib, get_the_CIB());
+	}
+	
+	return result;
+}
+
+enum cib_errors 
+cib_process_erase(
+	const char *op, int options, const char *section, xmlNodePtr input,
+	xmlNodePtr *answer)
+{
+	crm_debug("Processing \"%s\" event", op);
+	if(answer != NULL) *answer = NULL;
+
+	crm_err("Op %s is not currently supported", op);
+	return cib_NOTSUPPORTED;
+}
+
+enum cib_errors 
+cib_process_bump(
+	const char *op, int options, const char *section, xmlNodePtr input,
+	xmlNodePtr *answer)
+{
+	xmlNodePtr tmpCib = NULL;
+	enum cib_errors result = cib_ok;
+
+	crm_debug("Processing \"%s\" event", op);
+	if(answer != NULL) *answer = NULL;
+
+	tmpCib = copy_xml_node_recursive(the_cib);
+
+	cib_pre_notify(op, tmpCib->name, NULL, NULL);
+
+	crm_verbose("Handling a %s for section=%s of the cib",
+		    CRM_OP_CIB_BUMP, section);
+
+	cib_update_counter(tmpCib, XML_ATTR_GENERATION, FALSE);
+	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, TRUE);
 		
-		crm_verbose("CIB update status: %d", *result);
+	if(activateCibXml(tmpCib, CIB_FILENAME) < 0) {
+		result = cib_ACTIVATION;
 	}
-	
-	output_section = section;
-	
-	if (failed->children != NULL || *result != CIBRES_OK) {
-		cib_answer = createCibFragmentAnswer(NULL /*"all"*/, failed);
-	
-	} else if (verbose != NULL && strcmp(XML_BOOLEAN_TRUE, verbose) == 0) {
-		cib_answer = createCibFragmentAnswer(output_section, failed);
 
+	cib_post_notify(op, tmpCib->name, NULL, NULL, result, get_the_CIB());
+	*answer = createCibFragmentAnswer(NULL, NULL);
+	
+	return result;
+}
+
+enum cib_errors 
+cib_update_counter(xmlNodePtr xml_obj, const char *field, gboolean reset)
+{
+	char *new_value = NULL;
+	char *old_value = NULL;
+	int  int_value  = -1;
+
+	/* modify the timestamp */
+	set_node_tstamp(xml_obj);
+	if(reset == FALSE) {
+		old_value = xmlGetProp(xml_obj, field);
 	}
+	if(old_value != NULL) {
+		crm_malloc(new_value, 128*(sizeof(char)));
+		int_value = atoi(old_value);
+		sprintf(new_value, "%d", ++int_value);
+	} else {
+		new_value = crm_strdup("0");
+	}
+
+	crm_trace("%s %d(%s)->%s",
+		  field, int_value, crm_str(old_value), crm_str(new_value));
+	set_xml_property_copy(xml_obj, field, new_value);
+	crm_free(new_value);
+
+	return cib_ok;
+}
+
+enum cib_errors 
+cib_process_replace(
+	const char *op, int options, const char *section, xmlNodePtr input,
+	xmlNodePtr *answer)
+{
+	gboolean verbose       = FALSE;
+	xmlNodePtr tmpCib      = NULL;
+	xmlNodePtr cib_update  = NULL;
+	xmlNodePtr the_update  = NULL;
+	const char *section_name = section;
+	enum cib_errors result = cib_ok;
+	
+	crm_debug("Processing \"%s\" event", op);
+	if(answer != NULL) *answer = NULL;
+
+	if (options & cib_verbose) {
+		verbose = TRUE;
+	}
+	if(safe_str_eq("all", section)) {
+		section = NULL;
+	}
+	
+	cib_update = find_xml_node(input, XML_TAG_CIB);
+	
+	if (cib_update == NULL) {
+		result = cib_NOOBJECT;
+		
+	} else if (section == NULL) {
+		tmpCib = copy_xml_node_recursive(cib_update);
+		the_update = cib_update;
+		section_name = tmpCib->name;
+		
+	} else {
+		tmpCib = copy_xml_node_recursive(get_the_CIB());
+		replace_section(section, tmpCib, input);
+		the_update = get_object_root(section, cib_update);
+	}
+
+	cib_pre_notify(op, section_name, NULL, the_update);
+	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
+
+	if (result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
+		crm_warn("Replacment of section=%s failed", section);
+		result = cib_ACTIVATION;
+	}
+
+	if (verbose || result != cib_ok) {
+		*answer = createCibFragmentAnswer(section, NULL);
+	}
+	
+	cib_post_notify(op, section_name, NULL, the_update,
+			result, get_object_root(section, get_the_CIB()));
+
+	return result;
+}
+
+enum cib_errors 
+cib_process_modify(
+	const char *op, int options, const char *section, xmlNodePtr input,
+	xmlNodePtr *answer)
+{
+	gboolean verbose = FALSE;
+	enum cib_errors result = cib_ok;
+	const char *section_name = section;
+
+	xmlNodePtr failed = NULL;
+	xmlNodePtr cib_update = NULL;
+	xmlNodePtr the_update = NULL;
+	
+	int cib_update_op = CIB_OP_NONE;
+
+	xmlNodePtr tmpCib  = NULL;
+
+	char *xml_text  = NULL;
+
+	crm_debug("Processing \"%s\" event", op);
+
+	failed  = create_xml_node(NULL, XML_TAG_FAILED);
+
+	if (strcmp(CRM_OP_CIB_CREATE, op) == 0) {
+		cib_update_op = CIB_OP_ADD;
+		
+	} else if (strcmp(CRM_OP_CIB_UPDATE, op) == 0
+		   || strcmp(CRM_OP_JOINACK, op) == 0
+		   || strcmp(CRM_OP_SHUTDOWN_REQ, op) == 0) {
+		cib_update_op = CIB_OP_MODIFY;
+		
+	} else if (strcmp(CRM_OP_CIB_DELETE, op) == 0) {
+		cib_update_op = CIB_OP_DELETE;
+		
+	} else {
+		crm_err("Incorrect request handler invoked for \"%s\" op",
+			crm_str(op));
+		return cib_operation;
+	}
+
+	result = cib_ok;
+	if (options & cib_verbose) {
+		verbose = TRUE;
+	}
+	if(safe_str_eq("all", section)) {
+		section = NULL;
+	}
+
+	if(input == NULL) {
+		crm_err("Cannot perform modification with no data");
+		return cib_NOOBJECT;
+	}
+	
+	tmpCib = copy_xml_node_recursive(get_the_CIB());
+	cib_update = find_xml_node(input, XML_TAG_CIB);
+	
+	/* should we be doing this? */
+	/* do logging */
+			
+	/* make changes to a temp copy then activate */
+	if(section == NULL) {
+		/* order is no longer important here */
+		section_name = tmpCib->name;
+		the_update = cib_update;
+		cib_pre_notify(op, tmpCib->name, NULL, the_update);
+
+		result = updateList(tmpCib, input, failed, cib_update_op,
+				    XML_CIB_TAG_NODES);
+
+		if(result == cib_ok) {
+			result = updateList(
+				tmpCib, input, failed,
+				cib_update_op, XML_CIB_TAG_RESOURCES);
+		}
+		if(result == cib_ok) {
+			result = updateList(
+				tmpCib, input, failed,
+				cib_update_op, XML_CIB_TAG_CONSTRAINTS);
+		}
+		if(result == cib_ok) {
+			result = updateList(tmpCib, input, failed,
+					    cib_update_op, XML_CIB_TAG_STATUS);
+		}
+
+	} else {
+		the_update = get_object_root(section, cib_update);
+			
+		cib_pre_notify(op, section, NULL, the_update);
+		result = updateList(tmpCib, input, failed,
+				     cib_update_op, section);
+	}
+
+	crm_trace("Activating temporary CIB");
+	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
+
+	if (result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
+		result = cib_ACTIVATION;
+			
+	} else if (result != cib_ok || failed->children != NULL) {
+		if(result == cib_ok) {
+			result = cib_unknown;
+		}
+		crm_xml_info(failed, "CIB Update failures");
+		
+		xml_text = dump_xml_formatted(failed);
+		fprintf(msg_cib_strm, "[CIB %s failures]\t%s\n",
+			op, xml_text);
+		crm_free(xml_text);
+	}
+
+	if (verbose || failed->children != NULL || result != cib_ok) {
+		*answer = createCibFragmentAnswer(section, failed);
+	}
+
+	cib_post_notify(op, section_name, NULL, the_update,
+			result, get_object_root(section, get_the_CIB()));
 
 	free_xml(failed);
 
-#ifdef MSG_LOG
-	fprintf(msg_cib_strm, "[Reply (%s:%s)]\t%s\n",
-		op, cib_error2string(*result),
-		dump_xml_formatted(cib_answer));
-	fflush(msg_cib_strm);
-#endif
-
-	return cib_answer;
+	return result;
 }
+
 
 gboolean
 replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
@@ -297,7 +435,7 @@ replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 	/* find the old and new versions of the section */
 	new_section = get_object_root(section, cib_updates);
 	old_section = get_object_root(section, tmpCib);
-
+	
 	if(old_section == NULL) {
 		crm_err("The CIB is corrupt, cannot replace missing section %s",
 		       section);
@@ -317,16 +455,17 @@ replace_section(const char *section, xmlNodePtr tmpCib, xmlNodePtr fragment)
 
 	/* add the new copy */
 	add_node_copy(parent, new_section);
-	
+
 	return TRUE;
 }
 
 
 
-enum cib_result
+enum cib_errors
 updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 	   int operation, const char *section)
 {
+	int rc = cib_ok;
 	xmlNodePtr this_section = get_object_root(section, local_cib);
 	xmlNodePtr cib_updates  = NULL;
 	xmlNodePtr xml_section  = NULL;
@@ -338,12 +477,12 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 		crm_err("Section %s not found in message."
 			"  CIB update is corrupt, ignoring.",
 			crm_str(section));
-		return CIBRES_FAILED_NOSECTION;
+		return cib_NOSECTION;
 	}
 
 	if(CIB_OP_NONE > operation > CIB_OP_MAX) {
 		crm_err("Invalid operation on section %s", crm_str(section));
-		return CIBRES_FAILED;
+		return cib_operation;
 	}
 
 	set_node_tstamp(this_section);
@@ -351,65 +490,67 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_fragment, xmlNodePtr failed,
 	xml_child_iter(
 		xml_section, a_child, NULL,
 
-		crm_debug("%s to section %s with <%s id=%s>",
-			  cib_op2string(operation), section, a_child->name, xmlGetProp(a_child, "id"));
-
+		rc = cib_ok;
 		if(operation == CIB_OP_DELETE) {
-			update_results(
-				failed, a_child, operation,
-				delete_cib_object(this_section, a_child));
+			rc = delete_cib_object(this_section, a_child);
+			update_results(failed, a_child, operation, rc);
 
 		} else if(operation == CIB_OP_MODIFY) {
-
-			update_results(
-				failed, a_child, operation,
-				update_cib_object(this_section, a_child, FALSE));
+			rc = update_cib_object(this_section, a_child, FALSE);
+			update_results(failed, a_child, operation, rc);
 				       
 		} else {
-			update_results(
-				failed, a_child, operation,
-				add_cib_object(this_section, a_child));
+			rc = add_cib_object(this_section, a_child);
+			update_results(failed, a_child, operation, rc);
 		} 
-
 		);
 
-	if (failed->children != NULL) {
-		return CIBRES_FAILED;
-	} else {
-		return CIBRES_OK;
+	if(rc == cib_ok && failed->children != NULL) {
+		rc = cib_unknown;
 	}
+	return rc;
 }
 
 xmlNodePtr
 createCibFragmentAnswer(const char *section, xmlNodePtr failed)
 {
-	xmlNodePtr fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
+	xmlNodePtr cib = NULL;
+	xmlNodePtr fragment = NULL;
 	
-	set_xml_property_copy(fragment, XML_ATTR_SECTION, section);
+	fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
 
 	if (section == NULL
 		   || strlen(section) == 0
 		   || strcmp("all", section) == 0) {
-		add_node_copy(fragment, get_the_CIB());
+
+		cib = get_the_CIB();
+		if(cib != NULL) {
+			add_node_copy(fragment, get_the_CIB());
+		}
 		
 	} else {
-		xmlNodePtr cib = create_xml_node(fragment, XML_TAG_CIB);
-		add_node_copy(cib, get_object_root(section, get_the_CIB()));
-		copy_in_properties(cib, get_the_CIB());
-		
+		xmlNodePtr obj_root = get_object_root(section, get_the_CIB());
+
+		if(obj_root != NULL) {
+			cib      = create_xml_node(fragment, XML_TAG_CIB);
+
+			add_node_copy(cib, obj_root);
+			copy_in_properties(cib, get_the_CIB());
+		} 
 	}
 
 	if (failed != NULL && failed->children != NULL) {
 		add_node_copy(fragment, failed);
 	}
 		
+	set_xml_property_copy(fragment, XML_ATTR_SECTION, section);
 	return fragment;
 }
 
 gboolean
 check_generation(xmlNodePtr newCib, xmlNodePtr oldCib)
 {
-	if(compare_cib_generation(newCib, oldCib) >= 0) {
+	if(cib_compare_generation(newCib, oldCib) >= 0) {
 		return TRUE;
 	}
 
@@ -428,7 +569,7 @@ update_results(
 	
 	operation_msg = cib_op2string(operation);
     
-	if (return_code != CIBRES_OK) {
+	if (return_code != cib_ok) {
 		error_msg = cib_error2string(return_code);
 
 		xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
