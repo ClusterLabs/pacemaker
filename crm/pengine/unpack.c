@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.45 2004/11/12 17:18:05 andrew Exp $ */
+/* $Id: unpack.c,v 1.46 2004/11/23 11:22:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -933,7 +933,8 @@ unpack_rsc_order(
 	}
 
 #if 1
-	if(type_is_after && action_is_start) {
+	if((type_is_after && action_is_start)
+	   || (type_is_after == FALSE && action_is_start == FALSE)){
 		if(symetrical_bool || action_is_start == FALSE) {
 			order_new(rsc_lh, stop_rsc, NULL, rsc_rh, stop_rsc, NULL,
 				  pecs_startstop, ordering_constraints);
@@ -944,7 +945,7 @@ unpack_rsc_order(
 				  pecs_startstop, ordering_constraints);
 		}
 
-	} else if(action_is_start) {
+	} else {
 		if(symetrical_bool || action_is_start == FALSE) {
 			order_new(rsc_rh, stop_rsc, NULL, rsc_lh, stop_rsc, NULL,
 				  pecs_startstop, ordering_constraints);
