@@ -43,8 +43,10 @@ do_send_welcome(long long action,
 
 	if(action & A_JOIN_WELCOME && data == NULL) {
 		crm_err("Attempt to send welcome message "
-			"without a message to reply to!");
+			 "without a message to reply to!");
 		return I_NULL;
+//		return do_send_welcome_all(
+//			A_JOIN_WELCOME_ALL,cause,cur_state,current_input,data);
 		
 	} else if(action & A_JOIN_WELCOME) {
 		xmlNodePtr welcome = (xmlNodePtr)data;
@@ -302,26 +304,7 @@ do_process_welcome_ack(long long action,
 		return I_NULL;
 	}
 
-	/* make sure a node entry exists for the new node
-	 *
-	 * this will add anyone except the first ever node in the cluster
-	 *   since it will also be the DC which doesnt go through the
-	 *   join process (with itself).  We can include a special case
-	 *   later if desired.
-	 */
-	tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
-	set_xml_property_copy(tmp1, XML_ATTR_ID, join_from);
-	set_xml_property_copy(tmp1, "uname", join_from);
-	set_xml_property_copy(tmp1, XML_ATTR_TYPE, "member");
-	
-	tmp2 = create_cib_fragment(tmp1, NULL);
-
-	/* do not forward this to the TE */
-	invoke_local_cib(NULL, tmp2, CRM_OP_UPDATE);
-	
-	free_xml(tmp2);
-	free_xml(tmp1);
-	
+	create_node_entry(join_from, join_from, "member");
 
 	/* Make changes so that exp_state=active for this node when the update
 	 *  is processed by A_CIB_INVOKE
