@@ -57,7 +57,7 @@ static int execra(const char * rsc_id,
 static uniform_ret_execra_t map_ra_retvalue(int ret_execra, const char * op_type);
 static int get_resource_list(GList ** rsc_info);
 static char* get_resource_meta(const char* rsc_type,  const char* provider);
-static int get_provider_list(const char* op_type, GList ** providers);
+static int get_provider_list(const char* ra_type, GList ** providers);
 
 /* The end of exported function list */
  
