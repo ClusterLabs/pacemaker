@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.15 2005/02/24 14:54:59 andrew Exp $ */
+/* $Id: notify.c,v 1.16 2005/02/25 10:25:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,7 +57,11 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	gboolean is_pre = FALSE;
 	gboolean is_post = FALSE;	
 	gboolean is_confirm = FALSE;
+	gboolean do_send = FALSE;
 
+	int qlen = 0;
+	int max_qlen = 0;
+	
 	CRM_DEV_ASSERT(client != NULL);
 	CRM_DEV_ASSERT(update_msg != NULL);
 
@@ -76,32 +80,55 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	if(client == NULL) {
 		crm_warn("Skipping NULL client");
-		
-	} else if(client->channel->ch_status != IPC_CONNECT) {
+		return;
+	}
+
+	qlen = client->channel->send_queue->current_qlen;
+	max_qlen = client->channel->send_queue->max_qlen;
+	
+	if(client->channel->ch_status != IPC_CONNECT) {
 		crm_debug("Skipping notification to disconnected"
 			  " client %s/%s", client->name, client->id);
 
-	} else if( (client->pre_notify && is_pre)
-		   || (client->post_notify && is_post)
-		   || (client->confirmations && is_confirm) ) {
-		
-		crm_trace("Notifying client %s/%s of update",
-			  client->name, client->channel_name);
-		
-		crm_debug("%s/%s queue length: %d",
-			  client->name, client->channel_name,
-			  client->channel->send_queue->current_qlen);
-		
+	} else if(client->pre_notify && is_pre) {
+		if(qlen < (int)(0.4 * max_qlen)) {
+			do_send = TRUE;
+		} else {
+			crm_warn("Throttling pre-notifications due to"
+				 " high load: queue=%d (max=%d)",
+				 qlen, max_qlen);
+		}
+		 
+	} else if(client->post_notify && is_post) {
+		if(qlen < (int)(0.7 * max_qlen)) {
+			do_send = TRUE;
+		} else {
+			crm_warn("Throttling post-notifications due to"
+				 " extreme load: queue=%d (max=%d)",
+				 qlen, max_qlen);
+		}
+
+		/* these are critical */
+	} else if(client->confirmations && is_confirm) {
+		do_send = TRUE;
+	}
+
+	if(do_send) {
+		crm_debug("Notifying client %s/%s of update (queue=%d)",
+			  client->name, client->channel_name, qlen);
+
+#if 0
 		if(client->channel->should_send_blocking == FALSE) {
 			crm_warn("Client channel %s/%s was not set to"
 				 " \"send blocking\"", client->name,client->id);
 			client->channel->should_send_blocking = TRUE;
 		}
-		
+#endif	
 		if(msg2ipcchan(update_msg, client->channel) != HA_OK) {
 			crm_warn("Notification of client %s/%s failed",
 				 client->name, client->id);
 		}
+		CRM_DEV_ASSERT(is_confirm && client->channel->send_queue->current_qlen < client->channel->send_queue->max_qlen);
 		
 	} else {
 		crm_trace("Client %s/%s not interested in %s notifications",
