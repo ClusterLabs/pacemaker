@@ -153,10 +153,17 @@ class LinuxHAv2(HeartbeatCM):
     def StartaCM(self, node):
 
         '''Start up the cluster manager on a given node'''
-        watch = CTS.LogWatcher(self["LogFileName"]
-        ,                      [self["Pat:We_started"]%node, self["Pat:DC_IDLE"]]
-        ,                      60)
+	patterns = []
+	patterns.append(self["Pat:We_started"]%node)
+
+	# only search for this pattern if there is another node out there
+	# that should be the DC
+	if self.any_running == 1:
+	    patterns.append(self["Pat:DC_IDLE"])
+
+        watch = CTS.LogWatcher(self["LogFileName"], patterns, 60)
         watch.setwatch()
+
         self.log ("CM_LinuxHAv2.py: Starting %s on node %s"
                 %(self["Name"], node))
 
@@ -170,7 +177,7 @@ class LinuxHAv2(HeartbeatCM):
 		self.rsh.cp(self.Env["CIBfilename"], self["CIBfile"]%node)
 
         self.rsh(node, self["StartCmd"])
-        if watch.look():
+        if watch.lookforall():
             self.ShouldBeStatus[node]=self["up"]
             return 1
 
@@ -217,7 +224,13 @@ class LinuxHAv2(HeartbeatCM):
             dependancy["strength"]=node.getAttribute('strength')
             DependancyList.append(dependancy)
         return DependancyList
-        
+
+    def any_running(self):
+        for node in self.CM.Env["nodes"]:
+	    if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+		return 1
+	return 0
+
 class HAResourceAudit(ClusterAudit):
     def __init__(self, cm):
         self.CM = cm
