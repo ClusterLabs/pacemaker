@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.30 2005/02/17 16:29:38 andrew Exp $ */
+/* $Id: utils.c,v 1.31 2005/02/17 19:58:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -307,10 +307,7 @@ do_crm_log(int log_level, const char *function,
 {
 	int log_as = log_level;
 	gboolean do_log = FALSE;
-	if(log_level < LOG_INFO) {
-		do_log = TRUE;
-
-	} else if(log_level <= crm_log_level) {
+	if(log_level <= crm_log_level) {
 		do_log = TRUE;
 		if(log_level > LOG_INFO) {
 			log_as = LOG_DEBUG;
