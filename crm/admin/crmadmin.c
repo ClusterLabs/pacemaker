@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.22 2005/01/26 13:30:53 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.23 2005/02/02 09:17:25 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -666,8 +666,10 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 gboolean
 admin_message_timeout(gpointer data)
 {
-	fprintf(stderr, "No messages received in %d seconds.. aborting\n", (int)message_timeout_ms/1000);
-	crm_err("No messages received in %d seconds", (int)message_timeout_ms/1000);
+	fprintf(stderr, "No messages received in %d seconds.. aborting\n",
+		(int)message_timeout_ms/1000);
+	crm_err("No messages received in %d seconds",
+		(int)message_timeout_ms/1000);
 	g_main_quit(mainloop);
 	return FALSE;
 }
@@ -678,7 +680,6 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 {
 	int found = 0;
 	const char *path[] = {
-		XML_TAG_CIB,
 		XML_CIB_TAG_STATUS
 	};
 	const char *path2[] = {
@@ -778,7 +779,6 @@ do_find_resource_list(crm_data_t *xml_node)
 {
 	int found = 0;
 	const char *path[] = {
-		XML_TAG_CIB,
 		XML_CIB_TAG_RESOURCES
 	};
 	crm_data_t *rscs = find_xml_node_nested(
@@ -805,7 +805,6 @@ do_find_node_list(crm_data_t *xml_node)
 {
 	int found = 0;
 	const char *path[] = {
-		XML_TAG_CIB,
 		XML_CIB_TAG_NODES
 	};
 	crm_data_t *nodes = find_xml_node_nested(
