@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.11 2004/10/21 18:25:42 andrew Exp $ */
+/* $Id: ipc.c,v 1.12 2004/11/23 11:12:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,6 +51,7 @@
 
 IPC_Message *create_simple_message(char *text, IPC_Channel *ch);
 gboolean send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg);
+static void free_msg_data(IPC_Message *msg);
 
 
 gboolean 
@@ -66,7 +67,7 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 	
 	cib_dump = create_simple_message(xml_message, ipc_client);
 	res = send_ipc_message(ipc_client, cib_dump);
-	crm_free(xml_message);
+/* 	crm_free(xml_message); */
 
 	if(res == FALSE) {
 		log_level = LOG_ERR;
@@ -92,9 +93,11 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 	if (msg == NULL) {
 		crm_err("cant send NULL message");
 		all_is_good = FALSE;
+
 	} else if (msg->msg_len <= 0) {
 		crm_err("cant send 0 sized message");
 		all_is_good = FALSE;
+
 	} else if (msg->msg_len > MAXDATASIZE) {
 		crm_err("cant send msg... too big");
 		all_is_good = FALSE;
@@ -124,6 +127,13 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 	return all_is_good;
 }
 
+static void
+free_msg_data(IPC_Message *msg)
+{
+	crm_free(msg->msg_body);
+	msg->msg_body = NULL;
+}
+
 IPC_Message *
 create_simple_message(char *text, IPC_Channel *ch)
 {
@@ -134,16 +144,19 @@ create_simple_message(char *text, IPC_Channel *ch)
 	if (text == NULL) {
 		return NULL;
 	}
-	crm_malloc(ack_msg, sizeof(IPC_Message));
+	
+	ack_msg = cl_malloc(sizeof(IPC_Message));
 
-	if(ack_msg != NULL) {
-		ack_msg->msg_private = NULL;
-		ack_msg->msg_done    = NULL;
-		ack_msg->msg_body    = text;
-		ack_msg->msg_ch      = ch;
-		
-		ack_msg->msg_len = strlen(text)+1;
+	if(ack_msg == NULL) {
+		return NULL;
 	}
+	
+	ack_msg->msg_private = NULL;
+	ack_msg->msg_buf     = NULL;
+	ack_msg->msg_ch      = ch;
+	ack_msg->msg_body    = text;
+	ack_msg->msg_done    = free_msg_data;
+	ack_msg->msg_len     = strlen(text)+1;
 	
 	return ack_msg;
 }
@@ -185,7 +198,6 @@ find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free)
 void
 default_ipc_connection_destroy(gpointer user_data)
 {
-	
 	return;
 }
 
