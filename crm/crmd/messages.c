@@ -949,6 +949,8 @@ handle_shutdown_request(xmlNodePtr stored_msg)
 		stored_msg, NULL, XML_ATTR_HOSTFROM,  FALSE);
 	
 	crm_info("Creating shutdown request for %s",host_from);
+
+	crm_xml_info(stored_msg, "stored msg");
 	
 	set_uuid(node_state, XML_ATTR_UUID, host_from);
 	set_xml_property_copy(node_state, XML_ATTR_UNAME, host_from);
@@ -958,19 +960,16 @@ handle_shutdown_request(xmlNodePtr stored_msg)
 	
 	frag = create_cib_fragment(node_state, NULL);
 	
-	/* attach it to the original request
-	 * and make sure its sent to the CIB
-	 */
-	xmlAddChild(stored_msg, frag);
-	
 	/* cleanup intermediate steps */
 	free_xml(node_state);
 	crm_free(now_s);
 
 	fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, stored_msg, NULL,
-		cib_sync_call|cib_discard_reply);
+		fsa_cib_conn, XML_CIB_TAG_STATUS, frag, NULL,
+		cib_sync_call);
 
+	free_xml(frag);
+	
 	return I_NULL;
 }
 
