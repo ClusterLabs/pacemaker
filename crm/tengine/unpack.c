@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.1 2004/09/15 09:22:57 andrew Exp $ */
+/* $Id: unpack.c,v 1.2 2004/09/15 20:23:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -297,12 +297,12 @@ extract_event(xmlNodePtr msg)
 gboolean
 process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 {
-	const char *op = get_xml_attr (msg, XML_TAG_OPTIONS,
-				       XML_ATTR_OP, FALSE);
-
+	xmlNodePtr graph = NULL;
 	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
 	const char *ref    = xmlGetProp(msg, XML_ATTR_REFERENCE);
-	xmlNodePtr graph = NULL;
+	const char *op     = get_xml_attr(
+		msg, XML_TAG_OPTIONS, XML_ATTR_OP, FALSE);
+
 
 	crm_debug("Recieved %s (%s) message", op, ref);
 	
