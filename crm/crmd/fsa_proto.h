@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.13 2004/10/05 20:59:10 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.14 2004/10/12 21:11:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,10 +25,10 @@ extern xmlNodePtr do_lrm_query(gboolean);
 /*	 A_READCONFIG	*/
 enum crmd_fsa_input
 do_read_config(long long action,
-	    enum crmd_fsa_cause cause,
-	    enum crmd_fsa_state cur_state,
-	    enum crmd_fsa_input current_input,
-	    fsa_data_t *msg_data);
+	       enum crmd_fsa_cause cause,
+	       enum crmd_fsa_state cur_state,
+	       enum crmd_fsa_input current_input,
+	       fsa_data_t *msg_data);
 
 /*	 A_PE_INVOKE	*/
 enum crmd_fsa_input
@@ -73,26 +73,26 @@ do_cib_control(long long action,
 /*	A_HA_CONNECT	*/
 enum crmd_fsa_input
 do_ha_control(long long action,
+	      enum crmd_fsa_cause cause,
+	      enum crmd_fsa_state cur_state,
+	      enum crmd_fsa_input cur_input,
+	      fsa_data_t *msg_data);
+
+/*	A_CCM_CONNECT	*/
+enum crmd_fsa_input
+do_ccm_control(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input cur_input,
 	       fsa_data_t *msg_data);
 
-/*	A_CCM_CONNECT	*/
-enum crmd_fsa_input
-do_ccm_control(long long action,
-		enum crmd_fsa_cause cause,
-		enum crmd_fsa_state cur_state,
-		enum crmd_fsa_input cur_input,
-		fsa_data_t *msg_data);
-
 /*	A_LRM_CONNECT	*/
 enum crmd_fsa_input
 do_lrm_control(long long action,
-		enum crmd_fsa_cause cause,
-		enum crmd_fsa_state cur_state,
-		enum crmd_fsa_input cur_input,
-		fsa_data_t *msg_data);
+	       enum crmd_fsa_cause cause,
+	       enum crmd_fsa_state cur_state,
+	       enum crmd_fsa_input cur_input,
+	       fsa_data_t *msg_data);
 
 /*	A_PE_START, STOP, RESTART	*/
 enum crmd_fsa_input
@@ -153,10 +153,10 @@ do_election_count_vote(long long action,
 /*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT	*/
 enum crmd_fsa_input
 do_election_timer_ctrl(long long action,
-		  enum crmd_fsa_cause cause,
-		  enum crmd_fsa_state cur_state,
-		  enum crmd_fsa_input cur_input,
-		  fsa_data_t *msg_data);
+		       enum crmd_fsa_cause cause,
+		       enum crmd_fsa_state cur_state,
+		       enum crmd_fsa_input cur_input,
+		       fsa_data_t *msg_data);
 
 /*	A_DC_TIMER_STOP	*/
 enum crmd_fsa_input
@@ -241,10 +241,10 @@ do_dc_join_req(long long action,
 /*	A_DC_JOIN_FINALIZE	*/
 enum crmd_fsa_input
 do_dc_join_finalize(long long action,
-	       enum crmd_fsa_cause cause,
-	       enum crmd_fsa_state cur_state,
-	       enum crmd_fsa_input cur_input,
-	       fsa_data_t *msg_data);
+		    enum crmd_fsa_cause cause,
+		    enum crmd_fsa_state cur_state,
+		    enum crmd_fsa_input cur_input,
+		    fsa_data_t *msg_data);
 
 /*	 A_CL_JOIN_ANNOUNCE	*/
 enum crmd_fsa_input
@@ -290,10 +290,10 @@ do_update_node_status(long long action,
 /*	A_LRM_INVOKE	*/
 enum crmd_fsa_input
 do_lrm_invoke(long long action,
-	     enum crmd_fsa_cause cause,
-	     enum crmd_fsa_state cur_state,
-	     enum crmd_fsa_input cur_input,
-	     fsa_data_t *msg_data);
+	      enum crmd_fsa_cause cause,
+	      enum crmd_fsa_state cur_state,
+	      enum crmd_fsa_input cur_input,
+	      fsa_data_t *msg_data);
 
 /*	A_LRM_EVENT	*/
 enum crmd_fsa_input
