@@ -275,6 +275,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 		root_xml_node =
 			find_xml_in_ipcmessage(msg, FALSE);
 		if (root_xml_node != NULL) {
+
 			if (crmd_authorize_message(root_xml_node,
 						   msg,
 						   curr_client)) {
@@ -600,10 +601,17 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	const char *filtered_from;
 	gpointer table_key = NULL;
 	gboolean result;
+	const char *op = get_xml_attr(root_xml_node, XML_TAG_OPTIONS,
+				      XML_ATTR_OP, FALSE);
 	
 	FNIN();
 
-	if (sys_from != NULL) {
+	if (safe_str_neq("hello", op)) {
+			
+		if(sys_from == NULL) {
+			return FALSE;
+		}
+		
 		gboolean can_reply = FALSE; // no-one has registered with this id
 		filtered_from = sys_from;
 
@@ -617,16 +625,14 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		
 		CRM_DEBUG("Message reply can%s be routed from %s.",
 			   can_reply?"":" not", sys_from);
-		FNRET(can_reply);
+		return can_reply;
 	}
-
-	// otherwise, check if it was a hello message
-
+	
 	cl_log(LOG_INFO,
 	       "received client join msg: %s",
 	       (char*)client_msg->msg_body);
 
-	result = process_hello_message(client_msg,
+	result = process_hello_message(root_xml_node,
 				       &uuid,
 				       &client_name,
 				       &major_version,
@@ -721,7 +727,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	if(client_name != NULL) cl_free(client_name);
 
 	/* hello messages should never be processed further */
-	FNRET(FALSE);
+	return FALSE;
 }
 
 enum crmd_fsa_input

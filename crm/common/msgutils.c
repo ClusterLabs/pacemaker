@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.28 2004/05/10 21:52:57 andrew Exp $ */
+/* $Id: msgutils.c,v 1.29 2004/05/12 14:27:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -241,11 +241,11 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 char *
 generate_hash_key(const char *crm_msg_reference, const char *sys)
 {
-	int ref_len = strlen(sys) + strlen(crm_msg_reference) + 2;
+	int ref_len = strlen(sys?sys:"none") + strlen(crm_msg_reference) + 2;
 	char *hash_key = (char*)cl_malloc(sizeof(char)*(ref_len));
 
 	FNIN();
-	sprintf(hash_key, "%s_%s", sys, crm_msg_reference);
+	sprintf(hash_key, "%s_%s", sys?sys:"none", crm_msg_reference);
 	hash_key[ref_len-1] = '\0';
 	cl_log(LOG_INFO, "created hash key: (%s)", hash_key);
 	FNRET(hash_key);
@@ -345,32 +345,37 @@ send_hello_message(IPC_Channel *ipc_client,
 		return;
 	}
 
-	hello_node = create_xml_node(NULL, "hello");
+	hello_node = create_xml_node(NULL, XML_TAG_OPTIONS);
 	set_xml_property_copy(hello_node, "major_version", major_version);
 	set_xml_property_copy(hello_node, "minor_version", minor_version);
 	set_xml_property_copy(hello_node, "client_name",   client_name);
 	set_xml_property_copy(hello_node, "client_uuid",   uuid);
+	set_xml_property_copy(hello_node, "operation",     "hello");
 
 
-	send_xmlipc_message(ipc_client, hello_node);
+	send_ipc_request(ipc_client,
+			 hello_node, NULL, 
+			 NULL, NULL,
+			 client_name, uuid,
+			 NULL);
 
 	free_xml(hello_node);
 }
 
 
 gboolean
-process_hello_message(IPC_Message *hello_message,
+process_hello_message(xmlNodePtr hello,
 		      char **uuid,
 		      char **client_name,
 		      char **major_version,
 		      char **minor_version)
 {
-	xmlNodePtr hello;
-	xmlDocPtr hello_doc;
-	char *local_uuid;
-	char *local_client_name;
-	char *local_major_version;
-	char *local_minor_version;
+	xmlNodePtr opts = NULL;
+	const char *op = NULL;
+	const char *local_uuid;
+	const char *local_client_name;
+	const char *local_major_version;
+	const char *local_minor_version;
 
 	FNIN();
 	*uuid = NULL;
@@ -378,57 +383,45 @@ process_hello_message(IPC_Message *hello_message,
 	*major_version = NULL;
 	*minor_version = NULL;
 
-	if (hello_message == NULL || hello_message->msg_body == NULL) {
-		FNRET(FALSE);
-	}
+	opts = find_xml_node(hello, XML_TAG_OPTIONS);
+	
+	op = xmlGetProp(opts, "operation");
+	local_uuid = xmlGetProp(opts, "client_uuid");
+	local_client_name = xmlGetProp(opts, "client_name");
+	local_major_version = xmlGetProp(opts, "major_version");
+	local_minor_version = xmlGetProp(opts, "minor_version");
 
-	hello_doc = xmlParseMemory(
-		hello_message->msg_body,
-		strlen(hello_message->msg_body));
-	if (hello_doc == NULL) {
+	if (op == NULL || strcmp("hello", op) != 0) {
+		FNRET(FALSE);
+
+	} else if (local_uuid == NULL || strlen(local_uuid) == 0) {
 		cl_log(LOG_ERR,
-		       "Expected a Hello message, Got: %s",
-		       (char*)hello_message->msg_body);
+		       "Hello message was not valid (field %s not found)",
+		       "uuid");
 		FNRET(FALSE);
-	}
-    
-	hello = xmlDocGetRootElement(hello_doc);
-	if (hello == NULL) {
-		FNRET(FALSE);
-	} else if (strcmp("hello", hello->name) != 0) {
-		FNRET(FALSE);
-	}
 
-	local_uuid = xmlGetProp(hello, "client_uuid");
-	local_client_name = xmlGetProp(hello, "client_name");
-	local_major_version = xmlGetProp(hello, "major_version");
-	local_minor_version = xmlGetProp(hello, "minor_version");
-
-	if (local_uuid == NULL || strlen(local_uuid) == 0) {
-		cl_log(LOG_ERR,
-		       "Hello message was not valid (field %s not found): %s",
-		       "uuid", (char*)hello_message->msg_body);
-		FNRET(FALSE);
 	} else if (local_client_name==NULL || strlen(local_client_name)==0){
 		cl_log(LOG_ERR,
-		       "Hello message was not valid (field %s not found): %s",
-		       "client name", (char*)hello_message->msg_body);
+		       "Hello message was not valid (field %s not found)",
+		       "client name");
 		FNRET(FALSE);
+
 	} else if(local_major_version == NULL
 		  || strlen(local_major_version) == 0){
 		cl_log(LOG_ERR,
-		       "Hello message was not valid (field %s not found): %s",
-		       "major version", (char*)hello_message->msg_body);
+		       "Hello message was not valid (field %s not found)",
+		       "major version");
 		FNRET(FALSE);
+
 	} else if (local_minor_version == NULL
 		   || strlen(local_minor_version) == 0){
 		cl_log(LOG_ERR,
-		       "Hello message was not valid (field %s not found): %s",
-		       "minor version", (char*)hello_message->msg_body);
+		       "Hello message was not valid (field %s not found)",
+		       "minor version");
 		FNRET(FALSE);
 	}
     
-	*uuid           = cl_strdup(local_uuid);
+	*uuid          = cl_strdup(local_uuid);
 	*client_name   = cl_strdup(local_client_name);
 	*major_version = cl_strdup(local_major_version);
 	*minor_version = cl_strdup(local_minor_version);

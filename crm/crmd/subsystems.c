@@ -141,15 +141,22 @@ do_cib_invoke(long long action,
 
 	FNIN();
 
-	if(data != NULL)
+	if(data != NULL) {
 		cib_msg = (xmlNodePtr)data;
-
+	}
+	
 	
 	if(action & A_CIB_INVOKE) {
 
 		const char *op = get_xml_attr(cib_msg, XML_TAG_OPTIONS,
 					      XML_ATTR_OP, TRUE);
 
+		xml_message_debug(cib_msg, "[CIB] Invoking with");
+		if(cib_msg == NULL) {
+			cl_log(LOG_ERR, "No message for CIB command");
+			FNRET(I_NULL); // I_ERROR
+		}
+		
 		if(safe_str_eq(op, CRM_OPERATION_SHUTDOWN_REQ)){
 			// create update section
 			tmp2 =
@@ -207,6 +214,12 @@ do_cib_invoke(long long action,
 
 		/* experimental */
 	} else if(action & A_CIB_INVOKE_LOCAL) {
+		xml_message_debug(cib_msg, "[CIB] Invoking with");
+		if(cib_msg == NULL) {
+			cl_log(LOG_ERR, "No message for CIB command");
+			FNRET(I_NULL); // I_ERROR
+		}
+		
 		answer = process_cib_message(cib_msg, TRUE);
 		put_message(answer);
 		FNRET(I_REQUEST);
@@ -870,9 +883,38 @@ do_lrm_invoke(long long action,
 	
 	FNIN();
 
+	if(action & A_UPDATE_NODESTATUS) {
+
+		xmlNodePtr data = NULL;
+#ifndef USE_FAKE_LRM
+		data = do_lrm_query();
+#endif
+		set_xml_property_copy(data, "replace_lrm", "true");
+
+		tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
+		set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
+		fragment = create_cib_fragment(tmp1, NULL);
+
+		set_xml_property_copy(data, "replace_lrm", "true");
+		add_node_copy(tmp1, data);
+
+		send_request(NULL, fragment, CRM_OPERATION_UPDATE,
+			     NULL, CRM_SYSTEM_DC);
+
+		free_xml(fragment);
+		free_xml(tmp1);
+		free_xml(data);
+
+		FNRET(next_input);
+	}
+
 #ifdef USE_FAKE_LRM
+	if(data == NULL) {
+		FNRET(I_ERROR);
+	}
+	
 	msg = (xmlNodePtr)data;
-		
+	
 	operation = get_xml_attr_nested(msg, rsc_path, DIMOF(rsc_path) -3,
 					"task", TRUE);
 	
@@ -880,7 +922,6 @@ do_lrm_invoke(long long action,
 					  "id", TRUE);
 	
 	crm_op = get_xml_attr(msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
-
 
 	if(safe_str_eq(crm_op, "rsc_op")) {
 	
@@ -892,7 +933,7 @@ do_lrm_invoke(long long action,
 
 		iter = create_xml_node(iter, "lrm_resource");
 	
-		set_xml_property_copy(iter, "id", fsa_our_uname);
+		set_xml_property_copy(state, "id", fsa_our_uname);
 		set_xml_property_copy(iter, XML_ATTR_ID, id_from_cib);
 		set_xml_property_copy(iter, "last_op", operation);
 
@@ -914,27 +955,6 @@ do_lrm_invoke(long long action,
 	FNRET(I_NULL);
 #endif
 
-	if(action & A_UPDATE_NODESTATUS) {
-
-		xmlNodePtr data = do_lrm_query();
-		set_xml_property_copy(data, "replace_lrm", "true");
-
-		tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
-		set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
-		fragment = create_cib_fragment(tmp1, NULL);
-
-		set_xml_property_copy(data, "replace_lrm", "true");
-		add_node_copy(tmp1, data);
-
-		send_request(NULL, fragment, CRM_OPERATION_UPDATE,
-			     NULL, CRM_SYSTEM_DC);
-
-		free_xml(fragment);
-		free_xml(tmp1);
-		free_xml(data);
-
-		FNRET(next_input);
-	}
 	
 	cl_log(LOG_WARNING, "Action %s (%.16llx) only kind of supported\n",
 	       fsa_action2string(action), action);

@@ -1,4 +1,4 @@
-/* $Id: msgutils.h,v 1.10 2004/03/24 09:59:05 andrew Exp $ */
+/* $Id: msgutils.h,v 1.11 2004/05/12 14:27:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,7 +46,7 @@ extern void send_hello_message(IPC_Channel *ipc_client,
 			       const char *client_name,
 			       const char *major_version,
 			       const char *minor_version);
-extern gboolean process_hello_message(IPC_Message *hello_message,
+extern gboolean process_hello_message(xmlNodePtr hello,
 				      char **uuid,
 				      char **client_name,
 				      char **major_version,

@@ -1746,6 +1746,10 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 
 	if(op == NULL){
 		// error
+
+	} else if(strcmp(op, "hello") == 0) {
+		// ignore
+		
 	} else if(sys_to == NULL || strcmp(sys_to, "pengine") != 0) {
 		CRM_DEBUG("Bad sys-to %s", sys_to);
 		return FALSE;

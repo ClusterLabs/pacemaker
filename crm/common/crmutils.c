@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.14 2004/05/10 21:52:57 andrew Exp $ */
+/* $Id: crmutils.c,v 1.15 2004/05/12 14:27:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -336,9 +336,6 @@ subsystem_input_dispatch(IPC_Channel *sender, void *user_data)
 		type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
 		if (root_xml_node == NULL) {
 			cl_log(LOG_ERR, "Root node was NULL!!");
-
-		} else if (safe_str_eq(root_xml_node->name, "hello")) {
-			cl_log(LOG_WARNING, "HACK: Ignore hello messages");
 
 		} else if(sys_to == NULL) {
 			cl_log(LOG_ERR, "Value of %s was NULL!!",
