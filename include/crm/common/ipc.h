@@ -1,4 +1,4 @@
-/* $Id: ipc.h,v 1.1 2004/06/02 11:40:50 andrew Exp $ */
+/* $Id: ipc.h,v 1.2 2004/06/07 10:20:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -22,8 +22,8 @@
 #include <clplumbing/ipc.h>
 #include <clplumbing/GSource.h>
 
-#include <xml.h>
-#include <msg.h>
+#include <crm/common/xml.h>
+#include <crm/common/msg.h>
 
 typedef struct _crmd_client 
 {

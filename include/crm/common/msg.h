@@ -1,4 +1,4 @@
-/* $Id: msg.h,v 1.1 2004/06/02 11:40:50 andrew Exp $ */
+/* $Id: msg.h,v 1.2 2004/06/07 10:20:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,8 +19,8 @@
 #ifndef CRM_COMMON_MSG__H
 #define CRM_COMMON_MSG__H
 
-#include <xml.h>
-#include <util.h>
+#include <crm/common/xml.h>
+#include <crm/common/util.h>
 #include <clplumbing/ipc.h>
 
 extern xmlNodePtr validate_crm_message(xmlNodePtr root,
