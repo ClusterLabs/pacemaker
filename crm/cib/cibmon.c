@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.8 2005/01/27 09:05:17 andrew Exp $ */
+/* $Id: cibmon.c,v 1.9 2005/02/06 05:03:01 alan Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -121,12 +121,15 @@ main(int argc, char **argv)
 			case 0:
 				printf("option %s",
 				       long_options[option_index].name);
-				if (optarg)
+				if (optarg) {
 					printf(" with arg %s", optarg);
+				}
 				printf("\n");
-		printf("Long option (--%s) is not (yet?) properly supported\n",
-		       long_options[option_index].name);
-		++argerr;
+				printf("Long option (--%s) is not"
+				" (yet?) properly supported\n",
+		       		long_options[option_index].name);
+				++argerr;
+				break;
 			case 'V':
 				level = get_crm_log_level();
 				cl_log_enable_stderr(TRUE);
