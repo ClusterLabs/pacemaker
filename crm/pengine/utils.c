@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.37 2004/07/20 09:03:39 andrew Exp $ */
+/* $Id: utils.c,v 1.38 2004/08/29 02:36:53 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -173,13 +173,14 @@ node_list_minus(GListPtr list1, GListPtr list2, gboolean filter)
 	slist_iter(
 		node, node_t, list1, lpc,
 		node_t *other_node = pe_find_node(list2, node->details->uname);
+		node_t *new_node = NULL;
 		
 		if(node == NULL || other_node != NULL
 		   || (filter && node->weight < 0)) {
 			continue;
 			
 		}
-		node_t *new_node = node_copy(node);
+		new_node = node_copy(node);
 		result = g_list_append(result, new_node);
 		);
   
@@ -197,6 +198,7 @@ node_list_xor(GListPtr list1, GListPtr list2, gboolean filter)
 	
 	slist_iter(
 		node, node_t, list1, lpc,
+		node_t *new_node = NULL;
 		node_t *other_node = (node_t*)
 			pe_find_node(list2, node->details->uname);
 
@@ -204,13 +206,14 @@ node_list_xor(GListPtr list1, GListPtr list2, gboolean filter)
 		   || (filter && node->weight < 0)) {
 			continue;
 		}
-		node_t *new_node = node_copy(node);
+		new_node = node_copy(node);
 		result = g_list_append(result, new_node);
 		);
 	
  
 	slist_iter(
 		node, node_t, list2, lpc,
+		node_t *new_node = NULL;
 		node_t *other_node = (node_t*)
 			pe_find_node(list1, node->details->uname);
 
@@ -218,7 +221,7 @@ node_list_xor(GListPtr list1, GListPtr list2, gboolean filter)
 		   || (filter && node->weight < 0)) {
 			continue;
 		}
-		node_t *new_node = node_copy(node);
+		new_node = node_copy(node);
 		result = g_list_append(result, new_node);
 		);
   
@@ -270,11 +273,12 @@ node_list_dup(GListPtr list1, gboolean filter)
 	int lpc = 0;
 	slist_iter(
 		this_node, node_t, list1, lpc,
+		node_t *new_node = NULL;
 		if(filter && this_node->weight < 0) {
 			continue;
 		}
 		
-		node_t *new_node = node_copy(this_node);
+		new_node = node_copy(this_node);
 		if(new_node != NULL) {
 			result = g_list_append(result, new_node);
 		}
@@ -286,11 +290,13 @@ node_list_dup(GListPtr list1, gboolean filter)
 node_t *
 node_copy(node_t *this_node) 
 {
+	node_t *new_node  = NULL;
+
 	if(this_node == NULL) {
 		print_node("Failed copy of", this_node, TRUE);
 		return NULL;
 	}
-	node_t *new_node  = (node_t*)crm_malloc(sizeof(node_t));
+	new_node  = (node_t*)crm_malloc(sizeof(node_t));
 	crm_trace("copying %p (%s) to %p", this_node, this_node->details->uname, new_node);
 	new_node->weight  = this_node->weight; 
 	new_node->fixed   = this_node->fixed;
@@ -398,8 +404,10 @@ resource_t *
 pe_find_resource(GListPtr rsc_list, const char *id_rh)
 {
 	int lpc = 0;
+	resource_t *rsc = NULL;
+
 	for(lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
-		resource_t *rsc = g_list_nth_data(rsc_list, lpc);
+		rsc = g_list_nth_data(rsc_list, lpc);
 		if(rsc != NULL && safe_str_eq(rsc->id, id_rh)){
 			return rsc;
 		}
@@ -413,9 +421,10 @@ node_t *
 pe_find_node(GListPtr nodes, const char *uname)
 {
 	int lpc = 0;
+	node_t *node = NULL;
   
 	for(lpc = 0; lpc < g_list_length(nodes); lpc++) {
-		node_t *node = g_list_nth_data(nodes, lpc);
+		node = g_list_nth_data(nodes, lpc);
 		if(node != NULL && safe_str_eq(node->details->uname, uname)) {
 			return node;
 		}
@@ -428,9 +437,10 @@ node_t *
 pe_find_node_id(GListPtr nodes, const char *id)
 {
 	int lpc = 0;
+	node_t *node = NULL;
   
 	for(lpc = 0; lpc < g_list_length(nodes); lpc++) {
-		node_t *node = g_list_nth_data(nodes, lpc);
+		node = g_list_nth_data(nodes, lpc);
 		if(safe_str_eq(node->details->id, id)) {
 			return node;
 		}
@@ -738,6 +748,7 @@ print_color(const char *pre_text, color_t *color, gboolean details)
 void
 print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 { 
+	int lpc = 0;
 	if(cons == NULL) {
 		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
@@ -757,7 +768,6 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 			  cons->can?"Can":"Cannot",
 			  cons->weight);
 
-		int lpc = 0;
 		slist_iter(
 			node, node_t, cons->node_list_rh, lpc,
 			print_node("\t\t-->", node, FALSE)

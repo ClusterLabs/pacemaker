@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.15 2004/08/27 15:21:59 andrew Exp $ */
+/* $Id: stages.c,v 1.16 2004/08/29 02:35:12 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -230,6 +230,9 @@ stage5(GListPtr resources)
 {
 	int lpc = 0;
 	int lpc2 = 0;
+	node_t *start_node = NULL;
+	node_t *stop_node = NULL;
+	node_t *default_node = NULL;
 
 	crm_verbose("filling in the nodes to perform the actions on");
 	slist_iter(
@@ -237,10 +240,9 @@ stage5(GListPtr resources)
 
 		crm_debug_action(print_resource("Processing", rsc, FALSE));
 		
-		node_t *start_node = safe_val4(
+		start_node = safe_val4(
 			NULL, rsc, color, details, chosen_node);
-		node_t *stop_node = safe_val(NULL, rsc, cur_node);
-		node_t *default_node = NULL;
+		stop_node = safe_val(NULL, rsc, cur_node);
 		if(stop_node == NULL && start_node == NULL) {
 			// it is not and will not run
 			default_node = NULL;

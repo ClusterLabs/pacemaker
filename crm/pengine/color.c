@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.13 2004/07/30 15:31:06 andrew Exp $ */
+/* $Id: color.c,v 1.14 2004/08/29 02:34:29 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -376,6 +376,7 @@ gboolean
 choose_color(resource_t *lh_resource)
 {
 	int lpc = 0;
+	GListPtr sorted_colors = NULL;
 
 	if(lh_resource->runnable == FALSE) {
 		assign_color(lh_resource, no_color);
@@ -385,7 +386,7 @@ choose_color(resource_t *lh_resource)
 		return !lh_resource->provisional;
 	}
 	
-	GListPtr sorted_colors = g_list_sort(
+	sorted_colors = g_list_sort(
 		lh_resource->candidate_colors, sort_color_weight);
 	
 	lh_resource->candidate_colors = sorted_colors;
@@ -395,6 +396,9 @@ choose_color(resource_t *lh_resource)
 	
 	slist_iter(
 		this_color, color_t, lh_resource->candidate_colors, lpc,
+		GListPtr intersection = NULL;
+		GListPtr minus = NULL;
+		int len = 0;
 
 		if(this_color == NULL) {
 			crm_err("color was NULL");
@@ -403,11 +407,11 @@ choose_color(resource_t *lh_resource)
 		} else if(lh_resource->effective_priority
 		   < this_color->details->highest_priority) {
 
-			GListPtr minus = node_list_minus(
+			minus = node_list_minus(
 				this_color->details->candidate_nodes, 
 				lh_resource->allowed_nodes, TRUE);
 
-			int len = g_list_length(minus);
+			len = g_list_length(minus);
 			pe_free_shallow(minus);
 			
 			if(len > 0) {
@@ -416,11 +420,11 @@ choose_color(resource_t *lh_resource)
 			}
 			
 		} else {
-			GListPtr intersection = node_list_and(
+			intersection = node_list_and(
 				this_color->details->candidate_nodes, 
 				lh_resource->allowed_nodes, TRUE);
 
-			int len = g_list_length(intersection);
+			len = g_list_length(intersection);
 			pe_free_shallow(intersection);
 			
 			if(len != 0) {
@@ -470,6 +474,8 @@ rsc_postproc(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 void
 color_resource(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 {
+	color_t *new_color = NULL;
+
 	crm_debug_action(print_resource("Coloring", lh_resource, FALSE));
 	
 	if(lh_resource->provisional == FALSE) {
@@ -496,7 +502,7 @@ color_resource(resource_t *lh_resource, GListPtr *colors, GListPtr resources)
 	} else if(lh_resource->allowed_nodes != NULL) {
 		// filter out nodes with a negative weight
 		filter_nodes(lh_resource);
-		color_t *new_color = create_color(colors, lh_resource, NULL);
+		new_color = create_color(colors, lh_resource, NULL);
 		assign_color(lh_resource, new_color);
 	}
 	
@@ -563,6 +569,9 @@ gboolean
 assign_color(resource_t *rsc, color_t *color) 
 {
 	color_t *local_color = add_color(rsc, color);
+	GListPtr intersection = NULL;
+	GListPtr old_list = NULL;
+
 	
 	rsc->color = local_color;
 	rsc->provisional = FALSE;
@@ -572,11 +581,11 @@ assign_color(resource_t *rsc, color_t *color)
 			g_list_append(
 				local_color->details->allocated_resources,rsc);
 
-			GListPtr intersection = node_list_and(
+			intersection = node_list_and(
 				local_color->details->candidate_nodes, 
 				rsc->allowed_nodes, TRUE);
 			   
-			GListPtr old_list =
+			old_list =
 				local_color->details->candidate_nodes;
 				
 			pe_free_shallow(old_list);
@@ -593,6 +602,9 @@ gboolean
 process_colored_constraints(resource_t *rsc) 
 {
 	int lpc = 0;
+	color_t *other_c = NULL;
+	node_t *other_n = NULL;
+
 
 	if(rsc == NULL) {
 		crm_err("No constraints for NULL resource");
@@ -609,9 +621,8 @@ process_colored_constraints(resource_t *rsc)
 		}
 		
 		/* remove the node from the other color */
-		color_t *other_c = constraint->rsc_rh->color;
-		
-		node_t *other_n = pe_find_node(
+		other_c = constraint->rsc_rh->color;
+		other_n = pe_find_node(
 			other_c->details->candidate_nodes,
 			safe_val6(NULL, rsc, color, details,
 				  chosen_node, details, uname));

@@ -144,6 +144,7 @@ build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 //	GHashTable *metadata    = NULL;
 	xmlNodePtr xml_agent    = NULL;
 	xmlNodePtr xml_metadata = NULL;
+	xmlNodePtr tmp          = NULL;
 
 	classes = fsa_lrm_conn->lrm_ops->get_rsc_class_supported(fsa_lrm_conn);
 
@@ -176,7 +177,7 @@ build_suppported_RAs(xmlNodePtr metadata_list, xmlNodePtr xml_agent_list)
 				set_xml_property_copy(
 					xml_metadata, XML_ATTR_TYPE, type);
 
-				xmlNodePtr tmp = string2xml(ra_data);
+				tmp = string2xml(ra_data);
 				if(tmp != NULL) {
 					xmlAddChild(xml_metadata, tmp);
 				}
