@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.47 2005/02/25 10:32:08 andrew Exp $ */
+/* $Id: tengine.c,v 1.48 2005/02/28 10:58:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -335,10 +335,20 @@ initiate_action(action_t *action)
 	if(id == NULL || strlen(id) == 0
 	   || task == NULL || strlen(task) == 0) {
 		/* error */
+#ifdef TESTING
+		fprintf(stderr,"Failed on corrupted command: %s (id=%s) %s",
+			crm_element_name(action->xml),
+			crm_str(id), crm_str(task));
+#endif			
 		crm_err("Failed on corrupted command: %s (id=%s) %s",
-			crm_element_name(action->xml), crm_str(id), crm_str(task));
+			crm_element_name(action->xml),
+			crm_str(id), crm_str(task));
 
 	} else if(action->type == action_type_pseudo){
+#ifdef TESTING
+		fprintf(stderr,"Executing pseudo-event (%d): %s on %s",
+			action->id, task, on_node);
+#endif			
 		crm_info("Executing pseudo-event (%d): "
 			 "%s on %s", action->id, task, on_node);
 		
@@ -362,17 +372,26 @@ initiate_action(action_t *action)
 
 		crm_info("Executing fencing operation (%s) on %s", id, target);
 #ifdef TESTING
-		fprintf(stderr, "Executing fencing operation (%s) on %s",
+		fprintf(stderr, "Executing fencing operation (%s) on %s\n",
 			id, target);
 		ret = TRUE;
 #else
-		if (ST_OK == stonithd_node_fence( st_op )) {
+		if(stonithd_input_IPC_channel() == NULL) {
+			crm_err("Cannot fence %s - stonith not available", target);
+			
+		} else if (ST_OK == stonithd_node_fence( st_op )) {
 			ret = TRUE;
 		}
 #endif			
 		
 	} else if(on_node == NULL || strlen(on_node) == 0) {
 		/* error */
+#ifdef TESTING
+		fprintf(stderr,
+			"Failed on corrupted command: %s (id=%s) %s on %s\n",
+			crm_element_name(action->xml), crm_str(id),
+			crm_str(task), crm_str(on_node));
+#endif
 		crm_err("Failed on corrupted command: %s (id=%s) %s on %s",
 			crm_element_name(action->xml), crm_str(id),
 			crm_str(task), crm_str(on_node));
@@ -382,7 +401,7 @@ initiate_action(action_t *action)
 		  <crm_msg op=XML_LRM_ATTR_TASK to=XML_RES_ATTR_TARGET>
 		*/
 #ifdef TESTING
-		fprintf(stderr, "Executing crm-event (%s): %s on %s",
+		fprintf(stderr, "Executing crm-event (%s): %s on %s\n",
 			 id, task, on_node);
 #endif
 		crm_info("Executing crm-event (%s): %s on %s",
@@ -397,7 +416,7 @@ initiate_action(action_t *action)
 		crm_data_t *rsc = find_xml_node(
 			action->xml, XML_CIB_TAG_RESOURCE, TRUE);
 #ifdef TESTING
-		fprintf(stderr, "Executing rsc-op (%s): %s %s on %s",
+		fprintf(stderr, "Executing rsc-op (%s): %s %s on %s\n",
 			 id, task,
 			 crm_element_value(rsc, XML_ATTR_ID),
 			 on_node);
@@ -426,6 +445,11 @@ initiate_action(action_t *action)
 		ret = TRUE;
 			
 	} else {
+#ifdef TESTING
+		fprintf(stderr, "Failed on unsupported command type: "
+			"%s, %s (id=%s) on %s", crm_element_name(action->xml),
+			task, id, on_node);
+#endif
 		crm_err("Failed on unsupported command type: "
 			"%s, %s (id=%s) on %s",
 			crm_element_name(action->xml), task, id, on_node);
