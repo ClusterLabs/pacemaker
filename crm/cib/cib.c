@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.44 2004/07/30 15:31:04 andrew Exp $ */
+/* $Id: cib.c,v 1.45 2004/08/03 09:20:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -211,6 +211,12 @@ pluralSection(const char *a_section)
 		a_section_parent = crm_strdup(XML_CIB_TAG_STATUS);
 
 	} else if(strcmp(a_section, XML_CIB_TAG_CONSTRAINT) == 0) {
+		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
+		
+	} else if(strcmp(a_section, "rsc_location") == 0) {
+		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
+		
+	} else if(strcmp(a_section, "rsc_to_rsc") == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
 	} else if(strcmp(a_section, XML_CIB_TAG_RESOURCE) == 0) {
