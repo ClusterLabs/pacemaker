@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.8 2005/02/03 09:12:59 andrew Exp $ */
+/* $Id: callbacks.c,v 1.9 2005/02/07 11:21:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,6 +169,11 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 {
 	action_t *te_action = private_data;
 
+	if(op == NULL) {
+		crm_err("Called with a NULL op!");
+		return;
+	}
+	
 	crm_info("optype=%d, node_name=%s, result=%d, node_list=%s\n",
 		 op->optype, op->node_name, op->op_result,
 		 (char *)op->node_list);

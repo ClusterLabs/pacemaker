@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.43 2005/02/03 14:29:21 andrew Exp $ */
+/* $Id: tengine.c,v 1.44 2005/02/07 11:21:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -381,14 +381,13 @@ initiate_action(action_t *action)
 		ret = TRUE;
 
 	} else if(action->type == action_type_rsc){
-#ifdef USE_LIBXML
+		crm_data_t *rsc = find_xml_node(
+			action->xml, XML_CIB_TAG_RESOURCE, TRUE);
 		crm_info("Executing rsc-op (%s): %s %s on %s",
 			 id, task,
-			 crm_element_value(action->xml->children, XML_ATTR_ID),
+			 crm_element_value(rsc, XML_ATTR_ID),
 			 on_node);
-#else
-		abort();
-#endif
+
 		/* let everyone know this was invoked */
 		do_update_cib(action->xml, -1);
 
@@ -403,11 +402,7 @@ initiate_action(action_t *action)
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TASK, task);
 		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TARGET, on_node);
 
-#ifdef USE_LIBXML
-		add_node_copy(rsc_op, action->xml->children);
-#else
-		abort();
-#endif
+		add_node_copy(rsc_op, rsc);
 		destination = CRM_SYSTEM_LRMD;
 		ret = TRUE;
 			

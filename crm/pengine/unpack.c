@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.50 2005/02/01 22:46:41 andrew Exp $ */
+/* $Id: unpack.c,v 1.51 2005/02/07 11:21:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -211,14 +211,7 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 		type   = crm_element_value(xml_obj, XML_ATTR_TYPE);
 		crm_verbose("Processing node %s/%s", uname, id);
 
-#ifdef USE_LIBXML
-		attrs   = xml_obj->children;
-		if(attrs != NULL) {
-			attrs = attrs->children;
-		}
-#else
-		abort();
-#endif
+		attrs = find_xml_node(xml_obj, "attributes", FALSE);
 		
 		if(id == NULL) {
 			crm_err("Must specify id tag in <node>");
@@ -233,8 +226,8 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 			return FALSE;
 		}
 		
-		new_node->weight  = 1.0;
-		new_node->fixed   = FALSE;
+		new_node->weight = 1.0;
+		new_node->fixed  = FALSE;
 		crm_malloc(new_node->details,
 			   sizeof(struct node_shared_s));
 
@@ -518,7 +511,8 @@ is_node_unclean(crm_data_t * node_state)
 			return TRUE;
 		}
 		crm_debug("Node %s: ha=%s, join=%s, crm=%s, ccm=%s",
-			  uname, ha_state, join_state, crm_state, ccm_state);
+			  uname, crm_str(ha_state), crm_str(join_state),
+			  crm_str(crm_state), crm_str(ccm_state));
 	} else {
 		crm_debug("Node %s was expected to be down", uname);
 	}
