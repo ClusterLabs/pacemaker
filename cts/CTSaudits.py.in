@@ -428,10 +428,10 @@ class PartitionAudit(ClusterAudit):
         if nodes_up == 0:
             return 1
 
-#        if len(ccm_partitions) > 1:
-#            self.CM.log("%d cluster partitions detected:" %len(ccm_partitions))
-#            for partition in ccm_partitions:
-#                self.CM.log("\t %s" %partition)
+        if len(ccm_partitions) > 1:
+            self.CM.log("Warn: %d cluster partitions detected:" %len(ccm_partitions))
+            for partition in ccm_partitions:
+                self.CM.log("\t %s" %partition)
 
         for partition in ccm_partitions:
             partition_passed = 0
