@@ -35,6 +35,7 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+extern uint highest_born_on;
 extern int num_join_invites;
 extern GHashTable *join_requests;
 extern GHashTable *confirmed_nodes;
@@ -529,6 +530,9 @@ do_state_transition(long long actions,
 		set_bit_inplace(tmp, A_DC_TIMER_START);
 	} else {
 		set_bit_inplace(tmp, A_DC_TIMER_STOP);
+	}
+	if(next_state != S_ELECTION) {
+		highest_born_on = 0;
 	}
 	
 	switch(next_state) {
