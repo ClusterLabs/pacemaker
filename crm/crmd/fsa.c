@@ -468,6 +468,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_CIB_INVOKE,		do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_LRM_INVOKE,		do_lrm_invoke)
+		ELSEIF_FSA_ACTION(A_LRM_EVENT,		do_lrm_event)
 		ELSEIF_FSA_ACTION(A_PE_INVOKE,		do_pe_invoke)
 		ELSEIF_FSA_ACTION(A_TE_INVOKE,		do_te_invoke)
 		

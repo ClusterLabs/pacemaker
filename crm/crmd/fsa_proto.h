@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.4 2004/03/29 07:57:56 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.5 2004/04/01 07:38:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -255,6 +255,14 @@ do_cib_invoke(long long action,
 /*	A_LRM_INVOKE	*/
 enum crmd_fsa_input
 do_lrm_invoke(long long action,
+	     enum crmd_fsa_cause cause,
+	     enum crmd_fsa_state cur_state,
+	     enum crmd_fsa_input cur_input,
+	     void *data);
+
+/*	A_LRM_EVENT	*/
+enum crmd_fsa_input
+do_lrm_event(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input cur_input,

@@ -57,6 +57,10 @@ static gboolean run_command    (struct crm_subsystem_s *centry,
 
 xmlNodePtr do_lrm_startup_query(void);
 GHashTable *xml2list(xmlNodePtr parent, const char **attr_path, int depth);
+gboolean lrm_dispatch(int fd, gpointer user_data);
+void send_cib_status_update(xmlNodePtr update, gboolean do_delete);
+void do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type);
+
 
 struct crm_subsystem_s *cib_subsystem = NULL;
 struct crm_subsystem_s *te_subsystem  = NULL;
@@ -179,53 +183,9 @@ do_cib_invoke(long long action,
   	} else if(action & A_UPDATE_NODESTATUS) {
 
 		xmlNodePtr data = do_lrm_startup_query();
-		xmlNodePtr command, iter, answer;
 
-		command = create_xml_node(NULL, "status");
-		iter = create_xml_node(command, "node_state");
-		set_xml_property_copy(iter, XML_ATTR_ID, fsa_our_uname);
-		iter = create_xml_node(iter, "lrm");
-		
-		command = create_cib_fragment(command, "status");
-		
-		process_cib_request(CRM_OPERATION_DELETE, NULL, command);
-
-		add_node_copy(iter, data);
-		answer = process_cib_request(CRM_OPERATION_UPDATE,
-					     NULL,
-					     command);
-
-		free_xml(command); // takes iter & data with it
-
-		// distribute the answer
-
-		if(AM_I_DC) {
-			
-			xmlNodePtr new_options =
-				set_xml_attr(NULL, XML_TAG_OPTIONS,
-					     XML_ATTR_FILTER_TYPE, "status",
-					     TRUE);
-
-			free_xml(answer);
-			answer = process_cib_request(CRM_OPERATION_BUMP,
-						     new_options,
-						     NULL);
-
-			send_request(NULL, answer, CRM_OPERATION_REPLACE,
-				     NULL, CRM_SYSTEM_CRMD);
-			
-			free_xml(new_options);
-			
-			
-		} else {
-			send_request(NULL, answer,
-				     CRM_OPERATION_UPDATE,
-				     NULL, CRM_SYSTEM_DCIB);
-
-		}
-		free_xml(answer);
-		
-
+		send_cib_status_update(data, TRUE);
+		free_xml(data);
 		
 	} else {
 		cl_log(LOG_ERR, "Unexpected action %s",
@@ -600,22 +560,30 @@ do_lrm_register(long long action,
 	
 	CRM_DEBUG("LRM: set_lrm_callback...");
 	ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(fsa_lrm_conn,
-							    lrm_op_callback,
-							    lrm_monitor_callback);
+						      lrm_op_callback,
+						      lrm_monitor_callback);
 	
 	if(ret != HA_OK) {
 		cl_log(LOG_ERR, "Failed to set LRM callbacks");
 		return I_FAIL;
 	}
 
-#if 0
-	G_main_add_fd(G_PRIORITY_LOW, lrm_inputfd(fsa_lrm_conn), FALSE,
+	// TODO: create a destroy handler that causes some recovery to happen
+	G_main_add_fd(G_PRIORITY_LOW,
+		      fsa_lrm_conn->lrm_ops->inputfd(fsa_lrm_conn), FALSE,
 		      lrm_dispatch, fsa_lrm_conn,
 		      default_ipc_input_destroy);
-#endif
 	
 	FNRET(I_NULL);
 }
+
+gboolean lrm_dispatch(int fd, gpointer user_data)
+{
+	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
+	lrm->lrm_ops->rcvmsg(lrm, FALSE);
+	return TRUE;
+}
+
 
 
 xmlNodePtr
@@ -893,4 +861,156 @@ xml2list(xmlNodePtr parent, const char**attr_path, int depth)
 	}
 	
 	return nvpair_hash;
+}
+
+
+void
+do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
+{
+/*
+<status>
+    <nodes_status id=uname>
+        <lrm>
+	   <lrm_resources>
+	       <lrm_resource id=>
+	   </...>
+*/
+	xmlNodePtr update, iter;
+	
+	update = create_xml_node(NULL, "node_state");
+	set_xml_property_copy(update, XML_ATTR_ID, fsa_our_uname);
+	iter = create_xml_node(update, "lrm");
+	iter = create_xml_node(iter, "lrm_resources");
+	iter = create_xml_node(iter, "lrm_resource");
+	
+	set_xml_property_copy(iter, XML_ATTR_ID, rsc->id);
+//	set_xml_property_copy(iter, "op_status", status);
+//	set_xml_property_copy(iter, "op_code", rc);
+	set_xml_property_copy(iter, "last_op", op_type);
+
+	send_cib_status_update(update, FALSE);
+	free_xml(update);
+
+}
+
+
+enum crmd_fsa_input
+do_lrm_event(long long action,
+	     enum crmd_fsa_cause cause,
+	     enum crmd_fsa_state cur_state,
+	     enum crmd_fsa_input cur_input,
+	     void *data)
+{
+	FNIN();
+	if(cause == C_LRM_MONITOR_CALLBACK) {
+		lrm_mon_t* monitor = (lrm_mon_t*)data;
+		lrm_rsc_t* rsc = monitor->rsc;
+		
+
+		switch(monitor->status) {
+			case LRM_OP_DONE:
+				CRM_DEBUG("An LRM monitor operation passed");
+				FNRET(I_NULL);
+				break;
+
+			case LRM_OP_CANCELLED:
+			case LRM_OP_TIMEOUT:
+			case LRM_OP_NOTSUPPORTED:
+			case LRM_OP_ERROR:
+				cl_log(LOG_ERR,
+				       "An LRM monitor operation failed"
+				       " or was aborted");
+
+				do_update_resource(rsc,
+						   monitor->status,
+						   monitor->rc,
+						   monitor->op_type);
+				break;
+		}	
+
+	} else if(cause == C_LRM_OP_CALLBACK) {
+		lrm_op_t* op = (lrm_op_t*)data;
+		lrm_rsc_t* rsc = op->rsc;
+
+		switch(op->status) {
+			case LRM_OP_CANCELLED:
+			case LRM_OP_TIMEOUT:
+			case LRM_OP_NOTSUPPORTED:
+			case LRM_OP_ERROR:
+				cl_log(LOG_ERR,
+				       "An LRM operation failed"
+				       " or was aborted");
+				// keep going
+			case LRM_OP_DONE:
+
+				do_update_resource(rsc,
+						   op->status,
+						   op->rc,
+						   op->op_type);
+
+				break;
+		}
+		
+	} else {
+
+		FNRET(I_FAIL);
+	}
+	
+	FNRET(I_NULL);
+}
+
+
+
+void send_cib_status_update(xmlNodePtr update, gboolean do_delete)
+{
+	xmlNodePtr command, iter, answer, options;
+	
+	iter = create_xml_node(NULL, "node_state");
+	set_xml_property_copy(iter, XML_ATTR_ID, fsa_our_uname);
+	iter = create_xml_node(iter, "lrm");
+	
+	command = create_cib_fragment(iter, "status");
+
+	if(do_delete) {
+		process_cib_request(CRM_OPERATION_DELETE, NULL, command);
+	}
+	
+	add_node_copy(iter, update);
+
+	options = create_xml_node(NULL, XML_TAG_OPTIONS);
+	set_xml_property_copy(options, XML_ATTR_VERBOSE, "true");
+	
+	// set verbose
+	answer = process_cib_request(CRM_OPERATION_UPDATE, options, command);
+	
+	free_xml(command); // takes iter with it
+	
+	// distribute the answer
+	
+	if(AM_I_DC) {
+		
+		xmlNodePtr new_options =
+			set_xml_attr(NULL, XML_TAG_OPTIONS,
+				     XML_ATTR_FILTER_TYPE, "status",
+				     TRUE);
+		
+		free_xml(answer);
+		answer = process_cib_request(CRM_OPERATION_BUMP,
+					     new_options,
+					     NULL);
+		
+		send_request(NULL, answer, CRM_OPERATION_REPLACE,
+			     NULL, CRM_SYSTEM_CRMD);
+		
+		free_xml(new_options);
+		
+		
+	} else {
+		send_request(NULL, answer,
+			     CRM_OPERATION_UPDATE,
+			     NULL, CRM_SYSTEM_DCIB);
+		
+	}
+
+	free_xml(answer);
 }

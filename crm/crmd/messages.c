@@ -871,9 +871,14 @@ handle_message(xmlNodePtr stored_msg)
 
 void lrm_op_callback (lrm_op_t* op)
 {
+	CRM_DEBUG("In lrm_op_callback()");
+
+	s_crmd_fsa(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
 }
 
 void lrm_monitor_callback (lrm_mon_t* monitor)
 {
+	CRM_DEBUG("In lrm_monitor_callback()");
+	s_crmd_fsa(C_LRM_MONITOR_CALLBACK, I_LRM_EVENT, monitor);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.8 2004/03/29 07:57:56 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.9 2004/04/01 07:38:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -205,6 +205,9 @@ enum crmd_fsa_input {
 			   */
 
 	I_DC_HEARTBEAT,	/* The DC is telling us that it is alive and well */  
+
+
+	I_LRM_EVENT,
 	
 	/*  ------------ Last input found in table is above ----------- */
 	I_ILLEGAL,	/* This is an illegal value for an FSA input */
@@ -400,6 +403,7 @@ A_WARN
 	/* Update our information in the local CIB */
 #define A_UPDATE_NODESTATUS	0x0020000000000000ULL
 #define A_LRM_INVOKE		0x0040000000000000ULL
+#define A_LRM_EVENT		0x0080000000000000ULL
 
 /* -- Logging actions -- */
 #define	A_LOG			0x0100000000000000ULL
@@ -460,6 +464,8 @@ enum crmd_fsa_cause
 	C_IPC_MESSAGE,
 	C_HA_MESSAGE,
 	C_CCM_CALLBACK,
+	C_LRM_OP_CALLBACK,
+	C_LRM_MONITOR_CALLBACK,
 	C_TIMER_POPPED,
 	C_SHUTDOWN,
 	C_HEARTBEAT_FAILED,

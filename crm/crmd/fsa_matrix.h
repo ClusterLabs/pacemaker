@@ -473,6 +473,21 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_TRANSITION_ENGINE	==> */	S_RELEASE_DC,
 	},
 
+/* Got an I_LRM_EVENT */
+	{
+		/* S_IDLE		==> */	S_IDLE,
+		/* S_ELECTION		==> */	S_ELECTION,
+		/* S_INTEGRATION	==> */	S_INTEGRATION,
+		/* S_NOT_DC		==> */	S_NOT_DC,
+		/* S_POLICY_ENGINE	==> */	S_POLICY_ENGINE,
+		/* S_RECOVERY		==> */	S_RECOVERY,
+		/* S_RECOVERY_DC	==> */	S_RECOVERY_DC,
+		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
+		/* S_PENDING		==> */	S_PENDING,
+		/* S_STOPPING		==> */	S_STOPPING,
+		/* S_TERMINATE		==> */	S_TERMINATE,
+		/* S_TRANSITION_ENGINE	==> */	S_TRANSITION_ENGINE,
+	},
 };
 
 		
@@ -932,6 +947,23 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_TERMINATE		==> */	A_NOTHING,
 		/* S_TRANSITION_ENGINE	==> */	O_RELEASE|A_DC_TIMER_START,
 	},
+
+/* Got an I_LRM_EVENT */
+	{
+		/* S_IDLE		==> */	A_NOTHING,
+		/* S_ELECTION		==> */	A_NOTHING,
+		/* S_INTEGRATION	==> */	A_NOTHING,
+		/* S_NOT_DC		==> */	A_NOTHING,
+		/* S_POLICY_ENGINE	==> */	A_NOTHING,
+		/* S_RECOVERY		==> */	A_RECOVER,
+		/* S_RECOVERY_DC	==> */	A_RECOVER,
+		/* S_RELEASE_DC		==> */	A_NOTHING,
+		/* S_PENDING		==> */	A_NOTHING,
+		/* S_STOPPING		==> */	A_NOTHING,
+		/* S_TERMINATE		==> */	A_NOTHING,
+		/* S_TRANSITION_ENGINE	==> */	A_NOTHING,
+	},
+
 };
 
 
