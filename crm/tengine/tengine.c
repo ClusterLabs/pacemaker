@@ -272,8 +272,6 @@ process_graph_event(const char *event_node,
 		}
 		);			
 
-	// for the moment all actions succeed
-	
 	if(matched_action_list == NULL) {
 		// unexpected event, trigger a pe-recompute
 		// possibly do this only for certain types of actions
@@ -281,12 +279,24 @@ process_graph_event(const char *event_node,
 		       "Unexpected event... matched action list was NULL");
 		return FALSE;
 	}
-
+	
+	// how do we distinguish action failure?
+	if(safe_str_neq(event_rc, "0")){
+		if(safe_str_neq((const char*)xmlGetProp(action, "allow_fail"), "true")) {
+			cl_log(LOG_ERR,
+			       "Action %s to %s on %s resulted in failure..."
+			       " aborting transition.",
+			       event_action, event_rsc, event_node);
+			return FALSE;
+		}
+	}
+	
 	while(matched_action_list->index <= matched_action_list->index_max) {
+		gboolean passed = FALSE;
 		next_action = g_slist_nth_data(matched_action_list->actions,
 					       matched_action_list->index);
-
-		gboolean passed = initiate_action(matched_action_list);
+		
+		passed = initiate_action(matched_action_list);
 
 		if(passed == FALSE) {
 			cl_log(LOG_ERR,
@@ -328,7 +338,8 @@ initiate_transition(void)
 	
 	slist_iter(
 		action_list, action_list_t, graph, lpc,
-		if(initiate_action(action_list)) {
+		if(initiate_action(action_list)
+		   && action_list->index <= action_list->index_max) {
 			anything = TRUE;
 		}
 		);
@@ -360,7 +371,6 @@ initiate_action(action_list_t *list)
 			return TRUE;
 		}
 		
-		
 		discard  = xmlGetProp(xml_action, "discard");
 		on_node  = xmlGetProp(xml_action, "on_node");
 		id       = xmlGetProp(xml_action, "id");
@@ -370,7 +380,7 @@ initiate_action(action_list_t *list)
 		
 		if(safe_str_eq(discard, "true")) {
 			cl_log(LOG_INFO,
-			       "Skipping rsc-op (%s - replaced by STONITH): %s %s on %s",
+			       "Skipping discarded rsc-op (%s): %s %s on %s",
 			       id, task,
 			       xmlGetProp(xml_action->children, "id"),
 			       on_node);
@@ -398,7 +408,7 @@ initiate_action(action_list_t *list)
 		if(list->force == FALSE && is_optional) {
 			if(safe_str_eq(xml_action->name, "rsc_op")){
 				cl_log(LOG_INFO,
-				       "Skipping rsc-op (%s): %s %s on %s",
+				       "Skipping optional rsc-op (%s): %s %s on %s",
 				       id, task,
 				       xmlGetProp(xml_action->children, "id"),
 				       on_node);
@@ -410,7 +420,7 @@ initiate_action(action_list_t *list)
 			
 		} else if(safe_str_eq(runnable, "false")) {
 			cl_log(LOG_ERR,
-			       "Failed on un-runnable command: %s (id=%s) on %s",
+			       "Terminated transition on un-runnable command: %s (id=%s) on %s",
 			       task, id, on_node);
 			return FALSE;
 			
@@ -424,7 +434,25 @@ initiate_action(action_list_t *list)
 			
 			return FALSE;
 			
-//	} else if(safe_str_eq(xml_action->name, "pseduo_event")){
+		} else if(safe_str_eq(xml_action->name, "pseduo_event")){
+			if(safe_str_eq(task, "stonith")){
+				cl_log(LOG_INFO,
+				       "Executing %s (%s) of node %s",
+				       task, id, on_node);
+/*
+  translate this into a stonith op by deisgnated node
+  may need the CIB to determine who is running the stonith resource
+    for this node
+  more liekly, have the pengine find and supply that info 
+*/
+			} else {
+				cl_log(LOG_ERR,
+				       "Failed on unsupported %s: %s (id=%s) on %s",
+				       xml_action->name, task, id, on_node);
+				
+				return FALSE;
+			}
+			
 			
 		} else if(safe_str_eq(xml_action->name, "crm_event")){
 			/*
@@ -476,11 +504,12 @@ initiate_action(action_list_t *list)
 			free_xml(data);
 			return TRUE;
 #endif			
+			
 		} else {
 			// error
 			cl_log(LOG_ERR,
-			       "Failed on unsupported command: %s (id=%s) on %s",
-			       task, id, on_node);
+			       "Failed on unsupported command type: %s, %s (id=%s) on %s",
+			       xml_action->name, task, id, on_node);
 
 			return FALSE;
 		}

@@ -148,8 +148,14 @@ stage0(xmlNodePtr cib,
 		node, node_t, *nodes, lpc,
 		if(node->details->shutdown) {
 			*shutdown_list = g_slist_append(*shutdown_list, node);
+			pdebug("Scheduling Node %s for shutdown",
+			       node->details->id);
+
 		} else if(node->details->unclean) {
 			*stonith_list = g_slist_append(*stonith_list, node);
+			pdebug("Scheduling Node %s for STONITH",
+			       node->details->id);
+
 		}
 		);
 	
@@ -440,7 +446,7 @@ stage6(GSListPtr *actions, GSListPtr *action_constraints,
 			 * Possibly one day failed actions wont terminate
 			 *   the transition, but not yet
 			 */
-			rsc->stop->replaced_by_stonith = TRUE;
+			rsc->stop->discard = TRUE;
 #else			
 			rsc->stop->optional = TRUE;
 #endif
@@ -518,6 +524,8 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 		GSListPtr action_set = NULL;
+#if 0
+		// will be picked up by the start
 		if(rsc->stop->runnable) {
 			action_set = create_action_set(rsc->stop);
 			if(action_set != NULL) {
@@ -527,10 +535,12 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 				pdebug("No actions resulting from %s->stop",
 				       rsc->id);
 			}
-			
-			
 		}
-		if(rsc->start->runnable) {
+#endif
+		/* any non-essential stop actions will be marked redundant by
+		 *  during stage6
+		 */
+//		if(rsc->start->runnable) {
 			action_set = create_action_set(rsc->start);
 			if(action_set != NULL) {
 				*action_sets = g_slist_append(*action_sets,
@@ -539,7 +549,8 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 				pdebug("No actions resulting from %s->start",
 				       rsc->id);
 			}
-		}
+//		}
+		
 		
 		);
 	
@@ -907,11 +918,12 @@ unpack_status(xmlNodePtr status,
 {
 	pdebug("Begining unpack %s", __FUNCTION__);
 	while(status != NULL) {
-		const char *id = xmlGetProp(status, "id");
-		const char *state = xmlGetProp(status, "state");
+		const char *id        = xmlGetProp(status, "id");
+		const char *state     = xmlGetProp(status, "state");
 		const char *exp_state = xmlGetProp(status, "exp_state");
-		xmlNodePtr lrm_state = find_xml_node(status, "lrm");
-		xmlNodePtr attrs = find_xml_node(status, "attributes");
+		const char *shutdown  = xmlGetProp(status, "shutdown");
+		xmlNodePtr lrm_state  = find_xml_node(status, "lrm");
+		xmlNodePtr attrs      = find_xml_node(status, "attributes");
 
 		lrm_state = find_xml_node(lrm_state, "lrm_resources");
 		lrm_state = find_xml_node(lrm_state, "lrm_resource");
@@ -954,19 +966,25 @@ unpack_status(xmlNodePtr status,
 			this_node->weight = -1;
 			this_node->fixed = TRUE;
 
-			pdebug("state %s, expected %s",
-				      state, exp_state);
+			pdebug("state %s, expected %s, shutdown %s",
+			       state, exp_state, shutdown);
 			
-			if(safe_str_eq(state, "shutdown")){
+			if(shutdown != NULL
+			   /* avoid reissuing shutdowns once the CRMd has
+			    * been shutdown (even if heartbeat hasnt)
+			    */
+			   && (safe_str_eq(exp_state, "down"))
+			   && (safe_str_eq(state, "active"))){
 				// create shutdown req
 				this_node->details->shutdown = TRUE;
-
+				pdebug("Node %s is due for shutdown", id);
+				
 			} else if(safe_str_eq(exp_state, "active")
 				  && safe_str_neq(state, "active")) {
 				// mark unclean in the xml
 				this_node->details->unclean = TRUE;
+				pdebug("Node %s is due for STONITH", id);
 				
-				// remove any running resources from being allocated
 			}
 		}
 
@@ -1589,11 +1607,16 @@ create_action_set(action_t *action)
 			);
 
 		// add ourselves
-		pdebug("Adding self %d", action->id);
-		if(action->processed == FALSE) {
-			result = g_slist_append(result, action);
-			action->processed = TRUE;
+		if(action->runnable) {
+			pdebug("Adding self %d", action->id);
+			if(action->processed == FALSE) {
+				result = g_slist_append(result, action);
+				action->processed = TRUE;
+			}
+		} else {
+			pdebug("Skipping ourselves, we're not runnable");
 		}
+		
 		
 	} else {
 		pdebug("Already seen action %d", action->id);
@@ -1612,11 +1635,16 @@ create_action_set(action_t *action)
 			);
 
 		// add ourselves
-		pdebug("Adding self %d", action->id);
-		if(action->processed == FALSE) {
-			result = g_slist_append(result, action);
-			action->processed = TRUE;
+		if(action->runnable) {
+			pdebug("Adding self %d", action->id);
+			if(action->processed == FALSE) {
+				result = g_slist_append(result, action);
+				action->processed = TRUE;
+			}
+		} else {
+			pdebug("Skipping ourselves, we're not runnable");
 		}
+		
 
 		// add strength == !MUST
 		slist_iter(
@@ -1631,7 +1659,12 @@ create_action_set(action_t *action)
 	
 	action->seen_count = action->seen_count + 1;
 	
-	// process actions_after
+	/* process actions_after
+	 *
+	 * do this regardless of whether we are runnable.  Any direct or
+	 *  indirect hard/"must" dependancies on us will have been picked
+	 *  up earlier on in stage 7
+	 */
 	pdebug("Processing \"after\" for action %d", action->id);
 	slist_iter(
 		other, action_wrapper_t, action->actions_after, lpc,

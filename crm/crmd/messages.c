@@ -23,6 +23,7 @@
 
 
 #include <crm/msg_xml.h>
+#include <crm/common/crmutils.h>
 #include <crm/common/xmlutils.h>
 #include <crm/common/msgutils.h>
 #include <crm/cib.h>
@@ -749,6 +750,9 @@ handle_message(xmlNodePtr stored_msg)
 	const char *sys_from = get_xml_attr(stored_msg, NULL,
 					    XML_ATTR_SYSFROM, TRUE);
 
+	const char *host_from = get_xml_attr(stored_msg, NULL,
+					    XML_ATTR_HOSTFROM, TRUE);
+
 	const char *msg_ref  = get_xml_attr(stored_msg, NULL,
 					    XML_ATTR_REFERENCE, TRUE);
 
@@ -784,6 +788,32 @@ handle_message(xmlNodePtr stored_msg)
 			next_input = I_WELCOME;
 				
 		} else if(strcmp(op, CRM_OPERATION_SHUTDOWN_REQ) == 0) {
+
+			/* create cib fragment and add to message */
+
+			/* handle here to avoid potential version issues
+			 *   where the shutdown message/proceedure may have
+			 *   been changed in later versions.
+			 *
+			 * This way the DC is always in control of the shutdown
+			 */
+
+			xmlNodePtr frag = NULL;
+			time_t now = time(NULL);
+			char *now_s = crm_itoa((int)now);
+			xmlNodePtr node_state = create_xml_node(NULL,
+								XML_CIB_TAG_STATE);
+				
+			set_xml_property_copy(node_state, XML_ATTR_ID, host_from);
+			set_xml_property_copy(node_state, "shutdown",  now_s);
+			set_xml_property_copy(node_state, "exp_state", "down");
+
+			frag = create_cib_fragment(node_state, NULL);
+			xmlAddChild(stored_msg, frag);
+
+			free_xml(node_state);
+			cl_free(now_s);
+			
 			next_input = I_CIB_OP;
 				
 		} else if(strcmp(op, CRM_OPERATION_SHUTDOWN) == 0) {

@@ -409,9 +409,10 @@ action_new(int id, resource_t *rsc, enum action_tasks task)
 	action->rsc  = rsc;
 	action->task = task;
 	action->node = NULL; // fill node in later
-	action->actions_before = NULL;
-	action->actions_after  = NULL;
-	action->replaced_by_stonith = FALSE;
+	action->actions_before   = NULL;
+	action->actions_after    = NULL;
+	action->failure_is_fatal = TRUE;
+	action->discard    = FALSE;
 	action->runnable   = FALSE;
 	action->processed  = FALSE;
 	action->optional   = FALSE;
@@ -734,7 +735,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			cl_log(LOG_DEBUG, "%s%s%sAction %d: %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
-			       action->replaced_by_stonith?"Replaced ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+			       action->discard?"Discarded ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 			       action->id,
 			       task2text(action->task),
 			       safe_val4(NULL, action, node, details, id));
@@ -823,8 +824,11 @@ action2xml(action_t *action)
 
 	set_xml_property_copy(action_xml,
 			      "discard",
-			      action->replaced_by_stonith?"true":"false");
+			      action->discard?"true":"false");
 
-	
+	set_xml_property_copy(action_xml,
+			      "allow_fail",
+			      action->failure_is_fatal?"false":"true");
+
 	return action_xml;
 }
