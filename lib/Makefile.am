@@ -32,4 +32,6 @@ SUBDIRS			=  	\
 	pils stonith 		\
 	clplumbing		\
 	apphb recoverymgr	\
-	plugins  checkpointd
+	plugins  checkpointd    \
+	@SWIG_DIR@
+
