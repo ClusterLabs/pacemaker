@@ -1356,6 +1356,7 @@ class ResourceRecover(CTSTest):
         retrycount=1
 
         while retrycount<=self.max:
+            retrycount += 1
             recovernode=resource.RunningNodes()
             if len(recovernode)==1:
                 return self.success()
