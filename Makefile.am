@@ -31,6 +31,7 @@ RPMREL			= @RPMREL@
 RPM			= @RPM@
 RPMFLAGS		= -ta --nodeps
 TARFILE			= $(distdir).tar.gz
+AM_TAR			= tar
 RPMDIR=$(HOME)/rpms
 WEBDIR=/home/alanr/ha-web/download
 HBWEBDIR=/home/alanr/ha-web/heartbeat
