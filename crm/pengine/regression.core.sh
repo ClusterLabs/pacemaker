@@ -97,7 +97,6 @@ function do_test {
     if [ "$create_mode" = "true" -a ! -f $te_expected ]; then
 	cp "$te_output" "$te_expected"
     fi
-	cp "$te_output" "$te_expected"
 
     if [ -f $te_expected ]; then
 	diff $diff_opts -q $te_expected $te_output >/dev/null
