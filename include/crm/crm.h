@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.26 2004/09/20 12:15:37 andrew Exp $ */
+/* $Id: crm.h,v 1.27 2004/09/21 19:11:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,7 +72,7 @@
 #define CRM_OP_STORE		"store"
 #define CRM_OP_REPLACE		"replace"
 #define CRM_OP_FORWARD		"forward"
-#define CRM_OP_JOINACK		"join_ack"
+#define CRM_OP_JOINACK		"join_ack_nack"
 #define CRM_OP_WELCOME		"welcome"
 #define CRM_OP_PING		"ping"
 #define CRM_OP_VOTE		"vote"

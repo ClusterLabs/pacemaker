@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.4 2004/08/27 15:21:59 andrew Exp $ */
+/* $Id: cib.h,v 1.5 2004/09/21 19:11:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,6 +53,8 @@ enum cib_result {
 /* Core functions */
 extern gboolean   startCib(const char *filename);
 extern xmlNodePtr get_cib_copy(void);
+extern xmlNodePtr cib_get_generation(void);
+extern int compare_cib_generation(xmlNodePtr left, xmlNodePtr right);
 extern xmlNodePtr process_cib_message(xmlNodePtr message, gboolean auto_reply);
 extern xmlNodePtr process_cib_request(const char *op,
 				      const xmlNodePtr options,
