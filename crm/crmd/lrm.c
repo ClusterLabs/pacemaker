@@ -513,7 +513,7 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	
 	
 	update = create_xml_node(NULL, "node_state");
-	set_xml_property_copy(update,  XML_ATTR_ID,    fsa_our_uname);
+	set_uuid(update, XML_ATTR_UUID, fsa_our_uname);
 	set_xml_property_copy(update,  XML_ATTR_UNAME, fsa_our_uname);
 
 	iter = create_xml_node(update, XML_CIB_TAG_LRM);
@@ -617,7 +617,7 @@ do_fake_lrm_op(gpointer data)
 		crm_verbose("performing op %s...", operation);
 
 		// so we can identify where to do the update
-		set_xml_property_copy(state, XML_ATTR_ID, fsa_our_uname);
+		set_uuid(state, XML_ATTR_UUID, fsa_our_uname);
 
 		iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
 		iter = create_xml_node(iter, "lrm_resource");

@@ -596,8 +596,9 @@ handle_message(xmlNodePtr stored_msg)
 			crm_info("Creating shutdown request for %s",
 			       host_from);
 			
+			set_uuid(node_state, XML_ATTR_UUID, fsa_our_uname);
 			set_xml_property_copy(
-				node_state, XML_ATTR_ID, host_from);
+				node_state, XML_ATTR_UNAME, host_from);
 			set_xml_property_copy(
 				node_state, XML_CIB_ATTR_SHUTDOWN,  now_s);
 			set_xml_property_copy(
