@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.8 2004/09/21 19:10:02 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.9 2004/09/28 08:31:07 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -87,7 +87,7 @@ char *reset = NULL;
 int operation_status = 0;
 const char *sys_to = NULL;;
 
-#define OPTARGS	"V?i:o:QDSUCEX:"
+#define OPTARGS	"V?i:o:QDUCEX:"
 
 int
 main(int argc, char **argv)
@@ -105,7 +105,6 @@ main(int argc, char **argv)
 		{CRM_OP_QUERY,   0, 0, 'Q'},
 		{CRM_OP_CREATE,  0, 0, 'C'},
 		{CRM_OP_REPLACE, 0, 0, 'R'},
-		{CRM_OP_STORE,   0, 0, 'S'},
 		{CRM_OP_UPDATE,  0, 0, 'U'},
 		{CRM_OP_DELETE,  0, 0, 'D'},
 		{"xml",          1, 0, 'X'},
@@ -156,7 +155,6 @@ main(int argc, char **argv)
 	    || (safe_str_eq(CRM_OP_UPDATE,  long_options[option_index].name))
 	    || (safe_str_eq(CRM_OP_DELETE,  long_options[option_index].name))
 	    || (safe_str_eq(CRM_OP_REPLACE, long_options[option_index].name))
-	    || (safe_str_eq(CRM_OP_STORE,   long_options[option_index].name))
 	    || (safe_str_eq(CRM_OP_QUERY,   long_options[option_index].name))){
 		cib_action = crm_strdup(long_options[option_index].name);
 					
@@ -188,9 +186,6 @@ main(int argc, char **argv)
 				break;
 			case 'R':
 				cib_action = crm_strdup(CRM_OP_REPLACE);
-				break;
-			case 'S':
-				cib_action = crm_strdup(CRM_OP_STORE);
 				break;
 			case 'C':
 				cib_action = crm_strdup(CRM_OP_CREATE);
@@ -555,7 +550,6 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_QUERY, 'Q');
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CREATE, 'C');
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_REPLACE, 'R');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_STORE, 'S');
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_UPDATE, 'U');
 	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_DELETE, 'D');
 	fprintf(stream, "\nXML data\n");
