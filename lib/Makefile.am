@@ -57,3 +57,16 @@ SUBDIRS			=  	\
 	$(CMS_DIR)		\
 	$(SWIG_DIR)		\
 	$(LRM_DIR)
+
+DIST_SUBDIRS		=  	\
+	pils			\
+	stonith 		\
+	clplumbing		\
+	hbclient		\
+	apphb			\
+	recoverymgr		\
+	plugins 		\
+	checkpointd		\
+	eventd			\
+	bindings		\
+	lrm			
