@@ -647,7 +647,8 @@ do_lrm_rsc_op(
 	free_lrm_op(op);		
 	
 	if(call_id <= 0) {
-		crm_err("Operation %s on %s failed", operation, rid);
+		crm_err("Operation %s on %s failed: %d",
+			operation, rid, call_id);
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		return I_NULL;
 	}
@@ -815,10 +816,9 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 			rc = fsa_cib_conn->cmds->modify(
 				fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
 				call_options);
-			lpc++;
 			
-		} while(rc < cib_ok && lpc < 4);
-		fsa_cib_conn->call_timeout = 0; /* back to the default */		
+		} while(rc < cib_ok && lpc++ < 5);
+		fsa_cib_conn->call_timeout = 0; /* back to the default */
 
 		/*
 		 * There are a couple of options here...
