@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.31 2005/03/10 10:23:58 andrew Exp $ */
+/* $Id: callbacks.c,v 1.32 2005/03/11 14:12:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -171,7 +171,7 @@ cib_client_connect(IPC_Channel *channel, gpointer user_data)
 	
 	channel->ops->set_recv_qlen(channel, 100);
 	if(safe_str_eq(new_client->channel_name, cib_channel_callback)) {
-		channel->ops->set_send_qlen(channel, 200);
+		channel->ops->set_send_qlen(channel, 400);
 	} else {
 		channel->ops->set_send_qlen(channel, 100);
 	}
@@ -474,10 +474,7 @@ cib_common_callback(
 			crm_log_message(LOG_MSG, op_reply);
 			if(send_ipc_message(channel, op_reply) == FALSE) {
 				crm_err("Sync reply failed: %s",
-					cib_error2string(cib_reply_failed));
-				if(rc == cib_ok) {
-					rc = cib_reply_failed;
-				}
+					 cib_error2string(cib_reply_failed));
 			}
 			
 		} else {
@@ -489,11 +486,8 @@ cib_common_callback(
 			local_rc = send_via_callback_channel(
 				op_reply, cib_client->callback_id);
 			if(local_rc != cib_ok) {
-				crm_err("ASync reply failed: %s",
-					cib_error2string(local_rc));
-				if(rc != cib_ok) {
-					local_rc = cib_reply_failed;
-				}
+				crm_warn("ASync reply failed: %s",
+					 cib_error2string(local_rc));
 			}
 		}
 
@@ -669,7 +663,8 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 	if(rc == cib_ok) {
 		crm_devel("Delivering reply to client %s", token);
 		if(send_ipc_message(hash_client->channel, msg) == FALSE) {
-			crm_err("Delivery of reply to client %s failed", token);
+			crm_warn("Delivery of reply to client %s/%s failed",
+				hash_client->name, token);
 			rc = cib_reply_failed;
 		}
 
@@ -884,13 +879,12 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 	crm_info("Processing message from peer to %s...", request_to);
 	crm_log_message_adv(LOG_DEV, "Peer[inbound]", msg);
 
-	if(safe_str_eq(update, XML_BOOLEAN_TRUE)
-	   && safe_str_eq(reply_to, cib_our_uname)) {
+	if(crm_is_true(update) && safe_str_eq(reply_to, cib_our_uname)) {
 		crm_devel("Processing global update that originated from us");
 		needs_reply = FALSE;
 		local_notify = TRUE;
 		
-	} else if(safe_str_eq(update, XML_BOOLEAN_TRUE)) {
+	} else if(crm_is_true(update)) {
 		crm_devel("Processing global update");
 		needs_reply = FALSE;
 

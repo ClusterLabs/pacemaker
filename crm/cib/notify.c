@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.18 2005/03/08 15:30:53 andrew Exp $ */
+/* $Id: notify.c,v 1.19 2005/03/11 14:12:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,6 +51,7 @@ void
 cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
 
+	IPC_Channel *ipc_client = NULL;
 	HA_Message *update_msg = user_data;
 	cib_client_t *client = value;
 	const char *type = NULL;
@@ -81,12 +82,17 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	if(client == NULL) {
 		crm_warn("Skipping NULL client");
 		return;
+
+	} else if(client->channel == NULL) {
+		crm_warn("Skipping client with NULL channel");
+		return;
 	}
 
-	qlen = client->channel->send_queue->current_qlen;
-	max_qlen = client->channel->send_queue->max_qlen;
+	ipc_client = client->channel;
+	qlen = ipc_client->send_queue->current_qlen;
+	max_qlen = ipc_client->send_queue->max_qlen;
 	
-	if(client->channel->ch_status != IPC_CONNECT) {
+	if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
 		crm_debug("Skipping notification to disconnected"
 			  " client %s/%s", client->name, client->id);
 
@@ -119,7 +125,13 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		crm_debug("Notifying client %s/%s of update (queue=%d)",
 			  client->name, client->channel_name, qlen);
 
-		if(send_ipc_message(client->channel, msg_copy) == FALSE) {
+		if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
+			/* We never want the CIB to exit because our client is slow */
+			crm_crit("%s-notification of client %s/%s failed - queue saturated",
+				 is_confirm?"Confirmation":is_post?"Post":"Pre",
+				 client->name, client->id);
+			
+		} else if(send_ipc_message(ipc_client, msg_copy) == FALSE) {
 			crm_warn("Notification of client %s/%s failed",
 				 client->name, client->id);
 		}
