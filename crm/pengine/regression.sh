@@ -22,7 +22,6 @@
 create_mode="true"
 echo Generating test outputs for these tests...
 #do_test bad7
-do_test inc3
 
 echo ""
 

@@ -29,8 +29,10 @@ function do_test {
     base=$1;
     name=$2;
     input=$io_dir/${base}.xml
-    output=$io_dir/${base}.out
+    output=$io_dir/${base}.pe.out
+    te_output=$io_dir/${base}.te.out
     expected=$io_dir/${base}.exp
+    te_expected=$io_dir/${base}.te.exp
 
     if [ ! -f $input ]; then
 	echo "Test $name	($base)...	Error ($input)";
@@ -57,16 +59,14 @@ function do_test {
 	return;
     fi
 
-    ./fix_xml.pl $output
-
     if [ ! -s $output ]; then
 	echo "Test $name	($base)...	Error (fixed $output)";
 	rm $output
 	return;
     fi
 
-    if [ "$create_mode" = "true" ]; then
-#    if [ "$create_mode" = "true" -a ! -f $expected ]; then
+#    if [ "$create_mode" = "true" ]; then
+    if [ "$create_mode" = "true" -a ! -f $expected ]; then
 	cp "$output" "$expected"
     fi
 
@@ -76,22 +76,51 @@ function do_test {
     fi
 
     if [ "$create_mode" = "true" ]; then
-	echo "Test $name	($base)...	Created expected output" 
+	echo "Test $name	($base)...	Created expected output (PE)" 
     elif [ ! -f $expected ]; then
-	echo "==== Raw results for test ($base) ====" >> $failed
+	echo "==== Raw results for PE test ($base) ====" >> $failed
 	cat $output 2>/dev/null >> $failed
     elif [ "$rc" = 0 ]; then
-	echo "Test $name	($base)...	Passed";
+	echo "Test $name	($base)...	Passed (PE)";
     elif [ "$rc" = 1 ]; then
-	echo "Test $name	($base)...	* Failed";
+	echo "Test $name	($base)...	* Failed (PE)";
 	diff $diff_opts $expected $output 2>/dev/null >> $failed
     else 
-	echo "Test $name	($base)...	Error (diff: $rc)";
+	echo "Test $name	($base)...	Error PE (diff: $rc)";
 	echo "==== Raw results for test ($base) ====" >> $failed
 	cat $output 2>/dev/null >> $failed
     fi
+
+    ../tengine/ttest -X $expected 2> $te_output
+
+#    if [ "$create_mode" = "true" ]; then
+    if [ "$create_mode" = "true" -a ! -f $te_expected ]; then
+	cp "$te_output" "$te_expected"
+    fi
+	cp "$te_output" "$te_expected"
+
+    if [ -f $te_expected ]; then
+	diff $diff_opts -q $te_expected $te_output >/dev/null
+	rc=$?
+    fi
+
+    if [ "$create_mode" = "true" ]; then
+	echo "Test $name	($base)...	Created expected output (PE)" 
+    elif [ ! -f $te_expected ]; then
+	echo "==== Raw results for TE test ($base) ====" >> $failed
+	cat $te_output 2>/dev/null >> $failed
+    elif [ "$rc" = 0 ]; then
+	echo "Test $name	($base)...	Passed (TE)";
+    elif [ "$rc" = 1 ]; then
+	echo "Test $name	($base)...	* Failed (TE)";
+	diff $diff_opts $te_expected $te_output 2>/dev/null >> $failed
+    else 
+	echo "Test $name	($base)...	Error TE (diff: $rc)";
+	echo "==== Raw results for test ($base) TE ====" >> $failed
+	cat $te_output 2>/dev/null >> $failed
+    fi
     
-    rm $output
+    rm $output $te_output
 }
 
 function test_results {

@@ -1,0 +1,165 @@
+Start Transitioner state
+Synapse 0 has completed
+	[Action 6] Completed (pseduo: start rsc1 on (null))
+Synapse 1 is pending
+	[Input 2] Pending
+	[Input 4] Pending
+	[Action 7] Pending (pseduo: started rsc1 on (null))
+Synapse 2 has completed
+	[Action 8] Completed (pseduo: stop rsc1 on (null))
+Synapse 3 is pending
+	[Input 1] Pending
+	[Input 3] Pending
+	[Input 5] Pending
+	[Action 9] Pending (pseduo: stopped rsc1 on (null))
+Synapse 4 has completed
+	[Action 1] In-flight (rsc: stop rsc1:child_rsc1:1 on node1)
+Synapse 5 is pending
+	[Input 1] Pending
+	[Input 6] Satisfied
+	[Action 2] Pending (rsc: start rsc1:child_rsc1:1 on node2)
+Synapse 6 has completed
+	[Action 3] In-flight (rsc: stop rsc1:child_rsc1:3 on node1)
+Synapse 7 is pending
+	[Input 3] Pending
+	[Input 6] Satisfied
+	[Action 4] Pending (rsc: start rsc1:child_rsc1:3 on node2)
+Synapse 8 has completed
+	[Action 5] In-flight (rsc: stop rsc1:child_rsc1:4 on node1)
+End Transitioner state
+Start Transitioner state
+Synapse 0 has completed
+	[Action 6] Completed (pseduo: start rsc1 on (null))
+Synapse 1 is pending
+	[Input 2] Pending
+	[Input 4] Pending
+	[Action 7] Pending (pseduo: started rsc1 on (null))
+Synapse 2 has completed
+	[Action 8] Completed (pseduo: stop rsc1 on (null))
+Synapse 3 is pending
+	[Input 1] Satisfied
+	[Input 3] Pending
+	[Input 5] Pending
+	[Action 9] Pending (pseduo: stopped rsc1 on (null))
+Synapse 4 has completed
+	[Action 1] Completed (rsc: stop rsc1:child_rsc1:1 on node1)
+Synapse 5 has completed
+	[Action 2] In-flight (rsc: start rsc1:child_rsc1:1 on node2)
+Synapse 6 has completed
+	[Action 3] In-flight (rsc: stop rsc1:child_rsc1:3 on node1)
+Synapse 7 is pending
+	[Input 3] Pending
+	[Input 6] Satisfied
+	[Action 4] Pending (rsc: start rsc1:child_rsc1:3 on node2)
+Synapse 8 has completed
+	[Action 5] In-flight (rsc: stop rsc1:child_rsc1:4 on node1)
+End Transitioner state
+Start Transitioner state
+Synapse 0 has completed
+	[Action 6] Completed (pseduo: start rsc1 on (null))
+Synapse 1 is pending
+	[Input 2] Pending
+	[Input 4] Pending
+	[Action 7] Pending (pseduo: started rsc1 on (null))
+Synapse 2 has completed
+	[Action 8] Completed (pseduo: stop rsc1 on (null))
+Synapse 3 is pending
+	[Input 1] Satisfied
+	[Input 3] Satisfied
+	[Input 5] Pending
+	[Action 9] Pending (pseduo: stopped rsc1 on (null))
+Synapse 4 has completed
+	[Action 1] Completed (rsc: stop rsc1:child_rsc1:1 on node1)
+Synapse 5 has completed
+	[Action 2] In-flight (rsc: start rsc1:child_rsc1:1 on node2)
+Synapse 6 has completed
+	[Action 3] Completed (rsc: stop rsc1:child_rsc1:3 on node1)
+Synapse 7 has completed
+	[Action 4] In-flight (rsc: start rsc1:child_rsc1:3 on node2)
+Synapse 8 has completed
+	[Action 5] In-flight (rsc: stop rsc1:child_rsc1:4 on node1)
+End Transitioner state
+Start Transitioner state
+Synapse 0 has completed
+	[Action 6] Completed (pseduo: start rsc1 on (null))
+Synapse 1 is pending
+	[Input 2] Pending
+	[Input 4] Pending
+	[Action 7] Pending (pseduo: started rsc1 on (null))
+Synapse 2 has completed
+	[Action 8] Completed (pseduo: stop rsc1 on (null))
+Synapse 3 has completed
+	[Action 9] Completed (pseduo: stopped rsc1 on (null))
+Synapse 4 has completed
+	[Action 1] Completed (rsc: stop rsc1:child_rsc1:1 on node1)
+Synapse 5 has completed
+	[Action 2] In-flight (rsc: start rsc1:child_rsc1:1 on node2)
+Synapse 6 has completed
+	[Action 3] Completed (rsc: stop rsc1:child_rsc1:3 on node1)
+Synapse 7 has completed
+	[Action 4] In-flight (rsc: start rsc1:child_rsc1:3 on node2)
+Synapse 8 has completed
+	[Action 5] Completed (rsc: stop rsc1:child_rsc1:4 on node1)
+End Transitioner state
+Start Transitioner state
+Synapse 0 has completed
+	[Action 6] Completed (pseduo: start rsc1 on (null))
+Synapse 1 is pending
+	[Input 2] Satisfied
+	[Input 4] Pending
+	[Action 7] Pending (pseduo: started rsc1 on (null))
+Synapse 2 has completed
+	[Action 8] Completed (pseduo: stop rsc1 on (null))
+Synapse 3 has completed
+	[Action 9] Completed (pseduo: stopped rsc1 on (null))
+Synapse 4 has completed
+	[Action 1] Completed (rsc: stop rsc1:child_rsc1:1 on node1)
+Synapse 5 has completed
+	[Action 2] Completed (rsc: start rsc1:child_rsc1:1 on node2)
+Synapse 6 has completed
+	[Action 3] Completed (rsc: stop rsc1:child_rsc1:3 on node1)
+Synapse 7 has completed
+	[Action 4] In-flight (rsc: start rsc1:child_rsc1:3 on node2)
+Synapse 8 has completed
+	[Action 5] Completed (rsc: stop rsc1:child_rsc1:4 on node1)
+End Transitioner state
+Start Transitioner state
+Synapse 0 has completed
+	[Action 6] Completed (pseduo: start rsc1 on (null))
+Synapse 1 has completed
+	[Action 7] Completed (pseduo: started rsc1 on (null))
+Synapse 2 has completed
+	[Action 8] Completed (pseduo: stop rsc1 on (null))
+Synapse 3 has completed
+	[Action 9] Completed (pseduo: stopped rsc1 on (null))
+Synapse 4 has completed
+	[Action 1] Completed (rsc: stop rsc1:child_rsc1:1 on node1)
+Synapse 5 has completed
+	[Action 2] Completed (rsc: start rsc1:child_rsc1:1 on node2)
+Synapse 6 has completed
+	[Action 3] Completed (rsc: stop rsc1:child_rsc1:3 on node1)
+Synapse 7 has completed
+	[Action 4] Completed (rsc: start rsc1:child_rsc1:3 on node2)
+Synapse 8 has completed
+	[Action 5] Completed (rsc: stop rsc1:child_rsc1:4 on node1)
+End Transitioner state
+Start Transitioner state
+Synapse 0 has completed
+	[Action 6] Completed (pseduo: start rsc1 on (null))
+Synapse 1 has completed
+	[Action 7] Completed (pseduo: started rsc1 on (null))
+Synapse 2 has completed
+	[Action 8] Completed (pseduo: stop rsc1 on (null))
+Synapse 3 has completed
+	[Action 9] Completed (pseduo: stopped rsc1 on (null))
+Synapse 4 has completed
+	[Action 1] Completed (rsc: stop rsc1:child_rsc1:1 on node1)
+Synapse 5 has completed
+	[Action 2] Completed (rsc: start rsc1:child_rsc1:1 on node2)
+Synapse 6 has completed
+	[Action 3] Completed (rsc: stop rsc1:child_rsc1:3 on node1)
+Synapse 7 has completed
+	[Action 4] Completed (rsc: start rsc1:child_rsc1:3 on node2)
+Synapse 8 has completed
+	[Action 5] Completed (rsc: stop rsc1:child_rsc1:4 on node1)
+End Transitioner state
