@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.31 2004/06/01 12:25:15 andrew Exp $ */
+/* $Id: msgutils.c,v 1.32 2004/06/01 16:03:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -211,21 +211,15 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 		while(lpc < len) {
 			if (srcstring[lpc++] == separator) {
 				*name = (char*)crm_malloc(sizeof(char)*lpc);
-				CRM_DEBUG("Malloc ok %d", lpc);
 				strncpy(*name, srcstring, lpc-1);
-				CRM_DEBUG("Strcpy ok %d", lpc-1);
 				(*name)[lpc-1] = '\0';
-				CRM_DEBUG("Found token [%s]", *name);
 
 				// this sucks but as the strtok *is* a bug
 				len = len-lpc+1;
 				*value = (char*)crm_malloc(sizeof(char)*len);
-				CRM_DEBUG("Malloc ok %d", len);
 				temp = srcstring+lpc;
-				CRM_DEBUG("Doing str copy");
 				strncpy(*value, temp, len-1);
 				(*value)[len-1] = '\0';
-				CRM_DEBUG("Found token [%s]", *value);
 
 				FNRET(TRUE);
 			}
@@ -350,7 +344,7 @@ send_hello_message(IPC_Channel *ipc_client,
 	set_xml_property_copy(hello_node, "minor_version", minor_version);
 	set_xml_property_copy(hello_node, "client_name",   client_name);
 	set_xml_property_copy(hello_node, "client_uuid",   uuid);
-	set_xml_property_copy(hello_node, "operation",     CRM_OP_HELLO);
+	set_xml_property_copy(hello_node, XML_ATTR_OP,     CRM_OP_HELLO);
 
 
 	send_ipc_request(ipc_client,
@@ -385,7 +379,7 @@ process_hello_message(xmlNodePtr hello,
 
 	opts = find_xml_node(hello, XML_TAG_OPTIONS);
 	
-	op = xmlGetProp(opts, "operation");
+	op = xmlGetProp(opts, XML_ATTR_OP);
 	local_uuid = xmlGetProp(opts, "client_uuid");
 	local_client_name = xmlGetProp(opts, "client_name");
 	local_major_version = xmlGetProp(opts, "major_version");
