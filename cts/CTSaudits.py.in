@@ -407,17 +407,12 @@ class PartitionAudit(ClusterAudit):
                 self.NodeState[node] = self.CM.rsh.readaline(
                     node, self.CM["StatusCmd"]%node)
 
-                if len(self.NodeState[node]) > 1:
-                    self.NodeState[node] = self.NodeState[node][:-1]
-
-                if len(self.NodeEpoche[node]) > 0:
-                    self.NodeEpoche[node] = int(self.NodeEpoche[node][:-1])
-
-                if len(self.NodeQuorum[node]) > 1:
-                    self.NodeQuorum[node] = self.NodeQuorum[node][:-1]
-
+		self.NodeState[node]  = self.trim_string(self.NodeState[node])
+		self.NodeEpoche[node] = self.trim2int(self.NodeEpoche[node])
+		self.NodeQuorum[node] = self.trim_string(self.NodeQuorum[node])
+		self.NodeCCM[node]    = self.trim_string(self.NodeCCM[node])
+		
                 if len(self.NodeCCM[node]) > 1:
-                    self.NodeCCM[node] = self.NodeCCM[node][:-1]
                     found = 0
                     for partition in ccm_partitions:
                         if partition == self.NodeCCM[node]:
@@ -440,6 +435,19 @@ class PartitionAudit(ClusterAudit):
 
         return passed
 
+    def trim_string(self, avalue):
+	if not avalue:
+	    return None
+	if len(avalue) > 1:
+	    return avalue[:-1]
+
+    def trim2int(self, avalue):
+	if not avalue:
+	    return None
+	if len(avalue) > 1:
+	    return int(avalue[:-1])
+	    
+
     def audit_partition(self, partition):
         passed = 0
         dc_found = []
@@ -454,10 +462,17 @@ class PartitionAudit(ClusterAudit):
 # not in itself a reason to fail the audit (not what we're checking for in this one)
 #                passed = 0
                 self.CM.ShouldBeStatus[node] = self.CM["up"]
+
                 self.NodeState[node] = self.CM.rsh.readaline(
                     node, self.CM["StatusCmd"]%node)
-                if len(self.NodeState[node]) > 1:
-                    self.NodeState[node] = self.NodeState[node][:-1]
+                self.NodeEpoche[node] = self.CM.rsh.readaline(
+                    node, self.CM["EpocheCmd"])
+                self.NodeQuorum[node] = self.CM.rsh.readaline(
+                    node, self.CM["QuorumCmd"])
+
+		self.NodeState[node]  = self.trim_string(self.NodeState[node])
+		self.NodeEpoche[node] = self.trim2int(self.NodeEpoche[node])
+		self.NodeQuorum[node] = self.trim_string(self.NodeQuorum[node])
 
             elif lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
                 lowest_epoche = self.NodeEpoche[node]
@@ -468,6 +483,10 @@ class PartitionAudit(ClusterAudit):
                     dc_found.append(node)
                     if self.NodeEpoche[node] == lowest_epoche:
                         passed = 1
+		    elif not self.NodeEpoche[node]:
+                        self.CM.log("Cant determin epoche for DC %s" %(node))
+                        passed = 0
+
                     else:
                         self.CM.log("DC %s is not the oldest node (%d vs. %d)"
                             %(node, self.NodeEpoche[node], lowest_epoche))
@@ -530,7 +549,9 @@ class PartitionAudit(ClusterAudit):
         
     def is_node_dc(self, status_line):
         rc = 0
-        if string.find(status_line, 'S_IDLE') != -1:
+	if not status_line:
+	    rc = 0
+        elif string.find(status_line, 'S_IDLE') != -1:
             rc = 1
         elif string.find(status_line, 'S_INTEGRATION') != -1: 
             rc = 1
