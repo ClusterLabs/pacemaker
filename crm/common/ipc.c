@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.25 2005/03/11 14:13:32 andrew Exp $ */
+/* $Id: ipc.c,v 1.26 2005/03/14 20:54:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -125,7 +125,7 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 		}
 	}	
 
-	crm_log_message_adv(all_is_good?LOG_DEV:LOG_ERR,"IPC[outbound]",msg);
+	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"IPC[outbound]",msg);
 
 	
 	crm_msg_del(msg);
