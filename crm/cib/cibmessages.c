@@ -33,7 +33,7 @@
 #include <time.h>
 
 #include <crm/common/msgutils.h>
-#include <crm/common/crmutils.h>
+//#include <crm/common/crmutils.h>
 #include <crm/common/xmlutils.h>
 #include <cibio.h>
 #include <crm/common/xmltags.h>
@@ -131,7 +131,7 @@ processCibRequest(xmlNodePtr command)
 
 	if(data != NULL) status = "ok";
     }
-    else if(strcmp("add", op) == 0)
+    else if(strcmp("create", op) == 0)
     {
       update_the_cib = TRUE;
       cib_update_operation = CIB_OP_ADD;
@@ -179,8 +179,11 @@ processCibRequest(xmlNodePtr command)
 	}
     }
     else
+    {
 	status = "not supported";
-
+	cl_log(LOG_ERR, "Action [%s] is not supported by the CIB", op);
+    }
+    
     if(update_the_cib)
     {
 	cl_log(LOG_DEBUG, "Updating section=%s of the cib (op=%s)", section, op);
@@ -209,24 +212,30 @@ processCibRequest(xmlNodePtr command)
 	else
 	{
 	    // make changes to a temp copy then activate
+	    CRM_DEBUG("Backing up CIB");
 	    xmlNodePtr tmpCib = xmlLinkedCopyNoSiblings(theCib(), 1);
+	    CRM_DEBUG("Updating temporary CIB");
 	    updateList(tmpCib, command, failed, cib_update_operation, section);
+	    CRM_DEBUG("Activating temporary CIB");
 	    if(activateCibXml(tmpCib) < 0)
 		status = "update activation failed";
 	    else if(failed->children != NULL)
-	    {
 		status = "some updates failed";
-		data = getCibSection(section);
-	    }
 	    else
 		status = "ok";
+
+	    CRM_DEBUG2("CIB update status: %s", status);
 	}
     }
 
 //    if(data != NULL) status = "ok";
 
-    CRM_DEBUG("Checking for verbosity");
-    if(verbose != NULL && strcmp("true", verbose) == 0)
+    CRM_DEBUG("Checking for verbosity and attaching data");
+    if(failed->children != NULL)
+    {
+	data = theCib();
+    }
+    else if(verbose != NULL && strcmp("true", verbose) == 0)
     {
 	if(section != NULL || strcmp("all", section) == 0)
 	    data = theCib();
@@ -248,41 +257,50 @@ void
 updateList(xmlNodePtr local_cib, xmlNodePtr update_command, xmlNodePtr failed, int operation, const char *section)
 {
   xmlNodePtr xml_section = findNode(update_command, XML_TAG_CIB);
-  xml_section = findNode(update_command, section);
+  xml_section = findNode(xml_section, section);
   xmlNodePtr child = xml_section->children;
   
   while(child != NULL)
   {
-      cl_log(LOG_DEBUG, "Performing action %d on (%s=%s).", operation, child->name, ID(child));
+      cl_log(LOG_DEBUG, "#---#---# Performing action %d on (%s=%s).", operation, child->name, ID(child));
       
       if(strcmp(XML_CIB_TAG_NODE, child->name) == 0)
       {
-	  if(operation == CIB_OP_ADD || operation == CIB_OP_MODIFY)
+	  if(operation == CIB_OP_ADD)
+	      conditional_add_failure(failed, child, operation, addHaNode(local_cib, child));
+	  else if(operation == CIB_OP_MODIFY)
 	      conditional_add_failure(failed, child, operation, updateHaNode(local_cib, child));
 	  else 
 	      conditional_add_failure(failed, child, operation, delHaNode(local_cib, ID(child)));
       }
       if(strcmp(XML_CIB_TAG_RESOURCE, child->name) == 0)
       {
-	  if(operation == CIB_OP_ADD || operation == CIB_OP_MODIFY)
+	  if(operation == CIB_OP_ADD)
+	      conditional_add_failure(failed, child, operation, addResource(local_cib, child));
+	  else if(operation == CIB_OP_MODIFY)
 	      conditional_add_failure(failed, child, operation, updateResource(local_cib, child));
 	  else 
 	      conditional_add_failure(failed, child, operation, delResource(local_cib, ID(child)));
       }
       if(strcmp(XML_CIB_TAG_CONSTRAINT, child->name) == 0)
       {
-	  if(operation == CIB_OP_ADD || operation == CIB_OP_MODIFY)
+	  if(operation == CIB_OP_ADD)
+	      conditional_add_failure(failed, child, operation, addConstraint(local_cib, child));
+	  else if(operation == CIB_OP_MODIFY)
 	      conditional_add_failure(failed, child, operation, updateConstraint(local_cib, child));
 	  else 
 	      conditional_add_failure(failed, child, operation, delConstraint(local_cib, ID(child)));
       }
       if(strcmp(XML_CIB_TAG_STATE, child->name) == 0)
       {
-	  if(operation == CIB_OP_ADD || operation == CIB_OP_MODIFY)
+	  if(operation == CIB_OP_ADD)
+	      conditional_add_failure(failed, child, operation, addStatus(local_cib, child));
+	  else if(operation == CIB_OP_MODIFY)
 	      conditional_add_failure(failed, child, operation, updateStatus(local_cib, child));
 	  else 
 	      conditional_add_failure(failed, child, operation, delStatus(local_cib, ID(child), INSTANCE(child)));
       }
+      cl_log(LOG_DEBUG, "#---#---# Action %d on (%s=%s) complete.", operation, child->name, ID(child));
       child = child->next;
     }
 
@@ -305,20 +323,20 @@ createCibAnswer(const char *reference, const char *operation, const char *sectio
 	our_data = createPingAnswerFragment("cib", NULL, status);
 	wrapper = createIpcMessage(reference, "cib", NULL, our_data, FALSE);
     }
-    else if(failed == NULL && strcmp("true", verbose) == 0)
+    else if(failed->children != NULL || (verbose != NULL && strcmp("true", verbose) == 0))
     {
-	CRM_DEBUG("Creating CIB success answer");
-	wrapper = createIpcMessage(reference, "cib", NULL, data, FALSE);
-	xmlSetProp(wrapper, XML_CIB_ATTR_RESULT, status);	
+	CRM_DEBUG("Creating CIB failure answer");
+	our_data = createCibFragmentAnswer("all", data, failed);
+	wrapper = createIpcMessage(reference, "cib", NULL, our_data, FALSE);
     }
     else
     {
-	CRM_DEBUG("Creating CIB failure answer");
-	our_data = createCibFragmentAnswer(section, data, failed);
-	wrapper = createIpcMessage(reference, "cib", NULL, our_data, FALSE);
+	CRM_DEBUG("Creating CIB success answer");
+	wrapper = createIpcMessage(reference, "cib", NULL, data, FALSE);
     }
 
     CRM_DEBUG("Creating crm message");
+    xmlSetProp(wrapper, XML_CIB_ATTR_RESULT, status);	
     root = createCrmMsg(reference, "cib", NULL, wrapper, FALSE);
     return root;
 }
@@ -345,7 +363,7 @@ addCibFragment(xmlNodePtr top, const char *section, xmlNodePtr data)
 {    
     if(data != NULL)
     {
-	if((strcmp("cib", data->name) == 0 && strcmp("all", section) == 0))
+	if(strcmp("cib", data->name) == 0 && strcmp("all", section) == 0)
 	{
 	    CRM_DEBUG("Added entire cib to cib request");
 	    xmlAddChild(top, data);

@@ -18,10 +18,24 @@
 #ifndef CRM_UTILS__H
 #define CRM_UTILS__H
 
+
+#include <hb_api.h>
+#include <clplumbing/cl_signal.h>
+#include <clplumbing/lsb_exitcodes.h>
+#include <clplumbing/GSource.h>
+
 extern gboolean tickle_apphb(gpointer data);
-extern char* getNow(void);
 extern const char* daemon_name;
-extern void* ha_malloc(size_t size);
-extern void ha_free(void *mem);
+void register_pid(const char *pid_file, gboolean do_fork, void (*shutdown)(int nsig));
+extern long get_running_pid(const char *pid_file, gboolean* anypidfile);
+extern int init_status(const char *pid_file, const char *daemon_name);
+extern int init_stop(const char *pid_file, GMainLoop*  mainloop);
+extern gboolean
+register_with_ha(ll_cluster_t *hb_cluster, const char *daemon_name,
+		 gboolean (*dispatch_method)(int fd, gpointer user_data),
+		 void (*message_callback)(const struct ha_msg* msg, void* private_data),
+		 GDestroyNotify cleanup_method);
+
+extern void register_with_apphb(void);
 
 #endif

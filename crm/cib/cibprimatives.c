@@ -37,7 +37,7 @@
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
 #include <crm/common/xmlutils.h>
-#include <crm/common/crmutils.h>
+#include <crm/common/msgutils.h>
 #include <cibio.h>
 
 //--- Resource
@@ -45,6 +45,7 @@
 int
 addResource(xmlNodePtr cib, cibResource *xml_node)
 {
+    if(findResource(cib, ID(xml_node)) != NULL) return -1;
     // make these global constants
     return addNode(cib, XML_CIB_TAG_RESOURCES, xml_node);
 }
@@ -135,6 +136,7 @@ delResource(xmlNodePtr cib, const char *id)
 int
 addStatus(xmlNodePtr cib, cibStatus *xml_node)
 {
+    if(findStatus(cib, ID(xml_node), INSTANCE(xml_node)) != NULL) return -1;
     return addNode(cib, XML_CIB_TAG_STATUS, xml_node);
 }
 
@@ -207,6 +209,7 @@ delStatus(xmlNodePtr cib, const char *id, const char *instanceNum)
 int
 addConstraint(xmlNodePtr cib, cibConstraint *xml_node)
 {
+    if(findConstraint(cib, ID(xml_node)) != NULL) return -1;
     return addNode(cib, XML_CIB_TAG_CONSTRAINTS, xml_node);
 }
 
@@ -297,6 +300,14 @@ delConstraint(xmlNodePtr cib, const char *id)
 int
 addHaNode(xmlNodePtr cib, cibHaNode *xml_node)
 {
+    const char * id = xmlGetProp(xml_node, XML_ATTR_ID);
+    if(id == NULL || strlen(id) < 1) return -1;
+
+    if(findHaNode(cib, ID(xml_node)) != NULL) return -2;
+
+    const char * type = xmlGetProp(xml_node, XML_CIB_ATTR_NODETYPE);
+    if(type == NULL || strlen(type) < 1) return -3; // or fill in a default
+    
     return addNode(cib, XML_CIB_TAG_NODES, xml_node);
 }
 
@@ -312,7 +323,7 @@ xmlNodePtr
 newHaNode(const char *id, const char *type)
 {
     CRM_DEBUG2("Creating " XML_CIB_TAG_NODE " (%s)...", id);
-    xmlNodePtr xml_node = xmlNewNode(NULL, XML_CIB_TAG_NODE); // replace with #define
+    xmlNodePtr xml_node = xmlNewNode(NULL, XML_CIB_TAG_NODE);
 
     xmlSetProp(xml_node, XML_ATTR_ID,         id);
     xmlSetProp(xml_node, XML_CIB_ATTR_NODETYPE,   type);

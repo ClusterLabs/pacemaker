@@ -1,5 +1,47 @@
+Background
+##################
+First of all, go look at the diagram (comms.gif), read this, then 
+look at the diagram again.
+
+Next, some terminology...  
+Here I will use CRM to refer to the light blue section.  That is, 
+the entire collection of processes/daemons/modules on a node that, 
+as a whole, manage resources in the cluster.  CRMd refers to one 
+of the dark blue boxes.  It is the "master subsystem" if you like.  
+Its role is to co-ordinate the actions of all the other pieces of 
+the puzzle, including those on other nodes.
+ 
+Key points from the diagram:
+- All communications with the CRM are done with Heartbeat messages 
+  routed through the CRMd.  These messages contain a text 
+  representation of an XML document, the schema of which is outlined 
+  at the end of this document.
+- All communications internal to the CRM (ie. between its subsystems) 
+  is performed with IPC messages.  Again all messages are routed via 
+  the CRMd and contain the same XML documents as Heartbeat messages.
+- All admin clients (eventually) end up sending Heartbeat messages 
+  and are thus subject to existing HA client security is available.
+- The RPC layer allows the cluster to be controled from non-member 
+  hosts (subject to RPC security which is available for free).
+- The option of syncronous or asynchronous RPC calls will be provided. 
+  This will probably be in the form of a flag sent as part of the 
+  function call.
+
+Advantages:
+- The only source of "requests" is the CRMd which means it *never* has 
+  to forward on "request" messages for any of it sub-systems.  This is 
+  useful for the security of the system (see security.txt).
+- Potentially, most CRM<-->CRM communications can be replaced with RPC 
+  calls.
+- We are able to re-use existing security mechanisms (IPC, HA, RPC, 
+  unix_auth via RPC) to protect the system.
+
 Message scenarios:
 ##################
+There are really only 3 messaging scenarios in this system (exluding 
+broadcast vs. point-to-point).  Again this is nice as it keeps down the 
+number of "special cases".
+
 1) Sub-system <--(IPC)--> CRM <--(IPC)--> Sub-system 
 2) Sub-system <--(IPC)--> Local CRM <--(Heartbeat)--> Remote CRM <--(IPC)--> Sub-system 
 3) Admin Client <--(Heartbeat Broadcast)--> Remote CRM <--(IPC)--> Sub-system 
@@ -38,11 +80,11 @@ have not been acknowledged.  The DC will be able to detect duplicates by
 examining the destination sub-system and the reference number and we
 will rely on HA to ensure the delivery of DC responses.
 
-Only the *_request or *_response piece of the message is passed *to* the
-relevant sub-system.  However, to make life easier for the CRM (aka. the
-message broker), all responses *from* the sub-systems are a full
-crm_message so that the CRM can process messages recieved via IPC and HA
-in the same way.
+All messages are full crm_messages.  I toyed with only sending the *_request
+or *_response piece of the message to and/or from the relevant sub-systems, 
+but it just got messy.  This way, the routing role of the CRM is much easier.
+And easier equals lower complexity, which means less bugs, which is good for
+everyone.
 
 Schema Notes:
 ###################
@@ -100,13 +142,11 @@ Message Schema:
 <!ELEMENT dc_request cib_request?>
 <!ATTLIST dc_request
           dc_operation	(noop|ping|deep_ping|dc_query|cib_op)	'noop'
-	  reference	#CDATA
           timeout       #CDATA          '0'>
 
 <!ELEMENT crm_request cib_request?>
 <!ATTLIST crm_request
           crm_operation	(noop|ping|deep_ping|dc_query)	'noop'
-	  reference	#CDATA
           timeout       #CDATA          '0'>
 
 <!ELEMENT lrm_request>
@@ -114,13 +154,11 @@ Message Schema:
           lrm_operation    (noop|ping|query|start|stop|restart|shutdown|respawn|disconnect|reconnect)	'noop'
           type_filter?     #CDATA
 	  id_filter?	   #CDATA
-	  reference	   #CDATA
           timeout          #CDATA       '0'>
 
 <!ELEMENT pe_request>
 <!ATTLIST pe_request
           pe_operation    (noop|ping|validate|validate_clean|calculate|shutdown|respawn|disconnect|reconnect)	'noop'
-	  reference	   #CDATA
           timeout          #CDATA       '0'>
 
 <!ELEMENT te_request (existing_cib,target_cib)>
@@ -145,23 +183,20 @@ The value for timestamp is the one that should be used for all updates and adds.
           cib_operation    (noop|ping|query|add|update|delete|replace|respawn|disconnect|reconnect)	'noop'
           cib_section      (none|all|nodes|resources|constraints|status)			'none'
           verbose	   (true|false)								'false'
-	  reference	   #CDATA
           timeout          #CDATA       '0'>
 
 <!ELEMENT response (dc_response|cib_response|lrm_response|pe_response|te_response)>
 <!ATTLIST response>
 
 <!-- 
-The DC raely has anything interesting to say itself... more it is a broker for the CIB and LRM.
+The DC rarely has anything interesting to say itself... more it is a broker for the CIB and LRM.
 -->
 <!ELEMENT dc_response (ping_item*|cib_response|lrm_response)>
 <!ATTLIST dc_response
-	  reference	    #CDATA
 	  i_am_dc	    (yes|no)	'no'>
 
 <!ELEMENT crm_response (ping_item*)>
 <!ATTLIST crm_response
-	  reference	    #CDATA
 	  i_am_dc	    (yes|no)	'no'>
 
 <!ELEMENT ping_item>
@@ -170,16 +205,13 @@ The DC raely has anything interesting to say itself... more it is a broker for t
 	  ping_status	   (error|timeout|stopped|running|sick)	    'timeout'>
 
 <!ELEMENT lrm_response (cib_fragment, res_failed?)|ping_item>
-<!ATTLIST lrm_response
-	  reference	   #CDATA>
+<!ATTLIST lrm_response>
 
 <!ELEMENT pe_response (cib, res_action_list?, res_failed?)|ping_item>
-<!ATTLIST pe_response
-	  reference	   #CDATA>
+<!ATTLIST pe_response>
 
 <!ELEMENT te_response (cib, res_failed?)|ping_item>
-<!ATTLIST te_response
-	  reference	   #CDATA>
+<!ATTLIST te_response>
 
 <!ELEMENT res_failed (failed_resource)*>
 <!ATTLIST res_failed>
@@ -194,7 +226,6 @@ The DC raely has anything interesting to say itself... more it is a broker for t
 <!-- unless verbose was specified, if everything went well just set action_result=ok -->
 <!ELEMENT cib_response ((cib_fragment,obj_failed?)|(ping_item))?>
 <!ATTLIST cib_response
-	  reference	    #CDATA
 	  action_result	    (ok|failed|...)>
 
 <!-- always describe which part of the cib are being returned -->

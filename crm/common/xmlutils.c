@@ -33,7 +33,7 @@
 #include <clplumbing/cl_log.h> 
 
 #include <crm.h>
-#include <crmutils.h>
+//#include <crmutils.h>
 #include <xmlutils.h>
 #include <xmltags.h>
 
@@ -137,7 +137,7 @@ findEntityAdvanced(xmlNodePtr parent, const char *node_name, const char *elem_fi
 	    CRM_DEBUG2("looking for (%s) [name].", node_name);
 	    if(node_name != NULL && strcmp(child->name, node_name) != 0)
 	    {    
-		CRM_DEBUG2("skipping entity (%s) [node_name].", xmlGetNodePath(child));
+		CRM_DEBUG3("skipping entity (%s=%s) [node_name].", xmlGetNodePath(child), child->name);
 		break;
 	    }
 	    else if(elem_filter_name != NULL && elem_filter_value != NULL)
@@ -278,7 +278,7 @@ dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
 		return NULL;
 	}
 	
-	CRM_DEBUG2("Before free: [%s]", xml_message);
+//	CRM_DEBUG2("Before free: [%s]", xml_message);
 	xmlBufferFree(xml_buffer);
 //	CRM_DEBUG2("After free: [%s]", xml_message);
     }

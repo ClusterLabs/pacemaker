@@ -77,7 +77,10 @@ Common Options
 	   see lmb for details.
 	   Short equivalent: -A
 
+// what is this????
 --reset <node>
+
+--status <node>
 	   Display the status of <node>.  Ie. Are all sub-systems running? 
 	   Is it the DC? What resources is it running? Health. Etc.
 	   Short equivalent: -S

@@ -41,18 +41,14 @@
 
 #include <ocf/oc_event.h>
 
-#define IS_DAEMON   1
-#define REGISTER_HA 1
-#define IPC_COMMS   1
-#define REALTIME_SUPPORT
-#define APPHB_SUPPORT
-
-#define APPNAME_LEN 256
-
 gboolean i_am_dc = FALSE;
-int i_am_in = 0;
-oc_ev_t *ev_token;    // for CCM comms
-int	my_ev_fd;     // for CCM comms
+int      i_am_in = 0;
+oc_ev_t *ev_token = NULL;    // for CCM comms
+int	 my_ev_fd = -1;     // for CCM comms
+
+ll_cluster_t *hb_cluster = NULL;
+GHashTable   *pending_actions = NULL;
+IPC_Channel  *cib_channel = NULL;
 
 #include <crm/common/crmutils.h>
 #include <crm/common/ipcutils.h>
@@ -60,22 +56,14 @@ int	my_ev_fd;     // for CCM comms
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlutils.h>
 #include <glib.h>
+#include <crmd.h>
 
-extern GHashTable   *pending_actions;
-extern IPC_Channel  *cib;
-extern ll_cluster_t *hb_fd;
 
-extern const char* daemon_name;// = "crmd";
 void my_ms_events(oc_ed_t event, void *cookie, size_t size, const void *data);
 
-void send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg);
-gboolean waitCh_client_connect(IPC_Channel *newclient, gpointer user_data);
-void clntCh_input_destroy(gpointer );
-void waitCh_input_destroy(gpointer user_data);
-gboolean tickle_apphb(gpointer data);
 void msg_ccm_join(const struct ha_msg *msg, void *foo);
-void ha_crm_msg_callback(const struct ha_msg* msg, void* private_data);
-gboolean crm_clntCh_input_dispatch(IPC_Channel *client, gpointer user_data);
+void crmd_msg_callback(const struct ha_msg* msg, void* private_data);
+gboolean crmd_ipc_input_dispatch(IPC_Channel *client, gpointer user_data);
 
 char *generate_hash_key(const char *reference, const char *sys);
 char *generate_hash_value(const char *src_node, const char *src_subsys);
@@ -83,12 +71,11 @@ gboolean decode_hash_value(gpointer value, char **node, char **subsys);
 
 void relay_ipc_to_ha(xmlNodePtr action);
 void relay_ha_to_ipc(xmlNodePtr action, const char *sys, const char *src_node_name);
-void process_message(xmlNodePtr root_xml_node, gboolean from_ipc, const char *src_node_name);
 gboolean updateReferenceTable(xmlNodePtr root_xml_node, const char *src_node_name);
 
 
 gboolean
-waitCh_client_connect(IPC_Channel *newclient, gpointer user_data)
+crmd_client_connect(IPC_Channel *newclient, gpointer user_data)
 {
     // assign the client to be something, or put in a hashtable
 
@@ -108,9 +95,9 @@ waitCh_client_connect(IPC_Channel *newclient, gpointer user_data)
     G_main_add_IPC_Channel(G_PRIORITY_LOW,
 			   newclient,
 			   FALSE, 
-			   crm_clntCh_input_dispatch,
+			   crmd_ipc_input_dispatch,
 			   newclient, 
-			   clntCh_input_destroy);
+			   default_ipc_input_destroy);
     return TRUE;
 }
 
@@ -299,13 +286,6 @@ decode_hash_value(gpointer value, char **node, char **subsys)
     return FALSE;
 }
 
-void
-ha_crm_msg_callback(const struct ha_msg* msg, void* private_data)
-{
-    cl_log(LOG_DEBUG, "ha_crm_msg_callback: processing HA message (%s from %s)", ha_msg_value(msg, F_SEQ), ha_msg_value(msg, F_ORIG));
-    xmlNodePtr root_xml_node = validate_and_decode_hamessage(msg);
-    process_message(root_xml_node, FALSE, ha_msg_value(msg, F_ORIG));
-}
 
 void
 process_message(xmlNodePtr root_xml_node, gboolean from_ipc, const char *src_node_name)
@@ -335,7 +315,7 @@ process_message(xmlNodePtr root_xml_node, gboolean from_ipc, const char *src_nod
     {
 	crm_dc_other = 1;
 	tag = XML_RESP_TAG_DC;
-	op = xmlGetProp(root_xml_node, XML_DC_ATTR_OP);
+	op = xmlGetProp(action, XML_DC_ATTR_OP);
 	if(op == NULL)
 	{
 	    cl_log(LOG_ERR, "Invalid XML message.  No value for (%s) specified in (%s).", XML_DC_ATTR_OP, root_xml_node->name); 
@@ -355,21 +335,37 @@ process_message(xmlNodePtr root_xml_node, gboolean from_ipc, const char *src_nod
     else if(dest_sys[0] != 'd') crm_dc_other = 3;
 
     xmlNodePtr response = NULL, wrapper = NULL;;
+    gboolean message_done = FALSE;
+    
     switch(crm_dc_other)
     {
 	case 1:
 	    // DC specific actions
+	    if(strcmp("cib_op", op) == 0)
+	    {
+		message_done = TRUE;
 
+		action = findNode(action, "cib_request");
+		
+		wrapper = createCrmMsg(reference, src_sys, "cib", action, TRUE);
+		relay_ha_to_ipc(wrapper, "cib", src_node_name);
+	    }
+	    
+	    CRM_DEBUG("Finished processing DC specific actions");
 	    // fall through and do the things common to the DC and the CRMd
 	case 2:
 	    // DC/CRM actions
-	    if(strcmp("ping", op) == 0)
+	    if(message_done)
+	    {
+		CRM_DEBUG("No further work to be done");
+	    }
+	    else if(strcmp("ping", op) == 0)
 	    {
 		// eventually do some stuff to figure out if we *are* ok
 		xmlNodePtr ping = createPingAnswerFragment(dest_sys, NULL, "ok");
 		wrapper = createIpcMessage(reference, dest_sys, NULL, ping, FALSE);
 		response = createCrmMsg(reference, dest_sys, src_sys, wrapper, FALSE);
-		send_xmlha_message(hb_fd, response, src_node_name, NULL);
+		send_xmlha_message(hb_cluster, response, src_node_name, NULL);
 	    }
 	    else if(strcmp("ping_deep", op) == 0)
 	    {
@@ -377,7 +373,7 @@ process_message(xmlNodePtr root_xml_node, gboolean from_ipc, const char *src_nod
 		xmlNodePtr ping = createPingAnswerFragment(dest_sys, NULL, "ok");
 		wrapper = createIpcMessage(reference, dest_sys, NULL, ping, FALSE);
 		response = createCrmMsg(reference, dest_sys, src_sys, wrapper, FALSE);
-		send_xmlha_message(hb_fd, response, src_node_name, NULL);
+		send_xmlha_message(hb_cluster, response, src_node_name, NULL);
 
 		/* Now pass the ping request on to all subsystems for them
 		 *  to reply to individually.
@@ -404,7 +400,7 @@ process_message(xmlNodePtr root_xml_node, gboolean from_ipc, const char *src_nod
 		cl_log(LOG_DEBUG, "Sent Ping Request");
 		//   ...
 	    }
-	    // else if dc action, skip
+	    // else we dont know anythign about it
 	    else
 	    {
 		cl_log(LOG_ERR, "The specified operation (%s) is not (yet?) supported\n", op);
@@ -478,10 +474,10 @@ updateReferenceTable(xmlNodePtr root_xml_node, const char *originating_node_name
 
 
 gboolean
-crm_clntCh_input_dispatch(IPC_Channel *client, 
+crmd_ipc_input_dispatch(IPC_Channel *client, 
 	      gpointer        user_data)
 {
-	cl_log(LOG_DEBUG, "crm_clntCh_input_dispatch: processing IPC message");
+	cl_log(LOG_DEBUG, "crmd_ipc_input_dispatch: processing IPC message");
 	if(client->ch_status == IPC_DISCONNECT)
 	{
 	    cl_log(LOG_INFO, "clntCh_input_dispatch: received HUP");
@@ -496,7 +492,7 @@ crm_clntCh_input_dispatch(IPC_Channel *client,
 	    cl_log(LOG_INFO, "IPC Message was not valid... discarding message.");
 	    return TRUE;
 	}
-	cl_log(LOG_DEBUG, "crm_clntCh_input_dispatch: about to relay message");
+	cl_log(LOG_DEBUG, "crmd_ipc_input_dispatch: about to relay message");
 	
 	process_message(root_xml_node, TRUE, NULL);
 	    
@@ -544,7 +540,7 @@ relay_ipc_to_ha(xmlNodePtr action)
 	CRM_DEBUG3("Decoded destination (%s, %s)", dest_node, dest_sys);
 	xmlSetProp(action, XML_MSG_ATTR_SUBSYS, dest_sys);
 	cl_log(LOG_DEBUG, "setting (%s=%s) on HA message", XML_MSG_ATTR_SUBSYS, dest_sys);
-	send_xmlha_message(hb_fd, action, dest_node, NULL);
+	send_xmlha_message(hb_cluster, action, dest_node, NULL);
     }
     else
     {
@@ -565,7 +561,7 @@ relay_ha_to_ipc(xmlNodePtr action, const char *sys, const char *originating_node
     if(strcmp("cib", sys) == 0)
     {
 	cl_log(LOG_DEBUG, "Sending message to the CIB.");
-	send_xmlipc_message(cib, action);
+	send_xmlipc_message(cib_channel, action);
     }
     else
     {

@@ -46,6 +46,7 @@
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
 #include <crm/cib/cibprimatives.h>
+#include <crm/cib/cibmessages.h>
 
 #define OPTARGS	"V?i:o:D:C:S:HA:U:M:I:EWRFt:m:a:d:w:c:r:p:s:"
 
@@ -55,18 +56,16 @@ GMainLoop*  mainloop = NULL;
 const char* daemon_name = "crmadmin";
 
 void usage(const char* cmd, int exit_status);
-ll_cluster_t* ha_register(ll_cluster_t* hb_fd);
-void test_messaging(ll_cluster_t* hb_fd);
+void test_messaging(ll_cluster_t* hb_cluster);
 ll_cluster_t* do_init(void);
-int do_work(ll_cluster_t *hb_fd);
+int do_work(ll_cluster_t *hb_cluster);
 xmlNodePtr handleCreate(void);
 xmlNodePtr handleDelete(void);
 xmlNodePtr handleModify(void);
 gboolean decodeNVpair(const char *srcstring, char separator, char **name, char **value);
-gboolean hb_input_dispatch(int fd, gpointer user_data);
-void hb_input_destroy(gpointer user_data);
+gboolean admin_input_dispatch(int fd, gpointer user_data);
 void admin_msg_callback(const struct ha_msg* msg, void* private_data);
-xmlNodePtr wrapUpdate(xmlNodePtr update, const char *section_name);
+xmlNodePtr wrapUpdate(xmlNodePtr update, const char *section_name, const char *action);
 
 
 // from cibmessages.c
@@ -75,6 +74,7 @@ extern xmlNodePtr createCibRequest(gboolean isLocal, const char *operation, cons
 
 
 
+gboolean DO_DAEMON  = FALSE;
 gboolean DO_CREATE  = FALSE;
 gboolean DO_MODIFY  = FALSE;
 gboolean DO_DELETE  = FALSE;
@@ -97,6 +97,7 @@ typedef struct str_list_s
 
 const char *verbose = "false";
 char *id = NULL;
+char *msg_reference = NULL;
 char *obj_type = NULL;
 char *description = NULL;
 char *clear = NULL;
@@ -157,8 +158,9 @@ main(int argc, char ** argv)
 	    {"create"  , 0, 0, 0},
 	    {"modify"  , 0, 0, 0},
 	    {"delete"  , 0, 0, 0},
-	    {"instance"  , 0, 0, 0}, // undocumented, for testing only
-	    {"node"  , 0, 0, 0}, // undocumented, for testing only
+	    {"instance"  , 1, 0, 0}, // undocumented, for testing only
+	    {"node"  , 1, 0, 0}, // undocumented, for testing only
+	    {"reference"  , 1, 0, 0}, // undocumented, for testing only
 	    {"verbose" , 0, 0, 'V'},
 	    {"help" , 0, 0, '?'},
 
@@ -206,27 +208,22 @@ main(int argc, char ** argv)
 		    printf (" with arg %s", optarg);
 		printf ("\n");
 
-		if(     strcmp("create" , long_options[option_index].name) == 0) DO_CREATE  = TRUE;
+		if(     strcmp("daemon" , long_options[option_index].name) == 0) DO_DAEMON  = TRUE;
+		else if(strcmp("create" , long_options[option_index].name) == 0) DO_CREATE  = TRUE;
 		else if(strcmp("modify" , long_options[option_index].name) == 0) DO_MODIFY  = TRUE;
 		else if(strcmp("delete" , long_options[option_index].name) == 0) DO_DELETE  = TRUE;
 		else if(strcmp("query"  , long_options[option_index].name) == 0) DO_QUERY   = TRUE;
 		else if(strcmp("instance"  , long_options[option_index].name) == 0)
 		{
-		     	instance = strdup(optarg);
-			if (!instance) {
-			     	printf ("?? instance option memory "
-			    			"allocation failed ??\n");
-				argerr++;
-			}
+		    instance = strdup(optarg);
+		}
+		else if(strcmp("reference"  , long_options[option_index].name) == 0)
+		{
+		    msg_reference = strdup(optarg);
 		}
 		else if(strcmp("node"  , long_options[option_index].name) == 0)
 		{
 			node = strdup(optarg);
-			if (!node) {
-			     	printf ("?? node option memory "
-			    			"allocation failed ??\n");
-				argerr++;
-			}
 		}
 		else 
 		{
@@ -249,27 +246,16 @@ main(int argc, char ** argv)
 		usage(daemon_name, LSB_EXIT_OK);
 		break;
 	    case 'i':
+		CRM_DEBUG3("Option %c => %s", flag, optarg);
 		id = strdup(optarg);
-		if (!id) {
-			printf ("?? id option memory allocation failed ??\n");
-			argerr++;
-		}
 		break;
 	    case 'o':
+		CRM_DEBUG3("Option %c => %s", flag, optarg);
 		node = strdup(obj_type);
-		if (!node) {
-			printf ("?? obj_type option memory "
-					"allocation failed ??\n");
-			argerr++;
-		}
 		break;
 	    case 'D':
+		CRM_DEBUG3("Option %c => %s", flag, optarg);
 		description = strdup(optarg);
-		if (!description) {
-			printf ("?? description option memory "
-					"allocation failed ??\n");
-			argerr++;
-		}
 		break;
 	    case 'C':
 		printf ("Option %c is not yet supported\n", flag);
@@ -278,11 +264,6 @@ main(int argc, char ** argv)
 	    case 'S':
 		DO_HEALTH       = TRUE;
 		status = strdup(optarg);
-		if (!status) {
-			printf ("?? status option memory "
-					"allocation failed ??\n");
-			argerr++;
-		}
 		break;
 	    case 'H':
 		DO_HEALTH       = TRUE;
@@ -324,35 +305,27 @@ main(int argc, char ** argv)
 		++argerr;
 		break;
 	    case 'm':
+		CRM_DEBUG3("Option %c => %s", flag, optarg);
 		max_instances = strdup(optarg);
-		if (!max_instances) {
-			printf ("?? max_instances option memory "
-					"allocation failed ??\n");
-			argerr++;
-		}
 		break;
 	    case 'a':
+		CRM_DEBUG3("Option %c => %s", flag, optarg);
 		list_add->num_items++;
 		if(list_add->num_items != 1)
+		{
 		    list_add_last->next = (str_list_t *)ha_malloc(
-				    sizeof(str_list_t));
-		list_add_last->value = strdup(optarg);
-		if (!list_add_last->value) {
-			printf ("?? option memory allocation failed ??\n");
-			argerr++;
-			break;
+			sizeof(str_list_t));
+		    list_add_last->value = strdup(optarg);
 		}
 		list_add_last->next = NULL;
 		break;
 	    case 'd':
+		CRM_DEBUG3("Option %c => %s", flag, optarg);
 		list_del->num_items++;
 		if(list_del->num_items != 1)
+		{
 		    list_del_last->next = (str_list_t *)ha_malloc(sizeof(str_list_t));
-		list_add_last->value = strdup(optarg);
-		if (!list_add_last->value) {
-			printf ("?? option memory allocation failed ??\n");
-			argerr++;
-			break;
+		    list_add_last->value = strdup(optarg);
 		}
 		list_del_last->next = NULL;
 		break;
@@ -360,12 +333,8 @@ main(int argc, char ** argv)
 		list_wipe = TRUE;
 		break;
 	    case 'c':
+		CRM_DEBUG3("Option %c => %s", flag, optarg);
 		clear = strdup(optarg);
-		if (!clear) {
-			printf ("?? clear option memory "
-					"allocation failed ??\n");
-			argerr++;
-		}
 		break;
 	    case 'r':
 		if(num_resources > 1) {
@@ -384,28 +353,16 @@ main(int argc, char ** argv)
 		}
 		break;
 	    case 't':
+		CRM_DEBUG3("Option %c => %s", flag, optarg);
 		res_timeout = strdup(optarg);
-		if (!res_timeout) {
-			printf ("?? res_timeout option memory "
-					"allocation failed ??\n");
-			argerr++;
-		}
 		break;
 	    case 'p':
+		CRM_DEBUG3("Option %c => %s", flag, optarg);
 		priority = strdup(optarg);
-		if (!priority) {
-			printf ("?? priority option memory "
-					"allocation failed ??\n");
-			argerr++;
-		}
 		break;
 	    case 's':
+		CRM_DEBUG3("Option %c => %s", flag, optarg);
 		subtype = strdup(optarg);
-		if (!subtype) {
-			printf ("?? subtype option memory "
-					"allocation failed ??\n");
-			argerr++;
-		}
 		break;
 	    default:
 		printf ("?? getopt returned character code 0%o ??\n", flag);
@@ -429,10 +386,10 @@ main(int argc, char ** argv)
 	usage(daemon_name,LSB_EXIT_GENERIC);
     }
 
-    ll_cluster_t *hb_fd = do_init();
-    if(hb_fd != NULL)
+    ll_cluster_t *hb_cluster = do_init();
+    if(hb_cluster != NULL)
     {
-	if(do_work(hb_fd) > 0)
+	if(do_work(hb_cluster) > 0)
 	{
 	    /* wait for the reply by creating a mainloop and running it until
 	     * the callbacks are invoked...
@@ -462,14 +419,16 @@ main(int argc, char ** argv)
 xmlNodePtr
 handleCreate(void)
 {
-    if(subtype == NULL) return NULL;// error
+    CRM_DEBUG2("Creating new CIB object (%s)", obj_type);
+    if(obj_type == NULL) return NULL;// error
     xmlNodePtr root, new_xml_node;
     const char *section_name = NULL;
     
     if(strcmp("node", obj_type) == 0)
     {
 	section_name = XML_CIB_TAG_NODES;
-	if(id == NULL || subtype == NULL || description == NULL) return NULL;
+	CRM_DEBUG2("Creating new %s object", section_name);
+	if(id == NULL || description == NULL) return NULL;
 
 	new_xml_node = newHaNode(id, subtype);
 	if(description != NULL) xmlSetProp(new_xml_node, XML_ATTR_DESC, description);
@@ -477,6 +436,7 @@ handleCreate(void)
     else if(strcmp("resource", obj_type) == 0)
     {
 	section_name = XML_CIB_TAG_RESOURCES;
+	CRM_DEBUG2("Creating new %s object", section_name);
 	if(id == NULL || subtype == NULL || description == NULL) return NULL;
 
 	new_xml_node = newResource(id, subtype, description, max_instances);
@@ -508,8 +468,10 @@ handleCreate(void)
     else if(strcmp("constraint", obj_type) == 0)
     {
 	section_name = XML_CIB_TAG_CONSTRAINTS;
+	CRM_DEBUG2("Creating new %s object", section_name);
 	if(strcmp(CIB_VAL_CONTYPE_BLOCK, subtype) == 0)
 	{
+	    CRM_DEBUG3("Creating new %s (%s) object", section_name, subtype);
 	    if(clear == NULL || description == NULL || resource[0] == NULL || id == NULL) return NULL;
 
 	    id = (char*)ha_malloc(256*(sizeof(char)));
@@ -529,7 +491,8 @@ handleCreate(void)
 	}
 	else if(strcmp(CIB_VAL_CONTYPE_VAR, subtype) == 0)
 	{
-	    if(list_add->num_items == 1 || description == NULL ||  id == NULL || subtype == NULL || num_resources != 1) return NULL;
+	    CRM_DEBUG3("Creating new %s (%s) object", section_name, subtype);
+	    if(list_add->num_items == 1 || description == NULL ||  id == NULL || num_resources != 1) return NULL;
 
 	    new_xml_node = newConstraint(id);
 
@@ -559,7 +522,8 @@ handleCreate(void)
 	}
 	else
 	{
-	    if(id == NULL || description == NULL || subtype == NULL ||  num_resources != 2) return NULL;
+	    CRM_DEBUG3("Creating new %s (%s) object", section_name, subtype);
+	    if(id == NULL || description == NULL ||  num_resources != 2) return NULL;
 	    new_xml_node = newConstraint(id);
 
 	    xmlSetProp(new_xml_node, XML_CIB_ATTR_CONTYPE, subtype);
@@ -573,9 +537,10 @@ handleCreate(void)
 	cl_log(LOG_INFO, "Object Type (%s) not supported", obj_type);
 	return NULL;
     }
+    CRM_DEBUG("Object creation complete");
     
     // create the cib request
-    root = wrapUpdate(new_xml_node, section_name);
+    root = wrapUpdate(new_xml_node, section_name, "create");
 
     return root;
     
@@ -584,6 +549,7 @@ handleCreate(void)
 xmlNodePtr
 handleDelete(void)
 {
+    CRM_DEBUG("Deleting existing CIB object");
     if(subtype == NULL) return NULL;// error
     xmlNodePtr root, new_xml_node = NULL;;
     const char *section_name = NULL;
@@ -591,6 +557,7 @@ handleDelete(void)
     if(strcmp("node", obj_type) == 0)
     {
 	section_name = XML_CIB_TAG_NODES;
+	CRM_DEBUG2("Deleting exiting %s object", section_name);
 	if(id == NULL) return NULL;
 
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_NODE);
@@ -600,6 +567,7 @@ handleDelete(void)
     else if(strcmp("resource", obj_type) == 0)
     {
 	section_name = XML_CIB_TAG_RESOURCES;
+	CRM_DEBUG2("Deleting exiting %s object", section_name);
 	if(id == NULL) return NULL;
 
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_RESOURCE);
@@ -609,6 +577,7 @@ handleDelete(void)
     else if(strcmp("constraint", obj_type) == 0)
     {
 	section_name = XML_CIB_TAG_CONSTRAINTS;
+	CRM_DEBUG2("Deleting exiting %s object", section_name);
 	if(id == NULL) return NULL;
 
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_RESOURCE);
@@ -620,10 +589,12 @@ handleDelete(void)
 	cl_log(LOG_INFO, "Object Type (%s) not supported", obj_type);
 	return NULL;
     }
-    
-    // create the cib request
-    root = wrapUpdate(new_xml_node, section_name);
 
+    // create the cib request
+    root = wrapUpdate(new_xml_node, section_name, "delete");
+
+    CRM_DEBUG("Creation of removal request complete");
+    
     return root;
     
 }
@@ -631,6 +602,7 @@ handleDelete(void)
 xmlNodePtr
 handleModify(void)
 {
+    CRM_DEBUG("Modifying existing CIB object");
     if(subtype == NULL) return NULL;// error
     xmlNodePtr root, new_xml_node = NULL;
     const char *section_name = NULL;
@@ -638,6 +610,7 @@ handleModify(void)
     if(strcmp("node", obj_type) == 0)
     {
 	section_name = XML_CIB_TAG_NODES;
+	CRM_DEBUG3("Modifing existing %s (%s) object", section_name, id);
 	if(id == NULL) return NULL;
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_NODE);
 	xmlSetProp(new_xml_node, XML_ATTR_ID, id);
@@ -647,6 +620,7 @@ handleModify(void)
     else if(strcmp("resource", obj_type) == 0)
     {
 	section_name = XML_CIB_TAG_RESOURCES;
+	CRM_DEBUG3("Modifing existing %s (%s) object", section_name, id);
 
 	if(id == NULL) return NULL;
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_RESOURCE);
@@ -704,6 +678,7 @@ handleModify(void)
     else if(strcmp("constraint", obj_type) == 0)
     {
 	section_name = XML_CIB_TAG_CONSTRAINTS;
+	CRM_DEBUG3("Modifing existing %s (%s) object", section_name, id);
 
 	if(id == NULL) return NULL;
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_RESOURCE);
@@ -766,43 +741,49 @@ handleModify(void)
 
     
     // create the cib request
-    root = wrapUpdate(new_xml_node, section_name);
+    root = wrapUpdate(new_xml_node, section_name, "update");
     
+    CRM_DEBUG("Creation of modify request complete");
+
     return root;
     
 }
 
 
 xmlNodePtr
-wrapUpdate(xmlNodePtr update, const char *section_name)
+wrapUpdate(xmlNodePtr update, const char *section_name, const char *action)
 {
     // create the update section
     xmlNodePtr section = xmlNewNode(NULL, section_name);
     xmlAddChild(section, update);
 
-    xmlNodePtr cib_req = createCibRequest(TRUE, "modify", section_name, verbose, section);
+    xmlNodePtr cib_req = createCibRequest(TRUE, action, section_name, verbose, section);
 
-    char *reference = xmlGetProp(cib_req, XML_MSG_ATTR_REFERENCE);
     // create the real request
-    xmlNodePtr request = xmlNewNode( NULL, XML_REQ_TAG_DC);
+    xmlNodePtr request = xmlNewNode(NULL, XML_REQ_TAG_DC);
     xmlSetProp(request, XML_DC_ATTR_OP, "cib_op");
     xmlSetProp(request, XML_ATTR_TIMEOUT, "0");
-    xmlSetProp(request, XML_MSG_ATTR_REFERENCE, reference);
     xmlAddChild(request, cib_req);
     
     // create the real message
-    return createCrmMsg(NULL, "admin", "dc", request, TRUE);
+    xmlNodePtr xml_root = createCrmMsg(msg_reference, "admin", "dc", request, TRUE);
+
+    const char *local_reference = xmlGetProp(xml_root, XML_MSG_ATTR_REFERENCE);
+    xmlSetProp(request, XML_MSG_ATTR_REFERENCE, local_reference);
+    xmlSetProp(cib_req, XML_MSG_ATTR_REFERENCE, local_reference);
+
+    return xml_root;
 }
 
 
 int
-do_work(ll_cluster_t *hb_fd)
+do_work(ll_cluster_t *hb_cluster)
 {
     /* construct the request */
     xmlNodePtr root = NULL;
     const char *dest_node = NULL;
 
-    if(DO_QUERY == TRUE)
+    if(DO_DAEMON == TRUE && DO_QUERY == TRUE)
     {
 	cl_log(LOG_DEBUG, "Querying the CIB");
 	char *obj_type_parent = NULL;
@@ -826,26 +807,30 @@ do_work(ll_cluster_t *hb_fd)
 	cl_log(LOG_DEBUG, "Building the request - 1");
 	xmlNodePtr request = createCibRequest(TRUE, "query", obj_type_parent, "false", NULL);
 
-	const char *reference = xmlGetProp(request, XML_MSG_ATTR_REFERENCE);
-
+	
 	cl_log(LOG_DEBUG, "Building the request - 2");
-	root = createCrmMsg(reference, "admin", "cib", request, TRUE);
+	root = createCrmMsg(msg_reference, "admin", "cib", request, TRUE);
+
 	cl_log(LOG_DEBUG, "Building the request - 3");
+	const char *local_reference = xmlGetProp(root, XML_MSG_ATTR_REFERENCE);
+	xmlSetProp(request, XML_MSG_ATTR_REFERENCE, local_reference);
+
+	cl_log(LOG_DEBUG, "Building the request - 4");
 	dest_node = status;
     }
-    else if(DO_CREATE == TRUE)
+    else if(DO_DAEMON == FALSE && DO_CREATE == TRUE)
     {
 	root = handleCreate();
     }
-    else if(DO_DELETE == TRUE)
+    else if(DO_DAEMON == FALSE && DO_DELETE == TRUE)
     {
 	root = handleDelete();
     }
-    else if(DO_MODIFY == TRUE)
+    else if(DO_DAEMON == FALSE && DO_MODIFY == TRUE)
     {
 	root = handleModify();
     }
-    else if(DO_HEALTH == TRUE)
+    else if(DO_DAEMON == TRUE && DO_HEALTH == TRUE)
     {
 	cl_log(LOG_DEBUG, "Querying the system");
 /*
@@ -878,7 +863,7 @@ do_work(ll_cluster_t *hb_fd)
 
 	    xmlSetProp(request, XML_ATTR_TIMEOUT, "0");
 
-	    root = createCrmMsg(NULL, "admin", "crm", request, TRUE);
+	    root = createCrmMsg(msg_reference, "admin", "crm", request, TRUE);
 	    dest_node = status;
 	}
 	else
@@ -888,9 +873,9 @@ do_work(ll_cluster_t *hb_fd)
     /* send it */
     if(root != NULL)
     {
-	cl_log(LOG_DEBUG, "sending: [%s]", dump_xml(root));
+	cl_log(LOG_DEBUG, "sending: message");
 	xmlSetProp(root, XML_MSG_ATTR_SRCSUBSYS, "admin");
-	send_xmlha_message(hb_fd, root, dest_node, "crmd");
+	send_xmlha_message(hb_cluster, root, dest_node, "crmd");
     }
     else
     {
@@ -915,18 +900,22 @@ do_init(void)
     (void)_ha_msg_h_Id;
     
     /* change the logging facility to the one used by heartbeat daemon */
-    ll_cluster_t*	hb_fd = ll_cluster_new("heartbeat");
+    ll_cluster_t*	hb_cluster = ll_cluster_new("heartbeat");
     
     int facility;
     cl_log(LOG_INFO, "Switching to Heartbeat logger");
-    if ((facility = hb_fd->llc_ops->get_logfacility(hb_fd))>0) {
+    if ((facility = hb_cluster->llc_ops->get_logfacility(hb_cluster))>0) {
 	cl_log_set_facility(facility);
     }
 
-    hb_fd = ha_register(hb_fd);
+    register_with_ha(hb_cluster,
+		     daemon_name,
+		     admin_input_dispatch,
+		     admin_msg_callback,
+		     default_ipc_input_destroy);
 
 
-    return hb_fd;
+    return hb_cluster;
 }
 
 void
@@ -950,85 +939,22 @@ usage(const char* cmd, int exit_status)
 
 const char * ournode;
 
-ll_cluster_t*
-ha_register(ll_cluster_t* hb_fd)
-{
-    cl_log(LOG_DEBUG, "Register with HA");
-
-    /* we want hb_input_dispatch to be called when some input is
-     * pending on the heartbeat fd, and every 1 second 
-     */
-  
-    //	(void)_heartbeat_h_Id;
-    (void)_ha_msg_h_Id;
-  
-  
-    cl_log(LOG_INFO, "Signing in with Heartbeat");
-    if (hb_fd->llc_ops->signon(hb_fd, daemon_name)!= HA_OK) {
-	cl_log(LOG_ERR, "Cannot sign on with heartbeat");
-	cl_log(LOG_ERR, "REASON: %s", hb_fd->llc_ops->errmsg(hb_fd));
-	return NULL;
-    }
-  
-    cl_log(LOG_INFO, "Finding our node name");
-    if((ournode = hb_fd->llc_ops->get_mynodeid(hb_fd)) == NULL) {
-	cl_log(LOG_ERR, "get_mynodeid() failebd");
-	return NULL;
-    }
-    cl_log(LOG_INFO, "Hostname: %s", ournode);
-  
-    cl_log(LOG_INFO, "Be informed of CRM messages");
-    if (hb_fd->llc_ops->set_msg_callback(hb_fd, "CRM", admin_msg_callback, NULL)
-	!=HA_OK){
-	cl_log(LOG_ERR, "Cannot set CRM message callback");
-	cl_log(LOG_ERR, "REASON: %s", hb_fd->llc_ops->errmsg(hb_fd));
-	return NULL;
-    }
-
-    G_main_add_fd(G_PRIORITY_HIGH,
-		  hb_fd->llc_ops->inputfd(hb_fd),
-		  FALSE,
-		  hb_input_dispatch,
-		  hb_fd,  // usrdata
-		  hb_input_destroy);
-
-    /* it seems we need to poke the message receiving stuff in order for it to
-     *    start seeing messages.  Its like it gets blocked or something.
-     */
-    hb_input_dispatch(0, hb_fd);
-
-    return hb_fd;
-    
-}
-
-// keep the compiler happy
 gboolean
-waitCh_client_connect(IPC_Channel *newclient, gpointer user_data)
-{
-    return TRUE;
-}
-
-gboolean
-hb_input_dispatch(int fd, gpointer user_data)
+admin_input_dispatch(int fd, gpointer user_data)
 {
   cl_log(LOG_DEBUG, "input_dispatch...");
   
-  ll_cluster_t*	hb_fd = (ll_cluster_t*)user_data;
+  ll_cluster_t*	hb_cluster = (ll_cluster_t*)user_data;
 
-  while(hb_fd->llc_ops->msgready(hb_fd))
+  while(hb_cluster->llc_ops->msgready(hb_cluster))
   {
       cl_log(LOG_DEBUG, "there was another message...");
-      hb_fd->llc_ops->rcvmsg(hb_fd, 0);  // invoke the callbacks but dont block
+      hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);  // invoke the callbacks but dont block
   }
   
   return TRUE;
 }
 
-void
-hb_input_destroy(gpointer user_data)
-{
-  cl_log(LOG_INFO, "in my hb_input_destroy");
-}
 
 void
 admin_msg_callback(const struct ha_msg* msg, void* private_data)
@@ -1058,6 +984,21 @@ admin_msg_callback(const struct ha_msg* msg, void* private_data)
     recieved_responses++;
 
     // do stuff
+
+    if(msg_reference != NULL)
+    {
+	// in testing mode...
+	char *filename;
+	int filename_len = 31 + strlen(msg_reference); // 31 = "test-_.xml" + an_int_as_string + '\0'
+	filename = ha_malloc(sizeof(char)*filename_len);
+	sprintf(filename, "test-%s_%d.xml", msg_reference, recieved_responses);
+	filename[filename_len-1] = '\0';
+	if(xmlSaveFormatFile(filename, root->doc, 1) < 0)
+	{
+	    cl_log(LOG_CRIT, "Couuld not save response to file test-%s_%d.xml", msg_reference, recieved_responses);
+	}
+	
+    }
 
     if(recieved_responses >= expected_responses)
     {

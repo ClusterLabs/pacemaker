@@ -54,6 +54,7 @@
 #define XML_REQ_TAG_PE             "pe_request"
 #define XML_REQ_TAG_TE             "te_request"
 
+#define XML_DC_ATTR_OP		   "dc_operation"
 #define XML_CRM_ATTR_OP            "crm_operation"
 #define XML_LRM_ATTR_OP            "lrm_operation"
 #define XML_PE_ATTR_OP             "pe_operation"
@@ -64,7 +65,6 @@
 #define XML_LRM_ATTR_IDFILTER      "id_filter"
 #define XML_LRM_ATTR_TYPEFILTER    "type_filter"
 
-#define XML_DC_ATTR_OP    "type_filter"
 
 //---- response tags/attrs
 #define XML_RESP_TAG_DC             "dc_response"

@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include <stdlib.h>
 #include <errno.h>
@@ -29,7 +30,7 @@
 
 #include <libxml/tree.h>
 #include <cibio.h>
-#include <crm/common/crmutils.h>
+#include <crm/common/msgutils.h> // for getNow()
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlutils.h>
 
@@ -286,8 +287,22 @@ activateCibXml(xmlNodePtr cib)
  	// modify the timestamp
 	xmlSetProp(cib, XML_ATTR_TSTAMP, getNow());        
 	
-	// save it
-	res = xmlSaveFile(CIB_FILENAME, cib->doc);
+	cl_log(LOG_INFO, "Writing CIB out to %s", CIB_FILENAME);
+
+	if(cib->doc == NULL)
+	{
+	    cl_log(LOG_ERR, "Writing of a NULL document will fail, creating a new back link.");
+	    xmlDocPtr foo = xmlNewDoc("1.0");
+	    foo->children = cib;
+	    cib->doc = foo;
+	}
+	
+
+	// save it.  set arg 3 to 0 to disable line breaks
+	res = xmlSaveFormatFile(CIB_FILENAME, cib->doc, 0);
+	// for some reason, reading back after saving with formating doesnt go real well 
+//	res = xmlSaveFile(CIB_FILENAME, cib->doc);
+	
 	// res == num bytes saved
 	cl_log(LOG_INFO, "Saved %d bytes to the Cib as XML", res);
 	
@@ -306,7 +321,7 @@ activateCibXml(xmlNodePtr cib)
     }
     else
     {
-	cl_log(LOG_INFO, "Ignoring invalid Cib XML");
+	cl_log(LOG_INFO, "Ignoring invalid NULL Cib XML");
 	return -4;
     }
 

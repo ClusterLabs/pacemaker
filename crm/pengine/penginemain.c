@@ -41,6 +41,7 @@
 #include <clplumbing/cl_poll.h>
 
 #include <crm/common/ipcutils.h>
+#include <crm/common/crmutils.h>
 
 #define IPC_COMMS        1
 #define FORK_CHILD       1
@@ -49,8 +50,6 @@
 #define PID_FILE     WORKING_DIR "/pengine.pid"
 #define DAEMON_LOG   "/var/log/pengine.log"
 #define DAEMON_DEBUG "/var/log/pengine.debug"
-#define DAEMON_FIFO  WORKING_DIR "/pengine.fifo"
-
 
 GMainLoop*  mainloop = NULL;
 const char* daemon_name = "pengine";
@@ -58,15 +57,7 @@ const char* daemon_name = "pengine";
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
-int init_stop(void);
-int init_status(void);
-void register_pid(void);
-long get_running_pid(gboolean* anypidfile);
 void shutdown(int nsig);
-void register_with_apphb(void);
-
-gboolean tickle_apphb(gpointer data);
-int ha_register(void);
 
 int
 main(int argc, char ** argv)
@@ -119,15 +110,15 @@ main(int argc, char ** argv)
     // read local config file
     
     if (req_status){
-	return init_status();
+	return init_status(PID_FILE, daemon_name);
     }
-  
+
     if (req_stop){
-	return init_stop();
+	return init_stop(PID_FILE, mainloop);
     }
   
     if (req_restart) { 
-	init_stop();
+	init_stop(PID_FILE, mainloop);
     }
 
     return init_start();
@@ -140,7 +131,7 @@ init_start(void)
 {
     long pid;
 
-    if ((pid = get_running_pid(NULL)) > 0) {
+    if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
 	cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
 	exit(LSB_EXIT_OK);
     }
@@ -164,9 +155,9 @@ init_start(void)
     }
     
     cl_log(LOG_INFO, "Register PID");
-    register_pid();
+    register_pid(PID_FILE, TRUE, shutdown);
 
-    IPC_Channel *crm_ch = init_client_ipc_comms("crmd", clntCh_input_dispatch);
+    IPC_Channel *crm_ch = init_client_ipc_comms("crmd", default_ipc_input_dispatch);
 
     IPC_Message        *msg;
     char	       str[256];
@@ -182,9 +173,9 @@ init_start(void)
     G_main_add_IPC_Channel(G_PRIORITY_LOW,
 			   crm_ch,
 			   FALSE, 
-			   clntCh_input_dispatch,
+			   default_ipc_input_dispatch,
 			   crm_ch, 
-			   clntCh_input_destroy);
+			   default_ipc_input_destroy);
 
     
     
@@ -206,161 +197,6 @@ static int  crm_realtime = 1;
     }
     return 0;
 }
-
-#ifdef APPHB_SUPPORT
-static int  wdt_interval_ms = 10000;
-void
-register_with_apphb(void)
-{
-    // Register with apphb
-    cl_log(LOG_INFO, "Signing in with AppHb");
-    char	app_instance[APPNAME_LEN];
-    int     hb_intvl_ms = wdt_interval_ms * 2;
-    int     rc = 0;
-    sprintf(app_instance, "%s_%ld", daemon_name, (long)getpid());
-  
-    cl_log(LOG_INFO, "Client %s registering with apphb", app_instance);
-
-    rc = apphb_register(daemon_name, app_instance);
-    
-    if (rc < 0) {
-	cl_perror("%s registration failure", app_instance);
-	exit(1);
-    }
-  
-    cl_log(LOG_DEBUG, "Client %s registered with apphb", app_instance);
-  
-    cl_log(LOG_INFO, 
-	   "Client %s setting %d ms apphb heartbeat interval"
-	   , app_instance, hb_intvl_ms);
-    rc = apphb_setinterval(hb_intvl_ms);
-    if (rc < 0) {
-	cl_perror("%s setinterval failure", app_instance);
-	exit(2);
-    }
-  
-    // regularly tell apphb that we are alive
-    cl_log(LOG_INFO, "Setting up AppHb Heartbeat");
-    Gmain_timeout_add(wdt_interval_ms, tickle_apphb, NULL);
-}
-
-#else
-
-void
-register_with_apphb(void)
-{
-}
-
-#endif
-
-
-void
-register_pid(void)
-{
-    int	j;
-    long	pid;
-    FILE *	lockfd;
-
-#ifdef FORK_CHILD
-    pid = fork();
-
-    if (pid < 0) {
-	cl_log(LOG_CRIT, "cannot start daemon.\n");
-	exit(LSB_EXIT_GENERIC);
-    }else if (pid > 0) {
-	exit(LSB_EXIT_OK);
-    }
-#endif
-
-    lockfd = fopen(PID_FILE, "w");
-    if (lockfd == NULL) {
-	cl_log(LOG_CRIT, "cannot create pid file" PID_FILE);
-	exit(LSB_EXIT_GENERIC);
-    }else{
-	pid = getpid();
-	fprintf(lockfd, "%ld\n", pid);
-	fclose(lockfd);
-    }
-
-    umask(022);
-    getsid(0);
-/*     if (!crm_debug()) { */
-/* 	cl_log_enable_stderr(FALSE); */
-/*     } */
-
-    for (j=0; j < 3; ++j) {
-	close(j);
-	(void)open("/dev/null", j == 0 ? O_RDONLY : O_RDONLY);
-    }
-    CL_IGNORE_SIG(SIGINT);
-    CL_IGNORE_SIG(SIGHUP);
-    CL_SIGNAL(SIGTERM, shutdown);
-}
-
-long
-get_running_pid(gboolean* anypidfile)
-{
-    long    pid;
-    FILE *  lockfd;
-    lockfd = fopen(PID_FILE, "r");
-
-    if (anypidfile) {
-	*anypidfile = (lockfd != NULL);
-    }
-
-    if (lockfd != NULL
-	&&      fscanf(lockfd, "%ld", &pid) == 1 && pid > 0) {
-	if (CL_PID_EXISTS((pid_t)pid)) {
-	    fclose(lockfd);
-	    return(pid);
-	}
-    }
-    if (lockfd != NULL) {
-	fclose(lockfd);
-    }
-    return(-1L);
-}
-
-int
-init_stop(void)
-{
-    long	pid;
-    int	rc = LSB_EXIT_OK;
-    pid =	get_running_pid(NULL);
-
-    if (pid > 0) {
-	if (CL_KILL((pid_t)pid, SIGTERM) < 0) {
-	    rc = (errno == EPERM
-		  ?	LSB_EXIT_EPERM : LSB_EXIT_GENERIC);
-	    fprintf(stderr, "Cannot kill pid %ld\n", pid);
-	}else{
-	    while (CL_PID_EXISTS(pid)) {
-		sleep(1);
-	    }
-	}
-    }
-    return rc;
-}
-int
-init_status(void)
-{
-    gboolean	anypidfile;
-    long	pid =	get_running_pid(&anypidfile);
-
-    if (pid > 0) {
-	fprintf(stderr, "%s is running [pid: %ld]\n"
-		,	daemon_name, pid);
-	return LSB_STATUS_OK;
-    }
-    if (anypidfile) {
-	fprintf(stderr, "%s is stopped [pidfile exists]\n"
-		,	daemon_name);
-	return LSB_STATUS_VAR_PID;
-    }
-    fprintf(stderr, "%s is stopped.\n", daemon_name);
-    return LSB_STATUS_STOPPED;
-}
-
 
 void
 usage(const char* cmd, int exit_status)
@@ -397,9 +233,3 @@ shutdown(int nsig)
     }
 }
 
-// keep the compiler happy
-gboolean
-waitCh_client_connect(IPC_Channel *newclient, gpointer user_data)
-{
-    return TRUE;
-}

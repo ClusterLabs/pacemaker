@@ -54,6 +54,8 @@
 #include <crm/common/xmlutils.h>
 #include <crm/common/msgutils.h>
 #include <cibio.h>
+#include <cib.h>
+#include <cibmessages.h>
 
 /* gboolean waitCh_client_connect(IPC_Channel *newclient, gpointer user_data); */
 int updateCibStatus(xmlNodePtr cib, const char *res_id, const char *instanceNum, const char *node_id, const char *status);
@@ -63,12 +65,12 @@ cibConstraint *createInternalConstraint(const char *res_id_1, const char *instan
 cibConstraint *createSimpleConstraint(const char *id, const char *type, const char *res_id_1, const char *res_id_2);
 cibConstraint *createVariableConstraint(const char *id, const char *type, const char *res_id_1,
 					const char *var_name, const char *var_value);
-gboolean cib_clntCh_input_dispatch(IPC_Channel *client, gpointer user_data);
 
+// from cibmessages.c
 extern xmlNodePtr processCibRequest(xmlNodePtr command);
 
 gboolean
-waitCh_client_connect(IPC_Channel *newclient, gpointer user_data)
+cib_client_connect(IPC_Channel *newclient, gpointer user_data)
 {
     // assign the client to be something, or put in a hashtable
 
@@ -88,19 +90,19 @@ waitCh_client_connect(IPC_Channel *newclient, gpointer user_data)
     G_main_add_IPC_Channel(G_PRIORITY_LOW,
 			   newclient,
 			   FALSE, 
-			   cib_clntCh_input_dispatch,
+			   cib_input_dispatch,
 			   newclient, 
-			   clntCh_input_destroy);
+			   default_ipc_input_destroy);
     return TRUE;
 }
 
 gboolean
-cib_clntCh_input_dispatch(IPC_Channel *client, 
+cib_input_dispatch(IPC_Channel *client, 
 	      gpointer        user_data)
 {
     if(client->ch_status == IPC_DISCONNECT)
     {
-	cl_log(LOG_INFO, "cib_clntCh_input_dispatch: received HUP");
+	cl_log(LOG_INFO, "cib_input_dispatch: received HUP");
 // client_delete(client);
 // do some equiv instead
 	return FALSE;

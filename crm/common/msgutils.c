@@ -30,9 +30,19 @@
 #include <time.h> 
 
 #include <msgutils.h>
-#include <crmutils.h>
+
 #include <xmlutils.h>
 #include <xmltags.h>
+
+
+char *
+getNow(void)
+{
+    char *since_epoch = (char*)ha_malloc(128*(sizeof(char)));
+    sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
+    return since_epoch;
+}
+
 
 xmlNodePtr
 createPingAnswerFragment(const char *from, const char *to, const char *status)
@@ -74,7 +84,6 @@ createCrmMsg(const char *reference,
     xmlDocPtr doc;
     const char *message_type = XML_MSG_TAG_RESPONSE;
     
-    cl_log(LOG_DEBUG, "Building crm message - 1");
     
     if(reference == NULL) reference = generateReference();
     if(is_request) message_type = XML_MSG_TAG_REQUEST;
@@ -82,7 +91,6 @@ createCrmMsg(const char *reference,
     doc = xmlNewDoc("1.0");
     doc->children = xmlNewDocNode(doc, NULL, XML_MSG_TAG, NULL);
 
-    cl_log(LOG_DEBUG, "Building crm message - 2");
 
     // the root_xml_node node
     xmlSetProp(doc->children, XML_ATTR_VERSION, CRM_VERSION);
@@ -90,7 +98,6 @@ createCrmMsg(const char *reference,
     xmlSetProp(doc->children, XML_MSG_ATTR_REFERENCE, reference);
     xmlSetProp(doc->children, XML_ATTR_TSTAMP, getNow());
 
-    cl_log(LOG_DEBUG, "Building crm message - 3");
     
     if(dest_subsystem == NULL)
 	xmlSetProp(doc->children, XML_MSG_ATTR_SUBSYS, "none");
@@ -101,20 +108,16 @@ createCrmMsg(const char *reference,
     else
 	xmlSetProp(doc->children, XML_MSG_ATTR_SRCSUBSYS, src_subsystem);
 	
-    cl_log(LOG_DEBUG, "Building crm message - 4");
     // create a place holder for the eventual data
 
     xmlNodePtr xml_node   = xmlNewChild(doc->children, NULL, message_type, NULL);
 
 
-    cl_log(LOG_DEBUG, "Building crm message - 5");
     if(data != NULL)
     {
 	xmlAddChild(xml_node, data);
 	xmlSetProp(data, XML_MSG_ATTR_REFERENCE, reference);
     }
-    cl_log(LOG_DEBUG, "Building crm message - 6");
-    cl_log(LOG_DEBUG, "Building crm message - 8");
     
     return xmlDocGetRootElement(doc);
 }
@@ -125,11 +128,9 @@ createIpcMessage(const char *reference, const char *from, const char *to, xmlNod
     const char *tmp = from;
     if(is_request) tmp = to;
 
-    cl_log(LOG_DEBUG, "Building ipc message - 5.1 (%s)", tmp);
 
     const char *message_type = XML_MSG_TAG_RESPONSE;
     
-    cl_log(LOG_DEBUG, "Building ipc message - 5.2 (%s)", message_type);
     
     if(reference == NULL) reference = generateReference();
     if(is_request) message_type = XML_MSG_TAG_REQUEST;
@@ -137,23 +138,18 @@ createIpcMessage(const char *reference, const char *from, const char *to, xmlNod
     if(tmp == NULL) return NULL;
     
     int sub_type_len = strlen(tmp) + strlen(message_type) + 2; // 2 = "_" + '\0'
-    cl_log(LOG_DEBUG, "Building ipc message - 5.3");
     char *sub_type_target = (char*)ha_malloc(sizeof(char)*(sub_type_len));
-    cl_log(LOG_DEBUG, "Building ipc message - 5.4");
     sprintf(sub_type_target, "%s_%s", tmp, message_type);
-    cl_log(LOG_DEBUG, "Building ipc message - 5.5 (%s)", sub_type_target);
     xmlNodePtr xml_node   = xmlNewNode(NULL, sub_type_target);
 //	ha_free(sub_type_target);
     xmlSetProp(xml_node, XML_MSG_ATTR_REFERENCE, reference);
     
-    cl_log(LOG_DEBUG, "Building ipc message - 5.6");
     if(data != NULL)
     {
 	xmlAddChild(xml_node, data);
 //	xmlSetProp(data, XML_MSG_ATTR_REFERENCE, reference);
     }
     
-    cl_log(LOG_DEBUG, "Building ipc message - 5.7");
     return xml_node;
 }
 
@@ -170,10 +166,10 @@ conditional_add_failure(xmlNodePtr failed, xmlNodePtr target, int operation, int
   gboolean was_error = FALSE;
 
   if(return_code < 0)
-    {
+  {
       was_error = TRUE;
-
-      // do some fabulous logging
+      
+      cl_log(LOG_DEBUG, "Action %d failed (cde=%d)", operation, return_code);
       
       xmlNodePtr xml_node = xmlNewNode(NULL, XML_FAIL_TAG_CIB);
       xmlSetProp(xml_node, XML_FAILCIB_ATTR_ID, ID(target));
@@ -194,7 +190,7 @@ conditional_add_failure(xmlNodePtr failed, xmlNodePtr target, int operation, int
       xmlSetProp(xml_node, XML_FAILCIB_ATTR_REASON, buffer);
       
       xmlAddChild(failed, xml_node);
-    }
+  }
 
   return was_error;
 }
@@ -274,6 +270,7 @@ validate_crm_message(xmlNodePtr root_xml_node, const char *sys, const char *msg_
 
     
     cl_log(LOG_DEBUG, "XML is valid and node with message type (%s) found.", type);
+    cl_log(LOG_DEBUG, "Returning node (%s)", xmlGetNodePath(action));
     return action;
 }
 

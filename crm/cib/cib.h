@@ -15,28 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef CRM__H
-#define CRM__H
+#ifndef CIB__H
+#define CIB__H
 
-#include <stdlib.h>
 
-#define WORKING_DIR "/var/lib/heartbeat/crm"
-#define MAXDATASIZE 65535 // ipc comms
-#define FIFO_LEN    1024
-#define APPNAME_LEN 256
+gboolean cib_client_connect(IPC_Channel *newclient, gpointer user_data);
+gboolean cib_input_dispatch(IPC_Channel *client, gpointer user_data);
 
-#define CRM_DEBUG(w)        cl_log(LOG_DEBUG, w)
-#define CRM_DEBUG2(w,x)     cl_log(LOG_DEBUG, w, x)
-#define CRM_DEBUG3(w,x,y)   cl_log(LOG_DEBUG, w, x, y)
-#define CRM_DEBUG4(w,x,y,z) cl_log(LOG_DEBUG, w, x, y, z)
-
-#define _CRM_DEBUG(w)       
-#define _CRM_DEBUG2(w,x)    
-#define _CRM_DEBUG3(w,x,y)  
-#define _CRM_DEBUG4(w,x,y,z)
-
-extern char *ha_strdup(const char *s);
-extern void *ha_malloc(size_t size);
-extern void  ha_free(void *mem);
 
 #endif

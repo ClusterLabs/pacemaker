@@ -20,6 +20,7 @@
 
 #include <libxml/tree.h>
 
+extern char* getNow(void);
 extern const char *generateReference(void);
 extern gboolean conditional_add_failure(xmlNodePtr failed, xmlNodePtr target, int operation, int return_code);
 extern xmlNodePtr validate_crm_message(xmlNodePtr root, const char *sys, const char *msg_type);

@@ -20,6 +20,7 @@
 #include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <stdlib.h>
@@ -53,10 +54,10 @@
 
 #define APPNAME_LEN 256
 
-
-extern void*         ha_malloc(size_t size);
-extern void          ha_free(void *ptr);
+// this will come from whoever links with us, so any number of places.
 extern const char* daemon_name;// = "crmd";
+
+
 IPC_Message *get_ipc_message(IPC_Channel *client);
 
 
@@ -75,6 +76,7 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
     IPC_Message *cib_dump = create_simple_message(xml_message, ipc_client);
     CRM_DEBUG("Created IPC Message.");
     send_ipc_message(ipc_client, cib_dump);
+    CRM_DEBUG("Sent IPC Message.");
 }
 
 
@@ -128,8 +130,9 @@ void send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root, const char *node, 
 void 
 send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
 {
+    CRM_DEBUG("Processing IPC message");
     (void)_ha_msg_h_Id; /* Make the compiler happy */
-    if (msg->msg_len < 0)
+    if (msg->msg_len <= 0)
     {
 	cl_log(LOG_WARNING, "cant send 0 sized message");
 	return;
@@ -141,10 +144,17 @@ send_ipc_message(IPC_Channel *ipc_client, IPC_Message *msg)
     }
     
     // comment out soon
-    cl_log(LOG_DEBUG, "Sending message: %s", (char*)msg->msg_body);
+    CRM_DEBUG2("Sending message: %s", (char*)msg->msg_body);
+    CRM_DEBUG("Message ok to send");
+
+    if(ipc_client == NULL)
+    {
+	cl_log(LOG_ERR, "IPC Client was NULL, cant send message");
+	return;
+    }
     
-    while(ipc_client->ops->send(ipc_client, msg) 
-	  == IPC_FAIL){
+    
+    while(ipc_client->ops->send(ipc_client, msg) == IPC_FAIL){
 	cl_log(LOG_WARNING, "ipc channel blocked");
 	cl_shortsleep();
     }
@@ -173,13 +183,13 @@ create_simple_message(char *text, IPC_Channel *ch)
 }
 
 gboolean
-clntCh_input_dispatch(IPC_Channel *client, 
+default_ipc_input_dispatch(IPC_Channel *client, 
 	      gpointer        user_data)
 {
-    CRM_DEBUG("clntCh_input_dispatch: default processing of IPC messages");
+    CRM_DEBUG("default_ipc_input_dispatch: default processing of IPC messages");
     if(client->ch_status == IPC_DISCONNECT)
     {
-	cl_log(LOG_INFO, "clntCh_input_dispatch: received HUP");
+	cl_log(LOG_INFO, "default_ipc_input_dispatch: received HUP");
 // client_delete(client);
 // do some equiv instead
 	return FALSE;
@@ -311,27 +321,16 @@ get_ipc_message(IPC_Channel *client)
 
 
 void
-clntCh_input_destroy(gpointer user_data)
+default_ipc_input_destroy(gpointer user_data)
 {
-	cl_log(LOG_INFO, "clntCh_input_destroy:received HUP");
-	return;
-}
-
-
-void
-waitCh_input_destroy(gpointer user_data)
-{
-    CRM_DEBUG("In ipcutils::waitCh_input_destroy");
-    
-/* 	IPC_WaitConnection *wait_ch =  */
-/* 			(IPC_WaitConnection *)user_data; */
-
-/* 	wait_ch->ops->destroy(wait_ch); */
+	cl_log(LOG_INFO, "default_ipc_input_destroy:received HUP");
 	return;
 }
 
 void
-init_server_ipc_comms(const char *child)
+init_server_ipc_comms(const char *child,
+		      gboolean (*channel_client_connect)(IPC_Channel *newclient, gpointer user_data),
+		      void (*channel_input_destroy)(gpointer user_data))
 {
 
     CRM_DEBUG("Init IPC Comms");
@@ -352,9 +351,9 @@ init_server_ipc_comms(const char *child)
 				  wait_ch,
 				  NULL,
 				  FALSE,
-				  waitCh_client_connect,
+				  channel_client_connect,
 				  wait_ch,
-				  waitCh_input_destroy);
+				  channel_input_destroy);
 
     cl_log(LOG_DEBUG, "Listening on: %s", commpath);
 
@@ -400,7 +399,7 @@ init_client_ipc_comms(const char *child,
 			   FALSE, 
 			   dispatch,
 			   ch, 
-			   clntCh_input_destroy);
+			   default_ipc_input_destroy);
     
     // do some error reporting
     return ch;

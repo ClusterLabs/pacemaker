@@ -37,9 +37,6 @@
 #define IS_DAEMON
 #define IPC_COMMS
 
-#define CIB_FILENAME "cib.xml"
-#define CIB_BACKUP   "cib_backup.xml"
-
 typedef xmlNode cibStatus;
 typedef xmlNode cibResource;
 typedef xmlNode cibConstraint;
