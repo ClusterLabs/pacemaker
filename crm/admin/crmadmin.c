@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.27 2005/02/17 16:17:48 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.28 2005/02/19 18:20:25 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -679,7 +679,7 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 		crm_data_t *rscstates = NULL;
 
 		if(is_node_online(a_node) == FALSE) {
-			crm_debug("Skipping offline node: %s",
+			crm_devel("Skipping offline node: %s",
 				crm_element_value(a_node, XML_ATTR_ID));
 			continue;
 		}
@@ -695,7 +695,7 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 			const char *op_code =
 				crm_element_value(rsc_state,XML_LRM_ATTR_OPSTATUS);
 			
-			crm_debug("checking %s:%s for %s", target, id, rsc);
+			crm_devel("checking %s:%s for %s", target, id, rsc);
 
 			if(safe_str_neq(rsc, id)){
 				crm_trace("no match");
@@ -703,19 +703,19 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 			}
 			
 			if(safe_str_eq("stop", last_op)) {
-				crm_debug("resource %s is stopped on: %s\n",
+				crm_devel("resource %s is stopped on: %s\n",
 					  rsc, target);
 				
 			} else if(safe_str_eq(op_code, "-1")) {
-				crm_debug("resource %s is pending on: %s\n",
+				crm_devel("resource %s is pending on: %s\n",
 					  rsc, target);				
 
 			} else if(safe_str_neq(op_code, "0")) {
-				crm_debug("resource %s is failed on: %s\n",
+				crm_devel("resource %s is failed on: %s\n",
 					  rsc, target);				
 
 			} else {
-				crm_debug("resource %s is running on: %s\n",
+				crm_devel("resource %s is running on: %s\n",
 					  rsc, target);				
 				printf("resource %s is running on: %s\n",
 				       rsc, target);
@@ -750,11 +750,11 @@ is_node_online(crm_data_t *node_state)
 	   && safe_str_eq(ha_state, ACTIVESTATUS)
 	   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
 	   && safe_str_eq(crm_state, ONLINESTATUS)) {
-		crm_debug("Node %s is online", uname);
+		crm_devel("Node %s is online", uname);
 		return TRUE;
 	}
-	crm_debug("Node %s: %s %s %s", uname, join_state, ccm_state, crm_state);
-	crm_debug("Node %s is offline", uname);
+	crm_devel("Node %s: %s %s %s", uname, join_state, ccm_state, crm_state);
+	crm_devel("Node %s is offline", uname);
 	return FALSE;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.23 2005/02/16 18:22:42 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.24 2005/02/19 18:20:25 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -136,7 +136,6 @@ main(int argc, char **argv)
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
 	}
-
 
 	while (1) {
 		flag = getopt_long(argc, argv, OPTARGS,
@@ -281,13 +280,13 @@ main(int argc, char **argv)
 
 		mainloop = g_main_new(FALSE);
 
-		crm_debug("Setting operation timeout to %dms",
+		crm_devel("Setting operation timeout to %dms",
 			  message_timeout_ms);
 
 		message_timer_id = Gmain_timeout_add(
 			message_timeout_ms, admin_message_timeout, NULL);
 
-		crm_debug("%s waiting for reply from the local CIB",
+		crm_devel("%s waiting for reply from the local CIB",
 			 crm_system_name);
 		
 		crm_info("Starting mainloop");
@@ -307,7 +306,7 @@ main(int argc, char **argv)
 		crm_free(buffer);
 	}
 	
-	crm_debug("%s exiting normally", crm_system_name);
+	crm_devel("%s exiting normally", crm_system_name);
 	return -exit_code;
 }
 
