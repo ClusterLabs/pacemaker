@@ -22,7 +22,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
 			-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha
 
-apigid			= @HA_CCMGID@
+apigid			= @HA_APIGID@
 habindir		= @bindir@
 #halibdir		= $(libdir)/@HB_PKG@
 gliblib			= @GLIBLIB@
