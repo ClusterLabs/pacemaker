@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.16 2004/07/15 15:32:49 msoffen Exp $ */
+/* $Id: unpack.c,v 1.17 2004/07/16 16:50:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -180,8 +180,6 @@ unpack_global_defaults(xmlNodePtr defaults)
 gboolean
 unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 {
-	node_t *new_node  = NULL;
-
 	crm_verbose("Begining unpack...");
 	while(xml_nodes != NULL) {
 		xmlNodePtr xml_obj = xml_nodes;
@@ -206,7 +204,7 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 			crm_err("Must specify type tag in <node>");
 			continue;
 		}
-		new_node  = crm_malloc(sizeof(node_t));
+		node_t *new_node  = crm_malloc(sizeof(node_t));
 		new_node->weight  = 1.0;
 		new_node->fixed   = FALSE;
 		new_node->details = (struct node_shared_s*)
@@ -246,12 +244,10 @@ unpack_resources(xmlNodePtr xml_resources,
 		 GListPtr *action_cons,
 		 GListPtr all_nodes)
 {
-	action_t *action_stop  = NULL;
-	action_t *action_start = NULL;
-	resource_t *new_rsc = NULL;
-
 	crm_verbose("Begining unpack...");
 	while(xml_resources != NULL) {
+		action_t *action_stop  = NULL;
+		action_t *action_start = NULL;
 		xmlNodePtr xml_obj     = xml_resources;
 		const char *id         = xmlGetProp(xml_obj, XML_ATTR_ID);
 		const char *stopfail   = xmlGetProp(xml_obj, "on_stopfail");
@@ -267,7 +263,7 @@ unpack_resources(xmlNodePtr xml_resources,
 			crm_err("Must specify id tag in <resource>");
 			continue;
 		}
-		new_rsc = crm_malloc(sizeof(resource_t));
+		resource_t *new_rsc = crm_malloc(sizeof(resource_t));
 		new_rsc->id		= id;
 		new_rsc->xml		= xml_obj;
 		new_rsc->agent		= crm_malloc(sizeof(lrm_agent_t));
@@ -321,13 +317,10 @@ unpack_constraints(xmlNodePtr xml_constraints,
 		   GListPtr *node_constraints,
 		   GListPtr *action_constraints)
 {
-	const char *id = NULL;
-	xmlNodePtr xml_obj = NULL;
-
 	crm_verbose("Begining unpack...");
 	while(xml_constraints != NULL) {
-		id = xmlGetProp(xml_constraints, XML_ATTR_ID);
-		xml_obj = xml_constraints;
+		const char *id = xmlGetProp(xml_constraints, XML_ATTR_ID);
+		xmlNodePtr xml_obj = xml_constraints;
 		xml_constraints = xml_constraints->next;
 		if(id == NULL) {
 			crm_err("Constraint must have an id");
@@ -773,15 +766,13 @@ gboolean
 rsc2rsc_new(const char *id, enum con_strength strength, enum rsc_con_type type,
 	    resource_t *rsc_lh, resource_t *rsc_rh)
 {
-	rsc_to_rsc_t *new_con      = NULL;
-	rsc_to_rsc_t *inverted_con = NULL;
-
 	if(rsc_lh == NULL || rsc_rh == NULL){
 		// error
 		return FALSE;
 	}
 
-	new_con      = crm_malloc(sizeof(rsc_to_rsc_t));
+	rsc_to_rsc_t *new_con      = crm_malloc(sizeof(rsc_to_rsc_t));
+	rsc_to_rsc_t *inverted_con = NULL;
 
 	new_con->id       = id;
 	new_con->rsc_lh   = rsc_lh;
@@ -839,8 +830,6 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 
 	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
 	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
-
-	action_t *before, *after;
  
 	if(rsc_lh == NULL) {
 		crm_err("No resource (con=%s, rsc=%s)", id, id_lh);
@@ -882,6 +871,7 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 	 *  the higher is started, otherwise they may be both running
 	 *  on the same node when the higher is replacing the lower
 	 */
+	action_t *before, *after;
 	if(rsc_lh->priority >= rsc_rh->priority) {
 		before = rsc_rh->stop;
 		after  = rsc_lh->start;
@@ -928,12 +918,6 @@ match_attrs(const char *attr, const char *op, const char *value,
 		
 		int cmp = 0;
 		const char *h_val = (const char*)g_hash_table_lookup(
-<<<<<<< unpack.c
-			node->details->attrs, name);
-			
-		if(h_val != NULL && value == NULL && invert == FALSE) {
-			accept = TRUE;
-=======
 			node->details->attrs, attr);
 
 
@@ -968,7 +952,6 @@ match_attrs(const char *attr, const char *op, const char *value,
 		
 		if(safe_str_eq(op, "exists")) {
 			if(h_val != NULL) accept = TRUE;	
->>>>>>> 1.13
 
 		} else if(safe_str_eq(op, "notexists")) {
 			if(h_val == NULL) accept = TRUE;
