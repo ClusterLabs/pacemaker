@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.27 2004/04/29 15:33:03 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.28 2004/05/18 09:44:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -116,8 +116,8 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		   "Could not find the full path to the node you specified.",
 		   search_path, len);
 
-	cl_log(LOG_WARNING,"Closest point was node (%s).",
-	       xmlGetNodePath(lastMatch));
+	cl_log(LOG_WARNING,"Closest point was node (%s) starting from %s.",
+	       xmlGetNodePath(lastMatch), root?root->name:NULL);
 
 	FNRET(NULL);
     
