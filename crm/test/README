@@ -58,7 +58,8 @@ Pre-reqs:
 
     Basic requirement
     =======================
-    	Set up remote logging to the node you are running the tests from
+    	Set up remote logging to the node you are running the tests from.
+	You should only log "info" and higher to this log server. 
 
     Extra-info
 	Log messages must use the same values as uname -n, not the fully
@@ -69,7 +70,7 @@ Pre-reqs:
 
     Basic requirement
     =======================
-    	Set up 2 nodes called test1 and test2 on a 10.0.6.x subnet (for the IPaddr resource)
+    	Set up 3 nodes called test1, test2 and test3 on a 10.0.6.x subnet (for the IPaddr resource)
 
     Extra-info
 	You can use different names by specifying --node1 <node> and --node2  <node> on the testing command line.
@@ -77,23 +78,8 @@ Pre-reqs:
 
     Basic requirement
     =======================
-    	Set up ha.cf as below:
-
-	    debug 1
-	    logfacility     local7
-	    keepalive 1
-	    deadtime 5
-	    warntime 3
-	    initdead 10
-	    udpport 694
-	    bcast   eth0
-	    auto_failback legacy
-	    node    test1
-	    node    test2
-	    apiauth default uid=root
-	    apiauth ccm uid=hacluster
-	    respawn hacluster /usr/lib/heartbeat/ccm
-	    respawn root /usr/lib/heartbeat/lrmd
+    	Set up ha.cf according to the wiki: http://linuxha.trick.ca/ClusterResourceManager/Setup
+	The one exception is that crmd should not be started by default
 	
     Basic requirement
     =======================

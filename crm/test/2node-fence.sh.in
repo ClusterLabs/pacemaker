@@ -114,7 +114,7 @@ function 2node_fail_test() {
     do_cmd echo Create the first resource and wait for S_IDLE after start
     args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
     crm_log_pos=$(stat -L -c %s $logfile)
-    do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - ignore $args
+    do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - stonith $args
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
 	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
 	-s "crmd(.*) Performing op start(.*) on rsc1" \
@@ -126,12 +126,23 @@ function 2node_fail_test() {
     do_cmd echo Create the second resource and wait for S_IDLE after start
     args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
     crm_log_pos=$(stat -L -c %s $logfile)
-    do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - ignore $args
+    do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - stonith $args
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
 	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
 	-s "crmd(.*) Performing op start(.*) on rsc2" \
 	-s "crmd(.*) Resource state: rsc2(.*) after start"
     cts_assert Adding rsc2 did not pass
+
+#----
+
+    do_cmd echo Create the fencing resource and wait for S_IDLE after start
+    crm_log_pos=$(stat -L -c %s $logfile)
+    do_cmd make_incarnation $test_node_1 fence1 stonith null 2 - - ignore
+    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
+	-s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
+	-s "crmd(.*) Performing op start(.*) on fence1" \
+	-s "crmd(.*) Resource state: fence1(.*) after start"
+    cts_assert Adding fence1 did not pass
 
 #----
 
@@ -281,7 +292,6 @@ function 2node_fail_test() {
 	    -s "${fail_node} crmd(.*) State transition \"S_PENDING\" \-> \"S_NOT_DC\"" 
 	cts_assert "CRMd startup on ${fail_node} failed."
 
-	do_cmd echo "Checking ${moved_rsc} was moved back"
 	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 20000 \
 	    -s "${good_node} crmd(.*) State transition(.*) \-> \"S_IDLE\"" \
 	    -s "${fail_node} crmd(.*) Performing op start(.*) on ${moved_rsc}" \

@@ -233,6 +233,46 @@ function make_node_local()
     remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -l -C -o node -X $node_xml"
 }
 
+function make_incarnation()
+{
+    host=$1; shift
+    id=$1; shift
+    class=$1; shift
+    type=$1; shift
+    max=$1; shift
+    priority=$1; shift
+    version=$1; shift
+    stopfail=$1; shift
+
+    args=$*
+
+    uuid=`uuidgen`
+    node_xml="'<incarnation id=\"${id}\" incarnation_node_max=\"1\" incarnation_max=\"${max}\">"
+
+    if [ ! -z $priority -a "x$priority" != "x-" ]; then
+	node_xml="$node_xml priority=\"${priority}\""
+    fi
+
+    node_xml="$node_xml <resource id=\"child_${id}\" class=\"${class}\" type=\"${type}\""
+
+    if [ ! -z $version -a "x$version" != "x-" ]; then
+	node_xml="$node_xml version=\"${version}\""
+    fi
+    if [ ! -z $stopfail -a "x$stopfail" != "x-" ]; then
+	node_xml="$node_xml on_stopfail=\"${stopfail}\""
+    fi
+    node_xml="$node_xml >";
+
+    if [ ! -z "$args" -a "x$args" != "x-" ]; then
+	node_xml="$node_xml <instance_attributes><rsc_parameters>${args}</rsc_parameters></instance_attributes>"
+    fi
+    node_xml="$node_xml </resource>'";
+    node_xml="$node_xml </incarnation>";
+    
+    do_cmd `which ssh` ${ADMIN_USER}@${host} "$HALIB_DIR/cibadmin -VVVV -C -o resource -X $node_xml"
+# 2>&1 > /dev/null
+}
+
 function make_resource()
 {
     host=$1
@@ -349,6 +389,7 @@ function dump_node() {
     `which ssh` ${ADMIN_USER}@${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart -l $logfile > /tmp/crm/cluster-test.log"
 
     `which ssh` ${ADMIN_USER}@${a_node} "ln -s /tmp/crm /tmp/crm-${a_node_index}"
+    `which ssh` ${ADMIN_USER}@${a_node} "ln -s ${HAVAR_DIR}/cores /tmp/crm/cores"
     `which ssh` ${ADMIN_USER}@${a_node} "tar -zhcvf ${dump_file} /tmp/crm-${a_node_index}/"
     `which ssh` ${ADMIN_USER}@${a_node} "rm -f /tmp/crm-${a_node_index}"
 
@@ -465,7 +506,7 @@ function crm-cleanup-node() {
     do_cmd remote_cmd $INIT_USER $ha_host $HALIB_DIR/heartbeat "-k" "2>&1 >/dev/null"
     
 # be *very* sure everything has stopped
-    do_cmd remote_cmd $INIT_USER $ha_host "killall -q9 heartbeat ccm lrmd crmd crmadmin cibadmin"
+    do_cmd remote_cmd $INIT_USER $ha_host "killall -q9 heartbeat ccm lrmd crmd crmadmin cibadmin ha_logd stonithd cib pengine tengine"
 
 # resources too
     do_cmd remote_cmd $INIT_USER $ha_host "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
