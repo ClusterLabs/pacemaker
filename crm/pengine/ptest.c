@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.43 2005/02/23 15:44:00 andrew Exp $ */
+/* $Id: ptest.c,v 1.44 2005/02/25 10:31:35 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -107,8 +107,9 @@ main(int argc, char **argv)
   
 	if (optind < argc) {
 		printf("non-option ARGV-elements: ");
-		while (optind < argc)
+		while (optind < argc) {
 			printf("%s ", argv[optind++]);
+		}
 		printf("\n");
 	}
   
@@ -126,10 +127,8 @@ main(int argc, char **argv)
 	if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
 		cib_object = file2xml(xml_strm);
-#if BROKEN		
 	} else {
-		cib_object = file2xml(stdin);
-#endif
+		cib_object = stdin2xml();
 	}
 	crm_debug("=#=#=#=#= Stage 0 =#=#=#=#=");
 
