@@ -134,7 +134,7 @@ do_cib_control(long long action,
 	FNRET(result);
 }
 
-/*	 A_CIB_INVOKE, A_CIB_DISTRIBUTE	*/
+/*	 A_CIB_INVOKE, A_CIB_BUMPGEN	*/
 enum crmd_fsa_input
 do_cib_invoke(long long action,
 	      enum crmd_fsa_cause cause,
@@ -145,32 +145,31 @@ do_cib_invoke(long long action,
 	xmlNodePtr cib_msg = NULL;
 	FNIN();
 
-	if(action & A_CIB_INVOKE) {
+	if(data != NULL)
 		cib_msg = (xmlNodePtr)data;
+
+	
+	if(action & A_CIB_INVOKE) {
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
 		if(relay_message(cib_msg, FALSE) == FALSE) {
 			cl_log(LOG_ERR, "Confused what to do with message");
 			xml_message_debug(cib_msg, "Couldnt route: ");
-		} else {
-			xmlNodePtr options =
-				find_xml_node(cib_msg, XML_TAG_OPTIONS);
-
-			const char *op = xmlGetProp(options, XML_ATTR_OP);
-			if(strcmp(op, CRM_OPERATION_CREATE) == 0
-			  || strcmp(op, CRM_OPERATION_UPDATE) == 0
-			  || strcmp(op, CRM_OPERATION_DELETE) == 0
-			  || strcmp(op, CRM_OPERATION_ERASE) == 0)
-				send_request(NULL, NULL, CRM_OPERATION_BUMP, NULL, CRM_SYSTEM_CIB);
-		
-
 		}
-	}
-	
 
+	} else if(action & A_CIB_BUMPGEN) {  
+ 		// check if the response was ok before next bit
+		xmlNodePtr options = find_xml_node(cib_msg, XML_TAG_OPTIONS);
+		const char *section = xmlGetProp(options, XML_ATTR_FILTER_TYPE);
+		xmlNodePtr new_options = create_xml_node(NULL, XML_TAG_OPTIONS);
 
-/* else if(action & A_CIB_DISTRIBUTE) {  */
-/* 		// check if the response was ok before next bit */
-/*  	}  */
+		/* set the section so that we dont always send the
+		 * whole thing
+		 */
+		xmlSetProp(new_options, XML_ATTR_FILTER_TYPE, section);
+		send_request(new_options, NULL, CRM_OPERATION_BUMP,
+			     NULL, CRM_SYSTEM_CIB);
+		
+  	}  
 	
 	FNRET(I_NULL);
 }
@@ -356,8 +355,8 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 		client_channel->ops->set_send_qlen(client_channel, 100);
 	
 		blank_client->client_channel = client_channel;
-		blank_client->sub_sys = NULL;
-		blank_client->uid = NULL;
+		blank_client->sub_sys   = NULL;
+		blank_client->uuid       = NULL;
 		blank_client->table_key = NULL;
 	
 		CRM_DEBUG("Adding IPC Channel to main thread.");
@@ -377,12 +376,25 @@ static gboolean
 stop_subsystem(struct crm_subsystem_s*	centry)
 {
 	cl_log(LOG_INFO, "Stopping sub-system \"%s\"", centry->command);
-
 	if (centry->pid == 0) {
-		cl_log(LOG_ERR, "OOPS! client %s not running yet", centry->command);
+		cl_log(LOG_ERR,
+		       "OOPS! client %s not running yet",
+		       centry->command);
+	} else {
+#if 1
+		return run_command(centry, "-k", FALSE);
+#else
+		if(centry->ipc != NULL) {
+			centry->ipc->ch_status = IPC_DISC_PENDING;
+		} else {
+			cl_log(LOG_WARNING,
+			       "Could not stop [%s] as it hasnt connected yet",
+			       centry->command);
+		}
+#endif
 	}
-
-	return run_command(centry, "-k", FALSE);
+	
+	return TRUE;
 }
 
 

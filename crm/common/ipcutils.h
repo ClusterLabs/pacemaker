@@ -1,4 +1,4 @@
-/* $Id: ipcutils.h,v 1.7 2004/02/17 22:11:56 lars Exp $ */
+/* $Id: ipcutils.h,v 1.8 2004/03/18 10:48:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,7 +28,7 @@
 typedef struct _crmd_client 
 {
 		char *sub_sys;
-		char *uid;
+		char *uuid;
 		char *table_key;
 		IPC_Channel *client_channel;
 		GCHSource *client_source;
@@ -52,7 +52,7 @@ extern IPC_Channel *init_client_ipc_comms(
 	gboolean (*dispatch)(IPC_Channel* source_data, gpointer user_data),
 	crmd_client_t *user_data);
 
-extern IPC_WaitConnection *wait_channel_init(char daemonfifo[]);
+extern IPC_WaitConnection *wait_channel_init(char daemonsocket[]);
 
 extern IPC_Message *get_ipc_message(IPC_Channel *client);
 

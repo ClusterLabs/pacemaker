@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.15 2004/03/16 10:46:30 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.16 2004/03/18 10:48:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,6 +88,8 @@ gboolean check_generation(xmlNodePtr newCib, xmlNodePtr oldCib);
 xmlNodePtr
 processCibRequest(xmlNodePtr command)
 {
+
+	const char *reply_cc       = NULL;
 	const char *status         = "failed";
 	const char *op             = NULL;
 	const char *verbose        = NULL;
@@ -134,7 +136,9 @@ processCibRequest(xmlNodePtr command)
 		
 	} else if (strcmp(CRM_OPERATION_BUMP, op) == 0) {
 		xmlNodePtr tmpCib = copy_xml_node_recursive(get_the_CIB(), 1);
-
+		CRM_DEBUG3("Handling a %s for section=%s of the cib",
+			   CRM_OPERATION_BUMP, section);
+		
 		// modify the timestamp
 		set_node_tstamp(tmpCib);
 		char *new_value = NULL;
@@ -151,6 +155,7 @@ processCibRequest(xmlNodePtr command)
 		ha_free(new_value);
 
 		activateCibXml(tmpCib);
+		reply_cc = "dc";
 		
 	} else if (strcmp("query", op) == 0) {
 		CRM_DEBUG2("Handling a query for section=%s of the cib",
@@ -169,9 +174,11 @@ processCibRequest(xmlNodePtr command)
 		
 		if (activateCibXml(new_cib) < 0)
 			status = "erase of CIB failed";
-		else
+		else {
 			status = "ok";
-		
+			reply_cc = "dc";
+		}
+
 	} else if (strcmp(CRM_OPERATION_CREATE, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_ADD;
@@ -314,21 +321,24 @@ processCibRequest(xmlNodePtr command)
 		/* if(check_generation(cib_updates, tmpCib) == FALSE) */
 /* 			status = "discarded old update"; */
 /* 		else  */
-		if (activateCibXml(tmpCib) < 0)
+		if (activateCibXml(tmpCib) < 0) {
 			status = "update activation failed";
-		else if (failed->children != NULL)
-			status = "some updates failed";
-		else
-			status = "ok";
 
+		} else if (failed->children != NULL) {
+			status = "some updates failed";
+			reply_cc = "dc";
+			
+		} else {
+			status = "ok";
+			reply_cc = "dc";
+		}
+		
 		CRM_DEBUG2("CIB update status: %s", status);
 
 	}
 
 	output_section = section;
 
-	CRM_DEBUG2("Playing with cib: %p", get_the_CIB());
-	
 	/* dont de-allocate cib_section, its the real thing */
 	if (failed->children != NULL || strcmp("ok", status) != 0) {
 		output_section = "all";
@@ -343,9 +353,12 @@ processCibRequest(xmlNodePtr command)
 						     failed);
 	}
     
-/* 	set_xml_property_copy(cib_answer, XML_ATTR_SECTION, section); */
+	set_xml_property_copy(options, XML_ATTR_FILTER_TYPE, output_section);
  	set_xml_property_copy(options, XML_ATTR_RESULT, status);
-
+ 	if(reply_cc != NULL) {
+		set_xml_property_copy(options, XML_ATTR_SYSCC, reply_cc);
+	}
+	
 	free_xml(failed);
 	FNRET(cib_answer);
 }
@@ -563,8 +576,13 @@ check_generation(xmlNodePtr newCib, xmlNodePtr oldCib)
 	if(old_value != NULL) int_old_value = atoi(old_value);
 	if(new_value != NULL) int_new_value = atoi(new_value);
 	
-	if(int_new_value >= int_old_value)
+	if(int_new_value >= int_old_value) {
 		return TRUE;
+	} else {
+		cl_log(LOG_ERR, "Generation from update (%d) is older than %d",
+		       int_new_value, int_old_value);
+	}
+	
 	return FALSE;
 }
  

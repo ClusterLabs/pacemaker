@@ -35,35 +35,58 @@
 
 #define DOT_FSA_ACTIONS 1
 #define DOT_ALL_FSA_INPUTS 1
-
-enum crmd_fsa_input handle_message(xmlNodePtr stored_msg);
-
+//#define FSA_TRACE 1
 
 #ifdef DOT_FSA_ACTIONS
-#define ELSEIF_FSA_ACTION(x,y)						\
-  else if(is_set(actions,x)) {						\
-/*	if(cur_input != I_DC_HEARTBEAT)				*/	\
-	 fprintf(dot_strm, "\t\t// %s:\t%s\t(0x%.16llx) with data? %s\n",\
-		fsa_input2string(cur_input), fsa_action2string(x), x,	\
+# ifdef FSA_TRACE
+#  define ELSEIF_FSA_ACTION(x,y)					\
+     else if(is_set(actions,x)) {					\
+	fprintf(dot_strm, "\t// %s:\t%s\t(data? %s)",			\
+		fsa_input2string(cur_input), fsa_action2string(x),	\
 		data==NULL?"no":"yes");					\
 	fflush(dot_strm);						\
 	CRM_DEBUG3("Invoking action %s (%.16llx)",			\
 		fsa_action2string(x), x);				\
 	actions = clear_bit(actions, x);				\
 	next_input = y(x, cause, cur_state, last_input, data);		\
+	fprintf(dot_strm, "\t(result=%s)\n",				\
+		fsa_input2string(next_input));				\
+	fflush(dot_strm);						\
 	CRM_DEBUG3("Result of action %s was %s",			\
 		fsa_action2string(x), fsa_input2string(next_input));	\
-  }
+     }
+# else
+#  define ELSEIF_FSA_ACTION(x,y)					\
+     else if(is_set(actions,x)) {					\
+	fprintf(dot_strm, "\t// %s:\t%s\t(data? %s)",			\
+		fsa_input2string(cur_input), fsa_action2string(x),	\
+		data==NULL?"no":"yes");					\
+	fflush(dot_strm);						\
+	actions = clear_bit(actions, x);				\
+	next_input = y(x, cause, cur_state, last_input, data);		\
+	fprintf(dot_strm, "\t(result=%s)\n",				\
+		fsa_input2string(next_input));				\
+	fflush(dot_strm);						\
+     }
+# endif
 #else
-#define ELSEIF_FSA_ACTION(x,y)						\
-  else if(is_set(actions,x)) {						\
+# ifdef FSA_TRACE
+#  define ELSEIF_FSA_ACTION(x,y)					\
+     else if(is_set(actions,x)) {					\
 	CRM_DEBUG3("Invoking action %s (%.16llx)",			\
 		fsa_action2string(x), x);				\
 	actions = clear_bit(actions, x);				\
 	next_input = y(x, cause, cur_state, last_input, data);		\
 	CRM_DEBUG3("Result of action %s was %s",			\
 		fsa_action2string(x), fsa_input2string(next_input));	\
-  }
+     }
+# else
+#  define ELSEIF_FSA_ACTION(x,y)					\
+     else if(is_set(actions,x)) {					\
+	actions = clear_bit(actions, x);				\
+	next_input = y(x, cause, cur_state, last_input, data);		\
+     }
+# endif
 #endif
 
 const char *dot_intro = "digraph \"g\" {\n"
@@ -198,13 +221,15 @@ startTimer(fsa_timer_t *timer)
 			Gmain_timeout_add(timer->period_ms,
 					  timer->callback,
 					  (void*)timer);
+
 		CRM_DEBUG3("#!!#!!# Started %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
+
 	} else {
-		CRM_DEBUG3("#!!#!!# Timer %s already running (%d)",
-			   fsa_input2string(timer->fsa_input),
-			   timer->source_id);
+		cl_log(LOG_INFO, "#!!#!!# Timer %s already running (%d)",
+		       fsa_input2string(timer->fsa_input),
+		       timer->source_id);
 		
 	}
 }
@@ -214,17 +239,18 @@ void
 stopTimer(fsa_timer_t *timer)
 {
 	if(((int)timer->source_id) > 0) {
+
 		CRM_DEBUG3("#!!#!!# Stopping %s timer (%d)",
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
+
 		g_source_remove(timer->source_id);
 		timer->source_id = -2;
 
 	} else {
-		CRM_DEBUG3("#!!#!!# Timer %s already stopped (%d)",
-			   fsa_input2string(timer->fsa_input),
-			   timer->source_id);
-		
+		cl_log(LOG_INFO, "#!!#!!# Timer %s already stopped (%d)",
+		       fsa_input2string(timer->fsa_input),
+		       timer->source_id);
 	}
 }
 
@@ -248,11 +274,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	cur_state = starting_state;
 	next_state = cur_state;
 
+#ifdef FSA_TRACE
 	CRM_DEBUG4("FSA invoked with Cause: %s\n\tState: %s, Input: %s",
 		   fsa_cause2string(cause),
 		   fsa_state2string(cur_state),
 		   fsa_input2string(cur_input));
-
+#endif
 	/*
 	 * Process actions in order of priority but do only one
 	 * action at a time to avoid complicating the ordering.
@@ -273,10 +300,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 
 		cur_input = next_input;
 
+#ifdef FSA_TRACE
 		CRM_DEBUG3("FSA while loop:\tState: %s, Input: %s",
 			   fsa_state2string(cur_state),
 			   fsa_input2string(cur_input));
-		
+#endif		
 		/* safe to do every time, I_NULL gets us to the same state */
 		next_state = crmd_fsa_state[cur_input][cur_state];
 
@@ -313,7 +341,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		new_actions = crmd_fsa_actions[cur_input][cur_state];
 
 		if(new_actions != A_NOTHING) {
+#ifdef FSA_TRACE
 			CRM_DEBUG2("Adding actions %.16llx", new_actions);
+#endif
 			actions |= new_actions;
 		}
 		
@@ -433,7 +463,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 * PE, and the PE before the TE
 		 */
 		ELSEIF_FSA_ACTION(A_CIB_INVOKE,		do_cib_invoke)
-		ELSEIF_FSA_ACTION(A_CIB_DISTRIBUTE,	do_cib_invoke)
+		ELSEIF_FSA_ACTION(A_CIB_BUMPGEN,	do_cib_invoke)
 		ELSEIF_FSA_ACTION(A_PE_INVOKE,		do_pe_invoke)
 		ELSEIF_FSA_ACTION(A_TE_INVOKE,		do_te_invoke)
 		
@@ -467,29 +497,38 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 				if(data == NULL) {
 					cl_log(LOG_ERR,
 					       "Invalid stored message");
+					continue;
 				}
 			}
 
 #ifdef DOT_FSA_ACTIONS
 			fprintf(dot_strm,
-				"\t\t// %s:\t%s\t(0x%.16llx) with data? %s\n",
+				"\t// %s:\t%s\t(data? %s)",	
 				fsa_input2string(cur_input),
 				fsa_action2string(A_MSG_PROCESS),
-				A_MSG_PROCESS,
 				stored_msg==NULL?"no":"yes");
 			fflush(dot_strm);
 #endif
+#ifdef FSA_TRACE
 			CRM_DEBUG3("Invoking action %s (%.16llx)",
 				   fsa_action2string(A_MSG_PROCESS),
 				   A_MSG_PROCESS);
+#endif
 
 			stored_msg = (xmlNodePtr)data;
+
+#ifdef FSA_TRACE
 			xml_message_debug(stored_msg,
 					  "FSA processing message:");
+#endif
 
 			next_input = handle_message(stored_msg);
 
-			CRM_DEBUG3("Result of action %s was %s",
+#ifdef DOT_FSA_ACTIONS
+			fprintf(dot_strm, "\t(result=%s)\n",
+				fsa_input2string(next_input));
+#endif
+										CRM_DEBUG3("Result of action %s was %s",
 				   fsa_action2string(A_MSG_PROCESS),
 				   fsa_input2string(next_input));	
 	
@@ -503,8 +542,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			next_input = I_NULL;
 			
 		} else if(cur_input == I_NULL && is_set(actions, A_NOTHING)) {
+#ifdef FSA_TRACE
 			cl_log(LOG_INFO, "Nothing left to do");
-			
+#endif			
 		} else {
 			cl_log(LOG_ERR, "Action %s (0x%llx) not supported ",
 			       fsa_action2string(actions), actions);
@@ -512,9 +552,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		}
 	}
 	
+#ifdef FSA_TRACE
 	CRM_DEBUG2("################# Exiting the FSA (%s) ##################",
 		  fsa_state2string(fsa_state));
-
+#endif
 	// cleanup inputs?
 	
 	FNRET(fsa_state);
@@ -554,6 +595,9 @@ fsa_input2string(int input)
 			break;
 		case I_CCM_EVENT:
 			inputAsText = "I_CCM_EVENT";
+			break;
+		case I_CIB_OP:
+			inputAsText = "I_CIB_OP";
 			break;
 		case I_CIB_UPDATE:
 			inputAsText = "I_CIB_UPDATE";
@@ -853,8 +897,8 @@ fsa_action2string(long long action)
 		case A_CCM_UPDATE_CACHE:
 			actionAsText = "A_CCM_UPDATE_CACHE";
 			break;
-		case A_CIB_DISTRIBUTE:
-			actionAsText = "A_CIB_DISTRIBUTE";
+		case A_CIB_BUMPGEN:
+			actionAsText = "A_CIB_BUMPGEN";
 			break;
 		case A_CIB_INVOKE:
 			actionAsText = "A_CIB_INVOKE";
@@ -918,138 +962,3 @@ fsa_action2string(long long action)
 }
 
 
-enum crmd_fsa_input
-handle_message(xmlNodePtr stored_msg)
-{
-	enum crmd_fsa_input next_input = I_NULL;
-	xmlNodePtr options = find_xml_node(stored_msg, XML_TAG_OPTIONS);
-
-	const char *sys_to   = xmlGetProp(stored_msg, XML_ATTR_SYSTO);
-	const char *sys_from = xmlGetProp(stored_msg, XML_ATTR_SYSFROM);
-	const char *type     = xmlGetProp(stored_msg, XML_ATTR_MSGTYPE);
-	const char *op = xmlGetProp(options, XML_ATTR_OP);
-
-	if(type == NULL || op == NULL) {
-		cl_log(LOG_ERR, "Ignoring message (type=%s), (op=%s)",
-		       type, op);
-		xml_message_debug(stored_msg, "Bad message");
-		
-	} else if(strcmp(type, XML_ATTR_REQUEST) == 0){
-		if(strcmp(op, CRM_OPERATION_VOTE) == 0) {
-			next_input = I_ELECTION;
-				
-		} else if(strcmp(op, CRM_OPERATION_HBEAT) == 0) {
-			next_input = I_DC_HEARTBEAT;
-				
-		} else if(strcmp(op, CRM_OPERATION_WELCOME) == 0) {
-			next_input = I_WELCOME;
-				
-		} else if(strcmp(op, CRM_OPERATION_ANNOUNCE) == 0) {
-			next_input = I_NODE_JOIN;
-				
-		} else if(strcmp(op, CRM_OPERATION_STORE) == 0 && AM_I_DC) {
-			next_input = I_RELEASE_DC;
-				
-		} else if(strcmp(op, CRM_OPERATION_STORE) == 0
-			  || strcmp(op, CRM_OPERATION_CREATE) == 0
-			  || strcmp(op, CRM_OPERATION_UPDATE) == 0
-			  || strcmp(op, CRM_OPERATION_DELETE) == 0
-			  || strcmp(op, CRM_OPERATION_ERASE) == 0) {
-			next_input = I_CIB_UPDATE;
-				
-		} else if(strcmp(op, CRM_OPERATION_PING) == 0) {
-			/* eventually do some stuff to figure out
-			 * if we /are/ ok
-			 */
-			xmlNodePtr ping =
-				createPingAnswerFragment(sys_to, "ok");
-				
-			xmlNodePtr wrapper = create_reply(stored_msg, ping);
-			relay_message(wrapper, TRUE);
-			free_xml(wrapper);
-				
-		} else {
-			cl_log(LOG_ERR,
-			       "Unexpected (request) operation %s", op);
-		}
-		
-	} else if(strcmp(type, XML_ATTR_RESPONSE) == 0) {
-
-		if(strcmp(op, CRM_OPERATION_WELCOME) == 0) {
-			next_input = I_WELCOME;
-				
-		} else if(strcmp(op, CRM_OPERATION_JOINACK) == 0) {
-			next_input = I_WELCOME_ACK;
-				
-		} else if(strcmp(op, CRM_OPERATION_CREATE) == 0
-			  || strcmp(op, CRM_OPERATION_UPDATE) == 0
-			  || strcmp(op, CRM_OPERATION_DELETE) == 0
-			  || strcmp(op, CRM_OPERATION_ERASE) == 0) {
-
-			// perhaps we should do somethign with these replies
-
-		} else if(strcmp(op, CRM_OPERATION_BUMP) == 0) {
-
-			xmlNodePtr data = find_xml_node(stored_msg,
-							XML_TAG_FRAGMENT);
-			
-			send_request(NULL, data, CRM_OPERATION_STORE,
-				     NULL, CRM_SYSTEM_CRMD);
-
-		} else if (AM_I_DC && strcmp(op, CRM_OPERATION_STORE) == 0) {
-
-			/* if there was any result, we need to merge it back
-			 * into our (the DC) copy of the CIB
-			 */
-			xmlNodePtr data = find_xml_node(stored_msg,
-							XML_TAG_FRAGMENT);
-
-			if(data != NULL) {
-				send_request(NULL, data, CRM_OPERATION_UPDATE,
-					     NULL, CRM_SYSTEM_CIB);
-				send_request(NULL, NULL, CRM_OPERATION_BUMP,
-					     NULL, CRM_SYSTEM_CIB);
-			}
-
-
-		} else if(strcmp(sys_from, CRM_SYSTEM_CIB) == 0
-		   && strcmp(op, CRM_OPERATION_FORWARD) == 0
-		   && AM_I_DC) {
-				
-			/* this is a reply to our earlier command
-			 * Send it to the relevant node(s)
-			 */
-			const char *uname = xmlGetProp(options,
-						       "forward_to");
-
-			xmlNodePtr data = find_xml_node(stored_msg,
-							XML_TAG_FRAGMENT);
-
-			xmlNodePtr local_options =
-				create_xml_node(NULL, XML_TAG_OPTIONS);
-
-			/* If this is part of join request processing,
-			 * ask for the status section, otherwise just blast
-			 * it down to them.
-			 */
-			if(uname != NULL) {
-				set_xml_property_copy(local_options,
-						      XML_ATTR_VERBOSE,
-						      "true");
-			}
-			
-			send_request(local_options, data, CRM_OPERATION_STORE,
-				     uname, CRM_SYSTEM_CRMD);
-				
-		} else {
-			cl_log(LOG_ERR,
-			       "Unexpected (response) operation %s", op);
-		}
-	} else {
-		cl_log(LOG_ERR, "Unexpected message type %s", type);
-			
-	}
-		
-	return next_input;
-		
-}

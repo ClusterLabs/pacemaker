@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.19 2004/03/16 17:54:15 andrew Exp $ */
+/* $Id: msgutils.c,v 1.20 2004/03/18 10:48:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,7 +169,7 @@ conditional_add_failure(xmlNodePtr failed,
 xmlNodePtr
 validate_crm_message(xmlNodePtr root_xml_node,
 		     const char *sys,
-		     const char *uid,
+		     const char *uuid,
 		     const char *msg_type)
 {
 	const char *from = NULL;
@@ -199,7 +199,7 @@ validate_crm_message(xmlNodePtr root_xml_node,
 */
 	action = root_xml_node;
 	const char *true_sys = sys;
-	if (uid != NULL) true_sys = generate_hash_key(sys, uid);
+	if (uuid != NULL) true_sys = generate_hash_key(sys, uuid);
 
 	if (to == NULL) {
 		cl_log(LOG_INFO, "No sub-system defined.");
@@ -365,7 +365,7 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 
 void
 send_hello_message(IPC_Channel *ipc_client,
-		   const char *uid,
+		   const char *uuid,
 		   const char *client_name,
 		   const char *major_version,
 		   const char *minor_version)
@@ -373,7 +373,7 @@ send_hello_message(IPC_Channel *ipc_client,
 	xmlNodePtr hello_node = NULL;
 	FNIN();
 	
-	if (uid == NULL || strlen(uid) == 0
+	if (uuid == NULL || strlen(uuid) == 0
 	    || client_name == NULL || strlen(client_name) == 0
 	    || major_version == NULL || strlen(major_version) == 0
 	    || minor_version == NULL || strlen(minor_version) == 0) {
@@ -386,7 +386,7 @@ send_hello_message(IPC_Channel *ipc_client,
 	set_xml_property_copy(hello_node, "major_version", major_version);
 	set_xml_property_copy(hello_node, "minor_version", minor_version);
 	set_xml_property_copy(hello_node, "client_name",   client_name);
-	set_xml_property_copy(hello_node, "client_uuid",   uid);
+	set_xml_property_copy(hello_node, "client_uuid",   uuid);
 
 
 	send_xmlipc_message(ipc_client, hello_node);
@@ -397,13 +397,13 @@ send_hello_message(IPC_Channel *ipc_client,
 
 gboolean
 process_hello_message(IPC_Message *hello_message,
-		      char **uid,
+		      char **uuid,
 		      char **client_name,
 		      char **major_version,
 		      char **minor_version)
 {
 	FNIN();
-	*uid = NULL;
+	*uuid = NULL;
 	*client_name = NULL;
 	*major_version = NULL;
 	*minor_version = NULL;
@@ -429,7 +429,7 @@ process_hello_message(IPC_Message *hello_message,
 		FNRET(FALSE);
 	}
 
-	char *local_uid = xmlGetProp(hello, "client_uuid");
+	char *local_uuid = xmlGetProp(hello, "client_uuid");
 	char *local_client_name = xmlGetProp(hello, "client_name");
 	char *local_major_version = xmlGetProp(hello, "major_version");
 	char *local_minor_version = xmlGetProp(hello, "minor_version");
@@ -437,10 +437,10 @@ process_hello_message(IPC_Message *hello_message,
 
 	xml_message_debug(hello, "this is what we think we have");
 	
-	if (local_uid == NULL || strlen(local_uid) == 0) {
+	if (local_uuid == NULL || strlen(local_uuid) == 0) {
 		cl_log(LOG_ERR,
 		       "Hello message was not valid (field %s not found): %s",
-		       "uid", (char*)hello_message->msg_body);
+		       "uuid", (char*)hello_message->msg_body);
 		FNRET(FALSE);
 	} else if (local_client_name == NULL || strlen(local_client_name) == 0){
 		cl_log(LOG_ERR,
@@ -461,7 +461,7 @@ process_hello_message(IPC_Message *hello_message,
 		FNRET(FALSE);
 	}
     
-	*uid           = ha_strdup(local_uid);
+	*uuid           = ha_strdup(local_uuid);
 	*client_name   = ha_strdup(local_client_name);
 	*major_version = ha_strdup(local_major_version);
 	*minor_version = ha_strdup(local_minor_version);
@@ -494,7 +494,7 @@ gboolean
 send_ipc_request(IPC_Channel *ipc_channel,
 		 xmlNodePtr msg_options, xmlNodePtr msg_data, 
 		 const char *host_to, const char *sys_to,
-		 const char *sys_from, const char *uid_from,
+		 const char *sys_from, const char *uuid_from,
 		 const char *crm_msg_reference)
 {
 	gboolean was_sent = FALSE;
@@ -503,10 +503,10 @@ send_ipc_request(IPC_Channel *ipc_channel,
 
 	request = create_request(msg_options, msg_data,
 				 host_to, sys_to,
-				 sys_from, uid_from,
+				 sys_from, uuid_from,
 				 crm_msg_reference);
 
-	xml_message_debug(request, "Final request...");
+//	xml_message_debug(request, "Final request...");
 
 	was_sent = send_xmlipc_message(ipc_channel, request);
 
@@ -522,7 +522,7 @@ gboolean
 send_ha_request(ll_cluster_t *hb_fd,
 		xmlNodePtr msg_options, xmlNodePtr msg_data, 
 		const char *host_to, const char *sys_to,
-		const char *sys_from, const char *uid_from,
+		const char *sys_from, const char *uuid_from,
 		const char *crm_msg_reference)
 {
 	gboolean was_sent = FALSE;
@@ -531,7 +531,7 @@ send_ha_request(ll_cluster_t *hb_fd,
 
 	request = create_request(msg_options, msg_data,
 				 host_to, sys_to,
-				 sys_from, uid_from,
+				 sys_from, uuid_from,
 				 crm_msg_reference);
 
 //	xml_message_debug(request, "Final request...");
@@ -546,14 +546,14 @@ send_ha_request(ll_cluster_t *hb_fd,
 xmlNodePtr
 create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	       const char *host_to, const char *sys_to,
-	       const char *sys_from, const char *uid_from,
+	       const char *sys_from, const char *uuid_from,
 	       const char *crm_msg_reference)
 {
 	const char *true_from = sys_from;
 	FNIN();
 
-	if (uid_from != NULL)
-		true_from = generate_hash_key(sys_from, uid_from);
+	if (uuid_from != NULL)
+		true_from = generate_hash_key(sys_from, uuid_from);
 	// else make sure we are internal
 	else {
 		if (strcmp(CRM_SYSTEM_LRMD, sys_from) != 0
@@ -562,7 +562,7 @@ create_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 		    && strcmp(CRM_SYSTEM_DC, sys_from) != 0
 		    && strcmp(CRM_SYSTEM_CRMD, sys_from) != 0) {
 			cl_log(LOG_ERR,
-			       "only internal systems can leave uid_from blank");
+			       "only internal systems can leave uuid_from blank");
 			FNRET(FALSE);
 		}
 	}
@@ -609,7 +609,7 @@ send_ipc_reply(IPC_Channel *ipc_channel,
 	gboolean was_sent = FALSE;
 	xmlNodePtr reply = create_reply(xml_request, xml_response_data);
 
-	xml_message_debug(reply, "Final reply...");
+//	xml_message_debug(reply, "Final reply...");
 
 	if (reply != NULL) {
 		was_sent = send_xmlipc_message(ipc_channel, reply);

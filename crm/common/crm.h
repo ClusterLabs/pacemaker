@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.11 2004/02/26 12:58:57 andrew Exp $ */
+/* $Id: crm.h,v 1.12 2004/03/18 10:48:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,7 +25,7 @@
 #define WORKING_DIR HA_VARLIBDIR"/heartbeat/crm"
 #define BIN_DIR "/usr/lib/heartbeat"
 #define MAXDATASIZE 65535 // ipc comms
-#define FIFO_LEN    1024
+#define SOCKET_LEN    1024
 #define APPNAME_LEN 256
 #define LOG_DIR     "/var/log"
 #define MAX_IPC_FAIL 5
@@ -39,13 +39,13 @@
 #   define CRM_DEBUG4(w,x,y,z) cl_log(LOG_DEBUG, w, x, y, z)
 #else
 /* these wont work yet, need to cast to void */
-#   define CRM_DEBUG(w)        
-#   define CRM_DEBUG2(w,x)     
-#   define CRM_DEBUG3(w,x,y)  
-#   define CRM_DEBUG4(w,x,y,z)
+#   define CRM_DEBUG(w)		{ (void)w; }
+#   define CRM_DEBUG2(w,x)     	{ (void)w; (void)x; }
+#   define CRM_DEBUG3(w,x,y)  	{ (void)w; (void)x; (void)y; }
+#   define CRM_DEBUG4(w,x,y,z)	{ (void)w; (void)x; (void)y; (void)z; }
 #endif
 
-#if 1
+#if 0
 #   define FNIN()     cl_log(LOG_DEBUG, "#---#---# Entering function %s...", __FUNCTION__)
 #   define FNOUT()  { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return;   }
 #   define FNRET(x) { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return x; }

@@ -1,4 +1,4 @@
-/* $Id: msgutils.h,v 1.8 2004/03/05 13:08:52 andrew Exp $ */
+/* $Id: msgutils.h,v 1.9 2004/03/18 10:48:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,7 +32,7 @@ extern gboolean conditional_add_failure(xmlNodePtr failed,
 
 extern xmlNodePtr validate_crm_message(xmlNodePtr root,
 				       const char *sys,
-				       const char *uid,
+				       const char *uuid,
 				       const char *msg_type);
 
 extern xmlNodePtr createPingAnswerFragment(const char *from,
@@ -47,12 +47,12 @@ gboolean decodeNVpair(const char *srcstring,
 		      char **value);
 
 extern void send_hello_message(IPC_Channel *ipc_client,
-			       const char *uid,
+			       const char *uuid,
 			       const char *client_name,
 			       const char *major_version,
 			       const char *minor_version);
 extern gboolean process_hello_message(IPC_Message *hello_message,
-				      char **uid,
+				      char **uuid,
 				      char **client_name,
 				      char **major_version,
 				      char **minor_version);
@@ -66,14 +66,14 @@ extern gboolean
 send_ipc_request(IPC_Channel *ipc_channel,
 		 xmlNodePtr xml_options, xmlNodePtr xml_data,
 		 const char *host_to, const char *sys_to,
-		 const char *sys_from, const char *uid_from,
+		 const char *sys_from, const char *uuid_from,
 		 const char *crm_msg_reference);
 
 extern gboolean
 send_ha_request(ll_cluster_t *hb_fd,
 		xmlNodePtr xml_options, xmlNodePtr xml_data,
 		const char *host_to, const char *sys_to,
-		const char *sys_from, const char *uid_from,
+		const char *sys_from, const char *uuid_from,
 		const char *crm_msg_reference);
 
 extern gboolean send_ha_reply(ll_cluster_t *hb_cluster,
@@ -107,7 +107,7 @@ extern gboolean decode_hash_value(gpointer value,
 extern xmlNodePtr
 create_request(xmlNodePtr xml_options, xmlNodePtr xml_data,
 	       const char *host_to, const char *sys_to,
-	       const char *sys_from, const char *uid_from,
+	       const char *sys_from, const char *uuid_from,
 	       const char *crm_msg_reference);
 
 #endif

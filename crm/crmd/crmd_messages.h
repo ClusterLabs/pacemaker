@@ -74,5 +74,7 @@ extern gboolean send_request(xmlNodePtr msg_options,
 			     const char *host_to,
 			     const char *sys_to);
 
+extern enum crmd_fsa_input handle_message(xmlNodePtr stored_msg);
+
 
 #endif

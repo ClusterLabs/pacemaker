@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.14 2004/03/16 10:20:49 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.15 2004/03/18 10:48:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,9 +80,8 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 	IPC_Message *cib_dump =
 		create_simple_message(xml_message, ipc_client);
 	gboolean res = send_ipc_message(ipc_client, cib_dump);
-	CRM_DEBUG2("Sending of IPC message %s.", res?"succeeded":"failed");
 	ha_free(xml_message);
-	xml_message_debug(msg, "IPC Message was: ");
+	xml_message_debug(msg, "Sent IPC Message");
 	FNRET(res);
 }
 
@@ -90,7 +89,10 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 gboolean
 send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 {
+	gboolean broadcast = FALSE;
 	gboolean all_is_good = TRUE;
+	int send_result = -1;
+	int xml_len = -1;
 	const char *host_to = NULL;
 	const char *sys_to = NULL;
 	FNIN();
@@ -99,8 +101,6 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		cl_log(LOG_ERR, "Attempt to send NULL Message via HA failed.");
 		all_is_good = FALSE;
 	}
-	CRM_DEBUG2("Supplied XML data was %s.",
-		   all_is_good?"present":"empty");
 
 	host_to = xmlGetProp(root, XML_ATTR_HOSTTO);
 	sys_to = xmlGetProp(root, XML_ATTR_SYSTO);
@@ -118,8 +118,9 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		ha_msg_add(msg, F_TYPE, "CRM");
 		ha_msg_add(msg, F_COMMENT, "A CRM xml message");
 		char *xml_text = dump_xml(root);
-	
-		if (xml_text == NULL || strlen(xml_text) <= 0) {
+		xml_len = strlen(xml_text);
+		
+		if (xml_text == NULL || xml_len <= 0) {
 			cl_log(LOG_ERR,
 			       "Failed sending an invalid XML Message via HA");
 			all_is_good = FALSE;
@@ -132,30 +133,19 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 				all_is_good = FALSE;
 			}
 		}
-		
-		CRM_DEBUG3("Adding XML (%d chars) to HA message %s.",
-			   strlen(xml_text),
-			   all_is_good?"succeeded":"failed");
-
 	}
 
 	if (all_is_good) {
 		if (sys_to == NULL || strlen(sys_to) == 0)
 		{
-			cl_log(LOG_INFO,
+			cl_log(LOG_ERR,
 			       "You did not specify a destination sub-system"
 			       " for this message.");
 			all_is_good = FALSE;
 		}
-		CRM_DEBUG3("Destination of HA message is %s@%s",
-			   all_is_good?sys_to:"invalid",
-			   host_to==NULL?"<all>":host_to);	
 	}
 
 	if (all_is_good) {
-		int send_result = -1;
-		gboolean broadcast = FALSE;
-		CRM_DEBUG("Sending HA Message.");
 		if (host_to == NULL
 		    || strlen(host_to) == 0
 		    || strcmp("dc", sys_to) == 0) {
@@ -167,13 +157,24 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 			send_result =
 				hb_fd->llc_ops->sendnodemsg(hb_fd, msg, host_to);
 
+		if(send_result != HA_OK) all_is_good = FALSE;
+		
+	}
+
+	cl_log(LOG_DEBUG, "Sending %s HA message (ref=%s, len=%d) to %s@%s %s.",
+	       broadcast?"broadcast":"directed",
+	       xmlGetProp(root, XML_ATTR_REFERENCE), xml_len,
+	       sys_to, host_to==NULL?"<all>":host_to,
+	       all_is_good?"succeeded":"failed");
+
 #ifdef MSG_LOG
 	
 		char *msg_text = dump_xml(root);
 		if(msg_out_strm == NULL) {
 			msg_out_strm = fopen("/tmp/outbound.log", "w");
 		}
-		fprintf(msg_out_strm, "[HA (%s:%d)]\t%s\n",
+		fprintf(msg_out_strm, "[%d HA (%s:%d)]\t%s\n",
+			all_is_good,
 			xmlGetProp(root, XML_ATTR_REFERENCE),
 			send_result,
 			msg_text);
@@ -183,20 +184,10 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	
 #endif
 
-		if(send_result != HA_OK) all_is_good = FALSE;
-		
-		CRM_DEBUG2("Sent a %s HA message.",
-			   broadcast?"broadcast":"directed");
-	}
-
-//    if(msg) ha_msg_del(msg);
 
 	if(all_is_good == FALSE)
-		cl_log(LOG_ERR, "Sending of HA message %s failed",
-		       xmlGetProp(root, XML_ATTR_TSTAMP));
-	CRM_DEBUG2("Sending of HA message %s.",
-		   all_is_good?"succeeded":"failed");
-//	xml_message_debug(root, "HA Message was: ");
+		cl_log(LOG_ERR, "Reference of failed HA message %s",
+		       xmlGetProp(root, XML_ATTR_REFERENCE));
 	
 	FNRET(all_is_good);
 }
@@ -389,7 +380,7 @@ init_server_ipc_comms(
 	 * listen to this source at a relatively lower priority.
 	 */
     
-	char    commpath[FIFO_LEN];
+	char    commpath[SOCKET_LEN];
 	sprintf(commpath, WORKING_DIR "/%s", child);
 
 	IPC_WaitConnection *wait_ch;
@@ -423,13 +414,13 @@ init_client_ipc_comms(const char *child,
 	void *callback_data = client_data;
 	static char 	path[] = IPC_PATH_ATTR;
 
-	int local_fifo_len = 2; // 2 = '/' + '\0'
-	local_fifo_len += strlen(child);
-	local_fifo_len += strlen(WORKING_DIR);
+	int local_socket_len = 2; // 2 = '/' + '\0'
+	local_socket_len += strlen(child);
+	local_socket_len += strlen(WORKING_DIR);
 
-	char *commpath = (char*)ha_malloc(sizeof(char)*local_fifo_len);
+	char *commpath = (char*)ha_malloc(sizeof(char)*local_socket_len);
 	sprintf(commpath, WORKING_DIR "/%s", child);
-	commpath[local_fifo_len - 1] = '\0';
+	commpath[local_socket_len - 1] = '\0';
     
 	cl_log(LOG_DEBUG, "Attempting to talk on: %s", commpath);
 
@@ -471,7 +462,7 @@ init_client_ipc_comms(const char *child,
 
 
 IPC_WaitConnection *
-wait_channel_init(char daemonfifo[])
+wait_channel_init(char daemonsocket[])
 {
 	FNIN();
 	IPC_WaitConnection *wait_ch;
@@ -479,7 +470,7 @@ wait_channel_init(char daemonfifo[])
 	char path[] = IPC_PATH_ATTR;
     
 	GHashTable * attrs = g_hash_table_new(g_str_hash,g_str_equal);
-	g_hash_table_insert(attrs, path, daemonfifo);
+	g_hash_table_insert(attrs, path, daemonsocket);
     
 	mask = umask(0);
 	wait_ch = ipc_wait_conn_constructor(IPC_ANYTYPE, attrs);
