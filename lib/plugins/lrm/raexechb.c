@@ -156,7 +156,7 @@ execra( const char * rsc_type, const char * provider, const char * op_type,
 		return -1;
 	}
 
-	get_ra_pathname(RA_PATH, rsc_type, provider, ra_pathname);
+	get_ra_pathname(RA_PATH, rsc_type, NULL, ra_pathname);
 
 	debug_info = g_string_new("");
 	do {
@@ -230,7 +230,7 @@ map_ra_retvalue(int ret_execra, const char * op_type)
 static int 
 get_resource_list(GList ** rsc_info)
 {
-	return get_ra_list(RA_PATH, rsc_info);			
+	return get_runnable_list(RA_PATH, rsc_info);			
 }
 
 static void
@@ -257,11 +257,7 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 static int
 get_provider_list(const char* op_type, GList ** providers)
 {
-	int ret;
-	ret = get_providers(RA_PATH, op_type, providers);
-	if (0>ret) {
-		cl_log(LOG_ERR, "scandir failed in Heartbeat RA plugin");
-	}
-	return ret;
+	*providers = NULL;
+	return 0;
 }
 

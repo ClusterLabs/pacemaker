@@ -85,6 +85,10 @@ static void set_env(gpointer key, gpointer value, gpointer user_data);
 				   
 static gboolean let_remove_eachitem(gpointer key, gpointer value,
 				    gpointer user_data);
+static int get_providers(const char* class_path, const char* op_type,
+			 GList ** providers);
+static void merge_string_list(GList** old, GList* new);
+static gint g_compare_str(gconstpointer a, gconstpointer b);
 
 /* The end of internal function & data list */
 
@@ -158,7 +162,6 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 /*
  *	Real work starts here ;-)
  */
-
 static int
 execra(const char * rsc_type, const char * provider, const char * op_type,
 	GHashTable * params)
@@ -214,13 +217,75 @@ map_ra_retvalue(int ret_execra, const char * op_type)
 	/* Because the UNIFORM_RET_EXECRA is compatible with OCF standard */
 	return ret_execra;
 }
+gint
+g_compare_str(gconstpointer a, gconstpointer b)
+{
+	return strncmp(a,b,RA_MAX_NAME_LENGTH);
+}
 
 static int
 get_resource_list(GList ** rsc_info)
 {
-	return get_ra_list(RA_PATH, rsc_info);
-}
+	struct dirent **namelist;
+	GList* item;
+	int file_num;
 
+	if ( rsc_info == NULL ) {
+		cl_log(LOG_ERR, "Parameter error: get_resource_list");
+		return -2;
+	}
+
+	if ( *rsc_info != NULL ) {
+		cl_log(LOG_ERR, "Parameter error: get_resource_list."\
+			"will cause memory leak.");
+		*rsc_info = NULL;
+	}
+	file_num = scandir(RA_PATH, &namelist, 0, alphasort);
+	if (file_num < 0) {
+		return -2;
+	}
+	char subdir[FILENAME_MAX+1];
+	while (file_num--) {
+		GList* ra_subdir = NULL;
+		if (DT_DIR != namelist[file_num]->d_type) {
+			free(namelist[file_num]);
+			continue;
+		}
+
+		if ('.' == namelist[file_num]->d_name[0]) {
+			free(namelist[file_num]);
+			continue;
+		}
+		snprintf(subdir,FILENAME_MAX,"%s%s",
+			 RA_PATH, namelist[file_num]->d_name);
+			 
+		get_runnable_list(subdir,&ra_subdir);
+
+		merge_string_list(rsc_info,ra_subdir);
+
+		while (NULL != (item = g_list_first(ra_subdir))) {
+			ra_subdir = g_list_remove(ra_subdir, item->data);
+			g_free(item->data);
+			g_list_free(item);
+		}
+
+		free(namelist[file_num]);
+	}
+	free(namelist);
+			
+	return 0;
+}
+void
+merge_string_list(GList** old, GList* new)
+{
+	GList* item = NULL;
+	for( item=g_list_first(new); NULL!=item; item=g_list_next(item)){
+		if (!g_list_find_custom(*old, item->data,g_compare_str)){
+			char* newitem = strndup(item->data,RA_MAX_NAME_LENGTH);
+			*old = g_list_append(*old, newitem);
+		}
+	}
+}
 
 static int
 get_provider_list(const char* op_type, GList ** providers)
@@ -328,3 +393,45 @@ set_env(gpointer key, gpointer value, gpointer user_data)
         /*Need to free the memory to which key and value point?*/
 }
 
+int
+get_providers(const char* class_path, const char* op_type, GList ** providers)
+{
+	struct dirent **namelist;
+	int file_num;
+
+	if ( providers == NULL ) {
+		return -2;
+	}
+
+	if ( *providers != NULL ) {
+		*providers = NULL;
+	}
+
+	file_num = scandir(class_path, &namelist, 0, alphasort);
+	if (file_num < 0) {
+		return -2;
+	}else{
+		char tmp_buffer[FILENAME_MAX+1];
+		while (file_num--) {
+			if (DT_DIR != namelist[file_num]->d_type) {
+				free(namelist[file_num]);
+				continue;
+			}
+			if ('.' == namelist[file_num]->d_name[0]) {
+				free(namelist[file_num]);
+				continue;
+			}
+
+			snprintf(tmp_buffer,FILENAME_MAX,"%s%s/%s",
+				 class_path, namelist[file_num]->d_name, op_type);
+
+			if ( filtered(tmp_buffer) == TRUE ) {
+				*providers = g_list_append(*providers,
+					g_strdup(namelist[file_num]->d_name));
+			}
+			free(namelist[file_num]);
+		}
+		free(namelist);
+	}
+	return g_list_length(*providers);
+}
