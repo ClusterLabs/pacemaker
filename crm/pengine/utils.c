@@ -226,6 +226,7 @@ create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
 	new_color->id = color_id++;
 	new_color->local_weight = 1.0;
 	new_color->details = crm_malloc(sizeof(struct color_shared_s));
+	new_color->details->id = new_color->id; 
 	new_color->details->chosen_node = NULL; 
 	new_color->details->candidate_nodes = node_list_dup(nodes);
 
@@ -243,7 +244,8 @@ create_color(GSListPtr *colors, GSListPtr nodes, GSListPtr resources)
 		slist_iter(
 			rsc, resource_t, resources, lpc,
 			if(rsc->provisional && rsc->runnable) {
-				color_t *color_copy = cl_malloc(sizeof(color_t));
+				color_t *color_copy = (color_t *)
+					cl_malloc(sizeof(color_t));
 
 				color_copy->id      = new_color->id;
 				color_copy->details = new_color->details;
@@ -319,8 +321,12 @@ gint gslist_color_compare(gconstpointer a, gconstpointer b);
 color_t *
 find_color(GSListPtr candidate_colors, color_t *other_color)
 {
-	return (color_t *)g_slist_find_custom(candidate_colors, other_color,
-				   gslist_color_compare);
+	GSListPtr tmp = g_slist_find_custom(candidate_colors, other_color,
+					    gslist_color_compare);
+	if(tmp != NULL) {
+		return (color_t *)tmp->data;
+	}
+	return NULL;
 }
 
 
@@ -328,7 +334,11 @@ gint gslist_color_compare(gconstpointer a, gconstpointer b)
 {
 	const color_t *color_a = (const color_t*)a;
 	const color_t *color_b = (const color_t*)b;
-	if(color_a->id == color_b->id) {
+	if(a == b) {
+		return 0;
+	} else if(a == NULL || b == NULL) {
+		return 1;
+	} else if(color_a->id == color_b->id) {
 		return 0;
 	}
 	return 1;
