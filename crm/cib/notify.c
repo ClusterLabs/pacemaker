@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.6 2005/01/26 13:30:55 andrew Exp $ */
+/* $Id: notify.c,v 1.7 2005/02/07 11:09:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -86,22 +86,10 @@ cib_pre_notify(
 	type = cl_get_string(update_msg, F_CIB_OBJTYPE);	
 	
 	if(existing != NULL) {
-		char *existing_s = dump_xml_unformatted(existing);
-		if(existing_s != NULL) {
-			ha_msg_add(update_msg, F_CIB_EXISTING, existing_s);
-		} else {
-			crm_debug("Update string was NULL (xml=%p)", update);
-		}
-		crm_free(existing_s);
+		add_message_xml(update_msg, F_CIB_EXISTING, existing);
 	}
 	if(update != NULL) {
-		char *update_s = dump_xml_unformatted(update);
-		if(update_s != NULL) {
-			ha_msg_add(update_msg, F_CIB_UPDATE, update_s);
-		} else {
-			crm_debug("Update string was NULL (xml=%p)", update);
-		}
-		crm_free(update_s);
+		add_message_xml(update_msg, F_CIB_UPDATE, update);
 	}
 
 	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
@@ -147,21 +135,10 @@ cib_post_notify(
 	type = cl_get_string(update_msg, F_CIB_OBJTYPE);
 	
 	if(update != NULL) {
-		char *update_s = dump_xml_unformatted(update);
-		if(update_s != NULL) {
-			ha_msg_add(update_msg, F_CIB_UPDATE, update_s);
-		} else {
-			crm_debug("Update string was NULL (xml=%p)", update);
-		}
-		crm_free(update_s);
+		add_message_xml(update_msg, F_CIB_UPDATE, update);
+
 	} else if(new_obj != NULL) {
-		char *new_obj_s = dump_xml_unformatted(new_obj);
-		if(new_obj_s != NULL) {
-			ha_msg_add(update_msg, F_CIB_UPDATE_RESULT, new_obj_s);
-		} else {
-			crm_debug("Update string was NULL (xml=%p)", new_obj);
-		}
-		crm_free(new_obj_s);
+		add_message_xml(update_msg, F_CIB_UPDATE_RESULT, new_obj);
 	}
 
 	crm_debug("Notifying clients");
@@ -190,11 +167,11 @@ cib_post_notify(
 	} else {
 		if(result == cib_ok) {
 			crm_verbose("Completed %s of <%s %s%s>",
-				    op, type, id?"id=":"", id);
+				    op, type, id?"id=":"", id?id:"");
 			
 		} else {
 			crm_warn("%s of <%s %s%s> FAILED: %s", op, type,
-				 id?"id=":"", id, cib_error2string(result));
+				 id?"id=":"", id?id:"", cib_error2string(result));
 		}
 	}
 	crm_debug("Notify complete");

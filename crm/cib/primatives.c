@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.8 2005/01/26 13:30:58 andrew Exp $ */
+/* $Id: primatives.c,v 1.9 2005/02/07 11:09:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -451,27 +451,33 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 			result = cib_NODECOPY;
 			
 		} else if(add_node_copy(parent, new_obj) == NULL) {
-			crm_warn("Failed to add  <%s id=%s>", object_name, object_id);
+			crm_warn("Failed to add  <%s id=%s>",
+				 crm_str(object_name), crm_str(object_id));
 			result = cib_NODECOPY;
 		} else {
-			crm_debug("Added  <%s id=%s>", object_name, object_id);
+			crm_debug("Added  <%s id=%s>",
+				  crm_str(object_name), crm_str(object_id));
 
 			if(object_id == NULL) {
 				/*  placeholder object */
-				equiv_node = find_xml_node(parent, object_name, TRUE);
+				equiv_node = find_xml_node(
+					parent, object_name, TRUE);
 				
 			} else {
-				equiv_node = find_entity(parent, object_name, object_id, FALSE);
+				equiv_node = find_entity(
+					parent, object_name, object_id, FALSE);
 			}
 		}
 		
 	} else {
-		crm_verbose("Found node <%s id=%s> to update", object_name, object_id);
+		crm_verbose("Found node <%s id=%s> to update",
+			    crm_str(object_name), crm_str(object_id));
 
 		replace = crm_element_value(new_obj, XML_CIB_ATTR_REPLACE);
 		
 		if(replace != NULL) {
-			crm_data_t *remove = find_xml_node(equiv_node, replace, FALSE);
+			crm_data_t *remove = find_xml_node(
+				equiv_node, replace, FALSE);
 			if(remove != NULL) {
 				crm_debug("Replacing node <%s> in <%s>",
 					  replace, crm_element_name(equiv_node));
@@ -518,7 +524,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 			);
 		
 	}
-	crm_debug("Finished with <%s id=%s>", object_name, object_id);
+	crm_debug("Finished with <%s id=%s>", crm_str(object_name), object_id);
 	
 	cib_post_notify(CRM_OP_CIB_UPDATE, new_obj, result, equiv_node);
 

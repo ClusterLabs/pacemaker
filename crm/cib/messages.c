@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.17 2005/02/01 22:45:12 andrew Exp $ */
+/* $Id: messages.c,v 1.18 2005/02/07 11:09:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -170,9 +170,9 @@ cib_process_ping(
 {
 	enum cib_errors result = cib_ok;
 	crm_debug("Processing \"%s\" event", op);
-	if(answer != NULL) *answer = NULL;
-
-	*answer = createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
+	if(answer != NULL) {
+		*answer = createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
+	}
 	return result;
 }
 
@@ -187,13 +187,12 @@ cib_process_query(
 	crm_data_t *obj_root = NULL;
 	enum cib_errors result = cib_ok;
 
-	if(answer != NULL) *answer = NULL;
-	
 	crm_debug("Processing \"%s\" event", op);
 	crm_verbose("Handling a query for section=%s of the cib", section);
 
-	*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
-
+	if(answer != NULL) *answer = NULL;
+	else return cib_ok;
+	
 #if 0
 	if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
 		section = NULL;
@@ -204,11 +203,10 @@ cib_process_query(
 	}
 #endif
 
+	*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
 /*  	set_xml_property_copy(*answer, XML_ATTR_SECTION, section); */
 	set_xml_property_copy(*answer, "generated_on", cib_our_uname);
-
 	add_node_copy(*answer, the_cib);
-	return cib_ok;
 
 	obj_root = get_object_root(section, get_the_CIB());
 	
@@ -251,7 +249,9 @@ cib_process_erase(
 	}
 
 	cib_post_notify(op, NULL, result, the_cib);
-	*answer = createCibFragmentAnswer(NULL, NULL);
+	if(answer != NULL) {
+		*answer = createCibFragmentAnswer(NULL, NULL);
+	}
 	
 	return result;
 }
@@ -282,7 +282,9 @@ cib_process_bump(
 	}
 
 	cib_post_notify(op, NULL, result, get_the_CIB());
-	*answer = createCibFragmentAnswer(NULL, NULL);
+	if(answer != NULL) {
+		*answer = createCibFragmentAnswer(NULL, NULL);
+	}
 	
 	return result;
 }
@@ -379,7 +381,9 @@ cib_process_replace(
 	}
 
 	if (verbose || result != cib_ok) {
-		*answer = createCibFragmentAnswer(section_name, NULL);
+		if(answer != NULL) {
+			*answer = createCibFragmentAnswer(section_name, NULL);
+		}
 	}
 	
 	cib_post_notify(op, the_update, result,
