@@ -1,4 +1,4 @@
-/* $Id: crmutils.c,v 1.8 2004/03/18 10:27:31 andrew Exp $ */
+/* $Id: crmutils.c,v 1.9 2004/03/24 10:18:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <crm.h>
+#include <crm/crm.h>
 
 #include <portability.h>
 #include <stdio.h>

@@ -16,13 +16,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <crm/common/crm.h>
+#include <crm/crm.h>
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
 #include <crmd.h>
 #include <crm/common/ipcutils.h>
 #include <crm/common/crmutils.h>
-#include <crm/common/xmlvalues.h>
+
 #include <clplumbing/Gmain_timeout.h>
 
 #include <crm/dmalloc_wrapper.h>

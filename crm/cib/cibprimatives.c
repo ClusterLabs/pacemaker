@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.18 2004/03/24 09:59:04 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.19 2004/03/24 10:18:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <crm/common/crm.h>
+#include <crm/crm.h>
 
 #include <portability.h>
 #include <stdio.h>
@@ -33,8 +33,8 @@
 #include <libxml/tree.h>
 
 #include <cibprimatives.h>
-#include <crm/common/xmltags.h>
-#include <crm/common/xmlvalues.h>
+#include <crm/msg_xml.h>
+
 #include <crm/common/xmlutils.h>
 #include <crm/cib.h>
 

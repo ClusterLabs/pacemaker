@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.16 2004/03/18 13:32:38 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.17 2004/03/24 10:18:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,9 +31,9 @@
 #include <clplumbing/ipc.h>
 #include <clplumbing/cl_log.h> 
 
-#include <crm.h>
+#include <crm/crm.h>
 #include <xmlutils.h>
-#include <xmltags.h>
+#include <crm/msg_xml.h>
 
 #include <crm/dmalloc_wrapper.h>
 

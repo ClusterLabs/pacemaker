@@ -1,4 +1,4 @@
-/* $Id: crmd.c,v 1.15 2004/03/05 14:01:17 andrew Exp $ */
+/* $Id: crmd.c,v 1.16 2004/03/24 10:18:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <crm/common/crm.h>
+#include <crm/crm.h>
 
 #include <portability.h>
 #include <stdio.h>
@@ -42,7 +42,7 @@
 #include <clplumbing/cl_poll.h>
 
 #include <ocf/oc_event.h>
-#include <crm/common/xmlvalues.h>
+
 #include <crm/common/msgutils.h>
 #include <crm/common/xmlutils.h>
 
@@ -56,7 +56,7 @@ GHashTable   *ipc_clients = NULL;
 #include <crm/common/crmutils.h>
 #include <crm/common/ipcutils.h>
 #include <crm/common/msgutils.h>
-#include <crm/common/xmltags.h>
+#include <crm/msg_xml.h>
 #include <crm/common/xmlutils.h>
 #include <glib.h>
 #include <crmd.h>

@@ -1,4 +1,4 @@
-/* $Id: crmdmain.c,v 1.11 2004/03/05 14:01:17 andrew Exp $ */
+/* $Id: crmdmain.c,v 1.12 2004/03/24 10:18:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <crm/common/crm.h>
+#include <crm/crm.h>
 
 #include <portability.h>
 #include <stdio.h>
@@ -46,7 +46,7 @@ const char* crm_system_name = "crmd";
 
 #include <crm/common/crmutils.h>
 #include <crm/common/ipcutils.h>
-#include <crm/common/xmlvalues.h>
+
 #include <crmd.h>
 
 #include <crmd_fsa.h>

@@ -19,7 +19,7 @@
 #define XML_CRM_MESSAGES__H
 
 
-#include <crm/common/crm.h>
+#include <crm/crm.h>
 #include <crm/common/ipcutils.h>
 #include <crmd_fsa.h>
 #include <libxml/tree.h>

@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.12 2004/03/24 09:59:04 andrew Exp $ */
+/* $Id: cibmain.c,v 1.13 2004/03/24 10:18:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <crm/common/crm.h>
+#include <crm/crm.h>
 
 #include <portability.h>
 #include <stdio.h>
@@ -46,8 +46,8 @@
 #include <crm/common/ipcutils.h>
 #include <crm/common/crmutils.h>
 #include <crm/common/xmlutils.h>
-#include <crm/common/xmltags.h>
-#include <crm/common/xmlvalues.h>
+#include <crm/msg_xml.h>
+
 #include <cibio.h>
 #include <crm/cib.h>
 #include <crm/common/msgutils.h>

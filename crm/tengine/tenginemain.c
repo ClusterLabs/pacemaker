@@ -1,4 +1,4 @@
-/* $Id: tenginemain.c,v 1.9 2004/02/29 20:24:36 andrew Exp $ */
+/* $Id: tenginemain.c,v 1.10 2004/03/24 10:18:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,7 +18,7 @@
  */
 
 
-#include <crm/common/crm.h>
+#include <crm/crm.h>
 
 #include <portability.h>
 #include <stdio.h>
@@ -44,7 +44,7 @@
 
 #include <crm/common/ipcutils.h>
 #include <crm/common/crmutils.h>
-#include <crm/common/xmlvalues.h>
+
 #include <crm/common/msgutils.h>
 
 #include <crm/dmalloc_wrapper.h>

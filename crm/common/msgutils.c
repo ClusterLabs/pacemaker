@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.23 2004/03/24 09:59:04 andrew Exp $ */
+/* $Id: msgutils.c,v 1.24 2004/03/24 10:18:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <crm.h>
+#include <crm/crm.h>
 
 #include <portability.h>
 #include <stdio.h>
@@ -35,8 +35,8 @@
 #include <ha_msg.h>
 #include <ipcutils.h>
 #include <xmlutils.h>
-#include <xmltags.h>
-#include <xmlvalues.h>
+#include <crm/msg_xml.h>
+
 
 #include <crm/dmalloc_wrapper.h>
 

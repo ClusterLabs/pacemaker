@@ -1,4 +1,4 @@
-/* $Id: lrmdmessages.c,v 1.7 2004/02/26 12:58:58 andrew Exp $ */
+/* $Id: lrmdmessages.c,v 1.8 2004/03/24 10:18:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,7 +34,7 @@
 #include <crm/common/crmutils.h>
 #include <crm/common/xmlutils.h>
 #include <cibio.h>
-#include <crm/common/xmltags.h>
+#include <crm/msg_xml.h>
 #include <clplumbing/cl_log.h>
 #include <cibprimatives.h>
 
