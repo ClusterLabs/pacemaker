@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.36 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: stages.c,v 1.37 2005/02/20 22:05:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -399,16 +399,20 @@ choose_node_from_list(color_t *color)
 	  3. remove color.chosen_node from all other colors
 	*/
 	GListPtr nodes = color->details->candidate_nodes;
-	nodes = g_list_sort(nodes, sort_node_weight);
-	color->details->chosen_node =
-		node_copy((node_t*)g_list_nth_data(nodes, 0));
+	node_t *chosen = NULL;
+
+	nodes  = g_list_sort(nodes, sort_node_weight);
+	chosen = g_list_nth_data(nodes, 0);
+
+	color->details->chosen_node = NULL;
 	color->details->pending = FALSE;
 
-	if(color->details->chosen_node == NULL) {
+	if(chosen == NULL) {
 		crm_err("Could not allocate a node for color %d", color->id);
 		return FALSE;
 	}
 	
+	color->details->chosen_node = node_copy(chosen);
 	return TRUE;
 }
 
