@@ -1,4 +1,4 @@
-/* $Id: crmutils.h,v 1.6 2004/04/02 12:08:36 andrew Exp $ */
+/* $Id: crmutils.h,v 1.7 2004/05/06 12:13:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,5 +49,7 @@ extern void register_with_apphb(
 	gboolean(*tickle_fn)(gpointer data));
 
 extern char *crm_itoa(int an_int);
+
+extern gboolean subsystem_input_dispatch(IPC_Channel *sender, void *user_data);
 
 #endif
