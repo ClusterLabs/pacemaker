@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.46 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: crm.h,v 1.47 2005/02/24 14:55:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -103,6 +103,7 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_CIB_DELETE	"cib_delete"
 #define CRM_OP_CIB_ERASE	"cib_erase"
 #define CRM_OP_CIB_REPLACE	"cib_replace"
+#define CRM_OP_CIB_NOTIFY	"cib_notify"
 
 #define CRM_OP_DIE		"die_no_respawn"
 #define CRM_OP_RETRIVE_CIB	"retrieve_cib"

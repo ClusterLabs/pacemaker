@@ -27,6 +27,7 @@
 #include <heartbeat.h>
 #include <clplumbing/ipc.h>
 #include <ha_msg.h>
+
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/ipc.h>
@@ -61,6 +62,7 @@ void cib_native_notify(gpointer data, gpointer user_data);
 
 void cib_native_callback(cib_t *cib, struct ha_msg *msg);
 
+int cib_native_register_callback(cib_t* cib, const char *callback, int enabled);
 
 cib_t*
 cib_native_new (cib_t *cib)
@@ -83,6 +85,7 @@ cib_native_new (cib_t *cib)
 	cib->cmds->rcvmsg     = cib_native_rcvmsg;
 	cib->cmds->dispatch   = cib_native_dispatch;
 
+	cib->cmds->register_callback = cib_native_register_callback;
 	cib->cmds->set_connection_dnotify = cib_native_set_connection_dnotify;
 	
 	return cib;
@@ -130,9 +133,10 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 		} else if(native->callback_source == NULL) {
 			crm_err("Callback source not recorded");
 			rc = cib_connection;
+		} else {
+			native->callback_channel->send_queue->max_qlen = 500;
 		}
-		
-		
+	
 	} else if(rc == cib_ok
 		  && native->callback_channel->ch_status != IPC_CONNECT) {
 		crm_err("Connection may have succeeded,"
@@ -552,7 +556,7 @@ cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 
 	crm_devel("%d CIB messages dispatched", lpc);
 
-	if (channel && (channel->ch_status == IPC_DISCONNECT)) {
+	if (channel && (channel->ch_status != IPC_CONNECT)) {
 		crm_crit("Lost connection to the CIB service.");
 		return FALSE;
 	}
@@ -584,4 +588,19 @@ int cib_native_set_connection_dnotify(
 	return cib_ok;
 }
 
+
+int
+cib_native_register_callback(cib_t* cib, const char *callback, int enabled) 
+{
+	HA_Message *notify_msg = ha_msg_new(3);
+	cib_native_opaque_t *native = cib->variant_opaque;
+
+	/* short term hack - should make this generic somehow */
+	ha_msg_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
+	ha_msg_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
+	ha_msg_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
+	msg2ipcchan(notify_msg, native->callback_channel);
+	ha_msg_del(notify_msg);
+	return cib_ok;
+}
 

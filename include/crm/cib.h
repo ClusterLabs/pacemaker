@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.17 2005/02/21 13:13:45 andrew Exp $ */
+/* $Id: cib.h,v 1.18 2005/02/24 14:55:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -140,6 +140,8 @@ enum cib_section {
 #define F_CIB_GLOBAL_UPDATE	"cib_update"
 #define F_CIB_UPDATE_RESULT	"cib_update_result"
 #define F_CIB_CLIENTNAME	"cib_clientname"
+#define F_CIB_NOTIFY_TYPE	"cib_notify_type"
+#define F_CIB_NOTIFY_ACTIVATE	"cib_notify_activate"
 
 #define T_CIB			"cib"
 #define T_CIB_NOTIFY		"cib_notify"
@@ -223,6 +225,10 @@ typedef struct cib_api_operations_s
 		gboolean (*msgready)(cib_t* cib);
 		int (*rcvmsg)(cib_t* cib, int blocking);
 		gboolean (*dispatch)(IPC_Channel *channel, gpointer user_data);
+
+		int (*register_callback)(
+			cib_t* cib, const char *callback, int enabled);
+
 } cib_api_operations_t;
 
 struct cib_s

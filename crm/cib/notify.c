@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.14 2005/02/21 13:13:45 andrew Exp $ */
+/* $Id: notify.c,v 1.15 2005/02/24 14:54:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,14 +53,44 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	HA_Message *update_msg = user_data;
 	cib_client_t *client = value;
+	const char *type = NULL;
+	gboolean is_pre = FALSE;
+	gboolean is_post = FALSE;	
+	gboolean is_confirm = FALSE;
 
 	CRM_DEV_ASSERT(client != NULL);
 	CRM_DEV_ASSERT(update_msg != NULL);
 
-	if(client != NULL
-	   && safe_str_eq(client->channel_name, cib_channel_callback)) {
+	type = cl_get_string(update_msg, F_SUBTYPE);
+	CRM_DEV_ASSERT(type != NULL);
+
+	if(safe_str_eq(type, T_CIB_PRE_NOTIFY)) {
+		is_pre = TRUE;
+		
+	} else if(safe_str_eq(type, T_CIB_POST_NOTIFY)) {
+		is_post = TRUE;
+
+	} else if(safe_str_eq(type, T_CIB_UPDATE_CONFIRM)) {
+		is_confirm = TRUE;
+	}
+
+	if(client == NULL) {
+		crm_warn("Skipping NULL client");
+		
+	} else if(client->channel->ch_status != IPC_CONNECT) {
+		crm_debug("Skipping notification to disconnected"
+			  " client %s/%s", client->name, client->id);
+
+	} else if( (client->pre_notify && is_pre)
+		   || (client->post_notify && is_post)
+		   || (client->confirmations && is_confirm) ) {
+		
 		crm_trace("Notifying client %s/%s of update",
-			  client->name, client->id);
+			  client->name, client->channel_name);
+		
+		crm_debug("%s/%s queue length: %d",
+			  client->name, client->channel_name,
+			  client->channel->send_queue->current_qlen);
 		
 		if(client->channel->should_send_blocking == FALSE) {
 			crm_warn("Client channel %s/%s was not set to"
@@ -70,9 +100,14 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		
 		if(msg2ipcchan(update_msg, client->channel) != HA_OK) {
 			crm_warn("Notification of client %s/%s failed",
-				client->name, client->id);
+				 client->name, client->id);
 		}
+		
+	} else {
+		crm_trace("Client %s/%s not interested in %s notifications",
+			  client->name, client->channel_name, type);	
 	}
+	
 }
 
 void

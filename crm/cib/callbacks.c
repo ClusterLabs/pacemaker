@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.24 2005/02/21 13:13:45 andrew Exp $ */
+/* $Id: callbacks.c,v 1.25 2005/02/24 14:54:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -241,7 +241,27 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		op_request = msgfromIPC_noauth(channel);
 
 		type = cl_get_string(op_request, F_CIB_OPERATION);
-		if(safe_str_neq(type, CRM_OP_REGISTER) ) {
+		if(safe_str_eq(type, CRM_OP_REGISTER) ) {
+			/* ok */
+		} else if(safe_str_eq(type, T_CIB_NOTIFY) ) {
+			int on_off = 0;
+			ha_msg_value_int(
+				op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
+			type = cl_get_string(op_request, F_CIB_NOTIFY_TYPE);
+
+			if(safe_str_eq(type, T_CIB_POST_NOTIFY)) {
+				cib_client->post_notify = on_off;
+				
+			} else if(safe_str_eq(type, T_CIB_PRE_NOTIFY)) {
+				cib_client->pre_notify = on_off;
+
+			} else if(safe_str_eq(type, T_CIB_UPDATE_CONFIRM)) {
+				cib_client->confirmations = on_off;
+
+			}
+			continue;
+			
+		} else {
 			crm_warn("Discarding IPC message from %s on callback channel",
 				 cib_client->id);
 			crm_msg_del(op_request);
@@ -726,7 +746,7 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 gboolean
 cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 {
-	if (channel->ch_status == IPC_DISCONNECT && cib_client != NULL) {
+	if (channel->ch_status != IPC_CONNECT && cib_client != NULL) {
 		crm_info("Cleaning up after %s channel disconnect from client (%p) %s",
 			 cib_client->channel_name, cib_client,
 			 crm_str(cib_client->id));
@@ -752,7 +772,7 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 
 		return FALSE;
 
-	} else if (channel->ch_status == IPC_DISCONNECT) {
+	} else if (channel->ch_status != IPC_CONNECT) {
 		crm_warn("Unknown client disconnected");
 		return FALSE;
 	}

@@ -32,6 +32,15 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
+/* short term hack to reduce callback messages */
+typedef struct cib_native_opaque_s 
+{
+		IPC_Channel	*command_channel;
+		IPC_Channel	*callback_channel;
+ 		GCHSource	*callback_source; 
+		
+} cib_native_opaque_t;
+
 gboolean verify_cib_cmds(cib_t *cib);
 
 int cib_client_set_op_callback(
@@ -447,6 +456,8 @@ int cib_client_add_notify_callback(
 		cib->notify_list = g_list_append(
 			cib->notify_list, new_client);
 
+		cib->cmds->register_callback(cib, event, 1);
+		
 		crm_devel("Callback added (%d)", g_list_length(cib->notify_list));
 	}
 	return cib_ok;
@@ -469,11 +480,14 @@ int cib_client_del_notify_callback(
 	list_item = g_list_find_custom(
 		cib->notify_list, new_client, ciblib_GCompareFunc);
 	
+	cib->cmds->register_callback(cib, event, 0);
+
 	if(list_item != NULL) {
 		cib_notify_client_t *list_client = list_item->data;
 		cib->notify_list =
 			g_list_remove(cib->notify_list, list_client);
 		crm_free(list_client);
+
 		crm_devel("Removed callback");
 
 	} else {

@@ -1,4 +1,4 @@
-/* $Id: callbacks.h,v 1.6 2005/02/21 13:13:45 andrew Exp $ */
+/* $Id: callbacks.h,v 1.7 2005/02/24 14:54:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,6 +48,10 @@ typedef struct cib_client_s
 		IPC_Channel *channel;
 		GCHSource   *source;
 
+		int pre_notify;
+		int post_notify;
+		int confirmations;
+		
 		GList *delegated_calls;
 } cib_client_t;
 
