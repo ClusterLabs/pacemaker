@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.9 2004/10/06 19:34:42 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.10 2004/10/13 21:51:47 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -676,15 +676,22 @@ do_find_resource(const char *rsc, xmlNodePtr xml_node)
 			
 			crm_debug("checking %s:%s for %s", target, id, rsc);
 
+			if(safe_str_neq(rsc, id)){
+				crm_trace("no match");
+				continue;
+			}
+			
 			if(safe_str_eq("stop", last_op)) {
 				crm_debug("resource %s is stopped on: %s\n",
 					  rsc, target);
 				
-			} else if(safe_str_eq(last_op, "start")
-				  && safe_str_neq(op_code, "0")) {
+			} else if(safe_str_neq(op_code, "0")) {
 				crm_debug("resource %s is failed on: %s\n",
 					  rsc, target);				
-			} else if(safe_str_eq(rsc, id)){
+
+			} else {
+				crm_debug("resource %s is running on: %s\n",
+					  rsc, target);				
 				printf("resource %s is running on: %s\n",
 				       rsc, target);
 				if(BE_SILENT) {
