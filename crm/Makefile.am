@@ -27,6 +27,6 @@ install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)$(crmdir)
 #	-chgrp $(apigid) $(DESTDIR)/$(crmdir)
 #	-chown $(ccmuid) $(DESTDIR)/$(libdir)/$(HB_PKG)
-	cp  admin_cib_test.sh $(DESTDIR)/$(libdir)/$(HB_PKG)
+	cp  $(top_srcdir)/crm/admin_cib_test.sh $(DESTDIR)/$(libdir)/$(HB_PKG)
 	-chmod 770 $(DESTDIR)/$(crmdir)
 
