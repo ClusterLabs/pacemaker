@@ -28,7 +28,7 @@ crm-cleanup
 
 #----
 
-do_cmd echo "wait for HA to start"
+do_cmd echo "wait for HA to start on ${test_node_1}"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 300 \
@@ -39,7 +39,7 @@ cts_assert "Startup of Heartbeat on ${test_node_1} failed."
 
 #----
 
-do_cmd echo "wait for CRMd to start"
+do_cmd echo "wait for CRMd to start on ${test_node_1}"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd -VVVV "2>&1 >/dev/null" &
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 500 \
@@ -67,6 +67,7 @@ crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_constraint_adv $test_node_1 $node_xml
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert Adding constraint1 did not pass
 
 #----
 
@@ -85,6 +86,7 @@ crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_constraint_adv $test_node_1 $node_xml
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\""
+cts_assert Adding constraint2 did not pass
 
 #----
 
@@ -96,6 +98,7 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
     -s "crmd(.*) Performing op start(.*) on rsc1" \
     -s "crmd(.*) Resource state: rsc1(.*) after start"
+cts_assert Adding rsc1 did not pass
 
 #----
 
@@ -107,6 +110,7 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500
     -s "crmd(.*) State transition (.*) \-> \"S_IDLE\"" \
     -s "crmd(.*) Performing op start(.*) on rsc2" \
     -s "crmd(.*) Resource state: rsc2(.*) after start"
+cts_assert Adding rsc2 did not pass
 
 #----
 
