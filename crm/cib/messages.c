@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.2 2004/09/17 13:03:09 andrew Exp $ */
+/* $Id: messages.c,v 1.3 2004/09/21 19:12:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -82,6 +82,7 @@ cib_process_request(const char *op,
 	char *new_value = NULL;
 	char *old_value = NULL;
 	int int_value = -1;
+	char *xml_text = NULL;
 	
 	*result = CIBRES_OK;
 	verbose = xmlGetProp(options, XML_ATTR_VERBOSE);
@@ -243,11 +244,18 @@ cib_process_request(const char *op,
 			
 		} else if (failed->children != NULL) {
 			*result = CIBRES_FAILED;
+			crm_xml_info(failed, "CIB Update failures");
 
+			xml_text = dump_xml_formatted(failed);
+			fprintf(msg_cib_strm, "[CIB %s failures]\t%s\n",
+				op, xml_text);
+			crm_free(xml_text);
+			
 		}
+		xml_text = dump_xml_formatted(get_the_CIB());
 		fprintf(msg_cib_strm, "[New CIB (%s - %s)]\t%s\n", op,
-			cib_error2string(*result),
-			dump_xml_formatted(get_the_CIB()));
+			cib_error2string(*result), xml_text);
+		crm_free(xml_text);
 		fflush(msg_cib_strm);
 		
 		crm_verbose("CIB update status: %d", *result);
@@ -419,10 +427,8 @@ check_generation(xmlNodePtr newCib, xmlNodePtr oldCib)
 }
  
 gboolean
-update_results(xmlNodePtr failed,
-			xmlNodePtr target,
-			int operation,
-			int return_code)
+update_results(
+	xmlNodePtr failed, xmlNodePtr target, int operation, int return_code)
 {
 	gboolean was_error = FALSE;
 	const char *error_msg = NULL;
@@ -437,7 +443,9 @@ update_results(xmlNodePtr failed,
 		xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
 
 		was_error = TRUE;
-				
+
+		add_node_copy(xml_node, target);
+		
 		set_xml_property_copy(
 			xml_node, XML_FAILCIB_ATTR_ID, ID(target));
 
