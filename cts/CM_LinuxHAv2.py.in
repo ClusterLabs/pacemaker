@@ -88,17 +88,18 @@ class LinuxHAv2(HeartbeatCM):
         })
         del self["Standby"]
         self.CIBsync = {}
-        cib_prefix1='''
+        cib_prefix='''
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
    <configuration>
-     <crm_config>
+     <crm_config>'''
+	cib_options='''
         <nvpair id="require_quorum" name="require_quorum" value="true"/>
         <nvpair id="symetric_cluster" name="symetric_cluster" value="true"/>'''
-        cib_prefix2='''
+        cib_glue_1='''
      </crm_config>
      <nodes/>
      <resources>'''
-        cib_middle='''
+        cib_glue_2='''
      </resources>
      <constraints>'''
         cib_suffix='''
@@ -150,31 +151,25 @@ class LinuxHAv2(HeartbeatCM):
                 constraints = constraints + node_constraint
             
             if self.Env["DoFencing"] == 1 :
-                cib_fencing='''
-       <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>'''
+                cib_options=cib_options + '''
+        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>'''
                 nodelist = ""
                 for node in self.Env["nodes"]:
                     nodelist += node + " "
-                for node in self.Env["nodes"]:
-                    node_resource=("""
-       <resource id="s%s" class="stonith" type="ssh" priority="1.0">
-         <instance_attributes>
-           <rsc_parameters>
-             <nvpair name="hostlist" value="%s"/>
-           </rsc_parameters>
-         </instance_attributes>
-       </resource>""" %(node, nodelist))
-                    resources = resources + node_resource
-                    node_constraint=("""
-      <rsc_location id="run_s%s" rsc="s%s">
-        <rule id="can_run_s%s" result="can_not" boolean_op="and">
-          <expression attribute="uname" operation="ne" value="%s"/>
-        </rule>
-      </rsc_location>""" % (node, node, node, node))
-                    constraints = constraints + node_constraint
+		stonith_resource=("""
+       <incarnation id="DoFencing" priority="1.0" incarnation_max="%d" incarnation_node_max="1">
+         <resource id="child_DoFencing" class="stonith" type="ssh" priority="1.0">
+           <instance_attributes>
+             <rsc_parameters>
+               <nvpair name="hostlist" value="%s"/>
+             </rsc_parameters>
+           </instance_attributes>
+         </resource>
+       </incarnation>""" %(len(nodelist), nodelist))
+		resources = resources + stonith_resource
         
-        self.default_cts_cib=cib_prefix1 + cib_fencing + cib_prefix2 + \
-               resources + cib_middle + constraints + cib_suffix
+        self.default_cts_cib=cib_prefix + cib_options + cib_glue_1 + \
+               resources + cib_glue_2 + constraints + cib_suffix
         self.debug(self.default_cts_cib)
         
     def errorstoignore(self):
@@ -330,8 +325,19 @@ class LinuxHAv2(HeartbeatCM):
         return None
         
     def IsDC(self, node):
-        status = self.rsh.readaline(node, self["StatusCmd"]%node)
-        return (string.find(status, 'S_IDLE') != -1) 
+	rc = 0
+        status_line = self.rsh.readaline(node, self["StatusCmd"]%node)
+	if string.find(status_line, 'S_IDLE') == 0:
+	    rc = 1
+	elif string.find(status_line, 'S_INTEGRATION') == 0: 
+	    rc = 1
+	elif string.find(status_line, 'S_FINALIZE_JOIN') == 0: 
+	    rc = 1
+	elif string.find(status_line, 'S_POLICY_ENGINE') == 0: 
+	    rc = 1
+	elif string.find(status_line, 'S_TRANSITION_ENGINE') == 0: 
+	    rc = 1
+	return rc
 
     def Configuration(self):
         if 0!=self.rsh.cp(self["CIBfile"]%self.Env["nodes"][0],self.Env["HAdir"]):

@@ -529,7 +529,18 @@ class PartitionAudit(ClusterAudit):
         return passed
         
     def is_node_dc(self, status_line):
-        return (string.find(status_line, 'S_IDLE') != -1) 
+	rc = 0
+	if string.find(status_line, 'S_IDLE') == 0:
+	    rc = 1
+	elif string.find(status_line, 'S_INTEGRATION') == 0: 
+	    rc = 1
+	elif string.find(status_line, 'S_FINALIZE_JOIN') == 0: 
+	    rc = 1
+	elif string.find(status_line, 'S_POLICY_ENGINE') == 0: 
+	    rc = 1
+	elif string.find(status_line, 'S_TRANSITION_ENGINE') == 0: 
+	    rc = 1
+	return rc
 
     def name(self):
         return "PartitionAudit"
