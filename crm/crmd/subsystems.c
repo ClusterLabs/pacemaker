@@ -279,7 +279,7 @@ do_pe_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     void *data)
 {
-	
+	xmlNodePtr local_cib = NULL;
 
 	stopTimer(integration_timer);
 
@@ -290,7 +290,7 @@ do_pe_invoke(long long action,
 		
 	}
 	
-	xmlNodePtr local_cib = get_cib_copy();
+	local_cib = get_cib_copy();
 
 	crm_verbose("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
 
@@ -318,9 +318,8 @@ do_te_control(long long action,
 	
 	long long stop_actions = A_TE_STOP;
 	long long start_actions = A_TE_START;
+	int lpc, pid_status;
 	
-	
-
 /* 		if(action & stop_actions && cur_state != S_STOPPING */
 /* 		   && is_set(fsa_input_register, R_TE_PEND)) { */
 /* 			result = I_WAIT_FOR_EVENT; */
@@ -331,8 +330,8 @@ do_te_control(long long action,
 		if(stop_subsystem(this_subsys) == FALSE)
 			result = I_FAIL;
 		else if(this_subsys->pid > 0){
-			int lpc = CLIENT_EXIT_WAIT;
-			int pid_status = -1;
+			lpc = CLIENT_EXIT_WAIT;
+			pid_status = -1;
 			while(lpc-- > 0
 			      && this_subsys->pid > 0
 			      && CL_PID_EXISTS(this_subsys->pid)) {

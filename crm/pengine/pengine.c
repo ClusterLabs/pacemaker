@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.33 2004/06/07 10:29:03 andrew Exp $ */
+/* $Id: pengine.c,v 1.34 2004/06/07 21:28:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <portability.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -34,6 +35,8 @@ xmlNodePtr do_calculations(xmlNodePtr cib_object);
 gboolean
 process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 {
+	char *msg_buffer = NULL;
+	const char *sys_to = NULL;
 	const char *op = get_xml_attr (msg, XML_TAG_OPTIONS,
 				       XML_ATTR_OP, TRUE);
 
@@ -51,12 +54,12 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 		pemsg_strm = fopen("/tmp/pemsg.log", "w");
 	}
 
-	char *msg_buffer = dump_xml_node(msg, FALSE);
+	msg_buffer = dump_xml_node(msg, FALSE);
 	fprintf(pemsg_strm, "%s: %s\n", "[in ]", msg_buffer);
 	fflush(pemsg_strm);
 	crm_free(msg_buffer);
 	
-	const char *sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
+	sys_to = xmlGetProp(msg, XML_ATTR_SYSTO);
 
 	if(op == NULL){
 		// error

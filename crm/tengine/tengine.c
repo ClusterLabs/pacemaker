@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.17 2004/06/03 07:52:17 andrew Exp $ */
+/* $Id: tengine.c,v 1.18 2004/06/07 21:28:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <portability.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -239,6 +240,9 @@ process_graph_event(const char *event_node,
 	xmlNodePtr action        = NULL; // <rsc_op> or <crm_event>
 	xmlNodePtr next_action   = NULL;
 	action_list_t *matched_action_list = NULL;
+	const char *this_action = NULL;
+	const char *this_node   = NULL;
+	const char *this_rsc    = NULL;
 
 // Find the action corresponding to this event
 	slist_iter(
@@ -254,11 +258,12 @@ process_graph_event(const char *event_node,
 			<resource id="rsc3" priority="3.0"/>
 		</rsc_op>
 */
-		const char *this_action = xmlGetProp(
+
+		this_action = xmlGetProp(
 			action, XML_LRM_ATTR_TASK);
-		const char *this_node   = xmlGetProp(
+		this_node   = xmlGetProp(
 			action, XML_LRM_ATTR_TARGET);
-		const char *this_rsc    = xmlGetProp(
+		this_rsc    = xmlGetProp(
 			action->children, XML_ATTR_ID);
 
 		if(safe_str_neq(this_node, event_node)) {
@@ -360,6 +365,11 @@ initiate_action(action_list_t *list)
 	const char *optional  = NULL;
 	const char *task      = NULL;
 	const char *discard   = NULL;
+#ifndef TESTING
+	xmlNodePtr options = NULL;
+	xmlNodePtr data = NULL;
+	xmlNodePtr rsc_op = NULL;
+#endif
 	
 	while(TRUE) {
 		
@@ -457,7 +467,7 @@ initiate_action(action_list_t *list)
 			crm_info("Executing crm-event (%s): %s on %s",
 				 id, task, on_node);
 #ifndef TESTING
-			xmlNodePtr options = create_xml_node(
+			options = create_xml_node(
 				NULL, XML_TAG_OPTIONS);
 			set_xml_property_copy(options, XML_ATTR_OP, task);
 			
@@ -479,10 +489,10 @@ initiate_action(action_list_t *list)
 			  <rsc_op id="operation number" on_node="" task="">
 			  <resource>...</resource>
 			*/
-			xmlNodePtr options = create_xml_node(
+			options = create_xml_node(
 				NULL, XML_TAG_OPTIONS);
-			xmlNodePtr data = create_xml_node(NULL, "msg_data");
-			xmlNodePtr rsc_op = create_xml_node(data, "rsc_op");
+			data = create_xml_node(NULL, "msg_data");
+			rsc_op = create_xml_node(data, "rsc_op");
 			
 			set_xml_property_copy(options, XML_ATTR_OP, "rsc_op");
 			
@@ -521,6 +531,7 @@ FILE *msg_te_strm = NULL;
 gboolean
 process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 {
+	xmlNodePtr graph = NULL;
 	const char *op = get_xml_attr (msg, XML_TAG_OPTIONS,
 				       XML_ATTR_OP, FALSE);
 
@@ -563,7 +574,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		crm_trace("Initializing graph...");
 		initialize_graph();
 
-		xmlNodePtr graph = find_xml_node(msg, "transition_graph");
+		graph = find_xml_node(msg, "transition_graph");
 		crm_trace("Unpacking graph...");
 		unpack_graph(graph);
 		crm_trace("Initiating transition...");

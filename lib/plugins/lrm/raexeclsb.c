@@ -34,6 +34,7 @@
 #include <clplumbing/cl_log.h>
 #include <pils/plugin.h>
 #include <lrm/raexec.h>
+#include <libgen.h>
 
 #define PIL_PLUGINTYPE		RA_EXEC_TYPE
 #define PIL_PLUGIN		lsb

@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.1 2004/06/07 10:29:03 andrew Exp $ */
+/* $Id: color.c,v 1.2 2004/06/07 21:28:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <portability.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -60,10 +61,13 @@ gboolean choose_color(resource_t *lh_resource);
 gboolean 
 apply_node_constraints(GListPtr constraints, GListPtr nodes)
 {
-	crm_verbose("Applying constraints...");
 	int lpc = 0;
+
+	crm_verbose("Applying constraints...");
 	slist_iter(
 		cons, rsc_to_node_t, constraints, lpc,
+		resource_t *rsc_lh = NULL;
+
 		crm_debug_action(print_rsc_to_node("Applying", cons, FALSE));
 		// take "lifetime" into account
 		if(cons == NULL) {
@@ -76,7 +80,7 @@ apply_node_constraints(GListPtr constraints, GListPtr nodes)
 			continue;
 		}
     
-		resource_t *rsc_lh = cons->rsc_lh;
+		rsc_lh = cons->rsc_lh;
 		if(rsc_lh == NULL) {
 			crm_err("LHS of rsc_to_node (%s) is NULL", cons->id);
 			continue;

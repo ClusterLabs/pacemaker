@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.20 2004/06/07 10:29:03 andrew Exp $ */
+/* $Id: ptest.c,v 1.21 2004/06/07 21:28:39 msoffen Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -47,8 +47,21 @@ main(int argc, char **argv)
 {
 	xmlNodePtr cib_object = NULL;
 	int lpc = 0;
+	int lpc2 = 0;
 	int argerr = 0;
 	int flag;
+
+	GListPtr resources = NULL;
+	GListPtr nodes = NULL;
+	GListPtr node_constraints = NULL;
+	GListPtr actions = NULL;
+	GListPtr action_constraints = NULL;
+	GListPtr stonith_list = NULL;
+	GListPtr shutdown_list = NULL;
+	GListPtr colors = NULL;
+	GListPtr action_sets = NULL;
+	xmlNodePtr graph = NULL;
+	char *msg_buffer = NULL;
   
 	cl_log_set_entity("ptest");
 	cl_log_enable_stderr(TRUE);
@@ -115,18 +128,6 @@ main(int argc, char **argv)
   
 	crm_info("=#=#=#=#= Stage 0 =#=#=#=#=");
 
-	GListPtr resources = NULL;
-	GListPtr nodes = NULL;
-	GListPtr node_constraints = NULL;
-	GListPtr actions = NULL;
-	GListPtr action_constraints = NULL;
-	GListPtr stonith_list = NULL;
-	GListPtr shutdown_list = NULL;
-
-	GListPtr colors = NULL;
-	GListPtr action_sets = NULL;
-
-	xmlNodePtr graph = NULL;
 
 #ifdef MCHECK
 	mtrace();
@@ -228,7 +229,6 @@ main(int argc, char **argv)
 		   }
 		);
 
-	int lpc2;
 	slist_iter(action_set, GList, action_sets, lpc,
 		   crm_debug("\t========= Set %d =========", lpc);
 		   slist_iter(action, action_t, action_set, lpc2,
@@ -289,7 +289,7 @@ main(int argc, char **argv)
 #endif
 	set_crm_log_level(LOG_INFO);
 
-	char *msg_buffer = dump_xml_node(graph, FALSE);
+	msg_buffer = dump_xml_node(graph, FALSE);
 	fprintf(stdout, "%s\n", msg_buffer);
 	fflush(stdout);
 	crm_free(msg_buffer);

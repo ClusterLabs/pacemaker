@@ -102,8 +102,8 @@ do_election_count_vote(long long action,
 	xmlNodePtr vote = (xmlNodePtr)data;
 	enum crmd_fsa_input election_result = I_NULL;
 	const char *vote_from = xmlGetProp(vote, XML_ATTR_HOSTFROM);
-	
-	
+	oc_node_t *our_node = NULL, * your_node = NULL;
+	struct election_data_s election_data;
 
 	if(vote_from == NULL || strcmp(vote_from, fsa_our_uname) == 0) {
 		// dont count our own vote
@@ -116,10 +116,10 @@ do_election_count_vote(long long action,
 		
 	}
 
-	oc_node_t *our_node = (oc_node_t*)
+	our_node = (oc_node_t*)
 		g_hash_table_lookup(fsa_membership_copy->members, fsa_our_uname);
 
-	oc_node_t *your_node = (oc_node_t*)
+	your_node = (oc_node_t*)
 		g_hash_table_lookup(fsa_membership_copy->members, vote_from);
 
 #if 0
@@ -153,7 +153,6 @@ do_election_count_vote(long long action,
 		we_loose = TRUE;
 
 	} else {
-		struct election_data_s election_data;
 		election_data.winning_uname = NULL;
 		election_data.winning_bornon = -1; // maximum integer
 		

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.1 2004/06/07 10:29:03 andrew Exp $ */
+/* $Id: unpack.c,v 1.2 2004/06/07 21:28:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <portability.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -79,12 +80,18 @@ gboolean create_ordering(const char *id, enum con_strength strength,
 gboolean
 unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 {
+		node_t *new_node  = NULL;
+		xmlNodePtr xml_obj = NULL;
+		xmlNodePtr attrs   = NULL;
+		const char *id     = NULL;
+		const char *type   = NULL;
+
 	crm_verbose("Begining unpack...");
 	while(xml_nodes != NULL) {
-		xmlNodePtr xml_obj = xml_nodes;
-		xmlNodePtr attrs   = xml_obj->children;
-		const char *id     = xmlGetProp(xml_obj, XML_ATTR_ID);
-		const char *type   = xmlGetProp(xml_obj, XML_ATTR_TYPE);
+		xml_obj = xml_nodes;
+		attrs   = xml_obj->children;
+		id     = xmlGetProp(xml_obj, XML_ATTR_ID);
+		type   = xmlGetProp(xml_obj, XML_ATTR_TYPE);
 
 		crm_verbose("Processing node %s", id);
 
@@ -102,7 +109,7 @@ unpack_nodes(xmlNodePtr xml_nodes, GListPtr *nodes)
 			crm_err("Must specify type tag in <node>");
 			continue;
 		}
-		node_t *new_node  = crm_malloc(sizeof(node_t));
+		new_node  = crm_malloc(sizeof(node_t));
 		new_node->weight  = 1.0;
 		new_node->fixed   = FALSE;
 		new_node->details = (struct node_shared_s*)
@@ -141,14 +148,24 @@ unpack_resources(xmlNodePtr xml_resources,
 		 GListPtr *action_cons,
 		 GListPtr all_nodes)
 {
+	xmlNodePtr xml_obj   = NULL;
+	const char *id       = NULL;
+	const char *priority = NULL;
+	float priority_f;
+	resource_t *new_rsc = NULL;
+	action_t *action_stop = NULL;
+	action_t *action_start = NULL;
+	order_constraint_t *order = NULL;
+
+
 	crm_verbose("Begining unpack...");
 	while(xml_resources != NULL) {
-		xmlNodePtr xml_obj   = xml_resources;
-		const char *id       = xmlGetProp(xml_obj, XML_ATTR_ID);
-		const char *priority = xmlGetProp(
+		xml_obj   = xml_resources;
+		id       = xmlGetProp(xml_obj, XML_ATTR_ID);
+		priority = xmlGetProp(
 			xml_obj, XML_CIB_ATTR_PRIORITY);
 		// todo: check for null
-		float priority_f     = atof(priority);
+		priority_f     = atof(priority);
 
 		xml_resources = xml_resources->next;
 
@@ -158,7 +175,7 @@ unpack_resources(xmlNodePtr xml_resources,
 			crm_err("Must specify id tag in <resource>");
 			continue;
 		}
-		resource_t *new_rsc = crm_malloc(sizeof(resource_t));
+		new_rsc = crm_malloc(sizeof(resource_t));
 		new_rsc->id		= id;
 		new_rsc->class		= xmlGetProp(xml_obj, "class");
 		new_rsc->type		= xmlGetProp(xml_obj, "type");
@@ -173,10 +190,10 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->node_cons	= NULL; 
 		new_rsc->cur_node	= NULL;
 		
-		action_t *action_stop = action_new(
+		action_stop = action_new(
 			action_id++, new_rsc, stop_rsc);
 
-		action_t *action_start = action_new(
+		action_start = action_new(
 			action_id++, new_rsc, start_rsc);
 
 		new_rsc->stop = action_stop;
@@ -185,7 +202,7 @@ unpack_resources(xmlNodePtr xml_resources,
 		new_rsc->start = action_start;
 		*actions = g_list_append(*actions, action_start);
 
-		order_constraint_t *order = (order_constraint_t*)
+		order = (order_constraint_t*)
 			crm_malloc(sizeof(order_constraint_t));
 		order->id	 = order_id++;
 		order->lh_action = action_stop;
@@ -568,6 +585,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 	const char *rsc_state = NULL;
 	const char *rsc_code  = NULL;
 	resource_t *rsc_lh    = NULL;
+	int rsc_code_i = 0;
 	
 	while(lrm_rsc != NULL) {
 		rsc_entry = lrm_rsc;
@@ -590,7 +608,7 @@ unpack_lrm_rsc_state(node_t *node, xmlNodePtr lrm_rsc,
 			continue;
 		}
 		
-		int rsc_code_i = atoi(rsc_code);
+		rsc_code_i = atoi(rsc_code);
 
 		switch(rsc_code_i) {
 			case 0:
@@ -701,13 +719,15 @@ gboolean
 create_rsc_to_rsc(const char *id, enum con_strength strength,
 		  resource_t *rsc_lh, resource_t *rsc_rh)
 {
+	rsc_to_rsc_t *inverted_con = NULL;
+	rsc_to_rsc_t *new_con = NULL;
+
 	if(rsc_lh == NULL || rsc_rh == NULL){
 		// error
 		return FALSE;
 	}
 
-	rsc_to_rsc_t *new_con = crm_malloc(sizeof(rsc_to_node_t));
-	rsc_to_rsc_t *inverted_con = NULL;
+	new_con = crm_malloc(sizeof(rsc_to_node_t));
 
 	new_con->id = id;
 	new_con->rsc_lh = rsc_lh;
@@ -729,17 +749,23 @@ create_ordering(const char *id, enum con_strength strength,
 		resource_t *rsc_lh, resource_t *rsc_rh,
 		GListPtr *action_constraints)
 {
+	action_t *lh_stop = NULL;
+	action_t *lh_start = NULL;
+	action_t *rh_stop = NULL;
+	action_t *rh_start = NULL;
+	order_constraint_t *order = NULL;
+
 	if(rsc_lh == NULL || rsc_rh == NULL){
 		// error
 		return FALSE;
 	}
 	
-	action_t *lh_stop = rsc_lh->stop;
-	action_t *lh_start = rsc_lh->start;
-	action_t *rh_stop = rsc_rh->stop;
-	action_t *rh_start = rsc_rh->start;
+	lh_stop = rsc_lh->stop;
+	lh_start = rsc_lh->start;
+	rh_stop = rsc_rh->stop;
+	rh_start = rsc_rh->start;
 	
-	order_constraint_t *order = (order_constraint_t*)
+	order = (order_constraint_t*)
 		crm_malloc(sizeof(order_constraint_t));
 	order->id = order_id++;
 	order->lh_action = lh_stop;
@@ -806,6 +832,8 @@ match_attrs(xmlNodePtr attr_exp, GListPtr node_list)
 {
 	int lpc = 0;
 	GListPtr result = NULL;
+	const char *h_val = NULL;
+
 	slist_iter(
 		node, node_t, node_list, lpc,
 		xmlNodePtr node_match = attr_exp->children;
@@ -824,7 +852,7 @@ match_attrs(xmlNodePtr attr_exp, GListPtr node_list)
 				continue;
 			}
 			
-			const char *h_val = (const char*)
+			h_val = (const char*)
 				g_hash_table_lookup(node->details->attrs, name);
 			
 			if(h_val != NULL && safe_str_eq(type, "has_attr")){

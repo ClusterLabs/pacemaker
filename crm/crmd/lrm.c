@@ -173,6 +173,7 @@ build_active_RAs(xmlNodePtr rsc_list)
 
 	state_flag_t cur_state = 0;
 	const char *this_op    = NULL;
+	gboolean found = FALSE;
 	
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 
@@ -198,7 +199,6 @@ build_active_RAs(xmlNodePtr rsc_list)
 			op, lrm_op_t, op_list, llpc,
 
 			this_op = op->op_type;
-			gboolean found = FALSE;
 
 			if(found == FALSE && safe_str_neq(this_op, "status")){
 				switch(op->status) {
@@ -581,6 +581,13 @@ do_fake_lrm_op(gpointer data)
 	const char *crm_op      = NULL;
 	const char *operation   = NULL;
 	const char *id_from_cib = NULL;
+	long int op_code = 0;
+	const char *op_status = NULL;
+	xmlNodePtr update = NULL;
+	xmlNodePtr state = NULL;
+	xmlNodePtr iter = NULL;
+	char *op_code_s = NULL;
+
 	
 	if(data == NULL) {
 		return I_ERROR;
@@ -598,10 +605,8 @@ do_fake_lrm_op(gpointer data)
 
 	if(safe_str_eq(crm_op, "rsc_op")) {
 
-		const char *op_status = NULL;
-		xmlNodePtr update = NULL;
-		xmlNodePtr state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-		xmlNodePtr iter = create_xml_node(state, XML_CIB_TAG_LRM);
+		state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+		iter = create_xml_node(state, XML_CIB_TAG_LRM);
 
 		crm_verbose("performing op %s...", operation);
 
@@ -614,7 +619,6 @@ do_fake_lrm_op(gpointer data)
 		set_xml_property_copy(iter, XML_ATTR_ID, id_from_cib);
 		set_xml_property_copy(iter, XML_LRM_ATTR_LASTOP, operation);
 
-		long int op_code = 0;
 
 #if 0
 		/* introduce a 10% chance of an action failing */
@@ -625,7 +629,7 @@ do_fake_lrm_op(gpointer data)
 		} else {
 			op_code = 0;
 		}
-		char *op_code_s = crm_itoa(op_code);
+		op_code_s = crm_itoa(op_code);
 
 		if(op_code) {
 			// fail

@@ -26,6 +26,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <libgen.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>

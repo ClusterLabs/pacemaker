@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.3 2004/06/03 07:52:16 andrew Exp $ */
+/* $Id: xml.c,v 1.4 2004/06/07 21:28:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -299,6 +299,7 @@ find_entity_nested(xmlNodePtr parent,
 		   gboolean siblings)
 {
 	xmlNodePtr child;
+	xmlChar *child_id = NULL;
 	
 	crm_trace("Looking for %s elem with id=%s.", node_name, id);
 	while(parent != NULL) {
@@ -335,8 +336,7 @@ find_entity_nested(xmlNodePtr parent,
 				crm_trace(
 				       "looking for entity (%s) in %s.",
 				       id, xmlGetNodePath(child));
-				xmlChar *child_id =
-					xmlGetProp(child, XML_ATTR_ID);
+				child_id = xmlGetProp(child, XML_ATTR_ID);
 
 				if (child_id == NULL) {
 					crm_crit(

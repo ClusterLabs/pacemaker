@@ -376,6 +376,9 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	const char *filtered_from;
 	gpointer table_key = NULL;
 	gboolean result;
+	struct crm_subsystem_s *the_subsystem = NULL;
+	gboolean can_reply = FALSE; // no-one has registered with this id
+
 	const char *op = get_xml_attr(root_xml_node, XML_TAG_OPTIONS,
 				      XML_ATTR_OP, TRUE);
 	
@@ -387,7 +390,6 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 			return FALSE;
 		}
 		
-		gboolean can_reply = FALSE; // no-one has registered with this id
 		filtered_from = sys_from;
 
 		/* The CIB can have two names on the DC */
@@ -429,8 +431,6 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 		crm_free(major_version);
 		crm_free(minor_version);
 	}
-
-	struct crm_subsystem_s *the_subsystem = NULL;
 
 	if (result == TRUE) {
 		/* if we already have one of those clients

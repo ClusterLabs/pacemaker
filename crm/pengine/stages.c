@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.1 2004/06/07 10:29:03 andrew Exp $ */
+/* $Id: stages.c,v 1.2 2004/06/07 21:28:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <portability.h>
+
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -204,6 +207,8 @@ stage4(GListPtr colors)
 	int lpc = 0;
 	color_t *color_n = NULL;
 	color_t *color_n_plus_1 = NULL;
+	GListPtr xor = NULL;
+	GListPtr minus = NULL;
 	
 	for(lpc = 0; lpc < g_list_length(colors); lpc++) {
 		color_n = color_n_plus_1;
@@ -216,9 +221,9 @@ stage4(GListPtr colors)
 			continue;
 		}
 
-		GListPtr xor = node_list_xor(color_n_nodes,
+		xor = node_list_xor(color_n_nodes,
 					      color_n_plus_1_nodes);
-		GListPtr minus = node_list_minus(color_n_nodes,
+		minus = node_list_minus(color_n_nodes,
 						  color_n_plus_1_nodes);
 
 		if(g_list_length(xor) == 0 || g_list_length(minus) == 0) {
@@ -261,8 +266,9 @@ gboolean
 stage5(GListPtr resources)
 {
 	
-	crm_verbose("filling in the nodes to perform the actions on");
 	int lpc = 0;
+
+	crm_verbose("filling in the nodes to perform the actions on");
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 
@@ -343,10 +349,12 @@ stage6(GListPtr *actions, GListPtr *action_constraints,
 {
 	int lpc = 0;
 	int llpc = 0;
+	action_t *down_node = NULL;
+
 	slist_iter(
 		node, node_t, shutdown_nodes, lpc,
 
-		action_t *down_node =
+		down_node =
 			action_new(action_id++, NULL, shutdown_crm);
 		down_node->node = node;
 		down_node->runnable = TRUE;
@@ -392,7 +400,6 @@ stage6(GListPtr *actions, GListPtr *action_constraints,
 			
 			order_constraint_t *order = NULL;
 
-#if 1
 			/*
 			 * Mark the stop as irrelevant
 			 *
@@ -400,9 +407,9 @@ stage6(GListPtr *actions, GListPtr *action_constraints,
 			 *   the transition, but not yet
 			 */
 			rsc->stop->discard = TRUE;
-#else			
-			rsc->stop->optional = TRUE;
-#endif
+
+			/* This is always the opposite of the discard. */
+			rsc->stop->optional = ! rsc->stop->discard;
 
 			/* try stopping the resource before stonithing the node
 			 *
@@ -448,6 +455,9 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 	GListPtr *action_sets)
 {
 	int lpc;
+	action_wrapper_t *wrapper = NULL;
+	GListPtr list = NULL;
+
 /*
 	for(lpc = 0; lpc < g_list_length(action_constraints);  lpc++) {
 		order_constraint_t *order = (order_constraint_t*)
@@ -465,12 +475,12 @@ stage7(GListPtr resources, GListPtr actions, GListPtr action_constraints,
 		crm_debug_action(
 			print_action("RH (stage7)", order->rh_action, FALSE));
 
-		action_wrapper_t *wrapper = (action_wrapper_t*)
+		wrapper = (action_wrapper_t*)
 			crm_malloc(sizeof(action_wrapper_t));
 		wrapper->action = order->rh_action;
 		wrapper->strength = order->strength;
 
-		GListPtr list = order->lh_action->actions_after;
+		list = order->lh_action->actions_after;
 		list = g_list_append(list, wrapper);
 		order->lh_action->actions_after = list;
 
@@ -517,6 +527,7 @@ gboolean
 stage8(GListPtr action_sets, xmlNodePtr *graph)
 {
 	int lpc = 0;
+	int lpc2;
 	xmlNodePtr xml_action_set = NULL;
 
 	*graph = create_xml_node(NULL, "transition_graph");
@@ -528,7 +539,6 @@ stage8(GListPtr action_sets, xmlNodePtr *graph)
 		   }
 		);
 */
-	int lpc2;
 	slist_iter(action_set, GList, action_sets, lpc,
 		   crm_verbose("Processing Action Set %d", lpc);
 		   xml_action_set = create_xml_node(NULL, "actions");

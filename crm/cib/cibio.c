@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.27 2004/06/03 07:52:16 andrew Exp $ */
+/* $Id: cibio.c,v 1.28 2004/06/07 21:28:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -332,6 +332,8 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 	xmlNodePtr saved_cib = get_the_CIB();
 	const char *filename_bak = CIB_BACKUP; // calculate
 	xmlDocPtr foo;
+	time_t now;
+	char *now_str = NULL;
 	
 
 	if (initializeCib(new_cib) == TRUE) {
@@ -350,8 +352,8 @@ activateCibXml(xmlNodePtr new_cib, const char *filename)
 				xmlSetTreeDoc(new_cib,foo);
 			}
 
-			time_t now = time(NULL);
-			char *now_str = asctime(localtime(&now));
+			now = time(NULL);
+			now_str = asctime(localtime(&now));
 			set_xml_property_copy(new_cib, "last_written",now_str);
 			free(now_str);
 			

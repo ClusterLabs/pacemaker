@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.24 2004/06/07 10:29:03 andrew Exp $ */
+/* $Id: utils.c,v 1.25 2004/06/07 21:28:39 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <portability.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -34,8 +35,10 @@ gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 rsc_to_rsc_t *
 invert_constraint(rsc_to_rsc_t *constraint) 
 {
+	rsc_to_rsc_t *inverted_con = NULL;
+
 	crm_verbose("Inverting constraint");
-	rsc_to_rsc_t *inverted_con =
+	inverted_con =
 		crm_malloc(sizeof(rsc_to_node_t));
 
 	inverted_con->id = crm_strdup(constraint->id);
@@ -145,11 +148,12 @@ node_list_minus(GListPtr list1, GListPtr list2)
 		node, node_t, list1, lpc,
 		node_t *other_node = find_list_node(list2, node->details->id);
 		
+		node_t *new_node = NULL;
 		if(node == NULL || other_node != NULL) {
 			continue;
 			
 		}
-		node_t *new_node = node_copy(node);
+		new_node = node_copy(node);
 		result = g_list_append(result, new_node);
 		);
   
@@ -165,6 +169,7 @@ node_list_xor(GListPtr list1, GListPtr list2)
 {
 	GListPtr result = NULL;
 	int lpc = 0;
+	node_t *new_node = NULL;
 	
 	slist_iter(
 		node, node_t, list1, lpc,
@@ -173,7 +178,7 @@ node_list_xor(GListPtr list1, GListPtr list2)
 		if(node == NULL || other_node != NULL) {
 			continue;
 		}
-		node_t *new_node = node_copy(node);
+		new_node = node_copy(node);
 		result = g_list_append(result, new_node);
 		);
 	
@@ -185,7 +190,7 @@ node_list_xor(GListPtr list1, GListPtr list2)
 		if(node == NULL || other_node != NULL) {
 			continue;
 		}
-		node_t *new_node = node_copy(node);
+		new_node = node_copy(node);
 		result = g_list_append(result, new_node);
 		);
   
@@ -212,11 +217,12 @@ node_list_dup(GListPtr list1)
 node_t *
 node_copy(node_t *this_node) 
 {
+	node_t *new_node = NULL;
 	if(this_node == NULL) {
 		print_node("Failed copy of", this_node, TRUE);
 		return NULL;
 	}
-	node_t *new_node = crm_malloc(sizeof(node_t));
+	new_node = crm_malloc(sizeof(node_t));
 	new_node->weight = this_node->weight; 
 	new_node->fixed  = this_node->fixed;
 	new_node->details = this_node->details; 
@@ -658,6 +664,8 @@ print_color(const char *pre_text, color_t *color, gboolean details)
 void
 print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 { 
+	int lpc = 0;
+
 	if(cons == NULL) {
 		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
@@ -676,7 +684,6 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 		       modifier2text(cons->modifier),
 		       cons->weight);
 
-		int lpc = 0;
 		slist_iter(
 			node, node_t, cons->node_list_rh, lpc,
 			print_node("\t\t-->", node, FALSE)
@@ -710,6 +717,8 @@ print_rsc_to_rsc(const char *pre_text, rsc_to_rsc_t *cons, gboolean details)
 void
 print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 { 
+	int lpc = 0;
+
 	if(rsc == NULL) {
 		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
@@ -733,7 +742,6 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 	       g_list_length(rsc->node_cons));
 	
 	if(details) {
-		int lpc = 0;
 		crm_debug("\t=== Actions");
 		print_action("\tStop: ", rsc->stop, FALSE);
 		print_action("\tStart: ", rsc->start, FALSE);
@@ -898,6 +906,7 @@ pe_free_resources(GListPtr resources)
 { 
 	volatile GListPtr list_item = NULL;
 	resource_t *rsc = NULL;
+	int lpc;
 	
 	while(resources != NULL) {
 		list_item = resources;
@@ -909,7 +918,6 @@ pe_free_resources(GListPtr resources)
 //		crm_verbose("color");
 //		crm_free(rsc->color);
 
-		int lpc;
 		slist_iter(clr, color_t, rsc->candidate_colors, lpc,
 			   print_color("deleting", clr, FALSE));
 		
@@ -931,9 +939,12 @@ pe_free_resources(GListPtr resources)
 void
 pe_free_actions(GListPtr actions) 
 {
+	GListPtr list_item = NULL;
+	action_t *action = NULL;
+
 	while(actions != NULL) {
-		GListPtr list_item = actions;
-		action_t *action = (action_t *)list_item->data;
+		list_item = actions;
+		action = (action_t *)list_item->data;
 		actions = actions->next;
 
 		pe_free_shallow(action->actions_before); // action_warpper_t*
@@ -965,4 +976,3 @@ pe_free_rsc_to_node(rsc_to_node_t *cons)
 		crm_free(cons);
 	}
 }
-

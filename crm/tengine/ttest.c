@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.6 2004/06/07 10:40:33 andrew Exp $ */
+/* $Id: ttest.c,v 1.7 2004/06/07 21:28:39 msoffen Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -49,6 +49,7 @@ main(int argc, char **argv)
 {
 	int argerr = 0;
 	int flag;
+	xmlNodePtr xml_graph = NULL;
   
 	cl_log_set_entity("ttest");
 	cl_log_enable_stderr(TRUE);
@@ -114,10 +115,11 @@ main(int argc, char **argv)
 #ifdef MTRACE  
 	mtrace();
 #endif
+
 	crm_trace("Initializing graph...");
 	initialize_graph();
 	
-	xmlNodePtr xml_graph = file2xml(stdin);
+	xml_graph = file2xml(stdin);
 
 	crm_trace("Unpacking graph...");
 	unpack_graph(xml_graph);

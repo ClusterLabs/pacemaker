@@ -30,6 +30,7 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <dirent.h>
+#include <libgen.h>
 #include <glib.h>
 #include <clplumbing/cl_log.h>
 #include <pils/plugin.h>

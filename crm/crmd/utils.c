@@ -22,6 +22,8 @@
 #include <clplumbing/Gmain_timeout.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
+
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
