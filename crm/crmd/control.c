@@ -296,7 +296,7 @@ do_startup(long long action,
 	
 	if(wait_timer != NULL) {
 		wait_timer->source_id = -1;
-		wait_timer->period_ms = 3*1000;
+		wait_timer->period_ms = 500;
 		wait_timer->fsa_input = I_NULL;
 		wait_timer->callback = crm_timer_popped;
 		wait_timer->repeat = FALSE;
