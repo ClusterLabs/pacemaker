@@ -304,6 +304,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_STARTUP,	do_startup)
 		
 		ELSEIF_FSA_ACTION(A_CIB_START,  do_cib_control)
+		ELSEIF_FSA_ACTION(A_READCONFIG,	do_read_config)
 		ELSEIF_FSA_ACTION(A_HA_CONNECT, do_ha_control)
 		ELSEIF_FSA_ACTION(A_LRM_CONNECT,do_lrm_control)
 		ELSEIF_FSA_ACTION(A_CCM_CONNECT,do_ccm_control)

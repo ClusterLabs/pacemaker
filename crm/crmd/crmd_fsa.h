@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.23 2004/06/07 10:19:11 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.24 2004/06/28 08:23:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -68,7 +68,7 @@ typedef struct fsa_timer_s fsa_timer_t;
 struct fsa_timer_s 
 {
 		guint	source_id;	/* timer source id */
-		uint	period_ms;	/* timer period */
+		int	period_ms;	/* timer period */
 		enum crmd_fsa_input fsa_input;
 		gboolean (*callback)(gpointer data);
 };

@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.10 2004/06/07 10:19:11 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.11 2004/06/28 08:23:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,6 +19,14 @@
 
 #ifndef XML_FSA_PROTO__H
 #define XML_FSA_PROTO__H
+
+/*	 A_READCONFIG	*/
+enum crmd_fsa_input
+do_read_config(long long action,
+	    enum crmd_fsa_cause cause,
+	    enum crmd_fsa_state cur_state,
+	    enum crmd_fsa_input current_input,
+	    void *data);
 
 /*	 A_ANNOUNCE	*/
 enum crmd_fsa_input

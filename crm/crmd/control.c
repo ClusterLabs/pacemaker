@@ -19,6 +19,8 @@
 #include <portability.h>
 
 #include <crm/crm.h>
+#include <crm/cib.h>
+#include <crm/msg_xml.h>
 #include <crm/common/ctrl.h>
 
 #include <crmd.h>
@@ -293,27 +295,27 @@ do_startup(long long action,
 	interval = interval * 1000;
 	
 	election_trigger->source_id = -1;
-	election_trigger->period_ms = interval*4;
+	election_trigger->period_ms = -1;
 	election_trigger->fsa_input = I_DC_TIMEOUT;
 	election_trigger->callback = timer_popped;
 
 	dc_heartbeat->source_id = -1;
-	dc_heartbeat->period_ms = interval;
+	dc_heartbeat->period_ms = -1;
 	dc_heartbeat->fsa_input = I_NULL;
 	dc_heartbeat->callback = do_dc_heartbeat;
 		
 	election_timeout->source_id = -1;
-	election_timeout->period_ms = interval*6;
+	election_timeout->period_ms = -1;
 	election_timeout->fsa_input = I_ELECTION_DC;
 	election_timeout->callback = timer_popped;
 
 	integration_timer->source_id = -1;
-	integration_timer->period_ms = interval*6;
+	integration_timer->period_ms = -1;
 	integration_timer->fsa_input = I_INTEGRATION_TIMEOUT;
 	integration_timer->callback = timer_popped;
 	
 	shutdown_escalation_timmer->source_id = -1;
-	shutdown_escalation_timmer->period_ms = interval*130;
+	shutdown_escalation_timmer->period_ms = -1;
 	shutdown_escalation_timmer->fsa_input = I_TERMINATE;
 	shutdown_escalation_timmer->callback = timer_popped;
 	
@@ -403,13 +405,64 @@ do_recover(long long action,
 	return I_SHUTDOWN;
 }
 
+/*	 A_READCONFIG	*/
+enum crmd_fsa_input
+do_read_config(long long action,
+	       enum crmd_fsa_cause cause,
+	       enum crmd_fsa_state cur_state,
+	       enum crmd_fsa_input current_input,
+	       void *data)
+{
+	xmlNodePtr cib_copy = get_cib_copy();
+	xmlNodePtr config   = get_object_root(XML_CIB_TAG_CRMCONFIG, cib_copy);
+	xmlNodePtr iter = config->children;
+	while(iter != NULL) {
+		const char *name  = xmlGetProp(iter, XML_NVPAIR_ATTR_NAME);
+		const char *value = xmlGetProp(iter, XML_NVPAIR_ATTR_VALUE);
+		iter = iter->next;
+		
+		if(name == NULL || value == NULL) {
+			continue;
+			
+		} else if(safe_str_eq(name, "dc_heartbeat")) {
+			dc_heartbeat->period_ms = atoi(value);
+			
+		} else if(safe_str_eq(name, "dc_deadtime")) {
+			election_trigger->period_ms = atoi(value);
+
+		} else if(safe_str_eq(name, "shutdown_escalation")) {
+			shutdown_escalation_timmer->period_ms = atoi(value);
+
+		}
+	}
+	
+	if(dc_heartbeat->period_ms < 1) {
+		// sensible default
+		dc_heartbeat->period_ms = 1000;
+		
+	}
+	if(election_trigger->period_ms < 1) {
+		// sensible default
+		election_trigger->period_ms = dc_heartbeat->period_ms * 4;
+		
+	}
+	if(shutdown_escalation_timmer->period_ms < 1) {
+		// sensible default
+		shutdown_escalation_timmer->period_ms
+			= election_trigger->period_ms * 3 *10;// 10 for testing
+	}
+	
+	election_timeout->period_ms  = dc_heartbeat->period_ms * 6;
+	integration_timer->period_ms = dc_heartbeat->period_ms * 6;
+
+	return I_NULL;
+}
+
+
 void
 crm_shutdown(int nsig)
 {
-	
-    
 	CL_SIGNAL(nsig, crm_shutdown);
-
     
 	if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
 

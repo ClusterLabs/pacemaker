@@ -112,11 +112,11 @@ do_cib_invoke(long long action,
 	
 	
 	if(action & A_CIB_INVOKE) {
-		const char *op = get_xml_attr(
-			cib_msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
-
+		gboolean is_update   = FALSE;
+		xmlNodePtr options   = find_xml_node(cib_msg, XML_TAG_OPTIONS);
 		const char *sys_from = xmlGetProp(cib_msg, XML_ATTR_SYSFROM);
-
+		const char *op       = xmlGetProp(options, XML_ATTR_OP);
+		
 		xml_message_debug(cib_msg, "[CIB] Invoking with");
 		if(cib_msg == NULL) {
 			crm_err("No message for CIB command");
@@ -131,6 +131,17 @@ do_cib_invoke(long long action,
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
 		answer = process_cib_message(cib_msg, TRUE);
 
+
+		if(strcmp(op, CRM_OP_CREATE) == 0
+		   || strcmp(op, CRM_OP_UPDATE) == 0
+		   || strcmp(op, CRM_OP_DELETE) == 0
+		   || strcmp(op, CRM_OP_REPLACE) == 0
+		   || strcmp(op, CRM_OP_WELCOME) == 0
+		   || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
+		   || strcmp(op, CRM_OP_ERASE) == 0) {
+			is_update = TRUE;
+		}
+		
 		// the TENGINE will get CC'd by other means.
 		if(sys_from != NULL
 		   && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE) 
@@ -141,21 +152,10 @@ do_cib_invoke(long long action,
 			xml_message_debug(answer, "Couldnt route: ");
 			result = I_ERROR;
 
-		} else if(AM_I_DC
-			  && (strcmp(op, CRM_OP_CREATE) == 0
-			      || strcmp(op, CRM_OP_UPDATE) == 0
-			      || strcmp(op, CRM_OP_DELETE) == 0
-			      || strcmp(op, CRM_OP_REPLACE) == 0
-			      || strcmp(op, CRM_OP_WELCOME) == 0
-			      || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
-			      || strcmp(op, CRM_OP_ERASE) == 0)) {
+		}
+
+		if(is_update) {
 			result = I_CIB_UPDATE;	
-#if 0
-		// check the answer, see if we are interested in it also
-		} else if(interested in reply) {
-			put_message(answer);
-			result = I_REQUEST;
-#endif
 		}
 
 		free_xml(answer);
@@ -173,7 +173,12 @@ do_cib_invoke(long long action,
 		put_message(answer);
 		return I_REQUEST;
 
-	} else if(action & A_CIB_BUMPGEN) {  
+	} else if(action & A_CIB_BUMPGEN) {
+
+		if(AM_I_DC == FALSE) {
+			return I_NULL;
+		}
+		
  		// check if the response was ok before next bit
 
 		section = get_xml_attr(cib_msg, XML_TAG_OPTIONS,

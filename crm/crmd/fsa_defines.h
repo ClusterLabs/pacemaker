@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.16 2004/06/02 16:03:34 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.17 2004/06/28 08:23:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -235,54 +235,6 @@ enum crmd_fsa_input {
  *
  *======================================*/
 
-/* Complete list of actions
-A_CCM_CONNECT
-A_CCM_EVENT
-A_CCM_UPDATE_CACHE
-A_CIB_INVOKE 
-A_CIB_RESTART
-A_CIB_START
-A_CIB_STOP
-A_CIB_UPDATE 
-A_DC_RELEASE
-A_DC_TAKEOVER
-A_DISCONNECT 
-A_ELECTION_COUNT
-A_ELECTION_TIMEOUT
-A_ELECTION_VOTE
-A_ERROR
-A_EXIT_0 
-A_EXIT_1 
-A_HA_CONNECT
-A_JOIN_ACK
-A_JOIN_WELCOME
-A_JOIN_WELCOME_ALL 
-A_LOG
-A_LRM_CONNECT 
-A_MSG_PROCESS
-A_MSG_ROUTE
-A_MSG_STORE
-A_NODE_BLOCK
-A_NOTHING 
-A_PE_INVOKE
-A_PE_RESTART
-A_PE_START
-A_PE_STOP
-A_RECOVER 
-A_SHUTDOWN
-A_STARTED 
-A_STARTUP 
-A_STOP 
-A_TERMINATE 
-A_TE_INVOKE
-A_TE_RESTART
-A_TE_START
-A_TE_STOP
-A_DC_TIMER_STOP
-A_DC_TIMER_START
-A_WARN
-*/
-
 
 	 /* Dont do anything */
 #define	A_NOTHING		0x0000000000000000ULL
@@ -408,6 +360,7 @@ A_WARN
 	/* Update our information in the local CIB */
 #define A_UPDATE_NODESTATUS	0x0020000000000000ULL
 #define	A_CIB_BUMPGEN		0x0040000000000000ULL
+#define	A_READCONFIG		0x0080000000000000ULL
 
 /* -- LRM Actions -- */
 	/* Connect to the Local Resource Manager */

@@ -50,7 +50,8 @@ timer_popped(gpointer data)
 gboolean
 startTimer(fsa_timer_t *timer)
 {
-	if(((int)timer->source_id) < 0) {
+	if(((int)timer->source_id) < 0
+		&& timer->period_ms > 0) {
 		timer->source_id =
 			Gmain_timeout_add(timer->period_ms,
 					  timer->callback,
@@ -60,6 +61,10 @@ startTimer(fsa_timer_t *timer)
 			   fsa_input2string(timer->fsa_input),
 			   timer->source_id);
 */
+	} else if(timer->period_ms < 0) {
+		crm_err("Tried to start timer %s with -ve period",
+			fsa_input2string(timer->fsa_input));
+		
 	} else {
 		crm_info("#!!#!!# Timer %s already running (%d)",
 		       fsa_input2string(timer->fsa_input),
