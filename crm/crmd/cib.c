@@ -140,6 +140,18 @@ do_cib_invoke(long long action,
 	ha_msg_input_t *cib_msg = fsa_typed_data(fsa_dt_ha_msg);
 	const char *sys_from = cl_get_string(cib_msg->msg, F_CRM_SYS_FROM);
 
+	if(fsa_cib_conn->state == cib_disconnected) {
+		if(cur_state != S_STOPPING) {
+			crm_err("CIB is disconnected");
+			crm_log_message_adv(LOG_WARNING, "CIB Input", cib_msg->msg);
+			return I_NULL;
+		}
+		crm_info("CIB is disconnected");
+		crm_log_message_adv(LOG_DEBUG, "CIB Input", cib_msg->msg);
+		return I_NULL;
+		
+	}
+	
 	if(action & A_CIB_INVOKE) {
 		if(safe_str_eq(sys_from, CRM_SYSTEM_CRMD)) {
 			action = A_CIB_INVOKE_LOCAL;
@@ -190,8 +202,8 @@ do_cib_invoke(long long action,
 			ha_msg_input_t *input = NULL;
 			crm_err("Internal CRM/CIB command from %s() failed: %s",
 				msg_data->origin, cib_error2string(rc));
-			crm_log_message_adv(LOG_ERR, "CIB Input", cib_msg->msg);
-			crm_log_message_adv(LOG_ERR, "CIB Reply", answer);
+			crm_log_message_adv(LOG_WARNING, "CIB Input", cib_msg->msg);
+			crm_log_message_adv(LOG_WARNING, "CIB Reply", answer);
 			
 			input = new_ha_msg_input(answer);
 			register_fsa_input(C_FSA_INTERNAL, I_ERROR, input);
