@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.3 2005/01/06 11:02:24 andrew Exp $ */
+/* $Id: incarnation.c,v 1.4 2005/01/10 14:24:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,9 +31,6 @@ typedef struct incarnation_variant_data_s
 
 		int max_incarnation;
 		int max_incarnation_node;
-
-/* 		int max_master; */
-/* 		int max_master_node; */
 
 		int active_incarnation;
 
@@ -109,11 +106,6 @@ void incarnation_unpack(resource_t *rsc)
 
 				incarnation_data->child_list = g_list_append(
 					incarnation_data->child_list, child_rsc);
-
-				if(child_rsc->extra_attrs == NULL) {
-					child_rsc->extra_attrs =
-						create_xml_node(NULL, "extra");
-				}
 				
 				set_xml_property_copy(
 					child_rsc->extra_attrs,
@@ -122,7 +114,7 @@ void incarnation_unpack(resource_t *rsc)
 					child_rsc->extra_attrs,
 					XML_CIB_ATTR_INCARNATION_MAX, inc_max);
 
-				crm_xml_info(child_rsc->extra_attrs,
+				crm_xml_debug(child_rsc->extra_attrs,
 					     "creating extra attributes");
 
 				crm_debug_action(

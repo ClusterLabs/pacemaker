@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.23 2005/01/06 11:02:24 andrew Exp $ */
+/* $Id: graph.c,v 1.24 2005/01/10 14:24:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -272,7 +272,7 @@ action2xml(action_t *action, gboolean as_input)
 		return action_xml;
 	}
 	
-	crm_xml_info(action->extra_attrs, "copying in extra attributes");
+	crm_xml_debug(action->extra_attrs, "copying in extra attributes");
 	if(action->extra_attrs) {
 		copy_in_properties(action->args, action->extra_attrs);
 	}

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.8 2004/11/23 20:43:08 andrew Exp $ */
+/* $Id: complex.c,v 1.9 2005/01/10 14:24:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -163,6 +163,7 @@ common_unpack(xmlNodePtr xml_obj, resource_t **rsc)
 	(*rsc)->candidate_colors   = NULL;
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
+	(*rsc)->extra_attrs	   = create_xml_node(NULL, "extra");
 	
 	if(safe_str_eq(stopfail, "ignore")) {
 		(*rsc)->stopfail_type = pesf_ignore;
