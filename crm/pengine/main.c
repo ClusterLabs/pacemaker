@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.3 2004/10/21 18:25:43 andrew Exp $ */
+/* $Id: main.c,v 1.4 2004/11/24 15:40:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,7 @@
 
 #include <hb_api.h>
 #include <clplumbing/uids.h>
+#include <clplumbing/coredumps.h>
 
 #include <crm/common/ipc.h>
 #include <crm/common/ctrl.h>
@@ -37,14 +38,14 @@
 #include <crm/dmalloc_wrapper.h>
 
 #define SYS_NAME CRM_SYSTEM_PENGINE
-#define OPTARGS	"skrhV"
+#define OPTARGS	"skrhVc"
 #define PID_FILE     WORKING_DIR "/" SYS_NAME ".pid"
 #define DAEMON_LOG   DEVEL_DIR"/"SYS_NAME".log"
 #define DAEMON_DEBUG DEVEL_DIR"/"SYS_NAME".debug"
 
+
 GMainLoop*  mainloop = NULL;
 const char* crm_system_name = SYS_NAME;
-
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
@@ -54,6 +55,7 @@ extern gboolean process_pe_message(xmlNodePtr msg, IPC_Channel *sender);
 int
 main(int argc, char ** argv)
 {
+    gboolean allow_cores = TRUE;
     int	req_restart = FALSE;
     int	req_status = FALSE;
     int	req_stop = FALSE;
@@ -75,9 +77,7 @@ main(int argc, char ** argv)
     
     cl_log_set_logfile(DAEMON_LOG);
     cl_log_set_debugfile(DAEMON_DEBUG);
-    CL_SIGNAL(DEBUG_INC, alter_debug);
-    CL_SIGNAL(DEBUG_DEC, alter_debug);
-
+    
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
@@ -95,6 +95,9 @@ main(int argc, char ** argv)
 			case 'h':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
+			case 'c':
+				allow_cores = TRUE;
+				break;
 			default:
 				++argerr;
 				break;
@@ -110,7 +113,13 @@ main(int argc, char ** argv)
     }
     
     /* read local config file */
-    
+
+    if(allow_cores) {
+	    cl_set_corerootdir(DEVEL_DIR);	    
+	    cl_enable_coredumps(1);
+	    cl_cdtocoredir();
+    }
+     
     if (req_status){
 		return init_status(PID_FILE, crm_system_name);
     }
