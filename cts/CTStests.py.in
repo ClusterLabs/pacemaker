@@ -98,10 +98,7 @@ random for the selected number of iterations.
             self.CM.log("Running test %s (%s)	[%d]"  % (test.name, nodechoice, testcount))
             testcount = testcount + 1
             starttime=time.time()
-            try:
-                ret=test(nodechoice)
-            except TypeError:
-                ret=test()
+            ret=test(nodechoice)
 
             if ret:
                 self.incr("success");
@@ -212,7 +209,7 @@ class CTSTest:
         self.incr("skipped")
         return 1
 
-    def __call__(self):
+    def __call__(self, node):
         '''Perform the given test'''
         raise ValueError("Abstract Class member (__call__)")
         self.incr("calls")
@@ -778,13 +775,14 @@ class BandwidthTest(CTSTest):
             if not ret:
                 return ret
 
-        if self.CM.rsh(node,"tcpdump -c 105 -i any udp port %s > /tmp/band_estimate 2>&1" % port) == 0 :
+        if self.CM.rsh(node,"tcpdump -c 102 -i any udp port %s > /tmp/band_estimate 2>&1" % port) == 0 :
             self.CM.rsh.cp("root@%s:/tmp/band_estimate" % node, "/tmp/.")
             Bandwidth = self.countbandwidth("/tmp/band_estimate")
             if not Bandwidth:
                 self.CM.log("Could not compute bandwidth.")
                 return self.success()
-            self.CM.log("Bandwidth used to heartbeat is %f bit/s" % Bandwidth)
+            intband = int(Bandwidth + 0.5)
+            self.CM.log("Bandwidth used to heartbeat is %d bits/sec" % intband)
             self.Stats["totalbandwidth"] = self.Stats["totalbandwidth"] + Bandwidth
             if self.Stats["min"] == 0:
                 self.Stats["min"] = Bandwidth
@@ -810,9 +808,13 @@ class BandwidthTest(CTSTest):
             if re.search("udp",line):
                 count=count+1
                 linesplit = string.split(line," ")
-                for j in range(6):
+                for j in range(len(linesplit)-1):
                     if linesplit[j]=="udp": break
-                sum = int(linesplit[j+1])
+                try:
+                    sum = sum + int(linesplit[j+1])
+                except ValueError:
+                    self.CM.log("Invalid tcpdump line: %s" % line)
+                    return None
                 T1 = linesplit[0]
                 timesplit = string.split(T1,":")
                 time2split = string.split(timesplit[2],".")
@@ -826,9 +828,13 @@ class BandwidthTest(CTSTest):
             if re.search("udp", line):
                 count = count+1
                 linessplit = string.split(line," ")
-                for j in range(6):
+                for j in range(len(linessplit)-1):
                     if linessplit[j] =="udp": break
-                sum=int(linessplit[j+1])+sum
+                try:
+                    sum=int(linessplit[j+1])+sum
+                except ValueError:
+                    self.CM.log("Invalid tcpdump line: %s" % line)
+                    return None
 
         T2 = linessplit[0]
         timesplit = string.split(T2,":")
@@ -930,7 +936,7 @@ class DRBDTest(CTSTest):
         self.name = "DRBD"
         self.timeout = timeout
 
-    def __call__(self):
+    def __call__(self, dummy):
         '''Perform the 'DRBD' test.'''
         self.incr("calls")
         
