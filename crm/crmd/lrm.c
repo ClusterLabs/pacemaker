@@ -47,7 +47,7 @@ void do_update_resource(
 	lrm_rsc_t *rsc, int status, int rc, const char *op_type);
 
 enum crmd_fsa_input do_lrm_rsc_op(
-	lrm_rsc_t *rsc, rsc_id_t rid, const char *operation, xmlNodePtr msg);
+	lrm_rsc_t *rsc, char *rid, const char *operation, xmlNodePtr msg);
 
 enum crmd_fsa_input do_lrm_monitor(lrm_rsc_t *rsc);
 
@@ -309,7 +309,7 @@ do_lrm_invoke(long long action,
 	enum crmd_fsa_input next_input = I_NULL;
 	xmlNodePtr msg;
 	const char *operation = NULL;
-	rsc_id_t rid;
+	char *rid;
 	const char *id_from_cib = NULL;
 	const char *crm_op = NULL;
 	lrm_rsc_t *rsc = NULL;
@@ -365,7 +365,7 @@ do_lrm_invoke(long long action,
 
 enum crmd_fsa_input
 do_lrm_rsc_op(
-	lrm_rsc_t *rsc, rsc_id_t rid, const char *operation, xmlNodePtr msg)
+	lrm_rsc_t *rsc, char *rid, const char *operation, xmlNodePtr msg)
 {
 	lrm_op_t* op = NULL;
 
