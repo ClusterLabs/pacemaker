@@ -292,7 +292,7 @@ class ClusterManager(UserDict):
         self.rsh = RemoteExec()
 
         self.ShouldBeStatus={}
-        self.OurNode=os.uname()[1]
+        self.OurNode=lower(os.uname()[1])
         self.ShouldBeStatus={}
 
     def log(self, args):
