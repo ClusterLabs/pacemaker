@@ -56,6 +56,7 @@ static gboolean run_command    (struct crm_subsystem_s *centry,
 				gboolean update_pid);
 
 xmlNodePtr do_lrm_startup_query(void);
+GHashTable *xml2list(xmlNodePtr parent, const char **attr_path, int depth);
 
 struct crm_subsystem_s *cib_subsystem = NULL;
 struct crm_subsystem_s *te_subsystem  = NULL;
@@ -177,9 +178,54 @@ do_cib_invoke(long long action,
 
   	} else if(action & A_UPDATE_NODESTATUS) {
 
-		/* build our status */
-		/* save to message list CIB */
-		/* return I_MESSAGE */
+		xmlNodePtr data = do_lrm_startup_query();
+		xmlNodePtr command, iter, answer;
+
+		command = create_xml_node(NULL, "status");
+		iter = create_xml_node(command, "node_state");
+		set_xml_property_copy(iter, XML_ATTR_ID, fsa_our_uname);
+		iter = create_xml_node(iter, "lrm");
+		
+		command = create_cib_fragment(command, "status");
+		
+		process_cib_request(CRM_OPERATION_DELETE, NULL, command);
+
+		add_node_copy(iter, data);
+		answer = process_cib_request(CRM_OPERATION_UPDATE,
+					     NULL,
+					     command);
+
+		free_xml(command); // takes iter & data with it
+
+		// distribute the answer
+
+		if(AM_I_DC) {
+			
+			xmlNodePtr new_options =
+				set_xml_attr(NULL, XML_TAG_OPTIONS,
+					     XML_ATTR_FILTER_TYPE, "status",
+					     TRUE);
+
+			free_xml(answer);
+			answer = process_cib_request(CRM_OPERATION_BUMP,
+						     new_options,
+						     NULL);
+
+			send_request(NULL, answer, CRM_OPERATION_REPLACE,
+				     NULL, CRM_SYSTEM_CRMD);
+			
+			free_xml(new_options);
+			
+			
+		} else {
+			send_request(NULL, answer,
+				     CRM_OPERATION_UPDATE,
+				     NULL, CRM_SYSTEM_DCIB);
+
+		}
+		free_xml(answer);
+		
+
 		
 	} else {
 		cl_log(LOG_ERR, "Unexpected action %s",
@@ -575,6 +621,26 @@ do_lrm_register(long long action,
 xmlNodePtr
 do_lrm_startup_query(void)
 {
+/*
+	<node_state id=node1 ...>
+	id		CDATA #REQUIRED
+	uname   	CDATA #REQUIRED
+	state	  	(active|in_ccm|down|shot) #REQUIRED
+	exp_state	(active|down)      #REQUIRED
+	source		CDATA #IMPLIED
+	is_dc		(yes|no) 'no'
+	timestamp	CDATA #REQUIRED>
+
+	    <lrm>
+		 <lrm_agents>
+			<lrm_agent class=ocf type=drbd  .../>
+		 </lrm_agents>
+		 <lrm_resources>
+			<rsc_state id=rsc1 rsc_id= node_id= rsc_state=.../>
+		</lrm_resources>
+	    </lrm>
+		 </node_state>
+*/
 	GList* lrm_list = NULL;
 	xmlNodePtr data = create_xml_node(NULL, "lrm");
 	xmlNodePtr agent_list = create_xml_node(data, "lrm_agents");
@@ -625,35 +691,68 @@ do_lrm_startup_query(void)
 					      fsa_our_uname);
 			
 			state_flag_t cur_state = 0;
-			GList *rsc_ops = the_rsc->ops->get_cur_state(
+
+			CRM_DEBUG("get_cur_state...");
+
+			GList* op_list = the_rsc->ops->get_cur_state(
 				the_rsc, &cur_state);
+			printf("\tcurrent state:%s\n",cur_state==LRM_RSC_IDLE?"Idel":"Busy");
 			
-			if(rsc_ops == NULL)
-				continue;
+			const char *this_op = NULL;
+			GList* node = g_list_first(op_list);
 			
-			GList* ops_iter = g_list_first(rsc_ops);
-			if(ops_iter == NULL)
-				continue;
+			while(NULL != node){
+				lrm_op_t* op = (lrm_op_t*)node->data;
+				this_op = op->op_type;
+
+/* 	const char* 		op_type; */
+/* 	GHashTable*		params; */
+/* 	int			timeout; */
+/* 	gpointer		user_data; */
+
+/* 	/\*output fields*\/ */
+/* 	lrm_rsc_t*		rsc; */
+/* 	op_status_t		status; */
+/* 	char*			app_name; */
+/* 	char*			data; */
+/* 	int			rc; */
+/* 	int			call_id; */
+				
+				if(this_op == NULL
+				   || strcmp(this_op, "status") != 0){
+
+					const char *status_text = "<unknown>";
+					switch(op->status) {
+						case LRM_OP_DONE:
+							status_text = "done";
+							break;
+						case LRM_OP_CANCELLED:
+							status_text = "cancelled";
+							break;
+						case LRM_OP_TIMEOUT:
+							status_text = "timeout";
+							break;
+						case LRM_OP_NOTSUPPORTED:
+							status_text = "not suported";
+							break;
+						case LRM_OP_ERROR:
+							status_text = "error";
+							break;
+					}
+					
+					
+					set_xml_property_copy(xml_rsc,
+							      "op_result",
+							      status_text);
 			
-			set_xml_property_copy(xml_rsc,
-					      "rsc_op",
-					      (char*)ops_iter->data);
-			
-			const char *cur_state_str = NULL;
-			switch(cur_state) {
-				case LRM_RSC_IDLE:
-					cur_state_str = "Idle";
-					break;
-				case LRM_RSC_BUSY:
-					cur_state_str = "Busy";
-					break;
+					set_xml_property_copy(xml_rsc,
+							      "rsc_op",
+							      this_op);
+				}
+
+				node = g_list_next(node);
 			}
-			
-			
-			set_xml_property_copy(xml_rsc,
-					      "op_result",
-					      cur_state_str);
-			
+
 			element = g_list_next(element);
 		}
 	}
@@ -677,94 +776,55 @@ do_lrm_invoke(long long action,
 	       fsa_action2string(action), action);
 
 
-#if 0
-	<node_state id=node1 ...>
-	id		CDATA #REQUIRED
-	uname   	CDATA #REQUIRED
-	state	  	(active|in_ccm|down|shot) #REQUIRED
-	exp_state	(active|down)      #REQUIRED
-	source		CDATA #IMPLIED
-	is_dc		(yes|no) 'no'
-	timestamp	CDATA #REQUIRED>
+	xmlNodePtr msg = (xmlNodePtr)data;
+	const char *rsc_path[] = 
+		{
+			"msg_data",
+			"rsc_op",
+			"resource",
+			"instance_attributes",
+			"parameters"
+		};
+		
+	const char *operation = get_xml_attr_nested(msg,
+						    rsc_path,
+						    DIMOF(rsc_path) -3,
+						    "operation", TRUE);
 
-	    <lrm>
-		 <lrm_agents>
-			<lrm_agent class=ocf type=drbd  .../>
-		 </lrm_agents>
-		 <lrm_resources>
-			<rsc_state id=rsc1 rsc_id= node_id= rsc_state=.../>
-		</lrm_resources>
-	    </lrm>
-	</node_state>
-		 
-	if(startup query) {
-
-		xmlNodePtr data = do_lrm_startup_query();
-		xmlNodePtr msg  = create_from(data);
-		put_message(msg);
-		return I_MESSAGE;
-
-	}
+	rsc_id_t rid;
 	
-	decode lrm message;
-	if(monitor op) {
+	const char *id_from_cib = get_xml_attr_nested(msg,
+						      rsc_path,
+						      DIMOF(rsc_path) -2,
+						      "id",
+						      TRUE);
+	// only the first 16 chars are used by the LRM
+	strncpy(rid, id_from_cib, 16);
+	
+	lrm_rsc_t *rsc = fsa_lrm_conn->lrm_ops->get_rsc(
+		fsa_lrm_conn, rid);
+	
+	
+	if(operation != NULL && strcmp(operation, "monitor") == 0) {
+		if(rsc == NULL) {
+			cl_log(LOG_ERR, "Could not find resource to monitor");
+			FNRET(I_FAIL);
+		}
 		
 		lrm_mon_t* mon = g_new(lrm_mon_t, 1);
 		mon->op_type = "status";
 		mon->params = NULL;
 		mon->timeout = 0;
-		mon->user_data = NULL;
+		mon->user_data = rsc;
 		mon->mode = LRM_MONITOR_SET;
 		mon->interval = 2;
 		mon->target = 1;
 		rsc->ops->set_monitor(rsc,mon);
-		printf_mon(mon);
 		mon = g_new(lrm_mon_t, 1);
-	} else {
-		// make sure its added to the list
-/*
-<!ELEMENT resource (instance_attributes*)>
-<!ATTLIST resource
-          id            CDATA #REQUIRED
-          description   CDATA #IMPLIED
-          class         (ocf|init|heartbeat)	#REQUIRED
-	  ra_version	CDATA #IMPLIED
-	  priority      CDATA #IMPLIED
-          type          CDATA #REQUIRED>
 
-<!ELEMENT instance_attributes (node_ref?, parameters?, timings?)>
-<!ATTLIST instance_attributes
-	  weight	CDATA #IMPLIED
-	  id		CDATA #REQUIRED>
-
-<!ELEMENT attributes (nvpair*)>
-<!ELEMENT parameters (nvpair*)>
-
-*/
-		xmlNodePtr msg = NULL;
-		xmlNodePtr resource =
-			find_xml_node_nested(msg, NULL, 0);
-		
-		const char *rsc_path[] = 
-			{
-				XML_TAG_MSG,
-				"msg_data",
-				"rsc_op",
-				"resource",
-				"instance_attributes",
-				"parameters"
-			};
-		
-		rsc_id_t rid =
-			get_xml_attr_nested(msg,
-					    rsc_path,
-					    DIMOF(rsc_path) -2,
-					    "id", TRUE);
-		
-		lrm_rsc_t *rsc = fsa_lrm_conn->lrm_ops->get_rsc(
-			fsa_lrm_conn, rid);
-		
+	} else if(operation != NULL) {
 		if(rsc == NULL) {
+			// add it to the list
 			CRM_DEBUG("add_rsc...");
 			fsa_lrm_conn->lrm_ops->add_rsc(
 				fsa_lrm_conn, rid,
@@ -776,20 +836,22 @@ do_lrm_invoke(long long action,
 						    rsc_path,
 						    DIMOF(rsc_path) -2,
 						    "type", TRUE),
-				xml2list(msg, rsc_params));
+				NULL);
 			
 			rsc = fsa_lrm_conn->lrm_ops->get_rsc(
 				fsa_lrm_conn, rid);
 		}
+
+		if(rsc == NULL) {
+			cl_log(LOG_ERR, "Could not add resource to LRM");
+			FNRET(I_FAIL);
+		}
 		
 		// now do the op
-		CRM_DEBUG("perform_op...");
+		CRM_DEBUG2("performing op %s...", operation);
 		lrm_op_t* op = g_new(lrm_op_t, 1);
-		op->op_type = get_xml_attr_nested(msg,
-						  rsc_path,
-						  DIMOF(rsc_path) -3,
-						  "operation", TRUE);
-		op->params = xml2list(msg, rsc_params);
+		op->op_type = operation;
+		op->params = xml2list(msg, rsc_path, DIMOF(rsc_path));
 		op->timeout = 0;
 		op->user_data = rsc;
 		rsc->ops->perform_op(rsc, op);
@@ -798,7 +860,37 @@ do_lrm_invoke(long long action,
 /* 	while (TRUE) { */
 /* 		lrm->lrm_ops->rcvmsg(lrm,TRUE); */
 /* 	} */
-#endif
 	
 	FNRET(I_NULL);
+}
+
+GHashTable *
+xml2list(xmlNodePtr parent, const char**attr_path, int depth)
+{
+	xmlNodePtr node_iter = NULL;
+
+	GHashTable   *nvpair_hash =
+		g_hash_table_new(&g_str_hash, &g_str_equal);
+
+	xmlNodePtr nvpair_list =
+		find_xml_node_nested(parent, attr_path, depth);
+	
+	if(nvpair_list != NULL){
+		node_iter = nvpair_list->children;
+		while(node_iter != NULL) {
+			
+			const char *key = xmlGetProp(node_iter, "name");
+			const char *value = xmlGetProp(node_iter, "value");
+			
+			CRM_DEBUG3("Added %s=%s", key, value);
+			
+			g_hash_table_insert (nvpair_hash,
+					     cl_strdup(key),
+					     cl_strdup(value));
+			
+			node_iter = node_iter->next;
+		}
+	}
+	
+	return nvpair_hash;
 }
