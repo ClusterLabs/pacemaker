@@ -44,7 +44,7 @@
 xmlNodePtr createCibRequest(gboolean isLocal, const char *operation, const char *section,
 			    const char *verbose, xmlNodePtr data);
 xmlNodePtr processCibRequest(xmlNodePtr command);
-xmlNodePtr createCibAnswer(const char *reference, const char *operation, const char *section,
+xmlNodePtr createCibAnswer(const char *crm_msg_reference, const char *operation, const char *section,
 			   const char *status, const char *verbose,
 			   xmlNodePtr data, xmlNodePtr failed);
 void addCibSimpleAnswer(xmlNodePtr answer, const char *status);
@@ -56,13 +56,13 @@ xmlNodePtr createCibFragmentAnswer(const char *section, xmlNodePtr data, xmlNode
 /* createCibRequest(const char *operation, const char *section, */
 /* 		 const char *verbose, xmlNodePtr data) */
 /* { */
-/* //    const char *reference = generateReference(); */
+/* //    const char *crm_msg_reference = generateReference(); */
 /*     xmlNodePtr cmd = xmlNewNode(NULL, XML_REQ_TAG_CIB); */
 
-/* //    xmlSetProp(cmd, XML_MSG_ATTR_REFERENCE, reference); */
-/*     xmlSetProp(cmd, XML_CIB_ATTR_OP       , operation); */
-/*     xmlSetProp(cmd, XML_ATTR_VERBOSE      , verbose); */
-/*     if(section != NULL) xmlSetProp(cmd, XML_CIB_ATTR_SECTION  , section); */
+/* //    set_xml_property_copy(cmd, XML_MSG_ATTR_REFERENCE, crm_msg_reference); */
+/*     set_xml_property_copy(cmd, XML_CIB_ATTR_OP       , operation); */
+/*     set_xml_property_copy(cmd, XML_ATTR_VERBOSE      , verbose); */
+/*     if(section != NULL) set_xml_property_copy(cmd, XML_CIB_ATTR_SECTION  , section); */
 
 /*     addCibFragment(cmd, section, data); */
     
@@ -136,7 +136,7 @@ processCibRequest(xmlNodePtr command)
 	CRM_DEBUG2("Replacing section=%s of the cib", section);
 	if(strcmp("all", section) == 0)
 	{
-	    xmlNodePtr new_cib = findNode(command, XML_TAG_CIB);
+	    xmlNodePtr new_cib = find_xmlnode(command, XML_TAG_CIB);
 	    if(activateCibXml(new_cib) < 0)
 		status = "new activation failed";
 	    else
@@ -144,13 +144,13 @@ processCibRequest(xmlNodePtr command)
 	}
 	else
 	{
-	    xmlNodePtr new_section = findNode(command, XML_TAG_CIB);
-	    new_section = findNode(new_section, section);
+	    xmlNodePtr new_section = find_xmlnode(command, XML_TAG_CIB);
+	    new_section = find_xmlnode(new_section, section);
 	    if(new_section != NULL)
 	    {
 		// make changes to a temp copy then activate
-		xmlNodePtr tmpCib = xmlLinkedCopyNoSiblings(theCib(), 1);
-		xmlNodePtr old_section = findNode(tmpCib, section);
+		xmlNodePtr tmpCib = xmlCopyNode(theCib(), 1);
+		xmlNodePtr old_section = find_xmlnode(tmpCib, section);
 		xmlReplaceNode(old_section, new_section);
 		status = "ok";
 		if(activateCibXml(tmpCib) < 0)
@@ -177,7 +177,7 @@ processCibRequest(xmlNodePtr command)
 	    // do logging
 
 	    // make changes to a temp copy then activate
-	    xmlNodePtr tmpCib = xmlLinkedCopyNoSiblings(theCib(), 1);
+	    xmlNodePtr tmpCib = xmlCopyNode(theCib(), 1);
 	    if(cib_update_operation == CIB_OP_ADD || cib_update_operation == CIB_OP_MODIFY)
 	    {
 		updateList(tmpCib, command, failed, cib_update_operation, XML_CIB_TAG_NODES);
@@ -197,7 +197,7 @@ processCibRequest(xmlNodePtr command)
 	{
 	    // make changes to a temp copy then activate
 	    CRM_DEBUG("Backing up CIB");
-	    xmlNodePtr tmpCib = xmlLinkedCopyNoSiblings(theCib(), 1);
+	    xmlNodePtr tmpCib = xmlCopyNode(theCib(), 1);
 	    CRM_DEBUG("Updating temporary CIB");
 	    updateList(tmpCib, command, failed, cib_update_operation, section);
 	    CRM_DEBUG("Activating temporary CIB");
@@ -219,8 +219,8 @@ processCibRequest(xmlNodePtr command)
 		    createCibFragmentAnswer("all", getCibSection(NULL), failed));
 //		    createCibFragmentAnswer(section, getCibSection(section), failed));
     
-    xmlSetProp(cib_answer, XML_CIB_ATTR_SECTION, section);
-    xmlSetProp(cib_answer, XML_CIB_ATTR_RESULT, status);
+    set_xml_property_copy(cib_answer, XML_CIB_ATTR_SECTION, section);
+    set_xml_property_copy(cib_answer, XML_CIB_ATTR_RESULT, status);
 
     FNRET(cib_answer);
 }
@@ -233,7 +233,7 @@ updateList(xmlNodePtr local_cib, xmlNodePtr update_command, xmlNodePtr failed, i
     node_path[1] = XML_TAG_CIB;
     node_path[2] = section;
     
-    xmlNodePtr xml_section = findDeepNode(update_command, node_path, 3);
+    xmlNodePtr xml_section = find_xmlnode_nested(update_command, node_path, 3);
 
     if(section == NULL || xml_section == NULL)
     {
@@ -314,7 +314,7 @@ xmlNodePtr
 createCibFragmentAnswer(const char *section, xmlNodePtr data, xmlNodePtr failed)
 {
     xmlNodePtr fragment = xmlNewNode(NULL, XML_CIB_TAG_FRAGMENT);
-    xmlSetProp(fragment, XML_CIB_ATTR_SECTION, section);
+    set_xml_property_copy(fragment, XML_CIB_ATTR_SECTION, section);
 
     if(data != NULL)
     {

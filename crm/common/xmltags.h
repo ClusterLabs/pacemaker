@@ -45,7 +45,7 @@
 #define XML_MSG_ATTR_SYSTO         "sys_to"
 #define XML_MSG_ATTR_HOSTFROM      "host_from"
 #define XML_MSG_ATTR_HOSTTO        "host_to"
-#define XML_MSG_ATTR_REFERENCE     "reference"
+#define XML_MSG_ATTR_REFERENCE     "crm_msg_reference"
 
 
 //---- request tags/attrs
@@ -126,7 +126,7 @@
 #define XML_CIB_ATTR_NODESTATUS   "node_status"
 #define XML_CIB_ATTR_VARTYPE      "var_type"
 #define XML_CIB_ATTR_VARVALUE     "var_value"
-#define XML_CIB_ATTR_NODEREF      "node_reference"
+#define XML_CIB_ATTR_NODEREF      "node_crm_msg_reference"
 #define XML_CIB_ATTR_ACTION       "action"
 
 #include <libxml/tree.h> 

@@ -43,6 +43,7 @@
 #include <ocf/oc_event.h>
 #include <crm/common/xmlvalues.h>
 #include <crm/common/msgutils.h>
+#include <crm/common/xmlutils.h>
 
 
 
@@ -78,8 +79,8 @@ typedef struct _crmd_client
 	GCHSource *client_source;
 } crmd_client_t;
 
-void send_msg_to_ha(xmlNodePtr action, const char *dest_node);
-void send_msg_to_ipc(xmlNodePtr action, const char *sys);
+void send_msg_via_ha(xmlNodePtr action, const char *dest_node);
+void send_msg_via_ipc(xmlNodePtr action, const char *sys);
 
 void process_message(xmlNodePtr root_xml_node, gboolean originated_locally, const char *src_node_name);
 gboolean relay_message(xmlNodePtr action, gboolean originated_locally, const char *host_from);
@@ -87,9 +88,9 @@ gboolean crm_dc_process_message(xmlNodePtr whole_message, xmlNodePtr action,
 				const char *host_from, const char *sys_from, const char *sys_to,
 				const char *op, gboolean dc_mode);
 
-gboolean add_pending_outgoing_reply(const char *originating_node_name, const char *reference,
+gboolean add_pending_outgoing_reply(const char *originating_node_name, const char *crm_msg_reference,
 				    const char *sys_to, const char *sys_from);
-char *find_destination_host(xmlNodePtr xml_root_node, const char *reference, const char *sys_from, int is_request);
+char *find_destination_host(xmlNodePtr xml_root_node, const char *crm_msg_reference, const char *sys_from, int is_request);
 gboolean crmd_authorize_message(xmlNodePtr root_xml_node, IPC_Message *client_msg, crmd_client_t *curr_client);
 
 gboolean
@@ -181,7 +182,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node, IPC_Message *client_msg, crmd_c
 	}
     }
 
-    gpointer table_key = (gpointer)client_name;
+    gpointer table_key = (gpointer)strdup(client_name);
     if(result == TRUE)
     {
         /* if we already have one of those clients
@@ -210,7 +211,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node, IPC_Message *client_msg, crmd_c
     {
 	CRM_DEBUG2("Accepted client %s", (char*)table_key);
 
-	curr_client->table_key = strdup(table_key);
+	curr_client->table_key = table_key;
 	curr_client->sub_sys = strdup(client_name);
 	curr_client->uid = strdup(uid);
 	
@@ -226,15 +227,16 @@ void
 crmd_ha_input_callback(const struct ha_msg* msg, void* private_data)
 {
     FNIN();
-    cl_log(LOG_DEBUG, "crmd_hamsg_callback: processing HA message (%s from %s)", ha_msg_value(msg, F_SEQ), ha_msg_value(msg, F_ORIG));
-    xmlNodePtr root_xml_node = validate_and_decode_hamessage(msg);
+    cl_log(LOG_DEBUG, "processing HA message (%s from %s)", ha_msg_value(msg, F_SEQ), ha_msg_value(msg, F_ORIG));
+    xmlNodePtr root_xml_node = find_xml_in_hamessage(msg);
     process_message(root_xml_node, FALSE, ha_msg_value(msg, F_ORIG));
+    free_xml(root_xml_node);
     FNOUT();
 }
 
 /*
- * Apparently FNRET(gn FALSE means "stay connected, keep doing stuff".
- * Returning TRUE means "we're all done, close the connection"
+ * Apparently returning TRUE means "stay connected, keep doing stuff".
+ * Returning FALSE means "we're all done, close the connection"
  */
 gboolean
 crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
@@ -247,7 +249,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 
     CRM_DEBUG2("channel: %p", client);
 
-    CRM_DEBUG2("crmd_ipc_input_callback: processing IPC message from %s", curr_client->table_key);
+    CRM_DEBUG2("processing IPC message from %s", curr_client->table_key);
     CRM_DEBUG2("Client is %s", client == NULL?"NULL":"valid");
 
     CRM_DEBUG3("Client status %d (disconnect=%d)", client->ch_status, IPC_DISCONNECT);
@@ -270,7 +272,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	CRM_DEBUG2("Got xml [text=%s]", buffer);
 	
 	CRM_DEBUG("crmd_ipc_input_dispatch: validating and decoding");
-	xmlNodePtr root_xml_node = validate_and_decode_ipcmessage(msg, FALSE);
+	xmlNodePtr root_xml_node = find_xml_in_ipcmessage(msg, FALSE);
 	if(root_xml_node != NULL)
 	{
 	    if(crmd_authorize_message(root_xml_node, msg, curr_client))
@@ -285,6 +287,7 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	{
 	    cl_log(LOG_INFO, "IPC Message was not valid... discarding message.");
 	}
+	free_xml(root_xml_node);
 	msg->msg_done(msg);
     }
 
@@ -312,24 +315,13 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	    CRM_DEBUG("###-###-### Freeing crm_client");
 	    ha_free(curr_client);
 	}
-
-/* 	CRM_DEBUG("checking if more messages need to be gotten"); */
-/* 	if(client != NULL && client->ops->is_message_pending(client) == TRUE) */
-/* 	{ */
-/* 	    IPC_Message *msg = get_ipc_message(client); */
-/* 	    msg->msg_done(msg); */
-/* 	} */
-/* 	CRM_DEBUG("no more messages need to be gotten"); */
-	
-	// else nothign to do, they never registered
-	    
  	CRM_DEBUG("this client is now gone.");
-	FNRET(!hack_return_good); // definitly required
+	FNRET(!hack_return_good);
     }
     
 	 
     CRM_DEBUG("crmd_ipc_input_callback: done");
-    FNRET(hack_return_good); /* TOBEDONE */
+    FNRET(hack_return_good);
 }
 
 
@@ -445,12 +437,6 @@ msg_ccm_join(const struct ha_msg *msg, void *foo)
     FNOUT();
 }
 
-
-
-/*
- * will free root_xml_node (and src_node_name??) 
- */
-
 void
 process_message(xmlNodePtr root_xml_node, gboolean originated_locally, const char *src_node_name)
 {
@@ -462,7 +448,7 @@ process_message(xmlNodePtr root_xml_node, gboolean originated_locally, const cha
 	FNOUT();
     }
     
-    const char *reference = xmlGetProp(root_xml_node, XML_MSG_ATTR_REFERENCE);
+    const char *crm_msg_reference = xmlGetProp(root_xml_node, XML_MSG_ATTR_REFERENCE);
 
     // try passing the buck first
     gboolean processing_complete = relay_message(root_xml_node, originated_locally, src_node_name);
@@ -482,7 +468,9 @@ process_message(xmlNodePtr root_xml_node, gboolean originated_locally, const cha
 
 	if(op == NULL)
 	{
-	    cl_log(LOG_ERR, "Invalid XML message.  No value %s operation for specified in (%s).", dc_mode?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, root_xml_node->name); 
+	    cl_log(LOG_ERR, "Invalid XML message.  No value %s operation for specified in (%s).",
+		   dc_mode?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD,
+		   root_xml_node->name); 
 	    FNOUT();
 	}
 
@@ -492,28 +480,32 @@ process_message(xmlNodePtr root_xml_node, gboolean originated_locally, const cha
     }
 
     if(processing_complete != TRUE)
-	cl_log(LOG_ERR, "Did not know what to do with message (reference=%s)", reference);
+	cl_log(LOG_ERR,
+	       "Did not know what to do with message (crm_msg_reference=%s)",
+	       crm_msg_reference);
     else
-	CRM_DEBUG2("Processing complete for message (reference=%s)", reference);
+	CRM_DEBUG2("Processing complete for message (crm_msg_reference=%s)",
+		   crm_msg_reference);
 
     FNOUT();
 }
 
 
 gboolean
-relay_message(xmlNodePtr root_xml_node, gboolean originated_locally, const char *host_from)
+relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally, const char *host_from)
 {
     FNIN();
-    const char *sys_from   = xmlGetProp(root_xml_node, XML_MSG_ATTR_SYSFROM);
-    const char *host_to    = xmlGetProp(root_xml_node, XML_MSG_ATTR_HOSTTO);
-    const char *sys_to     = xmlGetProp(root_xml_node, XML_MSG_ATTR_SYSTO);
-    const char *reference  = xmlGetProp(root_xml_node, XML_MSG_ATTR_REFERENCE);
-    const char *type       = xmlGetProp(root_xml_node, XML_MSG_ATTR_MSGTYPE);
+    const char *sys_from   = xmlGetProp(xml_relay_message, XML_MSG_ATTR_SYSFROM);
+    const char *host_to    = xmlGetProp(xml_relay_message, XML_MSG_ATTR_HOSTTO);
+    const char *sys_to     = xmlGetProp(xml_relay_message, XML_MSG_ATTR_SYSTO);
+    const char *crm_msg_reference  = xmlGetProp(xml_relay_message, XML_MSG_ATTR_REFERENCE);
+    const char *type       = xmlGetProp(xml_relay_message, XML_MSG_ATTR_MSGTYPE);
 
 
-    if(sys_to == NULL || reference == NULL || type == NULL)
+    if(sys_to == NULL || crm_msg_reference == NULL || type == NULL)
     {
-	CRM_DEBUG("relay_message: Invalid message, discarding.");
+	cl_log(LOG_DEBUG, "relay_message: Invalid message, (%s, %s, %s) discarding.",
+		  sys_to, crm_msg_reference, type);
 	FNRET(TRUE); // Discard.  Should have been picked up by now anyway
     }
     
@@ -534,28 +526,28 @@ relay_message(xmlNodePtr root_xml_node, gboolean originated_locally, const char 
     
     if(is_request == 1 && is_for_dc == 0 && originated_locally == FALSE)
     {
-	/* save host/reference in routing table
+	/* save host/crm_msg_reference in routing table
 	 * so that responses will be directed appropriately
 	 */
 	CRM_DEBUG("Generating key to look up hash table with");
-	gpointer action_ref = (gpointer)generate_hash_key(reference, sys_to);
+	gpointer action_ref = (gpointer)generate_hash_key(crm_msg_reference, sys_to);
 	CRM_DEBUG2("key (%s)", (char*)action_ref);
 
 	if(g_hash_table_lookup (pending_remote_replies, action_ref) == NULL)
 	{
-	    CRM_DEBUG2("Updating reference table for %s", host_from);
+	    CRM_DEBUG2("Updating crm_msg_reference table for %s", host_from);
 	    gpointer value = (gpointer)generate_hash_value(host_from, sys_from);
 	    CRM_DEBUG2("value (%s)", (char*)value);
 	    g_hash_table_insert (pending_remote_replies, action_ref, value);
 	    // remove from the table based on FIFO or a timed sweep or something
-	    // cleanup_referenceTable();
+	    // cleanup_crm_msg_referenceTable();
 	}
 	else
 	{
 	    cl_log(LOG_INFO,
-		   "Already processing a message with reference number"
+		   "Already processing a message with crm_msg_reference number"
 		   " (%s) for sub-system (%s)... discarding message.",
-		   reference, sys_to);
+		   crm_msg_reference, sys_to);
 	    processing_complete = TRUE;
 	}
     }
@@ -566,7 +558,7 @@ relay_message(xmlNodePtr root_xml_node, gboolean originated_locally, const char 
 	if(originated_locally && i_am_dc == FALSE)
 	{
 	    // DC Messages are always broadcast
-	    send_msg_to_ha(root_xml_node, NULL);
+	    send_msg_via_ha(xml_relay_message, NULL);
 	    processing_complete = TRUE;
 	}
 	else if(i_am_dc == FALSE)
@@ -578,14 +570,14 @@ relay_message(xmlNodePtr root_xml_node, gboolean originated_locally, const char 
     {
 	if(!is_for_crm)
 	{
-	    send_msg_to_ipc(root_xml_node, sys_to);
+	    send_msg_via_ipc(xml_relay_message, sys_to);
 	    processing_complete = TRUE;
 	}
     }
     else
     {
-	char *dest_node = find_destination_host(root_xml_node, reference, sys_from, is_request);
-	send_msg_to_ha(root_xml_node, dest_node);
+	char *dest_node = find_destination_host(xml_relay_message, crm_msg_reference, sys_from, is_request);
+	send_msg_via_ha(xml_relay_message, dest_node);
 	processing_complete = TRUE;
     }
 
@@ -607,9 +599,12 @@ crm_dc_process_message(xmlNodePtr whole_message, xmlNodePtr action,
 	// DC specific actions
 	if(strcmp("cib_op", op) == 0)
 	{
-	    wrapper = create_forward(whole_message, findNode(action, XML_REQ_TAG_CIB), "cib");
+	    xmlNodePtr cib_req = find_xmlnode(action, XML_REQ_TAG_CIB);
+	    
+	    wrapper = create_forward(whole_message, cib_req, "cib");
 	    relay_message(wrapper, TRUE, host_from);
 	    processing_complete = TRUE;
+	    free_xml(wrapper);
 	}
 	
 	CRM_DEBUG("Finished processing DC specific actions");
@@ -632,6 +627,7 @@ crm_dc_process_message(xmlNodePtr whole_message, xmlNodePtr action,
 	    wrapper = create_reply(whole_message, response);
 	    relay_message(wrapper, TRUE, host_from);
 	    processing_complete = TRUE;
+	    free_xml(wrapper);
 	}
 	else if(strcmp("ping_deep", op) == 0)
 	{
@@ -644,6 +640,7 @@ crm_dc_process_message(xmlNodePtr whole_message, xmlNodePtr action,
 	    
 	    wrapper = create_reply(whole_message, response);
 	    relay_message(wrapper, TRUE, host_from);
+	    free_xml(wrapper);
 
 	    /* Now pass the ping request on to all subsystems for them
 	     *  to reply to individually.
@@ -658,15 +655,23 @@ crm_dc_process_message(xmlNodePtr whole_message, xmlNodePtr action,
 	     */
 	    wrapper = create_forward(whole_message, action, CRM_SYSTEM_CIB);
 	    relay_message(wrapper, TRUE, host_from);
+	    xmlUnlinkNode(action);
+	    free_xml(wrapper);
 
 	    wrapper = create_forward(whole_message, action, CRM_SYSTEM_LRMD);
 	    relay_message(wrapper, TRUE, host_from);
+	    xmlUnlinkNode(action);
+	    free_xml(wrapper);
 
 	    wrapper = create_forward(whole_message, action, CRM_SYSTEM_PENGINE);
 	    relay_message(wrapper, TRUE, host_from);
+	    xmlUnlinkNode(action);
+	    free_xml(wrapper);
 
 	    wrapper = create_forward(whole_message, action, CRM_SYSTEM_TENGINE);
 	    relay_message(wrapper, TRUE, host_from);
+	    xmlUnlinkNode(action);
+	    free_xml(wrapper);
 
 	    processing_complete = TRUE;
 	}
@@ -684,7 +689,7 @@ crm_dc_process_message(xmlNodePtr whole_message, xmlNodePtr action,
 
 
 void
-send_msg_to_ha(xmlNodePtr action, const char *dest_node)//, const char *sys_to, const char *dest_node)
+send_msg_via_ha(xmlNodePtr action, const char *dest_node)//, const char *sys_to, const char *dest_node)
 {
     FNIN();
     if(action == NULL) FNOUT();
@@ -695,14 +700,14 @@ send_msg_to_ha(xmlNodePtr action, const char *dest_node)//, const char *sys_to, 
 	FNOUT();
     }
     CRM_DEBUG2("Relaying message to (%s) via HA", dest_node);
-    xmlSetProp(action, XML_MSG_ATTR_HOSTTO, dest_node);
+    set_xml_property_copy(action, XML_MSG_ATTR_HOSTTO, dest_node);
     send_xmlha_message(hb_cluster, action);
     FNOUT();
 }
 
 
 void
-send_msg_to_ipc(xmlNodePtr action, const char *sys)
+send_msg_via_ipc(xmlNodePtr action, const char *sys)
 {
     FNIN();
     cl_log(LOG_DEBUG, "relaying msg to sub_sys=%s via IPC", sys);
@@ -724,47 +729,44 @@ send_msg_to_ipc(xmlNodePtr action, const char *sys)
 
 // return value is an indication that processing should continue
 gboolean
-add_pending_outgoing_reply(const char *originating_node_name, const char *reference,
+add_pending_outgoing_reply(const char *originating_node_name, const char *crm_msg_reference,
 			 const char *sys_to, const char *sys_from)
 {
     FNIN();
     
-    CRM_DEBUG2("Updating reference table for %s", originating_node_name);
+    CRM_DEBUG2("Updating crm_msg_reference table for %s", originating_node_name);
     CRM_DEBUG("Generating key to look up hash table with");
 
-    gpointer action_ref = (gpointer)generate_hash_key(reference, sys_to);
+    gpointer action_ref = (gpointer)generate_hash_key(crm_msg_reference, sys_to);
     CRM_DEBUG2("key (%s)", (char*)action_ref);
     if(g_hash_table_lookup (pending_remote_replies, action_ref) != NULL)
     {
 	cl_log(LOG_INFO,
-	       "Already processing a message with reference number (%s) for sub-system (%s)... discarding message.",
-	       reference, sys_to);
+	       "Already processing a message with crm_msg_reference number (%s) for sub-system (%s)... discarding message.",
+	       crm_msg_reference, sys_to);
 	FNRET(FALSE);
     }
     gpointer value = (gpointer)generate_hash_value(originating_node_name, sys_from);
     CRM_DEBUG2("value (%s)", (char*)value);
     g_hash_table_insert (pending_remote_replies, action_ref, value);
     // remove from the table based on FIFO or a timed sweep or something
-    // cleanup_referenceTable();
+    // cleanup_crm_msg_referenceTable();
 
     FNRET(TRUE);
 }
 
 		
 char *
-find_destination_host(xmlNodePtr xml_root_node, const char *reference, const char *sys_from, int is_request)
+find_destination_host(xmlNodePtr xml_root_node, const char *crm_msg_reference, const char *sys_from, int is_request)
 {
     FNIN();
-    
-//	    cl_log(LOG_DEBUG, "relaying msg (type=%s, ref=%s, from=%s) to HA", type, reference, from);
     char *dest_node = NULL, *sys_to = NULL;
-    
     
     if(is_request == 0)
     {
 	gpointer destination = NULL;
 	CRM_DEBUG("Generating key to look up destination hash table with");
-	gpointer action_ref = (gpointer)generate_hash_key(reference, sys_from);
+	gpointer action_ref = (gpointer)generate_hash_key(crm_msg_reference, sys_from);
 	CRM_DEBUG2("Created key (%s)", (char*)action_ref);
 	destination = g_hash_table_lookup (pending_remote_replies, action_ref);
 	CRM_DEBUG2("Looked up hash table and found value (%s)", (char*)destination);
@@ -772,15 +774,15 @@ find_destination_host(xmlNodePtr xml_root_node, const char *reference, const cha
 	if(destination == NULL)
 	{
 	    cl_log(LOG_INFO,
-		   "Dont know anything about a message with reference number (%s) from sub-system (%s)... discarding response.",
-		   reference, sys_from);
+		   "Dont know anything about a message with crm_msg_reference number (%s) from sub-system (%s)... discarding response.",
+		   crm_msg_reference, sys_from);
 	    FNRET(NULL);// should be discarded instead?
 	}
 	CRM_DEBUG("Decoding destination");
 	if(decode_hash_value(destination, &dest_node, &sys_to))
 	{
 	    CRM_DEBUG3("Decoded destination (%s, %s)", dest_node, sys_to);
-	    xmlSetProp(xml_root_node, XML_MSG_ATTR_SYSTO, sys_to);
+	    set_xml_property_copy(xml_root_node, XML_MSG_ATTR_SYSTO, sys_to);
 	    cl_log(LOG_DEBUG, "setting (%s=%s) on HA message", XML_MSG_ATTR_SYSTO, sys_to);
 	}
 	else

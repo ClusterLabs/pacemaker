@@ -44,6 +44,7 @@
 
 #include <crm/common/ipcutils.h>
 #include <crm/common/crmutils.h>
+#include <crm/common/xmlutils.h>
 #include <crm/common/xmlvalues.h>
 #include <cibio.h>
 #include <cib.h>
@@ -54,7 +55,7 @@
 #define DAEMON_DEBUG LOG_DIR"/cib.debug"
 
 GMainLoop*  mainloop = NULL;
-const char* daemon_name = CRM_SYSTEM_CIB;
+const char* crm_system_name = CRM_SYSTEM_CIB;
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
@@ -67,7 +68,7 @@ int
 main(int argc, char ** argv)
 {
 
-    cl_log_set_entity(daemon_name);
+    cl_log_set_entity(crm_system_name);
     cl_log_enable_stderr(TRUE);
     cl_log_set_facility(LOG_USER);
     
@@ -93,7 +94,7 @@ main(int argc, char ** argv)
 		req_comms_restart = TRUE;
 		break;
 	    case 'h':		/* Help message */
-		usage(daemon_name, LSB_EXIT_OK);
+		usage(crm_system_name, LSB_EXIT_OK);
 		break;
 	    default:
 		++argerr;
@@ -106,13 +107,13 @@ main(int argc, char ** argv)
     }
     
     if (argerr) {
-	usage(daemon_name,LSB_EXIT_GENERIC);
+	usage(crm_system_name,LSB_EXIT_GENERIC);
     }
     
     // read local config file
     
     if (req_status){
-	FNRET(init_status(PID_FILE, daemon_name));
+	FNRET(init_status(PID_FILE, crm_system_name));
     }
   
     if (req_stop){
@@ -170,6 +171,7 @@ init_start(void)
 	cl_log(LOG_INFO, "CIB Initialization completed successfully");
     else
     {
+	free_xml(cib);
 	cl_log(LOG_CRIT, "CIB Initialization failed, starting with an empty default.");
 	initializeCib(createEmptyCib());
     }
@@ -178,7 +180,7 @@ init_start(void)
     
     /* Create the mainloop and run it... */
     mainloop = g_main_new(FALSE);
-    cl_log(LOG_INFO, "Starting %s", daemon_name);
+    cl_log(LOG_INFO, "Starting %s", crm_system_name);
   
 #ifdef REALTIME_SUPPORT
 static int  crm_realtime = 1;
@@ -194,7 +196,7 @@ static int  crm_realtime = 1;
     return_to_orig_privs();
   
     if (unlink(PID_FILE) == 0) {
-	cl_log(LOG_INFO, "[%s] stopped", daemon_name);
+	cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
     }
     FNRET(0);
 }

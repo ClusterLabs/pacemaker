@@ -59,7 +59,7 @@
 
 /* gboolean waitCh_client_connect(IPC_Channel *newclient, gpointer user_data); */
 int updateCibStatus(xmlNodePtr cib, const char *res_id, const char *instanceNum, const char *node_id, const char *status);
-int addNodeToResource(xmlNodePtr cib, const char *res_id, const char *node_id, const char *weight);
+int add_xmlnode_to_cibToResource(xmlNodePtr cib, const char *res_id, const char *node_id, const char *weight);
 
 cibConstraint *createInternalConstraint(const char *res_id_1, const char *instance, const char *node_id, const char *expires);
 cibConstraint *createSimpleConstraint(const char *id, const char *type, const char *res_id_1, const char *res_id_2);
@@ -140,6 +140,7 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 	    CRM_DEBUG("Directing reply");
 	    if(send_ipc_reply(client, root_xml_node, answer) == FALSE)
 		cl_log(LOG_WARNING, "Cib answer could not be sent");
+	    free_xml(answer);//xmlFreeNode(answer);
 	}
 	else if(root_xml_node != NULL)
 	    cl_log(LOG_INFO, "Received a message for (%s) by mistake",
@@ -147,6 +148,7 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 	else
 	    cl_log(LOG_INFO, "Root node was NULL!!");
 
+	free_xml(root_xml_node);
 	msg->msg_done(msg);
     }
 
@@ -161,7 +163,7 @@ cib_input_dispatch(IPC_Channel *client, gpointer user_data)
 
 
 int
-addNodeToResource(xmlNodePtr cib, const char *res_id, const char *node_id, const char *weight)
+add_xmlnode_to_cibToResource(xmlNodePtr cib, const char *res_id, const char *node_id, const char *weight)
 {
     xmlNodePtr resource = findResource(cib, res_id);
     if(resource != NULL)
@@ -173,15 +175,15 @@ addNodeToResource(xmlNodePtr cib, const char *res_id, const char *node_id, const
 	}
 
 	CRM_DEBUG3("Attempting to add allowed " XML_CIB_TAG_NODE " (%s) to " XML_CIB_TAG_RESOURCE " (%s).", node_id, res_id);
-	xmlNodePtr node_entry = findEntity(resource, "node", node_id, FALSE);
+	xmlNodePtr node_entry = find_entity(resource, "node", node_id, FALSE);
 	if(node_entry == NULL)
 	    node_entry = xmlNewChild(resource, NULL, "node", NULL);
 	else
 	    CRM_DEBUG3("Allowed " XML_CIB_TAG_NODE " (%s) already present for " XML_CIB_TAG_RESOURCE " (%s), updating.", node_id, res_id);
 	
-	xmlSetProp(node_entry, XML_ATTR_ID, node_id);
-	xmlSetProp(node_entry, XML_CIB_ATTR_WEIGHT, weight);
-	xmlSetProp(node_entry, XML_ATTR_TSTAMP, getNow());
+	set_xml_property_copy(node_entry, XML_ATTR_ID, node_id);
+	set_xml_property_copy(node_entry, XML_CIB_ATTR_WEIGHT, weight);
+	set_xml_property_copy(node_entry, XML_ATTR_TSTAMP, getNow());
     }
     else
     {
@@ -215,8 +217,8 @@ updateCibStatus(xmlNodePtr cib, const char *res_id, const char *instanceNum, con
 	 *   the update with that... but for now, lets make it work.
 	 */
 	cibStatus *new_status = newStatus(res_id, node_id, instanceNum);
-	xmlSetProp(new_status, XML_CIB_ATTR_MAXINSTANCE, xmlGetProp(resource, XML_CIB_ATTR_MAXINSTANCE));
-	xmlSetProp(new_status, XML_CIB_ATTR_RESSTATUS, status);
+	set_xml_property_copy(new_status, XML_CIB_ATTR_MAXINSTANCE, xmlGetProp(resource, XML_CIB_ATTR_MAXINSTANCE));
+	set_xml_property_copy(new_status, XML_CIB_ATTR_RESSTATUS, status);
 	// TODO: set the source of the info
 	//new_status.source = "nodeX";
 
@@ -238,15 +240,15 @@ createInternalConstraint(const char *res_id_1, const char *instance, const char 
     
     cibConstraint *new_con = newConstraint(id);
 
-    xmlSetProp(new_con, XML_CIB_ATTR_CONTYPE, CIB_VAL_CONTYPE_BLOCK);
-    xmlSetProp(new_con, XML_CIB_ATTR_RESID1, res_id_1);
-    xmlSetProp(new_con, XML_CIB_ATTR_CLEAR, expires);
+    set_xml_property_copy(new_con, XML_CIB_ATTR_CONTYPE, CIB_VAL_CONTYPE_BLOCK);
+    set_xml_property_copy(new_con, XML_CIB_ATTR_RESID1, res_id_1);
+    set_xml_property_copy(new_con, XML_CIB_ATTR_CLEAR, expires);
 
     xmlNodePtr node_entry = xmlNewNode(NULL, XML_CIB_TAG_NVPAIR);			
-    xmlSetProp(node_entry, XML_ATTR_ID, "blockHost");
-//			xmlSetProp(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
-    xmlSetProp(node_entry, XML_CIB_ATTR_VARVALUE, node_id);
-    xmlSetProp(node_entry, XML_CIB_ATTR_ACTION, "add");
+    set_xml_property_copy(node_entry, XML_ATTR_ID, "blockHost");
+//			set_xml_property_copy(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
+    set_xml_property_copy(node_entry, XML_CIB_ATTR_VARVALUE, node_id);
+    set_xml_property_copy(node_entry, XML_CIB_ATTR_ACTION, "add");
     xmlAddChild(new_con, node_entry);
     
     FNRET(new_con);
@@ -257,9 +259,9 @@ createSimpleConstraint(const char *id, const char *type, const char *res_id_1, c
 {
     cibConstraint *new_con = newConstraint(id);
 
-    xmlSetProp(new_con, XML_CIB_ATTR_CONTYPE, type);
-    xmlSetProp(new_con, XML_CIB_ATTR_RESID1, res_id_1);
-    xmlSetProp(new_con, XML_CIB_ATTR_RESID2, res_id_2);
+    set_xml_property_copy(new_con, XML_CIB_ATTR_CONTYPE, type);
+    set_xml_property_copy(new_con, XML_CIB_ATTR_RESID1, res_id_1);
+    set_xml_property_copy(new_con, XML_CIB_ATTR_RESID2, res_id_2);
 
     FNRET(new_con);
 }
@@ -270,14 +272,14 @@ createVariableConstraint(const char *id, const char *type, const char *res_id_1,
 {
     cibConstraint *new_con = newConstraint(id);
 
-    xmlSetProp(new_con, XML_CIB_ATTR_CONTYPE, type);
-    xmlSetProp(new_con, XML_CIB_ATTR_RESID1, res_id_1);
+    set_xml_property_copy(new_con, XML_CIB_ATTR_CONTYPE, type);
+    set_xml_property_copy(new_con, XML_CIB_ATTR_RESID1, res_id_1);
 
     xmlNodePtr node_entry = xmlNewNode(NULL, XML_CIB_TAG_NVPAIR);			
-    xmlSetProp(node_entry, XML_ATTR_ID, var_name);
-//			xmlSetProp(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
-    xmlSetProp(node_entry, XML_CIB_ATTR_VARVALUE, var_value);
-    xmlSetProp(node_entry, XML_CIB_ATTR_ACTION, "add");
+    set_xml_property_copy(node_entry, XML_ATTR_ID, var_name);
+//			set_xml_property_copy(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
+    set_xml_property_copy(node_entry, XML_CIB_ATTR_VARVALUE, var_value);
+    set_xml_property_copy(node_entry, XML_CIB_ATTR_ACTION, "add");
     xmlAddChild(new_con, node_entry);
 
     FNRET(new_con);
@@ -301,14 +303,14 @@ test(void)
     updateResource(cib, newResource("res2", "drbd", "data for apache", "2"));
     updateResource(cib, newResource("res3", "dhcp", "dhcp", "1"));
      
-    addNodeToResource(cib, "res2", "node1", "10");
-    addNodeToResource(cib, "res2", "node2", "100");
-    addNodeToResource(cib, "res2", "node3", "5");
+    add_xmlnode_to_cibToResource(cib, "res2", "node1", "10");
+    add_xmlnode_to_cibToResource(cib, "res2", "node2", "100");
+    add_xmlnode_to_cibToResource(cib, "res2", "node3", "5");
 
-    addNodeToResource(cib, "res1", "node2", "20");
+    add_xmlnode_to_cibToResource(cib, "res1", "node2", "20");
 
-    addNodeToResource(cib, "res3", "node2", "-1");
-    addNodeToResource(cib, "res3", "node4", "10");
+    add_xmlnode_to_cibToResource(cib, "res3", "node2", "-1");
+    add_xmlnode_to_cibToResource(cib, "res3", "node4", "10");
     
     updateConstraint(cib, createSimpleConstraint("con1", CIB_VAL_CONTYPE_AFTER, "res1", "res2"));
     updateConstraint(cib, createVariableConstraint("con2", CIB_VAL_CONTYPE_VAR, "res1",

@@ -49,7 +49,7 @@ typedef xmlNode cibHaNode;
 /* extern xmlNodePtr resource_search; */
 /* extern xmlNodePtr constraint_search; */
 /* extern xmlNodePtr status_search; */
-/* extern const char* daemon_name; */
+/* extern const char* crm_system_name; */
 
 extern void* ha_malloc(size_t size);
 

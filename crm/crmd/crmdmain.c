@@ -43,7 +43,7 @@
 #include <libxml/tree.h>
 
 GMainLoop*  mainloop = NULL;
-const char* daemon_name = "crmd";
+const char* crm_system_name = "crmd";
 
 #include <crm/common/crmutils.h>
 #include <crm/common/ipcutils.h>
@@ -57,19 +57,19 @@ const char* daemon_name = "crmd";
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
-void register_with_apphb(void);
-ll_cluster_t * ha_register(void);
 int register_with_ccm(ll_cluster_t *hb_cluster);
 gboolean crmd_ha_input_dispatch(int fd, gpointer user_data);
 void crmd_ha_input_destroy(gpointer user_data);
 void shutdown(int nsig);
 void crmd_hamsg_callback(const struct ha_msg* msg, void* private_data);
+gboolean crmd_tickle_apphb(gpointer data);
+
 
 int
 main(int argc, char ** argv)
 {
 
-    cl_log_set_entity(daemon_name);
+    cl_log_set_entity(crm_system_name);
     cl_log_enable_stderr(TRUE);
     cl_log_set_facility(LOG_USER);
     
@@ -81,21 +81,21 @@ main(int argc, char ** argv)
     
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
-	switch(flag) {
+		switch(flag) {
 	    case 's':		/* Status */
-		req_status = TRUE;
+			req_status = TRUE;
 		break;
 	    case 'k':		/* Stop (kill) */
-		req_stop = TRUE;
+			req_stop = TRUE;
 		break;
 	    case 'r':		/* Restart */
-		req_restart = TRUE;
+			req_restart = TRUE;
 		break;
 	    case 'h':		/* Help message */
-		usage(daemon_name, LSB_EXIT_OK);
+			usage(crm_system_name, LSB_EXIT_OK);
 		break;
 	    default:
-		++argerr;
+			++argerr;
 		break;
 	}
     }
@@ -105,23 +105,23 @@ main(int argc, char ** argv)
     }
     
     if (argerr) {
-	usage(daemon_name,LSB_EXIT_GENERIC);
+		usage(crm_system_name,LSB_EXIT_GENERIC);
     }
     
     // read local config file
     
     if (req_status){
-	FNRET(init_status(PID_FILE, daemon_name));
+		FNRET(init_status(PID_FILE, crm_system_name));
     }
   
     if (req_stop){
-	FNRET(init_stop(PID_FILE, mainloop));
+		FNRET(init_stop(PID_FILE, mainloop));
     }
-  
+	
     if (req_restart) { 
-	init_stop(PID_FILE, mainloop);
+		init_stop(PID_FILE, mainloop);
     }
-
+	
     FNRET(init_start());
 }
 
@@ -132,31 +132,31 @@ init_start(void)
     long pid;
 
     if ((pid = get_running_pid(PID_FILE, NULL)) > 0) {
-	cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
-	exit(LSB_EXIT_OK);
+		cl_log(LOG_CRIT, "already running: [pid %ld].", pid);
+		exit(LSB_EXIT_OK);
     }
     cl_log(LOG_INFO, "Register PID");
     register_pid(PID_FILE, TRUE, shutdown);
-  
+	
     cl_log_set_logfile(DAEMON_LOG);
 //    if (crm_debug()) {
     cl_log_set_debugfile(DAEMON_DEBUG);
 //    }
-
+	
     xmlInitParser();
     pending_remote_replies = g_hash_table_new(&g_str_hash, &g_str_equal);
     ipc_clients = g_hash_table_new(&g_str_hash, &g_str_equal);
-		    
+	
     /* change the logging facility to the one used by heartbeat daemon */
     hb_cluster = ll_cluster_new("heartbeat");
-  
+	
     //	(void)_heartbeat_h_Id;
     (void)_ha_msg_h_Id;
-
+	
     int facility;
     cl_log(LOG_INFO, "Switching to Heartbeat logger");
     if ((facility = hb_cluster->llc_ops->get_logfacility(hb_cluster))>0) {
-	cl_log_set_facility(facility);
+		cl_log_set_facility(facility);
     }
     
 
@@ -178,7 +178,7 @@ init_start(void)
     {
 	CRM_DEBUG("Registering with HA");
 	was_error = (register_with_ha(hb_cluster,
-				      daemon_name,
+				      crm_system_name,
 				      crmd_ha_input_dispatch,
 				      crmd_ha_input_callback,
 				      crmd_ha_input_destroy) == FALSE);
@@ -205,7 +205,7 @@ init_start(void)
     {
 	/* Create the mainloop and run it... */
 	mainloop = g_main_new(FALSE);
-	cl_log(LOG_INFO, "Starting %s", daemon_name);
+	cl_log(LOG_INFO, "Starting %s", crm_system_name);
 	
 #ifdef REALTIME_SUPPORT
 	static int  crm_realtime = 1;
@@ -222,7 +222,7 @@ init_start(void)
     }
     
     if (unlink(PID_FILE) == 0) {
-	cl_log(LOG_INFO, "[%s] stopped", daemon_name);
+	cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
     }
     FNRET(was_error);
 }
@@ -265,9 +265,9 @@ register_with_ccm(ll_cluster_t *hb_cluster)
     cl_log(LOG_INFO, "Activating CCM taken");
     ret = oc_ev_activate(ev_token, &my_ev_fd);
     if(ret){
-	cl_log(LOG_INFO, "CCM Activation failed... unregistering");
-	oc_ev_unregister(ev_token);
-	return(1);
+		cl_log(LOG_INFO, "CCM Activation failed... unregistering");
+		oc_ev_unregister(ev_token);
+		return(1);
     }
     cl_log(LOG_INFO, "CCM Activation passed... all set to go!");
     
@@ -275,15 +275,15 @@ register_with_ccm(ll_cluster_t *hb_cluster)
     FD_SET(my_ev_fd, &rset);
     
     if(oc_ev_handle_event(ev_token)){
-	cl_log(LOG_ERR,"CCM Activation: terminating");
-	return(1);
+		cl_log(LOG_ERR,"CCM Activation: terminating");
+		return(1);
     }
     
     cl_log(LOG_INFO, "Sign up for \"ccmjoin\" messages");
     if (hb_cluster->llc_ops->set_msg_callback(hb_cluster, "ccmjoin",
-					      msg_ccm_join, hb_cluster) != HA_OK)
+											  msg_ccm_join, hb_cluster) != HA_OK)
     {
-	cl_log(LOG_ERR, "Cannot set msg_ipfail_join callback");
+		cl_log(LOG_ERR, "Cannot set msg_ipfail_join callback");
     }
     
     FNRET(0);
@@ -317,12 +317,26 @@ shutdown(int nsig)
     CL_SIGNAL(nsig, shutdown);
   
     if (!shuttingdown) {
-	shuttingdown = 1;
+		shuttingdown = 1;
     }
     if (mainloop != NULL && g_main_is_running(mainloop)) {
-	g_main_quit(mainloop);
+		g_main_quit(mainloop);
     }else{
-	exit(LSB_EXIT_OK);
+		exit(LSB_EXIT_OK);
     }
 }
 
+gboolean
+crmd_tickle_apphb(gpointer data)
+{
+    char	app_instance[APPNAME_LEN];
+    int     rc = 0;
+    sprintf(app_instance, "%s_%ld", crm_system_name, (long)getpid());
+
+    rc = apphb_hb();
+    if (rc < 0) {
+		cl_perror("%s apphb_hb failure", app_instance);
+		exit(3);
+    }
+    return TRUE;
+}

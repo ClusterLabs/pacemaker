@@ -31,17 +31,22 @@
 #include <clplumbing/cl_log.h> 
 #include <libxml/tree.h> 
 
-extern int addNode(xmlNodePtr cib, const char * node_path, xmlNodePtr xml_node);
-extern void copyInProperties(xmlNodePtr src, xmlNodePtr target);
+extern int add_xmlnode_to_cib(xmlNodePtr cib, const char * node_path, xmlNodePtr xml_node);
+extern void copy_in_properties(xmlNodePtr src, xmlNodePtr target);
 extern xmlNodePtr xmlLinkedCopyNoSiblings(xmlNodePtr src, int recursive);
 
-extern xmlNodePtr findNode(xmlNodePtr cib, const char * node_path);
-extern xmlNodePtr findEntity(xmlNodePtr parent, const char *node_name, const char *id, gboolean siblings);
-extern xmlNodePtr findEntityAdvanced(xmlNodePtr parent, const char *node_name, const char *elem_filter_name, const char *elem_filter_value, const char *id, gboolean siblings);
+extern xmlNodePtr find_xmlnode(xmlNodePtr cib, const char * node_path);
+extern xmlNodePtr find_entity(xmlNodePtr parent, const char *node_name, const char *id, gboolean siblings);
+extern xmlNodePtr find_entity_nested(xmlNodePtr parent, const char *node_name, const char *elem_filter_name, const char *elem_filter_value, const char *id, gboolean siblings);
 extern xmlDocPtr  createTree(void);
-extern xmlNodePtr findDeepNode(xmlNodePtr root, const char **search_path, int len);
+extern xmlNodePtr find_xmlnode_nested(xmlNodePtr root, const char **search_path, int len);
 
 extern char * dump_xml(xmlNodePtr msg);
 extern char * dump_xml_node(xmlNodePtr msg, gboolean whole_doc);
+extern void free_xml(xmlNodePtr a_node);
+extern int add_node_copy(xmlNodePtr cib, const char *node_path, xmlNodePtr xml_node);
+extern xmlAttrPtr set_xml_property_copy(xmlNodePtr node, const xmlChar *name, const xmlChar *value);
+void xml_message_debug(xmlNodePtr msg);
+
 
 #endif

@@ -38,8 +38,8 @@ extern char* getNow(void);
 extern char *dump_xml(xmlNodePtr msg);
 extern char *dump_xml_node(xmlNodePtr msg, gboolean whole_doc);
 
-extern xmlNodePtr validate_and_decode_hamessage(const struct ha_msg* msg);
-extern xmlNodePtr validate_and_decode_ipcmessage(IPC_Message *msg, gboolean do_free);
+extern xmlNodePtr find_xml_in_hamessage(const struct ha_msg* msg);
+extern xmlNodePtr find_xml_in_ipcmessage(IPC_Message *msg, gboolean do_free);
 
 extern gboolean send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg);
 extern gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);

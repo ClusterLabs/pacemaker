@@ -54,7 +54,7 @@
 #define DAEMON_DEBUG "/var/log/pengine.debug"
 
 GMainLoop*  mainloop = NULL;
-const char* daemon_name = "pengine";
+const char* crm_system_name = "pengine";
 
 
 void usage(const char* cmd, int exit_status);
@@ -65,7 +65,7 @@ int
 main(int argc, char ** argv)
 {
 
-    cl_log_set_entity(daemon_name);
+    cl_log_set_entity(crm_system_name);
     cl_log_enable_stderr(TRUE);
     cl_log_set_facility(LOG_USER);
     
@@ -93,7 +93,7 @@ main(int argc, char ** argv)
 		req_restart = TRUE;
 		break;
 	    case 'h':		/* Help message */
-		usage(daemon_name, LSB_EXIT_OK);
+		usage(crm_system_name, LSB_EXIT_OK);
 		break;
 	    default:
 		++argerr;
@@ -106,13 +106,13 @@ main(int argc, char ** argv)
     }
     
     if (argerr) {
-	usage(daemon_name,LSB_EXIT_GENERIC);
+	usage(crm_system_name,LSB_EXIT_GENERIC);
     }
     
     // read local config file
     
     if (req_status){
-	return init_status(PID_FILE, daemon_name);
+	return init_status(PID_FILE, crm_system_name);
     }
 
     if (req_stop){
@@ -164,7 +164,7 @@ init_start(void)
 
     /* Create the mainloop and run it... */
     mainloop = g_main_new(FALSE);
-    cl_log(LOG_INFO, "Starting %s", daemon_name);
+    cl_log(LOG_INFO, "Starting %s", crm_system_name);
 
     G_main_add_IPC_Channel(G_PRIORITY_LOW,
 			   crm_ch,
@@ -189,7 +189,7 @@ static int  crm_realtime = 1;
     return_to_orig_privs();
   
     if (unlink(PID_FILE) == 0) {
-	cl_log(LOG_INFO, "[%s] stopped", daemon_name);
+	cl_log(LOG_INFO, "[%s] stopped", crm_system_name);
     }
     return 0;
 }

@@ -26,13 +26,13 @@ extern const char *generateReference(void);
 extern gboolean conditional_add_failure(xmlNodePtr failed, xmlNodePtr target, int operation, int return_code);
 extern xmlNodePtr validate_crm_message(xmlNodePtr root, const char *sys, const char *uid, const char *msg_type);
 extern xmlNodePtr createPingAnswerFragment(const char *from, const char *status);
-extern xmlNodePtr createPingRequest(const char *reference, const char *to);
-/* extern xmlNodePtr createCrmMsg(const char *reference, */
+extern xmlNodePtr createPingRequest(const char *crm_msg_reference, const char *to);
+/* extern xmlNodePtr createCrmMsg(const char *crm_msg_reference, */
 /* 			       const char *dest_subsystem, */
 /* 			       const char *src_subsystem, */
 /* 			       xmlNodePtr data, */
 /* 			       gboolean is_request); */
-/* extern xmlNodePtr createIpcMessage(const char *reference, */
+/* extern xmlNodePtr createIpcMessage(const char *crm_msg_reference, */
 /* 				   const char *from, */
 /* 				   const char *to, */
 /* 				   xmlNodePtr data, */
@@ -53,19 +53,23 @@ process_hello_message(IPC_Message *hello_message,
 		      char **minor_version);
 
 extern gboolean
+forward_ipc_request(IPC_Channel *ipc_channel,
+		    xmlNodePtr xml_request, xmlNodePtr xml_response_data,
+		    const char *sys_to, const char *sys_from);
+extern gboolean
 send_ipc_request(IPC_Channel *ipc_channel, xmlNodePtr xml_msg_node,
 		 const char *host_to, const char *sys_to,
 		 const char *sys_from, const char *uid_from,
-		 const char *reference);
+		 const char *crm_msg_reference);
 extern gboolean send_ha_request(void);
 extern gboolean send_ha_reply(ll_cluster_t *hb_cluster, xmlNodePtr xml_request, xmlNodePtr xml_response_data);
 extern gboolean send_ipc_reply(IPC_Channel *ipc_channel, xmlNodePtr xml_request, xmlNodePtr xml_response_data);
 extern xmlNodePtr create_forward(xmlNodePtr xml_request, xmlNodePtr xml_response_data, const char *sys_to);
 extern xmlNodePtr createCrmMsg(xmlNodePtr data, gboolean is_request);
 extern xmlNodePtr create_reply(xmlNodePtr xml_request, xmlNodePtr xml_response_data);
-//xmlNodePtr createIpcMessage(const char *reference, const char *from, const char *to, xmlNodePtr data, gboolean is_request);
+//xmlNodePtr createIpcMessage(const char *crm_msg_reference, const char *from, const char *to, xmlNodePtr data, gboolean is_request);
 
-extern char *generate_hash_key(const char *reference, const char *sys);
+extern char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 extern char *generate_hash_value(const char *src_node, const char *src_subsys);
 extern gboolean decode_hash_value(gpointer value, char **node, char **subsys);
 

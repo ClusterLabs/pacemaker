@@ -43,6 +43,7 @@
 #include <crm/common/crmutils.h>
 #include <crm/common/msgutils.h>
 #include <crm/common/ipcutils.h>
+#include <crm/common/xmlutils.h>
 #include <crm/common/xmltags.h>
 #include <crm/common/xmlvalues.h>
 #include <crm/cib/cibprimatives.h>
@@ -53,7 +54,7 @@
 #include <getopt.h>
 
 GMainLoop*  mainloop = NULL;
-const char* daemon_name = "crmadmin";
+const char* crm_system_name = "crmadmin";
 IPC_Channel *crmd_channel = NULL;
 char *adminuid = NULL;
 
@@ -93,7 +94,7 @@ typedef struct str_list_s
 
 const char *verbose = "false";
 char *id = NULL;
-char *msg_reference = NULL;
+char *this_msg_reference = NULL;
 char *obj_type = NULL;
 char *description = NULL;
 char *clear = NULL;
@@ -127,7 +128,7 @@ int
 main(int argc, char ** argv)
 {
     
-    cl_log_set_entity(daemon_name);
+    cl_log_set_entity(crm_system_name);
     cl_log_enable_stderr(TRUE);
     cl_log_set_facility(LOG_USER);
     
@@ -215,7 +216,7 @@ main(int argc, char ** argv)
 		}
 		else if(strcmp("reference"  , long_options[option_index].name) == 0)
 		{
-		    msg_reference = strdup(optarg);
+		    this_msg_reference = strdup(optarg);
 		}
 		else if(strcmp("node"  , long_options[option_index].name) == 0)
 		{
@@ -239,7 +240,7 @@ main(int argc, char ** argv)
 		verbose = "true";
 		break;
 	    case '?':
-		usage(daemon_name, LSB_EXIT_OK);
+		usage(crm_system_name, LSB_EXIT_OK);
 		break;
 	    case 'i':
 		CRM_DEBUG3("Option %c => %s", flag, optarg);
@@ -379,7 +380,7 @@ main(int argc, char ** argv)
     }
     
     if (argerr) {
-	usage(daemon_name,LSB_EXIT_GENERIC);
+	usage(crm_system_name,LSB_EXIT_GENERIC);
     }
 
     ll_cluster_t *hb_cluster = do_init();
@@ -391,7 +392,7 @@ main(int argc, char ** argv)
 	     * the callbacks are invoked...
 	     */
 	    mainloop = g_main_new(FALSE);
-	    cl_log(LOG_INFO, "%s waiting for reply from the local CRM", daemon_name);
+	    cl_log(LOG_INFO, "%s waiting for reply from the local CRM", crm_system_name);
 	    
 	    g_main_run(mainloop);
 	    return_to_orig_privs();
@@ -408,7 +409,7 @@ main(int argc, char ** argv)
 	operation_status = -2;
     }
     
-    cl_log(LOG_DEBUG, "%s exiting normally", daemon_name);	
+    cl_log(LOG_DEBUG, "%s exiting normally", crm_system_name);	
     return operation_status;
 }
 
@@ -431,7 +432,7 @@ handleCreate(void)
 	if(id == NULL || description == NULL) return NULL;
 
 	new_xml_node = newHaNode(id, subtype);
-	if(description != NULL) xmlSetProp(new_xml_node, XML_ATTR_DESC, description);
+	if(description != NULL) set_xml_property_copy(new_xml_node, XML_ATTR_DESC, description);
     }
     else if(strcmp("resource", obj_type) == 0)
     {
@@ -440,8 +441,8 @@ handleCreate(void)
 	if(id == NULL || subtype == NULL || description == NULL) return NULL;
 
 	new_xml_node = newResource(id, subtype, description, max_instances);
-	if(priority    != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_PRIORITY   , priority);
-	if(res_timeout  != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_RESTIMEOUT , res_timeout);
+	if(priority    != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_PRIORITY   , priority);
+	if(res_timeout  != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_RESTIMEOUT , res_timeout);
 	
 	// add Nodes To Resources
 	if(list_add->num_items > 0)
@@ -454,10 +455,10 @@ handleCreate(void)
 		if(decodeNVpair(iter->value, '=', &name, &value))
 		{
 		    xmlNodePtr node_entry = xmlNewNode(NULL, XML_CIB_ATTR_NODEREF);			
-		    xmlSetProp(node_entry, XML_ATTR_ID, name);
-		    xmlSetProp(node_entry, XML_CIB_ATTR_WEIGHT, value);
-		    xmlSetProp(node_entry, XML_ATTR_TSTAMP, getNow());
-		    xmlSetProp(node_entry, XML_CIB_ATTR_ACTION, "add");
+		    set_xml_property_copy(node_entry, XML_ATTR_ID, name);
+		    set_xml_property_copy(node_entry, XML_CIB_ATTR_WEIGHT, value);
+		    set_xml_property_copy(node_entry, XML_ATTR_TSTAMP, getNow());
+		    set_xml_property_copy(node_entry, XML_CIB_ATTR_ACTION, "add");
 		    xmlAddChild(new_xml_node, node_entry);
 		}
 		iter = iter->next;
@@ -489,15 +490,15 @@ handleCreate(void)
 	    sprintf(id, "failed-%s-%s", node, resource[0]);
 	    new_xml_node = newConstraint(id);
 
-	    xmlSetProp(new_xml_node, XML_CIB_ATTR_CONTYPE, CIB_VAL_CONTYPE_BLOCK);
-	    xmlSetProp(new_xml_node, XML_CIB_ATTR_RESID1, resource[0]);
-	    xmlSetProp(new_xml_node, XML_CIB_ATTR_CLEAR, clear);
+	    set_xml_property_copy(new_xml_node, XML_CIB_ATTR_CONTYPE, CIB_VAL_CONTYPE_BLOCK);
+	    set_xml_property_copy(new_xml_node, XML_CIB_ATTR_RESID1, resource[0]);
+	    set_xml_property_copy(new_xml_node, XML_CIB_ATTR_CLEAR, clear);
 	    
 	    xmlNodePtr node_entry = xmlNewNode(NULL, XML_CIB_TAG_NVPAIR);			
-	    xmlSetProp(node_entry, XML_ATTR_ID, "blockHost");
-//			xmlSetProp(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
-	    xmlSetProp(node_entry, XML_CIB_ATTR_VARVALUE, node);
-	    xmlSetProp(node_entry, XML_CIB_ATTR_ACTION, "add");
+	    set_xml_property_copy(node_entry, XML_ATTR_ID, "blockHost");
+//			set_xml_property_copy(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
+	    set_xml_property_copy(node_entry, XML_CIB_ATTR_VARVALUE, node);
+	    set_xml_property_copy(node_entry, XML_CIB_ATTR_ACTION, "add");
 	    xmlAddChild(new_xml_node, node_entry);
 	}
 	else if(strcmp(CIB_VAL_CONTYPE_VAR, subtype) == 0)
@@ -511,8 +512,8 @@ handleCreate(void)
 
 	    new_xml_node = newConstraint(id);
 
-	    xmlSetProp(new_xml_node, XML_CIB_ATTR_CONTYPE, subtype);
-	    xmlSetProp(new_xml_node, XML_CIB_ATTR_RESID1, resource[0]);
+	    set_xml_property_copy(new_xml_node, XML_CIB_ATTR_CONTYPE, subtype);
+	    set_xml_property_copy(new_xml_node, XML_CIB_ATTR_RESID1, resource[0]);
 	    
 	    // add Name Value pairs To constraint s
 	    if(list_add->num_items > 0)
@@ -525,10 +526,10 @@ handleCreate(void)
 		    if(decodeNVpair(iter->value, '=', &name, &value))
 		    {
 			xmlNodePtr node_entry = xmlNewNode(NULL, XML_CIB_TAG_NVPAIR);			
-			xmlSetProp(node_entry, XML_ATTR_ID, name);
-//			xmlSetProp(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
-			xmlSetProp(node_entry, XML_CIB_ATTR_VARVALUE, value);
-			xmlSetProp(node_entry, XML_CIB_ATTR_ACTION, "add");
+			set_xml_property_copy(node_entry, XML_ATTR_ID, name);
+//			set_xml_property_copy(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
+			set_xml_property_copy(node_entry, XML_CIB_ATTR_VARVALUE, value);
+			set_xml_property_copy(node_entry, XML_CIB_ATTR_ACTION, "add");
 			xmlAddChild(new_xml_node, node_entry);
 		    }
 		    iter = iter->next;
@@ -545,11 +546,11 @@ handleCreate(void)
 	    }
 	    new_xml_node = newConstraint(id);
 
-	    xmlSetProp(new_xml_node, XML_CIB_ATTR_CONTYPE, subtype);
-	    xmlSetProp(new_xml_node, XML_CIB_ATTR_RESID1, resource[0]);
-	    xmlSetProp(new_xml_node, XML_CIB_ATTR_RESID2, resource[1]);
+	    set_xml_property_copy(new_xml_node, XML_CIB_ATTR_CONTYPE, subtype);
+	    set_xml_property_copy(new_xml_node, XML_CIB_ATTR_RESID1, resource[0]);
+	    set_xml_property_copy(new_xml_node, XML_CIB_ATTR_RESID2, resource[1]);
 	}
-	if(description != NULL) xmlSetProp(new_xml_node, XML_ATTR_DESC, description);
+	if(description != NULL) set_xml_property_copy(new_xml_node, XML_ATTR_DESC, description);
     }
     else
     {
@@ -585,8 +586,8 @@ handleDelete(void)
 	if(id == NULL) return NULL;
 
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_NODE);
-	xmlSetProp(new_xml_node, XML_ATTR_ID, id);
-	if(subtype != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_NODETYPE, subtype);
+	set_xml_property_copy(new_xml_node, XML_ATTR_ID, id);
+	if(subtype != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_NODETYPE, subtype);
     }
     else if(strcmp("resource", obj_type) == 0)
     {
@@ -595,8 +596,8 @@ handleDelete(void)
 	if(id == NULL) return NULL;
 
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_RESOURCE);
-	xmlSetProp(new_xml_node, XML_ATTR_ID, id);
-	if(subtype != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_NODETYPE, subtype);
+	set_xml_property_copy(new_xml_node, XML_ATTR_ID, id);
+	if(subtype != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_NODETYPE, subtype);
     }
     else if(strcmp("constraint", obj_type) == 0)
     {
@@ -605,8 +606,8 @@ handleDelete(void)
 	if(id == NULL) return NULL;
 
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_CONSTRAINT);
-	xmlSetProp(new_xml_node, XML_ATTR_ID, id);
-	if(subtype != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_NODETYPE, subtype);
+	set_xml_property_copy(new_xml_node, XML_ATTR_ID, id);
+	if(subtype != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_NODETYPE, subtype);
     }
     else
     {
@@ -642,9 +643,9 @@ handleModify(void)
 	CRM_DEBUG3("Modifing existing %s (%s) object", section_name, id);
 	if(id == NULL) return NULL;
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_NODE);
-	xmlSetProp(new_xml_node, XML_ATTR_ID, id);
+	set_xml_property_copy(new_xml_node, XML_ATTR_ID, id);
 
-	if(subtype != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_NODETYPE, subtype);
+	if(subtype != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_NODETYPE, subtype);
     }
     else if(strcmp("resource", obj_type) == 0)
     {
@@ -653,14 +654,14 @@ handleModify(void)
 
 	if(id == NULL) return NULL;
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_RESOURCE);
-	xmlSetProp(new_xml_node, XML_ATTR_ID, id);
+	set_xml_property_copy(new_xml_node, XML_ATTR_ID, id);
 
-	if(subtype       != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_RESTYPE     , subtype);
-	if(description   != NULL) xmlSetProp(new_xml_node, XML_ATTR_DESC            , description);
-	if(max_instances != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_MAXINSTANCE , max_instances);
-	if(priority      != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_PRIORITY    , priority);
-	if(res_timeout   != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_RESTIMEOUT , res_timeout);
-	xmlSetProp(new_xml_node, XML_ATTR_TSTAMP, getNow());
+	if(subtype       != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_RESTYPE     , subtype);
+	if(description   != NULL) set_xml_property_copy(new_xml_node, XML_ATTR_DESC            , description);
+	if(max_instances != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_MAXINSTANCE , max_instances);
+	if(priority      != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_PRIORITY    , priority);
+	if(res_timeout   != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_RESTIMEOUT , res_timeout);
+	set_xml_property_copy(new_xml_node, XML_ATTR_TSTAMP, getNow());
 
 	// TODO: need to handle add/remove of allowed nodes
 	// add Nodes To Resources
@@ -674,10 +675,10 @@ handleModify(void)
 		if(decodeNVpair(iter->value, '=', &name, &value))
 		{
 		    xmlNodePtr node_entry = xmlNewNode(NULL, XML_CIB_ATTR_NODEREF);			
-		    xmlSetProp(node_entry, XML_ATTR_ID, name);
-		    xmlSetProp(node_entry, XML_CIB_ATTR_WEIGHT, value);
-		    xmlSetProp(node_entry, XML_ATTR_TSTAMP, getNow());
-		    xmlSetProp(node_entry, XML_CIB_ATTR_ACTION, "del");
+		    set_xml_property_copy(node_entry, XML_ATTR_ID, name);
+		    set_xml_property_copy(node_entry, XML_CIB_ATTR_WEIGHT, value);
+		    set_xml_property_copy(node_entry, XML_ATTR_TSTAMP, getNow());
+		    set_xml_property_copy(node_entry, XML_CIB_ATTR_ACTION, "del");
 		    xmlAddChild(new_xml_node, node_entry);
 		}
 		iter = iter->next;
@@ -694,10 +695,10 @@ handleModify(void)
 		if(decodeNVpair(iter->value, '=', &name, &value))
 		{
 		    xmlNodePtr node_entry = xmlNewNode(NULL, XML_CIB_ATTR_NODEREF);			
-		    xmlSetProp(node_entry, XML_ATTR_ID, name);
-		    xmlSetProp(node_entry, XML_CIB_ATTR_WEIGHT, value);
-		    xmlSetProp(node_entry, XML_ATTR_TSTAMP, getNow());
-		    xmlSetProp(node_entry, XML_CIB_ATTR_ACTION, "add");
+		    set_xml_property_copy(node_entry, XML_ATTR_ID, name);
+		    set_xml_property_copy(node_entry, XML_CIB_ATTR_WEIGHT, value);
+		    set_xml_property_copy(node_entry, XML_ATTR_TSTAMP, getNow());
+		    set_xml_property_copy(node_entry, XML_CIB_ATTR_ACTION, "add");
 		    xmlAddChild(new_xml_node, node_entry);
 		}
 		iter = iter->next;
@@ -711,13 +712,13 @@ handleModify(void)
 
 	if(id == NULL) return NULL;
 	new_xml_node = xmlNewNode( NULL, XML_CIB_TAG_CONSTRAINT);
-	xmlSetProp(new_xml_node, XML_ATTR_ID, id);
+	set_xml_property_copy(new_xml_node, XML_ATTR_ID, id);
 
-	if(subtype     != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_CONTYPE, subtype);
-	if(description != NULL) xmlSetProp(new_xml_node, XML_ATTR_DESC       , description);
-	if(resource[0] != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_RESID1 , resource[0]);
-	if(resource[1] != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_RESID2 , resource[1]);
-	if(clear       != NULL) xmlSetProp(new_xml_node, XML_CIB_ATTR_CLEAR  , clear);
+	if(subtype     != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_CONTYPE, subtype);
+	if(description != NULL) set_xml_property_copy(new_xml_node, XML_ATTR_DESC       , description);
+	if(resource[0] != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_RESID1 , resource[0]);
+	if(resource[1] != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_RESID2 , resource[1]);
+	if(clear       != NULL) set_xml_property_copy(new_xml_node, XML_CIB_ATTR_CLEAR  , clear);
 
 	// del Name Value pairs To constraint s
 	if(list_del->num_items > 0)
@@ -730,10 +731,10 @@ handleModify(void)
 		if(decodeNVpair(iter->value, '=', &name, &value))
 		{
 		    xmlNodePtr node_entry = xmlNewNode(NULL, XML_CIB_TAG_NVPAIR);			
-		    xmlSetProp(node_entry, XML_ATTR_ID, name);
-//			xmlSetProp(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
-		    xmlSetProp(node_entry, XML_CIB_ATTR_VARVALUE, value);
-		    xmlSetProp(node_entry, XML_CIB_ATTR_ACTION, "del");
+		    set_xml_property_copy(node_entry, XML_ATTR_ID, name);
+//			set_xml_property_copy(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
+		    set_xml_property_copy(node_entry, XML_CIB_ATTR_VARVALUE, value);
+		    set_xml_property_copy(node_entry, XML_CIB_ATTR_ACTION, "del");
 		    xmlAddChild(new_xml_node, node_entry);
 		}
 		iter = iter->next;
@@ -751,16 +752,16 @@ handleModify(void)
 		if(decodeNVpair(iter->value, '=', &name, &value))
 		{
 		    xmlNodePtr node_entry = xmlNewNode(NULL, XML_CIB_ATTR_NODEREF);			
-		    xmlSetProp(node_entry, XML_ATTR_ID, name);
-//			xmlSetProp(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
-		    xmlSetProp(node_entry, XML_CIB_ATTR_VARVALUE, value);
-		    xmlSetProp(node_entry, XML_CIB_ATTR_ACTION, "add");
+		    set_xml_property_copy(node_entry, XML_ATTR_ID, name);
+//			set_xml_property_copy(node_entry, XML_CIB_ATTR_VARTYPE, subtype);
+		    set_xml_property_copy(node_entry, XML_CIB_ATTR_VARVALUE, value);
+		    set_xml_property_copy(node_entry, XML_CIB_ATTR_ACTION, "add");
 		    xmlAddChild(new_xml_node, node_entry);
 		}
 		iter = iter->next;
 	    }
 	}
-	xmlSetProp(new_xml_node, XML_ATTR_TSTAMP, getNow());
+	set_xml_property_copy(new_xml_node, XML_ATTR_TSTAMP, getNow());
     }
     else
     {
@@ -784,29 +785,29 @@ wrapUpdate(xmlNodePtr update, const char *section_name, const char *action)
 {
     // create the cib request
     xmlNodePtr cib_req = xmlNewNode(NULL, XML_REQ_TAG_CIB); 
-    xmlSetProp(cib_req, XML_CIB_ATTR_OP       , action);
-    xmlSetProp(cib_req, XML_ATTR_VERBOSE      , verbose);
-    xmlSetProp(cib_req, XML_CIB_ATTR_SECTION  , section_name);
+    set_xml_property_copy(cib_req, XML_CIB_ATTR_OP       , action);
+    set_xml_property_copy(cib_req, XML_ATTR_VERBOSE      , verbose);
+    set_xml_property_copy(cib_req, XML_CIB_ATTR_SECTION  , section_name);
 
     // create the update section
     xmlNodePtr fragment = xmlNewChild(cib_req, NULL, XML_CIB_TAG_FRAGMENT, NULL);
-    xmlSetProp(fragment, XML_CIB_ATTR_SECTION, section_name);
+    set_xml_property_copy(fragment, XML_CIB_ATTR_SECTION, section_name);
     xmlNodePtr cib = xmlNewChild(fragment, NULL, XML_TAG_CIB, NULL);
     xmlNodePtr section = xmlNewChild(cib, NULL, pluralSection(), NULL);
     xmlAddChild(section, update);
 
     // create the real request
     xmlNodePtr request = xmlNewNode(NULL, XML_REQ_TAG_DC);
-    xmlSetProp(request, XML_DC_ATTR_OP, "cib_op");
-    xmlSetProp(request, XML_ATTR_TIMEOUT, "0");
+    set_xml_property_copy(request, XML_DC_ATTR_OP, "cib_op");
+    set_xml_property_copy(request, XML_ATTR_TIMEOUT, "0");
     xmlAddChild(request, cib_req);
     
 /*   // create the real message */
-/*     xmlNodePtr xml_xml_root_node = createCrmMsg(msg_reference, "admin", "dc", request, TRUE); */
+/*     xmlNodePtr xml_xml_root_node = createCrmMsg(this_msg_reference, "admin", "dc", request, TRUE); */
 
-/*     const char *local_reference = xmlGetProp(xml_xml_root_node, XML_MSG_ATTR_REFERENCE); */
-/*     xmlSetProp(request, XML_MSG_ATTR_REFERENCE, local_reference); */
-/*     xmlSetProp(cib_req, XML_MSG_ATTR_REFERENCE, local_reference); */
+/*     const char *local_crm_msg_reference = xmlGetProp(xml_xml_root_node, XML_MSG_ATTR_REFERENCE); */
+/*     set_xml_property_copy(request, XML_MSG_ATTR_REFERENCE, local_crm_msg_reference); */
+/*     set_xml_property_copy(cib_req, XML_MSG_ATTR_REFERENCE, local_crm_msg_reference); */
 
     return request;
 }
@@ -846,12 +847,12 @@ do_work(ll_cluster_t *hb_cluster)
 	
 	CRM_DEBUG2("Querying the CIB for section: %s", obj_type_parent);
 	xml_root_node = xmlNewNode(NULL, XML_REQ_TAG_DC);
-	xmlSetProp(xml_root_node, XML_DC_ATTR_OP, "cib_op");
+	set_xml_property_copy(xml_root_node, XML_DC_ATTR_OP, "cib_op");
 
 	xmlNewChild(xml_root_node, NULL, XML_REQ_TAG_CIB, NULL);
-	xmlSetProp(xml_root_node->children, XML_CIB_ATTR_OP       , "query");
-	xmlSetProp(xml_root_node->children, XML_ATTR_VERBOSE      , verbose);
-	xmlSetProp(xml_root_node->children, XML_CIB_ATTR_SECTION, obj_type_parent);
+	set_xml_property_copy(xml_root_node->children, XML_CIB_ATTR_OP       , "query");
+	set_xml_property_copy(xml_root_node->children, XML_ATTR_VERBOSE      , verbose);
+	set_xml_property_copy(xml_root_node->children, XML_CIB_ATTR_SECTION, obj_type_parent);
 
 	dest_node = status;
 	CRM_DEBUG2("CIB query creation %s", xml_root_node==NULL?"failed.":"passed.");
@@ -874,7 +875,7 @@ do_work(ll_cluster_t *hb_cluster)
 /*
 <!ATTLIST dc_request
           dc_operation	(noop|ping|deep_ping|dc_query|cib_op)	'noop'
-	  reference	#CDATA
+	  crm_msg_reference	#CDATA
           timeout       #CDATA          '0'>
 */
 	if(status != NULL)
@@ -890,17 +891,17 @@ do_work(ll_cluster_t *hb_cluster)
 	    if(status != NULL)
 	    {
 		xml_root_node = xmlNewNode(NULL, XML_REQ_TAG_CRM);
-		xmlSetProp(xml_root_node, XML_CRM_ATTR_OP, ping_type);
-		xmlSetProp(xml_root_node, XML_MSG_ATTR_SYSTO, CRM_SYSTEM_CRMD);
+		set_xml_property_copy(xml_root_node, XML_CRM_ATTR_OP, ping_type);
+		set_xml_property_copy(xml_root_node, XML_MSG_ATTR_SYSTO, CRM_SYSTEM_CRMD);
 	    }
 	    else
 	    {
 		xml_root_node = xmlNewNode(NULL, XML_REQ_TAG_DC);
-		xmlSetProp(xml_root_node, XML_DC_ATTR_OP, ping_type);
-		xmlSetProp(xml_root_node, XML_MSG_ATTR_SYSTO, CRM_SYSTEM_DC);
+		set_xml_property_copy(xml_root_node, XML_DC_ATTR_OP, ping_type);
+		set_xml_property_copy(xml_root_node, XML_MSG_ATTR_SYSTO, CRM_SYSTEM_DC);
 	    }
 
-	    xmlSetProp(xml_root_node, XML_ATTR_TIMEOUT, "0");
+	    set_xml_property_copy(xml_root_node, XML_ATTR_TIMEOUT, "0");
 	    dest_node = status;
 	}
 	else
@@ -919,8 +920,8 @@ do_work(ll_cluster_t *hb_cluster)
 	
 	send_ipc_request(crmd_channel, xml_root_node,
 			 dest_node, sys_to,
-			 daemon_name, adminuid,
-			 msg_reference);
+			 crm_system_name, adminuid,
+			 this_msg_reference);
     }
     else if(crmd_channel == NULL)
     {
@@ -963,7 +964,7 @@ do_init(void)
     adminuid[10] = '\0';
 
     crmd_channel = init_client_ipc_comms(CRM_SYSTEM_CRMD, admin_msg_callback);
-    send_hello_message(crmd_channel, adminuid, daemon_name, "0", "1");
+    send_hello_message(crmd_channel, adminuid, crm_system_name, "0", "1");
 
     return hb_cluster;
 }
@@ -1019,7 +1020,7 @@ admin_msg_callback(IPC_Channel* server, void* private_data)
 	CRM_DEBUG2("Got xml [text=%s]", buffer);
 	
 	CRM_DEBUG("crmd_ipc_input_dispatch: validating and decoding");
-	xmlNodePtr xml_root_node = validate_and_decode_ipcmessage(msg, TRUE);
+	xmlNodePtr xml_root_node = find_xml_in_ipcmessage(msg, TRUE);
 
 	if(xml_root_node == NULL)
 	{
@@ -1027,7 +1028,7 @@ admin_msg_callback(IPC_Channel* server, void* private_data)
 	    continue;
 	}
 	
-	if(validate_crm_message(xml_root_node, daemon_name, adminuid, "response") == FALSE)
+	if(validate_crm_message(xml_root_node, crm_system_name, adminuid, "response") == FALSE)
 	{
 	    cl_log(LOG_INFO, "CRM message was not valid... discarding.");
 	    continue;
@@ -1044,17 +1045,17 @@ admin_msg_callback(IPC_Channel* server, void* private_data)
 
     // do stuff
 
-	if(msg_reference != NULL)
+	if(this_msg_reference != NULL)
 	{
 	    // in testing mode...
 	    char *filename;
-	    int filename_len = 31 + strlen(msg_reference); // 31 = "test-_.xml" + an_int_as_string + '\0'
+	    int filename_len = 31 + strlen(this_msg_reference); // 31 = "test-_.xml" + an_int_as_string + '\0'
 	    filename = ha_malloc(sizeof(char)*filename_len);
-	    sprintf(filename, "test-%s_%d.xml", msg_reference, recieved_responses);
+	    sprintf(filename, "test-%s_%d.xml", this_msg_reference, recieved_responses);
 	    filename[filename_len-1] = '\0';
 	    if(xmlSaveFormatFile(filename, xml_root_node->doc, 1) < 0)
 	    {
-		cl_log(LOG_CRIT, "Couuld not save response to file test-%s_%d.xml", msg_reference, recieved_responses);
+		cl_log(LOG_CRIT, "Couuld not save response to file test-%s_%d.xml", this_msg_reference, recieved_responses);
 	    }   
 	}
     }

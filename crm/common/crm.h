@@ -22,7 +22,7 @@
 #include <ha_config.h>
 
 #ifdef DMALLOC
-#include "dmalloc.h"
+#   include "dmalloc.h"
 #endif
 
 #define WORKING_DIR HA_VARLIBDIR"/heartbeat/crm"
@@ -32,20 +32,29 @@
 #define LOG_DIR     "/var/log"
 #define MAX_IPC_FAIL 5
 
-#define CRM_DEBUG(w)        cl_log(LOG_DEBUG, w)
-#define CRM_DEBUG2(w,x)     cl_log(LOG_DEBUG, w, x)
-#define CRM_DEBUG3(w,x,y)   cl_log(LOG_DEBUG, w, x, y)
-#define CRM_DEBUG4(w,x,y,z) cl_log(LOG_DEBUG, w, x, y, z)
+#if 1
+#   define CRM_DEBUG(w)        cl_log(LOG_DEBUG, w)
+#   define CRM_DEBUG2(w,x)     cl_log(LOG_DEBUG, w, x)
+#   define CRM_DEBUG3(w,x,y)   cl_log(LOG_DEBUG, w, x, y)
+#   define CRM_DEBUG4(w,x,y,z) cl_log(LOG_DEBUG, w, x, y, z)
+#else
+/* these wont work yet, need to cast to void */
+#   define CRM_DEBUG(w)        
+#   define CRM_DEBUG2(w,x)     
+#   define CRM_DEBUG3(w,x,y)  
+#   define CRM_DEBUG4(w,x,y,z)
+#endif
 
-#define FNIN()     cl_log(LOG_DEBUG, "#---#---# Entering function %s...", __FUNCTION__)
-#define FNOUT()  { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return; }
-#define FNRET(x) { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return x; }
-//#define FNRET(x) return x;
+#if 0
+#   define FNIN()     cl_log(LOG_DEBUG, "#---#---# Entering function %s...", __FUNCTION__)
+#   define FNOUT()  { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return; }
+#   define FNRET(x) { cl_log(LOG_DEBUG, "#---#---# Leaving function %s...",  __FUNCTION__); return x; }
+#else
+#   define FNIN()   ;
+#   define FNOUT()  return;
+#   define FNRET(x) return x; 
+#endif
 
-#define _CRM_DEBUG(w)       
-#define _CRM_DEBUG2(w,x)    
-#define _CRM_DEBUG3(w,x,y)  
-#define _CRM_DEBUG4(w,x,y,z)
 
 extern char *ha_strdup(const char *s);
 extern void *ha_malloc(size_t size);

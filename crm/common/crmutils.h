@@ -24,18 +24,19 @@
 #include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/GSource.h>
 
-extern gboolean tickle_apphb(gpointer data);
-extern const char* daemon_name;
-void register_pid(const char *pid_file, gboolean do_fork, void (*shutdown)(int nsig));
+//extern const char* our_system_name; // everyone who uses these tools needs to declare this
+
+extern gboolean tickle_apphb_template(gpointer data);
+extern void register_pid(const char *pid_file, gboolean do_fork, void (*shutdown)(int nsig));
 extern long get_running_pid(const char *pid_file, gboolean* anypidfile);
-extern int init_status(const char *pid_file, const char *daemon_name);
+extern int init_status(const char *pid_file, const char *crm_system_name);
 extern int init_stop(const char *pid_file, GMainLoop*  mainloop);
 extern gboolean
-register_with_ha(ll_cluster_t *hb_cluster, const char *daemon_name,
+register_with_ha(ll_cluster_t *hb_cluster, const char *crm_system_name,
 		 gboolean (*dispatch_method)(int fd, gpointer user_data),
 		 void (*message_callback)(const struct ha_msg* msg, void* private_data),
 		 GDestroyNotify cleanup_method);
 
-extern void register_with_apphb(void);
+extern void register_with_apphb(const char *crm_system_name, gboolean(*tickle_fn)(gpointer data));
 
 #endif

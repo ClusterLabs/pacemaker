@@ -18,7 +18,7 @@
 #ifndef CRMD__H
 #define CRMD__H
 
-extern const char* daemon_name;
+extern const char* crm_system_name;
 extern oc_ev_t   * ev_token;     // for CCM comms
 extern int	   my_ev_fd;     // for CCM comms
 extern gboolean    i_am_dc;

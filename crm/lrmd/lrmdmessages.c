@@ -38,11 +38,11 @@
 #include <cibprimatives.h>
 
 const char *generateReference(void);
-xmlNodePtr createEmptyMsg(const char *reference);
+xmlNodePtr createEmptyMsg(const char *crm_msg_reference);
 xmlNodePtr createLrmdRequest(gboolean isLocal, const char *operation, const char *section,
 			    const char *verbose, xmlNodePtr data);
 xmlNodePtr processLrmdRequest(xmlNodePtr command);
-xmlNodePtr createLrmdAnswer(const char *reference, const char *operation, const char *section,
+xmlNodePtr createLrmdAnswer(const char *crm_msg_reference, const char *operation, const char *section,
 			   const char *status, const char *verbose,
 			   xmlNodePtr data, xmlNodePtr failed);
 void addLrmdPingAnswer(xmlNodePtr answer, const char *status);
@@ -61,27 +61,27 @@ generateReference(void)
 }
 
 xmlNodePtr
-createEmptyMsg(const char *reference)
+createEmptyMsg(const char *crm_msg_reference)
 {
     xmlDocPtr doc;
     
     doc = xmlNewDoc("1.0");
     doc->children = xmlNewDocNode(doc, NULL, XML_MSG_TAG, NULL);
 
-    xmlSetProp(doc->children, XML_ATTR_VERSION, CRM_VERSION);
-    xmlSetProp(doc->children, XML_MSG_ATTR_SUBSYS, "none");
-    if(reference == NULL)
+    set_xml_property_copy(doc->children, XML_ATTR_VERSION, CRM_VERSION);
+    set_xml_property_copy(doc->children, XML_MSG_ATTR_SUBSYS, "none");
+    if(crm_msg_reference == NULL)
     {
-	xmlSetProp(doc->children, XML_MSG_ATTR_MSGTYPE, XML_MSG_TAG_REQUEST);
-	xmlSetProp(doc->children, XML_MSG_ATTR_REFERENCE, generateReference());
+	set_xml_property_copy(doc->children, XML_MSG_ATTR_MSGTYPE, XML_MSG_TAG_REQUEST);
+	set_xml_property_copy(doc->children, XML_MSG_ATTR_REFERENCE, generateReference());
     }
     else
     {
-	xmlSetProp(doc->children, XML_MSG_ATTR_MSGTYPE, XML_MSG_TAG_RESPONSE);
-	xmlSetProp(doc->children, XML_MSG_ATTR_REFERENCE, reference);
+	set_xml_property_copy(doc->children, XML_MSG_ATTR_MSGTYPE, XML_MSG_TAG_RESPONSE);
+	set_xml_property_copy(doc->children, XML_MSG_ATTR_REFERENCE, crm_msg_reference);
     }
     
-    xmlSetProp(doc->children, XML_ATTR_TSTAMP, getNow());
+    set_xml_property_copy(doc->children, XML_ATTR_TSTAMP, getNow());
 
     return xmlDocGetRootElement(doc);
 }
@@ -93,28 +93,28 @@ createLrmdRequest(gboolean isLocal, const char *operation,
 {
     xmlNodePtr root = NULL, cmd = NULL;
 
-    const char *reference;
+    const char *crm_msg_reference;
     if(isLocal)
     {
 	xmlDocPtr doc = xmlNewDoc("1.0");
 	doc->children = xmlNewDocNode(doc, NULL, XML_REQ_TAG_CIB, NULL);
 	cmd = doc->children;
 	root = cmd;
-	reference = generateReference();
+	crm_msg_reference = generateReference();
     }
     else
     {
 	xmlNodePtr request;
 	root = createEmptyMsg(NULL);
-	xmlSetProp(root, XML_MSG_ATTR_SUBSYS, "cib");
+	set_xml_property_copy(root, XML_MSG_ATTR_SUBSYS, "cib");
 	request   = xmlNewChild(root, NULL, XML_MSG_TAG_REQUEST, NULL);
 	cmd       = xmlNewChild(request, NULL, XML_REQ_TAG_LRM, NULL);
-	reference = xmlGetProp(root, XML_MSG_ATTR_REFERENCE);
+	crm_msg_reference = xmlGetProp(root, XML_MSG_ATTR_REFERENCE);
     }
-    xmlSetProp(cmd, XML_MSG_ATTR_REFERENCE, reference);
-    xmlSetProp(cmd, XML_LRM_ATTR_OP       , operation);
-    xmlSetProp(cmd, XML_LRM_ATTR_IDFILTE  , id_filter);
-    xmlSetProp(cmd, XML_LRM_ATTR_TYPEFILTE, type_filter);
+    set_xml_property_copy(cmd, XML_MSG_ATTR_REFERENCE, crm_msg_reference);
+    set_xml_property_copy(cmd, XML_LRM_ATTR_OP       , operation);
+    set_xml_property_copy(cmd, XML_LRM_ATTR_IDFILTE  , id_filter);
+    set_xml_property_copy(cmd, XML_LRM_ATTR_TYPEFILTE, type_filter);
     
     return root;
 }
@@ -143,9 +143,9 @@ processLrmdRequest(xmlNodePtr command)
     xmlNodePtr data         = NULL;
     xmlNodePtr failed       = xmlNewNode(NULL, XML_TAG_FAILED);
     const char *op          = xmlGetProp(command, XML_LRM_ATTR_OP);
-    const char *id_filter   = xmlSetProp(command, XML_LRM_ATTR_IDFILTE);
-    const char *type_filter = xmlSetProp(command, XML_LRM_ATTR_TYPEFILTE);
-    const char *reference   = xmlGetProp(command, XML_MSG_ATTR_REFERENCE);
+    const char *id_filter   = set_xml_property_copy(command, XML_LRM_ATTR_IDFILTE);
+    const char *type_filter = set_xml_property_copy(command, XML_LRM_ATTR_TYPEFILTE);
+    const char *crm_msg_reference   = xmlGetProp(command, XML_MSG_ATTR_REFERENCE);
     
     gboolean start_resource = FALSE;
     gboolean stop_resource = FALSE;
@@ -156,7 +156,7 @@ processLrmdRequest(xmlNodePtr command)
           lrm_operation    (noop|ping|query|start|stop|restart|shutdown|respawn|disconnect|reconnect)	'noop'
           type_filter?     #CDATA
 	  id_filter?	   #CDATA
-	  reference	   #CDATA
+	  crm_msg_reference	   #CDATA
           timeout          #CDATA       '0'>
 */
 
@@ -197,7 +197,7 @@ processLrmdRequest(xmlNodePtr command)
 	}
     }
 
-    xmlNodePtr lrm_answer = createLrmdAnswer(reference,
+    xmlNodePtr lrm_answer = createLrmdAnswer(crm_msg_reference,
 					     op,
 					     status,
 					     failed);
@@ -213,8 +213,8 @@ retrieveResourceList(const char *id_filter, const char *type_filter)
 void
 actionRequest(xmlNodePtr update_command, const char *operation, xmlNodePtr failed)
 {
-  xmlNodePtr xml_section = findNode(update_command, XML_TAG_CIB);
-  xml_section = findNode(update_command, XML_CIB_TAG_RESOURCES);
+  xmlNodePtr xml_section = find_xmlnode(update_command, XML_TAG_CIB);
+  xml_section = find_xmlnode(update_command, XML_CIB_TAG_RESOURCES);
   xmlNodePtr child = xml_section->children;
   
   while(child != NULL)
@@ -271,9 +271,9 @@ conditional_add_failure(xmlNodePtr failed, xmlNodePtr target, const char *operat
       // do some fabulous logging
       
       xmlNodePtr xml_node = xmlNewNode(NULL, XML_FAIL_TAG_RESOURCE);
-      xmlSetProp(xml_node, XML_FAILCIB_ATTR_RESID, ID(target));
-      xmlSetProp(xml_node, XML_LRM_ATTR_OP, operation);
-      xmlSetProp(xml_node, XML_LRM_ATTR_RESSTATUS, status);
+      set_xml_property_copy(xml_node, XML_FAILCIB_ATTR_RESID, ID(target));
+      set_xml_property_copy(xml_node, XML_LRM_ATTR_OP, operation);
+      set_xml_property_copy(xml_node, XML_LRM_ATTR_RESSTATUS, status);
 
       char buffer[20]; // will handle 64 bit integers
 
@@ -281,7 +281,7 @@ conditional_add_failure(xmlNodePtr failed, xmlNodePtr target, const char *operat
        * later, convert it to text based on the operation
        */
       sprintf(buffer, "%d", return_code);
-      xmlSetProp(xml_node, XML_FAILRES_ATTR_REASON, buffer);
+      set_xml_property_copy(xml_node, XML_FAILRES_ATTR_REASON, buffer);
       
       xmlAddChild(failed, xml_node);
     }
@@ -291,7 +291,7 @@ conditional_add_failure(xmlNodePtr failed, xmlNodePtr target, const char *operat
 
 
 xmlNodePtr
-createLrmdAnswer(const char *reference, const char *operation,
+createLrmdAnswer(const char *crm_msg_reference, const char *operation,
 		 const char *status, xmlNodePtr failed)
 {
     xmlNodePtr root, response, answer;
@@ -299,11 +299,11 @@ createLrmdAnswer(const char *reference, const char *operation,
 /*
 <!ELEMENT lrm_response (cib_fragment, res_failed?)|ping_item>
 <!ATTLIST lrm_response
-	  reference	   #CDATA>
+	  crm_msg_reference	   #CDATA>
  */
     
-    root = createEmptyMsg(reference);
-    xmlSetProp(root, XML_MSG_ATTR_SRCSUBSYS, "lrm");
+    root = createEmptyMsg(crm_msg_reference);
+    set_xml_property_copy(root, XML_MSG_ATTR_SRCSUBSYS, "lrm");
     response = xmlNewChild(root, NULL, XML_MSG_TAG_RESPONSE, NULL);
     answer = xmlNewChild(response, NULL, XML_RESP_TAG_LRM, NULL);
 
@@ -316,7 +316,7 @@ createLrmdAnswer(const char *reference, const char *operation,
     else
     {
 	xmlNodePtr fragment = xmlNewChild(answer, NULL, XML_CIB_TAG_FRAGMENT, NULL);
-	xmlSetProp(fragment, XML_CIB_ATTR_SECTION, "status");
+	set_xml_property_copy(fragment, XML_CIB_ATTR_SECTION, "status");
 	addLrmdFragment(fragment);
 	
 	if(failed != NULL && failed->children != NULL)
@@ -331,7 +331,7 @@ void
 addLrmdPingAnswer(xmlNodePtr answer, const char *status)
 {
     xmlNodePtr ping = xmlNewChild(answer, NULL, XML_CRM_TAG_PING, NULL);
-    xmlSetProp(ping, XML_PING_ATTR_STATUS, status);
+    set_xml_property_copy(ping, XML_PING_ATTR_STATUS, status);
 }
 
 void
