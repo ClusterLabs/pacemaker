@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.8 2004/10/24 12:38:33 lge Exp $ */
+/* $Id: unpack.c,v 1.9 2004/11/12 17:11:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,6 +37,10 @@ extern int transition_counter;
 void
 set_timer_value(te_timer_t *timer, const char *time, int time_default)
 {
+	if(timer == NULL) {
+		return;
+	}
+	
 	timer->timeout = time_default;
 	if(time != NULL) {
 		int tmp_time = atoi(time);
@@ -79,6 +83,9 @@ unpack_graph(xmlNodePtr xml_graph)
 		xml_graph, synapse, "synapse",
 
 		synapse_t *new_synapse = NULL;
+
+		crm_debug("looking in synapse %s", xmlGetProp(synapse, "id"));
+		
 		crm_malloc(new_synapse, sizeof(synapse_t));
 		new_synapse->id        = num_synapses++;
 		new_synapse->complete  = FALSE;
@@ -87,6 +94,8 @@ unpack_graph(xmlNodePtr xml_graph)
 		new_synapse->inputs    = NULL;
 		
 		graph = g_list_append(graph, new_synapse);
+
+		crm_debug("look for actions in synapse %s", xmlGetProp(synapse, "id"));
 
 		xml_child_iter(
 			synapse, actions, "action_set",
@@ -101,12 +110,17 @@ unpack_graph(xmlNodePtr xml_graph)
 					action = action->next;
 					break;
 				}
+				crm_debug("Adding action %d to synapse %d",
+						 new_action->id, new_synapse->id);
+
 				new_synapse->actions = g_list_append(
 					new_synapse->actions,
 					new_action);
 				);
 			
 			);
+
+		crm_debug("look for inputs in synapse %s", xmlGetProp(synapse, "id"));
 
 		xml_child_iter(
 			synapse, inputs, "inputs",
@@ -124,6 +138,9 @@ unpack_graph(xmlNodePtr xml_graph)
 						input = input->next;
 						break;
 					}
+
+					crm_debug("Adding input %d to synapse %d",
+						 new_input->id, new_synapse->id);
 					
 					new_synapse->inputs = g_list_append(
 						new_synapse->inputs,
