@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.24 2005/03/02 14:02:39 andrew Exp $ */
+/* $Id: ipc.c,v 1.25 2005/03/11 14:13:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -102,7 +102,7 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 		crm_err("cant send message without an IPC Channel");
 		all_is_good = FALSE;
 
-	} else if(ipc_client->ch_status != IPC_CONNECT) {
+	} else if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
 		crm_err("IPC Channel is not connected");
 		all_is_good = FALSE;
 
