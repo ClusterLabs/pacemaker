@@ -185,7 +185,7 @@ class LogWatcher:
         if timeout == None: timeout = self.Timeout
 
         done=time.time()+timeout+1
-        while (time.time() <= done):
+        while (timeout <= 0 or time.time() <= done):
             newsize=os.path.getsize(self.filename)
             if self.debug: print "newsize = %d" % newsize
             if newsize < self.size:
