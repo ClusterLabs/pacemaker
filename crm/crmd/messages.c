@@ -52,7 +52,7 @@ gboolean send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root);
 
 #ifdef MSG_LOG
 
-#    define ROUTER_RESULT(x) char *msg_text = dump_xml(xml_relay_message);\
+#    define ROUTER_RESULT(x) char *msg_text = dump_xml_formatted(xml_relay_message);\
 	if(router_strm == NULL) {					\
 		router_strm = fopen(DEVEL_DIR"/router.log", "w");		\
 	}								\
@@ -144,7 +144,7 @@ do_msg_route(long long action,
 					   msg,
 					   curr_client) == FALSE) {
 			crm_debug("Message not authorized\t%s",
-				  dump_xml_node(root_xml_node, FALSE));
+				  dump_xml_formatted(root_xml_node, FALSE));
 			do_process = FALSE;
 		}
 /*	} */
@@ -205,7 +205,7 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD,
 		NULL, NULL);
 
-/*	xml_message_debug(request, "Final request..."); */
+/*	print_xml_formatted(request, "Final request..."); */
 
 	if(msg_reference != NULL) {
 		*msg_reference = crm_strdup(xmlGetProp(request, XML_ATTR_REFERENCE));
@@ -280,7 +280,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 
 	if(strcmp(XML_MSG_TAG, xml_relay_message->name) != 0) {
 
-		xml_message_debug(xml_relay_message,
+		print_xml_formatted(xml_relay_message,
 				  "Bad message type, should be crm_message");
 		crm_err("Ignoring message of type %s",
 		       xml_relay_message->name);
@@ -289,7 +289,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 	
 
 	if(sys_to == NULL) {
-		xml_message_debug(xml_relay_message,
+		print_xml_formatted(xml_relay_message,
 				  "Message did not have any value for sys_to");
 		crm_err("Message did not have any value for %s",
 		       XML_ATTR_SYSTO);
@@ -536,7 +536,7 @@ handle_message(xmlNodePtr stored_msg)
 	const char *op       = get_xml_attr(
 		stored_msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
 
-/*	xml_message_debug(stored_msg, "Processing message"); */
+/*	print_xml_formatted(stored_msg, "Processing message"); */
 
 	crm_verbose("Received %s %s in state %s",
 		    op, type, fsa_state2string(fsa_state));
@@ -544,7 +544,7 @@ handle_message(xmlNodePtr stored_msg)
 	if(type == NULL || op == NULL) {
 		crm_err("Ignoring message (type=%s), (op=%s)",
 		       type, op);
-		xml_message_debug(stored_msg, "Bad message");
+		print_xml_formatted(stored_msg, "Bad message");
 		
 	} else if(strcmp(type, XML_ATTR_REQUEST) == 0){
 		if(strcmp(op, CRM_OP_HBEAT) == 0) {
@@ -759,14 +759,14 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 		msg = ha_msg_new(4); 
 		ha_msg_add(msg, F_TYPE, "CRM");
 		ha_msg_add(msg, F_COMMENT, "A CRM xml message");
-		xml_text = dump_xml(root);
+		xml_text = dump_xml_formatted(root);
 		xml_len = strlen(xml_text);
 		
 		if (xml_text == NULL || xml_len <= 0) {
 			crm_err(
 			       "Failed sending an invalid XML Message via HA");
 			all_is_good = FALSE;
-			xml_message_debug(root, "Bad message was");
+			print_xml_formatted(root, "Bad message was");
 			
 		} else {
 			if(ha_msg_add(msg, "xml", xml_text) == HA_FAIL) {
@@ -821,7 +821,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	}
 	
 #ifdef MSG_LOG
-	msg_text = dump_xml(root);
+	msg_text = dump_xml_formatted(root);
 	if(msg_out_strm == NULL) {
 		msg_out_strm = fopen(DEVEL_DIR"/outbound.log", "w");
 	}
@@ -910,7 +910,7 @@ send_msg_via_ipc(xmlNodePtr action, const char *sys)
 	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_CIB) == 0) {
 		crm_err("Sub-system (%s) has been incorporated into the CRMd.",
 			sys);
-		xml_message_debug(action, "Change the way we handle");
+		print_xml_formatted(action, "Change the way we handle");
 		relay_message(process_cib_message(action, TRUE), TRUE);
 		
 	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_LRMD) == 0) {

@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.49 2004/08/30 03:17:37 msoffen Exp $ */
+/* $Id: cibmessages.c,v 1.50 2004/09/04 10:41:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -94,7 +94,7 @@ cib_process_request(const char *op,
 		msg_cib_strm = fopen(DEVEL_DIR"/cib.log", "w");
 	}
 	fprintf(msg_cib_strm, "\n====================\n");
-	fprintf(msg_cib_strm, "[Input %s]\t%s\n", op, dump_xml_node(fragment, FALSE));
+	fprintf(msg_cib_strm, "[Input %s]\t%s\n", op, dump_xml_formatted(fragment));
 	fflush(msg_cib_strm);
 #endif
 
@@ -159,26 +159,7 @@ cib_process_request(const char *op,
 
 		crm_err("Op %s is not currently supported", op);
 		*result = CIBRES_FAILED_NOTSUPPORTED;
-#if 0
-		xmlNodePtr new_cib = createEmptyCib();
 
-		/* Preserve the status section */
-		xmlNodePtr state_info = copy_xml_node_recursive(
-			get_object_root(XML_CIB_TAG_STATUS, get_the_CIB()));
-
-		xmlNodePtr empty = get_object_root(XML_CIB_TAG_STATUS,new_cib);
-
-		empty->children = state_info->children;
-		state_info->children = NULL;
-		free_xml(state_info);
-
-		/* Preserve generation counters etc */
-		copy_in_properties(new_cib, get_the_CIB());
-
-		if (activateCibXml(new_cib, CIB_FILENAME) < 0) {
-			*result = CIBRES_FAILED;
-		}
-#endif
 	} else if (strcmp(CRM_OP_CREATE, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_ADD;
@@ -251,7 +232,7 @@ cib_process_request(const char *op,
 
 		fprintf(msg_cib_strm, "[Activating CIB (%s - %s)]\t%s\n", op,
 			cib_error2string(*result),
-			dump_xml_node(tmpCib, FALSE));
+			dump_xml_formatted(tmpCib));
 		/* if(check_generation(cib_updates, tmpCib) == FALSE) */
 /* 			status = "discarded old update"; */
 /* 		else  */
@@ -264,7 +245,7 @@ cib_process_request(const char *op,
 		}
 		fprintf(msg_cib_strm, "[New CIB (%s - %s)]\t%s\n", op,
 			cib_error2string(*result),
-			dump_xml_node(get_the_CIB(), FALSE));
+			dump_xml_formatted(get_the_CIB()));
 		fflush(msg_cib_strm);
 		
 		crm_verbose("CIB update status: %d", *result);
@@ -285,7 +266,7 @@ cib_process_request(const char *op,
 #ifdef MSG_LOG
 	fprintf(msg_cib_strm, "[Reply (%s:%s)]\t%s\n",
 		op, cib_error2string(*result),
-		dump_xml_node(cib_answer, FALSE));
+		dump_xml_formatted(cib_answer));
 	fflush(msg_cib_strm);
 #endif
 

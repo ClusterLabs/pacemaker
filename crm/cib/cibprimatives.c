@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.40 2004/08/30 03:17:37 msoffen Exp $ */
+/* $Id: cibprimatives.c,v 1.41 2004/09/04 10:41:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -314,7 +314,6 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 	const char *object_name = NULL;
 	const char *object_id = NULL;
 	xmlNodePtr equiv_node = NULL;
-	xmlNodePtr children = NULL;
 	int result = CIBRES_OK;
 	
 	if(delete_spec == NULL) {
@@ -325,7 +324,6 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 
 	object_name = delete_spec->name;
 	object_id = xmlGetProp(delete_spec, XML_ATTR_ID);
-	children = delete_spec->children;
 	
 	if(object_id == NULL) {
 		/*  placeholder object */
@@ -340,7 +338,7 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 	if(equiv_node == NULL) {
 		return CIBRES_FAILED_NOTEXISTS;
 
-	} else if(children == NULL) {
+	} else if(delete_spec->children == NULL) {
 
 		/*  only leaves are deleted */
 		unlink_xml_node(equiv_node);
@@ -348,17 +346,16 @@ delete_cib_object(xmlNodePtr parent, xmlNodePtr delete_spec)
 
 	} else {
 
-		while(children != NULL) {
-			int tmp_result =
-				delete_cib_object(equiv_node, children);
+		xml_child_iter(
+			delete_spec, child, NULL,
+
+			int tmp_result = delete_cib_object(equiv_node, child);
 			
 			/*  only the first error is likely to be interesting */
-			if(tmp_result != CIBRES_OK
-			   && result == CIBRES_OK) {
+			if(tmp_result != CIBRES_OK && result == CIBRES_OK) {
 				result = tmp_result;
 			}
-			children = children->next;
-		}
+			);
 	}
 
 	return result;
@@ -370,7 +367,6 @@ add_cib_object(xmlNodePtr parent, xmlNodePtr new_obj)
 	const char *object_name = NULL;
 	const char *object_id = NULL;
 	xmlNodePtr equiv_node = NULL;
-	xmlNodePtr children = NULL;
 	
 	if(new_obj == NULL) {
 		return CIBRES_FAILED_NOOBJECT;
@@ -380,7 +376,6 @@ add_cib_object(xmlNodePtr parent, xmlNodePtr new_obj)
 
 	object_name = new_obj->name;
 	object_id = xmlGetProp(new_obj, XML_ATTR_ID);
-	children = new_obj->children;
 	
 	if(object_id == NULL) {
 		/*  placeholder object */
@@ -411,7 +406,6 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 	const char *object_name = NULL;
 	const char *object_id = NULL;
 	xmlNodePtr equiv_node = NULL;
-	xmlNodePtr children = NULL;
 	int result = CIBRES_OK;
 	
 	if(new_obj == NULL) {
@@ -424,7 +418,6 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 
 	object_name = new_obj->name;
 	object_id = xmlGetProp(new_obj, XML_ATTR_ID);
-	children = new_obj->children;
 
 	crm_debug("Processing update to <%s id=%s>", object_name, object_id);
 

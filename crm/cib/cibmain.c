@@ -1,4 +1,4 @@
-/* $Id: cibmain.c,v 1.25 2004/08/29 03:01:12 msoffen Exp $ */
+/* $Id: cibmain.c,v 1.26 2004/09/04 10:41:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,10 +70,23 @@ main(int argc, char ** argv)
 	int	argerr = 0;
 	int flag;
     
+	/* Redirect messages from glib functions to our handler */
+	g_log_set_handler(NULL,
+			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
+			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
+			  | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
+			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
+			  cl_glib_msg_handler, NULL);
+	/* and for good measure... */
+	g_log_set_always_fatal((GLogLevelFlags)0);    
+	
 	cl_log_set_entity(crm_system_name);
-	cl_log_enable_stderr(TRUE);
 	cl_log_set_facility(LOG_USER);
-    
+	cl_log_set_logfile(DAEMON_LOG);
+	cl_log_set_debugfile(DAEMON_DEBUG);
+	CL_SIGNAL(DEBUG_INC, alter_debug);
+	CL_SIGNAL(DEBUG_DEC, alter_debug);
+	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 's':		/* Status */

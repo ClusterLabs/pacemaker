@@ -117,13 +117,13 @@ do_cib_invoke(long long action,
 		const char *sys_from = xmlGetProp(cib_msg, XML_ATTR_SYSFROM);
 		const char *op       = xmlGetProp(options, XML_ATTR_OP);
 		
-		crm_debug("[CIB b4]\t%s\n\n", dump_xml_node(cib_msg, FALSE));
+		print_xml_formatted(cib_msg, "[CIB b4]");
 		if(cib_msg == NULL) {
 			crm_err("No message for CIB command");
 			return I_NULL; /* I_ERROR */
 
 		} else if(op == NULL) {
-			xml_message_debug(cib_msg, "Invalid CIB Message");
+			print_xml_formatted(cib_msg, "Invalid CIB Message");
 			return I_NULL; /* I_ERROR */
 
 		}
@@ -136,7 +136,7 @@ do_cib_invoke(long long action,
 			if(AM_I_DC == FALSE) {
 				if(relay_message(answer, TRUE) == FALSE) {
 					crm_err("Confused what to do with cib result");
-					xml_message_debug(answer, "Couldnt route: ");
+					print_xml_formatted(answer, "Couldnt route: ");
 					result = I_ERROR;
 				}
 				
@@ -161,7 +161,7 @@ do_cib_invoke(long long action,
 			   && safe_str_neq(sys_from, CRM_SYSTEM_DC)
 			   && relay_message(answer, TRUE) == FALSE) {
 				crm_err("Confused what to do with cib result");
-				xml_message_debug(answer, "Couldnt route: ");
+				print_xml_formatted(answer, "Couldnt route: ");
 				result = I_ERROR;
 				
 			}
@@ -171,9 +171,8 @@ do_cib_invoke(long long action,
 /* 			return I_REQUEST; */
 			
 		}
-		
-		crm_debug("[CIB after]\t%s\n\n", dump_xml_node(cib_msg, FALSE));
-		free_xml(answer);
+
+		print_xml_formatted(cib_msg, "[CIB after]");
 		return result;
 
 	} else if(action & A_CIB_BUMPGEN) {
@@ -398,7 +397,7 @@ do_te_copyto(long long action,
 	
 
 	if(data != NULL) {
-		crm_debug("[TE input]\t%s\n\n", dump_xml_node((xmlNodePtr)data, FALSE));
+		print_xml_formatted(data, "[TE imput]");
 		message  = copy_xml_node_recursive((xmlNodePtr)data);
 		opts  = find_xml_node(message, XML_TAG_OPTIONS);
 		true_op = xmlGetProp(opts, XML_ATTR_OP);

@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.49 2004/08/29 03:01:12 msoffen Exp $ */
+/* $Id: cib.c,v 1.50 2004/09/04 10:41:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -131,7 +131,7 @@ process_cib_message(xmlNodePtr message, gboolean auto_reply)
 	data = cib_process_request(op, options, fragment, &result);
 
 	crm_info("[cib] operation returned result %d", result);
-	crm_debug("[CIB post-op]\t%s\n\n", dump_xml_node(message, FALSE));
+	crm_debug("[CIB post-op]\t%s\n\n", dump_xml_formatted(message));
 
 	if(auto_reply) {
 		reply = create_reply(message, data);
@@ -212,8 +212,8 @@ create_cib_fragment_adv(xmlNodePtr update, const char *section, const char *sour
 	crm_debug("Verifying created fragment");
 	if(verifyCibXml(cib) == FALSE) {
 		crm_err("Fragment creation failed");
-		crm_err("[src] %s", dump_xml_node(update, FALSE));
-		crm_err("[created] %s", dump_xml_node(fragment, FALSE));
+		crm_err("[src] %s", dump_xml_formatted(update));
+		crm_err("[created] %s", dump_xml_formatted(fragment));
 		free_xml(fragment);
 		fragment = NULL;
 	}

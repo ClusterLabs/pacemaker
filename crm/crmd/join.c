@@ -42,6 +42,7 @@ do_send_welcome(long long action,
 	xmlNodePtr update = NULL;
 	xmlNodePtr welcome = NULL;
 	xmlNodePtr tmp1 = NULL;
+	xmlNodePtr tmp2 = NULL;
 	const char *join_to = NULL;
 
 	if(action & A_JOIN_WELCOME && data == NULL) {
@@ -58,19 +59,31 @@ do_send_welcome(long long action,
 		if(join_to != NULL) {
 			stopTimer(integration_timer);
 
+			/* update node status */
 			update = create_node_state(
 				join_to, join_to,
 				NULL, NULL, CRMD_JOINSTATE_PENDING);
 
 			tmp1 = create_cib_fragment(update, NULL);
 			invoke_local_cib(NULL, tmp1, CRM_OP_UPDATE);
+			
+			/* Make sure they have the *whole* CIB */
+			tmp1 = get_cib_copy();
+			tmp2 = create_cib_fragment(tmp1, NULL);
+			
+			send_request(NULL, tmp2, CRM_OP_REPLACE,
+				     join_to, CRM_SYSTEM_CRMD, NULL);
+			
+			free_xml(tmp1);	
+			free_xml(tmp2);
 
+			/* send the welcome */
 			send_request(NULL, NULL, CRM_OP_WELCOME,
 				     join_to, CRM_SYSTEM_CRMD, NULL);
 
 			free_xml(update);
 			free_xml(tmp1);
-
+			
 			/* if this client is sick, we shouldnt wait forever */
 			startTimer(integration_timer);
 
@@ -99,7 +112,7 @@ do_send_welcome_all(long long action,
 	xmlNodePtr update     = NULL;
 	xmlNodePtr cib_copy   = get_cib_copy();
 	xmlNodePtr tmp1       = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
-	xmlNodePtr node_entry = tmp1->children;
+	xmlNodePtr tmp2       = NULL;
 
 	/* Give everyone a chance to join before invoking the PolicyEngine */
 	stopTimer(integration_timer);
@@ -112,14 +125,14 @@ do_send_welcome_all(long long action,
 	}
 
 	/* catch any nodes that are active in the CIB but not in the CCM list  */
-	while(node_entry != NULL){
+	xml_child_iter(
+		tmp1, node_entry, XML_CIB_TAG_STATE,
+
 		const char *node_id = xmlGetProp(node_entry, XML_ATTR_UNAME);
 
 		gpointer a_node =
 			g_hash_table_lookup(fsa_membership_copy->members,
 					    node_id);
-
-		node_entry = node_entry->next;
 
 		if(a_node != NULL || (safe_str_eq(fsa_our_uname, node_id))) {
 			/* handled by do_update_cib_node() */
@@ -135,18 +148,28 @@ do_send_welcome_all(long long action,
 		} else {
 			update = xmlAddSibling(update, tmp1);
 		}
-	}
+		);
 
 	/* now process the CCM data */
 	free_xml(do_update_cib_nodes(update, TRUE));
 	free_xml(cib_copy);
 
+	/* Make sure everyone has the *whole* CIB */
+	tmp1 = get_cib_copy();
+	tmp2 = create_cib_fragment(tmp1, NULL);
+	
+	send_request(NULL, tmp2, CRM_OP_REPLACE,
+		     NULL, CRM_SYSTEM_CRMD, NULL);
+	
+	free_xml(tmp1);	
+	free_xml(tmp2);
+	
 	/* Avoid ordered message delays caused when the CRMd proc
 	 * isnt running yet (ie. send as a broadcast msg which are never
 	 * sent ordered.
 	 */
 	send_request(NULL, NULL, CRM_OP_WELCOME,
-		     NULL, CRM_SYSTEM_CRMD, NULL);
+		     NULL, CRM_SYSTEM_CRMD, NULL);	
 
 /* No point hanging around in S_INTEGRATION if we're the only ones here! */
 	if(g_hash_table_size(joined_nodes)
@@ -305,16 +328,6 @@ do_process_welcome_ack(long long action,
 		free_xml(cib_fragment);
 		return I_FAIL;
 	}
-
-	/* Make sure they have the *whole* CIB */
-	tmp1 = get_cib_copy();
-	tmp2 = create_cib_fragment(tmp1, NULL);
-
-	send_request(NULL, tmp2, CRM_OP_REPLACE,
-		     join_from, CRM_SYSTEM_CRMD, NULL);
-
-	free_xml(tmp1);	
-	free_xml(tmp2);
 	
 	/* add them to our list of CRMD_STATE_ACTIVE nodes
 	   TODO: still used?

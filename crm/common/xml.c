@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.10 2004/08/30 03:17:38 msoffen Exp $ */
+/* $Id: xml.c,v 1.11 2004/09/04 10:41:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,8 +51,8 @@ find_xml_node(xmlNodePtr root, const char * search_path)
 	xml_child_iter(
 		root, a_child, search_path,
 		crm_trace("returning node (%s).", xmlGetNodePath(a_child));
-		crm_trace("contents\t%s", dump_xml_node(a_child, FALSE));
-		crm_trace("found in\t%s", dump_xml_node(root, FALSE));
+		crm_trace("contents\t%s", dump_xml_formatted(a_child));
+		crm_trace("found in\t%s", dump_xml_formatted(root));
 		return a_child;
 		);
 
@@ -94,8 +94,8 @@ find_xml_node_nested(xmlNodePtr root, const char **search_path, int len)
 		crm_trace("returning node (%s).",
 			   xmlGetNodePath(lastMatch));
 
-		crm_trace("found\t%s", dump_xml_node(lastMatch, FALSE));
-		crm_trace("in \t%s", dump_xml_node(root, FALSE));
+		crm_trace("found\t%s", dump_xml_formatted(lastMatch));
+		crm_trace("in \t%s", dump_xml_formatted(root));
 		
 		return lastMatch;
 	}
@@ -215,8 +215,10 @@ find_entity(xmlNodePtr parent,
 	while(parent != NULL) {
 		xml_child_iter(
 			parent, a_child, node_name,
-			if(id == NULL || safe_str_eq(id, xmlGetProp(a_child, XML_ATTR_ID))) {
-				crm_debug("returning node (%s).", xmlGetNodePath(a_child));
+			if(id == NULL 
+			   || safe_str_eq(id,xmlGetProp(a_child,XML_ATTR_ID))){
+				crm_debug("returning node (%s).", 
+					  xmlGetNodePath(a_child));
 				return a_child;
 			}
 			);
@@ -226,7 +228,8 @@ find_entity(xmlNodePtr parent,
 			break;
 		}
 	}
-	crm_warn("node <%s id=%s> not found in %s.", node_name, id, xmlGetNodePath(parent));
+	crm_warn("node <%s id=%s> not found in %s.",
+		 node_name, id, xmlGetNodePath(parent));
 	return NULL;
 }
 
@@ -243,7 +246,6 @@ copy_in_properties(xmlNodePtr target, xmlNodePtr src)
 	} else {
 #ifndef USE_BUGGY_LIBXML
 		xmlAttrPtr prop_iter = NULL;
-		
 		
 		prop_iter = src->properties;
 		while(prop_iter != NULL) {
@@ -263,84 +265,6 @@ copy_in_properties(xmlNodePtr target, xmlNodePtr src)
 	}
 	
 	return;
-}
-
-char * 
-dump_xml(xmlNodePtr msg)
-{
-	return dump_xml_node(msg, FALSE);
-}
-
-void
-xml_message_debug(xmlNodePtr msg, const char *text)
-{
-	char *msg_buffer;
-
-	
-	if(msg == NULL) {
-		crm_verbose("%s: %s",
-		   text==NULL?"<null>":text,"<null>");
-		
-		return;
-	}
-	
-	msg_buffer = dump_xml_node(msg, FALSE);
-	crm_verbose("%s: %s",
-		   text==NULL?"<null>":text,
-		   msg_buffer==NULL?"<null>":msg_buffer);
-	crm_free(msg_buffer);
-	return;
-}
-
-char * 
-dump_xml_node(xmlNodePtr msg, gboolean whole_doc)
-{
-	int lpc = 0;
-	int msg_size = -1;
-	xmlChar *xml_message = NULL;
-	xmlBufferPtr xml_buffer;
-
-	
-	if (msg == NULL) return NULL;
-
-	xmlInitParser();
-
-	if (whole_doc) {
-		if (msg->doc == NULL) {
-			xmlNodePtr top = msg;
-/* 			while(top->parent != NULL) { */
-/* 				top = top->parent; */
-/* 			} */
-			xmlDocPtr foo = xmlNewDoc("1.0");
-			xmlDocSetRootElement(foo, top);
-			xmlSetTreeDoc(top,foo);
-		}
-		xmlDocDumpMemory(msg->doc, &xml_message, &msg_size);
-	} else {
-		crm_trace("mem used by xml: %d", xmlMemUsed());
-		xmlMemoryDump ();
-	
-		xml_buffer = xmlBufferCreate();
-		msg_size = xmlNodeDump(xml_buffer, msg->doc, msg, 0, 0);
-
-		xml_message =
-			(xmlChar*)crm_strdup(xmlBufferContent(xml_buffer)); 
-		xmlBufferFree(xml_buffer);
-
-		if (!xml_message) {
-			crm_err(
-			       "memory allocation failed in dump_xml_node()");
-		}
-	}
-
-	xmlCleanupParser();
-	
-	/*  HA wont send messages with newlines in them. */
-	for(; xml_message != NULL && lpc < msg_size; lpc++)
-		if (xml_message[lpc] == '\n')
-			xml_message[lpc] = ' ';
-    
-	return (char*)xml_message; 
 }
 
 xmlNodePtr
@@ -439,15 +363,14 @@ void
 free_xml(xmlNodePtr a_node)
 {
 	
-	if (a_node == NULL)
-		; /*  nothing to do */
-	else if (a_node->doc != NULL)
-		xmlFreeDoc(a_node->doc);
-	else
-	{
-		/* make sure the node is unlinked first */
-		xmlUnlinkNode(a_node);
-		xmlFreeNode(a_node);
+        if(a_node == NULL) {
+	  ; /*  nothing to do */
+	} else if (a_node->doc != NULL) {
+	  xmlFreeDoc(a_node->doc);
+	} else {
+	  /* make sure the node is unlinked first */
+	  xmlUnlinkNode(a_node);
+	  xmlFreeNode(a_node);
 	}
 	
 	return;
@@ -468,7 +391,7 @@ copy_xml_node_recursive(xmlNodePtr src_node)
 {
 #if XML_TRACE
 	const char *local_name = NULL;
-	xmlNodePtr local_node = NULL, node_iter = NULL, local_child = NULL;
+	xmlNodePtr local_node = NULL, local_child = NULL;
 	xmlAttrPtr prop_iter = NULL;
 
 	if(src_node != NULL && src_node->name != NULL) {
@@ -488,15 +411,15 @@ copy_xml_node_recursive(xmlNodePtr src_node)
 			
 		}
 
-		node_iter = src_node->children;
-		while(node_iter != NULL) {
+		xml_child_iter(
+			node_iter, src_node, NULL,
+
 			local_child = copy_xml_node_recursive(node_iter);
 			if(local_child != NULL) {
 				xmlAddChild(local_node, local_child);
 				crm_trace("Copied node [%s [%s]", local_name, local_child->name);
 			} 				
-			node_iter = node_iter->next;
-		}
+			);
 
 		crm_trace("Returning [%s]", local_node->name);
 		return local_node;
@@ -629,7 +552,7 @@ file2xml(FILE *input)
 	xmlBufferFree(xml_buffer);
 	xml_object = xmlDocGetRootElement(doc);
 
-	xml_message_debug(xml_object, "Created fragment");
+	print_xml_formatted(xml_object, "Created fragment");
 
 	return xml_object;
 }
@@ -692,9 +615,8 @@ write_xml_file(xmlNodePtr xml_node, const char *filename)
 	return res;
 }
 
-void
-print_xml_formatted(xmlNodePtr an_xml_node) 
-{
+char *
+dump_xml_formatted(xmlNodePtr an_xml_node) {
 	int len = 0;
 	xmlChar *buffer = NULL;
 	xmlDocPtr foo = NULL;
@@ -702,22 +624,42 @@ print_xml_formatted(xmlNodePtr an_xml_node)
 	xmlNodePtr xml_node = copy_xml_node_recursive(an_xml_node);
 	
 	if (xml_node == NULL) {
-		return;
+		return NULL;
 		
-	} else if (xml_node->doc == NULL) {
+	} else {
+	  // reset the doc pointer
 		crm_trace("Creating doc pointer for %s", xml_node->name);
 		foo = xmlNewDoc("1.0");
 		xmlDocSetRootElement(foo, xml_node);
 		xmlSetTreeDoc(xml_node, foo);
 	}
 
+	xmlInitParser();
 	xmlDocDumpFormatMemory(xml_node->doc, &buffer, &len,1);
+	xmlCleanupParser();
 	
-	printf("%s", buffer);
-	
-	if(buffer != NULL) {
-		xmlFree(buffer);
-	}
-
 	free_xml(xml_node);
+
+	return buffer;
+}
+
+void
+print_xml_formatted(xmlNodePtr msg, const char *text)
+{
+	char *msg_buffer;
+
+	if(msg == NULL) {
+		crm_verbose("%s: %s",
+		   text==NULL?"<null>":text,"<null>");
+		
+		return;
+	}
+	
+	msg_buffer = dump_xml_formatted(msg);
+	crm_verbose("%s: %s",
+		   text==NULL?"<null>":text,
+		   msg_buffer==NULL?"<null>":msg_buffer);
+	crm_free(msg_buffer);
+
+	return;
 }

@@ -454,7 +454,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 #endif
 
 /*#ifdef FSA_TRACE*/
-			xml_message_debug(stored_msg,"FSA processing message");
+			print_xml_formatted(stored_msg,"FSA processing message");
 /*#endif*/
 
 			next_input = handle_message(stored_msg);
@@ -648,10 +648,7 @@ dump_rsc_info(void)
 {
 	xmlNodePtr local_cib = get_cib_copy();
 	xmlNodePtr root      = get_object_root(XML_CIB_TAG_STATUS, local_cib);
-	xmlNodePtr nodes     = NULL;
-	xmlNodePtr node      = NULL;
 	xmlNodePtr resources = NULL;
-	xmlNodePtr rsc       = NULL;
 	const char *rsc_id    = NULL;
 	const char *node_id   = NULL;
 	const char *rsc_state = NULL;
@@ -661,29 +658,18 @@ dump_rsc_info(void)
 
 	
 	const char *path[] = {
-		"lrm",
-		"lrm_resources"
+		XML_CIB_TAG_LRM,
+		XML_LRM_TAG_RESOURCES
 	};
 
-	if(root != NULL) {
-		crm_err("%s section was empty/NULL", XML_CIB_TAG_STATUS);
-	} else {
-		nodes = root->children;
-	}
-	
-	while(nodes != NULL) {
-		node = nodes;
-		nodes = nodes->next;
+	xml_child_iter(
+		root, node, XML_CIB_TAG_STATE,
 		
 		resources = find_xml_node_nested(node, path, DIMOF(path));
 
-		if(resources != NULL) {
-			resources = resources->children;
-		}
-		
-		while(resources != NULL) {
-			rsc = resources;
-			resources = resources->next;
+		xml_child_iter(
+			resources, rsc, XML_LRM_TAG_RESOURCE,
+
 			rsc_id    = xmlGetProp(rsc, XML_ATTR_ID);
 			node_id   = xmlGetProp(rsc, XML_LRM_ATTR_TARGET);
 			rsc_state = xmlGetProp(rsc, XML_LRM_ATTR_RSCSTATE);
@@ -699,6 +685,6 @@ dump_rsc_info(void)
 				 "[%s (rc=%s) after %s] on %s",
 				 rsc_id, rsc_state,
 				 op_status, last_rc, last_op, node_id);
-		}
-	}
+			);
+		);
 }

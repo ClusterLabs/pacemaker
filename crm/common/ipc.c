@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.5 2004/08/29 03:01:12 msoffen Exp $ */
+/* $Id: ipc.c,v 1.6 2004/09/04 10:41:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -62,7 +62,7 @@ send_xmlipc_message(IPC_Channel *ipc_client, xmlNodePtr msg)
 	gboolean res;
 	
 
-	xml_message = dump_xml(msg);
+	xml_message = dump_xml_formatted(msg);
 	
 	cib_dump =
 		create_simple_message(xml_message, ipc_client);

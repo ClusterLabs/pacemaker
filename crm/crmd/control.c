@@ -355,12 +355,13 @@ do_read_config(long long action,
 {
 	xmlNodePtr cib_copy = get_cib_copy();
 	xmlNodePtr config   = get_object_root(XML_CIB_TAG_CRMCONFIG, cib_copy);
-	xmlNodePtr iter = config->children;
-	while(iter != NULL) {
+
+	xml_child_iter(
+		config, iter, XML_CIB_TAG_NVPAIR,
+
 		const char *name  = xmlGetProp(iter, XML_NVPAIR_ATTR_NAME);
 		const char *value = xmlGetProp(iter, XML_NVPAIR_ATTR_VALUE);
-		iter = iter->next;
-		
+
 		if(name == NULL || value == NULL) {
 			continue;
 			
@@ -374,7 +375,8 @@ do_read_config(long long action,
 			shutdown_escalation_timmer->period_ms = atoi(value);
 
 		}
-	}
+		);
+	
 	
 	if(dc_heartbeat->period_ms < 1) {
 		/* sensible default */
