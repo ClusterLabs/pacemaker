@@ -563,6 +563,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			       fsa_action2string(actions), actions);
 			next_input = I_ERROR;
 		}
+
+		if(is_message()) {
+			actions |= A_MSG_PROCESS;
+		}
 	}
 	
 #ifdef FSA_TRACE

@@ -136,7 +136,9 @@ extract_event(xmlNodePtr msg)
 	const char *event_status = NULL;
 	const char *event_rc     = NULL;
 	
-/*	
+/*
+[cib fragment]
+...
 <status>
    <node_state id="node1" state="active" exp_state="active">
      <lrm>
@@ -151,15 +153,13 @@ extract_event(xmlNodePtr msg)
 
 	if(safe_str_neq(section, XML_CIB_TAG_STATUS)) {
 		// these too are never expected
-		send_abort();
 		return FALSE;
-		
 	}
 	
-	iter = find_xml_node(msg, XML_TAG_CIB);
+	iter = find_xml_node(iter, XML_TAG_CIB);
 	iter = get_object_root(XML_CIB_TAG_STATUS, iter);
 	iter = iter->children;
-
+	
 	while(abort == FALSE && iter != NULL) {
 		xmlNodePtr node_state = iter;
 		xmlNodePtr child = iter->children;
@@ -170,6 +170,8 @@ extract_event(xmlNodePtr msg)
 			/* node state update,
 			 * possibly from a shutdown we requested
 			 */
+			CRM_DEBUG("state no child");
+			
 			event_status = state;
 			event_node   = xmlGetProp(node_state, XML_ATTR_ID);
 			if(safe_str_eq(event_status, "down")) {
@@ -183,16 +185,22 @@ extract_event(xmlNodePtr msg)
 						     event_rc);
 
 		} else if(state != NULL && child != NULL) {
-			/* this is a complex eventand could not be completely
+			/* this is a complex event and could not be completely
 			 * due to any request we made
 			 */
-			send_abort();
 			abort = TRUE;
-		
+			CRM_DEBUG("state and child");
+			
 		} else {
+			CRM_DEBUG("child no state");
 			child = find_xml_node(node_state, "lrm");
 			child = find_xml_node(child, "lrm_resources");
-			child = child->children;
+
+			if(child != NULL) {
+				child = child->children;
+			} else {
+				abort = TRUE;
+			}
 			
 			while(abort == FALSE && child != NULL) {
 				event_action = xmlGetProp(child, "last_op");
@@ -233,6 +241,10 @@ process_graph_event(const char *event_node,
 		action_list, action_list_t, graph, lpc,
 		action = g_slist_nth_data(action_list->actions,
 					  action_list->index);
+
+		if(action == NULL) {
+			continue;
+		}
 /*
 		<rsc_op id= runnable= optional= task= on_node= >
 			<resource id="rsc3" priority="3.0"/>
@@ -475,24 +487,25 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		const char *true_op = get_xml_attr (msg, XML_TAG_OPTIONS,
 						    "true_op", TRUE);
 		if(true_op == NULL) {
-#ifdef USE_FAKE_LRM
-			process_fake_event(msg);
-#else
-			// error
-#endif
-		} else if(strcmp(op, CRM_OPERATION_CREATE) == 0
-		   || strcmp(op, CRM_OPERATION_DELETE) == 0
-		   || strcmp(op, CRM_OPERATION_REPLACE) == 0
-		   || strcmp(op, CRM_OPERATION_WELCOME) == 0
-		   || strcmp(op, CRM_OPERATION_SHUTDOWN_REQ) == 0
-		   || strcmp(op, CRM_OPERATION_ERASE) == 0) {
+			cl_log(LOG_ERR,
+			       "Illegal update, the original operation must be specified");
+			send_abort();
+			
+		} else if(strcmp(true_op, CRM_OPERATION_CREATE) == 0
+		   || strcmp(true_op, CRM_OPERATION_DELETE) == 0
+		   || strcmp(true_op, CRM_OPERATION_REPLACE) == 0
+		   || strcmp(true_op, CRM_OPERATION_WELCOME) == 0
+		   || strcmp(true_op, CRM_OPERATION_SHUTDOWN_REQ) == 0
+		   || strcmp(true_op, CRM_OPERATION_ERASE) == 0) {
 
 			// these are always unexpected, trigger the PE
 			send_abort();
 			
-		} else if(strcmp(op, CRM_OPERATION_UPDATE) == 0) {
+		} else if(strcmp(true_op, CRM_OPERATION_UPDATE) == 0) {
 			// this may not be un-expected
-			extract_event(msg);
+			if(extract_event(msg) == FALSE){
+				send_abort();
+			}
 			
 		} else {
 			cl_log(LOG_ERR,

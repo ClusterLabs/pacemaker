@@ -885,9 +885,14 @@ do_lrm_invoke(long long action,
 	if(safe_str_eq(crm_op, "rsc_op")) {
 	
 		CRM_DEBUG("performing op %s...", operation);
+		xmlNodePtr update = NULL;
+		xmlNodePtr state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+		xmlNodePtr iter = create_xml_node(state, "lrm");
+		iter = create_xml_node(iter, "lrm_resources");
 
-		xmlNodePtr iter = create_xml_node(NULL, "lrm_resource");
+		iter = create_xml_node(iter, "lrm_resource");
 	
+		set_xml_property_copy(iter, "id", fsa_our_uname);
 		set_xml_property_copy(iter, XML_ATTR_ID, id_from_cib);
 		set_xml_property_copy(iter, "last_op", operation);
 
@@ -900,8 +905,10 @@ do_lrm_invoke(long long action,
 		set_xml_property_copy(iter, "op_code", "0");
 		set_xml_property_copy(iter, "op_node", fsa_our_uname);
 
-		send_request(NULL, iter, "event",
-			     NULL, CRM_SYSTEM_TENGINE);
+		update = create_cib_fragment(state, NULL);
+		
+		send_request(NULL, update, "update",
+			     NULL, CRM_SYSTEM_DCIB);
 	}
 	
 	FNRET(I_NULL);
