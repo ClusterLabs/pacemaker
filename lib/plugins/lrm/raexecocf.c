@@ -187,7 +187,7 @@ execra(const char * rsc_type, const char * provider, const char * op_type,
 	 * layout, OCF_ROOT==OCF_RA_DIR?  I'm not very sure, pls fix me.
 	 */
 	g_hash_table_insert(tmp_for_setenv, g_strdup("OCF_ROOT"), 
-			    g_strdup(OCF_RA_DIR));
+			    g_strdup(OCF_ROOT_DIR));
 
 	/* Currently the rsc_type==rsc_class_name, maybe not correct.
 	 * Please fix me if you are sure what it should be. 
