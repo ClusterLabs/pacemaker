@@ -20,6 +20,12 @@
  * This code implements the Resource Agent Plugin Module for LSB style.
  * It's a part of Local Resource Manager. Currently it's used by lrmd only.
  */
+/*
+ * Todo
+ * 1) Use flex&bison to make the analysis functions for lsb compliant comment?
+ * 2) Support multiple paths which contain lsb compliant RAs.
+ * 3) Optional and additional actions analysis.
+ */
 
 #include <portability.h>
 #include <stdio.h>
@@ -45,6 +51,71 @@
 #define PIL_PLUGINLICENSE	LICENSE_PUBDOM
 #define PIL_PLUGINLICENSEURL	URL_PUBDOM
 
+
+/* meta-data template for lsb scripts */
+/* Note: As for optional actions -- extracted from lsb standard.
+ * The reload and the try-restart options are optional. Other init script
+ * actions may be defined by the init script.
+ */
+#define meta_data_template  "\n"\
+"<?xml version=\"1.0\"?>\n"\
+"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"\
+"<resource-agent name=%s"\
+"\" version=\"0.1\">\n"\
+"  <version>1.0</version>\n"\
+"  <longdesc lang=\"en\">\n"\
+"    %s"\
+"  </longdesc>\n"\
+"  <shortdesc lang=\"en\">%s</shortdesc>\n"\
+"  <parameters>\n"\
+"  </parameters>\n"\
+"  <actions>\n"\
+"    <action name=\"start\"   timeout=\"15\" />\n"\
+"    <action name=\"stop\"    timeout=\"15\" />\n"\
+"    <action name=\"status\"  timeout=\"15\" />\n"\
+"    <action name=\"restart\"  timeout=\"15\" />\n"\
+"    <action name=\"force-reload\"  timeout=\"15\" />\n"\
+"    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"\
+"    <action name=\"meta-data\"  timeout=\"5\" />\n"\
+"  </actions>\n"\
+"  <special tag=\"LSB\">\n"\
+"    <Provides>%s</Provides>\n"\
+"    <Required-Start>%s</Required-Start>\n"\
+"    <Required-Stop>%s</Required-Stop>\n"\
+"    <Should-Start>%s</Should-Start>\n"\
+"    <Should-Stop>%s</Should-Stop>\n"\
+"    <Default-Start>%s</Default-Start>\n"\
+"    <Default-Stop>%s</Default-Stop>\n"\
+"  </special>\n"\
+"</resource-agent>\n"
+
+/* The keywords for lsb-compliant comment */
+#define LSB_INITSCRIPT_BEGIN_TAG "### BEGIN INIT INFO"
+#define LSB_INITSCRIPT_END_TAG "### END INIT INFO"
+#define PROVIDES    "# Provides:" 
+#define REQ_START   "# Required-Start:"
+#define REQ_STOP    "# Required-Stop:"
+#define SHLD_START  "# Should-Start:"
+#define SHLD_STOP   "# Should-Stop:"
+#define DFLT_START  "# Default-Start:"
+#define DFLT_STOP   "# Default-Stop:"
+#define SHORT_DSCR  "# Short-Description:"
+#define DESCRIPTION "# Description:"
+
+#define ZAPGDOBJ(m)				\
+		if ( (m) != NULL ) {		\
+			g_free(m);		\
+			(m) = NULL;		\
+		}
+
+#define RALSB_GET_VALUE(ptr, keyword)	\
+	if ( (ptr == NULL) & (0 == strncmp(buffer, keyword, strlen(keyword))) ) { \
+		(ptr) = g_strdup(buffer+strlen(keyword)); \
+		if (*(ptr+strlen(ptr)-1) == '\n') { \
+			*(ptr+strlen(ptr)-1) = ' '; \
+		} \
+		continue; \
+	}
 /*
  * Are there multiple paths? Now according to LSB init scripts, the answer 
  * is 'no', but should be 'yes' for lsb none-init scripts?
@@ -78,8 +149,6 @@ static int get_provider_list(const char* ra_type, GList ** providers);
 
 /* The begin of internal used function & data list */
 #define MAX_PARAMETER_NUM 40
-#define LSB_INITSCRIPT_BEGIN_TAG "### BEGIN INIT INFO"
-#define LSB_INITSCRIPT_END_TAG "### END INIT INFO"
 
 const int MAX_LENGTH_OF_RSCNAME = 40,
 	  MAX_LENGTH_OF_OPNAME = 40;
@@ -146,6 +215,14 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	char * optype_tmp = NULL;
 	GString * debug_info;
 	int index_tmp = 0;
+
+	/* Specially handle the operation "metameta-data". To build up its
+	 * output from templet, dummy data and its comment head.
+	 */
+	if ( strncmp(op_type, "meta-data", strlen("meta-data")) == 0 ) {
+		printf("%s", get_resource_meta(rsc_type, provider));
+		exit(0);
+	}
 
 	/* To simulate the 'monitor' operation with 'status'.
 	 * Now suppose there is no 'monitor' operation for LSB scripts.
@@ -358,7 +435,123 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 static char*
 get_resource_meta(const char* rsc_type,  const char* provider)
 {
-	return g_strndup(rsc_type, strnlen(rsc_type, MAX_LENGTH_OF_RSCNAME));
+	char ra_pathname[RA_MAX_NAME_LENGTH];
+	FILE * fp;
+	gboolean next_continue;
+	GString * meta_data;
+	const int BUFLEN = 132;
+	char buffer[BUFLEN];
+	char * provides  = NULL,
+	     * req_start = NULL,
+	     * req_stop  = NULL,
+	     * shld_start = NULL,
+	     * shld_stop  = NULL,
+	     * dflt_start = NULL,
+	     * dflt_stop  = NULL,
+	     * s_dscrpt  = NULL;
+	 GString * l_dscrpt = NULL;
+	
+	/* 
+	 * Use the following tags to find the LSb-compliant comment block.
+	 *  "### BEGIN INIT INFO" and "### END INIT INFO"
+	 */
+	get_ra_pathname(RA_PATH, rsc_type, NULL, ra_pathname);
+	if ( (fp = fopen(ra_pathname, "r")) == NULL ) {
+		cl_log(LOG_ERR, "Failed to open lsb RA %s. No meta-data gotten."
+			, rsc_type);
+		return NULL;
+	}
+	meta_data = g_string_new("");
+
+	next_continue = FALSE;
+	while (NULL != fgets(buffer, BUFLEN, fp)) {
+		/* Handle the lines over BUFLEN(80) columns, only
+		 * the first part is compared.
+		 */
+		if ( next_continue == TRUE ) {
+			continue;
+		}
+		if (strlen(buffer) == BUFLEN ) {
+			next_continue = TRUE;
+		} else {
+			next_continue = FALSE;
+		}
+
+		if ( 0 == strncmp(buffer , LSB_INITSCRIPT_BEGIN_TAG
+			, strlen(LSB_INITSCRIPT_BEGIN_TAG)) ) {
+			break;
+		}
+	}
+
+	/* Enter into the lsb-compliant comment block */
+	while ( NULL != fgets(buffer, BUFLEN, fp) ) {
+		/* Now suppose each of the following eight arguments contain
+		 * only one line 
+		 */
+		RALSB_GET_VALUE(provides,   PROVIDES)
+		RALSB_GET_VALUE(req_start,  REQ_START)
+		RALSB_GET_VALUE(req_stop,   REQ_STOP)
+		RALSB_GET_VALUE(shld_start, SHLD_START)
+		RALSB_GET_VALUE(shld_stop,  SHLD_STOP)
+		RALSB_GET_VALUE(dflt_start, DFLT_START)
+		RALSB_GET_VALUE(dflt_stop,  DFLT_STOP)
+		RALSB_GET_VALUE(s_dscrpt,  SHORT_DSCR)
+		
+		/* Long description may cross multiple lines */
+		if ( (l_dscrpt == NULL) & (0 == strncmp(buffer, DESCRIPTION
+			, strlen(DESCRIPTION))) ) {
+			l_dscrpt = g_string_new(buffer+strlen(DESCRIPTION));
+			/* Between # and keyword, more than one space, or a tab
+			 * character, indicates the continuation line.
+			 * 	Extracted from LSB init script standatd
+			 */
+			while ( NULL != fgets(buffer, BUFLEN, fp) ) {
+				if ( (0 == strncmp(buffer, "#  ", 3))
+				  || (0 == strncmp(buffer, "#\t", 2)) ) {
+					buffer[0] = ' ';
+					l_dscrpt = g_string_append(l_dscrpt
+								   , buffer);
+				} else {
+					fputs(buffer, fp);
+					break; /* Long description ends */
+				}
+			}
+			continue;
+		}
+
+		if ( 0 == strncmp(buffer, LSB_INITSCRIPT_END_TAG
+			, strlen(LSB_INITSCRIPT_END_TAG)) ) {
+			/* Get to the out border of LSB comment block */
+			break;
+		}
+	}
+	fclose(fp);
+	
+	g_string_sprintf( meta_data, meta_data_template, rsc_type
+			, (l_dscrpt==NULL)? rsc_type : l_dscrpt->str
+			, (s_dscrpt==NULL)? rsc_type : s_dscrpt
+			, (provides==NULL)? "" : provides
+			, (req_start==NULL)? "" : req_start
+			, (req_stop==NULL)? "" : req_stop
+			, (shld_start==NULL)? "" : shld_start
+			, (shld_stop==NULL)? "" : shld_stop
+			, (dflt_start==NULL)? "" : dflt_start
+			, (dflt_stop==NULL)? "" : dflt_stop );
+
+	if ( l_dscrpt != NULL) {
+		g_string_free(l_dscrpt, TRUE);
+		l_dscrpt = NULL;
+	}
+	ZAPGDOBJ(s_dscrpt);	
+	ZAPGDOBJ(provides);	
+	ZAPGDOBJ(req_start);	
+	ZAPGDOBJ(req_stop);	
+	ZAPGDOBJ(shld_start);	
+	ZAPGDOBJ(shld_stop);	
+	ZAPGDOBJ(dflt_start);	
+	ZAPGDOBJ(dflt_stop);	
+
+	return meta_data->str;
 }
 
 static int
