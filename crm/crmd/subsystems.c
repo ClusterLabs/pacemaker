@@ -119,7 +119,7 @@ do_cib_invoke(long long action,
 		const char *type     = xmlGetProp(options, XML_ATTR_MSGTYPE);
 		const char *op       = xmlGetProp(options, XML_ATTR_OP);
 		
-		crm_xml_devel(cib_msg, "[CIB b4]");
+		crm_xml_devel(cib_msg, "[CIB update]");
 		if(cib_msg == NULL) {
 			crm_err("No message for CIB command");
 			return I_NULL; /* I_ERROR */
@@ -156,7 +156,6 @@ do_cib_invoke(long long action,
 			   || strcmp(op, CRM_OP_DELETE) == 0
 			   || strcmp(op, CRM_OP_REPLACE) == 0
 			   || strcmp(op, CRM_OP_RETRIVE_CIB) == 0
-			   || strcmp(op, CRM_OP_WELCOME) == 0
 			   || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
 				result = I_CIB_UPDATE;
 				
@@ -188,8 +187,6 @@ do_cib_invoke(long long action,
 /* 			return I_REQUEST; */
 			
 		}
-
-		crm_xml_devel(cib_msg, "[CIB after]");
 		return result;
 
 	} else if(action & A_CIB_BUMPGEN) {
