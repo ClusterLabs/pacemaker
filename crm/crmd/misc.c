@@ -17,7 +17,13 @@
  */
 #include <portability.h>
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
+#include <crm/cib.h>
 #include <crmd_fsa.h>
+#include <crmd_messages.h>
+#include <crm/common/xmlutils.h>
+
+#include <heartbeat.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -44,3 +50,45 @@ do_log(long long action,
 	
 	FNRET(I_NULL);
 }
+
+void
+CrmdClientStatus(const char * node, const char * client,
+		 const char * status, void * private)
+{
+	const char   *extra = NULL;
+	xmlNodePtr   update = NULL;
+	xmlNodePtr fragment = NULL;
+
+	if(safe_str_eq(status, JOINSTATUS)){
+		status = ONLINESTATUS;
+		extra = XML_CIB_ATTR_CLEAR_SHUTDOWN;
+
+	} else if(safe_str_eq(status, LEAVESTATUS)){
+		status = OFFLINESTATUS;
+		extra = XML_CIB_ATTR_CLEAR_SHUTDOWN;
+	}
+	
+	cl_log(LOG_NOTICE,
+	       "Status update: Client %s/%s now has status [%s]\n",
+	       node, client, status);
+
+	if(AM_I_DC) {
+		update = create_node_state(node, NULL, status, NULL);
+		if(extra != NULL) {
+			set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
+		}
+		
+		fragment = create_cib_fragment(update, NULL);
+		store_request(NULL, fragment,
+			      CRM_OP_UPDATE, CRM_SYSTEM_DCIB);
+		
+		free_xml(fragment);
+		free_xml(update);
+
+		s_crmd_fsa(C_CRMD_STATUS_CALLBACK, I_NULL, NULL);
+		
+	} else {
+		cl_log(LOG_ERR, "Got client status callback in non-DC mode");
+	}
+}
+

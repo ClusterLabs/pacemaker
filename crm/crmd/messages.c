@@ -63,48 +63,37 @@ gboolean relay_message(xmlNodePtr xml_relay_message,
 fsa_message_queue_t
 put_message(xmlNodePtr new_message)
 {
-	fsa_message_queue_t next_message = (fsa_message_queue_t)
-		crm_malloc(sizeof(struct fsa_message_queue_s));
-
-	CRM_DEBUG("Adding msg to queue");
+	int old_len = g_slist_length(fsa_message_queue);
 
 	// make sure to free it properly later
-	next_message->message = copy_xml_node_recursive(new_message);
-	next_message->next = NULL;
+	fsa_message_queue = g_slist_append(fsa_message_queue,
+					   copy_xml_node_recursive(new_message));
+
+	CRM_DEBUG("Queue len: %d -> %d", old_len,
+		  g_slist_length(fsa_message_queue));
+
 	
-	if(fsa_message_queue == NULL) {
-		fsa_message_queue = next_message;
-	} else {
-		fsa_message_queue->next = next_message;
+	if(old_len == g_slist_length(fsa_message_queue)){
+		cl_log(LOG_ERR, "Couldnt add message to the queue");
 	}
-
-	CRM_DEBUG("Added msg to queue");
-
+	
 	return fsa_message_queue;
 }
 
 /* returns the next message */
-fsa_message_queue_t
+xmlNodePtr
 get_message(void)
 {
-	fsa_message_queue_t next_message = NULL;
-
-	if(fsa_message_queue != NULL) {
-		next_message = fsa_message_queue;
-		fsa_message_queue = fsa_message_queue->next;
-		next_message->next = NULL;
-	}
-	
-	
-	return next_message;
+	xmlNodePtr message = g_slist_nth_data(fsa_message_queue, 0);
+	fsa_message_queue = g_slist_remove(fsa_message_queue, message);
+	return message;
 }
 
 /* returns the current head of the FIFO queue */
 gboolean
 is_message(void)
 {
-	return (fsa_message_queue != NULL
-		&& fsa_message_queue->message != NULL);
+	return (g_slist_length(fsa_message_queue) > 0);
 }
 
 
@@ -352,7 +341,6 @@ crmd_ipc_input_callback(IPC_Channel *client, gpointer user_data)
 	FNRET(hack_return_good);
 }
 
-
 /*
  * This method adds a copy of xml_response_data
  */
@@ -365,7 +353,6 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
 	xmlNodePtr request = NULL;
 
 	FNIN();
-
 
 	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
 				   XML_ATTR_OP, operation, TRUE);
@@ -400,24 +387,26 @@ send_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
  */
 gboolean
 store_request(xmlNodePtr msg_options, xmlNodePtr msg_data,
-	      const char *operation, const char *host_to, const char *sys_to)
+	      const char *operation, const char *sys_to)
 {
 	xmlNodePtr request = NULL;
 	FNIN();
 
-
 	msg_options = set_xml_attr(msg_options, XML_TAG_OPTIONS,
 				   XML_ATTR_OP, operation, TRUE);
+
+	crm_debug("Storing op=%s message for later processing", operation);
 	
 	request = create_request(msg_options,
 				 msg_data,
-				 host_to,
+				 NULL,
 				 sys_to,
 				 AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD,
 				 NULL,
 				 NULL);
 
 	put_message(request);
+	free_xml(request);
 	
 	FNRET(TRUE);
 }
@@ -442,7 +431,7 @@ relay_message(xmlNodePtr xml_relay_message, gboolean originated_locally)
 		FNRET(TRUE);
 	}
 
-	if(strcmp("hello", xml_relay_message->name) == 0) {
+	if(strcmp(CRM_OP_HELLO, xml_relay_message->name) == 0) {
 		/* quietly ignore */
 		FNRET(TRUE);
 	}
@@ -612,7 +601,7 @@ crmd_authorize_message(xmlNodePtr root_xml_node,
 	
 	FNIN();
 
-	if (safe_str_neq("hello", op)) {
+	if (safe_str_neq(CRM_OP_HELLO, op)) {
 			
 		if(sys_from == NULL) {
 			return FALSE;
@@ -776,14 +765,14 @@ handle_message(xmlNodePtr stored_msg)
 		xml_message_debug(stored_msg, "Bad message");
 		
 	} else if(strcmp(type, XML_ATTR_REQUEST) == 0){
-		if(strcmp(op, CRM_OPERATION_VOTE) == 0) {
+		if(strcmp(op, CRM_OP_VOTE) == 0) {
 			next_input = I_ELECTION;
 				
-		} else if(AM_I_DC && strcmp(op, "te_abort") == 0) {
+		} else if(AM_I_DC && strcmp(op, CRM_OP_TEABORT) == 0) {
 			next_input = I_PE_CALC;
 				
 		} else if(AM_I_DC
-			  && strcmp(op, "te_complete") == 0) {
+			  && strcmp(op, CRM_OP_TECOMPLETE) == 0) {
 			if(fsa_state == S_TRANSITION_ENGINE) {
 				next_input = I_SUCCESS;
 /* silently ignore? probably means the TE is signaling OK too early
@@ -796,13 +785,13 @@ handle_message(xmlNodePtr stored_msg)
 */
 			}
 	
-		} else if(strcmp(op, CRM_OPERATION_HBEAT) == 0) {
+		} else if(strcmp(op, CRM_OP_HBEAT) == 0) {
 			next_input = I_DC_HEARTBEAT;
 				
-		} else if(strcmp(op, CRM_OPERATION_WELCOME) == 0) {
+		} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
 			next_input = I_WELCOME;
 				
-		} else if(strcmp(op, CRM_OPERATION_SHUTDOWN_REQ) == 0) {
+		} else if(strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
 
 			/* create cib fragment and add to message */
 
@@ -822,9 +811,14 @@ handle_message(xmlNodePtr stored_msg)
 			cl_log(LOG_INFO, "Creating shutdown request for %s",
 			       host_from);
 			
-			set_xml_property_copy(node_state, XML_ATTR_ID, host_from);
-			set_xml_property_copy(node_state, "shutdown",  now_s);
-			set_xml_property_copy(node_state, "exp_state", "down");
+			set_xml_property_copy(
+				node_state, XML_ATTR_ID, host_from);
+			set_xml_property_copy(
+				node_state, XML_CIB_ATTR_SHUTDOWN,  now_s);
+			set_xml_property_copy(
+				node_state,
+				XML_CIB_ATTR_EXPSTATE,
+				CRMD_STATE_INACTIVE);
 
 			frag = create_cib_fragment(node_state, NULL);
 			xmlAddChild(stored_msg, frag);
@@ -834,25 +828,25 @@ handle_message(xmlNodePtr stored_msg)
 			
 			next_input = I_CIB_OP;
 				
-		} else if(strcmp(op, CRM_OPERATION_SHUTDOWN) == 0) {
+		} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 			next_input = I_TERMINATE;
 			
-		} else if(strcmp(op, CRM_OPERATION_ANNOUNCE) == 0) {
+		} else if(strcmp(op, CRM_OP_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
 			
-		} else if(strcmp(op, CRM_OPERATION_REPLACE) == 0
-			|| strcmp(op, CRM_OPERATION_ERASE) == 0) {
+		} else if(strcmp(op, CRM_OP_REPLACE) == 0
+			|| strcmp(op, CRM_OP_ERASE) == 0) {
 			next_input = I_CIB_OP;
 			fprintf(router_strm, "Message result: CIB Op\n");
 
 		} else if(AM_I_DC
-			  && (strcmp(op, CRM_OPERATION_CREATE) == 0
-			      || strcmp(op, CRM_OPERATION_UPDATE) == 0
-			      || strcmp(op, CRM_OPERATION_DELETE) == 0)) {
+			  && (strcmp(op, CRM_OP_CREATE) == 0
+			      || strcmp(op, CRM_OP_UPDATE) == 0
+			      || strcmp(op, CRM_OP_DELETE) == 0)) {
 			/* updates should only be performed on the DC */
 			next_input = I_CIB_OP;
 				
-		} else if(strcmp(op, CRM_OPERATION_PING) == 0) {
+		} else if(strcmp(op, CRM_OP_PING) == 0) {
 			/* eventually do some stuff to figure out
 			 * if we /are/ ok
 			 */
@@ -871,11 +865,11 @@ handle_message(xmlNodePtr stored_msg)
 		
 	} else if(strcmp(type, XML_ATTR_RESPONSE) == 0) {
 
-		if(strcmp(op, CRM_OPERATION_WELCOME) == 0) {
+		if(strcmp(op, CRM_OP_WELCOME) == 0) {
 			next_input = I_WELCOME_ACK;
 				
 		} else if(AM_I_DC
-			  && strcmp(op, "pecalc") == 0) {
+			  && strcmp(op, CRM_OP_PECALC) == 0) {
 
 			if(fsa_state == S_POLICY_ENGINE
 			   && safe_str_eq(msg_ref, fsa_pe_ref)) {
@@ -890,19 +884,19 @@ handle_message(xmlNodePtr stored_msg)
 					  sys_from);
 			}
 			
-		} else if(strcmp(op, CRM_OPERATION_VOTE) == 0
-			  || strcmp(op, CRM_OPERATION_HBEAT) == 0
-			  || strcmp(op, CRM_OPERATION_WELCOME) == 0
-			  || strcmp(op, CRM_OPERATION_SHUTDOWN_REQ) == 0
-			  || strcmp(op, CRM_OPERATION_SHUTDOWN) == 0
-			  || strcmp(op, CRM_OPERATION_ANNOUNCE) == 0) {
+		} else if(strcmp(op, CRM_OP_VOTE) == 0
+			  || strcmp(op, CRM_OP_HBEAT) == 0
+			  || strcmp(op, CRM_OP_WELCOME) == 0
+			  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
+			  || strcmp(op, CRM_OP_SHUTDOWN) == 0
+			  || strcmp(op, CRM_OP_ANNOUNCE) == 0) {
 			next_input = I_NULL;
 			
-		} else if(strcmp(op, CRM_OPERATION_CREATE) == 0
-			  || strcmp(op, CRM_OPERATION_UPDATE) == 0
-			  || strcmp(op, CRM_OPERATION_DELETE) == 0
-			  || strcmp(op, CRM_OPERATION_REPLACE) == 0
-			  || strcmp(op, CRM_OPERATION_ERASE) == 0) {
+		} else if(strcmp(op, CRM_OP_CREATE) == 0
+			  || strcmp(op, CRM_OP_UPDATE) == 0
+			  || strcmp(op, CRM_OP_DELETE) == 0
+			  || strcmp(op, CRM_OP_REPLACE) == 0
+			  || strcmp(op, CRM_OP_ERASE) == 0) {
 			
 			/* perhaps we should do somethign with these replies,
 			 * especially check that the actions passed

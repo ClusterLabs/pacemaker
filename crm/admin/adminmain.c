@@ -1,4 +1,4 @@
-/* $Id: adminmain.c,v 1.24 2004/05/23 19:54:04 andrew Exp $ */
+/* $Id: adminmain.c,v 1.25 2004/06/01 12:25:14 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -94,7 +94,7 @@ typedef struct str_list_s
 		struct str_list_s *next;
 } str_list_t;
 
-const char *verbose = "false";
+const char *verbose = XML_BOOLEAN_FALSE;
 char *id = NULL;
 char *this_msg_reference = NULL;
 char *obj_type = NULL;
@@ -121,19 +121,19 @@ main(int argc, char **argv)
 	static struct option long_options[] = {
 		// Top-level Options
 		{"daemon", 0, 0, 0},
-		{CRM_OPERATION_ERASE, 0, 0, 0},
-		{CRM_OPERATION_QUERY, 0, 0, 0},
-		{CRM_OPERATION_CREATE, 0, 0, 0},
-		{CRM_OPERATION_REPLACE, 0, 0, 0},
-		{CRM_OPERATION_STORE, 0, 0, 0},
-		{CRM_OPERATION_UPDATE, 0, 0, 0},
-		{CRM_OPERATION_DELETE, 0, 0, 0},
+		{CRM_OP_ERASE, 0, 0, 0},
+		{CRM_OP_QUERY, 0, 0, 0},
+		{CRM_OP_CREATE, 0, 0, 0},
+		{CRM_OP_REPLACE, 0, 0, 0},
+		{CRM_OP_STORE, 0, 0, 0},
+		{CRM_OP_UPDATE, 0, 0, 0},
+		{CRM_OP_DELETE, 0, 0, 0},
 		{"verbose", 0, 0, 'V'},
 		{"help", 0, 0, '?'},
 		{"reference", 1, 0, 0},
 
 		// common options
-		{"id", 1, 0, 'i'},
+		{XML_ATTR_ID, 1, 0, 'i'},
 		{"obj_type", 1, 0, 'o'},
 
 		// daemon options
@@ -171,19 +171,19 @@ main(int argc, char **argv)
 			
 				if (strcmp("daemon", long_options[option_index].name) == 0)
 					DO_DAEMON = TRUE;
-				else if (strcmp(CRM_OPERATION_ERASE,
+				else if (strcmp(CRM_OP_ERASE,
 						long_options[option_index].name) == 0
-					 || strcmp(CRM_OPERATION_CREATE,
+					 || strcmp(CRM_OP_CREATE,
 						   long_options[option_index].name) == 0
-					 || strcmp(CRM_OPERATION_UPDATE,
+					 || strcmp(CRM_OP_UPDATE,
 						   long_options[option_index].name) == 0
-					 || strcmp(CRM_OPERATION_DELETE,
+					 || strcmp(CRM_OP_DELETE,
 						   long_options[option_index].name) == 0
-					 || strcmp(CRM_OPERATION_REPLACE,
+					 || strcmp(CRM_OP_REPLACE,
 						   long_options[option_index].name) == 0
-					 || strcmp(CRM_OPERATION_STORE,
+					 || strcmp(CRM_OP_STORE,
 						   long_options[option_index].name) == 0
-					 || strcmp(CRM_OPERATION_QUERY,
+					 || strcmp(CRM_OP_QUERY,
 						   long_options[option_index].name) == 0){
 					
 					cib_action = crm_strdup(long_options[option_index].name);
@@ -208,7 +208,7 @@ main(int argc, char **argv)
 			
 			case 'V':
 				BE_VERBOSE = TRUE;
-				verbose = "true";
+				verbose = XML_BOOLEAN_TRUE;
 				break;
 			case '?':
 				usage(crm_system_name, LSB_EXIT_OK);
@@ -373,14 +373,14 @@ do_work(ll_cluster_t * hb_cluster)
 
 	if (DO_DAEMON == TRUE && cib_action != NULL) {
 
-		if(strcmp(CRM_OPERATION_QUERY, cib_action) == 0) {
+		if(strcmp(CRM_OP_QUERY, cib_action) == 0) {
 			cl_log(LOG_DEBUG, "Querying the CIB");
 			obj_type_parent = pluralSection(obj_type);
 			
 			CRM_DEBUG("Querying the CIB for section: %s",
 				   obj_type_parent);
 			
-			set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OPERATION_QUERY);
+			set_xml_property_copy(msg_options, XML_ATTR_OP, CRM_OP_QUERY);
 			set_xml_property_copy(msg_options, XML_ATTR_FILTER_ID,
 					      obj_type_parent);
 			
@@ -390,10 +390,10 @@ do_work(ll_cluster_t * hb_cluster)
 			
 			sys_to = CRM_SYSTEM_DCIB;
 			
-		} else if (strcmp(CRM_OPERATION_ERASE, cib_action) == 0) {
+		} else if (strcmp(CRM_OP_ERASE, cib_action) == 0) {
 			set_xml_property_copy(msg_options,
 					      XML_ATTR_OP,
-					      CRM_OPERATION_ERASE);
+					      CRM_OP_ERASE);
 			
 			dest_node = status;
 			CRM_DEBUG("CIB Erase op in progress");
@@ -417,7 +417,7 @@ do_work(ll_cluster_t * hb_cluster)
 
 		if (status != NULL) {
 			sys_to = CRM_SYSTEM_CRMD;
-			ping_type = CRM_OPERATION_PING;
+			ping_type = CRM_OP_PING;
 			if (BE_VERBOSE) {
 				ping_type = "ping_deep";
 				if (status != NULL)

@@ -42,6 +42,9 @@ do_state_transition(long long actions,
 		    enum crmd_fsa_input current_input,
 		    void *data);
 
+// delete this
+extern fsa_message_queue_t fsa_message_queue;
+
 #ifdef DOT_FSA_ACTIONS
 # ifdef FSA_TRACE
 #  define IF_FSA_ACTION(x,y)						\
@@ -56,7 +59,7 @@ do_state_transition(long long actions,
 			"\t// %s:\t%s\t(data? %s)\t(result=%s)\n",	\
 			fsa_input2string(cur_input),			\
 			fsa_action2string(x),				\
-			data==NULL?"no":"yes",				\
+			data==NULL?XML_BOOLEAN_NO:XML_BOOLEAN_YES,				\
 			fsa_input2string(next_input));			\
 	fflush(dot_strm);						\
 	CRM_DEBUG("Result of action %s was %s",				\
@@ -73,7 +76,7 @@ do_state_transition(long long actions,
 			"\t// %s:\t%s\t(data? %s)\t(result=%s)\n",	\
 			fsa_input2string(cur_input),			\
 			fsa_action2string(x),				\
-			data==NULL?"no":"yes",				\
+			data==NULL?XML_BOOLEAN_NO:XML_BOOLEAN_YES,				\
 			fsa_input2string(next_input));			\
 	fflush(dot_strm);						\
      }
@@ -162,108 +165,6 @@ fsa_timer_t *shutdown_escalation_timmer = NULL;	/*  */
 fsa_timer_t *integration_timer = NULL;
 fsa_timer_t *dc_heartbeat = NULL;
 
-long long
-toggle_bit(long long action_list, long long action)
-{
-//	CRM_DEBUG("Toggling bit %.16llx", action);
-	action_list ^= action;
-//	CRM_DEBUG("Result %.16llx", action_list & action);
-	return action_list;
-}
-
-long long
-clear_bit(long long action_list, long long action)
-{
-//	CRM_DEBUG("Clearing bit\t%.16llx", action);
-
-	// ensure its set
-	action_list |= action;
-
-	// then toggle
-	action_list = action_list ^ action;
-
-	return action_list;
-}
-
-long long
-set_bit(long long action_list, long long action)
-{
-//	CRM_DEBUG("Adding bit\t%.16llx", action);
-	action_list |= action;
-	return action_list;
-}
-
-void
-toggle_bit_inplace(long long *action_list, long long action)
-{
-	*action_list = toggle_bit(*action_list, action);
-}
-
-void
-clear_bit_inplace(long long *action_list, long long action)
-{
-	*action_list = clear_bit(*action_list, action);
-}
-
-void
-set_bit_inplace(long long *action_list, long long action)
-{
-	*action_list = set_bit(*action_list, action);
-}
-
-
-
-gboolean
-is_set(long long action_list, long long action)
-{
-//	CRM_DEBUG("Checking bit\t%.16llx", action);
-	return ((action_list & action) == action);
-}
-
-gboolean
-startTimer(fsa_timer_t *timer)
-{
-	if(((int)timer->source_id) < 0) {
-		timer->source_id =
-			Gmain_timeout_add(timer->period_ms,
-					  timer->callback,
-					  (void*)timer);
-/*
-		CRM_DEBUG("#!!#!!# Started %s timer (%d)",
-			   fsa_input2string(timer->fsa_input),
-			   timer->source_id);
-*/
-	} else {
-		cl_log(LOG_INFO, "#!!#!!# Timer %s already running (%d)",
-		       fsa_input2string(timer->fsa_input),
-		       timer->source_id);
-		return FALSE;		
-	}
-	return TRUE;
-}
-
-
-gboolean
-stopTimer(fsa_timer_t *timer)
-{
-	if(((int)timer->source_id) > 0) {
-/*
-		CRM_DEBUG("#!!#!!# Stopping %s timer (%d)",
-			   fsa_input2string(timer->fsa_input),
-			   timer->source_id);
-*/
-		g_source_remove(timer->source_id);
-		timer->source_id = -2;
-
-	} else {
-		cl_log(LOG_INFO, "#!!#!!# Timer %s already stopped (%d)",
-		       fsa_input2string(timer->fsa_input),
-		       timer->source_id);
-		return FALSE;
-	}
-	return TRUE;
-}
-
 enum crmd_fsa_state
 s_crmd_fsa(enum crmd_fsa_cause cause,
 	   enum crmd_fsa_input initial_input,
@@ -308,7 +209,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 	 * (not replace) existing actions before the next iteration.
 	 *
 	 */
-	while(next_input != I_NULL || actions != A_NOTHING) {
+	while(next_input != I_NULL || actions != A_NOTHING || is_message()) {
 
 		if(next_input == I_WAIT_FOR_EVENT) {
 			/* we may be waiting for an a-sync task to "happen"
@@ -428,8 +329,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		ELSEIF_FSA_ACTION(A_TE_COPYTO,		do_te_copyto)
 		ELSEIF_FSA_ACTION(A_MSG_ROUTE,		do_msg_route)
 		ELSEIF_FSA_ACTION(A_RECOVER,		do_recover)
-		ELSEIF_FSA_ACTION(A_JOIN_ACK,		do_ack_welcome)
 		ELSEIF_FSA_ACTION(A_UPDATE_NODESTATUS,	do_lrm_invoke)
+		ELSEIF_FSA_ACTION(A_JOIN_ACK,		do_ack_welcome)
 		ELSEIF_FSA_ACTION(A_SHUTDOWN_REQ,	do_shutdown_req)
 		ELSEIF_FSA_ACTION(A_ELECTION_VOTE,	do_election_vote)
 		ELSEIF_FSA_ACTION(A_ELECT_TIMER_STOP,	do_election_timer_ctrl)
@@ -441,7 +342,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 * "Get this over with" actions
 		 */
 		ELSEIF_FSA_ACTION(A_MSG_STORE,		do_msg_store)
-		ELSEIF_FSA_ACTION(A_NODE_BLOCK,		do_node_block)
 		
 		/*
 		 * High priority actions
@@ -455,7 +355,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		 */
 		ELSEIF_FSA_ACTION(A_DC_TAKEOVER,	do_dc_takeover)
 		ELSEIF_FSA_ACTION(A_DC_RELEASE,		do_dc_release)
-		ELSEIF_FSA_ACTION(A_JOIN_WELCOME_ALL,	do_send_welcome)
+		ELSEIF_FSA_ACTION(A_JOIN_WELCOME_ALL,	do_send_welcome_all)
 		ELSEIF_FSA_ACTION(A_JOIN_WELCOME,	do_send_welcome)
 		ELSEIF_FSA_ACTION(A_JOIN_PROCESS_ACK,	do_process_welcome_ack)
 		
@@ -496,16 +396,17 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 		else if((actions & A_MSG_PROCESS) != 0
 			|| is_message()) {
 			xmlNodePtr stored_msg = NULL;
+			crm_debug("Checking messages... %d",
+				  g_slist_length(fsa_message_queue));
 			
-			fsa_message_queue_t msg = get_message();
-
+			stored_msg = get_message();
+			
 			if(is_message() == FALSE) {
 				actions = clear_bit(actions, A_MSG_PROCESS);
 			}
 			
-			if(msg == NULL || msg->message == NULL) {
-				cl_log(LOG_ERR,
-				       "Invalid stored message");
+			if(stored_msg == NULL) {
+				cl_log(LOG_ERR, "Invalid stored message");
 				continue;
 			}
 
@@ -515,14 +416,14 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 			 * type of the data (and therefore the correct way
 			 * to free it).  A wrapper is probably required.
 			 */
-			data = msg->message;
+			data = stored_msg;
 
 #ifdef DOT_FSA_ACTIONS
 			fprintf(dot_strm,
 				"\t// %s:\t%s\t(data? %s)",	
 				fsa_input2string(cur_input),
 				fsa_action2string(A_MSG_PROCESS),
-				stored_msg==NULL?"no":"yes");
+				stored_msg==NULL?XML_BOOLEAN_NO:XML_BOOLEAN_YES);
 			fflush(dot_strm);
 #endif
 #ifdef FSA_TRACE
@@ -531,11 +432,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 				   A_MSG_PROCESS);
 #endif
 
-			stored_msg = (xmlNodePtr)data;
-
-#ifdef FSA_TRACE
+//#ifdef FSA_TRACE
 			xml_message_debug(stored_msg,"FSA processing message");
-#endif
+//#endif
 
 			next_input = handle_message(stored_msg);
 
@@ -590,436 +489,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause,
 }
 
 
-/*	A_NODE_BLOCK	*/
-enum crmd_fsa_input
-do_node_block(long long action,
-	      enum crmd_fsa_cause cause,
-	      enum crmd_fsa_state cur_state,
-	      enum crmd_fsa_input current_input,
-	      void *data)
-{
 
-	xmlNodePtr xml_message = (xmlNodePtr)data;
-	const char *host_from  = xmlGetProp(xml_message, XML_ATTR_HOSTFROM);
-
-	FNIN();
-	
-	(void)host_from;
-	
-	
-	FNRET(I_NULL);
-}
-
-
-const char *
-fsa_input2string(enum crmd_fsa_input input)
-{
-	const char *inputAsText = NULL;
-	
-	switch(input){
-		case I_NULL:
-			inputAsText = "I_NULL";
-			break;
-		case I_CCM_EVENT:
-			inputAsText = "I_CCM_EVENT";
-			break;
-		case I_CIB_OP:
-			inputAsText = "I_CIB_OP";
-			break;
-		case I_CIB_UPDATE:
-			inputAsText = "I_CIB_UPDATE";
-			break;
-		case I_DC_TIMEOUT:
-			inputAsText = "I_DC_TIMEOUT";
-			break;
-		case I_ELECTION:
-			inputAsText = "I_ELECTION";
-			break;
-		case I_PE_CALC:
-			inputAsText = "I_PE_CALC";
-			break;
-		case I_RELEASE_DC:
-			inputAsText = "I_RELEASE_DC";
-			break;
-		case I_ELECTION_DC:
-			inputAsText = "I_ELECTION_DC";
-			break;
-		case I_ERROR:
-			inputAsText = "I_ERROR";
-			break;
-		case I_FAIL:
-			inputAsText = "I_FAIL";
-			break;
-		case I_INTEGRATION_TIMEOUT:
-			inputAsText = "I_INTEGRATION_TIMEOUT";
-			break;
-		case I_NODE_JOIN:
-			inputAsText = "I_NODE_JOIN";
-			break;
-		case I_NODE_LEFT:
-			inputAsText = "I_NODE_LEFT";
-			break;
-		case I_NODE_LEAVING:
-			inputAsText = "I_NODE_LEAVING";
-			break;
-		case I_NOT_DC:
-			inputAsText = "I_NOT_DC";
-			break;
-		case I_RECOVERED:
-			inputAsText = "I_RECOVERED";
-			break;
-		case I_RELEASE_FAIL:
-			inputAsText = "I_RELEASE_FAIL";
-			break;
-		case I_RELEASE_SUCCESS:
-			inputAsText = "I_RELEASE_SUCCESS";
-			break;
-		case I_RESTART:
-			inputAsText = "I_RESTART";
-			break;
-		case I_REQUEST:
-			inputAsText = "I_REQUEST";
-			break;
-		case I_ROUTER:
-			inputAsText = "I_ROUTER";
-			break;
-		case I_SHUTDOWN:
-			inputAsText = "I_SHUTDOWN";
-			break;
-		case I_STARTUP:
-			inputAsText = "I_STARTUP";
-			break;
-		case I_SUCCESS:
-			inputAsText = "I_SUCCESS";
-			break;
-		case I_TERMINATE:
-			inputAsText = "I_TERMINATE";
-			break;
-		case I_WELCOME:
-			inputAsText = "I_WELCOME";
-			break;
-		case I_WELCOME_ACK:
-			inputAsText = "I_WELCOME_ACK";
-			break;
-		case I_DC_HEARTBEAT:
-			inputAsText = "I_DC_HEARTBEAT";
-			break;
-		case I_WAIT_FOR_EVENT:
-			inputAsText = "I_WAIT_FOR_EVENT";
-			break;
-		case I_LRM_EVENT:
-			inputAsText = "I_LRM_EVENT";
-			break;
-		case I_ILLEGAL:
-			inputAsText = "I_ILLEGAL";
-			break;
-	}
-
-	if(inputAsText == NULL) {
-		cl_log(LOG_ERR, "Input %d is unknown", input);
-		inputAsText = "<UNKNOWN_INPUT>";
-	}
-	
-	return inputAsText;
-}
-
-const char *
-fsa_state2string(enum crmd_fsa_state state)
-{
-	const char *stateAsText = NULL;
-	
-	switch(state){
-		case S_IDLE:
-			stateAsText = "S_IDLE";
-			break;
-		case S_ELECTION:
-			stateAsText = "S_ELECTION";
-			break;
-		case S_INTEGRATION:
-			stateAsText = "S_INTEGRATION";
-			break;
-		case S_NOT_DC:
-			stateAsText = "S_NOT_DC";
-			break;
-		case S_POLICY_ENGINE:
-			stateAsText = "S_POLICY_ENGINE";
-			break;
-		case S_RECOVERY:
-			stateAsText = "S_RECOVERY";
-			break;
-		case S_RECOVERY_DC:
-			stateAsText = "S_RECOVERY_DC";
-			break;
-		case S_RELEASE_DC:
-			stateAsText = "S_RELEASE_DC";
-			break;
-		case S_PENDING:
-			stateAsText = "S_PENDING";
-			break;
-		case S_STOPPING:
-			stateAsText = "S_STOPPING";
-			break;
-		case S_TERMINATE:
-			stateAsText = "S_TERMINATE";
-			break;
-		case S_TRANSITION_ENGINE:
-			stateAsText = "S_TRANSITION_ENGINE";
-			break;
-		case S_ILLEGAL:
-			stateAsText = "S_ILLEGAL";
-			break;
-	}
-
-	if(stateAsText == NULL) {
-		cl_log(LOG_ERR, "State %d is unknown", state);
-		stateAsText = "<UNKNOWN_STATE>";
-	}
-	
-	return stateAsText;
-}
-
-const char *
-fsa_cause2string(enum crmd_fsa_cause cause)
-{
-	const char *causeAsText = NULL;
-	
-	switch(cause){
-		case C_UNKNOWN:
-			causeAsText = "C_UNKNOWN";
-			break;
-		case C_STARTUP:
-			causeAsText = "C_STARTUP";
-			break;
-		case C_IPC_MESSAGE:
-			causeAsText = "C_IPC_MESSAGE";
-			break;
-		case C_HA_MESSAGE:
-			causeAsText = "C_HA_MESSAGE";
-			break;
-		case C_CCM_CALLBACK:
-			causeAsText = "C_CCM_CALLBACK";
-			break;
-		case C_TIMER_POPPED:
-			causeAsText = "C_TIMER_POPPED";
-			break;
-		case C_SHUTDOWN:
-			causeAsText = "C_SHUTDOWN";
-			break;
-		case C_HEARTBEAT_FAILED:
-			causeAsText = "C_HEARTBEAT_FAILED";
-			break;
-		case C_SUBSYSTEM_CONNECT:
-			causeAsText = "C_SUBSYSTEM_CONNECT";
-			break;
-		case C_LRM_OP_CALLBACK:
-			causeAsText = "C_LRM_OP_CALLBACK";
-			break;
-		case C_LRM_MONITOR_CALLBACK:
-			causeAsText = "C_LRM_MONITOR_CALLBACK";
-			break;
-		case C_ILLEGAL:
-			causeAsText = "C_ILLEGAL";
-			break;
-	}
-
-	if(causeAsText == NULL) {
-		cl_log(LOG_ERR, "Cause %d is unknown", cause);
-		causeAsText = "<UNKNOWN_CAUSE>";
-	}
-	
-	return causeAsText;
-}
-
-const char *
-fsa_action2string(long long action)
-{
-	const char *actionAsText = NULL;
-	
-	switch(action){
-
-		case A_NOTHING:
-			actionAsText = "A_NOTHING";
-			break;
-		case O_SHUTDOWN:
-			actionAsText = "O_SHUTDOWN";
-			break;
-		case O_RELEASE:
-			actionAsText = "O_RELEASE";
-			break;
-		case A_STARTUP:
-			actionAsText = "A_STARTUP";
-			break;
-		case A_STARTED:
-			actionAsText = "A_STARTED";
-			break;
-		case A_HA_CONNECT:
-			actionAsText = "A_HA_CONNECT";
-			break;
-		case A_HA_DISCONNECT:
-			actionAsText = "A_HA_DISCONNECT";
-			break;
-		case A_LRM_CONNECT:
-			actionAsText = "A_LRM_CONNECT";
-			break;
-		case A_LRM_DISCONNECT:
-			actionAsText = "A_LRM_DISCONNECT";
-			break;
-		case O_DC_TIMER_RESTART:
-			actionAsText = "O_DC_TIMER_RESTART";
-			break;
-		case A_DC_TIMER_STOP:
-			actionAsText = "A_DC_TIMER_STOP";
-			break;
-		case A_DC_TIMER_START:
-			actionAsText = "A_DC_TIMER_START";
-			break;
-		case A_ELECTION_COUNT:
-			actionAsText = "A_ELECTION_COUNT";
-			break;
-		case A_ELECTION_TIMEOUT:
-			actionAsText = "A_ELECTION_TIMEOUT";
-			break;
-		case A_ELECT_TIMER_START:
-			actionAsText = "A_ELECT_TIMER_START";
-			break;
-		case A_ELECT_TIMER_STOP:
-			actionAsText = "A_ELECT_TIMER_STOP";
-			break;
-		case A_ELECTION_VOTE:
-			actionAsText = "A_ELECTION_VOTE";
-			break;
-		case A_ANNOUNCE:
-			actionAsText = "A_ANNOUNCE";
-			break;
-		case A_JOIN_ACK:
-			actionAsText = "A_JOIN_ACK";
-			break;
-		case A_JOIN_WELCOME:
-			actionAsText = "A_JOIN_WELCOME";
-			break;
-		case A_JOIN_WELCOME_ALL:
-			actionAsText = "A_JOIN_WELCOME_ALL";
-			break;
-		case A_JOIN_PROCESS_ACK:
-			actionAsText = "A_JOIN_PROCESS_ACK";
-			break;
-		case A_MSG_PROCESS:
-			actionAsText = "A_MSG_PROCESS";
-			break;
-		case A_MSG_ROUTE:
-			actionAsText = "A_MSG_ROUTE";
-			break;
-		case A_MSG_STORE:
-			actionAsText = "A_MSG_STORE";
-			break;
-		case A_RECOVER:
-			actionAsText = "A_RECOVER";
-			break;
-		case A_DC_RELEASE:
-			actionAsText = "A_DC_RELEASE";
-			break;
-		case A_DC_RELEASED:
-			actionAsText = "A_DC_RELEASED";
-			break;
-		case A_DC_TAKEOVER:
-			actionAsText = "A_DC_TAKEOVER";
-			break;
-		case A_SHUTDOWN:
-			actionAsText = "A_SHUTDOWN";
-			break;
-		case A_SHUTDOWN_REQ:
-			actionAsText = "A_SHUTDOWN_REQ";
-			break;
-		case A_STOP:
-			actionAsText = "A_STOP  ";
-			break;
-		case A_EXIT_0:
-			actionAsText = "A_EXIT_0";
-			break;
-		case A_EXIT_1:
-			actionAsText = "A_EXIT_1";
-			break;
-		case A_CCM_CONNECT:
-			actionAsText = "A_CCM_CONNECT";
-			break;
-		case A_CCM_DISCONNECT:
-			actionAsText = "A_CCM_DISCONNECT";
-			break;
-		case A_CCM_EVENT:
-			actionAsText = "A_CCM_EVENT";
-			break;
-		case A_CCM_UPDATE_CACHE:
-			actionAsText = "A_CCM_UPDATE_CACHE";
-			break;
-		case A_CIB_BUMPGEN:
-			actionAsText = "A_CIB_BUMPGEN";
-			break;
-		case A_CIB_INVOKE:
-			actionAsText = "A_CIB_INVOKE";
-			break;
-		case O_CIB_RESTART:
-			actionAsText = "O_CIB_RESTART";
-			break;
-		case A_CIB_START:
-			actionAsText = "A_CIB_START";
-			break;
-		case A_CIB_STOP:
-			actionAsText = "A_CIB_STOP";
-			break;
-		case A_TE_INVOKE:
-			actionAsText = "A_TE_INVOKE";
-			break;
-		case O_TE_RESTART:
-			actionAsText = "O_TE_RESTART";
-			break;
-		case A_TE_START:
-			actionAsText = "A_TE_START";
-			break;
-		case A_TE_STOP:
-			actionAsText = "A_TE_STOP";
-			break;
-		case A_TE_CANCEL:
-			actionAsText = "A_TE_CANCEL";
-			break;
-		case A_TE_COPYTO:
-			actionAsText = "A_TE_COPYTO";
-			break;
-		case A_PE_INVOKE:
-			actionAsText = "A_PE_INVOKE";
-			break;
-		case O_PE_RESTART:
-			actionAsText = "O_PE_RESTART";
-			break;
-		case A_PE_START:
-			actionAsText = "A_PE_START";
-			break;
-		case A_PE_STOP:
-			actionAsText = "A_PE_STOP";
-			break;
-		case A_NODE_BLOCK:
-			actionAsText = "A_NODE_BLOCK";
-			break;
-		case A_UPDATE_NODESTATUS:
-			actionAsText = "A_UPDATE_NODESTATUS";
-			break;
-		case A_LOG:
-			actionAsText = "A_LOG   ";
-			break;
-		case A_ERROR:
-			actionAsText = "A_ERROR ";
-			break;
-		case A_WARN:
-			actionAsText = "A_WARN  ";
-			break;
-	}
-
-	if(actionAsText == NULL) {
-		cl_log(LOG_ERR, "Action %.16llx is unknown", action);
-		actionAsText = "<UNKNOWN_ACTION>";
-	}
-	
-	return actionAsText;
-}
 
 long long 
 do_state_transition(long long actions,

@@ -121,10 +121,14 @@ stage0(xmlNodePtr cib,
        GSListPtr *stonith_list, GSListPtr *shutdown_list)
 {
 	int lpc;
-	xmlNodePtr cib_nodes       = get_object_root("nodes",       cib);
-	xmlNodePtr cib_status      = get_object_root("status",      cib);
-	xmlNodePtr cib_resources   = get_object_root("resources",   cib);
-	xmlNodePtr cib_constraints = get_object_root("constraints", cib);
+	xmlNodePtr cib_nodes       = get_object_root(
+		XML_CIB_TAG_NODES,       cib);
+	xmlNodePtr cib_status      = get_object_root(
+		XML_CIB_TAG_STATUS,      cib);
+	xmlNodePtr cib_resources   = get_object_root(
+		XML_CIB_TAG_RESOURCES,   cib);
+	xmlNodePtr cib_constraints = get_object_root(
+		XML_CIB_TAG_CONSTRAINTS, cib);
 
 	/* reset remaining global variables */
 	max_valid_nodes = 0;
@@ -189,7 +193,7 @@ stage1(GSListPtr node_constraints, GSListPtr nodes, GSListPtr resources)
 } 
 
 /*
- * Choose a color for all resources from highest priority and "must"
+ * Choose a color for all resources from highest priority and XML_STRENGTH_VAL_MUST
  *  dependancies to lowest, creating new colors as necessary (returned
  *  as "colors").
  *
@@ -271,7 +275,8 @@ stage4(GSListPtr colors)
 		color_n = color_n_plus_1;
 		color_n_plus_1 = (color_t*)g_slist_nth_data(colors, lpc);
 
-		pdebug_action(print_color("Choose node for...", color_n, FALSE));
+		pdebug_action(
+			print_color("Choose node for...", color_n, FALSE));
 		
 		if(color_n == NULL) {
 			continue;
@@ -313,7 +318,7 @@ stage4(GSListPtr colors)
 /*
  * Attach nodes to the actions that need to be taken
  *
- * Mark actions "optional" if possible (Ie. if the start and stop are
+ * Mark actions XML_LRM_ATTR_OPTIONAL if possible (Ie. if the start and stop are
  *  for the same node)
  *
  * Mark unrunnable actions
@@ -339,7 +344,7 @@ stage5(GSListPtr resources)
 			       safe_val(NULL, rsc, start));
 			continue;
 		}
-		if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL) {
+		if(safe_val4(NULL, rsc, color, details, chosen_node) == NULL){
 			rsc->stop->node = safe_val(NULL, rsc, cur_node);
 			
 			rsc->start->node = NULL;
@@ -349,7 +354,8 @@ stage5(GSListPtr resources)
 			       safe_val5(NULL, rsc, stop, node, details, id));
 
 			pdebug_action(
-				print_action("active", rsc->stop, FALSE));
+				print_action(
+					CRMD_STATE_ACTIVE, rsc->stop, FALSE));
 			
 			
 		} else if(safe_str_eq(safe_val4(NULL, rsc, cur_node, details, id),
@@ -513,12 +519,13 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 	GSListPtr *action_sets)
 {
 	int lpc;
-
+/*
 	for(lpc = 0; lpc < g_slist_length(action_constraints);  lpc++) {
 		order_constraint_t *order = (order_constraint_t*)
 			g_slist_nth_data(action_constraints, lpc);
-//	slist_iter(
-//		order, order_constraint_t, action_constraints, lpc,
+*/
+	slist_iter(
+		order, order_constraint_t, action_constraints, lpc,
 			
 		pdebug("Processing %d -> %d",
 		       order->lh_action->id,
@@ -546,8 +553,8 @@ stage7(GSListPtr resources, GSListPtr actions, GSListPtr action_constraints,
 		list = order->rh_action->actions_before;
 		list = g_slist_append(list, wrapper);
 		order->rh_action->actions_before = list;
-//		);
-	}
+		);
+//	}
 	
 	update_runnable(actions);
 
@@ -596,7 +603,8 @@ stage8(GSListPtr action_sets, xmlNodePtr *graph)
 	slist_iter(action_set, GSList, action_sets, lpc,
 		   pdebug("Processing Action Set %d", lpc);
 		   xml_action_set = create_xml_node(NULL, "actions");
-		   set_xml_property_copy(xml_action_set, "id", crm_itoa(lpc));
+		   set_xml_property_copy(
+			   xml_action_set, XML_ATTR_ID, crm_itoa(lpc));
 
 		   slist_iter(action, action_t, action_set, lpc2,
 			      xmlNodePtr xml_action = action2xml(action);
@@ -718,9 +726,9 @@ unpack_nodes(xmlNodePtr xml_nodes, GSListPtr *nodes)
 	pdebug("Begining unpack... %s", __FUNCTION__);
 	while(xml_nodes != NULL) {
 		xmlNodePtr xml_obj = xml_nodes;
-		xmlNodePtr attrs = xml_obj->children;
-		const char *id = xmlGetProp(xml_obj, "id");
-		const char *type = xmlGetProp(xml_obj, "type");
+		xmlNodePtr attrs   = xml_obj->children;
+		const char *id     = xmlGetProp(xml_obj, XML_ATTR_ID);
+		const char *type   = xmlGetProp(xml_obj, XML_ATTR_TYPE);
 
 		pdebug("Processing node %s", id);
 
@@ -757,8 +765,11 @@ unpack_nodes(xmlNodePtr xml_nodes, GSListPtr *nodes)
 		
 
 		while(attrs != NULL){
-			const char *name = xmlGetProp(attrs, "name");
-			const char *value = xmlGetProp(attrs, "value");
+			const char *name  = xmlGetProp(
+				attrs, XML_NVPAIR_ATTR_NAME);
+			const char *value = xmlGetProp(
+				attrs, XML_NVPAIR_ATTR_VALUE);
+
 			if(name != NULL && value != NULL) {
 				g_hash_table_insert(new_node->details->attrs,
 						    crm_strdup(name),
@@ -789,8 +800,8 @@ unpack_resources(xmlNodePtr xml_resources,
 	pdebug("Begining unpack... %s", __FUNCTION__);
 	while(xml_resources != NULL) {
 		xmlNodePtr xml_obj = xml_resources;
-		const char *id = xmlGetProp(xml_obj, "id");
-		const char *priority = xmlGetProp(xml_obj, "priority");
+		const char *id = xmlGetProp(xml_obj, XML_ATTR_ID);
+		const char *priority = xmlGetProp(xml_obj, XML_CIB_ATTR_PRIORITY);
 		float priority_f = atof(priority);
 
 		xml_resources = xml_resources->next;
@@ -852,7 +863,7 @@ unpack_constraints(xmlNodePtr xml_constraints,
 {
 	pdebug("Begining unpack... %s", __FUNCTION__);
 	while(xml_constraints != NULL) {
-		const char *id = xmlGetProp(xml_constraints, "id");
+		const char *id = xmlGetProp(xml_constraints, XML_ATTR_ID);
 		xmlNodePtr xml_obj = xml_constraints;
 		xml_constraints = xml_constraints->next;
 		if(id == NULL) {
@@ -948,14 +959,27 @@ unpack_status(xmlNodePtr status,
 {
 	pdebug("Begining unpack %s", __FUNCTION__);
 	while(status != NULL) {
-		const char *id        = xmlGetProp(status, "id");
-		const char *state     = xmlGetProp(status, "state");
-		const char *exp_state = xmlGetProp(status, "exp_state");
-		const char *shutdown  = xmlGetProp(status, "shutdown");
-		xmlNodePtr lrm_state  = find_xml_node(status, "lrm");
+		const char *id        = xmlGetProp(
+			status, XML_ATTR_ID);
+		const char *state     = xmlGetProp(
+			status, XML_LRM_ATTR_STATE);
+		const char *exp_state = xmlGetProp(
+			status, XML_CIB_ATTR_EXPSTATE);
+		const char *join_state = xmlGetProp(
+			status, XML_CIB_ATTR_JOINSTATE);
+		const char *crm_state = xmlGetProp(
+			status, XML_CIB_ATTR_CRMDSTATE);
+		const char *ccm_state = xmlGetProp(
+			status, XML_CIB_ATTR_INCCM);
+		const char *shutdown  = xmlGetProp(
+			status, XML_CIB_ATTR_SHUTDOWN);
+		const char *unclean   = xmlGetProp(
+			status, XML_CIB_ATTR_STONITH);
+		
+		xmlNodePtr lrm_state  = find_xml_node(status, XML_CIB_TAG_LRM);
 		xmlNodePtr attrs      = find_xml_node(status, "attributes");
 
-		lrm_state = find_xml_node(lrm_state, "lrm_resources");
+		lrm_state = find_xml_node(lrm_state, XML_LRM_TAG_RESOURCES);
 		lrm_state = find_xml_node(lrm_state, "lrm_resource");
 		status = status->next;
 
@@ -978,13 +1002,14 @@ unpack_status(xmlNodePtr status,
 		
 
 		while(attrs != NULL){
-			const char *name = xmlGetProp(attrs, "name");
-			const char *value = xmlGetProp(attrs, "value");
+			const char *name  = xmlGetProp(
+				attrs, XML_NVPAIR_ATTR_NAME);
+			const char *value = xmlGetProp(
+				attrs, XML_NVPAIR_ATTR_VALUE);
 			
 			if(name != NULL && value != NULL
 			   && safe_val(NULL, this_node, details) != NULL) {
-				pdebug("Adding %s => %s",
-					      name, value);
+				pdebug("Adding %s => %s", name, value);
 				g_hash_table_insert(this_node->details->attrs,
 						    crm_strdup(name),
 						    crm_strdup(value));
@@ -994,11 +1019,11 @@ unpack_status(xmlNodePtr status,
 
 		pdebug("determining node state");
 		
-		if(safe_str_eq(exp_state, "active")
-		   && safe_str_eq(state, "active")) {
+		if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
+		   && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
+		   && shutdown == NULL) {
 			// process resource, make +ve preference
 			this_node->details->online = TRUE;
-			
 		} else {
 			pdebug("remove %s", __FUNCTION__);
 			// remove node from contention
@@ -1007,24 +1032,31 @@ unpack_status(xmlNodePtr status,
 
 			pdebug("state %s, expected %s, shutdown %s",
 			       state, exp_state, shutdown);
-			
-			if(shutdown != NULL
-			   /* avoid reissuing shutdowns once the CRMd has
-			    * been shutdown (even if heartbeat hasnt)
-			    */
-			   && (safe_str_eq(exp_state, "down"))
-//			   && (safe_str_eq(state, "active"))
-				){
-				// create shutdown req
-				this_node->details->shutdown = TRUE;
-				pdebug("Node %s is due for shutdown", id);
+
+			if(unclean != NULL) {
+				this_node->details->unclean = TRUE;
 				
-			} else if(safe_str_eq(exp_state, "active")
-				  && safe_str_neq(state, "active")) {
+			} else if(shutdown != NULL) {
+				this_node->details->shutdown = TRUE;
+
+			} else if(safe_str_eq(exp_state, CRMD_STATE_ACTIVE)
+				  && safe_str_neq(join_state,
+						  CRMD_JOINSTATE_MEMBER)
+				  && safe_str_eq(ccm_state, XML_BOOLEAN_YES)
+				  && crm_state != NULL
+				  && safe_str_neq(crm_state, "offline")
+				){
+
 				// mark unclean in the xml
 				this_node->details->unclean = TRUE;
+			}
+
+			if(this_node->details->unclean) {
 				pdebug("Node %s is due for STONITH", id);
-				
+			}
+
+			if(this_node->details->shutdown) {
+				pdebug("Node %s is due for shutdown", id);
 			}
 		}
 
@@ -1227,7 +1259,7 @@ unpack_rsc_to_node(xmlNodePtr xml_obj,
 	xmlNodePtr node_ref = xml_obj->children;
 	rsc_to_node_t *new_con = crm_malloc(sizeof(rsc_to_node_t));
 	const char *id_lh =  xmlGetProp(xml_obj, "from");
-	const char *id =  xmlGetProp(xml_obj, "id");
+	const char *id =  xmlGetProp(xml_obj, XML_ATTR_ID);
 
 	const char *mod = xmlGetProp(xml_obj, "modifier");
 	const char *weight = xmlGetProp(xml_obj, "weight");
@@ -1262,7 +1294,7 @@ unpack_rsc_to_node(xmlNodePtr xml_obj,
 
 	while(node_ref != NULL) {
 		const char *xml_name = node_ref->name;
-		const char *id_rh = xmlGetProp(node_ref, "name");
+		const char *id_rh = xmlGetProp(node_ref, XML_NVPAIR_ATTR_NAME);
 		node_t *node_rh =  pe_find_node(node_list, id_rh);
 		node_ref = node_ref->next;
 		
@@ -1322,7 +1354,7 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj,
 	const char *id_lh   =  xmlGetProp(xml_obj, "from");
 	const char *mod     = xmlGetProp(xml_obj, "modifier");
 	const char *weight  = xmlGetProp(xml_obj, "weight");
-	const char *id      = xmlGetProp(attr_exp, "id");
+	const char *id      = xmlGetProp(attr_exp, XML_ATTR_ID);
 	float weight_f = atof(weight);
 	enum con_modifier a_modifier = modifier_none;
 	
@@ -1348,8 +1380,8 @@ unpack_rsc_to_attr(xmlNodePtr xml_obj,
 	}
 	
 	while(attr_exp != NULL) {
-		const char *id_rh = xmlGetProp(attr_exp, "name");
-		const char *id = xmlGetProp(attr_exp, "id");
+		const char *id_rh = xmlGetProp(attr_exp, XML_NVPAIR_ATTR_NAME);
+		const char *id = xmlGetProp(attr_exp, XML_ATTR_ID);
 		rsc_to_node_t *new_con = crm_malloc(sizeof(rsc_to_node_t));
 		new_con->id = crm_strdup(id);
 		new_con->rsc_lh = rsc_lh;
@@ -1434,9 +1466,13 @@ process_node_lrm_state(node_t *node, xmlNodePtr lrm_state,
 		       GSListPtr *node_constraints)
 {
 	while(lrm_state != NULL) {
-		const char *rsc_id    = xmlGetProp(lrm_state, "id");
-		const char *node_id   = xmlGetProp(lrm_state, "op_node");
-		const char *rsc_state = xmlGetProp(lrm_state, "state");
+		const char *rsc_id    = xmlGetProp(
+			lrm_state, XML_ATTR_ID);
+		const char *node_id   = xmlGetProp(
+			lrm_state, XML_LRM_ATTR_TARGET);
+		const char *rsc_state = xmlGetProp(
+			lrm_state, XML_LRM_ATTR_STATE);
+		
 		resource_t *rsc_lh = pe_find_resource(rsc_list, rsc_id);
 
 		pdebug("[%s] Processing %s on %s (%s)",
@@ -1505,9 +1541,11 @@ match_attrs(xmlNodePtr attr_exp, GSListPtr node_list)
 		gboolean accept = TRUE;
 		
 		while(accept && node_match != NULL) {
-			const char *type =xmlGetProp(node_match, "type");
-			const char *value=xmlGetProp(node_match, "value");
-			const char *name =xmlGetProp(node_match, "target");
+			const char *type = xmlGetProp(
+				node_match, XML_ATTR_TYPE);
+			const char *value= xmlGetProp(
+				node_match, XML_NVPAIR_ATTR_VALUE);
+			const char *name = xmlGetProp(node_match, "target");
 			node_match = node_match->next;
 			
 			if(name == NULL || type == NULL) {
@@ -1608,12 +1646,12 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 		  GSListPtr *action_constraints)
 {
 	const char *id_lh =  xmlGetProp(xml_obj, "from");
-	const char *id =  xmlGetProp(xml_obj, "id");
+	const char *id =  xmlGetProp(xml_obj, XML_ATTR_ID);
 	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
 	const char *id_rh = xmlGetProp(xml_obj, "to");
 	resource_t *rsc_rh = pe_find_resource(rsc_list, id_rh);
 	const char *strength = xmlGetProp(xml_obj, "strength");
-	const char *type = xmlGetProp(xml_obj, "type");
+	const char *type = xmlGetProp(xml_obj, XML_ATTR_TYPE);
 	enum con_strength strength_e = ignore;
 
 	if(rsc_lh == NULL) {
@@ -1621,16 +1659,16 @@ unpack_rsc_to_rsc(xmlNodePtr xml_obj,
 		       id, id_lh);
 		return FALSE;
 	}
-	if(safe_str_eq(strength, "must")) {
+	if(safe_str_eq(strength, XML_STRENGTH_VAL_MUST)) {
 		strength_e = must;
 		
-	} else if(safe_str_eq(strength, "should")) {
+	} else if(safe_str_eq(strength, XML_STRENGTH_VAL_SHOULD)) {
 		strength_e = should;
 		
-	} else if(safe_str_eq(strength, "should_not")) {
+	} else if(safe_str_eq(strength, XML_STRENGTH_VAL_SHOULDNOT)) {
 		strength_e = should_not;
 		
-	} else if(safe_str_eq(strength, "must_not")) {
+	} else if(safe_str_eq(strength, XML_STRENGTH_VAL_MUSTNOT)) {
 		strength_e = must_not;
 	} else {
 		// error
@@ -1725,7 +1763,7 @@ create_action_set(action_t *action)
 	/* process actions_after
 	 *
 	 * do this regardless of whether we are runnable.  Any direct or
-	 *  indirect hard/"must" dependancies on us will have been picked
+	 *  indirect hard/XML_STRENGTH_VAL_MUST dependancies on us will have been picked
 	 *  up earlier on in stage 7
 	 */
 	pdebug("Processing \"after\" for action %d", action->id);
@@ -1894,14 +1932,14 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 	if(op == NULL){
 		// error
 
-	} else if(strcmp(op, "hello") == 0) {
+	} else if(strcmp(op, CRM_OP_HELLO) == 0) {
 		// ignore
 		
-	} else if(sys_to == NULL || strcmp(sys_to, "pengine") != 0) {
+	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
 		CRM_DEBUG("Bad sys-to %s", sys_to);
 		return FALSE;
 		
-	} else if(strcmp(op, "pecalc") == 0) {
+	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
 		xmlNodePtr input_cib = find_xml_node(msg, XML_TAG_CIB);
 		xmlNodePtr output = do_calculations(input_cib);
 		if (send_ipc_reply(sender, msg, output) ==FALSE) {
@@ -1911,7 +1949,7 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 		}
 		free_xml(output);
 
-	} else if(strcmp(op, "quit") == 0) {
+	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		cl_log(LOG_WARNING, "Received quit message, terminating");
 		exit(0);
 	}

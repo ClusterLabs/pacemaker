@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.7 2004/05/10 21:52:57 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.8 2004/06/01 12:25:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -172,14 +172,6 @@ do_msg_store(long long action,
 	     enum crmd_fsa_input cur_input,
 	     void *data);
 
-/*	A_NODE_BLOCK	*/
-enum crmd_fsa_input
-do_node_block(long long action,
-	      enum crmd_fsa_cause cause,
-	      enum crmd_fsa_state cur_state,
-	      enum crmd_fsa_input cur_input,
-	      void *data);
-
 /*	A_CCM_UPDATE_CACHE	*/
 enum crmd_fsa_input
 do_ccm_update_cache(long long action,
@@ -214,11 +206,11 @@ do_dc_release(long long action,
 
 /*	A_JOIN_WELCOME_ALL	*/
 enum crmd_fsa_input
-do_send_welcome(long long action,
-		enum crmd_fsa_cause cause,
-		enum crmd_fsa_state cur_state,
-		enum crmd_fsa_input cur_input,
-		void *data);
+do_send_welcome_all(long long action,
+		    enum crmd_fsa_cause cause,
+		    enum crmd_fsa_state cur_state,
+		    enum crmd_fsa_input cur_input,
+		    void *data);
 
 /*	A_JOIN_WELCOME	*/
 enum crmd_fsa_input

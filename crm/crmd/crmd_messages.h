@@ -24,16 +24,10 @@
 #include <crmd_fsa.h>
 #include <libxml/tree.h>
 
-struct fsa_message_queue_s 
-{
-		gboolean processed;
-		xmlNodePtr message;
-		struct fsa_message_queue_s *next;
-};
-typedef struct fsa_message_queue_s *fsa_message_queue_t;
+typedef GSList *fsa_message_queue_t;
 
 fsa_message_queue_t put_message(xmlNodePtr new_message);
-fsa_message_queue_t get_message(void);
+xmlNodePtr get_message(void);
 gboolean is_message(void);
 
 extern gboolean relay_message(xmlNodePtr xml_relay_message,
@@ -78,7 +72,6 @@ extern gboolean send_request(xmlNodePtr msg_options,
 extern gboolean store_request(xmlNodePtr msg_options,
 			      xmlNodePtr msg_data, 
 			      const char *operation,
-			      const char *host_to,
 			      const char *sys_to);
 
 extern enum crmd_fsa_input handle_message(xmlNodePtr stored_msg);

@@ -248,23 +248,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_TERMINATE		==> */	S_TERMINATE,
 		/* S_TRANSITION_ENGINE	==> */	S_POLICY_ENGINE,
 	},
-
-/* Got an I_NODE_LEAVING */
-	{
-		/* S_IDLE		==> */	S_POLICY_ENGINE,
-		/* S_ELECTION		==> */	S_ELECTION,
-		/* S_INTEGRATION	==> */	S_INTEGRATION,
-		/* S_NOT_DC		==> */	S_NOT_DC,
-		/* S_POLICY_ENGINE	==> */	S_POLICY_ENGINE,
-		/* S_RECOVERY		==> */	S_RECOVERY,
-		/* S_RECOVERY_DC	==> */	S_RECOVERY_DC,
-		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
-		/* S_PENDING		==> */	S_PENDING,
-		/* S_STOPPING		==> */	S_STOPPING,
-		/* S_TERMINATE		==> */	S_TERMINATE,
-		/* S_TRANSITION_ENGINE	==> */	S_POLICY_ENGINE,
-	},
-
+	
 /* Got an I_NOT_DC */
 	{
 		/* S_IDLE		==> */	S_RECOVERY,
@@ -753,22 +737,6 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
 		/* S_TRANSITION_ENGINE	==> */	A_LOG,
-	},
-
-/* Got an I_NODE_LEAVING */
-	{
-		/* S_IDLE		==> */	A_NODE_BLOCK|A_PE_INVOKE|A_TE_CANCEL,
-		/* S_ELECTION		==> */	A_WARN,
-		/* S_INTEGRATION	==> */	A_NODE_BLOCK|A_PE_INVOKE|A_TE_CANCEL,
-		/* S_NOT_DC		==> */	A_WARN,
-		/* S_POLICY_ENGINE	==> */	A_NODE_BLOCK|A_PE_INVOKE|A_TE_CANCEL,
-		/* S_RECOVERY		==> */	A_WARN,
-		/* S_RECOVERY_DC	==> */	A_NODE_BLOCK|A_PE_INVOKE|A_TE_CANCEL,
-		/* S_RELEASE_DC		==> */	A_WARN,
-		/* S_PENDING		==> */	A_WARN,
-		/* S_STOPPING		==> */	A_WARN,
-		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	A_NODE_BLOCK|A_PE_INVOKE|A_TE_CANCEL,
 	},
 
 /* Got an I_NOT_DC */

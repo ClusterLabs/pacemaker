@@ -81,7 +81,7 @@ do_lrm_control(long long action,
 	if(action & A_LRM_CONNECT) {
 	
 		CRM_DEBUG("LRM: connect...");
-		fsa_lrm_conn = ll_lrm_new("lrm");	
+		fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
 		if(NULL == fsa_lrm_conn) {
 			return failed;
 		}
@@ -138,7 +138,7 @@ do_lrm_query(void)
 	GList* element = NULL;
 	GList* op_list = NULL;
 	xmlNodePtr agent = NULL;
-	xmlNodePtr data = create_xml_node(NULL, "lrm");
+	xmlNodePtr data = create_xml_node(NULL, XML_CIB_TAG_LRM);
 	xmlNodePtr agent_list = create_xml_node(data, "lrm_agents");
 	xmlNodePtr rsc_list;
 	char *rsc_type = NULL;
@@ -158,7 +158,7 @@ do_lrm_query(void)
 			set_xml_property_copy(agent, "class",   rsc_type);
 
 			/* we dont have these yet */
-			set_xml_property_copy(agent, "type",    NULL);
+			set_xml_property_copy(agent, XML_ATTR_TYPE,    NULL);
 			set_xml_property_copy(agent, "version", NULL);
 			
 			element = g_list_next(element);
@@ -168,7 +168,7 @@ do_lrm_query(void)
 	g_list_free(lrm_list);
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 
-	rsc_list = create_xml_node(data, "lrm_resources");
+	rsc_list = create_xml_node(data, XML_LRM_TAG_RESOURCES);
 
 	if (NULL != lrm_list) {
 		element = g_list_first(lrm_list);
@@ -182,7 +182,7 @@ do_lrm_query(void)
 		
 		xmlNodePtr xml_rsc = create_xml_node(rsc_list, "rsc_state");
 		
-		set_xml_property_copy(xml_rsc, "id",     the_rsc->id);
+		set_xml_property_copy(xml_rsc, XML_ATTR_ID,     the_rsc->id);
 		set_xml_property_copy(xml_rsc, "rsc_id", the_rsc->name);
 		set_xml_property_copy(xml_rsc, "node_id",fsa_our_uname);
 		
@@ -282,23 +282,18 @@ do_lrm_invoke(long long action,
 #ifndef USE_FAKE_LRM
 		data = do_lrm_query();
 #endif
-		set_xml_property_copy(data, "replace_lrm", "true");
+		set_xml_property_copy(data, "replace", XML_CIB_TAG_LRM);
 
 		tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
 		set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
-		// if we are doing this we are active
-		set_xml_property_copy(tmp1, "state",     "active");
-
-		// either active or shutdown if R_SHUTDOWN is set
-		set_xml_property_copy(tmp1, "exp_state", "active");
 
 		fragment = create_cib_fragment(tmp1, NULL);
-
-		set_xml_property_copy(data, "replace_lrm", "true");
 		add_node_copy(tmp1, data);
 
-		send_request(NULL, fragment, CRM_OPERATION_UPDATE,
-			     fsa_our_dc, CRM_SYSTEM_DC, NULL);
+		/* this only happens locally.  the updates are pushed out
+		 * as part of the join process
+		 */
+		store_request(NULL, fragment, CRM_OP_UPDATE, CRM_SYSTEM_DC);
 
 		free_xml(fragment);
 		free_xml(tmp1);
@@ -315,10 +310,10 @@ do_lrm_invoke(long long action,
 	msg = (xmlNodePtr)data;
 	
 	operation = get_xml_attr_nested(msg, rsc_path, DIMOF(rsc_path) -3,
-					"task", TRUE);
+					XML_LRM_ATTR_TASK, TRUE);
 	
 	id_from_cib = get_xml_attr_nested(msg, rsc_path, DIMOF(rsc_path) -2,
-					  "id", TRUE);
+					  XML_ATTR_ID, TRUE);
 	
 	crm_op = get_xml_attr(msg, XML_TAG_OPTIONS, XML_ATTR_OP, TRUE);
 
@@ -327,18 +322,18 @@ do_lrm_invoke(long long action,
 		const char *op_status = NULL;
 		xmlNodePtr update = NULL;
 		xmlNodePtr state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-		xmlNodePtr iter = create_xml_node(state, "lrm");
+		xmlNodePtr iter = create_xml_node(state, XML_CIB_TAG_LRM);
 
 		CRM_DEBUG("performing op %s...", operation);
 
 		// so we can identify where to do the update
-		set_xml_property_copy(state, "id", fsa_our_uname);
+		set_xml_property_copy(state, XML_ATTR_ID, fsa_our_uname);
 
-		iter = create_xml_node(iter, "lrm_resources");
+		iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
 		iter = create_xml_node(iter, "lrm_resource");
 
 		set_xml_property_copy(iter, XML_ATTR_ID, id_from_cib);
-		set_xml_property_copy(iter, "last_op", operation);
+		set_xml_property_copy(iter, XML_LRM_ATTR_LASTOP, operation);
 
 		long int op_code = 0;
 
@@ -369,15 +364,15 @@ do_lrm_invoke(long long action,
 			}
 		}
 		
-		set_xml_property_copy(iter, "op_status", op_status);
-		set_xml_property_copy(iter, "op_code",   op_code_s);
-		set_xml_property_copy(iter, "op_node",   fsa_our_uname);
+		set_xml_property_copy(iter, XML_LRM_ATTR_OPSTATE,op_status);
+		set_xml_property_copy(iter, XML_LRM_ATTR_OPCODE, op_code_s);
+		set_xml_property_copy(iter, XML_LRM_ATTR_TARGET, fsa_our_uname);
 
 		crm_free(op_code_s);
 		
 		update = create_cib_fragment(state, NULL);
 		
-		send_request(NULL, update, "update",
+		send_request(NULL, update, CRM_OP_UPDATE,
 			     fsa_our_dc, CRM_SYSTEM_DCIB, NULL);
 	}
 	
@@ -396,7 +391,7 @@ do_lrm_invoke(long long action,
 	
 	
 	id_from_cib = get_xml_attr_nested(msg, rsc_path, DIMOF(rsc_path) -2,
-					  "id", TRUE);
+					  XML_ATTR_ID, TRUE);
 	
 	// only the first 16 chars are used by the LRM
 	strncpy(rid, id_from_cib, 16);
@@ -457,7 +452,7 @@ do_lrm_invoke(long long action,
 				get_xml_attr_nested(msg, 
 						    rsc_path,
 						    DIMOF(rsc_path) -2,
-						    "type", TRUE),
+						    XML_ATTR_TYPE, TRUE),
 				NULL);
 			
 			rsc = fsa_lrm_conn->lrm_ops->get_rsc(
@@ -497,8 +492,10 @@ xml2list(xmlNodePtr parent, const char**attr_path, int depth)
 		node_iter = nvpair_list->children;
 		while(node_iter != NULL) {
 			
-			const char *key = xmlGetProp(node_iter, "name");
-			const char *value = xmlGetProp(node_iter, "value");
+			const char *key   = xmlGetProp(
+				node_iter, XML_NVPAIR_ATTR_NAME);
+			const char *value = xmlGetProp(
+				node_iter, XML_NVPAIR_ATTR_VALUE);
 			
 			CRM_DEBUG("Added %s=%s", key, value);
 			
@@ -532,22 +529,22 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 	
 	update = create_xml_node(NULL, "node_state");
 	set_xml_property_copy(update, XML_ATTR_ID, fsa_our_uname);
-	iter = create_xml_node(update, "lrm");
-	iter = create_xml_node(iter, "lrm_resources");
+	iter = create_xml_node(update, XML_CIB_TAG_LRM);
+	iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
 	iter = create_xml_node(iter, "lrm_resource");
 	
 	set_xml_property_copy(iter, XML_ATTR_ID, rsc->id);
-	set_xml_property_copy(iter, "last_op", op_type);
+	set_xml_property_copy(iter, XML_LRM_ATTR_LASTOP, op_type);
 	
 	tmp = crm_itoa(status);
-	set_xml_property_copy(iter, "op_status", tmp);
+	set_xml_property_copy(iter, XML_LRM_ATTR_OPSTATE, tmp);
 	crm_free(tmp);
 	
 	tmp = crm_itoa(rc);
-	set_xml_property_copy(iter, "op_code", tmp);
+	set_xml_property_copy(iter, XML_LRM_ATTR_OPCODE, tmp);
 	crm_free(tmp);
 
-	set_xml_property_copy(iter, "op_node", fsa_our_uname);
+	set_xml_property_copy(iter, XML_LRM_ATTR_TARGET, fsa_our_uname);
 	
 	tmp1 = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	set_xml_property_copy(tmp1, XML_ATTR_ID, fsa_our_uname);
@@ -555,7 +552,7 @@ do_update_resource(lrm_rsc_t *rsc, int status, int rc, const char *op_type)
 
 	fragment = create_cib_fragment(tmp1, NULL);
 
-	send_request(NULL, fragment, CRM_OPERATION_UPDATE,
+	send_request(NULL, fragment, CRM_OP_UPDATE,
 		     fsa_our_dc, CRM_SYSTEM_DCIB, NULL);
 	
 	free_xml(fragment);

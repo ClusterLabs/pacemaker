@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.14 2004/05/28 07:48:03 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.15 2004/06/01 12:25:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -177,7 +177,6 @@ enum crmd_fsa_input {
 	I_INTEGRATION_TIMEOUT, 
 	I_NODE_JOIN,	/* A node has entered the CCM membership list*/
 	I_NODE_LEFT,	/* A node shutdown (possibly unexpectedly) */
-	I_NODE_LEAVING,	/* A node has asked to be shutdown */
 	I_NOT_DC,	/* We are not and were not the DC before or after
 			 * the current operation or state
 			 */
@@ -188,10 +187,10 @@ enum crmd_fsa_input {
 	I_RESTART,	/* The current set of actions needs to be
 			 * restarted
 			 */
-// 20
 	I_REQUEST,	/* Some non-resource, non-ccm action is required
 			 * of us, eg. ping
 			 */
+// 20
 	I_ROUTER,	/* Do our job as router and forward this to the
 			 * right place
 			 */
@@ -477,6 +476,7 @@ enum crmd_fsa_cause
 	C_IPC_MESSAGE,
 	C_HA_MESSAGE,
 	C_CCM_CALLBACK,
+	C_CRMD_STATUS_CALLBACK,
 	C_LRM_OP_CALLBACK,
 	C_LRM_MONITOR_CALLBACK,
 	C_TIMER_POPPED,

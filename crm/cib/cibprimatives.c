@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.c,v 1.30 2004/05/26 07:05:43 andrew Exp $ */
+/* $Id: cibprimatives.c,v 1.31 2004/06/01 12:25:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -501,17 +501,15 @@ update_cib_object(xmlNodePtr parent, xmlNodePtr new_obj, gboolean force)
 void
 update_node_state(xmlNodePtr target, xmlNodePtr update)
 {
-	gboolean any_updates = FALSE;
-	gboolean replace_lrm = FALSE;
+	const char *source	= NULL;
+	const char *replace     = NULL;
 	
-	const char *old_state     = xmlGetProp(target, "state");
-	const char *old_unclean   = xmlGetProp(target, "unclean");
-	const char *source	  = NULL;
-	const char *unclean	  = NULL;
-	const char *exp_state	  = NULL;
-	const char *state	  = NULL;
-	
-	xmlAttrPtr prop_iter = NULL;
+	xmlAttrPtr prop_iter    = NULL;
+
+	gboolean any_updates    = FALSE;
+	gboolean clear_stonith  = FALSE;
+	gboolean clear_shutdown = FALSE;
+
 	FNIN();
 	
 	prop_iter = update->properties;
@@ -520,19 +518,26 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 		const char *local_prop_value =
 			xmlGetProp(update, local_prop_name);
 
-
 		if(local_prop_name == NULL) {
 			// error
 			
-		} else if(strcmp(local_prop_name, "replace_lrm") == 0) {
-			replace_lrm = TRUE;
+		} else if(strcmp(local_prop_name, XML_ATTR_ID) == 0) {
+			
+		} else if(strcmp(local_prop_name, XML_ATTR_TSTAMP) == 0) {
+
+		} else if(strcmp(local_prop_name, XML_CIB_ATTR_CLEAR_SHUTDOWN) == 0) {
+			clear_shutdown = TRUE;
+			
+		} else if(strcmp(local_prop_name, XML_CIB_ATTR_CLEAR_STONITH) == 0) {
+			clear_stonith = TRUE;
+			clear_shutdown = TRUE;
+			
+		} else if(strcmp(local_prop_name, "replace") == 0) {
+			replace = local_prop_value;
 			any_updates = TRUE;
 			
 		} else if(strcmp(local_prop_name, "source") == 0) {
 			source = local_prop_value;
-			
-		} else if(strcmp(local_prop_name, "state") == 0) {
-			state = local_prop_value;
 			
 		} else {
 			any_updates = TRUE;
@@ -544,52 +549,24 @@ update_node_state(xmlNodePtr target, xmlNodePtr update)
 		prop_iter = prop_iter->next;
 	}
 	
-	unclean   = xmlGetProp(target, "unclean");
-	exp_state = xmlGetProp(target, "exp_state");
-
-	if(safe_str_eq(state, old_state)){
-		// do nothing
-		
-	} else if(safe_str_eq(state, "down")) {
-		any_updates = TRUE;
-		if(safe_str_neq(exp_state, "down")) {
-
-			// TODO: Only if not set?
-			if(old_unclean == NULL) {
-				time_t now = time(NULL);
-				char *now_s = crm_itoa((int)now);
-				
-				set_xml_property_copy(target, "unclean", now_s);
-				crm_free(now_s);
-
-				// unset "shutdown" 
-				set_xml_property_copy(target, "shutdown", NULL);
-			}
-					
-		} else {
-			// unset "unclean" 
-			set_xml_property_copy(target, "unclean", NULL);
-		}
-		
-	} else if(safe_str_eq(state, "active")
-		&& safe_str_eq(exp_state, "active")) {
-
-		// unset "unclean" 
-		any_updates = TRUE;
-		set_xml_property_copy(target, "unclean", NULL);
-		
-	} else if(state != NULL) {
+	if(clear_shutdown) {
+		// unset XML_CIB_ATTR_SHUTDOWN 
+		set_xml_property_copy(target, XML_CIB_ATTR_SHUTDOWN, NULL);
 		any_updates = TRUE;
 	}
 
-	if(replace_lrm) {
-		xmlNodePtr lrm = find_xml_node(target, "lrm");
-		xmlUnlinkNode(lrm);
-		free_xml(lrm);
-		
+	if(clear_stonith) {
+		// unset XML_CIB_ATTR_STONITH 
+		set_xml_property_copy(target, XML_CIB_ATTR_STONITH, NULL);
+		any_updates = TRUE;
 	}
 	
-	set_xml_property_copy(target, "state", state);
+	if(replace != NULL) {
+		xmlNodePtr lrm = find_xml_node(target, replace);
+		xmlUnlinkNode(lrm);
+		lrm->doc = NULL;
+		free_xml(lrm);	
+	}
 	
 	if(any_updates) {
 		set_node_tstamp(target);

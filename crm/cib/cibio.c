@@ -1,4 +1,4 @@
-/* $Id: cibio.c,v 1.22 2004/05/11 17:54:02 andrew Exp $ */
+/* $Id: cibio.c,v 1.23 2004/06/01 12:25:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -86,7 +86,7 @@ createEmptyCib(void)
 	set_node_tstamp(status);
 	
 	set_xml_property_copy(cib_root, "version", "1");
-	set_xml_property_copy(cib_root, "generated", "true");
+	set_xml_property_copy(cib_root, "generated", XML_BOOLEAN_TRUE);
 
 	create_xml_node(config, XML_CIB_TAG_NODES);
 	create_xml_node(config, XML_CIB_TAG_RESOURCES);
@@ -162,7 +162,7 @@ readCibXmlFile(const char *filename)
 	if (s_res == 0) {
 		FILE *cib_file = fopen(filename, "r");
 		root = file2xml(cib_file);
-		set_xml_property_copy(root, "generated", "false");
+		set_xml_property_copy(root, "generated", XML_BOOLEAN_FALSE);
 		fclose(cib_file);
 		
 	} else {

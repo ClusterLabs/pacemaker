@@ -1,4 +1,4 @@
-/* $Id: penginemain.c,v 1.12 2004/05/10 21:52:57 andrew Exp $ */
+/* $Id: penginemain.c,v 1.13 2004/06/01 12:25:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,7 +48,7 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-#define SYS_NAME "pengine"
+#define SYS_NAME CRM_SYSTEM_PENGINE
 #define OPTARGS	"skrh"
 #define PID_FILE     WORKING_DIR "/"SYS_NAME".pid"
 #define DAEMON_LOG   "/var/log/"SYS_NAME".log"

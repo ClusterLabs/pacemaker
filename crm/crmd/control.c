@@ -71,9 +71,9 @@ do_ha_control(long long action,
 					      crmd_ha_input_callback,
 					      crmd_ha_input_destroy);
 		
-		if(registered == FALSE)
+		if(registered == FALSE) {
 			FNRET(I_FAIL);
-
+		}
 	} 
 	
 	if(action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) {
@@ -138,7 +138,7 @@ do_shutdown_req(long long action,
 	enum crmd_fsa_input next_input = I_NULL;
 	FNIN();
 
-	if(send_request(NULL, NULL, CRM_OPERATION_SHUTDOWN_REQ,
+	if(send_request(NULL, NULL, CRM_OP_SHUTDOWN_REQ,
 			NULL, CRM_SYSTEM_DC, NULL) == FALSE){
 		next_input = I_ERROR;
 	}

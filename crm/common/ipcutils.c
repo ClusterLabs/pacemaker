@@ -1,4 +1,4 @@
-/* $Id: ipcutils.c,v 1.28 2004/05/28 07:07:51 andrew Exp $ */
+/* $Id: ipcutils.c,v 1.29 2004/06/01 12:25:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -191,7 +191,7 @@ send_xmlha_message(ll_cluster_t *hb_fd, xmlNodePtr root)
 	}
 
 	if(log_level == LOG_ERR
-	   || (safe_str_neq(op, CRM_OPERATION_HBEAT))) {
+	   || (safe_str_neq(op, CRM_OP_HBEAT))) {
 		cl_log(log_level,
 		       "Sending %s HA message (ref=%s, len=%d) to %s@%s %s.",
 		       broadcast?"broadcast":"directed",
@@ -303,7 +303,7 @@ default_ipc_input_dispatch(IPC_Channel *client, gpointer user_data)
 		validate_crm_message(root, NULL, NULL, NULL);
 		options = find_xml_node(root, XML_TAG_OPTIONS);
 		op = xmlGetProp(options, XML_ATTR_OP);
-		if(op != NULL && strcmp(op, "quit") == 0) {
+		if(op != NULL && strcmp(op, CRM_OP_QUIT) == 0) {
 			cl_log(LOG_WARNING,
 			       "The CRMd has asked us to exit... complying");
 			exit(0);

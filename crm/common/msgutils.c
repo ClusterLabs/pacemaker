@@ -1,4 +1,4 @@
-/* $Id: msgutils.c,v 1.30 2004/05/23 19:54:03 andrew Exp $ */
+/* $Id: msgutils.c,v 1.31 2004/06/01 12:25:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,7 +84,7 @@ createPingRequest(const char *crm_msg_reference, const char *to)
 	msg_type_target =
 		(char*)crm_malloc(sizeof(char)*(msg_type_len));
 	sprintf(msg_type_target, "%s_operation", to);
-	set_xml_property_copy(root_xml_node, msg_type_target, CRM_OPERATION_PING);
+	set_xml_property_copy(root_xml_node, msg_type_target, CRM_OP_PING);
 	crm_free(msg_type_target);
 
 	FNRET(root_xml_node);
@@ -262,7 +262,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 		FNRET(NULL);
 	}
     
-	if (strcmp("dc", src_subsys) == 0) {
+	if (strcmp(CRM_SYSTEM_DC, src_subsys) == 0) {
 		hash_value = crm_strdup(src_subsys);
 		if (!hash_value) {
 			cl_log(LOG_ERR,
@@ -301,7 +301,7 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 	       char_value,
 	       value_len);
     	
-	if (strcmp("dc", (char*)value) == 0) {
+	if (strcmp(CRM_SYSTEM_DC, (char*)value) == 0) {
 		*node = NULL;
 		*subsys = (char*)crm_strdup(char_value);
 		if (!*subsys) {
@@ -350,7 +350,7 @@ send_hello_message(IPC_Channel *ipc_client,
 	set_xml_property_copy(hello_node, "minor_version", minor_version);
 	set_xml_property_copy(hello_node, "client_name",   client_name);
 	set_xml_property_copy(hello_node, "client_uuid",   uuid);
-	set_xml_property_copy(hello_node, "operation",     "hello");
+	set_xml_property_copy(hello_node, "operation",     CRM_OP_HELLO);
 
 
 	send_ipc_request(ipc_client,
@@ -391,7 +391,7 @@ process_hello_message(xmlNodePtr hello,
 	local_major_version = xmlGetProp(opts, "major_version");
 	local_minor_version = xmlGetProp(opts, "minor_version");
 
-	if (op == NULL || strcmp("hello", op) != 0) {
+	if (op == NULL || strcmp(CRM_OP_HELLO, op) != 0) {
 		FNRET(FALSE);
 
 	} else if (local_uuid == NULL || strlen(local_uuid) == 0) {

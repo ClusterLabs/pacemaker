@@ -59,7 +59,7 @@ unpack_graph(xmlNodePtr xml_graph)
 /*
 <transition_graph>
 	<actions id="0">
-		<rsc_op id="5" runnable="false" optional="true" task="stop">
+		<rsc_op id="5" runnable=XML_BOOLEAN_FALSE optional=XML_BOOLEAN_TRUE task="stop">
 			<resource id="rsc3" priority="3.0"/>
 		</rsc_op>
 */
@@ -117,7 +117,7 @@ extract_event(xmlNodePtr msg)
 [cib fragment]
 ...
 <status>
-   <node_state id="node1" state="active" exp_state="active">
+   <node_state id="node1" state=CRMD_STATE_ACTIVE exp_state="active">
      <lrm>
        <lrm_resources>
 	 <rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>
@@ -126,7 +126,7 @@ extract_event(xmlNodePtr msg)
 	xml_message_debug(msg, "TE Event");
 	
 	iter = find_xml_node(msg, XML_TAG_FRAGMENT);
-	section = xmlGetProp(iter, "section");
+	section = xmlGetProp(iter, XML_ATTR_SECTION);
 
 	if(safe_str_neq(section, XML_CIB_TAG_STATUS)) {
 		// these too are never expected
@@ -140,10 +140,15 @@ extract_event(xmlNodePtr msg)
 	while(abort == FALSE && iter != NULL) {
 		xmlNodePtr node_state = iter;
 		xmlNodePtr child = iter->children;
-		const char *state = xmlGetProp(node_state, "state");
+		const char *state = xmlGetProp(
+			node_state, XML_CIB_ATTR_JOINSTATE);
 		iter = iter->next;
 
-		if(state != NULL && child == NULL) {
+		if(xmlGetProp(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL
+		   || xmlGetProp(node_state, XML_CIB_ATTR_STONITH) != NULL) {
+			abort = TRUE;
+			
+		} else if(state != NULL && child == NULL) {
 			/* node state update,
 			 * possibly from a shutdown we requested
 			 */
@@ -151,8 +156,12 @@ extract_event(xmlNodePtr msg)
 			
 			event_status = state;
 			event_node   = xmlGetProp(node_state, XML_ATTR_ID);
-			if(safe_str_eq(event_status, "down")) {
-				event_action = "shutdown";
+			
+			if(safe_str_eq(event_status, CRMD_JOINSTATE_DOWN)) {
+				event_action = XML_CIB_ATTR_SHUTDOWN;
+			} else {
+				// never expected... yet.  STONITH?
+				event_action = "startup";
 			}
 			
 			abort = !process_graph_event(event_node,
@@ -161,17 +170,10 @@ extract_event(xmlNodePtr msg)
 						     event_status,
 						     event_rc);
 
-		} else if(state != NULL && child != NULL) {
-			/* this is a complex event and could not be completely
-			 * due to any request we made
-			 */
-			abort = TRUE;
-			CRM_DEBUG("state and child");
-			
-		} else {
+		} else if(state == NULL && child != NULL) {
 			CRM_DEBUG("child no state");
-			child = find_xml_node(node_state, "lrm");
-			child = find_xml_node(child, "lrm_resources");
+			child = find_xml_node(node_state, XML_CIB_TAG_LRM);
+			child = find_xml_node(child, XML_LRM_TAG_RESOURCES);
 
 			if(child != NULL) {
 				child = child->children;
@@ -180,11 +182,16 @@ extract_event(xmlNodePtr msg)
 			}
 			
 			while(abort == FALSE && child != NULL) {
-				event_action = xmlGetProp(child, "last_op");
-				event_node   = xmlGetProp(child, "op_node");
-				event_rsc    = xmlGetProp(child, "id");
-				event_status = xmlGetProp(child, "op_status");
-				event_rc     = xmlGetProp(child, "op_code");
+				event_action = xmlGetProp(
+					child, XML_LRM_ATTR_LASTOP);
+				event_node   = xmlGetProp(
+					child, XML_LRM_ATTR_TARGET);
+				event_rsc    = xmlGetProp(
+					child, XML_ATTR_ID);
+				event_status = xmlGetProp(
+					child, XML_LRM_ATTR_OPSTATE);
+				event_rc     = xmlGetProp(
+					child, XML_LRM_ATTR_OPCODE);
 				
 				abort = !process_graph_event(event_node,
 							     event_rsc,
@@ -194,6 +201,15 @@ extract_event(xmlNodePtr msg)
 
 				child = child->next;
 			}	
+		} else if(state != NULL && child != NULL) {
+			/* this is a complex event and could not be completely
+			 * due to any request we made
+			 */
+			abort = TRUE;
+			CRM_DEBUG("state and child");
+			
+		} else {
+			/* ignore */
 		}
 	}
 	
@@ -226,9 +242,12 @@ process_graph_event(const char *event_node,
 			<resource id="rsc3" priority="3.0"/>
 		</rsc_op>
 */
-		const char *this_action = xmlGetProp(action, "task");
-		const char *this_node   = xmlGetProp(action, "on_node");
-		const char *this_rsc    = xmlGetProp(action->children, "id");
+		const char *this_action = xmlGetProp(
+			action, XML_LRM_ATTR_TASK);
+		const char *this_node   = xmlGetProp(
+			action, XML_LRM_ATTR_TARGET);
+		const char *this_rsc    = xmlGetProp(
+			action->children, XML_ATTR_ID);
 
 		if(safe_str_neq(this_node, event_node)) {
 			continue;
@@ -255,7 +274,8 @@ process_graph_event(const char *event_node,
 	
 	// how do we distinguish action failure?
 	if(safe_str_neq(event_rc, "0")){
-		if(safe_str_neq((const char*)xmlGetProp(action, "allow_fail"), "true")) {
+		if(safe_str_neq((const char*)xmlGetProp(action, "allow_fail"),
+				XML_BOOLEAN_TRUE)) {
 			cl_log(LOG_ERR,
 			       "Action %s to %s on %s resulted in failure..."
 			       " aborting transition.",
@@ -344,23 +364,23 @@ initiate_action(action_list_t *list)
 			return TRUE;
 		}
 		
-		discard  = xmlGetProp(xml_action, "discard");
-		on_node  = xmlGetProp(xml_action, "on_node");
-		id       = xmlGetProp(xml_action, "id");
-		runnable = xmlGetProp(xml_action, "runnable");
-		optional = xmlGetProp(xml_action, "optional");
-		task     = xmlGetProp(xml_action, "task");
+		discard  = xmlGetProp(xml_action, XML_LRM_ATTR_DISCARD);
+		on_node  = xmlGetProp(xml_action, XML_LRM_ATTR_TARGET);
+		id       = xmlGetProp(xml_action, XML_ATTR_ID);
+		runnable = xmlGetProp(xml_action, XML_LRM_ATTR_RUNNABLE);
+		optional = xmlGetProp(xml_action, XML_LRM_ATTR_OPTIONAL);
+		task     = xmlGetProp(xml_action, XML_LRM_ATTR_TASK);
 		
-		if(safe_str_eq(discard, "true")) {
+		if(safe_str_eq(discard, XML_BOOLEAN_TRUE)) {
 			cl_log(LOG_INFO,
 			       "Skipping discarded rsc-op (%s): %s %s on %s",
 			       id, task,
-			       xmlGetProp(xml_action->children, "id"),
+			       xmlGetProp(xml_action->children, XML_ATTR_ID),
 			       on_node);
 			continue;
 		}
 
-		if(safe_str_neq(optional, "true")) {
+		if(safe_str_neq(optional, XML_BOOLEAN_TRUE)) {
 			is_optional = FALSE;
 		}
 		
@@ -384,7 +404,8 @@ initiate_action(action_list_t *list)
 				       "Skipping optional rsc-op (%s):"
 				       " %s %s on %s",
 				       id, task,
-				       xmlGetProp(xml_action->children, "id"),
+				       xmlGetProp(xml_action->children,
+						  XML_ATTR_ID),
 				       on_node);
 			} else {
 				cl_log(LOG_INFO,
@@ -393,7 +414,7 @@ initiate_action(action_list_t *list)
 				       task, id, on_node);
 			}
 			
-		} else if(safe_str_eq(runnable, "false")) {
+		} else if(safe_str_eq(runnable, XML_BOOLEAN_FALSE)) {
 			cl_log(LOG_ERR,
 			       "Terminated transition on un-runnable command:"
 			       " %s (id=%s) on %s",
@@ -433,17 +454,18 @@ initiate_action(action_list_t *list)
 			
 		} else if(safe_str_eq(xml_action->name, "crm_event")){
 			/*
-			  <crm_msg op="task" to="on_node">
+			  <crm_msg op=XML_LRM_ATTR_TASK to=XML_RES_ATTR_TARGET>
 			*/
 			cl_log(LOG_INFO,
 			       "Executing crm-event (%s): %s on %s",
 			       id, task, on_node);
 #ifndef TESTING
-			xmlNodePtr options = create_xml_node(NULL, "options");
+			xmlNodePtr options = create_xml_node(
+				NULL, XML_TAG_OPTIONS);
 			set_xml_property_copy(options, XML_ATTR_OP, task);
 			
 			send_ipc_request(crm_ch, options, NULL,
-					 on_node, "crmd", "tengine",
+					 on_node, "crmd", CRM_SYSTEM_TENGINE,
 					 NULL, NULL);
 			
 			free_xml(options);
@@ -453,7 +475,7 @@ initiate_action(action_list_t *list)
 			cl_log(LOG_INFO,
 			       "Executing rsc-op (%s): %s %s on %s",
 			       id, task,
-			       xmlGetProp(xml_action->children, "id"),
+			       xmlGetProp(xml_action->children, XML_ATTR_ID),
 			       on_node);
 #ifndef TESTING
 			/*
@@ -461,20 +483,23 @@ initiate_action(action_list_t *list)
 			  <rsc_op id="operation number" on_node="" task="">
 			  <resource>...</resource>
 			*/
-			xmlNodePtr options = create_xml_node(NULL, "options");
+			xmlNodePtr options = create_xml_node(
+				NULL, XML_TAG_OPTIONS);
 			xmlNodePtr data = create_xml_node(NULL, "msg_data");
 			xmlNodePtr rsc_op = create_xml_node(data, "rsc_op");
 			
 			set_xml_property_copy(options, XML_ATTR_OP, "rsc_op");
 			
-			set_xml_property_copy(rsc_op, "id", id);
-			set_xml_property_copy(rsc_op, "task", task);
-			set_xml_property_copy(rsc_op, "on_node", on_node);
+			set_xml_property_copy(rsc_op, XML_ATTR_ID, id);
+			set_xml_property_copy(
+				rsc_op, XML_LRM_ATTR_TASK, task);
+			set_xml_property_copy(
+				rsc_op, XML_LRM_ATTR_TARGET, on_node);
 			
 			add_node_copy(rsc_op, xml_action->children);
 			
 			send_ipc_request(crm_ch, options, data,
-					 on_node, "lrmd", "tengine",
+					 on_node, "lrmd", CRM_SYSTEM_TENGINE,
 					 NULL, NULL);
 			
 			free_xml(options);
@@ -508,14 +533,14 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 	
 	if(op == NULL){
 		// error
-	} else if(strcmp(op, "hello") == 0) {
+	} else if(strcmp(op, CRM_OP_HELLO) == 0) {
 		// ignore
 
-	} else if(sys_to == NULL || strcmp(sys_to, "tengine") != 0) {
+	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
 		CRM_DEBUG("Bad sys-to %s", sys_to);
 		return FALSE;
 		
-	} else if(strcmp(op, "transition") == 0) {
+	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
 
 		CRM_DEBUG("Initializing graph...");
 		initialize_graph();
@@ -533,25 +558,26 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 		CRM_DEBUG("Processing complete...");
 		
 		
-	} else if(strcmp(op, "event") == 0) {
+	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
 		const char *true_op = get_xml_attr (msg, XML_TAG_OPTIONS,
-						    "true_op", TRUE);
+						    XML_ATTR_TRUEOP, TRUE);
 		if(true_op == NULL) {
 			cl_log(LOG_ERR,
-			       "Illegal update, the original operation must be specified");
+			       "Illegal update,"
+			       " the original operation must be specified");
 			send_abort(msg);
 			
-		} else if(strcmp(true_op, CRM_OPERATION_CREATE) == 0
-		   || strcmp(true_op, CRM_OPERATION_DELETE) == 0
-		   || strcmp(true_op, CRM_OPERATION_REPLACE) == 0
-		   || strcmp(true_op, CRM_OPERATION_WELCOME) == 0
-		   || strcmp(true_op, CRM_OPERATION_SHUTDOWN_REQ) == 0
-		   || strcmp(true_op, CRM_OPERATION_ERASE) == 0) {
+		} else if(strcmp(true_op, CRM_OP_CREATE) == 0
+		   || strcmp(true_op, CRM_OP_DELETE) == 0
+		   || strcmp(true_op, CRM_OP_REPLACE) == 0
+		   || strcmp(true_op, CRM_OP_WELCOME) == 0
+		   || strcmp(true_op, CRM_OP_SHUTDOWN_REQ) == 0
+		   || strcmp(true_op, CRM_OP_ERASE) == 0) {
 
 			// these are always unexpected, trigger the PE
 			send_abort(msg);
 			
-		} else if(strcmp(true_op, CRM_OPERATION_UPDATE) == 0) {
+		} else if(strcmp(true_op, CRM_OP_UPDATE) == 0) {
 			// this may not be un-expected
 			if(extract_event(msg) == FALSE){
 				send_abort(msg);
@@ -562,10 +588,10 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 			       "Did not expect copy of action %s", op);
 		}
 		
-	} else if(strcmp(op, "abort") == 0) {
+	} else if(strcmp(op, CRM_OP_ABORT) == 0) {
 		initialize_graph();
 
-	} else if(strcmp(op, "quit") == 0) {
+	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		cl_log(LOG_WARNING, "Received quit message, terminating");
 		exit(0);
 	}
@@ -576,7 +602,7 @@ process_te_message(xmlNodePtr msg, IPC_Channel *sender)
 void
 send_abort(xmlNodePtr msg)
 {	
-	xmlNodePtr options = create_xml_node(NULL, "options");
+	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
 
 	print_state();
 	
@@ -584,10 +610,10 @@ send_abort(xmlNodePtr msg)
 	
 	xml_message_debug(msg, "aborting on this msg");
 	
-	set_xml_property_copy(options, XML_ATTR_OP, "te_abort");
+	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TEABORT);
 	
 	send_ipc_request(crm_ch, options, NULL,
-			 NULL, "dc", "tengine",
+			 NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE,
 			 NULL, NULL);
 	
 	free_xml(options);
@@ -596,16 +622,16 @@ send_abort(xmlNodePtr msg)
 void
 send_success(void)
 {	
-	xmlNodePtr options = create_xml_node(NULL, "options");
+	xmlNodePtr options = create_xml_node(NULL, XML_TAG_OPTIONS);
 
 	print_state();
 
 	CRM_DEBUG("Sending \"complete\" message");
 	
-	set_xml_property_copy(options, XML_ATTR_OP, "te_complete");
+	set_xml_property_copy(options, XML_ATTR_OP, CRM_OP_TECOMPLETE);
 	
 	send_ipc_request(crm_ch, options, NULL,
-			 NULL, "dc", "tengine",
+			 NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE,
 			 NULL, NULL);
 	
 	free_xml(options);

@@ -63,7 +63,6 @@ do_ccm_control(long long action,
 		void *data)
 {
 	int      ret;
-/* 	fd_set   rset; */
  	int	 fsa_ev_fd; 
     
 	FNIN();
@@ -94,9 +93,6 @@ do_ccm_control(long long action,
 		}
 		cl_log(LOG_INFO, "CCM Activation passed... all set to go!");
 
-/* 		FD_ZERO(&rset); */
-/* 		FD_SET(fsa_ev_fd, &rset); */
-		
 //GFDSource*
 		G_main_add_fd(G_PRIORITY_LOW, fsa_ev_fd, FALSE, ccm_dispatch,
 			      fsa_ev_token,
@@ -212,7 +208,9 @@ do_ccm_update_cache(long long action,
 		members = membership_copy->members;
 		
 		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
-			oc_node_t *member = (oc_node_t *)crm_malloc(sizeof(oc_node_t));
+			oc_node_t *member = (oc_node_t *)
+				crm_malloc(sizeof(oc_node_t));
+			
 			member->node_id =
 				oc->m_array[offset+lpc].node_id;
 			
@@ -239,7 +237,9 @@ do_ccm_update_cache(long long action,
 		members = membership_copy->new_members;
 		
 		for(lpc=0; lpc < membership_copy->new_members_size; lpc++) {
-			oc_node_t *member = (oc_node_t *)crm_malloc(sizeof(oc_node_t));
+			oc_node_t *member = (oc_node_t *)
+				crm_malloc(sizeof(oc_node_t));
+			
 			member->node_id =
 				oc->m_array[offset+lpc].node_id;
 			
@@ -266,7 +266,9 @@ do_ccm_update_cache(long long action,
 		members = membership_copy->dead_members;
 
 		for(lpc=0; lpc < membership_copy->dead_members_size; lpc++) {
-			oc_node_t *member = (oc_node_t *)crm_malloc(sizeof(oc_node_t));
+			oc_node_t *member = (oc_node_t *)
+				crm_malloc(sizeof(oc_node_t));
+			
 			member->node_id =
 				oc->m_array[offset+lpc].node_id;
 			
@@ -288,17 +290,20 @@ do_ccm_update_cache(long long action,
 
 	if(AM_I_DC) {
 		// should be sufficient for only the DC to do this
-		free_xml(do_update_cib_nodes(NULL));
+		free_xml(do_update_cib_nodes(NULL, FALSE));
 	}
 	
 	/* Free the old copy */
 	if(tmp != NULL) {
 		if(tmp->members != NULL)
-			g_hash_table_foreach_remove (tmp->members, ghash_node_clfree, NULL);
+			g_hash_table_foreach_remove(
+				tmp->members, ghash_node_clfree, NULL);
 		if(tmp->new_members != NULL)
-			g_hash_table_foreach_remove (tmp->new_members, ghash_node_clfree, NULL);
+			g_hash_table_foreach_remove(
+				tmp->new_members, ghash_node_clfree, NULL);
 		if(tmp->dead_members != NULL)
-			g_hash_table_foreach_remove (tmp->dead_members, ghash_node_clfree, NULL);
+			g_hash_table_foreach_remove(
+				tmp->dead_members, ghash_node_clfree, NULL);
 		crm_free(tmp);
 	}
 	
@@ -477,29 +482,42 @@ struct update_data_s
 {
 		xmlNodePtr updates;
 		const char *state;
+		const char *join;
 };
 
 xmlNodePtr
-do_update_cib_nodes(xmlNodePtr updates)
+do_update_cib_nodes(xmlNodePtr updates, gboolean overwrite)
 {
 	
 	struct update_data_s update_data;
 	update_data.updates = updates;
 	
 	CRM_DEBUG("Processing the \"down\" list");
-	update_data.state = "down";
+	update_data.state = XML_BOOLEAN_NO;
+	update_data.join  = CRMD_JOINSTATE_DOWN;
 	if(fsa_membership_copy->dead_members != NULL) {
 		g_hash_table_foreach(fsa_membership_copy->dead_members,
 				     ghash_update_cib_node, &update_data);
 	}
 	
-	CRM_DEBUG("Processing the \"in_ccm (old)\" list");
-	update_data.state = "in_ccm";
+	CRM_DEBUG("Processing the \"in_ccm (all)\" list");
+	update_data.state = XML_BOOLEAN_YES;
+	update_data.join  = NULL;
+	if(overwrite) {
+		update_data.join = CRMD_JOINSTATE_PENDING;
+	}
+	
 	if(fsa_membership_copy->members != NULL) {
 		g_hash_table_foreach(fsa_membership_copy->members,
 				     ghash_update_cib_node, &update_data);
 	}
-/*	
+
+	/* this is most likely overkill...
+	 *
+	 * make *sure* that the join status of nodes entering the ccm list
+	 *  is reset
+	 *
+	update_data.join = CRMD_JOINSTATE_PENDING;
 	CRM_DEBUG("Processing the \"in_ccm (new)\" list");
 	if(fsa_membership_copy->new_members != NULL) {
 		g_hash_table_foreach(fsa_membership_copy->new_members,
@@ -507,10 +525,11 @@ do_update_cib_nodes(xmlNodePtr updates)
 	}
 */
 	if(update_data.updates != NULL) {
-		xmlNodePtr fragment = create_cib_fragment(update_data.updates, NULL);
-		
-		send_request(NULL, fragment, CRM_OPERATION_UPDATE,
-			     NULL, CRM_SYSTEM_DCIB, NULL);
+		xmlNodePtr fragment =
+			create_cib_fragment(update_data.updates, NULL);
+
+		store_request(NULL, fragment,
+			      CRM_OP_UPDATE, CRM_SYSTEM_DCIB);
 		
 		free_xml(fragment);
 	}
@@ -525,20 +544,26 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	xmlNodePtr tmp1 = NULL;
 	const char *node_uname = (const char*)key;
 	struct update_data_s* data = (struct update_data_s*)user_data;
+	const char *state = data->join;
 
-	CRM_DEBUG("%s processing %s (%s)", __FUNCTION__, node_uname, data->state);
-	
-	if(safe_str_eq(fsa_our_uname, node_uname)) {
-		// dont change ourselves
-		return;
-	}
+	crm_debug("%s processing %s (%s)",
+		  __FUNCTION__, node_uname, data->state);
 
-	tmp1 = create_node_state(node_uname, data->state, NULL, NULL);
+	if(state != NULL
+	   && safe_str_eq(fsa_our_uname, node_uname)) {
+		/* the DC is always a member */
+		state = CRMD_JOINSTATE_MEMBER;
+	} 
+
+	tmp1 = create_node_state(node_uname, data->state, NULL, state);
+
 	if(data->updates == NULL) {
+		crm_debug("Creating first update");
 		data->updates = tmp1;
 	} else {
-		data->updates = xmlAddSibling(data->updates, tmp1);
-	}	
+		xmlAddNextSibling(data->updates, tmp1);
+	}
+
 }
 
 gboolean

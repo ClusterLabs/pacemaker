@@ -469,16 +469,16 @@ strength2text(enum con_strength strength)
 			result = "ignore";
 			break;
 		case must:
-			result = "must";
+			result = XML_STRENGTH_VAL_MUST;
 			break;
 		case should:
-			result = "should";
+			result = XML_STRENGTH_VAL_SHOULD;
 			break;
 		case should_not:
-			result = "should_not";
+			result = XML_STRENGTH_VAL_SHOULDNOT;
 			break;
 		case must_not:
-			result = "must_not";
+			result = XML_STRENGTH_VAL_MUSTNOT;
 			break;
 		case startstop:
 			result = "start/stop";
@@ -828,32 +828,32 @@ action2xml(action_t *action)
 	}
 
 	set_xml_property_copy(action_xml,
-			      "on_node",
+			      XML_LRM_ATTR_TARGET,
 			      safe_val4(NULL, action, node, details, id));
 
 	set_xml_property_copy(action_xml,
-			      "id",
+			      XML_ATTR_ID,
 			      crm_itoa(action->id));
 
 	set_xml_property_copy(action_xml,
-			      "runnable",
-			      action->runnable?"true":"false");
+			      XML_LRM_ATTR_RUNNABLE,
+			      action->runnable?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
 
 	set_xml_property_copy(action_xml,
-			      "optional",
-			      action->optional?"true":"false");
+			      XML_LRM_ATTR_OPTIONAL,
+			      action->optional?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
 
 	set_xml_property_copy(action_xml,
-			      "task",
+			      XML_LRM_ATTR_TASK,
 			      task2text(action->task));
 
 	set_xml_property_copy(action_xml,
-			      "discard",
-			      action->discard?"true":"false");
+			      XML_LRM_ATTR_DISCARD,
+			      action->discard?XML_BOOLEAN_TRUE:XML_BOOLEAN_FALSE);
 
 	set_xml_property_copy(action_xml,
 			      "allow_fail",
-			      action->failure_is_fatal?"false":"true");
+			      action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
 
 	return action_xml;
 }

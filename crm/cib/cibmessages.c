@@ -1,4 +1,4 @@
-/* $Id: cibmessages.c,v 1.35 2004/05/28 06:09:22 andrew Exp $ */
+/* $Id: cibmessages.c,v 1.36 2004/06/01 12:25:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -110,19 +110,19 @@ cib_process_request(const char *op,
 	} else if(strcmp("noop", op) == 0) {
 		;
 		
-	} else if(strcmp("quit", op) == 0) {
+	} else if(strcmp(CRM_OP_QUIT, op) == 0) {
 		cl_log(LOG_WARNING,
 		       "The CRMd has asked us to exit... complying");
 		exit(0);
 		
-	} else if (strcmp(CRM_OPERATION_PING, op) == 0) {
+	} else if (strcmp(CRM_OP_PING, op) == 0) {
 		cib_answer =
 			createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
 		
-	} else if (strcmp(CRM_OPERATION_BUMP, op) == 0) {
+	} else if (strcmp(CRM_OP_BUMP, op) == 0) {
 		tmpCib = get_cib_copy();
 		CRM_DEBUG("Handling a %s for section=%s of the cib",
-			   CRM_OPERATION_BUMP, section);
+			   CRM_OP_BUMP, section);
 		
 		// modify the timestamp
 		set_node_tstamp(tmpCib);
@@ -144,7 +144,7 @@ cib_process_request(const char *op,
 		crm_free(new_value);
 		
 		if(activateCibXml(tmpCib, CIB_FILENAME) >= 0) {
-			verbose = "true"; 
+			verbose = XML_BOOLEAN_TRUE; 
 		} else {
 			*result = CIBRES_FAILED;
 		}
@@ -156,9 +156,9 @@ cib_process_request(const char *op,
 		/* force a pick-up of the relevant section before
 		 * returning
 		 */
-		verbose = "true"; 
+		verbose = XML_BOOLEAN_TRUE; 
 		
-	} else if (strcmp(CRM_OPERATION_ERASE, op) == 0) {
+	} else if (strcmp(CRM_OP_ERASE, op) == 0) {
 		xmlNodePtr new_cib = createEmptyCib();
 
 		// Preserve generation counters etc
@@ -168,21 +168,21 @@ cib_process_request(const char *op,
 			*result = CIBRES_FAILED;
 		}
 
-	} else if (strcmp(CRM_OPERATION_CREATE, op) == 0) {
+	} else if (strcmp(CRM_OP_CREATE, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_ADD;
 		
-	} else if (strcmp(CRM_OPERATION_UPDATE, op) == 0
-		   || strcmp(CRM_OPERATION_WELCOME, op) == 0
-		   || strcmp(CRM_OPERATION_SHUTDOWN_REQ, op) == 0) {
+	} else if (strcmp(CRM_OP_UPDATE, op) == 0
+		   || strcmp(CRM_OP_WELCOME, op) == 0
+		   || strcmp(CRM_OP_SHUTDOWN_REQ, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_MODIFY;
 		
-	} else if (strcmp(CRM_OPERATION_DELETE, op) == 0) {
+	} else if (strcmp(CRM_OP_DELETE, op) == 0) {
 		update_the_cib = TRUE;
 		cib_update_op = CIB_OP_DELETE;
 
-	} else if (strcmp(CRM_OPERATION_REPLACE, op) == 0) {
+	} else if (strcmp(CRM_OP_REPLACE, op) == 0) {
 		CRM_DEBUG("Replacing section=%s of the cib", section);
 		section = xmlGetProp(fragment, XML_ATTR_SECTION);
 
@@ -273,7 +273,7 @@ cib_process_request(const char *op,
 	if (failed->children != NULL || *result != CIBRES_OK) {
 		cib_answer = createCibFragmentAnswer(NULL /*"all"*/, failed);
 	
-	} else if (verbose != NULL && strcmp("true", verbose) == 0) {
+	} else if (verbose != NULL && strcmp(XML_BOOLEAN_TRUE, verbose) == 0) {
 		cib_answer = createCibFragmentAnswer(output_section, failed);
 
 	}

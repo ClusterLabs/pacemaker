@@ -60,21 +60,6 @@ struct crm_subsystem_s *cib_subsystem = NULL;
 struct crm_subsystem_s *te_subsystem  = NULL;
 struct crm_subsystem_s *pe_subsystem  = NULL;
 
-void
-cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
-{
-	int pid_status = -1;
-	the_subsystem->ipc = NULL;
-	clear_bit_inplace(&fsa_input_register,
-			  the_subsystem->flag);
-
-	/* Forcing client to die */
-	kill(the_subsystem->pid, -9);
-	
-	// cleanup the ps entry
-	waitpid(the_subsystem->pid, &pid_status, WNOHANG);
-	the_subsystem->pid = -1;
-}
 
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
 enum crmd_fsa_input
@@ -112,6 +97,7 @@ do_cib_control(long long action,
 	FNRET(result);
 }
 
+
 /*	 A_CIB_INVOKE, A_CIB_BUMPGEN, A_UPDATE_NODESTATUS	*/
 enum crmd_fsa_input
 do_cib_invoke(long long action,
@@ -122,10 +108,7 @@ do_cib_invoke(long long action,
 {
 	xmlNodePtr cib_msg = NULL;
 	xmlNodePtr answer = NULL;
-	xmlNodePtr tmp1 = NULL;
-	xmlNodePtr tmp2 = NULL;
 	xmlNodePtr new_options = NULL;
-	const char *req_from;
 	const char *section = NULL;
 
 	FNIN();
@@ -145,26 +128,6 @@ do_cib_invoke(long long action,
 			cl_log(LOG_ERR, "No message for CIB command");
 			FNRET(I_NULL); // I_ERROR
 		}
-		
-		if(safe_str_eq(op, CRM_OPERATION_SHUTDOWN_REQ)){
-			// create update section
-			tmp2 =
-				create_xml_node(NULL, XML_CIB_TAG_STATE);
-			req_from =
-				xmlGetProp(cib_msg, XML_ATTR_HOSTFROM);
-			
-			set_xml_property_copy(tmp1, "id", req_from);
-			set_xml_property_copy(tmp1, "exp_state", "shutdown");
-
-			// create fragment
-			tmp1 = create_cib_fragment(tmp2, NULL);
-			
-			// add to cib_msg
-			add_node_copy(cib_msg, tmp1);
-
-			free_xml(tmp2);
-			free_xml(tmp1);
-		}
 
 		set_xml_property_copy(cib_msg, XML_ATTR_SYSTO, "cib");
 		answer = process_cib_message(cib_msg, TRUE);
@@ -175,13 +138,13 @@ do_cib_invoke(long long action,
 
 
 		if(op != NULL && AM_I_DC
-		   && (strcmp(op, CRM_OPERATION_CREATE) == 0
-		       || strcmp(op, CRM_OPERATION_UPDATE) == 0
-		       || strcmp(op, CRM_OPERATION_DELETE) == 0
-		       || strcmp(op, CRM_OPERATION_REPLACE) == 0
-		       || strcmp(op, CRM_OPERATION_WELCOME) == 0
-		       || strcmp(op, CRM_OPERATION_SHUTDOWN_REQ) == 0
-		       || strcmp(op, CRM_OPERATION_ERASE) == 0)) {
+		   && (strcmp(op, CRM_OP_CREATE) == 0
+		       || strcmp(op, CRM_OP_UPDATE) == 0
+		       || strcmp(op, CRM_OP_DELETE) == 0
+		       || strcmp(op, CRM_OP_REPLACE) == 0
+		       || strcmp(op, CRM_OP_WELCOME) == 0
+		       || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
+		       || strcmp(op, CRM_OP_ERASE) == 0)) {
 			FNRET(I_CIB_UPDATE);	
 		}
 
@@ -229,7 +192,7 @@ do_cib_invoke(long long action,
 						   section, TRUE);
 		}
 		
-		answer = process_cib_request(CRM_OPERATION_BUMP,
+		answer = process_cib_request(CRM_OP_BUMP,
 					     new_options, NULL);
 
 		free_xml(new_options);
@@ -240,7 +203,7 @@ do_cib_invoke(long long action,
 			FNRET(I_FAIL);
 		}
 
-		send_request(NULL, answer, CRM_OPERATION_REPLACE,
+		send_request(NULL, answer, CRM_OP_REPLACE,
 			     NULL, CRM_SYSTEM_CRMD, NULL);
 		
 		free_xml(answer);
@@ -343,7 +306,7 @@ do_pe_invoke(long long action,
 		fsa_pe_ref = NULL;
 	}
 
-	send_request(NULL, local_cib, "pecalc",
+	send_request(NULL, local_cib, CRM_OP_PECALC,
 		     NULL, CRM_SYSTEM_PENGINE, &fsa_pe_ref);
 
 	FNRET(I_NULL);
@@ -432,11 +395,11 @@ do_te_copyto(long long action,
 
 	if(data != NULL) {
 		message  = copy_xml_node_recursive((xmlNodePtr)data);
-		opts  = find_xml_node(message, "options");
+		opts  = find_xml_node(message, XML_TAG_OPTIONS);
 		true_op = xmlGetProp(opts, XML_ATTR_OP);
 		
-		set_xml_property_copy(opts, XML_ATTR_OP, "event");
-		set_xml_property_copy(opts, "true_op", true_op);
+		set_xml_property_copy(opts, XML_ATTR_OP, CRM_OP_EVENTCC);
+		set_xml_property_copy(opts, XML_ATTR_TRUEOP, true_op);
 
 		set_xml_property_copy(message,
 				      XML_ATTR_SYSTO,
@@ -508,10 +471,10 @@ do_te_invoke(long long action,
 			FNRET(I_FAIL);
 		}
 	
-		send_request(NULL, graph, "transition",
+		send_request(NULL, graph, CRM_OP_TRANSITION,
 			     NULL, CRM_SYSTEM_TENGINE, NULL);
 	} else {
-		send_request(NULL, graph, "abort",
+		send_request(NULL, graph, CRM_OP_ABORT,
 			     NULL, CRM_SYSTEM_TENGINE, NULL);
 	}
 
@@ -575,7 +538,7 @@ stop_subsystem(struct crm_subsystem_s*	centry)
 
 	} else {
 		cl_log(LOG_INFO, "Sending quit message to %s.", centry->name);
-		send_request(NULL, NULL, "quit", NULL, centry->name, NULL);
+		send_request(NULL, NULL, CRM_OP_QUIT, NULL, centry->name, NULL);
 
 	}
 	

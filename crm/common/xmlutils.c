@@ -1,4 +1,4 @@
-/* $Id: xmlutils.c,v 1.29 2004/05/23 19:20:12 andrew Exp $ */
+/* $Id: xmlutils.c,v 1.30 2004/06/01 12:25:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -363,7 +363,9 @@ find_entity_nested(xmlNodePtr parent,
 				       "looking for entity (%s) in %s.",
 				       id, xmlGetNodePath(child));
 #endif
-				xmlChar *child_id = xmlGetProp(child, "id");
+				xmlChar *child_id =
+					xmlGetProp(child, XML_ATTR_ID);
+
 				if (child_id == NULL) {
 					cl_log(LOG_CRIT,
 					       "Entity (%s) has id=NULL..."
