@@ -128,7 +128,7 @@ More details are given in the annotated DTD below.
      evaluated ordered by the no tag. The weight attribute doesn't make
      much sense here.
      -->
-<!ELEMENT instance_attributes (node_ref?, parameters?, timings*)>
+<!ELEMENT instance_attributes (node_ref?, parameters?, timings?)>
 <!ATTLIST instance_attributes
 	  weight	CDATA #IMPLIED
 	  id		CDATA #REQUIRED>
@@ -255,7 +255,6 @@ More details are given in the annotated DTD below.
 <!ELEMENT node_match EMPTY>
 <!ATTLIST node_match
 		id	CDATA #REQUIRED
-		no	CDATA #REQUIRED
 		target	CDATA #REQUIRED
 		type	(id|uname|has_attr|not_attr|attr_value) #REQUIRED
 		value	CDATA #IMPLIED>
@@ -434,7 +433,7 @@ More details are given in the annotated DTD below.
 <!ATTLIST crm_event
 	id	CDATA #REQUIRED
 	on_node	CDATA #REQUIRED
-	operation (shutdown|election) #REQUIRED>
+	operation (shutdown|signup|election) #REQUIRED>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->

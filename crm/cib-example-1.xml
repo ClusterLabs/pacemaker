@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE cib SYSTEM "cib-schema.dtd">
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <!-- A CIB configuration example. No status section, just a config -->
 
 <cib version="1.0" timestamp="1080033905.000">
@@ -34,59 +34,69 @@
 <!-- ============================================================== -->
 <resources>
 <resource id="http-fs-1" class="ocf" ra_version="1.0" priority="0" type="Filesystem">
-<instance_parameters id="fs-459858">
+<instance_attributes id="fs-459858">
+<parameters>
 <nvpair id="nv009" name="Device" value="/dev/sdd4" />
 <nvpair id="nv010" name="Mountpoint" value="/mnt/ha-www" />
 <nvpair id="nv011" name="FSType" value="reiserfs" />
 <nvpair id="nv012" name="mount_options" value="defaults" />
-</instance_parameters>
+</parameters>
 <timings>
 <timing id="t01" action="monitor" frequency="60" />
 </timings>
+</instance_attributes>
 </resource>
 
 <resource id="http-ip-1" class="ocf" ra_version="1.0" priority="0" type="IPaddr">
-<instance_parameters id="ip-459558">
+<instance_attributes id="ip-459558">
+<parameters>
 <nvpair id="nv013" name="ip" value="192.168.1.100" />
 <nvpair id="nv014" name="device" value="auto" />
 <nvpair id="nv015" name="netmask" value="255.255.255.0" />
 <nvpair id="nv016" name="broadcast" value="192.168.1.255" />
-</instance_parameters>
+</parameters>
 <timings>
 <timing id="t02" action="monitor" frequency="60" />
 </timings>
+</instance_attributes>
 </resource>
 
 <resource id="http-1" class="init" priority="100" type="httpd">
+<instance_attributes id="ip-39494">
 <timings>
 <!-- Lets assume for some strange reason that the Apache takes ages to
 	start and stop... -->
 <timing id="t03" action="start" timeout="360" />
 <timing id="t04" action="stop" timeout="180" />
 </timings>
+</instance_attributes>
 </resource>
 
 </resources>
 <!-- ============================================================== -->
 <constraints>
 <rsc_to_rsc id="c001" from="http-1" to="http-ip-1" type="ordering"
-	strength="must" />
+	timestamp="1080160346.000" strength="must" />
 <rsc_to_rsc id="c002" from="http-1" to="http-ip-1" type="placement"
-	strength="must" />
+	timestamp="1080160346.000" strength="must" />
 <rsc_to_rsc id="c003" from="http-1" to="http-fs-1" type="ordering"
-	strength="must" />
+	timestamp="1080160346.000" strength="must" />
 <rsc_to_rsc id="c004" from="http-1" to="http-fs-1" type="placement"
-	strength="must" />
+	timestamp="1080160346.000" strength="must" />
 
-<rsc_to_node id="c005" rsc="http-fs-1">
-<node_ref id="nr001" no="0" weight="100" type="has_attr" 
-	target="san-msa1000" />
+<rsc_to_node id="c005" timestamp="1080160346.000" rsc="http-fs-1"
+	weight="100">
+<node_ref id="nr001">
+<node_match id="nm001" type="has_attr" target="san-msa1000" />
+</node_ref>
 </rsc_to_node>
 
-<node_to_all id="c006">
-<node_ref id="nr002" no="0" weight="-100" type="has_attr" target="arch"
-	value="AMD64" />
-</node_to_all>
+<node_baseweight id="c006" timestamp="1080160346.000" weight="-1"
+	modifier="set">
+<node_ref id="nr002">
+<node_match id="nm002" type="attr_value" target="AMD64" />
+</node_ref>
+</node_baseweight>
 </constraints>
 
 </configuration>
