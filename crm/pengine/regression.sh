@@ -19,7 +19,7 @@
 
 io_dir=testcases
 diff_opts="--ignore-all-space  --minimal"
-cat /dev/null > regression.failed
+> regression.failed
 
 function do_test {
 
