@@ -200,8 +200,7 @@ do_startup(long long action,
 	int interval = 1; /* seconds between DC heartbeats */
 
 	crm_info("Register PID");
-	register_pid(PID_FILE, FALSE, crm_shutdown);
-	
+	CL_SIGNAL(SIGTERM, crm_shutdown);
 	ipc_clients = g_hash_table_new(&g_str_hash, &g_str_equal);
 	
 	if(was_error == 0) {
@@ -420,12 +419,11 @@ do_recover(long long action,
 	   enum crmd_fsa_input current_input,
 	   fsa_data_t *msg_data)
 {
-	
-
 	crm_err("Action %s (%.16llx) not supported\n",
 	       fsa_action2string(action), action);
 
 	register_fsa_input(C_FSA_INTERNAL, I_SHUTDOWN, NULL);
+
 	return I_NULL;
 }
 
