@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.19 2004/10/21 18:25:42 andrew Exp $ */
+/* $Id: xml.c,v 1.20 2004/12/05 16:29:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -452,14 +452,19 @@ xmlNodePtr
 string2xml(const char *input)
 {
 	char ch = 0;
-	int lpc = 0, input_len = strlen(input);
+	int lpc = 0, input_len = 0;
 	gboolean more = TRUE;
 	gboolean inTag = FALSE;
 	xmlNodePtr xml_object = NULL;
 	const char *the_xml;
 	xmlDocPtr doc;
+	xmlBufferPtr xml_buffer = NULL;
 
-	xmlBufferPtr xml_buffer = xmlBufferCreate();
+	if(input == NULL || (input_len = strlen(input)) < 0) {
+		return NULL;
+	}
+	
+	xml_buffer = xmlBufferCreate();
 	
 	for(lpc = 0; (lpc < input_len) && more; lpc++) {
 		ch = input[lpc];

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.17 2004/09/20 12:19:27 andrew Exp $ */
+/* $Id: utils.c,v 1.18 2004/12/05 16:29:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -391,4 +391,10 @@ alter_debug(int nsig)
 			cl_log(LOG_ERR, "Unknown signal %d\n", nsig);
 			break;	
 	}
+}
+
+
+void g_hash_destroy_str(gpointer data)
+{
+	crm_free(data);
 }

@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.12 2004/11/23 11:12:29 andrew Exp $ */
+/* $Id: ipc.c,v 1.13 2004/12/05 16:29:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,6 +45,7 @@
 
 #include <crm/common/ipc.h>
 #include <crm/msg_xml.h>
+#include <ha_msg.h>
 
 
 #include <crm/dmalloc_wrapper.h>
@@ -201,28 +202,92 @@ default_ipc_connection_destroy(gpointer user_data)
 	return;
 }
 
-
-IPC_Channel *
-init_client_ipc_comms(const char *child,
-		      gboolean (*dispatch)(IPC_Channel* source_data
-					   ,gpointer    user_data),
-		      crmd_client_t *client_data)
+int
+init_server_ipc_comms(
+	char *channel_name,
+	gboolean (*channel_client_connect)(IPC_Channel *newclient,gpointer user_data),
+	void (*channel_connection_destroy)(gpointer user_data))
 {
-	IPC_Channel *ch;
-	GHashTable * attrs;
+	/* the clients wait channel is the other source of events.
+	 * This source delivers the clients connection events.
+	 * listen to this source at a relatively lower priority.
+	 */
+    
+	char    commpath[SOCKET_LEN];
+	IPC_WaitConnection *wait_ch;
+	
+	sprintf(commpath, WORKING_DIR "/%s", channel_name);
+
+	wait_ch = wait_channel_init(commpath);
+
+	if (wait_ch == NULL) {
+		return 1;
+	}
+	
+	G_main_add_IPC_WaitConnection(
+		G_PRIORITY_LOW, wait_ch, NULL, FALSE,
+		channel_client_connect, channel_name,
+		channel_connection_destroy);
+
+	crm_debug("Listening on: %s", commpath);
+
+	return 0;
+}
+
+/* GCHSource* */
+IPC_Channel *
+init_client_ipc_comms(const char *channel_name,
+		      gboolean (*dispatch)(
+			      IPC_Channel* source_data, gpointer user_data),
+		      void *client_data)
+{
+	IPC_Channel *ch = NULL;
 	GCHSource *the_source = NULL;
 	void *callback_data = client_data;
-	static char 	path[] = IPC_PATH_ATTR;
+	if(callback_data == NULL) {
+		callback_data = ch;
+	}
+	
+	ch = init_client_ipc_comms_nodispatch(channel_name);
+
+	if(ch == NULL) {
+		crm_err("Setup of client connection failed,"
+			" not adding channel to mainloop");
+		
+		return NULL;
+	}
+	
+	if(dispatch == NULL) {
+		crm_warn("No dispatch method specified..."
+			 "maybe you meant init_client_ipc_comms_nodispatch()?");
+	} else {
+		crm_debug("Adding dispatch method to channel");
+
+		the_source = G_main_add_IPC_Channel(
+			G_PRIORITY_LOW, ch, FALSE, dispatch, callback_data, 
+			default_ipc_connection_destroy);
+	}
+	
+	return ch;
+}
+
+IPC_Channel *
+init_client_ipc_comms_nodispatch(const char *channel_name)
+{
+	IPC_Channel *ch;
+	GHashTable  *attrs;
+	static char  path[] = IPC_PATH_ATTR;
+
 	char *commpath = NULL;
 	int local_socket_len = 2; /* 2 = '/' + '\0' */
 
 	
-	local_socket_len += strlen(child);
+	local_socket_len += strlen(channel_name);
 	local_socket_len += strlen(WORKING_DIR);
 
 	crm_malloc(commpath, sizeof(char)*local_socket_len);
 	if(commpath != NULL) {
-		sprintf(commpath, WORKING_DIR "/%s", child);
+		sprintf(commpath, WORKING_DIR "/%s", channel_name);
 		commpath[local_socket_len - 1] = '\0';
 		crm_debug("Attempting to talk on: %s", commpath);
 	}
@@ -243,22 +308,39 @@ init_client_ipc_comms(const char *child,
 		return NULL;
 	}
 
-	if(callback_data == NULL) {
-		callback_data = ch;
-	}
-	
 	ch->ops->set_recv_qlen(ch, 100);
 	ch->ops->set_send_qlen(ch, 100);
-
-	the_source = G_main_add_IPC_Channel(
-		G_PRIORITY_LOW, ch, FALSE, dispatch, callback_data, 
-		default_ipc_connection_destroy);
 
 	crm_debug("Processing of %s complete", commpath);
 
 	return ch;
 }
 
+IPC_WaitConnection *
+wait_channel_init(char daemonsocket[])
+{
+	IPC_WaitConnection *wait_ch;
+	mode_t mask;
+	char path[] = IPC_PATH_ATTR;
+	GHashTable * attrs;
+
+	
+	attrs = g_hash_table_new(g_str_hash,g_str_equal);
+	g_hash_table_insert(attrs, path, daemonsocket);
+    
+	mask = umask(0);
+	wait_ch = ipc_wait_conn_constructor(IPC_ANYTYPE, attrs);
+	if (wait_ch == NULL) {
+		cl_perror("Can't create wait channel of type %s",
+			  IPC_ANYTYPE);
+		exit(1);
+	}
+	mask = umask(mask);
+    
+	g_hash_table_destroy(attrs);
+    
+	return wait_ch;
+}
 
 /*
  * This method adds a copy of xml_response_data
@@ -389,3 +471,4 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 	}
 	return all_is_well;
 }
+
