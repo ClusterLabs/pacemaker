@@ -135,9 +135,10 @@ do_shutdown_req(long long action,
 	    fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input next_input = I_NULL;
+	HA_Message *msg = NULL;
 	
 	crm_debug("Sending shutdown request to DC");
-	HA_Message *msg = create_request(
+	msg = create_request(
 		CRM_OP_SHUTDOWN_REQ, NULL, NULL,
 		CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 

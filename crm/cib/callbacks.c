@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.12 2005/01/26 13:30:55 andrew Exp $ */
+/* $Id: callbacks.c,v 1.13 2005/02/03 20:08:21 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -555,8 +555,9 @@ cib_process_command(
 	
 	/* attach the output if necessary */
 	if(output != NULL) {
+		char *output_s = NULL;
 		crm_debug("Dumping XML");
-		char *output_s = dump_xml_unformatted(output);
+		output_s = dump_xml_unformatted(output);
 		if(output_s == NULL) {
 			crm_err("Currupt output in reply to \"%s\" op",op);
 			rc = cib_output_data;

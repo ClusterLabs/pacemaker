@@ -159,13 +159,14 @@ do_cib_invoke(long long action,
 			}
 
 		} else if(rc != cib_ok) {
+			ha_msg_input_t *input = NULL;
 			crm_err("Internal CRM/CIB command from %s: %s",
 				msg_data->origin, cib_error2string(rc));
 			crm_log_message(LOG_ERR, cib_msg->msg);
 			crm_xml_err(cib_msg->xml, "Command data:");
 			crm_log_message(LOG_ERR, answer);
 			
-			ha_msg_input_t *input = new_ha_msg_input(answer);
+			input = new_ha_msg_input(answer);
 			register_fsa_input(C_FSA_INTERNAL, I_ERROR, input);
 			crm_msg_del(answer);
 			delete_ha_msg_input(input);
@@ -210,8 +211,8 @@ update_local_cib_adv(
 		register_fsa_input_adv(C_FSA_INTERNAL, I_CIB_OP, fsa_input, 0,
 				       FALSE, raised_from);
 	} else {
-		crm_debug("Invoking CIB handler directly");
 		fsa_data_t *op_data = NULL;
+		crm_debug("Invoking CIB handler directly");
 		crm_malloc(op_data, sizeof(fsa_data_t));
 
 		op_data->fsa_cause	= C_FSA_INTERNAL;
