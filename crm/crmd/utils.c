@@ -661,6 +661,109 @@ fsa_action2string(long long action)
 	return actionAsText;
 }
 
+
+
+void
+fsa_dump_inputs(int log_level, long long input_register)
+{
+	if(is_set(input_register, R_THE_DC)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_THE_DC)", R_THE_DC);
+	}
+	if(is_set(input_register, R_STARTING)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_STARTING)", R_STARTING);
+	}
+	if(is_set(input_register, R_SHUTDOWN)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_SHUTDOWN)", R_SHUTDOWN);
+	}
+	if(is_set(input_register, R_STAYDOWN)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_STAYDOWN)", R_STAYDOWN);
+	}
+	if(is_set(input_register, R_JOIN_OK)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_JOIN_OK)", R_JOIN_OK);
+	}
+	if(is_set(input_register, R_HAVE_RES)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_HAVE_RES)", R_HAVE_RES);
+	}
+	if(is_set(input_register, R_INVOKE_PE)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_INVOKE_PE)", R_INVOKE_PE);
+	}
+	if(is_set(input_register, R_CIB_CONNECTED)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_CIB_CONNECTED)", R_CIB_CONNECTED);
+	}
+	if(is_set(input_register, R_PE_CONNECTED)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_PE_CONNECTED)", R_PE_CONNECTED);
+	}
+	if(is_set(input_register, R_TE_CONNECTED)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_TE_CONNECTED)", R_TE_CONNECTED);
+	}
+	if(is_set(input_register, R_LRM_CONNECTED)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_LRM_CONNECTED)", R_LRM_CONNECTED);
+	}
+	if(is_set(input_register, R_CIB_REQUIRED)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_CIB_REQUIRED)", R_CIB_REQUIRED);
+	}
+	if(is_set(input_register, R_PE_REQUIRED)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_PE_REQUIRED)", R_PE_REQUIRED);
+	}
+	if(is_set(input_register, R_TE_REQUIRED)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_TE_REQUIRED)", R_TE_REQUIRED);
+	}
+	if(is_set(input_register, R_REQ_PEND)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_REQ_PEND)", R_REQ_PEND);
+	}
+	if(is_set(input_register, R_PE_PEND)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_PE_PEND)", R_PE_PEND);
+	}
+	if(is_set(input_register, R_TE_PEND)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_TE_PEND)", R_TE_PEND);
+	}
+	if(is_set(input_register, R_RESP_PEND)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_RESP_PEND)", R_RESP_PEND);
+	}
+	if(is_set(input_register, R_CIB_DONE)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_CIB_DONE)", R_CIB_DONE);
+	}
+	if(is_set(input_register, R_HAVE_CIB)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_HAVE_CIB)", R_HAVE_CIB);
+	}
+	if(is_set(input_register, R_CIB_ASKED)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_CIB_ASKED)", R_CIB_ASKED);
+	}
+	if(is_set(input_register, R_CCM_DATA)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_CCM_DATA)", R_CCM_DATA);
+	}	
+	if(is_set(input_register, R_PEER_DATA)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_PEER_DATA)", R_PEER_DATA);
+	}
+	if(is_set(input_register, R_IN_RECOVERY)) {
+		do_crm_log(log_level, __FUNCTION__, NULL,
+			   "Input %.16llx (R_IN_RECOVERY)", R_IN_RECOVERY);
+	}
+}
+
 void
 fsa_dump_actions(long long action, const char *text)
 {

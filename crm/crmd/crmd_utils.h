@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.13 2005/02/02 21:51:19 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.14 2005/02/24 15:00:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,5 +65,6 @@ extern struct crmd_ccm_data_s *copy_ccm_data(
 extern oc_ev_membership_t *copy_ccm_oc_data(const oc_ev_membership_t *oc_in) ;
 
 extern void fsa_dump_actions(long long action, const char *text);
+extern void fsa_dump_inputs(int log_level, long long input_register);
 
 #endif
