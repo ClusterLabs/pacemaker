@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.21 2004/11/11 14:51:26 andrew Exp $ */
+/* $Id: color.c,v 1.22 2004/11/12 17:20:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,8 +36,6 @@ color_t *add_color(resource_t *rh_resource, color_t *color);
 gboolean 
 apply_placement_constraints(GListPtr constraints, GListPtr nodes)
 {
-	int lpc = 0;
-
 	crm_verbose("Applying constraints...");
 	slist_iter(
 		cons, rsc_to_node_t, constraints, lpc,
@@ -52,7 +50,6 @@ apply_placement_constraints(GListPtr constraints, GListPtr nodes)
 gboolean
 apply_agent_constraints(GListPtr resources)
 {
-	int lpc;
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 		rsc->fns->agent_constraints(rsc);
@@ -64,7 +61,6 @@ apply_agent_constraints(GListPtr resources)
 color_t *
 add_color(resource_t *resource, color_t *color)
 {
-					
 	color_t *local_color = NULL;
 
 	if(color == NULL) {
@@ -91,8 +87,6 @@ add_color(resource_t *resource, color_t *color)
 void
 color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
 {
-	int lpc = 0;
-
 	crm_debug_action(print_resource("Coloring", rsc, FALSE));
 	
 	if(rsc->provisional == FALSE) {

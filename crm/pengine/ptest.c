@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.38 2004/11/09 09:32:14 andrew Exp $ */
+/* $Id: ptest.c,v 1.39 2004/11/12 17:20:58 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -47,7 +47,6 @@ int
 main(int argc, char **argv)
 {
 	xmlNodePtr cib_object = NULL;
-	int lpc = 0;
 	int argerr = 0;
 	int flag;
 		

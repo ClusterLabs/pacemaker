@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.48 2004/11/09 09:32:14 andrew Exp $ */
+/* $Id: pengine.c,v 1.49 2004/11/12 17:20:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,8 @@
 FILE *pemsg_strm = NULL;
 
 xmlNodePtr do_calculations(xmlNodePtr cib_object);
+int num_synapse = 0;
+
 
 gboolean
 process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
@@ -96,8 +98,6 @@ process_pe_message(xmlNodePtr msg, IPC_Channel *sender)
 xmlNodePtr
 do_calculations(xmlNodePtr cib_object)
 {
-	int lpc, lpc2;
-	
 	GListPtr resources = NULL;
 	GListPtr nodes = NULL;
 	GListPtr placement_constraints = NULL;

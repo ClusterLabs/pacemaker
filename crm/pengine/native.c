@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.6 2004/11/11 14:51:26 andrew Exp $ */
+/* $Id: native.c,v 1.7 2004/11/12 17:20:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -117,7 +117,7 @@ native_find_child(resource_t *rsc, const char *id)
 
 int native_num_allowed_nodes(resource_t *rsc)
 {
-	int lpc = 0, num_nodes = 0;
+	int num_nodes = 0;
 	native_variant_data_t *native_data = NULL;
 	if(rsc->variant == pe_native) {
 		native_data = (native_variant_data_t *)rsc->variant_opaque;
@@ -150,7 +150,7 @@ int native_num_allowed_nodes(resource_t *rsc)
 
 int num_allowed_nodes4color(color_t *color) 
 {
-	int lpc = 0, num_nodes = 0;
+	int num_nodes = 0;
 
 	if(color->details->pending == FALSE) {
 		if(color->details->chosen_node) {
@@ -203,7 +203,6 @@ void native_color(resource_t *rsc, GListPtr *colors)
 
 void native_create_actions(resource_t *rsc)
 {
-	int lpc2, lpc3;
 	action_t *start_op = NULL;
 	gboolean can_start = FALSE;
 	node_t *chosen = NULL;
@@ -234,7 +233,7 @@ void native_create_actions(resource_t *rsc)
 		   || rsc->recovery_type == recovery_stop_only) {
 			slist_iter(
 				node, node_t,
-				native_data->running_on, lpc2,
+				native_data->running_on, lpc,
 				
 				crm_info("Stop  resource %s (%s)",
 					 rsc->id,
@@ -256,7 +255,7 @@ void native_create_actions(resource_t *rsc)
 		crm_debug("Stop and possible restart of %s", rsc->id);
 		
 		slist_iter(
-			node, node_t, native_data->running_on, lpc2,				
+			node, node_t, native_data->running_on, lpc,				
 			
 			if(chosen != NULL && safe_str_eq(
 				   node->details->id,
@@ -268,7 +267,7 @@ void native_create_actions(resource_t *rsc)
 				
 				/* in case the actions already exist */
 				slist_iter(
-					action, action_t, rsc->actions, lpc3,
+					action, action_t, rsc->actions, lpc2,
 					
 					if(action->task == start_rsc
 					   || action->task == stop_rsc){
@@ -446,7 +445,6 @@ void native_rsc_dependancy_rh(resource_t *rsc, rsc_dependancy_t *constraint)
 
 void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 {
-	int lpc;
 	GListPtr lh_actions = NULL;
 	action_t *lh_action = order->lh_action;
 
@@ -522,7 +520,6 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 void native_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order)
 {
-	int lpc;
 	GListPtr rh_actions = NULL;
 	action_t *rh_action = order->rh_action;
 
@@ -577,7 +574,6 @@ void native_rsc_order_rh(
 
 void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
-	int lpc;
 	GListPtr or_list;
 	native_variant_data_t *native_data = NULL;
 	
@@ -623,7 +619,6 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 void native_expand(resource_t *rsc, xmlNodePtr *graph)
 {
-	int lpc;
 	slist_iter(
 		action, action_t, rsc->actions, lpc,
 		crm_debug("processing action %d for rsc=%s",
@@ -646,8 +641,6 @@ void native_dump(resource_t *rsc, const char *pre_text, gboolean details)
 		  g_list_length(native_data->node_cons));
 	
 	if(details) {
-		int lpc = 0;
-		
 		crm_debug("\t=== Actions");
 		slist_iter(
 			action, action_t, rsc->actions, lpc, 
@@ -859,7 +852,6 @@ native_agent_constraints(resource_t *rsc)
 gboolean
 native_choose_color(resource_t *rsc)
 {
-	int lpc = 0;
 	GListPtr sorted_colors = NULL;
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data_boolean(native_data, rsc);
@@ -1096,13 +1088,12 @@ native_constraint_violated(
 void
 filter_nodes(resource_t *rsc)
 {
-	int lpc2 = 0;
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 
 	crm_debug_action(print_resource("Filtering nodes for", rsc, FALSE));
 	slist_iter(
-		node, node_t, native_data->allowed_nodes, lpc2,
+		node, node_t, native_data->allowed_nodes, lpc,
 		if(node == NULL) {
 			crm_err("Invalid NULL node");
 			
@@ -1113,7 +1104,7 @@ filter_nodes(resource_t *rsc)
 			native_data->allowed_nodes =
 				g_list_remove(native_data->allowed_nodes, node);
 			crm_free(node);
-			lpc2 = -1; /* restart the loop */
+			lpc = -1; /* restart the loop */
 		}
 		);
 }

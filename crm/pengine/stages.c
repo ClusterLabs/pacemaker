@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.27 2004/11/09 14:49:14 andrew Exp $ */
+/* $Id: stages.c,v 1.28 2004/11/12 17:20:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -66,6 +66,7 @@ stage0(xmlNodePtr cib,
 	/*get_object_root(XML_CIB_TAG_RA_DEFAULTS, cib); */
 
 	/* reset remaining global variables */
+	num_synapse = 0;
 	max_valid_nodes = 0;
 	order_id = 1;
 	action_id = 1;
@@ -97,7 +98,6 @@ stage0(xmlNodePtr cib,
 gboolean
 stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
 {
-	int lpc = 0;
 	crm_info("Processing stage 1");
 	
 	slist_iter(
@@ -134,7 +134,6 @@ stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
 gboolean
 stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 {
-	int lpc;
 	crm_info("Processing stage 2");
 	
 	if(no_color != NULL) {
@@ -184,8 +183,6 @@ stage3(GListPtr colors)
 gboolean
 stage4(GListPtr colors)
 {
-
-	int lpc = 0, lpc2 = 0;
 	crm_info("Processing stage 4");
 
 	slist_iter(
@@ -234,7 +231,6 @@ stage4(GListPtr colors)
 gboolean
 stage5(GListPtr resources, GListPtr *ordering_constraints)
 {
-	int lpc;
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 		rsc->fns->create_actions(rsc);
@@ -251,7 +247,6 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
        GListPtr nodes, GListPtr resources)
 {
 
-	int lpc = 0;
 	action_t *down_op = NULL;
 	action_t *stonith_op = NULL;
 	crm_info("Processing stage 6");
@@ -306,7 +301,6 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 gboolean
 stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 {
-	int lpc;
 	crm_info("Processing stage 7");
 
 	slist_iter(
@@ -353,8 +347,6 @@ stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 gboolean
 stage8(GListPtr resources, GListPtr actions, xmlNodePtr *graph)
 {
-	int lpc = 0;
-
 	crm_info("Processing stage 8");
 	*graph = create_xml_node(NULL, "transition_graph");
 	set_xml_property_copy(

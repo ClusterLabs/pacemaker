@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.48 2004/11/11 14:51:26 andrew Exp $ */
+/* $Id: utils.c,v 1.49 2004/11/12 17:20:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,8 +75,6 @@ invert_constraint(rsc_dependancy_t *constraint)
 gboolean
 node_list_eq(GListPtr list1, GListPtr list2, gboolean filter)
 {
-	int lpc;
-	
 	node_t *other_node;
 
 	GListPtr lhs = list1;
@@ -165,7 +163,6 @@ GListPtr
 node_list_minus(GListPtr list1, GListPtr list2, gboolean filter)
 {
 	GListPtr result = NULL;
-	int lpc = 0;
 
 	slist_iter(
 		node, node_t, list1, lpc,
@@ -191,7 +188,6 @@ GListPtr
 node_list_xor(GListPtr list1, GListPtr list2, gboolean filter)
 {
 	GListPtr result = NULL;
-	int lpc = 0;
 	
 	slist_iter(
 		node, node_t, list1, lpc,
@@ -231,7 +227,6 @@ node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
 {
 	node_t *other_node = NULL;
 	GListPtr result = NULL;
-	int lpc = 0;
 
 	result = node_list_dup(list1, filter);
 
@@ -267,7 +262,7 @@ GListPtr
 node_list_dup(GListPtr list1, gboolean filter)
 {
 	GListPtr result = NULL;
-	int lpc = 0;
+
 	slist_iter(
 		this_node, node_t, list1, lpc,
 		node_t *new_node = NULL;
@@ -717,7 +712,6 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 	}
 
 	if(details) {
-		int lpc = 0;
 		crm_debug("\t\t===Node Attributes");
 		slist_iter(
 			rsc, resource_t, node->details->running_rsc, lpc,
@@ -757,7 +751,6 @@ print_color_details(const char *pre_text,
 	       color->chosen_node==NULL?"<unset>":color->chosen_node->details->uname,
 	       g_list_length(color->candidate_nodes)); 
 	if(details) {
-		int lpc = 0;
 		slist_iter(node, node_t, color->candidate_nodes, lpc,
 			   print_node("\t", node, FALSE));
 	}
@@ -787,7 +780,6 @@ print_color(const char *pre_text, color_t *color, gboolean details)
 void
 print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 { 
-	int lpc = 0;
 	if(cons == NULL) {
 		crm_debug("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
@@ -886,7 +878,6 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 	}
 
 	if(details) {
-		int lpc = 0;
 #if 1
 		crm_debug("\t\t====== Preceeding Actions");
 		slist_iter(
@@ -1067,7 +1058,6 @@ pe_free_rsc_to_node(rsc_to_node_t *cons)
 GListPtr
 find_actions(GListPtr input, enum action_tasks task, node_t *on_node)
 {
-	int lpc = 0;
 	GListPtr result = NULL;
 	
 	slist_iter(

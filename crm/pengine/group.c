@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.5 2004/11/11 14:51:26 andrew Exp $ */
+/* $Id: group.c,v 1.6 2004/11/12 17:20:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -130,7 +130,6 @@ int group_num_allowed_nodes(resource_t *rsc)
 
 void group_color(resource_t *rsc, GListPtr *colors)
 {
-	int lpc;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
@@ -143,7 +142,6 @@ void group_color(resource_t *rsc, GListPtr *colors)
 
 void group_create_actions(resource_t *rsc)
 {
-	int lpc;
 	gboolean child_starting = FALSE;
 	gboolean child_stopping = FALSE;
 	group_variant_data_t *group_data = NULL;
@@ -176,7 +174,6 @@ void group_create_actions(resource_t *rsc)
 
 void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 {
-	int lpc;
 	resource_t *last_rsc = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
@@ -294,7 +291,6 @@ void group_rsc_order_rh(
 
 void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
-	int lpc;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
@@ -310,7 +306,6 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 void group_expand(resource_t *rsc, xmlNodePtr *graph)
 {
-	int lpc;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
@@ -328,7 +323,6 @@ void group_expand(resource_t *rsc, xmlNodePtr *graph)
 
 void group_dump(resource_t *rsc, const char *pre_text, gboolean details)
 {
-	int lpc;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
@@ -345,7 +339,6 @@ void group_dump(resource_t *rsc, const char *pre_text, gboolean details)
 
 void group_free(resource_t *rsc)
 {
-	int lpc;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
@@ -369,7 +362,6 @@ void group_free(resource_t *rsc)
 void
 group_agent_constraints(resource_t *rsc)
 {
-	int lpc;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.6 2004/11/11 14:51:26 andrew Exp $ */
+/* $Id: complex.c,v 1.7 2004/11/12 17:20:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -264,7 +264,6 @@ void
 common_agent_constraints(
 	GListPtr node_list, lrm_agent_t *agent, const char *id) 
 {
-	int lpc;
 	slist_iter(
 		node, node_t, node_list, lpc,
 		
@@ -299,7 +298,6 @@ common_agent_constraints(
 gboolean
 has_agent(node_t *a_node, lrm_agent_t *an_agent)
 {
-	int lpc;
 	if(a_node == NULL || an_agent == NULL || an_agent->type == NULL) {
 		crm_warn("Invalid inputs");
 		return FALSE;
