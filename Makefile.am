@@ -65,7 +65,7 @@ endif
 SUBDIRS                 = libltdl doc debian pkg replace include lib \
                         ldirectord heartbeat membership telecom\
                         cts linux-ha contrib config resources\
-			$(USE_CRM_DIR) $(LRM_DIR) $(SNMP_SUBAGENT_DIR) tools
+			$(USE_CRM_DIR) $(LRM_DIR) $(SNMP_SUBAGENT_DIR) tools logd
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
 HBDOCS = doc/heartbeat_api.html
