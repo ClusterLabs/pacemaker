@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.12 2005/02/19 18:11:04 andrew Exp $ */
+/* $Id: callbacks.c,v 1.13 2005/02/21 17:23:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -234,7 +234,8 @@ void
 tengine_stonith_connection_destroy(gpointer user_data)
 {
 	crm_err("Fencing daemon has left us: Shutting down...NOW");
-	abort(); /* shutdown properly later */
+	/* shutdown properly later */
+	CRM_DEV_ASSERT(FALSE/* fencing daemon died */);
 	return;
 }
 
