@@ -39,6 +39,9 @@ while ( $_ = @ARGV[0], /^-/ ) {
 	$log_file = $ARGV[0];
 	shift;
 
+    } elsif (  /^->/ ) {
+	last;
+
     } elsif (  /^-a/ ) {
 	$match_all = 1;
 
@@ -94,7 +97,7 @@ sub string_search() {
     my %results    = {};
     my $num_lines  = 0;
 
-    print STDOUT "Starting search in $log_file...\n";
+#    print STDOUT "Starting search in $log_file...\n";
     open(LOG, $log_file);
 
     seek LOG, 0, 2;
@@ -127,7 +130,7 @@ sub string_search() {
 			    $results{$regex} = 1;
 			}
 			$found = scalar(keys %results)-1;
-			print STDOUT "Found ".$found." of ".scalar(@search_for)." match for (".$regex."): \n\t".$line;
+			print STDOUT "Found match ".$found." of ".scalar(@search_for)." for (".$regex."): \n\t".$line;
 
 			if(scalar(@search_for) < scalar(keys %results)) {
 			    
