@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.15 2004/03/16 09:50:09 andrew Exp $ */
+/* $Id: cib.c,v 1.16 2004/03/18 10:21:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -111,7 +111,6 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 		}
 
 		lpc++;
-		CRM_DEBUG2("Got message [body=%s]", (char*)msg->msg_body);
 
 		/* the docs say only do this once, but in their code
 		 * they do it every time!
@@ -119,7 +118,7 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 //		xmlInitParser();
 
 		buffer = (char*)msg->msg_body;
-		cl_log(LOG_DEBUG, "[text=%s]", buffer);
+		cl_log(LOG_DEBUG, "Message %d [text=%s]", lpc, buffer);
 		doc = xmlParseMemory(ha_strdup(buffer), strlen(buffer));
 
 		CRM_DEBUG("Finished parsing buffer as XML");
@@ -134,19 +133,23 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 		CRM_DEBUG("Got the root element");
 		
 
-		const char *sys_to = xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
-		const char *type   = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
+		const char *sys_to= xmlGetProp(root_xml_node, XML_ATTR_SYSTO);
+		const char *type  = xmlGetProp(root_xml_node, XML_ATTR_MSGTYPE);
 		if (root_xml_node == NULL) {
 			cl_log(LOG_ERR, "Root node was NULL!!");
 
 		} else if(sys_to == NULL) {
-			cl_log(LOG_ERR, "Value of %s was NULL!!", XML_ATTR_SYSTO);
+			cl_log(LOG_ERR, "Value of %s was NULL!!",
+			       XML_ATTR_SYSTO);
 			
 		} else if(type == NULL) {
-			cl_log(LOG_ERR, "Value of %s was NULL!!", XML_ATTR_MSGTYPE);
+			cl_log(LOG_ERR, "Value of %s was NULL!!",
+			       XML_ATTR_MSGTYPE);
 			
 		} else if(strcmp(type, XML_ATTR_REQUEST) != 0) {
-			cl_log(LOG_INFO, "Message was a response not a request.  Discarding");
+			cl_log(LOG_INFO,
+			       "Message was a response not a request."
+			       "  Discarding");
 		} else if (strcmp(sys_to, CRM_SYSTEM_CIB) == 0) {
 			answer = processCibRequest(root_xml_node);
 			
@@ -159,7 +162,7 @@ cib_msg_callback(IPC_Channel *sender, void *user_data)
 		} else if (strcmp(sys_to, CRM_SYSTEM_DCIB) == 0) {
 
 			answer = processCibRequest(root_xml_node);
-			
+
 			if (send_ipc_reply(sender,root_xml_node,answer)==FALSE)
 				cl_log(LOG_WARNING,
 				       "Cib answer could not be sent");
