@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.25 2005/02/24 14:54:59 andrew Exp $ */
+/* $Id: callbacks.c,v 1.26 2005/02/25 10:22:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -168,8 +168,12 @@ cib_client_connect(IPC_Channel *channel, gpointer user_data)
 
 	
 	channel->ops->set_recv_qlen(channel, 100);
-	channel->ops->set_send_qlen(channel, 100);
-
+	if(safe_str_eq(new_client->channel_name, cib_channel_callback)) {
+		channel->ops->set_send_qlen(channel, 200);
+	} else {
+		channel->ops->set_send_qlen(channel, 100);
+	}
+		
 	if(client_callback != NULL) {
 		new_client->source = G_main_add_IPC_Channel(
 			G_PRIORITY_LOW, channel, FALSE, client_callback,
@@ -310,6 +314,7 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		ha_msg_add(op_request, F_CIB_CLIENTID,  cib_client->id);
 		
 		msg2ipcchan(op_request, channel);
+		CRM_DEV_ASSERT(channel->send_queue->current_qlen < channel->send_queue->max_qlen);
 		crm_msg_del(op_request);
 
 	}
@@ -474,6 +479,7 @@ cib_common_callback(
 					rc = cib_reply_failed;
 				}
 			}
+			CRM_DEV_ASSERT(channel->send_queue->current_qlen < channel->send_queue->max_qlen);
 
 		} else {
 			enum cib_errors local_rc = cib_ok;
@@ -658,6 +664,7 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 		crm_err("Delivery of reply to client %s failed", token);
 		return cib_reply_failed;
 	}
+	CRM_DEV_ASSERT(hash_client->channel->send_queue->current_qlen < hash_client->channel->send_queue->max_qlen);
 	return cib_ok;
 }
 
@@ -732,6 +739,7 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 		ha_msg_add_int(reply, F_CIB_RC, cib_master_timeout);
 
 		msg2ipcchan(reply, client->channel);
+		CRM_DEV_ASSERT(client->channel->send_queue->current_qlen < client->channel->send_queue->max_qlen);
 
 		list = list->next;
 		client->delegated_calls = g_list_remove(

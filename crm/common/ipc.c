@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.21 2005/02/19 18:11:03 andrew Exp $ */
+/* $Id: ipc.c,v 1.22 2005/02/25 10:22:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,10 +69,12 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 		crm_err("IPC Channel is not connected");
 		all_is_good = FALSE;
 
+#if 0
 	} else if(ipc_client->should_send_blocking == FALSE) {
 		crm_verbose("Setting IPC Channel to blocking..."
 			    " least some messages get lost");
 		ipc_client->should_send_blocking = TRUE;
+#endif
 	}
 
 	if(all_is_good && msg2ipcchan(msg, ipc_client) != HA_OK) {
@@ -81,16 +83,13 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 
 		if(ipc_client->ch_status != IPC_CONNECT) {
 			crm_err("IPC Channel is no longer connected");
-		}
+		} 
 		
 	}	
 
-	crm_log_message(all_is_good?LOG_DEV:LOG_ERR, msg);
+	crm_log_message_adv(all_is_good?LOG_DEV:LOG_ERR,"outbound.ipc.log",msg);
 
-#ifdef MSG_LOG
-	crm_log_message_adv(all_is_good?LOG_DEV:LOG_ERR,
-			    DEVEL_DIR"/outbound.ipc.log", msg);
-#endif
+	CRM_DEV_ASSERT(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen);
 	
 	crm_msg_del(msg);
 	
@@ -212,7 +211,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 
 	ch->ops->set_recv_qlen(ch, 100);
 	ch->ops->set_send_qlen(ch, 100);
-	ch->should_send_blocking = TRUE;
+/* 	ch->should_send_blocking = TRUE; */
 
 	crm_devel("Processing of %s complete", commpath);
 
