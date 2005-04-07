@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.34 2005/04/07 14:14:13 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.35 2005/04/07 14:17:47 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -866,7 +866,7 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"turn on debug info. additional instances increase verbosity\n",
 		"verbose", 'V');
-	fprintf(stream, "\t--%s (-%c)\t: be very very quiet\n", "silent", 's');
+	fprintf(stream, "\t--%s (-%c)\t: be very *very* quiet\n", "quiet", 'q');
 	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
 	fprintf(stream, "\nCommands\n");
 	fprintf(stream, "\t--%s (-%c) <node>\t: "
@@ -889,6 +889,10 @@ usage(const char *cmd, int exit_status)
 		"request the names of all resources\n", "resources", 'R');
 	fprintf(stream, "\t--%s (-%c) <rsc>\t: "
 		"request the location of <rsc>\n", "whereis", 'W');
+	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
+		"Tell the node to enter \"standby\" mode\n", "standby", 's');
+	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
+		"Tell the node to exit \"standby\" mode\n", "active", 'a');
 /*	fprintf(stream, "\t--%s (-%c)\t\n", "disconnect", 'D'); */
 	fflush(stream);
 
