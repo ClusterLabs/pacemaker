@@ -56,15 +56,17 @@ do_ha_control(long long action,
 	
 	if(action & A_HA_DISCONNECT) {
 		if(fsa_cluster_conn != NULL) {
-			fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn, FALSE);
+			fsa_cluster_conn->llc_ops->signoff(
+				fsa_cluster_conn, FALSE);
 		}
 		
 	}
 	
 	if(action & A_HA_CONNECT) {
-		if(fsa_cluster_conn == NULL)
+		if(fsa_cluster_conn == NULL) {
 			fsa_cluster_conn = ll_cluster_new("heartbeat");
-
+		}
+		
 		/* make sure we are disconnected first */
 		fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn, FALSE);
 		

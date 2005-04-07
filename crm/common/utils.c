@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.46 2005/04/06 14:35:57 andrew Exp $ */
+/* $Id: utils.c,v 1.47 2005/04/07 13:50:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -526,7 +526,6 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 	}
 	
 	CRM_DEV_ASSERT(uname != NULL);
-	CRM_DEV_ASSERT(safe_str_neq(uname, "__no_node__"));
 
 	/* avoid blocking calls where possible */
 	uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
