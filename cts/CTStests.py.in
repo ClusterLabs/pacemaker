@@ -150,7 +150,7 @@ random for the selected number of iterations.
 
             nodechoice = self.Env.RandomNode()
 
-            self.CM.log("Running test %s (%s)        [%d]"  % (test.name, nodechoice, testcount))
+            self.CM.log("Running test %s (%s)	[%d]"  % (test.name, nodechoice, testcount))
             os.system("stat -L -c %%s %s > /tmp/cts.%d"
                       %(self.CM["LogFileName"], testcount))
 
@@ -167,7 +167,7 @@ random for the selected number of iterations.
                 self.incr("success");
             else:
                 self.incr("failure");
-                self.CM.log("Test %s (%s)        [FAILED]"  % (test.name, nodechoice))
+                self.CM.log("Test %s (%s)	[FAILED]"  % (test.name, nodechoice))
                 # Better get the current info from the cluster...
                 self.CM.statall()
             stoptime=time.time()
