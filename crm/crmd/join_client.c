@@ -177,6 +177,8 @@ do_cl_join_request(long long action,
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
 	add_cib_op_callback(
 		call_id, TRUE, copy_ha_msg_input(input), join_query_callback);
+
+	fsa_actions |= A_DC_TIMER_STOP;
 	return I_NULL;
 }
 
@@ -197,9 +199,12 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 	
 	if(local_cib != NULL) {
 		HA_Message *reply = NULL;
+		crm_debug("Acknowledging %s as our DC",
+			  cl_get_string(input->msg, F_CRM_HOST_FROM));
 		copy_in_properties(generation, local_cib);
 		reply = create_reply(input->msg, generation);
 		send_msg_via_ha(fsa_cluster_conn, reply);
+		fsa_actions |= A_DC_TIMER_START;
 
 	} else {
 		crm_err("Could not retrieve Generation to attach to our"
