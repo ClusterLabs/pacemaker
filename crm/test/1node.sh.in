@@ -79,8 +79,7 @@ do_cmd make_resource $test_node_1 rsc1 ocf IPaddr - - - $args
 cts_assert "Creation of first resource failed."
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 300 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE"  \
-    -s "crmd(.*) Performing op start(.*) on rsc1" \
-    -s "crmd(.*) Resource state: rsc1(.*) after start] on ${test_node_1}"
+    -s "crmd(.*) Performing op start(.*) on rsc1"
 cts_assert S_IDLE not reached after first resource created
 
 #----
@@ -92,8 +91,7 @@ do_cmd make_resource $test_node_1 rsc2 ocf IPaddr - - - $args
 cts_assert "Creation of second resource failed."
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 300 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE"  \
-    -s "crmd(.*) Performing op start(.*) on rsc2" \
-    -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_1}"
+    -s "crmd(.*) Performing op start(.*) on rsc2"
 cts_assert S_IDLE not reached after second resource created
 
 #----
