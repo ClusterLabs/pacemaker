@@ -1433,11 +1433,12 @@ class ResourceRecover(CTSTest):
         '''ResourceRecover is applicable only when there is any resource running on cluster
         and environment is linux-ha-v2'''
         if self.CM["Name"] == "linux-ha-v2":
-            if self.CM.Env["CIBResource"] == 1:
-                return 1
-            else:
+            resourcelist=self.CM.Resources()
+            if len(resourcelist)==0:
                 self.CM.log("No resources on this cluster")
                 return 0
+            else:
+                return 1
         return 0
         
     def errorstoignore(self):
