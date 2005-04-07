@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.67 2005/04/06 13:54:40 andrew Exp $ */
+/* $Id: unpack.c,v 1.68 2005/04/07 13:54:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -666,7 +666,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 				/* map this to a "done" so it is not marked
 				 * as failed, then make sure it is re-issued
 				 */
-				action_new(rsc_lh, start_rsc, NULL, NULL);
+				action_new(rsc_lh, start_rsc, NULL, node);
 				action_status_i = LRM_OP_DONE;
 			}
 		}
