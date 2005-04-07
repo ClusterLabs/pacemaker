@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.25 2005/03/16 19:53:02 andrew Exp $ */
+/* $Id: unpack.c,v 1.26 2005/04/07 14:00:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,11 +42,9 @@ set_timer_value(te_timer_t *timer, const char *time, int time_default)
 	}
 	
 	timer->timeout = time_default;
-	if(time != NULL) {
-		int tmp_time = atoi(time);
-		if(tmp_time > 0) {
-			timer->timeout = tmp_time;
-		}
+	int tmp_time = crm_get_msec(time);
+	if(tmp_time > 0) {
+		timer->timeout = tmp_time;
 	}
 }
 
@@ -198,11 +196,10 @@ unpack_action(crm_data_t *xml_action)
 		action->type = action_type_crm;
 	}
 
-	tmp = crm_element_value(action_copy, XML_ATTR_TIMEOUT);
-	if(tmp != NULL) {
-		action->timeout = atoi(tmp);
-	}
-	crm_devel("Action %d has timer set to %d",
+	action->timeout = crm_get_msec(
+		crm_element_value(action_copy, XML_ATTR_TIMEOUT));
+
+	crm_devel("Action %d has timer set to %dms",
 		  action->id, action->timeout);
 	
 	crm_malloc(action->timer, sizeof(te_timer_t));
@@ -248,7 +245,9 @@ extract_event(crm_data_t *msg)
 		crm_xml_devel(node_state,"Processing");
 		
 		if(crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
-			send_abort("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute", node_state);
+			send_complete(
+				"Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute",
+				node_state, te_update);
 			break;
 			
 		} else if(crm_element_value(node_state, XML_CIB_ATTR_STONITH) != NULL) {
@@ -262,7 +261,9 @@ extract_event(crm_data_t *msg)
 				event_node, CRM_OP_SHUTDOWN, LRM_OP_DONE);
 			
 			if(action_id < 0) {
-				send_abort("Stonith/shutdown event not matched", node_state);
+				send_complete(
+					"Stonith/shutdown event not matched",
+					node_state, te_update);
 				break;
 			} else {
 				process_trigger(action_id);
@@ -307,7 +308,7 @@ extract_event(crm_data_t *msg)
 					event_node, NULL, LRM_OP_DONE);
 
 				if(action_id < 0) {
-					send_abort("Stonith/shutdown event not matched", node_state);
+					send_complete("Stonith/shutdown event not matched", node_state, te_update);
 					break;
 				} else {
 					process_trigger(action_id);

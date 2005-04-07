@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.57 2005/04/05 15:02:49 andrew Exp $ */
+/* $Id: tengine.c,v 1.58 2005/04/07 14:00:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -208,7 +208,8 @@ match_graph_event(action_t *action, crm_data_t *event)
 					" failure (%d)... aborting transition.",
 					event_action, event_rsc, event_node,
 					op_status_i);
-				send_abort("Action failed", match->xml);
+				send_complete(
+					"Action failed", match->xml, te_failed);
 				return -2;
 			}
 			break;
@@ -218,7 +219,8 @@ match_graph_event(action_t *action, crm_data_t *event)
 			break;
 		default:
 			crm_err("Unsupported action result: %d", op_status_i);
-			send_abort("Unsupport action result", match->xml);
+			send_complete("Unsupport action result",
+				      match->xml, te_failed);
 			return -2;
 	}
 	
@@ -307,13 +309,15 @@ match_down_event(const char *target, const char *filter, int rc)
 			if(FALSE == crm_is_true(allow_fail)) {
 				crm_err("Stonith of %s failed (%d)..."
 					" aborting transition.", target, rc);
-				send_abort("Action failed", match->xml);
+				send_complete("Stonith failed",
+					      match->xml, te_failed);
 				return -2;
 			}
 			break;
 		default:
 			crm_err("Unsupported action result: %d", rc);
-			send_abort("Unsupport action result", match->xml);
+			send_complete("Unsupport Stonith result",
+				      match->xml, te_failed);
 			return -2;
 	}
 	
@@ -376,7 +380,7 @@ process_graph_event(crm_data_t *event)
 	} else {
 		/* unexpected event, trigger a pe-recompute */
 		/* possibly do this only for certain types of actions */
-		send_abort("Event not matched", event);
+		send_complete("Event not matched", event, te_update);
 		return FALSE;
 	}
 
@@ -404,7 +408,7 @@ check_for_completion(void)
 			start_te_timer(transition_fuzz_timer);
 			
 		} else {
-			send_success("complete");
+			send_complete("complete", NULL, te_done);
 		}
 		
 	} else {
@@ -691,7 +695,8 @@ fire_synapse(synapse_t *synapse)
 			crm_err("Failed initiating <%s id=%d> in synapse %d",
 				crm_element_name(action->xml), action->id, synapse->id);
 
-			send_abort("Action init failed", action->xml);
+			send_complete(
+				"Action init failed", action->xml, te_failed);
 			return;
 		} 
 		if(tmp_time > next_transition_timeout) {

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.21 2005/04/06 14:38:14 andrew Exp $ */
+/* $Id: callbacks.c,v 1.22 2005/04/07 14:00:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,14 +55,14 @@ te_update_confirm(const char *event, HA_Message *msg)
 	if(op == NULL) {
 		crm_err(
 			"Illegal CIB update, the operation must be specified");
-		send_abort("Illegal update", update);
+		send_complete("Illegal update", update, te_update);
 		done = TRUE;
 		
 	} else if(strcmp(op, CRM_OP_CIB_ERASE) == 0) {
 		/* these are always unexpected, trigger the PE */
 		crm_err("Need to trigger an election here so that"
 			" the current state of all nodes is obtained");
-		send_abort("Erase event", update);
+		send_complete("Erase event", update, te_update);
 		done = TRUE;
 
 	} else if(strcmp(op, CRM_OP_CIB_CREATE) == 0
@@ -71,7 +71,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 		  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
 		
 		/* these are always unexpected, trigger the PE */
-		send_abort("Non-update change", update);
+		send_complete("Non-update change", update, te_update);
 		done = TRUE;
 		
 	} else if(strcmp(op, CRM_OP_CIB_UPDATE) != 0) {
@@ -95,7 +95,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 	} else if(safe_str_eq(type, XML_CIB_TAG_STATUS)) {
 		/* this _may_ not be un-expected */
 		if(extract_event(update) == FALSE) {
-			send_abort("Unexpected status update", update);
+			send_complete("Unexpected status update", update, te_update);
 		}
 
 
@@ -104,7 +104,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 		|| safe_str_eq(type, XML_CIB_TAG_CONSTRAINTS)) {
 		/* these are never expected	 */
 		crm_debug("Aborting on changes to the %s section", type);
-		send_abort("Non-status update", update);
+		send_complete("Non-status update", update, te_update);
 
 	} else {
 		crm_warn("Ignoring update confirmation for %s object", type);
@@ -167,12 +167,12 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	} else if(in_transition == FALSE) {
 		crm_info("Received event_cc while not in a transition..."
 			 "  Poking the Policy Engine");
-		send_abort("Initiate a transition", NULL);
+		send_complete("Initiate a transition", NULL, te_update);
 #ifdef TESTING
 	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
 		crm_trace("Processing %s...", CRM_OP_EVENTCC);
 		if(extract_event(msg) == FALSE) {
-			send_abort("ttest loopback", msg);
+			send_complete("ttest loopback", msg, te_failed);
 		}
 #endif
 	}
@@ -236,10 +236,11 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 			te_cib_conn, XML_CIB_TAG_STATUS,update,NULL,cib_none);	
 
 		if(action_id < 0) {
-			send_abort("Stonith not matched", update);
+			send_complete("Stonith not matched", update, te_update);
 
 		} else if(rc != cib_ok) {
-			send_abort("Couldnt update CIB after stonith", update);
+			send_complete("Couldnt update CIB after stonith",
+				      update, te_failed);
 			
 		} else {
 			process_trigger(action_id);
@@ -248,7 +249,7 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		free_xml(update);
 		
 	} else {
-		send_abort("Fencing op failed", NULL);
+		send_complete("Fencing op failed", NULL, te_failed);
 	}
 }
 

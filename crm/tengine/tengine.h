@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.17 2005/03/11 14:25:07 andrew Exp $ */
+/* $Id: tengine.h,v 1.18 2005/04/07 14:00:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,14 @@ typedef enum {
 	action_type_rsc,
 	action_type_crm
 } action_type_e;
+
+typedef enum te_reason_e {
+	te_update,
+	te_done,
+	te_failed,
+	te_timeout,
+	
+} te_reason_t;
 
 typedef struct synapse_s {
 		int id;
@@ -87,9 +95,7 @@ extern gboolean initiate_transition(void);
 
 /* utils */
 extern void print_state(int log_level);
-extern void send_success(const char *text);
-/*extern void send_abort(const char *text, HA_Message *msg); */
-extern void send_abort(const char *text, crm_data_t *msg);
+extern void send_complete(const char *text,crm_data_t *msg,te_reason_t reason);
 extern gboolean stop_te_timer(te_timer_t *timer);
 extern gboolean start_te_timer(te_timer_t *timer);
 extern gboolean do_update_cib(crm_data_t *xml_action, int status);

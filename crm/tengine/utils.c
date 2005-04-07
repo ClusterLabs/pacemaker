@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.21 2005/04/06 14:33:31 andrew Exp $ */
+/* $Id: utils.c,v 1.22 2005/04/07 14:00:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,62 +35,68 @@ void print_action(const char *prefix, action_t *action, gboolean to_file);
 gboolean timer_callback(gpointer data);
 
 void
-/* send_abort(const char *text, HA_Message *msg) */
-send_abort(const char *text, crm_data_t *msg)
+send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 {	
 	HA_Message *cmd = NULL;
+	const char *op = CRM_OP_TEABORT;
 
-	if(msg != NULL) {
-		crm_info("Sending \"abort\" message... details follow");
-		if(safe_str_eq(crm_element_name(msg), XML_TAG_CIB)) {
-			crm_info("%s... full CIB replace/update", text);
-
-		} else {
-			crm_xml_info(msg, text);
+	if(reason == te_done || reason == te_timeout) {
+		op = CRM_OP_TECOMPLETE;
+		if(in_transition == FALSE) {
+			crm_warn("Not in transition, not sending message");
+			return;
 		}
+	}
 
-	} else {
-		crm_info("Sending \"abort\" message... %s", text);
+	switch(reason) {
+		case te_update:
+			crm_debug("Transition status: %s by CIB update: %s",
+				  in_transition?"Aborted":"Triggered", text);
+			if(msg != NULL) {
+				if(safe_str_eq(crm_element_name(msg),
+					       XML_TAG_CIB)) {
+					crm_info("Cause:"
+						 " full CIB replace/update");
+				} else {
+					crm_xml_info(msg, "Cause");
+				}
+			}
+			print_state(LOG_DEBUG);
+			break;
+		case te_done:
+			crm_info("Transition status: Complete%s%s",
+				 text?": ":"", text?text:"");
+			print_state(LOG_DEBUG);
+			break;
+		case te_timeout:
+			crm_err("Transition status: Timed out after %dms",
+				transition_timer->timeout);
+			print_state(LOG_WARNING);
+			break;
+		case te_failed:
+			crm_err("Transition status: Aborted by failed action: %s",
+				 text);
+			print_state(LOG_WARNING);
+			break;
 	}
 	
-	print_state(LOG_WARNING);
-	initialize_graph();
-
-	cmd = create_request(CRM_OP_TEABORT, NULL, NULL,
-			     CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
-	ha_msg_add(cmd, "message", text);
-
-#ifdef TESTING
-	crm_log_message(LOG_ERR, cmd);
-	g_main_quit(mainloop);
-	return;
-#else
-	send_ipc_message(crm_ch, cmd);
-#endif	
-
-}
-
-void
-send_success(const char *text)
-{	
-	HA_Message *cmd = NULL;
-	if(in_transition == FALSE) {
-		crm_warn("Not in transition, not sending message");
-		return;
-	}
 	in_transition = FALSE;
-
-	crm_info("Transition \"complete\": %s", text);
-
-	print_state(LOG_INFO);
 	initialize_graph();
 
-	cmd = create_request(CRM_OP_TECOMPLETE, NULL, NULL,
-			     CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
-	ha_msg_add(cmd, "message", text);
+	cmd = create_request(
+		op, NULL, NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
 
+	if(text != NULL) {
+		ha_msg_add(cmd, "message", text);
+	}
+	
 #ifdef TESTING
-	crm_log_message(LOG_INFO, cmd);
+	if(reason == te_done) {
+		crm_log_message(LOG_INFO, cmd);
+	} else {
+		crm_log_message(LOG_ERR, cmd);
+	}
+	
 	g_main_quit(mainloop);
 	return;
 #else
@@ -357,7 +363,7 @@ timer_callback(gpointer data)
 	if(timer->reason == timeout_fuzz) {
 		crm_warn("Transition timeout reached..."
 			 " marking transition complete.");
-		send_success("success");
+		send_complete("success", NULL, te_done);
 		return TRUE;
 
 	} else if(timer->reason == timeout_timeout) {
@@ -368,7 +374,7 @@ timer_callback(gpointer data)
 		
 		crm_warn("Some actions may not have been executed.");
 			
-		send_success(XML_ATTR_TIMEOUT);
+		send_complete(XML_ATTR_TIMEOUT, NULL, te_timeout);
 		
 		return TRUE;
 		
