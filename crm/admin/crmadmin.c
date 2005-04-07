@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.33 2005/03/18 10:33:39 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.34 2005/04/07 14:14:13 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -84,11 +84,13 @@ gboolean DO_NODE_LIST     = FALSE;
 gboolean BE_SILENT        = FALSE;
 gboolean DO_RESOURCE_LIST = FALSE;
 gboolean DO_OPTION        = FALSE;
+gboolean DO_STANDBY       = FALSE;
 enum debug DO_DEBUG       = debug_none;
 const char *crmd_operation = NULL;
 
 crm_data_t *msg_options = NULL;
 
+const char *standby_on_off = "on";
 const char *admin_verbose = XML_BOOLEAN_FALSE;
 char *id = NULL;
 char *this_msg_reference = NULL;
@@ -101,7 +103,7 @@ int operation_status = 0;
 const char *sys_to = NULL;
 const char *crm_system_name = "crmadmin";
 
-#define OPTARGS	"V?K:S:HE:DW:d:i:RNst:o:"
+#define OPTARGS	"V?K:S:HE:DW:d:i:RNs:a:qt:o:"
 
 int
 main(int argc, char **argv)
@@ -115,7 +117,7 @@ main(int argc, char **argv)
 		/* Top-level Options */
 		{"verbose", 0, 0, 'V'},
 		{"help", 0, 0, '?'},
-		{"silent", 0, 0, 's'},
+		{"quiet", 0, 0, 'q'},
 		{"reference", 1, 0, 0},
 		{XML_ATTR_TIMEOUT, 1, 0, 't'},
 
@@ -125,6 +127,8 @@ main(int argc, char **argv)
 		{"crm_debug_inc", 1, 0, 'i'},
 		{"crm_debug_dec", 1, 0, 'd'},
 		{"status", 1, 0, 'S'},
+		{"standby", 1, 0, 's'},
+		{"active", 1, 0, 'a'},
 		{"health", 0, 0, 'H'},
 		{"election", 0, 0, 'E'},
 		{"dc_lookup", 0, 0, 'D'},
@@ -217,7 +221,7 @@ main(int argc, char **argv)
 				crm_verbose("Option %c => %s", flag, optarg);
 				crm_option = crm_strdup(optarg);
 				break;
-			case 's':
+			case 'q':
 				BE_SILENT = TRUE;
 				break;
 			case 'i':
@@ -229,6 +233,17 @@ main(int argc, char **argv)
 				DO_DEBUG = debug_dec;
 				crm_verbose("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
+				break;
+			case 's':
+				DO_STANDBY = TRUE;
+				crm_verbose("Option %c => %s", flag, optarg);
+				dest_node = crm_strdup(optarg);
+				break;
+			case 'a':
+				DO_STANDBY = TRUE;
+				crm_verbose("Option %c => %s", flag, optarg);
+				dest_node = crm_strdup(optarg);
+				standby_on_off = "off";
 				break;
 			case 'S':
 				DO_HEALTH = TRUE;
@@ -409,6 +424,43 @@ do_work(ll_cluster_t * hb_cluster)
 			
 			rc = the_cib->cmds->modify(
 				the_cib, XML_CIB_TAG_CRMCONFIG, fragment,
+				NULL, call_options|cib_discard_reply);
+			
+			free_xml(fragment);
+
+		} else if(DO_STANDBY) {
+			char *name = NULL;
+			char *value = NULL;
+			crm_data_t *a_node = NULL;
+			crm_data_t *xml_obj = NULL;
+			crm_data_t *fragment = NULL;
+
+			if(decodeNVpair(crm_option, '=', &name, &value)==FALSE){
+				crm_err("%s needs to be of the form"
+					" <name>=<value>", crm_option);
+				return -1;
+			}
+			
+			a_node = create_xml_node(NULL, XML_CIB_TAG_NODE);
+			set_xml_property_copy(a_node, XML_ATTR_ID, dest_node);
+
+			xml_obj = create_xml_node(a_node, XML_TAG_ATTR_SETS);
+			xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
+			xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
+
+			set_xml_property_copy(
+				xml_obj, XML_NVPAIR_ATTR_NAME, "standby");
+			set_xml_property_copy(
+				xml_obj, XML_NVPAIR_ATTR_VALUE, standby_on_off);
+			
+			fragment = create_cib_fragment(a_node, NULL);
+
+			free_xml(a_node);
+			crm_free(name);
+			crm_free(value);
+			
+			rc = the_cib->cmds->modify(
+				the_cib, XML_CIB_TAG_NODES, fragment,
 				NULL, call_options|cib_discard_reply);
 			
 			free_xml(fragment);
