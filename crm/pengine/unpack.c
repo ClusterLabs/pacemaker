@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.70 2005/04/08 17:34:33 andrew Exp $ */
+/* $Id: unpack.c,v 1.71 2005/04/08 19:10:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -238,7 +238,7 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 			return FALSE;
 		}
 		
-		new_node->weight = 1.0;
+		new_node->weight = 0;
 		new_node->fixed  = FALSE;
 		crm_malloc(new_node->details,
 			   sizeof(struct node_shared_s));
@@ -478,9 +478,6 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 	}
 
 	if(shutdown != NULL) {
-		/* dont run resources here */
-		this_node->weight = -1;
-		this_node->fixed = TRUE;
 		this_node->details->shutdown = TRUE;
 	}
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
@@ -527,6 +524,9 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 		crm_warn("Node %s is unclean", uname);
 	}
 	if(this_node->details->shutdown) {
+		/* dont run resources here */
+		this_node->weight = -1;
+		this_node->fixed = TRUE;
 		crm_debug("Node %s is due for shutdown", uname);
 	}
 	

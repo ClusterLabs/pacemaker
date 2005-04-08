@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.49 2005/04/08 17:35:09 andrew Exp $ */
+/* $Id: stages.c,v 1.50 2005/04/08 19:10:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -407,6 +407,10 @@ stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 		   }
 		);
 */
+	crm_verbose("========= Action List =========");
+	slist_iter(action, action_t, actions, lpc,
+		   print_action(NULL, action, FALSE));
+
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 
@@ -451,6 +455,17 @@ choose_node_from_list(color_t *color)
 
 	if(chosen == NULL) {
 		crm_debug("Could not allocate a node for color %d", color->id);
+		return FALSE;
+
+	} else if(chosen->details->unclean || chosen->details->shutdown) {
+		crm_debug("Even highest ranked node for color %d"
+			  " is unclean or shutting down",
+			  color->id);
+		return FALSE;
+		
+	} else if(chosen->weight < 0) {
+		crm_debug("Even highest ranked node for color %d, had weight %f",
+			  color->id, chosen->weight);
 		return FALSE;
 	}
 

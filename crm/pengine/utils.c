@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.63 2005/04/07 13:56:47 andrew Exp $ */
+/* $Id: utils.c,v 1.64 2005/04/08 19:10:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -302,7 +302,7 @@ node_copy(node_t *this_node)
 		  this_node, this_node->details->uname, new_node);
 	new_node->weight  = this_node->weight; 
 	new_node->fixed   = this_node->fixed;
-	new_node->details = this_node->details; 
+	new_node->details = this_node->details;	
 	
 	return new_node;
 }
@@ -542,20 +542,33 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	const node_t *node1 = (const node_t*)a;
 	const node_t *node2 = (const node_t*)b;
 
+	float node1_weight = 0;
+	float node2_weight = 0;
+	
 	if(a == NULL) { return 1; }
 	if(b == NULL) { return -1; }
+
+	node1_weight = node1->weight;
+	node2_weight = node2->weight;
 	
-	if(node1->weight > node2->weight) {
+	if(node1->details->unclean || node1->details->shutdown) {
+		node1_weight  = -INFINITY; 
+	}
+	if(node2->details->unclean || node2->details->shutdown) {
+		node2_weight  = -INFINITY; 
+	}
+
+	if(node1_weight > node2_weight) {
 		crm_devel("%s (%f) > %s (%f) : weight",
-			  node1->details->id, node1->weight,
-			  node2->details->id, node2->weight);
+			  node1->details->id, node1_weight,
+			  node2->details->id, node2_weight);
 		return -1;
 	}
 	
-	if(node1->weight < node2->weight) {
+	if(node1_weight < node2_weight) {
 		crm_devel("%s (%f) < %s (%f) : weight",
-			  node1->details->id, node1->weight,
-			  node2->details->id, node2->weight);
+			  node1->details->id, node1_weight,
+			  node2->details->id, node2_weight);
 		return 1;
 	}
 
