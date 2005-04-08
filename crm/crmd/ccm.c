@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.63 2005/04/01 12:29:46 andrew Exp $ */
+/* $Id: ccm.c,v 1.64 2005/04/08 16:46:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,6 +51,8 @@ gboolean ghash_node_clfree(gpointer key, gpointer value, gpointer user_data);
 void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
 
 #define CCM_EVENT_DETAIL 0
+#define CCM_EVENT_DETAIL_PARTIAL 1
+
 oc_ev_t *fsa_ev_token;
 int num_ccm_register_fails = 0;
 int max_ccm_register_fails = 30;
@@ -467,10 +469,8 @@ do_ccm_update_cache(long long action,
 void
 ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 {
-	int member_id = -1;
-	gboolean member = FALSE;
 	int lpc;
-	int node_list_size;
+	gboolean member = FALSE;
 
 	crm_info("-----------------------");
 	crm_debug("trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
@@ -482,9 +482,9 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	       oc->m_memb_idx,
 	       oc->m_in_idx,
 	       oc->m_out_idx);
-	
-	node_list_size = oc->m_n_member;
-	for(lpc=0; lpc<node_list_size; lpc++) {
+
+#if !CCM_EVENT_DETAIL_PARTIAL
+	for(lpc=0; lpc < oc->m_n_member; lpc++) {
 		crm_info("\tCURRENT: %s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_memb_idx+lpc].node_uname,
 		       oc->m_array[oc->m_memb_idx+lpc].node_id,
@@ -493,10 +493,9 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		if(safe_str_eq(fsa_our_uname,
 			       oc->m_array[oc->m_memb_idx+lpc].node_uname)) {
 			member = TRUE;
-			member_id = oc->m_array[oc->m_memb_idx+lpc].node_id;
 		}
 	}
-	
+#endif
 	if (member == FALSE) {
 		crm_warn("MY NODE IS NOT IN CCM THE MEMBERSHIP LIST");
 	}
