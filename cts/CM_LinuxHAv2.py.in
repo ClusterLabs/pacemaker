@@ -408,14 +408,19 @@ class HAResource(Resource):
         '''
         Get information from xml node
         '''
-        self.rid     = node.getAttribute('id')
-        self.rclass  = node.getAttribute('class')
-        self.rtype   = node.getAttribute('type')
+        self.rid     = str(node.getAttribute('id'))
+        self.rclass  = str(node.getAttribute('class'))
+        self.rtype   = str(node.getAttribute('type'))
         self.rparameters = {}
         
-        attributes  = node.getElementsByTagName('instance_attributes')[0]
-        parameters  = node.getElementsByTagName('attributes')[0]
-        nvpairs     = node.getElementsByTagName('nvpair')
+	list = node.getElementsByTagName('instance_attributes')
+	if len(list) > 0:
+	    attributes = list[0]
+	    list = attributes.getElementsByTagName('attributes')
+	if len(list) > 0:
+	    parameters = list[0]
+	    nvpairs     = parameters.getElementsByTagName('nvpair')
+
         for nvpair in nvpairs:
             name=nvpair.getAttribute('name')
             value=nvpair.getAttribute('value')
