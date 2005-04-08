@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.31 2005/04/07 13:51:25 andrew Exp $ */
+/* $Id: graph.c,v 1.32 2005/04/08 16:57:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -304,12 +304,15 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 	if(action == NULL) {
 		crm_err("Cannot dump NULL action");
 		return;
+
 	} else if(action->optional) {
 		crm_trace("action %d was optional", action->id);
 		return;
+
 	} else if(action->runnable == FALSE) {
 		crm_trace("action %d was not runnable", action->id);
 		return;
+
 	} else if(action->dumped) {
 		crm_trace("action %d was already dumped", action->id);
 		return;
@@ -317,7 +320,16 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 	} else if(action->discard) {
 		crm_trace("action %d was discarded", action->id);
 		return;
+
+	} else if(action->node == NULL) {
+		crm_err("action %d was not allocated", action->id);
+		return;
+
+	} else if(action->node->details->online == NULL) {
+		crm_err("action %d was scheduled for offline node", action->id);
+		return;
 	}
+	
 	action->dumped = TRUE;
 	
 	syn    = create_xml_node(*graph, "synapse");

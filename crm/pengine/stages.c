@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.47 2005/04/01 12:33:08 andrew Exp $ */
+/* $Id: stages.c,v 1.48 2005/04/08 16:57:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -287,7 +287,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 
 	slist_iter(
 		node, node_t, nodes, lpc,
-		if(node->details->shutdown) {
+		if(node->details->online && node->details->shutdown) {
 			crm_info("Scheduling Node %s for shutdown",
 				 node->details->uname);
 			
@@ -323,7 +323,13 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 			
 			stonith_constraints(node, stonith_op, down_op,
 					    ordering_constraints);
+		} else if(node->details->expected_up) {
+			crm_warn("Node %s was expected to be up!",
+				 node->details->uname);
+			crm_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
+			crm_warn("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
 		}
+		
 		);
 
 

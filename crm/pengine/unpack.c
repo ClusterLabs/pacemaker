@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.68 2005/04/07 13:54:47 andrew Exp $ */
+/* $Id: unpack.c,v 1.69 2005/04/08 16:57:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,8 +69,6 @@ gboolean unpack_failed_resource(GListPtr *placement_constraints,
 gboolean determine_online_status(crm_data_t * node_state, node_t *this_node);
 
 gboolean unpack_lrm_agents(node_t *node, crm_data_t * agent_list);
-
-gboolean is_node_unclean(crm_data_t * node_state);
 
 gboolean rsc_colocation_new(
 	const char *id, enum con_strength strength,
@@ -445,13 +443,17 @@ unpack_status(crm_data_t * status,
 		crm_verbose("determining node state");
 		determine_online_status(node_state, this_node);
 
-		crm_verbose("Processing lrm resource entries");
-		unpack_lrm_rsc_state(this_node, lrm_rsc, rsc_list, nodes,
-				     actions, placement_constraints);
-
-		crm_verbose("Processing lrm agents");
-		unpack_lrm_agents(this_node, lrm_agents);
-
+		if(this_node->details->online || stonith_enabled) {
+			/* offline nodes run no resources
+			 * unless stonith is enabled in which case we need to
+			 *   know
+			 */
+			crm_verbose("Processing lrm resource entries");
+			unpack_lrm_rsc_state(
+				this_node, lrm_rsc, rsc_list, nodes,
+				actions, placement_constraints);
+		}
+		
 		);
 
 	return TRUE;
@@ -470,86 +472,64 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 	const char *ccm_state  = crm_element_value(node_state,XML_CIB_ATTR_INCCM);
 	const char *ha_state   = crm_element_value(node_state,XML_CIB_ATTR_HASTATE);
 	const char *shutdown   = crm_element_value(node_state,XML_CIB_ATTR_SHUTDOWN);
-	const char *unclean    = NULL;/*crm_element_value(node_state,XML_CIB_ATTR_STONITH); */
-	
-	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
-	   && crm_is_true(ccm_state)
-	   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
-	   && safe_str_eq(crm_state, ONLINESTATUS)
-	   && shutdown == NULL) {
-		if(this_node != NULL) {
-			this_node->details->online = TRUE;
-		}
-		crm_debug("Node %s is online", uname);
+
+	if(this_node == NULL) {
+		return online;
+	}
+
+	if(shutdown != NULL) {
+		this_node->details->shutdown = TRUE;
+	}
+	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
+		this_node->details->expected_up = TRUE;
+	}
+
+	if(crm_is_true(ccm_state) == FALSE
+	   || ha_state == NULL
+	   || safe_str_eq(ha_state, DEADSTATUS)) {
+		crm_debug("Node is down: ha_state=%s, ccm_state=%s",
+			  crm_str(ha_state), crm_str(ccm_state));
+
+	} else if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
+		  && safe_str_eq(crm_state, ONLINESTATUS)) {
 		online = TRUE;
+
+	} else if(this_node->details->expected_up == FALSE) {
+		crm_debug("CRMd is down: ha_state=%s, ccm_state=%s",
+			  crm_str(ha_state), crm_str(ccm_state));
+		crm_debug("\tcrm_state=%s, join_state=%s, expected=%s",
+			  crm_str(crm_state), crm_str(join_state),
+			  crm_str(exp_state));
 		
-	} else if(this_node != NULL) {
+	} else {
+		/* mark it unclean */
+		this_node->details->unclean = TRUE;
+
+		crm_warn("Node %s is un-expectedly down", uname);
+		crm_debug("\tcrm_state=%s, join_state=%s, expected=%s",
+			  crm_str(crm_state), crm_str(join_state),
+			  crm_str(exp_state));
+	}
+
+	if(online) {
+		crm_debug("Node %s is online", uname);
+		this_node->details->online = TRUE;
+	} else {
 		/* remove node from contention */
+		crm_debug("Node %s is down", uname);
 		this_node->weight = -1;
 		this_node->fixed = TRUE;
-
-		crm_verbose("join_state=%s, expected=%s, shutdown=%s",
-			    crm_str(join_state), crm_str(exp_state),
-			    crm_str(shutdown));
-
-		if(unclean != NULL) {
-			this_node->details->unclean = TRUE;
-				
-		} else if(is_node_unclean(node_state)) {
-			/* report and or take remedial action */
-			this_node->details->unclean = TRUE;
-		}
-		
-		if(shutdown != NULL) {
-			this_node->details->shutdown = TRUE;
-
-		}
-
-		if(this_node->details->unclean) {
-			crm_warn("Node %s is unclean", uname);
-		}
-
-		if(this_node->details->shutdown) {
-			crm_debug("Node %s is due for shutdown", uname);
-		}
 	}
+	if(this_node->details->unclean) {
+		crm_warn("Node %s is unclean", uname);
+	}
+	if(this_node->details->shutdown) {
+		crm_debug("Node %s is due for shutdown", uname);
+	}
+	
 	return online;
 }
 
-gboolean
-is_node_unclean(crm_data_t * node_state)
-{
-/*	const char *state      = crm_element_value(node_state,XML_NODE_ATTR_STATE); */
-	const char *uname      = crm_element_value(node_state,XML_ATTR_UNAME);
-	const char *exp_state  = crm_element_value(node_state,XML_CIB_ATTR_EXPSTATE);
-	const char *join_state = crm_element_value(node_state,XML_CIB_ATTR_JOINSTATE);
-	const char *crm_state  = crm_element_value(node_state,XML_CIB_ATTR_CRMDSTATE);
-	const char *ha_state  = crm_element_value(node_state,XML_CIB_ATTR_HASTATE);
-	const char *ccm_state  = crm_element_value(node_state,XML_CIB_ATTR_INCCM);
-
-	if(safe_str_eq(exp_state, CRMD_STATE_INACTIVE)) {
-		crm_debug("Node %s is safely inactive", uname);
-		return FALSE;
-
-	/* do an actual calculation once STONITH is available */
-	} else if(safe_str_neq(exp_state, CRMD_JOINSTATE_DOWN)) {
-
-		if(safe_str_eq(crm_state, OFFLINESTATUS)
-		   || (ha_state != NULL && safe_str_eq(ha_state, DEADSTATUS))
-		   || safe_str_eq(join_state, CRMD_JOINSTATE_DOWN)
-		   || FALSE == crm_is_true(ccm_state)) {
-			crm_warn("Node %s is un-expectedly down", uname);
-			return TRUE;
-		}
-		crm_debug("Node %s: ha=%s, join=%s, crm=%s, ccm=%s",
-			  uname, crm_str(ha_state), crm_str(join_state),
-			  crm_str(crm_state), crm_str(ccm_state));
-	} else {
-		crm_debug("Node %s was expected to be down", uname);
-	}
-
-	return FALSE;
-}
 
 gboolean
 unpack_lrm_agents(node_t *node, crm_data_t * agent_list)
@@ -643,7 +623,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 			 * failed resource.
 			 */
 			action_status_i = LRM_OP_ERROR;
-			
+
 		} else if(action_status_i == (op_status_t)-1) {
 			/*
 			 * TODO: this may need some more thought

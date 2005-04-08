@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.55 2005/04/06 13:54:39 andrew Exp $ */
+/* $Id: pengine.h,v 1.56 2005/04/08 16:57:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -93,6 +93,7 @@ struct node_shared_s {
 		gboolean online;
 		gboolean unclean;
 		gboolean shutdown;
+		gboolean expected_up;
 		gboolean is_dc;
 		int	 num_resources;
 		GListPtr running_rsc;	/* resource_t* */
