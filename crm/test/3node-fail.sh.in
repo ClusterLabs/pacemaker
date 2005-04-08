@@ -154,8 +154,7 @@ crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - ignore $args
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE" \
-    -s "crmd(.*) Performing op start(.*) on rsc1" \
-    -s "crmd(.*) Resource state: rsc1(.*) after start"
+    -s "crmd(.*) Performing op start(.*) on rsc1"
 cts_assert Adding rsc1 did not pass
 
 #----
@@ -166,8 +165,7 @@ crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - ignore $args
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE" \
-    -s "crmd(.*) Performing op start(.*) on rsc2" \
-    -s "crmd(.*) Resource state: rsc2(.*) after start"
+    -s "crmd(.*) Performing op start(.*) on rsc2"
 cts_assert Adding rsc2 did not pass
 
 #----

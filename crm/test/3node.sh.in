@@ -154,8 +154,7 @@ crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - - $args
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE" \
-    -s "crmd(.*) Performing op start(.*) on rsc1" \
-    -s "crmd(.*) Resource state: rsc1(.*) after start"
+    -s "crmd(.*) Performing op start(.*) on rsc1"
 cts_assert Adding rsc1 did not pass
 
 #----
@@ -166,8 +165,7 @@ crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - - $args
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE" \
-    -s "crmd(.*) Performing op start(.*) on rsc2" \
-    -s "crmd(.*) Resource state: rsc2(.*) after start"
+    -s "crmd(.*) Performing op start(.*) on rsc2"
 cts_assert Adding rsc2 did not pass
 
 #----
@@ -220,8 +218,6 @@ cts_assert "$test_node_2 is supposed to be the DC"
 do_cmd wait_for_state S_IDLE 3 $test_node_2 
 cts_assert "S_IDLE not reached on $test_node_2!"
 
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
-    -s "crmd(.*) Resource state: rsc1(.*) after start] on ${test_node_2}"
 do_cmd is_running rsc1 $test_node_2 $test_node_2
 cts_assert "rsc1 NOT running on $test_node_2"
 
@@ -260,13 +256,9 @@ cts_assert "$test_node_3 is supposed to be the DC"
 do_cmd wait_for_state S_IDLE 3 $test_node_3 
 cts_assert "S_IDLE not reached on $test_node_3!"
 
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
-    -s "crmd(.*) Resource state: rsc1(.*) after start] on ${test_node_3}"
 do_cmd is_running rsc1 $test_node_3 $test_node_3
 cts_assert "rsc1 NOT running on $test_node_3"
 
-do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 10000 \
-    -s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_3}"
 do_cmd is_running rsc2 $test_node_3 $test_node_3
 cts_assert "rsc2 NOT running on $test_node_3"
 

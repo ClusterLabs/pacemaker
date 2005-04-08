@@ -118,8 +118,7 @@ function 2node_fail_test() {
     do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - ignore $args
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
 	-s "crmd(.*) State transition (.*) \-> S_IDLE" \
-	-s "crmd(.*) Performing op start(.*) on rsc1" \
-	-s "crmd(.*) Resource state: rsc1(.*) after start"
+	-s "crmd(.*) Performing op start(.*) on rsc1"
     cts_assert Adding rsc1 did not pass
 
 #----
@@ -130,8 +129,7 @@ function 2node_fail_test() {
     do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - ignore $args
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
 	-s "crmd(.*) State transition (.*) \-> S_IDLE" \
-	-s "crmd(.*) Performing op start(.*) on rsc2" \
-	-s "crmd(.*) Resource state: rsc2(.*) after start"
+	-s "crmd(.*) Performing op start(.*) on rsc2"
     cts_assert Adding rsc2 did not pass
 
 #----
@@ -181,8 +179,7 @@ function 2node_fail_test() {
 
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 8000 \
 	-s "${test_node_1} crmd(.*) State transition(.*) \-> S_IDLE" \
-	-s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2" \
-	-s "crmd(.*) Resource state: rsc2(.*) after start] on ${test_node_2}"
+	-s "${test_node_2} crmd(.*) Performing op start(.*) on rsc2"
     cts_assert "rsc2 was not transferred to ${test_node_2} on startup."
 
 #----
@@ -232,8 +229,7 @@ function 2node_fail_test() {
     fi
 
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 80000 \
-	    -s "${god_node} crmd(.*) Performing op start(.*) on ${moved_rsc}" \
-	    -s "crmd(.*) Resource state: ${moved_rsc}(.*) after start] on ${good_node}"
+	    -s "${god_node} crmd(.*) Performing op start(.*) on ${moved_rsc}"
     cts_assert "Move of ${moved_rsc} to ${good_node} failed."
 
 #----
@@ -285,8 +281,7 @@ function 2node_fail_test() {
 	do_cmd echo "Checking ${moved_rsc} was moved back"
 	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 20000 \
 	    -s "${good_node} crmd(.*) State transition(.*) \-> S_IDLE" \
-	    -s "${fail_node} crmd(.*) Performing op start(.*) on ${moved_rsc}" \
-	    -s "crmd(.*) Resource state: ${moved_rsc}(.*) after start] on ${fail_node}"
+	    -s "${fail_node} crmd(.*) Performing op start(.*) on ${moved_rsc}"
 	cts_assert "$moved_rsc was not transferred to ${fail_node} on startup."
 
 	do_cmd echo Various sanity checks - stage 4
