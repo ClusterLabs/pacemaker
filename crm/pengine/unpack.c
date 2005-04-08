@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.69 2005/04/08 16:57:10 andrew Exp $ */
+/* $Id: unpack.c,v 1.70 2005/04/08 17:34:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -478,6 +478,9 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 	}
 
 	if(shutdown != NULL) {
+		/* dont run resources here */
+		this_node->weight = -1;
+		this_node->fixed = TRUE;
 		this_node->details->shutdown = TRUE;
 	}
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
