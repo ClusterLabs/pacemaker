@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.21 2005/04/01 10:13:34 andrew Exp $ */
+/* $Id: notify.c,v 1.22 2005/04/08 13:53:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -288,9 +288,9 @@ attach_cib_generation(HA_Message *msg, const char *field, crm_data_t *a_cib)
 	crm_data_t *generation = create_xml_node(
 		NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
-	if(the_cib != NULL) {
+	if(a_cib != NULL) {
 		copy_in_properties(generation, a_cib);
 	}
-	add_message_xml(msg, field, a_cib);
+	add_message_xml(msg, field, generation);
 	free_xml(generation);
 }
