@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.48 2005/04/08 16:57:10 andrew Exp $ */
+/* $Id: stages.c,v 1.49 2005/04/08 17:35:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -323,7 +323,10 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 			
 			stonith_constraints(node, stonith_op, down_op,
 					    ordering_constraints);
-		} else if(node->details->expected_up) {
+		}
+
+		if(node->details->online == FALSE
+		   && node->details->expected_up) {
 			crm_warn("Node %s was expected to be up!",
 				 node->details->uname);
 			crm_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
