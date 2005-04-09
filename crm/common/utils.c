@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.47 2005/04/07 13:50:23 andrew Exp $ */
+/* $Id: utils.c,v 1.48 2005/04/09 11:48:02 zhenh Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -870,6 +870,10 @@ crm_get_msec(const char * input)
 	||	strncasecmp(units, "usec", 4) == 0) {
 		multiplier = 1;
 		divisor = 1000;
+	}else if (strncasecmp(units, "s", 1) == 0
+	||	strncasecmp(units, "sec", 3) == 0) {
+		multiplier = 1000;
+		divisor = 1;	
 	}else if (*units != EOS && *units != '\n'
 	&&	*units != '\r') {
 		return ret;
