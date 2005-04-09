@@ -54,9 +54,28 @@ class Logger:
         raise ValueError("Abstract class member (__call__)")
 
 class SysLog(Logger):
+    # http://docs.python.org/lib/module-syslog.html
     defaultsource="CTS"
-    defaultlevel= (23 << 3)
-
+    defaultfacility= syslog.LOG_LOCAL7
+    map = {
+            "kernel":	syslog.LOG_KERN,
+            "user":	syslog.LOG_USER,
+            "mail":	syslog.LOG_MAIL,
+            "daemon":	syslog.LOG_MAIL,
+            "auth":	syslog.LOG_AUTH,
+            "lpr":	syslog.LOG_LPR,
+            "news":	syslog.LOG_NEWS,
+            "uucp":	syslog.LOG_UUCP,
+            "cron":	syslog.LOG_CRON,
+            "local0":	syslog.LOG_LOCAL0,
+            "local1":	syslog.LOG_LOCAL1,
+            "local2":	syslog.LOG_LOCAL2,
+            "local3":	syslog.LOG_LOCAL3,
+            "local4":	syslog.LOG_LOCAL4,
+            "local5":	syslog.LOG_LOCAL5,
+            "local6":	syslog.LOG_LOCAL6,
+            "local7":	syslog.LOG_LOCAL7,
+    }
     def __init__(self, labinfo):
 
         if labinfo.has_key("syslogsource"):
@@ -64,12 +83,22 @@ class SysLog(Logger):
         else:
             self.source=SysLog.defaultsource
 
-        if labinfo.has_key("sysloglevel"):
-            self.level=labinfo["sysloglevel"]
+        if labinfo.has_key("SyslogFacility"):
+            self.facility=labinfo["SyslogFacility"]
+            if SysLog.map.has_key(self.facility):
+              self.facility=SysLog.map[self.facility]
         else:
-            self.level=SysLog.defaultlevel
+            self.facility=SysLog.defaultfacility
 
-        syslog.openlog(self.source, 0, self.level)
+        syslog.openlog(self.source, 0, self.facility)
+
+    def setfacility(self, facility):
+        self.facility = facility
+        if SysLog.map.has_key(self.facility):
+          self.facility=SysLog.map[self.facility]
+        syslog.closelog()
+        syslog.openlog(self.source, 0, self.facility)
+        
 
     def __call__(self, lines):
         if isinstance(lines, types.StringType):
@@ -171,7 +200,7 @@ class CtsLab(UserDict):
                 result = None
         return result
 
-    def SupplyDefaults(self):
+    def SupplyDefaults(self): 
         if not self.has_key("logger"):
             self["logger"] = (SysLog(self), StdErrLog(self))
         if not self.has_key("reset"):
@@ -328,6 +357,7 @@ if __name__ == '__main__':
     ClobberCIB = 0
     LimitNodes = 0
     TestCase = None
+    LogFacility = None
     
     #
     # The values of the rest of the parameters are now properly derived from
@@ -402,6 +432,9 @@ if __name__ == '__main__':
        elif args[i] == "--choose":
            skipthis=1
            TestCase = args[i+1]
+       elif args[i] == "--syslog-facility" or args[i] == "--facility":
+           skipthis=1
+           LogFacility = args[i+1]
        else:
            NumIter=int(args[i])
           
@@ -413,6 +446,11 @@ if __name__ == '__main__':
     #
     config = CM_hb.HBConfig(HAdir)
     node_list = config.Parameters["node"]
+    if LogFacility == None:
+        if config.Parameters.has_key("logfacility"): 
+            LogFacility = config.Parameters["logfacility"][0]
+        else:
+            LogFacility = "local7"
 
     if LimitNodes > 0:
         if len(node_list) > LimitNodes:
@@ -428,6 +466,7 @@ if __name__ == '__main__':
     Environment["CIBResource"] = CIBResource 
     Environment["LogFileName"] = LogFile
     Environment["DoStonith"] = DoStonith
+    Environment["SyslogFacility"] = LogFacility
     Environment["DoStandby"] = DoStandby
     Environment["DoFencing"] = DoFencing
     
@@ -450,6 +489,7 @@ if __name__ == '__main__':
     # Create the Cluster Manager object
 
     cm = Environment['CMclass'](Environment)
+
 
     cm.log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TESTS ")
     cm.log("HA configuration directory: " + Environment["HAdir"])
