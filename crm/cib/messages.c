@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.31 2005/03/29 06:33:33 andrew Exp $ */
+/* $Id: messages.c,v 1.32 2005/04/10 19:46:55 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -599,7 +599,7 @@ updateList(crm_data_t *local_cib, crm_data_t *update_fragment, crm_data_t *faile
 		return cib_NOSECTION;
 	}
 
-	if(CIB_OP_NONE > operation > CIB_OP_MAX) {
+	if((CIB_OP_NONE > operation) || (operation > CIB_OP_MAX)) {
 		crm_err("Invalid operation on section %s", crm_str(section));
 		return cib_operation;
 	}
