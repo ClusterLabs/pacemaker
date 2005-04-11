@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.23 2005/04/06 13:54:39 andrew Exp $ */
+/* $Id: native.c,v 1.24 2005/04/11 10:42:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -218,7 +218,7 @@ create_monitor_actions(resource_t *rsc, action_t *start, node_t *node,
 
 void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 {
-	gboolean can_start = FALSE;
+	action_t *op = NULL;
 	node_t *chosen = NULL;
 	native_variant_data_t *native_data = NULL;
 
@@ -228,22 +228,15 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		chosen = native_data->color->details->chosen_node;
 	}
 	
-	if(chosen != NULL) {
-		can_start = TRUE;
-	}
-	
-	if(can_start && g_list_length(native_data->running_on) == 0) {
+	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
 		/* create start action */
-		action_t *op = action_new(rsc, start_rsc, NULL, chosen);
+		op = action_new(rsc, start_rsc, NULL, chosen);
 		if(have_quorum == FALSE && require_quorum == TRUE) {
 			op->runnable = FALSE;
 		} else {
 			crm_info("Start resource %s (%s)",
 				 rsc->id, safe_val3(
 					 NULL, chosen, details, uname));
-
-			create_monitor_actions(
-				rsc, op, chosen, ordering_constraints);
 		}
 		
 	} else if(g_list_length(native_data->running_on) > 1) {
@@ -256,59 +249,60 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 				node, node_t,
 				native_data->running_on, lpc,
 				
-				crm_info("Stop  resource %s (%s)",
+				crm_info("Stop  resource %s (%s) (recovery)",
 					 rsc->id,
 					 safe_val3(NULL, node, details, uname));
 				action_new(rsc, stop_rsc, NULL, node);
 				);
 		}
 		
-		if(rsc->recovery_type == recovery_stop_start && can_start) {
-			crm_info("Start resource %s (%s)",
+		if(rsc->recovery_type == recovery_stop_start && chosen) {
+			crm_info("Start resource %s (%s) (recovery)",
 				 rsc->id,
 				 safe_val3(NULL, chosen, details, uname));
-			action_new(rsc, start_rsc, NULL, chosen);
+			op = action_new(rsc, start_rsc, NULL, chosen);
 		}
 		
 	} else {
-		crm_debug("Stop and possible restart of %s", rsc->id);
+		node_t *node = native_data->running_on->data;
 		
-		slist_iter(
-			node, node_t, native_data->running_on, lpc,				
+		crm_debug("Stop%s of %s",
+			  chosen != NULL?" and restart":"",rsc->id);
+		CRM_DEV_ASSERT(node != NULL);
+		
+		if(chosen != NULL && safe_str_eq(
+			   node->details->id, chosen->details->id)) {
+			/* restart */
+			crm_info("Leave resource %s on (%s)",rsc->id,
+				 safe_val3(NULL,chosen,details,uname));
 			
-			if(chosen != NULL && safe_str_eq(
-				   node->details->id,
-				   chosen->details->id)) {
-				/* restart */
-				crm_info("Leave resource %s alone (%s)", rsc->id,
-					 safe_val3(NULL, chosen, details, uname));
+			/* in case the actions already exist */
+			slist_iter(
+				action, action_t, rsc->actions, lpc2,
 				
-				/* in case the actions already exist */
-				slist_iter(
-					action, action_t, rsc->actions, lpc2,
-					
-					if(action->task == start_rsc
-					   || action->task == stop_rsc){
-						action->optional = TRUE;
-					}
-					);
-				
-				continue;
-			} else if(chosen != NULL) {
-				/* move */
-				crm_info("Move resource %s (%s -> %s)", rsc->id,
-					 safe_val3(NULL, node, details, uname),
-					 safe_val3(NULL, chosen, details, uname));
-				action_new(rsc, stop_rsc, NULL, node);
-				action_new(rsc, start_rsc, NULL, chosen);
-
-			} else {
-				crm_info("Stop resource %s (%s)", rsc->id,
-					 safe_val3(NULL, node, details, uname));
-				action_new(rsc, stop_rsc, NULL, node);
-			}
+				if(action->task == start_rsc
+				   || action->task == stop_rsc){
+					action->optional = TRUE;
+				}
+				);
 			
-			);	
+		} else if(chosen != NULL) {
+			/* move */
+			crm_info("Move resource %s (%s -> %s)", rsc->id,
+				 safe_val3(NULL, node, details, uname),
+				 safe_val3(NULL, chosen, details, uname));
+			action_new(rsc, stop_rsc, NULL, node);
+			op = action_new(rsc, start_rsc, NULL, chosen);
+				
+		} else {
+			crm_info("Stop resource %s (%s)", rsc->id,
+				 safe_val3(NULL, node, details, uname));
+			action_new(rsc, stop_rsc, NULL, node);
+		}
+	}
+	if(op != NULL && op->runnable) {
+		create_monitor_actions(
+			rsc, op, chosen, ordering_constraints);
 	}
 }
 
@@ -980,7 +974,6 @@ void
 native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 			  const char *id, GListPtr nodes)
 {
-	float old_weight = 0.0;
 	node_t *node_rh = NULL;
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
@@ -1028,27 +1021,7 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 	}
 	
 	
-	node_rh->weight += cons->weight;
-
-	/* detect wrap-around */
-	if(old_weight >= 0) {
-		if(cons->weight >= 0 && node_rh->weight < 0) {
-			node_rh->weight = INFINITY;
-		}
-		
-	} else if(cons->weight <= 0 && node_rh->weight > 0) {
-		node_rh->weight = -INFINITY;
-	}
-
-	/* detect +/- INFINITY */
-	if(node_rh->weight >= INFINITY) {
-		node_rh->weight = INFINITY;
-		node_rh->fixed = TRUE;
-		
-	} else if(node_rh->weight <= -INFINITY) {
-		node_rh->weight = -INFINITY;
-		node_rh->fixed = TRUE;
-	}
+	node_rh->weight = merge_weights(node_rh->weight, cons->weight);
 
 	if(node_rh->weight < 0) {
 		node_rh->fixed = TRUE;
