@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.22 2005/04/07 14:00:05 andrew Exp $ */
+/* $Id: utils.c,v 1.23 2005/04/11 10:38:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,10 +55,10 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 			if(msg != NULL) {
 				if(safe_str_eq(crm_element_name(msg),
 					       XML_TAG_CIB)) {
-					crm_info("Cause:"
+					crm_debug("Cause:"
 						 " full CIB replace/update");
 				} else {
-					crm_xml_info(msg, "Cause");
+					crm_xml_debug(msg, "Cause");
 				}
 			}
 			print_state(LOG_DEBUG);
@@ -107,7 +107,6 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 void
 print_state(int log_level)
 {
-	
 	if(graph == NULL) {
 		do_crm_log(LOG_DEBUG, __FUNCTION__, NULL, "###########");
 		do_crm_log(LOG_DEBUG, __FUNCTION__, NULL,
