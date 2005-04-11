@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.56 2005/04/08 16:57:10 andrew Exp $ */
+/* $Id: pengine.h,v 1.57 2005/04/11 10:51:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -164,6 +164,7 @@ struct resource_s {
 		gboolean     is_stonith;
 		gboolean     runnable;
 		gboolean     provisional;
+		gboolean     unclean;
 
 		enum rsc_recovery_type recovery_type;
 		enum pe_stop_fail      stopfail_type;

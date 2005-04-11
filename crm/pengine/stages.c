@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.50 2005/04/08 19:10:14 andrew Exp $ */
+/* $Id: stages.c,v 1.51 2005/04/11 10:51:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -321,16 +321,15 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 			
 			*actions = g_list_append(*actions, stonith_op);
 			
-			stonith_constraints(node, stonith_op, down_op,
-					    ordering_constraints);
-		}
-
-		if(node->details->online == FALSE
-		   && node->details->expected_up) {
-			crm_warn("Node %s was expected to be up!",
-				 node->details->uname);
+		} else if(node->details->unclean) {
+			crm_err("Node %s is unclean!", node->details->uname);
 			crm_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
 			crm_warn("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
+		}
+
+		if(node->details->unclean) {
+			stonith_constraints(
+				node, stonith_op, down_op, ordering_constraints);
 		}
 		
 		);

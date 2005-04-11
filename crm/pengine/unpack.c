@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.71 2005/04/08 19:10:14 andrew Exp $ */
+/* $Id: unpack.c,v 1.72 2005/04/11 10:51:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -253,12 +253,22 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 		new_node->details->uname	= uname;
 		new_node->details->type		= node_ping;
 		new_node->details->online	= FALSE;
-		new_node->details->unclean	= TRUE; /* all nodes are unclean until we've seen their status entry */
 		new_node->details->shutdown	= FALSE;
 		new_node->details->running_rsc	= NULL;
 		new_node->details->agents	= NULL;
 		new_node->details->attrs        = g_hash_table_new(
 			g_str_hash, g_str_equal);
+
+		if(stonith_enabled) {
+			/* all nodes are unclean until we've seen their
+			 * status entry
+			 */
+			new_node->details->unclean = TRUE;
+		} else {
+			/* blind faith... */
+			new_node->details->unclean = FALSE; 
+		}
+		
 		
 		if(safe_str_eq(type, "member")) {
 			new_node->details->type = node_member;
@@ -270,7 +280,7 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 				       new_node->details->attrs, "standby"))) {
 			crm_info("Node %s is in standby-mode",
 				 new_node->details->uname);
-			new_node->weight = -1.0;
+			new_node->weight = -INFINITY;
 		}
 		
 		*nodes = g_list_append(*nodes, new_node);    
@@ -444,9 +454,9 @@ unpack_status(crm_data_t * status,
 		determine_online_status(node_state, this_node);
 
 		if(this_node->details->online || stonith_enabled) {
-			/* offline nodes run no resources
+			/* offline nodes run no resources...
 			 * unless stonith is enabled in which case we need to
-			 *   know
+			 *   make sure rsc start events happen after the stonith
 			 */
 			crm_verbose("Processing lrm resource entries");
 			unpack_lrm_rsc_state(
@@ -465,13 +475,18 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 {
 	gboolean online = FALSE;
 	const char *uname      = crm_element_value(node_state,XML_ATTR_UNAME);
-/*	const char *state      = crm_element_value(node_state,XML_NODE_ATTR_STATE); */
-	const char *exp_state  = crm_element_value(node_state,XML_CIB_ATTR_EXPSTATE);
-	const char *join_state = crm_element_value(node_state,XML_CIB_ATTR_JOINSTATE);
-	const char *crm_state  = crm_element_value(node_state,XML_CIB_ATTR_CRMDSTATE);
-	const char *ccm_state  = crm_element_value(node_state,XML_CIB_ATTR_INCCM);
-	const char *ha_state   = crm_element_value(node_state,XML_CIB_ATTR_HASTATE);
-	const char *shutdown   = crm_element_value(node_state,XML_CIB_ATTR_SHUTDOWN);
+	const char *exp_state  =
+		crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
+	const char *join_state =
+		crm_element_value(node_state, XML_CIB_ATTR_JOINSTATE);
+	const char *crm_state  =
+		crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE);
+	const char *ccm_state  =
+		crm_element_value(node_state, XML_CIB_ATTR_INCCM);
+	const char *ha_state   =
+		crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
+	const char *shutdown   =
+		crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
 
 	if(this_node == NULL) {
 		return online;
@@ -484,48 +499,79 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 		this_node->details->expected_up = TRUE;
 	}
 
-	if(crm_is_true(ccm_state) == FALSE
-	   || ha_state == NULL
-	   || safe_str_eq(ha_state, DEADSTATUS)) {
-		crm_debug("Node is down: ha_state=%s, ccm_state=%s",
-			  crm_str(ha_state), crm_str(ccm_state));
-
-	} else if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
-		  && safe_str_eq(crm_state, ONLINESTATUS)) {
-		online = TRUE;
-
-	} else if(this_node->details->expected_up == FALSE) {
-		crm_debug("CRMd is down: ha_state=%s, ccm_state=%s",
-			  crm_str(ha_state), crm_str(ccm_state));
-		crm_debug("\tcrm_state=%s, join_state=%s, expected=%s",
-			  crm_str(crm_state), crm_str(join_state),
-			  crm_str(exp_state));
-		
+	if(stonith_enabled == FALSE) {
+		if(!crm_is_true(ccm_state) || safe_str_eq(ha_state,DEADSTATUS)){
+			crm_debug("Node is down: ha_state=%s, ccm_state=%s",
+				  crm_str(ha_state), crm_str(ccm_state));
+			
+		} else if(!crm_is_true(ccm_state)
+			  || safe_str_eq(ha_state, DEADSTATUS)) {
+			
+		} else if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
+			  && safe_str_eq(crm_state, ONLINESTATUS)) {
+			online = TRUE;
+			
+		} else if(this_node->details->expected_up == FALSE) {
+			crm_debug("CRMd is down: ha_state=%s, ccm_state=%s",
+				  crm_str(ha_state), crm_str(ccm_state));
+			crm_debug("\tcrm_state=%s, join_state=%s, expected=%s",
+				  crm_str(crm_state), crm_str(join_state),
+				  crm_str(exp_state));
+			
+		} else {
+			/* mark it unclean */
+			this_node->details->unclean = TRUE;
+			
+			crm_err("Node %s is partially & un-expectedly down",
+				uname);
+			crm_debug("\tcrm_state=%s, join_state=%s, expected=%s",
+				  crm_str(crm_state), crm_str(join_state),
+				  crm_str(exp_state));
+		}
 	} else {
-		/* mark it unclean */
-		this_node->details->unclean = TRUE;
+		if(crm_is_true(ccm_state)
+		   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
+		   && safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
+			online = TRUE;
 
-		crm_warn("Node %s is un-expectedly down", uname);
-		crm_debug("\tcrm_state=%s, join_state=%s, expected=%s",
-			  crm_str(crm_state), crm_str(join_state),
-			  crm_str(exp_state));
+		} else if(this_node->details->expected_up == FALSE) {
+			crm_debug("CRMd on %s is down: ha_state=%s, ccm_state=%s",
+				  uname, crm_str(ha_state), crm_str(ccm_state));
+			crm_debug("\tcrm_state=%s, join_state=%s, expected=%s",
+				  crm_str(crm_state), crm_str(join_state),
+				  crm_str(exp_state));
+			
+		} else {
+			/* mark it unclean */
+			this_node->details->unclean = TRUE;
+			
+			crm_err("Node %s is un-expectedly down", uname);
+			crm_debug("\tha_state=%s, ccm_state=%s",
+				  crm_str(ha_state), crm_str(ccm_state));
+			crm_debug("\tcrm_state=%s, join_state=%s, expected=%s",
+				  crm_str(crm_state), crm_str(join_state),
+				  crm_str(exp_state));
+		}
 	}
-
+	
 	if(online) {
 		crm_debug("Node %s is online", uname);
 		this_node->details->online = TRUE;
+
 	} else {
 		/* remove node from contention */
 		crm_debug("Node %s is down", uname);
-		this_node->weight = -1;
+		this_node->weight = -INFINITY;
 		this_node->fixed = TRUE;
 	}
+
 	if(this_node->details->unclean) {
 		crm_warn("Node %s is unclean", uname);
 	}
+
 	if(this_node->details->shutdown) {
 		/* dont run resources here */
-		this_node->weight = -1;
+		this_node->weight = -INFINITY;
 		this_node->fixed = TRUE;
 		crm_debug("Node %s is due for shutdown", uname);
 	}
@@ -560,7 +606,7 @@ unpack_lrm_agents(node_t *node, crm_data_t * agent_list)
 		version        = crm_element_value(xml_agent, XML_ATTR_VERSION);
 		agent->version = version?version:"0.0";
 
-		crm_trace("Adding agent %s/%s v%s to node %s",
+		crm_trace("Adding agent %s/%s %s to node %s",
 			  agent->class,
 			  agent->type,
 			  agent->version,
@@ -682,6 +728,10 @@ unpack_failed_resource(GListPtr *placement_constraints,
 {
 	const char *last_op  = crm_element_value(rsc_entry, XML_LRM_ATTR_LASTOP);
 	crm_devel("Unpacking failed action %s on %s", last_op, rsc_lh->id);
+	CRM_DEV_ASSERT(node != NULL);
+	if(crm_assert_failed) {
+		return FALSE;
+	}
 	
 	/* make sure we dont allocate the resource here again*/
 	rsc2node_new("dont_run__generated",
@@ -690,8 +740,15 @@ unpack_failed_resource(GListPtr *placement_constraints,
 	if(safe_str_eq(last_op, "start")) {
 		/* the resource is not actually running... nothing more to do*/
 		return TRUE;
-	} 
 
+	} else if(stonith_enabled == FALSE
+		  && rsc_lh->stopfail_type == pesf_stonith) {
+		crm_err("Cannot fence node %s after %s on %s"
+			" as STONITH is disabled",
+			node->details->uname, last_op, rsc_lh->id);
+		return FALSE;
+	}
+	
 	switch(rsc_lh->stopfail_type) {
 		case pesf_stonith:
 			/* treat it as if it is still running
@@ -701,10 +758,8 @@ unpack_failed_resource(GListPtr *placement_constraints,
 
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
-			
-			if(node->details->online) {
-				node->details->shutdown = TRUE;
-			}
+
+			rsc_lh->unclean = TRUE;
 			node->details->unclean  = TRUE;
 			break;
 			
@@ -718,6 +773,7 @@ unpack_failed_resource(GListPtr *placement_constraints,
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
 /* 			rsc_lh->stop->timeout = NULL; /\* wait forever *\/ */
+			rsc_lh->unclean = TRUE;
 			break;
 	
 		case pesf_ignore:

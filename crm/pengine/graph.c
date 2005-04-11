@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.33 2005/04/08 17:04:12 andrew Exp $ */
+/* $Id: graph.c,v 1.34 2005/04/11 10:51:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -124,78 +124,68 @@ stonith_constraints(node_t *node,
 		    GListPtr *ordering_constraints)
 {
 	GListPtr stop_actions = NULL;
-	
+
 	if(shutdown_op != NULL) {
+		/* stop everything we can via shutdown_constraints() and then
+		 *   shoot the node... the shutdown has been superceeded
+		 */
+		shutdown_op->pseudo = TRUE;
+
 		/* shutdown before stonith */
-		/* add the shutdown OP to the before lists so it counts as a pre-req */
+		/* Give any resources a chance to shutdown normally */
 		crm_devel("Adding shutdown (%d) as an input to stonith (%d)",
 			  shutdown_op->id, stonith_op->id);
 		
 		order_new(NULL, shutdown_crm, shutdown_op,
 			  NULL, stonith_node, stonith_op,
 			  pecs_must, ordering_constraints);
+		
 	}
 	
 	/* add the stonith OP to the before lists so it counts as a pre-req */
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
 
-		/* make use of timeouts in the TE for cases such
-		 *   as this.
-		 * ie. the node may be cactus and unable to receive the
-		 *  stop let alone reply with failed.
-		 */
+		if(stonith_op != NULL) {
+			stop_actions = find_actions(rsc->actions,stop_rsc,node);
+			slist_iter(
+				action, action_t, stop_actions, lpc2,
+				if(node->details->unclean || rsc->unclean) {
+					/* the stop would never complete and is
+					 * now implied by the stonith operation
+					 */
+					action->pseudo = TRUE;
+					order_new(NULL,stonith_node,stonith_op,
+						  rsc, stop_rsc, NULL,
+						  pecs_must, ordering_constraints);
+				} else {
+					/* stop healthy resources before the
+					 * stonith op
+					 */
+					order_new(rsc, stop_rsc, NULL,
+						  NULL,stonith_node,stonith_op,
+						  pecs_must, ordering_constraints);
+				}
+				);
 
-		stop_actions = find_actions(rsc->actions, stop_rsc, node);
-		slist_iter(
-			action, action_t, stop_actions, lpc2,
-			action->discard = TRUE;
-			);
-
-		if(rsc->stopfail_type == pesf_block) {
+			crm_devel("Adding stonith (%d) as an input to stop",
+				  stonith_op->id);
+			
+		} else if((rsc->unclean || node->details->unclean)
+			  && rsc->stopfail_type == pesf_block) {
 			/* depend on the stop action which will fail */
-			crm_warn("SHARED RESOURCE %s WILL REMAIN BLOCKED"
+			crm_err("SHARED RESOURCE %s WILL REMAIN BLOCKED"
 				 " UNTIL CLEANED UP MANUALLY ON NODE %s",
 				 rsc->id, node->details->uname);
 			continue;
 			
-		} else if(rsc->stopfail_type == pesf_ignore) {
+		} else if((rsc->unclean || node->details->unclean)
+			  && rsc->stopfail_type == pesf_ignore) {
 			/* nothing to do here */
-			crm_warn("SHARED RESOURCE %s IS NOT PROTECTED",
+			crm_err("SHARED RESOURCE %s IS NOT PROTECTED",
 				 rsc->id);
 			continue;
 		}
-		
-		/* case pesf_stonith: */
-		/* remedial action:
-		 *   shutdown (so all other resources are
-		 *   stopped gracefully) and then STONITH node
-		 */
-		if(stonith_enabled == FALSE) {
-			/* depend on an action that will never complete */
-			crm_err("STONITH is not enabled in this"
-				" cluster but is required for "
-				"resource %s after a failed stop",
-				rsc->id);
-		}
-		crm_devel("Adding stonith (%d) as an input to start",
-			  stonith_op->id);
-		
-		/* stonith before start */
-		order_new(NULL, stonith_node, stonith_op,
-			  rsc, start_rsc, NULL,
-			  pecs_must, ordering_constraints);
-
-/* 		a pointless optimization?  probably */
-/* 		if(shutdown_op != NULL) { */
-/* 			/\* the next rule is implied *\/ */
-/* 			continue; */
-/* 		} */
-
-		/* stop before stonith */
-		order_new(rsc, stop_rsc, NULL,
-			  NULL, stonith_node, stonith_op,
-			  pecs_must, ordering_constraints);
 		);
 	
 	return TRUE;
@@ -254,14 +244,18 @@ action2xml(action_t *action, gboolean as_input)
 
 	if(action->task != stonith_node
 	   && (action->pseudo == FALSE || action->node != NULL)) {
+		const char *default_value = NULL;
+		if(as_input) {
+			default_value = "__none__";
+		}
 
 		set_xml_property_copy(
 			action_xml, XML_LRM_ATTR_TARGET,
-			safe_val4(NULL, action, node, details,uname));
+			safe_val4(default_value, action, node, details,uname));
 
 		set_xml_property_copy(
 			action_xml, XML_LRM_ATTR_TARGET_UUID,
-			safe_val4(NULL, action, node, details, id));
+			safe_val4(default_value, action, node, details, id));
 
 		CRM_DEV_ASSERT(NULL != crm_element_value(
 				       action_xml, XML_LRM_ATTR_TARGET));
