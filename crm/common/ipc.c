@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.31 2005/04/06 14:33:32 andrew Exp $ */
+/* $Id: ipc.c,v 1.32 2005/04/11 10:34:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,9 +88,11 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node)
 	return all_is_good;
 }
 
+#define ipc_log(fmt...) do_crm_log(server?LOG_WARNING:LOG_ERR, __FUNCTION__, NULL, fmt)
+
 /* frees msg */
 gboolean 
-send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
+crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 {
 	gboolean all_is_good = TRUE;
 
@@ -103,18 +105,18 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 		all_is_good = FALSE;
 
 	} else if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-		crm_err("IPC Channel is not connected");
+		ipc_log("IPC Channel is not connected");
 		all_is_good = FALSE;
 	}
 
 	if(all_is_good && msg2ipcchan(msg, ipc_client) != HA_OK) {
-		crm_err("Could not send IPC, message");
+		ipc_log("Could not send IPC, message");
 		all_is_good = FALSE;
 
 		if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-			crm_err("IPC Channel is no longer connected");
+			ipc_log("IPC Channel is no longer connected");
 
-		} else {
+		} else if(server == FALSE) {
 			CRM_DEV_ASSERT(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen);
 		}
 	}	

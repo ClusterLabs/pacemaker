@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.22 2005/04/08 13:53:50 andrew Exp $ */
+/* $Id: notify.c,v 1.23 2005/04/11 10:34:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -133,7 +133,8 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		} else {
 			HA_Message *msg_copy = ha_msg_copy(update_msg);
 
-			if(send_ipc_message(ipc_client, msg_copy) == FALSE) {
+			if(crm_send_ipc_message(
+				   ipc_client, msg_copy, TRUE) == FALSE) {
 				crm_warn("Notification of client %s/%s failed",
 					 client->name, client->id);
 			}
