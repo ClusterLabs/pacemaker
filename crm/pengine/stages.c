@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.51 2005/04/11 10:51:05 andrew Exp $ */
+/* $Id: stages.c,v 1.52 2005/04/11 15:34:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,9 +38,9 @@ int max_valid_nodes = 0;
 GListPtr agent_defaults = NULL;
 
 gboolean have_quorum      = FALSE;
-gboolean require_quorum   = FALSE;
 gboolean stonith_enabled  = FALSE;
 gboolean symmetric_cluster = TRUE;
+no_quorum_policy_t no_quorum_policy = no_quorum_freeze;
 
 char *dc_uuid = NULL;
 const char* transition_timeout = "60000"; /* 1 minute */
@@ -77,13 +77,6 @@ stage0(crm_data_t * cib,
 	crm_data_t * agent_defaults  = NULL;
 	/*get_object_root(XML_CIB_TAG_RA_DEFAULTS, cib); */
 
-	crm_free(dc_uuid);
-	dc_uuid = NULL;
-	if(cib != NULL && crm_element_value(cib, XML_ATTR_DC_UUID) != NULL) {
-		/* this should always be present */
-		dc_uuid = crm_element_value_copy(cib, XML_ATTR_DC_UUID);
-	}	
-	
 	/* reset remaining global variables */
 	num_synapse = 0;
 	max_valid_nodes = 0;
@@ -91,14 +84,25 @@ stage0(crm_data_t * cib,
 	action_id = 1;
 	color_id = 0;
 
-	have_quorum      = FALSE;
-	require_quorum   = FALSE;
+	have_quorum      = TRUE;
 	stonith_enabled  = FALSE;
+
+	crm_free(dc_uuid); dc_uuid = NULL;
+
+	if(cib == NULL) {
+		return FALSE;
+	}
+
+	if(cib != NULL && crm_element_value(cib, XML_ATTR_DC_UUID) != NULL) {
+		/* this should always be present */
+		dc_uuid = crm_element_value_copy(cib, XML_ATTR_DC_UUID);
+	}	
 	
 	unpack_config(config);
 
-	if(require_quorum) {
-		const char *value = crm_element_value(cib, XML_ATTR_HAVE_QUORUM);
+	if(no_quorum_policy != no_quorum_ignore) {
+		const char *value = crm_element_value(
+			cib, XML_ATTR_HAVE_QUORUM);
 		if(value != NULL) {
 			crm_str_to_boolean(value, &have_quorum);
 		}

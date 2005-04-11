@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.57 2005/04/11 10:51:05 andrew Exp $ */
+/* $Id: pengine.h,v 1.58 2005/04/11 15:34:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,6 +35,12 @@ typedef struct action_wrapper_s action_wrapper_t;
 #include <crm/crm.h>
 #include <crm/common/msg.h>
 #include <complex.h>
+
+typedef enum no_quorum_policy_e {
+	no_quorum_freeze,
+	no_quorum_stop,
+	no_quorum_ignore
+} no_quorum_policy_t;
 
 enum con_type {
 	type_none,
@@ -330,7 +336,7 @@ extern int      order_id;
 extern int      action_id;
 extern gboolean stonith_enabled;
 extern gboolean have_quorum;
-extern gboolean require_quorum;
+extern no_quorum_policy_t no_quorum_policy;
 extern gboolean symmetric_cluster;
 extern GListPtr agent_defaults;
 extern const char* transition_timeout;

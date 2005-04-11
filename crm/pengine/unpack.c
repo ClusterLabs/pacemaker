@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.72 2005/04/11 10:51:05 andrew Exp $ */
+/* $Id: unpack.c,v 1.73 2005/04/11 15:34:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,12 +126,27 @@ unpack_config(crm_data_t * config)
 			 " - resources can run anywhere by default");
 	}
 
-	value = param_value(config, "require_quorum");
-	if(value != NULL) {
-		crm_str_to_boolean(value, &require_quorum);
+	value = param_value(config, "no_quorum_policy");
+	if(safe_str_eq(value, "ignore")) {
+		no_quorum_policy = no_quorum_ignore;
+		
+	} else if(safe_str_eq(value, "stop")) {
+		no_quorum_policy = no_quorum_stop;
+
+	} else {
+		no_quorum_policy = no_quorum_freeze;
 	}
-	if(require_quorum) {
-		crm_info("Quorum required for fencing and resource management");
+	
+	switch (no_quorum_policy) {
+		case no_quorum_freeze:
+			crm_info("On loss of CCM Quorum: Freeze resources");
+			break;
+		case no_quorum_stop:
+			crm_info("On loss of CCM Quorum: Stop ALL resources");
+			break;
+		case no_quorum_ignore:
+			crm_warn("On loss of CCM Quorum: Ignore");
+			break;
 	}
 	
 	return TRUE;
@@ -259,6 +274,12 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 		new_node->details->attrs        = g_hash_table_new(
 			g_str_hash, g_str_equal);
 
+		if(have_quorum == FALSE && no_quorum_policy == no_quorum_stop) {
+			/* start shutting resources down */
+			new_node->weight = -INFINITY;
+		}
+		
+		
 		if(stonith_enabled) {
 			/* all nodes are unclean until we've seen their
 			 * status entry

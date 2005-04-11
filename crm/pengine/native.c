@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.24 2005/04/11 10:42:51 andrew Exp $ */
+/* $Id: native.c,v 1.25 2005/04/11 15:34:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -231,8 +231,9 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
 		/* create start action */
 		op = action_new(rsc, start_rsc, NULL, chosen);
-		if(have_quorum == FALSE && require_quorum == TRUE) {
+		if( !have_quorum && no_quorum_policy != no_quorum_ignore) {
 			op->runnable = FALSE;
+			
 		} else {
 			crm_info("Start resource %s (%s)",
 				 rsc->id, safe_val3(
@@ -257,13 +258,16 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		}
 		
 		if(rsc->recovery_type == recovery_stop_start && chosen) {
+			/* if one of the "stops" is for a node outside
+			 * our partition, then this will block anyway
+			 */
 			crm_info("Start resource %s (%s) (recovery)",
 				 rsc->id,
 				 safe_val3(NULL, chosen, details, uname));
 			op = action_new(rsc, start_rsc, NULL, chosen);
 		}
 		
-	} else {
+	} else if(g_list_length(native_data->running_on) == 1) {
 		node_t *node = native_data->running_on->data;
 		
 		crm_debug("Stop%s of %s",
