@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.17 2005/03/31 16:40:06 andrew Exp $ */
+/* $Id: complex.c,v 1.18 2005/04/11 10:55:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -166,8 +166,14 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
 
-	
-	if(safe_str_eq(stopfail, "ignore")) {
+
+	if(stopfail == NULL && stonith_enabled) {
+		(*rsc)->stopfail_type = pesf_stonith;
+
+	} else if(stopfail == NULL) {
+		(*rsc)->stopfail_type = pesf_block;
+		
+	} else if(safe_str_eq(stopfail, "ignore")) {
 		(*rsc)->stopfail_type = pesf_ignore;
 		
 	} else if(safe_str_eq(stopfail, XML_CIB_ATTR_STONITH)) {
