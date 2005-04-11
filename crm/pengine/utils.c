@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.64 2005/04/08 19:10:14 andrew Exp $ */
+/* $Id: utils.c,v 1.65 2005/04/11 10:40:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,7 +33,6 @@ int color_id = 0;
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
-gboolean node_merge_weights(node_t *node, node_t *with);
 const char *find_action_timeout(resource_t *rsc, enum action_tasks task);
 
 /* only for rsc_colocation constraints */
@@ -128,35 +127,29 @@ node_list_and(GListPtr list1, GListPtr list2, gboolean filter)
 
 	for(lpc = 0; lpc < g_list_length(list1); lpc++) {
 		node_t *node = (node_t*)g_list_nth_data(list1, lpc);
-		node_t *new_node = node_copy(node);
 		node_t *other_node = pe_find_node(list2, node->details->uname);
+		node_t *new_node = NULL;
 
-		if(node_merge_weights(new_node, other_node) == FALSE) {
-			crm_free(new_node);
-
-		} else if(filter && new_node->weight < 0) {
-			crm_free(new_node);
-
-		} else {
+		if(other_node != NULL) {
+			new_node = node_copy(node);
+		}
+		
+		if(new_node != NULL) {
+			new_node->weight = merge_weights(
+				new_node->weight, other_node->weight);
+			
+			if(filter && new_node->weight < 0) {
+				crm_free(new_node);
+				new_node = NULL;
+			}
+		}
+		
+		if(new_node != NULL) {
 			result = g_list_append(result, new_node);
 		}
 	}
 
 	return result;
-}
-
-
-gboolean
-node_merge_weights(node_t *node, node_t *with)
-{
-	if(node == NULL || with == NULL) {
-		return FALSE;
-	} else if(node->weight < 0 || with->weight < 0) {
-		node->weight = -1;
-	} else if(node->weight < with->weight) {
-		node->weight = with->weight;
-	}
-	return TRUE;
 }
 
 
@@ -229,6 +222,7 @@ node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
 {
 	node_t *other_node = NULL;
 	GListPtr result = NULL;
+	gboolean needs_filter = FALSE;
 
 	result = node_list_dup(list1, filter);
 
@@ -241,21 +235,28 @@ node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
 
 		other_node = (node_t*)pe_find_node(
 			result, node->details->uname);
-		
-		if(other_node != NULL) {
-			node_merge_weights(other_node, node);
 
-			if(filter && node->weight < 0) {
-				/* TODO: remove and free other_node */
-			}
+		if(other_node != NULL) {
+			other_node->weight = merge_weights(
+				other_node->weight, node->weight);
 			
-		} else if(filter && node->weight < 0) {
-				  
+			if(filter && node->weight < 0) {
+				needs_filter = TRUE;
+			}
+
 		} else {
 			node_t *new_node = node_copy(node);
 			result = g_list_append(result, new_node);
 		}
 		);
+
+	/* not the neatest way, but the most expedient for now */
+	if(filter && needs_filter) {
+		GListPtr old_result = result;
+		result = node_list_dup(old_result, filter);
+		pe_free_shallow_adv(old_result, TRUE);
+	}
+	
 
 	return result;
 }
@@ -1213,4 +1214,40 @@ set_id(crm_data_t * xml_obj, const char *prefix, int child)
 	
 	set_xml_property_copy(xml_obj, XML_ATTR_ID, new_id);
 	crm_free(new_id);
+}
+
+float
+merge_weights(float w1, float w2) 
+{
+	float result = w1 + w2;
+
+	if(w1 <= -INFINITY || w2 <= -INFINITY) {
+		if(w1 == INFINITY || w2 == INFINITY) {
+			crm_warn("-INFINITY + INFINITY == -INFINITY");
+		}
+		return -INFINITY;
+
+	} else if(w1 >= INFINITY || w2 >= INFINITY) {
+		return INFINITY;
+	}
+
+	/* detect wrap-around */
+	if(result > 0) {
+		if(w1 <= 0 && w2 < 0) {
+			result = -INFINITY;
+		}
+		
+	} else if(w1 > 0 && w2 > 0) {
+		result = INFINITY;
+	}
+
+	/* detect +/- INFINITY */
+	if(result >= INFINITY) {
+		result = INFINITY;
+		
+	} else if(result <= -INFINITY) {
+		result = -INFINITY;
+	}
+
+	return result;
 }

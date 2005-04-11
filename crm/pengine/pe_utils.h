@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.20 2005/03/31 16:40:07 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.21 2005/04/11 10:40:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,6 +27,7 @@ extern action_t *action_new(
 	resource_t *rsc, enum action_tasks task,
 	const char *timeout, node_t *on_node);
 
+extern float merge_weights(float w1, float w2);
 
 /* Constraint helper functions */
 extern rsc_colocation_t *invert_constraint(rsc_colocation_t *constraint);
