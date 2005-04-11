@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.44 2005/02/25 10:31:35 andrew Exp $ */
+/* $Id: ptest.c,v 1.45 2005/04/11 15:32:35 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -66,6 +66,7 @@ main(int argc, char **argv)
 	
 	cl_log_set_entity("ptest");
 	cl_log_set_facility(LOG_USER);
+	set_crm_log_level(LOG_WARNING);
 	
 	while (1) {
 		int option_index = 0;
