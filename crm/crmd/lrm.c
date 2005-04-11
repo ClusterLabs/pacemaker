@@ -306,8 +306,6 @@ stop_all_resources(void)
 	slist_iter(
 		rid, char, lrm_list, lpc,
 
-/* 		GHashTable* 	params; */
-
 		lrm_rsc_t *the_rsc =
 			fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 
@@ -805,8 +803,8 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			crm_err("Resource action %s/%s failed: %d",
-				rsc->id, op->op_type, op->op_status);
+			crm_debug("Resource action %s/%s failed: %d",
+				  rsc->id, op->op_type, op->op_status);
 			set_xml_property_copy(
 				iter, XML_LRM_ATTR_RSCSTATE, fail_state);
 			break;
@@ -897,29 +895,50 @@ do_lrm_event(long long action,
 			 op->op_status, op->rc, LRM_OP_ERROR);
 		op->op_status = LRM_OP_ERROR;
 	}
-	
+
 	switch(op->op_status) {
 		case LRM_OP_ERROR:
-			crm_warn("LRM operation %s/%s failed (%s)",
-				 crm_str(rsc->id), op->op_type,
+			crm_err("LRM operation %s on %s::%s(%s):%s failed: %s",
+				 op->op_type,
+				 crm_str(rsc->class),
+				 crm_str(rsc->type),
+				 crm_str(rsc->provider),
+				 crm_str(rsc->id),
 				 execra_code2string(op->rc));
 			crm_debug("Result: %s", op->output);
 			break;
 		case LRM_OP_CANCELLED:
-			crm_warn("LRM operation %s/%s was cancelled",
-				crm_str(rsc->id), op->op_type);
+			crm_warn("LRM operation %s on %s::%s(%s):%s: cancelled",
+				 op->op_type,
+				 crm_str(rsc->class),
+				 crm_str(rsc->type),
+				 crm_str(rsc->provider),
+				 crm_str(rsc->id));
+			return I_NULL;
 			break;
 		case LRM_OP_TIMEOUT:
-			crm_err("LRM operation %s/%s timed out",
-				crm_str(rsc->id), op->op_type);
+			crm_err("LRM operation %s on %s::%s(%s):%s: timed out",
+				 op->op_type,
+				 crm_str(rsc->class),
+				 crm_str(rsc->type),
+				 crm_str(rsc->provider),
+				 crm_str(rsc->id));
 			break;
 		case LRM_OP_NOTSUPPORTED:
-			crm_err("LRM operation %s/%s was not suported",
-				crm_str(rsc->id), op->op_type);
+			crm_err("LRM operation %s on %s::%s(%s):%s: not supported",
+				 op->op_type,
+				 crm_str(rsc->class),
+				 crm_str(rsc->type),
+				 crm_str(rsc->provider),
+				 crm_str(rsc->id));
 			break;
 		case LRM_OP_DONE:
-			crm_debug("LRM operation %s/%s passed",
-				crm_str(rsc->id), op->op_type);
+			crm_debug("LRM operation %s on %s::%s(%s):%s: complete",
+				 op->op_type,
+				 crm_str(rsc->class),
+				 crm_str(rsc->type),
+				 crm_str(rsc->provider),
+				 crm_str(rsc->id));
 			break;
 	}
 	do_update_resource(rsc, op);
