@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.34 2005/04/11 10:51:05 andrew Exp $ */
+/* $Id: graph.c,v 1.35 2005/04/11 15:31:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -315,11 +315,12 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 		crm_trace("action %d was discarded", action->id);
 		return;
 
-	} else if(action->node == NULL) {
+	} else if(action->pseudo == FALSE && action->node == NULL) {
 		crm_err("action %d was not allocated", action->id);
 		return;
 
-	} else if(action->node->details->online == FALSE) {
+	} else if(action->pseudo == FALSE
+		  && action->node->details->online == FALSE) {
 		crm_err("action %d was scheduled for offline node", action->id);
 		return;
 	}
