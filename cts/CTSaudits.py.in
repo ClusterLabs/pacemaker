@@ -513,7 +513,7 @@ class PartitionAudit(ClusterAudit):
             Resources = self.CM.Resources()
             for node in node_list:
                 for resource in Resources:
-                    if resource.rid == node:
+                    if resource.rid == "rsc_"+node:
                         if resource.IsRunningOn(node) == 0:
                             self.CM.log("Node %s is not running its own resource" %(node))
                             passed = 0
