@@ -308,7 +308,7 @@ do_dc_takeover(long long action,
 	free_xml(cib);
 
 	rc = fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, NULL, update, &output, cib_none);
+		fsa_cib_conn, NULL, update, &output, cib_quorum_override);
 	
 	if(rc == cib_revision_unsupported) {
 		crm_err("Feature revision not permitted");

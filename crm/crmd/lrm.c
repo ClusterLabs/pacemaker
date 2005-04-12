@@ -847,7 +847,8 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	 * isnt acceptable
 	 */
 	rc = fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, cib_none);
+		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
+		cib_quorum_override);
 			
 	if(rc > 0) {
 		/* the return code is a call number, not an error code */

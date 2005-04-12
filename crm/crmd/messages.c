@@ -1023,7 +1023,8 @@ handle_shutdown_request(HA_Message *stored_msg)
 	crm_free(now_s);
 
 	fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, frag, NULL, cib_none);
+		fsa_cib_conn, XML_CIB_TAG_STATUS, frag, NULL,
+		cib_quorum_override);
 
 	free_xml(frag);
 

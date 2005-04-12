@@ -311,8 +311,9 @@ do_dc_join_finalize(long long action,
 
 	crm_devel("Bumping the epoche and syncing to %d clients",
 		  g_hash_table_size(join_requests));
-	fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_scope_local);
-	rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_none);
+	fsa_cib_conn->cmds->bump_epoch(
+		fsa_cib_conn, cib_scope_local|cib_quorum_override);
+	rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_quorum_override);
 	add_cib_op_callback(rc, FALSE, NULL, finalize_sync_callback);
 
 	return I_NULL;
@@ -370,15 +371,18 @@ finialize_query_callback(const HA_Message *msg, int call_id, int rc,
 		CRM_DEV_ASSERT(foreign_cib != NULL);
 		if(!crm_assert_failed) {
 			rc = fsa_cib_conn->cmds->replace(
-				fsa_cib_conn, NULL, foreign_cib, NULL, cib_none);
+				fsa_cib_conn, NULL, foreign_cib, NULL,
+				cib_quorum_override);
 		}
 	}
 
 	if(rc >= 0) {
 		crm_devel("Bumping the epoche and syncing to %d clients",
 			  g_hash_table_size(join_requests));
-		fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_scope_local);
-		rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_none);
+		fsa_cib_conn->cmds->bump_epoch(
+			fsa_cib_conn, cib_scope_local|cib_quorum_override);
+		rc = fsa_cib_conn->cmds->sync(
+			fsa_cib_conn, NULL, cib_quorum_override);
 		add_cib_op_callback(rc, FALSE, NULL, finalize_sync_callback);
 	}
 	
