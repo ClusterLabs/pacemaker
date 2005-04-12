@@ -1,4 +1,4 @@
-/* $Id: callbacks.h,v 1.7 2005/02/24 14:54:59 andrew Exp $ */
+/* $Id: callbacks.h,v 1.8 2005/04/12 09:25:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,6 +60,7 @@ typedef struct cib_operation_s
 		const char* 	operation;
 		gboolean	modifies_cib;
 		gboolean	needs_privileges;
+		gboolean	needs_quorum;
 		gboolean	needs_section;
 		gboolean	needs_data;
 		enum cib_errors (*fn)(

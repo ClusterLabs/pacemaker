@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.38 2005/04/06 14:42:42 andrew Exp $ */
+/* $Id: callbacks.c,v 1.39 2005/04/12 09:25:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,6 +47,7 @@ gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean cib_msg_timeout(gpointer data);
 void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_str_clfree(gpointer key, gpointer value, gpointer user_data);
+gboolean can_write(int flags);
 
 GHashTable *peer_hash = NULL;
 int        next_client_id  = 0;
@@ -61,24 +62,24 @@ extern ll_cluster_t *hb_conn;
  * but we want to split the "bump" from the "sync"
  */
 cib_operation_t cib_server_ops[] = {
-	{NULL,		     FALSE, FALSE, FALSE, FALSE, cib_process_default},
-	{CRM_OP_NOOP,	     FALSE, FALSE, FALSE, FALSE, cib_process_default},
-	{CRM_OP_RETRIVE_CIB, FALSE, FALSE, FALSE, FALSE, cib_process_query},
-	{CRM_OP_CIB_SLAVE,   FALSE, TRUE,  FALSE, FALSE, cib_process_readwrite},
-	{CRM_OP_CIB_SLAVEALL,TRUE,  TRUE,  FALSE, FALSE, cib_process_readwrite},
-	{CRM_OP_CIB_MASTER,  FALSE, TRUE,  FALSE, FALSE, cib_process_readwrite},
-	{CRM_OP_CIB_ISMASTER,FALSE, TRUE,  FALSE, FALSE, cib_process_readwrite},
-	{CRM_OP_CIB_BUMP,    FALSE, TRUE,  TRUE,  FALSE, cib_process_bump},
-	{CRM_OP_CIB_REPLACE, TRUE,  TRUE,  TRUE,  TRUE,  cib_process_replace},
-	{CRM_OP_CIB_CREATE,  TRUE,  TRUE,  TRUE,  TRUE,  cib_process_modify},
-	{CRM_OP_CIB_UPDATE,  TRUE,  TRUE,  TRUE,  TRUE,  cib_process_modify},
-	{CRM_OP_JOINACK,     TRUE,  TRUE,  TRUE,  TRUE,  cib_process_modify},
-	{CRM_OP_SHUTDOWN_REQ,TRUE,  TRUE,  TRUE,  TRUE,  cib_process_modify},
-	{CRM_OP_CIB_DELETE,  TRUE,  TRUE,  TRUE,  TRUE,  cib_process_modify},
-	{CRM_OP_CIB_QUERY,   FALSE, FALSE, TRUE,  FALSE, cib_process_query},
-	{CRM_OP_QUIT,	     FALSE, TRUE,  FALSE, FALSE, cib_process_quit},
-	{CRM_OP_PING,	     FALSE, FALSE, FALSE, FALSE, cib_process_ping},
-	{CRM_OP_CIB_ERASE,   TRUE,  TRUE,  TRUE,  FALSE, cib_process_erase}
+	{NULL,		     FALSE,FALSE,FALSE,FALSE,FALSE,cib_process_default},
+	{CRM_OP_NOOP,	     FALSE,FALSE,FALSE,FALSE,FALSE,cib_process_default},
+	{CRM_OP_RETRIVE_CIB, FALSE,FALSE,FALSE,FALSE,FALSE,cib_process_query},
+	{CRM_OP_CIB_SLAVE,   FALSE,TRUE, FALSE,FALSE,FALSE,cib_process_readwrite},
+	{CRM_OP_CIB_SLAVEALL,TRUE, TRUE, FALSE,FALSE,FALSE,cib_process_readwrite},
+	{CRM_OP_CIB_MASTER,  FALSE,TRUE, FALSE,FALSE,FALSE,cib_process_readwrite},
+	{CRM_OP_CIB_ISMASTER,FALSE,TRUE, FALSE,FALSE,FALSE,cib_process_readwrite},
+	{CRM_OP_CIB_BUMP,    FALSE,TRUE, TRUE, TRUE, FALSE,cib_process_bump},
+	{CRM_OP_CIB_REPLACE, TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_replace},
+	{CRM_OP_CIB_CREATE,  TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
+	{CRM_OP_CIB_UPDATE,  TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
+	{CRM_OP_JOINACK,     TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
+	{CRM_OP_SHUTDOWN_REQ,TRUE, TRUE, FALSE,TRUE, TRUE, cib_process_modify},
+	{CRM_OP_CIB_DELETE,  TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
+	{CRM_OP_CIB_QUERY,   FALSE,FALSE,FALSE,TRUE, FALSE,cib_process_query},
+	{CRM_OP_QUIT,	     FALSE,TRUE, FALSE,FALSE,FALSE,cib_process_quit},
+	{CRM_OP_PING,	     FALSE,FALSE,FALSE,FALSE,FALSE,cib_process_ping},
+	{CRM_OP_CIB_ERASE,   TRUE, TRUE, TRUE, TRUE, FALSE,cib_process_erase}
 };
 
 int send_via_callback_channel(HA_Message *msg, const char *token);
@@ -560,6 +561,12 @@ cib_process_command(
 		rc = cib_not_authorized;
 	}
 	
+	if(rc == cib_ok
+	   && cib_server_ops[call_type].needs_quorum
+	   && can_write(call_options) == FALSE) {
+		rc = cib_no_quorum;
+	}
+
 	if(rc == cib_ok && cib_server_ops[call_type].needs_section) {
 		section = cl_get_string(request, F_CIB_SECTION);
 		crm_trace("Unpacked section as: %s", section);
@@ -1139,3 +1146,23 @@ ghash_str_clfree(gpointer key, gpointer value, gpointer user_data)
 	}
 	return TRUE;
 }
+
+gboolean
+can_write(int flags)
+{
+	const char *value = NULL;
+
+	if(cib_have_quorum) {
+		return TRUE;
+	}
+	value = get_crm_option(the_cib, "no_quorum_policy", TRUE);
+	if(safe_str_eq(value, "ignore")) {
+		return TRUE;		
+	}
+	if((flags & cib_quorum_override) != 0) {
+		crm_warn("Overriding \"no quorum\" condition");
+		return TRUE;
+	}
+	return FALSE;
+}
+
