@@ -324,10 +324,18 @@ def usage(arg):
     +  " --directory config-directory" \
     +  " -D config-directory" \
     +  " --logfile system-logfile-name" \
+    +  " --trunc (truncate logfile before starting)" \
     +  " -L system-logfile-name" \
-    +  " --choose testcase" \
+    +  " --limit-nodes maxnumnodes" \
+    +  " --suppressmonitoring" \
+    +  " --syslog-facility syslog-facility" \
+    +  " --facility syslog-facility" \
+    +  " --choose testcase-name" \
+    +  " (-2 |"\
+    +  " -v2 |"\
+    +  " --crm |"\
+    +  " --classic)"\
     +  " --resource-can-stop" \
-    +  " -v2"\
     +  " --stonith (1 | 0 | yes | no)" \
     +  " --standby (1 | 0 | yes | no)" \
     +  " --fencing (1 | 0 | yes | no)" \
@@ -359,6 +367,7 @@ if __name__ == '__main__':
     LimitNodes = 0
     TestCase = None
     LogFacility = None
+    TruncateLog = 0
     ResCanStop = 0
     #
     # The values of the rest of the parameters are now properly derived from
@@ -393,6 +402,8 @@ if __name__ == '__main__':
        elif args[i] == "-L" or args[i] == "--logfile":
            skipthis=1
            LogFile = args[i+1]
+       elif args[i] == "--trunc":
+           TruncateLog=1
        elif args[i] == "-v2":
            Version=2
        elif args[i] == "--stonith":
@@ -473,7 +484,6 @@ if __name__ == '__main__':
     Environment["DoStandby"] = DoStandby
     Environment["DoFencing"] = DoFencing
     Environment["ResCanStop"] = ResCanStop
-    
     Environment["SuppressMonitoring"] = SuppressMonitoring
     if Version == 2:
         from CM_LinuxHAv2 import LinuxHAv2
@@ -493,7 +503,11 @@ if __name__ == '__main__':
     # Create the Cluster Manager object
 
     cm = Environment['CMclass'](Environment)
-
+    if TruncateLog:
+        lf = open(LogFile, "w");
+        if lf != None:
+            lf.truncate(0)
+            lf.close()
 
     cm.log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TESTS ")
     cm.log("HA configuration directory: " + Environment["HAdir"])
