@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.22 2005/04/07 14:00:04 andrew Exp $ */
+/* $Id: callbacks.c,v 1.23 2005/04/12 15:36:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -198,7 +198,8 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		 (char *)op->node_list);
 
 	/* this will mark the event complete if a match is found */
-	action_id = match_down_event(op->node_name, XML_CIB_ATTR_STONITH, op->op_result);
+	action_id = match_down_event(
+		op->node_name, XML_CIB_ATTR_STONITH, op->op_result);
 	
 	if(op->op_result == STONITH_SUCCEEDED) {
 		enum cib_errors rc = cib_ok;
@@ -233,7 +234,8 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		free_xml(node_state);
 	
 		rc = te_cib_conn->cmds->modify(
-			te_cib_conn, XML_CIB_TAG_STATUS,update,NULL,cib_none);	
+			te_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
+			cib_quorum_override);	
 
 		if(action_id < 0) {
 			send_complete("Stonith not matched", update, te_update);

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.23 2005/04/11 10:38:33 andrew Exp $ */
+/* $Id: utils.c,v 1.24 2005/04/12 15:36:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -226,7 +226,7 @@ do_update_cib(crm_data_t *xml_action, int status)
 	const char *target_uuid =
 		crm_element_value(xml_action, XML_LRM_ATTR_TARGET_UUID);
 
-	int call_options = cib_scope_local|cib_discard_reply|cib_inhibit_notify;
+	int call_options = cib_scope_local|cib_discard_reply|cib_inhibit_notify|cib_quorum_override;
 
 	if(safe_str_neq(CRMD_RSCSTATE_START, task)) {
 		/* no update required for non-start ops */
