@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.32 2005/04/10 19:46:55 lars Exp $ */
+/* $Id: messages.c,v 1.33 2005/04/12 09:23:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,7 +46,6 @@
 #include <crm/dmalloc_wrapper.h>
 
 extern const char *cib_our_uname;
-
 enum cib_errors revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags);
 int get_revision(crm_data_t *xml_obj, int cur_revision);
 
@@ -56,7 +55,7 @@ enum cib_errors updateList(
 
 crm_data_t *createCibFragmentAnswer(const char *section, crm_data_t *failed);
 
-gboolean replace_section(
+enum cib_errors replace_section(
 	const char *section, crm_data_t *tmpCib, crm_data_t *command);
 
 gboolean check_generation(crm_data_t *newCib, crm_data_t *oldCib);
@@ -190,7 +189,8 @@ cib_process_query(
 	crm_data_t *obj_root = NULL;
 	enum cib_errors result = cib_ok;
 
-	crm_debug("Processing \"%s\" event for section=%s", op, crm_str(section));
+	crm_debug("Processing \"%s\" event for section=%s",
+		  op, crm_str(section));
 
 	if(answer != NULL) { *answer = NULL; }	
 	else { return cib_output_ptr; }
@@ -258,7 +258,7 @@ cib_process_erase(
 	
 	cib_pre_notify(op, the_cib, tmpCib);
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, TRUE);
-		
+
 	if(result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
 		result = cib_ACTIVATION;
 	}
@@ -377,18 +377,21 @@ cib_process_replace(
 	} else {
 		tmpCib = copy_xml_node_recursive(get_the_CIB());
 		section_name = crm_strdup(section);
-
-		replace_section(section_name, tmpCib, input);
+		
+		result = replace_section(section_name, tmpCib, input);
 		the_update = get_object_root(section_name, cib_update);
 	}
 
 	cib_pre_notify(
 		op, get_object_root(section_name, get_the_CIB()), the_update);
-	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
 
-	result = revision_check(the_update, tmpCib, options);		
-	copy_in_properties(tmpCib, cib_update);
-
+	if(result == cib_ok) {
+		cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
+		
+		result = revision_check(the_update, tmpCib, options);		
+		copy_in_properties(tmpCib, cib_update);
+	}
+	
 	if (result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
 		crm_warn("Replacment of section=%s failed", section);
 		result = cib_ACTIVATION;
@@ -539,7 +542,7 @@ cib_process_modify(
 }
 
 
-gboolean
+enum cib_errors
 replace_section(const char *section, crm_data_t *tmpCib, crm_data_t *fragment)
 {
 	crm_data_t *cib_updates = NULL;
@@ -555,12 +558,12 @@ replace_section(const char *section, crm_data_t *tmpCib, crm_data_t *fragment)
 	if(old_section == NULL) {
 		crm_err("The CIB is corrupt, cannot replace missing section %s",
 		       section);
-		return FALSE;
+		return cib_NOSECTION;
 
 	} else if(new_section == NULL) {
 		crm_err("The CIB is corrupt, cannot set section %s to nothing",
 		       section);
-		return FALSE;
+		return cib_NOSECTION;
 	}
 
 	xml_child_iter(
@@ -575,7 +578,7 @@ replace_section(const char *section, crm_data_t *tmpCib, crm_data_t *fragment)
 		add_node_copy(old_section, a_child);
 		);
 
-	return TRUE;
+	return cib_ok;
 }
 
 
@@ -770,4 +773,3 @@ revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 	crm_free(revision);
 	return rc;
 }
-
