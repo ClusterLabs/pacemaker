@@ -210,7 +210,7 @@ AllAuditClasses.append(ResourceAudit)
 class HAResourceAudit(ClusterAudit):
     def __init__(self, cm):
         self.CM = cm
-
+    
     def _RscRunningNodes(self, resource):
         ResourceNodes = []
         for node in self.CM.Env["nodes"]:
@@ -222,7 +222,14 @@ class HAResourceAudit(ClusterAudit):
     def __call__(self):
         passed = 1
         NodeofRsc = {}
-
+        self.CM.debug("Do Audit HAResourceAudit")        
+        
+        for node in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                break
+        else:
+            return passed
+        
         #Make sure the resouces are running on one and only one node
         Resources = self.CM.Resources()
         for resource in Resources :
@@ -233,7 +240,7 @@ class HAResourceAudit(ClusterAudit):
                 passed = 0
             if len(RunningNodes) > 1:
                 self.CM.log("%s is running more than once %s" 
-			    %(resource, str(RunningNodes)))
+                            %(resource, str(RunningNodes)))
                 passed = 0
 
         #Make sure the resouces with "must","placement" constraint are running on the same node
@@ -247,14 +254,14 @@ class HAResourceAudit(ClusterAudit):
         return passed
     
     def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] == "linux-ha-v2" and self.CM.Env["ResCanStop"] == 0:
             return 1
         return 0
 
     def name(self):
         return "HAResourceAudit"
     
-#AllAuditClasses.append(HAResourceAudit)
+AllAuditClasses.append(HAResourceAudit)
 
 class CrmdStateAudit(ClusterAudit):
     def __init__(self, cm):

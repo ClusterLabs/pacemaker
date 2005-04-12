@@ -326,6 +326,7 @@ def usage(arg):
     +  " --logfile system-logfile-name" \
     +  " -L system-logfile-name" \
     +  " --choose testcase" \
+    +  " --resource-can-stop" \
     +  " -v2"\
     +  " --stonith (1 | 0 | yes | no)" \
     +  " --standby (1 | 0 | yes | no)" \
@@ -358,7 +359,7 @@ if __name__ == '__main__':
     LimitNodes = 0
     TestCase = None
     LogFacility = None
-    
+    ResCanStop = 0
     #
     # The values of the rest of the parameters are now properly derived from
     # the configuration files.
@@ -420,6 +421,8 @@ if __name__ == '__main__':
                usage(args[i+1])
        elif args[i] == "--suppressmonitoring":
            SuppressMonitoring = 1
+       elif args[i] == "--resource-can-stop":
+           ResCanStop = 1
        elif args[i] == "-2" or args[i] == "--crm":
            Version = 2
        elif args[i] == "-1" or args[i] == "--classic":
@@ -469,6 +472,7 @@ if __name__ == '__main__':
     Environment["SyslogFacility"] = LogFacility
     Environment["DoStandby"] = DoStandby
     Environment["DoFencing"] = DoFencing
+    Environment["ResCanStop"] = ResCanStop
     
     Environment["SuppressMonitoring"] = SuppressMonitoring
     if Version == 2:
