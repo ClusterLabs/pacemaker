@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.1 2005/04/12 12:49:02 andrew Exp $ */
+/* $Id: utils.c,v 1.2 2005/04/12 13:55:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -257,7 +257,6 @@ crm_log_init(const char *entity)
 	cl_set_corerootdir(HA_COREDIR);	    
 	cl_cdtocoredir();
 	
-	cl_log_set_logd_channel_source(NULL, NULL);
 	crm_set_env_options();
 
 	CL_SIGNAL(DEBUG_INC, alter_debug);
@@ -689,6 +688,7 @@ crm_set_env_options(void)
 		crm_str_to_boolean(param_val, &use_logging_daemon);
 		if(use_logging_daemon) {
 			cl_set_logging_wqueue_maxlen(500);
+			cl_log_set_logd_channel_source(NULL, NULL);
 		}
 		param_val = NULL;
 	}
