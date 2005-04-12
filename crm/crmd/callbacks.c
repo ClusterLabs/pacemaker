@@ -282,16 +282,12 @@ void
 crmd_ha_status_callback(
 	const char *node, const char * status,	void* private_data)
 {
-	crm_data_t *update      = NULL;
+	crm_data_t *update = NULL;
 
 	crm_devel("received callback");
 	crm_notice("Status update: Node %s now has status [%s]",node,status);
 
-	if(AM_I_DC == FALSE) {
-		crm_devel("Got nstatus callback in non-DC mode");
-		return;
-		
-	} else if(safe_str_neq(status, DEADSTATUS)) {
+	if(safe_str_neq(status, DEADSTATUS)) {
 		crm_devel("nstatus callback was not for a dead node");
 		return;
 	}
@@ -323,7 +319,11 @@ crmd_client_status_callback(const char * node, const char * client,
 	}
 
 	set_bit_inplace(fsa_input_register, R_PEER_DATA);
-	
+
+	if(fsa_state == S_STARTING || fsa_state == S_STOPPING) {
+		return;
+	}
+
 	if(safe_str_eq(status, JOINSTATUS)){
 		status = ONLINESTATUS;
 		extra  = XML_CIB_ATTR_CLEAR_SHUTDOWN;
@@ -342,12 +342,8 @@ crmd_client_status_callback(const char * node, const char * client,
 		crm_info("Got client status callback - our DC is dead");
 		register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 		
-	} else if(AM_I_DC == FALSE) {
-		crm_devel("Got client status callback in non-DC mode");
-		return;
-		
 	} else {
-		crm_devel("Got client status callback in DC mode");
+		crm_devel("Got client status callback");
 		update = create_node_state(
 			node, node, NULL, NULL, status, join, NULL);
 		

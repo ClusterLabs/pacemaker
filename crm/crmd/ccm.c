@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.64 2005/04/08 16:46:26 andrew Exp $ */
+/* $Id: ccm.c,v 1.65 2005/04/12 13:25:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -191,61 +191,52 @@ do_ccm_event(long long action,
 		return I_NULL;
 	}
 	
-	
 	/* My understanding is that we will never get both
 	 * node leaving *and* node joining callbacks at the
 	 * same time.
 	 *
-	 * This logic would need to change if this is not
-	 * the case
+	 * Gshi concurrs with this
+	 *
+	 * Various logic would need to change if this is not
+	 * the case... so assert its true
 	 */
+	CRM_DEV_ASSERT(oc->m_n_in != 0 || oc->m_n_out != 0);
+	CRM_DEV_ASSERT(oc->m_n_in == 0 || oc->m_n_out == 0);
 	
-	if(oc->m_n_out != 0) {
+	if(AM_I_DC) {
+		/* Membership changed, remind everyone we're here.
+		 * This will aid detection of duplicate DCs
+		 */
+		HA_Message *no_op = create_request(
+			CRM_OP_NOOP, NULL, NULL,
+			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+	
+		send_msg_via_ha(fsa_cluster_conn, no_op);
+
+	} else if(oc->m_n_out != 0) {
+		/* Possibly move this logic to ghash_update_cib_node() */
 		unsigned lpc = 0;
 		int offset = oc->m_out_idx;
 		for(lpc=0; lpc < oc->m_n_out; lpc++) {
-			crm_data_t *node_state = NULL;
-			
 			const char *uname = oc->m_array[offset+lpc].node_uname;
-			
-			crm_info("Node %s has left the cluster,"
-				 " updating the CIB.", uname);
-
 			if(uname == NULL) {
 				crm_err("CCM node had no name");
 				continue;
 				
 			} else if(safe_str_eq(uname, fsa_our_dc)) {
-				/* did our DC leave us */
+				crm_info("Our DC node (%s) left the cluster",
+					uname);
 				register_fsa_input(cause, I_ELECTION, NULL);
-
-			} else if(AM_I_DC) {
-				node_state = create_node_state(
-					NULL, uname, NULL,
-					XML_BOOLEAN_NO, NULL, NULL, NULL);
-				
-				update_local_cib(
-					create_cib_fragment(node_state, NULL));
-				free_xml(node_state);
-			}
+			} 
 		}
-		
-	} else if(oc->m_n_in !=0) {
-		/* delay the I_NODE_JOIN until they acknowledge our
-		 * DC status and send us their CIB
-		 */
-	} else {
-		CRM_DEV_ASSERT(oc->m_n_in != 0 || oc->m_n_out != 0);
-		crm_warn("So why are we here?  What CCM event happened?");
 	}
-
+	
 	return return_input;
 }
 
 /*	 A_CCM_UPDATE_CACHE	*/
 /*
  * Take the opportunity to update the node status in the CIB as well
- *  (but only if we are the DC)
  */
 enum crmd_fsa_input
 do_ccm_update_cache(long long action,
@@ -443,25 +434,12 @@ do_ccm_update_cache(long long action,
 	}
 	crm_devel("Free'd old copies");
 
-	if(AM_I_DC) {
-		/* should be sufficient for only the DC to do this */
-		crm_data_t *foo = NULL;
-		HA_Message *no_op = NULL;
-		
-		crm_devel("Updating the CIB");
-		foo = do_update_cib_nodes(NULL, FALSE);
-		free_xml(foo);
-
-		/* Membership changed, remind everyone we're here.
-		 * This will aid detection of duplicate DCs
-		 */
-		no_op = create_request(CRM_OP_NOOP, NULL, NULL,
-				       CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
-	
-		send_msg_via_ha(fsa_cluster_conn, no_op);
-	}
-	
 	set_bit_inplace(fsa_input_register, R_CCM_DATA);
+
+	if(cur_state != S_STARTING && cur_state != S_STOPPING) {
+		crm_devel("Updating the CIB from CCM cache");
+		do_update_cib_nodes(NULL, FALSE);
+	}
 	
 	return next_input;
 }
@@ -598,31 +576,23 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 	update_data.join  = NULL;
 	if(overwrite) {
 		update_data.join = CRMD_JOINSTATE_PENDING;
+		if(fsa_membership_copy->members != NULL) {
+			g_hash_table_foreach(fsa_membership_copy->members,
+					     ghash_update_cib_node, &update_data);
+		}
+	} else {
+		if(fsa_membership_copy->members != NULL) {
+			g_hash_table_foreach(fsa_membership_copy->new_members,
+					     ghash_update_cib_node, &update_data);
+		}
 	}
 	
-	if(fsa_membership_copy->members != NULL) {
-		g_hash_table_foreach(fsa_membership_copy->members,
-				     ghash_update_cib_node, &update_data);
-	}
-
-	/* this is most likely overkill...
-	 *
-	 * make *sure* that the join status of nodes entering the ccm list
-	 *  is reset
-	 *
-	update_data.join = CRMD_JOINSTATE_PENDING;
-	if(fsa_membership_copy->new_members != NULL) {
-		g_hash_table_foreach(fsa_membership_copy->new_members,
-				     ghash_update_cib_node, &update_data);
-	}
-*/
 	if(update_data.updates != NULL) {
 		update_local_cib(fragment);
 	}
 
-	/* so it can be freed */
-	return fragment;
-
+	free_xml(fragment);
+	return NULL;
 }
 
 void
@@ -631,13 +601,16 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	crm_data_t *tmp1 = NULL;
 	const char *node_uname = (const char*)key;
 	struct update_data_s* data = (struct update_data_s*)user_data;
-	const char *state = data->join;
 
+	if(safe_str_eq(data->state, XML_BOOLEAN_NO)) {
+		crm_info("Node %s has left the cluster", node_uname);
+	}
+	
 	crm_verbose("%s processing %s (%s)",
 		  __FUNCTION__, node_uname, data->state);
 
 	tmp1 = create_node_state(node_uname, node_uname,
-				 NULL, data->state, NULL, state, NULL);
+				 NULL, data->state, NULL, data->join, NULL);
 
 	add_node_copy(data->updates, tmp1);
 	free_xml(tmp1);
