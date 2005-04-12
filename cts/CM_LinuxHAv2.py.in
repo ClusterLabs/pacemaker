@@ -147,7 +147,7 @@ class LinuxHAv2(HeartbeatCM):
              <nvpair name="ip" value="127.0.0.%d"/>
            </attributes>
          </instance_attributes>
-       </resource>""" %(node, ip_num))
+       </resource>""" %("rsc_"+node, ip_num))
                 ip_num=ip_num+1
                 resources = resources + node_resource
                 node_constraint=("""
@@ -155,7 +155,7 @@ class LinuxHAv2(HeartbeatCM):
         <rule id="pref_run_%s" score="100" boolean_op="and">
           <expression attribute="uname" operation="eq" value="%s"/>
         </rule>
-      </rsc_location>""" % (node, node, node, node))
+      </rsc_location>""" % ("rsc_"+node, "rsc_"+node, "rsc_"+node, node))
                 constraints = constraints + node_constraint
             
             if self.Env["DoFencing"] == 1 :
@@ -359,15 +359,16 @@ class LinuxHAv2(HeartbeatCM):
             if self.Env["CIBfilename"] == None:
                 os.system("rm -f /tmp/cts.default.cib")
                 os.system("echo \'" + self.default_cts_cib + "\' > /tmp/cts.default.cib")
-		cib=parse("/tmp/cts.default.cib")
+                cib=parse("/tmp/cts.default.cib")
 #                os.system("rm -f /tmp/cts.default.cib")
             else:
-		cib=parse(self.Env["CIBfilename"])
+                cib=parse(self.Env["CIBfilename"])
         else:
-	    local_cib = "%s/cts_cib_%s.xml"%(self["TmpDir"],str(os.getpid()))
-	    if 0!=self.rsh.cp("root@"+self["CIBfile"]%self.Env["nodes"][0],local_cib):
-		raise ValueError("Can not copy file to %s, maybe permission denied"%self["TmpDir"])
-	    cib=parse(local_cib)
+            local_cib = "%s/cts_cib_%s.xml"%(self["TmpDir"],str(os.getpid()))
+            if 0!=self.rsh.cp("root@"+self["CIBfile"]%self.Env["nodes"][0],local_cib):
+                raise ValueError("Can not copy file to %s, maybe permission denied"%self["TmpDir"])
+            cib=parse(local_cib)
+            os.remove(local_cib)
 
         return cib.getElementsByTagName('configuration')[0]
     
@@ -413,13 +414,13 @@ class HAResource(Resource):
         self.rtype   = str(node.getAttribute('type'))
         self.rparameters = {}
         
-	list = node.getElementsByTagName('instance_attributes')
-	if len(list) > 0:
-	    attributes = list[0]
-	    list = attributes.getElementsByTagName('attributes')
-	if len(list) > 0:
-	    parameters = list[0]
-	    nvpairs     = parameters.getElementsByTagName('nvpair')
+        list = node.getElementsByTagName('instance_attributes')
+        if len(list) > 0:
+            attributes = list[0]
+            list = attributes.getElementsByTagName('attributes')
+        if len(list) > 0:
+            parameters = list[0]
+            nvpairs     = parameters.getElementsByTagName('nvpair')
 
         for nvpair in nvpairs:
             name=nvpair.getAttribute('name')
