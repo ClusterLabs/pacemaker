@@ -39,8 +39,8 @@ crmuid		= @HA_CCMUID@
 
 COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		$(top_builddir)/lib/clplumbing/libplumb.la		\
-		$(top_builddir)/$(CRM_DIR)/common/libcrmcommon.la	\
-		$(top_builddir)/lib/$(CRM_DIR)/cib/libcib.la		\
+		$(top_builddir)/lib/crm/common/libcrmcommon.la	\
+		$(top_builddir)/lib/crm/cib/libcib.la		\
 		$(top_builddir)/lib/apphb/libapphb.la			\
 		$(GLIBLIB)						\
 		$(LIBRT)

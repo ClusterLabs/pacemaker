@@ -18,8 +18,8 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 ## Subdirectories
-SUBDIRS			=  common cib crmd pengine tengine admin test
-#EXTRA_DIST		= admin_cib_test.sh
+SUBDIRS			=  cib crmd pengine tengine admin test
+DIST_SUBDIRS		=  cib crmd pengine tengine admin test
 
 crmdir			= $(HA_VARLIBDIR)/$(HB_PKG)/crm
 noinst_HEADERS 	= dmalloc_wrapper.h
