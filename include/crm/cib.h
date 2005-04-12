@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.20 2005/03/16 19:45:09 andrew Exp $ */
+/* $Id: cib.h,v 1.21 2005/04/12 09:19:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,14 +46,13 @@ enum cib_conn_type {
 };
 
 enum cib_call_options {
-	cib_none          = 0x000000,
-	cib_verbose       = 0x000001,
-	cib_discard_reply = 0x000004,
-	cib_scope_local   = 0x000010,
-/* 	cib_scope_global  = 0x000020, */
-	cib_sync_call     = 0x000040,
-/* 	cib_async_call    = 0x000080, */
-	cib_inhibit_notify= 0x000100
+	cib_none            = 0x000000,
+	cib_verbose         = 0x000001,
+	cib_discard_reply   = 0x000010,
+	cib_scope_local     = 0x000100,
+	cib_sync_call       = 0x001000,
+	cib_inhibit_notify  = 0x010000,
+ 	cib_quorum_override = 0x100000
 };
 
 #define cib_default_options = cib_none
@@ -100,7 +99,8 @@ enum cib_errors {
 	cib_revision_unsupported= -38,
 	cib_revision_unknown	= -39,
 	cib_missing_data	= -40,
-	cib_remote_timeout	= -41
+	cib_remote_timeout	= -41,
+	cib_no_quorum		= -42
 };
 
 enum cib_op {
@@ -270,7 +270,9 @@ extern int cib_compare_generation(crm_data_t *left, crm_data_t *right);
 extern crm_data_t *get_object_root(const char *object_type,crm_data_t *the_root);
 extern crm_data_t *create_cib_fragment_adv(
 			crm_data_t *update, const char *section, const char *source);
-extern char      *cib_pluralSection(const char *a_section);
+extern char *cib_pluralSection(const char *a_section);
+extern const char *get_crm_option(
+	crm_data_t *cib, const char *name, gboolean do_warn);
 
 /* Error Interpretation*/
 extern const char *cib_error2string(enum cib_errors);

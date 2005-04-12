@@ -686,6 +686,9 @@ cib_error2string(enum cib_errors return_code)
 		case cib_missing_data:
 			error_msg = "Required data for this CIB API call not found";
 			break;
+		case cib_no_quorum:
+			error_msg = "Write requires quorum";
+			break;
 	}
 			
 	if(error_msg == NULL) {
@@ -938,6 +941,33 @@ get_object_root(const char *object_type, crm_data_t *the_root)
 			crm_element_name(the_root));
 	}
 	return tmp_node;
+}
+
+const char *
+get_crm_option(crm_data_t *cib, const char *name, gboolean do_warn) 
+{
+	const char * value = NULL;
+	crm_data_t * a_default = NULL;
+	crm_data_t * config = get_object_root(XML_CIB_TAG_CRMCONFIG, cib);
+	
+	if(config != NULL) {
+		a_default = find_entity(
+			config, XML_CIB_TAG_NVPAIR, name, FALSE);
+	}
+	
+	if(a_default == NULL) {
+		if(do_warn) {
+			crm_warn("Option %s not set", name);
+		}
+		return NULL;
+	}
+	
+	value = crm_element_value(a_default, XML_NVPAIR_ATTR_VALUE);
+	if(safe_str_eq(value, "")) {
+		value = NULL;
+	}
+	return value;
+	
 }
 
 
