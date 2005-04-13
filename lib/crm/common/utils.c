@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.2 2005/04/12 13:55:24 andrew Exp $ */
+/* $Id: utils.c,v 1.3 2005/04/13 18:04:47 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -550,8 +550,6 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 #endif
 }/*memory leak*/ /* BEAM BUG - this is not a memory leak */
 
-extern int use_logging_daemon;
-extern int conn_logd_intval;
 
 void
 crm_set_ha_options(ll_cluster_t *hb_cluster) 
@@ -608,8 +606,10 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
 	crm_devel("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
-		crm_str_to_boolean(param_val, &use_logging_daemon);
-		if(use_logging_daemon) {
+		int uselogd;
+		crm_str_to_boolean(param_val, &uselogd);
+		cl_log_set_uselogd(uselogd);
+		if(cl_log_get_uselogd()) {
 			cl_set_logging_wqueue_maxlen(500);
 		}
 		cl_free(param_val);
@@ -620,7 +620,9 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
 	crm_devel("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
-		conn_logd_intval = crm_get_msec(param_val);
+		int logdtime;
+		logdtime = crm_get_msec(param_val);
+		cl_log_set_logdtime(logdtime);
 		cl_free(param_val);
 		param_val = NULL;
 	}
@@ -685,8 +687,10 @@ crm_set_env_options(void)
 	param_val = getenv(param_name);
 	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
-		crm_str_to_boolean(param_val, &use_logging_daemon);
-		if(use_logging_daemon) {
+		int uselogd;
+		crm_str_to_boolean(param_val, &uselogd);
+		cl_log_set_uselogd(uselogd);
+		if(uselogd) {
 			cl_set_logging_wqueue_maxlen(500);
 			cl_log_set_logd_channel_source(NULL, NULL);
 		}
@@ -697,7 +701,9 @@ crm_set_env_options(void)
 	param_val = getenv(param_name);
 	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
-		conn_logd_intval = crm_get_msec(param_val);
+		int logdtime;
+		logdtime = crm_get_msec(param_val);
+		cl_log_set_logdtime(logdtime);
 		param_val = NULL;
 	}
 	
