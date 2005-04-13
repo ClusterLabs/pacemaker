@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.58 2005/04/07 14:00:05 andrew Exp $ */
+/* $Id: tengine.c,v 1.59 2005/04/13 16:38:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -334,11 +334,13 @@ process_graph_event(crm_data_t *event)
 	int action_id          = -1;
 	int op_status_i        = 0;
 	const char *op_status  = NULL;
+	const char *task  = NULL;
 
 	if(event != NULL) {
 		op_status  = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
+		task  = crm_element_value(event, XML_LRM_ATTR_LASTOP);
 	}
-	
+
 	next_transition_timeout = transition_timeout;
 	
 	if(op_status != NULL) {
@@ -348,6 +350,20 @@ process_graph_event(crm_data_t *event)
 	if(op_status_i == -1) {
 		/* just information that the action was sent */
 		crm_trace("Ignoring TE initiated updates");
+		return TRUE;
+
+	} else if(op_status_i == 0 && safe_str_eq(task, CRMD_RSCSTATE_MON)) {
+		/* now how exactly this affects a resource that failed and
+		 *  and then recovered all by itself... i'm not 100% sure.
+		 *
+		 * in theory we just wouldnt trigger a new transition but
+		 *  then again, one should already be in progress right?
+		 *
+		 * possibly it would be better to keep the old transition
+		 *  around so we could try matching it against a start op
+		 *  and if one isnt found, _then_ trigger a new transition
+		 */
+		crm_debug("Ignoring successful monitor op");
 		return TRUE;
 	}
 
