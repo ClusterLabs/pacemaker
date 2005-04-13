@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.27 2005/04/13 08:22:29 andrew Exp $ */
+/* $Id: native.c,v 1.28 2005/04/13 09:14:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -275,6 +275,7 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 			
 			slist_iter(
 				node, node_t,
+				native_data->running_on, lpc,
 				crm_warn("Resource %s active on %s",
 					 rsc->id, node->details->uname);
 				);
