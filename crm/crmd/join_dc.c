@@ -96,12 +96,6 @@ do_dc_join_offer_all(long long action,
 	
 	/* now process the CCM data */
 	do_update_cib_nodes(fragment, TRUE);
-
-/*  	free_xml(fragment);  */
-/* BUG!  This should be able to be freed.
- * I cant find any reason why it shouldnt be able to be,
- * but libxml still corrupts memory
- */
 	
 #if 0
 	/* Avoid ordered message delays caused when the CRMd proc
@@ -119,6 +113,7 @@ do_dc_join_offer_all(long long action,
 			     join_send_offer, NULL);
 	
 #endif
+
 /* No point hanging around in S_INTEGRATION if we're the only ones here! */
 	if((ssize_t)g_hash_table_size(join_requests)
 	   >= fsa_membership_copy->members_size) {
