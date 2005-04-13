@@ -107,10 +107,8 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 			LOG_WARNING, "HA[inbound]: Duplicate DC", msg);
 		new_input = new_ha_msg_input(msg);
 #if 1
-		{
-			fsa_data_t *msg_data = NULL;
-			register_fsa_error(C_FSA_INTERNAL, I_ELECTION, new_input);
-		}
+		register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL,
+				       new_input, __FUNCTION__);
 #else
 		register_fsa_input(C_HA_MESSAGE, I_ELECTION, new_input);
 #endif
