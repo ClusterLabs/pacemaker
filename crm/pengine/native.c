@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.26 2005/04/13 08:13:26 andrew Exp $ */
+/* $Id: native.c,v 1.27 2005/04/13 08:22:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -267,6 +267,17 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 				 rsc->id,
 				 safe_val3(NULL, chosen, details, uname));
 			op = action_new(rsc, start_rsc, NULL, chosen);
+		}
+
+		if(rsc->recovery_type == recovery_block) {
+			crm_warn("RESOURCE %s WILL REMAIN ACTIVE ON MULTIPLE"
+				 " NODES PENDING MANUAL INTERVENTION", rsc->id);
+			
+			slist_iter(
+				node, node_t,
+				crm_warn("Resource %s active on %s",
+					 rsc->id, node->details->uname);
+				);
 		}
 		
 	} else if(g_list_length(native_data->running_on) == 1) {

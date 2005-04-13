@@ -88,6 +88,7 @@ do_test rec-rsc-4 "Resource Recover - stop - block "
 do_test rec-rsc-5 "Resource Recover - stop - fence "
 do_test rec-rsc-6 "Resource Recover - multiple - restart"
 do_test rec-rsc-7 "Resource Recover - multiple - stop   "
+do_test rec-rsc-8 "Resource Recover - multiple - block  "
 
 echo ""
 do_test quorum-1 "No quorum - ignore"
