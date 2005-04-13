@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.60 2005/03/29 20:01:54 andrew Exp $ */
+/* $Id: pengine.c,v 1.61 2005/04/13 13:45:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,7 +169,7 @@ do_calculations(crm_data_t * cib_object)
 		);
 	pe_free_shallow_adv(action_sets, FALSE);
 
-	pe_free_actions(actions);
+/* 	pe_free_actions(actions); */
 	pe_free_resources(resources); 
 	pe_free_colors(colors);
 	pe_free_nodes(nodes);
