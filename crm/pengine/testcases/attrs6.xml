@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <cib dc_uuid="uuid1">
-  <crm_config>
-    <nvpair id="symmetric_cluster" name="symetric_cluster" value="false"/>
-  </crm_config>
   <configuration>
+    <crm_config>
+      <nvpair id="symmetric_cluster" name="symetric_cluster" value="false"/>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
       <node id="uuid2" uname="node2" type="member"/>
@@ -21,21 +22,7 @@
     </constraints>
   </configuration>
   <status>
-    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
-      <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
-    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
-      <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
   </status>
 </cib>

@@ -3,7 +3,9 @@
 <!-- must not -->
 <cib>
   <configuration>
-    <crm_config/>
+    <crm_config>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </crm_config>
     <nodes>
       <node id="node1" uname="node1" type="member"/>
       <node id="node2" uname="node2" type="member"/>

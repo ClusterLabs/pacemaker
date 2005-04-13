@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.65 2005/04/11 10:40:10 andrew Exp $ */
+/* $Id: utils.c,v 1.66 2005/04/13 08:13:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,7 @@
 
 int action_id = 1;
 int color_id = 0;
+extern GListPtr global_action_list;
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
@@ -605,18 +606,6 @@ action_new(resource_t *rsc, enum action_tasks task,
 			find_actions(rsc->actions, task, on_node);
 	}
 
-	if(on_node != NULL && on_node->details->unclean) {
-		crm_warn("Not creating action  %s for %s because %s is unclean",
-			 task2text(task), rsc?rsc->id:"<NULL>",
-			 on_node->details->id);
-	}
-
-	if(on_node != NULL && on_node->details->unclean) {
-		crm_warn("Not creating action  %s for %s because %s is unclean",
-			 task2text(task), rsc?rsc->id:"<NULL>",
-			 on_node->details->id);
-	}
-	
 	if(possible_matches != NULL) {
 		if(g_list_length(possible_matches) > 1) {
 			crm_warn("Action %s for %s on %s exists %d times",
@@ -649,12 +638,13 @@ action_new(resource_t *rsc, enum action_tasks task,
 		action->rsc  = rsc;
 		action->task = task;
 		action->node = on_node;
+
 		action->actions_before   = NULL;
 		action->actions_after    = NULL;
 		action->failure_is_fatal = TRUE;
-		action->pseudo = FALSE;
+
+		action->pseudo     = FALSE;
 		action->dumped     = FALSE;
-		action->discard    = FALSE;
 		action->runnable   = TRUE;
 		action->processed  = FALSE;
 		action->optional   = FALSE;
@@ -667,8 +657,17 @@ action_new(resource_t *rsc, enum action_tasks task,
 		if(timeout != NULL) {
 			add_hash_param(action->extra, "timeout", timeout);
 		}
+
 		
 		if(rsc != NULL) {
+			if(on_node != NULL && !(on_node->details->online)) {
+				crm_warn("Action %s for %s is unrunnable:"
+					 " %s is offline",
+					 task2text(task), rsc?rsc->id:"<NULL>",
+					 on_node->details->id);
+				action->runnable = FALSE;
+			}
+			
 			crm_devel("Adding created action to its resource");
 			rsc->actions = g_list_append(rsc->actions, action);
 
@@ -677,12 +676,12 @@ action_new(resource_t *rsc, enum action_tasks task,
 
 			} else if(task == stop_rsc) {
 				rsc->stopping = TRUE;
-			}
-			
+			}			
 		}
 
 	}
 	crm_devel("Action %d created", action->id);
+	global_action_list = g_list_append(global_action_list, action);
 	return action;
 }
 
@@ -942,7 +941,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			crm_devel("%s%s%sAction %d: %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
-			       action->discard?"Discarded ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+			       action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 			       action->id,
 			       task2text(action->task),
 			       safe_val4(NULL, action, node, details, uname));

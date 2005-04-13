@@ -2,15 +2,17 @@
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <cib>
   <configuration>
-    <crm_config/>
+    <crm_config>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-      <resource id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
-      <resource id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
+      <resource id="rsc1" class="heartbeat" type="apache"/>
+      <resource id="rsc2" class="heartbeat" type="apache"/>
+      <resource id="rsc3" class="heartbeat" type="apache"/>
     </resources>
     <constraints>
       <rsc_order id="order1" from="rsc2" type="after"  to="rsc1"/>
@@ -18,21 +20,7 @@
     </constraints>
   </configuration>
   <status>
-    <node_state id="uuid1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
-      <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
-    <node_state id="uuid2" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
-      <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
   </status>
 </cib>

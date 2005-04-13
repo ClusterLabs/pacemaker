@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.73 2005/04/11 15:34:12 andrew Exp $ */
+/* $Id: unpack.c,v 1.74 2005/04/13 08:13:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -552,6 +552,7 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 	} else {
 		if(crm_is_true(ccm_state)
 		   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
+		   && safe_str_eq(crm_state, ONLINESTATUS)
 		   && safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
 			online = TRUE;
 
@@ -692,7 +693,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 			/* map the status to an error and then handle as a
 			 * failed resource.
 			 */
-			action_status_i = LRM_OP_ERROR;
+/* 			action_status_i = LRM_OP_ERROR; */
 
 		} else if(action_status_i == (op_status_t)-1) {
 			/*
@@ -716,8 +717,9 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 				/* map this to a "done" so it is not marked
 				 * as failed, then make sure it is re-issued
 				 */
-				action_new(rsc_lh, start_rsc, NULL, node);
+				action_new(rsc_lh, start_rsc, NULL, NULL);
 				action_status_i = LRM_OP_DONE;
+				rsc_lh->start_pending = TRUE;
 			}
 		}
 
@@ -748,7 +750,8 @@ unpack_failed_resource(GListPtr *placement_constraints,
 		       crm_data_t * rsc_entry, resource_t *rsc_lh, node_t *node)
 {
 	const char *last_op  = crm_element_value(rsc_entry, XML_LRM_ATTR_LASTOP);
-	crm_devel("Unpacking failed action %s on %s", last_op, rsc_lh->id);
+	crm_warn("Unpacking failed action %s for %s on %s",
+		 last_op, rsc_lh->id, node->details->uname);
 	CRM_DEV_ASSERT(node != NULL);
 	if(crm_assert_failed) {
 		return FALSE;
@@ -790,7 +793,6 @@ unpack_failed_resource(GListPtr *placement_constraints,
 			 */
 			native_add_running(rsc_lh, node);
 
-			(node->details->num_resources)++;
 			node->details->running_rsc = g_list_append(
 				node->details->running_rsc, rsc_lh);
 /* 			rsc_lh->stop->timeout = NULL; /\* wait forever *\/ */
@@ -820,7 +822,6 @@ unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
 
 		native_add_running(rsc_lh, node);
 
-		(node->details->num_resources)++;
 		node->details->running_rsc = g_list_append(
 			node->details->running_rsc, rsc_lh);
 	}

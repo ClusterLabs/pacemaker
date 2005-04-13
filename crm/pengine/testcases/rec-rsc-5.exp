@@ -1,0 +1,66 @@
+ <transition_graph global_timeout="60000">
+   <synapse id="0">
+     <action_set>
+       <pseudo_event id="1" rsc_id="rsc1" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+         <resource id="rsc1" class="heartbeat" type="apache" on_stopfail="fence"/>
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <crm_event id="5" operation="stonith" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <rsc_op id="2" rsc_id="rsc1" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <resource id="rsc1" class="heartbeat" type="apache" on_stopfail="fence"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="1" rsc_id="rsc1" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <rsc_op id="3" rsc_id="rsc2" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+         <resource id="rsc2" class="heartbeat" type="apache" on_stopfail="fence"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="3">
+     <action_set>
+       <rsc_op id="4" rsc_id="rsc2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <resource id="rsc2" class="heartbeat" type="apache" on_stopfail="fence"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="3" rsc_id="rsc2" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <crm_event id="5" operation="stonith" allow_fail="false">
+         <attributes>
+           <nvpair name="on_node" value="node2"/>
+           <nvpair name="on_node_uuid" value="uuid2"/>
+         </attributes>
+       </crm_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="3" rsc_id="rsc2" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+ </transition_graph>
+

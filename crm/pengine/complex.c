@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.18 2005/04/11 10:55:00 andrew Exp $ */
+/* $Id: complex.c,v 1.19 2005/04/13 08:13:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -112,10 +112,11 @@ is_active(rsc_to_node_t *cons)
 gboolean	
 common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 {
-	const char *id            = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *stopfail      = crm_element_value(xml_obj, XML_RSC_ATTR_STOPFAIL);
-	const char *restart       = crm_element_value(xml_obj, XML_RSC_ATTR_RESTART);
-	const char *priority      = NULL;
+	const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
+	const char *stopfail = crm_element_value(xml_obj, XML_RSC_ATTR_STOPFAIL);
+	const char *restart  = crm_element_value(xml_obj, XML_RSC_ATTR_RESTART);
+	const char *multiple = crm_element_value(xml_obj, "multi_active");
+	const char *priority = NULL;
 
 	crm_xml_verbose(xml_obj, "Processing resource input...");
 	
@@ -160,6 +161,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->runnable	   = TRUE; 
 	(*rsc)->provisional	   = TRUE; 
+	(*rsc)->start_pending	   = FALSE; 
 	(*rsc)->starting	   = FALSE; 
 	(*rsc)->stopping	   = FALSE; 
 	(*rsc)->candidate_colors   = NULL;
@@ -167,32 +169,50 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	(*rsc)->actions            = NULL;
 
 
+	crm_debug("Options for %s", id);
 	if(stopfail == NULL && stonith_enabled) {
 		(*rsc)->stopfail_type = pesf_stonith;
+		crm_debug("\tFailed stop handling handling: fence (default)");
 
 	} else if(stopfail == NULL) {
 		(*rsc)->stopfail_type = pesf_block;
+		crm_debug("\tFailed stop handling handling: block (default)");
 		
 	} else if(safe_str_eq(stopfail, "ignore")) {
 		(*rsc)->stopfail_type = pesf_ignore;
+		crm_debug("\tFailed stop handling handling: ignore");
 		
-	} else if(safe_str_eq(stopfail, XML_CIB_ATTR_STONITH)) {
+	} else if(safe_str_eq(stopfail, "fence")) {
 		(*rsc)->stopfail_type = pesf_stonith;
+		crm_debug("\tFailed stop handling handling: fence");
 
 	} else {
 		(*rsc)->stopfail_type = pesf_block;
+		crm_debug("\tFailed stop handling handling: block");
 	}
 	
 	if(safe_str_eq(restart, "restart")) {
 		(*rsc)->restart_type = pe_restart_restart;
-
-	} else if(safe_str_eq(restart, "recover")) {
-		(*rsc)->restart_type = pe_restart_recover;
+		crm_debug("\tDependancy restart handling: restart");
 
 	} else {
 		(*rsc)->restart_type = pe_restart_ignore;
+		crm_debug("\tDependancy restart handling: ignore");
 	}
 
+	if(multiple == NULL || safe_str_eq(multiple, "stop_start")) {
+		(*rsc)->recovery_type = recovery_stop_start;
+		crm_debug("\tMultiple running resource recovery: stop/start");
+		
+	} else if(safe_str_eq(multiple, "stop_only")) {
+		(*rsc)->recovery_type = recovery_stop_only;
+		crm_debug("\tMultiple running resource recovery: stop only");
+
+	} else {
+		(*rsc)->recovery_type = recovery_block;
+		crm_debug("\tMultiple running resource recovery: block");
+	}
+	
 	(*rsc)->fns->unpack(*rsc);
 
 	return TRUE;
@@ -205,8 +225,8 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
 	
-	crm_verbose("%d Processing %d -> %d",
-		    order->id, lh_action->id, rh_action->id);
+	crm_debug("Ordering %d: Action %d before %d",
+		  order?order->id:-1, lh_action->id, rh_action->id);
 	
 	crm_devel_action(
 		print_action("LH (order_actions)", lh_action, FALSE));

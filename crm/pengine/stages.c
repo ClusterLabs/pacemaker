@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.52 2005/04/11 15:34:12 andrew Exp $ */
+/* $Id: stages.c,v 1.53 2005/04/13 08:13:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,6 +36,7 @@ int order_id        = 1;
 int max_valid_nodes = 0;
 
 GListPtr agent_defaults = NULL;
+GListPtr global_action_list = NULL;
 
 gboolean have_quorum      = FALSE;
 gboolean stonith_enabled  = FALSE;
@@ -87,6 +88,13 @@ stage0(crm_data_t * cib,
 	have_quorum      = TRUE;
 	stonith_enabled  = FALSE;
 
+	if(global_action_list != NULL) {
+		crm_verbose("deleting actions");
+		pe_free_actions(global_action_list);
+		global_action_list = NULL;
+	}
+	
+	
 	crm_free(dc_uuid); dc_uuid = NULL;
 
 	if(cib == NULL) {
@@ -103,9 +111,12 @@ stage0(crm_data_t * cib,
 	if(no_quorum_policy != no_quorum_ignore) {
 		const char *value = crm_element_value(
 			cib, XML_ATTR_HAVE_QUORUM);
+
+		have_quorum = FALSE;
 		if(value != NULL) {
 			crm_str_to_boolean(value, &have_quorum);
 		}
+			
 		if(have_quorum == FALSE) {
 			crm_warn("We do not have quorum"
 				 " - fencing and resource management disabled");
@@ -304,7 +315,13 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 				node, down_op, ordering_constraints);
 		}
 
-		if(node->details->unclean && stonith_enabled) {
+		if(node->details->unclean && stonith_enabled == FALSE) {
+			crm_err("Node %s is unclean!", node->details->uname);
+			crm_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
+			crm_warn("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
+
+		} else if(node->details->unclean && stonith_enabled
+		   && (have_quorum || no_quorum_policy == no_quorum_ignore)) {
 			crm_warn("Scheduling Node %s for STONITH",
 				 node->details->uname);
 
@@ -323,12 +340,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 				down_op->failure_is_fatal = FALSE;
 			}
 			
-			*actions = g_list_append(*actions, stonith_op);
-			
-		} else if(node->details->unclean) {
-			crm_err("Node %s is unclean!", node->details->uname);
-			crm_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
-			crm_warn("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
+			*actions = g_list_append(*actions, stonith_op);	
 		}
 
 		if(node->details->unclean) {
@@ -387,7 +399,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 		
 		);
 
-	update_action_states(actions);
+	update_action_states(global_action_list);
 
 	return TRUE;
 }
@@ -411,7 +423,9 @@ stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 		);
 */
 	crm_verbose("========= Action List =========");
-	slist_iter(action, action_t, actions, lpc,
+	crm_debug("%d actions created",  g_list_length(global_action_list));
+	
+	slist_iter(action, action_t, global_action_list, lpc,
 		   print_action(NULL, action, FALSE));
 
 	slist_iter(
@@ -425,7 +439,7 @@ stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 	/* catch any non-resource specific actions */
 	crm_devel("processing non-resource actions");
 	slist_iter(
-		action, action_t, actions, lpc,
+		action, action_t, global_action_list, lpc,
 
 		graph_element_from_action(action, graph);
 		);

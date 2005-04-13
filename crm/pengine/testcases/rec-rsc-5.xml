@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<cib>
+  <configuration>
+    <crm_config>
+      <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </crm_config>
+    <nodes>
+      <node id="uuid1" uname="node1" type="member"/>
+      <node id="uuid2" uname="node2" type="member"/>
+    </nodes>
+    <resources>
+      <resource id="rsc1" class="heartbeat" type="apache" on_stopfail="fence"/>
+      <resource id="rsc2" class="heartbeat" type="apache" on_stopfail="fence"/>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <lrm>
+        <lrm_resources>
+          <lrm_resource id="rsc1" last_op="stop" rsc_state="stop_failed" op_status="4" rc_code="7" on_node="node2"/>
+          <lrm_resource id="rsc2" last_op="start" rsc_state="running" op_status="0" rc_code="0" on_node="node2"/>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

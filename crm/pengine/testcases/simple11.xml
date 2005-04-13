@@ -3,6 +3,7 @@
   <configuration>
     <crm_config>
       <nvpair id="symmetric_cluster" name="symetric_cluster" value="false"/>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
     </crm_config>
     <nodes>
       <node id="node1" uname="node1" type="member"/>

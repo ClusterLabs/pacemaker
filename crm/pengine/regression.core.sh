@@ -65,8 +65,7 @@ function do_test {
 	return;
     fi
 
-#    if [ "$create_mode" = "true" ]; then
-    if [ "$create_mode" = "true" -a ! -f $expected ]; then
+    if [ "$create_mode" = "true" ]; then
 	cp "$output" "$expected"
     fi
 

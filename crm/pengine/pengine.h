@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.58 2005/04/11 15:34:12 andrew Exp $ */
+/* $Id: pengine.h,v 1.59 2005/04/13 08:13:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,7 +88,6 @@ enum pe_stop_fail {
 
 enum pe_restart {
 	pe_restart_restart,
-	pe_restart_recover,
 	pe_restart_ignore
 };
 
@@ -162,19 +161,20 @@ struct resource_s {
 		enum pe_obj_types variant;
 		resource_object_functions_t *fns;
 
-		float	     priority; 
-		float	     effective_priority; 
-
-		gboolean     starting;
-		gboolean     stopping;
-		gboolean     is_stonith;
-		gboolean     runnable;
-		gboolean     provisional;
-		gboolean     unclean;
-
 		enum rsc_recovery_type recovery_type;
 		enum pe_stop_fail      stopfail_type;
 		enum pe_restart        restart_type;
+
+		float	 priority; 
+		float	 effective_priority; 
+
+		gboolean start_pending;
+		gboolean starting;
+		gboolean stopping;
+		gboolean is_stonith;
+		gboolean runnable;
+		gboolean provisional;
+		gboolean unclean;
 
 		GListPtr candidate_colors; /* color_t*          */
 		GListPtr rsc_cons;         /* rsc_colocation_t* */
@@ -203,7 +203,6 @@ struct action_s
 		gboolean dumped;
 		gboolean processed;
 		gboolean optional;
-		gboolean discard;
 		gboolean failure_is_fatal;
 
 		int seen_count;

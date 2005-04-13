@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.35 2005/04/11 15:31:58 andrew Exp $ */
+/* $Id: graph.c,v 1.36 2005/04/13 08:13:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,6 +33,7 @@ gboolean update_action(action_t *action);
 gboolean
 update_action_states(GListPtr actions)
 {
+	crm_debug("Updating %d actions",  g_list_length(actions));
 	slist_iter(
 		action, action_t, actions, lpc,
 
@@ -48,6 +49,7 @@ update_action(action_t *action)
 {
 	gboolean change = FALSE;
 
+	crm_debug("Processing action %d", action->id);
 	if(action->optional && action->runnable) {
 		return FALSE;
 	}
@@ -57,16 +59,15 @@ update_action(action_t *action)
 
 		if(action->runnable == FALSE && action->optional == FALSE) {
 			if(other->action->runnable == FALSE) {
+				crm_debug("Action %d already un-runnable",
+					  other->action->id);
 				continue;
-			} else if (other->strength == pecs_must) {
+			} else {
 				change = TRUE;
 				other->action->runnable =FALSE;
-				crm_devel_action(
-					print_action("Marking unrunnable",
-						     other->action, FALSE);
-					print_action("Reason",
-						     action, FALSE);
-					);
+				crm_debug("Marking action %d un-runnable"
+					  " because of %d",
+					  other->action->id, action->id);
 			}	
 		}
 
@@ -75,17 +76,11 @@ update_action(action_t *action)
 	switch(action->rsc->restart_type) {
 		case pe_restart_ignore:
 			break;
-		case pe_restart_recover:
-				crm_err("Recover after dependancy "
-					"restart not supported... "
-					"forcing a restart");
-				/* keep going */
 		case pe_restart_restart:
 			change = TRUE;
 			other->action->optional = FALSE;
-			crm_devel_action(
-				print_action("Marking manditory",
-					     other->action, FALSE));
+			crm_debug("Marking action %d manditory because of %d",
+				  other->action->id, action->id);
 	}
 		}
 		
@@ -130,6 +125,7 @@ stonith_constraints(node_t *node,
 		 *   shoot the node... the shutdown has been superceeded
 		 */
 		shutdown_op->pseudo = TRUE;
+		shutdown_op->runnable = TRUE;
 
 		/* shutdown before stonith */
 		/* Give any resources a chance to shutdown normally */
@@ -150,11 +146,13 @@ stonith_constraints(node_t *node,
 			stop_actions = find_actions(rsc->actions,stop_rsc,node);
 			slist_iter(
 				action, action_t, stop_actions, lpc2,
-				if(node->details->unclean || rsc->unclean) {
+				if(node->details->online == FALSE
+				   || rsc->unclean) {
 					/* the stop would never complete and is
 					 * now implied by the stonith operation
 					 */
 					action->pseudo = TRUE;
+					action->runnable = TRUE;
 					order_new(NULL,stonith_node,stonith_op,
 						  rsc, stop_rsc, NULL,
 						  pecs_must, ordering_constraints);
@@ -175,8 +173,9 @@ stonith_constraints(node_t *node,
 			  && rsc->stopfail_type == pesf_block) {
 			/* depend on the stop action which will fail */
 			crm_err("SHARED RESOURCE %s WILL REMAIN BLOCKED"
-				 " UNTIL CLEANED UP MANUALLY ON NODE %s",
-				 rsc->id, node->details->uname);
+				 " ON NODE %s UNTIL %s",
+				rsc->id, node->details->uname,
+				stonith_enabled?"QUORUM RETURNS":"CLEANED UP MANUALLY");
 			continue;
 			
 		} else if((rsc->unclean || node->details->unclean)
@@ -303,7 +302,7 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 		crm_trace("action %d was optional", action->id);
 		return;
 
-	} else if(action->runnable == FALSE) {
+	} else if(action->pseudo == FALSE && action->runnable == FALSE) {
 		crm_trace("action %d was not runnable", action->id);
 		return;
 
@@ -311,18 +310,20 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 		crm_trace("action %d was already dumped", action->id);
 		return;
 
-	} else if(action->discard) {
-		crm_trace("action %d was discarded", action->id);
-		return;
-
-	} else if(action->pseudo == FALSE && action->node == NULL) {
-		crm_err("action %d was not allocated", action->id);
-		return;
-
-	} else if(action->pseudo == FALSE
-		  && action->node->details->online == FALSE) {
-		crm_err("action %d was scheduled for offline node", action->id);
-		return;
+	} else if(action->pseudo
+		  || action->task == stonith_node
+		  || action->task == shutdown_crm) {
+		/* skip the next check */
+		
+	} else {
+		if(action->node == NULL) {
+			crm_err("action %d was not allocated", action->id);
+			return;
+			
+		} else if(action->node->details->online == FALSE) {
+			crm_err("action %d was scheduled for offline node", action->id);
+			return;
+		}
 	}
 	
 	action->dumped = TRUE;
@@ -341,30 +342,14 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 	slist_iter(wrapper,action_wrapper_t,action->actions_before,lpc,
 			
 		   if(wrapper->action->optional == TRUE) {
-			   continue;
-
-		   } else if(wrapper->action->discard == TRUE) {
+			   crm_debug("Input %d optional", wrapper->action->id);
 			   continue;
 		   }
 		   
-		   switch(wrapper->strength) {
-			   case pecs_must_not:
-			   case pecs_ignore:
-				   /* ignore both */
-				   break;
-			   case pecs_startstop:
-				   if(wrapper->action->runnable == FALSE){
-					   break;
-				   }
-				   /* keep going */
-			   case pecs_must:
-				   input = create_xml_node(in, "trigger");
-				   
-				   xml_action = action2xml(
-					   wrapper->action, TRUE);
-				   add_node_copy(input, xml_action);
-				   break;
-		   }
+		   input = create_xml_node(in, "trigger");
+		   
+		   xml_action = action2xml(wrapper->action, TRUE);
+		   add_node_copy(input, xml_action);
 		   
 		);
 	free_xml(xml_action);

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.25 2005/04/11 15:34:12 andrew Exp $ */
+/* $Id: native.c,v 1.26 2005/04/13 08:13:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -189,7 +189,6 @@ void native_color(resource_t *rsc, GListPtr *colors)
 		}
 	}
 	rsc->provisional = FALSE;
-	
 }
 
 void
@@ -210,8 +209,11 @@ create_monitor_actions(resource_t *rsc, action_t *start, node_t *node,
 			       crm_element_value(operation, "interval"));
 
  		unpack_instance_attributes(operation, mon->extra);
-		order_new(NULL, start_rsc, start, NULL, monitor_rsc, mon,
-			  pecs_must, ordering_constraints);
+		if(start != NULL) {
+			order_new(NULL, start_rsc, start,
+				  NULL, monitor_rsc, mon,
+				  pecs_must, ordering_constraints);
+		}
 		);
 	
 }
@@ -279,15 +281,22 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 			/* restart */
 			crm_info("Leave resource %s on (%s)",rsc->id,
 				 safe_val3(NULL,chosen,details,uname));
+
+			if(rsc->start_pending) {
+				op = action_new(rsc, start_rsc, NULL, chosen);
+			}
 			
 			/* in case the actions already exist */
 			slist_iter(
 				action, action_t, rsc->actions, lpc2,
 				
 				if(action->task == start_rsc
-				   || action->task == stop_rsc){
+				   && rsc->start_pending == FALSE) {
 					action->optional = TRUE;
-				}
+
+				} else if(action->task == stop_rsc){
+					action->optional = TRUE;
+ 				}
 				);
 			
 		} else if(chosen != NULL) {
