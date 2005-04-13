@@ -28,6 +28,7 @@ hard_SCRIPTS	=			\
 			CTSaudits.py	\
 			CTSlab.py	\
 			CTStests.py	\
-			CM_LinuxHAv2.py
+			CM_LinuxHAv2.py	\
+			extracttests.py
 
 hard_DATA =		README
