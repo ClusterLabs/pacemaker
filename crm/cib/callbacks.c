@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.39 2005/04/12 09:25:03 andrew Exp $ */
+/* $Id: callbacks.c,v 1.40 2005/04/13 09:06:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -460,14 +460,15 @@ cib_common_callback(
 		
 		crm_devel("processing response cases");
 		if(rc != cib_ok) {
-			crm_err("Input message");
-			crm_log_message(LOG_ERR, op_request);
-			crm_err("Output message");
-			crm_log_message_adv(LOG_ERR, "CIB[output]", op_reply);
+			crm_debug("Input message");
+			crm_log_message(LOG_DEBUG, op_request);
+			crm_err("%s operation failed: %s",
+				op, cib_error2string(rc));
+			crm_log_message_adv(LOG_DEBUG, "CIB[output]", op_reply);
 		}
 		
 		if(op_reply == NULL) {
-			crm_trace("No reply is required for op %s", crm_str(op));
+			crm_trace("No reply is required for op %s",crm_str(op));
 			
 		} else if(call_options & cib_sync_call) {
  			crm_devel("Sending sync reply to %s op", crm_str(op));
