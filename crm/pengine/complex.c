@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.19 2005/04/13 08:13:26 andrew Exp $ */
+/* $Id: complex.c,v 1.20 2005/04/13 09:02:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -115,7 +115,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *stopfail = crm_element_value(xml_obj, XML_RSC_ATTR_STOPFAIL);
 	const char *restart  = crm_element_value(xml_obj, XML_RSC_ATTR_RESTART);
-	const char *multiple = crm_element_value(xml_obj, "multi_active");
+	const char *multiple = crm_element_value(xml_obj, "multiple_active");
 	const char *priority = NULL;
 
 	crm_xml_verbose(xml_obj, "Processing resource input...");
