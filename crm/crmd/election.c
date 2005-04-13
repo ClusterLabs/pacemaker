@@ -273,10 +273,8 @@ do_dc_takeover(long long action,
 	crm_data_t *output = NULL;
 	int rc = cib_ok;
 	
-	crm_trace("################## Taking over the DC ##################");
+	crm_info("Taking over DC status for this partition");
 	set_bit_inplace(fsa_input_register, R_THE_DC);
-
-	crm_verbose("Am I the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
 
 	crm_free(fsa_our_dc);
 	fsa_our_dc = crm_strdup(fsa_our_uname);
