@@ -185,7 +185,7 @@ class LinuxHAv2(HeartbeatCM):
         self.default_cts_cib=cib_prefix + cib_options + cib_glue_1 + \
                resources + cib_glue_2 + constraints + cib_suffix
         self.debug(self.default_cts_cib)
-        
+    
     def errorstoignore(self):
         # At some point implement a more elegant solution that 
         #   also produces a report at the end
@@ -402,6 +402,14 @@ class LinuxHAv2(HeartbeatCM):
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == self["up"]:
                 return 1
+        return 0
+        
+    def HasQuorum(self):
+        for node in self.Env["nodes"]:
+            if self.ShouldBeStatus[node] == self["up"]:
+                if self.IsDC(node):
+                    quorum = self.rsh.readaline(node, self["QuorumCmd"])
+                    return  string.find(quorum,"1") != -1
         return 0
 
 class HAResource(Resource):
