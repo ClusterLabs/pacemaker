@@ -145,7 +145,7 @@ do_shutdown_req(long long action,
 		CRM_OP_SHUTDOWN_REQ, NULL, NULL,
 		CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
-	set_bit_inplace(fsa_input_register, R_STAYDOWN);
+/* 	set_bit_inplace(fsa_input_register, R_STAYDOWN); */
 	
 	if(send_request(msg, NULL) == FALSE) {
 		next_input = I_ERROR;
@@ -308,7 +308,7 @@ do_startup(long long action,
 	} else {
 		was_error = TRUE;
 	}
-	
+
 	if(wait_timer != NULL) {
 		wait_timer->source_id = -1;
 		wait_timer->period_ms = 500;
@@ -550,7 +550,7 @@ crm_shutdown(int nsig, gpointer unused)
 
 		} else {
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
-			set_bit_inplace(fsa_input_register, R_STAYDOWN);
+/* 			set_bit_inplace(fsa_input_register, R_STAYDOWN); */
 
 			/* if we ever win an election we're the last man standing */
 			election_timeout->fsa_input = I_TERMINATE;
