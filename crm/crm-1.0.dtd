@@ -98,12 +98,19 @@ More details are given in the annotated DTD below.
 	stonith_enabled (boolean, default=FALSE):
 		If true, failed nodes will be fenced.
 
-	require_quorum (boolean, default=FALSE):
-		If true, fencing operations and starting of resources will
-		 not occur unless we have quorum (as defined by the CCM)
+	no_quorum_policy (enum, default=freeze)
+		ignore
+			Pretend we have quorum
 
-		Resources currently running in our partition can still be
-		 safely stopped or restarted elsewhere in our partition.
+		freeze
+			Do not start any resources not currently in our
+			  partition.  Resources in our partition may be
+			  moved to another node within the partition
+			Fencing is disabled
+
+		stop
+			Stop all running resources in our partition
+			Fencing is disabled
 
 	suppress_cib_writes (boolean, default=FALSE):
 		If true, changes to the configuration and cluster status
@@ -148,10 +155,18 @@ More details are given in the annotated DTD below.
      "id" is a short name consisting of up to 64 simple ascii characters
      [a-zA-Z0-9_\-]
 
-     "priority" dictates the order in which resources will be processed
-
      Version constraints are handled by rsc_location constraints.  
      Use version=1.2 or version>2.0 etc.
+
+     The *_event_notify are not currently supported.
+
+     The restart_type prefernce is used when the other side of an ordering
+     dependancy is restarted/moved.  Use this for example if you want your
+     webserver to be automatically restarted if your database is restarted.
+
+     The multiple_active preference is used when a resource is detected as
+     being active on more than one machine.  The default, stop_start, will
+     stop all instances and start only 1.
 
 -->
 <!ELEMENT resource (operations, instance_attributes*)>
@@ -162,8 +177,9 @@ More details are given in the annotated DTD below.
 	  type		    CDATA #REQUIRED
 	  provider	    CDATA #IMPLIED
 
-	  on_stopfail	    (ignore|stonith|block)	'block'
-	  restart_type	    (ignore|restart|recover)	'ignore'
+	  on_stopfail	    (ignore|stonith|block)	 'block'
+	  restart_type	    (ignore|restart)		 'ignore'
+	  multiple_active   (stop_start|stop_only|block) 'stop_start'
 
 	  post_event_notify (true|false)		'false'
 	  pre_event_notify  (true|false)		'false'>
@@ -184,9 +200,7 @@ More details are given in the annotated DTD below.
 	  on_stopfail		(ignore|stonith|block)	 'block'
 	  restart_type		(ignore|restart|recover) 'ignore'
 	  ordered		(true|false)		 'true'
-	  interleave		(true|false)		 'false'
-	  incarnation_max	CDATA			 #REQUIRED
-	  incarnation_node_max  CDATA			 #REQUIRED>
+	  interleave		(true|false)		 'false'>
 
 <!ELEMENT master_slave (incarnation)>
 <!ATTLIST master_slave
@@ -222,6 +236,20 @@ More details are given in the annotated DTD below.
      values for the attribute are ignored.
 
      Currently the rule is ignored.  This will change shortly after 2.0.0.
+
+     Common instance attributes for resources: 
+      - priority (integer, default=0):
+	dictates the order in which resources will be processed
+
+     Common instance attributes for incarnations: 
+      - incarnation_max (integer, default=1):
+	the number of incarnations to be run
+      - incarnation_node_max (integer, default=1):
+	the maximum number of incarnations to be run on a single node
+
+     Common instance attributes for nodes: 
+      - "standby" (boolean, default=FALSE)
+	if TRUE, indicates that resources can not be run on the node
 
 -->
 <!ELEMENT instance_attributes (rule?, attributes)>
