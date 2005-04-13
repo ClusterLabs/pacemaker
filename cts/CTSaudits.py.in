@@ -224,24 +224,29 @@ class HAResourceAudit(ClusterAudit):
         NodeofRsc = {}
         self.CM.debug("Do Audit HAResourceAudit")        
         
-        for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                break
-        else:
-            return passed
-        
         #Make sure the resouces are running on one and only one node
         Resources = self.CM.Resources()
         for resource in Resources :
             RunningNodes = self._RscRunningNodes(resource)
             NodeofRsc[resource.rid]=RunningNodes
-            if len(RunningNodes) == 0 :
-                self.CM.log("%s isn't running anywhere" %resource)
-                passed = 0
-            if len(RunningNodes) > 1:
-                self.CM.log("%s is running more than once %s" 
-                            %(resource, str(RunningNodes)))
-                passed = 0
+            
+            #Is the resource served without quorum present?
+            if not self.CM.HasQuorum() and len(RunningNodes) != 0:
+                    self.CM.log("Resource " + repr(resource)
+                    +        " active without Quorum: "
+                    +        repr(RunningNodes))
+                    passed = 0
+            #Is the resource served at all?
+            elif len(RunningNodes) == 0 and self.CM.HasQuorum():
+                    self.CM.log("Resource " + repr(resource)
+                    +        " not served anywhere.")
+                    passed = 0
+            # Is the resource served too many times?
+            elif len(RunningNodes) > 1:
+                    self.CM.log("Resource " + repr(resource)
+                    +        " served too many times: "
+                    +        repr(RunningNodes))
+                    passed = 0
 
         #Make sure the resouces with "must","placement" constraint are running on the same node
         Dependancies = self.CM.Dependancies()
