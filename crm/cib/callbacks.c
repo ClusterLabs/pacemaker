@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.40 2005/04/13 09:06:47 andrew Exp $ */
+/* $Id: callbacks.c,v 1.41 2005/04/14 15:36:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -463,7 +463,7 @@ cib_common_callback(
 			crm_debug("Input message");
 			crm_log_message(LOG_DEBUG, op_request);
 			crm_err("%s operation failed: %s",
-				op, cib_error2string(rc));
+				crm_str(op), cib_error2string(rc));
 			crm_log_message_adv(LOG_DEBUG, "CIB[output]", op_reply);
 		}
 		
