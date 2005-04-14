@@ -285,6 +285,14 @@ do_dc_join_finalize(long long action,
 {
 	enum cib_errors rc = cib_ok;
 
+	/* This we can do straight away and avoid clients timing us out
+	 *  while we compute the latest CIB
+	 */
+	num_join_invites = 0;
+	crm_debug("Notifying %d clients of join results",
+		  g_hash_table_size(join_requests));
+	g_hash_table_foreach(join_requests, finalize_join_for, NULL);
+	
 	if(max_generation_from == NULL
 	   || safe_str_eq(max_generation_from, fsa_our_uname)){
 		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
@@ -395,12 +403,7 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 		register_fsa_error_adv(C_FSA_INTERNAL, I_FAIL,
 				       NULL, NULL, __FUNCTION__);
 		return;
-	}
-	
-	num_join_invites = 0;
-	crm_debug("Notifying %d clients of join results",
-		  g_hash_table_size(join_requests));
-	g_hash_table_foreach(join_requests, finalize_join_for, NULL);
+	}	
 }
 
 /*	A_DC_JOIN_PROCESS_ACK	*/
