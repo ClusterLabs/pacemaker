@@ -96,7 +96,8 @@ class LinuxHAv2(HeartbeatCM):
         cib_options='''
         <nvpair id="require_quorum" name="require_quorum" value="true"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
-        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>'''
+        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>
+        <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>'''
         cib_glue_1='''
      </crm_config>
      <nodes/>
