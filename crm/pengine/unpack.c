@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.74 2005/04/13 08:13:26 andrew Exp $ */
+/* $Id: unpack.c,v 1.75 2005/04/15 08:40:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -130,11 +130,11 @@ unpack_config(crm_data_t * config)
 	if(safe_str_eq(value, "ignore")) {
 		no_quorum_policy = no_quorum_ignore;
 		
-	} else if(safe_str_eq(value, "stop")) {
-		no_quorum_policy = no_quorum_stop;
+	} else if(safe_str_eq(value, "freeze")) {
+		no_quorum_policy = no_quorum_freeze;
 
 	} else {
-		no_quorum_policy = no_quorum_freeze;
+		no_quorum_policy = no_quorum_stop;
 	}
 	
 	switch (no_quorum_policy) {
