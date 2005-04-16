@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.28 2005/04/06 14:02:04 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.29 2005/04/16 16:54:36 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -318,7 +318,7 @@ handleCibMod(const char *xml)
 	crm_data_t *cib_object = NULL;
 
 	if(xml == NULL) {
-		cib_object = file2xml(stdin);
+		cib_object = stdin2xml();
 	} else {
 		cib_object = string2xml(xml);
 	}
