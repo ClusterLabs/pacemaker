@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.51 2005/04/06 14:13:10 andrew Exp $ */
+/* $Id: crm.h,v 1.52 2005/04/16 17:02:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -219,9 +219,10 @@ extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_M
 		actions;						\
 	}
 
-#define crm_info_action(x)  crm_do_action(LOG_INFO, x)
-#define crm_debug_action(x) crm_do_action(LOG_DEBUG, x)
-#define crm_devel_action(x) crm_do_action(LOG_DEV, x)
+#define crm_info_action(x)    crm_do_action(LOG_INFO, x)
+#define crm_debug_action(x)   crm_do_action(LOG_DEBUG, x)
+#define crm_verbose_action(x) crm_do_action(LOG_VERBOSE, x)
+#define crm_devel_action(x)   crm_do_action(LOG_DEV, x)
 
 #define crm_log_xml(level, text, xml)   if(crm_log_level >= level) {  \
 		print_xml_formatted(level,  __FUNCTION__, xml, text); \
