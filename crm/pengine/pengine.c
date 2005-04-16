@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.61 2005/04/13 13:45:21 andrew Exp $ */
+/* $Id: pengine.c,v 1.62 2005/04/16 16:57:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,41 +96,40 @@ do_calculations(crm_data_t * cib_object)
 
 /*	pe_debug_on(); */
 	
-	crm_verbose("=#=#=#=#= Stage 0 =#=#=#=#=");
-		  
+	crm_trace("unpack");		  
 	stage0(cib_object,
 	       &resources,
 	       &nodes,  &placement_constraints,
 	       &actions,  &ordering_constraints,
 	       &stonith_list, &shutdown_list);
 
-	crm_verbose("=#=#=#=#= Stage 1 =#=#=#=#=");
+	crm_trace("apply placement constraints");
 	stage1(placement_constraints, nodes, resources);
 	
-	crm_verbose("=#=#=#=#= Stage 2 =#=#=#=#=");
+	crm_trace("color resources");
 	stage2(resources, nodes, &colors);
-	
-	crm_verbose("=#=#=#=#= Stage 3 =#=#=#=#=");
+
+	/* unused */
 	stage3(colors);
 	
-	crm_verbose("=#=#=#=#= Stage 4 =#=#=#=#=");
+	crm_trace("assign nodes to colors");
 	stage4(colors);
 	
-	crm_verbose("=#=#=#=#= Stage 5 =#=#=#=#=");
+	crm_trace("creating actions and internal ording constraints");
 	stage5(resources, &ordering_constraints);
 		
-	crm_verbose("=#=#=#=#= Stage 6 =#=#=#=#=");
+	crm_trace("processing fencing and shutdown cases");
 	stage6(&actions, &ordering_constraints, nodes, resources);
 	
-	crm_verbose("=#=#=#=#= Stage 7 =#=#=#=#=");
+	crm_trace("applying ordering constraints");
 	stage7(resources, actions, ordering_constraints);
 	
 	crm_verbose("\t========= Set %d (Un-runnable) =========", -1);
-	crm_devel_action(
+	crm_verbose_action(
 		slist_iter(action, action_t, actions, lpc,
 			   if(action->optional == FALSE
 			      && action->runnable == FALSE) {
-				   print_action("\t", action, TRUE);
+				   log_action(LOG_VERBOSE, "\t", action, TRUE);
 			   }
 			)
 		);
@@ -149,10 +148,10 @@ do_calculations(crm_data_t * cib_object)
 			)
 		);
 	
-	crm_verbose("=#=#=#=#= Stage 8 =#=#=#=#=");
+	crm_trace("=#=#=#=#= Stage 8 =#=#=#=#=");
 	stage8(resources, actions, &graph);
 	
-	crm_verbose("=#=#=#=#= Cleanup =#=#=#=#=");
+	crm_verbose("Cleaning up");
 
 	while(placement_constraints) {
 		pe_free_rsc_to_node((rsc_to_node_t*)placement_constraints->data);

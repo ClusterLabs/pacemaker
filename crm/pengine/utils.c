@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.66 2005/04/13 08:13:26 andrew Exp $ */
+/* $Id: utils.c,v 1.67 2005/04/16 16:57:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -924,12 +924,20 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 }
 
 
-
 void
 print_action(const char *pre_text, action_t *action, gboolean details)
+{
+	log_action(LOG_DEV, pre_text, action, details);
+}
+
+#define util_log(fmt...)  do_crm_log(log_level,  __FUNCTION__, NULL, fmt)
+
+void
+log_action(int log_level, const char *pre_text, action_t *action, gboolean details)
 { 
 	if(action == NULL) {
-		crm_devel("%s%s: <NULL>",
+
+		util_log("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
@@ -938,7 +946,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 	switch(action->task) {
 		case stonith_node:
 		case shutdown_crm:
-			crm_devel("%s%s%sAction %d: %s @ %s",
+			util_log("%s%s%sAction %d: %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
 			       action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
@@ -947,7 +955,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 			       safe_val4(NULL, action, node, details, uname));
 			break;
 		default:
-			crm_devel("%s%s%sAction %d: %s %s @ %s",
+			util_log("%s%s%sAction %d: %s %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
 			       action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
@@ -961,27 +969,27 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 
 	if(details) {
 #if 1
-		crm_devel("\t\t====== Preceeding Actions");
+		util_log("\t\t====== Preceeding Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
-			print_action("\t\t", other->action, FALSE);
+			log_action(log_level-1, "\t\t", other->action, FALSE);
 			);
-		crm_devel("\t\t====== Subsequent Actions");
+		util_log("\t\t====== Subsequent Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
-			print_action("\t\t", other->action, FALSE);
+			log_action(log_level-1, "\t\t", other->action, FALSE);
 			);		
 #else
-		crm_devel("\t\t====== Subsequent Actions");
+		util_log("\t\t====== Subsequent Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
-			print_action("\t\t", other->action, FALSE);
+			log_action(log_level-1, "\t\t", other->action, FALSE);
 			);		
 #endif
-		crm_devel("\t\t====== End");
+		util_log("\t\t====== End");
 
 	} else {
-		crm_devel("\t\t(seen=%d, before=%d, after=%d)",
+		util_log("\t\t(seen=%d, before=%d, after=%d)",
 		       action->seen_count,
 		       g_list_length(action->actions_before),
 		       g_list_length(action->actions_after));

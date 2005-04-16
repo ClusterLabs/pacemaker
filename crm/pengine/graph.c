@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.36 2005/04/13 08:13:26 andrew Exp $ */
+/* $Id: graph.c,v 1.37 2005/04/16 16:57:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -318,10 +318,12 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 	} else {
 		if(action->node == NULL) {
 			crm_err("action %d was not allocated", action->id);
+			log_action(LOG_DEBUG, "Unallocated action", action, FALSE);
 			return;
 			
 		} else if(action->node->details->online == FALSE) {
 			crm_err("action %d was scheduled for offline node", action->id);
+			log_action(LOG_DEBUG, "Action for offline node", action, FALSE);
 			return;
 		}
 	}

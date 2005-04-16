@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.53 2005/04/13 08:13:26 andrew Exp $ */
+/* $Id: stages.c,v 1.54 2005/04/16 16:57:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -78,6 +78,8 @@ stage0(crm_data_t * cib,
 	crm_data_t * agent_defaults  = NULL;
 	/*get_object_root(XML_CIB_TAG_RA_DEFAULTS, cib); */
 
+	crm_verbose("Beginning unpack");
+	
 	/* reset remaining global variables */
 	num_synapse = 0;
 	max_valid_nodes = 0;
@@ -148,7 +150,7 @@ stage0(crm_data_t * cib,
 gboolean
 stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
 {
-	crm_devel("Processing stage 1");
+	crm_verbose("Applying placement constraints");
 	
 	slist_iter(
 		node, node_t, nodes, lpc,
@@ -184,7 +186,7 @@ stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
 gboolean
 stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 {
-	crm_devel("Processing stage 2");
+	crm_verbose("Coloring resources");
 	
 	if(no_color != NULL) {
 		crm_free(no_color->details);
@@ -217,7 +219,6 @@ stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 gboolean
 stage3(GListPtr colors)
 {
-	crm_devel("Processing stage 3");
 	/* not sure if this is a good idea or not */
 	if((ssize_t)g_list_length(colors) > max_valid_nodes) {
 		/* we need to consolidate some */
@@ -233,7 +234,7 @@ stage3(GListPtr colors)
 gboolean
 stage4(GListPtr colors)
 {
-	crm_devel("Processing stage 4");
+	crm_verbose("Assigning nodes to colors");
 
 	slist_iter(
 		color, color_t, colors, lpc,
@@ -281,6 +282,7 @@ stage4(GListPtr colors)
 gboolean
 stage5(GListPtr resources, GListPtr *ordering_constraints)
 {
+	crm_verbose("Creating actions and internal ording constraints");
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 		rsc->fns->create_actions(rsc, ordering_constraints);
@@ -298,7 +300,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 {
 	action_t *down_op = NULL;
 	action_t *stonith_op = NULL;
-	crm_devel("Processing stage 6");
+	crm_verbose("Processing fencing and shutdown cases");
 
 	slist_iter(
 		node, node_t, nodes, lpc,
@@ -364,7 +366,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 gboolean
 stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 {
-	crm_devel("Processing stage 7");
+	crm_verbose("Applying ordering constraints");
 
 	slist_iter(
 		order, order_constraint_t, ordering_constraints, lpc,
@@ -410,7 +412,7 @@ stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 gboolean
 stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 {
-	crm_devel("Processing stage 8");
+	crm_verbose("Creating transition graph");
 	*graph = create_xml_node(NULL, XML_TAG_GRAPH);
 	set_xml_property_copy(
 		*graph, "global_timeout", transition_timeout);
@@ -422,7 +424,7 @@ stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 		   }
 		);
 */
-	crm_verbose("========= Action List =========");
+	crm_verbose("========= Complete Action List =========");
 	crm_debug("%d actions created",  g_list_length(global_action_list));
 	
 	slist_iter(action, action_t, global_action_list, lpc,
