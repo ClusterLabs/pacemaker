@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.59 2005/04/13 16:38:18 andrew Exp $ */
+/* $Id: tengine.c,v 1.60 2005/04/16 16:59:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,16 +151,16 @@ match_graph_event(action_t *action, crm_data_t *event)
 	this_node   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	this_rsc    = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
 	
-	crm_devel("matching against: <%s task=%s node=%s rsc_id=%s/>",
+	crm_debug("matching against: <%s task=%s node=%s rsc_id=%s/>",
 		  crm_element_name(action->xml), this_action, this_node, this_rsc);
 	if(safe_str_neq(this_action, event_action)) {	
-		crm_info("Action %d : Action mismatch %s", action->id, event_action);
+		crm_debug("Action %d : Action mismatch %s", action->id, event_action);
 		
 	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT)) {
 		if(safe_str_eq(this_action, XML_CIB_ATTR_STONITH)) {
 			
 		} else if(safe_str_neq(this_node, event_node)) {
-			crm_devel("node mismatch: %s", event_node);
+			crm_debug("node mismatch: %s", event_node);
 		} else {
 			crm_devel(XML_GRAPH_TAG_CRM_EVENT);
 			match = action;
@@ -170,19 +170,19 @@ match_graph_event(action_t *action, crm_data_t *event)
 		match = action;
 		
 	} else if(safe_str_neq(this_node, event_node)) {
-		crm_info("Action %d : Node mismatch %s", action->id, event_node);
+		crm_debug("Action %d : Node mismatch %s", action->id, event_node);
 
 	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP)) {
 		crm_devel(XML_GRAPH_TAG_RSC_OP);
 		if(safe_str_eq(this_rsc, event_rsc)) {
 			match = action;
 		} else {
-			crm_info("Action %d : bad rsc (%s) != (%s)",
+			crm_debug("Action %d : bad rsc (%s) != (%s)",
 				 action->id, this_rsc, event_rsc);
 		}
 		
 	} else {
-		crm_devel("no match");
+		crm_debug("no match");
 	}
 	
 	if(match == NULL) {
