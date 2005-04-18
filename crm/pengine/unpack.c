@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.75 2005/04/15 08:40:41 andrew Exp $ */
+/* $Id: unpack.c,v 1.76 2005/04/18 11:47:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -713,13 +713,17 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 			if(safe_str_eq(last_op, "stop")) {
 				/* map this to a timeout so it is re-issued */
 				action_status_i = LRM_OP_TIMEOUT;
+
 			} else {
 				/* map this to a "done" so it is not marked
 				 * as failed, then make sure it is re-issued
 				 */
-				action_new(rsc_lh, start_rsc, NULL, NULL);
 				action_status_i = LRM_OP_DONE;
 				rsc_lh->start_pending = TRUE;
+				if(have_quorum == TRUE
+				   || no_quorum_policy == no_quorum_ignore) {
+					action_new(rsc_lh, start_rsc, NULL, NULL);
+				}
 			}
 		}
 
