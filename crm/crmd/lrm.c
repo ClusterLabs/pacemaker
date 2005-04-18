@@ -639,6 +639,16 @@ do_lrm_rsc_op(
 	if(op->timeout < 0) {
 		op->timeout = 0;
 	}
+	if(g_hash_table_lookup(op->params, "timeout") != NULL) {
+		char *timeout_ms = crm_itoa(op->timeout);
+		g_hash_table_replace(
+			op->params, crm_strdup("timeout"), timeout_ms);
+	}
+	if(g_hash_table_lookup(op->params, "interval") != NULL) {
+		char *interval_ms = crm_itoa(op->interval);
+		g_hash_table_replace(
+			op->params, crm_strdup("interval"), interval_ms);
+	}
 
 	if(safe_str_eq(operation, CRMD_RSCSTATE_MON)) {
 		op->target_rc = CHANGED;
@@ -714,6 +724,7 @@ remove_recurring_action(gpointer key, gpointer value, gpointer user_data)
 void
 free_lrm_op(lrm_op_t *op) 
 {
+	g_hash_table_destroy(op->params);
 	crm_free(op->user_data);
 	crm_free(op->op_type);
 	crm_free(op);
@@ -724,7 +735,9 @@ GHashTable *
 xml2list(crm_data_t *parent)
 {
 	crm_data_t *nvpair_list = NULL;
-	GHashTable *nvpair_hash = g_hash_table_new(g_str_hash, g_str_equal);
+	GHashTable *nvpair_hash = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
 
 	CRM_DEV_ASSERT(parent != NULL);
 	if(parent != NULL) {
@@ -732,7 +745,7 @@ xml2list(crm_data_t *parent)
 		if(nvpair_list == NULL) {
 			crm_debug("No attributes in %s",
 				  crm_element_name(parent));
-			crm_xml_verbose(parent, "No attributes for resource op");
+			crm_xml_verbose(parent,"No attributes for resource op");
 		}
 	}
 	
@@ -747,7 +760,7 @@ xml2list(crm_data_t *parent)
 		crm_verbose("Added %s=%s", key, value);
 		
 		g_hash_table_insert(
-			nvpair_hash,crm_strdup(key), crm_strdup(value));
+			nvpair_hash, crm_strdup(key), crm_strdup(value));
 		);
 	
 	return nvpair_hash;
