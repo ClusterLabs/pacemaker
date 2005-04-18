@@ -1395,6 +1395,8 @@ class ResourceRecover(CTSTest):
 
         resourcelist=self.CM.Resources()
         resource=self.CM.Env.RandomGen.choice(resourcelist)
+        while resource.rid == "DcIPaddr":
+            resource=self.CM.Env.RandomGen.choice(resourcelist)
         resourcetype = str(resource.Type())
         label = resourcetype+"::"+str(resource.rid)
         node=resource.RunningNodes()
