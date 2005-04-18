@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.62 2005/04/16 16:57:57 andrew Exp $ */
+/* $Id: pengine.c,v 1.63 2005/04/18 11:46:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,17 +58,20 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
 		crm_data_t * output = NULL;
 		crm_data_t * status = get_object_root(XML_CIB_TAG_STATUS, xml_data);
+		crm_data_t *generation = create_xml_node(NULL, XML_TAG_CIB);
+		copy_in_properties(generation, xml_data);
 		
+		crm_xml_info(generation, "[generation]");
 		crm_xml_info(status, "[in ]");
 		crm_xml_devel(xml_data, "[all]");
 		output = do_calculations(xml_data);
 		crm_xml_devel(output, "[out]");
 
 		if (send_ipc_reply(sender, msg, output) ==FALSE) {
-
 			crm_warn("Answer could not be sent");
 		}
 		free_xml(output);
+		free_xml(generation);
 
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		crm_warn("Received quit message, terminating");
@@ -148,7 +151,7 @@ do_calculations(crm_data_t * cib_object)
 			)
 		);
 	
-	crm_trace("=#=#=#=#= Stage 8 =#=#=#=#=");
+	crm_trace("creating transition graph");
 	stage8(resources, actions, &graph);
 	
 	crm_verbose("Cleaning up");
