@@ -327,6 +327,8 @@ def usage(arg):
     +  " --trunc (truncate logfile before starting)" \
     +  " -L system-logfile-name" \
     +  " --limit-nodes maxnumnodes" \
+    +  " --xmit-loss lost-rate(0.0-1.0)" \
+    +  " --recv-loss lost-rate(0.0-1.0)" \
     +  " --suppressmonitoring" \
     +  " --syslog-facility syslog-facility" \
     +  " --facility syslog-facility" \
@@ -369,6 +371,9 @@ if __name__ == '__main__':
     LogFacility = None
     TruncateLog = 0
     ResCanStop = 0
+    XmitLoss = "0.0"
+    RecvLoss = "0.0"
+    
     #
     # The values of the rest of the parameters are now properly derived from
     # the configuration files.
@@ -443,6 +448,22 @@ if __name__ == '__main__':
        elif args[i] == "--cib-filename":
            skipthis=1
            CIBfilename = args[i+1]
+       elif args[i] == "--xmit-loss":
+           try:
+               float(args[i+1])
+           except ValueError:
+               print ("--xmit-loss parameter should be float")
+               usage(args[i+1])
+           skipthis=1
+           XmitLoss = args[i+1]
+       elif args[i] == "--recv-loss":
+           try:
+               float(args[i+1])
+           except ValueError:
+               print ("--recv-loss parameter should be float")
+               usage(args[i+1])
+           skipthis=1
+           RecvLoss = args[i+1]
        elif args[i] == "--choose":
            skipthis=1
            TestCase = args[i+1]
@@ -485,6 +506,9 @@ if __name__ == '__main__':
     Environment["DoFencing"] = DoFencing
     Environment["ResCanStop"] = ResCanStop
     Environment["SuppressMonitoring"] = SuppressMonitoring
+    Environment["XmitLoss"] = XmitLoss
+    Environment["RecvLoss"] = RecvLoss
+    
     if Version == 2:
         from CM_LinuxHAv2 import LinuxHAv2
         Environment['CMclass']=LinuxHAv2
