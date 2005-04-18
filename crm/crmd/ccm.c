@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.65 2005/04/12 13:25:31 andrew Exp $ */
+/* $Id: ccm.c,v 1.66 2005/04/18 11:41:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,14 +169,14 @@ do_ccm_event(long long action,
 	event = ccm_data->event;
 	oc = ccm_data->oc;
 	
-	crm_info("event=%s", 
+	crm_info("event=%s",
 	       *event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
 	       *event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
 	       *event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
 	       *event==OC_EV_MS_EVICTED?"EVICTED":
 	       "NO QUORUM MEMBERSHIP");
 	
-	if(CCM_EVENT_DETAIL) {
+	if(CCM_EVENT_DETAIL || CCM_EVENT_DETAIL_PARTIAL) {
 		ccm_event_detail(oc, *event);
 	}
 
@@ -227,7 +227,7 @@ do_ccm_event(long long action,
 				crm_info("Our DC node (%s) left the cluster",
 					uname);
 				register_fsa_input(cause, I_ELECTION, NULL);
-			} 
+			}
 		}
 	}
 	
