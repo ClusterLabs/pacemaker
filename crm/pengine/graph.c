@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.37 2005/04/16 16:57:57 andrew Exp $ */
+/* $Id: graph.c,v 1.38 2005/04/18 11:44:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -330,9 +330,9 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 	
 	action->dumped = TRUE;
 	
-	syn    = create_xml_node(*graph, "synapse");
-	set    = create_xml_node(syn, "action_set");
-	in     = create_xml_node(syn, "inputs");
+	syn = create_xml_node(*graph, "synapse");
+	set = create_xml_node(syn, "action_set");
+	in  = create_xml_node(syn, "inputs");
 
 	syn_id = crm_itoa(num_synapse++);
 	set_xml_property_copy(syn, XML_ATTR_ID, syn_id);
