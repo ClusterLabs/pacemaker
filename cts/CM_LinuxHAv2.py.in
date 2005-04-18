@@ -61,7 +61,7 @@ class LinuxHAv2(HeartbeatCM):
             "ParitionCmd"    : "@libdir@/heartbeat/ccm_tool -p",
 	    # Please tweak the timeout value if needed.
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s monitor 60000 0 EVERYTIME 2>/dev/null|grep return",
-            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 60000 EVERYTIME 2>/dev/null",
+            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 60000 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             "TmpDir"         : "/tmp",
             "BreakCommCmd2"  : "/usr/lib/heartbeat/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
