@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.67 2005/04/16 16:57:57 andrew Exp $ */
+/* $Id: utils.c,v 1.68 2005/04/18 11:49:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -615,7 +615,7 @@ action_new(resource_t *rsc, enum action_tasks task,
 		}
 		
 		action = g_list_nth_data(possible_matches, 0);
-		crm_devel("Returning existing action (%d) %s for %s on %s",
+		crm_devel("Found existing action (%d) %s for %s on %s",
 			  action->id,
 			  task2text(task), rsc?rsc->id:"<NULL>",
 			  on_node?on_node->details->id:"<NULL>");
@@ -627,61 +627,68 @@ action_new(resource_t *rsc, enum action_tasks task,
 	if(timeout == NULL && rsc != NULL) {
 		timeout = find_action_timeout(rsc, task);
 	}
-	
-	crm_devel("Creating action %s for %s on %s",
-		  task2text(task), rsc?rsc->id:"<NULL>",
-		  on_node?on_node->details->id:"<NULL>");
 
-	crm_malloc(action, sizeof(action_t));
-	if(action != NULL) {
-		action->id   = action_id++;
-		action->rsc  = rsc;
-		action->task = task;
-		action->node = on_node;
+	if(action == NULL) {
+		crm_devel("Creating action %s for %s on %s",
+			  task2text(task), rsc?rsc->id:"<NULL>",
+			  on_node?on_node->details->id:"<NULL>");
 
-		action->actions_before   = NULL;
-		action->actions_after    = NULL;
-		action->failure_is_fatal = TRUE;
-
-		action->pseudo     = FALSE;
-		action->dumped     = FALSE;
-		action->runnable   = TRUE;
-		action->processed  = FALSE;
-		action->optional   = FALSE;
-		action->seen_count = 0;
-
-		action->extra	   = g_hash_table_new_full(
-			g_str_hash, g_str_equal,
-			g_hash_destroy_str, g_hash_destroy_str);
-
-		if(timeout != NULL) {
-			add_hash_param(action->extra, "timeout", timeout);
-		}
-
-		
-		if(rsc != NULL) {
-			if(on_node != NULL && !(on_node->details->online)) {
-				crm_warn("Action %s for %s is unrunnable:"
-					 " %s is offline",
-					 task2text(task), rsc?rsc->id:"<NULL>",
-					 on_node->details->id);
-				action->runnable = FALSE;
-			}
+		crm_malloc(action, sizeof(action_t));
+		if(action != NULL) {
+			action->id   = action_id++;
+			action->rsc  = rsc;
+			action->task = task;
+			action->node = on_node;
 			
-			crm_devel("Adding created action to its resource");
-			rsc->actions = g_list_append(rsc->actions, action);
+			action->actions_before   = NULL;
+			action->actions_after    = NULL;
+			action->failure_is_fatal = TRUE;
+			
+			action->pseudo     = FALSE;
+			action->dumped     = FALSE;
+			action->runnable   = TRUE;
+			action->processed  = FALSE;
+			action->optional   = FALSE;
+			action->seen_count = 0;
+			
+			action->extra	   = g_hash_table_new_full(
+				g_str_hash, g_str_equal,
+				g_hash_destroy_str, g_hash_destroy_str);
 
-			if(task == start_rsc) {
-				rsc->starting = TRUE;
+			global_action_list = g_list_append(
+				global_action_list, action);
 
-			} else if(task == stop_rsc) {
-				rsc->stopping = TRUE;
-			}			
+			if(rsc != NULL) {
+				rsc->actions = g_list_append(
+					 rsc->actions, action);
+			}
+			crm_devel("Action %d created", action->id);
 		}
-
 	}
-	crm_devel("Action %d created", action->id);
-	global_action_list = g_list_append(global_action_list, action);
+	
+	if(timeout != NULL) {
+		add_hash_param(action->extra, "timeout", timeout);
+	}
+		
+	if(rsc != NULL) {
+		if(on_node == NULL || on_node->details->online == FALSE) {
+			crm_warn("Action %d %s for %s on %s is unrunnable",
+				 action->id,
+				 task2text(task), rsc?rsc->id:"<NULL>",
+				 on_node?on_node->details->id:"<none>");
+			action->runnable = FALSE;
+		}
+		
+		if(task == stop_rsc) {
+			rsc->stopping = TRUE;
+
+		} else if(task == start_rsc && action->runnable) {
+			rsc->starting = TRUE;
+
+		} else if(task == start_rsc) {
+			rsc->starting = FALSE;
+		} 
+	}
 	return action;
 }
 
