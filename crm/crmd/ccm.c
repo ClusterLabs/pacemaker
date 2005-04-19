@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.66 2005/04/18 11:41:37 andrew Exp $ */
+/* $Id: ccm.c,v 1.67 2005/04/19 10:44:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,14 +169,9 @@ do_ccm_event(long long action,
 	event = ccm_data->event;
 	oc = ccm_data->oc;
 	
-	crm_info("event=%s",
-	       *event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
-	       *event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
-	       *event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
-	       *event==OC_EV_MS_EVICTED?"EVICTED":
-	       "NO QUORUM MEMBERSHIP");
+	crm_info("event=%s", ccm_event_name(*event));
 	
-	if(CCM_EVENT_DETAIL || CCM_EVENT_DETAIL_PARTIAL) {
+	if(CCM_EVENT_DETAIL /*constant condition*/ || CCM_EVENT_DETAIL_PARTIAL) {
 		ccm_event_detail(oc, *event);
 	}
 
@@ -238,6 +233,9 @@ do_ccm_event(long long action,
 /*
  * Take the opportunity to update the node status in the CIB as well
  */
+
+static gboolean fsa_have_quorum = FALSE;
+
 enum crmd_fsa_input
 do_ccm_update_cache(long long action,
 		    enum crmd_fsa_cause cause,
@@ -263,11 +261,7 @@ do_ccm_update_cache(long long action,
 	oc = ccm_data->oc;
 
 	crm_info("Updating CCM cache after a \"%s\" event.", 
-	       *event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
-	       *event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
-	       *event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
-	       *event==OC_EV_MS_EVICTED?"EVICTED":
-	       "NO QUORUM MEMBERSHIP");
+		 ccm_event_name(*event));
 
 	crm_debug("instace=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
 		  "new_idx=%d, old_idx=%d",
@@ -440,6 +434,19 @@ do_ccm_update_cache(long long action,
 		crm_devel("Updating the CIB from CCM cache");
 		do_update_cib_nodes(NULL, FALSE);
 	}
+
+	if(ccm_have_quorum(*event) == FALSE) {
+		if(fsa_have_quorum) {
+			/* we just lost quorum, trigger a recompute */
+			crm_info("Quorum lost: triggering transition (%s)", ccm_event_name(*event));
+			register_fsa_input(cause, I_PE_CALC, NULL);
+		}
+		fsa_have_quorum = FALSE;
+
+	} else {
+		fsa_have_quorum = TRUE;
+	}
+	
 	
 	return next_input;
 }
@@ -449,6 +456,7 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 {
 	int lpc;
 	gboolean member = FALSE;
+	member = FALSE;
 
 	crm_info("-----------------------");
 	crm_debug("trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
@@ -473,11 +481,10 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 			member = TRUE;
 		}
 	}
-#endif
 	if (member == FALSE) {
 		crm_warn("MY NODE IS NOT IN CCM THE MEMBERSHIP LIST");
 	}
-	
+#endif
 	for(lpc=0; lpc<(int)oc->m_n_in; lpc++) {
 		crm_info("\tNEW:     %s [nodeid=%d, born=%d]",
 		       oc->m_array[oc->m_in_idx+lpc].node_uname,
