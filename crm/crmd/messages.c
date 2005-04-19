@@ -773,7 +773,7 @@ handle_request(ha_msg_input_t *stored_msg)
 
 		/*========== common actions ==========*/
 	} else if(strcmp(op, CRM_OP_NOOP) == 0) {
-		crm_debug("no-op");
+		crm_debug("no-op from %s", crm_str(host_from));
 
 	} else if(strcmp(op, CRM_OP_VOTE) == 0) {
 		/* count the vote and decide what to do after that */
