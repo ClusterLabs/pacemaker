@@ -244,7 +244,7 @@ update_local_cib_adv(
 {
 	HA_Message *msg = NULL;
 	ha_msg_input_t *fsa_input = NULL;
-	int call_options = cib_quorum_override;
+	int call_options = cib_quorum_override|cib_scope_local;
 
 	CRM_DEV_ASSERT(msg_data != NULL);
 	
