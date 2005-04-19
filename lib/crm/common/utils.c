@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.3 2005/04/13 18:04:47 gshi Exp $ */
+/* $Id: utils.c,v 1.4 2005/04/19 09:05:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -882,4 +882,37 @@ crm_get_msec(const char * input)
 	dret += 0.5;
 	ret = (long)dret;
 	return(ret);
+}
+
+gboolean
+ccm_have_quorum(oc_ed_t event)
+{
+	if(event==OC_EV_MS_NEW_MEMBERSHIP 
+	   || event==OC_EV_MS_NOT_PRIMARY
+	   || event==OC_EV_MS_PRIMARY_RESTORED) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+const char *
+ccm_event_name(oc_ed_t event)
+{
+
+	if(event==OC_EV_MS_NEW_MEMBERSHIP) {
+		return "NEW MEMBERSHIP";
+
+	} else if(event==OC_EV_MS_NOT_PRIMARY) {
+		return "NOT PRIMARY";
+
+	} else if(event==OC_EV_MS_PRIMARY_RESTORED) {
+		return "PRIMARY RESTORED";
+		
+	} else if(event==OC_EV_MS_EVICTED) {
+		return "EVICTED";
+	}
+
+	return "NO QUORUM MEMBERSHIP";
+	
 }

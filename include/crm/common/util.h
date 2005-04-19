@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.13 2005/03/11 14:08:00 andrew Exp $ */
+/* $Id: util.h,v 1.14 2005/04/19 09:05:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <crm/common/xml.h>
 #include <hb_api.h>
+#include <ocf/oc_event.h>
 
 #define DEBUG_INC SIGUSR1
 #define DEBUG_DEC SIGUSR2
@@ -76,5 +77,9 @@ extern gboolean crm_is_true(const char * s);
 extern int crm_str_to_boolean(const char * s, int * ret);
 
 extern long crm_get_msec(const char * input);
+
+extern gboolean ccm_have_quorum(oc_ed_t event);
+
+extern const char *ccm_event_name(oc_ed_t event);
 
 #endif
