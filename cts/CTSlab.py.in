@@ -352,7 +352,7 @@ if __name__ == '__main__':
 
     from CTSaudits import AuditList
     from CTStests import TestList,RandomTests
-    from CTS import Scenario, InitClusterManager, PingFest
+    from CTS import Scenario, InitClusterManager, PingFest, PacketLoss
     import CM_hb
 
     HAdir = "/etc/ha.d"
@@ -522,7 +522,7 @@ if __name__ == '__main__':
     #[        InitClusterManager(Environment)
     #,        PingFest(Environment)])
     scenario = Scenario(
-    [        InitClusterManager(Environment)])
+    [        InitClusterManager(Environment), PacketLoss(Environment)])
 
     # Create the Cluster Manager object
 
