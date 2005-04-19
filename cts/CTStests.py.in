@@ -1312,6 +1312,8 @@ class Split_brainTest(CTSTest):
         watchstop.ReturnOnlyMatch()
 
         watchstop.setwatch()
+        if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
+            self.CM.rsh(node, "cp /etc/ha.d/OnlyForTesting /tmp/OnlyForTesting");
         if not self.CM.isolate_node(node):
             return self.failure("Could not isolate the nodes")
         if not watchstop.lookforall():
@@ -1342,6 +1344,8 @@ class Split_brainTest(CTSTest):
         watchpartition.setwatch()
         watchstart.setwatch()
         self.CM.unisolate_node(node)
+        if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
+            self.CM.rsh(node, self.CM["RestoreCommCmd"]%"/tmp/OnlyForTesting");
 
         if not watchpartition.lookforall():
             self.CM.log("Patterns not found: " + repr(watchpartition.unmatched))
@@ -1546,9 +1550,13 @@ class Split_brainTest2(CTSTest):
         watchdead.setwatch()
         
         for member in partition1:
+            if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
+                self.CM.rsh(node, "cp /etc/ha.d/OnlyForTesting /tmp/OnlyForTesting");
             if not self.CM.isolate_node(member,allownodes1):
                 return self.failure("Could not isolate the nodes")
         for member in partition2:
+            if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
+                self.CM.rsh(node, "cp /etc/ha.d/OnlyForTesting /tmp/OnlyForTesting");
             if not self.CM.isolate_node(member,allownodes2):
                 return self.failure("Could not isolate the nodes")
         
@@ -1581,6 +1589,8 @@ class Split_brainTest2(CTSTest):
         watchpartition.setwatch()
         
         for member in self.CM.Env["nodes"]:
+            if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
+                self.CM.rsh(node, self.CM["RestoreCommCmd"]%"/tmp/OnlyForTesting");
             self.CM.unisolate_node(member)
 
         if not watchpartition.lookforall():
