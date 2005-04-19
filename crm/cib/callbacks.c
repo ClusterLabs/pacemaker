@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.41 2005/04/14 15:36:43 andrew Exp $ */
+/* $Id: callbacks.c,v 1.42 2005/04/19 10:41:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1099,22 +1099,12 @@ cib_ccm_msg_callback(
 	const oc_ev_membership_t *membership = data;
 	crm_devel("received callback");	
 
-	if(event==OC_EV_MS_NEW_MEMBERSHIP 
-	   || event==OC_EV_MS_NOT_PRIMARY
-	   || event==OC_EV_MS_PRIMARY_RESTORED) {
-		cib_have_quorum = TRUE;
-	} else {
-		cib_have_quorum = FALSE;
-	}
+	cib_have_quorum = ccm_have_quorum(event);
 
 	crm_info("Quorum %s after event=%s", 
 		 cib_have_quorum?"(re)attained":"lost",
-		 event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
-		 event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
-		 event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
-		 event==OC_EV_MS_EVICTED?"EVICTED":
-		 "NO QUORUM MEMBERSHIP");
-	
+		 ccm_event_name(event));
+
 	if(data == NULL) {
 		return;
 	}
