@@ -935,6 +935,9 @@ amount of packet loss present.
     def TearDown(self, CM):
         '''Fix the reliability of communications'''
 
+        if float(CM.Env["XmitLoss"]) == 0 and float(CM.Env["RecvLoss"]) == 0 :
+            return 1
+        
         for node in CM.Env["nodes"]:
             CM.unisolate_node(node)
 
