@@ -97,7 +97,7 @@ class RandomTests:
                                add_err = 0
                    if add_err == 1:
                        self.CM.log(match)
-                       self.incr("BadNews");
+                       self.incr("BadNews")
                        errcount=errcount+1
                 else:
                   break
@@ -161,9 +161,9 @@ random for the selected number of iterations.
             ret=test(nodechoice)
 
             if ret:
-                self.incr("success");
+                self.incr("success")
             else:
-                self.incr("failure");
+                self.incr("failure")
                 self.CM.log("Test %s (%s) \t[FAILED]" %(test.name,nodechoice))
                 # Better get the current info from the cluster...
                 self.CM.statall()
@@ -843,10 +843,10 @@ class StandbyTest(CTSTest):
 
         if self.CM.upcount() < 2:
             self.incr("nostandby")
-            pat = self.nostandbypat;
+            pat = self.nostandbypat
         else:
             self.incr("standby")
-            pat = self.successpat;
+            pat = self.successpat
 
         #
         # You could make a good argument that the cluster manager
@@ -868,7 +868,7 @@ class StandbyTest(CTSTest):
             if match:
                 if re.search(self.transient, match):
                     self.incr("retries")
-                    time.sleep(2);
+                    time.sleep(2)
                     retrycount=retrycount+1
                 else:
                     return self.success()
@@ -892,7 +892,7 @@ class StandbyTest(CTSTest):
             #
             # We need to strip off everything after the first blank
             #
-            cmd=self.CM["Standby"];
+            cmd=self.CM["Standby"]
             cmd = cmd.split()[0]
             if not os.access(cmd, os.X_OK):
                 return None
@@ -937,7 +937,7 @@ class Fastdetection(CTSTest):
         # Make sure they're not holding any resources
         ret = self.standby(node)
         if not ret:
-            return ret;
+            return ret
 
         stoppat = (self.they_stopped % node)
         stopwatch = CTS.LogWatcher(self.CM["LogFileName"], [stoppat], timeout=self.timeout)
@@ -1022,7 +1022,7 @@ class BandwidthTest(CTSTest):
 
         fstmpfile = "/tmp/band_estimate"
         dumpcmd = "tcpdump -p -n -c 102 -i any udp port %d > %s 2>&1" \
-        %                (port, fstmpfile);
+        %                (port, fstmpfile)
  
         rc = self.CM.rsh(node, dumpcmd)
         if rc == 0:
@@ -1313,7 +1313,7 @@ class Split_brainTest(CTSTest):
 
         watchstop.setwatch()
         if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
-            self.CM.rsh(node, "cp /etc/ha.d/OnlyForTesting /tmp/OnlyForTesting");
+            self.CM.savecomm_node(node)
         if not self.CM.isolate_node(node):
             return self.failure("Could not isolate the nodes")
         if not watchstop.lookforall():
@@ -1343,9 +1343,10 @@ class Split_brainTest(CTSTest):
 
         watchpartition.setwatch()
         watchstart.setwatch()
+        
         self.CM.unisolate_node(node)
         if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
-            self.CM.rsh(node, self.CM["RestoreCommCmd"]%"/tmp/OnlyForTesting");
+            self.CM.restorecomm_node(node)
 
         if not watchpartition.lookforall():
             self.CM.log("Patterns not found: " + repr(watchpartition.unmatched))
@@ -1551,12 +1552,12 @@ class Split_brainTest2(CTSTest):
         
         for member in partition1:
             if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
-                self.CM.rsh(node, "cp /etc/ha.d/OnlyForTesting /tmp/OnlyForTesting");
-            if not self.CM.isolate_node(member,allownodes1):
+                self.CM.savecomm_node(node)
+        if not self.CM.isolate_node(member,allownodes1):
                 return self.failure("Could not isolate the nodes")
         for member in partition2:
             if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
-                self.CM.rsh(node, "cp /etc/ha.d/OnlyForTesting /tmp/OnlyForTesting");
+                self.CM.savecomm_node(node)
             if not self.CM.isolate_node(member,allownodes2):
                 return self.failure("Could not isolate the nodes")
         
@@ -1590,7 +1591,7 @@ class Split_brainTest2(CTSTest):
         
         for member in self.CM.Env["nodes"]:
             if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
-                self.CM.rsh(node, self.CM["RestoreCommCmd"]%"/tmp/OnlyForTesting");
+                self.CM.restorecomm_node(node)
             self.CM.unisolate_node(member)
 
         if not watchpartition.lookforall():
