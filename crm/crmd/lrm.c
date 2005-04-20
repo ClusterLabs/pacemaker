@@ -812,6 +812,7 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	
 	switch(op->op_status) {
 		case LRM_OP_CANCELLED:
+		case LRM_OP_NOTEXEC:			
 			break;
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
@@ -948,6 +949,14 @@ do_lrm_event(long long action,
 			break;
 		case LRM_OP_DONE:
 			crm_debug("LRM operation %s on %s::%s(%s):%s: complete",
+				 op->op_type,
+				 crm_str(rsc->class),
+				 crm_str(rsc->type),
+				 crm_str(rsc->provider),
+				 crm_str(rsc->id));
+			break;
+		case LRM_OP_NOTEXEC:
+			crm_debug("LRM operation %s on %s::%s(%s):%s: not executed yet",
 				 op->op_type,
 				 crm_str(rsc->class),
 				 crm_str(rsc->type),
