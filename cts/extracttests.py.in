@@ -30,24 +30,39 @@ def testruns(list):
 #	Scanning for particular tests...
 #
 class ExtractTests:
+    def expandtestranges(self, testlist):
+        for j in range(len(testlist)):
+            match = re.match("([0-9]+)[-:]([0-9]+)", testlist[j])
+            if match:
+                del testlist[j]
+                testlist = testlist + (range(int(match.groups()[0]),int(match.groups()[1])+1))
+        return testlist
+
     def __init__(self, filename, testlist):
         self.file = open(filename, "r")
+        testlist = self.expandtestranges(testlist)
         testlist.sort(sorttestnum)
         self.testlist = testlist
         print "Extracting tests ", self.testlist
-        self.regex=re.compile("CTS: Running test .*\[([0-9]+)")
+        self.regex=re.compile(" CTS: Running test .*\[([0-9]+)")
+        self.CTSregex=re.compile(" CTS: ")
 
     def __call__(self):
         first, last = testruns(self.testlist)
-        curtest=1
+        curtest=0
         while 1:
             line = self.file.readline()
+            lineprinted=None
             if line == None:
                 break
-            mobj=self.regex.search(line)
-            if mobj:
-                curtest= int(mobj.groups()[0])
-            if curtest >= first:
+            regexmatchobj=self.regex.search(line)
+            if regexmatchobj:
+                curtest= int(regexmatchobj.groups()[0])
+            if curtest == 0:
+               if self.CTSregex.search(line):
+                sys.stdout.write(line)
+                lineprinted=1
+            if curtest >= first and not lineprinted:
                 sys.stdout.write(line)
             if curtest >= last:
                 first, last = testruns(self.testlist)
