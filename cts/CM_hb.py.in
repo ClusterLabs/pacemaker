@@ -193,8 +193,7 @@ class HeartbeatCM(ClusterManager):
         '''
 
         Path = {"mediatype" : None, "interface": None, "protocol" : None, "port": None}
-        cf =HBConfig()
-
+        cf = self.cf
         for cfp in cf.Parameters:
             if cfp == "serial":
                 if Path["mediatype"] == None:
