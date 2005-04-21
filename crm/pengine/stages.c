@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.54 2005/04/16 16:57:57 andrew Exp $ */
+/* $Id: stages.c,v 1.55 2005/04/21 15:32:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,7 +44,7 @@ gboolean symmetric_cluster = TRUE;
 no_quorum_policy_t no_quorum_policy = no_quorum_freeze;
 
 char *dc_uuid = NULL;
-const char* transition_timeout = "60000"; /* 1 minute */
+const char* transition_timeout = NULL;
 
 /*
  * Unpack everything
@@ -108,6 +108,7 @@ stage0(crm_data_t * cib,
 		dc_uuid = crm_element_value_copy(cib, XML_ATTR_DC_UUID);
 	}	
 	
+	transition_timeout = "60s"; /* 1 minute */
 	unpack_config(config);
 
 	if(no_quorum_policy != no_quorum_ignore) {
@@ -406,16 +407,20 @@ stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 	return TRUE;
 }
 
+static int transition_id = 0;
 /*
  * Create a dependancy graph to send to the transitioner (via the CRMd)
  */
 gboolean
 stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 {
-	crm_verbose("Creating transition graph");
+	crm_info("Creating transition graph %d.", transition_id);
+
 	*graph = create_xml_node(NULL, XML_TAG_GRAPH);
 	set_xml_property_copy(
 		*graph, "global_timeout", transition_timeout);
+	set_xml_property_copy(
+		*graph, "transition_id", crm_itoa(transition_id++));
 	
 /* errors...
 	slist_iter(action, action_t, action_list, lpc,

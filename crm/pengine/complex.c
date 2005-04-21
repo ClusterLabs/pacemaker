@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.20 2005/04/13 09:02:16 andrew Exp $ */
+/* $Id: complex.c,v 1.21 2005/04/21 15:32:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -162,6 +162,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	(*rsc)->runnable	   = TRUE; 
 	(*rsc)->provisional	   = TRUE; 
 	(*rsc)->start_pending	   = FALSE; 
+	(*rsc)->schedule_recurring      = FALSE;
 	(*rsc)->starting	   = FALSE; 
 	(*rsc)->stopping	   = FALSE; 
 	(*rsc)->candidate_colors   = NULL;
@@ -200,17 +201,18 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 		crm_debug("\tDependancy restart handling: ignore");
 	}
 
-	if(multiple == NULL || safe_str_eq(multiple, "stop_start")) {
-		(*rsc)->recovery_type = recovery_stop_start;
-		crm_debug("\tMultiple running resource recovery: stop/start");
-		
-	} else if(safe_str_eq(multiple, "stop_only")) {
+	if(safe_str_eq(multiple, "stop_only")) {
 		(*rsc)->recovery_type = recovery_stop_only;
 		crm_debug("\tMultiple running resource recovery: stop only");
 
-	} else {
+	} else if(safe_str_eq(multiple, "block")) {
 		(*rsc)->recovery_type = recovery_block;
 		crm_debug("\tMultiple running resource recovery: block");
+
+	} else {		
+		(*rsc)->recovery_type = recovery_stop_start;
+		crm_debug("\tMultiple running resource recovery: stop/start");
+		
 	}
 	
 	(*rsc)->fns->unpack(*rsc);

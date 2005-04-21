@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.78 2005/04/21 07:58:29 zhenh Exp $ */
+/* $Id: unpack.c,v 1.79 2005/04/21 15:32:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,11 +60,10 @@ gboolean unpack_lrm_rsc_state(
 
 gboolean add_node_attrs(crm_data_t * attrs, node_t *node);
 
-gboolean unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
-	crm_data_t * rsc_entry, resource_t *rsc_lh, node_t *node);
-
-gboolean unpack_failed_resource(GListPtr *placement_constraints, 
-	crm_data_t * rsc_entry, resource_t *rsc_lh, node_t *node);
+gboolean
+unpack_rsc_op(resource_t *rsc, const char *last_op, const char *rsc_state,
+	      node_t *node, crm_data_t *xml_op,
+	      GListPtr *placement_constraints);
 
 gboolean determine_online_status(crm_data_t * node_state, node_t *this_node);
 
@@ -100,7 +99,7 @@ unpack_config(crm_data_t * config)
 	
 	value = param_value(config, "transition_timeout");
 	if(value != NULL) {
-		int tmp = atoi(value);
+		long tmp = crm_get_msec(value);
 		if(tmp > 0) {
 			transition_timeout = value;
 		} else {
@@ -643,27 +642,26 @@ unpack_lrm_agents(node_t *node, crm_data_t * agent_list)
 
 
 gboolean
-unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
+unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		     GListPtr rsc_list, GListPtr nodes,
 		     GListPtr *actions, GListPtr *placement_constraints)
 {
 	const char *rsc_id    = NULL;
-	const char *node_id   = NULL;
+	const char *node_id   = node->details->uname;;
 	const char *rsc_state = NULL;
-	const char *op_status = NULL;
-	const char *last_rc   = NULL;
 	const char *last_op   = NULL;
 	resource_t *rsc_lh    = NULL;
-	op_status_t  action_status_i = LRM_OP_ERROR;
 
+	CRM_DEV_ASSERT(node != NULL);
+	if(crm_assert_failed) {
+		return FALSE;
+	}
+	
 	xml_child_iter(
-		lrm_rsc, rsc_entry, XML_LRM_TAG_RESOURCE,
+		lrm_rsc_list, rsc_entry, XML_LRM_TAG_RESOURCE,
 		
 		rsc_id    = crm_element_value(rsc_entry, XML_ATTR_ID);
-		node_id   = crm_element_value(rsc_entry, XML_LRM_ATTR_TARGET);
 		rsc_state = crm_element_value(rsc_entry, XML_LRM_ATTR_RSCSTATE);
-		op_status = crm_element_value(rsc_entry, XML_LRM_ATTR_OPSTATUS);
-		last_rc   = crm_element_value(rsc_entry, XML_LRM_ATTR_RC);
 		last_op   = crm_element_value(rsc_entry, XML_LRM_ATTR_LASTOP);
 		
 		rsc_lh    = pe_find_resource(rsc_list, rsc_id);
@@ -675,27 +673,52 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 			crm_err("Could not find a match for resource"
 				" %s in %s's status section",
 				rsc_id, node_id);
-			continue;
-		} else if(op_status == NULL) {
-			crm_err("Invalid resource status entry for %s in %s",
-				rsc_id, node_id);
+			crm_xml_debug(rsc_entry, "Invalid status entry");
 			continue;
 		}
-		
-		action_status_i = atoi(op_status);
 
-		if(node->details->unclean) {
-			crm_debug("Node %s (where %s is running) is unclean."
-				  " Further action depends on the value of %s",
-				  node->details->uname, rsc_lh->id,
-				  XML_RSC_ATTR_STOPFAIL);
-			
-			/* map the status to an error and then handle as a
-			 * failed resource.
-			 */
-/* 			action_status_i = LRM_OP_ERROR; */
+		xml_child_iter(
+			rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
+			unpack_rsc_op(rsc_lh, last_op, rsc_state, node, rsc_op,
+				      placement_constraints);
+			);
+		);
+	
+	return TRUE;
+}
 
-		} else if(action_status_i == (op_status_t)-1) {
+gboolean
+unpack_rsc_op(resource_t *rsc, const char *last_op, const char *rsc_state,
+	      node_t *node, crm_data_t *xml_op,
+	      GListPtr *placement_constraints) 
+{
+	const char *task        = NULL;
+/* 	const char *task_rc     = NULL; */
+	const char *task_status = NULL;
+
+	int task_status_i = -2;
+
+	CRM_DEV_ASSERT(rsc    != NULL); if(crm_assert_failed) { return FALSE; }
+	CRM_DEV_ASSERT(node   != NULL); if(crm_assert_failed) { return FALSE; }
+	CRM_DEV_ASSERT(xml_op != NULL); if(crm_assert_failed) { return FALSE; }
+	
+	task        = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+/* 	task_rc     = crm_element_value(xml_op, XML_LRM_ATTR_RC); */
+	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
+
+
+	CRM_DEV_ASSERT(task != NULL); if(crm_assert_failed) { return FALSE; }
+	CRM_DEV_ASSERT(task_status != NULL); if(crm_assert_failed) { return FALSE; }
+
+	task_status_i = crm_atoi(task_status, "-1");
+	if(node->details->unclean) {
+		crm_debug("Node %s (where %s is running) is unclean."
+			  " Further action depends on the value of %s",
+			  node->details->uname, rsc->id, XML_RSC_ATTR_STOPFAIL);
+	}
+
+	switch(task_status_i) {
+		case LRM_OP_PENDING:
 			/*
 			 * TODO: this may need some more thought
 			 * Some cases:
@@ -710,127 +733,99 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 			 *
 			 * For now this should do
 			 */
-			if(safe_str_eq(last_op, "stop")) {
-				/* map this to a timeout so it is re-issued */
-				action_status_i = LRM_OP_TIMEOUT;
 
-			} else {
-				/* map this to a "done" so it is not marked
-				 * as failed, then make sure it is re-issued
-				 */
-				action_status_i = LRM_OP_DONE;
-				rsc_lh->start_pending = TRUE;
-				if(have_quorum == TRUE
-				   || no_quorum_policy == no_quorum_ignore) {
-					action_new(rsc_lh, start_rsc, NULL, NULL);
-				}
-			}
-		}
-
-		switch(action_status_i) {
-			case LRM_OP_DONE:
-				unpack_healthy_resource(
-					placement_constraints, actions,
-					rsc_entry, rsc_lh,node);
-				break;
-			case LRM_OP_ERROR:
-			case LRM_OP_TIMEOUT:
-			case LRM_OP_NOTSUPPORTED:
-				unpack_failed_resource(placement_constraints, 
-						       rsc_entry, rsc_lh,node);
-				break;
-			case LRM_OP_PENDING:			
-			case LRM_OP_CANCELLED:
-				/* do nothing?? */
-				crm_warn("Dont know what to do for cancelled ops yet");
-				break;
-		}
-		);
-	
-	return TRUE;
-}
-
-gboolean
-unpack_failed_resource(GListPtr *placement_constraints, 
-		       crm_data_t * rsc_entry, resource_t *rsc_lh, node_t *node)
-{
-	const char *last_op  = crm_element_value(rsc_entry, XML_LRM_ATTR_LASTOP);
-	crm_warn("Unpacking failed action %s for %s on %s",
-		 last_op, rsc_lh->id, node->details->uname);
-	CRM_DEV_ASSERT(node != NULL);
-	if(crm_assert_failed) {
-		return FALSE;
-	}
-	
-	/* make sure we dont allocate the resource here again*/
-	rsc2node_new("dont_run__generated",
-		     rsc_lh, -INFINITY, FALSE, node, placement_constraints);
-	
-	if(safe_str_eq(last_op, "start")) {
-		/* the resource is not actually running... nothing more to do*/
-		return TRUE;
-
-	} else if(stonith_enabled == FALSE
-		  && rsc_lh->stopfail_type == pesf_stonith) {
-		crm_err("Cannot fence node %s after %s on %s"
-			" as STONITH is disabled",
-			node->details->uname, last_op, rsc_lh->id);
-		return FALSE;
-	}
-	
-	switch(rsc_lh->stopfail_type) {
-		case pesf_stonith:
-			/* treat it as if it is still running
-			 * but also mark the node as unclean
-			 */
-			native_add_running(rsc_lh, node);
-
-			node->details->running_rsc = g_list_append(
-				node->details->running_rsc, rsc_lh);
-
-			rsc_lh->unclean = TRUE;
-			node->details->unclean  = TRUE;
-			break;
-			
-		case pesf_block:
- 			/* let this depend on the stop action which will fail
-			 * but make sure the transition continues...
-			 */
-			native_add_running(rsc_lh, node);
-
-			node->details->running_rsc = g_list_append(
-				node->details->running_rsc, rsc_lh);
-/* 			rsc_lh->stop->timeout = NULL; /\* wait forever *\/ */
-			rsc_lh->unclean = TRUE;
-			break;
-	
-		case pesf_ignore:
-			/* pretend nothing happened */
-			break;
-	}
+			if(safe_str_eq(task, CRMD_RSCSTATE_STOP)) {
+				/* re-issue the stop and return */
+				action_new(rsc, stop_rsc, NULL, node);
+				native_add_running(rsc, node);
+				
+			} else if(safe_str_eq(task, CRMD_RSCSTATE_START)) {
+				rsc->start_pending = TRUE;
+				native_add_running(rsc, node);
 		
-	return TRUE;
-}
+				/* make sure it is re-issued but,
+				 * only if we have quorum
+				 */
+				if(have_quorum == TRUE
+				   || no_quorum_policy == no_quorum_ignore){
+					/* do not specify the node, we may want
+					 * to start it elsewhere
+					 */
+					action_new(rsc, start_rsc, NULL, NULL);
+				}
+				
+			} else if(safe_str_neq(last_op, CRMD_RSCSTATE_STOP)) {
+				crm_devel("Re-issuing pending recurring task:"
+					  " %s for %s on %s",
+					  task, rsc->id, node->details->id);
+				rsc->schedule_recurring = TRUE;
+				native_add_running(rsc, node);
+			}
+			break;
+		
+		case LRM_OP_DONE:
+			if(safe_str_neq(task, last_op)) {
+				return TRUE;
+			}
+			crm_verbose("%s/%s completed on %s",
+				    rsc->id, task, node->details->uname);
+			if(safe_str_neq(task, CRMD_RSCSTATE_STOP)) {
+				crm_verbose("%s active on %s",
+					    rsc->id, node->details->uname);
+				native_add_running(rsc, node);
+			}
+			break;
+		case LRM_OP_ERROR:
+		case LRM_OP_TIMEOUT:
+		case LRM_OP_NOTSUPPORTED:
+			if(safe_str_eq(task, CRMD_RSCSTATE_START)
+			   || safe_str_eq(task, CRMD_RSCSTATE_STOP) ) {
+				crm_warn("Handling failed %s for %s on %s",
+					 task, rsc->id, node->details->uname);
+				rsc2node_new("dont_run__failed_stopstart",
+					     rsc, -INFINITY, FALSE, node,
+					     placement_constraints);
+			}
 
-gboolean
-unpack_healthy_resource(GListPtr *placement_constraints, GListPtr *actions,
-			crm_data_t * rsc_entry, resource_t *rsc_lh, node_t *node)
-{
-	const char *last_op  = crm_element_value(rsc_entry, XML_LRM_ATTR_LASTOP);
-	
-	crm_devel("Unpacking healthy action %s on %s", last_op, rsc_lh->id);
+			if(safe_str_neq(task, last_op)) {
+				return TRUE;
+			}
+			
+			crm_debug("Processing last op (%s) for %s on %s",
+				  task, rsc->id, node->details->uname);
 
-	if(safe_str_neq(last_op, "stop")) {
-		/* create the link between this node and the rsc */
-		crm_verbose("Setting cur_node = %s for rsc = %s",
-			    node->details->uname, rsc_lh->id);
+			rsc->recover = TRUE;
+			
+			if(safe_str_neq(task, CRMD_RSCSTATE_STOP)) {
+				action_t *stop = action_new(
+					rsc, stop_rsc, NULL, node);
+				stop->optional = FALSE;
+				native_add_running(rsc, node);
 
-		native_add_running(rsc_lh, node);
+			} else if(rsc->stopfail_type == pesf_stonith) {
+				/* treat it as if it is still running
+				 * but also mark the node as unclean
+				 */
+				rsc->unclean = TRUE;
+				node->details->unclean = TRUE;
+				native_add_running(rsc, node);
 
-		node->details->running_rsc = g_list_append(
-			node->details->running_rsc, rsc_lh);
+			} else if(rsc->stopfail_type == pesf_block) {
+				/* let this depend on the stop action
+				 * which will fail but make sure the
+				 * transition continues...
+				 */
+				native_add_running(rsc, node);
+				rsc->unclean = TRUE;
+
+			/* } else { pretend the stop completed */
+			}
+			break;
+		case LRM_OP_CANCELLED:
+			/* do nothing?? */
+			crm_err("Dont know what to do for cancelled ops yet");
+			break;
 	}
-
 	return TRUE;
 }
 
@@ -1070,19 +1065,19 @@ gboolean
 add_node_attrs(crm_data_t *xml_obj, node_t *node)
 {
  	g_hash_table_insert(node->details->attrs,
-			    crm_strdup(XML_ATTR_UNAME),
+			    crm_strdup("#"XML_ATTR_UNAME),
 			    crm_strdup(node->details->uname));
  	g_hash_table_insert(node->details->attrs,
-			    crm_strdup(XML_ATTR_ID),
+			    crm_strdup("#"XML_ATTR_ID),
 			    crm_strdup(node->details->id));
 	if(safe_str_eq(node->details->id, dc_uuid)) {
 		node->details->is_dc = TRUE;
 		g_hash_table_insert(node->details->attrs,
-				    crm_strdup(XML_ATTR_DC),
+				    crm_strdup("#"XML_ATTR_DC),
 				    crm_strdup(XML_BOOLEAN_TRUE));
 	} else {
 		g_hash_table_insert(node->details->attrs,
-				    crm_strdup(XML_ATTR_DC),
+				    crm_strdup("#"XML_ATTR_DC),
 				    crm_strdup(XML_BOOLEAN_FALSE));
 	}
 	

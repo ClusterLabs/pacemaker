@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.28 2005/04/13 09:14:05 andrew Exp $ */
+/* $Id: native.c,v 1.29 2005/04/21 15:32:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,7 +40,7 @@ void filter_nodes(resource_t *rsc);
 
 int num_allowed_nodes4color(color_t *color);
 
-void create_monitor_actions(resource_t *rsc, action_t *start, node_t *node,
+void create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			    GListPtr *ordering_constraints);
 
 typedef struct native_variant_data_s
@@ -63,14 +63,26 @@ native_add_running(resource_t *rsc, node_t *node)
 {
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
+
+	CRM_DEV_ASSERT(node != NULL); if(crm_assert_failed) { return; }
+	
+	slist_iter(
+		a_node, node_t, native_data->running_on, lpc,
+		CRM_DEV_ASSERT(a_node != NULL);
+		if(safe_str_eq(a_node->details->id, node->details->id)) {
+			return;
+		}
+		);
 	
 	native_data->running_on = g_list_append(native_data->running_on, node);
+	node->details->running_rsc = g_list_append(
+		node->details->running_rsc, rsc);
 
 	if(g_list_length(native_data->running_on) > 1) {
 		crm_warn("Resource %s is (potentially) active on %d nodes."
-			 "  Latest: %s", rsc->id,
+			 "  Latest: %s/%s", rsc->id,
 			 g_list_length(native_data->running_on),
-			 node->details->id);
+			 node->details->uname, node->details->id);
 	}
 }
 
@@ -192,21 +204,33 @@ void native_color(resource_t *rsc, GListPtr *colors)
 }
 
 void
-create_monitor_actions(resource_t *rsc, action_t *start, node_t *node,
+create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		       GListPtr *ordering_constraints) 
 {
 	action_t *mon = NULL;
+	const char *name = NULL;
+	const char *interval = NULL;
+	if(node == NULL || !node->details->online || node->details->unclean) {
+		crm_verbose("Not creating recurring actions");
+		return;
+	}
+	
 	xml_child_iter(
 		rsc->ops_xml, operation, "op",
-		if(safe_str_neq(
-			   crm_element_value(operation, "name"), CRMD_RSCSTATE_MON)) {
+		name = crm_element_value(operation, "name");
+		if(safe_str_neq(name, CRMD_RSCSTATE_MON)) {
 			continue;
 		}
+
+		interval = crm_element_value(operation, "interval");
+
+		crm_info("\tStart %s[%s] for %s\t(%s)",
+			 name, interval, rsc->id, node->details->uname);
+			 
 		mon = action_new(rsc, monitor_rsc,
 				 crm_element_value(operation, "timeout"), node);
 
-		add_hash_param(mon->extra, "interval",
-			       crm_element_value(operation, "interval"));
+		add_hash_param(mon->extra, "interval", interval);
 
  		unpack_instance_attributes(operation, mon->extra);
 		if(start != NULL) {
@@ -220,7 +244,8 @@ create_monitor_actions(resource_t *rsc, action_t *start, node_t *node,
 
 void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 {
-	action_t *op = NULL;
+	action_t *start = NULL;
+	action_t *stop = NULL;
 	node_t *chosen = NULL;
 	native_variant_data_t *native_data = NULL;
 
@@ -232,19 +257,19 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 	
 	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
 		/* create start action */
-		op = action_new(rsc, start_rsc, NULL, chosen);
+		start = action_new(rsc, start_rsc, NULL, chosen);
 		if( !have_quorum && no_quorum_policy != no_quorum_ignore) {
-			op->runnable = FALSE;
+			start->runnable = FALSE;
 			
 		} else {
 			crm_info("Start resource %s (%s)",
 				 rsc->id, safe_val3(
 					 NULL, chosen, details, uname));
+			rsc->schedule_recurring = TRUE;
 		}
 		
 	} else if(g_list_length(native_data->running_on) > 1) {
-		crm_info("Attempting recovery of resource %s",
-			 rsc->id);
+		crm_err("Attempting recovery of resource %s", rsc->id);
 		
 		if(rsc->recovery_type == recovery_stop_start
 		   || rsc->recovery_type == recovery_stop_only) {
@@ -252,10 +277,10 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 				node, node_t,
 				native_data->running_on, lpc,
 				
-				crm_info("Stop  resource %s (%s) (recovery)",
+				crm_info("Stop  resource %s\t(%s) (recovery)",
 					 rsc->id,
 					 safe_val3(NULL, node, details, uname));
-				action_new(rsc, stop_rsc, NULL, node);
+				stop = action_new(rsc, stop_rsc, NULL, node);
 				);
 		}
 		
@@ -263,10 +288,11 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 			/* if one of the "stops" is for a node outside
 			 * our partition, then this will block anyway
 			 */
-			crm_info("Start resource %s (%s) (recovery)",
+			crm_info("Start resource %s (%s)\t(recovery)",
 				 rsc->id,
 				 safe_val3(NULL, chosen, details, uname));
-			op = action_new(rsc, start_rsc, NULL, chosen);
+			start = action_new(rsc, start_rsc, NULL, chosen);
+			rsc->schedule_recurring = TRUE;
 		}
 
 		if(rsc->recovery_type == recovery_block) {
@@ -274,8 +300,7 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 				 " NODES PENDING MANUAL INTERVENTION", rsc->id);
 			
 			slist_iter(
-				node, node_t,
-				native_data->running_on, lpc,
+				node, node_t, native_data->running_on, lpc,
 				crm_warn("Resource %s active on %s",
 					 rsc->id, node->details->uname);
 				);
@@ -284,55 +309,72 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 	} else if(g_list_length(native_data->running_on) == 1) {
 		node_t *node = native_data->running_on->data;
 		
-		crm_debug("Stop%s of %s",
-			  chosen != NULL?" and restart":"",rsc->id);
+		crm_debug("Stop%s of %s", chosen?" and restart":"", rsc->id);
 		CRM_DEV_ASSERT(node != NULL);
 		
 		if(chosen != NULL && safe_str_eq(
 			   node->details->id, chosen->details->id)) {
 			/* restart */
-			crm_info("Leave resource %s on (%s)",rsc->id,
-				 safe_val3(NULL,chosen,details,uname));
+			if(rsc->recover) {
+				crm_info("Restart resource %s\t(%s)",rsc->id,
+					 safe_val3(NULL,chosen,details,uname));
 
-			if(rsc->start_pending) {
-				op = action_new(rsc, start_rsc, NULL, chosen);
-			}
-			
-			/* in case the actions already exist */
-			slist_iter(
-				action, action_t, rsc->actions, lpc2,
+				start = action_new(rsc, start_rsc, NULL,chosen);
+				stop  = action_new(rsc, stop_rsc,  NULL,chosen);
+
+				rsc->schedule_recurring = TRUE;
 				
-				if(action->task == start_rsc
-				   && rsc->start_pending == FALSE) {
-					action->optional = TRUE;
+			} else {
+				crm_info("Leave resource %s\t(%s)",rsc->id,
+					 safe_val3(NULL,chosen,details,uname));
 
-				} else if(action->task == stop_rsc){
-					action->optional = TRUE;
- 				}
-				);
+				if(rsc->start_pending) {
+					start = action_new(
+						rsc, start_rsc, NULL,chosen);
+				}
+
+				/* in case the actions already exist */
+				slist_iter(
+					action, action_t, rsc->actions, lpc2,
+					
+					if(action->task == start_rsc
+					   && rsc->start_pending == FALSE) {
+						action->optional = TRUE;
+						
+					} else if(action->task == stop_rsc){
+						action->optional = TRUE;
+					}
+					);
+			}
 			
 		} else if(chosen != NULL) {
 			/* move */
-			crm_info("Move resource %s (%s -> %s)", rsc->id,
+			crm_info("Move  resource %s\t(%s -> %s)", rsc->id,
 				 safe_val3(NULL, node, details, uname),
 				 safe_val3(NULL, chosen, details, uname));
 			action_new(rsc, stop_rsc, NULL, node);
-			op = action_new(rsc, start_rsc, NULL, chosen);
-				
+			start = action_new(rsc, start_rsc, NULL, chosen);
+			rsc->schedule_recurring = TRUE;
+			
 		} else {
-			crm_info("Stop resource %s (%s)", rsc->id,
+			crm_info("Stop  resource %s\t(%s)", rsc->id,
 				 safe_val3(NULL, node, details, uname));
 			action_new(rsc, stop_rsc, NULL, node);
 		}
 	}
-	if(op != NULL && op->runnable) {
-		create_monitor_actions(
-			rsc, op, chosen, ordering_constraints);
+
+	if(rsc->schedule_recurring == TRUE
+	   && (start == NULL || start->runnable)) {
+		create_recurring_actions(
+			rsc, start, chosen, ordering_constraints);
 	}
 }
 
 void native_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 {
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
+	
 	order_new(rsc, stop_rsc, NULL, rsc, start_rsc, NULL,
 		  pecs_startstop, ordering_constraints);
 }

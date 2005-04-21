@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.68 2005/04/18 11:49:34 andrew Exp $ */
+/* $Id: utils.c,v 1.69 2005/04/21 15:32:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -671,12 +671,18 @@ action_new(resource_t *rsc, enum action_tasks task,
 	}
 		
 	if(rsc != NULL) {
-		if(on_node == NULL || on_node->details->online == FALSE) {
+		if(on_node == NULL) {
+			action->runnable = FALSE;
+
+		} else if(on_node->details->online == FALSE) {
 			crm_warn("Action %d %s for %s on %s is unrunnable",
 				 action->id,
 				 task2text(task), rsc?rsc->id:"<NULL>",
 				 on_node?on_node->details->id:"<none>");
 			action->runnable = FALSE;
+
+		} else {
+			action->runnable = TRUE;
 		}
 		
 		if(task == stop_rsc) {
@@ -1168,7 +1174,7 @@ find_actions(GListPtr input, enum action_tasks task, node_t *on_node)
 
 			} else if(action->node == NULL) {
 				/* skip */
-				crm_warn("While looking for %s action on %s, "
+				crm_debug("While looking for %s action on %s, "
 					  "found an unallocated one.  Assigning"
 					  " it to the requested node...",
 					  task2text(task),
