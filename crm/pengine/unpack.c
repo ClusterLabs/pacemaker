@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.77 2005/04/20 09:54:18 zhenh Exp $ */
+/* $Id: unpack.c,v 1.78 2005/04/21 07:58:29 zhenh Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -739,7 +739,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc,
 				unpack_failed_resource(placement_constraints, 
 						       rsc_entry, rsc_lh,node);
 				break;
-			case LRM_OP_NOTEXEC:			
+			case LRM_OP_PENDING:			
 			case LRM_OP_CANCELLED:
 				/* do nothing?? */
 				crm_warn("Dont know what to do for cancelled ops yet");
