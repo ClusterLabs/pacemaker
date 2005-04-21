@@ -31,6 +31,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/ipc.h>
+#include <cib_private.h>
 
 typedef struct cib_native_opaque_s 
 {
@@ -564,14 +565,35 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 	int call_id = 0;
 	crm_data_t *output = NULL;
 
+	cib_callback_client_t *blob = g_hash_table_lookup(
+		cib_op_callback_table, GINT_TO_POINTER(call_id));
+
+	ha_msg_value_int(msg, F_CIB_CALLID, &call_id);
+	ha_msg_value_int(msg, F_CIB_RC, &rc);
+	output = get_message_xml(msg, F_CIB_CALLDATA);
+
+	blob = g_hash_table_lookup(
+		cib_op_callback_table, GINT_TO_POINTER(call_id));
+	
+	if(blob != NULL && (rc == cib_ok || blob->only_success == FALSE)) {
+		blob->callback(msg, call_id, rc, output, blob->user_data);
+		g_hash_table_remove(
+			cib_op_callback_table, GINT_TO_POINTER(call_id));
+		
+	} else if(cib->op_callback == NULL && rc != cib_ok) {
+		crm_err("CIB command failed: %s", cib_error2string(rc));
+		crm_log_message_adv(LOG_DEBUG, "Failed CIB Update", msg);
+	}
+	
+	if(blob != NULL) {
+		g_hash_table_remove(
+			cib_op_callback_table, GINT_TO_POINTER(call_id));
+	}
+	
 	if(cib->op_callback == NULL) {
 		crm_devel("No OP callback set, ignoring reply");
 		return;
 	}
-	
-	ha_msg_value_int(msg, F_CIB_CALLID, &call_id);
-	ha_msg_value_int(msg, F_CIB_RC, &rc);
-	output = get_message_xml(msg, F_CIB_CALLDATA);
 	
 	cib->op_callback(msg, call_id, rc, output);
 	free_xml(output);

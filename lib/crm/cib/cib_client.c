@@ -31,6 +31,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <cib_private.h>
 
 /* short term hack to reduce callback messages */
 typedef struct cib_native_opaque_s 
@@ -40,6 +41,8 @@ typedef struct cib_native_opaque_s
  		GCHSource	*callback_source; 
 		
 } cib_native_opaque_t;
+
+GHashTable *cib_op_callback_table = NULL;
 
 gboolean verify_cib_cmds(cib_t *cib);
 
@@ -99,6 +102,12 @@ cib_new(void)
 	if(configured_variant != cib_native) {
 		crm_err("Only the native CIB type is currently implemented");
 		return NULL;
+	}
+
+	if(cib_op_callback_table == NULL) {
+		cib_op_callback_table = g_hash_table_new_full(
+			g_direct_hash, g_direct_equal,
+			NULL, g_hash_destroy_str);
 	}
 
 	crm_malloc(new_cib, sizeof(cib_t));
@@ -299,10 +308,6 @@ int cib_client_sync(cib_t *cib, const char *section, int call_options)
 int cib_client_sync_from(
 	cib_t *cib, const char *host, const char *section, int call_options)
 {
-	enum cib_errors rc = cib_ok;
-	crm_data_t *stored_cib  = NULL;
-	crm_data_t *current_cib = NULL;
-
 	if(cib == NULL) {
 		return cib_missing;
 	} else if(cib->state == cib_disconnected) {
@@ -311,29 +316,8 @@ int cib_client_sync_from(
 		return cib_variant;
 	}
 
-	crm_devel("Retrieving current CIB from %s", host);
-	rc = cib->cmds->query_from(
-		cib, host, section, &current_cib, call_options|cib_sync_call);
-
-	if(current_cib == NULL) {
-		crm_err("Could not retrive current CIB.");
-		
-	} else if(rc == cib_ok) {
-		if(call_options & cib_scope_local) {
-			/* having scope == local makes no sense from here on */
-			call_options ^= cib_scope_local;
-		}
-		
-		crm_devel("Storing current CIB (should trigger a store everywhere)");
-/* 		crm_xml_devel(current_cib, "XML to store"); */
-		rc = cib->cmds->replace(
-			cib, section, current_cib, &stored_cib, call_options);
-	}
-	free_xml(current_cib);
-	free_xml(stored_cib);
-	
-	return rc;
-	
+	return cib->cmds->variant_op(
+		cib, CRM_OP_CIB_SYNC, host, section, NULL, NULL, call_options);
 }
 
 int cib_client_create(cib_t *cib, const char *section, crm_data_t *data,
@@ -509,6 +493,51 @@ gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
 	}
 	return 1;
 }
+
+
+
+gboolean
+add_cib_op_callback(
+	int call_id, gboolean only_success, void *user_data,
+	void (*callback)(const HA_Message*, int, int, crm_data_t*,void*)) 
+{
+	cib_callback_client_t *blob = NULL;
+
+	if(call_id < 0) {
+		crm_warn("CIB call failed: %s", cib_error2string(call_id));
+		if(only_success == FALSE) {
+			callback(NULL, call_id, call_id, NULL, user_data);
+		}
+		return FALSE;
+	}
+	
+	crm_malloc(blob, sizeof(cib_callback_client_t));
+	blob->only_success = only_success;
+	blob->user_data = user_data;
+	blob->callback = callback;
+	
+	g_hash_table_insert(
+		cib_op_callback_table, GINT_TO_POINTER(call_id), blob);
+	return TRUE;
+}
+
+void
+remove_cib_op_callback(int call_id, gboolean all_callbacks) 
+{
+	if(all_callbacks) {
+		if(cib_op_callback_table != NULL) {
+			g_hash_table_destroy(cib_op_callback_table);
+		}
+		cib_op_callback_table = g_hash_table_new_full(
+			g_direct_hash, g_direct_equal,
+			NULL, g_hash_destroy_str);
+	} else {
+		g_hash_table_remove(
+			cib_op_callback_table,
+			GINT_TO_POINTER(call_id));
+	}
+}
+
 
 
 char *
