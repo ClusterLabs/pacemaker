@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.1 2005/04/12 12:49:07 andrew Exp $ */
+/* $Id: xml.c,v 1.2 2005/04/21 15:12:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -583,7 +583,7 @@ stdin2xml(void)
 	int lpc = 0;
 	int MAX_XML_BUFFER = 20000;
 	
-	char ch = 0;
+	int ch = 0;
 	gboolean more = TRUE;
 	gboolean inTag = FALSE;
 	FILE *input = stdin;
@@ -1367,7 +1367,7 @@ int
 get_tag_name(const char *input) 
 {
 	int lpc = 0;
-	char ch = 0;
+	int ch = 0;
 	const char *error = NULL;
 	gboolean do_special = FALSE;
 	
@@ -1417,7 +1417,7 @@ int
 get_attr_name(const char *input) 
 {
 	int lpc = 0;
-	char ch = 0;
+	int ch = 0;
 	const char *error = NULL;
 	
 	for(lpc = 0; error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
@@ -1488,7 +1488,7 @@ crm_data_t*
 parse_xml(const char *input, int *offset)
 {
 	int len = 0, lpc = 0;
-	char ch = 0;
+	int ch = 0;
 	char *tag_name = NULL;
 	char *attr_name = NULL;
 	char *attr_value = NULL;
