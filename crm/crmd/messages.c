@@ -872,27 +872,36 @@ handle_request(ha_msg_input_t *stored_msg)
 
 		/*========== DC-Only Actions ==========*/
 	} else if(AM_I_DC){
-		if(strcmp(op, CRM_OP_TEABORT) == 0) {
+		if(safe_str_eq(op, CRM_OP_TEABORT)) {
 			if(fsa_state != S_INTEGRATION) {
 				next_input = I_PE_CALC;
 
 			} else {	
-				crm_devel("Ignoring %s in state %s."
-					"  Waiting for the integration to"
-					" complete first.",
-					op, fsa_state2string(fsa_state));
+				crm_err("Op %s does not make sense in state %s",
+					 op, fsa_state2string(fsa_state));
 			}
 				
+		} else if(safe_str_eq(op, CRM_OP_TETIMEOUT)) {
+			if(fsa_state == S_TRANSITION_ENGINE
+				|| fsa_state == S_POLICY_ENGINE) {
+				next_input = I_PE_CALC;
+
+			} else if(fsa_state == S_IDLE) {
+				crm_err("Transition timed out in S_IDLE");
+				next_input = I_PE_CALC;
+				
+			} else {	
+				crm_err("Op %s does not make sense in state %s",
+					 op, fsa_state2string(fsa_state));
+			}
+
 		} else if(strcmp(op, CRM_OP_TECOMPLETE) == 0) {
-/* 			if(fsa_state == S_TRANSITION_ENGINE) { */
+ 			if(fsa_state == S_TRANSITION_ENGINE) {
 				next_input = I_TE_SUCCESS;
-/* 			} else { */
-/* 				crm_warn("Op %s is only valid in state %s..." */
-/* 					 "We are in (%s)", */
-/* 					 op, */
-/* 					 fsa_state2string(S_TRANSITION_ENGINE), */
-/* 					 fsa_state2string(fsa_state)); */
-/* 			} */
+ 			} else {
+				crm_err("Op %s does not make sense in state %s",
+					 op, fsa_state2string(fsa_state));
+			}
 
 		} else if(strcmp(op, CRM_OP_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
