@@ -59,9 +59,9 @@ class LinuxHAv2(HeartbeatCM):
             "EpocheCmd"      : "@libdir@/heartbeat/ccm_tool -e",
             "QuorumCmd"      : "@libdir@/heartbeat/ccm_tool -q",
             "ParitionCmd"    : "@libdir@/heartbeat/ccm_tool -p",
-	    # Please tweak the timeout value if needed.
-            "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s monitor 60000 0 EVERYTIME 2>/dev/null|grep return",
-            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 60000 0 EVERYTIME 2>/dev/null",
+	    # Revert this to blocking (timeout = 0) to catch bugs
+            "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s monitor 0 0 EVERYTIME 2>/dev/null|grep return",
+            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             "TmpDir"         : "/tmp",
             "BreakCommCmd2"  : "/usr/lib/heartbeat/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
@@ -83,7 +83,14 @@ class LinuxHAv2(HeartbeatCM):
                 r"Timer I_TERMINATE just popped",
                 r"input=I_ERROR",
                 r"input=I_FAIL",
+                r"input=I_INTEGRATED cause=C_TIMER_POPPED",
+                r"input=I_FINALIZED cause=C_TIMER_POPPED",
+                r"input=I_ERROR",
                 r", exiting\.",
+		r"Ignoring HA message (op=vote).*: not in our membership list",
+		r"pengine:.*Attempting recovery of resource",
+		r"pengine:.*Handling failed ",
+		r"tengine:.*is taking more than 2x its timeout",
                 r"ERROR:",
                 r"CRIT:",
             ),
@@ -95,6 +102,7 @@ class LinuxHAv2(HeartbeatCM):
    <configuration>
      <crm_config>'''
         cib_options='''
+	<nvpair id="transition_timeout" name="transition_timeout" value="120s"/>
         <nvpair id="require_quorum" name="require_quorum" value="true"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
         <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>
@@ -132,7 +140,7 @@ class LinuxHAv2(HeartbeatCM):
             constraints='''
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
         <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
-          <expression attribute="is_dc" operation="eq" value="false"/>
+          <expression attribute="#is_dc" operation="eq" value="false"/>
         </rule>
       </rsc_location>'''
 
@@ -155,7 +163,7 @@ class LinuxHAv2(HeartbeatCM):
                 node_constraint=("""
       <rsc_location id="run_%s" rsc="%s">
         <rule id="pref_run_%s" score="100" boolean_op="and">
-          <expression attribute="uname" operation="eq" value="%s"/>
+          <expression attribute="#uname" operation="eq" value="%s"/>
         </rule>
       </rsc_location>""" % ("rsc_"+node, "rsc_"+node, "rsc_"+node, node))
                 constraints = constraints + node_constraint
@@ -236,11 +244,14 @@ class LinuxHAv2(HeartbeatCM):
         if self.any_running() == 1:
             patterns.append(self["Pat:DC_IDLE"])
             localBadNewsPats.append("input=I_ELECTION ")
-            localBadNewsPats.append("input=I_ELECTION_DC ")
+#            localBadNewsPats.append("S_INTEGRATION -> S_ELECTION")
+#            localBadNewsPats.append("S_FINALIZE_JOIN -> S_ELECTION")
+#            localBadNewsPats.append("S_POLICY_ENGINE -> S_ELECTION")
+#            localBadNewsPats.append("S_TRANSITION_ENGINE -> S_ELECTION")
+#            localBadNewsPats.append("S_IDLE -> S_ELECTION")
+#            localBadNewsPats.append("input=I_ELECTION_DC ")
 
-        if self.CIBsync.has_key(node):
-            self.debug("CIB already installed on node %s" %node)
-        elif self.Env["ClobberCIB"] == 1:
+        if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
             self.debug("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
             if self.Env["CIBfilename"] == None:
