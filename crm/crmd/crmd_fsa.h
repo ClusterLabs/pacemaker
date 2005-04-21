@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.39 2005/04/06 14:33:32 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.40 2005/04/21 15:18:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,13 +39,13 @@ struct oc_node_list_s
 {
 		oc_ed_t last_event;
 
-		int members_size;
+		guint members_size;
 		GHashTable *members; /* contents: oc_node_t * */
 
-		int new_members_size;
+		guint new_members_size;
 		GHashTable *new_members; /* contents: oc_node_t * */
 
-		int dead_members_size;
+		guint dead_members_size;
 		GHashTable *dead_members; /* contents: oc_node_t * */
 };
 typedef struct oc_node_list_s oc_node_list_t;
