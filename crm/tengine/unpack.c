@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.27 2005/04/21 15:44:42 andrew Exp $ */
+/* $Id: unpack.c,v 1.28 2005/04/21 21:00:51 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,12 +37,14 @@ extern int transition_counter;
 void
 set_timer_value(te_timer_t *timer, const char *time, int time_default)
 {
+	int tmp_time;
+
 	if(timer == NULL) {
 		return;
 	}
 	
 	timer->timeout = time_default;
-	int tmp_time = crm_get_msec(time);
+	tmp_time = crm_get_msec(time);
 	if(tmp_time > 0) {
 		timer->timeout = tmp_time;
 	}
