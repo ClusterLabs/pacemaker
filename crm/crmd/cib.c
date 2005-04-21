@@ -47,20 +47,8 @@
 #include <crm/dmalloc_wrapper.h>
 
 struct crm_subsystem_s *cib_subsystem = NULL;
-typedef struct cib_callback_blob_s 
-{
-		void (*callback)(
-			const HA_Message*, int, int, crm_data_t*, void*);
-		void *user_data;
-		gboolean only_success;
-		
-} cib_callback_blob_t;
-
-void crmd_cib_op_callback(
-	const HA_Message *msg, int call_id, int rc, crm_data_t *output);
 
 int cib_retries = 0;
-GHashTable *cib_callback_table = NULL;
 
 
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
@@ -85,11 +73,6 @@ do_cib_control(long long action,
 	}
 
 	if(action & start_actions) {
-		if(cib_callback_table == NULL) {
-			cib_callback_table = g_hash_table_new_full(
-				g_direct_hash, g_direct_equal,
-				NULL, g_hash_destroy_str);
-		}
 		if(cur_state != S_STOPPING) {
 			if(fsa_cib_conn == NULL) {
 				fsa_cib_conn = cib_new();
@@ -97,10 +80,11 @@ do_cib_control(long long action,
 			if(cib_ok != fsa_cib_conn->cmds->signon(
 				   fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command)){
 				crm_debug("Could not connect to the CIB service");
+#if 0
 			} else if(cib_ok != fsa_cib_conn->cmds->set_op_callback(
 					  fsa_cib_conn, crmd_cib_op_callback)) {
 				crm_err("Could not set op callback");
-
+#endif
 			} else if(fsa_cib_conn->cmds->set_connection_dnotify(
 					  fsa_cib_conn,
 					  crmd_cib_connection_destroy)!=cib_ok){
@@ -297,54 +281,5 @@ update_local_cib_adv(
 /*  	free_xml(fsa_input->xml); */
 #endif
 	crm_devel("deleted input");
-}
-
-
-gboolean
-add_cib_op_callback(
-	int call_id, gboolean only_success, void *user_data,
-	void (*callback)(const HA_Message*, int, int, crm_data_t*,void*)) 
-{
-	cib_callback_blob_t *blob = NULL;
-
-	if(call_id < 0) {
-		crm_warn("CIB call failed: %s", cib_error2string(call_id));
-		if(only_success == FALSE) {
-			callback(NULL, call_id, call_id, NULL, user_data);
-		}
-		return FALSE;
-	}
-	
-	crm_malloc(blob, sizeof(cib_callback_blob_t));
-	blob->only_success = only_success;
-	blob->user_data = user_data;
-	blob->callback = callback;
-	
-	g_hash_table_insert(
-		cib_callback_table, GINT_TO_POINTER(call_id), blob);
-	return TRUE;
-}
-
-void
-crmd_cib_op_callback(
-	const HA_Message *msg, int call_id, int rc, crm_data_t *output) 
-{
-	cib_callback_blob_t *blob = g_hash_table_lookup(
-		cib_callback_table, GINT_TO_POINTER(call_id));
-	
-	if(blob != NULL && (rc == cib_ok || blob->only_success == FALSE)) {
-		blob->callback(msg, call_id, rc, output, blob->user_data);
-		g_hash_table_remove(
-			cib_callback_table, GINT_TO_POINTER(call_id));
-
-	} else if(rc != cib_ok) {
-		if(blob != NULL) {
-			g_hash_table_remove(
-				cib_callback_table, GINT_TO_POINTER(call_id));
-		}
-		crm_err("CIB update failed: %s", cib_error2string(rc));
-		crm_log_message_adv(LOG_WARNING, "Failed CIB Update", msg);
-		return;
-	}
 }
 
