@@ -1,581 +1,210 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<!-- This document describes the XML elements used by the CRM. 
-  
-  The DTD given here is an annotated syntax definition.
-  
-  GLOBAL TODOs:
-	- Versionize DTD so we can validate against a specific version
-	- Timestamps et al should probably not be CDATA but more
-	  specific types
--->
-
-<!--
-
-The CIB is described quit well in section 5 of the crm.txt (checked into
-CVS in the crm directory) so it is not repeated here.  Suffice to say
-that it stores the configuration and runtime data required for
-cluster-wide resource managment in XML format.
-
-Because of inter-version compatibility, we cannot directly validate the
-CIB against this DTD; there may be fields present the local node cannot
-deal with. But the DTD can still be used as a tool to validate whether
-the output from the admin frontends is valid, and thus serves as a tool
-for debugging.
-
-CIB: Information Structure
-===========================
-The CIB is divided into two main sections: The "static" configuration
-part and the "dynamic" status.
-
-The configuration contains - suprisingly - the configuration of the
-cluster, namely node attributes, resource instance configuration, and
-the constraints which describe the dependencies between all these. To
-identify the most recent configuration available in the cluster, this
-section is timestamped with the unique timestamp of the last update.
-
-The status part is dynamically generated / updated by the CRM system and
-represents the current status of the cluster; which nodes are up, down
-or crashed, which resources are running where etc. The timestamps here
-represent when the last change went into this section.
-
-All timestamps are given in seconds since the epoch with millisecond
-precision. 
-
-Every information carrying object has an "id" tag, which is basically
-the UUID of it, should we ever need to access it directly.
-
-More details are given in the annotated DTD below.
-
--->
-
-<!-- configuration and status must be present. Why else would you
-     have a CIB? -->
-<!ELEMENT cib (configuration, status)>
-
-<!-- TODO: Is the version element necessary? If we flag the DTD against
-     which the CIB validates, the version is implicit... -->
-
-<!ATTLIST cib
-	  num_updates  CDATA	#IMPLIED
-	  num_peers    CDATA	#IMPLIED	
-	  last_written CDATA	#IMPLIED
-	  dc_uuid      CDATA	#IMPLIED
-	  timestamp    CDATA	#REQUIRED
-	  have_quorum  (true|false)	'false'
-	  cib_feature_revision	CDATA	#REQUIRED>
-
-<!ELEMENT configuration (nodes, resources, constraints, metadata, crm_config)>
-<!-- The most uptodate configuration in the cluster is automatically
-     determined by the CRM via the timestamp; the source indicates
-     which node that was. In case of updates at runtime, the source
-     should be set to the node from which the last update occured.
-
-     The serial gets incremented by one for any update to the
-     configuration.
-
-     TODO: Same comment about the version applies.
- -->
-
-<!ATTLIST configuration
-	  version   CDATA #REQUIRED
-	  source    CDATA #REQUIRED
-	  serial    CDATA #REQUIRED
-	  timestamp CDATA #REQUIRED>
-
-
-<!ELEMENT crm_config (nvpair*)>
-<!--
-    Current crm_config options:
-	transition_timeout (period in milliseconds, default=60000):
-		A time after which the transition is deemed failed.
-
-	symmetric_cluster (boolean, default=TRUE):
-		If true, resources are permitted to run anywhere by default.
-		Otherwise, explict constraints must be created to specify 
-		 where they can run.
- 
-	stonith_enabled (boolean, default=FALSE):
-		If true, failed nodes will be fenced.
-
-	no_quorum_policy (enum, default=freeze)
-		ignore
-			Pretend we have quorum
-
-		freeze
-			Do not start any resources not currently in our
-			  partition.  Resources in our partition may be
-			  moved to another node within the partition
-			Fencing is disabled
-
-		stop
-			Stop all running resources in our partition
-			Fencing is disabled
-
-	suppress_cib_writes (boolean, default=FALSE):
-		If true, changes to the configuration and cluster status
-		 will not be written to disk and will be kept in memory only.
-		Use this option if you have no local disk.
-  -->
-
-
-<!ELEMENT nodes	      (node*)>
-
-<!-- Each node can have additional attributes, such as "connected to SAN
-     subsystem whatever", and then a constraint could include a
-     dependency on such an attribute being present or having a specific
-     value. -->
-<!ELEMENT node (instance_attributes*)>
 <!-- 
-     Description in all elements is opaque to the CRM, some
-     adminstrative comments.
+     This document describes the XML elements used by the CRM. 
 
-     "id" refers to the node's UUID.
+     It can be found on the web at: 
+	http://wiki.linux-ha.org/ClusterResourceManager/DTD1.0
 
-     "uname" is the result of uname -n
 
-     "dc_weight" is an optional weight for influencing the DC election
-     process...
+     For reasons of user availability, the annotations formerly found here
+     are now located at:
 
-     TODO: Do we need to know about ping nodes...?
-     -->
+	http://wiki.linux-ha.org/ClusterResourceManager/DTD1.0/Annotated
+
+     which is also linked to directly by the page above.
+ 
+-->
+
+<!ELEMENT cib (configuration, status)>
+<!ATTLIST cib
+          num_updates  CDATA    #IMPLIED
+          num_peers    CDATA    #IMPLIED        
+          last_written CDATA    #IMPLIED
+          dc_uuid      CDATA    #IMPLIED
+          timestamp    CDATA    #REQUIRED
+          have_quorum  (true|false)     'false'
+          cib_feature_revision  CDATA   #REQUIRED>
+
+<!ELEMENT configuration (nodes, resources, constraints, crm_config)>
+<!ATTLIST configuration
+          version   CDATA #REQUIRED
+          source    CDATA #REQUIRED
+          serial    CDATA #REQUIRED
+          timestamp CDATA #REQUIRED>
+
+<!-- Annotated version -->
+<!ELEMENT crm_config (nvpair*)>
+
+<!ELEMENT nodes       (node*)>
+
+<!-- Annotated version -->
+<!ELEMENT node (instance_attributes*)>
 <!ATTLIST node
-	  id		CDATA	      #REQUIRED
-	  uname		CDATA	      #REQUIRED
-	  description	CDATA	      #IMPLIED
-	  dc_weight	CDATA	      #IMPLIED
-	  type		(member|ping) #REQUIRED>
-
-<!-- RESOURCES -->
+          id            CDATA         #REQUIRED
+          uname         CDATA         #REQUIRED
+          description   CDATA         #IMPLIED
+          dc_weight     CDATA         #IMPLIED
+          type          (member|ping) #REQUIRED>
 
 <!ELEMENT resources   (resource*, resource_group*, incarnation*)>
 
-<!-- 
-     
-     "id" is a short name consisting of up to 64 simple ascii characters
-     [a-zA-Z0-9_\-]
-
-     Version constraints are handled by rsc_location constraints.  
-     Use version=1.2 or version>2.0 etc.
-
-     The *_event_notify are not currently supported.
-
-     The restart_type prefernce is used when the other side of an ordering
-     dependancy is restarted/moved.  Use this for example if you want your
-     webserver to be automatically restarted if your database is restarted.
-
-     The multiple_active preference is used when a resource is detected as
-     being active on more than one machine.  The default, stop_start, will
-     stop all instances and start only 1.
-
--->
 <!ELEMENT resource (operations, instance_attributes*)>
 <!ATTLIST resource
-	  id		    CDATA #REQUIRED
-	  description	    CDATA #IMPLIED
-	  class		    (ocf|init|heartbeat|stonith) #REQUIRED
-	  type		    CDATA #REQUIRED
-	  provider	    CDATA #IMPLIED
+          id                CDATA #REQUIRED
+          description       CDATA #IMPLIED
+          class             (ocf|init|heartbeat|stonith) #REQUIRED
+          type              CDATA #REQUIRED
+          provider          CDATA #IMPLIED
 
-	  on_stopfail	    (ignore|stonith|block)	 'block'
-	  restart_type	    (ignore|restart)		 'ignore'
-	  multiple_active   (stop_start|stop_only|block) 'stop_start'
+          on_stopfail       (ignore|stonith|block)       #IMPLIED
+          restart_type      (ignore|restart)             'ignore'
+          multiple_active   (stop_start|stop_only|block) 'stop_start'
 
-	  post_event_notify (true|false)		'false'
-	  pre_event_notify  (true|false)		'false'>
+          post_event_notify (true|false)                'false'
+          pre_event_notify  (true|false)                'false'>
 
+<!-- Annotated version -->
+<!ELEMENT operations (op*)>
+<!ELEMENT op (instance_attributes*)>
+<!ATTLIST op
+          id            CDATA         #REQUIRED
+          name          CDATA         #REQUIRED
+          description   CDATA         #IMPLIED
+          interval      CDATA         #IMPLIED
+          timeout       CDATA         #IMPLIED>
+
+<!-- Annotated version -->
 <!ELEMENT resource_group (resource+)>
 <!ATTLIST resource_group
-	  id		   CDATA		    #REQUIRED
-	  description	   CDATA		    #IMPLIED
-	  priority	   CDATA		    #IMPLIED
-	  on_stopfail	   (ignore|stonith|block)   'block'
-	  restart_type	   (ignore|restart|recover) 'ignore'>
+          id               CDATA                    #REQUIRED
+          description      CDATA                    #IMPLIED
+          on_stopfail      (ignore|stonith|block)   'block'
+          restart_type     (ignore|restart|recover) 'ignore'>
 
 <!ELEMENT incarnation (resource|group)>
 <!ATTLIST incarnation
-	  id			CDATA			 #REQUIRED
-	  description		CDATA			 #IMPLIED
-	  priority		CDATA			 #IMPLIED
-	  on_stopfail		(ignore|stonith|block)	 'block'
-	  restart_type		(ignore|restart|recover) 'ignore'
-	  ordered		(true|false)		 'true'
-	  interleave		(true|false)		 'false'>
+          id                    CDATA                    #REQUIRED
+          description           CDATA                    #IMPLIED
+          on_stopfail           (ignore|stonith|block)   'block'
+          restart_type          (ignore|restart|recover) 'ignore'
+          ordered               (true|false)             'true'
+          interleave            (true|false)             'false'>
 
 <!ELEMENT master_slave (incarnation)>
 <!ATTLIST master_slave
-	  id		   CDATA		    #REQUIRED
-	  description	   CDATA		    #IMPLIED
-	  priority	   CDATA		    #IMPLIED
-	  on_stopfail	   (ignore|stonith|block)   'block'
-	  restart_type	   (ignore|restart|recover) 'ignore'
-	  ordered	   (true|false)		    'true'
-	  interleave	   (true|false)		    'false'
-	  max_masters	   CDATA		    #REQUIRED
-	  max_node_masters CDATA		    #REQUIRED>
+          id               CDATA                    #REQUIRED
+          description      CDATA                    #IMPLIED
+          priority         CDATA                    #IMPLIED
+          on_stopfail      (ignore|stonith|block)   'block'
+          restart_type     (ignore|restart|recover) 'ignore'
+          ordered          (true|false)             'true'
+          interleave       (true|false)             'false'
+          max_masters      CDATA                    #REQUIRED
+          max_node_masters CDATA                    #REQUIRED>
 
-<!ELEMENT operations (op*)>
-
-<!-- id is the name of the operation.  ie. "start" or "monitor" etc. -->
-<!ELEMENT op (instance_attributes*)>
-<!ATTLIST op
-	  id		CDATA	      #REQUIRED
-	  name		CDATA	      #REQUIRED
-	  description	CDATA	      #IMPLIED
-	  interval	CDATA	      #IMPLIED
-	  timeout	CDATA	      #IMPLIED>
-
-<!--
-
-     Some of these may need to be overridden on a per-node /
-     per-node-attribute basis (ie, eth1 is eth0 on some nodes...). Same
-     is true for timings.
-     
-     You can have multiple sets of 'instance attributes', the first to
-     have its rule satisfied _and_ define an attribute wins.  Subsequent
-     values for the attribute are ignored.
-
-     Currently the rule is ignored.  This will change shortly after 2.0.0.
-
-     Common instance attributes for resources: 
-      - priority (integer, default=0):
-	dictates the order in which resources will be processed
-
-     Common instance attributes for incarnations: 
-      - incarnation_max (integer, default=1):
-	the number of incarnations to be run
-      - incarnation_node_max (integer, default=1):
-	the maximum number of incarnations to be run on a single node
-
-     Common instance attributes for nodes: 
-      - "standby" (boolean, default=FALSE)
-	if TRUE, indicates that resources can not be run on the node
-
--->
+<!-- Annotated version -->
 <!ELEMENT instance_attributes (rule?, attributes)>
 
-<!-- CONSTRAINTS -->
-<!ELEMENT constraints (rsc_dependancy*,rsc_ordering*,rsc_location*)>
 
-<!-- Every constraint entry also has a 'lifetime' attribute, which
-     expresses when this is applicable. For example, a constraint could
-     be purged automatically when a node reboots, or after a week.
-
-     TODO: The syntax of this one needs more definition... -->
-
-<!-- Express dependencies between the elements.
-     
-     The type specifies whether or not a resource affects the start/stop
-     ordering (ie, that resource 'from' should be started after 'to'),
-     or whether it's a placement dependency (ie, 'from' should run on the
-     same node as 'to').
-
-     The 'strength' describes how strong the dependency is (RFC-style):
-     
-     An ordering dependency of strength 'must' implies that a resource
-     must be started after another one; it will not work without the
-     other one being present. If it was 'should' only, the resource will
-     try to be started afterwards, but still be started if it is not
-     present and will be started beforehand if required (perhaps if a
-     constraint loop was created).
-     
-     An ordering dependency of "must not" would imply the opposite; if
-     some higher priority resource has led to the 'to' being activated,
-     this resource will not be run.
-
-     The placement policies work in the same fashion.
-
- -->
+ <!-- Annotated version -->
 <!ELEMENT rsc_order EMPTY>
 <!ATTLIST rsc_order
-	  id	    CDATA #REQUIRED
-	  from	    CDATA #REQUIRED
-	  to	    CDATA #REQUIRED
-	  lifetime  CDATA #IMPLIED
-	  timestamp CDATA #REQUIRED
-	  type	    (before|after)>
+          id        CDATA #REQUIRED
+          from      CDATA #REQUIRED
+          action    (start|stop)        'start'
+          type      (before|after)      'after'
+          to        CDATA #REQUIRED
+          lifetime  CDATA #IMPLIED
+          timestamp CDATA #REQUIRED
+          symetrical    (TRUE|FALSE)    'TRUE'>
 
+
+<!-- Annotated version -->
 <!ELEMENT rsc_colocation EMPTY>
 <!ATTLIST rsc_colocation
-	  id	    CDATA #REQUIRED
-	  from	    CDATA #REQUIRED
-	  to	    CDATA #REQUIRED
-	  lifetime  CDATA #IMPLIED
-	  timestamp CDATA #REQUIRED
-	  type	    (must|mustnot) #REQUIRED>
+          id        CDATA #REQUIRED
+          from      CDATA #REQUIRED
+          to        CDATA #REQUIRED
+          lifetime  CDATA #IMPLIED
+          timestamp CDATA #REQUIRED
+          type      (must|mustnot) #REQUIRED>
 
-<!-- Specify which nodes are eligible for running a given resource. 
-     
-     During processing, all rsc_to_node for a given rsc are evaluated.
-     
-     All nodes start out with their base weight (which defaults to zero,
-     but can be modified via a node_baseweight dependency), and then all
-     matching rsc_to_node constraints modify their weight; it is either
-     in- or decremented accordingly.
 
-     "set" is different, the first set will finalize the score for the
-     matching nodes.
-
-     Then the highest non-zero available node is determined to place the
-     resource.
-     
-     The rsc references, suprisingly, a resource id.
-
-  -->
-
+<!-- Annotated version -->
 <!ELEMENT rsc_location (rule+)>
 <!ATTLIST rsc_location
-	  id	      CDATA #REQUIRED
-	  description CDATA #IMPLIED
-	  rsc	      CDATA #REQUIRED
-	  lifetime    CDATA #IMPLIED
-	  timestamp   CDATA #IMPLIED>
+          id          CDATA #REQUIRED
+          description CDATA #IMPLIED
+          rsc         CDATA #REQUIRED
+          lifetime    CDATA #IMPLIED
+          timestamp   CDATA #IMPLIED>
 
-<!--
 
-    A special case exists when no node_expressions are present.	 In this case
-    the rule applies to all nodes.
-
-    "score" adjusts the prefernce for running on the matched nodes.  Nodes that
-    end up with a -ve score will never run the resource.
-
-    Two special values of "score" exist: INFINITY and -INFINITY
-    Processing of these special values is as follows:
-      INFINITY +/- -INFINITY :  ERROR
-      INFINITY +/-  int      :  INFINITY
-     -INFINITY +/-  int      : -INFINITY
-
-    "boolean_op" determins how the results of multiple expressions are
-    combined.
-
--->
+<!-- Annotated version -->
 <!ELEMENT rule (expression*)>
 <!ATTLIST rule
-	  id	     CDATA	  #REQUIRED
-	  score	     CDATA	  #IMPLIED
-	  boolean_op (or|and)	  'and'>
+          id         CDATA        #REQUIRED
+          score      CDATA        #IMPLIED
+          boolean_op (or|and)     'and'>
 
-<!--
-    Reference a set of nodes, either by directly specifying a node id,
-      uname, or by matching its attributes. 
-    
-    (You can express "OR" by having multiple rsc_to_node / node_baseweight
-    entries.)
-    
-    "id" is mostly for debug purposes
-    
-    Two builtin attributes will be node id and node uname so that:
-      attribute=id value=8C05CA5C-C9E3-11D8-BEE6-000A95B71D78 operation=eq, and
-      attribute=uname value=test1 operation=eq
-    would both be valid tests.
 
-    An extra builtin attribute called "is_dc" will be set to true or false
-      depending on whether the node is operating as the DC for the cluster.
-      Valid tests would be:
-	attribute=is_dc operation=eq value=true, and
-	attribute=is_dc operation=eq value=false, and
-	attribute=is_dc operation=ne value=false 
-	(for those liking double negatives :)
-
-    Additionally, the "running" and "not_running" tests checks to see if
-      the value specified for "attribute" is a resource that is (not) running
-      on the node.  So these would both be valid tests.
-	attribute=myWebServer operation=running, and
-	attribute=myWebServer operation=not_running
-
-    "type" determines how the values being tested.
-      For "integer", they would be converted into a number format (probably
-      floats) before being compared.
-      The "version" type is intended to solve the problem of comparing
-      1.2 and 1.10
-
--->
-
+<!-- Annotated version -->
 <!ELEMENT expression EMPTY>
 <!ATTLIST expression
-	  id	     CDATA		      #REQUIRED
-	  attribute  CDATA		      #REQUIRED
-	  operation  (lt|gt|lte|gte|eq|ne|defined|not_defined|colocated|not_colocated)
-	  value	     CDATA		      #IMPLIED
-	  type	     (integer|string|version) 'string'>
-
-<!ELEMENT metadata ra_entry>
-<!--
-
-    id is largely ignored except for debug purposes
-
-    class will be one of lsb, ocf, heartbeat or stonith but remains a CDATA
-      in case others are added in the future
-
-    type is (strangely) the type of the RA (something like apache or IPaddr)
-
-    This section is compiled automatically from information supplied by the
-      LRM.  
-
-    In order to reduce bloat and information redundancy the assumption has
-      been made that all instances of an RA in the cluster carry the same
-      metadata values regardless of their version or the node they reside on.
-      The only exception to this is the version tag which can be different.
-      
-      Anyone caught breaking this rule will be shot on sight.
-
--->
-<!ELEMENT ra_entry (parameters)>
-<!ATTLIST ra_entry 
-	id	   CDATA			#REQUIRED
-<!-- possibly: version CDATA #REQUIRED -->
-	class	   (ocf|init|heartbeat|stonith)	#REQUIRED
-	type	   CDATA			#REQUIRED>
-
-<!-- STATUS SECTION -->
-<!-- Details about the status of each node configured.
-
-     In places, a "source" attribute has been added so that the CRM is able
-     to know where this information came from.	This is helpful during the
-     merging process (performed by a new DC and perhaps periodically) as it
-     allows the CRM to allow nodes to be authoritive about themselves if
-     appropriate (ie. which resources it is running, but perhaps not always
-     about its own health). TODO: Clarify meaning.
- 
-     To avoid duplication of data, state entries only carry references to
-     nodes and resources. 
-     
--->
-<!ELEMENT status (crm_state,node_state*)>
-
-<!-- Information about the CRM Layer of the cluster.
-
-	"dc_uname" is the uname of the currently elected as DC.
-
-	More attributes may be added later point.
-
--->
-<!ELEMENT crm_status EMPTY>
-<!ATTLIST crm_status 
-	id	   CDATA #REQUIRED
-	dc_uname   CDATA #REQUIRED>
+          id         CDATA                    #REQUIRED
+          attribute  CDATA                    #REQUIRED
+          operation  (lt|gt|lte|gte|eq|ne|defined|not_defined|colocated|not_colocated)
+          value      CDATA                    #IMPLIED
+          type       (integer|string|version) 'string'>
 
 
-<!--	The state of a given node.  
-	
-	This information is updated by the DC based on inputs from 
-	sources such as the CCM, status messages from remote LRMs and 
-	requests from other nodes. 
+<!-- Annotated version -->
+<!ELEMENT status (node_state*)>
 
-	"id" is the node's UUID.
-
-	"state" is either active (both CRM and CCM are up and the node 
-	is fully active in the cluster), in_ccm (node is around in the 
-	membership, but not taking part in CRM activities) or down
-	(neither).
-	
-	"unclean" is set to the current time when the node leaves the 
-	cluster ungracefully and is an indication that the node 
-	needs to be shot.  Any invokation of the PE while this attibute
-	will result in a STONITH op being sent to the TE (which may or
-	may not get to invoke it if the transition is aborted).
-
-	Setting "clear_unclean" will unset this field.	Normally this is
-	after the Transitioner has successfully shot the node, OR the node
-	rejoins the cluster cleanly.
-
-	"shutdown" and "clear_shutdown" operate in the same manner as
-	above but for shutting down the CRMd.
-
-	"expected" is our expectation of the state. This requires some
-	book-keeping on the part of the other nodes to remember the last
-	state of any other node by updating it to the latest relayed to
-	them.
-	
-	"source" then states which node contributed this state entry.
-	If unclean is not set, then "source" refers to the node that
-	last updated the "node_state" entry.
-
-	There is a period of time between when we recognise the node
-	is unlean and when it is shot.	The "assassin" attribute records the
-	name of the node which has been asked to shoot it.
-
-	A node which is expected == down && join == member is, in
-	fact, going down. The Policy Engine will migrate resources away
-	from it.
-	
-	Ideally, there should be a node_state entry for every entry in
-	the <nodes> list.
--->
+{ 
 <!ELEMENT node_state (lrm, attributes)>
 <!ATTLIST node_state
-	id		CDATA			#REQUIRED
-	crmd		(online|offline)	'offline'
-	join		(pending|member|down)	'down'
-	expected	(pending|member|down)	'down'
-	in_ccm		(true|false)		'false'
-	unclean		CDATA			#IMPLIED
-	shutdown	CDATA			#IMPLIED
-	clear_unclean	CDATA			#IMPLIED
-	clear_shutdown	CDATA			#IMPLIED
-	assassin	CDATA			#IMPLIED
-	source		CDATA			#IMPLIED
-	timestamp	CDATA			#REQUIRED>
+        id              CDATA                   #REQUIRED
+        uname           CDATA                   #REQUIRED
+        crmd            (online|offline)        'offline'
+        join            (pending|member|down)   'down'
+        expected        (pending|member|down)   'down'
+        in_ccm          (true|false)            'false'
+        shutdown        CDATA                   #IMPLIED
+        timestamp       CDATA                   #REQUIRED>
 
-<!-- Information from the Local Resource Manager of the node.
-     
-     Running resources, installed Resource Agents etc. -->
-     
-<!ELEMENT lrm (lrm_resources,lrm_agents)>
+<!ELEMENT lrm (lrm_resources)>
 <!ATTLIST lrm
-	id	CDATA #REQUIRED
-	version	CDATA #REQUIRED>
+        id      CDATA #REQUIRED
+        version CDATA #REQUIRED>
 
-<!-- TODO: Need to define howto handle agents provided by multiple
-     sources. The OCF RA spec allows a resource type to be provided by
-     multiple Resource Agents; how do we deal with that? -->
-<!ELEMENT lrm_agents (lrm_agent*)>
 
-<!ELEMENT lrm_agent (resource-agent?)>
-<!ATTLIST lrm_agent
-	type	CDATA			     #REQUIRED
-	class	(ocf|init|heartbeat|stonith) #REQUIRED
-	version CDATA			     #REQUIRED>
+<!-- Annotated version -->
+<!ELEMENT lrm_resources (lrm_resource*)>
+<!ELEMENT lrm_resource (lrm_rsc_op)>
+<!ATTLIST lrm_resource
+          id            CDATA #REQUIRED
+          rsc_state     (stopped|starting|started|fail|restarting|stopping|stop_fail)
+                                #REQUIRED
+          last_op       CDATA #REQUIRED
+          op_status     CDATA #REQUIRED
+          rc_code       CDATA #REQUIRED>
 
-<!-- TODO: In fact, this should reference the OCF RA DTD for class ==
-	   ocf, but I don't know how to specify that ;-)
+<!ELEMENT lrm_rsc_op)>
+<!ATTLIST lrm_rsc_op
+          id            CDATA #REQUIRED
+          operation     CDATA #REQUIRED
+          op_status     CDATA #REQUIRED
+          rc_code       CDATA #REQUIRED>
 
-     "last_op" records the last known operation invoked on a resource/node 
-	combination.  It is either supplied by the LRM or updated by the
-	Transitioner when an action is invoked.
 
-     "op_code" is supplied by the LRM and conforms to this enum:
-typedef enum {
-	LRM_OP_DONE,
-	LRM_OP_CANCELLED,
-	LRM_OP_TIMEOUT,
-	LRM_OP_NOTSUPPORTED,
-	LRM_OP_ERROR,
-} op_status_t;
-
-     "rsc_state" is really only a guide.  All actions are taken based on
-	"last_op" and "op_code"
-	
- -->
-<!ELEMENT resource_agent EMPTY>
-
-<!ELEMENT lrm_resources (rsc_state*)>
-
-<!ELEMENT rsc_state (can_fence)*>
-<!ATTLIST rsc_state
-	  id		CDATA #REQUIRED
-	  rsc_id	CDATA #REQUIRED
-	  node_id	CDATA #IMPLIED
-	  ra_state	(stopped|starting|started|fail|restarting|stopping|stop_fail)
-				#REQUIRED
-	  last_op	CDATA #REQUIRED
-	  op_code	CDATA #REQUIRED
-	  timestamp	CDATA #REQUIRED>
-
-<!-- id is the uname of the node that can be fenced by this resource -->
-<!ELEMENT can_fence EMPTY>
-<!ATTLIST can_fence
-	  id		CDATA #REQUIRED>
+<!ELEMENT nvpair EMPTY>
+<!ATTLIST nvpair
+          id            CDATA #REQUIRED
+          name          CDATA #REQUIRED
+          value         CDATA #IMPLIED>
+<!ELEMENT attributes (nvpair*)>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
@@ -682,54 +311,12 @@ typedef enum {
 <!-- ============================================================== -->
 <!-- ============================================================== -->
 
-<!-- crm_message: The messages we exchange between components and over
-     the network. 
-
-	For type == reply, reference references the id of the original
-	msg.
-  -->
-
-<!ELEMENT crm_message (msg_addr,msg_addr,operation,op_reply?,msg_data)>
-<!ATTLIST crm_message
-	  version	CDATA '1'
-	  type		(request|reply)	#REQUIRED
-	  id		CDATA		#REQUIRED
-	  reference	CDATA		#IMPLIED
-	  timestamp	CDATA		#REQUIRED>
-
+<!-- not currently used -->
 <!ELEMENT msg_addr EMPTY>
 <!ATTLIST msg_addr
 	part		(src|dst)	#REQUIRED
 	subsystem	(dc|crmd|dcib|cib|pe|te|lrm|admin) #REQUIRED
 	host		CDATA		#IMPLIED>
-
-<!-- What kinds of payload do we carry:
-     op_reply	A generic reply message to a request
-
-     TODO: Can msg_data not simply be melted into crm_message, cutting
-     out one level of redirection?  
-     (Andrew) Lets leave it separated least crm_message get too cluttered
-
-     TODO: crm_message.type == reply is implicit if op_reply is present,
-     should be merged
-     (Andrew) Lets leave it in incase we want to piggyback requests on replies
-
--->
-<!ELEMENT msg_data (rsc_op?,rsc_state?,lrm_state?,cib_fragment?,transition_graph?)>
-
-<!-- need to rationalize the list of operations -->
-<!ELEMENT operation (nvpair*)>
-<!ATTLIST operation
-	  op (noop|bump|query|create|update|delete|erase|store|replace|forward|join_ack|welcome|ping|vote|hello|announce|dc_beat|pe_calc|abort|quit|event_cc|te_abort|transition|te_complete|start_shutdown|req_shutdown|do_shutdown) 'noop'
-	  verbose	(true|false)	#IMPLIED
-	  timeout	CDATA		#REQUIRED>
-
-<!-- verbose reply for user consumption, may be useful. -->
-<!ELEMENT op_reply EMPTY>
-<!ATTLIST op_reply
-	  result	(ok|fail)	#REQUIRED
-	  verbose	CDATA		#IMPLIED
-	  timestamp	CDATA		#REQUIRED>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
@@ -745,35 +332,3 @@ typedef enum {
 
 <!ELEMENT attributes (nvpair*)>
 
-<!-- 
-
- Shamelessly stolen from:
-
-   http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/ra-api-1.dtd 
-
- but since it is Resource Agent metadata that we're storing here, 
- it makes sense.
-
--->
-
-<!ELEMENT parameters (parameter*)>
-
-<!ELEMENT action_set (action*)>
-
-<!ELEMENT parameter (longdesc+,shortdesc+,content)>
-<!ATTLIST parameter
-	name	CDATA	#REQUIRED
-	unique	(1|0)	'0'>
-
-<!ELEMENT longdesc ANY>
-<!ATTLIST longdesc
-	lang	NMTOKEN #IMPLIED>
-
-<!ELEMENT shortdesc ANY>
-<!ATTLIST shortdesc
-	lang	NMTOKEN #IMPLIED>
-
-<!ELEMENT content EMPTY>
-<!ATTLIST content
-	type	(string|integer|boolean) #REQUIRED
-	default CDATA			 #IMPLIED>
