@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.60 2005/04/16 16:59:27 andrew Exp $ */
+/* $Id: tengine.c,v 1.61 2005/04/21 15:44:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,9 @@ void fire_synapse(synapse_t *synapse);
 gboolean initiate_action(action_t *action);
 gboolean confirm_synapse(synapse_t *synapse, int action_id);
 void check_synapse_triggers(synapse_t *synapse, int action_id);
+void cib_action_updated(
+	const HA_Message *msg, int call_id, int rc,
+	crm_data_t *output, void *user_data);
 
 gboolean in_transition = FALSE;
 te_timer_t *transition_timer = NULL;
@@ -114,14 +117,13 @@ initialize_graph(void)
  *            not allowed to)
  */
 int
-match_graph_event(action_t *action, crm_data_t *event)
+match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 {
 	const char *allow_fail  = NULL;
 	const char *this_action = NULL;
 	const char *this_node   = NULL;
 	const char *this_rsc    = NULL;
 
-	const char *event_node;
 	const char *event_rsc;
 	const char *rsc_state;
 	const char *event_action;
@@ -136,7 +138,6 @@ match_graph_event(action_t *action, crm_data_t *event)
 		return -1;
 	}
 	
-	event_node   = crm_element_value(event, XML_LRM_ATTR_TARGET);
 	event_action = crm_element_value(event, XML_LRM_ATTR_LASTOP);
 	event_rsc    = crm_element_value(event, XML_ATTR_ID);
 	event_rc     = crm_element_value(event, XML_LRM_ATTR_RC);
@@ -198,35 +199,36 @@ match_graph_event(action_t *action, crm_data_t *event)
 	/* Process OP status */
 	allow_fail = crm_element_value(match->xml, "allow_fail");
 	switch(op_status_i) {
+		case LRM_OP_PENDING:
+			/* should never happen */
+			CRM_DEV_ASSERT(op_status_i != LRM_OP_PENDING);
+			break;
 		case LRM_OP_DONE:
 			break;
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
+			crm_warn("Action %s for \"%s\" on %s failed: %s",
+				event_action, event_rsc, event_node,
+				op_status2text(op_status_i));
 			if(FALSE == crm_is_true(allow_fail)) {
-				crm_err("Action %s for \"%s\" on %s resulted in"
-					" failure (%d)... aborting transition.",
-					event_action, event_rsc, event_node,
-					op_status_i);
 				send_complete(
-					"Action failed", match->xml, te_failed);
+					"Action failed", event, te_failed);
 				return -2;
 			}
 			break;
 		case LRM_OP_CANCELLED:
 			/* do nothing?? */
-			crm_warn("Dont know what to do for cancelled ops yet");
+			crm_err("Dont know what to do for cancelled ops yet");
 			break;
 		default:
 			crm_err("Unsupported action result: %d", op_status_i);
 			send_complete("Unsupport action result",
-				      match->xml, te_failed);
+				      event, te_failed);
 			return -2;
 	}
 	
-	crm_devel("Action %d was successful, looking for next action",
-		match->id);
-
+	crm_debug("Action %d confirmed", match->id);
 	match->complete = TRUE;
 	return match->id;
 }
@@ -329,7 +331,7 @@ match_down_event(const char *target, const char *filter, int rc)
 }
 
 gboolean
-process_graph_event(crm_data_t *event)
+process_graph_event(crm_data_t *event, const char *event_node)
 {
 	int action_id          = -1;
 	int op_status_i        = 0;
@@ -374,7 +376,7 @@ process_graph_event(crm_data_t *event)
 		slist_iter(
 			action, action_t, synapse->actions, lpc2,
 
-			action_id = match_graph_event(action, event);
+			action_id = match_graph_event(action, event,event_node);
 			if(action_id != -1) {
 				break;
 			}
@@ -430,24 +432,31 @@ check_for_completion(void)
 	} else {
 		/* restart the transition timer again */
 		crm_devel("Transition not yet complete");
-		print_state(LOG_DEV);
 		transition_timer->timeout = next_transition_timeout;
 		start_te_timer(transition_timer);
 	}
 }
 
+#ifdef TESTING
+#   define te_log_action(log_level, fmt...) { \
+		do_crm_log(log_level, __FUNCTION__, NULL, fmt);	\
+		fprintf(stderr, fmt);				\
+	}
+#else
+#   define te_log_action(log_level, fmt...) do_crm_log(log_level, __FUNCTION__, NULL, fmt)
+#endif
+
 gboolean
 initiate_action(action_t *action) 
 {
 	gboolean ret = FALSE;
+	gboolean send_command = FALSE;
 
 	const char *on_node   = NULL;
 	const char *id        = NULL;
 	const char *task      = NULL;
 	const char *timeout   = NULL;
-	const char *destination = NULL;
 	const char *msg_task    = XML_GRAPH_TAG_RSC_OP;
-	crm_data_t *rsc_op  = NULL;
 
 	on_node  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	id       = crm_element_value(action->xml, XML_ATTR_ID);
@@ -457,21 +466,12 @@ initiate_action(action_t *action)
 	if(id == NULL || strlen(id) == 0
 	   || task == NULL || strlen(task) == 0) {
 		/* error */
-#ifdef TESTING
-		fprintf(stderr,"Failed on corrupted command: %s (id=%s) %s",
-			crm_element_name(action->xml),
-			crm_str(id), crm_str(task));
-#endif			
-		crm_err("Failed on corrupted command: %s (id=%s) %s",
+		te_log_action(LOG_ERR, "Failed on corrupted command: %s (id=%s) %s",
 			crm_element_name(action->xml),
 			crm_str(id), crm_str(task));
 
 	} else if(action->type == action_type_pseudo){
-#ifdef TESTING
-		fprintf(stderr,"Executing pseudo-event (%d): %s on %s",
-			action->id, task, on_node);
-#endif			
-		crm_info("Executing pseudo-event (%d): "
+		te_log_action(LOG_INFO, "Executing pseudo-event (%d): "
 			 "%s on %s", action->id, task, on_node);
 		
 		action->complete = TRUE;
@@ -481,7 +481,6 @@ initiate_action(action_t *action)
 	} else if(action->type == action_type_crm
 		  && safe_str_eq(task, XML_CIB_ATTR_STONITH)){
 		
-/*         <args target="node1"/> */
 		crm_data_t *action_args = find_xml_node(
 			action->xml, XML_TAG_ATTRS, TRUE);
 		const char *uuid = NULL;
@@ -502,11 +501,9 @@ initiate_action(action_t *action)
 			);
 		CRM_DEV_ASSERT(target != NULL);
 		CRM_DEV_ASSERT(uuid != NULL);
-		
+
+		te_log_action(LOG_INFO, "Executing fencing operation (%s) on %s", id, target);
 #ifdef TESTING
-		crm_info("Executing fencing operation (%s) on %s", id, target);
-		fprintf(stderr, "Executing fencing operation (%s) on %s\n",
-			id, target);
 		ret = TRUE;
 		action->complete = TRUE;
 #else
@@ -517,8 +514,6 @@ initiate_action(action_t *action)
 		st_op->node_name = crm_strdup(target);
 		st_op->node_uuid = crm_strdup(uuid);
 
-		crm_info("Executing fencing operation (%s) on %s", id, target);
-
 		if(stonithd_input_IPC_channel() == NULL) {
 			crm_err("Cannot fence %s - stonith not available",
 				target);
@@ -526,118 +521,253 @@ initiate_action(action_t *action)
 		} else if (ST_OK == stonithd_node_fence( st_op )) {
 			ret = TRUE;
 		}
-		return ret;
 #endif
 		
 	} else if(on_node == NULL || strlen(on_node) == 0) {
 		/* error */
-#ifdef TESTING
-		fprintf(stderr,
-			"Failed on corrupted command: %s (id=%s) %s on %s\n",
-			crm_element_name(action->xml), crm_str(id),
-			crm_str(task), crm_str(on_node));
-#endif
-		crm_err("Failed on corrupted command: %s (id=%s) %s on %s",
-			crm_element_name(action->xml), crm_str(id),
-			crm_str(task), crm_str(on_node));
+		te_log_action(LOG_ERR,
+			      "Failed on corrupted command: %s (id=%s) %s on %s\n",
+			      crm_element_name(action->xml), crm_str(id),
+			      crm_str(task), crm_str(on_node));
 			
 	} else if(action->type == action_type_crm){
-#ifdef TESTING
-		fprintf(stderr, "Executing crm-event (%s): %s on %s\n",
-			 id, task, on_node);
-#endif
-		crm_info("Executing crm-event (%s): %s on %s",id,task,on_node);
+		te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s",
+			      id, task, on_node);
 
 		action->complete = TRUE;
-		destination = CRM_SYSTEM_CRMD;
 		msg_task = task;
-		ret = TRUE;
+		send_command = TRUE;
 
 	} else if(action->type == action_type_rsc){
-		crm_data_t *rsc = find_xml_node(
-			action->xml, XML_CIB_TAG_RESOURCE, TRUE);
-#ifdef TESTING
-		fprintf(stderr, "Executing rsc-op (%s): %s %s on %s\n",
-			 id, task,
-			 crm_element_value(rsc, XML_ATTR_ID),
-			 on_node);
-#endif
-		crm_info("Executing rsc-op (%s): %s %s on %s",
-			 id, task, crm_element_value(rsc,XML_ATTR_ID), on_node);
-
-		/* let everyone know this was invoked */
-		if(safe_str_eq(CRMD_RSCSTATE_MON, task)) {
-			/* no update required for monitor ops */
-			action->complete = TRUE;
-			
-		} else {
-			do_update_cib(action->xml, -1);
-		}
-		
-		/*
-		  <msg_data>
-		  <rsc_op id="operation number" on_node="" task="">
-		  <resource>...</resource>
-		*/
-#if 1
-		rsc_op  = copy_xml_node_recursive(action->xml);
-#else
-		rsc_op = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
-		
-		set_xml_property_copy(rsc_op, XML_ATTR_ID, id);
-		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TASK, task);
-		set_xml_property_copy(rsc_op, XML_LRM_ATTR_TARGET, on_node);
-
-		add_node_copy(rsc_op, rsc);
-#endif
-		destination = CRM_SYSTEM_LRMD;
+		cib_action_update(action, LRM_OP_PENDING);
 		ret = TRUE;
 			
 	} else {
-#ifdef TESTING
-		fprintf(stderr, "Failed on unsupported command type: "
-			"%s, %s (id=%s) on %s", crm_element_name(action->xml),
-			task, id, on_node);
-#endif
-		crm_err("Failed on unsupported command type: "
-			"%s, %s (id=%s) on %s",
-			crm_element_name(action->xml), task, id, on_node);
+		te_log_action(LOG_ERR,
+			      "Failed on unsupported command type: "
+			      "%s, %s (id=%s) on %s",
+			      crm_element_name(action->xml), task, id, on_node);
 	}
 
-	if(ret) {
+	if(send_command) {
 		HA_Message *cmd = NULL;
 		char *counter = crm_itoa(transition_counter);
 
-		if(rsc_op != NULL) {
-			crm_xml_debug(rsc_op, "Performing");
-		}
-		cmd = create_request(msg_task, rsc_op, on_node, destination,
+		cmd = create_request(msg_task, NULL, on_node, CRM_SYSTEM_CRMD,
 				     CRM_SYSTEM_TENGINE, NULL);
 
 		ha_msg_add(cmd, "transition_id", crm_str(counter));
 #ifndef TESTING
-		send_ipc_message(crm_ch, cmd);
+		ret = send_ipc_message(crm_ch, cmd);
 #else
+		ret = TRUE;
 		crm_log_message(LOG_INFO, cmd);
 #endif
 		crm_free(counter);
 
-		if(action->timeout > 0) {
+		if(ret && action->timeout > 0) {
 			crm_devel("Setting timer for action %d",action->id);
+			action->timer->reason = timeout_action_warn;
 			start_te_timer(action->timer);
 		}
-
 	}
-	free_xml(rsc_op);
 	return ret;
 }
+
+gboolean
+cib_action_update(action_t *action, int status)
+{
+	char *code = NULL;
+	crm_data_t *fragment = NULL;
+	crm_data_t *state    = NULL;
+	crm_data_t *rsc      = NULL;
+	crm_data_t *xml_op   = NULL;
+
+	enum cib_errors rc = cib_ok;
+	const char *task   = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+	const char *rsc_id = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
+	const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	const char *target_uuid =
+		crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+
+	int call_options = cib_scope_local|cib_inhibit_notify|cib_quorum_override;
+
+	if(status == LRM_OP_TIMEOUT) {
+		if(crm_element_value(action->xml, XML_LRM_ATTR_RSCID) != NULL) {
+			crm_warn("%s: %s %s on %s timed out",
+				 crm_element_name(action->xml), task, rsc_id, target);
+		} else {
+			crm_warn("%s: %s on %s timed out",
+				 crm_element_name(action->xml), task, target);
+		}
+#ifdef TESTING
+	/* turn the "pending" notification into a "op completed" notification
+	 *  when testing... exercises more code this way.
+	 */
+	} else if(status == LRM_OP_PENDING) {
+		status = LRM_OP_DONE;
+#endif
+	}
+	code = crm_itoa(status);
+	
+/*
+  update the CIB
+
+<node_state id="hadev">
+      <lrm>
+        <lrm_resources>
+          <lrm_resource id="rsc2" last_op="start" op_code="0" target="hadev"/>
+*/
+
+	fragment = NULL;
+	state    = create_xml_node(NULL, XML_CIB_TAG_STATE);
+
+	set_xml_property_copy(state, XML_ATTR_UUID,  target_uuid);
+	set_xml_property_copy(state, XML_ATTR_UNAME, target);
+	
+	rsc = create_xml_node(state, XML_CIB_TAG_LRM);
+	rsc = create_xml_node(rsc,   XML_LRM_TAG_RESOURCES);
+	rsc = create_xml_node(rsc,   XML_LRM_TAG_RESOURCE);
+
+	xml_op = create_xml_node(rsc,XML_LRM_TAG_RSC_OP);
+	
+	set_xml_property_copy(rsc,    XML_ATTR_ID, rsc_id);
+	set_xml_property_copy(xml_op, XML_ATTR_ID, task);
+	
+	if(action->interval > 0) {
+		int len = 0;
+		char *op_id = NULL;
+		len = 34 + strlen(task);
+		crm_malloc(op_id, sizeof(char)*len);
+		if(op_id != NULL) {
+			sprintf(op_id, "%s_%d", task,
+				action->interval);
+		}
+		set_xml_property_copy(xml_op, XML_ATTR_ID, op_id);
+		crm_free(op_id);
+	}
+	
+	set_xml_property_copy(xml_op, XML_LRM_ATTR_TASK, task);
+	set_xml_property_copy(rsc, XML_LRM_ATTR_RSCSTATE,
+			      get_rsc_state(task, status));
+	
+	set_xml_property_copy(rsc, XML_LRM_ATTR_OPSTATUS, code);
+	set_xml_property_copy(rsc, XML_LRM_ATTR_RC, code);
+	set_xml_property_copy(rsc, XML_LRM_ATTR_LASTOP, task);
+	
+	set_xml_property_copy(xml_op, XML_LRM_ATTR_OPSTATUS, code);
+	set_xml_property_copy(xml_op, XML_LRM_ATTR_RC, code);
+	set_xml_property_copy(xml_op, "origin", __FUNCTION__);
+	
+	set_node_tstamp(xml_op);
+	
+	crm_free(code);
+
+	fragment = create_cib_fragment(state, NULL);
+	
+	crm_devel("Updating CIB with \"%s\" (%s): %s %s on %s",
+		  status<0?"new action":XML_ATTR_TIMEOUT,
+		  crm_element_name(action->xml), crm_str(task), rsc_id, target);
+	
+#ifndef TESTING
+	rc = te_cib_conn->cmds->modify(
+		te_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, call_options);
+
+	crm_debug("Updating CIB with %s action %d: %s %s on %s (call_id=%d)",
+		  op_status2text(status), action->id, task, rsc_id, target, rc);
+
+	if(status == LRM_OP_PENDING) {
+		crm_debug("Waiting for callback id: %d)", rc);
+		add_cib_op_callback(rc, FALSE, action, cib_action_updated);
+	}
+#else
+	fprintf(stderr, "Initiating action %d: %s %s on %s",
+		action->id, task, rsc_id, target);
+	call_options = 0;
+	{
+		HA_Message *cmd = ha_msg_new(11);
+		ha_msg_add(cmd, F_TYPE,		T_CRM);
+		ha_msg_add(cmd, F_CRM_VERSION,	CRM_VERSION);
+		ha_msg_add(cmd, F_CRM_MSG_TYPE, XML_ATTR_REQUEST);
+		ha_msg_add(cmd, F_CRM_TASK,	CRM_OP_EVENTCC);
+		ha_msg_add(cmd, F_CRM_SYS_TO,   CRM_SYSTEM_TENGINE);
+		ha_msg_add(cmd, F_CRM_SYS_FROM, CRM_SYSTEM_TENGINE);
+		ha_msg_addstruct(cmd, crm_element_name(state), state);
+		send_ipc_message(crm_ch, cmd);
+	}
+#endif
+	free_xml(fragment);
+	free_xml(state);
+
+	if(rc < cib_ok) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+void
+cib_action_updated(
+	const HA_Message *msg, int call_id, int rc, crm_data_t *output, void *user_data)
+{
+	HA_Message *cmd = NULL;
+	crm_data_t *rsc_op = NULL;
+	const char *task    = NULL;
+	const char *rsc_id  = NULL;
+	const char *on_node = NULL;
+
+	action_t *action = user_data;
+	char *counter = crm_itoa(transition_counter);
+
+	CRM_DEV_ASSERT(action != NULL);      if(crm_assert_failed) { return; }
+	CRM_DEV_ASSERT(action->xml != NULL); if(crm_assert_failed) { return; }
+
+	rsc_op  = action->xml;
+	task    = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+	rsc_id  = crm_element_value(rsc_op, XML_LRM_ATTR_RSCID);
+	on_node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
+
+	if(rc < 0) {
+		crm_err("Update for action %d: %s %s on %s FAILED",
+			action->id, task, rsc_id, on_node);
+		send_complete(cib_error2string(rc), output, te_failed);
+		return;
+	}
+	
+	crm_info("Initiating action %d: %s %s on %s",
+		 action->id, task, rsc_id, on_node);
+	
+	if(rsc_op != NULL) {
+		crm_xml_debug(rsc_op, "Performing");
+	}
+	cmd = create_request(
+		task, rsc_op, on_node, CRM_SYSTEM_LRMD,CRM_SYSTEM_TENGINE,NULL);
+	
+	ha_msg_add(cmd, "transition_id", counter);
+	crm_free(counter);
+
+#ifndef TESTING
+	send_ipc_message(crm_ch, cmd);
+#else
+	crm_log_message(LOG_INFO, cmd);
+#endif
+	
+	if(action->timeout > 0) {
+		crm_devel("Setting timer for action %d",action->id);
+		action->timer->reason = timeout_action_warn;
+		start_te_timer(action->timer);
+	}
+}
+
+
 
 gboolean
 initiate_transition(void)
 {
 	crm_info("Initating transition");
 
-	process_graph_event(NULL);
+	process_graph_event(NULL, NULL);
 
 	return TRUE;
 }
@@ -692,7 +822,7 @@ fire_synapse(synapse_t *synapse)
 		return;
 	}
 	
-	crm_devel("All inputs for synapse %d satisfied... invoking actions",
+	crm_debug("All inputs for synapse %d satisfied... invoking actions",
 		  synapse->id);
 
 	synapse->complete = TRUE;
@@ -709,7 +839,8 @@ fire_synapse(synapse_t *synapse)
 
 		if(passed == FALSE) {
 			crm_err("Failed initiating <%s id=%d> in synapse %d",
-				crm_element_name(action->xml), action->id, synapse->id);
+				crm_element_name(action->xml),
+				action->id, synapse->id);
 
 			send_complete(
 				"Action init failed", action->xml, te_failed);
@@ -732,8 +863,7 @@ confirm_synapse(synapse_t *synapse, int action_id)
 	slist_iter(
 		action, action_t, synapse->actions, lpc,
 		
-		if(action->type == action_type_rsc
-		   && action->complete == FALSE) {
+		if(action->complete == FALSE) {
 			complete = FALSE;
 			synapse->confirmed = FALSE;
 			crm_devel("Found an incomplete action"
@@ -741,6 +871,12 @@ confirm_synapse(synapse_t *synapse, int action_id)
 			break;
 		}
 		);
+
+	if(complete) {
+		crm_debug("Synapse %d complete (action=%d)",
+			  synapse->id, action_id);
+	}
+
 	return complete;
 }
 
@@ -750,7 +886,7 @@ process_trigger(int action_id)
 	graph_complete = TRUE;
 	
 	crm_devel("Processing trigger from action %d", action_id);
-	
+
 	/* something happened, stop the timer and start it again at the end */
 	stop_te_timer(transition_timer);
 	
@@ -779,9 +915,8 @@ process_trigger(int action_id)
 			graph_complete = FALSE;
 			
 		} else if(synapse->confirmed == FALSE) {
-			graph_complete = graph_complete
-				&& confirm_synapse(synapse, action_id);
-			
+			gboolean confirmed = confirm_synapse(synapse,action_id);
+			graph_complete = graph_complete && confirmed;
 		}
 
 		crm_devel("%d is %s", synapse->id,

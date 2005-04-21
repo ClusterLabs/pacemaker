@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.24 2005/04/12 15:36:47 andrew Exp $ */
+/* $Id: utils.c,v 1.25 2005/04/21 15:44:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,10 +40,22 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 	HA_Message *cmd = NULL;
 	const char *op = CRM_OP_TEABORT;
 
-	if(reason == te_done || reason == te_timeout) {
+	/* the transition is over... ignore all future callbacks
+	 * resulting from our CIB updates (usually for pending operations)
+	 */
+	remove_cib_op_callback(-1, TRUE);
+	
+	if(reason == te_done) {
 		op = CRM_OP_TECOMPLETE;
 		if(in_transition == FALSE) {
 			crm_warn("Not in transition, not sending message");
+			return;
+		}
+
+	} else if(reason == te_timeout) {
+		op = CRM_OP_TETIMEOUT;
+		if(in_transition == FALSE) {
+			crm_err("Not in transition, not sending message");
 			return;
 		}
 	}
@@ -55,8 +67,15 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 			if(msg != NULL) {
 				if(safe_str_eq(crm_element_name(msg),
 					       XML_TAG_CIB)) {
+					crm_data_t *status = get_object_root(XML_CIB_TAG_STATUS, msg);
+					crm_data_t *generation = create_xml_node(NULL, XML_TAG_CIB);
 					crm_debug("Cause:"
 						 " full CIB replace/update");
+					copy_in_properties(generation, msg);
+					crm_xml_debug(generation, "[generation]");
+					crm_xml_debug(status, "[in ]");
+					free_xml(generation);
+					
 				} else {
 					crm_xml_debug(msg, "Cause");
 				}
@@ -76,6 +95,7 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 		case te_failed:
 			crm_err("Transition status: Aborted by failed action: %s",
 				 text);
+			crm_xml_debug(msg, "Cause");
 			print_state(LOG_WARNING);
 			break;
 	}
@@ -107,7 +127,7 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 void
 print_state(int log_level)
 {
-	if(graph == NULL) {
+	if(graph == NULL && log_level > LOG_DEBUG) {
 		do_crm_log(LOG_DEBUG, __FUNCTION__, NULL, "###########");
 		do_crm_log(LOG_DEBUG, __FUNCTION__, NULL,
 			   "\tEmpty transition graph");
@@ -121,8 +141,8 @@ print_state(int log_level)
 		synapse, synapse_t, graph, lpc,
 
 		do_crm_log(log_level, __FUNCTION__, NULL, "Synapse %d %s",
-			  synapse->id,
-			  synapse->complete?"has completed":"is pending");
+			   synapse->id,
+			   synapse->confirmed?"was confirmed":synapse->complete?"was executed":"is pending");
 
 		if(synapse->confirmed == FALSE) {
 			slist_iter(
@@ -202,146 +222,6 @@ print_action(const char *prefix, action_t *action, int log_level)
 	}
 }
 
-#if 0
-void
-send_cib_updates(void)
-{
-}
-#endif
-
-gboolean
-do_update_cib(crm_data_t *xml_action, int status)
-{
-	char *code;
-	char since_epoch[64];
-	crm_data_t *fragment = NULL;
-	crm_data_t *state    = NULL;
-	crm_data_t *rsc      = NULL;
-
-	enum cib_errors rc = cib_ok;
-	
-	const char *task   = crm_element_value(xml_action, XML_LRM_ATTR_TASK);
-	const char *rsc_id = crm_element_value(xml_action, XML_LRM_ATTR_RSCID);
-	const char *target = crm_element_value(xml_action, XML_LRM_ATTR_TARGET);
-	const char *target_uuid =
-		crm_element_value(xml_action, XML_LRM_ATTR_TARGET_UUID);
-
-	int call_options = cib_scope_local|cib_discard_reply|cib_inhibit_notify|cib_quorum_override;
-
-	if(safe_str_neq(CRMD_RSCSTATE_START, task)) {
-		/* no update required for non-start ops */
-		return TRUE;
-	}
-	
-	if(status == LRM_OP_TIMEOUT) {
-		if(crm_element_value(xml_action, XML_LRM_ATTR_RSCID) != NULL) {
-			crm_warn("%s: %s %s on %s timed out",
-				 crm_element_name(xml_action), task, rsc_id, target);
-		} else {
-			crm_warn("%s: %s on %s timed out",
-				 crm_element_name(xml_action), task, target);
-		}
-	}
-	
-/*
-  update the CIB
-
-<node_state id="hadev">
-      <lrm>
-        <lrm_resources>
-          <lrm_resource id="rsc2" last_op="start" op_code="0" target="hadev"/>
-*/
-
-	fragment = NULL;
-	state    = create_xml_node(NULL, XML_CIB_TAG_STATE);
-
-#ifdef TESTING
-
-	/* turn the "pending" notification into a "op completed" notification
-	 *  when testing... exercises more code this way.
-	 */
-	if(status == -1) {
-		status = 0;
-	}
-#endif
-	set_xml_property_copy(state,   XML_ATTR_UUID,  target_uuid);
-	set_xml_property_copy(state,   XML_ATTR_UNAME, target);
-	
-	if(status != -1 && (safe_str_eq(task, CRM_OP_SHUTDOWN))) {
-		sprintf(since_epoch, "%ld", (unsigned long)time(NULL));
-		set_xml_property_copy(rsc, XML_CIB_ATTR_STONITH, since_epoch);
-		
-	} else {
-		code = crm_itoa(status);
-		
-		rsc = create_xml_node(state, XML_CIB_TAG_LRM);
-		rsc = create_xml_node(rsc,   XML_LRM_TAG_RESOURCES);
-		rsc = create_xml_node(rsc,   XML_LRM_TAG_RESOURCE);
-		
-		set_xml_property_copy(rsc, XML_ATTR_ID,         rsc_id);
-		set_xml_property_copy(rsc, XML_LRM_ATTR_TARGET, target);
-		set_xml_property_copy(
-			rsc, XML_LRM_ATTR_TARGET_UUID, target_uuid);
-
-		if(safe_str_eq(CRMD_RSCSTATE_START, task)) {
-			set_xml_property_copy(
-				rsc, XML_LRM_ATTR_RSCSTATE,
-				CRMD_RSCSTATE_START_PENDING);
-
-		} else if(safe_str_eq(CRMD_RSCSTATE_STOP, task)) {
-			set_xml_property_copy(
-				rsc, XML_LRM_ATTR_RSCSTATE,
-				CRMD_RSCSTATE_STOP_PENDING);
-
-		} else {
-			crm_warn("Using status \"pending\" for op \"%s\"..."
-				 " this is still in the experimental stage.",
-				 crm_str(task));
-			set_xml_property_copy(
-				rsc, XML_LRM_ATTR_RSCSTATE,
-				CRMD_RSCSTATE_GENERIC_PENDING);
-		}
-		
-		set_xml_property_copy(rsc, XML_LRM_ATTR_OPSTATUS, code);
-		set_xml_property_copy(rsc, XML_LRM_ATTR_RC, code);
-		set_xml_property_copy(rsc, XML_LRM_ATTR_LASTOP, task);
-
-		crm_free(code);
-	}
-
-	fragment = create_cib_fragment(state, NULL);
-	
-	do_crm_log(LOG_DEV, __FUNCTION__, NULL,
-		   "Updating CIB with \"%s\" (%s): %s %s on %s",
-		   status<0?"new action":XML_ATTR_TIMEOUT,
-		   crm_element_name(xml_action), crm_str(task), rsc_id, target);
-	
-#ifndef TESTING
-	rc = te_cib_conn->cmds->modify(
-		te_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, call_options);
-#else
-	call_options = 0;
-	{
-		HA_Message *cmd = ha_msg_new(11);
-		ha_msg_add(cmd, F_TYPE,		T_CRM);
-		ha_msg_add(cmd, F_CRM_VERSION,	CRM_VERSION);
-		ha_msg_add(cmd, F_CRM_MSG_TYPE, XML_ATTR_REQUEST);
-		ha_msg_add(cmd, F_CRM_TASK,	CRM_OP_EVENTCC);
-		ha_msg_add(cmd, F_CRM_SYS_TO,   CRM_SYSTEM_TENGINE);
-		ha_msg_add(cmd, F_CRM_SYS_FROM, CRM_SYSTEM_TENGINE);
-		ha_msg_addstruct(cmd, crm_element_name(state), state);
-		send_ipc_message(crm_ch, cmd);
-	}
-#endif
-	free_xml(fragment);
-	free_xml(state);
-
-	if(rc != cib_ok) {
-		return FALSE;
-	}
-
-	return TRUE;
-}
 
 gboolean
 timer_callback(gpointer data)
@@ -381,6 +261,12 @@ timer_callback(gpointer data)
 		crm_err("Action not present!");
 		return FALSE;
 		
+	} else if(timer->reason == timeout_action_warn) {
+		crm_warn("Action %d is taking more than 2x its timeout (%d)",
+			timer->action->id, timer->action->timeout);
+		crm_xml_debug(timer->action->xml, "Slow action");
+		return TRUE;
+		
 	} else {
 		/* fail the action
 		 * - which may or may not abort the transition
@@ -388,7 +274,7 @@ timer_callback(gpointer data)
 
 		/* TODO: send a cancel notice to the LRM */
 		/* TODO: use the ack from above to update the CIB */
-		return do_update_cib(timer->action->xml, LRM_OP_TIMEOUT);
+		return cib_action_update(timer->action, LRM_OP_TIMEOUT);
 	}
 }
 
@@ -444,3 +330,49 @@ actiontype2text(action_type_e type)
 	return "<unknown>";
 }
 
+const char *
+get_rsc_state(const char *task, op_status_t status) 
+{
+	if(safe_str_eq(CRMD_RSCSTATE_START, task)) {
+		if(status == LRM_OP_PENDING) {
+			return CRMD_RSCSTATE_START_PENDING;
+		} else if(status == LRM_OP_DONE) {
+			return CRMD_RSCSTATE_START_OK;
+		} else {
+			return CRMD_RSCSTATE_START_FAIL;
+		}
+		
+	} else if(safe_str_eq(CRMD_RSCSTATE_STOP, task)) {
+		if(status == LRM_OP_PENDING) {
+			return CRMD_RSCSTATE_STOP_PENDING;
+		} else if(status == LRM_OP_DONE) {
+			return CRMD_RSCSTATE_STOP_OK;
+		} else {
+			return CRMD_RSCSTATE_STOP_FAIL;
+		}
+		
+	} else {
+		if(safe_str_eq(CRMD_RSCSTATE_MON, task)) {
+			if(status == LRM_OP_PENDING) {
+				return CRMD_RSCSTATE_MON_PENDING;
+			} else if(status == LRM_OP_DONE) {
+				return CRMD_RSCSTATE_MON_OK;
+			} else {
+				return CRMD_RSCSTATE_MON_FAIL;
+			}
+		} else {
+			const char *rsc_state = NULL;
+			if(status == LRM_OP_PENDING) {
+				rsc_state = CRMD_RSCSTATE_GENERIC_PENDING;
+			} else if(status == LRM_OP_DONE) {
+				rsc_state = CRMD_RSCSTATE_GENERIC_OK;
+			} else {
+				rsc_state = CRMD_RSCSTATE_GENERIC_FAIL;
+			}
+			crm_warn("Using status \"%s\" for op \"%s\"..."
+				 " this is still in the experimental stage.",
+				 rsc_state, task);
+			return rsc_state;
+		}
+	}
+}

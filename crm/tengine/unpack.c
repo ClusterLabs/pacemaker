@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.26 2005/04/07 14:00:05 andrew Exp $ */
+/* $Id: unpack.c,v 1.27 2005/04/21 15:44:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,16 +65,20 @@ unpack_graph(crm_data_t *xml_graph)
 	int num_synapses = 0;
 	int num_actions = 0;
 
-	const char *time = crm_element_value(xml_graph, "transition_timeout");
-	set_timer_value(transition_timer, time, default_transition_timeout);
+	const char *t_id = crm_element_value(xml_graph, "transition_id");
+	const char *time = crm_element_value(xml_graph, "global_timeout");
+	CRM_DEV_ASSERT(t_id != NULL);
+	CRM_DEV_ASSERT(time != NULL);
+
+	transition_timer->timeout = crm_get_msec(time);
 	transition_timeout = transition_timer->timeout;
 	
 	time = crm_element_value(xml_graph, "transition_fuzz");
 	set_timer_value(transition_fuzz_timer, time, transition_fuzz_timeout);
 
-	transition_counter++;
+	transition_counter = crm_atoi(t_id, "-1");
 
-	crm_info("Beginning transition %d - timeout set to %d",
+	crm_info("Beginning transition %d : timeout set to %dms",
 		 transition_counter, transition_timer->timeout);
 
 	xml_child_iter(
@@ -82,7 +86,8 @@ unpack_graph(crm_data_t *xml_graph)
 
 		synapse_t *new_synapse = NULL;
 
-		crm_devel("looking in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
+		crm_devel("looking in synapse %s",
+			  crm_element_value(synapse, XML_ATTR_ID));
 		
 		crm_malloc(new_synapse, sizeof(synapse_t));
 		new_synapse->id        = num_synapses++;
@@ -93,7 +98,8 @@ unpack_graph(crm_data_t *xml_graph)
 		
 		graph = g_list_append(graph, new_synapse);
 
-		crm_devel("look for actions in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
+		crm_devel("look for actions in synapse %s",
+			  crm_element_value(synapse, XML_ATTR_ID));
 
 		xml_child_iter(
 			synapse, actions, "action_set",
@@ -108,7 +114,7 @@ unpack_graph(crm_data_t *xml_graph)
 					continue;
 				}
 				crm_devel("Adding action %d to synapse %d",
-						 new_action->id, new_synapse->id);
+					  new_action->id, new_synapse->id);
 
 				new_synapse->actions = g_list_append(
 					new_synapse->actions,
@@ -117,7 +123,8 @@ unpack_graph(crm_data_t *xml_graph)
 			
 			);
 
-		crm_devel("look for inputs in synapse %s", crm_element_value(synapse, XML_ATTR_ID));
+		crm_devel("look for inputs in synapse %s",
+			  crm_element_value(synapse, XML_ATTR_ID));
 
 		xml_child_iter(
 			synapse, inputs, "inputs",
@@ -164,6 +171,7 @@ unpack_action(crm_data_t *xml_action)
 	const char *tmp        = crm_element_value(xml_action, XML_ATTR_ID);
 	action_t   *action     = NULL;
 	crm_data_t *action_copy = NULL;
+	crm_data_t *nvpair_list = NULL;
 
 	if(tmp == NULL) {
 		crm_err("Actions must have an id!");
@@ -179,6 +187,7 @@ unpack_action(crm_data_t *xml_action)
 	
 	action->id       = atoi(tmp);
 	action->timeout  = 0;
+	action->interval = 0;
 	action->timer    = NULL;
 	action->invoked  = FALSE;
 	action->complete = FALSE;
@@ -189,21 +198,42 @@ unpack_action(crm_data_t *xml_action)
 	if(safe_str_eq(crm_element_name(action_copy), XML_GRAPH_TAG_RSC_OP)) {
 		action->type = action_type_rsc;
 
-	} else if(safe_str_eq(crm_element_name(action_copy), XML_GRAPH_TAG_PSEUDO_EVENT)) {
+	} else if(safe_str_eq(crm_element_name(action_copy),
+			      XML_GRAPH_TAG_PSEUDO_EVENT)) {
 		action->type = action_type_pseudo;
 
-	} else if(safe_str_eq(crm_element_name(action_copy), XML_GRAPH_TAG_CRM_EVENT)) {
+	} else if(safe_str_eq(crm_element_name(action_copy),
+			      XML_GRAPH_TAG_CRM_EVENT)) {
 		action->type = action_type_crm;
 	}
 
-	action->timeout = crm_get_msec(
-		crm_element_value(action_copy, XML_ATTR_TIMEOUT));
+	nvpair_list = find_xml_node(action_copy, XML_TAG_ATTRS, FALSE);
+	if(nvpair_list == NULL) {
+		crm_verbose("No attributes in %s",
+			    crm_element_name(action_copy));
+	}
+	
+	xml_child_iter(
+		nvpair_list, node_iter, XML_CIB_TAG_NVPAIR,
+		
+		const char *key   = crm_element_value(
+			node_iter, XML_NVPAIR_ATTR_NAME);
+		const char *value = crm_element_value(
+			node_iter, XML_NVPAIR_ATTR_VALUE);
+
+		if(safe_str_eq(key, "timeout")) {
+			action->timeout = crm_get_msec(value);
+
+		} else if(safe_str_eq(key, "interval")) {
+			action->interval = crm_get_msec(value);
+		}
+		);
 
 	crm_devel("Action %d has timer set to %dms",
 		  action->id, action->timeout);
 	
 	crm_malloc(action->timer, sizeof(te_timer_t));
-	action->timer->timeout   = action->timeout;
+	action->timer->timeout   = 2 * action->timeout;
 	action->timer->source_id = -1;
 	action->timer->reason    = timeout_action;
 	action->timer->action    = action;
@@ -241,9 +271,10 @@ extract_event(crm_data_t *msg)
 			node_state, XML_CIB_ATTR_CRMDSTATE);
 		const char *join_state = crm_element_value(
 			node_state, XML_CIB_ATTR_JOINSTATE);
+		event_node = crm_element_value(node_state, XML_ATTR_UNAME);
 
 		crm_xml_devel(node_state,"Processing");
-		
+
 		if(crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
 			send_complete(
 				"Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute",
@@ -303,7 +334,6 @@ extract_event(crm_data_t *msg)
 				 */
 				int action_id = -1;
 				crm_devel("Checking if this was a known shutdown");
-				event_node = crm_element_value(node_state, XML_ATTR_UNAME);
 				action_id = match_down_event(
 					event_node, NULL, LRM_OP_DONE);
 
@@ -327,7 +357,7 @@ extract_event(crm_data_t *msg)
 				resources, child, NULL, 
 
 				crm_xml_devel(child, "Processing LRM resource update");
-				abort = !process_graph_event(child);
+				abort = !process_graph_event(child, event_node);
 				if(abort) {
 					break;
 				}

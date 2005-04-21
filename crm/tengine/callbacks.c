@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.23 2005/04/12 15:36:47 andrew Exp $ */
+/* $Id: callbacks.c,v 1.24 2005/04/21 15:44:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -178,7 +178,6 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	}
 
 	crm_devel("finished processing message");
-	print_state(LOG_DEV);
 	
 	return TRUE;
 }

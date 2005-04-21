@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.18 2005/04/07 14:00:05 andrew Exp $ */
+/* $Id: tengine.h,v 1.19 2005/04/21 15:44:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,6 +55,7 @@ typedef struct te_timer_s te_timer_t;
 typedef struct action_s {
 		int id;
 		int timeout;
+		int interval;
 		te_timer_t *timer;
 
 		action_type_e type;
@@ -70,6 +71,7 @@ typedef struct action_s {
 
 enum timer_reason {
 	timeout_action,
+	timeout_action_warn,
 	timeout_timeout,
 	timeout_fuzz
 };
@@ -85,20 +87,22 @@ struct te_timer_s
 
 /* tengine */
 extern gboolean initialize_graph(void);
-extern gboolean process_graph_event(crm_data_t *event);
+extern gboolean process_graph_event(crm_data_t *event, const char *event_node);
 /*	const char *event_node,   const char *event_rsc, const char *rsc_state,
  *	const char *event_action, const char *event_rc, const char *op_status); */
-extern int match_graph_event(action_t *action, crm_data_t *event);
+extern int match_graph_event(
+	action_t *action, crm_data_t *event, const char *event_node);
 extern int match_down_event(const char *target, const char *filter, int rc);
 
 extern gboolean initiate_transition(void);
+extern gboolean cib_action_update(action_t *action, int status);
 
 /* utils */
 extern void print_state(int log_level);
 extern void send_complete(const char *text,crm_data_t *msg,te_reason_t reason);
 extern gboolean stop_te_timer(te_timer_t *timer);
 extern gboolean start_te_timer(te_timer_t *timer);
-extern gboolean do_update_cib(crm_data_t *xml_action, int status);
+extern const char *get_rsc_state(const char *task, op_status_t status);
 
 /* unpack */
 extern gboolean unpack_graph(crm_data_t *xml_graph);
