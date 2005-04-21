@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.29 2005/04/05 15:31:13 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.30 2005/04/21 15:15:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,6 +126,7 @@
 #define XML_LRM_TAG_RESOURCE     	"lrm_resource"
 #define XML_LRM_TAG_AGENTS	     	"lrm_agents"
 #define XML_LRM_TAG_AGENT		"lrm_agent"
+#define XML_LRM_TAG_RSC_OP		"lrm_rsc_op"
 #define XML_AGENT_ATTR_CLASS		"class"
 #define XML_AGENT_ATTR_PROVIDER		"provider"
 #define XML_LRM_TAG_ATTRIBUTES		"attributes"

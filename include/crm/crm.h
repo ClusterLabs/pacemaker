@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.52 2005/04/16 17:02:21 andrew Exp $ */
+/* $Id: crm.h,v 1.53 2005/04/21 15:15:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -136,6 +136,7 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_TEABORT		"te_abort"
 #define CRM_OP_TRANSITION	"transition"
 #define CRM_OP_TECOMPLETE	"te_complete"
+#define CRM_OP_TETIMEOUT	"te_timeout"
 #define CRM_OP_REGISTER		"register"
 #define CRM_OP_DEBUG_UP		"debug_inc"
 #define CRM_OP_DEBUG_DOWN	"debug_dec"
@@ -253,7 +254,7 @@ extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_M
 #  define crm_free(x)   if(x) {				\
 		CRM_ASSERT(cl_is_allocated(x) == 1);	\
 		cl_free(x);				\
-		x=NULL;				\
+		x=NULL;					\
 	}
 #else
 #  define crm_free(x)   x=NULL
