@@ -726,8 +726,9 @@ do_lrm_rsc_op(
 		}
 		existing_op = g_hash_table_lookup(monitors, op_id);
 		if(existing_op != NULL) {
-			crm_debug("Operation %s on %s has already been invoked",
-				  op_id, rsc->id);
+			crm_debug("Cancelling previous invocation of"
+				  " %s on %s (%d)",
+				  op_id, rsc->id, existing_op->call_id);
 			/*cancel it so we can then restart it without conflict*/
 			rsc->ops->cancel_op(rsc, existing_op->call_id);
 			g_hash_table_remove(monitors, op_id);
@@ -780,7 +781,8 @@ do_lrm_rsc_op(
 	} else if(call_id > 0 && op->interval > 0) {
 		struct recurring_op_s *op = NULL;
 		crm_malloc(op, sizeof(struct recurring_op_s));
-		crm_debug("Adding recurring %s op for %s", operation, rsc->id);
+		crm_debug("Adding recurring %s op for %s (%d)",
+			  op_id, rsc->id, call_id);
 
 		op->call_id = call_id;
 		op->rsc_id  = crm_strdup(rsc->id);
@@ -985,8 +987,8 @@ do_lrm_event(long long action,
 	switch(op->op_status) {
 		case LRM_OP_PENDING:
 			/* this really shouldnt happen */
-			crm_err("LRM operation %s on %s::%s(%s):%s %s: %s",
-				op->op_type,
+			crm_err("LRM operation (%d) %s on %s::%s(%s):%s %s: %s",
+				op->call_id, op->op_type,
 				crm_str(rsc->class),
 				crm_str(rsc->type),
 				crm_str(rsc->provider),
@@ -995,8 +997,8 @@ do_lrm_event(long long action,
 				execra_code2string(op->rc));
 			break;
 		case LRM_OP_ERROR:
-			crm_err("LRM operation %s on %s::%s(%s):%s %s: %s",
-				op->op_type,
+			crm_err("LRM operation (%d) %s on %s::%s(%s):%s %s: %s",
+				op->call_id, op->op_type,
 				crm_str(rsc->class),
 				crm_str(rsc->type),
 				crm_str(rsc->provider),
@@ -1006,8 +1008,8 @@ do_lrm_event(long long action,
 			crm_debug("Result: %s", op->output);
 			break;
 		case LRM_OP_CANCELLED:
-			crm_warn("LRM operation %s on %s::%s(%s):%s %s",
-				 op->op_type,
+			crm_warn("LRM operation (%d) %s on %s::%s(%s):%s %s",
+				 op->call_id, op->op_type,
 				 crm_str(rsc->class),
 				 crm_str(rsc->type),
 				 crm_str(rsc->provider),
@@ -1026,8 +1028,8 @@ do_lrm_event(long long action,
 				return I_NULL;
 			}
 
-			crm_err("LRM operation %s on %s::%s(%s):%s %s",
-				op->op_type,
+			crm_err("LRM operation (%d) %s on %s::%s(%s):%s %s",
+				op->call_id, op->op_type,
 				crm_str(rsc->class),
 				crm_str(rsc->type),
 				crm_str(rsc->provider),
@@ -1035,8 +1037,8 @@ do_lrm_event(long long action,
 				op_status2text(op->op_status));
 			break;
 		case LRM_OP_NOTSUPPORTED:
-			crm_err("LRM operation %s on %s::%s(%s):%s %s",
-				op->op_type,
+			crm_err("LRM operation (%d) %s on %s::%s(%s):%s %s",
+				op->call_id, op->op_type,
 				crm_str(rsc->class),
 				crm_str(rsc->type),
 				crm_str(rsc->provider),
@@ -1044,21 +1046,13 @@ do_lrm_event(long long action,
 				op_status2text(op->op_status));
 			break;
 		case LRM_OP_DONE:
-			crm_debug("LRM operation %s on %s::%s(%s):%s %s",
-				  op->op_type,
+			crm_debug("LRM operation (%d) %s on %s::%s(%s):%s %s",
+				  op->call_id, op->op_type,
 				  crm_str(rsc->class),
 				  crm_str(rsc->type),
 				  crm_str(rsc->provider),
 				  crm_str(rsc->id),
 				  op_status2text(op->op_status));
-			break;
-		case LRM_OP_PENDING:
-			crm_debug("LRM operation %s on %s::%s(%s):%s: not executed yet",
-				 op->op_type,
-				 crm_str(rsc->class),
-				 crm_str(rsc->type),
-				 crm_str(rsc->provider),
-				 crm_str(rsc->id));
 			break;
 	}
 	do_update_resource(rsc, op);
