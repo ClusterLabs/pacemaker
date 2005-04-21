@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.21 2005/04/12 09:19:53 andrew Exp $ */
+/* $Id: cib.h,v 1.22 2005/04/21 15:16:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -258,6 +258,15 @@ typedef struct cib_notify_client_s
 	
 } cib_notify_client_t;
 
+typedef struct cib_callback_client_s 
+{
+		void (*callback)(
+			const HA_Message*, int, int, crm_data_t*, void*);
+		void *user_data;
+		gboolean only_success;
+		
+} cib_callback_client_t;
+
 /* Core functions */
 extern cib_t *cib_new(void);
 
@@ -265,7 +274,11 @@ extern gboolean   startCib(const char *filename);
 extern crm_data_t *get_cib_copy(cib_t *cib);
 extern crm_data_t *cib_get_generation(cib_t *cib);
 extern int cib_compare_generation(crm_data_t *left, crm_data_t *right);
-
+extern gboolean add_cib_op_callback(
+	int call_id, gboolean only_success, void *user_data,
+	void (*callback)(const HA_Message*, int, int, crm_data_t*,void*));
+extern void remove_cib_op_callback(int call_id, gboolean all_callbacks);
+	
 /* Utility functions */
 extern crm_data_t *get_object_root(const char *object_type,crm_data_t *the_root);
 extern crm_data_t *create_cib_fragment_adv(
