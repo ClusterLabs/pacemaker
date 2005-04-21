@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.4 2005/04/19 09:05:23 andrew Exp $ */
+/* $Id: utils.c,v 1.5 2005/04/21 15:13:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -872,6 +872,10 @@ crm_get_msec(const char * input)
 	||	strncasecmp(units, "sec", 3) == 0) {
 		multiplier = 1000;
 		divisor = 1;	
+	}else if (strncasecmp(units, "m", 1) == 0
+	||	strncasecmp(units, "min", 3) == 0) {
+		multiplier = 60*1000;
+		divisor = 1;	
 	}else if (*units != EOS && *units != '\n'
 	&&	*units != '\r') {
 		return ret;
@@ -915,4 +919,32 @@ ccm_event_name(oc_ed_t event)
 
 	return "NO QUORUM MEMBERSHIP";
 	
+}
+
+const char *
+op_status2text(op_status_t status)
+{
+	switch(status) {
+		case LRM_OP_PENDING:
+			return "pending";
+			break;
+		case LRM_OP_DONE:
+			return "complete";
+			break;
+		case LRM_OP_ERROR:
+			return "ERROR";
+			break;
+		case LRM_OP_TIMEOUT:
+			return "TIMED OUT";
+			break;
+		case LRM_OP_NOTSUPPORTED:
+			return "NOT SUPPORTED";
+			break;
+		case LRM_OP_CANCELLED:
+			return "cancelled";
+			break;
+	}
+	CRM_DEV_ASSERT(status >= LRM_OP_PENDING && status <= LRM_OP_CANCELLED);
+	crm_err("Unknown status: %d", status);
+	return "UNKNOWN!";
 }
