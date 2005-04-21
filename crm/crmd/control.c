@@ -36,6 +36,10 @@
 
 extern void crmd_ha_connection_destroy(gpointer user_data);
 extern gboolean stop_all_resources(void);
+extern GHashTable *welcomed_nodes;
+extern GHashTable *integrated_nodes;
+extern GHashTable *finalized_nodes;
+extern GHashTable *confirmed_nodes;
 
 gboolean crm_shutdown(int nsig, gpointer unused);
 gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
@@ -376,6 +380,19 @@ do_startup(long long action,
 	if(was_error) {
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
+	
+	welcomed_nodes = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	integrated_nodes = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	finalized_nodes = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	confirmed_nodes = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
 	
 	return I_NULL;
 }

@@ -37,7 +37,9 @@
 
 extern uint highest_born_on;
 extern int num_join_invites;
-extern GHashTable *join_requests;
+extern GHashTable *welcomed_nodes;
+extern GHashTable *integrated_nodes;
+extern GHashTable *finalized_nodes;
 extern GHashTable *confirmed_nodes;
 extern void initialize_join(gboolean before);
 
@@ -57,6 +59,8 @@ long long clear_flags(long long actions,
 void dump_rsc_info(void);
 void dump_rsc_info_callback(const HA_Message *msg, int call_id, int rc,
 			    crm_data_t *output, void *user_data);
+
+void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
 
 #define DOT_PREFIX "live.dot: "
 #define DOT_LOG    LOG_DEBUG
@@ -580,12 +584,16 @@ do_state_transition(long long actions,
 					 fsa_state2string(next_state),
 					 fsa_cause2string(cause));
 			}
-			if((ssize_t)g_hash_table_size(join_requests)
-			   != fsa_membership_copy->members_size) {
-				crm_warn("Only %d (of %d) cluster nodes "
-					 "responded to the join offer.",
-					 g_hash_table_size(join_requests),
-					 fsa_membership_copy->members_size);
+			if(g_hash_table_size(welcomed_nodes) > 0) {
+				char *msg = crm_strdup(
+					"  Welcome reply not received from");
+				
+				crm_warn("%u cluster nodes failed to respond"
+					 "to the join offer.",
+					 g_hash_table_size(welcomed_nodes));
+				g_hash_table_foreach(
+					welcomed_nodes, ghash_print_node, msg);
+
 			} else {
 				crm_info("All %d cluster nodes "
 					 "responded to the join offer.",
@@ -600,24 +608,26 @@ do_state_transition(long long actions,
 					 fsa_cause2string(cause));
 			}
 			
-			if((ssize_t)g_hash_table_size(confirmed_nodes)
-			   == fsa_membership_copy->members_size) {
-				crm_info("All %d cluster nodes are"
+			if(g_hash_table_size(finalized_nodes) > 0) {
+				char *msg = crm_strdup(
+					"  Confirm not received from");
+				
+				crm_err("%u cluster nodes failed to confirm"
+					 " their join.",
+					 g_hash_table_size(finalized_nodes));
+				g_hash_table_foreach(
+					finalized_nodes, ghash_print_node, msg);
+				
+			} else if(g_hash_table_size(confirmed_nodes)
+				  == fsa_membership_copy->members_size) {
+				crm_info("All %u cluster nodes are"
 					 " eligable to run resources.",
 					 fsa_membership_copy->members_size);
-
-			} else if((ssize_t)g_hash_table_size(confirmed_nodes)
-				  == num_join_invites) {
-				crm_warn("All %d (%d total) cluster "
-					 "nodes are eligable to run resources",
-					 g_hash_table_size(confirmed_nodes),
-					 fsa_membership_copy->members_size);
-
+				
 			} else {
-				crm_warn("Only %d of %d (%d total) cluster "
+				crm_warn("Only %u of %u cluster "
 					 "nodes are eligable to run resources",
 					 g_hash_table_size(confirmed_nodes),
-					 num_join_invites,
 					 fsa_membership_copy->members_size);
 			}
 /* 			initialize_join(FALSE); */
@@ -667,3 +677,11 @@ dump_rsc_info(void)
 {
 }
 
+
+void
+ghash_print_node(gpointer key, gpointer value, gpointer user_data) 
+{
+	const char *text = user_data;
+	const char *uname = key;
+	crm_info("%s: %s", text, uname);
+}
