@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.42 2005/04/19 10:41:02 andrew Exp $ */
+/* $Id: callbacks.c,v 1.43 2005/04/21 15:45:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -77,6 +77,7 @@ cib_operation_t cib_server_ops[] = {
 	{CRM_OP_SHUTDOWN_REQ,TRUE, TRUE, FALSE,TRUE, TRUE, cib_process_modify},
 	{CRM_OP_CIB_DELETE,  TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
 	{CRM_OP_CIB_QUERY,   FALSE,FALSE,FALSE,TRUE, FALSE,cib_process_query},
+	{CRM_OP_CIB_SYNC,    TRUE, TRUE, TRUE, TRUE, FALSE,cib_process_query},
 	{CRM_OP_QUIT,	     FALSE,TRUE, FALSE,FALSE,FALSE,cib_process_quit},
 	{CRM_OP_PING,	     FALSE,FALSE,FALSE,FALSE,FALSE,cib_process_ping},
 	{CRM_OP_CIB_ERASE,   TRUE, TRUE, TRUE, TRUE, FALSE,cib_process_erase}
@@ -455,7 +456,14 @@ cib_common_callback(
 				  op, cib_our_uname, cib_client->id,
 				  cl_get_string(op_request, F_CIB_CALLID),
 				  (rc==cib_ok && cib_server_ops[call_type].modifies_cib)?"true":"false");
- 			crm_devel("Processing complete");
+			if(rc == cib_ok && safe_str_eq(op, CRM_OP_CIB_SYNC)) {
+				HA_Message *sync_data = cl_get_struct(
+					op_reply, F_CIB_CALLDATA);
+				CRM_DEV_ASSERT(sync_data != NULL);
+				ha_msg_addstruct(
+					op_request, F_CIB_CALLDATA, sync_data);
+ 			}
+			crm_devel("Processing complete");
 		}
 		
 		crm_devel("processing response cases");
@@ -495,7 +503,18 @@ cib_common_callback(
 		op_reply = NULL;
 
 		crm_devel("Processing forward cases");
-		if(rc == cib_ok
+		if(rc == cib_ok && safe_str_eq(op, CRM_OP_CIB_SYNC)) {
+			const char *section = cl_get_string(
+				op_request, F_CIB_SECTION);
+ 			crm_info("Syncing section=%s to all instances",
+				 section?section:"<all>");
+			ha_msg_mod(op_request,
+				   F_CIB_OPERATION, CRM_OP_CIB_REPLACE);
+			ha_msg_add(op_request,
+				   F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
+			send_ha_message(hb_conn, op_request, NULL);
+
+		} else if(rc == cib_ok
 		   && cib_server_ops[call_type].modifies_cib
 		   && !(call_options & cib_scope_local)) {
 			/* send via HA to other nodes */
@@ -506,13 +525,14 @@ cib_common_callback(
 			
 		} else {
 			if(call_options & cib_scope_local ) {
-				crm_devel("Request not broadcast : local scope");
+				crm_devel("Request not broadcast: local scope");
 			}
 			if(cib_server_ops[call_type].modifies_cib == FALSE) {
-				crm_devel("Request not broadcast : R/O call");
+				crm_devel("Request not broadcast: R/O call");
 			}
 			if(rc != cib_ok) {
-				crm_devel("Request not broadcast : call failed : %s",
+				crm_debug("Request not broadcast:"
+					  " call failed: %s",
 					  cib_error2string(rc));
 			}
 		}
