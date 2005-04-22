@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.61 2005/04/21 15:44:42 andrew Exp $ */
+/* $Id: tengine.c,v 1.62 2005/04/22 10:06:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -351,21 +351,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	
 	if(op_status_i == -1) {
 		/* just information that the action was sent */
-		crm_trace("Ignoring TE initiated updates");
-		return TRUE;
-
-	} else if(op_status_i == 0 && safe_str_eq(task, CRMD_RSCSTATE_MON)) {
-		/* now how exactly this affects a resource that failed and
-		 *  and then recovered all by itself... i'm not 100% sure.
-		 *
-		 * in theory we just wouldnt trigger a new transition but
-		 *  then again, one should already be in progress right?
-		 *
-		 * possibly it would be better to keep the old transition
-		 *  around so we could try matching it against a start op
-		 *  and if one isnt found, _then_ trigger a new transition
-		 */
-		crm_debug("Ignoring successful monitor op");
+		crm_debug("Ignoring TE initiated updates");
 		return TRUE;
 	}
 
@@ -635,14 +621,7 @@ cib_action_update(action_t *action, int status)
 	set_xml_property_copy(xml_op, XML_ATTR_ID, task);
 	
 	if(action->interval > 0) {
-		int len = 0;
-		char *op_id = NULL;
-		len = 34 + strlen(task);
-		crm_malloc(op_id, sizeof(char)*len);
-		if(op_id != NULL) {
-			sprintf(op_id, "%s_%d", task,
-				action->interval);
-		}
+		char *op_id = generate_op_key(rsc_id, task, action->interval);
 		set_xml_property_copy(xml_op, XML_ATTR_ID, op_id);
 		crm_free(op_id);
 	}
