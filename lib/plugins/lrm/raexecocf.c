@@ -160,7 +160,6 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	hash_to_str(params, params_gstring);
 	cl_log(LOG_DEBUG, "RA instance %s executing: OCF::%s %s. Parameters: "
 		"{%s}", rsc_id, rsc_type, op_type, params_gstring->str);
-	cl_log(LOG_DEBUG, "The RA pathname: %s", ra_pathname);
 	g_string_free(params_gstring, TRUE);
 
 	execl(ra_pathname, ra_pathname, op_type, NULL);
