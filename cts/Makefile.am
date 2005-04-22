@@ -29,6 +29,7 @@ hard_SCRIPTS	=			\
 			CTSlab.py	\
 			CTStests.py	\
 			CM_LinuxHAv2.py	\
-			extracttests.py
+			extracttests.py \
+                        OCFIPraTest.py
 
 hard_DATA =		README
