@@ -462,9 +462,9 @@ initialize_join(gboolean before)
 {
 	/* clear out/reset a bunch of stuff */
 	crm_debug("Initializing join data");
-	g_hash_table_destroy(confirmed_nodes);
-	g_hash_table_destroy(confirmed_nodes);
-	g_hash_table_destroy(confirmed_nodes);
+	g_hash_table_destroy(welcomed_nodes);
+	g_hash_table_destroy(integrated_nodes);
+	g_hash_table_destroy(finalized_nodes);
 	g_hash_table_destroy(confirmed_nodes);
 
 	if(before) {
