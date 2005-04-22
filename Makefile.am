@@ -53,15 +53,12 @@ hauser = 		@HA_CCMUSER@
 
 ## proc-ha is left out from SUBDIRS (completely obsolete)
 
-if SNMP_SUBAGENT_BUILD
-  SNMP_SUBAGENT_DIR = snmp_subagent
-endif
-
-SUBDIRS                 = libltdl doc debian pkg replace include lib \
-                        ldirectord heartbeat membership telecom\
-                        cts linux-ha contrib config resources\
-			crm lrm $(SNMP_SUBAGENT_DIR) \
-			tools logd fencing
+SUBDIRS	=		libltdl debian pkg replace include config	\
+			lib						\
+			ldirectord heartbeat membership telecom		\
+			linux-ha contrib resources			\
+			crm lrm snmp_subagent				\
+			tools logd fencing doc cts
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
 HBDOCS = doc/heartbeat_api.html
