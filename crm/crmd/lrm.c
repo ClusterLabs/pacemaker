@@ -376,12 +376,8 @@ build_operation_update(
 		set_xml_property_copy(xml_op, XML_ATTR_ID, op->op_type);
 
 	} else {
-		char *op_id = NULL;
-		len = 34 + strlen(op->op_type);
-		crm_malloc(op_id, sizeof(char)*len);
-		if(op_id != NULL) {
-			sprintf(op_id, "%s_%d", op->op_type, op->interval);
-		}
+		char *op_id = generate_op_key(
+			rsc->id, op->op_type, op->interval);
 		set_xml_property_copy(xml_op, XML_ATTR_ID, op_id);
 		crm_free(op_id);
 	}
@@ -716,14 +712,9 @@ do_lrm_rsc_op(
 	}
 
 	if(op->interval > 0) {
-		int len;
 		struct recurring_op_s *existing_op = NULL;
 
-		len = 34 + strlen(op->op_type);
-		crm_malloc(op_id, sizeof(char)*len);
-		if(op_id != NULL) {
-			sprintf(op_id, "%s_%d", op->op_type, op->interval);
-		}
+		op_id = generate_op_key(rsc->id, op->op_type, op->interval);
 		existing_op = g_hash_table_lookup(monitors, op_id);
 		if(existing_op != NULL) {
 			crm_debug("Cancelling previous invocation of"

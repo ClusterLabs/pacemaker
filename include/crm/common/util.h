@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.15 2005/04/21 15:16:40 andrew Exp $ */
+/* $Id: util.h,v 1.16 2005/04/22 10:04:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,5 +84,8 @@ extern gboolean ccm_have_quorum(oc_ed_t event);
 extern const char *ccm_event_name(oc_ed_t event);
 
 extern const char *op_status2text(op_status_t status);
+
+extern char *generate_op_key(
+	const char *rsc_id, const char *op_type, int interval);
 
 #endif

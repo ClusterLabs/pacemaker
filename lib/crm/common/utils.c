@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.5 2005/04/21 15:13:40 andrew Exp $ */
+/* $Id: utils.c,v 1.6 2005/04/22 10:04:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -947,4 +947,22 @@ op_status2text(op_status_t status)
 	CRM_DEV_ASSERT(status >= LRM_OP_PENDING && status <= LRM_OP_CANCELLED);
 	crm_err("Unknown status: %d", status);
 	return "UNKNOWN!";
+}
+
+char *
+generate_op_key(const char *rsc_id, const char *op_type, int interval)
+{
+	int len = 35;
+	char *op_id = NULL;
+
+	CRM_DEV_ASSERT(rsc_id  != NULL); if(crm_assert_failed) { return NULL; }
+	CRM_DEV_ASSERT(op_type != NULL); if(crm_assert_failed) { return NULL; }
+	
+	len += strlen(op_type);
+	len += strlen(rsc_id);
+	crm_malloc(op_id, sizeof(char)*len);
+	if(op_id != NULL) {
+		sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
+	}
+	return op_id;
 }
