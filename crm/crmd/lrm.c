@@ -366,7 +366,8 @@ build_operation_update(
 		return FALSE;
 	}
 
-	crm_info("Updating resouce %s after op %s", rsc->id, op->op_type);
+	crm_info("%s: Updating resouce %s after %s %s op",
+		 src, rsc->id, op_status2text(op->op_status), op->op_type);
 	
 	xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
 	
@@ -385,9 +386,7 @@ build_operation_update(
 	set_xml_property_copy(xml_op, XML_LRM_ATTR_TASK, op->op_type);
 	set_xml_property_copy(xml_op, "origin", src);
 
-	if(lpc == 0) {
-		set_xml_property_copy(xml_rsc, XML_LRM_ATTR_LASTOP,op->op_type);
-	}
+	set_xml_property_copy(xml_rsc, XML_LRM_ATTR_LASTOP,op->op_type);
 
 	switch(op->op_status) {
 		case LRM_OP_PENDING:
