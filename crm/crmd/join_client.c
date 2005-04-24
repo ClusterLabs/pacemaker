@@ -234,7 +234,7 @@ do_cl_join_result(long long action,
 	const char *type = cl_get_string(input->msg, F_SUBTYPE);
 
 	if(safe_str_eq(type, XML_ATTR_RESPONSE)) {
-		crm_verbose("Ignoring result.");
+		crm_debug("Ignoring result.");
 		crm_log_message(LOG_VERBOSE, input->msg);
 		return I_NULL;
 	}
@@ -254,24 +254,17 @@ do_cl_join_result(long long action,
 		crm_warn("Discarding our own welcome - we're no longer the DC");
 		return I_NULL;
 		
-	} else if(g_hash_table_lookup(
-			  fsa_membership_copy->members, welcome_from) == NULL){
-		crm_warn("Discarding welcome from %s."
-			 "  They are no longer part of the cluster",
-			 welcome_from);
-		return I_NULL;
-		
 	} else if(fsa_our_dc == NULL) {
 		crm_info("Set DC to %s", welcome_from);
 		fsa_our_dc = crm_strdup(welcome_from);
 	} 	
 
 	/* send our status section to the DC */
-	crm_devel("Discovering local LRM status");
+	crm_debug("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
 		HA_Message *reply = create_reply(input->msg, tmp1);
-		crm_devel("Sending local LRM status");
+		crm_debug("Sending local LRM status");
 		send_msg_via_ha(fsa_cluster_conn, reply);
 		
 		free_xml(tmp1);
