@@ -873,17 +873,19 @@ handle_request(ha_msg_input_t *stored_msg)
 		/*========== DC-Only Actions ==========*/
 	} else if(AM_I_DC){
 		if(safe_str_eq(op, CRM_OP_TEABORT)) {
-			if(fsa_state != S_INTEGRATION) {
+			if(fsa_state == S_POLICY_ENGINE
+			   || fsa_state == S_TRANSITION_ENGINE
+			   || fsa_state == S_IDLE) {
 				next_input = I_PE_CALC;
 
 			} else {	
-				crm_err("Op %s does not make sense in state %s",
+				crm_debug("Filtering %s op in state %s",
 					 op, fsa_state2string(fsa_state));
 			}
 				
 		} else if(safe_str_eq(op, CRM_OP_TETIMEOUT)) {
 			if(fsa_state == S_TRANSITION_ENGINE
-				|| fsa_state == S_POLICY_ENGINE) {
+			   || fsa_state == S_POLICY_ENGINE) {
 				next_input = I_PE_CALC;
 
 			} else if(fsa_state == S_IDLE) {
@@ -891,7 +893,7 @@ handle_request(ha_msg_input_t *stored_msg)
 				next_input = I_PE_CALC;
 				
 			} else {	
-				crm_err("Op %s does not make sense in state %s",
+				crm_err("Filtering %s op in state %s",
 					 op, fsa_state2string(fsa_state));
 			}
 
@@ -899,7 +901,7 @@ handle_request(ha_msg_input_t *stored_msg)
  			if(fsa_state == S_TRANSITION_ENGINE) {
 				next_input = I_TE_SUCCESS;
  			} else {
-				crm_err("Op %s does not make sense in state %s",
+				crm_err("Filtering %s op in state %s",
 					 op, fsa_state2string(fsa_state));
 			}
 
@@ -921,7 +923,7 @@ handle_request(ha_msg_input_t *stored_msg)
 				next_input = I_TERMINATE;			
 
 			} else if(fsa_state != S_STOPPING) {
-				crm_warn("Another node is asking us to shutdown"
+				crm_err("Another node is asking us to shutdown"
 					" but we think we're ok.");
 				next_input = I_ELECTION;			
 			}
@@ -1038,9 +1040,11 @@ handle_shutdown_request(HA_Message *stored_msg)
 	free_xml(frag);
 
 	/* will be picked up by the TE as long as its running */
-	if(! is_set(fsa_input_register, R_TE_CONNECTED) ) {
+	if((fsa_state == S_POLICY_ENGINE || fsa_state == S_TRANSITION_ENGINE)
+		&& is_set(fsa_input_register, R_TE_CONNECTED) == FALSE) {
 		register_fsa_input(C_HA_MESSAGE, I_PE_CALC, NULL);
 	}
+
 	return I_NULL;
 }
 
