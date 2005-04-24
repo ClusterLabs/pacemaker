@@ -283,15 +283,19 @@ do_dc_join_finalize(long long action,
 		crm_info("Asking %s for its copy of the CIB",
 			 crm_str(max_generation_from));
 
+		set_bit_inplace(fsa_input_register, R_CIB_ASKED);
+
 		fsa_cib_conn->call_timeout = 10;
 		rc = fsa_cib_conn->cmds->sync_from(
-			fsa_cib_conn, max_generation_from, NULL, cib_quorum_override);
+			fsa_cib_conn, max_generation_from, NULL,
+			cib_quorum_override);
 		fsa_cib_conn->call_timeout = 0; /* back to the default */
 		add_cib_op_callback(rc, FALSE, crm_strdup(max_generation_from),
 				    finalize_sync_callback);
 		return I_NULL;
 	}
 
+	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 	crm_devel("Bumping the epoche and syncing to %d clients",
 		  g_hash_table_size(finalized_nodes));
 	fsa_cib_conn->cmds->bump_epoch(
@@ -307,6 +311,7 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 		       crm_data_t *output, void *user_data) 
 {
 	CRM_DEV_ASSERT(cib_not_master != rc);
+	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 	if(rc == cib_remote_timeout) {
 		crm_err("Sync from %s resulted in an error: %s."
 			"  Use what we have...",
@@ -315,18 +320,28 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 		/* restart the whole join process */
 		register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC,
 				       NULL, NULL, __FUNCTION__);
+		return;
 #else
 		rc = cib_ok;
 #endif
-	} else if(rc < cib_ok) {
+	}
+	if(rc < cib_ok) {
 		crm_err("Sync from %s resulted in an error: %s",
 			(char*)user_data, cib_error2string(rc));
 		
 		register_fsa_error_adv(
 			C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
-	} else {
+
+	} else if(AM_I_DC) {
+		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 		fsa_cib_conn->cmds->bump_epoch(
 			fsa_cib_conn, cib_quorum_override);
+
+		if(g_hash_table_size(finalized_nodes) == 0) {
+			crm_info("That was the last outstanding join confirmation");
+			register_fsa_input_later(
+				C_FSA_INTERNAL, I_FINALIZED, NULL);
+		}
 	}
 	crm_free(user_data);
 }
@@ -403,7 +418,14 @@ do_dc_join_ack(long long action,
 
 	if(g_hash_table_size(finalized_nodes) == 0) {
 		crm_info("That was the last outstanding join confirmation");
-		register_fsa_input_later(C_FSA_INTERNAL, I_FINALIZED, NULL);
+
+		if(is_set(fsa_input_register, R_HAVE_CIB)) {
+			crm_info("Transition complete");
+			register_fsa_input_later(
+				C_FSA_INTERNAL, I_FINALIZED, NULL);
+		} else {
+			crm_info("Delaying completion until CIB is sync'd");
+		}
 		
 		return I_NULL;
 	}
