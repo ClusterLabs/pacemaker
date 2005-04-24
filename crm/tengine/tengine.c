@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.62 2005/04/22 10:06:29 andrew Exp $ */
+/* $Id: tengine.c,v 1.63 2005/04/24 06:43:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -576,7 +576,7 @@ cib_action_update(action_t *action, int status)
 	const char *target_uuid =
 		crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
-	int call_options = cib_scope_local|cib_inhibit_notify|cib_quorum_override;
+	int call_options = cib_inhibit_notify|cib_quorum_override;
 
 	if(status == LRM_OP_TIMEOUT) {
 		if(crm_element_value(action->xml, XML_LRM_ATTR_RSCID) != NULL) {
