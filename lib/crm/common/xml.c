@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.2 2005/04/21 15:12:08 andrew Exp $ */
+/* $Id: xml.c,v 1.3 2005/04/24 06:42:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1367,7 +1367,7 @@ int
 get_tag_name(const char *input) 
 {
 	int lpc = 0;
-	int ch = 0;
+	char ch = 0;
 	const char *error = NULL;
 	gboolean do_special = FALSE;
 	
@@ -1376,7 +1376,6 @@ get_tag_name(const char *input)
 		crm_insane("Processing char %c [%d]", ch, lpc);
 
 		switch(ch) {
-			case EOF: 
 			case 0:
 				error = "unexpected EOS";
 				break;
@@ -1417,7 +1416,7 @@ int
 get_attr_name(const char *input) 
 {
 	int lpc = 0;
-	int ch = 0;
+	char ch = 0;
 	const char *error = NULL;
 	
 	for(lpc = 0; error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
@@ -1425,7 +1424,6 @@ get_attr_name(const char *input)
 		crm_insane("Processing char %c[%d]", ch, lpc);
 
 		switch(ch) {
-			case EOF: 
 			case 0:
 				error = "unexpected EOS";
  				break;
@@ -1462,7 +1460,6 @@ get_attr_value(const char *input)
 		crm_insane("Processing char %c [%d]", ch, lpc);
 		
 		switch(ch) {
-			case EOF: 
 			case 0:
 				error = "unexpected EOS";
  				break;
@@ -1488,7 +1485,7 @@ crm_data_t*
 parse_xml(const char *input, int *offset)
 {
 	int len = 0, lpc = 0;
-	int ch = 0;
+	char ch = 0;
 	char *tag_name = NULL;
 	char *attr_name = NULL;
 	char *attr_value = NULL;
@@ -1541,7 +1538,6 @@ parse_xml(const char *input, int *offset)
 			ch = our_input[lpc];
 			crm_insane("Processing char %c[%d]", ch, lpc);
 			switch(ch) {
-				case EOF: 
 				case 0:
 					error = "unexpected EOS";
 					break;
