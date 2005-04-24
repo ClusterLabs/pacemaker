@@ -105,6 +105,7 @@ do_dc_join_offer_all(long long action,
 	crm_debug("0) Offering membership to %d clients",
 		  fsa_membership_copy->members_size);
 	
+	initialize_join(TRUE);
 	g_hash_table_foreach(
 		fsa_membership_copy->members, join_send_offer, NULL);
 	
@@ -156,6 +157,13 @@ do_dc_join_offer_one(long long action,
 	crm_debug("Processing annouce request from %s in state %s",
 		  join_to, fsa_state2string(cur_state));
 
+	/* always offer to the DC (ourselves)
+	 * this ensures the correct value for max_generation_from
+	 */
+	member.node_uname = crm_strdup(fsa_our_uname);
+	join_send_offer(NULL, &member, NULL);
+	crm_free(member.node_uname);
+	
 	member.node_uname = crm_strdup(join_to);
 	join_send_offer(NULL, &member, NULL);
 	crm_free(member.node_uname);
@@ -254,6 +262,7 @@ do_dc_join_req(long long action,
 }
 
 
+#define JOIN_AFTER_SYNC 1
 
 /*	A_DC_JOIN_FINALIZE	*/
 enum crmd_fsa_input
@@ -268,11 +277,15 @@ do_dc_join_finalize(long long action,
 	/* This we can do straight away and avoid clients timing us out
 	 *  while we compute the latest CIB
 	 */
+#if JOIN_AFTER_SYNC
+	crm_debug("Finializing join for %d clients",
+		  g_hash_table_size(integrated_nodes));
+#else
 	crm_debug("Notifying %d clients of join results",
 		  g_hash_table_size(integrated_nodes));
 	g_hash_table_foreach_remove(
-		integrated_nodes, finalize_join_for, GINT_TO_POINTER(TRUE));
-	
+		integrated_nodes, finalize_join_for, NULL);
+#endif
 	if(max_generation_from == NULL
 	   || safe_str_eq(max_generation_from, fsa_our_uname)){
 		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
@@ -295,11 +308,20 @@ do_dc_join_finalize(long long action,
 		return I_NULL;
 	}
 
+	
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 	crm_devel("Bumping the epoche and syncing to %d clients",
 		  g_hash_table_size(finalized_nodes));
 	fsa_cib_conn->cmds->bump_epoch(
 		fsa_cib_conn, cib_scope_local|cib_quorum_override);
+
+#if JOIN_AFTER_SYNC
+	crm_debug("Notifying %d clients of join results",
+		  g_hash_table_size(integrated_nodes));
+	g_hash_table_foreach_remove(
+		integrated_nodes, finalize_join_for, NULL);
+#endif
+	
 	rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_quorum_override);
 	add_cib_op_callback(rc, FALSE, NULL, finalize_sync_callback);
 
@@ -337,11 +359,18 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 		fsa_cib_conn->cmds->bump_epoch(
 			fsa_cib_conn, cib_quorum_override);
 
+#if JOIN_AFTER_SYNC
+		crm_debug("Notifying %d clients of join results",
+			  g_hash_table_size(integrated_nodes));
+		g_hash_table_foreach_remove(
+			integrated_nodes, finalize_join_for, NULL);
+#else
 		if(g_hash_table_size(finalized_nodes) == 0) {
 			crm_info("That was the last outstanding join confirmation");
 			register_fsa_input_later(
 				C_FSA_INTERNAL, I_FINALIZED, NULL);
 		}
+#endif
 	}
 	crm_free(user_data);
 }
@@ -445,7 +474,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	HA_Message *acknak = NULL;
 	
 	if(key == NULL || value == NULL) {
-		return (gboolean)GPOINTER_TO_INT(user_data);
+		return TRUE;
 	}
 
 	join_to    = (const char *)key;
@@ -476,7 +505,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	}
 	
 	send_msg_via_ha(fsa_cluster_conn, acknak);
-	return (gboolean)GPOINTER_TO_INT(user_data);
+	return TRUE;
 }
 
 void
