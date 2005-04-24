@@ -719,7 +719,7 @@ do_lrm_rsc_op(
 		if(existing_op != NULL) {
 			crm_debug("Cancelling previous invocation of"
 				  " %s on %s (%d)",
-				  op_id, rsc->id, existing_op->call_id);
+				  crm_str(op_id), rsc->id,existing_op->call_id);
 			/*cancel it so we can then restart it without conflict*/
 			rsc->ops->cancel_op(rsc, existing_op->call_id);
 			g_hash_table_remove(monitors, op_id);
