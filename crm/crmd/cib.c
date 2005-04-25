@@ -232,7 +232,7 @@ update_local_cib_adv(
 
 	CRM_DEV_ASSERT(msg_data != NULL);
 	
-	crm_malloc(fsa_input, sizeof(ha_msg_input_t));
+	crm_malloc0(fsa_input, sizeof(ha_msg_input_t));
 
 	msg = create_request(CRM_OP_CIB_UPDATE, msg_data, NULL,
 			     CRM_SYSTEM_CIB, CRM_SYSTEM_CRMD, NULL);
@@ -256,7 +256,7 @@ update_local_cib_adv(
 	} else {
 		fsa_data_t *op_data = NULL;
 		crm_devel("Invoking CIB handler directly");
-		crm_malloc(op_data, sizeof(fsa_data_t));
+		crm_malloc0(op_data, sizeof(fsa_data_t));
 
 		op_data->fsa_cause	= C_FSA_INTERNAL;
 		op_data->fsa_input	= I_CIB_OP;
@@ -272,14 +272,9 @@ update_local_cib_adv(
 	}
 	
 	crm_devel("deleting input");
-#if 0
-	delete_ha_msg_input(fsa_input);
-#else
  	crm_msg_del(fsa_input->msg);
+  	free_xml(fsa_input->xml);
 	crm_free(fsa_input);
-	/* BUG: it should be possible to free this but for some reason I cant */
-/*  	free_xml(fsa_input->xml); */
-#endif
 	crm_devel("deleted input");
 }
 
