@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.7 2005/04/25 12:51:55 andrew Exp $ */
+/* $Id: utils.c,v 1.8 2005/04/25 14:57:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -155,7 +155,7 @@ char *
 generate_hash_value(const char *src_node, const char *src_subsys)
 {
 	int ref_len;
-	char *hash_value;
+	char *hash_value = NULL;
 	
 	if (src_node == NULL || src_subsys == NULL) {
 		return NULL;
