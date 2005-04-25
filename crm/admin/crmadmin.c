@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.35 2005/04/07 14:17:47 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.36 2005/04/25 14:07:06 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -563,7 +563,7 @@ do_init(void)
 		cl_log_set_facility(facility);
 	}
 
-	crm_malloc(admin_uuid, sizeof(char) * 11);
+	crm_malloc0(admin_uuid, sizeof(char) * 11);
 	if(admin_uuid != NULL) {
 		snprintf(admin_uuid, 10, "%d", getpid());
 		admin_uuid[10] = '\0';
@@ -667,7 +667,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			/* 31 = "test-_.xml" + an_int_as_string + '\0' */
 			filename_len = 31 + strlen(this_msg_reference);
 
-			crm_malloc(filename, sizeof(char) * filename_len);
+			crm_malloc0(filename, sizeof(char) * filename_len);
 			if(filename != NULL) {
 				sprintf(filename, "%s-%s_%d.xml",
 					result, this_msg_reference,
@@ -737,13 +737,14 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 		rscstates = find_xml_node_nested(a_node, path2, DIMOF(path2));
 		xml_child_iter(
 			rscstates, rsc_state, XML_LRM_TAG_RESOURCE,
-			const char *id = crm_element_value(rsc_state,XML_ATTR_ID);
-			const char *target =
-				crm_element_value(rsc_state,XML_LRM_ATTR_TARGET);
-			const char *last_op =
-				crm_element_value(rsc_state,XML_LRM_ATTR_LASTOP);
-			const char *op_code =
-				crm_element_value(rsc_state,XML_LRM_ATTR_OPSTATUS);
+			const char *id = crm_element_value(
+				rsc_state,XML_ATTR_ID);
+			const char *target = crm_element_value(
+				a_node, XML_ATTR_ID);
+			const char *last_op = crm_element_value(
+				rsc_state,XML_LRM_ATTR_LASTOP);
+			const char *op_code = crm_element_value(
+				rsc_state,XML_LRM_ATTR_OPSTATUS);
 			
 			crm_devel("checking %s:%s for %s", target, id, rsc);
 
