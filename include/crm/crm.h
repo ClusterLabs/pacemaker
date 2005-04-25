@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.53 2005/04/21 15:15:28 andrew Exp $ */
+/* $Id: crm.h,v 1.54 2005/04/25 12:49:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -194,17 +194,17 @@ extern gboolean safe_str_neq(const char *a, const char *b);
 #define LOG_INSANE   LOG_DEBUG+5
 #define LOG_MSG      LOG_TRACE
 
-#  define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FUNCTION__, NULL, w)
-#  define crm_err(w...)     do_crm_log(LOG_ERR,     __FUNCTION__, NULL, w)
-#  define crm_warn(w...)    do_crm_log(LOG_WARNING, __FUNCTION__, NULL, w)
-#  define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FUNCTION__, NULL, w)
-#  define crm_info(w...)    do_crm_log(LOG_INFO,    __FUNCTION__, NULL, w)
+#  define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FILE__, __FUNCTION__, w)
+#  define crm_err(w...)     do_crm_log(LOG_ERR,     __FILE__, __FUNCTION__, w)
+#  define crm_warn(w...)    do_crm_log(LOG_WARNING, __FILE__, __FUNCTION__, w)
+#  define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FILE__, __FUNCTION__, w)
+#  define crm_info(w...)    do_crm_log(LOG_INFO,    __FILE__, __FUNCTION__, w)
 #if 1
-#  define crm_debug(w...)   do_crm_log(LOG_DEBUG,   __FUNCTION__, NULL, w)
-#  define crm_devel(w...)   do_crm_log(LOG_DEV,     __FUNCTION__, NULL, w)
-#  define crm_verbose(w...) do_crm_log(LOG_VERBOSE, __FUNCTION__, NULL, w)
-#  define crm_trace(w...)   do_crm_log(LOG_TRACE,   __FUNCTION__, NULL, w)
-#  define crm_insane(w...)  do_crm_log(LOG_INSANE,  __FUNCTION__, NULL, w)
+#  define crm_debug(w...)   do_crm_log(LOG_DEBUG,   __FILE__, __FUNCTION__, w)
+#  define crm_devel(w...)   do_crm_log(LOG_DEV,     __FILE__, __FUNCTION__, w)
+#  define crm_verbose(w...) do_crm_log(LOG_VERBOSE, __FILE__, __FUNCTION__, w)
+#  define crm_trace(w...)   do_crm_log(LOG_TRACE,   __FILE__, __FUNCTION__, w)
+#  define crm_insane(w...)  do_crm_log(LOG_INSANE,  __FILE__, __FUNCTION__, w)
 #else
 #  define crm_debug(w...)   if(0) { do_crm_log(LOG_DEBUG,   NULL, NULL, w); }
 #  define crm_devel(w...)   if(0) { do_crm_log(LOG_DEV,     NULL, NULL, w); }
@@ -239,16 +239,25 @@ extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_M
 #define crm_xml_trace(xml, text)   crm_log_xml(LOG_TRACE,   text, xml)
 #define crm_xml_insane(xml, text)  crm_log_xml(LOG_INSANE,  text, xml)
 
-#define crm_malloc(new_obj,length)				\
-	{							\
-		new_obj = cl_malloc(length);			\
-		if(new_obj == NULL) {				\
-			crm_crit("Out of memory... exiting");	\
-			exit(1);				\
-		} else {					\
-			memset(new_obj, 0, length);		\
-		}						\
+#define crm_malloc0(new_obj,length)					\
+	{								\
+		if(new_obj) {						\
+			crm_err("Potential memory leak:"		\
+				" %s at %s:%d not NULL before alloc.",	\
+				#new_obj, __FILE__, __LINE__);		\
+			if(CRM_DEV_BUILD) { abort(); }			\
+		}							\
+		new_obj = cl_malloc(length);				\
+		if(new_obj == NULL) {					\
+			crm_crit("Out of memory... exiting");		\
+			exit(1);					\
+		} else {						\
+			memset(new_obj, 0, length);			\
+		}							\
 	}	
+
+/* for temporary backwards compatibility */
+#define crm_malloc(new_obj,length) crm_malloc0(new_obj,length) 
 
 #if 1
 #  define crm_free(x)   if(x) {				\
