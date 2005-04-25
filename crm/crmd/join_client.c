@@ -34,6 +34,8 @@ void join_query_callback(const HA_Message *msg, int call_id, int rc,
 			 crm_data_t *output, void *user_data);
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
+extern gboolean process_join_ack_msg(
+	const char *join_from, crm_data_t *lrm_update);
 
 /*	A_CL_JOIN_QUERY		*/
 /* is there a DC out there? */
@@ -46,7 +48,8 @@ do_cl_join_query(long long action,
 {
 	HA_Message *req = create_request(CRM_OP_ANNOUNCE, NULL, NULL,
 					 CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
-	
+
+	crm_debug("c0) query");
 	send_msg_via_ha(fsa_cluster_conn, req);
 	
 	return I_NULL;
@@ -84,6 +87,7 @@ do_cl_join_announce(long long action,
 		const char *hb_from = cl_get_string(
 			input->msg, F_CRM_HOST_FROM);
 
+		crm_debug("c0) announce");
 		if(hb_from == NULL) {
 			crm_err("Failed to determin origin of hb message");
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
@@ -160,6 +164,8 @@ do_cl_join_request(long long action,
 		return I_NULL;
 	} 
 #endif
+	crm_debug("c1) processing join offer: %s",
+		  cl_get_string(input->msg, F_CRM_TASK));
 	if(fsa_our_dc == NULL) {
 		crm_info("Set DC to %s", welcome_from);
 		fsa_our_dc = crm_strdup(welcome_from);
@@ -199,6 +205,7 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 	
 	if(local_cib != NULL) {
 		HA_Message *reply = NULL;
+		crm_debug("c2) respond to join offer");
 		crm_debug("Acknowledging %s as our DC",
 			  cl_get_string(input->msg, F_CRM_HOST_FROM));
 		copy_in_properties(generation, local_cib);
@@ -260,18 +267,23 @@ do_cl_join_result(long long action,
 	} 	
 
 	/* send our status section to the DC */
+	crm_debug("c3) confirming join: %s",
+		  cl_get_string(input->msg, F_CRM_TASK));
 	crm_debug("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
-		HA_Message *reply = create_reply(input->msg, tmp1);
-		crm_debug("Sending local LRM status");
-		send_msg_via_ha(fsa_cluster_conn, reply);
-		
-		free_xml(tmp1);
 
-		if(AM_I_DC == FALSE) {
+		if(AM_I_DC) {
+			process_join_ack_msg(fsa_our_uname, tmp1);
+
+		} else {
+			HA_Message *reply = create_reply(input->msg, tmp1);
+			crm_debug("Sending local LRM status");
+			send_msg_via_ha(fsa_cluster_conn, reply);
 			register_fsa_input(cause, I_NOT_DC, NULL);
 		}
+		
+		free_xml(tmp1);
 		
 	} else {
 		crm_err("Could send our LRM state to the DC");

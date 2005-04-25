@@ -42,6 +42,7 @@ gboolean finalize_join_for(gpointer key, gpointer value, gpointer user_data);
 void join_send_offer(gpointer key, gpointer value, gpointer user_data);
 void finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 			    crm_data_t *output, void *user_data);
+gboolean process_join_ack_msg(const char *join_from, crm_data_t *lrm_update);
 
 /*	 A_DC_JOIN_OFFER_ALL	*/
 enum crmd_fsa_input
@@ -52,56 +53,18 @@ do_dc_join_offer_all(long long action,
 		     fsa_data_t *msg_data)
 {
 	/* reset everyones status back to down or in_ccm in the CIB */
-#if 0
-	crm_data_t *cib_copy   = get_cib_copy(fsa_cib_conn);
-	crm_data_t *tmp1       = get_object_root(XML_CIB_TAG_STATUS, cib_copy);
-	crm_data_t *tmp2       = NULL;
-#endif
-	crm_data_t *fragment   = create_cib_fragment(NULL, NULL);
-	crm_data_t *update     = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-	
-	/* catch any nodes that are active in the CIB but not in the CCM list*/
+	crm_data_t *fragment = create_cib_fragment(NULL, NULL);
+	crm_data_t *update   = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+
+	/* any nodes that are active in the CIB but not in the CCM list
+	 *   will be seen as offline by the PE anyway
+	 */
 	update = get_object_root(XML_CIB_TAG_STATUS, update);
 	CRM_DEV_ASSERT(update != NULL);
 
-#if 0
-	/* dont do this for now... involves too much blocking and I cant
-	 * think of a sensible way to do it asyncronously
-	 */
-	xml_child_iter(
-		tmp1, node_entry, XML_CIB_TAG_STATE,
-
-		const char *node_id = crm_element_value(node_entry, XML_ATTR_UNAME);
-		gpointer a_node = g_hash_table_lookup(
-			fsa_membership_copy->members, node_id);
-
-		if(a_node != NULL || (safe_str_eq(fsa_our_uname, node_id))) {
-			/* handled by do_update_cib_node() */
-			continue;
-		}
-
-		tmp2 = create_node_state(
-			node_id, node_id, NULL,
-			XML_BOOLEAN_NO, NULL, CRMD_JOINSTATE_PENDING, NULL);
-
-		add_node_copy(update, tmp2);
-		free_xml(tmp2);
-		);
-	free_xml(cib_copy);
-#endif
-	
 	/* now process the CCM data */
 	do_update_cib_nodes(fragment, TRUE);
 	
-#if 0
-	/* Avoid ordered message delays caused when the CRMd proc
-	 * isnt running yet (ie. send as a broadcast msg which are never
-	 * sent ordered.
-	 */
-	send_request(NULL, NULL, CRM_OP_WELCOME,
-		     NULL, CRM_SYSTEM_CRMD, NULL);	
-#else
-
 	crm_debug("0) Offering membership to %d clients",
 		  fsa_membership_copy->members_size);
 	
@@ -109,9 +72,7 @@ do_dc_join_offer_all(long long action,
 	g_hash_table_foreach(
 		fsa_membership_copy->members, join_send_offer, NULL);
 	
-#endif
-
-	/* dont waste time by invoking the pe yet; */
+	/* dont waste time by invoking the PE yet; */
 	crm_debug("1) Waiting on %d outstanding join acks",
 		  g_hash_table_size(welcomed_nodes));
 
@@ -138,12 +99,6 @@ do_dc_join_offer_one(long long action,
 	}
 	
 	join_to = cl_get_string(welcome->msg, F_CRM_HOST_FROM);
-
-	g_hash_table_remove(confirmed_nodes,  join_to);
-	g_hash_table_remove(finalized_nodes,  join_to);
-	g_hash_table_remove(integrated_nodes, join_to);
-	g_hash_table_remove(welcomed_nodes,   join_to);
-
 	if(a_node != NULL
 	   && (cur_state == S_INTEGRATION || cur_state == S_FINALIZE_JOIN)) {
 		/* note: it _is_ possible that a node will have been
@@ -383,24 +338,30 @@ do_dc_join_ack(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	/* now update them to "member" */
-	crm_data_t *update = NULL;
 	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
-	const char *join_from = cl_get_string(join_ack->msg, F_CRM_HOST_FROM);
-	const char *op = cl_get_string(join_ack->msg, F_CRM_TASK);
-	const char *type = cl_get_string(join_ack->msg, F_SUBTYPE);
-	const char *join_state = NULL;
-
+	const char *join_from  = cl_get_string(join_ack->msg, F_CRM_HOST_FROM);
+	const char *op         = cl_get_string(join_ack->msg, F_CRM_TASK);
+	const char *type       = cl_get_string(join_ack->msg, F_SUBTYPE);
 
 	if(safe_str_neq(op, CRM_OP_JOINACK)) {
 		crm_warn("Ignoring op=%s message", op);
-		return I_NULL;
 
 	} else if(safe_str_eq(type, XML_ATTR_REQUEST)) {
 		crm_verbose("Ignoring request");
 		crm_log_message(LOG_VERBOSE, join_ack->msg);
-		return I_NULL;
+
+	} else {
+		process_join_ack_msg(join_from, join_ack->xml);
 	}
+	return I_NULL;
+}
+
+gboolean
+process_join_ack_msg(const char *join_from, crm_data_t *lrm_update)
+{
+	/* now update them to "member" */
+	crm_data_t *update = NULL;
+	const char *join_state = NULL;
 	
 	crm_debug("Processing ack from %s", join_from);
 
@@ -410,19 +371,19 @@ do_dc_join_ack(long long action,
 	if(join_state == NULL) {
 		crm_err("Join not in progress: ignoring join from %s",
 			join_from);
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
+		return FALSE;
 		
 	} else if(safe_str_neq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		crm_err("Node %s wasnt invited to join the cluster",join_from);
 		g_hash_table_remove(finalized_nodes, join_from);
-		return I_NULL;
+		return FALSE;
+
 	} else {
 		g_hash_table_remove(finalized_nodes, join_from);
 	}
 	
 	if(g_hash_table_lookup(confirmed_nodes, join_from) != NULL) {
-		crm_err("hash already contains confirmation from %s", join_from);
+		crm_err("hash already contains confirmation from %s",join_from);
 	}
 	
 	g_hash_table_insert(confirmed_nodes, crm_strdup(join_from),
@@ -433,7 +394,7 @@ do_dc_join_ack(long long action,
 	 */
 	
 	/* update CIB with the current LRM status from the node */
-	update_local_cib(copy_xml_node_recursive(join_ack->xml));
+	update_local_cib(copy_xml_node_recursive(lrm_update));
 
 	/* update node entry in the status section  */
 	crm_info("4) Updating node state to %s for %s", join_state, join_from);
@@ -456,14 +417,13 @@ do_dc_join_ack(long long action,
 			crm_info("Delaying completion until CIB is sync'd");
 		}
 		
-		return I_NULL;
+	} else {
+		/* dont waste time by invoking the pe yet; */
+		crm_debug("Still waiting on %d outstanding join confirmations",
+			  g_hash_table_size(finalized_nodes));
 	}
-
-	/* dont waste time by invoking the pe yet; */
-	crm_debug("Still waiting on %d outstanding join confirmations",
-		  g_hash_table_size(finalized_nodes));
 	
-	return I_NULL;
+	return TRUE;
 }
 
 gboolean
@@ -567,6 +527,11 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 		/* send the welcome */
 		crm_info("Sending %s to %s", CRM_OP_WELCOME, join_to);
 
+		g_hash_table_remove(confirmed_nodes,  join_to);
+		g_hash_table_remove(finalized_nodes,  join_to);
+		g_hash_table_remove(integrated_nodes, join_to);
+		g_hash_table_remove(welcomed_nodes,   join_to);
+		
 		send_msg_via_ha(fsa_cluster_conn, offer);
 
 		g_hash_table_insert(welcomed_nodes, crm_strdup(join_to),
