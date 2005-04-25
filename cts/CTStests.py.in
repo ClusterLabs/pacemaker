@@ -150,9 +150,11 @@ random for the selected number of iterations.
             # Some tests want a node as an argument.
 
             nodechoice = self.Env.RandomNode()
-            logsize = os.stat(self.CM["LogFileName"])[ST_SIZE]
-            self.CM.log("Running test %s (%s) \t[%d : %d]"  
-                        % (test.name, nodechoice, testcount, logsize))
+            #logsize = os.stat(self.CM["LogFileName"])[ST_SIZE]
+            #self.CM.log("Running test %s (%s) \t[%d : %d]"  
+            #            % (test.name, nodechoice, testcount, logsize))
+            self.CM.log("Running test %s (%s) \t[%d]"  
+                        % (test.name, nodechoice, testcount))
 
             testcount = testcount + 1
             starttime=time.time()
