@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.29 2005/04/21 15:32:02 andrew Exp $ */
+/* $Id: native.c,v 1.30 2005/04/25 13:21:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,9 +96,9 @@ void native_unpack(resource_t *rsc)
 	
 	crm_verbose("Processing resource %s...", rsc->id);
 
-	crm_malloc(native_data, sizeof(native_variant_data_t));
+	crm_malloc0(native_data, sizeof(native_variant_data_t));
 
-	crm_malloc(native_data->agent, sizeof(lrm_agent_t));
+	crm_malloc0(native_data->agent, sizeof(lrm_agent_t));
 	native_data->agent->class	= crm_element_value(xml_obj, "class");
 	native_data->agent->type	= crm_element_value(xml_obj, "type");
 	native_data->agent->version	= version?version:"0.0";
@@ -314,13 +314,14 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		
 		if(chosen != NULL && safe_str_eq(
 			   node->details->id, chosen->details->id)) {
+
 			/* restart */
 			if(rsc->recover) {
 				crm_info("Restart resource %s\t(%s)",rsc->id,
 					 safe_val3(NULL,chosen,details,uname));
 
 				start = action_new(rsc, start_rsc, NULL,chosen);
-				stop  = action_new(rsc, stop_rsc,  NULL,chosen);
+				stop  = action_new(rsc, stop_rsc,  NULL,node);
 
 				rsc->schedule_recurring = TRUE;
 				
@@ -328,23 +329,15 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 				crm_info("Leave resource %s\t(%s)",rsc->id,
 					 safe_val3(NULL,chosen,details,uname));
 
-				if(rsc->start_pending) {
-					start = action_new(
-						rsc, start_rsc, NULL,chosen);
+				start = action_new(rsc, start_rsc, NULL,chosen);
+				stop  = action_new(rsc, stop_rsc,  NULL,node);
+				if(rsc->start_pending == FALSE) {
+					stop->optional = TRUE;
+					start->optional = TRUE;
+				} else {
+					rsc->schedule_recurring = TRUE;
 				}
-
-				/* in case the actions already exist */
-				slist_iter(
-					action, action_t, rsc->actions, lpc2,
-					
-					if(action->task == start_rsc
-					   && rsc->start_pending == FALSE) {
-						action->optional = TRUE;
-						
-					} else if(action->task == stop_rsc){
-						action->optional = TRUE;
-					}
-					);
+				
 			}
 			
 		} else if(chosen != NULL) {
