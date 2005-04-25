@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.36 2005/04/25 14:07:06 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.37 2005/04/25 15:03:22 gshi Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -589,7 +589,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	ha_msg_input_t *new_input = NULL;
 	gboolean hack_return_good = TRUE;
 	static int received_responses = 0;
-	char *filename;
+	char *filename = NULL;
 	int filename_len = 0;
 	const char *result = NULL;
 
