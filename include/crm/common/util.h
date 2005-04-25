@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.16 2005/04/22 10:04:50 andrew Exp $ */
+/* $Id: util.h,v 1.17 2005/04/25 12:51:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,8 +32,8 @@ extern unsigned int crm_log_level;
 
 extern gboolean crm_log_init(const char *entity);
 
-extern void do_crm_log(int log_level, const char *function,
-		       const char *alt_debugfile, const char *format, ...) G_GNUC_PRINTF(4,5);
+extern void do_crm_log(int log_level, const char *file, const char *function,
+		       const char *format, ...) G_GNUC_PRINTF(4,5);
 
 /* returns the old value */
 extern unsigned int set_crm_log_level(unsigned int level);

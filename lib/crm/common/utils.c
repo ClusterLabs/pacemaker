@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.6 2005/04/22 10:04:50 andrew Exp $ */
+/* $Id: utils.c,v 1.7 2005/04/25 12:51:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,7 +75,7 @@ generateReference(const char *custom1, const char *custom2)
 	if(local_cust2 == NULL) { local_cust2 = "_empty_"; }
 	reference_len += strlen(local_cust2);
 	
-	crm_malloc(since_epoch, reference_len*(sizeof(char)));
+	crm_malloc0(since_epoch, reference_len*(sizeof(char)));
 
 	if(since_epoch != NULL) {
 		sprintf(since_epoch, "%s-%s-%ld-%u",
@@ -99,7 +99,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 		while(lpc <= len) {
 			if (srcstring[lpc] == separator
 			    || srcstring[lpc] == '\0') {
-				crm_malloc(*name, sizeof(char)*lpc+1);
+				crm_malloc0(*name, sizeof(char)*lpc+1);
 				if(*name == NULL) {
 					break; /* and return FALSE */
 				}
@@ -114,7 +114,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 					*value = NULL;
 				} else {
 
-					crm_malloc(*value, sizeof(char)*len+1);
+					crm_malloc0(*value, sizeof(char)*len+1);
 					if(*value == NULL) {
 						crm_free(*name);
 						break; /* and return FALSE */
@@ -141,7 +141,7 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 {
 	int ref_len = strlen(sys?sys:"none") + strlen(crm_msg_reference) + 2;
 	char *hash_key = NULL;
-	crm_malloc(hash_key, sizeof(char)*(ref_len));
+	crm_malloc0(hash_key, sizeof(char)*(ref_len));
 
 	if(hash_key != NULL) {
 		sprintf(hash_key, "%s_%s", sys?sys:"none", crm_msg_reference);
@@ -172,7 +172,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	}
     
 	ref_len = strlen(src_subsys) + strlen(src_node) + 2;
-	crm_malloc(hash_value, sizeof(char)*(ref_len));
+	crm_malloc0(hash_value, sizeof(char)*(ref_len));
 	if (!hash_value) {
 		crm_err("memory allocation failed in "
 		       "generate_hash_value()");
@@ -225,7 +225,7 @@ crm_itoa(int an_int)
 	int len = 32;
 	char *buffer = NULL;
 	
-	crm_malloc(buffer, sizeof(char)*(len+1));
+	crm_malloc0(buffer, sizeof(char)*(len+1));
 	if(buffer != NULL) {
 		snprintf(buffer, len, "%d", an_int);
 	}
@@ -302,8 +302,8 @@ crm_log_message_adv(int level, const char *prefix, const HA_Message *msg)
 
 
 void
-do_crm_log(int log_level, const char *function,
-	   const char *alt_debugfile, const char *fmt, ...)
+do_crm_log(int log_level, const char *file, const char *function,
+	   const char *fmt, ...)
 {
 	int log_as = log_level;
 	gboolean do_log = FALSE;
@@ -325,20 +325,25 @@ do_crm_log(int log_level, const char *function,
 
 		log_level -= LOG_INFO;
 		if(log_level > 1) {
-			if(function == NULL) {
+			if(file == NULL && function == NULL) {
 				cl_log(log_as, "[%d] %s", log_level, buf);
 				
 			} else {
-				cl_log(log_as, "fn(%s [%d]): %s",
-				       function, log_level, buf);
+				cl_log(log_as, "mask(%s%s%s [%d]): %s",
+				       file?file:"",
+				       (file !=NULL && function !=NULL)?":":"",
+				       function?function:"", log_level, buf);
 			}
 
 		} else {
-			if(function == NULL) {
+			if(file == NULL && function == NULL) {
 				cl_log(log_as, "%s", buf);
 				
 			} else {
-				cl_log(log_as, "fn(%s): %s", function, buf);
+				cl_log(log_as, "mask(%s%s%s): %s",
+				       file?file:"",
+				       (file !=NULL && function !=NULL)?":":"",
+				       function?function:"", buf);
 			}
 		}
 		
@@ -525,7 +530,7 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 		return;
 	}
 	
-	crm_malloc(uuid_calc, sizeof(char)*50);
+	crm_malloc0(uuid_calc, sizeof(char)*50);
 	
 	if(uuid_calc != NULL) {
 		uuid_t uuid_raw;
@@ -960,7 +965,7 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 	
 	len += strlen(op_type);
 	len += strlen(rsc_id);
-	crm_malloc(op_id, sizeof(char)*len);
+	crm_malloc0(op_id, sizeof(char)*len);
 	if(op_id != NULL) {
 		sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
 	}
