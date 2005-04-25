@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.79 2005/04/21 15:32:02 andrew Exp $ */
+/* $Id: unpack.c,v 1.80 2005/04/25 13:16:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -223,7 +223,7 @@ gboolean
 unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 {
 	node_t *new_node   = NULL;
-	crm_data_t * attrs   = NULL;
+	crm_data_t * attrs = NULL;
 	const char *id     = NULL;
 	const char *uname  = NULL;
 	const char *type   = NULL;
@@ -231,6 +231,8 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 	crm_verbose("Begining unpack...");
 	xml_child_iter(
 		xml_nodes, xml_obj, XML_CIB_TAG_NODE,
+
+		new_node = NULL;
 
 		id     = crm_element_value(xml_obj, XML_ATTR_ID);
 		uname  = crm_element_value(xml_obj, XML_ATTR_UNAME);
@@ -247,14 +249,14 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 			crm_err("Must specify type tag in <node>");
 			continue;
 		}
-		crm_malloc(new_node, sizeof(node_t));
+		crm_malloc0(new_node, sizeof(node_t));
 		if(new_node == NULL) {
 			return FALSE;
 		}
 		
 		new_node->weight = 0;
 		new_node->fixed  = FALSE;
-		crm_malloc(new_node->details,
+		crm_malloc0(new_node->details,
 			   sizeof(struct node_shared_s));
 
 		if(new_node->details == NULL) {
@@ -368,21 +370,27 @@ unpack_constraints(crm_data_t * xml_constraints,
 			continue;
 		}
 
-		crm_verbose("Processing constraint %s %s", crm_element_name(xml_obj),id);
-		if(safe_str_eq(XML_CONS_TAG_RSC_ORDER, crm_element_name(xml_obj))) {
+		crm_verbose("Processing constraint %s %s",
+			    crm_element_name(xml_obj),id);
+
+		if(safe_str_eq(XML_CONS_TAG_RSC_ORDER,
+			       crm_element_name(xml_obj))) {
 			unpack_rsc_order(
 				xml_obj, resources, ordering_constraints);
 
-		} else if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj))) {
+		} else if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND,
+				      crm_element_name(xml_obj))) {
 			unpack_rsc_colocation(
 				xml_obj, resources, ordering_constraints);
 
-		} else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj))) {
+		} else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION,
+				      crm_element_name(xml_obj))) {
 			unpack_rsc_location(
-				xml_obj, resources, nodes, placement_constraints);
+				xml_obj, resources,nodes,placement_constraints);
 
 		} else {
-			crm_err("Unsupported constraint type: %s", crm_element_name(xml_obj));
+			crm_err("Unsupported constraint type: %s",
+				crm_element_name(xml_obj));
 		}
 		);
 
@@ -401,7 +409,7 @@ rsc2node_new(const char *id, resource_t *rsc,
 		return NULL;
 	}
 
-	crm_malloc(new_con, sizeof(rsc_to_node_t));
+	crm_malloc0(new_con, sizeof(rsc_to_node_t));
 	if(new_con != NULL) {
 		new_con->id           = id;
 		new_con->rsc_lh       = rsc;
@@ -617,7 +625,7 @@ unpack_lrm_agents(node_t *node, crm_data_t * agent_list)
 	xml_child_iter(
 		agent_list, xml_agent, XML_LRM_TAG_AGENT,
 
-		crm_malloc(agent, sizeof(lrm_agent_t));
+		crm_malloc0(agent, sizeof(lrm_agent_t));
 		if(agent == NULL) {
 			continue;
 		}
@@ -841,7 +849,7 @@ rsc_colocation_new(const char *id, enum con_strength strength,
 		return FALSE;
 	}
 
-	crm_malloc(new_con, sizeof(rsc_colocation_t));
+	crm_malloc0(new_con, sizeof(rsc_colocation_t));
 	if(new_con == NULL) {
 		return FALSE;
 	}
@@ -885,7 +893,7 @@ order_new(resource_t *lh_rsc, enum action_tasks lh_action_task, action_t *lh_act
 		return FALSE;
 	}
 
-	crm_malloc(order, sizeof(order_constraint_t));
+	crm_malloc0(order, sizeof(order_constraint_t));
 
 	if(order == NULL) {
 		return FALSE;

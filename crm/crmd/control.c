@@ -242,14 +242,14 @@ do_startup(long long action,
 	}
 	
 	/* set up the timers */
-	crm_malloc(dc_heartbeat, sizeof(fsa_timer_t));
-	crm_malloc(integration_timer, sizeof(fsa_timer_t));
-	crm_malloc(finalization_timer, sizeof(fsa_timer_t));
-	crm_malloc(election_trigger, sizeof(fsa_timer_t));
-	crm_malloc(election_timeout, sizeof(fsa_timer_t));
-	crm_malloc(shutdown_escalation_timer, sizeof(fsa_timer_t));
-	crm_malloc(wait_timer, sizeof(fsa_timer_t));
-	crm_malloc(shutdown_timer, sizeof(fsa_timer_t));
+	crm_malloc0(dc_heartbeat, sizeof(fsa_timer_t));
+	crm_malloc0(integration_timer, sizeof(fsa_timer_t));
+	crm_malloc0(finalization_timer, sizeof(fsa_timer_t));
+	crm_malloc0(election_trigger, sizeof(fsa_timer_t));
+	crm_malloc0(election_timeout, sizeof(fsa_timer_t));
+	crm_malloc0(shutdown_escalation_timer, sizeof(fsa_timer_t));
+	crm_malloc0(wait_timer, sizeof(fsa_timer_t));
+	crm_malloc0(shutdown_timer, sizeof(fsa_timer_t));
 
 	interval = interval * 1000;
 
@@ -334,9 +334,9 @@ do_startup(long long action,
 	}
 	
 	/* set up the sub systems */
-	crm_malloc(cib_subsystem, sizeof(struct crm_subsystem_s));
-	crm_malloc(te_subsystem,  sizeof(struct crm_subsystem_s));
-	crm_malloc(pe_subsystem,  sizeof(struct crm_subsystem_s));
+	crm_malloc0(cib_subsystem, sizeof(struct crm_subsystem_s));
+	crm_malloc0(te_subsystem,  sizeof(struct crm_subsystem_s));
+	crm_malloc0(pe_subsystem,  sizeof(struct crm_subsystem_s));
 
 	if(cib_subsystem != NULL) {
 		cib_subsystem->pid      = -1;	
