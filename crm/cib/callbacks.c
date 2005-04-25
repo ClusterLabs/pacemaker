@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.44 2005/04/25 13:01:46 andrew Exp $ */
+/* $Id: callbacks.c,v 1.45 2005/04/25 16:03:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -73,7 +73,7 @@ cib_operation_t cib_server_ops[] = {
 	{CRM_OP_CIB_REPLACE, TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_replace},
 	{CRM_OP_CIB_CREATE,  TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
 	{CRM_OP_CIB_UPDATE,  TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
-	{CRM_OP_JOINACK,     TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
+	{CRM_OP_JOIN_ACKNAK, TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
 	{CRM_OP_SHUTDOWN_REQ,TRUE, TRUE, FALSE,TRUE, TRUE, cib_process_modify},
 	{CRM_OP_CIB_DELETE,  TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
 	{CRM_OP_CIB_QUERY,   FALSE,FALSE,FALSE,TRUE, FALSE,cib_process_query},

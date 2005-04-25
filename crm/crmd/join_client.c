@@ -46,7 +46,7 @@ do_cl_join_query(long long action,
 	    enum crmd_fsa_input current_input,
 		    fsa_data_t *msg_data)
 {
-	HA_Message *req = create_request(CRM_OP_ANNOUNCE, NULL, NULL,
+	HA_Message *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
 					 CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 	crm_debug("c0) query");
@@ -126,7 +126,7 @@ do_cl_join_announce(long long action,
 		/* send as a broadcast */
 		{
 			HA_Message *req = create_request(
-			CRM_OP_ANNOUNCE, NULL, NULL,
+			CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 			send_msg_via_ha(fsa_cluster_conn, req);
@@ -209,7 +209,11 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 		crm_debug("Acknowledging %s as our DC",
 			  cl_get_string(input->msg, F_CRM_HOST_FROM));
 		copy_in_properties(generation, local_cib);
-		reply = create_reply(input->msg, generation);
+
+		reply = create_request(
+			CRM_OP_JOIN_REQUEST, generation, fsa_our_dc,
+			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+
 		send_msg_via_ha(fsa_cluster_conn, reply);
 		fsa_actions |= A_DC_TIMER_START;
 
@@ -233,16 +237,16 @@ do_cl_join_result(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
+	crm_data_t *tmp1      = NULL;
 	gboolean   was_nack   = TRUE;
-	crm_data_t *tmp1       = NULL;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-	const char *ack_nack     = cl_get_string(input->msg, CRM_OP_JOINACK);
-	const char *welcome_from = cl_get_string(input->msg, F_CRM_HOST_FROM);
-	const char *type = cl_get_string(input->msg, F_SUBTYPE);
 
-	if(safe_str_eq(type, XML_ATTR_RESPONSE)) {
-		crm_debug("Ignoring result.");
-		crm_log_message(LOG_VERBOSE, input->msg);
+	const char *op           = cl_get_string(input->msg,F_CRM_TASK);
+	const char *ack_nack     = cl_get_string(input->msg,CRM_OP_JOIN_ACKNAK);
+	const char *welcome_from = cl_get_string(input->msg,F_CRM_HOST_FROM);
+
+	if(safe_str_neq(op, CRM_OP_JOIN_ACKNAK)) {
+		crm_debug("Ignoring op=%s message", op);
 		return I_NULL;
 	}
 	
@@ -277,7 +281,10 @@ do_cl_join_result(long long action,
 			process_join_ack_msg(fsa_our_uname, tmp1);
 
 		} else {
-			HA_Message *reply = create_reply(input->msg, tmp1);
+			HA_Message *reply = create_request(
+				CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
+				CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+
 			crm_debug("Sending local LRM status");
 			send_msg_via_ha(fsa_cluster_conn, reply);
 			register_fsa_input(cause, I_NOT_DC, NULL);

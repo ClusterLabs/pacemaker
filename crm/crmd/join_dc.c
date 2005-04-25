@@ -152,15 +152,9 @@ do_dc_join_req(long long action,
 
 	const char *join_from = cl_get_string(join_ack->msg,F_CRM_HOST_FROM);
 	const char *ref       = cl_get_string(join_ack->msg,XML_ATTR_REFERENCE);
-	const char *op	   = cl_get_string(join_ack->msg, F_CRM_TASK);
 
 	gpointer join_node =
 		g_hash_table_lookup(fsa_membership_copy->members, join_from);
-
-	if(safe_str_neq(op, CRM_OP_WELCOME)) {
-		crm_warn("Ignoring op=%s message", op);
-		return I_NULL;
-	}
 
 	crm_devel("Processing req from %s", join_from);
 	
@@ -341,14 +335,9 @@ do_dc_join_ack(long long action,
 	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 	const char *join_from  = cl_get_string(join_ack->msg, F_CRM_HOST_FROM);
 	const char *op         = cl_get_string(join_ack->msg, F_CRM_TASK);
-	const char *type       = cl_get_string(join_ack->msg, F_SUBTYPE);
 
-	if(safe_str_neq(op, CRM_OP_JOINACK)) {
-		crm_warn("Ignoring op=%s message", op);
-
-	} else if(safe_str_eq(type, XML_ATTR_REQUEST)) {
-		crm_verbose("Ignoring request");
-		crm_log_message(LOG_VERBOSE, join_ack->msg);
+	if(safe_str_neq(op, CRM_OP_JOIN_CONFIRM)) {
+		crm_debug("Ignoring op=%s message", op);
 
 	} else {
 		process_join_ack_msg(join_from, join_ack->xml);
@@ -445,14 +434,14 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 
 	/* send the ack/nack to the node */
 	acknak = create_request(
-		CRM_OP_JOINACK, NULL, join_to,
+		CRM_OP_JOIN_ACKNAK, NULL, join_to,
 		CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
 	
 	/* set the ack/nack */
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		crm_info("3) ACK'ing join request from %s, state %s",
 			 join_to, join_state);
-		ha_msg_add(acknak, CRM_OP_JOINACK, XML_BOOLEAN_TRUE);
+		ha_msg_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
 		g_hash_table_insert(
 			finalized_nodes,
 			crm_strdup(join_to), crm_strdup(CRMD_JOINSTATE_MEMBER));
@@ -461,7 +450,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 		crm_warn("3) NACK'ing join request from %s, state %s",
 			 join_to, join_state);
 		
-		ha_msg_add(acknak, CRM_OP_JOINACK, XML_BOOLEAN_FALSE);
+		ha_msg_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_FALSE);
 	}
 	
 	send_msg_via_ha(fsa_cluster_conn, acknak);
@@ -521,11 +510,11 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 
 	} else {
 		HA_Message *offer = create_request(
-			CRM_OP_WELCOME, NULL, join_to,
+			CRM_OP_JOIN_OFFER, NULL, join_to,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
 
 		/* send the welcome */
-		crm_info("Sending %s to %s", CRM_OP_WELCOME, join_to);
+		crm_info("Sending %s to %s", CRM_OP_JOIN_OFFER, join_to);
 
 		g_hash_table_remove(confirmed_nodes,  join_to);
 		g_hash_table_remove(finalized_nodes,  join_to);

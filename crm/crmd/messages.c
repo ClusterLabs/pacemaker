@@ -823,13 +823,15 @@ handle_request(ha_msg_input_t *stored_msg)
 		crm_info("Debug set to %d (was %d)",
 			 get_crm_log_level(), level);
 
-	} else if(strcmp(op, CRM_OP_WELCOME) == 0) {
+	} else if(strcmp(op, CRM_OP_JOIN_OFFER) == 0) {
 		next_input = I_JOIN_OFFER;
 				
-	} else if(strcmp(op, CRM_OP_JOINACK) == 0) {
+	} else if(strcmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
 		next_input = I_JOIN_RESULT;
 
-		/* this functionality should only be enabled if this is a development build */
+		/* this functionality should only be enabled
+		 *   if this is a development build
+		 */
 	} else if(CRM_DEV_BUILD && strcmp(op, CRM_OP_DIE) == 0/*constant condition*/) {
 		crm_warn("Test-only code: Killing the CRM without mercy");
 		crm_warn("Inhibiting respawns");
@@ -901,8 +903,15 @@ handle_request(ha_msg_input_t *stored_msg)
 					 op, fsa_state2string(fsa_state));
 			}
 
-		} else if(strcmp(op, CRM_OP_ANNOUNCE) == 0) {
+		} else if(strcmp(op, CRM_OP_JOIN_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
+			
+		} else if(strcmp(op, CRM_OP_JOIN_REQUEST) == 0) {
+			next_input = I_JOIN_REQUEST;
+			
+		} else if(strcmp(op, CRM_OP_JOIN_CONFIRM) == 0) {
+			next_input = I_JOIN_RESULT;
+				
 			
 		} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 			gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
@@ -953,12 +962,6 @@ handle_response(ha_msg_input_t *stored_msg)
 		crm_err("Bad message");
 		crm_log_message(LOG_ERR, stored_msg->msg);
 
-	} else if(AM_I_DC && strcmp(op, CRM_OP_WELCOME) == 0) {
-		next_input = I_JOIN_REQUEST;
-				
-	} else if(AM_I_DC && strcmp(op, CRM_OP_JOINACK) == 0) {
-		next_input = I_JOIN_RESULT;
-				
  	} else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
 
 		if(safe_str_eq(msg_ref, fsa_pe_ref)) {
@@ -971,10 +974,8 @@ handle_response(ha_msg_input_t *stored_msg)
 		
 	} else if(strcmp(op, CRM_OP_VOTE) == 0
 		  || strcmp(op, CRM_OP_HBEAT) == 0
-		  || strcmp(op, CRM_OP_WELCOME) == 0
 		  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
-		  || strcmp(op, CRM_OP_SHUTDOWN) == 0
-		  || strcmp(op, CRM_OP_ANNOUNCE) == 0) {
+		  || strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 		next_input = I_NULL;
 		
 	} else if(strcmp(op, CRM_OP_CIB_CREATE) == 0

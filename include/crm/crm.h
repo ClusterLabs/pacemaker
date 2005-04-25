@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.54 2005/04/25 12:49:17 andrew Exp $ */
+/* $Id: crm.h,v 1.55 2005/04/25 16:03:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -117,14 +117,17 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_CIB_REPLACE	"cib_replace"
 #define CRM_OP_CIB_NOTIFY	"cib_notify"
 
+#define CRM_OP_JOIN_ANNOUNCE	"join_announce"
+#define CRM_OP_JOIN_OFFER	"join_offer"
+#define CRM_OP_JOIN_REQUEST	"join_request"
+#define CRM_OP_JOIN_ACKNAK	"join_ack_nack"
+#define CRM_OP_JOIN_CONFIRM	"join_confirm"
+
 #define CRM_OP_DIE		"die_no_respawn"
 #define CRM_OP_RETRIVE_CIB	"retrieve_cib"
-#define CRM_OP_JOINACK		"join_ack_nack"
-#define CRM_OP_WELCOME		"welcome"
 #define CRM_OP_PING		"ping"
 #define CRM_OP_VOTE		"vote"
 #define CRM_OP_HELLO		"hello"
-#define CRM_OP_ANNOUNCE		"announce"
 #define CRM_OP_HBEAT		"dc_beat"
 #define CRM_OP_PECALC		"pe_calc"
 #define CRM_OP_ABORT		"abort"
