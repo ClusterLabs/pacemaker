@@ -267,7 +267,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				fsa_data->origin);
 			
 		} else if(fsa_data == NULL) {
-			crm_malloc(fsa_data, sizeof(fsa_data_t));
+			crm_malloc0(fsa_data, sizeof(fsa_data_t));
 			fsa_data->fsa_input = I_NULL;
 			fsa_data->fsa_cause = cause;
 			fsa_data->actions   = A_NOTHING;
@@ -414,7 +414,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		else IF_FSA_ACTION(A_DC_RELEASE,	 do_dc_release)
 		else IF_FSA_ACTION(A_ELECTION_START,	 do_election_vote)
 		else IF_FSA_ACTION(A_DC_JOIN_OFFER_ALL,	 do_dc_join_offer_all)
-		else IF_FSA_ACTION(A_DC_JOIN_OFFER_ONE,	 do_dc_join_offer_one)
+		else IF_FSA_ACTION(A_DC_JOIN_OFFER_ONE,	 do_dc_join_offer_all)
 		else IF_FSA_ACTION(A_DC_JOIN_PROCESS_REQ,do_dc_join_req)
 		else IF_FSA_ACTION(A_DC_JOIN_PROCESS_ACK,do_dc_join_ack)
 		
