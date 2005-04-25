@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.1 2005/04/12 12:49:02 andrew Exp $ */
+/* $Id: msg.c,v 1.2 2005/04/25 13:42:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -326,7 +326,7 @@ ha_msg_input_t *
 new_ha_msg_input(const HA_Message *orig) 
 {
 	ha_msg_input_t *input_copy = NULL;
-	crm_malloc(input_copy, sizeof(ha_msg_input_t));
+	crm_malloc0(input_copy, sizeof(ha_msg_input_t));
 
 	input_copy->msg = ha_msg_copy(orig);
 	input_copy->xml = get_message_xml(input_copy->msg, F_CRM_DATA);
@@ -338,7 +338,7 @@ new_ipc_msg_input(IPC_Message *orig)
 {
 	ha_msg_input_t *input_copy = NULL;
 	
-	crm_malloc(input_copy, sizeof(ha_msg_input_t));
+	crm_malloc0(input_copy, sizeof(ha_msg_input_t));
 	input_copy->msg = ipcmsg2hamsg(orig);
 	input_copy->xml = get_message_xml(input_copy->msg, F_CRM_DATA);
 	return input_copy;
