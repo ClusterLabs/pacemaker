@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.80 2005/04/25 13:16:52 andrew Exp $ */
+/* $Id: unpack.c,v 1.81 2005/04/25 13:58:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -746,6 +746,7 @@ unpack_rsc_op(resource_t *rsc, const char *last_op, const char *rsc_state,
 				/* re-issue the stop and return */
 				action_new(rsc, stop_rsc, NULL, node);
 				native_add_running(rsc, node);
+				rsc->recover = TRUE;
 				
 			} else if(safe_str_eq(task, CRMD_RSCSTATE_START)) {
 				rsc->start_pending = TRUE;
