@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.3 2005/04/24 06:42:24 andrew Exp $ */
+/* $Id: xml.c,v 1.4 2005/04/25 13:01:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -430,7 +430,7 @@ set_node_tstamp(crm_data_t *a_node)
 		return;
 	}
 	
-	crm_malloc(since_epoch, 128*(sizeof(char)));
+	crm_malloc0(since_epoch, 128*(sizeof(char)));
 	if(since_epoch != NULL) {
 		sprintf(since_epoch, "%ld", (unsigned long)a_time);
 #ifdef USE_LIBXML
@@ -591,7 +591,7 @@ stdin2xml(void)
 	char *xml_buffer = NULL;
 	crm_data_t *xml_obj = NULL;
 
-	crm_malloc(xml_buffer, sizeof(char)*(MAX_XML_BUFFER+1));
+	crm_malloc0(xml_buffer, sizeof(char)*(MAX_XML_BUFFER+1));
 	
 	while (more && lpc < MAX_XML_BUFFER) {
 		ch = fgetc(input);
@@ -714,7 +714,7 @@ file2xml(FILE *input)
 	}
 
 	crm_devel("Reading %d bytes from file", length);
-	crm_malloc(buffer, sizeof(char) * (length+1));
+	crm_malloc0(buffer, sizeof(char) * (length+1));
 	read_len = fread(buffer, sizeof(char), length, input);
 	if(read_len != length) {
 		crm_err("Calculated and read bytes differ: %d vs. %d",
@@ -736,18 +736,18 @@ dump_array(int log_level, const char *message, const char **array, int depth)
 	int j;
 	
 	if(message != NULL) {
-		do_crm_log(log_level, __FUNCTION__, NULL, "%s", message);
+		do_crm_log(log_level, __FILE__, __FUNCTION__, "%s", message);
 	}
 
-	do_crm_log(log_level, __FUNCTION__, NULL,  "Contents of the array:");
+	do_crm_log(log_level, __FILE__, __FUNCTION__,  "Contents of the array:");
 	if(array == NULL || array[0] == NULL || depth == 0) {
-		do_crm_log(log_level, __FUNCTION__, NULL, "\t<empty>");
+		do_crm_log(log_level, __FILE__, __FUNCTION__, "\t<empty>");
 		return;
 	}
 	
 	for (j=0; j < depth && array[j] != NULL; j++) {
 		if (array[j] == NULL) { break; }
-		do_crm_log(log_level, __FUNCTION__, NULL, "\t--> (%s).", array[j]);
+		do_crm_log(log_level, __FILE__, __FUNCTION__, "\t--> (%s).", array[j]);
 	}
 }
 
@@ -917,8 +917,8 @@ dump_xml_formatted(crm_data_t *an_xml_node)
 	free_xml(xml_node);
 #else
 	char *mutable_ptr = NULL;
-/* 	crm_malloc(buffer, 2*(an_xml_node->stringlen)); */
-	crm_malloc(buffer, sizeof(char)*30000);
+/* 	crm_malloc0(buffer, 2*(an_xml_node->stringlen)); */
+	crm_malloc0(buffer, sizeof(char)*30000);
 	mutable_ptr = buffer;
 	
 	crm_validate_data(an_xml_node);
@@ -994,8 +994,8 @@ dump_xml_unformatted(crm_data_t *an_xml_node)
 	crm_devel("Processed %d chars for newlines", lpc);
 #else
 	char *mutable_ptr = NULL;
-/* 	crm_malloc(buffer, 2*(an_xml_node->stringlen)); */
-	crm_malloc(buffer, sizeof(char)*20000);
+/* 	crm_malloc0(buffer, 2*(an_xml_node->stringlen)); */
+	crm_malloc0(buffer, sizeof(char)*20000);
 	mutable_ptr = buffer;
 	
 	crm_validate_data(an_xml_node);
@@ -1523,7 +1523,7 @@ parse_xml(const char *input, int *offset)
 	if(len < 0) {
 		return NULL;
 	}
-	crm_malloc(tag_name, len+1);
+	crm_malloc0(tag_name, len+1);
 	strncpy(tag_name, our_input, len+1);
 	tag_name[len] = EOS;
 	crm_devel("Processing tag %s", tag_name);
@@ -1592,7 +1592,7 @@ parse_xml(const char *input, int *offset)
 					if(len < 0) {
 						error = "couldnt find attr_value";
 					} else {
-						crm_malloc(attr_value, len+1);
+						crm_malloc0(attr_value, len+1);
 						strncpy(attr_value, our_input+lpc, len+1);
 						attr_value[len] = EOS;
 						lpc += len;
@@ -1618,7 +1618,7 @@ parse_xml(const char *input, int *offset)
 					if(len < 0) {
 						error = "couldnt find attr_name";
 					} else {
-						crm_malloc(attr_name, len+1);
+						crm_malloc0(attr_name, len+1);
 						strncpy(attr_name, our_input+lpc, len+1);
 						attr_name[len] = EOS;
 						lpc += len;

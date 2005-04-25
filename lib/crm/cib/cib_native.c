@@ -69,7 +69,7 @@ cib_t*
 cib_native_new (cib_t *cib)
 {
 	cib_native_opaque_t *native = NULL;
-	crm_malloc(cib->variant_opaque, sizeof(cib_native_opaque_t));
+	crm_malloc0(cib->variant_opaque, sizeof(cib_native_opaque_t));
 	
 	native = cib->variant_opaque;
 	native->command_channel   = NULL;

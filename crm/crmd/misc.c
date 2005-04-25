@@ -46,7 +46,7 @@ do_log(long long action,
 		log_type = LOG_ERR;
 	}
 	
-	do_crm_log(log_type, __FUNCTION__, NULL,
+	do_crm_log(log_type, __FILE__, __FUNCTION__,
 		   "[[FSA]] Input %s from %s() received in state (%s)",
 		   fsa_input2string(msg_data->fsa_input),
 		   msg_data->origin,
@@ -67,7 +67,7 @@ do_log(long long action,
 
 	} else if(msg_data->data_type == fsa_dt_lrm) {
 		lrm_op_t *input = fsa_typed_data(msg_data->data_type);
-		do_crm_log(log_type, __FUNCTION__, NULL,
+		do_crm_log(log_type, __FILE__, __FUNCTION__,
 			   "Resource %s: Call ID %d returned %d (%d)."
 			   "  New status if rc=0: %s",
 			   input->rsc_id, input->call_id, input->rc,
@@ -77,7 +77,7 @@ do_log(long long action,
 		struct crmd_ccm_data_s *input = fsa_typed_data(
 			msg_data->data_type);
 		int event = *(input->event);
-		do_crm_log(log_type, __FUNCTION__, NULL,
+		do_crm_log(log_type, __FILE__, __FUNCTION__,
 			   "Received \"%s\" event from the CCM.", 
 			   event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
 			   event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":

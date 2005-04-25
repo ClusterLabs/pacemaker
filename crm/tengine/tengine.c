@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.63 2005/04/24 06:43:06 andrew Exp $ */
+/* $Id: tengine.c,v 1.64 2005/04/25 13:01:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,7 +52,7 @@ gboolean
 initialize_graph(void)
 {
 	if(transition_timer == NULL) {
-		crm_malloc(transition_timer, sizeof(te_timer_t));
+		crm_malloc0(transition_timer, sizeof(te_timer_t));
 	    
 		transition_timer->timeout   = 10;
 		transition_timer->source_id = -1;
@@ -63,7 +63,7 @@ initialize_graph(void)
 	}
 	
 	if(transition_fuzz_timer == NULL) {
-		crm_malloc(transition_fuzz_timer, sizeof(te_timer_t));
+		crm_malloc0(transition_fuzz_timer, sizeof(te_timer_t));
 	
 		transition_fuzz_timer->timeout   = 10;
 		transition_fuzz_timer->source_id = -1;
@@ -425,11 +425,11 @@ check_for_completion(void)
 
 #ifdef TESTING
 #   define te_log_action(log_level, fmt...) { \
-		do_crm_log(log_level, __FUNCTION__, NULL, fmt);	\
+		do_crm_log(log_level, __FILE__, __FUNCTION__, fmt);	\
 		fprintf(stderr, fmt);				\
 	}
 #else
-#   define te_log_action(log_level, fmt...) do_crm_log(log_level, __FUNCTION__, NULL, fmt)
+#   define te_log_action(log_level, fmt...) do_crm_log(log_level, __FILE__, __FUNCTION__, fmt)
 #endif
 
 gboolean
@@ -494,7 +494,7 @@ initiate_action(action_t *action)
 		action->complete = TRUE;
 #else
 		stonith_ops_t * st_op = NULL;
-		crm_malloc(st_op, sizeof(stonith_ops_t));
+		crm_malloc0(st_op, sizeof(stonith_ops_t));
 		st_op->optype = RESET;
 		st_op->timeout = crm_atoi(timeout, "100"); /* ten seconds */
 		st_op->node_name = crm_strdup(target);

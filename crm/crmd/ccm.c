@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.67 2005/04/19 10:44:09 andrew Exp $ */
+/* $Id: ccm.c,v 1.68 2005/04/25 13:01:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -273,7 +273,7 @@ do_ccm_update_cache(long long action,
 		  oc->m_in_idx,
 		  oc->m_out_idx);
 
-	crm_malloc(membership_copy, sizeof(oc_node_list_t));
+	crm_malloc0(membership_copy, sizeof(oc_node_list_t));
 
 	if(membership_copy == NULL) {
 		crm_crit("Couldnt create membership copy - out of memory");
@@ -297,7 +297,7 @@ do_ccm_update_cache(long long action,
 		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
 			oc_node_t *member = NULL;
 			crm_devel("Copying member %d", lpc);
-			crm_malloc(member, sizeof(oc_node_t));
+			crm_malloc0(member, sizeof(oc_node_t));
 			
 			if(member == NULL) {
 				continue;
@@ -338,7 +338,7 @@ do_ccm_update_cache(long long action,
 		
 		for(lpc=0; lpc < membership_copy->new_members_size; lpc++) {
 			oc_node_t *member = NULL;
-			crm_malloc(member, sizeof(oc_node_t));
+			crm_malloc0(member, sizeof(oc_node_t));
 
 			if(member == NULL) {
 				continue;
@@ -379,7 +379,7 @@ do_ccm_update_cache(long long action,
 
 		for(lpc=0; lpc < membership_copy->dead_members_size; lpc++) {
 			oc_node_t *member = NULL;
-			crm_malloc(member, sizeof(oc_node_t));
+			crm_malloc0(member, sizeof(oc_node_t));
 
 			if(member == NULL) {
 				continue;
@@ -598,7 +598,6 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 		update_local_cib(fragment);
 	}
 
-	free_xml(fragment);
 	return NULL;
 }
 

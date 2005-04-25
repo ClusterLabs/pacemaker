@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.28 2005/04/21 21:00:51 gshi Exp $ */
+/* $Id: unpack.c,v 1.29 2005/04/25 13:01:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -91,7 +91,7 @@ unpack_graph(crm_data_t *xml_graph)
 		crm_devel("looking in synapse %s",
 			  crm_element_value(synapse, XML_ATTR_ID));
 		
-		crm_malloc(new_synapse, sizeof(synapse_t));
+		crm_malloc0(new_synapse, sizeof(synapse_t));
 		new_synapse->id        = num_synapses++;
 		new_synapse->complete  = FALSE;
 		new_synapse->confirmed = FALSE;
@@ -182,7 +182,7 @@ unpack_action(crm_data_t *xml_action)
 	}
 	
 	action_copy = copy_xml_node_recursive(xml_action);
-	crm_malloc(action, sizeof(action_t));
+	crm_malloc0(action, sizeof(action_t));
 	if(action == NULL) {
 		return NULL;
 	}
@@ -234,7 +234,7 @@ unpack_action(crm_data_t *xml_action)
 	crm_devel("Action %d has timer set to %dms",
 		  action->id, action->timeout);
 	
-	crm_malloc(action->timer, sizeof(te_timer_t));
+	crm_malloc0(action->timer, sizeof(te_timer_t));
 	action->timer->timeout   = 2 * action->timeout;
 	action->timer->source_id = -1;
 	action->timer->reason    = timeout_action;

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.21 2005/04/21 15:32:02 andrew Exp $ */
+/* $Id: complex.c,v 1.22 2005/04/25 13:01:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -129,7 +129,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 		return FALSE;
 		
 	}
-	crm_malloc(*rsc, sizeof(resource_t));
+	crm_malloc0(*rsc, sizeof(resource_t));
 	
 	if(*rsc == NULL) {
 		return FALSE;
@@ -236,7 +236,7 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 	crm_devel_action(
 		print_action("RH (order_actions)", rh_action, FALSE));
 	
-	crm_malloc(wrapper, sizeof(action_wrapper_t));
+	crm_malloc0(wrapper, sizeof(action_wrapper_t));
 	if(wrapper != NULL) {
 		wrapper->action = rh_action;
 		wrapper->strength = order->strength;
@@ -244,9 +244,10 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 		list = lh_action->actions_after;
 		list = g_list_append(list, wrapper);
 		lh_action->actions_after = list;
+		wrapper = NULL;
 	}
 	
-	crm_malloc(wrapper, sizeof(action_wrapper_t));
+	crm_malloc0(wrapper, sizeof(action_wrapper_t));
 	if(wrapper != NULL) {
 		wrapper->action = lh_action;
 		wrapper->strength = order->strength;

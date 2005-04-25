@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.69 2005/04/21 15:32:02 andrew Exp $ */
+/* $Id: utils.c,v 1.70 2005/04/25 13:01:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,7 +48,7 @@ invert_constraint(rsc_colocation_t *constraint)
 		return NULL;
 	}
 
-	crm_malloc(inverted_con, sizeof(rsc_colocation_t));
+	crm_malloc0(inverted_con, sizeof(rsc_colocation_t));
 
 	if(inverted_con == NULL) {
 		return NULL;
@@ -293,7 +293,7 @@ node_copy(node_t *this_node)
 		crm_err("Failed copy of <null> node.");
 		return NULL;
 	}
-	crm_malloc(new_node, sizeof(node_t));
+	crm_malloc0(new_node, sizeof(node_t));
 
 	CRM_DEV_ASSERT(new_node != NULL);
 	if(new_node == NULL) {
@@ -326,7 +326,7 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr node_list)
 	color_t *new_color = NULL;
 	
 	crm_trace("Creating color");
-	crm_malloc(new_color, sizeof(color_t));
+	crm_malloc0(new_color, sizeof(color_t));
 	if(new_color == NULL) {
 		return NULL;
 	}
@@ -335,7 +335,7 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr node_list)
 	new_color->local_weight = 1.0;
 	
 	crm_trace("Creating color details");
-	crm_malloc(new_color->details, sizeof(struct color_shared_s));
+	crm_malloc0(new_color->details, sizeof(struct color_shared_s));
 
 	if(new_color->details == NULL) {
 		crm_free(new_color);
@@ -375,7 +375,7 @@ copy_color(color_t *a_color)
 		return NULL;
 	}
 	
-	crm_malloc(color_copy, sizeof(color_t));
+	crm_malloc0(color_copy, sizeof(color_t));
 	if(color_copy != NULL) {
 		color_copy->id      = a_color->id;
 		color_copy->details = a_color->details;
@@ -633,7 +633,7 @@ action_new(resource_t *rsc, enum action_tasks task,
 			  task2text(task), rsc?rsc->id:"<NULL>",
 			  on_node?on_node->details->id:"<NULL>");
 
-		crm_malloc(action, sizeof(action_t));
+		crm_malloc0(action, sizeof(action_t));
 		if(action != NULL) {
 			action->id   = action_id++;
 			action->rsc  = rsc;
@@ -943,7 +943,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 	log_action(LOG_DEV, pre_text, action, details);
 }
 
-#define util_log(fmt...)  do_crm_log(log_level,  __FUNCTION__, NULL, fmt)
+#define util_log(fmt...)  do_crm_log(log_level,  __FILE__, __FUNCTION__, fmt)
 
 void
 log_action(int log_level, const char *pre_text, action_t *action, gboolean details)
@@ -1222,7 +1222,7 @@ set_id(crm_data_t * xml_obj, const char *prefix, int child)
 		id_len += (1 + strlen(prefix));
 	}
 	
-	crm_malloc(new_id, id_len);
+	crm_malloc0(new_id, id_len);
 
 	if(use_child) {
 		snprintf(new_id, id_len, "%s%s%s:%d",

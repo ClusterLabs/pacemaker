@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.12 2005/03/31 16:40:07 andrew Exp $ */
+/* $Id: incarnation.c,v 1.13 2005/04/25 13:01:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,7 +69,7 @@ void incarnation_unpack(resource_t *rsc)
 
 	crm_verbose("Processing resource %s...", rsc->id);
 
-	crm_malloc(incarnation_data, sizeof(incarnation_variant_data_t));
+	crm_malloc0(incarnation_data, sizeof(incarnation_variant_data_t));
 	incarnation_data->child_list           = NULL;
 	incarnation_data->interleave           = FALSE;
 	incarnation_data->ordered              = FALSE;

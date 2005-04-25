@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.12 2005/03/31 16:40:07 andrew Exp $ */
+/* $Id: group.c,v 1.13 2005/04/25 13:01:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,7 +50,7 @@ void group_unpack(resource_t *rsc)
 
 	crm_verbose("Processing resource %s...", rsc->id);
 
-	crm_malloc(group_data, sizeof(group_variant_data_t));
+	crm_malloc0(group_data, sizeof(group_variant_data_t));
 	group_data->num_children = 0;
 	group_data->self	 = NULL;
 	group_data->child_list   = NULL;

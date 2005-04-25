@@ -393,7 +393,7 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 	} else {
 		crmd_client_t *blank_client = NULL;
 		crm_devel("Channel connected");
-		crm_malloc(blank_client, sizeof(crmd_client_t));
+		crm_malloc0(blank_client, sizeof(crmd_client_t));
 	
 		if (blank_client == NULL) {
 			return FALSE;
@@ -444,7 +444,7 @@ crmd_ccm_msg_callback(
 	crm_devel("received callback");
 	
 	if(data != NULL) {
-		crm_malloc(event_data, sizeof(struct crmd_ccm_data_s));
+		crm_malloc0(event_data, sizeof(struct crmd_ccm_data_s));
 
 		if(event_data != NULL) {
 			event_data->event = &event;

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.43 2005/04/21 15:45:31 andrew Exp $ */
+/* $Id: callbacks.c,v 1.44 2005/04/25 13:01:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -118,7 +118,7 @@ cib_client_connect(IPC_Channel *channel, gpointer user_data)
 		can_connect = FALSE;
 		
 	} else {
-		crm_malloc(new_client, sizeof(cib_client_t));
+		crm_malloc0(new_client, sizeof(cib_client_t));
 		new_client->id          = NULL;
 		new_client->callback_id = NULL;
 		new_client->source      = NULL;
@@ -139,12 +139,12 @@ cib_client_connect(IPC_Channel *channel, gpointer user_data)
 			uuid_t client_id;
 
 			uuid_generate(client_id);
-			crm_malloc(new_client->id, sizeof(char)*36);
+			crm_malloc0(new_client->id, sizeof(char)*36);
 			uuid_unparse(client_id, new_client->id);
 			new_client->id[35] = EOS;
 			
 			uuid_generate(client_id);
-			crm_malloc(new_client->callback_id, sizeof(char)*36);
+			crm_malloc0(new_client->callback_id, sizeof(char)*36);
 			uuid_unparse(client_id, new_client->callback_id);
 			new_client->callback_id[35] = EOS;
 			

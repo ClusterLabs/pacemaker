@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.33 2005/04/12 09:23:26 andrew Exp $ */
+/* $Id: messages.c,v 1.34 2005/04/25 13:01:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -315,7 +315,7 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 		old_value = crm_element_value_copy(xml_obj, field);
 	}
 	if(old_value != NULL) {
-		crm_malloc(new_value, 128*(sizeof(char)));
+		crm_malloc0(new_value, 128*(sizeof(char)));
 		int_value = atoi(old_value);
 		sprintf(new_value, "%d", ++int_value);
 	} else {

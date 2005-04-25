@@ -45,14 +45,10 @@ gboolean ipc_queue_helper(gpointer key, gpointer value, gpointer user_data);
 
 
 #ifdef MSG_LOG
-#    define ROUTER_RESULT(x) \
-	do_crm_log(LOG_DEV, __FUNCTION__, DEVEL_DIR"/router.log", x); \
-	crm_log_message_adv(LOG_MSG, DEVEL_DIR"/router.log", relay_message); \
-	crm_devel(x);							\
-	crm_log_message(LOG_MSG, relay_message);
-#else
 #    define ROUTER_RESULT(x)	crm_devel("Router result: %s", x);	\
-	crm_log_message(LOG_MSG, relay_message);	
+	crm_log_message_adv(LOG_MSG, "router.log", relay_message);
+#else
+#    define ROUTER_RESULT(x)	crm_devel("Router result: %s", x)
 #endif
 /* debug only, can wrap all it likes */
 int last_data_id = 0;
@@ -141,7 +137,7 @@ register_fsa_input_adv(
 		last_was_vote = FALSE;
 	}
 
-	crm_malloc(fsa_data, sizeof(fsa_data_t));
+	crm_malloc0(fsa_data, sizeof(fsa_data_t));
 	fsa_data->id        = ++last_data_id;
 	fsa_data->fsa_input = input;
 	fsa_data->fsa_cause = cause;
@@ -229,7 +225,7 @@ fsa_dump_queue(int log_level)
 	}
 	slist_iter(
 		data, fsa_data_t, fsa_message_queue, lpc,
-		do_crm_log(log_level, __FUNCTION__, NULL,
+		do_crm_log(log_level, __FILE__, __FUNCTION__,
 			   "queue[%d(%d)]: input %s raised by %s()\t(cause=%s)",
 			   lpc, data->id, fsa_input2string(data->fsa_input),
 			   data->origin, fsa_cause2string(data->fsa_cause));
@@ -241,7 +237,7 @@ ha_msg_input_t *
 copy_ha_msg_input(ha_msg_input_t *orig) 
 {
 	ha_msg_input_t *input_copy = NULL;
-	crm_malloc(input_copy, sizeof(ha_msg_input_t));
+	crm_malloc0(input_copy, sizeof(ha_msg_input_t));
 
 	if(orig != NULL) {
 		crm_trace("Copy msg");
@@ -1096,7 +1092,7 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 
 	if(log_level == LOG_ERR
 	   || (safe_str_neq(op, CRM_OP_HBEAT))) {
-		do_crm_log(log_level, __FUNCTION__, NULL,
+		do_crm_log(log_level, __FILE__, __FUNCTION__,
 			   "Sending %sHA message (ref=%s) to %s@%s %s.",
 			   broadcast?"broadcast ":"directed ",
 			   cl_get_string(msg, XML_ATTR_REFERENCE),
@@ -1144,7 +1140,7 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 		fsa_data_t *fsa_data = NULL;
 		ha_msg_input_t *msg_copy = new_ha_msg_input(msg);
 
-		crm_malloc(fsa_data, sizeof(fsa_data_t));
+		crm_malloc0(fsa_data, sizeof(fsa_data_t));
 		fsa_data->fsa_input = I_MESSAGE;
 		fsa_data->fsa_cause = C_IPC_MESSAGE;
 		fsa_data->data = msg_copy;

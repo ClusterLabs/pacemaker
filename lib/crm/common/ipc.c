@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.1 2005/04/12 12:49:02 andrew Exp $ */
+/* $Id: ipc.c,v 1.2 2005/04/25 13:01:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,7 +88,7 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node)
 	return all_is_good;
 }
 
-#define ipc_log(fmt...) do_crm_log(server?LOG_WARNING:LOG_ERR, __FUNCTION__, NULL, fmt)
+#define ipc_log(fmt...) do_crm_log(server?LOG_WARNING:LOG_ERR, __FILE__, __FUNCTION__, fmt)
 
 /* frees msg */
 gboolean 
@@ -218,7 +218,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	local_socket_len += strlen(channel_name);
 	local_socket_len += strlen(WORKING_DIR);
 
-	crm_malloc(commpath, sizeof(char)*local_socket_len);
+	crm_malloc0(commpath, sizeof(char)*local_socket_len);
 	if(commpath != NULL) {
 		sprintf(commpath, WORKING_DIR "/%s", channel_name);
 		commpath[local_socket_len - 1] = '\0';

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.25 2005/04/21 15:44:42 andrew Exp $ */
+/* $Id: utils.c,v 1.26 2005/04/25 13:01:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -128,19 +128,19 @@ void
 print_state(int log_level)
 {
 	if(graph == NULL && log_level > LOG_DEBUG) {
-		do_crm_log(LOG_DEBUG, __FUNCTION__, NULL, "###########");
-		do_crm_log(LOG_DEBUG, __FUNCTION__, NULL,
+		do_crm_log(LOG_DEBUG, __FILE__, __FUNCTION__, "###########");
+		do_crm_log(LOG_DEBUG, __FILE__, __FUNCTION__,
 			   "\tEmpty transition graph");
-		do_crm_log(LOG_DEBUG, __FUNCTION__, NULL, "###########");
+		do_crm_log(LOG_DEBUG, __FILE__, __FUNCTION__, "###########");
 		return;
 	}
 
-	do_crm_log(log_level, __FUNCTION__, NULL, "###########");
+	do_crm_log(log_level, __FILE__, __FUNCTION__, "###########");
 
 	slist_iter(
 		synapse, synapse_t, graph, lpc,
 
-		do_crm_log(log_level, __FUNCTION__, NULL, "Synapse %d %s",
+		do_crm_log(log_level, __FILE__, __FUNCTION__, "Synapse %d %s",
 			   synapse->id,
 			   synapse->confirmed?"was confirmed":synapse->complete?"was executed":"is pending");
 
@@ -159,13 +159,13 @@ print_state(int log_level)
 		
 		);
 	
-	do_crm_log(log_level, __FUNCTION__, NULL, "###########");
+	do_crm_log(log_level, __FILE__, __FUNCTION__, "###########");
 }
 
 void
 print_input(const char *prefix, action_t *input, int log_level) 
 {
-	do_crm_log(log_level, __FUNCTION__, NULL, "%s[Input %d] %s (%s)",
+	do_crm_log(log_level, __FILE__, __FUNCTION__, "%s[Input %d] %s (%s)",
 		   prefix, input->id,
 		   input->complete?"Satisfied":"Pending",
 		   actiontype2text(input->type));
@@ -179,20 +179,20 @@ print_input(const char *prefix, action_t *input, int log_level)
 void
 print_action(const char *prefix, action_t *action, int log_level) 
 {
-	do_crm_log(log_level, __FUNCTION__, NULL, "%s[Action %d] %s (%s fail)",
+	do_crm_log(log_level, __FILE__, __FUNCTION__, "%s[Action %d] %s (%s fail)",
 		   prefix, action->id, action->complete?"Completed":
 					action->invoked?"In-flight":"Pending",
 		   action->can_fail?"can":"cannot");
 		
 	switch(action->type) {
 		case action_type_pseudo:
-			do_crm_log(log_level, __FUNCTION__, NULL,
+			do_crm_log(log_level, __FILE__, __FUNCTION__,
 				   "%s\tPseudo Op: %s", prefix,
 				   crm_element_value(
 					   action->xml, XML_LRM_ATTR_TASK));
 			break;
 		case action_type_rsc:
-			do_crm_log(log_level, __FUNCTION__, NULL,
+			do_crm_log(log_level, __FILE__, __FUNCTION__,
 				   "%s\tResource Op: %s/%s on %s", prefix,
 				   crm_element_value(
 					   action->xml, XML_LRM_ATTR_RSCID),
@@ -202,7 +202,7 @@ print_action(const char *prefix, action_t *action, int log_level)
 					   action->xml, XML_LRM_ATTR_TARGET));
 			break;
 		case action_type_crm:	
-			do_crm_log(log_level, __FUNCTION__, NULL,
+			do_crm_log(log_level, __FILE__, __FUNCTION__,
 				   "%s\tCRM Op: %s on %s", prefix,
 				   crm_element_value(
 					   action->xml, XML_LRM_ATTR_TASK),
@@ -212,7 +212,7 @@ print_action(const char *prefix, action_t *action, int log_level)
 	}
 
 	if(action->timeout > 0 || action->timer->source_id > 0) {
-		do_crm_log(log_level, __FUNCTION__, NULL,
+		do_crm_log(log_level, __FILE__, __FUNCTION__,
 			   "%s\ttimeout=%d, timer=%d", prefix,
 			   action->timeout, action->timer->source_id);
 	}

@@ -110,7 +110,7 @@ cib_new(void)
 			NULL, g_hash_destroy_str);
 	}
 
-	crm_malloc(new_cib, sizeof(cib_t));
+	crm_malloc0(new_cib, sizeof(cib_t));
 
 	new_cib->call_id = 1;
 
@@ -122,7 +122,7 @@ cib_new(void)
 	new_cib->notify_list    = NULL;
 
 	/* the rest will get filled in by the variant constructor */
-	crm_malloc(new_cib->cmds, sizeof(cib_api_operations_t));
+	crm_malloc0(new_cib->cmds, sizeof(cib_api_operations_t));
 	memset(new_cib->cmds, 0, sizeof(cib_api_operations_t));
 
 	new_cib->cmds->set_op_callback     = cib_client_set_op_callback;
@@ -426,7 +426,7 @@ int cib_client_add_notify_callback(
 	crm_verbose("Adding callback for %s events (%d)",
 		    event, g_list_length(cib->notify_list));
 
-	crm_malloc(new_client, sizeof(cib_notify_client_t));
+	crm_malloc0(new_client, sizeof(cib_notify_client_t));
 	new_client->event = event;
 	new_client->callback = callback;
 
@@ -457,7 +457,7 @@ int cib_client_del_notify_callback(
 
 	crm_debug("Removing callback for %s events", event);
 
-	crm_malloc(new_client, sizeof(cib_notify_client_t));
+	crm_malloc0(new_client, sizeof(cib_notify_client_t));
 	new_client->event = event;
 	new_client->callback = callback;
 
@@ -511,7 +511,7 @@ add_cib_op_callback(
 		return FALSE;
 	}
 	
-	crm_malloc(blob, sizeof(cib_callback_client_t));
+	crm_malloc0(blob, sizeof(cib_callback_client_t));
 	blob->only_success = only_success;
 	blob->user_data = user_data;
 	blob->callback = callback;
