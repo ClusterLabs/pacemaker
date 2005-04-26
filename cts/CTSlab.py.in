@@ -514,6 +514,7 @@ if __name__ == '__main__':
         Environment['CMclass']=LinuxHAv2
     #Environment["RandSeed"] = (156, 104, 218)
 
+    Environment["reset"] = Stonith(sttype="external/ssh", parm=string.join(node_list, " "))
     Environment.SupplyDefaults()
 
     # Your basic start up the world type of test scenario...
