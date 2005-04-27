@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.40 2005/04/21 15:18:39 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.41 2005/04/27 08:57:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,12 +126,17 @@ extern fsa_timer_t *integration_timer;
 extern fsa_timer_t *finalization_timer;
 extern fsa_timer_t *wait_timer;
 
-extern int fsa_join_reannouce;
 extern GTRIGSource *fsa_source;
 
 extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;
 extern struct crm_subsystem_s *pe_subsystem;
+
+extern GHashTable *welcomed_nodes;
+extern GHashTable *integrated_nodes;
+extern GHashTable *finalized_nodes;
+extern GHashTable *confirmed_nodes;
+extern GHashTable *crmd_peer_state;
 
 /* these two should be moved elsewhere... */
 extern crm_data_t *do_update_cib_nodes(crm_data_t *updates, gboolean overwrite);
