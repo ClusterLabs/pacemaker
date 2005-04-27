@@ -36,10 +36,6 @@
 
 extern void crmd_ha_connection_destroy(gpointer user_data);
 extern gboolean stop_all_resources(void);
-extern GHashTable *welcomed_nodes;
-extern GHashTable *integrated_nodes;
-extern GHashTable *finalized_nodes;
-extern GHashTable *confirmed_nodes;
 
 gboolean crm_shutdown(int nsig, gpointer unused);
 gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
@@ -250,6 +246,7 @@ do_startup(long long action,
 	crm_malloc0(shutdown_escalation_timer, sizeof(fsa_timer_t));
 	crm_malloc0(wait_timer, sizeof(fsa_timer_t));
 	crm_malloc0(shutdown_timer, sizeof(fsa_timer_t));
+	crm_malloc0(revote_timer, sizeof(fsa_timer_t));
 
 	interval = interval * 1000;
 
@@ -313,6 +310,16 @@ do_startup(long long action,
 		was_error = TRUE;
 	}
 
+	if(revote_timer != NULL) {
+		revote_timer->source_id = -1;
+		revote_timer->period_ms = 2000;
+		revote_timer->fsa_input = I_NULL;
+		revote_timer->callback = crm_timer_popped;
+		revote_timer->repeat = FALSE;
+	} else {
+		was_error = TRUE;
+	}
+	
 	if(wait_timer != NULL) {
 		wait_timer->source_id = -1;
 		wait_timer->period_ms = 500;
@@ -393,7 +400,10 @@ do_startup(long long action,
 	confirmed_nodes = g_hash_table_new_full(
 		g_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
-	
+	crmd_peer_state = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+
 	return I_NULL;
 }
 
@@ -497,6 +507,8 @@ do_read_config(long long action,
 	crm_data_t *cib_copy = get_cib_copy(fsa_cib_conn);
 	crm_data_t *config   = get_object_root(XML_CIB_TAG_CRMCONFIG, cib_copy);
 
+	dc_heartbeat->period_ms = 0;
+	
 	xml_child_iter(
 		config, iter, XML_CIB_TAG_NVPAIR,
 
@@ -515,27 +527,20 @@ do_read_config(long long action,
 		} else if(safe_str_eq(name, XML_CONFIG_ATTR_FORCE_QUIT)) {
 			shutdown_escalation_timer->period_ms = atoi(value);
 
-		} else if(safe_str_eq(name, XML_CONFIG_ATTR_REANNOUNCE)) {
-			fsa_join_reannouce = atoi(value);
-
 		}
 		);
 		
 	if(dc_heartbeat->period_ms < 1) {
 		/* sensible default */
-		dc_heartbeat->period_ms = 1000;
-		
-	}
-	if(fsa_join_reannouce < 0) {
-		fsa_join_reannouce = 100; /* how many times should we let
-					   * go by before reannoucning
-					   * ourselves to the DC
-					   */
+		dc_heartbeat->period_ms = crm_get_msec(
+			getenv("HA_"KEY_KEEPALIVE));
 	}
 	
 	election_timeout->period_ms   = dc_heartbeat->period_ms * 6;
 	integration_timer->period_ms  = dc_heartbeat->period_ms * 6;
 	finalization_timer->period_ms = dc_heartbeat->period_ms * 6;
+	integration_timer->period_ms  = crm_get_msec("5min");
+	finalization_timer->period_ms = crm_get_msec("5min");
 	
 	if(election_trigger->period_ms < 1
 	   || election_trigger->period_ms > election_timeout->period_ms) {
