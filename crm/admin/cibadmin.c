@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.29 2005/04/16 16:54:36 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.30 2005/04/27 08:45:52 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -62,8 +62,8 @@ gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 crm_data_t *handleCibMod(const char *xml);
 gboolean admin_message_timeout(gpointer data);
 void cib_connection_destroy(gpointer user_data);
-void cibadmin_op_callback(
-	const HA_Message *msg, int call_id, int rc, crm_data_t *output);
+void cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
+			  crm_data_t *output, void *user_data);
 
 int command_options = 0;
 const char *cib_action = NULL;
@@ -89,7 +89,7 @@ int request_id = 0;
 int operation_status = 0;
 cib_t *the_cib = NULL;
 
-#define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MB"
+#define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MBfb"
 
 int
 main(int argc, char **argv)
@@ -114,14 +114,16 @@ main(int argc, char **argv)
 		{CRM_OP_CIB_MASTER,  0, 0, 'w'},
 		{CRM_OP_CIB_ISMASTER,0, 0, 'M'},
 		
-		{"local",	 0, 0, 'l'},
-		{"sync-call",	 0, 0, 's'},
-		{"host",	 0, 0, 'h'},
-		{F_CRM_DATA,          1, 0, 'X'},
-		{"verbose",      0, 0, 'V'},
-		{"help",         0, 0, '?'},
-		{"reference",    1, 0, 0},
-		{XML_ATTR_TIMEOUT,	 1, 0, 't'},
+		{"force-quorum",0, 0, 'f'},
+		{"local",	0, 0, 'l'},
+		{"sync-call",	0, 0, 's'},
+		{"no-bcast",	0, 0, 'b'},
+		{"host",	0, 0, 'h'},
+		{F_CRM_DATA,    1, 0, 'X'},
+		{"verbose",     0, 0, 'V'},
+		{"help",        0, 0, '?'},
+		{"reference",   1, 0, 0},
+		{"timeout",	1, 0, 't'},
 
 		/* common options */
 		{XML_ATTR_ID, 1, 0, 'i'},
@@ -226,8 +228,14 @@ main(int argc, char **argv)
 			case 'l':
 				command_options |= cib_scope_local;
 				break;
+			case 'b':
+				command_options |= cib_inhibit_bcast;
+				break;
 			case 's':
 				command_options |= cib_sync_call;
+				break;
+			case 'f':
+				command_options |= cib_quorum_override;
 				break;
 			default:
 				printf("Argument code 0%o (%c)"
@@ -269,13 +277,10 @@ main(int argc, char **argv)
 		/* wait for the reply by creating a mainloop and running it until
 		 * the callbacks are invoked...
 		 */
-		IPC_Channel *ch = the_cib->cmds->channel(the_cib);
 		request_id = exit_code;
-		
-		if(ch == NULL) {
-			crm_err("Connection to CIB is corrupt");
-			return 2;
-		}
+
+		add_cib_op_callback(
+			request_id, FALSE, NULL, cibadmin_op_callback);
 
 		mainloop = g_main_new(FALSE);
 
@@ -433,15 +438,6 @@ do_init(void)
 			cib_error2string(rc));
 		fprintf(stderr, "Signon to CIB failed: %s\n",
 			cib_error2string(rc));
-	} else {
-		rc = the_cib->cmds->set_op_callback(
-			the_cib, cibadmin_op_callback);
-		if(rc != cib_ok) {
-			crm_err("Failed to set callback: %s",
-				cib_error2string(rc));
-			fprintf(stderr,"Failed to set callback: %s\n",
-				cib_error2string(rc));
-		}
 	}
 	
 	return rc;
@@ -483,8 +479,10 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\tsend command to specified host."
 		" Applies to %s and %s commands only\n", "host", 'h',
 		CRM_OP_CIB_QUERY, CRM_OP_CIB_SYNC);
-	fprintf(stream, "\t--%s (-%c)\tcommand only takes effect locally"
+	fprintf(stream, "\t--%s (-%c)\tcommand takes effect locally"
 		" on the specified host\n", "local", 'l');
+	fprintf(stream, "\t--%s (-%c)\tcommand will not be broadcast even if"
+		" it altered the CIB\n", "no-bcast", 'b');
 	fprintf(stream, "\t--%s (-%c)\twait for call to complete before"
 		" returning\n", "sync-call", 's');
 
@@ -525,8 +523,9 @@ cib_connection_destroy(gpointer user_data)
 	return;
 }
 
-void cibadmin_op_callback(
-	const HA_Message *msg, int call_id, int rc, crm_data_t *output)
+void
+cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
+		     crm_data_t *output, void *user_data)
 {
 	char *admin_input_xml = NULL;
 	
