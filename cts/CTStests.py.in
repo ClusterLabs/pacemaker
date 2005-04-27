@@ -1449,7 +1449,7 @@ class ResourceRecover(CTSTest):
         
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """ERROR: .* LRM operation monitor on .*: not running""",
+        return [ """ERROR: .* LRM operation.*monitor on .*: not running""",
 		 """pengine:.*Handling failed """]
 
 AllTestClasses.append(ResourceRecover)
