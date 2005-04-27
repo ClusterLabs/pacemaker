@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.65 2005/04/27 09:48:54 andrew Exp $ */
+/* $Id: tengine.c,v 1.66 2005/04/27 11:47:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -335,21 +335,26 @@ match_down_event(const char *target, const char *filter, int rc)
 gboolean
 process_graph_event(crm_data_t *event, const char *event_node)
 {
-	int action_id          = -1;
-	int op_status_i        = 0;
-	const char *op_status  = NULL;
-	const char *task  = NULL;
+	int action_id         = -1;
+	int op_status_i       = 0;
+	const char *task      = NULL;
+	const char *rsc_id    = NULL;
+	const char *op_status = NULL;
 
 	if(event != NULL) {
-		op_status  = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
-		task  = crm_element_value(event, XML_LRM_ATTR_LASTOP);
+		task      = crm_element_value(event, XML_LRM_ATTR_LASTOP);
+		rsc_id    = crm_element_value(event, XML_ATTR_ID);
+		op_status = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
+		if(op_status != NULL) {
+			op_status_i = atoi(op_status);
+		}
+		crm_debug("Processing CIB update: %s %s on %s: %s",
+			  task, rsc_id, event_node, op_status2text(op_status_i));
 	}
+
 
 	next_transition_timeout = transition_timeout;
 	
-	if(op_status != NULL) {
-		op_status_i = atoi(op_status);
-	}
 	
 	if(op_status_i == -1) {
 		/* just information that the action was sent */
