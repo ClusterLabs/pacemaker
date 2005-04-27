@@ -90,7 +90,6 @@ crm_timer_popped(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
-
 	if(timer == election_trigger) {
 		crm_info("Election Trigger (%s) just popped!",
 			 fsa_input2string(timer->fsa_input));
@@ -120,22 +119,34 @@ crm_timer_popped(gpointer data)
 gboolean
 crm_timer_start(fsa_timer_t *timer)
 {
+	const char *timer_desc = NULL;
+	if(timer == election_trigger) {
+		timer_desc = "Election Trigger";
+
+ 	} else if(timer == election_timeout) {
+		timer_desc = "Election Timeout";
+		
+	} else {
+		timer_desc = "Timer";
+	}
+
 	if((timer->source_id == (guint)-1 || timer->source_id == (guint)-2)
 	   && timer->period_ms > 0) {
 		timer->source_id = Gmain_timeout_add(
 			timer->period_ms, timer->callback, (void*)timer);
 
-		crm_devel("Started %s timer (%d), period=%dms",
-			  fsa_input2string(timer->fsa_input),
-			  timer->source_id, timer->period_ms);
+		crm_debug("Started %s (%s:%dms), src=%d",
+			  timer_desc, fsa_input2string(timer->fsa_input),
+			  timer->period_ms, timer->source_id);
 
 	} else if(timer->period_ms < 0) {
-		crm_err("Tried to start timer %s with -ve period",
-			fsa_input2string(timer->fsa_input));
+		crm_err("Tried to start %s (%s:%dms) with a -ve period",
+			  timer_desc, fsa_input2string(timer->fsa_input),
+			  timer->period_ms);
 		
 	} else {
-		crm_devel("Timer %s (period=%dms) already running (%d)",
-			  fsa_input2string(timer->fsa_input),
+		crm_debug("%s (%s:%dms) already running: src=%d",
+			  timer_desc, fsa_input2string(timer->fsa_input),
 			  timer->period_ms, timer->source_id);
 		return FALSE;		
 	}
@@ -146,21 +157,33 @@ crm_timer_start(fsa_timer_t *timer)
 gboolean
 crm_timer_stop(fsa_timer_t *timer)
 {
+	const char *timer_desc = NULL;
+	if(timer == election_trigger) {
+		timer_desc = "Election Trigger";
+
+ 	} else if(timer == election_timeout) {
+		timer_desc = "Election Timeout";
+		
+	} else {
+		timer_desc = "Timer";
+	}
+
 	if(timer == NULL) {
 		crm_debug("Attempted to stop NULL timer");
 		return FALSE;
 		
-	} else if(timer->source_id != (guint)-1 && timer->source_id != (guint)-2) {
-		crm_devel("Stopping %s timer (period=%dms, src=%d)",
-			  fsa_input2string(timer->fsa_input),
+	} else if(timer->source_id != (guint)-1
+		  && timer->source_id != (guint)-2) {
+		crm_debug("Stopping %s (%s:%dms), src=%d",
+			  timer_desc, fsa_input2string(timer->fsa_input),
 			  timer->period_ms, timer->source_id);
 		g_source_remove(timer->source_id);
 		timer->source_id = -2;
 		
 	} else {
-		crm_devel("Timer %s (period=%dms) already stopped (src=%d)",
-		       fsa_input2string(timer->fsa_input),
-			  timer->period_ms, timer->source_id);
+		crm_debug("%s (%s:%dms) already stopped",
+			  timer_desc, fsa_input2string(timer->fsa_input),
+			  timer->period_ms);
 		timer->source_id = -2;
 		return FALSE;
 	}
