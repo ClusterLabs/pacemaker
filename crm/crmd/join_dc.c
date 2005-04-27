@@ -43,6 +43,7 @@ void join_send_offer(gpointer key, gpointer value, gpointer user_data);
 void finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 			    crm_data_t *output, void *user_data);
 gboolean process_join_ack_msg(const char *join_from, crm_data_t *lrm_update);
+gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
 /*	 A_DC_JOIN_OFFER_ALL	*/
 enum crmd_fsa_input
@@ -164,22 +165,25 @@ do_dc_join_req(long long action,
 	
 	generation = join_ack->xml;
 
+	crm_xml_debug(max_generation_xml, "Max generation");
+	crm_xml_debug(generation, "Their generation");
+
 	if(max_generation_xml == NULL) {
 		max_generation_xml = copy_xml_node_recursive(generation);
 		max_generation_from = crm_strdup(join_from);
 
 	} else if(cib_compare_generation(max_generation_xml, generation) < 0) {
-		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
-		crm_devel("%s has a better generation number than the current max",
-			  join_from);
-		crm_xml_devel(max_generation_xml, "Max generation");
-		crm_xml_devel(generation, "Their generation");
+		crm_debug("%s has a better generation number than"
+			  " the current max %s",
+			  join_from, max_generation_from);
 		crm_free(max_generation_from);
 		free_xml(max_generation_xml);
 		
 		max_generation_from = crm_strdup(join_from);
 		max_generation_xml = copy_xml_node_recursive(join_ack->xml);
 	}
+
+	crm_xml_debug(max_generation_xml, "Current max generation");
 	
 	crm_debug("2) Welcoming node %s after ACK (ref %s)", join_from, ref);
 
@@ -198,11 +202,7 @@ do_dc_join_req(long long action,
 	
 	g_hash_table_remove(welcomed_nodes, join_from);
 
-	if(g_hash_table_size(welcomed_nodes) == 0) {
-		crm_info("That was the last outstanding join ack");
-		register_fsa_input(C_FSA_INTERNAL, I_INTEGRATED, NULL);
-
-	} else {
+	if(check_join_state(cur_state, __FUNCTION__) == FALSE) {
 		/* dont waste time by invoking the PE yet; */
 		crm_debug("Still waiting on %d outstanding join acks",
 			  g_hash_table_size(welcomed_nodes));
@@ -235,6 +235,7 @@ do_dc_join_finalize(long long action,
 	g_hash_table_foreach_remove(
 		integrated_nodes, finalize_join_for, NULL);
 #endif
+	clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	if(max_generation_from == NULL
 	   || safe_str_eq(max_generation_from, fsa_our_uname)){
 		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
@@ -262,17 +263,22 @@ do_dc_join_finalize(long long action,
 	crm_devel("Bumping the epoche and syncing to %d clients",
 		  g_hash_table_size(finalized_nodes));
 	fsa_cib_conn->cmds->bump_epoch(
-		fsa_cib_conn, cib_scope_local|cib_quorum_override);
+		fsa_cib_conn,
+		cib_scope_local|cib_inhibit_bcast|cib_quorum_override);
 
 #if JOIN_AFTER_SYNC
 	crm_debug("Notifying %d clients of join results",
 		  g_hash_table_size(integrated_nodes));
-	g_hash_table_foreach_remove(
-		integrated_nodes, finalize_join_for, NULL);
+
+	if(check_join_state(cur_state, __FUNCTION__) == FALSE) {
+		crm_debug("Notifying %d clients of join results",
+			  g_hash_table_size(integrated_nodes));
+		g_hash_table_foreach_remove(
+			integrated_nodes, finalize_join_for, NULL);
+	}
 #endif
 	
 	rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_quorum_override);
-	add_cib_op_callback(rc, FALSE, NULL, finalize_sync_callback);
 
 	return I_NULL;
 }
@@ -314,11 +320,7 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 		g_hash_table_foreach_remove(
 			integrated_nodes, finalize_join_for, NULL);
 #else
-		if(g_hash_table_size(finalized_nodes) == 0) {
-			crm_info("That was the last outstanding join confirmation");
-			register_fsa_input_later(
-				C_FSA_INTERNAL, I_FINALIZED, NULL);
-		}
+		check_join_state(cur_state, __FUNCTION__);
 #endif
 	}
 	crm_free(user_data);
@@ -395,22 +397,7 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update)
 
 	update_local_cib(create_cib_fragment(update, NULL));
 
-	if(g_hash_table_size(finalized_nodes) == 0) {
-		crm_info("That was the last outstanding join confirmation");
-
-		if(is_set(fsa_input_register, R_HAVE_CIB)) {
-			crm_info("Transition complete");
-			register_fsa_input_later(
-				C_FSA_INTERNAL, I_FINALIZED, NULL);
-		} else {
-			crm_info("Delaying completion until CIB is sync'd");
-		}
-		
-	} else {
-		/* dont waste time by invoking the pe yet; */
-		crm_debug("Still waiting on %d outstanding join confirmations",
-			  g_hash_table_size(finalized_nodes));
-	}
+	check_join_state(fsa_state, __FUNCTION__);
 	
 	return TRUE;
 }
@@ -462,6 +449,7 @@ initialize_join(gboolean before)
 {
 	/* clear out/reset a bunch of stuff */
 	crm_debug("Initializing join data");
+	
 	g_hash_table_destroy(welcomed_nodes);
 	g_hash_table_destroy(integrated_nodes);
 	g_hash_table_destroy(finalized_nodes);
@@ -476,7 +464,7 @@ initialize_join(gboolean before)
 			free_xml(max_generation_xml);
 			max_generation_xml = NULL;
 		}
-		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
+		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 		clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 	}
 	
@@ -499,6 +487,7 @@ void
 join_send_offer(gpointer key, gpointer value, gpointer user_data)
 {
 	const char *join_to = NULL;
+	const char *crm_online = NULL;
 	const oc_node_t *member = (const oc_node_t*)value;
 
 	if(member != NULL) {
@@ -507,8 +496,18 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 
 	if(join_to == NULL) {
 		crm_err("No recipient for welcome message");
+		return;
+		
+	}
 
-	} else {
+	g_hash_table_remove(confirmed_nodes,  join_to);
+	g_hash_table_remove(finalized_nodes,  join_to);
+	g_hash_table_remove(integrated_nodes, join_to);
+	g_hash_table_remove(welcomed_nodes,   join_to);
+
+	crm_online = g_hash_table_lookup(crmd_peer_state, join_to);
+	
+	if(safe_str_eq(crm_online, ONLINESTATUS)) {
 		HA_Message *offer = create_request(
 			CRM_OP_JOIN_OFFER, NULL, join_to,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
@@ -516,15 +515,61 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 		/* send the welcome */
 		crm_info("Sending %s to %s", CRM_OP_JOIN_OFFER, join_to);
 
-		g_hash_table_remove(confirmed_nodes,  join_to);
-		g_hash_table_remove(finalized_nodes,  join_to);
-		g_hash_table_remove(integrated_nodes, join_to);
-		g_hash_table_remove(welcomed_nodes,   join_to);
-		
 		send_msg_via_ha(fsa_cluster_conn, offer);
 
 		g_hash_table_insert(welcomed_nodes, crm_strdup(join_to),
 				    crm_strdup(CRMD_JOINSTATE_PENDING));
+	} else {
+		crm_debug("Peer process on %s is not active", join_to);
 	}
+	
 }
+
+gboolean
+check_join_state(enum crmd_fsa_state cur_state, const char *source)
+{
+	crm_debug("Invoked by %s in state: %s",
+		  source, fsa_state2string(cur_state));
+
+	if(cur_state == S_INTEGRATION) {
+		if(g_hash_table_size(welcomed_nodes) == 0) {
+			crm_info("Integration of %d peers complete: %s",
+				 g_hash_table_size(integrated_nodes), source);
+			register_fsa_input_later(
+				C_FSA_INTERNAL, I_INTEGRATED, NULL);
+			return TRUE;
+		}
+
+	} else if(cur_state == S_FINALIZE_JOIN) {
+		if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
+			crm_debug("Delaying I_FINALIZED until we have the CIB");
+			return TRUE;
+			
+		} else if(g_hash_table_size(integrated_nodes) == 0
+		   && g_hash_table_size(finalized_nodes) == 0) {
+			crm_info("Join process complete: %s", source);
+			register_fsa_input_later(
+				C_FSA_INTERNAL, I_FINALIZED, NULL);
+
+		} else if(g_hash_table_size(integrated_nodes) != 0
+			  && g_hash_table_size(finalized_nodes) != 0) {
+			crm_err("Waiting on %d integrated nodes"
+				" AND %d confirmations",
+				g_hash_table_size(integrated_nodes),
+				g_hash_table_size(finalized_nodes));
+
+		} else if(g_hash_table_size(integrated_nodes) != 0) {
+			crm_debug("Still waiting on %d integrated nodes",
+				  g_hash_table_size(integrated_nodes));
+			
+		} else if(g_hash_table_size(finalized_nodes) != 0) {
+			crm_debug("Still waiting on %d confirmations",
+				  g_hash_table_size(finalized_nodes));
+		}
+		
+	}
+	
+	return FALSE;
+}
+
 
