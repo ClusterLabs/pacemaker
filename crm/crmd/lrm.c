@@ -1043,6 +1043,15 @@ do_lrm_event(long long action,
 				  crm_str(rsc->provider),
 				  crm_str(rsc->id),
 				  op_status2text(op->op_status));
+			/* this is an evil hack that will slow down
+			 * resource recovery
+			 */
+			if(safe_str_eq(op->op_type, CRMD_RSCSTATE_STOP)) {
+				int rc = HA_OK;
+				fsa_lrm_conn->lrm_ops->delete_rsc(
+					fsa_lrm_conn, rsc->id);
+				CRM_DEV_ASSERT(rc == HA_OK);
+			}
 			break;
 	}
 	do_update_resource(rsc, op);
