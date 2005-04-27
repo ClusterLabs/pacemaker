@@ -401,7 +401,7 @@ build_operation_update(
 				  rsc->id, op->op_type, op->op_status);
 			len = strlen(op->op_type);
 			len += strlen("_failed_");
-			crm_malloc(fail_state, sizeof(char)*len);
+			crm_malloc0(fail_state, sizeof(char)*len);
 			if(fail_state != NULL) {
 				sprintf(fail_state, "%s_failed", op->op_type);
 			}
@@ -569,8 +569,8 @@ do_lrm_invoke(long long action,
 		lrm_rsc_t *rsc = NULL;
 
 		if(AM_I_DC == FALSE && cur_state != S_NOT_DC) {
-			crm_err("Ignoring LRM operation while in state %s",
-				fsa_state2string(cur_state));
+			crm_warn("Ignoring LRM operation while in state %s",
+				 fsa_state2string(cur_state));
 		}
 		
 		id_from_cib = get_xml_attr_nested(
@@ -674,7 +674,7 @@ do_lrm_rsc_op(
 	
 	/* now do the op */
 	crm_info("Performing op %s on %s", operation, rid);
-	crm_malloc(op, sizeof(lrm_op_t));
+	crm_malloc0(op, sizeof(lrm_op_t));
 	op->op_type   = crm_strdup(operation);
 	op->op_status = LRM_OP_PENDING;
 	op->user_data = NULL;
@@ -770,7 +770,7 @@ do_lrm_rsc_op(
 
 	} else if(call_id > 0 && op->interval > 0) {
 		struct recurring_op_s *op = NULL;
-		crm_malloc(op, sizeof(struct recurring_op_s));
+		crm_malloc0(op, sizeof(struct recurring_op_s));
 		crm_debug("Adding recurring %s op for %s (%d)",
 			  op_id, rsc->id, call_id);
 
