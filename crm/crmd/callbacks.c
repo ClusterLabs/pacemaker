@@ -34,8 +34,14 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+GHashTable *crmd_peer_state = NULL;
+
 crm_data_t *find_xml_in_hamessage(const HA_Message * msg);
 void crmd_ha_connection_destroy(gpointer user_data);
+
+/* From join_dc... */
+extern gboolean check_join_state(
+	enum crmd_fsa_state cur_state, const char *source);
 
 
 /* #define MAX_EMPTY_CALLBACKS 20 */
@@ -316,12 +322,6 @@ crmd_client_status_callback(const char * node, const char * client,
 		return;
 	}
 
-	set_bit_inplace(fsa_input_register, R_PEER_DATA);
-
-	if(fsa_state == S_STARTING || fsa_state == S_STOPPING) {
-		return;
-	}
-
 	if(safe_str_eq(status, JOINSTATUS)){
 		status = ONLINESTATUS;
 		extra  = XML_CIB_ATTR_CLEAR_SHUTDOWN;
@@ -332,10 +332,19 @@ crmd_client_status_callback(const char * node, const char * client,
 		extra  = XML_CIB_ATTR_CLEAR_SHUTDOWN;
 	}
 	
+	set_bit_inplace(fsa_input_register, R_PEER_DATA);
+	g_hash_table_replace(
+		crmd_peer_state, crm_strdup(node), crm_strdup(status));
+
+	if(fsa_state == S_STARTING || fsa_state == S_STOPPING) {
+		return;
+	}
+
 	crm_notice("Status update: Client %s/%s now has status [%s]",
 		   node, client, status);
 
-	if(safe_str_eq(node, fsa_our_dc) && status == OFFLINESTATUS) {
+	if(safe_str_eq(node, fsa_our_dc)
+	   && safe_str_eq(status, OFFLINESTATUS)) {
 		/* did our DC leave us */
 		crm_info("Got client status callback - our DC is dead");
 		register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
@@ -348,6 +357,16 @@ crmd_client_status_callback(const char * node, const char * client,
 		set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
 		update_local_cib(create_cib_fragment(update, NULL));
 		free_xml(update);
+
+		if(AM_I_DC && safe_str_eq(status, OFFLINESTATUS)) {
+
+			g_hash_table_remove(confirmed_nodes,  node);
+			g_hash_table_remove(finalized_nodes,  node);
+			g_hash_table_remove(integrated_nodes, node);
+			g_hash_table_remove(welcomed_nodes,   node);
+			
+			check_join_state(fsa_state, __FUNCTION__);
+		}
 	}
 	
 	G_main_set_trigger(fsa_source);
