@@ -246,7 +246,6 @@ do_startup(long long action,
 	crm_malloc0(shutdown_escalation_timer, sizeof(fsa_timer_t));
 	crm_malloc0(wait_timer, sizeof(fsa_timer_t));
 	crm_malloc0(shutdown_timer, sizeof(fsa_timer_t));
-	crm_malloc0(revote_timer, sizeof(fsa_timer_t));
 
 	interval = interval * 1000;
 
@@ -306,16 +305,6 @@ do_startup(long long action,
 		shutdown_escalation_timer->fsa_input = I_TERMINATE;
 		shutdown_escalation_timer->callback = crm_timer_popped;
 		shutdown_escalation_timer->repeat = FALSE;
-	} else {
-		was_error = TRUE;
-	}
-
-	if(revote_timer != NULL) {
-		revote_timer->source_id = -1;
-		revote_timer->period_ms = 2000;
-		revote_timer->fsa_input = I_NULL;
-		revote_timer->callback = crm_timer_popped;
-		revote_timer->repeat = FALSE;
 	} else {
 		was_error = TRUE;
 	}
