@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.45 2005/04/25 16:03:36 andrew Exp $ */
+/* $Id: callbacks.c,v 1.46 2005/04/27 09:47:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,6 +48,8 @@ gboolean cib_msg_timeout(gpointer data);
 void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_str_clfree(gpointer key, gpointer value, gpointer user_data);
 gboolean can_write(int flags);
+HA_Message *cib_msg_copy(const HA_Message *msg, gboolean with_data);
+
 
 GHashTable *peer_hash = NULL;
 int        next_client_id  = 0;
@@ -69,7 +71,7 @@ cib_operation_t cib_server_ops[] = {
 	{CRM_OP_CIB_SLAVEALL,TRUE, TRUE, FALSE,FALSE,FALSE,cib_process_readwrite},
 	{CRM_OP_CIB_MASTER,  FALSE,TRUE, FALSE,FALSE,FALSE,cib_process_readwrite},
 	{CRM_OP_CIB_ISMASTER,FALSE,TRUE, FALSE,FALSE,FALSE,cib_process_readwrite},
-	{CRM_OP_CIB_BUMP,    FALSE,TRUE, TRUE, TRUE, FALSE,cib_process_bump},
+	{CRM_OP_CIB_BUMP,    TRUE, TRUE, TRUE, TRUE, FALSE,cib_process_bump},
 	{CRM_OP_CIB_REPLACE, TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_replace},
 	{CRM_OP_CIB_CREATE,  TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
 	{CRM_OP_CIB_UPDATE,  TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
@@ -437,7 +439,8 @@ cib_common_callback(
 				/* keep track of the request so we can time it
 				 * out if required
 				 */
-				HA_Message *saved = ha_msg_copy(op_request);
+				HA_Message *saved = cib_msg_copy(
+					op_request, TRUE);
 				crm_devel("Registering delegated call from %s",
 					  cib_client->id);
 				cib_client->delegated_calls = g_list_append(
@@ -460,7 +463,11 @@ cib_common_callback(
 				HA_Message *sync_data = cl_get_struct(
 					op_reply, F_CIB_CALLDATA);
 				CRM_DEV_ASSERT(sync_data != NULL);
-				ha_msg_addstruct(
+				ha_msg_mod(op_request,
+					   F_CIB_OPERATION, CRM_OP_CIB_REPLACE);
+				ha_msg_add(op_request,
+					   F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
+				cl_msg_modstruct(
 					op_request, F_CIB_CALLDATA, sync_data);
  			}
 			crm_devel("Processing complete");
@@ -508,15 +515,11 @@ cib_common_callback(
 				op_request, F_CIB_SECTION);
  			crm_info("Syncing section=%s to all instances",
 				 section?section:"<all>");
-			ha_msg_mod(op_request,
-				   F_CIB_OPERATION, CRM_OP_CIB_REPLACE);
-			ha_msg_add(op_request,
-				   F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 			send_ha_message(hb_conn, op_request, NULL);
 
 		} else if(rc == cib_ok
 		   && cib_server_ops[call_type].modifies_cib
-		   && !(call_options & cib_scope_local)) {
+		   && !(call_options & cib_inhibit_bcast)) {
 			/* send via HA to other nodes */
  			crm_debug("Forwarding %s op to all instances", op);
 			ha_msg_add(op_request,
@@ -524,8 +527,8 @@ cib_common_callback(
 			send_ha_message(hb_conn, op_request, NULL);
 			
 		} else {
-			if(call_options & cib_scope_local ) {
-				crm_devel("Request not broadcast: local scope");
+			if(call_options & cib_inhibit_bcast ) {
+				crm_devel("Request not broadcast: inhibited");
 			}
 			if(cib_server_ops[call_type].modifies_cib == FALSE) {
 				crm_devel("Request not broadcast: R/O call");
@@ -875,7 +878,9 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 
 	enum cib_errors rc = cib_ok;
 	HA_Message *op_reply = NULL;
+	HA_Message *replace_request = NULL;
 	
+	const char *op         = cl_get_string(msg, F_CIB_OPERATION);
 	const char *originator = cl_get_string(msg, F_ORIG);
 	const char *request_to = cl_get_string(msg, F_CIB_HOST);
 	const char *reply_to   = cl_get_string(msg, F_CIB_ISREPLY);
@@ -976,6 +981,20 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 			  cl_get_string(msg, F_CIB_CALLID),
 			  update);
 		rc = cib_process_command(msg, &op_reply, TRUE);
+		if(rc == cib_ok && safe_str_eq(op, CRM_OP_CIB_SYNC)) {
+			HA_Message *sync_data = cl_get_struct(
+				op_reply, F_CIB_CALLDATA);
+			CRM_DEV_ASSERT(sync_data != NULL);
+
+			replace_request = cib_msg_copy(msg, TRUE);
+			ha_msg_mod(replace_request,
+				   F_CIB_OPERATION, CRM_OP_CIB_REPLACE);
+			ha_msg_add(replace_request,
+				   F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
+			ha_msg_add(replace_request, F_CIB_ISREPLY, originator);
+			ha_msg_addstruct(
+				replace_request, F_CIB_CALLDATA, sync_data);
+		}
 	}
 	
 	if(local_notify) {
@@ -985,9 +1004,9 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		crm_trace("find the client");
 
 		if(process == FALSE) {
-			client_reply = ha_msg_copy(msg);
+			client_reply = cib_msg_copy(msg, TRUE);
 		} else {
-			client_reply = ha_msg_copy(op_reply);
+			client_reply = cib_msg_copy(op_reply, TRUE);
 		}
 		
 		client_id = cl_get_string(msg, F_CIB_CLIENTID);
@@ -1039,13 +1058,22 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 	crm_trace("add the originator to message");
 
 	/* from now on we are the server */ 
-	if(rc == cib_ok && cib_server_ops[call_type].modifies_cib
-	   && !(call_options & cib_scope_local)) {
+	if(rc == cib_ok && safe_str_eq(op, CRM_OP_CIB_SYNC)) {
+		const char *section = cl_get_string(
+			replace_request, F_CIB_SECTION);
+		crm_info("Syncing section=%s to all instances",
+			 section?section:"<all>");
+		CRM_DEV_ASSERT(replace_request != NULL);
+		send_ha_message(hb_conn, replace_request, NULL);
+		ha_msg_del(replace_request);
+		
+	} else if(rc == cib_ok && cib_server_ops[call_type].modifies_cib
+		   && !(call_options & cib_scope_local)) {
 		/* this (successful) call modified the CIB _and_ the
 		 * change needs to be broadcast...
 		 *   send via HA to other nodes
 		 */
-		HA_Message *op_bcast = ha_msg_copy(msg);
+		HA_Message *op_bcast = cib_msg_copy(msg, TRUE);
 		crm_devel("Sending update request to everyone");
 		ha_msg_add(op_bcast, F_CIB_ISREPLY, originator);
 		ha_msg_add(op_bcast, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
@@ -1063,6 +1091,67 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 
 	return;
 }
+
+HA_Message *
+cib_msg_copy(const HA_Message *msg, gboolean with_data) 
+{
+	int lpc = 0;
+	const char *field = NULL;
+	const char *value = NULL;
+	const HA_Message *value_struct = NULL;
+
+	const char *field_list[] = {
+		F_TYPE		,
+		F_CIB_CLIENTID  ,
+		F_CIB_CALLOPTS  ,
+		F_CIB_CALLID    ,
+		F_CIB_OPERATION ,
+		F_CIB_ISREPLY   ,
+		F_CIB_SECTION   ,
+		F_CIB_HOST	,
+		F_CIB_RC	,
+		F_CIB_DELEGATED	,
+		F_CIB_OBJID	,
+		F_CIB_OBJTYPE	,
+		F_CIB_EXISTING	,
+		F_CIB_SEENCOUNT	,
+		F_CIB_TIMEOUT	,
+		F_CIB_CALLBACK_TOKEN	,
+		F_CIB_GLOBAL_UPDATE	,
+		F_CIB_CLIENTNAME	,
+		F_CIB_NOTIFY_TYPE	,
+		F_CIB_NOTIFY_ACTIVATE
+	};
+	
+	const char *data_list[] = {
+		F_CIB_CALLDATA  ,
+		F_CIB_UPDATE	,
+		F_CIB_UPDATE_RESULT
+	};
+
+	HA_Message *copy = ha_msg_new(10);
+
+	if(copy == NULL) {
+		return copy;
+	}
+	
+	for(lpc = 0; lpc < DIMOF(field_list); lpc++) {
+		field = field_list[lpc];
+		value = cl_get_string(msg, field);
+		if(value != NULL) {
+			ha_msg_add(copy, field, value);
+		}
+	}
+	for(lpc = 0; with_data && lpc < DIMOF(data_list); lpc++) {
+		field = data_list[lpc];
+		value_struct = cl_get_struct(msg, field);
+		if(value_struct != NULL) {
+			ha_msg_addstruct(copy, field, value_struct);
+		}
+	}
+	return copy;
+}
+
 
 enum cib_errors
 cib_get_operation_id(const HA_Message * msg, int *operation) 
