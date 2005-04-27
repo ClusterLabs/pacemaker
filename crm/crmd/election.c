@@ -282,9 +282,6 @@ do_dc_takeover(long long action,
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(fsa_input_register, R_INVOKE_PE);
 	
-	clear_bit_inplace(fsa_input_register, R_CIB_DONE);
-	clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
-
 	if(dc_heartbeat->source_id == (guint)-1
 	   || dc_heartbeat->source_id == (guint)-2) {
 		crm_devel("Starting DC Heartbeat timer");
@@ -378,9 +375,6 @@ do_dc_release(long long action,
 	if(action & A_DC_RELEASE) {
 		clear_bit_inplace(fsa_input_register, R_THE_DC);
 		
-		/* get a new CIB from the new DC */
-		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
-
 	} else if (action & A_DC_RELEASED) {
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 
