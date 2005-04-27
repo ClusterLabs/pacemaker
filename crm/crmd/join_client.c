@@ -98,20 +98,7 @@ do_cl_join_announce(long long action,
 			crm_info("Set DC to %s", hb_from);
 			fsa_our_dc = crm_strdup(hb_from);
 
-		} else if(safe_str_eq(hb_from, fsa_our_dc)) {
-			reannounce_count++;
-			if(fsa_join_reannouce > 0
-			   && reannounce_count < fsa_join_reannouce) {
-				crm_warn("Already announced to %s", hb_from);
-				return I_NULL;
-			}
-			crm_warn("Re-announcing ourselves to %s (%d times)",
-				 hb_from, reannounce_count);
-			
-		} else {
-			crm_warn("We announced ourselves to %s, but are"
-				 " now receiving DC Heartbeats from %s",
-				 fsa_our_dc, hb_from);
+		} else if(safe_str_neq(fsa_our_dc, hb_from)) {
 			/* reset the fsa_our_dc to NULL */
 			crm_warn("Resetting our DC to NULL after DC_HB"
 				 " from unrecognised node.");
@@ -122,7 +109,6 @@ do_cl_join_announce(long long action,
 					*/
 		}
 		
-		reannounce_count = 0;
 		/* send as a broadcast */
 		{
 			HA_Message *req = create_request(
@@ -142,8 +128,9 @@ do_cl_join_announce(long long action,
 }
 
 
-/*	 A_CL_JOIN_REQUEST	*/
+static int query_call_id = 0;
 
+/*	 A_CL_JOIN_REQUEST	*/
 /* aka. accept the welcome offer */
 enum crmd_fsa_input
 do_cl_join_request(long long action,
@@ -152,7 +139,6 @@ do_cl_join_request(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	int call_id = 0;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 	const char *welcome_from = cl_get_string(input->msg, F_CRM_HOST_FROM);
 	
@@ -166,6 +152,13 @@ do_cl_join_request(long long action,
 #endif
 	crm_debug("c1) processing join offer: %s",
 		  cl_get_string(input->msg, F_CRM_TASK));
+
+	/* we only ever want the last one */
+	if(query_call_id > 0) {
+		crm_debug("Cancelling previous join query");
+		remove_cib_op_callback(query_call_id, FALSE);
+	}
+
 	if(fsa_our_dc == NULL) {
 		crm_info("Set DC to %s", welcome_from);
 		fsa_our_dc = crm_strdup(welcome_from);
@@ -179,10 +172,11 @@ do_cl_join_request(long long action,
 	}
 
 	CRM_DEV_ASSERT(input != NULL);
-	call_id = fsa_cib_conn->cmds->query(
+	query_call_id = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
 	add_cib_op_callback(
-		call_id, TRUE, copy_ha_msg_input(input), join_query_callback);
+		query_call_id, TRUE,
+		copy_ha_msg_input(input), join_query_callback);
 
 	fsa_actions |= A_DC_TIMER_STOP;
 	return I_NULL;
@@ -198,6 +192,8 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 		NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
 	CRM_DEV_ASSERT(input != NULL);
+
+	query_call_id = 0;
 	
 	if(rc == cib_ok) {
 		local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
@@ -215,7 +211,6 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 		send_msg_via_ha(fsa_cluster_conn, reply);
-		fsa_actions |= A_DC_TIMER_START;
 
 	} else {
 		crm_err("Could not retrieve Generation to attach to our"
@@ -276,7 +271,7 @@ do_cl_join_result(long long action,
 	crm_debug("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
-
+#if 0
 		if(AM_I_DC) {
 			process_join_ack_msg(fsa_our_uname, tmp1);
 
@@ -289,7 +284,17 @@ do_cl_join_result(long long action,
 			send_msg_via_ha(fsa_cluster_conn, reply);
 			register_fsa_input(cause, I_NOT_DC, NULL);
 		}
+#else
+		HA_Message *reply = create_request(
+			CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
+			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 		
+		crm_debug("Sending local LRM status");
+		send_msg_via_ha(fsa_cluster_conn, reply);
+		if(AM_I_DC == FALSE) {
+			register_fsa_input(cause, I_NOT_DC, NULL);
+		}
+#endif
 		free_xml(tmp1);
 		
 	} else {
