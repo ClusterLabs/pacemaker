@@ -166,7 +166,6 @@ fsa_timer_t *finalization_timer = NULL;
 fsa_timer_t *dc_heartbeat = NULL;
 fsa_timer_t *wait_timer = NULL;
 
-int fsa_join_reannouce = 0;
 volatile gboolean do_fsa_stall = FALSE;
 
 enum crmd_fsa_state
@@ -546,9 +545,7 @@ do_state_transition(long long actions,
 		set_bit_inplace(tmp, A_FINALIZE_TIMER_STOP);
 	}
 	
-	if(next_state == S_PENDING) {
-		set_bit_inplace(tmp, A_DC_TIMER_START);
-	} else {
+	if(next_state != S_PENDING) {
 		set_bit_inplace(tmp, A_DC_TIMER_STOP);
 	}
 	if(next_state != S_ELECTION) {
@@ -558,7 +555,8 @@ do_state_transition(long long actions,
 	switch(next_state) {
 		case S_PENDING:			
 		case S_ELECTION:
-			crm_info("Resetting our DC to NULL on election");
+			crm_info("Resetting our DC to NULL on transition to %s",
+				 fsa_state2string(next_state));
 			crm_free(fsa_our_dc);
 			fsa_our_dc = NULL;
 			break;
@@ -597,7 +595,7 @@ do_state_transition(long long actions,
 			} else {
 				crm_info("All %d cluster nodes "
 					 "responded to the join offer.",
-					 fsa_membership_copy->members_size);
+					 g_hash_table_size(integrated_nodes));
 			}
 			break;
 			
