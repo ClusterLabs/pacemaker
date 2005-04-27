@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.64 2005/04/25 13:01:44 andrew Exp $ */
+/* $Id: tengine.c,v 1.65 2005/04/27 09:48:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,6 +51,8 @@ int transition_counter = 1;
 gboolean
 initialize_graph(void)
 {
+	remove_cib_op_callback(-1, TRUE);
+
 	if(transition_timer == NULL) {
 		crm_malloc0(transition_timer, sizeof(te_timer_t));
 	    
