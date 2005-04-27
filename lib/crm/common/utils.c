@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.8 2005/04/25 14:57:09 andrew Exp $ */
+/* $Id: utils.c,v 1.9 2005/04/27 11:17:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -512,7 +512,6 @@ static GHashTable *crm_uuid_cache = NULL;
 void
 set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname) 
 {
-#if 1
 	char *uuid_calc = NULL;
 
 	if(crm_uuid_cache == NULL) {
@@ -533,15 +532,16 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 	crm_malloc0(uuid_calc, sizeof(char)*50);
 	
 	if(uuid_calc != NULL) {
-		uuid_t uuid_raw;
+		cl_uuid_t uuid_raw;
+		
 		if(hb->llc_ops->get_uuid_by_name(
-			   hb, uname, uuid_raw) == HA_FAIL) {
+			   hb, uname, &uuid_raw) == HA_FAIL) {
 			crm_err("Could not calculate UUID for %s", uname);
 			crm_free(uuid_calc);
 			uuid_calc = crm_strdup(uname);
 			
 		} else {
-			uuid_unparse(uuid_raw, uuid_calc);
+			cl_uuid_unparse(&uuid_raw, uuid_calc);
 			g_hash_table_insert(
 				crm_uuid_cache,
 				crm_strdup(uname), crm_strdup(uuid_calc));
@@ -550,9 +550,6 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 	}
 	
 	crm_free(uuid_calc);
-#else
-	set_xml_property_copy(node, attr, uname);	
-#endif
 }/*memory leak*/ /* BEAM BUG - this is not a memory leak */
 
 
