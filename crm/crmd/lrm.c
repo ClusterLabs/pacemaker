@@ -746,8 +746,8 @@ do_lrm_rsc_op(
 		op->user_data = crm_strdup(CRMD_RSCSTATE_STOP_OK);
 		
 	} else if(safe_str_eq(CRMD_RSCSTATE_MON, operation)) {
-		op->user_data = crm_strdup(CRMD_RSCSTATE_MON_OK);
 		const char *last_op = g_hash_table_lookup(resources, rsc->id);
+		op->user_data = crm_strdup(CRMD_RSCSTATE_MON_OK);
 		if(safe_str_eq(last_op, CRMD_RSCSTATE_STOP)) {
 			crm_err("Attempting to schedule %s _after_ a stop.",
 				op_id);
