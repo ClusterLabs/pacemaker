@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.81 2005/04/25 13:58:53 andrew Exp $ */
+/* $Id: unpack.c,v 1.82 2005/04/27 09:12:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -535,7 +535,7 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 		} else if(!crm_is_true(ccm_state)
 			  || safe_str_eq(ha_state, DEADSTATUS)) {
 			
-		} else if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
+		} else if(safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)
 			  && safe_str_eq(crm_state, ONLINESTATUS)) {
 			online = TRUE;
 			
@@ -560,7 +560,7 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 		if(crm_is_true(ccm_state)
 		   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
 		   && safe_str_eq(crm_state, ONLINESTATUS)
-		   && safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
+		   && safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)) {
 			online = TRUE;
 
 		} else if(this_node->details->expected_up == FALSE) {
