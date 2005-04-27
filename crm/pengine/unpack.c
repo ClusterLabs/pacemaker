@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.82 2005/04/27 09:12:34 andrew Exp $ */
+/* $Id: unpack.c,v 1.83 2005/04/27 16:19:57 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -655,7 +655,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		     GListPtr *actions, GListPtr *placement_constraints)
 {
 	const char *rsc_id    = NULL;
-	const char *node_id   = node->details->uname;;
+	const char *node_id   = node->details->uname;
 	const char *rsc_state = NULL;
 	const char *last_op   = NULL;
 	resource_t *rsc_lh    = NULL;
