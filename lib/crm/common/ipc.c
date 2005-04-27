@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.2 2005/04/25 13:01:42 andrew Exp $ */
+/* $Id: ipc.c,v 1.3 2005/04/27 08:45:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -68,22 +68,27 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node)
 		crm_err("Not connected to Heartbeat");
 		all_is_good = FALSE;
 		
-	} else if(node == NULL
-		  && hb_conn->llc_ops->sendclustermsg(hb_conn, msg) != HA_OK) {
-		IPC_Channel *ipc = hb_conn->llc_ops->ipcchan(hb_conn);
-		all_is_good = FALSE;
-		crm_err("Broadcast Send failed");
-		CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
-
-	} else if(node != NULL
-		  && hb_conn->llc_ops->send_ordered_nodemsg(
-			  hb_conn, msg, node) != HA_OK) {
-		IPC_Channel *ipc = hb_conn->llc_ops->ipcchan(hb_conn);
-		all_is_good = FALSE;
-		crm_err("Send failed");
-		CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
+	} else if(node != NULL) {
+		if(hb_conn->llc_ops->send_ordered_nodemsg(
+			   hb_conn, msg, node) != HA_OK) {
+			IPC_Channel *ipc = hb_conn->llc_ops->ipcchan(hb_conn);
+			all_is_good = FALSE;
+			crm_err("Send failed");
+			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
+		} else {
+			crm_verbose("Message sent...");
+		}
+	} else {
+		if(hb_conn->llc_ops->sendclustermsg(hb_conn, msg) != HA_OK) {
+			IPC_Channel *ipc = hb_conn->llc_ops->ipcchan(hb_conn);
+			all_is_good = FALSE;
+			crm_err("Broadcast Send failed");
+			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
+		} else {
+			crm_verbose("Broadcast message sent...");
+		}
 	}
-
+	
 	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"HA[outbound]",msg);
 	return all_is_good;
 }
