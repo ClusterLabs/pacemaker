@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.37 2005/04/25 15:03:22 gshi Exp $ */
+/* $Id: crmadmin.c,v 1.38 2005/04/27 08:49:08 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -740,7 +740,7 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 			const char *id = crm_element_value(
 				rsc_state,XML_ATTR_ID);
 			const char *target = crm_element_value(
-				a_node, XML_ATTR_ID);
+				a_node, XML_ATTR_UNAME);
 			const char *last_op = crm_element_value(
 				rsc_state,XML_LRM_ATTR_LASTOP);
 			const char *op_code = crm_element_value(
@@ -793,18 +793,20 @@ is_node_online(crm_data_t *node_state)
 {
 	const char *uname      = crm_element_value(node_state,XML_ATTR_UNAME);
 	const char *join_state = crm_element_value(node_state,XML_CIB_ATTR_JOINSTATE);
+	const char *exp_state  = crm_element_value(node_state,XML_CIB_ATTR_EXPSTATE);
 	const char *crm_state  = crm_element_value(node_state,XML_CIB_ATTR_CRMDSTATE);
 	const char *ha_state   = crm_element_value(node_state,XML_CIB_ATTR_HASTATE);
 	const char *ccm_state  = crm_element_value(node_state,XML_CIB_ATTR_INCCM);
 
-	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)
-	   && safe_str_eq(ha_state, ACTIVESTATUS)
+	if(safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)
+	   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
 	   && crm_is_true(ccm_state)
 	   && safe_str_eq(crm_state, ONLINESTATUS)) {
 		crm_devel("Node %s is online", uname);
 		return TRUE;
 	}
-	crm_devel("Node %s: %s %s %s", uname, join_state, ccm_state, crm_state);
+	crm_devel("Node %s: ha=%s ccm=%s join=%s exp=%s crm=%s",
+		  uname, ha_state, ccm_state, join_state, exp_state, crm_state);
 	crm_devel("Node %s is offline", uname);
 	return FALSE;
 }
