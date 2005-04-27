@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.22 2005/04/21 15:16:40 andrew Exp $ */
+/* $Id: cib.h,v 1.23 2005/04/27 09:30:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,13 +46,14 @@ enum cib_conn_type {
 };
 
 enum cib_call_options {
-	cib_none            = 0x000000,
-	cib_verbose         = 0x000001,
-	cib_discard_reply   = 0x000010,
-	cib_scope_local     = 0x000100,
-	cib_sync_call       = 0x001000,
-	cib_inhibit_notify  = 0x010000,
- 	cib_quorum_override = 0x100000
+	cib_none            = 0x00000000,
+	cib_verbose         = 0x00000001,
+	cib_discard_reply   = 0x00000010,
+	cib_scope_local     = 0x00000100,
+	cib_sync_call       = 0x00001000,
+	cib_inhibit_notify  = 0x00010000,
+ 	cib_quorum_override = 0x00100000,
+	cib_inhibit_bcast   = 0x01000000
 };
 
 #define cib_default_options = cib_none
