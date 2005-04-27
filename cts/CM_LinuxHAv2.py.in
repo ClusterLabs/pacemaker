@@ -83,6 +83,7 @@ class LinuxHAv2(HeartbeatCM):
                 r"Timer I_TERMINATE just popped",
                 r"input=I_ERROR",
                 r"input=I_FAIL",
+                r"input=I_INTEGRATED cause=C_TIMER_POPPED",
                 r"input=I_FINALIZED cause=C_TIMER_POPPED",
                 r"input=I_ERROR",
                 r", exiting\.",
