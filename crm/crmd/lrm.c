@@ -68,6 +68,7 @@ void free_recurring_op(gpointer value);
 GHashTable *xml2list(crm_data_t *parent);
 GHashTable *monitors = NULL;
 GHashTable *resources = NULL;
+GHashTable *resources_confirmed = NULL;
 int num_lrm_register_fails = 0;
 int max_lrm_register_fails = 30;
 
@@ -186,6 +187,10 @@ do_lrm_control(long long action,
 			g_hash_destroy_str, free_recurring_op);
 
 		resources = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+		
+		resources_confirmed = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
 		
@@ -744,7 +749,8 @@ do_lrm_rsc_op(
 		op->user_data = crm_strdup(CRMD_RSCSTATE_MON_OK);
 		const char *last_op = g_hash_table_lookup(resources, rsc->id);
 		if(safe_str_eq(last_op, CRMD_RSCSTATE_STOP)) {
-			crm_err("Attempting to schedule %s for _after_ a stop.", op_id);
+			crm_err("Attempting to schedule %s _after_ a stop.",
+				op_id);
 			free_lrm_op(op);
 			crm_free(op_id);
 			return I_NULL;			
@@ -1009,11 +1015,12 @@ do_lrm_event(long long action,
 			break;
 		case LRM_OP_TIMEOUT:
 			last_op = g_hash_table_lookup(
-				resources, crm_strdup(rsc->id));
+				resources_confirmed, crm_strdup(rsc->id));
 
 			if(safe_str_eq(last_op, CRMD_RSCSTATE_STOP)
 			   && safe_str_eq(op->op_type, CRMD_RSCSTATE_MON)) {
-				crm_err("LRM sent a timed out %s operation _after_ it was cancelled",
+				crm_err("LRM sent a timed out %s operation"
+					" _after_ a confirmed stop",
 					op->op_type);
 				return I_NULL;
 			}
@@ -1054,6 +1061,10 @@ do_lrm_event(long long action,
 			}
 			break;
 	}
+	g_hash_table_replace(resources_confirmed,
+			     crm_strdup(rsc->id), crm_strdup(op->op_type));
+
 	do_update_resource(rsc, op);
+	
 	return I_NULL;
 }
