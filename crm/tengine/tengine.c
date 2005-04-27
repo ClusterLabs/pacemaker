@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.66 2005/04/27 11:47:17 andrew Exp $ */
+/* $Id: tengine.c,v 1.67 2005/04/27 16:32:17 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -479,6 +479,9 @@ initiate_action(action_t *action)
 		const char *uuid = NULL;
 		const char *target = NULL;
 		const char *name = NULL;
+#ifndef TESTING
+		stonith_ops_t * st_op = NULL;
+#endif
 
 		xml_child_iter(
 			action_args, nvpair, XML_CIB_TAG_NVPAIR,
@@ -500,7 +503,6 @@ initiate_action(action_t *action)
 		ret = TRUE;
 		action->complete = TRUE;
 #else
-		stonith_ops_t * st_op = NULL;
 		crm_malloc0(st_op, sizeof(stonith_ops_t));
 		st_op->optype = RESET;
 		st_op->timeout = crm_atoi(timeout, "100"); /* ten seconds */
