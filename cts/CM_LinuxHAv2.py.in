@@ -92,6 +92,7 @@ class LinuxHAv2(HeartbeatCM):
 		r"pengine:.*Handling failed ",
 		r"tengine:.*is taking more than 2x its timeout",
 		r"Confirm not received from",
+		r"Welcome reply not received from",
                 r"ERROR:",
                 r"CRIT:",
             ),
@@ -244,13 +245,9 @@ class LinuxHAv2(HeartbeatCM):
         # that should be the DC
         if self.any_running() == 1:
             patterns.append(self["Pat:DC_IDLE"])
-            localBadNewsPats.append("input=I_ELECTION ")
-#            localBadNewsPats.append("S_INTEGRATION -> S_ELECTION")
-#            localBadNewsPats.append("S_FINALIZE_JOIN -> S_ELECTION")
-#            localBadNewsPats.append("S_POLICY_ENGINE -> S_ELECTION")
-#            localBadNewsPats.append("S_TRANSITION_ENGINE -> S_ELECTION")
-#            localBadNewsPats.append("S_IDLE -> S_ELECTION")
-#            localBadNewsPats.append("input=I_ELECTION_DC ")
+	    localBadNewsPats.append("input=I_DC_TIMEOUT ")
+            localBadNewsPats.append("input=I_ELECTION_DC ")
+	    localBadNewsPats.append("""Ignoring HA message (op=join_annouce).*: not in our membership list""")
 
         if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
