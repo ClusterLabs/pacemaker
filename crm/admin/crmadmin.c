@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.38 2005/04/27 08:49:08 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.39 2005/04/28 10:14:46 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -56,6 +56,7 @@ char *admin_uuid = NULL;
 void usage(const char *cmd, int exit_status);
 ll_cluster_t *do_init(void);
 int do_work(ll_cluster_t * hb_cluster);
+void crmd_ipc_connection_destroy(gpointer user_data);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 char *pluralSection(const char *a_section);
@@ -543,13 +544,21 @@ do_work(ll_cluster_t * hb_cluster)
 
 }
 
+void
+crmd_ipc_connection_destroy(gpointer user_data)
+{
+	crm_err("Connection to CRMd was terminated");
+	exit(1);
+}
+
 
 ll_cluster_t *
 do_init(void)
 {
 	int facility;
+	GCHSource *src = NULL;
 	ll_cluster_t *hb_cluster = NULL;
-
+	
 #ifdef USE_LIBXML
 	/* docs say only do this once, but in their code they do it every time! */
 	xmlInitParser (); 
@@ -569,13 +578,15 @@ do_init(void)
 		admin_uuid[10] = '\0';
 	}
 	
-	init_client_ipc_comms(
+	src = init_client_ipc_comms(
 		CRM_SYSTEM_CRMD, admin_msg_callback, NULL, &crmd_channel);
 
 	if(crmd_channel != NULL) {
 		send_hello_message(
 			crmd_channel, admin_uuid, crm_system_name,"0", "1");
 
+		set_IPC_Channel_dnotify(src, crmd_ipc_connection_destroy);
+		
 		return hb_cluster;
 	} 
 	return NULL;
