@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.30 2005/04/25 13:21:44 andrew Exp $ */
+/* $Id: native.c,v 1.31 2005/04/28 08:32:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -356,14 +356,19 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		}
 	}
 
-	if(rsc->schedule_recurring == TRUE
-	   && (start == NULL || start->runnable)) {
+	if( !have_quorum && no_quorum_policy == no_quorum_stop) {
+		if(start != NULL) {
+			start->runnable = FALSE;
+		}
+		
+	} else if(rsc->schedule_recurring == TRUE
+		  && (start == NULL || start->runnable)) {
 		create_recurring_actions(
 			rsc, start, chosen, ordering_constraints);
 	}
 }
 
-void native_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
+void native_internal_constraints(resource_t *rsc,GListPtr *ordering_constraints)
 {
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
