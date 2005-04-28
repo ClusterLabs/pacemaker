@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.3 2005/04/27 08:45:00 andrew Exp $ */
+/* $Id: ipc.c,v 1.4 2005/04/28 08:37:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -202,7 +202,7 @@ init_client_ipc_comms(const char *channel_name,
 		crm_devel("Adding dispatch method to channel");
 
 		the_source = G_main_add_IPC_Channel(
-			G_PRIORITY_LOW, a_ch, FALSE, dispatch, callback_data, 
+			G_PRIORITY_HIGH, a_ch, FALSE, dispatch, callback_data, 
 			default_ipc_connection_destroy);
 	}
 	
