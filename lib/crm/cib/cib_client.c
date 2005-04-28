@@ -106,6 +106,7 @@ cib_new(void)
 
 	if(cib_op_callback_table != NULL) {
 		g_hash_table_destroy(cib_op_callback_table);
+		cib_op_callback_table = NULL;
 	}
 	if(cib_op_callback_table == NULL) {
 		cib_op_callback_table = g_hash_table_new_full(
