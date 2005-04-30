@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.39 2005/04/28 10:14:46 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.40 2005/04/30 08:15:50 alan Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -817,7 +817,9 @@ is_node_online(crm_data_t *node_state)
 		return TRUE;
 	}
 	crm_devel("Node %s: ha=%s ccm=%s join=%s exp=%s crm=%s",
-		  uname, ha_state, ccm_state, join_state, exp_state, crm_state);
+		  uname, crm_str(ha_state), crm_str(ccm_state),
+                  crm_str(join_state), crm_str(exp_state),
+                  crm_str(crm_state));
 	crm_devel("Node %s is offline", uname);
 	return FALSE;
 }
