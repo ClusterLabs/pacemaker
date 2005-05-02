@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.22 2005/04/25 13:01:45 andrew Exp $ */
+/* $Id: complex.c,v 1.23 2005/05/02 10:54:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -409,8 +409,11 @@ add_hash_param(GHashTable *hash, const char *name, const char *value)
 		return;
 	}
 
-	if(g_hash_table_lookup(hash, name) == NULL) {
-		crm_debug("adding: name=%s value=%s", name, value);
+	crm_debug("adding: name=%s value=%s", crm_str(name), crm_str(value));
+	if(name == NULL || value == NULL) {
+		return;
+		
+	} else if(g_hash_table_lookup(hash, name) == NULL) {
 		g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
 	}
 }
