@@ -899,8 +899,8 @@ handle_request(ha_msg_input_t *stored_msg)
  			if(fsa_state == S_TRANSITION_ENGINE) {
 				next_input = I_TE_SUCCESS;
  			} else {
-				crm_err("Filtering %s op in state %s",
-					 op, fsa_state2string(fsa_state));
+				crm_debug("Filtering %s op in state %s",
+					  op, fsa_state2string(fsa_state));
 			}
 
 		} else if(strcmp(op, CRM_OP_JOIN_ANNOUNCE) == 0) {
