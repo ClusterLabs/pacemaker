@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.83 2005/04/27 16:19:57 alan Exp $ */
+/* $Id: unpack.c,v 1.84 2005/05/02 10:57:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -951,13 +951,13 @@ unpack_rsc_colocation(crm_data_t * xml_obj,
 {
 	enum con_strength strength_e = pecs_ignore;
 
-	const char *id_lh    = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
-	const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *id_rh    = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-	const char *type     = crm_element_value(xml_obj, XML_ATTR_TYPE);
+	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
+	const char *id_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
+	const char *id_lh = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
+	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 
-	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
-	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
+	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
+	resource_t *rsc_rh = pe_find_resource(rsc_list, id_rh);
  
 	if(rsc_lh == NULL) {
 		crm_err("No resource (con=%s, rsc=%s)", id, id_lh);
@@ -966,24 +966,15 @@ unpack_rsc_colocation(crm_data_t * xml_obj,
 		crm_err("No resource (con=%s, rsc=%s)", id, id_rh);
 		return FALSE;
 	}
-	
-	if(safe_str_eq(type, XML_STRENGTH_VAL_MUST)) {
-		strength_e = pecs_must;
-		
-	} else if(safe_str_eq(type, XML_STRENGTH_VAL_SHOULD)) {
-		crm_err("Type %s is no longer supported", type);
-		strength_e = pecs_must;
-		
-	} else if(safe_str_eq(type, XML_STRENGTH_VAL_SHOULDNOT)) {
-		crm_err("Type %s is no longer supported", type);
-		strength_e = pecs_must_not;
-		
-	} else if(safe_str_eq(type, XML_STRENGTH_VAL_MUSTNOT)) {
-		strength_e = pecs_must_not;
 
+	/* the docs indicate that only +/- INFINITY are allowed,
+	 *   but no-one ever reads the docs so all positive values will
+	 *   count as "must" and negative values as "must not"
+	 */
+	if(score == NULL || score[0] != '-') {
+		strength_e = pecs_must;
 	} else {
-		crm_err("Unknown value for %s: %s", XML_ATTR_TYPE, type);
-		return FALSE;
+		strength_e = pecs_must_not;
 	}
 	return rsc_colocation_new(id, strength_e, rsc_lh, rsc_rh);
 }
@@ -992,16 +983,18 @@ gboolean
 unpack_rsc_order(
 	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints)
 {
+	gboolean type_is_after    = TRUE;
+	gboolean action_is_start  = TRUE;
 	gboolean symmetrical_bool = TRUE;
-	gboolean action_is_start = TRUE;
-	gboolean type_is_after   = TRUE;
 	
-	const char *id         = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *id_lh      = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
-	const char *id_rh      = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-	const char *action     = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
-	const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
-	const char *type       = crm_element_value(xml_obj, XML_ATTR_TYPE);
+	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
+	const char *type   = crm_element_value(xml_obj, XML_ATTR_TYPE);
+	const char *id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
+	const char *id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
+	const char *action = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
+
+	const char *symmetrical = crm_element_value(
+		xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
 	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
 	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
