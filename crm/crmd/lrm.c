@@ -696,6 +696,8 @@ do_lrm_rsc_op(
 	op->params = params;
 	op->interval = crm_get_msec(g_hash_table_lookup(op->params,"interval"));
 	op->timeout  = crm_get_msec(g_hash_table_lookup(op->params, "timeout"));
+	op->start_delay = crm_get_msec(
+		g_hash_table_lookup(op->params,"start_delay"));
 
 	/* sanity */
 	if(op->interval < 0) {
@@ -703,6 +705,9 @@ do_lrm_rsc_op(
 	}
 	if(op->timeout < 0) {
 		op->timeout = 0;
+	}
+	if(op->start_delay < 0) {
+		op->start_delay = 0;
 	}
 	if(g_hash_table_lookup(op->params, "timeout") != NULL) {
 		char *timeout_ms = crm_itoa(op->timeout);
@@ -713,6 +718,11 @@ do_lrm_rsc_op(
 		char *interval_ms = crm_itoa(op->interval);
 		g_hash_table_replace(
 			op->params, crm_strdup("interval"), interval_ms);
+	}
+	if(g_hash_table_lookup(op->params, "start_delay") != NULL) {
+		char *delay_ms = crm_itoa(op->start_delay);
+		g_hash_table_replace(
+			op->params, crm_strdup("start_delay"), delay_ms);
 	}
 
 	if(op->interval > 0) {
