@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.31 2005/04/28 08:32:24 andrew Exp $ */
+/* $Id: native.c,v 1.32 2005/05/02 10:56:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -209,7 +209,7 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 {
 	action_t *mon = NULL;
 	const char *name = NULL;
-	const char *interval = NULL;
+	const char *value = NULL;
 	if(node == NULL || !node->details->online || node->details->unclean) {
 		crm_verbose("Not creating recurring actions");
 		return;
@@ -222,15 +222,18 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			continue;
 		}
 
-		interval = crm_element_value(operation, "interval");
+		value = crm_element_value(operation, "interval");
 
 		crm_info("\tStart %s[%s] for %s\t(%s)",
-			 name, interval, rsc->id, node->details->uname);
+			 name, value, rsc->id, node->details->uname);
 			 
 		mon = action_new(rsc, monitor_rsc,
 				 crm_element_value(operation, "timeout"), node);
 
-		add_hash_param(mon->extra, "interval", interval);
+		add_hash_param(mon->extra, "interval", value);
+
+		value = crm_element_value(operation, "start_delay");
+		add_hash_param(mon->extra, "start_delay", value);
 
  		unpack_instance_attributes(operation, mon->extra);
 		if(start != NULL) {
@@ -312,7 +315,12 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		crm_debug("Stop%s of %s", chosen?" and restart":"", rsc->id);
 		CRM_DEV_ASSERT(node != NULL);
 		
-		if(chosen != NULL && safe_str_eq(
+		if(have_quorum == FALSE && no_quorum_policy == no_quorum_stop){
+			start = action_new(rsc, start_rsc, NULL, chosen);
+			stop  = action_new(rsc, stop_rsc,  NULL, node);
+			start->runnable = FALSE;
+
+		} else if(chosen != NULL && safe_str_eq(
 			   node->details->id, chosen->details->id)) {
 
 			/* restart */
@@ -336,8 +344,7 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 					start->optional = TRUE;
 				} else {
 					rsc->schedule_recurring = TRUE;
-				}
-				
+				}	
 			}
 			
 		} else if(chosen != NULL) {
@@ -355,13 +362,8 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 			action_new(rsc, stop_rsc, NULL, node);
 		}
 	}
-
-	if( !have_quorum && no_quorum_policy == no_quorum_stop) {
-		if(start != NULL) {
-			start->runnable = FALSE;
-		}
-		
-	} else if(rsc->schedule_recurring == TRUE
+	
+	if(rsc->schedule_recurring == TRUE
 		  && (start == NULL || start->runnable)) {
 		create_recurring_actions(
 			rsc, start, chosen, ordering_constraints);
