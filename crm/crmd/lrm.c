@@ -48,9 +48,6 @@ gboolean resource_stopped(gpointer key, gpointer value, gpointer user_data);
 gboolean build_operation_update(
 	crm_data_t *rsc_list, lrm_op_t *op, const char *src, int lpc);
 
-gboolean build_suppported_RAs(
-	crm_data_t *metadata_list, crm_data_t *xml_agent_list);
-
 gboolean build_active_RAs(crm_data_t *rsc_list);
 
 void do_update_resource(lrm_op_t *op);
@@ -266,56 +263,6 @@ do_lrm_control(long long action,
 	return I_NULL;
 }
 
-
-
-gboolean
-build_suppported_RAs(crm_data_t *metadata_list, crm_data_t *xml_agent_list)
-{
-	GList *types            = NULL;
-	GList *classes          = NULL;
-	const char *version     = NULL;
-	crm_data_t *xml_agent    = NULL;
-	
-/* 	return TRUE; */
-	
-	if(fsa_lrm_conn == NULL) {
-		return FALSE;
-	}
-	
-	classes = fsa_lrm_conn->lrm_ops->get_rsc_class_supported(fsa_lrm_conn);
-
-	slist_iter(
-		class, char, classes, lpc,
-
-		types = fsa_lrm_conn->lrm_ops->get_rsc_type_supported(
-			fsa_lrm_conn, class);
-
-		slist_iter(
-			type, char, types, llpc,
-			
-			version = "1";
-
-			xml_agent = create_xml_node(
-				xml_agent_list, XML_LRM_TAG_AGENT);
-			
-			set_xml_property_copy(
-				xml_agent, XML_AGENT_ATTR_CLASS, class);
-			set_xml_property_copy(xml_agent, XML_ATTR_TYPE, type);
-
-			set_xml_property_copy(
-				xml_agent, XML_ATTR_VERSION, version);
-
-			)
-		g_list_free(types);
-		);
-
-	g_list_free(classes);
-
-	return TRUE;
-}
-
-
-
 gboolean
 stop_all_resources(void)
 {
@@ -361,12 +308,16 @@ build_operation_update(
 
 	CRM_DEV_ASSERT(op != NULL);
 	if(crm_assert_failed) {
-		crm_err("Either resouce or op was not specified");
 		return FALSE;
 	}
 
 	crm_info("%s: Updating resouce %s after %s %s op",
 		 src, op->rsc_id, op_status2text(op->op_status), op->op_type);
+
+	if(op->op_status == LRM_OP_CANCELLED) {
+		crm_debug("Ignoring cancelled op");
+		return TRUE;
+	}
 	
 	xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
 	
@@ -382,11 +333,21 @@ build_operation_update(
 		crm_free(op_id);
 	}
 
-	set_xml_property_copy(xml_op, XML_LRM_ATTR_TASK, op->op_type);
-	set_xml_property_copy(xml_op, "origin", src);
+	set_xml_property_copy(xml_rsc, XML_LRM_ATTR_LASTOP, op->op_type);
+	set_xml_property_copy(xml_op,  XML_LRM_ATTR_TASK,   op->op_type);
+	set_xml_property_copy(xml_op,  "origin", src);
 
-	set_xml_property_copy(xml_rsc, XML_LRM_ATTR_LASTOP,op->op_type);
-
+	/* Handle recurring ops - infer last op_status */
+	if(op->op_status == LRM_OP_PENDING && op->interval > 0) {
+		if(op->rc == 0) {
+			crm_debug("Mapping pending operation to DONE");
+			op->op_status = LRM_OP_DONE;
+		} else {
+			crm_debug("Mapping pending operation to ERROR");
+			op->op_status = LRM_OP_ERROR;
+		}
+	}
+	
 	switch(op->op_status) {
 		case LRM_OP_PENDING:
 			break;
@@ -425,19 +386,19 @@ build_operation_update(
 			break;
 	}
 
+	tmp = crm_itoa(op->call_id);
+	set_xml_property_copy(xml_op,  XML_LRM_ATTR_CALLID, tmp);
+	crm_free(tmp);
+
 	/* set these on 'xml_rsc' too to make life easy for the TE */
 	tmp = crm_itoa(op->rc);
 	set_xml_property_copy(xml_op, XML_LRM_ATTR_RC, tmp);
-	if(lpc == 0) {
-		set_xml_property_copy(xml_rsc, XML_LRM_ATTR_RC, tmp);
-	}
+	set_xml_property_copy(xml_rsc, XML_LRM_ATTR_RC, tmp);
 	crm_free(tmp);
 
 	tmp = crm_itoa(op->op_status);
 	set_xml_property_copy(xml_op, XML_LRM_ATTR_OPSTATUS, tmp);
-	if(lpc == 0) {
-		set_xml_property_copy(xml_rsc, XML_LRM_ATTR_OPSTATUS, tmp);
-	}
+	set_xml_property_copy(xml_rsc, XML_LRM_ATTR_OPSTATUS, tmp);
 	crm_free(tmp);
 
 	set_node_tstamp(xml_op);
