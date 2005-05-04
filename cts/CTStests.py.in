@@ -78,7 +78,6 @@ class RandomTests:
 
     def audit(self, BadNews, test):
             errcount=0
-#            print ("Looking for BadNews")
             while errcount < 1000:
                 match=BadNews.look()
                 if match:
@@ -96,7 +95,7 @@ class RandomTests:
                            if re.search(ignore, match):
                                add_err = 0
                    if add_err == 1:
-                       self.CM.log(match)
+                       self.CM.log("BadNews: " + match)
                        self.incr("BadNews")
                        errcount=errcount+1
                 else:
@@ -106,8 +105,6 @@ class RandomTests:
               self.CM.stopall()
               self.summarize()
               raise ValueError("Looks like we hit the jackpot!        :-)")
-
-#            print ("Done looking for BadNews")
 
             for audit in self.Audits:
                 if not audit():
@@ -132,12 +129,13 @@ Set up the given scenario, then run the selected tests at
 random for the selected number of iterations.
 ''')
 
-        if not self.Scenario.SetUp(self.CM):
-            return None
-
         BadNews=CTS.LogWatcher(self.CM["LogFileName"], self.CM["BadRegexes"]
         ,        timeout=0)
         BadNews.setwatch()
+
+        if not self.Scenario.SetUp(self.CM):
+            return None
+
         testcount=1
         time.sleep(30)
 
