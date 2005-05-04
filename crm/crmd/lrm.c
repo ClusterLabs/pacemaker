@@ -429,6 +429,8 @@ build_active_RAs(crm_data_t *rsc_list)
 		crm_data_t *xml_rsc = create_xml_node(
 			rsc_list, XML_LRM_TAG_RESOURCE);
 
+		int max_call_id = -1;
+		
 		crm_info("Processing lrm_rsc_t entry %s", rid);
 		
 		if(the_rsc == NULL) {
@@ -448,7 +450,18 @@ build_active_RAs(crm_data_t *rsc_list)
 
 			crm_info("Processing op %s for %s (status=%d, rc=%d)", 
 				 op->op_type, the_rsc->id, op->op_status, op->rc);
-			build_operation_update(xml_rsc, op, __FUNCTION__, llpc);
+
+			if(max_call_id < op->call_id) {
+				build_operation_update(xml_rsc, op, __FUNCTION__, llpc);
+
+			} else if(max_call_id > op->call_id) {
+				crm_err("Bad call_id in list=%d. Previous call_id=%d",
+					op->call_id, max_call_id);
+
+			} else {
+				crm_debug("Skipping duplicate entry for call_id=%d",
+					  op->call_id);
+			}
 
 			found_op = TRUE;
 			
@@ -1016,17 +1029,6 @@ do_lrm_event(long long action,
 				  op->call_id, op->op_type,
 				  crm_str(op->rsc_id),
 				  op_status2text(op->op_status));
-			/* this is an evil hack that will slow down
-			 * resource recovery
-			 */
-			if(safe_str_eq(op->op_type, CRMD_RSCSTATE_STOP)) {
-				int rc = HA_OK;
-				fsa_lrm_conn->lrm_ops->delete_rsc(
-					fsa_lrm_conn, op->rsc_id);
-				CRM_DEV_ASSERT(rc == HA_OK);
-				g_hash_table_foreach_remove(
-					shutdown_ops, resource_stopped, op->rsc_id);
-			}
 			break;
 	}
 	g_hash_table_replace(resources_confirmed,
