@@ -272,13 +272,37 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 	return stay_connected;
 }
 
+gboolean lrm_dispatch(int fd, gpointer user_data)
+{
+	int num_msgs = 0;
+	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
+	crm_devel("received callback");
+	num_msgs = lrm->lrm_ops->rcvmsg(lrm, FALSE);
+	if(num_msgs < 1) {
+		crm_err("lrm->lrm_ops->rcvmsg() failed, connection lost?");
+		clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+		register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+		G_main_set_trigger(fsa_source);
+		return FALSE;
+	}
+	return TRUE;
+}
 
 void
 lrm_op_callback(lrm_op_t* op)
 {
+	CRM_DEV_ASSERT(op != NULL);
+	if(crm_assert_failed) {
+		return;
+	}
+	
 	/* todo: free op->rsc */
-	crm_devel("received callback");
-	register_fsa_input(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
+	
+	crm_debug("received callback: %s/%s (%s)",
+		  op->op_type, op->rsc_id, op_status2text(op->op_status));
+
+	/* Make sure the LRM events are received in order */
+	register_fsa_input_later(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
 	G_main_set_trigger(fsa_source);
 }
 
@@ -370,23 +394,6 @@ crmd_client_status_callback(const char * node, const char * client,
 	}
 	
 	G_main_set_trigger(fsa_source);
-}
-
-
-gboolean lrm_dispatch(int fd, gpointer user_data)
-{
-	int num_msgs = 0;
-	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
-	crm_devel("received callback");
-	num_msgs = lrm->lrm_ops->rcvmsg(lrm, FALSE);
-	if(num_msgs < 1) {
-		crm_err("lrm->lrm_ops->rcvmsg() failed, connection lost?");
-		clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
-		register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-		G_main_set_trigger(fsa_source);
-		return FALSE;
-	}
-	return TRUE;
 }
 
 void
