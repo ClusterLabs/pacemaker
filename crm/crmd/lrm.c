@@ -273,7 +273,7 @@ stop_all_resources(void)
 	if(fsa_lrm_conn == NULL) {
 		return TRUE;
 
-	} else if(g_hash_table_size(shutdown_ops) > 0) {
+	} else if(is_set(fsa_input_register, R_SENT_RSC_STOP)) {
 		crm_debug("Already sent stop operation");
 		return TRUE;
 	}
@@ -285,6 +285,8 @@ stop_all_resources(void)
 		do_lrm_rsc_op(NULL, rsc_id, CRMD_RSCSTATE_STOP, NULL);
 		);
 
+	set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
+	
 	if(g_hash_table_size(shutdown_ops) == 0) {
 		register_fsa_input(C_FSA_INTERNAL, I_EXIT, NULL);
 
@@ -537,14 +539,15 @@ do_lrm_invoke(long long action,
 
 	} else if(operation != NULL) {
 		char rid[64];
-		const char *id_from_cib = NULL;
 		lrm_rsc_t *rsc = NULL;
-#if 0
-		if(AM_I_DC == FALSE && cur_state != S_NOT_DC) {
-			crm_warn("Ignoring LRM operation while in state %s",
-				 fsa_state2string(cur_state));
+		const char *id_from_cib = NULL;
+
+		if(cur_state == S_STOPPING || cur_state == S_TERMINATE) {
+			/* we will have already scheduled a stop */
+			crm_debug("Ignoring LRM operation while in state %s",
+				  fsa_state2string(cur_state));
 		}
-#endif	
+
 		id_from_cib = get_xml_attr_nested(
 			input->xml, rsc_path, DIMOF(rsc_path) -2,
 			XML_ATTR_ID, TRUE);
@@ -565,7 +568,7 @@ do_lrm_invoke(long long action,
 	} else {
 		crm_err("Operation was neither a lrm_query, nor a rsc op.  %s",
 			crm_str(crm_op));
-		next_input = I_ERROR;
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 
 	return next_input;
@@ -581,16 +584,16 @@ enum crmd_fsa_input
 do_lrm_rsc_op(
 	lrm_rsc_t *rsc, char *rid, const char *operation, crm_data_t *msg)
 {
-	lrm_op_t* op        = NULL;
-	int call_id         = 0;
-	fsa_data_t *msg_data = NULL;
-	char *op_id = NULL;
+	int call_id  = 0;
+	char *op_id  = NULL;
+	lrm_op_t* op = NULL;
 
 	const char *type = NULL;
 	const char *class = NULL;
 	const char *provider = NULL;
-
-	GHashTable *params = NULL;
+	
+	GHashTable *params   = NULL;
+	fsa_data_t *msg_data = NULL;
 	
 	if(rsc != NULL) {
 		class = rsc->class;
@@ -778,12 +781,11 @@ do_lrm_rsc_op(
 			g_hash_table_insert(monitors, op_id, op);
 			op_id = NULL;
 		}
-		if(fsa_state == S_STOPPING) {
-			char *call_id_s = make_stop_id(rsc->id, call_id);
-			g_hash_table_replace(
-				shutdown_ops, call_id_s, crm_strdup(rsc->id));
-			crm_debug("Recording shutdown op: %s", call_id_s);
-		}
+		/* record all operations so we can wait for them to complete */
+		char *call_id_s = make_stop_id(rsc->id, call_id);
+		g_hash_table_replace(
+			shutdown_ops, call_id_s, crm_strdup(rsc->id));
+		crm_debug("Recording shutdown op: %s", call_id_s);
 	}
 
 	crm_free(op_id);
@@ -1036,19 +1038,19 @@ do_lrm_event(long long action,
 
 	do_update_resource(op);
 
-	if(fsa_state == S_STOPPING) {
-		if(g_hash_table_size(shutdown_ops) > 0) {
-			char *op_id = make_stop_id(op->rsc_id, op->call_id);
-			if(g_hash_table_remove(shutdown_ops, op_id)) {
-				crm_debug("Shutdown op %d (%s %s) confirmed",
-					  op->call_id, op->op_type, op->rsc_id);
-			} else {
-				crm_debug("Shutdown op %d (%s %s) not matched: %s",
-					  op->call_id, op->op_type, op->rsc_id, op_id);
-			}
-			crm_free(op_id);
+	if(g_hash_table_size(shutdown_ops) > 0) {
+		char *op_id = make_stop_id(op->rsc_id, op->call_id);
+		if(g_hash_table_remove(shutdown_ops, op_id)) {
+			crm_debug("Shutdown op %d (%s %s) confirmed",
+				  op->call_id, op->op_type, op->rsc_id);
+		} else {
+			crm_debug("Shutdown op %d (%s %s) not matched: %s",
+				  op->call_id, op->op_type, op->rsc_id, op_id);
 		}
-		
+		crm_free(op_id);
+	}
+	
+	if(is_set(fsa_input_register, R_SENT_RSC_STOP)) {
 		if(g_hash_table_size(shutdown_ops) == 0) {
 			register_fsa_input(C_FSA_INTERNAL, I_EXIT, NULL);
 			
