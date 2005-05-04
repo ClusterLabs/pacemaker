@@ -70,6 +70,10 @@ class ResourceAudit(ClusterAudit):
         Fatal = 0
         result = []
 
+        # Thought: use self.CM.find_partitions() and make this audit 
+        #   aware of partitions.  Since in a split cluster one 
+        #   partition may have quorum (and permission to run resources)
+        #   and the other not.
 
         Groups = self.CM.ResourceGroups()
         for group in Groups:
@@ -88,7 +92,7 @@ class ResourceAudit(ClusterAudit):
 
                 #        Is the resource served without quorum present?
 
-                if not self.CM.HasQuorum() and len(ResourceNodes) != 0:
+                if not self.CM.HasQuorum(None) and len(ResourceNodes) != 0:
 
                     result.append("Resource " + repr(resource)
                     +        " active without Quorum: "
@@ -96,7 +100,7 @@ class ResourceAudit(ClusterAudit):
 
                 #        Is the resource served at all?
 
-                elif len(ResourceNodes) == 0 and self.CM.HasQuorum():
+                elif len(ResourceNodes) == 0 and self.CM.HasQuorum(None):
                     result.append("Resource " + repr(resource)
                     +        " not served anywhere.")
 
@@ -231,13 +235,13 @@ class HAResourceAudit(ClusterAudit):
             NodeofRsc[resource.rid]=RunningNodes
             
             #Is the resource served without quorum present?
-            if not self.CM.HasQuorum() and len(RunningNodes) != 0:
+            if not self.CM.HasQuorum(None) and len(RunningNodes) != 0:
                     self.CM.log("Resource " + repr(resource)
                     +        " active without Quorum: "
                     +        repr(RunningNodes))
                     passed = 0
             #Is the resource served at all?
-            elif len(RunningNodes) == 0 and self.CM.HasQuorum():
+            elif len(RunningNodes) == 0 and self.CM.HasQuorum(None):
                     self.CM.log("Resource " + repr(resource)
                     +        " not served anywhere.")
                     passed = 0
@@ -378,7 +382,6 @@ class PartitionAudit(ClusterAudit):
         self.NodeEpoche={}
         self.NodeState={}
         self.NodeQuorum={}
-        self.NodeCCM={}
 
     def has_key(self, key):
         return self.Stats.has_key(key)
@@ -388,7 +391,7 @@ class PartitionAudit(ClusterAudit):
         
     def __getitem__(self, key):
         return self.Stats[key]
-
+    
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
         if not self.Stats.has_key(name):
@@ -398,41 +401,9 @@ class PartitionAudit(ClusterAudit):
     def __call__(self):
         self.CM.debug("Do Audit %s"%self.name())
         passed = 1
-        nodes_up = 0
-        ccm_partitions = []
+        ccm_partitions = self.CM.find_partitions()
 
-        for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] != self.CM["up"]:
-                self.NodeCCM[node]    = None
-                self.NodeState[node]  = None
-                self.NodeEpoche[node] = None
-                self.NodeQuorum[node] = None
-            else:
-                nodes_up = nodes_up + 1
-#                self.PS_State[node] = os.system("@SSH@ root@%s ps -C crmd" %(node))
-                self.NodeQuorum[node] = self.CM.rsh.readaline(
-                    node, self.CM["QuorumCmd"])
-                self.NodeCCM[node] = self.CM.rsh.readaline(
-                    node, self.CM["ParitionCmd"])
-                self.NodeEpoche[node] = self.CM.rsh.readaline(
-                    node, self.CM["EpocheCmd"])
-                self.NodeState[node] = self.CM.rsh.readaline(
-                    node, self.CM["StatusCmd"]%node)
-
-		self.NodeState[node]  = self.trim_string(self.NodeState[node])
-		self.NodeEpoche[node] = self.trim2int(self.NodeEpoche[node])
-		self.NodeQuorum[node] = self.trim_string(self.NodeQuorum[node])
-		self.NodeCCM[node]    = self.trim_string(self.NodeCCM[node])
-		
-                if len(self.NodeCCM[node]) > 1:
-                    found = 0
-                    for partition in ccm_partitions:
-                        if partition == self.NodeCCM[node]:
-                            found = 1
-                    if found == 0:
-                        ccm_partitions.append(self.NodeCCM[node])
-
-        if nodes_up == 0:
+        if len(ccm_partitions) == 0:
             return 1
 
         if len(ccm_partitions) > 1:
@@ -448,17 +419,17 @@ class PartitionAudit(ClusterAudit):
         return passed
 
     def trim_string(self, avalue):
-	if not avalue:
-	    return None
-	if len(avalue) > 1:
-	    return avalue[:-1]
+        if not avalue:
+            return None
+        if len(avalue) > 1:
+            return avalue[:-1]
 
     def trim2int(self, avalue):
-	if not avalue:
-	    return None
-	if len(avalue) > 1:
-	    return int(avalue[:-1])
-	    
+        if not avalue:
+            return None
+        if len(avalue) > 1:
+            return int(avalue[:-1])
+            
 
     def audit_partition(self, partition):
         passed = 0
@@ -469,24 +440,23 @@ class PartitionAudit(ClusterAudit):
 
         self.CM.debug("Auditing partition: %s" %(partition))
         for node in node_list:
-            if not self.NodeEpoche[node]:
+            if self.CM.ShouldBeStatus[node] != self.CM["up"]:
                 self.CM.log("Warn: Node %s appeared out of nowhere" %(node))
-# not in itself a reason to fail the audit (not what we're checking for in this one)
-#                passed = 0
                 self.CM.ShouldBeStatus[node] = self.CM["up"]
+		# not in itself a reason to fail the audit (not what we're checking for in this one)
 
-                self.NodeState[node] = self.CM.rsh.readaline(
-                    node, self.CM["StatusCmd"]%node)
-                self.NodeEpoche[node] = self.CM.rsh.readaline(
-                    node, self.CM["EpocheCmd"])
-                self.NodeQuorum[node] = self.CM.rsh.readaline(
-                    node, self.CM["QuorumCmd"])
+	    self.NodeState[node] = self.CM.rsh.readaline(
+		node, self.CM["StatusCmd"]%node)
+	    self.NodeEpoche[node] = self.CM.rsh.readaline(
+		node, self.CM["EpocheCmd"])
+	    self.NodeQuorum[node] = self.CM.rsh.readaline(
+		node, self.CM["QuorumCmd"])
+	    
+	    self.NodeState[node]  = self.trim_string(self.NodeState[node])
+	    self.NodeEpoche[node] = self.trim2int(self.NodeEpoche[node])
+	    self.NodeQuorum[node] = self.trim_string(self.NodeQuorum[node])
 
-		self.NodeState[node]  = self.trim_string(self.NodeState[node])
-		self.NodeEpoche[node] = self.trim2int(self.NodeEpoche[node])
-		self.NodeQuorum[node] = self.trim_string(self.NodeQuorum[node])
-
-            elif lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
+            if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
                 lowest_epoche = self.NodeEpoche[node]
                 
         for node in node_list:
@@ -495,7 +465,7 @@ class PartitionAudit(ClusterAudit):
                     dc_found.append(node)
                     if self.NodeEpoche[node] == lowest_epoche:
                         passed = 1
-		    elif not self.NodeEpoche[node]:
+                    elif not self.NodeEpoche[node]:
                         self.CM.log("Cant determin epoche for DC %s" %(node))
                         passed = 0
 
@@ -561,8 +531,8 @@ class PartitionAudit(ClusterAudit):
         
     def is_node_dc(self, status_line):
         rc = 0
-	if not status_line:
-	    rc = 0
+        if not status_line:
+            rc = 0
         elif string.find(status_line, 'S_IDLE') != -1:
             rc = 1
         elif string.find(status_line, 'S_INTEGRATION') != -1: 

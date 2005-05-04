@@ -59,7 +59,7 @@ class LinuxHAv2(HeartbeatCM):
             "EpocheCmd"      : "@libdir@/heartbeat/ccm_tool -e",
             "QuorumCmd"      : "@libdir@/heartbeat/ccm_tool -q",
             "ParitionCmd"    : "@libdir@/heartbeat/ccm_tool -p",
-	    # Revert this to blocking (timeout = 0) to catch bugs
+            # Revert this to blocking (timeout = 0) to catch bugs
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s monitor 0 0 EVERYTIME 2>/dev/null|grep return",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
@@ -87,12 +87,12 @@ class LinuxHAv2(HeartbeatCM):
                 r"input=I_FINALIZED cause=C_TIMER_POPPED",
                 r"input=I_ERROR",
                 r", exiting\.",
-		r"Ignoring HA message (op=vote).*: not in our membership list",
-		r"pengine:.*Attempting recovery of resource",
-		r"pengine:.*Handling failed ",
-		r"tengine:.*is taking more than 2x its timeout",
-		r"Confirm not received from",
-		r"Welcome reply not received from",
+                r"Ignoring HA message (op=vote).*: not in our membership list",
+                r"pengine:.*Attempting recovery of resource",
+                r"pengine:.*Handling failed ",
+                r"tengine:.*is taking more than 2x its timeout",
+                r"Confirm not received from",
+                r"Welcome reply not received from",
                 r"ERROR:",
                 r"CRIT:",
             ),
@@ -104,7 +104,7 @@ class LinuxHAv2(HeartbeatCM):
    <configuration>
      <crm_config>'''
         cib_options='''
-	<nvpair id="transition_timeout" name="transition_timeout" value="120s"/>
+        <nvpair id="transition_timeout" name="transition_timeout" value="120s"/>
         <nvpair id="require_quorum" name="require_quorum" value="true"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
         <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>
@@ -210,9 +210,7 @@ class LinuxHAv2(HeartbeatCM):
 
 
     def StataCM(self, node):
-
         '''Report the status of the cluster manager on a given node'''
-
         out=self.rsh.readaline(node, self["StatusCmd"]%node)
         ret= (string.find(out, 'ok') != -1)
         try:
@@ -235,7 +233,6 @@ class LinuxHAv2(HeartbeatCM):
         return ret
 
     def StartaCM(self, node):
-
         '''Start up the cluster manager on a given node'''
         localBadNewsPats = []
         patterns = []
@@ -245,14 +242,14 @@ class LinuxHAv2(HeartbeatCM):
         # that should be the DC
         if self.any_running() == 1:
             patterns.append(self["Pat:DC_IDLE"])
-	    localBadNewsPats.append("input=I_DC_TIMEOUT ")
+            localBadNewsPats.append("input=I_DC_TIMEOUT ")
             localBadNewsPats.append("input=I_ELECTION_DC ")
-	    localBadNewsPats.append("""Ignoring HA message (op=join_annouce).*: not in our membership list""")
+            localBadNewsPats.append("""Ignoring HA message (op=join_annouce).*: not in our membership list""")
 
         if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
-            self.debug("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
             if self.Env["CIBfilename"] == None:
+                self.debug("Installing Generated CIB on node %s" %(node))
                 os.system("rm -f /tmp/cts.default.cib")
                 os.system("echo \'" + self.default_cts_cib + "\' > /tmp/cts.default.cib")
                 if 0!=self.rsh.cp("/tmp/cts.default.cib",
@@ -261,6 +258,7 @@ class LinuxHAv2(HeartbeatCM):
 
                 os.system("rm -f /tmp/cts.default.cib")
             else:
+                self.debug("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
                 if 0!=self.rsh.cp(self.Env["CIBfilename"], 
                     "root@" + (self["CIBfile"]%node)):
                     raise ValueError("Can not scp file to %s "%node)
@@ -353,7 +351,9 @@ class LinuxHAv2(HeartbeatCM):
     def IsDC(self, node):
         rc = 0
         status_line = self.rsh.readaline(node, self["StatusCmd"]%node)
-        if string.find(status_line, 'S_IDLE') != -1:
+        if not status_line:
+            rc = 0
+        elif string.find(status_line, 'S_IDLE') != -1:
             rc = 1
         elif string.find(status_line, 'S_INTEGRATION') != -1: 
             rc = 1
@@ -415,12 +415,37 @@ class LinuxHAv2(HeartbeatCM):
                 return 1
         return 0
         
-    def HasQuorum(self):
+    def find_partitions(self):
+        ccm_partitions = []
+
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == self["up"]:
-                if self.IsDC(node):
-                    quorum = self.rsh.readaline(node, self["QuorumCmd"])
-                    return  string.find(quorum,"1") != -1
+                partition = self.rsh.readaline(node, self["ParitionCmd"])
+
+                if not partition:
+                    self.log("no partition details for %s" %node)
+                elif len(partition) > 2:
+                    partition = partition[:-1]
+                    for a_partition in ccm_partitions:
+                        if partition != a_partition:
+                            ccm_partitions.append(partition)
+                else:
+                    self.log("bad partition details for %s" %node)
+
+        return ccm_partitions
+
+    def HasQuorum(self, node_list):
+        # If we are auditing a partition, then one side will
+        #   have quorum and the other not.
+        # So the caller needs to tell us which we are checking
+        # If no value for node_list is specified... assume all nodes  
+        if not node_list:
+            node_list = self.Env["nodes"]
+
+        for node in node_list:
+            if self.ShouldBeStatus[node] == self["up"]:
+                quorum = self.rsh.readaline(node, self["QuorumCmd"])
+                return  string.find(quorum,"1") != -1
         return 0
 
 class HAResource(Resource):

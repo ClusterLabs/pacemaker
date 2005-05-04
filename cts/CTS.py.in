@@ -602,8 +602,12 @@ class ClusterManager(UserDict):
         "Return a list of paths: each patch consists of a tuple"
         raise ValueError("Abstract Class member (InternalCommConfig)")
 
-    def HasQuorum(self):
+    def HasQuorum(self, node_list):
          "Return TRUE if the cluster currently has quorum"
+         # If we are auditing a partition, then one side will
+         #   have quorum and the other not.
+         # So the caller needs to tell us which we are checking
+         # If no value for node_list is specified... assume all nodes  
          raise ValueError("Abstract Class member (HasQuorum)")
 
 class Resource:

@@ -233,7 +233,7 @@ class HeartbeatCM(ClusterManager):
 
         return Path
                 
-    def HasQuorum(self):
+    def HasQuorum(self, node_list):
         (
 '''Return TRUE if the cluster currently has quorum.  According to
 current heartbeat code this means one node is up.
