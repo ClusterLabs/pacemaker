@@ -124,7 +124,13 @@ do_shutdown(long long action,
 	}
 
 	crm_info("Stopping all remaining local resources");
-	stop_all_resources();
+	if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
+		stop_all_resources();
+	} else {
+		crm_err("Exiting with no LRM connection..."
+			" resources may be active!");
+		register_fsa_input(C_FSA_INTERNAL, I_EXIT, NULL);
+	}
 	
 	return next_input;
 }
@@ -481,7 +487,7 @@ do_recover(long long action,
 	crm_err("Action %s (%.16llx) not supported",
 	       fsa_action2string(action), action);
 
-	register_fsa_input(C_FSA_INTERNAL, I_EXIT, NULL);
+	register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
 	return I_NULL;
 }
