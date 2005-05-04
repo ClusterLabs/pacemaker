@@ -436,13 +436,14 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		else IF_FSA_ACTION(A_DC_RELEASED,	do_dc_release)
 		else IF_FSA_ACTION(A_PE_STOP,		do_pe_control)
 		else IF_FSA_ACTION(A_TE_STOP,		do_te_control)
-		else IF_FSA_ACTION(A_CCM_DISCONNECT,	do_ccm_control)
 
 		else IF_FSA_ACTION(A_SHUTDOWN,		do_shutdown)
+
+		else IF_FSA_ACTION(A_STOP,		do_stop)
+		else IF_FSA_ACTION(A_CCM_DISCONNECT,	do_ccm_control)
 		else IF_FSA_ACTION(A_LRM_DISCONNECT,	do_lrm_control)
 		else IF_FSA_ACTION(A_HA_DISCONNECT,	do_ha_control)
 		else IF_FSA_ACTION(A_CIB_STOP,		do_cib_control)
-		else IF_FSA_ACTION(A_STOP,		do_stop)
 		
 		/* exit gracefully */
 		else IF_FSA_ACTION(A_EXIT_0,	do_exit)

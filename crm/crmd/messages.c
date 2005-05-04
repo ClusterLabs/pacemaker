@@ -919,12 +919,12 @@ handle_request(ha_msg_input_t *stored_msg)
 				crm_err("We didnt ask to be shut down yet our"
 					" TE is telling us too."
 					" Better get out now!");
-				next_input = I_TERMINATE;
+				next_input = I_EXIT;
 
 			} else if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				crm_err("We asked to be shut down, "
 					" are still the DC, yet another node"
-					" is askin us to shutdown!");
+					" (DC) is askin us to shutdown!");
 				next_input = I_TERMINATE;			
 
 			} else if(fsa_state != S_STOPPING) {

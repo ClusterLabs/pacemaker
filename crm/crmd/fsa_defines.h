@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.35 2005/02/23 12:22:46 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.36 2005/05/04 07:03:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -203,6 +203,7 @@ enum crmd_fsa_input {
 			 */
 	I_SHUTDOWN,	/* We are asking to shutdown */
 	I_TERMINATE,	/* We have been told to shutdown */
+	I_EXIT,		/* Actually exit */
 	I_STARTUP,
 	I_PE_SUCCESS,	/* The action completed successfully */
 
@@ -393,7 +394,7 @@ enum crmd_fsa_input {
 #define	A_ERROR			0x2000000000000000ULL
 #define	A_WARN			0x4000000000000000ULL
 
-#define O_SHUTDOWN (A_CCM_DISCONNECT|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_SHUTDOWN|A_STOP|A_EXIT_0|A_CIB_STOP)
+#define O_EXIT (A_STOP|A_CCM_DISCONNECT|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_EXIT_0|A_CIB_STOP)
 #define O_RELEASE  (A_DC_TIMER_STOP|A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED)
 #define O_DC_TIMER_RESTART	(A_NOTHING)
 #define	O_PE_RESTART		(A_PE_START|A_PE_STOP)

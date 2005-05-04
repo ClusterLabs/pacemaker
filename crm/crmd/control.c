@@ -396,6 +396,7 @@ do_startup(long long action,
 	return I_NULL;
 }
 
+extern GHashTable *shutdown_ops;
 
 /*	 A_STOP	*/
 enum crmd_fsa_input
@@ -405,9 +406,10 @@ do_stop(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
-	/* nothing to do yet */
-
-	/* todo: shut down any remaining CRM resources */
+	if(g_hash_table_size(shutdown_ops) > 0) {
+		crm_err("%d stop operations outstanding at exit",
+			g_hash_table_size(shutdown_ops));
+	}
 	
 	return I_NULL;
 }
@@ -479,7 +481,7 @@ do_recover(long long action,
 	crm_err("Action %s (%.16llx) not supported",
 	       fsa_action2string(action), action);
 
-	register_fsa_input(C_FSA_INTERNAL, I_SHUTDOWN, NULL);
+	register_fsa_input(C_FSA_INTERNAL, I_EXIT, NULL);
 
 	return I_NULL;
 }

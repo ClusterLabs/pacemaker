@@ -342,6 +342,9 @@ fsa_input2string(enum crmd_fsa_input input)
 		case I_HALT:
 			inputAsText = "I_HALT";
 			break;
+		case I_EXIT:
+			inputAsText = "I_EXIT";
+			break;
 		case I_ILLEGAL:
 			inputAsText = "I_ILLEGAL";
 			break;
@@ -492,9 +495,6 @@ fsa_action2string(long long action)
 			break;
 		case A_READCONFIG:
 			actionAsText = "A_READCONFIG";
-			break;
-		case O_SHUTDOWN:
-			actionAsText = "O_SHUTDOWN";
 			break;
 		case O_RELEASE:
 			actionAsText = "O_RELEASE";

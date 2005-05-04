@@ -39,7 +39,11 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+char *make_stop_id(const char *rsc, int call_id);
+void ghash_print_pending(gpointer key, gpointer value, gpointer user_data);
+
 gboolean stop_all_resources(void);
+gboolean resource_stopped(gpointer key, gpointer value, gpointer user_data);
 
 gboolean build_operation_update(
 	crm_data_t *rsc_list, lrm_rsc_t *rsc, lrm_op_t *op,
@@ -69,6 +73,8 @@ GHashTable *xml2list(crm_data_t *parent);
 GHashTable *monitors = NULL;
 GHashTable *resources = NULL;
 GHashTable *resources_confirmed = NULL;
+GHashTable *shutdown_ops = NULL;
+
 int num_lrm_register_fails = 0;
 int max_lrm_register_fails = 30;
 
@@ -194,6 +200,10 @@ do_lrm_control(long long action,
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
 		
+		shutdown_ops = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+		
 		fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
 		if(NULL == fsa_lrm_conn) {
 			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
@@ -306,53 +316,38 @@ build_suppported_RAs(crm_data_t *metadata_list, crm_data_t *xml_agent_list)
 }
 
 
+
 gboolean
 stop_all_resources(void)
 {
-	GList *op_list  = NULL;
-	GList *lrm_list = NULL;
-	state_flag_t cur_state = 0;
-	const char *this_op    = NULL;
+	GListPtr lrm_list = NULL;
+
+	crm_info("Makeing sure all active resources are stopped before exit");
 	
 	if(fsa_lrm_conn == NULL) {
+		return TRUE;
+
+	} else if(g_hash_table_size(shutdown_ops) > 0) {
+		crm_debug("Already sent stop operation");
 		return TRUE;
 	}
 
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
-
 	slist_iter(
-		rid, char, lrm_list, lpc,
+		rsc_id, char, lrm_list, lpc,
 
-		lrm_rsc_t *the_rsc =
-			fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
-
-		crm_info("Processing lrm_rsc_t entry %s", rid);
-		
-		if(the_rsc == NULL) {
-			crm_err("NULL resource returned from the LRM");
-			continue;
-		}
-
-		op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
-
-		crm_verbose("\tcurrent state:%s",
-			    cur_state==LRM_RSC_IDLE?"Idle":"Busy");
-
-		slist_iter(
-			op, lrm_op_t, op_list, llpc,
-
-			this_op = op->op_type;
-			crm_debug("Processing op %s for %s (status=%d, rc=%d)",
-				  op->op_type, the_rsc->id,
-				  op->op_status, op->rc);
-			
-			if(safe_str_neq(this_op, CRMD_RSCSTATE_STOP)){
-				do_lrm_rsc_op(the_rsc, the_rsc->id,
-					      CRMD_RSCSTATE_STOP, NULL);
-			}
-			break;
-			);
+		do_lrm_rsc_op(NULL, rsc_id, CRMD_RSCSTATE_STOP, NULL);
 		);
+
+	if(g_hash_table_size(shutdown_ops) == 0) {
+		register_fsa_input(C_FSA_INTERNAL, I_EXIT, NULL);
+
+	} else {
+		crm_info("Waiting for %d pending stop operations "
+			 " to complete before exiting",
+			 g_hash_table_size(shutdown_ops));
+	}
+
 	return TRUE;
 }
 
@@ -572,12 +567,12 @@ do_lrm_invoke(long long action,
 		char rid[64];
 		const char *id_from_cib = NULL;
 		lrm_rsc_t *rsc = NULL;
-
+#if 0
 		if(AM_I_DC == FALSE && cur_state != S_NOT_DC) {
 			crm_warn("Ignoring LRM operation while in state %s",
 				 fsa_state2string(cur_state));
 		}
-		
+#endif	
 		id_from_cib = get_xml_attr_nested(
 			input->xml, rsc_path, DIMOF(rsc_path) -2,
 			XML_ATTR_ID, TRUE);
@@ -675,7 +670,22 @@ do_lrm_rsc_op(
 		g_hash_table_foreach(monitors, stop_recurring_action, rsc);
 		g_hash_table_foreach_remove(
 			monitors, remove_recurring_action, rsc);
+		
+	} else if(fsa_state == S_STARTING
+		|| fsa_state == S_STOPPING
+		|| fsa_state == S_TERMINATE) {
+		crm_err("Discarding attempt to perform action %s on %s"
+			" while in state %s",
+			operation, rsc->id, fsa_state2string(fsa_state));
+		return I_NULL;
+		
+	} else if(AM_I_DC == FALSE && fsa_state != S_NOT_DC) {
+		crm_warn("Discarding attempt to perform action %s on %s"
+			 " in state %s",
+			 operation, rsc->id, fsa_state2string(fsa_state));
+		return I_NULL;
 	}
+	
 	
 	/* now do the op */
 	crm_info("Performing op %s on %s", operation, rid);
@@ -784,17 +794,25 @@ do_lrm_rsc_op(
 			operation, rid, call_id);
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
-	} else if(call_id > 0 && op->interval > 0) {
-		struct recurring_op_s *op = NULL;
-		crm_malloc0(op, sizeof(struct recurring_op_s));
-		crm_debug("Adding recurring %s op for %s (%d)",
-			  op_id, rsc->id, call_id);
-
-		op->call_id = call_id;
-		op->rsc_id  = crm_strdup(rsc->id);
-		g_hash_table_insert(monitors, op_id, op);
-		op_id = NULL;
-	} 
+	} else {
+		if(call_id > 0 && op->interval > 0) {
+			struct recurring_op_s *op = NULL;
+			crm_malloc0(op, sizeof(struct recurring_op_s));
+			crm_debug("Adding recurring %s op for %s (%d)",
+				  op_id, rsc->id, call_id);
+			
+			op->call_id = call_id;
+			op->rsc_id  = crm_strdup(rsc->id);
+			g_hash_table_insert(monitors, op_id, op);
+			op_id = NULL;
+		}
+		if(fsa_state == S_STOPPING) {
+			char *call_id_s = make_stop_id(rsc->id, call_id);
+			g_hash_table_replace(
+				shutdown_ops, call_id_s, crm_strdup(rsc->id));
+			crm_debug("Recording shutdown op: %s", call_id_s);
+		}
+	}
 
 	crm_free(op_id);
 	free_lrm_op(op);		
@@ -1068,6 +1086,8 @@ do_lrm_event(long long action,
 				fsa_lrm_conn->lrm_ops->delete_rsc(
 					fsa_lrm_conn, rsc->id);
 				CRM_DEV_ASSERT(rc == HA_OK);
+				g_hash_table_foreach_remove(
+					shutdown_ops, resource_stopped,rsc->id);
 			}
 			break;
 	}
@@ -1075,6 +1095,60 @@ do_lrm_event(long long action,
 			     crm_strdup(rsc->id), crm_strdup(op->op_type));
 
 	do_update_resource(rsc, op);
+
+	if(fsa_state == S_STOPPING) {
+		if(g_hash_table_size(shutdown_ops) > 0) {
+			char *op_id = make_stop_id(rsc->id, op->call_id);
+			if(g_hash_table_remove(shutdown_ops, op_id)) {
+				crm_debug("Shutdown op %d (%s %s) confirmed",
+					  op->call_id, op->op_type, rsc->id);
+			} else {
+				crm_debug("Shutdown op %d (%s %s) not matched: %s",
+					  op->call_id, op->op_type, rsc->id, op_id);
+			}
+			crm_free(op_id);
+		}
+		
+		if(g_hash_table_size(shutdown_ops) == 0) {
+			register_fsa_input(C_FSA_INTERNAL, I_EXIT, NULL);
+			
+		} else {
+			crm_debug("Still waiting for %d pending stop operations"
+				  " to complete before exiting",
+				  g_hash_table_size(shutdown_ops));
+			g_hash_table_foreach(
+				shutdown_ops, ghash_print_pending, NULL);
+		}
+	}
 	
 	return I_NULL;
+}
+
+char *
+make_stop_id(const char *rsc, int call_id)
+{
+	char *op_id = NULL;
+	crm_malloc0(op_id, strlen(rsc) + 34);
+	if(op_id != NULL) {
+		snprintf(op_id, strlen(rsc) + 34, "%s:%d", rsc, call_id);
+	}
+	return op_id;
+}
+
+void
+ghash_print_pending(gpointer key, gpointer value, gpointer user_data) 
+{
+	const char *uname = key;
+	crm_info("Pending action: %s", uname);
+}
+
+gboolean
+resource_stopped(gpointer key, gpointer value, gpointer user_data)
+{
+	const char *this_rsc = value;
+	const char *target_rsc = user_data;
+	if(safe_str_eq(this_rsc, target_rsc)) {
+		return TRUE;
+	}
+	return FALSE;
 }
