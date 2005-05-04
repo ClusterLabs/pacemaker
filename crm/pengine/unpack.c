@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.84 2005/05/02 10:57:15 andrew Exp $ */
+/* $Id: unpack.c,v 1.85 2005/05/04 16:11:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,6 +33,8 @@
 #include <pe_utils.h>
 #include <pe_rules.h>
 
+gint sort_op_by_callid(gconstpointer a, gconstpointer b);
+
 gboolean unpack_rsc_to_attr(crm_data_t * xml_obj,
 			    GListPtr rsc_list,
 			    GListPtr node_list,
@@ -60,10 +62,9 @@ gboolean unpack_lrm_rsc_state(
 
 gboolean add_node_attrs(crm_data_t * attrs, node_t *node);
 
-gboolean
-unpack_rsc_op(resource_t *rsc, const char *last_op, const char *rsc_state,
-	      node_t *node, crm_data_t *xml_op,
-	      GListPtr *placement_constraints);
+gboolean unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
+		       gboolean *running, gboolean *failed, int *max_call_id,
+		       GListPtr *placement_constraints);
 
 gboolean determine_online_status(crm_data_t * node_state, node_t *this_node);
 
@@ -657,9 +658,15 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 	const char *rsc_id    = NULL;
 	const char *node_id   = node->details->uname;
 	const char *rsc_state = NULL;
-	const char *last_op   = NULL;
-	resource_t *rsc_lh    = NULL;
 
+	int max_call_id = -1;
+	gboolean failed  = FALSE;
+	gboolean running = FALSE;
+
+	resource_t *rsc   = NULL;
+	GListPtr op_list = NULL;
+	GListPtr sorted_op_list = NULL;
+	
 	CRM_DEV_ASSERT(node != NULL);
 	if(crm_assert_failed) {
 		return FALSE;
@@ -670,14 +677,14 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		
 		rsc_id    = crm_element_value(rsc_entry, XML_ATTR_ID);
 		rsc_state = crm_element_value(rsc_entry, XML_LRM_ATTR_RSCSTATE);
-		last_op   = crm_element_value(rsc_entry, XML_LRM_ATTR_LASTOP);
 		
-		rsc_lh    = pe_find_resource(rsc_list, rsc_id);
+		rsc    = pe_find_resource(rsc_list, rsc_id);
 
 		crm_verbose("[%s] Processing %s on %s (%s)",
-			    crm_element_name(rsc_entry), rsc_id, node_id, rsc_state);
+			    crm_element_name(rsc_entry),
+			    rsc_id, node_id, rsc_state);
 
-		if(rsc_lh == NULL) {
+		if(rsc == NULL) {
 			crm_err("Could not find a match for resource"
 				" %s in %s's status section",
 				rsc_id, node_id);
@@ -685,40 +692,125 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			continue;
 		}
 
+		failed  = FALSE;
+		running = FALSE;
+		max_call_id = -1;
+
+		op_list = NULL;
+		sorted_op_list = NULL;
+		
 		xml_child_iter(
 			rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
-			unpack_rsc_op(rsc_lh, last_op, rsc_state, node, rsc_op,
+			op_list = g_list_append(op_list, rsc_op);
+			);
+
+		if(op_list == NULL) {
+			continue;
+		}
+		
+		sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
+
+		slist_iter(
+			rsc_op, crm_data_t, sorted_op_list, lpc,
+			unpack_rsc_op(rsc, node, rsc_op,
+				      &running, &failed, &max_call_id,
 				      placement_constraints);
 			);
+
+		/* no need to free the contents */
+		g_list_free(sorted_op_list);
+
+		if(running) {
+			native_add_running(rsc, node);
+			if(failed) {
+				action_t *stop = action_new(
+					rsc, stop_rsc, NULL, node);
+				stop->optional = FALSE;
+				rsc->recover = TRUE;
+			}
+		}
 		);
 	
 	return TRUE;
 }
 
+gint
+sort_op_by_callid(gconstpointer a, gconstpointer b)
+{
+ 	const char *a_task_id = cl_get_string(a, XML_LRM_ATTR_CALLID);
+ 	const char *b_task_id = cl_get_string(b, XML_LRM_ATTR_CALLID);
+	/* if task id is NULL, then its a pending op
+	 * put pending ops last
+	 */
+
+	int a_id = -1;
+	int b_id = -1;
+	
+	if(a_task_id == NULL && b_task_id == NULL) { return 0; }
+
+	/* the reverse from normal so that NULLs appear last */
+	if(a_task_id == NULL) { return -1; }
+	if(b_task_id == NULL) { return 1; }
+
+	a_id = atoi(a_task_id);
+	b_id = atoi(b_task_id);
+
+	if(a_id < b_id) {
+		return -1;
+	} else if(a_id > b_id) {
+		return 1;
+	}
+	return 0;
+}
+
 gboolean
-unpack_rsc_op(resource_t *rsc, const char *last_op, const char *rsc_state,
-	      node_t *node, crm_data_t *xml_op,
+unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
+	      gboolean *running, gboolean *failed, int *max_call_id,
 	      GListPtr *placement_constraints) 
 {
 	const char *task        = NULL;
-/* 	const char *task_rc     = NULL; */
+ 	const char *task_id     = NULL;
 	const char *task_status = NULL;
 
 	int task_status_i = -2;
+	int task_id_i = -1;
 
 	CRM_DEV_ASSERT(rsc    != NULL); if(crm_assert_failed) { return FALSE; }
 	CRM_DEV_ASSERT(node   != NULL); if(crm_assert_failed) { return FALSE; }
 	CRM_DEV_ASSERT(xml_op != NULL); if(crm_assert_failed) { return FALSE; }
 	
 	task        = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-/* 	task_rc     = crm_element_value(xml_op, XML_LRM_ATTR_RC); */
+ 	task_id     = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 
 
-	CRM_DEV_ASSERT(task != NULL); if(crm_assert_failed) { return FALSE; }
+	CRM_DEV_ASSERT(task != NULL);        if(crm_assert_failed) { return FALSE; }
 	CRM_DEV_ASSERT(task_status != NULL); if(crm_assert_failed) { return FALSE; }
 
-	task_status_i = crm_atoi(task_status, "-1");
+	task_status_i = atoi(task_status);
+
+	CRM_DEV_ASSERT(task_status_i <= LRM_OP_ERROR);  if(crm_assert_failed) {return FALSE;}
+	CRM_DEV_ASSERT(task_status_i >= LRM_OP_PENDING);if(crm_assert_failed) {return FALSE;}
+
+	if(task_status_i != LRM_OP_PENDING) {
+
+		task_id_i = crm_atoi(task_id, "-1");
+		CRM_DEV_ASSERT(task_id != NULL); if(crm_assert_failed) { return FALSE; }
+		CRM_DEV_ASSERT(task_id_i >= 0);  if(crm_assert_failed) { return FALSE; }
+
+		if(task_id_i == *max_call_id) {
+			crm_debug("Already processed this call");
+			return TRUE;
+		}
+
+		CRM_DEV_ASSERT(task_id_i > *max_call_id);
+		if(crm_assert_failed) { return FALSE; }
+	}
+
+	if(*max_call_id < task_id_i) {
+		*max_call_id = task_id_i;
+	}
+	
 	if(node->details->unclean) {
 		crm_debug("Node %s (where %s is running) is unclean."
 			  " Further action depends on the value of %s",
@@ -745,12 +837,12 @@ unpack_rsc_op(resource_t *rsc, const char *last_op, const char *rsc_state,
 			if(safe_str_eq(task, CRMD_RSCSTATE_STOP)) {
 				/* re-issue the stop and return */
 				action_new(rsc, stop_rsc, NULL, node);
-				native_add_running(rsc, node);
+				*running = TRUE;
 				rsc->recover = TRUE;
 				
 			} else if(safe_str_eq(task, CRMD_RSCSTATE_START)) {
 				rsc->start_pending = TRUE;
-				native_add_running(rsc, node);
+				*running = TRUE;
 		
 				/* make sure it is re-issued but,
 				 * only if we have quorum
@@ -763,32 +855,36 @@ unpack_rsc_op(resource_t *rsc, const char *last_op, const char *rsc_state,
 					action_new(rsc, start_rsc, NULL, NULL);
 				}
 				
-			} else if(safe_str_neq(last_op, CRMD_RSCSTATE_STOP)) {
+			} else if(*running == TRUE) {
 				crm_devel("Re-issuing pending recurring task:"
 					  " %s for %s on %s",
 					  task, rsc->id, node->details->id);
 				rsc->schedule_recurring = TRUE;
-				native_add_running(rsc, node);
 			}
 			break;
 		
 		case LRM_OP_DONE:
-			if(safe_str_neq(task, last_op)) {
-				return TRUE;
-			}
 			crm_verbose("%s/%s completed on %s",
 				    rsc->id, task, node->details->uname);
-			if(safe_str_neq(task, CRMD_RSCSTATE_STOP)) {
+
+			if(safe_str_eq(task, CRMD_RSCSTATE_STOP)) {
+				*failed  = FALSE;
+				*running = FALSE;				
+				rsc->schedule_recurring = FALSE;
+
+			} else {
 				crm_verbose("%s active on %s",
 					    rsc->id, node->details->uname);
-				native_add_running(rsc, node);
+				*running = TRUE;				
 			}
+			
 			break;
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			if(safe_str_eq(task, CRMD_RSCSTATE_START)
-			   || safe_str_eq(task, CRMD_RSCSTATE_STOP) ) {
+			if(task_status_i == LRM_OP_NOTSUPPORTED
+			   || safe_str_eq(task, CRMD_RSCSTATE_STOP)
+			   || safe_str_eq(task, CRMD_RSCSTATE_START) ) {
 				crm_warn("Handling failed %s for %s on %s",
 					 task, rsc->id, node->details->uname);
 				rsc2node_new("dont_run__failed_stopstart",
@@ -796,20 +892,12 @@ unpack_rsc_op(resource_t *rsc, const char *last_op, const char *rsc_state,
 					     placement_constraints);
 			}
 
-			if(safe_str_neq(task, last_op)) {
-				return TRUE;
-			}
-			
 			crm_debug("Processing last op (%s) for %s on %s",
 				  task, rsc->id, node->details->uname);
 
-			rsc->recover = TRUE;
-			
 			if(safe_str_neq(task, CRMD_RSCSTATE_STOP)) {
-				action_t *stop = action_new(
-					rsc, stop_rsc, NULL, node);
-				stop->optional = FALSE;
-				native_add_running(rsc, node);
+				*failed = TRUE;				
+				*running = TRUE;				
 
 			} else if(rsc->stopfail_type == pesf_stonith) {
 				/* treat it as if it is still running
@@ -817,17 +905,19 @@ unpack_rsc_op(resource_t *rsc, const char *last_op, const char *rsc_state,
 				 */
 				rsc->unclean = TRUE;
 				node->details->unclean = TRUE;
-				native_add_running(rsc, node);
+				*running = TRUE;				
 
 			} else if(rsc->stopfail_type == pesf_block) {
 				/* let this depend on the stop action
 				 * which will fail but make sure the
 				 * transition continues...
 				 */
-				native_add_running(rsc, node);
+				*running = TRUE;				
 				rsc->unclean = TRUE;
 
-			/* } else { pretend the stop completed */
+			} else { /* pretend the stop completed */
+				*running = FALSE;
+				rsc->schedule_recurring = FALSE;
 			}
 			break;
 		case LRM_OP_CANCELLED:
