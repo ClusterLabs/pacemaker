@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.70 2005/04/25 13:01:44 andrew Exp $ */
+/* $Id: utils.c,v 1.71 2005/05/04 16:12:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -485,6 +485,7 @@ gint sort_rsc_priority(gconstpointer a, gconstpointer b)
 	const resource_t *resource1 = (const resource_t*)a;
 	const resource_t *resource2 = (const resource_t*)b;
 
+	if(a == NULL && b == NULL) { return 0; }
 	if(a == NULL) { return 1; }
 	if(b == NULL) { return -1; }
   
