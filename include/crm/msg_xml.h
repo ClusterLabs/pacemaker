@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.30 2005/04/21 15:15:28 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.31 2005/05/04 16:40:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -159,6 +159,7 @@
 #define XML_LRM_ATTR_LASTOP		"last_op"
 #define XML_LRM_ATTR_OPSTATUS		"op_status"
 #define XML_LRM_ATTR_RC			"rc_code"
+#define XML_LRM_ATTR_CALLID		"call_id"
 
 #define XML_TAG_GRAPH			"transition_graph"
 #define XML_GRAPH_TAG_RSC_OP		"rsc_op"
