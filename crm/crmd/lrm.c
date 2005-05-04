@@ -46,15 +46,14 @@ gboolean stop_all_resources(void);
 gboolean resource_stopped(gpointer key, gpointer value, gpointer user_data);
 
 gboolean build_operation_update(
-	crm_data_t *rsc_list, lrm_rsc_t *rsc, lrm_op_t *op,
-	const char *src, int lpc);
+	crm_data_t *rsc_list, lrm_op_t *op, const char *src, int lpc);
 
 gboolean build_suppported_RAs(
 	crm_data_t *metadata_list, crm_data_t *xml_agent_list);
 
 gboolean build_active_RAs(crm_data_t *rsc_list);
 
-void do_update_resource(lrm_rsc_t *rsc, lrm_op_t *op);
+void do_update_resource(lrm_op_t *op);
 
 enum crmd_fsa_input do_lrm_rsc_op(
 	lrm_rsc_t *rsc, char *rid, const char *operation, crm_data_t *msg);
@@ -353,21 +352,21 @@ stop_all_resources(void)
 
 gboolean
 build_operation_update(
-	crm_data_t *xml_rsc, lrm_rsc_t *rsc, lrm_op_t *op,
-	const char *src, int lpc)
+	crm_data_t *xml_rsc, lrm_op_t *op, const char *src, int lpc)
 {
 	int len = 0;
 	char *tmp = NULL;
 	char *fail_state = NULL;
 	crm_data_t *xml_op = NULL;
 
-	if(op == NULL || rsc == NULL) {
+	CRM_DEV_ASSERT(op != NULL);
+	if(crm_assert_failed) {
 		crm_err("Either resouce or op was not specified");
 		return FALSE;
 	}
 
 	crm_info("%s: Updating resouce %s after %s %s op",
-		 src, rsc->id, op_status2text(op->op_status), op->op_type);
+		 src, op->rsc_id, op_status2text(op->op_status), op->op_type);
 	
 	xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
 	
@@ -378,7 +377,7 @@ build_operation_update(
 
 	} else {
 		char *op_id = generate_op_key(
-			rsc->id, op->op_type, op->interval);
+			op->rsc_id, op->op_type, op->interval);
 		set_xml_property_copy(xml_op, XML_ATTR_ID, op_id);
 		crm_free(op_id);
 	}
@@ -398,7 +397,7 @@ build_operation_update(
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
 			crm_debug("Resource action %s/%s failed: %d",
-				  rsc->id, op->op_type, op->op_status);
+				  op->rsc_id, op->op_type, op->op_status);
 			len = strlen(op->op_type);
 			len += strlen("_failed_");
 			crm_malloc0(fail_state, sizeof(char)*len);
@@ -488,8 +487,7 @@ build_active_RAs(crm_data_t *rsc_list)
 
 			crm_info("Processing op %s for %s (status=%d, rc=%d)", 
 				 op->op_type, the_rsc->id, op->op_status, op->rc);
-			build_operation_update(
-				xml_rsc, the_rsc, op, __FUNCTION__, llpc);
+			build_operation_update(xml_rsc, op, __FUNCTION__, llpc);
 
 			found_op = TRUE;
 			
@@ -907,7 +905,7 @@ xml2list(crm_data_t *parent)
 
 
 void
-do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
+do_update_resource(lrm_op_t* op)
 {
 /*
   <status>
@@ -921,8 +919,8 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	crm_data_t *fragment;
 	int rc = cib_ok;
 
-	if(op == NULL || rsc == NULL) {
-		crm_err("Either resouce or op was not specified");
+	CRM_DEV_ASSERT(op != NULL);
+	if(crm_assert_failed) {
 		return;
 	}
 
@@ -934,9 +932,9 @@ do_update_resource(lrm_rsc_t *rsc, lrm_op_t* op)
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
 
-	set_xml_property_copy(iter, XML_ATTR_ID, rsc->id);
+	set_xml_property_copy(iter, XML_ATTR_ID, op->rsc_id);
 
-	build_operation_update(iter, rsc, op, __FUNCTION__, 0);
+	build_operation_update(iter, op, __FUNCTION__, 0);
 	fragment = create_cib_fragment(update, NULL);
 
 	/* make it an asyncronous call and be done with it
@@ -982,7 +980,6 @@ do_lrm_event(long long action,
 	     fsa_data_t *msg_data)
 {
 	lrm_op_t* op = NULL;
-	lrm_rsc_t* rsc = NULL;
 	const char *last_op = NULL;
 	
 	if(msg_data->fsa_cause != C_LRM_OP_CALLBACK) {
@@ -993,13 +990,11 @@ do_lrm_event(long long action,
 	op = fsa_typed_data(fsa_dt_lrm);
 	
 	CRM_DEV_ASSERT(op != NULL);
-	CRM_DEV_ASSERT(op != NULL && op->rsc != NULL);
+	CRM_DEV_ASSERT(op != NULL && op->rsc_id != NULL);
 
-	if(op == NULL || op->rsc == NULL) {
+	if(crm_assert_failed) {
 		return I_NULL;
 	}
-
-	rsc = op->rsc;
 
 	if(op->op_status == LRM_OP_DONE && op->rc != EXECRA_OK) {
 		crm_warn("Mapping operation %d status with a rc=%d"
@@ -1011,39 +1006,30 @@ do_lrm_event(long long action,
 	switch(op->op_status) {
 		case LRM_OP_PENDING:
 			/* this really shouldnt happen */
-			crm_err("LRM operation (%d) %s on %s::%s(%s):%s %s: %s",
+			crm_err("LRM operation (%d) %s on %s %s: %s",
 				op->call_id, op->op_type,
-				crm_str(rsc->class),
-				crm_str(rsc->type),
-				crm_str(rsc->provider),
-				crm_str(rsc->id),
+				crm_str(op->rsc_id),
 				op_status2text(op->op_status),
 				execra_code2string(op->rc));
 			break;
 		case LRM_OP_ERROR:
-			crm_err("LRM operation (%d) %s on %s::%s(%s):%s %s: %s",
+			crm_err("LRM operation (%d) %s on %s %s: %s",
 				op->call_id, op->op_type,
-				crm_str(rsc->class),
-				crm_str(rsc->type),
-				crm_str(rsc->provider),
-				crm_str(rsc->id),
+				crm_str(op->rsc_id),
 				op_status2text(op->op_status),
 				execra_code2string(op->rc));
 			crm_debug("Result: %s", op->output);
 			break;
 		case LRM_OP_CANCELLED:
-			crm_warn("LRM operation (%d) %s on %s::%s(%s):%s %s",
+			crm_warn("LRM operation (%d) %s on %s %s",
 				 op->call_id, op->op_type,
-				 crm_str(rsc->class),
-				 crm_str(rsc->type),
-				 crm_str(rsc->provider),
-				 crm_str(rsc->id),
+				 crm_str(op->rsc_id),
 				 op_status2text(op->op_status));
 			return I_NULL;
 			break;
 		case LRM_OP_TIMEOUT:
 			last_op = g_hash_table_lookup(
-				resources_confirmed, crm_strdup(rsc->id));
+				resources_confirmed, crm_strdup(op->rsc_id));
 
 			if(safe_str_eq(last_op, CRMD_RSCSTATE_STOP)
 			   && safe_str_eq(op->op_type, CRMD_RSCSTATE_MON)) {
@@ -1053,30 +1039,21 @@ do_lrm_event(long long action,
 				return I_NULL;
 			}
 
-			crm_err("LRM operation (%d) %s on %s::%s(%s):%s %s",
+			crm_err("LRM operation (%d) %s on %s %s",
 				op->call_id, op->op_type,
-				crm_str(rsc->class),
-				crm_str(rsc->type),
-				crm_str(rsc->provider),
-				crm_str(rsc->id),
+				crm_str(op->rsc_id),
 				op_status2text(op->op_status));
 			break;
 		case LRM_OP_NOTSUPPORTED:
-			crm_err("LRM operation (%d) %s on %s::%s(%s):%s %s",
+			crm_err("LRM operation (%d) %s on %s %s",
 				op->call_id, op->op_type,
-				crm_str(rsc->class),
-				crm_str(rsc->type),
-				crm_str(rsc->provider),
-				crm_str(rsc->id),
+				crm_str(op->rsc_id),
 				op_status2text(op->op_status));
 			break;
 		case LRM_OP_DONE:
-			crm_debug("LRM operation (%d) %s on %s::%s(%s):%s %s",
+			crm_debug("LRM operation (%d) %s on %s %s",
 				  op->call_id, op->op_type,
-				  crm_str(rsc->class),
-				  crm_str(rsc->type),
-				  crm_str(rsc->provider),
-				  crm_str(rsc->id),
+				  crm_str(op->rsc_id),
 				  op_status2text(op->op_status));
 			/* this is an evil hack that will slow down
 			 * resource recovery
@@ -1084,27 +1061,27 @@ do_lrm_event(long long action,
 			if(safe_str_eq(op->op_type, CRMD_RSCSTATE_STOP)) {
 				int rc = HA_OK;
 				fsa_lrm_conn->lrm_ops->delete_rsc(
-					fsa_lrm_conn, rsc->id);
+					fsa_lrm_conn, op->rsc_id);
 				CRM_DEV_ASSERT(rc == HA_OK);
 				g_hash_table_foreach_remove(
-					shutdown_ops, resource_stopped,rsc->id);
+					shutdown_ops, resource_stopped, op->rsc_id);
 			}
 			break;
 	}
 	g_hash_table_replace(resources_confirmed,
-			     crm_strdup(rsc->id), crm_strdup(op->op_type));
+			     crm_strdup(op->rsc_id), crm_strdup(op->op_type));
 
-	do_update_resource(rsc, op);
+	do_update_resource(op);
 
 	if(fsa_state == S_STOPPING) {
 		if(g_hash_table_size(shutdown_ops) > 0) {
-			char *op_id = make_stop_id(rsc->id, op->call_id);
+			char *op_id = make_stop_id(op->rsc_id, op->call_id);
 			if(g_hash_table_remove(shutdown_ops, op_id)) {
 				crm_debug("Shutdown op %d (%s %s) confirmed",
-					  op->call_id, op->op_type, rsc->id);
+					  op->call_id, op->op_type, op->rsc_id);
 			} else {
 				crm_debug("Shutdown op %d (%s %s) not matched: %s",
-					  op->call_id, op->op_type, rsc->id, op_id);
+					  op->call_id, op->op_type, op->rsc_id, op_id);
 			}
 			crm_free(op_id);
 		}

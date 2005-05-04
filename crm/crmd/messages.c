@@ -280,12 +280,6 @@ delete_fsa_input(fsa_data_t *fsa_data)
 			case fsa_dt_lrm:
 				op = (lrm_op_t*)fsa_data->data;
 
-				crm_free(op->rsc->id);
-				crm_free(op->rsc->type);
-				crm_free(op->rsc->class);
-				crm_free(op->rsc->provider);
-				crm_free(op->rsc);
-
  				crm_free(op->user_data);
 				crm_free(op->output);
 				crm_free(op->rsc_id);

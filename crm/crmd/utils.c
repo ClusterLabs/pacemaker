@@ -1234,26 +1234,21 @@ copy_lrm_op(const lrm_op_t *op)
 	}
 	
 	/* output fields */
+	op_copy->rsc       = NULL;
 	op_copy->op_status = op->op_status; 
 	op_copy->rc        = op->rc; 
 	op_copy->call_id   = op->call_id; 
 	op_copy->output    = NULL;
-	if(op->output!= NULL) {
-		op_copy->output    = crm_strdup(op->output);
-	}
 	op_copy->rsc_id    = crm_strdup(op->rsc_id);
 	op_copy->app_name  = crm_strdup(op->app_name);
-
-	/*please notice the client needs release the memory of rsc.*/
-	CRM_DEV_ASSERT(op->rsc != NULL);
-	op_copy->rsc = copy_lrm_rsc(op->rsc);
-	if(op_copy->rsc == NULL) {
-		crm_err("Op callback for %s did not contain a resource",
-			crm_str(op_copy->rsc_id));
-	} else {
-		crm_devel("Copied op callback for %s",crm_str(op_copy->rsc_id));
+	if(op->output!= NULL) {
+		op_copy->output = crm_strdup(op->output);
 	}
 	
+
+	if(op->rsc != NULL) {
+		/*please notice the client needs release the memory of rsc.*/
+	}
 
 	return op_copy;
 }
