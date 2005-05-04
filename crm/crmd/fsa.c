@@ -631,6 +631,12 @@ do_state_transition(long long actions,
 			}
 /* 			initialize_join(FALSE); */
 			break;
+
+		case S_STOPPING:
+		case S_TERMINATE:
+			/* possibly redundant */
+			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
+			break;
 			
 		case S_IDLE:
 			dump_rsc_info();
