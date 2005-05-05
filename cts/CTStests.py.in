@@ -108,7 +108,7 @@ class RandomTests:
 
             for audit in self.Audits:
                 if not audit():
-                    self.CM.log("Audit " + audit.name() + " Failed.")
+                    self.CM.log("Audit " + audit.name() + " FAILED.")
                     self.incr("auditfail")
                     if test:
                         test.incr("auditfail")
@@ -1405,7 +1405,7 @@ class ResourceRecover(CTSTest):
         node=resource.RunningNodes()
         if node == []:
             return self.failure("%s is not running on any node" %label)
-        self.CM.log("Choice resource %s on %s"%(label,node[0]))
+        self.CM.log("...resource %s on %s"%(label,node[0]))
 
 
 	pat=("""crmd:.* Performing op start on %s""" %(resource.rid))
