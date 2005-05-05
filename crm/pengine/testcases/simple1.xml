@@ -15,13 +15,6 @@
     </constraints>
   </configuration>
   <status>
-    <node_state id="node1" crmd="offline" join="down" expected="down" timestamp="1086187789" in_ccm="true">
-      <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
+    <node_state id="node1" crmd="offline" join="down" expected="down" timestamp="1086187789" in_ccm="true"/>
   </status>
 </cib>

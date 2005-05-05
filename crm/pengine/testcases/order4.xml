@@ -22,21 +22,7 @@
     </constraints>
   </configuration>
   <status>
-    <node_state id="uuid1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
-      <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
-    <node_state id="uuid2" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
-      <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
+    <node_state id="uuid1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="uuid2" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
   </status>
 </cib>

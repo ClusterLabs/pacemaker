@@ -38,7 +38,9 @@
     <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
         <lrm_resources>
-          <lrm_resource id="rsc1" last_op="start" rsc_state="started" op_status="0" rc_code="0" on_node="node1"/>
+          <lrm_resource id="rsc1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
         </lrm_resources>	
       </lrm>
     </node_state>

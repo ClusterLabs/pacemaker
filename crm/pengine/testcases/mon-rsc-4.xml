@@ -23,7 +23,9 @@
     <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
         <lrm_resources>
-          <lrm_resource id="rsc1" last_op="start" rsc_state="starting" op_status="-1" rc_code="-1" on_node="node1"/>
+          <lrm_resource id="rsc1" last_op="start" rsc_state="starting" op_status="-1" rc_code="-1">
+            <lrm_rsc_op id="rsc1" operation="start" rsc_state="starting" op_status="-1" rc_code="-1" call_id="1"/>
+	  </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>

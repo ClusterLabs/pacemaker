@@ -29,8 +29,8 @@
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="cannot1" score="-INFINITY" boolean_op="or">
-	  <expression id="exp1" attribute="uname" operation="eq" value="node2"/>
-	  <expression id="exp2" attribute="uname" operation="eq" value="node3"/>
+	  <expression id="exp1" attribute="#uname" operation="eq" value="node2"/>
+	  <expression id="exp2" attribute="#uname" operation="eq" value="node3"/>
 	</rule>
       </rsc_location>
     </constraints>

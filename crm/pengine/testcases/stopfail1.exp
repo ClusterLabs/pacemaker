@@ -1,4 +1,4 @@
-<transition_graph global_timeout="60000">
+<transition_graph global_timeout="60s">
   <synapse id="0">
     <action_set>
       <rsc_op id="1" rsc_id="rsc1" operation="stop" on_node="node1" on_node_uuid="node1" allow_fail="false">

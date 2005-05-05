@@ -20,8 +20,12 @@
     <node_state id="uuid1" uname="node1" join="member" expected="member" timestamp="1086187789" in_ccm="false">
       <lrm>
         <lrm_resources>
-          <lrm_resource id="rsc1" last_op="stop" rsc_state="stop_failed" op_status="4" rc_code="7" on_node="node2"/>
-          <lrm_resource id="rsc2" last_op="start" rsc_state="running" op_status="0" rc_code="0" on_node="node2"/>
+          <lrm_resource id="rsc1" last_op="stop" rsc_state="stop_failed" op_status="4" rc_code="7">
+            <lrm_rsc_op id="rsc1" operation="stop" rsc_state="stop_failed" op_status="4" rc_code="7" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc2" operation="start" rsc_state="running" op_status="0" rc_code="0 call_id="1"">
+            <lrm_rsc_op id="rsc2" operation="start" rsc_state="running" op_status="0" rc_code="0"/>
+	  </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>

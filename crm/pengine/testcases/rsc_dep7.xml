@@ -34,9 +34,9 @@
       </resource>
     </resources>
     <constraints>
-      <rsc_colocation id="not_same_1" from="rsc1" to="rsc2" type="must"/>
-      <rsc_colocation id="not_same_2" from="rsc1" to="rsc3" type="must"/>
-      <rsc_colocation id="not_same_3" from="rsc3" to="rsc2" type="must"/>
+      <rsc_colocation id="not_same_1" from="rsc1" to="rsc2" score="INFINITY"/>
+      <rsc_colocation id="not_same_2" from="rsc1" to="rsc3" score="INFINITY"/>
+      <rsc_colocation id="not_same_3" from="rsc3" to="rsc2" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>

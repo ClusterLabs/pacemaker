@@ -27,7 +27,7 @@
       </resource>
     </resources>
     <constraints>
-      <rsc_colocation id="not_same_1" from="rsc1" to="rsc2" type="must_not"/>
+      <rsc_colocation id="not_same_1" from="rsc1" to="rsc2" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status>
@@ -45,7 +45,9 @@
 	  <lrm_agent class="heartbeat" type="apache"/>
 	</lrm_agents>
         <lrm_resources>
-          <lrm_resource id="rsc1" last_op="start" rsc_state="started" op_status="0" rc_code="0" on_node="node1"/>
+          <lrm_resource id="rsc1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>

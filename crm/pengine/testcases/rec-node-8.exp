@@ -1,2 +1,2 @@
- <transition_graph global_timeout="60000"/>
+ <transition_graph global_timeout="60s" transition_id="0"/>
 
