@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.71 2005/05/04 16:12:12 andrew Exp $ */
+/* $Id: utils.c,v 1.72 2005/05/05 22:51:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -620,9 +620,6 @@ action_new(resource_t *rsc, enum action_tasks task,
 			  action->id,
 			  task2text(task), rsc?rsc->id:"<NULL>",
 			  on_node?on_node->details->id:"<NULL>");
-
-		/* todo: free possible_matches */
-		return action;
 	}
 
 	if(timeout == NULL && rsc != NULL) {
@@ -672,14 +669,14 @@ action_new(resource_t *rsc, enum action_tasks task,
 	}
 		
 	if(rsc != NULL) {
-		if(on_node == NULL) {
+		if(action->node == NULL) {
 			action->runnable = FALSE;
 
-		} else if(on_node->details->online == FALSE) {
+		} else if(action->node->details->online == FALSE) {
 			crm_warn("Action %d %s for %s on %s is unrunnable",
 				 action->id,
 				 task2text(task), rsc?rsc->id:"<NULL>",
-				 on_node?on_node->details->id:"<none>");
+				 action->node?action->node->details->id:"<none>");
 			action->runnable = FALSE;
 
 		} else {
