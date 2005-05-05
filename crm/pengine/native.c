@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.32 2005/05/02 10:56:05 andrew Exp $ */
+/* $Id: native.c,v 1.33 2005/05/05 23:02:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -338,13 +338,13 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 					 safe_val3(NULL,chosen,details,uname));
 
 				start = action_new(rsc, start_rsc, NULL,chosen);
-				stop  = action_new(rsc, stop_rsc,  NULL,node);
 				if(rsc->start_pending == FALSE) {
-					stop->optional = TRUE;
 					start->optional = TRUE;
 				} else {
 					rsc->schedule_recurring = TRUE;
 				}	
+				stop  = action_new(rsc, stop_rsc,  NULL,node);
+				stop->optional = TRUE;
 			}
 			
 		} else if(chosen != NULL) {
