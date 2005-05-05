@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.85 2005/05/04 16:11:22 andrew Exp $ */
+/* $Id: unpack.c,v 1.86 2005/05/05 22:52:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -842,6 +842,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				
 			} else if(safe_str_eq(task, CRMD_RSCSTATE_START)) {
 				rsc->start_pending = TRUE;
+				rsc->schedule_recurring = TRUE;
 				*running = TRUE;
 		
 				/* make sure it is re-issued but,
