@@ -1614,6 +1614,38 @@ class Split_brainTest2(CTSTest):
 
 #AllTestClasses.append(Split_brainTest2)
 
+####################################################################
+class SpecialTest1(CTSTest):
+####################################################################
+    '''Set up a custom test to cause quorum failure issues for Andrew'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="SpecialTest1"
+	self.startall = SimulStartLite(cm)
+	self.restart1 = RestartTest(cm)
+	self.stopall = SimulStopLite(cm)
+
+    def __call__(self, node):
+        '''Perform the 'SpecialTest1' test for Andrew. '''
+        self.incr("calls")
+        #        Shut down all the nodes...
+	ret = self.stopall(None)
+	if not ret:
+            return ret
+        #        Start the selected node
+	ret = self.restart1(node)
+	if not ret:
+            return ret
+        #        Start all remaining nodes
+	ret = self.startall(None)
+        return ret
+
+    def is_applicable(self):
+        return 1
+
+AllTestClasses.append(SpecialTest1)
+
+
 def TestList(cm):
     result = []
     for testclass in AllTestClasses:
@@ -1622,6 +1654,7 @@ def TestList(cm):
             result.append(bound_test)
     return result
 
+         
 
 class SimulStopLite(CTSTest):
 ###################################################################
@@ -1674,7 +1707,6 @@ class SimulStopLite(CTSTest):
     def is_applicable(self):
         '''SimulStopLite is a setup test and never applicable'''
         return 0
-AllTestClasses.append(SimulStopLite)
 
 ###################################################################
 class SimulStartLite(CTSTest):
@@ -1735,4 +1767,3 @@ class SimulStartLite(CTSTest):
         '''SimulStartLite is a setup test and never applicable'''
         return 0
 
-AllTestClasses.append(SimulStartLite)
