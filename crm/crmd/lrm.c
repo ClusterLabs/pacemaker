@@ -612,6 +612,23 @@ do_lrm_rsc_op(
 			msg, rsc_path, DIMOF(rsc_path) -2,
 			XML_AGENT_ATTR_PROVIDER, FALSE);
 	}
+
+	if(safe_str_neq(operation, CRMD_RSCSTATE_STOP)) {
+		if(fsa_state == S_STARTING
+		   || fsa_state == S_STOPPING
+		   || fsa_state == S_TERMINATE) {
+			crm_err("Discarding attempt to perform action %s on %s"
+				" while in state %s", operation, rsc->id,
+				fsa_state2string(fsa_state));
+			return I_NULL;
+			
+		} else if(AM_I_DC == FALSE && fsa_state != S_NOT_DC) {
+			crm_warn("Discarding attempt to perform action %s on %s"
+				 " in state %s", operation, rsc->id,
+				 fsa_state2string(fsa_state));
+			return I_NULL;
+		}
+	}
 	
 	if(rsc == NULL) {
 		/* check if its already there */
@@ -645,20 +662,6 @@ do_lrm_rsc_op(
 		g_hash_table_foreach(monitors, stop_recurring_action, rsc);
 		g_hash_table_foreach_remove(
 			monitors, remove_recurring_action, rsc);
-		
-	} else if(fsa_state == S_STARTING
-		|| fsa_state == S_STOPPING
-		|| fsa_state == S_TERMINATE) {
-		crm_err("Discarding attempt to perform action %s on %s"
-			" while in state %s",
-			operation, rsc->id, fsa_state2string(fsa_state));
-		return I_NULL;
-		
-	} else if(AM_I_DC == FALSE && fsa_state != S_NOT_DC) {
-		crm_warn("Discarding attempt to perform action %s on %s"
-			 " in state %s",
-			 operation, rsc->id, fsa_state2string(fsa_state));
-		return I_NULL;
 	}
 	
 	
