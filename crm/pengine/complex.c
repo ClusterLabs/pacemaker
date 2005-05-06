@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.23 2005/05/02 10:54:52 andrew Exp $ */
+/* $Id: complex.c,v 1.24 2005/05/06 09:19:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -409,7 +409,7 @@ add_hash_param(GHashTable *hash, const char *name, const char *value)
 		return;
 	}
 
-	crm_debug("adding: name=%s value=%s", crm_str(name), crm_str(value));
+	crm_verbose("adding: name=%s value=%s", crm_str(name), crm_str(value));
 	if(name == NULL || value == NULL) {
 		return;
 		
@@ -440,5 +440,5 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
 	set_xml_property_copy(xml_child, XML_NVPAIR_ATTR_NAME, name);
 	set_xml_property_copy(xml_child, XML_NVPAIR_ATTR_VALUE, s_value);
 
-	crm_debug("dumped: name=%s value=%s", name, s_value);
+	crm_verbose("dumped: name=%s value=%s", name, s_value);
 }
