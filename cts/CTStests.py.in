@@ -1391,7 +1391,7 @@ class ResourceRecover(CTSTest):
 	if not ret:
             return self.skipped()
 
-        # if there is not resource , return directly
+        # if there are no resources , return directly
         resourcelist=self.CM.Resources()
         if len(resourcelist)==0:
             self.CM.log("Can't find any resource on cluster,exit this test")
@@ -1402,18 +1402,18 @@ class ResourceRecover(CTSTest):
         
         resourcetype = str(resource.Type())
         label = resourcetype+"::"+str(resource.rid)
-        node=resource.RunningNodes()
-        if node == []:
-            return self.failure("%s is not running on any node" %label)
-        self.CM.log("...resource %s on %s"%(label,node[0]))
+        nodes=resource.RunningNodes()
+        if len(nodes) == 0:
+            return self.skipped()
+        self.CM.log("...resource %s on %s" % (label, nodes[0]))
 
 
-	pat=("""crmd:.* Performing op start on %s""" %(resource.rid))
+	pat=("""crmd:.* Performing op start on %s""" % (resource. rid))
         watch = CTS.LogWatcher(self.CM["LogFileName"], [pat], timeout=240)
         watch.setwatch()
         
         # stop a resource
-        resource.Stop(node[0])
+        resource.Stop(nodes[0])
 
         # wait for the resource to be started
         if not watch.look():
@@ -1434,7 +1434,7 @@ class ResourceRecover(CTSTest):
 				%(label, str(recovernode)))
 
     def is_applicable(self):
-        '''ResourceRecover is applicable only when there is any resource running on cluster
+        '''ResourceRecover is applicable only when there are resources running on our cluster
         and environment is linux-ha-v2'''
         if self.CM["Name"] == "linux-ha-v2":
             resourcelist=self.CM.Resources()
