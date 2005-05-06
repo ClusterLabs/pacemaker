@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.67 2005/04/27 16:32:17 alan Exp $ */
+/* $Id: tengine.c,v 1.68 2005/05/06 11:34:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -534,9 +534,19 @@ initiate_action(action_t *action)
 		send_command = TRUE;
 
 	} else if(action->type == action_type_rsc){
-		cib_action_update(action, LRM_OP_PENDING);
+		/* never overwrite stop actions in the CIB with
+		 *   anything other than completed results
+		 *
+		 * Writing pending stops makes it look like the
+		 *   resource is running again
+		 */
+		if(safe_str_neq(task, CRMD_RSCSTATE_STOP)) {
+			cib_action_update(action, LRM_OP_PENDING);
+		} else {
+			cib_action_updated(NULL, 0, cib_ok, NULL, action);
+		}
 		ret = TRUE;
-			
+
 	} else {
 		te_log_action(LOG_ERR,
 			      "Failed on unsupported command type: "
@@ -716,7 +726,7 @@ cib_action_updated(
 	rsc_id  = crm_element_value(rsc_op, XML_LRM_ATTR_RSCID);
 	on_node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
 
-	if(rc < 0) {
+	if(rc < cib_ok) {
 		crm_err("Update for action %d: %s %s on %s FAILED",
 			action->id, task, rsc_id, on_node);
 		send_complete(cib_error2string(rc), output, te_failed);
@@ -747,8 +757,6 @@ cib_action_updated(
 		start_te_timer(action->timer);
 	}
 }
-
-
 
 gboolean
 initiate_transition(void)
