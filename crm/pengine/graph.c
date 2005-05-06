@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.38 2005/04/18 11:44:15 andrew Exp $ */
+/* $Id: graph.c,v 1.39 2005/05/06 09:20:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,7 +49,7 @@ update_action(action_t *action)
 {
 	gboolean change = FALSE;
 
-	crm_debug("Processing action %d", action->id);
+	crm_verbose("Processing action %d", action->id);
 	if(action->optional && action->runnable) {
 		return FALSE;
 	}
@@ -57,7 +57,9 @@ update_action(action_t *action)
 	slist_iter(
 		other, action_wrapper_t, action->actions_after, lpc,
 
-		if(action->runnable == FALSE && action->optional == FALSE) {
+		if(action->pseudo == FALSE
+		   && action->runnable == FALSE
+		   && action->optional == FALSE) {
 			if(other->action->runnable == FALSE) {
 				crm_debug("Action %d already un-runnable",
 					  other->action->id);
@@ -69,7 +71,15 @@ update_action(action_t *action)
 					  " because of %d",
 					  other->action->id, action->id);
 			}	
+
+		} else if(other->action->optional
+			  && action->optional == FALSE) {
+			change = TRUE;
+			other->action->optional = FALSE;
+			crm_debug("Marking action %d manditory because of %d",
+				  other->action->id, action->id);
 		}
+		
 
 		if(action->optional == FALSE && other->action->optional) {
 
@@ -79,7 +89,7 @@ update_action(action_t *action)
 		case pe_restart_restart:
 			change = TRUE;
 			other->action->optional = FALSE;
-			crm_debug("Marking action %d manditory because of %d",
+			crm_debug("(Restart) Marking action %d manditory because of %d",
 				  other->action->id, action->id);
 	}
 		}
@@ -272,6 +282,8 @@ action2xml(action_t *action, gboolean as_input)
 		return action_xml;
 	}
 
+	crm_xml_debug(action_xml, "dumped action");
+	
 	args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
 	g_hash_table_foreach(action->extra, hash2nvpair, args_xml);
 
@@ -280,7 +292,7 @@ action2xml(action_t *action, gboolean as_input)
 			action->rsc->parameters, hash2nvpair, args_xml);
 	}
 	
-	crm_xml_debug(args_xml, "copied in extra attributes");
+	crm_xml_verbose(args_xml, "copied in extra attributes");
 	
 	return action_xml;
 }
