@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.55 2005/04/25 16:03:37 andrew Exp $ */
+/* $Id: crm.h,v 1.56 2005/05/06 11:33:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,8 +42,8 @@
 
 #include <crm/common/util.h>
 
-#define CRM_ASSERT(expr) if((expr) == FALSE) {			\
-		do_crm_log(LOG_CRIT, __PRETTY_FUNCTION__, NULL,	\
+#define CRM_ASSERT(expr) if((expr) == FALSE) {				\
+		do_crm_log(LOG_CRIT, __FILE__, __PRETTY_FUNCTION__,	\
 			   "Triggered dev assert at %s:%d : %s",	\
 			   __FILE__, __LINE__, #expr);			\
 		abort();						\
@@ -55,8 +55,8 @@ extern gboolean crm_assert_failed;
 	if((expr) == FALSE) {						\
 		crm_assert_failed = TRUE;				\
 		do_crm_log(CRM_DEV_BUILD?LOG_CRIT:LOG_ERR,		\
-			   __PRETTY_FUNCTION__, NULL,			\
-			   "Triggered dev assert at %s:%d : %s", \
+			   __FILE__, __PRETTY_FUNCTION__,		\
+			   "Triggered dev assert at %s:%d : %s",	\
 			   __FILE__, __LINE__, #expr);			\
 		if(CRM_DEV_BUILD) {					\
 			abort();					\
@@ -175,13 +175,13 @@ typedef GList* GListPtr;
 extern gboolean safe_str_eq(const char *a, const char *b);
 extern gboolean safe_str_neq(const char *a, const char *b);
 
-#define slist_iter(w, x, y, z, a)					\
+#define slist_iter(child, child_type, parent, counter, a)		\
 	{								\
-		GListPtr __crm_iter_head = y;				\
-		x *w = NULL;						\
-		int z = 0;						\
-		for(; __crm_iter_head != NULL; z++) {			\
-			w = __crm_iter_head->data;			\
+		GListPtr __crm_iter_head = parent;			\
+		child_type *child = NULL;				\
+		int counter = 0;					\
+		for(; __crm_iter_head != NULL; counter++) {		\
+			child = __crm_iter_head->data;			\
 			__crm_iter_head = __crm_iter_head->next;	\
 			{ a; }						\
 		}							\
@@ -195,7 +195,7 @@ extern gboolean safe_str_neq(const char *a, const char *b);
 #define LOG_DEV      LOG_DEBUG+2
 #define LOG_TRACE    LOG_DEBUG+3
 #define LOG_INSANE   LOG_DEBUG+5
-#define LOG_MSG      LOG_TRACE
+#define LOG_MSG      LOG_DEV
 
 #  define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FILE__, __FUNCTION__, w)
 #  define crm_err(w...)     do_crm_log(LOG_ERR,     __FILE__, __FUNCTION__, w)

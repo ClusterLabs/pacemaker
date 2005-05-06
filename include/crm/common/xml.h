@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.20 2005/02/25 10:35:35 andrew Exp $ */
+/* $Id: xml.h,v 1.21 2005/05/06 11:33:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -222,16 +222,17 @@ extern void crm_update_parents(crm_data_t *root);
 extern gboolean xml_has_children(crm_data_t *root);	 		
 
 #ifdef USE_LIBXML
-#   define xml_child_iter(a,b,c,d) if(a != NULL) {			\
-		crm_data_t *b = NULL;					\
-		crm_data_t *__crm_xml_iter = a->children;		\
-		while(__crm_xml_iter != NULL) {			\
-			b = __crm_xml_iter;				\
+#   define xml_child_iter(parent,child,filter,d) if(parent != NULL) {	\
+		crm_data_t *child = NULL;				\
+		crm_data_t *__crm_xml_iter = parent->children;		\
+		while(__crm_xml_iter != NULL) {				\
+			child = __crm_xml_iter;				\
 			__crm_xml_iter = __crm_xml_iter->next;		\
-			if(c == NULL || safe_str_eq(c, b->name)) {	\
+			if(filter == NULL				\
+			   || safe_str_eq(filter, child->name)) {	\
 				d;					\
 			} else {					\
-				crm_trace("Skipping <%s../>", b->name);	\
+				crm_trace("Skipping <%s../>", child->name); \
 			}						\
 		}							\
 	} else {							\
@@ -252,21 +253,25 @@ extern gboolean xml_has_children(crm_data_t *root);
 
 #else
 #   define xmlGetNodePath(data) crm_element_value(data, XML_ATTR_TAGNAME)
-#   define xml_child_iter(a, b, c, d) if(a != NULL) {			\
+#   define xml_child_iter(parent, child, filter, loop_code)		\
+	if(parent != NULL) {						\
 		int __counter = 0;					\
-		crm_data_t *b = NULL;					\
-		crm_validate_data(a);					\
-		for (__counter = 0; __counter < a->nfields; __counter++) { \
-			if(a->types[__counter] != FT_STRUCT) {		\
+		crm_data_t *child = NULL;				\
+		crm_validate_data(parent);				\
+		for (__counter = 0; __counter < parent->nfields; __counter++) { \
+			if(parent->types[__counter] != FT_STRUCT) {		\
 				continue;				\
 			}						\
-			b = a->values[__counter];			\
-			if(b == NULL) {				\
-				crm_trace("Skipping %s == NULL", a->names[__counter]); \
-			} else if(c == NULL || safe_str_eq(c, a->names[__counter])) { \
-				d;					\
+			child = parent->values[__counter];		\
+			if(child == NULL) {				\
+				crm_trace("Skipping %s == NULL",	\
+					  parent->names[__counter]);	\
+			} else if(filter == NULL			\
+				  || safe_str_eq(filter, parent->names[__counter])) { \
+				loop_code;					\
 			} else {					\
-				crm_trace("Skipping <%s../>", a->names[__counter]); \
+				crm_trace("Skipping <%s../>",		\
+					  parent->names[__counter]);	\
 			}						\
 		}							\
 	} else {							\
