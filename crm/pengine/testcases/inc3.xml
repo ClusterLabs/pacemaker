@@ -53,7 +53,7 @@
             <lrm_rsc_op id="rsc1:child_rsc1:3" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
          <lrm_resource id="rsc1:child_rsc1:4" last_op="start" rsc_state="started" op_status="0" rc_code="0">
-         <lrm_rsc_op id="rsc1:child_rsc1:4" operat call_id="1"ion="start" rsc_state="started" op_status="0" rc_code="0"/>
+         <lrm_rsc_op id="rsc1:child_rsc1:4" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -77,7 +77,7 @@
             <lrm_rsc_op id="rsc2:child_rsc2:3" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
           <lrm_resource id="rsc2:child_rsc2:4" last_op="start" rsc_state="started" op_status="0" rc_code="0">
-            <lrm_rsc_op id="rsc2:child_rsc2:4" operat call_id="1"ion="start" rsc_state="started" op_status="0" rc_code="0"/>
+            <lrm_rsc_op id="rsc2:child_rsc2:4" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
         </lrm_resources>
       </lrm>

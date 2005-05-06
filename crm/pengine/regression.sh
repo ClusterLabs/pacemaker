@@ -129,7 +129,8 @@ do_test group5 "Group + Native (move)   "
 do_test group6 "Group + Group (move)    "
 
 echo ""
-do_test inc1 "Incarnation start					" 
+do_test inc0 "Incarnation start					" 
+do_test inc1 "Incarnation start order				" 
 do_test inc2 "Incarnation silent restart, stop, move		"
 do_test inc3 "Inter-incarnation ordering, silent restart, stop, move"
 
