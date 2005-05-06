@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.39 2005/05/06 09:20:26 andrew Exp $ */
+/* $Id: graph.c,v 1.40 2005/05/06 11:35:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,6 +55,17 @@ update_action(action_t *action)
 	}
 	
 	slist_iter(
+		other, action_wrapper_t, action->actions_before, lpc,
+		if(action->optional
+		   && other->action->optional == FALSE) {
+			change = TRUE;
+			action->optional = FALSE;
+			crm_debug("Marking action %d manditory because of %d",
+				  action->id, other->action->id);
+		}
+		);
+	
+	slist_iter(
 		other, action_wrapper_t, action->actions_after, lpc,
 
 		if(action->pseudo == FALSE
@@ -70,14 +81,7 @@ update_action(action_t *action)
 				crm_debug("Marking action %d un-runnable"
 					  " because of %d",
 					  other->action->id, action->id);
-			}	
-
-		} else if(other->action->optional
-			  && action->optional == FALSE) {
-			change = TRUE;
-			other->action->optional = FALSE;
-			crm_debug("Marking action %d manditory because of %d",
-				  other->action->id, action->id);
+			}
 		}
 		
 
