@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.13 2005/04/25 13:01:45 andrew Exp $ */
+/* $Id: incarnation.c,v 1.14 2005/05/06 09:21:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -264,7 +264,6 @@ void incarnation_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		rsc->starting = TRUE;
 		action_new(incarnation_data->self, start_rsc, NULL, NULL);
 		action_new(incarnation_data->self, started_rsc, NULL, NULL);
-		
 	}
 	if(child_stopping) {
 		rsc->stopping = TRUE;
@@ -274,7 +273,8 @@ void incarnation_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 	
 	slist_iter(
 		action, action_t, incarnation_data->self->actions, lpc,
-		action->pseudo   = TRUE;
+		action->pseudo = TRUE;
+		action->optional = TRUE;
 		);
 }
 
