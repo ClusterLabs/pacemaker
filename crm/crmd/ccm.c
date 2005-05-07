@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.68 2005/04/25 13:01:45 andrew Exp $ */
+/* $Id: ccm.c,v 1.69 2005/05/07 16:14:28 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -263,7 +263,7 @@ do_ccm_update_cache(long long action,
 	crm_info("Updating CCM cache after a \"%s\" event.", 
 		 ccm_event_name(*event));
 
-	crm_debug("instace=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
+	crm_debug("instance=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
 		  "new_idx=%d, old_idx=%d",
 		  oc->m_instance,
 		  oc->m_n_member,
@@ -272,6 +272,42 @@ do_ccm_update_cache(long long action,
 		  oc->m_memb_idx,
 		  oc->m_in_idx,
 		  oc->m_out_idx);
+#define ALAN_DEBUG 1
+#ifdef ALAN_DEBUG
+	{
+		/*
+		 *	Size	(Size + 2) / 2
+		 *
+		 *	3	(3+2)/2	= 5 / 2 = 2
+		 *	4	(4+2)/2	= 6 / 2 = 3
+		 *	5	(5+2)/2	= 7 / 2 = 3
+		 *	6	(6+2)/2	= 8 / 2 = 4
+		 *	7	(7+2)/2	= 9 / 2 = 4
+		 */
+		int		clsize = (oc->m_out_idx - oc->m_n_member);
+		int		plsize = (clsize + 2)/2;
+		gboolean	plurality = (oc->m_n_member >= plsize);
+		gboolean	Q =  ccm_have_quorum(*event);
+
+		if (oc->m_n_member == 2) {
+			if (!Q) {
+				crm_err("%s: 2 nodes w/o quorum"
+				,	__FUNCTION__);
+			}
+		}else if(Q && !plurality) {
+			crm_err("%s: Quorum w/o plurality (%d/%d nodes)"
+			,	__FUNCTION__, oc->m_n_member, clsize);
+		}else if(plurality && !Q) {
+			crm_err("%s: Plurality w/o Quorum (%d/%d nodes)"
+			,	__FUNCTION__, oc->m_n_member, clsize);
+		}else{
+			crm_info("%s: Quorum(%d) and plurality (%d/%d) agree."
+			,	__FUNCTION__, (int)Q, oc->m_n_member, clsize);
+		}
+		
+	}
+#endif
+		
 
 	crm_malloc0(membership_copy, sizeof(oc_node_list_t));
 
