@@ -618,14 +618,16 @@ do_lrm_rsc_op(
 		   || fsa_state == S_STOPPING
 		   || fsa_state == S_TERMINATE) {
 			crm_err("Discarding attempt to perform action %s on %s"
-				" while in state %s", operation, rsc->id,
-				fsa_state2string(fsa_state));
+				" while in state %s", operation
+				,	(rsc ? crm_str(rsc->id) : "no rsc")
+				,	fsa_state2string(fsa_state));
 			return I_NULL;
 			
 		} else if(AM_I_DC == FALSE && fsa_state != S_NOT_DC) {
 			crm_warn("Discarding attempt to perform action %s on %s"
-				 " in state %s", operation, rsc->id,
-				 fsa_state2string(fsa_state));
+				 " in state %s", operation
+				,	(rsc ? crm_str(rsc->id) : "no rsc")
+				,	fsa_state2string(fsa_state));
 			return I_NULL;
 		}
 	}
