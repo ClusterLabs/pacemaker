@@ -31,12 +31,15 @@ def testruns(list):
 #
 class ExtractTests:
     def expandtestranges(self, testlist):
+        outlist = []
         for j in range(len(testlist)):
             match = re.match("([0-9]+)[-:]([0-9]+)", testlist[j])
             if match:
-                del testlist[j]
-                testlist = testlist + (range(int(match.groups()[0]),int(match.groups()[1])+1))
-        return testlist
+                for k in range(int(match.groups()[0]),int(match.groups()[1])+1):
+                    outlist.append(k)
+            else:
+                outlist.append(testlist[j])
+        return outlist
 
     def __init__(self, filename, testlist):
         self.file = open(filename, "r")
