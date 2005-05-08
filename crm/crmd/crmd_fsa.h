@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.41 2005/04/27 08:57:12 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.42 2005/05/08 08:06:40 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,7 +31,7 @@
 struct crmd_ccm_data_s 
 {
 		oc_ev_membership_t *oc;
-		oc_ed_t *event;
+		oc_ed_t event;
 };
 
 

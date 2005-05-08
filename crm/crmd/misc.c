@@ -76,7 +76,7 @@ do_log(long long action,
 	} else if(msg_data->data_type == fsa_dt_ccm) {
 		struct crmd_ccm_data_s *input = fsa_typed_data(
 			msg_data->data_type);
-		int event = *(input->event);
+		int event = input->event;
 		do_crm_log(log_type, __FILE__, __FUNCTION__,
 			   "Received \"%s\" event from the CCM.", 
 			   event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":

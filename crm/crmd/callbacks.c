@@ -473,7 +473,14 @@ crmd_ccm_msg_callback(
 		crm_malloc0(event_data, sizeof(struct crmd_ccm_data_s));
 
 		if(event_data != NULL) {
-			event_data->event = &event;
+			event_data->event = event;
+			/* Event_data could be a local variable if we
+			 * did the copying here.
+			 *
+			 * The reason why we can't without that change
+			 * is because of the 'const' attribute of 'data'.
+			 * FIXME??
+			 */
 			event_data->oc = copy_ccm_oc_data(
 				(const oc_ev_membership_t *)data);
 
@@ -482,9 +489,10 @@ crmd_ccm_msg_callback(
 				C_CCM_CALLBACK, I_CCM_EVENT,
 				(void*)event_data);
 
-			event_data->event = NULL;
-			event_data->oc = NULL;
-
+			if (event_data->oc) {
+				crm_free(event_data->oc);
+				event_data->oc = NULL;
+			}
 			crm_free(event_data);
 		}
 

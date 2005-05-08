@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.71 2005/05/08 03:19:40 alan Exp $ */
+/* $Id: ccm.c,v 1.72 2005/05/08 08:06:40 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,7 +151,7 @@ do_ccm_event(long long action,
 	     fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input return_input = I_NULL;
-	oc_ed_t *event = NULL;
+	oc_ed_t event;
 	const oc_ev_membership_t *oc = NULL;
 	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
 	
@@ -169,13 +169,13 @@ do_ccm_event(long long action,
 	event = ccm_data->event;
 	oc = ccm_data->oc;
 	
-	crm_info("event=%s", ccm_event_name(*event));
+	crm_info("event=%s", ccm_event_name(event));
 	
 	if(CCM_EVENT_DETAIL /*constant condition*/ || CCM_EVENT_DETAIL_PARTIAL) {
-		ccm_event_detail(oc, *event);
+		ccm_event_detail(oc, event);
 	}
 
-	if (OC_EV_MS_EVICTED == *event) {
+	if (OC_EV_MS_EVICTED == event) {
 		/* todo: drop back to S_PENDING instead */
 		/* get out... NOW!
 		 *
@@ -246,7 +246,7 @@ do_ccm_update_cache(long long action,
 	enum crmd_fsa_input next_input = I_NULL;
 	int lpc, offset;
 	GHashTable *members = NULL;
-	oc_ed_t *event = NULL;
+	oc_ed_t event;
 	const oc_ev_membership_t *oc = NULL;
 	oc_node_list_t *tmp = NULL, *membership_copy = NULL;
 	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
@@ -261,7 +261,7 @@ do_ccm_update_cache(long long action,
 	oc = ccm_data->oc;
 
 	crm_info("Updating CCM cache after a \"%s\" event.", 
-		 ccm_event_name(*event));
+		 ccm_event_name(event));
 
 	crm_debug("instance=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
 		  "new_idx=%d, old_idx=%d",
@@ -287,7 +287,7 @@ do_ccm_update_cache(long long action,
 		int		clsize = (oc->m_out_idx - oc->m_n_member);
 		int		plsize = (clsize + 2)/2;
 		gboolean	plurality = (oc->m_n_member >= plsize);
-		gboolean	Q =  ccm_have_quorum(*event);
+		gboolean	Q =  ccm_have_quorum(event);
 
 		if (clsize == 2) {
 			if (!Q) {
@@ -317,7 +317,7 @@ do_ccm_update_cache(long long action,
 		return I_NULL;
 	}
 
-	membership_copy->last_event = *event;
+	membership_copy->last_event = event;
 
 	crm_devel("Copying members");
 
@@ -471,10 +471,10 @@ do_ccm_update_cache(long long action,
 		do_update_cib_nodes(NULL, FALSE);
 	}
 
-	if(ccm_have_quorum(*event) == FALSE) {
+	if(ccm_have_quorum(event) == FALSE) {
 		if(fsa_have_quorum) {
 			/* we just lost quorum, trigger a recompute */
-			crm_info("Quorum lost: triggering transition (%s)", ccm_event_name(*event));
+			crm_info("Quorum lost: triggering transition (%s)", ccm_event_name(event));
 			register_fsa_input(cause, I_PE_CALC, NULL);
 		}
 		fsa_have_quorum = FALSE;
