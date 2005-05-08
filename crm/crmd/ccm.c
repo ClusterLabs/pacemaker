@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.70 2005/05/07 23:12:07 alan Exp $ */
+/* $Id: ccm.c,v 1.71 2005/05/08 03:19:40 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -289,7 +289,7 @@ do_ccm_update_cache(long long action,
 		gboolean	plurality = (oc->m_n_member >= plsize);
 		gboolean	Q =  ccm_have_quorum(*event);
 
-		if (oc->clsize == 2) {
+		if (clsize == 2) {
 			if (!Q) {
 				crm_err("%s: 2 nodes w/o quorum"
 				,	__FUNCTION__);
