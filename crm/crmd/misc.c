@@ -83,6 +83,7 @@ do_log(long long action,
 			   event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
 			   event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
 			   event==OC_EV_MS_EVICTED?"EVICTED":
+			   event==OC_EV_MS_INVALID?"INVALID (no quorum membership)":
 			   "NO QUORUM MEMBERSHIP");
 	}
 	
