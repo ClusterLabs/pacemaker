@@ -159,7 +159,7 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	CRM_DEV_ASSERT(local_cib != NULL);
 	CRM_DEV_ASSERT(crm_element_value(local_cib, XML_ATTR_DC_UUID) != NULL);
 
-	crm_is_true(crm_element_value(local_cib, XML_ATTR_HAVE_QUORUM));
+	cib_has_quorum = crm_is_true(crm_element_value(local_cib, XML_ATTR_HAVE_QUORUM));
 
 	if(ccm_have_quorum(fsa_membership_copy->last_event) == cib_has_quorum) {
 		crm_debug("CRM and CIB agree on quorum state: quorum=%s",
