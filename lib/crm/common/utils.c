@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.10 2005/05/09 14:43:32 andrew Exp $ */
+/* $Id: utils.c,v 1.11 2005/05/09 21:17:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -893,9 +893,7 @@ crm_get_msec(const char * input)
 gboolean
 ccm_have_quorum(oc_ed_t event)
 {
-	if(event==OC_EV_MS_NEW_MEMBERSHIP 
-	   || event==OC_EV_MS_NOT_PRIMARY
-	   || event==OC_EV_MS_PRIMARY_RESTORED) {
+	if(event==OC_EV_MS_NEW_MEMBERSHIP) {
 		return TRUE;
 	}
 	return FALSE;
@@ -919,7 +917,7 @@ ccm_event_name(oc_ed_t event)
 		return "EVICTED";
 
 	} else if(event==OC_EV_MS_INVALID) {
-		return "INVALID (no quorum membership)";
+		return "INVALID";
 	}
 
 	return "NO QUORUM MEMBERSHIP";
