@@ -170,11 +170,13 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 		      crm_data_t *output, void *user_data)
 {
 	HA_Message *cmd = NULL;
+	int ccm_transition_id = -1;
 	gboolean cib_has_quorum = FALSE;
 	crm_data_t *local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
 
 	if(AM_I_DC == FALSE
-	   || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE) {
+	   || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE
+	   || fsa_state != S_POLICY_ENGINE) {
 		crm_debug("No need to invoke the PE anymore");
 		return;
 	}
@@ -184,16 +186,18 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	CRM_DEV_ASSERT(local_cib != NULL);
 	CRM_DEV_ASSERT(crm_element_value(local_cib, XML_ATTR_DC_UUID) != NULL);
 
-	cib_has_quorum = crm_is_true(crm_element_value(local_cib, XML_ATTR_HAVE_QUORUM));
+	cib_has_quorum = crm_is_true(
+		crm_element_value(local_cib, XML_ATTR_HAVE_QUORUM));
 
-	if(ccm_have_quorum(fsa_membership_copy->last_event) == cib_has_quorum) {
-		crm_debug("CRM and CIB agree on quorum state: quorum=%s",
-			  cib_has_quorum?"true":"false");
-		
-	} else {
-		crm_err("CRM and CIB disagree on quorum state: cib=%s, crm=%s",
-			cib_has_quorum?"true":"false",
-			ccm_have_quorum(fsa_membership_copy->last_event)?"true":"false");
+	ccm_transition_id = crm_atoi(
+		crm_element_value(local_cib, XML_ATTR_CCM_TRANSITION), "-1");
+
+	if(ccm_transition_id != fsa_membership_copy->id) {
+		crm_err("Re-asking for the CIB until membership/quorum"
+			" matches: CIB=%d, CRM=%d",
+			ccm_transition_id, fsa_membership_copy->id);
+		fsa_actions |= A_PE_INVOKE;
+		return;
 	}
 	
 	if(fsa_pe_ref) {
