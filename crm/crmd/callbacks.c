@@ -101,10 +101,21 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 	from_node = g_hash_table_lookup(fsa_membership_copy->members, from);
 
 	if(from_node == NULL) {
-		crm_debug("Ignoring HA message (op=%s) from %s: not in our"
-			  " membership list", op, from);
+		int level = LOG_DEBUG;
+		if(safe_str_eq(op, CRM_OP_VOTE)) {
+			level = LOG_WARNING;
+
+		} else if(AM_I_DC && safe_str_eq(op, CRM_OP_JOIN_ANNOUNCE)) {
+			level = LOG_WARNING;
+
+		} else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
+			level = LOG_WARNING;
+		}
+		do_crm_log(level, __FILE__, __FUNCTION__, 
+			   "Ignoring HA message (op=%s) from %s: not in our"
+			   " membership list", op, from);
 		crm_log_message_adv(LOG_MSG, "HA[inbound]: CCM Discard", msg);
-		
+
 	} else if(AM_I_DC
 	   && safe_str_eq(sys_from, CRM_SYSTEM_DC)
 	   && safe_str_neq(from, fsa_our_uname)) {
@@ -112,12 +123,10 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 		crm_log_message_adv(
 			LOG_WARNING, "HA[inbound]: Duplicate DC", msg);
 		new_input = new_ha_msg_input(msg);
-#if 1
+
+		/* make sure the election happens NOW */
 		register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL,
 				       new_input, __FUNCTION__);
-#else
-		register_fsa_input(C_HA_MESSAGE, I_ELECTION, new_input);
-#endif
 		
 #if 0
 		/* still thinking about this one...
@@ -298,8 +307,6 @@ lrm_op_callback(lrm_op_t* op)
 		return;
 	}
 	
-	/* todo: free op->rsc */
-	
 	crm_debug("received callback: %s/%s (%s)",
 		  op->op_type, op->rsc_id, op_status2text(op->op_status));
 
@@ -473,6 +480,11 @@ crmd_ccm_msg_callback(
 	
 	if(data != NULL) {
 		crm_malloc0(event_data, sizeof(struct crmd_ccm_data_s));
+
+		crm_info("Quorum %s after event=%s (id=%d)", 
+			 ccm_have_quorum(event)?"(re)attained":"lost",
+			 ccm_event_name(event),
+			 ((const oc_ev_membership_t *)data)->m_instance);
 
 		if(event_data != NULL) {
 			event_data->event = event;
