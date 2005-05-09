@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.23 2005/03/16 17:11:15 lars Exp $ */
+/* $Id: main.c,v 1.24 2005/05/09 15:01:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -201,7 +201,8 @@ init_start(void)
 					sleep(1);
 					
 				} else {
-					crm_err("CCM Activation failed %d (max) times",
+					crm_err("CCM Activation failed"
+						" %d (max) times",
 						num_ccm_fails);
 					was_error = TRUE;
 					
@@ -210,8 +211,9 @@ init_start(void)
 		}
 
 		crm_devel("CCM Activation passed... all set to go!");
-		G_main_add_fd(G_PRIORITY_LOW, cib_ev_fd, FALSE, cib_ccm_dispatch,
-			      cib_ev_token, default_ipc_connection_destroy);
+		G_main_add_fd(G_PRIORITY_HIGH, cib_ev_fd, FALSE,
+			      cib_ccm_dispatch, cib_ev_token,
+			      default_ipc_connection_destroy);
 	}
 
 	if(was_error == FALSE) {
