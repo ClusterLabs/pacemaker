@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.73 2005/05/09 15:00:22 andrew Exp $ */
+/* $Id: ccm.c,v 1.74 2005/05/09 21:10:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,8 +126,7 @@ do_ccm_control(long long action,
 
 		crm_info("CCM Activation passed... all set to go!");
 
-/* GFDSource* */
-		G_main_add_fd(G_PRIORITY_LOW, fsa_ev_fd, FALSE, ccm_dispatch,
+		G_main_add_fd(G_PRIORITY_HIGH, fsa_ev_fd, FALSE, ccm_dispatch,
 			      fsa_ev_token,
 			      default_ipc_connection_destroy);
 		
@@ -473,11 +472,10 @@ do_ccm_update_cache(long long action,
 	}
 
 	if(ccm_have_quorum(event) == FALSE) {
-		if(fsa_have_quorum && AM_I_DC
+		if(fsa_have_quorum
 		   && (fsa_state == S_POLICY_ENGINE
 		       || fsa_state == S_TRANSITION_ENGINE
 		       || fsa_state == S_IDLE)) {
-			/* we just lost quorum, trigger a recompute */
 			crm_info("Quorum lost: triggering transition (%s)",
 				 ccm_event_name(event));
 			register_fsa_input(cause, I_PE_CALC, NULL);
