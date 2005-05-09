@@ -272,7 +272,9 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 	return stay_connected;
 }
 
-gboolean lrm_dispatch(int fd, gpointer user_data)
+
+gboolean
+lrm_dispatch(IPC_Channel*src_not_used, gpointer user_data)
 {
 	int num_msgs = 0;
 	ll_lrm_t *lrm = (ll_lrm_t*)user_data;

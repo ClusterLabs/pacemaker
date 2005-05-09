@@ -244,10 +244,11 @@ do_lrm_control(long long action,
 		/* TODO: create a destroy handler that causes
 		 * some recovery to happen
 		 */
-		G_main_add_fd(G_PRIORITY_LOW,
-			      fsa_lrm_conn->lrm_ops->inputfd(fsa_lrm_conn),
+		G_main_add_IPC_Channel(G_PRIORITY_LOW,
+			      fsa_lrm_conn->lrm_ops->ipcchan(fsa_lrm_conn),
 			      FALSE,
-			      lrm_dispatch, fsa_lrm_conn,
+			      lrm_dispatch,
+			      fsa_lrm_conn,
 			      default_ipc_connection_destroy);
 
 		set_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
