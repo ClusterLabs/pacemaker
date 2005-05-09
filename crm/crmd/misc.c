@@ -78,13 +78,8 @@ do_log(long long action,
 			msg_data->data_type);
 		int event = input->event;
 		do_crm_log(log_type, __FILE__, __FUNCTION__,
-			   "Received \"%s\" event from the CCM.", 
-			   event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
-			   event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
-			   event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
-			   event==OC_EV_MS_EVICTED?"EVICTED":
-			   event==OC_EV_MS_INVALID?"INVALID (no quorum membership)":
-			   "NO QUORUM MEMBERSHIP");
+			   "Received \"%s\" event from the CCM.",
+			   ccm_event_name(event));
 	}
 	
 	
