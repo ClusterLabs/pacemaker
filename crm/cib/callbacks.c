@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.46 2005/04/27 09:47:17 andrew Exp $ */
+/* $Id: callbacks.c,v 1.47 2005/05/09 15:03:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,6 +55,7 @@ GHashTable *peer_hash = NULL;
 int        next_client_id  = 0;
 gboolean   cib_is_master   = FALSE;
 gboolean   cib_have_quorum = FALSE;
+char *     ccm_transition_id = NULL;
 GHashTable *client_list    = NULL;
 GHashTable *ccm_membership = NULL;
 extern const char *cib_our_uname;
@@ -452,7 +453,7 @@ cib_common_callback(
 		}
 
 		if(needs_processing) {
- 			crm_verbose("Processing %s op", op);
+ 			crm_debug("Processing %s op", op);
 			rc = cib_process_command(
 				op_request, &op_reply, privileged);
 			crm_devel("Performing local processing: op=%s origin=%s/%s,%s (update=%s)",
@@ -1187,7 +1188,7 @@ gboolean cib_ccm_dispatch(int fd, gpointer user_data)
 {
 	int rc = 0;
 	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
-	crm_devel("received callback");	
+	crm_debug("received callback");	
 	rc = oc_ev_handle_event(ccm_token);
 	if(0 == rc) {
 		return TRUE;
@@ -1198,7 +1199,6 @@ gboolean cib_ccm_dispatch(int fd, gpointer user_data)
 	}
 }
 
-
 void 
 cib_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
@@ -1206,13 +1206,22 @@ cib_ccm_msg_callback(
 	unsigned lpc = 0;
 	int offset = 0;
 	const oc_ev_membership_t *membership = data;
-	crm_devel("received callback");	
+	crm_verbose("received callback");	
 
+	if(ccm_transition_id != NULL) {
+		crm_free(ccm_transition_id);
+		ccm_transition_id = NULL;
+	}
+	
 	cib_have_quorum = ccm_have_quorum(event);
-
-	crm_info("Quorum %s after event=%s", 
+	ccm_transition_id = crm_itoa(membership->m_instance);
+	set_xml_property_copy(
+		the_cib, XML_ATTR_CCM_TRANSITION, ccm_transition_id);
+	
+	crm_info("Quorum %s after event=%s (id=%s/%d)", 
 		 cib_have_quorum?"(re)attained":"lost",
-		 ccm_event_name(event));
+		 ccm_event_name(event), ccm_transition_id,
+		 membership->m_instance);
 
 	if(data == NULL) {
 		return;

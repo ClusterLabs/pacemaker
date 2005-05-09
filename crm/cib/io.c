@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.18 2005/03/11 14:08:00 andrew Exp $ */
+/* $Id: io.c,v 1.19 2005/05/09 15:03:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <heartbeat.h>
 #include <crm/crm.h>
 
 #include <cibio.h>
@@ -38,8 +39,6 @@
 #include <crm/common/util.h>
 
 #include <crm/dmalloc_wrapper.h>
-
-gboolean cib_writes_enabled = TRUE;
 
 const char * local_resource_path[] =
 {
@@ -68,6 +67,13 @@ crm_data_t *resource_search = NULL;
 crm_data_t *constraint_search = NULL;
 crm_data_t *status_search = NULL;
 
+gboolean cib_writes_enabled = TRUE;
+extern char *ccm_transition_id;
+extern gboolean cib_have_quorum;
+extern GHashTable *peer_hash;
+
+int set_connected_peers(crm_data_t *xml_obj);
+void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
 
 /*
  * It is the callers responsibility to free the output of this function
@@ -202,9 +208,6 @@ initializeCib(crm_data_t *new_cib)
 			get_object_root(XML_CIB_TAG_STATUS, new_cib);
 		*/
 		initialized = TRUE;
-
-		crm_trace("CIB initialized");
-		return TRUE;
 	}
 
 	if(initialized == FALSE) {
@@ -234,11 +237,22 @@ initializeCib(crm_data_t *new_cib)
 		}
 
 		if(cib_writes_enabled) {
-			crm_info("CIB disk writes to %s enabled", CIB_FILENAME);
+			crm_debug("CIB disk writes to %s enabled", CIB_FILENAME);
 		} else {
 			crm_notice("Disabling CIB disk writes");
 		}
-		
+
+		set_connected_peers(the_cib);
+		set_xml_property_copy(
+			the_cib, XML_ATTR_CCM_TRANSITION, ccm_transition_id);
+		crm_debug("Set transition to %s", ccm_transition_id);
+		if(cib_have_quorum) {
+			set_xml_property_copy(
+				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_TRUE);
+		} else {
+			set_xml_property_copy(
+				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_FALSE);
+		}		
 	}
 
 	return initialized;
@@ -403,3 +417,30 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 	return error_code;
     
 }
+
+int
+set_connected_peers(crm_data_t *xml_obj)
+{
+	int active = 0;
+	char *peers_s = NULL;
+
+	g_hash_table_foreach(peer_hash, GHFunc_count_peers, &active);
+	peers_s = crm_itoa(active);
+	set_xml_property_copy(xml_obj, XML_ATTR_NUMPEERS, peers_s);
+	crm_debug("Set peers to %s", peers_s);
+	crm_free(peers_s);
+
+	return active;
+}
+
+void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data)
+{
+	int *active = user_data;
+	if(safe_str_eq(value, ONLINESTATUS)) {
+		(*active)++;
+		
+	} else if(safe_str_eq(value, JOINSTATUS)) {
+		(*active)++;
+	}
+}
+

@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.35 2005/04/25 16:03:36 andrew Exp $ */
+/* $Id: messages.c,v 1.36 2005/05/09 15:03:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,35 +65,6 @@ gboolean update_results(
 
 enum cib_errors cib_update_counter(
 	crm_data_t *xml_obj, const char *field, gboolean reset);
-
-int set_connected_peers(crm_data_t *xml_obj);
-void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
-
-
-int
-set_connected_peers(crm_data_t *xml_obj)
-{
-	int active = 0;
-	char *peers_s = NULL;
-
-	g_hash_table_foreach(peer_hash, GHFunc_count_peers, &active);
-	peers_s = crm_itoa(active);
-	set_xml_property_copy(xml_obj, XML_ATTR_NUMPEERS, peers_s);
-	crm_free(peers_s);
-
-	return active;
-}
-
-void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data)
-{
-	int *active = user_data;
-	if(safe_str_eq(value, ONLINESTATUS)) {
-		(*active)++;
-		
-	} else if(safe_str_eq(value, JOINSTATUS)) {
-		(*active)++;
-	}
-}
 
 enum cib_errors 
 cib_process_default(
@@ -327,17 +298,6 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 	set_xml_property_copy(xml_obj, field, new_value);
 	crm_free(new_value);
 
-	if(safe_str_eq(field, XML_ATTR_NUMUPDATES)) {
-		set_connected_peers(xml_obj);
-		if(cib_have_quorum) {
-			set_xml_property_copy(
-				xml_obj, XML_ATTR_HAVE_QUORUM, XML_BOOLEAN_TRUE);
-		} else {
-			set_xml_property_copy(
-				xml_obj, XML_ATTR_HAVE_QUORUM, XML_BOOLEAN_FALSE);
-		}
-	}
-	
 	crm_free(old_value);
 	return cib_ok;
 }
