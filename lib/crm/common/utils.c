@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.9 2005/04/27 11:17:18 andrew Exp $ */
+/* $Id: utils.c,v 1.10 2005/05/09 14:43:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -917,6 +917,9 @@ ccm_event_name(oc_ed_t event)
 		
 	} else if(event==OC_EV_MS_EVICTED) {
 		return "EVICTED";
+
+	} else if(event==OC_EV_MS_INVALID) {
+		return "INVALID (no quorum membership)";
 	}
 
 	return "NO QUORUM MEMBERSHIP";
