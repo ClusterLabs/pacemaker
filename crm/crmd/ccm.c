@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.72 2005/05/08 08:06:40 alan Exp $ */
+/* $Id: ccm.c,v 1.73 2005/05/09 15:00:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -317,6 +317,7 @@ do_ccm_update_cache(long long action,
 		return I_NULL;
 	}
 
+	membership_copy->id = oc->m_instance;
 	membership_copy->last_event = event;
 
 	crm_devel("Copying members");
@@ -472,9 +473,13 @@ do_ccm_update_cache(long long action,
 	}
 
 	if(ccm_have_quorum(event) == FALSE) {
-		if(fsa_have_quorum) {
+		if(fsa_have_quorum && AM_I_DC
+		   && (fsa_state == S_POLICY_ENGINE
+		       || fsa_state == S_TRANSITION_ENGINE
+		       || fsa_state == S_IDLE)) {
 			/* we just lost quorum, trigger a recompute */
-			crm_info("Quorum lost: triggering transition (%s)", ccm_event_name(event));
+			crm_info("Quorum lost: triggering transition (%s)",
+				 ccm_event_name(event));
 			register_fsa_input(cause, I_PE_CALC, NULL);
 		}
 		fsa_have_quorum = FALSE;
