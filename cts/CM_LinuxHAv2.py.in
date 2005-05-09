@@ -87,7 +87,7 @@ class LinuxHAv2(HeartbeatCM):
                 r"input=I_FINALIZED cause=C_TIMER_POPPED",
                 r"input=I_ERROR",
                 r", exiting\.",
-                r"Ignoring HA message (op=vote).*: not in our membership list",
+                r"WARN.*Ignoring HA message.* not in our membership list",
                 r"pengine:.*Attempting recovery of resource",
                 r"pengine:.*Handling failed ",
                 r"tengine:.*is taking more than 2x its timeout",
@@ -244,7 +244,7 @@ class LinuxHAv2(HeartbeatCM):
             patterns.append(self["Pat:DC_IDLE"])
             localBadNewsPats.append("input=I_DC_TIMEOUT ")
             localBadNewsPats.append("input=I_ELECTION_DC ")
-            localBadNewsPats.append("""Ignoring HA message (op=join_annouce).*: not in our membership list""")
+            localBadNewsPats.append("WARN:.*Ignoring HA message.*not in our membership list")
 
         if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
