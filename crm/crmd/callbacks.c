@@ -558,7 +558,7 @@ crmd_ccm_msg_callback(
 					(const oc_ev_membership_t *)data);
 			}
 			crm_devel("Sending callback to the FSA");
-			register_fsa_input(
+			register_fsa_input_later(
 				C_CCM_CALLBACK, I_CCM_EVENT, event_data);
 			
 			if (event_data->oc) {
