@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.49 2005/05/10 15:54:07 andrew Exp $ */
+/* $Id: callbacks.c,v 1.50 2005/05/10 16:02:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1278,6 +1278,14 @@ cib_ccm_msg_callback(
 
 		cib_have_quorum = ccm_have_quorum(event);
 
+		if(cib_have_quorum) {
+ 			set_xml_property_copy(
+				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_TRUE);
+		} else {
+ 			set_xml_property_copy(
+				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_FALSE);
+		}
+		
 		crm_info("Quorum %s after event=%s (id=%d)", 
 			 cib_have_quorum?"(re)attained":"lost",
 			 ccm_event_name(event), instance);
