@@ -498,21 +498,17 @@ crmd_ccm_msg_callback(
 			if(AM_I_DC == FALSE) {
 				break;
 			}
-			register_fsa_input_adv(
-				C_FSA_INTERNAL, I_NULL, NULL,
-				A_TE_CANCEL, TRUE, __FUNCTION__);
+			register_fsa_action(A_TE_CANCEL);
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
 			if(AM_I_DC == FALSE) {
 				break;
 			}
 			fsa_membership_copy->id = instance;
-			register_fsa_input(
-				C_FSA_INTERNAL, I_PE_CALC, NULL);
+			register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
 			break;
 		case OC_EV_MS_EVICTED:
-			register_fsa_input(
-				C_FSA_INTERNAL, I_TERMINATE, NULL);
+			register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 			break;
 		default:
 			crm_err("Unknown CCM event: %d", event);
