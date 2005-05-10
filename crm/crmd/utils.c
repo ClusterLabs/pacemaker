@@ -1234,7 +1234,6 @@ copy_lrm_op(const lrm_op_t *op)
 	}
 	
 	/* output fields */
-	op_copy->rsc       = NULL;
 	op_copy->op_status = op->op_status; 
 	op_copy->rc        = op->rc; 
 	op_copy->call_id   = op->call_id; 
@@ -1245,11 +1244,6 @@ copy_lrm_op(const lrm_op_t *op)
 		op_copy->output = crm_strdup(op->output);
 	}
 	
-
-	if(op->rsc != NULL) {
-		/*please notice the client needs release the memory of rsc.*/
-	}
-
 	return op_copy;
 }
 
