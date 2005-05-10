@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.50 2005/05/10 16:02:01 andrew Exp $ */
+/* $Id: callbacks.c,v 1.51 2005/05/10 16:04:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1181,6 +1181,7 @@ cib_client_status_callback(const char * node, const char * client,
 		crm_verbose("Status update: Client %s/%s now has status [%s]",
 			    node, client, status);
 		g_hash_table_replace(peer_hash, crm_strdup(node), crm_strdup(status));
+		set_connected_peers(the_cib);
 	}
 	return;
 }
