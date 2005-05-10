@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.75 2005/05/10 13:18:26 andrew Exp $ */
+/* $Id: ccm.c,v 1.76 2005/05/10 20:14:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -233,8 +233,6 @@ do_ccm_event(long long action,
  * Take the opportunity to update the node status in the CIB as well
  */
 
-static gboolean fsa_have_quorum = FALSE;
-
 enum crmd_fsa_input
 do_ccm_update_cache(long long action,
 		    enum crmd_fsa_cause cause,
@@ -445,9 +443,12 @@ do_ccm_update_cache(long long action,
 		membership_copy->dead_members = NULL;
 	}
 
-	crm_devel("Replacing old copies");
 	tmp = fsa_membership_copy;
 	fsa_membership_copy = membership_copy;
+	crm_info("Updated membership cache with %d (%d new, %d lost) members",
+		 g_hash_table_size(fsa_membership_copy->members),
+		 g_hash_table_size(fsa_membership_copy->new_members),
+		 g_hash_table_size(fsa_membership_copy->dead_members));
 
 	/* Free the old copy */
 	if(tmp != NULL) {
@@ -471,21 +472,6 @@ do_ccm_update_cache(long long action,
 		do_update_cib_nodes(NULL, FALSE);
 	}
 
-	if(ccm_have_quorum(event) == FALSE) {
-		if(fsa_have_quorum
-		   && (fsa_state == S_POLICY_ENGINE
-		       || fsa_state == S_TRANSITION_ENGINE
-		       || fsa_state == S_IDLE)) {
-			crm_info("Quorum lost: triggering transition (%s)",
-				 ccm_event_name(event));
-			register_fsa_action(A_TE_CANCEL);
-		}
-		fsa_have_quorum = FALSE;
-
-	} else {
-		fsa_have_quorum = TRUE;
-	}
-	
 	
 	return next_input;
 }

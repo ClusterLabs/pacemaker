@@ -470,6 +470,7 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 	return !was_error;
 }
 
+static gboolean fsa_have_quorum = FALSE;
 
 void 
 crmd_ccm_msg_callback(
@@ -479,6 +480,10 @@ crmd_ccm_msg_callback(
 	gboolean update_cache = FALSE;
 	struct crmd_ccm_data_s *event_data = NULL;
 	const oc_ev_membership_t *membership = data;
+
+	gboolean update_quorum = FALSE;
+	gboolean trigger_transition = FALSE;
+
 	crm_devel("received callback");
 
 	if(data != NULL) {
@@ -493,10 +498,10 @@ crmd_ccm_msg_callback(
 		case OC_EV_MS_NEW_MEMBERSHIP:
 		case OC_EV_MS_INVALID:
 			update_cache = TRUE;
-			if(AM_I_DC == FALSE) {
-				break;
+			update_quorum = TRUE;
+			if(AM_I_DC) {
+				trigger_transition = TRUE;
 			}
-			register_fsa_action(A_TE_CANCEL); /*cause a transition*/
 			break;
 		case OC_EV_MS_NOT_PRIMARY:
 #if UNTESTED
@@ -509,17 +514,37 @@ crmd_ccm_msg_callback(
 #endif
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
-			if(AM_I_DC == FALSE) {
-				break;
+			if(AM_I_DC) {
+				fsa_membership_copy->id = instance;
+				trigger_transition = TRUE;
 			}
-			fsa_membership_copy->id = instance;
-			register_fsa_action(A_TE_CANCEL); /*cause a transition*/
 			break;
 		case OC_EV_MS_EVICTED:
+			update_quorum = TRUE;
 			register_fsa_input(C_FSA_INTERNAL, I_STOP, NULL);
 			break;
 		default:
 			crm_err("Unknown CCM event: %d", event);
+	}
+
+	if(update_quorum && ccm_have_quorum(event) == FALSE) {
+		/* did we just loose quorum? */
+		if(fsa_have_quorum
+		   && (fsa_state == S_POLICY_ENGINE
+		       || fsa_state == S_TRANSITION_ENGINE
+		       || fsa_state == S_IDLE)) {
+			crm_info("Quorum lost: triggering transition (%s)",
+				 ccm_event_name(event));
+			trigger_transition = TRUE;
+		}
+		fsa_have_quorum = FALSE;
+			
+	} else if(update_quorum)  {
+		fsa_have_quorum = TRUE;
+	}
+
+	if(trigger_transition) {
+		register_fsa_action(A_TE_CANCEL);
 	}
 
 	if(update_cache) {
