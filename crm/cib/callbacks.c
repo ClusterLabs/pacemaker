@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.47 2005/05/09 15:03:17 andrew Exp $ */
+/* $Id: callbacks.c,v 1.48 2005/05/10 07:16:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,6 +49,7 @@ void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_str_clfree(gpointer key, gpointer value, gpointer user_data);
 gboolean can_write(int flags);
 HA_Message *cib_msg_copy(const HA_Message *msg, gboolean with_data);
+gboolean ccm_manual_check(gpointer data);
 
 
 GHashTable *peer_hash = NULL;
@@ -1184,6 +1185,25 @@ cib_client_status_callback(const char * node, const char * client,
 	return;
 }
 
+extern oc_ev_t *cib_ev_token;
+
+gboolean
+ccm_manual_check(gpointer data)
+{
+	int rc = 0;
+	oc_ev_t *ccm_token = cib_ev_token;
+	
+	crm_debug("manual check");	
+	rc = oc_ev_handle_event(ccm_token);
+	if(0 == rc) {
+		return TRUE;
+
+	} else {
+		crm_err("CCM connection appears to have failed: rc=%d.", rc);
+		return FALSE;
+	}
+}
+
 gboolean cib_ccm_dispatch(int fd, gpointer user_data)
 {
 	int rc = 0;
@@ -1203,43 +1223,78 @@ void
 cib_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
-	unsigned lpc = 0;
-	int offset = 0;
+	int instance = -1;
+	gboolean update_id = FALSE;
+	gboolean update_quorum = FALSE;
+	
 	const oc_ev_membership_t *membership = data;
-	crm_verbose("received callback");	
 
-	if(ccm_transition_id != NULL) {
-		crm_free(ccm_transition_id);
-		ccm_transition_id = NULL;
+	if(membership != NULL) {
+		instance = membership->m_instance;
 	}
-	
-	cib_have_quorum = ccm_have_quorum(event);
-	ccm_transition_id = crm_itoa(membership->m_instance);
-	set_xml_property_copy(
-		the_cib, XML_ATTR_CCM_TRANSITION, ccm_transition_id);
-	
-	crm_info("Quorum %s after event=%s (id=%s/%d)", 
+
+	crm_info("Quorum %s after event=%s (id=%d)", 
 		 cib_have_quorum?"(re)attained":"lost",
-		 ccm_event_name(event), ccm_transition_id,
-		 membership->m_instance);
+		 ccm_event_name(event), instance);
 
-	if(data == NULL) {
-		return;
+	switch(event) {
+		case OC_EV_MS_NEW_MEMBERSHIP:
+		case OC_EV_MS_INVALID:
+			update_id = TRUE;
+			update_quorum = TRUE;
+			break;
+		case OC_EV_MS_PRIMARY_RESTORED:
+			update_id = TRUE;
+			break;
+		case OC_EV_MS_NOT_PRIMARY:
+			crm_debug("Ignoring transitional CCM event: %s",
+				  ccm_event_name(event));
+			break;
+		case OC_EV_MS_EVICTED:
+			crm_err("Evicted from CCM: %s", ccm_event_name(event));
+			update_quorum = TRUE;
+			break;
+		default:
+			crm_err("Unknown CCM event: %d", event);
 	}
 	
-	if(ccm_membership != NULL) {
-		g_hash_table_foreach_remove(
-			ccm_membership, ghash_str_clfree, NULL);
-	}
-	ccm_membership = g_hash_table_new(g_str_hash, g_str_equal);
-
-	offset = membership->m_memb_idx;
+	if(update_id) {
+		CRM_DEV_ASSERT(membership != NULL);
+		if(crm_assert_failed) { return; }
 	
-	for(lpc = 0; lpc < membership->m_n_member; lpc++) {
-		oc_node_t a_node = membership->m_array[lpc+offset];
-		char *uname = crm_strdup(a_node.node_uname);
-		crm_devel("Copying ccm member node %d:%s", lpc, uname);
-		g_hash_table_insert(ccm_membership, uname, uname);	
+		if(ccm_transition_id != NULL) {
+			crm_free(ccm_transition_id);
+			ccm_transition_id = NULL;
+		}
+		ccm_transition_id = crm_itoa(instance);
+		set_xml_property_copy(
+			the_cib, XML_ATTR_CCM_TRANSITION, ccm_transition_id);
+	}
+	
+	if(update_quorum) {
+		int members = 0;
+		int offset = 0;
+		unsigned lpc = 0;
+
+		cib_have_quorum = ccm_have_quorum(event);
+		
+		if(ccm_membership != NULL) {
+			g_hash_table_foreach_remove(
+				ccm_membership, ghash_str_clfree, NULL);
+		}
+		ccm_membership = g_hash_table_new(g_str_hash, g_str_equal);
+
+		if(membership != NULL) {
+			members = membership->m_n_member;
+			offset = membership->m_memb_idx;
+		}
+		
+		for(lpc = 0; lpc < members; lpc++) {
+			oc_node_t a_node = membership->m_array[lpc+offset];
+			char *uname = crm_strdup(a_node.node_uname);
+			g_hash_table_insert(
+				ccm_membership, uname, uname);	
+		}
 	}
 	
 	oc_ev_callback_done(cookie);

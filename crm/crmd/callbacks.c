@@ -475,48 +475,74 @@ void
 crmd_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
+	int instance = -1;
+	gboolean update_cache = FALSE;
 	struct crmd_ccm_data_s *event_data = NULL;
+	const oc_ev_membership_t *membership = data;
 	crm_devel("received callback");
-	
+
 	if(data != NULL) {
+		instance = membership->m_instance;
+	}
+	
+	crm_info("Quorum %s after event=%s (id=%d)", 
+		 ccm_have_quorum(event)?"(re)attained":"lost",
+		 ccm_event_name(event), instance);
+	
+	switch(event) {
+		case OC_EV_MS_NEW_MEMBERSHIP:
+		case OC_EV_MS_INVALID:
+			update_cache = TRUE;
+			break;
+		case OC_EV_MS_NOT_PRIMARY:
+			if(AM_I_DC == FALSE) {
+				break;
+			}
+			register_fsa_input_adv(
+				C_FSA_INTERNAL, I_NULL, NULL,
+				A_TE_CANCEL, TRUE, __FUNCTION__);
+			break;
+		case OC_EV_MS_PRIMARY_RESTORED:
+			if(AM_I_DC == FALSE) {
+				break;
+			}
+			fsa_membership_copy->id = instance;
+			register_fsa_input(
+				C_FSA_INTERNAL, I_PE_CALC, NULL);
+			break;
+		case OC_EV_MS_EVICTED:
+			register_fsa_input(
+				C_FSA_INTERNAL, I_TERMINATE, NULL);
+			break;
+		default:
+			crm_err("Unknown CCM event: %d", event);
+	}
+
+	if(update_cache) {
 		crm_malloc0(event_data, sizeof(struct crmd_ccm_data_s));
-
-		crm_info("Quorum %s after event=%s (id=%d)", 
-			 ccm_have_quorum(event)?"(re)attained":"lost",
-			 ccm_event_name(event),
-			 ((const oc_ev_membership_t *)data)->m_instance);
-
 		if(event_data != NULL) {
 			event_data->event = event;
-			/* Event_data could be a local variable if we
-			 * did the copying here.
-			 *
-			 * The reason why we can't without that change
-			 * is because of the 'const' attribute of 'data'.
-			 * FIXME??
-			 */
-			event_data->oc = copy_ccm_oc_data(
-				(const oc_ev_membership_t *)data);
-
+			if(data != NULL) {
+				event_data->oc = copy_ccm_oc_data(
+					(const oc_ev_membership_t *)data);
+			}
 			crm_devel("Sending callback to the FSA");
 			register_fsa_input(
 				C_CCM_CALLBACK, I_CCM_EVENT,
 				(void*)event_data);
-
+			
 			if (event_data->oc) {
 				crm_free(event_data->oc);
 				event_data->oc = NULL;
 			}
 			crm_free(event_data);
 		}
-
 	} else {
-		crm_info("CCM Callback with NULL data... "
-		       "I dont /think/ this is bad");
+		crm_debug("No futher action for transitional CCM event: %s",
+			  ccm_event_name(event));
 	}
 	
 	oc_ev_callback_done(cookie);
-	
 	return;
 }
 
