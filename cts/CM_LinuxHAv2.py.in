@@ -275,7 +275,7 @@ class LinuxHAv2(HeartbeatCM):
             match=localBadNews.look()
             while match:
                 if not re.search("CTS:", match):
-                    self.log(match)
+                    self.log("(startup) BadNews"+ match)
                     self.Env.RandomTests.incr("BadNews")
                 match=localBadNews.look()
             return 1
