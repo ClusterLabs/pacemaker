@@ -52,45 +52,39 @@ sub make_inputs_dot
 	size = "30,30"
 	graph [
 		fontsize = "12"
-		fontname = "Times-Roman"
 		fontcolor = "black"
 		bb = "0,0,398.922306,478.927856"
 		color = "black"
 	]
 	node [
 		fontsize = "12"
-		fontname = "Times-Roman"
 		fontcolor = "black"
 		shape = "ellipse"
 		color = "black"
 	]
 	edge [
 		fontsize = "12"
-		fontname = "Times-Roman"
 		fontcolor = "black"
 		color = "black"
 	]
 // special nodes
-	"S_PENDING" 
-	[
-	 color = "blue"
-	 fontcolor = "blue"
-	 ]
-	"S_TERMINATE" 
-	[
-	 color = "red"
-	 fontcolor = "red"
-	 ]
+	"Any State" [ fontcolor="white" fillcolor="black" style="filled" ]
+	"S_PENDING" [ color = "blue" fontcolor = "blue" ]
+	"S_TERMINATE" [ color = "red" fillcolor = "red" style="filled" ]
+	"S_STOPPING" [ color = "red" fillcolor = "red" style="filled" ]
+	"S_RECOVERY" [ color = "orange" fillcolor = "orange" style="filled" ]
+	"S_HALT" [ color = "#eeee55" fillcolor = "#eeee55" style="filled" ]
+	"S_ELECTION" [ color = "purple" fillcolor = "purple" style="filled" ]
+	"S_RELEASE_DC" [ color = "grey" fillcolor = "grey" style="filled" ]
 
 // DC only nodes
-	"S_RECOVERY_DC" [ fontcolor = "green" ]
-	"S_INTEGRATION" [ fontcolor = "green" ]
-	"S_POLICY_ENGINE" [ fontcolor = "green" ]
-	"S_TRANSITION_ENGINE" [ fontcolor = "green" ]
-	"S_RELEASE_DC" [ fontcolor = "green" ]
-//	"S_<ANY_DC>" [ fontcolor = "green" ]
-	"S_IDLE" [ fontcolor = "green" ]
+	"S_INTEGRATION" [ fillcolor = "#33dd33" style="filled" ]
+	"S_FINALIZE_JOIN" [ fillcolor = "#33dd33" style="filled" ]
+	"S_POLICY_ENGINE" [ color = "royalblue" fillcolor = "royalblue" style="filled" ]
+	"S_TRANSITION_ENGINE" [ fillcolor = "#33dd33" style="filled" ]
+	"S_IDLE" [ fillcolor = "#33dd33" style="filled" ]
 ';
+
     
     $outro = '}
 ';
@@ -155,10 +149,19 @@ sub make_inputs_dot
 			$self_links = $self_links+1;
 		    }
 
-		    if( exists($HoH{$state1}) )
+		    if( $input eq "I_TERMINATE" ) 
+		    {
+		    } 
+		    elsif( $input eq "I_STOP" )
+		    {
+		    } 
+		    elsif( $input eq "I_RELEASE_FAIL" )
+		    {
+		    } 
+		    elsif( exists($HoH{$state1}) )
 		    {
 			$rec = $HoH{$state1};
-			
+
 			if( $HoH{$state1}{$state2} ne "" )
 			{
 			    $oldval = $HoH{$state1}{$state2};
@@ -184,26 +187,35 @@ sub make_inputs_dot
 
 
 # print the whole thing  somewhat sorted
-    foreach $family ( sort keys %HoH ) {
-#     print "$family: { ";
-	for $role ( sort keys %{ $HoH{$family} } ) {
+    foreach $state_from ( sort keys %HoH ) {
+#     print "$state_from: { ";
+	for $state_to ( sort keys %{ $HoH{$state_from} } ) {
 	    
 	    $color="black";
-	    $color="red"    if $role =~ /STOPPING/;
-	    $color="blue"    if $role =~ /PENDING/;
-	    $color="purple"  if $role =~ /ELECTION/;
-	    $color="royalblue"   if $role =~ /POLICY/;
-	    $color="orange" if $role =~ /RECOVERY/;
-	    $color="gray" if $role =~ /RELEASE/;
+	    $color="red"       if $state_to =~ /STOPPING/;
+	    $color="red"       if $state_to =~ /TERMINATE/;
+	    $color="orange"    if $state_to =~ /RECOVERY/;
+	    $color="#eeee55"    if $state_to =~ /HALT/;
+	    $color="blue"      if $state_to =~ /PENDING/;
+	    $color="purple"    if $state_to =~ /ELECTION/;
+	    $color="royalblue" if $state_to =~ /POLICY/;
+	    $color="gray"      if $state_to =~ /RELEASE/;
 
-	    print DOT_FD "\"".$family."\" -> \"".$role."\" [ color=\"$color\" fontcolor=\"$color\" label = \"$HoH{$family}{$role}\" ]\n";    
 
-#	    print DOT_FD "\"".$family."\" -> \"".$role."\" [ label = \"$HoH{$family}{$role}\" ]\n";    
-#         print "$role=$HoH{$family}{$role} ";
+	    print DOT_FD "\"".$state_from."\" -> \"".$state_to."\" [ color=\"$color\" fontcolor=\"$color\" label = \"$HoH{$state_from}{$state_to}\" ]\n";    
+
+#	    print DOT_FD "\"".$state_from."\" -> \"".$state_to."\" [ label = \"$HoH{$state_from}{$state_to}\" ]\n";    
+#         print "$state_to=$HoH{$state_from}{$state_to} ";
 	}
 #     print "}\n";
     }
+
+    $color="red";
+    print DOT_FD "\"Any State\" -> \"S_STOPPING\" [ color=\"$color\" fontcolor=\"$color\" label = \"I_STOP\" ]\n";    
+    print DOT_FD "\"Any State\" -> \"S_STOPPING\" [ color=\"$color\" fontcolor=\"$color\" label = \"I_RELEASE_FAIL\" ]\n";    
+    print DOT_FD "\"Any State\" -> \"S_TERMINATE\" [ color=\"$color\" fontcolor=\"$color\" label = \"I_TERMINATE\" ]\n";    
     
+
     print DOT_FD $outro;
 
     close(DOT_FD);
@@ -411,11 +423,13 @@ sub make_actions_dot
 
 # aid readability
 	    $color="black";
-	    $color="red"    if $role =~ /ERROR/;
-	    $color="green"  if $role =~ /ELECTION/;
+	    $color="red"    if $role =~ /TERMINATE/;
+	    $color="red"    if $role =~ /STOP/;
+	    $color="orange" if $role =~ /ERROR/;
+	    $color="orange" if $role =~ /FAIL/;
+	    $color="#33dd33"  if $role =~ /ELECTION/;
 	    $color="blue"   if $role =~ /RESTART/;
 	    $color="cyan"   if $role =~ /TIMEOUT/;
-	    $color="orange" if $role =~ /FAIL/;
 	    $color="gray" if $role =~ /UPDATE/;
 
 	    print DOT_FD "\"".$family."\" -> \"".$role."\" [ color=\"$color\" fontcolor=\"$color\" label = \"$HoH{$family}{$role}\" ]\n";    
@@ -444,11 +458,13 @@ sub make_actions_dot
 
 # aid readability
 	    $color="black";
-	    $color="red"    if $role =~ /ERROR/;
-	    $color="green"  if $role =~ /ELECTION/;
+	    $color="red"    if $role =~ /TERMINATE/;
+	    $color="red"    if $role =~ /STOP/;
+	    $color="orange" if $role =~ /ERROR/;
+	    $color="orange" if $role =~ /FAIL/;
+	    $color="#33dd33"  if $role =~ /ELECTION/;
 	    $color="blue"   if $role =~ /RESTART/;
 	    $color="cyan"   if $role =~ /TIMEOUT/;
-	    $color="orange" if $role =~ /FAIL/;
 	    $color="gray" if $role =~ /UPDATE/;
 
 	    print DOT_FD "\"".$family."\" -> \"".$role."\" [ color=\"$color\" fontcolor=\"$color\" label = \"$HoH2{$family}{$role}\" ]\n";    
