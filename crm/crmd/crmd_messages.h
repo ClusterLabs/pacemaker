@@ -46,6 +46,10 @@ extern void fsa_dump_queue(int log_level);
 
 #define register_fsa_input(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
 
+#define register_fsa_action(action) register_fsa_input_adv(C_FSA_INTERNAL, I_NULL, NULL, action, FALSE, __FUNCTION__)
+
+#define register_fsa_action_later(action) register_fsa_input_adv(C_FSA_INTERNAL, I_NULL, NULL, action, TRUE, __FUNCTION__)
+
 #define register_fsa_input_before(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
 
 #define register_fsa_input_later(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, TRUE, __FUNCTION__)
