@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.48 2005/05/10 07:16:10 andrew Exp $ */
+/* $Id: callbacks.c,v 1.49 2005/05/10 15:54:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1233,8 +1233,7 @@ cib_ccm_msg_callback(
 		instance = membership->m_instance;
 	}
 
-	crm_info("Quorum %s after event=%s (id=%d)", 
-		 cib_have_quorum?"(re)attained":"lost",
+	crm_info("Process CCM event=%s (id=%d)", 
 		 ccm_event_name(event), instance);
 
 	switch(event) {
@@ -1269,6 +1268,7 @@ cib_ccm_msg_callback(
 		ccm_transition_id = crm_itoa(instance);
 		set_xml_property_copy(
 			the_cib, XML_ATTR_CCM_TRANSITION, ccm_transition_id);
+
 	}
 	
 	if(update_quorum) {
@@ -1277,6 +1277,10 @@ cib_ccm_msg_callback(
 		unsigned lpc = 0;
 
 		cib_have_quorum = ccm_have_quorum(event);
+
+		crm_info("Quorum %s after event=%s (id=%d)", 
+			 cib_have_quorum?"(re)attained":"lost",
+			 ccm_event_name(event), instance);
 		
 		if(ccm_membership != NULL) {
 			g_hash_table_foreach_remove(
