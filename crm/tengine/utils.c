@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.26 2005/04/25 13:01:44 andrew Exp $ */
+/* $Id: utils.c,v 1.27 2005/05/10 13:20:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,19 +45,13 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 	 */
 	remove_cib_op_callback(-1, TRUE);
 	
-	if(reason == te_done) {
-		op = CRM_OP_TECOMPLETE;
-		if(in_transition == FALSE) {
-			crm_warn("Not in transition, not sending message");
-			return;
-		}
+	if(reason == te_done && in_transition == FALSE) {
+		crm_warn("Not in transition, not sending message");
+		return;
 
-	} else if(reason == te_timeout) {
-		op = CRM_OP_TETIMEOUT;
-		if(in_transition == FALSE) {
-			crm_err("Not in transition, not sending message");
-			return;
-		}
+	} else if(reason == te_timeout && in_transition == FALSE) {
+		crm_err("Not in transition, not sending message");
+		return;
 	}
 
 	switch(reason) {
@@ -82,15 +76,28 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 			}
 			print_state(LOG_DEBUG);
 			break;
+		case te_halt:
+			crm_info("Transition status: Stopped%s%s",
+				 text?": ":"", text?text:"");
+			print_state(LOG_DEBUG);
+			op = CRM_OP_TECOMPLETE;
+			break;
+		case te_abort:
+			crm_info("Transition status: Stopped%s%s",
+				 text?": ":"", text?text:"");
+			print_state(LOG_DEBUG);
+			break;
 		case te_done:
 			crm_info("Transition status: Complete%s%s",
 				 text?": ":"", text?text:"");
 			print_state(LOG_DEBUG);
+			op = CRM_OP_TECOMPLETE;
 			break;
 		case te_timeout:
 			crm_err("Transition status: Timed out after %dms",
 				transition_timer->timeout);
 			print_state(LOG_WARNING);
+			op = CRM_OP_TETIMEOUT;
 			break;
 		case te_failed:
 			crm_err("Transition status: Aborted by failed action: %s",

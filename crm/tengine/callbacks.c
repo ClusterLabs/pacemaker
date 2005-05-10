@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.24 2005/04/21 15:44:42 andrew Exp $ */
+/* $Id: callbacks.c,v 1.25 2005/05/10 13:20:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -156,9 +156,14 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 			       " transition compelte.");
 		}
 		crm_trace("Processing complete...");
-		
+
+	} else if(strcmp(op, CRM_OP_TE_HALT) == 0) {
+		initialize_graph();
+		send_complete(CRM_OP_TE_HALT, NULL, te_halt);
+
 	} else if(strcmp(op, CRM_OP_TEABORT) == 0) {
 		initialize_graph();
+		send_complete(CRM_OP_TEABORT, NULL, te_abort);
 
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		crm_info("Received quit message, terminating");

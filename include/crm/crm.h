@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.57 2005/05/06 16:01:05 gshi Exp $ */
+/* $Id: crm.h,v 1.58 2005/05/10 13:20:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -136,9 +136,10 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_SHUTDOWN 	"do_shutdown"
 #define CRM_OP_EVENTCC		"event_cc"
 #define CRM_OP_TEABORT		"te_abort"
-#define CRM_OP_TRANSITION	"transition"
+#define CRM_OP_TE_HALT		"te_halt"
 #define CRM_OP_TECOMPLETE	"te_complete"
 #define CRM_OP_TETIMEOUT	"te_timeout"
+#define CRM_OP_TRANSITION	"transition"
 #define CRM_OP_REGISTER		"register"
 #define CRM_OP_DEBUG_UP		"debug_inc"
 #define CRM_OP_DEBUG_DOWN	"debug_dec"
