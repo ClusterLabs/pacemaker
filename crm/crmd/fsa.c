@@ -635,6 +635,7 @@ do_state_transition(long long actions,
 		case S_STOPPING:
 		case S_TERMINATE:
 			/* possibly redundant */
+			crm_timer_stop(shutdown_timer);
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
 			break;
 			
