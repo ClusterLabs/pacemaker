@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.51 2005/05/10 16:04:09 andrew Exp $ */
+/* $Id: callbacks.c,v 1.52 2005/05/10 16:05:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,6 +61,7 @@ GHashTable *client_list    = NULL;
 GHashTable *ccm_membership = NULL;
 extern const char *cib_our_uname;
 extern ll_cluster_t *hb_conn;
+extern int set_connected_peers(crm_data_t *xml_obj);
 
 /* technically bump does modify the cib...
  * but we want to split the "bump" from the "sync"
