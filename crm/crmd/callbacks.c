@@ -113,7 +113,9 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 		}
 		do_crm_log(level, __FILE__, __FUNCTION__, 
 			   "Ignoring HA message (op=%s) from %s: not in our"
-			   " membership list", op, from);
+			   " membership list (size=%d)", op, from,
+			   g_hash_table_size(fsa_membership_copy->members));
+		
 		crm_log_message_adv(LOG_MSG, "HA[inbound]: CCM Discard", msg);
 
 	} else if(AM_I_DC
