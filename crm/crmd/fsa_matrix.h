@@ -421,7 +421,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_HALT		==> */	S_RELEASE_DC,
 	},
 
-/* Got an I_TERMINATE */
+/* Got an I_STOP */
 	{
 		/* S_IDLE		==> */	S_STOPPING,
 		/* S_ELECTION		==> */	S_STOPPING,
@@ -439,7 +439,7 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 		/* S_HALT		==> */	S_STOPPING,
 	},
 
-/* Got an I_EXIT */
+/* Got an I_TERMINATE */
 	{
 		/* S_IDLE		==> */	S_TERMINATE,
 		/* S_ELECTION		==> */	S_TERMINATE,
@@ -531,19 +531,19 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 
 /* Got an I_JOIN_RESULT */
 	{
-		/* S_IDLE		==> */	S_IDLE,
+		/* S_IDLE		==> */	S_INTEGRATION,
 		/* S_ELECTION		==> */	S_ELECTION,
 		/* S_INTEGRATION	==> */	S_INTEGRATION,
 		/* S_FINALIZE_JOIN	==> */	S_FINALIZE_JOIN,
 		/* S_NOT_DC		==> */	S_PENDING,
-		/* S_POLICY_ENGINE	==> */	S_POLICY_ENGINE,
+		/* S_POLICY_ENGINE	==> */	S_INTEGRATION,
 		/* S_RECOVERY		==> */	S_RECOVERY,
 		/* S_RELEASE_DC		==> */	S_RELEASE_DC,
 		/* S_STARTING		==> */	S_RECOVERY,
 		/* S_PENDING		==> */	S_PENDING,
 		/* S_STOPPING		==> */	S_STOPPING,
 		/* S_TERMINATE		==> */	S_TERMINATE,
-		/* S_TRANSITION_ENGINE	==> */	S_POLICY_ENGINE,
+		/* S_TRANSITION_ENGINE	==> */	S_INTEGRATION,
 		/* S_HALT		==> */	S_HALT,
 	},	
 
@@ -760,19 +760,19 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 /* Got an I_PE_CALC */
 	{
 		/* S_IDLE		==> */	A_PE_INVOKE,
-		/* S_ELECTION		==> */	A_WARN,
-		/* S_INTEGRATION	==> */	A_WARN,
-		/* S_FINALIZE_JOIN	==> */	A_WARN,
+		/* S_ELECTION		==> */	A_NOTHING,
+		/* S_INTEGRATION	==> */	A_NOTHING,
+		/* S_FINALIZE_JOIN	==> */	A_NOTHING,
 		/* S_NOT_DC		==> */	A_ERROR,
 		/* S_POLICY_ENGINE	==> */	A_PE_INVOKE,
-		/* S_RECOVERY		==> */	A_WARN,
-		/* S_RELEASE_DC		==> */	A_WARN,
+		/* S_RECOVERY		==> */	A_NOTHING,
+		/* S_RELEASE_DC		==> */	A_NOTHING,
 		/* S_STARTING		==> */	A_ERROR,
 		/* S_PENDING		==> */	A_ERROR,
-		/* S_STOPPING		==> */	A_WARN,
-		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	A_PE_INVOKE|A_TE_CANCEL,
-		/* S_HALT		==> */	A_WARN,
+		/* S_STOPPING		==> */	A_ERROR,
+		/* S_TERMINATE		==> */	A_ERROR,
+		/* S_TRANSITION_ENGINE	==> */	A_PE_INVOKE,
+		/* S_HALT		==> */	A_ERROR,
 	},
 	
 /* Got an I_RELEASE_DC */
@@ -836,7 +836,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_INTEGRATION	==> */	A_WARN|A_DC_JOIN_OFFER_ALL,
 		/* S_FINALIZE_JOIN	==> */	A_WARN|A_DC_JOIN_OFFER_ALL,
 		/* S_NOT_DC		==> */	A_WARN,
-		/* S_POLICY_ENGINE	==> */	A_WARN|A_DC_JOIN_OFFER_ALL|A_PE_INVOKE,
+		/* S_POLICY_ENGINE	==> */	A_WARN|A_DC_JOIN_OFFER_ALL|A_TE_CANCEL,
 		/* S_RECOVERY		==> */	A_WARN|O_RELEASE,
 		/* S_RELEASE_DC		==> */	A_WARN,
 		/* S_STARTING		==> */	A_WARN,
@@ -870,7 +870,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_IDLE		==> */	A_NOTHING,
 		/* S_ELECTION		==> */	A_WARN,
 		/* S_INTEGRATION	==> */	A_WARN,
-		/* S_FINALIZE_JOIN	==> */	A_PE_INVOKE,
+		/* S_FINALIZE_JOIN	==> */	A_TE_CANCEL,
 		/* S_NOT_DC		==> */	A_WARN,
 		/* S_POLICY_ENGINE	==> */	A_NOTHING,
 		/* S_RECOVERY		==> */	A_WARN,
@@ -1045,7 +1045,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_HALT		==> */	O_RELEASE|A_SHUTDOWN_REQ|A_WARN,
 	},
 
-/* Got an I_TERMINATE */
+/* Got an I_STOP */
 	{
 		/* S_IDLE		==> */	A_ERROR|A_SHUTDOWN|O_RELEASE,
 		/* S_ELECTION		==> */	A_SHUTDOWN|O_RELEASE,
@@ -1063,7 +1063,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_HALT		==> */	A_SHUTDOWN|O_RELEASE|A_WARN,
 	},
 
-/* Got an I_EXIT */
+/* Got an I_TERMINATE */
 	{
 		/* S_IDLE		==> */	A_ERROR|A_SHUTDOWN|O_EXIT,
 		/* S_ELECTION		==> */	A_ERROR|A_SHUTDOWN|O_EXIT,
@@ -1155,19 +1155,19 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_JOIN_RESULT */
 	{
-		/* S_IDLE		==> */	A_LOG,
+		/* S_IDLE		==> */	A_ERROR|A_TE_CANCEL|A_DC_JOIN_OFFER_ALL,
 		/* S_ELECTION		==> */	A_LOG,
 		/* S_INTEGRATION	==> */	A_LOG,
 		/* S_FINALIZE_JOIN	==> */	A_CL_JOIN_RESULT|A_DC_JOIN_PROCESS_ACK,
 		/* S_NOT_DC		==> */	A_LOG|O_DC_TICKLE,
-		/* S_POLICY_ENGINE	==> */	A_WARN|A_DC_JOIN_PROCESS_ACK|A_PE_INVOKE,
+		/* S_POLICY_ENGINE	==> */	A_ERROR|A_TE_CANCEL|A_DC_JOIN_OFFER_ALL,
 		/* S_RECOVERY		==> */	A_LOG,
 		/* S_RELEASE_DC		==> */	A_LOG,
-		/* S_STARTING		==> */	A_WARN,
+		/* S_STARTING		==> */	A_ERROR,
 		/* S_PENDING		==> */	A_CL_JOIN_RESULT|O_DC_TICKLE,
-		/* S_STOPPING		==> */	A_LOG,
-		/* S_TERMINATE		==> */	A_LOG,
-		/* S_TRANSITION_ENGINE	==> */	A_WARN|A_DC_JOIN_PROCESS_ACK|A_PE_INVOKE,
+		/* S_STOPPING		==> */	A_ERROR,
+		/* S_TERMINATE		==> */	A_ERROR,
+		/* S_TRANSITION_ENGINE	==> */	A_ERROR|A_TE_CANCEL|A_DC_JOIN_OFFER_ALL,
 		/* S_HALT		==> */	A_WARN,
 	},
 	

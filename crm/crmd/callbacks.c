@@ -493,22 +493,30 @@ crmd_ccm_msg_callback(
 		case OC_EV_MS_NEW_MEMBERSHIP:
 		case OC_EV_MS_INVALID:
 			update_cache = TRUE;
-			break;
-		case OC_EV_MS_NOT_PRIMARY:
 			if(AM_I_DC == FALSE) {
 				break;
 			}
-			register_fsa_action(A_TE_CANCEL);
+			register_fsa_action(A_TE_CANCEL); /*cause a transition*/
+			break;
+		case OC_EV_MS_NOT_PRIMARY:
+#if UNTESTED
+			if(AM_I_DC == FALSE) {
+				break;
+			}
+			/* tell the TE to pretend it completed and stop */
+			/* side effect: we'll end up in S_IDLE */
+			register_fsa_action(A_TE_HALT);
+#endif
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
 			if(AM_I_DC == FALSE) {
 				break;
 			}
 			fsa_membership_copy->id = instance;
-			register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+			register_fsa_action(A_TE_CANCEL); /*cause a transition*/
 			break;
 		case OC_EV_MS_EVICTED:
-			register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
+			register_fsa_input(C_FSA_INTERNAL, I_STOP, NULL);
 			break;
 		default:
 			crm_err("Unknown CCM event: %d", event);
@@ -524,8 +532,7 @@ crmd_ccm_msg_callback(
 			}
 			crm_devel("Sending callback to the FSA");
 			register_fsa_input(
-				C_CCM_CALLBACK, I_CCM_EVENT,
-				(void*)event_data);
+				C_CCM_CALLBACK, I_CCM_EVENT, event_data);
 			
 			if (event_data->oc) {
 				crm_free(event_data->oc);

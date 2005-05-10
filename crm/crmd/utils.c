@@ -324,8 +324,8 @@ fsa_input2string(enum crmd_fsa_input input)
 		case I_TE_SUCCESS:
 			inputAsText = "I_TE_SUCCESS";
 			break;
-		case I_TERMINATE:
-			inputAsText = "I_TERMINATE";
+		case I_STOP:
+			inputAsText = "I_STOP";
 			break;
 		case I_DC_HEARTBEAT:
 			inputAsText = "I_DC_HEARTBEAT";
@@ -342,8 +342,8 @@ fsa_input2string(enum crmd_fsa_input input)
 		case I_HALT:
 			inputAsText = "I_HALT";
 			break;
-		case I_EXIT:
-			inputAsText = "I_EXIT";
+		case I_TERMINATE:
+			inputAsText = "I_TERMINATE";
 			break;
 		case I_ILLEGAL:
 			inputAsText = "I_ILLEGAL";

@@ -851,7 +851,7 @@ handle_request(ha_msg_input_t *stored_msg)
 				crm_log_message(LOG_WARNING, stored_msg->msg);
 				
 			} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
-				next_input = I_TERMINATE;
+				next_input = I_STOP;
 				
 			} else {
 				crm_err("CRMd didnt expect request: %s", op);
@@ -913,13 +913,13 @@ handle_request(ha_msg_input_t *stored_msg)
 				crm_err("We didnt ask to be shut down yet our"
 					" TE is telling us too."
 					" Better get out now!");
-				next_input = I_EXIT;
+				next_input = I_TERMINATE;
 
 			} else if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				crm_err("We asked to be shut down, "
 					" are still the DC, yet another node"
 					" (DC) is askin us to shutdown!");
-				next_input = I_TERMINATE;			
+				next_input = I_STOP;			
 
 			} else if(fsa_state != S_STOPPING) {
 				crm_err("Another node is asking us to shutdown"
@@ -1033,7 +1033,7 @@ handle_shutdown_request(HA_Message *stored_msg)
 	/* will be picked up by the TE as long as its running */
 	if((fsa_state == S_POLICY_ENGINE || fsa_state == S_TRANSITION_ENGINE)
 		&& is_set(fsa_input_register, R_TE_CONNECTED) == FALSE) {
-		register_fsa_input(C_HA_MESSAGE, I_PE_CALC, NULL);
+		register_fsa_action(A_TE_CANCEL);
 	}
 
 	return I_NULL;

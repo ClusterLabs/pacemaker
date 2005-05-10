@@ -129,7 +129,7 @@ do_shutdown(long long action,
 	} else {
 		crm_err("Exiting with no LRM connection..."
 			" resources may be active!");
-		register_fsa_input(C_FSA_INTERNAL, I_EXIT, NULL);
+		register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 	}
 	
 	return next_input;
@@ -308,7 +308,7 @@ do_startup(long long action,
 	if(shutdown_escalation_timer != NULL) {
 		shutdown_escalation_timer->source_id = -1;
 		shutdown_escalation_timer->period_ms = -1;
-		shutdown_escalation_timer->fsa_input = I_TERMINATE;
+		shutdown_escalation_timer->fsa_input = I_STOP;
 		shutdown_escalation_timer->callback = crm_timer_popped;
 		shutdown_escalation_timer->repeat = FALSE;
 	} else {
@@ -487,7 +487,7 @@ do_recover(long long action,
 	crm_err("Action %s (%.16llx) not supported",
 	       fsa_action2string(action), action);
 
-	register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
+	register_fsa_input(C_FSA_INTERNAL, I_STOP, NULL);
 
 	return I_NULL;
 }
@@ -572,7 +572,7 @@ crm_shutdown(int nsig, gpointer unused)
 /* 			set_bit_inplace(fsa_input_register, R_STAYDOWN); */
 
 			/* if we ever win an election we're the last man standing */
-			election_timeout->fsa_input = I_TERMINATE;
+			election_timeout->fsa_input = I_STOP;
 
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				/* cant rely on this... */

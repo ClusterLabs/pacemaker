@@ -289,7 +289,7 @@ stop_all_resources(void)
 	set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
 	
 	if(g_hash_table_size(shutdown_ops) == 0) {
-		register_fsa_input(C_FSA_INTERNAL, I_EXIT, NULL);
+		register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
 	} else {
 		crm_info("Waiting for %d pending stop operations "
@@ -1057,7 +1057,7 @@ do_lrm_event(long long action,
 	
 	if(is_set(fsa_input_register, R_SENT_RSC_STOP)) {
 		if(g_hash_table_size(shutdown_ops) == 0) {
-			register_fsa_input(C_FSA_INTERNAL, I_EXIT, NULL);
+			register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 			
 		} else {
 			crm_debug("Still waiting for %d pending stop operations"

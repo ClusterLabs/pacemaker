@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.37 2005/05/04 22:03:15 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.38 2005/05/10 13:18:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -202,8 +202,8 @@ enum crmd_fsa_input {
 			 * right place
 			 */
 	I_SHUTDOWN,	/* We are asking to shutdown */
-	I_TERMINATE,	/* We have been told to shutdown */
-	I_EXIT,		/* Actually exit */
+	I_STOP,	/* We have been told to shutdown */
+	I_TERMINATE,		/* Actually exit */
 	I_STARTUP,
 	I_PE_SUCCESS,	/* The action completed successfully */
 
@@ -361,15 +361,16 @@ enum crmd_fsa_input {
 #define	A_TE_START		0x0000200000000000ULL
 #define	A_TE_STOP		0x0000400000000000ULL
 #define	A_TE_CANCEL		0x0000800000000000ULL
+#define	A_TE_HALT		0x0001000000000000ULL
 
 
 /* -- Policy Engine actions -- */
 	/* Calculate the next state for the cluster.  This is only
 	 * invoked once per needed calculation.
 	 */
-#define	A_PE_INVOKE		0x0001000000000000ULL
-#define	A_PE_START		0x0002000000000000ULL
-#define	A_PE_STOP		0x0004000000000000ULL
+#define	A_PE_INVOKE		0x0002000000000000ULL
+#define	A_PE_START		0x0004000000000000ULL
+#define	A_PE_STOP		0x0008000000000000ULL
 /* -- Misc actions -- */
 	/* Add a system generate "block" so that resources arent moved
 	 * to or are activly moved away from the affected node.  This

@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.74 2005/05/09 21:10:03 andrew Exp $ */
+/* $Id: ccm.c,v 1.75 2005/05/10 13:18:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -478,7 +478,7 @@ do_ccm_update_cache(long long action,
 		       || fsa_state == S_IDLE)) {
 			crm_info("Quorum lost: triggering transition (%s)",
 				 ccm_event_name(event));
-			register_fsa_input(cause, I_PE_CALC, NULL);
+			register_fsa_action(A_TE_CANCEL);
 		}
 		fsa_have_quorum = FALSE;
 

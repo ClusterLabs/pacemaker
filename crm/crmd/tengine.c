@@ -152,6 +152,14 @@ do_te_invoke(long long action,
 			CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
 		
 		send_request(cmd, NULL);
+
+	} else if(action & A_TE_HALT) {
+		cmd = create_request(
+			CRM_OP_TE_HALT, NULL, NULL,
+			CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
+		
+		send_request(cmd, NULL);
+
 	}
 
 	return ret;
