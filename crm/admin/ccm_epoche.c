@@ -1,4 +1,4 @@
-/* $Id: ccm_epoche.c,v 1.3 2005/03/04 15:59:08 alan Exp $ */
+/* $Id: ccm_epoche.c,v 1.4 2005/05/10 09:13:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -182,9 +182,7 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 			  event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
 			  event==OC_EV_MS_EVICTED?"EVICTED":
 			  "NO QUORUM MEMBERSHIP");
-		if(event == OC_EV_MS_NEW_MEMBERSHIP
-		   || event == OC_EV_MS_NOT_PRIMARY
-		   || event == OC_EV_MS_PRIMARY_RESTORED) {
+		if(ccm_have_quorum(event)) {
 			fprintf(stdout, "1\n");
 		} else {
 			fprintf(stdout, "0\n");
