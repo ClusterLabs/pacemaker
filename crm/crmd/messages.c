@@ -104,6 +104,7 @@ register_fsa_input_adv(
 	
 	if(input == I_NULL && with_actions == A_NOTHING /* && data == NULL */){
 		/* no point doing anything */
+		crm_err("Cannot add entry to queue: no input and no action");
 		return;
 		
 	} else if(data == NULL) {
@@ -212,10 +213,10 @@ register_fsa_input_adv(
 		fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
 	}
 	
-	crm_verbose("Queue len: %d -> %d", old_len,
+	crm_debug("Queue len: %d -> %d", old_len,
 		  g_list_length(fsa_message_queue));
 
-	fsa_dump_queue(LOG_DEV);
+	fsa_dump_queue(LOG_DEBUG);
 	
 	if(old_len == g_list_length(fsa_message_queue)){
 		crm_err("Couldnt add message to the queue");
@@ -1040,7 +1041,7 @@ handle_shutdown_request(HA_Message *stored_msg)
 	/* will be picked up by the TE as long as its running */
 	if(need_transition(fsa_state)
 	   && is_set(fsa_input_register, R_TE_CONNECTED) == FALSE) {
-		register_fsa_action(A_TE_CANCEL, TRUE);
+		register_fsa_action(A_TE_CANCEL);
 	}
 
 	return I_NULL;
@@ -1187,9 +1188,11 @@ msg_queue_helper(void)
 		ipc = fsa_cluster_conn->llc_ops->ipcchan(
 			fsa_cluster_conn);
 	}
+	crm_debug("Checking cluster connection");
 	if(ipc != NULL) {
-		ipc->ops->is_message_pending(ipc);
+		ipc->ops->resume_io(ipc);
 	}
+	crm_debug("Checking cluster connection complete");
 /*  	g_hash_table_foreach_remove(ipc_clients, ipc_queue_helper, NULL); */
 }
 

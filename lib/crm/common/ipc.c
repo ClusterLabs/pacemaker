@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.4 2005/04/28 08:37:06 andrew Exp $ */
+/* $Id: ipc.c,v 1.5 2005/05/11 17:40:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -283,7 +283,6 @@ wait_channel_init(char daemonsocket[])
 longclock_t ipc_call_start = 0;
 longclock_t ipc_call_stop = 0;
 longclock_t ipc_call_diff = 0;
-int ipc_call_diff_ms = 0;
 
 gboolean
 subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
@@ -349,9 +348,10 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 					 " by mistake", sys_to);
 			}
 			if(ipc_call_diff_max_ms > 0) {
+				unsigned int ipc_call_diff_ms = 0;
 				ipc_call_stop = time_longclock();
 				ipc_call_diff = sub_longclock(
-					ipc_call_start, ipc_call_stop);
+					ipc_call_stop, ipc_call_start);
 				ipc_call_diff_ms = longclockto_ms(
 					ipc_call_diff);
 				if(ipc_call_diff_ms > ipc_call_diff_max_ms) {

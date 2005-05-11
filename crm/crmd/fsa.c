@@ -70,7 +70,7 @@ void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
 longclock_t action_start = 0;
 longclock_t action_stop = 0;
 longclock_t action_diff = 0;
-int action_diff_ms = 0;
+unsigned int action_diff_ms = 0;
 
 #define IF_FSA_ACTION(x,y)						\
    if(is_set(fsa_actions,x)) {						\
@@ -84,7 +84,7 @@ int action_diff_ms = 0;
 	   next_input = y(x, cause, fsa_state, last_input, fsa_data);	\
 	   if(action_diff_max_ms > 0) {					\
 		   action_stop = time_longclock();			\
-		   action_diff = sub_longclock(action_start, action_stop); \
+		   action_diff = sub_longclock(action_stop, action_start); \
 		   action_diff_ms = longclockto_ms(action_diff);	\
 		   if(action_diff_ms > action_diff_max_ms) {		\
 			   crm_err("Action %s took %dms to complete",	\
@@ -196,7 +196,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	 *
 	 */
 	do_fsa_stall = FALSE;
-	while(next_input != I_NULL || fsa_actions != A_NOTHING || is_message()) {
+	while(next_input != I_NULL || fsa_actions != A_NOTHING || is_message()){
 
  		msg_queue_helper();
 
@@ -216,6 +216,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
 			next_input = I_NULL;
 			stored_msg = get_message();
+			crm_debug("Processing queued input %d", stored_msg->id);
 			
 			if(stored_msg == NULL) {
 				crm_crit("Invalid stored message");
@@ -259,11 +260,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 			fsa_dump_actions(fsa_data->actions, "\tadded back");
 
 			do_dot_log(DOT_PREFIX"\t// FSA input: State=%s \tCause=%s"
-				" \tInput=%s \tOrigin=%s()",
+				" \tInput=%s \tOrigin=%s() \tid=%d",
 				fsa_state2string(fsa_state),
 				fsa_cause2string(fsa_data->fsa_cause),
 				fsa_input2string(fsa_data->fsa_input),
-				fsa_data->origin);
+				   fsa_data->origin, fsa_data->id);
 			
 		} else if(fsa_data == NULL) {
 			crm_malloc0(fsa_data, sizeof(fsa_data_t));
@@ -479,6 +480,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		  fsa_state2string(fsa_state), do_fsa_stall?": paused":"",
 		  asctime(localtime(&now)));
 
+	crm_debug("Exiting the FSA: is_message=%s, queue=%d, fsa_data=%p,"
+		  " fsa_actions=0x%llx, next_input=%s, stalled=%s",
+		  is_message()?"true":"false", g_list_length(fsa_message_queue),
+		  fsa_data, fsa_actions, fsa_input2string(next_input),
+		  do_fsa_stall?"true":"false");
+	
 	/* cleanup inputs? */
 	delete_fsa_input(fsa_data);
 	if(register_copy != fsa_input_register) {

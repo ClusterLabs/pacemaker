@@ -555,20 +555,21 @@ crmd_ccm_msg_callback(
 		if(data != NULL) {
 			event_data->oc = copy_ccm_oc_data(data);
 		}
-		register_fsa_input_later(
-			C_CCM_CALLBACK, I_CCM_EVENT, event_data);
+		register_fsa_input_adv(
+			C_CCM_CALLBACK, I_CCM_EVENT, event_data,
+			trigger_transition?A_TE_CANCEL:A_NOTHING,
+			FALSE, __FUNCTION__);
 		
 		if (event_data->oc) {
 			crm_free(event_data->oc);
 			event_data->oc = NULL;
 		}
 		crm_free(event_data);
-	}
 
-	if(trigger_transition) {
+	} else if(trigger_transition) {
 		crm_debug("Scheduling transition after event %s",
 			  ccm_event_name(event));
-		register_fsa_action(A_TE_CANCEL, FALSE);
+		register_fsa_action(A_TE_CANCEL);
 	}
 	
 	oc_ev_callback_done(cookie);
@@ -595,22 +596,23 @@ crmd_cib_connection_destroy(gpointer user_data)
 longclock_t fsa_start = 0;
 longclock_t fsa_stop = 0;
 longclock_t fsa_diff = 0;
-int fsa_diff_ms = 0;
 
 gboolean
 crm_fsa_trigger(gpointer user_data) 
 {
+	unsigned int fsa_diff_ms = 0;
 	if(fsa_diff_max_ms > 0) {
 		fsa_start = time_longclock();
 	}
 	s_crmd_fsa(C_FSA_INTERNAL);
 	if(fsa_diff_max_ms > 0) {
 		fsa_stop = time_longclock();
-		fsa_diff = sub_longclock(fsa_start, fsa_stop);
+		fsa_diff = sub_longclock(fsa_stop, fsa_start);
 		fsa_diff_ms = longclockto_ms(fsa_diff);
-		if(fsa_diff_ms > fsa_diff_max_ms) {
+		if(fsa_diff_ms < 0 || fsa_diff_ms > fsa_diff_max_ms) {
 			crm_err("FSA took %dms to complete", fsa_diff_ms);
 		}
+		
 	}
 	return TRUE;	
 }
