@@ -209,8 +209,6 @@ class ResourceAudit(ClusterAudit):
             return 1
         return 0
 
-AllAuditClasses.append(ResourceAudit)
-
 class HAResourceAudit(ClusterAudit):
     def __init__(self, cm):
         self.CM = cm
@@ -270,7 +268,6 @@ class HAResourceAudit(ClusterAudit):
     def name(self):
         return "HAResourceAudit"
     
-AllAuditClasses.append(HAResourceAudit)
 
 class CrmdStateAudit(ClusterAudit):
     def __init__(self, cm):
@@ -369,7 +366,6 @@ class CrmdStateAudit(ClusterAudit):
             return 1
         return 0
 
-AllAuditClasses.append(CrmdStateAudit)
 
 class PartitionAudit(ClusterAudit):
     def __init__(self, cm):
@@ -553,7 +549,10 @@ class PartitionAudit(ClusterAudit):
             return 1
         return 0
 
+AllAuditClasses.append(CrmdStateAudit)
 AllAuditClasses.append(PartitionAudit)
+AllAuditClasses.append(ResourceAudit)
+AllAuditClasses.append(HAResourceAudit)
 
 def AuditList(cm):
     result = []
