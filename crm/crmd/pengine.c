@@ -198,6 +198,7 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 			" matches: CIB=%d, CRM=%d",
 			 ccm_transition_id, fsa_membership_copy->id);
 		register_fsa_action(A_PE_INVOKE);
+		G_main_set_trigger(fsa_source);
 		return;
 	}
 	
