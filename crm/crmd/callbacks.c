@@ -549,7 +549,7 @@ crmd_ccm_msg_callback(
 			  ccm_event_name(event));
 
 		crm_malloc0(event_data, sizeof(struct crmd_ccm_data_s));
-		if(event_data != NULL) { return; }
+		if(event_data == NULL) { return; }
 		
 		event_data->event = event;
 		if(data != NULL) {
