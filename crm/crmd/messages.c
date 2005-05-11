@@ -1188,11 +1188,9 @@ msg_queue_helper(void)
 		ipc = fsa_cluster_conn->llc_ops->ipcchan(
 			fsa_cluster_conn);
 	}
-	crm_debug("Checking cluster connection");
 	if(ipc != NULL) {
 		ipc->ops->resume_io(ipc);
 	}
-	crm_debug("Checking cluster connection complete");
 /*  	g_hash_table_foreach_remove(ipc_clients, ipc_queue_helper, NULL); */
 }
 
