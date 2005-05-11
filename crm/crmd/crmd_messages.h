@@ -46,7 +46,12 @@ extern void fsa_dump_queue(int log_level);
 
 #define register_fsa_input(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
 
-#define register_fsa_action(action, prepend) register_fsa_input_adv(C_FSA_INTERNAL, I_NULL, NULL, action, prepend, __FUNCTION__)
+#define register_fsa_action(action) {					\
+		fsa_actions |= action;					\
+		crm_debug("%s added action %s to the FSA",		\
+			  __FUNCTION__, fsa_action2string(action));	\
+	}
+
 
 #define register_fsa_input_before(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, TRUE, __FUNCTION__)
 
