@@ -196,7 +196,7 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 		crm_info("Re-asking for the CIB until membership/quorum"
 			" matches: CIB=%d, CRM=%d",
 			 ccm_transition_id, fsa_membership_copy->id);
-		register_fsa_action_later(A_PE_INVOKE);
+		register_fsa_action(A_PE_INVOKE, TRUE);
 		return;
 	}
 	

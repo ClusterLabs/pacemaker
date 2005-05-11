@@ -61,14 +61,14 @@ register_fsa_error_adv(
 	/* save the current actions */
 	register_fsa_input_adv(cur_data?cur_data->fsa_cause:C_FSA_INTERNAL,
 			       I_NULL, cur_data?cur_data->data:NULL,
-			       fsa_actions, FALSE, __FUNCTION__);
+			       fsa_actions, TRUE, __FUNCTION__);
 	
 	/* reset the action list */
 	fsa_actions = A_NOTHING;
 
 	/* register the error */
 	register_fsa_input_adv(
-		cause, input, new_data, A_NOTHING, FALSE, raised_from);
+		cause, input, new_data, A_NOTHING, TRUE, raised_from);
 }
 
 static gboolean last_was_vote = FALSE;
@@ -77,20 +77,25 @@ void
 register_fsa_input_adv(
 	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 	void *data, long long with_actions,
-	gboolean after, const char *raised_from)
+	gboolean prepend, const char *raised_from)
 {
 	unsigned  old_len = g_list_length(fsa_message_queue);
 	fsa_data_t *fsa_data = NULL;
 
-	crm_verbose("%s raised FSA input %s (cause=%s) %s data",
-		    raised_from,fsa_input2string(input),
-		    fsa_cause2string(cause), data?"with":"without");
+	crm_debug("%s raised FSA input %s (cause=%s) %s data",
+		  raised_from,fsa_input2string(input),
+		  fsa_cause2string(cause), data?"with":"without");
 	
 	if(input == I_WAIT_FOR_EVENT) {
 		do_fsa_stall = TRUE;
 		set_bit_inplace(fsa_actions, with_actions);
 		with_actions = A_NOTHING;
 		crm_debug("Stalling the FSA pending further input");
+		if(old_len > 0) {
+			crm_err("Stalling the FSA with pending inputs");
+		}
+		fsa_dump_queue(LOG_DEBUG);
+		return;
 	}
 
 	if(old_len == 0) {
@@ -199,12 +204,12 @@ register_fsa_input_adv(
 	}
 	
 	/* make sure to free it properly later */
-	if(after) {
-		crm_trace("Appending input");
-		fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
-	} else {
+	if(prepend) {
 		crm_trace("Prepending input");
 		fsa_message_queue = g_list_prepend(fsa_message_queue, fsa_data);
+	} else {
+		crm_trace("Appending input");
+		fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
 	}
 	
 	crm_verbose("Queue len: %d -> %d", old_len,
@@ -767,8 +772,8 @@ handle_request(ha_msg_input_t *stored_msg)
 
 	} else if(strcmp(op, CRM_OP_VOTE) == 0) {
 		/* count the vote and decide what to do after that */
-		register_fsa_input_w_actions(
-			C_HA_MESSAGE, I_NULL, stored_msg, A_ELECTION_COUNT);
+		register_fsa_input_adv(C_HA_MESSAGE, I_NULL, stored_msg,
+				       A_ELECTION_COUNT, FALSE, __FUNCTION__);
 
 		/* Sometimes we _must_ go into S_ELECTION */
 		if(fsa_state == S_HALT) {
@@ -795,6 +800,8 @@ handle_request(ha_msg_input_t *stored_msg)
 
 		set_xml_property_copy(ping, "crmd_state",
 				      fsa_state2string(fsa_state));
+
+		crm_info("Current state: %s", fsa_state2string(fsa_state));
 		
 		msg = create_reply(stored_msg->msg, ping);
 		
@@ -1031,9 +1038,9 @@ handle_shutdown_request(HA_Message *stored_msg)
 	free_xml(frag);
 
 	/* will be picked up by the TE as long as its running */
-	if((fsa_state == S_POLICY_ENGINE || fsa_state == S_TRANSITION_ENGINE)
-		&& is_set(fsa_input_register, R_TE_CONNECTED) == FALSE) {
-		register_fsa_action(A_TE_CANCEL);
+	if(need_transition(fsa_state)
+	   && is_set(fsa_input_register, R_TE_CONNECTED) == FALSE) {
+		register_fsa_action(A_TE_CANCEL, TRUE);
 	}
 
 	return I_NULL;

@@ -127,8 +127,8 @@ do_dc_join_offer_one(long long action,
 	/* this was a genuine join request, cancel any existing
 	 * transition and invoke the PE
 	 */
-	register_fsa_input_w_actions(
-		msg_data->fsa_cause, I_NULL, NULL, A_TE_CANCEL);
+	register_fsa_input_adv(msg_data->fsa_cause, I_NULL, NULL,
+			       A_TE_CANCEL, FALSE, __FUNCTION__);
 
 	/* dont waste time by invoking the pe yet; */
 	crm_debug("1) Waiting on %d outstanding join acks",

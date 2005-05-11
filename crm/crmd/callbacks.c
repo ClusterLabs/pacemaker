@@ -501,7 +501,7 @@ crmd_ccm_msg_callback(
 		case OC_EV_MS_INVALID:
 			update_cache = TRUE;
 			update_quorum = TRUE;
-			if(AM_I_DC) {
+			if(AM_I_DC && need_transition(fsa_state)) {
 				trigger_transition = TRUE;
 			}
 			break;
@@ -512,11 +512,11 @@ crmd_ccm_msg_callback(
 			}
 			/* tell the TE to pretend it completed and stop */
 			/* side effect: we'll end up in S_IDLE */
-			register_fsa_action(A_TE_HALT);
+			register_fsa_action(A_TE_HALT, TRUE);
 #endif
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
-			if(AM_I_DC) {
+			if(AM_I_DC && need_transition(fsa_state)) {
 				fsa_membership_copy->id = instance;
 				trigger_transition = TRUE;
 			}
@@ -531,10 +531,7 @@ crmd_ccm_msg_callback(
 
 	if(update_quorum && ccm_have_quorum(event) == FALSE) {
 		/* did we just loose quorum? */
-		if(fsa_have_quorum
-		   && (fsa_state == S_POLICY_ENGINE
-		       || fsa_state == S_TRANSITION_ENGINE
-		       || fsa_state == S_IDLE)) {
+		if(fsa_have_quorum && need_transition(fsa_state)) {
 			crm_info("Quorum lost: triggering transition (%s)",
 				 ccm_event_name(event));
 			trigger_transition = TRUE;
@@ -542,34 +539,36 @@ crmd_ccm_msg_callback(
 		fsa_have_quorum = FALSE;
 			
 	} else if(update_quorum)  {
+		crm_debug("Updating quorum after event %s",
+			  ccm_event_name(event));
 		fsa_have_quorum = TRUE;
 	}
 
-	if(trigger_transition) {
-		register_fsa_action(A_TE_CANCEL);
+	if(update_cache) {
+		crm_debug("Updating cache after event %s",
+			  ccm_event_name(event));
+
+		crm_malloc0(event_data, sizeof(struct crmd_ccm_data_s));
+		if(event_data != NULL) { return; }
+		
+		event_data->event = event;
+		if(data != NULL) {
+			event_data->oc = copy_ccm_oc_data(data);
+		}
+		register_fsa_input_later(
+			C_CCM_CALLBACK, I_CCM_EVENT, event_data);
+		
+		if (event_data->oc) {
+			crm_free(event_data->oc);
+			event_data->oc = NULL;
+		}
+		crm_free(event_data);
 	}
 
-	if(update_cache) {
-		crm_malloc0(event_data, sizeof(struct crmd_ccm_data_s));
-		if(event_data != NULL) {
-			event_data->event = event;
-			if(data != NULL) {
-				event_data->oc = copy_ccm_oc_data(
-					(const oc_ev_membership_t *)data);
-			}
-			crm_devel("Sending callback to the FSA");
-			register_fsa_input_later(
-				C_CCM_CALLBACK, I_CCM_EVENT, event_data);
-			
-			if (event_data->oc) {
-				crm_free(event_data->oc);
-				event_data->oc = NULL;
-			}
-			crm_free(event_data);
-		}
-	} else {
-		crm_debug("No futher action for transitional CCM event: %s",
+	if(trigger_transition) {
+		crm_debug("Scheduling transition after event %s",
 			  ccm_event_name(event));
+		register_fsa_action(A_TE_CANCEL, FALSE);
 	}
 	
 	oc_ev_callback_done(cookie);

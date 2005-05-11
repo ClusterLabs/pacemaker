@@ -38,23 +38,19 @@ extern void register_fsa_error_adv(
 extern void register_fsa_input_adv(
 	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 	void *data, long long with_actions,
-	gboolean after, const char *raised_from);
+	gboolean prepend, const char *raised_from);
 
 extern void fsa_dump_queue(int log_level);
 
-#define crmd_fsa_stall() register_fsa_input_adv(msg_data->fsa_cause, I_WAIT_FOR_EVENT, msg_data->data, action, FALSE, __FUNCTION__)
+#define crmd_fsa_stall() register_fsa_input_adv(msg_data->fsa_cause, I_WAIT_FOR_EVENT, msg_data->data, action, TRUE, __FUNCTION__)
 
 #define register_fsa_input(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
 
-#define register_fsa_action(action) register_fsa_input_adv(C_FSA_INTERNAL, I_NULL, NULL, action, FALSE, __FUNCTION__)
+#define register_fsa_action(action, prepend) register_fsa_input_adv(C_FSA_INTERNAL, I_NULL, NULL, action, prepend, __FUNCTION__)
 
-#define register_fsa_action_later(action) register_fsa_input_adv(C_FSA_INTERNAL, I_NULL, NULL, action, TRUE, __FUNCTION__)
+#define register_fsa_input_before(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, TRUE, __FUNCTION__)
 
-#define register_fsa_input_before(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
-
-#define register_fsa_input_later(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, TRUE, __FUNCTION__)
-
-#define register_fsa_input_w_actions(cause, input, data, actions) register_fsa_input_adv(cause, input, data, actions, FALSE, __FUNCTION__)
+#define register_fsa_input_later(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
 
 void delete_fsa_input(fsa_data_t *fsa_data);
 
@@ -63,14 +59,15 @@ fsa_data_t *get_message(void);
 gboolean is_message(void);
 gboolean have_wait_message(void);
 
-extern gboolean relay_message(HA_Message *relay_message, gboolean originated_locally);
+extern gboolean relay_message(
+	HA_Message *relay_message, gboolean originated_locally);
 
 extern void crmd_ha_msg_callback(const HA_Message * msg, void* private_data);
 
 extern gboolean crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data);
 
 extern void process_message(
-	HA_Message *msg, gboolean originated_locally, const char *src_node_name);
+	HA_Message *msg, gboolean originated_locally,const char *src_node_name);
 
 extern gboolean crm_dc_process_message(crm_data_t *whole_message,
 				       crm_data_t *action,
