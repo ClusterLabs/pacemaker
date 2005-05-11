@@ -104,7 +104,18 @@ do_te_invoke(long long action,
 	HA_Message *cmd = NULL;
 	
 
-	if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE){
+	if(AM_I_DC == FALSE) {
+		crm_debug("Not DC: No need to invoke the TE (anymore): %s",
+			  fsa_action2string(action));
+		return I_NULL;
+		
+	} else if(fsa_state != S_TRANSITION_ENGINE && action ^ A_TE_CANCEL) {
+		crm_debug("No need to invoke the TE (%s) in state %s",
+			  fsa_action2string(action),
+			  fsa_state2string(fsa_state));
+		return I_NULL;
+		
+	} else if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE) {
 		if(te_subsystem->pid > 0) {
 			int pid_status = -1;
 			int rc = waitpid(
