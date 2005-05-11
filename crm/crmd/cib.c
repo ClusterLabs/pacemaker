@@ -98,7 +98,7 @@ do_cib_control(long long action,
 			if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
 
 				cib_retries++;
-				crm_warn("Could complete CIB registration %d"
+				crm_warn("Couldn't complete CIB registration %d"
 					 " times... pause and retry",
 					 cib_retries);
 
