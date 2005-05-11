@@ -774,23 +774,25 @@ do_lrm_rsc_op(
 			operation, rid, call_id);
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
+	} else if(op->interval > 0) {
+		struct recurring_op_s *op = NULL;
+		crm_malloc0(op, sizeof(struct recurring_op_s));
+		crm_debug("Adding recurring %s op for %s (%d)",
+			  op_id, rsc->id, call_id);
+		
+		op->call_id = call_id;
+		op->rsc_id  = crm_strdup(rsc->id);
+		g_hash_table_insert(monitors, op_id, op);
+		op_id = NULL;
+		
 	} else {
-		if(call_id > 0 && op->interval > 0) {
-			struct recurring_op_s *op = NULL;
-			crm_malloc0(op, sizeof(struct recurring_op_s));
-			crm_debug("Adding recurring %s op for %s (%d)",
-				  op_id, rsc->id, call_id);
-			
-			op->call_id = call_id;
-			op->rsc_id  = crm_strdup(rsc->id);
-			g_hash_table_insert(monitors, op_id, op);
-			op_id = NULL;
-		}
-		/* record all operations so we can wait for them to complete */
+		/* record all non-recurring operations so we can wait
+		 * for them to complete during shutdown
+		 */
 		char *call_id_s = make_stop_id(rsc->id, call_id);
 		g_hash_table_replace(
 			shutdown_ops, call_id_s, crm_strdup(rsc->id));
-		crm_debug("Recording shutdown op: %s", call_id_s);
+		crm_debug("Recording pending op: %s", call_id_s);
 	}
 
 	crm_free(op_id);
