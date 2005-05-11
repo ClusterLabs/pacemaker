@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.15 2005/03/03 16:19:25 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.16 2005/05/11 11:54:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -66,5 +66,7 @@ extern oc_ev_membership_t *copy_ccm_oc_data(const oc_ev_membership_t *oc_in) ;
 
 extern void fsa_dump_actions(long long action, const char *text);
 extern void fsa_dump_inputs(int log_level, long long input_register);
+
+extern gboolean need_transition(enum crmd_fsa_state state);
 
 #endif
