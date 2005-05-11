@@ -1746,9 +1746,6 @@ class SimulStartLite(CTSTest):
         if len(watchpats) == 0:
             return self.skipped()
         
-        # Make sure the DC is stable before continuing
-        watchpats.append(self.CM["Pat:DC_IDLE"])
-
         #        Start all the nodes - at about the same time...
         watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
         ,        timeout=self.CM["DeadTime"]+10)
