@@ -295,7 +295,6 @@ lrm_dispatch(IPC_Channel*src_not_used, gpointer user_data)
 		crm_err("lrm->lrm_ops->rcvmsg() failed, connection lost?");
 		clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
 		register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-		G_main_set_trigger(fsa_source);
 		return FALSE;
 	}
 	return TRUE;
@@ -314,7 +313,6 @@ lrm_op_callback(lrm_op_t* op)
 
 	/* Make sure the LRM events are received in order */
 	register_fsa_input_later(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
-	G_main_set_trigger(fsa_source);
 }
 
 void
@@ -414,7 +412,6 @@ crmd_ha_connection_destroy(gpointer user_data)
 	/* this is always an error */
 	/* feed this back into the FSA */
 	register_fsa_input(C_HA_DISCONNECT, I_ERROR, NULL);
-	G_main_set_trigger(fsa_source);
 }
 
 
@@ -589,7 +586,6 @@ crmd_cib_connection_destroy(gpointer user_data)
 	register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 	clear_bit_inplace(fsa_input_register, R_CIB_CONNECTED);
 	
-	G_main_set_trigger(fsa_source);
 	return;
 }
 

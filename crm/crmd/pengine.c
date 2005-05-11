@@ -194,11 +194,10 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 		crm_element_value(local_cib, XML_ATTR_CCM_TRANSITION), "-1");
 
 	if(ccm_transition_id != fsa_membership_copy->id) {
-		crm_err("Re-asking for the CIB until membership/quorum"
-			" matches: CIB=%d, CRM=%d",
-			 ccm_transition_id, fsa_membership_copy->id);
+		crm_debug("Re-asking for the CIB until membership/quorum"
+			  " matches: CIB=%d, CRM=%d",
+			  ccm_transition_id, fsa_membership_copy->id);
 		register_fsa_action(A_PE_INVOKE);
-		G_main_set_trigger(fsa_source);
 		return;
 	}
 	

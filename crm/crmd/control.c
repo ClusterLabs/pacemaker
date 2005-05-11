@@ -565,7 +565,6 @@ crm_shutdown(int nsig, gpointer unused)
 		if(is_set(fsa_input_register, R_SHUTDOWN)) {
 			crm_err("Escalating the shutdown");
 			register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
-			G_main_set_trigger(fsa_source);
 
 		} else {
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
@@ -577,8 +576,7 @@ crm_shutdown(int nsig, gpointer unused)
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				/* cant rely on this... */
 				crm_timer_start(shutdown_escalation_timer);
-				register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
-				G_main_set_trigger(fsa_source);
+				register_fsa_input(C_SHUTDOWN,I_SHUTDOWN,NULL);
 
 			} else {
 				crm_err("Could not set R_SHUTDOWN");

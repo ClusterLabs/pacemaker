@@ -220,9 +220,13 @@ register_fsa_input_adv(
 	
 	if(old_len == g_list_length(fsa_message_queue)){
 		crm_err("Couldnt add message to the queue");
-	}	
+	}
 
+	if(fsa_source) {
+		G_main_set_trigger(fsa_source);
+	}
 }
+
 void
 fsa_dump_queue(int log_level) 
 {
