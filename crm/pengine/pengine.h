@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.60 2005/04/21 15:32:02 andrew Exp $ */
+/* $Id: pengine.h,v 1.61 2005/05/12 18:10:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -209,6 +209,7 @@ struct action_s
 
 		int seen_count;
 		const char *timeout;
+		const char *uuid;
 
 /* 		crm_data_t *args; */
 		GHashTable *extra;
