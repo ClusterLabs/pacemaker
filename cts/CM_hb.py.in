@@ -231,6 +231,9 @@ class HeartbeatCM(ClusterManager):
                 Path["port"] = cf.Parameters["udpport"]
                 Path["protocol"] = ["udp"]
 
+            if Path["port"] == None:
+                Path["port"] = [694]
+
         return Path
                 
     def HasQuorum(self, node_list):

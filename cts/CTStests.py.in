@@ -949,8 +949,6 @@ class BandwidthTest(CTSTest):
              return self.skipped()
 
         port = Path["port"][0]
-        if port == None:
-            port = 694
         port = int(port)
 
         ret = self.startall(None)
