@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.58 2005/05/10 13:20:32 andrew Exp $ */
+/* $Id: crm.h,v 1.59 2005/05/12 11:16:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,9 +36,11 @@
 #  define CRM_DEV_BUILD 0
 #endif
 
-#define ipc_call_diff_max_ms 1000
-#define action_diff_max_ms   1000
-#define fsa_diff_max_ms      2000
+#define ipc_call_diff_max_ms 2000
+#define action_diff_warn_ms  5000
+#define action_diff_max_ms   15000
+#define fsa_diff_warn_ms     10000
+#define fsa_diff_max_ms      20000
 
 #include <crm/common/util.h>
 
@@ -274,7 +276,7 @@ extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_M
 #define crm_str(x)    (const char*)(x?x:"<null>")
 
 #if 1
-#  define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); }
+#  define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); msg = NULL; }
 #else
 #  define crm_msg_del(msg) msg = NULL
 #endif

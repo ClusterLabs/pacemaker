@@ -90,6 +90,10 @@ unsigned int action_diff_ms = 0;
 			   crm_err("Action %s took %dms to complete",	\
 				   fsa_action2string(x),		\
 				   action_diff_ms);			\
+		   } else if(action_diff_ms > action_diff_warn_ms) {	\
+			   crm_warn("Action %s took %dms to complete",	\
+				    fsa_action2string(x),		\
+				    action_diff_ms);			\
 		   }							\
 	   }								\
 	   crm_verbose("Action complete: %s (%.16llx)",			\

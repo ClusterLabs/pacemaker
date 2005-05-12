@@ -605,8 +605,11 @@ crm_fsa_trigger(gpointer user_data)
 		fsa_stop = time_longclock();
 		fsa_diff = sub_longclock(fsa_stop, fsa_start);
 		fsa_diff_ms = longclockto_ms(fsa_diff);
-		if(fsa_diff_ms < 0 || fsa_diff_ms > fsa_diff_max_ms) {
+		if(fsa_diff_ms > fsa_diff_max_ms) {
 			crm_err("FSA took %dms to complete", fsa_diff_ms);
+
+		} else if(fsa_diff_ms > fsa_diff_warn_ms) {
+			crm_warn("FSA took %dms to complete", fsa_diff_ms);
 		}
 		
 	}
