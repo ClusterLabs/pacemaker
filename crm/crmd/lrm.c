@@ -220,7 +220,7 @@ do_lrm_control(long long action,
 					 max_lrm_register_fails);
 				
 				crm_timer_start(wait_timer);
-				crmd_fsa_stall();
+				crmd_fsa_stall(NULL);
 				return I_NULL;
 			}
 		}

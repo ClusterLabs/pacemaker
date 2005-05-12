@@ -88,14 +88,19 @@ register_fsa_input_adv(
 	
 	if(input == I_WAIT_FOR_EVENT) {
 		do_fsa_stall = TRUE;
-		set_bit_inplace(fsa_actions, with_actions);
-		with_actions = A_NOTHING;
 		crm_debug("Stalling the FSA pending further input");
 		if(old_len > 0) {
-			crm_err("Stalling the FSA with pending inputs");
+			crm_warn("%s stalled the FSA with pending inputs",
+				raised_from);
+			fsa_dump_queue(LOG_DEBUG);
 		}
-		fsa_dump_queue(LOG_DEBUG);
-		return;
+		if(data == NULL) {
+			set_bit_inplace(fsa_actions, with_actions);
+			with_actions = A_NOTHING;
+			return;
+		}
+		crm_err("%s stalled the FSA with data - this may be broken",
+			raised_from);
 	}
 
 	if(old_len == 0) {

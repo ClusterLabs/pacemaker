@@ -104,7 +104,7 @@ do_cib_control(long long action,
 
 				if(cib_retries < 30) {
 					crm_timer_start(wait_timer);
-					crmd_fsa_stall();
+					crmd_fsa_stall(NULL);
 
 				} else {
 					crm_err("Could not complete CIB"

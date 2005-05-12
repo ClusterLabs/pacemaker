@@ -176,11 +176,11 @@ do_exit(long long action,
 	if(action & A_EXIT_0) {
 		if(is_set(fsa_input_register, R_PE_CONNECTED)) {
 			crm_info("Waiting for the PE to disconnect");
-			crmd_fsa_stall();
+			crmd_fsa_stall(NULL);
 			
 		} else if(is_set(fsa_input_register, R_TE_CONNECTED)) {
 			crm_info("Waiting for the TE to disconnect");
-			crmd_fsa_stall();
+			crmd_fsa_stall(NULL);
 		} else {
 			do_exit = TRUE;
 			crm_info("Performing %s - gracefully exiting the CRMd",
@@ -432,21 +432,21 @@ do_started(long long action,
 		crm_info("Delaying start, CCM (%.16llx) not connected",
 			 R_CCM_DATA);
 
-		crmd_fsa_stall();
+		crmd_fsa_stall(NULL);
 		return I_NULL;
 
 	} else if(is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE) {
 		crm_info("Delaying start, LRM (%.16llx) not connected",
 			 R_LRM_CONNECTED);
 
-		crmd_fsa_stall();
+		crmd_fsa_stall(NULL);
 		return I_NULL;
 
 	} else if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
 		crm_info("Delaying start, CIB (%.16llx) not connected",
 			 R_CIB_CONNECTED);
 
-		crmd_fsa_stall();
+		crmd_fsa_stall(NULL);
 		return I_NULL;
 
 	} else if(is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
@@ -464,7 +464,7 @@ do_started(long long action,
 		}
 		
 		crm_timer_start(wait_timer);
-		crmd_fsa_stall();
+		crmd_fsa_stall(NULL);
 		return I_NULL;
 	}
 

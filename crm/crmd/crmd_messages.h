@@ -42,7 +42,15 @@ extern void register_fsa_input_adv(
 
 extern void fsa_dump_queue(int log_level);
 
-#define crmd_fsa_stall() register_fsa_input_adv(msg_data->fsa_cause, I_WAIT_FOR_EVENT, msg_data->data, action, TRUE, __FUNCTION__)
+#define crmd_fsa_stall(cur_input) if(cur_input != NULL) {		\
+		register_fsa_input_adv(					\
+			((fsa_data_t*)cur_input)->fsa_cause, I_WAIT_FOR_EVENT, \
+			((fsa_data_t*)cur_input)->data, action, TRUE, __FUNCTION__);	\
+	} else {							\
+		register_fsa_input_adv(					\
+			C_FSA_INTERNAL, I_WAIT_FOR_EVENT,		\
+			NULL, action, TRUE, __FUNCTION__);		\
+	}								\
 
 #define register_fsa_input(cause, input, data) register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __FUNCTION__)
 

@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.76 2005/05/10 20:14:33 andrew Exp $ */
+/* $Id: ccm.c,v 1.77 2005/05/12 11:59:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -112,7 +112,7 @@ do_ccm_control(long long action,
 					 max_ccm_register_fails);
 				
 				crm_timer_start(wait_timer);
-				crmd_fsa_stall();
+				crmd_fsa_stall(NULL);
 				return I_NULL;
 				
 			} else {

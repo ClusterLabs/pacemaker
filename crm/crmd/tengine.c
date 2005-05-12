@@ -140,7 +140,7 @@ do_te_invoke(long long action,
 		} 
 
 		crm_info("Waiting for the TE to connect");
-		crmd_fsa_stall();
+		crmd_fsa_stall(msg_data);
 		return I_NULL;
 	}
 
