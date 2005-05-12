@@ -636,6 +636,7 @@ class SimulStart(CTSTest):
         CTSTest.__init__(self,cm)
         self.name="SimulStart"
         self.stopall = SimulStopLite(cm)
+        self.startall = SimulStartLite(cm)
 
     def __call__(self, dummy):
         '''Perform the 'SimulStart' test. '''
@@ -646,56 +647,9 @@ class SimulStart(CTSTest):
         #        Shut down all the nodes...
         ret = self.stopall(None)
         if not ret:
-            return self.skipped()
+            return self.failure("Setup failed")
          
-        watchpats = [ ]
-
-        pat = self.CM["Pat:We_started"]
-        for node in self.CM.Env["nodes"]:
-          thispat = (pat % node)
-          watchpats.append(thispat)
-
-        #        Start all the nodes - at about the same time...
-        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
-        ,        timeout=self.CM["DeadTime"]+10)
-        watch.ReturnOnlyMatch()
-
-        watch.setwatch()
-
-        self.starttime=time.time()
-        for node in self.CM.Env["nodes"]:
-            self.CM.StartaCMnoBlock(node)
-        if watch.lookforall():
-            watchpats = [ ]
-            watchpats.append("Current state: S_IDLE")
-            watchpats.append(self.CM["Pat:DC_IDLE"])
-            idle_watch = CTS.LogWatcher(
-                self.CM["LogFileName"], watchpats, timeout=self.CM["DeadTime"])
-            idle_watch.setwatch()
-            for node in self.CM.Env["nodes"]:
-		# have each node dump its current state
-                self.CM.rsh.readaline(node, (self.CM["StatusCmd"] %node) )
-            if idle_watch.look():
-                return self.success()
-
-            self.CM.log("Warn: DC did not stablize") 
-            return self.failure("DC did not stablize") 
-        
-        did_fail=0
-        for node in self.CM.Env["nodes"]:
-            if self.CM.StataCM(node) == 0:
-                did_fail=1
-                
-        if did_fail:
-            return self.failure("Did not find start pattern(s): " 
-                                +        repr(watch.unmatched))
-
-        self.CM.log("Warn: Did not find start pattern(s): " +        repr(watch.unmatched))
-        self.CM.log("All nodes were started but %d may be unstable"
-                            %(len(watch.unmatched)))
-
-        return self.success()
-
+	return self.startall(None)
 
     def is_applicable(self):
         '''SimulStart is always applicable'''
@@ -711,6 +665,7 @@ class SimulStop(CTSTest):
         CTSTest.__init__(self,cm)
         self.name="SimulStop"
         self.startall = SimulStartLite(cm)
+        self.stopall = SimulStopLite(cm)
 
     def __call__(self, dummy):
         '''Perform the 'SimulStop' test. '''
@@ -721,37 +676,9 @@ class SimulStop(CTSTest):
         #     Start up all the nodes...
         ret = self.startall(None)
         if not ret:
-            return self.skipped()
+            return self.failure("Setup failed")
 
-        watchpats = [ ]
-
-        for node in self.CM.Env["nodes"]:
-            pat = (self.CM["Pat:All_stopped"] % node)
-            watchpats.append(pat)
-
-        #     Stop all the nodes - at about the same time...
-        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
-        ,     timeout=self.CM["DeadTime"]+10)
-
-        watch.setwatch()
-        self.starttime=time.time()
-        for node in self.CM.Env["nodes"]:
-            self.CM.StopaCMnoBlock(node)
-        if watch.lookforall():
-            return self.success()
-
-        did_fail=0
-        for node in self.CM.Env["nodes"]:
-            if self.CM.StataCM(node) == 1:
-                did_fail=1
-                
-        if did_fail:
-            return self.failure("Did not find stop pattern(s): "
-                                +     repr(watch.unmatched))
-
-        self.CM.log("Warn: All nodes stopped but CTS didnt detect these patterns: " 
-                    + repr(watch.unmatched))
-        return self.success()
+	return self.stopall(None)
 
     def is_applicable(self):
         '''SimulStop is always applicable'''
