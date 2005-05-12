@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.33 2005/05/05 23:02:26 andrew Exp $ */
+/* $Id: native.c,v 1.34 2005/05/12 18:16:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,6 +42,8 @@ int num_allowed_nodes4color(color_t *color);
 
 void create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			    GListPtr *ordering_constraints);
+action_t *create_recurring_action(resource_t *rsc, node_t *node,
+				  const char *action, const char *key);
 
 typedef struct native_variant_data_s
 {
@@ -205,9 +207,10 @@ void native_color(resource_t *rsc, GListPtr *colors)
 
 void
 create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
-		       GListPtr *ordering_constraints) 
+			 GListPtr *ordering_constraints) 
 {
 	action_t *mon = NULL;
+	char *match_key = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
 	if(node == NULL || !node->details->online || node->details->unclean) {
@@ -217,32 +220,71 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 	
 	xml_child_iter(
 		rsc->ops_xml, operation, "op",
-		name = crm_element_value(operation, "name");
-		if(safe_str_neq(name, CRMD_RSCSTATE_MON)) {
-			continue;
-		}
 
+		name = crm_element_value(operation, "name");
 		value = crm_element_value(operation, "interval");
 
-		crm_info("\tStart %s[%s] for %s\t(%s)",
-			 name, value, rsc->id, node->details->uname);
-			 
-		mon = action_new(rsc, monitor_rsc,
-				 crm_element_value(operation, "timeout"), node);
-
-		add_hash_param(mon->extra, "interval", value);
-
-		value = crm_element_value(operation, "start_delay");
-		add_hash_param(mon->extra, "start_delay", value);
-
- 		unpack_instance_attributes(operation, mon->extra);
+		match_key = generate_op_key(rsc->id, name, crm_atoi(value,"0"));
+		mon = create_recurring_action(rsc, node, name, match_key);
+		crm_free(match_key);
+		
 		if(start != NULL) {
-			order_new(NULL, start_rsc, start,
+			order_new(rsc, start_rsc, NULL,
 				  NULL, monitor_rsc, mon,
 				  pecs_must, ordering_constraints);
 		}
+		);	
+}
+
+action_t *
+create_recurring_action(resource_t *rsc, node_t *node,
+			const char *action, const char *key)
+{
+	crm_data_t *op = NULL;
+
+	action_t *mon = NULL;
+	char *match_key = NULL;
+	const char *name = NULL;
+	const char *value = NULL;
+	if(safe_str_neq(action, CRMD_RSCSTATE_MON)) {
+		crm_err("Unsupported action: %s", action);
+		return NULL;
+	}
+
+	crm_info("\tStart %s\t(%s)", key, node?node->details->uname:"<any>");
+
+	xml_child_iter(
+		rsc->ops_xml, operation, "op",
+
+		name = crm_element_value(operation, "name");
+		value = crm_element_value(operation, "interval");
+		match_key = generate_op_key(rsc->id, name, crm_atoi(value,"0"));
+		if(safe_str_neq(key, match_key)) {
+			crm_free(match_key);
+			continue;
+		}
+		crm_free(match_key);
+		op = operation;
+		break;
 		);
 	
+	if(op == NULL) {
+		crm_err("Unmatched recurring op: %s", key);
+		return NULL;
+	}
+	
+	mon = action_new(rsc, monitor_rsc,
+			 crm_element_value(op, "timeout"), node);
+
+	mon->uuid = key;
+	add_hash_param(mon->extra, "interval", value);
+
+	value = crm_element_value(op, "start_delay");
+	add_hash_param(mon->extra, "start_delay", value);
+
+	unpack_instance_attributes(op, mon->extra);
+
+	return mon;
 }
 
 void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
@@ -363,8 +405,7 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		}
 	}
 	
-	if(rsc->schedule_recurring == TRUE
-		  && (start == NULL || start->runnable)) {
+	if(start != NULL && start->runnable) {
 		create_recurring_actions(
 			rsc, start, chosen, ordering_constraints);
 	}

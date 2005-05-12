@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.86 2005/05/05 22:52:02 andrew Exp $ */
+/* $Id: unpack.c,v 1.87 2005/05/12 18:16:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,9 @@
 #include <pengine.h>
 #include <pe_utils.h>
 #include <pe_rules.h>
+
+extern action_t *create_recurring_action(
+	resource_t *rsc, node_t *node, const char *action, const char *key);
 
 gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
@@ -784,19 +787,29 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 
 
-	CRM_DEV_ASSERT(task != NULL);        if(crm_assert_failed) { return FALSE; }
-	CRM_DEV_ASSERT(task_status != NULL); if(crm_assert_failed) { return FALSE; }
+	CRM_DEV_ASSERT(task != NULL);
+        if(crm_assert_failed) { return FALSE; }
+
+	CRM_DEV_ASSERT(task_status != NULL);
+	if(crm_assert_failed) { return FALSE; }
 
 	task_status_i = atoi(task_status);
 
-	CRM_DEV_ASSERT(task_status_i <= LRM_OP_ERROR);  if(crm_assert_failed) {return FALSE;}
-	CRM_DEV_ASSERT(task_status_i >= LRM_OP_PENDING);if(crm_assert_failed) {return FALSE;}
+	CRM_DEV_ASSERT(task_status_i <= LRM_OP_ERROR);
+	if(crm_assert_failed) {return FALSE;}
+
+	CRM_DEV_ASSERT(task_status_i >= LRM_OP_PENDING);
+	if(crm_assert_failed) {return FALSE;}
 
 	if(task_status_i != LRM_OP_PENDING) {
 
 		task_id_i = crm_atoi(task_id, "-1");
-		CRM_DEV_ASSERT(task_id != NULL); if(crm_assert_failed) { return FALSE; }
-		CRM_DEV_ASSERT(task_id_i >= 0);  if(crm_assert_failed) { return FALSE; }
+
+		CRM_DEV_ASSERT(task_id != NULL);
+		if(crm_assert_failed) { return FALSE; }
+
+		CRM_DEV_ASSERT(task_id_i >= 0);
+		if(crm_assert_failed) { return FALSE; }
 
 		if(task_id_i == *max_call_id) {
 			crm_debug("Already processed this call");
@@ -873,10 +886,22 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				*running = FALSE;				
 				rsc->schedule_recurring = FALSE;
 
-			} else {
+			} else if(safe_str_eq(task, CRMD_RSCSTATE_START)) {
 				crm_verbose("%s active on %s",
 					    rsc->id, node->details->uname);
-				*running = TRUE;				
+				*running = TRUE;
+				rsc->schedule_recurring = FALSE;
+
+			} else if(*running) {
+				/* assume its a recurring action */
+				action_t *mon = NULL;
+
+ 				mon = create_recurring_action(
+ 					rsc, NULL, task,
+					crm_element_value(xml_op, XML_ATTR_ID));
+				if(mon != NULL) {
+					mon->optional = TRUE;
+				}
 			}
 			
 			break;
