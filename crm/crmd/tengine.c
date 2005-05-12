@@ -115,6 +115,10 @@ do_te_invoke(long long action,
 			  fsa_state2string(fsa_state));
 		return I_NULL;
 		
+	} else if(is_set(fsa_input_register, R_SHUTDOWN)) {
+		crm_err("No point invoking the TE, we're shutting down");
+		return I_NULL;
+
 	} else if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE) {
 		if(te_subsystem->pid > 0) {
 			int pid_status = -1;
@@ -139,8 +143,15 @@ do_te_invoke(long long action,
 			}
 		} 
 
-		crm_info("Waiting for the TE to connect");
-		crmd_fsa_stall(msg_data);
+		crm_info("Waiting for the TE to connect before action %s",
+			fsa_action2string(action));
+
+		if(action & A_TE_INVOKE) {
+			register_fsa_input(
+				msg_data->fsa_cause, msg_data->fsa_input,
+				msg_data->data);
+		}
+		crmd_fsa_stall(NULL);
 		return I_NULL;
 	}
 
