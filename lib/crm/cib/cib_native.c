@@ -423,7 +423,11 @@ cib_native_perform_op(
 					reply_id, msg_id);
 				crm_log_message_adv(
 					LOG_MSG, "Old reply", op_reply);
+			} else {
+				crm_err("Received a __future__ reply:"
+					" %d (wanted %d)", reply_id, msg_id);
 			}
+			crm_msg_del(op_reply);
 
 		} else if(rc == IPC_INTR) {
 			crm_devel("a signal arrived, retry the read");
@@ -592,10 +596,9 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 	
 	if(cib->op_callback == NULL) {
 		crm_devel("No OP callback set, ignoring reply");
-		return;
+	} else {
+		cib->op_callback(msg, call_id, rc, output);
 	}
-	
-	cib->op_callback(msg, call_id, rc, output);
 	free_xml(output);
 	
 	crm_trace("OP callback activated.");
