@@ -11,7 +11,6 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="5" rsc_id="rsc2" operation="start" allow_fail="false">
-         <resource id="rsc2"/>
          <attributes/>
       </pseudo_event>
     </action_set>
@@ -24,7 +23,6 @@
   <synapse id="2">
     <action_set>
       <pseudo_event id="6" rsc_id="rsc2" operation="running" allow_fail="false">
-         <resource id="rsc2"/>
          <attributes/>
       </pseudo_event>
     </action_set>
