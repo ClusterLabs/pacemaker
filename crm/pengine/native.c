@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.34 2005/05/12 18:16:30 andrew Exp $ */
+/* $Id: native.c,v 1.35 2005/05/13 07:55:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -224,7 +224,7 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		name = crm_element_value(operation, "name");
 		value = crm_element_value(operation, "interval");
 
-		match_key = generate_op_key(rsc->id, name, crm_atoi(value,"0"));
+		match_key = generate_op_key(rsc->id, name, crm_get_msec(value));
 		mon = create_recurring_action(rsc, node, name, match_key);
 		crm_free(match_key);
 		
@@ -258,7 +258,8 @@ create_recurring_action(resource_t *rsc, node_t *node,
 
 		name = crm_element_value(operation, "name");
 		value = crm_element_value(operation, "interval");
-		match_key = generate_op_key(rsc->id, name, crm_atoi(value,"0"));
+		match_key = generate_op_key(rsc->id, name, crm_get_msec(value));
+		crm_verbose("Matching against %s with %s", key, match_key);
 		if(safe_str_neq(key, match_key)) {
 			crm_free(match_key);
 			continue;
