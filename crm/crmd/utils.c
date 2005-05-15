@@ -108,8 +108,7 @@ crm_timer_popped(gpointer data)
 	}
 	
 	if(timer->fsa_input != I_NULL) {
-		register_fsa_input_before(
-			C_TIMER_POPPED, timer->fsa_input, NULL);
+		register_fsa_input(C_TIMER_POPPED, timer->fsa_input, NULL);
 	}
 	G_main_set_trigger(fsa_source);
 	
