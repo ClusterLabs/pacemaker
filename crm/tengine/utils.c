@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.27 2005/05/10 13:20:32 andrew Exp $ */
+/* $Id: utils.c,v 1.28 2005/05/15 13:13:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -340,41 +340,41 @@ actiontype2text(action_type_e type)
 const char *
 get_rsc_state(const char *task, op_status_t status) 
 {
-	if(safe_str_eq(CRMD_RSCSTATE_START, task)) {
+	if(safe_str_eq(CRMD_ACTION_START, task)) {
 		if(status == LRM_OP_PENDING) {
-			return CRMD_RSCSTATE_START_PENDING;
+			return CRMD_ACTION_START_PENDING;
 		} else if(status == LRM_OP_DONE) {
-			return CRMD_RSCSTATE_START_OK;
+			return CRMD_ACTION_STARTED;
 		} else {
-			return CRMD_RSCSTATE_START_FAIL;
+			return CRMD_ACTION_START_FAIL;
 		}
 		
-	} else if(safe_str_eq(CRMD_RSCSTATE_STOP, task)) {
+	} else if(safe_str_eq(CRMD_ACTION_STOP, task)) {
 		if(status == LRM_OP_PENDING) {
-			return CRMD_RSCSTATE_STOP_PENDING;
+			return CRMD_ACTION_STOP_PENDING;
 		} else if(status == LRM_OP_DONE) {
-			return CRMD_RSCSTATE_STOP_OK;
+			return CRMD_ACTION_STOPPED;
 		} else {
-			return CRMD_RSCSTATE_STOP_FAIL;
+			return CRMD_ACTION_STOP_FAIL;
 		}
 		
 	} else {
-		if(safe_str_eq(CRMD_RSCSTATE_MON, task)) {
+		if(safe_str_eq(CRMD_ACTION_MON, task)) {
 			if(status == LRM_OP_PENDING) {
-				return CRMD_RSCSTATE_MON_PENDING;
+				return CRMD_ACTION_MON_PENDING;
 			} else if(status == LRM_OP_DONE) {
-				return CRMD_RSCSTATE_MON_OK;
+				return CRMD_ACTION_MON_OK;
 			} else {
-				return CRMD_RSCSTATE_MON_FAIL;
+				return CRMD_ACTION_MON_FAIL;
 			}
 		} else {
 			const char *rsc_state = NULL;
 			if(status == LRM_OP_PENDING) {
-				rsc_state = CRMD_RSCSTATE_GENERIC_PENDING;
+				rsc_state = CRMD_ACTION_GENERIC_PENDING;
 			} else if(status == LRM_OP_DONE) {
-				rsc_state = CRMD_RSCSTATE_GENERIC_OK;
+				rsc_state = CRMD_ACTION_GENERIC_OK;
 			} else {
-				rsc_state = CRMD_RSCSTATE_GENERIC_FAIL;
+				rsc_state = CRMD_ACTION_GENERIC_FAIL;
 			}
 			crm_warn("Using status \"%s\" for op \"%s\"..."
 				 " this is still in the experimental stage.",

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.29 2005/04/25 13:01:44 andrew Exp $ */
+/* $Id: unpack.c,v 1.30 2005/05/15 13:13:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -283,7 +283,7 @@ extract_event(crm_data_t *msg)
 				node_state, te_update);
 			break;
 			
-		} else if(crm_element_value(node_state, XML_CIB_ATTR_STONITH) != NULL) {
+		} else if(crm_element_value(node_state, CRM_OP_FENCE) != NULL) {
 			/* node marked for STONITH
 			 *   possibly by us when a shutdown timmed out
 			 */
@@ -386,7 +386,7 @@ create_shutdown_event(const char *node, int op_status)
 	set_xml_property_copy(
 		event, XML_LRM_ATTR_LASTOP, XML_CIB_ATTR_SHUTDOWN);
 	set_xml_property_copy(
-		event, XML_LRM_ATTR_RSCSTATE, CRMD_RSCSTATE_GENERIC_OK);
+		event, XML_LRM_ATTR_RSCSTATE, CRMD_ACTION_GENERIC_OK);
 	set_xml_property_copy(event, XML_LRM_ATTR_OPSTATUS, code);
 	
 	crm_free(code);

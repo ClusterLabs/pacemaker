@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.25 2005/05/10 13:20:32 andrew Exp $ */
+/* $Id: callbacks.c,v 1.26 2005/05/15 13:13:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -128,7 +128,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		return TRUE;
 	}
 
-	crm_devel("Processing %s (%s) message", op, ref);
+	crm_debug("Processing %s (%s) message", op, ref);
 	
 	if(op == NULL){
 		/* error */
@@ -140,22 +140,16 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
-
-		crm_trace("Initializing graph...");
 		initialize_graph();
-
-		crm_trace("Unpacking graph...");
 		unpack_graph(xml_data);
-		crm_debug("Initiating transition...");
 
 		in_transition = TRUE;
-
+		crm_debug("Initiating transition...");
 		if(initiate_transition() == FALSE) {
 			/* nothing to be done.. means we're done. */
 			crm_info("No actions to be taken..."
 			       " transition compelte.");
 		}
-		crm_trace("Processing complete...");
 
 	} else if(strcmp(op, CRM_OP_TE_HALT) == 0) {
 		initialize_graph();
@@ -169,10 +163,6 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		crm_info("Received quit message, terminating");
 		exit(0);
 		
-	} else if(in_transition == FALSE) {
-		crm_info("Received event_cc while not in a transition..."
-			 "  Poking the Policy Engine");
-		send_complete("Initiate a transition", NULL, te_update);
 #ifdef TESTING
 	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
 		crm_trace("Processing %s...", CRM_OP_EVENTCC);
@@ -180,6 +170,10 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 			send_complete("ttest loopback", msg, te_failed);
 		}
 #endif
+	} else if(in_transition == FALSE) {
+		crm_info("Received event_cc while not in a transition..."
+			 "  Poking the Policy Engine");
+		send_complete("Initiate a transition", NULL, te_update);
 	}
 
 	crm_devel("finished processing message");
@@ -203,7 +197,7 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 
 	/* this will mark the event complete if a match is found */
 	action_id = match_down_event(
-		op->node_name, XML_CIB_ATTR_STONITH, op->op_result);
+		op->node_name, CRM_OP_FENCE, op->op_result);
 	
 	if(op->op_result == STONITH_SUCCEEDED) {
 		enum cib_errors rc = cib_ok;

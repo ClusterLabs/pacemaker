@@ -113,49 +113,49 @@ crmd_rscstate2string(enum crmd_rscstate state)
 			return NULL;
 			
 		case crmd_rscstate_START:
-			return CRMD_RSCSTATE_START;
+			return CRMD_ACTION_START;
 			
 		case crmd_rscstate_START_PENDING:
-			return CRMD_RSCSTATE_START_PENDING;
+			return CRMD_ACTION_START_PENDING;
 			
 		case crmd_rscstate_START_OK:
-			return CRMD_RSCSTATE_START_OK;
+			return CRMD_ACTION_STARTED;
 			
 		case crmd_rscstate_START_FAIL:
-			return CRMD_RSCSTATE_START_FAIL;
+			return CRMD_ACTION_START_FAIL;
 			
 		case crmd_rscstate_STOP:
-			return CRMD_RSCSTATE_STOP;
+			return CRMD_ACTION_STOP;
 			
 		case crmd_rscstate_STOP_PENDING:
-			return CRMD_RSCSTATE_STOP_PENDING;
+			return CRMD_ACTION_STOP_PENDING;
 			
 		case crmd_rscstate_STOP_OK:
-			return CRMD_RSCSTATE_STOP_OK;
+			return CRMD_ACTION_STOPPED;
 			
 		case crmd_rscstate_STOP_FAIL:
-			return CRMD_RSCSTATE_STOP_FAIL;
+			return CRMD_ACTION_STOP_FAIL;
 			
 		case crmd_rscstate_MON:
-			return CRMD_RSCSTATE_MON;
+			return CRMD_ACTION_MON;
 			
 		case crmd_rscstate_MON_PENDING:
-			return CRMD_RSCSTATE_MON_PENDING;
+			return CRMD_ACTION_MON_PENDING;
 			
 		case crmd_rscstate_MON_OK:
-			return CRMD_RSCSTATE_MON_OK;
+			return CRMD_ACTION_MON_OK;
 			
 		case crmd_rscstate_MON_FAIL:
-			return CRMD_RSCSTATE_MON_FAIL;
+			return CRMD_ACTION_MON_FAIL;
 			
 		case crmd_rscstate_GENERIC_PENDING:
-			return CRMD_RSCSTATE_GENERIC_PENDING;
+			return CRMD_ACTION_GENERIC_PENDING;
 			
 		case crmd_rscstate_GENERIC_OK:
-			return CRMD_RSCSTATE_GENERIC_OK;
+			return CRMD_ACTION_GENERIC_OK;
 			
 		case crmd_rscstate_GENERIC_FAIL:
-			return CRMD_RSCSTATE_GENERIC_FAIL;
+			return CRMD_ACTION_GENERIC_FAIL;
 			
 	}
 	return "<unknown>";
@@ -283,7 +283,7 @@ stop_all_resources(void)
 	slist_iter(
 		rsc_id, char, lrm_list, lpc,
 
-		do_lrm_rsc_op(NULL, rsc_id, CRMD_RSCSTATE_STOP, NULL);
+		do_lrm_rsc_op(NULL, rsc_id, CRMD_ACTION_STOP, NULL);
 		);
 
 	set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
@@ -325,8 +325,8 @@ build_operation_update(
 	xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
 	
 	if(op->interval <= 0
-	   ||safe_str_eq(op->op_type, CRMD_RSCSTATE_START)
-	   || safe_str_eq(op->op_type, CRMD_RSCSTATE_STOP)) {
+	   ||safe_str_eq(op->op_type, CRMD_ACTION_START)
+	   || safe_str_eq(op->op_type, CRMD_ACTION_STOP)) {
 		set_xml_property_copy(xml_op, XML_ATTR_ID, op->op_type);
 
 	} else {
@@ -616,7 +616,7 @@ do_lrm_rsc_op(
 			XML_AGENT_ATTR_PROVIDER, FALSE);
 	}
 
-	if(safe_str_neq(operation, CRMD_RSCSTATE_STOP)) {
+	if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
 		if(fsa_state == S_STARTING
 		   || fsa_state == S_STOPPING
 		   || fsa_state == S_TERMINATE) {
@@ -645,7 +645,7 @@ do_lrm_rsc_op(
 			params = xml2list(msg);
 
 		} else {
-			CRM_DEV_ASSERT(safe_str_eq(CRMD_RSCSTATE_STOP, operation));
+			CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 		}
 		fsa_lrm_conn->lrm_ops->add_rsc(
 			fsa_lrm_conn, rid, class, type, provider, params);
@@ -660,7 +660,7 @@ do_lrm_rsc_op(
 	}
 
 	/* stop the monitor before stopping the resource */
-	if(safe_str_eq(operation, CRMD_RSCSTATE_STOP)) {
+	if(safe_str_eq(operation, CRMD_ACTION_STOP)) {
 		g_hash_table_foreach(monitors, stop_recurring_action, rsc);
 		g_hash_table_foreach_remove(
 			monitors, remove_recurring_action, rsc);
@@ -679,7 +679,7 @@ do_lrm_rsc_op(
 			params = xml2list(msg);
 		} else {
 			CRM_DEV_ASSERT(safe_str_eq(
-					       CRMD_RSCSTATE_STOP, operation));
+					       CRMD_ACTION_STOP, operation));
 		}
 	}
 
@@ -732,23 +732,23 @@ do_lrm_rsc_op(
 
 	op->app_name = crm_strdup(CRM_SYSTEM_CRMD);
 	
-	if(safe_str_eq(operation, CRMD_RSCSTATE_MON)) {
+	if(safe_str_eq(operation, CRMD_ACTION_MON)) {
 		op->target_rc = CHANGED;
 
 	} else {
 		op->target_rc = EVERYTIME;
 	}
 
-	if(safe_str_eq(CRMD_RSCSTATE_START, operation)) {
-		op->user_data = crm_strdup(CRMD_RSCSTATE_START_OK);
+	if(safe_str_eq(CRMD_ACTION_START, operation)) {
+		op->user_data = crm_strdup(CRMD_ACTION_STARTED);
 
-	} else if(safe_str_eq(CRMD_RSCSTATE_STOP, operation)) {
-		op->user_data = crm_strdup(CRMD_RSCSTATE_STOP_OK);
+	} else if(safe_str_eq(CRMD_ACTION_STOP, operation)) {
+		op->user_data = crm_strdup(CRMD_ACTION_STOPPED);
 		
-	} else if(safe_str_eq(CRMD_RSCSTATE_MON, operation)) {
+	} else if(safe_str_eq(CRMD_ACTION_MON, operation)) {
 		const char *last_op = g_hash_table_lookup(resources, rsc->id);
-		op->user_data = crm_strdup(CRMD_RSCSTATE_MON_OK);
-		if(safe_str_eq(last_op, CRMD_RSCSTATE_STOP)) {
+		op->user_data = crm_strdup(CRMD_ACTION_MON_OK);
+		if(safe_str_eq(last_op, CRMD_ACTION_STOP)) {
 			crm_err("Attempting to schedule %s _after_ a stop.",
 				op_id);
 			free_lrm_op(op);
@@ -759,8 +759,8 @@ do_lrm_rsc_op(
 	} else {
 		crm_warn("Using status \"%s\" for op \"%s\""
 			 "... this is still in the experimental stage.",
-			 CRMD_RSCSTATE_GENERIC_OK, operation);
-		op->user_data = crm_strdup(CRMD_RSCSTATE_GENERIC_OK);
+			 CRMD_ACTION_GENERIC_OK, operation);
+		op->user_data = crm_strdup(CRMD_ACTION_GENERIC_OK);
 	}	
 
 	g_hash_table_replace(
@@ -1014,8 +1014,8 @@ do_lrm_event(long long action,
 			last_op = g_hash_table_lookup(
 				resources_confirmed, crm_strdup(op->rsc_id));
 
-			if(safe_str_eq(last_op, CRMD_RSCSTATE_STOP)
-			   && safe_str_eq(op->op_type, CRMD_RSCSTATE_MON)) {
+			if(safe_str_eq(last_op, CRMD_ACTION_STOP)
+			   && safe_str_eq(op->op_type, CRMD_ACTION_MON)) {
 				crm_err("LRM sent a timed out %s operation"
 					" _after_ a confirmed stop",
 					op->op_type);

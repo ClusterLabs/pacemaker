@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.59 2005/05/12 11:16:40 andrew Exp $ */
+/* $Id: crm.h,v 1.60 2005/05/15 13:13:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -136,6 +136,7 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_LOCAL_SHUTDOWN 	"start_shutdown"
 #define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
 #define CRM_OP_SHUTDOWN 	"do_shutdown"
+#define CRM_OP_FENCE	 	"stonith"
 #define CRM_OP_EVENTCC		"event_cc"
 #define CRM_OP_TEABORT		"te_abort"
 #define CRM_OP_TE_HALT		"te_halt"
@@ -153,22 +154,24 @@ extern gboolean crm_assert_failed;
 #define CRMD_JOINSTATE_PENDING	"pending"
 #define CRMD_JOINSTATE_MEMBER	"member"
 
-#define CRMD_RSCSTATE_START		"start"
-#define CRMD_RSCSTATE_START_PENDING	"starting"
-#define CRMD_RSCSTATE_START_OK		"running"
-#define CRMD_RSCSTATE_START_FAIL	"start_failed"
-#define CRMD_RSCSTATE_STOP		"stop"
-#define CRMD_RSCSTATE_STOP_PENDING	"stopping"
-#define CRMD_RSCSTATE_STOP_OK		"stopped"
-#define CRMD_RSCSTATE_STOP_FAIL		"stop_failed"
-#define CRMD_RSCSTATE_MON		"monitor"
-#define CRMD_RSCSTATE_MON_PENDING	CRMD_RSCSTATE_START_OK
-#define CRMD_RSCSTATE_MON_OK		CRMD_RSCSTATE_START_OK
-#define CRMD_RSCSTATE_MON_FAIL		"monitor_failed"
-/* #define CRMD_RSCSTATE_GENERIC		"pending" */
-#define CRMD_RSCSTATE_GENERIC_PENDING	"pending"
-#define CRMD_RSCSTATE_GENERIC_OK	"complete"
-#define CRMD_RSCSTATE_GENERIC_FAIL	"pending_failed"
+#define CRMD_ACTION_START		"start"
+#define CRMD_ACTION_STARTED		"running"
+#define CRMD_ACTION_START_FAIL		"start_failed"
+#define CRMD_ACTION_START_PENDING	"starting"
+
+#define CRMD_ACTION_STOP		"stop"
+#define CRMD_ACTION_STOPPED		"stopped"
+#define CRMD_ACTION_STOP_FAIL		"stop_failed"
+#define CRMD_ACTION_STOP_PENDING	"stopping"
+
+#define CRMD_ACTION_MON			"monitor"
+#define CRMD_ACTION_MON_PENDING		CRMD_ACTION_STARTED
+#define CRMD_ACTION_MON_OK		CRMD_ACTION_STARTED
+#define CRMD_ACTION_MON_FAIL		"monitor_failed"
+/* #define CRMD_ACTION_GENERIC		"pending" */
+#define CRMD_ACTION_GENERIC_PENDING	"pending"
+#define CRMD_ACTION_GENERIC_OK		"complete"
+#define CRMD_ACTION_GENERIC_FAIL	"pending_failed"
 
 typedef GList* GListPtr;
 

@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.68 2005/05/06 11:34:52 andrew Exp $ */
+/* $Id: tengine.c,v 1.69 2005/05/15 13:13:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -160,7 +160,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		crm_debug("Action %d : Action mismatch %s", action->id, event_action);
 		
 	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT)) {
-		if(safe_str_eq(this_action, XML_CIB_ATTR_STONITH)) {
+		if(safe_str_eq(this_action, CRM_OP_FENCE)) {
 			
 		} else if(safe_str_neq(this_node, event_node)) {
 			crm_debug("node mismatch: %s", event_node);
@@ -262,7 +262,7 @@ match_down_event(const char *target, const char *filter, int rc)
 				continue;
 			}
 			
-			if(safe_str_eq(this_action, XML_CIB_ATTR_STONITH)) {
+			if(safe_str_eq(this_action, CRM_OP_FENCE)) {
 				action_args = find_xml_node(
 					action->xml, XML_TAG_ATTRS, TRUE);
 				this_node = crm_element_value(
@@ -472,7 +472,7 @@ initiate_action(action_t *action)
 		ret = TRUE;
 
 	} else if(action->type == action_type_crm
-		  && safe_str_eq(task, XML_CIB_ATTR_STONITH)){
+		  && safe_str_eq(task, CRM_OP_FENCE)){
 		
 		crm_data_t *action_args = find_xml_node(
 			action->xml, XML_TAG_ATTRS, TRUE);
@@ -540,7 +540,7 @@ initiate_action(action_t *action)
 		 * Writing pending stops makes it look like the
 		 *   resource is running again
 		 */
-		if(safe_str_neq(task, CRMD_RSCSTATE_STOP)) {
+		if(safe_str_neq(task, CRMD_ACTION_STOP)) {
 			cib_action_update(action, LRM_OP_PENDING);
 		} else {
 			cib_action_updated(NULL, 0, cib_ok, NULL, action);
