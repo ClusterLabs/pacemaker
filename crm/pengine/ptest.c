@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.45 2005/04/11 15:32:35 andrew Exp $ */
+/* $Id: ptest.c,v 1.46 2005/05/15 13:17:59 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -131,97 +131,35 @@ main(int argc, char **argv)
 	} else {
 		cib_object = stdin2xml();
 	}
-	crm_debug("=#=#=#=#= Stage 0 =#=#=#=#=");
-
 #ifdef MCHECK
 	mtrace();
-#endif
-
+#endif 
+	crm_debug("unpack");		  
 	stage0(cib_object,
 	       &resources,
 	       &nodes,  &placement_constraints,
 	       &actions,  &ordering_constraints,
 	       &stonith_list, &shutdown_list);
-	
-	crm_debug("========= Nodes =========");
-	slist_iter(node, node_t, nodes, lpc,
-		   print_node(NULL, node, TRUE));
 
-	crm_debug("========= Resources =========");
-	slist_iter(resource, resource_t, resources, lpc,
-		   print_resource(NULL, resource, TRUE));    
-
-	crm_debug("========= Constraints =========");
-	slist_iter(constraint, rsc_to_node_t, placement_constraints, lpc,
-		   print_rsc_to_node(NULL, constraint, FALSE));
-    
-	crm_debug("=#=#=#=#= Stage 1 =#=#=#=#=");
+	crm_debug("apply placement constraints");
 	stage1(placement_constraints, nodes, resources);
-
-	crm_debug("========= Nodes =========");
-	slist_iter(node, node_t, nodes, lpc,
-		   print_node(NULL, node, TRUE));
-
-	crm_debug("========= Resources =========");
-	slist_iter(resource, resource_t, resources, lpc,
-		   print_resource(NULL, resource, TRUE));
-
-	crm_debug("=#=#=#=#= Stage 2 =#=#=#=#=");
+	
+	crm_debug("color resources");
 	stage2(resources, nodes, &colors);
 
-	crm_debug("========= Nodes =========");
-	slist_iter(node, node_t, nodes, lpc,
-		   print_node(NULL, node, TRUE));
-
-	crm_debug("========= Resources =========");
-	slist_iter(resource, resource_t, resources, lpc,
-		   print_resource(NULL, resource, TRUE));  
-  
-	crm_debug("========= Colors =========");
-	slist_iter(color, color_t, colors, lpc,
-		   print_color(NULL, color, FALSE));
-  
-	crm_debug("========= Action List =========");
-	slist_iter(action, action_t, actions, lpc,
-		   print_action(NULL, action, FALSE));
-
-	crm_debug("=#=#=#=#= Stage 3 =#=#=#=#=");
+	/* unused */
 	stage3(colors);
-	crm_debug("========= Colors =========");
-	slist_iter(color, color_t, colors, lpc,
-		   print_color(NULL, color, FALSE));
-
-	crm_debug("========= Action List =========");
-	slist_iter(action, action_t, actions, lpc,
-		   print_action(NULL, action, TRUE));
-
-	crm_debug("=#=#=#=#= Stage 4 =#=#=#=#=");
+	
+	crm_debug("assign nodes to colors");
 	stage4(colors);
-	crm_debug("========= Colors =========");
-	slist_iter(color, color_t, colors, lpc,
-		   print_color(NULL, color, FALSE));
-
-	crm_debug("=#=#=#=#= Summary =#=#=#=#=");
-	crm_debug("========= Action List =========");
-	slist_iter(action, action_t, actions, lpc,
-		   print_action(NULL, action, TRUE));
 	
-	crm_debug("=#=#=#=#= Stage 5 =#=#=#=#=");
+	crm_debug("creating actions and internal ording constraints");
 	stage5(resources, &ordering_constraints);
-
-	crm_debug("========= All Actions =========");
-	slist_iter(action, action_t, actions, lpc,
-		   print_action("\t", action, TRUE);
-		);
-
-	crm_debug("=#=#=#=#= Stage 6 =#=#=#=#=");
+		
+	crm_debug("processing fencing and shutdown cases");
 	stage6(&actions, &ordering_constraints, nodes, resources);
-
-	crm_debug("========= Action List =========");
-	slist_iter(action, action_t, actions, lpc,
-		   print_action(NULL, action, TRUE));
 	
-	crm_debug("=#=#=#=#= Stage 7 =#=#=#=#=");
+	crm_debug("applying ordering constraints");
 	stage7(resources, actions, ordering_constraints);
 
 	crm_debug("=#=#=#=#= Summary =#=#=#=#=");
@@ -238,7 +176,7 @@ main(int argc, char **argv)
 	slist_iter(node, node_t, shutdown_list, lpc,
 		   print_node(NULL, node, FALSE));
 
-	crm_debug("=#=#=#=#= Stage 8 =#=#=#=#=");
+	crm_debug("creating transition graph");
 	stage8(resources, actions, &graph);
 
 
@@ -252,7 +190,7 @@ main(int argc, char **argv)
 	}
 	
 	crm_verbose("deleting order cons");
-	pe_free_shallow(ordering_constraints);
+	pe_free_ordering(ordering_constraints); 
 
 	crm_verbose("deleting action sets");
 	slist_iter(action_set, GList, action_sets, lpc,

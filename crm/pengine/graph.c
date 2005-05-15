@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.40 2005/05/06 11:35:59 andrew Exp $ */
+/* $Id: graph.c,v 1.41 2005/05/15 13:17:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -118,9 +118,10 @@ shutdown_constraints(
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
 
-		order_new(rsc, stop_rsc, NULL,
-			  NULL, shutdown_crm, shutdown_op,
-			  pecs_must, ordering_constraints);
+		custom_action_order(
+			rsc, stop_key(rsc), NULL,
+			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
+			pecs_must, ordering_constraints);
 
 		);	
 
@@ -146,9 +147,10 @@ stonith_constraints(node_t *node,
 		crm_devel("Adding shutdown (%d) as an input to stonith (%d)",
 			  shutdown_op->id, stonith_op->id);
 		
-		order_new(NULL, shutdown_crm, shutdown_op,
-			  NULL, stonith_node, stonith_op,
-			  pecs_must, ordering_constraints);
+		custom_action_order(
+			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
+			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
+			pecs_must, ordering_constraints);
 		
 	}
 	
@@ -157,7 +159,10 @@ stonith_constraints(node_t *node,
 		rsc, resource_t, node->details->running_rsc, lpc,
 
 		if(stonith_op != NULL) {
-			stop_actions = find_actions(rsc->actions,stop_rsc,node);
+			char *key = stop_key(rsc);
+			stop_actions = find_actions(rsc->actions, key, node);
+			crm_free(key);
+			
 			slist_iter(
 				action, action_t, stop_actions, lpc2,
 				if(node->details->online == FALSE
@@ -167,16 +172,18 @@ stonith_constraints(node_t *node,
 					 */
 					action->pseudo = TRUE;
 					action->runnable = TRUE;
-					order_new(NULL,stonith_node,stonith_op,
-						  rsc, stop_rsc, NULL,
-						  pecs_must, ordering_constraints);
+					custom_action_order(
+						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
+						rsc, stop_key(rsc), NULL,
+						pecs_must, ordering_constraints);
 				} else {
 					/* stop healthy resources before the
 					 * stonith op
 					 */
-					order_new(rsc, stop_rsc, NULL,
-						  NULL,stonith_node,stonith_op,
-						  pecs_must, ordering_constraints);
+					custom_action_order(
+						rsc, stop_key(rsc), NULL,
+						NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
+						pecs_must, ordering_constraints);
 				}
 				);
 
@@ -207,6 +214,7 @@ stonith_constraints(node_t *node,
 crm_data_t *
 action2xml(action_t *action, gboolean as_input)
 {
+	gboolean needs_node_info = TRUE;
 	crm_data_t * action_xml = NULL;
 	crm_data_t * args_xml = NULL;
 	
@@ -215,61 +223,37 @@ action2xml(action_t *action, gboolean as_input)
 	}
 
 	crm_devel("Dumping action %d as XML", action->id);
-	switch(action->task) {
-		case stonith_node:
-		case shutdown_crm:
-			action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+	if(safe_str_eq(action->task, CRM_OP_FENCE)) {
+		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+		needs_node_info = FALSE;
+		
+	} else if(safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
+		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
-			set_xml_property_copy(
-				action_xml, XML_ATTR_ID, crm_itoa(action->id));
+	} else if(action->pseudo) {
+		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_PSEUDO_EVENT);
+		needs_node_info = FALSE;
 
-			set_xml_property_copy(action_xml, XML_LRM_ATTR_TASK,
-					      task2text(action->task));
-
-			break;
-		default:
-			if(action->pseudo) {
-				action_xml = create_xml_node(NULL,XML_GRAPH_TAG_PSEUDO_EVENT);
-			} else {
-				action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
-			}
-
-			if(!as_input && action->rsc != NULL) {
-				crm_data_t *rsc_xml = create_xml_node(
-					action_xml, crm_element_name(action->rsc->xml));
-				copy_in_properties(rsc_xml, action->rsc->xml);
-			}
-			
-			set_xml_property_copy(
-				action_xml, XML_ATTR_ID, crm_itoa(action->id));
-
-			if(safe_val3(NULL, action, rsc, id) != NULL) {
-				set_xml_property_copy(
-					action_xml, XML_LRM_ATTR_RSCID,
-					safe_val3(NULL, action, rsc, id));
-			}
-			
-			set_xml_property_copy(action_xml, XML_LRM_ATTR_TASK,
-					      task2text(action->task));
-			
-			break;
+	} else {
+		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
 	}
+	
+	set_xml_property_copy(action_xml, XML_ATTR_ID, crm_itoa(action->id));
+	if(action->rsc != NULL) {
+		set_xml_property_copy(
+			action_xml, XML_LRM_ATTR_RSCID, action->rsc->id);
+	}
+	set_xml_property_copy(action_xml, XML_LRM_ATTR_TASK, action->task);
 
-	if(action->task != stonith_node
-	   && (action->pseudo == FALSE || action->node != NULL)) {
-		const char *default_value = NULL;
-		if(as_input) {
-			default_value = "__none__";
-		}
-
+	if(needs_node_info && action->node != NULL) {
 		set_xml_property_copy(
 			action_xml, XML_LRM_ATTR_TARGET,
-			safe_val4(default_value, action, node, details,uname));
+			action->node->details->uname);
 
 		set_xml_property_copy(
 			action_xml, XML_LRM_ATTR_TARGET_UUID,
-			safe_val4(default_value, action, node, details, id));
-
+			action->node->details->id);
+		
 		CRM_DEV_ASSERT(NULL != crm_element_value(
 				       action_xml, XML_LRM_ATTR_TARGET));
 		
@@ -286,17 +270,25 @@ action2xml(action_t *action, gboolean as_input)
 		return action_xml;
 	}
 
-	crm_xml_debug(action_xml, "dumped action");
-	
-	args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
-	g_hash_table_foreach(action->extra, hash2nvpair, args_xml);
+	if(action->rsc != NULL && action->pseudo == FALSE) {
+		crm_data_t *rsc_xml = create_xml_node(
+			action_xml, crm_element_name(action->rsc->xml));
 
-	if(action->rsc != NULL) {
+		copy_in_properties(rsc_xml, action->rsc->xml);
+
+		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
+		g_hash_table_foreach(action->extra, hash2nvpair, args_xml);
+		
 		g_hash_table_foreach(
 			action->rsc->parameters, hash2nvpair, args_xml);
+
+	} else {
+		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
+		g_hash_table_foreach(action->extra, hash2nvpair, args_xml);
 	}
 	
-	crm_xml_verbose(args_xml, "copied in extra attributes");
+	
+	crm_xml_verbose(action_xml, "dumped action");
 	
 	return action_xml;
 }
@@ -327,8 +319,8 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 		return;
 
 	} else if(action->pseudo
-		  || action->task == stonith_node
-		  || action->task == shutdown_crm) {
+		  || safe_str_eq(action->task,  CRM_OP_FENCE)
+		  || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
 		/* skip the next check */
 		
 	} else {

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.72 2005/05/05 22:51:20 andrew Exp $ */
+/* $Id: utils.c,v 1.73 2005/05/15 13:17:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,7 +34,7 @@ extern GListPtr global_action_list;
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
-const char *find_action_timeout(resource_t *rsc, enum action_tasks task);
+void unpack_operation(crm_data_t *xml_obj, GHashTable *hash);
 
 /* only for rsc_colocation constraints */
 rsc_colocation_t *
@@ -596,39 +596,38 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 }
 
 action_t *
-action_new(resource_t *rsc, enum action_tasks task,
-	   const char *timeout, node_t *on_node)
+custom_action(
+	resource_t *rsc, char *key, const char *task, node_t *on_node)
 {
 	action_t *action = NULL;
-
 	GListPtr possible_matches = NULL;
-	if(rsc != NULL && task != monitor_rsc) {
-		possible_matches =
-			find_actions(rsc->actions, task, on_node);
-	}
+	CRM_DEV_ASSERT(key != NULL);
+	if(crm_assert_failed) { return NULL; }
+	
+	CRM_DEV_ASSERT(task != NULL);
+	if(crm_assert_failed) { return NULL; }
 
+	if(rsc != NULL) {
+		possible_matches = find_actions(rsc->actions, key, on_node);
+	}
+	
 	if(possible_matches != NULL) {
 		if(g_list_length(possible_matches) > 1) {
 			crm_warn("Action %s for %s on %s exists %d times",
-				task2text(task), rsc?rsc->id:"<NULL>",
+				task, rsc?rsc->id:"<NULL>",
 				on_node?on_node->details->id:"<NULL>",
 				g_list_length(possible_matches));
 		}
 		
 		action = g_list_nth_data(possible_matches, 0);
 		crm_devel("Found existing action (%d) %s for %s on %s",
-			  action->id,
-			  task2text(task), rsc?rsc->id:"<NULL>",
+			  action->id, task, rsc?rsc->id:"<NULL>",
 			  on_node?on_node->details->id:"<NULL>");
-	}
-
-	if(timeout == NULL && rsc != NULL) {
-		timeout = find_action_timeout(rsc, task);
 	}
 
 	if(action == NULL) {
 		crm_devel("Creating action %s for %s on %s",
-			  task2text(task), rsc?rsc->id:"<NULL>",
+			  task, rsc?rsc->id:"<NULL>",
 			  on_node?on_node->details->id:"<NULL>");
 
 		crm_malloc0(action, sizeof(action_t));
@@ -649,23 +648,23 @@ action_new(resource_t *rsc, enum action_tasks task,
 			action->optional   = FALSE;
 			action->seen_count = 0;
 			
-			action->extra	   = g_hash_table_new_full(
+			action->extra = g_hash_table_new_full(
 				g_str_hash, g_str_equal,
 				g_hash_destroy_str, g_hash_destroy_str);
 
 			global_action_list = g_list_append(
 				global_action_list, action);
 
+			action->uuid = key;
+
 			if(rsc != NULL) {
+				action->op_entry = find_rsc_op_entry(rsc, key);
+				unpack_operation(action->op_entry,action->extra);
 				rsc->actions = g_list_append(
-					 rsc->actions, action);
+					rsc->actions, action);
 			}
 			crm_devel("Action %d created", action->id);
 		}
-	}
-	
-	if(timeout != NULL) {
-		add_hash_param(action->extra, "timeout", timeout);
 	}
 		
 	if(rsc != NULL) {
@@ -675,46 +674,79 @@ action_new(resource_t *rsc, enum action_tasks task,
 		} else if(action->node->details->online == FALSE) {
 			crm_warn("Action %d %s for %s on %s is unrunnable",
 				 action->id,
-				 task2text(task), rsc?rsc->id:"<NULL>",
+				 task, rsc?rsc->id:"<NULL>",
 				 action->node?action->node->details->id:"<none>");
 			action->runnable = FALSE;
 
 		} else {
 			action->runnable = TRUE;
 		}
-		
-		if(task == stop_rsc) {
-			rsc->stopping = TRUE;
 
-		} else if(task == start_rsc && action->runnable) {
-			rsc->starting = TRUE;
-
-		} else if(task == start_rsc) {
-			rsc->starting = FALSE;
-		} 
+		switch(text2task(action->task)) {
+			case stop_rsc:
+				rsc->stopping = TRUE;
+				break;
+			case start_rsc:
+				rsc->starting = FALSE;
+				if(action->runnable) {
+					rsc->starting = TRUE;
+				}
+				break;
+			default:
+				break;
+		}
 	}
 	return action;
 }
 
-
-const char *
-find_action_timeout(resource_t *rsc, enum action_tasks task)
+void
+unpack_operation(crm_data_t *xml_obj, GHashTable *hash)
 {
-	crm_data_t *op = NULL;
-	if(rsc != NULL && rsc->ops_xml != NULL) {
-		xml_child_iter(
-			rsc->ops_xml, a_child, "op",
-			if(safe_str_eq(task2text(task),
-				       crm_element_value(a_child,"name"))) {
-				op = a_child;
-				break;
-			}
-			);
+	int lpc = 0;
+	const char *value = NULL;
+	const char *fields[] = {
+		"interval",
+		"timeout",
+		"start_delay"
+	};
+
+	if(xml_obj == NULL) {
+		return;
 	}
-	if(op == NULL) {
-		return NULL;
+	
+	for(;lpc < DIMOF(fields); lpc++) {
+		value = crm_element_value(xml_obj, fields[lpc]);
+		add_hash_param(hash, fields[lpc], value);
 	}
-	return crm_element_value(op, "timeout");
+	
+	unpack_instance_attributes(xml_obj, hash);
+}
+
+
+
+crm_data_t *
+find_rsc_op_entry(resource_t *rsc, const char *key) 
+{
+	const char *name = NULL;
+	const char *interval = NULL;
+	char *match_key = NULL;
+	
+	xml_child_iter(
+		rsc->ops_xml, operation, "op",
+
+		name = crm_element_value(operation, "name");
+		interval = crm_element_value(operation, "interval");
+
+		match_key = generate_op_key(rsc->id,name,crm_get_msec(interval));
+		crm_debug("Matching %s with %s", key, match_key);
+		if(safe_str_eq(key, match_key)) {
+			crm_free(match_key);
+			return operation;
+		}
+		crm_free(match_key);
+		);
+	crm_debug("No matching for %s", key);
+	return NULL;
 }
 
 
@@ -741,6 +773,27 @@ strength2text(enum con_strength strength)
 	return result;
 }
 
+enum action_tasks
+text2task(const char *task) 
+{
+	if(safe_str_eq(task, CRMD_ACTION_STOP)) {
+		return stop_rsc;
+	} else if(safe_str_eq(task, CRMD_ACTION_STOPPED)) {
+		return stopped_rsc;
+	} else if(safe_str_eq(task, CRMD_ACTION_START)) {
+		return start_rsc;
+	} else if(safe_str_eq(task, CRMD_ACTION_STARTED)) {
+		return started_rsc;
+	} else if(safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+		return shutdown_crm;
+	} else if(safe_str_eq(task, CRM_OP_FENCE)) {
+		return stonith_node;
+	} else if(safe_str_eq(task, CRMD_ACTION_MON)) {
+		return monitor_rsc;
+	} 
+	crm_err("Unsupported action: %s", task);
+	return no_action;
+}
 
 
 const char *
@@ -753,25 +806,25 @@ task2text(enum action_tasks task)
 			result = "no_action";
 			break;
 		case stop_rsc:
-			result = CRMD_RSCSTATE_STOP;
+			result = CRMD_ACTION_STOP;
 			break;
 		case stopped_rsc:
-			result = CRMD_RSCSTATE_STOP_OK;
+			result = CRMD_ACTION_STOPPED;
 			break;
 		case start_rsc:
-			result = CRMD_RSCSTATE_START;
+			result = CRMD_ACTION_START;
 			break;
 		case started_rsc:
-			result = CRMD_RSCSTATE_START_OK;
+			result = CRMD_ACTION_STARTED;
 			break;
 		case shutdown_crm:
 			result = CRM_OP_SHUTDOWN;
 			break;
 		case stonith_node:
-			result = XML_CIB_ATTR_STONITH;
+			result = CRM_OP_FENCE;
 			break;
 		case monitor_rsc:
-			result = CRMD_RSCSTATE_MON;
+			result = CRMD_ACTION_MON;
 			break;
 	}
 	
@@ -954,15 +1007,14 @@ log_action(int log_level, const char *pre_text, action_t *action, gboolean detai
 		return;
 	}
 
-	switch(action->task) {
+	switch(text2task(action->task)) {
 		case stonith_node:
 		case shutdown_crm:
 			util_log("%s%s%sAction %d: %s @ %s",
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
 			       action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
-			       action->id,
-			       task2text(action->task),
+			       action->id, action->task,
 			       safe_val4(NULL, action, node, details, uname));
 			break;
 		default:
@@ -970,8 +1022,7 @@ log_action(int log_level, const char *pre_text, action_t *action, gboolean detai
 			       pre_text==NULL?"":pre_text,
 			       pre_text==NULL?"":": ",
 			       action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
-			       action->id,
-			       task2text(action->task),
+			       action->id, action->task,
 			       safe_val3(NULL, action, rsc, id),
 			       safe_val4(NULL, action, node, details, uname));
 			
@@ -1130,6 +1181,7 @@ pe_free_actions(GListPtr actions)
 		action->actions_before = NULL;
 		action->actions_after  = NULL;
 		g_hash_table_destroy(action->extra);
+		crm_free(action->uuid);
 		crm_free(action);
 	}
 	if(actions != NULL) {
@@ -1137,6 +1189,22 @@ pe_free_actions(GListPtr actions)
 	}
 }
 
+void
+pe_free_ordering(GListPtr constraints) 
+{
+	while(constraints != NULL) {
+		GListPtr list_item = constraints;
+		order_constraint_t *order = list_item->data;
+		constraints = constraints->next;
+
+		crm_free(order->lh_action_task);
+		crm_free(order->rh_action_task);
+		crm_free(order);
+	}
+	if(constraints != NULL) {
+		g_list_free(constraints);
+	}
+}
 
 
 void
@@ -1160,30 +1228,33 @@ pe_free_rsc_to_node(rsc_to_node_t *cons)
 }
 
 GListPtr
-find_actions(GListPtr input, enum action_tasks task, node_t *on_node)
+find_actions(GListPtr input, const char *key, node_t *on_node)
 {
 	GListPtr result = NULL;
+	CRM_DEV_ASSERT(key != NULL);
 	
 	slist_iter(
 		action, action_t, input, lpc,
-		if(action->task == task) {
-			if(on_node == NULL) {
-				result = g_list_append(result, action);
+		crm_trace("Matching %s against %s", key, action->uuid);
+		if(safe_str_neq(key, action->uuid)) {
+			continue;
+			
+		} else if(on_node == NULL) {
+			result = g_list_append(result, action);
+			
+		} else if(action->node == NULL) {
+			/* skip */
+			crm_debug("While looking for %s action on %s, "
+				  "found an unallocated one.  Assigning"
+				  " it to the requested node...",
+				  key, on_node->details->uname);
 
-			} else if(action->node == NULL) {
-				/* skip */
-				crm_debug("While looking for %s action on %s, "
-					  "found an unallocated one.  Assigning"
-					  " it to the requested node...",
-					  task2text(task),
-					  on_node->details->uname);
-				action->node = on_node;
-				result = g_list_append(result, action);
-				
-			} else if(safe_str_eq(on_node->details->id,
-					      action->node->details->id)) {
-				result = g_list_append(result, action);
-			}
+			action->node = on_node;
+			result = g_list_append(result, action);
+			
+		} else if(safe_str_eq(on_node->details->id,
+				      action->node->details->id)) {
+			result = g_list_append(result, action);
 		}
 		);
 

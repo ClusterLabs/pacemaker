@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.13 2005/04/25 13:01:45 andrew Exp $ */
+/* $Id: group.c,v 1.14 2005/05/15 13:17:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -158,14 +158,16 @@ void group_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 
 	if(child_starting) {
 		rsc->starting = TRUE;
-		action_new(group_data->self, start_rsc, NULL, NULL);
-		action_new(group_data->self, started_rsc, NULL, NULL);
+		start_action(group_data->self, NULL);
+		custom_action(group_data->self,
+			      started_key(rsc), CRMD_ACTION_STARTED, NULL);
 		
 	}
 	if(child_stopping) {
 		rsc->stopping = TRUE;
-		action_new(group_data->self, stop_rsc, NULL, NULL);
-		action_new(group_data->self, stopped_rsc, NULL, NULL);
+		stop_action(group_data->self, NULL);
+		custom_action(group_data->self,
+			      stopped_key(rsc), CRMD_ACTION_STOPPED, NULL);
 	}
 	
 	if(group_data->self != NULL) {
@@ -182,47 +184,36 @@ void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	order_new(group_data->self, stop_rsc,  NULL,
-		  group_data->self, start_rsc, NULL,
-		  pecs_startstop, ordering_constraints);
+	order_stop_start(group_data->self, group_data->self);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
-		order_new(child_rsc, stop_rsc,  NULL,
-			  child_rsc, start_rsc, NULL,
-			  pecs_startstop, ordering_constraints);
+		order_stop_start(child_rsc, child_rsc);
 
 		if(last_rsc != NULL) {
-			order_new(last_rsc,  start_rsc, NULL,
-				  child_rsc, start_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
-
-			order_new(child_rsc, stop_rsc, NULL,
-				  last_rsc,  stop_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			order_start_start(last_rsc, child_rsc);
+			order_stop_stop(child_rsc, last_rsc);
 
 		} else {
-			order_new(child_rsc,        stop_rsc, NULL,
-				  group_data->self, stopped_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			custom_action_order(
+				child_rsc, stop_key(child_rsc), NULL,
+				group_data->self, stopped_key(group_data->self), NULL,
+				pecs_startstop, ordering_constraints);
 
-			order_new(group_data->self, start_rsc, NULL,
-				  child_rsc,        start_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			order_start_start(group_data->self, child_rsc);
 		}
 		
 		last_rsc = child_rsc;
 		);
 
 	if(last_rsc != NULL) {
-		order_new(last_rsc,         start_rsc, NULL,
-			  group_data->self, started_rsc, NULL,
-			  pecs_startstop, ordering_constraints);
+		custom_action_order(
+			last_rsc, start_key(last_rsc), NULL,
+			group_data->self, started_key(group_data->self), NULL,
+			pecs_startstop, ordering_constraints);
 
-		order_new(group_data->self, stop_rsc, NULL,
-			  last_rsc,         stop_rsc, NULL,
-			  pecs_startstop, ordering_constraints);
+		order_stop_stop(group_data->self, last_rsc);
 	}
 		
 }
@@ -272,6 +263,8 @@ void group_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
 
 void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 {
+	char *stop_id = NULL;
+	char *start_id = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
@@ -279,13 +272,22 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 
 	if(group_data->self == NULL) {
 		return;
-
-	} else if(order->lh_action_task == start_rsc) {
-		order->lh_action_task = started_rsc;
-		
-	} else if(order->lh_action_task == stop_rsc) {
-		order->lh_action_task = stopped_rsc;
 	}
+
+	stop_id = stop_key(rsc);
+	start_id = start_key(rsc);
+	
+	if(safe_str_eq(order->lh_action_task, start_id)) {
+		crm_free(order->lh_action_task);
+		order->lh_action_task = started_key(rsc);
+
+	} else if(safe_str_eq(order->lh_action_task, stop_id)) {
+		crm_free(order->lh_action_task);
+		order->lh_action_task = stopped_key(rsc);
+	}
+
+	crm_free(start_id);
+	crm_free(stop_id);
 	
 	group_data->self->fns->rsc_order_lh(group_data->self, order);
 }

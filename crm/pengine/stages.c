@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.55 2005/04/21 15:32:02 andrew Exp $ */
+/* $Id: stages.c,v 1.56 2005/05/15 13:17:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -309,7 +309,9 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 			crm_info("Scheduling Node %s for shutdown",
 				 node->details->uname);
 			
-			down_op = action_new(NULL, shutdown_crm, NULL, node);
+			down_op = custom_action(
+				NULL, crm_strdup(CRM_OP_SHUTDOWN),
+				CRM_OP_SHUTDOWN, node);
 			down_op->runnable = TRUE;
 			
 			*actions = g_list_append(*actions, down_op);
@@ -328,7 +330,9 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 			crm_warn("Scheduling Node %s for STONITH",
 				 node->details->uname);
 
-			stonith_op = action_new(NULL, stonith_node,NULL,NULL);
+			stonith_op = custom_action(
+				NULL, crm_strdup(CRM_OP_FENCE),
+				CRM_OP_FENCE, node);
 			stonith_op->runnable = TRUE;
 
 			add_hash_param(

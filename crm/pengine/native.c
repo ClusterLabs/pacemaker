@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.35 2005/05/13 07:55:55 andrew Exp $ */
+/* $Id: native.c,v 1.36 2005/05/15 13:17:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -210,7 +210,7 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			 GListPtr *ordering_constraints) 
 {
 	action_t *mon = NULL;
-	char *match_key = NULL;
+	char *key = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
 	if(node == NULL || !node->details->online || node->details->unclean) {
@@ -224,68 +224,16 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		name = crm_element_value(operation, "name");
 		value = crm_element_value(operation, "interval");
 
-		match_key = generate_op_key(rsc->id, name, crm_get_msec(value));
-		mon = create_recurring_action(rsc, node, name, match_key);
-		crm_free(match_key);
+		key = generate_op_key(rsc->id, name, crm_get_msec(value));
+		mon = custom_action(rsc, key, name, node);
 		
 		if(start != NULL) {
-			order_new(rsc, start_rsc, NULL,
-				  NULL, monitor_rsc, mon,
-				  pecs_must, ordering_constraints);
+			custom_action_order(
+				rsc, start_key(rsc), NULL,
+				NULL, crm_strdup(key), mon,
+				pecs_must, ordering_constraints);
 		}
 		);	
-}
-
-action_t *
-create_recurring_action(resource_t *rsc, node_t *node,
-			const char *action, const char *key)
-{
-	crm_data_t *op = NULL;
-
-	action_t *mon = NULL;
-	char *match_key = NULL;
-	const char *name = NULL;
-	const char *value = NULL;
-	if(safe_str_neq(action, CRMD_RSCSTATE_MON)) {
-		crm_err("Unsupported action: %s", action);
-		return NULL;
-	}
-
-	crm_info("\tStart %s\t(%s)", key, node?node->details->uname:"<any>");
-
-	xml_child_iter(
-		rsc->ops_xml, operation, "op",
-
-		name = crm_element_value(operation, "name");
-		value = crm_element_value(operation, "interval");
-		match_key = generate_op_key(rsc->id, name, crm_get_msec(value));
-		crm_verbose("Matching against %s with %s", key, match_key);
-		if(safe_str_neq(key, match_key)) {
-			crm_free(match_key);
-			continue;
-		}
-		crm_free(match_key);
-		op = operation;
-		break;
-		);
-	
-	if(op == NULL) {
-		crm_err("Unmatched recurring op: %s", key);
-		return NULL;
-	}
-	
-	mon = action_new(rsc, monitor_rsc,
-			 crm_element_value(op, "timeout"), node);
-
-	mon->uuid = key;
-	add_hash_param(mon->extra, "interval", value);
-
-	value = crm_element_value(op, "start_delay");
-	add_hash_param(mon->extra, "start_delay", value);
-
-	unpack_instance_attributes(op, mon->extra);
-
-	return mon;
 }
 
 void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
@@ -303,7 +251,7 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 	
 	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
 		/* create start action */
-		start = action_new(rsc, start_rsc, NULL, chosen);
+		start = start_action(rsc, chosen);
 		if( !have_quorum && no_quorum_policy != no_quorum_ignore) {
 			start->runnable = FALSE;
 			
@@ -326,7 +274,7 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 				crm_info("Stop  resource %s\t(%s) (recovery)",
 					 rsc->id,
 					 safe_val3(NULL, node, details, uname));
-				stop = action_new(rsc, stop_rsc, NULL, node);
+				stop = stop_action(rsc, node);
 				);
 		}
 		
@@ -337,7 +285,7 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 			crm_info("Start resource %s (%s)\t(recovery)",
 				 rsc->id,
 				 safe_val3(NULL, chosen, details, uname));
-			start = action_new(rsc, start_rsc, NULL, chosen);
+			start = start_action(rsc, chosen);
 			rsc->schedule_recurring = TRUE;
 		}
 
@@ -359,8 +307,8 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		CRM_DEV_ASSERT(node != NULL);
 		
 		if(have_quorum == FALSE && no_quorum_policy == no_quorum_stop){
-			start = action_new(rsc, start_rsc, NULL, chosen);
-			stop  = action_new(rsc, stop_rsc,  NULL, node);
+			start = start_action(rsc, chosen);
+			stop = stop_action(rsc, node);
 			start->runnable = FALSE;
 
 		} else if(chosen != NULL && safe_str_eq(
@@ -371,8 +319,8 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 				crm_info("Restart resource %s\t(%s)",rsc->id,
 					 safe_val3(NULL,chosen,details,uname));
 
-				start = action_new(rsc, start_rsc, NULL,chosen);
-				stop  = action_new(rsc, stop_rsc,  NULL,node);
+				start = start_action(rsc, chosen);
+				stop = stop_action(rsc, node);
 
 				rsc->schedule_recurring = TRUE;
 				
@@ -380,13 +328,13 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 				crm_info("Leave resource %s\t(%s)",rsc->id,
 					 safe_val3(NULL,chosen,details,uname));
 
-				start = action_new(rsc, start_rsc, NULL,chosen);
+				start = start_action(rsc, chosen);
 				if(rsc->start_pending == FALSE) {
 					start->optional = TRUE;
 				} else {
 					rsc->schedule_recurring = TRUE;
 				}	
-				stop  = action_new(rsc, stop_rsc,  NULL,node);
+				stop = stop_action(rsc, node);
 				stop->optional = TRUE;
 			}
 			
@@ -395,14 +343,14 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 			crm_info("Move  resource %s\t(%s -> %s)", rsc->id,
 				 safe_val3(NULL, node, details, uname),
 				 safe_val3(NULL, chosen, details, uname));
-			action_new(rsc, stop_rsc, NULL, node);
-			start = action_new(rsc, start_rsc, NULL, chosen);
+			stop = stop_action(rsc, node);
+			start = start_action(rsc, chosen);
 			rsc->schedule_recurring = TRUE;
 			
 		} else {
 			crm_info("Stop  resource %s\t(%s)", rsc->id,
 				 safe_val3(NULL, node, details, uname));
-			action_new(rsc, stop_rsc, NULL, node);
+			stop_action(rsc, node);
 		}
 	}
 	
@@ -416,9 +364,8 @@ void native_internal_constraints(resource_t *rsc,GListPtr *ordering_constraints)
 {
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
-	
-	order_new(rsc, stop_rsc, NULL, rsc, start_rsc, NULL,
-		  pecs_startstop, ordering_constraints);
+
+	order_stop_start(rsc, rsc);
 }
 
 void native_rsc_colocation_lh(rsc_colocation_t *constraint)
@@ -570,49 +517,70 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 
 	crm_verbose("Processing LH of ordering constraint %d", order->id);
 
-	switch(order->lh_action_task) {
-		case start_rsc:
-		case started_rsc:
-		case stop_rsc:
-		case stopped_rsc:
-			break;
-		default:
-			crm_err("Task \"%s\" from ordering %d isnt a resource action",
-				task2text(order->lh_action_task), order->id);
-			return;
-	}
-
-
 	if(lh_action != NULL) {
 		lh_actions = g_list_append(NULL, lh_action);
 
 	} else if(lh_action == NULL && lh_rsc != NULL) {
+#if 0
+/* this should be safe to remove */
 		if(order->strength == pecs_must) {
 			crm_devel("No LH-Side (%s/%s) found for constraint..."
 				  " creating",
-				  lh_rsc->id, task2text(order->lh_action_task));
-
-			action_new(lh_rsc, order->lh_action_task, NULL, NULL);
+				  lh_rsc->id, order->lh_action_task);
+			crm_err("BROKEN CODE");
+			custom_action(
+				lh_rsc, order->lh_action_task, NULL, NULL);
 		}
-			
+#endif
 		lh_actions = find_actions(
 			lh_rsc->actions, order->lh_action_task, NULL);
 
 		if(lh_actions == NULL) {
 			crm_devel("No LH-Side (%s/%s) found for constraint",
-				  lh_rsc->id, task2text(order->lh_action_task));
-			crm_devel("RH-Side was: (%s/%s)",
-				  order->rh_rsc?order->rh_rsc->id:order->rh_action?order->rh_action->rsc->id:"<NULL>",
-				  task2text(order->rh_action_task));
+				  lh_rsc->id, order->lh_action_task);
+
+			if(order->rh_rsc != NULL) {
+				crm_devel("RH-Side was: (%s/%s)",
+					  order->rh_rsc->id,
+					  order->rh_action_task);
+				
+			} else if(order->rh_action != NULL
+				  && order->rh_action->rsc != NULL) {
+				crm_devel("RH-Side was: (%s/%s)",
+					  order->rh_action->rsc->id,
+					  order->rh_action_task);
+				
+			} else if(order->rh_action != NULL) {
+				crm_devel("RH-Side was: %s",
+					  order->rh_action_task);
+			} else {
+				crm_devel("RH-Side was NULL");
+			}
+			
 			return;
 		}
 
 	} else {
 		crm_warn("No LH-Side (%s) specified for constraint",
-			 task2text(order->lh_action_task));
-		crm_devel("RH-Side was: (%s/%s)",
-			  order->rh_rsc?order->rh_rsc->id:order->rh_action?order->rh_action->rsc->id:"<NULL>",
-			  task2text(order->rh_action_task));
+			 order->lh_action_task);
+		if(order->rh_rsc != NULL) {
+			crm_devel("RH-Side was: (%s/%s)",
+				  order->rh_rsc->id,
+				  order->rh_action_task);
+				  
+		} else if(order->rh_action != NULL
+			  && order->rh_action->rsc != NULL) {
+			crm_devel("RH-Side was: (%s/%s)",
+				  order->rh_action->rsc->id,
+				  order->rh_action_task);
+				  
+		} else if(order->rh_action != NULL) {
+			crm_devel("RH-Side was: %s",
+				  order->rh_action_task);
+		} else {
+			crm_devel("RH-Side was NULL");
+		}		
+		
 		return;
 	}
 
@@ -645,42 +613,29 @@ void native_rsc_order_rh(
 
 	crm_verbose("Processing RH of ordering constraint %d", order->id);
 
-	switch(order->rh_action_task) {
-		case start_rsc:
-		case started_rsc:
-		case stop_rsc:
-		case stopped_rsc:
-		case monitor_rsc:
-			break;
-		default:
-			crm_err("Task \"%s\" from ordering %d isnt a resource action",
-				task2text(order->rh_action_task), order->id);
-			return;
-	}
-	
 	if(rh_action != NULL) {
 		rh_actions = g_list_append(NULL, rh_action);
 
 	} else if(rh_action == NULL && rsc != NULL) {
 		rh_actions = find_actions(
 			rsc->actions, order->rh_action_task, NULL);
-
+		
 		if(rh_actions == NULL) {
 			crm_devel("No RH-Side (%s/%s) found for constraint..."
 				  " ignoring",
-				  rsc->id, task2text(order->rh_action_task));
+				  rsc->id, order->rh_action_task);
 			crm_devel("LH-Side was: (%s/%s)",
 				  order->lh_rsc?order->lh_rsc->id:order->lh_action?order->lh_action->rsc->id:"<NULL>",
-				  task2text(order->lh_action_task));
+				  order->lh_action_task);
 			return;
 		}
 			
 	}  else if(rh_action == NULL) {
 		crm_devel("No RH-Side (%s) specified for constraint..."
-			  " ignoring", task2text(order->rh_action_task));
+			  " ignoring", order->rh_action_task);
 		crm_devel("LH-Side was: (%s/%s)",
 			  order->lh_rsc?order->lh_rsc->id:order->lh_action?order->lh_action->rsc->id:"<NULL>",
-			  task2text(order->lh_action_task));
+			  order->lh_action_task);
 		return;
 	} 
 

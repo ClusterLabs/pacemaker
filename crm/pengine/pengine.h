@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.61 2005/05/12 18:10:36 andrew Exp $ */
+/* $Id: pengine.h,v 1.62 2005/05/15 13:17:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -198,18 +198,20 @@ struct action_s
 		resource_t *rsc;
 		void       *rsc_opaque;
 		node_t     *node;
-		enum action_tasks task;
+		const char *task;
+
+		char *uuid;
+		crm_data_t *op_entry;
 		
 		gboolean pseudo;
 		gboolean runnable;
-		gboolean dumped;
-		gboolean processed;
 		gboolean optional;
 		gboolean failure_is_fatal;
 
+		gboolean dumped;
+		gboolean processed;
+		
 		int seen_count;
-		const char *timeout;
-		const char *uuid;
 
 /* 		crm_data_t *args; */
 		GHashTable *extra;
@@ -226,12 +228,12 @@ struct order_constraint_s
 		void *lh_opaque;
 		resource_t *lh_rsc;
 		action_t   *lh_action;
-		enum action_tasks lh_action_task;
+		char *lh_action_task;
 		
 		void *rh_opaque;
 		resource_t *rh_rsc;
 		action_t   *rh_action;
-		enum action_tasks rh_action_task;
+		char *rh_action_task;
 
 		/* (soon to be) variant specific */
 /* 		int   lh_rsc_incarnation; */
@@ -323,11 +325,27 @@ extern gboolean stonith_constraints(
 	node_t *node, action_t *stonith_op, action_t *shutdown_op,
 	GListPtr *ordering_constraints);
 
-extern gboolean order_new(
-	resource_t *lh_rsc, enum action_tasks lh_task, action_t *lh_action,
-	resource_t *rh_rsc, enum action_tasks rh_task, action_t *rh_action,
+extern gboolean custom_action_order(
+	resource_t *lh_rsc, char *lh_task, action_t *lh_action,
+	resource_t *rh_rsc, char *rh_task, action_t *rh_action,
 	enum con_strength strength, GListPtr *ordering_constraints);
 
+#define order_start_start(rsc1,rsc2)					\
+	custom_action_order(rsc1, start_key(rsc1), NULL,		\
+			    rsc2, start_key(rsc2) ,NULL,		\
+			    pecs_startstop, ordering_constraints)
+#define order_stop_stop(rsc1, rsc2)					\
+	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
+			    rsc2, stop_key(rsc2) ,NULL,		\
+			    pecs_startstop, ordering_constraints)
+#define order_stop_start(rsc1, rsc2)					\
+	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
+			    rsc2, start_key(rsc2) ,NULL,		\
+			    pecs_startstop, ordering_constraints)
+#define order_start_stop(rsc1, rsc2)					\
+	custom_action_order(rsc1, start_key(rsc1), NULL,		\
+			    rsc2, stop_key(rsc2) ,NULL,		\
+			    pecs_startstop, ordering_constraints)
 
 extern gboolean process_colored_constraints(resource_t *rsc);
 extern void graph_element_from_action(action_t *action, crm_data_t **graph);

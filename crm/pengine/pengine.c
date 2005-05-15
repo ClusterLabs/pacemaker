@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.63 2005/04/18 11:46:17 andrew Exp $ */
+/* $Id: pengine.c,v 1.64 2005/05/15 13:17:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -164,8 +164,7 @@ do_calculations(crm_data_t * cib_object)
 		g_list_free(placement_constraints);
 	}
 
-	pe_free_shallow(ordering_constraints);
-
+	pe_free_ordering(ordering_constraints); 
 	slist_iter(action_set, GList, action_sets, lpc,
 		   pe_free_shallow_adv(action_set, FALSE);
 		);

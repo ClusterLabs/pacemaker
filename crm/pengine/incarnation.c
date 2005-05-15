@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.14 2005/05/06 09:21:31 andrew Exp $ */
+/* $Id: incarnation.c,v 1.15 2005/05/15 13:17:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -260,15 +260,19 @@ void incarnation_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		child_stopping = child_stopping || child_rsc->stopping;
 		);
 
+
 	if(child_starting) {
 		rsc->starting = TRUE;
-		action_new(incarnation_data->self, start_rsc, NULL, NULL);
-		action_new(incarnation_data->self, started_rsc, NULL, NULL);
+		start_action(incarnation_data->self, NULL);
+		custom_action(incarnation_data->self,
+			      started_key(rsc), CRMD_ACTION_STARTED, NULL);
+		
 	}
 	if(child_stopping) {
 		rsc->stopping = TRUE;
-		action_new(incarnation_data->self, stop_rsc, NULL, NULL);
-		action_new(incarnation_data->self, stopped_rsc, NULL, NULL);
+		stop_action(incarnation_data->self, NULL);
+		custom_action(incarnation_data->self,
+			      stopped_key(rsc), CRMD_ACTION_STOPPED, NULL);
 	}
 	
 	slist_iter(
@@ -286,75 +290,64 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 	get_incarnation_variant_data(incarnation_data, rsc);
 
 	/* global stop before start */
-	order_new(incarnation_data->self, stop_rsc,  NULL,
-		  incarnation_data->self, start_rsc, NULL,
-		  pecs_startstop, ordering_constraints);
+	order_stop_start(incarnation_data->self, incarnation_data->self);
 	
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 
 		/* child stop before start */
-		order_new(child_rsc, stop_rsc,  NULL,
-			  child_rsc, start_rsc, NULL,
-			  pecs_startstop, ordering_constraints);
+		order_stop_start(child_rsc, child_rsc);
 		
 		if(incarnation_data->ordered && last_rsc != NULL) {
 			crm_devel("Ordered version");
 			if(lpc < incarnation_data->active_incarnation) {
 				/* child/child relative start */
-				order_new(last_rsc,  start_rsc, NULL,
-					  child_rsc, start_rsc, NULL,
-					  pecs_startstop, ordering_constraints);
+				order_start_start(last_rsc, child_rsc);
 			}
 			
 			/* child/child relative stop */
-			order_new(child_rsc, stop_rsc, NULL,
-				  last_rsc,  stop_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			order_stop_stop(child_rsc, last_rsc);
 
 		} else if(incarnation_data->ordered) {
 			crm_devel("Ordered version (1st node)");
 
 			/* child start before global started */
-			order_new(child_rsc,              start_rsc, NULL,
-				  incarnation_data->self, started_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			custom_action_order(
+				child_rsc, start_key(child_rsc), NULL,
+				incarnation_data->self, started_key(incarnation_data->self), NULL,
+				pecs_startstop, ordering_constraints);
 			
 			/* first child stop before global stopped */
-			order_new(child_rsc,              stop_rsc, NULL,
-				  incarnation_data->self, stopped_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			custom_action_order(
+				child_rsc, stop_key(child_rsc), NULL,
+				incarnation_data->self, stopped_key(incarnation_data->self), NULL,
+				pecs_startstop, ordering_constraints);
 			
 			/* global start before first child start */
-			order_new(incarnation_data->self, start_rsc, NULL,
-				  child_rsc,              start_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			order_start_start(incarnation_data->self, child_rsc);
 
 		} else {
 			crm_devel("Un-ordered version");
 
 			if(lpc < incarnation_data->active_incarnation) {
 				/* child start before global started */
-				order_new(child_rsc,              start_rsc, NULL,
-					  incarnation_data->self, started_rsc, NULL,
+				custom_action_order(
+					child_rsc, start_key(child_rsc), NULL,
+					incarnation_data->self, started_key(incarnation_data->self), NULL,
 					  pecs_startstop, ordering_constraints);
 			}
 		
 			/* global start before child start */
-			order_new(incarnation_data->self, start_rsc, NULL,
-				  child_rsc,              start_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			order_start_start(incarnation_data->self, child_rsc);
 
 			/* child stop before global stopped */
-			order_new(child_rsc,              stop_rsc, NULL,
-				  incarnation_data->self, stopped_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			custom_action_order(
+				child_rsc, stop_key(child_rsc), NULL,
+				incarnation_data->self, stopped_key(incarnation_data->self), NULL,
+				pecs_startstop, ordering_constraints);
 			
 			/* global stop before child stop */
-			order_new(incarnation_data->self, stop_rsc, NULL,
-				  child_rsc,               stop_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
-
+			order_stop_stop(incarnation_data->self, child_rsc);
 		}
 
 		if(lpc < incarnation_data->active_incarnation) {
@@ -366,14 +359,13 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 	if(incarnation_data->ordered && last_rsc != NULL) {
 		crm_devel("Ordered version (last node)");
 		/* last child start before global started */
-		order_new(last_rsc,         start_rsc, NULL,
-			  incarnation_data->self, started_rsc, NULL,
-			  pecs_startstop, ordering_constraints);
+		custom_action_order(
+			last_rsc, start_key(last_rsc), NULL,
+			incarnation_data->self, started_key(incarnation_data->self), NULL,
+			pecs_startstop, ordering_constraints);
 
 		/* global stop before first child stop */
-		order_new(incarnation_data->self, stop_rsc, NULL,
-			  last_rsc,         stop_rsc, NULL,
-			  pecs_startstop, ordering_constraints);
+		order_stop_stop(incarnation_data->self, last_rsc);
 	}
 		
 }
@@ -446,17 +438,27 @@ void incarnation_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint
 
 void incarnation_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 {
+	char *stop_id = NULL;
+	char *start_id = NULL;
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
 	crm_verbose("Processing LH of ordering constraint %d", order->id);
 
-	if(order->lh_action_task == start_rsc) {
-		order->lh_action_task = started_rsc;
-		
-	} else if(order->lh_action_task == stop_rsc) {
-		order->lh_action_task = stopped_rsc;
+	stop_id = stop_key(rsc);
+	start_id = start_key(rsc);
+	
+	if(safe_str_eq(order->lh_action_task, start_id)) {
+		crm_free(order->lh_action_task);
+		order->lh_action_task = started_key(rsc);
+
+	} else if(safe_str_eq(order->lh_action_task, stop_id)) {
+		crm_free(order->lh_action_task);
+		order->lh_action_task = stopped_key(rsc);
 	}
+
+	crm_free(start_id);
+	crm_free(stop_id);
 	
 	incarnation_data->self->fns->rsc_order_lh(incarnation_data->self, order);
 }

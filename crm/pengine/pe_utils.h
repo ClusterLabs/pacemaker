@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.22 2005/04/16 16:57:57 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.23 2005/05/15 13:17:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -22,10 +22,6 @@
 
 /* General utilities */
 extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
-
-extern action_t *action_new(
-	resource_t *rsc, enum action_tasks task,
-	const char *timeout, node_t *on_node);
 
 extern float merge_weights(float w1, float w2);
 
@@ -106,9 +102,24 @@ extern const char *contype2text(enum con_type type);
 extern const char *strength2text(enum con_strength strength);
 /*extern const char *modifier2text(enum con_modifier modifier); */
 extern const char *task2text(enum action_tasks task);
+extern enum action_tasks text2task(const char *task);
 
-extern GListPtr find_actions(
-	GListPtr input, enum action_tasks task, node_t *on_node);
+extern crm_data_t *find_rsc_op_entry(resource_t *rsc, const char *key);
+
+extern action_t *custom_action(
+	resource_t *rsc, char *key, const char *task, node_t *on_node);
+
+#define stop_action(rsc, node) custom_action(			\
+		rsc, stop_key(rsc), CRMD_ACTION_STOP, node)
+#define stopped_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
+#define stop_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOP, 0)
+
+#define start_action(rsc, node) custom_action(		\
+		rsc, start_key(rsc), CRMD_ACTION_START, node)
+#define started_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STARTED, 0)
+#define start_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_START, 0)
+
+extern GListPtr find_actions(GListPtr input, const char *key, node_t *on_node);
 
 extern void set_id(crm_data_t *xml_obj, const char *prefix, int child);
 
@@ -122,6 +133,7 @@ extern void pe_free_shallow(GListPtr alist);
 extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
 extern void pe_free_resources(GListPtr resources);
 extern void pe_free_actions(GListPtr actions);
+extern void pe_free_ordering(GListPtr constraints);
 
 /* Helper macros to avoid NULL pointers */
 #define safe_val(def, x,y)          (x?x->y:def)

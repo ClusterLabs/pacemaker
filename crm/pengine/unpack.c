@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.87 2005/05/12 18:16:30 andrew Exp $ */
+/* $Id: unpack.c,v 1.88 2005/05/15 13:17:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,9 +32,6 @@
 #include <pengine.h>
 #include <pe_utils.h>
 #include <pe_rules.h>
-
-extern action_t *create_recurring_action(
-	resource_t *rsc, node_t *node, const char *action, const char *key);
 
 gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
@@ -726,8 +723,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		if(running) {
 			native_add_running(rsc, node);
 			if(failed) {
-				action_t *stop = action_new(
-					rsc, stop_rsc, NULL, node);
+				action_t *stop = stop_action(rsc, node);
 				stop->optional = FALSE;
 				rsc->recover = TRUE;
 			}
@@ -847,13 +843,13 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			 * For now this should do
 			 */
 
-			if(safe_str_eq(task, CRMD_RSCSTATE_STOP)) {
+			if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 				/* re-issue the stop and return */
-				action_new(rsc, stop_rsc, NULL, node);
+				stop_action(rsc, node);
 				*running = TRUE;
 				rsc->recover = TRUE;
 				
-			} else if(safe_str_eq(task, CRMD_RSCSTATE_START)) {
+			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
 				rsc->start_pending = TRUE;
 				rsc->schedule_recurring = TRUE;
 				*running = TRUE;
@@ -866,7 +862,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 					/* do not specify the node, we may want
 					 * to start it elsewhere
 					 */
-					action_new(rsc, start_rsc, NULL, NULL);
+					start_action(rsc, NULL);
 				}
 				
 			} else if(*running == TRUE) {
@@ -881,12 +877,12 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			crm_verbose("%s/%s completed on %s",
 				    rsc->id, task, node->details->uname);
 
-			if(safe_str_eq(task, CRMD_RSCSTATE_STOP)) {
+			if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 				*failed  = FALSE;
 				*running = FALSE;				
 				rsc->schedule_recurring = FALSE;
 
-			} else if(safe_str_eq(task, CRMD_RSCSTATE_START)) {
+			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
 				crm_verbose("%s active on %s",
 					    rsc->id, node->details->uname);
 				*running = TRUE;
@@ -895,10 +891,15 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			} else if(*running) {
 				/* assume its a recurring action */
 				action_t *mon = NULL;
+				const char *id = crm_element_value(
+					xml_op, XML_ATTR_ID);
 
- 				mon = create_recurring_action(
- 					rsc, NULL, task,
-					crm_element_value(xml_op, XML_ATTR_ID));
+				CRM_DEV_ASSERT(id != NULL);
+				if(crm_assert_failed) { break; }
+
+				mon = custom_action(
+					rsc, crm_strdup(id), task, node);
+
 				if(mon != NULL) {
 					mon->optional = TRUE;
 				}
@@ -909,8 +910,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
 			if(task_status_i == LRM_OP_NOTSUPPORTED
-			   || safe_str_eq(task, CRMD_RSCSTATE_STOP)
-			   || safe_str_eq(task, CRMD_RSCSTATE_START) ) {
+			   || safe_str_eq(task, CRMD_ACTION_STOP)
+			   || safe_str_eq(task, CRMD_ACTION_START) ) {
 				crm_warn("Handling failed %s for %s on %s",
 					 task, rsc->id, node->details->uname);
 				rsc2node_new("dont_run__failed_stopstart",
@@ -921,7 +922,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			crm_debug("Processing last op (%s) for %s on %s",
 				  task, rsc->id, node->details->uname);
 
-			if(safe_str_neq(task, CRMD_RSCSTATE_STOP)) {
+			if(safe_str_neq(task, CRMD_ACTION_STOP)) {
 				*failed = TRUE;				
 				*running = TRUE;				
 
@@ -994,9 +995,10 @@ rsc_colocation_new(const char *id, enum con_strength strength,
 }
 
 gboolean
-order_new(resource_t *lh_rsc, enum action_tasks lh_action_task, action_t *lh_action,
-	  resource_t *rh_rsc, enum action_tasks rh_action_task, action_t *rh_action,
-	  enum con_strength strength, GListPtr *ordering_constraints)
+custom_action_order(
+	resource_t *lh_rsc, char *lh_action_task, action_t *lh_action,
+	resource_t *rh_rsc, char *rh_action_task, action_t *rh_action,
+	enum con_strength strength, GListPtr *ordering_constraints)
 {
 	order_constraint_t *order = NULL;
 
@@ -1032,29 +1034,29 @@ order_new(resource_t *lh_rsc, enum action_tasks lh_action_task, action_t *lh_act
 		crm_devel("Created ordering constraint %d (%s):"
 			 " %s/%s before %s/%s",
 			 order->id, strength2text(order->strength),
-			 lh_rsc->id, task2text(lh_action_task),
-			 rh_rsc->id, task2text(rh_action_task));
+			 lh_rsc->id, lh_action_task,
+			 rh_rsc->id, rh_action_task);
 		
 	} else if(lh_rsc != NULL) {
 		crm_devel("Created ordering constraint %d (%s):"
 			 " %s/%s before action %d (%s)",
 			 order->id, strength2text(order->strength),
-			 lh_rsc->id, task2text(lh_action_task),
-			 rh_action->id, task2text(rh_action_task));
+			 lh_rsc->id, lh_action_task,
+			 rh_action->id, rh_action_task);
 		
 	} else if(rh_rsc != NULL) {
 		crm_devel("Created ordering constraint %d (%s):"
 			 " action %d (%s) before %s/%s",
 			 order->id, strength2text(order->strength),
-			 lh_action->id, task2text(lh_action_task),
-			 rh_rsc->id, task2text(rh_action_task));
+			 lh_action->id, lh_action_task,
+			 rh_rsc->id, rh_action_task);
 		
 	} else {
 		crm_devel("Created ordering constraint %d (%s):"
 			 " action %d (%s) before action %d (%s)",
 			 order->id, strength2text(order->strength),
-			 lh_action->id, task2text(lh_action_task),
-			 rh_action->id, task2text(rh_action_task));
+			 lh_action->id, lh_action_task,
+			 rh_action->id, rh_action_task);
 	}
 	
 	return TRUE;
@@ -1120,7 +1122,8 @@ unpack_rsc_order(
 		return FALSE;
 
 	} else if(id == NULL) {
-		crm_err("%s constraint must have an id", crm_element_name(xml_obj));
+		crm_err("%s constraint must have an id",
+			crm_element_name(xml_obj));
 		return FALSE;
 		
 	} else if(rsc_lh == NULL || rsc_rh == NULL) {
@@ -1135,7 +1138,7 @@ unpack_rsc_order(
 	if(safe_str_eq(type, "before")) {
 		type_is_after = FALSE;
 	}
-	if(safe_str_eq(action, CRMD_RSCSTATE_STOP)) {
+	if(safe_str_eq(action, task2text(stop_rsc))) {
 		action_is_start = FALSE;
 	}
 
@@ -1143,37 +1146,29 @@ unpack_rsc_order(
 	if((type_is_after && action_is_start)
 	   || (type_is_after == FALSE && action_is_start == FALSE)){
 		if(symmetrical_bool || action_is_start == FALSE) {
-			order_new(rsc_lh, stop_rsc, NULL, rsc_rh, stop_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			order_stop_stop(rsc_lh, rsc_rh);
 		}
 		
 		if(symmetrical_bool || action_is_start) {
-			order_new(rsc_rh, start_rsc, NULL, rsc_lh, start_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			order_start_start(rsc_rh, rsc_lh);
 		}
 
 	} else {
 		if(symmetrical_bool || action_is_start == FALSE) {
-			order_new(rsc_rh, stop_rsc, NULL, rsc_lh, stop_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			order_stop_stop(rsc_rh, rsc_lh);
 		}
 		if(symmetrical_bool || action_is_start) {
-			order_new(rsc_lh, start_rsc, NULL, rsc_rh, start_rsc, NULL,
-				  pecs_startstop, ordering_constraints);
+			order_start_start(rsc_lh, rsc_rh);
 		}
 	}
 	
 #else	
 	if(type_is_after) {
-		order_new(rsc_lh, stop_rsc, NULL, rsc_rh, stop_rsc, NULL,
-			  pecs_startstop, ordering_constraints);
-		order_new(rsc_rh, start_rsc, NULL, rsc_lh, start_rsc, NULL,
-			  pecs_startstop, ordering_constraints);
+		order_stop_stop(rsc_lh, rsc_rh);
+		order_start_start(rsc_rh, rsc_lh);
 	} else {
-		order_new(rsc_rh, stop_rsc, NULL, rsc_lh, stop_rsc, NULL,
-			  pecs_startstop, ordering_constraints);
-		order_new(rsc_lh, start_rsc, NULL, rsc_rh, start_rsc, NULL,
-			  pecs_startstop, ordering_constraints);
+		order_stop_stop(rsc_rh, rsc_lh);
+		order_start_start(rsc_lh, rsc_rh);
 	}
 #endif
 	return TRUE;
