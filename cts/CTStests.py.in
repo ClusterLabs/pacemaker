@@ -704,7 +704,7 @@ class StopOnebyOne(CTSTest):
         #     Start up all the nodes...
         ret = self.startall(None)
         if not ret:
-            return self.skipped()
+            return self.failure("Setup failed")
 
         did_fail=0
         self.starttime=time.time()
@@ -741,7 +741,7 @@ class RestartOnebyOne(CTSTest):
         #     Start up all the nodes...
         ret = self.startall(None)
         if not ret:
-            return self.skipped()
+            return self.failure("Setup failed")
 
         did_fail=0
         self.starttime=time.time()
@@ -1327,7 +1327,7 @@ class ResourceRecover(CTSTest):
         
         ret = self.startall(None)
         if not ret:
-            return self.skipped()
+            return self.failure("Setup failed")
 
         # if there are no resources , return directly
         resourcelist=self.CM.Resources()
@@ -1406,7 +1406,7 @@ class ComponentFail(CTSTest):
         # start all nodes
         ret = self.startall(None)
         if not ret:
-            return self.skipped()
+            return self.failure("Setup failed")
 
         # select a component to kill
         complist = ["lrmd","crmd"]
@@ -1454,7 +1454,7 @@ class Split_brainTest2(CTSTest):
         self.incr("calls")
         ret = self.startall(None)
         if not ret:
-            return self.skipped()
+            return self.failure("Setup failed")
         
         count1 = self.CM.Env.RandomGen.randint(1,len(self.CM.Env["nodes"])-1)
         partition1 = []
@@ -1630,15 +1630,16 @@ class SimulStopLite(CTSTest):
             return self.success()
 
         did_fail=0
+	up_nodes = []
         for node in self.CM.Env["nodes"]:
             if self.CM.StataCM(node) == 1:
                 did_fail=1
-                
-        if did_fail:
-            return self.failure("Did not find stop pattern(s): "
-                                +     repr(watch.unmatched))
+                up_nodes.append(node)
 
-        self.CM.log("Warn: All nodes stopped but CTS didnt detect these patterns: " 
+        if did_fail:
+            return self.failure("Active nodes exist: " + repr(up_nodes))
+
+        self.CM.log("Warn: All nodes stopped but CTS didnt detect: " 
                     + repr(watch.unmatched))
         return self.success()
 
@@ -1699,20 +1700,31 @@ class SimulStartLite(CTSTest):
             return self.failure("DC did not stablize") 
                 
         did_fail=0
+	unstable = []
         for node in self.CM.Env["nodes"]:
             if self.CM.StataCM(node) == 0:
                 did_fail=1
+		unstable.append(node)
                 
         if did_fail:
-            return self.failure("Did not find start pattern(s): " 
-                                + repr(watch.unmatched))
+            return self.failure("Unstarted nodes exist: " + repr(unstable))
 
-        self.CM.log("Warn: Did not find start pattern(s): " 
+	unstable = []
+        for node in self.CM.Env["nodes"]:
+	    out=self.rsh.readaline(node, self["StatusCmd"]%node)
+	    ret= (string.find(out, "(S_NOT_DC|S_IDLE)") != -1)
+            if ret:
+                did_fail=1
+		unstable.append(out)
+
+        if did_fail:
+            return self.failure("Unstable cluster nodes exist: " 
+				+ repr(unstable))
+
+        self.CM.log("Warn: All nodes started but CTS didnt detect: " 
                     + repr(watch.unmatched))
-        self.CM.log("All nodes are running but %d may be unstable"
-                    %(len(watch.unmatched)))
 
-        return self.failure("Unstable cluster") 
+        return self.success() 
 
 
     def is_applicable(self):
