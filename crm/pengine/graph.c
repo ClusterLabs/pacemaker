@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.41 2005/05/15 13:17:58 andrew Exp $ */
+/* $Id: graph.c,v 1.42 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -193,7 +193,7 @@ stonith_constraints(node_t *node,
 		} else if((rsc->unclean || node->details->unclean)
 			  && rsc->stopfail_type == pesf_block) {
 			/* depend on the stop action which will fail */
-			crm_err("SHARED RESOURCE %s WILL REMAIN BLOCKED"
+			pe_err("SHARED RESOURCE %s WILL REMAIN BLOCKED"
 				 " ON NODE %s UNTIL %s",
 				rsc->id, node->details->uname,
 				stonith_enabled?"QUORUM RETURNS":"CLEANED UP MANUALLY");
@@ -202,7 +202,7 @@ stonith_constraints(node_t *node,
 		} else if((rsc->unclean || node->details->unclean)
 			  && rsc->stopfail_type == pesf_ignore) {
 			/* nothing to do here */
-			crm_err("SHARED RESOURCE %s IS NOT PROTECTED",
+			pe_err("SHARED RESOURCE %s IS NOT PROTECTED",
 				 rsc->id);
 			continue;
 		}
@@ -303,7 +303,7 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 	crm_data_t * input = NULL;
 	crm_data_t * xml_action = NULL;
 	if(action == NULL) {
-		crm_err("Cannot dump NULL action");
+		pe_err("Cannot dump NULL action");
 		return;
 
 	} else if(action->optional) {
@@ -325,12 +325,12 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 		
 	} else {
 		if(action->node == NULL) {
-			crm_err("action %d was not allocated", action->id);
+			pe_err("action %d was not allocated", action->id);
 			log_action(LOG_DEBUG, "Unallocated action", action, FALSE);
 			return;
 			
 		} else if(action->node->details->online == FALSE) {
-			crm_err("action %d was scheduled for offline node", action->id);
+			pe_err("action %d was scheduled for offline node", action->id);
 			log_action(LOG_DEBUG, "Action for offline node", action, FALSE);
 			return;
 		}

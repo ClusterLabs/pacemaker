@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.62 2005/05/15 13:17:59 andrew Exp $ */
+/* $Id: pengine.h,v 1.63 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -295,8 +295,6 @@ extern gboolean unpack_config(crm_data_t *config);
 
 extern gboolean unpack_config(crm_data_t *config);
 
-extern gboolean unpack_global_defaults(crm_data_t *defaults);
-
 extern gboolean unpack_nodes(crm_data_t *xml_nodes, GListPtr *nodes);
 
 extern gboolean unpack_status(crm_data_t *status,
@@ -347,6 +345,9 @@ extern gboolean custom_action_order(
 			    rsc2, stop_key(rsc2) ,NULL,		\
 			    pecs_startstop, ordering_constraints)
 
+#define pe_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
+#define pe_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
+
 extern gboolean process_colored_constraints(resource_t *rsc);
 extern void graph_element_from_action(action_t *action, crm_data_t **graph);
 
@@ -363,6 +364,8 @@ extern const char* transition_timeout;
 extern int num_synapse;
 extern int color_id;
 extern char *dc_uuid;
+extern gboolean was_processing_error;
+extern gboolean was_processing_warning;
 
 #endif
 

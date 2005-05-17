@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.36 2005/05/15 13:17:58 andrew Exp $ */
+/* $Id: native.c,v 1.37 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -81,7 +81,7 @@ native_add_running(resource_t *rsc, node_t *node)
 		node->details->running_rsc, rsc);
 
 	if(g_list_length(native_data->running_on) > 1) {
-		crm_warn("Resource %s is (potentially) active on %d nodes."
+		pe_warn("Resource %s is (potentially) active on %d nodes."
 			 "  Latest: %s/%s", rsc->id,
 			 g_list_length(native_data->running_on),
 			 node->details->uname, node->details->id);
@@ -127,7 +127,7 @@ int native_num_allowed_nodes(resource_t *rsc)
 	if(rsc->variant == pe_native) {
 		native_data = (native_variant_data_t *)rsc->variant_opaque;
 	} else {
-		crm_err("Resource %s was not a \"native\" variant",
+		pe_err("Resource %s was not a \"native\" variant",
 			rsc->id);
 		return 0;
 	}
@@ -197,7 +197,7 @@ void native_color(resource_t *rsc, GListPtr *colors)
 		}
 		
 		if(new_color == NULL) {
-			crm_warn("Resource %s cannot run anywhere", rsc->id);
+			pe_warn("Resource %s cannot run anywhere", rsc->id);
 			print_resource("ERROR: No color", rsc, FALSE);
 			native_assign_color(rsc, no_color);
 		}
@@ -263,7 +263,7 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		}
 		
 	} else if(g_list_length(native_data->running_on) > 1) {
-		crm_err("Attempting recovery of resource %s", rsc->id);
+		pe_err("Attempting recovery of resource %s", rsc->id);
 		
 		if(rsc->recovery_type == recovery_stop_start
 		   || rsc->recovery_type == recovery_stop_only) {
@@ -290,12 +290,12 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		}
 
 		if(rsc->recovery_type == recovery_block) {
-			crm_warn("RESOURCE %s WILL REMAIN ACTIVE ON MULTIPLE"
+			pe_warn("RESOURCE %s WILL REMAIN ACTIVE ON MULTIPLE"
 				 " NODES PENDING MANUAL INTERVENTION", rsc->id);
 			
 			slist_iter(
 				node, node_t, native_data->running_on, lpc,
-				crm_warn("Resource %s active on %s",
+				pe_warn("Resource %s active on %s",
 					 rsc->id, node->details->uname);
 				);
 		}
@@ -373,11 +373,11 @@ void native_rsc_colocation_lh(rsc_colocation_t *constraint)
 	resource_t *rsc = constraint->rsc_lh;
 	
 	if(rsc == NULL) {
-		crm_err("rsc_lh was NULL for %s", constraint->id);
+		pe_err("rsc_lh was NULL for %s", constraint->id);
 		return;
 
 	} else if(constraint->rsc_rh == NULL) {
-		crm_err("rsc_rh was NULL for %s", constraint->id);
+		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
 	} else {
@@ -460,7 +460,7 @@ void native_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
 		update_lh = TRUE;
 
 	} else {
-		crm_warn("Un-expected combination of inputs");
+		pe_warn("Un-expected combination of inputs");
 		return;
 	}
 	
@@ -480,16 +480,16 @@ void native_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
 			return;
 		}
 		/* else constraint cant be satisified */
-		crm_warn("Constraint %s could not be satisfied",
+		pe_warn("Constraint %s could not be satisfied",
 			 constraint->id);
 		
 		if(update_lh) {
-			crm_warn("Marking resource %s unrunnable as a result",
+			pe_warn("Marking resource %s unrunnable as a result",
 				 rsc_lh->id);
 			rsc_lh->runnable = FALSE;
 		}
 		if(update_rh) {
-			crm_warn("Marking resource %s unrunnable as a result",
+			pe_warn("Marking resource %s unrunnable as a result",
 				 rsc_rh->id);
 			rsc_rh->runnable = FALSE;
 		}		
@@ -502,7 +502,7 @@ void native_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
 		
 	} else if(constraint->strength != pecs_must_not) {
 		/* unknown type */
-		crm_err("Unknown constraint type %d", constraint->strength);
+		pe_err("Unknown constraint type %d", constraint->strength);
 		return;
 	}
 
@@ -527,7 +527,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 			crm_devel("No LH-Side (%s/%s) found for constraint..."
 				  " creating",
 				  lh_rsc->id, order->lh_action_task);
-			crm_err("BROKEN CODE");
+			pe_err("BROKEN CODE");
 			custom_action(
 				lh_rsc, order->lh_action_task, NULL, NULL);
 		}
@@ -561,7 +561,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 		}
 
 	} else {
-		crm_warn("No LH-Side (%s) specified for constraint",
+		pe_warn("No LH-Side (%s) specified for constraint",
 			 order->lh_action_task);
 		if(order->rh_rsc != NULL) {
 			crm_devel("RH-Side was: (%s/%s)",
@@ -656,14 +656,14 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	crm_devel_action(print_rsc_to_node("Applying", constraint, FALSE));
 	/* take "lifetime" into account */
 	if(constraint == NULL) {
-		crm_err("Constraint is NULL");
+		pe_err("Constraint is NULL");
 		return;
 			
 	} else if(is_active(constraint) == FALSE) {
 		crm_debug("Constraint (%s) is not active", constraint->id);
 		return;
 	} else if(rsc == NULL) {
-		crm_err("LHS of rsc_to_node (%s) is NULL", constraint->id);
+		pe_err("LHS of rsc_to_node (%s) is NULL", constraint->id);
 		return;
 	}
     
@@ -865,7 +865,7 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 			crm_free(node_lh);
 		} else {
 			/* error, rsc marked as unrunnable above */
-			crm_warn("lh else");
+			pe_warn("lh else");
 		}
 	}
 	
@@ -910,7 +910,7 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 
 		} else {
 			/* error, rsc marked as unrunnable above */
-			crm_warn("rh else");
+			pe_warn("rh else");
 		}
 	}
 }
@@ -956,7 +956,7 @@ native_choose_color(resource_t *rsc)
 		int len = 0;
 
 		if(this_color == NULL) {
-			crm_err("color was NULL");
+			pe_err("color was NULL");
 			continue;
 			
 		} else if(rsc->effective_priority
@@ -1028,7 +1028,7 @@ native_assign_color(resource_t *rsc, color_t *color)
 				print_resource("Colored Resource", rsc, TRUE));
 			
 	} else {
-		crm_err("local color was NULL");
+		pe_err("local color was NULL");
 	}
 	
 	return;
@@ -1045,15 +1045,15 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 	node_rh = pe_find_node(native_data->allowed_nodes, id);
 
 	if(node_rh == NULL) {
-		crm_err("Node not found - cant update");
+		pe_err("Node not found - cant update");
 		return;
 	}
 
 	if(node_rh->weight >= INFINITY && cons->weight == -INFINITY) {
-		crm_err("Constraint %s mixes +/- INFINITY", cons->id);
+		pe_err("Constraint %s mixes +/- INFINITY", cons->id);
 		
 	} else if(node_rh->weight <= -INFINITY && cons->weight == INFINITY) {
-		crm_err("Constraint %s mixes +/- INFINITY", cons->id);
+		pe_err("Constraint %s mixes +/- INFINITY", cons->id);
 	}
 
 	if(node_rh->fixed) {
@@ -1189,7 +1189,7 @@ filter_nodes(resource_t *rsc)
 	slist_iter(
 		node, node_t, native_data->allowed_nodes, lpc,
 		if(node == NULL) {
-			crm_err("Invalid NULL node");
+			pe_err("Invalid NULL node");
 			
 		} else if(node->weight < 0.0
 			  || node->details->online == FALSE

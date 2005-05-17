@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.25 2005/02/23 15:43:58 andrew Exp $ */
+/* $Id: color.c,v 1.26 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -63,7 +63,7 @@ add_color(resource_t *resource, color_t *color)
 	color_t *local_color = NULL;
 
 	if(color == NULL) {
-		crm_err("Cannot add NULL color");
+		pe_err("Cannot add NULL color");
 		return NULL;
 	}
 	

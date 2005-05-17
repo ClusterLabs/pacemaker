@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.64 2005/05/15 13:17:58 andrew Exp $ */
+/* $Id: pengine.c,v 1.65 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,6 +31,8 @@
 
 crm_data_t * do_calculations(crm_data_t *cib_object);
 int num_synapse = 0;
+gboolean was_processing_error = FALSE;
+gboolean was_processing_warning = FALSE;
 
 gboolean
 process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
@@ -56,15 +58,56 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
-		crm_data_t * output = NULL;
-		crm_data_t * status = get_object_root(XML_CIB_TAG_STATUS, xml_data);
 		crm_data_t *generation = create_xml_node(NULL, XML_TAG_CIB);
+		crm_data_t *status     = get_object_root(
+			XML_CIB_TAG_STATUS, xml_data);
+		crm_data_t *log_input  = status;
+		crm_data_t *output     = NULL;
+
 		copy_in_properties(generation, xml_data);
-		
 		crm_xml_info(generation, "[generation]");
-		crm_xml_info(status, "[in ]");
-		crm_xml_devel(xml_data, "[all]");
+
+#if 0
+		char *xml_buffer = NULL;
+		char *xml_buffer_ptr = NULL;
+		int max_xml = MAXLINE - 8;
+		
+		xml_buffer = dump_xml_unformatted(generation);
+		LogToCircularBuffer(input_buffer, LOG_INFO,
+				    "Generation: %s", xml_buffer);
+		crm_free(xml_buffer);
+
+		xml_buffer = dump_xml_unformatted(status);
+		xml_buffer_ptr = xml_buffer;
+
+		while(xml_buffer_ptr != NULL) {
+			LogToCircularBuffer(input_buffer, LOG_INFO,
+					    "PE xml: %s", xml_buffer_ptr);
+			if(strlen(xml_buffer_ptr) > max_xml) {
+				xml_buffer_ptr = xml_buffer_ptr + max_xml;
+			} else {
+				xml_buffer_ptr = NULL;;
+			}
+		}
+		crm_free(xml_buffer);
+#endif
+		was_processing_error = FALSE;
+		was_processing_warning = FALSE;
 		output = do_calculations(xml_data);
+		
+		if(was_processing_error) {
+			crm_err("ERRORs found during PE processing."
+			       "  Input follows:");
+			crm_xml_info(log_input, "[input]");
+
+		} else if(was_processing_warning) {
+			crm_warn("WARNINGs found during PE processing."
+				"  Input follows:");
+			crm_xml_debug(log_input, "[input]");
+
+		} else {
+			crm_xml_verbose(log_input, "[input]");
+		}
 		crm_xml_devel(output, "[out]");
 
 		if (send_ipc_reply(sender, msg, output) ==FALSE) {

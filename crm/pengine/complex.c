@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.24 2005/05/06 09:19:14 andrew Exp $ */
+/* $Id: complex.c,v 1.25 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -121,11 +121,11 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	crm_xml_verbose(xml_obj, "Processing resource input...");
 	
 	if(id == NULL) {
-		crm_err("Must specify id tag in <resource>");
+		pe_err("Must specify id tag in <resource>");
 		return FALSE;
 		
 	} else if(rsc == NULL) {
-		crm_err("Nowhere to unpack resource into");
+		pe_err("Nowhere to unpack resource into");
 		return FALSE;
 		
 	}
@@ -141,7 +141,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	(*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
 	
 	if((*rsc)->variant == pe_unknown) {
-		crm_err("Unknown resource type: %s", crm_element_name(xml_obj));
+		pe_err("Unknown resource type: %s", crm_element_name(xml_obj));
 		crm_free(*rsc);
 		return FALSE;
 	}
@@ -323,7 +323,7 @@ gboolean
 has_agent(node_t *a_node, lrm_agent_t *an_agent)
 {
 	if(a_node == NULL || an_agent == NULL || an_agent->type == NULL) {
-		crm_warn("Invalid inputs");
+		pe_warn("Invalid inputs");
 		return FALSE;
 	}
 	

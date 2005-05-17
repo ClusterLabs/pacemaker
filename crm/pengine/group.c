@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.14 2005/05/15 13:17:58 andrew Exp $ */
+/* $Id: group.c,v 1.15 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -91,7 +91,7 @@ void group_unpack(resource_t *rsc)
 			crm_devel_action(
 				print_resource("Added", new_rsc, FALSE));
 		} else {
-			crm_err("Failed unpacking resource %s",
+			pe_err("Failed unpacking resource %s",
 				crm_element_value(xml_obj, XML_ATTR_ID));
 		}
 		);
@@ -108,7 +108,7 @@ group_find_child(resource_t *rsc, const char *id)
 	if(rsc->variant == pe_group) {
 		group_data = (group_variant_data_t *)rsc->variant_opaque;
 	} else {
-		crm_err("Resource %s was not a \"group\" variant", rsc->id);
+		pe_err("Resource %s was not a \"group\" variant", rsc->id);
 		return NULL;
 	}
 	return pe_find_resource(group_data->child_list, id);
@@ -120,7 +120,7 @@ int group_num_allowed_nodes(resource_t *rsc)
 	if(rsc->variant == pe_native) {
 		group_data = (group_variant_data_t *)rsc->variant_opaque;
 	} else {
-		crm_err("Resource %s was not a \"native\" variant",
+		pe_err("Resource %s was not a \"native\" variant",
 			rsc->id);
 		return 0;
 	}
@@ -224,11 +224,11 @@ void group_rsc_colocation_lh(rsc_colocation_t *constraint)
 	group_variant_data_t *group_data = NULL;
 	
 	if(rsc == NULL) {
-		crm_err("rsc_lh was NULL for %s", constraint->id);
+		pe_err("rsc_lh was NULL for %s", constraint->id);
 		return;
 
 	} else if(constraint->rsc_rh == NULL) {
-		crm_err("rsc_rh was NULL for %s", constraint->id);
+		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
 	} else {

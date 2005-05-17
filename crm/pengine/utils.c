@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.73 2005/05/15 13:17:59 andrew Exp $ */
+/* $Id: utils.c,v 1.74 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,7 +44,7 @@ invert_constraint(rsc_colocation_t *constraint)
 
 	crm_verbose("Inverting constraint");
 	if(constraint == NULL) {
-		crm_err("Cannot invert NULL constraint");
+		pe_err("Cannot invert NULL constraint");
 		return NULL;
 	}
 
@@ -290,7 +290,7 @@ node_copy(node_t *this_node)
 
 	CRM_DEV_ASSERT(this_node != NULL);
 	if(this_node == NULL) {
-		crm_err("Failed copy of <null> node.");
+		pe_err("Failed copy of <null> node.");
 		return NULL;
 	}
 	crm_malloc0(new_node, sizeof(node_t));
@@ -371,7 +371,7 @@ copy_color(color_t *a_color)
 	color_t *color_copy = NULL;
 
 	if(a_color == NULL) {
-		crm_err("Cannot copy NULL");
+		pe_err("Cannot copy NULL");
 		return NULL;
 	}
 	
@@ -613,7 +613,7 @@ custom_action(
 	
 	if(possible_matches != NULL) {
 		if(g_list_length(possible_matches) > 1) {
-			crm_warn("Action %s for %s on %s exists %d times",
+			pe_warn("Action %s for %s on %s exists %d times",
 				task, rsc?rsc->id:"<NULL>",
 				on_node?on_node->details->id:"<NULL>",
 				g_list_length(possible_matches));
@@ -672,7 +672,7 @@ custom_action(
 			action->runnable = FALSE;
 
 		} else if(action->node->details->online == FALSE) {
-			crm_warn("Action %d %s for %s on %s is unrunnable",
+			pe_warn("Action %d %s for %s on %s is unrunnable",
 				 action->id,
 				 task, rsc?rsc->id:"<NULL>",
 				 action->node?action->node->details->id:"<none>");
@@ -791,7 +791,7 @@ text2task(const char *task)
 	} else if(safe_str_eq(task, CRMD_ACTION_MON)) {
 		return monitor_rsc;
 	} 
-	crm_err("Unsupported action: %s", task);
+	pe_err("Unsupported action: %s", task);
 	return no_action;
 }
 
@@ -1274,7 +1274,7 @@ set_id(crm_data_t * xml_obj, const char *prefix, int child)
 	id_len = 1 + strlen(id);
 
 	if(child > 999) {
-		crm_err("Are you insane?!?"
+		pe_err("Are you insane?!?"
 			" The CRM does not support > 1000 children per resource");
 		return;
 		
@@ -1312,7 +1312,7 @@ merge_weights(float w1, float w2)
 
 	if(w1 <= -INFINITY || w2 <= -INFINITY) {
 		if(w1 == INFINITY || w2 == INFINITY) {
-			crm_warn("-INFINITY + INFINITY == -INFINITY");
+			pe_warn("-INFINITY + INFINITY == -INFINITY");
 		}
 		return -INFINITY;
 

@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.15 2005/05/15 13:17:58 andrew Exp $ */
+/* $Id: incarnation.c,v 1.16 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,7 +44,7 @@ typedef struct incarnation_variant_data_s
 	if(rsc->variant == pe_incarnation) {				\
 		data = (incarnation_variant_data_t *)rsc->variant_opaque; \
 	} else {							\
-		crm_err("Resource %s was not an \"incarnation\" variant", \
+		pe_err("Resource %s was not an \"incarnation\" variant", \
 			rsc->id);					\
 		return;							\
 	}
@@ -123,7 +123,7 @@ void incarnation_unpack(resource_t *rsc)
 				crm_free(inc_num);
 				
 			} else {
-				crm_err("Failed unpacking resource %s",
+				pe_err("Failed unpacking resource %s",
 					crm_element_value(child_copy, XML_ATTR_ID));
 			}
 		}
@@ -148,7 +148,7 @@ incarnation_find_child(resource_t *rsc, const char *id)
 	if(rsc->variant == pe_incarnation) {
 		incarnation_data = (incarnation_variant_data_t *)rsc->variant_opaque;
 	} else {
-		crm_err("Resource %s was not a \"incarnation\" variant", rsc->id);
+		pe_err("Resource %s was not a \"incarnation\" variant", rsc->id);
 		return NULL;
 	}
 	return pe_find_resource(incarnation_data->child_list, id);
@@ -161,7 +161,7 @@ int incarnation_num_allowed_nodes(resource_t *rsc)
 	if(rsc->variant == pe_incarnation) {
 		incarnation_data = (incarnation_variant_data_t *)rsc->variant_opaque;
 	} else {
-		crm_err("Resource %s was not an \"incarnation\" variant",
+		pe_err("Resource %s was not an \"incarnation\" variant",
 			rsc->id);
 		return 0;
 	}
@@ -240,7 +240,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 			child_rsc->fns->color(child_rsc, colors);
 		} else {
 			/* TODO: assign "no color"?  Doesnt seem to need it */
-			crm_warn("Incarnation %d cannot be started", lpc+1);
+			pe_warn("Incarnation %d cannot be started", lpc+1);
 		} 
 		);
 	crm_info("%d Incarnations are active", incarnation_data->active_incarnation);
@@ -376,15 +376,15 @@ void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint)
 	incarnation_variant_data_t *incarnation_data = NULL;
 	
 	if(rsc == NULL) {
-		crm_err("rsc_lh was NULL for %s", constraint->id);
+		pe_err("rsc_lh was NULL for %s", constraint->id);
 		return;
 
 	} else if(constraint->rsc_rh == NULL) {
-		crm_err("rsc_rh was NULL for %s", constraint->id);
+		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
 	} else if(constraint->strength != pecs_must_not) {
-		crm_warn("rsc_dependancies other than \"must_not\" "
+		pe_warn("rsc_dependancies other than \"must_not\" "
 			 "are not supported for incarnation resources");
 		return;
 		
@@ -409,15 +409,15 @@ void incarnation_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint
 	crm_verbose("Processing RH of constraint %s", constraint->id);
 
 	if(rsc == NULL) {
-		crm_err("rsc_lh was NULL for %s", constraint->id);
+		pe_err("rsc_lh was NULL for %s", constraint->id);
 		return;
 
 	} else if(constraint->rsc_rh == NULL) {
-		crm_err("rsc_rh was NULL for %s", constraint->id);
+		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
 	} else if(constraint->strength != pecs_must_not) {
-		crm_warn("rsc_dependancies other than \"must_not\" "
+		pe_warn("rsc_dependancies other than \"must_not\" "
 			 "are not supported for incarnation resources");
 		return;
 		

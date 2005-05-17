@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.56 2005/05/15 13:17:59 andrew Exp $ */
+/* $Id: stages.c,v 1.57 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,8 +75,6 @@ stage0(crm_data_t * cib,
 		XML_CIB_TAG_CONSTRAINTS, cib);
 	crm_data_t * config          = get_object_root(
 		XML_CIB_TAG_CRMCONFIG,   cib);
-	crm_data_t * agent_defaults  = NULL;
-	/*get_object_root(XML_CIB_TAG_RA_DEFAULTS, cib); */
 
 	crm_verbose("Beginning unpack");
 	
@@ -125,8 +123,6 @@ stage0(crm_data_t * cib,
 				 " - fencing and resource management disabled");
 		}
 	}
-	
-	unpack_global_defaults(agent_defaults);
 	
 	unpack_nodes(cib_nodes, nodes);
 
@@ -243,7 +239,7 @@ stage4(GListPtr colors)
 		crm_devel("assigning node to color %d", color->id);
 		
 		if(color == NULL) {
-			crm_err("NULL color detected");
+			pe_err("NULL color detected");
 			continue;
 			
 		} else if(color->details->pending == FALSE) {
@@ -321,13 +317,13 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 		}
 
 		if(node->details->unclean && stonith_enabled == FALSE) {
-			crm_err("Node %s is unclean!", node->details->uname);
-			crm_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
-			crm_warn("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
+			pe_err("Node %s is unclean!", node->details->uname);
+			pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
+			pe_warn("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
 
 		} else if(node->details->unclean && stonith_enabled
 		   && (have_quorum || no_quorum_policy == no_quorum_ignore)) {
-			crm_warn("Scheduling Node %s for STONITH",
+			pe_warn("Scheduling Node %s for STONITH",
 				 node->details->uname);
 
 			stonith_op = custom_action(

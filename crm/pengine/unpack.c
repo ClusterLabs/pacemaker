@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.88 2005/05/15 13:17:59 andrew Exp $ */
+/* $Id: unpack.c,v 1.89 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -83,14 +83,6 @@ rsc_to_node_t *rsc2node_new(
 	double weight, gboolean can_run, node_t *node,
 	GListPtr *placement_constraints);
 
-const char *get_agent_param(resource_t *rsc, const char *param);
-
-const char *get_agent_param_rsc(resource_t *rsc, const char *param);
-
-const void *get_agent_param_metadata(resource_t *rsc, const char *param);
-
-const char *get_agent_param_global(resource_t *rsc, const char *param);
-
 const char *param_value(crm_data_t * parent, const char *name);
 
 gboolean
@@ -104,8 +96,8 @@ unpack_config(crm_data_t * config)
 		if(tmp > 0) {
 			transition_timeout = value;
 		} else {
-			crm_warn("Invalid value for %s: %s",
-				 "transition_timeout", value);
+			crm_err("Invalid value for %s: %s",
+				"transition_timeout", value);
 		}
 	}
 	crm_devel("%s set to: %s",
@@ -115,7 +107,8 @@ unpack_config(crm_data_t * config)
 	if(value != NULL) {
 		crm_str_to_boolean(value, &stonith_enabled);
 	}
-	crm_info("STONITH of failed nodes is %s", stonith_enabled?"enabled":"disabled");
+	crm_info("STONITH of failed nodes is %s",
+		 stonith_enabled?"enabled":"disabled");
 	
 	value = param_value(config, "symmetric_cluster");
 	if(value != NULL) {
@@ -170,56 +163,6 @@ param_value(crm_data_t * parent, const char *name)
 	return crm_element_value(a_default, XML_NVPAIR_ATTR_VALUE);
 }
 
-const char *
-get_agent_param(resource_t *rsc, const char *param)
-{
-	const char *value = NULL;
-
-	if(param == NULL) {
-		return NULL;
-	}
-	
-	value = get_agent_param_rsc(rsc, param);
-	if(value == NULL) {
-		value = get_agent_param_metadata(rsc, param);
-	}
-	if(value == NULL) {
-		value = get_agent_param_global(rsc, param);
-	}
-	
-	return value;
-}
-
-const char *
-get_agent_param_rsc(resource_t *rsc, const char *param)
-{
-	crm_data_t * xml_rsc = rsc->xml;
-	return crm_element_value(xml_rsc, param);
-}
-
-const void *
-get_agent_param_metadata(resource_t *rsc, const char *param)
-{
-	return NULL;
-}
-
-const char *
-get_agent_param_global(resource_t *rsc, const char *param)
-{
-	const char * value = NULL;/*g_hashtable_lookup(agent_global_defaults, param); */
-	if(value == NULL) {
-		crm_err("No global value default for %s", param);
-	}
-	return value;
-}
-
-gboolean
-unpack_global_defaults(crm_data_t * defaults)
-{
-	return TRUE;
-}
-
-
 gboolean
 unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 {
@@ -243,11 +186,11 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 		attrs = find_xml_node(xml_obj, "attributes", FALSE);
 		
 		if(id == NULL) {
-			crm_err("Must specify id tag in <node>");
+			pe_err("Must specify id tag in <node>");
 			continue;
 		}
 		if(type == NULL) {
-			crm_err("Must specify type tag in <node>");
+			pe_err("Must specify type tag in <node>");
 			continue;
 		}
 		crm_malloc0(new_node, sizeof(node_t));
@@ -340,11 +283,12 @@ unpack_resources(crm_data_t * xml_resources,
 				rsc_to_node_t *new_con = rsc2node_new(
 					"symmetric_default", new_rsc, 0,
 					TRUE, NULL, placement_constraints);
-				new_con->node_list_rh = node_list_dup(all_nodes, FALSE);
+				new_con->node_list_rh = node_list_dup(
+					all_nodes, FALSE);
 			}
 
 		} else {
-			crm_err("Failed unpacking resource %s",
+			pe_err("Failed unpacking resource %s",
 				crm_element_value(xml_obj, XML_ATTR_ID));
 		}
 		);
@@ -366,7 +310,7 @@ unpack_constraints(crm_data_t * xml_constraints,
 
 		const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
 		if(id == NULL) {
-			crm_err("Constraint <%s...> must have an id",
+			pe_err("Constraint <%s...> must have an id",
 				crm_element_name(xml_obj));
 			continue;
 		}
@@ -390,7 +334,7 @@ unpack_constraints(crm_data_t * xml_constraints,
 				xml_obj, resources,nodes,placement_constraints);
 
 		} else {
-			crm_err("Unsupported constraint type: %s",
+			pe_err("Unsupported constraint type: %s",
 				crm_element_name(xml_obj));
 		}
 		);
@@ -406,7 +350,7 @@ rsc2node_new(const char *id, resource_t *rsc,
 	rsc_to_node_t *new_con = NULL;
 
 	if(rsc == NULL || id == NULL) {
-		crm_err("Invalid constraint %s for rsc=%p", crm_str(id), rsc);
+		pe_err("Invalid constraint %s for rsc=%p", crm_str(id), rsc);
 		return NULL;
 	}
 
@@ -421,7 +365,8 @@ rsc2node_new(const char *id, resource_t *rsc,
 			new_con->node_list_rh = g_list_append(NULL, node);
 		}
 		
-		*placement_constraints = g_list_append(*placement_constraints, new_con);
+		*placement_constraints = g_list_append(
+			*placement_constraints, new_con);
 	}
 	
 	return new_con;
@@ -466,7 +411,7 @@ unpack_status(crm_data_t * status,
 			continue;
 
 		} else if(this_node == NULL) {
-			crm_warn("Node %s in status section no longer exists",
+			pe_warn("Node %s in status section no longer exists",
 				uname);
 			continue;
 		}
@@ -551,7 +496,7 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 			/* mark it unclean */
 			this_node->details->unclean = TRUE;
 			
-			crm_err("Node %s is partially & un-expectedly down",
+			pe_err("Node %s is partially & un-expectedly down",
 				uname);
 			crm_debug("\tcrm_state=%s, join_state=%s, expected=%s",
 				  crm_str(crm_state), crm_str(join_state),
@@ -575,7 +520,7 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 			/* mark it unclean */
 			this_node->details->unclean = TRUE;
 			
-			crm_err("Node %s is un-expectedly down", uname);
+			pe_err("Node %s is un-expectedly down", uname);
 			crm_debug("\tha_state=%s, ccm_state=%s",
 				  crm_str(ha_state), crm_str(ccm_state));
 			crm_debug("\tcrm_state=%s, join_state=%s, expected=%s",
@@ -596,7 +541,7 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 	}
 
 	if(this_node->details->unclean) {
-		crm_warn("Node %s is unclean", uname);
+		pe_warn("Node %s is unclean", uname);
 	}
 
 	if(this_node->details->shutdown) {
@@ -685,7 +630,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			    rsc_id, node_id, rsc_state);
 
 		if(rsc == NULL) {
-			crm_err("Could not find a match for resource"
+			pe_err("Could not find a match for resource"
 				" %s in %s's status section",
 				rsc_id, node_id);
 			crm_xml_debug(rsc_entry, "Invalid status entry");
@@ -912,7 +857,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			if(task_status_i == LRM_OP_NOTSUPPORTED
 			   || safe_str_eq(task, CRMD_ACTION_STOP)
 			   || safe_str_eq(task, CRMD_ACTION_START) ) {
-				crm_warn("Handling failed %s for %s on %s",
+				pe_warn("Handling failed %s for %s on %s",
 					 task, rsc->id, node->details->uname);
 				rsc2node_new("dont_run__failed_stopstart",
 					     rsc, -INFINITY, FALSE, node,
@@ -949,7 +894,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			break;
 		case LRM_OP_CANCELLED:
 			/* do nothing?? */
-			crm_err("Dont know what to do for cancelled ops yet");
+			pe_err("Dont know what to do for cancelled ops yet");
 			break;
 	}
 	return TRUE;
@@ -1005,7 +950,7 @@ custom_action_order(
 	if((lh_action == NULL && lh_rsc == NULL)
 	   || (rh_action == NULL && rh_rsc == NULL)
 	   || ordering_constraints == NULL){
-		crm_err("Invalid inputs lh_rsc=%p, lh_a=%p,"
+		pe_err("Invalid inputs lh_rsc=%p, lh_a=%p,"
 			" rh_rsc=%p, rh_a=%p,  l=%p",
 			lh_rsc, lh_action, rh_rsc, rh_action,
 			ordering_constraints);
@@ -1078,10 +1023,10 @@ unpack_rsc_colocation(crm_data_t * xml_obj,
 	resource_t *rsc_rh = pe_find_resource(rsc_list, id_rh);
  
 	if(rsc_lh == NULL) {
-		crm_err("No resource (con=%s, rsc=%s)", id, id_lh);
+		pe_err("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 	} else if(rsc_rh == NULL) {
-		crm_err("No resource (con=%s, rsc=%s)", id, id_rh);
+		pe_err("No resource (con=%s, rsc=%s)", id, id_rh);
 		return FALSE;
 	}
 
@@ -1118,16 +1063,16 @@ unpack_rsc_order(
 	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
 
 	if(xml_obj == NULL) {
-		crm_err("No constraint object to process.");
+		pe_err("No constraint object to process.");
 		return FALSE;
 
 	} else if(id == NULL) {
-		crm_err("%s constraint must have an id",
+		pe_err("%s constraint must have an id",
 			crm_element_name(xml_obj));
 		return FALSE;
 		
 	} else if(rsc_lh == NULL || rsc_rh == NULL) {
-		crm_err("Constraint %s needs two sides lh: %p rh: %p"
+		pe_err("Constraint %s needs two sides lh: %p rh: %p"
 			" (NULL indicates missing side)",
 			id, rsc_lh, rsc_rh);
 		return FALSE;
@@ -1212,7 +1157,7 @@ unpack_rsc_location(
 	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
 
 	if(rsc_lh == NULL) {
-		crm_warn("No resource (con=%s, rsc=%s)", id, id_lh);
+		pe_warn("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 	}
 			

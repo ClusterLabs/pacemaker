@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.2 2005/04/04 07:18:45 andrew Exp $ */
+/* $Id: rules.c,v 1.3 2005/05/17 14:33:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -181,7 +181,7 @@ coloc_expression(const char *attr, const char *op, const char *value,
 	gboolean accept = FALSE;
 	
 	if(attr == NULL || op == NULL) {
-		crm_err("Invlaid attribute or operation in expression"
+		pe_err("Invlaid attribute or operation in expression"
 			" (\'%s\' \'%s\' \'%s\')",
 			crm_str(attr), crm_str(op), crm_str(value));
 		return FALSE;
@@ -246,7 +246,7 @@ attr_expression(const char *attr, const char *op, const char *value,
 	const char *h_val = NULL;
 	
 	if(attr == NULL || op == NULL) {
-		crm_err("Invlaid attribute or operation in expression"
+		pe_err("Invlaid attribute or operation in expression"
 			" (\'%s\' \'%s\' \'%s\')",
 			crm_str(attr), crm_str(op), crm_str(value));
 		return FALSE;
