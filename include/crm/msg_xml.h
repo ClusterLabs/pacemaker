@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.32 2005/05/09 15:03:17 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.33 2005/05/17 14:33:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,6 +28,7 @@
 #define F_CRM_REFERENCE			XML_ATTR_REFERENCE
 #define F_CRM_VERSION			XML_ATTR_VERSION
 #define F_CRM_ORIGIN			"origin"
+#define F_CRM_JOIN_ID			"join_id"
 
 /*---- Common tags/attrs */
 #define XML_ATTR_TAGNAME		F_XML_TAGNAME
