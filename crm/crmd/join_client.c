@@ -201,6 +201,7 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 	
 	if(local_cib != NULL) {
 		HA_Message *reply = NULL;
+		const char *join_id = ha_msg_value(input->msg, F_CRM_JOIN_ID);
 		crm_debug("c2) respond to join offer");
 		crm_debug("Acknowledging %s as our DC",
 			  cl_get_string(input->msg, F_CRM_HOST_FROM));
@@ -209,6 +210,8 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 		reply = create_request(
 			CRM_OP_JOIN_REQUEST, generation, fsa_our_dc,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+
+		ha_msg_add(reply, F_CRM_JOIN_ID, join_id);
 
 		send_msg_via_ha(fsa_cluster_conn, reply);
 
@@ -271,30 +274,17 @@ do_cl_join_result(long long action,
 	crm_debug("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
-#if 0
-		if(AM_I_DC) {
-			process_join_ack_msg(fsa_our_uname, tmp1);
-
-		} else {
-			HA_Message *reply = create_request(
-				CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
-				CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
-
-			crm_debug("Sending local LRM status");
-			send_msg_via_ha(fsa_cluster_conn, reply);
-			register_fsa_input(cause, I_NOT_DC, NULL);
-		}
-#else
+		const char *join_id = ha_msg_value(input->msg, F_CRM_JOIN_ID);
 		HA_Message *reply = create_request(
 			CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+		ha_msg_add(reply, F_CRM_JOIN_ID, join_id);
 		
 		crm_debug("Sending local LRM status");
 		send_msg_via_ha(fsa_cluster_conn, reply);
 		if(AM_I_DC == FALSE) {
 			register_fsa_input(cause, I_NOT_DC, NULL);
 		}
-#endif
 		free_xml(tmp1);
 		
 	} else {
