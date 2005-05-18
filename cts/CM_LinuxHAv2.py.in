@@ -55,6 +55,7 @@ class LinuxHAv2(HeartbeatCM):
             "StableTime"     : 10,
             "StartCmd"       : "@libdir@/heartbeat/ha_logd -d >/dev/null 2>&1; @libdir@/heartbeat/heartbeat >/dev/null 2>&1",
             "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
+            "ElectionCmd"    : "@libdir@/heartbeat/crmadmin -E %s",
             "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null",
             "EpocheCmd"      : "@libdir@/heartbeat/ccm_tool -e",
             "QuorumCmd"      : "@libdir@/heartbeat/ccm_tool -q",
