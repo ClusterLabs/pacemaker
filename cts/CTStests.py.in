@@ -588,7 +588,7 @@ class StartOnebyOne(CTSTest):
         #        Shut down all the nodes...
         ret = self.stopall(None)
         if not ret:
-            return self.skipped()
+            return self.failure("Test setup failed")
          
         watchpats = [ ]
 
@@ -868,7 +868,7 @@ class Fastdetection(CTSTest):
 
         ret=self.startall(None)
         if not ret:
-            return self.skipped()
+            return self.failure("Test setup failed")
 
         if self.CM.upcount() < 2:
             return self.skipped()
@@ -953,7 +953,7 @@ class BandwidthTest(CTSTest):
 
         ret = self.startall(None)
         if not ret:
-            return self.skipped()
+            return self.failure("Test setup failed")
         time.sleep(5)  # We get extra messages right after startup.
 
 
@@ -1235,7 +1235,7 @@ class Split_brainTest(CTSTest):
 
         ret = self.startall(None)
         if not ret:
-            return self.skipped()
+            return self.failure("Test setup failed")
 
         '''isolate node, Look for node is dead message'''
         watchstoppats = [ ]
@@ -1551,6 +1551,169 @@ class Split_brainTest2(CTSTest):
         ]
 
 #AllTestClasses.append(Split_brainTest2)
+
+####################################################################
+class MemoryTest(CTSTest):
+####################################################################
+    '''Check to see if anyone is leaking memory'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="Memory"
+#        self.test = ElectionMemoryTest(cm)
+        self.test = ResourceRecover(cm)
+        self.startall = SimulStartLite(cm)
+	self.before = {}
+	self.after = {}
+
+    def __call__(self, node):
+	ps_command='''ps -eo ucomm,pid,pmem,tsiz,dsiz,rss,vsize | grep -e heartbeat -e ha_logd -e cib -e crmd -e lrmd -e tengine -e pengine'''
+
+	memory_error = [ 
+	    "", "", "", 
+	    "Code", 
+	    "Data", 
+	    "Resident", 
+	    "Total" 
+	    ]
+	
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Test setup failed")
+
+	time.sleep(10)  
+
+	for node in self.CM.Env["nodes"]:
+	    self.before[node] = {}
+	    rsh_pipe = self.CM.rsh.popen(node, ps_command)
+	    rsh_pipe.tochild.close()
+	    result = rsh_pipe.fromchild.readline()
+	    while result:
+		tokens = result.split()
+		self.before[node][tokens[1]] = result
+		result = rsh_pipe.fromchild.readline()
+	    rsh_pipe.fromchild.close()
+	    self.lastrc = rsh_pipe.wait()
+
+	# do something...
+	if not self.test(node):
+	    return self.failure("Underlying test failed")
+
+	time.sleep(10)  
+
+	for node in self.CM.Env["nodes"]:
+	    self.after[node] = {}
+	    rsh_pipe = self.CM.rsh.popen(node, ps_command)
+	    rsh_pipe.tochild.close()
+	    result = rsh_pipe.fromchild.readline()
+	    while result:
+		tokens = result.split()
+		self.after[node][tokens[1]] = result
+		result = rsh_pipe.fromchild.readline()
+	    rsh_pipe.fromchild.close()
+	    self.lastrc = rsh_pipe.wait()
+
+	failed_nodes = []
+	for node in self.CM.Env["nodes"]:
+	    failed = 0
+	    for process in self.before[node]:
+		messages = []
+		before_line = self.before[node][process]
+		after_line = self.after[node][process]
+
+		if not after_line:
+		    self.CM.log("%s %s[%s] exited during the test"
+			      %(node, before_tokens[0], before_tokens[1]))
+		    continue
+
+		before_tokens = before_line.split()
+		after_tokens = after_line.split()
+		self.CM.debug("%s Before: %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
+			      %(node, before_tokens[0], before_tokens[1],
+				before_tokens[2], before_tokens[3], 
+				before_tokens[4], before_tokens[5],
+				before_tokens[6]))
+		self.CM.debug("%s After:  %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
+			      %(node, after_tokens[0], after_tokens[1],
+				after_tokens[2], after_tokens[3],
+				after_tokens[4], after_tokens[5],
+				after_tokens[6]))
+		
+		# 3 : Code size
+		# 4 : Data size
+		# 5 : Resident size
+		# 6 : Total size
+		for index in [ 3, 4, 6 ]:
+		    mem_before = int(before_tokens[index])
+		    mem_after  = int(after_tokens[index])
+		    mem_diff   = mem_after - mem_before
+		    mem_allow  = mem_before * 0.01
+		    
+		    # for now...
+		    mem_allow  = 0
+
+		    if mem_diff > mem_allow:
+			failed = 1
+			messages.append("%s size grew by %dkB (%dkB)"
+					%(memory_error[index], mem_diff, mem_after))
+		    elif mem_diff < 0:
+			messages.append("%s size shrank by %dkB (%dkB)"
+					%(memory_error[index], mem_diff, mem_after))
+
+		if len(messages) > 0:
+		    self.CM.log("Process %s[%s] on %s: %s"
+				%(before_tokens[0], before_tokens[1], node,
+				  repr(messages)))
+
+	    if failed == 1:
+		failed_nodes.append(node)
+
+	if len(failed_nodes) > 0:
+	    return self.failure("Memory leaked on: " + repr(failed_nodes))
+
+        return self.success()
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        return [ """ERROR: .* LRM operation.*monitor on .*: not running""",
+                 """pengine:.*Handling failed """]
+
+    def is_applicable(self):
+        return 1
+
+AllTestClasses.append(MemoryTest)
+
+####################################################################
+class ElectionMemoryTest(CTSTest):
+####################################################################
+    '''Check to see if anyone is leaking memory'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="Election"
+
+    def __call__(self, node):
+        self.rsh.readaline(node, self["ElectionCmd"]%node)
+
+	watchpats = [ ]
+	watchpats.append("Current state: S_IDLE")
+	watchpats.append(self.CM["Pat:DC_IDLE"])
+	idle_watch = CTS.LogWatcher(
+	    self.CM["LogFileName"], watchpats, timeout=self.CM["DeadTime"])
+	idle_watch.setwatch()
+	if idle_watch.look():
+	    return self.success()
+	
+	return self.failure("IDLE state not reached")
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        return []
+
+    def is_applicable(self):
+	'''Never applicable, only for use by the memory test'''
+        return 0
+
+AllTestClasses.append(ElectionMemoryTest)
+
 
 ####################################################################
 class SpecialTest1(CTSTest):
