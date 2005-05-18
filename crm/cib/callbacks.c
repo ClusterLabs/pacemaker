@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.52 2005/05/10 16:05:11 andrew Exp $ */
+/* $Id: callbacks.c,v 1.53 2005/05/18 14:23:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -411,13 +411,13 @@ cib_common_callback(
 			
 		} else if(host == NULL && cib_is_master
 			&& !(call_options & cib_scope_local)) {
- 			crm_devel("Processing master %s op locally", op);
+ 			crm_debug("Processing master %s op locally", op);
 			needs_processing = TRUE;
 
 		} else if(
 			(host == NULL && (call_options & cib_scope_local))
 			  || safe_str_eq(host, cib_our_uname)) {
- 			crm_devel("Processing %s op locally", op);
+ 			crm_debug("Processing %s op locally", op);
 			needs_processing = TRUE;
 
 		} else {
@@ -426,17 +426,17 @@ cib_common_callback(
 			crm_log_message(LOG_MSG, op_request);
 
 			if(host != NULL) {
-				crm_devel("Forwarding %s op to %s", op, host);
+				crm_verbose("Forwarding %s op to %s", op, host);
 				send_ha_message(hb_conn, op_request, host);
 
 			} else {
-				crm_info("Forwarding %s op to master instance",
+				crm_verbose("Forwarding %s op to master instance",
 					 op);
 				send_ha_message(hb_conn, op_request, NULL);
 			}
 
 			if(call_options & cib_discard_reply) {
-				crm_trace("Client not interested in reply");
+				crm_verbose("Client not interested in reply");
 
 			} else if(call_options & cib_sync_call) {
 				/* keep track of the request so we can time it
@@ -458,7 +458,7 @@ cib_common_callback(
  			crm_debug("Processing %s op", op);
 			rc = cib_process_command(
 				op_request, &op_reply, privileged);
-			crm_devel("Performing local processing: op=%s origin=%s/%s,%s (update=%s)",
+			crm_debug("Performing local processing: op=%s origin=%s/%s,%s (update=%s)",
 				  op, cib_our_uname, cib_client->id,
 				  cl_get_string(op_request, F_CIB_CALLID),
 				  (rc==cib_ok && cib_server_ops[call_type].modifies_cib)?"true":"false");
@@ -1338,7 +1338,7 @@ can_write(int flags)
 		return TRUE;		
 	}
 	if((flags & cib_quorum_override) != 0) {
-		crm_warn("Overriding \"no quorum\" condition");
+		crm_debug("Overriding \"no quorum\" condition");
 		return TRUE;
 	}
 	return FALSE;
