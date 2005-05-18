@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.77 2005/05/12 11:59:46 andrew Exp $ */
+/* $Id: ccm.c,v 1.78 2005/05/18 20:13:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -74,7 +74,7 @@ do_ccm_control(long long action,
 	}
 
 	if(action & A_CCM_CONNECT) {
-		crm_devel("Registering with CCM");
+		crm_debug_3("Registering with CCM");
 		ret = oc_ev_register(&fsa_ev_token);
 		if (ret != 0) {
 			crm_warn("CCM registration failed");
@@ -82,7 +82,7 @@ do_ccm_control(long long action,
 		}
 
 		if(did_fail == FALSE) {
-			crm_devel("Setting up CCM callbacks");
+			crm_debug_3("Setting up CCM callbacks");
 			ret = oc_ev_set_callback(fsa_ev_token, OC_EV_MEMB_CLASS,
 						 crmd_ccm_msg_callback, NULL);
 			if (ret != 0) {
@@ -93,7 +93,7 @@ do_ccm_control(long long action,
 		if(did_fail == FALSE) {
 			oc_ev_special(fsa_ev_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
 			
-			crm_devel("Activating CCM token");
+			crm_debug_3("Activating CCM token");
 			ret = oc_ev_activate(fsa_ev_token, &fsa_ev_fd);
 			if (ret != 0){
 				crm_warn("CCM Activation failed");
@@ -317,7 +317,7 @@ do_ccm_update_cache(long long action,
 	membership_copy->id = oc->m_instance;
 	membership_copy->last_event = event;
 
-	crm_devel("Copying members");
+	crm_debug_3("Copying members");
 
 	/*--*-- All Member Nodes --*--*/
 	offset = oc->m_memb_idx;
@@ -330,7 +330,7 @@ do_ccm_update_cache(long long action,
 		
 		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
 			oc_node_t *member = NULL;
-			crm_devel("Copying member %d", lpc);
+			crm_debug_3("Copying member %d", lpc);
 			crm_malloc0(member, sizeof(oc_node_t));
 			
 			if(member == NULL) {
@@ -359,7 +359,7 @@ do_ccm_update_cache(long long action,
 		membership_copy->members = NULL;
 	}
 	
-	crm_devel("Copying new members");
+	crm_debug_3("Copying new members");
 
 	/*--*-- New Member Nodes --*--*/
 	offset = oc->m_in_idx;
@@ -400,7 +400,7 @@ do_ccm_update_cache(long long action,
 		membership_copy->new_members = NULL;
 	}
 	
-	crm_devel("Copying dead members");
+	crm_debug_3("Copying dead members");
 
 	/*--*-- Recently Dead Member Nodes --*--*/
 	offset = oc->m_out_idx;
@@ -463,12 +463,12 @@ do_ccm_update_cache(long long action,
 				tmp->dead_members, ghash_node_clfree, NULL);
 		crm_free(tmp);
 	}
-	crm_devel("Free'd old copies");
+	crm_debug_3("Free'd old copies");
 
 	set_bit_inplace(fsa_input_register, R_CCM_DATA);
 
 	if(cur_state != S_STARTING && cur_state != S_STOPPING) {
-		crm_devel("Updating the CIB from CCM cache");
+		crm_debug_3("Updating the CIB from CCM cache");
 		do_update_cib_nodes(NULL, FALSE);
 	}
 
@@ -543,32 +543,32 @@ void
 msg_ccm_join(const HA_Message *msg, void *foo)
 {
 	
-	crm_verbose("###### Received ccm_join message...");
+	crm_debug_2("###### Received ccm_join message...");
 	if (msg != NULL)
 	{
-		crm_verbose("[type=%s]",
+		crm_debug_2("[type=%s]",
 			    ha_msg_value(msg, F_TYPE));
-		crm_verbose("[orig=%s]",
+		crm_debug_2("[orig=%s]",
 			    ha_msg_value(msg, F_ORIG));
-		crm_verbose("[to=%s]",
+		crm_debug_2("[to=%s]",
 			    ha_msg_value(msg, F_TO));
-		crm_verbose("[status=%s]",
+		crm_debug_2("[status=%s]",
 			    ha_msg_value(msg, F_STATUS));
-		crm_verbose("[info=%s]",
+		crm_debug_2("[info=%s]",
 			    ha_msg_value(msg, F_COMMENT));
-		crm_verbose("[rsc_hold=%s]",
+		crm_debug_2("[rsc_hold=%s]",
 			    ha_msg_value(msg, F_RESOURCES));
-		crm_verbose("[stable=%s]",
+		crm_debug_2("[stable=%s]",
 			    ha_msg_value(msg, F_ISSTABLE));
-		crm_verbose("[rtype=%s]",
+		crm_debug_2("[rtype=%s]",
 			    ha_msg_value(msg, F_RTYPE));
-		crm_verbose("[ts=%s]",
+		crm_debug_2("[ts=%s]",
 			    ha_msg_value(msg, F_TIME));
-		crm_verbose("[seq=%s]",
+		crm_debug_2("[seq=%s]",
 			    ha_msg_value(msg, F_SEQ));
-		crm_verbose("[generation=%s]",
+		crm_debug_2("[generation=%s]",
 			    ha_msg_value(msg, F_HBGENERATION));
-		/*      crm_verbose("[=%s]", ha_msg_value(msg, F_)); */
+		/*      crm_debug_2("[=%s]", ha_msg_value(msg, F_)); */
 	}
 	return;
 }
@@ -589,6 +589,8 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 	
 	if(updates == NULL) {
 		fragment = create_cib_fragment(NULL, NULL);
+		set_xml_property_copy(
+			fragment, XML_ATTR_SECTION, XML_CIB_TAG_STATUS);
 	}
 
 	tmp = find_xml_node(fragment, XML_TAG_CIB, TRUE);
@@ -637,7 +639,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 		crm_info("Node %s has left the cluster", node_uname);
 	}
 	
-	crm_verbose("%s processing %s (%s)",
+	crm_debug_2("%s processing %s (%s)",
 		  __FUNCTION__, node_uname, data->state);
 
 	tmp1 = create_node_state(node_uname, node_uname,
