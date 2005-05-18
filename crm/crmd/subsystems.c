@@ -25,6 +25,7 @@
 #include <unistd.h>			/* for access */
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/realtime.h>
+#include <clplumbing/proctrack.h>
 #include <sys/types.h>	/* for calls to open */
 #include <sys/stat.h>	/* for calls to open */
 #include <fcntl.h>	/* for calls to open */
@@ -45,6 +46,48 @@
 #include <crmd.h>
 
 #include <crm/dmalloc_wrapper.h>
+
+static void
+crmdManagedChildRegistered(ProcTrack* p)
+{
+	struct crm_subsystem_s *the_subsystem = p->privatedata;
+	the_subsystem->pid = p->pid;
+}
+
+
+static void
+crmdManagedChildDied(
+	ProcTrack* p, int status, int signo, int exitcode, int waslogged)
+{
+	struct crm_subsystem_s *the_subsystem = p->privatedata;
+	
+	the_subsystem->pid = -1;
+	the_subsystem->ipc = NULL;
+	clear_bit_inplace(fsa_input_register, the_subsystem->flag_connected);
+
+	if(is_set(fsa_input_register, the_subsystem->flag_required)) {
+		/* this wasnt supposed to happen */
+		crm_err("The %s subsystem terminated unexpectedly",
+			the_subsystem->name);
+		
+		register_fsa_input_before(C_IPC_MESSAGE, I_ERROR, NULL);
+	}
+
+	p->privatedata = NULL;
+}
+
+static const char *
+crmdManagedChildName(ProcTrack* p)
+{
+	struct crm_subsystem_s *the_subsystem = p->privatedata;
+	return the_subsystem->name;
+}
+
+static ProcTrack_ops crmd_managed_child_ops = {
+	crmdManagedChildDied,
+	crmdManagedChildRegistered,
+	crmdManagedChildName
+};
 
 gboolean
 stop_subsystem(struct crm_subsystem_s*	the_subsystem)
@@ -128,6 +171,8 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 			return FALSE;
 
 		default:	/* Parent */
+			NewTrackedProc(pid, 0, PT_LOGNORMAL,
+				       the_subsystem, &crmd_managed_child_ops);
 			the_subsystem->pid = pid;
 			return TRUE;
 
@@ -168,37 +213,3 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	exit(100); /* Suppress respawning */
 	return TRUE; /* never reached */
 }
-
-
-void
-cleanup_subsystem(struct crm_subsystem_s *the_subsystem)
-{
-	int pid_status = -1;
-	the_subsystem->ipc = NULL;
-
-	if(FALSE == is_set(fsa_input_register, the_subsystem->flag_connected)) {
-		crm_verbose("Duplicate notification that %s left us",
-			    the_subsystem->name);
-		return;
-	}
-	
-	clear_bit_inplace(fsa_input_register, the_subsystem->flag_connected);
-	
-	/* Forcing client to die */
-	CL_KILL(the_subsystem->pid, -SIGKILL);
-	
-	/* cleanup the ps entry */
-	waitpid(the_subsystem->pid, &pid_status, WNOHANG);
-	the_subsystem->pid = -1;
-	
-	if(is_set(fsa_input_register, the_subsystem->flag_required)) {
-		/* this wasnt supposed to happen */
-		crm_err("The %s subsystem terminated unexpectedly",
-			the_subsystem->name);
-		
-		register_fsa_input_before(C_IPC_MESSAGE, I_ERROR, NULL);
-	}
-}
-
-
-

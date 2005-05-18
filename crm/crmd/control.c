@@ -399,6 +399,8 @@ do_startup(long long action,
 		g_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
 
+	set_sigchld_proctrack(G_PRIORITY_HIGH);
+	
 	return I_NULL;
 }
 

@@ -609,13 +609,6 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 				 cl_get_string(client_msg->msg, XML_ATTR_REFERENCE));
 		}
 		
-#if 0
-		if(ha_msg_value(msg, XML_ATTR_REFERENCE) == NULL) {
-			ha_msg_add(new_input->msg, XML_ATTR_REFERENCE, seq);
-		}
-#endif
-		register_fsa_input(C_IPC_MESSAGE, I_ROUTER, client_msg);
-		
 		return can_reply;
 	}
 	
@@ -703,8 +696,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		curr_client->uuid = crm_strdup(uuid);
 	
 		g_hash_table_insert (ipc_clients,
-				     table_key,
-				     curr_client->client_channel);
+				     table_key, curr_client->client_channel);
 
 		send_hello_message(curr_client->client_channel,
 				   "n/a", CRM_SYSTEM_CRMD,
@@ -713,8 +705,8 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		crm_devel("Updated client list with %s", crm_str(table_key));
 		
 		if(the_subsystem != NULL) {
-			set_bit_inplace(
-				fsa_input_register, the_subsystem->flag_connected);
+			set_bit_inplace(fsa_input_register,
+					the_subsystem->flag_connected);
 		}
 		G_main_set_trigger(fsa_source);
 

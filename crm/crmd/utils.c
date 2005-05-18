@@ -1322,3 +1322,49 @@ need_transition(enum crmd_fsa_state state)
 	}
 	return FALSE;
 }
+
+extern GHashTable   *ipc_clients;
+
+void
+process_client_disconnect(crmd_client_t *curr_client) 
+{
+	struct crm_subsystem_s *the_subsystem = NULL;
+
+	CRM_DEV_ASSERT(curr_client != NULL);
+	if(crm_assert_failed) { return; }
+	
+	crm_verbose("received HUP from %s", curr_client->table_key);
+		
+	if (curr_client->sub_sys == NULL) {
+		crm_debug("Client hadn't registered with us yet");
+		
+	} else if (strcmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) {
+		the_subsystem = pe_subsystem;
+		
+	} else if (strcmp(CRM_SYSTEM_TENGINE, curr_client->sub_sys) == 0) {
+		the_subsystem = te_subsystem;
+			
+	} else if (strcmp(CRM_SYSTEM_CIB, curr_client->sub_sys) == 0){
+		the_subsystem = cib_subsystem;
+	}
+		
+	if(the_subsystem != NULL) {
+		the_subsystem->ipc = NULL;
+		
+	} /* else that was a transient client */
+	
+	if (curr_client->table_key != NULL) {
+		/*
+		 * Key is destroyed below:
+		 *	curr_client->table_key
+		 * Value is cleaned up by:
+		 *	G_main_del_IPC_Channel
+		 */
+		g_hash_table_remove(ipc_clients, curr_client->table_key);
+	}
+	
+	crm_free(curr_client->table_key);
+	crm_free(curr_client->sub_sys);
+	crm_free(curr_client->uuid);
+	crm_free(curr_client);
+}

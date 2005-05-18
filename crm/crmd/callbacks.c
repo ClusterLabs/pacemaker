@@ -201,12 +201,14 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		}
 		if (client->ops->recv(client, &msg) != IPC_OK) {
 			perror("Receive failure:");
-			crm_err("[%s] [receive failure]", curr_client->table_key);
+			crm_err("[%s] [receive failure]",
+				curr_client->table_key);
 			stay_connected = FALSE;
 			break;
 			
 		} else if (msg == NULL) {
-			crm_err("No message from %s this time", curr_client->table_key);
+			crm_err("[%s] [no message this time]",
+				curr_client->table_key);
 			continue;
 		}
 
@@ -216,7 +218,9 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		
 		crm_verbose("Processing msg from %s", curr_client->table_key);
 		crm_log_message_adv(LOG_MSG, "CRMd[inbound]", new_input->msg);
-		crmd_authorize_message(new_input, curr_client);
+		if(crmd_authorize_message(new_input, curr_client)) {
+			register_fsa_input(C_IPC_MESSAGE, I_ROUTER, new_input);
+		}
 		delete_ha_msg_input(new_input);
 		
 		msg = NULL;
@@ -227,61 +231,13 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
     
 	if (client->ch_status != IPC_CONNECT) {
 		stay_connected = FALSE;
-		crm_verbose("received HUP from %s", curr_client->table_key);
-		if (curr_client != NULL) {
-			struct crm_subsystem_s *the_subsystem = NULL;
-			
-			if (curr_client->sub_sys == NULL) {
-				crm_debug("Client hadn't registered with us yet");
-
-			} else if (strcmp(CRM_SYSTEM_PENGINE,
-					  curr_client->sub_sys) == 0) {
-				the_subsystem = pe_subsystem;
-
-			} else if (strcmp(CRM_SYSTEM_TENGINE,
-					  curr_client->sub_sys) == 0) {
-				the_subsystem = te_subsystem;
-
-			} else if (strcmp(CRM_SYSTEM_CIB,
-					  curr_client->sub_sys) == 0){
-				the_subsystem = cib_subsystem;
-			}
-			
-			if(the_subsystem != NULL) {
-				cleanup_subsystem(the_subsystem);
-				
-			} /* else that was a transient client */
-			
-			if (curr_client->table_key != NULL) {
-				/*
-				 * Key is destroyed below:
-				 *	curr_client->table_key
-				 * Value is cleaned up by:
-				 *	G_main_del_IPC_Channel
-				 */
-				g_hash_table_remove(
-					ipc_clients, curr_client->table_key);
-			}
-
-#if 0
-			if(curr_client->client_source != NULL) {
-				gboolean det = G_main_del_IPC_Channel(
-					curr_client->client_source);
-			
-				crm_verbose("crm_client was %s detached",
-					   det?"successfully":"not");
-			}
-#endif		
-			crm_free(curr_client->table_key);
-			crm_free(curr_client->sub_sys);
-			crm_free(curr_client->uuid);
-			crm_free(curr_client);
-		}
+		process_client_disconnect(curr_client);
 	}
 
 	G_main_set_trigger(fsa_source);
 	return stay_connected;
 }
+
 
 
 gboolean

@@ -73,15 +73,12 @@ do_te_control(long long action,
 		if(stop_subsystem(this_subsys) == FALSE) {
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		}
-
-		cleanup_subsystem(this_subsys);
 	}
 
 	if(action & start_actions) {
 		if(cur_state != S_STOPPING) {
 			if(start_subsystem(this_subsys) == FALSE) {
 				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-				cleanup_subsystem(this_subsys);
 			}
 		} else {
 			crm_info("Ignoring request to start %s while shutting down",

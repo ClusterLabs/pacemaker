@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.16 2005/05/11 11:54:48 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.17 2005/05/18 14:24:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,6 +24,7 @@
 
 #define CLIENT_EXIT_WAIT 30
 
+extern void process_client_disconnect(crmd_client_t *curr_client);
 
 extern void update_local_cib_adv(
 	crm_data_t *msg_data, gboolean do_now, const char *raised_from);
@@ -44,8 +45,6 @@ extern gboolean is_set_any(long long action_list, long long action);
 extern gboolean crm_timer_stop (fsa_timer_t *timer);
 extern gboolean crm_timer_start(fsa_timer_t *timer);
 extern gboolean crm_timer_popped(gpointer data);
-
-extern void cleanup_subsystem(struct crm_subsystem_s *the_subsystem);
 
 extern crm_data_t *create_node_state(
 	const char *uuid, const char *uname,
