@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.11 2005/05/09 21:17:37 andrew Exp $ */
+/* $Id: utils.c,v 1.12 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -93,7 +93,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 	int len = 0;
 	const char *temp = NULL;
 
-	crm_trace("Attempting to decode: [%s]", srcstring);
+	crm_debug_4("Attempting to decode: [%s]", srcstring);
 	if (srcstring != NULL) {
 		len = strlen(srcstring);
 		while(lpc <= len) {
@@ -146,7 +146,7 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 	if(hash_key != NULL) {
 		sprintf(hash_key, "%s_%s", sys?sys:"none", crm_msg_reference);
 		hash_key[ref_len-1] = '\0';
-		crm_devel("created hash key: (%s)", hash_key);
+		crm_debug_3("created hash key: (%s)", hash_key);
 	}
 	return hash_key;
 }
@@ -403,7 +403,7 @@ compare_version(const char *version1, const char *version2)
 			cmp = 1;
 		}
 
-		crm_trace("compare[%d (%d)]: %d(%s)  %d(%s)",
+		crm_debug_4("compare[%d (%d)]: %d(%s)  %d(%s)",
 			  lpc++, cmp,
 			  step1_i, crm_str(step1),
 			  step2_i, crm_str(step2));
@@ -422,15 +422,15 @@ compare_version(const char *version1, const char *version2)
 		crm_free(step2);
 		
 		if(cmp < 0) {
-			crm_verbose("%s < %s", version1, version2);
+			crm_debug_2("%s < %s", version1, version2);
 			return -1;
 			
 		} else if(cmp > 0) {
-			crm_verbose("%s > %s", version1, version2);
+			crm_debug_2("%s > %s", version1, version2);
 			return 1;
 		}
 	}
-	crm_verbose("%s == %s", version1, version2);
+	crm_debug_2("%s == %s", version1, version2);
 	return 0;
 }
 
@@ -572,11 +572,11 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
 		cl_log_set_facility(facility);
  	}	
-	crm_verbose("Facility: %d", facility);
+	crm_debug_2("Facility: %d", facility);
 
 	param_name = KEY_LOGFILE;
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_devel("%s = %s", param_name, param_val);
+	crm_debug_3("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		cl_log_set_logfile(param_val);
 		cl_free(param_val);
@@ -585,7 +585,7 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 	
 	param_name = KEY_DBGFILE;
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_devel("%s = %s", param_name, param_val);
+	crm_debug_3("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		cl_log_set_debugfile(param_val);
 		cl_free(param_val);
@@ -594,7 +594,7 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 	
 	param_name = KEY_DEBUGLEVEL;
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_devel("%s = %s", param_name, param_val);
+	crm_debug_3("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		int debug_level = atoi(param_val);
 		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
@@ -606,7 +606,7 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 
 	param_name = KEY_LOGDAEMON;
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_devel("%s = %s", param_name, param_val);
+	crm_debug_3("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		int uselogd;
 		crm_str_to_boolean(param_val, &uselogd);
@@ -620,7 +620,7 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 
 	param_name = KEY_CONNINTVAL;
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_devel("%s = %s", param_name, param_val);
+	crm_debug_3("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		int logdtime;
 		logdtime = crm_get_msec(param_val);

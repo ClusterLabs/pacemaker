@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.19 2005/05/09 15:03:17 andrew Exp $ */
+/* $Id: io.c,v 1.20 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -335,7 +335,7 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 	crm_data_t *saved_cib = get_the_CIB();
 	const char *filename_bak = CIB_BACKUP; /* calculate */
 
-	crm_xml_devel(new_cib, "Attempting to activate CIB");
+	crm_log_xml_debug_3(new_cib, "Attempting to activate CIB");
 
 	CRM_ASSERT(new_cib != saved_cib);
 	crm_validate_data(new_cib);
@@ -362,7 +362,7 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 		}
 		
 		if(error_code == cib_ok) {
-			crm_devel("Writing CIB out to %s", CIB_FILENAME);
+			crm_debug_3("Writing CIB out to %s", CIB_FILENAME);
 			CRM_DEV_ASSERT(write_xml_file(
 					       new_cib, CIB_FILENAME) >= 0);
 			if (crm_assert_failed) {
@@ -405,11 +405,11 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 
 	/* Make sure memory is cleaned up appropriately */
 	if (error_code != cib_ok) {
-		crm_trace("Freeing new CIB %p", new_cib);
+		crm_debug_4("Freeing new CIB %p", new_cib);
 		free_xml(new_cib);
 		
 	} else if(saved_cib != NULL) {
-		crm_trace("Freeing saved CIB %p", saved_cib);
+		crm_debug_4("Freeing saved CIB %p", saved_cib);
 		crm_validate_data(saved_cib);
 		free_xml(saved_cib);
 	}

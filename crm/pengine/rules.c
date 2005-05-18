@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.3 2005/05/17 14:33:39 andrew Exp $ */
+/* $Id: rules.c,v 1.4 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,9 +92,9 @@ apply_node_expression(const char *attr, const char *op, const char *value,
 		
 		if(accept) {
 			result = g_list_append(result, node);
-			crm_trace("node %s matched", node->details->uname);
+			crm_debug_4("node %s matched", node->details->uname);
 		} else {
-			crm_trace("node %s did not match", node->details->uname);
+			crm_debug_4("node %s did not match", node->details->uname);
 		}
 		);
 	
@@ -212,18 +212,18 @@ coloc_expression(const char *attr, const char *op, const char *value,
 	}
 	
 	if(accept && node != NULL) {
-		crm_trace("node %s matched", node->details->uname);
+		crm_debug_4("node %s matched", node->details->uname);
 		return TRUE;
 		
 	} else if(accept) {
-		crm_trace("node <NULL> matched");
+		crm_debug_4("node <NULL> matched");
 		return TRUE;
 		
 	} else if(node != NULL) {
-		crm_trace("node %s did not match", node->details->uname);
+		crm_debug_4("node %s did not match", node->details->uname);
 
 	} else {
-		crm_trace("node <NULL> not matched");
+		crm_debug_4("node <NULL> not matched");
 	}
 	
 	return FALSE;

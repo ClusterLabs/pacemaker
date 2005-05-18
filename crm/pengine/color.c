@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.26 2005/05/17 14:33:39 andrew Exp $ */
+/* $Id: color.c,v 1.27 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,7 +35,7 @@ color_t *add_color(resource_t *rh_resource, color_t *color);
 gboolean 
 apply_placement_constraints(GListPtr constraints, GListPtr nodes)
 {
-	crm_verbose("Applying constraints...");
+	crm_debug_2("Applying constraints...");
 	slist_iter(
 		cons, rsc_to_node_t, constraints, lpc,
 
@@ -53,7 +53,7 @@ apply_agent_constraints(GListPtr resources)
 		rsc, resource_t, resources, lpc,
 		rsc->fns->agent_constraints(rsc);
 		);
-	crm_trace("Finished applying RA restrictions");
+	crm_debug_4("Finished applying RA restrictions");
 	return TRUE;
 }
 
@@ -70,14 +70,14 @@ add_color(resource_t *resource, color_t *color)
 	local_color = find_color(resource->candidate_colors, color);
 
 	if(local_color == NULL) {
-		crm_devel("Adding color %d", color->id);
+		crm_debug_3("Adding color %d", color->id);
 		
 		local_color = copy_color(color);
 		resource->candidate_colors =
 			g_list_append(resource->candidate_colors, local_color);
 
 	} else {
-		crm_devel("Color %d already present", color->id);
+		crm_debug_3("Color %d already present", color->id);
 	}
 
 	return local_color;
@@ -86,7 +86,7 @@ add_color(resource_t *resource, color_t *color)
 void
 color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
 {
-	crm_devel_action(print_resource("Coloring", rsc, FALSE));
+	crm_action_debug_3(print_resource("Coloring", rsc, FALSE));
 	
 	if(rsc->provisional == FALSE) {
 		/* already processed this resource */
@@ -96,14 +96,14 @@ color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
 	rsc->rsc_cons = g_list_sort(
 		rsc->rsc_cons, sort_cons_strength);
 
-	crm_devel_action(
+	crm_action_debug_3(
 		print_resource("Pre-processing", rsc, FALSE));
 
 	/*------ Pre-processing */
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
-		crm_devel_action(
+		crm_action_debug_3(
 			print_rsc_colocation(
 				"Pre-Processing constraint", constraint,FALSE));
 		
@@ -116,19 +116,19 @@ color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
 
 	rsc->fns->color(rsc, colors);
 
-	crm_devel_action(
+	crm_action_debug_3(
 		print_resource("Post-processing", rsc, TRUE));
 
 	/*------ Post-processing */
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
-		crm_devel_action(
+		crm_action_debug_3(
 			print_rsc_colocation(
 				"Post-Processing constraint",constraint,FALSE));
 		rsc->fns->rsc_colocation_lh(constraint);
 		);
 	
-	crm_devel_action(print_resource("Colored", rsc, TRUE));
+	crm_action_debug_3(print_resource("Colored", rsc, TRUE));
 }
 
 

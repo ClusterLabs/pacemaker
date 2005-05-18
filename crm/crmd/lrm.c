@@ -181,7 +181,7 @@ do_lrm_control(long long action,
 
 	if(action & A_LRM_CONNECT) {
 	
-		crm_trace("LRM: connect...");
+		crm_debug_4("LRM: connect...");
 		ret = HA_OK;
 		
 		monitors = g_hash_table_new_full(
@@ -207,7 +207,7 @@ do_lrm_control(long long action,
 		}
 
 		if(ret == HA_OK) {
-			crm_trace("LRM: sigon...");
+			crm_debug_4("LRM: sigon...");
 			ret = fsa_lrm_conn->lrm_ops->signon(
 				fsa_lrm_conn, CRM_SYSTEM_CRMD);
 		}
@@ -226,7 +226,7 @@ do_lrm_control(long long action,
 		}
 
 		if(ret == HA_OK) {
-			crm_trace("LRM: set_lrm_callback...");
+			crm_debug_4("LRM: set_lrm_callback...");
 			ret = fsa_lrm_conn->lrm_ops->set_lrm_callback(
 				fsa_lrm_conn, lrm_op_callback);
 			if(ret != HA_OK) {
@@ -445,13 +445,13 @@ build_active_RAs(crm_data_t *rsc_list)
 
 		op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
 
-		crm_verbose("\tcurrent state:%s",
+		crm_debug_2("\tcurrent state:%s",
 			    cur_state==LRM_RSC_IDLE?"Idle":"Busy");
 
 		slist_iter(
 			op, lrm_op_t, op_list, llpc,
 
-			crm_verbose("Processing op %s for %s (status=%d, rc=%d)", 
+			crm_debug_2("Processing op %s for %s (status=%d, rc=%d)", 
 				    op->op_type, the_rsc->id, op->op_status, op->rc);
 
 			if(max_call_id < op->call_id) {
@@ -503,7 +503,7 @@ do_lrm_query(gboolean is_replace)
 	set_xml_property_copy(xml_state, XML_ATTR_UNAME, fsa_our_uname);
 	xml_result = create_cib_fragment(xml_state, NULL);
 
-	crm_xml_devel(xml_state, "Current state of the LRM");
+	crm_log_xml_debug_3(xml_state, "Current state of the LRM");
 	
 	return xml_result;
 }
@@ -640,7 +640,7 @@ do_lrm_rsc_op(
 
 	if(rsc == NULL) {
 		/* add it to the list */
-		crm_verbose("adding rsc %s before operation", rid);
+		crm_debug_2("adding rsc %s before operation", rid);
 		if(msg != NULL) {
 			params = xml2list(msg);
 
@@ -865,7 +865,7 @@ xml2list(crm_data_t *parent)
 		if(nvpair_list == NULL) {
 			crm_debug("No attributes in %s",
 				  crm_element_name(parent));
-			crm_xml_verbose(parent,"No attributes for resource op");
+			crm_log_xml_debug_2(parent,"No attributes for resource op");
 		}
 	}
 	
@@ -877,7 +877,7 @@ xml2list(crm_data_t *parent)
 		const char *value = crm_element_value(
 			node_iter, XML_NVPAIR_ATTR_VALUE);
 		
-		crm_verbose("Added %s=%s", key, value);
+		crm_debug_2("Added %s=%s", key, value);
 		
 		g_hash_table_insert(
 			nvpair_hash, crm_strdup(key), crm_strdup(value));
@@ -943,7 +943,7 @@ do_update_resource(lrm_op_t* op)
 			
 	if(rc > 0) {
 		/* the return code is a call number, not an error code */
-		crm_devel("Sent resource state update message: %d", rc);
+		crm_debug_3("Sent resource state update message: %d", rc);
 		
 	} else {
 		crm_err("Resource state update failed: %s",

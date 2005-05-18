@@ -63,7 +63,7 @@ crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
 
-	crm_devel("%d HA messages dispatched", lpc);
+	crm_debug_3("%d HA messages dispatched", lpc);
 	G_main_set_trigger(fsa_source);
 	
 	if (channel && (channel->ch_status != IPC_CONNECT)) {
@@ -143,23 +143,23 @@ crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
 		crm_log_message_adv(LOG_WARNING, "HA[inbound]: wrong DC", msg);
 #endif
 	} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
-		crm_verbose("Ignoring message for the DC [F_SEQ=%s]", seq);
-		crm_log_message_adv(LOG_TRACE, "HA[inbound]: ignore", msg);
+		crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
+		crm_log_message_adv(LOG_DEBUG_4, "HA[inbound]: ignore", msg);
 		return;
 
 	} else if(safe_str_eq(from, fsa_our_uname)
 		  && safe_str_eq(op, CRM_OP_VOTE)) {
-		crm_log_message_adv(LOG_TRACE, "HA[inbound]", msg);
-		crm_verbose("Ignoring our own vote [F_SEQ=%s]: own vote", seq);
+		crm_log_message_adv(LOG_DEBUG_4, "HA[inbound]", msg);
+		crm_debug_2("Ignoring our own vote [F_SEQ=%s]: own vote", seq);
 		return;
 		
 	} else if(AM_I_DC && safe_str_eq(op, CRM_OP_HBEAT)) {
-		crm_verbose("Ignoring our own heartbeat [F_SEQ=%s]", seq);
-		crm_log_message_adv(LOG_TRACE, "HA[inbound]: own heartbeat", msg);
+		crm_debug_2("Ignoring our own heartbeat [F_SEQ=%s]", seq);
+		crm_log_message_adv(LOG_DEBUG_4, "HA[inbound]: own heartbeat", msg);
 		return;
 
 	} else {
-		crm_devel("Processing message");
+		crm_debug_3("Processing message");
 		crm_log_message_adv(LOG_MSG, "HA[inbound]", msg);
 		new_input = new_ha_msg_input(msg);
 		register_fsa_input(C_HA_MESSAGE, I_ROUTER, new_input);
@@ -190,7 +190,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 	gboolean stay_connected = TRUE;
 	
-	crm_verbose("Processing IPC message from %s",
+	crm_debug_2("Processing IPC message from %s",
 		   curr_client->table_key);
 
 	while(lpc == 0 && client->ops->is_message_pending(client)) {
@@ -216,7 +216,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		new_input = new_ipc_msg_input(msg);
 		msg->msg_done(msg);
 		
-		crm_verbose("Processing msg from %s", curr_client->table_key);
+		crm_debug_2("Processing msg from %s", curr_client->table_key);
 		crm_log_message_adv(LOG_MSG, "CRMd[inbound]", new_input->msg);
 		if(crmd_authorize_message(new_input, curr_client)) {
 			register_fsa_input(C_IPC_MESSAGE, I_ROUTER, new_input);
@@ -227,7 +227,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		new_input = NULL;
 	}
 	
-	crm_verbose("Processed %d messages", lpc);
+	crm_debug_2("Processed %d messages", lpc);
     
 	if (client->ch_status != IPC_CONNECT) {
 		stay_connected = FALSE;
@@ -245,7 +245,7 @@ lrm_dispatch(IPC_Channel*src_not_used, gpointer user_data)
 {
 	int num_msgs = 0;
 	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
-	crm_devel("received callback");
+	crm_debug_3("received callback");
 	num_msgs = lrm->lrm_ops->rcvmsg(lrm, FALSE);
 	if(num_msgs < 1) {
 		crm_err("lrm->lrm_ops->rcvmsg() failed, connection lost?");
@@ -277,11 +277,11 @@ crmd_ha_status_callback(
 {
 	crm_data_t *update = NULL;
 
-	crm_devel("received callback");
+	crm_debug_3("received callback");
 	crm_notice("Status update: Node %s now has status [%s]",node,status);
 
 	if(safe_str_neq(status, DEADSTATUS)) {
-		crm_devel("nstatus callback was not for a dead node");
+		crm_debug_3("nstatus callback was not for a dead node");
 		return;
 	}
 
@@ -306,7 +306,7 @@ crmd_client_status_callback(const char * node, const char * client,
 	const char   *extra = NULL;
 	crm_data_t *  update = NULL;
 
-	crm_devel("received callback");
+	crm_debug_3("received callback");
 	if(safe_str_neq(client, CRM_SYSTEM_CRMD)) {
 		return;
 	}
@@ -339,7 +339,7 @@ crmd_client_status_callback(const char * node, const char * client,
 		register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 		
 	} else {
-		crm_devel("Got client status callback");
+		crm_debug_3("Got client status callback");
 		update = create_node_state(
 			node, node, NULL, NULL, status, join, NULL);
 		
@@ -382,7 +382,7 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 
 	} else {
 		crmd_client_t *blank_client = NULL;
-		crm_devel("Channel connected");
+		crm_debug_3("Channel connected");
 		crm_malloc0(blank_client, sizeof(crmd_client_t));
 	
 		if (blank_client == NULL) {
@@ -414,7 +414,7 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
 	gboolean was_error = FALSE;
 	
-	crm_devel("received callback");	
+	crm_debug_3("received callback");	
 	rc = oc_ev_handle_event(ccm_token);
 	if(rc != 0) {
 		crm_err("CCM connection appears to have failed: rc=%d.", rc);
@@ -439,7 +439,7 @@ crmd_ccm_msg_callback(
 	gboolean update_quorum = FALSE;
 	gboolean trigger_transition = FALSE;
 
-	crm_devel("received callback");
+	crm_debug_3("received callback");
 
 	if(data != NULL) {
 		instance = membership->m_instance;

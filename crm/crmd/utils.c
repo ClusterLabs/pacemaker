@@ -193,16 +193,16 @@ crm_timer_stop(fsa_timer_t *timer)
 long long
 toggle_bit(long long action_list, long long action)
 {
-	crm_insane("Toggling bit %.16llx", action);
+	crm_debug_5("Toggling bit %.16llx", action);
 	action_list ^= action;
-	crm_insane("Result %.16llx", action_list & action);
+	crm_debug_5("Result %.16llx", action_list & action);
 	return action_list;
 }
 
 long long
 clear_bit(long long action_list, long long action)
 {
-	crm_insane("Clearing bit\t%.16llx", action);
+	crm_debug_5("Clearing bit\t%.16llx", action);
 
 	/* ensure its set */
 	action_list |= action;
@@ -216,7 +216,7 @@ clear_bit(long long action_list, long long action)
 long long
 set_bit(long long action_list, long long action)
 {
-	crm_insane("Setting bit\t%.16llx", action);
+	crm_debug_5("Setting bit\t%.16llx", action);
 	action_list |= action;
 	return action_list;
 }
@@ -225,14 +225,14 @@ set_bit(long long action_list, long long action)
 gboolean
 is_set(long long action_list, long long action)
 {
-	crm_insane("Checking bit\t%.16llx in %.16llx", action, action_list);
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", action, action_list);
 	return ((action_list & action) == action);
 }
 
 gboolean
 is_set_any(long long action_list, long long action)
 {
-	crm_insane("Checking bit\t%.16llx in %.16llx", action, action_list);
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", action, action_list);
 	return ((action_list & action) != 0);
 }
 
@@ -794,7 +794,7 @@ fsa_dump_inputs(int log_level, long long input_register)
 void
 fsa_dump_actions(long long action, const char *text)
 {
-	int log_level = LOG_DEV;
+	int log_level = LOG_DEBUG_3;
 	
 	if(is_set(action, A_READCONFIG)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__, 
@@ -1076,7 +1076,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	 */
 	crm_data_t *tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
-	crm_devel("Creating node entry for %s", uname);
+	crm_debug_3("Creating node entry for %s", uname);
 	set_uuid(fsa_cluster_conn, tmp1, XML_ATTR_UUID, uname);
 	
 	set_xml_property_copy(tmp1, XML_ATTR_UNAME, uname);
@@ -1117,17 +1117,17 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 	if(oc_in->m_n_member > 0
 	   && num_nodes < oc_in->m_n_member + oc_in->m_memb_idx) {
 		num_nodes = oc_in->m_n_member + oc_in->m_memb_idx;
-		crm_devel("Updated ccm nodes to %d - 1", num_nodes);
+		crm_debug_3("Updated ccm nodes to %d - 1", num_nodes);
 	}
 	if(oc_in->m_n_in > 0
 	   && num_nodes < oc_in->m_n_in + oc_in->m_in_idx) {
 		num_nodes = oc_in->m_n_in + oc_in->m_in_idx;
-		crm_devel("Updated ccm nodes to %d - 2", num_nodes);
+		crm_debug_3("Updated ccm nodes to %d - 2", num_nodes);
 	}
 	if(oc_in->m_n_out > 0
 	   && num_nodes < oc_in->m_n_out + oc_in->m_out_idx) {
 		num_nodes = oc_in->m_n_out + oc_in->m_out_idx;
-		crm_devel("Updated ccm nodes to %d - 3", num_nodes);
+		crm_debug_3("Updated ccm nodes to %d - 3", num_nodes);
 	}
 
 	/* why 2*??
@@ -1137,7 +1137,7 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 		+ sizeof(int)
 		+ 2*num_nodes*sizeof(oc_node_t);
 
-	crm_devel("Copying %d ccm nodes", num_nodes);
+	crm_debug_3("Copying %d ccm nodes", num_nodes);
 	
 	crm_malloc0(oc_copy, size);
 
@@ -1149,7 +1149,7 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 	oc_copy->m_n_in     = oc_in->m_n_in;
 	oc_copy->m_in_idx   = oc_in->m_in_idx;
 
-	crm_devel("instance=%d, nodes=%d (idx=%d), new=%d (idx=%d), lost=%d (idx=%d)",
+	crm_debug_3("instance=%d, nodes=%d (idx=%d), new=%d (idx=%d), lost=%d (idx=%d)",
 		  oc_in->m_instance,
 		  oc_in->m_n_member,
 		  oc_in->m_memb_idx,
@@ -1162,7 +1162,7 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 	for(lpc = 0; lpc < oc_in->m_n_member; lpc++) {
 		oc_node_t a_node      = oc_in->m_array[lpc+offset];
 		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
-		crm_devel("Copying ccm member node %d", lpc);
+		crm_debug_3("Copying ccm member node %d", lpc);
 		copy_ccm_node(a_node, a_node_copy);
 		
 	}
@@ -1171,7 +1171,7 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 	for(lpc = 0; lpc < oc_in->m_n_in; lpc++) {
 		oc_node_t a_node      = oc_in->m_array[lpc+offset];
 		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
-		crm_devel("Copying ccm new node %d", lpc);
+		crm_debug_3("Copying ccm new node %d", lpc);
 		copy_ccm_node(a_node, a_node_copy);
 		
 	}
@@ -1180,7 +1180,7 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 	for(lpc = 0; lpc < oc_in->m_n_out; lpc++) {
 		oc_node_t a_node      = oc_in->m_array[lpc+offset];
 		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
-		crm_devel("Copying ccm lost node %d", lpc);
+		crm_debug_3("Copying ccm lost node %d", lpc);
 		copy_ccm_node(a_node, a_node_copy);
 	}
 	
@@ -1191,7 +1191,7 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 void
 copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy)
 {
-	crm_devel("Copying ccm node: id=%d, born=%d, uname=%s",
+	crm_debug_3("Copying ccm node: id=%d, born=%d, uname=%s",
 		  a_node.node_id, a_node.node_born_on,
 		  a_node.node_uname);
 	
@@ -1207,7 +1207,7 @@ copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy)
 			a_node.node_id);
 	}
 	
-	crm_devel("Copied ccm node: id=%d, born=%d, uname=%s",
+	crm_debug_3("Copied ccm node: id=%d, born=%d, uname=%s",
 		  a_node_copy->node_id, a_node_copy->node_born_on,
 		  a_node_copy->node_uname);
 }
@@ -1288,7 +1288,7 @@ create_node_state(const char *uuid,
 {
 	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
-	crm_devel("Creating node state entry for %s", uname);
+	crm_debug_3("Creating node state entry for %s", uname);
 	set_uuid(fsa_cluster_conn, node_state, XML_ATTR_UUID, uname);
 	set_xml_property_copy(node_state, XML_ATTR_UNAME, uname);
 
@@ -1307,7 +1307,7 @@ create_node_state(const char *uuid,
 	set_xml_property_copy(
 		node_state, XML_CIB_ATTR_EXPSTATE, exp_state);
 
-	crm_xml_devel(node_state, "created");
+	crm_log_xml_debug_3(node_state, "created");
 
 	return node_state;
 }
@@ -1333,7 +1333,7 @@ process_client_disconnect(crmd_client_t *curr_client)
 	CRM_DEV_ASSERT(curr_client != NULL);
 	if(crm_assert_failed) { return; }
 	
-	crm_verbose("received HUP from %s", curr_client->table_key);
+	crm_debug_2("received HUP from %s", curr_client->table_key);
 		
 	if (curr_client->sub_sys == NULL) {
 		crm_debug("Client hadn't registered with us yet");

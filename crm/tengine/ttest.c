@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.17 2005/02/25 10:32:08 andrew Exp $ */
+/* $Id: ttest.c,v 1.18 2005/05/18 20:15:58 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -133,7 +133,7 @@ main(int argc, char **argv)
 		crm_err("%d errors in option parsing", argerr);
 	}
   
-	crm_trace("Initializing graph...");
+	crm_debug_4("Initializing graph...");
 	initialize_graph();
 	
 	crm_debug("=#=#=#=#= Getting XML =#=#=#=#=");
@@ -188,7 +188,7 @@ main(int argc, char **argv)
 #ifdef MTRACE  
 	muntrace();
 #endif
-	crm_trace("Transition complete...");
+	crm_debug_4("Transition complete...");
 
 	return 0;
 }

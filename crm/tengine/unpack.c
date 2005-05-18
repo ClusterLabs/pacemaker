@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.30 2005/05/15 13:13:41 andrew Exp $ */
+/* $Id: unpack.c,v 1.31 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,7 +88,7 @@ unpack_graph(crm_data_t *xml_graph)
 
 		synapse_t *new_synapse = NULL;
 
-		crm_devel("looking in synapse %s",
+		crm_debug_3("looking in synapse %s",
 			  crm_element_value(synapse, XML_ATTR_ID));
 		
 		crm_malloc0(new_synapse, sizeof(synapse_t));
@@ -100,7 +100,7 @@ unpack_graph(crm_data_t *xml_graph)
 		
 		graph = g_list_append(graph, new_synapse);
 
-		crm_devel("look for actions in synapse %s",
+		crm_debug_3("look for actions in synapse %s",
 			  crm_element_value(synapse, XML_ATTR_ID));
 
 		xml_child_iter(
@@ -115,7 +115,7 @@ unpack_graph(crm_data_t *xml_graph)
 				if(new_action == NULL) {
 					continue;
 				}
-				crm_devel("Adding action %d to synapse %d",
+				crm_debug_3("Adding action %d to synapse %d",
 					  new_action->id, new_synapse->id);
 
 				new_synapse->actions = g_list_append(
@@ -125,7 +125,7 @@ unpack_graph(crm_data_t *xml_graph)
 			
 			);
 
-		crm_devel("look for inputs in synapse %s",
+		crm_debug_3("look for inputs in synapse %s",
 			  crm_element_value(synapse, XML_ATTR_ID));
 
 		xml_child_iter(
@@ -144,7 +144,7 @@ unpack_graph(crm_data_t *xml_graph)
 						continue;
 					}
 
-					crm_devel("Adding input %d to synapse %d",
+					crm_debug_3("Adding input %d to synapse %d",
 						 new_input->id, new_synapse->id);
 					
 					new_synapse->inputs = g_list_append(
@@ -177,7 +177,7 @@ unpack_action(crm_data_t *xml_action)
 
 	if(tmp == NULL) {
 		crm_err("Actions must have an id!");
-		crm_xml_devel(xml_action, "Action with missing id");
+		crm_log_xml_debug_3(xml_action, "Action with missing id");
 		return NULL;
 	}
 	
@@ -211,7 +211,7 @@ unpack_action(crm_data_t *xml_action)
 
 	nvpair_list = find_xml_node(action_copy, XML_TAG_ATTRS, FALSE);
 	if(nvpair_list == NULL) {
-		crm_verbose("No attributes in %s",
+		crm_debug_2("No attributes in %s",
 			    crm_element_name(action_copy));
 	}
 	
@@ -231,7 +231,7 @@ unpack_action(crm_data_t *xml_action)
 		}
 		);
 
-	crm_devel("Action %d has timer set to %dms",
+	crm_debug_3("Action %d has timer set to %dms",
 		  action->id, action->timeout);
 	
 	crm_malloc0(action->timer, sizeof(te_timer_t));
@@ -261,7 +261,7 @@ extract_event(crm_data_t *msg)
        <lrm_resources>
 	 <rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>
 */
-	crm_trace("Extracting event from %s", crm_element_name(msg));
+	crm_debug_4("Extracting event from %s", crm_element_name(msg));
 	xml_child_iter(
 		msg, node_state, XML_CIB_TAG_STATE,
 
@@ -275,7 +275,7 @@ extract_event(crm_data_t *msg)
 			node_state, XML_CIB_ATTR_JOINSTATE);
 		event_node = crm_element_value(node_state, XML_ATTR_UNAME);
 
-		crm_xml_devel(node_state,"Processing");
+		crm_log_xml_debug_3(node_state,"Processing");
 
 		if(crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
 			send_complete(
@@ -288,7 +288,7 @@ extract_event(crm_data_t *msg)
 			 *   possibly by us when a shutdown timmed out
 			 */
 			int action_id = -1;
-			crm_devel("Checking for STONITH");
+			crm_debug_3("Checking for STONITH");
 			event_node = crm_element_value(node_state, XML_ATTR_UNAME);
 			action_id = match_down_event(
 				event_node, CRM_OP_SHUTDOWN, LRM_OP_DONE);
@@ -313,7 +313,7 @@ extract_event(crm_data_t *msg)
 			/* simple node state update...
 			 *   possibly from a shutdown we requested
 			 */
-			crm_devel("Processing state update");
+			crm_debug_3("Processing state update");
 			if(crmd_state != NULL
 			   && safe_str_neq(crmd_state, OFFLINESTATUS)) {
 				/* the node is comming up,
@@ -335,7 +335,7 @@ extract_event(crm_data_t *msg)
 				 * ie. once per update of each field
 				 */
 				int action_id = -1;
-				crm_devel("Checking if this was a known shutdown");
+				crm_debug_3("Checking if this was a known shutdown");
 				action_id = match_down_event(
 					event_node, NULL, LRM_OP_DONE);
 
@@ -349,7 +349,7 @@ extract_event(crm_data_t *msg)
 			}
 			
 			if(ccm_state != NULL && crm_is_true(ccm_state)) {
-				crm_devel("Ignore - new CCM node");
+				crm_debug_3("Ignore - new CCM node");
 			}
 		}
 		if(resources != NULL) {
@@ -358,7 +358,7 @@ extract_event(crm_data_t *msg)
 			xml_child_iter(
 				resources, child, NULL, 
 
-				crm_xml_devel(child, "Processing LRM resource update");
+				crm_log_xml_debug_3(child, "Processing LRM resource update");
 				abort = !process_graph_event(child, event_node);
 				if(abort) {
 					break;

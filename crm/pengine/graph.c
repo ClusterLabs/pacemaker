@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.42 2005/05/17 14:33:39 andrew Exp $ */
+/* $Id: graph.c,v 1.43 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,7 +49,7 @@ update_action(action_t *action)
 {
 	gboolean change = FALSE;
 
-	crm_verbose("Processing action %d", action->id);
+	crm_debug_2("Processing action %d", action->id);
 	if(action->optional && action->runnable) {
 		return FALSE;
 	}
@@ -144,7 +144,7 @@ stonith_constraints(node_t *node,
 
 		/* shutdown before stonith */
 		/* Give any resources a chance to shutdown normally */
-		crm_devel("Adding shutdown (%d) as an input to stonith (%d)",
+		crm_debug_3("Adding shutdown (%d) as an input to stonith (%d)",
 			  shutdown_op->id, stonith_op->id);
 		
 		custom_action_order(
@@ -187,7 +187,7 @@ stonith_constraints(node_t *node,
 				}
 				);
 
-			crm_devel("Adding stonith (%d) as an input to stop",
+			crm_debug_3("Adding stonith (%d) as an input to stop",
 				  stonith_op->id);
 			
 		} else if((rsc->unclean || node->details->unclean)
@@ -222,7 +222,7 @@ action2xml(action_t *action, gboolean as_input)
 		return NULL;
 	}
 
-	crm_devel("Dumping action %d as XML", action->id);
+	crm_debug_3("Dumping action %d as XML", action->id);
 	if(safe_str_eq(action->task, CRM_OP_FENCE)) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 		needs_node_info = FALSE;
@@ -288,7 +288,7 @@ action2xml(action_t *action, gboolean as_input)
 	}
 	
 	
-	crm_xml_verbose(action_xml, "dumped action");
+	crm_log_xml_debug_2(action_xml, "dumped action");
 	
 	return action_xml;
 }
@@ -307,15 +307,15 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 		return;
 
 	} else if(action->optional) {
-		crm_trace("action %d was optional", action->id);
+		crm_debug_4("action %d was optional", action->id);
 		return;
 
 	} else if(action->pseudo == FALSE && action->runnable == FALSE) {
-		crm_trace("action %d was not runnable", action->id);
+		crm_debug_4("action %d was not runnable", action->id);
 		return;
 
 	} else if(action->dumped) {
-		crm_trace("action %d was already dumped", action->id);
+		crm_debug_4("action %d was already dumped", action->id);
 		return;
 
 	} else if(action->pseudo

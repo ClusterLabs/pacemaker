@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.65 2005/05/17 14:33:39 andrew Exp $ */
+/* $Id: pengine.c,v 1.66 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,7 +41,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	const char *op = cl_get_string(msg, F_CRM_TASK);
 	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
 
-	crm_verbose("Processing %s op (ref=%s)...", op, ref);
+	crm_debug_2("Processing %s op (ref=%s)...", op, ref);
 	
 	if(op == NULL){
 		/* error */
@@ -54,7 +54,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		/* ignore */
 		
 	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
-		crm_verbose("Bad sys-to %s", crm_str(sys_to));
+		crm_debug_2("Bad sys-to %s", crm_str(sys_to));
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
@@ -65,7 +65,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		crm_data_t *output     = NULL;
 
 		copy_in_properties(generation, xml_data);
-		crm_xml_info(generation, "[generation]");
+		crm_log_xml_info(generation, "[generation]");
 
 #if 0
 		char *xml_buffer = NULL;
@@ -98,17 +98,17 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		if(was_processing_error) {
 			crm_err("ERRORs found during PE processing."
 			       "  Input follows:");
-			crm_xml_info(log_input, "[input]");
+			crm_log_xml_info(log_input, "[input]");
 
 		} else if(was_processing_warning) {
 			crm_warn("WARNINGs found during PE processing."
 				"  Input follows:");
-			crm_xml_debug(log_input, "[input]");
+			crm_log_xml_debug(log_input, "[input]");
 
 		} else {
-			crm_xml_verbose(log_input, "[input]");
+			crm_log_xml_debug_2(log_input, "[input]");
 		}
-		crm_xml_devel(output, "[out]");
+		crm_log_xml_debug_3(output, "[out]");
 
 		if (send_ipc_reply(sender, msg, output) ==FALSE) {
 			crm_warn("Answer could not be sent");
@@ -142,62 +142,62 @@ do_calculations(crm_data_t * cib_object)
 
 /*	pe_debug_on(); */
 	
-	crm_trace("unpack");		  
+	crm_debug_4("unpack");		  
 	stage0(cib_object,
 	       &resources,
 	       &nodes,  &placement_constraints,
 	       &actions,  &ordering_constraints,
 	       &stonith_list, &shutdown_list);
 
-	crm_trace("apply placement constraints");
+	crm_debug_4("apply placement constraints");
 	stage1(placement_constraints, nodes, resources);
 	
-	crm_trace("color resources");
+	crm_debug_4("color resources");
 	stage2(resources, nodes, &colors);
 
 	/* unused */
 	stage3(colors);
 	
-	crm_trace("assign nodes to colors");
+	crm_debug_4("assign nodes to colors");
 	stage4(colors);
 	
-	crm_trace("creating actions and internal ording constraints");
+	crm_debug_4("creating actions and internal ording constraints");
 	stage5(resources, &ordering_constraints);
 		
-	crm_trace("processing fencing and shutdown cases");
+	crm_debug_4("processing fencing and shutdown cases");
 	stage6(&actions, &ordering_constraints, nodes, resources);
 	
-	crm_trace("applying ordering constraints");
+	crm_debug_4("applying ordering constraints");
 	stage7(resources, actions, ordering_constraints);
 	
-	crm_verbose("\t========= Set %d (Un-runnable) =========", -1);
-	crm_verbose_action(
+	crm_debug_2("\t========= Set %d (Un-runnable) =========", -1);
+	crm_action_debug_2(
 		slist_iter(action, action_t, actions, lpc,
 			   if(action->optional == FALSE
 			      && action->runnable == FALSE) {
-				   log_action(LOG_VERBOSE, "\t", action, TRUE);
+				   log_action(LOG_DEBUG_2, "\t", action, TRUE);
 			   }
 			)
 		);
 	
-	crm_verbose("========= Stonith List =========");
-	crm_devel_action(
+	crm_debug_2("========= Stonith List =========");
+	crm_action_debug_3(
 		slist_iter(node, node_t, stonith_list, lpc,
 			   print_node(NULL, node, FALSE);
 			)
 		);
 	
-	crm_verbose("========= Shutdown List =========");
-	crm_devel_action(
+	crm_debug_2("========= Shutdown List =========");
+	crm_action_debug_3(
 		slist_iter(node, node_t, shutdown_list, lpc,
 			   print_node(NULL, node, FALSE);
 			)
 		);
 	
-	crm_trace("creating transition graph");
+	crm_debug_4("creating transition graph");
 	stage8(resources, actions, &graph);
 	
-	crm_verbose("Cleaning up");
+	crm_debug_2("Cleaning up");
 
 	while(placement_constraints) {
 		pe_free_rsc_to_node((rsc_to_node_t*)placement_constraints->data);

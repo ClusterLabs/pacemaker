@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.69 2005/05/15 13:13:41 andrew Exp $ */
+/* $Id: tengine.c,v 1.70 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,7 +84,7 @@ initialize_graph(void)
 				synapse->actions, action);
 
 			if(action->timer->source_id > 0) {
-				crm_devel("Removing timer for action: %d",
+				crm_debug_3("Removing timer for action: %d",
 					  action->id);
 				
 				g_source_remove(action->timer->source_id);
@@ -136,7 +136,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	int op_status_i = -3;
 
 	if(event == NULL) {
-		crm_trace("Ignoring NULL event");
+		crm_debug_4("Ignoring NULL event");
 		return -1;
 	}
 	
@@ -165,18 +165,18 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		} else if(safe_str_neq(this_node, event_node)) {
 			crm_debug("node mismatch: %s", event_node);
 		} else {
-			crm_devel(XML_GRAPH_TAG_CRM_EVENT);
+			crm_debug_3(XML_GRAPH_TAG_CRM_EVENT);
 			match = action;
 		}
 		
-		crm_devel(XML_GRAPH_TAG_CRM_EVENT);
+		crm_debug_3(XML_GRAPH_TAG_CRM_EVENT);
 		match = action;
 		
 	} else if(safe_str_neq(this_node, event_node)) {
 		crm_debug("Action %d : Node mismatch %s", action->id, event_node);
 
 	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP)) {
-		crm_devel(XML_GRAPH_TAG_RSC_OP);
+		crm_debug_3(XML_GRAPH_TAG_RSC_OP);
 		if(safe_str_eq(this_rsc, event_rsc)) {
 			match = action;
 		} else {
@@ -189,11 +189,11 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	}
 	
 	if(match == NULL) {
-		crm_devel("didnt match current action");
+		crm_debug_3("didnt match current action");
 		return -1;
 	}
 
-	crm_devel("matched");
+	crm_debug_3("matched");
 
 	/* stop this event's timer if it had one */
 	stop_te_timer(match->timer);
@@ -293,11 +293,11 @@ match_down_event(const char *target, const char *filter, int rc)
 		);
 	
 	if(match == NULL) {
-		crm_devel("didnt match current action");
+		crm_debug_3("didnt match current action");
 		return -1;
 	}
 
-	crm_devel("matched");
+	crm_debug_3("matched");
 
 	/* stop this event's timer if it had one */
 	stop_te_timer(match->timer);
@@ -325,7 +325,7 @@ match_down_event(const char *target, const char *filter, int rc)
 			return -2;
 	}
 	
-	crm_devel("Action %d was successful, looking for next action",
+	crm_debug_3("Action %d was successful, looking for next action",
 		match->id);
 
 	match->complete = TRUE;
@@ -383,10 +383,10 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		crm_debug("a transition is starting");
 		
 	} else if(action_id > -1) {
-		crm_xml_devel(event, "Event found");
+		crm_log_xml_debug_3(event, "Event found");
 		
 	} else if(action_id == -2) {
-		crm_xml_info(event, "Event found but failed");
+		crm_log_xml_info(event, "Event found but failed");
 		
 	} else {
 		/* unexpected event, trigger a pe-recompute */
@@ -424,7 +424,7 @@ check_for_completion(void)
 		
 	} else {
 		/* restart the transition timer again */
-		crm_devel("Transition not yet complete");
+		crm_debug_3("Transition not yet complete");
 		transition_timer->timeout = next_transition_timeout;
 		start_te_timer(transition_timer);
 	}
@@ -571,7 +571,7 @@ initiate_action(action_t *action)
 		crm_free(counter);
 
 		if(ret && action->timeout > 0) {
-			crm_devel("Setting timer for action %d",action->id);
+			crm_debug_3("Setting timer for action %d",action->id);
 			action->timer->reason = timeout_action_warn;
 			start_te_timer(action->timer);
 		}
@@ -663,7 +663,7 @@ cib_action_update(action_t *action, int status)
 
 	fragment = create_cib_fragment(state, NULL);
 	
-	crm_devel("Updating CIB with \"%s\" (%s): %s %s on %s",
+	crm_debug_3("Updating CIB with \"%s\" (%s): %s %s on %s",
 		  status<0?"new action":XML_ATTR_TIMEOUT,
 		  crm_element_name(action->xml), crm_str(task), rsc_id, target);
 	
@@ -737,7 +737,7 @@ cib_action_updated(
 		 action->id, task, rsc_id, on_node);
 	
 	if(rsc_op != NULL) {
-		crm_xml_debug(rsc_op, "Performing");
+		crm_log_xml_debug(rsc_op, "Performing");
 	}
 	cmd = create_request(
 		task, rsc_op, on_node, CRM_SYSTEM_LRMD,CRM_SYSTEM_TENGINE,NULL);
@@ -752,7 +752,7 @@ cib_action_updated(
 #endif
 	
 	if(action->timeout > 0) {
-		crm_devel("Setting timer for action %d",action->id);
+		crm_debug_3("Setting timer for action %d",action->id);
 		action->timer->reason = timeout_action_warn;
 		start_te_timer(action->timer);
 	}
@@ -774,24 +774,24 @@ check_synapse_triggers(synapse_t *synapse, int action_id)
 	synapse->triggers_complete = TRUE;
 			
 	if(synapse->confirmed) {
-		crm_devel("Skipping confirmed synapse %d", synapse->id);
+		crm_debug_3("Skipping confirmed synapse %d", synapse->id);
 		return;
 			
 	} else if(synapse->complete == FALSE) {
-		crm_devel("Checking pre-reqs for %d", synapse->id);
+		crm_debug_3("Checking pre-reqs for %d", synapse->id);
 		/* lookup prereqs */
 		slist_iter(
 			prereq, action_t, synapse->inputs, lpc,
 				
-			crm_devel("Processing input %d", prereq->id);
+			crm_debug_3("Processing input %d", prereq->id);
 				
 			if(prereq->id == action_id) {
-				crm_devel("Marking input %d complete",
+				crm_debug_3("Marking input %d complete",
 					  action_id);
 				prereq->complete = TRUE;
 					
 			} else if(prereq->complete == FALSE) {
-				crm_devel("Inputs for synapse %d not satisfied",
+				crm_debug_3("Inputs for synapse %d not satisfied",
 					  synapse->id);
 				synapse->triggers_complete = FALSE;
 			}
@@ -808,13 +808,13 @@ fire_synapse(synapse_t *synapse)
 		return;
 	}
 	
-	crm_devel("Checking if synapse %d needs to be fired", synapse->id);
+	crm_debug_3("Checking if synapse %d needs to be fired", synapse->id);
 	if(synapse->complete) {
-		crm_devel("Skipping complete synapse %d", synapse->id);
+		crm_debug_3("Skipping complete synapse %d", synapse->id);
 		return;
 		
 	} else if(synapse->triggers_complete == FALSE) {
-		crm_devel("Synapse %d not yet satisfied", synapse->id);
+		crm_debug_3("Synapse %d not yet satisfied", synapse->id);
 		return;
 	}
 	
@@ -862,7 +862,7 @@ confirm_synapse(synapse_t *synapse, int action_id)
 		if(action->complete == FALSE) {
 			complete = FALSE;
 			synapse->confirmed = FALSE;
-			crm_devel("Found an incomplete action"
+			crm_debug_3("Found an incomplete action"
 				  " - transition not complete");
 			break;
 		}
@@ -881,7 +881,7 @@ process_trigger(int action_id)
 {
 	graph_complete = TRUE;
 	
-	crm_devel("Processing trigger from action %d", action_id);
+	crm_debug_3("Processing trigger from action %d", action_id);
 
 	/* something happened, stop the timer and start it again at the end */
 	stop_te_timer(transition_timer);
@@ -890,7 +890,7 @@ process_trigger(int action_id)
 		synapse, synapse_t, graph, lpc,
 		
 		if(synapse->confirmed) {
-			crm_devel("Skipping confirmed synapse %d", synapse->id);
+			crm_debug_3("Skipping confirmed synapse %d", synapse->id);
 			continue;
 		}
 		
@@ -903,9 +903,9 @@ process_trigger(int action_id)
 			break;
 		}
 		
-		crm_devel("Checking if %d is confirmed", synapse->id);
+		crm_debug_3("Checking if %d is confirmed", synapse->id);
 		if(synapse->complete == FALSE) {
-			crm_devel("Found an incomplete synapse"
+			crm_debug_3("Found an incomplete synapse"
 				  " - transition not complete");
 			/* indicate that the transition is not yet complete */
 			graph_complete = FALSE;
@@ -915,7 +915,7 @@ process_trigger(int action_id)
 			graph_complete = graph_complete && confirmed;
 		}
 
-		crm_devel("%d is %s", synapse->id,
+		crm_debug_3("%d is %s", synapse->id,
 			  synapse->confirmed?"confirmed":synapse->complete?"complete":"pending");
 		
 		);

@@ -172,7 +172,7 @@ cib_client_set_op_callback(
 		crm_info("Un-Setting operation callback");
 		
 	} else {
-		crm_devel("Setting operation callback");
+		crm_debug_3("Setting operation callback");
 	}
 	cib->op_callback = callback;
 	return cib_ok;
@@ -282,7 +282,7 @@ int cib_client_set_master(cib_t *cib, int call_options)
 		return cib_variant;
 	} 
 
-	crm_devel("Adding cib_scope_local to options");
+	crm_debug_3("Adding cib_scope_local to options");
 	return cib->cmds->variant_op(
 		cib, CRM_OP_CIB_MASTER, NULL,NULL,NULL,NULL,
 		call_options|cib_scope_local);
@@ -427,7 +427,7 @@ int cib_client_add_notify_callback(
 	GList *list_item = NULL;
 	cib_notify_client_t *new_client = NULL;
 	
-	crm_verbose("Adding callback for %s events (%d)",
+	crm_debug_2("Adding callback for %s events (%d)",
 		    event, g_list_length(cib->notify_list));
 
 	crm_malloc0(new_client, sizeof(cib_notify_client_t));
@@ -446,7 +446,7 @@ int cib_client_add_notify_callback(
 
 		cib->cmds->register_callback(cib, event, 1);
 		
-		crm_devel("Callback added (%d)", g_list_length(cib->notify_list));
+		crm_debug_3("Callback added (%d)", g_list_length(cib->notify_list));
 	}
 	return cib_ok;
 }
@@ -476,10 +476,10 @@ int cib_client_del_notify_callback(
 			g_list_remove(cib->notify_list, list_client);
 		crm_free(list_client);
 
-		crm_devel("Removed callback");
+		crm_debug_3("Removed callback");
 
 	} else {
-		crm_devel("Callback not present");
+		crm_debug_3("Callback not present");
 	}
 	crm_free(new_client);
 	return cib_ok;
@@ -583,7 +583,7 @@ cib_pluralSection(const char *a_section)
 		a_section_parent = crm_strdup("all");
 	}
 	
-	crm_verbose("Plural of %s is %s", crm_str(a_section), a_section_parent);
+	crm_debug_2("Plural of %s is %s", crm_str(a_section), a_section_parent);
 
 	return a_section_parent;
 }
@@ -801,21 +801,21 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 	const char *elem_l = crm_element_value(left, XML_ATTR_GENERATION);
 	const char *elem_r = NULL;
 
-	crm_xml_trace(left, "left");
+	crm_log_xml_debug_4(left, "left");
 	if(right != NULL) {
 		elem_r = crm_element_value(right, XML_ATTR_GENERATION);
-		crm_xml_trace(right, "right");
+		crm_log_xml_debug_4(right, "right");
 	}
 	
 	if(elem_l != NULL) { int_elem_l = atoi(elem_l); }
 	if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
 	
 	if(int_elem_l < int_elem_r) {
-		crm_verbose("lt - XML_ATTR_GENERATION");
+		crm_debug_2("lt - XML_ATTR_GENERATION");
 		return -1;
 		
 	} else if(int_elem_l > int_elem_r) {
-		crm_verbose("gt - XML_ATTR_GENERATION");
+		crm_debug_2("gt - XML_ATTR_GENERATION");
 		return 1;
 	}
 
@@ -829,19 +829,19 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 	if(elem_l != NULL) { int_elem_l = atoi(elem_l); }
 	if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
 
-	crm_xml_trace(left, "left");
-	crm_xml_trace(left, "right");
+	crm_log_xml_debug_4(left, "left");
+	crm_log_xml_debug_4(left, "right");
 	
 	if(int_elem_l < int_elem_r) {
-		crm_verbose("lt - XML_ATTR_NUMUPDATES");
+		crm_debug_2("lt - XML_ATTR_NUMUPDATES");
 		return -1;
 		
 	} else if(int_elem_l > int_elem_r) {
-		crm_verbose("gt - XML_ATTR_NUMUPDATES");
+		crm_debug_2("gt - XML_ATTR_NUMUPDATES");
 		return 1;
 	}
 	
-	crm_verbose("eq - XML_ATTR_NUMUPDATES");
+	crm_debug_2("eq - XML_ATTR_NUMUPDATES");
 
 	int_elem_l = -1;
 	int_elem_r = -1;
@@ -854,15 +854,15 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 	if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
 
 	if(int_elem_l < int_elem_r) {
-		crm_verbose("lt - XML_ATTR_NUMPEERS");
+		crm_debug_2("lt - XML_ATTR_NUMPEERS");
 		return -1;
 		
 	} else if(int_elem_l > int_elem_r) {
-		crm_verbose("gt - XML_ATTR_NUMPEERS");
+		crm_debug_2("gt - XML_ATTR_NUMPEERS");
 		return 1;
 	}
 	
-	crm_verbose("eq - XML_ATTR_NUMPEERS");
+	crm_debug_2("eq - XML_ATTR_NUMPEERS");
 
 	elem_l = crm_element_value(left, XML_ATTR_NUMPEERS);
 	if(right != NULL) {
@@ -872,26 +872,26 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 	if(elem_l == NULL && elem_r == NULL) {
 
 	} else if(elem_l == NULL) {
-		crm_verbose("lt - XML_ATTR_NUMPEERS");
+		crm_debug_2("lt - XML_ATTR_NUMPEERS");
 		return -1;
 
 	} else if(elem_r == NULL) {
-		crm_verbose("gt - XML_ATTR_NUMPEERS");
+		crm_debug_2("gt - XML_ATTR_NUMPEERS");
 		return 1;
 
 	} else if(safe_str_neq(elem_l, elem_r)) {
 
 		if(safe_str_eq(elem_l, XML_BOOLEAN_TRUE)) {
-			crm_verbose("gt - XML_ATTR_NUMPEERS");
+			crm_debug_2("gt - XML_ATTR_NUMPEERS");
 			return 1;
 			
 		} else if(safe_str_eq(elem_r, XML_BOOLEAN_TRUE)) {
-			crm_verbose("lt - XML_ATTR_NUMPEERS");
+			crm_debug_2("lt - XML_ATTR_NUMPEERS");
 			return -1;
 		}
 	}
 	
-	crm_verbose("eq - XML_ATTR_NUMPEERS");
+	crm_debug_2("eq - XML_ATTR_NUMPEERS");
 	return 0;
 }
 
@@ -1020,7 +1020,7 @@ create_cib_fragment_adv(
 	auto_section = cib_pluralSection(update_name);
 	
 	if(update == NULL && section == NULL) {
-		crm_devel("Creating a blank fragment");
+		crm_debug_3("Creating a blank fragment");
 		update = createEmptyCib();
 		section = auto_section;
 
@@ -1064,11 +1064,11 @@ create_cib_fragment_adv(
 	
 	crm_free(auto_section);
 
-	crm_devel("Verifying created fragment");
+	crm_debug_3("Verifying created fragment");
 	if(verifyCibXml(cib) == FALSE) {
 		crm_err("Fragment creation failed");
-		crm_xml_err(update, "[src]");
-		crm_xml_err(fragment, "[created]");
+		crm_log_xml_err(update, "[src]");
+		crm_log_xml_err(fragment, "[created]");
 		free_xml(fragment);
 		fragment = NULL;
 	}

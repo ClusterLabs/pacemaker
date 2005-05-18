@@ -45,10 +45,10 @@ gboolean ipc_queue_helper(gpointer key, gpointer value, gpointer user_data);
 
 
 #ifdef MSG_LOG
-#    define ROUTER_RESULT(x)	crm_devel("Router result: %s", x);	\
+#    define ROUTER_RESULT(x)	crm_debug_3("Router result: %s", x);	\
 	crm_log_message_adv(LOG_MSG, "router.log", relay_message);
 #else
-#    define ROUTER_RESULT(x)	crm_devel("Router result: %s", x)
+#    define ROUTER_RESULT(x)	crm_debug_3("Router result: %s", x)
 #endif
 /* debug only, can wrap all it likes */
 int last_data_id = 0;
@@ -132,7 +132,7 @@ register_fsa_input_adv(
 			 *    even in the case that N=2, is no worse than if we
 			 *    had not disarded the vote).
 			 */
-			crm_verbose("Vote compression: %d", old_len);
+			crm_debug_2("Vote compression: %d", old_len);
 			return;
 		}
 
@@ -141,7 +141,7 @@ register_fsa_input_adv(
 			((ha_msg_input_t*)data)->msg, F_CRM_TASK);
 		if(safe_str_eq(op, CRM_OP_VOTE)) {
 			last_was_vote = TRUE;
-			crm_devel("Added vote: %d", old_len);
+			crm_debug_3("Added vote: %d", old_len);
 		}
 
 	} else {
@@ -158,7 +158,7 @@ register_fsa_input_adv(
 	fsa_data->actions   = with_actions;
 
 	if(with_actions != A_NOTHING) {
-		crm_devel("Adding actions %.16llx to input", with_actions);
+		crm_debug_3("Adding actions %.16llx to input", with_actions);
 	}
 	
 	if(data != NULL) {
@@ -167,7 +167,7 @@ register_fsa_input_adv(
 			case C_CRMD_STATUS_CALLBACK:
 			case C_IPC_MESSAGE:
 			case C_HA_MESSAGE:
-				crm_devel("Copying %s data from %s as a HA msg",
+				crm_debug_3("Copying %s data from %s as a HA msg",
 					  fsa_cause2string(cause),
 					  raised_from);
 				fsa_data->data = copy_ha_msg_input(data);
@@ -175,7 +175,7 @@ register_fsa_input_adv(
 				break;
 				
 			case C_LRM_OP_CALLBACK:
-				crm_devel("Copying %s data from %s as lrm_op_t",
+				crm_debug_3("Copying %s data from %s as lrm_op_t",
 					  fsa_cause2string(cause),
 					  raised_from);
 				fsa_data->data = copy_lrm_op((lrm_op_t*)data);
@@ -183,7 +183,7 @@ register_fsa_input_adv(
 				break;
 				
 			case C_CCM_CALLBACK:
-				crm_devel("Copying %s data from %s as CCM data",
+				crm_debug_3("Copying %s data from %s as CCM data",
 					  fsa_cause2string(cause),
 					  raised_from);
 				fsa_data->data = copy_ccm_data(data);
@@ -205,16 +205,16 @@ register_fsa_input_adv(
 				exit(1);
 				break;
 		}
-		crm_trace("%s data copied",
+		crm_debug_4("%s data copied",
 			  fsa_cause2string(fsa_data->fsa_cause));
 	}
 	
 	/* make sure to free it properly later */
 	if(prepend) {
-		crm_trace("Prepending input");
+		crm_debug_4("Prepending input");
 		fsa_message_queue = g_list_prepend(fsa_message_queue, fsa_data);
 	} else {
-		crm_trace("Appending input");
+		crm_debug_4("Appending input");
 		fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
 	}
 	
@@ -255,14 +255,14 @@ copy_ha_msg_input(ha_msg_input_t *orig)
 	crm_malloc0(input_copy, sizeof(ha_msg_input_t));
 
 	if(orig != NULL) {
-		crm_trace("Copy msg");
+		crm_debug_4("Copy msg");
 		input_copy->msg = ha_msg_copy(orig->msg);
 		if(orig->xml != NULL) {
-			crm_trace("Copy xml");
+			crm_debug_4("Copy xml");
 			input_copy->xml = copy_xml_node_recursive(orig->xml);
 		}
 	} else {
-		crm_devel("No message to copy");
+		crm_debug_3("No message to copy");
 	}
 	return input_copy;
 }
@@ -278,7 +278,7 @@ delete_fsa_input(fsa_data_t *fsa_data)
 	if(fsa_data == NULL) {
 		return;
 	}
-	crm_trace("About to free %s data",
+	crm_debug_4("About to free %s data",
 		  fsa_cause2string(fsa_data->fsa_cause));
 	
 	if(fsa_data->data != NULL) {
@@ -320,7 +320,7 @@ delete_fsa_input(fsa_data_t *fsa_data)
 				}
 				break;
 		}
-		crm_trace("%s data freed",
+		crm_debug_4("%s data freed",
 			  fsa_cause2string(fsa_data->fsa_cause));
 	}
 
@@ -389,11 +389,11 @@ do_msg_route(long long action,
 	}
 
 	/* try passing the buck first */
-	crm_trace("Attempting to route message");
+	crm_debug_4("Attempting to route message");
 	routed = relay_message(input->msg, cause==C_IPC_MESSAGE);
 	
 	if(routed == FALSE) {
-		crm_trace("Message wasn't routed... try handling locally");
+		crm_debug_4("Message wasn't routed... try handling locally");
 		
 		/* calculate defer */
 		result = handle_message(input);
@@ -407,7 +407,7 @@ do_msg_route(long long action,
 				
 				/* what else should go here? */
 			default:
-				crm_trace("Defering local processing of message");
+				crm_debug_4("Defering local processing of message");
 				register_fsa_input_later(
 					cause, result, msg_data->data);
 				
@@ -415,14 +415,14 @@ do_msg_route(long long action,
 				break;
 		}
 		if(result == I_NULL) {
-			crm_trace("Message processed");
+			crm_debug_4("Message processed");
 			
 		} else {
 			register_fsa_input(cause, result, msg_data->data);
 		}
 		
 	} else {
-		crm_trace("Message routed...");
+		crm_debug_4("Message routed...");
 		input->msg = NULL;
 	}
 	return I_NULL;
@@ -437,7 +437,7 @@ send_request(HA_Message *msg, char **msg_reference)
 {
 	gboolean was_sent = FALSE;
 
-/*	crm_xml_devel(request, "Final request..."); */
+/*	crm_log_xml_debug_3(request, "Final request..."); */
 
 	if(msg_reference != NULL) {
 		*msg_reference = crm_strdup(
@@ -472,7 +472,7 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 	const char *type    = cl_get_string(relay_message, F_TYPE);
 	const char *msg_error = NULL;
 
-	crm_devel("Routing message %s",
+	crm_debug_3("Routing message %s",
 		  cl_get_string(relay_message, XML_ATTR_REFERENCE));
 
 	if(relay_message == NULL) {
@@ -601,7 +601,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 			can_reply = TRUE;  /* reply can be routed */
 		}
 		
-		crm_verbose("Message reply can%s be routed from %s.",
+		crm_debug_2("Message reply can%s be routed from %s.",
 			   can_reply?"":" not", sys_from);
 
 		if(can_reply == FALSE) {
@@ -612,7 +612,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		return can_reply;
 	}
 	
-	crm_devel("received client join msg");
+	crm_debug_3("received client join msg");
 	crm_log_message(LOG_MSG, client_msg->msg);
 	auth_result = process_hello_message(
 		client_msg->xml, &uuid, &client_name,
@@ -630,7 +630,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		/* check version */
 		int mav = atoi(major_version);
 		int miv = atoi(minor_version);
-		crm_devel("Checking client version number");
+		crm_debug_3("Checking client version number");
 		if (mav < 0 || miv < 0) {
 			crm_err("Client version (%d:%d) is not acceptable",
 				mav, miv);
@@ -654,7 +654,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 
 		if (the_subsystem != NULL) {
 			/* do we already have one? */
-			crm_devel("Checking if %s is required/already connected",
+			crm_debug_3("Checking if %s is required/already connected",
 				  client_name);
 			
 			if(is_set(fsa_input_register,
@@ -689,7 +689,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		if(table_key == NULL) {
 			table_key = (gpointer)crm_strdup(client_name);
 		}
-		crm_verbose("Accepted client %s", crm_str(table_key));
+		crm_debug_2("Accepted client %s", crm_str(table_key));
 
 		curr_client->table_key = table_key;
 		curr_client->sub_sys = crm_strdup(client_name);
@@ -702,7 +702,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 				   "n/a", CRM_SYSTEM_CRMD,
 				   "0", "1");
 
-		crm_devel("Updated client list with %s", crm_str(table_key));
+		crm_debug_3("Updated client list with %s", crm_str(table_key));
 		
 		if(the_subsystem != NULL) {
 			set_bit_inplace(fsa_input_register,
@@ -745,7 +745,7 @@ handle_message(ha_msg_input_t *stored_msg)
 		crm_err("Unknown message type: %s", type);
 	}
 
-/* 	crm_verbose("%s: Next input is %s", __FUNCTION__, */
+/* 	crm_debug_2("%s: Next input is %s", __FUNCTION__, */
 /* 		   fsa_input2string(next_input)); */
 	
 	return next_input;
@@ -762,7 +762,7 @@ handle_request(ha_msg_input_t *stored_msg)
 	const char *sys_to    = cl_get_string(stored_msg->msg, F_CRM_SYS_TO);
 	const char *host_from = cl_get_string(stored_msg->msg, F_CRM_HOST_FROM);
 
-	crm_verbose("Received %s in state %s", op, fsa_state2string(fsa_state));
+	crm_debug_2("Received %s in state %s", op, fsa_state2string(fsa_state));
 	
 	if(op == NULL) {
 		crm_err("Bad message");
@@ -847,7 +847,7 @@ handle_request(ha_msg_input_t *stored_msg)
 
 		if(dc_match || fsa_our_dc == NULL) {
 			if(strcmp(op, CRM_OP_HBEAT) == 0) {
-				crm_devel("Received DC heartbeat from %s",
+				crm_debug_3("Received DC heartbeat from %s",
 					  host_from);
 				next_input = I_DC_HEARTBEAT;
 				
@@ -958,7 +958,7 @@ handle_response(ha_msg_input_t *stored_msg)
 	const char *sys_from  = cl_get_string(stored_msg->msg, F_CRM_SYS_FROM);
 	const char *msg_ref   = cl_get_string(stored_msg->msg, XML_ATTR_REFERENCE);
 
-	crm_verbose("Received %s %s in state %s",
+	crm_debug_2("Received %s %s in state %s",
 		    op, XML_ATTR_RESPONSE, fsa_state2string(fsa_state));
 	
 	if(op == NULL) {
@@ -971,7 +971,7 @@ handle_response(ha_msg_input_t *stored_msg)
 			next_input = I_PE_SUCCESS;
 			
 		} else {
-			crm_verbose("Skipping superceeded reply from %s",
+			crm_debug_2("Skipping superceeded reply from %s",
 				    sys_from);
 		}
 		
@@ -1052,7 +1052,7 @@ handle_shutdown_request(HA_Message *stored_msg)
 gboolean
 send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 {
-	int log_level        = LOG_DEV;
+	int log_level        = LOG_DEBUG_3;
 	gboolean broadcast   = FALSE;
 	gboolean all_is_good = TRUE;
 
@@ -1064,7 +1064,7 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 		crm_err("Attempt to send NULL Message via HA failed.");
 		all_is_good = FALSE;
 	} else {
-		crm_trace("Relaying message to (%s) via HA", host_to); 
+		crm_debug_4("Relaying message to (%s) via HA", host_to); 
 	}
 	
 	if (all_is_good) {
@@ -1119,7 +1119,7 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 	IPC_Channel *client_channel;
 	enum crmd_fsa_input next_input;
 	
-	crm_trace("relaying msg to sub_sys=%s via IPC", sys);
+	crm_debug_4("relaying msg to sub_sys=%s via IPC", sys);
 
 	client_channel =
 		(IPC_Channel*)g_hash_table_lookup(ipc_clients, sys);
@@ -1129,7 +1129,7 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 	}
 	
 	if (client_channel != NULL) {
-		crm_devel("Sending message via channel %s.", sys);
+		crm_debug_3("Sending message via channel %s.", sys);
 		send_ok = send_ipc_message(client_channel, msg);
 		msg = NULL;  /* so the crm_msg_del() below doesnt fail */
 		
@@ -1152,7 +1152,7 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 		fsa_data->data_type = fsa_dt_ha_msg;
 		
 #ifdef FSA_TRACE
-		crm_verbose("Invoking action %s (%.16llx)",
+		crm_debug_2("Invoking action %s (%.16llx)",
 			    fsa_action2string(A_LRM_INVOKE),
 			    A_LRM_INVOKE);
 #endif
@@ -1165,7 +1165,7 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 		/* todo: feed this back in for anything != I_NULL */
 		
 #ifdef FSA_TRACE
-		crm_verbose("Result of action %s was %s",
+		crm_debug_2("Result of action %s was %s",
 			    fsa_action2string(A_LRM_INVOKE),
 			    fsa_input2string(next_input));
 #endif

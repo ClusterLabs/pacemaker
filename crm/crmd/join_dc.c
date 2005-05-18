@@ -56,18 +56,12 @@ do_dc_join_offer_all(long long action,
 		     enum crmd_fsa_input current_input,
 		     fsa_data_t *msg_data)
 {
-	/* reset everyones status back to down or in_ccm in the CIB */
-	crm_data_t *fragment = create_cib_fragment(NULL, NULL);
-	crm_data_t *update   = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-
-	/* any nodes that are active in the CIB but not in the CCM list
+	/* reset everyones status back to down or in_ccm in the CIB
+	 *
+	 * any nodes that are active in the CIB but not in the CCM list
 	 *   will be seen as offline by the PE anyway
 	 */
-	update = get_object_root(XML_CIB_TAG_STATUS, update);
-	CRM_DEV_ASSERT(update != NULL);
-
-	/* now process the CCM data */
-	do_update_cib_nodes(fragment, TRUE);
+	do_update_cib_nodes(NULL, TRUE);
 	
 	crm_info("0) Offering membership to %d clients",
 		  fsa_membership_copy->members_size);
@@ -164,12 +158,12 @@ do_dc_join_req(long long action,
 	gpointer join_node =
 		g_hash_table_lookup(fsa_membership_copy->members, join_from);
 
-	crm_devel("2) Processing req from %s", join_from);
+	crm_debug_3("2) Processing req from %s", join_from);
 	
 	generation = join_ack->xml;
 	ha_msg_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
-	crm_xml_debug(max_generation_xml, "Max generation");
-	crm_xml_debug(generation, "Their generation");
+	crm_log_xml_debug(max_generation_xml, "Max generation");
+	crm_log_xml_debug(generation, "Their generation");
 
 	if(join_node == NULL) {
 		crm_err("Node %s is not a member", join_from);
@@ -199,7 +193,7 @@ do_dc_join_req(long long action,
 		max_generation_xml = copy_xml_node_recursive(join_ack->xml);
 	}
 
-	crm_xml_debug(max_generation_xml, "Current max generation");	
+	crm_log_xml_debug(max_generation_xml, "Current max generation");	
 	
 	if(ack_nack_bool == FALSE) {
 		/* NACK this client */
@@ -277,7 +271,7 @@ do_dc_join_finalize(long long action,
 
 	
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
-	crm_devel("Bumping the epoche and syncing to %d clients",
+	crm_debug_3("Bumping the epoche and syncing to %d clients",
 		  g_hash_table_size(finalized_nodes));
 	fsa_cib_conn->cmds->bump_epoch(
 		fsa_cib_conn,

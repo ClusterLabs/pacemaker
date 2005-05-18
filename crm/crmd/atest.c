@@ -1,4 +1,4 @@
-/* $Id: atest.c,v 1.4 2005/02/15 09:45:42 andrew Exp $ */
+/* $Id: atest.c,v 1.5 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -68,7 +68,7 @@ main(int argc, char ** argv)
 	HA_Message *cmd = NULL;
 	
 	crm_log_init(crm_system_name);
-	set_crm_log_level(LOG_INSANE-1);
+	set_crm_log_level(LOG_DEBUG_5-1);
 	
 	a_cib = string2xml("<cib_fragment section=\"status\"><cib timestamp=\"1107940665\" generated=\"true\" cib_feature_revision=\"1\" debug_source=\"do_lrm_query\"><configuration timestamp=\"1107940665\"><crm_config/><nodes/><resources/><constraints/></configuration><status timestamp=\"1107940665\"><node_state replace=\"lrm\" id=\"f67904e0-4dfc-4db1-83a2-e930fc1d20f4\" uname=\"c001n09\"><lrm><lrm_resources/><lrm_agents><lrm_agent class=\"stonith\" type=\"apcmaster\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"apcsmart\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"baytech\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"external\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"ibmhmc\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"meatware\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"null\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"nw_rpc100s\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"rcd_serial\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"riloe\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"rps10\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"ssh\" version=\"1\"/><lrm_agent class=\"stonith\" type=\"wti_nps\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"portblock\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"ldirectord\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"db2\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"apache\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"Xinetd\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"WinPopup\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"WAS\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"ServeRAID\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"SendArp\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"Raid1\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"OCF\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"MailTo\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"LinuxSCSI\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"LVM\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"IPv6addr\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"IPsrcaddr\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"IPaddr2\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"IPaddr\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"ICP\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"Filesystem\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"Delay\" version=\"1\"/><lrm_agent class=\"heartbeat\" type=\"AudibleAlarm\" version=\"1\"/></lrm_agents><metatdata/></lrm></node_state></status></cib></cib_fragment>");
 	/* createEmptyCib(); */
@@ -96,7 +96,7 @@ main(int argc, char ** argv)
 	
 #else
 	crm_log_init(crm_system_name);
-	set_crm_log_level(LOG_INSANE-1);
+	set_crm_log_level(LOG_DEBUG_5-1);
 
 	/* read local config file */
     crm_debug("Enabling coredumps");

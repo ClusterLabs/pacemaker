@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.16 2005/03/15 11:47:26 andrew Exp $ */
+/* $Id: main.c,v 1.17 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -94,7 +94,7 @@ main(int argc, char ** argv)
 	}
     
 	/* read local config file */
-	crm_devel("do start");
+	crm_debug_3("do start");
 	return init_start();
 }
 
@@ -104,13 +104,13 @@ init_start(void)
 {
 	IPC_Channel *crm_ch = NULL;
 
-	crm_devel("initialize comms");
+	crm_debug_3("initialize comms");
 	init_client_ipc_comms(
 		CRM_SYSTEM_CRMD, subsystem_msg_dispatch,
 		(void*)process_pe_message, &crm_ch);
 
 	if(crm_ch != NULL) {
-		crm_devel("sending hello message");
+		crm_debug_3("sending hello message");
 		send_hello_message(
 			crm_ch, "1234", CRM_SYSTEM_PENGINE, "0", "1");
 

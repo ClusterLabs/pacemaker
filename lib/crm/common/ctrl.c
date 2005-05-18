@@ -1,4 +1,4 @@
-/* $Id: ctrl.c,v 1.1 2005/04/12 12:49:02 andrew Exp $ */
+/* $Id: ctrl.c,v 1.2 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,7 +65,7 @@ register_with_apphb(const char *client_name,
 		exit(1);
 	}
   
-	crm_devel("Client %s registered with apphb", app_instance);
+	crm_debug_3("Client %s registered with apphb", app_instance);
   
 	crm_info("Client %s setting %d ms apphb heartbeat interval",
 		 app_instance, hb_intvl_ms);

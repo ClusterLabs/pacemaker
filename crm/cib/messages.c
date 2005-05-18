@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.36 2005/05/09 15:03:17 andrew Exp $ */
+/* $Id: messages.c,v 1.37 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -293,7 +293,7 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 		new_value = crm_strdup("1");
 	}
 
-	crm_trace("%s %d(%s)->%s",
+	crm_debug_4("%s %d(%s)->%s",
 		  field, int_value, crm_str(old_value), crm_str(new_value));
 	set_xml_property_copy(xml_obj, field, new_value);
 	crm_free(new_value);
@@ -475,7 +475,7 @@ cib_process_modify(
 				     cib_update_op, section);
 	}
 
-	crm_trace("Activating temporary CIB");
+	crm_debug_4("Activating temporary CIB");
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
 
 	if (result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
@@ -485,7 +485,7 @@ cib_process_modify(
 		if(result == cib_ok) {
 			result = cib_unknown;
 		}
-		crm_xml_err(failed, "CIB Update failures");
+		crm_log_xml_err(failed, "CIB Update failures");
 	}
 
 	if (verbose || xml_has_children(failed) || result != cib_ok) {
@@ -677,7 +677,7 @@ update_results(
 			  operation_msg, error_msg, return_code);
 	
 	} else {
-		crm_devel("CIB %s passed", operation_msg);
+		crm_debug_3("CIB %s passed", operation_msg);
 	}
 
 	return was_error;

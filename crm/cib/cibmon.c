@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.19 2005/03/29 06:31:35 andrew Exp $ */
+/* $Id: cibmon.c,v 1.20 2005/05/18 20:15:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -234,7 +234,7 @@ main(int argc, char **argv)
 	mainloop = g_main_new(FALSE);
 	crm_info("Starting mainloop");
 	g_main_run(mainloop);
-	crm_devel("%s exiting normally", crm_system_name);
+	crm_debug_3("%s exiting normally", crm_system_name);
 	fflush(stderr);
 	return -exit_code;
 }
@@ -322,7 +322,7 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	last_notify_pre = TRUE;
 	
 	if(update_depth > 1 && intermediate_changes == FALSE) {
-		crm_trace("[%s] Ignoring intermediate update", event);
+		crm_debug_4("[%s] Ignoring intermediate update", event);
 		return;
 	}
 
@@ -330,9 +330,9 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	pre_update = get_message_xml(msg, F_CIB_EXISTING);
 
 	if(update != NULL) {
-		crm_devel(UPDATE_PREFIX"[%s] Performing %s on <%s%s%s>",
+		crm_debug_3(UPDATE_PREFIX"[%s] Performing %s on <%s%s%s>",
 			    event, op, type, id?" id=":"", id?id:"");
-		print_xml_formatted(LOG_INSANE,  UPDATE_PREFIX,
+		print_xml_formatted(LOG_DEBUG_5,  UPDATE_PREFIX,
 				    update, "Update");
 		
 	} else if(update == NULL) {
@@ -340,7 +340,7 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 			 event, op, crm_str(type));
 	}
 
-	print_xml_formatted(LOG_DEV,  UPDATE_PREFIX,
+	print_xml_formatted(LOG_DEBUG_3,  UPDATE_PREFIX,
 			    pre_update, "Existing Object");
 
 	free_xml(update);
@@ -373,7 +373,7 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	if(last_notify_pre == FALSE 
 	   && update_depth > 0
 	   && intermediate_changes == FALSE) {
-		crm_trace("Ignoring intermediate update");
+		crm_debug_4("Ignoring intermediate update");
 		return;
 	}
 
@@ -385,7 +385,7 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	
 	if(update == NULL) {
 		if(rc == cib_ok) {
-			crm_verbose(UPDATE_PREFIX"[%s] %s (to %s) completed",
+			crm_debug_2(UPDATE_PREFIX"[%s] %s (to %s) completed",
 				    event, op, crm_str(type));
 			
 		} else {
@@ -396,7 +396,7 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 		
 	} else {
 		if(rc == cib_ok) {
-			crm_verbose(UPDATE_PREFIX"[%s] Operation %s to <%s%s%s> completed.",
+			crm_debug_2(UPDATE_PREFIX"[%s] Operation %s to <%s%s%s> completed.",
 				    event, op, crm_str(type),
 				    id?" id=":"", id?id:"");
 			
@@ -412,7 +412,7 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 			update, "Update");
 	}
 	print_xml_formatted(
-		rc==cib_ok?LOG_DEV:LOG_WARNING, UPDATE_PREFIX,
+		rc==cib_ok?LOG_DEBUG_3:LOG_WARNING, UPDATE_PREFIX,
 		output, "Resulting Object");
 
 	if(update_depth == 0) {
@@ -467,7 +467,7 @@ cibmon_update_confirm(const char *event, HA_Message *msg)
 				 rc, cib_error2string(rc));
 		}
 	}
-	crm_devel(UPDATE_PREFIX"=================================");
+	crm_debug_3(UPDATE_PREFIX"=================================");
 }
 
 gboolean

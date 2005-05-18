@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.23 2005/04/11 10:34:11 andrew Exp $ */
+/* $Id: notify.c,v 1.24 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -121,7 +121,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	if(do_send) {
 
-		crm_devel("Notifying client %s/%s of update (queue=%d)",
+		crm_debug_3("Notifying client %s/%s of update (queue=%d)",
 			  client->name, client->channel_name, qlen);
 
 		if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
@@ -141,7 +141,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		}
 		
 	} else {
-		crm_trace("Client %s/%s not interested in %s notifications",
+		crm_debug_4("Client %s/%s not interested in %s notifications",
 			  client->name, client->channel_name, type);	
 	}
 }
@@ -186,11 +186,11 @@ cib_pre_notify(
 	pending_updates++;
 	
 	if(update == NULL) {
-		crm_verbose("Performing operation %s (on section=%s)",
+		crm_debug_2("Performing operation %s (on section=%s)",
 			    op, type);
 
 	} else {
-		crm_verbose("Performing %s on <%s%s%s>",
+		crm_debug_2("Performing %s on <%s%s%s>",
 			    op, type, id?" id=":"", id?id:"");
 	}
 		
@@ -218,19 +218,19 @@ cib_post_notify(
 	}
 
 	if(update != NULL) {
-		crm_trace("Setting type to update->name: %s",
+		crm_debug_4("Setting type to update->name: %s",
 			    crm_element_name(update));
 		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
 		type = crm_strdup(crm_element_name(update));
 
 	} else if(new_obj != NULL) {
-		crm_trace("Setting type to new_obj->name: %s",
+		crm_debug_4("Setting type to new_obj->name: %s",
 			    crm_element_name(new_obj));
 		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(new_obj));
 		type = crm_strdup(crm_element_name(new_obj));
 		
 	} else {
-		crm_trace("Not Setting type");
+		crm_debug_4("Not Setting type");
 	}
 
 	
@@ -243,20 +243,20 @@ cib_post_notify(
 		add_message_xml(update_msg, F_CIB_UPDATE_RESULT, new_obj);
 	}
 
-	crm_devel("Notifying clients");
+	crm_debug_3("Notifying clients");
 	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
 	
 	pending_updates--;
 
 	if(pending_updates == 0) {
 		ha_msg_mod(update_msg, F_SUBTYPE, T_CIB_UPDATE_CONFIRM);
-		crm_devel("Sending confirmation to clients");
+		crm_debug_3("Sending confirmation to clients");
 		g_hash_table_foreach(client_list, cib_notify_client, update_msg);
 	}
 
 	if(update == NULL) {
 		if(result == cib_ok) {
-			crm_verbose("Operation %s (on section=%s) completed",
+			crm_debug_2("Operation %s (on section=%s) completed",
 				    op, crm_str(type));
 			
 		} else {
@@ -267,7 +267,7 @@ cib_post_notify(
 		
 	} else {
 		if(result == cib_ok) {
-			crm_verbose("Completed %s of <%s %s%s>",
+			crm_debug_2("Completed %s of <%s %s%s>",
 				    op, crm_str(type), id?"id=":"", id?id:"");
 			
 		} else {
@@ -280,7 +280,7 @@ cib_post_notify(
 	crm_free(type);
 	crm_msg_del(update_msg);
 
-	crm_devel("Notify complete");
+	crm_debug_3("Notify complete");
 }
 
 void

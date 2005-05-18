@@ -102,7 +102,7 @@ do_dc_heartbeat(gpointer data)
 #if 0
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
-	crm_devel("Sending DC Heartbeat %d", beat_num);
+	crm_debug_3("Sending DC Heartbeat %d", beat_num);
 	HA_Message *msg = ha_msg_new(5); 
 	ha_msg_add(msg, F_TYPE,		T_CRM);
 	ha_msg_add(msg, F_SUBTYPE,	XML_ATTR_REQUEST);
@@ -219,11 +219,11 @@ do_election_count_vote(long long action,
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		crm_debug("Election lost to %s", vote_from);
 		if(fsa_input_register & R_THE_DC) {
-			crm_devel("Give up the DC to %s", vote_from);
+			crm_debug_3("Give up the DC to %s", vote_from);
 			election_result = I_RELEASE_DC;
 			
 		} else {
-			crm_devel("We werent the DC anyway");
+			crm_debug_3("We werent the DC anyway");
 			election_result = I_PENDING;
 			
 		}
@@ -282,19 +282,19 @@ do_dc_takeover(long long action,
 	
 	if(dc_heartbeat->source_id == (guint)-1
 	   || dc_heartbeat->source_id == (guint)-2) {
-		crm_devel("Starting DC Heartbeat timer");
+		crm_debug_3("Starting DC Heartbeat timer");
 		dc_heartbeat->source_id = Gmain_timeout_add_full(
 			G_PRIORITY_HIGH, dc_heartbeat->period_ms,
 			dc_heartbeat->callback, dc_heartbeat, NULL);
 	} else {
-		crm_devel("DC Heartbeat timer already active");
+		crm_debug_3("DC Heartbeat timer already active");
 	}
 	
 /* 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none); */
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
 
 	set_uuid(fsa_cluster_conn, cib, XML_ATTR_DC_UUID, fsa_our_uname);
-	crm_devel("Update %s in the CIB to our uuid: %s",
+	crm_debug_3("Update %s in the CIB to our uuid: %s",
 		  XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
 	
 	update = create_cib_fragment(cib, NULL);
@@ -327,7 +327,7 @@ do_dc_takeover(long long action,
 	
 	free_xml(update);
 	
-	crm_devel("Requesting an initial dump of CRMD client_status");
+	crm_debug_3("Requesting an initial dump of CRMD client_status");
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 	
@@ -343,7 +343,7 @@ revision_check_callback(const HA_Message *msg, int call_id, int rc,
 	const char *revision = NULL;
 	crm_data_t *generation = find_xml_node(output, XML_TAG_CIB, TRUE);
 		
-	crm_devel("Checking our feature revision is allowed: %d",
+	crm_debug_3("Checking our feature revision is allowed: %d",
 		  cib_feature_revision);
 	
 	revision = crm_element_value(generation, XML_ATTR_CIB_REVISION);
@@ -367,7 +367,7 @@ do_dc_release(long long action,
 {
 	enum crmd_fsa_input result = I_NULL;
 
-	crm_trace("################## Releasing the DC ##################");
+	crm_debug_4("################## Releasing the DC ##################");
 
 	crm_timer_stop(dc_heartbeat);
 	if(action & A_DC_RELEASE) {
@@ -395,7 +395,7 @@ do_dc_release(long long action,
 		       fsa_action2string(action));
 	}
 
-	crm_verbose("Am I still the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
+	crm_debug_2("Am I still the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
 
 	return result;
 }

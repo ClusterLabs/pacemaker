@@ -36,10 +36,10 @@ do_log(long long action,
        enum crmd_fsa_input current_input,
        fsa_data_t *msg_data)
 {
-	unsigned log_type = LOG_DEV;	
+	unsigned log_type = LOG_DEBUG_3;	
 
 	if(action & A_LOG) {
-		log_type = LOG_VERBOSE;
+		log_type = LOG_DEBUG_2;
 	} else if(action & A_WARN) {
 		log_type = LOG_WARNING;
 	} else if(action & A_ERROR) {

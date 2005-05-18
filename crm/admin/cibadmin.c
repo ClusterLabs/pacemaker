@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.30 2005/04/27 08:45:52 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.31 2005/05/18 20:15:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -212,11 +212,11 @@ main(int argc, char **argv)
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
 			case 'i':
-				crm_verbose("Option %c => %s", flag, optarg);
+				crm_debug_2("Option %c => %s", flag, optarg);
 				id = crm_strdup(optarg);
 				break;
 			case 'o':
-				crm_verbose("Option %c => %s", flag, optarg);
+				crm_debug_2("Option %c => %s", flag, optarg);
 				obj_type = crm_strdup(optarg);
 				break;
 			case 'X':
@@ -284,13 +284,13 @@ main(int argc, char **argv)
 
 		mainloop = g_main_new(FALSE);
 
-		crm_devel("Setting operation timeout to %dms",
+		crm_debug_3("Setting operation timeout to %dms",
 			  message_timeout_ms);
 
 		message_timer_id = Gmain_timeout_add(
 			message_timeout_ms, admin_message_timeout, NULL);
 
-		crm_devel("%s waiting for reply from the local CIB",
+		crm_debug_3("%s waiting for reply from the local CIB",
 			 crm_system_name);
 		
 		crm_info("Starting mainloop");
@@ -310,7 +310,7 @@ main(int argc, char **argv)
 		crm_free(buffer);
 	}
 	
-	crm_devel("%s exiting normally", crm_system_name);
+	crm_debug_3("%s exiting normally", crm_system_name);
 	return -exit_code;
 }
 
@@ -340,7 +340,7 @@ handleCibMod(const char *xml)
 		return NULL;
 	}
 	
-	crm_trace("Object creation complete");
+	crm_debug_4("Object creation complete");
 
 	/* create the cib request */
 	fragment = create_cib_fragment(cib_object, NULL);
@@ -359,19 +359,19 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 	obj_type_parent = cib_pluralSection(obj_type);
 
 	if(strcmp(CRM_OP_CIB_QUERY, cib_action) == 0) {
-		crm_verbose("Querying the CIB for section: %s",
+		crm_debug_2("Querying the CIB for section: %s",
 			    obj_type_parent);
 
 		return the_cib->cmds->query_from(
 			the_cib, host, obj_type_parent, output, call_options);
 		
 	} else if (strcmp(CRM_OP_CIB_ERASE, cib_action) == 0) {
-		crm_trace("CIB Erase op in progress");
+		crm_debug_4("CIB Erase op in progress");
 		return the_cib->cmds->erase(the_cib, output, call_options);
 		
 	} else if (strcmp(CRM_OP_CIB_CREATE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
-		crm_trace("Performing %s op...", cib_action);
+		crm_debug_4("Performing %s op...", cib_action);
 		msg_data = handleCibMod(admin_input_xml);
 		rc = the_cib->cmds->create(
 			the_cib, obj_type_parent, msg_data, output, call_options);
@@ -380,7 +380,7 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 
 	} else if (strcmp(CRM_OP_CIB_UPDATE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
-		crm_trace("Performing %s op...", cib_action);
+		crm_debug_4("Performing %s op...", cib_action);
 		msg_data = handleCibMod(admin_input_xml);
 		rc = the_cib->cmds->modify(
 			the_cib, obj_type_parent, msg_data, output, call_options);
@@ -389,7 +389,7 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 
 	} else if (strcmp(CRM_OP_CIB_DELETE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
-		crm_trace("Performing %s op...", cib_action);
+		crm_debug_4("Performing %s op...", cib_action);
 		msg_data = handleCibMod(admin_input_xml);
 		rc = the_cib->cmds->delete(
 			the_cib, obj_type_parent, msg_data, output, call_options);
@@ -397,21 +397,21 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 		return rc;
 
 	} else if (strcmp(CRM_OP_CIB_SYNC, cib_action) == 0) {
-		crm_trace("Performing %s op...", cib_action);
+		crm_debug_4("Performing %s op...", cib_action);
 		return the_cib->cmds->sync_from(
 			the_cib, host, obj_type_parent, call_options);
 
 	} else if (strcmp(CRM_OP_CIB_SLAVE, cib_action) == 0
 		   && (call_options ^ cib_scope_local) ) {
-		crm_trace("Performing %s op on all nodes...", cib_action);
+		crm_debug_4("Performing %s op on all nodes...", cib_action);
 		return the_cib->cmds->set_slave_all(the_cib, call_options);
 
 	} else if (strcmp(CRM_OP_CIB_MASTER, cib_action) == 0) {
-		crm_trace("Performing %s op on all nodes...", cib_action);
+		crm_debug_4("Performing %s op on all nodes...", cib_action);
 		return the_cib->cmds->set_master(the_cib, call_options);
 
 	} else if(cib_action != NULL) {
-		crm_trace("Passing \"%s\" to variant_op...", cib_action);
+		crm_debug_4("Passing \"%s\" to variant_op...", cib_action);
 		return the_cib->cmds->variant_op(
 			the_cib, cib_action, host, obj_type_parent,
 			NULL, output, call_options);

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.28 2005/05/15 13:13:40 andrew Exp $ */
+/* $Id: utils.c,v 1.29 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -66,12 +66,12 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 					crm_debug("Cause:"
 						 " full CIB replace/update");
 					copy_in_properties(generation, msg);
-					crm_xml_debug(generation, "[generation]");
-					crm_xml_debug(status, "[in ]");
+					crm_log_xml_debug(generation, "[generation]");
+					crm_log_xml_debug(status, "[in ]");
 					free_xml(generation);
 					
 				} else {
-					crm_xml_debug(msg, "Cause");
+					crm_log_xml_debug(msg, "Cause");
 				}
 			}
 			print_state(LOG_DEBUG);
@@ -102,7 +102,7 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 		case te_failed:
 			crm_err("Transition status: Aborted by failed action: %s",
 				 text);
-			crm_xml_debug(msg, "Cause");
+			crm_log_xml_debug(msg, "Cause");
 			print_state(LOG_WARNING);
 			break;
 	}
@@ -225,7 +225,7 @@ print_action(const char *prefix, action_t *action, int log_level)
 	}
 	
 	if(action->complete == FALSE) {
-		crm_log_xml(LOG_VERBOSE, "\tRaw action", action->xml);
+		crm_log_xml(LOG_DEBUG_2, "\tRaw action", action->xml);
 	}
 }
 
@@ -271,7 +271,7 @@ timer_callback(gpointer data)
 	} else if(timer->reason == timeout_action_warn) {
 		crm_warn("Action %d is taking more than 2x its timeout (%d)",
 			timer->action->id, timer->action->timeout);
-		crm_xml_debug(timer->action->xml, "Slow action");
+		crm_log_xml_debug(timer->action->xml, "Slow action");
 		return TRUE;
 		
 	} else {
@@ -297,7 +297,7 @@ start_te_timer(te_timer_t *timer)
 		crm_err("Tried to start timer with -ve period");
 		
 	} else {
-		crm_devel("#!!#!!# Timer already running (%d)",
+		crm_debug_3("#!!#!!# Timer already running (%d)",
 			  timer->source_id);
 	}
 	return FALSE;		

@@ -182,7 +182,7 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 		return;
 	}
 
-	crm_verbose("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
+	crm_debug_2("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
 
 	CRM_DEV_ASSERT(local_cib != NULL);
 	CRM_DEV_ASSERT(crm_element_value(local_cib, XML_ATTR_DC_UUID) != NULL);

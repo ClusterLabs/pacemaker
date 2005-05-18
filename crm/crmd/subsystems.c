@@ -93,11 +93,11 @@ gboolean
 stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 {
 	IPC_Channel *client_channel = the_subsystem->ipc;
-	crm_verbose("Stopping sub-system \"%s\"", the_subsystem->name);
+	crm_debug_2("Stopping sub-system \"%s\"", the_subsystem->name);
 	clear_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 	
 	if (the_subsystem->pid <= 0) {
-		crm_verbose("Client %s not running", the_subsystem->name);
+		crm_debug_2("Client %s not running", the_subsystem->name);
 
 	} else if(FALSE == is_set(
 			  fsa_input_register, the_subsystem->flag_connected)) {

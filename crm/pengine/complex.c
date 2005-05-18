@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.25 2005/05/17 14:33:39 andrew Exp $ */
+/* $Id: complex.c,v 1.26 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -118,7 +118,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	const char *multiple = crm_element_value(xml_obj, "multiple_active");
 	const char *priority = NULL;
 
-	crm_xml_verbose(xml_obj, "Processing resource input...");
+	crm_log_xml_debug_2(xml_obj, "Processing resource input...");
 	
 	if(id == NULL) {
 		pe_err("Must specify id tag in <resource>");
@@ -147,7 +147,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	}
 	
 	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
-	crm_verbose("Unpacking resource...");
+	crm_debug_2("Unpacking resource...");
 	
 	(*rsc)->parameters = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
@@ -230,10 +230,10 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 	crm_debug("Ordering %d: Action %d before %d",
 		  order?order->id:-1, lh_action->id, rh_action->id);
 	
-	crm_devel_action(
+	crm_action_debug_3(
 		print_action("LH (order_actions)", lh_action, FALSE));
 
-	crm_devel_action(
+	crm_action_debug_3(
 		print_action("RH (order_actions)", rh_action, FALSE));
 	
 	crm_malloc0(wrapper, sizeof(action_wrapper_t));
@@ -260,7 +260,7 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 
 void common_dump(resource_t *rsc, const char *pre_text, gboolean details)
 {
-	crm_devel("%s%s%s%sResource %s: (variant=%s, priority=%f)",
+	crm_debug_3("%s%s%s%sResource %s: (variant=%s, priority=%f)",
 		  pre_text==NULL?"":pre_text,
 		  pre_text==NULL?"":": ",
 		  rsc->provisional?"Provisional ":"",
@@ -276,23 +276,23 @@ void common_free(resource_t *rsc)
 		return;
 	}
 	
-	crm_trace("Freeing %s", rsc->id);
+	crm_debug_4("Freeing %s", rsc->id);
 
 	while(rsc->rsc_cons) {
  		pe_free_rsc_colocation(
 			(rsc_colocation_t*)rsc->rsc_cons->data);
 		rsc->rsc_cons = rsc->rsc_cons->next;
 	}
-	crm_trace("Freeing constraint list");
+	crm_debug_4("Freeing constraint list");
 	if(rsc->rsc_cons != NULL) {
 		g_list_free(rsc->rsc_cons);
 	}
 
-	crm_trace("Freeing opaque data");
+	crm_debug_4("Freeing opaque data");
 	crm_free(rsc->variant_opaque);
-	crm_trace("Freeing resource");
+	crm_debug_4("Freeing resource");
 	crm_free(rsc);
-	crm_trace("Resource freed");
+	crm_debug_4("Resource freed");
 }
 
 void
@@ -303,13 +303,13 @@ common_agent_constraints(
 	slist_iter(
 		node, node_t, node_list, lpc,
 		
-		crm_trace("Checking if %s supports %s/%s (%s)",
+		crm_debug_4("Checking if %s supports %s/%s (%s)",
 			  node->details->uname,
 			  agent->class, agent->type, agent->version);
 		
 		if(has_agent(node, agent) == FALSE) {
 			/* remove node from contention */
-			crm_trace("Marking node %s unavailable for %s",
+			crm_debug_4("Marking node %s unavailable for %s",
 				  node->details->uname, id);
 			node->weight = -1.0;
 			node->fixed = TRUE;
@@ -327,14 +327,14 @@ has_agent(node_t *a_node, lrm_agent_t *an_agent)
 		return FALSE;
 	}
 	
-	crm_devel("Checking %d agents on %s",
+	crm_debug_3("Checking %d agents on %s",
 		  g_list_length(a_node->details->agents),
 		  a_node->details->uname);
 
 	slist_iter(
 		agent, lrm_agent_t, a_node->details->agents, lpc,
 
-		crm_trace("Checking against  %s/%s (%s)",
+		crm_debug_4("Checking against  %s/%s (%s)",
 			  agent->class, agent->type, agent->version);
 
 		if(safe_str_eq(an_agent->type, agent->type)){
@@ -351,7 +351,7 @@ has_agent(node_t *a_node, lrm_agent_t *an_agent)
 		}
 		);
 	
-	crm_verbose("%s doesnt support version %s of %s/%s",
+	crm_debug_2("%s doesnt support version %s of %s/%s",
 		    a_node->details->uname, an_agent->version,
 		    an_agent->class, an_agent->type);
 	
@@ -365,7 +365,7 @@ unpack_instance_attributes(crm_data_t *xml_obj, GHashTable *hash)
 	const char *value = NULL;
 	
 	if(xml_obj == NULL) {
-		crm_devel("No instance attributes");
+		crm_debug_3("No instance attributes");
 		return;
 	}
 	
@@ -409,7 +409,7 @@ add_hash_param(GHashTable *hash, const char *name, const char *value)
 		return;
 	}
 
-	crm_verbose("adding: name=%s value=%s", crm_str(name), crm_str(value));
+	crm_debug_2("adding: name=%s value=%s", crm_str(name), crm_str(value));
 	if(name == NULL || value == NULL) {
 		return;
 		
@@ -440,5 +440,5 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
 	set_xml_property_copy(xml_child, XML_NVPAIR_ATTR_NAME, name);
 	set_xml_property_copy(xml_child, XML_NVPAIR_ATTR_VALUE, s_value);
 
-	crm_verbose("dumped: name=%s value=%s", name, s_value);
+	crm_debug_2("dumped: name=%s value=%s", name, s_value);
 }

@@ -1,4 +1,4 @@
-/* $Id: ccm_epoche.c,v 1.4 2005/05/10 09:13:06 andrew Exp $ */
+/* $Id: ccm_epoche.c,v 1.5 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -167,8 +167,8 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 	int node_list_size;
 	const oc_ev_membership_t *oc = (const oc_ev_membership_t *)data;
 
-	crm_devel("-----------------------");
-	crm_devel("trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
+	crm_debug_3("-----------------------");
+	crm_debug_3("trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
 		  "new_idx=%d, old_idx=%d",
 		  oc->m_instance,
 		  oc->m_n_member, oc->m_n_in, oc->m_n_out,
@@ -205,27 +205,27 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 					oc->m_array[oc->m_memb_idx+lpc].node_born_on);
 			}
 		}
-		crm_devel("\tCURRENT: %s [nodeid=%d, born=%d]",
+		crm_debug_3("\tCURRENT: %s [nodeid=%d, born=%d]",
 			  oc->m_array[oc->m_memb_idx+lpc].node_uname,
 			  oc->m_array[oc->m_memb_idx+lpc].node_id,
 			  oc->m_array[oc->m_memb_idx+lpc].node_born_on);
 	}
 	
 	for(lpc=0; lpc < (int)oc->m_n_in; lpc++) {
-		crm_devel("\tNEW:     %s [nodeid=%d, born=%d]",
+		crm_debug_3("\tNEW:     %s [nodeid=%d, born=%d]",
 			  oc->m_array[oc->m_in_idx+lpc].node_uname,
 			  oc->m_array[oc->m_in_idx+lpc].node_id,
 			  oc->m_array[oc->m_in_idx+lpc].node_born_on);
 	}
 	
 	for(lpc=0; lpc < (int)oc->m_n_out; lpc++) {
-		crm_devel("\tLOST:    %s [nodeid=%d, born=%d]",
+		crm_debug_3("\tLOST:    %s [nodeid=%d, born=%d]",
 			  oc->m_array[oc->m_out_idx+lpc].node_uname,
 			  oc->m_array[oc->m_out_idx+lpc].node_id,
 			  oc->m_array[oc->m_out_idx+lpc].node_born_on);
 	}
 
-	crm_devel("-----------------------");
+	crm_debug_3("-----------------------");
 	oc_ev_callback_done(cookie);
 
 	if(command == 'p') {

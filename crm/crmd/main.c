@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.18 2005/02/28 10:53:25 andrew Exp $ */
+/* $Id: main.c,v 1.19 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -66,19 +66,9 @@ main(int argc, char ** argv)
 {
     int flag;
     int	argerr = 0;
-    struct stat buf;
-
-#ifdef DEVEL_DIR
-    mkdir(DEVEL_DIR, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-#endif
 
     crm_log_init(crm_system_name);
 
-    if(stat(DEVEL_DIR, &buf) != 0) {
-	    cl_perror("Stat of %s failed... exiting", DEVEL_DIR);
-	    exit(100);
-    }
-    
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
@@ -103,7 +93,7 @@ main(int argc, char ** argv)
     }
     
     /* read local config file */
-    crm_devel("Enabling coredumps");
+    crm_debug_3("Enabling coredumps");
     if(cl_enable_coredumps(1) != 0) {
 	    crm_warn("Cannot enable coredumps");
     }

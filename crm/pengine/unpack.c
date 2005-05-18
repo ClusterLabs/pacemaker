@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.89 2005/05/17 14:33:39 andrew Exp $ */
+/* $Id: unpack.c,v 1.90 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -100,7 +100,7 @@ unpack_config(crm_data_t * config)
 				"transition_timeout", value);
 		}
 	}
-	crm_devel("%s set to: %s",
+	crm_debug_3("%s set to: %s",
 		 "transition_timeout", transition_timeout);
 
 	value = param_value(config, "stonith_enabled");
@@ -172,7 +172,7 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 	const char *uname  = NULL;
 	const char *type   = NULL;
 
-	crm_verbose("Begining unpack...");
+	crm_debug_2("Begining unpack...");
 	xml_child_iter(
 		xml_nodes, xml_obj, XML_CIB_TAG_NODE,
 
@@ -181,7 +181,7 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 		id     = crm_element_value(xml_obj, XML_ATTR_ID);
 		uname  = crm_element_value(xml_obj, XML_ATTR_UNAME);
 		type   = crm_element_value(xml_obj, XML_ATTR_TYPE);
-		crm_verbose("Processing node %s/%s", uname, id);
+		crm_debug_2("Processing node %s/%s", uname, id);
 
 		attrs = find_xml_node(xml_obj, "attributes", FALSE);
 		
@@ -208,7 +208,7 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 			return FALSE;
 		}
 
-		crm_verbose("Creaing node for entry %s/%s", uname, id);
+		crm_debug_2("Creaing node for entry %s/%s", uname, id);
 		new_node->details->id		= id;
 		new_node->details->uname	= uname;
 		new_node->details->type		= node_ping;
@@ -250,10 +250,10 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 		}
 		
 		*nodes = g_list_append(*nodes, new_node);    
-		crm_verbose("Done with node %s",
+		crm_debug_2("Done with node %s",
 			    crm_element_value(xml_obj, XML_ATTR_UNAME));
 
-		crm_devel_action(print_node("Added", new_node, FALSE));
+		crm_action_debug_3(print_node("Added", new_node, FALSE));
 		);
   
 	*nodes = g_list_sort(*nodes, sort_node_weight);
@@ -269,14 +269,14 @@ unpack_resources(crm_data_t * xml_resources,
 		 GListPtr *placement_constraints,
 		 GListPtr all_nodes)
 {
-	crm_verbose("Begining unpack...");
+	crm_debug_2("Begining unpack...");
 	xml_child_iter(
 		xml_resources, xml_obj, NULL,
 
 		resource_t *new_rsc = NULL;
 		if(common_unpack(xml_obj, &new_rsc)) {
 			*resources = g_list_append(*resources, new_rsc);
-			crm_devel_action(
+			crm_action_debug_3(
 				print_resource("Added", new_rsc, FALSE));
 
 			if(symmetric_cluster) {
@@ -304,7 +304,7 @@ unpack_constraints(crm_data_t * xml_constraints,
 		   GListPtr *placement_constraints,
 		   GListPtr *ordering_constraints)
 {
-	crm_verbose("Begining unpack...");
+	crm_debug_2("Begining unpack...");
 	xml_child_iter(
 		xml_constraints, xml_obj, NULL,
 
@@ -315,7 +315,7 @@ unpack_constraints(crm_data_t * xml_constraints,
 			continue;
 		}
 
-		crm_verbose("Processing constraint %s %s",
+		crm_debug_2("Processing constraint %s %s",
 			    crm_element_name(xml_obj),id);
 
 		if(safe_str_eq(XML_CONS_TAG_RSC_ORDER,
@@ -390,7 +390,7 @@ unpack_status(crm_data_t * status,
 	crm_data_t * attrs      = NULL;
 	node_t    *this_node  = NULL;
 	
-	crm_verbose("Begining unpack");
+	crm_debug_2("Begining unpack");
 	xml_child_iter(
 		status, node_state, XML_CIB_TAG_STATE,
 
@@ -403,7 +403,7 @@ unpack_status(crm_data_t * status,
 
 		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
 
-		crm_verbose("Processing node %s", uname);
+		crm_debug_2("Processing node %s", uname);
 		this_node = pe_find_node(nodes, uname);
 
 		if(uname == NULL) {
@@ -421,10 +421,10 @@ unpack_status(crm_data_t * status,
 		 */
 		this_node->details->unclean = FALSE;
 		
-		crm_verbose("Adding runtime node attrs");
+		crm_debug_2("Adding runtime node attrs");
 		add_node_attrs(node_state, this_node);
 
-		crm_verbose("determining node state");
+		crm_debug_2("determining node state");
 		determine_online_status(node_state, this_node);
 
 		if(this_node->details->online || stonith_enabled) {
@@ -432,7 +432,7 @@ unpack_status(crm_data_t * status,
 			 * unless stonith is enabled in which case we need to
 			 *   make sure rsc start events happen after the stonith
 			 */
-			crm_verbose("Processing lrm resource entries");
+			crm_debug_2("Processing lrm resource entries");
 			unpack_lrm_rsc_state(
 				this_node, lrm_rsc, rsc_list, nodes,
 				actions, placement_constraints);
@@ -581,7 +581,7 @@ unpack_lrm_agents(node_t *node, crm_data_t * agent_list)
 		version        = crm_element_value(xml_agent, XML_ATTR_VERSION);
 		agent->version = version?version:"0.0";
 
-		crm_trace("Adding agent %s/%s %s to node %s",
+		crm_debug_4("Adding agent %s/%s %s to node %s",
 			  agent->class,
 			  agent->type,
 			  agent->version,
@@ -625,7 +625,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		
 		rsc    = pe_find_resource(rsc_list, rsc_id);
 
-		crm_verbose("[%s] Processing %s on %s (%s)",
+		crm_debug_2("[%s] Processing %s on %s (%s)",
 			    crm_element_name(rsc_entry),
 			    rsc_id, node_id, rsc_state);
 
@@ -633,7 +633,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			pe_err("Could not find a match for resource"
 				" %s in %s's status section",
 				rsc_id, node_id);
-			crm_xml_debug(rsc_entry, "Invalid status entry");
+			crm_log_xml_debug(rsc_entry, "Invalid status entry");
 			continue;
 		}
 
@@ -811,7 +811,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				}
 				
 			} else if(*running == TRUE) {
-				crm_devel("Re-issuing pending recurring task:"
+				crm_debug_3("Re-issuing pending recurring task:"
 					  " %s for %s on %s",
 					  task, rsc->id, node->details->id);
 				rsc->schedule_recurring = TRUE;
@@ -819,7 +819,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			break;
 		
 		case LRM_OP_DONE:
-			crm_verbose("%s/%s completed on %s",
+			crm_debug_2("%s/%s completed on %s",
 				    rsc->id, task, node->details->uname);
 
 			if(safe_str_eq(task, CRMD_ACTION_STOP)) {
@@ -828,7 +828,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				rsc->schedule_recurring = FALSE;
 
 			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
-				crm_verbose("%s active on %s",
+				crm_debug_2("%s active on %s",
 					    rsc->id, node->details->uname);
 				*running = TRUE;
 				rsc->schedule_recurring = FALSE;
@@ -924,13 +924,13 @@ rsc_colocation_new(const char *id, enum con_strength strength,
 	
 	inverted_con = invert_constraint(new_con);
 	
-	crm_devel("Adding constraint %s (%p) to %s",
+	crm_debug_3("Adding constraint %s (%p) to %s",
 		  new_con->id, new_con, rsc_lh->id);
 	
 	rsc_lh->rsc_cons = g_list_insert_sorted(
 		rsc_lh->rsc_cons, new_con, sort_cons_strength);
 	
-	crm_devel("Adding constraint %s (%p) to %s",
+	crm_debug_3("Adding constraint %s (%p) to %s",
 		  inverted_con->id, inverted_con, rsc_rh->id);
 	
 	rsc_rh->rsc_cons = g_list_insert_sorted(
@@ -976,28 +976,28 @@ custom_action_order(
 		*ordering_constraints, order);
 	
 	if(lh_rsc != NULL && rh_rsc != NULL) {
-		crm_devel("Created ordering constraint %d (%s):"
+		crm_debug_3("Created ordering constraint %d (%s):"
 			 " %s/%s before %s/%s",
 			 order->id, strength2text(order->strength),
 			 lh_rsc->id, lh_action_task,
 			 rh_rsc->id, rh_action_task);
 		
 	} else if(lh_rsc != NULL) {
-		crm_devel("Created ordering constraint %d (%s):"
+		crm_debug_3("Created ordering constraint %d (%s):"
 			 " %s/%s before action %d (%s)",
 			 order->id, strength2text(order->strength),
 			 lh_rsc->id, lh_action_task,
 			 rh_action->id, rh_action_task);
 		
 	} else if(rh_rsc != NULL) {
-		crm_devel("Created ordering constraint %d (%s):"
+		crm_debug_3("Created ordering constraint %d (%s):"
 			 " action %d (%s) before %s/%s",
 			 order->id, strength2text(order->strength),
 			 lh_action->id, lh_action_task,
 			 rh_rsc->id, rh_action_task);
 		
 	} else {
-		crm_devel("Created ordering constraint %d (%s):"
+		crm_debug_3("Created ordering constraint %d (%s):"
 			 " action %d (%s) before action %d (%s)",
 			 order->id, strength2text(order->strength),
 			 lh_action->id, lh_action_task,
@@ -1208,7 +1208,7 @@ unpack_rsc_location(
 			continue;
 		}
 		
-		crm_trace("processing rule: %s",
+		crm_debug_4("processing rule: %s",
 			  crm_element_value(rule, XML_ATTR_ID));
 
 		rule_has_expressions = FALSE;
@@ -1225,7 +1225,7 @@ unpack_rsc_location(
 				expr, XML_EXPR_ATTR_TYPE);
 			
 			rule_has_expressions = TRUE;
-			crm_trace("processing expression: %s",
+			crm_debug_4("processing expression: %s",
 				  crm_element_value(expr, XML_ATTR_ID));
 
 			match_L = apply_node_expression(
@@ -1241,12 +1241,12 @@ unpack_rsc_location(
 			old_list = new_con->node_list_rh;
 
 			if(do_and) {
-				crm_trace("do_and");
+				crm_debug_4("do_and");
 				
 				new_con->node_list_rh = node_list_and(
 					old_list, match_L, FALSE);
 			} else {
-				crm_trace("do_or");
+				crm_debug_4("do_or");
 				
 				new_con->node_list_rh = node_list_or(
 					old_list, match_L, FALSE);
@@ -1257,7 +1257,7 @@ unpack_rsc_location(
 
 		if(rule_has_expressions == FALSE && symmetric_cluster == FALSE) {
 			/* feels like a hack */
-			crm_devel("Rule %s had no expressions,"
+			crm_debug_3("Rule %s had no expressions,"
 				  " adding all nodes", crm_element_value(rule, XML_ATTR_ID));
 
 			new_con->node_list_rh = node_list_dup(node_list,FALSE);
@@ -1268,7 +1268,7 @@ unpack_rsc_location(
 				 id, crm_element_value(rule, XML_ATTR_ID));
 		}
 		
-		crm_devel_action(print_rsc_to_node("Added", new_con, FALSE));
+		crm_action_debug_3(print_rsc_to_node("Added", new_con, FALSE));
 		);
 
 	if(were_rules == FALSE) {

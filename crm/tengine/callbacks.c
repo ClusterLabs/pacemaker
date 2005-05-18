@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.26 2005/05/15 13:13:41 andrew Exp $ */
+/* $Id: callbacks.c,v 1.27 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,19 +42,10 @@ te_update_confirm(const char *event, HA_Message *msg)
 
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 	crm_debug("Processing %s...", event);
-	crm_xml_verbose(update, "Processing update");
-	
-	if (MSG_LOG) {
-		struct stat buf;
-		if(stat(DEVEL_DIR, &buf) != 0) {
-			cl_perror("Stat of %s failed... exiting", DEVEL_DIR);
-			exit(100);
-		}
-	}
+	crm_log_xml_debug_2(update, "Processing update");
 	
 	if(op == NULL) {
-		crm_err(
-			"Illegal CIB update, the operation must be specified");
+		crm_err("Illegal CIB update, the operation must be specified");
 		send_complete("Illegal update", update, te_update);
 		done = TRUE;
 		
@@ -75,7 +66,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 		done = TRUE;
 		
 	} else if(strcmp(op, CRM_OP_CIB_UPDATE) != 0) {
-		crm_verbose("Ignoring %s op confirmation", op);
+		crm_debug_2("Ignoring %s op confirmation", op);
 		done = TRUE;
 	}
 
@@ -107,7 +98,8 @@ te_update_confirm(const char *event, HA_Message *msg)
 		send_complete("Non-status update", update, te_update);
 
 	} else {
-		crm_warn("Ignoring update confirmation for %s object", type);
+		crm_err("Ignoring update confirmation for %s object", type);
+		crm_log_xml_debug(update, "Ignored update");
 	}
 
 	free_xml(update);
@@ -120,7 +112,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	const char *ref    = cl_get_string(msg, XML_ATTR_REFERENCE);
 	const char *op     = cl_get_string(msg, F_CRM_TASK);
 
-	crm_log_message(LOG_DEV, msg);
+	crm_log_message(LOG_DEBUG_3, msg);
 	
 	if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE), XML_ATTR_RESPONSE)
 	   && safe_str_neq(op, CRM_OP_EVENTCC)) {
@@ -136,7 +128,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		/* ignore */
 
 	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
-		crm_verbose("Bad sys-to %s", crm_str(sys_to));
+		crm_debug_2("Bad sys-to %s", crm_str(sys_to));
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
@@ -165,7 +157,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		
 #ifdef TESTING
 	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
-		crm_trace("Processing %s...", CRM_OP_EVENTCC);
+		crm_debug_4("Processing %s...", CRM_OP_EVENTCC);
 		if(extract_event(msg) == FALSE) {
 			send_complete("ttest loopback", msg, te_failed);
 		}
@@ -176,7 +168,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		send_complete("Initiate a transition", NULL, te_update);
 	}
 
-	crm_devel("finished processing message");
+	crm_debug_3("finished processing message");
 	
 	return TRUE;
 }
@@ -285,7 +277,7 @@ tengine_stonith_dispatch(IPC_Channel *sender, void *user_data)
 		}
 	}
 
-	crm_verbose("Processed %d messages", lpc);
+	crm_debug_2("Processed %d messages", lpc);
 	if (sender->ch_status == IPC_DISCONNECT) {
 		return FALSE;
 	}

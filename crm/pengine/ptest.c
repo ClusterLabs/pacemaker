@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.46 2005/05/15 13:17:59 andrew Exp $ */
+/* $Id: ptest.c,v 1.47 2005/05/18 20:15:58 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -180,7 +180,7 @@ main(int argc, char **argv)
 	stage8(resources, actions, &graph);
 
 
-	crm_verbose("deleting node cons");
+	crm_debug_2("deleting node cons");
 	while(placement_constraints) {
 		pe_free_rsc_to_node((rsc_to_node_t*)placement_constraints->data);
 		placement_constraints = placement_constraints->next;
@@ -189,30 +189,30 @@ main(int argc, char **argv)
 		g_list_free(placement_constraints);
 	}
 	
-	crm_verbose("deleting order cons");
+	crm_debug_2("deleting order cons");
 	pe_free_ordering(ordering_constraints); 
 
-	crm_verbose("deleting action sets");
+	crm_debug_2("deleting action sets");
 	slist_iter(action_set, GList, action_sets, lpc,
 		   pe_free_shallow_adv(action_set, FALSE);
 		);
 	pe_free_shallow_adv(action_sets, FALSE);
 	
-	crm_verbose("deleting actions");
+	crm_debug_2("deleting actions");
 	pe_free_actions(actions);
 
 /*	GListPtr action_sets = NULL; */
 
-	crm_verbose("deleting resources");
+	crm_debug_2("deleting resources");
 	pe_free_resources(resources); 
 	
-	crm_verbose("deleting colors");
+	crm_debug_2("deleting colors");
 	pe_free_colors(colors);
 
 	crm_free(no_color->details);
 	crm_free(no_color);
 	
-	crm_verbose("deleting nodes");
+	crm_debug_2("deleting nodes");
 	pe_free_nodes(nodes);
 	
 	if(shutdown_list != NULL) {

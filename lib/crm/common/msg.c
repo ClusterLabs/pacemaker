@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.2 2005/04/25 13:42:29 andrew Exp $ */
+/* $Id: msg.c,v 1.3 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,7 +84,7 @@ validate_crm_message(
 		crm_info("No sub-system defined.");
 		action = NULL;
 	} else if (true_sys != NULL && strcmp(to, true_sys) != 0) {
-		crm_devel("The message is not for this sub-system (%s != %s).",
+		crm_debug_3("The message is not for this sub-system (%s != %s).",
 			  to, true_sys);
 		action = NULL;
 	}
@@ -104,10 +104,10 @@ validate_crm_message(
 	}
 /*
  	if(action != NULL) 
-		crm_devel(
+		crm_debug_3(
 		       "XML is valid and node with message type (%s) found.",
 		       type);
-	crm_devel("Returning node (%s)", xmlGetNodePath(action));
+	crm_debug_3("Returning node (%s)", xmlGetNodePath(action));
 */
 	
 	return action;
@@ -137,12 +137,12 @@ send_hello_message(IPC_Channel *ipc_client,
 	set_xml_property_copy(hello_node, "client_name",   client_name);
 	set_xml_property_copy(hello_node, "client_uuid",   uuid);
 
-	crm_trace("creating hello message");
+	crm_debug_4("creating hello message");
 	hello = create_request(
 		CRM_OP_HELLO, hello_node, NULL, NULL, client_name, uuid);
 
 	send_ipc_message(ipc_client, hello);
-	crm_trace("hello message sent");
+	crm_debug_4("hello message sent");
 	
 	free_xml(hello_node);
 }
@@ -202,7 +202,7 @@ process_hello_message(crm_data_t *hello,
 	*major_version = crm_strdup(local_major_version);
 	*minor_version = crm_strdup(local_minor_version);
 
-	crm_devel("Hello message ok");
+	crm_debug_3("Hello message ok");
 	return TRUE;
 }
 

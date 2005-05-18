@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.5 2005/05/11 17:40:00 andrew Exp $ */
+/* $Id: ipc.c,v 1.6 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,7 +76,7 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node)
 			crm_err("Send failed");
 			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
 		} else {
-			crm_verbose("Message sent...");
+			crm_debug_2("Message sent...");
 		}
 	} else {
 		if(hb_conn->llc_ops->sendclustermsg(hb_conn, msg) != HA_OK) {
@@ -85,7 +85,7 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node)
 			crm_err("Broadcast Send failed");
 			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
 		} else {
-			crm_verbose("Broadcast message sent...");
+			crm_debug_2("Broadcast message sent...");
 		}
 	}
 	
@@ -165,7 +165,7 @@ init_server_ipc_comms(
 		channel_client_connect, channel_name,
 		channel_connection_destroy);
 
-	crm_devel("Listening on: %s", commpath);
+	crm_debug_3("Listening on: %s", commpath);
 
 	return 0;
 }
@@ -199,7 +199,7 @@ init_client_ipc_comms(const char *channel_name,
 		crm_warn("No dispatch method specified..."
 			 "maybe you meant init_client_ipc_comms_nodispatch()?");
 	} else {
-		crm_devel("Adding dispatch method to channel");
+		crm_debug_3("Adding dispatch method to channel");
 
 		the_source = G_main_add_IPC_Channel(
 			G_PRIORITY_HIGH, a_ch, FALSE, dispatch, callback_data, 
@@ -227,7 +227,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	if(commpath != NULL) {
 		sprintf(commpath, WORKING_DIR "/%s", channel_name);
 		commpath[local_socket_len - 1] = '\0';
-		crm_devel("Attempting to talk on: %s", commpath);
+		crm_debug_3("Attempting to talk on: %s", commpath);
 	}
 	
 	attrs = g_hash_table_new(g_str_hash,g_str_equal);
@@ -249,7 +249,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	ch->ops->set_send_qlen(ch, 100);
 /* 	ch->should_send_block = TRUE; */
 
-	crm_devel("Processing of %s complete", commpath);
+	crm_debug_3("Processing of %s complete", commpath);
 
 	return ch;
 }
@@ -375,7 +375,7 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		msg->msg_done(msg);
 	}
 	
-	crm_verbose("Processed %d messages", lpc);
+	crm_debug_2("Processed %d messages", lpc);
 	if (sender->ch_status != IPC_CONNECT) {
 		crm_err("The server has left us: Shutting down...NOW");
 

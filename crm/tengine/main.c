@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.23 2005/03/15 11:47:26 andrew Exp $ */
+/* $Id: main.c,v 1.24 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,7 +65,7 @@ main(int argc, char ** argv)
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, tengine_shutdown, NULL, NULL);
 
-	crm_devel("Begining option processing");
+	crm_debug_3("Begining option processing");
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -85,7 +85,7 @@ main(int argc, char ** argv)
 		}
 	}
     
-	crm_devel("Option processing complete");
+	crm_debug_3("Option processing complete");
 
 	if (optind > argc) {
 		++argerr;
@@ -97,7 +97,7 @@ main(int argc, char ** argv)
     
 	/* read local config file */
     
-	crm_devel("Starting...");
+	crm_debug_3("Starting...");
 	return init_start();
 
 }
@@ -120,7 +120,7 @@ init_start(void)
 	}
 	
 	if(init_ok) {
-		crm_trace("Creating CIB connection");
+		crm_debug_4("Creating CIB connection");
 		te_cib_conn = cib_new();
 		if(te_cib_conn == NULL) {
 			init_ok = FALSE;
@@ -128,7 +128,7 @@ init_start(void)
 	}
 	
 	if(init_ok) {
-		crm_trace("Connecting to the CIB");
+		crm_debug_4("Connecting to the CIB");
 		if(cib_ok != te_cib_conn->cmds->signon(
 			   te_cib_conn, crm_system_name, cib_command)) {
 			init_ok = FALSE;
@@ -136,7 +136,7 @@ init_start(void)
 	}
 
 	if(init_ok) {
-		crm_trace("Setting CIB notification callback");
+		crm_debug_4("Setting CIB notification callback");
 		if(te_cib_conn->cmds->add_notify_callback(
 			   te_cib_conn, T_CIB_UPDATE_CONFIRM,
 			   te_update_confirm) != cib_ok) {

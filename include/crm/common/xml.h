@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.21 2005/05/06 11:33:32 andrew Exp $ */
+/* $Id: xml.h,v 1.22 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -232,11 +232,11 @@ extern gboolean xml_has_children(crm_data_t *root);
 			   || safe_str_eq(filter, child->name)) {	\
 				d;					\
 			} else {					\
-				crm_trace("Skipping <%s../>", child->name); \
+				crm_debug_4("Skipping <%s../>", child->name); \
 			}						\
 		}							\
 	} else {							\
-		crm_trace("Parent of loop was NULL");			\
+		crm_debug_4("Parent of loop was NULL");			\
 	}
 #define xml_prop_iter(parent, prop_name, prop_value, code) if(parent != NULL) { \
 		xmlAttrPtr prop_iter = parent->properties;		\
@@ -248,7 +248,7 @@ extern gboolean xml_has_children(crm_data_t *root);
 			prop_iter = prop_iter->next;			\
 		}							\
 	} else {							\
-		crm_trace("Parent of loop was NULL");			\
+		crm_debug_4("Parent of loop was NULL");			\
 	}
 
 #else
@@ -264,18 +264,18 @@ extern gboolean xml_has_children(crm_data_t *root);
 			}						\
 			child = parent->values[__counter];		\
 			if(child == NULL) {				\
-				crm_trace("Skipping %s == NULL",	\
+				crm_debug_4("Skipping %s == NULL",	\
 					  parent->names[__counter]);	\
 			} else if(filter == NULL			\
 				  || safe_str_eq(filter, parent->names[__counter])) { \
 				loop_code;					\
 			} else {					\
-				crm_trace("Skipping <%s../>",		\
+				crm_debug_4("Skipping <%s../>",		\
 					  parent->names[__counter]);	\
 			}						\
 		}							\
 	} else {							\
-		crm_trace("Parent of loop was NULL");			\
+		crm_debug_4("Parent of loop was NULL");			\
 	}
 
 #define xml_prop_iter(parent, prop_name, prop_value, code) if(parent != NULL) { \
@@ -283,9 +283,9 @@ extern gboolean xml_has_children(crm_data_t *root);
 		const char *prop_value = NULL;				\
 		int __counter = 0;					\
 		crm_validate_data(parent);				\
-		crm_insane("Searching %d fields", parent->nfields);	\
+		crm_debug_5("Searching %d fields", parent->nfields);	\
 		for (__counter = 0; __counter < parent->nfields; __counter++) { \
-			crm_insane("Searching field %d", __counter);	\
+			crm_debug_5("Searching field %d", __counter);	\
 			if(parent->types[__counter] != FT_STRING) {	\
 				continue;				\
 			} else if(safe_str_eq(parent->names[__counter], F_XML_TAGNAME)) { \
@@ -298,7 +298,7 @@ extern gboolean xml_has_children(crm_data_t *root);
 			code;						\
 		}							\
 	} else {							\
-		crm_trace("Parent of loop was NULL");			\
+		crm_debug_4("Parent of loop was NULL");			\
 	}
 
 #endif

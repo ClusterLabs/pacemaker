@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.57 2005/05/17 14:33:39 andrew Exp $ */
+/* $Id: stages.c,v 1.58 2005/05/18 20:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,7 +76,7 @@ stage0(crm_data_t * cib,
 	crm_data_t * config          = get_object_root(
 		XML_CIB_TAG_CRMCONFIG,   cib);
 
-	crm_verbose("Beginning unpack");
+	crm_debug_2("Beginning unpack");
 	
 	/* reset remaining global variables */
 	num_synapse = 0;
@@ -89,7 +89,7 @@ stage0(crm_data_t * cib,
 	stonith_enabled  = FALSE;
 
 	if(global_action_list != NULL) {
-		crm_verbose("deleting actions");
+		crm_debug_2("deleting actions");
 		pe_free_actions(global_action_list);
 		global_action_list = NULL;
 	}
@@ -147,7 +147,7 @@ stage0(crm_data_t * cib,
 gboolean
 stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
 {
-	crm_verbose("Applying placement constraints");
+	crm_debug_2("Applying placement constraints");
 	
 	slist_iter(
 		node, node_t, nodes, lpc,
@@ -183,14 +183,14 @@ stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
 gboolean
 stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
 {
-	crm_verbose("Coloring resources");
+	crm_debug_2("Coloring resources");
 	
 	if(no_color != NULL) {
 		crm_free(no_color->details);
 		crm_free(no_color);
 	}
 	
-	crm_trace("create \"no color\"");
+	crm_debug_4("create \"no color\"");
 	no_color = create_color(NULL, NULL, NULL);
 	
 	/* Take (next) highest resource */
@@ -231,12 +231,12 @@ stage3(GListPtr colors)
 gboolean
 stage4(GListPtr colors)
 {
-	crm_verbose("Assigning nodes to colors");
+	crm_debug_2("Assigning nodes to colors");
 
 	slist_iter(
 		color, color_t, colors, lpc,
 
-		crm_devel("assigning node to color %d", color->id);
+		crm_debug_3("assigning node to color %d", color->id);
 		
 		if(color == NULL) {
 			pe_err("NULL color detected");
@@ -248,10 +248,14 @@ stage4(GListPtr colors)
 		
 		choose_node_from_list(color);
 
-		crm_devel("assigned %s to color %d",
-			  safe_val5(NULL, color, details, chosen_node, details, uname),
-			  color->id);
-
+		if(color->details->chosen_node == NULL) {
+			crm_debug("No node available for color %d", color->id);
+		} else {
+			crm_debug_3("assigned %s to color %d",
+				    color->details->chosen_node->details->uname,
+				    color->id);
+		}
+		
 		slist_iter(
 			rsc, resource_t, color->details->allocated_resources, lpc2,
 			slist_iter(
@@ -262,7 +266,7 @@ stage4(GListPtr colors)
 			);
 		);
 
-	crm_verbose("done");
+	crm_debug_2("done");
 	return TRUE;
 	
 }
@@ -279,7 +283,7 @@ stage4(GListPtr colors)
 gboolean
 stage5(GListPtr resources, GListPtr *ordering_constraints)
 {
-	crm_verbose("Creating actions and internal ording constraints");
+	crm_debug_2("Creating actions and internal ording constraints");
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 		rsc->fns->create_actions(rsc, ordering_constraints);
@@ -297,7 +301,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 {
 	action_t *down_op = NULL;
 	action_t *stonith_op = NULL;
-	crm_verbose("Processing fencing and shutdown cases");
+	crm_debug_2("Processing fencing and shutdown cases");
 
 	slist_iter(
 		node, node_t, nodes, lpc,
@@ -367,7 +371,7 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 gboolean
 stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 {
-	crm_verbose("Applying ordering constraints");
+	crm_debug_2("Applying ordering constraints");
 
 	slist_iter(
 		order, order_constraint_t, ordering_constraints, lpc,
@@ -429,7 +433,7 @@ stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 		   }
 		);
 */
-	crm_verbose("========= Complete Action List =========");
+	crm_debug_2("========= Complete Action List =========");
 	crm_debug("%d actions created",  g_list_length(global_action_list));
 	
 	slist_iter(action, action_t, global_action_list, lpc,
@@ -438,20 +442,20 @@ stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 	slist_iter(
 		rsc, resource_t, resources, lpc,
 
-		crm_devel("processing actions for rsc=%s", rsc->id);
+		crm_debug_3("processing actions for rsc=%s", rsc->id);
 		rsc->fns->expand(rsc, graph);
 		);
-	crm_xml_devel(*graph, "created resource-driven action list");
+	crm_log_xml_debug_3(*graph, "created resource-driven action list");
 
 	/* catch any non-resource specific actions */
-	crm_devel("processing non-resource actions");
+	crm_debug_3("processing non-resource actions");
 	slist_iter(
 		action, action_t, global_action_list, lpc,
 
 		graph_element_from_action(action, graph);
 		);
 
-	crm_xml_devel(*graph, "created generic action list");
+	crm_log_xml_debug_3(*graph, "created generic action list");
 	
 	return TRUE;
 }
@@ -469,7 +473,7 @@ choose_node_from_list(color_t *color)
 	GListPtr nodes = color->details->candidate_nodes;
 	node_t *chosen = NULL;
 
-	crm_devel("Choosing node for color %d", color->id);
+	crm_debug_3("Choosing node for color %d", color->id);
 	nodes  = g_list_sort(nodes, sort_node_weight);
 
 	chosen = g_list_nth_data(nodes, 0);

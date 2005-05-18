@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.60 2005/05/15 13:13:40 andrew Exp $ */
+/* $Id: crm.h,v 1.61 2005/05/18 20:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,11 +36,11 @@
 #  define CRM_DEV_BUILD 0
 #endif
 
-#define ipc_call_diff_max_ms 2000
+#define ipc_call_diff_max_ms 5000
 #define action_diff_warn_ms  5000
-#define action_diff_max_ms   15000
+#define action_diff_max_ms   20000
 #define fsa_diff_warn_ms     10000
-#define fsa_diff_max_ms      20000
+#define fsa_diff_max_ms      30000
 
 #include <crm/common/util.h>
 
@@ -70,15 +70,11 @@ extern gboolean crm_assert_failed;
 #define BIN_DIR		HA_LIBDIR"/heartbeat"
 #define SOCKET_LEN	1024
 #define APPNAME_LEN	256
-#define LOG_DIR		"/var/log"
 #define MAX_IPC_FAIL	5
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
-#define DEVEL_CIB_COPY   1
-#define DEVEL_DIR	"/tmp/crm"
-
-#define CRM_VERSION	"0.7"
+#define CRM_VERSION	"0.8"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
@@ -192,68 +188,77 @@ extern gboolean safe_str_neq(const char *a, const char *b);
 		}							\
 	}
 
-#define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
+#define LOG_DEBUG_2  LOG_DEBUG+1
+#define LOG_DEBUG_3  LOG_DEBUG+2
+#define LOG_DEBUG_4  LOG_DEBUG+3
+#define LOG_DEBUG_5  LOG_DEBUG+4
+#define LOG_DEBUG_6  LOG_DEBUG+5
 
-/* Developmental debug stuff */
+#define LOG_MSG  LOG_DEBUG_3
 
-#define LOG_VERBOSE  LOG_DEBUG+1
-#define LOG_DEV      LOG_DEBUG+2
-#define LOG_TRACE    LOG_DEBUG+3
-#define LOG_INSANE   LOG_DEBUG+5
-#define LOG_MSG      LOG_DEV
+#define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FILE__, __FUNCTION__, w)
+#define crm_err(w...)     do_crm_log(LOG_ERR,     __FILE__, __FUNCTION__, w)
+#define crm_warn(w...)    do_crm_log(LOG_WARNING, __FILE__, __FUNCTION__, w)
+#define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FILE__, __FUNCTION__, w)
+#define crm_info(w...)    do_crm_log(LOG_INFO,    __FILE__, __FUNCTION__, w)
+#define crm_log_maybe(level, fmt...) if(crm_log_level >= level) {	\
+		do_crm_log(level, __FILE__, __FUNCTION__, fmt);		\
+	}
 
-#  define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FILE__, __FUNCTION__, w)
-#  define crm_err(w...)     do_crm_log(LOG_ERR,     __FILE__, __FUNCTION__, w)
-#  define crm_warn(w...)    do_crm_log(LOG_WARNING, __FILE__, __FUNCTION__, w)
-#  define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FILE__, __FUNCTION__, w)
-#  define crm_info(w...)    do_crm_log(LOG_INFO,    __FILE__, __FUNCTION__, w)
-#if 1
-#  define crm_debug(w...)   do_crm_log(LOG_DEBUG,   __FILE__, __FUNCTION__, w)
-#  define crm_devel(w...)   do_crm_log(LOG_DEV,     __FILE__, __FUNCTION__, w)
-#  define crm_verbose(w...) do_crm_log(LOG_VERBOSE, __FILE__, __FUNCTION__, w)
-#  define crm_trace(w...)   do_crm_log(LOG_TRACE,   __FILE__, __FUNCTION__, w)
-#  define crm_insane(w...)  do_crm_log(LOG_INSANE,  __FILE__, __FUNCTION__, w)
+#define crm_debug(fmt...)   crm_log_maybe(LOG_DEBUG, fmt)
+#define crm_debug_2(fmt...) crm_log_maybe(LOG_DEBUG_2, fmt)
+
+/* If this is not a developmental build, give the compiler every chance to
+ * optimize these away
+ */
+#if CRM_DEV_BUILD
+#  define crm_debug_3(fmt...) crm_log_maybe(LOG_DEBUG_3, fmt)
+#  define crm_debug_4(fmt...) crm_log_maybe(LOG_DEBUG_4, fmt)
+#  define crm_debug_5(fmt...) crm_log_maybe(LOG_DEBUG_5, fmt)
 #else
-#  define crm_debug(w...)   if(0) { do_crm_log(LOG_DEBUG,   NULL, NULL, w); }
-#  define crm_devel(w...)   if(0) { do_crm_log(LOG_DEV,     NULL, NULL, w); }
-#  define crm_verbose(w...) if(0) { do_crm_log(LOG_VERBOSE, NULL, NULL, w); }
-#  define crm_trace(w...)   if(0) { do_crm_log(LOG_TRACE,   NULL, NULL, w); }
-#  define crm_insane(w...)  if(0) { do_crm_log(LOG_INSANE,  NULL, NULL, w); }
+#  define crm_debug_3(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
+#  define crm_debug_4(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
+#  define crm_debug_5(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
 #endif
 
-extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_Message *msg);
-#define crm_log_message(level, msg) crm_log_message_adv(level, NULL, msg)
+extern void crm_log_message_adv(
+	int level, const char *alt_debugfile, const HA_Message *msg);
+
+#define crm_log_message(level, msg) if(crm_log_level >= level) {	\
+		crm_log_message_adv(level, NULL, msg);			\
+	}
 
 #define crm_do_action(level, actions) if(crm_log_level >= level) {	\
 		actions;						\
 	}
-
-#define crm_info_action(x)    crm_do_action(LOG_INFO, x)
-#define crm_debug_action(x)   crm_do_action(LOG_DEBUG, x)
-#define crm_verbose_action(x) crm_do_action(LOG_VERBOSE, x)
-#define crm_devel_action(x)   crm_do_action(LOG_DEV, x)
+#define crm_action_info(x)    crm_do_action(LOG_INFO,    x)
+#define crm_action_debug(x)   crm_do_action(LOG_DEBUG,   x)
+#define crm_action_debug_2(x) crm_do_action(LOG_DEBUG_2, x)
+#define crm_action_debug_3(x) crm_do_action(LOG_DEBUG_3, x)
 
 #define crm_log_xml(level, text, xml)   if(crm_log_level >= level) {  \
 		print_xml_formatted(level,  __FUNCTION__, xml, text); \
 	}
-#define crm_xml_crit(xml, text)    crm_log_xml(LOG_CRIT,    text, xml)
-#define crm_xml_err(xml, text)     crm_log_xml(LOG_ERR,     text, xml)
-#define crm_xml_warn(xml, text)    crm_log_xml(LOG_WARNING, text, xml)
-#define crm_xml_notice(xml, text)  crm_log_xml(LOG_NOTICE,  text, xml)
-#define crm_xml_info(xml, text)    crm_log_xml(LOG_INFO,    text, xml)
-#define crm_xml_debug(xml, text)   crm_log_xml(LOG_DEBUG,   text, xml)
-#define crm_xml_devel(xml, text)   crm_log_xml(LOG_DEV,     text, xml)
-#define crm_xml_verbose(xml, text) crm_log_xml(LOG_VERBOSE, text, xml)
-#define crm_xml_trace(xml, text)   crm_log_xml(LOG_TRACE,   text, xml)
-#define crm_xml_insane(xml, text)  crm_log_xml(LOG_INSANE,  text, xml)
+#define crm_log_xml_crit(xml, text)    crm_log_xml(LOG_CRIT,    text, xml)
+#define crm_log_xml_err(xml, text)     crm_log_xml(LOG_ERR,     text, xml)
+#define crm_log_xml_warn(xml, text)    crm_log_xml(LOG_WARNING, text, xml)
+#define crm_log_xml_notice(xml, text)  crm_log_xml(LOG_NOTICE,  text, xml)
+#define crm_log_xml_info(xml, text)    crm_log_xml(LOG_INFO,    text, xml)
+#define crm_log_xml_debug(xml, text)   crm_log_xml(LOG_DEBUG,   text, xml)
+#define crm_log_xml_debug_2(xml, text) crm_log_xml(LOG_DEBUG_2, text, xml)
+#define crm_log_xml_debug_3(xml, text) crm_log_xml(LOG_DEBUG_3, text, xml)
+#define crm_log_xml_debug_4(xml, text) crm_log_xml(LOG_DEBUG_4, text, xml)
+#define crm_log_xml_debug_5(xml, text) crm_log_xml(LOG_DEBUG_5, text, xml)
 
-#define crm_malloc0(new_obj,length)					\
+
+#if CRM_DEV_BUILD
+#  define crm_malloc0(new_obj,length)					\
 	{								\
 		if(new_obj) {						\
 			crm_err("Potential memory leak:"		\
 				" %s at %s:%d not NULL before alloc.",	\
 				#new_obj, __FILE__, __LINE__);		\
-			if(CRM_DEV_BUILD) { abort(); }			\
+			abort();					\
 		}							\
 		new_obj = cl_malloc(length);				\
 		if(new_obj == NULL) {					\
@@ -262,10 +267,19 @@ extern void crm_log_message_adv(int level, const char *alt_debugfile, const HA_M
 		} else {						\
 			memset(new_obj, 0, length);			\
 		}							\
-	}	
-
-/* for temporary backwards compatibility */
-#define crm_malloc(new_obj,length) crm_malloc0(new_obj,length) 
+	}
+#else
+#  define crm_malloc0(new_obj,length)					\
+	{								\
+		new_obj = cl_malloc(length);				\
+		if(new_obj == NULL) {					\
+			crm_crit("Out of memory... exiting");		\
+			exit(1);					\
+		} else {						\
+			memset(new_obj, 0, length);			\
+		}							\
+	}
+#endif
 
 #if 1
 #  define crm_free(x)   if(x) {				\

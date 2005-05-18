@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.40 2005/04/30 08:15:50 alan Exp $ */
+/* $Id: crmadmin.c,v 1.41 2005/05/18 20:15:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -208,18 +208,18 @@ main(int argc, char **argv)
 				break;
 			case 'W':
 				DO_RESOURCE = TRUE;
-				crm_verbose("Option %c => %s", flag, optarg);
+				crm_debug_2("Option %c => %s", flag, optarg);
 				rsc_name = crm_strdup(optarg);
 				break;
 			case 'K':
 				DO_RESET = TRUE;
-				crm_verbose("Option %c => %s", flag, optarg);
+				crm_debug_2("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
 				crmd_operation = CRM_OP_LOCAL_SHUTDOWN;
 				break;
 			case 'o':
 				DO_OPTION = TRUE;
-				crm_verbose("Option %c => %s", flag, optarg);
+				crm_debug_2("Option %c => %s", flag, optarg);
 				crm_option = crm_strdup(optarg);
 				break;
 			case 'q':
@@ -227,28 +227,28 @@ main(int argc, char **argv)
 				break;
 			case 'i':
 				DO_DEBUG = debug_inc;
-				crm_verbose("Option %c => %s", flag, optarg);
+				crm_debug_2("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
 				break;
 			case 'd':
 				DO_DEBUG = debug_dec;
-				crm_verbose("Option %c => %s", flag, optarg);
+				crm_debug_2("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
 				break;
 			case 's':
 				DO_STANDBY = TRUE;
-				crm_verbose("Option %c => %s", flag, optarg);
+				crm_debug_2("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
 				break;
 			case 'a':
 				DO_STANDBY = TRUE;
-				crm_verbose("Option %c => %s", flag, optarg);
+				crm_debug_2("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
 				standby_on_off = "off";
 				break;
 			case 'S':
 				DO_HEALTH = TRUE;
-				crm_verbose("Option %c => %s", flag, optarg);
+				crm_debug_2("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
 				break;
 			case 'E':
@@ -293,7 +293,7 @@ main(int argc, char **argv)
 			 * the callbacks are invoked...
 			 */
 			mainloop = g_main_new(FALSE);
-			crm_verbose("%s waiting for reply from the local CRM",
+			crm_debug_2("%s waiting for reply from the local CRM",
 				 crm_system_name);
 
 			message_timer_id = Gmain_timeout_add(
@@ -303,7 +303,7 @@ main(int argc, char **argv)
 			return_to_orig_privs();
 			
 		} else if(res == 0) {
-			crm_verbose("%s: no reply expected",
+			crm_debug_2("%s: no reply expected",
 				 crm_system_name);
 			
 		} else {
@@ -315,7 +315,7 @@ main(int argc, char **argv)
 		operation_status = -2;
 	}
 
-	crm_verbose("%s exiting normally", crm_system_name);
+	crm_debug_2("%s exiting normally", crm_system_name);
 	return operation_status;
 }
 
@@ -334,7 +334,7 @@ do_work(ll_cluster_t * hb_cluster)
 	set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
 
 	if (DO_HEALTH == TRUE) {
-		crm_verbose("Querying the system");
+		crm_debug_2("Querying the system");
 		
 		sys_to = CRM_SYSTEM_DC;
 		
@@ -566,7 +566,7 @@ do_init(void)
 	/* change the logging facility to the one used by heartbeat daemon */
 	hb_cluster = ll_cluster_new("heartbeat");
 	
-	crm_verbose("Switching to Heartbeat logger");
+	crm_debug_2("Switching to Heartbeat logger");
 	if (( facility =
 	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
 		cl_log_set_facility(facility);
@@ -618,7 +618,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 		if (msg == NULL) {
-			crm_trace("No message this time");
+			crm_debug_4("No message this time");
 			continue;
 		}
 
@@ -694,12 +694,12 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	}
 
 	if (server->ch_status == IPC_DISCONNECT) {
-		crm_verbose("admin_msg_callback: received HUP");
+		crm_debug_2("admin_msg_callback: received HUP");
 		return !hack_return_good;
 	}
 
 	if (received_responses >= expected_responses) {
-		crm_verbose(
+		crm_debug_2(
 		       "Recieved expected number (%d) of messages from Heartbeat."
 		       "  Exiting normally.", expected_responses);
 		g_main_quit(mainloop);
@@ -740,7 +740,7 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 		crm_data_t *rscstates = NULL;
 
 		if(is_node_online(a_node) == FALSE) {
-			crm_devel("Skipping offline node: %s",
+			crm_debug_3("Skipping offline node: %s",
 				crm_element_value(a_node, XML_ATTR_ID));
 			continue;
 		}
@@ -757,27 +757,27 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 			const char *op_code = crm_element_value(
 				rsc_state,XML_LRM_ATTR_OPSTATUS);
 			
-			crm_devel("checking %s:%s for %s", target, id, rsc);
+			crm_debug_3("checking %s:%s for %s", target, id, rsc);
 
 			if(safe_str_neq(rsc, id)){
-				crm_trace("no match");
+				crm_debug_4("no match");
 				continue;
 			}
 			
 			if(safe_str_eq("stop", last_op)) {
-				crm_devel("resource %s is stopped on: %s",
+				crm_debug_3("resource %s is stopped on: %s",
 					  rsc, target);
 				
 			} else if(safe_str_eq(op_code, "-1")) {
-				crm_devel("resource %s is pending on: %s",
+				crm_debug_3("resource %s is pending on: %s",
 					  rsc, target);				
 
 			} else if(safe_str_neq(op_code, "0")) {
-				crm_devel("resource %s is failed on: %s",
+				crm_debug_3("resource %s is failed on: %s",
 					  rsc, target);				
 
 			} else {
-				crm_devel("resource %s is running on: %s",
+				crm_debug_3("resource %s is running on: %s",
 					  rsc, target);				
 				printf("resource %s is running on: %s\n",
 				       rsc, target);
@@ -813,14 +813,14 @@ is_node_online(crm_data_t *node_state)
 	   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
 	   && crm_is_true(ccm_state)
 	   && safe_str_eq(crm_state, ONLINESTATUS)) {
-		crm_devel("Node %s is online", uname);
+		crm_debug_3("Node %s is online", uname);
 		return TRUE;
 	}
-	crm_devel("Node %s: ha=%s ccm=%s join=%s exp=%s crm=%s",
+	crm_debug_3("Node %s: ha=%s ccm=%s join=%s exp=%s crm=%s",
 		  uname, crm_str(ha_state), crm_str(ccm_state),
                   crm_str(join_state), crm_str(exp_state),
                   crm_str(crm_state));
-	crm_devel("Node %s is offline", uname);
+	crm_debug_3("Node %s is offline", uname);
 	return FALSE;
 }
 

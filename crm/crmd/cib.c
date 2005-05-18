@@ -173,7 +173,7 @@ do_cib_invoke(long long action,
 		ha_msg_value_int(cib_msg->msg, F_CIB_CALLOPTS, &call_options);
 
 		crm_log_message(LOG_MSG, cib_msg->msg);
-		crm_xml_devel(cib_msg->xml, "[CIB update]");
+		crm_log_xml_debug_3(cib_msg->xml, "[CIB update]");
 		if(op == NULL) {
 			crm_err("Invalid CIB Message");
 			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
@@ -250,12 +250,12 @@ update_local_cib_adv(
 	}
 	
 	if(do_now == FALSE) {
-		crm_devel("Registering event with FSA");
+		crm_debug_3("Registering event with FSA");
 		register_fsa_input_adv(C_FSA_INTERNAL, I_CIB_OP, fsa_input, 0,
 				       FALSE, raised_from);
 	} else {
 		fsa_data_t *op_data = NULL;
-		crm_devel("Invoking CIB handler directly");
+		crm_debug_3("Invoking CIB handler directly");
 		crm_malloc0(op_data, sizeof(fsa_data_t));
 
 		op_data->fsa_cause	= C_FSA_INTERNAL;
@@ -268,13 +268,13 @@ update_local_cib_adv(
 			      I_CIB_OP, op_data);
 
 		crm_free(op_data);
-		crm_devel("CIB handler completed");
+		crm_debug_3("CIB handler completed");
 	}
 	
-	crm_devel("deleting input");
+	crm_debug_3("deleting input");
  	crm_msg_del(fsa_input->msg);
   	free_xml(fsa_input->xml);
 	crm_free(fsa_input);
-	crm_devel("deleted input");
+	crm_debug_3("deleted input");
 }
 
