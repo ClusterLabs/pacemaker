@@ -69,7 +69,7 @@ do_dc_join_offer_all(long long action,
 	/* now process the CCM data */
 	do_update_cib_nodes(fragment, TRUE);
 	
-	crm_debug("0) Offering membership to %d clients",
+	crm_info("0) Offering membership to %d clients",
 		  fsa_membership_copy->members_size);
 	
 	initialize_join(TRUE);
@@ -112,11 +112,11 @@ do_dc_join_offer_one(long long action,
 		 *  however, it will either re-announce itself in due course
 		 *  _or_ we can re-store the original offer on the client.
 		 */
-		crm_info("Re-offering membership to %s...", join_to);
+		crm_debug("Re-offering membership to %s...", join_to);
 	}
 
-	crm_debug("Processing annouce request from %s in state %s",
-		  join_to, fsa_state2string(cur_state));
+	crm_info("Processing annouce request from %s in state %s",
+		 join_to, fsa_state2string(cur_state));
 
 	/* always offer to the DC (ourselves)
 	 * this ensures the correct value for max_generation_from
@@ -452,8 +452,8 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	
 	/* set the ack/nack */
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
-		crm_info("3) ACK'ing join request from %s, state %s",
-			 join_to, join_state);
+		crm_debug("3) ACK'ing join request from %s, state %s",
+			  join_to, join_state);
 		ha_msg_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
 		g_hash_table_insert(
 			finalized_nodes,
@@ -540,8 +540,8 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 
 		ha_msg_add_int(offer, F_CRM_JOIN_ID, current_join_id);
 		/* send the welcome */
-		crm_info("Sending %s(%d) to %s",
-			 CRM_OP_JOIN_OFFER, current_join_id, join_to);
+		crm_debug("Sending %s(%d) to %s",
+			  CRM_OP_JOIN_OFFER, current_join_id, join_to);
 
 		send_msg_via_ha(fsa_cluster_conn, offer);
 

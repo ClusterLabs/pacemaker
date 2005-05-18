@@ -314,7 +314,7 @@ build_operation_update(
 		return FALSE;
 	}
 
-	crm_info("%s: Updating resouce %s after %s %s op",
+	crm_debug("%s: Updating resouce %s after %s %s op",
 		 src, op->rsc_id, op_status2text(op->op_status), op->op_type);
 
 	if(op->op_status == LRM_OP_CANCELLED) {
@@ -434,7 +434,7 @@ build_active_RAs(crm_data_t *rsc_list)
 
 		int max_call_id = -1;
 		
-		crm_info("Processing lrm_rsc_t entry %s", rid);
+		crm_debug("Processing lrm_rsc_t entry %s", rid);
 		
 		if(the_rsc == NULL) {
 			crm_err("NULL resource returned from the LRM");
@@ -451,8 +451,8 @@ build_active_RAs(crm_data_t *rsc_list)
 		slist_iter(
 			op, lrm_op_t, op_list, llpc,
 
-			crm_info("Processing op %s for %s (status=%d, rc=%d)", 
-				 op->op_type, the_rsc->id, op->op_status, op->rc);
+			crm_verbose("Processing op %s for %s (status=%d, rc=%d)", 
+				    op->op_type, the_rsc->id, op->op_status, op->rc);
 
 			if(max_call_id < op->call_id) {
 				build_operation_update(xml_rsc, op, __FUNCTION__, llpc);
@@ -1088,7 +1088,7 @@ void
 ghash_print_pending(gpointer key, gpointer value, gpointer user_data) 
 {
 	const char *uname = key;
-	crm_info("Pending action: %s", uname);
+	crm_debug("Pending action: %s", uname);
 }
 
 gboolean
