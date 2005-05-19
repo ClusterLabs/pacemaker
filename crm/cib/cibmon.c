@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.20 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: cibmon.c,v 1.21 2005/05/19 11:02:51 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -101,11 +101,6 @@ main(int argc, char **argv)
 	cl_set_corerootdir(HA_COREDIR);	    
 	cl_cdtocoredir();
 	
-#ifdef USE_LIBXML
-	/* docs say only do this once, but in their code they do it every time! */
-	xmlInitParser(); 
-#endif
-
 	while (1) {
 		flag = getopt_long(argc, argv, OPTARGS,
 				   long_options, &option_index);
