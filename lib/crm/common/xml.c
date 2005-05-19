@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.6 2005/05/19 10:50:08 andrew Exp $ */
+/* $Id: xml.c,v 1.7 2005/05/19 13:45:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1277,10 +1277,10 @@ parse_xml(const char *input, int *offset)
 							CRM_DEV_ASSERT(crm_is_allocated(child) == 1);
 							ha_msg_addstruct(
 								new_obj, crm_element_name(child), child);
-							ha_msg_del(child);
 							
 							crm_debug_3("Finished parsing child: %s",
 								  crm_element_name(child));
+							ha_msg_del(child);
 /* 							lpc++; /\* > *\/ */
 						}
 
