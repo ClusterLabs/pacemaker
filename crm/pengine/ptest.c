@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.47 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: ptest.c,v 1.48 2005/05/19 10:53:44 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -35,13 +35,14 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?X:"
+#define OPTARGS	"V?X:w"
 
 #include <getopt.h>
 #include <glib.h>
 #include <pengine.h>
 #include <pe_utils.h>
 
+gboolean inhibit_exit = FALSE;
 
 int
 main(int argc, char **argv)
@@ -92,6 +93,9 @@ main(int argc, char **argv)
     
 				break;
       
+			case 'w':
+				inhibit_exit = TRUE;
+				break;
 			case 'X':
 				xml_file = crm_strdup(optarg);
 				break;
@@ -234,5 +238,11 @@ main(int argc, char **argv)
 	free_xml(graph);
 	free_xml(cib_object);
 
+	/* required for MallocDebug.app */
+	if(inhibit_exit) {
+		GMainLoop*  mainloop = g_main_new(FALSE);
+		g_main_run(mainloop);		
+	}
+	
 	return 0;
 }
