@@ -344,7 +344,7 @@ cib_native_perform_op(
 		rc = ha_msg_add(op_msg, F_CIB_OPERATION, op);
 	}
 	if(rc == HA_OK && host != NULL) {
-		CRM_DEV_ASSERT(cl_is_allocated(host) == 1);
+		CRM_DEV_ASSERT(crm_is_allocated(host) == 1);
 		rc = ha_msg_add(op_msg, F_CIB_HOST, host);
 	}
 	if(rc == HA_OK && section != NULL) {
