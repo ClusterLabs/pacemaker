@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.12 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: utils.c,v 1.13 2005/05/19 10:58:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -316,11 +316,11 @@ do_crm_log(int log_level, const char *file, const char *function,
 
 	if(do_log) {
 		va_list ap;
-		char	*buf = NULL;
 		int	nbytes;
+		char    buf[MAXLINE];
 		
 		va_start(ap, fmt);
-		nbytes=vasprintf(&buf, fmt, ap);
+		nbytes=vsnprintf(buf, MAXLINE, fmt, ap);
 		va_end(ap);
 
 		log_level -= LOG_INFO;
@@ -346,7 +346,7 @@ do_crm_log(int log_level, const char *file, const char *function,
 				       function?function:"", buf);
 			}
 		}
-		
+
 		if(nbytes > MAXLINE) {
 			cl_log(LOG_WARNING, "Log from %s() was truncated",
 			       crm_str(function));
