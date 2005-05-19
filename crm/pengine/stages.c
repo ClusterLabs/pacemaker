@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.58 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: stages.c,v 1.59 2005/05/19 10:54:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -418,13 +418,14 @@ static int transition_id = 0;
 gboolean
 stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 {
+	char *transition_id_s = NULL;
 	crm_info("Creating transition graph %d.", transition_id);
 
+	transition_id_s = crm_itoa(transition_id++);
 	*graph = create_xml_node(NULL, XML_TAG_GRAPH);
-	set_xml_property_copy(
-		*graph, "global_timeout", transition_timeout);
-	set_xml_property_copy(
-		*graph, "transition_id", crm_itoa(transition_id++));
+	set_xml_property_copy(*graph, "global_timeout", transition_timeout);
+	set_xml_property_copy(*graph, "transition_id", transition_id_s);
+	crm_free(transition_id_s);
 	
 /* errors...
 	slist_iter(action, action_t, action_list, lpc,

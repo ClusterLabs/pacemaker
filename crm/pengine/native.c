@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.38 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: native.c,v 1.39 2005/05/19 10:54:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -740,8 +740,8 @@ void native_free(resource_t *rsc)
 	
 	crm_debug_3("Freeing Allowed Nodes");
 	pe_free_shallow(native_data->allowed_nodes);
-	
-	common_free(rsc);	
+	crm_free(native_data->agent);
+	common_free(rsc);
 }
 
 
