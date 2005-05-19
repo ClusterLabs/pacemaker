@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.13 2005/05/19 10:58:55 andrew Exp $ */
+/* $Id: utils.c,v 1.14 2005/05/19 11:25:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -351,7 +351,6 @@ do_crm_log(int log_level, const char *file, const char *function,
 			cl_log(LOG_WARNING, "Log from %s() was truncated",
 			       crm_str(function));
 		}
-		free(buf);
 	}
 }
 
