@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.61 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: crm.h,v 1.62 2005/05/19 10:56:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -250,9 +250,24 @@ extern void crm_log_message_adv(
 #define crm_log_xml_debug_4(xml, text) crm_log_xml(LOG_DEBUG_4, text, xml)
 #define crm_log_xml_debug_5(xml, text) crm_log_xml(LOG_DEBUG_5, text, xml)
 
+#define crm_str(x)    (const char*)(x?x:"<null>")
 
-#if CRM_DEV_BUILD
+#if CRM_USE_MALLOC
 #  define crm_malloc0(new_obj,length)					\
+	{								\
+		new_obj = malloc(length);				\
+		if(new_obj == NULL) {					\
+			crm_crit("Out of memory... exiting");		\
+			exit(1);					\
+		} else {						\
+			memset(new_obj, 0, length);			\
+		}							\
+	}
+#  define crm_free(x) if(x) { free(x); x=NULL; }
+#  define crm_is_allocated(obj) obj?TRUE:FALSE
+#else
+#  if CRM_DEV_BUILD
+#    define crm_malloc0(new_obj,length)					\
 	{								\
 		if(new_obj) {						\
 			crm_err("Potential memory leak:"		\
@@ -269,7 +284,7 @@ extern void crm_log_message_adv(
 		}							\
 	}
 #else
-#  define crm_malloc0(new_obj,length)					\
+#    define crm_malloc0(new_obj,length)					\
 	{								\
 		new_obj = cl_malloc(length);				\
 		if(new_obj == NULL) {					\
@@ -279,23 +294,15 @@ extern void crm_log_message_adv(
 			memset(new_obj, 0, length);			\
 		}							\
 	}
-#endif
-
-#if 1
-#  define crm_free(x)   if(x) {				\
+#  endif
+#  define crm_free(x) if(x) {				\
 		CRM_ASSERT(cl_is_allocated(x) == 1);	\
 		cl_free(x);				\
-		x=NULL;					\
+		x=NULL;				\
 	}
-#else
-#  define crm_free(x)   x=NULL
+#  define crm_is_allocated(obj) cl_is_allocated(obj)
 #endif
-#define crm_str(x)    (const char*)(x?x:"<null>")
 
-#if 1
-#  define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); msg = NULL; }
-#else
-#  define crm_msg_del(msg) msg = NULL
-#endif
+#define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); msg = NULL; }
 
 #endif
