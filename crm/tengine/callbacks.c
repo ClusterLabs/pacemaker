@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.27 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: callbacks.c,v 1.28 2005/05/19 14:20:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -89,7 +89,6 @@ te_update_confirm(const char *event, HA_Message *msg)
 			send_complete("Unexpected status update", update, te_update);
 		}
 
-
 	} else if(safe_str_eq(type, XML_CIB_TAG_NODES)
 		|| safe_str_eq(type, XML_CIB_TAG_RESOURCES)
 		|| safe_str_eq(type, XML_CIB_TAG_CONSTRAINTS)) {
@@ -97,6 +96,62 @@ te_update_confirm(const char *event, HA_Message *msg)
 		crm_debug("Aborting on changes to the %s section", type);
 		send_complete("Non-status update", update, te_update);
 
+	} else if(safe_str_eq(type, XML_TAG_CIB)) {
+		crm_data_t *section_xml = NULL;
+		const char *section = NULL;
+		gboolean abort = FALSE;
+
+		section = XML_CIB_TAG_NODES;
+		if(abort == FALSE) {
+			section_xml = get_object_root(section, update);
+			xml_child_iter(section_xml, child, NULL,
+				       abort = TRUE;
+				       break;
+				);
+		}
+		section = XML_CIB_TAG_RESOURCES;
+		if(abort == FALSE) {
+			section_xml = get_object_root(section, update);
+			xml_child_iter(section_xml, child, NULL,
+				       abort = TRUE;
+				       break;
+				);
+		}
+		section = XML_CIB_TAG_CONSTRAINTS;
+		if(abort == FALSE) {
+			section_xml = get_object_root(section, update);
+			xml_child_iter(section_xml, child, NULL,
+				       abort = TRUE;
+				       break;
+				);
+		}
+		section = XML_CIB_TAG_CONFIGURATION;
+		if(abort == FALSE) {
+			section_xml = get_object_root(section, update);
+			xml_child_iter(section_xml, child, NULL,
+				       abort = TRUE;
+				       break;
+				);
+		}
+		if(abort) {
+			send_complete("Non-status update", update, te_update);
+
+		} 
+
+		section = XML_CIB_TAG_STATUS;
+		if(abort == FALSE) {
+			section_xml = get_object_root(section, update);
+			xml_child_iter(section_xml, child, NULL,
+				       abort = TRUE;
+				       break;
+				);
+			if(abort) {
+				crm_err("Sub-optimal handling of global CIB update");
+				send_complete("Global status update",
+					      update, te_update);
+			} 
+		}
+		
 	} else {
 		crm_err("Ignoring update confirmation for %s object", type);
 		crm_log_xml_debug(update, "Ignored update");
