@@ -1566,7 +1566,7 @@ class MemoryTest(CTSTest):
 	self.after = {}
 
     def __call__(self, node):
-	ps_command='''ps -eo ucomm,pid,pmem,tsiz,dsiz,rss,vsize | grep -e heartbeat -e ha_logd -e cib -e crmd -e lrmd -e tengine -e pengine'''
+	ps_command='''ps -eo ucomm,pid,pmem,tsiz,dsiz,rss,vsize | grep -e ccm -e ha_logd -e cib -e crmd -e lrmd -e tengine -e pengine'''
 
 	memory_error = [ 
 	    "", "", "", 
