@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.31 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.32 2005/05/19 10:50:08 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -427,10 +427,6 @@ do_init(void)
 {
 	enum cib_errors rc = cib_ok;
 	
-#ifdef USE_LIBXML
-	/* docs say only do this once, but in their code they do it every time! */
-	xmlInitParser(); 
-#endif
 	the_cib = cib_new();
 	rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 	if(rc != cib_ok) {

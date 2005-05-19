@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.6 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: ipc.c,v 1.7 2005/05/19 10:50:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,12 +37,6 @@
 #include <clplumbing/realtime.h>
 #include <clplumbing/GSource.h>
 #include <clplumbing/cl_poll.h>
-
-#ifdef USE_LIBXML
-#  include <libxml/xmlmemory.h>
-#  include <libxml/parser.h>
-#  include <libxml/xpath.h>
-#endif
 
 #include <crm/common/ipc.h>
 #include <crm/msg_xml.h>

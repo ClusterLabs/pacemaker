@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.41 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.42 2005/05/19 10:50:08 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -559,10 +559,6 @@ do_init(void)
 	GCHSource *src = NULL;
 	ll_cluster_t *hb_cluster = NULL;
 	
-#ifdef USE_LIBXML
-	/* docs say only do this once, but in their code they do it every time! */
-	xmlInitParser (); 
-#endif
 	/* change the logging facility to the one used by heartbeat daemon */
 	hb_cluster = ll_cluster_new("heartbeat");
 	
