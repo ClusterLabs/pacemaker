@@ -1171,7 +1171,8 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 #endif
 		
 	} else {
-		crm_err("Unknown Sub-system (%s)... discarding message.", sys);
+		crm_err("Unknown Sub-system (%s)... discarding message.",
+			crm_str(sys));
 		send_ok = FALSE;
 	}    
 

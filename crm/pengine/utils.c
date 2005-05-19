@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.75 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: utils.c,v 1.76 2005/05/19 06:49:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -858,7 +858,7 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 		crm_free(pe_mutable);
 	}
 
-	if(details) {
+	if(details && node != NULL) {
 		crm_debug_3("\t\t===Node Attributes");
 		slist_iter(
 			rsc, resource_t, node->details->running_rsc, lpc,

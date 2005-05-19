@@ -208,7 +208,7 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	
 	/* Should not happen */
 	cl_perror("FATAL: Cannot exec %s %s",
-		  the_subsystem->command, the_subsystem->args);
+		  the_subsystem->command, crm_str(the_subsystem->args));
 
 	exit(100); /* Suppress respawning */
 	return TRUE; /* never reached */
