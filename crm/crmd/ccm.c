@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.78 2005/05/18 20:13:27 andrew Exp $ */
+/* $Id: ccm.c,v 1.79 2005/05/20 16:38:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -583,6 +583,7 @@ struct update_data_s
 crm_data_t*
 do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 {
+	int call_options = cib_scope_local|cib_quorum_override;
 	struct update_data_s update_data;
 	crm_data_t *fragment = updates;
 	crm_data_t *tmp = NULL;
@@ -614,7 +615,11 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 			g_hash_table_foreach(fsa_membership_copy->members,
 					     ghash_update_cib_node, &update_data);
 		}
+		
 	} else {
+		call_options = call_options|cib_inhibit_bcast;
+		crm_debug("Inhibiting bcast for CCM updates");
+
 		if(fsa_membership_copy->members != NULL) {
 			g_hash_table_foreach(fsa_membership_copy->new_members,
 					     ghash_update_cib_node, &update_data);
@@ -622,7 +627,9 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 	}
 	
 	if(update_data.updates != NULL) {
-		update_local_cib(fragment);
+		fsa_cib_conn->cmds->modify(fsa_cib_conn, XML_CIB_TAG_STATUS,
+					   fragment, NULL, call_options);
+		free_xml(fragment);
 	}
 
 	return NULL;
@@ -643,7 +650,8 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 		  __FUNCTION__, node_uname, data->state);
 
 	tmp1 = create_node_state(node_uname, node_uname,
-				 NULL, data->state, NULL, data->join, NULL);
+				 NULL, data->state, NULL, data->join,
+				 NULL, __FUNCTION__);
 
 	add_node_copy(data->updates, tmp1);
 	free_xml(tmp1);
