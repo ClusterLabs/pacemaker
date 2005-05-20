@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.69 2005/05/20 10:48:00 andrew Exp $ */
+/* $Id: pengine.c,v 1.70 2005/05/20 11:59:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -148,7 +148,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	return TRUE;
 }
 
-/* #define MEMCHECK_STAGE_4 1 */
+#define MEMCHECK_STAGE_5 0
 
 crm_data_t *
 do_calculations(crm_data_t * cib_object)
@@ -321,6 +321,8 @@ do_calculations(crm_data_t * cib_object)
 	return graph;
 }
 
+/* 	cleanup_calculations(resources, nodes, placement_constraints, actions, ordering_constraints, stonith_list, shutdown_list, colors, action_sets); */
+
 void
 cleanup_calculations(GListPtr resources,
 		     GListPtr nodes,
@@ -332,17 +334,10 @@ cleanup_calculations(GListPtr resources,
 		     GListPtr colors,
 		     GListPtr action_sets)
 {
-	crm_free(dc_uuid);
-	dc_uuid = NULL;
+	GListPtr iterator = NULL;
 	
-	crm_debug_3("deleting node cons");
-	while(placement_constraints) {
-		pe_free_rsc_to_node((rsc_to_node_t*)placement_constraints->data);
-		placement_constraints = placement_constraints->next;
-	}
-	if(placement_constraints != NULL) {
-		g_list_free(placement_constraints);
-	}
+	crm_free(dc_uuid);
+	dc_uuid = NULL;	
 	
 	crm_debug_3("deleting order cons");
 	pe_free_ordering(ordering_constraints); 
@@ -363,21 +358,27 @@ cleanup_calculations(GListPtr resources,
 	crm_debug_3("deleting resources");
 	pe_free_resources(resources); 
 	
+	crm_debug_3("deleting nodes");
+	pe_free_nodes(nodes);
+	
 	crm_debug_3("deleting colors");
 	pe_free_colors(colors);
 
+	crm_debug_3("deleting node cons");
+	iterator = placement_constraints;
+	while(iterator) {
+		pe_free_rsc_to_node((rsc_to_node_t*)iterator->data);
+		iterator = iterator->next;
+	}
+	if(placement_constraints != NULL) {
+		g_list_free(placement_constraints);
+	}
+	
 	if(no_color != NULL) {
 		crm_free(no_color->details);
 		crm_free(no_color);
 	}
 	
-	crm_debug_3("deleting nodes");
-	pe_free_nodes(nodes);
-	
-	if(shutdown_list != NULL) {
-		g_list_free(shutdown_list);
-	}
-	if(stonith_list != NULL) {
-		g_list_free(stonith_list);
-	}
+	pe_free_shallow(shutdown_list);
+	pe_free_shallow(stonith_list);
 }
