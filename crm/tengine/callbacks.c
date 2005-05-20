@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.28 2005/05/19 14:20:39 andrew Exp $ */
+/* $Id: callbacks.c,v 1.29 2005/05/20 06:01:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -125,7 +125,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 				       break;
 				);
 		}
-		section = XML_CIB_TAG_CONFIGURATION;
+		section = XML_CIB_TAG_CRMCONFIG;
 		if(abort == FALSE) {
 			section_xml = get_object_root(section, update);
 			xml_child_iter(section_xml, child, NULL,
@@ -135,7 +135,6 @@ te_update_confirm(const char *event, HA_Message *msg)
 		}
 		if(abort) {
 			send_complete("Non-status update", update, te_update);
-
 		} 
 
 		section = XML_CIB_TAG_STATUS;
