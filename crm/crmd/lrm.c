@@ -463,9 +463,9 @@ build_active_RAs(crm_data_t *rsc_list)
 
 			} else {
 				crm_debug("Skipping duplicate entry for call_id=%d",
-					  op->call_id);
+					op->call_id);
 			}
-
+			max_call_id = op->call_id;
 			found_op = TRUE;
 			
 			);
