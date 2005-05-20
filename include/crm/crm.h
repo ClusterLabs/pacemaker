@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.62 2005/05/19 10:56:51 andrew Exp $ */
+/* $Id: crm.h,v 1.63 2005/05/20 14:59:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -135,6 +135,7 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_FENCE	 	"stonith"
 #define CRM_OP_EVENTCC		"event_cc"
 #define CRM_OP_TEABORT		"te_abort"
+#define CRM_OP_TEABORTED	"te_abort_confirmed" /* we asked */
 #define CRM_OP_TE_HALT		"te_halt"
 #define CRM_OP_TECOMPLETE	"te_complete"
 #define CRM_OP_TETIMEOUT	"te_timeout"
@@ -278,10 +279,9 @@ extern void crm_log_message_adv(
 		new_obj = cl_malloc(length);				\
 		if(new_obj == NULL) {					\
 			crm_crit("Out of memory... exiting");		\
-			exit(1);					\
-		} else {						\
-			memset(new_obj, 0, length);			\
+			abort();					\
 		}							\
+		memset(new_obj, 0, length);				\
 	}
 #else
 #    define crm_malloc0(new_obj,length)					\
@@ -289,10 +289,9 @@ extern void crm_log_message_adv(
 		new_obj = cl_malloc(length);				\
 		if(new_obj == NULL) {					\
 			crm_crit("Out of memory... exiting");		\
-			exit(1);					\
-		} else {						\
-			memset(new_obj, 0, length);			\
+			abort();					\
 		}							\
+		memset(new_obj, 0, length);				\
 	}
 #  endif
 #  define crm_free(x) if(x) {				\
