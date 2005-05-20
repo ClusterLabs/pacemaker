@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.50 2005/05/20 10:48:00 andrew Exp $ */
+/* $Id: ptest.c,v 1.51 2005/05/20 14:58:09 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -133,7 +133,7 @@ main(int argc, char **argv)
 	mtrace();
 #endif
 	crm_malloc0(mem_stats, sizeof(cl_mem_stats_t));
-	cl_malloc_setstats(mem_stats);
+	crm_zero_mem_stats(mem_stats);
 
 	graph = do_calculations(cib_object);
 
@@ -145,8 +145,8 @@ main(int argc, char **argv)
 	free_xml(graph);
 
 	crm_mem_stats(mem_stats);
-	crm_free(mem_stats);
 	cl_malloc_setstats(NULL);
+	crm_free(mem_stats);
 
 #ifdef MCHECK
 	muntrace();

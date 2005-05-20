@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.70 2005/05/20 11:59:54 andrew Exp $ */
+/* $Id: pengine.c,v 1.71 2005/05/20 14:58:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -105,7 +105,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		was_processing_warning = FALSE;
 
 		crm_malloc0(mem_stats, sizeof(cl_mem_stats_t));
-		cl_malloc_setstats(mem_stats);
+		crm_zero_mem_stats(mem_stats);
 
 		output = do_calculations(xml_data);
 		crm_log_xml_debug_3(output, "[out]");
