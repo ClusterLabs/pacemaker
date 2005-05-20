@@ -417,7 +417,8 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 	crm_info("4) Updating node state to %s for %s", join_state, join_from);
 	update = create_node_state(
 		join_from, join_from,
-		ACTIVESTATUS, NULL, ONLINESTATUS, join_state, join_state);
+		ACTIVESTATUS, NULL, ONLINESTATUS, join_state, join_state,
+		__FUNCTION__);
 
 	set_xml_property_copy(update,XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
 
