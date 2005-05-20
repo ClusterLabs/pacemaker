@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.48 2005/05/19 10:53:44 andrew Exp $ */
+/* $Id: ptest.c,v 1.49 2005/05/20 09:48:15 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -43,6 +43,8 @@
 #include <pe_utils.h>
 
 gboolean inhibit_exit = FALSE;
+extern crm_data_t * do_calculations(crm_data_t *cib_object);
+extern cl_mem_stats_t *mem_stats;
 
 int
 main(int argc, char **argv)
@@ -51,15 +53,6 @@ main(int argc, char **argv)
 	int argerr = 0;
 	int flag;
 		
-	GListPtr resources = NULL;
-	GListPtr nodes = NULL;
-	GListPtr placement_constraints = NULL;
-	GListPtr actions = NULL;
-	GListPtr ordering_constraints = NULL;
-	GListPtr stonith_list = NULL;
-	GListPtr shutdown_list = NULL;
-	GListPtr colors = NULL;
-	GListPtr action_sets = NULL;
 	crm_data_t * graph = NULL;
 	char *msg_buffer = NULL;
 
@@ -128,103 +121,22 @@ main(int argc, char **argv)
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
   
-
+#ifndef CRM_USE_MALLOC
+	crm_malloc0(mem_stats, sizeof(cl_mem_stats_t));
+	cl_malloc_setstats(mem_stats);
+#endif
+	
 	if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
 		cib_object = file2xml(xml_strm);
 	} else {
 		cib_object = stdin2xml();
 	}
+
 #ifdef MCHECK
 	mtrace();
-#endif 
-	crm_debug("unpack");		  
-	stage0(cib_object,
-	       &resources,
-	       &nodes,  &placement_constraints,
-	       &actions,  &ordering_constraints,
-	       &stonith_list, &shutdown_list);
-
-	crm_debug("apply placement constraints");
-	stage1(placement_constraints, nodes, resources);
-	
-	crm_debug("color resources");
-	stage2(resources, nodes, &colors);
-
-	/* unused */
-	stage3(colors);
-	
-	crm_debug("assign nodes to colors");
-	stage4(colors);
-	
-	crm_debug("creating actions and internal ording constraints");
-	stage5(resources, &ordering_constraints);
-		
-	crm_debug("processing fencing and shutdown cases");
-	stage6(&actions, &ordering_constraints, nodes, resources);
-	
-	crm_debug("applying ordering constraints");
-	stage7(resources, actions, ordering_constraints);
-
-	crm_debug("=#=#=#=#= Summary =#=#=#=#=");
-	crm_debug("========= All Actions =========");
-	slist_iter(action, action_t, actions, lpc,
-		   print_action("\t", action, TRUE);
-		);
-
-	crm_debug("========= Stonith List =========");
-	slist_iter(node, node_t, stonith_list, lpc,
-		   print_node(NULL, node, FALSE));
-  
-	crm_debug("========= Shutdown List =========");
-	slist_iter(node, node_t, shutdown_list, lpc,
-		   print_node(NULL, node, FALSE));
-
-	crm_debug("creating transition graph");
-	stage8(resources, actions, &graph);
-
-
-	crm_debug_2("deleting node cons");
-	while(placement_constraints) {
-		pe_free_rsc_to_node((rsc_to_node_t*)placement_constraints->data);
-		placement_constraints = placement_constraints->next;
-	}
-	if(placement_constraints != NULL) {
-		g_list_free(placement_constraints);
-	}
-	
-	crm_debug_2("deleting order cons");
-	pe_free_ordering(ordering_constraints); 
-
-	crm_debug_2("deleting action sets");
-	slist_iter(action_set, GList, action_sets, lpc,
-		   pe_free_shallow_adv(action_set, FALSE);
-		);
-	pe_free_shallow_adv(action_sets, FALSE);
-	
-	crm_debug_2("deleting actions");
-	pe_free_actions(actions);
-
-/*	GListPtr action_sets = NULL; */
-
-	crm_debug_2("deleting resources");
-	pe_free_resources(resources); 
-	
-	crm_debug_2("deleting colors");
-	pe_free_colors(colors);
-
-	crm_free(no_color->details);
-	crm_free(no_color);
-	
-	crm_debug_2("deleting nodes");
-	pe_free_nodes(nodes);
-	
-	if(shutdown_list != NULL) {
-		g_list_free(shutdown_list);
-	}
-	if(stonith_list != NULL) {
-		g_list_free(stonith_list);
-	}
+#endif
+	graph = do_calculations(cib_object);
 
 #ifdef MCHECK
 	muntrace();
@@ -237,6 +149,11 @@ main(int argc, char **argv)
 
 	free_xml(graph);
 	free_xml(cib_object);
+
+#ifndef CRM_USE_MALLOC
+	crm_mem_stats(mem_stats);
+	cl_malloc_setstats(NULL);
+#endif
 
 	/* required for MallocDebug.app */
 	if(inhibit_exit) {

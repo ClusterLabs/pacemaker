@@ -64,7 +64,7 @@ ptest_SOURCES	= color.c unpack.c graph.c \
 		native.c group.c incarnation.c complex.c  \
 		rules.c pengine.c stages.c utils.c ptest.c
 
-ptest_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+ptest_CFLAGS	= $(XML_FLAGS) -DTESTING=1 -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ptest_LDFLAGS	= $(XML_LIBS)
 ptest_LDADD	= $(COMMONLIBS) 
 

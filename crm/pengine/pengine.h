@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.63 2005/05/17 14:33:39 andrew Exp $ */
+/* $Id: pengine.h,v 1.64 2005/05/20 09:48:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -91,6 +91,22 @@ enum pe_restart {
 	pe_restart_ignore
 };
 
+typedef struct pe_working_set_s 
+{
+		crm_data_t *input;
+		
+		GListPtr nodes;
+		GListPtr resources;
+		GListPtr placement_constraints;
+		GListPtr ordering_constraints;
+		
+		GListPtr colors;
+		GListPtr actions;
+		GListPtr action_sets;
+		GListPtr stonith_list;
+		GListPtr shutdown_list;
+} pe_working_set_t;
+
 
 struct node_shared_s { 
 		const char *id; 
@@ -102,7 +118,6 @@ struct node_shared_s {
 		gboolean is_dc;
 		int	 num_resources;
 		GListPtr running_rsc;	/* resource_t* */
-		GListPtr agents;	/* lrm_agent_t* */
 		
 		GHashTable *attrs;	/* char* => char* */
 		enum node_type type;
@@ -139,11 +154,11 @@ struct rsc_colocation_s {
 };
 
 struct rsc_to_node_s { 
-		const char	*id;
-		resource_t	*rsc_lh; 
+		const char *id;
+		resource_t *rsc_lh; 
 
-		float		weight;
-		GListPtr node_list_rh; /* node_t* */
+		float	    weight;
+		GListPtr    node_list_rh; /* node_t* */
 };
 
 struct lrm_agent_s { 
@@ -154,8 +169,8 @@ struct lrm_agent_s {
 
 struct resource_s { 
 		const char *id; 
-		crm_data_t * xml; 
-		crm_data_t * ops_xml; 
+		crm_data_t *xml; 
+		crm_data_t *ops_xml; 
 
 		void *variant_opaque;
 		enum pe_obj_types variant;

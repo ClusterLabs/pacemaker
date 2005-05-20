@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.43 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: graph.c,v 1.44 2005/05/20 09:48:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -217,6 +217,7 @@ action2xml(action_t *action, gboolean as_input)
 	gboolean needs_node_info = TRUE;
 	crm_data_t * action_xml = NULL;
 	crm_data_t * args_xml = NULL;
+	char *action_id_s = NULL;
 	
 	if(action == NULL) {
 		return NULL;
@@ -237,8 +238,11 @@ action2xml(action_t *action, gboolean as_input)
 	} else {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
 	}
+
+	action_id_s = crm_itoa(action->id);
+	set_xml_property_copy(action_xml, XML_ATTR_ID, action_id_s);
+	crm_free(action_id_s);
 	
-	set_xml_property_copy(action_xml, XML_ATTR_ID, crm_itoa(action->id));
 	if(action->rsc != NULL) {
 		set_xml_property_copy(
 			action_xml, XML_LRM_ATTR_RSCID, action->rsc->id);
@@ -342,12 +346,14 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 	set = create_xml_node(syn, "action_set");
 	in  = create_xml_node(syn, "inputs");
 
-	syn_id = crm_itoa(num_synapse++);
+	syn_id = crm_itoa(num_synapse);
 	set_xml_property_copy(syn, XML_ATTR_ID, syn_id);
 	crm_free(syn_id);
+	num_synapse++;
 	
 	xml_action = action2xml(action, FALSE);
 	add_node_copy(set, xml_action);
+	free_xml(xml_action);
 	
 	slist_iter(wrapper,action_wrapper_t,action->actions_before,lpc,
 			
@@ -360,7 +366,7 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 		   
 		   xml_action = action2xml(wrapper->action, TRUE);
 		   add_node_copy(input, xml_action);
+		   free_xml(xml_action);
 		   
 		);
-	free_xml(xml_action);
 }

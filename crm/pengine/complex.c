@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.26 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: complex.c,v 1.27 2005/05/20 09:48:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -162,7 +162,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	(*rsc)->runnable	   = TRUE; 
 	(*rsc)->provisional	   = TRUE; 
 	(*rsc)->start_pending	   = FALSE; 
-	(*rsc)->schedule_recurring      = FALSE;
+	(*rsc)->schedule_recurring = FALSE;
 	(*rsc)->starting	   = FALSE; 
 	(*rsc)->stopping	   = FALSE; 
 	(*rsc)->candidate_colors   = NULL;
@@ -219,7 +219,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 
 	return TRUE;
 }
-
 
 void
 order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *order) 
@@ -283,14 +282,14 @@ void common_free(resource_t *rsc)
 			(rsc_colocation_t*)rsc->rsc_cons->data);
 		rsc->rsc_cons = rsc->rsc_cons->next;
 	}
-	crm_debug_4("Freeing constraint list");
 	if(rsc->rsc_cons != NULL) {
 		g_list_free(rsc->rsc_cons);
 	}
-
-	crm_debug_4("Freeing opaque data");
+	if(rsc->parameters != NULL) {
+		g_hash_table_destroy(rsc->parameters);
+	}
+	pe_free_shallow_adv(rsc->candidate_colors, TRUE);
 	crm_free(rsc->variant_opaque);
-	crm_debug_4("Freeing resource");
 	crm_free(rsc);
 	crm_debug_4("Resource freed");
 }
@@ -318,45 +317,6 @@ common_agent_constraints(
 #endif
 }
 
-
-gboolean
-has_agent(node_t *a_node, lrm_agent_t *an_agent)
-{
-	if(a_node == NULL || an_agent == NULL || an_agent->type == NULL) {
-		pe_warn("Invalid inputs");
-		return FALSE;
-	}
-	
-	crm_debug_3("Checking %d agents on %s",
-		  g_list_length(a_node->details->agents),
-		  a_node->details->uname);
-
-	slist_iter(
-		agent, lrm_agent_t, a_node->details->agents, lpc,
-
-		crm_debug_4("Checking against  %s/%s (%s)",
-			  agent->class, agent->type, agent->version);
-
-		if(safe_str_eq(an_agent->type, agent->type)){
-			if(an_agent->class == NULL) {
-				return TRUE;
-				
-			} else if(safe_str_eq(an_agent->class, agent->class)) {
-				if(compare_version(
-					   an_agent->version, agent->version)
-				   <= 0) {
-					return TRUE;
-				}
-			}
-		}
-		);
-	
-	crm_debug_2("%s doesnt support version %s of %s/%s",
-		    a_node->details->uname, an_agent->version,
-		    an_agent->class, an_agent->type);
-	
-	return FALSE;
-}
 
 void
 unpack_instance_attributes(crm_data_t *xml_obj, GHashTable *hash)

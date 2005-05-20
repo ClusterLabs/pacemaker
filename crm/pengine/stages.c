@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.59 2005/05/19 10:54:32 andrew Exp $ */
+/* $Id: stages.c,v 1.60 2005/05/20 09:48:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,16 +65,16 @@ stage0(crm_data_t * cib,
        GListPtr *stonith_list, GListPtr *shutdown_list)
 {
 /*	int lpc; */
-	crm_data_t * cib_nodes       = get_object_root(
-		XML_CIB_TAG_NODES,       cib);
-	crm_data_t * cib_status      = get_object_root(
-		XML_CIB_TAG_STATUS,      cib);
-	crm_data_t * cib_resources   = get_object_root(
-		XML_CIB_TAG_RESOURCES,   cib);
-	crm_data_t * cib_constraints = get_object_root(
-		XML_CIB_TAG_CONSTRAINTS, cib);
 	crm_data_t * config          = get_object_root(
 		XML_CIB_TAG_CRMCONFIG,   cib);
+	crm_data_t * cib_nodes       = get_object_root(
+		XML_CIB_TAG_NODES,       cib);
+	crm_data_t * cib_resources   = get_object_root(
+		XML_CIB_TAG_RESOURCES,   cib);
+	crm_data_t * cib_status      = get_object_root(
+		XML_CIB_TAG_STATUS,      cib);
+	crm_data_t * cib_constraints = get_object_root(
+		XML_CIB_TAG_CONSTRAINTS, cib);
 
 	crm_debug_2("Beginning unpack");
 	
@@ -88,14 +88,8 @@ stage0(crm_data_t * cib,
 	have_quorum      = TRUE;
 	stonith_enabled  = FALSE;
 
-	if(global_action_list != NULL) {
-		crm_debug_2("deleting actions");
-		pe_free_actions(global_action_list);
-		global_action_list = NULL;
-	}
-	
-	
-	crm_free(dc_uuid); dc_uuid = NULL;
+	CRM_DEV_ASSERT(dc_uuid == NULL);
+	CRM_DEV_ASSERT(global_action_list == NULL);
 
 	if(cib == NULL) {
 		return FALSE;
@@ -419,9 +413,11 @@ gboolean
 stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 {
 	char *transition_id_s = NULL;
-	crm_info("Creating transition graph %d.", transition_id);
 
-	transition_id_s = crm_itoa(transition_id++);
+	transition_id++;
+	transition_id_s = crm_itoa(transition_id);
+	crm_info("Creating transition graph %d.", transition_id);
+	
 	*graph = create_xml_node(NULL, XML_TAG_GRAPH);
 	set_xml_property_copy(*graph, "global_timeout", transition_timeout);
 	set_xml_property_copy(*graph, "transition_id", transition_id_s);

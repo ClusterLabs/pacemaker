@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.76 2005/05/19 06:49:52 andrew Exp $ */
+/* $Id: utils.c,v 1.77 2005/05/20 09:48:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -850,22 +850,19 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 	       node->weight,
 	       node->fixed?"True":"False"); 
 
-	if(details && node->details != NULL) {
+	if(details && node != NULL && node->details != NULL) {
 		char *pe_mutable = crm_strdup("\t\t");
 		crm_debug_3("\t\t===Node Attributes");
 		g_hash_table_foreach(node->details->attrs,
 				     print_str_str, pe_mutable);
 		crm_free(pe_mutable);
-	}
 
-	if(details && node != NULL) {
-		crm_debug_3("\t\t===Node Attributes");
+		crm_debug_3("\t\t=== Resources");
 		slist_iter(
 			rsc, resource_t, node->details->running_rsc, lpc,
 			print_resource("\t\t", rsc, FALSE);
 			);
 	}
-	
 }
 
 /*
@@ -1074,28 +1071,17 @@ pe_free_nodes(GListPtr nodes)
 		
 		if(details != NULL) {
 			if(details->attrs != NULL) {
-				g_hash_table_foreach_remove(details->attrs,
-							    ghash_free_str_str,
-							    NULL);
-
 				g_hash_table_destroy(details->attrs);
 			}
-			
+			pe_free_shallow_adv(details->running_rsc, FALSE);
 		}
-		
+		crm_free(details);
+		crm_free(node);
 	}
 	if(nodes != NULL) {
 		g_list_free(nodes);
 	}
 }
-
-gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data)
-{
-	crm_free(key);
-	crm_free(value);
-	return TRUE;
-}
-
 
 void
 pe_free_colors(GListPtr colors)
@@ -1155,11 +1141,6 @@ pe_free_resources(GListPtr resources)
 		list_item = resources;
 		rsc = (resource_t *)list_item->data;
 		resources = resources->next;
-
-		pe_free_shallow_adv(rsc->candidate_colors, TRUE);
-		
-		g_hash_table_destroy(rsc->parameters);
-
 		rsc->fns->free(rsc);
 	}
 	if(resources != NULL) {
@@ -1220,9 +1201,7 @@ void
 pe_free_rsc_to_node(rsc_to_node_t *cons)
 {
 	if(cons != NULL) {
-
-		/* right now we dont make copies so this isnt required */
-/*		pe_free_shallow(cons->node_list_rh); */ /* node_t* */
+		pe_free_shallow(cons->node_list_rh);
 		crm_free(cons);
 	}
 }
@@ -1340,3 +1319,4 @@ merge_weights(float w1, float w2)
 
 	return result;
 }
+

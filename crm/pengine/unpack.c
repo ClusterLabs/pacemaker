@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.90 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: unpack.c,v 1.91 2005/05/20 09:48:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -215,9 +215,9 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 		new_node->details->online	= FALSE;
 		new_node->details->shutdown	= FALSE;
 		new_node->details->running_rsc	= NULL;
-		new_node->details->agents	= NULL;
-		new_node->details->attrs        = g_hash_table_new(
-			g_str_hash, g_str_equal);
+		new_node->details->attrs        = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
 
 		if(have_quorum == FALSE && no_quorum_policy == no_quorum_stop) {
 			/* start shutting resources down */
@@ -552,46 +552,6 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 	}
 	
 	return online;
-}
-
-
-gboolean
-unpack_lrm_agents(node_t *node, crm_data_t * agent_list)
-{
-	/* if the agent is not listed, remove the node from
-	 * the resource's list of allowed_nodes
-	 */
-	lrm_agent_t *agent   = NULL;
-	const char *version  = NULL;
-
-	if(agent_list == NULL) {
-		return FALSE;
-	}
-
-	xml_child_iter(
-		agent_list, xml_agent, XML_LRM_TAG_AGENT,
-
-		crm_malloc0(agent, sizeof(lrm_agent_t));
-		if(agent == NULL) {
-			continue;
-		}
-		
-		agent->class   = crm_element_value(xml_agent, XML_AGENT_ATTR_CLASS);
-		agent->type    = crm_element_value(xml_agent, XML_ATTR_TYPE);
-		version        = crm_element_value(xml_agent, XML_ATTR_VERSION);
-		agent->version = version?version:"0.0";
-
-		crm_debug_4("Adding agent %s/%s %s to node %s",
-			  agent->class,
-			  agent->type,
-			  agent->version,
-			  node->details->uname);
-			  
-		node->details->agents = g_list_append(
-			node->details->agents, agent);
-		);
-	
-	return TRUE;
 }
 
 

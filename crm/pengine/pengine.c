@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.66 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: pengine.c,v 1.67 2005/05/20 09:48:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,10 +29,18 @@
 #include <pengine.h>
 #include <pe_utils.h>
 
+extern GListPtr global_action_list;
+
 crm_data_t * do_calculations(crm_data_t *cib_object);
+void cleanup_calculations(
+	GListPtr resources, GListPtr nodes, GListPtr placement_constraints,
+	GListPtr actions, GListPtr ordering_constraints, GListPtr stonith_list,
+	GListPtr shutdown_list, GListPtr colors, GListPtr action_sets);
+
 int num_synapse = 0;
 gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
+cl_mem_stats_t *mem_stats = NULL;
 
 gboolean
 process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
@@ -63,6 +71,8 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 			XML_CIB_TAG_STATUS, xml_data);
 		crm_data_t *log_input  = status;
 		crm_data_t *output     = NULL;
+		log_input  = xml_data;
+
 
 		copy_in_properties(generation, xml_data);
 		crm_log_xml_info(generation, "[generation]");
@@ -93,7 +103,21 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 #endif
 		was_processing_error = FALSE;
 		was_processing_warning = FALSE;
+#ifndef CRM_USE_MALLOC
+		crm_malloc0(mem_stats, sizeof(cl_mem_stats_t));
+		cl_malloc_setstats(mem_stats);
+#endif
 		output = do_calculations(xml_data);
+	
+#ifndef CRM_USE_MALLOC
+		crm_mem_stats(mem_stats);
+		if(mem_stats->nbytes_alloc != 0) {
+			pe_err("Unfree'd memory");
+		} else {
+			crm_info("All memory was free'd");
+		}
+		cl_malloc_setstats(NULL);
+#endif
 		
 		if(was_processing_error) {
 			crm_err("ERRORs found during PE processing."
@@ -111,11 +135,12 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		crm_log_xml_debug_3(output, "[out]");
 
 		if (send_ipc_reply(sender, msg, output) ==FALSE) {
-			crm_warn("Answer could not be sent");
+			crm_err("Answer could not be sent");
 		}
 		free_xml(output);
 		free_xml(generation);
 
+		
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		crm_warn("Received quit message, terminating");
 		exit(0);
@@ -148,7 +173,7 @@ do_calculations(crm_data_t * cib_object)
 	       &nodes,  &placement_constraints,
 	       &actions,  &ordering_constraints,
 	       &stonith_list, &shutdown_list);
-
+	
 	crm_debug_4("apply placement constraints");
 	stage1(placement_constraints, nodes, resources);
 	
@@ -159,18 +184,24 @@ do_calculations(crm_data_t * cib_object)
 	stage3(colors);
 	
 	crm_debug_4("assign nodes to colors");
-	stage4(colors);
+	stage4(colors);	
 	
 	crm_debug_4("creating actions and internal ording constraints");
 	stage5(resources, &ordering_constraints);
-		
+
 	crm_debug_4("processing fencing and shutdown cases");
 	stage6(&actions, &ordering_constraints, nodes, resources);
 	
 	crm_debug_4("applying ordering constraints");
 	stage7(resources, actions, ordering_constraints);
+
+	crm_debug("=#=#=#=#= Summary =#=#=#=#=");
+	crm_debug("========= All Actions =========");
+	slist_iter(action, action_t, actions, lpc,
+		   print_action("\t", action, TRUE);
+		);
 	
-	crm_debug_2("\t========= Set %d (Un-runnable) =========", -1);
+	crm_debug("\t========= Set %d (Un-runnable) =========", -1);
 	crm_action_debug_2(
 		slist_iter(action, action_t, actions, lpc,
 			   if(action->optional == FALSE
@@ -180,14 +211,14 @@ do_calculations(crm_data_t * cib_object)
 			)
 		);
 	
-	crm_debug_2("========= Stonith List =========");
+	crm_debug("========= Stonith List =========");
 	crm_action_debug_3(
 		slist_iter(node, node_t, stonith_list, lpc,
 			   print_node(NULL, node, FALSE);
 			)
 		);
 	
-	crm_debug_2("========= Shutdown List =========");
+	crm_debug("========= Shutdown List =========");
 	crm_action_debug_3(
 		slist_iter(node, node_t, shutdown_list, lpc,
 			   print_node(NULL, node, FALSE);
@@ -196,9 +227,42 @@ do_calculations(crm_data_t * cib_object)
 	
 	crm_debug_4("creating transition graph");
 	stage8(resources, actions, &graph);
-	
-	crm_debug_2("Cleaning up");
 
+#if 0
+	cleanup_calculations(
+		resources, nodes, placement_constraints, actions,
+		ordering_constraints, stonith_list, shutdown_list,
+		colors, action_sets);
+	free_xml(cib_object);
+	free_xml(graph);
+	crm_mem_stats(mem_stats);
+	crm_err("Exiting");
+	exit(1);
+#endif
+	
+	cleanup_calculations(
+		resources, nodes, placement_constraints, actions,
+		ordering_constraints, stonith_list, shutdown_list,
+		colors, action_sets);
+	
+	return graph;
+}
+
+void
+cleanup_calculations(GListPtr resources,
+		     GListPtr nodes,
+		     GListPtr placement_constraints,
+		     GListPtr actions,
+		     GListPtr ordering_constraints,
+		     GListPtr stonith_list,
+		     GListPtr shutdown_list,
+		     GListPtr colors,
+		     GListPtr action_sets)
+{
+	crm_free(dc_uuid);
+	dc_uuid = NULL;
+	
+	crm_debug_2("deleting node cons");
 	while(placement_constraints) {
 		pe_free_rsc_to_node((rsc_to_node_t*)placement_constraints->data);
 		placement_constraints = placement_constraints->next;
@@ -206,24 +270,41 @@ do_calculations(crm_data_t * cib_object)
 	if(placement_constraints != NULL) {
 		g_list_free(placement_constraints);
 	}
-
+	
+	crm_debug_2("deleting order cons");
 	pe_free_ordering(ordering_constraints); 
+
+	crm_debug_2("deleting action sets");
 	slist_iter(action_set, GList, action_sets, lpc,
 		   pe_free_shallow_adv(action_set, FALSE);
 		);
 	pe_free_shallow_adv(action_sets, FALSE);
+	
+	crm_debug_2("deleting global actions");
+	pe_free_actions(global_action_list);
+	global_action_list = NULL;
 
+/* 	crm_debug_2("deleting actions"); */
 /* 	pe_free_actions(actions); */
-	pe_free_resources(resources); 
-	pe_free_colors(colors);
-	pe_free_nodes(nodes);
 
+	crm_debug_2("deleting resources");
+	pe_free_resources(resources); 
+	
+	crm_debug_2("deleting colors");
+	pe_free_colors(colors);
+
+	if(no_color != NULL) {
+		crm_free(no_color->details);
+		crm_free(no_color);
+	}
+	
+	crm_debug_2("deleting nodes");
+	pe_free_nodes(nodes);
+	
 	if(shutdown_list != NULL) {
 		g_list_free(shutdown_list);
 	}
 	if(stonith_list != NULL) {
 		g_list_free(stonith_list);
 	}
-	
-	return graph;
 }
