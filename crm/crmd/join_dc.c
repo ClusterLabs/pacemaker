@@ -45,6 +45,9 @@ void finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 gboolean process_join_ack_msg(
 	const char *join_from, crm_data_t *lrm_update, int join_id);
 gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
+void join_update_complete_callback(const HA_Message *msg, int call_id, int rc,
+				   crm_data_t *output, void *user_data);
+
 
 static int current_join_id = 0;
 
@@ -364,7 +367,9 @@ gboolean
 process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 {
 	/* now update them to "member" */
+	int call_id = 0;
 	crm_data_t *update = NULL;
+	crm_data_t *fragment = NULL;
 	const char *join_state = NULL;
 	
 	crm_debug("Processing ack from %s", join_from);
@@ -405,7 +410,9 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 	
 	/* update CIB with the current LRM status from the node */
 	update_local_cib(copy_xml_node_recursive(lrm_update));
-
+	fsa_cib_conn->cmds->modify(fsa_cib_conn, XML_CIB_TAG_STATUS, lrm_update,
+				   NULL, cib_scope_local|cib_quorum_override);
+	
 	/* update node entry in the status section  */
 	crm_info("4) Updating node state to %s for %s", join_state, join_from);
 	update = create_node_state(
@@ -414,9 +421,16 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 
 	set_xml_property_copy(update,XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
 
-	update_local_cib(create_cib_fragment(update, NULL));
+	fragment = create_cib_fragment(update, NULL);
 
-	check_join_state(fsa_state, __FUNCTION__);
+	call_id = fsa_cib_conn->cmds->modify(
+		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
+		cib_scope_local|cib_quorum_override);
+	
+	add_cib_op_callback(call_id, TRUE,NULL, join_update_complete_callback);
+
+	free_xml(fragment);
+	free_xml(update);
 	
 	return TRUE;
 }
@@ -572,7 +586,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 			crm_info("Join process complete: %s", source);
 			register_fsa_input_later(
 				C_FSA_INTERNAL, I_FINALIZED, NULL);
-
+			
 		} else if(g_hash_table_size(integrated_nodes) != 0
 			  && g_hash_table_size(finalized_nodes) != 0) {
 			crm_err("Waiting on %d integrated nodes"
@@ -594,4 +608,18 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 	return FALSE;
 }
 
+void
+join_update_complete_callback(const HA_Message *msg, int call_id, int rc,
+			      crm_data_t *output, void *user_data)
+{
+	fsa_data_t *msg_data = NULL;
+	
+	if(rc == cib_ok) {
+		check_join_state(fsa_state, __FUNCTION__);
 
+	} else {
+		crm_err("Join update failed");
+		crm_log_message(LOG_DEBUG, msg);
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+	}
+}
