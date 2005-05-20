@@ -353,12 +353,12 @@ class FlipTest(CTSTest):
     '''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="flip"
+        self.name="Flip"
         self.start = StartTest(cm)
         self.stop = StopTest(cm)
 
     def __call__(self, node):
-        '''Perform the 'flip' test. '''
+        '''Perform the 'Flip' test. '''
         self.incr("calls")
         if self.CM.ShouldBeStatus[node] == self.CM["up"]:
             self.incr("stopped")
