@@ -287,7 +287,7 @@ crmd_ha_status_callback(
 
 	/* this node is taost */
 	update = create_node_state(
-		node, node, status, NULL, NULL, NULL, NULL);
+		node, node, status, NULL, NULL, NULL, NULL, __FUNCTION__);
 	
 	set_xml_property_copy(
 		update, XML_CIB_ATTR_CLEAR_SHUTDOWN, XML_BOOLEAN_TRUE);
@@ -342,7 +342,8 @@ crmd_client_status_callback(const char * node, const char * client,
 		crm_data_t *fragment = NULL;
 		crm_debug_3("Got client status callback");
 		update = create_node_state(
-			node, node, NULL, NULL, status, join, NULL);
+			node, node, NULL, NULL, status, join, NULL,
+			__FUNCTION__);
 		
 		set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
 		fragment = create_cib_fragment(update, NULL);
@@ -352,7 +353,7 @@ crmd_client_status_callback(const char * node, const char * client,
 		 */
 		fsa_cib_conn->cmds->modify(
 			fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
-			cib_inhibit_bcast|cib_quorum_override);
+			cib_inhibit_bcast|cib_scope_local|cib_quorum_override);
 
 		free_xml(fragment);
 		free_xml(update);
