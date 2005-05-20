@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.17 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: main.c,v 1.18 2005/05/20 09:58:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,14 +60,6 @@ main(int argc, char ** argv)
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL);
 
-	/*
-	 * generally we dont need the PE to be as verbose as the rest
-	 * of the system... drop it one notch but dont hide LOG_INFO
-	 */
-	if(crm_log_level > LOG_INFO) {
-		crm_log_level--;
-	}
-	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
@@ -94,7 +86,7 @@ main(int argc, char ** argv)
 	}
     
 	/* read local config file */
-	crm_debug_3("do start");
+	crm_debug_4("do start");
 	return init_start();
 }
 
@@ -104,13 +96,13 @@ init_start(void)
 {
 	IPC_Channel *crm_ch = NULL;
 
-	crm_debug_3("initialize comms");
+	crm_debug_4("initialize comms");
 	init_client_ipc_comms(
 		CRM_SYSTEM_CRMD, subsystem_msg_dispatch,
 		(void*)process_pe_message, &crm_ch);
 
 	if(crm_ch != NULL) {
-		crm_debug_3("sending hello message");
+		crm_debug_4("sending hello message");
 		send_hello_message(
 			crm_ch, "1234", CRM_SYSTEM_PENGINE, "0", "1");
 

@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.17 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: incarnation.c,v 1.18 2005/05/20 09:58:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -67,7 +67,7 @@ void incarnation_unpack(resource_t *rsc)
 	const char *max_incarn_node = get_rsc_param(
 		rsc, XML_RSC_ATTR_INCARNATION_NODEMAX);
 
-	crm_debug_2("Processing resource %s...", rsc->id);
+	crm_debug_3("Processing resource %s...", rsc->id);
 
 	crm_malloc0(incarnation_data, sizeof(incarnation_variant_data_t));
 	incarnation_data->child_list           = NULL;
@@ -133,7 +133,7 @@ void incarnation_unpack(resource_t *rsc)
 		break;
 		);
 	
-	crm_debug_2("Added %d children to resource %s...",
+	crm_debug_3("Added %d children to resource %s...",
 		    incarnation_data->incarnation_max, rsc->id);
 	
 	rsc->variant_opaque = incarnation_data;
@@ -204,7 +204,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 		if(lpc != 0) {
 			child_rh = g_list_nth_data(incarnation_data->child_list, lpc);
 			
-			crm_debug_3("Incarnation %d will run on a differnt node to 0",
+			crm_debug_4("Incarnation %d will run on a differnt node to 0",
 				  lpc);
 			
 			rsc_colocation_new("pe_incarnation_internal_must_not",
@@ -220,7 +220,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 			if(offset >= incarnation_data->incarnation_max) {
 				break;
 			}
-			crm_debug_3("Incarnation %d will run on the same node as %d",
+			crm_debug_4("Incarnation %d will run on the same node as %d",
 				  offset, lpc);
 
 			incarnation_data->active_incarnation++;
@@ -236,7 +236,7 @@ void incarnation_color(resource_t *rsc, GListPtr *colors)
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 		if(lpc < incarnation_data->active_incarnation) {
-			crm_debug_3("Coloring Incarnation %d", lpc);
+			crm_debug_4("Coloring Incarnation %d", lpc);
 			child_rsc->fns->color(child_rsc, colors);
 		} else {
 			/* TODO: assign "no color"?  Doesnt seem to need it */
@@ -299,7 +299,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 		order_stop_start(child_rsc, child_rsc);
 		
 		if(incarnation_data->ordered && last_rsc != NULL) {
-			crm_debug_3("Ordered version");
+			crm_debug_4("Ordered version");
 			if(lpc < incarnation_data->active_incarnation) {
 				/* child/child relative start */
 				order_start_start(last_rsc, child_rsc);
@@ -309,7 +309,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 			order_stop_stop(child_rsc, last_rsc);
 
 		} else if(incarnation_data->ordered) {
-			crm_debug_3("Ordered version (1st node)");
+			crm_debug_4("Ordered version (1st node)");
 
 			/* child start before global started */
 			custom_action_order(
@@ -327,7 +327,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 			order_start_start(incarnation_data->self, child_rsc);
 
 		} else {
-			crm_debug_3("Un-ordered version");
+			crm_debug_4("Un-ordered version");
 
 			if(lpc < incarnation_data->active_incarnation) {
 				/* child start before global started */
@@ -357,7 +357,7 @@ void incarnation_internal_constraints(resource_t *rsc, GListPtr *ordering_constr
 		);
 
 	if(incarnation_data->ordered && last_rsc != NULL) {
-		crm_debug_3("Ordered version (last node)");
+		crm_debug_4("Ordered version (last node)");
 		/* last child start before global started */
 		custom_action_order(
 			last_rsc, start_key(last_rsc), NULL,
@@ -389,7 +389,7 @@ void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint)
 		return;
 		
 	} else {
-		crm_debug_3("Processing constraints from %s", rsc->id);
+		crm_debug_4("Processing constraints from %s", rsc->id);
 	}
 	
 	get_incarnation_variant_data(incarnation_data, rsc);
@@ -406,7 +406,7 @@ void incarnation_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint
 {
 	incarnation_variant_data_t *incarnation_data = NULL;
 	
-	crm_debug_2("Processing RH of constraint %s", constraint->id);
+	crm_debug_3("Processing RH of constraint %s", constraint->id);
 
 	if(rsc == NULL) {
 		pe_err("rsc_lh was NULL for %s", constraint->id);
@@ -443,7 +443,7 @@ void incarnation_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
-	crm_debug_2("Processing LH of ordering constraint %d", order->id);
+	crm_debug_3("Processing LH of ordering constraint %d", order->id);
 
 	stop_id = stop_key(rsc);
 	start_id = start_key(rsc);
@@ -469,7 +469,7 @@ void incarnation_rsc_order_rh(
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
-	crm_debug_2("Processing RH of ordering constraint %d", order->id);
+	crm_debug_3("Processing RH of ordering constraint %d", order->id);
 
 	incarnation_data->self->fns->rsc_order_rh(lh_action, incarnation_data->self, order);
 }
@@ -479,7 +479,7 @@ void incarnation_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
-	crm_debug_2("Processing actions from %s", rsc->id);
+	crm_debug_3("Processing actions from %s", rsc->id);
 
 	incarnation_data->self->fns->rsc_location(incarnation_data->self, constraint);
 	slist_iter(
@@ -494,7 +494,7 @@ void incarnation_expand(resource_t *rsc, crm_data_t * *graph)
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
-	crm_debug_2("Processing actions from %s", rsc->id);
+	crm_debug_3("Processing actions from %s", rsc->id);
 
 	incarnation_data->self->fns->expand(incarnation_data->self, graph);
 
@@ -528,16 +528,16 @@ void incarnation_free(resource_t *rsc)
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
-	crm_debug_2("Freeing %s", rsc->id);
+	crm_debug_3("Freeing %s", rsc->id);
 
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 
-		crm_debug_2("Freeing child %s", child_rsc->id);
+		crm_debug_3("Freeing child %s", child_rsc->id);
 		child_rsc->fns->free(child_rsc);
 		);
 
-	crm_debug_2("Freeing child list");
+	crm_debug_3("Freeing child list");
 	pe_free_shallow_adv(incarnation_data->child_list, FALSE);
 	incarnation_data->self->fns->free(incarnation_data->self);
 

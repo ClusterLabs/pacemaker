@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.77 2005/05/20 09:48:15 andrew Exp $ */
+/* $Id: utils.c,v 1.78 2005/05/20 09:58:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,7 +42,7 @@ invert_constraint(rsc_colocation_t *constraint)
 {
 	rsc_colocation_t *inverted_con = NULL;
 
-	crm_debug_2("Inverting constraint");
+	crm_debug_3("Inverting constraint");
 	if(constraint == NULL) {
 		pe_err("Cannot invert NULL constraint");
 		return NULL;
@@ -174,7 +174,7 @@ node_list_minus(GListPtr list1, GListPtr list2, gboolean filter)
 		result = g_list_append(result, new_node);
 		);
   
-	crm_debug_2("Minus result len: %d", g_list_length(result));
+	crm_debug_3("Minus result len: %d", g_list_length(result));
 
 	return result;
 }
@@ -214,7 +214,7 @@ node_list_xor(GListPtr list1, GListPtr list2, gboolean filter)
 		result = g_list_append(result, new_node);
 		);
   
-	crm_debug_2("Xor result len: %d", g_list_length(result));
+	crm_debug_3("Xor result len: %d", g_list_length(result));
 	return result;
 }
 
@@ -300,7 +300,7 @@ node_copy(node_t *this_node)
 		return NULL;
 	}
 	
-	crm_debug_4("Copying %p (%s) to %p",
+	crm_debug_5("Copying %p (%s) to %p",
 		  this_node, this_node->details->uname, new_node);
 	new_node->weight  = this_node->weight; 
 	new_node->fixed   = this_node->fixed;
@@ -325,7 +325,7 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr node_list)
 {
 	color_t *new_color = NULL;
 	
-	crm_debug_4("Creating color");
+	crm_debug_5("Creating color");
 	crm_malloc0(new_color, sizeof(color_t));
 	if(new_color == NULL) {
 		return NULL;
@@ -334,7 +334,7 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr node_list)
 	new_color->id           = color_id++;
 	new_color->local_weight = 1.0;
 	
-	crm_debug_4("Creating color details");
+	crm_debug_5("Creating color details");
 	crm_malloc0(new_color->details, sizeof(struct color_shared_s));
 
 	if(new_color->details == NULL) {
@@ -350,7 +350,7 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr node_list)
 	new_color->details->pending             = TRUE;
 	
 	if(resource != NULL) {
-		crm_debug_4("populating node list");
+		crm_debug_5("populating node list");
 		new_color->details->highest_priority = resource->priority;
 		new_color->details->candidate_nodes  =
 			node_list_dup(node_list, TRUE);
@@ -393,11 +393,11 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 	resource_t *rsc = NULL;
 	resource_t *child_rsc = NULL;
 
-	crm_debug_3("Looking for %s in %d objects", id, g_list_length(rsc_list));
+	crm_debug_4("Looking for %s in %d objects", id, g_list_length(rsc_list));
 	for(lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
 		rsc = g_list_nth_data(rsc_list, lpc);
 		if(rsc != NULL && safe_str_eq(rsc->id, id)){
-			crm_debug_3("Found a match for %s", id);
+			crm_debug_4("Found a match for %s", id);
 			return rsc;
 		}
 	}
@@ -406,7 +406,7 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 
 		child_rsc = rsc->fns->find_child(rsc, id);
 		if(child_rsc != NULL) {
-			crm_debug_3("Found a match for %s in %s",
+			crm_debug_4("Found a match for %s in %s",
 				  id, rsc->id);
 			
 			return child_rsc;
@@ -467,7 +467,7 @@ gint gslist_color_compare(gconstpointer a, gconstpointer b)
 	const color_t *color_a = (const color_t*)a;
 	const color_t *color_b = (const color_t*)b;
 
-/*	crm_debug_4("%d vs. %d", a?color_a->id:-2, b?color_b->id:-2); */
+/*	crm_debug_5("%d vs. %d", a?color_a->id:-2, b?color_b->id:-2); */
 	if(a == b) {
 		return 0;
 	} else if(a == NULL || b == NULL) {
@@ -562,14 +562,14 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	}
 
 	if(node1_weight > node2_weight) {
-		crm_debug_3("%s (%f) > %s (%f) : weight",
+		crm_debug_4("%s (%f) > %s (%f) : weight",
 			  node1->details->id, node1_weight,
 			  node2->details->id, node2_weight);
 		return -1;
 	}
 	
 	if(node1_weight < node2_weight) {
-		crm_debug_3("%s (%f) < %s (%f) : weight",
+		crm_debug_4("%s (%f) < %s (%f) : weight",
 			  node1->details->id, node1_weight,
 			  node2->details->id, node2_weight);
 		return 1;
@@ -578,20 +578,20 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	/* now try to balance resources across the cluster */
 	if(node1->details->num_resources
 	   < node2->details->num_resources) {
-		crm_debug_3("%s (%d) < %s (%d) : resources",
+		crm_debug_4("%s (%d) < %s (%d) : resources",
 			  node1->details->id, node1->details->num_resources,
 			  node2->details->id, node2->details->num_resources);
 		return -1;
 		
 	} else if(node1->details->num_resources
 		  > node2->details->num_resources) {
-		crm_debug_3("%s (%d) > %s (%d) : resources",
+		crm_debug_4("%s (%d) > %s (%d) : resources",
 			  node1->details->id, node1->details->num_resources,
 			  node2->details->id, node2->details->num_resources);
 		return 1;
 	}
 	
-	crm_debug_3("%s = %s", node1->details->id, node2->details->id);
+	crm_debug_4("%s = %s", node1->details->id, node2->details->id);
 	return 0;
 }
 
@@ -620,13 +620,13 @@ custom_action(
 		}
 		
 		action = g_list_nth_data(possible_matches, 0);
-		crm_debug_3("Found existing action (%d) %s for %s on %s",
+		crm_debug_4("Found existing action (%d) %s for %s on %s",
 			  action->id, task, rsc?rsc->id:"<NULL>",
 			  on_node?on_node->details->id:"<NULL>");
 	}
 
 	if(action == NULL) {
-		crm_debug_3("Creating action %s for %s on %s",
+		crm_debug_4("Creating action %s for %s on %s",
 			  task, rsc?rsc->id:"<NULL>",
 			  on_node?on_node->details->id:"<NULL>");
 
@@ -663,7 +663,7 @@ custom_action(
 				rsc->actions = g_list_append(
 					rsc->actions, action);
 			}
-			crm_debug_3("Action %d created", action->id);
+			crm_debug_4("Action %d created", action->id);
 		}
 	}
 		
@@ -738,14 +738,14 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 		interval = crm_element_value(operation, "interval");
 
 		match_key = generate_op_key(rsc->id,name,crm_get_msec(interval));
-		crm_debug("Matching %s with %s", key, match_key);
+		crm_debug_2("Matching %s with %s", key, match_key);
 		if(safe_str_eq(key, match_key)) {
 			crm_free(match_key);
 			return operation;
 		}
 		crm_free(match_key);
 		);
-	crm_debug("No matching for %s", key);
+	crm_debug_2("No matching for %s", key);
 	return NULL;
 }
 
@@ -836,13 +836,13 @@ void
 print_node(const char *pre_text, node_t *node, gboolean details)
 { 
 	if(node == NULL) {
-		crm_debug_3("%s%s: <NULL>",
+		crm_debug_4("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
 	}
 
-	crm_debug_3("%s%s%sNode %s: (weight=%f, fixed=%s)",
+	crm_debug_4("%s%s%sNode %s: (weight=%f, fixed=%s)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       node->details==NULL?"error ":node->details->online?"":"Unavailable/Unclean ",
@@ -852,12 +852,12 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 
 	if(details && node != NULL && node->details != NULL) {
 		char *pe_mutable = crm_strdup("\t\t");
-		crm_debug_3("\t\t===Node Attributes");
+		crm_debug_4("\t\t===Node Attributes");
 		g_hash_table_foreach(node->details->attrs,
 				     print_str_str, pe_mutable);
 		crm_free(pe_mutable);
 
-		crm_debug_3("\t\t=== Resources");
+		crm_debug_4("\t\t=== Resources");
 		slist_iter(
 			rsc, resource_t, node->details->running_rsc, lpc,
 			print_resource("\t\t", rsc, FALSE);
@@ -870,7 +870,7 @@ print_node(const char *pre_text, node_t *node, gboolean details)
  */
 void print_str_str(gpointer key, gpointer value, gpointer user_data)
 {
-	crm_debug_3("%s%s %s ==> %s",
+	crm_debug_4("%s%s %s ==> %s",
 	       user_data==NULL?"":(char*)user_data,
 	       user_data==NULL?"":": ",
 	       (char*)key,
@@ -883,12 +883,12 @@ print_color_details(const char *pre_text,
 		    gboolean details)
 { 
 	if(color == NULL) {
-		crm_debug_3("%s%s: <NULL>",
+		crm_debug_4("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug_3("%s%sColor %d: node=%s (from %d candidates)",
+	crm_debug_4("%s%sColor %d: node=%s (from %d candidates)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       color->id, 
@@ -904,12 +904,12 @@ void
 print_color(const char *pre_text, color_t *color, gboolean details)
 { 
 	if(color == NULL) {
-		crm_debug_3("%s%s: <NULL>",
+		crm_debug_4("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug_3("%s%sColor %d: (weight=%f, node=%s, possible=%d)",
+	crm_debug_4("%s%sColor %d: (weight=%f, node=%s, possible=%d)",
 		    pre_text==NULL?"":pre_text,
 		    pre_text==NULL?"":": ",
 		    color->id, 
@@ -925,12 +925,12 @@ void
 print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 { 
 	if(cons == NULL) {
-		crm_debug_3("%s%s: <NULL>",
+		crm_debug_4("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug_3("%s%s%s Constraint %s (%p) - %d nodes:",
+	crm_debug_4("%s%s%s Constraint %s (%p) - %d nodes:",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       "rsc_to_node",
@@ -938,7 +938,7 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 		  g_list_length(cons->node_list_rh));
 
 	if(details == FALSE) {
-		crm_debug_3("\t%s (score=%f : node placement rule)",
+		crm_debug_4("\t%s (score=%f : node placement rule)",
 			  safe_val3(NULL, cons, rsc_lh, id), 
 			  cons->weight);
 
@@ -953,19 +953,19 @@ void
 print_rsc_colocation(const char *pre_text, rsc_colocation_t *cons, gboolean details)
 { 
 	if(cons == NULL) {
-		crm_debug_3("%s%s: <NULL>",
+		crm_debug_4("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug_3("%s%s%s Constraint %s (%p):",
+	crm_debug_4("%s%s%s Constraint %s (%p):",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       XML_CONS_TAG_RSC_DEPEND, cons->id, cons);
 
 	if(details == FALSE) {
 
-		crm_debug_3("\t%s --> %s, %s",
+		crm_debug_4("\t%s --> %s, %s",
 			  safe_val3(NULL, cons, rsc_lh, id), 
 			  safe_val3(NULL, cons, rsc_rh, id), 
 			  strength2text(cons->strength));
@@ -976,7 +976,7 @@ void
 print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 { 
 	if(rsc == NULL) {
-		crm_debug_3("%s%s: <NULL>",
+		crm_debug_4("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
@@ -1065,8 +1065,8 @@ pe_free_nodes(GListPtr nodes)
 		struct node_shared_s *details = node->details;
 		nodes = nodes->next;
 
-		crm_debug_4("deleting node");
-		crm_debug_4("%s is being deleted", details->uname);
+		crm_debug_5("deleting node");
+		crm_debug_5("%s is being deleted", details->uname);
 		print_node("delete", node, FALSE);
 		
 		if(details != NULL) {
@@ -1121,7 +1121,7 @@ pe_free_shallow_adv(GListPtr alist, gboolean with_data)
 		item_next = item_next->next;
 		
 		if(with_data) {
-/*			crm_debug_4("freeing %p", item->data); */
+/*			crm_debug_5("freeing %p", item->data); */
 			crm_free(item->data);
 		}
 		
@@ -1192,7 +1192,7 @@ void
 pe_free_rsc_colocation(rsc_colocation_t *cons)
 { 
 	if(cons != NULL) {
-		crm_debug_3("Freeing constraint %s (%p)", cons->id, cons);
+		crm_debug_4("Freeing constraint %s (%p)", cons->id, cons);
 		crm_free(cons);
 	}
 }
@@ -1214,7 +1214,7 @@ find_actions(GListPtr input, const char *key, node_t *on_node)
 	
 	slist_iter(
 		action, action_t, input, lpc,
-		crm_debug_4("Matching %s against %s", key, action->uuid);
+		crm_debug_5("Matching %s against %s", key, action->uuid);
 		if(safe_str_neq(key, action->uuid)) {
 			continue;
 			
@@ -1223,7 +1223,7 @@ find_actions(GListPtr input, const char *key, node_t *on_node)
 			
 		} else if(action->node == NULL) {
 			/* skip */
-			crm_debug("While looking for %s action on %s, "
+			crm_debug_2("While looking for %s action on %s, "
 				  "found an unallocated one.  Assigning"
 				  " it to the requested node...",
 				  key, on_node->details->uname);

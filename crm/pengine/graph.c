@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.44 2005/05/20 09:48:15 andrew Exp $ */
+/* $Id: graph.c,v 1.45 2005/05/20 09:58:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,7 +33,7 @@ gboolean update_action(action_t *action);
 gboolean
 update_action_states(GListPtr actions)
 {
-	crm_debug("Updating %d actions",  g_list_length(actions));
+	crm_debug_2("Updating %d actions",  g_list_length(actions));
 	slist_iter(
 		action, action_t, actions, lpc,
 
@@ -49,7 +49,7 @@ update_action(action_t *action)
 {
 	gboolean change = FALSE;
 
-	crm_debug_2("Processing action %d", action->id);
+	crm_debug_3("Processing action %d", action->id);
 	if(action->optional && action->runnable) {
 		return FALSE;
 	}
@@ -60,7 +60,7 @@ update_action(action_t *action)
 		   && other->action->optional == FALSE) {
 			change = TRUE;
 			action->optional = FALSE;
-			crm_debug("Marking action %d manditory because of %d",
+			crm_debug_2("Marking action %d manditory because of %d",
 				  action->id, other->action->id);
 		}
 		);
@@ -72,13 +72,13 @@ update_action(action_t *action)
 		   && action->runnable == FALSE
 		   && action->optional == FALSE) {
 			if(other->action->runnable == FALSE) {
-				crm_debug("Action %d already un-runnable",
+				crm_debug_2("Action %d already un-runnable",
 					  other->action->id);
 				continue;
 			} else {
 				change = TRUE;
 				other->action->runnable =FALSE;
-				crm_debug("Marking action %d un-runnable"
+				crm_debug_2("Marking action %d un-runnable"
 					  " because of %d",
 					  other->action->id, action->id);
 			}
@@ -93,7 +93,7 @@ update_action(action_t *action)
 		case pe_restart_restart:
 			change = TRUE;
 			other->action->optional = FALSE;
-			crm_debug("(Restart) Marking action %d manditory because of %d",
+			crm_debug_2("(Restart) Marking action %d manditory because of %d",
 				  other->action->id, action->id);
 	}
 		}
@@ -144,7 +144,7 @@ stonith_constraints(node_t *node,
 
 		/* shutdown before stonith */
 		/* Give any resources a chance to shutdown normally */
-		crm_debug_3("Adding shutdown (%d) as an input to stonith (%d)",
+		crm_debug_4("Adding shutdown (%d) as an input to stonith (%d)",
 			  shutdown_op->id, stonith_op->id);
 		
 		custom_action_order(
@@ -187,7 +187,7 @@ stonith_constraints(node_t *node,
 				}
 				);
 
-			crm_debug_3("Adding stonith (%d) as an input to stop",
+			crm_debug_4("Adding stonith (%d) as an input to stop",
 				  stonith_op->id);
 			
 		} else if((rsc->unclean || node->details->unclean)
@@ -223,7 +223,7 @@ action2xml(action_t *action, gboolean as_input)
 		return NULL;
 	}
 
-	crm_debug_3("Dumping action %d as XML", action->id);
+	crm_debug_4("Dumping action %d as XML", action->id);
 	if(safe_str_eq(action->task, CRM_OP_FENCE)) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 		needs_node_info = FALSE;
@@ -311,15 +311,15 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 		return;
 
 	} else if(action->optional) {
-		crm_debug_4("action %d was optional", action->id);
+		crm_debug_5("action %d was optional", action->id);
 		return;
 
 	} else if(action->pseudo == FALSE && action->runnable == FALSE) {
-		crm_debug_4("action %d was not runnable", action->id);
+		crm_debug_5("action %d was not runnable", action->id);
 		return;
 
 	} else if(action->dumped) {
-		crm_debug_4("action %d was already dumped", action->id);
+		crm_debug_5("action %d was already dumped", action->id);
 		return;
 
 	} else if(action->pseudo
@@ -358,7 +358,7 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 	slist_iter(wrapper,action_wrapper_t,action->actions_before,lpc,
 			
 		   if(wrapper->action->optional == TRUE) {
-			   crm_debug("Input %d optional", wrapper->action->id);
+			   crm_debug_2("Input %d optional", wrapper->action->id);
 			   continue;
 		   }
 		   

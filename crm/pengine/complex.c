@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.27 2005/05/20 09:48:15 andrew Exp $ */
+/* $Id: complex.c,v 1.28 2005/05/20 09:58:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -147,7 +147,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	}
 	
 	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
-	crm_debug_2("Unpacking resource...");
+	crm_debug_3("Unpacking resource...");
 	
 	(*rsc)->parameters = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
@@ -170,48 +170,48 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 	(*rsc)->actions            = NULL;
 
 
-	crm_debug("Options for %s", id);
+	crm_debug_2("Options for %s", id);
 	if(stopfail == NULL && stonith_enabled) {
 		(*rsc)->stopfail_type = pesf_stonith;
-		crm_debug("\tFailed stop handling handling: fence (default)");
+		crm_debug_2("\tFailed stop handling handling: fence (default)");
 
 	} else if(stopfail == NULL) {
 		(*rsc)->stopfail_type = pesf_block;
-		crm_debug("\tFailed stop handling handling: block (default)");
+		crm_debug_2("\tFailed stop handling handling: block (default)");
 		
 	} else if(safe_str_eq(stopfail, "ignore")) {
 		(*rsc)->stopfail_type = pesf_ignore;
-		crm_debug("\tFailed stop handling handling: ignore");
+		crm_debug_2("\tFailed stop handling handling: ignore");
 		
 	} else if(safe_str_eq(stopfail, "fence")) {
 		(*rsc)->stopfail_type = pesf_stonith;
-		crm_debug("\tFailed stop handling handling: fence");
+		crm_debug_2("\tFailed stop handling handling: fence");
 
 	} else {
 		(*rsc)->stopfail_type = pesf_block;
-		crm_debug("\tFailed stop handling handling: block");
+		crm_debug_2("\tFailed stop handling handling: block");
 	}
 	
 	if(safe_str_eq(restart, "restart")) {
 		(*rsc)->restart_type = pe_restart_restart;
-		crm_debug("\tDependancy restart handling: restart");
+		crm_debug_2("\tDependancy restart handling: restart");
 
 	} else {
 		(*rsc)->restart_type = pe_restart_ignore;
-		crm_debug("\tDependancy restart handling: ignore");
+		crm_debug_2("\tDependancy restart handling: ignore");
 	}
 
 	if(safe_str_eq(multiple, "stop_only")) {
 		(*rsc)->recovery_type = recovery_stop_only;
-		crm_debug("\tMultiple running resource recovery: stop only");
+		crm_debug_2("\tMultiple running resource recovery: stop only");
 
 	} else if(safe_str_eq(multiple, "block")) {
 		(*rsc)->recovery_type = recovery_block;
-		crm_debug("\tMultiple running resource recovery: block");
+		crm_debug_2("\tMultiple running resource recovery: block");
 
 	} else {		
 		(*rsc)->recovery_type = recovery_stop_start;
-		crm_debug("\tMultiple running resource recovery: stop/start");
+		crm_debug_2("\tMultiple running resource recovery: stop/start");
 		
 	}
 	
@@ -226,7 +226,7 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
 	
-	crm_debug("Ordering %d: Action %d before %d",
+	crm_debug_2("Ordering %d: Action %d before %d",
 		  order?order->id:-1, lh_action->id, rh_action->id);
 	
 	crm_action_debug_3(
@@ -259,7 +259,7 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 
 void common_dump(resource_t *rsc, const char *pre_text, gboolean details)
 {
-	crm_debug_3("%s%s%s%sResource %s: (variant=%s, priority=%f)",
+	crm_debug_4("%s%s%s%sResource %s: (variant=%s, priority=%f)",
 		  pre_text==NULL?"":pre_text,
 		  pre_text==NULL?"":": ",
 		  rsc->provisional?"Provisional ":"",
@@ -275,7 +275,7 @@ void common_free(resource_t *rsc)
 		return;
 	}
 	
-	crm_debug_4("Freeing %s", rsc->id);
+	crm_debug_5("Freeing %s", rsc->id);
 
 	while(rsc->rsc_cons) {
  		pe_free_rsc_colocation(
@@ -291,7 +291,7 @@ void common_free(resource_t *rsc)
 	pe_free_shallow_adv(rsc->candidate_colors, TRUE);
 	crm_free(rsc->variant_opaque);
 	crm_free(rsc);
-	crm_debug_4("Resource freed");
+	crm_debug_5("Resource freed");
 }
 
 void
@@ -302,13 +302,13 @@ common_agent_constraints(
 	slist_iter(
 		node, node_t, node_list, lpc,
 		
-		crm_debug_4("Checking if %s supports %s/%s (%s)",
+		crm_debug_5("Checking if %s supports %s/%s (%s)",
 			  node->details->uname,
 			  agent->class, agent->type, agent->version);
 		
 		if(has_agent(node, agent) == FALSE) {
 			/* remove node from contention */
-			crm_debug_4("Marking node %s unavailable for %s",
+			crm_debug_5("Marking node %s unavailable for %s",
 				  node->details->uname, id);
 			node->weight = -1.0;
 			node->fixed = TRUE;
@@ -325,7 +325,7 @@ unpack_instance_attributes(crm_data_t *xml_obj, GHashTable *hash)
 	const char *value = NULL;
 	
 	if(xml_obj == NULL) {
-		crm_debug_3("No instance attributes");
+		crm_debug_4("No instance attributes");
 		return;
 	}
 	
@@ -369,7 +369,7 @@ add_hash_param(GHashTable *hash, const char *name, const char *value)
 		return;
 	}
 
-	crm_debug_2("adding: name=%s value=%s", crm_str(name), crm_str(value));
+	crm_debug_3("adding: name=%s value=%s", crm_str(name), crm_str(value));
 	if(name == NULL || value == NULL) {
 		return;
 		
@@ -400,5 +400,5 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
 	set_xml_property_copy(xml_child, XML_NVPAIR_ATTR_NAME, name);
 	set_xml_property_copy(xml_child, XML_NVPAIR_ATTR_VALUE, s_value);
 
-	crm_debug_2("dumped: name=%s value=%s", name, s_value);
+	crm_debug_3("dumped: name=%s value=%s", name, s_value);
 }

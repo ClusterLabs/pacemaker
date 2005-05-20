@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.67 2005/05/20 09:48:15 andrew Exp $ */
+/* $Id: pengine.c,v 1.68 2005/05/20 09:58:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,7 +49,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	const char *op = cl_get_string(msg, F_CRM_TASK);
 	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
 
-	crm_debug_2("Processing %s op (ref=%s)...", op, ref);
+	crm_debug_3("Processing %s op (ref=%s)...", op, ref);
 	
 	if(op == NULL){
 		/* error */
@@ -62,7 +62,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		/* ignore */
 		
 	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
-		crm_debug_2("Bad sys-to %s", crm_str(sys_to));
+		crm_debug_3("Bad sys-to %s", crm_str(sys_to));
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
@@ -167,41 +167,41 @@ do_calculations(crm_data_t * cib_object)
 
 /*	pe_debug_on(); */
 	
-	crm_debug_4("unpack");		  
+	crm_debug_5("unpack");		  
 	stage0(cib_object,
 	       &resources,
 	       &nodes,  &placement_constraints,
 	       &actions,  &ordering_constraints,
 	       &stonith_list, &shutdown_list);
 	
-	crm_debug_4("apply placement constraints");
+	crm_debug_5("apply placement constraints");
 	stage1(placement_constraints, nodes, resources);
 	
-	crm_debug_4("color resources");
+	crm_debug_5("color resources");
 	stage2(resources, nodes, &colors);
 
 	/* unused */
 	stage3(colors);
 	
-	crm_debug_4("assign nodes to colors");
+	crm_debug_5("assign nodes to colors");
 	stage4(colors);	
 	
-	crm_debug_4("creating actions and internal ording constraints");
+	crm_debug_5("creating actions and internal ording constraints");
 	stage5(resources, &ordering_constraints);
 
-	crm_debug_4("processing fencing and shutdown cases");
+	crm_debug_5("processing fencing and shutdown cases");
 	stage6(&actions, &ordering_constraints, nodes, resources);
 	
-	crm_debug_4("applying ordering constraints");
+	crm_debug_5("applying ordering constraints");
 	stage7(resources, actions, ordering_constraints);
 
-	crm_debug("=#=#=#=#= Summary =#=#=#=#=");
-	crm_debug("========= All Actions =========");
+	crm_debug_2("=#=#=#=#= Summary =#=#=#=#=");
+	crm_debug_2("========= All Actions =========");
 	slist_iter(action, action_t, actions, lpc,
 		   print_action("\t", action, TRUE);
 		);
 	
-	crm_debug("\t========= Set %d (Un-runnable) =========", -1);
+	crm_debug_2("\t========= Set %d (Un-runnable) =========", -1);
 	crm_action_debug_2(
 		slist_iter(action, action_t, actions, lpc,
 			   if(action->optional == FALSE
@@ -211,21 +211,21 @@ do_calculations(crm_data_t * cib_object)
 			)
 		);
 	
-	crm_debug("========= Stonith List =========");
+	crm_debug_2("========= Stonith List =========");
 	crm_action_debug_3(
 		slist_iter(node, node_t, stonith_list, lpc,
 			   print_node(NULL, node, FALSE);
 			)
 		);
 	
-	crm_debug("========= Shutdown List =========");
+	crm_debug_2("========= Shutdown List =========");
 	crm_action_debug_3(
 		slist_iter(node, node_t, shutdown_list, lpc,
 			   print_node(NULL, node, FALSE);
 			)
 		);
 	
-	crm_debug_4("creating transition graph");
+	crm_debug_5("creating transition graph");
 	stage8(resources, actions, &graph);
 
 #if 0
@@ -262,7 +262,7 @@ cleanup_calculations(GListPtr resources,
 	crm_free(dc_uuid);
 	dc_uuid = NULL;
 	
-	crm_debug_2("deleting node cons");
+	crm_debug_3("deleting node cons");
 	while(placement_constraints) {
 		pe_free_rsc_to_node((rsc_to_node_t*)placement_constraints->data);
 		placement_constraints = placement_constraints->next;
@@ -271,26 +271,26 @@ cleanup_calculations(GListPtr resources,
 		g_list_free(placement_constraints);
 	}
 	
-	crm_debug_2("deleting order cons");
+	crm_debug_3("deleting order cons");
 	pe_free_ordering(ordering_constraints); 
 
-	crm_debug_2("deleting action sets");
+	crm_debug_3("deleting action sets");
 	slist_iter(action_set, GList, action_sets, lpc,
 		   pe_free_shallow_adv(action_set, FALSE);
 		);
 	pe_free_shallow_adv(action_sets, FALSE);
 	
-	crm_debug_2("deleting global actions");
+	crm_debug_3("deleting global actions");
 	pe_free_actions(global_action_list);
 	global_action_list = NULL;
 
-/* 	crm_debug_2("deleting actions"); */
+/* 	crm_debug_3("deleting actions"); */
 /* 	pe_free_actions(actions); */
 
-	crm_debug_2("deleting resources");
+	crm_debug_3("deleting resources");
 	pe_free_resources(resources); 
 	
-	crm_debug_2("deleting colors");
+	crm_debug_3("deleting colors");
 	pe_free_colors(colors);
 
 	if(no_color != NULL) {
@@ -298,7 +298,7 @@ cleanup_calculations(GListPtr resources,
 		crm_free(no_color);
 	}
 	
-	crm_debug_2("deleting nodes");
+	crm_debug_3("deleting nodes");
 	pe_free_nodes(nodes);
 	
 	if(shutdown_list != NULL) {

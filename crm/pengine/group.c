@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.16 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: group.c,v 1.17 2005/05/20 09:58:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,7 +48,7 @@ void group_unpack(resource_t *rsc)
 	group_variant_data_t *group_data = NULL;
 	resource_t *self = NULL;
 
-	crm_debug_2("Processing resource %s...", rsc->id);
+	crm_debug_3("Processing resource %s...", rsc->id);
 
 	crm_malloc0(group_data, sizeof(group_variant_data_t));
 	group_data->num_children = 0;
@@ -95,7 +95,7 @@ void group_unpack(resource_t *rsc)
 				crm_element_value(xml_obj, XML_ATTR_ID));
 		}
 		);
-	crm_debug_2("Added %d children to resource %s...",
+	crm_debug_3("Added %d children to resource %s...",
 		    group_data->num_children, rsc->id);
 	
 	rsc->variant_opaque = group_data;
@@ -232,7 +232,7 @@ void group_rsc_colocation_lh(rsc_colocation_t *constraint)
 		return;
 		
 	} else {
-		crm_debug_3("Processing constraints from %s", rsc->id);
+		crm_debug_4("Processing constraints from %s", rsc->id);
 	}
 
 	get_group_variant_data(group_data, rsc);
@@ -250,7 +250,7 @@ void group_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_2("Processing RH of constraint %s", constraint->id);
+	crm_debug_3("Processing RH of constraint %s", constraint->id);
 	crm_action_debug_3(print_resource("LHS", rsc_lh, TRUE));
 
 	if(group_data->self == NULL) {
@@ -268,7 +268,7 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_2("Processing LH of ordering constraint %d", order->id);
+	crm_debug_3("Processing LH of ordering constraint %d", order->id);
 
 	if(group_data->self == NULL) {
 		return;
@@ -298,7 +298,7 @@ void group_rsc_order_rh(
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_2("Processing RH of ordering constraint %d", order->id);
+	crm_debug_3("Processing RH of ordering constraint %d", order->id);
 
 	if(group_data->self == NULL) {
 		return;
@@ -312,7 +312,7 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_2("Processing actions from %s", rsc->id);
+	crm_debug_3("Processing actions from %s", rsc->id);
 
 	if(group_data->self != NULL) {
 		group_data->self->fns->rsc_location(group_data->self, constraint);
@@ -330,7 +330,7 @@ void group_expand(resource_t *rsc, crm_data_t * *graph)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_2("Processing actions from %s", rsc->id);
+	crm_debug_3("Processing actions from %s", rsc->id);
 
 	group_data->self->fns->expand(group_data->self, graph);
 
@@ -371,16 +371,16 @@ void group_free(resource_t *rsc)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_2("Freeing %s", rsc->id);
+	crm_debug_3("Freeing %s", rsc->id);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
-		crm_debug_2("Freeing child %s", child_rsc->id);
+		crm_debug_3("Freeing child %s", child_rsc->id);
 		child_rsc->fns->free(child_rsc);
 		);
 
-	crm_debug_2("Freeing child list");
+	crm_debug_3("Freeing child list");
 	pe_free_shallow_adv(group_data->child_list, FALSE);
 
 	if(group_data->self != NULL) {
