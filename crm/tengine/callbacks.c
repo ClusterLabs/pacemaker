@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.29 2005/05/20 06:01:29 andrew Exp $ */
+/* $Id: callbacks.c,v 1.30 2005/05/20 15:04:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -140,15 +140,10 @@ te_update_confirm(const char *event, HA_Message *msg)
 		section = XML_CIB_TAG_STATUS;
 		if(abort == FALSE) {
 			section_xml = get_object_root(section, update);
-			xml_child_iter(section_xml, child, NULL,
-				       abort = TRUE;
-				       break;
-				);
-			if(abort) {
-				crm_err("Sub-optimal handling of global CIB update");
-				send_complete("Global status update",
-					      update, te_update);
-			} 
+			if(extract_event(section_xml) == FALSE) {
+				send_complete("Unexpected global status update",
+					      section_xml, te_update);
+			}
 		}
 		
 	} else {
@@ -203,7 +198,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 
 	} else if(strcmp(op, CRM_OP_TEABORT) == 0) {
 		initialize_graph();
-		send_complete(CRM_OP_TEABORT, NULL, te_abort);
+		send_complete(CRM_OP_TEABORTED, NULL, te_abort);
 
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		crm_info("Received quit message, terminating");
