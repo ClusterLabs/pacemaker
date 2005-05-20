@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.79 2005/05/20 16:38:02 andrew Exp $ */
+/* $Id: ccm.c,v 1.80 2005/05/20 17:09:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -600,16 +600,10 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 	
 	update_data.updates = tmp;
 
-	update_data.state = XML_BOOLEAN_NO;
-	update_data.join  = CRMD_JOINSTATE_DOWN;
-	if(fsa_membership_copy->dead_members != NULL) {
-		g_hash_table_foreach(fsa_membership_copy->dead_members,
-				     ghash_update_cib_node, &update_data);
-	}
-	
 	update_data.state = XML_BOOLEAN_YES;
 	update_data.join  = NULL;
 	if(overwrite) {
+		crm_debug_2("Performing a join update based on CCM data");
 		update_data.join = CRMD_JOINSTATE_PENDING;
 		if(fsa_membership_copy->members != NULL) {
 			g_hash_table_foreach(fsa_membership_copy->members,
@@ -624,6 +618,13 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 			g_hash_table_foreach(fsa_membership_copy->new_members,
 					     ghash_update_cib_node, &update_data);
 		}
+
+		update_data.state = XML_BOOLEAN_NO;
+		update_data.join  = CRMD_JOINSTATE_DOWN;
+		if(fsa_membership_copy->dead_members != NULL) {
+			g_hash_table_foreach(fsa_membership_copy->dead_members,
+					     ghash_update_cib_node, &update_data);
+		}		
 	}
 	
 	if(update_data.updates != NULL) {
