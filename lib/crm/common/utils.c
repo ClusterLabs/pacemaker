@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.14 2005/05/19 11:25:29 andrew Exp $ */
+/* $Id: utils.c,v 1.15 2005/05/20 14:59:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -967,4 +967,37 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 		sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
 	}
 	return op_id;
+}
+
+void
+crm_mem_stats(volatile cl_mem_stats_t *mem_stats)
+{
+	CRM_DEV_ASSERT(mem_stats != NULL);
+#ifndef CRM_USE_MALLOC
+	if(mem_stats->nbytes_alloc != 0) {
+		crm_err("%lu alloc's vs. %lu free's (%lu)"
+			" (%lu bytes not freed: req=%lu, alloc'd=%lu)",
+			mem_stats->numalloc, mem_stats->numfree,
+			mem_stats->numalloc - mem_stats->numfree,
+			mem_stats->nbytes_alloc, mem_stats->nbytes_req,
+			mem_stats->mallocbytes);
+	}
+#endif
+}
+
+void
+crm_zero_mem_stats(volatile cl_mem_stats_t *stats)
+{
+	volatile cl_mem_stats_t *active_stats = NULL;
+	if(stats != NULL) {
+		cl_malloc_setstats(stats);
+	}
+	active_stats = cl_malloc_getstats();
+	active_stats->numalloc = 0;
+	active_stats->numfree = 0;
+	active_stats->numrealloc = 0;
+	active_stats->nbytes_req = 0;
+	active_stats->nbytes_alloc = 0;
+	active_stats->mallocbytes = 0;
+	active_stats->arena = 0;
 }
