@@ -751,6 +751,7 @@ handle_message(ha_msg_input_t *stored_msg)
 	return next_input;
 }
 
+extern gboolean te_in_transition;
 
 enum crmd_fsa_input
 handle_request(ha_msg_input_t *stored_msg)
@@ -874,9 +875,8 @@ handle_request(ha_msg_input_t *stored_msg)
 		/*========== DC-Only Actions ==========*/
 	} else if(AM_I_DC){
 		if(safe_str_eq(op, CRM_OP_TEABORT)) {
-			if(fsa_state == S_POLICY_ENGINE
-			   || fsa_state == S_TRANSITION_ENGINE
-			   || fsa_state == S_IDLE) {
+			te_in_transition = FALSE;
+			if(need_transition(fsa_state)) {
 				next_input = I_PE_CALC;
 
 			} else {	
@@ -885,17 +885,26 @@ handle_request(ha_msg_input_t *stored_msg)
 			}
 				
 		} else if(safe_str_eq(op, CRM_OP_TETIMEOUT)) {
-			if(fsa_state == S_TRANSITION_ENGINE
-			   || fsa_state == S_POLICY_ENGINE) {
-				next_input = I_PE_CALC;
-
-			} else if(fsa_state == S_IDLE) {
+			te_in_transition = FALSE;
+			if(fsa_state == S_IDLE) {
 				crm_err("Transition timed out in S_IDLE");
+				next_input = I_PE_CALC;
+				
+			} else if(need_transition(fsa_state)) {
 				next_input = I_PE_CALC;
 				
 			} else {	
 				crm_err("Filtering %s op in state %s",
 					 op, fsa_state2string(fsa_state));
+			}
+
+		} else if(safe_str_eq(op, CRM_OP_TEABORTED)) {
+			te_in_transition = FALSE;
+			if(need_transition(fsa_state)) {
+				next_input = I_PE_CALC;
+			} else {	
+				crm_err("Filtering %s op in state %s",
+					op, fsa_state2string(fsa_state));
 			}
 
 		} else if(strcmp(op, CRM_OP_TECOMPLETE) == 0) {
@@ -914,7 +923,6 @@ handle_request(ha_msg_input_t *stored_msg)
 			
 		} else if(strcmp(op, CRM_OP_JOIN_CONFIRM) == 0) {
 			next_input = I_JOIN_RESULT;
-				
 			
 		} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 			gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);

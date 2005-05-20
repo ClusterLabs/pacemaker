@@ -47,6 +47,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 struct crm_subsystem_s *te_subsystem  = NULL;
+gboolean te_in_transition = FALSE;
 
 
 /*	 A_TE_START, A_TE_STOP, A_TE_RESTART	*/
@@ -100,7 +101,7 @@ do_te_invoke(long long action,
 	enum crmd_fsa_input ret = I_NULL;
 	HA_Message *cmd = NULL;
 	
-
+	
 	if(AM_I_DC == FALSE) {
 		crm_debug("Not DC: No need to invoke the TE (anymore): %s",
 			  fsa_action2string(action));
@@ -155,6 +156,8 @@ do_te_invoke(long long action,
 	if(action & A_TE_INVOKE) {
 		ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 		if(input->xml != NULL) {
+			te_in_transition = TRUE;
+
 			cmd = create_request(
 				CRM_OP_TRANSITION, input->xml, NULL,
 				CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
@@ -166,11 +169,15 @@ do_te_invoke(long long action,
 		}
 	
 	} else if(action & A_TE_CANCEL) {
-		cmd = create_request(
-			CRM_OP_TEABORT, NULL, NULL,
-			CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
-		
-		send_request(cmd, NULL);
+		if(te_in_transition) {
+			cmd = create_request(
+				CRM_OP_TEABORT, NULL, NULL,
+				CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
+			
+			send_request(cmd, NULL);
+		} else {
+			register_fsa_action(A_PE_INVOKE);
+		}
 
 	} else if(action & A_TE_HALT) {
 		cmd = create_request(
@@ -178,7 +185,6 @@ do_te_invoke(long long action,
 			CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
 		
 		send_request(cmd, NULL);
-
 	}
 
 	return ret;
