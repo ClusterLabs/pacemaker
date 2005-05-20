@@ -302,6 +302,8 @@ do_dc_takeover(long long action,
 
 	rc = fsa_cib_conn->cmds->modify(
 		fsa_cib_conn, NULL, update, &output, cib_quorum_override);
+
+	free_xml(update);
 	
 	if(rc == cib_revision_unsupported) {
 		crm_err("Feature revision not permitted");
@@ -323,9 +325,7 @@ do_dc_takeover(long long action,
 		crm_err("Retrieval of generation failed");
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		return I_NULL;
-	}
-	
-	free_xml(update);
+	}	
 	
 	crm_debug_3("Requesting an initial dump of CRMD client_status");
 	fsa_cluster_conn->llc_ops->client_status(
@@ -342,9 +342,15 @@ revision_check_callback(const HA_Message *msg, int call_id, int rc,
 	int revision_i = -1;
 	const char *revision = NULL;
 	crm_data_t *generation = find_xml_node(output, XML_TAG_CIB, TRUE);
-		
+
+	if(rc != cib_ok) {
+		fsa_data_t *msg_data = NULL;
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+		return;
+	}
+	
 	crm_debug_3("Checking our feature revision is allowed: %d",
-		  cib_feature_revision);
+		    cib_feature_revision);
 	
 	revision = crm_element_value(generation, XML_ATTR_CIB_REVISION);
 	revision_i = atoi(revision?revision:"0");
