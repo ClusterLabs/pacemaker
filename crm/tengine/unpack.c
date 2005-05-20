@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.31 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: unpack.c,v 1.32 2005/05/20 15:02:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -314,22 +314,19 @@ extract_event(crm_data_t *msg)
 			 *   possibly from a shutdown we requested
 			 */
 			crm_debug_3("Processing state update");
-			if(crmd_state != NULL
-			   && safe_str_neq(crmd_state, OFFLINESTATUS)) {
+			if( (crmd_state != NULL && safe_str_neq(
+				     crmd_state, OFFLINESTATUS))
+			    || (join_state != NULL && safe_str_neq(
+					join_state, CRMD_JOINSTATE_DOWN))
+			    || safe_str_eq(ccm_state, XML_BOOLEAN_TRUE)) {
 				/* the node is comming up,
 				 *  only recompute after the join completes,
 				 *  we dont need to check for this
 				 */
+				crm_debug("Ignoreing status update of"
+					  " starting node.");
 				continue;
 				
-			} else if(join_state != NULL
-				  && safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)) {
-				/* the node is comming up,
-				 *  only recompute after the join completes,
-				 *  we dont need to check for this
-				 */
-				continue;
-
 			} else {
 				/* this may be called more than once per shutdown
 				 * ie. once per update of each field
@@ -359,9 +356,11 @@ extract_event(crm_data_t *msg)
 				resources, child, NULL, 
 
 				crm_log_xml_debug_3(child, "Processing LRM resource update");
-				abort = !process_graph_event(child, event_node);
-				if(abort) {
-					break;
+				if(!process_graph_event(child, event_node)) {
+					/* the transition has already been
+					 * aborted and with better details
+					 */
+					return TRUE;
 				}
 				);
 			
