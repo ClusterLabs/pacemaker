@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.29 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: utils.c,v 1.30 2005/05/20 15:05:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -81,6 +81,12 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 				 text?": ":"", text?text:"");
 			print_state(LOG_DEBUG);
 			op = CRM_OP_TECOMPLETE;
+			break;
+		case te_abort_confirmed:
+			crm_info("Transition status: Confirmed Stopped%s%s",
+				 text?": ":"", text?text:"");
+			print_state(LOG_DEBUG);
+			op = CRM_OP_TEABORTED;
 			break;
 		case te_abort:
 			crm_info("Transition status: Stopped%s%s",

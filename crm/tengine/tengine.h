@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.20 2005/05/10 13:20:32 andrew Exp $ */
+/* $Id: tengine.h,v 1.21 2005/05/20 15:05:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,6 +38,7 @@ typedef enum te_reason_e {
 	te_done,
 	te_halt,
 	te_abort,
+	te_abort_confirmed,
 	te_failed,
 	te_timeout,
 	
