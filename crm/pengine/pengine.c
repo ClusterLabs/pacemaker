@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.68 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: pengine.c,v 1.69 2005/05/20 10:48:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -103,22 +103,26 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 #endif
 		was_processing_error = FALSE;
 		was_processing_warning = FALSE;
-#ifndef CRM_USE_MALLOC
+
 		crm_malloc0(mem_stats, sizeof(cl_mem_stats_t));
 		cl_malloc_setstats(mem_stats);
-#endif
+
 		output = do_calculations(xml_data);
-	
-#ifndef CRM_USE_MALLOC
-		crm_mem_stats(mem_stats);
+		crm_log_xml_debug_3(output, "[out]");
+
+		if (send_ipc_reply(sender, msg, output) ==FALSE) {
+			crm_err("Answer could not be sent");
+		}
+
+		free_xml(output);
+		
 		if(mem_stats->nbytes_alloc != 0) {
-			pe_err("Unfree'd memory");
-		} else {
-			crm_info("All memory was free'd");
+			crm_mem_stats(mem_stats);
+			pe_warn("Unfree'd memory");
 		}
 		cl_malloc_setstats(NULL);
-#endif
-		
+		crm_free(mem_stats);
+	
 		if(was_processing_error) {
 			crm_err("ERRORs found during PE processing."
 			       "  Input follows:");
@@ -132,12 +136,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		} else {
 			crm_log_xml_debug_2(log_input, "[input]");
 		}
-		crm_log_xml_debug_3(output, "[out]");
 
-		if (send_ipc_reply(sender, msg, output) ==FALSE) {
-			crm_err("Answer could not be sent");
-		}
-		free_xml(output);
 		free_xml(generation);
 
 		
@@ -148,6 +147,8 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	
 	return TRUE;
 }
+
+/* #define MEMCHECK_STAGE_4 1 */
 
 crm_data_t *
 do_calculations(crm_data_t * cib_object)
@@ -174,11 +175,47 @@ do_calculations(crm_data_t * cib_object)
 	       &actions,  &ordering_constraints,
 	       &stonith_list, &shutdown_list);
 	
+#if MEMCHECK_STAGE_0
+	cleanup_calculations(
+		resources, nodes, placement_constraints, actions,
+		ordering_constraints, stonith_list, shutdown_list,
+		colors, action_sets);
+
+	free_xml(graph);
+	crm_mem_stats(mem_stats);
+	crm_err("Exiting");
+	exit(1);
+#endif
+
 	crm_debug_5("apply placement constraints");
 	stage1(placement_constraints, nodes, resources);
 	
+#if MEMCHECK_STAGE_1
+	cleanup_calculations(
+		resources, nodes, placement_constraints, actions,
+		ordering_constraints, stonith_list, shutdown_list,
+		colors, action_sets);
+
+	free_xml(graph);
+	crm_mem_stats(mem_stats);
+	crm_err("Exiting");
+	exit(1);
+#endif
+
 	crm_debug_5("color resources");
 	stage2(resources, nodes, &colors);
+
+#if MEMCHECK_STAGE_2
+	cleanup_calculations(
+		resources, nodes, placement_constraints, actions,
+		ordering_constraints, stonith_list, shutdown_list,
+		colors, action_sets);
+
+	free_xml(graph);
+	crm_mem_stats(mem_stats);
+	crm_err("Exiting");
+	exit(1);
+#endif
 
 	/* unused */
 	stage3(colors);
@@ -186,14 +223,62 @@ do_calculations(crm_data_t * cib_object)
 	crm_debug_5("assign nodes to colors");
 	stage4(colors);	
 	
+#if MEMCHECK_STAGE_4
+	cleanup_calculations(
+		resources, nodes, placement_constraints, actions,
+		ordering_constraints, stonith_list, shutdown_list,
+		colors, action_sets);
+
+	free_xml(graph);
+	crm_mem_stats(mem_stats);
+	crm_err("Exiting");
+	exit(1);
+#endif
+
 	crm_debug_5("creating actions and internal ording constraints");
 	stage5(resources, &ordering_constraints);
+
+#if MEMCHECK_STAGE_5
+	cleanup_calculations(
+		resources, nodes, placement_constraints, actions,
+		ordering_constraints, stonith_list, shutdown_list,
+		colors, action_sets);
+
+	free_xml(graph);
+	crm_mem_stats(mem_stats);
+	crm_err("Exiting");
+	exit(1);
+#endif
 
 	crm_debug_5("processing fencing and shutdown cases");
 	stage6(&actions, &ordering_constraints, nodes, resources);
 	
+#if MEMCHECK_STAGE_6
+	cleanup_calculations(
+		resources, nodes, placement_constraints, actions,
+		ordering_constraints, stonith_list, shutdown_list,
+		colors, action_sets);
+
+	free_xml(graph);
+	crm_mem_stats(mem_stats);
+	crm_err("Exiting");
+	exit(1);
+#endif
+
 	crm_debug_5("applying ordering constraints");
 	stage7(resources, actions, ordering_constraints);
+
+#if MEMCHECK_STAGE_7
+	cleanup_calculations(
+		resources, nodes, placement_constraints, actions,
+		ordering_constraints, stonith_list, shutdown_list,
+		colors, action_sets);
+
+	free_xml(graph);
+	crm_mem_stats(mem_stats);
+	crm_err("Exiting");
+	exit(1);
+#endif
 
 	crm_debug_2("=#=#=#=#= Summary =#=#=#=#=");
 	crm_debug_2("========= All Actions =========");
@@ -227,18 +312,6 @@ do_calculations(crm_data_t * cib_object)
 	
 	crm_debug_5("creating transition graph");
 	stage8(resources, actions, &graph);
-
-#if 0
-	cleanup_calculations(
-		resources, nodes, placement_constraints, actions,
-		ordering_constraints, stonith_list, shutdown_list,
-		colors, action_sets);
-	free_xml(cib_object);
-	free_xml(graph);
-	crm_mem_stats(mem_stats);
-	crm_err("Exiting");
-	exit(1);
-#endif
 	
 	cleanup_calculations(
 		resources, nodes, placement_constraints, actions,

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.78 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: utils.c,v 1.79 2005/05/20 10:48:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1074,8 +1074,8 @@ pe_free_nodes(GListPtr nodes)
 				g_hash_table_destroy(details->attrs);
 			}
 			pe_free_shallow_adv(details->running_rsc, FALSE);
+			crm_free(details);
 		}
-		crm_free(details);
 		crm_free(node);
 	}
 	if(nodes != NULL) {

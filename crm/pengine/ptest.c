@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.49 2005/05/20 09:48:15 andrew Exp $ */
+/* $Id: ptest.c,v 1.50 2005/05/20 10:48:00 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -121,10 +121,6 @@ main(int argc, char **argv)
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
   
-#ifndef CRM_USE_MALLOC
-	crm_malloc0(mem_stats, sizeof(cl_mem_stats_t));
-	cl_malloc_setstats(mem_stats);
-#endif
 	
 	if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
@@ -136,24 +132,27 @@ main(int argc, char **argv)
 #ifdef MCHECK
 	mtrace();
 #endif
-	graph = do_calculations(cib_object);
+	crm_malloc0(mem_stats, sizeof(cl_mem_stats_t));
+	cl_malloc_setstats(mem_stats);
 
-#ifdef MCHECK
-	muntrace();
-#endif
+	graph = do_calculations(cib_object);
 
 	msg_buffer = dump_xml_formatted(graph);
 	fprintf(stdout, "%s\n", msg_buffer);
 	fflush(stdout);
 	crm_free(msg_buffer);
-
+	
 	free_xml(graph);
-	free_xml(cib_object);
 
-#ifndef CRM_USE_MALLOC
 	crm_mem_stats(mem_stats);
+	crm_free(mem_stats);
 	cl_malloc_setstats(NULL);
+
+#ifdef MCHECK
+	muntrace();
 #endif
+	
+	free_xml(cib_object);
 
 	/* required for MallocDebug.app */
 	if(inhibit_exit) {
