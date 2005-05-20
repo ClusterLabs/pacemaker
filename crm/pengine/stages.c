@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.61 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: stages.c,v 1.62 2005/05/20 11:57:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -471,9 +471,9 @@ choose_node_from_list(color_t *color)
 	node_t *chosen = NULL;
 
 	crm_debug_4("Choosing node for color %d", color->id);
-	nodes  = g_list_sort(nodes, sort_node_weight);
+	color->details->candidate_nodes = g_list_sort(nodes, sort_node_weight);
 
-	chosen = g_list_nth_data(nodes, 0);
+	chosen = g_list_nth_data(color->details->candidate_nodes, 0);
 
 	color->details->chosen_node = NULL;
 	color->details->pending = FALSE;
