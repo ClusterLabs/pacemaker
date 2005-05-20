@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.79 2005/05/20 10:48:00 andrew Exp $ */
+/* $Id: utils.c,v 1.80 2005/05/20 11:58:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -612,6 +612,8 @@ custom_action(
 	}
 	
 	if(possible_matches != NULL) {
+		crm_free(key);
+		
 		if(g_list_length(possible_matches) > 1) {
 			pe_warn("Action %s for %s on %s exists %d times",
 				task, rsc?rsc->id:"<NULL>",
@@ -730,6 +732,7 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 	const char *name = NULL;
 	const char *interval = NULL;
 	char *match_key = NULL;
+	crm_data_t *op = NULL;
 	
 	xml_child_iter(
 		rsc->ops_xml, operation, "op",
@@ -740,13 +743,15 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 		match_key = generate_op_key(rsc->id,name,crm_get_msec(interval));
 		crm_debug_2("Matching %s with %s", key, match_key);
 		if(safe_str_eq(key, match_key)) {
-			crm_free(match_key);
-			return operation;
+			op = operation;
 		}
 		crm_free(match_key);
+		if(op != NULL) {
+			break;
+		}
 		);
 	crm_debug_2("No matching for %s", key);
-	return NULL;
+	return op;
 }
 
 
@@ -1059,11 +1064,11 @@ log_action(int log_level, const char *pre_text, action_t *action, gboolean detai
 void
 pe_free_nodes(GListPtr nodes)
 {
-	while(nodes != NULL) {
-		GListPtr list_item = nodes;
-		node_t *node = (node_t*)list_item->data;
+	GListPtr iterator = nodes;
+	while(iterator != NULL) {
+		node_t *node = (node_t*)iterator->data;
 		struct node_shared_s *details = node->details;
-		nodes = nodes->next;
+		iterator = iterator->next;
 
 		crm_debug_5("deleting node");
 		crm_debug_5("%s is being deleted", details->uname);
@@ -1086,11 +1091,11 @@ pe_free_nodes(GListPtr nodes)
 void
 pe_free_colors(GListPtr colors)
 {
-	while(colors != NULL) {
-		GListPtr list_item = colors;
-		color_t *color = (color_t *)list_item->data;
+	GListPtr iterator = colors;
+	while(iterator != NULL) {
+		color_t *color = (color_t *)iterator->data;
 		struct color_shared_s *details = color->details;
-		colors = colors->next;
+		iterator = iterator->next;
 		
 		if(details != NULL) {
 			pe_free_shallow(details->candidate_nodes);
@@ -1134,13 +1139,12 @@ pe_free_shallow_adv(GListPtr alist, gboolean with_data)
 void
 pe_free_resources(GListPtr resources)
 { 
-	volatile GListPtr list_item = NULL;
 	resource_t *rsc = NULL;
-	
-	while(resources != NULL) {
-		list_item = resources;
-		rsc = (resource_t *)list_item->data;
-		resources = resources->next;
+	GListPtr iterator = resources;
+	while(iterator != NULL) {
+		iterator = iterator;
+		rsc = (resource_t *)iterator->data;
+		iterator = iterator->next;
 		rsc->fns->free(rsc);
 	}
 	if(resources != NULL) {
@@ -1152,15 +1156,13 @@ pe_free_resources(GListPtr resources)
 void
 pe_free_actions(GListPtr actions) 
 {
-	while(actions != NULL) {
-		GListPtr list_item = actions;
-		action_t *action = (action_t *)list_item->data;
-		actions = actions->next;
+	GListPtr iterator = actions;
+	while(iterator != NULL) {
+		action_t *action = (action_t *)iterator->data;
+		iterator = iterator->next;
 
 		pe_free_shallow(action->actions_before);/* action_warpper_t* */
 		pe_free_shallow(action->actions_after); /* action_warpper_t* */
-		action->actions_before = NULL;
-		action->actions_after  = NULL;
 		g_hash_table_destroy(action->extra);
 		crm_free(action->uuid);
 		crm_free(action);
@@ -1173,10 +1175,10 @@ pe_free_actions(GListPtr actions)
 void
 pe_free_ordering(GListPtr constraints) 
 {
-	while(constraints != NULL) {
-		GListPtr list_item = constraints;
-		order_constraint_t *order = list_item->data;
-		constraints = constraints->next;
+	GListPtr iterator = constraints;
+	while(iterator != NULL) {
+		order_constraint_t *order = iterator->data;
+		iterator = iterator->next;
 
 		crm_free(order->lh_action_task);
 		crm_free(order->rh_action_task);
