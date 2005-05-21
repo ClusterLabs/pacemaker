@@ -1896,7 +1896,7 @@ class SimulStartLite(CTSTest):
 #	
 	unstable = []
         for node in self.CM.Env["nodes"]:
-	    out=self.CM.rsh.readaline(node, self["StatusCmd"]%node)
+	    out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
 	    ret= (string.find(out, "(S_NOT_DC|S_IDLE)") != -1)
             if ret:
                 did_fail=1
