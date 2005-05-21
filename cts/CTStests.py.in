@@ -882,10 +882,14 @@ class Fastdetection(CTSTest):
         stopwatch = CTS.LogWatcher(self.CM["LogFileName"], [stoppat], timeout=self.timeout)
         stopwatch.setwatch()
 
+#
+#	This test is CM-specific - FIXME!!
+#
         if self.CM.rsh(node, "killall -9 heartbeat")==0:
             Starttime = os.times()[4]
             if stopwatch.look():
                 Stoptime = os.times()[4]
+#	This test is CM-specific - FIXME!!
                 self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
                 Detectiontime = Stoptime-Starttime
                 detectms = int(Detectiontime*1000+0.5)
@@ -901,17 +905,19 @@ class Fastdetection(CTSTest):
                 self.start(node)
                 return self.success()
             else:
+#	This test is CM-specific - FIXME!!
                 self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
                 self.CM.ShouldBeStatus[node] = self.CM["down"]
                 ret=self.start(node)
                 return self.failure("Didn't find the log message")
         else:
-            return self.failure("Couldn't stop heartbeat")
+            return self.failure("Couldn't kill cluster manager")
 
     def is_applicable(self):
         '''This test is applicable when auto_failback != legacy'''
         return self.standby.is_applicable()
 
+#	This test is CM-specific - FIXME!!
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''
         return [ "ccm.*ERROR: ccm_control_process:failure to send protoversion request"
@@ -970,7 +976,7 @@ class BandwidthTest(CTSTest):
                 self.CM.log("Could not compute bandwidth.")
                 return self.success()
             intband = int(Bandwidth + 0.5)
-            self.CM.log("...heartbeat bandwidth: %d bits/sec" % intband)
+            self.CM.log("...bandwidth: %d bits/sec" % intband)
             self.Stats["totalbandwidth"] = self.Stats["totalbandwidth"] + Bandwidth
             if self.Stats["min"] == 0:
                 self.Stats["min"] = Bandwidth
@@ -1208,7 +1214,7 @@ class DRBDTest(CTSTest):
         return device
 
     def is_applicable(self):
-        '''DRBD is applicable when there are drbd device'''
+        '''DRBD is applicable when there are drbd devices'''
 
         for group in self.CM.ResourceGroups():
             for resource in group:
@@ -1300,6 +1306,9 @@ class Split_brainTest(CTSTest):
             return 1
         return 0
 
+#
+#	FIXME!!  This test has hard-coded cluster-manager-specific things in it!!
+#	
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''
         return [ "ERROR:.*Both machines own.*resources"
@@ -1383,6 +1392,9 @@ class ResourceRecover(CTSTest):
                 return 1
         return 0
     
+#
+#	FIXME!!  This test has hard-coded cluster-manager-specific things in it!!
+#	
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return [ """ERROR: .* LRM operation.*monitor on .*: not running""",
@@ -1407,6 +1419,8 @@ class ComponentFail(CTSTest):
         ret = self.startall(None)
         if not ret:
             return self.failure("Setup failed")
+
+#	This test is CM-specific - FIXME!!
 
         # select a component to kill
         complist = ["lrmd","crmd"]
@@ -1565,6 +1579,9 @@ class MemoryTest(CTSTest):
 	self.before = {}
 	self.after = {}
 
+#
+#	FIXME!!  This test has hard-coded cluster-manager-specific things in it!!
+#	
     def __call__(self, node):
 	ps_command='''ps -eo ucomm,pid,pmem,tsiz,dsiz,rss,vsize | grep -e ccm -e ha_logd -e cib -e crmd -e lrmd -e tengine -e pengine'''
 
@@ -1845,7 +1862,9 @@ class SimulStartLite(CTSTest):
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 self.CM.StartaCMnoBlock(node)
-
+#
+#	FIXME!!  This test has hard-coded cluster-manager-specific strings in it
+#	
         if watch.lookforall():
             watchpats = [ ]
             watchpats.append("Current state: S_IDLE")
@@ -1859,8 +1878,8 @@ class SimulStartLite(CTSTest):
             if idle_watch.look():
                 return self.success()
 
-            self.CM.log("Warn: DC did not stablize") 
-            return self.failure("DC did not stablize") 
+            self.CM.log("Warn: Cluster (DC) did not stablize") 
+            return self.failure("Cluster (DC) did not stablize") 
                 
         did_fail=0
 	unstable = []
@@ -1872,9 +1891,12 @@ class SimulStartLite(CTSTest):
         if did_fail:
             return self.failure("Unstarted nodes exist: " + repr(unstable))
 
+#
+#	FIXME!!  This test has hard-coded cluster-manager-specific strings in it
+#	
 	unstable = []
         for node in self.CM.Env["nodes"]:
-	    out=self.rsh.readaline(node, self["StatusCmd"]%node)
+	    out=self.CM.rsh.readaline(node, self["StatusCmd"]%node)
 	    ret= (string.find(out, "(S_NOT_DC|S_IDLE)") != -1)
             if ret:
                 did_fail=1
