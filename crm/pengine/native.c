@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.41 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: native.c,v 1.42 2005/05/23 16:25:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -304,6 +304,8 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		CRM_DEV_ASSERT(node != NULL);
 		
 		if(have_quorum == FALSE && no_quorum_policy == no_quorum_stop){
+			pe_warn("Stop  resource %s\t(%s) (no quorum)",
+				rsc->id, node->details->uname);
 			start = start_action(rsc, chosen);
 			stop = stop_action(rsc, node);
 			start->runnable = FALSE;
