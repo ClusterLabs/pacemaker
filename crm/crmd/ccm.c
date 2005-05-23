@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.81 2005/05/23 16:24:21 andrew Exp $ */
+/* $Id: ccm.c,v 1.82 2005/05/23 20:28:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -184,17 +184,7 @@ do_ccm_event(long long action,
 		return I_NULL;
 	}
 	
-	/* My understanding is that we will never get both
-	 * node leaving *and* node joining callbacks at the
-	 * same time.
-	 *
-	 * Gshi concurrs with this
-	 *
-	 * Various logic would need to change if this is not
-	 * the case... so assert its true
-	 */
 	CRM_DEV_ASSERT(oc->m_n_in != 0 || oc->m_n_out != 0);
-	CRM_DEV_ASSERT(oc->m_n_in == 0 || oc->m_n_out == 0);
 	
 	if(AM_I_DC) {
 		/* Membership changed, remind everyone we're here.

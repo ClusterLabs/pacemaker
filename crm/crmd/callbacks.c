@@ -446,7 +446,6 @@ crmd_ccm_msg_callback(
 	gboolean update_cache = FALSE;
 	struct crmd_ccm_data_s *event_data = NULL;
 	const oc_ev_membership_t *membership = data;
-	const oc_ev_membership_t *oc = data;
 
 	gboolean update_quorum = FALSE;
 	gboolean trigger_transition = FALSE;
@@ -463,8 +462,6 @@ crmd_ccm_msg_callback(
 	
 	switch(event) {
 		case OC_EV_MS_NEW_MEMBERSHIP:
-			CRM_DEV_ASSERT(oc->m_n_in != 0 || oc->m_n_out != 0);
-			CRM_DEV_ASSERT(oc->m_n_in == 0 || oc->m_n_out == 0);
 		case OC_EV_MS_INVALID:/* fall through */
 			update_cache = TRUE;
 			update_quorum = TRUE;
@@ -483,8 +480,6 @@ crmd_ccm_msg_callback(
 #endif
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
-			CRM_DEV_ASSERT(oc->m_n_in != 0 || oc->m_n_out != 0);
-			CRM_DEV_ASSERT(oc->m_n_in == 0 || oc->m_n_out == 0);
 			if(AM_I_DC && need_transition(fsa_state)) {
 				fsa_membership_copy->id = instance;
 				trigger_transition = TRUE;
