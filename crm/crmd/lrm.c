@@ -283,7 +283,11 @@ stop_all_resources(void)
 	slist_iter(
 		rsc_id, char, lrm_list, lpc,
 
-		do_lrm_rsc_op(NULL, rsc_id, CRMD_ACTION_STOP, NULL);
+		const char *last_op = g_hash_table_lookup(resources, rsc_id);
+		if(safe_str_neq(last_op, CRMD_ACTION_STOP)) {
+			crm_warn("Resource %s was active at shutdown", rsc_id);
+			do_lrm_rsc_op(NULL, rsc_id, CRMD_ACTION_STOP, NULL);
+		}
 		);
 
 	set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
