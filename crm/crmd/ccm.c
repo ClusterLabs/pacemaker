@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.80 2005/05/20 17:09:10 andrew Exp $ */
+/* $Id: ccm.c,v 1.81 2005/05/23 16:24:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -127,8 +127,7 @@ do_ccm_control(long long action,
 		crm_info("CCM Activation passed... all set to go!");
 
 		G_main_add_fd(G_PRIORITY_HIGH, fsa_ev_fd, FALSE, ccm_dispatch,
-			      fsa_ev_token,
-			      default_ipc_connection_destroy);
+			      fsa_ev_token, default_ipc_connection_destroy);
 		
 	}
 
@@ -284,22 +283,22 @@ do_ccm_update_cache(long long action,
 		int		clsize = (oc->m_out_idx - oc->m_n_member);
 		int		plsize = (clsize + 2)/2;
 		gboolean	plurality = (oc->m_n_member >= plsize);
-		gboolean	Q =  ccm_have_quorum(event);
+		gboolean	Q = ccm_have_quorum(event);
 
-		if (clsize == 2) {
+		if(clsize == 2) {
 			if (!Q) {
-				crm_err("%s: 2 nodes w/o quorum"
-				,	__FUNCTION__);
+				crm_err("2 nodes w/o quorum");
 			}
-		}else if(Q && !plurality) {
-			crm_err("%s: Quorum w/o plurality (%d/%d nodes)"
-			,	__FUNCTION__, oc->m_n_member, clsize);
-		}else if(plurality && !Q) {
-			crm_err("%s: Plurality w/o Quorum (%d/%d nodes)"
-			,	__FUNCTION__, oc->m_n_member, clsize);
-		}else{
-			crm_info("%s: Quorum(%d) and plurality (%d/%d) agree."
-			,	__FUNCTION__, (int)Q, oc->m_n_member, clsize);
+			
+		} else if(Q && !plurality) {
+			crm_err("Quorum w/o plurality (%d/%d nodes)",
+				oc->m_n_member, clsize);
+		} else if(plurality && !Q) {
+			crm_err("Plurality w/o Quorum (%d/%d nodes)",
+				oc->m_n_member, clsize);
+		} else {
+			crm_debug("Quorum(%s) and plurality (%d/%d) agree.",
+				  Q?"true":"false", oc->m_n_member, clsize);
 		}
 		
 	}
