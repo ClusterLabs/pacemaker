@@ -163,6 +163,9 @@ crm_timer_stop(fsa_timer_t *timer)
  	} else if(timer == election_timeout) {
 		timer_desc = "Election Timeout";
 		
+ 	} else if(timer == wait_timer) {
+		timer_desc = "Stall Timeout";
+		
 	} else {
 		timer_desc = "Timer";
 	}
