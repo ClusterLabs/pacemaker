@@ -52,6 +52,7 @@ class LinuxHAv2(HeartbeatCM):
         self.update({
             "Name"           : "linux-ha-v2",
             "DeadTime"       : 600,
+            "StartTime"      : 180,        # Max time to start up
             "StableTime"     : 10,
             "StartCmd"       : "@libdir@/heartbeat/ha_logd -d >/dev/null 2>&1; @libdir@/heartbeat/heartbeat >/dev/null 2>&1",
             "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
@@ -60,7 +61,6 @@ class LinuxHAv2(HeartbeatCM):
             "EpocheCmd"      : "@libdir@/heartbeat/ccm_tool -e",
             "QuorumCmd"      : "@libdir@/heartbeat/ccm_tool -q",
             "ParitionCmd"    : "@libdir@/heartbeat/ccm_tool -p",
-            # Revert this to blocking (timeout = 0) to catch bugs
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s monitor 0 0 EVERYTIME 2>/dev/null|grep return",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
@@ -70,12 +70,16 @@ class LinuxHAv2(HeartbeatCM):
 
             # Patterns to look for in the log files for various occasions...
             "Pat:DC_IDLE"      : "crmd:.*State transition.*-> S_IDLE",
-            "Pat:We_started"   : "%s crmd:.*State transition.*-> (S_NOT_DC|S_IDLE)",
-            "Pat:They_started" : "%s crmd:.*State transition.*-> (S_NOT_DC|S_IDLE)",
-            "Pat:They_stopped" : "%s heartbeat.*Heartbeat shutdown complete",
+	    
+	    # This wont work if we have multiple partitions
+            # Use: "Pat:They_started" : "%s crmd:.*State transition.*-> S_NOT_DC",
+	    "Pat:They_started" : "Updating node state to member for %s",
+            "Pat:We_started"   : "%s crmd:.*State transition.*-> S_IDLE",
+            "Pat:We_stopped"   : "%s heartbeat.*Heartbeat shutdown complete",
+	    "Pat:They_stopped" : "%s crmd:.*LOST:.*%s",
             "Pat:They_dead"    : "node (%s).*: is dead",
-            "Pat:We_stopped"   : ("%s heartbeat.*Heartbeat shutdown complete" %(self.OurNode)),
-            "Pat:All_stopped"  : "%s heartbeat.*Heartbeat shutdown complete",
+
+            "Pat:TransitionComplete" : "Transition status: Complete: complete",
             
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
@@ -88,17 +92,20 @@ class LinuxHAv2(HeartbeatCM):
                 r"input=I_FINALIZED cause=C_TIMER_POPPED",
                 r"input=I_ERROR",
                 r", exiting\.",
-                r"WARN.*Ignoring HA message.* not in our membership list",
+                r"WARN.*Ignoring HA message.*vote.*not in our membership list",
                 r"pengine:.*Attempting recovery of resource",
                 r"pengine:.*Handling failed ",
                 r"tengine:.*is taking more than 2x its timeout",
                 r"Confirm not received from",
                 r"Welcome reply not received from",
+		r"Resource .* was active at shutdown",
                 r"ERROR:",
                 r"CRIT:",
             ),
         })
         del self["Standby"]
+        self.check_transitions = 0
+        self.check_elections = 0
         self.CIBsync = {}
         cib_prefix='''
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
@@ -209,44 +216,7 @@ class LinuxHAv2(HeartbeatCM):
                 ]
         return []
 
-
-    def StataCM(self, node):
-        '''Report the status of the cluster manager on a given node'''
-        out=self.rsh.readaline(node, self["StatusCmd"]%node)
-        ret= (string.find(out, 'ok') != -1)
-        try:
-            if ret:
-                if self.ShouldBeStatus[node] != self["up"]:
-                    self.log(
-                    "Node status for %s is %s but we think it should be %s"
-                    %        (node, self["up"], self.ShouldBeStatus[node]))
-                    self.log("Expected: %s. Actual: %s"
-                    %        (self.ShouldBeStatus[node], out))
-            else:
-                if self.ShouldBeStatus[node] != self["down"]:
-                    self.log(
-                    "Node status for %s is %s but we think it should be %s"
-                    %        (node, self["down"], self.ShouldBeStatus[node]))
-        except KeyError:        pass
-
-        if ret:        self.ShouldBeStatus[node]=self["up"]
-        else:        self.ShouldBeStatus[node]=self["down"]
-        return ret
-
-    def StartaCM(self, node):
-        '''Start up the cluster manager on a given node'''
-        localBadNewsPats = []
-        patterns = []
-        patterns.append(self["Pat:We_started"]%node)
-
-        # only search for this pattern if there is another node out there
-        # that should be the DC
-        if self.any_running() == 1:
-            patterns.append(self["Pat:DC_IDLE"])
-            localBadNewsPats.append("input=I_DC_TIMEOUT ")
-            localBadNewsPats.append("input=I_ELECTION_DC ")
-            localBadNewsPats.append("WARN:.*Ignoring HA message.*not in our membership list")
-
+    def install_config(self, node):
         if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
             if self.Env["CIBfilename"] == None:
@@ -264,94 +234,94 @@ class LinuxHAv2(HeartbeatCM):
                     "root@" + (self["CIBfile"]%node)):
                     raise ValueError("Can not scp file to %s "%node)
 
-        localBadNews = CTS.LogWatcher(self["LogFileName"], localBadNewsPats, 0)
-        localBadNews.setwatch()
+    def prepare(self):
+        '''Finish the Initialization process. Prepare to test...'''
 
-        watch = CTS.LogWatcher(self["LogFileName"], patterns, 180)
-        self.debug("Starting %s on node %s" %(self["Name"], node))
-        watch.setwatch()
-        self.rsh(node, self["StartCmd"])
-        self.ShouldBeStatus[node]=self["up"]
-        if watch.lookforall():
-            match=localBadNews.look()
-            while match:
-                if not re.search("CTS:", match):
-                    self.log("(startup) BadNews "+ match)
-                    self.Env.RandomTests.incr("BadNews")
-                match=localBadNews.look()
-            return 1
+        for node in self.Env["nodes"]:
+	    self.ShouldBeStatus[node] = ""
+	    self.StataCM(node)
 
-        # the watch() failed... lets check to see if the start _really_ failed
-        for regex in watch.unmatched:
-            self.log ("Warn: Startup pattern not found: %s" %(regex))
+    def test_node_CM(self, node):
+        '''Report the status of the cluster manager on a given node'''
 
-        match=localBadNews.look()
-        while match:
-            if not re.search("CTS:", match):
-                self.log("Warn: %s" %match)
-                self.Env.RandomTests.incr("BadNews")
-            match=localBadNews.look()
+	watchpats = [ ]
+	watchpats.append("Current state: (S_IDLE|S_NOT_DC)")
+	watchpats.append(self["Pat:They_started"]%node)
+	idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats)
+	idle_watch.setwatch()
 
-        out = self.rsh.readaline(node, (self["StatusCmd"] %node) )
-        if string.find(out, 'ok') == -1:
-            # yep, it _really_ failed
-            self.ShouldBeStatus[node]=self["down"]        
-            return None
+        out=self.rsh.readaline(node, self["StatusCmd"]%node)
+        ret= (string.find(out, 'ok') != -1)
+	self.debug("Node %s status: %s" %(node, out))	    
 
-        ret=(string.find(out, 'S_NOT_DC') != -1)
-        if ret:
-            # actually we joined the cluster just fine
-            self.log ("%s on %s joined the cluster" %(self["Name"], node))
-            return 1
+	if not ret:
+	    if self.ShouldBeStatus[node] == self["up"]:
+		self.log(
+		    "Node status for %s is %s but we think it should be %s"
+		    %(node, self["down"], self.ShouldBeStatus[node]))
+	    self.ShouldBeStatus[node]=self["down"]
+	    return 0
 
-        ret= (string.find(out, 'S_IDLE') != -1)
-        if ret:
-            # actually we joined the cluster just fine
-            self.log ("%s on %s joined the cluster as DC" %(self["Name"], node))
-            return 1
+	if self.ShouldBeStatus[node] == self["down"]:
+	    self.log(
+		"Node status for %s is %s but we think it should be %s: %s"
+		%(node, self["up"], self.ShouldBeStatus[node], out))
 
-        self.log ("%s on %s started but unstable: %s" 
-                  %(self["Name"], node, out))
-#        self.ShouldBeStatus[node]=self["down"]
-        return None
+	self.ShouldBeStatus[node]=self["up"]
+	if not idle_watch.look():
+	    # just up
+	    self.debug("Warn: Node %s is unstable: %s" %(node, out))
+	    return 1
 
-    def StopaCM(self, node):
+	# Up and stable
+	return 2
 
-        '''Stop the cluster manager on a given node'''
+    # Is the node up or is the node down
+    def StataCM(self, node):
+        '''Report the status of the cluster manager on a given node'''
 
-        self.debug("Stopping %s on node %s" %(self["Name"], node))
+	if self.test_node_CM(node) > 0:
+	    return 1
+	return None
 
-        rc=self.rsh(node, self["StopCmd"])
-        if rc == 0:
-            self.ShouldBeStatus[node]=self["down"]
-            return 1
+    # Being up and being stable is not the same question...
+    def node_stable(self, node):
+        '''Report the status of the cluster manager on a given node'''
 
-        still_running = 0
-        if self.rsh(node, "killall -INT crmd") == 0:
-            still_running = 1
-            self.log("%s is still running on node %s" %(self["name"], node))
-        if self.rsh(node, "killall -INT heartbeat") == 0:
-            still_running = 1
-            self.log("Heartbeat is still running on node %s" %node)
+	if self.test_node_CM(node) == 2:
+	    return 1
+	self.log("Warn: Node %s not stable" %(node)) 
+	return None
 
-        if still_running == 0:
-            self.log ("Warn: %s failed, yet nothing is running on node %s" %(self["StopCmd"], self["Name"], node))
-            return 1
+    def cluster_stable(self, timeout=None):
+	watchpats = [ ]
+	watchpats.append("Current state: S_IDLE")
+	watchpats.append(self["Pat:DC_IDLE"])
 
-        return None
-    
-    def isolate_node(self, node, allowlist):
-        '''isolate the communication between the nodes'''
-        rc = self.rsh(node, self["BreakCommCmd2"]%allowlist)
-        if rc == 0:
-            return 1
-        else:
-            self.log("Could not break the communication from node: %s",node)
-        return None
-        
-    def IsDC(self, node):
+	if timeout == None:
+	    timeout = self["DeadTime"]
+
+	idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats, timeout)
+	idle_watch.setwatch()
+
+	any_up = 0
+	for node in self.Env["nodes"]:
+	    # have each node dump its current state
+	    if self.ShouldBeStatus[node] == self["up"]:
+		self.rsh.readaline(node, (self["StatusCmd"] %node) )
+		any_up = 1
+
+	if any_up == 0 or idle_watch.look():
+	    return 1
+
+	self.log("Warn: Cluster not IDLE") 
+	return None
+
+    def is_node_dc(self, node, status_line=None):
         rc = 0
-        status_line = self.rsh.readaline(node, self["StatusCmd"]%node)
+	if not status_line: 
+	    status_line = self.rsh.readaline(node, self["StatusCmd"]%node)
+
         if not status_line:
             rc = 0
         elif string.find(status_line, 'S_IDLE') != -1:
@@ -364,8 +334,21 @@ class LinuxHAv2(HeartbeatCM):
             rc = 1
         elif string.find(status_line, 'S_TRANSITION_ENGINE') != -1: 
             rc = 1
+
+	if rc == 1:
+	    self.debug("%s _is_ the DC" % node)
+	    
         return rc
 
+    def isolate_node(self, node, allowlist):
+        '''isolate the communication between the nodes'''
+        rc = self.rsh(node, self["BreakCommCmd2"]%allowlist)
+        if rc == 0:
+            return 1
+        else:
+            self.log("Could not break the communication from node: %s",node)
+        return None
+        
     def Configuration(self):
         if self.Env["ClobberCIB"] == 1:
             if self.Env["CIBfilename"] == None:
@@ -410,12 +393,6 @@ class LinuxHAv2(HeartbeatCM):
             DependancyList.append(dependancy)
         return DependancyList
 
-    def any_running(self):
-        for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == self["up"]:
-                return 1
-        return 0
-        
     def find_partitions(self):
         ccm_partitions = []
 

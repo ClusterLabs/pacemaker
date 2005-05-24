@@ -73,8 +73,8 @@ class HeartbeatCM(ClusterManager):
             # Patterns to look for in the log files for various occasions...
             "Pat:We_started"       : " (%s) .* Initial resource acquisition complete",
             "Pat:They_started"     : " (%s) .* Initial resource acquisition complete",
-            "Pat:We_stopped"       : "Heartbeat shutdown complete",
-            "Pat:They_stopped"     : "node (%s).*: is dead",
+            "Pat:We_stopped"       : "%s heartbeat.*Heartbeat shutdown complete",
+            "Pat:They_stopped"     : "%s heartbeat.*node (%s).*: is dead",
             "Pat:They_dead"        : "node (%s).*: is dead",
             "Pat:All_stopped"      : " (%s).*heartbeat.*Heartbeat shutdown complete",
             "Pat:StandbyOK"        : "Standby resource acquisition done",

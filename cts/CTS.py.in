@@ -254,7 +254,16 @@ class LogWatcher:
         self.unmatched = None
         self.regexes = save_regexes
         return returnresult
-                
+
+# In case we ever want multiple regexes to match a single line...
+#-            del self.regexes[self.whichmatch]
+#+            tmp_regexes = self.regexes
+#+            self.regexes = []
+#+            which = 0
+#+            for regex in tmp_regexes:
+#+                matchobj = re.search(regex, oneresult)
+#+                if not matchobj:
+#+                    self.regexes.append(regex)
 
 class ClusterManager(UserDict):
     '''The Cluster Manager class.
@@ -337,10 +346,10 @@ class ClusterManager(UserDict):
         '''Finish the Initialization process. Prepare to test...'''
 
         for node in self.Env["nodes"]:
-          if self.StataCM(node):
-              self.ShouldBeStatus[node]=self["up"]
-          else:
-              self.ShouldBeStatus[node]=self["down"]
+	    if self.StataCM(node):
+		self.ShouldBeStatus[node]=self["up"]
+	    else:
+		self.ShouldBeStatus[node]=self["down"]
 
     def upcount(self):
         '''How many nodes are up?'''
@@ -355,36 +364,47 @@ class ClusterManager(UserDict):
         if self["LogFileName"] != None:
             os.system("cp /dev/null " + self["LogFileName"])
 
+    def install_config(self, node):
+	return None
+
     def StartaCM(self, node):
 
         '''Start up the cluster manager on a given node'''
+        self.debug("Starting %s on node %s" %(self["Name"], node))
 
-        self.debug("Starting %s on node %s"
-                  %        (self["Name"], node))
+        if self.ShouldBeStatus[node] != self["down"]:
+	    return 1
 
-        if node == self.OurNode or self.upcount() < 1:
-            pat = (self["Pat:We_started"] % node)
-        else:
-            pat = (self["Pat:They_started"] % node)
+        patterns = []
+        # Technically we should always be able to notice ourselves starting
+	if self.upcount() == 0:
+	    patterns.append(self["Pat:We_started"] % node)
+	else:
+	    patterns.append(self["Pat:They_started"] % node)
 
-        watch = CTS.LogWatcher(self["LogFileName"], [pat]
-        ,        timeout=self["StartTime"]+10)
+        watch = LogWatcher(
+            self["LogFileName"], patterns, timeout=self["StartTime"]+10)
+        
         watch.setwatch()
 
-        rc=self.rsh(node, self["StartCmd"])
-        if rc != 0:
-            self.log ("Could not start %s on node %s"
-            %        (self["Name"], node))
+	self.install_config(node)
+        if self.rsh(node, self["StartCmd"]) != 0:
+            self.log ("Warn: Start command failed on node %s" %(node))
             return None
 
         self.ShouldBeStatus[node]=self["up"]
 
-        if watch.look():
-            return 1
+        watch_result = watch.lookforall()
+        if watch.unmatched:
+            for regex in watch.unmatched:
+                self.log ("Warn: Startup pattern not found: %s" %(regex))
 
-        self.CM.log("START FAILURE: did not find pattern " + pat)
-        self.CM.log("START TIMEOUT = %d " % self.CM["StartTime"])
-        
+        if watch_result:  
+	    #self.debug("Found match: "+ repr(watch_result))
+	    self.cluster_stable(self["DeadTime"])
+	    return 1
+
+	self.log ("Warn: Start failed for node %s" %(node))
         return None
 
     def StartaCMnoBlock(self, node):
@@ -400,16 +420,18 @@ class ClusterManager(UserDict):
 
         '''Stop the cluster manager on a given node'''
 
-        self.debug("Stopping %s on node %s"
-                  %        (self["Name"], node))
+        self.debug("Stopping %s on node %s" %(self["Name"], node))
 
-        rc=self.rsh(node, self["StopCmd"])
-        if rc == 0:
+        if self.ShouldBeStatus[node] != self["up"]:
+	    return 1
+
+        if self.rsh(node, self["StopCmd"]) == 0:
             self.ShouldBeStatus[node]=self["down"]
+	    self.cluster_stable(self["DeadTime"])
             return 1
         else:
-            self.log ("Could not stop %s on node %s"
-            %        (self["Name"], node))
+            self.log ("Could not stop %s on node %s" %(self["Name"], node))
+
         return None
 
     def StopaCMnoBlock(self, node):
@@ -419,6 +441,13 @@ class ClusterManager(UserDict):
         self.debug("Stopping %s on node %s" %(self["Name"], node))
         self.rsh.noBlock(node, self["StopCmd"])
         self.ShouldBeStatus[node]=self["down"]
+        return 1
+
+    def cluster_stable(self, timeout):
+        time.sleep(self["StableTime"])
+        return 1
+
+    def node_stable(self, node):
         return 1
 
     def RereadCM(self, node):

@@ -274,10 +274,9 @@ class StopTest(CTSTest):
     '''Stop (deactivate) the cluster manager on a node'''
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
-        self.name="stop"
+        self.name="Stop"
         self.uspat   = self.CM["Pat:We_stopped"]
         self.thempat = self.CM["Pat:They_stopped"]
-        self.allpat = self.CM["Pat:All_stopped"]
 
     def __call__(self, node):
         '''Perform the 'stop' test. '''
@@ -285,23 +284,38 @@ class StopTest(CTSTest):
         if self.CM.ShouldBeStatus[node] != self.CM["up"]:
             return self.skipped()
 
+	patterns = []
+	# Technicall we should always be able to notice ourselves stopping
+	patterns.append(self.CM["Pat:We_stopped"] % node)
+
+	# Any active node needs to notice this one left
+	# NOTE: This wont work if we have multiple partitions
+	for other in self.CM.Env["nodes"]:
+	    if self.CM.ShouldBeStatus[other] == self.CM["up"] and other != node:
+		patterns.append(self.CM["Pat:They_stopped"] %(other, node))
+		#self.debug("Checking %s will notice %s left"%(other, node))
+		
+        watch = CTS.LogWatcher(
+	    self.CM["LogFileName"], patterns, self.CM["DeadTime"])
+        watch.setwatch()
 
         if node == self.CM.OurNode:
             self.incr("us")
-            pat = self.uspat
         else:
             if self.CM.upcount() <= 1:
                 self.incr("all")
-                pat = (self.allpat % node)
             else:
                 self.incr("them")
-                pat = (self.thempat % node)
 
-        watch = CTS.LogWatcher(self.CM["LogFileName"], [pat]
-        ,        self.CM["DeadTime"]+10)
-        watch.setwatch()
         self.CM.StopaCM(node)
-        if watch.look():
+	watch_result = watch.lookforall()
+
+        if watch.unmatched:
+            for regex in watch.unmatched:
+                self.log ("Warn: Shutdown pattern not found: %s" %(regex))
+
+        if watch_result:
+	    self.CM.cluster_stable(self.CM["DeadTime"])
             return self.success()
         else:
             return self.failure("no match against %s "% pat)
@@ -318,24 +332,25 @@ class StartTest(CTSTest):
         CTSTest.__init__(self,cm)
         self.name="start"
         self.debug = debug
+        self.uspat   = self.CM["Pat:We_started"]
+        self.thempat = self.CM["Pat:They_started"]
 
     def __call__(self, node):
         '''Perform the 'start' test. '''
         self.incr("calls")
 
-        if node == self.CM.OurNode or self.CM.upcount() < 1:
+        if self.CM.upcount() == 0:
             self.incr("us")
         else:
             self.incr("them")
 
         if self.CM.ShouldBeStatus[node] != self.CM["down"]:
             return self.skipped()
-
-        elif self.CM.StartaCM(node) == 1:
+	elif self.CM.StartaCM(node):
             return self.success()
-
-        return self.failure("Startup %s on node %s failed"
-                            %(self.CM["Name"], node))
+        else:
+	    return self.failure("Startup %s on node %s failed"
+				%(self.CM["Name"], node))
 
     def is_applicable(self):
         '''StartTest is always applicable'''
@@ -409,8 +424,6 @@ class RestartTest(CTSTest):
 
         self.starttime=time.time()
         ret2 = self.stop(node)
-        # Give the cluster time to recognize we're gone...
-        time.sleep(self.CM["StableTime"])
         ret3 = self.start(node)
 
         if not ret1:
@@ -578,6 +591,7 @@ class StartOnebyOne(CTSTest):
         CTSTest.__init__(self,cm)
         self.name="StartOnebyOne"
         self.stopall = SimulStopLite(cm)
+        self.start = StartTest(cm)
 
     def __call__(self, dummy):
         '''Perform the 'StartOnebyOne' test. '''
@@ -589,37 +603,22 @@ class StartOnebyOne(CTSTest):
         ret = self.stopall(None)
         if not ret:
             return self.failure("Test setup failed")
-         
-        watchpats = [ ]
 
-        pat = self.CM["Pat:We_started"]
-        for node in self.CM.Env["nodes"]:
-          thispat = (pat % node)
-          watchpats.append(thispat)
-
-        #        Start all the nodes - one by one...
-        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
-        ,        timeout=self.CM["DeadTime"]+10)
-        watch.ReturnOnlyMatch()
-
-        watch.setwatch()
+        failed=[]
         self.starttime=time.time()
         for node in self.CM.Env["nodes"]:
-            self.CM.StartaCM(node)
-        if watch.lookforall():
-             return self.success()
-        
-        did_fail=0
-        for node in self.CM.Env["nodes"]:
-            if self.CM.StataCM(node) == 0:
-                did_fail=1
-                
-        if did_fail:
-            return self.failure("Did not find start pattern(s): " 
-                                +        repr(watch.unmatched))
+            if not self.start(node):
+		failed.append(node)
 
-        return self.failure("All nodes were started but %d may be unstable"
-                            %(len(watch.unmatched)))
+        if len(failed) > 0:
+            return self.failure("Some node failed to start: " + repr(failed))
+
+	return self.success()
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+	# Because we essentially do a SimulStop at the start...
+        return [ "Resource .* was active at shutdown" ]
 
     def is_applicable(self):
         '''StartOnebyOne is always applicable'''
@@ -649,7 +648,15 @@ class SimulStart(CTSTest):
         if not ret:
             return self.failure("Setup failed")
          
-	return self.startall(None)
+	if not self.startall(None):
+            return self.failure("Startall failed")
+
+	return self.success()
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+	# Because we essentially do a SimulStop at the start...
+        return [ "Resource .* was active at shutdown" ]
 
     def is_applicable(self):
         '''SimulStart is always applicable'''
@@ -678,7 +685,17 @@ class SimulStop(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-	return self.stopall(None)
+	if not self.stopall(None):
+            return self.failure("Stopall failed")
+
+	return self.success()
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+	# Eventually one node may stay around to shut the others down
+	#  but until then, nodes will shut down their own resources
+	#  and this pattern is expected
+        return [ "Resource .* was active at shutdown" ]
 
     def is_applicable(self):
         '''SimulStop is always applicable'''
@@ -694,6 +711,7 @@ class StopOnebyOne(CTSTest):
         CTSTest.__init__(self,cm)
         self.name="StopOnebyOne"
         self.startall = SimulStartLite(cm)
+        self.stop = StopTest(cm)
 
     def __call__(self, dummy):
         '''Perform the 'StopOnebyOne' test. '''
@@ -706,14 +724,14 @@ class StopOnebyOne(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        did_fail=0
+        failed=[]
         self.starttime=time.time()
         for node in self.CM.Env["nodes"]:
-            if not self.CM.StopaCM(node):
-                did_fail=did_fail + 1
+            if not self.stop(node):
+		failed.append(node)
 
-        if did_fail:
-            return self.failure("Could not stop %d nodes" %did_fail)
+        if len(failed) > 0:
+            return self.failure("Some node failed to stop: " + repr(failed))
 
         return self.success()
 
@@ -1373,6 +1391,7 @@ class ResourceRecover(CTSTest):
         if len(recovernode)==1:
             self.CM.debug("Recovered: %s is running on %s" 
                           %(label, recovernode[0]))
+	    self.CM.cluster_stable()
             return self.success()
         elif len(recovernode)==0:
             return self.failure("%s was not recovered and is inactive" %(label))
@@ -1421,29 +1440,42 @@ class ComponentFail(CTSTest):
             return self.failure("Setup failed")
 
 #	This test is CM-specific - FIXME!!
+#       the is_applicable() doesnt address this already?
 
         # select a component to kill
-        complist = ["lrmd","crmd"]
+        complist = ["lrmd","crmd", "ccm"]
+        complist = ["crmd"]
         if self.CM.Env["DoFencing"] == 1 :
             complist.append("stonithd")
             complist.append("heartbeat")
         
         component = self.CM.Env.RandomGen.choice(complist)
-        
+        patterns = []
+	patterns.append("%s heartbeat.*respawn.*" %(node, component))
+
         # set the watch for stable
-        watch = CTS.LogWatcher(self.CM["LogFileName"], [self.CM["Pat:DC_IDLE"]]
-        ,     timeout=self.CM["DeadTime"]+10)
+        watch = CTS.LogWatcher(
+	    self.CM["LogFileName"], patterns, self.CM["DeadTime"]+10)
         watch.setwatch()
         
         # kill the component
-        self.CM.log("Kill %s on %s"%(component,node))
+        self.CM.log("...%s"%(component))
         self.CM.rsh.readaline(node, "killall -9 %s"%component)
-        
-        # wait for stable
-        if watch.look():
-            return self.success()
+
+        # check to see Heartbeat noticed
+	match = watch.look()
+        if match:
+	    self.CM.log("Found match: %s"%(match))
+
+	    # now watch it recover...
+	    if self.CM.cluster_stable(self.CM["deadtime"]):
+		return self.success()
+	    else:
+		self.failure("Cluster not stable")
         else:
-            return self.failure("no match against %s "% pat)
+            for regex in watch.unmatched:
+                self.log ("Warn: pattern not found: %s" %(regex))
+            return self.failure("Heartbeat didnt notice %s die" %component)
 
     def is_applicable(self):
         if self.CM["Name"] == "linux-ha-v2":
@@ -1522,7 +1554,7 @@ class Split_brainTest2(CTSTest):
         while dcnum < 2:
             dcnum = 0
             for member in self.CM.Env["nodes"]:
-                if self.CM.IsDC(member):
+                if self.CM.is_node_dc(member):
                     dcnum += 1
             time.sleep(1)  
                     
@@ -1579,9 +1611,6 @@ class MemoryTest(CTSTest):
 	self.before = {}
 	self.after = {}
 
-#
-#	FIXME!!  This test has hard-coded cluster-manager-specific things in it!!
-#	
     def __call__(self, node):
 	ps_command='''ps -eo ucomm,pid,pmem,tsiz,dsiz,rss,vsize | grep -e ccm -e ha_logd -e cib -e crmd -e lrmd -e tengine -e pengine'''
 
@@ -1644,16 +1673,6 @@ class MemoryTest(CTSTest):
 
 		before_tokens = before_line.split()
 		after_tokens = after_line.split()
-		self.CM.debug("%s Before: %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
-			      %(node, before_tokens[0], before_tokens[1],
-				before_tokens[2], before_tokens[3], 
-				before_tokens[4], before_tokens[5],
-				before_tokens[6]))
-		self.CM.debug("%s After:  %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
-			      %(node, after_tokens[0], after_tokens[1],
-				after_tokens[2], after_tokens[3],
-				after_tokens[4], after_tokens[5],
-				after_tokens[6]))
 		
 		# 3 : Code size
 		# 4 : Data size
@@ -1680,7 +1699,17 @@ class MemoryTest(CTSTest):
 		    self.CM.log("Process %s[%s] on %s: %s"
 				%(before_tokens[0], before_tokens[1], node,
 				  repr(messages)))
-
+		    self.CM.debug("%s Before: %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
+				  %(node, before_tokens[0], before_tokens[1],
+				    before_tokens[2], before_tokens[3], 
+				    before_tokens[4], before_tokens[5],
+				    before_tokens[6]))
+		    self.CM.debug("%s After:  %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
+				  %(node, after_tokens[0], after_tokens[1],
+				    after_tokens[2], after_tokens[3],
+				    after_tokens[4], after_tokens[5],
+				    after_tokens[6]))
+		    
 	    if failed == 1:
 		failed_nodes.append(node)
 
@@ -1695,7 +1724,9 @@ class MemoryTest(CTSTest):
                  """pengine:.*Handling failed """]
 
     def is_applicable(self):
-        return 1
+        if self.CM["Name"] == "linux-ha-v2":
+            return 1
+        return 0
 
 AllTestClasses.append(MemoryTest)
 
@@ -1710,16 +1741,10 @@ class ElectionMemoryTest(CTSTest):
     def __call__(self, node):
         self.rsh.readaline(node, self.CM["ElectionCmd"]%node)
 
-	watchpats = [ ]
-	watchpats.append("Current state: S_IDLE")
-	watchpats.append(self.CM["Pat:DC_IDLE"])
-	idle_watch = CTS.LogWatcher(
-	    self.CM["LogFileName"], watchpats, timeout=self.CM["DeadTime"])
-	idle_watch.setwatch()
-	if idle_watch.look():
+	if self.CM.cluster_stable():
 	    return self.success()
 	
-	return self.failure("IDLE state not reached")
+	return self.failure("Cluster not stable")
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
@@ -1758,6 +1783,11 @@ class SpecialTest1(CTSTest):
         ret = self.startall(None)
         return ret
 
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+	# Because we essentially do a SimulStop at the start...
+        return [ "Resource .* was active at shutdown" ]
+
     def is_applicable(self):
         return 1
 
@@ -1784,6 +1814,7 @@ class SimulStopLite(CTSTest):
     def __call__(self, dummy):
         '''Perform the 'SimulStopLite' setup work. '''
         self.incr("calls")
+	self.CM.debug("Setup: " + self.name)
 
         #     We ignore the "node" parameter...
         watchpats = [ ]
@@ -1838,16 +1869,14 @@ class SimulStartLite(CTSTest):
     def __call__(self, dummy):
         '''Perform the 'SimulStartList' setup work. '''
         self.incr("calls")
-
+	self.CM.debug("Setup: " + self.name)
         #        We ignore the "node" parameter...
         watchpats = [ ]
 
-        pat = self.CM["Pat:We_started"]
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 self.incr("WasStopped")
-                thispat = (pat % node)
-                watchpats.append(thispat)
+                watchpats.append(self.CM["Pat:They_started"] % node)
         
         if len(watchpats) == 0:
             return self.skipped()
@@ -1862,24 +1891,10 @@ class SimulStartLite(CTSTest):
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 self.CM.StartaCMnoBlock(node)
-#
-#	FIXME!!  This test has hard-coded cluster-manager-specific strings in it
-#	
         if watch.lookforall():
-            watchpats = [ ]
-            watchpats.append("Current state: S_IDLE")
-            watchpats.append(self.CM["Pat:DC_IDLE"])
-            idle_watch = CTS.LogWatcher(
-                self.CM["LogFileName"], watchpats, timeout=self.CM["DeadTime"])
-            idle_watch.setwatch()
-            for node in self.CM.Env["nodes"]:
-		# have each node dump its current state
-                self.CM.rsh.readaline(node, (self.CM["StatusCmd"] %node) )
-            if idle_watch.look():
+	    if self.CM.cluster_stable(self.CM["DeadTime"]):
                 return self.success()
-
-            self.CM.log("Warn: Cluster (DC) did not stablize") 
-            return self.failure("Cluster (DC) did not stablize") 
+            return self.failure("Cluster did not stablize") 
                 
         did_fail=0
 	unstable = []
@@ -1891,14 +1906,9 @@ class SimulStartLite(CTSTest):
         if did_fail:
             return self.failure("Unstarted nodes exist: " + repr(unstable))
 
-#
-#	FIXME!!  This test has hard-coded cluster-manager-specific strings in it
-#	
 	unstable = []
         for node in self.CM.Env["nodes"]:
-	    out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
-	    ret= (string.find(out, "(S_NOT_DC|S_IDLE)") != -1)
-            if ret:
+	    if not self.CM.node_stable(node):
                 did_fail=1
 		unstable.append(out)
 
@@ -1915,4 +1925,3 @@ class SimulStartLite(CTSTest):
     def is_applicable(self):
         '''SimulStartLite is a setup test and never applicable'''
         return 0
-
