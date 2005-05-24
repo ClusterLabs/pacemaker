@@ -294,67 +294,37 @@ class CrmdStateAudit(ClusterAudit):
         self.Stats[name] = self.Stats[name]+1
 
     def __call__(self):
-        self.CM.debug("Do Audit %s"%self.name())
         passed = 1
-        dc_list = []
-        up_count = 0
-        node_count = 0
         up_are_down = 0
         down_are_up = 0
-        slave_count = 0
         unstable_list = []
+        self.CM.debug("Do Audit %s"%self.name())
 
         for node in self.CM.Env["nodes"]:
-            out=self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
-            ret = (string.find(out, 'ok') != -1)
-            node_count = node_count + 1
-            if ret:
-                up_count = up_count + 1
-                if self.CM.ShouldBeStatus[node] == self.CM["down"]:
-                    self.CM.log(
-                        "Node %s %s when it should be %s"
-                        %        (node, self.CM["up"], self.CM.ShouldBeStatus[node]))
-                    self.CM.ShouldBeStatus[node] = self.CM["up"]
+	    should_be = self.CM.ShouldBeStatus[node]
+	    rc = self.CM.StataCM(node)
+	    if rc:
+		if should_be == self.CM["down"]:
                     down_are_up = down_are_up + 1
-
-                ret= (string.find(out, 'S_NOT_DC') != -1)
-                if ret:
-                    slave_count = slave_count + 1
-                else:        
-                    ret= (string.find(out, 'S_IDLE') != -1)
-                    if ret:
-                        dc_list.append(node)
-                    else:
-                        unstable_list.append(out)
-            else:
-                if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                    self.CM.log(
-                        "Node %s %s when it should be %s"
-                        %        (node, self.CM["down"], self.CM.ShouldBeStatus[node]))
-                    self.CM.ShouldBeStatus[node] = self.CM["down"]
-                    up_are_down = up_are_down + 1
-
-#        if up_count > 0 and len(dc_list) != 1:
-#            passed = 0
-#            self.CM.log("Exactly 1 node should be DC.  We found %d (of %d): %s"
-#                     %(len(dc_list), up_count, str(dc_list)))
+		if not self.CM.node_stable(node):
+		    unstable_list.append(node)
+	    elif should_be == self.CM["up"]:
+		up_are_down = up_are_down + 1
 
         if len(unstable_list) > 0:
             passed = 0
-            self.CM.log("Cluster is not stable: %d (of %d)." 
-                     %(len(unstable_list), up_count))
-            for status in unstable_list:
-                self.CM.log("%s" %(status))
+            self.CM.log("Cluster is not stable: %d (of %d): %s" 
+                     %(len(unstable_list), up_count, repr(unstable_list)))
 
         if up_are_down > 0:
             passed = 0
             self.CM.log("%d (of %d) nodes expected to be up were down."
-                     %(up_are_down, node_count))
+                     %(up_are_down, len(self.CM.Env["nodes"])))
 
         if down_are_up > 0:
             passed = 0
             self.CM.log("%d (of %d) nodes expected to be down were up." 
-                     %(down_are_up, node_count))
+                     %(down_are_up, len(self.CM.Env["nodes"])))
             
         return passed
 
@@ -439,7 +409,8 @@ class PartitionAudit(ClusterAudit):
             if self.CM.ShouldBeStatus[node] != self.CM["up"]:
                 self.CM.log("Warn: Node %s appeared out of nowhere" %(node))
                 self.CM.ShouldBeStatus[node] = self.CM["up"]
-		# not in itself a reason to fail the audit (not what we're checking for in this one)
+		# not in itself a reason to fail the audit (not what we're
+		#  checking for in this audit)
 
 	    self.NodeState[node] = self.CM.rsh.readaline(
 		node, self.CM["StatusCmd"]%node)
@@ -457,7 +428,7 @@ class PartitionAudit(ClusterAudit):
                 
         for node in node_list:
             if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                if self.is_node_dc(self.NodeState[node]):
+                if self.CM.is_node_dc(node, self.NodeState[node]):
                     dc_found.append(node)
                     if self.NodeEpoche[node] == lowest_epoche:
                         passed = 1
@@ -518,29 +489,13 @@ class PartitionAudit(ClusterAudit):
                 # All nodes running the resource are DCs
                 for node in node_list:
                     if resource.IsRunningOn(node):
-                        if self.is_node_dc(self.NodeState[node]) == 0:
+                        if self.CM.is_node_dc(node, self.NodeState[node]) == 0:
                             self.CM.log("Resource %s is running on non-DC node %s"  
                                         %("DcIPaddr", node))
                             passed = 0
 
         return passed
         
-    def is_node_dc(self, status_line):
-        rc = 0
-        if not status_line:
-            rc = 0
-        elif string.find(status_line, 'S_IDLE') != -1:
-            rc = 1
-        elif string.find(status_line, 'S_INTEGRATION') != -1: 
-            rc = 1
-        elif string.find(status_line, 'S_FINALIZE_JOIN') != -1: 
-            rc = 1
-        elif string.find(status_line, 'S_POLICY_ENGINE') != -1: 
-            rc = 1
-        elif string.find(status_line, 'S_TRANSITION_ENGINE') != -1: 
-            rc = 1
-        return rc
-
     def name(self):
         return "PartitionAudit"
     
