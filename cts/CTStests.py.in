@@ -1708,7 +1708,7 @@ class ElectionMemoryTest(CTSTest):
         self.name="Election"
 
     def __call__(self, node):
-        self.rsh.readaline(node, self["ElectionCmd"]%node)
+        self.rsh.readaline(node, self.CM["ElectionCmd"]%node)
 
 	watchpats = [ ]
 	watchpats.append("Current state: S_IDLE")
