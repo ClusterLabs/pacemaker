@@ -178,7 +178,7 @@ do_cl_join_request(long long action,
 		query_call_id, TRUE,
 		copy_ha_msg_input(input), join_query_callback);
 
-	fsa_actions |= A_DC_TIMER_STOP;
+	register_fsa_action(A_DC_TIMER_STOP);
 	return I_NULL;
 }
 
