@@ -392,10 +392,9 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 			join_from, join_id, current_join_id);
 		g_hash_table_remove(finalized_nodes, join_from);
 		return FALSE;
-		
-	} else {
-		g_hash_table_remove(finalized_nodes, join_from);
 	}
+
+	g_hash_table_remove(finalized_nodes, join_from);
 	
 	if(g_hash_table_lookup(confirmed_nodes, join_from) != NULL) {
 		crm_err("hash already contains confirmation from %s",join_from);
@@ -414,10 +413,10 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 				   NULL, cib_scope_local|cib_quorum_override);
 	
 	/* update node entry in the status section  */
-	crm_info("4) Updating node state to %s for %s", join_state, join_from);
+	crm_info("4) Updating node state to %s for %s", CRMD_JOINSTATE_MEMBER, join_from);
 	update = create_node_state(
 		join_from, join_from,
-		ACTIVESTATUS, NULL, ONLINESTATUS, join_state, join_state,
+		ACTIVESTATUS, NULL, ONLINESTATUS, CRMD_JOINSTATE_MEMBER, CRMD_JOINSTATE_MEMBER,
 		__FUNCTION__);
 
 	set_xml_property_copy(update,XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
@@ -467,7 +466,6 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 		g_hash_table_insert(
 			finalized_nodes,
 			crm_strdup(join_to), crm_strdup(CRMD_JOINSTATE_MEMBER));
-
 	} else {
 		crm_warn("3) NACK'ing join request from %s, state %s",
 			 join_to, join_state);
