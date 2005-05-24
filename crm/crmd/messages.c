@@ -903,8 +903,8 @@ handle_request(ha_msg_input_t *stored_msg)
 			if(need_transition(fsa_state)) {
 				next_input = I_PE_CALC;
 			} else {	
-				crm_err("Filtering %s op in state %s",
-					op, fsa_state2string(fsa_state));
+				crm_debug("Filtering %s op in state %s",
+					  op, fsa_state2string(fsa_state));
 			}
 
 		} else if(strcmp(op, CRM_OP_TECOMPLETE) == 0) {
