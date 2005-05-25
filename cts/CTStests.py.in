@@ -1910,7 +1910,7 @@ class SimulStartLite(CTSTest):
         for node in self.CM.Env["nodes"]:
 	    if not self.CM.node_stable(node):
                 did_fail=1
-		unstable.append(out)
+		unstable.append(node)
 
         if did_fail:
             return self.failure("Unstable cluster nodes exist: " 
