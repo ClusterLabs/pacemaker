@@ -751,8 +751,6 @@ handle_message(ha_msg_input_t *stored_msg)
 	return next_input;
 }
 
-extern gboolean te_in_transition;
-
 enum crmd_fsa_input
 handle_request(ha_msg_input_t *stored_msg)
 {
@@ -873,9 +871,12 @@ handle_request(ha_msg_input_t *stored_msg)
 		}
 
 		/*========== DC-Only Actions ==========*/
-	} else if(AM_I_DC){
+	} else if(AM_I_DC) {
+		const char *message = ha_msg_value(stored_msg->msg, "message");
+
 		if(safe_str_eq(op, CRM_OP_TEABORT)) {
-			te_in_transition = FALSE;
+			crm_debug("Transition cancelled: %s/%s", op, message);
+			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 			if(need_transition(fsa_state)) {
 				next_input = I_PE_CALC;
 
@@ -885,7 +886,8 @@ handle_request(ha_msg_input_t *stored_msg)
 			}
 				
 		} else if(safe_str_eq(op, CRM_OP_TETIMEOUT)) {
-			te_in_transition = FALSE;
+			crm_debug("Transition cancelled: %s/%s", op, message);
+			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 			if(fsa_state == S_IDLE) {
 				crm_err("Transition timed out in S_IDLE");
 				next_input = I_PE_CALC;
@@ -899,7 +901,8 @@ handle_request(ha_msg_input_t *stored_msg)
 			}
 
 		} else if(safe_str_eq(op, CRM_OP_TEABORTED)) {
-			te_in_transition = FALSE;
+			crm_debug("Transition cancelled: %s/%s", op, message);
+			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 			if(need_transition(fsa_state)) {
 				next_input = I_PE_CALC;
 			} else {	
@@ -908,6 +911,8 @@ handle_request(ha_msg_input_t *stored_msg)
 			}
 
 		} else if(strcmp(op, CRM_OP_TECOMPLETE) == 0) {
+			crm_debug("Transition complete: %s/%s", op, message);
+			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
  			if(fsa_state == S_TRANSITION_ENGINE) {
 				next_input = I_TE_SUCCESS;
  			} else {

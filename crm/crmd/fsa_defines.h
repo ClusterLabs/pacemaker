@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.38 2005/05/10 13:18:26 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.39 2005/05/25 12:51:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -434,6 +434,14 @@ enum crmd_fsa_input {
 #define	R_PE_REQUIRED	0x00002000ULL /* Is the Policy Engine required? */
 #define	R_TE_REQUIRED	0x00004000ULL /* Is the Transition Engine required? */
 
+
+#define	R_CIB_DONE	0x00010000ULL /* Have we calculated the CIB? */
+#define R_HAVE_CIB	0x00020000ULL /* Do we have an up-to-date CIB */
+#define R_CIB_ASKED	0x00040000ULL /* Have we asked for an up-to-date CIB */
+
+#define R_CCM_DATA	0x00100000ULL /* Have we got CCM data yet */
+#define R_PEER_DATA	0x00200000ULL /* Have we got T_CL_STATUS data yet */
+
 #define	R_REQ_PEND	0x01000000ULL /* Are there Requests waiting for
 					 processing? */
 #define	R_PE_PEND	0x02000000ULL /* Has the PE been invoked and we're
@@ -444,14 +452,9 @@ enum crmd_fsa_input {
 					 response? if so perhaps we shouldnt
 					 stop yet */
 
-#define	R_CIB_DONE	0x00010000ULL /* Have we calculated the CIB? */
-#define R_HAVE_CIB	0x00020000ULL /* Do we have an up-to-date CIB */
-#define R_CIB_ASKED	0x00040000ULL /* Have we asked for an up-to-date CIB */
 
-#define R_CCM_DATA	0x00100000ULL /* Have we got CCM data yet */
-#define R_PEER_DATA	0x00200000ULL /* Have we got T_CL_STATUS data yet */
-
-#define R_SENT_RSC_STOP 0x10000000ULL /* Have we sent a stop action to all
+#define R_IN_TRANSITION	0x10000000ULL /*  */
+#define R_SENT_RSC_STOP 0x20000000ULL /* Have we sent a stop action to all
 				       * resources in preparation for
 				       * shutting down */
 

@@ -47,8 +47,6 @@
 #include <crm/dmalloc_wrapper.h>
 
 struct crm_subsystem_s *te_subsystem  = NULL;
-gboolean te_in_transition = FALSE;
-
 
 /*	 A_TE_START, A_TE_STOP, A_TE_RESTART	*/
 enum crmd_fsa_input
@@ -156,8 +154,11 @@ do_te_invoke(long long action,
 	if(action & A_TE_INVOKE) {
 		ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 		if(input->xml != NULL) {
-			te_in_transition = TRUE;
 
+			CRM_DEV_ASSERT(is_set(fsa_input_register, R_IN_TRANSITION) == FALSE);
+			crm_debug("Starting a transition");
+			set_bit_inplace(fsa_input_register, R_IN_TRANSITION);
+			
 			cmd = create_request(
 				CRM_OP_TRANSITION, input->xml, NULL,
 				CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
@@ -169,7 +170,8 @@ do_te_invoke(long long action,
 		}
 	
 	} else if(action & A_TE_CANCEL) {
-		if(te_in_transition) {
+		if(is_set(fsa_input_register, R_IN_TRANSITION)) {
+			crm_debug("Cancelling the active Transition");
 			cmd = create_request(
 				CRM_OP_TEABORT, NULL, NULL,
 				CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
