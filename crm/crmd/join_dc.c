@@ -407,17 +407,21 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 	 * the LIFO nature of the fsa input queue
 	 */
 	
-	/* update CIB with the current LRM status from the node */
-	update_local_cib(copy_xml_node_recursive(lrm_update));
-	fsa_cib_conn->cmds->modify(fsa_cib_conn, XML_CIB_TAG_STATUS, lrm_update,
-				   NULL, cib_scope_local|cib_quorum_override);
+	/* update CIB with the current LRM status from the node
+	 * We dont need to notify the TE of these updates, a transition will
+	 *   be started in due time
+	 */
+	fsa_cib_conn->cmds->modify(
+		fsa_cib_conn, XML_CIB_TAG_STATUS, lrm_update, NULL,
+		cib_scope_local|cib_quorum_override|cib_inhibit_notify);
 	
 	/* update node entry in the status section  */
-	crm_info("4) Updating node state to %s for %s", CRMD_JOINSTATE_MEMBER, join_from);
+	crm_info("4) Updating node state to %s for %s",
+		 CRMD_JOINSTATE_MEMBER, join_from);
 	update = create_node_state(
 		join_from, join_from,
-		ACTIVESTATUS, NULL, ONLINESTATUS, CRMD_JOINSTATE_MEMBER, CRMD_JOINSTATE_MEMBER,
-		__FUNCTION__);
+		ACTIVESTATUS, NULL, ONLINESTATUS,
+		CRMD_JOINSTATE_MEMBER, CRMD_JOINSTATE_MEMBER, __FUNCTION__);
 
 	set_xml_property_copy(update,XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
 
@@ -425,7 +429,7 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 
 	call_id = fsa_cib_conn->cmds->modify(
 		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
-		cib_scope_local|cib_quorum_override);
+		cib_scope_local|cib_quorum_override|cib_inhibit_notify);
 	
 	add_cib_op_callback(call_id, TRUE,NULL, join_update_complete_callback);
 
