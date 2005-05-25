@@ -465,9 +465,6 @@ crmd_ccm_msg_callback(
 		case OC_EV_MS_INVALID:/* fall through */
 			update_cache = TRUE;
 			update_quorum = TRUE;
-			if(AM_I_DC && need_transition(fsa_state)) {
-				trigger_transition = TRUE;
-			}
 			break;
 		case OC_EV_MS_NOT_PRIMARY:
 #if UNTESTED
@@ -480,10 +477,7 @@ crmd_ccm_msg_callback(
 #endif
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
-			if(AM_I_DC && need_transition(fsa_state)) {
-				fsa_membership_copy->id = instance;
-				trigger_transition = TRUE;
-			}
+			fsa_membership_copy->id = instance;
 			break;
 		case OC_EV_MS_EVICTED:
 			update_quorum = TRUE;
