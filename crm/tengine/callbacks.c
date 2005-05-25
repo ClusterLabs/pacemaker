@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.30 2005/05/20 15:04:32 andrew Exp $ */
+/* $Id: callbacks.c,v 1.31 2005/05/25 12:49:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -198,7 +198,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 
 	} else if(strcmp(op, CRM_OP_TEABORT) == 0) {
 		initialize_graph();
-		send_complete(CRM_OP_TEABORTED, NULL, te_abort);
+		send_complete(CRM_OP_TEABORTED, NULL, te_abort_confirmed);
 
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		crm_info("Received quit message, terminating");
