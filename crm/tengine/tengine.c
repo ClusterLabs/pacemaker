@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.70 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: tengine.c,v 1.71 2005/05/25 12:48:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -341,27 +341,33 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	const char *rsc_id    = NULL;
 	const char *op_status = NULL;
 
-	if(event != NULL) {
-		task      = crm_element_value(event, XML_LRM_ATTR_LASTOP);
-		rsc_id    = crm_element_value(event, XML_ATTR_ID);
-		op_status = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
-		if(op_status != NULL) {
-			op_status_i = atoi(op_status);
-		}
-		crm_debug("Processing CIB update: %s %s on %s: %s",
-			  task, rsc_id, event_node, op_status2text(op_status_i));
-	}
+	if(event == NULL) {
+		crm_debug("a transition is starting");
 
-
-	next_transition_timeout = transition_timeout;
-	
-	
-	if(op_status_i == -1) {
-		/* just information that the action was sent */
-		crm_debug("Ignoring TE initiated updates");
+		process_trigger(action_id);
+		check_for_completion();
+		
 		return TRUE;
 	}
 
+	task      = crm_element_value(event, XML_LRM_ATTR_LASTOP);
+	rsc_id    = crm_element_value(event, XML_ATTR_ID);
+	op_status = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
+
+	if(op_status != NULL) {
+		op_status_i = atoi(op_status);
+		if(op_status_i == -1) {
+			/* just information that the action was sent */
+			crm_debug("Ignoring TE initiated updates");
+			return TRUE;
+		}
+	}
+	
+	crm_debug("Processing CIB update: %s %s on %s: %s",
+		  task, rsc_id, event_node, op_status2text(op_status_i));
+
+	next_transition_timeout = transition_timeout;
+	
 	slist_iter(
 		synapse, synapse_t, graph, lpc,
 
@@ -369,7 +375,20 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		slist_iter(
 			action, action_t, synapse->actions, lpc2,
 
-			action_id = match_graph_event(action, event,event_node);
+			action_id = match_graph_event(action,event,event_node);
+			if(action_id != -1) {
+				break;
+			}
+			);
+		if(action_id != -1) {
+			break;
+		}
+
+		/* now try any dangling inputs */
+		slist_iter(
+			action, action_t, synapse->inputs, lpc2,
+			
+			action_id = match_graph_event(action,event,event_node);
 			if(action_id != -1) {
 				break;
 			}
@@ -378,15 +397,12 @@ process_graph_event(crm_data_t *event, const char *event_node)
 			break;
 		}
 		);
-
-	if(event == NULL) {
-		crm_debug("a transition is starting");
-		
-	} else if(action_id > -1) {
+	
+	if(action_id > -1) {
 		crm_log_xml_debug_3(event, "Event found");
 		
 	} else if(action_id == -2) {
-		crm_log_xml_info(event, "Event found but failed");
+		crm_log_xml_info(event, "Event failed");
 		
 	} else {
 		/* unexpected event, trigger a pe-recompute */
@@ -529,7 +545,7 @@ initiate_action(action_t *action)
 		te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s",
 			      id, task, on_node);
 
-		action->complete = TRUE;
+/* 		action->complete = TRUE; */
 		msg_task = task;
 		send_command = TRUE;
 
