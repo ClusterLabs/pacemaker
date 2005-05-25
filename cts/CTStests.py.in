@@ -310,15 +310,17 @@ class StopTest(CTSTest):
         self.CM.StopaCM(node)
 	watch_result = watch.lookforall()
 
+        UnmatchedList = "||"
         if watch.unmatched:
             for regex in watch.unmatched:
-                self.CM.log ("Warn: Shutdown pattern not found: %s" %(regex))
+                self.CM.log ("Warn: Shutdown pattern not found: %s" % (regex))
+                UnmatchedList +=  regex + "||";
 
         if watch_result:
 	    self.CM.cluster_stable(self.CM["DeadTime"])
             return self.success()
         else:
-            return self.failure("no match against %s "% pat)
+            return self.failure("no match against (%s)" % UnmatchedList)
 #
 # We don't register StopTest because it's better when called by
 # another test...
