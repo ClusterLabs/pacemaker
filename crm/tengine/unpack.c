@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.32 2005/05/20 15:02:55 andrew Exp $ */
+/* $Id: unpack.c,v 1.33 2005/05/25 12:46:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -249,8 +249,16 @@ unpack_action(crm_data_t *xml_action)
 gboolean
 extract_event(crm_data_t *msg)
 {
-	gboolean abort  = FALSE;
 	const char *event_node = NULL;
+	struct abort_blob_s 
+	{
+			const char *text;
+			crm_data_t *update;
+			te_reason_t reason;
+	};
+
+	struct abort_blob_s blob = { NULL, NULL, 0 };
+	blob.reason = te_update;
 
 /*
 [cib fragment]
@@ -269,23 +277,24 @@ extract_event(crm_data_t *msg)
 
 		const char *ccm_state  = crm_element_value(
 			node_state, XML_CIB_ATTR_INCCM);
-		const char *crmd_state = crm_element_value(
+		const char *crmd_state  = crm_element_value(
 			node_state, XML_CIB_ATTR_CRMDSTATE);
-		const char *join_state = crm_element_value(
-			node_state, XML_CIB_ATTR_JOINSTATE);
+
+		blob.update = node_state;
+		
 		event_node = crm_element_value(node_state, XML_ATTR_UNAME);
 
 		crm_log_xml_debug_3(node_state,"Processing");
 
 		if(crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
-			send_complete(
-				"Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute",
-				node_state, te_update);
+			blob.text = "Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute";
 			break;
 			
+#if 1
+			/* is this still required??? */
 		} else if(crm_element_value(node_state, CRM_OP_FENCE) != NULL) {
 			/* node marked for STONITH
-			 *   possibly by us when a shutdown timmed out
+			 *   possibly by us when a shutdown timed out
 			 */
 			int action_id = -1;
 			crm_debug_3("Checking for STONITH");
@@ -294,59 +303,37 @@ extract_event(crm_data_t *msg)
 				event_node, CRM_OP_SHUTDOWN, LRM_OP_DONE);
 			
 			if(action_id < 0) {
-				send_complete(
-					"Stonith/shutdown event not matched",
-					node_state, te_update);
+				blob.text="Stonith/shutdown event not matched";
 				break;
+
 			} else {
 				process_trigger(action_id);
 				check_for_completion();
 			}
-			continue;
+#endif
 		}
 
 		resources = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
 		resources = find_xml_node(
 			resources, XML_LRM_TAG_RESOURCES, FALSE);
 
-		if(crmd_state != NULL || ccm_state != NULL || join_state != NULL) {
-			/* simple node state update...
-			 *   possibly from a shutdown we requested
-			 */
-			crm_debug_3("Processing state update");
-			if( (crmd_state != NULL && safe_str_neq(
-				     crmd_state, OFFLINESTATUS))
-			    || (join_state != NULL && safe_str_neq(
-					join_state, CRMD_JOINSTATE_DOWN))
-			    || safe_str_eq(ccm_state, XML_BOOLEAN_TRUE)) {
-				/* the node is comming up,
-				 *  only recompute after the join completes,
-				 *  we dont need to check for this
-				 */
-				crm_debug("Ignoreing status update of"
-					  " starting node.");
-				continue;
-				
-			} else {
-				/* this may be called more than once per shutdown
-				 * ie. once per update of each field
-				 */
-				int action_id = -1;
-				crm_debug_3("Checking if this was a known shutdown");
-				action_id = match_down_event(
-					event_node, NULL, LRM_OP_DONE);
-
-				if(action_id < 0) {
-					send_complete("Stonith/shutdown event not matched", node_state, te_update);
-					break;
-				} else {
-					process_trigger(action_id);
-					check_for_completion();
-				}
-			}
+		/*
+		 * node state update... possibly from a shutdown we requested
+		 */
+		crm_debug_3("Processing state update");
+		if(safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
+		   || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
+			int action_id = -1;
+			crm_debug_3("A shutdown we requested?");
+			action_id = match_down_event(
+				event_node, NULL, LRM_OP_DONE);
 			
-			if(ccm_state != NULL && crm_is_true(ccm_state)) {
-				crm_debug_3("Ignore - new CCM node");
+			if(action_id >= 0) {
+				process_trigger(action_id);
+				check_for_completion();
+			} else {
+				blob.text="Stonith/shutdown event not matched";
+				break;
 			}
 		}
 		if(resources != NULL) {
@@ -355,7 +342,8 @@ extract_event(crm_data_t *msg)
 			xml_child_iter(
 				resources, child, NULL, 
 
-				crm_log_xml_debug_3(child, "Processing LRM resource update");
+				crm_log_xml_debug_3(
+					child,"Processing LRM resource update");
 				if(!process_graph_event(child, event_node)) {
 					/* the transition has already been
 					 * aborted and with better details
@@ -363,14 +351,14 @@ extract_event(crm_data_t *msg)
 					return TRUE;
 				}
 				);
-			
-			if(abort) {
-				break;
-			}
 		}
 		);
+
+	if(blob.text != NULL) {
+		send_complete(blob.text, blob.update, blob.reason);
+	}
 	
-	return !abort;
+	return TRUE;
 }
 
 crm_data_t*
