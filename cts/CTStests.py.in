@@ -1793,6 +1793,117 @@ class SpecialTest1(CTSTest):
 
 AllTestClasses.append(SpecialTest1)
 
+###################################################################
+class NearQuorumPointTest(CTSTest):
+###################################################################
+    '''
+    This test brings larger clusters near the quorum point (50%).
+    In addition, it will test doing starts and stops at the same time.
+
+    Here is how I think it should work:
+    - loop over the nodes and decide randomly which will be up and which
+      will be down  Use a 50% probability for each of up/down.
+    - figure out what to do to get into that state from the current state
+    - in parallel, bring up those going up  and bring those going down.
+    '''
+    
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="NearQuorumPoint"
+
+    def __call__(self, dummy):
+        '''Perform the 'NearQuorumPoint' test. '''
+        self.incr("calls")
+        startset = []
+        stopset = []
+        
+        #divid the nodes to two sets: startset and stopset
+        for node in self.CM.Env["nodes"]:
+            action = self.CM.Env.RandomGen.choice(["start","stop"])
+            if action == "start" :
+                startset.append(node)
+            else :
+                stopset.append(node)
+                
+        self.CM.debug("start nodes:" + repr(startset))
+        self.CM.debug("stop nodes:" + repr(stopset))
+
+        #add search patterns
+        watchpats = [ ]
+        for node in stopset:
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                watchpats.append(self.CM["Pat:All_stopped"] % node)
+                
+        for node in startset:
+            if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+                watchpats.append(self.CM["Pat:They_started"] % node)
+        
+        if len(watchpats) == 0:
+            return self.skipped()
+
+        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
+        ,     timeout=self.CM["DeadTime"]+10)
+        
+        watch.setwatch()
+        
+        #begin actions
+        for node in stopset:
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                self.CM.debug("stoping node:" + node)
+                self.CM.StopaCMnoBlock(node)
+                
+        for node in startset:
+            if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+                self.CM.debug("starting node:" + node)
+                self.CM.StartaCMnoBlock(node)
+        
+        #get the result        
+        if watch.lookforall():
+            return self.success()
+        
+        #get the "bad" nodes
+        upnodes = []        
+        for node in stopset:
+            if self.CM.StataCM(node) == 1:
+                upnodes.append(node)
+        
+        downnodes = []
+        for node in startset:
+            if self.CM.StataCM(node) == 0:
+                downnodes.append(node)
+                
+        unstablenodes = []        
+        for node in self.CM.Env["nodes"]:
+            if not self.CM.node_stable(node):
+                unstablenodes.append(node)
+        
+        if upnodes == [] and downnodes == [] and unstablenodes == []:
+            self.CM.log("no bad node but some patterns not found")
+            return self.success()
+
+        if len(upnodes) > 0:
+            self.CM.log("following nodes are still up after stop:" 
+                    + repr(upnodes))
+        
+        if len(downnodes) > 0:
+            self.CM.log("following nodes are still down after start:" 
+                    + repr(downnodes))
+        
+        if len(unstablenodes) > 0:
+            self.CM.log("following nodes are still unstable:" 
+                    + repr(unstablenodes))
+    
+        return self.failure()
+
+    def is_applicable(self):
+        if self.CM["Name"] == "linux-ha-v2":
+            return 1
+        return 0
+
+AllTestClasses.append(NearQuorumPointTest)
+
+
+
 
 def TestList(cm):
     result = []
