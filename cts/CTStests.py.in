@@ -312,7 +312,7 @@ class StopTest(CTSTest):
 
         if watch.unmatched:
             for regex in watch.unmatched:
-                self.log ("Warn: Shutdown pattern not found: %s" %(regex))
+                self.CM.log ("Warn: Shutdown pattern not found: %s" %(regex))
 
         if watch_result:
 	    self.CM.cluster_stable(self.CM["DeadTime"])
@@ -1474,7 +1474,7 @@ class ComponentFail(CTSTest):
 		self.failure("Cluster not stable")
         else:
             for regex in watch.unmatched:
-                self.log ("Warn: pattern not found: %s" %(regex))
+                self.CM.log ("Warn: pattern not found: %s" %(regex))
             return self.failure("Heartbeat didnt notice %s die" %component)
 
     def is_applicable(self):
