@@ -19,9 +19,6 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-if SWIG_BUILD
-SWIG_DIR = bindings
-endif
 
 #
 #	PILS is supposed to be an independent library
@@ -41,7 +38,7 @@ SUBDIRS			=  	\
 	recoverymgr		\
 	fencing			\
 	plugins 		\
-	$(SWIG_DIR)		\
+	bindings		\
 	crm			\
 	lrm
 
