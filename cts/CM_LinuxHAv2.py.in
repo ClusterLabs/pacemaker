@@ -185,23 +185,22 @@ class LinuxHAv2(HeartbeatCM):
                 for node in self.Env["nodes"]:
                     nodelist += node + " "
                 stonith_resource=("""
-       <incarnation id="DoFencing" incarnation_max="%d" incarnation_node_max="1">
-         <instance_attributes>
-           <attributes>
-             <nvpair name="incarnation_max" value="%d"/>
-             <nvpair name="incarnation_node_max" value="%d"/>
-           </attributes>
-         </instance_attributes>
-         <resource id="child_DoFencing" class="stonith" type="ssh">
-           <instance_attributes>
-             <attributes>
-               <nvpair name="hostlist" value="%s"/>
-             </attributes>
-           </instance_attributes>
-         </resource>
-       </incarnation>""" %(len(nodelist), len(nodelist), nodelist))
+      <resource id="stonith_resource" class="stonith" type="ssh">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="hostlist" value="%s"/>
+          </attributes>
+        </instance_attributes>
+      </resource>""" %nodelist)
                 resources = resources + stonith_resource
-        
+                stonith_resource_constraint='''
+      <rsc_location id="run_stonith_resource" rsc="stonith_resource">
+        <rule id="cant_run_stonith_resource" score="-INFINITY" boolean_op="and">
+          <expression attribute="#is_dc" operation="eq" value="false"/>
+        </rule>
+      </rsc_location>'''
+                constraints = constraints + stonith_resource_constraint
+                
         self.default_cts_cib=cib_prefix + cib_options + cib_glue_1 + \
                resources + cib_glue_2 + constraints + cib_suffix
         self.debug(self.default_cts_cib)
