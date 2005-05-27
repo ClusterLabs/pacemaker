@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.71 2005/05/25 12:48:45 andrew Exp $ */
+/* $Id: tengine.c,v 1.72 2005/05/27 15:06:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,7 +31,6 @@ gboolean graph_complete = FALSE;
 GListPtr graph = NULL;
 IPC_Channel *crm_ch = NULL;
 uint transition_timeout = 30*1000; /* 30 seconds */
-uint transition_fuzz_timeout = 0;
 uint default_transition_timeout = 30*1000; /* 30 seconds */
 uint next_transition_timeout = 30*1000; /* 30 seconds */
 
@@ -43,10 +42,22 @@ void cib_action_updated(
 	const HA_Message *msg, int call_id, int rc,
 	crm_data_t *output, void *user_data);
 
-gboolean in_transition = FALSE;
 te_timer_t *transition_timer = NULL;
-te_timer_t *transition_fuzz_timer = NULL;
 int transition_counter = 1;
+
+const te_fsa_state_t te_state_matrix[i_invalid][s_invalid] = 
+{
+			/*  s_idle,          s_in_transition, s_abort_pending */
+/* Got an i_transition  */{ s_in_transition, s_abort_pending, s_abort_pending },
+/* Got an i_cancel      */{ s_idle,          s_abort_pending, s_abort_pending },
+/* Got an i_complete    */{ s_idle,          s_idle,          s_abort_pending },
+/* Got an i_cib_complete*/{ s_idle,          s_in_transition, s_idle          },
+/* Got an i_cib_confirm */{ s_idle,          s_in_transition, s_abort_pending },
+/* Got an i_cib_notify  */{ s_idle,          s_in_transition, s_abort_pending }
+};
+
+te_fsa_state_t te_fsa_state = s_idle;
+
 
 gboolean
 initialize_graph(void)
@@ -62,17 +73,6 @@ initialize_graph(void)
 		transition_timer->action    = NULL;
 	} else {
 		stop_te_timer(transition_timer);
-	}
-	
-	if(transition_fuzz_timer == NULL) {
-		crm_malloc0(transition_fuzz_timer, sizeof(te_timer_t));
-	
-		transition_fuzz_timer->timeout   = 10;
-		transition_fuzz_timer->source_id = -1;
-		transition_fuzz_timer->reason    = timeout_fuzz;
-		transition_fuzz_timer->action    = NULL;
-	} else {
-		stop_te_timer(transition_fuzz_timer);
 	}
 	
 	while(g_list_length(graph) > 0) {
@@ -214,8 +214,8 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 				event_action, event_rsc, event_node,
 				op_status2text(op_status_i));
 			if(FALSE == crm_is_true(allow_fail)) {
-				send_complete(
-					"Action failed", event, te_failed);
+				send_complete("Action failed", event,
+					      te_failed, i_cancel);
 				return -2;
 			}
 			break;
@@ -226,7 +226,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		default:
 			crm_err("Unsupported action result: %d", op_status_i);
 			send_complete("Unsupport action result",
-				      event, te_failed);
+				      event, te_failed, i_cancel);
 			return -2;
 	}
 	
@@ -314,14 +314,14 @@ match_down_event(const char *target, const char *filter, int rc)
 				crm_err("Stonith of %s failed (%d)..."
 					" aborting transition.", target, rc);
 				send_complete("Stonith failed",
-					      match->xml, te_failed);
+					      match->xml, te_failed, i_cancel);
 				return -2;
 			}
 			break;
 		default:
 			crm_err("Unsupported action result: %d", rc);
 			send_complete("Unsupport Stonith result",
-				      match->xml, te_failed);
+				      match->xml, te_failed, i_cancel);
 			return -2;
 	}
 	
@@ -407,7 +407,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	} else {
 		/* unexpected event, trigger a pe-recompute */
 		/* possibly do this only for certain types of actions */
-		send_complete("Event not matched", event, te_update);
+		send_complete("Event not matched", event, te_update, i_cancel);
 		return FALSE;
 	}
 
@@ -426,17 +426,7 @@ check_for_completion(void)
 		 * else is happening
 		 */
 		crm_info("Transition complete");
-		
-		if(transition_fuzz_timer->timeout > 0) {
-			crm_info("Allowing the system to stabilize for %d ms"
-				 " before S_IDLE transition",
-				 transition_fuzz_timer->timeout);
-
-			start_te_timer(transition_fuzz_timer);
-			
-		} else {
-			send_complete("complete", NULL, te_done);
-		}
+		send_complete("complete", NULL, te_done, i_complete);
 		
 	} else {
 		/* restart the transition timer again */
@@ -691,7 +681,7 @@ cib_action_update(action_t *action, int status)
 		  op_status2text(status), action->id, task, rsc_id, target, rc);
 
 	if(status == LRM_OP_PENDING) {
-		crm_debug("Waiting for callback id: %d)", rc);
+		crm_debug_2("Waiting for callback id: %d", rc);
 		add_cib_op_callback(rc, FALSE, action, cib_action_updated);
 	}
 #else
@@ -726,7 +716,7 @@ cib_action_updated(
 	const HA_Message *msg, int call_id, int rc, crm_data_t *output, void *user_data)
 {
 	HA_Message *cmd = NULL;
-	crm_data_t *rsc_op = NULL;
+	crm_data_t *rsc_op  = NULL;
 	const char *task    = NULL;
 	const char *rsc_id  = NULL;
 	const char *on_node = NULL;
@@ -745,7 +735,21 @@ cib_action_updated(
 	if(rc < cib_ok) {
 		crm_err("Update for action %d: %s %s on %s FAILED",
 			action->id, task, rsc_id, on_node);
-		send_complete(cib_error2string(rc), output, te_failed);
+		send_complete(cib_error2string(rc), output, te_failed, i_cancel);
+		return;
+	}
+
+	if(te_fsa_state != s_in_transition) {
+		int pending_updates = num_cib_op_callbacks();
+		if(pending_updates == 0) {
+			send_complete("CIB update queue empty", output,
+				      te_done, i_cib_complete);
+		} else {
+			crm_debug("Still waiting on %d callbacks",
+				pending_updates);
+		}
+		crm_debug("Not executing action: Not in a transition: %d",
+			  te_fsa_state);
 		return;
 	}
 	
@@ -854,8 +858,8 @@ fire_synapse(synapse_t *synapse)
 				crm_element_name(action->xml),
 				action->id, synapse->id);
 
-			send_complete(
-				"Action init failed", action->xml, te_failed);
+			send_complete("Action init failed", action->xml,
+				      te_failed, i_cancel);
 			return;
 		} 
 		if(tmp_time > next_transition_timeout) {

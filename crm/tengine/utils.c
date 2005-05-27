@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.30 2005/05/20 15:05:36 andrew Exp $ */
+/* $Id: utils.c,v 1.31 2005/05/27 15:06:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,29 +35,52 @@ void print_action(const char *prefix, action_t *action, gboolean to_file);
 gboolean timer_callback(gpointer data);
 
 void
-send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
+send_complete(const char *text, crm_data_t *msg,
+	      te_reason_t reason, te_fsa_input_t input)
 {	
 	HA_Message *cmd = NULL;
 	const char *op = CRM_OP_TEABORT;
+	static te_reason_t last_reason = te_done;
+	static crm_data_t *last_msg = NULL;
+	static const char *last_text = NULL;
 
-	/* the transition is over... ignore all future callbacks
-	 * resulting from our CIB updates (usually for pending operations)
-	 */
-	remove_cib_op_callback(-1, TRUE);
-	
-	if(reason == te_done && in_transition == FALSE) {
-		crm_warn("Not in transition, not sending message");
-		return;
+	te_fsa_state_t last_state = te_fsa_state;
+	te_fsa_state = te_state_matrix[input][te_fsa_state];
 
-	} else if(reason == te_timeout && in_transition == FALSE) {
-		crm_err("Not in transition, not sending message");
-		return;
+	if(te_fsa_state == s_abort_pending && num_cib_op_callbacks() == 0) {
+		te_fsa_state = te_state_matrix[i_cib_complete][te_fsa_state];
 	}
+	
+	if(te_fsa_state != s_idle && input != i_cib_complete) {
+		if(last_msg) {
+			free_xml(last_msg);
+		}
+		last_msg = NULL;
+		if(msg != NULL) {
+			last_msg = copy_xml_node_recursive(msg);
+		}
+		last_text   = text;
+		last_reason = reason;
+		crm_info("CIB updates are pending.  Delay until they complete.");
+		return;
 
+	} else if(te_fsa_state != s_idle) {
+		crm_err("Delaying \"%s\" notification until we are idle.",text);
+		return;
+		
+	} else if(input == i_cib_complete) {
+		msg    = last_msg;
+		text   = last_text;
+		reason = last_reason;
+	}
+	
+	CRM_DEV_ASSERT(num_cib_op_callbacks() == 0);
+	
 	switch(reason) {
 		case te_update:
 			crm_debug("Transition status: %s by CIB update: %s",
-				  in_transition?"Aborted":"Triggered", text);
+				  last_state!=s_idle?"Aborted":"Triggered",
+				  text);
 			if(msg != NULL) {
 				if(safe_str_eq(crm_element_name(msg),
 					       XML_TAG_CIB)) {
@@ -113,7 +136,6 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 			break;
 	}
 	
-	in_transition = FALSE;
 	initialize_graph();
 
 	cmd = create_request(
@@ -122,6 +144,8 @@ send_complete(const char *text, crm_data_t *msg, te_reason_t reason)
 	if(text != NULL) {
 		ha_msg_add(cmd, "message", text);
 	}
+
+	free_xml(last_msg);
 	
 #ifdef TESTING
 	if(reason == te_done) {
@@ -251,13 +275,12 @@ timer_callback(gpointer data)
 		g_source_remove(timer->source_id);
 	}
 	timer->source_id = -1;
-	
-	if(timer->reason == timeout_fuzz) {
-		crm_warn("Transition timeout reached..."
-			 " marking transition complete.");
-		send_complete("success", NULL, te_done);
-		return TRUE;
 
+	crm_err("Timer popped in state=%d", te_fsa_state);
+	if(te_fsa_state != s_in_transition) {
+		crm_debug("Ignoring timeout while not in transition");
+		return TRUE;
+		
 	} else if(timer->reason == timeout_timeout) {
 		
 		/* global timeout - abort the transition */
@@ -266,7 +289,7 @@ timer_callback(gpointer data)
 		
 		crm_warn("Some actions may not have been executed.");
 			
-		send_complete(XML_ATTR_TIMEOUT, NULL, te_timeout);
+		send_complete(XML_ATTR_TIMEOUT, NULL, te_timeout, i_cancel);
 		
 		return TRUE;
 		

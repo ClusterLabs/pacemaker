@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.34 2005/05/27 12:30:45 alan Exp $ */
+/* $Id: unpack.c,v 1.35 2005/05/27 15:06:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,7 +76,6 @@ unpack_graph(crm_data_t *xml_graph)
 	transition_timeout = transition_timer->timeout;
 	
 	time = crm_element_value(xml_graph, "transition_fuzz");
-	set_timer_value(transition_fuzz_timer, time, transition_fuzz_timeout);
 
 	transition_counter = crm_atoi(t_id, "-1");
 
@@ -290,8 +289,7 @@ extract_event(crm_data_t *msg)
 			blob.text = "Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute";
 			break;
 			
-/* #if 1 */
-			/* is this still required??? */
+/* is this still required??? */
 		} else if(crm_element_value(node_state, CRM_OP_FENCE) != NULL) {
 			/* node marked for STONITH
 			 *   possibly by us when a shutdown timed out
@@ -310,7 +308,7 @@ extract_event(crm_data_t *msg)
 				process_trigger(action_id);
 				check_for_completion();
 			}
-/* #endif */
+/* END: is this still required??? */
 		}
 
 		resources = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
@@ -355,7 +353,7 @@ extract_event(crm_data_t *msg)
 		);
 
 	if(blob.text != NULL) {
-		send_complete(blob.text, blob.update, blob.reason);
+		send_complete(blob.text, blob.update, blob.reason, i_cancel);
 	}
 	
 	return TRUE;

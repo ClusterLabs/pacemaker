@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.21 2005/05/20 15:05:36 andrew Exp $ */
+/* $Id: tengine.h,v 1.22 2005/05/27 15:06:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,8 +41,29 @@ typedef enum te_reason_e {
 	te_abort_confirmed,
 	te_failed,
 	te_timeout,
-	
 } te_reason_t;
+
+typedef enum te_fsa_states_e {
+	s_idle,
+	s_in_transition,
+	s_abort_pending,
+	s_invalid
+	
+} te_fsa_state_t;
+
+typedef enum te_fsa_inputs_e {
+	i_transition,
+	i_cancel,
+	i_complete,
+	i_cib_complete,
+	i_cib_confirm,
+	i_cib_notify,
+	i_invalid	
+} te_fsa_input_t;
+
+extern const te_fsa_state_t te_state_matrix[i_invalid][s_invalid];
+extern te_fsa_state_t te_fsa_state;
+
 
 typedef struct synapse_s {
 		int id;
@@ -76,7 +97,6 @@ enum timer_reason {
 	timeout_action,
 	timeout_action_warn,
 	timeout_timeout,
-	timeout_fuzz
 };
 
 struct te_timer_s
@@ -102,7 +122,8 @@ extern gboolean cib_action_update(action_t *action, int status);
 
 /* utils */
 extern void print_state(int log_level);
-extern void send_complete(const char *text,crm_data_t *msg,te_reason_t reason);
+extern void send_complete(const char *text, crm_data_t *msg,
+			  te_reason_t reason, te_fsa_input_t input);
 extern gboolean stop_te_timer(te_timer_t *timer);
 extern gboolean start_te_timer(te_timer_t *timer);
 extern const char *get_rsc_state(const char *task, op_status_t status);
@@ -114,11 +135,9 @@ extern gboolean process_te_message(
 	HA_Message * msg, crm_data_t *xml_data, IPC_Channel *sender);
 
 extern uint transition_timeout;
-extern uint transition_fuzz_timeout;
 extern uint default_transition_timeout;
 
 extern te_timer_t *transition_timer;
-extern te_timer_t *transition_fuzz_timer;
 extern cib_t *te_cib_conn;
 
 extern const char *actiontype2text(action_type_e type);

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.31 2005/05/25 12:49:27 andrew Exp $ */
+/* $Id: callbacks.c,v 1.32 2005/05/27 15:06:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,14 +46,19 @@ te_update_confirm(const char *event, HA_Message *msg)
 	
 	if(op == NULL) {
 		crm_err("Illegal CIB update, the operation must be specified");
-		send_complete("Illegal update", update, te_update);
+		send_complete("Illegal update", update, te_update, i_cancel);
+		done = TRUE;
+		
+	} else if(te_fsa_state == s_abort_pending) {
+		/* take no further actions if an abort is pending */
+		crm_debug("Ignoring CIB update while waiting for an abort");
 		done = TRUE;
 		
 	} else if(strcmp(op, CRM_OP_CIB_ERASE) == 0) {
 		/* these are always unexpected, trigger the PE */
 		crm_err("Need to trigger an election here so that"
 			" the current state of all nodes is obtained");
-		send_complete("Erase event", update, te_update);
+		send_complete("Erase event", update, te_update, i_cancel);
 		done = TRUE;
 
 	} else if(strcmp(op, CRM_OP_CIB_CREATE) == 0
@@ -62,7 +67,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 		  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
 		
 		/* these are always unexpected, trigger the PE */
-		send_complete("Non-update change", update, te_update);
+		send_complete("Non-update change", update, te_update, i_cancel);
 		done = TRUE;
 		
 	} else if(strcmp(op, CRM_OP_CIB_UPDATE) != 0) {
@@ -86,7 +91,8 @@ te_update_confirm(const char *event, HA_Message *msg)
 	} else if(safe_str_eq(type, XML_CIB_TAG_STATUS)) {
 		/* this _may_ not be un-expected */
 		if(extract_event(update) == FALSE) {
-			send_complete("Unexpected status update", update, te_update);
+			send_complete("Unexpected status update",
+				      update, te_update, i_cancel);
 		}
 
 	} else if(safe_str_eq(type, XML_CIB_TAG_NODES)
@@ -94,7 +100,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 		|| safe_str_eq(type, XML_CIB_TAG_CONSTRAINTS)) {
 		/* these are never expected	 */
 		crm_debug("Aborting on changes to the %s section", type);
-		send_complete("Non-status update", update, te_update);
+		send_complete("Non-status update", update, te_update, i_cancel);
 
 	} else if(safe_str_eq(type, XML_TAG_CIB)) {
 		crm_data_t *section_xml = NULL;
@@ -134,7 +140,8 @@ te_update_confirm(const char *event, HA_Message *msg)
 				);
 		}
 		if(abort) {
-			send_complete("Non-status update", update, te_update);
+			send_complete("Non-status update", update,
+				      te_update, i_cancel);
 		} 
 
 		section = XML_CIB_TAG_STATUS;
@@ -142,7 +149,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 			section_xml = get_object_root(section, update);
 			if(extract_event(section_xml) == FALSE) {
 				send_complete("Unexpected global status update",
-					      section_xml, te_update);
+					      section_xml, te_update, i_cancel);
 			}
 		}
 		
@@ -181,24 +188,29 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
-		initialize_graph();
-		unpack_graph(xml_data);
+		if(te_fsa_state != s_idle) {
+			crm_debug("Attempt to start another transition");
+			send_complete(CRM_OP_TE_HALT, NULL, te_halt, i_cancel);
 
-		in_transition = TRUE;
-		crm_debug("Initiating transition...");
-		if(initiate_transition() == FALSE) {
-			/* nothing to be done.. means we're done. */
-			crm_info("No actions to be taken..."
-			       " transition compelte.");
+		} else {
+			te_fsa_state = te_state_matrix[i_transition][te_fsa_state];
+			initialize_graph();
+			unpack_graph(xml_data);
+			
+			crm_debug("Initiating transition...");
+			if(initiate_transition() == FALSE) {
+				/* nothing to be done.. means we're done. */
+				crm_info("No actions to be taken..."
+					 " transition compelte.");
+			}
 		}
 
 	} else if(strcmp(op, CRM_OP_TE_HALT) == 0) {
-		initialize_graph();
-		send_complete(CRM_OP_TE_HALT, NULL, te_halt);
+		send_complete(CRM_OP_TE_HALT, NULL, te_halt, i_cancel);
 
 	} else if(strcmp(op, CRM_OP_TEABORT) == 0) {
-		initialize_graph();
-		send_complete(CRM_OP_TEABORTED, NULL, te_abort_confirmed);
+		send_complete(CRM_OP_TEABORTED, NULL,
+			      te_abort_confirmed, i_cancel);
 
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		crm_info("Received quit message, terminating");
@@ -208,13 +220,12 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
 		crm_debug_4("Processing %s...", CRM_OP_EVENTCC);
 		if(extract_event(msg) == FALSE) {
-			send_complete("ttest loopback", msg, te_failed);
+			send_complete("ttest loopback", msg,
+				      te_failed, i_complete);
 		}
-#endif
-	} else if(in_transition == FALSE) {
-		crm_info("Received event_cc while not in a transition..."
-			 "  Poking the Policy Engine");
-		send_complete("Initiate a transition", NULL, te_update);
+#endif 
+	} else {
+		crm_err("Unknown command: %s", op);
 	}
 
 	crm_debug_3("finished processing message");
@@ -236,6 +247,13 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		 op->optype, op->node_name, op->op_result,
 		 (char *)op->node_list);
 
+	if(te_fsa_state == s_abort_pending) {
+		/* take no further actions if an abort is pending */
+		crm_debug("Ignoring Stonith result while waiting for an abort");
+		return;
+	}
+ 
+	
 	/* this will mark the event complete if a match is found */
 	action_id = match_down_event(
 		op->node_name, CRM_OP_FENCE, op->op_result);
@@ -277,11 +295,12 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 			cib_quorum_override);	
 
 		if(action_id < 0) {
-			send_complete("Stonith not matched", update, te_update);
+			send_complete("Stonith not matched", update,
+				      te_update, i_cancel);
 
 		} else if(rc != cib_ok) {
 			send_complete("Couldnt update CIB after stonith",
-				      update, te_failed);
+				      update, te_failed, i_cancel);
 			
 		} else {
 			process_trigger(action_id);
@@ -290,7 +309,7 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		free_xml(update);
 		
 	} else {
-		send_complete("Fencing op failed", NULL, te_failed);
+		send_complete("Fencing op failed", NULL, te_failed, i_cancel);
 	}
 }
 
