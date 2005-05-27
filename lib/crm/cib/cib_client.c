@@ -542,6 +542,12 @@ remove_cib_op_callback(int call_id, gboolean all_callbacks)
 	}
 }
 
+int
+num_cib_op_callbacks(void)
+{
+	return g_hash_table_size(cib_op_callback_table);
+}
+
 
 
 char *
@@ -796,102 +802,42 @@ cib_section2enum(const char *a_section)
 int
 cib_compare_generation(crm_data_t *left, crm_data_t *right)
 {
-	int int_elem_l = -1;
-	int int_elem_r = -1;
-	const char *elem_l = crm_element_value(left, XML_ATTR_GENERATION);
-	const char *elem_r = NULL;
+	int lpc = 0;
+	const char *attributes[] = {
+		XML_ATTR_GENERATION_ADMIN,
+		XML_ATTR_GENERATION,
+		XML_ATTR_NUMUPDATES,
+		XML_ATTR_NUMPEERS
+	};
 
-	crm_log_xml_debug_4(left, "left");
-	if(right != NULL) {
-		elem_r = crm_element_value(right, XML_ATTR_GENERATION);
-		crm_log_xml_debug_4(right, "right");
-	}
+	crm_log_xml_debug_3(left, "left");
+	crm_log_xml_debug_3(right, "right");
 	
-	if(elem_l != NULL) { int_elem_l = atoi(elem_l); }
-	if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
+	for(lpc = 0; lpc < DIMOF(attributes); lpc++) {
+		int int_elem_l = -1;
+		int int_elem_r = -1;
+		const char *elem_r = NULL;
+		const char *elem_l = crm_element_value(left, attributes[lpc]);
+
+		if(right != NULL) {
+			elem_r = crm_element_value(right, attributes[lpc]);
+		}
 	
-	if(int_elem_l < int_elem_r) {
-		crm_debug_2("lt - XML_ATTR_GENERATION");
-		return -1;
-		
-	} else if(int_elem_l > int_elem_r) {
-		crm_debug_2("gt - XML_ATTR_GENERATION");
-		return 1;
-	}
+		if(elem_l != NULL) { int_elem_l = atoi(elem_l); }
+		if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
 
-	int_elem_l = -1;
-	int_elem_r = -1;
-	elem_l = crm_element_value(left, XML_ATTR_NUMUPDATES);
-	if(right != NULL) {
-		elem_r = crm_element_value(right, XML_ATTR_NUMUPDATES);
-	}
-	
-	if(elem_l != NULL) { int_elem_l = atoi(elem_l); }
-	if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
-
-	crm_log_xml_debug_4(left, "left");
-	crm_log_xml_debug_4(left, "right");
-	
-	if(int_elem_l < int_elem_r) {
-		crm_debug_2("lt - XML_ATTR_NUMUPDATES");
-		return -1;
-		
-	} else if(int_elem_l > int_elem_r) {
-		crm_debug_2("gt - XML_ATTR_NUMUPDATES");
-		return 1;
-	}
-	
-	crm_debug_2("eq - XML_ATTR_NUMUPDATES");
-
-	int_elem_l = -1;
-	int_elem_r = -1;
-	elem_l = crm_element_value(left, XML_ATTR_NUMPEERS);
-	if(right != NULL) {
-		elem_r = crm_element_value(right, XML_ATTR_NUMPEERS);
-	}
-	
-	if(elem_l != NULL) { int_elem_l = atoi(elem_l); }
-	if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
-
-	if(int_elem_l < int_elem_r) {
-		crm_debug_2("lt - XML_ATTR_NUMPEERS");
-		return -1;
-		
-	} else if(int_elem_l > int_elem_r) {
-		crm_debug_2("gt - XML_ATTR_NUMPEERS");
-		return 1;
-	}
-	
-	crm_debug_2("eq - XML_ATTR_NUMPEERS");
-
-	elem_l = crm_element_value(left, XML_ATTR_NUMPEERS);
-	if(right != NULL) {
-		elem_r = crm_element_value(right, XML_ATTR_NUMPEERS);
-	}
-	
-	if(elem_l == NULL && elem_r == NULL) {
-
-	} else if(elem_l == NULL) {
-		crm_debug_2("lt - XML_ATTR_NUMPEERS");
-		return -1;
-
-	} else if(elem_r == NULL) {
-		crm_debug_2("gt - XML_ATTR_NUMPEERS");
-		return 1;
-
-	} else if(safe_str_neq(elem_l, elem_r)) {
-
-		if(safe_str_eq(elem_l, XML_BOOLEAN_TRUE)) {
-			crm_debug_2("gt - XML_ATTR_NUMPEERS");
-			return 1;
-			
-		} else if(safe_str_eq(elem_r, XML_BOOLEAN_TRUE)) {
-			crm_debug_2("lt - XML_ATTR_NUMPEERS");
+		if(int_elem_l < int_elem_r) {
+			crm_debug_2("%s (%s < %s)", attributes[lpc],
+				    crm_str(elem_l), crm_str(elem_r));
 			return -1;
+			
+		} else if(int_elem_l > int_elem_r) {
+			crm_debug_2("%s (%s > %s)", attributes[lpc],
+				    crm_str(elem_l), crm_str(elem_r));
+			return 1;
 		}
 	}
 	
-	crm_debug_2("eq - XML_ATTR_NUMPEERS");
 	return 0;
 }
 

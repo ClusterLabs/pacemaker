@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.23 2005/04/27 09:30:52 andrew Exp $ */
+/* $Id: cib.h,v 1.24 2005/05/27 08:41:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -279,7 +279,8 @@ extern gboolean add_cib_op_callback(
 	int call_id, gboolean only_success, void *user_data,
 	void (*callback)(const HA_Message*, int, int, crm_data_t*,void*));
 extern void remove_cib_op_callback(int call_id, gboolean all_callbacks);
-	
+extern int num_cib_op_callbacks(void);
+
 /* Utility functions */
 extern crm_data_t *get_object_root(const char *object_type,crm_data_t *the_root);
 extern crm_data_t *create_cib_fragment_adv(
