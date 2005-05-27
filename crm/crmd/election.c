@@ -88,8 +88,15 @@ do_election_vote(long long action,
 	}
 
 	send_request(vote, NULL);
-	crm_timer_start(election_timeout);		
+	if(cur_state == S_ELECTION || cur_state == S_RELEASE_DC) {
+		crm_timer_start(election_timeout);		
 
+	} else if(cur_state != S_INTEGRATION) {
+		crm_err("Broken? Voting in state %s",
+			fsa_state2string(cur_state));
+	}
+	
+	
 	return I_NULL;
 }
 
