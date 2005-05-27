@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.72 2005/05/24 12:54:39 andrew Exp $ */
+/* $Id: pengine.c,v 1.73 2005/05/27 07:35:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -116,9 +116,11 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		free_xml(output);
 		
-		if(mem_stats->nbytes_alloc != 0) {
+		if(sender->send_queue->current_qlen == 0
+		   && sender->recv_queue->current_qlen == 0
+		   && mem_stats->nbytes_alloc != 0) {
 			crm_mem_stats(mem_stats);
-			pe_warn("Unfree'd memory");
+ 			pe_warn("Unfree'd memory");
 		}
 		cl_malloc_setstats(NULL);
 		crm_free(mem_stats);
