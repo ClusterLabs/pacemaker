@@ -478,6 +478,9 @@ crmd_ccm_msg_callback(
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
 			fsa_membership_copy->id = instance;
+			if(AM_I_DC && need_transition(fsa_state)) {
+				trigger_transition = TRUE;
+			}
 			break;
 		case OC_EV_MS_EVICTED:
 			update_quorum = TRUE;
