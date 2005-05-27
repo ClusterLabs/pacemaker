@@ -314,7 +314,7 @@ class CrmdStateAudit(ClusterAudit):
         if len(unstable_list) > 0:
             passed = 0
             self.CM.log("Cluster is not stable: %d (of %d): %s" 
-                     %(len(unstable_list), up_count, repr(unstable_list)))
+            %(len(unstable_list), len(self.CM.Env["nodes"]), repr(unstable_list)))
 
         if up_are_down > 0:
             passed = 0
