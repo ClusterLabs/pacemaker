@@ -582,7 +582,7 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 		cib_op_callback_table, GINT_TO_POINTER(call_id));
 	
 	if(blob != NULL) {
-		crm_debug("Callback found for call %d", call_id);
+		crm_debug_3("Callback found for call %d", call_id);
 /* 		local_blob.callback = blob->callback; */
 /* 		local_blob.user_data = blob->user_data; */
 /* 		local_blob.only_success = blob->only_success; */
@@ -590,7 +590,7 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 		g_hash_table_remove(
 			cib_op_callback_table, GINT_TO_POINTER(call_id));
 	} else {
-		crm_debug("No callback found for call %d", call_id);
+		crm_debug_3("No callback found for call %d", call_id);
 		local_blob.callback = NULL;
 	}
 
