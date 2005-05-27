@@ -898,7 +898,7 @@ class Fastdetection(CTSTest):
         if not ret:
             return ret
 
-        stoppat = (self.they_stopped % node)
+        stoppat = (self.they_stopped % ("", node))
         stopwatch = CTS.LogWatcher(self.CM["LogFileName"], [stoppat], timeout=self.timeout)
         stopwatch.setwatch()
 
