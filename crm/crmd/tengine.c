@@ -155,7 +155,6 @@ do_te_invoke(long long action,
 		ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 		if(input->xml != NULL) {
 
-			CRM_DEV_ASSERT(is_set(fsa_input_register, R_IN_TRANSITION) == FALSE);
 			crm_debug("Starting a transition");
 			set_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 			
@@ -170,16 +169,12 @@ do_te_invoke(long long action,
 		}
 	
 	} else if(action & A_TE_CANCEL) {
-		if(is_set(fsa_input_register, R_IN_TRANSITION)) {
-			crm_debug("Cancelling the active Transition");
-			cmd = create_request(
-				CRM_OP_TEABORT, NULL, NULL,
-				CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
-			
-			send_request(cmd, NULL);
-		} else {
-			register_fsa_action(A_PE_INVOKE);
-		}
+		crm_debug("Cancelling the active Transition");
+		cmd = create_request(
+			CRM_OP_TEABORT, NULL, NULL,
+			CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
+		
+		send_request(cmd, NULL);
 
 	} else if(action & A_TE_HALT) {
 		cmd = create_request(
