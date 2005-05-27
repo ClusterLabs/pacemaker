@@ -373,6 +373,10 @@ cib_native_perform_op(
 		return cib_create_msg;
 	}
 
+	if(call_options & cib_inhibit_bcast) {
+		CRM_DEV_ASSERT((call_options & cib_scope_local));
+	}
+	
 	cib->call_id++;
 
 	crm_debug_3("Sending %s message to CIB service", op);
@@ -569,29 +573,38 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 	int call_id = 0;
 	crm_data_t *output = NULL;
 
-	cib_callback_client_t *blob = g_hash_table_lookup(
-		cib_op_callback_table, GINT_TO_POINTER(call_id));
+	cib_callback_client_t *blob = NULL;
 
+	cib_callback_client_t local_blob;
 	ha_msg_value_int(msg, F_CIB_CALLID, &call_id);
-	ha_msg_value_int(msg, F_CIB_RC, &rc);
-	output = get_message_xml(msg, F_CIB_CALLDATA);
 
 	blob = g_hash_table_lookup(
 		cib_op_callback_table, GINT_TO_POINTER(call_id));
 	
-	if(blob != NULL && (rc == cib_ok || blob->only_success == FALSE)) {
-		blob->callback(msg, call_id, rc, output, blob->user_data);
+	if(blob != NULL) {
+		crm_debug("Callback found for call %d", call_id);
+/* 		local_blob.callback = blob->callback; */
+/* 		local_blob.user_data = blob->user_data; */
+/* 		local_blob.only_success = blob->only_success; */
+		local_blob = *blob;
 		g_hash_table_remove(
 			cib_op_callback_table, GINT_TO_POINTER(call_id));
+	} else {
+		crm_debug("No callback found for call %d", call_id);
+		local_blob.callback = NULL;
+	}
+
+	ha_msg_value_int(msg, F_CIB_RC, &rc);
+	output = get_message_xml(msg, F_CIB_CALLDATA);
+	
+	if(local_blob.callback != NULL
+	   && (rc == cib_ok || local_blob.only_success == FALSE)) {
+		local_blob.callback(
+			msg, call_id, rc, output, local_blob.user_data);
 		
 	} else if(cib->op_callback == NULL && rc != cib_ok) {
 		crm_err("CIB command failed: %s", cib_error2string(rc));
 		crm_log_message_adv(LOG_DEBUG, "Failed CIB Update", msg);
-	}
-	
-	if(blob != NULL) {
-		g_hash_table_remove(
-			cib_op_callback_table, GINT_TO_POINTER(call_id));
 	}
 	
 	if(cib->op_callback == NULL) {
