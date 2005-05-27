@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.33 2005/05/25 12:46:22 andrew Exp $ */
+/* $Id: unpack.c,v 1.34 2005/05/27 12:30:45 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -290,7 +290,7 @@ extract_event(crm_data_t *msg)
 			blob.text = "Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute";
 			break;
 			
-#if 1
+/* #if 1 */
 			/* is this still required??? */
 		} else if(crm_element_value(node_state, CRM_OP_FENCE) != NULL) {
 			/* node marked for STONITH
@@ -310,7 +310,7 @@ extract_event(crm_data_t *msg)
 				process_trigger(action_id);
 				check_for_completion();
 			}
-#endif
+/* #endif */
 		}
 
 		resources = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
