@@ -58,10 +58,13 @@ register_fsa_error_adv(
 	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 	fsa_data_t *cur_data, void *new_data, const char *raised_from)
 {
-	/* save the current actions */
-	register_fsa_input_adv(cur_data?cur_data->fsa_cause:C_FSA_INTERNAL,
-			       I_NULL, cur_data?cur_data->data:NULL,
-			       fsa_actions, TRUE, __FUNCTION__);
+	/* save the current actions if any */
+	if(fsa_actions != A_NOTHING) {
+		register_fsa_input_adv(
+			cur_data?cur_data->fsa_cause:C_FSA_INTERNAL,
+			I_NULL, cur_data?cur_data->data:NULL,
+			fsa_actions, TRUE, __FUNCTION__);
+	}
 	
 	/* reset the action list */
 	fsa_actions = A_NOTHING;
