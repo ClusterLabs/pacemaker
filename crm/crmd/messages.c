@@ -85,8 +85,10 @@ register_fsa_input_adv(
 	unsigned  old_len = g_list_length(fsa_message_queue);
 	fsa_data_t *fsa_data = NULL;
 
-	crm_debug("%s raised FSA input %s (cause=%s) %s data",
-		  raised_from,fsa_input2string(input),
+	last_data_id++;
+	
+	crm_debug("%s raised FSA input %d (%s) (cause=%s) %s data",
+		  raised_from, last_data_id, fsa_input2string(input),
 		  fsa_cause2string(cause), data?"with":"without");
 	
 	if(input == I_WAIT_FOR_EVENT) {
@@ -152,7 +154,7 @@ register_fsa_input_adv(
 	}
 
 	crm_malloc0(fsa_data, sizeof(fsa_data_t));
-	fsa_data->id        = ++last_data_id;
+	fsa_data->id        = last_data_id;
 	fsa_data->fsa_input = input;
 	fsa_data->fsa_cause = cause;
 	fsa_data->origin    = raised_from;
@@ -214,15 +216,13 @@ register_fsa_input_adv(
 	
 	/* make sure to free it properly later */
 	if(prepend) {
-		crm_debug_4("Prepending input");
+		crm_debug_2("Prepending input");
 		fsa_message_queue = g_list_prepend(fsa_message_queue, fsa_data);
 	} else {
-		crm_debug_4("Appending input");
 		fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
 	}
 	
-	crm_debug("Queue len: %d -> %d", old_len,
-		  g_list_length(fsa_message_queue));
+	crm_debug("Queue len: %d", g_list_length(fsa_message_queue));
 
 	fsa_dump_queue(LOG_DEBUG);
 	
