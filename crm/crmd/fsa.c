@@ -549,7 +549,7 @@ do_state_transition(long long actions,
 					"  Welcome reply not received from");
 				
 				crm_warn("%u cluster nodes failed to respond"
-					 "to the join offer.",
+					 " to the join offer.",
 					 g_hash_table_size(welcomed_nodes));
 				g_hash_table_foreach(
 					welcomed_nodes, ghash_print_node, msg);
