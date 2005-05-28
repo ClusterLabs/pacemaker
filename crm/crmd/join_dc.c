@@ -574,7 +574,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 		if(g_hash_table_size(welcomed_nodes) == 0) {
 			crm_info("Integration of %d peers complete: %s",
 				 g_hash_table_size(integrated_nodes), source);
-			register_fsa_input_later(
+			register_fsa_input_before(
 				C_FSA_INTERNAL, I_INTEGRATED, NULL);
 			return TRUE;
 		}
