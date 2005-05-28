@@ -51,7 +51,7 @@ class HeartbeatCM(ClusterManager):
             "Name"           : "heartbeat",
             "DeadTime"       : 30,
             "StableTime"     : 30,
-            "StartCmd"       : "ulimit -c unlimited; MALLOC_CHECK_=2; export MALLOC_CHECK_; @libdir@/heartbeat/heartbeat -d 2>/dev/null",
+            "StartCmd"       : "@libdir@/heartbeat/ha_logd -d >/dev/null 2>&1; MALLOC_CHECK_=2 @libdir@/heartbeat/heartbeat >/dev/null 2>&1",
             "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
             "StatusCmd"      : "@libdir@/heartbeat/heartbeat -s",
             "RereadCmd"      : "@libdir@/heartbeat/heartbeat -r",
