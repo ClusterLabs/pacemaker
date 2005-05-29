@@ -1137,19 +1137,19 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_JOIN_REQUEST */
 	{
-		/* S_IDLE		==> */	A_DC_JOIN_PROCESS_REQ,
+		/* S_IDLE		==> */	A_DC_JOIN_OFFER_ONE,
 		/* S_ELECTION		==> */	A_WARN,
 		/* S_INTEGRATION	==> */	A_DC_JOIN_PROCESS_REQ,
-		/* S_FINALIZE_JOIN	==> */	A_DC_JOIN_PROCESS_REQ,
+		/* S_FINALIZE_JOIN	==> */	A_DC_JOIN_OFFER_ONE,
 		/* S_NOT_DC		==> */	A_WARN,
-		/* S_POLICY_ENGINE	==> */	A_DC_JOIN_PROCESS_REQ,
+		/* S_POLICY_ENGINE	==> */	A_DC_JOIN_OFFER_ONE,
 		/* S_RECOVERY		==> */	A_WARN,
 		/* S_RELEASE_DC		==> */	A_WARN,
 		/* S_STARTING		==> */	A_WARN,
 		/* S_PENDING		==> */	A_WARN,
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	A_DC_JOIN_PROCESS_REQ,
+		/* S_TRANSITION_ENGINE	==> */	A_DC_JOIN_OFFER_ONE,
 		/* S_HALT		==> */	A_WARN,
 	},
 
