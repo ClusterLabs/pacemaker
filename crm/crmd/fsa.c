@@ -72,14 +72,15 @@ unsigned int action_diff_ms = 0;
 
 #define IF_FSA_ACTION(x,y)						\
    if(is_set(fsa_actions,x)) {						\
+	   enum crmd_fsa_input result = I_NULL;				\
 	   last_action = x;						\
 	   fsa_actions = clear_bit(fsa_actions, x);			\
-	   crm_debug_2("Invoking action %s (%.16llx)",			\
+	   crm_debug_3("Invoking action %s (%.16llx)",			\
 		       fsa_action2string(x), x);			\
 	   if(action_diff_max_ms > 0) {					\
 		   action_start = time_longclock();			\
 	   }								\
-	   next_input = y(x, fsa_data->fsa_cause, fsa_state,		\
+	   result = y(x, fsa_data->fsa_cause, fsa_state,		\
 			  fsa_data->fsa_input, fsa_data);		\
 	   if(action_diff_max_ms > 0) {					\
 		   action_stop = time_longclock();			\
@@ -95,9 +96,9 @@ unsigned int action_diff_ms = 0;
 				    action_diff_ms);			\
 		   }							\
 	   }								\
-	   crm_debug_2("Action complete: %s (%.16llx)",			\
+	   crm_debug_3("Action complete: %s (%.16llx)",			\
 		       fsa_action2string(x), x);			\
-	   CRM_DEV_ASSERT(next_input == I_NULL); 			\
+	   CRM_DEV_ASSERT(result == I_NULL);				\
 	   do_dot_action(DOT_PREFIX"\t// %s", fsa_action2string(x));	\
    }
 
@@ -180,7 +181,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	long long register_copy = fsa_input_register;
 	long long new_actions = A_NOTHING;
 	long long last_action = A_NOTHING;
-	enum crmd_fsa_input next_input = I_NULL;
 	enum crmd_fsa_state last_state = fsa_state;
 	
 	crm_debug("FSA invoked with Cause: %s\tState: %s",
@@ -202,9 +202,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		crm_debug("Checking messages (%d remaining)",
 			    g_list_length(fsa_message_queue));
 		
-		delete_fsa_input(fsa_data);
 		fsa_data = get_message();
-		
 		CRM_DEV_ASSERT(fsa_data != NULL);
 		if(crm_assert_failed) {
 			continue;
@@ -220,7 +218,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		fsa_actions |= new_actions;
 #ifdef FSA_TRACE
 		if(new_actions != A_NOTHING) {
-			crm_debug("Adding FSA actions %.16llx for %s/%s",
+			crm_debug_2("Adding FSA actions %.16llx for %s/%s",
 				  new_actions, fsa_input2string(fsa_data->fsa_input),
 				  fsa_state2string(fsa_state));
 			fsa_dump_actions(new_actions, "\tFSA scheduled");
@@ -231,18 +229,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				  fsa_state2string(fsa_state));
 		}
 		if(fsa_data->actions != A_NOTHING) {
-			crm_debug("Adding input actions %.16llx for %s/%s",
+			crm_debug_2("Adding input actions %.16llx for %s/%s",
 				    new_actions, fsa_input2string(fsa_data->fsa_input),
 				    fsa_state2string(fsa_state));
 			fsa_dump_actions(fsa_data->actions,"\tInput scheduled");
-		}
-		
-		do_dot_log(DOT_PREFIX"\t// FSA input: State=%s \tCause=%s"
-			   " \tInput=%s \tOrigin=%s() \tid=%d",
-			   fsa_state2string(fsa_state),
-			   fsa_cause2string(fsa_data->fsa_cause),
-			   fsa_input2string(fsa_data->fsa_input),
-			   fsa_data->origin, fsa_data->id);
+		}		
 #endif
 
 		/* logging : *before* the state is changed */
@@ -267,20 +258,27 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		if(last_state != fsa_state){
 			fsa_actions = do_state_transition(
 				fsa_actions, last_state, fsa_state, fsa_data);
+		} else {
+			do_dot_log(DOT_PREFIX"\t// FSA input: State=%s \tCause=%s"
+				   " \tInput=%s \tOrigin=%s() \tid=%d",
+				   fsa_state2string(fsa_state),
+				   fsa_cause2string(fsa_data->fsa_cause),
+				   fsa_input2string(fsa_data->fsa_input),
+				   fsa_data->origin, fsa_data->id);
 		}
+		
 
 		/* start doing things... */
 		s_crmd_fsa_actions(fsa_data);
+		delete_fsa_input(fsa_data);
+		fsa_data = NULL;
 	}
 	
-	crm_debug("Exiting the FSA: is_message=%s, queue=%d, fsa_data=%p,"
-		  " fsa_actions=0x%llx, next_input=%s, stalled=%s",
-		  is_message()?"true":"false", g_list_length(fsa_message_queue),
-		  fsa_data, fsa_actions, fsa_input2string(next_input),
+	crm_debug("Exiting the FSA: queue=%d, fsa_actions=0x%llx, stalled=%s",
+		  g_list_length(fsa_message_queue), fsa_actions,
 		  do_fsa_stall?"true":"false");
 	
 	/* cleanup inputs? */
-	delete_fsa_input(fsa_data);
 	if(register_copy != fsa_input_register) {
 		fsa_dump_inputs(LOG_DEBUG, fsa_input_register);
 	}
@@ -293,7 +291,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 void
 s_crmd_fsa_actions(fsa_data_t *fsa_data)
 {
-	enum crmd_fsa_input next_input = I_NULL;
 	long long last_action = A_NOTHING;
 	
 	/*
@@ -302,11 +299,11 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 	 */
 	while(fsa_actions != A_NOTHING  && do_fsa_stall == FALSE) {
 		msg_queue_helper();
-		if(fsa_data == NULL) {
-			crm_err("No input for FSA.... terminating");
-			exit(1);
+		CRM_DEV_ASSERT(fsa_data != NULL);
+		if(crm_assert_failed) {
+			return;
 		}
-
+		
 		/* regular action processing in order of action priority
 		 *
 		 * Make sure all actions that connect to required systems
