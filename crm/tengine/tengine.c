@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.72 2005/05/27 15:06:40 andrew Exp $ */
+/* $Id: tengine.c,v 1.73 2005/05/30 10:22:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -154,16 +154,17 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	this_node   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	this_rsc    = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
 	
-	crm_debug("matching against: <%s task=%s node=%s rsc_id=%s/>",
+	crm_debug_2("matching against: <%s task=%s node=%s rsc_id=%s/>",
 		  crm_element_name(action->xml), this_action, this_node, this_rsc);
 	if(safe_str_neq(this_action, event_action)) {	
-		crm_debug("Action %d : Action mismatch %s", action->id, event_action);
+		crm_debug_2("Action %d : Action mismatch %s",
+			    action->id, event_action);
 		
 	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT)) {
 		if(safe_str_eq(this_action, CRM_OP_FENCE)) {
 			
 		} else if(safe_str_neq(this_node, event_node)) {
-			crm_debug("node mismatch: %s", event_node);
+			crm_debug_2("node mismatch: %s", event_node);
 		} else {
 			crm_debug_3(XML_GRAPH_TAG_CRM_EVENT);
 			match = action;
@@ -173,27 +174,25 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		match = action;
 		
 	} else if(safe_str_neq(this_node, event_node)) {
-		crm_debug("Action %d : Node mismatch %s", action->id, event_node);
+		crm_debug_2("Action %d : Node mismatch %s",
+			    action->id, event_node);
 
 	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP)) {
 		crm_debug_3(XML_GRAPH_TAG_RSC_OP);
 		if(safe_str_eq(this_rsc, event_rsc)) {
 			match = action;
 		} else {
-			crm_debug("Action %d : bad rsc (%s) != (%s)",
+			crm_debug_2("Action %d : bad rsc (%s) != (%s)",
 				 action->id, this_rsc, event_rsc);
 		}
-		
-	} else {
-		crm_debug("no match");
 	}
 	
 	if(match == NULL) {
-		crm_debug_3("didnt match current action");
+		crm_debug_2("didnt match current action");
 		return -1;
 	}
 
-	crm_debug_3("matched");
+	crm_debug_2("matched");
 
 	/* stop this event's timer if it had one */
 	stop_te_timer(match->timer);
@@ -335,6 +334,7 @@ match_down_event(const char *target, const char *filter, int rc)
 gboolean
 process_graph_event(crm_data_t *event, const char *event_node)
 {
+	int rc                = -1;
 	int action_id         = -1;
 	int op_status_i       = 0;
 	const char *task      = NULL;
@@ -375,29 +375,41 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		slist_iter(
 			action, action_t, synapse->actions, lpc2,
 
-			action_id = match_graph_event(action,event,event_node);
-			if(action_id != -1) {
-				break;
-			}
-			);
-		if(action_id != -1) {
-			break;
-		}
-
-		/* now try any dangling inputs */
-		slist_iter(
-			action, action_t, synapse->inputs, lpc2,
-			
-			action_id = match_graph_event(action,event,event_node);
-			if(action_id != -1) {
-				break;
+			rc = match_graph_event(action, event ,event_node);
+			if(action_id >= 0 && rc >= 0 && rc != action_id) {
+				crm_err("Additional match found: %d [%d]",
+					rc, action_id);
+			} else if(rc != -1) {
+				rc = action_id;
 			}
 			);
 		if(action_id != -1) {
 			break;
 		}
 		);
-	
+
+	if(action_id == -1) {
+		/* didnt find a match...
+		 * now try any dangling inputs
+		 */
+		slist_iter(
+			synapse, synapse_t, graph, lpc,
+			
+			slist_iter(
+				action, action_t, synapse->inputs, lpc2,
+				
+				rc = match_graph_event(action,event,event_node);
+				if(action_id >=0 && rc >=0 && rc != action_id) {
+					crm_err("Additional match found:"
+						" %d [%d]", rc, action_id);
+				} else if(rc != -1) {
+					rc = action_id;
+				}
+				);
+			if(action_id != -1) { break; }
+			);
+	}
+
 	if(action_id > -1) {
 		crm_log_xml_debug_3(event, "Event found");
 		
