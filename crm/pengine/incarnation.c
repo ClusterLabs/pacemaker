@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.18 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: incarnation.c,v 1.19 2005/05/30 09:35:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -534,11 +534,14 @@ void incarnation_free(resource_t *rsc)
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 
 		crm_debug_3("Freeing child %s", child_rsc->id);
+		free_xml(child_rsc->xml);
 		child_rsc->fns->free(child_rsc);
 		);
 
 	crm_debug_3("Freeing child list");
 	pe_free_shallow_adv(incarnation_data->child_list, FALSE);
+
+	free_xml(incarnation_data->self->xml);
 	incarnation_data->self->fns->free(incarnation_data->self);
 
 	common_free(rsc);
