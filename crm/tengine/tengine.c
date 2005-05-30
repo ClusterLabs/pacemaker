@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.73 2005/05/30 10:22:56 andrew Exp $ */
+/* $Id: tengine.c,v 1.74 2005/05/30 11:09:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -376,11 +376,11 @@ process_graph_event(crm_data_t *event, const char *event_node)
 			action, action_t, synapse->actions, lpc2,
 
 			rc = match_graph_event(action, event ,event_node);
-			if(action_id >= 0 && rc >= 0 && rc != action_id) {
+			if(action_id >= 0 && rc >= 0) {
 				crm_err("Additional match found: %d [%d]",
 					rc, action_id);
 			} else if(rc != -1) {
-				rc = action_id;
+				action_id = rc;
 			}
 			);
 		if(action_id != -1) {
@@ -403,7 +403,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 					crm_err("Additional match found:"
 						" %d [%d]", rc, action_id);
 				} else if(rc != -1) {
-					rc = action_id;
+					action_id = rc;
 				}
 				);
 			if(action_id != -1) { break; }
