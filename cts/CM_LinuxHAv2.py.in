@@ -374,7 +374,9 @@ class LinuxHAv2(HeartbeatCM):
         resources=configuration.getElementsByTagName('resources')[0]
         rscs=configuration.getElementsByTagName('resource')
         for rsc in rscs:
-            ResourceList.append(HAResource(self,rsc))
+	    #FixMe: the resources in incarnations will not be return
+            if rsc in resources.childNodes:
+                ResourceList.append(HAResource(self,rsc))
         return ResourceList
 
     def Dependancies(self):
