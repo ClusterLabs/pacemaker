@@ -201,6 +201,33 @@ class LinuxHAv2(HeartbeatCM):
          </resource>
        </incarnation>""" %(len(self.Env["nodes"]), len(self.Env["nodes"]), nodelist))
                 resources = resources + stonith_resource
+            
+#             if self.Env["DoFencing"] == 1 :
+#                 cib_options=cib_options + '''
+#         <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>'''
+#                 nodelist = ""
+#                 for node in self.Env["nodes"]:
+#                     nodelist += node + " "
+#                 index = 0
+#                 for node in self.Env["nodes"]:    
+#                     stonith_resource=("""
+#          <resource id="child_DoFencing_%d" class="stonith" type="ssh">
+#            <instance_attributes>
+#              <attributes>
+#                <nvpair name="hostlist" value="%s"/>
+#              </attributes>
+#            </instance_attributes>
+#          </resource>
+#        """ %(index, nodelist))
+#                     resources = resources + stonith_resource
+#                     node_constraint=("""
+#       <rsc_location id="run_child_DoFencing_%d" rsc="child_DoFencing_%d">
+#         <rule id="pref_run_child_DoFencing_%d" score="100" boolean_op="and">
+#           <expression attribute="#uname" operation="eq" value="%s"/>
+#         </rule>
+#       </rsc_location>""" % (index,index,index, node))
+#                     constraints = constraints + node_constraint
+#                     index += 1
                 
         self.default_cts_cib=cib_prefix + cib_options + cib_glue_1 + \
                resources + cib_glue_2 + constraints + cib_suffix
@@ -370,13 +397,21 @@ class LinuxHAv2(HeartbeatCM):
     def Resources(self):
         ResourceList = []
         #read resources in cib
-        configuration=self.Configuration()
-        resources=configuration.getElementsByTagName('resources')[0]
-        rscs=configuration.getElementsByTagName('resource')
+        configuration = self.Configuration()
+        resources = configuration.getElementsByTagName('resources')[0]
+        rscs = configuration.getElementsByTagName('resource')
         for rsc in rscs:
-	    #FixMe: the resources in incarnations will not be return
             if rsc in resources.childNodes:
                 ResourceList.append(HAResource(self,rsc))
+        incs = configuration.getElementsByTagName('incarnation')
+        for inc in incs:
+            max = int(inc.getAttribute('incarnation_max'))
+            inc_rsc = inc.getElementsByTagName('resource')[0]
+            for i in range(0,max):
+                rsc = HAResource(self,inc_rsc)
+                rsc.rid = rsc.rid + ":%d"%i
+                rsc.Instance = rsc.rid
+                ResourceList.append(rsc)
         return ResourceList
 
     def Dependancies(self):
