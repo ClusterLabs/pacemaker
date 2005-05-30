@@ -224,31 +224,69 @@ class HAResourceAudit(ClusterAudit):
     def __call__(self):
         passed = 1
         NodeofRsc = {}
+        NumofInc = {}
+        MaxofInc = {}
         self.CM.debug("Do Audit HAResourceAudit")        
         
+        #Calculate the count of active nodes
+        up_count = 0;
+        for node in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                up_count += 1
+                
         #Make sure the resouces are running on one and only one node
         Resources = self.CM.Resources()
         for resource in Resources :
             RunningNodes = self._RscRunningNodes(resource)
             NodeofRsc[resource.rid]=RunningNodes
-            
-            #Is the resource served without quorum present?
-            if not self.CM.HasQuorum(None) and len(RunningNodes) != 0:
+            if resource.inc_name == None:
+                #Is the resource served without quorum present?
+                if not self.CM.HasQuorum(None) and len(RunningNodes) != 0:
                     self.CM.log("Resource " + repr(resource)
                     +        " active without Quorum: "
                     +        repr(RunningNodes))
                     passed = 0
-            #Is the resource served at all?
-            elif len(RunningNodes) == 0 and self.CM.HasQuorum(None):
+                #Is the resource served at all?
+                elif len(RunningNodes) == 0 and self.CM.HasQuorum(None):
                     self.CM.log("Resource " + repr(resource)
                     +        " not served anywhere.")
                     passed = 0
-            # Is the resource served too many times?
-            elif len(RunningNodes) > 1:
+                # Is the resource served too many times?
+                elif len(RunningNodes) > 1:
                     self.CM.log("Resource " + repr(resource)
                     +        " served too many times: "
                     +        repr(RunningNodes))
                     passed = 0
+            else:
+                if not NumofInc.has_key(resource.inc_name):
+                    NumofInc[resource.inc_name]=0
+                    MaxofInc[resource.inc_name]=resource.inc_max
+                running = 1
+                #Is the resource served without quorum present?
+                if not self.CM.HasQuorum(None) and len(RunningNodes) != 0:
+                    self.CM.log("Resource " + repr(resource)
+                    +        " active without Quorum: "
+                    +        repr(RunningNodes))
+                    passed = 0
+                #Is the resource served at all?
+                elif len(RunningNodes) == 0 :
+                    running = 0
+                # Is the resource served too many times?
+                elif len(RunningNodes) > 1:
+                    self.CM.log("Resource " + repr(resource)
+                    +        " served too many times: "
+                    +        repr(RunningNodes))
+                    passed = 0
+                
+                if running:
+                    NumofInc[resource.inc_name] += 1
+                
+        for inc_name in NumofInc.keys():
+            if NumofInc[inc_name] != min(up_count,MaxofInc[inc_name]):
+                passed = 0
+                self.CM.log("Incarnation %s has %d instances(max %d instances).\
+                    Now %d nodes are up"%(inc_name,NumofInc[inc_name], \
+                    MaxofInc[inc_name],up_count))
 
         #Make sure the resouces with "must","placement" constraint are running on the same node
         Dependancies = self.CM.Dependancies()
@@ -257,7 +295,7 @@ class HAResourceAudit(ClusterAudit):
                 if NodeofRsc[dependancy["from"]] != NodeofRsc[dependancy["to"]]:
                     print dependancy["from"] + " and " + dependancy["to"] + " should be run on same node"
                     passed = 0
-                 
+                  
         return passed
     
     def is_applicable(self):
