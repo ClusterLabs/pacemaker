@@ -211,7 +211,7 @@ class LinuxHAv2(HeartbeatCM):
 #                 index = 0
 #                 for node in self.Env["nodes"]:    
 #                     stonith_resource=("""
-#          <resource id="child_DoFencing_%d" class="stonith" type="ssh">
+#          <resource id="child_DoFencing:%d" class="stonith" type="ssh">
 #            <instance_attributes>
 #              <attributes>
 #                <nvpair name="hostlist" value="%s"/>
@@ -221,8 +221,8 @@ class LinuxHAv2(HeartbeatCM):
 #        """ %(index, nodelist))
 #                     resources = resources + stonith_resource
 #                     node_constraint=("""
-#       <rsc_location id="run_child_DoFencing_%d" rsc="child_DoFencing_%d">
-#         <rule id="pref_run_child_DoFencing_%d" score="100" boolean_op="and">
+#       <rsc_location id="run_child_DoFencing:%d" rsc="child_DoFencing:%d">
+#         <rule id="pref_run_child_DoFencing:%d" score="100" boolean_op="and">
 #           <expression attribute="#uname" operation="eq" value="%s"/>
 #         </rule>
 #       </rsc_location>""" % (index,index,index, node))
@@ -405,11 +405,21 @@ class LinuxHAv2(HeartbeatCM):
                 ResourceList.append(HAResource(self,rsc))
         incs = configuration.getElementsByTagName('incarnation')
         for inc in incs:
-            max = int(inc.getAttribute('incarnation_max'))
+            max = 0
+            inc_name = inc.getAttribute("id")
+            instance_attributes = inc.getElementsByTagName('instance_attributes')[0]
+            attributes = instance_attributes.getElementsByTagName('attributes')[0]
+            nvpairs = attributes.getElementsByTagName('nvpair')
+            for nvpair in nvpairs:
+                if nvpair.getAttribute("name") == "incarnation_max":
+                    max = int(nvpair.getAttribute("value"))
             inc_rsc = inc.getElementsByTagName('resource')[0]
             for i in range(0,max):
                 rsc = HAResource(self,inc_rsc)
-                rsc.rid = rsc.rid + ":%d"%i
+                rsc.inc_no = i
+                rsc.inc_name = inc_name
+                rsc.inc_max = max
+                rsc.rid = inc_name+":"+rsc.rid + ":%d"%i
                 rsc.Instance = rsc.rid
                 ResourceList.append(rsc)
         return ResourceList
@@ -471,6 +481,9 @@ class HAResource(Resource):
         self.rid     = str(node.getAttribute('id'))
         self.rclass  = str(node.getAttribute('class'))
         self.rtype   = str(node.getAttribute('type'))
+        self.inc_name = None
+        self.inc_no = -1
+        self.inc_max = -1
         self.rparameters = {}
         
         list = node.getElementsByTagName('instance_attributes')
