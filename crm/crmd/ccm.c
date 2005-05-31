@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.82 2005/05/23 20:28:26 andrew Exp $ */
+/* $Id: ccm.c,v 1.83 2005/05/31 14:54:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -472,8 +472,8 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	gboolean member = FALSE;
 	member = FALSE;
 
-	crm_info("-----------------------");
-	crm_debug("trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
+	crm_debug_2("-----------------------");
+	crm_info("trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
 	       "new_idx=%d, old_idx=%d",
 	       oc->m_instance,
 	       oc->m_n_member,
@@ -518,7 +518,7 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		}
 	}
 	
-	crm_info("-----------------------");
+	crm_debug_2("-----------------------");
 	
 }
 

@@ -183,7 +183,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 	long long last_action = A_NOTHING;
 	enum crmd_fsa_state last_state = fsa_state;
 	
-	crm_debug("FSA invoked with Cause: %s\tState: %s",
+	crm_debug_2("FSA invoked with Cause: %s\tState: %s",
 		    fsa_cause2string(cause),
 		    fsa_state2string(fsa_state));
 
@@ -199,7 +199,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		fsa_data = NULL;
 	}
 	while(is_message() && do_fsa_stall == FALSE) {
-		crm_debug("Checking messages (%d remaining)",
+		crm_debug_2("Checking messages (%d remaining)",
 			    g_list_length(fsa_message_queue));
 		
 		fsa_data = get_message();
@@ -273,20 +273,53 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		delete_fsa_input(fsa_data);
 		fsa_data = NULL;
 	}
-	
-	crm_debug("Exiting the FSA: queue=%d, fsa_actions=0x%llx, stalled=%s",
-		  g_list_length(fsa_message_queue), fsa_actions,
-		  do_fsa_stall?"true":"false");
+
+	if(g_list_length(fsa_message_queue) > 0
+	   || fsa_actions != A_NOTHING || do_fsa_stall) {
+		crm_debug("Exiting the FSA: queue=%d, fsa_actions=0x%llx, stalled=%s",
+			  g_list_length(fsa_message_queue), fsa_actions,
+			  do_fsa_stall?"true":"false");
+	} else {
+		crm_debug_2("Exiting the FSA");
+	}
 	
 	/* cleanup inputs? */
 	if(register_copy != fsa_input_register) {
-		fsa_dump_inputs(LOG_DEBUG, fsa_input_register);
+		long long same = register_copy & fsa_input_register;
+		fsa_dump_inputs(LOG_DEBUG, "Added input:",
+				fsa_input_register ^ same);
+		fsa_dump_inputs(LOG_DEBUG, "Removed input:",
+				register_copy ^ same);
 	}
+
+#if 0
+	if(fsa_state != S_STARTING
+	   && g_list_length(fsa_message_queue)
+	   && is_ipc_empty(te_subsystem->ipc)
+	   && is_ipc_empty(pe_subsystem->ipc)
+	   && is_ipc_empty(fsa_cib_conn->cmds->channel(fsa_cib_conn)
+	   && is_ipc_empty(fsa_cluster_conn->llc_ops->ipcchan(fsa_cluster_conn))
+		){
+		static gboolean mem_needs_init = TRUE;
+		if(mem_needs_init) {
+			crm_debug("Reached a stable point:"
+				  " reseting memory usage stats to zero");
+			crm_zero_mem_stats(NULL);
+			mem_needs_init = FALSE;
+
+		} else {
+			crm_debug("Reached a stable point:"
+				  " checking memory usage");
+			crm_mem_stats(NULL);
+		}
+	}
+#endif
 	
-	fsa_dump_queue(LOG_DEBUG_2);
+	fsa_dump_queue(LOG_DEBUG);
 	
 	return fsa_state;
 }
+
 
 void
 s_crmd_fsa_actions(fsa_data_t *fsa_data)
@@ -457,7 +490,6 @@ do_state_transition(long long actions,
 	long long tmp = actions;
 	gboolean clear_recovery_bit = TRUE;
 
-
 	enum crmd_fsa_cause cause         = msg_data->fsa_cause;
 	enum crmd_fsa_input current_input = msg_data->fsa_input;
 
@@ -465,11 +497,7 @@ do_state_transition(long long actions,
 	const char *state_to   = fsa_state2string(next_state);
 	const char *input      = fsa_input2string(current_input);
 
-	if(cur_state == next_state) {
-		crm_err("%s called in state %s with no transtion",
-		       __FUNCTION__, state_from);
-		return A_NOTHING;
-	}
+	CRM_DEV_ASSERT(cur_state != next_state);
 	
 	do_dot_log(DOT_PREFIX"\t%s -> %s [ label=%s cause=%s origin=%s ]",
 		  state_from, state_to, input, fsa_cause2string(cause),
@@ -514,8 +542,8 @@ do_state_transition(long long actions,
 	switch(next_state) {
 		case S_PENDING:			
 		case S_ELECTION:
-			crm_info("Resetting our DC to NULL on transition to %s",
-				 fsa_state2string(next_state));
+			crm_debug_2("Resetting our DC to NULL on transition to %s",
+				    fsa_state2string(next_state));
 			crm_free(fsa_our_dc);
 			fsa_our_dc = NULL;
 			break;
@@ -550,7 +578,8 @@ do_state_transition(long long actions,
 					 g_hash_table_size(welcomed_nodes));
 				g_hash_table_foreach(
 					welcomed_nodes, ghash_print_node, msg);
-
+				crm_free(msg);
+				
 			} else {
 				crm_info("All %d cluster nodes "
 					 "responded to the join offer.",
@@ -574,6 +603,7 @@ do_state_transition(long long actions,
 					 g_hash_table_size(finalized_nodes));
 				g_hash_table_foreach(
 					finalized_nodes, ghash_print_node, msg);
+				crm_free(msg);
 				
 			} else if(g_hash_table_size(confirmed_nodes)
 				  == fsa_membership_copy->members_size) {

@@ -175,7 +175,7 @@ crm_timer_stop(fsa_timer_t *timer)
 	}
 
 	if(timer == NULL) {
-		crm_debug("Attempted to stop NULL timer");
+		crm_err("Attempted to stop NULL timer");
 		return FALSE;
 		
 	} else if(timer->source_id != (guint)-1
@@ -187,7 +187,7 @@ crm_timer_stop(fsa_timer_t *timer)
 		timer->source_id = -2;
 		
 	} else {
-		crm_debug("%s (%s:%dms) already stopped",
+		crm_debug_2("%s (%s:%dms) already stopped",
 			  timer_desc, fsa_input2string(timer->fsa_input),
 			  timer->period_ms);
 		timer->source_id = -2;
@@ -697,106 +697,110 @@ fsa_action2string(long long action)
 
 
 void
-fsa_dump_inputs(int log_level, long long input_register)
+fsa_dump_inputs(int log_level, const char *text, long long input_register)
 {
-	do_crm_log(log_level, __FILE__, __FUNCTION__,
-		   "Current register contents: 0x%llx", input_register);
+	if(input_register == A_NOTHING) {
+		return;
+	}
+	if(text == NULL) {
+		text = "Input register contents:";
+	}
 
 	if(is_set(input_register, R_THE_DC)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_THE_DC)", R_THE_DC);
+			   "%s %.16llx (R_THE_DC)", text, R_THE_DC);
 	}
 	if(is_set(input_register, R_STARTING)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_STARTING)", R_STARTING);
+			   "%s %.16llx (R_STARTING)", text, R_STARTING);
 	}
 	if(is_set(input_register, R_SHUTDOWN)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_SHUTDOWN)", R_SHUTDOWN);
+			   "%s %.16llx (R_SHUTDOWN)", text, R_SHUTDOWN);
 	}
 	if(is_set(input_register, R_STAYDOWN)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_STAYDOWN)", R_STAYDOWN);
+			   "%s %.16llx (R_STAYDOWN)", text, R_STAYDOWN);
 	}
 	if(is_set(input_register, R_JOIN_OK)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_JOIN_OK)", R_JOIN_OK);
+			   "%s %.16llx (R_JOIN_OK)", text, R_JOIN_OK);
 	}
 	if(is_set(input_register, R_HAVE_RES)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_HAVE_RES)", R_HAVE_RES);
+			   "%s %.16llx (R_HAVE_RES)", text, R_HAVE_RES);
 	}
 	if(is_set(input_register, R_INVOKE_PE)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_INVOKE_PE)", R_INVOKE_PE);
+			   "%s %.16llx (R_INVOKE_PE)", text, R_INVOKE_PE);
 	}
 	if(is_set(input_register, R_CIB_CONNECTED)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_CIB_CONNECTED)", R_CIB_CONNECTED);
+			   "%s %.16llx (R_CIB_CONNECTED)", text, R_CIB_CONNECTED);
 	}
 	if(is_set(input_register, R_PE_CONNECTED)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_PE_CONNECTED)", R_PE_CONNECTED);
+			   "%s %.16llx (R_PE_CONNECTED)", text, R_PE_CONNECTED);
 	}
 	if(is_set(input_register, R_TE_CONNECTED)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_TE_CONNECTED)", R_TE_CONNECTED);
+			   "%s %.16llx (R_TE_CONNECTED)", text, R_TE_CONNECTED);
 	}
 	if(is_set(input_register, R_LRM_CONNECTED)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_LRM_CONNECTED)", R_LRM_CONNECTED);
+			   "%s %.16llx (R_LRM_CONNECTED)", text, R_LRM_CONNECTED);
 	}
 	if(is_set(input_register, R_CIB_REQUIRED)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_CIB_REQUIRED)", R_CIB_REQUIRED);
+			   "%s %.16llx (R_CIB_REQUIRED)", text, R_CIB_REQUIRED);
 	}
 	if(is_set(input_register, R_PE_REQUIRED)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_PE_REQUIRED)", R_PE_REQUIRED);
+			   "%s %.16llx (R_PE_REQUIRED)", text, R_PE_REQUIRED);
 	}
 	if(is_set(input_register, R_TE_REQUIRED)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_TE_REQUIRED)", R_TE_REQUIRED);
+			   "%s %.16llx (R_TE_REQUIRED)", text, R_TE_REQUIRED);
 	}
 	if(is_set(input_register, R_REQ_PEND)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_REQ_PEND)", R_REQ_PEND);
+			   "%s %.16llx (R_REQ_PEND)", text, R_REQ_PEND);
 	}
 	if(is_set(input_register, R_PE_PEND)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_PE_PEND)", R_PE_PEND);
+			   "%s %.16llx (R_PE_PEND)", text, R_PE_PEND);
 	}
 	if(is_set(input_register, R_TE_PEND)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_TE_PEND)", R_TE_PEND);
+			   "%s %.16llx (R_TE_PEND)", text, R_TE_PEND);
 	}
 	if(is_set(input_register, R_RESP_PEND)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_RESP_PEND)", R_RESP_PEND);
+			   "%s %.16llx (R_RESP_PEND)", text, R_RESP_PEND);
 	}
 	if(is_set(input_register, R_CIB_DONE)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_CIB_DONE)", R_CIB_DONE);
+			   "%s %.16llx (R_CIB_DONE)", text, R_CIB_DONE);
 	}
 	if(is_set(input_register, R_HAVE_CIB)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_HAVE_CIB)", R_HAVE_CIB);
+			   "%s %.16llx (R_HAVE_CIB)", text, R_HAVE_CIB);
 	}
 	if(is_set(input_register, R_CIB_ASKED)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_CIB_ASKED)", R_CIB_ASKED);
+			   "%s %.16llx (R_CIB_ASKED)", text, R_CIB_ASKED);
 	}
 	if(is_set(input_register, R_CCM_DATA)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_CCM_DATA)", R_CCM_DATA);
+			   "%s %.16llx (R_CCM_DATA)", text, R_CCM_DATA);
 	}	
 	if(is_set(input_register, R_PEER_DATA)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_PEER_DATA)", R_PEER_DATA);
+			   "%s %.16llx (R_PEER_DATA)", text, R_PEER_DATA);
 	}
 	if(is_set(input_register, R_IN_RECOVERY)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "Input %.16llx (R_IN_RECOVERY)", R_IN_RECOVERY);
+			   "%s %.16llx (R_IN_RECOVERY)", text, R_IN_RECOVERY);
 	}
 }
 

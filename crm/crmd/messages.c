@@ -222,9 +222,9 @@ register_fsa_input_adv(
 		fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
 	}
 	
-	crm_debug("Queue len: %d", g_list_length(fsa_message_queue));
+	crm_debug_2("Queue len: %d", g_list_length(fsa_message_queue));
 
-	fsa_dump_queue(LOG_DEBUG);
+	fsa_dump_queue(LOG_DEBUG_2);
 	
 	if(old_len == g_list_length(fsa_message_queue)){
 		crm_err("Couldnt add message to the queue");
@@ -671,15 +671,19 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 
 			} else if(FALSE == is_set(fsa_input_register,
 					 the_subsystem->flag_required)) {
-				auth_result = FALSE;
+				auth_result = TRUE;
 				crm_warn("Bit\t%.16llx not set in %.16llx",
 					  the_subsystem->flag_connected,
 					  fsa_input_register);
 				crm_warn("Client %s joined but we dont need it",
 					 client_name);
+				stop_subsystem(the_subsystem);
+				
 			} else {
 				the_subsystem->ipc =
 					curr_client->client_channel;
+				set_bit_inplace(fsa_input_register,
+						the_subsystem->flag_connected);
 			}
 
 		} else {
@@ -707,10 +711,6 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 
 		crm_debug_3("Updated client list with %s", crm_str(table_key));
 		
-		if(the_subsystem != NULL) {
-			set_bit_inplace(fsa_input_register,
-					the_subsystem->flag_connected);
-		}
 		G_main_set_trigger(fsa_source);
 
 	} else {
