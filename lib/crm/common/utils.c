@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.15 2005/05/20 14:59:48 andrew Exp $ */
+/* $Id: utils.c,v 1.16 2005/05/31 11:50:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -969,20 +969,32 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 	return op_id;
 }
 
-void
+gboolean
 crm_mem_stats(volatile cl_mem_stats_t *mem_stats)
 {
-	CRM_DEV_ASSERT(mem_stats != NULL);
+	volatile cl_mem_stats_t *active_stats = mem_stats;
+	if(active_stats == NULL) {
+		active_stats = cl_malloc_getstats();
+	}
+	CRM_DEV_ASSERT(active_stats != NULL);
 #ifndef CRM_USE_MALLOC
-	if(mem_stats->nbytes_alloc != 0) {
-		crm_err("%lu alloc's vs. %lu free's (%lu)"
+	if(active_stats->numalloc > active_stats->numfree) {
+		crm_err("Potential memory leak detected:"
+			" %lu alloc's vs. %lu free's (%lu)"
 			" (%lu bytes not freed: req=%lu, alloc'd=%lu)",
-			mem_stats->numalloc, mem_stats->numfree,
-			mem_stats->numalloc - mem_stats->numfree,
-			mem_stats->nbytes_alloc, mem_stats->nbytes_req,
-			mem_stats->mallocbytes);
+			active_stats->numalloc, active_stats->numfree,
+			active_stats->numalloc - active_stats->numfree,
+			active_stats->nbytes_alloc, active_stats->nbytes_req,
+			active_stats->mallocbytes);
+		return TRUE;
+		
+	} else if(active_stats->numalloc < active_stats->numfree) {
+		crm_debug("Process shrank: %lu alloc's vs. %lu free's (%lu)",
+			  active_stats->numalloc, active_stats->numfree,
+			  active_stats->numalloc - active_stats->numfree);
 	}
 #endif
+	return FALSE;
 }
 
 void
@@ -1001,3 +1013,4 @@ crm_zero_mem_stats(volatile cl_mem_stats_t *stats)
 	active_stats->mallocbytes = 0;
 	active_stats->arena = 0;
 }
+

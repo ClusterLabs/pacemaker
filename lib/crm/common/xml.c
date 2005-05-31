@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.7 2005/05/19 13:45:03 andrew Exp $ */
+/* $Id: xml.c,v 1.8 2005/05/31 11:50:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,8 +42,8 @@ void dump_array(
 
 int print_spaces(char *buffer, int spaces);
 
-int log_data_element(
-	const char *function, int log_level, int depth, crm_data_t *data, gboolean formatted);
+int log_data_element(const char *function, const char *prefix, int log_level,
+		     int depth, crm_data_t *data, gboolean formatted);
 
 int dump_data_element(
 	int depth, char **buffer, crm_data_t *data, gboolean formatted);
@@ -52,6 +52,11 @@ crm_data_t *parse_xml(const char *input, int *offset);
 int get_tag_name(const char *input);
 int get_attr_name(const char *input);
 int get_attr_value(const char *input);
+gboolean can_prune_leaf(crm_data_t *xml_node);
+
+void diff_filter_context(int context, int upper_bound, int lower_bound,
+		    crm_data_t *xml_node, crm_data_t *parent);
+int in_upper_context(int depth, int context, crm_data_t *xml_node);
 
 crm_data_t *
 find_xml_node(crm_data_t *root, const char * search_path, gboolean must_find)
@@ -189,10 +194,7 @@ get_xml_attr_nested(crm_data_t *parent,
 
 
 crm_data_t*
-find_entity(crm_data_t *parent,
-	    const char *node_name,
-	    const char *id,
-	    gboolean siblings)
+find_entity(crm_data_t *parent, const char *node_name, const char *id)
 {
 	crm_validate_data(parent);
 	xml_child_iter(
@@ -204,11 +206,6 @@ find_entity(crm_data_t *parent,
 			return a_child;
 		}
 		);
-	if(siblings) {
-		abort();
-	}
-
-	
 	crm_debug("node <%s id=%s> not found in %s.",
 		  node_name, id, xmlGetNodePath(parent));
 	return NULL;
@@ -245,10 +242,11 @@ add_node_copy(crm_data_t *new_parent, crm_data_t *xml_node)
 		
 	if(xml_node != NULL && new_parent != NULL) {
 		const char *name = crm_element_name(xml_node);
-		CRM_DEV_ASSERT(HA_OK == ha_msg_addstruct(
-				       new_parent, name, xml_node));
+		CRM_DEV_ASSERT(
+			HA_OK == ha_msg_addstruct(new_parent, name, xml_node));
 		
-		node_copy = find_entity(new_parent, crm_element_name(xml_node), ID(xml_node), FALSE);
+		node_copy = find_entity(
+			new_parent, crm_element_name(xml_node), ID(xml_node));
 		crm_validate_data(node_copy);
 		crm_update_parents(new_parent);
 		crm_validate_data(new_parent);
@@ -592,15 +590,13 @@ print_xml_formatted(int log_level, const char *function,
 		    crm_data_t *msg, const char *text)
 {
 	if(msg == NULL) {
-		do_crm_log(log_level, function, NULL, "%s: %s",
-			   crm_str(text), "<null>");
+		do_crm_log(log_level,NULL,function, "%s: NULL", crm_str(text));
 		return;
 	}
 
 	crm_validate_data(msg);
-	do_crm_log(log_level, function, NULL, "%s:",
-		   crm_str(text));
-	log_data_element(function, log_level, 0, msg, TRUE);
+	do_crm_log(log_level, NULL, function, "%s:", crm_str(text));
+	log_data_element(function, NULL, log_level, 0, msg, TRUE);
 	return;
 }
 
@@ -788,7 +784,7 @@ print_spaces(char *buffer, int depth)
 
 int
 log_data_element(
-	const char *function, int log_level, int depth,
+	const char *function, const char *prefix, int log_level, int depth,
 	crm_data_t *data, gboolean formatted) 
 {
 	int printed = 0;
@@ -808,7 +804,7 @@ log_data_element(
 		xml_child_iter(
 			data, a_child, NULL,
 			child_result = log_data_element(
-				function, log_level, depth, a_child, formatted);
+				function, prefix, log_level, depth, a_child, formatted);
 			if(child_result < 0) {
 				return child_result;
 			}
@@ -853,7 +849,8 @@ log_data_element(
 
 	printed = sprintf(buffer, "%s>", has_children==0?"/":"");
 	update_buffer_head(buffer, printed);
-	do_crm_log(log_level,  function, NULL, "%s", print_buffer);
+	do_crm_log(log_level,  function, NULL, "%s%s",
+		   prefix?prefix:"", print_buffer);
 	buffer = print_buffer;
 	
 	if(has_children == 0) {
@@ -863,7 +860,7 @@ log_data_element(
 	xml_child_iter(
 		data, a_child, NULL,
 		child_result = log_data_element(
-			function, log_level, depth+1, a_child, formatted);
+			function, prefix, log_level, depth+1, a_child, formatted);
 
 		if(child_result < 0) { return -1; }
 		);
@@ -872,8 +869,8 @@ log_data_element(
 		printed = print_spaces(buffer, depth);
 		update_buffer_head(buffer, printed);
 	}
-	do_crm_log(log_level, function, NULL, "%s</%s>",
-		   print_buffer, name);
+	do_crm_log(log_level, function, NULL, "%s%s</%s>",
+		   prefix?prefix:"", print_buffer, name);
 	crm_debug_5("Dumped %s...", name);
 
 	return has_children;
@@ -1367,5 +1364,231 @@ parse_xml(const char *input, int *offset)
 	return new_obj;
 }
 
+void
+log_xml_diff(int log_level, crm_data_t *diff, const char *function)
+{
+	crm_data_t *added = find_xml_node(diff, "diff-added", FALSE);
+	crm_data_t *removed = find_xml_node(diff, "diff-removed", FALSE);
+	gboolean is_first = TRUE;
+	
+	xml_child_iter(
+		removed, child, NULL,
+		log_data_element(function, "-", log_level, 0, child, TRUE);
+		if(is_first) {
+			is_first = FALSE;
+		} else {
+			crm_log_maybe(log_level, " --- ");
+		}
+		
+		);
+/* 	crm_log_maybe(log_level, " === "); */
 
+	is_first = TRUE;
+	xml_child_iter(
+		added, child, NULL,
+		log_data_element(function, "+", log_level, 0, child, TRUE);
+		if(is_first) {
+			is_first = FALSE;
+		} else {
+			crm_log_maybe(log_level, " --- ");
+		}
+		);
+}
+
+
+crm_data_t *
+diff_xml_object(crm_data_t *old, crm_data_t *new, int context)
+{
+	crm_data_t *diff = NULL;
+	crm_data_t *tmp1 = NULL;
+	crm_data_t *tmp2 = NULL;
+	
+	tmp1 = subtract_xml_object(old, new);
+	if(tmp1 != NULL) {
+		diff = create_xml_node(NULL, "diff");
+		tmp2 = create_xml_node(diff, "diff-removed");
+		if(can_prune_leaf(tmp1)) {
+			ha_msg_del(tmp1);
+			tmp1 = NULL;
+		}
+
+		if(context < 0) {
+			add_node_copy(tmp2, tmp1);
+		} else {
+			diff_filter_context(context, -1, -1, tmp1, tmp2);
+		}
+		free_xml(tmp1);
+	}
+	
+	tmp1 = subtract_xml_object(new, old);
+	if(tmp1 != NULL) {
+		if(diff == NULL) {
+			diff = create_xml_node(NULL, "diff");
+		}
+		tmp2 = create_xml_node(diff, "diff-added");
+		if(can_prune_leaf(tmp1)) {
+			ha_msg_del(tmp1);
+			tmp1 = NULL;
+		}
+		
+		if(context < 0) {
+			add_node_copy(tmp2, tmp1);
+		} else {
+			diff_filter_context(context, -1, -1, tmp1, tmp2);
+		}
+		free_xml(tmp1);
+	}
+
+	return diff;
+}
+
+gboolean
+can_prune_leaf(crm_data_t *xml_node)
+{
+	gboolean can_prune = TRUE;
+	xml_prop_iter(xml_node, prop_name, prop_value,
+		      if(safe_str_eq(prop_name, XML_ATTR_ID)) {
+			      continue;
+		      } else if(safe_str_eq(prop_name, XML_ATTR_TSTAMP)) {
+			      continue;
+		      }		      
+		      can_prune = FALSE;
+		);
+	xml_child_iter(xml_node, child, NULL,
+		       if(can_prune_leaf(child)) {
+			       cl_msg_remove_value(xml_node, child);
+			       __counter--;
+		       } else {
+			       can_prune = FALSE;
+		       }
+		);
+	return can_prune;
+}
+
+
+void
+diff_filter_context(int context, int upper_bound, int lower_bound,
+		    crm_data_t *xml_node, crm_data_t *parent) 
+{
+	crm_data_t *us = NULL;
+	crm_data_t *new_parent = parent;
+	const char *name = crm_element_name(xml_node);
+
+	CRM_DEV_ASSERT(xml_node != NULL && name != NULL);
+	if(crm_assert_failed) { return; }
+	
+	us = create_xml_node(parent, name);
+	xml_prop_iter(xml_node, prop_name, prop_value,
+		      lower_bound = context;
+		      set_xml_property_copy(us, prop_name, prop_value);
+		);
+	if(lower_bound >= 0 || upper_bound >= 0) {
+		set_xml_property_copy(us, XML_ATTR_ID, ID(xml_node));
+		new_parent = us;
+
+	} else {
+		upper_bound = in_upper_context(0, context, xml_node);
+		if(upper_bound >= 0) {
+			set_xml_property_copy(us, XML_ATTR_ID, ID(xml_node));
+			new_parent = us;
+		} else {
+			free_xml(us);
+			us = NULL;
+		}
+	}
+
+	xml_child_iter(us, child, NULL,
+		       diff_filter_context(
+			       context, upper_bound-1, lower_bound-1,
+			       child, new_parent);
+		);
+}
+
+int
+in_upper_context(int depth, int context, crm_data_t *xml_node)
+{
+	gboolean has_attributes = FALSE;
+	if(context == 0) {
+		return 0;
+	}
+	
+	xml_prop_iter(xml_node, prop_name, prop_value,
+		      has_attributes = TRUE;
+		      break;
+		);
+	
+	if(has_attributes) {
+		return depth;
+
+	} else if(depth < context) {
+		xml_child_iter(xml_node, child, NULL,
+			       if(in_upper_context(depth+1, context, child)) {
+				       return depth;
+			       }
+			);
+	}
+	return 0;       
+}
+
+
+crm_data_t *
+subtract_xml_object(crm_data_t *left, crm_data_t *right)
+{
+	gboolean differences = FALSE;
+	crm_data_t *diff = NULL;
+	crm_data_t *child_diff = NULL;
+	crm_data_t *right_child = NULL;
+	const char *right_val = NULL;
+	const char *name = NULL;
+
+	if(left == NULL) {
+		return NULL;
+	} else if(right == NULL) {
+		return copy_xml_node_recursive(left);
+	}
+	
+	name = crm_element_name(left);
+
+	/* sanity check */
+	CRM_DEV_ASSERT(name != NULL);
+	if(crm_assert_failed) { return NULL; }
+
+	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(left),
+				   crm_element_name(right)));
+	if(crm_assert_failed) { return NULL; }
+	
+	CRM_DEV_ASSERT(safe_str_eq(ID(left), ID(right)));
+	if(crm_assert_failed) { return NULL; }
+	
+	diff = create_xml_node(NULL, name);
+
+	/* changes to name/value pairs */
+	xml_prop_iter(left, prop_name, left_value,
+		      right_val = crm_element_value(right, prop_name);
+		      if(safe_str_neq(left_value, right_val)) {
+			      differences = TRUE;
+			      set_xml_property_copy(diff, prop_name, left_value);
+		      }
+		);
+
+	/* changes to child objects */
+	xml_child_iter(
+		left, left_child, NULL, 
+		right_child = find_entity(
+			right, crm_element_name(left_child), ID(left_child));
+		child_diff = subtract_xml_object(left_child, right_child);
+		if(child_diff != NULL) {
+			differences = TRUE;
+			add_node_copy(diff, child_diff);
+			free_xml(child_diff);
+		}
+		);
+	
+	if(differences == FALSE) {
+		free_xml(diff);
+		return NULL;
+	}
+	set_xml_property_copy(diff, XML_ATTR_ID, ID(left));
+	return diff;
+}
 
