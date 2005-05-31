@@ -179,6 +179,7 @@ do_dc_join_req(long long action,
 	} else if(join_id != current_join_id) {
 		crm_debug("Response from %s was for invalid join: %d vs. %d",
 			  join_from, join_id, current_join_id);
+		check_join_state(cur_state, __FUNCTION__);
 		return I_NULL;
 		
 	} else if(max_generation_xml == NULL) {
