@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.7 2005/05/19 10:50:08 andrew Exp $ */
+/* $Id: ipc.c,v 1.8 2005/05/31 17:54:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -380,3 +380,15 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 	return all_is_well;
 }
 
+gboolean
+is_ipc_empty(IPC_Channel *ch)
+{
+	if(ch == NULL) {
+		return TRUE;
+
+	} else if(ch->send_queue->current_qlen == 0
+		  && ch->recv_queue->current_qlen == 0) {
+		return TRUE;
+	}	
+	return FALSE;
+}
