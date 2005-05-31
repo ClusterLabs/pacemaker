@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.21 2005/05/31 11:32:39 andrew Exp $ */
+/* $Id: io.c,v 1.22 2005/05/31 14:50:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -228,24 +228,33 @@ initializeCib(crm_data_t *new_cib)
 				a_default, XML_NVPAIR_ATTR_VALUE);
 		}
 
-		cib_writes_enabled = TRUE;
 		if(value == NULL) {
 			crm_warn("Option %s not set", option);
-
+			if(cib_writes_enabled == FALSE) {
+				crm_debug("Disk writes to %s enabled",
+					  CIB_FILENAME);
+			}
+			cib_writes_enabled = TRUE;
+			
 		} else {
-			crm_str_to_boolean(value, &cib_writes_enabled);
+			gboolean suppress = FALSE;
+			crm_str_to_boolean(value, &suppress);
+			if(cib_writes_enabled != suppress) {
+				cib_writes_enabled = !suppress;
+				if(cib_writes_enabled) {
+					crm_debug("Disk writes to %s enabled",
+						  CIB_FILENAME);
+				} else {
+					crm_notice("Disabling CIB disk writes");
+				}
+			}
 		}
+		crm_debug_2("Disk writes to %s %s", CIB_FILENAME,
+			    cib_writes_enabled?"enabled":"DISABLED");
 
-		if(cib_writes_enabled) {
-			crm_debug("CIB disk writes to %s enabled", CIB_FILENAME);
-		} else {
-			crm_notice("Disabling CIB disk writes");
-		}
 
 		set_connected_peers(the_cib);
-		set_xml_property_copy(
-			the_cib, XML_ATTR_CCM_TRANSITION, ccm_transition_id);
-		crm_debug("Set transition to %s", ccm_transition_id);
+		set_transition(the_cib);
 		if(cib_have_quorum) {
 			set_xml_property_copy(
 				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_TRUE);
@@ -437,18 +446,35 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
     
 }
 
+void
+set_transition(crm_data_t *xml_obj)
+{
+	const char *current = crm_element_value(
+		xml_obj, XML_ATTR_CCM_TRANSITION);
+	if(safe_str_neq(current, ccm_transition_id)) {
+		crm_debug("Set transition to %s", ccm_transition_id);
+		set_xml_property_copy(
+			the_cib, XML_ATTR_CCM_TRANSITION, ccm_transition_id);
+	}
+}
+
 int
 set_connected_peers(crm_data_t *xml_obj)
 {
 	int active = 0;
+	int current = 0;
 	char *peers_s = NULL;
+	const char *current_s = crm_element_value(
+		xml_obj, XML_ATTR_NUMPEERS);
 
 	g_hash_table_foreach(peer_hash, GHFunc_count_peers, &active);
-	peers_s = crm_itoa(active);
-	set_xml_property_copy(xml_obj, XML_ATTR_NUMPEERS, peers_s);
-	crm_debug("Set peers to %s", peers_s);
-	crm_free(peers_s);
-
+	current = crm_atoi(current_s, "0");
+	if(current != active) {
+		peers_s = crm_itoa(active);
+		set_xml_property_copy(xml_obj, XML_ATTR_NUMPEERS, peers_s);
+		crm_debug("Set peers to %s", peers_s);
+		crm_free(peers_s);
+	}
 	return active;
 }
 

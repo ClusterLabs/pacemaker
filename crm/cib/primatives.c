@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.17 2005/05/31 11:32:39 andrew Exp $ */
+/* $Id: primatives.c,v 1.18 2005/05/31 14:50:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -450,7 +450,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 		; /* nothing */
 		
 	} else if(equiv_node == NULL) {
-		crm_debug("No node to update, creating %s instead",
+		crm_debug_2("No node to update, creating %s instead",
 			  crm_element_name(new_obj));
 		if(parent == NULL) {
 			crm_err("Failed to add <%s id=%s> (NULL parent)",
@@ -462,7 +462,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 				 crm_str(object_name), crm_str(object_id));
 			result = cib_NODECOPY;
 		} else {
-			crm_debug("Added  <%s id=%s>",
+			crm_debug_2("Added  <%s id=%s>",
 				  crm_str(object_name), crm_str(object_id));
 
 			if(object_id == NULL) {

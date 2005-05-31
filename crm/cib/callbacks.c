@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.55 2005/05/31 11:32:39 andrew Exp $ */
+/* $Id: callbacks.c,v 1.56 2005/05/31 14:50:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -414,13 +414,13 @@ cib_common_callback(
 			
 		} else if(host == NULL && cib_is_master
 			&& !(call_options & cib_scope_local)) {
- 			crm_debug("Processing master %s op locally", op);
+ 			crm_debug_2("Processing master %s op locally", op);
 			needs_processing = TRUE;
 
 		} else if(
 			(host == NULL && (call_options & cib_scope_local))
 			  || safe_str_eq(host, cib_our_uname)) {
- 			crm_debug("Processing %s op locally", op);
+ 			crm_debug_2("Processing %s op locally", op);
 			needs_processing = TRUE;
 
 		} else {
@@ -458,13 +458,12 @@ cib_common_callback(
 		}
 
 		if(needs_processing) {
- 			crm_debug("Processing %s op", op);
-			rc = cib_process_command(
-				op_request, &op_reply, privileged);
 			crm_debug("Performing local processing: op=%s origin=%s/%s,%s (update=%s)",
 				  op, cib_our_uname, cib_client->id,
 				  cl_get_string(op_request, F_CIB_CALLID),
 				  (rc==cib_ok && cib_server_ops[call_type].modifies_cib)?"true":"false");
+			rc = cib_process_command(
+				op_request, &op_reply, privileged);
 			if(rc == cib_ok && safe_str_eq(op, CRM_OP_CIB_SYNC)) {
 				HA_Message *sync_data = cl_get_struct(
 					op_reply, F_CIB_CALLDATA);
@@ -481,11 +480,11 @@ cib_common_callback(
 		
 		crm_debug_3("processing response cases");
 		if(rc != cib_ok) {
-			crm_debug("Input message");
-			crm_log_message(LOG_DEBUG, op_request);
 			crm_err("%s operation failed: %s",
 				crm_str(op), cib_error2string(rc));
 			crm_log_message_adv(LOG_DEBUG, "CIB[output]", op_reply);
+			crm_debug("Input message");
+			crm_log_message(LOG_DEBUG, op_request);
 		}
 		
 		if(op_reply == NULL) {
@@ -527,7 +526,7 @@ cib_common_callback(
 		   && cib_server_ops[call_type].modifies_cib
 		   && !(call_options & cib_inhibit_bcast)) {
 			/* send via HA to other nodes */
- 			crm_debug("Forwarding %s op to all instances", op);
+ 			crm_debug_2("Forwarding %s op to all instances", op);
 			ha_msg_add(op_request,
 				   F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 			send_ha_message(hb_conn, op_request, NULL);
@@ -540,9 +539,9 @@ cib_common_callback(
 				crm_debug_3("Request not broadcast: R/O call");
 			}
 			if(rc != cib_ok) {
-				crm_debug("Request not broadcast:"
-					  " call failed: %s",
-					  cib_error2string(rc));
+				crm_err("Request not broadcast:"
+					" call failed: %s",
+					cib_error2string(rc));
 			}
 		}
 
@@ -1271,9 +1270,7 @@ cib_ccm_msg_callback(
 			ccm_transition_id = NULL;
 		}
 		ccm_transition_id = crm_itoa(instance);
-		set_xml_property_copy(
-			the_cib, XML_ATTR_CCM_TRANSITION, ccm_transition_id);
-
+		set_transition(the_cib);
 	}
 	
 	if(update_quorum) {
