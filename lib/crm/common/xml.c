@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.8 2005/05/31 11:50:16 andrew Exp $ */
+/* $Id: xml.c,v 1.9 2005/05/31 20:27:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1410,10 +1410,10 @@ diff_xml_object(crm_data_t *old, crm_data_t *new, int context)
 		if(can_prune_leaf(tmp1)) {
 			ha_msg_del(tmp1);
 			tmp1 = NULL;
-		}
 
-		if(context < 0) {
+		} else if(context < 0) {
 			add_node_copy(tmp2, tmp1);
+
 		} else {
 			diff_filter_context(context, -1, -1, tmp1, tmp2);
 		}
@@ -1429,10 +1429,10 @@ diff_xml_object(crm_data_t *old, crm_data_t *new, int context)
 		if(can_prune_leaf(tmp1)) {
 			ha_msg_del(tmp1);
 			tmp1 = NULL;
-		}
-		
-		if(context < 0) {
+
+		} else if(context < 0) {
 			add_node_copy(tmp2, tmp1);
+
 		} else {
 			diff_filter_context(context, -1, -1, tmp1, tmp2);
 		}
