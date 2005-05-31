@@ -1730,7 +1730,7 @@ class MemoryTest(CTSTest):
             return 1
         return 0
 
-AllTestClasses.append(MemoryTest)
+#AllTestClasses.append(MemoryTest)
 
 ####################################################################
 class ElectionMemoryTest(CTSTest):
@@ -1794,7 +1794,6 @@ class SpecialTest1(CTSTest):
         return 1
 
 AllTestClasses.append(SpecialTest1)
-
 ###################################################################
 class NearQuorumPointTest(CTSTest):
 ###################################################################
@@ -1812,6 +1811,7 @@ class NearQuorumPointTest(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name="NearQuorumPoint"
+	self.ignore_patterns = []
 
     def __call__(self, dummy):
         '''Perform the 'NearQuorumPoint' test. '''
@@ -1819,27 +1819,36 @@ class NearQuorumPointTest(CTSTest):
         startset = []
         stopset = []
         
-        #divid the nodes to two sets: startset and stopset
+        #decide what to do with each node
         for node in self.CM.Env["nodes"]:
             action = self.CM.Env.RandomGen.choice(["start","stop"])
+            #action = self.CM.Env.RandomGen.choice(["start","stop","no change"])
             if action == "start" :
                 startset.append(node)
-            else :
+            elif action == "stop" :
                 stopset.append(node)
                 
         self.CM.debug("start nodes:" + repr(startset))
         self.CM.debug("stop nodes:" + repr(stopset))
 
+	# Set the correct BadNews "ignore" pattern(s)
+	if len(startset) > 0:
+	    # Someone will be up to co-ordinate any nodes that wish to shut down
+	    self.ignore_patterns = []
+	else:
+	    # This is essentially a SimulStop...
+	    self.ignore_patterns = [ "Resource .* was active at shutdown" ]
+
         #add search patterns
         watchpats = [ ]
         for node in stopset:
             if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                watchpats.append(self.CM["Pat:All_stopped"] % node)
+                watchpats.append(self.CM["Pat:We_stopped"] % node)
                 
         for node in startset:
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 watchpats.append(self.CM["Pat:They_started"] % node)
-        
+		
         if len(watchpats) == 0:
             return self.skipped()
 
@@ -1851,17 +1860,18 @@ class NearQuorumPointTest(CTSTest):
         #begin actions
         for node in stopset:
             if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                self.CM.debug("stoping node:" + node)
                 self.CM.StopaCMnoBlock(node)
                 
         for node in startset:
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
-                self.CM.debug("starting node:" + node)
                 self.CM.StartaCMnoBlock(node)
         
         #get the result        
         if watch.lookforall():
+	    self.CM.cluster_stable(self.CM["DeadTime"])
             return self.success()
+
+	self.CM.log("Warn: Patterns not found: " + repr(watch.unmatched))
         
         #get the "bad" nodes
         upnodes = []        
@@ -1873,29 +1883,23 @@ class NearQuorumPointTest(CTSTest):
         for node in startset:
             if self.CM.StataCM(node) == 0:
                 downnodes.append(node)
-                
-        unstablenodes = []        
-        for node in self.CM.Env["nodes"]:
-            if not self.CM.node_stable(node):
-                unstablenodes.append(node)
-        
-        if upnodes == [] and downnodes == [] and unstablenodes == []:
-            self.CM.log("no bad node but some patterns not found")
+
+        if upnodes == [] and downnodes == []:
+	    self.CM.cluster_stable(self.CM["DeadTime"])
             return self.success()
 
         if len(upnodes) > 0:
-            self.CM.log("following nodes are still up after stop:" 
-                    + repr(upnodes))
+            self.CM.log("Warn: Unstoppable nodes: " + repr(upnodes))
         
         if len(downnodes) > 0:
-            self.CM.log("following nodes are still down after start:" 
-                    + repr(downnodes))
+            self.CM.log("Warn: Unstartable nodes: " + repr(downnodes))
         
-        if len(unstablenodes) > 0:
-            self.CM.log("following nodes are still unstable:" 
-                    + repr(unstablenodes))
-    
         return self.failure()
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+	# Because sometimes we essentially do a SimulStop...
+        return self.ignore_patterns
 
     def is_applicable(self):
         if self.CM["Name"] == "linux-ha-v2":
@@ -1903,7 +1907,6 @@ class NearQuorumPointTest(CTSTest):
         return 0
 
 AllTestClasses.append(NearQuorumPointTest)
-
 
 
 
