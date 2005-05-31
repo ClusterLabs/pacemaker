@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.37 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: messages.c,v 1.38 2005/05/31 11:32:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -97,7 +97,7 @@ cib_process_quit(
 	enum cib_errors result = cib_ok;
 	crm_debug("Processing \"%s\" event", op);
 
-	cib_pre_notify(op, get_the_CIB(), NULL);
+	cib_pre_notify(options, op, get_the_CIB(), NULL);
 	crm_warn("The CRMd has asked us to exit... complying");
 	exit(0);
 	return result;
@@ -120,7 +120,7 @@ cib_process_readwrite(
 		return result;
 	}
 
-	cib_pre_notify(op, get_the_CIB(), NULL);
+	cib_pre_notify(options, op, get_the_CIB(), NULL);
 	if(safe_str_eq(op, CRM_OP_CIB_MASTER)) {
 		if(cib_is_master == FALSE) {
 			crm_info("We are now in R/W mode");
@@ -133,7 +133,7 @@ cib_process_readwrite(
 		crm_info("We are now in R/O mode");
 		cib_is_master = FALSE;
 	}
-	cib_post_notify(op, NULL, result, NULL);
+	cib_post_notify(options, op, NULL, result, NULL);
 
 	return result;
 }
@@ -216,6 +216,7 @@ cib_process_erase(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t **answer)
 {
+	crm_data_t *cib_diff = NULL;
 	crm_data_t *tmpCib = NULL;
 	enum cib_errors result = cib_ok;
 
@@ -227,14 +228,18 @@ cib_process_erase(
 	result = revision_check(get_the_CIB(), tmpCib, options);		
 	copy_in_properties(tmpCib, get_the_CIB());
 	
-	cib_pre_notify(op, the_cib, tmpCib);
+	cib_pre_notify(options, op, the_cib, tmpCib);
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, TRUE);
 
+	cib_diff = diff_xml_object(the_cib, tmpCib, -1);
 	if(result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
 		result = cib_ACTIVATION;
 	}
 
-	cib_post_notify(op, NULL, result, the_cib);
+	cib_post_notify(options, op, NULL, result, the_cib);
+	cib_diff_notify(options, op, NULL, result, cib_diff);
+	crm_free(cib_diff);
+
 	if(answer != NULL) {
 		*answer = createCibFragmentAnswer(NULL, NULL);
 	}
@@ -247,6 +252,7 @@ cib_process_bump(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t **answer)
 {
+	crm_data_t *cib_diff = NULL;
 	crm_data_t *tmpCib = NULL;
 	enum cib_errors result = cib_ok;
 
@@ -255,17 +261,21 @@ cib_process_bump(
 	
 	if(answer != NULL) { *answer = NULL; }	
 
-	cib_pre_notify(op, get_the_CIB(), NULL);
+	cib_pre_notify(options, op, get_the_CIB(), NULL);
 
 	tmpCib = copy_xml_node_recursive(the_cib);
 	cib_update_counter(tmpCib, XML_ATTR_GENERATION, FALSE);
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
 	
+	cib_diff = diff_xml_object(the_cib, tmpCib, -1);
 	if(activateCibXml(tmpCib, CIB_FILENAME) < 0) {
 		result = cib_ACTIVATION;
 	}
 
-	cib_post_notify(op, NULL, result, get_the_CIB());
+	cib_post_notify(options, op, NULL, result, get_the_CIB());
+	cib_diff_notify(options, op, NULL, result, cib_diff);
+	crm_free(cib_diff);
+
 	if(answer != NULL) {
 		*answer = createCibFragmentAnswer(NULL, NULL);
 	}
@@ -311,6 +321,7 @@ cib_process_replace(
 	crm_data_t *tmpCib      = NULL;
 	crm_data_t *cib_update  = NULL;
 	crm_data_t *the_update  = NULL;
+	crm_data_t *cib_diff = NULL;
 	char *section_name = NULL;
 	enum cib_errors result = cib_ok;
 	
@@ -342,7 +353,7 @@ cib_process_replace(
 		the_update = get_object_root(section_name, cib_update);
 	}
 
-	cib_pre_notify(
+	cib_pre_notify(options, 
 		op, get_object_root(section_name, get_the_CIB()), the_update);
 
 	if(result == cib_ok) {
@@ -352,6 +363,7 @@ cib_process_replace(
 		copy_in_properties(tmpCib, cib_update);
 	}
 	
+	cib_diff = diff_xml_object(the_cib, tmpCib, -1);
 	if (result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
 		crm_warn("Replacment of section=%s failed", section);
 		result = cib_ACTIVATION;
@@ -363,8 +375,11 @@ cib_process_replace(
 		}
 	}
 	
-	cib_post_notify(op, the_update, result,
+	cib_post_notify(options, op, the_update, result,
 			get_object_root(section_name, get_the_CIB()));
+
+	cib_diff_notify(options, op, NULL, result, cib_diff);
+	crm_free(cib_diff);
 
 	crm_free(section_name);
 	return result;
@@ -385,6 +400,7 @@ cib_process_modify(
 	crm_data_t *failed = NULL;
 	crm_data_t *cib_update = NULL;
 	crm_data_t *the_update = NULL;
+	crm_data_t *cib_diff = NULL;
 	
 	int cib_update_op = CIB_OP_NONE;
 
@@ -434,7 +450,7 @@ cib_process_modify(
 	crm_validate_data(the_update);
 	crm_validate_data(tmpCib);
 
-	cib_pre_notify(op, get_object_root(section, tmpCib), the_update);
+	cib_pre_notify(options, op, get_object_root(section, tmpCib), the_update);
 
 	crm_validate_data(the_update);
 	crm_validate_data(tmpCib);
@@ -478,6 +494,7 @@ cib_process_modify(
 	crm_debug_4("Activating temporary CIB");
 	cib_update_counter(tmpCib, XML_ATTR_NUMUPDATES, FALSE);
 
+	cib_diff = diff_xml_object(the_cib, tmpCib, -1);
 	if (result == cib_ok && activateCibXml(tmpCib, CIB_FILENAME) < 0) {
 		result = cib_ACTIVATION;
 			
@@ -492,12 +509,15 @@ cib_process_modify(
 		*answer = createCibFragmentAnswer(section_name, failed);
 	}
 
-	cib_post_notify(op, the_update, result,
+	cib_diff_notify(options, op, NULL, result, cib_diff);
+	crm_free(cib_diff);
+
+	cib_post_notify(options, op, the_update, result,
 			get_object_root(section_name, get_the_CIB()));
 
 	free_xml(failed);
 	crm_free(section_name);
-	
+
 	return result;
 }
 

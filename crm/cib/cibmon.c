@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.21 2005/05/19 11:02:51 andrew Exp $ */
+/* $Id: cibmon.c,v 1.22 2005/05/31 11:32:39 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -57,18 +57,17 @@ void usage(const char *cmd, int exit_status);
 void cib_connection_destroy(gpointer user_data);
 
 void cibmon_pre_notify(const char *event, HA_Message *msg);
-void cibmon_post_notify(const char *event, HA_Message *msg);
 void cibmon_update_confirm(const char *event, HA_Message *msg);
 gboolean cibmon_shutdown(int nsig, gpointer unused);
+void cibmon_diff(const char *event, HA_Message *msg);
 
 cib_t *the_cib = NULL;
 
-#define OPTARGS	"V?pPUam:i"
+#define OPTARGS	"V?pPdam:"
 
-gboolean intermediate_changes = FALSE;
 gboolean pre_notify = FALSE;
 gboolean post_notify = FALSE;
-gboolean update_notify = FALSE;
+gboolean log_diffs = FALSE;
 int max_failures = 30;
 
 int
@@ -86,9 +85,8 @@ main(int argc, char **argv)
 		{"help",         0, 0, '?'},
 		{"pre",          0, 0, 'p'},
 		{"post",         0, 0, 'P'},
-		{"update",       0, 0, 'U'},
 		{"all",          0, 0, 'a'},
-		{"intermediate", 0, 0, 'i'},
+		{"diffs",        0, 0, 'd'},
 		{"max-conn-fail",1, 0, 'm'},
 		{0, 0, 0, 0}
 	};
@@ -134,19 +132,16 @@ main(int argc, char **argv)
 			case 'a':
 				pre_notify = TRUE;
 				post_notify = TRUE;
-				update_notify = TRUE;
+				log_diffs = TRUE;
+				break;
+			case 'd':
+				log_diffs = TRUE;
 				break;
 			case 'p':
 				pre_notify = TRUE;
 				break;
 			case 'P':
 				post_notify = TRUE;
-				break;
-			case 'U':
-				update_notify = TRUE;
-				break;
-			case 'i':
-				intermediate_changes = TRUE;
 				break;
 			default:
 				printf("Argument code 0%o (%c)"
@@ -189,11 +184,13 @@ main(int argc, char **argv)
 	} 
 
 	if(exit_code == cib_ok) {
+		crm_debug("Setting dnotify");
 		exit_code = the_cib->cmds->set_connection_dnotify(
 			the_cib, cib_connection_destroy);
 	}
 	
 	if(exit_code == cib_ok && pre_notify) {
+		crm_debug("Setting pre-notify callback");
 		exit_code = the_cib->cmds->add_notify_callback(
 			the_cib, T_CIB_PRE_NOTIFY, cibmon_pre_notify);
 		
@@ -203,21 +200,23 @@ main(int argc, char **argv)
 		}
 	}
 	if(exit_code == cib_ok && post_notify) {
-		exit_code = the_cib->cmds->add_notify_callback(
-			the_cib, T_CIB_POST_NOTIFY, cibmon_post_notify);
-		
-		if(exit_code != cib_ok) {
-			crm_err("Failed to set %s callback: %s",
-				T_CIB_POST_NOTIFY, cib_error2string(exit_code));
-		}
-	}
-	if(exit_code == cib_ok && update_notify) {
+		crm_debug("Setting post-notify callback");
 		exit_code = the_cib->cmds->add_notify_callback(
 			the_cib, T_CIB_UPDATE_CONFIRM, cibmon_update_confirm);
 		
 		if(exit_code != cib_ok) {
 			crm_err("Failed to set %s callback: %s",
 				T_CIB_UPDATE_CONFIRM, cib_error2string(exit_code));
+		}
+	}
+	if(exit_code == cib_ok && log_diffs) {
+		crm_debug("Setting diff callback");
+		exit_code = the_cib->cmds->add_notify_callback(
+			the_cib, T_CIB_DIFF_NOTIFY, cibmon_diff);
+		
+		if(exit_code != cib_ok) {
+			crm_err("Failed to set %s callback: %s",
+				T_CIB_DIFF_NOTIFY, cib_error2string(exit_code));
 		}
 	}
 	
@@ -316,11 +315,6 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 	update_depth++;
 	last_notify_pre = TRUE;
 	
-	if(update_depth > 1 && intermediate_changes == FALSE) {
-		crm_debug_4("[%s] Ignoring intermediate update", event);
-		return;
-	}
-
 	update     = get_message_xml(msg, F_CIB_UPDATE);
 	pre_update = get_message_xml(msg, F_CIB_EXISTING);
 
@@ -344,7 +338,7 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 
 
 void
-cibmon_post_notify(const char *event, HA_Message *msg)
+cibmon_update_confirm(const char *event, HA_Message *msg)
 {
 	int rc = -1;
 	const char *op       = NULL;
@@ -365,12 +359,6 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	type     = cl_get_string(msg, F_CIB_OBJTYPE);
 
 	update_depth--;
-	if(last_notify_pre == FALSE 
-	   && update_depth > 0
-	   && intermediate_changes == FALSE) {
-		crm_debug_4("Ignoring intermediate update");
-		return;
-	}
 
 	last_notify_pre = FALSE;
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
@@ -380,23 +368,23 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 	
 	if(update == NULL) {
 		if(rc == cib_ok) {
-			crm_debug_2(UPDATE_PREFIX"[%s] %s (to %s) completed",
+			crm_debug_2(UPDATE_PREFIX"[%s] %s (to %s) confirmed",
 				    event, op, crm_str(type));
 			
 		} else {
-			crm_warn(UPDATE_PREFIX"[%s] %s (to %s) FAILED: (%d) %s",
+			crm_warn(UPDATE_PREFIX"[%s] %s (to %s) ABORTED: (%d) %s",
 				 event, op, crm_str(type), rc,
 				 cib_error2string(rc));
 		}
 		
 	} else {
 		if(rc == cib_ok) {
-			crm_debug_2(UPDATE_PREFIX"[%s] Operation %s to <%s%s%s> completed.",
+			crm_debug_2(UPDATE_PREFIX"[%s] Operation %s to <%s%s%s> confirmed.",
 				    event, op, crm_str(type),
 				    id?" id=":"", id?id:"");
 			
 		} else {
-			crm_warn(UPDATE_PREFIX"[%s] Operation %s to <%s %s%s> FAILED: (%d) %s",
+			crm_warn(UPDATE_PREFIX"[%s] Operation %s to <%s %s%s> ABORTED: (%d) %s",
 				event, op, crm_str(type), id?" id=":"", id?id:"",
 				rc, cib_error2string(rc));
 		}
@@ -415,6 +403,7 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 			rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
 			generation, "CIB Generation");
 	}
+
 	free_xml(update);
 	free_xml(output);
 	free_xml(generation);
@@ -422,47 +411,65 @@ cibmon_post_notify(const char *event, HA_Message *msg)
 
 
 void
-cibmon_update_confirm(const char *event, HA_Message *msg)
+cibmon_diff(const char *event, HA_Message *msg)
 {
 	int rc = -1;
 	const char *op = NULL;
-	const char *id = NULL;
-	const char *type = NULL;
-
+	crm_data_t *diff = NULL;
+	crm_data_t *tmp = NULL;
+	const char *updates = NULL;
+	const char *old_updates = NULL;
+	const char *epoche= NULL;
+	const char *old_epoche= NULL;
+	const char *admin_epoche= NULL;
+	const char *old_admin_epoche= NULL;
+	
 	if(msg == NULL) {
 		crm_err("NULL update");
 		return;
 	}		
 	
-	op = cl_get_string(msg, F_CIB_OPERATION);
-	id = cl_get_string(msg, F_CIB_OBJID);
-	type = cl_get_string(msg, F_CIB_OBJTYPE);
-	
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 	
-	if(id == NULL) {
-		if(rc == cib_ok) {
-			crm_info(UPDATE_PREFIX"[%s] %s (to section=%s) confirmed.",
-				 event, op, crm_str(type));
-		} else {
-			crm_warn(UPDATE_PREFIX"[%s] %s (to section=%s) ABORTED: (%d) %s",
-				 event, op, crm_str(type), 
-				 rc, cib_error2string(rc));
-		}
-		
-	} else {
-		if(rc == cib_ok) {
-			crm_info(UPDATE_PREFIX"[%s] %s (to <%s%s%s>) confirmed",
-				 event, op, crm_str(type),
-				 id?" id=":"", id?id:"");
-		} else {
-			crm_warn(UPDATE_PREFIX"[%s] %s (to <%s%s%s>) ABORTED: (%d) %s",
-				 event, op, crm_str(type),
-				 id?" id=":"", id?id:"",
-				 rc, cib_error2string(rc));
-		}
+	if(rc < cib_ok) {
+		return;
 	}
-	crm_debug_3(UPDATE_PREFIX"=================================");
+	
+	op = cl_get_string(msg, F_CIB_OPERATION);
+	diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+
+	tmp = find_xml_node(diff, "diff-added", FALSE);
+	tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
+	updates = crm_element_value(tmp, XML_ATTR_NUMUPDATES);
+
+	tmp = get_message_xml(msg, "cib_generation");
+	epoche = crm_element_value(tmp, XML_ATTR_GENERATION);
+	admin_epoche = crm_element_value(tmp, XML_ATTR_GENERATION_ADMIN);
+	
+	tmp = find_xml_node(diff, "diff-removed", FALSE);
+	tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
+	old_updates = crm_element_value(tmp, XML_ATTR_NUMUPDATES);
+	old_epoche = crm_element_value(tmp, XML_ATTR_GENERATION);
+	if(old_epoche == NULL) {
+		old_epoche = epoche;
+	}
+	old_admin_epoche = crm_element_value(tmp, XML_ATTR_GENERATION_ADMIN);
+	if(old_admin_epoche == NULL) {
+		old_admin_epoche = admin_epoche;
+	}
+	
+	if(old_updates != NULL) {
+		cl_log(LOG_INFO, "Diff: --- %s%s%s.%s (op=%s)",
+		       old_admin_epoche?old_admin_epoche:"", old_admin_epoche?".":"",
+		       old_epoche?old_epoche:" ", old_updates, op);
+	}
+	if(updates != NULL) {
+		cl_log(LOG_INFO, "Diff: +++ %s%s%s.%s (op=%s)",
+		       admin_epoche?admin_epoche:"", admin_epoche?".":"",
+		       epoche?epoche:" ", updates, op);
+	}
+	log_xml_diff(LOG_INFO, diff, NULL);
+	free_xml(diff);
 }
 
 gboolean

@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.16 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: primatives.c,v 1.17 2005/05/31 11:32:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -78,7 +78,7 @@ findResource(crm_data_t *cib, const char *id)
 	
 	
 	root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
-	ret = find_entity(root, XML_CIB_TAG_RESOURCE, id, FALSE);
+	ret = find_entity(root, XML_CIB_TAG_RESOURCE, id);
 
 	return ret;
 }
@@ -141,7 +141,7 @@ findConstraint(crm_data_t *cib, const char *id)
 	
 	
 	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	ret = find_entity(root, XML_CIB_TAG_CONSTRAINT, id, FALSE);
+	ret = find_entity(root, XML_CIB_TAG_CONSTRAINT, id);
 
 	return ret;
 }
@@ -203,7 +203,7 @@ findHaNode(crm_data_t *cib, const char *id)
 	
 	
 	root = get_object_root(XML_CIB_TAG_NODES, cib);
-	ret = find_entity(root, XML_CIB_TAG_NODE, id, FALSE);
+	ret = find_entity(root, XML_CIB_TAG_NODE, id);
 
 	return ret;
 }
@@ -266,7 +266,7 @@ findStatus(crm_data_t *cib, const char *id)
 	crm_data_t *root = NULL, *ret = NULL;
 
 	root = get_object_root(XML_CIB_TAG_STATUS, cib);
-	ret = find_entity(root, XML_CIB_TAG_STATE, id, FALSE);
+	ret = find_entity(root, XML_CIB_TAG_STATE, id);
 
 	return ret;
 }
@@ -327,10 +327,11 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 		equiv_node = find_xml_node(parent, object_name, FALSE);
 		
 	} else {
-		equiv_node = find_entity(
-			parent, object_name, object_id, FALSE);
+		equiv_node = find_entity(parent, object_name, object_id);
 	}
+#if INTERMEDIATE_NOTIFICATIONS
 	cib_pre_notify(CRM_OP_CIB_DELETE, equiv_node, delete_spec);
+#endif
 
 	if(result != cib_ok) {
 		; /* nothing */
@@ -356,7 +357,9 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 			);
 	}
 
+#if INTERMEDIATE_NOTIFICATIONS
 	cib_post_notify(CRM_OP_CIB_DELETE, delete_spec, result, equiv_node);
+#endif
 
 	return result;
 }
@@ -385,10 +388,11 @@ add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
 		equiv_node = find_xml_node(parent, object_name, FALSE);
 		
 	} else {
-		equiv_node = find_entity(
-			parent, object_name, object_id, FALSE);
+		equiv_node = find_entity(parent, object_name, object_id);
 	}
+#if INTERMEDIATE_NOTIFICATIONS
 	cib_pre_notify(CRM_OP_CIB_CREATE, equiv_node, new_obj);
+#endif
 
 	if(result != cib_ok) {
 		; /* do nothing */
@@ -401,7 +405,9 @@ add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
 		
 	}
 	
+#if INTERMEDIATE_NOTIFICATIONS
 	cib_post_notify(CRM_OP_CIB_CREATE, new_obj, result, new_obj);
+#endif
 
 	return result;
 }
@@ -434,9 +440,11 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 		equiv_node = find_xml_node(parent, object_name, FALSE);
 
 	} else {
-		equiv_node = find_entity(parent, object_name, object_id, FALSE);
+		equiv_node = find_entity(parent, object_name, object_id);
 	}
+#if INTERMEDIATE_NOTIFICATIONS
 	cib_pre_notify(CRM_OP_CIB_UPDATE, equiv_node, new_obj);
+#endif
 
 	if(result != cib_ok) {
 		; /* nothing */
@@ -464,7 +472,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 				
 			} else {
 				equiv_node = find_entity(
-					parent, object_name, object_id, FALSE);
+					parent, object_name, object_id);
 			}
 		}
 		
@@ -522,11 +530,12 @@ update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
 	crm_debug_3("Finished with <%s id=%s>",
 		  crm_str(object_name), crm_str(object_id));
 	
+#if INTERMEDIATE_NOTIFICATIONS
 	cib_post_notify(CRM_OP_CIB_UPDATE, new_obj, result, equiv_node);
+#endif
 	crm_free(object_id);
 	return result;
 }
-
 
 void
 update_node_state(crm_data_t *target, crm_data_t *update)
@@ -585,3 +594,4 @@ update_node_state(crm_data_t *target, crm_data_t *update)
 	}
 	
 }
+

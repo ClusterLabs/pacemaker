@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.24 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: notify.c,v 1.25 2005/05/31 11:32:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,6 +47,11 @@ int pending_updates = 0;
 void cib_notify_client(gpointer key, gpointer value, gpointer user_data);
 void attach_cib_generation(HA_Message *msg, const char *field, crm_data_t *a_cib);
 
+void do_cib_notify(
+	int options, const char *op, crm_data_t *update,
+	enum cib_errors result, crm_data_t *result_data, const char *msg_type);
+
+
 void
 cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
@@ -58,6 +63,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	gboolean is_pre = FALSE;
 	gboolean is_post = FALSE;	
 	gboolean is_confirm = FALSE;
+	gboolean is_diff = FALSE;
 	gboolean do_send = FALSE;
 
 	int qlen = 0;
@@ -77,6 +83,9 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	} else if(safe_str_eq(type, T_CIB_UPDATE_CONFIRM)) {
 		is_confirm = TRUE;
+
+	} else if(safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
+		is_diff = TRUE;
 	}
 
 	if(client == NULL) {
@@ -107,6 +116,15 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		 
 	} else if(client->post_notify && is_post) {
 		if(qlen < (int)(0.7 * max_qlen)) {
+			do_send = TRUE;
+		} else {
+			crm_warn("Throttling post-notifications due to"
+				 " extreme load: queue=%d (max=%d)",
+				 qlen, max_qlen);
+		}
+
+	} else if(client->diffs && is_diff) {
+		if(qlen < (int)(0.8 * max_qlen)) {
 			do_send = TRUE;
 		} else {
 			crm_warn("Throttling post-notifications due to"
@@ -148,11 +166,16 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 void
 cib_pre_notify(
-	const char *op, crm_data_t *existing, crm_data_t *update) 
+	int options, const char *op, crm_data_t *existing, crm_data_t *update) 
 {
 	HA_Message *update_msg = ha_msg_new(6);
 	const char *type = NULL;
 	const char *id = NULL;
+	if(options & cib_inhibit_notify) {
+		crm_debug_2("Inhibiting notify.");
+		return;
+	}	
+
 	if(update != NULL) {
 		id = crm_element_value(update, XML_ATTR_ID);
 	}
@@ -183,8 +206,6 @@ cib_pre_notify(
 
 	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
 	
-	pending_updates++;
-	
 	if(update == NULL) {
 		crm_debug_2("Performing operation %s (on section=%s)",
 			    op, type);
@@ -198,18 +219,43 @@ cib_pre_notify(
 }
 
 void
-cib_post_notify(
-	const char *op, crm_data_t *update, enum cib_errors result, crm_data_t *new_obj) 
+cib_post_notify(int options, const char *op, crm_data_t *update,
+		enum cib_errors result, crm_data_t *new_obj) 
+{
+	if(options & cib_inhibit_notify) {
+		crm_debug_2("Inhibiting notify.");
+		return;
+	}
+	do_cib_notify(
+		options, op, update, result, new_obj, T_CIB_UPDATE_CONFIRM);
+}
+
+void
+cib_diff_notify(int options, const char *op, crm_data_t *update,
+		enum cib_errors result, crm_data_t *diff) 
+{
+	do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
+}
+
+void
+do_cib_notify(
+	int options, const char *op, crm_data_t *update,
+	enum cib_errors result, crm_data_t *result_data, const char *msg_type) 
 {
 	HA_Message *update_msg = ha_msg_new(8);
 	char *type = NULL;
 	char *id = NULL;
-	if(update != NULL && crm_element_value(new_obj, XML_ATTR_ID) != NULL){
-		id = crm_element_value_copy(new_obj, XML_ATTR_ID);
+
+	if(options & cib_inhibit_notify) {
+		crm_debug_2("Inhibiting notify.");
+		return;
+	}
+	if(update != NULL && crm_element_value(result_data, XML_ATTR_ID) != NULL){
+		id = crm_element_value_copy(result_data, XML_ATTR_ID);
 	}
 	
 	ha_msg_add(update_msg, F_TYPE, T_CIB_NOTIFY);
-	ha_msg_add(update_msg, F_SUBTYPE, T_CIB_POST_NOTIFY);
+	ha_msg_add(update_msg, F_SUBTYPE, msg_type);
 	ha_msg_add(update_msg, F_CIB_OPERATION, op);
 	ha_msg_add_int(update_msg, F_CIB_RC, result);
 	
@@ -223,36 +269,26 @@ cib_post_notify(
 		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
 		type = crm_strdup(crm_element_name(update));
 
-	} else if(new_obj != NULL) {
+	} else if(result_data != NULL) {
 		crm_debug_4("Setting type to new_obj->name: %s",
-			    crm_element_name(new_obj));
-		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(new_obj));
-		type = crm_strdup(crm_element_name(new_obj));
+			    crm_element_name(result_data));
+		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(result_data));
+		type = crm_strdup(crm_element_name(result_data));
 		
 	} else {
 		crm_debug_4("Not Setting type");
 	}
 
-	
 	attach_cib_generation(update_msg, "cib_generation", the_cib);
 	if(update != NULL) {
 		add_message_xml(update_msg, F_CIB_UPDATE, update);
-
 	}
-	if(new_obj != NULL) {
-		add_message_xml(update_msg, F_CIB_UPDATE_RESULT, new_obj);
+	if(result_data != NULL) {
+		add_message_xml(update_msg, F_CIB_UPDATE_RESULT, result_data);
 	}
 
 	crm_debug_3("Notifying clients");
 	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
-	
-	pending_updates--;
-
-	if(pending_updates == 0) {
-		ha_msg_mod(update_msg, F_SUBTYPE, T_CIB_UPDATE_CONFIRM);
-		crm_debug_3("Sending confirmation to clients");
-		g_hash_table_foreach(client_list, cib_notify_client, update_msg);
-	}
 
 	if(update == NULL) {
 		if(result == cib_ok) {
@@ -282,6 +318,7 @@ cib_post_notify(
 
 	crm_debug_3("Notify complete");
 }
+
 
 void
 attach_cib_generation(HA_Message *msg, const char *field, crm_data_t *a_cib) 

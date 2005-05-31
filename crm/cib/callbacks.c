@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.54 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: callbacks.c,v 1.55 2005/05/31 11:32:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -270,6 +270,9 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 
 			} else if(safe_str_eq(type, T_CIB_UPDATE_CONFIRM)) {
 				cib_client->confirmations = on_off;
+
+			} else if(safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
+				cib_client->diffs = on_off;
 
 			}
 			continue;

@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.20 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: io.c,v 1.21 2005/05/31 11:32:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -221,7 +221,7 @@ initializeCib(crm_data_t *new_cib)
 			XML_CIB_TAG_CRMCONFIG, new_cib);
 		
 		crm_data_t * a_default = find_entity(
-			config, XML_CIB_TAG_NVPAIR, option, FALSE);
+			config, XML_CIB_TAG_NVPAIR, option);
 
 		if(a_default != NULL) {
 			value = crm_element_value(
@@ -332,6 +332,7 @@ int
 activateCibXml(crm_data_t *new_cib, const char *filename)
 {
 	int error_code = cib_ok;
+	crm_data_t *diff = NULL;
 	crm_data_t *saved_cib = get_the_CIB();
 	const char *filename_bak = CIB_BACKUP; /* calculate */
 
@@ -403,17 +404,35 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 		}
 	}
 
+#if ACTIVATION_DIFFS
 	/* Make sure memory is cleaned up appropriately */
+	diff = diff_xml_object(saved_cib, new_cib, -1);
 	if (error_code != cib_ok) {
-		crm_debug_4("Freeing new CIB %p", new_cib);
+		crm_err("Changes could not be activated: %s",
+			cib_error2string(error_code));
+		log_xml_diff(LOG_WARNING, diff, __FUNCTION__);
 		free_xml(new_cib);
 		
 	} else if(saved_cib != NULL) {
-		crm_debug_4("Freeing saved CIB %p", saved_cib);
+		crm_debug_2("Changes activated");
+		log_xml_diff(LOG_DEBUG, diff, __FUNCTION__);
 		crm_validate_data(saved_cib);
 		free_xml(saved_cib);
 	}
-
+	free_xml(diff);
+#else
+	if (error_code != cib_ok) {
+		crm_err("Changes could not be activated: %s",
+			cib_error2string(error_code));
+		free_xml(new_cib);
+		
+	} else if(saved_cib != NULL) {
+		crm_debug_2("Changes activated");
+		crm_validate_data(saved_cib);
+		free_xml(saved_cib);
+	}	
+#endif
+	diff = NULL;
 	return error_code;
     
 }
