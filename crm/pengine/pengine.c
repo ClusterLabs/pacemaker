@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.73 2005/05/27 07:35:27 andrew Exp $ */
+/* $Id: pengine.c,v 1.74 2005/05/31 11:35:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -116,11 +116,8 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		free_xml(output);
 		
-		if(sender->send_queue->current_qlen == 0
-		   && sender->recv_queue->current_qlen == 0
-		   && mem_stats->nbytes_alloc != 0) {
-			crm_mem_stats(mem_stats);
- 			pe_warn("Unfree'd memory");
+		if(is_ipc_empty(sender) && crm_mem_stats(mem_stats)) {
+			pe_warn("Unfree'd memory");
 		}
 		cl_malloc_setstats(NULL);
 		crm_free(mem_stats);
@@ -150,7 +147,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	return TRUE;
 }
 
-#define MEMCHECK_STAGE_5 0
+#define MEMCHECK_STAGE_2 0
 
 crm_data_t *
 do_calculations(crm_data_t * cib_object)
@@ -221,6 +218,18 @@ do_calculations(crm_data_t * cib_object)
 
 	/* unused */
 	stage3(colors);
+
+#if MEMCHECK_STAGE_3
+	cleanup_calculations(
+		resources, nodes, placement_constraints, actions,
+		ordering_constraints, stonith_list, shutdown_list,
+		colors, action_sets);
+
+	free_xml(graph);
+	crm_mem_stats(mem_stats);
+	crm_err("Exiting");
+	exit(1);
+#endif
 	
 	crm_debug_5("assign nodes to colors");
 	stage4(colors);	
