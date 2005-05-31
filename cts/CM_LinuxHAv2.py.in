@@ -77,8 +77,8 @@ class LinuxHAv2(HeartbeatCM):
             "Pat:We_started"   : "%s crmd:.*State transition.*-> S_IDLE",
             "Pat:We_stopped"   : "%s heartbeat.*Heartbeat shutdown complete",
 	    "Pat:They_stopped" : "%s crmd:.*LOST:.*%s",
-            "Pat:They_dead"    : "node (%s).*: is dead",
-
+            "Pat:All_stopped"  : "%s .*heartbeat.*Heartbeat shutdown complete",
+            "Pat:They_dead"    : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
             
             # Bad news Regexes.  Should never occur.
@@ -341,7 +341,7 @@ class LinuxHAv2(HeartbeatCM):
 	if any_up == 0 or idle_watch.look():
 	    return 1
 
-	self.log("Warn: Cluster not IDLE") 
+	self.log("Warn: Cluster Master not IDLE") 
 	return None
 
     def is_node_dc(self, node, status_line=None):
