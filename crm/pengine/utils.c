@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.80 2005/05/20 11:58:58 andrew Exp $ */
+/* $Id: utils.c,v 1.81 2005/05/31 11:36:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,7 +54,7 @@ invert_constraint(rsc_colocation_t *constraint)
 		return NULL;
 	}
 	
-	inverted_con->id = crm_strdup(constraint->id);
+	inverted_con->id = constraint->id;
 	inverted_con->strength = constraint->strength;
 
 	/* swap the direction */
