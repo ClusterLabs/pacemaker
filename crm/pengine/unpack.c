@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.92 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: unpack.c,v 1.93 2005/05/31 11:46:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,8 +151,7 @@ param_value(crm_data_t * parent, const char *name)
 	crm_data_t * a_default = NULL;
 
 	if(parent != NULL) {
-		a_default = find_entity(
-			parent, XML_CIB_TAG_NVPAIR, name, FALSE);
+		a_default = find_entity(parent, XML_CIB_TAG_NVPAIR, name);
 	}
 	
 	if(a_default == NULL) {

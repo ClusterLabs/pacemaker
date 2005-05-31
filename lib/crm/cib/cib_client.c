@@ -930,8 +930,7 @@ get_crm_option(crm_data_t *cib, const char *name, gboolean do_warn)
 	crm_data_t * config = get_object_root(XML_CIB_TAG_CRMCONFIG, cib);
 	
 	if(config != NULL) {
-		a_default = find_entity(
-			config, XML_CIB_TAG_NVPAIR, name, FALSE);
+		a_default = find_entity(config, XML_CIB_TAG_NVPAIR, name);
 	}
 	
 	if(a_default == NULL) {
