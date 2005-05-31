@@ -1,4 +1,4 @@
-/* $Id: ccm_epoche.c,v 1.5 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: ccm_epoche.c,v 1.6 2005/05/31 11:28:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,7 +37,7 @@
 
 #include <crm/dmalloc_wrapper.h>
 
-const char* crm_system_name = "ccm_age";
+const char* crm_system_name = "ccm_tool";
 oc_ev_t *ccm_token = NULL;
 int command = 0;
 
@@ -91,19 +91,25 @@ main(int argc, char ** argv)
 	}
 
 	if(ccm_age_connect(&ccm_fd)) {
-		for (;;) {
+		int rc = 0;
+		int lpc = 0;
+		for (;;lpc++) {
 
 			FD_ZERO(&rset);
 			FD_SET(ccm_fd, &rset);
 
-			if(select(ccm_fd + 1, &rset, NULL,NULL,NULL) == -1){
-				perror("select");
-				return(1);
+			rc = select(ccm_fd + 1, &rset, NULL,NULL,NULL);
+			if(rc == -1){
+				perror("select failed");
+				if(errno == EINTR) {
+					crm_debug("Retry...");
+					continue;
+				}
+				
+			} else if(oc_ev_handle_event(ccm_token) != 0){
+				crm_err("oc_ev_handle_event failed");
 			}
-			if(oc_ev_handle_event(ccm_token)){
-				crm_err("terminating");
-				return(1);
-			}
+			return(1);
 		}
 	}
 	return(1);    
@@ -117,7 +123,10 @@ usage(const char* cmd, int exit_status)
 
 	stream = exit_status ? stderr : stdout;
 
-	fprintf(stream, "usage: %s [-V]\n", cmd);
+	fprintf(stream, "usage: %s [-V] [-p|-e|-q]\n", cmd);
+	fprintf(stream, "\t-p : print the members of this partition\n");
+	fprintf(stream, "\t-e : print the epoche this node joined the partition\n");
+	fprintf(stream, "\t-q : print a 1 if our partition has quorum\n");
 	fflush(stream);
 
 	exit(exit_status);
