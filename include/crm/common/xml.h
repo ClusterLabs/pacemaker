@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.22 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: xml.h,v 1.23 2005/05/31 11:44:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -188,10 +188,8 @@ extern crm_data_t *string2xml(const char *input);
 extern crm_data_t *find_xml_node(
 	crm_data_t *cib, const char * node_path, gboolean must_find);
 
-extern crm_data_t *find_entity(crm_data_t *parent,
-			      const char *node_name,
-			      const char *id,
-			      gboolean siblings);
+extern crm_data_t *find_entity(
+	crm_data_t *parent, const char *node_name, const char *id);
 
 extern int write_xml_file(crm_data_t *xml_node, const char *filename);
 
@@ -203,6 +201,12 @@ extern void print_xml_formatted(
 	int log_level, const char *function,
 	crm_data_t *an_xml_node, const char *text);
 
+extern void log_xml_diff(int log_level, crm_data_t *diff, const char *function);
+
+extern crm_data_t *diff_xml_object(
+	crm_data_t *left, crm_data_t *right, int context);
+
+extern crm_data_t *subtract_xml_object(crm_data_t *left, crm_data_t *right);
 
 extern crm_data_t *crm_element_parent(crm_data_t *data);
 
@@ -221,37 +225,6 @@ extern void crm_update_parents(crm_data_t *root);
 
 extern gboolean xml_has_children(crm_data_t *root);	 		
 
-#ifdef USE_LIBXML
-#   define xml_child_iter(parent,child,filter,d) if(parent != NULL) {	\
-		crm_data_t *child = NULL;				\
-		crm_data_t *__crm_xml_iter = parent->children;		\
-		while(__crm_xml_iter != NULL) {				\
-			child = __crm_xml_iter;				\
-			__crm_xml_iter = __crm_xml_iter->next;		\
-			if(filter == NULL				\
-			   || safe_str_eq(filter, child->name)) {	\
-				d;					\
-			} else {					\
-				crm_debug_4("Skipping <%s../>", child->name); \
-			}						\
-		}							\
-	} else {							\
-		crm_debug_4("Parent of loop was NULL");			\
-	}
-#define xml_prop_iter(parent, prop_name, prop_value, code) if(parent != NULL) { \
-		xmlAttrPtr prop_iter = parent->properties;		\
-		while(prop_iter != NULL) {				\
-			const char *prop_name = prop_iter->name;	\
-			const char *prop_value =			\
-				xmlGetProp(parent, prop_name);		\
-			code;						\
-			prop_iter = prop_iter->next;			\
-		}							\
-	} else {							\
-		crm_debug_4("Parent of loop was NULL");			\
-	}
-
-#else
 #   define xmlGetNodePath(data) crm_element_value(data, XML_ATTR_TAGNAME)
 #   define xml_child_iter(parent, child, filter, loop_code)		\
 	if(parent != NULL) {						\
@@ -300,7 +273,5 @@ extern gboolean xml_has_children(crm_data_t *root);
 	} else {							\
 		crm_debug_4("Parent of loop was NULL");			\
 	}
-
-#endif
 
 #endif
