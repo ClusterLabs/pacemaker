@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.63 2005/05/20 14:59:00 andrew Exp $ */
+/* $Id: crm.h,v 1.64 2005/05/31 11:43:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -79,8 +79,7 @@ extern gboolean crm_assert_failed;
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
 #define DOT_ALL_FSA_INPUTS	1
-#define FSA_TRACE		1
-/* #define USE_FAKE_LRM		1 */
+/* #define FSA_TRACE		1 */
 
 #define INFINITY_S        "INFINITY"
 #define MINUS_INFINITY_S "-INFINITY"

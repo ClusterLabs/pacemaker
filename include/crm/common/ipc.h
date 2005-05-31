@@ -1,4 +1,4 @@
-/* $Id: ipc.h,v 1.8 2005/04/11 10:34:11 andrew Exp $ */
+/* $Id: ipc.h,v 1.9 2005/05/31 11:43:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,5 +61,7 @@ extern IPC_Channel *init_client_ipc_comms_nodispatch(const char *channel_name);
 extern gboolean subsystem_msg_dispatch(IPC_Channel *sender, void *user_data);
 
 extern IPC_WaitConnection *wait_channel_init(char daemonsocket[]);
+
+extern gboolean is_ipc_empty(IPC_Channel *ch);
 
 #endif
