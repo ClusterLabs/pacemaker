@@ -285,7 +285,7 @@ class HAResourceAudit(ClusterAudit):
             if NumofInc[inc_name] != min(up_count,MaxofInc[inc_name]):
                 passed = 0
                 self.CM.log("Incarnation %s has %d instances(max %d instances).\
-                    Now %d nodes are up"%(inc_name,NumofInc[inc_name], \
+                    Now %d nodes are up"%(str(inc_name),NumofInc[inc_name], \
                     MaxofInc[inc_name],up_count))
 
         #Make sure the resouces with "must","placement" constraint are running on the same node
