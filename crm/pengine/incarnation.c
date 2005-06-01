@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.20 2005/06/01 19:03:04 andrew Exp $ */
+/* $Id: incarnation.c,v 1.21 2005/06/01 22:30:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,11 +41,11 @@ typedef struct incarnation_variant_data_s
 } incarnation_variant_data_t;
 
 void child_stopping_constraints(
-	incarnation_variant_data_t *incarnation_data,
+	incarnation_variant_data_t *incarnation_data, enum pe_ordering type,
 	resource_t *child, resource_t *last, pe_working_set_t *data_set);
 
 void child_starting_constraints(
-	incarnation_variant_data_t *incarnation_data,
+	incarnation_variant_data_t *incarnation_data, enum pe_ordering type,
 	resource_t *child, resource_t *last, pe_working_set_t *data_set);
 
 
@@ -90,7 +90,6 @@ void incarnation_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	copy_in_properties(xml_self, xml_obj);
 	if(common_unpack(xml_self, &self, data_set)) {
 		incarnation_data->self = self;
-		self->restart_type = pe_restart_restart;
 
 	} else {
 		crm_log_xml_err(xml_self, "Couldnt unpack dummy child");
@@ -264,9 +263,6 @@ void incarnation_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
-	last_stop_rsc = incarnation_data->self;
-	last_start_rsc = incarnation_data->self;
-	
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 		child_rsc->fns->create_actions(child_rsc, data_set);
@@ -291,15 +287,15 @@ void incarnation_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		if(child_rsc->starting) {
 			child_starting = TRUE;
 			child_starting_constraints(
-				incarnation_data, child_rsc,
-				last_start_rsc, data_set);
+				incarnation_data, pe_ordering_manditory,
+				child_rsc, last_start_rsc, data_set);
 			last_start_rsc = child_rsc;
 		}
 		if(child_rsc->stopping) {
 			child_stopping = TRUE;
 			child_stopping_constraints(
-				incarnation_data, child_rsc,
-				last_stop_rsc, data_set);
+				incarnation_data, pe_ordering_manditory,
+				child_rsc, last_stop_rsc, data_set);
 			last_stop_rsc = child_rsc;
 		}
 		);
@@ -310,7 +306,8 @@ void incarnation_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		custom_action(incarnation_data->self, started_key(rsc),
 			      CRMD_ACTION_STARTED, NULL, data_set);
 		child_starting_constraints(
-			incarnation_data, NULL, last_start_rsc, data_set);
+			incarnation_data, pe_ordering_manditory,
+			NULL, last_start_rsc, data_set);
 		
 	}
 	if(child_stopping) {
@@ -319,7 +316,8 @@ void incarnation_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		custom_action(incarnation_data->self, stopped_key(rsc),
 			      CRMD_ACTION_STOPPED, NULL, data_set);
 		child_stopping_constraints(
-			incarnation_data, NULL, last_stop_rsc, data_set);
+			incarnation_data, pe_ordering_manditory,
+			NULL, last_stop_rsc, data_set);
 	}
 	
 	slist_iter(
@@ -331,7 +329,7 @@ void incarnation_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 void
 child_starting_constraints(
-	incarnation_variant_data_t *incarnation_data,
+	incarnation_variant_data_t *incarnation_data, enum pe_ordering type,
 	resource_t *child, resource_t *last, pe_working_set_t *data_set)
 {
 	if(child == NULL && incarnation_data->ordered && last != NULL) {
@@ -340,7 +338,7 @@ child_starting_constraints(
 		custom_action_order(
 			last, start_key(last), NULL,
 			incarnation_data->self, started_key(incarnation_data->self), NULL,
-			pecs_startstop, data_set);
+			type, data_set);
 		
 	} else if(child == NULL) {
 		return;
@@ -349,7 +347,9 @@ child_starting_constraints(
 		crm_debug_4("Ordered version");
 
 		/* child/child relative start */
-		order_start_start(last, child);
+		custom_action_order(last, start_key(last), NULL,
+				    child, start_key(child), NULL,
+				    type, data_set);
 
 	} else if(incarnation_data->ordered) {
 		crm_debug_4("Ordered version (1st node)");
@@ -358,10 +358,13 @@ child_starting_constraints(
 		custom_action_order(
 			child, start_key(child), NULL,
 			incarnation_data->self, started_key(incarnation_data->self), NULL,
-			pecs_startstop, data_set);
+			type, data_set);
 		
 		/* global start before first child start */
-		order_start_start(incarnation_data->self, child);
+		custom_action_order(
+			incarnation_data->self, start_key(incarnation_data->self), NULL,
+			child, start_key(child), NULL,
+			pe_ordering_manditory, data_set);
 		
 	} else {
 		crm_debug_4("Un-ordered version");
@@ -370,22 +373,28 @@ child_starting_constraints(
 		custom_action_order(
 			child, start_key(child), NULL,
 			incarnation_data->self, started_key(incarnation_data->self), NULL,
-			pecs_startstop, data_set);
+			type, data_set);
                 
 		/* global start before child start */
-		order_start_start(incarnation_data->self, child);
+		custom_action_order(
+			incarnation_data->self, start_key(incarnation_data->self), NULL,
+			child, start_key(child), NULL,
+			pe_ordering_manditory, data_set);
 	}
 }
 
 void
 child_stopping_constraints(
-	incarnation_variant_data_t *incarnation_data,
+	incarnation_variant_data_t *incarnation_data, enum pe_ordering type,
 	resource_t *child, resource_t *last, pe_working_set_t *data_set)
 {
 	if(child == NULL && incarnation_data->ordered && last != NULL) {
 		crm_debug_4("Ordered version (last node)");
 		/* global stop before first child stop */
-		order_stop_stop(incarnation_data->self, last);
+		custom_action_order(
+			incarnation_data->self, stop_key(incarnation_data->self), NULL,
+			last, stop_key(last), NULL,
+			pe_ordering_manditory, data_set);
 		
 	} else if(child == NULL) {
 		return;
@@ -394,7 +403,9 @@ child_stopping_constraints(
 		crm_debug_4("Ordered version");
 
 		/* child/child relative stop */
-		order_stop_stop(child, last);
+		custom_action_order(child, stop_key(child), NULL,
+				    last, stop_key(last), NULL,
+				    type, data_set);
 
 	} else if(incarnation_data->ordered) {
 		crm_debug_4("Ordered version (1st node)");
@@ -402,7 +413,7 @@ child_stopping_constraints(
 		custom_action_order(
 			child, stop_key(child), NULL,
 			incarnation_data->self, stopped_key(incarnation_data->self), NULL,
-			pecs_startstop, data_set);
+			type, data_set);
 
 	} else {
 		crm_debug_4("Un-ordered version");
@@ -411,10 +422,13 @@ child_stopping_constraints(
 		custom_action_order(
 			child, stop_key(child), NULL,
 			incarnation_data->self, stopped_key(incarnation_data->self), NULL,
-			pecs_startstop, data_set);
+			type, data_set);
                         
 		/* global stop before child stop */
-		order_stop_stop(incarnation_data->self, child);
+		custom_action_order(
+			incarnation_data->self, stop_key(incarnation_data->self), NULL,
+			child, stop_key(child), NULL,
+			pe_ordering_manditory, data_set);
 	}
 }
 
@@ -422,6 +436,7 @@ child_stopping_constraints(
 void
 incarnation_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
+	resource_t *last_rsc = NULL;	
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
@@ -429,14 +444,33 @@ incarnation_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		incarnation_data->self, stopped_key(incarnation_data->self), NULL,
 		incarnation_data->self, start_key(incarnation_data->self), NULL,
-		pecs_startstop, data_set);
+		pe_ordering_manditory, data_set);
 	
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 
 		/* child stop before start */
 		order_stop_start(child_rsc, child_rsc);
+
+		child_starting_constraints(
+			incarnation_data, pe_ordering_optional,
+			child_rsc, last_rsc, data_set);
+
+		child_stopping_constraints(
+			incarnation_data, pe_ordering_optional,
+			child_rsc, last_rsc, data_set);
+
+		last_rsc = child_rsc;
+		
 		);
+	
+	child_starting_constraints(
+		incarnation_data, pe_ordering_optional,
+		NULL, last_rsc, data_set);
+	
+	child_stopping_constraints(
+		incarnation_data, pe_ordering_optional,
+		NULL, last_rsc, data_set);
 }
 
 void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint)

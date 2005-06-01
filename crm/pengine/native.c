@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.44 2005/06/01 19:03:04 andrew Exp $ */
+/* $Id: native.c,v 1.45 2005/06/01 22:30:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -228,10 +228,9 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		mon = custom_action(rsc, key, name, node, data_set);
 		
 		if(start != NULL) {
-			custom_action_order(
-				rsc, start_key(rsc), NULL,
-				NULL, crm_strdup(key), mon,
-				pecs_must, data_set);
+			custom_action_order(rsc, start_key(rsc), NULL,
+					    NULL, crm_strdup(key), mon,
+					    pe_ordering_manditory, data_set);
 		}
 		);	
 }
@@ -259,7 +258,6 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		} else {
 			crm_info("Start resource %s (%s)",
 				 rsc->id, chosen->details->uname);
-			rsc->schedule_recurring = TRUE;
 		}
 		
 	} else if(g_list_length(native_data->running_on) > 1) {
@@ -284,7 +282,6 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 			crm_info("Start resource %s (%s)\t(recovery)",
 				 rsc->id, chosen->details->uname);
 			start = start_action(rsc, chosen);
-			rsc->schedule_recurring = TRUE;
 		}
 
 		if(rsc->recovery_type == recovery_block) {
@@ -323,8 +320,6 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				start = start_action(rsc, chosen);
 				stop = stop_action(rsc, node);
 
-				rsc->schedule_recurring = TRUE;
-				
 			} else {
 				crm_info("Leave resource %s\t(%s)",
 					 rsc->id, chosen->details->uname);
@@ -332,8 +327,6 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				start = start_action(rsc, chosen);
 				if(rsc->start_pending == FALSE) {
 					start->optional = TRUE;
-				} else {
-					rsc->schedule_recurring = TRUE;
 				}	
 				stop = stop_action(rsc, node);
 				stop->optional = TRUE;
@@ -346,7 +339,6 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				 chosen->details->uname);
 			stop = stop_action(rsc, node);
 			start = start_action(rsc, chosen);
-			rsc->schedule_recurring = TRUE;
 			
 		} else {
 			crm_info("Stop  resource %s\t(%s)",

@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.19 2005/06/01 19:13:25 andrew Exp $ */
+/* $Id: group.c,v 1.20 2005/06/01 22:30:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -187,7 +187,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		group_data->self, stopped_key(group_data->self), NULL,
 		group_data->self, start_key(group_data->self), NULL,
-		pecs_startstop, data_set);
+		pe_ordering_manditory, data_set);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
@@ -202,7 +202,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			custom_action_order(
 				child_rsc, stop_key(child_rsc), NULL,
 				group_data->self, stopped_key(group_data->self), NULL,
-				pecs_startstop, data_set);
+				pe_ordering_manditory, data_set);
 
 			order_start_start(group_data->self, child_rsc);
 		}
@@ -214,7 +214,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		custom_action_order(
 			last_rsc, start_key(last_rsc), NULL,
 			group_data->self, started_key(group_data->self), NULL,
-			pecs_startstop, data_set);
+			pe_ordering_manditory, data_set);
 
 		order_stop_stop(group_data->self, last_rsc);
 	}

@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.75 2005/06/01 19:03:04 andrew Exp $ */
+/* $Id: pengine.c,v 1.76 2005/06/01 22:30:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,7 +30,6 @@
 #include <pe_utils.h>
 
 crm_data_t * do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input);
-void cleanup_calculations(pe_working_set_t *data_set);
 
 gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
@@ -137,10 +136,9 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	return TRUE;
 }
 
-#define MEMCHECK_STAGE_2 0
-#define check_and_exit(stage) 	cleanup_calculations(&data_set);	\
-	free_xml(graph);						\
-	crm_mem_stats(NULL);					\
+#define MEMCHECK_STAGE_5 0
+#define check_and_exit(stage) 	cleanup_calculations(data_set);	\
+	crm_mem_stats(NULL);						\
 	crm_err("Exiting: stage %d", stage);				\
 	exit(1);
 

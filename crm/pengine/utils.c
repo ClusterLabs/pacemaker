@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.82 2005/06/01 19:03:04 andrew Exp $ */
+/* $Id: utils.c,v 1.83 2005/06/01 22:30:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -772,6 +772,22 @@ strength2text(enum con_strength strength)
 			break;
 		case pecs_startstop:
 			result = "start/stop";
+			break;
+	}
+	return result;
+}
+
+const char *
+ordering_type2text(enum pe_ordering type)
+{
+	const char *result = "<unknown>";
+	switch(type)
+	{
+		case pe_ordering_manditory:
+			result = "manditory";
+			break;
+		case pe_ordering_optional:
+			result = "optional";
 			break;
 	}
 	return result;

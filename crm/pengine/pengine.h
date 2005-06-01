@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.65 2005/06/01 19:03:04 andrew Exp $ */
+/* $Id: pengine.h,v 1.66 2005/06/01 22:30:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,6 +126,11 @@ enum pe_restart {
 	pe_restart_ignore
 };
 
+enum pe_ordering {
+	pe_ordering_manditory,
+	pe_ordering_optional
+};
+
 struct node_shared_s { 
 		const char *id; 
 		const char *uname; 
@@ -202,7 +207,6 @@ struct resource_s {
 		float	 effective_priority; 
 
 		gboolean start_pending;
-		gboolean schedule_recurring;
 		gboolean recover;
 		gboolean starting;
 		gboolean stopping;
@@ -220,7 +224,7 @@ struct resource_s {
 
 struct action_wrapper_s 
 {
-		enum con_strength strength;
+		enum pe_ordering type;
 		action_t *action;
 };
 
@@ -256,7 +260,7 @@ struct action_s
 struct order_constraint_s 
 {
 		int id;
-		enum con_strength strength;
+		enum pe_ordering type;
 
 		void *lh_opaque;
 		resource_t *lh_rsc;
@@ -326,19 +330,19 @@ extern gboolean custom_action_order(
 #define order_start_start(rsc1,rsc2)					\
 	custom_action_order(rsc1, start_key(rsc1), NULL,		\
 			    rsc2, start_key(rsc2) ,NULL,		\
-			    pecs_startstop, data_set)
+			    pe_ordering_manditory, data_set)
 #define order_stop_stop(rsc1, rsc2)					\
 	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
 			    rsc2, stop_key(rsc2) ,NULL,		\
-			    pecs_startstop, data_set)
+			    pe_ordering_manditory, data_set)
 #define order_stop_start(rsc1, rsc2)					\
 	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
 			    rsc2, start_key(rsc2) ,NULL,		\
-			    pecs_startstop, data_set)
+			    pe_ordering_optional, data_set)
 #define order_start_stop(rsc1, rsc2)					\
 	custom_action_order(rsc1, start_key(rsc1), NULL,		\
 			    rsc2, stop_key(rsc2) ,NULL,		\
-			    pecs_startstop, data_set)
+			    pe_ordering_manditory, data_set)
 
 #define pe_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #define pe_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
@@ -347,6 +351,7 @@ extern gboolean process_colored_constraints(resource_t *rsc);
 extern void graph_element_from_action(
 	action_t *action, pe_working_set_t *data_set);
 extern void set_working_set_defaults(pe_working_set_t *data_set);
+extern void cleanup_calculations(pe_working_set_t *data_set);
 
 extern const char* transition_timeout;
 extern gboolean was_processing_error;

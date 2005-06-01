@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.94 2005/06/01 19:03:04 andrew Exp $ */
+/* $Id: unpack.c,v 1.95 2005/06/01 22:30:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -732,7 +732,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				
 			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
 				rsc->start_pending = TRUE;
-				rsc->schedule_recurring = TRUE;
 				*running = TRUE;
 		
 				/* make sure it is re-issued but,
@@ -750,7 +749,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				crm_debug_4("Re-issuing pending recurring task:"
 					  " %s for %s on %s",
 					  task, rsc->id, node->details->id);
-				rsc->schedule_recurring = TRUE;
 			}
 			break;
 		
@@ -761,13 +759,11 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 				*failed  = FALSE;
 				*running = FALSE;				
-				rsc->schedule_recurring = FALSE;
 
 			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
 				crm_debug_3("%s active on %s",
 					    rsc->id, node->details->uname);
 				*running = TRUE;
-				rsc->schedule_recurring = FALSE;
 
 			} else if(*running) {
 				/* assume its a recurring action */
@@ -825,7 +821,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 			} else { /* pretend the stop completed */
 				*running = FALSE;
-				rsc->schedule_recurring = FALSE;
 			}
 			break;
 		case LRM_OP_CANCELLED:
@@ -880,7 +875,7 @@ gboolean
 custom_action_order(
 	resource_t *lh_rsc, char *lh_action_task, action_t *lh_action,
 	resource_t *rh_rsc, char *rh_action_task, action_t *rh_action,
-	enum con_strength strength, pe_working_set_t *data_set)
+	enum pe_ordering type, pe_working_set_t *data_set)
 {
 	order_constraint_t *order = NULL;
 
@@ -889,17 +884,16 @@ custom_action_order(
 		pe_err("Invalid inputs lh_rsc=%p, lh_a=%p,"
 			" rh_rsc=%p, rh_a=%p",
 			lh_rsc, lh_action, rh_rsc, rh_action);
+		crm_free(lh_action_task);
+		crm_free(rh_action_task);
 		return FALSE;
 	}
 
 	crm_malloc0(order, sizeof(order_constraint_t));
-
-	if(order == NULL) {
-		return FALSE;
-	}
+	if(order == NULL) { return FALSE; }
 	
 	order->id             = data_set->order_id++;
-	order->strength       = strength;
+	order->type           = type;
 	order->lh_rsc         = lh_rsc;
 	order->rh_rsc         = rh_rsc;
 	order->lh_action      = lh_action;
@@ -913,28 +907,28 @@ custom_action_order(
 	if(lh_rsc != NULL && rh_rsc != NULL) {
 		crm_debug_4("Created ordering constraint %d (%s):"
 			 " %s/%s before %s/%s",
-			 order->id, strength2text(order->strength),
+			 order->id, ordering_type2text(order->type),
 			 lh_rsc->id, lh_action_task,
 			 rh_rsc->id, rh_action_task);
 		
 	} else if(lh_rsc != NULL) {
 		crm_debug_4("Created ordering constraint %d (%s):"
 			 " %s/%s before action %d (%s)",
-			 order->id, strength2text(order->strength),
+			 order->id, ordering_type2text(order->type),
 			 lh_rsc->id, lh_action_task,
 			 rh_action->id, rh_action_task);
 		
 	} else if(rh_rsc != NULL) {
 		crm_debug_4("Created ordering constraint %d (%s):"
 			 " action %d (%s) before %s/%s",
-			 order->id, strength2text(order->strength),
+			 order->id, ordering_type2text(order->type),
 			 lh_action->id, lh_action_task,
 			 rh_rsc->id, rh_action_task);
 		
 	} else {
 		crm_debug_4("Created ordering constraint %d (%s):"
 			 " action %d (%s) before action %d (%s)",
-			 order->id, strength2text(order->strength),
+			 order->id, ordering_type2text(order->type),
 			 lh_action->id, lh_action_task,
 			 rh_action->id, rh_action_task);
 	}

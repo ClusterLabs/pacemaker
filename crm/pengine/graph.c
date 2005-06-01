@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.46 2005/06/01 19:03:04 andrew Exp $ */
+/* $Id: graph.c,v 1.47 2005/06/01 22:30:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,15 +52,18 @@ update_action(action_t *action)
 	crm_debug_3("Processing action %d", action->id);
 	slist_iter(
 		other, action_wrapper_t, action->actions_before, lpc,
-		crm_debug_3("\tChecking action %d", other->action->id);
-		if(action->optional
-		   && other->action->optional == FALSE) {
+		crm_debug_3("\tChecking action %d: %s/%s",
+			    other->action->id, ordering_type2text(other->type),
+			    other->action->optional?"optional":"required");
+		if(action->optional == FALSE
+		   && other->type == pe_ordering_manditory
+		   && other->action->optional) {
 			change = TRUE;
-			action->optional = FALSE;
+			other->action->optional = FALSE;
 			crm_debug_2("Marking action %d manditory because of %d",
-				  action->id, other->action->id);
+				    other->action->id, action->id);
 			update_action(other->action);
-		}
+		} 
 		);
 
 	slist_iter(
@@ -119,7 +122,7 @@ shutdown_constraints(
 		custom_action_order(
 			rsc, stop_key(rsc), NULL,
 			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
-			pecs_must, data_set);
+			pe_ordering_manditory, data_set);
 
 		);	
 
@@ -148,7 +151,7 @@ stonith_constraints(node_t *node,
 		custom_action_order(
 			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
 			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-			pecs_must, data_set);
+			pe_ordering_manditory, data_set);
 		
 	}
 	
@@ -173,7 +176,7 @@ stonith_constraints(node_t *node,
 					custom_action_order(
 						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
 						rsc, stop_key(rsc), NULL,
-						pecs_must, data_set);
+						pe_ordering_manditory, data_set);
 				} else {
 					/* stop healthy resources before the
 					 * stonith op
@@ -181,7 +184,7 @@ stonith_constraints(node_t *node,
 					custom_action_order(
 						rsc, stop_key(rsc), NULL,
 						NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
-						pecs_must, data_set);
+						pe_ordering_manditory, data_set);
 				}
 				);
 
