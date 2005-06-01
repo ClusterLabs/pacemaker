@@ -7,7 +7,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="9" rsc_id="rsc1" operation="stop" allow_fail="false"/>
+         <pseudo_event id="10" rsc_id="rsc1" operation="stopped" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
@@ -145,7 +145,7 @@
         <pseudo_event id="8" rsc_id="rsc1" operation="running" allow_fail="false"/>
       </trigger>
       <trigger>
-        <pseudo_event id="19" rsc_id="rsc2" operation="stop" allow_fail="false"/>
+         <pseudo_event id="20" rsc_id="rsc2" operation="stopped" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>

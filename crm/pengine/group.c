@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.18 2005/06/01 19:03:04 andrew Exp $ */
+/* $Id: group.c,v 1.19 2005/06/01 19:13:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -184,7 +184,10 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	order_stop_start(group_data->self, group_data->self);
+	custom_action_order(
+		group_data->self, stopped_key(group_data->self), NULL,
+		group_data->self, start_key(group_data->self), NULL,
+		pecs_startstop, data_set);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
