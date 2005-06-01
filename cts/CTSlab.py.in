@@ -46,6 +46,109 @@ class Stonith(ResetMechanism):
         cmdstring = "%s -t '%s' -p '%s' '%s' 2>/dev/null" % (self.pathname
         ,        self.stonithtype, self.configstring, node)
         return (os.system(cmdstring) == 0)
+    
+class Stonithd(ResetMechanism):
+    def __init__(self, nodes, sttype = 'ssh'):
+        self.sttype = sttype
+        self.nodes = nodes
+
+        self.query_cmd_pat   = '/usr/lib/heartbeat/stonithdtest/apitest 0 %s 1000 0'
+        self.reset_cmd_pat   = '/usr/lib/heartbeat/stonithdtest/apitest 1 %s 1000 0'
+        self.poweron_cmd_pat = '/usr/lib/heartbeat/stonithdtest/apitest 2 %s 1000 0'
+        self.poweroff_cmd_pat= '/usr/lib/heartbeat/stonithdtest/apitest 3 %s 1000 0'
+
+        self.lrmd_add_pat    = '/usr/lib/heartbeat/lrmadmin -A %s stonith ' + sttype + ' NULL hostlist=%s'
+        self.lrmd_start_pat  = '/usr/lib/heartbeat/lrmadmin -E %s start 0 0 0'
+        self.lrmd_stop_pat   = '/usr/lib/heartbeat/lrmadmin -E %s stop 0 0 0'
+        self.lrmd_del_pat    = '/usr/lib/heartbeat/lrmadmin -D %s'
+
+        self.rsc_id          = 'my_stonithd_id'
+        
+        #        -n: no stdin, -x: no X11
+        self.command = "/usr/bin/ssh -l root -n -x"
+        #         -f: ssh to background
+        self.command_noblock = "/usr/bin/ssh -f -l root -n -x"
+
+        #self.startall = SimulStartLite(cm)
+        #self.restart = RestartTest(self.CM)
+
+        self.stonithd_started_nodes = []
+
+    def log(self, msg):
+        'Just print it'
+        pass
+    
+    def remote_exec(self, node, cmnd):
+        return os.system("%s %s %s > /dev/null" % (self.command, node, cmnd))
+
+    def stonithd_started(self, node):
+        return node in self.stonithd_started_nodes
+
+    def start_stonithd(self, node,  hosts):
+        hostlist = string.join(hosts, ',')
+
+        lrmd_add_cmd = self.lrmd_add_pat % (self.rsc_id,  hostlist)
+        self.log("%s : %s" % (node, lrmd_add_cmd))
+        line = self.remote_exec(node, lrmd_add_cmd)
+        
+        lrmd_start_cmd = self.lrmd_start_pat % self.rsc_id
+                
+        self.log("%s : %s" % (node,  lrmd_start_cmd))
+        line = self.remote_exec(node, lrmd_start_cmd)
+        
+        self.stonithd_started_nodes.append(node)
+        return 1
+    
+    def stop_stonithd(self, node):
+        lrmd_stop_cmd = self.lrmd_stop_pat % self.rsc_id
+        self.log("%s : %s" % (node, lrmd_stop_cmd))
+        line = self.remote_exec(node, lrmd_stop_cmd)
+           
+        lrmd_del_cmd = self.lrmd_del_pat % self.rsc_id
+        self.log("%s : %s" % (node, lrmd_del_cmd))
+        line = self.remote_exec(node, lrmd_del_cmd)
+        
+        self.stonithd_started_nodes.remove(node)
+
+        return 1
+
+    def do_stonith(self, init_node, target_node, action):
+    
+        stonithd_started = self.stonithd_started(init_node)
+
+        if not stonithd_started:
+            self.log("Node %s : not start stonithd yet, start it" % init_node)
+            self.start_stonithd(init_node, [target_node])
+
+        self.log("Stonithd %s node %s from node %s" % (action, target_node, init_node))
+
+        command = ""
+
+        if action == "RESET":
+            command = self.reset_cmd_pat % target_node
+        elif action == "POWEROFF":
+            command = self.poweroff_cmd_pat % target_node
+        elif action == "POWERON":
+            command = self.poweron_cmd_pat % target_node
+
+        self.log("%s : %s" % (init_node, command))
+        line = self.remote_exec(init_node, command)
+
+        if not stonithd_started:
+            self.log("Node %s : stop stonithd" % init_node)
+            self.stop_stonithd(init_node)
+        
+        return 1
+
+    # Should we random choose a node as init_node here if init_node not specified?
+    def reset(self, init_node, target_node):
+        return self.do_stonith(init_node, target_node, "RESET")
+
+    def poweron(self, init_node, target_node):
+        return self.do_stonith(init_node, target_node, "POWERON")
+
+    def poweroff(self, init_node, target_node):
+        return self.do_stonith(init_node, target_node, "POWEROFF")
 
 class Logger:
     TimeFormat = "%Y/%m/%d_%H:%M:%S\t"
@@ -317,6 +420,10 @@ class CtsLab(UserDict):
         "Reset a node, (normally) using a hardware mechanism"
         self.__CheckNode(node)
         return self["reset"].reset(node)
+    
+    def ResetNode2(self, init_node, target_node):
+        self.__CheckNode(target_node)
+        return Stonithd(self["nodes"]).reset(init_node, target_node)
 
 def usage(arg):
     print "Illegal argument " + arg
