@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.51 2005/05/20 14:58:09 andrew Exp $ */
+/* $Id: ptest.c,v 1.52 2005/06/01 19:03:04 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -43,17 +43,18 @@
 #include <pe_utils.h>
 
 gboolean inhibit_exit = FALSE;
-extern crm_data_t * do_calculations(crm_data_t *cib_object);
-extern cl_mem_stats_t *mem_stats;
+extern crm_data_t * do_calculations(
+	pe_working_set_t *data_set, crm_data_t *xml_input);
+extern void cleanup_calculations(pe_working_set_t *data_set);
 
 int
 main(int argc, char **argv)
 {
+	pe_working_set_t data_set;
 	crm_data_t * cib_object = NULL;
 	int argerr = 0;
 	int flag;
 		
-	crm_data_t * graph = NULL;
 	char *msg_buffer = NULL;
 
 	const char *xml_file = NULL;
@@ -132,21 +133,18 @@ main(int argc, char **argv)
 #ifdef MCHECK
 	mtrace();
 #endif
-	crm_malloc0(mem_stats, sizeof(cl_mem_stats_t));
-	crm_zero_mem_stats(mem_stats);
+	crm_zero_mem_stats(NULL);
+	
+	do_calculations(&data_set, cib_object);
 
-	graph = do_calculations(cib_object);
-
-	msg_buffer = dump_xml_formatted(graph);
+	msg_buffer = dump_xml_formatted(data_set.graph);
 	fprintf(stdout, "%s\n", msg_buffer);
 	fflush(stdout);
 	crm_free(msg_buffer);
 	
-	free_xml(graph);
+	cleanup_calculations(&data_set);
 
-	crm_mem_stats(mem_stats);
-	cl_malloc_setstats(NULL);
-	crm_free(mem_stats);
+	crm_mem_stats(NULL);
 
 #ifdef MCHECK
 	muntrace();

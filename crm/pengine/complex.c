@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.28 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: complex.c,v 1.29 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -110,7 +110,8 @@ is_active(rsc_to_node_t *cons)
 }
 
 gboolean	
-common_unpack(crm_data_t * xml_obj, resource_t **rsc)
+common_unpack(
+	crm_data_t * xml_obj, resource_t **rsc, pe_working_set_t *data_set)
 {
 	const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *stopfail = crm_element_value(xml_obj, XML_RSC_ATTR_STOPFAIL);
@@ -171,7 +172,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 
 
 	crm_debug_2("Options for %s", id);
-	if(stopfail == NULL && stonith_enabled) {
+	if(stopfail == NULL && data_set->stonith_enabled) {
 		(*rsc)->stopfail_type = pesf_stonith;
 		crm_debug_2("\tFailed stop handling handling: fence (default)");
 
@@ -215,7 +216,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc)
 		
 	}
 	
-	(*rsc)->fns->unpack(*rsc);
+	(*rsc)->fns->unpack(*rsc, data_set);
 
 	return TRUE;
 }
@@ -245,12 +246,22 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 		lh_action->actions_after = list;
 		wrapper = NULL;
 	}
+
+	/* avoid creating duplicate entries for the same pre-requisite
+	 * in the transition graph
+	 */
+	slist_iter(
+		existing, action_wrapper_t, rh_action->actions_before, lpc,
+		if(existing->action == lh_action
+		   && existing->strength == order->strength) {
+			return;
+		}
+		);
 	
 	crm_malloc0(wrapper, sizeof(action_wrapper_t));
 	if(wrapper != NULL) {
 		wrapper->action = lh_action;
 		wrapper->strength = order->strength;
-		
 		list = rh_action->actions_before;
 		list = g_list_append(list, wrapper);
 		rh_action->actions_before = list;

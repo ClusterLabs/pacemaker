@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.62 2005/05/20 11:57:28 andrew Exp $ */
+/* $Id: stages.c,v 1.63 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,19 +32,9 @@
 node_t *choose_fencer(action_t *stonith, node_t *node, GListPtr resources);
 void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 
-int order_id        = 1;
-int max_valid_nodes = 0;
-
-GListPtr agent_defaults = NULL;
-GListPtr global_action_list = NULL;
-
-gboolean have_quorum      = FALSE;
-gboolean stonith_enabled  = FALSE;
-gboolean symmetric_cluster = TRUE;
-no_quorum_policy_t no_quorum_policy = no_quorum_freeze;
-
-char *dc_uuid = NULL;
 const char* transition_timeout = NULL;
+
+
 
 /*
  * Unpack everything
@@ -58,76 +48,57 @@ const char* transition_timeout = NULL;
  *  - A list of the possible stop/start actions (without dependancies)
  */
 gboolean
-stage0(crm_data_t * cib,
-       GListPtr *resources,
-       GListPtr *nodes, GListPtr *placement_constraints,
-       GListPtr *actions, GListPtr *ordering_constraints,
-       GListPtr *stonith_list, GListPtr *shutdown_list)
+stage0(pe_working_set_t *data_set)
 {
 /*	int lpc; */
 	crm_data_t * config          = get_object_root(
-		XML_CIB_TAG_CRMCONFIG,   cib);
+		XML_CIB_TAG_CRMCONFIG,   data_set->input);
 	crm_data_t * cib_nodes       = get_object_root(
-		XML_CIB_TAG_NODES,       cib);
+		XML_CIB_TAG_NODES,       data_set->input);
 	crm_data_t * cib_resources   = get_object_root(
-		XML_CIB_TAG_RESOURCES,   cib);
+		XML_CIB_TAG_RESOURCES,   data_set->input);
 	crm_data_t * cib_status      = get_object_root(
-		XML_CIB_TAG_STATUS,      cib);
+		XML_CIB_TAG_STATUS,      data_set->input);
 	crm_data_t * cib_constraints = get_object_root(
-		XML_CIB_TAG_CONSTRAINTS, cib);
+		XML_CIB_TAG_CONSTRAINTS, data_set->input);
 
 	crm_debug_3("Beginning unpack");
 	
 	/* reset remaining global variables */
-	num_synapse = 0;
-	max_valid_nodes = 0;
-	order_id = 1;
-	action_id = 1;
-	color_id = 0;
 
-	have_quorum      = TRUE;
-	stonith_enabled  = FALSE;
-
-	CRM_DEV_ASSERT(dc_uuid == NULL);
-	CRM_DEV_ASSERT(global_action_list == NULL);
-
-	if(cib == NULL) {
+	if(data_set->input == NULL) {
 		return FALSE;
 	}
 
-	if(cib != NULL && crm_element_value(cib, XML_ATTR_DC_UUID) != NULL) {
+	if(data_set->input != NULL
+	   && crm_element_value(data_set->input, XML_ATTR_DC_UUID) != NULL) {
 		/* this should always be present */
-		dc_uuid = crm_element_value_copy(cib, XML_ATTR_DC_UUID);
+		data_set->dc_uuid = crm_element_value_copy(
+			data_set->input, XML_ATTR_DC_UUID);
 	}	
 	
 	transition_timeout = "60s"; /* 1 minute */
-	unpack_config(config);
+	unpack_config(config, data_set);
 
-	if(no_quorum_policy != no_quorum_ignore) {
+	if(data_set->no_quorum_policy != no_quorum_ignore) {
 		const char *value = crm_element_value(
-			cib, XML_ATTR_HAVE_QUORUM);
+			data_set->input, XML_ATTR_HAVE_QUORUM);
 
-		have_quorum = FALSE;
+		data_set->have_quorum = FALSE;
 		if(value != NULL) {
-			crm_str_to_boolean(value, &have_quorum);
+			crm_str_to_boolean(value, &data_set->have_quorum);
 		}
 			
-		if(have_quorum == FALSE) {
+		if(data_set->have_quorum == FALSE) {
 			crm_warn("We do not have quorum"
 				 " - fencing and resource management disabled");
 		}
 	}
 	
-	unpack_nodes(cib_nodes, nodes);
-
-	unpack_resources(cib_resources, resources, actions,
-			 ordering_constraints, placement_constraints, *nodes);
-
-	unpack_status(cib_status, *nodes, *resources, actions,
-		      placement_constraints);
-
-	unpack_constraints(cib_constraints, *nodes, *resources,
-			   placement_constraints, ordering_constraints);
+	unpack_nodes(cib_nodes, data_set);
+	unpack_resources(cib_resources, data_set);
+	unpack_status(cib_status, data_set);
+	unpack_constraints(cib_constraints, data_set);
 
 	return TRUE;
 }
@@ -139,27 +110,22 @@ stage0(crm_data_t * cib,
  * Apply node constraints (ie. filter the "allowed_nodes" part of resources
  */
 gboolean
-stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
+stage1(pe_working_set_t *data_set)
 {
 	crm_debug_3("Applying placement constraints");
 	
 	slist_iter(
-		node, node_t, nodes, lpc,
+		node, node_t, data_set->nodes, lpc,
 		if(node == NULL) {
 			/* error */
 		} else if(node->weight >= 0.0 /* global weight */
 			  && node->details->online
 			  && node->details->type == node_member) {
-			max_valid_nodes++;
+			data_set->max_valid_nodes++;
 		}	
 		);
 
-	apply_placement_constraints(placement_constraints, nodes);
-
-	/* will also filter -ve "final" weighted nodes from resources'
-	 *   allowed lists while we are there
-	 */
-	apply_agent_constraints(resources);
+	apply_placement_constraints(data_set);
 
 	return TRUE;
 } 
@@ -175,27 +141,22 @@ stage1(GListPtr placement_constraints, GListPtr nodes, GListPtr resources)
  *  given the current node stati and constraints.
  */
 gboolean
-stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
+stage2(pe_working_set_t *data_set)
 {
 	crm_debug_3("Coloring resources");
 	
-	if(no_color != NULL) {
-		crm_free(no_color->details);
-		crm_free(no_color);
-	}
-	
 	crm_debug_5("create \"no color\"");
-	no_color = create_color(NULL, NULL, NULL);
+	data_set->no_color = create_color(data_set, NULL, NULL);
 	
 	/* Take (next) highest resource */
 	slist_iter(
-		lh_resource, resource_t, sorted_rscs, lpc,
+		lh_resource, resource_t, data_set->resources, lpc,
 		/* if resource.provisional == FALSE, repeat  */
 		if(lh_resource->provisional == FALSE) {
 			/* already processed this resource */
 			continue;
 		}
-		color_resource(lh_resource, colors, sorted_rscs);
+		color_resource(lh_resource, data_set);
 		/* next resource */
 		);
 	
@@ -208,12 +169,12 @@ stage2(GListPtr sorted_rscs, GListPtr sorted_nodes, GListPtr *colors)
  *  hook
  */
 gboolean
-stage3(GListPtr colors)
+stage3(pe_working_set_t *data_set)
 {
 	/* not sure if this is a good idea or not */
-	if((ssize_t)g_list_length(colors) > max_valid_nodes) {
+	if((ssize_t)g_list_length(data_set->colors) > data_set->max_valid_nodes) {
 		/* we need to consolidate some */
-	} else if((ssize_t)g_list_length(colors) < max_valid_nodes) {
+	} else if((ssize_t)g_list_length(data_set->colors) < data_set->max_valid_nodes) {
 		/* we can create a few more */
 	}
 	return TRUE;
@@ -223,12 +184,12 @@ stage3(GListPtr colors)
  * Choose a node for each (if possible) color
  */
 gboolean
-stage4(GListPtr colors)
+stage4(pe_working_set_t *data_set)
 {
 	crm_debug_3("Assigning nodes to colors");
 
 	slist_iter(
-		color, color_t, colors, lpc,
+		color, color_t, data_set->colors, lpc,
 
 		crm_debug_4("assigning node to color %d", color->id);
 		
@@ -275,13 +236,13 @@ stage4(GListPtr colors)
  * Mark unrunnable actions
  */
 gboolean
-stage5(GListPtr resources, GListPtr *ordering_constraints)
+stage5(pe_working_set_t *data_set)
 {
 	crm_debug_3("Creating actions and internal ording constraints");
 	slist_iter(
-		rsc, resource_t, resources, lpc,
-		rsc->fns->create_actions(rsc, ordering_constraints);
-		rsc->fns->internal_constraints(rsc, ordering_constraints);
+		rsc, resource_t, data_set->resources, lpc,
+		rsc->fns->create_actions(rsc, data_set);
+		rsc->fns->internal_constraints(rsc, data_set);
 		);
 	return TRUE;
 }
@@ -290,43 +251,42 @@ stage5(GListPtr resources, GListPtr *ordering_constraints)
  * Create dependacies for stonith and shutdown operations
  */
 gboolean
-stage6(GListPtr *actions, GListPtr *ordering_constraints,
-       GListPtr nodes, GListPtr resources)
+stage6(pe_working_set_t *data_set)
 {
 	action_t *down_op = NULL;
 	action_t *stonith_op = NULL;
 	crm_debug_3("Processing fencing and shutdown cases");
 
 	slist_iter(
-		node, node_t, nodes, lpc,
+		node, node_t, data_set->nodes, lpc,
 		if(node->details->online && node->details->shutdown) {
 			crm_info("Scheduling Node %s for shutdown",
 				 node->details->uname);
 			
 			down_op = custom_action(
 				NULL, crm_strdup(CRM_OP_SHUTDOWN),
-				CRM_OP_SHUTDOWN, node);
+				CRM_OP_SHUTDOWN, node, data_set);
 			down_op->runnable = TRUE;
 			
-			*actions = g_list_append(*actions, down_op);
-			
 			shutdown_constraints(
-				node, down_op, ordering_constraints);
+				node, down_op, data_set);
 		}
 
-		if(node->details->unclean && stonith_enabled == FALSE) {
+		if(node->details->unclean
+		   && data_set->stonith_enabled == FALSE) {
 			pe_err("Node %s is unclean!", node->details->uname);
 			pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
 			pe_warn("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
 
-		} else if(node->details->unclean && stonith_enabled
-		   && (have_quorum || no_quorum_policy == no_quorum_ignore)) {
+		} else if(node->details->unclean && data_set->stonith_enabled
+		   && (data_set->have_quorum
+		       || data_set->no_quorum_policy == no_quorum_ignore)) {
 			pe_warn("Scheduling Node %s for STONITH",
 				 node->details->uname);
 
 			stonith_op = custom_action(
 				NULL, crm_strdup(CRM_OP_FENCE),
-				CRM_OP_FENCE, node);
+				CRM_OP_FENCE, node, data_set);
 			stonith_op->runnable = TRUE;
 
 			add_hash_param(
@@ -340,13 +300,11 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
 			if(down_op != NULL) {
 				down_op->failure_is_fatal = FALSE;
 			}
-			
-			*actions = g_list_append(*actions, stonith_op);	
 		}
 
 		if(node->details->unclean) {
 			stonith_constraints(
-				node, stonith_op, down_op, ordering_constraints);
+				node, stonith_op, down_op, data_set);
 		}
 		
 		);
@@ -363,12 +321,12 @@ stage6(GListPtr *actions, GListPtr *ordering_constraints,
  *
  */
 gboolean
-stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
+stage7(pe_working_set_t *data_set)
 {
 	crm_debug_3("Applying ordering constraints");
 
 	slist_iter(
-		order, order_constraint_t, ordering_constraints, lpc,
+		order, order_constraint_t, data_set->ordering_constraints, lpc,
 
 		/* try rsc_action-to-rsc_action */
 		resource_t *rsc = order->lh_rsc;
@@ -400,17 +358,17 @@ stage7(GListPtr resources, GListPtr actions, GListPtr ordering_constraints)
 		
 		);
 
-	update_action_states(global_action_list);
+	update_action_states(data_set->actions);
 
 	return TRUE;
 }
 
-static int transition_id = 0;
+static int transition_id = -1;
 /*
  * Create a dependancy graph to send to the transitioner (via the CRMd)
  */
 gboolean
-stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
+stage8(pe_working_set_t *data_set)
 {
 	char *transition_id_s = NULL;
 
@@ -418,9 +376,9 @@ stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 	transition_id_s = crm_itoa(transition_id);
 	crm_info("Creating transition graph %d.", transition_id);
 	
-	*graph = create_xml_node(NULL, XML_TAG_GRAPH);
-	set_xml_property_copy(*graph, "global_timeout", transition_timeout);
-	set_xml_property_copy(*graph, "transition_id", transition_id_s);
+	data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
+	set_xml_property_copy(data_set->graph, "global_timeout", transition_timeout);
+	set_xml_property_copy(data_set->graph, "transition_id", transition_id_s);
 	crm_free(transition_id_s);
 	
 /* errors...
@@ -430,29 +388,24 @@ stage8(GListPtr resources, GListPtr actions, crm_data_t * *graph)
 		   }
 		);
 */
-	crm_debug_3("========= Complete Action List =========");
-	crm_debug_2("%d actions created",  g_list_length(global_action_list));
-	
-	slist_iter(action, action_t, global_action_list, lpc,
-		   print_action(NULL, action, FALSE));
-
 	slist_iter(
-		rsc, resource_t, resources, lpc,
+		rsc, resource_t, data_set->resources, lpc,
 
 		crm_debug_4("processing actions for rsc=%s", rsc->id);
-		rsc->fns->expand(rsc, graph);
+		rsc->fns->expand(rsc, data_set);
 		);
-	crm_log_xml_debug_3(*graph, "created resource-driven action list");
+	crm_log_xml_debug_3(
+		data_set->graph, "created resource-driven action list");
 
 	/* catch any non-resource specific actions */
 	crm_debug_4("processing non-resource actions");
 	slist_iter(
-		action, action_t, global_action_list, lpc,
+		action, action_t, data_set->actions, lpc,
 
-		graph_element_from_action(action, graph);
+		graph_element_from_action(action, data_set);
 		);
 
-	crm_log_xml_debug_3(*graph, "created generic action list");
+	crm_log_xml_debug_3(data_set->graph, "created generic action list");
 	
 	return TRUE;
 }

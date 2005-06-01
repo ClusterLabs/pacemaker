@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.93 2005/05/31 11:46:08 andrew Exp $ */
+/* $Id: unpack.c,v 1.94 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,40 +35,27 @@
 
 gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
-gboolean unpack_rsc_to_attr(crm_data_t * xml_obj,
-			    GListPtr rsc_list,
-			    GListPtr node_list,
-			    GListPtr *placement_constraints);
+gboolean unpack_rsc_to_attr(crm_data_t *xml_obj, pe_working_set_t *data_set);
 
-gboolean unpack_rsc_to_node(crm_data_t * xml_obj,
-			    GListPtr rsc_list,
-			    GListPtr node_list,
-			    GListPtr *placement_constraints);
+gboolean unpack_rsc_to_node(crm_data_t *xml_obj, pe_working_set_t *data_set);
 
-gboolean unpack_rsc_order(
-	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints);
+gboolean unpack_rsc_order(crm_data_t *xml_obj, pe_working_set_t *data_set);
 
-gboolean unpack_rsc_colocation(
-	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints);
+gboolean unpack_rsc_colocation(crm_data_t *xml_obj, pe_working_set_t *data_set);
 
-gboolean unpack_rsc_location(
-	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr node_list,
-	GListPtr *ordering_constraints);
+gboolean unpack_rsc_location(crm_data_t *xml_obj, pe_working_set_t *data_set);
 
 gboolean unpack_lrm_rsc_state(
-	node_t *node, crm_data_t * lrm_state,
-	GListPtr rsc_list, GListPtr nodes,
-	GListPtr *actions, GListPtr *placement_constraints);
+	node_t *node, crm_data_t * lrm_state, pe_working_set_t *data_set);
 
-gboolean add_node_attrs(crm_data_t * attrs, node_t *node);
+gboolean add_node_attrs(crm_data_t * attrs, node_t *node, const char *dc_uuid);
 
 gboolean unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		       gboolean *running, gboolean *failed, int *max_call_id,
-		       GListPtr *placement_constraints);
+		       pe_working_set_t *data_set);
 
-gboolean determine_online_status(crm_data_t * node_state, node_t *this_node);
-
-gboolean unpack_lrm_agents(node_t *node, crm_data_t * agent_list);
+gboolean determine_online_status(
+	crm_data_t * node_state, node_t *this_node, pe_working_set_t *data_set);
 
 gboolean rsc_colocation_new(
 	const char *id, enum con_strength strength,
@@ -76,17 +63,17 @@ gboolean rsc_colocation_new(
 
 gboolean create_ordering(
 	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh, GListPtr *ordering_constraints);
+	resource_t *rsc_lh, resource_t *rsc_rh, pe_working_set_t *data_set);
 
 rsc_to_node_t *rsc2node_new(
 	const char *id, resource_t *rsc,
 	double weight, gboolean can_run, node_t *node,
-	GListPtr *placement_constraints);
+	pe_working_set_t *data_set);
 
 const char *param_value(crm_data_t * parent, const char *name);
 
 gboolean
-unpack_config(crm_data_t * config)
+unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 {
 	const char *value = NULL;
 	
@@ -105,32 +92,32 @@ unpack_config(crm_data_t * config)
 
 	value = param_value(config, "stonith_enabled");
 	if(value != NULL) {
-		crm_str_to_boolean(value, &stonith_enabled);
+		crm_str_to_boolean(value, &data_set->stonith_enabled);
 	}
 	crm_info("STONITH of failed nodes is %s",
-		 stonith_enabled?"enabled":"disabled");
+		 data_set->stonith_enabled?"enabled":"disabled");
 	
 	value = param_value(config, "symmetric_cluster");
 	if(value != NULL) {
-		crm_str_to_boolean(value, &symmetric_cluster);
+		crm_str_to_boolean(value, &data_set->symmetric_cluster);
 	}
-	if(symmetric_cluster) {
+	if(data_set->symmetric_cluster) {
 		crm_info("Cluster is symmetric"
 			 " - resources can run anywhere by default");
 	}
 
 	value = param_value(config, "no_quorum_policy");
 	if(safe_str_eq(value, "ignore")) {
-		no_quorum_policy = no_quorum_ignore;
+		data_set->no_quorum_policy = no_quorum_ignore;
 		
 	} else if(safe_str_eq(value, "freeze")) {
-		no_quorum_policy = no_quorum_freeze;
+		data_set->no_quorum_policy = no_quorum_freeze;
 
 	} else {
-		no_quorum_policy = no_quorum_stop;
+		data_set->no_quorum_policy = no_quorum_stop;
 	}
 	
-	switch (no_quorum_policy) {
+	switch (data_set->no_quorum_policy) {
 		case no_quorum_freeze:
 			crm_info("On loss of CCM Quorum: Freeze resources");
 			break;
@@ -163,7 +150,7 @@ param_value(crm_data_t * parent, const char *name)
 }
 
 gboolean
-unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
+unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 {
 	node_t *new_node   = NULL;
 	crm_data_t * attrs = NULL;
@@ -218,13 +205,14 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
 
-		if(have_quorum == FALSE && no_quorum_policy == no_quorum_stop) {
+		if(data_set->have_quorum == FALSE
+		   && data_set->no_quorum_policy == no_quorum_stop) {
 			/* start shutting resources down */
 			new_node->weight = -INFINITY;
 		}
 		
 		
-		if(stonith_enabled) {
+		if(data_set->stonith_enabled) {
 			/* all nodes are unclean until we've seen their
 			 * status entry
 			 */
@@ -239,7 +227,7 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 			new_node->details->type = node_member;
 		}
 
-		add_node_attrs(xml_obj, new_node);
+		add_node_attrs(xml_obj, new_node, data_set->dc_uuid);
 
 		if(crm_is_true(g_hash_table_lookup(
 				       new_node->details->attrs, "standby"))) {
@@ -248,42 +236,39 @@ unpack_nodes(crm_data_t * xml_nodes, GListPtr *nodes)
 			new_node->weight = -INFINITY;
 		}
 		
-		*nodes = g_list_append(*nodes, new_node);    
+		data_set->nodes = g_list_append(data_set->nodes, new_node);    
 		crm_debug_3("Done with node %s",
 			    crm_element_value(xml_obj, XML_ATTR_UNAME));
 
 		crm_action_debug_3(print_node("Added", new_node, FALSE));
 		);
   
-	*nodes = g_list_sort(*nodes, sort_node_weight);
+	data_set->nodes = g_list_sort(data_set->nodes, sort_node_weight);
 
 	return TRUE;
 }
 
 gboolean 
-unpack_resources(crm_data_t * xml_resources,
-		 GListPtr *resources,
-		 GListPtr *actions,
-		 GListPtr *ordering_constraints,
-		 GListPtr *placement_constraints,
-		 GListPtr all_nodes)
+unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 {
 	crm_debug_3("Begining unpack...");
 	xml_child_iter(
 		xml_resources, xml_obj, NULL,
 
 		resource_t *new_rsc = NULL;
-		if(common_unpack(xml_obj, &new_rsc)) {
-			*resources = g_list_append(*resources, new_rsc);
+		if(common_unpack(xml_obj, &new_rsc, data_set)) {
+			data_set->resources = g_list_append(
+				data_set->resources, new_rsc);
+
 			crm_action_debug_3(
 				print_resource("Added", new_rsc, FALSE));
 
-			if(symmetric_cluster) {
+			if(data_set->symmetric_cluster) {
 				rsc_to_node_t *new_con = rsc2node_new(
 					"symmetric_default", new_rsc, 0,
-					TRUE, NULL, placement_constraints);
+					TRUE, NULL, data_set);
 				new_con->node_list_rh = node_list_dup(
-					all_nodes, FALSE);
+					data_set->nodes, FALSE);
 			}
 
 		} else {
@@ -292,16 +277,14 @@ unpack_resources(crm_data_t * xml_resources,
 		}
 		);
 	
-	*resources = g_list_sort(*resources, sort_rsc_priority);
+	data_set->resources = g_list_sort(
+		data_set->resources, sort_rsc_priority);
 
 	return TRUE;
 }
 
 gboolean 
-unpack_constraints(crm_data_t * xml_constraints,
-		   GListPtr nodes, GListPtr resources,
-		   GListPtr *placement_constraints,
-		   GListPtr *ordering_constraints)
+unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 {
 	crm_debug_3("Begining unpack...");
 	xml_child_iter(
@@ -319,18 +302,15 @@ unpack_constraints(crm_data_t * xml_constraints,
 
 		if(safe_str_eq(XML_CONS_TAG_RSC_ORDER,
 			       crm_element_name(xml_obj))) {
-			unpack_rsc_order(
-				xml_obj, resources, ordering_constraints);
+			unpack_rsc_order(xml_obj, data_set);
 
 		} else if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND,
 				      crm_element_name(xml_obj))) {
-			unpack_rsc_colocation(
-				xml_obj, resources, ordering_constraints);
+			unpack_rsc_colocation(xml_obj, data_set);
 
 		} else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION,
 				      crm_element_name(xml_obj))) {
-			unpack_rsc_location(
-				xml_obj, resources,nodes,placement_constraints);
+			unpack_rsc_location(xml_obj, data_set);
 
 		} else {
 			pe_err("Unsupported constraint type: %s",
@@ -344,7 +324,7 @@ unpack_constraints(crm_data_t * xml_constraints,
 rsc_to_node_t *
 rsc2node_new(const char *id, resource_t *rsc,
 	     double weight, gboolean can, node_t *node,
-	     GListPtr *placement_constraints)
+	     pe_working_set_t *data_set)
 {
 	rsc_to_node_t *new_con = NULL;
 
@@ -361,11 +341,12 @@ rsc2node_new(const char *id, resource_t *rsc,
 		new_con->weight = weight;
 		
 		if(node != NULL) {
-			new_con->node_list_rh = g_list_append(NULL, node);
+			node_t *copy = node_copy(node);
+			new_con->node_list_rh = g_list_append(NULL, copy);
 		}
 		
-		*placement_constraints = g_list_append(
-			*placement_constraints, new_con);
+		data_set->placement_constraints = g_list_append(
+			data_set->placement_constraints, new_con);
 	}
 	
 	return new_con;
@@ -378,9 +359,7 @@ rsc2node_new(const char *id, resource_t *rsc,
 /* create +ve rsc_to_node constraints between resources and the nodes they are running on */
 /* anything else? */
 gboolean
-unpack_status(crm_data_t * status,
-	      GListPtr nodes, GListPtr rsc_list,
-	      GListPtr *actions, GListPtr *placement_constraints)
+unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 {
 	const char *uname     = NULL;
 
@@ -403,7 +382,7 @@ unpack_status(crm_data_t * status,
 		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
 
 		crm_debug_3("Processing node %s", uname);
-		this_node = pe_find_node(nodes, uname);
+		this_node = pe_find_node(data_set->nodes, uname);
 
 		if(uname == NULL) {
 			/* error */
@@ -421,20 +400,18 @@ unpack_status(crm_data_t * status,
 		this_node->details->unclean = FALSE;
 		
 		crm_debug_3("Adding runtime node attrs");
-		add_node_attrs(node_state, this_node);
+		add_node_attrs(node_state, this_node, data_set->dc_uuid);
 
 		crm_debug_3("determining node state");
-		determine_online_status(node_state, this_node);
+		determine_online_status(node_state, this_node, data_set);
 
-		if(this_node->details->online || stonith_enabled) {
+		if(this_node->details->online || data_set->stonith_enabled) {
 			/* offline nodes run no resources...
 			 * unless stonith is enabled in which case we need to
 			 *   make sure rsc start events happen after the stonith
 			 */
 			crm_debug_3("Processing lrm resource entries");
-			unpack_lrm_rsc_state(
-				this_node, lrm_rsc, rsc_list, nodes,
-				actions, placement_constraints);
+			unpack_lrm_rsc_state(this_node, lrm_rsc, data_set);
 		}
 		
 		);
@@ -444,7 +421,8 @@ unpack_status(crm_data_t * status,
 }
 
 gboolean
-determine_online_status(crm_data_t * node_state, node_t *this_node)
+determine_online_status(
+	crm_data_t * node_state, node_t *this_node, pe_working_set_t *data_set)
 {
 	gboolean online = FALSE;
 	const char *uname      = crm_element_value(node_state,XML_ATTR_UNAME);
@@ -472,7 +450,7 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 		this_node->details->expected_up = TRUE;
 	}
 
-	if(stonith_enabled == FALSE) {
+	if(data_set->stonith_enabled == FALSE) {
 		if(!crm_is_true(ccm_state) || safe_str_eq(ha_state,DEADSTATUS)){
 			crm_debug_2("Node is down: ha_state=%s, ccm_state=%s",
 				  crm_str(ha_state), crm_str(ccm_state));
@@ -556,8 +534,7 @@ determine_online_status(crm_data_t * node_state, node_t *this_node)
 
 gboolean
 unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
-		     GListPtr rsc_list, GListPtr nodes,
-		     GListPtr *actions, GListPtr *placement_constraints)
+		     pe_working_set_t *data_set)
 {
 	const char *rsc_id    = NULL;
 	const char *node_id   = node->details->uname;
@@ -582,7 +559,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		rsc_id    = crm_element_value(rsc_entry, XML_ATTR_ID);
 		rsc_state = crm_element_value(rsc_entry, XML_LRM_ATTR_RSCSTATE);
 		
-		rsc    = pe_find_resource(rsc_list, rsc_id);
+		rsc    = pe_find_resource(data_set->resources, rsc_id);
 
 		crm_debug_3("[%s] Processing %s on %s (%s)",
 			    crm_element_name(rsc_entry),
@@ -618,7 +595,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			rsc_op, crm_data_t, sorted_op_list, lpc,
 			unpack_rsc_op(rsc, node, rsc_op,
 				      &running, &failed, &max_call_id,
-				      placement_constraints);
+				      data_set);
 			);
 
 		/* no need to free the contents */
@@ -669,7 +646,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 gboolean
 unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	      gboolean *running, gboolean *failed, int *max_call_id,
-	      GListPtr *placement_constraints) 
+	      pe_working_set_t *data_set) 
 {
 	const char *task        = NULL;
  	const char *task_id     = NULL;
@@ -761,8 +738,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				/* make sure it is re-issued but,
 				 * only if we have quorum
 				 */
-				if(have_quorum == TRUE
-				   || no_quorum_policy == no_quorum_ignore){
+				if(data_set->have_quorum == TRUE
+				   || data_set->no_quorum_policy == no_quorum_ignore){
 					/* do not specify the node, we may want
 					 * to start it elsewhere
 					 */
@@ -801,8 +778,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				CRM_DEV_ASSERT(id != NULL);
 				if(crm_assert_failed) { break; }
 
-				mon = custom_action(
-					rsc, crm_strdup(id), task, node);
+				mon = custom_action(rsc, crm_strdup(id),
+						    task, node, data_set);
 
 				if(mon != NULL) {
 					mon->optional = TRUE;
@@ -820,7 +797,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 					 task, rsc->id, node->details->uname);
 				rsc2node_new("dont_run__failed_stopstart",
 					     rsc, -INFINITY, FALSE, node,
-					     placement_constraints);
+					     data_set);
 			}
 
 			crm_debug_2("Processing last op (%s) for %s on %s",
@@ -898,21 +875,20 @@ rsc_colocation_new(const char *id, enum con_strength strength,
 	return TRUE;
 }
 
+/* LHS before RHS */
 gboolean
 custom_action_order(
 	resource_t *lh_rsc, char *lh_action_task, action_t *lh_action,
 	resource_t *rh_rsc, char *rh_action_task, action_t *rh_action,
-	enum con_strength strength, GListPtr *ordering_constraints)
+	enum con_strength strength, pe_working_set_t *data_set)
 {
 	order_constraint_t *order = NULL;
 
 	if((lh_action == NULL && lh_rsc == NULL)
-	   || (rh_action == NULL && rh_rsc == NULL)
-	   || ordering_constraints == NULL){
+	   || (rh_action == NULL && rh_rsc == NULL)){
 		pe_err("Invalid inputs lh_rsc=%p, lh_a=%p,"
-			" rh_rsc=%p, rh_a=%p,  l=%p",
-			lh_rsc, lh_action, rh_rsc, rh_action,
-			ordering_constraints);
+			" rh_rsc=%p, rh_a=%p",
+			lh_rsc, lh_action, rh_rsc, rh_action);
 		return FALSE;
 	}
 
@@ -922,7 +898,7 @@ custom_action_order(
 		return FALSE;
 	}
 	
-	order->id             = order_id++;
+	order->id             = data_set->order_id++;
 	order->strength       = strength;
 	order->lh_rsc         = lh_rsc;
 	order->rh_rsc         = rh_rsc;
@@ -931,8 +907,8 @@ custom_action_order(
 	order->lh_action_task = lh_action_task;
 	order->rh_action_task = rh_action_task;
 	
-	*ordering_constraints = g_list_append(
-		*ordering_constraints, order);
+	data_set->ordering_constraints = g_list_append(
+		data_set->ordering_constraints, order);
 	
 	if(lh_rsc != NULL && rh_rsc != NULL) {
 		crm_debug_4("Created ordering constraint %d (%s):"
@@ -967,9 +943,7 @@ custom_action_order(
 }
 
 gboolean
-unpack_rsc_colocation(crm_data_t * xml_obj,
-		  GListPtr rsc_list,
-		  GListPtr *ordering_constraints)
+unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 {
 	enum con_strength strength_e = pecs_ignore;
 
@@ -978,8 +952,8 @@ unpack_rsc_colocation(crm_data_t * xml_obj,
 	const char *id_lh = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
 	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 
-	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
-	resource_t *rsc_rh = pe_find_resource(rsc_list, id_rh);
+	resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
+	resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
  
 	if(rsc_lh == NULL) {
 		pe_err("No resource (con=%s, rsc=%s)", id, id_lh);
@@ -1002,8 +976,7 @@ unpack_rsc_colocation(crm_data_t * xml_obj,
 }
 
 gboolean
-unpack_rsc_order(
-	crm_data_t * xml_obj, GListPtr rsc_list, GListPtr *ordering_constraints)
+unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 {
 	gboolean type_is_after    = TRUE;
 	gboolean action_is_start  = TRUE;
@@ -1018,8 +991,8 @@ unpack_rsc_order(
 	const char *symmetrical = crm_element_value(
 		xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
-	resource_t *rsc_lh   = pe_find_resource(rsc_list, id_lh);
-	resource_t *rsc_rh   = pe_find_resource(rsc_list, id_rh);
+	resource_t *rsc_lh   = pe_find_resource(data_set->resources, id_lh);
+	resource_t *rsc_rh   = pe_find_resource(data_set->resources, id_rh);
 
 	if(xml_obj == NULL) {
 		pe_err("No constraint object to process.");
@@ -1079,7 +1052,7 @@ unpack_rsc_order(
 }
 
 gboolean
-add_node_attrs(crm_data_t *xml_obj, node_t *node)
+add_node_attrs(crm_data_t *xml_obj, node_t *node, const char *dc_uuid)
 {
  	g_hash_table_insert(node->details->attrs,
 			    crm_strdup("#"XML_ATTR_UNAME),
@@ -1106,14 +1079,12 @@ add_node_attrs(crm_data_t *xml_obj, node_t *node)
 
 
 gboolean
-unpack_rsc_location(
-	crm_data_t * xml_obj,
-	GListPtr rsc_list, GListPtr node_list, GListPtr *placement_constraints)
+unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 {
 	gboolean were_rules = FALSE;
 	const char *id_lh   = crm_element_value(xml_obj, "rsc");
 	const char *id      = crm_element_value(xml_obj, XML_ATTR_ID);
-	resource_t *rsc_lh = pe_find_resource(rsc_list, id_lh);
+	resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
 
 	if(rsc_lh == NULL) {
 		pe_warn("No resource (con=%s, rsc=%s)", id, id_lh);
@@ -1161,7 +1132,7 @@ unpack_rsc_location(
 		}
 
 		new_con = rsc2node_new(rule_id, rsc_lh, score_f,
-				       can_run, NULL, placement_constraints);
+				       can_run, NULL, data_set);
 
 		if(new_con == NULL) {
 			continue;
@@ -1188,7 +1159,7 @@ unpack_rsc_location(
 				  crm_element_value(expr, XML_ATTR_ID));
 
 			match_L = apply_node_expression(
-				attr, op, value, type, node_list);
+				attr, op, value, type, data_set->nodes);
 			
 			if(first_expr) {
 				new_con->node_list_rh =	node_list_dup(
@@ -1214,12 +1185,14 @@ unpack_rsc_location(
 			pe_free_shallow_adv(old_list, TRUE);
 			);
 
-		if(rule_has_expressions == FALSE && symmetric_cluster == FALSE) {
+		if(rule_has_expressions == FALSE
+		   && data_set->symmetric_cluster == FALSE) {
 			/* feels like a hack */
 			crm_debug_4("Rule %s had no expressions,"
 				  " adding all nodes", crm_element_value(rule, XML_ATTR_ID));
 
-			new_con->node_list_rh = node_list_dup(node_list,FALSE);
+			new_con->node_list_rh = node_list_dup(
+				data_set->nodes, FALSE);
 		}
 		
 		if(new_con->node_list_rh == NULL) {

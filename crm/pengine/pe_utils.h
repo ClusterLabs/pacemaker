@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.23 2005/05/15 13:17:58 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.24 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,7 +36,7 @@ extern void add_color_to_rsc(resource_t *rsc, color_t *color);
 extern color_t *find_color(GListPtr candidate_colors, color_t *other_color);
 
 extern color_t *create_color(
-	GListPtr *colors, resource_t *resource, GListPtr resources);
+	pe_working_set_t *data_set, resource_t *resource, GListPtr resources);
 
 extern color_t *copy_color(color_t *a_color);
 
@@ -107,15 +107,16 @@ extern enum action_tasks text2task(const char *task);
 extern crm_data_t *find_rsc_op_entry(resource_t *rsc, const char *key);
 
 extern action_t *custom_action(
-	resource_t *rsc, char *key, const char *task, node_t *on_node);
+	resource_t *rsc, char *key, const char *task, node_t *on_node,
+	pe_working_set_t *data_set);
 
 #define stop_action(rsc, node) custom_action(			\
-		rsc, stop_key(rsc), CRMD_ACTION_STOP, node)
+		rsc, stop_key(rsc), CRMD_ACTION_STOP, node, data_set)
 #define stopped_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
 #define stop_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOP, 0)
 
 #define start_action(rsc, node) custom_action(		\
-		rsc, start_key(rsc), CRMD_ACTION_START, node)
+		rsc, start_key(rsc), CRMD_ACTION_START, node, data_set)
 #define started_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STARTED, 0)
 #define start_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_START, 0)
 

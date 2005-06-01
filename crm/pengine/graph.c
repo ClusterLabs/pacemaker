@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.45 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: graph.c,v 1.46 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,7 +33,7 @@ gboolean update_action(action_t *action);
 gboolean
 update_action_states(GListPtr actions)
 {
-	crm_debug_2("Updating %d actions",  g_list_length(actions));
+	crm_debug_2("Updating %d actions", g_list_length(actions));
 	slist_iter(
 		action, action_t, actions, lpc,
 
@@ -50,21 +50,19 @@ update_action(action_t *action)
 	gboolean change = FALSE;
 
 	crm_debug_3("Processing action %d", action->id);
-	if(action->optional && action->runnable) {
-		return FALSE;
-	}
-	
 	slist_iter(
 		other, action_wrapper_t, action->actions_before, lpc,
+		crm_debug_3("\tChecking action %d", other->action->id);
 		if(action->optional
 		   && other->action->optional == FALSE) {
 			change = TRUE;
 			action->optional = FALSE;
 			crm_debug_2("Marking action %d manditory because of %d",
 				  action->id, other->action->id);
+			update_action(other->action);
 		}
 		);
-	
+
 	slist_iter(
 		other, action_wrapper_t, action->actions_after, lpc,
 
@@ -81,11 +79,14 @@ update_action(action_t *action)
 				crm_debug_2("Marking action %d un-runnable"
 					  " because of %d",
 					  other->action->id, action->id);
+				update_action(other->action);
 			}
 		}
 		
 
 		if(action->optional == FALSE && other->action->optional) {
+			crm_debug_3("\t(restart)Checking action %d",
+				    other->action->id);
 
 	switch(action->rsc->restart_type) {
 		case pe_restart_ignore:
@@ -95,11 +96,8 @@ update_action(action_t *action)
 			other->action->optional = FALSE;
 			crm_debug_2("(Restart) Marking action %d manditory because of %d",
 				  other->action->id, action->id);
-	}
-		}
-		
-		if(change) {
 			update_action(other->action);
+	}
 		}
 		
 		);
@@ -110,7 +108,7 @@ update_action(action_t *action)
 
 gboolean
 shutdown_constraints(
-	node_t *node, action_t *shutdown_op, GListPtr *ordering_constraints)
+	node_t *node, action_t *shutdown_op, pe_working_set_t *data_set)
 {
 	/* add the stop to the before lists so it counts as a pre-req
 	 * for the shutdown
@@ -121,7 +119,7 @@ shutdown_constraints(
 		custom_action_order(
 			rsc, stop_key(rsc), NULL,
 			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
-			pecs_must, ordering_constraints);
+			pecs_must, data_set);
 
 		);	
 
@@ -131,7 +129,7 @@ shutdown_constraints(
 gboolean
 stonith_constraints(node_t *node,
 		    action_t *stonith_op, action_t *shutdown_op,
-		    GListPtr *ordering_constraints)
+		    pe_working_set_t *data_set)
 {
 	GListPtr stop_actions = NULL;
 
@@ -150,7 +148,7 @@ stonith_constraints(node_t *node,
 		custom_action_order(
 			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
 			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-			pecs_must, ordering_constraints);
+			pecs_must, data_set);
 		
 	}
 	
@@ -175,7 +173,7 @@ stonith_constraints(node_t *node,
 					custom_action_order(
 						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
 						rsc, stop_key(rsc), NULL,
-						pecs_must, ordering_constraints);
+						pecs_must, data_set);
 				} else {
 					/* stop healthy resources before the
 					 * stonith op
@@ -183,7 +181,7 @@ stonith_constraints(node_t *node,
 					custom_action_order(
 						rsc, stop_key(rsc), NULL,
 						NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
-						pecs_must, ordering_constraints);
+						pecs_must, data_set);
 				}
 				);
 
@@ -196,7 +194,7 @@ stonith_constraints(node_t *node,
 			pe_err("SHARED RESOURCE %s WILL REMAIN BLOCKED"
 				 " ON NODE %s UNTIL %s",
 				rsc->id, node->details->uname,
-				stonith_enabled?"QUORUM RETURNS":"CLEANED UP MANUALLY");
+				data_set->stonith_enabled?"QUORUM RETURNS":"CLEANED UP MANUALLY");
 			continue;
 			
 		} else if((rsc->unclean || node->details->unclean)
@@ -298,7 +296,7 @@ action2xml(action_t *action, gboolean as_input)
 }
 
 void
-graph_element_from_action(action_t *action, crm_data_t * *graph)
+graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 {
 	char *syn_id = NULL;
 	crm_data_t * syn = NULL;
@@ -342,14 +340,14 @@ graph_element_from_action(action_t *action, crm_data_t * *graph)
 	
 	action->dumped = TRUE;
 	
-	syn = create_xml_node(*graph, "synapse");
+	syn = create_xml_node(data_set->graph, "synapse");
 	set = create_xml_node(syn, "action_set");
 	in  = create_xml_node(syn, "inputs");
 
-	syn_id = crm_itoa(num_synapse);
+	syn_id = crm_itoa(data_set->num_synapse);
 	set_xml_property_copy(syn, XML_ATTR_ID, syn_id);
 	crm_free(syn_id);
-	num_synapse++;
+	data_set->num_synapse++;
 	
 	xml_action = action2xml(action, FALSE);
 	add_node_copy(set, xml_action);

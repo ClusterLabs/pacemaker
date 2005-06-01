@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.43 2005/05/31 14:58:05 andrew Exp $ */
+/* $Id: native.c,v 1.44 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,7 +23,7 @@
 
 extern color_t *add_color(resource_t *rh_resource, color_t *color);
 
-gboolean native_choose_color(resource_t *lh_resource);
+gboolean native_choose_color(resource_t *lh_resource, color_t *no_color);
 
 void native_assign_color(resource_t *rsc, color_t *color);
 
@@ -41,7 +41,7 @@ void filter_nodes(resource_t *rsc);
 int num_allowed_nodes4color(color_t *color);
 
 void create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
-			    GListPtr *ordering_constraints);
+			      pe_working_set_t *data_set);
 action_t *create_recurring_action(resource_t *rsc, node_t *node,
 				  const char *action, const char *key);
 
@@ -89,7 +89,7 @@ native_add_running(resource_t *rsc, node_t *node)
 }
 
 
-void native_unpack(resource_t *rsc)
+void native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	crm_data_t * xml_obj = rsc->xml;
 	native_variant_data_t *native_data = NULL;
@@ -176,14 +176,14 @@ int num_allowed_nodes4color(color_t *color)
 }
 
 
-void native_color(resource_t *rsc, GListPtr *colors)
+void native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	color_t *new_color = NULL;
 	native_variant_data_t *native_data = NULL;
 
 	get_native_variant_data(native_data, rsc);
 	
-	if( native_choose_color(rsc) ) {
+	if( native_choose_color(rsc, data_set->no_color) ) {
 		crm_debug_3("Colored resource %s with color %d",
 			    rsc->id, native_data->color->id);
 		
@@ -191,15 +191,15 @@ void native_color(resource_t *rsc, GListPtr *colors)
 		if(native_data->allowed_nodes != NULL) {
 			/* filter out nodes with a negative weight */
 			filter_nodes(rsc);
-			new_color = create_color(
-				colors, rsc, native_data->allowed_nodes);
+			new_color = create_color(data_set, rsc,
+						 native_data->allowed_nodes);
 			native_assign_color(rsc, new_color);
 		}
 		
 		if(new_color == NULL) {
 			pe_warn("Resource %s cannot run anywhere", rsc->id);
 			print_resource("ERROR: No color", rsc, FALSE);
-			native_assign_color(rsc, no_color);
+			native_assign_color(rsc, data_set->no_color);
 		}
 	}
 	rsc->provisional = FALSE;
@@ -207,7 +207,7 @@ void native_color(resource_t *rsc, GListPtr *colors)
 
 void
 create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
-			 GListPtr *ordering_constraints) 
+			 pe_working_set_t *data_set) 
 {
 	action_t *mon = NULL;
 	char *key = NULL;
@@ -225,18 +225,18 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		value = crm_element_value(operation, "interval");
 
 		key = generate_op_key(rsc->id, name, crm_get_msec(value));
-		mon = custom_action(rsc, key, name, node);
+		mon = custom_action(rsc, key, name, node, data_set);
 		
 		if(start != NULL) {
 			custom_action_order(
 				rsc, start_key(rsc), NULL,
 				NULL, crm_strdup(key), mon,
-				pecs_must, ordering_constraints);
+				pecs_must, data_set);
 		}
 		);	
 }
 
-void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
+void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
 	action_t *start = NULL;
 	action_t *stop = NULL;
@@ -252,7 +252,8 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
 		/* create start action */
 		start = start_action(rsc, chosen);
-		if( !have_quorum && no_quorum_policy != no_quorum_ignore) {
+		if( !data_set->have_quorum
+		    && data_set->no_quorum_policy != no_quorum_ignore) {
 			start->runnable = FALSE;
 			
 		} else {
@@ -303,7 +304,8 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 		crm_debug_2("Stop%s of %s", chosen?" and restart":"", rsc->id);
 		CRM_DEV_ASSERT(node != NULL);
 		
-		if(have_quorum == FALSE && no_quorum_policy == no_quorum_stop){
+		if(data_set->have_quorum == FALSE
+		   && data_set->no_quorum_policy == no_quorum_stop){
 			crm_warn("Stop  resource %s\t(%s) (no quorum)",
 				rsc->id, node->details->uname);
 			start = start_action(rsc, chosen);
@@ -355,11 +357,11 @@ void native_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 	
 	if(start != NULL && start->runnable) {
 		create_recurring_actions(
-			rsc, start, chosen, ordering_constraints);
+			rsc, start, chosen, data_set);
 	}
 }
 
-void native_internal_constraints(resource_t *rsc,GListPtr *ordering_constraints)
+void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
@@ -691,13 +693,13 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 }
 
-void native_expand(resource_t *rsc, crm_data_t * *graph)
+void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
 	slist_iter(
 		action, action_t, rsc->actions, lpc,
 		crm_debug_4("processing action %d for rsc=%s",
 			  action->id, rsc->id);
-		graph_element_from_action(action, graph);
+		graph_element_from_action(action, data_set);
 		);
 }
 
@@ -926,7 +928,7 @@ native_agent_constraints(resource_t *rsc)
 		native_data->allowed_nodes, native_data->agent, rsc->id);
 }
 gboolean
-native_choose_color(resource_t *rsc)
+native_choose_color(resource_t *rsc, color_t *no_color)
 {
 	GListPtr sorted_colors = NULL;
 	native_variant_data_t *native_data = NULL;

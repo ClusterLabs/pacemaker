@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.64 2005/05/20 09:48:15 andrew Exp $ */
+/* $Id: pengine.h,v 1.65 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,13 +34,48 @@ typedef struct action_wrapper_s action_wrapper_t;
 #include <glib.h>
 #include <crm/crm.h>
 #include <crm/common/msg.h>
-#include <complex.h>
 
 typedef enum no_quorum_policy_e {
 	no_quorum_freeze,
 	no_quorum_stop,
 	no_quorum_ignore
 } no_quorum_policy_t;
+
+typedef struct pe_working_set_s 
+{
+		crm_data_t *input;
+
+		/* options extracted from the input */
+		char *dc_uuid;
+		gboolean have_quorum;
+		gboolean stonith_enabled;
+		gboolean symmetric_cluster;
+		no_quorum_policy_t no_quorum_policy;
+
+		/* intermediate steps */
+		color_t *no_color;
+		
+		GListPtr nodes;
+		GListPtr resources;
+		GListPtr placement_constraints;
+		GListPtr ordering_constraints;
+		
+		GListPtr colors;
+		GListPtr actions;
+
+		/* stats */
+		int num_synapse;
+		int max_valid_nodes;
+		int order_id;
+		int action_id;
+		int color_id;
+
+		/* final output */
+		crm_data_t *graph;
+
+} pe_working_set_t;
+
+#include <complex.h>
 
 enum con_type {
 	type_none,
@@ -90,23 +125,6 @@ enum pe_restart {
 	pe_restart_restart,
 	pe_restart_ignore
 };
-
-typedef struct pe_working_set_s 
-{
-		crm_data_t *input;
-		
-		GListPtr nodes;
-		GListPtr resources;
-		GListPtr placement_constraints;
-		GListPtr ordering_constraints;
-		
-		GListPtr colors;
-		GListPtr actions;
-		GListPtr action_sets;
-		GListPtr stonith_list;
-		GListPtr shutdown_list;
-} pe_working_set_t;
-
 
 struct node_shared_s { 
 		const char *id; 
@@ -256,36 +274,15 @@ struct order_constraint_s
 };
 
 
-extern gboolean stage0(crm_data_t *cib,
-		       GListPtr *nodes,
-		       GListPtr *rscs,
-		       GListPtr *cons,
-		       GListPtr *actions, GListPtr *ordering_constraints,
-		       GListPtr *stonith_list, GListPtr *shutdown_list);
-
-extern gboolean stage1(GListPtr placement_constraints,
-		       GListPtr nodes,
-		       GListPtr resources);
-
-extern gboolean stage2(GListPtr sorted_rscs,
-		       GListPtr sorted_nodes,
-		       GListPtr *colors);
-
-extern gboolean stage3(GListPtr colors);
-
-extern gboolean stage4(GListPtr colors);
-
-extern gboolean stage5(GListPtr resources, GListPtr *ordering_constraints);
-
-extern gboolean stage6(
-	GListPtr *actions, GListPtr *ordering_constraints,
-	GListPtr nodes, GListPtr resources);
-
-extern gboolean stage7(
-	GListPtr resources, GListPtr actions, GListPtr ordering_constraints);
-
-extern gboolean stage8(
-	GListPtr resources, GListPtr action_sets, crm_data_t **graph);
+extern gboolean stage0(pe_working_set_t *data_set);
+extern gboolean stage1(pe_working_set_t *data_set);
+extern gboolean stage2(pe_working_set_t *data_set);
+extern gboolean stage3(pe_working_set_t *data_set);
+extern gboolean stage4(pe_working_set_t *data_set);
+extern gboolean stage5(pe_working_set_t *data_set);
+extern gboolean stage6(pe_working_set_t *data_set);
+extern gboolean stage7(pe_working_set_t *data_set);
+extern gboolean stage8(pe_working_set_t *data_set);
 
 extern gboolean summary(GListPtr resources);
 
@@ -294,91 +291,64 @@ extern gboolean pe_msg_dispatch(IPC_Channel *sender, void *user_data);
 extern gboolean process_pe_message(
 	HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender);
 
-extern gboolean unpack_constraints(crm_data_t *xml_constraints,
-				   GListPtr nodes, GListPtr resources,
-				   GListPtr *placement_constraints,
-				   GListPtr *ordering_constraints);
+extern gboolean unpack_constraints(
+	crm_data_t *xml_constraints, pe_working_set_t *data_set);
 
-extern gboolean unpack_resources(crm_data_t *xml_resources,
-				 GListPtr *resources,
-				 GListPtr *actions,
-				 GListPtr *ordering_constraints,
-				 GListPtr *placement_constraints,
-				 GListPtr all_nodes);
+extern gboolean unpack_resources(
+	crm_data_t *xml_resources, pe_working_set_t *data_set);
 
-extern gboolean unpack_config(crm_data_t *config);
+extern gboolean unpack_config(crm_data_t *config, pe_working_set_t *data_set);
 
-extern gboolean unpack_config(crm_data_t *config);
+extern gboolean unpack_nodes(crm_data_t *xml_nodes, pe_working_set_t *data_set);
 
-extern gboolean unpack_nodes(crm_data_t *xml_nodes, GListPtr *nodes);
+extern gboolean unpack_status(crm_data_t *status, pe_working_set_t *data_set);
 
-extern gboolean unpack_status(crm_data_t *status,
-			      GListPtr nodes,
-			      GListPtr rsc_list,
-			      GListPtr *actions,
-			      GListPtr *placement_constraints);
+extern gboolean apply_placement_constraints(pe_working_set_t *data_set);
 
-
-extern gboolean apply_placement_constraints(GListPtr constraints, GListPtr nodes);
-
-extern gboolean apply_agent_constraints(GListPtr resources);
-
-extern void color_resource(resource_t *lh_resource,
-			   GListPtr *colors,
-			   GListPtr resources);
+extern void color_resource(resource_t *lh_resource, pe_working_set_t *data_set);
 
 extern gboolean choose_node_from_list(color_t *color);
 
 extern gboolean update_action_states(GListPtr actions);
 
 extern gboolean shutdown_constraints(
-	node_t *node, action_t *shutdown_op, GListPtr *ordering_constraints);
+	node_t *node, action_t *shutdown_op, pe_working_set_t *data_set);
 
 extern gboolean stonith_constraints(
 	node_t *node, action_t *stonith_op, action_t *shutdown_op,
-	GListPtr *ordering_constraints);
+	pe_working_set_t *data_set);
 
 extern gboolean custom_action_order(
 	resource_t *lh_rsc, char *lh_task, action_t *lh_action,
 	resource_t *rh_rsc, char *rh_task, action_t *rh_action,
-	enum con_strength strength, GListPtr *ordering_constraints);
+	enum con_strength strength, pe_working_set_t *data_set);
 
 #define order_start_start(rsc1,rsc2)					\
 	custom_action_order(rsc1, start_key(rsc1), NULL,		\
 			    rsc2, start_key(rsc2) ,NULL,		\
-			    pecs_startstop, ordering_constraints)
+			    pecs_startstop, data_set)
 #define order_stop_stop(rsc1, rsc2)					\
 	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
 			    rsc2, stop_key(rsc2) ,NULL,		\
-			    pecs_startstop, ordering_constraints)
+			    pecs_startstop, data_set)
 #define order_stop_start(rsc1, rsc2)					\
 	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
 			    rsc2, start_key(rsc2) ,NULL,		\
-			    pecs_startstop, ordering_constraints)
+			    pecs_startstop, data_set)
 #define order_start_stop(rsc1, rsc2)					\
 	custom_action_order(rsc1, start_key(rsc1), NULL,		\
 			    rsc2, stop_key(rsc2) ,NULL,		\
-			    pecs_startstop, ordering_constraints)
+			    pecs_startstop, data_set)
 
 #define pe_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #define pe_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
 
 extern gboolean process_colored_constraints(resource_t *rsc);
-extern void graph_element_from_action(action_t *action, crm_data_t **graph);
+extern void graph_element_from_action(
+	action_t *action, pe_working_set_t *data_set);
+extern void set_working_set_defaults(pe_working_set_t *data_set);
 
-extern color_t *no_color;
-extern int      max_valid_nodes;
-extern int      order_id;
-extern int      action_id;
-extern gboolean stonith_enabled;
-extern gboolean have_quorum;
-extern no_quorum_policy_t no_quorum_policy;
-extern gboolean symmetric_cluster;
-extern GListPtr agent_defaults;
 extern const char* transition_timeout;
-extern int num_synapse;
-extern int color_id;
-extern char *dc_uuid;
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
 

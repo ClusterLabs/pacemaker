@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.81 2005/05/31 11:36:47 andrew Exp $ */
+/* $Id: utils.c,v 1.82 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,10 +27,6 @@
 
 #include <pengine.h>
 #include <pe_utils.h>
-
-int action_id = 1;
-int color_id = 0;
-extern GListPtr global_action_list;
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
@@ -321,7 +317,8 @@ node_copy(node_t *this_node)
  *  in that list
  */
 color_t *
-create_color(GListPtr *colors, resource_t *resource, GListPtr node_list)
+create_color(
+	pe_working_set_t *data_set, resource_t *resource, GListPtr node_list)
 {
 	color_t *new_color = NULL;
 	
@@ -331,7 +328,7 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr node_list)
 		return NULL;
 	}
 	
-	new_color->id           = color_id++;
+	new_color->id           = data_set->color_id++;
 	new_color->local_weight = 1.0;
 	
 	crm_debug_5("Creating color details");
@@ -358,8 +355,8 @@ create_color(GListPtr *colors, resource_t *resource, GListPtr node_list)
 	
 	crm_action_debug_3(print_color("Created color", new_color, TRUE));
 
-	if(colors != NULL) {
-		*colors = g_list_append(*colors, new_color);      
+	if(data_set != NULL) {
+		data_set->colors = g_list_append(data_set->colors, new_color);
 	}
 	
 	return new_color;
@@ -596,8 +593,8 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 }
 
 action_t *
-custom_action(
-	resource_t *rsc, char *key, const char *task, node_t *on_node)
+custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
+	      pe_working_set_t *data_set)
 {
 	action_t *action = NULL;
 	GListPtr possible_matches = NULL;
@@ -634,7 +631,7 @@ custom_action(
 
 		crm_malloc0(action, sizeof(action_t));
 		if(action != NULL) {
-			action->id   = action_id++;
+			action->id   = data_set->action_id++;
 			action->rsc  = rsc;
 			action->task = task;
 			action->node = on_node;
@@ -654,14 +651,16 @@ custom_action(
 				g_str_hash, g_str_equal,
 				g_hash_destroy_str, g_hash_destroy_str);
 
-			global_action_list = g_list_append(
-				global_action_list, action);
+			data_set->actions = g_list_append(
+					data_set->actions, action);
 
 			action->uuid = key;
 
 			if(rsc != NULL) {
 				action->op_entry = find_rsc_op_entry(rsc, key);
-				unpack_operation(action->op_entry,action->extra);
+				unpack_operation(
+					action->op_entry, action->extra);
+
 				rsc->actions = g_list_append(
 					rsc->actions, action);
 			}
@@ -1012,51 +1011,45 @@ log_action(int log_level, const char *pre_text, action_t *action, gboolean detai
 	switch(text2task(action->task)) {
 		case stonith_node:
 		case shutdown_crm:
-			util_log("%s%s%sAction %d: %s @ %s",
-			       pre_text==NULL?"":pre_text,
-			       pre_text==NULL?"":": ",
-			       action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
-			       action->id, action->task,
-			       safe_val4(NULL, action, node, details, uname));
+			crm_log_maybe(log_level, "%s%s%sAction %d: %s @ %s",
+				      pre_text==NULL?"":pre_text,
+				      pre_text==NULL?"":": ",
+				      action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+				      action->id, action->task,
+				      safe_val4(NULL, action, node, details, uname));
 			break;
 		default:
-			util_log("%s%s%sAction %d: %s %s @ %s",
-			       pre_text==NULL?"":pre_text,
-			       pre_text==NULL?"":": ",
-			       action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
-			       action->id, action->task,
-			       safe_val3(NULL, action, rsc, id),
-			       safe_val4(NULL, action, node, details, uname));
+			crm_log_maybe(log_level, "%s%s%sAction %d: %s %s @ %s",
+				      pre_text==NULL?"":pre_text,
+				      pre_text==NULL?"":": ",
+				      action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+				      action->id, action->task,
+				      safe_val3(NULL, action, rsc, id),
+				      safe_val4(NULL, action, node, details, uname));
 			
 			break;
 	}
 
 	if(details) {
-#if 1
-		util_log("\t\t====== Preceeding Actions");
+		crm_log_maybe(log_level+1, "\t\t====== Preceeding Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
-			log_action(log_level-1, "\t\t", other->action, FALSE);
+			log_action(log_level+1, "\t\t", other->action, FALSE);
 			);
-		util_log("\t\t====== Subsequent Actions");
+#if 1
+		crm_log_maybe(log_level+1, "\t\t====== Subsequent Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
-			log_action(log_level-1, "\t\t", other->action, FALSE);
-			);		
-#else
-		util_log("\t\t====== Subsequent Actions");
-		slist_iter(
-			other, action_wrapper_t, action->actions_after, lpc,
-			log_action(log_level-1, "\t\t", other->action, FALSE);
+			log_action(log_level+1, "\t\t", other->action, FALSE);
 			);		
 #endif
-		util_log("\t\t====== End");
+		crm_log_maybe(log_level+1, "\t\t====== End");
 
 	} else {
-		util_log("\t\t(seen=%d, before=%d, after=%d)",
-		       action->seen_count,
-		       g_list_length(action->actions_before),
-		       g_list_length(action->actions_after));
+		crm_log_maybe(log_level, "\t\t(seen=%d, before=%d, after=%d)",
+			      action->seen_count,
+			      g_list_length(action->actions_before),
+			      g_list_length(action->actions_after));
 	}
 }
 

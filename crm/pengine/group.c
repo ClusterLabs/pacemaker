@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.17 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: group.c,v 1.18 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,7 +41,7 @@ typedef struct group_variant_data_s
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (group_variant_data_t *)rsc->variant_opaque;		\
 
-void group_unpack(resource_t *rsc)
+void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	crm_data_t * xml_obj = rsc->xml;
 	crm_data_t * xml_self = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
@@ -59,7 +59,7 @@ void group_unpack(resource_t *rsc)
 
 	/* this is a bit of a hack - but simplifies everything else */
 	copy_in_properties(xml_self, xml_obj);
-	if(common_unpack(xml_self, &self)) {
+	if(common_unpack(xml_self, &self, data_set)) {
 		group_data->self = self;
 		self->restart_type = pe_restart_restart;
 
@@ -74,7 +74,7 @@ void group_unpack(resource_t *rsc)
 		resource_t *new_rsc = NULL;
 		set_id(xml_native_rsc, rsc->id, -1);
 
-		if(common_unpack(xml_native_rsc, &new_rsc)) {
+		if(common_unpack(xml_native_rsc, &new_rsc, data_set)) {
 			group_data->num_children++;
 			group_data->child_list = g_list_append(
 				group_data->child_list, new_rsc);
@@ -130,7 +130,7 @@ int group_num_allowed_nodes(resource_t *rsc)
  	return group_data->self->fns->num_allowed_nodes(group_data->self);
 }
 
-void group_color(resource_t *rsc, GListPtr *colors)
+void group_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
@@ -139,10 +139,10 @@ void group_color(resource_t *rsc, GListPtr *colors)
 		return;
 	}
 
- 	group_data->self->fns->color(group_data->self, colors);
+ 	group_data->self->fns->color(group_data->self, data_set);
 }
 
-void group_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
+void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
 	gboolean child_starting = FALSE;
 	gboolean child_stopping = FALSE;
@@ -151,7 +151,7 @@ void group_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		child_rsc->fns->create_actions(child_rsc, ordering_constraints);
+		child_rsc->fns->create_actions(child_rsc, data_set);
 		child_starting = child_starting || child_rsc->starting;
 		child_stopping = child_stopping || child_rsc->stopping;
 		);
@@ -159,15 +159,15 @@ void group_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 	if(child_starting) {
 		rsc->starting = TRUE;
 		start_action(group_data->self, NULL);
-		custom_action(group_data->self,
-			      started_key(rsc), CRMD_ACTION_STARTED, NULL);
+		custom_action(group_data->self, started_key(rsc),
+			      CRMD_ACTION_STARTED, NULL, data_set);
 		
 	}
 	if(child_stopping) {
 		rsc->stopping = TRUE;
 		stop_action(group_data->self, NULL);
-		custom_action(group_data->self,
-			      stopped_key(rsc), CRMD_ACTION_STOPPED, NULL);
+		custom_action(group_data->self, stopped_key(rsc),
+			      CRMD_ACTION_STOPPED, NULL, data_set);
 	}
 	
 	if(group_data->self != NULL) {
@@ -178,7 +178,7 @@ void group_create_actions(resource_t *rsc, GListPtr *ordering_constraints)
 	}
 }
 
-void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
+void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
 	resource_t *last_rsc = NULL;
 	group_variant_data_t *group_data = NULL;
@@ -199,7 +199,7 @@ void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 			custom_action_order(
 				child_rsc, stop_key(child_rsc), NULL,
 				group_data->self, stopped_key(group_data->self), NULL,
-				pecs_startstop, ordering_constraints);
+				pecs_startstop, data_set);
 
 			order_start_start(group_data->self, child_rsc);
 		}
@@ -211,7 +211,7 @@ void group_internal_constraints(resource_t *rsc, GListPtr *ordering_constraints)
 		custom_action_order(
 			last_rsc, start_key(last_rsc), NULL,
 			group_data->self, started_key(group_data->self), NULL,
-			pecs_startstop, ordering_constraints);
+			pecs_startstop, data_set);
 
 		order_stop_stop(group_data->self, last_rsc);
 	}
@@ -325,14 +325,14 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		);
 }
 
-void group_expand(resource_t *rsc, crm_data_t * *graph)
+void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
 	crm_debug_3("Processing actions from %s", rsc->id);
 
-	group_data->self->fns->expand(group_data->self, graph);
+	group_data->self->fns->expand(group_data->self, data_set);
 
 	if(group_data->self == NULL) {
 		return;
@@ -341,7 +341,7 @@ void group_expand(resource_t *rsc, crm_data_t * *graph)
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
-		child_rsc->fns->expand(child_rsc, graph);
+		child_rsc->fns->expand(child_rsc, data_set);
 		);
 
 }

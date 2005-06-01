@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.74 2005/05/31 11:35:20 andrew Exp $ */
+/* $Id: pengine.c,v 1.75 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,18 +29,11 @@
 #include <pengine.h>
 #include <pe_utils.h>
 
-extern GListPtr global_action_list;
+crm_data_t * do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input);
+void cleanup_calculations(pe_working_set_t *data_set);
 
-crm_data_t * do_calculations(crm_data_t *cib_object);
-void cleanup_calculations(
-	GListPtr resources, GListPtr nodes, GListPtr placement_constraints,
-	GListPtr actions, GListPtr ordering_constraints, GListPtr stonith_list,
-	GListPtr shutdown_list, GListPtr colors, GListPtr action_sets);
-
-int num_synapse = 0;
 gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
-cl_mem_stats_t *mem_stats = NULL;
 
 gboolean
 process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
@@ -66,11 +59,11 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
+		pe_working_set_t data_set;
 		crm_data_t *generation = create_xml_node(NULL, XML_TAG_CIB);
 		crm_data_t *status     = get_object_root(
 			XML_CIB_TAG_STATUS, xml_data);
 		crm_data_t *log_input  = status;
-		crm_data_t *output     = NULL;
 		log_input  = xml_data;
 
 
@@ -104,23 +97,20 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		was_processing_error = FALSE;
 		was_processing_warning = FALSE;
 
-		crm_malloc0(mem_stats, sizeof(cl_mem_stats_t));
-		crm_zero_mem_stats(mem_stats);
+		crm_zero_mem_stats(NULL);
 
-		output = do_calculations(xml_data);
-		crm_log_xml_debug_3(output, "[out]");
+		do_calculations(&data_set, xml_data);
+		crm_log_xml_debug_3(data_set.graph, "[out]");
 
-		if (send_ipc_reply(sender, msg, output) ==FALSE) {
+		if (send_ipc_reply(sender, msg, data_set.graph) ==FALSE) {
 			crm_err("Answer could not be sent");
 		}
 
-		free_xml(output);
+		cleanup_calculations(&data_set);
 		
-		if(is_ipc_empty(sender) && crm_mem_stats(mem_stats)) {
+		if(is_ipc_empty(sender) && crm_mem_stats(NULL)) {
 			pe_warn("Unfree'd memory");
 		}
-		cl_malloc_setstats(NULL);
-		crm_free(mem_stats);
 	
 		if(was_processing_error) {
 			crm_info("ERRORs found during PE processing."
@@ -148,248 +138,168 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 }
 
 #define MEMCHECK_STAGE_2 0
+#define check_and_exit(stage) 	cleanup_calculations(&data_set);	\
+	free_xml(graph);						\
+	crm_mem_stats(NULL);					\
+	crm_err("Exiting: stage %d", stage);				\
+	exit(1);
+
 
 crm_data_t *
-do_calculations(crm_data_t * cib_object)
+do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input)
 {
-	GListPtr resources = NULL;
-	GListPtr nodes = NULL;
-	GListPtr placement_constraints = NULL;
-	GListPtr actions = NULL;
-	GListPtr ordering_constraints = NULL;
-	GListPtr stonith_list = NULL;
-	GListPtr shutdown_list = NULL;
-
-	GListPtr colors = NULL;
-	GListPtr action_sets = NULL;
-
-	crm_data_t * graph = NULL;
-
+	
 /*	pe_debug_on(); */
+	set_working_set_defaults(data_set);
+	data_set->input = xml_input;
 	
 	crm_debug_5("unpack");		  
-	stage0(cib_object,
-	       &resources,
-	       &nodes,  &placement_constraints,
-	       &actions,  &ordering_constraints,
-	       &stonith_list, &shutdown_list);
+	stage0(data_set);
 	
 #if MEMCHECK_STAGE_0
-	cleanup_calculations(
-		resources, nodes, placement_constraints, actions,
-		ordering_constraints, stonith_list, shutdown_list,
-		colors, action_sets);
-
-	free_xml(graph);
-	crm_mem_stats(mem_stats);
-	crm_err("Exiting");
-	exit(1);
+	check_and_exit(0);
 #endif
 
 	crm_debug_5("apply placement constraints");
-	stage1(placement_constraints, nodes, resources);
+	stage1(data_set);
 	
 #if MEMCHECK_STAGE_1
-	cleanup_calculations(
-		resources, nodes, placement_constraints, actions,
-		ordering_constraints, stonith_list, shutdown_list,
-		colors, action_sets);
-
-	free_xml(graph);
-	crm_mem_stats(mem_stats);
-	crm_err("Exiting");
-	exit(1);
+	check_and_exit(1);
 #endif
 
 	crm_debug_5("color resources");
-	stage2(resources, nodes, &colors);
+	stage2(data_set);
 
 #if MEMCHECK_STAGE_2
-	cleanup_calculations(
-		resources, nodes, placement_constraints, actions,
-		ordering_constraints, stonith_list, shutdown_list,
-		colors, action_sets);
-
-	free_xml(graph);
-	crm_mem_stats(mem_stats);
-	crm_err("Exiting");
-	exit(1);
+	check_and_exit(2);
 #endif
 
 	/* unused */
-	stage3(colors);
+	stage3(data_set);
 
 #if MEMCHECK_STAGE_3
-	cleanup_calculations(
-		resources, nodes, placement_constraints, actions,
-		ordering_constraints, stonith_list, shutdown_list,
-		colors, action_sets);
-
-	free_xml(graph);
-	crm_mem_stats(mem_stats);
-	crm_err("Exiting");
-	exit(1);
+	check_and_exit(3);
 #endif
 	
 	crm_debug_5("assign nodes to colors");
-	stage4(colors);	
+	stage4(data_set);	
 	
 #if MEMCHECK_STAGE_4
-	cleanup_calculations(
-		resources, nodes, placement_constraints, actions,
-		ordering_constraints, stonith_list, shutdown_list,
-		colors, action_sets);
-
-	free_xml(graph);
-	crm_mem_stats(mem_stats);
-	crm_err("Exiting");
-	exit(1);
+	check_and_exit(4);
 #endif
 
 	crm_debug_5("creating actions and internal ording constraints");
-	stage5(resources, &ordering_constraints);
+	stage5(data_set);
 
 #if MEMCHECK_STAGE_5
-	cleanup_calculations(
-		resources, nodes, placement_constraints, actions,
-		ordering_constraints, stonith_list, shutdown_list,
-		colors, action_sets);
-
-	free_xml(graph);
-	crm_mem_stats(mem_stats);
-	crm_err("Exiting");
-	exit(1);
+	check_and_exit(5);
 #endif
 
 	crm_debug_5("processing fencing and shutdown cases");
-	stage6(&actions, &ordering_constraints, nodes, resources);
+	stage6(data_set);
 	
 #if MEMCHECK_STAGE_6
-	cleanup_calculations(
-		resources, nodes, placement_constraints, actions,
-		ordering_constraints, stonith_list, shutdown_list,
-		colors, action_sets);
-
-	free_xml(graph);
-	crm_mem_stats(mem_stats);
-	crm_err("Exiting");
-	exit(1);
+	check_and_exit(6);
 #endif
 
 	crm_debug_5("applying ordering constraints");
-	stage7(resources, actions, ordering_constraints);
+	stage7(data_set);
 
 #if MEMCHECK_STAGE_7
-	cleanup_calculations(
-		resources, nodes, placement_constraints, actions,
-		ordering_constraints, stonith_list, shutdown_list,
-		colors, action_sets);
-
-	free_xml(graph);
-	crm_mem_stats(mem_stats);
-	crm_err("Exiting");
-	exit(1);
+	check_and_exit(7);
 #endif
 
 	crm_debug_2("=#=#=#=#= Summary =#=#=#=#=");
 	crm_debug_2("========= All Actions =========");
-	slist_iter(action, action_t, actions, lpc,
-		   print_action("\t", action, TRUE);
+	slist_iter(action, action_t, data_set->actions, lpc,
+		   log_action(LOG_DEBUG_2, "\t", action, TRUE)
 		);
 	
 	crm_debug_2("\t========= Set %d (Un-runnable) =========", -1);
 	crm_action_debug_2(
-		slist_iter(action, action_t, actions, lpc,
+		slist_iter(action, action_t, data_set->actions, lpc,
 			   if(action->optional == FALSE
-			      && action->runnable == FALSE) {
+			      && action->runnable == FALSE
+			      && action->pseudo == FALSE) {
 				   log_action(LOG_DEBUG_2, "\t", action, TRUE);
 			   }
 			)
 		);
 	
-	crm_debug_2("========= Stonith List =========");
-	crm_action_debug_3(
-		slist_iter(node, node_t, stonith_list, lpc,
-			   print_node(NULL, node, FALSE);
-			)
-		);
-	
-	crm_debug_2("========= Shutdown List =========");
-	crm_action_debug_3(
-		slist_iter(node, node_t, shutdown_list, lpc,
-			   print_node(NULL, node, FALSE);
-			)
-		);
-	
 	crm_debug_5("creating transition graph");
-	stage8(resources, actions, &graph);
+	stage8(data_set);
+
+#if MEMCHECK_STAGE_8
+	check_and_exit(8);
+#endif
 	
-	cleanup_calculations(
-		resources, nodes, placement_constraints, actions,
-		ordering_constraints, stonith_list, shutdown_list,
-		colors, action_sets);
-	
-	return graph;
+	return data_set->graph;
 }
 
-/* 	cleanup_calculations(resources, nodes, placement_constraints, actions, ordering_constraints, stonith_list, shutdown_list, colors, action_sets); */
-
 void
-cleanup_calculations(GListPtr resources,
-		     GListPtr nodes,
-		     GListPtr placement_constraints,
-		     GListPtr actions,
-		     GListPtr ordering_constraints,
-		     GListPtr stonith_list,
-		     GListPtr shutdown_list,
-		     GListPtr colors,
-		     GListPtr action_sets)
+cleanup_calculations(pe_working_set_t *data_set)
 {
 	GListPtr iterator = NULL;
+
+	if(data_set == NULL) {
+		return;
+	}
 	
-	crm_free(dc_uuid);
-	dc_uuid = NULL;	
+	crm_free(data_set->dc_uuid);
 	
 	crm_debug_3("deleting order cons");
-	pe_free_ordering(ordering_constraints); 
+	pe_free_ordering(data_set->ordering_constraints); 
 
-	crm_debug_3("deleting action sets");
-	slist_iter(action_set, GList, action_sets, lpc,
-		   pe_free_shallow_adv(action_set, FALSE);
-		);
-	pe_free_shallow_adv(action_sets, FALSE);
-	
-	crm_debug_3("deleting global actions");
-	pe_free_actions(global_action_list);
-	global_action_list = NULL;
-
-/* 	crm_debug_3("deleting actions"); */
-/* 	pe_free_actions(actions); */
+	crm_debug_3("deleting actions");
+	pe_free_actions(data_set->actions);
 
 	crm_debug_3("deleting resources");
-	pe_free_resources(resources); 
+	pe_free_resources(data_set->resources); 
 	
 	crm_debug_3("deleting nodes");
-	pe_free_nodes(nodes);
+	pe_free_nodes(data_set->nodes);
 	
 	crm_debug_3("deleting colors");
-	pe_free_colors(colors);
+	pe_free_colors(data_set->colors);
 
 	crm_debug_3("deleting node cons");
-	iterator = placement_constraints;
+	iterator = data_set->placement_constraints;
 	while(iterator) {
-		pe_free_rsc_to_node((rsc_to_node_t*)iterator->data);
+		pe_free_rsc_to_node(iterator->data);
 		iterator = iterator->next;
 	}
-	if(placement_constraints != NULL) {
-		g_list_free(placement_constraints);
+	if(data_set->placement_constraints != NULL) {
+		g_list_free(data_set->placement_constraints);
 	}
+	free_xml(data_set->graph);
+}
+
+
+void
+set_working_set_defaults(pe_working_set_t *data_set) 
+{
+	data_set->input = NULL;
 	
-	if(no_color != NULL) {
-		crm_free(no_color->details);
-		crm_free(no_color);
-	}
+	data_set->dc_uuid           = NULL;
+	data_set->have_quorum       = TRUE;
+	data_set->stonith_enabled   = FALSE;
+	data_set->symmetric_cluster = TRUE;
+	data_set->no_quorum_policy  = no_quorum_freeze;
 	
-	pe_free_shallow(shutdown_list);
-	pe_free_shallow(stonith_list);
+	
+	data_set->nodes     = NULL;
+	data_set->resources = NULL;
+	data_set->ordering_constraints  = NULL;
+	data_set->placement_constraints = NULL;
+
+	data_set->no_color = NULL;
+	data_set->colors   = NULL;
+	data_set->actions  = NULL;	
+
+	data_set->num_synapse = 0;
+	data_set->max_valid_nodes = 0;
+	data_set->order_id = 1;
+	data_set->action_id = 1;
+	data_set->color_id = 0;
+
 }

@@ -1,32 +1,17 @@
  <transition_graph global_timeout="60s" transition_id="0">
   <synapse id="0">
     <action_set>
-       <pseudo_event id="10" rsc_id="rsc1" operation="start" allow_fail="false">
-         <attributes/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-         <pseudo_event id="13" rsc_id="rsc1" operation="stopped" allow_fail="false"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="1">
-    <action_set>
        <pseudo_event id="11" rsc_id="rsc1" operation="running" allow_fail="false">
          <attributes/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-         <rsc_op id="4" rsc_id="rsc1:child_rsc1:1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
-       </trigger>
-       <trigger>
          <rsc_op id="8" rsc_id="rsc1:child_rsc1:3" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="2">
+  <synapse id="1">
     <action_set>
        <pseudo_event id="12" rsc_id="rsc1" operation="stop" allow_fail="false">
          <attributes/>
@@ -34,46 +19,44 @@
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="27" rsc_id="rsc2" operation="stopped" allow_fail="false"/>
+         <rsc_op id="2" rsc_id="rsc1:child_rsc1:0" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="3">
+  <synapse id="2">
     <action_set>
-       <pseudo_event id="13" rsc_id="rsc1" operation="stopped" allow_fail="false">
-         <attributes/>
-      </pseudo_event>
+       <rsc_op id="2" rsc_id="rsc1:child_rsc1:0" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <resource id="rsc1:child_rsc1:0" class="heartbeat" type="apache" priority="1.0"/>
+         <attributes>
+           <nvpair name="incarnation_max" value="5"/>
+           <nvpair name="incarnation" value="0"/>
+         </attributes>
+       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
          <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
-       <trigger>
-         <rsc_op id="7" rsc_id="rsc1:child_rsc1:3" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="9" rsc_id="rsc1:child_rsc1:4" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
-      </trigger>
     </inputs>
   </synapse>
-   <synapse id="4">
-     <action_set>
+  <synapse id="3">
+    <action_set>
        <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <resource id="rsc1:child_rsc1:1" class="heartbeat" type="apache" priority="1.0"/>
          <attributes>
            <nvpair name="incarnation_max" value="5"/>
            <nvpair name="incarnation" value="1"/>
          </attributes>
-      </rsc_op>
+       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="12" rsc_id="rsc1" operation="stop" allow_fail="false"/>
+         <rsc_op id="6" rsc_id="rsc1:child_rsc1:2" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
-   <synapse id="5">
-    <action_set>
+   <synapse id="4">
+     <action_set>
        <rsc_op id="4" rsc_id="rsc1:child_rsc1:1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <resource id="rsc1:child_rsc1:1" class="heartbeat" type="apache" priority="1.0"/>
          <attributes>
@@ -84,14 +67,46 @@
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="10" rsc_id="rsc1" operation="start" allow_fail="false"/>
-      </trigger>
-      <trigger>
          <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
+   <synapse id="5">
+    <action_set>
+       <rsc_op id="5" rsc_id="rsc1:child_rsc1:2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <resource id="rsc1:child_rsc1:2" class="heartbeat" type="apache" priority="1.0"/>
+         <attributes>
+           <nvpair name="incarnation_max" value="5"/>
+           <nvpair name="incarnation" value="2"/>
+         </attributes>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+         <rsc_op id="4" rsc_id="rsc1:child_rsc1:1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+      </trigger>
+      <trigger>
+         <rsc_op id="6" rsc_id="rsc1:child_rsc1:2" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+      </trigger>
+    </inputs>
+  </synapse>
    <synapse id="6">
+     <action_set>
+       <rsc_op id="6" rsc_id="rsc1:child_rsc1:2" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <resource id="rsc1:child_rsc1:2" class="heartbeat" type="apache" priority="1.0"/>
+         <attributes>
+           <nvpair name="incarnation_max" value="5"/>
+           <nvpair name="incarnation" value="2"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="7" rsc_id="rsc1:child_rsc1:3" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="7">
      <action_set>
        <rsc_op id="7" rsc_id="rsc1:child_rsc1:3" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <resource id="rsc1:child_rsc1:3" class="heartbeat" type="apache" priority="1.0"/>
@@ -103,11 +118,11 @@
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="12" rsc_id="rsc1" operation="stop" allow_fail="false"/>
+         <rsc_op id="9" rsc_id="rsc1:child_rsc1:4" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
-   <synapse id="7">
+   <synapse id="8">
     <action_set>
        <rsc_op id="8" rsc_id="rsc1:child_rsc1:3" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <resource id="rsc1:child_rsc1:3" class="heartbeat" type="apache" priority="1.0"/>
@@ -119,14 +134,14 @@
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="10" rsc_id="rsc1" operation="start" allow_fail="false"/>
+         <rsc_op id="5" rsc_id="rsc1:child_rsc1:2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
       <trigger>
          <rsc_op id="7" rsc_id="rsc1:child_rsc1:3" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
-   <synapse id="8">
+   <synapse id="9">
     <action_set>
        <rsc_op id="9" rsc_id="rsc1:child_rsc1:4" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <resource id="rsc1:child_rsc1:4" class="heartbeat" type="apache" priority="1.0"/>
@@ -142,7 +157,7 @@
       </trigger>
     </inputs>
   </synapse>
-   <synapse id="9">
+   <synapse id="10">
     <action_set>
        <pseudo_event id="24" rsc_id="rsc2" operation="start" allow_fail="false">
          <attributes/>
@@ -152,12 +167,9 @@
       <trigger>
          <pseudo_event id="11" rsc_id="rsc1" operation="running" allow_fail="false"/>
       </trigger>
-       <trigger>
-         <pseudo_event id="27" rsc_id="rsc2" operation="stopped" allow_fail="false"/>
-       </trigger>
     </inputs>
   </synapse>
-   <synapse id="10">
+   <synapse id="11">
     <action_set>
        <pseudo_event id="25" rsc_id="rsc2" operation="running" allow_fail="false">
          <attributes/>
@@ -165,19 +177,13 @@
     </action_set>
     <inputs>
       <trigger>
-         <rsc_op id="15" rsc_id="rsc2:child_rsc2:0" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="19" rsc_id="rsc2:child_rsc2:2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
-      </trigger>
-      <trigger>
          <rsc_op id="23" rsc_id="rsc2:child_rsc2:4" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
-   <synapse id="11">
+   <synapse id="12">
     <action_set>
-       <pseudo_event id="27" rsc_id="rsc2" operation="stopped" allow_fail="false">
+       <pseudo_event id="26" rsc_id="rsc2" operation="stop" allow_fail="false">
          <attributes/>
       </pseudo_event>
     </action_set>
@@ -185,15 +191,9 @@
       <trigger>
          <rsc_op id="14" rsc_id="rsc2:child_rsc2:0" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
       </trigger>
-      <trigger>
-         <rsc_op id="18" rsc_id="rsc2:child_rsc2:2" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
-      </trigger>
-      <trigger>
-         <rsc_op id="22" rsc_id="rsc2:child_rsc2:4" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
-      </trigger>
     </inputs>
   </synapse>
-   <synapse id="12">
+   <synapse id="13">
     <action_set>
        <rsc_op id="14" rsc_id="rsc2:child_rsc2:0" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <resource id="rsc2:child_rsc2:0" class="heartbeat" type="apache" priority="1.0"/>
@@ -203,9 +203,13 @@
          </attributes>
       </rsc_op>
     </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="17" rsc_id="rsc2:child_rsc2:1" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+       </trigger>
+     </inputs>
   </synapse>
-   <synapse id="13">
+   <synapse id="14">
     <action_set>
        <rsc_op id="15" rsc_id="rsc2:child_rsc2:0" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <resource id="rsc2:child_rsc2:0" class="heartbeat" type="apache" priority="1.0"/>
@@ -224,7 +228,42 @@
       </trigger>
     </inputs>
   </synapse>
-   <synapse id="14">
+   <synapse id="15">
+     <action_set>
+       <rsc_op id="16" rsc_id="rsc2:child_rsc2:1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+         <resource id="rsc2:child_rsc2:1" class="heartbeat" type="apache" priority="1.0"/>
+         <attributes>
+           <nvpair name="incarnation_max" value="5"/>
+           <nvpair name="incarnation" value="1"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="15" rsc_id="rsc2:child_rsc2:0" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="17" rsc_id="rsc2:child_rsc2:1" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="16">
+     <action_set>
+       <rsc_op id="17" rsc_id="rsc2:child_rsc2:1" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+         <resource id="rsc2:child_rsc2:1" class="heartbeat" type="apache" priority="1.0"/>
+         <attributes>
+           <nvpair name="incarnation_max" value="5"/>
+           <nvpair name="incarnation" value="1"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="18" rsc_id="rsc2:child_rsc2:2" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="17">
      <action_set>
        <rsc_op id="18" rsc_id="rsc2:child_rsc2:2" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <resource id="rsc2:child_rsc2:2" class="heartbeat" type="apache" priority="1.0"/>
@@ -234,9 +273,13 @@
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="21" rsc_id="rsc2:child_rsc2:3" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+       </trigger>
+     </inputs>
    </synapse>
-   <synapse id="15">
+   <synapse id="18">
     <action_set>
        <rsc_op id="19" rsc_id="rsc2:child_rsc2:2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <resource id="rsc2:child_rsc2:2" class="heartbeat" type="apache" priority="1.0"/>
@@ -248,14 +291,49 @@
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="24" rsc_id="rsc2" operation="start" allow_fail="false"/>
+         <rsc_op id="16" rsc_id="rsc2:child_rsc2:1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
       </trigger>
       <trigger>
          <rsc_op id="18" rsc_id="rsc2:child_rsc2:2" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
-   <synapse id="16">
+   <synapse id="19">
+     <action_set>
+       <rsc_op id="20" rsc_id="rsc2:child_rsc2:3" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+         <resource id="rsc2:child_rsc2:3" class="heartbeat" type="apache" priority="1.0"/>
+         <attributes>
+           <nvpair name="incarnation_max" value="5"/>
+           <nvpair name="incarnation" value="3"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="19" rsc_id="rsc2:child_rsc2:2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="21" rsc_id="rsc2:child_rsc2:3" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="20">
+     <action_set>
+       <rsc_op id="21" rsc_id="rsc2:child_rsc2:3" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+         <resource id="rsc2:child_rsc2:3" class="heartbeat" type="apache" priority="1.0"/>
+         <attributes>
+           <nvpair name="incarnation_max" value="5"/>
+           <nvpair name="incarnation" value="3"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="22" rsc_id="rsc2:child_rsc2:4" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="21">
      <action_set>
        <rsc_op id="22" rsc_id="rsc2:child_rsc2:4" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <resource id="rsc2:child_rsc2:4" class="heartbeat" type="apache" priority="1.0"/>
@@ -265,9 +343,13 @@
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="26" rsc_id="rsc2" operation="stop" allow_fail="false"/>
+       </trigger>
+     </inputs>
    </synapse>
-   <synapse id="17">
+   <synapse id="22">
     <action_set>
        <rsc_op id="23" rsc_id="rsc2:child_rsc2:4" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <resource id="rsc2:child_rsc2:4" class="heartbeat" type="apache" priority="1.0"/>
@@ -279,7 +361,7 @@
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="24" rsc_id="rsc2" operation="start" allow_fail="false"/>
+         <rsc_op id="20" rsc_id="rsc2:child_rsc2:3" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
       </trigger>
       <trigger>
          <rsc_op id="22" rsc_id="rsc2:child_rsc2:4" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>

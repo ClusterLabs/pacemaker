@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.28 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: color.c,v 1.29 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,28 +33,17 @@ color_t *no_color = NULL;
 color_t *add_color(resource_t *rh_resource, color_t *color);
 
 gboolean 
-apply_placement_constraints(GListPtr constraints, GListPtr nodes)
+apply_placement_constraints(pe_working_set_t *data_set)
 {
 	crm_debug_3("Applying constraints...");
 	slist_iter(
-		cons, rsc_to_node_t, constraints, lpc,
+		cons, rsc_to_node_t, data_set->placement_constraints, lpc,
 
 		cons->rsc_lh->fns->rsc_location(cons->rsc_lh, cons);
 		);
 	
 	return TRUE;
 	
-}
-
-gboolean
-apply_agent_constraints(GListPtr resources)
-{
-	slist_iter(
-		rsc, resource_t, resources, lpc,
-		rsc->fns->agent_constraints(rsc);
-		);
-	crm_debug_5("Finished applying RA restrictions");
-	return TRUE;
 }
 
 color_t *
@@ -84,7 +73,7 @@ add_color(resource_t *resource, color_t *color)
 }
 
 void
-color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
+color_resource(resource_t *rsc, pe_working_set_t *data_set)
 {
 	crm_action_debug_3(print_resource("Coloring", rsc, FALSE));
 	
@@ -114,7 +103,7 @@ color_resource(resource_t *rsc, GListPtr *colors, GListPtr resources)
 	 * cant be started
 	 */
 
-	rsc->fns->color(rsc, colors);
+	rsc->fns->color(rsc, data_set);
 
 	crm_action_debug_3(
 		print_resource("Post-processing", rsc, TRUE));

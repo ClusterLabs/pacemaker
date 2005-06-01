@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.10 2005/03/31 16:40:06 andrew Exp $ */
+/* $Id: complex.h,v 1.11 2005/06/01 19:03:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,6 +18,7 @@
  */
 
 #include <crm/common/xml.h>
+#include <pengine.h>
 #include <glib.h>
 
 #define n_object_classes 3
@@ -38,14 +39,15 @@ enum pe_obj_types
 
 extern int get_resource_type(const char *name);
 
+
 typedef struct resource_object_functions_s 
 {
-		void (*unpack)(resource_t *);
+		void (*unpack)(resource_t *, pe_working_set_t *);
 		resource_t *(*find_child)(resource_t *, const char *);
 		int  (*num_allowed_nodes)(resource_t *);
-		void (*color)(resource_t *, GListPtr *);
-		void (*create_actions)(resource_t *, GListPtr *);
-		void (*internal_constraints)(resource_t *, GListPtr *);
+		void (*color)(resource_t *, pe_working_set_t *);
+		void (*create_actions)(resource_t *, pe_working_set_t *);
+		void (*internal_constraints)(resource_t *, pe_working_set_t *);
 		void (*agent_constraints)(resource_t *);
 
 		void (*rsc_colocation_lh)(rsc_colocation_t *);
@@ -57,20 +59,20 @@ typedef struct resource_object_functions_s
 
 		void (*rsc_location)(resource_t *, rsc_to_node_t *);
 
-		void (*expand)(resource_t *, crm_data_t **);
+		void (*expand)(resource_t *, pe_working_set_t *);
 		void (*dump)(resource_t *, const char *, gboolean);
 		void (*free)(resource_t *);
 		
 } resource_object_functions_t;
 
-extern void native_unpack(resource_t *rsc);
+extern void native_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern resource_t *native_find_child(resource_t *rsc, const char *id);
 extern int  native_num_allowed_nodes(resource_t *rsc);
-extern void native_color(resource_t *rsc, GListPtr *colors);
+extern void native_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_create_actions(
-	resource_t *rsc, GListPtr *ordering_constraints);
+	resource_t *rsc, pe_working_set_t *data_set);
 extern void native_internal_constraints(
-	resource_t *rsc, GListPtr *ordering_constraints);
+	resource_t *rsc, pe_working_set_t *data_set);
 extern void native_agent_constraints(resource_t *rsc);
 extern void native_rsc_colocation_lh(rsc_colocation_t *constraint);
 extern void native_rsc_colocation_rh(
@@ -79,19 +81,19 @@ extern void native_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
 extern void native_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
-extern void native_expand(resource_t *rsc, crm_data_t **graph);
+extern void native_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details);
 extern void native_free(resource_t *rsc);
 
 
-extern void group_unpack(resource_t *rsc);
+extern void group_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern resource_t *group_find_child(resource_t *rsc, const char *id);
 extern int  group_num_allowed_nodes(resource_t *rsc);
-extern void group_color(resource_t *rsc, GListPtr *colors);
+extern void group_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void group_create_actions(
-	resource_t *rsc, GListPtr *ordering_constraints);
+	resource_t *rsc, pe_working_set_t *data_set);
 extern void group_internal_constraints(
-	resource_t *rsc, GListPtr *ordering_constraints);
+	resource_t *rsc, pe_working_set_t *data_set);
 extern void group_agent_constraints(resource_t *rsc);
 extern void group_rsc_colocation_lh(rsc_colocation_t *constraint);
 extern void group_rsc_colocation_rh(
@@ -100,19 +102,19 @@ extern void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
 extern void group_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
-extern void group_expand(resource_t *rsc, crm_data_t **graph);
+extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void group_dump(resource_t *rsc, const char *pre_text, gboolean details);
 extern void group_free(resource_t *rsc);
 
 
-extern void incarnation_unpack(resource_t *rsc);
+extern void incarnation_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern resource_t *incarnation_find_child(resource_t *rsc, const char *id);
 extern int  incarnation_num_allowed_nodes(resource_t *rsc);
-extern void incarnation_color(resource_t *rsc, GListPtr *colors);
+extern void incarnation_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void incarnation_create_actions(
-	resource_t *rsc, GListPtr *ordering_constraints);
+	resource_t *rsc, pe_working_set_t *data_set);
 extern void incarnation_internal_constraints(
-	resource_t *rsc, GListPtr *ordering_constraints);
+	resource_t *rsc, pe_working_set_t *data_set);
 extern void incarnation_agent_constraints(resource_t *rsc);
 extern void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint);
 extern void incarnation_rsc_colocation_rh(
@@ -121,13 +123,14 @@ extern void incarnation_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 extern void incarnation_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void incarnation_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
-extern void incarnation_expand(resource_t *rsc, crm_data_t **graph);
+extern void incarnation_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void incarnation_dump(resource_t *rsc, const char *pre_text, gboolean details);
 extern void incarnation_free(resource_t *rsc);
 
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_object_functions_t resource_class_functions[];
-extern gboolean common_unpack(crm_data_t *xml_obj, resource_t **rsc);
+extern gboolean common_unpack(
+	crm_data_t *xml_obj, resource_t **rsc, pe_working_set_t *data_set);
 extern void common_dump(
 	resource_t *rsc, const char *pre_text, gboolean details);
 extern void common_free(resource_t *rsc);
