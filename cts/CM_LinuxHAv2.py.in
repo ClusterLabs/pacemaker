@@ -199,7 +199,7 @@ class LinuxHAv2(HeartbeatCM):
              </attributes>
            </instance_attributes>
          </resource>
-       </incarnation>""" %(len(self.Env["nodes"]), len(self.Env["nodes"]), nodelist))
+       </incarnation>""" %(len(self.Env["nodes"]), nodelist))
                 resources = resources + stonith_resource
             
         self.default_cts_cib=cib_prefix + cib_options + cib_glue_1 + \
