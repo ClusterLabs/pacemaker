@@ -84,10 +84,10 @@
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="10" rsc_id="rsc1" operation="start" allow_fail="false"/>
+         <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
       <trigger>
-         <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+         <pseudo_event id="10" rsc_id="rsc1" operation="start" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
@@ -119,10 +119,10 @@
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="10" rsc_id="rsc1" operation="start" allow_fail="false"/>
+         <rsc_op id="7" rsc_id="rsc1:child_rsc1:3" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
       <trigger>
-         <rsc_op id="7" rsc_id="rsc1:child_rsc1:3" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+         <pseudo_event id="10" rsc_id="rsc1" operation="start" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
@@ -211,10 +211,10 @@
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="24" rsc_id="rsc2" operation="start" allow_fail="false"/>
+         <rsc_op id="14" rsc_id="rsc2:child_rsc2:0" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
       </trigger>
       <trigger>
-         <rsc_op id="14" rsc_id="rsc2:child_rsc2:0" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+         <pseudo_event id="24" rsc_id="rsc2" operation="start" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
@@ -246,10 +246,10 @@
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="24" rsc_id="rsc2" operation="start" allow_fail="false"/>
+         <rsc_op id="18" rsc_id="rsc2:child_rsc2:2" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
       </trigger>
       <trigger>
-         <rsc_op id="18" rsc_id="rsc2:child_rsc2:2" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+         <pseudo_event id="24" rsc_id="rsc2" operation="start" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
@@ -281,10 +281,10 @@
     </action_set>
     <inputs>
       <trigger>
-         <pseudo_event id="24" rsc_id="rsc2" operation="start" allow_fail="false"/>
+         <rsc_op id="22" rsc_id="rsc2:child_rsc2:4" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
       </trigger>
       <trigger>
-         <rsc_op id="22" rsc_id="rsc2:child_rsc2:4" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+         <pseudo_event id="24" rsc_id="rsc2" operation="start" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
