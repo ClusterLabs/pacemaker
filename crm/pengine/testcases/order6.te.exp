@@ -1,0 +1,21 @@
+Initiating action 3: stop rsc2 on node1
+Initiating action 7: stop rsc4 on node1
+Initiating action 12: stop rsc6 on node2
+Initiating action 13: stop rsc7 on node2
+Action 3 confirmed
+Initiating action 4: start rsc2 on node2
+Action 7 confirmed
+Initiating action 8: start rsc4 on node2
+Action 12 confirmed
+Initiating action 9: stop rsc5 on node2
+Action 13 confirmed
+Initiating action 14: start rsc7 on node1
+Action 4 confirmed
+Action 8 confirmed
+Action 9 confirmed
+Initiating action 10: start rsc5 on node1
+Action 14 confirmed
+Action 10 confirmed
+Initiating action 11: start rsc6 on node2
+Action 11 confirmed
+Transition status: Complete: complete

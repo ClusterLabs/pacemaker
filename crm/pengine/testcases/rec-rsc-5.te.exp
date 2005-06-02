@@ -1,0 +1,9 @@
+Initiating action 3: stop rsc2 on node2
+Action 3 confirmed
+Initiating action 4: start rsc2 on node1
+Executing fencing operation (5) on node2
+Executing pseudo-event (1): stop on (null)
+Initiating action 2: start rsc1 on node1
+Action 4 confirmed
+Action 2 confirmed
+Transition status: Complete: complete

@@ -1,0 +1,5 @@
+Initiating action 1: start rsc1 on node1
+Action 1 confirmed
+Initiating action 2: monitor rsc1 on node1
+Action 2 confirmed
+Transition status: Complete: complete

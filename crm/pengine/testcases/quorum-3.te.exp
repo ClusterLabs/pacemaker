@@ -1,0 +1,5 @@
+Initiating action 2: stop rsc1 on node1
+Initiating action 4: stop rsc2 on node1
+Action 2 confirmed
+Action 4 confirmed
+Transition status: Complete: complete

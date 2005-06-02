@@ -1,6 +1,3 @@
-Start Transitioner state
-	Empty transition graph
-End Transitioner state
-Start Transitioner state
-	Empty transition graph
-End Transitioner state
+Initiating action 1: stop rsc1 on node1
+Action 1 confirmed
+Transition status: Complete: complete

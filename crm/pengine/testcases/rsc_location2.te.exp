@@ -1,12 +1,3 @@
-Start Transitioner state
-Synapse 0 has completed
-	[Action 1] In-flight (rsc: start rsc1 on node2)
-End Transitioner state
-Start Transitioner state
-Synapse 0 has completed
-	[Action 1] Completed (rsc: start rsc1 on node2)
-End Transitioner state
-Start Transitioner state
-Synapse 0 has completed
-	[Action 1] Completed (rsc: start rsc1 on node2)
-End Transitioner state
+Initiating action 3: start rsc1 on node2
+Action 3 confirmed
+Transition status: Complete: complete

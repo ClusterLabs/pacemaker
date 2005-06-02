@@ -1,0 +1,6 @@
+Executing fencing operation (3) on node1
+Initiating action 1: start rsc1 on node2
+Initiating action 2: start rsc2 on node2
+Action 1 confirmed
+Action 2 confirmed
+Transition status: Complete: complete

@@ -1,19 +1,4 @@
-Start Transitioner state
-Synapse 0 has completed
-	[Action 1] In-flight (rsc: stop rsc1 on node1)
-Synapse 1 is pending
-	[Input 1] Pending
-	[Action 2] Pending (crm: shutdown_crm (null) on node1)
-End Transitioner state
-Start Transitioner state
-Synapse 0 has completed
-	[Action 1] Completed (rsc: stop rsc1 on node1)
-Synapse 1 has completed
-	[Action 2] In-flight (crm: shutdown_crm (null) on node1)
-End Transitioner state
-Start Transitioner state
-Synapse 0 has completed
-	[Action 1] Completed (rsc: stop rsc1 on node1)
-Synapse 1 has completed
-	[Action 2] In-flight (crm: shutdown_crm (null) on node1)
-End Transitioner state
+Initiating action 1: stop rsc1 on node1
+Action 1 confirmed
+Executing crm-event (2): do_shutdown on node1
+Transition status: Complete: complete

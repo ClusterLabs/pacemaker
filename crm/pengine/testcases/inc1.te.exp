@@ -1,100 +1,15 @@
-Start Transitioner state
-Synapse 0 has completed
-	[Action 5] Completed (pseduo: start rsc1 on (null))
-Synapse 1 is pending
-	[Input 1] Pending
-	[Input 2] Pending
-	[Input 3] Pending
-	[Input 4] Pending
-	[Action 6] Pending (pseduo: started rsc1 on (null))
-Synapse 2 has completed
-	[Action 1] In-flight (rsc: start rsc1:child_rsc1:0 on node1)
-Synapse 3 has completed
-	[Action 2] In-flight (rsc: start rsc1:child_rsc1:1 on node2)
-Synapse 4 has completed
-	[Action 3] In-flight (rsc: start rsc1:child_rsc1:2 on node1)
-Synapse 5 has completed
-	[Action 4] In-flight (rsc: start rsc1:child_rsc1:3 on node2)
-End Transitioner state
-Start Transitioner state
-Synapse 0 has completed
-	[Action 5] Completed (pseduo: start rsc1 on (null))
-Synapse 1 is pending
-	[Input 1] Satisfied
-	[Input 2] Pending
-	[Input 3] Pending
-	[Input 4] Pending
-	[Action 6] Pending (pseduo: started rsc1 on (null))
-Synapse 2 has completed
-	[Action 1] Completed (rsc: start rsc1:child_rsc1:0 on node1)
-Synapse 3 has completed
-	[Action 2] In-flight (rsc: start rsc1:child_rsc1:1 on node2)
-Synapse 4 has completed
-	[Action 3] In-flight (rsc: start rsc1:child_rsc1:2 on node1)
-Synapse 5 has completed
-	[Action 4] In-flight (rsc: start rsc1:child_rsc1:3 on node2)
-End Transitioner state
-Start Transitioner state
-Synapse 0 has completed
-	[Action 5] Completed (pseduo: start rsc1 on (null))
-Synapse 1 is pending
-	[Input 1] Satisfied
-	[Input 2] Satisfied
-	[Input 3] Pending
-	[Input 4] Pending
-	[Action 6] Pending (pseduo: started rsc1 on (null))
-Synapse 2 has completed
-	[Action 1] Completed (rsc: start rsc1:child_rsc1:0 on node1)
-Synapse 3 has completed
-	[Action 2] Completed (rsc: start rsc1:child_rsc1:1 on node2)
-Synapse 4 has completed
-	[Action 3] In-flight (rsc: start rsc1:child_rsc1:2 on node1)
-Synapse 5 has completed
-	[Action 4] In-flight (rsc: start rsc1:child_rsc1:3 on node2)
-End Transitioner state
-Start Transitioner state
-Synapse 0 has completed
-	[Action 5] Completed (pseduo: start rsc1 on (null))
-Synapse 1 is pending
-	[Input 1] Satisfied
-	[Input 2] Satisfied
-	[Input 3] Satisfied
-	[Input 4] Pending
-	[Action 6] Pending (pseduo: started rsc1 on (null))
-Synapse 2 has completed
-	[Action 1] Completed (rsc: start rsc1:child_rsc1:0 on node1)
-Synapse 3 has completed
-	[Action 2] Completed (rsc: start rsc1:child_rsc1:1 on node2)
-Synapse 4 has completed
-	[Action 3] Completed (rsc: start rsc1:child_rsc1:2 on node1)
-Synapse 5 has completed
-	[Action 4] In-flight (rsc: start rsc1:child_rsc1:3 on node2)
-End Transitioner state
-Start Transitioner state
-Synapse 0 has completed
-	[Action 5] Completed (pseduo: start rsc1 on (null))
-Synapse 1 has completed
-	[Action 6] Completed (pseduo: started rsc1 on (null))
-Synapse 2 has completed
-	[Action 1] Completed (rsc: start rsc1:child_rsc1:0 on node1)
-Synapse 3 has completed
-	[Action 2] Completed (rsc: start rsc1:child_rsc1:1 on node2)
-Synapse 4 has completed
-	[Action 3] Completed (rsc: start rsc1:child_rsc1:2 on node1)
-Synapse 5 has completed
-	[Action 4] Completed (rsc: start rsc1:child_rsc1:3 on node2)
-End Transitioner state
-Start Transitioner state
-Synapse 0 has completed
-	[Action 5] Completed (pseduo: start rsc1 on (null))
-Synapse 1 has completed
-	[Action 6] Completed (pseduo: started rsc1 on (null))
-Synapse 2 has completed
-	[Action 1] Completed (rsc: start rsc1:child_rsc1:0 on node1)
-Synapse 3 has completed
-	[Action 2] Completed (rsc: start rsc1:child_rsc1:1 on node2)
-Synapse 4 has completed
-	[Action 3] Completed (rsc: start rsc1:child_rsc1:2 on node1)
-Synapse 5 has completed
-	[Action 4] Completed (rsc: start rsc1:child_rsc1:3 on node2)
-End Transitioner state
+Initiating action 1: start rsc1 on node1
+Action 1 confirmed
+Executing pseudo-event (6): start on (null)
+Initiating action 2: start rsc2:child_rsc2:0 on node2
+Initiating action 3: start rsc2:child_rsc2:1 on node1
+Initiating action 4: start rsc2:child_rsc2:2 on node2
+Initiating action 5: start rsc2:child_rsc2:3 on node1
+Action 2 confirmed
+Action 3 confirmed
+Action 4 confirmed
+Action 5 confirmed
+Executing pseudo-event (7): running on (null)
+Initiating action 8: start rsc3 on node2
+Action 8 confirmed
+Transition status: Complete: complete

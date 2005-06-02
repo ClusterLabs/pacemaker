@@ -1,0 +1,47 @@
+Executing pseudo-event (26): stop on (null)
+Initiating action 22: stop rsc2:child_rsc2:4 on node2
+Action 22 confirmed
+Initiating action 21: stop rsc2:child_rsc2:3 on node2
+Action 21 confirmed
+Initiating action 18: stop rsc2:child_rsc2:2 on node2
+Action 18 confirmed
+Initiating action 17: stop rsc2:child_rsc2:1 on node2
+Action 17 confirmed
+Initiating action 14: stop rsc2:child_rsc2:0 on node2
+Action 14 confirmed
+Executing pseudo-event (27): stopped on (null)
+Executing pseudo-event (12): stop on (null)
+Initiating action 9: stop rsc1:child_rsc1:4 on node1
+Action 9 confirmed
+Initiating action 7: stop rsc1:child_rsc1:3 on node1
+Action 7 confirmed
+Initiating action 6: stop rsc1:child_rsc1:2 on node1
+Action 6 confirmed
+Initiating action 3: stop rsc1:child_rsc1:1 on node1
+Action 3 confirmed
+Initiating action 2: stop rsc1:child_rsc1:0 on node1
+Action 2 confirmed
+Executing pseudo-event (13): stopped on (null)
+Executing pseudo-event (10): start on (null)
+Initiating action 1: start rsc1:child_rsc1:0 on node1
+Action 1 confirmed
+Initiating action 4: start rsc1:child_rsc1:1 on node2
+Action 4 confirmed
+Initiating action 5: start rsc1:child_rsc1:2 on node1
+Action 5 confirmed
+Initiating action 8: start rsc1:child_rsc1:3 on node2
+Action 8 confirmed
+Executing pseudo-event (11): running on (null)
+Executing pseudo-event (24): start on (null)
+Initiating action 15: start rsc2:child_rsc2:0 on node1
+Action 15 confirmed
+Initiating action 16: start rsc2:child_rsc2:1 on node2
+Action 16 confirmed
+Initiating action 19: start rsc2:child_rsc2:2 on node1
+Action 19 confirmed
+Initiating action 20: start rsc2:child_rsc2:3 on node2
+Action 20 confirmed
+Initiating action 23: start rsc2:child_rsc2:4 on node1
+Action 23 confirmed
+Executing pseudo-event (25): running on (null)
+Transition status: Complete: complete

@@ -1,0 +1,49 @@
+Executing pseudo-event (6): running on (null)
+Executing pseudo-event (8): stopped on (null)
+Executing pseudo-event (5): start on (null)
+Executing pseudo-event (15): stop on (null)
+Initiating action 11: stop rsc2:child_rsc2:1 on node1
+Executing pseudo-event (22): running on (null)
+Executing pseudo-event (24): stopped on (null)
+Executing pseudo-event (21): start on (null)
+Executing pseudo-event (31): stop on (null)
+Initiating action 27: stop rsc4:child_rsc4:1 on node1
+Executing pseudo-event (46): running on (null)
+Executing pseudo-event (47): stop on (null)
+Executing pseudo-event (48): stopped on (null)
+Executing pseudo-event (39): stop on (null)
+Initiating action 33: stop rsc5:child_rsc5:0 on node2
+Executing pseudo-event (62): running on (null)
+Executing pseudo-event (63): stop on (null)
+Executing pseudo-event (64): stopped on (null)
+Executing pseudo-event (55): stop on (null)
+Initiating action 49: stop rsc7:child_rsc7:0 on node2
+Action 11 confirmed
+Executing pseudo-event (16): stopped on (null)
+Executing pseudo-event (7): stop on (null)
+Executing pseudo-event (13): start on (null)
+Initiating action 12: start rsc2:child_rsc2:1 on node2
+Action 27 confirmed
+Executing pseudo-event (32): stopped on (null)
+Executing pseudo-event (23): stop on (null)
+Executing pseudo-event (29): start on (null)
+Initiating action 28: start rsc4:child_rsc4:1 on node2
+Action 33 confirmed
+Executing pseudo-event (40): stopped on (null)
+Executing pseudo-event (37): start on (null)
+Initiating action 34: start rsc5:child_rsc5:0 on node1
+Action 49 confirmed
+Executing pseudo-event (56): stopped on (null)
+Executing pseudo-event (53): start on (null)
+Initiating action 50: start rsc7:child_rsc7:0 on node1
+Action 12 confirmed
+Executing pseudo-event (14): running on (null)
+Action 28 confirmed
+Executing pseudo-event (30): running on (null)
+Action 34 confirmed
+Executing pseudo-event (38): running on (null)
+Executing pseudo-event (45): start on (null)
+Action 50 confirmed
+Executing pseudo-event (54): running on (null)
+Executing pseudo-event (61): start on (null)
+Transition status: Complete: complete
