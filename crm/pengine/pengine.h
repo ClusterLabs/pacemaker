@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.66 2005/06/01 22:30:21 andrew Exp $ */
+/* $Id: pengine.h,v 1.67 2005/06/02 16:20:22 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -325,7 +325,7 @@ extern gboolean stonith_constraints(
 extern gboolean custom_action_order(
 	resource_t *lh_rsc, char *lh_task, action_t *lh_action,
 	resource_t *rh_rsc, char *rh_task, action_t *rh_action,
-	enum con_strength strength, pe_working_set_t *data_set);
+	enum pe_ordering type, pe_working_set_t *data_set);
 
 #define order_start_start(rsc1,rsc2)					\
 	custom_action_order(rsc1, start_key(rsc1), NULL,		\
