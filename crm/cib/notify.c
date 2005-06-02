@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.25 2005/05/31 11:32:39 andrew Exp $ */
+/* $Id: notify.c,v 1.26 2005/06/02 09:44:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -168,13 +168,15 @@ void
 cib_pre_notify(
 	int options, const char *op, crm_data_t *existing, crm_data_t *update) 
 {
-	HA_Message *update_msg = ha_msg_new(6);
+	HA_Message *update_msg = NULL;
 	const char *type = NULL;
 	const char *id = NULL;
 	if(options & cib_inhibit_notify) {
 		crm_debug_2("Inhibiting notify.");
 		return;
 	}	
+
+	update_msg = ha_msg_new(6);
 
 	if(update != NULL) {
 		id = crm_element_value(update, XML_ATTR_ID);
@@ -242,7 +244,7 @@ do_cib_notify(
 	int options, const char *op, crm_data_t *update,
 	enum cib_errors result, crm_data_t *result_data, const char *msg_type) 
 {
-	HA_Message *update_msg = ha_msg_new(8);
+	HA_Message *update_msg = NULL;
 	char *type = NULL;
 	char *id = NULL;
 
@@ -250,6 +252,9 @@ do_cib_notify(
 		crm_debug_2("Inhibiting notify.");
 		return;
 	}
+
+	update_msg = ha_msg_new(8);
+
 	if(update != NULL && crm_element_value(result_data, XML_ATTR_ID) != NULL){
 		id = crm_element_value_copy(result_data, XML_ATTR_ID);
 	}
