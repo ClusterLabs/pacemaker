@@ -324,7 +324,7 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 		register_fsa_error_adv(
 			C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
 
-	} else if(AM_I_DC) {
+	} else if(AM_I_DC && fsa_state == S_FINALIZE_JOIN) {
 		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 		fsa_cib_conn->cmds->bump_epoch(
 			fsa_cib_conn, cib_quorum_override);
@@ -337,7 +337,11 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 #else
 		check_join_state(cur_state, __FUNCTION__);
 #endif
+	} else {
+		crm_debug("No longer the DC in S_FINALIZE_JOIN: %s/%s",
+			  AM_I_DC?"DC":"CRMd", fsa_state2string(fsa_state));
 	}
+	
 	crm_free(user_data);
 }
 

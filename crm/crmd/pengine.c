@@ -98,31 +98,6 @@ do_pe_invoke(long long action,
 {
 	int call_id = 0;
 
-	/*
-	 *	FIXME: The CIB might have a different version of membership than the CRM
-	 *	We need to allow for that possibility.
-	 *	We could set a flag saying we're waiting for the membership versions (and quorum!)
-	 *	to synchronize before going on.  I don't know if anything bad happens
-	 *	if the CIB is ahead of us.  But I know for sure that bad things
-	 *	happen when the CIB is behind us (the CRM).
-	 *
-	 *	This probably has effects beyond that of running things without quorum
-	 *	or failing to run things when we have quorum.
-	 *
-	 *	We might try and run things on nodes that aren't running, and we
-	 *	might fail to schedule something on a node which is really available
-	 *	for use.  I'm pretty sure I've seen the latter occur
-	 *
-	 *	A crude method would be to poll every 100ms and detect when the CRM
-	 *	and CIB membership versions are the same.  I suspect if I knew
-	 *	the code better, there probably is a callback which occurs when the
-	 *	CIB is updated which we could use to trigger the delayed PE invocation.
-	 *	There _might_ also need to be a mechanism for cancelling this delayed
-	 *	pengine invocation - depending on what else happens after we
-	 *	get this far (this doesn't seem that likely)
-	 *	--AlanR.
-	 *
-	 */
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
 		if(pe_subsystem->pid > 0) {
 			int pid_status = -1;
@@ -152,6 +127,15 @@ do_pe_invoke(long long action,
 		return I_NULL;		
 	}
 
+	if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
+		crm_err("Attempted to invoke the PE without a consistent"
+			" copy of the CIB!");
+
+		/* start the join from scratch */
+		register_fsa_input_before(C_FSA_INTERNAL, I_ELECTION, NULL);
+		return I_NULL;		
+	}
+	
 	crm_debug("Requesting the current CIB");
 	call_id = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);

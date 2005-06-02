@@ -111,6 +111,11 @@ crm_timer_popped(gpointer data)
 		register_fsa_input_before(
 			C_TIMER_POPPED, timer->fsa_input, NULL);
 		
+	} else if(timer->fsa_input == I_FINALIZED
+		  && fsa_state != S_FINALIZE_JOIN) {
+		crm_debug("Discarding I_FINALIZED event in state: %s",
+			  fsa_state2string(fsa_state));
+		
 	} else if(timer->fsa_input != I_NULL) {
 		register_fsa_input(C_TIMER_POPPED, timer->fsa_input, NULL);
 	}
