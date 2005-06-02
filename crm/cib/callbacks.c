@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.56 2005/05/31 14:50:46 andrew Exp $ */
+/* $Id: callbacks.c,v 1.57 2005/06/02 09:23:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -927,46 +927,48 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		is_done = 0;
 	}
 
-	crm_debug("Processing message from peer (%s) to %s...",
+	crm_debug_2("Processing message from peer (%s) to %s...",
 		  originator, request_to?request_to:"master");
 	crm_log_message_adv(LOG_DEBUG_3, "Peer[inbound]", msg);
 
 	if(crm_is_true(update) && safe_str_eq(reply_to, cib_our_uname)) {
-		crm_debug_3("Processing global update that originated from us");
+		crm_debug("Processing global/peer update from %s"
+			  " that originated from us", originator);
 		needs_reply = FALSE;
 		local_notify = TRUE;
 		
 	} else if(crm_is_true(update)) {
-		crm_debug_3("Processing global update");
+		crm_debug("Processing global/peer update from %s", originator);
 		needs_reply = FALSE;
 
 	} else if(request_to != NULL
 		  && safe_str_eq(request_to, cib_our_uname)) {
-		crm_debug_3("Processing request sent to us");
+		crm_debug("Processing request sent to us from %s", originator);
 
 	} else if(delegated != NULL && cib_is_master == TRUE) {
-		crm_debug_3("Processing request sent to master instance");
+		crm_debug("Processing request sent to master instance from %s",
+			originator);
 
 	} else if(reply_to != NULL && safe_str_eq(reply_to, cib_our_uname)) {
-		crm_debug_3("Forward reply sent from %s to local clients",
+		crm_debug("Forward reply sent from %s to local clients",
 			  originator);
 		process = FALSE;
 		needs_reply = FALSE;
 		local_notify = TRUE;
 
 	} else if(delegated != NULL) {
-		crm_debug_3("Ignoring msg for master instance");
+		crm_debug_2("Ignoring msg for master instance");
 		return;
 
 	} else if(request_to != NULL) {
 		/* this is for a specific instance and we're not it */
-		crm_debug_3("Ignoring msg for instance on %s",
-			  crm_str(request_to));
+		crm_debug_2("Ignoring msg for instance on %s",
+			    crm_str(request_to));
 		return;
 		
 	} else if(reply_to == NULL && cib_is_master == FALSE) {
 		/* this is for the master instance and we're not it */
-		crm_debug_3("Ignoring reply to %s", crm_str(reply_to));
+		crm_debug_2("Ignoring reply to %s", crm_str(reply_to));
 		return;
 		
 	} else {
@@ -1025,6 +1027,11 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		
 		crm_debug_3("Sending callback to originator of delegated request");
 		if(client_obj != NULL) {
+			crm_debug("Sending %ssync response to %s"
+				  " (originator of delegated request)",
+				  (call_options & cib_sync_call)?"":"an a-",
+				  client_obj->id);
+
 			if(is_done == 0) {
 				crm_debug_3("Sending local modify response");
 
@@ -1032,14 +1039,10 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 				crm_debug_3("Sending master response");
 			}
 			if(call_options & cib_sync_call) {
-				crm_debug_3("Sending sync response: %d",
-					  call_options);
-
 				send_via_callback_channel(
 					client_reply, client_obj->id);
 
 			} else {
-				crm_debug_3("Sending async response");
 				send_via_callback_channel(
 					client_reply, client_obj->callback_id);
 			}

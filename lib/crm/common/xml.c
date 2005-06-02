@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.9 2005/05/31 20:27:52 andrew Exp $ */
+/* $Id: xml.c,v 1.10 2005/06/02 09:23:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -183,9 +183,8 @@ get_xml_attr_nested(crm_data_t *parent,
 	
 	attr_value = crm_element_value(attr_parent, attr_name);
 	if((attr_value == NULL || strlen(attr_value) == 0) && error) {
-		crm_err(
-		       "No value present for %s at %s",
-		       attr_name, xmlGetNodePath(attr_parent));
+		crm_err("No value present for %s at %s",
+			attr_name, xmlGetNodePath(attr_parent));
 		return NULL;
 	}
 	
@@ -206,8 +205,8 @@ find_entity(crm_data_t *parent, const char *node_name, const char *id)
 			return a_child;
 		}
 		);
-	crm_debug("node <%s id=%s> not found in %s.",
-		  node_name, id, xmlGetNodePath(parent));
+	crm_debug_2("node <%s id=%s> not found in %s.",
+		    node_name, id, xmlGetNodePath(parent));
 	return NULL;
 }
 

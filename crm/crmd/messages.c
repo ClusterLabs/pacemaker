@@ -696,7 +696,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		if(table_key == NULL) {
 			table_key = (gpointer)crm_strdup(client_name);
 		}
-		crm_debug_2("Accepted client %s", crm_str(table_key));
+		crm_debug("Accepted client %s", crm_str(table_key));
 
 		curr_client->table_key = table_key;
 		curr_client->sub_sys = crm_strdup(client_name);

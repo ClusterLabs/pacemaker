@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.32 2005/05/19 10:50:08 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.33 2005/06/02 09:23:43 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -284,8 +284,8 @@ main(int argc, char **argv)
 
 		mainloop = g_main_new(FALSE);
 
-		crm_debug_3("Setting operation timeout to %dms",
-			  message_timeout_ms);
+		crm_debug("Setting operation timeout to %dms for call %d",
+			  message_timeout_ms, request_id);
 
 		message_timer_id = Gmain_timeout_add(
 			message_timeout_ms, admin_message_timeout, NULL);
