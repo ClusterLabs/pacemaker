@@ -86,6 +86,7 @@ static int get_provider_list(const char* ra_type, GList ** providers);
 /* The end of exported function list */
  
 /* The begin of internal used function & data list */
+#define HADEBUGVAL      "HA_DEBUG"
 #define MAX_PARAMETER_NUM 40
 typedef char * RA_ARGV[MAX_PARAMETER_NUM];
 
@@ -150,6 +151,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	char ra_pathname[RA_MAX_NAME_LENGTH];
 	uniform_ret_execra_t exit_value;
 	GString * debug_info;
+	char * inherit_debuglevel = NULL;
 	char * optype_tmp = NULL;
 	int index_tmp = 0;
 
@@ -181,17 +183,21 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 
 	get_ra_pathname(RA_PATH, rsc_type, NULL, ra_pathname);
 
-	debug_info = g_string_new("");
-	do {
-		g_string_append(debug_info, params_argv[index_tmp]);
-		g_string_append(debug_info, " ");
-	} while (params_argv[++index_tmp] != NULL);
-	debug_info->str[debug_info->len-1] = '\0';
-	/*
-	cl_log(LOG_DEBUG, "RA instance %s executing: heartbeat::%s"
-				, rsc_id, debug_info->str);
-	*/
-	g_string_free(debug_info, TRUE);
+	/* let this log show only high loglevel. */
+	inherit_debuglevel = getenv(HADEBUGVAL);
+	if ((inherit_debuglevel != NULL) && (atoi(inherit_debuglevel) > 1)) {
+		debug_info = g_string_new("");
+		do {
+			g_string_append(debug_info, params_argv[index_tmp]);
+			g_string_append(debug_info, " ");
+		} while (params_argv[++index_tmp] != NULL);
+		debug_info->str[debug_info->len-1] = '\0';
+
+		cl_log(LOG_DEBUG, "RA instance %s executing: heartbeat::%s"
+			, rsc_id, debug_info->str);
+
+		g_string_free(debug_info, TRUE);
+	} 
 	
 	execv(ra_pathname, params_argv);
 	cl_log(LOG_ERR, "execv error when to execute a heartbeat RA %s.", rsc_type);

@@ -69,6 +69,8 @@ static int get_provider_list(const char* ra_type, GList ** providers);
 /* The end of exported function list */
 
 /* The begin of internal used function & data list */
+#define HADEBUGVAL      "HA_DEBUG"
+
 static void add_OCF_prefix(GHashTable * params, GHashTable * new_params);
 static void add_OCF_env_vars(GHashTable * env, const char * rsc_id,
 			     const char * rsc_type, const char * provider);
@@ -144,6 +146,7 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	char ra_pathname[RA_MAX_NAME_LENGTH];
 	GHashTable * tmp_for_setenv;
 	GString * params_gstring;
+	char * inherit_debuglevel = NULL;
 
 	get_ra_pathname(RA_PATH, rsc_type, provider, ra_pathname);
 
@@ -154,16 +157,18 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	raexec_setenv(tmp_for_setenv);
 	g_hash_table_foreach_remove(tmp_for_setenv, let_remove_eachitem, NULL);
 	g_hash_table_destroy(tmp_for_setenv);
-	
-	/* execute the RA */
-	params_gstring = g_string_new("");
-	hash_to_str(params, params_gstring);
-	/* 
-	cl_log(LOG_DEBUG, "RA instance %s executing: OCF::%s %s. Parameters: "
-		"{%s}", rsc_id, rsc_type, op_type, params_gstring->str);
-	*/
-	g_string_free(params_gstring, TRUE);
 
+	/* let this log show only high loglevel. */
+	inherit_debuglevel = getenv(HADEBUGVAL);
+	if ((inherit_debuglevel != NULL) && (atoi(inherit_debuglevel) > 1)) {
+		params_gstring = g_string_new("");
+		hash_to_str(params, params_gstring);
+		cl_log(LOG_DEBUG, "RA instance %s executing: OCF::%s %s. Parameters: "
+			"{%s}", rsc_id, rsc_type, op_type, params_gstring->str);
+		g_string_free(params_gstring, TRUE);
+	}
+
+	/* execute the RA */
 	execl(ra_pathname, ra_pathname, op_type, NULL);
 
 	switch (errno) {
