@@ -164,6 +164,7 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 {
 	stonithRA_ops_t * op;
 	int call_id = -1;
+	char buffer_tmp[32];
 
 	/* Handling "meta-data" operation in a special way.
 	 * Now handle "meta-data" operation locally. 
@@ -177,7 +178,9 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 		exit(0);
 	}
 
-	if (ST_OK != stonithd_signon("STONITH_RA_EXEC")) {
+	g_snprintf(buffer_tmp, sizeof(buffer_tmp), "%s_%d"
+		, 	"STONITH_RA_EXEC", getpid());
+	if (ST_OK != stonithd_signon(buffer_tmp)) {
 		cl_log(LOG_ERR, "STONITH_RA_EXEC: Cannot sign on the stonithd.");
 		exit(EXECRA_UNKNOWN_ERROR);
 	}
