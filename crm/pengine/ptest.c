@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.52 2005/06/01 19:03:04 andrew Exp $ */
+/* $Id: ptest.c,v 1.53 2005/06/03 14:15:56 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -145,6 +145,8 @@ main(int argc, char **argv)
 	cleanup_calculations(&data_set);
 
 	crm_mem_stats(NULL);
+ 	CRM_DEV_ASSERT(crm_mem_stats(NULL) == FALSE);
+	
 
 #ifdef MCHECK
 	muntrace();

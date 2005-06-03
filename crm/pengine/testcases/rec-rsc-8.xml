@@ -15,7 +15,7 @@
     <constraints/>
   </configuration>
   <status>
-    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc1" last_op="start" rsc_state="running" op_status="0" rc_code="0">

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.63 2005/06/01 19:03:04 andrew Exp $ */
+/* $Id: stages.c,v 1.64 2005/06/03 14:15:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -66,6 +66,8 @@ stage0(pe_working_set_t *data_set)
 	
 	/* reset remaining global variables */
 
+	transition_timeout = "60s"; /* 1 minute */
+	
 	if(data_set->input == NULL) {
 		return FALSE;
 	}
@@ -77,7 +79,6 @@ stage0(pe_working_set_t *data_set)
 			data_set->input, XML_ATTR_DC_UUID);
 	}	
 	
-	transition_timeout = "60s"; /* 1 minute */
 	unpack_config(config, data_set);
 
 	if(data_set->no_quorum_policy != no_quorum_ignore) {

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.45 2005/06/01 22:30:21 andrew Exp $ */
+/* $Id: native.c,v 1.46 2005/06/03 14:15:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -282,6 +282,9 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 			crm_info("Start resource %s (%s)\t(recovery)",
 				 rsc->id, chosen->details->uname);
 			start = start_action(rsc, chosen);
+
+			/* make the restart required */
+			order_stop_start(rsc, rsc, pe_ordering_manditory);
 		}
 
 		if(rsc->recovery_type == recovery_block) {
@@ -320,6 +323,9 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				start = start_action(rsc, chosen);
 				stop = stop_action(rsc, node);
 
+				/* make the restart required */
+				order_stop_start(rsc, rsc, pe_ordering_manditory);
+
 			} else {
 				crm_info("Leave resource %s\t(%s)",
 					 rsc->id, chosen->details->uname);
@@ -339,6 +345,9 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				 chosen->details->uname);
 			stop = stop_action(rsc, node);
 			start = start_action(rsc, chosen);
+
+			/* make the restart required */
+			order_stop_start(rsc, rsc, pe_ordering_manditory);
 			
 		} else {
 			crm_info("Stop  resource %s\t(%s)",
@@ -358,7 +367,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 
-	order_stop_start(rsc, rsc);
+	order_restart(rsc);
 }
 
 void native_rsc_colocation_lh(rsc_colocation_t *constraint)
@@ -676,6 +685,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		
 	pe_free_shallow(native_data->allowed_nodes);
 	native_data->allowed_nodes = or_list;
+
 	slist_iter(node_rh, node_t, constraint->node_list_rh, lpc,
 		   native_update_node_weight(
 			   rsc, constraint, node_rh->details->uname,
@@ -735,6 +745,7 @@ void native_free(resource_t *rsc)
 		(native_variant_data_t *)rsc->variant_opaque;
 	
 	crm_debug_4("Freeing Allowed Nodes & Agent");
+	crm_free(native_data->color);
 	pe_free_shallow(native_data->allowed_nodes);
 	crm_free(native_data->agent);
 	common_free(rsc);
@@ -780,12 +791,14 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 	}
 		
 	if(update_lh) {
+		CRM_DEV_ASSERT(native_data_lh->color != native_data_rh->color);
 		crm_free(native_data_lh->color);
 		rsc_lh->runnable      = rsc_rh->runnable;
 		rsc_lh->provisional   = rsc_rh->provisional;
 		native_data_lh->color = copy_color(native_data_rh->color);
 	}
 	if(update_rh) {
+		CRM_DEV_ASSERT(native_data_lh->color != native_data_rh->color);
 		crm_free(native_data_rh->color);
 		rsc_rh->runnable      = rsc_lh->runnable;
 		rsc_rh->provisional   = rsc_lh->provisional;
@@ -995,7 +1008,7 @@ native_assign_color(resource_t *rsc, color_t *color)
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 
-	native_data->color = local_color;
+	native_data->color = copy_color(local_color);
 	rsc->provisional = FALSE;
 
 	if(local_color != NULL) {

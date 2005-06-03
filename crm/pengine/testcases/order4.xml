@@ -22,7 +22,7 @@
     </constraints>
   </configuration>
   <status>
-    <node_state id="uuid1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
-    <node_state id="uuid2" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
   </status>
 </cib>

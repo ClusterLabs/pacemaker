@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<cib>
+  <configuration>
+    <crm_config>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </crm_config>
+    <nodes>
+      <node id="uuid1" uname="node1" type="member"/>
+      <node id="uuid2" uname="node2" type="member"/>
+    </nodes>
+    <resources>
+      <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
+      <resource id="rsc2" class="heartbeat" type="apache" priority="1.0" restart_type="restart"/>
+      <resource id="rsc3" class="heartbeat" type="apache" priority="1.0" restart_type="restart"/>
+      <resource id="rsc4" class="heartbeat" type="apache" priority="1.0"/>
+      <resource id="rsc5" class="heartbeat" type="apache" priority="1.0"/>
+      <resource id="rsc6" class="heartbeat" type="apache" priority="1.0" restart_type="restart"/>
+      <resource id="rsc7" class="heartbeat" type="apache" priority="1.0" restart_type="restart"/>
+      <resource id="rsc8" class="heartbeat" type="apache" priority="1.0"/>
+    </resources>
+    <constraints>
+      <rsc_order id="order1" from="rsc1" type="before" to="rsc2"/>
+      <rsc_order id="order2" from="rsc3" type="before" to="rsc4"/>
+      <rsc_order id="order3" from="rsc5" type="before" to="rsc6"/>
+      <rsc_order id="order4" from="rsc7" type="before" to="rsc8"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <lrm>
+        <lrm_resources>
+          <lrm_resource id="rsc1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+          </lrm_resource>
+          <lrm_resource id="rsc2" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc2" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="2"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc3" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc3" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="3"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc4" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc4" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="4"/>
+	  </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <lrm>
+        <lrm_resources>
+          <lrm_resource id="rsc5" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc5" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+          </lrm_resource>
+          <lrm_resource id="rsc6" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc6" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="2"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc7" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc7" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="3"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc8" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc8" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="4"/>
+	  </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.47 2005/06/01 22:30:21 andrew Exp $ */
+/* $Id: graph.c,v 1.48 2005/06/03 14:15:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,68 +43,144 @@ update_action_states(GListPtr actions)
 	return TRUE;
 }
 
+#define UPDATE_THEM 1
 
 gboolean
 update_action(action_t *action)
 {
 	gboolean change = FALSE;
-
-	crm_debug_3("Processing action %d", action->id);
+	enum action_tasks task = no_action;
+	
+	crm_debug_3("Processing action %d: %s",
+		    action->id, action->optional?"optional":"required");
+#if UPDATE_THEM
 	slist_iter(
 		other, action_wrapper_t, action->actions_before, lpc,
 		crm_debug_3("\tChecking action %d: %s/%s",
 			    other->action->id, ordering_type2text(other->type),
 			    other->action->optional?"optional":"required");
-		if(action->optional == FALSE
-		   && other->type == pe_ordering_manditory
-		   && other->action->optional) {
-			change = TRUE;
-			other->action->optional = FALSE;
-			crm_debug_2("Marking action %d manditory because of %d",
-				    other->action->id, action->id);
-			update_action(other->action);
-		} 
-		);
 
+		if(other->type == pe_ordering_manditory) {
+			
+		} else if(other->type == pe_ordering_restart
+			  && action->rsc->start_pending == FALSE) {
+
+		} else {
+			crm_debug_3("\t  Ignoring: %s",
+				    ordering_type2text(other->type));
+			continue;
+			
+		}
+		if(action->optional || other->action->optional == FALSE) {
+			crm_debug_3("\t  Ignoring: %s/%s",
+				    other->action->optional?"-":"they are not optional",
+				    action->optional?"we are optional":"-");
+			continue;
+		}
+
+		other->action->optional = FALSE;
+		crm_debug_2("* Marking action %d manditory because of %d",
+			    other->action->id, action->id);
+		update_action(other->action);
+		);
+#else
+	slist_iter(
+		other, action_wrapper_t, action->actions_before, lpc,
+		crm_debug_3("\tChecking action %d: %s/%s",
+			    other->action->id, ordering_type2text(other->type),
+			    other->action->optional?"optional":"required");
+		if(other->type != pe_ordering_manditory) {
+			crm_debug_3("\t  Ignoring: %s",
+				    ordering_type2text(other->type));
+			continue;
+		} else if(other->action->optional || action->optional == FALSE) {
+			crm_debug_3("\t  Ignoring: %s/%s",
+				    other->action->optional?"they are optional":"-",
+				    action->optional?"-":"we are not optional");
+			continue;
+		}
+
+		change = TRUE;
+		action->optional = FALSE;
+		crm_debug_2("* Marking action %d manditory because of %d",
+			    action->id, other->action->id);
+		);
+#endif
 	slist_iter(
 		other, action_wrapper_t, action->actions_after, lpc,
-
-		if(action->pseudo == FALSE
-		   && action->runnable == FALSE
-		   && action->optional == FALSE) {
+		
+		if(action->pseudo == FALSE && action->runnable == FALSE) {
 			if(other->action->runnable == FALSE) {
 				crm_debug_2("Action %d already un-runnable",
 					  other->action->id);
-				continue;
 			} else {
-				change = TRUE;
-				other->action->runnable =FALSE;
+				other->action->runnable = FALSE;
 				crm_debug_2("Marking action %d un-runnable"
 					  " because of %d",
 					  other->action->id, action->id);
 				update_action(other->action);
 			}
 		}
-		
 
-		if(action->optional == FALSE && other->action->optional) {
-			crm_debug_3("\t(restart)Checking action %d",
-				    other->action->id);
+		crm_debug_3("\t(Recover) Checking action %d: %s/%s",
+			    other->action->id, ordering_type2text(other->type),
+			    other->action->optional?"optional":"required");
 
-	switch(action->rsc->restart_type) {
-		case pe_restart_ignore:
-			break;
-		case pe_restart_restart:
-			change = TRUE;
-			other->action->optional = FALSE;
-			crm_debug_2("(Restart) Marking action %d manditory because of %d",
-				  other->action->id, action->id);
-			update_action(other->action);
-	}
+		if(other->action->rsc == NULL) {
+			continue;
+			
+		} else if(other->type == pe_ordering_recover) {
+			if(other->action->rsc->restart_type != pe_restart_restart) {
+				crm_debug_3("\t  Ignoring: restart type %d",
+					    other->action->rsc->restart_type);
+				continue;
+			}
+			
+		} else if(other->type == pe_ordering_restart) {
+			if(action->rsc != other->action->rsc) {
+				crm_err("Unexpected!");
+				continue;
+			}
+		} else {
+			crm_debug_3("\t  Ignoring: ordering %s",
+				    ordering_type2text(other->type));
+			continue;
 		}
 		
+		if(other->action->optional == FALSE || action->optional) {
+			crm_debug_3("\t  Ignoring: %s/%s",
+				    action->optional?"we are optional":"-",
+				    other->action->optional?"-":"they are not optional");
+			continue;
+		}
+
+		task = text2task(action->task);
+		switch(task) {
+			case stop_rsc:
+			case stopped_rsc:
+				crm_debug_3("\t  Ignoring: action %s",
+					    action->task);
+				break;
+			case start_rsc:
+			case started_rsc:
+				crm_debug_2("* (Recover) Marking action %d"
+					    " manditory because of %d",
+					    other->action->id, action->id);
+				other->action->optional = FALSE; 
+				update_action(other->action);
+				break;
+			default:
+				crm_debug_3("\t  Ignoring: action %s",
+					    action->task);
+				break;
+		}
 		);
 
+	if(change) {
+		update_action(action);
+	}
+
+	crm_debug_3("Action %d: %s", action->id, change?"update":"untouched");
 	return change;
 }
 
@@ -301,6 +377,7 @@ action2xml(action_t *action, gboolean as_input)
 void
 graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 {
+	int last_action = -1;
 	char *syn_id = NULL;
 	crm_data_t * syn = NULL;
 	crm_data_t * set = NULL;
@@ -355,14 +432,25 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 	xml_action = action2xml(action, FALSE);
 	add_node_copy(set, xml_action);
 	free_xml(xml_action);
+
+	action->actions_before = g_list_sort(
+		action->actions_before, sort_action_id);
 	
 	slist_iter(wrapper,action_wrapper_t,action->actions_before,lpc,
-			
-		   if(wrapper->action->optional == TRUE) {
-			   crm_debug_2("Input %d optional", wrapper->action->id);
+
+		   if(last_action == wrapper->action->id) {
+			   crm_debug_2("Input %d duplicated",
+				       wrapper->action->id);
+			   continue;
+			   
+		   } else if(wrapper->action->optional == TRUE) {
+			   crm_debug_2("Input %d optional",
+				       wrapper->action->id);
 			   continue;
 		   }
-		   
+
+		   CRM_DEV_ASSERT(last_action < wrapper->action->id);
+		   last_action = wrapper->action->id;
 		   input = create_xml_node(in, "trigger");
 		   
 		   xml_action = action2xml(wrapper->action, TRUE);

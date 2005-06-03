@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.25 2005/06/01 22:30:21 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.26 2005/06/03 14:15:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,6 +96,7 @@ extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
 extern gint sort_cons_strength(gconstpointer a, gconstpointer b);
 extern gint sort_color_weight(gconstpointer a, gconstpointer b);
 extern gint sort_node_weight(gconstpointer a, gconstpointer b);
+extern gint sort_action_id(gconstpointer a, gconstpointer b);
 
 /* enum 2 text functions (mostly used by print_*) */
 extern const char *contype2text(enum con_type type);

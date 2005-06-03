@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.67 2005/06/02 16:20:22 gshi Exp $ */
+/* $Id: pengine.h,v 1.68 2005/06/03 14:15:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -128,6 +128,8 @@ enum pe_restart {
 
 enum pe_ordering {
 	pe_ordering_manditory,
+	pe_ordering_restart,
+	pe_ordering_recover,
 	pe_ordering_optional
 };
 
@@ -327,25 +329,37 @@ extern gboolean custom_action_order(
 	resource_t *rh_rsc, char *rh_task, action_t *rh_action,
 	enum pe_ordering type, pe_working_set_t *data_set);
 
-#define order_start_start(rsc1,rsc2)					\
+#define order_start_start(rsc1,rsc2, type)				\
 	custom_action_order(rsc1, start_key(rsc1), NULL,		\
 			    rsc2, start_key(rsc2) ,NULL,		\
-			    pe_ordering_manditory, data_set)
-#define order_stop_stop(rsc1, rsc2)					\
+			    type, data_set)
+#define order_stop_stop(rsc1, rsc2, type)				\
 	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
 			    rsc2, stop_key(rsc2) ,NULL,		\
-			    pe_ordering_manditory, data_set)
-#define order_stop_start(rsc1, rsc2)					\
+			    type, data_set)
+
+#define order_restart(rsc1)						\
+	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
+			    rsc1, start_key(rsc1), NULL,	\
+			    pe_ordering_restart, data_set)
+
+#define order_stop_start(rsc1, rsc2, type)				\
 	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
 			    rsc2, start_key(rsc2) ,NULL,		\
-			    pe_ordering_optional, data_set)
-#define order_start_stop(rsc1, rsc2)					\
+			    type, data_set)
+
+#define order_start_stop(rsc1, rsc2, type)				\
 	custom_action_order(rsc1, start_key(rsc1), NULL,		\
 			    rsc2, stop_key(rsc2) ,NULL,		\
-			    pe_ordering_manditory, data_set)
+			    type, data_set)
 
 #define pe_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #define pe_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
+
+#define check_and_exit(stage) 	cleanup_calculations(data_set);	\
+	crm_mem_stats(NULL);						\
+	crm_err("Exiting: stage %d", stage);				\
+	exit(1);
 
 extern gboolean process_colored_constraints(resource_t *rsc);
 extern void graph_element_from_action(

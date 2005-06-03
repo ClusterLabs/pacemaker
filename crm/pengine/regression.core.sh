@@ -91,7 +91,7 @@ function do_test {
     fi
 
     if [ "$test_te" = "true" ]; then
-	../tengine/ttest -X $expected 2> $te_output
+	../tengine/ttest -X $output 2> $te_output
 	
 #    if [ "$create_mode" = "true" ]; then
 	if [ "$create_mode" = "true" -a ! -f $te_expected ]; then
@@ -113,6 +113,7 @@ function do_test {
 	elif [ "$rc" = 1 ]; then
 	    echo "Test $name	($base)...	* Failed (TE)";
 	    diff $diff_opts $te_expected $te_output 2>/dev/null >> $failed
+	    diff $diff_opts $te_expected $te_output
 	else 
 	    echo "Test $name	($base)...	Error TE (diff: $rc)";
 	    echo "==== Raw results for test ($base) TE ====" >> $failed

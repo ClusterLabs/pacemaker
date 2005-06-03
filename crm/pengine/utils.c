@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.83 2005/06/01 22:30:21 andrew Exp $ */
+/* $Id: utils.c,v 1.84 2005/06/03 14:15:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -241,7 +241,7 @@ node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
 				needs_filter = TRUE;
 			}
 
-		} else {
+		} else if(filter == FALSE || node->weight >= 0) {
 			node_t *new_node = node_copy(node);
 			result = g_list_append(result, new_node);
 		}
@@ -355,10 +355,10 @@ create_color(
 	
 	crm_action_debug_3(print_color("Created color", new_color, TRUE));
 
-	if(data_set != NULL) {
+	CRM_DEV_ASSERT(data_set != NULL);
+	if(crm_assert_failed == FALSE) {
 		data_set->colors = g_list_append(data_set->colors, new_color);
 	}
-	
 	return new_color;
 }
 
@@ -494,6 +494,25 @@ gint sort_rsc_priority(gconstpointer a, gconstpointer b)
 		return 1;
 	}
 
+	return 0;
+}
+
+/* lowest to highest */
+gint sort_action_id(gconstpointer a, gconstpointer b)
+{
+	const action_wrapper_t *action_wrapper2 = (const action_wrapper_t*)a;
+	const action_wrapper_t *action_wrapper1 = (const action_wrapper_t*)b;
+
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
+  
+	if(action_wrapper1->action->id > action_wrapper2->action->id) {
+		return -1;
+	}
+	
+	if(action_wrapper1->action->id < action_wrapper2->action->id) {
+		return 1;
+	}
 	return 0;
 }
 
@@ -786,6 +805,12 @@ ordering_type2text(enum pe_ordering type)
 		case pe_ordering_manditory:
 			result = "manditory";
 			break;
+		case pe_ordering_restart:
+			result = "restart";
+			break;
+		case pe_ordering_recover:
+			result = "recover";
+			break;
 		case pe_ordering_optional:
 			result = "optional";
 			break;
@@ -1038,7 +1063,7 @@ log_action(int log_level, const char *pre_text, action_t *action, gboolean detai
 			crm_log_maybe(log_level, "%s%s%sAction %d: %s %s @ %s",
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
-				      action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+				      action->optional?"Optional ":action->pseudo?"Pseduo ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 				      action->id, action->task,
 				      safe_val3(NULL, action, rsc, id),
 				      safe_val4(NULL, action, node, details, uname));

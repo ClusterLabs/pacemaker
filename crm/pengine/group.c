@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.20 2005/06/01 22:30:21 andrew Exp $ */
+/* $Id: group.c,v 1.21 2005/06/03 14:15:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,9 @@ typedef struct group_variant_data_s
 		resource_t *self;
 		resource_t *first_child;
 		resource_t *last_child;
+
+		gboolean child_starting;
+		gboolean child_stopping;
 		
 } group_variant_data_t;
 
@@ -142,40 +145,62 @@ void group_color(resource_t *rsc, pe_working_set_t *data_set)
  	group_data->self->fns->color(group_data->self, data_set);
 }
 
+void group_update_pseudo_status(resource_t *parent, resource_t *child);
+
 void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
-	gboolean child_starting = FALSE;
-	gboolean child_stopping = FALSE;
+	action_t *op = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 		child_rsc->fns->create_actions(child_rsc, data_set);
-		child_starting = child_starting || child_rsc->starting;
-		child_stopping = child_stopping || child_rsc->stopping;
+		group_update_pseudo_status(rsc, child_rsc);
 		);
 
-	if(child_starting) {
-		rsc->starting = TRUE;
-		start_action(group_data->self, NULL);
-		custom_action(group_data->self, started_key(rsc),
-			      CRMD_ACTION_STARTED, NULL, data_set);
-		
-	}
-	if(child_stopping) {
-		rsc->stopping = TRUE;
-		stop_action(group_data->self, NULL);
-		custom_action(group_data->self, stopped_key(rsc),
-			      CRMD_ACTION_STOPPED, NULL, data_set);
-	}
+	op = start_action(group_data->self, NULL);
+	op->optional = !group_data->child_starting;
+	op->pseudo   = TRUE;
+
+	op = custom_action(group_data->self, started_key(rsc),
+			   CRMD_ACTION_STARTED, NULL, data_set);
+	op->optional = !group_data->child_starting;
+	op->pseudo   = TRUE;
+
+	op = stop_action(group_data->self, NULL);
+	op->optional = !group_data->child_stopping;
+	op->pseudo   = TRUE;
 	
-	if(group_data->self != NULL) {
-		slist_iter(
-			action, action_t, group_data->self->actions, lpc,
-			action->pseudo   = TRUE;
-			);
+	op = custom_action(group_data->self, stopped_key(rsc),
+			   CRMD_ACTION_STOPPED, NULL, data_set);
+	op->optional = !group_data->child_stopping;
+	op->pseudo   = TRUE;
+}
+
+void
+group_update_pseudo_status(resource_t *parent, resource_t *child) 
+{
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, parent);
+
+	if(group_data->child_stopping && group_data->child_starting) {
+		return;
 	}
+	slist_iter(
+		action, action_t, child->actions, lpc,
+
+		if(action->optional) {
+			continue;
+		}
+		if(safe_str_eq(CRMD_ACTION_STOP, action->task)) {
+			group_data->child_stopping = TRUE;
+		} else if(safe_str_eq(CRMD_ACTION_START, action->task)) {
+			group_data->child_starting = TRUE;
+		}
+		
+		);
+
 }
 
 void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
@@ -187,24 +212,27 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		group_data->self, stopped_key(group_data->self), NULL,
 		group_data->self, start_key(group_data->self), NULL,
-		pe_ordering_manditory, data_set);
+		pe_ordering_optional, data_set);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
-		order_stop_start(child_rsc, child_rsc);
+		order_restart(child_rsc);
 
 		if(last_rsc != NULL) {
-			order_start_start(last_rsc, child_rsc);
-			order_stop_stop(child_rsc, last_rsc);
+			order_start_start(
+				last_rsc, child_rsc, pe_ordering_optional);
+			order_stop_stop(
+				child_rsc, last_rsc, pe_ordering_optional);
 
 		} else {
 			custom_action_order(
 				child_rsc, stop_key(child_rsc), NULL,
 				group_data->self, stopped_key(group_data->self), NULL,
-				pe_ordering_manditory, data_set);
+				pe_ordering_optional, data_set);
 
-			order_start_start(group_data->self, child_rsc);
+			order_start_start(group_data->self, child_rsc,
+					  pe_ordering_optional);
 		}
 		
 		last_rsc = child_rsc;
@@ -214,12 +242,14 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		custom_action_order(
 			last_rsc, start_key(last_rsc), NULL,
 			group_data->self, started_key(group_data->self), NULL,
-			pe_ordering_manditory, data_set);
+			pe_ordering_optional, data_set);
 
-		order_stop_stop(group_data->self, last_rsc);
+		order_stop_stop(
+			group_data->self, last_rsc, pe_ordering_optional);
 	}
 		
 }
+
 
 void group_rsc_colocation_lh(rsc_colocation_t *constraint)
 {

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.30 2005/06/01 22:30:21 andrew Exp $ */
+/* $Id: complex.c,v 1.31 2005/06/03 14:15:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -228,41 +228,10 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 	
 	crm_debug_2("Ordering %d: Action %d before %d",
 		  order?order->id:-1, lh_action->id, rh_action->id);
-	
-	crm_action_debug_3(
-		print_action("LH (order_actions)", lh_action, FALSE));
 
-	crm_action_debug_3(
-		print_action("RH (order_actions)", rh_action, FALSE));
-	
-	/* avoid creating duplicate entries for the same pre-requisite
-	 * in the transition graph
-	 */
-	slist_iter(
-		existing, action_wrapper_t, rh_action->actions_before, lpc,
-		if(existing->action == lh_action) {
-			wrapper = existing;
-			break;
-		}
-		);
+	log_action(LOG_DEBUG_4, "LH (order_actions)", lh_action, FALSE);
+	log_action(LOG_DEBUG_4, "RH (order_actions)", rh_action, FALSE);
 
-	if(wrapper && wrapper->type == order->type) {
-		crm_debug_2("Compressing multiple %s orderings for action %d",
-			    ordering_type2text(order->type), lh_action->id);
-
-	} else if(wrapper && wrapper->type == pe_ordering_optional) {
-		wrapper->type = order->type;
-		crm_debug_2("Changing an %s ordering into %s for action %d",
-			    ordering_type2text(wrapper->type),
-			    ordering_type2text(order->type), lh_action->id);
-		
-	} else if(wrapper && wrapper->type != pe_ordering_manditory) {
-		pe_err("Unknown type (%d) for action %d",
-		       wrapper->type, lh_action->id);
-	}
-	if(wrapper) {
-		return;
-	}
 	
 	crm_malloc0(wrapper, sizeof(action_wrapper_t));
 	if(wrapper != NULL) {
@@ -274,14 +243,15 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 		lh_action->actions_after = list;
 		wrapper = NULL;
 	}
-	
-	crm_malloc0(wrapper, sizeof(action_wrapper_t));
-	if(wrapper != NULL) {
-		wrapper->action = lh_action;
-		wrapper->type = order->type;
-		list = rh_action->actions_before;
-		list = g_list_append(list, wrapper);
-		rh_action->actions_before = list;
+	if(order->type != pe_ordering_recover) {
+		crm_malloc0(wrapper, sizeof(action_wrapper_t));
+		if(wrapper != NULL) {
+			wrapper->action = lh_action;
+			wrapper->type = order->type;
+			list = rh_action->actions_before;
+			list = g_list_append(list, wrapper);
+			rh_action->actions_before = list;
+		}
 	}
 }
 

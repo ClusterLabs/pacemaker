@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.22 2005/06/02 09:54:14 andrew Exp $ */
+/* $Id: incarnation.c,v 1.23 2005/06/03 14:15:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,6 +38,10 @@ typedef struct incarnation_variant_data_s
 		gboolean ordered;
 
 		GListPtr child_list; /* resource_t* */
+
+		gboolean child_starting;
+		gboolean child_stopping;
+		
 } incarnation_variant_data_t;
 
 void child_stopping_constraints(
@@ -61,10 +65,12 @@ void child_starting_constraints(
 void incarnation_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int lpc = 0;
+	crm_data_t * xml_obj_child = NULL;
 	crm_data_t * xml_obj = rsc->xml;
 	crm_data_t * xml_self = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 	incarnation_variant_data_t *incarnation_data = NULL;
 	resource_t *self = NULL;
+	char *inc_max = NULL;
 
 	const char *ordered =
 		crm_element_value(xml_obj, XML_RSC_ATTR_ORDERED);
@@ -88,6 +94,16 @@ void incarnation_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 	/* this is a bit of a hack - but simplifies everything else */
 	copy_in_properties(xml_self, xml_obj);
+
+	xml_obj_child = find_xml_node(xml_obj, "resource_group", FALSE);
+	if(xml_obj_child == NULL) {
+		xml_obj_child = find_xml_node(
+			xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
+	}
+
+	CRM_DEV_ASSERT(xml_obj_child != NULL);
+	if(crm_assert_failed) { return; }
+	
 	if(common_unpack(xml_self, &self, data_set)) {
 		incarnation_data->self = self;
 
@@ -102,44 +118,37 @@ void incarnation_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	if(crm_is_true(ordered)) {
 		incarnation_data->ordered = TRUE;
 	}
-	
-	xml_child_iter(
-		xml_obj, xml_obj_child, XML_CIB_TAG_RESOURCE,
 
-		char *inc_max = crm_itoa(incarnation_data->incarnation_max);
-		for(lpc = 0; lpc < incarnation_data->incarnation_max; lpc++) {
-			resource_t *child_rsc = NULL;
-			crm_data_t * child_copy = copy_xml_node_recursive(
-				xml_obj_child);
-
-			set_id(child_copy, rsc->id, lpc);
-			
-			if(common_unpack(child_copy, &child_rsc, data_set)) {
-				char *inc_num = crm_itoa(lpc);
-
-				incarnation_data->child_list = g_list_append(
-					incarnation_data->child_list, child_rsc);
-				
-				add_rsc_param(
-					child_rsc, XML_RSC_ATTR_INCARNATION, inc_num);
-				add_rsc_param(
-					child_rsc, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
-
-				crm_action_debug_3(
-					print_resource("Added", child_rsc, FALSE));
-
-				crm_free(inc_num);
-				
-			} else {
-				pe_err("Failed unpacking resource %s",
-					crm_element_value(child_copy, XML_ATTR_ID));
-			}
-		}
-		crm_free(inc_max);
+	inc_max = crm_itoa(incarnation_data->incarnation_max);
+	for(lpc = 0; lpc < incarnation_data->incarnation_max; lpc++) {
+		resource_t *child_rsc = NULL;
+		crm_data_t * child_copy = copy_xml_node_recursive(
+			xml_obj_child);
 		
-		/* only count the first one */
-		break;
-		);
+		set_id(child_copy, rsc->id, lpc);
+		
+		if(common_unpack(child_copy, &child_rsc, data_set)) {
+			char *inc_num = crm_itoa(lpc);
+			
+			incarnation_data->child_list = g_list_append(
+				incarnation_data->child_list, child_rsc);
+			
+			add_rsc_param(
+				child_rsc, XML_RSC_ATTR_INCARNATION, inc_num);
+			add_rsc_param(
+				child_rsc, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
+			
+			crm_action_debug_3(
+				print_resource("Added", child_rsc, FALSE));
+			
+			crm_free(inc_num);
+			
+		} else {
+			pe_err("Failed unpacking resource %s",
+			       crm_element_value(child_copy, XML_ATTR_ID));
+		}
+	}
+	crm_free(inc_max);
 	
 	crm_debug_3("Added %d children to resource %s...",
 		    incarnation_data->incarnation_max, rsc->id);
@@ -254,10 +263,11 @@ void incarnation_color(resource_t *rsc, pe_working_set_t *data_set)
 	crm_info("%d Incarnations are active", incarnation_data->active_incarnation);
 }
 
+void incarnation_update_pseudo_status(resource_t *parent, resource_t *child);
+
 void incarnation_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
-	gboolean child_starting = FALSE;
-	gboolean child_stopping = FALSE;
+	action_t *op = NULL;
 	resource_t *last_start_rsc = NULL;
 	resource_t *last_stop_rsc = NULL;
 	incarnation_variant_data_t *incarnation_data = NULL;
@@ -266,41 +276,65 @@ void incarnation_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 		child_rsc->fns->create_actions(child_rsc, data_set);
-
+		incarnation_update_pseudo_status(rsc, child_rsc);
 		if(child_rsc->starting) {
-			child_starting = TRUE;
 			last_start_rsc = child_rsc;
 		}
 		if(child_rsc->stopping) {
-			child_stopping = TRUE;
 			last_stop_rsc = child_rsc;
 		}
 		);
 
-	if(child_starting) {
-		rsc->starting = TRUE;
-		start_action(incarnation_data->self, NULL);
-		custom_action(incarnation_data->self, started_key(rsc),
-			      CRMD_ACTION_STARTED, NULL, data_set);
-		child_starting_constraints(
-			incarnation_data, pe_ordering_optional,
-			NULL, last_start_rsc, data_set);
-	}
-	if(child_stopping) {
-		rsc->stopping = TRUE;
-		stop_action(incarnation_data->self, NULL);
-		custom_action(incarnation_data->self, stopped_key(rsc),
-			      CRMD_ACTION_STOPPED, NULL, data_set);
-		child_stopping_constraints(
-			incarnation_data, pe_ordering_optional,
-			NULL, last_stop_rsc, data_set);
-	}
+	op = start_action(incarnation_data->self, NULL);
+	op->optional = !incarnation_data->child_starting;
+	op->pseudo   = TRUE;
 	
+	op = custom_action(incarnation_data->self, started_key(rsc),
+		      CRMD_ACTION_STARTED, NULL, data_set);
+ 	op->optional = !incarnation_data->child_starting;
+	op->pseudo   = TRUE;
+
+	child_starting_constraints(
+		incarnation_data, pe_ordering_optional,
+		NULL, last_start_rsc, data_set);
+	
+	op = stop_action(incarnation_data->self, NULL);
+	op->optional = !incarnation_data->child_stopping;
+	op->pseudo   = TRUE;
+
+	op = custom_action(incarnation_data->self, stopped_key(rsc),
+		      CRMD_ACTION_STOPPED, NULL, data_set);
+ 	op->optional = !incarnation_data->child_stopping;
+	op->pseudo   = TRUE;
+
+	child_stopping_constraints(
+		incarnation_data, pe_ordering_optional,
+		NULL, last_stop_rsc, data_set);
+}
+
+void
+incarnation_update_pseudo_status(resource_t *parent, resource_t *child) 
+{
+	incarnation_variant_data_t *incarnation_data = NULL;
+	get_incarnation_variant_data(incarnation_data, parent);
+
+	if(incarnation_data->child_stopping
+	   && incarnation_data->child_starting) {
+		return;
+	}
 	slist_iter(
-		action, action_t, incarnation_data->self->actions, lpc,
-		action->pseudo = TRUE;
-		action->optional = TRUE;
+		action, action_t, child->actions, lpc,
+
+		if(action->optional) {
+			continue;
+		}
+		if(safe_str_eq(CRMD_ACTION_STOP, action->task)) {
+			incarnation_data->child_stopping = TRUE;
+		} else if(safe_str_eq(CRMD_ACTION_START, action->task)) {
+			incarnation_data->child_starting = TRUE;
+		}
 		);
+
 }
 
 void
@@ -308,7 +342,8 @@ child_starting_constraints(
 	incarnation_variant_data_t *incarnation_data, enum pe_ordering type,
 	resource_t *child, resource_t *last, pe_working_set_t *data_set)
 {
-	if(incarnation_data->ordered) {
+	if(incarnation_data->ordered
+	   || incarnation_data->self->restart_type == pe_restart_restart) {
 		type = pe_ordering_manditory;
 	}
 	if(child == NULL) {
@@ -329,9 +364,7 @@ child_starting_constraints(
 
 		} /* else: child/child relative start */
 
-		custom_action_order(last, start_key(last), NULL,
-				    child, start_key(child), NULL,
-				    type, data_set);
+		order_start_start(last, child, type);
 
 	} else {
 		crm_debug_4("Un-ordered version");
@@ -343,10 +376,9 @@ child_starting_constraints(
 			type, data_set);
                 
 		/* global start before child start */
-		custom_action_order(
-			incarnation_data->self, start_key(incarnation_data->self), NULL,
-			child, start_key(child), NULL,
-			pe_ordering_manditory, data_set);
+/* 		order_start_start(incarnation_data->self, child, type); */
+		order_start_start(
+			incarnation_data->self, child, pe_ordering_manditory);
 	}
 }
 
@@ -355,7 +387,8 @@ child_stopping_constraints(
 	incarnation_variant_data_t *incarnation_data, enum pe_ordering type,
 	resource_t *child, resource_t *last, pe_working_set_t *data_set)
 {
-	if(incarnation_data->ordered) {
+	if(incarnation_data->ordered
+	   || incarnation_data->self->restart_type == pe_restart_restart) {
 		type = pe_ordering_manditory;
 	}
 	
@@ -363,19 +396,15 @@ child_stopping_constraints(
 		if(incarnation_data->ordered && last != NULL) {
 			crm_debug_4("Ordered version (last node)");
 			/* global stop before first child stop */
-			custom_action_order(
-				incarnation_data->self, stop_key(incarnation_data->self), NULL,
-				last, stop_key(last), NULL,
-				pe_ordering_manditory, data_set);
+			order_stop_stop(incarnation_data->self, last,
+					pe_ordering_manditory);
 		}
 		
 	} else if(incarnation_data->ordered && last != NULL) {
 		crm_debug_4("Ordered version");
 
 		/* child/child relative stop */
-		custom_action_order(child, stop_key(child), NULL,
-				    last, stop_key(last), NULL,
-				    type, data_set);
+		order_stop_stop(child, last, type);
 
 	} else if(incarnation_data->ordered) {
 		crm_debug_4("Ordered version (1st node)");
@@ -395,10 +424,7 @@ child_stopping_constraints(
 			type, data_set);
                         
 		/* global stop before child stop */
-		custom_action_order(
-			incarnation_data->self, stop_key(incarnation_data->self), NULL,
-			child, stop_key(child), NULL,
-			pe_ordering_manditory, data_set);
+		order_stop_stop(incarnation_data->self, child, type);
 	}
 }
 
@@ -420,7 +446,7 @@ incarnation_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 
 		/* child stop before start */
-		order_stop_start(child_rsc, child_rsc);
+		order_restart(child_rsc);
 
 		child_starting_constraints(
 			incarnation_data, pe_ordering_optional,
@@ -537,7 +563,8 @@ void incarnation_rsc_order_rh(
 
 	crm_debug_3("Processing RH of ordering constraint %d", order->id);
 
-	incarnation_data->self->fns->rsc_order_rh(lh_action, incarnation_data->self, order);
+ 	incarnation_data->self->fns->rsc_order_rh(lh_action, incarnation_data->self, order);
+
 }
 
 void incarnation_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)

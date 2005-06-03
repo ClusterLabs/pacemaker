@@ -1,2 +1,12 @@
- <transition_graph transition_id="0"/>
+ <transition_graph global_timeout="60s" transition_id="0">
+   <synapse id="0">
+     <action_set>
+       <rsc_op id="1" rsc_id="rsc1" operation="start" on_node="node1" on_node_uuid="node1" allow_fail="false">
+         <resource id="rsc1" class="heartbeat" priority="1.0"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+ </transition_graph>
 

@@ -10,7 +10,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="2" rsc_id="rsc2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="2" rsc_id="rsc2" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
         <resource id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
          <attributes/>
       </rsc_op>
@@ -30,7 +30,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="2" rsc_id="rsc2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+         <rsc_op id="2" rsc_id="rsc2" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>

@@ -1,0 +1,161 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<cib>
+  <configuration>
+    <crm_config>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </crm_config>
+    <nodes>
+      <node id="uuid1" uname="node1" type="member"/>
+      <node id="uuid2" uname="node2" type="member"/>
+    </nodes>
+    <resources>
+      <incarnation id="rsc1">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="incarnation_max" value="3"/>
+            <nvpair name="incarnation_node_max" value="1"/>
+          </attributes>
+        </instance_attributes>
+	<resource id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
+      </incarnation>
+      <incarnation id="rsc2" restart_type="restart">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="incarnation_max" value="3"/>
+            <nvpair name="incarnation_node_max" value="1"/>
+          </attributes>
+        </instance_attributes>
+	<resource id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
+      </incarnation>
+      <incarnation id="rsc3" restart_type="restart">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="incarnation_max" value="3"/>
+            <nvpair name="incarnation_node_max" value="1"/>
+          </attributes>
+        </instance_attributes>
+	<resource id="child_rsc3" class="heartbeat" type="apache" priority="1.0"/>
+      </incarnation>
+      <incarnation id="rsc4">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="incarnation_max" value="3"/>
+            <nvpair name="incarnation_node_max" value="1"/>
+          </attributes>
+        </instance_attributes>
+	<resource id="child_rsc4" class="heartbeat" type="apache" priority="1.0"/>
+      </incarnation>
+      <incarnation id="rsc5">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="incarnation_max" value="3"/>
+            <nvpair name="incarnation_node_max" value="1"/>
+          </attributes>
+        </instance_attributes>
+	<resource id="child_rsc5" class="heartbeat" type="apache" priority="1.0"/>
+      </incarnation>
+      <incarnation id="rsc6" restart_type="restart">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="incarnation_max" value="3"/>
+            <nvpair name="incarnation_node_max" value="1"/>
+          </attributes>
+        </instance_attributes>
+	<resource id="child_rsc6" class="heartbeat" type="apache" priority="1.0"/>
+      </incarnation>
+      <incarnation id="rsc7" restart_type="restart">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="incarnation_max" value="3"/>
+            <nvpair name="incarnation_node_max" value="1"/>
+          </attributes>
+        </instance_attributes>
+	<resource id="child_rsc7" class="heartbeat" type="apache" priority="1.0"/>
+      </incarnation>
+      <incarnation id="rsc8">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="incarnation_max" value="3"/>
+            <nvpair name="incarnation_node_max" value="1"/>
+          </attributes>
+        </instance_attributes>
+	<resource id="child_rsc8" class="heartbeat" type="apache" priority="1.0"/>
+      </incarnation>
+    </resources>
+    <constraints>
+      <rsc_order id="order1" from="rsc1" type="before" to="rsc2"/>
+      <rsc_order id="order2" from="rsc3" type="before" to="rsc4"/>
+      <rsc_order id="order3" from="rsc5" type="before" to="rsc6"/>
+      <rsc_order id="order4" from="rsc7" type="before" to="rsc8"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <lrm>
+	<lrm_agents>
+	  <lrm_agent class="heartbeat" type="apache"/>
+	</lrm_agents>
+        <lrm_resources>
+          <lrm_resource id="rsc1:child_rsc1:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc1:child_rsc1:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc2:child_rsc2:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc2:child_rsc2:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc2:child_rsc2:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc2:child_rsc2:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc3:child_rsc3:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc3:child_rsc3:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc4:child_rsc4:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc4:child_rsc4:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc4:child_rsc4:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc4:child_rsc4:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc6:child_rsc6:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc6:child_rsc6:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc8:child_rsc8:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc8:child_rsc8:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <lrm>
+	<lrm_agents>
+	  <lrm_agent class="heartbeat" type="apache"/>
+	</lrm_agents>
+        <lrm_resources>
+          <lrm_resource id="rsc1:child_rsc1:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc1:child_rsc1:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc3:child_rsc3:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc3:child_rsc3:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc5:child_rsc5:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc5:child_rsc5:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc5:child_rsc5:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc5:child_rsc5:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc6:child_rsc6:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc6:child_rsc6:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc7:child_rsc7:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc7:child_rsc7:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc7:child_rsc7:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc7:child_rsc7:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+          <lrm_resource id="rsc8:child_rsc8:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc8:child_rsc8:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+	  </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

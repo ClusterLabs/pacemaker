@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.95 2005/06/01 22:30:21 andrew Exp $ */
+/* $Id: unpack.c,v 1.96 2005/06/03 14:15:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1013,35 +1013,38 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		action_is_start = FALSE;
 	}
 
-#if 1
 	if((type_is_after && action_is_start)
 	   || (type_is_after == FALSE && action_is_start == FALSE)){
 		if(symmetrical_bool || action_is_start == FALSE) {
-			order_stop_stop(rsc_lh, rsc_rh);
+			if(rsc_lh->restart_type == pe_restart_restart){
+				order_stop_stop(rsc_lh, rsc_rh, pe_ordering_recover);
+			}
+			order_stop_stop(rsc_lh, rsc_rh, pe_ordering_optional);
 		}
 		
 		if(symmetrical_bool || action_is_start) {
-			order_start_start(rsc_rh, rsc_lh);
+			if(rsc_lh->restart_type == pe_restart_restart){
+				order_start_start(rsc_rh, rsc_lh, pe_ordering_recover);
+			}
+			order_start_start(rsc_rh, rsc_lh, pe_ordering_optional);
 		}
 
 	} else {
 		if(symmetrical_bool || action_is_start == FALSE) {
-			order_stop_stop(rsc_rh, rsc_lh);
+			if(rsc_rh->restart_type == pe_restart_restart){
+				order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover);
+			}
+			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_optional);
 		}
+
 		if(symmetrical_bool || action_is_start) {
-			order_start_start(rsc_lh, rsc_rh);
+			if(rsc_rh->restart_type == pe_restart_restart){
+				order_start_start(rsc_lh, rsc_rh, pe_ordering_recover);
+			}
+			order_start_start(rsc_lh, rsc_rh, pe_ordering_optional);
 		}
 	}
 	
-#else	
-	if(type_is_after) {
-		order_stop_stop(rsc_lh, rsc_rh);
-		order_start_start(rsc_rh, rsc_lh);
-	} else {
-		order_stop_stop(rsc_rh, rsc_lh);
-		order_start_start(rsc_lh, rsc_rh);
-	}
-#endif
 	return TRUE;
 }
 

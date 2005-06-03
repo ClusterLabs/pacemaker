@@ -127,10 +127,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" rsc_id="rsc2:child_rsc2" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+         <rsc_op id="4" rsc_id="rsc2:child_rsc1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
       </trigger>
       <trigger>
-        <rsc_op id="4" rsc_id="rsc2:child_rsc1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+         <rsc_op id="5" rsc_id="rsc2:child_rsc2" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>
@@ -156,10 +156,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="7" rsc_id="rsc2:child_rsc3" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+         <rsc_op id="6" rsc_id="rsc2:child_rsc2" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
       </trigger>
       <trigger>
-        <rsc_op id="6" rsc_id="rsc2:child_rsc2" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+         <rsc_op id="7" rsc_id="rsc2:child_rsc3" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
     </inputs>
   </synapse>

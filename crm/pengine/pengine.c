@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.76 2005/06/01 22:30:21 andrew Exp $ */
+/* $Id: pengine.c,v 1.77 2005/06/03 14:15:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -136,11 +136,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	return TRUE;
 }
 
-#define MEMCHECK_STAGE_5 0
-#define check_and_exit(stage) 	cleanup_calculations(data_set);	\
-	crm_mem_stats(NULL);						\
-	crm_err("Exiting: stage %d", stage);				\
-	exit(1);
+#define MEMCHECK_STAGE_2 0
 
 
 crm_data_t *
@@ -277,6 +273,7 @@ void
 set_working_set_defaults(pe_working_set_t *data_set) 
 {
 	data_set->input = NULL;
+	data_set->graph = NULL;
 	
 	data_set->dc_uuid           = NULL;
 	data_set->have_quorum       = TRUE;

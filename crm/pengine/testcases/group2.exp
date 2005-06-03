@@ -73,7 +73,7 @@
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="7" rsc_id="rsc3" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="9" rsc_id="rsc3" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <resource id="rsc3" class="heartbeat" type="apache"/>
          <attributes/>
       </rsc_op>
