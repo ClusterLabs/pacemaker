@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.22 2005/05/27 15:06:40 andrew Exp $ */
+/* $Id: tengine.h,v 1.23 2005/06/03 14:05:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -147,6 +147,16 @@ extern void tengine_stonith_connection_destroy(gpointer user_data);
 extern gboolean tengine_stonith_dispatch(IPC_Channel *sender, void *user_data);
 extern void check_for_completion(void);
 void process_trigger(int action_id);
+
+#ifdef TESTING
+#   define te_log_action(log_level, fmt...) {				\
+		do_crm_log(log_level, __FILE__, __FUNCTION__, fmt);	\
+		fprintf(stderr, fmt);					\
+		fprintf(stderr, "\n");					\
+	}
+#else
+#   define te_log_action(log_level, fmt...) do_crm_log(log_level, __FILE__, __FUNCTION__, fmt)
+#endif
 
 #endif
 

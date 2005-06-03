@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.75 2005/05/31 15:12:55 andrew Exp $ */
+/* $Id: tengine.c,v 1.76 2005/06/03 14:05:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -229,7 +229,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 			return -2;
 	}
 	
-	crm_debug("Action %d confirmed", match->id);
+	te_log_action(LOG_DEBUG, "Action %d confirmed", match->id);
 	match->complete = TRUE;
 	return match->id;
 }
@@ -448,14 +448,6 @@ check_for_completion(void)
 	}
 }
 
-#ifdef TESTING
-#   define te_log_action(log_level, fmt...) { \
-		do_crm_log(log_level, __FILE__, __FUNCTION__, fmt);	\
-		fprintf(stderr, fmt);				\
-	}
-#else
-#   define te_log_action(log_level, fmt...) do_crm_log(log_level, __FILE__, __FUNCTION__, fmt)
-#endif
 
 gboolean
 initiate_action(action_t *action) 
@@ -497,9 +489,7 @@ initiate_action(action_t *action)
 		const char *uuid = NULL;
 		const char *target = NULL;
 		const char *name = NULL;
-#ifndef TESTING
 		stonith_ops_t * st_op = NULL;
-#endif
 
 		xml_child_iter(
 			action_args, nvpair, XML_CIB_TAG_NVPAIR,
@@ -516,11 +506,14 @@ initiate_action(action_t *action)
 		CRM_DEV_ASSERT(target != NULL);
 		CRM_DEV_ASSERT(uuid != NULL);
 
-		te_log_action(LOG_INFO, "Executing fencing operation (%s) on %s", id, target);
+		te_log_action(LOG_INFO,"Executing fencing operation (%s) on %s",
+			      id, target);
 #ifdef TESTING
 		ret = TRUE;
 		action->complete = TRUE;
-#else
+		process_trigger(action->id);
+		return TRUE;
+#endif
 		crm_malloc0(st_op, sizeof(stonith_ops_t));
 		st_op->optype = RESET;
 		st_op->timeout = crm_atoi(timeout, "100"); /* ten seconds */
@@ -534,12 +527,11 @@ initiate_action(action_t *action)
 		} else if (ST_OK == stonithd_node_fence( st_op )) {
 			ret = TRUE;
 		}
-#endif
 		
 	} else if(on_node == NULL || strlen(on_node) == 0) {
 		/* error */
 		te_log_action(LOG_ERR,
-			      "Failed on corrupted command: %s (id=%s) %s on %s\n",
+			      "Failed on corrupted command: %s (id=%s) %s on %s",
 			      crm_element_name(action->xml), crm_str(id),
 			      crm_str(task), crm_str(on_node));
 			
@@ -547,6 +539,11 @@ initiate_action(action_t *action)
 		te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s",
 			      id, task, on_node);
 
+#ifdef TESTING
+		action->complete = TRUE;
+		process_trigger(action->id);
+		return TRUE;
+#endif
 /* 		action->complete = TRUE; */
 		msg_task = task;
 		send_command = TRUE;
@@ -558,6 +555,10 @@ initiate_action(action_t *action)
 		 * Writing pending stops makes it look like the
 		 *   resource is running again
 		 */
+#ifdef TESTING
+		cib_action_update(action, LRM_OP_PENDING);
+		return TRUE;
+#endif
 		if(safe_str_neq(task, CRMD_ACTION_STOP)) {
 			cib_action_update(action, LRM_OP_PENDING);
 		} else {
@@ -580,12 +581,7 @@ initiate_action(action_t *action)
 				     CRM_SYSTEM_TENGINE, NULL);
 
 		ha_msg_add(cmd, "transition_id", crm_str(counter));
-#ifndef TESTING
 		ret = send_ipc_message(crm_ch, cmd);
-#else
-		ret = TRUE;
-		crm_log_message(LOG_INFO, cmd);
-#endif
 		crm_free(counter);
 
 		if(ret && action->timeout > 0) {
@@ -697,7 +693,7 @@ cib_action_update(action_t *action, int status)
 		add_cib_op_callback(rc, FALSE, action, cib_action_updated);
 	}
 #else
-	fprintf(stderr, "Initiating action %d: %s %s on %s",
+	fprintf(stderr, "Initiating action %d: %s %s on %s\n",
 		action->id, task, rsc_id, target);
 	call_options = 0;
 	{

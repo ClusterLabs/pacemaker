@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.31 2005/05/27 15:06:40 andrew Exp $ */
+/* $Id: utils.c,v 1.32 2005/06/03 14:05:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -78,9 +78,10 @@ send_complete(const char *text, crm_data_t *msg,
 	
 	switch(reason) {
 		case te_update:
-			crm_debug("Transition status: %s by CIB update: %s",
-				  last_state!=s_idle?"Aborted":"Triggered",
-				  text);
+			te_log_action(LOG_DEBUG,
+				      "Transition status: %s by CIB update: %s",
+				      last_state!=s_idle?"Aborted":"Triggered",
+				      text);
 			if(msg != NULL) {
 				if(safe_str_eq(crm_element_name(msg),
 					       XML_TAG_CIB)) {
@@ -100,37 +101,39 @@ send_complete(const char *text, crm_data_t *msg,
 			print_state(LOG_DEBUG);
 			break;
 		case te_halt:
-			crm_info("Transition status: Stopped%s%s",
+			te_log_action(LOG_INFO,"Transition status: Stopped%s%s",
 				 text?": ":"", text?text:"");
 			print_state(LOG_DEBUG);
 			op = CRM_OP_TECOMPLETE;
 			break;
 		case te_abort_confirmed:
-			crm_info("Transition status: Confirmed Stopped%s%s",
-				 text?": ":"", text?text:"");
+			te_log_action(LOG_INFO,
+				      "Transition status: Confirmed Stopped%s%s",
+				      text?": ":"", text?text:"");
 			print_state(LOG_DEBUG);
 			op = CRM_OP_TEABORTED;
 			break;
 		case te_abort:
-			crm_info("Transition status: Stopped%s%s",
-				 text?": ":"", text?text:"");
+			te_log_action(LOG_INFO,"Transition status: Stopped%s%s",
+				      text?": ":"", text?text:"");
 			print_state(LOG_DEBUG);
 			break;
 		case te_done:
-			crm_info("Transition status: Complete%s%s",
-				 text?": ":"", text?text:"");
+			te_log_action(LOG_INFO,
+				      "Transition status: Complete%s%s",
+				      text?": ":"", text?text:"");
 			print_state(LOG_DEBUG);
 			op = CRM_OP_TECOMPLETE;
 			break;
 		case te_timeout:
-			crm_err("Transition status: Timed out after %dms",
-				transition_timer->timeout);
+			te_log_action(LOG_ERR,
+				      "Transition status: Timed out after %dms",
+				      transition_timer->timeout);
 			print_state(LOG_WARNING);
 			op = CRM_OP_TETIMEOUT;
 			break;
 		case te_failed:
-			crm_err("Transition status: Aborted by failed action: %s",
-				 text);
+			te_log_action(LOG_ERR, "Transition status: Aborted by failed action: %s", text);
 			crm_log_xml_debug(msg, "Cause");
 			print_state(LOG_WARNING);
 			break;
@@ -158,6 +161,23 @@ send_complete(const char *text, crm_data_t *msg,
 	return;
 #else
 	send_ipc_message(crm_ch, cmd);
+#endif	
+#if 0
+	if(is_ipc_empty(crm_ch)
+	   && is_ipc_empty(te_cib_conn->cmds->channel(te_cib_conn)) ) {
+		static gboolean mem_needs_init = TRUE;
+		if(mem_needs_init) {
+			crm_debug("Reached a stable point:"
+				  " reseting memory usage stats to zero");
+			crm_zero_mem_stats(NULL);
+			mem_needs_init = FALSE;
+			
+		} else {
+			crm_err("Reached a stable point:"
+				  " checking memory usage");
+			crm_mem_stats(NULL);
+		}
+	}
 #endif	
 }
 

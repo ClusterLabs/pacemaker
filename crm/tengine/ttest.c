@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.18 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: ttest.c,v 1.19 2005/06/03 14:05:41 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -165,7 +165,7 @@ main(int argc, char **argv)
 /* 	fcntl(channels[1]->ops->get_send_select_fd(channels[0]), F_SETFL, O_NONBLOCK); */
 /* 	fcntl(channels[1]->ops->get_recv_select_fd(channels[0]), F_SETFL, O_NONBLOCK); */
 	
-	G_main_add_IPC_Channel(G_PRIORITY_LOW,
+	G_main_add_IPC_Channel(G_PRIORITY_HIGH,
 			       channels[1], FALSE,
 			       subsystem_msg_dispatch,
 			       (void*)process_te_message, 
@@ -174,6 +174,8 @@ main(int argc, char **argv)
 	/* send transition graph over IPC instead */
 	cmd = create_request(CRM_OP_TRANSITION, xml_graph, NULL,
 			     CRM_SYSTEM_TENGINE, CRM_SYSTEM_TENGINE, NULL);
+
+
 	
 	send_ipc_message(channels[0], cmd);
 	free_xml(xml_graph);
