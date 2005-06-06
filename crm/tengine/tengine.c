@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.76 2005/06/03 14:05:40 andrew Exp $ */
+/* $Id: tengine.c,v 1.77 2005/06/06 09:18:37 zhenh Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -516,7 +516,7 @@ initiate_action(action_t *action)
 #endif
 		crm_malloc0(st_op, sizeof(stonith_ops_t));
 		st_op->optype = RESET;
-		st_op->timeout = crm_atoi(timeout, "100"); /* ten seconds */
+		st_op->timeout = crm_atoi(timeout, "10000"); /* ten seconds */
 		st_op->node_name = crm_strdup(target);
 		st_op->node_uuid = crm_strdup(uuid);
 
