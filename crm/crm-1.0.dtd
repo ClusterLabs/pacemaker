@@ -108,6 +108,8 @@
 
 
  <!-- Annotated version -->
+<!ELEMENT constraints (rsc_order*, rsc_colocation*, rsc_location*)>
+
 <!ELEMENT rsc_order EMPTY>
 <!ATTLIST rsc_order
           id        CDATA #REQUIRED
