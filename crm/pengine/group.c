@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.21 2005/06/03 14:15:53 andrew Exp $ */
+/* $Id: group.c,v 1.22 2005/06/06 14:19:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -416,6 +416,7 @@ void group_free(resource_t *rsc)
 	crm_debug_3("Freeing child list");
 	pe_free_shallow_adv(group_data->child_list, FALSE);
 
+	free_xml(group_data->self->xml);
 	if(group_data->self != NULL) {
 		group_data->self->fns->free(group_data->self);
 	}
