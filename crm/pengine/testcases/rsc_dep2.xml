@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<!-- must -->
+<cib>
+  <configuration>
+    <crm_config>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1" type="member"/>
+      <node id="node2" uname="node2" type="member"/>
+    </nodes>
+    <resources>
+      <resource id="rsc1" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="1.0"/>
+          </attributes>
+        </instance_attributes>
+      </resource>
+      <resource id="rsc2" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="2.0"/>
+          </attributes>
+        </instance_attributes>
+      </resource>
+      <resource id="rsc3" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="1.0"/>
+          </attributes>
+        </instance_attributes>
+      </resource>
+      <resource id="rsc4" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="2.0"/>
+          </attributes>
+        </instance_attributes>
+      </resource>
+    </resources>
+    <constraints>
+      <rsc_colocation id="same_1_2" from="rsc1" to="rsc2" score="INFINITY"/>
+      <rsc_colocation id="same_3_4" from="rsc3" to="rsc4" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <lrm>
+        <lrm_resources>
+          <lrm_resource id="rsc1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <lrm>
+        <lrm_resources>
+          <lrm_resource id="rsc4" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc4" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

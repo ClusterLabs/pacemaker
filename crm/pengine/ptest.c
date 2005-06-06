@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.53 2005/06/03 14:15:56 andrew Exp $ */
+/* $Id: ptest.c,v 1.54 2005/06/06 13:30:49 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -133,6 +133,7 @@ main(int argc, char **argv)
 #ifdef MCHECK
 	mtrace();
 #endif
+ 	CRM_DEV_ASSERT(cib_object != NULL);
 	crm_zero_mem_stats(NULL);
 	
 	do_calculations(&data_set, cib_object);
