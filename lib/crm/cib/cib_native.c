@@ -576,6 +576,8 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 	cib_callback_client_t *blob = NULL;
 
 	cib_callback_client_t local_blob;
+	/* GCC4 is not smar enough. Here make it happy and, anyway, harmless. */
+	memset(&local_blob, 0, sizeof(local_blob));
 	ha_msg_value_int(msg, F_CIB_CALLID, &call_id);
 
 	blob = g_hash_table_lookup(
