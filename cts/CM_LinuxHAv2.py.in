@@ -448,7 +448,13 @@ class LinuxHAv2(HeartbeatCM):
                 quorum = self.rsh.readaline(node, self["QuorumCmd"])
                 return  string.find(quorum,"1") != -1
         return 0
-
+    def Components(self):    
+        complist = [Process("lrmd",self),Process("crmd",self)]
+        if self.Env["DoFencing"] == 1 :
+            complist.append(Process("stonithd",self))
+            complist.append(Process("heartbeat",self))
+        return complist
+    
 class HAResource(Resource):
     def __init__(self, cm, node):
         '''
