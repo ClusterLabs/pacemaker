@@ -265,6 +265,7 @@ class LogWatcher:
 #+                if not matchobj:
 #+                    self.regexes.append(regex)
 
+            
 class ClusterManager(UserDict):
     '''The Cluster Manager class.
     This is an subclass of the Python dictionary class.
@@ -632,13 +633,16 @@ class ClusterManager(UserDict):
         raise ValueError("Abstract Class member (InternalCommConfig)")
 
     def HasQuorum(self, node_list):
-         "Return TRUE if the cluster currently has quorum"
-         # If we are auditing a partition, then one side will
-         #   have quorum and the other not.
-         # So the caller needs to tell us which we are checking
-         # If no value for node_list is specified... assume all nodes  
-         raise ValueError("Abstract Class member (HasQuorum)")
-
+        "Return TRUE if the cluster currently has quorum"
+        # If we are auditing a partition, then one side will
+        #   have quorum and the other not.
+        # So the caller needs to tell us which we are checking
+        # If no value for node_list is specified... assume all nodes  
+        raise ValueError("Abstract Class member (HasQuorum)")
+    
+    def Components(self):
+        raise ValueError("Abstract Class member (Components)")
+    
 class Resource:
     '''
     This is an HA resource (not a resource group).
@@ -698,6 +702,21 @@ class Resource:
                 return "{" + self.ResourceType + "::" + self.Instance + "}"
         else:
                 return "{" + self.ResourceType + "}"
+class Component:
+    def kill(self, node):
+        None
+        
+class Process(Component):
+    def __init__(self, name, cm):
+        self.name = str(name)
+        self.CM = cm
+        self.KillCmd = "killall -9 " + self.name
+        
+    def kill(self, node):
+        if self.CM.rsh(node, self.KillCmd) != 0:
+            self.log ("Warn: Kill %s failed on node %s" %(name,node))
+            return None
+        return 1
 
 class ScenarioComponent:
 
