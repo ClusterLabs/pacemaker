@@ -1474,7 +1474,9 @@ class ComponentFail(CTSTest):
         self.name="ComponentFail"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
-
+        self.complist = cm.Components()
+        self.theystart = cm["Pat:They_started"]
+        
     def __call__(self, node):
         '''Perform the 'ComponentFail' test. '''
         self.incr("calls")
@@ -1488,32 +1490,26 @@ class ComponentFail(CTSTest):
 #       the is_applicable() doesnt address this already?
 
         # select a component to kill
-        complist = ["lrmd","crmd", "ccm"]
-        complist = ["crmd"]
-        if self.CM.Env["DoFencing"] == 1 :
-            complist.append("stonithd")
-            complist.append("heartbeat")
-        
-        component = self.CM.Env.RandomGen.choice(complist)
+        component = self.CM.Env.RandomGen.choice(self.complist)
+        self.CM.debug("choose %s to kill"%component.name)
         patterns = []
-	patterns.append("%s heartbeat.*respawn.*" %(node, component))
-
+	patterns.append("%s heartbeat.*Respawning.*%s" %(node, component.name))
+        patterns.append(self.theystart%node)
+        
         # set the watch for stable
         watch = CTS.LogWatcher(
 	    self.CM["LogFileName"], patterns, self.CM["DeadTime"]+10)
         watch.setwatch()
         
         # kill the component
-        self.CM.log("...%s"%(component))
-        self.CM.rsh.readaline(node, "killall -9 %s"%component)
-
+        component.kill(node)
         # check to see Heartbeat noticed
 	match = watch.look()
         if match:
 	    self.CM.log("Found match: %s"%(match))
 
 	    # now watch it recover...
-	    if self.CM.cluster_stable(self.CM["deadtime"]):
+	    if self.CM.cluster_stable(self.CM["DeadTime"]):
 		return self.success()
 	    else:
 		self.failure("Cluster not stable")
@@ -1527,7 +1523,11 @@ class ComponentFail(CTSTest):
             return 1
         return 0
     
-#AllTestClasses.append(ComponentFail)
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        return ["""heartbeat.*killed by signal 9""", """heartbeat.*Respawning"""]
+    
+AllTestClasses.append(ComponentFail)
 
 ####################################################################
 class Split_brainTest2(CTSTest):
