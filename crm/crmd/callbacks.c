@@ -194,7 +194,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		   curr_client->table_key);
 
 	while(lpc == 0 && client->ops->is_message_pending(client)) {
-		if (client->ch_status != IPC_CONNECT) {
+		if (client->ch_status == IPC_DISCONNECT) {
 			/* The message which was pending for us is that
 			 * the IPC status is now IPC_DISCONNECT */
 			break;
@@ -229,7 +229,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 	
 	crm_debug_2("Processed %d messages", lpc);
     
-	if (client->ch_status != IPC_CONNECT) {
+	if (client->ch_status == IPC_DISCONNECT) {
 		stay_connected = FALSE;
 		process_client_disconnect(curr_client);
 	}

@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.42 2005/05/19 10:50:08 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.43 2005/06/10 07:05:06 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -288,23 +288,25 @@ main(int argc, char **argv)
 	hb_cluster = do_init();
 	if (hb_cluster != NULL) {
 		int res = do_work(hb_cluster);
-		if (res > 0) {
+		if (res >= 0) {
 			/* wait for the reply by creating a mainloop and running it until
 			 * the callbacks are invoked...
 			 */
 			mainloop = g_main_new(FALSE);
-			crm_debug_2("%s waiting for reply from the local CRM",
-				 crm_system_name);
+			expected_responses++;
+			if(res == 0) {
+				crm_debug_2("no reply expected,"
+					    " wait for the hello message only");
+				
+			} else {
+				crm_debug_2("Waiting for reply from the local CRM");
+			}
 
 			message_timer_id = Gmain_timeout_add(
 				message_timeout_ms, admin_message_timeout, NULL);
 			
 			g_main_run(mainloop);
 			return_to_orig_privs();
-			
-		} else if(res == 0) {
-			crm_debug_2("%s: no reply expected",
-				 crm_system_name);
 			
 		} else {
 			crm_err("No message to send");
@@ -619,20 +621,19 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 		lpc++;
+		received_responses++;
 		new_input = new_ipc_msg_input(msg);
 		msg->msg_done(msg);
 		crm_log_message(LOG_MSG, new_input->msg);
 		
 		if (new_input->xml == NULL) {
-			crm_info(
-			       "XML in IPC message was not valid... "
+			crm_info("XML in IPC message was not valid... "
 			       "discarding.");
 			continue;
 		} else if (validate_crm_message(
 				   new_input->msg, crm_system_name, admin_uuid,
 				   XML_ATTR_RESPONSE) == FALSE) {
-			crm_info(
-			       "Message was not a CRM response. Discarding.");
+			crm_info("Message was not a CRM response. Discarding.");
 			continue;
 		}
 
@@ -643,8 +644,6 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			result = "fail";
 		}
 		
-		received_responses++;
-
 		if(DO_HEALTH) {
 			const char *state = crm_element_value(
 				new_input->xml, "crmd_state");
