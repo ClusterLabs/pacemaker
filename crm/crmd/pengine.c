@@ -25,6 +25,7 @@
 #include <unistd.h>			/* for access */
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/realtime.h>
+#include <clplumbing/timers.h>
 #include <sys/types.h>	/* for calls to open */
 #include <sys/stat.h>	/* for calls to open */
 #include <fcntl.h>	/* for calls to open */
@@ -157,7 +158,6 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	int ccm_transition_id = -1;
 	gboolean cib_has_quorum = FALSE;
 	crm_data_t *local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
-	static const struct timespec cib_wait = {0,500000000L}; /* 0.5s */
 
 	if(AM_I_DC == FALSE
 	   || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE
@@ -183,7 +183,7 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 			  " matches: CIB=%d < CRM=%d",
 			  ccm_transition_id, fsa_membership_copy->id);
 		
-		nanosleep(&cib_wait, NULL); /* give the CIB time to catch up */
+		mssleep(500);
 		register_fsa_action(A_PE_INVOKE);
 		return;
 
