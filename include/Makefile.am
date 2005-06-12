@@ -28,7 +28,7 @@ includedir=$(base_includedir)/heartbeat
 noinst_HEADERS	        = hb_api_core.h
 include_HEADERS	        = apphb.h apphb_notify.h HBauth.h HBcomm.h	\
 			  ha_msg.h heartbeat.h hb_api.h ha_config.h	\
-			  recoverymgr.h
+			  recoverymgr.h replace_uuid.h
 
 SUBDIRS                 = clplumbing ocf pils saf 			\
 			  stonith fencing lrm crm

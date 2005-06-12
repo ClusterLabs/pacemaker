@@ -31,8 +31,30 @@
 #include <stdlib.h>
 #endif
 #include <string.h>
+#include <ctype.h>
 
-#include <hb_uuid.h>
+#include <replace_uuid.h>
+
+/*
+ * Local "replace" implementation of uuid functions.
+ */
+
+
+#include <sys/types.h>
+#include <sys/time.h>
+#include <time.h>
+
+/* UUID Variant definitions */
+#define UUID_VARIANT_NCS	0
+#define UUID_VARIANT_DCE	1
+#define UUID_VARIANT_MICROSOFT	2
+#define UUID_VARIANT_OTHER	3
+
+/* UUID Type definitions */  
+#define UUID_TYPE_DCE_TIME	1
+#define UUID_TYPE_DCE_RANDOM	4
+
+
 
 /* For uuid_compare() */
 #define UUCMP(u1,u2) if (u1 != u2) return((u1 < u2) ? -1 : 1);
@@ -238,52 +260,6 @@ uuid_unparse(const uuid_t uu, char *out)
 		uuid.node[3], uuid.node[4], uuid.node[5]);
 }
 
-time_t uuid_time(const uuid_t uu, struct timeval *ret_tv)
-{
-	struct uuid		uuid;
-	unsigned int			high;
-	struct timeval		tv;
-	unsigned long long	clock_reg;
-
-	uuid_unpack(uu, &uuid);
-	
-	high = uuid.time_mid | ((uuid.time_hi_and_version & 0xFFF) << 16);
-	clock_reg = uuid.time_low | ((unsigned long long) high << 32);
-
-	clock_reg -= (((unsigned long long) 0x01B21DD2) << 32) + 0x13814000;
-	tv.tv_sec = clock_reg / 10000000;
-	tv.tv_usec = (clock_reg % 10000000) / 10;
-
-	if (ret_tv)
-		*ret_tv = tv;
-
-	return tv.tv_sec;
-}
-
-int uuid_type(const uuid_t uu)
-{
-	struct uuid		uuid;
-
-	uuid_unpack(uu, &uuid);	
-	return ((uuid.time_hi_and_version >> 12) & 0xF);
-}
-
-int uuid_variant(const uuid_t uu)
-{
-	struct uuid		uuid;
-	int			var;
-
-	uuid_unpack(uu, &uuid);	
-	var = uuid.clock_seq;
-
-	if ((var & 0x8000) == 0)
-		return UUID_VARIANT_NCS;
-	if ((var & 0x4000) == 0)
-		return UUID_VARIANT_DCE;
-	if ((var & 0x2000) == 0)
-		return UUID_VARIANT_MICROSOFT;
-	return UUID_VARIANT_OTHER;
-}
 
 /************************************
  * Main routines: uuid_generate*()
@@ -445,7 +421,8 @@ static int get_node_id(unsigned char *node_id)
 /* Assume that the gettimeofday() has microsecond granularity */
 #define MAX_ADJUSTMENT 10
 
-static int get_clock(__u32 *clock_high, __u32 *clock_low, __u16 *ret_clock_seq)
+static int
+get_clock(__u32 *clock_high, __u32 *clock_low, __u16 *ret_clock_seq)
 {
 	static int			adjustment = 0;
 	static struct timeval		last = {0, 0};
@@ -503,7 +480,7 @@ uuid_generate_random(uuid_t out)
 }
 
 /* create a new uuid, based on time */
-void
+static void
 uuid_generate_time(uuid_t out)
 {
 	static unsigned char node_id[6];
@@ -534,8 +511,9 @@ uuid_generate_time(uuid_t out)
 void
 uuid_generate(uuid_t out)
 {
-	if (get_random_fd() >= 0)
+	if (get_random_fd() >= 0) {
 		uuid_generate_random(out);
-	else
+	}else{
 		uuid_generate_time(out);
+	}
 }
