@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.57 2005/06/02 09:23:43 andrew Exp $ */
+/* $Id: callbacks.c,v 1.58 2005/06/12 06:47:58 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,6 +28,7 @@
 
 #include <hb_api.h>
 #include <clplumbing/uids.h>
+#include <clplumbing/cl_uuid.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -141,16 +142,16 @@ cib_client_connect(IPC_Channel *channel, gpointer user_data)
 			client_callback = cib_null_callback;
 
 		} else {
-			uuid_t client_id;
+			cl_uuid_t client_id;
 
-			uuid_generate(client_id);
+			cl_uuid_generate(&client_id);
 			crm_malloc0(new_client->id, sizeof(char)*36);
-			uuid_unparse(client_id, new_client->id);
+			cl_uuid_unparse(&client_id, new_client->id);
 			new_client->id[35] = EOS;
 			
-			uuid_generate(client_id);
+			cl_uuid_generate(&client_id);
 			crm_malloc0(new_client->callback_id, sizeof(char)*36);
-			uuid_unparse(client_id, new_client->callback_id);
+			cl_uuid_unparse(&client_id, new_client->callback_id);
 			new_client->callback_id[35] = EOS;
 			
 			client_callback = cib_ro_callback;
