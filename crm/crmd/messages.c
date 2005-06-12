@@ -18,6 +18,7 @@
 #include <sys/param.h>
 #include <crm/crm.h>
 #include <string.h>
+#include <time.h>
 #include <crmd_fsa.h>
 
 #include <hb_api.h>
