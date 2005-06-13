@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.43 2005/06/10 07:05:06 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.44 2005/06/13 05:42:05 panjiam Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -378,7 +378,7 @@ do_work(ll_cluster_t * hb_cluster)
 
 		dest_node = NULL;
 
-	} else if(DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST || DO_OPTION){
+	} else if(DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST || DO_OPTION || DO_STANDBY){
 		cib_t *	the_cib = cib_new();
 		crm_data_t *output = NULL;
 		int call_options = cib_sync_call;
