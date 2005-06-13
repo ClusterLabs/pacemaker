@@ -338,32 +338,4 @@ get_providers(const char* class_path, const char* op_type, GList ** providers)
 	}
 
 	return 0;
-#if 0
-	struct dirent **namelist;
-	int file_num;
-	file_num = scandir(class_path, &namelist, 0, alphasort);
-	if (file_num < 0) {
-		return -2;
-	}else{
-		char tmp_buffer[FILENAME_MAX+1];
-		while (file_num--) {
-			if ((DT_DIR != namelist[file_num]->d_type) ||
-			    ('.' == namelist[file_num]->d_name[0])) {
-				free(namelist[file_num]);
-				continue;
-			}
-
-			snprintf(tmp_buffer,FILENAME_MAX,"%s/%s/%s",
-				 class_path, namelist[file_num]->d_name, op_type);
-
-			if ( filtered(tmp_buffer) == TRUE ) {
-				*providers = g_list_append(*providers,
-					g_strdup(namelist[file_num]->d_name));
-			}
-			free(namelist[file_num]);
-		}
-		free(namelist);
-	}
-	return g_list_length(*providers);
-#endif
 }
