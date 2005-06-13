@@ -23,6 +23,7 @@
 #include <sys/wait.h>
 
 #include <unistd.h>			/* for access */
+#include <heartbeat.h>
 #include <clplumbing/cl_signal.h>
 
 #include <errno.h>
@@ -491,9 +492,17 @@ crm_data_t*
 do_lrm_query(gboolean is_replace)
 {
 	crm_data_t *xml_result= NULL;
-	crm_data_t *xml_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	crm_data_t *xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
-	crm_data_t *rsc_list  = create_xml_node(xml_data,XML_LRM_TAG_RESOURCES);
+	crm_data_t *xml_state = NULL;
+	crm_data_t *xml_data  = NULL;
+	crm_data_t *rsc_list  = NULL;
+
+	xml_state = create_node_state(
+		fsa_our_uname, fsa_our_uname,
+		ACTIVESTATUS, XML_BOOLEAN_TRUE, ONLINESTATUS,
+		CRMD_JOINSTATE_MEMBER, CRMD_JOINSTATE_MEMBER, __FUNCTION__);
+
+	xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
+	rsc_list  = create_xml_node(xml_data, XML_LRM_TAG_RESOURCES);
 
 	/* Build a list of active (not always running) resources */
 	build_active_RAs(rsc_list);
@@ -503,8 +512,6 @@ do_lrm_query(gboolean is_replace)
 			xml_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
 	}
 
-	set_uuid(fsa_cluster_conn, xml_state, XML_ATTR_UUID, fsa_our_uname);
-	set_xml_property_copy(xml_state, XML_ATTR_UNAME, fsa_our_uname);
 	xml_result = create_cib_fragment(xml_state, NULL);
 
 	crm_log_xml_debug_3(xml_state, "Current state of the LRM");
