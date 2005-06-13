@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.22 2005/06/06 14:19:58 andrew Exp $ */
+/* $Id: group.c,v 1.23 2005/06/13 12:35:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,12 +70,13 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		crm_log_xml_err(xml_self, "Couldnt unpack dummy child");
 		return;
 	}
-	
+
 	xml_child_iter(
 		xml_obj, xml_native_rsc, XML_CIB_TAG_RESOURCE,
 
 		resource_t *new_rsc = NULL;
 		set_id(xml_native_rsc, rsc->id, -1);
+		inherit_parent_attributes(xml_self, xml_native_rsc, TRUE);
 
 		if(common_unpack(xml_native_rsc, &new_rsc, data_set)) {
 			group_data->num_children++;
@@ -103,6 +104,7 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	
 	rsc->variant_opaque = group_data;
 }
+
 
 resource_t *
 group_find_child(resource_t *rsc, const char *id)

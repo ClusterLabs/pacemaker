@@ -38,40 +38,42 @@ crmuid		= @HA_CCMUID@
 
 COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		$(top_builddir)/lib/clplumbing/libplumb.la		\
-		$(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		$(top_builddir)/lib/crm/cib/libcib.la		\
+		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
+		$(top_builddir)/crm/pengine/libpengine.la		\
+		$(top_builddir)/lib/crm/cib/libcib.la			\
 		$(top_builddir)/lib/apphb/libapphb.la			\
 		$(GLIBLIB)						\
 		$(LIBRT)
 
 LIBRT 		= @LIBRT@
-AM_CFLAGS	= @CFLAGS@						\
-		$(CRM_DEBUG_FLAGS)
+AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
 
 ## libraries
-lib_LTLIBRARIES	= 
+lib_LTLIBRARIES	= libpengine.la
 
 ## binary progs
 halib_PROGRAMS	= ptest pengine
 
 ## SOURCES
 
+libpengine_la_SOURCES	= color.c unpack.c graph.c			\
+			native.c group.c incarnation.c complex.c	\
+			rules.c pengine.c stages.c utils.c
+
+libpengine_la_LDFLAGS	= -version-info 0:0:0
+
 noinst_HEADERS	= pe_utils.h pengine.h complex.h pe_rules.h
 
-ptest_SOURCES	= color.c unpack.c graph.c \
-		native.c group.c incarnation.c complex.c  \
-		rules.c pengine.c stages.c utils.c ptest.c
+ptest_SOURCES	= ptest.c
 
-ptest_CFLAGS	= $(XML_FLAGS) -DTESTING=1 -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-ptest_LDFLAGS	= $(XML_LIBS)
+ptest_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+ptest_LDFLAGS	= 
 ptest_LDADD	= $(COMMONLIBS) 
 
-pengine_SOURCES	= unpack.c color.c graph.c  \
-		native.c group.c incarnation.c complex.c  \
-		rules.c pengine.c stages.c utils.c main.c
+pengine_SOURCES	= main.c
 
-pengine_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-pengine_LDFLAGS	= $(XML_LIBS)
+pengine_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+pengine_LDFLAGS	= 
 pengine_LDADD	= $(COMMONLIBS) \
 		$(top_builddir)/lib/hbclient/libhbclient.la
 

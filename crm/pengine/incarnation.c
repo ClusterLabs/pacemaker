@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.23 2005/06/03 14:15:54 andrew Exp $ */
+/* $Id: incarnation.c,v 1.24 2005/06/13 12:35:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -119,10 +119,11 @@ void incarnation_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		incarnation_data->ordered = TRUE;
 	}
 
+	inherit_parent_attributes(xml_self, xml_obj_child, FALSE);
 	inc_max = crm_itoa(incarnation_data->incarnation_max);
 	for(lpc = 0; lpc < incarnation_data->incarnation_max; lpc++) {
 		resource_t *child_rsc = NULL;
-		crm_data_t * child_copy = copy_xml_node_recursive(
+		crm_data_t * child_copy = copy_xml(
 			xml_obj_child);
 		
 		set_id(child_copy, rsc->id, lpc);

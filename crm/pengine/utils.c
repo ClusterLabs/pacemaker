@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.84 2005/06/03 14:15:59 andrew Exp $ */
+/* $Id: utils.c,v 1.85 2005/06/13 12:35:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,7 +30,8 @@
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
-void unpack_operation(crm_data_t *xml_obj, GHashTable *hash);
+void unpack_operation(
+	action_t *action, crm_data_t *xml_obj, pe_working_set_t* data_set);
 
 /* only for rsc_colocation constraints */
 rsc_colocation_t *
@@ -633,20 +634,20 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 		if(g_list_length(possible_matches) > 1) {
 			pe_warn("Action %s for %s on %s exists %d times",
 				task, rsc?rsc->id:"<NULL>",
-				on_node?on_node->details->id:"<NULL>",
+				on_node?on_node->details->uname:"<NULL>",
 				g_list_length(possible_matches));
 		}
 		
 		action = g_list_nth_data(possible_matches, 0);
 		crm_debug_4("Found existing action (%d) %s for %s on %s",
 			  action->id, task, rsc?rsc->id:"<NULL>",
-			  on_node?on_node->details->id:"<NULL>");
+			  on_node?on_node->details->uname:"<NULL>");
 	}
 
 	if(action == NULL) {
 		crm_debug_4("Creating action %s for %s on %s",
 			  task, rsc?rsc->id:"<NULL>",
-			  on_node?on_node->details->id:"<NULL>");
+			  on_node?on_node->details->uname:"<NULL>");
 
 		crm_malloc0(action, sizeof(action_t));
 		if(action != NULL) {
@@ -677,8 +678,9 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 
 			if(rsc != NULL) {
 				action->op_entry = find_rsc_op_entry(rsc, key);
+
 				unpack_operation(
-					action->op_entry, action->extra);
+					action, action->op_entry, data_set);
 
 				rsc->actions = g_list_append(
 					rsc->actions, action);
@@ -695,9 +697,16 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 			pe_warn("Action %d %s for %s on %s is unrunnable",
 				 action->id,
 				 task, rsc?rsc->id:"<NULL>",
-				 action->node?action->node->details->id:"<none>");
+				 action->node?action->node->details->uname:"<none>");
 			action->runnable = FALSE;
 
+		} else 	if(action->needs == rsc_req_nothing) {
+			action->runnable = TRUE;
+			
+		} else if(data_set->have_quorum == FALSE
+			&& data_set->no_quorum_policy == no_quorum_stop) {
+			action->runnable = FALSE;
+		
 		} else {
 			action->runnable = TRUE;
 		}
@@ -720,15 +729,50 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 }
 
 void
-unpack_operation(crm_data_t *xml_obj, GHashTable *hash)
+unpack_operation(
+	action_t *action, crm_data_t *xml_obj, pe_working_set_t* data_set)
 {
 	int lpc = 0;
 	const char *value = NULL;
 	const char *fields[] = {
 		"interval",
 		"timeout",
-		"start_delay"
+		"start_delay",
 	};
+	if(xml_obj != NULL) {
+		value = crm_element_value(xml_obj, "prereq");
+	}
+	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_START)) {
+		value = crm_element_value(action->rsc->xml, "start_prereq");
+	}
+	
+	if(value == NULL && safe_str_neq(action->task, CRMD_ACTION_START)) {
+		action->needs = rsc_req_nothing;		
+		value = "nothing (default)";
+
+	} else if(safe_str_eq(value, "nothing")) {
+		action->needs = rsc_req_nothing;
+
+	} else if(safe_str_eq(value, "quorum")) {
+		action->needs = rsc_req_quorum;
+
+	} else if(safe_str_eq(value, "fencing")) {
+		action->needs = rsc_req_stonith;
+		
+	} else if(data_set->no_quorum_policy == no_quorum_ignore) {
+		action->needs = rsc_req_nothing;
+		value = "nothing (default)";
+		
+	} else if(data_set->no_quorum_policy == no_quorum_freeze
+		  && data_set->stonith_enabled) {
+		action->needs = rsc_req_stonith;
+		value = "fencing (default)";
+
+	} else {
+		action->needs = rsc_req_quorum;
+		value = "quorum (default)";
+	}
+	crm_debug_2("\tAction %s requires: %s", action->task, value);
 
 	if(xml_obj == NULL) {
 		return;
@@ -736,10 +780,20 @@ unpack_operation(crm_data_t *xml_obj, GHashTable *hash)
 	
 	for(;lpc < DIMOF(fields); lpc++) {
 		value = crm_element_value(xml_obj, fields[lpc]);
-		add_hash_param(hash, fields[lpc], value);
+		add_hash_param(action->extra, fields[lpc], value);
 	}
 	
-	unpack_instance_attributes(xml_obj, hash);
+	unpack_instance_attributes(xml_obj, action->extra);
+
+
+/* 	if(safe_str_eq(native_data->agent->class, "stonith")) { */
+/* 		if(rsc->start_needs == rsc_req_stonith) { */
+/* 			pe_err("Stonith resources (eg. %s) cannot require" */
+/* 			       " fencing to start", rsc->id); */
+/* 		} */
+/* 		rsc->start_needs = rsc_req_quorum; */
+/* 	} */
+
 }
 
 

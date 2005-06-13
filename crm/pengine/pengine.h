@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.68 2005/06/03 14:15:56 andrew Exp $ */
+/* $Id: pengine.h,v 1.69 2005/06/13 12:35:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,6 +50,7 @@ typedef struct pe_working_set_s
 		gboolean have_quorum;
 		gboolean stonith_enabled;
 		gboolean symmetric_cluster;
+		int default_resource_stickiness;
 		no_quorum_policy_t no_quorum_policy;
 
 		/* intermediate steps */
@@ -114,6 +115,11 @@ enum rsc_recovery_type {
 	recovery_block
 };
 
+enum rsc_start_requirement {
+	rsc_req_nothing,
+	rsc_req_quorum,
+	rsc_req_stonith
+};
 
 enum pe_stop_fail {
 	pesf_block,
@@ -246,6 +252,7 @@ struct action_s
 		gboolean runnable;
 		gboolean optional;
 		gboolean failure_is_fatal;
+		enum rsc_start_requirement needs;
 
 		gboolean dumped;
 		gboolean processed;

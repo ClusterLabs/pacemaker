@@ -44,7 +44,7 @@ function do_test {
 #	return;
     fi
 
-    ./ptest -X $input 2>/dev/null > $output
+    ./ptest -V -X $input > $output
 
     if [ -s core ]; then
 	echo "Test $name	($base)...	Moved core to core.${base}";

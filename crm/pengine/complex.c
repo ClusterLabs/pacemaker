@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.31 2005/06/03 14:15:53 andrew Exp $ */
+/* $Id: complex.c,v 1.32 2005/06/13 12:35:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,6 +29,8 @@ void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 
 gboolean has_agent(node_t *a_node, lrm_agent_t *an_agent);
 
+extern gboolean rsc_colocation_new(const char *id, enum con_strength strength,
+				   resource_t *rsc_lh, resource_t *rsc_rh);
 
 resource_object_functions_t resource_class_functions[] = {
 	{
@@ -109,14 +111,47 @@ is_active(rsc_to_node_t *cons)
 	return TRUE;
 }
 
+
+void
+inherit_parent_attributes(
+	crm_data_t *parent, crm_data_t *child, gboolean overwrite)
+{
+	int lpc = 0;
+	const char *attributes[] = {
+		XML_RSC_ATTR_STOPFAIL,
+		XML_RSC_ATTR_RESTART,
+		"multiple_active",
+		"start_prereq",
+		"resource_stickiness"
+	};
+
+	for(lpc = 0; lpc < DIMOF(attributes); lpc++) {
+		const char *attr_p = crm_element_value(parent, attributes[lpc]);
+		const char *attr_c = crm_element_value(child, attributes[lpc]);
+
+		if(attr_c != NULL && safe_str_neq(attr_p, attr_c)) {
+			if(overwrite == FALSE) {
+			crm_debug_2("Resource %s: ignoring parent value for %s",
+				ID(child), attributes[lpc]);
+				continue;
+			}
+			pe_warn("Resource %s: Overwriting attribute %s: %s->%s",
+				ID(child), attributes[lpc], attr_c, attr_p);
+		}
+		set_xml_property_copy(child, attributes[lpc], attr_p);
+	}
+}
+
 gboolean	
 common_unpack(
 	crm_data_t * xml_obj, resource_t **rsc, pe_working_set_t *data_set)
 {
+	int stickiness = data_set->default_resource_stickiness;
 	const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *stopfail = crm_element_value(xml_obj, XML_RSC_ATTR_STOPFAIL);
 	const char *restart  = crm_element_value(xml_obj, XML_RSC_ATTR_RESTART);
 	const char *multiple = crm_element_value(xml_obj, "multiple_active");
+	const char *placement= crm_element_value(xml_obj, "resource_stickiness");
 	const char *priority = NULL;
 
 	crm_log_xml_debug_2(xml_obj, "Processing resource input...");
@@ -170,6 +205,7 @@ common_unpack(
 	(*rsc)->actions            = NULL;
 
 
+	
 	crm_debug_2("Options for %s", id);
 	if(stopfail == NULL && data_set->stonith_enabled) {
 		(*rsc)->stopfail_type = pesf_stonith;
@@ -213,6 +249,24 @@ common_unpack(
 		(*rsc)->recovery_type = recovery_stop_start;
 		crm_debug_2("\tMultiple running resource recovery: stop/start");
 		
+	}
+
+	if(placement != NULL) {
+		stickiness = atoi(placement);
+	}
+	if(stickiness > 0) {
+		crm_debug_2("\tPlacement: prefer current location%s",
+			    placement == NULL?" (default)":"");
+		rsc_colocation_new("__generated_internal_placement__",
+				   pecs_must, *rsc, *rsc);
+	} else if(stickiness < 0) {
+		crm_warn("\tPlacement: always move from the current location%s",
+			    placement == NULL?" (default)":"");
+		rsc_colocation_new("__generated_internal_placement__",
+				   pecs_must_not, *rsc, *rsc);
+	} else {
+		crm_debug_2("\tPlacement: optimal%s",
+			    placement == NULL?" (default)":"");
 	}
 	
 	(*rsc)->fns->unpack(*rsc, data_set);

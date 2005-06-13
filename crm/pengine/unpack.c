@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.96 2005/06/03 14:15:58 andrew Exp $ */
+/* $Id: unpack.c,v 1.97 2005/06/13 12:35:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -90,6 +90,21 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	crm_debug_4("%s set to: %s",
 		 "transition_timeout", transition_timeout);
 
+	value = param_value(config, "default_resource_stickiness");
+	data_set->default_resource_stickiness = crm_atoi(value, "0");
+	
+	switch (data_set->no_quorum_policy) {
+		case no_quorum_freeze:
+			crm_info("On loss of CCM Quorum: Freeze resources");
+			break;
+		case no_quorum_stop:
+			crm_info("On loss of CCM Quorum: Stop ALL resources");
+			break;
+		case no_quorum_ignore:
+			crm_warn("On loss of CCM Quorum: Ignore");
+			break;
+	}
+	
 	value = param_value(config, "stonith_enabled");
 	if(value != NULL) {
 		crm_str_to_boolean(value, &data_set->stonith_enabled);
@@ -158,7 +173,8 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 	const char *uname  = NULL;
 	const char *type   = NULL;
 
-	crm_debug_3("Begining unpack...");
+	crm_debug("Begining unpack... %s",
+		    xml_nodes?crm_element_name(xml_nodes):"<none>");
 	xml_child_iter(
 		xml_nodes, xml_obj, XML_CIB_TAG_NODE,
 
@@ -251,7 +267,8 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 gboolean 
 unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 {
-	crm_debug_3("Begining unpack...");
+	crm_debug("Begining unpack... %s",
+		    xml_resources?crm_element_name(xml_resources):"<none>");
 	xml_child_iter(
 		xml_resources, xml_obj, NULL,
 
@@ -272,8 +289,9 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 			}
 
 		} else {
-			pe_err("Failed unpacking resource %s",
-				crm_element_value(xml_obj, XML_ATTR_ID));
+			pe_err("Failed unpacking %s %s",
+			       crm_element_name(xml_obj),
+			       crm_element_value(xml_obj, XML_ATTR_ID));
 		}
 		);
 	
@@ -286,7 +304,8 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 gboolean 
 unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 {
-	crm_debug_3("Begining unpack...");
+	crm_debug("Begining unpack... %s",
+		    xml_constraints?crm_element_name(xml_constraints):"<none>");
 	xml_child_iter(
 		xml_constraints, xml_obj, NULL,
 

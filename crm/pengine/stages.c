@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.64 2005/06/03 14:15:57 andrew Exp $ */
+/* $Id: stages.c,v 1.65 2005/06/13 12:35:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,7 +61,9 @@ stage0(pe_working_set_t *data_set)
 		XML_CIB_TAG_STATUS,      data_set->input);
 	crm_data_t * cib_constraints = get_object_root(
 		XML_CIB_TAG_CONSTRAINTS, data_set->input);
-
+ 	const char *value = crm_element_value(
+		data_set->input, XML_ATTR_HAVE_QUORUM);
+	
 	crm_debug_3("Beginning unpack");
 	
 	/* reset remaining global variables */
@@ -81,19 +83,13 @@ stage0(pe_working_set_t *data_set)
 	
 	unpack_config(config, data_set);
 
-	if(data_set->no_quorum_policy != no_quorum_ignore) {
-		const char *value = crm_element_value(
-			data_set->input, XML_ATTR_HAVE_QUORUM);
-
-		data_set->have_quorum = FALSE;
-		if(value != NULL) {
-			crm_str_to_boolean(value, &data_set->have_quorum);
-		}
-			
-		if(data_set->have_quorum == FALSE) {
-			crm_warn("We do not have quorum"
-				 " - fencing and resource management disabled");
-		}
+	if(value != NULL) {
+		crm_str_to_boolean(value, &data_set->have_quorum);
+	}
+	
+	if(data_set->have_quorum == FALSE) {
+		crm_warn("We do not have quorum"
+			 " - fencing and resource management disabled");
 	}
 	
 	unpack_nodes(cib_nodes, data_set);

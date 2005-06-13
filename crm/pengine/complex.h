@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.11 2005/06/01 19:03:04 andrew Exp $ */
+/* $Id: complex.h,v 1.12 2005/06/13 12:35:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -150,3 +150,5 @@ extern void add_rsc_param(resource_t *rsc, const char *name, const char *value);
 extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
 extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 
+extern void inherit_parent_attributes(
+	crm_data_t *parent, crm_data_t *child, gboolean overwrite);

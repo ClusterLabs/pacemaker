@@ -48,7 +48,9 @@ do_test rsc_dep5 "Must not 3   "
 do_test rsc_dep7 "Must 3       "
 do_test rsc_dep10 "Must (but cant)"
 do_test rsc_dep2  "Must (running) "
+do_test rsc_dep8  "Must (running : alt) "
 do_test rsc_dep4  "Must (running + move)"
+do_test rsc_dep9  "Must (running + move : alt)"
 
 echo ""
 do_test order1 "Order start 1     "
@@ -144,6 +146,10 @@ do_test bad3 "No rsc class	"
 do_test bad4 "Bad data		"
 do_test bad5 "Bad data		"
 do_test bad6 "Bad lrm_rsc	"
+
+echo ""
+do_test 594 "Bugzilla 594"
+
 
 echo ""
 

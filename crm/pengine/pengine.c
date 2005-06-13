@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.77 2005/06/03 14:15:55 andrew Exp $ */
+/* $Id: pengine.c,v 1.78 2005/06/13 12:35:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -136,7 +136,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	return TRUE;
 }
 
-#define MEMCHECK_STAGE_2 0
+#define MEMCHECK_STAGE_0 0
 
 
 crm_data_t *
@@ -276,7 +276,7 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->graph = NULL;
 	
 	data_set->dc_uuid           = NULL;
-	data_set->have_quorum       = TRUE;
+	data_set->have_quorum       = FALSE;
 	data_set->stonith_enabled   = FALSE;
 	data_set->symmetric_cluster = TRUE;
 	data_set->no_quorum_policy  = no_quorum_freeze;

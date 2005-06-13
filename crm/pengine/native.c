@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.46 2005/06/03 14:15:54 andrew Exp $ */
+/* $Id: native.c,v 1.47 2005/06/13 12:35:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -241,7 +241,6 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action_t *stop = NULL;
 	node_t *chosen = NULL;
 	native_variant_data_t *native_data = NULL;
-
 	get_native_variant_data(native_data, rsc);
 
 	if(native_data->color != NULL) {
@@ -249,16 +248,17 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	
 	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
-		/* create start action */
 		start = start_action(rsc, chosen);
-		if( !data_set->have_quorum
-		    && data_set->no_quorum_policy != no_quorum_ignore) {
+		if(start->runnable && data_set->have_quorum == FALSE
+		   && data_set->no_quorum_policy != no_quorum_ignore) {
+			crm_warn("Start resource %s\t(%s) (cancelled : quorum)",
+				 rsc->id, chosen->details->uname);
 			start->runnable = FALSE;
-			
 		} else {
-			crm_info("Start resource %s (%s)",
+			crm_info("Start resource %s\t(%s)",
 				 rsc->id, chosen->details->uname);
 		}
+		
 		
 	} else if(g_list_length(native_data->running_on) > 1) {
 		pe_err("Attempting recovery of resource %s", rsc->id);
@@ -279,10 +279,12 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 			/* if one of the "stops" is for a node outside
 			 * our partition, then this will block anyway
 			 */
-			crm_info("Start resource %s (%s)\t(recovery)",
-				 rsc->id, chosen->details->uname);
 			start = start_action(rsc, chosen);
-
+			if(start->runnable) {
+				crm_info("Recover resource %s\t(%s)",
+					 rsc->id, chosen->details->uname);
+			}
+			
 			/* make the restart required */
 			order_stop_start(rsc, rsc, pe_ordering_manditory);
 		}
@@ -303,56 +305,52 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		
 		crm_debug_2("Stop%s of %s", chosen?" and restart":"", rsc->id);
 		CRM_DEV_ASSERT(node != NULL);
-		
-		if(data_set->have_quorum == FALSE
-		   && data_set->no_quorum_policy == no_quorum_stop){
-			crm_warn("Stop  resource %s\t(%s) (no quorum)",
-				rsc->id, node->details->uname);
-			start = start_action(rsc, chosen);
-			stop = stop_action(rsc, node);
-			start->runnable = FALSE;
 
-		} else if(chosen != NULL && safe_str_eq(
-			   node->details->id, chosen->details->id)) {
-
-			/* restart */
-			if(rsc->recover) {
-				crm_info("Restart resource %s\t(%s)",
-					 rsc->id, chosen->details->uname);
-
-				start = start_action(rsc, chosen);
-				stop = stop_action(rsc, node);
-
-				/* make the restart required */
-				order_stop_start(rsc, rsc, pe_ordering_manditory);
-
-			} else {
-				crm_info("Leave resource %s\t(%s)",
-					 rsc->id, chosen->details->uname);
-
-				start = start_action(rsc, chosen);
-				if(rsc->start_pending == FALSE) {
-					start->optional = TRUE;
-				}	
-				stop = stop_action(rsc, node);
-				stop->optional = TRUE;
-			}
-			
-		} else if(chosen != NULL) {
-			/* move */
-			crm_info("Move  resource %s\t(%s -> %s)", rsc->id,
-				 node->details->uname,
-				 chosen->details->uname);
-			stop = stop_action(rsc, node);
-			start = start_action(rsc, chosen);
-
-			/* make the restart required */
-			order_stop_start(rsc, rsc, pe_ordering_manditory);
-			
-		} else {
+		if(chosen == NULL) {
 			crm_info("Stop  resource %s\t(%s)",
 				 rsc->id, node->details->uname);
 			stop_action(rsc, node);
+
+		} else if(safe_str_eq(node->details->id, chosen->details->id)) {
+			stop = stop_action(rsc, node);
+			start = start_action(rsc, chosen);
+
+			if(start->runnable == FALSE) {
+				crm_info("Stop  resource %s\t(%s)",
+					 rsc->id, node->details->uname);
+
+			} else if(rsc->recover) {
+				crm_info("Restart resource %s\t(%s)",
+					 rsc->id, node->details->uname);
+				/* make the restart required */
+				order_stop_start(rsc, rsc, pe_ordering_manditory);
+			} else {
+				crm_info("Leave resource %s\t(%s)",
+					 rsc->id, node->details->uname);
+
+				if(rsc->start_pending == FALSE) {
+					start->optional = TRUE;
+				}	
+				stop->optional = TRUE;
+			}
+			
+		} else {
+			/* move */
+			stop = stop_action(rsc, node);
+			start = start_action(rsc, chosen);
+
+			if(start->runnable) {
+				crm_info("Move  resource %s\t(%s -> %s)", rsc->id,
+					 node->details->uname,
+					 chosen->details->uname);
+			} else {
+				crm_info("Stop  resource %s\t(%s)", rsc->id,
+					 node->details->uname);
+			}
+			
+			/* make the restart required */
+			order_stop_start(rsc, rsc, pe_ordering_manditory);
+			
 		}
 	}
 	
