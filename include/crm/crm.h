@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.65 2005/06/13 11:54:53 andrew Exp $ */
+/* $Id: crm.h,v 1.66 2005/06/13 15:46:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,6 +24,7 @@
 #include <glib.h>
 
 #include <string.h>
+#include <portability.h>
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_malloc.h>
 #ifdef MCHECK

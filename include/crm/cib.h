@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.26 2005/06/13 11:54:53 andrew Exp $ */
+/* $Id: cib.h,v 1.27 2005/06/13 15:46:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,6 +18,8 @@
  */
 #ifndef CIB__H
 #define CIB__H
+
+#include <portability.h>
 
 #include <clplumbing/ipc.h>
 #include <crm/common/ipc.h>
