@@ -1,4 +1,4 @@
-/* $Id: fsa_data.c,v 1.1 2005/05/30 15:09:36 andrew Exp $ */
+/* $Id: fsa_data.c,v 1.2 2005/06/13 12:24:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -174,7 +174,7 @@ void te_data_command_copy(te_input_t *a_copy, te_input_t *fsa_data)
 	copy_data = a_copy->data;
 
 	copy_data->msg = ha_msg_copy(data->msg);
-	copy_data->xml = copy_xml_node_recursive(data->xml);
+	copy_data->xml = copy_xml(data->xml);
 }
 
 const char* te_data_cib_type(void)
@@ -206,7 +206,7 @@ void te_data_cib_copy(te_input_t *a_copy, te_input_t *fsa_data)
 
 	*copy_data = *data;
 	copy_data->msg = ha_msg_copy(data->msg);
-	copy_data->xml = copy_xml_node_recursive(data->xml);
+	copy_data->xml = copy_xml(data->xml);
 }
 
 const char* te_data_complete_type(void)
@@ -237,7 +237,7 @@ void te_data_complete_copy(te_input_t *a_copy, te_input_t *fsa_data)
 	copy_data = a_copy->data;
 
 	*copy_data = *data;
-	copy_data->xml = copy_xml_node_recursive(data->xml);
+	copy_data->xml = copy_xml(data->xml);
 }
 
 te_input_t *
@@ -246,7 +246,7 @@ new_input_command(HA_Message *msg, crm_data_t *xml)
 	struct te_data_cib_s *copy_data = NULL;
 	crm_malloc0(a_copy->data, sizeof(struct te_data_cib_s));
 	copy_data = a_copy->data;
-	copy_data->xml = copy_xml_node_recursive(xml);
+	copy_data->xml = copy_xml(xml);
 	copy_data->msg = ha_msg_copy(msg);
 	
 	return te_input_new(te_data_command, copy_data);
@@ -261,7 +261,7 @@ new_input_complete(const char *text, crm_data_t *xml,
 	copy_data = a_copy->data;
 	copy_data->text   = text;
 	copy_data->reason = reason;
-	copy_data->xml    = copy_xml_node_recursive(xml);
+	copy_data->xml    = copy_xml(xml);
 
 	return te_input_new(te_data_complete, copy_data);
 }
@@ -278,7 +278,7 @@ new_input_cib(HA_Message *msg, crm_data_t *xml,
 	copy_data->call_id   = call_id;
 	copy_data->user_data = user_data;
 	copy_data->msg       = ha_msg_copy(msg);
-	copy_data->xml       = copy_xml_node_recursive(xml);
+	copy_data->xml       = copy_xml(xml);
 	
 	return te_input_new(te_data_cib, copy_data);
 }

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.32 2005/05/27 15:06:40 andrew Exp $ */
+/* $Id: callbacks.c,v 1.33 2005/06/13 12:24:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,23 +54,23 @@ te_update_confirm(const char *event, HA_Message *msg)
 		crm_debug("Ignoring CIB update while waiting for an abort");
 		done = TRUE;
 		
-	} else if(strcmp(op, CRM_OP_CIB_ERASE) == 0) {
+	} else if(strcmp(op, CIB_OP_ERASE) == 0) {
 		/* these are always unexpected, trigger the PE */
 		crm_err("Need to trigger an election here so that"
 			" the current state of all nodes is obtained");
 		send_complete("Erase event", update, te_update, i_cancel);
 		done = TRUE;
 
-	} else if(strcmp(op, CRM_OP_CIB_CREATE) == 0
-		  || strcmp(op, CRM_OP_CIB_DELETE) == 0
-		  || strcmp(op, CRM_OP_CIB_REPLACE) == 0
+	} else if(strcmp(op, CIB_OP_CREATE) == 0
+		  || strcmp(op, CIB_OP_DELETE) == 0
+		  || strcmp(op, CIB_OP_REPLACE) == 0
 		  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
 		
 		/* these are always unexpected, trigger the PE */
 		send_complete("Non-update change", update, te_update, i_cancel);
 		done = TRUE;
 		
-	} else if(strcmp(op, CRM_OP_CIB_UPDATE) != 0) {
+	} else if(strcmp(op, CIB_OP_UPDATE) != 0) {
 		crm_debug_2("Ignoring %s op confirmation", op);
 		done = TRUE;
 	}

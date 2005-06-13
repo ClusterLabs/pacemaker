@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.32 2005/06/03 14:05:41 andrew Exp $ */
+/* $Id: utils.c,v 1.33 2005/06/13 12:24:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,7 +57,7 @@ send_complete(const char *text, crm_data_t *msg,
 		}
 		last_msg = NULL;
 		if(msg != NULL) {
-			last_msg = copy_xml_node_recursive(msg);
+			last_msg = copy_xml(msg);
 		}
 		last_text   = text;
 		last_reason = reason;

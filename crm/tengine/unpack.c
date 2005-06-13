@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.35 2005/05/27 15:06:40 andrew Exp $ */
+/* $Id: unpack.c,v 1.36 2005/06/13 12:24:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -180,7 +180,7 @@ unpack_action(crm_data_t *xml_action)
 		return NULL;
 	}
 	
-	action_copy = copy_xml_node_recursive(xml_action);
+	action_copy = copy_xml(xml_action);
 	crm_malloc0(action, sizeof(action_t));
 	if(action == NULL) {
 		return NULL;
