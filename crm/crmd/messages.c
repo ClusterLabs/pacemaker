@@ -263,7 +263,7 @@ copy_ha_msg_input(ha_msg_input_t *orig)
 		input_copy->msg = ha_msg_copy(orig->msg);
 		if(orig->xml != NULL) {
 			crm_debug_4("Copy xml");
-			input_copy->xml = copy_xml_node_recursive(orig->xml);
+			input_copy->xml = copy_xml(orig->xml);
 		}
 	} else {
 		crm_debug_3("No message to copy");
@@ -998,16 +998,6 @@ handle_response(ha_msg_input_t *stored_msg)
 		  || strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 		next_input = I_NULL;
 		
-	} else if(strcmp(op, CRM_OP_CIB_CREATE) == 0
-		  || strcmp(op, CRM_OP_CIB_UPDATE) == 0
-		  || strcmp(op, CRM_OP_CIB_DELETE) == 0
-		  || strcmp(op, CRM_OP_CIB_REPLACE) == 0
-		  || strcmp(op, CRM_OP_CIB_ERASE) == 0) {
-		
-		/* perhaps we should do somethign with these replies,
-		 * especially check that the actions passed
-		 */
-
 	} else {
 		crm_err("Unexpected response (op=%s) sent to the %s",
 			op, AM_I_DC?"DC":"CRMd");
