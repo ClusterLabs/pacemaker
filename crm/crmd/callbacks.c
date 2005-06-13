@@ -291,7 +291,8 @@ crmd_ha_status_callback(
 	
 	set_xml_property_copy(
 		update, XML_CIB_ATTR_CLEAR_SHUTDOWN, XML_BOOLEAN_TRUE);
-	
+
+	/* this change should not be broadcast */
 	update_local_cib(create_cib_fragment(update, NULL));
 	G_main_set_trigger(fsa_source);
 	free_xml(update);
@@ -471,7 +472,7 @@ crmd_ccm_msg_callback(
 			if(AM_I_DC == FALSE) {
 				break;
 			}
-			/* tell the TE to pretend it completed and stop */
+			/* tell the TE to pretend it had completed and stop */
 			/* side effect: we'll end up in S_IDLE */
 			register_fsa_action(A_TE_HALT, TRUE);
 #endif
@@ -505,6 +506,26 @@ crmd_ccm_msg_callback(
 		fsa_have_quorum = TRUE;
 	}
 
+	if(trigger_transition) {
+		crm_debug("Scheduling transition after event %s",
+			  ccm_event_name(event));
+		/* make sure that when we query the CIB that it has
+		 * the changes that triggered the transition
+		 */
+		switch(event) {
+			case OC_EV_MS_NEW_MEMBERSHIP:
+			case OC_EV_MS_INVALID:
+			case OC_EV_MS_PRIMARY_RESTORED:
+				fsa_membership_copy->id = instance;
+				break;
+			default:
+				break;
+		}
+		if(update_cache == FALSE) {
+			/* a stand-alone transition */
+			register_fsa_action(A_TE_CANCEL);
+		}
+	}
 	if(update_cache) {
 		crm_debug("Updating cache after event %s",
 			  ccm_event_name(event));
@@ -526,12 +547,7 @@ crmd_ccm_msg_callback(
 			event_data->oc = NULL;
 		}
 		crm_free(event_data);
-
-	} else if(trigger_transition) {
-		crm_debug("Scheduling transition after event %s",
-			  ccm_event_name(event));
-		register_fsa_action(A_TE_CANCEL);
-	}
+	} 
 	
 	oc_ev_callback_done(cookie);
 	return;
