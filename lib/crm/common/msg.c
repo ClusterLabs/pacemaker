@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.3 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: msg.c,v 1.4 2005/06/13 15:57:58 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <portability.h>
+
 #include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
