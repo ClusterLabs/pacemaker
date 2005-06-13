@@ -225,7 +225,7 @@ int cib_client_query_from(cib_t *cib, const char *host, const char *section,
 		return cib_variant;
 	}
 	
-	return cib->cmds->variant_op(cib, CRM_OP_CIB_QUERY, host, section,
+	return cib->cmds->variant_op(cib, CIB_OP_QUERY, host, section,
 				     NULL, output_data, call_options);
 }
 
@@ -240,7 +240,7 @@ int cib_client_is_master(cib_t *cib)
 		return cib_variant;
 	} 
 	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_ISMASTER, NULL, NULL,NULL,NULL,
+		cib, CIB_OP_ISMASTER, NULL, NULL,NULL,NULL,
 		cib_scope_local|cib_sync_call);
 }
 
@@ -255,7 +255,7 @@ int cib_client_set_slave(cib_t *cib, int call_options)
 	} 
 
 	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_SLAVE, NULL,NULL,NULL,NULL, call_options);
+		cib, CIB_OP_SLAVE, NULL,NULL,NULL,NULL, call_options);
 }
 
 int cib_client_set_slave_all(cib_t *cib, int call_options)
@@ -269,7 +269,7 @@ int cib_client_set_slave_all(cib_t *cib, int call_options)
 	} 
 
 	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_SLAVEALL, NULL,NULL,NULL,NULL, call_options);
+		cib, CIB_OP_SLAVEALL, NULL,NULL,NULL,NULL, call_options);
 }
 
 int cib_client_set_master(cib_t *cib, int call_options)
@@ -284,7 +284,7 @@ int cib_client_set_master(cib_t *cib, int call_options)
 
 	crm_debug_3("Adding cib_scope_local to options");
 	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_MASTER, NULL,NULL,NULL,NULL,
+		cib, CIB_OP_MASTER, NULL,NULL,NULL,NULL,
 		call_options|cib_scope_local);
 }
 
@@ -301,7 +301,7 @@ int cib_client_bump_epoch(cib_t *cib, int call_options)
 	} 
 
 	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_BUMP, NULL, NULL, NULL, NULL, call_options);
+		cib, CIB_OP_BUMP, NULL, NULL, NULL, NULL, call_options);
 }
 
 int cib_client_sync(cib_t *cib, const char *section, int call_options)
@@ -321,7 +321,7 @@ int cib_client_sync_from(
 	}
 
 	return cib->cmds->variant_op(
-		cib, CRM_OP_CIB_SYNC, host, section, NULL, NULL, call_options);
+		cib, CIB_OP_SYNC, host, section, NULL, NULL, call_options);
 }
 
 int cib_client_create(cib_t *cib, const char *section, crm_data_t *data,
@@ -335,7 +335,7 @@ int cib_client_create(cib_t *cib, const char *section, crm_data_t *data,
 		return cib_variant;
 	} 
 
-	return cib->cmds->variant_op(cib, CRM_OP_CIB_CREATE, NULL, section,
+	return cib->cmds->variant_op(cib, CIB_OP_CREATE, NULL, section,
 				     data, output_data, call_options);
 }
 
@@ -351,7 +351,7 @@ int cib_client_modify(cib_t *cib, const char *section, crm_data_t *data,
 		return cib_variant;
 	} 
 
-	return cib->cmds->variant_op(cib, CRM_OP_CIB_UPDATE, NULL, section,
+	return cib->cmds->variant_op(cib, CIB_OP_UPDATE, NULL, section,
 				     data, output_data, call_options);
 }
 
@@ -369,7 +369,7 @@ int cib_client_replace(cib_t *cib, const char *section, crm_data_t *data,
 		return cib_missing_data;
 	}
 	
-	return cib->cmds->variant_op(cib, CRM_OP_CIB_REPLACE, NULL, section,
+	return cib->cmds->variant_op(cib, CIB_OP_REPLACE, NULL, section,
 				     data, output_data, call_options);
 }
 
@@ -385,7 +385,7 @@ int cib_client_delete(cib_t *cib, const char *section, crm_data_t *data,
 		return cib_variant;
 	}
 	
-	return cib->cmds->variant_op(cib, CRM_OP_CIB_DELETE, NULL, section,
+	return cib->cmds->variant_op(cib, CIB_OP_DELETE, NULL, section,
 				     data, output_data, call_options);
 }
 
@@ -401,7 +401,7 @@ int cib_client_erase(
 		return cib_variant;
 	} 
 
-	return cib->cmds->variant_op(cib, CRM_OP_CIB_ERASE, NULL, NULL, NULL,
+	return cib->cmds->variant_op(cib, CIB_OP_ERASE, NULL, NULL, NULL,
 				     output_data, call_options);
 }
 
@@ -728,6 +728,15 @@ cib_error2string(enum cib_errors return_code)
 		case cib_no_quorum:
 			error_msg = "Write requires quorum";
 			break;
+		case cib_diff_failed:
+			error_msg = "Application of an update diff failed";
+			break;
+		case cib_diff_resync:
+			error_msg = "Application of an update diff failed, requesting a full refresh";
+			break;
+		case cib_old_data:
+			error_msg = "Update was older than existing configuration";
+			break;
 	}
 			
 	if(error_msg == NULL) {
@@ -739,7 +748,7 @@ cib_error2string(enum cib_errors return_code)
 }
 
 const char *
-cib_op2string(enum cib_op operation)
+cib_op2string(enum cib_update_op operation)
 {
 	const char *operation_msg = NULL;
 	switch(operation) {
@@ -755,7 +764,7 @@ cib_op2string(enum cib_op operation)
 		case 3:
 			operation_msg = "delete";
 			break;
-		case CIB_OP_MAX:
+		case CIB_UPDATE_OP_MAX:
 			operation_msg = "invalid operation";
 			break;
 			
@@ -856,7 +865,7 @@ get_cib_copy(cib_t *cib)
 		return NULL;
 	}
 
-	xml_cib_copy = copy_xml_node_recursive(
+	xml_cib_copy = copy_xml(
 		find_xml_node(xml_cib, XML_TAG_CIB, TRUE));
 	free_xml(xml_cib);
 	
@@ -876,6 +885,231 @@ cib_get_generation(cib_t *cib)
 	}
 	
 	return generation;
+}
+
+gboolean
+apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
+{
+	gboolean result = TRUE;
+	const char *value = NULL;
+
+	int this_updates = 0;
+	int this_epoche  = 0;
+	int this_admin_epoche = 0;
+
+	int diff_add_updates = 0;
+	int diff_add_epoche  = 0;
+	int diff_add_admin_epoche = 0;
+
+	int diff_del_updates = 0;
+	int diff_del_epoche  = 0;
+	int diff_del_admin_epoche = 0;
+
+	CRM_DEV_ASSERT(diff != NULL);
+	CRM_DEV_ASSERT(old != NULL);
+	
+	value = crm_element_value(old, XML_ATTR_GENERATION_ADMIN);
+	this_admin_epoche = atoi(value?value:"0");
+	crm_debug_3("%s=%d (%s)", XML_ATTR_GENERATION_ADMIN,
+		  this_admin_epoche, value);
+	
+	value = crm_element_value(old, XML_ATTR_GENERATION);
+	this_epoche = atoi(value?value:"0");
+	crm_debug_3("%s=%d (%s)", XML_ATTR_GENERATION, this_epoche, value);
+	
+	value = crm_element_value(old, XML_ATTR_NUMUPDATES);
+	this_updates = atoi(value?value:"0");
+	crm_debug_3("%s=%d (%s)", XML_ATTR_NUMUPDATES, this_updates, value);
+	
+	cib_diff_version_details(
+		diff,
+		&diff_add_admin_epoche, &diff_add_epoche, &diff_add_updates, 
+		&diff_del_admin_epoche, &diff_del_epoche, &diff_del_updates);
+
+	value = NULL;
+	if(result && diff_del_admin_epoche != this_admin_epoche) {
+		value = XML_ATTR_GENERATION_ADMIN;
+		result = FALSE;
+		crm_debug_3("%s=%d", value, diff_del_admin_epoche);
+
+	} else if(result && diff_del_epoche != this_epoche) {
+		value = XML_ATTR_GENERATION;
+		result = FALSE;
+		crm_debug_3("%s=%d", value, diff_del_epoche);
+
+	} else if(result && diff_del_updates != this_updates) {
+		value = XML_ATTR_NUMUPDATES;
+		result = FALSE;
+		crm_debug_3("%s=%d", value, diff_del_updates);
+	}
+
+	if(result) {
+		int len = 0;
+		crm_data_t *tmp = NULL;
+		crm_data_t *diff_copy = copy_xml(diff);
+		
+		tmp = find_xml_node(diff_copy, "diff-removed", TRUE);
+		if(tmp != NULL) {
+			len = tmp->nfields;
+			cl_msg_remove(tmp, XML_ATTR_GENERATION_ADMIN);
+			cl_msg_remove(tmp, XML_ATTR_GENERATION);
+			cl_msg_remove(tmp, XML_ATTR_NUMUPDATES);
+			CRM_DEV_ASSERT(tmp->nfields == len - 3);
+		}
+		
+		tmp = find_xml_node(diff_copy, "diff-added", TRUE);
+		if(tmp != NULL) {
+			len = tmp->nfields;
+			cl_msg_remove(tmp, XML_ATTR_GENERATION_ADMIN);
+			cl_msg_remove(tmp, XML_ATTR_GENERATION);
+			cl_msg_remove(tmp, XML_ATTR_NUMUPDATES);
+			CRM_DEV_ASSERT(tmp->nfields == len - 3);
+		}
+		
+		result = apply_xml_diff(old, diff_copy, new);
+		free_xml(diff_copy);
+		
+	} else {
+		crm_err("target and diff %s values didnt match", value);
+	}
+	
+	
+	return result;
+}
+
+crm_data_t *
+diff_cib_object(crm_data_t *old_cib, crm_data_t *new_cib, gboolean suppress)
+{
+	crm_data_t *diff = diff_xml_object(old_cib, new_cib, suppress);
+
+	crm_data_t *dest = NULL;
+	crm_data_t *src = NULL;
+	const char *name = NULL;
+	const char *value = NULL;
+	
+	/* add complete version information */
+	src = old_cib;
+	dest = find_xml_node(diff, "diff-removed", FALSE);
+	if(src != NULL && dest != NULL) {
+		name = XML_ATTR_GENERATION_ADMIN;
+		value = crm_element_value(src, name);
+		if(value == NULL) {
+			value = "0";
+		}
+		set_xml_property_copy(dest, name, value);
+
+		name = XML_ATTR_GENERATION;
+		value = crm_element_value(src, name);
+		if(value == NULL) {
+			value = "0";
+		}
+		set_xml_property_copy(dest, name, value);
+
+		name = XML_ATTR_NUMUPDATES;
+		value = crm_element_value(src, name);
+		if(value == NULL) {
+			value = "0";
+		}
+		set_xml_property_copy(dest, name, value);
+	}
+	
+	src = new_cib;
+	dest = find_xml_node(diff, "diff-added", FALSE);
+	if(src != NULL && dest != NULL) {
+		name = XML_ATTR_GENERATION_ADMIN;
+		value = crm_element_value(src, name);
+		if(value == NULL) {
+			value = "0";
+		}
+		set_xml_property_copy(dest, name, value);
+
+		name = XML_ATTR_GENERATION;
+		value = crm_element_value(src, name);
+		if(value == NULL) {
+			value = "0";
+		}
+		set_xml_property_copy(dest, name, value);
+
+		name = XML_ATTR_NUMUPDATES;
+		value = crm_element_value(src, name);
+		if(value == NULL) {
+			value = "0";
+		}
+		set_xml_property_copy(dest, name, value);
+	}
+	return diff;
+}
+
+void
+log_cib_diff(int log_level, crm_data_t *diff, const char *function)
+{
+	int add_updates = 0;
+	int add_epoche  = 0;
+	int add_admin_epoche = 0;
+
+	int del_updates = 0;
+	int del_epoche  = 0;
+	int del_admin_epoche = 0;
+
+	if(diff == NULL) {
+		return;
+	}
+	
+	cib_diff_version_details(
+		diff, &add_admin_epoche, &add_epoche, &add_updates, 
+		&del_admin_epoche, &del_epoche, &del_updates);
+
+	if(add_updates != del_updates) {
+		do_crm_log(log_level, NULL, function, "Diff: --- %d.%d.%d",
+			   del_admin_epoche, del_epoche, del_updates);
+		do_crm_log(log_level, NULL, function, "Diff: +++ %d.%d.%d",
+			   add_admin_epoche, add_epoche, add_updates);
+	} else if(diff != NULL) {
+		do_crm_log(log_level, NULL, function,
+			   "Local-only Change: %d.%d.%d",
+			   add_admin_epoche, add_epoche, add_updates);
+	}
+	
+	log_xml_diff(log_level, diff, function);
+}
+
+gboolean
+cib_version_details(
+	crm_data_t *cib, int *admin_epoche, int *epoche, int *updates)
+{
+	const char *value = NULL;
+	if(cib == NULL) {
+		*admin_epoche = -1;
+		*epoche  = -1;
+		*updates = -1;
+		return FALSE;
+		
+	} else {
+		value = crm_element_value(cib, XML_ATTR_GENERATION_ADMIN);
+		*admin_epoche = atoi(value?value:"-1");
+
+		value  = crm_element_value(cib, XML_ATTR_GENERATION);
+		*epoche = atoi(value?value:"-1");
+
+		value = crm_element_value(cib, XML_ATTR_NUMUPDATES);
+		*updates = atoi(value?value:"-1");
+	}
+	return TRUE;	
+}
+
+gboolean
+cib_diff_version_details(
+	crm_data_t *diff, int *admin_epoche, int *epoche, int *updates, 
+	int *_admin_epoche, int *_epoche, int *_updates)
+{
+	crm_data_t *tmp = NULL;
+
+	tmp = find_xml_node(diff, "diff-added", FALSE);
+	cib_version_details(tmp, admin_epoche, epoche, updates);
+
+	tmp = find_xml_node(diff, "diff-removed", FALSE);
+	cib_version_details(tmp, _admin_epoche, _epoche, _updates);
+	return TRUE;
 }
 
 /*

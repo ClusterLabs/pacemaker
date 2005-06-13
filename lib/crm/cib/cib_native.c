@@ -604,7 +604,8 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 		local_blob.callback(
 			msg, call_id, rc, output, local_blob.user_data);
 		
-	} else if(cib->op_callback == NULL && rc != cib_ok) {
+	} else if(cib->op_callback == NULL
+		  && rc != cib_ok && rc != cib_diff_resync) {
 		crm_err("CIB command failed: %s", cib_error2string(rc));
 		crm_log_message_adv(LOG_DEBUG, "Failed CIB Update", msg);
 	}
