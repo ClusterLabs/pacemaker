@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.45 2005/06/13 06:50:41 panjiam Exp $ */
+/* $Id: crmadmin.c,v 1.46 2005/06/13 13:05:15 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -378,7 +378,9 @@ do_work(ll_cluster_t * hb_cluster)
 
 		dest_node = NULL;
 
-	} else if(DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST || DO_OPTION || DO_STANDBY){
+	} else if(DO_RESOURCE || DO_RESOURCE_LIST
+		  || DO_NODE_LIST || DO_OPTION || DO_STANDBY) {
+
 		cib_t *	the_cib = cib_new();
 		crm_data_t *output = NULL;
 		int call_options = cib_sync_call;
@@ -461,7 +463,7 @@ do_work(ll_cluster_t * hb_cluster)
 
 		free_xml(output);
 		the_cib->cmds->signoff(the_cib);
-		return rc;
+		exit(rc);
 		
 	} else if(DO_RESET) {
 		/* tell dest_node to initiate the shutdown proceedure
@@ -470,8 +472,7 @@ do_work(ll_cluster_t * hb_cluster)
 		 *   local node
 		 */
 		sys_to = CRM_SYSTEM_CRMD;
-		set_xml_property_copy(
-			msg_options, XML_ATTR_TIMEOUT, "0");
+		set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
 		
 		ret = 0; /* no return message */
 		
@@ -613,13 +614,14 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		lpc++;
 		received_responses++;
 		new_input = new_ipc_msg_input(msg);
-		msg->msg_done(msg);
 		crm_log_message(LOG_MSG, new_input->msg);
+		msg->msg_done(msg);
 		
 		if (new_input->xml == NULL) {
 			crm_info("XML in IPC message was not valid... "
-			       "discarding.");
+				 "discarding.");
 			continue;
+
 		} else if (validate_crm_message(
 				   new_input->msg, crm_system_name, admin_uuid,
 				   XML_ATTR_RESPONSE) == FALSE) {
