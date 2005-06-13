@@ -1323,7 +1323,7 @@ create_node_state(
 	set_xml_property_copy(
 		node_state, XML_CIB_ATTR_EXPSTATE, exp_state);
 
-	set_xml_property_copy(node_state, "debug_origin", src);
+	set_xml_property_copy(node_state, "origin", src);
 
 	crm_log_xml_debug_3(node_state, "created");
 
