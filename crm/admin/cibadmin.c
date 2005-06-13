@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.34 2005/06/13 11:54:53 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.35 2005/06/13 13:32:13 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -41,7 +41,9 @@
 
 #include <crm/cib.h>
 
-#include <getopt.h>
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
+#endif
 #include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
 #include <crm/dmalloc_wrapper.h>
 
@@ -140,8 +142,12 @@ main(int argc, char **argv)
 	}
 
 	while (1) {
+#ifdef HAVE_GETOPT_H
 		flag = getopt_long(argc, argv, OPTARGS,
 				   long_options, &option_index);
+#else
+		flag = getopt(argc, argv, OPTARGS);
+#endif
 		if (flag == -1)
 			break;
 

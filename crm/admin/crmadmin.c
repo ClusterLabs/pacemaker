@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.46 2005/06/13 13:05:15 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.47 2005/06/13 13:32:12 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -43,7 +43,9 @@
 
 #include <crm/cib.h>
 
-#include <getopt.h>
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
+#endif
 #include <crm/dmalloc_wrapper.h>
 
 int message_timer_id = -1;
@@ -142,17 +144,19 @@ main(int argc, char **argv)
 	};
 
 	crm_system_name = basename(argv[0]);
-	crm_log_level = 0;
 	crm_log_init(crm_system_name);
-	crm_log_level = 0;
 
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
 	}
 	
 	while (1) {
+#ifdef HAVE_GETOPT_H
 		flag = getopt_long(argc, argv, OPTARGS,
 				   long_options, &option_index);
+#else
+		flag = getopt(argc, argv, OPTARGS);
+#endif
 		if (flag == -1)
 			break;
 

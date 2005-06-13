@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.19 2005/06/03 14:05:41 andrew Exp $ */
+/* $Id: ttest.c,v 1.20 2005/06/13 13:32:09 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -37,7 +37,6 @@
 
 #define OPTARGS	"V?X:"
 
-#include <getopt.h>
 #include <glib.h>
 #include <tengine.h>
 #include <clplumbing/GSource.h>
@@ -74,35 +73,11 @@ main(int argc, char **argv)
 	set_crm_log_level(LOG_WARNING);
 
 	while (1) {
-		int option_index = 0;
-		static struct option long_options[] = {
-			/* Top-level Options */
-			{"daemon", 0, 0, 0},
-      
-			{0, 0, 0, 0}
-		};
-    
-		flag = getopt_long(argc, argv, OPTARGS,
-				   long_options, &option_index);
+		flag = getopt(argc, argv, OPTARGS);
 		if (flag == -1)
 			break;
     
 		switch(flag) {
-			case 0:
-				printf("option %s", long_options[option_index].name);
-				if (optarg)
-					printf(" with arg %s", optarg);
-				printf("\n");
-    
-				break;
-      
-				/* a sample test for multiple instance
-				   if (digit_optind != 0 && digit_optind != this_option_optind)
-				   printf ("digits occur in two different argv-elements.\n");
-				   digit_optind = this_option_optind;
-				   printf ("option %c\n", c);
-				*/
-      
 			case 'X':
 				xml_file = crm_strdup(optarg);
 				break;

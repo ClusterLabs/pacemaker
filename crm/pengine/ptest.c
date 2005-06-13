@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.55 2005/06/13 12:35:50 andrew Exp $ */
+/* $Id: ptest.c,v 1.56 2005/06/13 13:32:10 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -37,7 +37,9 @@
 
 #define OPTARGS	"V?X:w"
 
-#include <getopt.h>
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
+#endif
 #include <glib.h>
 #include <pengine.h>
 #include <pe_utils.h>
@@ -73,8 +75,12 @@ main(int argc, char **argv)
 			{0, 0, 0, 0}
 		};
     
+#ifdef HAVE_GETOPT_H
 		flag = getopt_long(argc, argv, OPTARGS,
 				   long_options, &option_index);
+#else
+		flag = getopt(argc, argv, OPTARGS);
+#endif
 		if (flag == -1)
 			break;
     
