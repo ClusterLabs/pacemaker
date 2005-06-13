@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.10 2005/06/02 09:23:43 andrew Exp $ */
+/* $Id: xml.c,v 1.11 2005/06/13 12:04:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,10 +43,10 @@ void dump_array(
 int print_spaces(char *buffer, int spaces);
 
 int log_data_element(const char *function, const char *prefix, int log_level,
-		     int depth, crm_data_t *data, gboolean formatted);
+		     int depth, const crm_data_t *data, gboolean formatted);
 
 int dump_data_element(
-	int depth, char **buffer, crm_data_t *data, gboolean formatted);
+	int depth, char **buffer, const crm_data_t *data, gboolean formatted);
 
 crm_data_t *parse_xml(const char *input, int *offset);
 int get_tag_name(const char *input);
@@ -200,18 +200,18 @@ find_entity(crm_data_t *parent, const char *node_name, const char *id)
 		parent, a_child, node_name,
 		if(id == NULL 
 		   || safe_str_eq(id,crm_element_value(a_child,XML_ATTR_ID))){
-			crm_debug_3("returning node (%s).", 
+			crm_debug_4("returning node (%s).", 
 				  xmlGetNodePath(a_child));
 			return a_child;
 		}
 		);
-	crm_debug_2("node <%s id=%s> not found in %s.",
+	crm_debug_3("node <%s id=%s> not found in %s.",
 		    node_name, id, xmlGetNodePath(parent));
 	return NULL;
 }
 
 void
-copy_in_properties(crm_data_t* target, crm_data_t *src)
+copy_in_properties(crm_data_t* target, const crm_data_t *src)
 {
 	crm_validate_data(src);
 	crm_validate_data(target);
@@ -232,7 +232,7 @@ copy_in_properties(crm_data_t* target, crm_data_t *src)
 }
 
 crm_data_t*
-add_node_copy(crm_data_t *new_parent, crm_data_t *xml_node)
+add_node_copy(crm_data_t *new_parent, const crm_data_t *xml_node)
 {
 	crm_data_t *node_copy = NULL;
 	
@@ -371,6 +371,7 @@ free_xml_fn(crm_data_t *a_node)
 void
 set_node_tstamp(crm_data_t *a_node)
 {
+#if 0
 	char *since_epoch = NULL;
 	time_t a_time = time(NULL);
 	
@@ -388,10 +389,11 @@ set_node_tstamp(crm_data_t *a_node)
 		crm_validate_data(a_node);
 		crm_free(since_epoch);
 	}
+#endif
 }
 
 crm_data_t*
-copy_xml_node_recursive(crm_data_t *src_node)
+copy_xml(const crm_data_t *src_node)
 {
 	crm_data_t *new_xml = NULL;
 	
@@ -586,7 +588,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 
 void
 print_xml_formatted(int log_level, const char *function,
-		    crm_data_t *msg, const char *text)
+		    const crm_data_t *msg, const char *text)
 {
 	if(msg == NULL) {
 		do_crm_log(log_level,NULL,function, "%s: NULL", crm_str(text));
@@ -607,13 +609,13 @@ get_message_xml(const HA_Message *msg, const char *field)
 	crm_validate_data(msg);
 	tmp_node = cl_get_struct(msg, field);
 	if(tmp_node != NULL) {
-		xml_node = copy_xml_node_recursive(tmp_node);
+		xml_node = copy_xml(tmp_node);
 	}
 	return xml_node;
 }
 
 gboolean
-add_message_xml(HA_Message *msg, const char *field, crm_data_t *xml) 
+add_message_xml(HA_Message *msg, const char *field, const crm_data_t *xml) 
 {
 	crm_validate_data(xml);
 	crm_validate_data(msg);
@@ -624,7 +626,7 @@ add_message_xml(HA_Message *msg, const char *field, crm_data_t *xml)
 
 
 char *
-dump_xml_formatted(crm_data_t *an_xml_node)
+dump_xml_formatted(const crm_data_t *an_xml_node)
 {
 	char *buffer     = NULL;
 #if 0
@@ -634,7 +636,7 @@ dump_xml_formatted(crm_data_t *an_xml_node)
 
 	crm_data_t* xml_node  = NULL;
 
-	xml_node  = copy_xml_node_recursive(an_xml_node);
+	xml_node  = copy_xml(an_xml_node);
 	
 	if (xml_node == NULL) {
 		return NULL;
@@ -682,7 +684,7 @@ dump_xml_formatted(crm_data_t *an_xml_node)
 }
 	
 char *
-dump_xml_unformatted(crm_data_t *an_xml_node)
+dump_xml_unformatted(const crm_data_t *an_xml_node)
 {
 	char *buffer     = NULL;
 #if 0
@@ -693,7 +695,7 @@ dump_xml_unformatted(crm_data_t *an_xml_node)
 
 	crm_data_t* xml_node  = NULL;
 
-	xml_node  = copy_xml_node_recursive(an_xml_node);
+	xml_node  = copy_xml(an_xml_node);
 	
 	if (xml_node == NULL) {
 		return NULL;
@@ -784,7 +786,7 @@ print_spaces(char *buffer, int depth)
 int
 log_data_element(
 	const char *function, const char *prefix, int log_level, int depth,
-	crm_data_t *data, gboolean formatted) 
+	const crm_data_t *data, gboolean formatted) 
 {
 	int printed = 0;
 	int child_result = 0;
@@ -878,7 +880,7 @@ log_data_element(
 
 int
 dump_data_element(
-	int depth, char **buffer,  crm_data_t *data, gboolean formatted) 
+	int depth, char **buffer,  const crm_data_t *data, gboolean formatted) 
 {
 	int printed = 0;
 	int child_result = 0;
@@ -1023,7 +1025,7 @@ crm_set_element_parent(crm_data_t *data, crm_data_t *parent)
 }
 
 const char *
-crm_element_value(crm_data_t *data, const char *name)
+crm_element_value(const crm_data_t *data, const char *name)
 {
 	const char *value = NULL;
 	crm_validate_data(data);
@@ -1035,7 +1037,7 @@ crm_element_value(crm_data_t *data, const char *name)
 }
 
 char *
-crm_element_value_copy(crm_data_t *data, const char *name)
+crm_element_value_copy(const crm_data_t *data, const char *name)
 {
 	const char *value = NULL;
 	char *value_copy = NULL;
@@ -1052,7 +1054,7 @@ crm_element_value_copy(crm_data_t *data, const char *name)
 }
 
 const char *
-crm_element_name(crm_data_t *data)
+crm_element_name(const crm_data_t *data)
 {
 	crm_validate_data(data);
 	return cl_get_string(data, F_XML_TAGNAME);
@@ -1118,8 +1120,9 @@ get_tag_name(const char *input)
 				} else if('a' <= ch && ch <= 'z') {
 				} else if('A' <= ch && ch <= 'Z') {
 				} else if(ch == '_') {
+				} else if(ch == '-') {
 				} else {
-					error = "bad character, not in [a-zA-Z_]";
+					error = "bad character, not in [a-zA-Z_-]";
 				}
  				break;
 		}
@@ -1154,8 +1157,9 @@ get_attr_name(const char *input)
 				if('a' <= ch && ch <= 'z') {
 				} else if('A' <= ch && ch <= 'Z') {
 				} else if(ch == '_') {
+				} else if(ch == '-') {
 				} else {
-					error = "bad character, not in [a-zA-Z_]";
+					error = "bad character, not in [a-zA-Z_-]";
 				}
  				break;
 		}
@@ -1210,6 +1214,9 @@ parse_xml(const char *input, int *offset)
 	const char *our_input = input;
 	crm_data_t *new_obj = NULL;
 
+	if(input == NULL) {
+		return NULL;
+	}
 	if(offset != NULL) {
 		our_input = input + (*offset);
 	}
@@ -1219,7 +1226,7 @@ parse_xml(const char *input, int *offset)
 		if(our_input[lpc] != '<') {
 
 		} else if(our_input[lpc+1] == '!') {
-			crm_err("XML Comments are not supported");
+			crm_warn("XML Comments are not supported");
 			crm_debug_5("Skipping char %c", our_input[lpc]);
 			lpc++;
 			
@@ -1242,7 +1249,7 @@ parse_xml(const char *input, int *offset)
 	crm_malloc0(tag_name, len+1);
 	strncpy(tag_name, our_input, len+1);
 	tag_name[len] = EOS;
-	crm_debug_3("Processing tag %s", tag_name);
+	crm_debug_4("Processing tag %s", tag_name);
 	
 	new_obj = ha_msg_new(1);
 	CRM_DEV_ASSERT(crm_is_allocated(new_obj) == 1);
@@ -1265,7 +1272,7 @@ parse_xml(const char *input, int *offset)
 				case '<':
 					if(our_input[lpc+1] != '/') {
 						crm_data_t *child = NULL;
-						crm_debug_3("Start parsing child...");
+						crm_debug_4("Start parsing child...");
 						child = parse_xml(our_input, &lpc);
 						if(child == NULL) {
 							error = "error parsing child";
@@ -1274,7 +1281,7 @@ parse_xml(const char *input, int *offset)
 							ha_msg_addstruct(
 								new_obj, crm_element_name(child), child);
 							
-							crm_debug_3("Finished parsing child: %s",
+							crm_debug_4("Finished parsing child: %s",
 								  crm_element_name(child));
 							ha_msg_del(child);
 /* 							lpc++; /\* > *\/ */
@@ -1292,7 +1299,7 @@ parse_xml(const char *input, int *offset)
 							if(our_input[lpc] != '>') {
 								error = "clase tag cannot contain attrs";
 							}
-							crm_debug_3("Finished parsing ourselves: %s",
+							crm_debug_4("Finished parsing ourselves: %s",
 								  crm_element_name(new_obj));
 							
 						} else {
@@ -1316,7 +1323,7 @@ parse_xml(const char *input, int *offset)
 						lpc += len;
 /* 						lpc++; /\* " *\/ */
 
-						crm_debug_3("creating nvpair: <%s %s=\"%s\"...",
+						crm_debug_4("creating nvpair: <%s %s=\"%s\"...",
 							  tag_name,
 							  crm_str(attr_name),
 							  crm_str(attr_value));
@@ -1353,7 +1360,7 @@ parse_xml(const char *input, int *offset)
 		return NULL;
 	}
 	
-	crm_debug_3("Finished processing %s tag", tag_name);
+	crm_debug_4("Finished processing %s tag", tag_name);
 	crm_free(tag_name);
 	if(offset != NULL) {
 		(*offset) += lpc;
@@ -1394,46 +1401,122 @@ log_xml_diff(int log_level, crm_data_t *diff, const char *function)
 		);
 }
 
+gboolean
+apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
+{
+	gboolean result = TRUE;
+	crm_data_t *added = find_xml_node(diff, "diff-added", FALSE);
+	crm_data_t *removed = find_xml_node(diff, "diff-removed", FALSE);
+
+	crm_data_t *intermediate = NULL;
+	crm_data_t *diff_of_diff = NULL;
+
+	int root_nodes_seen = 0;
+
+	CRM_DEV_ASSERT(new != NULL);
+	if(crm_assert_failed) { return FALSE; }
+
+	crm_debug_2("Substraction Phase");
+	xml_child_iter(removed, child_diff, NULL,
+		       CRM_DEV_ASSERT(root_nodes_seen == 0);
+		       if(root_nodes_seen == 0) {
+			       *new = subtract_xml_object(old, child_diff, FALSE);
+		       }
+		       root_nodes_seen++;
+		);
+	if(root_nodes_seen == 0) {
+		*new = copy_xml(old);
+		
+	} else if(root_nodes_seen > 1) {
+		crm_err("(-) Diffs cannot contain more than one change set..."
+			" saw %d", root_nodes_seen);
+		result = FALSE;
+	}
+
+	root_nodes_seen = 0;
+	crm_debug_2("Addition Phase");
+	if(result) {
+		xml_child_iter(added, child_diff, NULL,
+			       CRM_DEV_ASSERT(root_nodes_seen == 0);
+			       if(root_nodes_seen == 0) {
+				       add_xml_object(NULL, *new, child_diff);
+			       }
+			       root_nodes_seen++;
+			);
+	}
+	if(root_nodes_seen > 1) {
+		crm_err("(+) Diffs cannot contain more than one change set..."
+			" saw %d", root_nodes_seen);
+		result = FALSE;
+
+#if CRM_DEV_BUILD
+	} else if(result) {
+		crm_debug_2("Verification Phase");
+		intermediate = diff_xml_object(old, *new, FALSE);
+		diff_of_diff = diff_xml_object(intermediate, diff, TRUE);
+		if(diff_of_diff != NULL) {
+			crm_err("Diff application failed!");
+/* 			log_xml_diff(LOG_DEBUG, diff_of_diff, "diff:diff_of_diff"); */
+			log_xml_diff(LOG_DEBUG, intermediate, "diff:actual_diff");
+			result = FALSE;
+		}
+		crm_free(diff_of_diff);
+		crm_free(intermediate);
+		diff_of_diff = NULL;
+#endif
+	}
+
+	if(result == FALSE) {
+		log_xml_diff(LOG_DEBUG, diff, "diff:input_diff");
+
+		log_data_element("diff:input", NULL, LOG_DEBUG, 0, old, TRUE);
+/* 		CRM_DEV_ASSERT(diff_of_diff != NULL); */
+		result = FALSE;
+	}
+
+	return result;
+}
+
 
 crm_data_t *
-diff_xml_object(crm_data_t *old, crm_data_t *new, int context)
+diff_xml_object(crm_data_t *old, crm_data_t *new, gboolean suppress)
 {
 	crm_data_t *diff = NULL;
 	crm_data_t *tmp1 = NULL;
-	crm_data_t *tmp2 = NULL;
+	crm_data_t *added = NULL;
+	crm_data_t *removed = NULL;
 	
-	tmp1 = subtract_xml_object(old, new);
+	tmp1 = subtract_xml_object(old, new, suppress);
 	if(tmp1 != NULL) {
 		diff = create_xml_node(NULL, "diff");
-		tmp2 = create_xml_node(diff, "diff-removed");
 		if(can_prune_leaf(tmp1)) {
 			ha_msg_del(tmp1);
 			tmp1 = NULL;
-
-		} else if(context < 0) {
-			add_node_copy(tmp2, tmp1);
-
 		} else {
-			diff_filter_context(context, -1, -1, tmp1, tmp2);
+			removed = create_xml_node(diff, "diff-removed");
+			added = create_xml_node(diff, "diff-added");
+			add_node_copy(removed, tmp1);
 		}
 		free_xml(tmp1);
 	}
 	
-	tmp1 = subtract_xml_object(new, old);
+	tmp1 = subtract_xml_object(new, old, suppress);
 	if(tmp1 != NULL) {
 		if(diff == NULL) {
 			diff = create_xml_node(NULL, "diff");
 		}
-		tmp2 = create_xml_node(diff, "diff-added");
 		if(can_prune_leaf(tmp1)) {
 			ha_msg_del(tmp1);
 			tmp1 = NULL;
 
-		} else if(context < 0) {
-			add_node_copy(tmp2, tmp1);
-
 		} else {
-			diff_filter_context(context, -1, -1, tmp1, tmp2);
+			if(removed == NULL) {
+				removed = create_xml_node(diff, "diff-removed");
+			}
+			if(added == NULL) {
+				added = create_xml_node(diff, "diff-added");
+			}
+			add_node_copy(added, tmp1);
 		}
 		free_xml(tmp1);
 	}
@@ -1445,6 +1528,8 @@ gboolean
 can_prune_leaf(crm_data_t *xml_node)
 {
 	gboolean can_prune = TRUE;
+/* 	return FALSE; */
+	
 	xml_prop_iter(xml_node, prop_name, prop_value,
 		      if(safe_str_eq(prop_name, XML_ATTR_ID)) {
 			      continue;
@@ -1531,7 +1616,7 @@ in_upper_context(int depth, int context, crm_data_t *xml_node)
 
 
 crm_data_t *
-subtract_xml_object(crm_data_t *left, crm_data_t *right)
+subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 {
 	gboolean differences = FALSE;
 	crm_data_t *diff = NULL;
@@ -1540,10 +1625,20 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right)
 	const char *right_val = NULL;
 	const char *name = NULL;
 
+	int lpc = 0;
+	const char *filter[] = {
+		XML_ATTR_TSTAMP,
+		"last_written",
+		"debug_source",
+		"origin"
+	};
+
 	if(left == NULL) {
 		return NULL;
 	} else if(right == NULL) {
-		return copy_xml_node_recursive(left);
+		crm_debug_2("Processing <%s id=%s> (complete copy)",
+			    crm_element_name(left), ID(left));
+		return copy_xml(left);
 	}
 	
 	name = crm_element_name(left);
@@ -1562,11 +1657,44 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right)
 	diff = create_xml_node(NULL, name);
 
 	/* changes to name/value pairs */
+	crm_debug_2("Processing <%s id=%s>", crm_str(name), ID(left));
+
 	xml_prop_iter(left, prop_name, left_value,
+		      gboolean skip = FALSE;
+		      if(safe_str_eq(prop_name, XML_ATTR_ID)) {
+			      skip = TRUE;
+		      }
+		      for(lpc = 0;
+			  skip == FALSE && suppress && lpc < DIMOF(filter);
+			  lpc++) {
+			      if(safe_str_eq(prop_name, filter[lpc])) {
+				      skip = TRUE;
+			      }
+		      }
+		      
+		      if(skip) { continue; }
+		      
 		      right_val = crm_element_value(right, prop_name);
-		      if(safe_str_neq(left_value, right_val)) {
+		      if(right_val == NULL) {
 			      differences = TRUE;
-			      set_xml_property_copy(diff, prop_name, left_value);
+			      set_xml_property_copy(
+				      diff, prop_name, left_value);
+				      crm_debug_3("\t%s: %s",
+						  crm_str(prop_name),
+						  crm_str(left_value));
+				      
+		      } else if(safe_str_eq(left_value, right_val)) {
+			      crm_debug_2("\t%s: %s (removed)",
+					  crm_str(prop_name),
+					  crm_str(left_value));
+		      } else {
+			      differences = TRUE;
+			      set_xml_property_copy(
+				      diff, prop_name, left_value);
+			      crm_debug_2("\t%s: %s->%s",
+					  crm_str(prop_name),
+					  crm_str(left_value),
+					  right_val);
 		      }
 		);
 
@@ -1575,7 +1703,8 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right)
 		left, left_child, NULL, 
 		right_child = find_entity(
 			right, crm_element_name(left_child), ID(left_child));
-		child_diff = subtract_xml_object(left_child, right_child);
+		child_diff = subtract_xml_object(
+			left_child, right_child, suppress);
 		if(child_diff != NULL) {
 			differences = TRUE;
 			add_node_copy(diff, child_diff);
@@ -1585,9 +1714,99 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right)
 	
 	if(differences == FALSE) {
 		free_xml(diff);
+		crm_debug_2("\tNo changes");
 		return NULL;
 	}
 	set_xml_property_copy(diff, XML_ATTR_ID, ID(left));
 	return diff;
+}
+
+int
+add_xml_object(crm_data_t *parent, crm_data_t *target, const crm_data_t *update)
+{
+	const char *object_id = NULL;
+	const char *object_name = NULL;
+	const char *right_val = NULL;
+	
+	int result = 0;
+
+	CRM_DEV_ASSERT(update != NULL);
+	if(crm_assert_failed) { return 0; }
+
+	object_name = crm_element_name(update);
+	object_id = ID(update);
+
+	CRM_DEV_ASSERT(object_name != NULL);
+	if(crm_assert_failed) { return 0; }
+	
+	if(target == NULL && object_id == NULL) {
+		/*  placeholder object */
+		target = find_xml_node(parent, object_name, FALSE);
+
+	} else if(target == NULL) {
+		target = find_entity(parent, object_name, object_id);
+	}
+
+	if(target == NULL) {
+		target = add_node_copy(parent, update);
+		crm_debug_2("Added  <%s id=%s>",
+			    crm_str(object_name), crm_str(object_id));
+		CRM_DEV_ASSERT(target != NULL);
+		return 0;
+		
+	} 
+
+	crm_debug_2("Found node <%s id=%s> to update",
+		    crm_str(object_name), crm_str(object_id));
+	
+	xml_prop_iter(update, prop_name, left_value,
+		      right_val = crm_element_value(target, prop_name);
+		      if(right_val == NULL) {
+			      set_xml_property_copy(
+				      target, prop_name, left_value);
+			      crm_debug_2("\t%s: %s (added)",
+					  crm_str(prop_name),
+					  crm_str(left_value));
+			      
+		      } else if(safe_str_neq(left_value, right_val)) {
+			      set_xml_property_copy(
+				      target, prop_name, left_value);
+			      crm_debug_2("\t%s: %s->%s",
+					  crm_str(prop_name),
+					  crm_str(left_value),
+					  right_val);
+		      }
+		);
+
+	CRM_DEV_ASSERT(cl_is_allocated(object_name));
+	if(object_id != NULL) {
+		CRM_DEV_ASSERT(cl_is_allocated(object_id));
+	}	
+
+	crm_debug_3("Processing children of <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
+	
+	xml_child_iter(
+		update, a_child, NULL, 
+		int tmp_result = 0;
+		crm_debug_3("Updating child <%s id=%s>",
+			    crm_element_name(a_child), ID(a_child));
+		
+		tmp_result = add_xml_object(target, NULL, a_child);
+		
+		if(tmp_result < 0) {
+			crm_err("Error updating child <%s id=%s>",
+				crm_element_name(a_child), ID(a_child));
+			
+			/*  only the first error is likely to be interesting */
+			if(result >= 0) {
+				result = tmp_result;
+			}
+		}
+		);
+
+	crm_debug_3("Finished with <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
+	return result;
 }
 

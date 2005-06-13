@@ -183,7 +183,7 @@ do_dc_join_req(long long action,
 		return I_NULL;
 		
 	} else if(max_generation_xml == NULL) {
-		max_generation_xml = copy_xml_node_recursive(generation);
+		max_generation_xml = copy_xml(generation);
 		max_generation_from = crm_strdup(join_from);
 
 	} else if(cib_compare_generation(max_generation_xml, generation) < 0) {
@@ -194,7 +194,7 @@ do_dc_join_req(long long action,
 		free_xml(max_generation_xml);
 		
 		max_generation_from = crm_strdup(join_from);
-		max_generation_xml = copy_xml_node_recursive(join_ack->xml);
+		max_generation_xml = copy_xml(join_ack->xml);
 	}
 
 	crm_log_xml_debug(max_generation_xml, "Current max generation");	
@@ -278,8 +278,7 @@ do_dc_join_finalize(long long action,
 	crm_debug_3("Bumping the epoche and syncing to %d clients",
 		  g_hash_table_size(finalized_nodes));
 	fsa_cib_conn->cmds->bump_epoch(
-		fsa_cib_conn,
-		cib_scope_local|cib_inhibit_bcast|cib_quorum_override);
+		fsa_cib_conn, cib_scope_local|cib_quorum_override);
 
 #if JOIN_AFTER_SYNC
 	crm_debug("Notifying %d clients of join results",
@@ -408,34 +407,17 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 	g_hash_table_insert(confirmed_nodes, crm_strdup(join_from),
 			    crm_strdup(CRMD_JOINSTATE_MEMBER));
 
-	/* the updates will actually occur in reverse order because of
-	 * the LIFO nature of the fsa input queue
-	 */
+ 	crm_info("4) Updating node state to %s for %s",
+ 		 CRMD_JOINSTATE_MEMBER, join_from);
 	
 	/* update CIB with the current LRM status from the node
 	 * We dont need to notify the TE of these updates, a transition will
 	 *   be started in due time
 	 */
-	fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, lrm_update, NULL,
-		cib_scope_local|cib_quorum_override|cib_inhibit_notify);
-	
-	/* update node entry in the status section  */
-	crm_info("4) Updating node state to %s for %s",
-		 CRMD_JOINSTATE_MEMBER, join_from);
-	update = create_node_state(
-		join_from, join_from,
-		ACTIVESTATUS, NULL, ONLINESTATUS,
-		CRMD_JOINSTATE_MEMBER, CRMD_JOINSTATE_MEMBER, __FUNCTION__);
-
-	set_xml_property_copy(update,XML_CIB_ATTR_EXPSTATE, CRMD_STATE_ACTIVE);
-
-	fragment = create_cib_fragment(update, NULL);
-
 	call_id = fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
-		cib_scope_local|cib_quorum_override|cib_inhibit_notify);
-	
+		fsa_cib_conn, XML_CIB_TAG_STATUS, lrm_update, NULL,
+		cib_scope_local|cib_quorum_override);
+
 	add_cib_op_callback(call_id, TRUE,NULL, join_update_complete_callback);
 
 	free_xml(fragment);

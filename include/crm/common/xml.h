@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.23 2005/05/31 11:44:46 andrew Exp $ */
+/* $Id: xml.h,v 1.24 2005/06/13 12:04:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,7 +42,7 @@
 #endif
 
 extern gboolean add_message_xml(
-	HA_Message *msg, const char *field, crm_data_t *xml);
+	HA_Message *msg, const char *field, const crm_data_t *xml);
 extern crm_data_t *get_message_xml(const HA_Message *msg, const char *field);
 
 /*
@@ -54,7 +54,7 @@ extern crm_data_t *get_message_xml(const HA_Message *msg, const char *field);
  * Not recursive, does not return anything. 
  *
  */
-extern void copy_in_properties(crm_data_t *target, crm_data_t *src);
+extern void copy_in_properties(crm_data_t *target, const crm_data_t *src);
 
 /*
  * Find a child named search_path[i] at level i in the XML fragment where i=0
@@ -146,80 +146,77 @@ extern void set_node_tstamp(crm_data_t *a_node);
 /*
  * Returns a deep copy of src_node
  *
- * Either calls xmlCopyNode() or a home grown alternative (based on
- * XML_TRACE being defined) that does more logging...
- * helpful when part of the XML document has been freed :)
  */
-extern crm_data_t *copy_xml_node_recursive(crm_data_t *src_node);
+extern crm_data_t *copy_xml(const crm_data_t *src_node);
 
 /*
  * Add a copy of xml_node to new_parent
  */
 extern crm_data_t *add_node_copy(
-	crm_data_t *new_parent, crm_data_t *xml_node);
+	crm_data_t *new_parent, const crm_data_t *xml_node);
 
 
 /*
- * Read in the contents of a pre-opened file descriptor (until EOF) and
- * produce an XML fragment (it will have an attached document).
- *
- * input will need to be closed on completion.
+ * XML I/O Functions
  *
  * Whitespace between tags is discarded.
- *
  */
 extern crm_data_t *file2xml(FILE *input);
 
 extern crm_data_t *stdin2xml(void);
 
-/*
- * Read in the contents of a string and produce an XML fragment (it will
- * have an attached document).
- *
- * input will need to be freed on completion.
- *
- * Whitespace between tags is discarded.
- *
- */
 extern crm_data_t *string2xml(const char *input);
 
+extern int write_xml_file(crm_data_t *xml_node, const char *filename);
 
-/* convience "wrapper" functions */
+extern char *dump_xml_formatted(const crm_data_t *msg);
+
+extern char *dump_xml_unformatted(const crm_data_t *msg);
+
+extern void print_xml_formatted(
+	int log_level, const char *function,
+	const crm_data_t *an_xml_node, const char *text);
+
+/*
+ * Diff related Functions
+ */ 
+extern crm_data_t *diff_xml_object(
+	crm_data_t *left, crm_data_t *right, gboolean suppress);
+
+extern void log_xml_diff(int log_level, crm_data_t *diff, const char *function);
+
+extern gboolean apply_xml_diff(
+	crm_data_t *old, crm_data_t *diff, crm_data_t **new);
+
+
+/*
+ * Searching & Modifying
+ */
 extern crm_data_t *find_xml_node(
 	crm_data_t *cib, const char * node_path, gboolean must_find);
 
 extern crm_data_t *find_entity(
 	crm_data_t *parent, const char *node_name, const char *id);
 
-extern int write_xml_file(crm_data_t *xml_node, const char *filename);
+extern crm_data_t *subtract_xml_object(
+	crm_data_t *left, crm_data_t *right, gboolean suppress);
 
-extern char *dump_xml_formatted(crm_data_t *msg);
+extern int add_xml_object(
+	crm_data_t *parent, crm_data_t *target, const crm_data_t *update);
 
-extern char *dump_xml_unformatted(crm_data_t *msg);
-
-extern void print_xml_formatted(
-	int log_level, const char *function,
-	crm_data_t *an_xml_node, const char *text);
-
-extern void log_xml_diff(int log_level, crm_data_t *diff, const char *function);
-
-extern crm_data_t *diff_xml_object(
-	crm_data_t *left, crm_data_t *right, int context);
-
-extern crm_data_t *subtract_xml_object(crm_data_t *left, crm_data_t *right);
-
-extern crm_data_t *crm_element_parent(crm_data_t *data);
+extern void xml_remove_prop(crm_data_t *obj, const char *name);
 
 extern void crm_set_element_parent(crm_data_t *data, crm_data_t *parent);
 
-extern const char *crm_element_value(crm_data_t *data, const char *name);
-extern char *crm_element_value_copy(crm_data_t *data, const char *name);
+/*
+ *
+ */
+extern const char *crm_element_value(const crm_data_t *data, const char *name);
+extern char *crm_element_value_copy(const crm_data_t *data, const char *name);
 
-extern const char *crm_element_name(crm_data_t *data);
+extern const char *crm_element_name(const crm_data_t *data);
 
 extern void crm_validate_data(const crm_data_t *root);
-
-extern void xml_remove_prop(crm_data_t *obj, const char *name);
 
 extern void crm_update_parents(crm_data_t *root);
 
