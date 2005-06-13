@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.44 2005/06/13 05:42:05 panjiam Exp $ */
+/* $Id: crmadmin.c,v 1.45 2005/06/13 06:50:41 panjiam Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -432,18 +432,10 @@ do_work(ll_cluster_t * hb_cluster)
 			free_xml(fragment);
 
 		} else if(DO_STANDBY) {
-			char *name = NULL;
-			char *value = NULL;
 			crm_data_t *a_node = NULL;
 			crm_data_t *xml_obj = NULL;
 			crm_data_t *fragment = NULL;
 
-			if(decodeNVpair(crm_option, '=', &name, &value)==FALSE){
-				crm_err("%s needs to be of the form"
-					" <name>=<value>", crm_option);
-				return -1;
-			}
-			
 			a_node = create_xml_node(NULL, XML_CIB_TAG_NODE);
 			set_xml_property_copy(a_node, XML_ATTR_ID, dest_node);
 
@@ -459,8 +451,6 @@ do_work(ll_cluster_t * hb_cluster)
 			fragment = create_cib_fragment(a_node, NULL);
 
 			free_xml(a_node);
-			crm_free(name);
-			crm_free(value);
 			
 			rc = the_cib->cmds->modify(
 				the_cib, XML_CIB_TAG_NODES, fragment,
