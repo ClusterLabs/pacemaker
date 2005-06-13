@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.25 2005/05/18 20:15:57 andrew Exp $ */
+/* $Id: main.c,v 1.26 2005/06/13 11:54:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -332,7 +332,8 @@ startCib(const char *filename)
 		/* free_xml(cib); */
 		crm_warn("CIB Initialization failed, "
 			 "starting with an empty default.");
-		activateCibXml(createEmptyCib(), filename);
+		cib = readCibXml(NULL);
+		activateCibXml(cib, filename);
 	}
 	return TRUE;
 }

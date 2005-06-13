@@ -234,7 +234,7 @@ update_local_cib_adv(
 	
 	crm_malloc0(fsa_input, sizeof(ha_msg_input_t));
 
-	msg = create_request(CRM_OP_CIB_UPDATE, msg_data, NULL,
+	msg = create_request(CIB_OP_UPDATE, msg_data, NULL,
 			     CRM_SYSTEM_CIB, CRM_SYSTEM_CRMD, NULL);
 
 	ha_msg_add(msg, F_CIB_SECTION,

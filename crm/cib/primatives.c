@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.18 2005/05/31 14:50:46 andrew Exp $ */
+/* $Id: primatives.c,v 1.19 2005/06/13 11:54:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,7 +96,7 @@ updateResource(crm_data_t *cib,  crm_data_t *anXmlNode)
 	crm_debug_2("Updating " XML_CIB_TAG_RESOURCE " (%s)...", id);
 
 	root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
-	return update_cib_object(root, anXmlNode, FALSE);
+	return update_cib_object(root, anXmlNode);
 }
 
 int
@@ -160,7 +160,7 @@ updateConstraint(crm_data_t *cib, crm_data_t *anXmlNode)
 	crm_debug_2("Updating " XML_CIB_TAG_CONSTRAINT " (%s)...", id);
 
 	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	return update_cib_object(root, anXmlNode, FALSE);
+	return update_cib_object(root, anXmlNode);
 }
 
 int
@@ -223,7 +223,7 @@ updateHaNode(crm_data_t *cib, cibHaNode *anXmlNode)
 	crm_debug_2("Updating " XML_CIB_TAG_NODE " (%s)...", id);
 
 	root = get_object_root(XML_CIB_TAG_NODES, cib);
-	return update_cib_object(root, anXmlNode, FALSE);
+	return update_cib_object(root, anXmlNode);
 }
 
 int
@@ -284,7 +284,7 @@ updateStatus(crm_data_t *cib, crm_data_t *anXmlNode)
 	crm_debug_2("Updating " XML_CIB_TAG_NODE " (%s)...", id);
 
 	root = get_object_root(XML_CIB_TAG_STATUS, cib);
-	return update_cib_object(root, anXmlNode, FALSE);
+	return update_cib_object(root, anXmlNode);
 }
 
 int
@@ -329,9 +329,6 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 	} else {
 		equiv_node = find_entity(parent, object_name, object_id);
 	}
-#if INTERMEDIATE_NOTIFICATIONS
-	cib_pre_notify(CRM_OP_CIB_DELETE, equiv_node, delete_spec);
-#endif
 
 	if(result != cib_ok) {
 		; /* nothing */
@@ -356,10 +353,6 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 			}
 			);
 	}
-
-#if INTERMEDIATE_NOTIFICATIONS
-	cib_post_notify(CRM_OP_CIB_DELETE, delete_spec, result, equiv_node);
-#endif
 
 	return result;
 }
@@ -390,9 +383,6 @@ add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
 	} else {
 		equiv_node = find_entity(parent, object_name, object_id);
 	}
-#if INTERMEDIATE_NOTIFICATIONS
-	cib_pre_notify(CRM_OP_CIB_CREATE, equiv_node, new_obj);
-#endif
 
 	if(result != cib_ok) {
 		; /* do nothing */
@@ -404,136 +394,105 @@ add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
 		result = cib_NODECOPY;
 		
 	}
-	
-#if INTERMEDIATE_NOTIFICATIONS
-	cib_post_notify(CRM_OP_CIB_CREATE, new_obj, result, new_obj);
-#endif
 
 	return result;
 }
 
 
 int
-update_cib_object(crm_data_t *parent, crm_data_t *new_obj, gboolean force)
+update_cib_object(crm_data_t *parent, crm_data_t *update)
 {
 	const char *replace = NULL;
 	const char *object_name = NULL;
-	char *object_id = NULL;
-	crm_data_t *equiv_node = NULL;
+	const char *object_id = NULL;
+	crm_data_t *target = NULL;
 	int result = cib_ok;
-	
-	if(new_obj != NULL) {
-		object_name = crm_element_name(new_obj);
-		if(crm_element_value(new_obj, XML_ATTR_ID) != NULL){
-			object_id = crm_element_value_copy(new_obj,XML_ATTR_ID);
-		}
-	}
 
-	if(new_obj == NULL) {
-		result = cib_NOOBJECT;
+	CRM_DEV_ASSERT(update != NULL);
+	if(crm_assert_failed) { return cib_NOOBJECT; }
 
-	} else if(parent == NULL) {
-		result = cib_NOPARENT;
+	CRM_DEV_ASSERT(parent != NULL);
+	if(crm_assert_failed) { return cib_NOPARENT; }
 
-	} else if(object_id == NULL) {
+	object_name = crm_element_name(update);
+	object_id = ID(update);
+
+	CRM_DEV_ASSERT(object_name != NULL);
+	if(crm_assert_failed) { return cib_NOOBJECT; }
+
+	if(object_id == NULL) {
 		/*  placeholder object */
-		equiv_node = find_xml_node(parent, object_name, FALSE);
+		target = find_xml_node(parent, object_name, FALSE);
 
 	} else {
-		equiv_node = find_entity(parent, object_name, object_id);
+		target = find_entity(parent, object_name, object_id);
 	}
-#if INTERMEDIATE_NOTIFICATIONS
-	cib_pre_notify(CRM_OP_CIB_UPDATE, equiv_node, new_obj);
-#endif
 
-	if(result != cib_ok) {
-		; /* nothing */
-		
-	} else if(equiv_node == NULL) {
-		crm_debug_2("No node to update, creating %s instead",
-			  crm_element_name(new_obj));
-		if(parent == NULL) {
-			crm_err("Failed to add <%s id=%s> (NULL parent)",
-				 object_name, object_id);
-			result = cib_NODECOPY;
-			
-		} else if(add_node_copy(parent, new_obj) == NULL) {
-			crm_err("Failed to add  <%s id=%s>",
-				 crm_str(object_name), crm_str(object_id));
-			result = cib_NODECOPY;
-		} else {
-			crm_debug_2("Added  <%s id=%s>",
-				  crm_str(object_name), crm_str(object_id));
-
-			if(object_id == NULL) {
-				/*  placeholder object */
-				equiv_node = find_xml_node(
-					parent, object_name, TRUE);
-				
-			} else {
-				equiv_node = find_entity(
-					parent, object_name, object_id);
-			}
-		}
-		
-	} else {
-		crm_debug_2("Found node <%s id=%s> to update",
+	if(target == NULL) {
+		target = add_node_copy(parent, update);
+		crm_debug_2("Added  <%s id=%s>",
 			    crm_str(object_name), crm_str(object_id));
 
-		replace = crm_element_value(new_obj, XML_CIB_ATTR_REPLACE);
-		
-		if(replace != NULL) {
-			crm_data_t *remove = find_xml_node(
-				equiv_node, replace, FALSE);
-			if(remove != NULL) {
-				crm_debug_3("Replacing node <%s> in <%s>",
-					  replace, crm_element_name(equiv_node));
-				zap_xml_from_parent(equiv_node, remove);
-			}
-			xml_remove_prop(new_obj, XML_CIB_ATTR_REPLACE);
-			xml_remove_prop(equiv_node, XML_CIB_ATTR_REPLACE);
-		}
-		
-		if(safe_str_eq(XML_CIB_TAG_STATE, object_name)){
-			update_node_state(equiv_node, new_obj);
-			
-		} else {
-			copy_in_properties(equiv_node, new_obj);
-		}
+		CRM_DEV_ASSERT(target != NULL);
+		if(crm_assert_failed) { return cib_NODECOPY; }
 
-		crm_debug_3("Processing children of <%s id=%s>",
-			  crm_str(object_name), crm_str(object_id));
+		return cib_ok;
 		
-		xml_child_iter(
-			new_obj, a_child, NULL, 
-			int tmp_result = 0;
-			crm_debug_3("Updating child <%s id=%s>",
-				  crm_element_name(a_child),
-				  crm_element_value(a_child, XML_ATTR_ID));
-			
-			tmp_result =
-				update_cib_object(equiv_node, a_child, force);
+	} 
 
-			/*  only the first error is likely to be interesting */
-			if(tmp_result != cib_ok) {
-				crm_err("Error updating child <%s id=%s>",
-					crm_element_name(a_child),
-					crm_element_value(a_child, XML_ATTR_ID));
-				
-				if(result == cib_ok) {
-					result = tmp_result;
-				}
-			}
-			);
-		
+	crm_debug_2("Found node <%s id=%s> to update",
+		    crm_str(object_name), crm_str(object_id));
+	
+	replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
+	
+	if(replace != NULL) {
+		crm_data_t *remove = find_xml_node(target, replace, FALSE);
+		if(remove != NULL) {
+			crm_debug_3("Replacing node <%s> in <%s>",
+				    replace, crm_element_name(target));
+			zap_xml_from_parent(target, remove);
+		}
+		xml_remove_prop(update, XML_CIB_ATTR_REPLACE);
+		xml_remove_prop(target, XML_CIB_ATTR_REPLACE);
 	}
+	
+	if(safe_str_eq(XML_CIB_TAG_STATE, object_name)){
+		update_node_state(target, update);
+		
+	} else {
+		copy_in_properties(target, update);
+	}
+
+	CRM_DEV_ASSERT(cl_is_allocated(object_name));
+	if(object_id != NULL) {
+		CRM_DEV_ASSERT(cl_is_allocated(object_id));
+	}
+	
+	crm_debug_3("Processing children of <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
+	
+	xml_child_iter(
+		update, a_child, NULL, 
+		int tmp_result = 0;
+		crm_debug_3("Updating child <%s id=%s>",
+			    crm_element_name(a_child), ID(a_child));
+		
+		tmp_result = update_cib_object(target, a_child);
+		
+		/*  only the first error is likely to be interesting */
+		if(tmp_result != cib_ok) {
+			crm_err("Error updating child <%s id=%s>",
+				crm_element_name(a_child), ID(a_child));
+			
+			if(result == cib_ok) {
+				result = tmp_result;
+			}
+		}
+		);
+	
 	crm_debug_3("Finished with <%s id=%s>",
 		  crm_str(object_name), crm_str(object_id));
-	
-#if INTERMEDIATE_NOTIFICATIONS
-	cib_post_notify(CRM_OP_CIB_UPDATE, new_obj, result, equiv_node);
-#endif
-	crm_free(object_id);
+
 	return result;
 }
 

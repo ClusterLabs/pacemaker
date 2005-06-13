@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.h,v 1.10 2005/01/26 13:30:55 andrew Exp $ */
+/* $Id: cibprimatives.h,v 1.11 2005/06/13 11:54:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -74,8 +74,7 @@ extern int delStatus    (crm_data_t *cib, crm_data_t *delete_spec);
 
 extern int add_cib_object   (crm_data_t *parent, crm_data_t *new_obj);
 extern int delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec);
-extern int update_cib_object(crm_data_t *parent, crm_data_t *new_obj,
-			     gboolean force);
+extern int update_cib_object(crm_data_t *parent, crm_data_t *new_obj);
 
 
 #endif

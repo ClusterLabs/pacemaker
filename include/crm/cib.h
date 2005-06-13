@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.25 2005/05/31 11:43:56 andrew Exp $ */
+/* $Id: cib.h,v 1.26 2005/06/13 11:54:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,7 +53,8 @@ enum cib_call_options {
 	cib_sync_call       = 0x00001000,
 	cib_inhibit_notify  = 0x00010000,
  	cib_quorum_override = 0x00100000,
-	cib_inhibit_bcast   = 0x01000000
+	cib_inhibit_bcast   = 0x01000000,
+	cib_force_diff	    = 0x10000000
 };
 
 #define cib_default_options = cib_none
@@ -101,15 +102,18 @@ enum cib_errors {
 	cib_revision_unknown	= -39,
 	cib_missing_data	= -40,
 	cib_remote_timeout	= -41,
-	cib_no_quorum		= -42
+	cib_no_quorum		= -42,
+	cib_diff_failed		= -43,
+	cib_diff_resync		= -44,
+	cib_old_data		= -45
 };
 
-enum cib_op {
-	CIB_OP_NONE = 0,
-	CIB_OP_ADD,
-	CIB_OP_MODIFY,
-	CIB_OP_DELETE,
-	CIB_OP_MAX
+enum cib_update_op {
+	CIB_UPDATE_OP_NONE = 0,
+	CIB_UPDATE_OP_ADD,
+	CIB_UPDATE_OP_MODIFY,
+	CIB_UPDATE_OP_DELETE,
+	CIB_UPDATE_OP_MAX
 };
 
 enum cib_section {
@@ -121,6 +125,22 @@ enum cib_section {
 	cib_section_crmconfig,
 	cib_section_status
 };
+
+#define CIB_OP_SLAVE	"cib_slave"
+#define CIB_OP_SLAVEALL	"cib_slave_all"
+#define CIB_OP_MASTER	"cib_master"
+#define CIB_OP_SYNC	"cib_sync"
+#define CIB_OP_SYNC_ONE	"cib_sync_one"
+#define CIB_OP_ISMASTER	"cib_ismaster"
+#define CIB_OP_BUMP	"cib_bump"
+#define CIB_OP_QUERY	"cib_query"
+#define CIB_OP_CREATE	"cib_create"
+#define CIB_OP_UPDATE	"cib_update"
+#define CIB_OP_DELETE	"cib_delete"
+#define CIB_OP_ERASE	"cib_erase"
+#define CIB_OP_REPLACE	"cib_replace"
+#define CIB_OP_NOTIFY	"cib_notify"
+#define CIB_OP_APPLY_DIFF "cib_apply_diff"
 
 #define F_CIB_CLIENTID  "cib_clientid"
 #define F_CIB_CALLOPTS  "cib_callopt"
@@ -144,6 +164,7 @@ enum cib_section {
 #define F_CIB_CLIENTNAME	"cib_clientname"
 #define F_CIB_NOTIFY_TYPE	"cib_notify_type"
 #define F_CIB_NOTIFY_ACTIVATE	"cib_notify_activate"
+#define F_CIB_UPDATE_DIFF	"cib_update_diff"
 
 #define T_CIB			"cib"
 #define T_CIB_NOTIFY		"cib_notify"
@@ -292,7 +313,7 @@ extern const char *get_crm_option(
 
 /* Error Interpretation*/
 extern const char *cib_error2string(enum cib_errors);
-extern const char *cib_op2string(enum cib_op);
+extern const char *cib_op2string(enum cib_update_op);
 
 extern crm_data_t *createEmptyCib(void);
 extern gboolean verifyCibXml(crm_data_t *cib);
@@ -300,6 +321,20 @@ extern int cib_section2enum(const char *a_section);
 
 #define create_cib_fragment(update,section) create_cib_fragment_adv(update, section, __FUNCTION__)
 
+extern crm_data_t *diff_cib_object(
+	crm_data_t *old, crm_data_t *new,gboolean suppress);
+
+extern gboolean apply_cib_diff(
+	crm_data_t *old, crm_data_t *diff, crm_data_t **new);
+
+extern void log_cib_diff(int log_level, crm_data_t *diff, const char *function);
+
+extern gboolean cib_diff_version_details(
+	crm_data_t *diff, int *admin_epoche, int *epoche, int *updates, 
+	int *_admin_epoche, int *_epoche, int *_updates);
+
+extern gboolean cib_version_details(
+	crm_data_t *cib, int *admin_epoche, int *epoche, int *updates);
 
 #endif
 

@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.33 2005/06/02 09:23:43 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.34 2005/06/13 11:54:53 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -102,17 +102,17 @@ main(int argc, char **argv)
 	
 	static struct option long_options[] = {
 		/* Top-level Options */
-		{CRM_OP_CIB_ERASE,   0, 0, 'E'},
-		{CRM_OP_CIB_QUERY,   0, 0, 'Q'},
-		{CRM_OP_CIB_CREATE,  0, 0, 'C'},
-		{CRM_OP_CIB_REPLACE, 0, 0, 'R'},
-		{CRM_OP_CIB_UPDATE,  0, 0, 'U'},
-		{CRM_OP_CIB_DELETE,  0, 0, 'D'},
-		{CRM_OP_CIB_BUMP,    0, 0, 'B'},
-		{CRM_OP_CIB_SYNC,    0, 0, 'S'},
-		{CRM_OP_CIB_SLAVE,   0, 0, 'r'},
-		{CRM_OP_CIB_MASTER,  0, 0, 'w'},
-		{CRM_OP_CIB_ISMASTER,0, 0, 'M'},
+		{CIB_OP_ERASE,   0, 0, 'E'},
+		{CIB_OP_QUERY,   0, 0, 'Q'},
+		{CIB_OP_CREATE,  0, 0, 'C'},
+		{CIB_OP_REPLACE, 0, 0, 'R'},
+		{CIB_OP_UPDATE,  0, 0, 'U'},
+		{CIB_OP_DELETE,  0, 0, 'D'},
+		{CIB_OP_BUMP,    0, 0, 'B'},
+		{CIB_OP_SYNC,    0, 0, 'S'},
+		{CIB_OP_SLAVE,   0, 0, 'r'},
+		{CIB_OP_MASTER,  0, 0, 'w'},
+		{CIB_OP_ISMASTER,0, 0, 'M'},
 		
 		{"force-quorum",0, 0, 'f'},
 		{"local",	0, 0, 'l'},
@@ -169,38 +169,38 @@ main(int argc, char **argv)
 				break;
 				
 			case 'E':
-				cib_action = CRM_OP_CIB_ERASE;
+				cib_action = CIB_OP_ERASE;
 				break;
 			case 'Q':
-				cib_action = CRM_OP_CIB_QUERY;
+				cib_action = CIB_OP_QUERY;
 				break;
 			case 'S':
-				cib_action = CRM_OP_CIB_SYNC;
+				cib_action = CIB_OP_SYNC;
 				break;
 			case 'U':
-				cib_action = CRM_OP_CIB_UPDATE;
+				cib_action = CIB_OP_UPDATE;
 				break;
 			case 'R':
-				cib_action = CRM_OP_CIB_REPLACE;
+				cib_action = CIB_OP_REPLACE;
 				break;
 			case 'C':
-				cib_action = CRM_OP_CIB_CREATE;
+				cib_action = CIB_OP_CREATE;
 				break;
 			case 'D':
-				cib_action = CRM_OP_CIB_DELETE;
+				cib_action = CIB_OP_DELETE;
 				break;
 			case 'M':
-				cib_action = CRM_OP_CIB_ISMASTER;
+				cib_action = CIB_OP_ISMASTER;
 				command_options |= cib_scope_local;
 				break;
 			case 'B':
-				cib_action = CRM_OP_CIB_BUMP;
+				cib_action = CIB_OP_BUMP;
 				break;
 			case 'r':
-				cib_action = CRM_OP_CIB_SLAVE;
+				cib_action = CIB_OP_SLAVE;
 				break;
 			case 'w':
-				cib_action = CRM_OP_CIB_MASTER;
+				cib_action = CIB_OP_MASTER;
 				command_options |= cib_scope_local;
 				break;
 			case 'V':
@@ -230,6 +230,7 @@ main(int argc, char **argv)
 				break;
 			case 'b':
 				command_options |= cib_inhibit_bcast;
+				command_options |= cib_scope_local;
 				break;
 			case 's':
 				command_options |= cib_sync_call;
@@ -358,18 +359,18 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 
 	obj_type_parent = cib_pluralSection(obj_type);
 
-	if(strcmp(CRM_OP_CIB_QUERY, cib_action) == 0) {
+	if(strcmp(CIB_OP_QUERY, cib_action) == 0) {
 		crm_debug_2("Querying the CIB for section: %s",
 			    obj_type_parent);
 
 		return the_cib->cmds->query_from(
 			the_cib, host, obj_type_parent, output, call_options);
 		
-	} else if (strcmp(CRM_OP_CIB_ERASE, cib_action) == 0) {
+	} else if (strcmp(CIB_OP_ERASE, cib_action) == 0) {
 		crm_debug_4("CIB Erase op in progress");
 		return the_cib->cmds->erase(the_cib, output, call_options);
 		
-	} else if (strcmp(CRM_OP_CIB_CREATE, cib_action) == 0) {
+	} else if (strcmp(CIB_OP_CREATE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
 		crm_debug_4("Performing %s op...", cib_action);
 		msg_data = handleCibMod(admin_input_xml);
@@ -378,7 +379,7 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 		free_xml(msg_data);
 		return rc;
 
-	} else if (strcmp(CRM_OP_CIB_UPDATE, cib_action) == 0) {
+	} else if (strcmp(CIB_OP_UPDATE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
 		crm_debug_4("Performing %s op...", cib_action);
 		msg_data = handleCibMod(admin_input_xml);
@@ -387,7 +388,7 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 		free_xml(msg_data);
 		return rc;
 
-	} else if (strcmp(CRM_OP_CIB_DELETE, cib_action) == 0) {
+	} else if (strcmp(CIB_OP_DELETE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
 		crm_debug_4("Performing %s op...", cib_action);
 		msg_data = handleCibMod(admin_input_xml);
@@ -396,17 +397,17 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 		free_xml(msg_data);
 		return rc;
 
-	} else if (strcmp(CRM_OP_CIB_SYNC, cib_action) == 0) {
+	} else if (strcmp(CIB_OP_SYNC, cib_action) == 0) {
 		crm_debug_4("Performing %s op...", cib_action);
 		return the_cib->cmds->sync_from(
 			the_cib, host, obj_type_parent, call_options);
 
-	} else if (strcmp(CRM_OP_CIB_SLAVE, cib_action) == 0
+	} else if (strcmp(CIB_OP_SLAVE, cib_action) == 0
 		   && (call_options ^ cib_scope_local) ) {
 		crm_debug_4("Performing %s op on all nodes...", cib_action);
 		return the_cib->cmds->set_slave_all(the_cib, call_options);
 
-	} else if (strcmp(CRM_OP_CIB_MASTER, cib_action) == 0) {
+	} else if (strcmp(CIB_OP_MASTER, cib_action) == 0) {
 		crm_debug_4("Performing %s op on all nodes...", cib_action);
 		return the_cib->cmds->set_master(the_cib, call_options);
 
@@ -456,25 +457,26 @@ usage(const char *cmd, int exit_status)
 		XML_ATTR_ID, 'i');
 	fprintf(stream, "\t--%s (-%c) <type>\tobject type being operated on\n",
 		"obj_type", 'o');
+	fprintf(stream, "\t\tValid values are: node, resource, node_state, constraint, nvpair\n");
 	fprintf(stream, "\t--%s (-%c)\tturn on debug info."
 		"  additional instance increase verbosity\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
 	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_ERASE,  'E');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_QUERY,  'Q');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_CREATE, 'C');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_REPLACE,'R');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_UPDATE, 'U');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_DELETE, 'D');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_BUMP,   'B');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_ISMASTER,'M');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_SYNC,   'S');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ERASE,  'E');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_QUERY,  'Q');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_CREATE, 'C');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_REPLACE,'R');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_UPDATE, 'U');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE, 'D');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'M');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_SYNC,   'S');
 	fprintf(stream, "\nXML data\n");
 	fprintf(stream, "\t--%s (-%c) <string>\t\n", F_CRM_DATA, 'X');
 	fprintf(stream, "\nAdvanced Options\n");
 	fprintf(stream, "\t--%s (-%c)\tsend command to specified host."
 		" Applies to %s and %s commands only\n", "host", 'h',
-		CRM_OP_CIB_QUERY, CRM_OP_CIB_SYNC);
+		CIB_OP_QUERY, CIB_OP_SYNC);
 	fprintf(stream, "\t--%s (-%c)\tcommand takes effect locally"
 		" on the specified host\n", "local", 'l');
 	fprintf(stream, "\t--%s (-%c)\tcommand will not be broadcast even if"
@@ -491,7 +493,7 @@ usage(const char *cmd, int exit_status)
 gboolean
 admin_message_timeout(gpointer data)
 {
-	if(safe_str_eq(cib_action, CRM_OP_CIB_SLAVE)) {
+	if(safe_str_eq(cib_action, CIB_OP_SLAVE)) {
 		exit_code = cib_ok;
 		fprintf(stdout, "CIB service(s) are in slave mode.\n");
 		
@@ -533,13 +535,17 @@ cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
 		admin_input_xml = dump_xml_formatted(output);
 	}
 	
-	if(safe_str_eq(cib_action, CRM_OP_CIB_ISMASTER) && rc != cib_ok) {
-		crm_info("Local CIB is _not_ the master instance");
-		fprintf(stderr, "Local CIB is _not_ the master instance\n");
+	if(safe_str_eq(cib_action, CIB_OP_ISMASTER) && rc != cib_ok) {
+		crm_info("CIB on %s is _not_ the master instance",
+			 host?host:"localhost");
+		fprintf(stderr, "CIB on %s is _not_ the master instance",
+			 host?host:"localhost");
 		
-	} else if(safe_str_eq(cib_action, CRM_OP_CIB_ISMASTER)) {
-		crm_info("Local CIB _is_ the master instance");
-		fprintf(stderr, "Local CIB _is_ the master instance\n");
+	} else if(safe_str_eq(cib_action, CIB_OP_ISMASTER)) {
+		crm_info("CIB on %s _is_ the master instance",
+			 host?host:"localhost");
+		fprintf(stderr, "CIB on %s _is_ the master instance",
+			 host?host:"localhost");
 		
 	} else if(rc != 0) {
 		crm_warn("Call %s failed (%d): %s",
@@ -548,7 +554,7 @@ cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
 			cib_action, rc, cib_error2string(rc));
 		fprintf(stdout, "%s\n",	crm_str(admin_input_xml));
 
-	} else if(safe_str_eq(cib_action, CRM_OP_CIB_QUERY) && output==NULL) {
+	} else if(safe_str_eq(cib_action, CIB_OP_QUERY) && output==NULL) {
 		crm_err("Output expected in query response");
 		crm_log_message(LOG_ERR, msg);
 

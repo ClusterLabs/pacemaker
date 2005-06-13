@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.26 2005/06/02 09:44:01 andrew Exp $ */
+/* $Id: notify.c,v 1.27 2005/06/13 11:54:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -245,8 +245,8 @@ do_cib_notify(
 	enum cib_errors result, crm_data_t *result_data, const char *msg_type) 
 {
 	HA_Message *update_msg = NULL;
-	char *type = NULL;
-	char *id = NULL;
+	const char *type = NULL;
+	const char *id = NULL;
 
 	if(options & cib_inhibit_notify) {
 		crm_debug_2("Inhibiting notify.");
@@ -255,8 +255,8 @@ do_cib_notify(
 
 	update_msg = ha_msg_new(8);
 
-	if(update != NULL && crm_element_value(result_data, XML_ATTR_ID) != NULL){
-		id = crm_element_value_copy(result_data, XML_ATTR_ID);
+	if(result_data != NULL) {
+		id = crm_element_value(result_data, XML_ATTR_ID);
 	}
 	
 	ha_msg_add(update_msg, F_TYPE, T_CIB_NOTIFY);
@@ -272,13 +272,13 @@ do_cib_notify(
 		crm_debug_4("Setting type to update->name: %s",
 			    crm_element_name(update));
 		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
-		type = crm_strdup(crm_element_name(update));
+		type = crm_element_name(update);
 
 	} else if(result_data != NULL) {
 		crm_debug_4("Setting type to new_obj->name: %s",
 			    crm_element_name(result_data));
 		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(result_data));
-		type = crm_strdup(crm_element_name(result_data));
+		type = crm_element_name(result_data);
 		
 	} else {
 		crm_debug_4("Not Setting type");
@@ -317,8 +317,6 @@ do_cib_notify(
 		}
 	}
 
-	crm_free(id);
-	crm_free(type);
 	crm_msg_del(update_msg);
 
 	crm_debug_3("Notify complete");

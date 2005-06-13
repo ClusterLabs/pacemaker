@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.64 2005/05/31 11:43:56 andrew Exp $ */
+/* $Id: crm.h,v 1.65 2005/06/13 11:54:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -97,21 +97,6 @@ extern gboolean crm_assert_failed;
 
 /* Valid operations */
 #define CRM_OP_NOOP		"noop"
-
-/* soon to be moved to cib.h */
-#define CRM_OP_CIB_SLAVE	"cib_slave"
-#define CRM_OP_CIB_SLAVEALL	"cib_slave_all"
-#define CRM_OP_CIB_MASTER	"cib_master"
-#define CRM_OP_CIB_SYNC		"cib_sync"
-#define CRM_OP_CIB_ISMASTER	"cib_ismaster"
-#define CRM_OP_CIB_BUMP		"cib_bump"
-#define CRM_OP_CIB_QUERY	"cib_query"
-#define CRM_OP_CIB_CREATE	"cib_create"
-#define CRM_OP_CIB_UPDATE	"cib_update"
-#define CRM_OP_CIB_DELETE	"cib_delete"
-#define CRM_OP_CIB_ERASE	"cib_erase"
-#define CRM_OP_CIB_REPLACE	"cib_replace"
-#define CRM_OP_CIB_NOTIFY	"cib_notify"
 
 #define CRM_OP_JOIN_ANNOUNCE	"join_announce"
 #define CRM_OP_JOIN_OFFER	"join_offer"
@@ -235,6 +220,7 @@ extern void crm_log_message_adv(
 #define crm_action_debug(x)   crm_do_action(LOG_DEBUG,   x)
 #define crm_action_debug_2(x) crm_do_action(LOG_DEBUG_2, x)
 #define crm_action_debug_3(x) crm_do_action(LOG_DEBUG_3, x)
+#define crm_action_debug_4(x) crm_do_action(LOG_DEBUG_4, x)
 
 #define crm_log_xml(level, text, xml)   if(crm_log_level >= level) {  \
 		print_xml_formatted(level,  __FUNCTION__, xml, text); \

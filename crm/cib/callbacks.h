@@ -1,4 +1,4 @@
-/* $Id: callbacks.h,v 1.9 2005/05/31 11:32:39 andrew Exp $ */
+/* $Id: callbacks.h,v 1.10 2005/06/13 11:54:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,7 +65,8 @@ typedef struct cib_operation_s
 		gboolean	needs_section;
 		gboolean	needs_data;
 		enum cib_errors (*fn)(
-		const char *, int, const char *, crm_data_t*, crm_data_t**);
+			const char *, int, const char *,
+			crm_data_t*, crm_data_t*, crm_data_t**, crm_data_t**);
 } cib_operation_t;
 
 extern cib_operation_t cib_server_ops[];

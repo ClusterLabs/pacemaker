@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.22 2005/05/31 11:32:39 andrew Exp $ */
+/* $Id: cibmon.c,v 1.23 2005/06/13 11:54:53 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -254,21 +254,21 @@ usage(const char *cmd, int exit_status)
 		"  additional instance increase verbosity\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
 	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_ERASE,  'E');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_QUERY,  'Q');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_CREATE, 'C');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_REPLACE,'R');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_UPDATE, 'U');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_DELETE, 'D');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_BUMP,   'B');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_ISMASTER,'M');
-	fprintf(stream, "\t--%s (-%c)\t\n", CRM_OP_CIB_SYNC,   'S');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ERASE,  'E');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_QUERY,  'Q');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_CREATE, 'C');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_REPLACE,'R');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_UPDATE, 'U');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE, 'D');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'M');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_SYNC,   'S');
 	fprintf(stream, "\nXML data\n");
 	fprintf(stream, "\t--%s (-%c) <string>\t\n", F_CRM_DATA, 'X');
 	fprintf(stream, "\nAdvanced Options\n");
 	fprintf(stream, "\t--%s (-%c)\tsend command to specified host."
 		" Applies to %s and %s commands only\n", "host", 'h',
-		CRM_OP_CIB_QUERY, CRM_OP_CIB_SYNC);
+		CIB_OP_QUERY, CRM_OP_CIB_SYNC);
 	fprintf(stream, "\t--%s (-%c)\tcommand only takes effect locally"
 		" on the specified host\n", "local", 'l');
 	fprintf(stream, "\t--%s (-%c)\twait for call to complete before"
@@ -389,7 +389,7 @@ cibmon_update_confirm(const char *event, HA_Message *msg)
 				rc, cib_error2string(rc));
 		}
 	}
-	if(update == NULL) {
+	if(update != NULL) {
 		print_xml_formatted(
 			rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
 			update, "Update");
@@ -410,66 +410,42 @@ cibmon_update_confirm(const char *event, HA_Message *msg)
 }
 
 
+
 void
 cibmon_diff(const char *event, HA_Message *msg)
 {
 	int rc = -1;
 	const char *op = NULL;
 	crm_data_t *diff = NULL;
-	crm_data_t *tmp = NULL;
-	const char *updates = NULL;
-	const char *old_updates = NULL;
-	const char *epoche= NULL;
-	const char *old_epoche= NULL;
-	const char *admin_epoche= NULL;
-	const char *old_admin_epoche= NULL;
+	crm_data_t *update = get_message_xml(msg, F_CIB_UPDATE);
+
+	int log_level = LOG_INFO;
 	
 	if(msg == NULL) {
 		crm_err("NULL update");
 		return;
 	}		
 	
-	ha_msg_value_int(msg, F_CIB_RC, &rc);
-	
-	if(rc < cib_ok) {
-		return;
-	}
-	
+	ha_msg_value_int(msg, F_CIB_RC, &rc);	
 	op = cl_get_string(msg, F_CIB_OPERATION);
 	diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-	tmp = find_xml_node(diff, "diff-added", FALSE);
-	tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
-	updates = crm_element_value(tmp, XML_ATTR_NUMUPDATES);
+	if(rc < cib_ok) {
+		log_level = LOG_WARNING;
+		crm_log_maybe(log_level, "[%s] %s ABORTED: %s",
+			      event, op, cib_error2string(rc));
+		
+	} else {
+		crm_log_maybe(log_level, "[%s] %s confirmed", event, op);
+	}
 
-	tmp = get_message_xml(msg, "cib_generation");
-	epoche = crm_element_value(tmp, XML_ATTR_GENERATION);
-	admin_epoche = crm_element_value(tmp, XML_ATTR_GENERATION_ADMIN);
-	
-	tmp = find_xml_node(diff, "diff-removed", FALSE);
-	tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
-	old_updates = crm_element_value(tmp, XML_ATTR_NUMUPDATES);
-	old_epoche = crm_element_value(tmp, XML_ATTR_GENERATION);
-	if(old_epoche == NULL) {
-		old_epoche = epoche;
+	log_cib_diff(log_level, diff, op);
+	if(update != NULL) {
+		print_xml_formatted(
+			log_level+1, "raw_update", update, NULL);
 	}
-	old_admin_epoche = crm_element_value(tmp, XML_ATTR_GENERATION_ADMIN);
-	if(old_admin_epoche == NULL) {
-		old_admin_epoche = admin_epoche;
-	}
-	
-	if(old_updates != NULL) {
-		cl_log(LOG_INFO, "Diff: --- %s%s%s.%s (op=%s)",
-		       old_admin_epoche?old_admin_epoche:"", old_admin_epoche?".":"",
-		       old_epoche?old_epoche:" ", old_updates, op);
-	}
-	if(updates != NULL) {
-		cl_log(LOG_INFO, "Diff: +++ %s%s%s.%s (op=%s)",
-		       admin_epoche?admin_epoche:"", admin_epoche?".":"",
-		       epoche?epoche:" ", updates, op);
-	}
-	log_xml_diff(LOG_INFO, diff, NULL);
 	free_xml(diff);
+	free_xml(update);
 }
 
 gboolean

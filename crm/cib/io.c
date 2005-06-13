@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.22 2005/05/31 14:50:46 andrew Exp $ */
+/* $Id: io.c,v 1.23 2005/06/13 11:54:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -81,10 +81,16 @@ void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
 crm_data_t*
 readCibXml(char *buffer)
 {
-	crm_data_t *root = string2xml(buffer);
+	crm_data_t *root = NULL;
+	if(buffer != NULL) {
+		root = string2xml(buffer);
+	}
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
-		return createEmptyCib();
+		root = createEmptyCib();
+		set_xml_property_copy(root, XML_ATTR_GENERATION_ADMIN, "0");
+		set_xml_property_copy(root, XML_ATTR_GENERATION, "0");
+		set_xml_property_copy(root, XML_ATTR_NUMUPDATES, "0");
 	}
 	return root;
 }
@@ -99,7 +105,6 @@ readCibXmlFile(const char *filename)
 	struct stat buf;
 	crm_data_t *root = NULL;
 	
-
 	if(filename != NULL) {
 		s_res = stat(filename, &buf);
 	}
@@ -117,6 +122,8 @@ readCibXmlFile(const char *filename)
 
 	if(root != NULL) {
 		int lpc = 0;
+		const char *value = NULL;
+		const char *name = NULL;
 		crm_data_t *status = get_object_root(XML_CIB_TAG_STATUS, root);
 		for (; status != NULL && lpc < status->nfields; ) {
 			if(status->types[lpc] != FT_STRUCT) {
@@ -129,6 +136,22 @@ readCibXmlFile(const char *filename)
 			if(crm_assert_failed) {
 				lpc++;
 			}
+		}
+
+		name = XML_ATTR_GENERATION_ADMIN;
+		value = crm_element_value(root, name);
+		if(value == NULL) {
+			set_xml_property_copy(root, name, "0");
+		}
+		name = XML_ATTR_GENERATION;
+		value = crm_element_value(root, name);
+		if(value == NULL) {
+			set_xml_property_copy(root, name, "0");
+		}
+		name = XML_ATTR_NUMUPDATES;
+		value = crm_element_value(root, name);
+		if(value == NULL) {
+			set_xml_property_copy(root, name, "0");
 		}
 	}
 	if (verifyCibXml(root) == FALSE) {
@@ -248,7 +271,8 @@ initializeCib(crm_data_t *new_cib)
 					crm_notice("Disabling CIB disk writes");
 				}
 			}
-		}
+		}		
+		
 		crm_debug_2("Disk writes to %s %s", CIB_FILENAME,
 			    cib_writes_enabled?"enabled":"DISABLED");
 
@@ -337,6 +361,7 @@ activateCibBuffer(char *buffer, const char *filename)
  * This method will free the old CIB pointer on success and the new one
  * on failure.
  */
+#define ACTIVATION_DIFFS 0
 int
 activateCibXml(crm_data_t *new_cib, const char *filename)
 {
@@ -415,16 +440,18 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 
 #if ACTIVATION_DIFFS
 	/* Make sure memory is cleaned up appropriately */
-	diff = diff_xml_object(saved_cib, new_cib, -1);
+	if(saved_cib != NULL && new_cib != NULL) {
+		diff = diff_cib_object(saved_cib, new_cib, -1);
+	}
 	if (error_code != cib_ok) {
 		crm_err("Changes could not be activated: %s",
 			cib_error2string(error_code));
-		log_xml_diff(LOG_WARNING, diff, __FUNCTION__);
+		log_cib_diff(LOG_WARNING, diff, __FUNCTION__);
 		free_xml(new_cib);
 		
 	} else if(saved_cib != NULL) {
 		crm_debug_2("Changes activated");
-		log_xml_diff(LOG_DEBUG, diff, __FUNCTION__);
+		log_cib_diff(LOG_DEBUG, diff, __FUNCTION__);
 		crm_validate_data(saved_cib);
 		free_xml(saved_cib);
 	}
