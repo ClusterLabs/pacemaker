@@ -213,9 +213,9 @@ class LinuxHAv2(HeartbeatCM):
         # At some point implement a more elegant solution that 
         #   also produces a report at the end
         '''Return list of errors which are known and very noisey should be ignored'''
-        if 0:
+        if 1:
             return [ 
-                "Currently no errors to ignore"
+		"crmadmin:"
                 ]
         return []
 
