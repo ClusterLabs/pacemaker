@@ -230,8 +230,14 @@ get_resource_list(GList ** rsc_info)
 	}
 	while (file_num--) {
 		GList* ra_subdir = NULL;
-		if ((DT_DIR != namelist[file_num]->d_type) || 
-		    ('.' == namelist[file_num]->d_name[0])) {
+		struct stat prop;
+		if ('.' == namelist[file_num]->d_name[0]) {
+			free(namelist[file_num]);
+			continue;
+		}
+		
+		stat(namelist[file_num]->d_name, &prop);
+		if (S_ISDIR(prop.st_mode)) {
 			free(namelist[file_num]);
 			continue;
 		}
@@ -420,9 +426,16 @@ get_providers(const char* class_path, const char* ra_type, GList ** providers)
 		return -2;
 	}else{
 		char tmp_buffer[FILENAME_MAX+1];
+		struct stat prop;
+
 		while (file_num--) {
-			if ((DT_DIR != namelist[file_num]->d_type) ||
-			    ('.' == namelist[file_num]->d_name[0])) {
+			if ('.' == namelist[file_num]->d_name[0]) {
+				free(namelist[file_num]);
+				continue;
+			}
+
+			stat(namelist[file_num]->d_name, &prop);
+			if (S_ISDIR(prop.st_mode)) {
 				free(namelist[file_num]);
 				continue;
 			}
