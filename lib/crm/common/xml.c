@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.11 2005/06/13 12:04:52 andrew Exp $ */
+/* $Id: xml.c,v 1.12 2005/06/13 15:10:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1462,8 +1462,9 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 		}
 		crm_free(diff_of_diff);
 		crm_free(intermediate);
-		diff_of_diff = NULL;
 #endif
+		diff_of_diff = NULL;
+		intermediate = NULL;
 	}
 
 	if(result == FALSE) {
