@@ -30,7 +30,7 @@ EXTRA_DIST              = bootstrap rc.config.heartbeat \
 RPMREL			= @RPMREL@
 RPM			= @RPM@
 RPMFLAGS		= -ta --nodeps
-TARFILE			= $(distdir).tar.gz
+TARFILE			= @TARFILE@
 AM_TAR			= tar
 RPMDIR=$(HOME)/rpms
 WEBDIR=/home/alanr/ha-web/download
@@ -92,6 +92,10 @@ install-exec-local:
 # "pkg" format for Solaris etc.
 pkg:
 		(cd pkg && $(MAKE) PWD=`pwd` pkg)
+
+# "port" format for BSD
+portfile: $(TARFILE)
+		( $(MAKE) dist; cd port && $(MAKE) PWD=`pwd` portfile)
 
 clean-generic: am_config_clean
 
