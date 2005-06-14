@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.56 2005/06/13 13:32:10 andrew Exp $ */
+/* $Id: ptest.c,v 1.57 2005/06/14 11:25:54 davidlee Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -66,6 +66,7 @@ main(int argc, char **argv)
 	set_crm_log_level(LOG_CRIT-1);
 	
 	while (1) {
+#ifdef HAVE_GETOPT_H
 		int option_index = 0;
 		static struct option long_options[] = {
 			/* Top-level Options */
@@ -74,6 +75,7 @@ main(int argc, char **argv)
       
 			{0, 0, 0, 0}
 		};
+#endif
     
 #ifdef HAVE_GETOPT_H
 		flag = getopt_long(argc, argv, OPTARGS,
@@ -85,6 +87,7 @@ main(int argc, char **argv)
 			break;
     
 		switch(flag) {
+#ifdef HAVE_GETOPT_H
 			case 0:
 				printf("option %s", long_options[option_index].name);
 				if (optarg)
@@ -92,6 +95,7 @@ main(int argc, char **argv)
 				printf("\n");
     
 				break;
+#endif
       
 			case 'w':
 				inhibit_exit = TRUE;
