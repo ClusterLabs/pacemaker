@@ -1,4 +1,4 @@
-/* $Id: xml_diff.c,v 1.2 2005/06/14 11:39:04 davidlee Exp $ */
+/* $Id: xml_diff.c,v 1.3 2005/06/14 11:55:29 davidlee Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -43,7 +43,10 @@
 
 #include <crm/cib.h>
 
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
+
 #include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
 #include <crm/dmalloc_wrapper.h>
 
@@ -58,7 +61,6 @@ main(int argc, char **argv)
 	gboolean apply = TRUE;
 	gboolean use_stdin = FALSE;
 	gboolean as_cib = FALSE;
-	int option_index = 0;
 	int argerr = 0;
 	int flag;
 	crm_data_t *object_1 = NULL;
@@ -67,6 +69,8 @@ main(int argc, char **argv)
 	const char *xml_file_1 = NULL;
 	const char *xml_file_2 = NULL;
 	
+#ifdef HAVE_GETOPT_H
+	int option_index = 0;
 	static struct option long_options[] = {
 		/* Top-level Options */
 		{"original", 1, 0, 'o'},
@@ -78,6 +82,7 @@ main(int argc, char **argv)
 		{"help",     0, 0, '?'},
 		{0, 0, 0, 0}
 	};
+#endif
 
 	cl_log_set_entity(crm_system_name);
 	cl_log_set_facility(LOG_USER);
@@ -88,8 +93,12 @@ main(int argc, char **argv)
 	}
 
 	while (1) {
+#ifdef HAVE_GETOPT_H
 		flag = getopt_long(argc, argv, OPTARGS,
 				   long_options, &option_index);
+#else
+		flag = getopt(argc, argv, OPTARGS);
+#endif
 		if (flag == -1)
 			break;
 
