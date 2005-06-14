@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.36 2005/06/14 11:39:04 davidlee Exp $ */
+/* $Id: cibadmin.c,v 1.37 2005/06/14 11:48:58 davidlee Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -98,12 +98,13 @@ cib_t *the_cib = NULL;
 int
 main(int argc, char **argv)
 {
-	int option_index = 0;
 	int argerr = 0;
 	int flag;
 	char *admin_input_xml = NULL;
 	crm_data_t *output = NULL;
 	
+#ifdef HAVE_GETOPT_H
+	int option_index = 0;
 	static struct option long_options[] = {
 		/* Top-level Options */
 		{CIB_OP_ERASE,   0, 0, 'E'},
@@ -135,6 +136,7 @@ main(int argc, char **argv)
 
 		{0, 0, 0, 0}
 	};
+#endif
 
 	crm_log_init(crm_system_name);
 	cl_log_set_facility(LOG_USER);
@@ -154,6 +156,7 @@ main(int argc, char **argv)
 			break;
 
 		switch(flag) {
+#ifdef HAVE_GETOPT_H
 			case 0:
 				printf("option %s",
 				       long_options[option_index].name);
@@ -169,6 +172,7 @@ main(int argc, char **argv)
 		++argerr;
 	}
 	break;
+#endif
 			case 't':
 				message_timeout_ms = atoi(optarg);
 				if(message_timeout_ms < 1) {

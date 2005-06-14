@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.48 2005/06/14 11:39:04 davidlee Exp $ */
+/* $Id: crmadmin.c,v 1.49 2005/06/14 11:48:58 davidlee Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -113,11 +113,12 @@ const char *crm_system_name = "crmadmin";
 int
 main(int argc, char **argv)
 {
-	int option_index = 0;
 	int argerr = 0;
 	int flag;
 	ll_cluster_t *hb_cluster = NULL;
 
+#ifdef HAVE_GETOPT_H
+	int option_index = 0;
 	static struct option long_options[] = {
 		/* Top-level Options */
 		{"verbose", 0, 0, 'V'},
@@ -144,6 +145,7 @@ main(int argc, char **argv)
 
 		{0, 0, 0, 0}
 	};
+#endif
 
 	crm_system_name = basename(argv[0]);
 	crm_log_init(crm_system_name);
@@ -163,6 +165,7 @@ main(int argc, char **argv)
 			break;
 
 		switch(flag) {
+#ifdef HAVE_GETOPT_H
 			case 0:
 				printf("option %s", long_options[option_index].name);
 				if (optarg)
@@ -185,6 +188,7 @@ main(int argc, char **argv)
 					++argerr;
 				}
 				break;
+#endif
 			
 /* a sample test for multiple instance
    if (digit_optind != 0 && digit_optind != this_option_optind)
