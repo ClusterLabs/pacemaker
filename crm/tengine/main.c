@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.24 2005/05/18 20:15:58 andrew Exp $ */
+/* $Id: main.c,v 1.25 2005/06/14 11:38:26 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <portability.h>
 
 #include <sys/param.h>
 

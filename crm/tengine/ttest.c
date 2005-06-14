@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.20 2005/06/13 13:32:09 andrew Exp $ */
+/* $Id: ttest.c,v 1.21 2005/06/14 11:38:26 davidlee Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -17,6 +17,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <portability.h>
 
 #include <sys/param.h>
 #include <crm/crm.h>

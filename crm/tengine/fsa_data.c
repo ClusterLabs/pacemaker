@@ -1,4 +1,4 @@
-/* $Id: fsa_data.c,v 1.2 2005/06/13 12:24:37 andrew Exp $ */
+/* $Id: fsa_data.c,v 1.3 2005/06/14 11:38:26 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,8 +16,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <tengine.h>
 
+#include <portability.h>
+
+#include <tengine.h>
 
 extern void te_input_free(te_input_t *fsa_data);
 extern te_input_t* te_input_copy(te_input_t *fsa_data);

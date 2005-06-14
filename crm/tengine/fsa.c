@@ -1,4 +1,4 @@
-/* $Id: fsa.c,v 1.1 2005/05/30 15:09:36 andrew Exp $ */
+/* $Id: fsa.c,v 1.2 2005/06/14 11:38:26 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,8 +16,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <tengine.h>
 
+#include <portability.h>
+
+#include <tengine.h>
 
 long long fsa_actions = a_nothing;
 

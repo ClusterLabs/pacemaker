@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.33 2005/06/13 12:24:37 andrew Exp $ */
+/* $Id: callbacks.c,v 1.34 2005/06/14 11:38:26 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <portability.h>
 
 #include <sys/stat.h>
 

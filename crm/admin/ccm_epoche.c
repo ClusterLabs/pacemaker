@@ -1,4 +1,4 @@
-/* $Id: ccm_epoche.c,v 1.6 2005/05/31 11:28:22 andrew Exp $ */
+/* $Id: ccm_epoche.c,v 1.7 2005/06/14 11:39:04 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <portability.h>
+
 #include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -29,7 +32,6 @@
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/lsb_exitcodes.h>
 
-#include <portability.h>
 #include <ocf/oc_event.h>
 #include <ocf/oc_membership.h>
 
