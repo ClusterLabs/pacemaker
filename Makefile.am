@@ -53,7 +53,7 @@ hauser = 		@HA_CCMUSER@
 
 ## proc-ha is left out from SUBDIRS (completely obsolete)
 
-SUBDIRS	=		libltdl debian pkg replace include config	\
+SUBDIRS	=		libltdl debian pkg port replace include config	\
 			lib						\
 			ldirectord heartbeat membership telecom		\
 			linux-ha contrib resources			\
@@ -94,8 +94,8 @@ pkg:
 		(cd pkg && $(MAKE) PWD=`pwd` pkg)
 
 # "port" format for BSD
-portfile: $(TARFILE)
-		( $(MAKE) dist; cd port && $(MAKE) PWD=`pwd` portfile)
+portfile:	dist
+		( cd port && $(MAKE) PWD=`pwd` portfile)
 
 clean-generic: am_config_clean
 
