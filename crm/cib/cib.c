@@ -1,4 +1,4 @@
-/* $Id: cib.c,v 1.56 2004/12/05 16:14:07 andrew Exp $ */
+/* $Id: cib.c,v 1.57 2005/06/14 10:37:04 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,6 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <portability.h>
 
 #include <sys/param.h>
 #include <stdio.h>

@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.23 2005/06/13 11:54:53 andrew Exp $ */
+/* $Id: io.c,v 1.24 2005/06/14 10:37:04 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <portability.h>
 
 #include <sys/param.h>
 #include <stdio.h>
