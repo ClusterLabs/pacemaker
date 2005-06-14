@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.25 2005/06/14 10:37:04 davidlee Exp $ */
+/* $Id: cibmon.c,v 1.26 2005/06/14 10:47:55 davidlee Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -77,12 +77,13 @@ int max_failures = 30;
 int
 main(int argc, char **argv)
 {
-	int option_index = 0;
 	int argerr = 0;
 	int flag;
 	int level = 0;
 	int attempts = 0;
 	
+#ifdef HAVE_GETOPT_H
+	int option_index = 0;
 	static struct option long_options[] = {
 		/* Top-level Options */
 		{"verbose",      0, 0, 'V'},
@@ -94,6 +95,7 @@ main(int argc, char **argv)
 		{"max-conn-fail",1, 0, 'm'},
 		{0, 0, 0, 0}
 	};
+#endif
 
 	crm_log_init(crm_system_name);
 
@@ -114,6 +116,7 @@ main(int argc, char **argv)
 			break;
 
 		switch(flag) {
+#ifdef HAVE_GETOPT_H
 			case 0:
 				printf("option %s",
 				       long_options[option_index].name);
@@ -126,6 +129,7 @@ main(int argc, char **argv)
 		       		long_options[option_index].name);
 				++argerr;
 				break;
+#endif
 			case 'V':
 				level = get_crm_log_level();
 				cl_log_enable_stderr(TRUE);
