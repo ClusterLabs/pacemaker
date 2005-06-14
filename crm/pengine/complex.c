@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.32 2005/06/13 12:35:46 andrew Exp $ */
+/* $Id: complex.c,v 1.33 2005/06/14 11:21:02 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,6 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <portability.h>
 
 #include <pengine.h>
 #include <pe_utils.h>
