@@ -1514,8 +1514,6 @@ class ComponentFail(CTSTest):
 	    else:
 		self.failure("Cluster not stable")
         else:
-            for regex in watch.unmatched:
-                self.CM.log ("Warn: pattern not found: %s" %(regex))
             return self.failure("Heartbeat didnt notice %s die" %component)
 
     def is_applicable(self):
@@ -1527,7 +1525,7 @@ class ComponentFail(CTSTest):
         '''Return list of errors which should be ignored'''
         return ["""heartbeat.*killed by signal 9""", """heartbeat.*Respawning"""]
     
-AllTestClasses.append(ComponentFail)
+#AllTestClasses.append(ComponentFail)
 
 ####################################################################
 class Split_brainTest2(CTSTest):
