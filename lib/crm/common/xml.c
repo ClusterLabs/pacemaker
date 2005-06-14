@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.13 2005/06/13 15:57:58 davidlee Exp $ */
+/* $Id: xml.c,v 1.14 2005/06/14 08:35:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -545,7 +545,7 @@ int
 write_xml_file(crm_data_t *xml_node, const char *filename) 
 {
 	int res = 0;
-	char now_str[30];
+	char *now_str = NULL;
 	time_t now;
 
 	crm_debug_3("Writing XML out to %s", filename);
@@ -559,7 +559,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 	crm_validate_data(xml_node);
 	
 	now = time(NULL);
-	ctime_r(&now, now_str);
+	now_str = ctime(&now);
 	now_str[24] = EOS; /* replace the newline */
 	set_xml_property_copy(xml_node, "last_written", now_str);
 	crm_validate_data(xml_node);
@@ -1620,6 +1620,7 @@ in_upper_context(int depth, int context, crm_data_t *xml_node)
 crm_data_t *
 subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 {
+	gboolean skip = FALSE;
 	gboolean differences = FALSE;
 	crm_data_t *diff = NULL;
 	crm_data_t *child_diff = NULL;
@@ -1662,7 +1663,7 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 	crm_debug_2("Processing <%s id=%s>", crm_str(name), ID(left));
 
 	xml_prop_iter(left, prop_name, left_value,
-		      gboolean skip = FALSE;
+		      skip = FALSE;
 		      if(safe_str_eq(prop_name, XML_ATTR_ID)) {
 			      skip = TRUE;
 		      }
