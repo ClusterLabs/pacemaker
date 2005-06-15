@@ -440,6 +440,7 @@ def usage(arg):
     +  " --syslog-facility syslog-facility" \
     +  " --facility syslog-facility" \
     +  " --choose testcase-name" \
+    +  " --test-ip-base ip" \
     +  " (-2 |"\
     +  " -v2 |"\
     +  " --crm |"\
@@ -480,6 +481,7 @@ if __name__ == '__main__':
     ResCanStop = 0
     XmitLoss = "0.0"
     RecvLoss = "0.0"
+    IPBase = "127.0.0.10"
     
     #
     # The values of the rest of the parameters are now properly derived from
@@ -514,6 +516,9 @@ if __name__ == '__main__':
        elif args[i] == "-L" or args[i] == "--logfile":
            skipthis=1
            LogFile = args[i+1]
+       elif args[i] == "--test-ip-base":
+           skipthis=1
+           IPBase = args[i+1]
        elif args[i] == "--trunc":
            TruncateLog=1
        elif args[i] == "-v2":
@@ -615,6 +620,7 @@ if __name__ == '__main__':
     Environment["SuppressMonitoring"] = SuppressMonitoring
     Environment["XmitLoss"] = XmitLoss
     Environment["RecvLoss"] = RecvLoss
+    Environment["IPBase"] = IPBase
     
     if Version == 2:
         from CM_LinuxHAv2 import LinuxHAv2

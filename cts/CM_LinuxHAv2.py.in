@@ -142,10 +142,10 @@ class LinuxHAv2(HeartbeatCM):
          </operations>
          <instance_attributes>
            <attributes>
-             <nvpair name="ip" value="127.0.0.10"/>
+             <nvpair name="ip" value="%s"/>
            </attributes>
          </instance_attributes>
-       </resource>'''
+       </resource>''' % self.Env["IPBase"]
             # DcIPaddr cant run anywhere but the DC
             constraints='''
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
@@ -153,10 +153,11 @@ class LinuxHAv2(HeartbeatCM):
           <expression attribute="#is_dc" operation="eq" value="false"/>
         </rule>
       </rsc_location>'''
-
-            ip_num=21
+            fields = string.split(self.Env["IPBase"], '.')
             for node in self.Env["nodes"]:
                 # These resources prefer to run on the node with the same name
+                fields[3] = str(int(fields[3])+1)
+                ip = string.join(fields, '.')
                 node_resource=("""
        <resource id="%s" class="ocf" type="IPaddr" provider="heartbeat">
          <operations>
@@ -164,11 +165,10 @@ class LinuxHAv2(HeartbeatCM):
          </operations>
          <instance_attributes>
            <attributes>
-             <nvpair name="ip" value="127.0.0.%d"/>
+             <nvpair name="ip" value="%s"/>
            </attributes>
          </instance_attributes>
-       </resource>""" %("rsc_"+node, ip_num))
-                ip_num=ip_num+1
+       </resource>""" %("rsc_"+node, ip))
                 resources = resources + node_resource
                 node_constraint=("""
       <rsc_location id="run_%s" rsc="%s">
