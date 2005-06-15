@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.34 2005/06/14 11:38:26 davidlee Exp $ */
+/* $Id: callbacks.c,v 1.35 2005/06/15 10:47:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,112 @@
 #include <tengine.h>
 
 void te_update_confirm(const char *event, HA_Message *msg);
+void te_update_diff(const char *event, HA_Message *msg);
+crm_data_t *need_abort(crm_data_t *update);
+
+void
+te_update_diff(const char *event, HA_Message *msg)
+{
+	int rc = -1;
+	const char *op = NULL;
+	crm_data_t *diff = NULL;
+	crm_data_t *aborted = NULL;
+	const char *set_name = NULL;
+	
+	if(msg == NULL) {
+		crm_err("NULL update");
+		return;
+	}		
+
+	ha_msg_value_int(msg, F_CIB_RC, &rc);	
+	op = cl_get_string(msg, F_CIB_OPERATION);
+
+	if(rc < cib_ok) {
+		crm_debug_2("Ignoring failed %s operation: %s",
+			    op, cib_error2string(rc));
+		return;
+	} 	
+
+	crm_debug("Processing diff from %s operation", op);
+
+	diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+	log_cib_diff(LOG_DEBUG, diff, op);
+
+	set_name = "diff-added";
+	if(diff != NULL && aborted == NULL) {
+		crm_data_t *section = NULL;
+		crm_data_t *change_set = find_xml_node(diff, set_name, FALSE);
+		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
+
+		if(change_set != NULL) {
+			crm_debug("Checking status changes");
+			section=get_object_root(XML_CIB_TAG_STATUS,change_set);
+		}
+		if(section != NULL && extract_event(section) == FALSE) {
+			send_complete("Unexpected status update",
+				      section, te_update, i_cancel);
+			free_xml(diff);
+			return;
+		}
+		crm_debug("Checking change set: %s", set_name);
+		aborted = need_abort(change_set);
+	}
+	
+	set_name = "diff-removed";
+	if(diff != NULL && aborted == NULL) {
+		crm_data_t *change_set = find_xml_node(diff, set_name, FALSE);
+		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
+
+		crm_debug("Checking change set: %s", set_name);
+		aborted = need_abort(change_set);
+	}
+
+	if(aborted != NULL) {
+		send_complete("Non-status change", diff, te_update, i_cancel);
+		free_xml(diff);
+		return;
+	}
+	
+	free_xml(diff);
+	return;
+}
+
+crm_data_t *
+need_abort(crm_data_t *update)
+{
+	crm_data_t *section_xml = NULL;
+	const char *section = NULL;
+
+	if(update == NULL) {
+		return NULL;
+	}
+	
+	section = XML_CIB_TAG_NODES;
+	section_xml = get_object_root(section, update);
+	xml_child_iter(section_xml, child, NULL,
+		       return section_xml;
+		);
+
+	section = XML_CIB_TAG_RESOURCES;
+	section_xml = get_object_root(section, update);
+	xml_child_iter(section_xml, child, NULL,
+		       return section_xml;
+		);
+
+	section = XML_CIB_TAG_CONSTRAINTS;
+	section_xml = get_object_root(section, update);
+	xml_child_iter(section_xml, child, NULL,
+		       return section_xml;
+		);
+
+	section = XML_CIB_TAG_CRMCONFIG;
+	section_xml = get_object_root(section, update);
+	xml_child_iter(section_xml, child, NULL,
+		       return section_xml;
+		);
+	return NULL;
+}
+
 
 void
 te_update_confirm(const char *event, HA_Message *msg)

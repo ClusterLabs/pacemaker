@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.37 2005/06/14 11:38:26 davidlee Exp $ */
+/* $Id: unpack.c,v 1.38 2005/06/15 10:47:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,7 +52,6 @@ set_timer_value(te_timer_t *timer, const char *time, int time_default)
 		timer->timeout = tmp_time;
 	}
 }
-
 
 gboolean
 unpack_graph(crm_data_t *xml_graph)
@@ -284,7 +283,7 @@ extract_event(crm_data_t *msg)
 
 		blob.update = node_state;
 		
-		event_node = crm_element_value(node_state, XML_ATTR_UNAME);
+		event_node = crm_element_value(node_state, XML_ATTR_ID);
 
 		crm_log_xml_debug_3(node_state,"Processing");
 
@@ -299,7 +298,6 @@ extract_event(crm_data_t *msg)
 			 */
 			int action_id = -1;
 			crm_debug_3("Checking for STONITH");
-			event_node = crm_element_value(node_state, XML_ATTR_UNAME);
 			action_id = match_down_event(
 				event_node, CRM_OP_SHUTDOWN, LRM_OP_DONE);
 			
@@ -337,22 +335,23 @@ extract_event(crm_data_t *msg)
 				break;
 			}
 		}
-		if(resources != NULL) {
-			/* LRM resource update...
-			 */
-			xml_child_iter(
-				resources, child, NULL, 
 
+		/* LRM resource update... */
+		xml_child_iter(
+			resources, rsc, NULL, 
+			xml_child_iter(
+				rsc, rsc_op, NULL, 
+				
 				crm_log_xml_debug_3(
-					child,"Processing LRM resource update");
-				if(!process_graph_event(child, event_node)) {
+					rsc_op, "Processing resource update");
+				if(!process_graph_event(rsc_op, event_node)) {
 					/* the transition has already been
 					 * aborted and with better details
 					 */
 					return TRUE;
 				}
 				);
-		}
+			);
 		);
 
 	if(blob.text != NULL) {

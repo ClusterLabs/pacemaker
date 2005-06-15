@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.79 2005/06/14 11:38:26 davidlee Exp $ */
+/* $Id: tengine.c,v 1.80 2005/06/15 10:47:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -127,94 +127,119 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	const char *allow_fail  = NULL;
 	const char *this_action = NULL;
 	const char *this_node   = NULL;
+	const char *this_uname  = NULL;
 	const char *this_rsc    = NULL;
+	const char *magic       = NULL;
+	const char *transition  = NULL;
 
-	const char *event_rsc;
-	const char *rsc_state;
-	const char *event_action;
-	const char *event_rc;
+	char *this_event;
 	const char *op_status;
+	const char *update_event;
 	
 	action_t *match = NULL;
 	int op_status_i = -3;
+	int transition_i = -1;
 
 	if(event == NULL) {
 		crm_debug_4("Ignoring NULL event");
 		return -1;
 	}
 	
-	event_action = crm_element_value(event, XML_LRM_ATTR_LASTOP);
-	event_rsc    = crm_element_value(event, XML_ATTR_ID);
-	event_rc     = crm_element_value(event, XML_LRM_ATTR_RC);
-	rsc_state    = crm_element_value(event, XML_LRM_ATTR_RSCSTATE);
+	update_event = crm_element_value(event, XML_ATTR_ID);
 	op_status    = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
 	
+	this_action = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+	this_node   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+	this_uname  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	this_rsc    = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
+	magic       = crm_element_value(event, "transition_magic");
+
+	this_event  = generate_op_key(this_rsc, this_action, action->interval);
+
+	if(safe_str_neq(this_event, update_event)) {
+		crm_debug_2("Action %d : Event mismatch %s vs. %s",
+			  action->id, this_event, update_event);
+
+	} else if(safe_str_neq(this_node, event_node)) {
+		crm_debug_2("Action %d : Node mismatch %s (%s) vs. %s",
+			  action->id, this_node, this_uname, event_node);
+	} else {
+		match = action;
+	}
+	
+	crm_free(this_event);
+	if(match == NULL) {
+		return -1;
+	}
+	
+	crm_debug("Matched action %d", action->id);
+	if(transition != NULL) {
+		transition_i = atoi(transition);
+	}
 	if(op_status != NULL) {
 		op_status_i = atoi(op_status);
 	}
-	
-	this_action = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-	this_node   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-	this_rsc    = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
-	
-	crm_debug_2("matching against: <%s task=%s node=%s rsc_id=%s/>",
-		  crm_element_name(action->xml), this_action, this_node, this_rsc);
-	if(safe_str_neq(this_action, event_action)) {	
-		crm_debug_2("Action %d : Action mismatch %s",
-			    action->id, event_action);
-		
-	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT)) {
-		if(safe_str_eq(this_action, CRM_OP_FENCE)) {
-			
-		} else if(safe_str_neq(this_node, event_node)) {
-			crm_debug_2("node mismatch: %s", event_node);
-		} else {
-			crm_debug_3(XML_GRAPH_TAG_CRM_EVENT);
-			match = action;
-		}
-		
-		crm_debug_3(XML_GRAPH_TAG_CRM_EVENT);
-		match = action;
-		
-	} else if(safe_str_neq(this_node, event_node)) {
-		crm_debug_2("Action %d : Node mismatch %s",
-			    action->id, event_node);
 
-	} else if(safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP)) {
-		crm_debug_3(XML_GRAPH_TAG_RSC_OP);
-		if(safe_str_eq(this_rsc, event_rsc)) {
-			match = action;
-		} else {
-			crm_debug_2("Action %d : bad rsc (%s) != (%s)",
-				 action->id, this_rsc, event_rsc);
+	if(magic != NULL && (op_status == NULL || transition == NULL)) {
+		char *alt_status     = NULL;
+		char *alt_transition = NULL;
+		decodeNVpair(magic, ':', &alt_transition, &alt_status);
+		if(op_status == NULL && alt_status != NULL) {
+			op_status_i = atoi(alt_status);
+
+		} else if(op_status == NULL) {
+			crm_err("Status details not found");
+			crm_log_message(LOG_ERR, event);
 		}
+
+		if(transition == NULL && alt_transition != NULL) {
+			transition_i = atoi(alt_transition);
+
+		} else if(transition == NULL) {
+			crm_err("Transition details not found");
+			crm_log_message(LOG_ERR, event);
+		}
+		
+	} else if(magic == NULL) {
+		crm_err("magic not found");
+		crm_log_message(LOG_ERR, event);
 	}
 	
-	if(match == NULL) {
-		crm_debug_2("didnt match current action");
+	if(transition_counter < transition_i) {
+		crm_err("Detected an action from a __future__ transition:"
+			" %d vs. %d", transition_i, transition_counter);
 		return -1;
+		
+	} else if(transition_counter > transition_i) {
+		crm_warn("Detected an action from a previous transition:"
+			 " %d vs. %d", transition_i, transition_counter);
+		return -3;
 	}
-
-	crm_debug_2("matched");
-
+	
+	
 	/* stop this event's timer if it had one */
 	stop_te_timer(match->timer);
 
 	/* Process OP status */
 	allow_fail = crm_element_value(match->xml, "allow_fail");
 	switch(op_status_i) {
+		case -3:
+			crm_err("Action returned the same as last time..."
+				" whatever that was!");
+			crm_log_message(LOG_ERR, event);
+			break;
 		case LRM_OP_PENDING:
-			/* should never happen */
-			CRM_DEV_ASSERT(op_status_i != LRM_OP_PENDING);
+			crm_debug("Ignoring pending operation");
+			return -4;
 			break;
 		case LRM_OP_DONE:
 			break;
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			crm_warn("Action %s for \"%s\" on %s failed: %s",
-				event_action, event_rsc, event_node,
-				op_status2text(op_status_i));
+			crm_warn("Action %s on %s failed: %s",
+				 update_event, event_node,
+				 op_status2text(op_status_i));
 			if(FALSE == crm_is_true(allow_fail)) {
 				send_complete("Action failed", event,
 					      te_failed, i_cancel);
@@ -366,8 +391,8 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		}
 	}
 	
-	crm_debug("Processing CIB update: %s %s on %s: %s",
-		  task, rsc_id, event_node, op_status2text(op_status_i));
+	crm_debug("Processing CIB update: %s on %s: %s",
+		  rsc_id, event_node, op_status2text(op_status_i));
 
 	next_transition_timeout = transition_timeout;
 	
@@ -378,7 +403,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		slist_iter(
 			action, action_t, synapse->actions, lpc2,
 
-			rc = match_graph_event(action, event ,event_node);
+			rc = match_graph_event(action, event, event_node);
 			if(action_id >= 0 && rc >= 0) {
 				crm_err("Additional match found: %d [%d]",
 					rc, action_id);
@@ -418,6 +443,12 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		
 	} else if(action_id == -2) {
 		crm_log_xml_info(event, "Event failed");
+		
+	} else if(action_id == -3) {
+		crm_log_xml_info(event, "Old event found");
+		
+	} else if(action_id == -4) {
+		crm_log_xml_debug(event, "Pending event found");
 		
 	} else {
 		/* unexpected event, trigger a pe-recompute */
@@ -604,6 +635,7 @@ cib_action_update(action_t *action, int status)
 	crm_data_t *state    = NULL;
 	crm_data_t *rsc      = NULL;
 	crm_data_t *xml_op   = NULL;
+	char *op_id = NULL;
 
 	enum cib_errors rc = cib_ok;
 	const char *task   = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
@@ -656,11 +688,9 @@ cib_action_update(action_t *action, int status)
 	set_xml_property_copy(rsc,    XML_ATTR_ID, rsc_id);
 	set_xml_property_copy(xml_op, XML_ATTR_ID, task);
 	
-	if(action->interval > 0) {
-		char *op_id = generate_op_key(rsc_id, task, action->interval);
-		set_xml_property_copy(xml_op, XML_ATTR_ID, op_id);
-		crm_free(op_id);
-	}
+	op_id = generate_op_key(rsc_id, task, action->interval);
+	set_xml_property_copy(xml_op, XML_ATTR_ID, op_id);
+	crm_free(op_id);
 	
 	set_xml_property_copy(xml_op, XML_LRM_ATTR_TASK, task);
 	set_xml_property_copy(rsc, XML_LRM_ATTR_RSCSTATE,
@@ -673,10 +703,19 @@ cib_action_update(action_t *action, int status)
 	set_xml_property_copy(xml_op, XML_LRM_ATTR_OPSTATUS, code);
 	set_xml_property_copy(xml_op, XML_LRM_ATTR_RC, code);
 	set_xml_property_copy(xml_op, "origin", __FUNCTION__);
+
+	crm_free(code);
+
+	ha_msg_add_int(xml_op, "transition_id", transition_counter);
+	
+	crm_malloc0(code, sizeof(char)*37);
+	if(code != NULL) {
+		snprintf(code, 36, "%d:-1", transition_counter);
+	}
+	set_xml_property_copy(xml_op,  "transition_magic", code);
+	crm_free(code);
 	
 	set_node_tstamp(xml_op);
-	
-	crm_free(code);
 
 	fragment = create_cib_fragment(state, NULL);
 	
@@ -742,7 +781,8 @@ cib_action_updated(
 	task    = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 	rsc_id  = crm_element_value(rsc_op, XML_LRM_ATTR_RSCID);
 	on_node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
-
+	ha_msg_add_int(rsc_op, "transition_id", transition_counter);
+	
 	if(rc < cib_ok) {
 		crm_err("Update for action %d: %s %s on %s FAILED",
 			action->id, task, rsc_id, on_node);

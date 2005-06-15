@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.25 2005/06/14 11:38:26 davidlee Exp $ */
+/* $Id: main.c,v 1.26 2005/06/15 10:47:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,7 +53,7 @@ void usage(const char* cmd, int exit_status);
 int init_start(void);
 gboolean tengine_shutdown(int nsig, gpointer unused);
 extern void te_update_confirm(const char *event, HA_Message *msg);
-
+extern void te_update_diff(const char *event, HA_Message *msg);
 
 
 int
@@ -140,8 +140,8 @@ init_start(void)
 	if(init_ok) {
 		crm_debug_4("Setting CIB notification callback");
 		if(te_cib_conn->cmds->add_notify_callback(
-			   te_cib_conn, T_CIB_UPDATE_CONFIRM,
-			   te_update_confirm) != cib_ok) {
+			   te_cib_conn, T_CIB_DIFF_NOTIFY,
+			   te_update_diff) != cib_ok) {
 			crm_err("Could not set CIB notification callback");
 			init_ok = FALSE;
 		}
