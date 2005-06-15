@@ -273,9 +273,6 @@ do_dc_takeover(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	crm_data_t *cib = createEmptyCib();
-	crm_data_t *update = NULL;
-	crm_data_t *output = NULL;
 	int rc = cib_ok;
 	
 	crm_info("Taking over DC status for this partition");
@@ -299,31 +296,7 @@ do_dc_takeover(long long action,
 	
 /* 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none); */
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
-
-	set_uuid(fsa_cluster_conn, cib, XML_ATTR_DC_UUID, fsa_our_uname);
-	crm_debug_3("Update %s in the CIB to our uuid: %s",
-		  XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
 	
-	update = create_cib_fragment(cib, NULL);
-	free_xml(cib);
-
-	rc = fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, NULL, update, &output, cib_quorum_override);
-
-	free_xml(update);
-	
-	if(rc == cib_revision_unsupported) {
-		crm_err("Feature revision not permitted");
-		/* go into a stall state */
-		register_fsa_error(C_FSA_INTERNAL, I_HALT, NULL);
-		return I_NULL;
-		
-	} else 	if(rc < cib_ok) {
-		crm_err("DC UUID update failed: %s", cib_error2string(rc));
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
-	}
-
 	rc = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
 	
