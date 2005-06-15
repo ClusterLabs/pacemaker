@@ -48,6 +48,7 @@ gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 void join_update_complete_callback(const HA_Message *msg, int call_id, int rc,
 				   crm_data_t *output, void *user_data);
 
+void finalize_join(const char *caller);
 
 static int current_join_id = 0;
 
@@ -165,8 +166,8 @@ do_dc_join_req(long long action,
 	
 	generation = join_ack->xml;
 	ha_msg_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
-	crm_log_xml_debug(max_generation_xml, "Max generation");
-	crm_log_xml_debug(generation, "Their generation");
+	crm_log_xml_debug_2(max_generation_xml, "Max generation");
+	crm_log_xml_debug_2(generation, "Their generation");
 
 	if(join_node == NULL) {
 		crm_err("Node %s is not a member", join_from);
@@ -273,26 +274,7 @@ do_dc_join_finalize(long long action,
 		return I_NULL;
 	}
 
-	
-	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
-	crm_debug_3("Bumping the epoche and syncing to %d clients",
-		  g_hash_table_size(finalized_nodes));
-	fsa_cib_conn->cmds->bump_epoch(
-		fsa_cib_conn, cib_scope_local|cib_quorum_override);
-
-#if JOIN_AFTER_SYNC
-	crm_debug("Notifying %d clients of join results",
-		  g_hash_table_size(integrated_nodes));
-
-	if(check_join_state(cur_state, __FUNCTION__) == FALSE) {
-		crm_debug("Notifying %d clients of join results",
-			  g_hash_table_size(integrated_nodes));
-		g_hash_table_foreach_remove(
-			integrated_nodes, finalize_join_for, NULL);
-	}
-#endif
-	
-	rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_quorum_override);
+	finalize_join(__FUNCTION__);
 
 	return I_NULL;
 }
@@ -324,18 +306,8 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 			C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
 
 	} else if(AM_I_DC && fsa_state == S_FINALIZE_JOIN) {
-		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
-		fsa_cib_conn->cmds->bump_epoch(
-			fsa_cib_conn, cib_quorum_override);
+		finalize_join(__FUNCTION__);
 
-#if JOIN_AFTER_SYNC
-		crm_debug("Notifying %d clients of join results",
-			  g_hash_table_size(integrated_nodes));
-		g_hash_table_foreach_remove(
-			integrated_nodes, finalize_join_for, NULL);
-#else
-		check_join_state(cur_state, __FUNCTION__);
-#endif
 	} else {
 		crm_debug("No longer the DC in S_FINALIZE_JOIN: %s/%s",
 			  AM_I_DC?"DC":"CRMd", fsa_state2string(fsa_state));
@@ -343,6 +315,47 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 	
 	crm_free(user_data);
 }
+
+void
+finalize_join(const char *caller)
+{
+	crm_data_t *cib = createEmptyCib();
+	crm_data_t *cib_update = NULL;
+	
+	set_bit_inplace(fsa_input_register, R_HAVE_CIB);
+	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
+
+	set_uuid(fsa_cluster_conn, cib, XML_ATTR_DC_UUID, fsa_our_uname);
+	crm_debug_3("Update %s in the CIB to our uuid: %s",
+		    XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
+	
+	cib_update = create_cib_fragment(cib, NULL);
+	fsa_cib_conn->cmds->modify(
+		fsa_cib_conn, NULL, cib_update, NULL, cib_quorum_override);
+
+	free_xml(cib_update);
+	free_xml(cib);
+	
+	crm_debug_3("Bumping the epoche and syncing to %d clients",
+		  g_hash_table_size(finalized_nodes));
+	fsa_cib_conn->cmds->bump_epoch(
+		fsa_cib_conn, cib_scope_local|cib_quorum_override);
+	
+#if JOIN_AFTER_SYNC
+	/* make sure dc_uuid is re-set to us */
+	
+	if(check_join_state(fsa_state, caller) == FALSE) {
+		crm_debug("Notifying %d clients of join results",
+			  g_hash_table_size(integrated_nodes));
+		g_hash_table_foreach_remove(
+			integrated_nodes, finalize_join_for, NULL);
+	}
+#else
+	check_join_state(cur_state, caller);
+	rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_quorum_override);
+#endif
+}
+
 
 /*	A_DC_JOIN_PROCESS_ACK	*/
 enum crmd_fsa_input
