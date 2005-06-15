@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.28 2005/06/14 10:37:04 davidlee Exp $ */
+/* $Id: notify.c,v 1.29 2005/06/15 10:13:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -125,16 +125,10 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 				 qlen, max_qlen);
 		}
 
-	} else if(client->diffs && is_diff) {
-		if(qlen < (int)(0.8 * max_qlen)) {
-			do_send = TRUE;
-		} else {
-			crm_warn("Throttling post-notifications due to"
-				 " extreme load: queue=%d (max=%d)",
-				 qlen, max_qlen);
-		}
-
 		/* these are critical */
+	} else if(client->diffs && is_diff) {
+		do_send = TRUE;
+
 	} else if(client->confirmations && is_confirm) {
 		do_send = TRUE;
 	}
@@ -251,7 +245,7 @@ do_cib_notify(
 	const char *id = NULL;
 
 	if(options & cib_inhibit_notify) {
-		crm_debug_2("Inhibiting notify.");
+		crm_err("Inhibiting notify.");
 		return;
 	}
 
