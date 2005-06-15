@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.41 2005/06/15 13:39:37 andrew Exp $ */
+/* $Id: messages.c,v 1.42 2005/06/15 19:18:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -486,11 +486,11 @@ cib_process_replace(
 		}
 
 		if(reason != NULL) {
-			crm_err("Replacement %d.%d.%d not applied to %d.%d.%d:"
-				" current %s is greater than the replacement",
-				replace_admin_epoche, replace_epoche,
-				replace_updates, admin_epoche, epoche, updates,
-				reason);
+			crm_warn("Replacement %d.%d.%d not applied to %d.%d.%d:"
+				 " current %s is greater than the replacement",
+				 replace_admin_epoche, replace_epoche,
+				 replace_updates, admin_epoche, epoche, updates,
+				 reason);
 			result = cib_old_data;
 		}
 		*result_cib = copy_xml(input);
