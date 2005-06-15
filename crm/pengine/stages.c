@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.67 2005/06/15 13:39:43 andrew Exp $ */
+/* $Id: stages.c,v 1.68 2005/06/15 13:56:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,12 +43,12 @@ const char* transition_timeout = NULL;
  * Unpack everything
  * At the end you'll have:
  *  - A list of nodes
- *  - A list of resources (each with any dependancies on other resources)
+ *  - A list of resources (each with any dependencies on other resources)
  *  - A list of constraints between resources and nodes
  *  - A list of constraints between start/stop actions
  *  - A list of nodes that need to be stonith'd
  *  - A list of nodes that need to be shutdown
- *  - A list of the possible stop/start actions (without dependancies)
+ *  - A list of the possible stop/start actions (without dependencies)
  */
 gboolean
 stage0(pe_working_set_t *data_set)
@@ -134,7 +134,7 @@ stage1(pe_working_set_t *data_set)
 
 /*
  * Choose a color for all resources from highest priority and XML_STRENGTH_VAL_MUST
- *  dependancies to lowest, creating new colors as necessary (returned
+ *  dependencies to lowest, creating new colors as necessary (returned
  *  as "colors").
  *
  * Some nodes may be colored as a "no_color" meaning that it was unresolvable
@@ -317,7 +317,7 @@ stage6(pe_working_set_t *data_set)
  * Determin the sets of independant actions and the correct order for the
  *  actions in each set.
  *
- * Mark dependancies of un-runnable actions un-runnable
+ * Mark dependencies of un-runnable actions un-runnable
  *
  */
 gboolean
@@ -365,7 +365,7 @@ stage7(pe_working_set_t *data_set)
 
 static int transition_id = -1;
 /*
- * Create a dependancy graph to send to the transitioner (via the CRMd)
+ * Create a dependency graph to send to the transitioner (via the CRMd)
  */
 gboolean
 stage8(pe_working_set_t *data_set)
