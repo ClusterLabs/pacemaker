@@ -315,7 +315,9 @@ build_operation_update(
 	int len = 0;
 	char *tmp = NULL;
 	char *fail_state = NULL;
+	const char *state = NULL;
 	crm_data_t *xml_op = NULL;
+	char *op_id = NULL;
 
 	CRM_DEV_ASSERT(op != NULL);
 	if(crm_assert_failed) {
@@ -332,22 +334,14 @@ build_operation_update(
 	
 	xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
 	
-	if(op->interval <= 0
-	   ||safe_str_eq(op->op_type, CRMD_ACTION_START)
-	   || safe_str_eq(op->op_type, CRMD_ACTION_STOP)) {
-		set_xml_property_copy(xml_op, XML_ATTR_ID, op->op_type);
-
-	} else {
-		char *op_id = generate_op_key(
-			op->rsc_id, op->op_type, op->interval);
-		set_xml_property_copy(xml_op, XML_ATTR_ID, op_id);
-		crm_free(op_id);
-	}
+	op_id = generate_op_key(op->rsc_id, op->op_type, op->interval);
+	set_xml_property_copy(xml_op, XML_ATTR_ID, op_id);
+	crm_free(op_id);
 
 	set_xml_property_copy(xml_rsc, XML_LRM_ATTR_LASTOP, op->op_type);
 	set_xml_property_copy(xml_op,  XML_LRM_ATTR_TASK,   op->op_type);
 	set_xml_property_copy(xml_op,  "origin", src);
-
+	
 	/* Handle recurring ops - infer last op_status */
 	if(op->op_status == LRM_OP_PENDING && op->interval > 0) {
 		if(op->rc == 0) {
@@ -358,6 +352,15 @@ build_operation_update(
 			op->op_status = LRM_OP_ERROR;
 		}
 	}
+	
+	len = 34 + strlen(op->user_data?op->user_data:"-1");
+	crm_malloc0(fail_state, sizeof(char)*(len+1));
+	if(fail_state != NULL) {
+		snprintf(fail_state, len, "%s:%d",
+			 op->user_data?op->user_data:"-1", op->op_status);
+	}
+	set_xml_property_copy(xml_op,  "transition_magic", fail_state);
+	crm_free(fail_state);	
 	
 	switch(op->op_status) {
 		case LRM_OP_PENDING:
@@ -378,25 +381,34 @@ build_operation_update(
 			}
 			set_xml_property_copy(
 				xml_op, XML_LRM_ATTR_RSCSTATE, fail_state);
-			if(lpc == 0) {
-				set_xml_property_copy(
-					xml_rsc, XML_LRM_ATTR_RSCSTATE,
-					fail_state);
-			}
-			crm_free(fail_state);
+			set_xml_property_copy(
+				xml_rsc, XML_LRM_ATTR_RSCSTATE, fail_state);
+			crm_free(fail_state);			
 			break;
 		case LRM_OP_DONE:
+			if(safe_str_eq(CRMD_ACTION_START, op->op_type)) {
+				state = CRMD_ACTION_STARTED;
+
+			} else if(safe_str_eq(CRMD_ACTION_STOP, op->op_type)) {
+				state = CRMD_ACTION_STOPPED;
+				
+			} else if(safe_str_eq(CRMD_ACTION_MON, op->op_type)) {
+				state = CRMD_ACTION_STARTED;
+		
+			} else {
+				crm_warn("Using status \"%s\" for op \"%s\""
+					 "... this is still in the experimental stage.",
+					 CRMD_ACTION_GENERIC_OK, op->op_type);
+				state = CRMD_ACTION_GENERIC_OK;
+			}	
+
 			set_xml_property_copy(
-				xml_op, XML_LRM_ATTR_RSCSTATE,
-				op->user_data);
-			if(lpc == 0) {
-				set_xml_property_copy(
-					xml_rsc, XML_LRM_ATTR_RSCSTATE,
-					op->user_data);
-			}
+				xml_op, XML_LRM_ATTR_RSCSTATE, state);
+			set_xml_property_copy(
+				xml_rsc, XML_LRM_ATTR_RSCSTATE, state);
 			break;
 	}
-
+	
 	tmp = crm_itoa(op->call_id);
 	set_xml_property_copy(xml_op,  XML_LRM_ATTR_CALLID, tmp);
 	crm_free(tmp);
@@ -606,6 +618,7 @@ do_lrm_rsc_op(
 	const char *type = NULL;
 	const char *class = NULL;
 	const char *provider = NULL;
+	const char *transition = NULL;
 	
 	GHashTable *params   = NULL;
 	fsa_data_t *msg_data = NULL;
@@ -615,7 +628,7 @@ do_lrm_rsc_op(
 	if(rsc != NULL) {
 		class = rsc->class;
 		type = rsc->type;
-		
+
 	} else if(msg != NULL) {
 		class = get_xml_attr_nested(
 			msg, rsc_path, DIMOF(rsc_path) -2,
@@ -628,6 +641,13 @@ do_lrm_rsc_op(
 		provider = get_xml_attr_nested(
 			msg, rsc_path, DIMOF(rsc_path) -2,
 			XML_AGENT_ATTR_PROVIDER, FALSE);
+	}
+	
+	if(msg != NULL) {
+		transition = crm_element_value(msg, "transition_id");
+		if(transition == NULL) {
+			crm_log_message(LOG_ERR, msg);
+		}
 	}
 
 	if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
@@ -687,7 +707,16 @@ do_lrm_rsc_op(
 	op->op_type   = crm_strdup(operation);
 	op->op_status = LRM_OP_PENDING;
 	op->user_data = NULL;
+	op->user_data_len = 0;
 	
+	if(transition != NULL) {
+		op->user_data = crm_strdup(transition);
+		op->user_data_len = 1+strlen(op->user_data);
+	} else {
+		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
+	}
+	
+
 	if(params == NULL) {
 		if(msg != NULL) {
 			params = xml2list(msg);
@@ -753,15 +782,8 @@ do_lrm_rsc_op(
 		op->target_rc = EVERYTIME;
 	}
 
-	if(safe_str_eq(CRMD_ACTION_START, operation)) {
-		op->user_data = crm_strdup(CRMD_ACTION_STARTED);
-
-	} else if(safe_str_eq(CRMD_ACTION_STOP, operation)) {
-		op->user_data = crm_strdup(CRMD_ACTION_STOPPED);
-		
-	} else if(safe_str_eq(CRMD_ACTION_MON, operation)) {
+	if(safe_str_eq(CRMD_ACTION_MON, operation)) {
 		const char *last_op = g_hash_table_lookup(resources, rsc->id);
-		op->user_data = crm_strdup(CRMD_ACTION_MON_OK);
 		if(safe_str_eq(last_op, CRMD_ACTION_STOP)) {
 			crm_err("Attempting to schedule %s _after_ a stop.",
 				op_id);
@@ -769,18 +791,11 @@ do_lrm_rsc_op(
 			crm_free(op_id);
 			return I_NULL;			
 		}
-		
-	} else {
-		crm_warn("Using status \"%s\" for op \"%s\""
-			 "... this is still in the experimental stage.",
-			 CRMD_ACTION_GENERIC_OK, operation);
-		op->user_data = crm_strdup(CRMD_ACTION_GENERIC_OK);
 	}	
 
 	g_hash_table_replace(
 		resources, crm_strdup(rsc->id), crm_strdup(operation));
 
-	op->user_data_len = 1+strlen(op->user_data);
 	call_id = rsc->ops->perform_op(rsc, op);
 
 	if(call_id <= 0) {
