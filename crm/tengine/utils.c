@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.34 2005/06/14 11:38:26 davidlee Exp $ */
+/* $Id: utils.c,v 1.35 2005/06/15 10:12:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -188,21 +188,17 @@ void
 print_state(int log_level)
 {
 	if(graph == NULL && log_level > LOG_DEBUG) {
-		do_crm_log(LOG_DEBUG, __FILE__, __FUNCTION__, "###########");
-		do_crm_log(LOG_DEBUG, __FILE__, __FUNCTION__,
-			   "\tEmpty transition graph");
-		do_crm_log(LOG_DEBUG, __FILE__, __FUNCTION__, "###########");
+		crm_debug("## Empty transition graph ##");
 		return;
 	}
 
-	do_crm_log(log_level, __FILE__, __FUNCTION__, "###########");
+	crm_log_maybe(log_level, "###########");
 
 	slist_iter(
 		synapse, synapse_t, graph, lpc,
 
-		do_crm_log(log_level, __FILE__, __FUNCTION__, "Synapse %d %s",
-			   synapse->id,
-			   synapse->confirmed?"was confirmed":synapse->complete?"was executed":"is pending");
+		crm_log_maybe(log_level, "Synapse %d %s", synapse->id,
+			      synapse->confirmed?"was confirmed":synapse->complete?"was executed":"is pending");
 
 		if(synapse->confirmed == FALSE) {
 			slist_iter(
@@ -219,7 +215,7 @@ print_state(int log_level)
 		
 		);
 	
-	do_crm_log(log_level, __FILE__, __FUNCTION__, "###########");
+	crm_log_maybe(log_level, "###########");
 }
 
 void

@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.14 2005/06/14 08:35:14 andrew Exp $ */
+/* $Id: xml.c,v 1.15 2005/06/15 10:12:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -135,12 +135,12 @@ find_xml_node_nested(crm_data_t *root, const char **search_path, int len)
 		return lastMatch;
 	}
 
-	dump_array(LOG_WARNING,
+	dump_array(LOG_DEBUG_2,
 		   "Could not find the full path to the node you specified.",
 		   search_path, len);
 
-	crm_warn("Closest point was node (%s) starting from %s.",
-		 xmlGetNodePath(lastMatch), crm_element_name(root));
+	crm_debug_2("Closest point was node (%s) starting from %s.",
+		    xmlGetNodePath(lastMatch), crm_element_name(root));
 
 	return NULL;
     
@@ -1456,7 +1456,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 		intermediate = diff_xml_object(old, *new, FALSE);
 		diff_of_diff = diff_xml_object(intermediate, diff, TRUE);
 		if(diff_of_diff != NULL) {
-			crm_err("Diff application failed!");
+			crm_warn("Diff application failed!");
 /* 			log_xml_diff(LOG_DEBUG, diff_of_diff, "diff:diff_of_diff"); */
 			log_xml_diff(LOG_DEBUG, intermediate, "diff:actual_diff");
 			result = FALSE;
@@ -1471,7 +1471,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	if(result == FALSE) {
 		log_xml_diff(LOG_DEBUG, diff, "diff:input_diff");
 
-		log_data_element("diff:input", NULL, LOG_DEBUG, 0, old, TRUE);
+		log_data_element("diff:input", NULL, LOG_DEBUG_2, 0, old, TRUE);
 /* 		CRM_DEV_ASSERT(diff_of_diff != NULL); */
 		result = FALSE;
 	}

@@ -1138,7 +1138,7 @@ get_object_root(const char *object_type, crm_data_t *the_root)
 
 	} else if(strcmp(object_type, XML_CIB_TAG_STATUS) == 0) {
 		/* these live in a different place */
-		tmp_node = find_xml_node(the_root, XML_CIB_TAG_STATUS, TRUE);
+		tmp_node = find_xml_node(the_root, XML_CIB_TAG_STATUS, FALSE);
 
 		node_stack[0] = XML_CIB_TAG_STATUS;
 		node_stack[1] = NULL;
@@ -1148,10 +1148,10 @@ get_object_root(const char *object_type, crm_data_t *the_root)
 	}
 
 	if (tmp_node == NULL) {
-		crm_err("Section [%s [%s]] not present in %s",
-			node_stack[0],
-			node_stack[1]?node_stack[1]:"",
-			crm_element_name(the_root));
+		crm_debug("Section [%s [%s]] not present in %s",
+			  node_stack[0],
+			  node_stack[1]?node_stack[1]:"",
+			  crm_element_name(the_root));
 	}
 	return tmp_node;
 }

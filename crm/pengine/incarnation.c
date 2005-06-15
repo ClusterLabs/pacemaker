@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.25 2005/06/14 11:21:02 davidlee Exp $ */
+/* $Id: incarnation.c,v 1.26 2005/06/15 10:12:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -479,7 +479,7 @@ void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint)
 		return;
 		
 	} else if(constraint->strength != pecs_must_not) {
-		pe_warn("rsc_dependancies other than \"must_not\" "
+		pe_warn("rsc_colocations other than \"-INFINITY\" "
 			 "are not supported for incarnation resources");
 		return;
 		

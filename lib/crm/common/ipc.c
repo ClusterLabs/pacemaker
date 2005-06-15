@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.9 2005/06/13 15:57:58 davidlee Exp $ */
+/* $Id: ipc.c,v 1.10 2005/06/15 10:12:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -186,8 +186,8 @@ init_client_ipc_comms(const char *channel_name,
 	}
 
 	if(a_ch == NULL) {
-		crm_err("Setup of client connection failed,"
-			" not adding channel to mainloop");
+		crm_warn("Setup of client connection failed,"
+			 " not adding channel to mainloop");
 		
 		return NULL;
 	}
@@ -296,6 +296,7 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		if (sender->ch_status == IPC_DISCONNECT) {
 			/* The message which was pending for us is that
 			 * the IPC status is now IPC_DISCONNECT */
+			crm_debug("Channel is disconnected");
 			break;
 		}
 		if (sender->ops->recv(sender, &msg) != IPC_OK) {
