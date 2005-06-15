@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.66 2005/06/14 11:21:02 davidlee Exp $ */
+/* $Id: stages.c,v 1.67 2005/06/15 13:39:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -377,8 +377,8 @@ stage8(pe_working_set_t *data_set)
 	crm_info("Creating transition graph %d.", transition_id);
 	
 	data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
-	set_xml_property_copy(data_set->graph, "global_timeout", transition_timeout);
-	set_xml_property_copy(data_set->graph, "transition_id", transition_id_s);
+	crm_xml_add(data_set->graph, "global_timeout", transition_timeout);
+	crm_xml_add(data_set->graph, "transition_id", transition_id_s);
 	crm_free(transition_id_s);
 	
 /* errors...

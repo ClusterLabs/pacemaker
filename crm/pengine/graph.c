@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.50 2005/06/14 11:21:02 davidlee Exp $ */
+/* $Id: graph.c,v 1.51 2005/06/15 13:39:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -349,23 +349,21 @@ action2xml(action_t *action, gboolean as_input)
 	}
 
 	action_id_s = crm_itoa(action->id);
-	set_xml_property_copy(action_xml, XML_ATTR_ID, action_id_s);
+	crm_xml_add(action_xml, XML_ATTR_ID, action_id_s);
 	crm_free(action_id_s);
 	
 	if(action->rsc != NULL) {
-		set_xml_property_copy(
+		crm_xml_add(
 			action_xml, XML_LRM_ATTR_RSCID, action->rsc->id);
 	}
-	set_xml_property_copy(action_xml, XML_LRM_ATTR_TASK, action->task);
+	crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
 
 	if(needs_node_info && action->node != NULL) {
-		set_xml_property_copy(
-			action_xml, XML_LRM_ATTR_TARGET,
-			action->node->details->uname);
+		crm_xml_add(action_xml, XML_LRM_ATTR_TARGET,
+			    action->node->details->uname);
 
-		set_xml_property_copy(
-			action_xml, XML_LRM_ATTR_TARGET_UUID,
-			action->node->details->id);
+		crm_xml_add(action_xml, XML_LRM_ATTR_TARGET_UUID,
+			    action->node->details->id);
 		
 		CRM_DEV_ASSERT(NULL != crm_element_value(
 				       action_xml, XML_LRM_ATTR_TARGET));
@@ -375,8 +373,7 @@ action2xml(action_t *action, gboolean as_input)
 
 	}
 
-	set_xml_property_copy(
-		action_xml, "allow_fail",
+	crm_xml_add(action_xml, "allow_fail",
 		action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
 	
 	if(as_input) {
@@ -457,7 +454,7 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 	in  = create_xml_node(syn, "inputs");
 
 	syn_id = crm_itoa(data_set->num_synapse);
-	set_xml_property_copy(syn, XML_ATTR_ID, syn_id);
+	crm_xml_add(syn, XML_ATTR_ID, syn_id);
 	crm_free(syn_id);
 	data_set->num_synapse++;
 	

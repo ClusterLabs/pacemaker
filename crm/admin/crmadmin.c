@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.50 2005/06/15 10:19:30 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.51 2005/06/15 13:39:35 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -342,8 +342,8 @@ do_work(ll_cluster_t * hb_cluster)
 	gboolean all_is_good = TRUE;
 	
 	msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-	set_xml_property_copy(msg_options, XML_ATTR_VERBOSE, admin_verbose);
-	set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
+	crm_xml_add(msg_options, XML_ATTR_VERBOSE, admin_verbose);
+	crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
 
 	if (DO_HEALTH == TRUE) {
 		crm_debug_2("Querying the system");
@@ -358,8 +358,7 @@ do_work(ll_cluster_t * hb_cluster)
 				expected_responses = -1;/* wait until timeout instead */
 			}
 			
-			set_xml_property_copy(
-				msg_options, XML_ATTR_TIMEOUT, "0");
+			crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
 
 		} else {
 			crm_info("Cluster-wide health not available yet");
@@ -372,8 +371,7 @@ do_work(ll_cluster_t * hb_cluster)
 		sys_to = CRM_SYSTEM_CRMD;
 		crmd_operation = CRM_OP_VOTE;
 		
-		set_xml_property_copy(
-			msg_options, XML_ATTR_TIMEOUT, "0");
+		crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
 		
 		dest_node = NULL;
 
@@ -383,8 +381,7 @@ do_work(ll_cluster_t * hb_cluster)
 		sys_to = CRM_SYSTEM_DC;
 		crmd_operation = CRM_OP_PING;
 			
-		set_xml_property_copy(
-			msg_options, XML_ATTR_TIMEOUT, "0");
+		crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
 
 		dest_node = NULL;
 
@@ -426,10 +423,8 @@ do_work(ll_cluster_t * hb_cluster)
 			}
 			
 			xml_option = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
-			set_xml_property_copy(
-				xml_option, XML_NVPAIR_ATTR_NAME, name);
-			set_xml_property_copy(
-				xml_option, XML_NVPAIR_ATTR_VALUE, value);
+			crm_xml_add(xml_option, XML_NVPAIR_ATTR_NAME, name);
+			crm_xml_add(xml_option, XML_NVPAIR_ATTR_VALUE, value);
 			
 			fragment = create_cib_fragment(xml_option, NULL);
 
@@ -449,16 +444,14 @@ do_work(ll_cluster_t * hb_cluster)
 			crm_data_t *fragment = NULL;
 
 			a_node = create_xml_node(NULL, XML_CIB_TAG_NODE);
-			set_xml_property_copy(a_node, XML_ATTR_ID, dest_node);
+			crm_xml_add(a_node, XML_ATTR_ID, dest_node);
 
 			xml_obj = create_xml_node(a_node, XML_TAG_ATTR_SETS);
 			xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
 			xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
 
-			set_xml_property_copy(
-				xml_obj, XML_NVPAIR_ATTR_NAME, "standby");
-			set_xml_property_copy(
-				xml_obj, XML_NVPAIR_ATTR_VALUE, standby_on_off);
+			crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, "standby");
+			crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, standby_on_off);
 			
 			fragment = create_cib_fragment(a_node, NULL);
 
@@ -482,7 +475,7 @@ do_work(ll_cluster_t * hb_cluster)
 		 *   local node
 		 */
 		sys_to = CRM_SYSTEM_CRMD;
-		set_xml_property_copy(msg_options, XML_ATTR_TIMEOUT, "0");
+		crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
 		
 		ret = 0; /* no return message */
 		

@@ -806,8 +806,7 @@ handle_request(ha_msg_input_t *stored_msg)
 		 */
 		crm_data_t *ping = createPingAnswerFragment(sys_to, "ok");
 
-		set_xml_property_copy(ping, "crmd_state",
-				      fsa_state2string(fsa_state));
+		crm_xml_add(ping, "crmd_state", fsa_state2string(fsa_state));
 
 		crm_info("Current state: %s", fsa_state2string(fsa_state));
 		
@@ -1032,10 +1031,9 @@ handle_shutdown_request(HA_Message *stored_msg)
 	crm_log_message(LOG_MSG, stored_msg);
 	
 	set_uuid(fsa_cluster_conn, node_state, XML_ATTR_UUID, host_from);
-	set_xml_property_copy(node_state, XML_ATTR_UNAME, host_from);
-	set_xml_property_copy(node_state, XML_CIB_ATTR_SHUTDOWN,  now_s);
-	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_EXPSTATE, CRMD_STATE_INACTIVE);
+	crm_xml_add(node_state, XML_ATTR_UNAME, host_from);
+	crm_xml_add(node_state, XML_CIB_ATTR_SHUTDOWN,  now_s);
+	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE, CRMD_STATE_INACTIVE);
 	
 	frag = create_cib_fragment(node_state, NULL);
 	

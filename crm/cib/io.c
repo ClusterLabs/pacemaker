@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.24 2005/06/14 10:37:04 davidlee Exp $ */
+/* $Id: io.c,v 1.25 2005/06/15 13:39:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -90,9 +90,9 @@ readCibXml(char *buffer)
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
 		root = createEmptyCib();
-		set_xml_property_copy(root, XML_ATTR_GENERATION_ADMIN, "0");
-		set_xml_property_copy(root, XML_ATTR_GENERATION, "0");
-		set_xml_property_copy(root, XML_ATTR_NUMUPDATES, "0");
+		crm_xml_add(root, XML_ATTR_GENERATION_ADMIN, "0");
+		crm_xml_add(root, XML_ATTR_GENERATION, "0");
+		crm_xml_add(root, XML_ATTR_NUMUPDATES, "0");
 	}
 	return root;
 }
@@ -114,7 +114,7 @@ readCibXmlFile(const char *filename)
 	if (s_res == 0) {
 		FILE *cib_file = fopen(filename, "r");
 		root = file2xml(cib_file);
-		set_xml_property_copy(root, "generated", XML_BOOLEAN_FALSE);
+		crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);
 		fclose(cib_file);
 		
 	} else {
@@ -143,17 +143,17 @@ readCibXmlFile(const char *filename)
 		name = XML_ATTR_GENERATION_ADMIN;
 		value = crm_element_value(root, name);
 		if(value == NULL) {
-			set_xml_property_copy(root, name, "0");
+			crm_xml_add(root, name, "0");
 		}
 		name = XML_ATTR_GENERATION;
 		value = crm_element_value(root, name);
 		if(value == NULL) {
-			set_xml_property_copy(root, name, "0");
+			crm_xml_add(root, name, "0");
 		}
 		name = XML_ATTR_NUMUPDATES;
 		value = crm_element_value(root, name);
 		if(value == NULL) {
-			set_xml_property_copy(root, name, "0");
+			crm_xml_add(root, name, "0");
 		}
 	}
 	if (verifyCibXml(root) == FALSE) {
@@ -282,10 +282,10 @@ initializeCib(crm_data_t *new_cib)
 		set_connected_peers(the_cib);
 		set_transition(the_cib);
 		if(cib_have_quorum) {
-			set_xml_property_copy(
+			crm_xml_add(
 				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_TRUE);
 		} else {
-			set_xml_property_copy(
+			crm_xml_add(
 				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_FALSE);
 		}		
 	}
@@ -482,8 +482,7 @@ set_transition(crm_data_t *xml_obj)
 		xml_obj, XML_ATTR_CCM_TRANSITION);
 	if(safe_str_neq(current, ccm_transition_id)) {
 		crm_debug("Set transition to %s", ccm_transition_id);
-		set_xml_property_copy(
-			the_cib, XML_ATTR_CCM_TRANSITION, ccm_transition_id);
+		crm_xml_add(the_cib, XML_ATTR_CCM_TRANSITION,ccm_transition_id);
 	}
 }
 
@@ -500,7 +499,7 @@ set_connected_peers(crm_data_t *xml_obj)
 	current = crm_atoi(current_s, "0");
 	if(current != active) {
 		peers_s = crm_itoa(active);
-		set_xml_property_copy(xml_obj, XML_ATTR_NUMPEERS, peers_s);
+		crm_xml_add(xml_obj, XML_ATTR_NUMPEERS, peers_s);
 		crm_debug("Set peers to %s", peers_s);
 		crm_free(peers_s);
 	}

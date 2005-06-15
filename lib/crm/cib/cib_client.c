@@ -996,21 +996,21 @@ diff_cib_object(crm_data_t *old_cib, crm_data_t *new_cib, gboolean suppress)
 		if(value == NULL) {
 			value = "0";
 		}
-		set_xml_property_copy(dest, name, value);
+		crm_xml_add(dest, name, value);
 
 		name = XML_ATTR_GENERATION;
 		value = crm_element_value(src, name);
 		if(value == NULL) {
 			value = "0";
 		}
-		set_xml_property_copy(dest, name, value);
+		crm_xml_add(dest, name, value);
 
 		name = XML_ATTR_NUMUPDATES;
 		value = crm_element_value(src, name);
 		if(value == NULL) {
 			value = "0";
 		}
-		set_xml_property_copy(dest, name, value);
+		crm_xml_add(dest, name, value);
 	}
 	
 	src = new_cib;
@@ -1021,21 +1021,21 @@ diff_cib_object(crm_data_t *old_cib, crm_data_t *new_cib, gboolean suppress)
 		if(value == NULL) {
 			value = "0";
 		}
-		set_xml_property_copy(dest, name, value);
+		crm_xml_add(dest, name, value);
 
 		name = XML_ATTR_GENERATION;
 		value = crm_element_value(src, name);
 		if(value == NULL) {
 			value = "0";
 		}
-		set_xml_property_copy(dest, name, value);
+		crm_xml_add(dest, name, value);
 
 		name = XML_ATTR_NUMUPDATES;
 		value = crm_element_value(src, name);
 		if(value == NULL) {
 			value = "0";
 		}
-		set_xml_property_copy(dest, name, value);
+		crm_xml_add(dest, name, value);
 	}
 	return diff;
 }
@@ -1224,11 +1224,11 @@ create_cib_fragment_adv(
 		whole_cib = TRUE;
 	}
 	
-	set_xml_property_copy(fragment, XML_ATTR_SECTION, section);
+	crm_xml_add(fragment, XML_ATTR_SECTION, section);
 
 	if(whole_cib == FALSE) {
 		cib = createEmptyCib();
-		set_xml_property_copy(cib, "debug_source", source);
+		crm_xml_add(cib, "debug_source", source);
 		object_root = get_object_root(section, cib);
 		add_node_copy(object_root, update);
 		add_node_copy(fragment, cib);
@@ -1238,7 +1238,7 @@ create_cib_fragment_adv(
 	} else {
 		add_node_copy(fragment, update);
 		cib = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-		set_xml_property_copy(cib, "debug_source", source);
+		crm_xml_add(cib, "debug_source", source);
 	}
 	
 	crm_free(auto_section);
@@ -1273,10 +1273,9 @@ createEmptyCib(void)
 	set_node_tstamp(config);
 	set_node_tstamp(status);
 	
-/* 	set_xml_property_copy(cib_root, "version", "1"); */
-	set_xml_property_copy(cib_root, "generated", XML_BOOLEAN_TRUE);
-	set_xml_property_copy(
-		cib_root, XML_ATTR_CIB_REVISION, cib_feature_revision_s);
+/* 	crm_xml_add(cib_root, "version", "1"); */
+	crm_xml_add(cib_root, "generated", XML_BOOLEAN_TRUE);
+	crm_xml_add(cib_root, XML_ATTR_CIB_REVISION, cib_feature_revision_s);
 
 	create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
 	create_xml_node(config, XML_CIB_TAG_NODES);

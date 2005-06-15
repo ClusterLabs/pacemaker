@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.60 2005/06/14 10:37:04 davidlee Exp $ */
+/* $Id: callbacks.c,v 1.61 2005/06/15 13:39:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1295,10 +1295,10 @@ cib_ccm_msg_callback(
 		cib_have_quorum = ccm_have_quorum(event);
 
 		if(cib_have_quorum) {
- 			set_xml_property_copy(
+ 			crm_xml_add(
 				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_TRUE);
 		} else {
- 			set_xml_property_copy(
+ 			crm_xml_add(
 				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_FALSE);
 		}
 		

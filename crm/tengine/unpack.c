@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.38 2005/06/15 10:47:45 andrew Exp $ */
+/* $Id: unpack.c,v 1.39 2005/06/15 13:39:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -367,14 +367,12 @@ create_shutdown_event(const char *node, int op_status)
 	crm_data_t *event = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	char *code = crm_itoa(op_status);
 
-	set_xml_property_copy(event, XML_LRM_ATTR_TARGET, node);
-/*	event_rsc    = set_xml_property_copy(event, XML_ATTR_ID); */
-	set_xml_property_copy(event, XML_LRM_ATTR_RC, "0");
-	set_xml_property_copy(
-		event, XML_LRM_ATTR_LASTOP, XML_CIB_ATTR_SHUTDOWN);
-	set_xml_property_copy(
-		event, XML_LRM_ATTR_RSCSTATE, CRMD_ACTION_GENERIC_OK);
-	set_xml_property_copy(event, XML_LRM_ATTR_OPSTATUS, code);
+	crm_xml_add(event, XML_LRM_ATTR_TARGET, node);
+/*	event_rsc    = crm_xml_add(event, XML_ATTR_ID); */
+	crm_xml_add(event, XML_LRM_ATTR_RC, "0");
+	crm_xml_add(event, XML_LRM_ATTR_LASTOP, XML_CIB_ATTR_SHUTDOWN);
+	crm_xml_add(event, XML_LRM_ATTR_RSCSTATE, CRMD_ACTION_GENERIC_OK);
+	crm_xml_add(event, XML_LRM_ATTR_OPSTATUS, code);
 	
 	crm_free(code);
 	return event;

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.33 2005/06/14 11:21:02 davidlee Exp $ */
+/* $Id: complex.c,v 1.34 2005/06/15 13:39:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -140,7 +140,7 @@ inherit_parent_attributes(
 			pe_warn("Resource %s: Overwriting attribute %s: %s->%s",
 				ID(child), attributes[lpc], attr_c, attr_p);
 		}
-		set_xml_property_copy(child, attributes[lpc], attr_p);
+		crm_xml_add(child, attributes[lpc], attr_p);
 	}
 }
 
@@ -451,8 +451,8 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
 	crm_data_t *xml_node  = user_data;
 	crm_data_t *xml_child = create_xml_node(xml_node, XML_CIB_TAG_NVPAIR);
 
-	set_xml_property_copy(xml_child, XML_NVPAIR_ATTR_NAME, name);
-	set_xml_property_copy(xml_child, XML_NVPAIR_ATTR_VALUE, s_value);
+	crm_xml_add(xml_child, XML_NVPAIR_ATTR_NAME, name);
+	crm_xml_add(xml_child, XML_NVPAIR_ATTR_VALUE, s_value);
 
 	crm_debug_3("dumped: name=%s value=%s", name, s_value);
 }

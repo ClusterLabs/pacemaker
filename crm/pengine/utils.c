@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.85 2005/06/13 12:35:53 andrew Exp $ */
+/* $Id: utils.c,v 1.86 2005/06/15 13:39:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1370,7 +1370,7 @@ set_id(crm_data_t * xml_obj, const char *prefix, int child)
 			 use_prefix?prefix:"", use_prefix?":":"", id);
 	}
 	
-	set_xml_property_copy(xml_obj, XML_ATTR_ID, new_id);
+	crm_xml_add(xml_obj, XML_ATTR_ID, new_id);
 	crm_free(new_id);
 }
 

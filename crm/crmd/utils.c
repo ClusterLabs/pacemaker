@@ -1100,8 +1100,8 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	crm_debug_3("Creating node entry for %s", uname);
 	set_uuid(fsa_cluster_conn, tmp1, XML_ATTR_UUID, uname);
 	
-	set_xml_property_copy(tmp1, XML_ATTR_UNAME, uname);
-	set_xml_property_copy(tmp1, XML_ATTR_TYPE, type);
+	crm_xml_add(tmp1, XML_ATTR_UNAME, uname);
+	crm_xml_add(tmp1, XML_ATTR_TYPE, type);
 	
 	update_local_cib(create_cib_fragment(tmp1, NULL));
 	free_xml(tmp1);
@@ -1309,24 +1309,14 @@ create_node_state(
 
 	crm_debug_2("%s Creating node state entry for %s", src, uname);
 	set_uuid(fsa_cluster_conn, node_state, XML_ATTR_UUID, uname);
-	set_xml_property_copy(node_state, XML_ATTR_UNAME, uname);
 
-	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_HASTATE, ha_state);
-
-	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_INCCM, ccm_state);
-
-	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_CRMDSTATE, crmd_state);
-
-	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_JOINSTATE, join_state);
-	
-	set_xml_property_copy(
-		node_state, XML_CIB_ATTR_EXPSTATE, exp_state);
-
-	set_xml_property_copy(node_state, "origin", src);
+	crm_xml_add(node_state, XML_ATTR_UNAME, uname);
+	crm_xml_add(node_state, XML_CIB_ATTR_HASTATE, ha_state);
+	crm_xml_add(node_state, XML_CIB_ATTR_INCCM, ccm_state);
+	crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, crmd_state);
+	crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE, join_state);
+	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE, exp_state);
+	crm_xml_add(node_state, "origin", src);
 
 	crm_log_xml_debug_3(node_state, "created");
 

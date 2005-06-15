@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.24 2005/06/13 12:04:52 andrew Exp $ */
+/* $Id: xml.h,v 1.25 2005/06/15 13:39:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -129,8 +129,11 @@ extern crm_data_t *create_xml_node(crm_data_t *parent, const char *name);
  * Returns FALSE on failure and TRUE on success.
  *
  */
-extern const char *set_xml_property_copy(
+extern const char *crm_xml_add(
 	crm_data_t *node, const char *name, const char *value);
+
+extern const char *crm_xml_add_int(
+	crm_data_t* node, const char *name, int value);
 
 /*
  * Unlink the node and set its doc pointer to NULL so free_xml()

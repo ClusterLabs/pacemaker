@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.35 2005/06/15 10:47:45 andrew Exp $ */
+/* $Id: callbacks.c,v 1.36 2005/06/15 13:39:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -379,20 +379,14 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		CRM_DEV_ASSERT(op->node_name != NULL);
 		CRM_DEV_ASSERT(op->node_uuid != NULL);
 
-		set_xml_property_copy(node_state, XML_ATTR_UUID, uuid);
-		set_xml_property_copy(node_state, XML_ATTR_UNAME, target);
-		set_xml_property_copy(
-			node_state, XML_CIB_ATTR_HASTATE, DEADSTATUS);
-		set_xml_property_copy(
-			node_state, XML_CIB_ATTR_INCCM, XML_BOOLEAN_NO);
-		set_xml_property_copy(
-			node_state, XML_CIB_ATTR_CRMDSTATE, OFFLINESTATUS);
-		set_xml_property_copy(
-			node_state, XML_CIB_ATTR_JOINSTATE,CRMD_JOINSTATE_DOWN);
-		set_xml_property_copy(
-			node_state, XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_DOWN);
-		set_xml_property_copy(
-			node_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
+		crm_xml_add(node_state, XML_ATTR_UUID, uuid);
+		crm_xml_add(node_state, XML_ATTR_UNAME, target);
+		crm_xml_add(node_state, XML_CIB_ATTR_HASTATE, DEADSTATUS);
+		crm_xml_add(node_state, XML_CIB_ATTR_INCCM, XML_BOOLEAN_NO);
+		crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, OFFLINESTATUS);
+		crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE,CRMD_JOINSTATE_DOWN);
+		crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_DOWN);
+		crm_xml_add(node_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
 		create_xml_node(node_state, XML_CIB_TAG_LRM);
 		
 		update = create_cib_fragment(node_state, NULL);

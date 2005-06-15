@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.83 2005/05/31 14:54:28 andrew Exp $ */
+/* $Id: ccm.c,v 1.84 2005/06/15 13:39:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -579,8 +579,7 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 	
 	if(updates == NULL) {
 		fragment = create_cib_fragment(NULL, NULL);
-		set_xml_property_copy(
-			fragment, XML_ATTR_SECTION, XML_CIB_TAG_STATUS);
+		crm_xml_add(fragment, XML_ATTR_SECTION, XML_CIB_TAG_STATUS);
 	}
 
 	tmp = find_xml_node(fragment, XML_TAG_CIB, TRUE);

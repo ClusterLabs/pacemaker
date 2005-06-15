@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.20 2005/06/14 10:37:04 davidlee Exp $ */
+/* $Id: primatives.c,v 1.21 2005/06/15 13:39:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -528,8 +528,7 @@ update_node_state(crm_data_t *target, crm_data_t *update)
 			
 		} else {
 			any_updates = TRUE;
-			set_xml_property_copy(
-				target, local_prop_name, local_prop_value);
+			crm_xml_add(target, local_prop_name, local_prop_value);
 		}
 		);
 	
@@ -551,7 +550,7 @@ update_node_state(crm_data_t *target, crm_data_t *update)
 	
 	if(any_updates) {
 		set_node_tstamp(target);
-		set_xml_property_copy(target, XML_CIB_ATTR_SOURCE, source);
+		crm_xml_add(target, XML_CIB_ATTR_SOURCE, source);
 	}
 	
 }

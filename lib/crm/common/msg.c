@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.4 2005/06/13 15:57:58 davidlee Exp $ */
+/* $Id: msg.c,v 1.5 2005/06/15 13:39:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,8 +51,8 @@ createPingAnswerFragment(const char *from, const char *status)
 	
 	ping = create_xml_node(NULL, XML_CRM_TAG_PING);
 	
-	set_xml_property_copy(ping, XML_PING_ATTR_STATUS, status);
-	set_xml_property_copy(ping, XML_PING_ATTR_SYSFROM, from);
+	crm_xml_add(ping, XML_PING_ATTR_STATUS, status);
+	crm_xml_add(ping, XML_PING_ATTR_SYSFROM, from);
 
 	return ping;
 }
@@ -135,10 +135,10 @@ send_hello_message(IPC_Channel *ipc_client,
 	}
 
 	hello_node = create_xml_node(NULL, XML_TAG_OPTIONS);
-	set_xml_property_copy(hello_node, "major_version", major_version);
-	set_xml_property_copy(hello_node, "minor_version", minor_version);
-	set_xml_property_copy(hello_node, "client_name",   client_name);
-	set_xml_property_copy(hello_node, "client_uuid",   uuid);
+	crm_xml_add(hello_node, "major_version", major_version);
+	crm_xml_add(hello_node, "minor_version", minor_version);
+	crm_xml_add(hello_node, "client_name",   client_name);
+	crm_xml_add(hello_node, "client_uuid",   uuid);
 
 	crm_debug_4("creating hello message");
 	hello = create_request(

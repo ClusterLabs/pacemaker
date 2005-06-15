@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.40 2005/06/14 10:37:04 davidlee Exp $ */
+/* $Id: messages.c,v 1.41 2005/06/15 13:39:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -175,7 +175,7 @@ cib_process_query(
 	}
 
 	*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
-/*  	set_xml_property_copy(*answer, XML_ATTR_SECTION, section); */
+/*  	crm_xml_add(*answer, XML_ATTR_SECTION, section); */
 
 	obj_root = get_object_root(section, existing_cib);
 	
@@ -183,14 +183,14 @@ cib_process_query(
 		result = cib_NOTEXISTS;
 
 	} else if(obj_root == existing_cib) {
-		set_xml_property_copy(obj_root, "origin", cib_our_uname);
+		crm_xml_add(obj_root, "origin", cib_our_uname);
 		add_node_copy(*answer, obj_root);
 
 	} else {
 		crm_data_t *cib = createEmptyCib();
 		crm_data_t *query_obj_root = get_object_root(section, cib);
 		copy_in_properties(cib, existing_cib);
-		set_xml_property_copy(cib, "origin", cib_our_uname);
+		crm_xml_add(cib, "origin", cib_our_uname);
 
 		xml_child_iter(
 			obj_root, an_obj, NULL,
@@ -300,7 +300,7 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 
 	crm_debug_4("%s %d(%s)->%s",
 		  field, int_value, crm_str(old_value), crm_str(new_value));
-	set_xml_property_copy(xml_obj, field, new_value);
+	crm_xml_add(xml_obj, field, new_value);
 	crm_free(new_value);
 
 	crm_free(old_value);
@@ -731,8 +731,8 @@ createCibFragmentAnswer(const char *section, crm_data_t *failed)
 		add_node_copy(fragment, failed);
 	}
 		
-	set_xml_property_copy(fragment, XML_ATTR_SECTION, section);
-	set_xml_property_copy(fragment, "generated_on", cib_our_uname);
+	crm_xml_add(fragment, XML_ATTR_SECTION, section);
+	crm_xml_add(fragment, "generated_on", cib_our_uname);
 	return fragment;
 }
 
@@ -767,17 +767,10 @@ update_results(
 
 		add_node_copy(xml_node, target);
 		
-		set_xml_property_copy(
-			xml_node, XML_FAILCIB_ATTR_ID, ID(target));
-
-		set_xml_property_copy(
-			xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
-
-		set_xml_property_copy(
-			xml_node, XML_FAILCIB_ATTR_OP, operation_msg);
-	
-		set_xml_property_copy(
-			xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
+		crm_xml_add(xml_node, XML_FAILCIB_ATTR_ID, ID(target));
+		crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
+		crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP, operation_msg);
+		crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
 
 		crm_warn("Action %s failed: %s (cde=%d)",
 			  operation_msg, error_msg, return_code);
@@ -807,11 +800,11 @@ revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 	} else if(cur_revision == NULL
 		  || strcmp(revision, cur_revision) > 0) {
 		crm_info("Updating CIB revision to %s", revision);
-		set_xml_property_copy(
+		crm_xml_add(
 			cib_copy, XML_ATTR_CIB_REVISION, revision);
 	} else {
 		/* make sure we end up with the right value in the end */
-		set_xml_property_copy(
+		crm_xml_add(
 			cib_update, XML_ATTR_CIB_REVISION, cur_revision);
 	}
 	

@@ -292,8 +292,7 @@ crmd_ha_status_callback(
 	update = create_node_state(
 		node, node, status, NULL, NULL, NULL, NULL, __FUNCTION__);
 	
-	set_xml_property_copy(
-		update, XML_CIB_ATTR_CLEAR_SHUTDOWN, XML_BOOLEAN_TRUE);
+	crm_xml_add(update, XML_CIB_ATTR_CLEAR_SHUTDOWN, XML_BOOLEAN_TRUE);
 
 	/* this change should not be broadcast */
 	update_local_cib(create_cib_fragment(update, NULL));
@@ -349,7 +348,7 @@ crmd_client_status_callback(const char * node, const char * client,
 			node, node, NULL, NULL, status, join, NULL,
 			__FUNCTION__);
 		
-		set_xml_property_copy(update, extra, XML_BOOLEAN_TRUE);
+		crm_xml_add(update, extra, XML_BOOLEAN_TRUE);
 		fragment = create_cib_fragment(update, NULL);
 
 		/* it is safe to keep these updates on the local node

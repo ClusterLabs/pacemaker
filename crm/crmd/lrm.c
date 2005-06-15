@@ -335,12 +335,12 @@ build_operation_update(
 	xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
 	
 	op_id = generate_op_key(op->rsc_id, op->op_type, op->interval);
-	set_xml_property_copy(xml_op, XML_ATTR_ID, op_id);
+	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
 	crm_free(op_id);
 
-	set_xml_property_copy(xml_rsc, XML_LRM_ATTR_LASTOP, op->op_type);
-	set_xml_property_copy(xml_op,  XML_LRM_ATTR_TASK,   op->op_type);
-	set_xml_property_copy(xml_op,  "origin", src);
+	crm_xml_add(xml_rsc, XML_LRM_ATTR_LASTOP, op->op_type);
+	crm_xml_add(xml_op,  XML_LRM_ATTR_TASK,   op->op_type);
+	crm_xml_add(xml_op,  "origin", src);
 	
 	/* Handle recurring ops - infer last op_status */
 	if(op->op_status == LRM_OP_PENDING && op->interval > 0) {
@@ -359,7 +359,7 @@ build_operation_update(
 		snprintf(fail_state, len, "%s:%d",
 			 op->user_data?op->user_data:"-1", op->op_status);
 	}
-	set_xml_property_copy(xml_op,  "transition_magic", fail_state);
+	crm_xml_add(xml_op,  "transition_magic", fail_state);
 	crm_free(fail_state);	
 	
 	switch(op->op_status) {
@@ -379,10 +379,8 @@ build_operation_update(
 			if(fail_state != NULL) {
 				sprintf(fail_state, "%s_failed", op->op_type);
 			}
-			set_xml_property_copy(
-				xml_op, XML_LRM_ATTR_RSCSTATE, fail_state);
-			set_xml_property_copy(
-				xml_rsc, XML_LRM_ATTR_RSCSTATE, fail_state);
+			crm_xml_add(xml_op, XML_LRM_ATTR_RSCSTATE, fail_state);
+			crm_xml_add(xml_rsc, XML_LRM_ATTR_RSCSTATE, fail_state);
 			crm_free(fail_state);			
 			break;
 		case LRM_OP_DONE:
@@ -402,26 +400,24 @@ build_operation_update(
 				state = CRMD_ACTION_GENERIC_OK;
 			}	
 
-			set_xml_property_copy(
-				xml_op, XML_LRM_ATTR_RSCSTATE, state);
-			set_xml_property_copy(
-				xml_rsc, XML_LRM_ATTR_RSCSTATE, state);
+			crm_xml_add(xml_op, XML_LRM_ATTR_RSCSTATE, state);
+			crm_xml_add(xml_rsc, XML_LRM_ATTR_RSCSTATE, state);
 			break;
 	}
 	
 	tmp = crm_itoa(op->call_id);
-	set_xml_property_copy(xml_op,  XML_LRM_ATTR_CALLID, tmp);
+	crm_xml_add(xml_op,  XML_LRM_ATTR_CALLID, tmp);
 	crm_free(tmp);
 
 	/* set these on 'xml_rsc' too to make life easy for the TE */
 	tmp = crm_itoa(op->rc);
-	set_xml_property_copy(xml_op, XML_LRM_ATTR_RC, tmp);
-	set_xml_property_copy(xml_rsc, XML_LRM_ATTR_RC, tmp);
+	crm_xml_add(xml_op, XML_LRM_ATTR_RC, tmp);
+	crm_xml_add(xml_rsc, XML_LRM_ATTR_RC, tmp);
 	crm_free(tmp);
 
 	tmp = crm_itoa(op->op_status);
-	set_xml_property_copy(xml_op, XML_LRM_ATTR_OPSTATUS, tmp);
-	set_xml_property_copy(xml_rsc, XML_LRM_ATTR_OPSTATUS, tmp);
+	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, tmp);
+	crm_xml_add(xml_rsc, XML_LRM_ATTR_OPSTATUS, tmp);
 	crm_free(tmp);
 
 	set_node_tstamp(xml_op);
@@ -461,7 +457,7 @@ build_active_RAs(crm_data_t *rsc_list)
 			continue;
 		}
 
-		set_xml_property_copy(xml_rsc, XML_ATTR_ID, the_rsc->id);
+		crm_xml_add(xml_rsc, XML_ATTR_ID, the_rsc->id);
 
 		op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
 
@@ -523,8 +519,7 @@ do_lrm_query(gboolean is_replace)
 	build_active_RAs(rsc_list);
 
 	if(is_replace) {
-		set_xml_property_copy(
-			xml_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
+		crm_xml_add(xml_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
 	}
 
 	xml_result = create_cib_fragment(xml_state, NULL);
@@ -938,13 +933,13 @@ do_update_resource(lrm_op_t* op)
 
 	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	set_uuid(fsa_cluster_conn, update, XML_ATTR_UUID, fsa_our_uname);
-	set_xml_property_copy(update,  XML_ATTR_UNAME, fsa_our_uname);
+	crm_xml_add(update,  XML_ATTR_UNAME, fsa_our_uname);
 
 	iter = create_xml_node(update, XML_CIB_TAG_LRM);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
 
-	set_xml_property_copy(iter, XML_ATTR_ID, op->rsc_id);
+	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
 	build_operation_update(iter, op, __FUNCTION__, 0);
 	fragment = create_cib_fragment(update, NULL);

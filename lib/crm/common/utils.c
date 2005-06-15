@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.17 2005/06/13 15:57:58 davidlee Exp $ */
+/* $Id: utils.c,v 1.18 2005/06/15 13:39:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -526,7 +526,7 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 	/* avoid blocking calls where possible */
 	uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
 	if(uuid_calc != NULL) {
-		set_xml_property_copy(node, attr, uuid_calc);
+		crm_xml_add(node, attr, uuid_calc);
 		return;
 	}
 	
@@ -547,7 +547,7 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 				crm_uuid_cache,
 				crm_strdup(uname), crm_strdup(uuid_calc));
 		}
-		set_xml_property_copy(node, attr, uuid_calc);
+		crm_xml_add(node, attr, uuid_calc);
 	}
 	
 	crm_free(uuid_calc);
