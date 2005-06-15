@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.49 2005/06/14 11:48:58 davidlee Exp $ */
+/* $Id: crmadmin.c,v 1.50 2005/06/15 10:19:30 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -323,7 +323,7 @@ main(int argc, char **argv)
 			operation_status = -1;
 		}
 	} else {
-		crm_err("Init failed, could not perform requested operations");
+		crm_warn("Init failed, could not perform requested operations");
 		operation_status = -2;
 	}
 
