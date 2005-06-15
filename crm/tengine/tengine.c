@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.80 2005/06/15 10:47:45 andrew Exp $ */
+/* $Id: tengine.c,v 1.81 2005/06/15 13:43:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -145,15 +145,21 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		return -1;
 	}
 	
+	this_rsc = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
+
+	if(this_rsc == NULL) {
+		crm_debug_4("Skipping non-resource event");
+		return -1;
+	}
+
 	update_event = crm_element_value(event, XML_ATTR_ID);
 	op_status    = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
+	magic        = crm_element_value(event, "transition_magic");
 	
 	this_action = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 	this_node   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 	this_uname  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-	this_rsc    = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
-	magic       = crm_element_value(event, "transition_magic");
-
+	
 	this_event  = generate_op_key(this_rsc, this_action, action->interval);
 
 	if(safe_str_neq(this_event, update_event)) {
@@ -200,18 +206,22 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 			crm_log_message(LOG_ERR, event);
 		}
 		
+	} else if(magic == NULL && match->complete) {
+		crm_debug("Ignoring previously processed update");
+		return -3;
+
 	} else if(magic == NULL) {
-		crm_err("magic not found");
+		crm_err("Magic not found");
 		crm_log_message(LOG_ERR, event);
 	}
 	
-	if(transition_counter < transition_i) {
-		crm_err("Detected an action from a __future__ transition:"
-			" %d vs. %d", transition_i, transition_counter);
+	if(transition_i == -1) {
+		/* we never expect these - recompute */
+		crm_err("Detected an action initiated outside of a transition");
 		return -1;
 		
-	} else if(transition_counter > transition_i) {
-		crm_warn("Detected an action from a previous transition:"
+	} else if(transition_counter != transition_i) {
+		crm_warn("Detected an action from a different transition:"
 			 " %d vs. %d", transition_i, transition_counter);
 		return -3;
 	}
@@ -676,8 +686,8 @@ cib_action_update(action_t *action, int status)
 	fragment = NULL;
 	state    = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
-	set_xml_property_copy(state, XML_ATTR_UUID,  target_uuid);
-	set_xml_property_copy(state, XML_ATTR_UNAME, target);
+	crm_xml_add(state, XML_ATTR_UUID,  target_uuid);
+	crm_xml_add(state, XML_ATTR_UNAME, target);
 	
 	rsc = create_xml_node(state, XML_CIB_TAG_LRM);
 	rsc = create_xml_node(rsc,   XML_LRM_TAG_RESOURCES);
@@ -685,24 +695,24 @@ cib_action_update(action_t *action, int status)
 
 	xml_op = create_xml_node(rsc,XML_LRM_TAG_RSC_OP);
 	
-	set_xml_property_copy(rsc,    XML_ATTR_ID, rsc_id);
-	set_xml_property_copy(xml_op, XML_ATTR_ID, task);
+	crm_xml_add(rsc,    XML_ATTR_ID, rsc_id);
+	crm_xml_add(xml_op, XML_ATTR_ID, task);
 	
 	op_id = generate_op_key(rsc_id, task, action->interval);
-	set_xml_property_copy(xml_op, XML_ATTR_ID, op_id);
+	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
 	crm_free(op_id);
 	
-	set_xml_property_copy(xml_op, XML_LRM_ATTR_TASK, task);
-	set_xml_property_copy(rsc, XML_LRM_ATTR_RSCSTATE,
+	crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
+	crm_xml_add(rsc, XML_LRM_ATTR_RSCSTATE,
 			      get_rsc_state(task, status));
 	
-	set_xml_property_copy(rsc, XML_LRM_ATTR_OPSTATUS, code);
-	set_xml_property_copy(rsc, XML_LRM_ATTR_RC, code);
-	set_xml_property_copy(rsc, XML_LRM_ATTR_LASTOP, task);
+	crm_xml_add(rsc, XML_LRM_ATTR_OPSTATUS, code);
+	crm_xml_add(rsc, XML_LRM_ATTR_RC, code);
+	crm_xml_add(rsc, XML_LRM_ATTR_LASTOP, task);
 	
-	set_xml_property_copy(xml_op, XML_LRM_ATTR_OPSTATUS, code);
-	set_xml_property_copy(xml_op, XML_LRM_ATTR_RC, code);
-	set_xml_property_copy(xml_op, "origin", __FUNCTION__);
+	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, code);
+	crm_xml_add(xml_op, XML_LRM_ATTR_RC, code);
+	crm_xml_add(xml_op, "origin", __FUNCTION__);
 
 	crm_free(code);
 
@@ -712,7 +722,7 @@ cib_action_update(action_t *action, int status)
 	if(code != NULL) {
 		snprintf(code, 36, "%d:-1", transition_counter);
 	}
-	set_xml_property_copy(xml_op,  "transition_magic", code);
+	crm_xml_add(xml_op,  "transition_magic", code);
 	crm_free(code);
 	
 	set_node_tstamp(xml_op);
