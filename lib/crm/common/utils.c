@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.18 2005/06/15 13:39:49 andrew Exp $ */
+/* $Id: utils.c,v 1.19 2005/06/16 09:20:02 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,6 +36,7 @@
 #include <ha_msg.h>
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_signal.h>
+#include <clplumbing/cl_syslog.h>
 #include <clplumbing/coredumps.h>
 
 #include <time.h> 
@@ -57,7 +58,6 @@ gboolean crm_assert_failed = FALSE;
 unsigned int crm_log_level = LOG_INFO;
 
 void crm_set_env_options(void);
-int crm_logfacility_from_name(const char * value);
 
 char *
 generateReference(const char *custom1, const char *custom2)
@@ -657,7 +657,7 @@ crm_set_env_options(void)
 	param_val = getenv(param_name);
 	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
-		int facility = crm_logfacility_from_name(param_val);
+		int facility = cl_syslogfac_str2int(param_val);
 		if(facility > 0) {
 			cl_log_set_facility(facility);
 		}
@@ -710,94 +710,6 @@ crm_set_env_options(void)
 		param_val = NULL;
 	}
 	
-}
-
-struct _syslog_code {
-        const char    *c_name;
-        int     c_val;
-};
-
-
-struct _syslog_code facilitynames[] =
-{
-#ifdef LOG_AUTH
-	{ "auth", LOG_AUTH },
-	{ "security", LOG_AUTH },           /* DEPRECATED */
-#endif
-#ifdef LOG_AUTHPRIV
-	{ "authpriv", LOG_AUTHPRIV },
-#endif
-#ifdef LOG_CRON
-	{ "cron", LOG_CRON },
-#endif
-#ifdef LOG_DAEMON
-	{ "daemon", LOG_DAEMON },
-#endif
-#ifdef LOG_FTP
-	{ "ftp", LOG_FTP },
-#endif
-#ifdef LOG_KERN
-	{ "kern", LOG_KERN },
-#endif
-#ifdef LOG_LPR
-	{ "lpr", LOG_LPR },
-#endif
-#ifdef LOG_MAIL
-	{ "mail", LOG_MAIL },
-#endif
-
-/*	{ "mark", INTERNAL_MARK },           * INTERNAL */
-
-#ifdef LOG_NEWS
-	{ "news", LOG_NEWS },
-#endif
-#ifdef LOG_SYSLOG
-	{ "syslog", LOG_SYSLOG },
-#endif
-#ifdef LOG_USER
-	{ "user", LOG_USER },
-#endif
-#ifdef LOG_UUCP
-	{ "uucp", LOG_UUCP },
-#endif
-#ifdef LOG_LOCAL0
-	{ "local0", LOG_LOCAL0 },
-#endif
-#ifdef LOG_LOCAL1
-	{ "local1", LOG_LOCAL1 },
-#endif
-#ifdef LOG_LOCAL2
-	{ "local2", LOG_LOCAL2 },
-#endif
-#ifdef LOG_LOCAL3
-	{ "local3", LOG_LOCAL3 },
-#endif
-#ifdef LOG_LOCAL4
-	{ "local4", LOG_LOCAL4 },
-#endif
-#ifdef LOG_LOCAL5
-	{ "local5", LOG_LOCAL5 },
-#endif
-#ifdef LOG_LOCAL6
-	{ "local6", LOG_LOCAL6 },
-#endif
-#ifdef LOG_LOCAL7
-	{ "local7", LOG_LOCAL7 },
-#endif
-	{ NULL, -1 }
-};
-
-/* set syslog facility config variable */
-int
-crm_logfacility_from_name(const char * value)
-{
-	int lpc;
-	for(lpc = 0; facilitynames[lpc].c_name != NULL; lpc++) {
-		if(strcmp(value, facilitynames[lpc].c_name) == 0) {
-			return facilitynames[lpc].c_val;
-		}
-	}
-	return -1;
 }
 
 gboolean
