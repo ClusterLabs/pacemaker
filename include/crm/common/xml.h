@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.25 2005/06/15 13:39:47 andrew Exp $ */
+/* $Id: xml.h,v 1.26 2005/06/16 12:44:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -210,6 +210,9 @@ extern int add_xml_object(
 extern void xml_remove_prop(crm_data_t *obj, const char *name);
 
 extern void crm_set_element_parent(crm_data_t *data, crm_data_t *parent);
+
+extern gboolean delete_xml_child(
+	crm_data_t *parent, crm_data_t *child, crm_data_t *to_delete);
 
 /*
  *
