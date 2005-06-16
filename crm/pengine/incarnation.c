@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.27 2005/06/15 13:56:03 andrew Exp $ */
+/* $Id: incarnation.c,v 1.28 2005/06/16 12:36:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -288,26 +288,26 @@ void incarnation_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		}
 		);
 
-	op = start_action(incarnation_data->self, NULL);
-	op->optional = !incarnation_data->child_starting;
+	op = start_action(incarnation_data->self, NULL,
+			  !incarnation_data->child_starting);
 	op->pseudo   = TRUE;
 	
 	op = custom_action(incarnation_data->self, started_key(rsc),
-		      CRMD_ACTION_STARTED, NULL, data_set);
- 	op->optional = !incarnation_data->child_starting;
+		      CRMD_ACTION_STARTED, NULL,
+			   !incarnation_data->child_starting, data_set);
 	op->pseudo   = TRUE;
 
 	child_starting_constraints(
 		incarnation_data, pe_ordering_optional,
 		NULL, last_start_rsc, data_set);
 	
-	op = stop_action(incarnation_data->self, NULL);
-	op->optional = !incarnation_data->child_stopping;
+	op = stop_action(incarnation_data->self, NULL,
+			 !incarnation_data->child_stopping);
 	op->pseudo   = TRUE;
 
 	op = custom_action(incarnation_data->self, stopped_key(rsc),
-		      CRMD_ACTION_STOPPED, NULL, data_set);
- 	op->optional = !incarnation_data->child_stopping;
+			   CRMD_ACTION_STOPPED, NULL,
+			   !incarnation_data->child_stopping, data_set);
 	op->pseudo   = TRUE;
 
 	child_stopping_constraints(

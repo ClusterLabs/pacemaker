@@ -16,7 +16,7 @@
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="score1" score="1000">
-	  <expression id="exp1" attribute="rsc1" operation="not_colocated"/>
+	  <expression id="exp1" attribute="rsc1" operation="#not_colocated"/>
 	</rule>
       </rsc_location>
     </constraints>

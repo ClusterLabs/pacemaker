@@ -20,7 +20,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc1" last_op="stop" rsc_state="stop_failed" op_status="4" rc_code="7">
-            <lrm_rsc_op id="rsc1" operation="stop" rsc_state="stop_failed" op_status="4" rc_code="7" call_id="1"/>
+            <lrm_rsc_op id="rsc1_stop_0" operation="stop" rsc_state="stop_failed" op_status="4" rc_code="7" call_id="1"/>
 	  </lrm_resource>
         </lrm_resources>
       </lrm>

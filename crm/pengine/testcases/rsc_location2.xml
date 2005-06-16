@@ -29,12 +29,12 @@
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="score1" score="10">
-	  <expression id="exp1" attribute="rsc2" operation="colocated"/>
+	  <expression id="exp1" attribute="rsc2" operation="#colocated"/>
 	</rule>
       </rsc_location>
       <rsc_location id="run_rsc2" rsc="rsc2">
 	<rule id="score1" score="10">
-	  <expression id="exp1" attribute="rsc2" operation="colocated"/>
+	  <expression id="exp1" attribute="rsc2" operation="#colocated"/>
 	</rule>
       </rsc_location>
     </constraints>

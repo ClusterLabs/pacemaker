@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.86 2005/06/15 13:39:44 andrew Exp $ */
+/* $Id: utils.c,v 1.87 2005/06/16 12:36:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -614,7 +614,7 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 
 action_t *
 custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
-	      pe_working_set_t *data_set)
+	      gboolean optional, pe_working_set_t *data_set)
 {
 	action_t *action = NULL;
 	GListPtr possible_matches = NULL;
@@ -664,7 +664,7 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 			action->dumped     = FALSE;
 			action->runnable   = TRUE;
 			action->processed  = FALSE;
-			action->optional   = FALSE;
+			action->optional   = TRUE;
 			action->seen_count = 0;
 			
 			action->extra = g_hash_table_new_full(
@@ -688,7 +688,13 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 			crm_debug_4("Action %d created", action->id);
 		}
 	}
-		
+
+	if(optional == FALSE) {
+		crm_debug_2("Action %d marked manditory", action->id);
+		action->optional = FALSE;
+	}
+	
+	
 	if(rsc != NULL) {
 		if(action->node == NULL) {
 			action->runnable = FALSE;
@@ -774,6 +780,53 @@ unpack_operation(
 	}
 	crm_debug_2("\tAction %s requires: %s", action->task, value);
 
+	value = NULL;
+	if(xml_obj != NULL) {
+		value = crm_element_value(xml_obj, "on_fail");
+	}
+	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
+		value = crm_element_value(action->rsc->xml, "on_stopfail");
+	}
+	
+	if(value == NULL) {
+
+	} else if(safe_str_eq(value, "fence")) {
+		action->on_fail = action_fail_fence;
+		value = "node fencing";
+	} else if(safe_str_eq(value, "stop")) {
+		action->on_fail = action_fail_stop;
+		value = "resource nothing";
+	} else if(safe_str_eq(value, "nothing")) {
+		action->on_fail = action_fail_nothing;
+		value = "nothing";
+	} else if(safe_str_eq(value, "ignore")) {
+		action->on_fail = action_fail_nothing;
+		value = "nothing";
+	} else {
+		pe_err("Resource %s: Unknown failure type (%s)",
+		       action->rsc->id, value);
+		value = NULL;
+	}
+	
+	/* defaults */
+	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
+		if(data_set->stonith_enabled) {
+			action->on_fail = action_fail_fence;		
+			value = "resource fence (default)";
+			
+		} else {
+			action->on_fail = action_fail_block;		
+			value = "resource block (default)";
+		}
+		
+	} else if(value == NULL) {
+		action->on_fail = action_fail_stop;		
+		value = "resource stop (default)";
+
+	}
+	crm_debug_2("\t%s failure results in: %s", action->task, value);
+	
+	
 	if(xml_obj == NULL) {
 		return;
 	}

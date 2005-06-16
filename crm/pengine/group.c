@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.24 2005/06/14 11:21:02 davidlee Exp $ */
+/* $Id: group.c,v 1.25 2005/06/16 12:36:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -163,22 +163,20 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		group_update_pseudo_status(rsc, child_rsc);
 		);
 
-	op = start_action(group_data->self, NULL);
-	op->optional = !group_data->child_starting;
+	op = start_action(group_data->self, NULL, !group_data->child_starting);
 	op->pseudo   = TRUE;
 
 	op = custom_action(group_data->self, started_key(rsc),
-			   CRMD_ACTION_STARTED, NULL, data_set);
-	op->optional = !group_data->child_starting;
+			   CRMD_ACTION_STARTED, NULL,
+			   !group_data->child_starting, data_set);
 	op->pseudo   = TRUE;
 
-	op = stop_action(group_data->self, NULL);
-	op->optional = !group_data->child_stopping;
+	op = stop_action(group_data->self, NULL, !group_data->child_stopping);
 	op->pseudo   = TRUE;
 	
 	op = custom_action(group_data->self, stopped_key(rsc),
-			   CRMD_ACTION_STOPPED, NULL, data_set);
-	op->optional = !group_data->child_stopping;
+			   CRMD_ACTION_STOPPED, NULL,
+			   !group_data->child_stopping, data_set);
 	op->pseudo   = TRUE;
 }
 

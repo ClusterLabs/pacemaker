@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.34 2005/06/15 13:39:42 andrew Exp $ */
+/* $Id: complex.c,v 1.35 2005/06/16 12:36:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -150,7 +150,6 @@ common_unpack(
 {
 	int stickiness = data_set->default_resource_stickiness;
 	const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *stopfail = crm_element_value(xml_obj, XML_RSC_ATTR_STOPFAIL);
 	const char *restart  = crm_element_value(xml_obj, XML_RSC_ATTR_RESTART);
 	const char *multiple = crm_element_value(xml_obj, "multiple_active");
 	const char *placement= crm_element_value(xml_obj, "resource_stickiness");
@@ -209,26 +208,6 @@ common_unpack(
 
 	
 	crm_debug_2("Options for %s", id);
-	if(stopfail == NULL && data_set->stonith_enabled) {
-		(*rsc)->stopfail_type = pesf_stonith;
-		crm_debug_2("\tFailed stop handling handling: fence (default)");
-
-	} else if(stopfail == NULL) {
-		(*rsc)->stopfail_type = pesf_block;
-		crm_debug_2("\tFailed stop handling handling: block (default)");
-		
-	} else if(safe_str_eq(stopfail, "ignore")) {
-		(*rsc)->stopfail_type = pesf_ignore;
-		crm_debug_2("\tFailed stop handling handling: ignore");
-		
-	} else if(safe_str_eq(stopfail, "fence")) {
-		(*rsc)->stopfail_type = pesf_stonith;
-		crm_debug_2("\tFailed stop handling handling: fence");
-
-	} else {
-		(*rsc)->stopfail_type = pesf_block;
-		crm_debug_2("\tFailed stop handling handling: block");
-	}
 	
 	if(safe_str_eq(restart, "restart")) {
 		(*rsc)->restart_type = pe_restart_restart;

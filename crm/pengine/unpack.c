@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.97 2005/06/13 12:35:53 andrew Exp $ */
+/* $Id: unpack.c,v 1.98 2005/06/16 12:36:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,9 +50,9 @@ gboolean unpack_lrm_rsc_state(
 
 gboolean add_node_attrs(crm_data_t * attrs, node_t *node, const char *dc_uuid);
 
-gboolean unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
-		       gboolean *running, gboolean *failed, int *max_call_id,
-		       pe_working_set_t *data_set);
+gboolean unpack_rsc_op(
+	resource_t *rsc, node_t *node, crm_data_t *xml_op,
+	gboolean *running, int *max_call_id, pe_working_set_t *data_set);
 
 gboolean determine_online_status(
 	crm_data_t * node_state, node_t *this_node, pe_working_set_t *data_set);
@@ -560,7 +560,6 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 	const char *rsc_state = NULL;
 
 	int max_call_id = -1;
-	gboolean failed  = FALSE;
 	gboolean running = FALSE;
 
 	resource_t *rsc   = NULL;
@@ -592,7 +591,6 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			continue;
 		}
 
-		failed  = FALSE;
 		running = FALSE;
 		max_call_id = -1;
 
@@ -613,8 +611,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		slist_iter(
 			rsc_op, crm_data_t, sorted_op_list, lpc,
 			unpack_rsc_op(rsc, node, rsc_op,
-				      &running, &failed, &max_call_id,
-				      data_set);
+				      &running, &max_call_id, data_set);
 			);
 
 		/* no need to free the contents */
@@ -622,11 +619,6 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 
 		if(running) {
 			native_add_running(rsc, node);
-			if(failed) {
-				action_t *stop = stop_action(rsc, node);
-				stop->optional = FALSE;
-				rsc->recover = TRUE;
-			}
 		}
 		);
 	
@@ -664,24 +656,30 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 gboolean
 unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
-	      gboolean *running, gboolean *failed, int *max_call_id,
-	      pe_working_set_t *data_set) 
+	      gboolean *running, int *max_call_id, pe_working_set_t *data_set) 
 {
+	const char *id          = NULL;
 	const char *task        = NULL;
  	const char *task_id     = NULL;
 	const char *task_status = NULL;
 
-	int task_status_i = -2;
 	int task_id_i = -1;
+	int task_status_i = -2;
 
+	action_t *action = NULL;
+	gboolean is_stop_action = FALSE;
+	
 	CRM_DEV_ASSERT(rsc    != NULL); if(crm_assert_failed) { return FALSE; }
 	CRM_DEV_ASSERT(node   != NULL); if(crm_assert_failed) { return FALSE; }
 	CRM_DEV_ASSERT(xml_op != NULL); if(crm_assert_failed) { return FALSE; }
 	
+	id = ID(xml_op);
 	task        = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
  	task_id     = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 
+	CRM_DEV_ASSERT(id != NULL);
+        if(crm_assert_failed) { return FALSE; }	
 
 	CRM_DEV_ASSERT(task != NULL);
         if(crm_assert_failed) { return FALSE; }
@@ -697,6 +695,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	CRM_DEV_ASSERT(task_status_i >= LRM_OP_PENDING);
 	if(crm_assert_failed) {return FALSE;}
 
+	if(safe_str_eq(task, CRMD_ACTION_STOP)) {
+		is_stop_action = TRUE;
+	}
+	
 	if(task_status_i != LRM_OP_PENDING) {
 
 		task_id_i = crm_atoi(task_id, "-1");
@@ -743,9 +745,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			 * For now this should do
 			 */
 
-			if(safe_str_eq(task, CRMD_ACTION_STOP)) {
+			if(is_stop_action) {
 				/* re-issue the stop and return */
-				stop_action(rsc, node);
+				stop_action(rsc, node, FALSE);
 				*running = TRUE;
 				rsc->recover = TRUE;
 				
@@ -761,13 +763,15 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 					/* do not specify the node, we may want
 					 * to start it elsewhere
 					 */
-					start_action(rsc, NULL);
+					start_action(rsc, NULL, FALSE);
 				}
 				
 			} else if(*running == TRUE) {
 				crm_debug_4("Re-issuing pending recurring task:"
 					  " %s for %s on %s",
 					  task, rsc->id, node->details->id);
+				custom_action(rsc, crm_strdup(id),
+					      task, node, FALSE, data_set);
 			}
 			break;
 		
@@ -775,72 +779,66 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			crm_debug_3("%s/%s completed on %s",
 				    rsc->id, task, node->details->uname);
 
-			if(safe_str_eq(task, CRMD_ACTION_STOP)) {
-				*failed  = FALSE;
+			if(is_stop_action) {
 				*running = FALSE;				
 
 			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
 				crm_debug_3("%s active on %s",
 					    rsc->id, node->details->uname);
 				*running = TRUE;
-
-			} else if(*running) {
-				/* assume its a recurring action */
-				action_t *mon = NULL;
-				const char *id = crm_element_value(
-					xml_op, XML_ATTR_ID);
-
-				CRM_DEV_ASSERT(id != NULL);
-				if(crm_assert_failed) { break; }
-
-				mon = custom_action(rsc, crm_strdup(id),
-						    task, node, data_set);
-
-				if(mon != NULL) {
-					mon->optional = TRUE;
-				}
 			}
 			
 			break;
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
+			crm_debug_2("Processing failed op (%s) for %s on %s",
+				  task, rsc->id, node->details->uname);
+
+			action = custom_action(
+				rsc, crm_strdup(id), task, NULL, TRUE, data_set);
+
+			if(action->on_fail == action_fail_nothing) {
+				/* pretend the op completed */
+				if(is_stop_action) {
+					*running = FALSE;
+				} else {
+					*running = TRUE;
+				}
+				break;
+			}
+
 			if(task_status_i == LRM_OP_NOTSUPPORTED
-			   || safe_str_eq(task, CRMD_ACTION_STOP)
+			   || is_stop_action
 			   || safe_str_eq(task, CRMD_ACTION_START) ) {
-				pe_warn("Handling failed %s for %s on %s",
+				crm_warn("Handling failed %s for %s on %s",
 					 task, rsc->id, node->details->uname);
 				rsc2node_new("dont_run__failed_stopstart",
 					     rsc, -INFINITY, FALSE, node,
 					     data_set);
 			}
 
-			crm_debug_2("Processing last op (%s) for %s on %s",
-				  task, rsc->id, node->details->uname);
-
-			if(safe_str_neq(task, CRMD_ACTION_STOP)) {
-				*failed = TRUE;				
-				*running = TRUE;				
-
-			} else if(rsc->stopfail_type == pesf_stonith) {
+			if(action->on_fail == action_fail_fence) {
 				/* treat it as if it is still running
 				 * but also mark the node as unclean
 				 */
 				rsc->unclean = TRUE;
 				node->details->unclean = TRUE;
-				*running = TRUE;				
-
-			} else if(rsc->stopfail_type == pesf_block) {
+				stop_action(rsc, node, FALSE);
+				*running = TRUE;
+				
+			} else if(action->on_fail == action_fail_block) {
 				/* let this depend on the stop action
 				 * which will fail but make sure the
 				 * transition continues...
 				 */
-				*running = TRUE;				
 				rsc->unclean = TRUE;
-
-			} else { /* pretend the stop completed */
-				*running = FALSE;
-			}
+				*running = TRUE;
+				
+			} else if(action->on_fail == action_fail_stop) {
+				*running = TRUE;
+				stop_action(rsc, node, FALSE);
+			} 
 			break;
 		case LRM_OP_CANCELLED:
 			/* do nothing?? */

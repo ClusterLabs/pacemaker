@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.48 2005/06/14 11:21:02 davidlee Exp $ */
+/* $Id: native.c,v 1.49 2005/06/16 12:36:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -215,11 +215,12 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 	char *key = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
+	
 	if(node == NULL || !node->details->online || node->details->unclean) {
 		crm_debug_3("Not creating recurring actions");
 		return;
 	}
-	
+
 	xml_child_iter(
 		rsc->ops_xml, operation, "op",
 
@@ -227,7 +228,7 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		value = crm_element_value(operation, "interval");
 
 		key = generate_op_key(rsc->id, name, crm_get_msec(value));
-		mon = custom_action(rsc, key, name, node, data_set);
+		mon = custom_action(rsc, key, name, node, start->optional, data_set);
 		
 		if(start != NULL) {
 			custom_action_order(rsc, start_key(rsc), NULL,
@@ -250,7 +251,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	
 	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
-		start = start_action(rsc, chosen);
+		start = start_action(rsc, chosen, TRUE);
 		if(start->runnable && data_set->have_quorum == FALSE
 		   && data_set->no_quorum_policy != no_quorum_ignore) {
 			crm_warn("Start resource %s\t(%s) (cancelled : quorum)",
@@ -259,6 +260,8 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		} else {
 			crm_info("Start resource %s\t(%s)",
 				 rsc->id, chosen->details->uname);
+			start->optional = FALSE;
+			start->rsc->start_pending = TRUE;
 		}
 		
 		
@@ -273,7 +276,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				
 				crm_info("Stop  resource %s\t(%s) (recovery)",
 					 rsc->id, node->details->uname);
-				stop = stop_action(rsc, node);
+				stop = stop_action(rsc, node, FALSE);
 				);
 		}
 		
@@ -281,7 +284,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 			/* if one of the "stops" is for a node outside
 			 * our partition, then this will block anyway
 			 */
-			start = start_action(rsc, chosen);
+			start = start_action(rsc, chosen, FALSE);
 			if(start->runnable) {
 				crm_info("Recover resource %s\t(%s)",
 					 rsc->id, chosen->details->uname);
@@ -311,35 +314,41 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		if(chosen == NULL) {
 			crm_info("Stop  resource %s\t(%s)",
 				 rsc->id, node->details->uname);
-			stop_action(rsc, node);
+			stop_action(rsc, node, FALSE);
 
 		} else if(safe_str_eq(node->details->id, chosen->details->id)) {
-			stop = stop_action(rsc, node);
-			start = start_action(rsc, chosen);
+			stop = stop_action(rsc, node, TRUE);
+			start = start_action(rsc, chosen, TRUE);
 
 			if(start->runnable == FALSE) {
 				crm_info("Stop  resource %s\t(%s)",
 					 rsc->id, node->details->uname);
+				stop->optional = FALSE;
 
 			} else if(rsc->recover) {
 				crm_info("Restart resource %s\t(%s)",
 					 rsc->id, node->details->uname);
 				/* make the restart required */
 				order_stop_start(rsc, rsc, pe_ordering_manditory);
+				start->optional = FALSE;
+				stop->optional = FALSE;
+
 			} else {
 				crm_info("Leave resource %s\t(%s)",
 					 rsc->id, node->details->uname);
 
-				if(rsc->start_pending == FALSE) {
-					start->optional = TRUE;
-				}	
-				stop->optional = TRUE;
+				if(stop->optional == FALSE) {
+ 					start->optional = FALSE;
+
+				} else if(rsc->start_pending) { 
+ 					start->optional = FALSE;
+ 				}
 			}
 			
 		} else {
 			/* move */
-			stop = stop_action(rsc, node);
-			start = start_action(rsc, chosen);
+			stop = stop_action(rsc, node, FALSE);
+			start = start_action(rsc, chosen, FALSE);
 
 			if(start->runnable) {
 				crm_info("Move  resource %s\t(%s -> %s)", rsc->id,

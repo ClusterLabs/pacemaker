@@ -30,7 +30,7 @@
       <rsc_colocation id="not_same_1" from="rsc1" to="rsc2" score="-INFINITY"/>
       <rsc_location id="run_rsc2" rsc="rsc2">
 	<rule id="score1" score="10">
-	  <expression id="exp1" attribute="rsc1" operation="colocated"/>
+	  <expression id="exp1" attribute="rsc1" operation="#colocated"/>
 	</rule>
       </rsc_location>
     </constraints>

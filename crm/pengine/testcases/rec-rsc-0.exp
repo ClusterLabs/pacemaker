@@ -1,7 +1,7 @@
  <transition_graph global_timeout="60s" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="1" rsc_id="rsc1" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="2" rsc_id="rsc1" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <resource id="rsc1" class="heartbeat" type="apache"/>
          <attributes/>
        </rsc_op>
@@ -10,7 +10,7 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="2" rsc_id="rsc1" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+       <rsc_op id="3" rsc_id="rsc1" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <resource id="rsc1" class="heartbeat" type="apache"/>
          <attributes/>
        </rsc_op>

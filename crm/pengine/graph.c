@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.51 2005/06/15 13:39:43 andrew Exp $ */
+/* $Id: graph.c,v 1.52 2005/06/16 12:36:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -116,7 +116,7 @@ update_action(action_t *action)
 			if(other->action->runnable == FALSE) {
 				crm_debug_2("Action %d already un-runnable",
 					  other->action->id);
-			} else {
+			} else if(action->optional == FALSE) {
 				other->action->runnable = FALSE;
 				crm_debug_2("Marking action %d un-runnable"
 					  " because of %d",
@@ -300,20 +300,21 @@ stonith_constraints(node_t *node,
 			crm_debug_4("Adding stonith (%d) as an input to stop",
 				  stonith_op->id);
 			
-		} else if((rsc->unclean || node->details->unclean)
-			  && rsc->stopfail_type == pesf_block) {
-			/* depend on the stop action which will fail */
-			pe_err("SHARED RESOURCE %s WILL REMAIN BLOCKED"
-				 " ON NODE %s UNTIL %s",
-				rsc->id, node->details->uname,
-				data_set->stonith_enabled?"QUORUM RETURNS":"CLEANED UP MANUALLY");
-			continue;
+/* 		} else if((rsc->unclean || node->details->unclean) */
+/* 			  && rsc->stopfail_type == pesf_block) { */
 			
-		} else if((rsc->unclean || node->details->unclean)
-			  && rsc->stopfail_type == pesf_ignore) {
-			/* nothing to do here */
-			pe_err("SHARED RESOURCE %s IS NOT PROTECTED", rsc->id);
-			continue;
+/* 			/\* depend on the stop action which will fail *\/ */
+/* 			pe_err("SHARED RESOURCE %s WILL REMAIN BLOCKED" */
+/* 				 " ON NODE %s UNTIL %s", */
+/* 				rsc->id, node->details->uname, */
+/* 				data_set->stonith_enabled?"QUORUM RETURNS":"CLEANED UP MANUALLY"); */
+/* 			continue; */
+			
+/* 		} else if((rsc->unclean || node->details->unclean) */
+/* 			  && rsc->stopfail_type == pesf_ignore) { */
+/* 			/\* nothing to do here *\/ */
+/* 			pe_err("SHARED RESOURCE %s IS NOT PROTECTED", rsc->id); */
+/* 			continue; */
 		}
 		);
 	

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.68 2005/06/15 13:56:03 andrew Exp $ */
+/* $Id: stages.c,v 1.69 2005/06/16 12:36:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -265,7 +265,7 @@ stage6(pe_working_set_t *data_set)
 			
 			down_op = custom_action(
 				NULL, crm_strdup(CRM_OP_SHUTDOWN),
-				CRM_OP_SHUTDOWN, node, data_set);
+				CRM_OP_SHUTDOWN, node, FALSE, data_set);
 			down_op->runnable = TRUE;
 			
 			shutdown_constraints(
@@ -286,7 +286,7 @@ stage6(pe_working_set_t *data_set)
 
 			stonith_op = custom_action(
 				NULL, crm_strdup(CRM_OP_FENCE),
-				CRM_OP_FENCE, node, data_set);
+				CRM_OP_FENCE, node, FALSE, data_set);
 			stonith_op->runnable = TRUE;
 
 			add_hash_param(

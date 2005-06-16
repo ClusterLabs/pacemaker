@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.26 2005/06/03 14:15:55 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.27 2005/06/16 12:36:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -108,16 +108,17 @@ extern enum action_tasks text2task(const char *task);
 extern crm_data_t *find_rsc_op_entry(resource_t *rsc, const char *key);
 
 extern action_t *custom_action(
-	resource_t *rsc, char *key, const char *task, node_t *on_node,
-	pe_working_set_t *data_set);
+	resource_t *rsc, char *key, const char *task,
+	node_t *on_node, gboolean optional, pe_working_set_t *data_set);
 
-#define stop_action(rsc, node) custom_action(			\
-		rsc, stop_key(rsc), CRMD_ACTION_STOP, node, data_set)
+#define stop_action(rsc, node, optional) custom_action(			\
+		rsc, stop_key(rsc), CRMD_ACTION_STOP, node, optional, data_set);
+		
 #define stopped_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
 #define stop_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOP, 0)
 
-#define start_action(rsc, node) custom_action(		\
-		rsc, start_key(rsc), CRMD_ACTION_START, node, data_set)
+#define start_action(rsc, node, optional) custom_action(		\
+		rsc, start_key(rsc), CRMD_ACTION_START, node, optional, data_set)
 #define started_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STARTED, 0)
 #define start_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_START, 0)
 

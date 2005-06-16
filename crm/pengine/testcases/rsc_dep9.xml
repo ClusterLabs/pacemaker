@@ -43,12 +43,12 @@
     <constraints>
       <rsc_location id="same_1_2" rsc="rsc1">
         <rule id="colocate_1_2" score="INFINITY">
-          <expression id="exp1" attribute="rsc2" operation="colocated"/>
+          <expression id="exp1" attribute="rsc2" operation="#colocated"/>
         </rule>
       </rsc_location>
       <rsc_location id="same_3_4" rsc="rsc3">
         <rule id="colocate_3_4" score="INFINITY">
-          <expression id="exp2" attribute="rsc4" operation="colocated"/>
+          <expression id="exp2" attribute="rsc4" operation="#colocated"/>
         </rule>
       </rsc_location>
     </constraints>

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.69 2005/06/13 12:35:50 andrew Exp $ */
+/* $Id: pengine.h,v 1.70 2005/06/16 12:36:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -208,7 +208,6 @@ struct resource_s {
 		resource_object_functions_t *fns;
 
 		enum rsc_recovery_type recovery_type;
-		enum pe_stop_fail      stopfail_type;
 		enum pe_restart        restart_type;
 
 		float	 priority; 
@@ -236,6 +235,13 @@ struct action_wrapper_s
 		action_t *action;
 };
 
+enum action_fail_response {
+	action_fail_nothing,
+	action_fail_block,
+	action_fail_stop,
+	action_fail_fence
+};
+
 
 struct action_s 
 {
@@ -253,6 +259,7 @@ struct action_s
 		gboolean optional;
 		gboolean failure_is_fatal;
 		enum rsc_start_requirement needs;
+		enum action_fail_response  on_fail;
 
 		gboolean dumped;
 		gboolean processed;

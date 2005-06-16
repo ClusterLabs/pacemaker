@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.5 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: rules.c,v 1.6 2005/06/16 12:36:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,13 +51,13 @@ typedef struct native_variant_data_s
 enum expression_type
 find_expression_type(const char *attr, const char *op, const char *value) 
 {
-	if(safe_str_eq(op, "colocated")
-	   || safe_str_eq(op, "not_colocated")) {
-		return coloc_expr;
-
-	} else if(safe_str_eq(attr, "uname")
-		  || safe_str_eq(attr, "id")) {
+	if(safe_str_eq(attr, "#uname")
+	   || safe_str_eq(attr, "#id")) {
 		return loc_expr;		
+
+	} else if(safe_str_eq(op, "#colocated")
+		  || safe_str_eq(op, "#not_colocated")) {
+/* 		return coloc_expr; */
 	}
 	
 	return attr_expr;
@@ -187,7 +187,7 @@ coloc_expression(const char *attr, const char *op, const char *value,
 		return FALSE;
 	}
 	
-	if(safe_str_eq(op, "colocated") && node != NULL) {
+	if(safe_str_eq(op, "#colocated") && node != NULL) {
 		GListPtr rsc_list = node->details->running_rsc;
 		slist_iter(
 			rsc, resource_t, rsc_list, lpc2,
@@ -196,10 +196,10 @@ coloc_expression(const char *attr, const char *op, const char *value,
 			}
 			);
 		
-	} else if(node == NULL && safe_str_eq(op, "not_colocated")) {
+	} else if(node == NULL && safe_str_eq(op, "#not_colocated")) {
 		accept = TRUE;
 
-	} else if(safe_str_eq(op, "not_colocated")) {
+	} else if(safe_str_eq(op, "#not_colocated")) {
 		GListPtr rsc_list = node->details->running_rsc;
 		accept = TRUE;
 		slist_iter(

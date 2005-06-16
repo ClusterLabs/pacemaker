@@ -20,7 +20,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc1" last_op="monitor" rsc_state="monitor_failed" op_status="4" rc_code="7">
-            <lrm_rsc_op id="rsc1" operation="monitor" rsc_state="monitor_failed" op_status="4" rc_code="7" call_id="1"/>
+            <lrm_rsc_op id="rsc1_monitor_1" operation="monitor" rsc_state="monitor_failed" op_status="4" rc_code="7" call_id="1"/>
 	  </lrm_resource>
         </lrm_resources>
       </lrm>
