@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.35 2005/06/15 10:12:25 andrew Exp $ */
+/* $Id: utils.c,v 1.36 2005/06/16 12:42:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -187,16 +187,17 @@ send_complete(const char *text, crm_data_t *msg,
 void
 print_state(int log_level)
 {
+	gboolean first_synapse = TRUE;
+	
 	if(graph == NULL && log_level > LOG_DEBUG) {
 		crm_debug("## Empty transition graph ##");
 		return;
 	}
 
-	crm_log_maybe(log_level, "###########");
-
 	slist_iter(
 		synapse, synapse_t, graph, lpc,
 
+		first_synapse = FALSE;
 		crm_log_maybe(log_level, "Synapse %d %s", synapse->id,
 			      synapse->confirmed?"was confirmed":synapse->complete?"was executed":"is pending");
 
@@ -215,7 +216,10 @@ print_state(int log_level)
 		
 		);
 	
-	crm_log_maybe(log_level, "###########");
+	if(first_synapse && log_level > LOG_DEBUG) {
+		crm_debug("## Empty transition graph ##");
+		return;
+	}
 }
 
 void

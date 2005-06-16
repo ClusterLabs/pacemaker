@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.37 2005/06/16 08:10:26 andrew Exp $ */
+/* $Id: callbacks.c,v 1.38 2005/06/16 12:42:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -85,7 +85,7 @@ te_update_diff(const char *event, HA_Message *msg)
 		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
 
 		if(change_set != NULL) {
-			crm_debug("Checking status changes");
+			crm_debug_2("Checking status changes");
 			section=get_object_root(XML_CIB_TAG_STATUS,change_set);
 		}
 		if(section != NULL && extract_event(section) == FALSE) {
@@ -94,7 +94,7 @@ te_update_diff(const char *event, HA_Message *msg)
 			free_xml(diff);
 			return;
 		}
-		crm_debug("Checking change set: %s", set_name);
+		crm_debug_2("Checking change set: %s", set_name);
 		aborted = need_abort(change_set);
 	}
 	
@@ -103,7 +103,7 @@ te_update_diff(const char *event, HA_Message *msg)
 		crm_data_t *change_set = find_xml_node(diff, set_name, FALSE);
 		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
 
-		crm_debug("Checking change set: %s", set_name);
+		crm_debug_2("Checking change set: %s", set_name);
 		aborted = need_abort(change_set);
 	}
 

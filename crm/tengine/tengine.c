@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.82 2005/06/16 08:12:12 andrew Exp $ */
+/* $Id: tengine.c,v 1.83 2005/06/16 12:42:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -155,6 +155,11 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	update_event = crm_element_value(event, XML_ATTR_ID);
 	op_status    = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
 	magic        = crm_element_value(event, "transition_magic");
+
+	if(magic == NULL) {
+		crm_debug_4("Skipping \"non-change\"");
+		return -3;
+	}
 	
 	this_action = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 	this_node   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
@@ -186,7 +191,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		op_status_i = atoi(op_status);
 	}
 
-	if(magic != NULL && (op_status == NULL || transition == NULL)) {
+	if(op_status == NULL || transition == NULL) {
 		char *alt_status     = NULL;
 		char *alt_transition = NULL;
 		decodeNVpair(magic, ':', &alt_transition, &alt_status);
@@ -205,14 +210,6 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 			crm_err("Transition details not found");
 			crm_log_message(LOG_ERR, event);
 		}
-		
-	} else if(magic == NULL && match->complete) {
-		crm_debug("Ignoring previously processed update");
-		return -3;
-
-	} else if(magic == NULL) {
-		crm_err("Magic not found");
-		crm_log_message(LOG_ERR, event);
 	}
 	
 	if(transition_i == -1) {
@@ -267,7 +264,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 			return -2;
 	}
 	
-	te_log_action(LOG_DEBUG, "Action %d confirmed", match->id);
+	te_log_action(LOG_INFO, "Action %d confirmed", match->id);
 	match->complete = TRUE;
 	return match->id;
 }
