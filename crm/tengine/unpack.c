@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.39 2005/06/15 13:39:46 andrew Exp $ */
+/* $Id: unpack.c,v 1.40 2005/06/16 08:12:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -367,7 +367,7 @@ create_shutdown_event(const char *node, int op_status)
 	crm_data_t *event = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	char *code = crm_itoa(op_status);
 
-	crm_xml_add(event, XML_LRM_ATTR_TARGET, node);
+	crm_xml_add(event, XML_LRM_ATTR_TARGET_UUID, node);
 /*	event_rsc    = crm_xml_add(event, XML_ATTR_ID); */
 	crm_xml_add(event, XML_LRM_ATTR_RC, "0");
 	crm_xml_add(event, XML_LRM_ATTR_LASTOP, XML_CIB_ATTR_SHUTDOWN);

@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.81 2005/06/15 13:43:08 andrew Exp $ */
+/* $Id: tengine.c,v 1.82 2005/06/16 08:12:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -279,7 +279,7 @@ match_down_event(const char *target, const char *filter, int rc)
 	const char *this_action = NULL;
 	const char *this_node   = NULL;
 	action_t *match = NULL;
-	
+
 	slist_iter(
 		synapse, synapse_t, graph, lpc,
 
@@ -295,29 +295,32 @@ match_down_event(const char *target, const char *filter, int rc)
 			this_action = crm_element_value(
 				action->xml, XML_LRM_ATTR_TASK);
 
-			if(filter != NULL && safe_str_neq(this_action, filter)) {
+/* 			if(crm_element_value(action->xml, XML_LRM_ATTR_RSCID)) { */
+/* 				continue; */
+				
+/* 			} else */
+				if(filter != NULL && safe_str_neq(this_action, filter)) {
 				continue;
 			}
+			
 			
 			if(safe_str_eq(this_action, CRM_OP_FENCE)) {
 				action_args = find_xml_node(
 					action->xml, XML_TAG_ATTRS, TRUE);
 				this_node = crm_element_value(
-					action_args, XML_LRM_ATTR_TARGET);
+					action_args, XML_LRM_ATTR_TARGET_UUID);
 
 			} else if(safe_str_eq(this_action, CRM_OP_SHUTDOWN)) {
-				   crm_element_value(
-					   action->xml, XML_LRM_ATTR_TASK);
 				this_node = crm_element_value(
-					action->xml, XML_LRM_ATTR_TARGET);
+					action->xml, XML_LRM_ATTR_TARGET_UUID);
 			} else {
-				crm_info("Action %d : Bad action %s",
-					 action->id, this_action);
+				crm_err("Action %d : Bad action %s",
+					action->id, this_action);
 				continue;
 			}
 			
 			if(safe_str_neq(this_node, target)) {
-				crm_info("Action %d : Node mismatch: %s",
+				crm_debug("Action %d : Node mismatch: %s",
 					 action->id, this_node);
 				continue;
 			}
