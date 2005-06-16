@@ -1148,10 +1148,10 @@ get_object_root(const char *object_type, crm_data_t *the_root)
 	}
 
 	if (tmp_node == NULL) {
-		crm_debug("Section [%s [%s]] not present in %s",
-			  node_stack[0],
-			  node_stack[1]?node_stack[1]:"",
-			  crm_element_name(the_root));
+		crm_debug_2("Section [%s [%s]] not present in %s",
+			    node_stack[0],
+			    node_stack[1]?node_stack[1]:"",
+			    crm_element_name(the_root));
 	}
 	return tmp_node;
 }
