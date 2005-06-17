@@ -109,6 +109,14 @@ class RemoteExec:
         self.lastrc = p.wait()
         return result
 
+    def readlines(self, *args):
+        p = self.popen(args[0], args[1])
+        p.tochild.close()
+        result = p.fromchild.readlines()
+        p.fromchild.close()
+        self.lastrc = p.wait()
+        return result
+
     def cp(self, *args):
         '''Perform a remote copy'''
         cpstring=self.CpCommand
