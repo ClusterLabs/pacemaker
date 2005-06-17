@@ -30,6 +30,7 @@ hard_SCRIPTS	=			\
 			CTStests.py	\
 			CM_LinuxHAv2.py	\
 			extracttests.py \
-                        OCFIPraTest.py
+                        OCFIPraTest.py  \
+			haresources2cib.py
 
 hard_DATA =		README
