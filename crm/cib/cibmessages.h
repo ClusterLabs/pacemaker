@@ -1,4 +1,4 @@
-/* $Id: cibmessages.h,v 1.7 2005/06/13 11:54:53 andrew Exp $ */
+/* $Id: cibmessages.h,v 1.8 2005/06/17 11:07:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,6 +69,10 @@ extern enum cib_errors cib_process_sync(
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer);
 
 extern enum cib_errors cib_process_sync_one(
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer);
+
+extern enum cib_errors cib_process_delete(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer);
 

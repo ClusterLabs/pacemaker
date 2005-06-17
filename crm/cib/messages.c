@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.42 2005/06/15 19:18:30 andrew Exp $ */
+/* $Id: messages.c,v 1.43 2005/06/17 11:07:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -425,6 +425,7 @@ cib_process_diff(
 
 		ha_msg_add(sync_me, F_TYPE, "cib");
 		ha_msg_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
+		ha_msg_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
 
 		if(send_ha_message(hb_conn, sync_me, NULL) == FALSE) {
 			result = cib_not_connected;
@@ -510,6 +511,30 @@ cib_process_replace(
 
 	return result;
 }
+
+enum cib_errors 
+cib_process_delete(
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
+{
+	crm_debug("Processing \"%s\" event", op);
+
+	if(input == NULL) {
+		crm_err("Cannot perform modification with no data");
+		return cib_NOOBJECT;
+	}
+	
+	*result_cib = copy_xml(existing_cib);
+	
+	crm_validate_data(input);
+	crm_validate_data(*result_cib);
+
+	if(delete_xml_child(NULL, *result_cib, input) == FALSE) {
+		return cib_NOTEXISTS;		
+	}
+	return cib_ok;
+}
+
 
 enum cib_errors 
 cib_process_modify(
