@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.62 2005/06/17 11:09:36 andrew Exp $ */
+/* $Id: callbacks.c,v 1.63 2005/06/17 15:16:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -353,7 +353,7 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 	}
 	did_disconnect = cib_process_disconnect(channel, cib_client);	
 	if(did_disconnect) {
-		crm_debug("Client disconnected");
+		crm_debug_2("Client disconnected");
 	}
 	
 	return did_disconnect;
@@ -612,7 +612,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		
 		crm_debug_3("Sending callback to request originator");
 		if(client_obj != NULL) {
-			crm_debug("Sending %ssync response to %s %s",
+			crm_debug_2("Sending %ssync response to %s %s",
 				  (call_options & cib_sync_call)?"":"an a-",
 				  client_obj->id,
 				  from_peer?"(originator of delegated request)":"");
@@ -662,7 +662,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		 *   send via HA to other nodes
 		 */
 		HA_Message *op_bcast = cib_msg_copy(request, FALSE);
-		crm_debug("Sending update diff to everyone");
+		crm_debug_2("Sending update diff to everyone");
 		ha_msg_add(op_bcast, F_CIB_ISREPLY, originator);
 		ha_msg_add(op_bcast, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 		ha_msg_mod(op_bcast, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
@@ -683,7 +683,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 			crm_debug("Request not broadcast: inhibited");
 		}
 		if(cib_server_ops[call_type].modifies_cib == FALSE) {
-			crm_debug("Request not broadcast: R/O call");
+			crm_debug_2("Request not broadcast: R/O call");
 		}
 		if(rc != cib_ok) {
 			crm_err("Request not broadcast: call failed: %s",
@@ -1367,7 +1367,7 @@ can_write(int flags)
 		return TRUE;		
 	}
 	if((flags & cib_quorum_override) != 0) {
-		crm_debug("Overriding \"no quorum\" condition");
+		crm_debug_2("Overriding \"no quorum\" condition");
 		return TRUE;
 	}
 	return FALSE;

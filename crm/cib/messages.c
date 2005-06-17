@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.43 2005/06/17 11:07:16 andrew Exp $ */
+/* $Id: messages.c,v 1.44 2005/06/17 15:16:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,7 +76,7 @@ cib_process_default(
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
 	enum cib_errors result = cib_ok;
-	crm_debug("Processing \"%s\" event", op);
+	crm_debug_2("Processing \"%s\" event", op);
 	if(answer != NULL) { *answer = NULL; }	
 
 	if(op == NULL) {
@@ -99,7 +99,7 @@ cib_process_quit(
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
 	enum cib_errors result = cib_ok;
-	crm_debug("Processing \"%s\" event", op);
+	crm_debug_2("Processing \"%s\" event", op);
 
 	crm_warn("The CRMd has asked us to exit... complying");
 	exit(0);
@@ -113,7 +113,7 @@ cib_process_readwrite(
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
 	enum cib_errors result = cib_ok;
-	crm_debug("Processing \"%s\" event", op);
+	crm_debug_2("Processing \"%s\" event", op);
 
 	if(safe_str_eq(op, CIB_OP_ISMASTER)) {
 		if(cib_is_master == TRUE) {
@@ -148,7 +148,7 @@ cib_process_ping(
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
 	enum cib_errors result = cib_ok;
-	crm_debug("Processing \"%s\" event", op);
+	crm_debug_2("Processing \"%s\" event", op);
 	if(answer != NULL) {
 		*answer = createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
 	}
@@ -164,7 +164,7 @@ cib_process_query(
 	crm_data_t *obj_root = NULL;
 	enum cib_errors result = cib_ok;
 
-	crm_debug("Processing \"%s\" event for section=%s",
+	crm_debug_2("Processing \"%s\" event for section=%s",
 		  op, crm_str(section));
 
 	if(answer != NULL) { *answer = NULL; }	
@@ -216,7 +216,7 @@ cib_process_erase(
 {
 	enum cib_errors result = cib_ok;
 
-	crm_debug("Processing \"%s\" event", op);
+	crm_debug_2("Processing \"%s\" event", op);
 	if(answer != NULL) { *answer = NULL; }	
 
 	*result_cib = createEmptyCib();
@@ -242,7 +242,7 @@ cib_process_bump(
 {
 	enum cib_errors result = cib_ok;
 
-	crm_debug("Processing \"%s\" event for epoche=%s",
+	crm_debug_2("Processing \"%s\" event for epoche=%s",
 		  op, crm_str(crm_element_value(the_cib, XML_ATTR_GENERATION)));
 	
 	if(answer != NULL) { *answer = NULL; }	
@@ -331,7 +331,7 @@ cib_process_diff(
 	int diff_del_epoche  = 0;
 	int diff_del_admin_epoche = 0;
 
-	crm_debug("Processing \"%s\" event", op);
+	crm_debug_2("Processing \"%s\" event", op);
 	
 	value = crm_element_value(existing_cib, XML_ATTR_GENERATION);
 	this_epoche = atoi(value?value:"0");
@@ -448,7 +448,7 @@ cib_process_replace(
 	gboolean verbose       = FALSE;
 	enum cib_errors result = cib_ok;
 	
-	crm_debug("Processing \"%s\" event for section=%s", op, crm_str(section));
+	crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
 	if(answer != NULL) { *answer = NULL; }	
 
 	if (options & cib_verbose) {
@@ -517,7 +517,7 @@ cib_process_delete(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
-	crm_debug("Processing \"%s\" event", op);
+	crm_debug_2("Processing \"%s\" event", op);
 
 	if(input == NULL) {
 		crm_err("Cannot perform modification with no data");
@@ -546,7 +546,7 @@ cib_process_modify(
 	enum cib_errors result = cib_ok;
 	int cib_update_op = CIB_UPDATE_OP_NONE;
 
-	crm_debug("Processing \"%s\" event for section=%s", op, crm_str(section));
+	crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
 
 	failed  = create_xml_node(NULL, XML_TAG_FAILED);
 
