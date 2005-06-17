@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.51 2005/06/15 13:39:35 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.52 2005/06/17 11:15:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -543,7 +543,7 @@ do_work(ll_cluster_t * hb_cluster)
 void
 crmd_ipc_connection_destroy(gpointer user_data)
 {
-	crm_err("Connection to CRMd was terminated");
+	crm_info("Connection to CRMd was terminated");
 	exit(1);
 }
 
