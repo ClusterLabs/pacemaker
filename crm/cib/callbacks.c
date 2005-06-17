@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.61 2005/06/15 13:39:36 andrew Exp $ */
+/* $Id: callbacks.c,v 1.62 2005/06/17 11:09:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -102,7 +102,8 @@ cib_operation_t cib_server_ops[] = {
 	{CIB_OP_REPLACE,   TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_replace},
 	{CIB_OP_CREATE,    TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
 	{CIB_OP_UPDATE,    TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
-	{CIB_OP_DELETE,    TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
+	{CIB_OP_DELETE,    TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_delete},
+	{CIB_OP_DELETE_ALT,TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
 	{CIB_OP_QUERY,     FALSE,FALSE,FALSE,TRUE, FALSE,cib_process_query},
 	{CIB_OP_SYNC,      FALSE,TRUE, FALSE,TRUE, FALSE,cib_process_sync},
 	{CRM_OP_QUIT,	   FALSE,TRUE, FALSE,FALSE,FALSE,cib_process_quit},
@@ -524,7 +525,8 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		return;
 		
 	} else {
-		crm_warn("Nothing for us to do?");
+		crm_err("Nothing for us to do?");
+		crm_log_message_adv(LOG_ERR, "Peer[inbound]", request);
 		return;
 	}
 	crm_debug_3("Finished determining processing actions");
@@ -604,8 +606,8 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 			client_obj = g_hash_table_lookup(
 				client_list, client_id);
 		} else {
-			crm_err("No client to sent the response to."
-				"  F_CIB_CLIENTID not set.");
+			crm_debug("No client to sent the response to."
+				  "  F_CIB_CLIENTID not set.");
 		}
 		
 		crm_debug_3("Sending callback to request originator");
@@ -756,25 +758,38 @@ cib_process_command(const HA_Message *request, HA_Message **reply,
 	if(rc == cib_ok && safe_str_eq(op, CIB_OP_APPLY_DIFF)) {
 		crm_debug_4("Unpacking diff data in %s", F_CIB_UPDATE_DIFF);
 		input_fragment = get_message_xml(request, F_CIB_UPDATE_DIFF);
-		input = input_fragment;
 		if(global_update) {
 			call_options |= cib_force_diff;
 		}
 		
 	} else if(rc == cib_ok && safe_str_eq(op, CIB_OP_SYNC)) {
  		input_fragment = ha_msg_copy(request);
- 		input = input_fragment;
+		
+	} else if(rc == cib_ok && safe_str_eq(op, CIB_OP_SYNC_ONE)) {
+ 		input_fragment = ha_msg_copy(request);
 		
 	} else if(rc == cib_ok && cib_server_ops[call_type].needs_data) {
 		crm_debug_4("Unpacking data in %s", F_CIB_CALLDATA);
 		input_fragment = get_message_xml(request, F_CIB_CALLDATA);
+	}
+
+	/* extract the CIB from the fragment */
+	if(input_fragment != NULL
+	   && safe_str_eq(crm_element_name(input_fragment), XML_TAG_FRAGMENT)) {
 		input = find_xml_node(input_fragment, XML_TAG_CIB, TRUE);
+		
+	} else {
+		input = input_fragment;
+	}
+
+	/* grab the section specified for the command */
+	if(input != NULL && safe_str_eq(crm_element_name(input), XML_TAG_CIB)){
 		rc = revision_check(input, current_cib, call_options);
 		if(rc == cib_ok) {
 			input = get_object_root(section, input);
 		}
 	}
-
+	
 	if(cib_server_ops[call_type].modifies_cib) {
 		cib_pre_notify(
 			call_options, op,
