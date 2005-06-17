@@ -460,7 +460,7 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 
 void log_fsa_input(fsa_data_t *stored_msg)
 {
-	crm_debug("Processing queued input %d", stored_msg->id);
+	crm_debug_2("Processing queued input %d", stored_msg->id);
 	if(stored_msg->fsa_cause == C_CCM_CALLBACK) {
 		crm_debug_3("FSA processing CCM callback from %s",
 			    stored_msg->origin);

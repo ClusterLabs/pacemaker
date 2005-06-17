@@ -503,14 +503,14 @@ crmd_ccm_msg_callback(
 		fsa_have_quorum = FALSE;
 			
 	} else if(update_quorum)  {
-		crm_debug("Updating quorum after event %s",
-			  ccm_event_name(event));
+		crm_debug_2("Updating quorum after event %s",
+			    ccm_event_name(event));
 		fsa_have_quorum = TRUE;
 	}
 
 	if(trigger_transition) {
-		crm_debug("Scheduling transition after event %s",
-			  ccm_event_name(event));
+		crm_debug_2("Scheduling transition after event %s",
+			    ccm_event_name(event));
 		/* make sure that when we query the CIB that it has
 		 * the changes that triggered the transition
 		 */
@@ -529,8 +529,8 @@ crmd_ccm_msg_callback(
 		}
 	}
 	if(update_cache) {
-		crm_debug("Updating cache after event %s",
-			  ccm_event_name(event));
+		crm_debug_2("Updating cache after event %s",
+			    ccm_event_name(event));
 
 		crm_malloc0(event_data, sizeof(struct crmd_ccm_data_s));
 		if(event_data == NULL) { return; }

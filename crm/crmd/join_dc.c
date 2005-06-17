@@ -198,8 +198,6 @@ do_dc_join_req(long long action,
 		max_generation_xml = copy_xml(join_ack->xml);
 	}
 
-	crm_log_xml_debug(max_generation_xml, "Current max generation");	
-	
 	if(ack_nack_bool == FALSE) {
 		/* NACK this client */
 		ack_nack = CRMD_JOINSTATE_DOWN;
@@ -213,15 +211,15 @@ do_dc_join_req(long long action,
 	g_hash_table_insert(
 		integrated_nodes, crm_strdup(join_from), crm_strdup(ack_nack));
 
-	crm_debug("%u nodes have been integrated",
-		  g_hash_table_size(integrated_nodes));
+	crm_debug_2("%u nodes have been integrated",
+		    g_hash_table_size(integrated_nodes));
 	
 	g_hash_table_remove(welcomed_nodes, join_from);
 
 	if(check_join_state(cur_state, __FUNCTION__) == FALSE) {
 		/* dont waste time by invoking the PE yet; */
-		crm_debug("Still waiting on %d outstanding join acks",
-			  g_hash_table_size(welcomed_nodes));
+		crm_debug_2("Still waiting on %d outstanding join acks",
+			    g_hash_table_size(welcomed_nodes));
 	}
 	return I_NULL;
 }
@@ -389,7 +387,7 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 	crm_data_t *fragment = NULL;
 	const char *join_state = NULL;
 	
-	crm_debug("Processing ack from %s", join_from);
+	crm_debug_2("Processing ack from %s", join_from);
 
 	join_state = (const char *)
 		g_hash_table_lookup(finalized_nodes, join_from);
@@ -567,12 +565,12 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 gboolean
 check_join_state(enum crmd_fsa_state cur_state, const char *source)
 {
-	crm_debug("Invoked by %s in state: %s",
+	crm_debug_2("Invoked by %s in state: %s",
 		  source, fsa_state2string(cur_state));
 
 	if(cur_state == S_INTEGRATION) {
 		if(g_hash_table_size(welcomed_nodes) == 0) {
-			crm_info("Integration of %d peers complete: %s",
+			crm_debug("Integration of %d peers complete: %s",
 				 g_hash_table_size(integrated_nodes), source);
 			register_fsa_input_before(
 				C_FSA_INTERNAL, I_INTEGRATED, NULL);
@@ -586,7 +584,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 			
 		} else if(g_hash_table_size(integrated_nodes) == 0
 		   && g_hash_table_size(finalized_nodes) == 0) {
-			crm_info("Join process complete: %s", source);
+			crm_debug("Join process complete: %s", source);
 			register_fsa_input_later(
 				C_FSA_INTERNAL, I_FINALIZED, NULL);
 			
@@ -602,7 +600,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 				  g_hash_table_size(integrated_nodes));
 			
 		} else if(g_hash_table_size(finalized_nodes) != 0) {
-			crm_debug("Still waiting on %d confirmations",
+			crm_debug_2("Still waiting on %d confirmations",
 				  g_hash_table_size(finalized_nodes));
 		}
 		

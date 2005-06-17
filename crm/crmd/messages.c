@@ -91,9 +91,9 @@ register_fsa_input_adv(
 
 	last_data_id++;
 	
-	crm_debug("%s raised FSA input %d (%s) (cause=%s) %s data",
-		  raised_from, last_data_id, fsa_input2string(input),
-		  fsa_cause2string(cause), data?"with":"without");
+	crm_debug_2("%s raised FSA input %d (%s) (cause=%s) %s data",
+		    raised_from, last_data_id, fsa_input2string(input),
+		    fsa_cause2string(cause), data?"with":"without");
 	
 	if(input == I_WAIT_FOR_EVENT) {
 		do_fsa_stall = TRUE;

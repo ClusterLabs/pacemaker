@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.84 2005/06/15 13:39:40 andrew Exp $ */
+/* $Id: ccm.c,v 1.85 2005/06/17 18:44:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -167,11 +167,7 @@ do_ccm_event(long long action,
 	event = ccm_data->event;
 	oc = ccm_data->oc;
 	
-	crm_info("event=%s", ccm_event_name(event));
-	
-	if(CCM_EVENT_DETAIL /*constant condition*/ || CCM_EVENT_DETAIL_PARTIAL) {
-		ccm_event_detail(oc, event);
-	}
+	ccm_event_detail(oc, event);
 
 	if (OC_EV_MS_EVICTED == event) {
 		/* todo: drop back to S_PENDING instead */
@@ -207,8 +203,8 @@ do_ccm_event(long long action,
 				continue;
 				
 			} else if(safe_str_eq(uname, fsa_our_dc)) {
-				crm_info("Our DC node (%s) left the cluster",
-					uname);
+				crm_warn("Our DC node (%s) left the cluster",
+					 uname);
 				register_fsa_input(cause, I_ELECTION, NULL);
 			}
 		}
@@ -246,10 +242,10 @@ do_ccm_update_cache(long long action,
 	event = ccm_data->event;
 	oc = ccm_data->oc;
 
-	crm_info("Updating CCM cache after a \"%s\" event.", 
+	crm_debug_2("Updating CCM cache after a \"%s\" event.", 
 		 ccm_event_name(event));
 
-	crm_debug("instance=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
+	crm_debug_2("instance=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
 		  "new_idx=%d, old_idx=%d",
 		  oc->m_instance,
 		  oc->m_n_member,
@@ -287,8 +283,8 @@ do_ccm_update_cache(long long action,
 			crm_err("Plurality w/o Quorum (%d/%d nodes)",
 				oc->m_n_member, clsize);
 		} else {
-			crm_debug("Quorum(%s) and plurality (%d/%d) agree.",
-				  Q?"true":"false", oc->m_n_member, clsize);
+			crm_debug_2("Quorum(%s) and plurality (%d/%d) agree.",
+				    Q?"true":"false", oc->m_n_member, clsize);
 		}
 		
 	}
@@ -415,13 +411,15 @@ do_ccm_update_cache(long long action,
 				oc->m_array[offset+lpc].node_born_on;
 			
 			member->node_uname = NULL;
-			if(oc->m_array[offset+lpc].node_uname != NULL) {
-				member->node_uname =
-					crm_strdup(oc->m_array[offset+lpc].node_uname);
-			} else {
-				crm_err("Node %d had a NULL uname",
-					member->node_id);
+			CRM_DEV_ASSERT(oc->m_array[offset+lpc].node_uname != NULL);
+			
+			if(oc->m_array[offset+lpc].node_uname == NULL) {
+				continue;
 			}
+			
+			member->node_uname =
+				crm_strdup(oc->m_array[offset+lpc].node_uname);
+
 			g_hash_table_insert(
 				members, member->node_uname, member);	
 
@@ -434,11 +432,11 @@ do_ccm_update_cache(long long action,
 
 	tmp = fsa_membership_copy;
 	fsa_membership_copy = membership_copy;
-	crm_info("Updated membership cache with %d (%d new, %d lost) members",
-		 g_hash_table_size(fsa_membership_copy->members),
-		 g_hash_table_size(fsa_membership_copy->new_members),
-		 g_hash_table_size(fsa_membership_copy->dead_members));
-
+	crm_debug_2("Updated membership cache with %d (%d new, %d lost) members",
+		    g_hash_table_size(fsa_membership_copy->members),
+		    g_hash_table_size(fsa_membership_copy->new_members),
+		    g_hash_table_size(fsa_membership_copy->dead_members));
+	
 	/* Free the old copy */
 	if(tmp != NULL) {
 		if(tmp->members != NULL)
@@ -473,16 +471,17 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	member = FALSE;
 
 	crm_debug_2("-----------------------");
-	crm_info("trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
-	       "new_idx=%d, old_idx=%d",
-	       oc->m_instance,
-	       oc->m_n_member,
-	       oc->m_n_in,
-	       oc->m_n_out,
-	       oc->m_memb_idx,
-	       oc->m_in_idx,
-	       oc->m_out_idx);
-
+	crm_info("%s: trans=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
+		 "new_idx=%d, old_idx=%d",
+		 ccm_event_name(event),
+		 oc->m_instance,
+		 oc->m_n_member,
+		 oc->m_n_in,
+		 oc->m_n_out,
+		 oc->m_memb_idx,
+		 oc->m_in_idx,
+		 oc->m_out_idx);
+	
 #if !CCM_EVENT_DETAIL_PARTIAL
 	for(lpc=0; lpc < oc->m_n_member; lpc++) {
 		crm_info("\tCURRENT: %s [nodeid=%d, born=%d]",
@@ -600,7 +599,7 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 		
 	} else {
 		call_options = call_options|cib_inhibit_bcast;
-		crm_debug("Inhibiting bcast for CCM updates");
+		crm_debug_2("Inhibiting bcast for CCM updates");
 
 		if(fsa_membership_copy->members != NULL) {
 			g_hash_table_foreach(fsa_membership_copy->new_members,
@@ -631,10 +630,6 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	const char *node_uname = (const char*)key;
 	struct update_data_s* data = (struct update_data_s*)user_data;
 
-	if(safe_str_eq(data->state, XML_BOOLEAN_NO)) {
-		crm_info("Node %s has left the cluster", node_uname);
-	}
-	
 	crm_debug_2("%s processing %s (%s)",
 		  __FUNCTION__, node_uname, data->state);
 

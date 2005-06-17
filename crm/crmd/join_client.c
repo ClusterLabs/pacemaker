@@ -244,7 +244,7 @@ do_cl_join_result(long long action,
 	const char *welcome_from = cl_get_string(input->msg,F_CRM_HOST_FROM);
 
 	if(safe_str_neq(op, CRM_OP_JOIN_ACKNAK)) {
-		crm_debug("Ignoring op=%s message", op);
+		crm_debug_2("Ignoring op=%s message", op);
 		return I_NULL;
 	}
 	
@@ -271,7 +271,7 @@ do_cl_join_result(long long action,
 	/* send our status section to the DC */
 	crm_debug("c3) confirming join: %s",
 		  cl_get_string(input->msg, F_CRM_TASK));
-	crm_debug("Discovering local LRM status");
+	crm_debug_2("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
 		const char *join_id = ha_msg_value(input->msg, F_CRM_JOIN_ID);
@@ -280,7 +280,7 @@ do_cl_join_result(long long action,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 		ha_msg_add(reply, F_CRM_JOIN_ID, join_id);
 		
-		crm_debug("Sending local LRM status");
+		crm_debug_2("Sending local LRM status");
 		send_msg_via_ha(fsa_cluster_conn, reply);
 		if(AM_I_DC == FALSE) {
 			register_fsa_input(cause, I_NOT_DC, NULL);
