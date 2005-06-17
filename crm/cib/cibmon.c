@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.26 2005/06/14 10:47:55 davidlee Exp $ */
+/* $Id: cibmon.c,v 1.27 2005/06/17 11:08:19 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -454,7 +454,7 @@ cibmon_diff(const char *event, HA_Message *msg)
 	log_cib_diff(log_level, diff, op);
 	if(update != NULL) {
 		print_xml_formatted(
-			log_level+1, "raw_update", update, NULL);
+			log_level+2, "raw_update", update, NULL);
 	}
 	free_xml(diff);
 	free_xml(update);
