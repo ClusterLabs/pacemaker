@@ -496,6 +496,9 @@ class StonithTest(CTSTest):
 
         StonithWorked = self._reset(node)
 
+        if not StonithWorked:
+            return self.failure("Stonith didn't work")
+
         upwatch.setwatch()
 
         #        Look() and see if the machine went down
@@ -552,23 +555,31 @@ class StonithdTest(StonithTest):
         self.stop = StopTest(cm)
 
     def _reset(self, target_node):
-         
+
         if len(self.CM.Env["nodes"]) < 2:
             return self.skipped()
 
         init_node = self.CM.Env.RandomNode()
         while init_node == target_node:
             init_node = self.CM.Env.RandomNode()
- 
+
         if self.CM.ShouldBeStatus[target_node] == self.CM["down"]:
             if not self.start(target_node):
-                return self.failure("Node %s failed to start" % target_node)               
+                return self.failure("Node %s failed to start" % target_node)
 
         if self.CM.ShouldBeStatus[init_node] == self.CM["down"]:
             if not self.start(init_node):
-                return self.failure("Node %s failed to start" % init_node)               
+                return self.failure("Node %s failed to start" % init_node)
 
-        return self.CM.Env.ResetNode2(init_node, target_node)
+        StonithWorked = False
+        for tries in range(1,5):
+            fail_reasons = []
+            if self.CM.Env.ResetNode2(init_node, target_node, fail_reasons):
+                StonithWorked = True
+                break
+            for reason in fail_reasons:
+                self.CM.log(reason)
+        return StonithWorked
         
     def is_applicable(self):
 
