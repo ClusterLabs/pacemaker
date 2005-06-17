@@ -909,6 +909,195 @@ class StandbyTest(CTSTest):
 #        Register StandbyTest as a good test to run
 AllTestClasses.append(StandbyTest)
 
+
+#######################################################################
+class StandbyTest2(CTSTest):
+#######################################################################
+    '''Standby with CRM of HA release 2'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="standby2"
+        self.standby_cmd_pat    = "/usr/lib/heartbeat/crmadmin -s %s"
+        self.active_cmd_pat     = "/usr/lib/heartbeat/crmadmin -a %s"
+        self.check_cib_cmd_pat  = "/usr/lib/heartbeat/cibadmin -Ql -h %s -o node"
+        self.list_rsc_cmd       = "/usr/lib/heartbeat/crmadmin -R"
+        self.check_rsc_cmd_pat  = "/usr/lib/heartbeat/crmadmin -W %s"
+        self.get_uuid_cmd       = "/usr/lib/heartbeat/crmadmin -N"
+
+        self.standby_on         = '<nvpair name="standby" value="on"/>'
+        #self.uuid_of_node       = ''
+
+        self.start = StartTest(cm)
+        self.startall = SimulStartLite(cm)
+
+    def _get_node_uuid(self, node):
+        lines = self.CM.rsh.readlines(node, self.get_uuid_cmd)
+        for line in lines:
+            m = re.search(r'%s.+\((.+)\)' % node, line)
+            if m:
+                return m.group(1)
+
+    def _get_rsc_list(self, node):
+
+        rsc_dict = {}
+        lines = self.CM.rsh.readlines(node, self.list_rsc_cmd)
+
+        for line in lines:
+            rsc = line.split(' ')[2]
+
+            check_rsc_cmd = self.check_rsc_cmd_pat % rsc
+            result = self.CM.rsh.readaline(node, check_rsc_cmd)
+
+            if result.find('NOT') != -1:
+                rsc_dict[rsc] = ''
+            else:
+                running_node = result.split(' ')[5][:-1]
+                rsc_dict[rsc] = running_node
+
+        self.CM.log(repr(rsc_dict))
+        return rsc_dict
+
+    def _is_rsc_running(self, resource, node):
+        check_rsc_cmd = self.check_rsc_cmd_pat % resource
+        result = self.CM.rsh.readaline(node, check_rsc_cmd)
+
+        if result.find('NOT') != -1:
+            #self.CM.log("%s is NOT running" % resource)
+            return ''
+
+        running_node = result.split(' ')[5][:-1]
+        self.CM.log("%s is running on %s" % (resource, running_node))
+        return running_node
+
+    def _is_standby_on(self, node):
+        check_cib_cmd = self.check_cib_cmd_pat % node;
+
+        lines = self.CM.rsh.readlines(node, check_cib_cmd);
+        cib = "".join(lines)
+
+        is_standby_on = False
+        in_node = False
+
+        for line in lines:
+            if in_node:
+                m = re.search(r'<nvpair\s+name="standby"\s+value="(.+)".+', line)
+                if not m:continue
+                if m.group(1) == 'on':  is_standby_on = True
+                else:                   is_standby_on = False
+                break
+
+            m = re.search(r'<node\s+id="(\S+)".+uname="%s"[^/]+([/]*)>' % node, line)
+            if not m:continue
+
+            #self.uuid_of_node = m.group(1)
+            if m.group(2):
+                is_standby_on = False
+                break
+            else:
+                in_node = True
+
+        return is_standby_on
+
+
+    # check cib to make sure the node is active, else skip
+    # set the node to standby mode
+    # check cib to see whether standby is on
+    # check resources, none resource should be running on the node
+    # set the node to active mode
+    # check cib
+    # check resouces, resources should be migrated back.
+
+    def __call__(self, node):
+
+        self.incr("calls")
+
+        ret=self.startall(None)
+        if not ret:
+            return self.failure("test setup failed")
+
+        if self._is_standby_on(node):
+            self.CM.log("node %s is already in standby node, skip test" % node)
+            return self.skipped()
+
+
+        node_uuid = self._get_node_uuid(node)
+
+        if not node_uuid:
+            self.CM.log("node uuid if None, none node configured?")
+            return self.skipped()
+
+        resource_dict = self._get_rsc_list(node)
+
+
+        retrycount = 0
+
+        self.CM.log("setting node %s to standby mode ..." % node)
+        while retrycount < 10:
+            ret = self.CM.rsh(node, self.standby_cmd_pat % node_uuid)
+            time.sleep(self.CM["StableTime"])
+            if self._is_standby_on(node):
+                break
+            retrycount = retrycount + 1
+
+        if retrycount == 10:
+            return self.failure("can't set node %s to standby mode" % node)
+
+        time.sleep(self.CM["StableTime"])
+
+        self.CM.log("checking resources ...")
+        for rsc in resource_dict.keys():
+            if self._is_rsc_running(rsc, node) == node:
+                return self.failure("%s set to standby, %s is still running on it" % (node, rsc))
+
+
+        retrycount = 0
+
+        self.CM.log("setting node %s to active mode ..." % node)
+        while retrycount < 10:
+            ret = self.CM.rsh(node, self.active_cmd_pat % node_uuid)
+            time.sleep(self.CM["StableTime"])
+            if not self._is_standby_on(node):
+                break
+            retrycount = retrycount + 1
+
+        if retrycount == 10:
+            return self.failure("can't set node %s to active mode" % node)
+
+        time.sleep(self.CM["StableTime"])
+
+        self.CM.log("checking resources ...")
+        retrycount = 0
+        rsc_not_running = []
+
+        while retrycount < 10:
+            running = True
+            rsc_not_running = []
+            for rsc in resource_dict.keys():
+                if rsc != 'DcIPaddr' and resource_dict[rsc] == node:
+                    if self._is_rsc_running(rsc, node) != node:
+                        rsc_not_running.append(rsc)
+                        running = False
+            if running:
+                break
+            retrycount = retrycount + 1
+            time.sleep(2)
+
+        if retrycount == 10:
+            return self.failure("%s set to active, %s is NOT running or running somewhere else" \
+                        % (node, repr(rsc_not_running) ))
+
+        return self.success()
+
+    def errorstoignore(self):
+        return ["ERROR: ha_msg_value: NULL msg", "crmadmin:.*: ERROR.*"]
+
+    def is_applicable(self):
+        if self.CM["Name"] == "linux-ha-v2":
+            return 1
+        return 0
+
+AllTestClasses.append(StandbyTest2)
+
 #######################################################################
 class Fastdetection(CTSTest):
 #######################################################################
