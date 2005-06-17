@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.27 2005/06/13 15:46:15 andrew Exp $ */
+/* $Id: cib.h,v 1.28 2005/06/17 11:05:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -139,6 +139,7 @@ enum cib_section {
 #define CIB_OP_CREATE	"cib_create"
 #define CIB_OP_UPDATE	"cib_update"
 #define CIB_OP_DELETE	"cib_delete"
+#define CIB_OP_DELETE_ALT	"cib_delete_alt"
 #define CIB_OP_ERASE	"cib_erase"
 #define CIB_OP_REPLACE	"cib_replace"
 #define CIB_OP_NOTIFY	"cib_notify"
@@ -236,13 +237,16 @@ typedef struct cib_api_operations_s
 		int (*bump_epoch)(cib_t *cib, int call_options);
 		
 		int (*create)(cib_t *cib, const char *section, crm_data_t *data,
-			   crm_data_t **output_data, int call_options) ;
+			   crm_data_t **output_data, int call_options);
 		int (*modify)(cib_t *cib, const char *section, crm_data_t *data,
-			   crm_data_t **output_data, int call_options) ;
+			   crm_data_t **output_data, int call_options);
 		int (*replace)(cib_t *cib, const char *section, crm_data_t *data,
-			   crm_data_t **output_data, int call_options) ;
+			   crm_data_t **output_data, int call_options);
 		int (*delete)(cib_t *cib, const char *section, crm_data_t *data,
-			   crm_data_t **output_data, int call_options) ;
+			   crm_data_t **output_data, int call_options);
+		int (*delete_absolute)(
+			cib_t *cib, const char *section, crm_data_t *data,
+			crm_data_t **output_data, int call_options);
 		int (*erase)(
 			cib_t *cib, crm_data_t **output_data, int call_options);
 
