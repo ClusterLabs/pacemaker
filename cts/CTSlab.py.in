@@ -73,13 +73,14 @@ class Stonithd(ResetMechanism):
         #self.restart = RestartTest(self.CM)
 
         self.stonithd_started_nodes = []
+        self.fail_reason = ''
 
     def log(self, msg):
-        'Just print it'
+        #print msg
         pass
     
     def remote_exec(self, node, cmnd):
-        return os.system("%s %s %s > /dev/null" % (self.command, node, cmnd))
+        return (os.system("%s %s %s > /dev/null" % (self.command, node, cmnd)) == 0)
 
     def stonithd_started(self, node):
         return node in self.stonithd_started_nodes
@@ -88,57 +89,63 @@ class Stonithd(ResetMechanism):
         hostlist = string.join(hosts, ',')
 
         lrmd_add_cmd = self.lrmd_add_pat % (self.rsc_id,  hostlist)
-        self.log("%s : %s" % (node, lrmd_add_cmd))
-        line = self.remote_exec(node, lrmd_add_cmd)
-        
+        ret = self.remote_exec(node, lrmd_add_cmd)
+        if not ret:return ret
+
         lrmd_start_cmd = self.lrmd_start_pat % self.rsc_id
-                
-        self.log("%s : %s" % (node,  lrmd_start_cmd))
-        line = self.remote_exec(node, lrmd_start_cmd)
-        
+
+        ret = self.remote_exec(node, lrmd_start_cmd)
+
+        if not ret:return ret
+
         self.stonithd_started_nodes.append(node)
         return 1
-    
+
     def stop_stonithd(self, node):
         lrmd_stop_cmd = self.lrmd_stop_pat % self.rsc_id
-        self.log("%s : %s" % (node, lrmd_stop_cmd))
-        line = self.remote_exec(node, lrmd_stop_cmd)
-           
+        ret = self.remote_exec(node, lrmd_stop_cmd)
+        if not ret:return ret
+
         lrmd_del_cmd = self.lrmd_del_pat % self.rsc_id
-        self.log("%s : %s" % (node, lrmd_del_cmd))
-        line = self.remote_exec(node, lrmd_del_cmd)
-        
+
+        ret = self.remote_exec(node, lrmd_del_cmd)
+        if not ret:return ret
+
         self.stonithd_started_nodes.remove(node)
 
         return 1
 
     def do_stonith(self, init_node, target_node, action):
-    
+        
         stonithd_started = self.stonithd_started(init_node)
-
+    
         if not stonithd_started:
             self.log("Node %s : not start stonithd yet, start it" % init_node)
-            self.start_stonithd(init_node, [target_node])
-
-        self.log("Stonithd %s node %s from node %s" % (action, target_node, init_node))
-
+            ret = self.start_stonithd(init_node, [target_node])
+            if not ret:
+                self.fail_reason = "failed to start stonithd on node %s" % init_node
+                return ret
+        
         command = ""
-
+        
         if action == "RESET":
             command = self.reset_cmd_pat % target_node
         elif action == "POWEROFF":
             command = self.poweroff_cmd_pat % target_node
         elif action == "POWERON":
             command = self.poweron_cmd_pat % target_node
-
-        self.log("%s : %s" % (init_node, command))
-        line = self.remote_exec(init_node, command)
+    
+        ret = self.remote_exec(init_node, command)
+        
+        if not ret:
+            self.fail_reason = "failed to run command %s on %s" % ( command, init_node)
+            return ret 
 
         if not stonithd_started:
             self.log("Node %s : stop stonithd" % init_node)
             self.stop_stonithd(init_node)
         
-        return 1
+        return ret
 
     # Should we random choose a node as init_node here if init_node not specified?
     def reset(self, init_node, target_node):
@@ -421,9 +428,13 @@ class CtsLab(UserDict):
         self.__CheckNode(node)
         return self["reset"].reset(node)
     
-    def ResetNode2(self, init_node, target_node):
+    def ResetNode2(self, init_node, target_node, reasons):
         self.__CheckNode(target_node)
-        return Stonithd(self["nodes"]).reset(init_node, target_node)
+        stonithd = Stonithd(self["nodes"])
+        ret = stonithd.reset(init_node, target_node)
+        if not ret: 
+            reasons.append(stonithd.fail_reason)
+        return ret
 
 def usage(arg):
     print "Illegal argument " + arg
