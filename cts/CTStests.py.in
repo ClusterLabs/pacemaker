@@ -34,6 +34,7 @@ import CTSaudits
 import time, os, re, types, string, tempfile
 from CTSaudits import *
 from stat import *
+from xml.dom.minidom import *
 
 #        List of all class objects for tests which we ought to
 #        consider running.
@@ -973,31 +974,22 @@ class StandbyTest2(CTSTest):
         check_cib_cmd = self.check_cib_cmd_pat % node;
 
         lines = self.CM.rsh.readlines(node, check_cib_cmd);
-        cib = "".join(lines)
+        cib_data = "".join(lines)
+        cib = parseString(cib_data)
 
         is_standby_on = False
-        in_node = False
+        nodes = cib.getElementsByTagName('node')
 
-        for line in lines:
-            if in_node:
-                m = re.search(r'<nvpair\s+name="standby"\s+value="(.+)".+', line)
-                if not m:continue
-                if m.group(1) == 'on':  is_standby_on = True
-                else:                   is_standby_on = False
+        for ha_node in nodes:
+            if ha_node.getAttribute("uname") == node:
+                nvpairs = ha_node.getElementsByTagName('nvpair')
+                for nvpair in nvpairs:
+                    if nvpair.getAttribute('name') == 'standby':
+                        if nvpair.getAttribute('value') == 'on':
+                            is_standby_on = True
                 break
-
-            m = re.search(r'<node\s+id="(\S+)".+uname="%s"[^/]+([/]*)>' % node, line)
-            if not m:continue
-
-            #self.uuid_of_node = m.group(1)
-            if m.group(2):
-                is_standby_on = False
-                break
-            else:
-                in_node = True
-
+        
         return is_standby_on
-
 
     # check cib to make sure the node is active, else skip
     # set the node to standby mode
@@ -1016,7 +1008,7 @@ class StandbyTest2(CTSTest):
             return self.failure("test setup failed")
 
         if self._is_standby_on(node):
-            self.CM.log("node %s is already in standby node, skip test" % node)
+            self.CM.log("node %s is already in standby node, skip this test" % node)
             return self.skipped()
 
 
@@ -1036,6 +1028,7 @@ class StandbyTest2(CTSTest):
             ret = self.CM.rsh(node, self.standby_cmd_pat % node_uuid)
             time.sleep(self.CM["StableTime"])
             if self._is_standby_on(node):
+                self.CM.log("node %s has been set to standby mode successfully" % node)
                 break
             retrycount = retrycount + 1
 
@@ -1057,6 +1050,7 @@ class StandbyTest2(CTSTest):
             ret = self.CM.rsh(node, self.active_cmd_pat % node_uuid)
             time.sleep(self.CM["StableTime"])
             if not self._is_standby_on(node):
+                self.CM.log("node %s has been set to active mode successfully" % node)
                 break
             retrycount = retrycount + 1
 
