@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.37 2005/06/14 11:48:58 davidlee Exp $ */
+/* $Id: cibadmin.c,v 1.38 2005/06/17 11:11:35 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -93,7 +93,7 @@ int request_id = 0;
 int operation_status = 0;
 cib_t *the_cib = NULL;
 
-#define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MBfb"
+#define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MBfbd"
 
 int
 main(int argc, char **argv)
@@ -113,6 +113,7 @@ main(int argc, char **argv)
 		{CIB_OP_REPLACE, 0, 0, 'R'},
 		{CIB_OP_UPDATE,  0, 0, 'U'},
 		{CIB_OP_DELETE,  0, 0, 'D'},
+		{CIB_OP_DELETE_ALT,  0, 0, 'd'},
 		{CIB_OP_BUMP,    0, 0, 'B'},
 		{CIB_OP_SYNC,    0, 0, 'S'},
 		{CIB_OP_SLAVE,   0, 0, 'r'},
@@ -400,10 +401,24 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 		free_xml(msg_data);
 		return rc;
 
-	} else if (strcmp(CIB_OP_DELETE, cib_action) == 0) {
+	} else if (strcmp(CIB_OP_DELETE_ALT, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
 		crm_debug_4("Performing %s op...", cib_action);
 		msg_data = handleCibMod(admin_input_xml);
+		rc = the_cib->cmds->delete_absolute(
+			the_cib, obj_type_parent, msg_data, output, call_options);
+		free_xml(msg_data);
+		return rc;
+
+	} else if (strcmp(CIB_OP_DELETE_ALT, cib_action) == 0) {
+		enum cib_errors rc = cib_ok;
+		crm_debug_4("Performing %s op...", cib_action);
+
+		if(admin_input_xml == NULL) {
+			msg_data = stdin2xml();
+		} else {
+			msg_data = string2xml(admin_input_xml);
+		}
 		rc = the_cib->cmds->delete(
 			the_cib, obj_type_parent, msg_data, output, call_options);
 		free_xml(msg_data);
@@ -480,6 +495,15 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_REPLACE,'R');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_UPDATE, 'U');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE, 'D');
+	fprintf(stream, "\t\t\tDelete the first object matching the supplied criteria");
+	fprintf(stream, "\t\t\tEg. <op id=\"rsc1_op1\" name=\"monitor\"/>");
+	fprintf(stream, "\t\t\tThe tagname and all attributes must match in order for the element to be deleted");
+	
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE_ALT, 'd');
+	fprintf(stream, "\t\t\tDelete the object at specified fully qualified location");
+	fprintf(stream, "\t\t\tEg. <resource id=\"rsc1\"><operations><op id=\"rsc1_op1\"/>...");
+	fprintf(stream, "\t\t\tRequires -o");
+
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'M');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_SYNC,   'S');
