@@ -68,13 +68,16 @@ int cib_client_set_master(cib_t *cib, int call_options);
 
 int cib_client_bump_epoch(cib_t *cib, int call_options);
 int cib_client_create(cib_t *cib, const char *section, crm_data_t *data,
-	      crm_data_t **output_data, int call_options) ;
+	      crm_data_t **output_data, int call_options);
 int cib_client_modify(cib_t *cib, const char *section, crm_data_t *data,
-	      crm_data_t **output_data, int call_options) ;
+	      crm_data_t **output_data, int call_options);
 int cib_client_replace(cib_t *cib, const char *section, crm_data_t *data,
-	       crm_data_t **output_data, int call_options) ;
+	       crm_data_t **output_data, int call_options);
 int cib_client_delete(cib_t *cib, const char *section, crm_data_t *data,
-	      crm_data_t **output_data, int call_options) ;
+	      crm_data_t **output_data, int call_options);
+int cib_client_delete_absolute(
+	cib_t *cib, const char *section, crm_data_t *data,
+	crm_data_t **output_data, int call_options);
 int cib_client_erase(
 	cib_t *cib, crm_data_t **output_data, int call_options);
 int cib_client_quit(cib_t *cib,   int call_options);
@@ -155,6 +158,8 @@ cib_new(void)
 	new_cib->cmds->erase   = cib_client_erase;
 	new_cib->cmds->quit    = cib_client_quit;
 
+	new_cib->cmds->delete_absolute  = cib_client_delete_absolute;
+	
 	cib_native_new(new_cib);
 	if(verify_cib_cmds(new_cib) == FALSE) {
 		return NULL;
@@ -389,6 +394,21 @@ int cib_client_delete(cib_t *cib, const char *section, crm_data_t *data,
 				     data, output_data, call_options);
 }
 
+int cib_client_delete_absolute(
+	cib_t *cib, const char *section, crm_data_t *data,
+	crm_data_t **output_data, int call_options) 
+{
+	if(cib == NULL) {
+		return cib_missing;
+	} else if(cib->state == cib_disconnected) {
+		return cib_not_connected;
+	} else if(cib->cmds->variant_op == NULL) {
+		return cib_variant;
+	}
+	
+	return cib->cmds->variant_op(cib, CIB_OP_DELETE_ALT, NULL, section,
+				     data, output_data, call_options);
+}
 
 int cib_client_erase(
 	cib_t *cib, crm_data_t **output_data, int call_options)
