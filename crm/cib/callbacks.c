@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.65 2005/06/20 12:27:40 andrew Exp $ */
+/* $Id: callbacks.c,v 1.66 2005/06/20 12:46:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -658,7 +658,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 	   && result_diff == NULL
 	   && cib_server_ops[call_type].modifies_cib
 	   && !(call_options & cib_inhibit_bcast)) {
-		crm_log_message(LOG_ERR, op_bcast);
+		crm_log_message(LOG_ERR, request);
 	}
 	/* end temporary code */
 	
