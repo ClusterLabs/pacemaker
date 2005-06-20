@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.44 2005/06/17 15:16:20 andrew Exp $ */
+/* $Id: messages.c,v 1.45 2005/06/20 13:33:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -863,7 +863,8 @@ enum cib_errors
 sync_our_cib(HA_Message *request, gboolean all) 
 {
 	enum cib_errors result      = cib_ok;
-	const char *host            = cl_get_string(request, F_CIB_HOST);
+	const char *host            = cl_get_string(request, F_ORIG);
+	const char *op              = cl_get_string(request, F_CIB_OPERATION);
 	crm_data_t *sync_data       = create_cib_fragment(the_cib, NULL);
 	HA_Message *replace_request = cib_msg_copy(request, FALSE);
 	
@@ -871,10 +872,15 @@ sync_our_cib(HA_Message *request, gboolean all)
 	CRM_DEV_ASSERT(replace_request != NULL);
 	
 	crm_info("Syncing CIB to %s", all?"all peers":host);
-	if(host != NULL) {
+	if(all == FALSE && host == NULL) {
+		crm_log_message(LOG_ERR, request);
+	}
+	
+	if(all == FALSE && host != NULL) {
 		ha_msg_add(replace_request, F_CIB_ISREPLY, host);
 	}
 	ha_msg_mod(replace_request, F_CIB_OPERATION, CIB_OP_REPLACE);
+	ha_msg_add(replace_request, "original_"F_CIB_OPERATION, op);
 	ha_msg_add(replace_request, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 	ha_msg_addstruct(replace_request, F_CIB_CALLDATA, sync_data);
 	
