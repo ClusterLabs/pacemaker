@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.63 2005/06/17 15:16:20 andrew Exp $ */
+/* $Id: callbacks.c,v 1.64 2005/06/20 12:24:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -666,8 +666,10 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		ha_msg_add(op_bcast, F_CIB_ISREPLY, originator);
 		ha_msg_add(op_bcast, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 		ha_msg_mod(op_bcast, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
-		add_message_xml(op_bcast, F_CIB_UPDATE_DIFF, result_diff);
-		
+
+		if(result_diff != NULL) {
+			add_message_xml(op_bcast, F_CIB_UPDATE_DIFF, result_diff);
+		}
 		crm_log_message(LOG_DEBUG_3, op_bcast);
 		send_ha_message(hb_conn, op_bcast, NULL);
 		crm_msg_del(op_bcast);
