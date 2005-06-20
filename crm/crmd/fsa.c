@@ -73,36 +73,37 @@ longclock_t action_stop = 0;
 longclock_t action_diff = 0;
 unsigned int action_diff_ms = 0;
 
-#define IF_FSA_ACTION(x,y)						\
-   if(is_set(fsa_actions,x)) {						\
+#define IF_FSA_ACTION(an_action,function)				\
+	if(is_set(fsa_actions,an_action)) {				\
 	   enum crmd_fsa_input result = I_NULL;				\
-	   last_action = x;						\
-	   fsa_actions = clear_bit(fsa_actions, x);			\
+	   last_action = an_action;					\
+	   fsa_actions = clear_bit(fsa_actions, an_action);		\
 	   crm_debug_3("Invoking action %s (%.16llx)",			\
-		       fsa_action2string(x), x);			\
+		       fsa_action2string(an_action), an_action);	\
 	   if(action_diff_max_ms > 0) {					\
 		   action_start = time_longclock();			\
 	   }								\
-	   result = y(x, fsa_data->fsa_cause, fsa_state,		\
+	   result = function(an_action, fsa_data->fsa_cause, fsa_state,	\
 			  fsa_data->fsa_input, fsa_data);		\
 	   if(action_diff_max_ms > 0) {					\
 		   action_stop = time_longclock();			\
 		   action_diff = sub_longclock(action_stop, action_start); \
 		   action_diff_ms = longclockto_ms(action_diff);	\
-		   if(action_diff_ms > action_diff_max_ms) {		\
+		   if(an_action != A_CIB_START				\
+		      && action_diff_ms > action_diff_max_ms) {		\
 			   crm_err("Action %s took %dms to complete",	\
-				   fsa_action2string(x),		\
+				   fsa_action2string(an_action),	\
 				   action_diff_ms);			\
 		   } else if(action_diff_ms > action_diff_warn_ms) {	\
 			   crm_warn("Action %s took %dms to complete",	\
-				    fsa_action2string(x),		\
+				    fsa_action2string(an_action),	\
 				    action_diff_ms);			\
 		   }							\
 	   }								\
 	   crm_debug_3("Action complete: %s (%.16llx)",			\
-		       fsa_action2string(x), x);			\
+		       fsa_action2string(an_action), an_action);	\
 	   CRM_DEV_ASSERT(result == I_NULL);				\
-	   do_dot_action(DOT_PREFIX"\t// %s", fsa_action2string(x));	\
+	   do_dot_action(DOT_PREFIX"\t// %s", fsa_action2string(an_action)); \
    }
 
 /* #define ELSEIF_FSA_ACTION(x,y) else IF_FSA_ACTION(x,y) */
