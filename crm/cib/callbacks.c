@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.64 2005/06/20 12:24:03 andrew Exp $ */
+/* $Id: callbacks.c,v 1.65 2005/06/20 12:27:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -652,9 +652,20 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 	crm_debug_4("add the originator to message");
 
 	rc = cib_get_operation_id(request, &call_type);
+
+	/* temporary code to understand how this might happen */
+	if(rc == cib_ok
+	   && result_diff == NULL
+	   && cib_server_ops[call_type].modifies_cib
+	   && !(call_options & cib_inhibit_bcast)) {
+		crm_log_message(LOG_ERR, op_bcast);
+	}
+	/* end temporary code */
+	
 	
 	/* from now on we are the server */ 
 	if(rc == cib_ok
+	   && result_diff != NULL
 	   && cib_server_ops[call_type].modifies_cib
 	   && !(call_options & cib_inhibit_bcast)) {
 		/* this (successful) call modified the CIB _and_ the
@@ -667,9 +678,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		ha_msg_add(op_bcast, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 		ha_msg_mod(op_bcast, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
 
-		if(result_diff != NULL) {
-			add_message_xml(op_bcast, F_CIB_UPDATE_DIFF, result_diff);
-		}
+		add_message_xml(op_bcast, F_CIB_UPDATE_DIFF, result_diff);
 		crm_log_message(LOG_DEBUG_3, op_bcast);
 		send_ha_message(hb_conn, op_bcast, NULL);
 		crm_msg_del(op_bcast);
