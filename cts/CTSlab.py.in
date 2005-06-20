@@ -52,10 +52,10 @@ class Stonithd(ResetMechanism):
         self.sttype = sttype
         self.nodes = nodes
 
-        self.query_cmd_pat   = '/usr/lib/heartbeat/stonithdtest/apitest 0 %s 1000 0'
-        self.reset_cmd_pat   = '/usr/lib/heartbeat/stonithdtest/apitest 1 %s 1000 0'
-        self.poweron_cmd_pat = '/usr/lib/heartbeat/stonithdtest/apitest 2 %s 1000 0'
-        self.poweroff_cmd_pat= '/usr/lib/heartbeat/stonithdtest/apitest 3 %s 1000 0'
+        self.query_cmd_pat   = '/usr/lib/heartbeat/stonithdtest/apitest 0 %s 4000 0'
+        self.reset_cmd_pat   = '/usr/lib/heartbeat/stonithdtest/apitest 1 %s 4000 0'
+        self.poweron_cmd_pat = '/usr/lib/heartbeat/stonithdtest/apitest 2 %s 4000 0'
+        self.poweroff_cmd_pat= '/usr/lib/heartbeat/stonithdtest/apitest 3 %s 4000 0'
 
         self.lrmd_add_pat    = '/usr/lib/heartbeat/lrmadmin -A %s stonith ' + sttype + ' NULL hostlist=%s'
         self.lrmd_start_pat  = '/usr/lib/heartbeat/lrmadmin -E %s start 0 0 0'
@@ -63,99 +63,97 @@ class Stonithd(ResetMechanism):
         self.lrmd_del_pat    = '/usr/lib/heartbeat/lrmadmin -D %s'
 
         self.rsc_id          = 'my_stonithd_id'
-        
-        #        -n: no stdin, -x: no X11
-        self.command = "/usr/bin/ssh -l root -n -x"
-        #         -f: ssh to background
-        self.command_noblock = "/usr/bin/ssh -f -l root -n -x"
 
-        #self.startall = SimulStartLite(cm)
-        #self.restart = RestartTest(self.CM)
+        self.command = "/usr/bin/ssh -l root -n -x"
+        self.command_noblock = "/usr/bin/ssh -f -l root -n -x"
 
         self.stonithd_started_nodes = []
         self.fail_reason = ''
 
-    def log(self, msg):
-        #print msg
-        pass
-    
-    def remote_exec(self, node, cmnd):
+    def _remote_exec(self, node, cmnd):
         return (os.system("%s %s %s > /dev/null" % (self.command, node, cmnd)) == 0)
 
-    def stonithd_started(self, node):
+    def _remote_readlines(self, node, cmnd):
+        f = os.popen("%s %s %s" % (self.command, node, cmnd))
+        return f.readlines()
+
+    def _stonithd_started(self, node):
         return node in self.stonithd_started_nodes
 
-    def start_stonithd(self, node,  hosts):
+    def _start_stonithd(self, node,  hosts):
         hostlist = string.join(hosts, ',')
 
         lrmd_add_cmd = self.lrmd_add_pat % (self.rsc_id,  hostlist)
-        ret = self.remote_exec(node, lrmd_add_cmd)
+        ret = self._remote_exec(node, lrmd_add_cmd)
         if not ret:return ret
 
         lrmd_start_cmd = self.lrmd_start_pat % self.rsc_id
 
-        ret = self.remote_exec(node, lrmd_start_cmd)
+        ret = self._remote_exec(node, lrmd_start_cmd)
 
         if not ret:return ret
 
         self.stonithd_started_nodes.append(node)
         return 1
 
-    def stop_stonithd(self, node):
+    def _stop_stonithd(self, node):
         lrmd_stop_cmd = self.lrmd_stop_pat % self.rsc_id
-        ret = self.remote_exec(node, lrmd_stop_cmd)
+        ret = self._remote_exec(node, lrmd_stop_cmd)
         if not ret:return ret
 
         lrmd_del_cmd = self.lrmd_del_pat % self.rsc_id
 
-        ret = self.remote_exec(node, lrmd_del_cmd)
+        ret = self._remote_exec(node, lrmd_del_cmd)
         if not ret:return ret
 
         self.stonithd_started_nodes.remove(node)
 
         return 1
 
-    def do_stonith(self, init_node, target_node, action):
-        
-        stonithd_started = self.stonithd_started(init_node)
-    
+    def _do_stonith(self, init_node, target_node, action):
+
+        stonithd_started = self._stonithd_started(init_node)
+
         if not stonithd_started:
-            self.log("Node %s : not start stonithd yet, start it" % init_node)
-            ret = self.start_stonithd(init_node, [target_node])
+            ret = self._start_stonithd(init_node, [target_node])
             if not ret:
                 self.fail_reason = "failed to start stonithd on node %s" % init_node
                 return ret
-        
+
         command = ""
-        
+
         if action == "RESET":
             command = self.reset_cmd_pat % target_node
         elif action == "POWEROFF":
             command = self.poweroff_cmd_pat % target_node
         elif action == "POWERON":
             command = self.poweron_cmd_pat % target_node
-    
-        ret = self.remote_exec(init_node, command)
-        
-        if not ret:
-            self.fail_reason = "failed to run command %s on %s" % ( command, init_node)
-            return ret 
+        else:
+            self.fail_reason = "unknown opration type %s" % action
+            return 0
+
+        lines = self._remote_readlines(init_node, command)
+        result = "".join(lines)
 
         if not stonithd_started:
-            self.log("Node %s : stop stonithd" % init_node)
-            self.stop_stonithd(init_node)
-        
-        return ret
+            self._stop_stonithd(init_node)
+
+        index = result.find("result=0")
+        if index == -1:
+            self.fail_reason = "unexpected stonithd status: %s" % result
+            return 0
+
+        return 1 
 
     # Should we random choose a node as init_node here if init_node not specified?
     def reset(self, init_node, target_node):
-        return self.do_stonith(init_node, target_node, "RESET")
+        return self._do_stonith(init_node, target_node, "RESET")
 
     def poweron(self, init_node, target_node):
-        return self.do_stonith(init_node, target_node, "POWERON")
+        return self._do_stonith(init_node, target_node, "POWERON")
 
     def poweroff(self, init_node, target_node):
-        return self.do_stonith(init_node, target_node, "POWEROFF")
+        return self._do_stonith(init_node, target_node, "POWEROFF")
 
 class Logger:
     TimeFormat = "%Y/%m/%d_%H:%M:%S\t"
