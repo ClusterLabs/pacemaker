@@ -51,9 +51,9 @@ class LinuxHAv2(HeartbeatCM):
         
         self.update({
             "Name"           : "linux-ha-v2",
-            "DeadTime"       : 600,
-            "StartTime"      : 180,        # Max time to start up
-            "StableTime"     : 10,
+            "DeadTime"       : 300,
+            "StartTime"      : 300,        # Max time to start up
+            "StableTime"     : 30,
             "StartCmd"       : "@libdir@/heartbeat/ha_logd -d >/dev/null 2>&1; @libdir@/heartbeat/heartbeat >/dev/null 2>&1",
             "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
             "ElectionCmd"    : "@libdir@/heartbeat/crmadmin -E %s",
