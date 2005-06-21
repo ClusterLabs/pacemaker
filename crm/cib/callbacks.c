@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.66 2005/06/20 12:46:28 andrew Exp $ */
+/* $Id: callbacks.c,v 1.67 2005/06/21 07:01:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -456,6 +456,8 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		  originator, host?host:"master");
 	crm_log_message_adv(LOG_DEBUG_3, "Peer[inbound]", request);
 
+	rc = cib_get_operation_id(request, &call_type);
+	
 	if(rc != cib_ok) {
 		/* TODO: construct error reply */
 		crm_err("Pre-processing of command failed: %s",
@@ -573,7 +575,10 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		rc = cib_process_command(request, &op_reply, &result_diff, TRUE);
 		crm_debug_3("Processing complete");
 
-		if(rc == cib_diff_resync || rc == cib_diff_failed) {
+		if(rc == cib_diff_resync
+		   || rc == cib_diff_failed
+/* 		   || rc == cib_old_data */
+			) {
 			crm_warn("%s operation failed: %s",
 				crm_str(op), cib_error2string(rc));
 			
@@ -651,14 +656,14 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 	
 	crm_debug_4("add the originator to message");
 
-	rc = cib_get_operation_id(request, &call_type);
-
 	/* temporary code to understand how this might happen */
 	if(rc == cib_ok
 	   && result_diff == NULL
 	   && cib_server_ops[call_type].modifies_cib
 	   && !(call_options & cib_inhibit_bcast)) {
+		crm_err("Null result diff but rc == cib_ok");
 		crm_log_message(LOG_ERR, request);
+		crm_log_message(LOG_ERR, op_reply);
 	}
 	/* end temporary code */
 	
@@ -697,8 +702,8 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 			crm_debug_2("Request not broadcast: R/O call");
 		}
 		if(rc != cib_ok) {
-			crm_err("Request not broadcast: call failed: %s",
-				cib_error2string(rc));
+			crm_warn("Request not broadcast: call failed: %s",
+				 cib_error2string(rc));
 		}
 	}
 	
