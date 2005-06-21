@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.67 2005/06/21 07:01:27 andrew Exp $ */
+/* $Id: callbacks.c,v 1.68 2005/06/21 10:38:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -464,28 +464,27 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 			cib_error2string(rc));
 		
 	} else if(from_peer == FALSE) {
+		needs_reply = FALSE;
 		if(host == NULL && (call_options & cib_scope_local)) {
 			crm_debug("Processing locally scoped %s op from %s",
 				  op, cib_client->name);
-			process = TRUE;
 			local_notify = TRUE;
 
 		} else if(host == NULL && cib_is_master) {
 			crm_debug("Processing master %s op locally from %s",
 				  op, cib_client->name);
-			process = TRUE;
 			local_notify = TRUE;
 
 		} else if(safe_str_eq(host, cib_our_uname)) {
 			crm_debug("Processing locally addressed %s op from %s",
 				  op, cib_client->name);
-			process = TRUE;
 			local_notify = TRUE;
 		} else {
 			crm_debug("%s op from %s needs to be forwarded to %s",
 				  op, cib_client->name,
 				  host?host:"the master instance");
 			needs_forward = TRUE;
+			process = FALSE;
 		}
 		
 	} else if(crm_is_true(update) && safe_str_eq(reply_to, cib_our_uname)) {
@@ -532,6 +531,11 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		return;
 	}
 	crm_debug_3("Finished determining processing actions");
+
+	if(call_options & cib_discard_reply) {
+		needs_reply = FALSE;
+		local_notify = FALSE;
+	}
 	
 	if(needs_forward) {
 		HA_Message *forward_msg = cib_msg_copy(request, TRUE);
@@ -589,6 +593,14 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 			crm_debug("Input message");
 			crm_log_message(LOG_DEBUG, request);
 		}
+
+		if(op_reply == NULL && (needs_reply || local_notify)) {
+			crm_err("Unexpected NULL reply to message");
+			crm_log_message(LOG_ERR, request);
+			needs_reply = FALSE;
+			local_notify = FALSE;
+		}
+			
 	}
 
 	crm_debug_3("processing response cases");
@@ -656,17 +668,9 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 	
 	crm_debug_4("add the originator to message");
 
-	/* temporary code to understand how this might happen */
-	if(rc == cib_ok
-	   && result_diff == NULL
-	   && cib_server_ops[call_type].modifies_cib
-	   && !(call_options & cib_inhibit_bcast)) {
-		crm_err("Null result diff but rc == cib_ok");
-		crm_log_message(LOG_ERR, request);
-		crm_log_message(LOG_ERR, op_reply);
-	}
-	/* end temporary code */
-	
+	CRM_DEV_ASSERT(op_reply != NULL);
+	CRM_DEV_ASSERT(cib_server_ops[call_type].modifies_cib == FALSE
+		       || result_diff != NULL || rc != cib_ok);
 	
 	/* from now on we are the server */ 
 	if(rc == cib_ok
