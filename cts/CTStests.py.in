@@ -936,7 +936,6 @@ class StandbyTest2(CTSTest):
         self.check_rsc_cmd_pat  = "/usr/lib/heartbeat/crmadmin -W %s"
         self.get_uuid_cmd       = "/usr/lib/heartbeat/crmadmin -N"
 
-        self.standby_on         = '<nvpair name="standby" value="on"/>'
         #self.uuid_of_node       = ''
 
         self.start = StartTest(cm)
@@ -966,7 +965,7 @@ class StandbyTest2(CTSTest):
                 running_node = result.split(' ')[5][:-1]
                 rsc_dict[rsc] = running_node
 
-        self.CM.log(repr(rsc_dict))
+        self.CM.debug(repr(rsc_dict))
         return rsc_dict
 
     def _is_rsc_running(self, resource, node):
@@ -978,7 +977,7 @@ class StandbyTest2(CTSTest):
             return ''
 
         running_node = result.split(' ')[5][:-1]
-        self.CM.log("%s is running on %s" % (resource, running_node))
+        self.CM.debug("%s is running on %s" % (resource, running_node))
         return running_node
 
     def _is_standby_on(self, node):
@@ -1034,12 +1033,12 @@ class StandbyTest2(CTSTest):
 
         retrycount = 0
 
-        self.CM.log("setting node %s to standby mode ..." % node)
+        self.CM.debug("setting node %s to standby mode ..." % node)
         while retrycount < 10:
             ret = self.CM.rsh(node, self.standby_cmd_pat % node_uuid)
             time.sleep(self.CM["StableTime"])
             if self._is_standby_on(node):
-                self.CM.log("node %s has been set to standby mode successfully" % node)
+                self.CM.debug("node %s has been set to standby mode successfully" % node)
                 break
             retrycount = retrycount + 1
 
@@ -1048,7 +1047,7 @@ class StandbyTest2(CTSTest):
 
         time.sleep(self.CM["StableTime"])
 
-        self.CM.log("checking resources ...")
+        self.CM.debug("checking resources ...")
         for rsc in resource_dict.keys():
             if self._is_rsc_running(rsc, node) == node:
                 return self.failure("%s set to standby, %s is still running on it" % (node, rsc))
@@ -1056,12 +1055,12 @@ class StandbyTest2(CTSTest):
 
         retrycount = 0
 
-        self.CM.log("setting node %s to active mode ..." % node)
+        self.CM.debug("setting node %s to active mode ..." % node)
         while retrycount < 10:
             ret = self.CM.rsh(node, self.active_cmd_pat % node_uuid)
             time.sleep(self.CM["StableTime"])
             if not self._is_standby_on(node):
-                self.CM.log("node %s has been set to active mode successfully" % node)
+                self.CM.debug("node %s has been set to active mode successfully" % node)
                 break
             retrycount = retrycount + 1
 
@@ -1070,7 +1069,7 @@ class StandbyTest2(CTSTest):
 
         time.sleep(self.CM["StableTime"])
 
-        self.CM.log("checking resources ...")
+        self.CM.debug("checking resources ...")
         retrycount = 0
         rsc_not_running = []
 
@@ -1078,7 +1077,7 @@ class StandbyTest2(CTSTest):
             running = True
             rsc_not_running = []
             for rsc in resource_dict.keys():
-                if rsc != 'DcIPaddr' and resource_dict[rsc] == node:
+                if resource_dict[rsc] == node:
                     if self._is_rsc_running(rsc, node) != node:
                         rsc_not_running.append(rsc)
                         running = False
@@ -1094,7 +1093,7 @@ class StandbyTest2(CTSTest):
         return self.success()
 
     def errorstoignore(self):
-        return ["ERROR: ha_msg_value: NULL msg", "crmadmin:.*: ERROR.*"]
+        return []
 
     def is_applicable(self):
         if self.CM["Name"] == "linux-ha-v2":
@@ -1703,7 +1702,7 @@ class ComponentFail(CTSTest):
 	    self.CM.log("Found match: %s"%(match))
 
 	    # now watch it recover...
-	    if self.CM.cluster_stable(self.CM["DeadTime"]):
+	    if self.CM.cluster_stable():
 		return self.success()
 	    else:
 		self.failure("Cluster not stable")
@@ -2103,7 +2102,7 @@ class NearQuorumPointTest(CTSTest):
         
         #get the result        
         if watch.lookforall():
-	    self.CM.cluster_stable(self.CM["DeadTime"])
+	    self.CM.cluster_stable()
             return self.success()
 
 	self.CM.log("Warn: Patterns not found: " + repr(watch.unmatched))
@@ -2120,7 +2119,7 @@ class NearQuorumPointTest(CTSTest):
                 downnodes.append(node)
 
         if upnodes == [] and downnodes == []:
-	    self.CM.cluster_stable(self.CM["DeadTime"])
+	    self.CM.cluster_stable()
             return self.success()
 
         if len(upnodes) > 0:
@@ -2243,7 +2242,7 @@ class SimulStartLite(CTSTest):
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 self.CM.StartaCMnoBlock(node)
         if watch.lookforall():
-	    if self.CM.cluster_stable(self.CM["DeadTime"]):
+	    if self.CM.cluster_stable():
                 return self.success()
             return self.failure("Cluster did not stablize") 
                 
