@@ -317,11 +317,10 @@ class StopTest(CTSTest):
                 self.CM.log ("Warn: Shutdown pattern not found: %s" % (regex))
                 UnmatchedList +=  regex + "||";
 
-        if watch_result:
-	    self.CM.cluster_stable(self.CM["DeadTime"])
-            return self.success()
-        else:
+	if not self.CM.cluster_stable(self.CM["DeadTime"]) and len(watch.unmatched) > 0:
             return self.failure("no match against (%s)" % UnmatchedList)
+
+	return self.success()
 #
 # We don't register StopTest because it's better when called by
 # another test...
