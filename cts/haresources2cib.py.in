@@ -27,7 +27,6 @@ Copyright (C) 2005 International Business Machines
 import sys,string
 import xml.dom.minidom
 
-
 def create_cib() :
         doc = xml.dom.minidom.Document()
         cib = doc.createElement("cib")
@@ -36,11 +35,43 @@ def create_cib() :
         configuration = doc.createElement("configuration")
         cib.appendChild(configuration)
         
-        configuration.appendChild(doc.createElement("crm_config"))
+        crm_config = doc.createElement("crm_config")
+        configuration.appendChild(crm_config)
+        
+        nvpair = doc.createElement("nvpair")
+        crm_config.appendChild(nvpair)
+        nvpair.setAttribute("id","transition_timeout")
+        nvpair.setAttribute("name","transition_timeout")
+        nvpair.setAttribute("value","120s")
+
+        nvpair = doc.createElement("nvpair")
+        crm_config.appendChild(nvpair)
+        nvpair.setAttribute("id","require_quorum")
+        nvpair.setAttribute("name","require_quorum")
+        nvpair.setAttribute("value","true")
+
+        nvpair = doc.createElement("nvpair")
+        crm_config.appendChild(nvpair)
+        nvpair.setAttribute("id","symmetric_cluster")
+        nvpair.setAttribute("name","symmetric_cluster")
+        nvpair.setAttribute("value","true")
+                
+        nvpair = doc.createElement("nvpair")
+        crm_config.appendChild(nvpair)
+        nvpair.setAttribute("id","suppress_cib_writes")
+        nvpair.setAttribute("name","suppress_cib_writes")
+        nvpair.setAttribute("value","true")
+        
+        nvpair = doc.createElement("nvpair")
+        crm_config.appendChild(nvpair)
+        nvpair.setAttribute("id","no_quorum_policy")
+        nvpair.setAttribute("name","no_quorum_policy")
+        nvpair.setAttribute("value","stop")
+        
         configuration.appendChild(doc.createElement("nodes"))
         resources = doc.createElement("resources")
         configuration.appendChild(resources)
-	constraints = doc.createElement("constraints")
+        constraints = doc.createElement("constraints")
         configuration.appendChild(constraints)
         
         status = doc.createElement("status")
