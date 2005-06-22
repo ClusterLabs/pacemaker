@@ -233,17 +233,12 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 		return -1;
 	}
                                                                                         
-	/* No actual arguments except op_type */
-	if (ht_size == 0) {
-		return 0;
-	}
-
-	/* Now suppose the parameter formate stored in Hashtabe is like
+	/* Now suppose the parameter format stored in Hashtabe is as like as
 	 * key="1", value="-Wl,soname=test"
 	 * Moreover, the key is supposed as a string transfered from an integer.
 	 * It may be changed in the future.
 	 */
-
+	/* Notice: if ht_size==0, no actual arguments except op_type */
 	for (index = 1; index <= ht_size; index++ ) {
 		snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
 		value_tmp = g_hash_table_lookup(params_ht, buf_tmp);
