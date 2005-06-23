@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.45 2005/06/20 13:33:30 andrew Exp $ */
+/* $Id: messages.c,v 1.46 2005/06/23 07:52:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -479,8 +479,13 @@ cib_process_replace(
 		if(replace_admin_epoche < admin_epoche) {
 			reason = XML_ATTR_GENERATION_ADMIN;
 
+		} else if(replace_admin_epoche > admin_epoche) {
+			/* no more checks */
 		} else if(replace_epoche < epoche) {
 			reason = XML_ATTR_GENERATION;
+
+		} else if(replace_epoche > epoche) {
+			/* no more checks */
 
 		} else if(replace_updates < updates) {
 			reason = XML_ATTR_NUMUPDATES;
@@ -548,7 +553,7 @@ cib_process_modify(
 
 	crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
 
-	failed  = create_xml_node(NULL, XML_TAG_FAILED);
+	failed = create_xml_node(NULL, XML_TAG_FAILED);
 
 	if (strcmp(CIB_OP_CREATE, op) == 0) {
 		cib_update_op = CIB_UPDATE_OP_ADD;
@@ -620,7 +625,6 @@ cib_process_modify(
 			*result_cib, input, failed, cib_update_op, section);
 	}
 
-	crm_debug_4("Activating temporary CIB");
 	if(result == cib_ok && !(options & cib_inhibit_bcast)) {
 		cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
 	}
