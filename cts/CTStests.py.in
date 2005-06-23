@@ -953,7 +953,7 @@ class StandbyTest2(CTSTest):
         lines = self.CM.rsh.readlines(node, self.list_rsc_cmd)
 
         for line in lines:
-            rsc = line.split(' ')[2]
+            rsc = line.split(' ')[1]
 
             check_rsc_cmd = self.check_rsc_cmd_pat % rsc
             result = self.CM.rsh.readaline(node, check_rsc_cmd)
