@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.25 2005/06/15 13:39:37 andrew Exp $ */
+/* $Id: io.c,v 1.26 2005/06/23 07:51:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -264,7 +264,7 @@ initializeCib(crm_data_t *new_cib)
 		} else {
 			gboolean suppress = FALSE;
 			crm_str_to_boolean(value, &suppress);
-			if(cib_writes_enabled != suppress) {
+			if(cib_writes_enabled == suppress) {
 				cib_writes_enabled = !suppress;
 				if(cib_writes_enabled) {
 					crm_debug("Disk writes to %s enabled",
