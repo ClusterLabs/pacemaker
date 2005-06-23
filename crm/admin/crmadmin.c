@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.52 2005/06/17 11:15:17 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.53 2005/06/23 07:59:12 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -66,7 +66,7 @@ gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 char *pluralSection(const char *a_section);
 crm_data_t *handleCibMod(void);
 int do_find_resource(const char *rsc, crm_data_t *xml_node);
-int do_find_resource_list(crm_data_t *xml_node);
+int do_find_resource_list(int level, crm_data_t *xml_node);
 int do_find_node_list(crm_data_t *xml_node);
 gboolean admin_message_timeout(gpointer data);
 gboolean is_node_online(crm_data_t *node_state);
@@ -403,8 +403,10 @@ do_work(ll_cluster_t * hb_cluster)
 			do_find_resource(rsc_name, output);
 
 		} else if(DO_RESOURCE_LIST) {
+			crm_data_t *rscs = NULL;
 			output = get_cib_copy(the_cib);
-			do_find_resource_list(output);
+			rscs = get_object_root(XML_CIB_TAG_RESOURCES, output);
+			do_find_resource_list(0, rscs);
 			
 		} else if(DO_NODE_LIST) {
 			output = get_cib_copy(the_cib);
@@ -816,21 +818,40 @@ is_node_online(crm_data_t *node_state)
 
 
 int
-do_find_resource_list(crm_data_t *xml_node)
+do_find_resource_list(int level, crm_data_t *resource_list)
 {
+	int lpc = 0;
 	int found = 0;
-	crm_data_t *rscs = get_object_root(XML_CIB_TAG_RESOURCES, xml_node);
+	const char *name = NULL;
+	const char *type = NULL;
+	const char *class = NULL;
 
 	xml_child_iter(
-		rscs, rsc, XML_CIB_TAG_RESOURCE,
-		printf("%s resource: %s (%s)\n",
-		       crm_element_value(rsc, "class"),
-		       crm_element_value(rsc, XML_ATTR_ID),
-		       crm_element_value(rsc, XML_ATTR_TYPE));
-
-		found++;
+		resource_list, rsc, NULL,
+		name = crm_element_name(rsc);
+		if(safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
+			class = crm_element_value(rsc, "class");
+			type = crm_element_value(rsc, XML_ATTR_TYPE);
+			for(lpc = 0; lpc < level; lpc++) {
+				printf("\t");
+			}
+			found++;
+			printf("%s: %s (%s::%s)\n",
+			       name, ID(rsc), crm_str(class), crm_str(type));
+		} else if(safe_str_eq(name, "resource_group")
+			  || safe_str_eq(name, XML_RSC_ATTR_INCARNATION)) {
+			for(lpc = 0; lpc < level; lpc++) {
+				printf("\t");
+			}
+			printf("%s: %s (complex)\n", name, ID(rsc));
+			do_find_resource_list(level+1, rsc);
+			found++;
+		}
 		);
 	if(found == 0) {
+		for(lpc = 0; lpc < level; lpc++) {
+			printf("\t");
+		}
 		printf("NO resources configured\n");
 	}
 					
