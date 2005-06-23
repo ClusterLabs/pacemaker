@@ -46,20 +46,8 @@ def create_cib() :
 
         nvpair = doc.createElement("nvpair")
         crm_config.appendChild(nvpair)
-        nvpair.setAttribute("id","require_quorum")
-        nvpair.setAttribute("name","require_quorum")
-        nvpair.setAttribute("value","true")
-
-        nvpair = doc.createElement("nvpair")
-        crm_config.appendChild(nvpair)
         nvpair.setAttribute("id","symmetric_cluster")
         nvpair.setAttribute("name","symmetric_cluster")
-        nvpair.setAttribute("value","true")
-                
-        nvpair = doc.createElement("nvpair")
-        crm_config.appendChild(nvpair)
-        nvpair.setAttribute("id","suppress_cib_writes")
-        nvpair.setAttribute("name","suppress_cib_writes")
         nvpair.setAttribute("value","true")
         
         nvpair = doc.createElement("nvpair")
@@ -84,7 +72,7 @@ def cib_resource(doc,index, rsc):
         id, type, params = None, None, None
         
         if len(string.split(rsc,'.')) == 4 :
-                id = "IPaddr"+"_"+str(index)
+                id = "IPaddr_"+str(index)
                 type = "IPaddr"
                 params = [rsc]
         else :
@@ -114,10 +102,10 @@ def cib_resource(doc,index, rsc):
                 
 def cib_rsc_location(doc, id, node):
         rsc_location = doc.createElement("rsc_location")
-        rsc_location.setAttribute("id","run_"+id)
+        rsc_location.setAttribute("id","rsc_location_"+id)
         rsc_location.setAttribute("rsc",id)
         rule = doc.createElement("rule")
-        rule.setAttribute("id","pre_run_"+id)
+        rule.setAttribute("id","prefered_location_"+id)
         rule.setAttribute("score","100")
         rsc_location.appendChild(rule)
         expression = doc.createElement("expression")
@@ -139,7 +127,7 @@ def add_resource(cib,index,node,rsc):
         cib[2].appendChild(rsc_location)
         
 def add_resource_group(cib,index,node,rscs):
-        groupid = "group"+str(index)
+        groupid = "group_"+str(index)
         resource_group = cib_resource_group(cib[0],groupid)
         cib[1].appendChild(resource_group)
         for rsc in rscs :
