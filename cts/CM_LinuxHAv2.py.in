@@ -142,7 +142,7 @@ class LinuxHAv2(HeartbeatCM):
          </operations>
          <instance_attributes>
            <attributes>
-             <nvpair name="ip" value="%s"/>
+             <nvpair id="1" name="ip" value="%s"/>
            </attributes>
          </instance_attributes>
        </resource>''' % self.Env["IPBase"]
@@ -165,7 +165,7 @@ class LinuxHAv2(HeartbeatCM):
          </operations>
          <instance_attributes>
            <attributes>
-             <nvpair name="ip" value="%s"/>
+             <nvpair id="1" name="ip" value="%s"/>
            </attributes>
          </instance_attributes>
        </resource>""" %("rsc_"+node, ip))
@@ -188,8 +188,8 @@ class LinuxHAv2(HeartbeatCM):
        <incarnation id="DoFencing">
          <instance_attributes>
            <attributes>
-             <nvpair name="incarnation_max" value="%d"/>
-             <nvpair name="incarnation_node_max" value="1"/>
+             <nvpair id="1" name="incarnation_max" value="%d"/>
+             <nvpair id="2" name="incarnation_node_max" value="1"/>
            </attributes>
          </instance_attributes>
          <resource id="child_DoFencing" class="stonith" type="ssh">
@@ -198,7 +198,7 @@ class LinuxHAv2(HeartbeatCM):
            </operations>
            <instance_attributes>
              <attributes>
-               <nvpair name="hostlist" value="%s"/>
+               <nvpair id="1" name="hostlist" value="%s"/>
              </attributes>
            </instance_attributes>
          </resource>
