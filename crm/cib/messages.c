@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.46 2005/06/23 07:52:56 andrew Exp $ */
+/* $Id: messages.c,v 1.47 2005/06/27 08:17:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -561,7 +561,7 @@ cib_process_modify(
 	} else if (strcmp(CIB_OP_UPDATE, op) == 0) {
 		cib_update_op = CIB_UPDATE_OP_MODIFY;
 		
-	} else if (strcmp(CIB_OP_DELETE, op) == 0) {
+	} else if (strcmp(CIB_OP_DELETE_ALT, op) == 0) {
 		cib_update_op = CIB_UPDATE_OP_DELETE;
 		
 	} else {
@@ -869,6 +869,7 @@ sync_our_cib(HA_Message *request, gboolean all)
 	enum cib_errors result      = cib_ok;
 	const char *host            = cl_get_string(request, F_ORIG);
 	const char *op              = cl_get_string(request, F_CIB_OPERATION);
+
 	crm_data_t *sync_data       = create_cib_fragment(the_cib, NULL);
 	HA_Message *replace_request = cib_msg_copy(request, FALSE);
 	

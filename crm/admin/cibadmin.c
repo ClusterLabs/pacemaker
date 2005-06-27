@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.38 2005/06/17 11:11:35 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.39 2005/06/27 08:17:06 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -201,6 +201,9 @@ main(int argc, char **argv)
 				break;
 			case 'D':
 				cib_action = CIB_OP_DELETE;
+				break;
+			case 'd':
+				cib_action = CIB_OP_DELETE_ALT;
 				break;
 			case 'M':
 				cib_action = CIB_OP_ISMASTER;
@@ -410,7 +413,7 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 		free_xml(msg_data);
 		return rc;
 
-	} else if (strcmp(CIB_OP_DELETE_ALT, cib_action) == 0) {
+	} else if (strcmp(CIB_OP_DELETE, cib_action) == 0) {
 		enum cib_errors rc = cib_ok;
 		crm_debug_4("Performing %s op...", cib_action);
 
@@ -475,9 +478,9 @@ usage(const char *cmd, int exit_status)
 
 	stream = exit_status != 0 ? stderr : stdout;
 
-	fprintf(stream, "usage: %s [-?Vio] command\n"
+	fprintf(stream, "usage: %s [%s] command\n"
 		"\twhere necessary, XML data will be expected using -X"
-		" or on STDIN if -X isnt specified\n", cmd);
+		" or on STDIN if -X isnt specified\n", cmd, OPTARGS);
 
 	fprintf(stream, "Options\n");
 	fprintf(stream, "\t--%s (-%c) <id>\tid of the object being operated on\n",
@@ -494,15 +497,16 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_CREATE, 'C');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_REPLACE,'R');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_UPDATE, 'U');
+
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE, 'D');
-	fprintf(stream, "\t\t\tDelete the first object matching the supplied criteria");
-	fprintf(stream, "\t\t\tEg. <op id=\"rsc1_op1\" name=\"monitor\"/>");
-	fprintf(stream, "\t\t\tThe tagname and all attributes must match in order for the element to be deleted");
+	fprintf(stream, "\t\t\tDelete the first object matching the supplied criteria\n");
+	fprintf(stream, "\t\t\tEg. <op id=\"rsc1_op1\" name=\"monitor\"/>\n");
+	fprintf(stream, "\t\t\tThe tagname and all attributes must match in order for the element to be deleted\n");
 	
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE_ALT, 'd');
-	fprintf(stream, "\t\t\tDelete the object at specified fully qualified location");
-	fprintf(stream, "\t\t\tEg. <resource id=\"rsc1\"><operations><op id=\"rsc1_op1\"/>...");
-	fprintf(stream, "\t\t\tRequires -o");
+	fprintf(stream, "\t\t\tDelete the object at specified fully qualified location\n");
+	fprintf(stream, "\t\t\tEg. <resource id=\"rsc1\"><operations><op id=\"rsc1_op1\"/>...\n");
+	fprintf(stream, "\t\t\tRequires -o\n");
 
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'M');
