@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.68 2005/06/21 10:38:41 andrew Exp $ */
+/* $Id: callbacks.c,v 1.69 2005/06/27 07:57:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -533,7 +533,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 	crm_debug_3("Finished determining processing actions");
 
 	if(call_options & cib_discard_reply) {
-		needs_reply = FALSE;
+		needs_reply = cib_server_ops[call_type].modifies_cib;
 		local_notify = FALSE;
 	}
 	
@@ -692,7 +692,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		send_ha_message(hb_conn, op_bcast, NULL);
 		crm_msg_del(op_bcast);
 		
-	} else {
+	} else if((call_options & cib_discard_reply) == 0) {
 		if(from_peer && originator != NULL) {
 			/* send reply via HA to originating node */
 			crm_debug("Sending request result to originator only");
@@ -847,7 +847,8 @@ cib_process_command(const HA_Message *request, HA_Message **reply,
 	
 	
 	crm_debug_4("Processing reply cases");
-	if(call_options & cib_discard_reply) {
+	if((call_options & cib_discard_reply)
+	   && cib_server_ops[call_type].modifies_cib == FALSE) {
 		crm_debug_3("No reply needed for call %s", call_id);
 		return rc;
 		
