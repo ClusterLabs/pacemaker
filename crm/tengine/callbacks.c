@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.38 2005/06/16 12:42:54 andrew Exp $ */
+/* $Id: callbacks.c,v 1.39 2005/06/27 11:20:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -313,7 +313,8 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
 		if(te_fsa_state != s_idle) {
 			crm_debug("Attempt to start another transition");
-			send_complete(CRM_OP_TE_HALT, NULL, te_halt, i_cancel);
+			send_complete("Attempt to start another transition",
+				      NULL, te_abort, i_cancel);
 
 		} else {
 			te_fsa_state = te_state_matrix[i_transition][te_fsa_state];
