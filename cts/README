@@ -2,52 +2,61 @@ BASIC REQUIREMENTS BEFORE STARTING:
 
 Three machines:  one test exerciser and two test cluster machines.
 
-	The two test cluster machines need to be on the same subnet.
-		and they should have journalling filesytems for
-		all their filesystems
+	The two test cluster machines need to be on the same subnet
+		and they should have journalling filesystems for
+		all of their filesystems other than /boot
 	You also need two free IP addresses on that subnet to test
 		mutual IP address takeover
 
 	The test exerciser machine doesn't need to be on the same subnet
-	as the test machines.  Minimal demands are made on the exerciser
-	machine - it just has to stay up during the tests ;-).
+	as the test cluster machines.  Minimal demands are made on the 
+	exerciser machine - it just has to stay up during the tests ;-).
 	However, it does need to have a current copy of the cts test
 	scripts.  It is worth noting that these scripts are coordinated
 	with particular versions of linux-ha, so that in general you
-	have to the same version of test scripts as the rest of linux-ha.
+	have to have the same version of test scripts as the rest of 
+	linux-ha.
 	
 
 Install heartbeat, heartbeat-pils, and heartbeat-stonith on all three
 machines.  Set up the configuration on the cluster machines *and make
-a copy of on the test exerciser machine*.  These are the necessary files:
+a copy of it on the test exerciser machine*.  These are the necessary 
+files:
 	/etc/ha.d/ha.cf
 	/etc/ha.d/haresources
 	/etc/ha.d/authkeys
 
-Note that wherever machine names are mentioned in these configuration files,
+NOTE: Do not run heartbeat on the test exerciser machine.  After
+installing all three packages, run the following to make sure that 
+heartbeat isn't automatically started every time the test exerciser
+machine boots:
+	rm /etc/rc.d/rc3.d/*heartbeat
+	rm /etc/rc.d/rc5.d/*heartbeat
+
+NOTE: Wherever machine names are mentioned in these configuration files,
 they must match the machines' `uname -n` name.  This may or may not match
 the machines' FQDN (fully qualified domain name) - it depends on how
 you (and your OS) have named the machines.  It helps a lot in tracking
 problems if the three machines' clocks are closely synchronized.  xntpd
 does this, but you can do it by hand if you want.
 
-Make sure the at service is enabled on the test cluster machines.
-(this is normally the 'atd' service started by /etc/init.d/atd).
-This doesn't mean just start it, it means enable it to start on every boot into
-your default init state (probably either 3 or 5).  Enabling it for both state
+Make sure the 'at' daemon is enabled on the test cluster machines (this
+is normally the 'atd' service started by /etc/init.d/atd).  This doesn't
+mean just start it, it means enable it to start on every boot into your
+default init state (probably either 3 or 5).  Enabling it for both state
 3 and 5 is a good minimum.  We don't need this in production - just for these
-tests.
+tests.  This typically means you need a symlink for /etc/rc.d/rc3.d/S*atd
+to /etc/init.d/atd, and one in /etc/rc.d/rc5.d/S*atd.
 
 Make sure all your filesystems are journalling filesystems (/boot can be
-ext2 if you want)...  This means jfs, ext3, or reiserfs.
+ext2 if you want).  This means filesystems like jfs, ext3, or reiserfs.
 
-Here's what you need to do to run CTS
+Here's what you need to do to run CTS:
 
-Configure the two "cluster" machines with their logging of heartbeat
-messages redirected via syslog to the third machine.  Let's call it the
-exerciser...   The exerciser doesn't have to be the same OS as the others
-but it needs to be one that supports a lot of the other things
-(like ssh and remote syslog logging).
+Configure the two cluster machines with their logging of heartbeat
+messages redirected via syslog to the exerciser machine.  The exerciser 
+doesn't have to be the same OS as the others but it needs to be one that 
+supports a lot of the other things (like ssh and remote syslog logging).
 
 You may want to configure the cluster machines to boot into run level 3,
 that is without Xdm logins - particularly if they're behind a KVM switch.
@@ -57,11 +66,11 @@ out without manual intervention.  And since some of the tests cause the
 machine to reboot without manual intervention this would be a problem.
 
 Configure syslog on the cluster machines accordingly.
-	(see the mini-HOWTOs at the end for more details)
+	(see the Mini-MOWTOs at the end for more details)
 
 The exerciser needs to be able to ssh over to the cluster nodes as root
 without a password challenge.  Configure ssh accordingly.
-	(see the mini-HOWTOs at the end for more details)
+	(see the Mini-HOWTOs at the end for more details)
 
 The exerciser needs to have the IP addresses of the test machines available
 to it - either by DNS or by /etc/hosts.  It uses this to validate configuration
@@ -91,8 +100,8 @@ need to modify it.
 
 
 OK.  Now assuming you did all this and the stuff described below, what you
-need to do is run CTSlab.py.  This is the same as the file you modified above.
-If you run any other file, it won't test your cluster ;-)
+need to do is run CTSlab.py.  If you run any other file, it won't test 
+your cluster ;-)
 
 Depending on permissions, etc., this may be either done as:
 	./CTSlab.py number-of-tests-to-run
@@ -121,11 +130,11 @@ Options for CTSlab:
 	--standby (yes|no)
 		Enable/disable standby tests
 	-v2
-		Test the release 2.0 ( include 1.99.*)
-		(see the mini-HOWTOs at the end for more details)
+		Test release 2.x (includes 1.99.x)
+		(see the Mini-HOWTOs at the end for more details)
 	
 ==============
-Mini HOWTOs:
+Mini-HOWTOs:
 ==============
 
 --------------------------------------------------------------------------------
@@ -133,10 +142,10 @@ How to redirect linux-HA logging the way CTS wants it using syslog
 --------------------------------------------------------------------------------
 
 NOTE:   There have been reports of messages being lost with vanilla syslog.
-	At least one of the developers recommend using syslog-ng or indead
+	At least one of the developers recommends using syslog-ng or indeed
 	anything else to avoid these problems.
 
-1)	Redirect each machines to go (at least) to syslog local7:
+1)	Redirect each machine to go (at least) to syslog local7:
 
 	Change /etc/ha.d/ha.cf on each test machine to say this:
 
@@ -144,23 +153,24 @@ logfacility local7
 
 	(you can also log to a dedicated local file with logfile if you want)
 
-2)	Change /etc/syslog.conf to redirect local7 on each of your slave
-	machines to redirect to your testmonitor machine by adding this line
+2)	Change /etc/syslog.conf to redirect local7 on each of your cluster
+	machines to redirect to your exerciser machine by adding this line
 	somewhere near the top of /etc/syslog.conf
 
-local7.*                                @testmonitor-machine 
+local7.*                                @exerciser-machine 
 
-3)	Change syslog on the testmonitor-machine to accept remote
+3)	Change syslog on the exerciser machine to accept remote
 	logging requests. You do this by making sure it gets invoked with
-	the "-r" option On SuSE Linux you need to change /etc/rc.config
+	the "-r" option. On SuSE Linux you need to change /etc/rc.config
 	to put have this line for SYSLOGD_PARAMS:
+
+SYSLOGD_PARAMS="-r"
+
 	If you're on a recent version of SuSE/UL, this parameter has
 	moved into /etc/sysconfig/syslog.  You'll have to restart syslog
 	after putting these parameters into effect.
 
-SYSLOGD_PARAMS="-r"
-
-4)	Change on the testmonitor-machine to redirect messages
+4)	Change syslog on the exerciser machine to redirect messages
 	from local7 into /var/log/ha-log-local7 by adding this line to
 	/etc/syslog.conf 
 
@@ -180,18 +190,24 @@ a password.
 All our scripts run ssh -l root, so you don't have to do any of your testing
 logged in as root on the test machine
 
-1)	Grab your key from the testmonitor-machine:
+1)	Grab your key from the exerciser machine:
+
 	take the single line out of ~/.ssh/identity.pub
 	and put it into root's authorized_keys file.
 	[This has changed to: copying the line from ~/.ssh/id_dsa.pub into
 		root's authorized_keys file ]
-	Run this command on each of the "test" machines as root:
 
-ssh -v -l myid testmonitor-machine cat /home/myid/.ssh/identity.pub \
+	NOTE: If you don't have an id_dsa.pub file, create it by running:
+
+		ssh-keygen -t dsa
+
+2)	Run this command on each of the cluster machines as root:
+
+ssh -v -l myid ererciser-machine cat /home/myid/.ssh/identity.pub \
 	>> ~root/.ssh/authorized_keys
 
 [For most people, this has changed to:
-  ssh -v -l myid testmonitor-machine cat /home/myid/.ssh/id_dsa.pub \
+  ssh -v -l myid exerciser-machine cat /home/myid/.ssh/id_dsa.pub \
 	>> ~root/.ssh/authorized_keys
 ]
 
@@ -199,16 +215,17 @@ ssh -v -l myid testmonitor-machine cat /home/myid/.ssh/identity.pub \
 	"yes" to some questions about accepting the identity of the
 	test machines
 
-You must also do the corresponding update for the testmonitor machine itself
-as root:
+3)	You must also do the corresponding update for the exerciser 
+	machine itself as root:
+
 	cat /home/myid/.ssh/identity.pub >> ~root/.ssh/authorized_keys
 
-	To test this, try this command from the testmonitor-machine for each
-	of your testmachines, and for the testmonitor-machine itself.
+	To test this, try this command from the exerciser machine for each
+	of your cluster machines, and for the exerciser machine itself.
 
-ssh -l root othermachine
+ssh -l root cluster-machine
 
-If this works, without prompting for a password, you're in business...
+If this works without prompting for a password, you're in business...
 If not, you need to look at the ssh/openssh documentation and the output from
 the -v options above...
 
@@ -217,12 +234,13 @@ How to redirect linux-HA logging the way CTS wants it using syslog-ng
 --------------------------------------------------------------------------------
 
 why syslong-ng:
-        Syslog-ng can use tcp and guarantee availability of logs. It is important
-we get every log message or our test may fail with lost of some important messages.
+        Syslog-ng can use tcp and guarantee availability of logs. It is
+important we get every log message or our test may fail with loss of some 
+important messages.
 
 The following instructions apply to RedHat systems:
 
-1)      Redirect each machines to go (at least) to syslog local7:
+1)      Redirect each machine to go (at least) to syslog local7:
 
         Change /etc/ha.d/ha.cf on each test machine to say this:
 
@@ -230,39 +248,60 @@ logfacility local7
 
 
 2)      On all machines: download syslog-ng rpm and install it.
-        Or you can download its source at http://www.balabit.com/products/syslog_ng/,
-        compile and install it.
+        Or you can download its source at 
+		http://www.balabit.com/products/syslog_ng/
+        and compile and install it.
 	
 
-3)      On all machines: stop syslog and disable it on reboot
+3)      On all machines: stop syslog and disable it on reboot (SEE NOTE BELOW
+	FIRST)
         
-$ /etc/init.d/syslog stop
-$ chkconfig --level 2345 syslog off
+/etc/init.d/syslog stop
+chkconfig --level 2345 syslog off
 
 
-4)      In testmonitor-machine, add the source and destination for remote log in the
-        file /etc/syslog-ng/syslong-ng.conf. You can change the port number to
-        other number, but it must be the same with the port number in slave machines
-        (see 5)
+4)      On exerciser machine, add the source and destination for remote log in
+	the file /etc/syslog-ng/syslong-ng.conf. You can change the port number
+	to other number, but it must be the same with the port number in cluster
+	machines (see 5)
 
 source s_tcp { tcp(port(15789) max-connections(10)); }; 
 destination     d_ha  { file("/var/log/ha-log-local7"); };
 log { source(s_tcp); destination(d_ha); };
 
-5)      In slave machines, send log out to a remote machine
-	add the following lines to /etc/syslog-ng/syslong-ng.conf
-        after the definition of f_boot. 
-	Note the port number must be the same with 4)
-	Change the ip to the testmonitor machine's ip
 
-filter          f_boot  { facility(local7); }; /* this line is already in file*/
-destination d_tcp { tcp("192.168.0.3" port(15789));};
-log { source(s_sys); filter(f_boot); destination(d_tcp); };
+5)      On cluster machines, send log out to a remote machine by adding the
+	following lines to /etc/syslog-ng/syslong-ng.conf after the definition
+	of f_boot.  Note the port number must be the same with 4).
+	Change exerciser-machine to the exerciser machine's IP or name
+
+source s_tcp { tcp(port(15789) max-connections(10)); };
+filter f_ha  { facility(local7); };
+filter f_ha_tcp  { facility(local7); };
+destination ha_local { file("/var/log/cluster.log" perm(0644)); };
+destination ha_tcp { tcp(exerciser-machine port(15789));};
+log { source(src); filter(f_ha_tcp); destination(ha_tcp); };
+log { source(src); source(s_tcp); filter(f_ha); destination(ha_local); };
         
-6)      start syslog-ng and enable it in reboot in all machines 
 
-$/etc/init.d/syslog-ng start
-$chkconfig --level 2345 syslog-ng on
+6)      Start syslog-ng and enable it upon reboot in all machines (SEE NOTE
+	BELOW FIRST)
+
+/etc/init.d/syslog-ng start
+chkconfig --level 2345 syslog-ng on
+
+NOTE:	Instead of disabling syslog and enabling syslog-ng, it is possible
+	with newer versions of syslog to simply tell it to use the syslog-ng
+	daemon instead of its own.  If you prefer this method, then step 3 
+	becomes:
+
+/etc/init.d/syslog stop
+
+	and step 6 becomes:
+
+echo SYSLOG_DAEMON="syslog-ng" >> /etc/sysconfig/syslog
+echo SYSLOG_NG_CREATE_CONFIG="no" >> /etc/sysconfig/syslog
+/etc/init.d/syslog start
 
 --------------------------------------------------------------------------------
 How to redirect linux-HA logging CTS wants with evlog
@@ -276,21 +315,21 @@ http://evlog.sourceforge.net/
 
 evlog is compliance with draft POSIX Standard 1003.25. It can provide more 
 advanced logging capacities (please refer to its web site for more details). 
-Among its serveral important features, when comparing with syslog, the remote 
+Among its several important features, when comparing with syslog, the remote 
 logging with tcp protocol is preferred here.
 
 Why? Because when testing linux-ha as described above, you may have to need 
 remote logging support. Of course you can use syslog to get it via suitable
-setting as the steps descibed above. But, syslog itself only supports remote
+setting as the steps described above. But, syslog itself only supports remote
 logging with udp protocol. As you know, sometimes udp protocol is not reliable 
 enough, especially under heavy workload, may lose some udp packages, cause 
-cts' log to become mess and difficult to analyse. Evlog is a good way to 
+cts' log to become mess and difficult to analyze. Evlog is a good way to 
 resolve this issue.
 
 Briefly, we can locally forward syslog message to evlog, then continue 
 forwarding the log message to remote machine with evlog's tcp remote logging
 capacity. This don't require to rewrite related applications, such as heartbeat.
-It's a big advantage for us. Since by default evlog isn't configurated to 
+It's a big advantage for us. Since by default evlog isn't configured to 
 support tcp remote logging, so need to configure it. The following is the brief 
 steps. Some of them are abstracted from evlog documents.
 
@@ -299,7 +338,7 @@ steps. Some of them are abstracted from evlog documents.
 
   You can download evlog binary or source from evlog project page:
 	http://sourceforge.net/projects/evlog                                              
-  Some linux distributions, such as SLES, includes evlog, but normally it 
+  Some linux distributions, such as SLES, include evlog, but normally it 
 doesn't contain remote tcp logging module named as tcp_rmtlog_be. So you may
 need to get additional package from there.  
 
@@ -383,7 +422,7 @@ d. Restart the evlogrmtd daemon...
    If evlogrmtd cannot resolve any of the hosts listed in evlhosts, or there 
    are no entries in /etc/evlog.d/evlhosts, then the evlogmrtd will exit.
 
-3) Configure the two test machine on which hearbeat will run.
+3) Configure the two test machine on which heartbeat will run.
 -------------------------------------------------------------
 
 This procedure installs and configures an event tcp logging plugin for 
@@ -452,34 +491,39 @@ to read them.
 Enjoy evlog ;). The end.
 
 --------------------------------------------------------------------------------
-How to configure release 2.*(1.99.*) for cts testing --draft
+How to configure release 2.x (including 1.99.x) for cts testing
 --------------------------------------------------------------------------------
-To test release 2.X(1.99.*), we need do following additional work.
+To test release 2.x (including 1.99.x) you need to do the following additional
+work.
 
 1. Please build the source code with --enable-crm option and install it.
 
-2. Configure the ha.cf, and make it same on the test exerciser and all test 
-cluster machines. Please add following lines to ha.cf:
-	apiauth default uid=root
-	apiauth ccm uid=hacluster
-	respawn root /usr/lib/heartbeat/lrmd
-	respawn hacluster /usr/lib/heartbeat/ccm
-	respawn root /usr/lib/heartbeat/crmd -VVVV
+2. Configure ha.cf, and make it same on the test exerciser and all test 
+cluster machines.  Please add the following lines to ha.cf:
+	auto_failback legacy
+	crm yes
+Also, if the following line is in ha.cf, please remove it as it does not
+apply to 2.x:
+	respawn hacluster /usr/lib/heartbeat/ipfail 
 
-3. Add resources and constraints to the cluster:
-  3.1 Start up the heartbeat on all test machines:
-	/usr/lib/heartbeat/heartbeat -M
+3. Remove all lines from haresources and save it as an empty file until
+bug 613 (http://www.osdl.org/developer_bugzilla/show_bug.cgi?id=613) is
+resolved.
 
-  3.2 Wait for the heartbeat start complete:
-	Using "/usr/lib/crmadmin -S node" on one test machine to get the states
-	of nodes. Wait for all test machines are in S_IDLE or S_NOT_DC state.
+4. Add resources and constraints to the cluster:
+  4.1 Start up heartbeat on all test cluster machines:
+	/etc/init.d/heartbeat start
 
-  3.3 Add resources and constraints to cluster.
-	Using "/usr/lib/cibadmin" to add resources and constraints.
-	Please notice you need do this only once on one test node.
-	For examples,
+  4.2 Wait for the heartbeat starts to complete:
+	Using "/usr/lib/heartbeat/crmadmin -S node" on one test cluster machine
+	to get the states of nodes, wait until all test cluster machines are in
+	S_IDLE or S_NOT_DC state.
 
-	To add a constraint:
+  4.3 Add resources and constraints to cluster.
+	Use "/usr/lib/heartbeat/cibadmin" to add resources and constraints.
+	Please note that you need do this only once on one test cluster node.
+	For example, to add a constraint:
+
 	/usr/lib/heartbeat/cibadmin -C -o constraint -X \
 	'<rsc_location id="ad66bef2-5a34-49b2-85a9-3fc6dc69e6fb" rsc="rsc1"> \
 		<rule id="2deac01b-35ee-4148-97ab-17970fb710df" result="can"/> \
@@ -489,6 +533,7 @@ cluster machines. Please add following lines to ha.cf:
 	</rsc_location>'
 
 	To add a resource:
+
 	/usr/lib/heartbeat/cibadmin -C -o resource   -X \
 	'<resource id="rsc1" class="heartbeat" type="IPaddr" > \
 		<instance_attributes> \
@@ -498,10 +543,11 @@ cluster machines. Please add following lines to ha.cf:
 		</instance_attributes> \
 	</resource>'
 
-  3.4 Shutdown the heartbeat on all test machines:	
-	/usr/lib/heartbeat/heartbeat -k
+  4.4 Shutdown heartbeat on all test cluster machines:	
+	/etc/init.d/heartbeat stop
 
-4. Now we can tart cts test on the exerciser node:
+5. Now we can tart cts test on the exerciser node:
 		./CTSlab.py -v2 number-of-tests-to-run
 	or as
 		python ./CTSlab.py -v2 number-of-tests-to-run
+
