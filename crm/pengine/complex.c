@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.35 2005/06/16 12:36:17 andrew Exp $ */
+/* $Id: complex.c,v 1.36 2005/06/27 11:18:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,6 +33,9 @@ gboolean has_agent(node_t *a_node, lrm_agent_t *an_agent);
 
 extern gboolean rsc_colocation_new(const char *id, enum con_strength strength,
 				   resource_t *rsc_lh, resource_t *rsc_rh);
+extern rsc_to_node_t *rsc2node_new(
+	const char *id, resource_t *rsc, double weight, node_t *node,
+	pe_working_set_t *data_set);
 
 resource_object_functions_t resource_class_functions[] = {
 	{
@@ -124,7 +127,8 @@ inherit_parent_attributes(
 		XML_RSC_ATTR_RESTART,
 		"multiple_active",
 		"start_prereq",
-		"resource_stickiness"
+		"resource_stickiness",
+		"is_managed"
 	};
 
 	for(lpc = 0; lpc < DIMOF(attributes); lpc++) {
@@ -154,6 +158,7 @@ common_unpack(
 	const char *multiple = crm_element_value(xml_obj, "multiple_active");
 	const char *placement= crm_element_value(xml_obj, "resource_stickiness");
 	const char *priority = NULL;
+	const char *is_managed = NULL;
 
 	crm_log_xml_debug_2(xml_obj, "Processing resource input...");
 	
@@ -205,7 +210,20 @@ common_unpack(
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
 
-
+	is_managed = crm_element_value((*rsc)->xml, "is_managed");
+	if(crm_is_true(is_managed) == FALSE) {
+		/* prevent this resource from running anywhere */
+		rsc_to_node_t *new_con = rsc2node_new(
+			"is_managed_default", *rsc, -INFINITY, NULL, data_set);
+		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);
+		crm_warn("Resource %s is currently in standby/non-managed mode",
+			 (*rsc)->id);
+		
+	} else if(data_set->symmetric_cluster) {
+		rsc_to_node_t *new_con = rsc2node_new(
+			"symmetric_default", *rsc, 0, NULL, data_set);
+		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);
+	}
 	
 	crm_debug_2("Options for %s", id);
 	
