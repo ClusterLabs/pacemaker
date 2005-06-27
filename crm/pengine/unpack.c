@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.98 2005/06/16 12:36:23 andrew Exp $ */
+/* $Id: unpack.c,v 1.99 2005/06/27 11:15:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -67,8 +67,7 @@ gboolean create_ordering(
 
 rsc_to_node_t *rsc2node_new(
 	const char *id, resource_t *rsc,
-	double weight, gboolean can_run, node_t *node,
-	pe_working_set_t *data_set);
+	double weight, node_t *node, pe_working_set_t *data_set);
 
 const char *param_value(crm_data_t * parent, const char *name);
 
@@ -77,18 +76,18 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 {
 	const char *value = NULL;
 	
-	value = param_value(config, "transition_timeout");
+	value = param_value(config, "transition_idle_timeout");
 	if(value != NULL) {
 		long tmp = crm_get_msec(value);
 		if(tmp > 0) {
-			transition_timeout = value;
+			transition_idle_timeout = value;
 		} else {
 			crm_err("Invalid value for %s: %s",
-				"transition_timeout", value);
+				"transition_idle_timeout", value);
 		}
 	}
 	crm_debug_4("%s set to: %s",
-		 "transition_timeout", transition_timeout);
+		 "transition_idle_timeout", transition_idle_timeout);
 
 	value = param_value(config, "default_resource_stickiness");
 	data_set->default_resource_stickiness = crm_atoi(value, "0");
@@ -276,17 +275,9 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 		if(common_unpack(xml_obj, &new_rsc, data_set)) {
 			data_set->resources = g_list_append(
 				data_set->resources, new_rsc);
-
+			
 			crm_action_debug_3(
 				print_resource("Added", new_rsc, FALSE));
-
-			if(data_set->symmetric_cluster) {
-				rsc_to_node_t *new_con = rsc2node_new(
-					"symmetric_default", new_rsc, 0,
-					TRUE, NULL, data_set);
-				new_con->node_list_rh = node_list_dup(
-					data_set->nodes, FALSE);
-			}
 
 		} else {
 			pe_err("Failed unpacking %s %s",
@@ -342,8 +333,7 @@ unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 
 rsc_to_node_t *
 rsc2node_new(const char *id, resource_t *rsc,
-	     double weight, gboolean can, node_t *node,
-	     pe_working_set_t *data_set)
+	     double weight, node_t *node, pe_working_set_t *data_set)
 {
 	rsc_to_node_t *new_con = NULL;
 
@@ -814,8 +804,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				crm_warn("Handling failed %s for %s on %s",
 					 task, rsc->id, node->details->uname);
 				rsc2node_new("dont_run__failed_stopstart",
-					     rsc, -INFINITY, FALSE, node,
-					     data_set);
+					     rsc, -INFINITY, node, data_set);
 			}
 
 			if(action->on_fail == action_fail_fence) {
@@ -1109,7 +1098,6 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		xml_obj, rule, XML_TAG_RULE,
 
 		gboolean first_expr = TRUE;
-		gboolean can_run    = FALSE;
 		gboolean do_and     = TRUE;
 		gboolean rule_has_expressions;
 
@@ -1141,12 +1129,7 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 			do_and = FALSE;
 		}
 
-		if(score_f >= 0.0) {
-			can_run = TRUE;
-		}
-
-		new_con = rsc2node_new(rule_id, rsc_lh, score_f,
-				       can_run, NULL, data_set);
+		new_con = rsc2node_new(rule_id, rsc_lh, score_f,NULL,data_set);
 
 		if(new_con == NULL) {
 			continue;
