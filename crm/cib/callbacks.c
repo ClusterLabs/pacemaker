@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.69 2005/06/27 07:57:57 andrew Exp $ */
+/* $Id: callbacks.c,v 1.70 2005/06/27 08:22:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -394,8 +394,7 @@ cib_common_callback(
 
 		crm_debug_2("Processing IPC message from %s on %s channel",
 			    cib_client->id, cib_client->channel_name);
- 		crm_log_message(LOG_MSG, op_request);
-		crm_log_message_adv(LOG_DEBUG_3, "Client[inbound]", op_request);
+		crm_log_message_adv(LOG_MSG, "Client[inbound]", op_request);
 		
 		lpc++;
 		rc = cib_ok;
@@ -452,9 +451,8 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 	ha_msg_value_int(request, F_CIB_CALLOPTS, &call_options);
 	crm_debug_4("Retrieved call options: %d", call_options);
 	
-	crm_debug_2("Processing message from peer (%s) to %s...",
-		  originator, host?host:"master");
-	crm_log_message_adv(LOG_DEBUG_3, "Peer[inbound]", request);
+	crm_debug_2("Processing %s message (%s) to %s...",
+		    from_peer?"peer":"local",originator, host?host:"master");
 
 	rc = cib_get_operation_id(request, &call_type);
 	
@@ -579,8 +577,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		rc = cib_process_command(request, &op_reply, &result_diff, TRUE);
 		crm_debug_3("Processing complete");
 
-		if(rc == cib_diff_resync
-		   || rc == cib_diff_failed
+		if(rc == cib_diff_resync || rc == cib_diff_failed
 /* 		   || rc == cib_old_data */
 			) {
 			crm_warn("%s operation failed: %s",
