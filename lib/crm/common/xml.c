@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.17 2005/06/16 12:44:30 andrew Exp $ */
+/* $Id: xml.c,v 1.18 2005/06/27 08:18:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1862,6 +1862,7 @@ delete_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *to_delete)
 	if(can_delete && parent != NULL) {
 		crm_log_xml_debug(child, "Delete match found...");
 		cl_msg_remove_value(parent, child);
+		child = NULL;
 		
 	} else if(can_delete) {
 		crm_log_xml_debug(child, "Cannot delete the search root");
