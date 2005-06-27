@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.23 2005/06/03 14:05:40 andrew Exp $ */
+/* $Id: tengine.h,v 1.24 2005/06/27 11:13:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -134,8 +134,8 @@ extern gboolean extract_event(crm_data_t *msg);
 extern gboolean process_te_message(
 	HA_Message * msg, crm_data_t *xml_data, IPC_Channel *sender);
 
-extern uint transition_timeout;
-extern uint default_transition_timeout;
+extern uint transition_idle_timeout;
+extern uint default_transition_idle_timeout;
 
 extern te_timer_t *transition_timer;
 extern cib_t *te_cib_conn;

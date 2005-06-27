@@ -112,7 +112,7 @@ class LinuxHAv2(HeartbeatCM):
    <configuration>
      <crm_config>'''
         cib_options='''
-        <nvpair id="transition_timeout" name="transition_timeout" value="120s"/>
+        <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="120s"/>
         <nvpair id="require_quorum" name="require_quorum" value="true"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
         <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>

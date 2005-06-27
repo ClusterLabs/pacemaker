@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.70 2005/06/16 12:36:20 andrew Exp $ */
+/* $Id: pengine.h,v 1.71 2005/06/27 11:13:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -381,7 +381,7 @@ extern void graph_element_from_action(
 extern void set_working_set_defaults(pe_working_set_t *data_set);
 extern void cleanup_calculations(pe_working_set_t *data_set);
 
-extern const char* transition_timeout;
+extern const char* transition_idle_timeout;
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
 

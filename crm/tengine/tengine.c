@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.83 2005/06/16 12:42:54 andrew Exp $ */
+/* $Id: tengine.c,v 1.84 2005/06/27 11:13:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,9 +33,9 @@
 gboolean graph_complete = FALSE;
 GListPtr graph = NULL;
 IPC_Channel *crm_ch = NULL;
-uint transition_timeout = 30*1000; /* 30 seconds */
-uint default_transition_timeout = 30*1000; /* 30 seconds */
-uint next_transition_timeout = 30*1000; /* 30 seconds */
+uint transition_idle_timeout = 30*1000; /* 30 seconds */
+uint default_transition_idle_timeout = 30*1000; /* 30 seconds */
+uint next_transition_idle_timeout = 30*1000; /* 30 seconds */
 
 void fire_synapse(synapse_t *synapse);
 gboolean initiate_action(action_t *action);
@@ -404,7 +404,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	crm_debug("Processing CIB update: %s on %s: %s",
 		  rsc_id, event_node, op_status2text(op_status_i));
 
-	next_transition_timeout = transition_timeout;
+	next_transition_idle_timeout = transition_idle_timeout;
 	
 	slist_iter(
 		synapse, synapse_t, graph, lpc,
@@ -487,7 +487,7 @@ check_for_completion(void)
 	} else {
 		/* restart the transition timer again */
 		crm_debug_3("Transition not yet complete");
-		transition_timer->timeout = next_transition_timeout;
+		transition_timer->timeout = next_transition_idle_timeout;
 		start_te_timer(transition_timer);
 	}
 }
@@ -923,8 +923,8 @@ fire_synapse(synapse_t *synapse)
 				      te_failed, i_cancel);
 			return;
 		} 
-		if(tmp_time > next_transition_timeout) {
-			next_transition_timeout = tmp_time;
+		if(tmp_time > next_transition_idle_timeout) {
+			next_transition_idle_timeout = tmp_time;
 		}
 			
 		);
