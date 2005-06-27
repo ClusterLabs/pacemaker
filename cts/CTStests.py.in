@@ -87,6 +87,7 @@ class RandomTests:
                    if test:
                        ignorelist=test.errorstoignore()
                    ignorelist.append(" CTS: ")
+                   ignorelist.append("BadNews")
                    for ignore in ignorelist:
                        if re.search(ignore, match):
                            add_err = 0
