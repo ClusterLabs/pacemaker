@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.87 2005/06/16 12:36:23 andrew Exp $ */
+/* $Id: utils.c,v 1.88 2005/06/27 11:21:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -753,7 +753,8 @@ unpack_operation(
 	}
 	
 	if(value == NULL && safe_str_neq(action->task, CRMD_ACTION_START)) {
-		action->needs = rsc_req_nothing;		
+		/* todo: integrate stop as an option? */
+		action->needs = rsc_req_nothing;
 		value = "nothing (default)";
 
 	} else if(safe_str_eq(value, "nothing")) {
