@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.70 2005/06/27 08:22:01 andrew Exp $ */
+/* $Id: callbacks.c,v 1.71 2005/06/28 08:11:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -578,8 +578,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		crm_debug_3("Processing complete");
 
 		if(rc == cib_diff_resync || rc == cib_diff_failed
-/* 		   || rc == cib_old_data */
-			) {
+		   || rc == cib_old_data) {
 			crm_warn("%s operation failed: %s",
 				crm_str(op), cib_error2string(rc));
 			
