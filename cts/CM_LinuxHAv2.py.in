@@ -136,7 +136,7 @@ class LinuxHAv2(HeartbeatCM):
         if self.Env["CIBResource"] == 1:
             self.log("Enabling DC resource")
             resources='''
-       <resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
+       <resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
            <op id="1" name="monitor" interval="5s" timeout="20s"/>
          </operations>
@@ -159,7 +159,7 @@ class LinuxHAv2(HeartbeatCM):
                 fields[3] = str(int(fields[3])+1)
                 ip = string.join(fields, '.')
                 node_resource=("""
-       <resource id="%s" class="ocf" type="IPaddr" provider="heartbeat">
+       <resource id="%s" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
            <op id="1" name="monitor" interval="5s" timeout="20s"/>
          </operations>
