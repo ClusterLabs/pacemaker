@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.36 2005/06/27 11:18:29 andrew Exp $ */
+/* $Id: complex.c,v 1.37 2005/06/28 08:18:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -211,7 +211,7 @@ common_unpack(
 	(*rsc)->actions            = NULL;
 
 	is_managed = crm_element_value((*rsc)->xml, "is_managed");
-	if(crm_is_true(is_managed) == FALSE) {
+	if(is_managed != NULL && crm_is_true(is_managed) == FALSE) {
 		/* prevent this resource from running anywhere */
 		rsc_to_node_t *new_con = rsc2node_new(
 			"is_managed_default", *rsc, -INFINITY, NULL, data_set);
