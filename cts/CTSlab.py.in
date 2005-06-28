@@ -239,7 +239,7 @@ class FileLog(Logger):
     def __init__(self, labinfo, filename=None):
 
         if filename == None:
-            filename=labinfo["logfile"]
+            filename=labinfo["LogFileName"]
         
         self.logfile=filename
 
