@@ -98,7 +98,6 @@ class LinuxHAv2(HeartbeatCM):
                 r"tengine:.*is taking more than 2x its timeout",
                 r"Confirm not received from",
                 r"Welcome reply not received from",
-		r"Resource .* was active at shutdown",
                 r"ERROR:",
                 r"CRIT:",
             ),
@@ -271,6 +270,16 @@ class LinuxHAv2(HeartbeatCM):
 		%(node, self["up"], self.ShouldBeStatus[node], out))
 
 	self.ShouldBeStatus[node]=self["up"]
+
+	# check the output first - because syslog-ng looses messages
+	if string.find(out, 'S_NOT_DC') != -1:
+	    # Up and stable
+	    return 2
+	if string.find(out, 'S_IDLE') != -1:
+	    # Up and stable
+	    return 2
+
+	# fall back to syslog-ng and wait
 	if not idle_watch.look():
 	    # just up
 	    self.debug("Warn: Node %s is unstable: %s" %(node, out))
