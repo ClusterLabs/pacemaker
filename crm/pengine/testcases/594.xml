@@ -1,0 +1,174 @@
+  <cib cib_feature_revision="1" num_updates="117" have_quorum="true" epoche="6" generated="true" num_peers="1" origin="hadev1" ccm_transition="4" timestamp="1118302975" dc_uuid="6125a0df-456a-4395-829a-418e9a380d36" debug_source="process_join_ack_msg" last_written="Thu Jun  9 15:42:55 2005">
+    <configuration>
+      <crm_config>
+        <nvpair id="transition_timeout" name="transition_timeout" value="120s"/>
+        <nvpair id="require_quorum" name="require_quorum" value="true"/>
+        <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
+        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>
+        <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>
+        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
+      </crm_config>
+      <nodes timestamp="1118302974">
+        <node id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" type="member"/>
+        <node id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" type="member"/>
+        <node id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" type="member"/>
+      </nodes>
+      <resources timestamp="1118302973">
+        <resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
+          <operations>
+            <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          </operations>
+          <instance_attributes>
+            <attributes>
+              <nvpair name="ip" value="127.0.0.10"/>
+            </attributes>
+          </instance_attributes>
+        </resource>
+        <resource id="rsc_hadev3" class="ocf" type="IPaddr" provider="heartbeat">
+          <operations>
+            <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          </operations>
+          <instance_attributes>
+            <attributes>
+              <nvpair name="ip" value="127.0.0.21"/>
+            </attributes>
+          </instance_attributes>
+        </resource>
+        <resource id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat">
+          <operations>
+            <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          </operations>
+          <instance_attributes>
+            <attributes>
+              <nvpair name="ip" value="127.0.0.22"/>
+            </attributes>
+          </instance_attributes>
+        </resource>
+        <resource id="rsc_hadev1" class="ocf" type="IPaddr" provider="heartbeat">
+          <operations>
+            <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          </operations>
+          <instance_attributes>
+            <attributes>
+              <nvpair name="ip" value="127.0.0.23"/>
+            </attributes>
+          </instance_attributes>
+        </resource>
+        <incarnation id="DoFencing">
+          <instance_attributes>
+            <attributes>
+              <nvpair name="incarnation_max" value="3"/>
+              <nvpair name="incarnation_node_max" value="1"/>
+            </attributes>
+          </instance_attributes>
+          <resource id="child_DoFencing" class="stonith" type="ssh">
+            <operations>
+              <op id="1" name="monitor" interval="5s" timeout="20s"/>
+            </operations>
+            <instance_attributes>
+              <attributes>
+                <nvpair name="hostlist" value="hadev3 hadev2 hadev1 "/>
+              </attributes>
+            </instance_attributes>
+          </resource>
+        </incarnation>
+      </resources>
+      <constraints timestamp="1118302973">
+        <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
+          <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
+            <expression attribute="#is_dc" operation="eq" value="false"/>
+          </rule>
+        </rsc_location>
+        <rsc_location id="run_rsc_hadev3" rsc="rsc_hadev3">
+          <rule id="pref_run_rsc_hadev3" score="100" boolean_op="and">
+            <expression attribute="#uname" operation="eq" value="hadev3"/>
+          </rule>
+        </rsc_location>
+        <rsc_location id="run_rsc_hadev2" rsc="rsc_hadev2">
+          <rule id="pref_run_rsc_hadev2" score="100" boolean_op="and">
+            <expression attribute="#uname" operation="eq" value="hadev2"/>
+          </rule>
+        </rsc_location>
+        <rsc_location id="run_rsc_hadev1" rsc="rsc_hadev1">
+          <rule id="pref_run_rsc_hadev1" score="100" boolean_op="and">
+            <expression attribute="#uname" operation="eq" value="hadev1"/>
+          </rule>
+        </rsc_location>
+      </constraints>
+    </configuration>
+    <status timestamp="1118302975">
+      <node_state id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" in_ccm="false" join="down" debug_origin="ghash_update_cib_node" crmd="offline" timestamp="1118302967" ha="active" expected="member">
+        <lrm>
+          <lrm_resources>
+            <lrm_resource id="DoFencing:child_DoFencing:0" last_op="stop" rsc_state="running" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="4" rc_code="0" op_status="0" timestamp="1118302956"/>
+              <lrm_rsc_op id="stop" operation="stop" origin="build_active_RAs" rsc_state="stopped" call_id="9" rc_code="0" op_status="0" timestamp="1118302956"/>
+            </lrm_resource>
+            <lrm_resource id="rsc_hadev3" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="3" rc_code="0" op_status="0" timestamp="1118302956"/>
+              <lrm_rsc_op id="rsc_hadev3_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="6" rc_code="0" op_status="0" timestamp="1118302956"/>
+              <lrm_rsc_op id="stop" operation="stop" origin="do_update_resource" rsc_state="stopped" call_id="19" rc_code="0" op_status="0" timestamp="1118302957"/>
+            </lrm_resource>
+            <lrm_resource id="DoFencing:child_DoFencing:2" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="10" rc_code="0" op_status="0" timestamp="1118302956"/>
+              <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="11" rc_code="0" op_status="0" timestamp="1118302956"/>
+              <lrm_rsc_op id="stop" operation="stop" origin="do_update_resource" rsc_state="stopped" call_id="21" rc_code="0" op_status="0" timestamp="1118302957"/>
+            </lrm_resource>
+            <lrm_resource id="DcIPaddr" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="2" rc_code="0" op_status="0" timestamp="1118302956"/>
+              <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="7" rc_code="0" op_status="0" timestamp="1118302956"/>
+              <lrm_rsc_op id="stop" operation="stop" origin="do_update_resource" rsc_state="stopped" call_id="17" rc_code="0" op_status="0" timestamp="1118302957"/>
+            </lrm_resource>
+          </lrm_resources>
+        </lrm>
+      </node_state>
+      <node_state id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" crmd="online" debug_origin="process_join_ack_msg" in_ccm="true" timestamp="1118302974" join="member" ha="active" expected="member" shutdown="1118302974">
+        <lrm>
+          <lrm_resources>
+            <lrm_resource id="rsc_hadev1" last_op="stop" rsc_state="running" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="3" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="stop" operation="stop" origin="build_active_RAs" rsc_state="stopped" call_id="9" rc_code="0" op_status="0" timestamp="1118302974"/>
+            </lrm_resource>
+            <lrm_resource id="DoFencing:child_DoFencing:0" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="12" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="13" rc_code="0" op_status="0" timestamp="1118302974"/>
+            </lrm_resource>
+            <lrm_resource id="rsc_hadev2" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="2" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="rsc_hadev2_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="7" rc_code="0" op_status="0" timestamp="1118302974"/>
+            </lrm_resource>
+            <lrm_resource id="DoFencing:child_DoFencing:1" last_op="stop" rsc_state="running" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="4" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="stop" operation="stop" origin="build_active_RAs" rsc_state="stopped" call_id="11" rc_code="0" op_status="0" timestamp="1118302974"/>
+            </lrm_resource>
+            <lrm_resource id="DcIPaddr" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="18" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="19" rc_code="0" op_status="0" timestamp="1118302974"/>
+            </lrm_resource>
+          </lrm_resources>
+        </lrm>
+      </node_state>
+      <node_state id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" crmd="online" debug_origin="process_join_ack_msg" in_ccm="true" timestamp="1118302975" join="member" ha="active" expected="member">
+        <lrm>
+          <lrm_resources>
+            <lrm_resource id="rsc_hadev1" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="3" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="rsc_hadev1_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="5" rc_code="0" op_status="0" timestamp="1118302974"/>
+            </lrm_resource>
+            <lrm_resource id="DoFencing:child_DoFencing:1" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="2" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="4" rc_code="0" op_status="0" timestamp="1118302974"/>
+            </lrm_resource>
+            <lrm_resource id="DoFencing:child_DoFencing:2" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="8" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="10" rc_code="0" op_status="0" timestamp="1118302974"/>
+            </lrm_resource>
+            <lrm_resource id="rsc_hadev3" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+              <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="9" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="rsc_hadev3_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="11" rc_code="0" op_status="0" timestamp="1118302974"/>
+            </lrm_resource>
+          </lrm_resources>
+        </lrm>
+      </node_state>
+    </status>
+  </cib>
