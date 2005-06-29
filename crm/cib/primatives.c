@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.22 2005/06/27 08:17:06 andrew Exp $ */
+/* $Id: primatives.c,v 1.23 2005/06/29 11:30:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -318,7 +318,8 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 	}
 	object_id = crm_element_value(delete_spec, XML_ATTR_ID);
 
-	crm_debug_2("Processing: <%s id=%s>", object_name, object_id);
+	crm_debug_2("Processing: <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
 	
 	if(delete_spec == NULL) {
 		result = cib_NOOBJECT;
@@ -342,7 +343,8 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 
 	} else if(xml_has_children(delete_spec) == FALSE) {
 		/*  only leaves are deleted */
-		crm_debug("Removing leaf: <%s id=%s>",object_name, object_id);
+		crm_debug("Removing leaf: <%s id=%s>",
+			  crm_str(object_name), crm_str(object_id));
 		zap_xml_from_parent(parent, equiv_node);
 
 	} else {
