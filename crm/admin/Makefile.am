@@ -53,7 +53,7 @@ AM_CFLAGS		= @CFLAGS@					\
 lib_LTLIBRARIES		= 
 
 ## binary progs
-halib_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff
+halib_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon
 
 ## SOURCES
 
@@ -78,6 +78,11 @@ ccm_tool_LDADD		= $(COMMONLIBS) \
 crm_diff_SOURCES	= xml_diff.c
 crm_diff_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crm_diff_LDADD		= $(COMMONLIBS)
+
+crm_mon_SOURCES		= crm_mon.c
+crm_mon_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+crm_mon_LDADD		= $(COMMONLIBS) \
+			$(top_builddir)/crm/pengine/libpengine.la
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
