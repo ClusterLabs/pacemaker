@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.51 2005/06/29 09:03:52 andrew Exp $ */
+/* $Id: native.c,v 1.52 2005/06/29 10:36:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -248,12 +248,13 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 
 		key = generate_op_key(rsc->id, name, crm_get_msec(value));
 		mon = custom_action(rsc, key, name, node, start->optional, data_set);
-		
-		if(start != NULL) {
-			custom_action_order(rsc, start_key(rsc), NULL,
-					    NULL, crm_strdup(key), mon,
-					    pe_ordering_manditory, data_set);
+
+		if(mon->optional == FALSE && node != NULL) {
+			crm_info("   %s:\t(%s)", mon->uuid, node->details->uname);
 		}
+		custom_action_order(rsc, start_key(rsc), NULL,
+				    NULL, crm_strdup(key), mon,
+				    pe_ordering_manditory, data_set);
 		);	
 }
 
@@ -385,8 +386,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	
 	if(start != NULL && start->runnable) {
-		create_recurring_actions(
-			rsc, start, chosen, data_set);
+		create_recurring_actions(rsc, start, chosen, data_set);
 	}
 }
 

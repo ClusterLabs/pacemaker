@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.80 2005/06/29 09:03:52 andrew Exp $ */
+/* $Id: pengine.c,v 1.81 2005/06/29 10:36:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -123,6 +123,9 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 			crm_debug_2("WARNINGs found during PE processing."
 				"  Input follows:");
 			crm_log_xml_debug(log_input, "[input]");
+
+		} else if(crm_log_level == LOG_DEBUG) {
+			crm_log_xml_debug(status, "[status]");
 
 		} else {
 			crm_log_xml_debug_2(log_input, "[input]");
