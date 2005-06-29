@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.38 2005/06/29 09:03:52 andrew Exp $ */
+/* $Id: complex.c,v 1.39 2005/06/29 16:40:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -147,7 +147,9 @@ inherit_parent_attributes(
 			pe_warn("Resource %s: Overwriting attribute %s: %s->%s",
 				ID(child), attributes[lpc], attr_c, attr_p);
 		}
-		crm_xml_add(child, attributes[lpc], attr_p);
+		if(attr_p != NULL) {
+			crm_xml_add(child, attributes[lpc], attr_p);
+		}
 	}
 }
 
