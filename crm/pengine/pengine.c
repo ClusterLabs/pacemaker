@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.79 2005/06/14 11:21:02 davidlee Exp $ */
+/* $Id: pengine.c,v 1.80 2005/06/29 09:03:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -279,6 +279,7 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->graph = NULL;
 	
 	data_set->dc_uuid           = NULL;
+	data_set->dc_node           = NULL;
 	data_set->have_quorum       = FALSE;
 	data_set->stonith_enabled   = FALSE;
 	data_set->symmetric_cluster = TRUE;

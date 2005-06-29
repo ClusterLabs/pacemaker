@@ -22,6 +22,7 @@
 create_mode="true"
 echo Generating test outputs for these tests...
 #do_test bad7
+do_test 662 "Bugzilla 622"
 
 echo ""
 
@@ -149,6 +150,7 @@ do_test bad6 "Bad lrm_rsc	"
 
 echo ""
 do_test 594 "Bugzilla 594"
+do_test 662 "Bugzilla 662"
 
 
 echo ""

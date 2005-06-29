@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.50 2005/06/29 08:28:42 andrew Exp $ */
+/* $Id: native.c,v 1.51 2005/06/29 09:03:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,9 +151,10 @@ int native_num_allowed_nodes(resource_t *rsc)
 			crm_debug_3("Rsc %s Checking %s: %f",
 				    rsc->id, this_node->details->uname,
 				    this_node->weight);
+			if(this_node->details->shutdown) {
+				this_node->weight = -INFINITY;
+			}
 			if(this_node->weight < 0) {				
-				continue;
-			} else if(this_node->details->shutdown) {
 				continue;
 /* 			} else if(this_node->details->unclean) { */
 /* 				continue; */
@@ -181,9 +182,10 @@ int num_allowed_nodes4color(color_t *color)
 		this_node, node_t, color->details->candidate_nodes, lpc,
 		crm_debug_3("Checking %s: %f",
 			    this_node->details->uname, this_node->weight);
+		if(this_node->details->shutdown) {
+			this_node->weight = -INFINITY;
+		}
 		if(this_node->weight < 0) {
-			continue;
-		} else if(this_node->details->shutdown) {
 			continue;
 /* 		} else if(this_node->details->unclean) { */
 /* 			continue; */
@@ -729,6 +731,32 @@ void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 			  action->id, rsc->id);
 		graph_element_from_action(action, data_set);
 		);
+}
+
+void native_printw(resource_t *rsc, const char *pre_text, int *index)
+{
+#ifdef HAVE_LIBNCURSES
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
+	common_printw(rsc, pre_text, index);
+	if(g_list_length(native_data->running_on) == 0) {
+		printw("NOT ACTIVE\n");
+		
+	} else if(g_list_length(native_data->running_on) == 1) {
+		node_t *node = native_data->running_on->data;
+		printw("%s (%s)\n", node->details->uname, node->details->id);
+		
+	} else if(g_list_length(native_data->running_on) == 1) {
+		printw("[");
+		slist_iter(node, node_t, native_data->running_on, lpc,
+			   if(lpc > 0) { printw(", "); }
+			   printw("%s (%s)", node->details->uname, node->details->id);
+			);
+		printw("]\n");
+	}
+#else
+	crm_err("printw support requires ncurses to be available during configure");
+#endif
 }
 
 void native_dump(resource_t *rsc, const char *pre_text, gboolean details)

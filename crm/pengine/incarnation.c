@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.28 2005/06/16 12:36:19 andrew Exp $ */
+/* $Id: incarnation.c,v 1.29 2005/06/29 09:03:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -261,6 +261,7 @@ void incarnation_color(resource_t *rsc, pe_working_set_t *data_set)
 		} else {
 			/* TODO: assign "no color"?  Doesnt seem to need it */
 			pe_warn("Incarnation %d cannot be started", lpc+1);
+/* 			native_assign_color(child_rsc, data_set->no_color); */
 		} 
 		);
 	crm_info("%d Incarnations are active", incarnation_data->active_incarnation);
@@ -290,12 +291,12 @@ void incarnation_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	op = start_action(incarnation_data->self, NULL,
 			  !incarnation_data->child_starting);
-	op->pseudo   = TRUE;
+	op->pseudo = TRUE;
 	
 	op = custom_action(incarnation_data->self, started_key(rsc),
 		      CRMD_ACTION_STARTED, NULL,
 			   !incarnation_data->child_starting, data_set);
-	op->pseudo   = TRUE;
+	op->pseudo = TRUE;
 
 	child_starting_constraints(
 		incarnation_data, pe_ordering_optional,
@@ -303,12 +304,12 @@ void incarnation_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	
 	op = stop_action(incarnation_data->self, NULL,
 			 !incarnation_data->child_stopping);
-	op->pseudo   = TRUE;
+	op->pseudo = TRUE;
 
 	op = custom_action(incarnation_data->self, stopped_key(rsc),
 			   CRMD_ACTION_STOPPED, NULL,
 			   !incarnation_data->child_stopping, data_set);
-	op->pseudo   = TRUE;
+	op->pseudo = TRUE;
 
 	child_stopping_constraints(
 		incarnation_data, pe_ordering_optional,
@@ -467,8 +468,10 @@ incarnation_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint)
 {
+	gboolean do_interleave = FALSE;
 	resource_t *rsc = constraint->rsc_lh;
 	incarnation_variant_data_t *incarnation_data = NULL;
+	incarnation_variant_data_t *incarnation_data_rh = NULL;
 	
 	if(rsc == NULL) {
 		pe_err("rsc_lh was NULL for %s", constraint->id);
@@ -489,6 +492,44 @@ void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint)
 	
 	get_incarnation_variant_data(incarnation_data, rsc);
 
+	if(constraint->rsc_lh == constraint->rsc_rh) {
+		do_interleave = TRUE;
+		get_incarnation_variant_data(
+			incarnation_data_rh, constraint->rsc_rh);
+
+	} else if(constraint->rsc_rh->variant == pe_incarnation) {
+		get_incarnation_variant_data(
+			incarnation_data_rh, constraint->rsc_rh);
+		if(incarnation_data->interleave == FALSE) {
+		} else if(incarnation_data_rh->interleave == FALSE) {
+		} else if(incarnation_data->incarnation_max
+			  == incarnation_data_rh->incarnation_max) {
+			do_interleave = TRUE;
+		}
+	}
+	
+	if(do_interleave) {
+		resource_t *child_lh = NULL;
+		resource_t *child_rh = NULL;
+		resource_t *parent_rh = constraint->rsc_rh;
+		
+		GListPtr iter_lh = incarnation_data->child_list;
+		GListPtr iter_rh = incarnation_data_rh->child_list;
+		
+		while(iter_lh != NULL && iter_rh != NULL) {
+			child_lh = iter_lh->data;
+			child_rh = iter_rh->data;
+			iter_lh = iter_lh->next;
+			iter_rh = iter_rh->next;
+			
+			constraint->rsc_rh = child_rh;
+			child_rh->fns->rsc_colocation_rh(child_lh, constraint);
+		}
+		constraint->rsc_rh = parent_rh;
+		return;
+	}
+	
+	
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,
 		
@@ -600,6 +641,32 @@ void incarnation_expand(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc->fns->expand(child_rsc, data_set);
 
 		);
+}
+
+void incarnation_printw(resource_t *rsc, const char *pre_text, int *index)
+{
+#ifdef HAVE_LIBNCURSES
+	const char *child_text = NULL;
+	incarnation_variant_data_t *incarnation_data = NULL;
+	get_incarnation_variant_data(incarnation_data, rsc);
+	if(pre_text != NULL) {
+		child_text = "        ";
+	} else {
+		child_text = "    ";
+	}
+
+	move(*index, 0);
+	printw("Incarnation: %s\n", rsc->id);
+	
+	slist_iter(
+		child_rsc, resource_t, incarnation_data->child_list, lpc,
+		
+		(*index)++;
+		child_rsc->fns->printw(child_rsc, child_text, index);
+		);
+#else
+	crm_err("printw support requires ncurses to be available during configure");
+#endif
 }
 
 void incarnation_dump(resource_t *rsc, const char *pre_text, gboolean details)

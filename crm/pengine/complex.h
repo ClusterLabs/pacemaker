@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.12 2005/06/13 12:35:46 andrew Exp $ */
+/* $Id: complex.h,v 1.13 2005/06/29 09:03:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -16,9 +16,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#ifndef CRM_PENGINE_COMPLEX__H
+#define CRM_PENGINE_COMPLEX__H
 
 #include <crm/common/xml.h>
-#include <pengine.h>
+#include <crm/pengine/pengine.h>
 #include <glib.h>
 
 #define n_object_classes 3
@@ -61,6 +63,7 @@ typedef struct resource_object_functions_s
 
 		void (*expand)(resource_t *, pe_working_set_t *);
 		void (*dump)(resource_t *, const char *, gboolean);
+		void (*printw)(resource_t *, const char *, int*);
 		void (*free)(resource_t *);
 		
 } resource_object_functions_t;
@@ -83,6 +86,7 @@ extern void native_rsc_order_rh(
 extern void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void native_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details);
+extern void native_printw(resource_t *rsc, const char *pre_text, int *index);
 extern void native_free(resource_t *rsc);
 
 
@@ -104,6 +108,7 @@ extern void group_rsc_order_rh(
 extern void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void group_dump(resource_t *rsc, const char *pre_text, gboolean details);
+extern void group_printw(resource_t *rsc, const char *pre_text, int *index);
 extern void group_free(resource_t *rsc);
 
 
@@ -125,6 +130,7 @@ extern void incarnation_rsc_order_rh(
 extern void incarnation_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void incarnation_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void incarnation_dump(resource_t *rsc, const char *pre_text, gboolean details);
+extern void incarnation_printw(resource_t *rsc, const char *pre_text, int *index);
 extern void incarnation_free(resource_t *rsc);
 
 /* extern resource_object_functions_t resource_variants[]; */
@@ -133,6 +139,8 @@ extern gboolean common_unpack(
 	crm_data_t *xml_obj, resource_t **rsc, pe_working_set_t *data_set);
 extern void common_dump(
 	resource_t *rsc, const char *pre_text, gboolean details);
+extern void common_printw(resource_t *rsc, const char *pre_text, int *index);
+
 extern void common_free(resource_t *rsc);
 extern void native_add_running(resource_t *rsc, node_t *node);
 extern gboolean is_active(rsc_to_node_t *cons);
@@ -152,3 +160,5 @@ extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 
 extern void inherit_parent_attributes(
 	crm_data_t *parent, crm_data_t *child, gboolean overwrite);
+
+#endif

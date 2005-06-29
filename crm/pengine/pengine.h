@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.71 2005/06/27 11:13:05 andrew Exp $ */
+/* $Id: pengine.h,v 1.72 2005/06/29 09:03:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,6 +35,12 @@ typedef struct action_wrapper_s action_wrapper_t;
 #include <crm/crm.h>
 #include <crm/common/msg.h>
 
+#include <linux-ha/config.h>
+
+#ifdef HAVE_LIBNCURSES
+#  include <curses.h>
+#endif
+
 typedef enum no_quorum_policy_e {
 	no_quorum_freeze,
 	no_quorum_stop,
@@ -47,6 +53,7 @@ typedef struct pe_working_set_s
 
 		/* options extracted from the input */
 		char *dc_uuid;
+		node_t *dc_node;
 		gboolean have_quorum;
 		gboolean stonith_enabled;
 		gboolean symmetric_cluster;
@@ -76,7 +83,7 @@ typedef struct pe_working_set_s
 
 } pe_working_set_t;
 
-#include <complex.h>
+#include <crm/pengine/complex.h>
 
 enum con_type {
 	type_none,

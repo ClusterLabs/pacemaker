@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.99 2005/06/27 11:15:43 andrew Exp $ */
+/* $Id: unpack.c,v 1.100 2005/06/29 09:03:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,7 +48,8 @@ gboolean unpack_rsc_location(crm_data_t *xml_obj, pe_working_set_t *data_set);
 gboolean unpack_lrm_rsc_state(
 	node_t *node, crm_data_t * lrm_state, pe_working_set_t *data_set);
 
-gboolean add_node_attrs(crm_data_t * attrs, node_t *node, const char *dc_uuid);
+gboolean add_node_attrs(
+	crm_data_t * attrs, node_t *node, pe_working_set_t *data_set);
 
 gboolean unpack_rsc_op(
 	resource_t *rsc, node_t *node, crm_data_t *xml_op,
@@ -242,7 +243,7 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 			new_node->details->type = node_member;
 		}
 
-		add_node_attrs(xml_obj, new_node, data_set->dc_uuid);
+		add_node_attrs(xml_obj, new_node, data_set);
 
 		if(crm_is_true(g_hash_table_lookup(
 				       new_node->details->attrs, "standby"))) {
@@ -272,6 +273,8 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 		xml_resources, xml_obj, NULL,
 
 		resource_t *new_rsc = NULL;
+		crm_debug_2("Begining unpack... %s",
+			    xml_obj?crm_element_name(xml_obj):"<none>");
 		if(common_unpack(xml_obj, &new_rsc, data_set)) {
 			data_set->resources = g_list_append(
 				data_set->resources, new_rsc);
@@ -409,7 +412,7 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 		this_node->details->unclean = FALSE;
 		
 		crm_debug_3("Adding runtime node attrs");
-		add_node_attrs(node_state, this_node, data_set->dc_uuid);
+		add_node_attrs(node_state, this_node, data_set);
 
 		crm_debug_3("determining node state");
 		determine_online_status(node_state, this_node, data_set);
@@ -1055,7 +1058,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 }
 
 gboolean
-add_node_attrs(crm_data_t *xml_obj, node_t *node, const char *dc_uuid)
+add_node_attrs(crm_data_t *xml_obj, node_t *node, pe_working_set_t *data_set)
 {
  	g_hash_table_insert(node->details->attrs,
 			    crm_strdup("#"XML_ATTR_UNAME),
@@ -1063,7 +1066,8 @@ add_node_attrs(crm_data_t *xml_obj, node_t *node, const char *dc_uuid)
  	g_hash_table_insert(node->details->attrs,
 			    crm_strdup("#"XML_ATTR_ID),
 			    crm_strdup(node->details->id));
-	if(safe_str_eq(node->details->id, dc_uuid)) {
+	if(safe_str_eq(node->details->id, data_set->dc_uuid)) {
+		data_set->dc_node = node;
 		node->details->is_dc = TRUE;
 		g_hash_table_insert(node->details->attrs,
 				    crm_strdup("#"XML_ATTR_DC),

@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.25 2005/06/16 12:36:18 andrew Exp $ */
+/* $Id: group.c,v 1.26 2005/06/29 09:03:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -379,6 +379,32 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc->fns->expand(child_rsc, data_set);
 		);
 
+}
+
+void group_printw(resource_t *rsc, const char *pre_text, int *index)
+{
+#ifdef HAVE_LIBNCURSES
+	const char *child_text = NULL;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
+	if(pre_text != NULL) {
+		child_text = "        ";
+	} else {
+		child_text = "    ";
+	}
+	
+	move(*index, 0);
+	printw("Resource Group: %s\n", rsc->id);
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		
+		(*index)++;
+		group_data->self->fns->printw(child_rsc, child_text, index);
+		);
+#else
+	crm_err("printw support requires ncurses to be available during configure");
+#endif
 }
 
 void group_dump(resource_t *rsc, const char *pre_text, gboolean details)
