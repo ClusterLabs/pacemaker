@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.49 2005/06/16 12:36:20 andrew Exp $ */
+/* $Id: native.c,v 1.50 2005/06/29 08:28:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -135,23 +135,34 @@ int native_num_allowed_nodes(resource_t *rsc)
 	}
 
 	if(native_data->color) {
-		return num_allowed_nodes4color(native_data->color);
+		crm_debug_4("Colored case");
+		num_nodes = num_allowed_nodes4color(native_data->color);
 		
 	} else if(rsc->candidate_colors) {
 		/* TODO: sort colors first */
 		color_t *color = g_list_nth_data(rsc->candidate_colors, 0);
-		return num_allowed_nodes4color(color);
+		crm_debug_4("Candidate colors case");
+		num_nodes = num_allowed_nodes4color(color);
 
 	} else {
+		crm_debug_4("Default case");
 		slist_iter(
 			this_node, node_t, native_data->allowed_nodes, lpc,
-			if(this_node->weight < 0) {
+			crm_debug_3("Rsc %s Checking %s: %f",
+				    rsc->id, this_node->details->uname,
+				    this_node->weight);
+			if(this_node->weight < 0) {				
 				continue;
+			} else if(this_node->details->shutdown) {
+				continue;
+/* 			} else if(this_node->details->unclean) { */
+/* 				continue; */
 			}
+			
 			num_nodes++;
 			);
 	}
-	
+	crm_debug_2("Resource %s can run on %d nodes", rsc->id, num_nodes);
 	return num_nodes;
 }
 
@@ -168,8 +179,14 @@ int num_allowed_nodes4color(color_t *color)
 	
 	slist_iter(
 		this_node, node_t, color->details->candidate_nodes, lpc,
+		crm_debug_3("Checking %s: %f",
+			    this_node->details->uname, this_node->weight);
 		if(this_node->weight < 0) {
 			continue;
+		} else if(this_node->details->shutdown) {
+			continue;
+/* 		} else if(this_node->details->unclean) { */
+/* 			continue; */
 		}
 		num_nodes++;
 		);
