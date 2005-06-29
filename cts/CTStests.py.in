@@ -287,7 +287,7 @@ class StopTest(CTSTest):
             return self.skipped()
 
 	patterns = []
-	# Technicall we should always be able to notice ourselves stopping
+	# Technically we should always be able to notice ourselves stopping
 	patterns.append(self.CM["Pat:We_stopped"] % node)
 
 	# Any active node needs to notice this one left
@@ -318,7 +318,13 @@ class StopTest(CTSTest):
                 self.CM.log ("Warn: Shutdown pattern not found: %s" % (regex))
                 UnmatchedList +=  regex + "||";
 
-	if not self.CM.cluster_stable(self.CM["DeadTime"]) and len(watch.unmatched) > 0:
+	self.CM.cluster_stable(self.CM["DeadTime"])
+
+	# because syslog looses so many messages we can only really fail 
+	#  the stop if _none_ of the CCM peers notice the node leave
+	if not watch.unmatched or self.CM.upcount() == 0:
+	    return self.success()
+	elif len(watch.unmatched) >= self.CM.upcount():
             return self.failure("no match against (%s)" % UnmatchedList)
 
 	return self.success()
@@ -430,11 +436,11 @@ class RestartTest(CTSTest):
         ret3 = self.start(node)
 
         if not ret1:
-            return self.failure("start (setup) failure")
-        if not ret2:
-            return self.failure("stop failure")
+            return self.failure("start (setup) failure: "+node)
+        if not ret2 and not ret3:
+            return self.failure("stop failure: "+node)
         if not ret3:
-            return self.failure("start failure")
+            return self.failure("start failure: "+node)
         return self.success()
 
     def is_applicable(self):
@@ -674,8 +680,7 @@ class StartOnebyOne(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-	# Because we essentially do a SimulStop at the start...
-        return [ "Resource .* was active at shutdown" ]
+        return []
 
     def is_applicable(self):
         '''StartOnebyOne is always applicable'''
@@ -712,8 +717,7 @@ class SimulStart(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-	# Because we essentially do a SimulStop at the start...
-        return [ "Resource .* was active at shutdown" ]
+        return []
 
     def is_applicable(self):
         '''SimulStart is always applicable'''
@@ -749,10 +753,7 @@ class SimulStop(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-	# Eventually one node may stay around to shut the others down
-	#  but until then, nodes will shut down their own resources
-	#  and this pattern is expected
-        return [ "Resource .* was active at shutdown" ]
+        return []
 
     def is_applicable(self):
         '''SimulStop is always applicable'''
@@ -818,16 +819,16 @@ class RestartOnebyOne(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        did_fail=0
+        did_fail=[]
         self.starttime=time.time()
         self.restart = RestartTest(self.CM)
         for node in self.CM.Env["nodes"]:
             if not self.restart(node):
-                did_fail=did_fail + 1
+                did_fail.append(node)
 
         if did_fail:
-            return self.failure("Could not restart %d nodes" %did_fail)
-
+            return self.failure("Could not restart %d nodes: %s" 
+				%(len(did_fail), repr(did_fail)))
         return self.success()
 
     def is_applicable(self):
@@ -944,6 +945,7 @@ class StandbyTest2(CTSTest):
     def _get_node_uuid(self, node):
         lines = self.CM.rsh.readlines(node, self.get_uuid_cmd)
         for line in lines:
+	    self.CM.debug("Searching for %s in: %s" % (node, line))
             m = re.search(r'%s.+\((.+)\)' % node, line)
             if m:
                 return m.group(1)
@@ -1025,7 +1027,7 @@ class StandbyTest2(CTSTest):
         node_uuid = self._get_node_uuid(node)
 
         if not node_uuid:
-            self.CM.log("node uuid if None, none node configured?")
+            self.CM.log("Warn: Node %s not found in CIB" % node)
             return self.skipped()
 
         resource_dict = self._get_rsc_list(node)
@@ -2021,8 +2023,7 @@ class SpecialTest1(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-	# Because we essentially do a SimulStop at the start...
-        return [ "Resource .* was active at shutdown" ]
+        return []
 
     def is_applicable(self):
         return 1
@@ -2045,7 +2046,6 @@ class NearQuorumPointTest(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name="NearQuorumPoint"
-	self.ignore_patterns = []
 
     def __call__(self, dummy):
         '''Perform the 'NearQuorumPoint' test. '''
@@ -2064,14 +2064,6 @@ class NearQuorumPointTest(CTSTest):
                 
         self.CM.debug("start nodes:" + repr(startset))
         self.CM.debug("stop nodes:" + repr(stopset))
-
-	# Set the correct BadNews "ignore" pattern(s)
-	if len(startset) > 0:
-	    # Someone will be up to co-ordinate any nodes that wish to shut down
-	    self.ignore_patterns = []
-	else:
-	    # This is essentially a SimulStop...
-	    self.ignore_patterns = [ "Resource .* was active at shutdown" ]
 
         #add search patterns
         watchpats = [ ]
@@ -2132,8 +2124,7 @@ class NearQuorumPointTest(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-	# Because sometimes we essentially do a SimulStop...
-        return self.ignore_patterns
+        return []
 
     def is_applicable(self):
         if self.CM["Name"] == "linux-ha-v2":
