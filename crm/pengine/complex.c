@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.39 2005/06/29 16:40:55 andrew Exp $ */
+/* $Id: complex.c,v 1.40 2005/06/29 16:43:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -214,17 +214,20 @@ common_unpack(
 	(*rsc)->candidate_colors   = NULL;
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
+	(*rsc)->is_managed	   = TRUE;
 
 	is_managed = crm_element_value((*rsc)->xml, "is_managed");
 	if(is_managed != NULL && crm_is_true(is_managed) == FALSE) {
+		(*rsc)->is_managed = FALSE;
+		crm_warn("Resource %s is currently not managed", (*rsc)->id);
+#if 0		
+		rsc_to_node_t *new_con = NULL;
 		/* prevent this resource from running anywhere */
-		rsc_to_node_t *new_con = rsc2node_new(
+		new_con = rsc2node_new(
 			"is_managed_default", *rsc, -INFINITY, NULL, data_set);
 		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);
-		crm_warn("Resource %s is currently in standby/non-managed mode",
-			 (*rsc)->id);
-		
-	} else if(data_set->symmetric_cluster) {
+#endif	
+	} else if((*rsc)->is_managed && data_set->symmetric_cluster) {
 		rsc_to_node_t *new_con = rsc2node_new(
 			"symmetric_default", *rsc, 0, NULL, data_set);
 		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.100 2005/06/29 09:03:52 andrew Exp $ */
+/* $Id: unpack.c,v 1.101 2005/06/29 16:43:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -611,7 +611,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		g_list_free(sorted_op_list);
 
 		if(running) {
-			native_add_running(rsc, node);
+			native_add_running(rsc, node, data_set);
 		}
 		);
 	
@@ -1096,7 +1096,14 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	if(rsc_lh == NULL) {
 		pe_warn("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
+
+	} else if(rsc_lh->is_managed == FALSE) {
+		crm_debug_2(
+			"Ignoring constraint %s: resource %s is not managed",
+			id, id_lh);
+		return FALSE;
 	}
+	
 			
 	xml_child_iter(
 		xml_obj, rule, XML_TAG_RULE,

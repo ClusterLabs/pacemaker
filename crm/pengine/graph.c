@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.52 2005/06/16 12:36:18 andrew Exp $ */
+/* $Id: graph.c,v 1.53 2005/06/29 16:43:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -433,7 +433,12 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 	} else if(action->pseudo
 		  || safe_str_eq(action->task,  CRM_OP_FENCE)
 		  || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
-		/* skip the next check */
+		/* skip the next two checks */
+		
+	} else if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
+		pe_warn("action %d was for an unmanaged resource (%s)",
+			action->id, action->rsc->id);
+		return;
 		
 	} else {
 		if(action->node == NULL) {

@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.13 2005/06/29 09:03:52 andrew Exp $ */
+/* $Id: complex.h,v 1.14 2005/06/29 16:43:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -142,7 +142,8 @@ extern void common_dump(
 extern void common_printw(resource_t *rsc, const char *pre_text, int *index);
 
 extern void common_free(resource_t *rsc);
-extern void native_add_running(resource_t *rsc, node_t *node);
+extern void native_add_running(
+	resource_t *rsc, node_t *node, pe_working_set_t *data_set);
 extern gboolean is_active(rsc_to_node_t *cons);
 
 extern gboolean native_constraint_violated(

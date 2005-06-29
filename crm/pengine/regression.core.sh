@@ -123,6 +123,15 @@ function do_test {
     rm -f $output $te_output
 }
 
+
+#function do_test {
+#    base=$1;
+#    input=$io_dir/${base}.xml
+#    expected=$io_dir/${base}.exp
+#    te_expected=$io_dir/${base}.te.exp
+#    mv $input $expected $te_expected testcases.saved
+#}
+
 function test_results {
 
     if [ -s $failed ]; then

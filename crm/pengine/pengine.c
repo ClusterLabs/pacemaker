@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.81 2005/06/29 10:36:54 andrew Exp $ */
+/* $Id: pengine.c,v 1.82 2005/06/29 16:43:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -142,7 +142,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	return TRUE;
 }
 
-#define MEMCHECK_STAGE_0 0
+#define MEMCHECK_STAGE_8 0
 
 
 crm_data_t *

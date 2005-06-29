@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.72 2005/06/29 09:03:52 andrew Exp $ */
+/* $Id: pengine.h,v 1.73 2005/06/29 16:43:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -220,11 +220,11 @@ struct resource_s {
 		float	 priority; 
 		float	 effective_priority; 
 
+		gboolean is_managed;
 		gboolean start_pending;
 		gboolean recover;
 		gboolean starting;
 		gboolean stopping;
-		gboolean is_stonith;
 		gboolean runnable;
 		gboolean provisional;
 		gboolean unclean;

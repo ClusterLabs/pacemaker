@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.53 2005/06/29 12:56:16 andrew Exp $ */
+/* $Id: native.c,v 1.54 2005/06/29 16:43:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,6 +47,10 @@ void create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 action_t *create_recurring_action(resource_t *rsc, node_t *node,
 				  const char *action, const char *key);
 
+extern rsc_to_node_t *
+rsc2node_new(const char *id, resource_t *rsc,
+	     double weight, node_t *node, pe_working_set_t *data_set);
+
 typedef struct native_variant_data_s
 {
 		lrm_agent_t *agent;
@@ -63,7 +67,7 @@ typedef struct native_variant_data_s
 	data = (native_variant_data_t *)rsc->variant_opaque;
 
 void
-native_add_running(resource_t *rsc, node_t *node)
+native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 {
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
@@ -82,6 +86,12 @@ native_add_running(resource_t *rsc, node_t *node)
 	node->details->running_rsc = g_list_append(
 		node->details->running_rsc, rsc);
 
+	if(rsc->is_managed == FALSE) {
+		rsc2node_new(
+			"not_managed_default", rsc, INFINITY, node, data_set);
+		return;
+	}
+	
 	if(g_list_length(native_data->running_on) > 1) {
 		pe_warn("Resource %s is (potentially) active on %d nodes."
 			 "  Latest: %s/%s", rsc->id,
@@ -271,7 +281,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	if(native_data->color != NULL) {
 		chosen = native_data->color->details->chosen_node;
 	}
-	
+
 	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
 		start = start_action(rsc, chosen, TRUE);
 		if(start->runnable && data_set->have_quorum == FALSE
