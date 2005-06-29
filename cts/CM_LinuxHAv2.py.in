@@ -177,13 +177,11 @@ class LinuxHAv2(HeartbeatCM):
       </rsc_location>""" % ("rsc_"+node, "rsc_"+node, "rsc_"+node, node))
                 constraints = constraints + node_constraint
             
-            if self.Env["DoFencing"] == 1 :
-                cib_options=cib_options + '''
-        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>'''
-                nodelist = ""
-                for node in self.Env["nodes"]:
-                    nodelist += node + " "
-                stonith_resource=("""
+	    # always add the fencing resource so that we test incarnations
+	    nodelist = ""
+	    for node in self.Env["nodes"]:
+		nodelist += node + " "
+	    stonith_resource=("""
        <incarnation id="DoFencing">
          <instance_attributes>
            <attributes>
@@ -202,7 +200,11 @@ class LinuxHAv2(HeartbeatCM):
            </instance_attributes>
          </resource>
        </incarnation>""" %(len(self.Env["nodes"]), nodelist))
-                resources = resources + stonith_resource
+	    resources = resources + stonith_resource
+
+            if self.Env["DoFencing"] == 1:
+                cib_options=cib_options + '''
+        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>'''
             
         self.default_cts_cib=cib_prefix + cib_options + cib_glue_1 + \
                resources + cib_glue_2 + constraints + cib_suffix
