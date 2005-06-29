@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.52 2005/06/29 10:36:54 andrew Exp $ */
+/* $Id: native.c,v 1.53 2005/06/29 12:56:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,7 +151,8 @@ int native_num_allowed_nodes(resource_t *rsc)
 			crm_debug_3("Rsc %s Checking %s: %f",
 				    rsc->id, this_node->details->uname,
 				    this_node->weight);
-			if(this_node->details->shutdown) {
+			if(this_node->details->shutdown
+			   || this_node->details->online == FALSE) {
 				this_node->weight = -INFINITY;
 			}
 			if(this_node->weight < 0) {				
@@ -182,7 +183,8 @@ int num_allowed_nodes4color(color_t *color)
 		this_node, node_t, color->details->candidate_nodes, lpc,
 		crm_debug_3("Checking %s: %f",
 			    this_node->details->uname, this_node->weight);
-		if(this_node->details->shutdown) {
+		if(this_node->details->shutdown
+		   || this_node->details->online == FALSE) {
 			this_node->weight = -INFINITY;
 		}
 		if(this_node->weight < 0) {
@@ -1252,6 +1254,7 @@ filter_nodes(resource_t *rsc)
 			pe_err("Invalid NULL node");
 			
 		} else if(node->weight < 0.0
+			  || node->details->shutdown
 			  || node->details->online == FALSE
 			  || node->details->type == node_ping) {
 			crm_action_debug_3(print_node("Removing", node, FALSE));
