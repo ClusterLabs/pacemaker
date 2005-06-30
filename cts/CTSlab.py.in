@@ -156,7 +156,7 @@ class Stonithd(ResetMechanism):
         return self._do_stonith(init_node, target_node, "POWEROFF")
 
 class Logger:
-    TimeFormat = "%Y/%m/%d_%H:%M:%S\t"
+    TimeFormat = "%b %d %H:%M:%S\t"
 
     def __call__(self, lines):
         raise ValueError("Abstract class member (__call__)")
@@ -242,17 +242,19 @@ class FileLog(Logger):
             filename=labinfo["LogFileName"]
         
         self.logfile=filename
-
+        import os
+        self.hostname = os.uname()[1]+" "
+        self.source = "CTS: "
     def __call__(self, lines):
 
         fd = open(self.logfile, "a")
         t = time.strftime(Logger.TimeFormat, time.localtime(time.time()))  
 
         if isinstance(lines, types.StringType):
-            fd.writelines([t, lines, "\n"])
+            fd.writelines([t, self.hostname, self.source, lines, "\n"])
         else:
             for line in lines:
-                fd.writelines([t, line, "\n"])
+                fd.writelines([t, self.hostname, self.source, line, "\n"])
         fd.close()
 
     def name(self):
