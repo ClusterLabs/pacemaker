@@ -46,7 +46,7 @@ EXTRA_DIST = $(txtfiles) $(htmlfiles) $(man_MANS) $(OTHER_DOCS)
 
 ChangeLog: $(SPECSRC)
 	rm -fr ChangeLog
-	sed -e '1,/^%changelog/d' -e '/^%/,$$d' < $< > $@
+	sed -e '1,/^%changelog/d' -e '/^%/,$$d' < $(SPECSRC) > $@
 
 
 %.txt: %.html
