@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.39 2005/06/27 08:17:06 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.40 2005/06/30 14:08:14 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -82,7 +82,6 @@ typedef struct str_list_s
 char *id = NULL;
 char *this_msg_reference = NULL;
 char *obj_type = NULL;
-char *clear = NULL;
 char *status = NULL;
 char *migrate_from = NULL;
 char *migrate_res = NULL;

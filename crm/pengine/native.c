@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.56 2005/06/30 13:18:48 andrew Exp $ */
+/* $Id: native.c,v 1.57 2005/06/30 14:08:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -753,7 +753,7 @@ void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 void native_printw(resource_t *rsc, const char *pre_text, int *index)
 {
-#ifdef CURSES_ENABLED
+#if CURSES_ENABLED
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 	common_printw(rsc, pre_text, index);

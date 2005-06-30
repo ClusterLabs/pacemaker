@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.1 2005/06/29 11:02:58 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.2 2005/06/30 14:08:14 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -57,7 +57,7 @@ const char *crm_system_name = "crm_mon";
 
 #define OPTARGS	"V?i:nr"
 
-#if HAVE_LIBNCURSES
+#if CURSES_ENABLED
 void usage(const char *cmd, int exit_status);
 void blank_screen(void);
 int print_status(crm_data_t *cib);

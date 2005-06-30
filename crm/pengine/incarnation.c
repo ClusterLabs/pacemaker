@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.33 2005/06/30 13:18:48 andrew Exp $ */
+/* $Id: incarnation.c,v 1.34 2005/06/30 14:08:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -659,7 +659,7 @@ void incarnation_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 void incarnation_printw(resource_t *rsc, const char *pre_text, int *index)
 {
-#ifdef CURSES_ENABLED
+#if CURSES_ENABLED
 	const char *child_text = NULL;
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);

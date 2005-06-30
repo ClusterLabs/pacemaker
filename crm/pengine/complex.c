@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.42 2005/06/30 13:18:48 andrew Exp $ */
+/* $Id: complex.c,v 1.43 2005/06/30 14:08:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -322,7 +322,7 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 
 void common_printw(resource_t *rsc, const char *pre_text, int *index)
 {
-#ifdef CURSES_ENABLED
+#if CURSES_ENABLED
 	const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
 	
 	move(*index, 0);
