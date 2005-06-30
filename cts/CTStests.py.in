@@ -28,6 +28,18 @@ Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+#
+#	SPECIAL NOTE:
+#
+#	Tests may NOT implement any cluster-manager-specific code in them.
+#	EXTEND the ClusterManager object to provide the base capabilities
+#	the test needs if you need to do something that the current CM classes
+#	do not.  Otherwise you screw up the whole point of the object structure
+#	in CTS.
+#
+#		Thank you.
+#
+
 import CTS
 from CM_hb import HBConfig
 import CTSaudits
@@ -925,6 +937,13 @@ AllTestClasses.append(StandbyTest)
 
 #######################################################################
 class StandbyTest2(CTSTest):
+#
+#	This test is HORRIBLY R2-dependent.
+#	This is not acceptable.
+#	Things which depend on the cluster manager need to be abstracted
+#	and put into cluster member class objects.
+#	NOT put in the tests!
+#
 #######################################################################
     '''Standby with CRM of HA release 2'''
     def __init__(self, cm):
@@ -987,6 +1006,17 @@ class StandbyTest2(CTSTest):
         if result.find('NOT') != -1:
             return []
         
+#Traceback (most recent call last):
+#  File "CTSlab.py", line 685, in ?
+#    overall, detailed = tests.run(NumIter)
+#  File "/home/alanr/linux-ha/cts/CTStests.py", line 161, in run
+#    ret=test(nodechoice)
+#  File "/home/alanr/linux-ha/cts/CTStests.py", line 1032, in __call__
+#    resource_dict = self._get_rsc_list(node)
+#  File "/home/alanr/linux-ha/cts/CTStests.py", line 966, in _get_rsc_list
+#    running_node = result.split(' ')[5][:-1]
+#IndexError: list index out of range
+
         running_node = result.split(' ')[5][:-1]
         self.CM.debug("%s is running on %s" % (resource, running_node))
         return [running_node]
@@ -1152,7 +1182,8 @@ class StandbyTest2(CTSTest):
             return 1
         return 0
 
-AllTestClasses.append(StandbyTest2)
+#It's broken...
+#AllTestClasses.append(StandbyTest2)
 
 #######################################################################
 class Fastdetection(CTSTest):
