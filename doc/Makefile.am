@@ -30,7 +30,7 @@ htmlfiles		= HardwareGuide.html	\
 
 txtfiles                = $(htmlfiles:.html=.txt)
 
-CLEANFILES              = ChangeLog
+CLEANFILES              = ChangeLog $(txtfiles)
 
 SPECSRC 		= $(top_builddir)/heartbeat.spec
 
@@ -50,4 +50,4 @@ ChangeLog: $(SPECSRC)
 
 
 %.txt: %.html
-	@HTML2TXT@ -dump $< >$@
+	[ "X$(HTML2TXT)" = "X" ] || $(HTML2TXT) -dump $< >$@
