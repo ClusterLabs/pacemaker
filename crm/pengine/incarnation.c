@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.31 2005/06/30 10:48:01 andrew Exp $ */
+/* $Id: incarnation.c,v 1.32 2005/06/30 12:53:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -488,29 +488,24 @@ void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint)
 		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
-	} else if(constraint->strength != pecs_must_not) {
-		pe_warn("rsc_colocations other than \"-INFINITY\" "
-			 "are not supported for incarnation resources");
-		return;
-		
 	} else {
 		crm_debug_4("Processing constraints from %s", rsc->id);
 	}
 	
 	get_incarnation_variant_data(incarnation_data, rsc);
 
-	if(constraint->rsc_lh == constraint->rsc_rh) {
-		do_interleave = TRUE;
+	if(constraint->rsc_rh->variant == pe_incarnation) {
 		get_incarnation_variant_data(
 			incarnation_data_rh, constraint->rsc_rh);
-
-	} else if(constraint->rsc_rh->variant == pe_incarnation) {
-		get_incarnation_variant_data(
-			incarnation_data_rh, constraint->rsc_rh);
-		if(incarnation_data->interleave == FALSE) {
-		} else if(incarnation_data_rh->interleave == FALSE) {
-		} else if(incarnation_data->incarnation_max
-			  == incarnation_data_rh->incarnation_max) {
+		if(incarnation_data->incarnation_max_node
+		   != incarnation_data_rh->incarnation_max_node) {
+			pe_err("Cannot interleave incarnation %s and %s because"
+			       " they do not support the same number of"
+			       " resources per node",
+			       constraint->rsc_lh->id, constraint->rsc_rh->id);
+			
+		/* only the LHS side needs to be labeled as interleave */
+		} else if(incarnation_data->interleave) {
 			do_interleave = TRUE;
 		}
 	}
@@ -522,7 +517,12 @@ void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint)
 		
 		GListPtr iter_lh = incarnation_data->child_list;
 		GListPtr iter_rh = incarnation_data_rh->child_list;
-		
+
+		crm_debug_2("Interleaving %s with %s",
+			    constraint->rsc_lh->id, constraint->rsc_rh->id);
+		/* If the resource have different numbers of incarnations,
+		 *   then just do as many as are available
+		 */
 		while(iter_lh != NULL && iter_rh != NULL) {
 			child_lh = iter_lh->data;
 			child_rh = iter_rh->data;
@@ -530,12 +530,19 @@ void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint)
 			iter_rh = iter_rh->next;
 			
 			constraint->rsc_rh = child_rh;
+			crm_debug_3("Colocating %s with %s", child_lh->id, child_rh->id);
 			child_rh->fns->rsc_colocation_rh(child_lh, constraint);
 		}
+		/* restore the original RHS of the constraint */
 		constraint->rsc_rh = parent_rh;
 		return;
+
+	} else if(constraint->strength != pecs_must_not) {
+		pe_warn("rsc_colocations other than \"-INFINITY\""
+			 " are not supported for non-interleaved"
+			" incarnation resources");
+		return;
 	}
-	
 	
 	slist_iter(
 		child_rsc, resource_t, incarnation_data->child_list, lpc,

@@ -147,6 +147,13 @@ do_test managed-1 "Not managed - down "
 do_test managed-2 "Not managed - up   "
 
 echo ""
+
+do_test interleave-0 "Interleave (reference)"
+do_test interleave-1 "coloc - not interleaved"
+do_test interleave-2 "coloc - interleaved   "
+do_test interleave-3 "coloc - interleaved (2)"
+
+echo ""
 do_test bad1 "Bad node		"
 do_test bad2 "Bad rsc		"
 do_test bad3 "No rsc class	"
