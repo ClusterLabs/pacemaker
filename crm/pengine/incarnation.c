@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.30 2005/06/29 16:40:55 andrew Exp $ */
+/* $Id: incarnation.c,v 1.31 2005/06/30 10:48:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -209,7 +209,12 @@ void incarnation_color(resource_t *rsc, pe_working_set_t *data_set)
 	incarnation_variant_data_t *incarnation_data = NULL;
 	get_incarnation_variant_data(incarnation_data, rsc);
 
+	if(incarnation_data->self->is_managed == FALSE) {
+		return;
+	}
+	
 	child_0 = g_list_nth_data(incarnation_data->child_list, 0);
+
 
 	max_nodes = rsc->fns->num_allowed_nodes(rsc);
 
