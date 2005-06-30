@@ -141,6 +141,12 @@ do_test inc6 "Inter-incarnation ordering, silent restart, stop, move (restart 2)
 #do_test inc7 "Inter-incarnation ordering, silent restart, stop, move (ordered subset)"
 
 echo ""
+
+do_test managed-0 "Managed (reference)"
+do_test managed-1 "Not managed - down "
+do_test managed-2 "Not managed - up   "
+
+echo ""
 do_test bad1 "Bad node		"
 do_test bad2 "Bad rsc		"
 do_test bad3 "No rsc class	"
