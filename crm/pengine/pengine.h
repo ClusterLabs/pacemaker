@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.74 2005/06/30 11:59:43 andrew Exp $ */
+/* $Id: pengine.h,v 1.75 2005/06/30 13:18:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,7 +38,8 @@ typedef struct action_wrapper_s action_wrapper_t;
 #include <linux-ha/config.h>
 
 #ifdef HAVE_LIBNCURSES
-#  include <curses.h>
+#  include <ncurses.h>
+#  define CURSES_ENABLED
 #endif
 
 typedef enum no_quorum_policy_e {

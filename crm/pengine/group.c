@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.26 2005/06/29 09:03:52 andrew Exp $ */
+/* $Id: group.c,v 1.27 2005/06/30 13:18:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -383,7 +383,7 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 void group_printw(resource_t *rsc, const char *pre_text, int *index)
 {
-#ifdef HAVE_LIBNCURSES
+#ifdef CURSES_ENABLED
 	const char *child_text = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
