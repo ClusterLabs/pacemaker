@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.18 2005/06/27 08:18:45 andrew Exp $ */
+/* $Id: xml.c,v 1.19 2005/06/30 14:13:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -655,47 +655,12 @@ char *
 dump_xml_formatted(const crm_data_t *an_xml_node)
 {
 	char *buffer     = NULL;
-#if 0
-	int       len        = 0;
-	xmlChar  *xml_buffer = NULL;
-	xmlDocPtr foo        = NULL;
-
-	crm_data_t* xml_node  = NULL;
-
-	xml_node  = copy_xml(an_xml_node);
-	
-	if (xml_node == NULL) {
-		return NULL;
-		
-	} else {
-		/* reset the doc pointer */
-		crm_debug_5("Creating doc pointer for %s", xml_node->name);
-		foo = xmlNewDoc("1.0");
-		xmlDocSetRootElement(foo, xml_node);
-		xmlSetTreeDoc(xml_node, foo);
-		crm_debug_5("Doc pointer set for %s", xml_node->name);
-	}
-
-	crm_debug_5("Initializing Parser");
-	xmlInitParser();
-	crm_debug_5("Dumping data");
-	xmlDocDumpFormatMemory(xml_node->doc, &xml_buffer, &len, 1);
-	crm_debug_5("Cleaning up parser");
-	xmlCleanupParser();
-
-	crm_debug_5("Copying memory into crm_ space");
-	if(xml_buffer != NULL && len > 0) {
-		/* copy the text into crm_ memory */ 
-		buffer = crm_strdup(xml_buffer);
-		xmlFree(xml_buffer);
-	}
-	crm_debug_5("Buffer coppied");
-	
-	free_xml(xml_node);
-#else
 	char *mutable_ptr = NULL;
-/* 	crm_malloc0(buffer, 2*(an_xml_node->stringlen)); */
-	crm_malloc0(buffer, sizeof(char)*30000);
+#if 0
+  	crm_malloc0(buffer, 3*get_stringlen(an_xml_node));
+#else
+ 	crm_malloc0(buffer, sizeof(char)*60000);
+#endif
 	mutable_ptr = buffer;
 	
 	crm_validate_data(an_xml_node);
@@ -705,7 +670,6 @@ dump_xml_formatted(const crm_data_t *an_xml_node)
 		crm_crit("Could not dump the whole message");
 	}
 	crm_debug_4("Dumped: %s", buffer);
-#endif
 	return buffer;
 }
 	
@@ -713,66 +677,12 @@ char *
 dump_xml_unformatted(const crm_data_t *an_xml_node)
 {
 	char *buffer     = NULL;
-#if 0
-	int       lpc	     = 0;
-	int       len        = 0;
-	xmlChar  *xml_buffer = NULL;
-	xmlDocPtr foo        = NULL;
-
-	crm_data_t* xml_node  = NULL;
-
-	xml_node  = copy_xml(an_xml_node);
-	
-	if (xml_node == NULL) {
-		return NULL;
-		
-	} else {
-	  /* reset the doc pointer */
-		crm_debug_5("Creating doc pointer for %s", xml_node->name);
-		foo = xmlNewDoc("1.0");
-		xmlDocSetRootElement(foo, xml_node);
-		xmlSetTreeDoc(xml_node, foo);
-		crm_debug_5("Doc pointer set for %s", xml_node->name);
-	}
-
-	crm_debug_5("Initializing Parser");
-	xmlInitParser();
-	crm_debug_5("Dumping data");
-	xmlDocDumpFormatMemory(xml_node->doc, &xml_buffer, &len, 0);
-	crm_debug_5("Cleaning up parser");
-	xmlCleanupParser();
-
-	crm_debug_5("Copying memory into crm_ space");
-	if(xml_buffer != NULL && len > 0) {
-		/* copy the text into crm_ memory */ 
-		buffer = crm_strdup(xml_buffer);
-		xmlFree(xml_buffer);
-	}
-	crm_debug_5("Buffer coppied");
-	
-	free_xml(xml_node);
-
-	/* remove <?xml version="1.0"?> and the newline	 */
-/* 	for(lpc = 0; lpc < len; lpc++) { */
-/* 		if(buffer[lpc] == '\n') { */
-/* 			buffer[lpc] = ' '; */
-/* 			break; */
-/* 		} else { */
-/* 			buffer[lpc] = ' '; */
-/* 		} */
-/* 	} */
-/* 	for(lpc = len - 2; lpc > 0 && lpc < len; lpc++) { */
-	for(lpc = 0; lpc < len; lpc++) {
-		if(buffer[lpc] == '\n') {
-			crm_debug_3("Reset newline at %d", lpc);
-			buffer[lpc] = ' ';
-		}
-	}
-	crm_debug_3("Processed %d chars for newlines", lpc);
-#else
 	char *mutable_ptr = NULL;
-/* 	crm_malloc0(buffer, 2*(an_xml_node->stringlen)); */
-	crm_malloc0(buffer, sizeof(char)*20000);
+#if 0
+  	crm_malloc0(buffer, 2*get_stringlen(an_xml_node));
+#else
+ 	crm_malloc0(buffer, sizeof(char)*20000);
+#endif
 	mutable_ptr = buffer;
 	
 	crm_validate_data(an_xml_node);
@@ -783,7 +693,6 @@ dump_xml_unformatted(const crm_data_t *an_xml_node)
 	}
 
 	crm_debug_4("Dumped: %s", buffer);
-#endif
 	return buffer;
 }
 
