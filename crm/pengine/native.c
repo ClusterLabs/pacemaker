@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.54 2005/06/29 16:43:12 andrew Exp $ */
+/* $Id: native.c,v 1.55 2005/06/30 11:59:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -90,6 +90,12 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		rsc2node_new(
 			"not_managed_default", rsc, INFINITY, node, data_set);
 		return;
+
+	} else if(rsc->stickiness > 0) {
+		rsc2node_new("stickiness", rsc, INFINITY, node, data_set);
+
+	} else if(rsc->stickiness < 0) {
+		rsc2node_new("stickiness", rsc, -INFINITY, node, data_set);
 	}
 	
 	if(g_list_length(native_data->running_on) > 1) {
@@ -444,16 +450,16 @@ void native_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
 	get_native_variant_data(native_data_lh, rsc_lh);
 	get_native_variant_data(native_data_rh, rsc_rh);
 	
-	crm_debug_3("Processing RH of constraint %s", constraint->id);
-	crm_action_debug_3(print_resource("LHS", rsc_lh, TRUE));
-	crm_action_debug_3(print_resource("RHS", rsc_rh, TRUE));
+	crm_debug_2("%sColocating %s with %s",
+		    constraint->strength == pecs_must?"":"Anti-",
+		    rsc_lh->id, rsc_rh->id);
 	
 	if(constraint->strength == pecs_ignore
 		|| constraint->strength == pecs_startstop){
 		crm_debug_4("Skipping constraint type %d", constraint->strength);
 		return;
 	}
-	
+
 	if(rsc_lh->provisional && rsc_rh->provisional) {
 		if(constraint->strength == pecs_must) {
 			/* update effective_priorities */
@@ -856,14 +862,14 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 			native_data_rh->color->details->candidate_nodes, TRUE);
 	}
 		
-	if(update_lh) {
+	if(update_lh && rsc_rh != rsc_lh) {
 		CRM_DEV_ASSERT(native_data_lh->color != native_data_rh->color);
 		crm_free(native_data_lh->color);
 		rsc_lh->runnable      = rsc_rh->runnable;
 		rsc_lh->provisional   = rsc_rh->provisional;
 		native_data_lh->color = copy_color(native_data_rh->color);
 	}
-	if(update_rh) {
+	if(update_rh && rsc_rh != rsc_lh) {
 		CRM_DEV_ASSERT(native_data_lh->color != native_data_rh->color);
 		crm_free(native_data_rh->color);
 		rsc_rh->runnable      = rsc_lh->runnable;

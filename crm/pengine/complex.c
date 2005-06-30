@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.40 2005/06/29 16:43:12 andrew Exp $ */
+/* $Id: complex.c,v 1.41 2005/06/30 11:59:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -157,7 +157,6 @@ gboolean
 common_unpack(
 	crm_data_t * xml_obj, resource_t **rsc, pe_working_set_t *data_set)
 {
-	int stickiness = data_set->default_resource_stickiness;
 	const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *restart  = crm_element_value(xml_obj, XML_RSC_ATTR_RESTART);
 	const char *multiple = crm_element_value(xml_obj, "multiple_active");
@@ -215,6 +214,7 @@ common_unpack(
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
 	(*rsc)->is_managed	   = TRUE;
+	(*rsc)->stickiness         = data_set->default_resource_stickiness;
 
 	is_managed = crm_element_value((*rsc)->xml, "is_managed");
 	if(is_managed != NULL && crm_is_true(is_managed) == FALSE) {
@@ -259,18 +259,22 @@ common_unpack(
 	}
 
 	if(placement != NULL) {
-		stickiness = atoi(placement);
+		if(safe_str_eq(placement, "INFINITY")) {
+			(*rsc)->stickiness = INFINITY;
+
+		} else if(safe_str_eq(placement, "-INFINITY")) {
+			(*rsc)->stickiness = -INFINITY;
+
+		} else {
+			(*rsc)->stickiness = atoi(placement);
+		}
 	}
-	if(stickiness > 0) {
+	if((*rsc)->stickiness > 0) {
 		crm_debug_2("\tPlacement: prefer current location%s",
 			    placement == NULL?" (default)":"");
-		rsc_colocation_new("__generated_internal_placement__",
-				   pecs_must, *rsc, *rsc);
-	} else if(stickiness < 0) {
+	} else if((*rsc)->stickiness < 0) {
 		crm_warn("\tPlacement: always move from the current location%s",
 			    placement == NULL?" (default)":"");
-		rsc_colocation_new("__generated_internal_placement__",
-				   pecs_must_not, *rsc, *rsc);
 	} else {
 		crm_debug_2("\tPlacement: optimal%s",
 			    placement == NULL?" (default)":"");

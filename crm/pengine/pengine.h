@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.73 2005/06/29 16:43:12 andrew Exp $ */
+/* $Id: pengine.h,v 1.74 2005/06/30 11:59:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -218,6 +218,7 @@ struct resource_s {
 		enum pe_restart        restart_type;
 
 		float	 priority; 
+		float	 stickiness; 
 		float	 effective_priority; 
 
 		gboolean is_managed;
