@@ -68,6 +68,11 @@ class LinuxHAv2(HeartbeatCM):
             "BreakCommCmd2"  : "/usr/lib/heartbeat/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
             "IsIPAddrRscRunning"   : "",
 
+            "StandbyOnCmd"   : "@libdir@/heartbeat/crmadmin -s %s",
+            "StandbyOffCmd"  : "@libdir@/heartbeat/crmadmin -a %s",
+            "UUIDQueryCmd"   : "@libdir@/heartbeat/crmadmin -N",
+            "CIBQueryCmd"    : "@libdir@/heartbeat/cibadmin -Ql -h %s",
+
             # Patterns to look for in the log files for various occasions...
             "Pat:DC_IDLE"      : "crmd:.*State transition.*-> S_IDLE",
 	    
@@ -466,6 +471,59 @@ class LinuxHAv2(HeartbeatCM):
             complist.append(Process("heartbeat",self))
         return complist
     
+    def NodeUUID(self, node):
+        lines = self.rsh.readlines(node, self["UUIDQueryCmd"])
+        for line in lines:
+            m = re.search(r'%s.+\((.+)\)' % node, line)
+            if m:   
+                return m.group(1)
+        return ""       
+                            
+    def StandbyStatus(self, node):
+        check_cib_cmd = self["CIBQueryCmd"] % node;
+
+        lines = self.rsh.readlines(node, check_cib_cmd);
+        if not lines:
+            return ""
+        
+        cib_data = "".join(lines)
+        try:
+            cib = parseString(cib_data)
+        except xml.parsers.expat.ExpatError:
+            return "" 
+
+        standby_status = "off"
+        nodes = cib.getElementsByTagName('node')
+                
+        for ha_node in nodes:
+            if ha_node.getAttribute("uname") == node:
+                nvpairs = ha_node.getElementsByTagName('nvpair')
+                for nvpair in nvpairs:
+                    if nvpair.getAttribute('name') == 'standby':
+                        if nvpair.getAttribute('value') == 'on':
+                            standby_status = "on"
+                break
+
+        return standby_status
+
+    # status == "on" : Enter Standby mode
+    # status == "off": Enter Active mode
+    def SetStandbyMode(self, node, status):
+        current_status = self.StandbyStatus(node)
+        if current_status == status:
+            return True
+
+        if status == "on":
+            cmd = self["StandbyOnCmd"] % self.NodeUUID(node)
+        elif status == "off":
+            cmd = self["StandbyOffCmd"] % self.NodeUUID(node)
+        else:
+            return False
+
+        ret = self.rsh(node, cmd)
+
+        return True
+
 class HAResource(Resource):
     def __init__(self, cm, node):
         '''
