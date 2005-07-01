@@ -937,253 +937,82 @@ AllTestClasses.append(StandbyTest)
 
 #######################################################################
 class StandbyTest2(CTSTest):
-#
-#	This test is HORRIBLY R2-dependent.
-#	This is not acceptable.
-#	Things which depend on the cluster manager need to be abstracted
-#	and put into cluster member class objects.
-#	NOT put in the tests!
-#
 #######################################################################
     '''Standby with CRM of HA release 2'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name="standby2"
-        self.standby_cmd_pat    = "/usr/lib/heartbeat/crmadmin -s %s"
-        self.active_cmd_pat     = "/usr/lib/heartbeat/crmadmin -a %s"
-        self.check_cib_cmd_pat  = "/usr/lib/heartbeat/cibadmin -Ql -h %s -o node"
-        self.list_rsc_cmd       = "/usr/lib/heartbeat/crmadmin -R"
-        self.check_rsc_cmd_pat  = "/usr/lib/heartbeat/crmadmin -W %s"
-        self.get_uuid_cmd       = "/usr/lib/heartbeat/crmadmin -N"
-            
-        #self.uuid_of_node       = ''
             
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         
-        ## if we have class HAResource, use it instead of crmadmin
-        self.HAS_CLASS_HARESOURCE = True
-    
-        if self.HAS_CLASS_HARESOURCE:
-            self._get_rsc_list = self._get_rsc_list_2
-            self._is_rsc_running = self._is_rsc_running_2
-        else:
-            self._get_rsc_list = self._get_rsc_list_1
-            self._is_rsc_running = self._is_rsc_running_1
-            
-    def _get_node_uuid(self, node):
-        lines = self.CM.rsh.readlines(node, self.get_uuid_cmd)
-        for line in lines:
-            m = re.search(r'%s.+\((.+)\)' % node, line)
-            if m:
-                return m.group(1)
-
-    def _get_rsc_list_1(self, node):
-        rsc_dict = {}
-        lines = self.CM.rsh.readlines(node, self.list_rsc_cmd)
-        
-        if not lines:
-            raise ValueError("the result of %s is Null" % self.list_rsc_cmd)
-        
-        for line in lines:
-            m = re.search(r'resource\W+(\w+).+::(\w+)', line)
-            if not m:continue
-            #rsc = m.group(2) + "::" + m.group(1) 
-            rsc = m.group(1) 
-            running_nodes = self._is_rsc_running(rsc, node)
-            rsc_dict[rsc] = running_nodes
-        
-        self.CM.debug(repr(rsc_dict))
-        return rsc_dict
-    
-    def _is_rsc_running_1(self, resource, node): 
-        check_rsc_cmd = self.check_rsc_cmd_pat % resource
-        result = self.CM.rsh.readaline(node, check_rsc_cmd)
-        
-        if not result:
-            raise ValueError("the result of %s is Null" % check_rsc_cmd)
-        
-        if result.find('NOT') != -1:
-            return []
-        
-#Traceback (most recent call last):
-#  File "CTSlab.py", line 685, in ?
-#    overall, detailed = tests.run(NumIter)
-#  File "/home/alanr/linux-ha/cts/CTStests.py", line 161, in run
-#    ret=test(nodechoice)
-#  File "/home/alanr/linux-ha/cts/CTStests.py", line 1032, in __call__
-#    resource_dict = self._get_rsc_list(node)
-#  File "/home/alanr/linux-ha/cts/CTStests.py", line 966, in _get_rsc_list
-#    running_node = result.split(' ')[5][:-1]
-#IndexError: list index out of range
-
-        running_node = result.split(' ')[5][:-1]
-        self.CM.debug("%s is running on %s" % (resource, running_node))
-        return [running_node]
-
-    def _get_rsc_list_2(self, node):
-        rsc_dict = {}
-        rsc_list = self.CM.Resources()
-        for rsc in rsc_list:
-            rsc_dict[rsc.Instance] = rsc.RunningNodes()
-        return rsc_dict
-
-    def _is_rsc_running_2(self, resource, node):
-        rsc_list = self.CM.Resources()
-        for rsc in rsc_list:
-           if rsc.Instance == resource:
-                return rsc.RunningNodes()
-        return []
-
-    def _is_standby_on(self, node):
-        check_cib_cmd = self.check_cib_cmd_pat % node;
-
-        lines = self.CM.rsh.readlines(node, check_cib_cmd);
-        if not lines:
-            raise ValueError("the result of %s is Null" % check_cib_cmd)
-
-        cib_data = "".join(lines)
-        cib = parseString(cib_data)
-
-        is_standby_on = False
-        nodes = cib.getElementsByTagName('node')
-
-        for ha_node in nodes:
-            if ha_node.getAttribute("uname") == node:
-                nvpairs = ha_node.getElementsByTagName('nvpair')
-                for nvpair in nvpairs:
-                    if nvpair.getAttribute('name') == 'standby':
-                        if nvpair.getAttribute('value') == 'on':
-                            is_standby_on = True
-                break
-
-        return is_standby_on
-
-    # check cib to make sure the node is active, else skip
+    # make sure the node is active
     # set the node to standby mode
-    # check cib to see whether standby is on
     # check resources, none resource should be running on the node
     # set the node to active mode
-    # check cib
-    # check resouces, resources should be migrated back.
-
+    # check resouces, resources should have been migrated back (SHOULD THEY?)
+    
     def __call__(self, node):
-
+    
         self.incr("calls")
-
         ret=self.startall(None)
         if not ret:
-            return self.failure("test setup failed")
-
-
-        try:
-            is_standby_on = self._is_standby_on(node)
-        except ValueError:
-            return self.failure("fail to get CIB data")
-
-        if is_standby_on:
-            self.CM.log("node %s is already in standby node, skip this test" % node)
-            return self.skipped()
-
-
-        node_uuid = self._get_node_uuid(node)
-
-        if not node_uuid:
-            self.CM.log("no nodes setion in CIB, skip this test")
-            return self.skipped()
-
-        try:
-            resource_dict = self._get_rsc_list(node)
-        except ValueError:
-            return self.failure("fail to get resource list")
-
-        retrycount = 0
-
-        self.CM.debug("setting node %s to standby mode ..." % node)
-        while retrycount < 10:
-            ret = self.CM.rsh(node, self.standby_cmd_pat % node_uuid)
-            time.sleep(self.CM["StableTime"])
-            try:
-                is_standby_on = self._is_standby_on(node)
-            except ValueError:
-                return self.failure("fail to get CIB segment")
-            if is_standby_on:
-                self.CM.debug("node %s has been set to standby mode successfully" % node)
-                break
-            retrycount = retrycount + 1
-
-        if retrycount == 10:
-            return self.failure("can't set node %s to standby mode" % node)
-
-        time.sleep(self.CM["StableTime"])
-
-        self.CM.debug("checking resources ...")
-        for rsc in resource_dict.keys():
-            try:
-                running_nodes = self._is_rsc_running(rsc, node)
-            except ValueError:
-                return self.failure("fail to get resource information")
+            return self.failure("Start all nodes failed")
         
-            if node in running_nodes:
+        self.CM.debug("Make sure node %s is active" % node)    
+        if self.CM.StandbyStatus(node) != "off":
+            if not self.CM.SetStandbyMode(node, "off"):
+                return self.failure("can't set node %s to active mode" % node)
+               
+        self.CM.cluster_stable()
+
+        status = self.CM.StandbyStatus(node)
+        if status != "off":
+            return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
+
+        self.CM.debug("Getting resources running on node %s" % node)
+        rsc_on_node = []
+        for rsc in self.CM.Resources():
+            if rsc.IsRunningOn(node):
+                rsc_on_node.append(rsc)
+
+        self.CM.debug("Setting node %s to standby mode" % node) 
+        if not self.CM.SetStandbyMode(node, "on"):
+            return self.failure("can't set node %s to standby mode" % node)
+        self.CM.cluster_stable()
+
+        status = self.CM.StandbyStatus(node)
+        if status != "on":
+            return self.failure("standby status of %s is [%s] but we expect [on]" % (node, status))
+
+        self.CM.debug("Checking resources")
+        for rsc in self.CM.Resources():
+            if rsc.IsRunningOn(node):
                 return self.failure("%s set to standby, %s is still running on it" % (node, rsc))
 
-
-        retrycount = 0
-
-        self.CM.debug("setting node %s to active mode ..." % node)
-        while retrycount < 10:
-            ret = self.CM.rsh(node, self.active_cmd_pat % node_uuid)
-            time.sleep(self.CM["StableTime"])
-            try:
-                is_standby_on = self._is_standby_on(node)
-            except ValueError:
-                return self.failure("fail to get CIB data")
-            if not is_standby_on:
-                self.CM.debug("node %s has been set to active mode successfully" % node)
-                break
-            retrycount = retrycount + 1
-
-        if retrycount == 10:
+        self.CM.debug("Setting node %s to active mode" % node) 
+        if not self.CM.SetStandbyMode(node, "off"):
             return self.failure("can't set node %s to active mode" % node)
+        self.CM.cluster_stable()
 
-        time.sleep(self.CM["StableTime"])
+        status = self.CM.StandbyStatus(node)
+        if status != "off":
+            return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
 
-        self.CM.debug("checking resources ...")
-        retrycount = 0
-        rsc_not_running = []
+        self.CM.debug("Checking resources")
+        for rsc in rsc_on_node:
+            if not rsc.IsRunningOn(node):
+                return self.failure("%s set to active but %s is NOT back" % (node, repr(rsc_not_running) ))
 
-        while retrycount < 10:
-            rsc_not_running = []
-            for rsc in resource_dict.keys():
-                try:
-                    running_nodes = self._is_rsc_running(rsc, node)
-                except ValueError:
-                    return self.failure("fail to get resource information")
-
-                if node in resource_dict[rsc]:
-                    if not node in running_nodes:
-                        rsc_not_running.append(rsc)
-            if len(rsc_not_running) == 0:
-                break
-            retrycount = retrycount + 1
-            time.sleep(2)
-
-        if retrycount == 10:
-            return self.failure("%s set to active, %s is NOT running or running somewhere else" \
-                        % (node, repr(rsc_not_running) ))
 
         return self.success()
-
-    def errorstoignore(self):
-        return []
 
     def is_applicable(self):
         if self.CM["Name"] == "linux-ha-v2":
             return 1
         return 0
 
-#It's broken...
-#AllTestClasses.append(StandbyTest2)
+AllTestClasses.append(StandbyTest2)
 
 #######################################################################
 class Fastdetection(CTSTest):
