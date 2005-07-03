@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.24 2005/06/27 11:13:05 andrew Exp $ */
+/* $Id: tengine.h,v 1.25 2005/07/03 22:15:49 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -121,7 +121,7 @@ extern gboolean initiate_transition(void);
 extern gboolean cib_action_update(action_t *action, int status);
 
 /* utils */
-extern void print_state(int log_level);
+extern void print_state(unsigned int log_level);
 extern void send_complete(const char *text, crm_data_t *msg,
 			  te_reason_t reason, te_fsa_input_t input);
 extern gboolean stop_te_timer(te_timer_t *timer);

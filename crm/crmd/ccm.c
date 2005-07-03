@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.85 2005/06/17 18:44:57 andrew Exp $ */
+/* $Id: ccm.c,v 1.86 2005/07/03 22:15:49 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -226,7 +226,8 @@ do_ccm_update_cache(long long action,
 		    fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input next_input = I_NULL;
-	int lpc, offset;
+	unsigned int	lpc;
+	int		offset;
 	GHashTable *members = NULL;
 	oc_ed_t event;
 	const oc_ev_membership_t *oc = NULL;
@@ -266,8 +267,8 @@ do_ccm_update_cache(long long action,
 		 *	6	(6+2)/2	= 8 / 2 = 4
 		 *	7	(7+2)/2	= 9 / 2 = 4
 		 */
-		int		clsize = (oc->m_out_idx - oc->m_n_member);
-		int		plsize = (clsize + 2)/2;
+		unsigned int		clsize = (oc->m_out_idx - oc->m_n_member);
+		unsigned int		plsize = (clsize + 2)/2;
 		gboolean	plurality = (oc->m_n_member >= plsize);
 		gboolean	Q = ccm_have_quorum(event);
 

@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.19 2005/06/30 14:13:07 andrew Exp $ */
+/* $Id: xml.c,v 1.20 2005/07/03 22:15:50 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1306,7 +1306,7 @@ parse_xml(const char *input, int *offset)
 }
 
 void
-log_xml_diff(int log_level, crm_data_t *diff, const char *function)
+log_xml_diff(unsigned int log_level, crm_data_t *diff, const char *function)
 {
 	crm_data_t *added = find_xml_node(diff, "diff-added", FALSE);
 	crm_data_t *removed = find_xml_node(diff, "diff-removed", FALSE);

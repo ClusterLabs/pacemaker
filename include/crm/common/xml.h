@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.26 2005/06/16 12:44:31 andrew Exp $ */
+/* $Id: xml.h,v 1.27 2005/07/03 22:15:50 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -186,7 +186,7 @@ extern void print_xml_formatted(
 extern crm_data_t *diff_xml_object(
 	crm_data_t *left, crm_data_t *right, gboolean suppress);
 
-extern void log_xml_diff(int log_level, crm_data_t *diff, const char *function);
+extern void log_xml_diff(unsigned int log_level, crm_data_t *diff, const char *function);
 
 extern gboolean apply_xml_diff(
 	crm_data_t *old, crm_data_t *diff, crm_data_t **new);

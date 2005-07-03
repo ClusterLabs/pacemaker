@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.36 2005/06/16 12:42:54 andrew Exp $ */
+/* $Id: utils.c,v 1.37 2005/07/03 22:15:49 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -185,7 +185,7 @@ send_complete(const char *text, crm_data_t *msg,
 }
 
 void
-print_state(int log_level)
+print_state(unsigned int log_level)
 {
 	gboolean first_synapse = TRUE;
 	

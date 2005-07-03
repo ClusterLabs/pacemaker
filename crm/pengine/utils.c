@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.88 2005/06/27 11:21:23 andrew Exp $ */
+/* $Id: utils.c,v 1.89 2005/07/03 22:15:49 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1147,7 +1147,7 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 #define util_log(fmt...)  do_crm_log(log_level,  __FILE__, __FUNCTION__, fmt)
 
 void
-log_action(int log_level, const char *pre_text, action_t *action, gboolean details)
+log_action(unsigned int log_level, const char *pre_text, action_t *action, gboolean details)
 { 
 	if(action == NULL) {
 

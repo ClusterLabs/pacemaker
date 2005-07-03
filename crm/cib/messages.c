@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.47 2005/06/27 08:17:06 andrew Exp $ */
+/* $Id: messages.c,v 1.48 2005/07/03 22:15:49 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -312,7 +312,7 @@ cib_process_diff(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
-	int log_level = LOG_DEBUG;
+	unsigned int log_level = LOG_DEBUG;
 	const char *value = NULL;
 	const char *reason = NULL;
 	gboolean apply_diff = TRUE;

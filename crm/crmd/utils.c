@@ -217,7 +217,7 @@ toggle_bit(long long action_list, long long action)
 long long
 clear_bit(long long action_list, long long action)
 {
-	int level = LOG_DEBUG_5;
+	unsigned int	level = LOG_DEBUG_5;
 	crm_log_maybe(level, "Clearing bit\t%.16llx", action);
 	
 	/* ensure its set */
@@ -232,7 +232,7 @@ clear_bit(long long action_list, long long action)
 long long
 set_bit(long long action_list, long long action)
 {
-	int level = LOG_DEBUG_5;
+	unsigned int	level = LOG_DEBUG_5;
 	crm_log_maybe(level, "Setting bit\t%.16llx", action);
 	action_list |= action;
 	return action_list;

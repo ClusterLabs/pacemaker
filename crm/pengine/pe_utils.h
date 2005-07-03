@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.27 2005/06/16 12:36:20 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.28 2005/07/03 22:15:49 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -89,7 +89,7 @@ extern void print_action(
 	const char *pre_text, action_t *action, gboolean details);
 
 extern void log_action(
-	int log_level, const char *pre_text, action_t *action, gboolean details);
+	unsigned int log_level, const char *pre_text, action_t *action, gboolean details);
 
 /* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);

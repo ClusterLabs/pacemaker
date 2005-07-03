@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.27 2005/06/17 11:08:19 andrew Exp $ */
+/* $Id: cibmon.c,v 1.28 2005/07/03 22:15:49 alan Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -431,7 +431,7 @@ cibmon_diff(const char *event, HA_Message *msg)
 	crm_data_t *diff = NULL;
 	crm_data_t *update = get_message_xml(msg, F_CIB_UPDATE);
 
-	int log_level = LOG_INFO;
+	unsigned int log_level = LOG_INFO;
 	
 	if(msg == NULL) {
 		crm_err("NULL update");

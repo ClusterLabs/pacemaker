@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.71 2005/06/28 08:11:07 andrew Exp $ */
+/* $Id: callbacks.c,v 1.72 2005/07/03 22:15:49 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1320,9 +1320,9 @@ cib_ccm_msg_callback(
 	}
 	
 	if(update_quorum) {
-		int members = 0;
+		unsigned int members = 0;
 		int offset = 0;
-		unsigned lpc = 0;
+		unsigned int lpc = 0;
 
 		cib_have_quorum = ccm_have_quorum(event);
 

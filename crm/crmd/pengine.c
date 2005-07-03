@@ -180,7 +180,7 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	ccm_transition_id = crm_atoi(
 		crm_element_value(local_cib, XML_ATTR_CCM_TRANSITION), "-1");
 
-	if(ccm_transition_id < fsa_membership_copy->id) {
+	if(ccm_transition_id < (int)fsa_membership_copy->id) {
 		/* the cib is behind */
 		crm_debug("Re-asking for the CIB until membership/quorum"
 			  " matches: CIB=%d < CRM=%d",
@@ -190,7 +190,7 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 		register_fsa_action(A_PE_INVOKE);
 		return;
 
-	} else if(ccm_transition_id > fsa_membership_copy->id) {
+	} else if(ccm_transition_id > (int)fsa_membership_copy->id) {
 		/* we are behind */
 		crm_info("Waiting for another CCM event before proceeding:"
 			 " CIB=%d > CRM=%d",
