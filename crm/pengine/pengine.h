@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.76 2005/06/30 14:08:14 andrew Exp $ */
+/* $Id: pengine.h,v 1.77 2005/07/05 16:31:45 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,8 +36,16 @@ typedef struct action_wrapper_s action_wrapper_t;
 #include <crm/common/msg.h>
 
 #include <linux-ha/config.h>
-#ifdef HAVE_LIBNCURSES
+
+/*
+ * The man pages for both curses and ncurses suggest inclusion of "curses.h".
+ * We believe the following to be acceptable and portable.
+ */
+#if defined(HAVE_NCURSES_H)
 #  include <ncurses.h>
+#  define CURSES_ENABLED 1
+#elif defined(HAVE_CURSES_H)
+#  include <curses.h>
 #  define CURSES_ENABLED 1
 #else
 #  define CURSES_ENABLED 0

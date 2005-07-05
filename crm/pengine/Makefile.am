@@ -43,6 +43,7 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		$(top_builddir)/lib/crm/cib/libcib.la			\
 		$(top_builddir)/lib/apphb/libapphb.la			\
 		$(GLIBLIB)						\
+		$(CURSESLIBS)						\
 		$(LIBRT)
 
 LIBRT 		= @LIBRT@
