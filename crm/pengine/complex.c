@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.43 2005/06/30 14:08:14 andrew Exp $ */
+/* $Id: complex.c,v 1.44 2005/07/05 13:56:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -99,13 +99,13 @@ resource_object_functions_t resource_class_functions[] = {
 
 int get_resource_type(const char *name)
 {
-	if(safe_str_eq(name, "resource")) {
+	if(safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
 		return pe_native;
 
-	} else if(safe_str_eq(name, "resource_group")) {
+	} else if(safe_str_eq(name, XML_CIB_TAG_GROUP)) {
 		return pe_group;
 
-	} else if(safe_str_eq(name, XML_RSC_ATTR_INCARNATION)) {
+	} else if(safe_str_eq(name, XML_CIB_TAG_INCARNATION)) {
 		return pe_incarnation;
 	}
 	

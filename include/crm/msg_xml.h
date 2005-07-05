@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.34 2005/05/27 08:41:54 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.35 2005/07/05 13:56:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -114,6 +114,9 @@
 #define XML_TAG_ATTRS			"attributes"
 
 #define XML_CIB_TAG_RESOURCE	  	"resource"
+#define XML_CIB_TAG_GROUP	  	"resource_group"
+#define XML_CIB_TAG_INCARNATION		"incarnation"
+
 #define XML_RSC_ATTR_STOPFAIL	   	"on_stopfail"
 #define XML_RSC_ATTR_RESTART	  	"restart_type"
 #define XML_RSC_ATTR_START_TIMEOUT	"start_timeout"

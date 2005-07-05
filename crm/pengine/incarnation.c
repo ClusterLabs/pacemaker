@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.34 2005/06/30 14:08:14 andrew Exp $ */
+/* $Id: incarnation.c,v 1.35 2005/07/05 13:56:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -97,7 +97,7 @@ void incarnation_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	/* this is a bit of a hack - but simplifies everything else */
 	copy_in_properties(xml_self, xml_obj);
 
-	xml_obj_child = find_xml_node(xml_obj, "resource_group", FALSE);
+	xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_GROUP, FALSE);
 	if(xml_obj_child == NULL) {
 		xml_obj_child = find_xml_node(
 			xml_obj, XML_CIB_TAG_RESOURCE, TRUE);

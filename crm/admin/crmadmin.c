@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.53 2005/06/23 07:59:12 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.54 2005/07/05 13:56:46 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -838,8 +838,8 @@ do_find_resource_list(int level, crm_data_t *resource_list)
 			found++;
 			printf("%s: %s (%s::%s)\n",
 			       name, ID(rsc), crm_str(class), crm_str(type));
-		} else if(safe_str_eq(name, "resource_group")
-			  || safe_str_eq(name, XML_RSC_ATTR_INCARNATION)) {
+		} else if(safe_str_eq(name, XML_CIB_TAG_GROUP)
+			  || safe_str_eq(name, XML_CIB_TAG_INCARNATION)) {
 			for(lpc = 0; lpc < level; lpc++) {
 				printf("\t");
 			}
