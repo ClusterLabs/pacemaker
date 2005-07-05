@@ -55,11 +55,11 @@
    <synapse id="3">
      <action_set>
        <rsc_op id="53" rsc_id="CloneSet:child_CloneSet:0" operation="start" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="0"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="0"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -72,13 +72,13 @@
    <synapse id="4">
      <action_set>
        <rsc_op id="54" rsc_id="CloneSet:child_CloneSet:0" operation="monitor" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="0"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="0"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -91,11 +91,11 @@
    <synapse id="5">
      <action_set>
        <rsc_op id="55" rsc_id="CloneSet:child_CloneSet:1" operation="start" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="1"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -108,13 +108,13 @@
    <synapse id="6">
      <action_set>
        <rsc_op id="56" rsc_id="CloneSet:child_CloneSet:1" operation="monitor" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="1"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -127,11 +127,11 @@
    <synapse id="7">
      <action_set>
        <rsc_op id="57" rsc_id="CloneSet:child_CloneSet:2" operation="start" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="2"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="2"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -144,13 +144,13 @@
    <synapse id="8">
      <action_set>
        <rsc_op id="58" rsc_id="CloneSet:child_CloneSet:2" operation="monitor" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="2"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="2"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -163,11 +163,11 @@
    <synapse id="9">
      <action_set>
        <rsc_op id="59" rsc_id="CloneSet:child_CloneSet:3" operation="start" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="3"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="3"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -180,13 +180,13 @@
    <synapse id="10">
      <action_set>
        <rsc_op id="60" rsc_id="CloneSet:child_CloneSet:3" operation="monitor" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="3"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="3"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -199,11 +199,11 @@
    <synapse id="11">
      <action_set>
        <rsc_op id="61" rsc_id="CloneSet:child_CloneSet:4" operation="start" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="4"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="4"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -216,13 +216,13 @@
    <synapse id="12">
      <action_set>
        <rsc_op id="62" rsc_id="CloneSet:child_CloneSet:4" operation="monitor" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="4"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="4"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -235,11 +235,11 @@
    <synapse id="13">
      <action_set>
        <rsc_op id="63" rsc_id="CloneSet:child_CloneSet:5" operation="start" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="5"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -252,13 +252,13 @@
    <synapse id="14">
      <action_set>
        <rsc_op id="64" rsc_id="CloneSet:child_CloneSet:5" operation="monitor" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="5"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -271,11 +271,11 @@
    <synapse id="15">
      <action_set>
        <rsc_op id="65" rsc_id="CloneSet:child_CloneSet:6" operation="start" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="6"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="6"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -288,13 +288,13 @@
    <synapse id="16">
      <action_set>
        <rsc_op id="66" rsc_id="CloneSet:child_CloneSet:6" operation="monitor" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="6"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="6"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -307,11 +307,11 @@
    <synapse id="17">
      <action_set>
        <rsc_op id="67" rsc_id="CloneSet:child_CloneSet:7" operation="start" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="7"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="7"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -324,13 +324,13 @@
    <synapse id="18">
      <action_set>
        <rsc_op id="68" rsc_id="CloneSet:child_CloneSet:7" operation="monitor" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false">
-         <resource id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
+         <native id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
-           <nvpair name="incarnation_max" value="8"/>
+           <nvpair name="clone" value="7"/>
+           <nvpair name="clone_max" value="8"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
-           <nvpair name="incarnation" value="7"/>
          </attributes>
        </rsc_op>
      </action_set>

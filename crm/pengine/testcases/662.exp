@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <rsc_op id="7" rsc_id="rsc_c001n02" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
-         <resource id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
+         <native id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
            <nvpair name="ip" value="127.0.0.12"/>
          </attributes>
@@ -13,7 +13,7 @@
    <synapse id="1">
      <action_set>
        <rsc_op id="8" rsc_id="rsc_c001n02" operation="start" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
-         <resource id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
+         <native id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
            <nvpair name="ip" value="127.0.0.12"/>
          </attributes>
@@ -28,7 +28,7 @@
    <synapse id="2">
      <action_set>
        <rsc_op id="9" rsc_id="rsc_c001n02" operation="monitor" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
-         <resource id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
+         <native id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
@@ -104,11 +104,11 @@
    <synapse id="7">
      <action_set>
        <rsc_op id="16" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
-         <resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+         <native id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="4"/>
+           <nvpair name="clone" value="0"/>
+           <nvpair name="clone_max" value="4"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
-           <nvpair name="incarnation" value="0"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -121,11 +121,11 @@
    <synapse id="8">
      <action_set>
        <rsc_op id="17" rsc_id="DoFencing:child_DoFencing:0" operation="start" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
-         <resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+         <native id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="4"/>
+           <nvpair name="clone" value="0"/>
+           <nvpair name="clone_max" value="4"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
-           <nvpair name="incarnation" value="0"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -141,13 +141,13 @@
    <synapse id="9">
      <action_set>
        <rsc_op id="18" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
-         <resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+         <native id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
-           <nvpair name="incarnation_max" value="4"/>
+           <nvpair name="clone" value="0"/>
+           <nvpair name="clone_max" value="4"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
-           <nvpair name="incarnation" value="0"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -160,11 +160,11 @@
    <synapse id="10">
      <action_set>
        <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:1" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
-         <resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
+         <native id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="4"/>
+           <nvpair name="clone" value="1"/>
+           <nvpair name="clone_max" value="4"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
-           <nvpair name="incarnation" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -177,11 +177,11 @@
    <synapse id="11">
      <action_set>
        <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:1" operation="start" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
-         <resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
+         <native id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="4"/>
+           <nvpair name="clone" value="1"/>
+           <nvpair name="clone_max" value="4"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
-           <nvpair name="incarnation" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -197,13 +197,13 @@
    <synapse id="12">
      <action_set>
        <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
-         <resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
+         <native id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
-           <nvpair name="incarnation_max" value="4"/>
+           <nvpair name="clone" value="1"/>
+           <nvpair name="clone_max" value="4"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
-           <nvpair name="incarnation" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -216,11 +216,11 @@
    <synapse id="13">
      <action_set>
        <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
-         <resource id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
+         <native id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="4"/>
+           <nvpair name="clone" value="2"/>
+           <nvpair name="clone_max" value="4"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
-           <nvpair name="incarnation" value="2"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -233,11 +233,11 @@
    <synapse id="14">
      <action_set>
        <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:2" operation="start" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
-         <resource id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
+         <native id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="4"/>
+           <nvpair name="clone" value="2"/>
+           <nvpair name="clone_max" value="4"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
-           <nvpair name="incarnation" value="2"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -253,13 +253,13 @@
    <synapse id="15">
      <action_set>
        <rsc_op id="24" rsc_id="DoFencing:child_DoFencing:2" operation="monitor" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
-         <resource id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
+         <native id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
-           <nvpair name="incarnation_max" value="4"/>
+           <nvpair name="clone" value="2"/>
+           <nvpair name="clone_max" value="4"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
-           <nvpair name="incarnation" value="2"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -272,11 +272,11 @@
    <synapse id="16">
      <action_set>
        <rsc_op id="25" rsc_id="DoFencing:child_DoFencing:3" operation="stop" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
-         <resource id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
+         <native id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="incarnation_max" value="4"/>
+           <nvpair name="clone" value="3"/>
+           <nvpair name="clone_max" value="4"/>
            <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
-           <nvpair name="incarnation" value="3"/>
          </attributes>
        </rsc_op>
      </action_set>

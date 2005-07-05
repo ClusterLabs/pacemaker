@@ -10,14 +10,14 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-      <resource id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
-      <resource id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
-      <resource id="rsc4" class="heartbeat" type="apache" priority="1.0"/>
-      <resource id="rsc5" class="heartbeat" type="apache" priority="1.0"/>
-      <resource id="rsc6" class="heartbeat" type="apache" priority="1.0"/>
-      <resource id="rsc7" class="heartbeat" type="apache" priority="1.0"/>
-      <resource id="rsc8" class="heartbeat" type="apache" priority="1.0"/>
+      <native id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
+      <native id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
+      <native id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
+      <native id="rsc4" class="heartbeat" type="apache" priority="1.0"/>
+      <native id="rsc5" class="heartbeat" type="apache" priority="1.0"/>
+      <native id="rsc6" class="heartbeat" type="apache" priority="1.0"/>
+      <native id="rsc7" class="heartbeat" type="apache" priority="1.0"/>
+      <native id="rsc8" class="heartbeat" type="apache" priority="1.0"/>
     </resources>
     <constraints>
       <rsc_order id="order1" from="rsc1" type="before" to="rsc2"/>

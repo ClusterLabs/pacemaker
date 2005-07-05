@@ -14,7 +14,7 @@
         <node id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" type="member"/>
       </nodes>
       <resources timestamp="1118302973">
-        <resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
+        <native id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
           <operations>
             <op id="1" name="monitor" interval="5s" timeout="20s"/>
           </operations>
@@ -23,8 +23,8 @@
               <nvpair name="ip" value="127.0.0.10"/>
             </attributes>
           </instance_attributes>
-        </resource>
-        <resource id="rsc_hadev3" class="ocf" type="IPaddr" provider="heartbeat">
+        </native>
+        <native id="rsc_hadev3" class="ocf" type="IPaddr" provider="heartbeat">
           <operations>
             <op id="1" name="monitor" interval="5s" timeout="20s"/>
           </operations>
@@ -33,8 +33,8 @@
               <nvpair name="ip" value="127.0.0.21"/>
             </attributes>
           </instance_attributes>
-        </resource>
-        <resource id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat">
+        </native>
+        <native id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat">
           <operations>
             <op id="1" name="monitor" interval="5s" timeout="20s"/>
           </operations>
@@ -43,8 +43,8 @@
               <nvpair name="ip" value="127.0.0.22"/>
             </attributes>
           </instance_attributes>
-        </resource>
-        <resource id="rsc_hadev1" class="ocf" type="IPaddr" provider="heartbeat">
+        </native>
+        <native id="rsc_hadev1" class="ocf" type="IPaddr" provider="heartbeat">
           <operations>
             <op id="1" name="monitor" interval="5s" timeout="20s"/>
           </operations>
@@ -53,15 +53,15 @@
               <nvpair name="ip" value="127.0.0.23"/>
             </attributes>
           </instance_attributes>
-        </resource>
-        <incarnation id="DoFencing">
+        </native>
+        <clone id="DoFencing">
           <instance_attributes>
             <attributes>
-              <nvpair name="incarnation_max" value="3"/>
-              <nvpair name="incarnation_node_max" value="1"/>
+              <nvpair name="clone_max" value="3"/>
+              <nvpair name="clone_node_max" value="1"/>
             </attributes>
           </instance_attributes>
-          <resource id="child_DoFencing" class="stonith" type="ssh">
+          <native id="child_DoFencing" class="stonith" type="ssh">
             <operations>
               <op id="1" name="monitor" interval="5s" timeout="20s"/>
             </operations>
@@ -70,8 +70,8 @@
                 <nvpair name="hostlist" value="hadev3 hadev2 hadev1 "/>
               </attributes>
             </instance_attributes>
-          </resource>
-        </incarnation>
+          </native>
+        </clone>
       </resources>
       <constraints timestamp="1118302973">
         <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">

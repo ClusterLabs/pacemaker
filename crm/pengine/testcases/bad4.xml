@@ -10,7 +10,7 @@
       <node id="node1" uname="node1" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" priority="1.0"/>
+      <native id="rsc1" class="heartbeat" priority="1.0"/>
     </resources>
     <constraints> 
     </constraints> 

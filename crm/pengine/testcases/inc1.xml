@@ -10,17 +10,17 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache"/>
-      <incarnation id="rsc2">
+      <native id="rsc1" class="heartbeat" type="apache"/>
+      <clone id="rsc2">
         <instance_attributes>
           <attributes>
-            <nvpair name="incarnation_max" value="5"/>
-            <nvpair name="incarnation_node_max" value="2"/>
+            <nvpair name="clone_max" value="5"/>
+            <nvpair name="clone_node_max" value="2"/>
           </attributes>
         </instance_attributes>
-	<resource id="child_rsc2" class="heartbeat" type="apache"/>
-      </incarnation>
-      <resource id="rsc3" class="heartbeat" type="apache"/>
+	<native id="child_rsc2" class="heartbeat" type="apache"/>
+      </clone>
+      <native id="rsc3" class="heartbeat" type="apache"/>
     </resources>
     <constraints>
       <rsc_order id="order1" from="rsc1" type="before" to="rsc2"/>

@@ -11,11 +11,11 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource_group id="rsc1" priority="1.0">
-	<resource id="child_rsc1" class="heartbeat" type="apache"/>
-	<resource id="child_rsc2" class="heartbeat" type="apache"/>
-	<resource id="child_rsc3" class="heartbeat" type="apache"/>
-      </resource_group>
+      <group id="rsc1" priority="1.0">
+	<native id="child_rsc1" class="heartbeat" type="apache"/>
+	<native id="child_rsc2" class="heartbeat" type="apache"/>
+	<native id="child_rsc3" class="heartbeat" type="apache"/>
+      </group>
     </resources>
     <constraints>
     </constraints>

@@ -10,78 +10,78 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <incarnation id="rsc1">
+      <clone id="rsc1">
         <instance_attributes>
           <attributes>
-            <nvpair name="incarnation_max" value="3"/>
-            <nvpair name="incarnation_node_max" value="1"/>
+            <nvpair name="clone_max" value="3"/>
+            <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<resource id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
-      </incarnation>
-      <incarnation id="rsc2">
+	<native id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
+      </clone>
+      <clone id="rsc2">
         <instance_attributes>
           <attributes>
-            <nvpair name="incarnation_max" value="3"/>
-            <nvpair name="incarnation_node_max" value="1"/>
+            <nvpair name="clone_max" value="3"/>
+            <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<resource id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
-      </incarnation>
-      <incarnation id="rsc3">
+	<native id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
+      </clone>
+      <clone id="rsc3">
         <instance_attributes>
           <attributes>
-            <nvpair name="incarnation_max" value="3"/>
-            <nvpair name="incarnation_node_max" value="1"/>
+            <nvpair name="clone_max" value="3"/>
+            <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<resource id="child_rsc3" class="heartbeat" type="apache" priority="1.0"/>
-      </incarnation>
-      <incarnation id="rsc4">
+	<native id="child_rsc3" class="heartbeat" type="apache" priority="1.0"/>
+      </clone>
+      <clone id="rsc4">
         <instance_attributes>
           <attributes>
-            <nvpair name="incarnation_max" value="3"/>
-            <nvpair name="incarnation_node_max" value="1"/>
+            <nvpair name="clone_max" value="3"/>
+            <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<resource id="child_rsc4" class="heartbeat" type="apache" priority="1.0"/>
-      </incarnation>
-      <incarnation id="rsc5">
+	<native id="child_rsc4" class="heartbeat" type="apache" priority="1.0"/>
+      </clone>
+      <clone id="rsc5">
         <instance_attributes>
           <attributes>
-            <nvpair name="incarnation_max" value="3"/>
-            <nvpair name="incarnation_node_max" value="1"/>
+            <nvpair name="clone_max" value="3"/>
+            <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<resource id="child_rsc5" class="heartbeat" type="apache" priority="1.0"/>
-      </incarnation>
-      <incarnation id="rsc6">
+	<native id="child_rsc5" class="heartbeat" type="apache" priority="1.0"/>
+      </clone>
+      <clone id="rsc6">
         <instance_attributes>
           <attributes>
-            <nvpair name="incarnation_max" value="3"/>
-            <nvpair name="incarnation_node_max" value="1"/>
+            <nvpair name="clone_max" value="3"/>
+            <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<resource id="child_rsc6" class="heartbeat" type="apache" priority="1.0"/>
-      </incarnation>
-      <incarnation id="rsc7">
+	<native id="child_rsc6" class="heartbeat" type="apache" priority="1.0"/>
+      </clone>
+      <clone id="rsc7">
         <instance_attributes>
           <attributes>
-            <nvpair name="incarnation_max" value="3"/>
-            <nvpair name="incarnation_node_max" value="1"/>
+            <nvpair name="clone_max" value="3"/>
+            <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<resource id="child_rsc7" class="heartbeat" type="apache" priority="1.0"/>
-      </incarnation>
-      <incarnation id="rsc8">
+	<native id="child_rsc7" class="heartbeat" type="apache" priority="1.0"/>
+      </clone>
+      <clone id="rsc8">
         <instance_attributes>
           <attributes>
-            <nvpair name="incarnation_max" value="3"/>
-            <nvpair name="incarnation_node_max" value="1"/>
+            <nvpair name="clone_max" value="3"/>
+            <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<resource id="child_rsc8" class="heartbeat" type="apache" priority="1.0"/>
-      </incarnation>
+	<native id="child_rsc8" class="heartbeat" type="apache" priority="1.0"/>
+      </clone>
     </resources>
     <constraints>
       <rsc_order id="order1" from="rsc1" type="before" to="rsc2"/>

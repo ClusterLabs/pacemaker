@@ -10,20 +10,20 @@
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache">
+      <native id="rsc1" class="heartbeat" type="apache">
         <instance_attributes>
           <attributes>
             <nvpair name="priority" value="3.0"/>
           </attributes>
         </instance_attributes>
-      </resource>
-      <resource id="rsc2" class="heartbeat" type="apache">
+      </native>
+      <native id="rsc2" class="heartbeat" type="apache">
         <instance_attributes>
           <attributes>
             <nvpair name="priority" value="2.0"/>
           </attributes>
         </instance_attributes>
-      </resource>
+      </native>
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">

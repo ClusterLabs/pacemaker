@@ -10,11 +10,11 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache">
+      <native id="rsc1" class="heartbeat" type="apache">
          <operations>
            <op id="1" name="monitor" interval="5s" timeout="3s"/>
          </operations>
-      </resource>
+      </native>
     </resources>
     <constraints/>
   </configuration>

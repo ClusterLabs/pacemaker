@@ -11,8 +11,8 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <resource id="rsc1" class="heartbeat" type="apache" on_stopfail="fence"/>
-      <resource id="rsc2" class="heartbeat" type="apache" on_stopfail="fence"/>
+      <native id="rsc1" class="heartbeat" type="apache" on_stopfail="fence"/>
+      <native id="rsc2" class="heartbeat" type="apache" on_stopfail="fence"/>
     </resources>
     <constraints/>
   </configuration>

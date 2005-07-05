@@ -10,24 +10,24 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <incarnation id="rsc1" ordered="true">
+      <clone id="rsc1" ordered="true">
         <instance_attributes>
           <attributes>
-            <nvpair name="incarnation_max" value="5"/>
-            <nvpair name="incarnation_node_max" value="2"/>
+            <nvpair name="clone_max" value="5"/>
+            <nvpair name="clone_node_max" value="2"/>
           </attributes>
         </instance_attributes>
-	<resource id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
-      </incarnation>
-      <incarnation id="rsc2" ordered="true">
+	<native id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
+      </clone>
+      <clone id="rsc2" ordered="true">
         <instance_attributes>
           <attributes>
-            <nvpair name="incarnation_max" value="5"/>
-            <nvpair name="incarnation_node_max" value="3"/>
+            <nvpair name="clone_max" value="5"/>
+            <nvpair name="clone_node_max" value="3"/>
           </attributes>
         </instance_attributes>
-	<resource id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
-      </incarnation>
+	<native id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
+      </clone>
     </resources>
     <constraints>
       <rsc_order id="order1" from="rsc1" type="before" to="rsc2"/>
