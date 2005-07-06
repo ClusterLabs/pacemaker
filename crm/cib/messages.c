@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.48 2005/07/03 22:15:49 alan Exp $ */
+/* $Id: messages.c,v 1.49 2005/07/06 09:08:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -307,6 +307,8 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 	return cib_ok;
 }
 
+gboolean sync_in_progress = FALSE;
+
 enum cib_errors 
 cib_process_diff(
 	const char *op, int options, const char *section, crm_data_t *input,
@@ -332,6 +334,16 @@ cib_process_diff(
 	int diff_del_admin_epoche = 0;
 
 	crm_debug_2("Processing \"%s\" event", op);
+
+	if(cib_is_master) {
+		/* the master is never waiting for a resync */
+		sync_in_progress = FALSE;
+	}
+	
+	if(sync_in_progress) {
+		crm_warn("Not applying diff: sync in progress");
+		return cib_diff_resync;
+	}
 	
 	value = crm_element_value(existing_cib, XML_ATTR_GENERATION);
 	this_epoche = atoi(value?value:"0");
@@ -417,12 +429,13 @@ cib_process_diff(
 	}
 
 	if(do_resync && cib_is_master == FALSE) {
-		HA_Message *sync_me = ha_msg_new(2);
+		HA_Message *sync_me = ha_msg_new(3);
 		free_xml(*result_cib);
 		*result_cib = NULL;
 		result = cib_diff_resync;
 		crm_info("Requesting re-sync from peer: %s", reason);
-
+		sync_in_progress = TRUE;
+		
 		ha_msg_add(sync_me, F_TYPE, "cib");
 		ha_msg_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
 		ha_msg_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
@@ -499,6 +512,7 @@ cib_process_replace(
 				 reason);
 			result = cib_old_data;
 		}
+		sync_in_progress = FALSE;
 		*result_cib = copy_xml(input);
 		
 	} else {
