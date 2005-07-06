@@ -40,8 +40,8 @@ def create_cib() :
         
         nvpair = doc.createElement("nvpair")
         crm_config.appendChild(nvpair)
-        nvpair.setAttribute("id","transition_timeout")
-        nvpair.setAttribute("name","transition_timeout")
+        nvpair.setAttribute("id","transition_idle_timeout")
+        nvpair.setAttribute("name","transition_idle_timeout")
         nvpair.setAttribute("value","120s")
 
         nvpair = doc.createElement("nvpair")
@@ -81,7 +81,7 @@ def cib_resource(doc,index, rsc):
                 type = fields[0]
                 params = fields[1:]
         
-        resource = doc.createElement("resource")
+        resource = doc.createElement("primitive")
         resource.setAttribute("id",id)
         resource.setAttribute("type",type)
         resource.setAttribute("class","heartbeat")
@@ -116,7 +116,7 @@ def cib_rsc_location(doc, id, node):
         return rsc_location
 
 def cib_resource_group(doc, id):
-        resource_group = doc.createElement("resource_group")
+        resource_group = doc.createElement("group")
         resource_group.setAttribute("id",id)
         return resource_group
 
