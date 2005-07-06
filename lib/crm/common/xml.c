@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.20 2005/07/03 22:15:50 alan Exp $ */
+/* $Id: xml.c,v 1.21 2005/07/06 09:49:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -656,11 +656,7 @@ dump_xml_formatted(const crm_data_t *an_xml_node)
 {
 	char *buffer     = NULL;
 	char *mutable_ptr = NULL;
-#if 0
   	crm_malloc0(buffer, 3*get_stringlen(an_xml_node));
-#else
- 	crm_malloc0(buffer, sizeof(char)*60000);
-#endif
 	mutable_ptr = buffer;
 	
 	crm_validate_data(an_xml_node);
@@ -678,11 +674,7 @@ dump_xml_unformatted(const crm_data_t *an_xml_node)
 {
 	char *buffer     = NULL;
 	char *mutable_ptr = NULL;
-#if 0
   	crm_malloc0(buffer, 2*get_stringlen(an_xml_node));
-#else
- 	crm_malloc0(buffer, sizeof(char)*20000);
-#endif
 	mutable_ptr = buffer;
 	
 	crm_validate_data(an_xml_node);
