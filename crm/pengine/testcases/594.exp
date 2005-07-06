@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <rsc_op id="1" rsc_id="DcIPaddr" operation="stop" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
-         <primative id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat"/>
+         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
            <nvpair name="ip" value="127.0.0.10"/>
          </attributes>
@@ -13,7 +13,7 @@
    <synapse id="1">
      <action_set>
        <rsc_op id="2" rsc_id="DcIPaddr" operation="start" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false">
-         <primative id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat"/>
+         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
            <nvpair name="ip" value="127.0.0.10"/>
          </attributes>
@@ -28,7 +28,7 @@
    <synapse id="2">
      <action_set>
        <rsc_op id="3" rsc_id="DcIPaddr" operation="monitor" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false">
-         <primative id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat"/>
+         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
@@ -45,7 +45,7 @@
    <synapse id="3">
      <action_set>
        <rsc_op id="7" rsc_id="rsc_hadev2" operation="stop" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
-         <primative id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat"/>
+         <primitive id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
            <nvpair name="ip" value="127.0.0.22"/>
          </attributes>
@@ -56,7 +56,7 @@
    <synapse id="4">
      <action_set>
        <rsc_op id="8" rsc_id="rsc_hadev2" operation="start" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false">
-         <primative id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat"/>
+         <primitive id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
            <nvpair name="ip" value="127.0.0.22"/>
          </attributes>
@@ -71,7 +71,7 @@
    <synapse id="5">
      <action_set>
        <rsc_op id="9" rsc_id="rsc_hadev2" operation="monitor" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false">
-         <primative id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat"/>
+         <primitive id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
@@ -138,7 +138,7 @@
    <synapse id="10">
      <action_set>
        <rsc_op id="13" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
-         <primative id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="clone" value="0"/>
            <nvpair name="clone_max" value="3"/>
@@ -155,7 +155,7 @@
    <synapse id="11">
      <action_set>
        <rsc_op id="14" rsc_id="DoFencing:child_DoFencing:0" operation="start" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false">
-         <primative id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="clone" value="0"/>
            <nvpair name="clone_max" value="3"/>
@@ -175,7 +175,7 @@
    <synapse id="12">
      <action_set>
        <rsc_op id="15" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false">
-         <primative id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
@@ -194,7 +194,7 @@
    <synapse id="13">
      <action_set>
        <rsc_op id="16" rsc_id="DoFencing:child_DoFencing:1" operation="stop" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false">
-         <primative id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
+         <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="clone" value="1"/>
            <nvpair name="clone_max" value="3"/>
@@ -211,7 +211,7 @@
    <synapse id="14">
      <action_set>
        <rsc_op id="17" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false">
-         <primative id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
+         <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="clone" value="2"/>
            <nvpair name="clone_max" value="3"/>

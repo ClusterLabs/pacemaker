@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
        <rsc_op id="1" rsc_id="rsc1" operation="start" on_node="node2" on_node_uuid="node2" allow_fail="false">
-         <primative id="rsc1" class="heartbeat" type="apache"/>
+         <primitive id="rsc1" class="heartbeat" type="apache"/>
          <attributes/>
       </rsc_op>
     </action_set>
@@ -11,7 +11,7 @@
   <synapse id="1">
     <action_set>
       <rsc_op id="2" rsc_id="rsc2" operation="start" on_node="node1" on_node_uuid="node1" allow_fail="false">
-         <primative id="rsc2" class="heartbeat" type="apache"/>
+         <primitive id="rsc2" class="heartbeat" type="apache"/>
          <attributes/>
       </rsc_op>
     </action_set>

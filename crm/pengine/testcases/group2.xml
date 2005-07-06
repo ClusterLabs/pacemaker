@@ -10,13 +10,13 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primative id="rsc1" class="heartbeat" type="apache"/>
+      <primitive id="rsc1" class="heartbeat" type="apache"/>
       <group id="rsc2">
-	<primative id="child_rsc1" class="heartbeat" type="apache"/>
-	<primative id="child_rsc2" class="heartbeat" type="apache"/>
-	<primative id="child_rsc3" class="heartbeat" type="apache"/>
+	<primitive id="child_rsc1" class="heartbeat" type="apache"/>
+	<primitive id="child_rsc2" class="heartbeat" type="apache"/>
+	<primitive id="child_rsc3" class="heartbeat" type="apache"/>
       </group>
-      <primative id="rsc3" class="heartbeat" type="apache"/>
+      <primitive id="rsc3" class="heartbeat" type="apache"/>
     </resources>
     <constraints>
       <rsc_order id="order1" from="rsc2" type="after"  to="rsc1"/>

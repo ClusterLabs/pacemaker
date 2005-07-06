@@ -10,9 +10,9 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primative id="rsc1" class="heartbeat" type="apache" on_stopfail="block"/>
-      <primative id="rsc2" class="heartbeat" type="apache" on_stopfail="block"/>
-      <primative id="rsc3" class="heartbeat" type="apache" on_stopfail="block"/>
+      <primitive id="rsc1" class="heartbeat" type="apache" on_stopfail="block"/>
+      <primitive id="rsc2" class="heartbeat" type="apache" on_stopfail="block"/>
+      <primitive id="rsc3" class="heartbeat" type="apache" on_stopfail="block"/>
     </resources>
     <constraints/>
   </configuration>

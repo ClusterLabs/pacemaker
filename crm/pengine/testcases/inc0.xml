@@ -17,7 +17,7 @@
             <nvpair name="clone_node_max" value="2"/>
           </attributes>
         </instance_attributes>
-	<primative id="child_rsc1" class="heartbeat" type="apache"/>
+	<primitive id="child_rsc1" class="heartbeat" type="apache"/>
       </clone>
     </resources>
     <constraints>

@@ -43,7 +43,7 @@
    <synapse id="3">
      <action_set>
       <rsc_op id="1" rsc_id="rsc1:child_rsc1:0" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <primative id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
+         <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="clone" value="0"/>
            <nvpair name="clone_max" value="5"/>
@@ -59,7 +59,7 @@
    <synapse id="4">
     <action_set>
       <rsc_op id="2" rsc_id="rsc1:child_rsc1:1" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
-         <primative id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
+         <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="clone" value="1"/>
            <nvpair name="clone_max" value="5"/>
@@ -75,7 +75,7 @@
    <synapse id="5">
     <action_set>
       <rsc_op id="3" rsc_id="rsc1:child_rsc1:2" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <primative id="rsc1:child_rsc1:2" class="heartbeat" type="apache"/>
+         <primitive id="rsc1:child_rsc1:2" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="clone" value="2"/>
            <nvpair name="clone_max" value="5"/>
@@ -91,7 +91,7 @@
    <synapse id="6">
     <action_set>
       <rsc_op id="4" rsc_id="rsc1:child_rsc1:3" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
-         <primative id="rsc1:child_rsc1:3" class="heartbeat" type="apache"/>
+         <primitive id="rsc1:child_rsc1:3" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="clone" value="3"/>
            <nvpair name="clone_max" value="5"/>

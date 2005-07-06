@@ -11,11 +11,11 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primative id="rsc1" class="heartbeat" type="apache">
+      <primitive id="rsc1" class="heartbeat" type="apache">
          <operations>
            <op id="1" name="monitor" interval="5s" timeout="3s"/>
          </operations>
-      </primative>
+      </primitive>
     </resources>
     <constraints/>
   </configuration>

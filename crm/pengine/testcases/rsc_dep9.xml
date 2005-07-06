@@ -11,34 +11,34 @@
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primative id="rsc1" class="heartbeat" type="apache">
+      <primitive id="rsc1" class="heartbeat" type="apache">
         <instance_attributes>
           <attributes>
             <nvpair name="priority" value="1.0"/>
           </attributes>
         </instance_attributes>
-      </primative>
-      <primative id="rsc2" class="heartbeat" type="apache">
+      </primitive>
+      <primitive id="rsc2" class="heartbeat" type="apache">
         <instance_attributes>
           <attributes>
             <nvpair name="priority" value="2.0"/>
           </attributes>
         </instance_attributes>
-      </primative>
-      <primative id="rsc3" class="heartbeat" type="apache">
+      </primitive>
+      <primitive id="rsc3" class="heartbeat" type="apache">
         <instance_attributes>
           <attributes>
             <nvpair name="priority" value="1.0"/>
           </attributes>
         </instance_attributes>
-      </primative>
-      <primative id="rsc4" class="heartbeat" type="apache">
+      </primitive>
+      <primitive id="rsc4" class="heartbeat" type="apache">
         <instance_attributes>
           <attributes>
             <nvpair name="priority" value="2.0"/>
           </attributes>
         </instance_attributes>
-      </primative>
+      </primitive>
     </resources>
     <constraints>
       <rsc_location id="same_1_2" rsc="rsc1">

@@ -11,8 +11,8 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primative id="rsc1" class="heartbeat" type="apache" on_stopfail="fence"/>
-      <primative id="rsc2" class="heartbeat" type="apache" on_stopfail="fence"/>
+      <primitive id="rsc1" class="heartbeat" type="apache" on_stopfail="fence"/>
+      <primitive id="rsc2" class="heartbeat" type="apache" on_stopfail="fence"/>
     </resources>
     <constraints/>
   </configuration>

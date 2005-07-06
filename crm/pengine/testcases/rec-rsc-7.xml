@@ -10,7 +10,7 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primative id="rsc1" class="heartbeat" type="apache" multiple_active="stop_only"/>
+      <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_only"/>
     </resources>
     <constraints/>
   </configuration>
