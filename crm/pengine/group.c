@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.28 2005/06/30 14:08:14 andrew Exp $ */
+/* $Id: group.c,v 1.29 2005/07/06 09:31:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -400,11 +400,35 @@ void group_printw(resource_t *rsc, const char *pre_text, int *index)
 		child_rsc, resource_t, group_data->child_list, lpc,
 		
 		(*index)++;
-		group_data->self->fns->printw(child_rsc, child_text, index);
+		child_rsc->fns->printw(child_rsc, child_text, index);
 		);
 #else
 	crm_err("printw support requires ncurses to be available during configure");
 #endif
+}
+
+void group_html(resource_t *rsc, const char *pre_text, FILE *stream)
+{
+	const char *child_text = NULL;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
+	if(pre_text != NULL) {
+		child_text = "        ";
+	} else {
+		child_text = "    ";
+	}
+	
+	fprintf(stream, "Resource Group: %s\n", rsc->id);
+	fprintf(stream, "<ul>\n");
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		
+		fprintf(stream, "<li>\n");
+		child_rsc->fns->html(child_rsc, child_text, stream);
+		fprintf(stream, "</li>\n");
+		);
+	fprintf(stream, "</ul>\n");
 }
 
 void group_dump(resource_t *rsc, const char *pre_text, gboolean details)
