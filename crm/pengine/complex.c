@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.44 2005/07/05 13:56:46 andrew Exp $ */
+/* $Id: complex.c,v 1.45 2005/07/06 09:30:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,6 +54,7 @@ resource_object_functions_t resource_class_functions[] = {
 		native_expand,
 		native_dump,
 		native_printw,
+		native_html,
 		native_free
 	},
 	{
@@ -72,25 +73,27 @@ resource_object_functions_t resource_class_functions[] = {
 		group_expand,
 		group_dump,
 		group_printw,
+		group_html,
 		group_free
 	},
 	{
-		incarnation_unpack,
-		incarnation_find_child,
-		incarnation_num_allowed_nodes,
-		incarnation_color,
-		incarnation_create_actions,
-		incarnation_internal_constraints,
-		incarnation_agent_constraints,
-		incarnation_rsc_colocation_lh,
-		incarnation_rsc_colocation_rh,
-		incarnation_rsc_order_lh,
-		incarnation_rsc_order_rh,
-		incarnation_rsc_location,
-		incarnation_expand,
-		incarnation_dump,
-		incarnation_printw,
-		incarnation_free
+		clone_unpack,
+		clone_find_child,
+		clone_num_allowed_nodes,
+		clone_color,
+		clone_create_actions,
+		clone_internal_constraints,
+		clone_agent_constraints,
+		clone_rsc_colocation_lh,
+		clone_rsc_colocation_rh,
+		clone_rsc_order_lh,
+		clone_rsc_order_rh,
+		clone_rsc_location,
+		clone_expand,
+		clone_dump,
+		clone_printw,
+		clone_html,
+		clone_free
 	}
 };
 
@@ -106,7 +109,7 @@ int get_resource_type(const char *name)
 		return pe_group;
 
 	} else if(safe_str_eq(name, XML_CIB_TAG_INCARNATION)) {
-		return pe_incarnation;
+		return pe_clone;
 	}
 	
 	return pe_unknown;
@@ -318,6 +321,17 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 			rh_action->actions_before = list;
 		}
 	}
+}
+
+void common_html(resource_t *rsc, const char *pre_text, FILE *stream)
+{
+	const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+	
+	fprintf(stream, "%s%s %s (%s%s%s:%s):\t",
+		pre_text?pre_text:"", crm_element_name(rsc->xml), rsc->id,
+		prov?prov:"", prov?"::":"",
+		crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
+		crm_element_value(rsc->xml, XML_ATTR_TYPE));
 }
 
 void common_printw(resource_t *rsc, const char *pre_text, int *index)

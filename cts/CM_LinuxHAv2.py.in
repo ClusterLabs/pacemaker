@@ -117,9 +117,8 @@ class LinuxHAv2(HeartbeatCM):
      <crm_config>'''
         cib_options='''
         <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="120s"/>
-        <nvpair id="require_quorum" name="require_quorum" value="true"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
-        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>
+        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="false"/>
         <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>'''
         cib_glue_1='''
      </crm_config>
@@ -140,7 +139,7 @@ class LinuxHAv2(HeartbeatCM):
         if self.Env["CIBResource"] == 1:
             self.log("Enabling DC resource")
             resources='''
-       <resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+       <primative id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
            <op id="1" name="monitor" interval="5s" timeout="20s"/>
          </operations>
@@ -149,7 +148,7 @@ class LinuxHAv2(HeartbeatCM):
              <nvpair id="1" name="ip" value="%s"/>
            </attributes>
          </instance_attributes>
-       </resource>''' % self.Env["IPBase"]
+       </primative>''' % self.Env["IPBase"]
             # DcIPaddr cant run anywhere but the DC
             constraints='''
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
@@ -163,7 +162,7 @@ class LinuxHAv2(HeartbeatCM):
                 fields[3] = str(int(fields[3])+1)
                 ip = string.join(fields, '.')
                 node_resource=("""
-       <resource id="%s" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+       <primative id="%s" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
            <op id="1" name="monitor" interval="5s" timeout="20s"/>
          </operations>
@@ -172,7 +171,7 @@ class LinuxHAv2(HeartbeatCM):
              <nvpair id="1" name="ip" value="%s"/>
            </attributes>
          </instance_attributes>
-       </resource>""" %("rsc_"+node, ip))
+       </primative>""" %("rsc_"+node, ip))
                 resources = resources + node_resource
                 node_constraint=("""
       <rsc_location id="run_%s" rsc="%s">
@@ -187,14 +186,14 @@ class LinuxHAv2(HeartbeatCM):
 	    for node in self.Env["nodes"]:
 		nodelist += node + " "
 	    stonith_resource=("""
-       <incarnation id="DoFencing">
+       <clone id="DoFencing">
          <instance_attributes>
            <attributes>
-             <nvpair id="1" name="incarnation_max" value="%d"/>
-             <nvpair id="2" name="incarnation_node_max" value="1"/>
+             <nvpair id="1" name="clone_max" value="%d"/>
+             <nvpair id="2" name="clone_node_max" value="1"/>
            </attributes>
          </instance_attributes>
-         <resource id="child_DoFencing" class="stonith" type="ssh">
+         <primative id="child_DoFencing" class="stonith" type="ssh">
            <operations>
              <op id="1" name="monitor" interval="5s" timeout="20s"/>
            </operations>
@@ -203,8 +202,8 @@ class LinuxHAv2(HeartbeatCM):
                <nvpair id="1" name="hostlist" value="%s"/>
              </attributes>
            </instance_attributes>
-         </resource>
-       </incarnation>""" %(len(self.Env["nodes"]), nodelist))
+         </primative>
+       </clone>""" %(len(self.Env["nodes"]), nodelist))
 	    resources = resources + stonith_resource
 
             if self.Env["DoFencing"] == 1:
@@ -391,11 +390,11 @@ class LinuxHAv2(HeartbeatCM):
         #read resources in cib
         configuration = self.Configuration()
         resources = configuration.getElementsByTagName('resources')[0]
-        rscs = configuration.getElementsByTagName('resource')
+        rscs = configuration.getElementsByTagName('primative')
         for rsc in rscs:
             if rsc in resources.childNodes:
                 ResourceList.append(HAResource(self,rsc))
-        incs = configuration.getElementsByTagName('incarnation')
+        incs = configuration.getElementsByTagName('clone')
         for inc in incs:
             max = 0
             inc_name = inc.getAttribute("id")
@@ -403,9 +402,9 @@ class LinuxHAv2(HeartbeatCM):
             attributes = instance_attributes.getElementsByTagName('attributes')[0]
             nvpairs = attributes.getElementsByTagName('nvpair')
             for nvpair in nvpairs:
-                if nvpair.getAttribute("name") == "incarnation_max":
+                if nvpair.getAttribute("name") == "clone_max":
                     max = int(nvpair.getAttribute("value"))
-            inc_rsc = inc.getElementsByTagName('resource')[0]
+            inc_rsc = inc.getElementsByTagName('primative')[0]
             for i in range(0,max):
                 rsc = HAResource(self,inc_rsc)
                 rsc.inc_no = i

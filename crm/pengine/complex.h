@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.14 2005/06/29 16:43:12 andrew Exp $ */
+/* $Id: complex.h,v 1.15 2005/07/06 09:30:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,7 +35,7 @@ enum pe_obj_types
 {
 	pe_native = 0,
 	pe_group = 1,
-	pe_incarnation = 2,
+	pe_clone = 2,
 	pe_unknown = -1
 };
 
@@ -64,6 +64,7 @@ typedef struct resource_object_functions_s
 		void (*expand)(resource_t *, pe_working_set_t *);
 		void (*dump)(resource_t *, const char *, gboolean);
 		void (*printw)(resource_t *, const char *, int*);
+		void (*html)(resource_t *, const char *, FILE*);
 		void (*free)(resource_t *);
 		
 } resource_object_functions_t;
@@ -87,6 +88,7 @@ extern void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void native_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details);
 extern void native_printw(resource_t *rsc, const char *pre_text, int *index);
+extern void native_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void native_free(resource_t *rsc);
 
 
@@ -109,29 +111,30 @@ extern void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void group_dump(resource_t *rsc, const char *pre_text, gboolean details);
 extern void group_printw(resource_t *rsc, const char *pre_text, int *index);
+extern void group_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void group_free(resource_t *rsc);
 
 
-extern void incarnation_unpack(resource_t *rsc, pe_working_set_t *data_set);
-extern resource_t *incarnation_find_child(resource_t *rsc, const char *id);
-extern int  incarnation_num_allowed_nodes(resource_t *rsc);
-extern void incarnation_color(resource_t *rsc, pe_working_set_t *data_set);
-extern void incarnation_create_actions(
+extern void clone_unpack(resource_t *rsc, pe_working_set_t *data_set);
+extern resource_t *clone_find_child(resource_t *rsc, const char *id);
+extern int  clone_num_allowed_nodes(resource_t *rsc);
+extern void clone_color(resource_t *rsc, pe_working_set_t *data_set);
+extern void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set);
+extern void clone_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
-extern void incarnation_internal_constraints(
-	resource_t *rsc, pe_working_set_t *data_set);
-extern void incarnation_agent_constraints(resource_t *rsc);
-extern void incarnation_rsc_colocation_lh(rsc_colocation_t *constraint);
-extern void incarnation_rsc_colocation_rh(
+extern void clone_agent_constraints(resource_t *rsc);
+extern void clone_rsc_colocation_lh(rsc_colocation_t *constraint);
+extern void clone_rsc_colocation_rh(
 	resource_t *rsc, rsc_colocation_t *constraint);
-extern void incarnation_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
-extern void incarnation_rsc_order_rh(
+extern void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
+extern void clone_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
-extern void incarnation_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
-extern void incarnation_expand(resource_t *rsc, pe_working_set_t *data_set);
-extern void incarnation_dump(resource_t *rsc, const char *pre_text, gboolean details);
-extern void incarnation_printw(resource_t *rsc, const char *pre_text, int *index);
-extern void incarnation_free(resource_t *rsc);
+extern void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
+extern void clone_expand(resource_t *rsc, pe_working_set_t *data_set);
+extern void clone_dump(resource_t *rsc, const char *pre_text, gboolean details);
+extern void clone_printw(resource_t *rsc, const char *pre_text, int *index);
+extern void clone_html(resource_t *rsc, const char *pre_text, FILE *stream);
+extern void clone_free(resource_t *rsc);
 
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_object_functions_t resource_class_functions[];
@@ -140,6 +143,7 @@ extern gboolean common_unpack(
 extern void common_dump(
 	resource_t *rsc, const char *pre_text, gboolean details);
 extern void common_printw(resource_t *rsc, const char *pre_text, int *index);
+extern void common_html(resource_t *rsc, const char *pre_text, FILE *stream);
 
 extern void common_free(resource_t *rsc);
 extern void native_add_running(

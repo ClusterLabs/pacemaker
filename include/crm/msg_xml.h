@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.35 2005/07/05 13:56:46 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.36 2005/07/06 09:30:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -113,9 +113,9 @@
 #define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #define XML_TAG_ATTRS			"attributes"
 
-#define XML_CIB_TAG_RESOURCE	  	"resource"
-#define XML_CIB_TAG_GROUP	  	"resource_group"
-#define XML_CIB_TAG_INCARNATION		"incarnation"
+#define XML_CIB_TAG_RESOURCE	  	"primative"
+#define XML_CIB_TAG_GROUP	  	"group"
+#define XML_CIB_TAG_INCARNATION		"clone"
 
 #define XML_RSC_ATTR_STOPFAIL	   	"on_stopfail"
 #define XML_RSC_ATTR_RESTART	  	"restart_type"
@@ -123,9 +123,9 @@
 #define XML_RSC_ATTR_STOP_TIMEOUT	"stop_timeout"
 #define XML_RSC_ATTR_ORDERED		"ordered"
 #define XML_RSC_ATTR_INTERLEAVE		"interleave"
-#define XML_RSC_ATTR_INCARNATION	"incarnation"
-#define XML_RSC_ATTR_INCARNATION_MAX	"incarnation_max"
-#define XML_RSC_ATTR_INCARNATION_NODEMAX	"incarnation_node_max"
+#define XML_RSC_ATTR_INCARNATION	"clone"
+#define XML_RSC_ATTR_INCARNATION_MAX	"clone_max"
+#define XML_RSC_ATTR_INCARNATION_NODEMAX	"clone_node_max"
 
 #define XML_CIB_TAG_LRM		  	"lrm"
 #define XML_LRM_TAG_RESOURCES     	"lrm_resources"
