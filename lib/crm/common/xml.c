@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.21 2005/07/06 09:49:35 andrew Exp $ */
+/* $Id: xml.c,v 1.22 2005/07/06 13:25:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -573,9 +573,11 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 	char *now_str = NULL;
 	time_t now;
 
+	CRM_DEV_ASSERT(filename != NULL);
 	crm_debug_3("Writing XML out to %s", filename);
 	crm_validate_data(xml_node);
 	if (xml_node == NULL) {
+		crm_err("Cannot write NULL to %s", filename);
 		return -1;
 	}
 
@@ -599,6 +601,9 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 			
 		} else if(buffer != NULL && strlen(buffer) > 0) {
 			res = fprintf(file_output_strm, "%s", buffer);
+			if(res < 0) {
+				crm_err("Cannot write output to %s", filename);
+			}
 		}
 		if(file_output_strm != NULL) {
 			fflush(file_output_strm);

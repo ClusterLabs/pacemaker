@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.26 2005/06/23 07:51:27 andrew Exp $ */
+/* $Id: io.c,v 1.27 2005/07/06 13:25:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -400,6 +400,7 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 		
 		if(error_code == cib_ok) {
 			crm_debug_3("Writing CIB out to %s", CIB_FILENAME);
+			CRM_DEV_ASSERT(new_cib != NULL);
 			CRM_DEV_ASSERT(write_xml_file(
 					       new_cib, CIB_FILENAME) >= 0);
 			if (crm_assert_failed) {
