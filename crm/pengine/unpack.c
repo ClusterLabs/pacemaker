@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.101 2005/06/29 16:43:12 andrew Exp $ */
+/* $Id: unpack.c,v 1.102 2005/07/06 09:33:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,18 +92,6 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 
 	value = param_value(config, "default_resource_stickiness");
 	data_set->default_resource_stickiness = crm_atoi(value, "0");
-	
-	switch (data_set->no_quorum_policy) {
-		case no_quorum_freeze:
-			crm_info("On loss of CCM Quorum: Freeze resources");
-			break;
-		case no_quorum_stop:
-			crm_info("On loss of CCM Quorum: Stop ALL resources");
-			break;
-		case no_quorum_ignore:
-			crm_warn("On loss of CCM Quorum: Ignore");
-			break;
-	}
 	
 	value = param_value(config, "stonith_enabled");
 	if(value != NULL) {
