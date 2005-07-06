@@ -10,9 +10,9 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <native id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-      <native id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
-      <native id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
+      <primative id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
+      <primative id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
+      <primative id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
     </resources>
     <constraints>
       <rsc_order id="order1" from="rsc2" type="after"  to="rsc1"/>

@@ -11,20 +11,20 @@
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <native id="rsc1" class="heartbeat" type="apache">
+      <primative id="rsc1" class="heartbeat" type="apache">
         <instance_attributes>
           <attributes>
             <nvpair name="priority" value="1.0"/>
           </attributes>
         </instance_attributes>
-      </native>
-      <native id="rsc2" class="heartbeat" type="apache">
+      </primative>
+      <primative id="rsc2" class="heartbeat" type="apache">
         <instance_attributes>
           <attributes>
             <nvpair name="priority" value="2.0"/>
           </attributes>
         </instance_attributes>
-      </native>
+      </primative>
     </resources>
     <constraints>
       <rsc_colocation id="not_same_1" from="rsc1" to="rsc2" score="-INFINITY"/>

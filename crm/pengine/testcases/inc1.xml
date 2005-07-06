@@ -10,7 +10,7 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <native id="rsc1" class="heartbeat" type="apache"/>
+      <primative id="rsc1" class="heartbeat" type="apache"/>
       <clone id="rsc2">
         <instance_attributes>
           <attributes>
@@ -18,9 +18,9 @@
             <nvpair name="clone_node_max" value="2"/>
           </attributes>
         </instance_attributes>
-	<native id="child_rsc2" class="heartbeat" type="apache"/>
+	<primative id="child_rsc2" class="heartbeat" type="apache"/>
       </clone>
-      <native id="rsc3" class="heartbeat" type="apache"/>
+      <primative id="rsc3" class="heartbeat" type="apache"/>
     </resources>
     <constraints>
       <rsc_order id="order1" from="rsc1" type="before" to="rsc2"/>

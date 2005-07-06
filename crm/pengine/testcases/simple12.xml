@@ -11,8 +11,8 @@
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <native id="rsc1" class="heartbeat" type="apache"/>
-      <native id="rsc2" class="heartbeat" type="apache"/>
+      <primative id="rsc1" class="heartbeat" type="apache"/>
+      <primative id="rsc2" class="heartbeat" type="apache"/>
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">

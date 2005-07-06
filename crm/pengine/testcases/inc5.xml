@@ -17,7 +17,7 @@
             <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<native id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
+	<primative id="child_rsc1" class="heartbeat" type="apache" priority="1.0"/>
       </clone>
       <clone id="rsc2">
         <instance_attributes>
@@ -26,7 +26,7 @@
             <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<native id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
+	<primative id="child_rsc2" class="heartbeat" type="apache" priority="1.0"/>
       </clone>
       <clone id="rsc3">
         <instance_attributes>
@@ -35,7 +35,7 @@
             <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<native id="child_rsc3" class="heartbeat" type="apache" priority="1.0"/>
+	<primative id="child_rsc3" class="heartbeat" type="apache" priority="1.0"/>
       </clone>
       <clone id="rsc4">
         <instance_attributes>
@@ -44,7 +44,7 @@
             <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<native id="child_rsc4" class="heartbeat" type="apache" priority="1.0"/>
+	<primative id="child_rsc4" class="heartbeat" type="apache" priority="1.0"/>
       </clone>
       <clone id="rsc5">
         <instance_attributes>
@@ -53,7 +53,7 @@
             <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<native id="child_rsc5" class="heartbeat" type="apache" priority="1.0"/>
+	<primative id="child_rsc5" class="heartbeat" type="apache" priority="1.0"/>
       </clone>
       <clone id="rsc6">
         <instance_attributes>
@@ -62,7 +62,7 @@
             <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<native id="child_rsc6" class="heartbeat" type="apache" priority="1.0"/>
+	<primative id="child_rsc6" class="heartbeat" type="apache" priority="1.0"/>
       </clone>
       <clone id="rsc7">
         <instance_attributes>
@@ -71,7 +71,7 @@
             <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<native id="child_rsc7" class="heartbeat" type="apache" priority="1.0"/>
+	<primative id="child_rsc7" class="heartbeat" type="apache" priority="1.0"/>
       </clone>
       <clone id="rsc8">
         <instance_attributes>
@@ -80,7 +80,7 @@
             <nvpair name="clone_node_max" value="1"/>
           </attributes>
         </instance_attributes>
-	<native id="child_rsc8" class="heartbeat" type="apache" priority="1.0"/>
+	<primative id="child_rsc8" class="heartbeat" type="apache" priority="1.0"/>
       </clone>
     </resources>
     <constraints>

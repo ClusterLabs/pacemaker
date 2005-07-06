@@ -11,7 +11,7 @@
       <node id="node1" uname="node1" type="member"/>
     </nodes>
     <resources>
-      <native id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
+      <primative id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
     </resources>
     <constraints>
     </constraints>

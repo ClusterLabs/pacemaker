@@ -12,9 +12,9 @@
     </nodes>
     <resources>
       <group id="rsc1" priority="1.0">
-	<native id="child_rsc1" class="heartbeat" type="apache"/>
-	<native id="child_rsc2" class="heartbeat" type="apache"/>
-	<native id="child_rsc3" class="heartbeat" type="apache"/>
+	<primative id="child_rsc1" class="heartbeat" type="apache"/>
+	<primative id="child_rsc2" class="heartbeat" type="apache"/>
+	<primative id="child_rsc3" class="heartbeat" type="apache"/>
       </group>
     </resources>
     <constraints>
