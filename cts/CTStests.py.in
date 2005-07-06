@@ -988,7 +988,7 @@ class StandbyTest2(CTSTest):
         self.CM.debug("Checking resources")
         for rsc in self.CM.Resources():
             if rsc.IsRunningOn(node):
-                return self.failure("%s set to standby, %s is still running on it" % (node, rsc))
+                return self.failure("%s set to standby, %s is still running on it" % (node, rsc.rid))
 
         self.CM.debug("Setting node %s to active mode" % node) 
         if not self.CM.SetStandbyMode(node, "off"):
@@ -1002,7 +1002,7 @@ class StandbyTest2(CTSTest):
         self.CM.debug("Checking resources")
         for rsc in rsc_on_node:
             if not rsc.IsRunningOn(node):
-                return self.failure("%s set to active but %s is NOT back" % (node, repr(rsc_not_running) ))
+                return self.failure("%s set to active but %s is NOT back" % (node, rsc.rid))
 
 
         return self.success()
