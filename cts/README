@@ -515,44 +515,11 @@ apply to 2.x:
 bug 613 (http://www.osdl.org/developer_bugzilla/show_bug.cgi?id=613) is
 resolved.
 
-4. Add resources and constraints to the cluster:
-  4.1 Start up heartbeat on all test cluster machines:
-	/etc/init.d/heartbeat start
-
-  4.2 Wait for the heartbeat starts to complete:
-	Using "/usr/lib/heartbeat/crmadmin -S node" on one test cluster machine
-	to get the states of nodes, wait until all test cluster machines are in
-	S_IDLE or S_NOT_DC state.
-
-  4.3 Add resources and constraints to cluster.
-	Use "/usr/lib/heartbeat/cibadmin" to add resources and constraints.
-	Please note that you need do this only once on one test cluster node.
-	For example, to add a constraint:
-
-	/usr/lib/heartbeat/cibadmin -C -o constraint -X \
-	'<rsc_location id="ad66bef2-5a34-49b2-85a9-3fc6dc69e6fb" rsc="rsc1"> \
-		<rule id="2deac01b-35ee-4148-97ab-17970fb710df" result="can"/> \
-		<rule id="84bc3cb2-fcab-4297-bd39-e6587c492fb7" score="1000" boolean_op="or"> \
-			<expression attribute="uname" operation="eq" value="hadev1"/>	\
-		</rule> \
-	</rsc_location>'
-
-	To add a resource:
-
-	/usr/lib/heartbeat/cibadmin -C -o resource   -X \
-	'<resource id="rsc1" class="heartbeat" type="IPaddr" > \
-		<instance_attributes> \
-			<rsc_parameters> \
-				<nvpair name="1" value="172.30.1.241"/> \
-			</rsc_parameters> \
-		</instance_attributes> \
-	</resource>'
-
-  4.4 Shutdown heartbeat on all test cluster machines:	
-	/etc/init.d/heartbeat stop
-
-5. Now we can tart cts test on the exerciser node:
+4. Now we can start cts test on the exerciser node:
 		./CTSlab.py -v2 number-of-tests-to-run
 	or as
 		python ./CTSlab.py -v2 number-of-tests-to-run
+
+5. To automatically generate and install a sample CIB:
+      add the -r and -c options to the above command
 
