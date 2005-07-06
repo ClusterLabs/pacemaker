@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.57 2005/06/30 14:08:14 andrew Exp $ */
+/* $Id: native.c,v 1.58 2005/07/06 09:32:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -757,12 +757,18 @@ void native_printw(resource_t *rsc, const char *pre_text, int *index)
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 	common_printw(rsc, pre_text, index);
+	if(rsc->is_managed == FALSE) {
+		printw(" (unmanaged) ");
+	}
 	if(g_list_length(native_data->running_on) == 0) {
-		printw("NOT ACTIVE\n");
+		printw("NOT ACTIVE");
 		
 	} else if(g_list_length(native_data->running_on) == 1) {
 		node_t *node = native_data->running_on->data;
-		printw("%s (%s)\n", node->details->uname, node->details->id);
+		printw("%s (%s)", node->details->uname, node->details->id);
+		if(rsc->unclean) {
+			printw(" FAILED");
+		}
 		
 	} else if(g_list_length(native_data->running_on) == 1) {
 		printw("[");
@@ -770,11 +776,53 @@ void native_printw(resource_t *rsc, const char *pre_text, int *index)
 			   if(lpc > 0) { printw(", "); }
 			   printw("%s (%s)", node->details->uname, node->details->id);
 			);
-		printw("]\n");
+		printw("]");
 	}
+	printw("\n");
 #else
 	crm_err("printw support requires ncurses to be available during configure");
 #endif
+}
+
+void native_html(resource_t *rsc, const char *pre_text, FILE *stream)
+{
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
+	if(rsc->is_managed == FALSE) {
+		fprintf(stream, "<font color=\"orange\">");
+	}
+	common_html(rsc, pre_text, stream);
+	if(rsc->is_managed == FALSE) {
+		fprintf(stream, " (unmanaged)</font> ");
+	}
+	
+	if(rsc->unclean) {
+		fprintf(stream, "<font color=\"orange\">");
+	} else if(g_list_length(native_data->running_on) == 0) {
+		fprintf(stream, "<font color=\"red\">");
+	} else if(g_list_length(native_data->running_on) > 1) {
+		fprintf(stream, "<font color=\"orange\">");
+	} else {
+		fprintf(stream, "<font color=\"green\">");
+	}	
+	
+	if(g_list_length(native_data->running_on) == 0) {
+		fprintf(stream, "<b>NOT ACTIVE</b>");
+		
+	} else if(g_list_length(native_data->running_on) == 1) {
+		node_t *node = native_data->running_on->data;
+		fprintf(stream, "%s (%s)",
+			node->details->uname, node->details->id);
+		
+	} else if(g_list_length(native_data->running_on) > 1) {
+		fprintf(stream, "<ul>\n");
+		slist_iter(node, node_t, native_data->running_on, lpc,
+			   fprintf(stream, "<li><b>%s (%s)</b></li>\n",
+				   node->details->uname, node->details->id);
+			);
+		fprintf(stream, "</ul>\n");
+	}
+	fprintf(stream, "</font><br/>\n");
 }
 
 void native_dump(resource_t *rsc, const char *pre_text, gboolean details)
