@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.36 2005/07/06 09:30:21 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.37 2005/07/06 12:34:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -113,7 +113,7 @@
 #define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #define XML_TAG_ATTRS			"attributes"
 
-#define XML_CIB_TAG_RESOURCE	  	"primative"
+#define XML_CIB_TAG_RESOURCE	  	"primitive"
 #define XML_CIB_TAG_GROUP	  	"group"
 #define XML_CIB_TAG_INCARNATION		"clone"
 

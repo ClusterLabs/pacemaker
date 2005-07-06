@@ -42,9 +42,9 @@
           description   CDATA         #IMPLIED
           dc_weight     CDATA         #IMPLIED
           type          (member|ping) #REQUIRED>
-<!ELEMENT resources   (resource*, resource_group*, incarnation*)>
-<!ELEMENT resource (operations, instance_attributes*)>
-<!ATTLIST resource
+<!ELEMENT resources   (primitive*, group*, clone*)>
+<!ELEMENT primitive (operations, instance_attributes*)>
+<!ATTLIST primitive
           id                CDATA        #REQUIRED
           description       CDATA        #IMPLIED
           class             (ocf|init|heartbeat|stonith) #REQUIRED
@@ -69,8 +69,8 @@
           interval      CDATA         #IMPLIED
           timeout       CDATA         #IMPLIED>
 <!-- Annotated version -->
-<!ELEMENT resource_group (resource+)>
-<!ATTLIST resource_group
+<!ELEMENT group (primitive+)>
+<!ATTLIST group
           id                    CDATA               #REQUIRED
           description   CDATA               #IMPLIED
 
@@ -79,8 +79,8 @@
           multiple_active       (stop_start|stop_only|block)     'stop_start'
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
           start_prereq          (nothing|quorum|fencing)         #IMPLIED>
-<!ELEMENT incarnation (resource|group)>
-<!ATTLIST incarnation
+<!ELEMENT clone (primitive|group)>
+<!ATTLIST clone
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
 
@@ -92,7 +92,7 @@
 
           ordered       (true|false)     'true'
           interleave    (true|false)     'false'>
-<!ELEMENT master_slave (incarnation)>
+<!ELEMENT master_slave (clone)>
 <!ATTLIST master_slave
           id            CDATA       #REQUIRED
           description   CDATA       #IMPLIED
@@ -269,7 +269,7 @@
 
 -->
 
-<!ELEMENT rsc_op (resource, attributes)>
+<!ELEMENT rsc_op (primitive, attributes)>
 <!ATTLIST rsc_op
 	id	      CDATA	#REQUIRED
 	operation     CDATA	#REQUIRED
