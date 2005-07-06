@@ -339,13 +339,13 @@ function make_incarnation()
     args=$*
 
     uuid=`uuidgen`
-    node_xml="'<incarnation id=\\\"${id}\\\" incarnation_node_max=\\\"1\\\" incarnation_max=\\\"${max}\\\">"
+    node_xml="'<clone id=\\\"${id}\\\" incarnation_node_max=\\\"1\\\" incarnation_max=\\\"${max}\\\">"
 
     if [ ! -z $priority -a "x$priority" != "x-" ]; then
 	node_xml="$node_xml priority=\\\"${priority}\\\""
     fi
 
-    node_xml="$node_xml <resource id=\\\"child_${id}\\\" class=\\\"${class}\\\" type=\\\"${type}\\\""
+    node_xml="$node_xml <primitive id=\\\"child_${id}\\\" class=\\\"${class}\\\" type=\\\"${type}\\\""
 
     if [ ! -z $version -a "x$version" != "x-" ]; then
 	node_xml="$node_xml version=\\\"${version}\\\""
@@ -358,8 +358,8 @@ function make_incarnation()
     if [ ! -z "$args" -a "x$args" != "x-" ]; then
 	node_xml="$node_xml <instance_attributes><rsc_parameters>${args}</rsc_parameters></instance_attributes>"
     fi
-    node_xml="$node_xml </resource>'";
-    node_xml="$node_xml </incarnation>";
+    node_xml="$node_xml </primitive>'";
+    node_xml="$node_xml </clone>";
     
     do_cmd remote_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -VVVV -C -o resource -X $node_xml"
 # 2>&1 > /dev/null
@@ -381,7 +381,7 @@ function make_resource()
 
     uuid=`uuidgen`
     
-    node_xml="<resource id=\\\"${id}\\\" class=\\\"${class}\\\" type=\\\"${type}\\\"  provider=\\\"heartbeat\\\""
+    node_xml="<primitive id=\\\"${id}\\\" class=\\\"${class}\\\" type=\\\"${type}\\\"  provider=\\\"heartbeat\\\""
 
     if [ ! -z $version -a "x$version" != "x-" ]; then
 	node_xml="$node_xml version=\\\"${version}\\\""
@@ -396,9 +396,9 @@ function make_resource()
     if [ ! -z "$args" -a "x$args" != "x-" ]; then
 	node_xml="$node_xml <instance_attributes><attributes>${args}</attributes></instance_attributes>"
     fi
-    node_xml="$node_xml </resource>";
+    node_xml="$node_xml </primitive>";
     
-    do_cmd remote_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -VVVV -C -o resource -X \"$node_xml\""
+    do_cmd remote_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -VVVV -C -o primitive -X \"$node_xml\""
 # 2>&1 > /dev/null
 }
 
