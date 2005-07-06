@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.36 2005/07/06 09:30:21 andrew Exp $ */
+/* $Id: incarnation.c,v 1.37 2005/07/06 12:37:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -215,63 +215,54 @@ void clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	
 	child_0 = g_list_nth_data(clone_data->child_list, 0);
 
-
 	max_nodes = rsc->fns->num_allowed_nodes(rsc);
 
 	/* generate up to max_nodes * clone_node_max constraints */
 	lpc = 0;
-	crm_info("Distributing %d incarnations over %d nodes",
-		  clone_data->clone_max, max_nodes);
-
-	for(; lpc < max_nodes && lpc < clone_data->clone_max; lpc++) {
-
-		child_lh = child_0;
-		clone_data->active_clones++;
-
-		if(lpc != 0) {
-			child_rh = g_list_nth_data(clone_data->child_list, lpc);
-			
-			crm_debug_4("Clone %d will run on a differnt node to 0",
-				  lpc);
-			
-			rsc_colocation_new("pe_clone_internal_must_not",
-					   pecs_must_not, child_lh, child_rh);
-		} else {
-			child_rh = child_0;
-		}
-		
-		child_lh = child_rh;
-		
-		for(lpc2 = 1; lpc2 < clone_data->clone_max_node; lpc2++) {
-			int offset = lpc + (lpc2 * max_nodes);
-			if(offset >= clone_data->clone_max) {
-				break;
-			}
-			crm_debug_4("Clone %d will run on the same node as %d",
-				  offset, lpc);
-
-			clone_data->active_clones++;
-
-			child_rh = g_list_nth_data(
-				clone_data->child_list, offset);
-
-			rsc_colocation_new("pe_clone_internal_must",
-					   pecs_must, child_lh, child_rh);
-		}
+	clone_data->active_clones = max_nodes * clone_data->clone_max_node;
+	if(clone_data->active_clones > clone_data->clone_max) {
+		clone_data->active_clones = clone_data->clone_max;
 	}
+	crm_info("Distributing %d (of %d) %s clones over %d nodes",
+		 clone_data->active_clones, clone_data->clone_max,
+		 rsc->id, max_nodes);
 
+	for(; lpc < clone_data->active_clones && lpc < max_nodes; lpc++) {
+		child_lh = g_list_nth_data(clone_data->child_list, lpc);
+		for(lpc2 = lpc + 1; lpc2 < clone_data->active_clones; lpc2++) {
+			child_rh = g_list_nth_data(clone_data->child_list,lpc2);
+
+			if(lpc2 < max_nodes) {
+				crm_debug_2("Clone %d will not run with %d",
+					    lpc, lpc2);
+				rsc_colocation_new(
+					"__clone_internal_must_not__",
+					pecs_must_not, child_lh, child_rh);
+
+			} else if((lpc2 % max_nodes) == lpc) {
+				crm_debug_2("Clone %d can run with %d",
+					    lpc, lpc2);
+				rsc_colocation_new(
+					"__clone_internal_must__",
+					pecs_must, child_lh, child_rh);
+			}
+		}
+		for(; lpc2 < clone_data->clone_max; lpc2++) {
+			child_rh = g_list_nth_data(clone_data->child_list,lpc2);
+			crm_debug_2("Unrunnable: Clone %d will not run with %d",
+				    lpc2, lpc);
+			rsc_colocation_new("__clone_internal_must_not__",
+					   pecs_must_not, child_lh, child_rh);
+		}
+		
+	}
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
-		if(lpc < clone_data->active_clones) {
-			crm_debug_4("Coloring Clone %d", lpc);
-			child_rsc->fns->color(child_rsc, data_set);
-		} else {
-			/* TODO: assign "no color"?  Doesnt seem to need it */
-			pe_warn("Clone %d cannot be started", lpc+1);
-/* 			native_assign_color(child_rsc, data_set->no_color); */
-		} 
+		if(lpc >= clone_data->active_clones) {
+			pe_warn("Clone %s cannot be started", child_rsc->id);
+		}
+		child_rsc->fns->color(child_rsc, data_set);
 		);
-	crm_info("%d Clones are active", clone_data->active_clones);
 }
 
 void clone_update_pseudo_status(resource_t *parent, resource_t *child);
