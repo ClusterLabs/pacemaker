@@ -76,6 +76,11 @@ The exerciser needs to have the IP addresses of the test machines available
 to it - either by DNS or by /etc/hosts.  It uses this to validate configuration
 information.
 
+The StonithdTest uses 'ssh' as its default plugin. To run this test, the cluster
+nodes need to be able to ssh over to each other without a password challenge.
+Configure ssh accordingly.
+    (see the Mini-HOWTOs at the end for more details)
+
 The "heartbeat" service (init script) needs to be enabled to
 automatically start in the default run level on the cluster machines. 
 This typically means you need a symlink for /etc/rc.d/rc3.d/S*heartbeat
