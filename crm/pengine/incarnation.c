@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.38 2005/07/07 14:50:35 andrew Exp $ */
+/* $Id: incarnation.c,v 1.39 2005/07/07 15:28:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -101,8 +101,6 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	CRM_DEV_ASSERT(xml_obj_child != NULL);
 	if(crm_assert_failed) { return; }
 
-	xml_obj_child = copy_xml(xml_obj_child);
-	
 	if(common_unpack(xml_self, &self, data_set)) {
 		clone_data->self = self;
 
@@ -148,7 +146,6 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		}
 	}
 	crm_free(inc_max);
-	free_xml(xml_obj_child);
 	
 	crm_debug_3("Added %d children to resource %s...",
 		    clone_data->clone_max, rsc->id);

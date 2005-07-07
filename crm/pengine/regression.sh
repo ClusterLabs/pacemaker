@@ -22,9 +22,6 @@
 create_mode="true"
 echo Generating test outputs for these tests...
 #do_test bad7
-do_test quorum-4 "No quorum - start anyway"
-do_test quorum-5 "No quorum - start anyway (group)"
-do_test quorum-6 "No quorum - start anyway (clone)"
 
 echo ""
 

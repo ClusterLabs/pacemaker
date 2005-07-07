@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.47 2005/07/07 14:50:35 andrew Exp $ */
+/* $Id: complex.c,v 1.48 2005/07/07 15:28:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -144,18 +144,21 @@ inherit_parent_attributes(
 		const char *attr_p = crm_element_value(parent, attributes[lpc]);
 		const char *attr_c = crm_element_value(child,  attributes[lpc]);
 
-		if(attr_c != NULL && safe_str_neq(attr_p, attr_c)) {
-			if(overwrite == FALSE) {
+		if(attr_p == NULL) {
+			continue;
+		} else if(safe_str_eq(attr_p, attr_c)) {
+			continue;
+		}
+		
+		if(attr_c != NULL && overwrite == FALSE) {
 			crm_debug_2("Resource %s: ignoring parent value for %s",
-				ID(child), attributes[lpc]);
-				continue;
-			}
+				    ID(child), attributes[lpc]);
+			continue;
+		} else if(attr_c != NULL) {
 			pe_warn("Resource %s: Overwriting attribute %s: %s->%s",
 				ID(child), attributes[lpc], attr_c, attr_p);
 		}
-		if(attr_p != NULL) {
-			crm_xml_add(child, attributes[lpc], attr_p);
-		}
+		crm_xml_add(child, attributes[lpc], attr_p);
 	}
 }
 
