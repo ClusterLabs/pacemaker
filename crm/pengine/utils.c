@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.91 2005/07/07 14:50:35 andrew Exp $ */
+/* $Id: utils.c,v 1.92 2005/07/07 19:16:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -707,6 +707,9 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 			action->runnable = FALSE;
 
 		} else 	if(action->needs == rsc_req_nothing) {
+			action->runnable = TRUE;
+			
+		} else 	if(action->needs == rsc_req_stonith) {
 			action->runnable = TRUE;
 			
 		} else if(data_set->have_quorum == FALSE
