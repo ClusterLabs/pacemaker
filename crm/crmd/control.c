@@ -157,8 +157,11 @@ do_shutdown_req(long long action,
 	
 	if(send_request(msg, NULL) == FALSE) {
 		next_input = I_ERROR;
+#if 0
+		/* this shouldnt be required */
 	} else {
 		crm_timer_start(shutdown_timer);
+#endif
 	}
 
 	return next_input;
