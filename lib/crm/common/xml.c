@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.22 2005/07/06 13:25:09 andrew Exp $ */
+/* $Id: xml.c,v 1.23 2005/07/07 06:40:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -593,24 +593,24 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 	
 	{
 		FILE *file_output_strm = fopen(filename, "w");
-		char *buffer = dump_xml_formatted(xml_node);
-		CRM_DEV_ASSERT(buffer != NULL && strlen(buffer) > 0);
 		if(file_output_strm == NULL) {
 			res = -1;
-			crm_err("Cannot write to %s", filename);
+			cl_perror("Cannot write to %s", filename);
 			
-		} else if(buffer != NULL && strlen(buffer) > 0) {
-			res = fprintf(file_output_strm, "%s", buffer);
-			if(res < 0) {
-				crm_err("Cannot write output to %s", filename);
+		} else {
+			char *buffer = dump_xml_formatted(xml_node);
+			CRM_DEV_ASSERT(buffer != NULL && strlen(buffer) > 0);
+			if(buffer != NULL && strlen(buffer) > 0) {
+				res = fprintf(file_output_strm, "%s", buffer);
+				if(res < 0) {
+					cl_perror("Cannot write output to %s",
+						  filename);
+				}
 			}
-		}
-		if(file_output_strm != NULL) {
 			fflush(file_output_strm);
 			fclose(file_output_strm);
+			crm_free(buffer);
 		}
-		
-		crm_free(buffer);
 	}
 	crm_debug_3("Saved %d bytes to the Cib as XML", res);
 
