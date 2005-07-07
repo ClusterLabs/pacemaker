@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.45 2005/07/06 09:30:21 andrew Exp $ */
+/* $Id: complex.c,v 1.46 2005/07/07 06:34:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -262,10 +262,10 @@ common_unpack(
 	}
 
 	if(placement != NULL) {
-		if(safe_str_eq(placement, "INFINITY")) {
+		if(safe_str_eq(placement, INFINITY_S)) {
 			(*rsc)->stickiness = INFINITY;
 
-		} else if(safe_str_eq(placement, "-INFINITY")) {
+		} else if(safe_str_eq(placement, MINUS_INFINITY_S)) {
 			(*rsc)->stickiness = -INFINITY;
 
 		} else {
@@ -327,8 +327,8 @@ void common_html(resource_t *rsc, const char *pre_text, FILE *stream)
 {
 	const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
 	
-	fprintf(stream, "%s%s %s (%s%s%s:%s):\t",
-		pre_text?pre_text:"", crm_element_name(rsc->xml), rsc->id,
+	fprintf(stream, "%s%s (%s%s%s:%s):\t",
+		pre_text?pre_text:"", rsc->id,
 		prov?prov:"", prov?"::":"",
 		crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
 		crm_element_value(rsc->xml, XML_ATTR_TYPE));
