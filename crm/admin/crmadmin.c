@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.54 2005/07/05 13:56:46 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.55 2005/07/07 22:09:55 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -452,6 +452,7 @@ do_work(ll_cluster_t * hb_cluster)
 			xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
 			xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
 
+			crm_xml_add(xml_obj, XML_ATTR_ID, "standby");
 			crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, "standby");
 			crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, standby_on_off);
 			
