@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.48 2005/07/07 15:28:59 andrew Exp $ */
+/* $Id: complex.c,v 1.49 2005/07/07 19:13:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -346,8 +346,8 @@ void common_printw(resource_t *rsc, const char *pre_text, int *index)
 	const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
 	
 	move(*index, 0);
-	printw("%s%s %s (%s%s%s:%s):\t",
-	       pre_text?pre_text:"", crm_element_name(rsc->xml), rsc->id,
+	printw("%s%s (%s%s%s:%s):\t",
+	       pre_text?pre_text:"", rsc->id,
 	       prov?prov:"", prov?"::":"",
 	       crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
 	       crm_element_value(rsc->xml, XML_ATTR_TYPE));
