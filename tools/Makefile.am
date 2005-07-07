@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
+MAINTAINERCLEANFILES    = Makefile.in ccdv
 
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
   			  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha
