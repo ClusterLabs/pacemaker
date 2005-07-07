@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.58 2005/07/06 09:32:38 andrew Exp $ */
+/* $Id: native.c,v 1.59 2005/07/07 06:11:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -252,6 +252,7 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 	char *key = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
+	int interval_ms = 0;
 	
 	if(node == NULL || !node->details->online || node->details->unclean) {
 		crm_debug_3("Not creating recurring actions");
@@ -263,8 +264,13 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 
 		name = crm_element_value(operation, "name");
 		value = crm_element_value(operation, "interval");
+		interval_ms = crm_get_msec(value);
 
-		key = generate_op_key(rsc->id, name, crm_get_msec(value));
+		if(interval_ms <= 0) {
+			continue;
+		}
+		
+		key = generate_op_key(rsc->id, name, interval_ms);
 		mon = custom_action(rsc, key, name, node, start->optional, data_set);
 
 		if(mon->optional == FALSE && node != NULL) {
