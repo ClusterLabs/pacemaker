@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.4 2005/07/07 06:44:41 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.5 2005/07/07 19:13:10 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -142,6 +142,9 @@ main(int argc, char **argv)
 				break;
 			case 'h':
 				as_html_file = crm_strdup(optarg);
+				break;
+			case 'c':
+				as_console = TRUE;
 				break;
 			default:
 				printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -350,6 +353,7 @@ print_status(crm_data_t *cib)
 	move(lpc, 0);
 
 	refresh();
+	data_set.input = NULL;
 	cleanup_calculations(&data_set);
 	return lpc;
 }
@@ -462,6 +466,7 @@ print_html_status(crm_data_t *cib, const char *filename)
 			);
 	}
 
+	data_set.input = NULL;
 	cleanup_calculations(&data_set);
 	fprintf(stream, "</html>");
 	fflush(stream);
