@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.103 2005/07/07 09:48:58 andrew Exp $ */
+/* $Id: unpack.c,v 1.104 2005/07/07 10:32:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -611,16 +611,24 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 {
  	const char *a_task_id = cl_get_string(a, XML_LRM_ATTR_CALLID);
  	const char *b_task_id = cl_get_string(b, XML_LRM_ATTR_CALLID);
-	/* if task id is NULL, then its a pending op
-	 * put pending ops last
-	 */
+
+	const char *a_status = cl_get_string(a, XML_LRM_ATTR_OPSTATUS);
+ 	const char *b_status = cl_get_string(b, XML_LRM_ATTR_OPSTATUS);
 
 	int a_id = -1;
 	int b_id = -1;
 	
-	if(a_task_id == NULL && b_task_id == NULL) { return 0; }
+	if(safe_str_eq(a_status, "-1") && safe_str_eq(b_status, "-1")) {
+		return 0;
+	}
+	/* the reverse from normal so that pending ops appear last */
+	if(safe_str_eq(a_status, "-1")) { return 1;  }
+	if(safe_str_eq(b_status, "-1")) { return -1; }
 
-	/* the reverse from normal so that NULLs appear last */
+	CRM_DEV_ASSERT(a_task_id != NULL && b_task_id != NULL);
+	
+	/* if task id is NULL, then its a pending op put pending ops last */
+	if(a_task_id == NULL && b_task_id == NULL) { return 0; }
 	if(a_task_id == NULL) { return 1; }
 	if(b_task_id == NULL) { return -1; }
 
