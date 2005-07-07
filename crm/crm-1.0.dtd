@@ -18,19 +18,20 @@
 
 <!ELEMENT cib (configuration, status)>
 <!ATTLIST cib
-          num_updates  CDATA    #IMPLIED
-          num_peers    CDATA    #IMPLIED        
-          last_written CDATA    #IMPLIED
-          dc_uuid      CDATA    #IMPLIED
-          timestamp    CDATA    #REQUIRED
-          have_quorum  (true|false)     'false'
-          cib_feature_revision  CDATA   #REQUIRED>
+	  timestamp    CDATA	#IMPLIED
+	  last_written CDATA	#IMPLIED
+
+	  admin_epoche CDATA	#IMPLIED
+	  epoche       CDATA	#IMPLIED
+	  num_updates  CDATA	#IMPLIED
+	  num_peers    CDATA	#IMPLIED	
+
+	  dc_uuid      CDATA	#IMPLIED
+	  ccm_transition CDATA	#REQUIRED
+	  have_quorum    (true|false)	'false'
+	  cib_feature_revision	CDATA	#REQUIRED>
+
 <!ELEMENT configuration (nodes, resources, constraints, crm_config)>
-<!ATTLIST configuration
-          version   CDATA #REQUIRED
-          source    CDATA #REQUIRED
-          serial    CDATA #REQUIRED
-          timestamp CDATA #REQUIRED>
 <!-- Annotated version -->
 <!ELEMENT crm_config (nvpair*)>
 <!ELEMENT nodes       (node*)>
@@ -120,7 +121,6 @@
           type      (before|after)      'after'
           to        CDATA #REQUIRED
           lifetime  CDATA #IMPLIED
-          timestamp CDATA #REQUIRED
           symetrical    (TRUE|FALSE)    'TRUE'>
 <!-- Annotated version -->
 
@@ -130,7 +130,6 @@
           from      CDATA #REQUIRED
           to        CDATA #REQUIRED
           lifetime  CDATA #IMPLIED
-          timestamp CDATA #REQUIRED
           type      (must|mustnot) #REQUIRED>
 <!-- Annotated version -->
 
@@ -139,8 +138,7 @@
           id          CDATA #REQUIRED
           description CDATA #IMPLIED
           rsc         CDATA #REQUIRED
-          lifetime    CDATA #IMPLIED
-          timestamp   CDATA #IMPLIED>
+          lifetime    CDATA #IMPLIED>
 <!-- Annotated version -->
 
 <!ELEMENT rule (expression*)>
@@ -170,7 +168,7 @@
         expected        (pending|member|down)   'down'
         in_ccm          (true|false)            'false'
         shutdown        CDATA                   #IMPLIED
-        timestamp       CDATA                   #REQUIRED>
+        timestamp       CDATA                   #IMPLIED>
 <!ELEMENT lrm (lrm_resources)>
 <!ATTLIST lrm
         id      CDATA #REQUIRED
