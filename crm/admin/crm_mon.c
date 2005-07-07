@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.3 2005/07/06 09:38:27 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.4 2005/07/07 06:44:41 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -67,6 +67,8 @@ int print_status(crm_data_t *cib);
 void wait_for_refresh(int offset, const char *prefix, int seconds);
 int print_html_status(crm_data_t *cib, const char *filename);
 void make_daemon(gboolean daemonize, const char *pidfile);
+gboolean mon_timer_popped(gpointer data);
+void mon_update(const HA_Message*, int, int, crm_data_t*,void*);
 
 char *as_html_file = NULL;
 char *pid_file = NULL;
@@ -75,14 +77,14 @@ gboolean group_by_node = FALSE;
 gboolean inactive_resources = FALSE;
 int interval = 15;
 gboolean daemonize = FALSE;
+GMainLoop*  mainloop = NULL;
+guint timer_id = 0;
+cib_t *cib_conn = NULL;
+int failed_connections = 0;
 
 int
 main(int argc, char **argv)
 {
-	int failed_connections = 0;
-	int options = cib_scope_local|cib_sync_call;
-	crm_data_t *xml_frag = NULL;
-	cib_t *cib_conn = NULL;
 	int argerr = 0;
 	int flag;
 
@@ -171,60 +173,22 @@ main(int argc, char **argv)
 	}
 	
 	make_daemon(daemonize, pid_file);
-	
+
 	if(as_console) {
 		initscr();
 		cbreak();
 		noecho();
 	}
+
+	crm_info("Starting %s", crm_system_name);
 	
-	while(1) {
-		int offset = 0;
-		const char *prefix = NULL;
-		int rc = cib_ok;
-		if(cib_conn == NULL || cib_conn->state != cib_connected_query){
-			crm_free(cib_conn);
-			crm_debug_4("Creating CIB connection");
-			cib_conn = cib_new();
-			if(cib_conn != NULL) {
-				crm_debug_4("Connecting to the CIB");
-				if(cib_ok == cib_conn->cmds->signon(
-					   cib_conn, crm_system_name, cib_query)) {
-					failed_connections = 0;
-				}
-			}
-		}
-		if(as_console) { blank_screen(); }
-		if(cib_conn == NULL || cib_conn->state != cib_connected_query){
-			failed_connections++;
-			if(as_console) { refresh(); }
-			wait_for_refresh(0, "Not connected: ", 2*interval);
-			continue;
-		}
-		
-		rc = cib_conn->cmds->query(cib_conn, NULL, &xml_frag, options);
-/* 		add_cib_op_callback(rc, FALSE, crm_strdup(max_generation_from), */
-/* 				    finalize_sync_callback); */
-		if(rc == cib_ok) {
-			crm_data_t *cib = NULL;
-			cib = find_xml_node(xml_frag,XML_TAG_CIB,TRUE);
-			if(as_html_file) {
-				print_html_status(cib, as_html_file);
-			}
-			if(as_console) {
-				offset = print_status(cib);
-			}
-			free_xml(xml_frag);
-			
-			cib_conn->cmds->signoff(cib_conn);
-			
-		} else {
-			crm_err("Query failed: %s", cib_error2string(rc));
-			prefix = "Query failed! ";
-			
-		}
-		wait_for_refresh(0, prefix, interval);
-	}
+	mainloop = g_main_new(FALSE);
+	timer_id = Gmain_timeout_add(interval*1000, mon_timer_popped, NULL);
+	g_main_run(mainloop);
+	return_to_orig_privs();
+	
+	crm_info("Exiting %s", crm_system_name);	
+	
 	if(as_console) {
 		echo();
 		nocbreak();
@@ -233,26 +197,16 @@ main(int argc, char **argv)
 	return 0;
 }
 
-void
-wait_for_refresh(int offset, const char *prefix, int seconds) 
+gboolean
+mon_timer_popped(gpointer data)
 {
-	int lpc = seconds;
-	if(as_console == FALSE) {
-		crm_notice("%sRefresh in %ds...", prefix?prefix:"", lpc);
-	}
-	while(lpc > 0) {
-		if(as_console) {
-			move(offset, 0);
-/* 		printw("%sRefresh in \033[01;32m%ds\033[00m...", prefix?prefix:"", lpc); */
-			printw("%sRefresh in %ds...", prefix?prefix:"", lpc);
-			clrtoeol();
-			refresh();
-		}
-		lpc--;
-		sleep(1);
-	}
+	int rc = cib_ok;
+	int options = cib_scope_local;
+
+	Gmain_timeout_remove(timer_id);
+
 	if(as_console) {
-		move(offset, 0);
+		move(0, 0);
 		printw("Updating...");
 		clrtoeol();
 		refresh();
@@ -260,6 +214,80 @@ wait_for_refresh(int offset, const char *prefix, int seconds)
 		crm_notice("Updating...");
 	}
 	
+	if(cib_conn == NULL || cib_conn->state != cib_connected_query){
+		crm_free(cib_conn);
+		crm_debug_4("Creating CIB connection");
+		cib_conn = cib_new();
+		if(cib_conn != NULL) {
+			crm_debug_4("Connecting to the CIB");
+			if(cib_ok == cib_conn->cmds->signon(
+				   cib_conn, crm_system_name, cib_query)) {
+				failed_connections = 0;
+			}
+		}
+	}
+	if(as_console) { blank_screen(); }
+	if(cib_conn == NULL || cib_conn->state != cib_connected_query){
+		failed_connections++;
+		wait_for_refresh(0, "Not connected: ", 2*interval);
+		return FALSE;
+	}
+	
+	rc = cib_conn->cmds->query(cib_conn, NULL, NULL, options);
+	add_cib_op_callback(rc, FALSE, NULL, mon_update);
+	return FALSE;
+}
+
+
+void
+mon_update(const HA_Message *msg, int call_id, int rc,
+	   crm_data_t *output, void*user_data) 
+{
+	const char *prefix = NULL;
+	if(rc == cib_ok) {
+		crm_data_t *cib = NULL;
+		cib = find_xml_node(output,XML_TAG_CIB,TRUE);
+		if(as_html_file) {
+			print_html_status(cib, as_html_file);
+		}
+		if(as_console) {
+			print_status(cib);
+		}
+		cib_conn->cmds->signoff(cib_conn);
+			
+	} else {
+		crm_err("Query failed: %s", cib_error2string(rc));
+		prefix = "Query failed! ";
+		
+	}
+	wait_for_refresh(0, prefix, interval);
+}
+
+void
+wait_for_refresh(int offset, const char *prefix, int seconds) 
+{
+	int lpc = seconds;
+
+	if(as_console == FALSE) {
+		timer_id = Gmain_timeout_add(seconds*1000, mon_timer_popped, NULL);
+		return;
+	}
+	
+	crm_notice("%sRefresh in %ds...", prefix?prefix:"", lpc);
+	while(lpc > 0) {
+		move(offset, 0);
+/* 		printw("%sRefresh in \033[01;32m%ds\033[00m...", prefix?prefix:"", lpc); */
+		printw("%sRefresh in %ds...", prefix?prefix:"", lpc);
+		clrtoeol();
+		refresh();
+		lpc--;
+		if(lpc == 0) {
+			timer_id = Gmain_timeout_add(
+				1000, mon_timer_popped, NULL);
+		} else {
+			sleep(1);
+		}
+	}
 }
 
 
@@ -351,6 +379,9 @@ print_html_status(crm_data_t *cib, const char *filename)
 	fprintf(stream,
 		"<meta http-equiv=\"refresh\" content=\"%d\">", interval);
 	fprintf(stream, "</head>");
+
+	/*** SUMMARY ***/
+
 	fprintf(stream, "<h2>Cluster summary</h2>");
 	{
 		char *now_str = NULL;
@@ -370,15 +401,44 @@ print_html_status(crm_data_t *cib, const char *filename)
 		  g_list_length(data_set.nodes));
 	fprintf(stream, "%d Resources configured.<br/>",
 		  g_list_length(data_set.resources));
-	fprintf(stream, "<br/>");
 
-	fprintf(stream, "<h2>Node list</h2>\n");
+	/*** CONFIG ***/
+	
+	fprintf(stream, "<h3>Config Options</h3>\n");
+
+	fprintf(stream, "<table>\n");
+	fprintf(stream, "<tr><td>Default resource stickiness</td><td>:</td><td>%d</td></tr>\n",
+		data_set.default_resource_stickiness);
+	
+	fprintf(stream, "<tr><td>STONITH of failed nodes</td><td>:</td><td>%s</td></tr>\n",
+		data_set.stonith_enabled?"enabled":"disabled");
+
+	fprintf(stream, "<tr><td>Cluster is</td><td>:</td><td>%ssymmetric</td></tr>\n",
+		data_set.symmetric_cluster?"":"a-");
+	
+	fprintf(stream, "<tr><td>No Quorum Policy</td><td>:</td><td>");
+	switch (data_set.no_quorum_policy) {
+		case no_quorum_freeze:
+			fprintf(stream, "Freeze resources");
+			break;
+		case no_quorum_stop:
+			fprintf(stream, "Stop ALL resources");
+			break;
+		case no_quorum_ignore:
+			fprintf(stream, "Ignore");
+			break;
+	}
+	fprintf(stream, "\n</td></tr>\n</table>\n");
+
+	/*** NODE LIST ***/
+	
+	fprintf(stream, "<h2>Node List</h2>\n");
 	fprintf(stream, "<ul>\n");
 	slist_iter(node, node_t, data_set.nodes, lpc2,
 		   fprintf(stream, "<li>");
 		   fprintf(stream, "Node: %s (%s): %s",
 			     node->details->uname, node->details->id,
-			     node->details->online?"<font color=\"green\">online</font>":"<font color=\"orange\"><b>OFFLINE</b></font>");
+			     node->details->online?"<font color=\"green\">online</font>\n":"<font color=\"orange\"><b>OFFLINE</b></font>\n");
 		   if(group_by_node) {
 			   fprintf(stream, "<ul>\n");
 			   slist_iter(rsc, resource_t,
