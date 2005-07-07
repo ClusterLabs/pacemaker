@@ -441,21 +441,21 @@ class LinuxHAv2(HeartbeatCM):
                 ResourceList.append(rsc)
         return ResourceList
 
-    def Dependancies(self):
-        DependancyList = []
-        #read dependancy in cib
+    def Dependencies(self):
+        DependencyList = []
+        #read dependency in cib
         configuration=self.Configuration()
         constraints=configuration.getElementsByTagName('constraints')[0]
         rsc_to_rscs=configuration.getElementsByTagName('rsc_to_rsc')
         for node in rsc_to_rscs:
-            dependancy = {}
-            dependancy["id"]=node.getAttribute('id')
-            dependancy["from"]=node.getAttribute('from')
-            dependancy["to"]=node.getAttribute('to')
-            dependancy["type"]=node.getAttribute('type')
-            dependancy["strength"]=node.getAttribute('strength')
-            DependancyList.append(dependancy)
-        return DependancyList
+            dependency = {}
+            dependency["id"]=node.getAttribute('id')
+            dependency["from"]=node.getAttribute('from')
+            dependency["to"]=node.getAttribute('to')
+            dependency["type"]=node.getAttribute('type')
+            dependency["strength"]=node.getAttribute('strength')
+            DependencyList.append(dependency)
+        return DependencyList
 
     def find_partitions(self):
         ccm_partitions = []
@@ -574,7 +574,9 @@ class HAResource(Resource):
             name=nvpair.getAttribute('name')
             value=nvpair.getAttribute('value')
             self.rparameters[name]=value
+	# This should normally be called first... FIXME!
         Resource.__init__(self, cm, self.rtype, self.rid)
+	self.needsquorum = (self.rclass != "stonith");
         
     def IsRunningOn(self, nodename):
         '''

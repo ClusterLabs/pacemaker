@@ -92,7 +92,7 @@ class ResourceAudit(ClusterAudit):
 
                 #        Is the resource served without quorum present?
 
-                if not self.CM.HasQuorum(None) and len(ResourceNodes) != 0:
+                if not self.CM.HasQuorum(None) and len(ResourceNodes) != 0 and resource.needs_quorum:
 
                     result.append("Resource " + repr(resource)
                     +        " active without Quorum: "
@@ -241,7 +241,7 @@ class HAResourceAudit(ClusterAudit):
             NodeofRsc[resource.rid]=RunningNodes
             if resource.inc_name == None:
                 #Is the resource served without quorum present?
-                if not self.CM.HasQuorum(None) and len(RunningNodes) != 0:
+                if not self.CM.HasQuorum(None) and len(RunningNodes) != 0 and resource.needs_quorum:
                     self.CM.log("Resource " + repr(resource)
                     +        " active without Quorum: "
                     +        repr(RunningNodes))
@@ -263,7 +263,7 @@ class HAResourceAudit(ClusterAudit):
                     MaxofInc[resource.inc_name]=resource.inc_max
                 running = 1
                 #Is the resource served without quorum present?
-                if not self.CM.HasQuorum(None) and len(RunningNodes) != 0:
+                if not self.CM.HasQuorum(None) and len(RunningNodes) != 0 and resource.needs_quorum:
                     self.CM.log("Resource " + repr(resource)
                     +        " active without Quorum: "
                     +        repr(RunningNodes))
@@ -289,11 +289,11 @@ class HAResourceAudit(ClusterAudit):
                         MaxofInc[inc_name],up_count))
 
         #Make sure the resouces with "must","placement" constraint are running on the same node
-        Dependancies = self.CM.Dependancies()
-        for dependancy in Dependancies:
-            if dependancy["type"] == "placement" and dependancy["strength"] == "must":
-                if NodeofRsc[dependancy["from"]] != NodeofRsc[dependancy["to"]]:
-                    print dependancy["from"] + " and " + dependancy["to"] + " should be run on same node"
+        Dependancies = self.CM.Dependencies()
+        for dependency in Dependancies:
+            if dependency["type"] == "placement" and dependency["strength"] == "must":
+                if NodeofRsc[dependency["from"]] != NodeofRsc[dependency["to"]]:
+                    print dependency["from"] + " and " + dependency["to"] + " should be run on same node"
                     passed = 0
                   
         return passed

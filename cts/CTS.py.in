@@ -661,6 +661,7 @@ class Resource:
         self.CM = cm
         self.ResourceType = rsctype
         self.Instance = instance
+	self.needs_quorum = 1
 
     def Type(self):
         return self.ResourceType
