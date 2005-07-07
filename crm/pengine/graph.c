@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.53 2005/06/29 16:43:12 andrew Exp $ */
+/* $Id: graph.c,v 1.54 2005/07/07 09:48:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -79,6 +79,17 @@ update_action(action_t *action)
 				    other->action->optional?"-":"they are not optional",
 				    action->optional?"we are optional":"-");
 			continue;
+		} else if(safe_str_eq(other->action->task, CRMD_ACTION_START)) {
+			const char *interval = g_hash_table_lookup(
+				action->extra, "interval");
+			int interval_i = 0;
+			if(interval != NULL) {
+				interval_i = atoi(interval);
+				if(interval_i > 0) {
+					crm_debug_3("Ignoring: start + recurring");
+					continue;
+				}
+			}
 		}
 
 		other->action->optional = FALSE;

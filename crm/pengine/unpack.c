@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.102 2005/07/06 09:33:10 andrew Exp $ */
+/* $Id: unpack.c,v 1.103 2005/07/07 09:48:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -621,8 +621,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	if(a_task_id == NULL && b_task_id == NULL) { return 0; }
 
 	/* the reverse from normal so that NULLs appear last */
-	if(a_task_id == NULL) { return -1; }
-	if(b_task_id == NULL) { return 1; }
+	if(a_task_id == NULL) { return 1; }
+	if(b_task_id == NULL) { return -1; }
 
 	a_id = atoi(a_task_id);
 	b_id = atoi(b_task_id);
@@ -676,6 +676,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	CRM_DEV_ASSERT(task_status_i >= LRM_OP_PENDING);
 	if(crm_assert_failed) {return FALSE;}
 
+	crm_debug_2("Unpacking task %s/%s (%s) on %s",
+		    rsc->id, task, task_status, node->details->uname);
+	
 	if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 		is_stop_action = TRUE;
 	}
@@ -747,10 +750,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 					start_action(rsc, NULL, FALSE);
 				}
 				
-			} else if(*running == TRUE) {
-				crm_debug_4("Re-issuing pending recurring task:"
-					  " %s for %s on %s",
-					  task, rsc->id, node->details->id);
+			} else  if(*running == TRUE) {
+				crm_debug_2("Re-issuing pending recurring task:"
+					    " %s for %s on %s",
+					    task, rsc->id, node->details->id);
 				custom_action(rsc, crm_strdup(id),
 					      task, node, FALSE, data_set);
 			}

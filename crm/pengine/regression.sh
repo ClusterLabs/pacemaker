@@ -164,6 +164,7 @@ do_test bad6 "Bad lrm_rsc	"
 echo ""
 do_test 594 "Bugzilla 594"
 do_test 662 "Bugzilla 662"
+do_test 696 "Bugzilla 696"
 
 
 echo ""

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.89 2005/07/03 22:15:49 alan Exp $ */
+/* $Id: utils.c,v 1.90 2005/07/07 09:48:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -645,9 +645,9 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 	}
 
 	if(action == NULL) {
-		crm_debug_4("Creating action %s for %s on %s",
-			  task, rsc?rsc->id:"<NULL>",
-			  on_node?on_node->details->uname:"<NULL>");
+		crm_debug_2("Creating action %d: %s for %s on %s",
+			    data_set->action_id, task, rsc?rsc->id:"<NULL>",
+			    on_node?on_node->details->uname:"<NULL>");
 
 		crm_malloc0(action, sizeof(action_t));
 		if(action != NULL) {

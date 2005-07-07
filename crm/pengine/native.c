@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.59 2005/07/07 06:11:19 andrew Exp $ */
+/* $Id: native.c,v 1.60 2005/07/07 09:48:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -255,9 +255,10 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 	int interval_ms = 0;
 	
 	if(node == NULL || !node->details->online || node->details->unclean) {
-		crm_debug_3("Not creating recurring actions");
+		crm_debug_3("Not creating recurring actions for %s", rsc->id);
 		return;
 	}
+	crm_debug_2("Creating recurring actions for %s", rsc->id);
 
 	xml_child_iter(
 		rsc->ops_xml, operation, "op",
@@ -411,6 +412,9 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	
 	if(start != NULL && start->runnable) {
 		create_recurring_actions(rsc, start, chosen, data_set);
+	} else {
+		crm_debug_3("Not creating recurring actions for %s: %p (%d)",
+			    rsc->id, start, start?start->runnable:0);
 	}
 }
 
