@@ -644,7 +644,7 @@ do_lrm_rsc_op(
 			crm_err("Missing transition");
 			crm_log_message(LOG_ERR, msg);
 		} else {
-			int transition_i = atoi(alt_transition);
+			int transition_i = atoi(transition);
 			if(transition_i < 0) {
 				crm_err("Invalid transition");
 				crm_log_message(LOG_ERR, msg);
