@@ -22,6 +22,9 @@
 create_mode="true"
 echo Generating test outputs for these tests...
 #do_test bad7
+do_test quorum-4 "No quorum - start anyway"
+do_test quorum-5 "No quorum - start anyway (group)"
+do_test quorum-6 "No quorum - start anyway (clone)"
 
 echo ""
 
@@ -95,6 +98,9 @@ echo ""
 do_test quorum-1 "No quorum - ignore"
 do_test quorum-2 "No quorum - freeze"
 do_test quorum-3 "No quorum - stop  "
+do_test quorum-4 "No quorum - start anyway"
+do_test quorum-5 "No quorum - start anyway (group)"
+do_test quorum-6 "No quorum - start anyway (clone)"
 
 echo ""
 do_test rec-node-1 "Node Recover - Startup   - no fence"

@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.15 2005/07/06 09:30:21 andrew Exp $ */
+/* $Id: complex.h,v 1.16 2005/07/07 14:50:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,6 +65,7 @@ typedef struct resource_object_functions_s
 		void (*dump)(resource_t *, const char *, gboolean);
 		void (*printw)(resource_t *, const char *, int*);
 		void (*html)(resource_t *, const char *, FILE*);
+		gboolean (*active)(resource_t *,gboolean);
 		void (*free)(resource_t *);
 		
 } resource_object_functions_t;
@@ -87,6 +88,7 @@ extern void native_rsc_order_rh(
 extern void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void native_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details);
+extern gboolean native_active(resource_t *rsc, gboolean all);
 extern void native_printw(resource_t *rsc, const char *pre_text, int *index);
 extern void native_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void native_free(resource_t *rsc);
@@ -110,6 +112,7 @@ extern void group_rsc_order_rh(
 extern void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void group_dump(resource_t *rsc, const char *pre_text, gboolean details);
+extern gboolean group_active(resource_t *rsc, gboolean all);
 extern void group_printw(resource_t *rsc, const char *pre_text, int *index);
 extern void group_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void group_free(resource_t *rsc);
@@ -132,6 +135,7 @@ extern void clone_rsc_order_rh(
 extern void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void clone_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void clone_dump(resource_t *rsc, const char *pre_text, gboolean details);
+extern gboolean clone_active(resource_t *rsc, gboolean all);
 extern void clone_printw(resource_t *rsc, const char *pre_text, int *index);
 extern void clone_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void clone_free(resource_t *rsc);

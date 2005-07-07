@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.29 2005/07/06 09:31:38 andrew Exp $ */
+/* $Id: group.c,v 1.30 2005/07/07 14:50:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,8 +48,8 @@ typedef struct group_variant_data_s
 
 void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
-	crm_data_t * xml_obj = rsc->xml;
-	crm_data_t * xml_self = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+	crm_data_t *xml_obj = rsc->xml;
+	crm_data_t *xml_self = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 	group_variant_data_t *group_data = NULL;
 	resource_t *self = NULL;
 
@@ -379,6 +379,27 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc->fns->expand(child_rsc, data_set);
 		);
 
+}
+
+gboolean group_active(resource_t *rsc, gboolean all)
+{
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		gboolean child_active = child_rsc->fns->active(child_rsc, all);
+		if(all == FALSE && child_active) {
+			return TRUE;
+		} else if(child_active == FALSE) {
+			return FALSE;
+		}
+		);
+	if(all) {
+		return TRUE;
+	} else {
+		return FALSE;
+	}
 }
 
 void group_printw(resource_t *rsc, const char *pre_text, int *index)

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.60 2005/07/07 09:48:58 andrew Exp $ */
+/* $Id: native.c,v 1.61 2005/07/07 14:50:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -297,12 +297,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
 		start = start_action(rsc, chosen, TRUE);
-		if(start->runnable && data_set->have_quorum == FALSE
-		   && data_set->no_quorum_policy != no_quorum_ignore) {
-			crm_warn("Start resource %s\t(%s) (cancelled : quorum)",
-				 rsc->id, chosen->details->uname);
-			start->runnable = FALSE;
-		} else {
+		if(start->runnable) {
 			crm_info("Start resource %s\t(%s)",
 				 rsc->id, chosen->details->uname);
 			start->optional = FALSE;
@@ -760,6 +755,17 @@ void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 		graph_element_from_action(action, data_set);
 		);
 }
+
+gboolean native_active(resource_t *rsc, gboolean all)
+{
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
+	if(g_list_length(native_data->running_on) > 0) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 
 void native_printw(resource_t *rsc, const char *pre_text, int *index)
 {

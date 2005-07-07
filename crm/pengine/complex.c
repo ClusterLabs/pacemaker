@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.46 2005/07/07 06:34:45 andrew Exp $ */
+/* $Id: complex.c,v 1.47 2005/07/07 14:50:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,6 +55,7 @@ resource_object_functions_t resource_class_functions[] = {
 		native_dump,
 		native_printw,
 		native_html,
+		native_active,
 		native_free
 	},
 	{
@@ -74,6 +75,7 @@ resource_object_functions_t resource_class_functions[] = {
 		group_dump,
 		group_printw,
 		group_html,
+		group_active,
 		group_free
 	},
 	{
@@ -93,6 +95,7 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_dump,
 		clone_printw,
 		clone_html,
+		clone_active,
 		clone_free
 	}
 };
@@ -139,7 +142,7 @@ inherit_parent_attributes(
 
 	for(lpc = 0; lpc < DIMOF(attributes); lpc++) {
 		const char *attr_p = crm_element_value(parent, attributes[lpc]);
-		const char *attr_c = crm_element_value(child, attributes[lpc]);
+		const char *attr_c = crm_element_value(child,  attributes[lpc]);
 
 		if(attr_c != NULL && safe_str_neq(attr_p, attr_c)) {
 			if(overwrite == FALSE) {

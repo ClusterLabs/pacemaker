@@ -10,7 +10,7 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="2" rsc_id="rsc2" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="3" rsc_id="rsc2" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc2" class="heartbeat" type="apache" on_stopfail="block"/>
          <attributes/>
        </rsc_op>

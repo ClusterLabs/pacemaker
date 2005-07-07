@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.90 2005/07/07 09:48:58 andrew Exp $ */
+/* $Id: utils.c,v 1.91 2005/07/07 14:50:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -712,7 +712,17 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 		} else if(data_set->have_quorum == FALSE
 			&& data_set->no_quorum_policy == no_quorum_stop) {
 			action->runnable = FALSE;
+			crm_warn("%s resource %s\t(%s) (cancelled : quorum)",
+				 action->task, rsc->id, action->node->details->uname);
 		
+		} else if(data_set->have_quorum == FALSE
+			&& data_set->no_quorum_policy == no_quorum_freeze) {
+			if(rsc->fns->active(rsc, TRUE) == FALSE) {
+				action->runnable = FALSE;
+				crm_warn("%s resource %s\t(%s) (cancelled : quorum freeze)",
+					 action->task, rsc->id,
+					 action->node->details->uname);
+			}
 		} else {
 			action->runnable = TRUE;
 		}

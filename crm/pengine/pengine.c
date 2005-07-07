@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.83 2005/07/07 06:34:18 andrew Exp $ */
+/* $Id: pengine.c,v 1.84 2005/07/07 14:50:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,7 +151,7 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input)
 	
 /*	pe_debug_on(); */
 	set_working_set_defaults(data_set);
-	data_set->input = xml_input;
+	data_set->input = copy_xml(xml_input);
 	
 	crm_debug_5("unpack");		  
 	stage0(data_set);
@@ -272,6 +272,7 @@ cleanup_calculations(pe_working_set_t *data_set)
 		g_list_free(data_set->placement_constraints);
 	}
 	free_xml(data_set->graph);
+	free_xml(data_set->input);
 }
 
 

@@ -1,0 +1,43 @@
+<cib cib_feature_revision="1" have_quorum="false" epoche="262" generated="true" admin_epoche="0" num_peers="3" origin="hadev2" last_written="Thu Jul  7 04:56:20 2005" dc_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" debug_source="finalize_join" num_updates="8358" ccm_transition="3">
+  <configuration>
+      <crm_config>
+        <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="120s"/>
+        <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
+        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="false"/>
+        <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>
+        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
+      </crm_config>
+      <nodes>
+        <node id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" type="member"/>
+        <node id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" type="member"/>
+        <node id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" type="member"/>
+      </nodes>
+      <resources>
+	<clone id="DoFencing">
+          <instance_attributes>
+            <attributes>
+              <nvpair id="1" name="clone_max" value="8"/>
+              <nvpair id="2" name="clone_node_max" value="1"/>
+            </attributes>
+          </instance_attributes>
+          <primitive id="child_DoFencing" class="stonith" type="ssh">
+            <operations>
+              <op id="1" name="monitor" interval="5s" timeout="20s"/>
+              <op id="1" name="start" prereq="nothing" timeout="20s"/>
+            </operations>
+            <instance_attributes>
+              <attributes>
+                <nvpair id="1" name="hostlist" value="hadev1 hadev2 hadev3 "/>
+              </attributes>
+            </instance_attributes>
+          </primitive>
+	</clone>
+      </resources>
+      <constraints>
+      </constraints>
+    </configuration>
+  <status>
+    <node_state id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" in_ccm="true" join="member" origin="do_lrm_query" crmd="online" ha="active" expected="member">
+    </node_state>
+  </status>
+</cib>

@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.37 2005/07/06 12:37:55 andrew Exp $ */
+/* $Id: incarnation.c,v 1.38 2005/07/07 14:50:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -56,13 +56,8 @@ void child_starting_constraints(
 
 
 #define get_clone_variant_data(data, rsc)				\
-	if(rsc->variant == pe_clone) {				\
-		data = (clone_variant_data_t *)rsc->variant_opaque; \
-	} else {							\
-		pe_err("Resource %s was not an \"" XML_CIB_TAG_INCARNATION "\" variant", \
-			rsc->id);					\
-		return;							\
-	}
+	CRM_ASSERT(rsc->variant == pe_clone);				\
+	data = (clone_variant_data_t *)rsc->variant_opaque;
 
 void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
@@ -646,6 +641,27 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc->fns->expand(child_rsc, data_set);
 
 		);
+}
+
+gboolean clone_active(resource_t *rsc, gboolean all)
+{
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc);
+
+	slist_iter(
+		child_rsc, resource_t, clone_data->child_list, lpc,
+		gboolean child_active = child_rsc->fns->active(child_rsc, all);
+		if(all == FALSE && child_active) {
+			return TRUE;
+		} else if(all && child_active == FALSE) {
+			return FALSE;
+		}
+		);
+	if(all) {
+		return TRUE;
+	} else {
+		return FALSE;
+	}
 }
 
 void clone_printw(resource_t *rsc, const char *pre_text, int *index)
