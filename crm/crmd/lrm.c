@@ -641,8 +641,16 @@ do_lrm_rsc_op(
 	if(msg != NULL) {
 		transition = crm_element_value(msg, "transition_id");
 		if(transition == NULL) {
+			crm_err("Missing transition");
 			crm_log_message(LOG_ERR, msg);
+		} else {
+			int transition_i = atoi(alt_transition);
+			if(transition_i < 0) {
+				crm_err("Invalid transition");
+				crm_log_message(LOG_ERR, msg);
+			}
 		}
+		
 	}
 
 	if(safe_str_neq(operation, CRMD_ACTION_STOP)) {

@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.84 2005/06/27 11:13:05 andrew Exp $ */
+/* $Id: tengine.c,v 1.85 2005/07/07 08:12:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -215,6 +215,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	if(transition_i == -1) {
 		/* we never expect these - recompute */
 		crm_err("Detected an action initiated outside of a transition");
+		crm_log_message(LOG_ERR, event);
 		return -1;
 		
 	} else if(transition_counter != transition_i) {
