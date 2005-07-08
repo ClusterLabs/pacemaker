@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.105 2005/07/07 14:50:35 andrew Exp $ */
+/* $Id: unpack.c,v 1.106 2005/07/08 20:46:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -208,13 +208,12 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 		new_node->details->attrs        = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
-#if 0
-		if(data_set->have_quorum == FALSE
-		   && data_set->no_quorum_policy == no_quorum_stop) {
-			/* start shutting resources down */
-			new_node->weight = -INFINITY;
-		}
-#endif	
+
+/* 		if(data_set->have_quorum == FALSE */
+/* 		   && data_set->no_quorum_policy == no_quorum_stop) { */
+/* 			/\* start shutting resources down *\/ */
+/* 			new_node->weight = -INFINITY; */
+/* 		} */
 		
 		if(data_set->stonith_enabled) {
 			/* all nodes are unclean until we've seen their
