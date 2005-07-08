@@ -492,13 +492,13 @@ class StonithTest(CTSTest):
         #        Figure out what log message to look for when/if it goes down
 
         if self.CM.ShouldBeStatus[node] != self.CM["down"]:
-            if self.CM.upcount() != 1:
+            if self.CM.upcount() > 1:
                 stopwatch = (self.theystopped % node)
 
         #        Figure out what log message to look for when it comes up
 
-        if (self.CM.upcount() <= 1):
-            uppat = (self.usstart % node)
+        if self.CM.upcount() == 1 and self.CM.ShouldBeStatus[node] == self.CM["up"]:
+	    uppat = (self.usstart % node)
         else:
             uppat = (self.themstart % node)
 
@@ -540,9 +540,7 @@ class StonithTest(CTSTest):
 
         self.CM.ShouldBeStatus[node] = self.CM["up"]
 
-        # I can't remember why I put this in here :-(
-
-        time.sleep(30)
+        self.CM.cluster_stable()
 
         if not ret1:
             self.CM.log("When node %s STONITHed, the other node didn't log it" % node)
@@ -597,6 +595,8 @@ class StonithdTest(StonithTest):
                 break
             for reason in fail_reasons:
                 self.CM.log(reason)
+
+        self.CM.cluster_stable()
         return StonithWorked
         
     def is_applicable(self):
@@ -979,6 +979,8 @@ class StandbyTest2(CTSTest):
         self.CM.debug("Setting node %s to standby mode" % node) 
         if not self.CM.SetStandbyMode(node, "on"):
             return self.failure("can't set node %s to standby mode" % node)
+
+        time.sleep(30)  # Allow time for the update to be applied and cause something
         self.CM.cluster_stable()
 
         status = self.CM.StandbyStatus(node)
@@ -993,6 +995,8 @@ class StandbyTest2(CTSTest):
         self.CM.debug("Setting node %s to active mode" % node) 
         if not self.CM.SetStandbyMode(node, "off"):
             return self.failure("can't set node %s to active mode" % node)
+
+        time.sleep(30)  # Allow time for the update to be applied and cause something
         self.CM.cluster_stable()
 
         status = self.CM.StandbyStatus(node)
