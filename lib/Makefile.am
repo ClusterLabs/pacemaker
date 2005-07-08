@@ -38,9 +38,10 @@ SUBDIRS			=  	\
 	recoverymgr		\
 	fencing			\
 	plugins 		\
-	bindings		\
 	crm			\
 	lrm
+
+#	bindings
 
 DIST_SUBDIRS		=  	\
 	pils			\
