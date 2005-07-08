@@ -51,7 +51,7 @@ DIST_SUBDIRS		=  	\
 	apphb			\
 	recoverymgr		\
 	plugins 		\
-	bindings		\
 	fencing			\
 	crm			\
 	lrm			
+#	bindings
