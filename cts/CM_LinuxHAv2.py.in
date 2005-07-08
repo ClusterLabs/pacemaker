@@ -574,10 +574,22 @@ class HAResource(Resource):
             name=nvpair.getAttribute('name')
             value=nvpair.getAttribute('value')
             self.rparameters[name]=value
+
 	# This should normally be called first... FIXME!
         Resource.__init__(self, cm, self.rtype, self.rid)
-	self.needsquorum = (self.rclass != "stonith");
         
+	# resources that dont need quorum will have:
+	#	<op name="start" prereq="nothing"/>
+	ops = node.getElementsByTagName('op')
+        for op in ops:
+	    if op.getAttribute('name') == "start" and op.getAttribute('prereq') == "nothing":
+		self.needs_quorum = 0
+
+	if self.needs_quorum == 0:
+	    self.CM.debug("Resource %s does not need quorum" % self.rid)
+	else:
+	    self.CM.debug("Resource %s DOES need quorum" % self.rid)
+
     def IsRunningOn(self, nodename):
         '''
         This member function returns true if our resource is running
