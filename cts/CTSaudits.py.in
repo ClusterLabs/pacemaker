@@ -93,7 +93,6 @@ class ResourceAudit(ClusterAudit):
                 #        Is the resource served without quorum present?
 
                 if not self.CM.HasQuorum(None) and len(ResourceNodes) != 0 and resource.needs_quorum:
-
                     result.append("Resource " + repr(resource)
                     +        " active without Quorum: "
                     +        repr(ResourceNodes))
@@ -263,7 +262,7 @@ class HAResourceAudit(ClusterAudit):
                     MaxofInc[resource.inc_name]=resource.inc_max
                 running = 1
                 #Is the resource served without quorum present?
-                if not self.CM.HasQuorum(None) and len(RunningNodes) != 0 and resource.needs_quorum:
+                if not self.CM.HasQuorum(None) and len(RunningNodes) != 0 and resource.needs_quorum == 1:
                     self.CM.log("Resource " + repr(resource)
                     +        " active without Quorum: "
                     +        repr(RunningNodes))
