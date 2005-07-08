@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.49 2005/07/06 09:08:54 andrew Exp $ */
+/* $Id: messages.c,v 1.50 2005/07/08 20:55:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -340,8 +340,15 @@ cib_process_diff(
 		sync_in_progress = FALSE;
 	}
 	
+	cib_diff_version_details(
+		input,
+		&diff_add_admin_epoche, &diff_add_epoche, &diff_add_updates, 
+		&diff_del_admin_epoche, &diff_del_epoche, &diff_del_updates);
+
 	if(sync_in_progress) {
-		crm_warn("Not applying diff: sync in progress");
+		crm_warn("Not applying diff %d.%d.%d -> %d.%d.%d (sync in progress)",
+			diff_del_admin_epoche,diff_del_epoche,diff_del_updates,
+			diff_add_admin_epoche,diff_add_epoche,diff_add_updates);
 		return cib_diff_resync;
 	}
 	
@@ -354,11 +361,6 @@ cib_process_diff(
 	value = crm_element_value(existing_cib, XML_ATTR_GENERATION_ADMIN);
 	this_admin_epoche = atoi(value?value:"0");
 	
-	cib_diff_version_details(
-		input,
-		&diff_add_admin_epoche, &diff_add_epoche, &diff_add_updates, 
-		&diff_del_admin_epoche, &diff_del_epoche, &diff_del_updates);
-
 	if(diff_del_admin_epoche == diff_add_admin_epoche
 	   && diff_del_epoche == diff_add_epoche
 	   && diff_del_updates == diff_add_updates) {
@@ -416,6 +418,7 @@ cib_process_diff(
 			reason = "Failed application of a global update.  Not requesting full refresh.";
 		}
 	}
+	
 
 	if(reason != NULL) {
 		crm_log_maybe(
@@ -426,6 +429,11 @@ cib_process_diff(
 			this_admin_epoche,this_epoche,this_updates, reason);
 		
 		result = cib_diff_failed;
+
+	} else if(apply_diff) {
+		crm_debug("Diff %d.%d.%d -> %d.%d.%d was applied",
+			diff_del_admin_epoche,diff_del_epoche,diff_del_updates,
+			diff_add_admin_epoche,diff_add_epoche,diff_add_updates);
 	}
 
 	if(do_resync && cib_is_master == FALSE) {
@@ -440,7 +448,7 @@ cib_process_diff(
 		ha_msg_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
 		ha_msg_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
 
-		if(send_ha_message(hb_conn, sync_me, NULL) == FALSE) {
+		if(send_ha_message(hb_conn, sync_me, NULL, FALSE) == FALSE) {
 			result = cib_not_connected;
 		}
 		ha_msg_del(sync_me);
@@ -903,7 +911,7 @@ sync_our_cib(HA_Message *request, gboolean all)
 	ha_msg_add(replace_request, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 	ha_msg_addstruct(replace_request, F_CIB_CALLDATA, sync_data);
 	
-	if(send_ha_message(hb_conn, replace_request, all?NULL:host) == FALSE) {
+	if(send_ha_message(hb_conn, replace_request, all?NULL:host, FALSE) == FALSE) {
 		result = cib_not_connected;
 	}
 	ha_msg_del(replace_request);

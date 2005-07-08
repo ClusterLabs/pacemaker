@@ -1092,9 +1092,9 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 		    || strlen(host_to) == 0
 		    || safe_str_eq(sys_to, CRM_SYSTEM_DC)) {
 			broadcast = TRUE;
-			all_is_good = send_ha_message(hb_fd, msg, NULL);
+			all_is_good = send_ha_message(hb_fd, msg, NULL, FALSE);
 		} else {
-			all_is_good = send_ha_message(hb_fd, msg, host_to);
+			all_is_good = send_ha_message(hb_fd, msg, host_to, FALSE);
 		}
 	}
 	

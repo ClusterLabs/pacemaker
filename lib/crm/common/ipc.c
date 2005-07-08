@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.10 2005/06/15 10:12:25 andrew Exp $ */
+/* $Id: ipc.c,v 1.11 2005/07/08 20:55:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,7 +49,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 gboolean 
-send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node)
+send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboolean force_ordered)
 {
 	gboolean all_is_good = TRUE;
 
@@ -65,6 +65,10 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node)
 		crm_err("Not connected to Heartbeat");
 		all_is_good = FALSE;
 		
+	} else if(get_stringlen(msg) >= MAXMSG) {
+		crm_err("Message is too large to send");
+		all_is_good = FALSE;
+
 	} else if(node != NULL) {
 		if(hb_conn->llc_ops->send_ordered_nodemsg(
 			   hb_conn, msg, node) != HA_OK) {
@@ -74,6 +78,15 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node)
 			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
 		} else {
 			crm_debug_2("Message sent...");
+		}
+	} else if(force_ordered) {
+		if(hb_conn->llc_ops->send_ordered_clustermsg(hb_conn, msg) != HA_OK) {
+			IPC_Channel *ipc = hb_conn->llc_ops->ipcchan(hb_conn);
+			all_is_good = FALSE;
+			crm_err("Broadcast Send failed");
+			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
+		} else {
+			crm_debug_2("Broadcast message sent...");
 		}
 	} else {
 		if(hb_conn->llc_ops->sendclustermsg(hb_conn, msg) != HA_OK) {
@@ -108,6 +121,10 @@ crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 
 	} else if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
 		ipc_log("IPC Channel is not connected");
+		all_is_good = FALSE;
+
+	} else if(get_stringlen(msg) >= MAXMSG) {
+		crm_err("Message is too large to send");
 		all_is_good = FALSE;
 	}
 

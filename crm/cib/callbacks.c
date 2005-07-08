@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.72 2005/07/03 22:15:49 alan Exp $ */
+/* $Id: callbacks.c,v 1.73 2005/07/08 20:55:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -542,11 +542,11 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		
 		if(host != NULL) {
 			crm_debug("Forwarding %s op to %s", op, host);
-			send_ha_message(hb_conn, forward_msg, host);
+			send_ha_message(hb_conn, forward_msg, host, FALSE);
 			
 		} else {
 			crm_debug("Forwarding %s op to master instance", op);
-			send_ha_message(hb_conn, forward_msg, NULL);
+			send_ha_message(hb_conn, forward_msg, NULL, FALSE);
 		}
 		
 		if(call_options & cib_discard_reply) {
@@ -588,7 +588,13 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 			crm_log_message_adv(LOG_DEBUG, "CIB[output]", op_reply);
 			crm_debug("Input message");
 			crm_log_message(LOG_DEBUG, request);
+
+		} else if(cib_server_ops[call_type].modifies_cib
+			  && !(call_options & cib_inhibit_bcast)) {
+			/* we need to send an update anyway */
+			needs_reply = TRUE;			
 		}
+		
 
 		if(op_reply == NULL && (needs_reply || local_notify)) {
 			crm_err("Unexpected NULL reply to message");
@@ -685,7 +691,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 
 		add_message_xml(op_bcast, F_CIB_UPDATE_DIFF, result_diff);
 		crm_log_message(LOG_DEBUG_3, op_bcast);
-		send_ha_message(hb_conn, op_bcast, NULL);
+		send_ha_message(hb_conn, op_bcast, NULL, TRUE);
 		crm_msg_del(op_bcast);
 		
 	} else if((call_options & cib_discard_reply) == 0) {
@@ -693,7 +699,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 			/* send reply via HA to originating node */
 			crm_debug("Sending request result to originator only");
 			ha_msg_add(op_reply, F_CIB_ISREPLY, originator);
-			send_ha_message(hb_conn, op_reply, originator);
+			send_ha_message(hb_conn, op_reply, originator, FALSE);
 		}
 		if(call_options & cib_inhibit_bcast ) {
 			crm_debug("Request not broadcast: inhibited");
