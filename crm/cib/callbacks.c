@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.73 2005/07/08 20:55:20 andrew Exp $ */
+/* $Id: callbacks.c,v 1.74 2005/07/09 11:21:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -462,7 +462,15 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 			cib_error2string(rc));
 		
 	} else if(from_peer == FALSE) {
-		needs_reply = FALSE;
+
+		if(cib_server_ops[call_type].modifies_cib
+		   && !(call_options & cib_inhibit_bcast)) {
+			/* we need to send an update anyway */
+			needs_reply = TRUE;
+		} else {
+			needs_reply = FALSE;
+		}
+		
 		if(host == NULL && (call_options & cib_scope_local)) {
 			crm_debug("Processing locally scoped %s op from %s",
 				  op, cib_client->name);
@@ -588,11 +596,6 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 			crm_log_message_adv(LOG_DEBUG, "CIB[output]", op_reply);
 			crm_debug("Input message");
 			crm_log_message(LOG_DEBUG, request);
-
-		} else if(cib_server_ops[call_type].modifies_cib
-			  && !(call_options & cib_inhibit_bcast)) {
-			/* we need to send an update anyway */
-			needs_reply = TRUE;			
 		}
 		
 
@@ -684,7 +687,23 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		 *   send via HA to other nodes
 		 */
 		HA_Message *op_bcast = cib_msg_copy(request, FALSE);
-		crm_debug_2("Sending update diff to everyone");
+		int diff_add_updates = 0;
+		int diff_add_epoche  = 0;
+		int diff_add_admin_epoche = 0;
+		
+		int diff_del_updates = 0;
+		int diff_del_epoche  = 0;
+		int diff_del_admin_epoche = 0;
+		
+		cib_diff_version_details(
+			result_diff,
+			&diff_add_admin_epoche, &diff_add_epoche, &diff_add_updates, 
+			&diff_del_admin_epoche, &diff_del_epoche, &diff_del_updates);
+
+		crm_debug("Sending update diff %d.%d.%d -> %d.%d.%d",
+			diff_del_admin_epoche,diff_del_epoche,diff_del_updates,
+			diff_add_admin_epoche,diff_add_epoche,diff_add_updates);
+
 		ha_msg_add(op_bcast, F_CIB_ISREPLY, originator);
 		ha_msg_add(op_bcast, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 		ha_msg_mod(op_bcast, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
