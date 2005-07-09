@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.5 2005/07/07 19:13:10 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.6 2005/07/09 09:23:14 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -458,10 +458,17 @@ print_html_status(crm_data_t *cib, const char *filename)
 	fprintf(stream, "</ul>\n");
 	
 	if(group_by_node && inactive_resources) {
-		fprintf(stream, "<h2>Full list of resources</h2>\n");
+		fprintf(stream, "<h2>(Partially) Inactive Resources</h2>\n");
+
+	} else if(group_by_node == FALSE)  {
+		fprintf(stream, "<h2>Resource List</h2>\n");
 	}
+	
 	if(group_by_node == FALSE || inactive_resources) {
 		slist_iter(rsc, resource_t, data_set.resources, lpc2,
+			   if(group_by_node && rsc->fns->active(rsc, TRUE)) {
+				   continue;
+			   }
 			   rsc->fns->html(rsc, NULL, stream);
 			);
 	}
