@@ -610,7 +610,7 @@ class StonithdTest(StonithTest):
         return 1
            
 
-#AllTestClasses.append(StonithdTest)
+AllTestClasses.append(StonithdTest)
 
 ###################################################################
 class IPaddrtest(CTSTest):
