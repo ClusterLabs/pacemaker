@@ -23,9 +23,9 @@
 ##                        $(auxdir)/mkinstalldirs
 ##AUX_DIST_EXTRA          = $(auxdir)/readline.m4 $(auxdir)/sys_errlist.m4 \
 ##                        $(auxdir)/sys_siglist.m4
-EXTRA_DIST              = bootstrap rc.config.heartbeat \
-				heartbeat.spec.in heartbeat.spec	\
-				ConfigureMe autoconf-2.53.diff README.in
+EXTRA_DIST              = bootstrap rc.config.heartbeat 	\
+			heartbeat.spec.in heartbeat.spec	\
+			ConfigureMe autoconf-2.53.diff README.in libltdl.tar.gz 
 
 RPMREL			= @RPMREL@
 RPM			= @RPM@
@@ -47,13 +47,13 @@ AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
-                        DRF/stamp-h.in libtool.m4 ltdl.m4
+                        DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar.gz 
 coredir = 		@HA_COREDIR@
 hauser = 		@HA_CCMUSER@
 
 ## proc-ha is left out from SUBDIRS (completely obsolete)
 
-SUBDIRS	=		libltdl debian pkg port replace include config	\
+SUBDIRS	=		$(LIBLTDL_DIR) debian pkg port replace include config	\
 			lib						\
 			ldirectord heartbeat membership telecom		\
 			linux-ha contrib resources			\
