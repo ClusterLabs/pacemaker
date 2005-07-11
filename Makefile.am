@@ -25,7 +25,7 @@
 ##                        $(auxdir)/sys_siglist.m4
 EXTRA_DIST              = bootstrap rc.config.heartbeat 	\
 			heartbeat.spec.in heartbeat.spec	\
-			ConfigureMe autoconf-2.53.diff README.in libltdl.tar.gz 
+			ConfigureMe autoconf-2.53.diff README.in libltdl.tar 
 
 RPMREL			= @RPMREL@
 RPM			= @RPM@
@@ -47,7 +47,7 @@ AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
-                        DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar.gz 
+                        DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar 
 coredir = 		@HA_COREDIR@
 hauser = 		@HA_CCMUSER@
 
