@@ -72,7 +72,7 @@ class LinuxHAv2(HeartbeatCM):
             "StandbyOnCmd"   : "@libdir@/heartbeat/crmadmin -s %s",
             "StandbyOffCmd"  : "@libdir@/heartbeat/crmadmin -a %s",
             "UUIDQueryCmd"   : "@libdir@/heartbeat/crmadmin -N",
-            "CIBQueryCmd"    : "@libdir@/heartbeat/cibadmin -Ql -h %s",
+            "CIBQueryCmd"    : "@libdir@/heartbeat/cibadmin -Ql -h %s -o node",
 
             # Patterns to look for in the log files for various occasions...
             "Pat:DC_IDLE"      : "crmd:.*State transition.*-> S_IDLE",
