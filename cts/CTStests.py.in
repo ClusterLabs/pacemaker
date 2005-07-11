@@ -526,7 +526,7 @@ class StonithTest(CTSTest):
         #        Look() and see if the machine went down
         if stopwatch == 0:
             # Allow time for the node to die
-            sleep(self.CM["DeadTime"]+10)
+            time.sleep(self.CM["DeadTime"]+10)
         elif not watch.lookforall():
             if watch.unmatched:
                 for regex in watch.unmatched:
@@ -624,8 +624,7 @@ class StonithdTest(StonithTest):
 
         return 1
            
-
-#AllTestClasses.append(StonithdTest)
+AllTestClasses.append(StonithdTest)
 
 ###################################################################
 class IPaddrtest(CTSTest):
