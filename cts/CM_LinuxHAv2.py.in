@@ -538,10 +538,15 @@ class LinuxHAv2(HeartbeatCM):
         if current_status == status:
             return True
 
+        uuid = self.NodeUUID(node)
+        if not uuid:
+            self.log("failed to get the UUID of node %s" % node)
+            return False
+
         if status == "on":
-            cmd = self["StandbyOnCmd"] % self.NodeUUID(node)
+            cmd = self["StandbyOnCmd"] % uuid
         elif status == "off":
-            cmd = self["StandbyOffCmd"] % self.NodeUUID(node)
+            cmd = self["StandbyOffCmd"] % uuid
         else:
             return False
 
