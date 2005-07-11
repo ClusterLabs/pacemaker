@@ -413,6 +413,9 @@ class ClusterManager(UserDict):
 	    self.cluster_stable(self["DeadTime"])
 	    return 1
 
+	if self.StataCM(node) and self.cluster_stable(self["DeadTime"]):
+	    return 1
+
 	self.log ("Warn: Start failed for node %s" %(node))
         return None
 

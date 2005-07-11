@@ -494,7 +494,7 @@ if __name__ == '__main__':
     XmitLoss = "0.0"
     RecvLoss = "0.0"
     IPBase = "127.0.0.10"
-    SuppressCib = 0
+    SuppressCib = 1
     #
     # The values of the rest of the parameters are now properly derived from
     # the configuration files.
@@ -543,7 +543,7 @@ if __name__ == '__main__':
                DoStonith=0
            else:
                usage(args[i+1])
-       elif args[i] == "--suppress_cib_writes":
+       elif args[i] == "--suppress-cib-writes":
            skipthis=1
            if args[i+1] == "1" or args[i+1] == "yes":
                SuppressCib=1

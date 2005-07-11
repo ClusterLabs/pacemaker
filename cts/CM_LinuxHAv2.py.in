@@ -49,14 +49,14 @@ class LinuxHAv2(HeartbeatCM):
     def __init__(self, Environment, randseed=None):
         HeartbeatCM.__init__(self, Environment, randseed=randseed)
         
-	self.cluster_monitor = 0
+        self.cluster_monitor = 0
         self.update({
             "Name"           : "linux-ha-v2",
             "DeadTime"       : 300,
             "StartTime"      : 300,        # Max time to start up
             "StableTime"     : 30,
-            "StartCmd"       : "@libdir@/heartbeat/ha_logd -d >/dev/null 2>&1; @libdir@/heartbeat/heartbeat >/dev/null 2>&1",
-            "StopCmd"        : "@libdir@/heartbeat/heartbeat -k",
+            "StartCmd"       : "/etc/init.d/heartbeat start > /dev/null 2>&1",
+            "StopCmd"        : "/etc/init.d/heartbeat stop  > /dev/null 2>&1",
             "ElectionCmd"    : "@libdir@/heartbeat/crmadmin -E %s",
             "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null",
             "EpocheCmd"      : "@libdir@/heartbeat/ccm_tool -e",
@@ -76,13 +76,13 @@ class LinuxHAv2(HeartbeatCM):
 
             # Patterns to look for in the log files for various occasions...
             "Pat:DC_IDLE"      : "crmd:.*State transition.*-> S_IDLE",
-	    
-	    # This wont work if we have multiple partitions
+            
+            # This wont work if we have multiple partitions
             # Use: "Pat:They_started" : "%s crmd:.*State transition.*-> S_NOT_DC",
-	    "Pat:They_started" : "Updating node state to member for %s",
+            "Pat:They_started" : "Updating node state to member for %s",
             "Pat:We_started"   : "%s crmd:.*State transition.*-> S_IDLE",
             "Pat:We_stopped"   : "%s heartbeat.*Heartbeat shutdown complete",
-	    "Pat:They_stopped" : "%s crmd:.*LOST:.* %s ",
+            "Pat:They_stopped" : "%s crmd:.*LOST:.* %s ",
             "Pat:All_stopped"  : "%s .*heartbeat.*Heartbeat shutdown complete",
             "Pat:They_dead"    : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
@@ -104,7 +104,7 @@ class LinuxHAv2(HeartbeatCM):
                 r"tengine:.*is taking more than 2x its timeout",
                 r"Confirm not received from",
                 r"Welcome reply not received from",
-		r"Attempting to schedule .* after a stop"
+                r"Attempting to schedule .* after a stop"
                 r"ERROR:",
                 r"CRIT:",
             ),
@@ -117,10 +117,12 @@ class LinuxHAv2(HeartbeatCM):
 <cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
    <configuration>
      <crm_config>'''
-        cib_options='''
+        cib_options="""
         <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="120s"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
-        <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>'''
+        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="%d"/>
+        <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>""" % self.Env["SuppressCib"]
+            
         cib_glue_1='''
      </crm_config>
      <nodes/>
@@ -150,8 +152,8 @@ class LinuxHAv2(HeartbeatCM):
            </attributes>
          </instance_attributes>
        </primitive>''' % self.Env["IPBase"]
-	    if self.cluster_monitor == 1:
-		resources=resources+'''
+            if self.cluster_monitor == 1:
+                resources=resources+'''
        <primitive id="cluster_mon" class="ocf" type="ClusterMon" provider="heartbeat" is_managed="1">
          <operations>
            <op id="1" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
@@ -170,14 +172,14 @@ class LinuxHAv2(HeartbeatCM):
             constraints='''
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
         <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
-          <expression attribute="#is_dc" operation="eq" value="false"/>
+          <expression id="dc_ip_expr" attribute="#is_dc" operation="eq" value="false"/>
         </rule>
       </rsc_location>'''
-	    if self.cluster_monitor == 1:
-		constraints=constraints+'''
+            if self.cluster_monitor == 1:
+                constraints=constraints+'''
       <rsc_location id="run_cluster_mon" rsc="cluster_mon">
         <rule id="cant_run_cluster_mon" score="-INFINITY" boolean_op="and">
-          <expression attribute="#is_dc" operation="eq" value="false"/>
+          <expression id="mon_expr" attribute="#is_dc" operation="eq" value="false"/>
         </rule>
       </rsc_location>'''
             fields = string.split(self.Env["IPBase"], '.')
@@ -200,16 +202,16 @@ class LinuxHAv2(HeartbeatCM):
                 node_constraint=("""
       <rsc_location id="run_%s" rsc="%s">
         <rule id="pref_run_%s" score="100" boolean_op="and">
-          <expression attribute="#uname" operation="eq" value="%s"/>
+          <expression id="%s_loc_expr" attribute="#uname" operation="eq" value="%s"/>
         </rule>
-      </rsc_location>""" % ("rsc_"+node, "rsc_"+node, "rsc_"+node, node))
+      </rsc_location>""" % ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node))
                 constraints = constraints + node_constraint
             
-	    # always add the fencing resource so that we test incarnations
-	    nodelist = ""
-	    for node in self.Env["nodes"]:
-		nodelist += node + " "
-	    stonith_resource=("""
+            # always add the fencing resource so that we test incarnations
+            nodelist = ""
+            for node in self.Env["nodes"]:
+                nodelist += node + " "
+            stonith_resource=("""
        <clone id="DoFencing">
          <instance_attributes>
            <attributes>
@@ -220,7 +222,7 @@ class LinuxHAv2(HeartbeatCM):
          <primitive id="child_DoFencing" class="stonith" type="ssh">
            <operations>
              <op id="1" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
-	     <op id="2" name="start" timeout="20s" prereq="nothing"/>
+             <op id="2" name="start" timeout="20s" prereq="nothing"/>
            </operations>
            <instance_attributes>
              <attributes>
@@ -229,19 +231,12 @@ class LinuxHAv2(HeartbeatCM):
            </instance_attributes>
          </primitive>
        </clone>""" %(len(self.Env["nodes"]), nodelist))
-	    resources = resources + stonith_resource
+            resources = resources + stonith_resource
 
             if self.Env["DoFencing"] == 1:
                 cib_options=cib_options + '''
         <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>'''
 
-            if self.Env["SuppressCib"] == 1:
-                cib_options=cib_options + '''
-        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>'''
-            else :
-                cib_options=cib_options + '''
-        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="false"/>'''
-            
         self.default_cts_cib=cib_prefix + cib_options + cib_glue_1 + \
                resources + cib_glue_2 + constraints + cib_suffix
         self.debug(self.default_cts_cib)
@@ -252,7 +247,7 @@ class LinuxHAv2(HeartbeatCM):
         '''Return list of errors which are known and very noisey should be ignored'''
         if 1:
             return [ 
-		"crmadmin:"
+                "crmadmin:"
                 ]
         return []
 
@@ -278,99 +273,99 @@ class LinuxHAv2(HeartbeatCM):
         '''Finish the Initialization process. Prepare to test...'''
 
         for node in self.Env["nodes"]:
-	    self.ShouldBeStatus[node] = ""
-	    self.StataCM(node)
+            self.ShouldBeStatus[node] = ""
+            self.StataCM(node)
 
     def test_node_CM(self, node):
         '''Report the status of the cluster manager on a given node'''
 
-	watchpats = [ ]
-	watchpats.append("Current state: (S_IDLE|S_NOT_DC)")
-	watchpats.append(self["Pat:They_started"]%node)
-	idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats)
-	idle_watch.setwatch()
+        watchpats = [ ]
+        watchpats.append("Current state: (S_IDLE|S_NOT_DC)")
+        watchpats.append(self["Pat:They_started"]%node)
+        idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats)
+        idle_watch.setwatch()
 
         out=self.rsh.readaline(node, self["StatusCmd"]%node)
         ret= (string.find(out, 'ok') != -1)
-	self.debug("Node %s status: %s" %(node, out))	    
+        self.debug("Node %s status: %s" %(node, out))            
 
-	if not ret:
-	    if self.ShouldBeStatus[node] == self["up"]:
-		self.log(
-		    "Node status for %s is %s but we think it should be %s"
-		    %(node, self["down"], self.ShouldBeStatus[node]))
-	    self.ShouldBeStatus[node]=self["down"]
-	    return 0
+        if not ret:
+            if self.ShouldBeStatus[node] == self["up"]:
+                self.log(
+                    "Node status for %s is %s but we think it should be %s"
+                    %(node, self["down"], self.ShouldBeStatus[node]))
+            self.ShouldBeStatus[node]=self["down"]
+            return 0
 
-	if self.ShouldBeStatus[node] == self["down"]:
-	    self.log(
-		"Node status for %s is %s but we think it should be %s: %s"
-		%(node, self["up"], self.ShouldBeStatus[node], out))
+        if self.ShouldBeStatus[node] == self["down"]:
+            self.log(
+                "Node status for %s is %s but we think it should be %s: %s"
+                %(node, self["up"], self.ShouldBeStatus[node], out))
 
-	self.ShouldBeStatus[node]=self["up"]
+        self.ShouldBeStatus[node]=self["up"]
 
-	# check the output first - because syslog-ng looses messages
-	if string.find(out, 'S_NOT_DC') != -1:
-	    # Up and stable
-	    return 2
-	if string.find(out, 'S_IDLE') != -1:
-	    # Up and stable
-	    return 2
+        # check the output first - because syslog-ng looses messages
+        if string.find(out, 'S_NOT_DC') != -1:
+            # Up and stable
+            return 2
+        if string.find(out, 'S_IDLE') != -1:
+            # Up and stable
+            return 2
 
-	# fall back to syslog-ng and wait
-	if not idle_watch.look():
-	    # just up
-	    self.debug("Warn: Node %s is unstable: %s" %(node, out))
-	    return 1
+        # fall back to syslog-ng and wait
+        if not idle_watch.look():
+            # just up
+            self.debug("Warn: Node %s is unstable: %s" %(node, out))
+            return 1
 
-	# Up and stable
-	return 2
+        # Up and stable
+        return 2
 
     # Is the node up or is the node down
     def StataCM(self, node):
         '''Report the status of the cluster manager on a given node'''
 
-	if self.test_node_CM(node) > 0:
-	    return 1
-	return None
+        if self.test_node_CM(node) > 0:
+            return 1
+        return None
 
     # Being up and being stable is not the same question...
     def node_stable(self, node):
         '''Report the status of the cluster manager on a given node'''
 
-	if self.test_node_CM(node) == 2:
-	    return 1
-	self.log("Warn: Node %s not stable" %(node)) 
-	return None
+        if self.test_node_CM(node) == 2:
+            return 1
+        self.log("Warn: Node %s not stable" %(node)) 
+        return None
 
     def cluster_stable(self, timeout=None):
-	watchpats = [ ]
-	watchpats.append("Current state: S_IDLE")
-	watchpats.append(self["Pat:DC_IDLE"])
+        watchpats = [ ]
+        watchpats.append("Current state: S_IDLE")
+        watchpats.append(self["Pat:DC_IDLE"])
 
-	if timeout == None:
-	    timeout = self["DeadTime"]
+        if timeout == None:
+            timeout = self["DeadTime"]
 
-	idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats, timeout)
-	idle_watch.setwatch()
+        idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats, timeout)
+        idle_watch.setwatch()
 
-	any_up = 0
-	for node in self.Env["nodes"]:
-	    # have each node dump its current state
-	    if self.ShouldBeStatus[node] == self["up"]:
-		self.rsh.readaline(node, (self["StatusCmd"] %node) )
-		any_up = 1
+        any_up = 0
+        for node in self.Env["nodes"]:
+            # have each node dump its current state
+            if self.ShouldBeStatus[node] == self["up"]:
+                self.rsh.readaline(node, (self["StatusCmd"] %node) )
+                any_up = 1
 
-	if any_up == 0 or idle_watch.look():
-	    return 1
+        if any_up == 0 or idle_watch.look():
+            return 1
 
-	self.log("Warn: Cluster Master not IDLE") 
-	return None
+        self.log("Warn: Cluster Master not IDLE") 
+        return None
 
     def is_node_dc(self, node, status_line=None):
         rc = 0
-	if not status_line: 
-	    status_line = self.rsh.readaline(node, self["StatusCmd"]%node)
+        if not status_line: 
+            status_line = self.rsh.readaline(node, self["StatusCmd"]%node)
 
         if not status_line:
             rc = 0
@@ -385,9 +380,9 @@ class LinuxHAv2(HeartbeatCM):
         elif string.find(status_line, 'S_TRANSITION_ENGINE') != -1: 
             rc = 1
 
-	if rc == 1:
-	    self.debug("%s _is_ the DC" % node)
-	    
+        if rc == 1:
+            self.debug("%s _is_ the DC" % node)
+            
         return rc
 
     def isolate_node(self, node, allowlist):
@@ -505,6 +500,7 @@ class LinuxHAv2(HeartbeatCM):
     def NodeUUID(self, node):
         lines = self.rsh.readlines(node, self["UUIDQueryCmd"])
         for line in lines:
+            self.debug("UUIDLine:"+ line) 
             m = re.search(r'%s.+\((.+)\)' % node, line)
             if m:   
                 return m.group(1)
@@ -589,20 +585,20 @@ class HAResource(Resource):
             value=nvpair.getAttribute('value')
             self.rparameters[name]=value
 
-	# This should normally be called first... FIXME!
+        # This should normally be called first... FIXME!
         Resource.__init__(self, cm, self.rtype, self.rid)
         
-	# resources that dont need quorum will have:
-	#	<op name="start" prereq="nothing"/>
-	ops = node.getElementsByTagName('op')
+        # resources that dont need quorum will have:
+        #        <op name="start" prereq="nothing"/>
+        ops = node.getElementsByTagName('op')
         for op in ops:
-	    if op.getAttribute('name') == "start" and op.getAttribute('prereq') == "nothing":
-		self.needs_quorum = 0
+            if op.getAttribute('name') == "start" and op.getAttribute('prereq') == "nothing":
+                self.needs_quorum = 0
 
-	if self.needs_quorum == 0:
-	    self.CM.debug("Resource %s does not need quorum" % self.rid)
-	else:
-	    self.CM.debug("Resource %s DOES need quorum" % self.rid)
+        if self.needs_quorum == 0:
+            self.CM.debug("Resource %s does not need quorum" % self.rid)
+#        else:
+#            self.CM.debug("Resource %s DOES need quorum" % self.rid)
 
     def IsRunningOn(self, nodename):
         '''

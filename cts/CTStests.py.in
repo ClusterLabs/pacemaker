@@ -298,19 +298,19 @@ class StopTest(CTSTest):
         if self.CM.ShouldBeStatus[node] != self.CM["up"]:
             return self.skipped()
 
-	patterns = []
-	# Technically we should always be able to notice ourselves stopping
-	patterns.append(self.CM["Pat:We_stopped"] % node)
+        patterns = []
+        # Technically we should always be able to notice ourselves stopping
+        patterns.append(self.CM["Pat:We_stopped"] % node)
 
-	# Any active node needs to notice this one left
-	# NOTE: This wont work if we have multiple partitions
-	for other in self.CM.Env["nodes"]:
-	    if self.CM.ShouldBeStatus[other] == self.CM["up"] and other != node:
-		patterns.append(self.CM["Pat:They_stopped"] %(other, node))
-		#self.debug("Checking %s will notice %s left"%(other, node))
-		
+        # Any active node needs to notice this one left
+        # NOTE: This wont work if we have multiple partitions
+        for other in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[other] == self.CM["up"] and other != node:
+                patterns.append(self.CM["Pat:They_stopped"] %(other, node))
+                #self.debug("Checking %s will notice %s left"%(other, node))
+                
         watch = CTS.LogWatcher(
-	    self.CM["LogFileName"], patterns, self.CM["DeadTime"])
+            self.CM["LogFileName"], patterns, self.CM["DeadTime"])
         watch.setwatch()
 
         if node == self.CM.OurNode:
@@ -322,7 +322,7 @@ class StopTest(CTSTest):
                 self.incr("them")
 
         self.CM.StopaCM(node)
-	watch_result = watch.lookforall()
+        watch_result = watch.lookforall()
 
         UnmatchedList = "||"
         if watch.unmatched:
@@ -330,16 +330,16 @@ class StopTest(CTSTest):
                 self.CM.log ("Warn: Shutdown pattern not found: %s" % (regex))
                 UnmatchedList +=  regex + "||";
 
-	self.CM.cluster_stable(self.CM["DeadTime"])
+        self.CM.cluster_stable(self.CM["DeadTime"])
 
-	# because syslog looses so many messages we can only really fail 
-	#  the stop if _none_ of the CCM peers notice the node leave
-	if not watch.unmatched or self.CM.upcount() == 0:
-	    return self.success()
-	elif len(watch.unmatched) >= self.CM.upcount():
+        # because syslog looses so many messages we can only really fail 
+        #  the stop if _none_ of the CCM peers notice the node leave
+        if not watch.unmatched or self.CM.upcount() == 0:
+            return self.success()
+        elif len(watch.unmatched) >= self.CM.upcount():
             return self.failure("no match against (%s)" % UnmatchedList)
 
-	return self.success()
+        return self.success()
 #
 # We don't register StopTest because it's better when called by
 # another test...
@@ -367,11 +367,11 @@ class StartTest(CTSTest):
 
         if self.CM.ShouldBeStatus[node] != self.CM["down"]:
             return self.skipped()
-	elif self.CM.StartaCM(node):
+        elif self.CM.StartaCM(node):
             return self.success()
         else:
-	    return self.failure("Startup %s on node %s failed"
-				%(self.CM["Name"], node))
+            return self.failure("Startup %s on node %s failed"
+                                %(self.CM["Name"], node))
 
     def is_applicable(self):
         '''StartTest is always applicable'''
@@ -439,19 +439,15 @@ class RestartTest(CTSTest):
         self.incr("node:" + node)
         
         ret1 = 1
-        if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+        if self.CM.StataCM(node):
             self.incr("WasStopped")
-            ret1 = self.start(node)
+            if not self.start(node):
+		return self.failure("start (setup) failure: "+node)
 
         self.starttime=time.time()
-        ret2 = self.stop(node)
-        ret3 = self.start(node)
-
-        if not ret1:
-            return self.failure("start (setup) failure: "+node)
-        if not ret2 and not ret3:
+        if not self.stop(node):
             return self.failure("stop failure: "+node)
-        if not ret3:
+	if not self.start(node):
             return self.failure("start failure: "+node)
         return self.success()
 
@@ -486,27 +482,35 @@ class StonithTest(CTSTest):
     def __call__(self, node):
         '''Perform the 'stonith' test. (whack the node)'''
         self.incr("calls")
-        stopwatch = None
+        stopwatch = 0
+        rc = 0
 
+        # Figure out what log message to look for when/if it goes down
+        #
+        # Any active node needs to notice this one left
+        # NOTE: This wont work if we have multiple partitions
+        stop_patterns = []
+        for other in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[other] == self.CM["up"] and other != node:
+                stop_patterns.append(self.CM["Pat:They_stopped"] %(other, node))
+                stopwatch = 1
+                #self.debug("Checking %s will notice %s left"%(other, node))
 
-        #        Figure out what log message to look for when/if it goes down
-
-        if self.CM.ShouldBeStatus[node] != self.CM["down"]:
-            if self.CM.upcount() > 1:
-                stopwatch = (self.theystopped % node)
+        if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+            # actually no-one will notice this node die since HA isnt running
+            stopwatch = 0
 
         #        Figure out what log message to look for when it comes up
-
         if self.CM.upcount() == 1 and self.CM.ShouldBeStatus[node] == self.CM["up"]:
-	    uppat = (self.usstart % node)
+            uppat = (self.usstart % node)
         else:
             uppat = (self.themstart % node)
 
         upwatch = CTS.LogWatcher(self.CM["LogFileName"], [uppat]
         ,        timeout=self.timeout)
 
-        if stopwatch:
-            watch = CTS.LogWatcher(self.CM["LogFileName"], [stopwatch]
+        if stopwatch == 1:
+            watch = CTS.LogWatcher(self.CM["LogFileName"], stop_patterns
             ,        timeout=self.CM["DeadTime"]+10)
             watch.setwatch()
 
@@ -520,35 +524,46 @@ class StonithTest(CTSTest):
         upwatch.setwatch()
 
         #        Look() and see if the machine went down
+        if stopwatch == 0:
+            # Allow time for the node to die
+            sleep(self.CM["DeadTime"]+10)
+        elif not watch.lookforall():
+            if watch.unmatched:
+                for regex in watch.unmatched:
+                    self.CM.log("Warn: STONITH pattern not found: %s"%regex)
+                # !!no-one!! saw this node die
+                if len(watch.unmatched) == len(stop_patterns):
+                    return self.failure("No-one saw %s die" %node)
+                # else: syslog* lost a message
 
-        if stopwatch:
-            if watch.look():
-                ret1=1
-            else:
-                reason="Did not find " + stopwatch
-                ret1=0
-        else:
-            ret1=1
+        # Alas I dont think this check is plausable (beekhof)
+        #
+        # Check it really stopped...
+        #self.CM.ShouldBeStatus[node] = self.CM["down"]
+        #if self.CM.StataCM(node) == 1:
+        #    ret1=0
 
         #        Look() and see if the machine came back up
-
+        rc=0
         if upwatch.look():
-            ret2=1
+            self.CM.debug("Startup pattern found: %s" %uppat)
+            rc=1
         else:
-            reason="Did not find " + uppat
-            ret2=0
+            self.CM.log("Warn: Startup pattern not found: %s" %uppat)
 
+        # Check it really started...
         self.CM.ShouldBeStatus[node] = self.CM["up"]
+        if rc == 0 and self.CM.StataCM(node) == 1:
+            rc=1
 
+        # wait for the cluster to stabilize
         self.CM.cluster_stable()
 
-        if not ret1:
-            self.CM.log("When node %s STONITHed, the other node didn't log it" % node)
-
-        if ret1 and ret2:
-            return self.success()
+        # return case processing
+        if rc == 0:
+            return self.failure("Node %s did not restart" %node)
         else:
-            return self.failure(reason)
+            return self.success()
 
     def is_applicable(self):
         '''StonithTest is applicable unless suppressed by CM.Env["DoStonith"] == FALSE'''
@@ -610,7 +625,7 @@ class StonithdTest(StonithTest):
         return 1
            
 
-AllTestClasses.append(StonithdTest)
+#AllTestClasses.append(StonithdTest)
 
 ###################################################################
 class IPaddrtest(CTSTest):
@@ -683,12 +698,12 @@ class StartOnebyOne(CTSTest):
         self.starttime=time.time()
         for node in self.CM.Env["nodes"]:
             if not self.start(node):
-		failed.append(node)
+                failed.append(node)
 
         if len(failed) > 0:
             return self.failure("Some node failed to start: " + repr(failed))
 
-	return self.success()
+        return self.success()
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
@@ -722,10 +737,10 @@ class SimulStart(CTSTest):
         if not ret:
             return self.failure("Setup failed")
          
-	if not self.startall(None):
+        if not self.startall(None):
             return self.failure("Startall failed")
 
-	return self.success()
+        return self.success()
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
@@ -758,10 +773,10 @@ class SimulStop(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-	if not self.stopall(None):
+        if not self.stopall(None):
             return self.failure("Stopall failed")
 
-	return self.success()
+        return self.success()
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
@@ -798,7 +813,7 @@ class StopOnebyOne(CTSTest):
         self.starttime=time.time()
         for node in self.CM.Env["nodes"]:
             if not self.stop(node):
-		failed.append(node)
+                failed.append(node)
 
         if len(failed) > 0:
             return self.failure("Some node failed to stop: " + repr(failed))
@@ -840,7 +855,7 @@ class RestartOnebyOne(CTSTest):
 
         if did_fail:
             return self.failure("Could not restart %d nodes: %s" 
-				%(len(did_fail), repr(did_fail)))
+                                %(len(did_fail), repr(did_fail)))
         return self.success()
 
     def is_applicable(self):
@@ -1545,7 +1560,7 @@ class ResourceRecover(CTSTest):
         if len(recovernode)==1:
             self.CM.debug("Recovered: %s is running on %s" 
                           %(label, recovernode[0]))
-	    self.CM.cluster_stable()
+            self.CM.cluster_stable()
             return self.success()
         elif len(recovernode)==0:
             return self.failure("%s was not recovered and is inactive" %(label))
@@ -1602,26 +1617,26 @@ class ComponentFail(CTSTest):
         component = self.CM.Env.RandomGen.choice(self.complist)
         self.CM.debug("choose %s to kill"%component.name)
         patterns = []
-	patterns.append("%s heartbeat.*Respawning.*%s" %(node, component.name))
+        patterns.append("%s heartbeat.*Respawning.*%s" %(node, component.name))
         patterns.append(self.theystart%node)
         
         # set the watch for stable
         watch = CTS.LogWatcher(
-	    self.CM["LogFileName"], patterns, self.CM["DeadTime"]+10)
+            self.CM["LogFileName"], patterns, self.CM["DeadTime"]+10)
         watch.setwatch()
         
         # kill the component
         component.kill(node)
         # check to see Heartbeat noticed
-	match = watch.look()
+        match = watch.look()
         if match:
-	    self.CM.log("Found match: %s"%(match))
+            self.CM.log("Found match: %s"%(match))
 
-	    # now watch it recover...
-	    if self.CM.cluster_stable():
-		return self.success()
-	    else:
-		self.failure("Cluster not stable")
+            # now watch it recover...
+            if self.CM.cluster_stable():
+                return self.success()
+            else:
+                self.failure("Cluster not stable")
         else:
             return self.failure("Heartbeat didnt notice %s die" %component)
 
@@ -1760,113 +1775,113 @@ class MemoryTest(CTSTest):
 #        self.test = ElectionMemoryTest(cm)
         self.test = ResourceRecover(cm)
         self.startall = SimulStartLite(cm)
-	self.before = {}
-	self.after = {}
+        self.before = {}
+        self.after = {}
 
     def __call__(self, node):
-	ps_command='''ps -eo ucomm,pid,pmem,tsiz,dsiz,rss,vsize | grep -e ccm -e ha_logd -e cib -e crmd -e lrmd -e tengine -e pengine'''
+        ps_command='''ps -eo ucomm,pid,pmem,tsiz,dsiz,rss,vsize | grep -e ccm -e ha_logd -e cib -e crmd -e lrmd -e tengine -e pengine'''
 
-	memory_error = [ 
-	    "", "", "", 
-	    "Code", 
-	    "Data", 
-	    "Resident", 
-	    "Total" 
-	    ]
-	
+        memory_error = [ 
+            "", "", "", 
+            "Code", 
+            "Data", 
+            "Resident", 
+            "Total" 
+            ]
+        
         ret = self.startall(None)
         if not ret:
             return self.failure("Test setup failed")
 
-	time.sleep(10)  
+        time.sleep(10)  
 
-	for node in self.CM.Env["nodes"]:
-	    self.before[node] = {}
-	    rsh_pipe = self.CM.rsh.popen(node, ps_command)
-	    rsh_pipe.tochild.close()
-	    result = rsh_pipe.fromchild.readline()
-	    while result:
-		tokens = result.split()
-		self.before[node][tokens[1]] = result
-		result = rsh_pipe.fromchild.readline()
-	    rsh_pipe.fromchild.close()
-	    self.lastrc = rsh_pipe.wait()
+        for node in self.CM.Env["nodes"]:
+            self.before[node] = {}
+            rsh_pipe = self.CM.rsh.popen(node, ps_command)
+            rsh_pipe.tochild.close()
+            result = rsh_pipe.fromchild.readline()
+            while result:
+                tokens = result.split()
+                self.before[node][tokens[1]] = result
+                result = rsh_pipe.fromchild.readline()
+            rsh_pipe.fromchild.close()
+            self.lastrc = rsh_pipe.wait()
 
-	# do something...
-	if not self.test(node):
-	    return self.failure("Underlying test failed")
+        # do something...
+        if not self.test(node):
+            return self.failure("Underlying test failed")
 
-	time.sleep(10)  
+        time.sleep(10)  
 
-	for node in self.CM.Env["nodes"]:
-	    self.after[node] = {}
-	    rsh_pipe = self.CM.rsh.popen(node, ps_command)
-	    rsh_pipe.tochild.close()
-	    result = rsh_pipe.fromchild.readline()
-	    while result:
-		tokens = result.split()
-		self.after[node][tokens[1]] = result
-		result = rsh_pipe.fromchild.readline()
-	    rsh_pipe.fromchild.close()
-	    self.lastrc = rsh_pipe.wait()
+        for node in self.CM.Env["nodes"]:
+            self.after[node] = {}
+            rsh_pipe = self.CM.rsh.popen(node, ps_command)
+            rsh_pipe.tochild.close()
+            result = rsh_pipe.fromchild.readline()
+            while result:
+                tokens = result.split()
+                self.after[node][tokens[1]] = result
+                result = rsh_pipe.fromchild.readline()
+            rsh_pipe.fromchild.close()
+            self.lastrc = rsh_pipe.wait()
 
-	failed_nodes = []
-	for node in self.CM.Env["nodes"]:
-	    failed = 0
-	    for process in self.before[node]:
-		messages = []
-		before_line = self.before[node][process]
-		after_line = self.after[node][process]
+        failed_nodes = []
+        for node in self.CM.Env["nodes"]:
+            failed = 0
+            for process in self.before[node]:
+                messages = []
+                before_line = self.before[node][process]
+                after_line = self.after[node][process]
 
-		if not after_line:
-		    self.CM.log("%s %s[%s] exited during the test"
-			      %(node, before_tokens[0], before_tokens[1]))
-		    continue
+                if not after_line:
+                    self.CM.log("%s %s[%s] exited during the test"
+                              %(node, before_tokens[0], before_tokens[1]))
+                    continue
 
-		before_tokens = before_line.split()
-		after_tokens = after_line.split()
-		
-		# 3 : Code size
-		# 4 : Data size
-		# 5 : Resident size
-		# 6 : Total size
-		for index in [ 3, 4, 6 ]:
-		    mem_before = int(before_tokens[index])
-		    mem_after  = int(after_tokens[index])
-		    mem_diff   = mem_after - mem_before
-		    mem_allow  = mem_before * 0.01
-		    
-		    # for now...
-		    mem_allow  = 0
+                before_tokens = before_line.split()
+                after_tokens = after_line.split()
+                
+                # 3 : Code size
+                # 4 : Data size
+                # 5 : Resident size
+                # 6 : Total size
+                for index in [ 3, 4, 6 ]:
+                    mem_before = int(before_tokens[index])
+                    mem_after  = int(after_tokens[index])
+                    mem_diff   = mem_after - mem_before
+                    mem_allow  = mem_before * 0.01
+                    
+                    # for now...
+                    mem_allow  = 0
 
-		    if mem_diff > mem_allow:
-			failed = 1
-			messages.append("%s size grew by %dkB (%dkB)"
-					%(memory_error[index], mem_diff, mem_after))
-		    elif mem_diff < 0:
-			messages.append("%s size shrank by %dkB (%dkB)"
-					%(memory_error[index], mem_diff, mem_after))
+                    if mem_diff > mem_allow:
+                        failed = 1
+                        messages.append("%s size grew by %dkB (%dkB)"
+                                        %(memory_error[index], mem_diff, mem_after))
+                    elif mem_diff < 0:
+                        messages.append("%s size shrank by %dkB (%dkB)"
+                                        %(memory_error[index], mem_diff, mem_after))
 
-		if len(messages) > 0:
-		    self.CM.log("Process %s[%s] on %s: %s"
-				%(before_tokens[0], before_tokens[1], node,
-				  repr(messages)))
-		    self.CM.debug("%s Before: %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
-				  %(node, before_tokens[0], before_tokens[1],
-				    before_tokens[2], before_tokens[3], 
-				    before_tokens[4], before_tokens[5],
-				    before_tokens[6]))
-		    self.CM.debug("%s After:  %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
-				  %(node, after_tokens[0], after_tokens[1],
-				    after_tokens[2], after_tokens[3],
-				    after_tokens[4], after_tokens[5],
-				    after_tokens[6]))
-		    
-	    if failed == 1:
-		failed_nodes.append(node)
+                if len(messages) > 0:
+                    self.CM.log("Process %s[%s] on %s: %s"
+                                %(before_tokens[0], before_tokens[1], node,
+                                  repr(messages)))
+                    self.CM.debug("%s Before: %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
+                                  %(node, before_tokens[0], before_tokens[1],
+                                    before_tokens[2], before_tokens[3], 
+                                    before_tokens[4], before_tokens[5],
+                                    before_tokens[6]))
+                    self.CM.debug("%s After:  %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
+                                  %(node, after_tokens[0], after_tokens[1],
+                                    after_tokens[2], after_tokens[3],
+                                    after_tokens[4], after_tokens[5],
+                                    after_tokens[6]))
+                    
+            if failed == 1:
+                failed_nodes.append(node)
 
-	if len(failed_nodes) > 0:
-	    return self.failure("Memory leaked on: " + repr(failed_nodes))
+        if len(failed_nodes) > 0:
+            return self.failure("Memory leaked on: " + repr(failed_nodes))
 
         return self.success()
 
@@ -1893,17 +1908,17 @@ class ElectionMemoryTest(CTSTest):
     def __call__(self, node):
         self.rsh.readaline(node, self.CM["ElectionCmd"]%node)
 
-	if self.CM.cluster_stable():
-	    return self.success()
-	
-	return self.failure("Cluster not stable")
+        if self.CM.cluster_stable():
+            return self.success()
+        
+        return self.failure("Cluster not stable")
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return []
 
     def is_applicable(self):
-	'''Never applicable, only for use by the memory test'''
+        '''Never applicable, only for use by the memory test'''
         return 0
 
 AllTestClasses.append(ElectionMemoryTest)
@@ -1988,7 +2003,7 @@ class NearQuorumPointTest(CTSTest):
         for node in startset:
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 watchpats.append(self.CM["Pat:They_started"] % node)
-		
+                
         if len(watchpats) == 0:
             return self.skipped()
 
@@ -2008,10 +2023,10 @@ class NearQuorumPointTest(CTSTest):
         
         #get the result        
         if watch.lookforall():
-	    self.CM.cluster_stable()
+            self.CM.cluster_stable()
             return self.success()
 
-	self.CM.log("Warn: Patterns not found: " + repr(watch.unmatched))
+        self.CM.log("Warn: Patterns not found: " + repr(watch.unmatched))
         
         #get the "bad" nodes
         upnodes = []        
@@ -2025,7 +2040,7 @@ class NearQuorumPointTest(CTSTest):
                 downnodes.append(node)
 
         if upnodes == [] and downnodes == []:
-	    self.CM.cluster_stable()
+            self.CM.cluster_stable()
             return self.success()
 
         if len(upnodes) > 0:
@@ -2069,7 +2084,7 @@ class SimulStopLite(CTSTest):
     def __call__(self, dummy):
         '''Perform the 'SimulStopLite' setup work. '''
         self.incr("calls")
-	self.CM.debug("Setup: " + self.name)
+        self.CM.debug("Setup: " + self.name)
 
         #     We ignore the "node" parameter...
         watchpats = [ ]
@@ -2096,7 +2111,7 @@ class SimulStopLite(CTSTest):
             return self.success()
 
         did_fail=0
-	up_nodes = []
+        up_nodes = []
         for node in self.CM.Env["nodes"]:
             if self.CM.StataCM(node) == 1:
                 did_fail=1
@@ -2120,11 +2135,11 @@ class SimulStartLite(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name="SimulStartLite"
-
+	
     def __call__(self, dummy):
         '''Perform the 'SimulStartList' setup work. '''
         self.incr("calls")
-	self.CM.debug("Setup: " + self.name)
+        self.CM.debug("Setup: " + self.name)
         #        We ignore the "node" parameter...
         watchpats = [ ]
 
@@ -2147,29 +2162,29 @@ class SimulStartLite(CTSTest):
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 self.CM.StartaCMnoBlock(node)
         if watch.lookforall():
-	    if self.CM.cluster_stable():
+            if self.CM.cluster_stable():
                 return self.success()
             return self.failure("Cluster did not stablize") 
                 
         did_fail=0
-	unstable = []
+        unstable = []
         for node in self.CM.Env["nodes"]:
             if self.CM.StataCM(node) == 0:
                 did_fail=1
-		unstable.append(node)
+                unstable.append(node)
                 
         if did_fail:
             return self.failure("Unstarted nodes exist: " + repr(unstable))
 
-	unstable = []
+        unstable = []
         for node in self.CM.Env["nodes"]:
-	    if not self.CM.node_stable(node):
+            if not self.CM.node_stable(node):
                 did_fail=1
-		unstable.append(node)
+                unstable.append(node)
 
         if did_fail:
             return self.failure("Unstable cluster nodes exist: " 
-				+ repr(unstable))
+                                + repr(unstable))
 
         self.CM.log("Warn: All nodes started but CTS didnt detect: " 
                     + repr(watch.unmatched))
