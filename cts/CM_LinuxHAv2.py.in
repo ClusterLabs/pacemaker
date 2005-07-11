@@ -509,12 +509,15 @@ class LinuxHAv2(HeartbeatCM):
 
         lines = self.rsh.readlines(node, check_cib_cmd);
         if not lines:
+            self.log("failed to get the CIB segment")
             return ""
         
         cib_data = "".join(lines)
+        self.debug(cib_data)
         try:
             cib = parseString(cib_data)
         except xml.parsers.expat.ExpatError:
+            self.log("the CIB format error")
             return "" 
 
         standby_status = "off"
