@@ -120,7 +120,6 @@ class LinuxHAv2(HeartbeatCM):
         cib_options='''
         <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="120s"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
-        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="false"/>
         <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>'''
         cib_glue_1='''
      </crm_config>
@@ -234,7 +233,11 @@ class LinuxHAv2(HeartbeatCM):
 
             if self.Env["DoFencing"] == 1:
                 cib_options=cib_options + '''
-        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>'''
+        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
+        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>'''
+            else :
+                cib_options=cib_options + '''
+        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="false"/>'''
             
         self.default_cts_cib=cib_prefix + cib_options + cib_glue_1 + \
                resources + cib_glue_2 + constraints + cib_suffix
