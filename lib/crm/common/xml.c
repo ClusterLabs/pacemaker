@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.23 2005/07/07 06:40:54 andrew Exp $ */
+/* $Id: xml.c,v 1.24 2005/07/11 12:14:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -283,9 +283,12 @@ crm_xml_add(crm_data_t* node, const char *name, const char *value)
 		return NULL;
 		
 	} else {
+		const char *new_value = NULL;
 		crm_validate_data(node);
 		ha_msg_mod(node, name, value);
-		return crm_element_value(node, name);
+		new_value = crm_element_value(node, name);
+		CRM_DEV_ASSERT(cl_is_allocated(new_value));
+		return new_value;
 	}
 	
 	return NULL;
