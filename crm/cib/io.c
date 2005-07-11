@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.27 2005/07/06 13:25:09 andrew Exp $ */
+/* $Id: io.c,v 1.28 2005/07/11 12:13:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,8 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
+
+#include <cibprimatives.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -87,6 +89,9 @@ readCibXml(char *buffer)
 	if(buffer != NULL) {
 		root = string2xml(buffer);
 	}
+
+	do_id_check(root);
+	
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
 		root = createEmptyCib();
@@ -155,6 +160,8 @@ readCibXmlFile(const char *filename)
 		if(value == NULL) {
 			crm_xml_add(root, name, "0");
 		}
+
+		do_id_check(root);
 	}
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);

@@ -1,4 +1,4 @@
-/* $Id: cibprimatives.h,v 1.11 2005/06/13 11:54:53 andrew Exp $ */
+/* $Id: cibprimatives.h,v 1.12 2005/07/11 12:13:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,5 +76,6 @@ extern int add_cib_object   (crm_data_t *parent, crm_data_t *new_obj);
 extern int delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec);
 extern int update_cib_object(crm_data_t *parent, crm_data_t *new_obj);
 
+void do_id_check(crm_data_t *xml_obj);
 
 #endif

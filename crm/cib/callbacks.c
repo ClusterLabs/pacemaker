@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.74 2005/07/09 11:21:31 andrew Exp $ */
+/* $Id: callbacks.c,v 1.75 2005/07/11 12:13:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,6 +43,7 @@
 #include <cibio.h>
 #include <callbacks.h>
 #include <cibmessages.h>
+#include <cibprimatives.h>
 #include <notify.h>
 
 #include <crm/dmalloc_wrapper.h>
@@ -801,6 +802,8 @@ cib_process_command(const HA_Message *request, HA_Message **reply,
 		input_fragment = get_message_xml(request, F_CIB_UPDATE_DIFF);
 		if(global_update) {
 			call_options |= cib_force_diff;
+		} else {
+			do_id_check(input_fragment);
 		}
 		
 	} else if(rc == cib_ok && safe_str_eq(op, CIB_OP_SYNC)) {
@@ -828,6 +831,7 @@ cib_process_command(const HA_Message *request, HA_Message **reply,
 		rc = revision_check(input, current_cib, call_options);
 		if(rc == cib_ok) {
 			input = get_object_root(section, input);
+			do_id_check(input);
 		}
 	}
 	
