@@ -233,7 +233,10 @@ class LinuxHAv2(HeartbeatCM):
 
             if self.Env["DoFencing"] == 1:
                 cib_options=cib_options + '''
-        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
+        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>'''
+
+            if self.Env["SuppressCib"] == 1:
+                cib_options=cib_options + '''
         <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>'''
             else :
                 cib_options=cib_options + '''
