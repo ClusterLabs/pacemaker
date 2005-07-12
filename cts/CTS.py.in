@@ -455,7 +455,7 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus[node]=self["down"]
         return 1
 
-    def cluster_stable(self, timeout):
+    def cluster_stable(self, timeout = None):
         time.sleep(self["StableTime"])
         return 1
 
