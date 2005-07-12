@@ -104,7 +104,7 @@ class LinuxHAv2(HeartbeatCM):
                 r"tengine:.*is taking more than 2x its timeout",
                 r"Confirm not received from",
                 r"Welcome reply not received from",
-                r"Attempting to schedule .* after a stop"
+                r"Attempting to schedule .* after a stop",
                 r"ERROR:",
                 r"CRIT:",
             ),
