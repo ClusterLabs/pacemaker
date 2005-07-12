@@ -523,3 +523,53 @@ resolved.
 5. To automatically generate and install a sample CIB:
       add the -r and -c options to the above command
 
+--------------------------------------------------------------------------------
+How to configure OpenSSH for StonithdTest
+--------------------------------------------------------------------------------
+
+This configure enables cluster machines to ssh over to each other without a
+password challenge.
+
+1)	On each of the cluster machines, grab your key:
+
+	take the single line out of ~/.ssh/identity.pub
+	and put it into root's authorized_keys file.
+	[This has changed to: copying the line from ~/.ssh/id_dsa.pub into
+		root's authorized_keys file ]
+
+	NOTE: If you don't have an id_dsa.pub file, create it by running:
+
+		ssh-keygen -t dsa
+
+2)	Run this command on each of the cluster machines as root:
+
+ssh -v -l myid cluster_machine_1 cat /home/myid/.ssh/identity.pub \
+	>> ~root/.ssh/authorized_keys
+
+ssh -v -l myid cluster_machine_2 cat /home/myid/.ssh/identity.pub \
+	>> ~root/.ssh/authorized_keys
+
+......
+
+ssh -v -l myid cluster_machine_n cat /home/myid/.ssh/identity.pub \
+	>> ~root/.ssh/authorized_keys
+
+[For most people, this has changed to:
+  ssh -v -l myid cluster_machine cat /home/myid/.ssh/id_dsa.pub \
+	>> ~root/.ssh/authorized_keys
+]
+
+	You will probably have to provide your password, and possibly say
+	"yes" to some questions about accepting the identity of the
+	test machines
+
+To test this, try this command from any machine for each
+of other cluster machines, and for the machine itself.
+
+    ssh -l root cluster-machine
+
+This should work without prompting for a password,
+If not, you need to look at the ssh/openssh documentation and the output from
+the -v options above...
+
+
