@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.50 2005/07/08 20:55:20 andrew Exp $ */
+/* $Id: messages.c,v 1.51 2005/07/12 13:27:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,6 +45,8 @@
 #include <callbacks.h>
 
 #include <crm/dmalloc_wrapper.h>
+
+#define MAX_DIFF_RETRY 5
 
 extern const char *cib_our_uname;
 extern gboolean syncd_once;
@@ -307,7 +309,7 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 	return cib_ok;
 }
 
-gboolean sync_in_progress = FALSE;
+int sync_in_progress = 0;
 
 enum cib_errors 
 cib_process_diff(
@@ -337,7 +339,7 @@ cib_process_diff(
 
 	if(cib_is_master) {
 		/* the master is never waiting for a resync */
-		sync_in_progress = FALSE;
+		sync_in_progress = 0;
 	}
 	
 	cib_diff_version_details(
@@ -345,7 +347,14 @@ cib_process_diff(
 		&diff_add_admin_epoche, &diff_add_epoche, &diff_add_updates, 
 		&diff_del_admin_epoche, &diff_del_epoche, &diff_del_updates);
 
+	if(sync_in_progress > MAX_DIFF_RETRY) {
+		/* request another full-sync,
+		 * the last request may have been lost
+		 */
+		sync_in_progress = 0;
+	} 
 	if(sync_in_progress) {
+		sync_in_progress++;
 		crm_warn("Not applying diff %d.%d.%d -> %d.%d.%d (sync in progress)",
 			diff_del_admin_epoche,diff_del_epoche,diff_del_updates,
 			diff_add_admin_epoche,diff_add_epoche,diff_add_updates);
@@ -442,7 +451,7 @@ cib_process_diff(
 		*result_cib = NULL;
 		result = cib_diff_resync;
 		crm_info("Requesting re-sync from peer: %s", reason);
-		sync_in_progress = TRUE;
+		sync_in_progress++;
 		
 		ha_msg_add(sync_me, F_TYPE, "cib");
 		ha_msg_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
@@ -520,7 +529,7 @@ cib_process_replace(
 				 reason);
 			result = cib_old_data;
 		}
-		sync_in_progress = FALSE;
+		sync_in_progress = 0;
 		*result_cib = copy_xml(input);
 		
 	} else {
