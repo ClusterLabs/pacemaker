@@ -611,7 +611,6 @@ class StonithdTest(StonithTest):
             for reason in fail_reasons:
                 self.CM.log(reason)
 
-        self.CM.cluster_stable()
         return StonithWorked
         
     def is_applicable(self):
