@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.61 2005/07/07 14:50:35 andrew Exp $ */
+/* $Id: native.c,v 1.62 2005/07/13 15:44:24 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1191,10 +1191,10 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 		return;
 	}
 
-	if(node_rh->weight >= INFINITY && cons->weight == -INFINITY) {
+	if(node_rh->weight >= INFINITY && cons->weight <= -INFINITY) {
 		pe_err("Constraint %s mixes +/- INFINITY", cons->id);
 		
-	} else if(node_rh->weight <= -INFINITY && cons->weight == INFINITY) {
+	} else if(node_rh->weight <= -INFINITY && cons->weight >= INFINITY) {
 		pe_err("Constraint %s mixes +/- INFINITY", cons->id);
 	}
 
@@ -1208,13 +1208,13 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 		return;
 	}
 
-	if(cons->weight != INFINITY && cons->weight != -INFINITY) {
+	if(cons->weight >= INFINITY && cons->weight <= -INFINITY) {
 		crm_debug_3("Constraint %s (%f): node %s weight %f.",
 			    cons->id,
 			    cons->weight,
 			    node_rh->details->uname,
 			    node_rh->weight);
-	} else if(cons->weight == -INFINITY) {
+	} else if(cons->weight <= -INFINITY) {
 		crm_debug_3("Constraint %s (-INFINITY): node %s weight %f.",
 			    cons->id,
 			    node_rh->details->uname,

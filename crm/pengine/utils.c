@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.92 2005/07/07 19:16:05 andrew Exp $ */
+/* $Id: utils.c,v 1.93 2005/07/13 15:44:24 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1447,7 +1447,7 @@ merge_weights(float w1, float w2)
 	float result = w1 + w2;
 
 	if(w1 <= -INFINITY || w2 <= -INFINITY) {
-		if(w1 == INFINITY || w2 == INFINITY) {
+		if(w1 >= INFINITY || w2 >= INFINITY) {
 			pe_warn("-INFINITY + INFINITY == -INFINITY");
 		}
 		return -INFINITY;
