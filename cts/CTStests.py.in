@@ -300,7 +300,10 @@ class StopTest(CTSTest):
 
         patterns = []
         # Technically we should always be able to notice ourselves stopping
-        patterns.append(self.CM["Pat:We_stopped"] % node)
+	patterns.append(self.CM["Pat:We_stopped"] % node)
+
+	if self.CM.Env["use_logd"]:
+	    patterns.append(self.CM["Pat:Logd_stopped"] % node)
 
         # Any active node needs to notice this one left
         # NOTE: This wont work if we have multiple partitions
@@ -462,7 +465,7 @@ AllTestClasses.append(RestartTest)
 class StonithTest(CTSTest):
 ###################################################################
     '''Reboot a node by whacking it with stonith.'''
-    def __init__(self, cm, timeout=600):
+    def __init__(self, cm, timeout=900):
         CTSTest.__init__(self,cm)
         self.name="Stonith"
         self.theystopped  = self.CM["Pat:They_dead"]
@@ -2090,8 +2093,9 @@ class SimulStopLite(CTSTest):
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == self.CM["up"]:
                 self.incr("WasStarted")
-                pat = (self.CM["Pat:All_stopped"] % node)
-                watchpats.append(pat)
+                watchpats.append(self.CM["Pat:All_stopped"] % node)
+		if self.CM.Env["use_logd"]:
+		    watchpats.append(self.CM["Pat:Logd_stopped"] % node)
 
         if len(watchpats) == 0:
             return self.skipped()

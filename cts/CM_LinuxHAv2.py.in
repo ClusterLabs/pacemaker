@@ -82,6 +82,7 @@ class LinuxHAv2(HeartbeatCM):
             "Pat:They_started" : "Updating node state to member for %s",
             "Pat:We_started"   : "%s crmd:.*State transition.*-> S_IDLE",
             "Pat:We_stopped"   : "%s heartbeat.*Heartbeat shutdown complete",
+            "Pat:Logd_stopped" : "%s logd:.*Exiting write process",
             "Pat:They_stopped" : "%s crmd:.*LOST:.* %s ",
             "Pat:All_stopped"  : "%s .*heartbeat.*Heartbeat shutdown complete",
             "Pat:They_dead"    : "node %s.*: is dead",

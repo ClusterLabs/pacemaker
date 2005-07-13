@@ -74,6 +74,7 @@ class HeartbeatCM(ClusterManager):
             "Pat:We_started"       : " (%s) .* Initial resource acquisition complete",
             "Pat:They_started"     : " (%s) .* Initial resource acquisition complete",
             "Pat:We_stopped"       : "%s heartbeat.*Heartbeat shutdown complete",
+            "Pat:Logd_stopped"     : "%s logd:.*Exiting write process",
             "Pat:They_stopped"     : "%s heartbeat.*node (%s).*: is dead",
             "Pat:They_dead"        : "node (%s).*: is dead",
             "Pat:All_stopped"      : " (%s).*heartbeat.*Heartbeat shutdown complete",

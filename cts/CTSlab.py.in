@@ -613,6 +613,7 @@ if __name__ == '__main__':
     #
     config = CM_hb.HBConfig(HAdir)
     node_list = config.Parameters["node"]
+
     if LogFacility == None:
         if config.Parameters.has_key("logfacility"): 
             LogFacility = config.Parameters["logfacility"][0]
@@ -642,6 +643,9 @@ if __name__ == '__main__':
     Environment["RecvLoss"] = RecvLoss
     Environment["IPBase"] = IPBase
     Environment["SuppressCib"] = SuppressCib
+    Environment["use_logd"] = 0
+    if config.Parameters.has_key("use_logd"):
+	Environment["use_logd"] = 1
     
     if Version == 2:
         from CM_LinuxHAv2 import LinuxHAv2
