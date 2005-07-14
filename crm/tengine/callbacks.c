@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.39 2005/06/27 11:20:47 andrew Exp $ */
+/* $Id: callbacks.c,v 1.40 2005/07/14 13:27:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,12 +45,12 @@ te_update_diff(const char *event, HA_Message *msg)
 	const char *set_name = NULL;
 
 	int diff_add_updates = 0;
-	int diff_add_epoche  = 0;
-	int diff_add_admin_epoche = 0;
+	int diff_add_epoch  = 0;
+	int diff_add_admin_epoch = 0;
 
 	int diff_del_updates = 0;
-	int diff_del_epoche  = 0;
-	int diff_del_admin_epoche = 0;
+	int diff_del_epoch  = 0;
+	int diff_del_admin_epoch = 0;
 	
 	if(msg == NULL) {
 		crm_err("NULL update");
@@ -70,12 +70,12 @@ te_update_diff(const char *event, HA_Message *msg)
 
 	cib_diff_version_details(
 		diff,
-		&diff_add_admin_epoche, &diff_add_epoche, &diff_add_updates, 
-		&diff_del_admin_epoche, &diff_del_epoche, &diff_del_updates);
+		&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
+		&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 	
 	crm_debug("Processing diff (%s): %d.%d.%d -> %d.%d.%d", op,
-		  diff_del_admin_epoche,diff_del_epoche,diff_del_updates,
-		  diff_add_admin_epoche,diff_add_epoche,diff_add_updates);
+		  diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
+		  diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 	log_cib_diff(LOG_DEBUG_2, diff, op);
 
 	set_name = "diff-added";

@@ -1,4 +1,4 @@
-/* $Id: ccm_epoche.c,v 1.7 2005/06/14 11:39:04 davidlee Exp $ */
+/* $Id: ccm_epoche.c,v 1.8 2005/07/14 13:27:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -127,7 +127,7 @@ usage(const char* cmd, int exit_status)
 
 	fprintf(stream, "usage: %s [-V] [-p|-e|-q]\n", cmd);
 	fprintf(stream, "\t-p : print the members of this partition\n");
-	fprintf(stream, "\t-e : print the epoche this node joined the partition\n");
+	fprintf(stream, "\t-e : print the epoch this node joined the partition\n");
 	fprintf(stream, "\t-q : print a 1 if our partition has quorum\n");
 	fflush(stream);
 

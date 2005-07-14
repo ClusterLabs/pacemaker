@@ -33,7 +33,7 @@ GHashTable *welcomed_nodes   = NULL;
 GHashTable *integrated_nodes = NULL;
 GHashTable *finalized_nodes  = NULL;
 GHashTable *confirmed_nodes  = NULL;
-char *max_epoche = NULL;
+char *max_epoch = NULL;
 char *max_generation_from = NULL;
 crm_data_t *max_generation_xml = NULL;
 
@@ -334,7 +334,7 @@ finalize_join(const char *caller)
 	free_xml(cib_update);
 	free_xml(cib);
 	
-	crm_debug_3("Bumping the epoche and syncing to %d clients",
+	crm_debug_3("Bumping the epoch and syncing to %d clients",
 		  g_hash_table_size(finalized_nodes));
 	fsa_cib_conn->cmds->bump_epoch(
 		fsa_cib_conn, cib_scope_local|cib_quorum_override);

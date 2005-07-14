@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.37 2005/07/06 12:34:26 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.38 2005/07/14 13:27:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,8 +39,8 @@
 #define XML_ATTR_NUMPEERS		"num_peers"
 #define XML_ATTR_HAVE_QUORUM		"have_quorum"
 #define XML_ATTR_CCM_TRANSITION		"ccm_transition"
-#define XML_ATTR_GENERATION		"epoche"
-#define XML_ATTR_GENERATION_ADMIN	"admin_epoche"
+#define XML_ATTR_GENERATION		"epoch"
+#define XML_ATTR_GENERATION_ADMIN	"admin_epoch"
 #define XML_ATTR_NUMUPDATES		"num_updates"
 #define XML_ATTR_TIMEOUT		"timeout"
 #define XML_ATTR_TSTAMP			"timestamp"

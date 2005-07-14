@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.28 2005/06/17 11:05:05 andrew Exp $ */
+/* $Id: cib.h,v 1.29 2005/07/14 13:27:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -336,11 +336,11 @@ extern gboolean apply_cib_diff(
 extern void log_cib_diff(int log_level, crm_data_t *diff, const char *function);
 
 extern gboolean cib_diff_version_details(
-	crm_data_t *diff, int *admin_epoche, int *epoche, int *updates, 
-	int *_admin_epoche, int *_epoche, int *_updates);
+	crm_data_t *diff, int *admin_epoch, int *epoch, int *updates, 
+	int *_admin_epoch, int *_epoch, int *_updates);
 
 extern gboolean cib_version_details(
-	crm_data_t *cib, int *admin_epoche, int *epoche, int *updates);
+	crm_data_t *cib, int *admin_epoch, int *epoch, int *updates);
 
 #endif
 

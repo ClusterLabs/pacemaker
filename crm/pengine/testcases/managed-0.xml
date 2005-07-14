@@ -1,4 +1,4 @@
-<cib cib_feature_revision="1" num_updates="372" have_quorum="true" epoche="9" generated="true" admin_epoche="0" num_peers="8" origin="c001n09" ccm_transition="8" dc_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" debug_source="finalize_join">
+<cib cib_feature_revision="1" num_updates="372" have_quorum="true" epoch="9" generated="true" admin_epoch="0" num_peers="8" origin="c001n09" ccm_transition="8" dc_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" debug_source="finalize_join">
   <configuration>
     <crm_config>
       <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="120s"/>

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.75 2005/07/11 12:13:07 andrew Exp $ */
+/* $Id: callbacks.c,v 1.76 2005/07/14 13:27:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -689,21 +689,21 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		 */
 		HA_Message *op_bcast = cib_msg_copy(request, FALSE);
 		int diff_add_updates = 0;
-		int diff_add_epoche  = 0;
-		int diff_add_admin_epoche = 0;
+		int diff_add_epoch  = 0;
+		int diff_add_admin_epoch = 0;
 		
 		int diff_del_updates = 0;
-		int diff_del_epoche  = 0;
-		int diff_del_admin_epoche = 0;
+		int diff_del_epoch  = 0;
+		int diff_del_admin_epoch = 0;
 		
 		cib_diff_version_details(
 			result_diff,
-			&diff_add_admin_epoche, &diff_add_epoche, &diff_add_updates, 
-			&diff_del_admin_epoche, &diff_del_epoche, &diff_del_updates);
+			&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
+			&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 
 		crm_debug("Sending update diff %d.%d.%d -> %d.%d.%d",
-			diff_del_admin_epoche,diff_del_epoche,diff_del_updates,
-			diff_add_admin_epoche,diff_add_epoche,diff_add_updates);
+			diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
+			diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 
 		ha_msg_add(op_bcast, F_CIB_ISREPLY, originator);
 		ha_msg_add(op_bcast, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);

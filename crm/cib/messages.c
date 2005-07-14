@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.51 2005/07/12 13:27:36 andrew Exp $ */
+/* $Id: messages.c,v 1.52 2005/07/14 13:27:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -244,7 +244,7 @@ cib_process_bump(
 {
 	enum cib_errors result = cib_ok;
 
-	crm_debug_2("Processing \"%s\" event for epoche=%s",
+	crm_debug_2("Processing \"%s\" event for epoch=%s",
 		  op, crm_str(crm_element_value(the_cib, XML_ATTR_GENERATION)));
 	
 	if(answer != NULL) { *answer = NULL; }	
@@ -324,16 +324,16 @@ cib_process_diff(
 	enum cib_errors result = cib_ok;
 
 	int this_updates = 0;
-	int this_epoche  = 0;
-	int this_admin_epoche = 0;
+	int this_epoch  = 0;
+	int this_admin_epoch = 0;
 
 	int diff_add_updates = 0;
-	int diff_add_epoche  = 0;
-	int diff_add_admin_epoche = 0;
+	int diff_add_epoch  = 0;
+	int diff_add_admin_epoch = 0;
 
 	int diff_del_updates = 0;
-	int diff_del_epoche  = 0;
-	int diff_del_admin_epoche = 0;
+	int diff_del_epoch  = 0;
+	int diff_del_admin_epoch = 0;
 
 	crm_debug_2("Processing \"%s\" event", op);
 
@@ -344,8 +344,8 @@ cib_process_diff(
 	
 	cib_diff_version_details(
 		input,
-		&diff_add_admin_epoche, &diff_add_epoche, &diff_add_updates, 
-		&diff_del_admin_epoche, &diff_del_epoche, &diff_del_updates);
+		&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
+		&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 
 	if(sync_in_progress > MAX_DIFF_RETRY) {
 		/* request another full-sync,
@@ -356,22 +356,22 @@ cib_process_diff(
 	if(sync_in_progress) {
 		sync_in_progress++;
 		crm_warn("Not applying diff %d.%d.%d -> %d.%d.%d (sync in progress)",
-			diff_del_admin_epoche,diff_del_epoche,diff_del_updates,
-			diff_add_admin_epoche,diff_add_epoche,diff_add_updates);
+			diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
+			diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 		return cib_diff_resync;
 	}
 	
 	value = crm_element_value(existing_cib, XML_ATTR_GENERATION);
-	this_epoche = atoi(value?value:"0");
+	this_epoch = atoi(value?value:"0");
 	
 	value = crm_element_value(existing_cib, XML_ATTR_NUMUPDATES);
 	this_updates = atoi(value?value:"0");
 	
 	value = crm_element_value(existing_cib, XML_ATTR_GENERATION_ADMIN);
-	this_admin_epoche = atoi(value?value:"0");
+	this_admin_epoch = atoi(value?value:"0");
 	
-	if(diff_del_admin_epoche == diff_add_admin_epoche
-	   && diff_del_epoche == diff_add_epoche
+	if(diff_del_admin_epoch == diff_add_admin_epoch
+	   && diff_del_epoch == diff_add_epoch
 	   && diff_del_updates == diff_add_updates) {
 		apply_diff = FALSE;
 		log_level = LOG_ERR;
@@ -379,25 +379,25 @@ cib_process_diff(
 		log_cib_diff(LOG_ERR, input, __FUNCTION__);
 	}
 
-	if(apply_diff && diff_del_admin_epoche > this_admin_epoche) {
+	if(apply_diff && diff_del_admin_epoch > this_admin_epoch) {
 		do_resync = TRUE;
 		apply_diff = FALSE;
 		log_level = LOG_INFO;
 		reason = "current \""XML_ATTR_GENERATION_ADMIN"\" is less than required";
 		
-	} else if(apply_diff && diff_del_admin_epoche < this_admin_epoche) {
+	} else if(apply_diff && diff_del_admin_epoch < this_admin_epoch) {
 		apply_diff = FALSE;
 		log_level = LOG_WARNING;
 		reason = "current \""XML_ATTR_GENERATION_ADMIN"\" is greater than required";
 	}
 
-	if(apply_diff && diff_del_epoche > this_epoche) {
+	if(apply_diff && diff_del_epoch > this_epoch) {
 		do_resync = TRUE;
 		apply_diff = FALSE;
 		log_level = LOG_INFO;
 		reason = "current \""XML_ATTR_GENERATION"\" is less than required";
 		
-	} else if(apply_diff && diff_del_epoche < this_epoche) {
+	} else if(apply_diff && diff_del_epoch < this_epoch) {
 		apply_diff = FALSE;
 		log_level = LOG_WARNING;
 		reason = "current \""XML_ATTR_GENERATION"\" is greater than required";
@@ -433,16 +433,16 @@ cib_process_diff(
 		crm_log_maybe(
 			log_level,
 			"Diff %d.%d.%d -> %d.%d.%d not applied to %d.%d.%d: %s",
-			diff_del_admin_epoche,diff_del_epoche,diff_del_updates,
-			diff_add_admin_epoche,diff_add_epoche,diff_add_updates,
-			this_admin_epoche,this_epoche,this_updates, reason);
+			diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
+			diff_add_admin_epoch,diff_add_epoch,diff_add_updates,
+			this_admin_epoch,this_epoch,this_updates, reason);
 		
 		result = cib_diff_failed;
 
 	} else if(apply_diff) {
 		crm_debug("Diff %d.%d.%d -> %d.%d.%d was applied",
-			diff_del_admin_epoche,diff_del_epoche,diff_del_updates,
-			diff_add_admin_epoche,diff_add_epoche,diff_add_updates);
+			diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
+			diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 	}
 
 	if(do_resync && cib_is_master == FALSE) {
@@ -493,28 +493,28 @@ cib_process_replace(
 		
 	} else if(section == NULL) {
 		int updates = 0;
-		int epoche  = 0;
-		int admin_epoche = 0;
+		int epoch  = 0;
+		int admin_epoch = 0;
 		
 		int replace_updates = 0;
-		int replace_epoche  = 0;
-		int replace_admin_epoche = 0;
+		int replace_epoch  = 0;
+		int replace_admin_epoch = 0;
 		const char *reason = NULL;
 		
 		cib_version_details(
-			existing_cib, &admin_epoche, &epoche, &updates);
-		cib_version_details(input, &replace_admin_epoche,
-				    &replace_epoche, &replace_updates);
+			existing_cib, &admin_epoch, &epoch, &updates);
+		cib_version_details(input, &replace_admin_epoch,
+				    &replace_epoch, &replace_updates);
 
-		if(replace_admin_epoche < admin_epoche) {
+		if(replace_admin_epoch < admin_epoch) {
 			reason = XML_ATTR_GENERATION_ADMIN;
 
-		} else if(replace_admin_epoche > admin_epoche) {
+		} else if(replace_admin_epoch > admin_epoch) {
 			/* no more checks */
-		} else if(replace_epoche < epoche) {
+		} else if(replace_epoch < epoch) {
 			reason = XML_ATTR_GENERATION;
 
-		} else if(replace_epoche > epoche) {
+		} else if(replace_epoch > epoch) {
 			/* no more checks */
 
 		} else if(replace_updates < updates) {
@@ -524,8 +524,8 @@ cib_process_replace(
 		if(reason != NULL) {
 			crm_warn("Replacement %d.%d.%d not applied to %d.%d.%d:"
 				 " current %s is greater than the replacement",
-				 replace_admin_epoche, replace_epoche,
-				 replace_updates, admin_epoche, epoche, updates,
+				 replace_admin_epoch, replace_epoch,
+				 replace_updates, admin_epoch, epoch, updates,
 				 reason);
 			result = cib_old_data;
 		}

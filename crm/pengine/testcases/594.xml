@@ -1,4 +1,4 @@
-  <cib cib_feature_revision="1" num_updates="117" have_quorum="true" epoche="6" generated="true" num_peers="1" origin="hadev1" ccm_transition="4" timestamp="1118302975" dc_uuid="6125a0df-456a-4395-829a-418e9a380d36" debug_source="process_join_ack_msg" last_written="Thu Jun  9 15:42:55 2005">
+  <cib cib_feature_revision="1" num_updates="117" have_quorum="true" epoch="6" generated="true" num_peers="1" origin="hadev1" ccm_transition="4" timestamp="1118302975" dc_uuid="6125a0df-456a-4395-829a-418e9a380d36" debug_source="process_join_ack_msg" last_written="Thu Jun  9 15:42:55 2005">
     <configuration>
       <crm_config>
         <nvpair id="transition_timeout" name="transition_timeout" value="120s"/>

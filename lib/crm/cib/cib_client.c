@@ -914,28 +914,28 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	const char *value = NULL;
 
 	int this_updates = 0;
-	int this_epoche  = 0;
-	int this_admin_epoche = 0;
+	int this_epoch  = 0;
+	int this_admin_epoch = 0;
 
 	int diff_add_updates = 0;
-	int diff_add_epoche  = 0;
-	int diff_add_admin_epoche = 0;
+	int diff_add_epoch  = 0;
+	int diff_add_admin_epoch = 0;
 
 	int diff_del_updates = 0;
-	int diff_del_epoche  = 0;
-	int diff_del_admin_epoche = 0;
+	int diff_del_epoch  = 0;
+	int diff_del_admin_epoch = 0;
 
 	CRM_DEV_ASSERT(diff != NULL);
 	CRM_DEV_ASSERT(old != NULL);
 	
 	value = crm_element_value(old, XML_ATTR_GENERATION_ADMIN);
-	this_admin_epoche = atoi(value?value:"0");
+	this_admin_epoch = atoi(value?value:"0");
 	crm_debug_3("%s=%d (%s)", XML_ATTR_GENERATION_ADMIN,
-		  this_admin_epoche, value);
+		  this_admin_epoch, value);
 	
 	value = crm_element_value(old, XML_ATTR_GENERATION);
-	this_epoche = atoi(value?value:"0");
-	crm_debug_3("%s=%d (%s)", XML_ATTR_GENERATION, this_epoche, value);
+	this_epoch = atoi(value?value:"0");
+	crm_debug_3("%s=%d (%s)", XML_ATTR_GENERATION, this_epoch, value);
 	
 	value = crm_element_value(old, XML_ATTR_NUMUPDATES);
 	this_updates = atoi(value?value:"0");
@@ -943,19 +943,19 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	
 	cib_diff_version_details(
 		diff,
-		&diff_add_admin_epoche, &diff_add_epoche, &diff_add_updates, 
-		&diff_del_admin_epoche, &diff_del_epoche, &diff_del_updates);
+		&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
+		&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 
 	value = NULL;
-	if(result && diff_del_admin_epoche != this_admin_epoche) {
+	if(result && diff_del_admin_epoch != this_admin_epoch) {
 		value = XML_ATTR_GENERATION_ADMIN;
 		result = FALSE;
-		crm_debug_3("%s=%d", value, diff_del_admin_epoche);
+		crm_debug_3("%s=%d", value, diff_del_admin_epoch);
 
-	} else if(result && diff_del_epoche != this_epoche) {
+	} else if(result && diff_del_epoch != this_epoch) {
 		value = XML_ATTR_GENERATION;
 		result = FALSE;
-		crm_debug_3("%s=%d", value, diff_del_epoche);
+		crm_debug_3("%s=%d", value, diff_del_epoch);
 
 	} else if(result && diff_del_updates != this_updates) {
 		value = XML_ATTR_NUMUPDATES;
@@ -1064,30 +1064,30 @@ void
 log_cib_diff(int log_level, crm_data_t *diff, const char *function)
 {
 	int add_updates = 0;
-	int add_epoche  = 0;
-	int add_admin_epoche = 0;
+	int add_epoch  = 0;
+	int add_admin_epoch = 0;
 
 	int del_updates = 0;
-	int del_epoche  = 0;
-	int del_admin_epoche = 0;
+	int del_epoch  = 0;
+	int del_admin_epoch = 0;
 
 	if(diff == NULL) {
 		return;
 	}
 	
 	cib_diff_version_details(
-		diff, &add_admin_epoche, &add_epoche, &add_updates, 
-		&del_admin_epoche, &del_epoche, &del_updates);
+		diff, &add_admin_epoch, &add_epoch, &add_updates, 
+		&del_admin_epoch, &del_epoch, &del_updates);
 
 	if(add_updates != del_updates) {
 		do_crm_log(log_level, NULL, function, "Diff: --- %d.%d.%d",
-			   del_admin_epoche, del_epoche, del_updates);
+			   del_admin_epoch, del_epoch, del_updates);
 		do_crm_log(log_level, NULL, function, "Diff: +++ %d.%d.%d",
-			   add_admin_epoche, add_epoche, add_updates);
+			   add_admin_epoch, add_epoch, add_updates);
 	} else if(diff != NULL) {
 		do_crm_log(log_level, NULL, function,
 			   "Local-only Change: %d.%d.%d",
-			   add_admin_epoche, add_epoche, add_updates);
+			   add_admin_epoch, add_epoch, add_updates);
 	}
 	
 	log_xml_diff(log_level, diff, function);
@@ -1095,21 +1095,21 @@ log_cib_diff(int log_level, crm_data_t *diff, const char *function)
 
 gboolean
 cib_version_details(
-	crm_data_t *cib, int *admin_epoche, int *epoche, int *updates)
+	crm_data_t *cib, int *admin_epoch, int *epoch, int *updates)
 {
 	const char *value = NULL;
 	if(cib == NULL) {
-		*admin_epoche = -1;
-		*epoche  = -1;
+		*admin_epoch = -1;
+		*epoch  = -1;
 		*updates = -1;
 		return FALSE;
 		
 	} else {
 		value = crm_element_value(cib, XML_ATTR_GENERATION_ADMIN);
-		*admin_epoche = atoi(value?value:"-1");
+		*admin_epoch = atoi(value?value:"-1");
 
 		value  = crm_element_value(cib, XML_ATTR_GENERATION);
-		*epoche = atoi(value?value:"-1");
+		*epoch = atoi(value?value:"-1");
 
 		value = crm_element_value(cib, XML_ATTR_NUMUPDATES);
 		*updates = atoi(value?value:"-1");
@@ -1119,16 +1119,16 @@ cib_version_details(
 
 gboolean
 cib_diff_version_details(
-	crm_data_t *diff, int *admin_epoche, int *epoche, int *updates, 
-	int *_admin_epoche, int *_epoche, int *_updates)
+	crm_data_t *diff, int *admin_epoch, int *epoch, int *updates, 
+	int *_admin_epoch, int *_epoch, int *_updates)
 {
 	crm_data_t *tmp = NULL;
 
 	tmp = find_xml_node(diff, "diff-added", FALSE);
-	cib_version_details(tmp, admin_epoche, epoche, updates);
+	cib_version_details(tmp, admin_epoch, epoch, updates);
 
 	tmp = find_xml_node(diff, "diff-removed", FALSE);
-	cib_version_details(tmp, _admin_epoche, _epoche, _updates);
+	cib_version_details(tmp, _admin_epoch, _epoch, _updates);
 	return TRUE;
 }
 
