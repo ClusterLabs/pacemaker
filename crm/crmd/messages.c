@@ -758,6 +758,16 @@ handle_message(ha_msg_input_t *stored_msg)
 	return next_input;
 }
 
+#define schedule_pe()							\
+	{								\
+		next_input = I_PE_CALC;					\
+		if(fsa_pe_ref) {					\
+			crm_debug("Cancelling %s...", fsa_pe_ref);	\
+			crm_free(fsa_pe_ref);				\
+			fsa_pe_ref = NULL;				\
+		}							\
+	}
+
 enum crmd_fsa_input
 handle_request(ha_msg_input_t *stored_msg)
 {
@@ -880,11 +890,15 @@ handle_request(ha_msg_input_t *stored_msg)
 	} else if(AM_I_DC) {
 		const char *message = ha_msg_value(stored_msg->msg, "message");
 
+		/* setting "fsa_pe_ref = NULL" makes sure we ignore any
+		 *  PE reply that might be pending or in the queue while
+		 *  we ask the CIB for a more up-to-date copy
+		 */
 		if(safe_str_eq(op, CRM_OP_TEABORT)) {
 			crm_debug("Transition cancelled: %s/%s", op, message);
 			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 			if(need_transition(fsa_state)) {
-				next_input = I_PE_CALC;
+				schedule_pe();
 
 			} else {	
 				crm_debug("Filtering %s op in state %s",
@@ -896,10 +910,10 @@ handle_request(ha_msg_input_t *stored_msg)
 			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 			if(fsa_state == S_IDLE) {
 				crm_err("Transition timed out in S_IDLE");
-				next_input = I_PE_CALC;
+				schedule_pe();
 				
 			} else if(need_transition(fsa_state)) {
-				next_input = I_PE_CALC;
+				schedule_pe();
 				
 			} else {	
 				crm_err("Filtering %s op in state %s",
@@ -910,7 +924,8 @@ handle_request(ha_msg_input_t *stored_msg)
 			crm_debug("Transition cancelled: %s/%s", op, message);
 			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 			if(need_transition(fsa_state)) {
-				next_input = I_PE_CALC;
+				schedule_pe();
+
 			} else {	
 				crm_debug("Filtering %s op in state %s",
 					  op, fsa_state2string(fsa_state));
@@ -986,12 +1001,18 @@ handle_response(ha_msg_input_t *stored_msg)
 
  	} else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
 
-		if(safe_str_eq(msg_ref, fsa_pe_ref)) {
+		crm_debug("Processing %s reply %s (fsa=%s)",
+			  sys_from, msg_ref, crm_str(fsa_pe_ref));
+
+		if(msg_ref != NULL && safe_str_eq(msg_ref, fsa_pe_ref)) {
 			next_input = I_PE_SUCCESS;
+			crm_debug("Completed: %s...", fsa_pe_ref);
+			crm_free(fsa_pe_ref);
+			fsa_pe_ref = NULL;
 			
 		} else {
-			crm_debug_2("Skipping superceeded reply from %s",
-				    sys_from);
+			crm_debug("Skipping superceeded reply from %s",
+				  sys_from);
 		}
 		
 	} else if(strcmp(op, CRM_OP_VOTE) == 0

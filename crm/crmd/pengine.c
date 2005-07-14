@@ -90,6 +90,7 @@ do_pe_control(long long action,
 	return result;
 }
 
+int fsa_pe_query = 0;
 char *fsa_pe_ref = NULL;
 
 /*	 A_PE_INVOKE	*/
@@ -100,8 +101,6 @@ do_pe_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-	int call_id = 0;
-
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
 		if(pe_subsystem->pid > 0) {
 			int pid_status = -1;
@@ -140,11 +139,11 @@ do_pe_invoke(long long action,
 		return I_NULL;		
 	}
 	
-	crm_debug("Requesting the current CIB");
-	call_id = fsa_cib_conn->cmds->query(
+	crm_debug("Requesting the current CIB: %s",fsa_state2string(fsa_state));
+	fsa_pe_query = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
 	if(FALSE == add_cib_op_callback(
-		   call_id, TRUE, NULL, do_pe_invoke_callback)) {
+		   fsa_pe_query, TRUE, NULL, do_pe_invoke_callback)) {
 		crm_err("Cant retrieve the CIB to invoke the %s subsystem with",
 			pe_subsystem->name);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
@@ -162,12 +161,24 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	gboolean cib_has_quorum = FALSE;
 	crm_data_t *local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
 
-	if(AM_I_DC == FALSE
-	   || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE
-	   || fsa_state != S_POLICY_ENGINE) {
+	if(call_id != fsa_pe_query) {
+		crm_debug_2("Skipping superceeded CIB query: %d (current=%d)",
+			    call_id, fsa_pe_query);
+		return;
+		
+	} else if(AM_I_DC == FALSE
+	   || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE) {
 		crm_debug("No need to invoke the PE anymore");
 		return;
+
+	} else if(need_transition(fsa_state) == FALSE) {
+		crm_debug("Discarding PE request in state: %s",
+			  fsa_state2string(fsa_state));
+
+	} else if(fsa_state != S_POLICY_ENGINE) {
+		crm_err("Invoking PE in state: %s",fsa_state2string(fsa_state));
 	}
+	
 
 	crm_debug_2("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
 
