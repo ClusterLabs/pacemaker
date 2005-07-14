@@ -571,6 +571,9 @@ class StonithTest(CTSTest):
     def is_applicable(self):
         '''StonithTest is applicable unless suppressed by CM.Env["DoStonith"] == FALSE'''
 
+	# for v2, stonithd test is a better test to run.
+        if self.CM["Name"] == "linux-ha-v2":
+	    return None
         if self.CM.Env.has_key("DoStonith"):
             return self.CM.Env["DoStonith"]
         return 1
