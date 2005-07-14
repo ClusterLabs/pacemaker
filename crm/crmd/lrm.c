@@ -577,6 +577,7 @@ do_lrm_invoke(long long action,
 		if(id_from_cib == NULL) {
 			crm_err("No value for %s in message at level %d.",
 				XML_ATTR_ID, DIMOF(rsc_path) -2);
+			crm_log_xml_err(input->xml, "Bad command");
 			return I_NULL;
 		}
 		
@@ -650,7 +651,6 @@ do_lrm_rsc_op(
 				crm_log_message(LOG_ERR, msg);
 			}
 		}
-		
 	}
 
 	if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
@@ -788,8 +788,8 @@ do_lrm_rsc_op(
 	if(safe_str_eq(CRMD_ACTION_MON, operation)) {
 		const char *last_op = g_hash_table_lookup(resources, rsc->id);
 		if(safe_str_eq(last_op, CRMD_ACTION_STOP)) {
-			crm_err("Attempting to schedule %s _after_ a stop.",
-				op_id);
+			crm_warn("Attempting to schedule %s after a stop.",
+				 op_id);
 			free_lrm_op(op);
 			crm_free(op_id);
 			return I_NULL;			
