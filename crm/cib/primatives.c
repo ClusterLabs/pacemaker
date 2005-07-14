@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.24 2005/07/11 12:13:07 andrew Exp $ */
+/* $Id: primatives.c,v 1.25 2005/07/14 15:45:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -570,7 +570,14 @@ do_id_check(crm_data_t *xml_obj)
 	const char *new_uuid_s2 = NULL;
 
 	const char *allowed_list[] = {
-		XML_TAG_CIB
+		XML_TAG_CIB,
+		XML_CIB_TAG_NODES,
+		XML_CIB_TAG_RESOURCES,
+		XML_CIB_TAG_CONSTRAINTS,
+		XML_CIB_TAG_STATUS,
+		XML_CIB_TAG_LRM,
+		XML_LRM_TAG_RESOURCES,
+		"operations",
 	};
 	
 	if(xml_obj == NULL) {
