@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.93 2005/07/13 15:44:24 lars Exp $ */
+/* $Id: utils.c,v 1.94 2005/07/15 15:32:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -706,12 +706,18 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 				 action->node?action->node->details->uname:"<none>");
 			action->runnable = FALSE;
 
-		} else 	if(action->needs == rsc_req_nothing) {
+		} else if(action->needs == rsc_req_nothing) {
+			crm_debug_2("Action doesnt require anything");
 			action->runnable = TRUE;
-			
-		} else 	if(action->needs == rsc_req_stonith) {
+#if 0
+			/*
+			 * No point checking this
+			 * - if we dont have quorum we cant stonith anyway
+			 */
+		} else if(action->needs == rsc_req_stonith) {
+			crm_debug_2("Action requires only stonith");
 			action->runnable = TRUE;
-			
+#endif
 		} else if(data_set->have_quorum == FALSE
 			&& data_set->no_quorum_policy == no_quorum_stop) {
 			action->runnable = FALSE;
@@ -720,6 +726,7 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 		
 		} else if(data_set->have_quorum == FALSE
 			&& data_set->no_quorum_policy == no_quorum_freeze) {
+			crm_debug_2("Check resource is already active");
 			if(rsc->fns->active(rsc, TRUE) == FALSE) {
 				action->runnable = FALSE;
 				crm_warn("%s resource %s\t(%s) (cancelled : quorum freeze)",
@@ -727,6 +734,7 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 					 action->node->details->uname);
 			}
 		} else {
+			crm_debug_2("Action is runnable");
 			action->runnable = TRUE;
 		}
 
@@ -809,10 +817,13 @@ unpack_operation(
 		value = "node fencing";
 	} else if(safe_str_eq(value, "stop")) {
 		action->on_fail = action_fail_stop;
-		value = "resource nothing";
+		value = "resource stop";
 	} else if(safe_str_eq(value, "nothing")) {
 		action->on_fail = action_fail_nothing;
-		value = "nothing";
+
+	} else if(safe_str_eq(value, "block")) {
+		action->on_fail = action_fail_block;
+
 	} else if(safe_str_eq(value, "ignore")) {
 		action->on_fail = action_fail_nothing;
 		value = "nothing";
@@ -836,8 +847,8 @@ unpack_operation(
 	} else if(value == NULL) {
 		action->on_fail = action_fail_stop;		
 		value = "resource stop (default)";
-
 	}
+	
 	crm_debug_2("\t%s failure results in: %s", action->task, value);
 	
 	

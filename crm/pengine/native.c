@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.62 2005/07/13 15:44:24 lars Exp $ */
+/* $Id: native.c,v 1.63 2005/07/15 15:32:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -272,9 +272,15 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		}
 		
 		key = generate_op_key(rsc->id, name, interval_ms);
-		mon = custom_action(rsc, key, name, node, start->optional, data_set);
+		mon = custom_action(
+			rsc, key, name, node, start->optional, data_set);
 
-		if(mon->optional == FALSE && node != NULL) {
+		if(start->runnable == FALSE) {
+			crm_warn("   %s:\t(%s) (cancelled : start un-runnable)",
+				 mon->uuid, node->details->uname);
+			mon->runnable = start->runnable;
+
+		} else if(mon->optional == FALSE && node != NULL) {
 			crm_info("   %s:\t(%s)", mon->uuid, node->details->uname);
 		}
 		custom_action_order(rsc, start_key(rsc), NULL,
@@ -405,11 +411,11 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		}
 	}
 	
-	if(start != NULL && start->runnable) {
+	if(start != NULL) {
 		create_recurring_actions(rsc, start, chosen, data_set);
 	} else {
-		crm_debug_3("Not creating recurring actions for %s: %p (%d)",
-			    rsc->id, start, start?start->runnable:0);
+		crm_err("Not creating recurring actions for %s: %p (%d)",
+			rsc->id, start, start?start->runnable:0);
 	}
 }
 
@@ -757,12 +763,26 @@ void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 }
 
 gboolean native_active(resource_t *rsc, gboolean all)
-{
+{	
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
-	if(g_list_length(native_data->running_on) > 0) {
-		return TRUE;
-	}
+
+	slist_iter(
+		a_node, node_t, native_data->running_on, lpc,
+
+		if(a_node->details->online == FALSE) {
+			crm_debug("Resource %s: node %s is offline",
+				  rsc->id, a_node->details->uname);
+		} else if(a_node->details->unclean) {
+			crm_debug("Resource %s: node %s is unclean",
+				  rsc->id, a_node->details->uname);
+		} else {
+			crm_debug("Resource %s active on %s",
+				  rsc->id, a_node->details->uname);
+			return TRUE;
+		}
+		);
+	
 	return FALSE;
 }
 
