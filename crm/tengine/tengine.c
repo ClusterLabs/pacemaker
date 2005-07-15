@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.85 2005/07/07 08:12:24 andrew Exp $ */
+/* $Id: tengine.c,v 1.86 2005/07/15 15:38:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -146,18 +146,20 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	}
 	
 	this_rsc = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
-
+	
 	if(this_rsc == NULL) {
 		crm_debug_4("Skipping non-resource event");
 		return -1;
 	}
 
+	crm_debug_3("Processing \"%s\" change", crm_element_name(event));
 	update_event = crm_element_value(event, XML_ATTR_ID);
 	op_status    = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
 	magic        = crm_element_value(event, "transition_magic");
 
 	if(magic == NULL) {
-		crm_debug_4("Skipping \"non-change\"");
+/* 		crm_debug("Skipping \"non-change\""); */
+		crm_log_xml_debug(event, "Skipping \"non-change\"");
 		return -3;
 	}
 	
@@ -168,11 +170,11 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	this_event  = generate_op_key(this_rsc, this_action, action->interval);
 
 	if(safe_str_neq(this_event, update_event)) {
-		crm_debug_2("Action %d : Event mismatch %s vs. %s",
+		crm_debug("Action %d : Event mismatch %s vs. %s",
 			  action->id, this_event, update_event);
 
 	} else if(safe_str_neq(this_node, event_node)) {
-		crm_debug_2("Action %d : Node mismatch %s (%s) vs. %s",
+		crm_debug("Action %d : Node mismatch %s (%s) vs. %s",
 			  action->id, this_node, this_uname, event_node);
 	} else {
 		match = action;
@@ -216,7 +218,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		/* we never expect these - recompute */
 		crm_err("Detected an action initiated outside of a transition");
 		crm_log_message(LOG_ERR, event);
-		return -1;
+		return -5;
 		
 	} else if(transition_counter != transition_i) {
 		crm_warn("Detected an action from a different transition:"
@@ -267,6 +269,11 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	
 	te_log_action(LOG_INFO, "Action %d confirmed", match->id);
 	match->complete = TRUE;
+
+	if(te_fsa_state != s_in_transition) {
+		crm_debug("Action completed after transition was terminated");
+		return -3;
+	}
 	return match->id;
 }
 
@@ -406,6 +413,11 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		  rsc_id, event_node, op_status2text(op_status_i));
 
 	next_transition_idle_timeout = transition_idle_timeout;
+
+	if(crm_element_value(event, "transition_magic") == NULL) {
+		crm_log_xml_debug(event, "Skipping \"non-change\"");
+		action_id = -3;
+	}
 	
 	slist_iter(
 		synapse, synapse_t, graph, lpc,
@@ -423,6 +435,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 			}
 			);
 		if(action_id != -1) {
+			crm_debug("Terminating search: %d", action_id);
 			break;
 		}
 		);
@@ -445,7 +458,9 @@ process_graph_event(crm_data_t *event, const char *event_node)
 					action_id = rc;
 				}
 				);
-			if(action_id != -1) { break; }
+			if(action_id != -1) {
+				break;
+			}
 			);
 	}
 
@@ -464,6 +479,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	} else {
 		/* unexpected event, trigger a pe-recompute */
 		/* possibly do this only for certain types of actions */
+		crm_debug("Search terminated: %d", action_id);
 		send_complete("Event not matched", event, te_update, i_cancel);
 		return FALSE;
 	}

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.38 2005/07/07 08:12:24 andrew Exp $ */
+/* $Id: utils.c,v 1.39 2005/07/15 15:38:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,6 +41,7 @@ void
 send_complete(const char *text, crm_data_t *msg,
 	      te_reason_t reason, te_fsa_input_t input)
 {	
+	int pending_callbacks = 0;
 	HA_Message *cmd = NULL;
 	const char *op = CRM_OP_TEABORT;
 	static te_reason_t last_reason = te_done;
@@ -48,13 +49,21 @@ send_complete(const char *text, crm_data_t *msg,
 	static const char *last_text = NULL;
 
 	te_fsa_state_t last_state = te_fsa_state;
+
+	pending_callbacks = num_cib_op_callbacks();
+	CRM_DEV_ASSERT(pending_callbacks == 0 || te_fsa_state != s_idle);
+	if(crm_assert_failed) {
+		te_fsa_state = s_abort_pending;
+	}
+	
 	te_fsa_state = te_state_matrix[input][te_fsa_state];
 
-	if(te_fsa_state == s_abort_pending && num_cib_op_callbacks() == 0) {
+	if(te_fsa_state == s_abort_pending && pending_callbacks == 0) {
+		crm_debug("Faking i_cib_complete: %d/%d", last_state, input);
 		te_fsa_state = te_state_matrix[i_cib_complete][te_fsa_state];
 	}
 	
-	if(te_fsa_state != s_idle && input != i_cib_complete) {
+	if(pending_callbacks > 0 && input != i_cib_complete) {
 		if(last_msg) {
 			free_xml(last_msg);
 		}
@@ -76,8 +85,9 @@ send_complete(const char *text, crm_data_t *msg,
 		text   = last_text;
 		reason = last_reason;
 	}
-	
-	CRM_DEV_ASSERT(num_cib_op_callbacks() == 0);
+
+
+	CRM_DEV_ASSERT(pending_callbacks == 0);
 	
 	switch(reason) {
 		case te_update:
@@ -253,21 +263,25 @@ print_action(const char *prefix, action_t *action, int log_level)
 			break;
 		case action_type_rsc:
 			do_crm_log(log_level, __FILE__, __FUNCTION__,
-				   "%s\tResource Op: %s/%s on %s", prefix,
+				   "%s\tResource Op: %s/%s on %s (%s)", prefix,
 				   crm_element_value(
 					   action->xml, XML_LRM_ATTR_RSCID),
 				   crm_element_value(
 					   action->xml, XML_LRM_ATTR_TASK),
 				   crm_element_value(
-					   action->xml, XML_LRM_ATTR_TARGET));
+					   action->xml, XML_LRM_ATTR_TARGET),
+				   crm_element_value(
+					   action->xml, XML_LRM_ATTR_TARGET_UUID));
 			break;
 		case action_type_crm:	
 			do_crm_log(log_level, __FILE__, __FUNCTION__,
-				   "%s\tCRM Op: %s on %s", prefix,
+				   "%s\tCRM Op: %s on %s (%s)", prefix,
 				   crm_element_value(
 					   action->xml, XML_LRM_ATTR_TASK),
 				   crm_element_value(
-					   action->xml, XML_LRM_ATTR_TARGET));
+					   action->xml, XML_LRM_ATTR_TARGET),
+				   crm_element_value(
+					   action->xml, XML_LRM_ATTR_TARGET_UUID));
 			break;
 	}
 
@@ -321,9 +335,8 @@ timer_callback(gpointer data)
 		return FALSE;
 		
 	} else if(timer->reason == timeout_action_warn) {
-		crm_warn("Action %d is taking more than 2x its timeout (%d)",
-			timer->action->id, timer->action->timeout);
-		crm_log_xml_debug(timer->action->xml, "Slow action");
+		print_action("Action missed its timeout",
+			     timer->action, LOG_WARNING);
 		return TRUE;
 		
 	} else {

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.40 2005/07/14 13:27:49 andrew Exp $ */
+/* $Id: callbacks.c,v 1.41 2005/07/15 15:38:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -318,6 +318,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 
 		} else {
 			te_fsa_state = te_state_matrix[i_transition][te_fsa_state];
+			CRM_DEV_ASSERT(te_fsa_state == s_in_transition);
 			initialize_graph();
 			unpack_graph(xml_data);
 			
