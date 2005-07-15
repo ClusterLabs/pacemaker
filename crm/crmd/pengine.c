@@ -174,6 +174,7 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	} else if(need_transition(fsa_state) == FALSE) {
 		crm_debug("Discarding PE request in state: %s",
 			  fsa_state2string(fsa_state));
+		return;
 
 	} else if(fsa_state != S_POLICY_ENGINE) {
 		crm_err("Invoking PE in state: %s",fsa_state2string(fsa_state));
