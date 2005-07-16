@@ -190,7 +190,11 @@
           id            CDATA #REQUIRED
           operation     CDATA #REQUIRED
           op_status     CDATA #REQUIRED
-          rc_code       CDATA #REQUIRED>
+	  rc_code	CDATA #REQUIRED
+	  call_id	CDATA #REQUIRED
+	  rsc_state	CDATA #IMPLIED
+	  transition_key	CDATA #IMPLIED
+	  transition_magic	CDATA #REQUIRED>
 <!ELEMENT nvpair EMPTY>
 <!ATTLIST nvpair
           id            CDATA #REQUIRED
