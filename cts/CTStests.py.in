@@ -482,11 +482,18 @@ class StonithTest(CTSTest):
             break
         return StonithWorked
 
+    def setup(self, target_node):
+        # nothing to do
+        return 1
+
     def __call__(self, node):
         '''Perform the 'stonith' test. (whack the node)'''
         self.incr("calls")
         stopwatch = 0
         rc = 0
+
+        if not self.setup(node):
+            return self.failure("Setup failed")
 
         # Figure out what log message to look for when/if it goes down
         #
@@ -571,9 +578,9 @@ class StonithTest(CTSTest):
     def is_applicable(self):
         '''StonithTest is applicable unless suppressed by CM.Env["DoStonith"] == FALSE'''
 
-	# for v2, stonithd test is a better test to run.
+        # for v2, stonithd test is a better test to run.
         if self.CM["Name"] == "linux-ha-v2":
-	    return None
+            return None
         if self.CM.Env.has_key("DoStonith"):
             return self.CM.Env["DoStonith"]
         return 1
@@ -587,37 +594,46 @@ class StonithdTest(StonithTest):
 ###################################################################
     def __init__(self, cm, timeout=600):
         StonithTest.__init__(self, cm, timeout=600)
-        self.name="StonithdTest"
+        self.name="Stonithd"
         self.start = StartTest(cm)
         self.stop = StopTest(cm)
+        self.init_node = None
 
     def _reset(self, target_node):
 
         if len(self.CM.Env["nodes"]) < 2:
             return self.skipped()
 
-        init_node = self.CM.Env.RandomNode()
-        while init_node == target_node:
-            init_node = self.CM.Env.RandomNode()
-
-        if self.CM.ShouldBeStatus[target_node] == self.CM["down"]:
-            if not self.start(target_node):
-                return self.failure("Node %s failed to start" % target_node)
-
-        if self.CM.ShouldBeStatus[init_node] == self.CM["down"]:
-            if not self.start(init_node):
-                return self.failure("Node %s failed to start" % init_node)
-
         StonithWorked = False
         for tries in range(1,5):
             fail_reasons = []
-            if self.CM.Env.ResetNode2(init_node, target_node, fail_reasons):
+            if self.CM.Env.ResetNode2(self.init_node, target_node, fail_reasons):
                 StonithWorked = True
                 break
             for reason in fail_reasons:
                 self.CM.log(reason)
 
         return StonithWorked
+
+    def setup(self, target_node):
+        if len(self.CM.Env["nodes"]) < 2:
+            return 1
+
+        self.init_node = self.CM.Env.RandomNode()
+        while self.init_node == target_node:
+            self.init_node = self.CM.Env.RandomNode()
+
+        if self.CM.ShouldBeStatus[target_node] == self.CM["down"]:
+            if not self.start(target_node):
+                self.CM.log("Node %s (target) failed to start"%target_node)
+                return None
+
+        if self.CM.ShouldBeStatus[self.init_node] == self.CM["down"]:
+            if not self.start(self.init_node):
+                self.CM.log("Node %s (init) failed to start"%self.init_node)
+                return None
+
+        return 1
         
     def is_applicable(self):
 
@@ -1520,6 +1536,7 @@ class ResourceRecover(CTSTest):
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.max=30
+	self.rid=None
 
     def __call__(self, dummy):
         '''Perform the 'ResourceRecover' test. '''
@@ -1539,6 +1556,7 @@ class ResourceRecover(CTSTest):
         resource=self.CM.Env.RandomGen.choice(resourcelist)
         
         resourcetype = str(resource.Type())
+	self.rid = str(resource.rid)
         label = resourcetype+"::"+str(resource.rid)
         nodes=resource.RunningNodes()
         if len(nodes) == 0:
@@ -1589,8 +1607,8 @@ class ResourceRecover(CTSTest):
 #	
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """ERROR: .* LRM operation.*monitor on .*: not running""",
-                 """pengine:.*Handling failed """]
+        return [ """ERROR: .* LRM operation.*monitor on %s ERROR: not running""" % self.rid
+		 ]
 
 AllTestClasses.append(ResourceRecover)
 
