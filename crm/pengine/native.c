@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.63 2005/07/15 15:32:51 andrew Exp $ */
+/* $Id: native.c,v 1.64 2005/07/16 07:02:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -250,16 +250,20 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 {
 	action_t *mon = NULL;
 	char *key = NULL;
+	const char *node_uname = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
 	int interval_ms = 0;
+	gboolean is_optional = TRUE;
 	
-	if(node == NULL || !node->details->online || node->details->unclean) {
-		crm_debug_3("Not creating recurring actions for %s", rsc->id);
-		return;
-	}
 	crm_debug_2("Creating recurring actions for %s", rsc->id);
-
+	if(start != NULL) {
+		is_optional = start->optional;
+	}
+	if(node != NULL) {
+		node_uname = node->details->uname;
+	}
+	
 	xml_child_iter(
 		rsc->ops_xml, operation, "op",
 
@@ -273,15 +277,22 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		
 		key = generate_op_key(rsc->id, name, interval_ms);
 		mon = custom_action(
-			rsc, key, name, node, start->optional, data_set);
+			rsc, key, name, node, is_optional, data_set);
 
-		if(start->runnable == FALSE) {
+		if(start == NULL || start->runnable == FALSE) {
 			crm_warn("   %s:\t(%s) (cancelled : start un-runnable)",
-				 mon->uuid, node->details->uname);
-			mon->runnable = start->runnable;
+				 mon->uuid, node_uname);
+			mon->runnable = FALSE;
 
-		} else if(mon->optional == FALSE && node != NULL) {
-			crm_info("   %s:\t(%s)", mon->uuid, node->details->uname);
+		} else if(node == NULL
+			  || node->details->online == FALSE
+			  || node->details->unclean) {
+			crm_warn("   %s:\t(%s) (cancelled : no node available)",
+				 mon->uuid, node_uname);
+			mon->runnable = FALSE;
+		
+		} else if(mon->optional == FALSE) {
+			crm_info("   %s:\t(%s)", mon->uuid, node_uname);
 		}
 		custom_action_order(rsc, start_key(rsc), NULL,
 				    NULL, crm_strdup(key), mon,
@@ -411,12 +422,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		}
 	}
 	
-	if(start != NULL) {
-		create_recurring_actions(rsc, start, chosen, data_set);
-	} else {
-		crm_err("Not creating recurring actions for %s: %p (%d)",
-			rsc->id, start, start?start->runnable:0);
-	}
+	create_recurring_actions(rsc, start, chosen, data_set);
 }
 
 void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)

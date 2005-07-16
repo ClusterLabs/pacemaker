@@ -44,19 +44,19 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <pseudo_event id="26" rsc_id="DoFencing" operation="start" allow_fail="false">
+       <pseudo_event id="27" rsc_id="DoFencing" operation="start" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="29" rsc_id="DoFencing" operation="stopped" allow_fail="false"/>
+         <pseudo_event id="30" rsc_id="DoFencing" operation="stopped" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="4">
      <action_set>
-       <pseudo_event id="27" rsc_id="DoFencing" operation="running" allow_fail="false">
+       <pseudo_event id="28" rsc_id="DoFencing" operation="running" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
@@ -74,7 +74,7 @@
    </synapse>
    <synapse id="5">
      <action_set>
-       <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false">
+       <pseudo_event id="29" rsc_id="DoFencing" operation="stop" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
@@ -82,7 +82,7 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <pseudo_event id="29" rsc_id="DoFencing" operation="stopped" allow_fail="false">
+       <pseudo_event id="30" rsc_id="DoFencing" operation="stopped" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
@@ -114,7 +114,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+         <pseudo_event id="29" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -134,7 +134,7 @@
          <rsc_op id="16" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
        </trigger>
        <trigger>
-         <pseudo_event id="26" rsc_id="DoFencing" operation="start" allow_fail="false"/>
+         <pseudo_event id="27" rsc_id="DoFencing" operation="start" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -170,7 +170,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+         <pseudo_event id="29" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -190,7 +190,7 @@
          <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:1" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
        </trigger>
        <trigger>
-         <pseudo_event id="26" rsc_id="DoFencing" operation="start" allow_fail="false"/>
+         <pseudo_event id="27" rsc_id="DoFencing" operation="start" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -226,7 +226,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+         <pseudo_event id="29" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -246,7 +246,7 @@
          <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false"/>
        </trigger>
        <trigger>
-         <pseudo_event id="26" rsc_id="DoFencing" operation="start" allow_fail="false"/>
+         <pseudo_event id="27" rsc_id="DoFencing" operation="start" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -282,13 +282,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+         <pseudo_event id="29" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="17">
      <action_set>
-       <crm_event id="30" operation="do_shutdown" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+       <crm_event id="31" operation="do_shutdown" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
          <attributes/>
        </crm_event>
      </action_set>

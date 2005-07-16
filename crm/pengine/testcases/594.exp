@@ -87,19 +87,19 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <pseudo_event id="18" rsc_id="DoFencing" operation="start" allow_fail="false">
+       <pseudo_event id="20" rsc_id="DoFencing" operation="start" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="21" rsc_id="DoFencing" operation="stopped" allow_fail="false"/>
+         <pseudo_event id="23" rsc_id="DoFencing" operation="stopped" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="7">
      <action_set>
-       <pseudo_event id="19" rsc_id="DoFencing" operation="running" allow_fail="false">
+       <pseudo_event id="21" rsc_id="DoFencing" operation="running" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
@@ -111,7 +111,7 @@
    </synapse>
    <synapse id="8">
      <action_set>
-       <pseudo_event id="20" rsc_id="DoFencing" operation="stop" allow_fail="false">
+       <pseudo_event id="22" rsc_id="DoFencing" operation="stop" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
@@ -119,7 +119,7 @@
    </synapse>
    <synapse id="9">
      <action_set>
-       <pseudo_event id="21" rsc_id="DoFencing" operation="stopped" allow_fail="false">
+       <pseudo_event id="23" rsc_id="DoFencing" operation="stopped" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
@@ -131,7 +131,7 @@
          <rsc_op id="16" rsc_id="DoFencing:child_DoFencing:1" operation="stop" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="17" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false"/>
+         <rsc_op id="18" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -148,7 +148,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="20" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+         <pseudo_event id="22" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -168,7 +168,7 @@
          <rsc_op id="13" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false"/>
        </trigger>
        <trigger>
-         <pseudo_event id="18" rsc_id="DoFencing" operation="start" allow_fail="false"/>
+         <pseudo_event id="20" rsc_id="DoFencing" operation="start" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -204,13 +204,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="20" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+         <pseudo_event id="22" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="14">
      <action_set>
-       <rsc_op id="17" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false">
+       <rsc_op id="18" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="clone" value="2"/>
@@ -221,13 +221,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="20" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+         <pseudo_event id="22" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="15">
      <action_set>
-       <crm_event id="22" operation="do_shutdown" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
+       <crm_event id="24" operation="do_shutdown" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
          <attributes/>
        </crm_event>
      </action_set>
