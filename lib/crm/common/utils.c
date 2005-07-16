@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.19 2005/06/16 09:20:02 davidlee Exp $ */
+/* $Id: utils.c,v 1.20 2005/07/16 06:58:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -882,6 +882,82 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 	}
 	return op_id;
 }
+
+char *
+generate_transition_magic(const char *transition_key, int op_status)
+{
+	int len = 40;
+	char *fail_state = NULL;
+
+	CRM_DEV_ASSERT(transition_key != NULL);
+	if(crm_assert_failed) { return NULL; }
+	
+	len += strlen(transition_key);
+	
+	crm_malloc0(fail_state, sizeof(char)*len);
+	if(fail_state != NULL) {
+		snprintf(fail_state, len, "%d:%s", op_status, transition_key);
+	}
+	return fail_state;
+}
+
+gboolean
+decode_transition_magic(
+	const char *magic, char **uuid, int *transition_id, int *op_status)
+{
+	char *key = NULL;
+	char *status = NULL;
+
+	if(decodeNVpair(magic, ':', &status, &key) == FALSE) {
+		return FALSE;
+	}
+
+	if(decode_transition_key(key, uuid, transition_id) == FALSE) {
+		return FALSE;
+	}
+	
+	*op_status = atoi(status);
+
+	crm_free(key);
+	crm_free(status);
+	
+	return TRUE;
+}
+
+char *
+generate_transition_key(int transition_id, const char *node)
+{
+	int len = 40;
+	char *fail_state = NULL;
+
+	CRM_DEV_ASSERT(node != NULL); if(crm_assert_failed) { return NULL; }
+	
+	len += strlen(node);
+	
+	crm_malloc0(fail_state, sizeof(char)*len);
+	if(fail_state != NULL) {
+		snprintf(fail_state, len, "%d:%s", transition_id, node);
+	}
+	return fail_state;
+}
+
+
+gboolean
+decode_transition_key(const char *key, char **uuid, int *transition_id)
+{
+	char *transition = NULL;
+	
+	if(decodeNVpair(key, ':', &transition, uuid) == FALSE) {
+		return FALSE;
+	}
+	
+	*transition_id = atoi(transition);
+
+	crm_free(transition);
+	
+	return TRUE;
+}
+
 
 gboolean
 crm_mem_stats(volatile cl_mem_stats_t *mem_stats)

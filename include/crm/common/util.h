@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.19 2005/05/31 11:43:56 andrew Exp $ */
+/* $Id: util.h,v 1.20 2005/07/16 06:58:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -91,5 +91,17 @@ extern char *generate_op_key(
 extern gboolean crm_mem_stats(volatile cl_mem_stats_t *mem_stats);
 
 extern void crm_zero_mem_stats(volatile cl_mem_stats_t *stats);
+
+extern char *generate_transition_magic(
+	const char *transition_key, int op_status);
+
+extern gboolean decode_transition_magic(
+	const char *magic, char **uuid, int *transition_id, int *op_status);
+
+extern char *generate_transition_key(int transition_id, const char *node);
+
+extern gboolean decode_transition_key(
+	const char *key, char **uuid, int *transition_id);
+
 
 #endif

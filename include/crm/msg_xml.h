@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.38 2005/07/14 13:27:49 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.39 2005/07/16 06:58:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -208,6 +208,9 @@
 #define XML_CONFIG_ATTR_REANNOUNCE	"join_reannouce"
 
 #define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
+
+#define XML_ATTR_TRANSITION_MAGIC	"transition_magic"
+#define XML_ATTR_TRANSITION_KEY		"transition_key"
 
 #include <crm/common/xml.h> 
 

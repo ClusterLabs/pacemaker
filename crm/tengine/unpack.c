@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.41 2005/06/27 11:13:05 andrew Exp $ */
+/* $Id: unpack.c,v 1.42 2005/07/16 06:58:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,9 +75,7 @@ unpack_graph(crm_data_t *xml_graph)
 	CRM_DEV_ASSERT(time != NULL);
 
 	transition_timer->timeout = crm_get_msec(time);
-	transition_idle_timeout = transition_timer->timeout;
-	
-	time = crm_element_value(xml_graph, "transition_fuzz");
+	transition_idle_timeout = transition_timer->timeout;		
 
 	transition_counter = crm_atoi(t_id, "-1");
 

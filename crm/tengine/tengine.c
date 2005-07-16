@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.86 2005/07/15 15:38:52 andrew Exp $ */
+/* $Id: tengine.c,v 1.87 2005/07/16 06:58:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,8 +34,6 @@ gboolean graph_complete = FALSE;
 GListPtr graph = NULL;
 IPC_Channel *crm_ch = NULL;
 uint transition_idle_timeout = 30*1000; /* 30 seconds */
-uint default_transition_idle_timeout = 30*1000; /* 30 seconds */
-uint next_transition_idle_timeout = 30*1000; /* 30 seconds */
 
 void fire_synapse(synapse_t *synapse);
 gboolean initiate_action(action_t *action);
@@ -47,6 +45,7 @@ void cib_action_updated(
 
 te_timer_t *transition_timer = NULL;
 int transition_counter = 1;
+char *te_uuid = NULL;
 
 const te_fsa_state_t te_state_matrix[i_invalid][s_invalid] = 
 {
@@ -76,6 +75,14 @@ initialize_graph(void)
 		transition_timer->action    = NULL;
 	} else {
 		stop_te_timer(transition_timer);
+	}
+
+	if(te_uuid == NULL) {
+		cl_uuid_t new_uuid;
+		crm_malloc0(te_uuid, sizeof(char)*38);
+		cl_uuid_generate(&new_uuid);
+		cl_uuid_unparse(&new_uuid, te_uuid);
+		crm_info("Registering TE UUID: %s", te_uuid);
 	}
 	
 	while(g_list_length(graph) > 0) {
@@ -130,10 +137,9 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	const char *this_uname  = NULL;
 	const char *this_rsc    = NULL;
 	const char *magic       = NULL;
-	const char *transition  = NULL;
 
 	char *this_event;
-	const char *op_status;
+	char *update_te_uuid = NULL;
 	const char *update_event;
 	
 	action_t *match = NULL;
@@ -154,8 +160,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 
 	crm_debug_3("Processing \"%s\" change", crm_element_name(event));
 	update_event = crm_element_value(event, XML_ATTR_ID);
-	op_status    = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
-	magic        = crm_element_value(event, "transition_magic");
+	magic        = crm_element_value(event, XML_ATTR_TRANSITION_MAGIC);
 
 	if(magic == NULL) {
 /* 		crm_debug("Skipping \"non-change\""); */
@@ -186,33 +191,10 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	}
 	
 	crm_debug("Matched action %d", action->id);
-	if(transition != NULL) {
-		transition_i = atoi(transition);
-	}
-	if(op_status != NULL) {
-		op_status_i = atoi(op_status);
-	}
 
-	if(op_status == NULL || transition == NULL) {
-		char *alt_status     = NULL;
-		char *alt_transition = NULL;
-		decodeNVpair(magic, ':', &alt_transition, &alt_status);
-		if(op_status == NULL && alt_status != NULL) {
-			op_status_i = atoi(alt_status);
-
-		} else if(op_status == NULL) {
-			crm_err("Status details not found");
-			crm_log_message(LOG_ERR, event);
-		}
-
-		if(transition == NULL && alt_transition != NULL) {
-			transition_i = atoi(alt_transition);
-
-		} else if(transition == NULL) {
-			crm_err("Transition details not found");
-			crm_log_message(LOG_ERR, event);
-		}
-	}
+	CRM_DEV_ASSERT(decode_transition_magic(
+			       magic, &update_te_uuid,
+			       &transition_i, &op_status_i));
 	
 	if(transition_i == -1) {
 		/* we never expect these - recompute */
@@ -220,12 +202,16 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		crm_log_message(LOG_ERR, event);
 		return -5;
 		
+	} else if(safe_str_neq(update_te_uuid, te_uuid)) {
+		crm_err("Detected an action from a different transitioner:"
+			" %s vs. %s", update_te_uuid, te_uuid);
+		return -6;
+		
 	} else if(transition_counter != transition_i) {
 		crm_warn("Detected an action from a different transition:"
 			 " %d vs. %d", transition_i, transition_counter);
 		return -3;
 	}
-	
 	
 	/* stop this event's timer if it had one */
 	stop_te_timer(match->timer);
@@ -412,9 +398,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	crm_debug("Processing CIB update: %s on %s: %s",
 		  rsc_id, event_node, op_status2text(op_status_i));
 
-	next_transition_idle_timeout = transition_idle_timeout;
-
-	if(crm_element_value(event, "transition_magic") == NULL) {
+	if(crm_element_value(event, XML_ATTR_TRANSITION_MAGIC) == NULL) {
 		crm_log_xml_debug(event, "Skipping \"non-change\"");
 		action_id = -3;
 	}
@@ -504,7 +488,6 @@ check_for_completion(void)
 	} else {
 		/* restart the transition timer again */
 		crm_debug_3("Transition not yet complete");
-		transition_timer->timeout = next_transition_idle_timeout;
 		start_te_timer(transition_timer);
 	}
 }
@@ -641,7 +624,8 @@ initiate_action(action_t *action)
 		cmd = create_request(msg_task, NULL, on_node, CRM_SYSTEM_CRMD,
 				     CRM_SYSTEM_TENGINE, NULL);
 
-		ha_msg_add(cmd, "transition_id", crm_str(counter));
+		counter = generate_transition_key(transition_counter, te_uuid);
+		crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 		ret = send_ipc_message(crm_ch, cmd);
 		crm_free(counter);
 
@@ -733,13 +717,13 @@ cib_action_update(action_t *action, int status)
 
 	crm_free(code);
 
-	ha_msg_add_int(xml_op, "transition_id", transition_counter);
-	
-	crm_malloc0(code, sizeof(char)*37);
-	if(code != NULL) {
-		snprintf(code, 36, "%d:-1", transition_counter);
-	}
-	crm_xml_add(xml_op,  "transition_magic", code);
+	code = generate_transition_key(transition_counter, te_uuid);
+	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, code);
+	crm_free(code);
+
+	code = generate_transition_magic(
+		crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY), -1);
+	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, code);
 	crm_free(code);
 	
 	set_node_tstamp(xml_op);
@@ -808,7 +792,9 @@ cib_action_updated(
 	task    = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 	rsc_id  = crm_element_value(rsc_op, XML_LRM_ATTR_RSCID);
 	on_node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
-	ha_msg_add_int(rsc_op, "transition_id", transition_counter);
+	counter = generate_transition_key(transition_counter, te_uuid);
+	crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
+	crm_free(counter);
 	
 	if(rc < cib_ok) {
 		crm_err("Update for action %d: %s %s on %s FAILED",
@@ -840,8 +826,6 @@ cib_action_updated(
 	cmd = create_request(
 		task, rsc_op, on_node, CRM_SYSTEM_LRMD,CRM_SYSTEM_TENGINE,NULL);
 	
-	ha_msg_add(cmd, "transition_id", counter);
-	crm_free(counter);
 
 #ifndef TESTING
 	send_ipc_message(crm_ch, cmd);
@@ -940,8 +924,10 @@ fire_synapse(synapse_t *synapse)
 				      te_failed, i_cancel);
 			return;
 		} 
-		if(tmp_time > next_transition_idle_timeout) {
-			next_transition_idle_timeout = tmp_time;
+		if(tmp_time > transition_timer->timeout) {
+			crm_debug("Action %d: Increasing IDLE timer to %d",
+				  action->id, tmp_time);
+			transition_timer->timeout = tmp_time;
 		}
 			
 		);

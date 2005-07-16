@@ -352,14 +352,12 @@ build_operation_update(
 			op->op_status = LRM_OP_ERROR;
 		}
 	}
-	
-	len = 34 + strlen(op->user_data?op->user_data:"-1");
-	crm_malloc0(fail_state, sizeof(char)*(len+1));
-	if(fail_state != NULL) {
-		snprintf(fail_state, len, "%s:%d",
-			 op->user_data?op->user_data:"-1", op->op_status);
+
+	if(op->user_data == NULL) {
+		op->user_data = generate_transition_key(-1, fsa_our_uname);
 	}
-	crm_xml_add(xml_op,  "transition_magic", fail_state);
+	fail_state = generate_transition_magic(op->user_data, op->op_status);
+	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, fail_state);
 	crm_free(fail_state);	
 	
 	switch(op->op_status) {
@@ -640,16 +638,10 @@ do_lrm_rsc_op(
 	}
 	
 	if(msg != NULL) {
-		transition = crm_element_value(msg, "transition_id");
+		transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
 		if(transition == NULL) {
 			crm_err("Missing transition");
 			crm_log_message(LOG_ERR, msg);
-		} else {
-			int transition_i = atoi(transition);
-			if(transition_i < 0) {
-				crm_err("Invalid transition");
-				crm_log_message(LOG_ERR, msg);
-			}
 		}
 	}
 
