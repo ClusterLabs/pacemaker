@@ -105,6 +105,7 @@ am_config_clean:
 drpm:		dist
 		$(RPM) --nodeps $(RPMFLAGS) $(TARFILE) </dev/null;
 handy: drpm handy-copy
+	$HOME/bin/linuxhasums $VERSION
 
 handy-copy:
 	cd doc; $(MAKE)
