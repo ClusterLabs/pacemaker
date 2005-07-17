@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.87 2005/07/16 06:58:35 andrew Exp $ */
+/* $Id: tengine.c,v 1.88 2005/07/17 10:01:12 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -907,8 +907,8 @@ fire_synapse(synapse_t *synapse)
 	slist_iter(
 		action, action_t, synapse->actions, lpc,
 
-		/* allow some leway */
-		unsigned tmp_time = 2 * action->timeout;
+		/* allow some leeway */
+		int tmp_time = 2 * action->timeout;
 		gboolean passed = FALSE;
 		action->invoked = TRUE;
 
