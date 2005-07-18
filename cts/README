@@ -572,4 +572,37 @@ This should work without prompting for a password,
 If not, you need to look at the ssh/openssh documentation and the output from
 the -v options above...
 
+----------------------------------------------------------------------------------
+How to set up host based authentication (http://wiki.linux-ha.org/HostBasedAuthentication)
+----------------------------------------------------------------------------------
+Client Machine 
+1) set 
+	HostbasedAuthentication yes
+in /etc/ssh/ssh_config 
+
+Server Machine
+1) in server, in /etc/ssh/sshd_config, set 
+	HostbasedAuthentication yes
+	IgnoreUserKnownHosts yes
+   and restart sshd 
+
+2) put client's machine name to /etc/ssh/shosts.equiv (assume the client is posic021) 
+	posic021
+	posic021.domain.name
+
+3) put the client machine's host key to /etc/ssh/ssh_known_hosts, 
+   add the client machine's name/full domain name/ip before that, e.g 
+	posic021,posic021.domain.name,141.142.xxx.xxx, ssh-rsa  .....
+
+4) For HostBasedAuthentication to work with root, In the server machine, 
+   you need have the file /root/.shosts 
+	posic021.domain.name root
+   You also need to set 
+	IgnoreRhosts no
+   in /etc/ssh/sshd_config and then restart sshd. 
+
+
+
+
+
 
