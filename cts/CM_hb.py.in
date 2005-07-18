@@ -58,7 +58,7 @@ class HeartbeatCM(ClusterManager):
             "StartDRBDCmd"   : "@sysconfdir@/init.d/drbd start >/dev/null 2>&1",
             "StopDRBDCmd"    : "@sysconfdir@/init.d/drbd stop",
             "StatusDRBDCmd"  : "@sysconfdir@/init.d/drbd status",
-            "DRBDCheckconf"  : "@sysconfdir@/init.d/drbd checkconfig >/tmp/drbdconf 2>&1",
+            "DRBDCheckconf"  : "@sysconfdir@/init.d/drbd checkconfig >/var/run/drbdconf 2>&1",
             "BreakCommCmd"   : "@libdir@/heartbeat/TestHeartbeatComm break-communication >/dev/null 2>&1",
             "FixCommCmd"     : "@libdir@/heartbeat/TestHeartbeatComm fix-communication >/dev/null 2>&1",
             "DelFileCommCmd" : "/usr/lib/heartbeat/TestHeartbeatComm delete-testingfile >/dev/null 2>&1",

@@ -1170,7 +1170,7 @@ class BandwidthTest(CTSTest):
         time.sleep(5)  # We get extra messages right after startup.
 
 
-        fstmpfile = "/tmp/band_estimate"
+        fstmpfile = "/var/run/band_estimate"
         dumpcmd = "tcpdump -p -n -c 102 -i any udp port %d > %s 2>&1" \
         %                (port, fstmpfile)
  
@@ -1374,9 +1374,9 @@ class DRBDTest(CTSTest):
         while 1:
             if (time.time()>done):
                 return self.failure("the drbd could't sync")
-            self.CM.rsh(node,"cp /proc/drbd /tmp >/dev/null 2>&1")
-            if self.CM.rsh.cp("%s:/tmp/drbd" % node,"/tmp"):
-                line = open("/tmp/drbd").readlines()[2]
+            self.CM.rsh(node,"cp /proc/drbd /var/run >/dev/null 2>&1")
+            if self.CM.rsh.cp("%s:/var/run/drbd" % node,"/var/run"):
+                line = open("/tmp/var/run").readlines()[2]
                 p = line.find("Primary")
                 s1 = line.find("Secondary")
                 s2 = line.rfind("Secondary")
@@ -1412,8 +1412,8 @@ class DRBDTest(CTSTest):
     def getdevice(self,node):
         device=None
         if self.CM.rsh(node,self.CM["DRBDCheckconf"])==0:
-            self.CM.rsh.cp("%s:/tmp/drbdconf" % node, "/tmp")
-            lines=open("/tmp/drbdconf","r")
+            self.CM.rsh.cp("%s:/var/run/drbdconf" % node, "/var/run")
+            lines=open("/var/run/drbdconf","r")
             for line in lines:
                 if line.find("%s:device" % node)!=-1:
                     device=string.split(line," ")[8]
