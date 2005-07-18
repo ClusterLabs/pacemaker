@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.40 2005/07/18 11:17:23 andrew Exp $ */
+/* $Id: utils.c,v 1.41 2005/07/18 21:25:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -129,13 +129,11 @@ send_complete(const char *text, crm_data_t *msg,
 		case te_halt:
 			te_log_action(LOG_INFO,"Transition status: Stopped%s%s",
 				 text?": ":"", text?text:"");
-			op = CRM_OP_TECOMPLETE;
 			break;
 		case te_abort_confirmed:
 			te_log_action(LOG_INFO,
 				      "Transition status: Confirmed Stopped%s%s",
 				      text?": ":"", text?text:"");
-			op = CRM_OP_TEABORTED;
 			break;
 		case te_abort:
 			te_log_action(LOG_INFO,"Transition status: Stopped%s%s",
@@ -145,7 +143,6 @@ send_complete(const char *text, crm_data_t *msg,
 			te_log_action(LOG_INFO,
 				      "Transition status: Complete%s%s",
 				      text?": ":"", text?text:"");
-			op = CRM_OP_TECOMPLETE;
 			break;
 		case te_abort_timeout:
 			te_log_action(LOG_ERR,
@@ -158,7 +155,6 @@ send_complete(const char *text, crm_data_t *msg,
 				      "Transition status: Timed out after %dms",
 				      transition_timer->timeout);
 			log_level = LOG_WARNING;
-			op = CRM_OP_TETIMEOUT;
 			break;
 		case te_failed:
 			te_log_action(LOG_ERR, "Transition status: Aborted by failed action: %s", text);
@@ -198,6 +194,27 @@ send_complete(const char *text, crm_data_t *msg,
 	print_state(log_level);
 	initialize_graph();
 
+	switch(reason) {
+		case te_abort:
+		case te_abort_timeout:
+		case te_failed:
+		case te_update:
+			op = CRM_OP_TEABORT;
+			break;
+		case te_halt:
+			op = CRM_OP_TECOMPLETE;
+			break;
+		case te_abort_confirmed:
+			op = CRM_OP_TEABORTED;
+			break;
+		case te_done:
+			op = CRM_OP_TECOMPLETE;
+			break;
+		case te_timeout:
+			op = CRM_OP_TETIMEOUT;
+			break;
+	}
+	
 	cmd = create_request(
 		op, NULL, NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
 
