@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.94 2005/07/15 15:32:51 andrew Exp $ */
+/* $Id: utils.c,v 1.95 2005/07/18 16:15:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1184,21 +1184,25 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 	switch(text2task(action->task)) {
 		case stonith_node:
 		case shutdown_crm:
-			crm_log_maybe(log_level, "%s%s%sAction %d: %s @ %s",
+			crm_log_maybe(log_level,
+				      "%s%s%sAction %d: %s\ton %s\t\t(%s)",
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
 				      action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 				      action->id, action->task,
-				      safe_val4(NULL, action, node, details, uname));
+				      safe_val4("<none>",action,node,details,uname),
+				      safe_val4("",action,node,details,id));
 			break;
 		default:
-			crm_log_maybe(log_level, "%s%s%sAction %d: %s %s @ %s",
+			crm_log_maybe(log_level,
+				      "%s%s%sAction %d: %s %s\ton %s\t\t(%s)",
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
 				      action->optional?"Optional ":action->pseudo?"Pseduo ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 				      action->id, action->task,
-				      safe_val3(NULL, action, rsc, id),
-				      safe_val4(NULL, action, node, details, uname));
+				      safe_val3("<none>", action, rsc, id),
+				      safe_val4("<none>",action,node,details,uname),
+				      safe_val4("",action,node,details,id));
 			
 			break;
 	}
