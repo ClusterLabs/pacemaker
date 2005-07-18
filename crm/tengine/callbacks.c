@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.41 2005/07/15 15:38:52 andrew Exp $ */
+/* $Id: callbacks.c,v 1.42 2005/07/18 11:17:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -371,13 +371,6 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 	crm_info("optype=%d, node_name=%s, result=%d, node_list=%s",
 		 op->optype, op->node_name, op->op_result,
 		 (char *)op->node_list);
-
-	if(te_fsa_state == s_abort_pending) {
-		/* take no further actions if an abort is pending */
-		crm_debug("Ignoring Stonith result while waiting for an abort");
-		return;
-	}
- 
 	
 	/* this will mark the event complete if a match is found */
 	action_id = match_down_event(

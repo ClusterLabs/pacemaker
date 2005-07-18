@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.26 2005/06/15 10:47:45 andrew Exp $ */
+/* $Id: main.c,v 1.27 2005/07/18 11:17:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -177,6 +177,8 @@ init_start(void)
 		crm_info("Starting %s", crm_system_name);
 
 		mainloop = g_main_new(FALSE);
+		initialize_graph();
+
 		g_main_run(mainloop);
 		return_to_orig_privs();
 

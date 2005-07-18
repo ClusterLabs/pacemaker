@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.39 2005/07/15 15:38:52 andrew Exp $ */
+/* $Id: utils.c,v 1.40 2005/07/18 11:17:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,11 +37,34 @@ void print_input(const char *prefix, action_t *input, gboolean to_file);
 void print_action(const char *prefix, action_t *action, gboolean to_file);
 gboolean timer_callback(gpointer data);
 
+int unconfirmed_actions(void)
+{
+	int unconfirmed = 0;
+	
+	crm_debug_2("Unconfirmed actions...");
+	slist_iter(
+		synapse, synapse_t, graph, lpc,
+
+		/* lookup event */
+		slist_iter(
+			action, action_t, synapse->actions, lpc2,
+			if(action->invoked && action->complete == FALSE) {
+				unconfirmed++;
+				crm_debug("Action %d: unconfirmed",action->id);
+			}
+			);
+		);
+	
+	return unconfirmed;
+}
+
 void
 send_complete(const char *text, crm_data_t *msg,
 	      te_reason_t reason, te_fsa_input_t input)
 {	
-	int pending_callbacks = 0;
+	int log_level = LOG_DEBUG;
+	int unconfirmed = unconfirmed_actions();
+	int pending_callbacks = num_cib_op_callbacks();
 	HA_Message *cmd = NULL;
 	const char *op = CRM_OP_TEABORT;
 	static te_reason_t last_reason = te_done;
@@ -49,45 +72,36 @@ send_complete(const char *text, crm_data_t *msg,
 	static const char *last_text = NULL;
 
 	te_fsa_state_t last_state = te_fsa_state;
-
-	pending_callbacks = num_cib_op_callbacks();
-	CRM_DEV_ASSERT(pending_callbacks == 0 || te_fsa_state != s_idle);
-	if(crm_assert_failed) {
-		te_fsa_state = s_abort_pending;
-	}
-	
 	te_fsa_state = te_state_matrix[input][te_fsa_state];
-
-	if(te_fsa_state == s_abort_pending && pending_callbacks == 0) {
-		crm_debug("Faking i_cib_complete: %d/%d", last_state, input);
-		te_fsa_state = te_state_matrix[i_cib_complete][te_fsa_state];
+	if(te_fsa_state != last_state) {
+		crm_debug("State change %d->%d", last_state, te_fsa_state);
 	}
 	
-	if(pending_callbacks > 0 && input != i_cib_complete) {
-		if(last_msg) {
-			free_xml(last_msg);
-		}
-		last_msg = NULL;
-		if(msg != NULL) {
-			last_msg = copy_xml(msg);
-		}
-		last_text   = text;
-		last_reason = reason;
-		crm_info("CIB updates are pending.  Delay until they complete.");
-		return;
+	if(te_fsa_state == s_abort_pending
+	   && (unconfirmed == 0 || reason == te_timeout || reason == te_abort_timeout)) {
+		crm_debug("Faking i_cmd_complete: %d/%d", last_state, input);
+		te_fsa_state = te_state_matrix[i_cmd_complete][te_fsa_state];
+		crm_debug("State change %d->%d", last_state, te_fsa_state);
+		crm_debug("Stopping abort timer");
+		stop_te_timer(abort_timer);
 
-	} else if(te_fsa_state != s_idle) {
-		crm_err("Delaying \"%s\" notification until we are idle.",text);
-		return;
-		
-	} else if(input == i_cib_complete) {
-		msg    = last_msg;
-		text   = last_text;
-		reason = last_reason;
+	} else if(te_fsa_state ==s_abort_pending && te_fsa_state !=last_state) {
+		abort_timer->timeout = transition_timer->timeout;
+		crm_info("Starting abort timer: %dms", abort_timer->timeout);
+		start_te_timer(abort_timer);
 	}
 
+	if(te_fsa_state == s_updates_pending && pending_callbacks == 0) {
+		crm_debug("Faking i_cib_complete: %d/%d", last_state, input);
+		te_fsa_state = te_state_matrix[i_cib_complete][te_fsa_state];		
+		crm_debug("State change %d->%d", last_state, te_fsa_state);
+	}
 
-	CRM_DEV_ASSERT(pending_callbacks == 0);
+	if(te_fsa_state == last_state
+	   && (last_state==s_abort_pending || last_state==s_updates_pending)) {
+		crm_info("Transaction already cancelled");
+	}
+	
 	
 	switch(reason) {
 		case te_update:
@@ -111,47 +125,77 @@ send_complete(const char *text, crm_data_t *msg,
 					crm_log_xml_debug(msg, "Cause");
 				}
 			}
-			print_state(LOG_DEBUG);
 			break;
 		case te_halt:
 			te_log_action(LOG_INFO,"Transition status: Stopped%s%s",
 				 text?": ":"", text?text:"");
-			print_state(LOG_DEBUG);
 			op = CRM_OP_TECOMPLETE;
 			break;
 		case te_abort_confirmed:
 			te_log_action(LOG_INFO,
 				      "Transition status: Confirmed Stopped%s%s",
 				      text?": ":"", text?text:"");
-			print_state(LOG_DEBUG);
 			op = CRM_OP_TEABORTED;
 			break;
 		case te_abort:
 			te_log_action(LOG_INFO,"Transition status: Stopped%s%s",
 				      text?": ":"", text?text:"");
-			print_state(LOG_DEBUG);
 			break;
 		case te_done:
 			te_log_action(LOG_INFO,
 				      "Transition status: Complete%s%s",
 				      text?": ":"", text?text:"");
-			print_state(LOG_DEBUG);
 			op = CRM_OP_TECOMPLETE;
+			break;
+		case te_abort_timeout:
+			te_log_action(LOG_ERR,
+				      "Transition status: Abort timed out after %dms",
+				      abort_timer->timeout);
+			log_level = LOG_WARNING;
 			break;
 		case te_timeout:
 			te_log_action(LOG_ERR,
 				      "Transition status: Timed out after %dms",
 				      transition_timer->timeout);
-			print_state(LOG_WARNING);
+			log_level = LOG_WARNING;
 			op = CRM_OP_TETIMEOUT;
 			break;
 		case te_failed:
 			te_log_action(LOG_ERR, "Transition status: Aborted by failed action: %s", text);
 			crm_log_xml_debug(msg, "Cause");
-			print_state(LOG_WARNING);
+			log_level = LOG_WARNING;
 			break;
 	}
 	
+	if(te_fsa_state != s_idle) {
+		if(last_text == NULL) {
+			/* store the original input */
+			crm_debug("Storing TE input.");
+			last_msg = NULL;
+			if(msg != NULL) {
+				last_msg = copy_xml(msg);
+			}
+			last_text   = text;
+			last_reason = reason;
+		}
+		crm_info("Delay abort until %d updates and %d actions complete (state=%d).",
+			pending_callbacks, unconfirmed, te_fsa_state);
+		return;
+		
+	} else if(last_text != NULL) {
+		/* restore the original reason we aborted */
+		crm_debug("Restoring TE input.");
+		msg    = last_msg;
+		text   = last_text;
+		reason = last_reason;
+
+		last_msg = NULL;
+		last_text = NULL;
+	}
+
+	CRM_DEV_ASSERT(pending_callbacks == 0);
+
+	print_state(log_level);
 	initialize_graph();
 
 	cmd = create_request(
@@ -250,8 +294,10 @@ void
 print_action(const char *prefix, action_t *action, int log_level) 
 {
 	do_crm_log(log_level, __FILE__, __FUNCTION__, "%s[Action %d] %s (%s fail)",
-		   prefix, action->id, action->complete?"Completed":
-					action->invoked?"In-flight":"Pending",
+		   prefix, action->id,
+		   action->complete?"Completed":
+		    action->invoked?"In-flight":
+		    action->sent_update?"Update sent":"Pending",
 		   action->can_fail?"can":"cannot");
 		
 	switch(action->type) {
@@ -313,8 +359,17 @@ timer_callback(gpointer data)
 	}
 	timer->source_id = -1;
 
-	crm_err("Timer popped in state=%d", te_fsa_state);
-	if(te_fsa_state != s_in_transition) {
+	crm_warn("Timer popped in state=%d", te_fsa_state);
+	if(timer->reason == timeout_abort) {
+		crm_err("Transition abort timeout reached..."
+			 " marking transition complete.");
+			
+		send_complete(XML_ATTR_TIMEOUT, NULL,
+			      te_abort_timeout, i_cmd_complete);
+		
+		return TRUE;
+		
+	} else if(te_fsa_state != s_in_transition) {
 		crm_debug("Ignoring timeout while not in transition");
 		return TRUE;
 		

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.42 2005/07/16 06:58:35 andrew Exp $ */
+/* $Id: unpack.c,v 1.43 2005/07/18 11:17:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -191,6 +191,7 @@ unpack_action(crm_data_t *xml_action)
 	action->interval = 0;
 	action->timer    = NULL;
 	action->invoked  = FALSE;
+	action->sent_update = FALSE;
 	action->complete = FALSE;
 	action->can_fail = FALSE;
 	action->type     = action_type_rsc;
@@ -289,25 +290,6 @@ extract_event(crm_data_t *msg)
 			blob.text = "Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute";
 			break;
 			
-/* is this still required??? */
-		} else if(crm_element_value(node_state, CRM_OP_FENCE) != NULL) {
-			/* node marked for STONITH
-			 *   possibly by us when a shutdown timed out
-			 */
-			int action_id = -1;
-			crm_debug_3("Checking for STONITH");
-			action_id = match_down_event(
-				event_node, CRM_OP_SHUTDOWN, LRM_OP_DONE);
-			
-			if(action_id < 0) {
-				blob.text="Stonith/shutdown event not matched";
-				break;
-
-			} else {
-				process_trigger(action_id);
-				check_for_completion();
-			}
-/* END: is this still required??? */
 		}
 
 		resources = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);

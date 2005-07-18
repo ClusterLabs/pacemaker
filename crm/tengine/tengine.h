@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.25 2005/07/03 22:15:49 alan Exp $ */
+/* $Id: tengine.h,v 1.26 2005/07/18 11:17:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,6 +40,7 @@ typedef enum te_reason_e {
 	te_abort,
 	te_abort_confirmed,
 	te_failed,
+	te_abort_timeout,
 	te_timeout,
 } te_reason_t;
 
@@ -47,6 +48,7 @@ typedef enum te_fsa_states_e {
 	s_idle,
 	s_in_transition,
 	s_abort_pending,
+	s_updates_pending,
 	s_invalid
 	
 } te_fsa_state_t;
@@ -55,6 +57,7 @@ typedef enum te_fsa_inputs_e {
 	i_transition,
 	i_cancel,
 	i_complete,
+	i_cmd_complete,
 	i_cib_complete,
 	i_cib_confirm,
 	i_cib_notify,
@@ -84,7 +87,8 @@ typedef struct action_s {
 
 		action_type_e type;
 
-		gboolean invoked;
+		gboolean sent_update;	/* sent to the CIB */
+		gboolean invoked;	/* sent to the CRM */
 		gboolean complete;
 		gboolean can_fail;
 		
@@ -97,6 +101,7 @@ enum timer_reason {
 	timeout_action,
 	timeout_action_warn,
 	timeout_timeout,
+	timeout_abort,
 };
 
 struct te_timer_s
@@ -138,6 +143,7 @@ extern uint transition_idle_timeout;
 extern uint default_transition_idle_timeout;
 
 extern te_timer_t *transition_timer;
+extern te_timer_t *abort_timer;
 extern cib_t *te_cib_conn;
 
 extern const char *actiontype2text(action_type_e type);
@@ -146,7 +152,8 @@ extern void tengine_stonith_callback(stonith_ops_t * op, void * private_data);
 extern void tengine_stonith_connection_destroy(gpointer user_data);
 extern gboolean tengine_stonith_dispatch(IPC_Channel *sender, void *user_data);
 extern void check_for_completion(void);
-void process_trigger(int action_id);
+extern void process_trigger(int action_id);
+extern int unconfirmed_actions(void);
 
 #ifdef TESTING
 #   define te_log_action(log_level, fmt...) {				\

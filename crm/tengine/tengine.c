@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.88 2005/07/17 10:01:12 alan Exp $ */
+/* $Id: tengine.c,v 1.89 2005/07/18 11:17:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,19 +44,23 @@ void cib_action_updated(
 	crm_data_t *output, void *user_data);
 
 te_timer_t *transition_timer = NULL;
+te_timer_t *abort_timer = NULL;
 int transition_counter = 1;
 char *te_uuid = NULL;
 
 const te_fsa_state_t te_state_matrix[i_invalid][s_invalid] = 
 {
-			/*  s_idle,          s_in_transition, s_abort_pending */
-/* Got an i_transition  */{ s_in_transition, s_abort_pending, s_abort_pending },
-/* Got an i_cancel      */{ s_idle,          s_abort_pending, s_abort_pending },
-/* Got an i_complete    */{ s_idle,          s_idle,          s_abort_pending },
-/* Got an i_cib_complete*/{ s_idle,          s_in_transition, s_idle          },
-/* Got an i_cib_confirm */{ s_idle,          s_in_transition, s_abort_pending },
-/* Got an i_cib_notify  */{ s_idle,          s_in_transition, s_abort_pending }
+			/*  s_idle,          s_in_transition, s_abort_pending,   s_updates_pending */
+/* Got an i_transition  */{ s_in_transition, s_abort_pending, s_abort_pending,   s_updates_pending },
+/* Got an i_cancel      */{ s_idle,          s_abort_pending, s_abort_pending,   s_updates_pending },
+/* Got an i_complete    */{ s_idle,          s_idle,          s_abort_pending,   s_updates_pending },
+/* Got an i_cmd_complete*/{ s_idle,          s_in_transition, s_updates_pending, s_updates_pending },
+/* Got an i_cib_complete*/{ s_idle,          s_in_transition, s_abort_pending,   s_idle },
+/* Got an i_cib_confirm */{ s_idle,          s_in_transition, s_abort_pending,   s_updates_pending },
+/* Got an i_cib_notify  */{ s_idle,          s_in_transition, s_abort_pending,   s_updates_pending }
 };
+
+
 
 te_fsa_state_t te_fsa_state = s_idle;
 
@@ -77,6 +81,17 @@ initialize_graph(void)
 		stop_te_timer(transition_timer);
 	}
 
+	if(abort_timer == NULL) {
+		crm_malloc0(abort_timer, sizeof(te_timer_t));
+	    
+		abort_timer->timeout   = 10;
+		abort_timer->source_id = -1;
+		abort_timer->reason    = timeout_abort;
+		abort_timer->action    = NULL;
+	} else {
+		stop_te_timer(abort_timer);
+	}
+	
 	if(te_uuid == NULL) {
 		cl_uuid_t new_uuid;
 		crm_malloc0(te_uuid, sizeof(char)*38);
@@ -255,9 +270,9 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	
 	te_log_action(LOG_INFO, "Action %d confirmed", match->id);
 	match->complete = TRUE;
+	process_trigger(match->id);
 
 	if(te_fsa_state != s_in_transition) {
-		crm_debug("Action completed after transition was terminated");
 		return -3;
 	}
 	return match->id;
@@ -468,8 +483,6 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		return FALSE;
 	}
 
-
-	process_trigger(action_id);
 	check_for_completion();
 
 	return TRUE;
@@ -603,6 +616,7 @@ initiate_action(action_t *action)
 		cib_action_update(action, LRM_OP_PENDING);
 		return TRUE;
 #endif
+		action->invoked = FALSE;
 		if(safe_str_neq(task, CRMD_ACTION_STOP)) {
 			cib_action_update(action, LRM_OP_PENDING);
 		} else {
@@ -764,6 +778,8 @@ cib_action_update(action_t *action, int status)
 	free_xml(fragment);
 	free_xml(state);
 
+	action->sent_update = TRUE;
+	
 	if(rc < cib_ok) {
 		return FALSE;
 	}
@@ -833,6 +849,7 @@ cib_action_updated(
 	crm_log_message(LOG_INFO, cmd);
 #endif
 	
+	action->invoked = TRUE;
 	if(action->timeout > 0) {
 		crm_debug_3("Setting timer for action %d",action->id);
 		action->timer->reason = timeout_action_warn;
@@ -963,6 +980,17 @@ confirm_synapse(synapse_t *synapse, int action_id)
 void
 process_trigger(int action_id) 
 {
+	if(te_fsa_state != s_in_transition) {
+		int unconfirmed = unconfirmed_actions();
+		crm_info("Trigger from action %d (%d more) discarded:"
+			 " Not in transition", action_id, unconfirmed);
+		if(unconfirmed == 0) {
+			send_complete("Last pending action confirmed", NULL,
+				      te_abort_confirmed, i_cmd_complete);
+		}
+		return;
+	}
+	
 	graph_complete = TRUE;
 	
 	crm_debug_3("Processing trigger from action %d", action_id);
