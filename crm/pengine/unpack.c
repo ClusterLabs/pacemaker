@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.107 2005/07/18 16:11:34 andrew Exp $ */
+/* $Id: unpack.c,v 1.108 2005/07/18 21:31:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -608,38 +608,47 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 gint
 sort_op_by_callid(gconstpointer a, gconstpointer b)
 {
+	char *uuid = NULL;
  	const char *a_task_id = cl_get_string(a, XML_LRM_ATTR_CALLID);
  	const char *b_task_id = cl_get_string(b, XML_LRM_ATTR_CALLID);
 
-	const char *a_status = cl_get_string(a, XML_LRM_ATTR_OPSTATUS);
- 	const char *b_status = cl_get_string(b, XML_LRM_ATTR_OPSTATUS);
+	const char *a_key = cl_get_string(a, XML_ATTR_TRANSITION_KEY);
+ 	const char *b_key = cl_get_string(b, XML_ATTR_TRANSITION_KEY);
 
 	int a_id = -1;
 	int b_id = -1;
-	
-	if(safe_str_eq(a_status, "-1") && safe_str_eq(b_status, "-1")) {
-		return 0;
-	}
-	/* the reverse from normal so that pending ops appear last */
-	if(safe_str_eq(a_status, "-1")) { return 1;  }
-	if(safe_str_eq(b_status, "-1")) { return -1; }
 
-	CRM_DEV_ASSERT(a_task_id != NULL && b_task_id != NULL);
-	
-	/* if task id is NULL, then its a pending op put pending ops last */
-	if(a_task_id == NULL && b_task_id == NULL) { return 0; }
-	if(a_task_id == NULL) { return 1; }
-	if(b_task_id == NULL) { return -1; }
-
+	CRM_DEV_ASSERT(a_task_id != NULL && b_task_id != NULL);	
 	a_id = atoi(a_task_id);
 	b_id = atoi(b_task_id);
 
-	if(a_id < b_id) {
+	if(a_id == -1 && b_id == -1) {
+		/* do nothing */
+	} else if(a_id < b_id || b_id == -1) {
 		return -1;
-	} else if(a_id > b_id) {
+	} else if(a_id > b_id || a_id == -1) {
 		return 1;
 	}
+
+	/* now process pending ops */
+	
+	CRM_DEV_ASSERT(a_key != NULL && b_key != NULL);
+	CRM_DEV_ASSERT(decode_transition_key(a_key, &uuid, &a_id)); crm_free(uuid);
+	CRM_DEV_ASSERT(decode_transition_key(b_key, &uuid, &b_id)); crm_free(uuid);
+	
+	/* test for -1 so that shutdown ops appear last
+	 * by definition nothing else should get run on that node
+	 */
+	if(a_id == b_id) {
+		return 0;
+	} else if(a_id < b_id || b_id == -1) {
+		return -1;
+	} else if(a_id > b_id || a_id == -1) {
+		return 1;
+	}
+
 	return 0;
+	
 }
 
 gboolean
@@ -683,8 +692,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	CRM_DEV_ASSERT(task_status_i >= LRM_OP_PENDING);
 	if(crm_assert_failed) {return FALSE;}
 
-	crm_debug_2("Unpacking task %s/%s (%s) on %s",
-		    rsc->id, task, task_status, node->details->uname);
+	crm_debug_2("Unpacking task %s/%s (call_id=%s, status=%s) on %s",
+		    rsc->id, task, task_id, task_status, node->details->uname);
 	
 	if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 		is_stop_action = TRUE;

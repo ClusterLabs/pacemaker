@@ -29,6 +29,7 @@ echo Done.
 echo ""
 echo Performing the following tests...
 create_mode="false"
+
 do_test simple1 "Offline     "
 do_test simple2 "Start       "
 do_test simple3 "Start 2     "
@@ -169,6 +170,7 @@ do_test 594 "Bugzilla 594"
 do_test 662 "Bugzilla 662"
 do_test 696 "Bugzilla 696"
 do_test 726 "Bugzilla 726"
+do_test 735 "Bugzilla 735"
 
 
 echo ""

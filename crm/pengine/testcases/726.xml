@@ -117,23 +117,23 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" origin="build_active_RAs" transition_magic="0:0" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_stop_0" operation="stop" origin="build_active_RAs" transition_magic="1:0" rsc_state="stopped" call_id="5" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" origin="build_active_RAs" transition_key="0:0" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_stop_0" operation="stop" origin="build_active_RAs" transition_key="1:0" rsc_state="stopped" call_id="5" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_ibm1" last_op="monitor" rsc_state="running" rc_code="-1" op_status="-1">
-            <lrm_rsc_op id="rsc_ibm1_start_0" operation="start" origin="build_active_RAs" transition_magic="1:0" rsc_state="running" call_id="7" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_ibm1_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_magic="1:-1"/>
+            <lrm_rsc_op id="rsc_ibm1_start_0" operation="start" origin="build_active_RAs" transition_key="1:0" rsc_state="running" call_id="7" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_ibm1_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="1:-1" call_id="-1"/>
           </lrm_resource>
           <lrm_resource id="rsc_test03" last_op="monitor" rsc_state="running" rc_code="-1" op_status="-1">
-            <lrm_rsc_op id="rsc_test03_start_0" operation="start" origin="build_active_RAs" transition_magic="1:0" rsc_state="running" call_id="8" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_test03_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_magic="1:-1"/>
+            <lrm_rsc_op id="rsc_test03_start_0" operation="start" origin="build_active_RAs" transition_key="1:0" rsc_state="running" call_id="8" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_test03_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="1:-1" call_id="-1"/>
           </lrm_resource>
           <lrm_resource id="DcIPaddr" last_op="monitor" rsc_state="running" rc_code="-1" op_status="-1">
-            <lrm_rsc_op id="DcIPaddr_start_0" operation="start" origin="build_active_RAs" transition_magic="1:0" rsc_state="running" call_id="6" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_magic="1:-1"/>
+            <lrm_rsc_op id="DcIPaddr_start_0" operation="start" origin="build_active_RAs" transition_key="1:0" rsc_state="running" call_id="6" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="1:-1" call_id="-1"/>
           </lrm_resource>
           <lrm_resource id="DoFencing:child_DoFencing:1" rsc_state="starting" op_status="-1" rc_code="-1" last_op="start">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" operation="start" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_magic="1:-1"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" operation="start" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="1:-1" call_id="-1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -142,7 +142,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" rsc_state="starting" op_status="-1" rc_code="-1" last_op="start">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_magic="1:-1"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="1:-1" call_id="-1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
