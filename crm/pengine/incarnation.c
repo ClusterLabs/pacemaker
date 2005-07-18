@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.39 2005/07/07 15:28:59 andrew Exp $ */
+/* $Id: incarnation.c,v 1.40 2005/07/18 16:14:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -251,7 +251,7 @@ void clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		if(lpc >= clone_data->active_clones) {
-			pe_warn("Clone %s cannot be started", child_rsc->id);
+			crm_warn("Clone %s cannot be started", child_rsc->id);
 		}
 		child_rsc->fns->color(child_rsc, data_set);
 		);
