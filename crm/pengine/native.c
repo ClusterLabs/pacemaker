@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.64 2005/07/16 07:02:25 andrew Exp $ */
+/* $Id: native.c,v 1.65 2005/07/18 21:23:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -331,7 +331,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				node, node_t,
 				native_data->running_on, lpc,
 				
-				crm_info("Stop  resource %s\t(%s) (recovery)",
+				pe_warn("Stop  resource %s\t(%s) (recovery)",
 					 rsc->id, node->details->uname);
 				stop = stop_action(rsc, node, FALSE);
 				);
@@ -343,8 +343,8 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 			 */
 			start = start_action(rsc, chosen, FALSE);
 			if(start->runnable) {
-				crm_info("Recover resource %s\t(%s)",
-					 rsc->id, chosen->details->uname);
+				pe_warn("Recover resource %s\t(%s)",
+					rsc->id, chosen->details->uname);
 			}
 			
 			/* make the restart required */
