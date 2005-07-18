@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.106 2005/07/08 20:46:26 andrew Exp $ */
+/* $Id: unpack.c,v 1.107 2005/07/18 16:11:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -761,8 +761,11 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				crm_debug_2("Re-issuing pending recurring task:"
 					    " %s for %s on %s",
 					    task, rsc->id, node->details->id);
+				/* do not specify the node, we may want
+				 * to start it elsewhere
+				 */
 				custom_action(rsc, crm_strdup(id),
-					      task, node, FALSE, data_set);
+					      task, NULL, FALSE, data_set);
 			}
 			break;
 		
