@@ -376,9 +376,16 @@ cib_native_perform_op(
 	if(call_options & cib_inhibit_bcast) {
 		CRM_DEV_ASSERT((call_options & cib_scope_local));
 	}
-	
-	cib->call_id++;
 
+	cib->call_id++;
+	/* prevent call_id from being negative (or zero) and conflicting
+	 *    with the cib_errors enum
+	 * use 2 because we use it as (cib->call_id - 1) below
+	 */
+	if(cib->call_id < 2) {
+		cib->call_id = 2;
+	}
+	
 	crm_debug_3("Sending %s message to CIB service", op);
 	if(send_ipc_message(native->command_channel, op_msg) == FALSE) {
 		crm_err("Sending message to CIB service FAILED");
