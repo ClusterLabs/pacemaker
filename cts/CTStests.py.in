@@ -2023,6 +2023,9 @@ class NearQuorumPointTest(CTSTest):
                 watchpats.append(self.CM["Pat:We_stopped"] % node)
                 
         for node in startset:
+	    for stop_node in stopset:
+		if self.CM.ShouldBeStatus[stop_node] == self.CM["up"]:
+		    watchpats.append(self.CM["Pat:They_stopped"] % (node, stop_node))
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 watchpats.append(self.CM["Pat:They_started"] % node)
                 
