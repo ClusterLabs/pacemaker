@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.76 2005/07/14 13:27:49 andrew Exp $ */
+/* $Id: callbacks.c,v 1.77 2005/07/19 20:29:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -210,7 +210,7 @@ cib_client_connect(IPC_Channel *channel, gpointer user_data)
 		
 	if(client_callback != NULL) {
 		new_client->source = G_main_add_IPC_Channel(
-			G_PRIORITY_LOW, channel, FALSE, client_callback,
+			G_PRIORITY_DEFAULT, channel, FALSE, client_callback,
 			new_client, default_ipc_connection_destroy);
 	}
 	if(client_callback != cib_null_callback) {
@@ -287,6 +287,9 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 				op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
 			type = cl_get_string(op_request, F_CIB_NOTIFY_TYPE);
 
+			crm_info("Setting %s callbacks for %s: %s",
+				 type, cib_client->name, on_off?"on":"off");
+			
 			if(safe_str_eq(type, T_CIB_POST_NOTIFY)) {
 				cib_client->post_notify = on_off;
 				
@@ -344,6 +347,13 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		crm_debug_2("Registered %s on %s channel",
 			    cib_client->id, cib_client->channel_name);
 
+		if(safe_str_eq(cib_client->name, CRM_SYSTEM_TENGINE)) {
+			/* The TE is _always_ interested in these
+			 * Enable now to avoid timing issues
+			 */
+			cib_client->diffs = TRUE;
+		}
+		
 		crm_msg_del(op_request);
 
 		op_request = ha_msg_new(2);
