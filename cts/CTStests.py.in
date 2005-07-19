@@ -91,22 +91,28 @@ class RandomTests:
 
     def audit(self, BadNews, test):
             errcount=0
+            BadNewsDebug=0
+            #BadNews.debug=1
             while errcount < 1000:
-                match=BadNews.look()
+                if BadNewsDebug: print "Looking for BadNews"
+                match=BadNews.look(0)
                 if match:
+                   if BadNewsDebug: print "BadNews found: "+match
                    add_err = 1
                    ignorelist = []
                    if test:
                        ignorelist=test.errorstoignore()
                    ignorelist.append(" CTS: ")
-                   ignorelist.append("BadNews")
+                   ignorelist.append("BadNews:")
                    for ignore in ignorelist:
                        if re.search(ignore, match):
+                           if BadNewsDebug: print "Ignoring:"+match+" (pattern: "+ignore+")"
                            add_err = 0
                    if add_err == 1:
                        ignorelist=self.CM.errorstoignore()
                        for ignore in ignorelist:
                            if re.search(ignore, match):
+                               if BadNewsDebug: print "Ignoring:"+match+" (pattern: "+ignore+")"
                                add_err = 0
                    if add_err == 1:
                        self.CM.log("BadNews: " + match)
@@ -2023,9 +2029,6 @@ class NearQuorumPointTest(CTSTest):
                 watchpats.append(self.CM["Pat:We_stopped"] % node)
                 
         for node in startset:
-	    for stop_node in stopset:
-		if self.CM.ShouldBeStatus[stop_node] == self.CM["up"]:
-		    watchpats.append(self.CM["Pat:They_stopped"] % (node, stop_node))
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 watchpats.append(self.CM["Pat:They_started"] % node)
                 
