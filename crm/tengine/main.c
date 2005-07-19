@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.27 2005/07/18 11:17:23 andrew Exp $ */
+/* $Id: main.c,v 1.28 2005/07/19 19:12:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -133,15 +133,15 @@ init_start(void)
 		crm_debug_4("Connecting to the CIB");
 		if(cib_ok != te_cib_conn->cmds->signon(
 			   te_cib_conn, crm_system_name, cib_command)) {
+			crm_err("Could not connect to the CIB");
 			init_ok = FALSE;
 		}
 	}
 
 	if(init_ok) {
 		crm_debug_4("Setting CIB notification callback");
-		if(te_cib_conn->cmds->add_notify_callback(
-			   te_cib_conn, T_CIB_DIFF_NOTIFY,
-			   te_update_diff) != cib_ok) {
+		if(cib_ok != te_cib_conn->cmds->add_notify_callback(
+			   te_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
 			crm_err("Could not set CIB notification callback");
 			init_ok = FALSE;
 		}
