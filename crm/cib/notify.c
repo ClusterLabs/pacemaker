@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.29 2005/06/15 10:13:55 andrew Exp $ */
+/* $Id: notify.c,v 1.30 2005/07/19 19:11:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -77,6 +77,19 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	type = cl_get_string(update_msg, F_SUBTYPE);
 	CRM_DEV_ASSERT(type != NULL);
 
+	if(client == NULL) {
+		crm_warn("Skipping NULL client");
+		return;
+
+	} else if(client->channel == NULL) {
+		crm_warn("Skipping client with NULL channel");
+		return;
+
+	} else if(client->name == NULL) {
+		crm_debug_2("Skipping unnammed client / comamnd channel");
+		return;
+	}
+	
 	if(safe_str_eq(type, T_CIB_PRE_NOTIFY)) {
 		is_pre = TRUE;
 		
@@ -88,15 +101,6 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	} else if(safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
 		is_diff = TRUE;
-	}
-
-	if(client == NULL) {
-		crm_warn("Skipping NULL client");
-		return;
-
-	} else if(client->channel == NULL) {
-		crm_warn("Skipping client with NULL channel");
-		return;
 	}
 
 	ipc_client = client->channel;
@@ -135,8 +139,8 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	if(do_send) {
 
-		crm_debug_3("Notifying client %s/%s of update (queue=%d)",
-			  client->name, client->channel_name, qlen);
+		crm_debug_2("Notifying client %s/%s of %s update (queue=%d)",
+			    client->name, client->channel_name, type, qlen);
 
 		if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
 			/* We never want the CIB to exit because our client is slow */
@@ -155,8 +159,8 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		}
 		
 	} else {
-		crm_debug_4("Client %s/%s not interested in %s notifications",
-			  client->name, client->channel_name, type);	
+		crm_debug_3("Client %s/%s not interested in %s notifications",
+			    client->name, client->channel_name, type);	
 	}
 }
 
@@ -232,6 +236,31 @@ void
 cib_diff_notify(int options, const char *op, crm_data_t *update,
 		enum cib_errors result, crm_data_t *diff) 
 {
+	int add_updates = 0;
+	int add_epoch  = 0;
+	int add_admin_epoch = 0;
+
+	int del_updates = 0;
+	int del_epoch  = 0;
+	int del_admin_epoch = 0;
+
+	if(diff == NULL) {
+		return;
+	}
+	
+	cib_diff_version_details(
+		diff, &add_admin_epoch, &add_epoch, &add_updates, 
+		&del_admin_epoch, &del_epoch, &del_updates);
+
+	if(add_updates != del_updates) {
+		crm_debug("Notify: %d.%d.%d -> %d.%d.%d",
+			  del_admin_epoch, del_epoch, del_updates,
+			  add_admin_epoch, add_epoch, add_updates);
+	} else if(diff != NULL) {
+		crm_debug("Local-only Change: %d.%d.%d",
+			  add_admin_epoch, add_epoch, add_updates);
+	}
+	
 	do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
 }
 
