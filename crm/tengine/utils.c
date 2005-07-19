@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.41 2005/07/18 21:25:20 andrew Exp $ */
+/* $Id: utils.c,v 1.42 2005/07/19 19:06:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,7 @@
 
 extern cib_t *te_cib_conn;
 extern int global_transition_timer;
+extern int transition_counter;
 
 void print_input(const char *prefix, action_t *input, gboolean to_file);
 void print_action(const char *prefix, action_t *action, gboolean to_file);
@@ -102,13 +103,13 @@ send_complete(const char *text, crm_data_t *msg,
 		crm_info("Transaction already cancelled");
 	}
 	
-	
 	switch(reason) {
 		case te_update:
-			te_log_action(LOG_DEBUG,
-				      "Transition status: %s by CIB update: %s",
-				      last_state!=s_idle?"Aborted":"Triggered",
-				      text);
+			te_log_action(
+				LOG_DEBUG, "%d - Transition status: %s by CIB update: %s",
+				transition_counter,
+				last_state!=s_idle?"Aborted":"Triggered", text);
+
 			if(msg != NULL) {
 				if(safe_str_eq(crm_element_name(msg),
 					       XML_TAG_CIB)) {
@@ -127,37 +128,41 @@ send_complete(const char *text, crm_data_t *msg,
 			}
 			break;
 		case te_halt:
-			te_log_action(LOG_INFO,"Transition status: Stopped%s%s",
-				 text?": ":"", text?text:"");
+			te_log_action(
+				LOG_INFO, "%d - Transition status: Stopped%s%s",
+				transition_counter, text?": ":"", text?text:"");
 			break;
 		case te_abort_confirmed:
-			te_log_action(LOG_INFO,
-				      "Transition status: Confirmed Stopped%s%s",
-				      text?": ":"", text?text:"");
+			te_log_action(
+				LOG_INFO, "%d - Transition status: Confirmed Stopped%s%s",
+				transition_counter, text?": ":"", text?text:"");
 			break;
 		case te_abort:
-			te_log_action(LOG_INFO,"Transition status: Stopped%s%s",
-				      text?": ":"", text?text:"");
+			te_log_action(
+				LOG_INFO,"%d - Transition status: Stopped%s%s",
+				transition_counter, text?": ":"", text?text:"");
 			break;
 		case te_done:
-			te_log_action(LOG_INFO,
-				      "Transition status: Complete%s%s",
-				      text?": ":"", text?text:"");
+			te_log_action(
+				LOG_INFO,"%d - Transition status: Complete%s%s",
+				transition_counter, text?": ":"", text?text:"");
 			break;
 		case te_abort_timeout:
-			te_log_action(LOG_ERR,
-				      "Transition status: Abort timed out after %dms",
-				      abort_timer->timeout);
+			te_log_action(
+				LOG_ERR, "%d - Transition status: Abort timed out after %dms",
+				transition_counter, abort_timer->timeout);
 			log_level = LOG_WARNING;
 			break;
 		case te_timeout:
-			te_log_action(LOG_ERR,
-				      "Transition status: Timed out after %dms",
-				      transition_timer->timeout);
+			te_log_action(
+				LOG_ERR, "%d - Transition status: Timed out after %dms",
+				transition_counter, transition_timer->timeout);
 			log_level = LOG_WARNING;
 			break;
 		case te_failed:
-			te_log_action(LOG_ERR, "Transition status: Aborted by failed action: %s", text);
+			te_log_action(
+				LOG_ERR, "%d - Transition status: Aborted by failed action: %s",
+				transition_counter, text);
 			crm_log_xml_debug(msg, "Cause");
 			log_level = LOG_WARNING;
 			break;
@@ -174,8 +179,8 @@ send_complete(const char *text, crm_data_t *msg,
 			last_text   = text;
 			last_reason = reason;
 		}
-		crm_info("Delay abort until %d updates and %d actions complete (state=%d).",
-			pending_callbacks, unconfirmed, te_fsa_state);
+		crm_info("%d - Delay abort until %d updates and %d actions complete (state=%d).",
+			 transition_counter, pending_callbacks, unconfirmed, te_fsa_state);
 		return;
 		
 	} else if(last_text != NULL) {
@@ -302,7 +307,7 @@ print_input(const char *prefix, action_t *input, int log_level)
 		   actiontype2text(input->type));
 
 	if(input->complete == FALSE) {
-		crm_log_xml((unsigned)log_level+1, "\t  Raw input", input->xml);
+		crm_log_xml(log_level+2, "\t\t\tRaw input: ", input->xml);
 	}
 }
 
@@ -355,7 +360,7 @@ print_action(const char *prefix, action_t *action, int log_level)
 	}
 	
 	if(action->complete == FALSE) {
-		crm_log_xml(LOG_DEBUG_2, "\tRaw action", action->xml);
+		crm_log_xml(log_level+2, "\t\t\tRaw action: ", action->xml);
 	}
 }
 

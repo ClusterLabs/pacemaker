@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.24 2005/07/11 12:14:21 andrew Exp $ */
+/* $Id: xml.c,v 1.25 2005/07/19 19:06:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -630,8 +630,7 @@ print_xml_formatted(int log_level, const char *function,
 	}
 
 	crm_validate_data(msg);
-	do_crm_log(log_level, NULL, function, "%s:", crm_str(text));
-	log_data_element(function, NULL, log_level, 0, msg, TRUE);
+	log_data_element(function, text, log_level, 0, msg, TRUE);
 	return;
 }
 

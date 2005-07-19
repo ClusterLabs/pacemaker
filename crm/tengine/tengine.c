@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.90 2005/07/18 21:26:02 andrew Exp $ */
+/* $Id: tengine.c,v 1.91 2005/07/19 19:06:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -190,12 +190,12 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	this_event  = generate_op_key(this_rsc, this_action, action->interval);
 
 	if(safe_str_neq(this_event, update_event)) {
-		crm_debug("Action %d : Event mismatch %s vs. %s",
-			  action->id, this_event, update_event);
+		crm_debug_2("Action %d : Event mismatch %s vs. %s",
+			    action->id, this_event, update_event);
 
 	} else if(safe_str_neq(this_node, event_node)) {
-		crm_debug("Action %d : Node mismatch %s (%s) vs. %s",
-			  action->id, this_node, this_uname, event_node);
+		crm_debug_2("Action %d : Node mismatch %s (%s) vs. %s",
+			    action->id, this_node, this_uname, event_node);
 	} else {
 		match = action;
 	}
