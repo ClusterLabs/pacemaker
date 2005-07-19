@@ -119,7 +119,7 @@ class LinuxHAv2(HeartbeatCM):
    <configuration>
      <crm_config>'''
         cib_options="""
-        <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="5m"/>
+        <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="3m"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
         <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="%d"/>
         <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>""" % self.Env["SuppressCib"]
@@ -188,6 +188,7 @@ class LinuxHAv2(HeartbeatCM):
                 # These resources prefer to run on the node with the same name
                 fields[3] = str(int(fields[3])+1)
                 ip = string.join(fields, '.')
+                self.Env["IPBase"] = ip
                 node_resource=("""
        <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
