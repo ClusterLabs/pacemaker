@@ -1,0 +1,211 @@
+<cib cib_feature_revision="1" have_quorum="false" epoche="1" admin_epoch="0" num_peers="2" origin="posic043" ccm_transition="8" generated="true" dc_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596" debug_source="finalize_join" epoch="3" num_updates="132">
+   <configuration>
+     <crm_config>
+        <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="3m"/>
+        <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
+        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="1"/>
+        <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>
+     </crm_config>
+     <nodes>
+       <node uname="posic042" id="829cb8c0-2689-44af-b3e3-2ba4091b1f37" type="member"/>
+       <node uname="posic041" id="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" type="member"/>
+       <node uname="posic044" id="b6903810-3581-47d7-ba42-70588f681e12" type="member"/>
+       <node uname="posic043" id="3daa25e7-8713-4c6f-8790-7f41599a1596" type="member"/>
+     </nodes>
+     <resources>
+       <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+         <operations>
+           <op id="1" name="monitor" interval="5s" timeout="20s"/>
+         </operations>
+         <instance_attributes>
+           <attributes>
+             <nvpair id="1" name="ip" value="127.0.0.10"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="rsc_posic041" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+         <operations>
+           <op id="1" name="monitor" interval="5s" timeout="20s"/>
+         </operations>
+         <instance_attributes>
+           <attributes>
+             <nvpair id="1" name="ip" value="127.0.0.11"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="rsc_posic042" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+         <operations>
+           <op id="1" name="monitor" interval="5s" timeout="20s"/>
+         </operations>
+         <instance_attributes>
+           <attributes>
+             <nvpair id="1" name="ip" value="127.0.0.12"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="rsc_posic043" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+         <operations>
+           <op id="1" name="monitor" interval="5s" timeout="20s"/>
+         </operations>
+         <instance_attributes>
+           <attributes>
+             <nvpair id="1" name="ip" value="127.0.0.13"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="rsc_posic044" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+         <operations>
+           <op id="1" name="monitor" interval="5s" timeout="20s"/>
+         </operations>
+         <instance_attributes>
+           <attributes>
+             <nvpair id="1" name="ip" value="127.0.0.14"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <clone id="DoFencing">
+         <instance_attributes>
+           <attributes>
+             <nvpair id="1" name="clone_max" value="4"/>
+             <nvpair id="2" name="clone_node_max" value="1"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="child_DoFencing" class="stonith" type="ssh">
+           <operations>
+             <op id="1" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
+             <op id="2" name="start" timeout="20s" prereq="nothing"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="1" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </clone>
+     </resources>
+     <constraints>
+      <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
+        <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
+          <expression id="dc_ip_expr" attribute="#is_dc" operation="eq" value="false"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_posic041" rsc="rsc_posic041">
+        <rule id="pref_run_rsc_posic041" score="100" boolean_op="and">
+          <expression id="rsc_posic041_loc_expr" attribute="#uname" operation="eq" value="posic041"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_posic042" rsc="rsc_posic042">
+        <rule id="pref_run_rsc_posic042" score="100" boolean_op="and">
+          <expression id="rsc_posic042_loc_expr" attribute="#uname" operation="eq" value="posic042"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_posic043" rsc="rsc_posic043">
+        <rule id="pref_run_rsc_posic043" score="100" boolean_op="and">
+          <expression id="rsc_posic043_loc_expr" attribute="#uname" operation="eq" value="posic043"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc_posic044" rsc="rsc_posic044">
+        <rule id="pref_run_rsc_posic044" score="100" boolean_op="and">
+          <expression id="rsc_posic044_loc_expr" attribute="#uname" operation="eq" value="posic044"/>
+        </rule>
+      </rsc_location>
+     </constraints>
+   </configuration>
+ <status>
+   <node_state uname="posic042" in_ccm="false" origin="ghash_update_cib_node" join="down" ha="active" expected="down" id="829cb8c0-2689-44af-b3e3-2ba4091b1f37" crmd="offline">
+     <lrm>
+       <lrm_resources>
+         <lrm_resource id="rsc_posic042" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+           <lrm_rsc_op id="rsc_posic042_start_0" operation="start" origin="build_active_RAs" transition_magic="0:0:84055284-2e67-4da2-b337-73d2f66d5c22" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="rsc_posic042_monitor_5000" operation="monitor" origin="build_active_RAs" transition_magic="0:0:84055284-2e67-4da2-b337-73d2f66d5c22" rsc_state="running" call_id="4" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="rsc_posic042_stop_0" operation="stop" origin="do_update_resource" transition_magic="0:2:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="21" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="DoFencing:child_DoFencing:0" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" origin="build_active_RAs" transition_magic="0:0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running" call_id="10" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" origin="build_active_RAs" transition_magic="0:0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running" call_id="11" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_stop_0" operation="stop" origin="do_update_resource" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="13" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="DoFencing:child_DoFencing:1" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+           <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" operation="start" origin="build_active_RAs" transition_magic="0:0:84055284-2e67-4da2-b337-73d2f66d5c22" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:1_stop_0" operation="stop" origin="build_active_RAs" transition_magic="0:0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="9" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="DoFencing:child_DoFencing:2" rsc_state="stopped" op_status="0" rc_code="0" last_op="stop">
+           <lrm_rsc_op id="DoFencing:child_DoFencing:2_start_0" operation="start" op_status="0" call_id="14" rc_code="0" origin="do_update_resource" transition_key="1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" operation="monitor" op_status="0" call_id="15" rc_code="0" origin="do_update_resource" transition_key="1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:2_stop_0" operation="stop" origin="do_update_resource" transition_magic="0:2:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="23" rc_code="0" op_status="0"/>
+         </lrm_resource>
+       </lrm_resources>
+     </lrm>
+   </node_state>
+   <node_state uname="posic041" in_ccm="true" origin="do_lrm_query" join="member" ha="active" expected="member" id="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" crmd="online">
+     <lrm>
+       <lrm_resources>
+         <lrm_resource id="rsc_posic041" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+           <lrm_rsc_op id="rsc_posic041_start_0" operation="start" origin="build_active_RAs" transition_magic="0:0:84055284-2e67-4da2-b337-73d2f66d5c22" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="rsc_posic041_monitor_5000" operation="monitor" origin="build_active_RAs" transition_magic="0:0:84055284-2e67-4da2-b337-73d2f66d5c22" rsc_state="running" call_id="4" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="DoFencing:child_DoFencing:0" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" origin="build_active_RAs" transition_magic="0:0:84055284-2e67-4da2-b337-73d2f66d5c22" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_stop_0" operation="stop" origin="build_active_RAs" transition_magic="0:0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="9" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="DoFencing:child_DoFencing:1" last_op="start" rsc_state="running" rc_code="0" op_status="0">
+           <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" operation="start" origin="do_update_resource" transition_magic="0:4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running" call_id="23" rc_code="0" op_status="0" transition_key="4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" operation="monitor" origin="build_active_RAs" transition_magic="0:0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running" call_id="12" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:1_stop_0" operation="stop" origin="do_update_resource" transition_magic="0:2:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="21" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="rsc_posic044" last_op="start" rsc_state="starting" rc_code="-1" op_status="-1">
+           <lrm_rsc_op id="rsc_posic044_start_0" operation="start" origin="cib_action_update" transition_magic="-1:4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running" call_id="-1" rc_code="-1" op_status="-1" transition_key="4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11"/>
+           <lrm_rsc_op id="rsc_posic044_monitor_5000" operation="monitor" origin="build_active_RAs" transition_magic="0:0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running" call_id="13" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="rsc_posic044_stop_0" operation="stop" origin="do_update_resource" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="15" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="rsc_posic042" rsc_state="running" op_status="0" rc_code="0" last_op="start">
+           <lrm_rsc_op id="rsc_posic042_start_0" operation="start" op_status="0" call_id="22" rc_code="0" origin="do_update_resource" transition_key="4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running"/>
+         </lrm_resource>
+       </lrm_resources>
+     </lrm>
+   </node_state>
+   <node_state uname="posic044" in_ccm="false" origin="ghash_update_cib_node" join="down" ha="active" expected="down" id="b6903810-3581-47d7-ba42-70588f681e12" crmd="offline">
+     <lrm>
+       <lrm_resources>
+         <lrm_resource id="DoFencing:child_DoFencing:0" rsc_state="stopped" op_status="0" rc_code="0" last_op="stop">
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" op_status="0" call_id="2" rc_code="0" origin="do_update_resource" transition_key="1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" op_status="0" call_id="4" rc_code="0" origin="do_update_resource" transition_key="1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_stop_0" operation="stop" origin="do_update_resource" transition_magic="0:2:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="9" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="rsc_posic044" rsc_state="stopped" op_status="0" rc_code="0" last_op="stop">
+           <lrm_rsc_op id="rsc_posic044_start_0" operation="start" op_status="0" call_id="3" rc_code="0" origin="do_update_resource" transition_key="1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running"/>
+           <lrm_rsc_op id="rsc_posic044_monitor_5000" operation="monitor" op_status="0" call_id="5" rc_code="0" origin="do_update_resource" transition_key="1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running"/>
+           <lrm_rsc_op id="rsc_posic044_stop_0" operation="stop" origin="do_update_resource" transition_magic="0:4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="11" rc_code="0" op_status="0"/>
+         </lrm_resource>
+       </lrm_resources>
+     </lrm>
+   </node_state>
+   <node_state origin="do_lrm_query" join="member" ha="active" expected="member" id="3daa25e7-8713-4c6f-8790-7f41599a1596" uname="posic043" in_ccm="true" crmd="online">
+     <lrm>
+       <lrm_resources>
+         <lrm_resource id="rsc_posic043" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+           <lrm_rsc_op id="rsc_posic043_start_0" operation="start" origin="build_active_RAs" transition_magic="0:1:84055284-2e67-4da2-b337-73d2f66d5c22" rsc_state="running" call_id="10" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="rsc_posic043_monitor_5000" operation="monitor" origin="build_active_RAs" transition_magic="0:1:84055284-2e67-4da2-b337-73d2f66d5c22" rsc_state="running" call_id="11" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="DoFencing:child_DoFencing:2" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+           <lrm_rsc_op id="DoFencing:child_DoFencing:2_start_0" operation="start" origin="build_active_RAs" transition_magic="0:0:84055284-2e67-4da2-b337-73d2f66d5c22" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" operation="monitor" origin="build_active_RAs" transition_magic="0:0:84055284-2e67-4da2-b337-73d2f66d5c22" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:2_stop_0" operation="stop" origin="do_update_resource" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="18" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="DcIPaddr" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+           <lrm_rsc_op id="DcIPaddr_start_0" operation="start" origin="build_active_RAs" transition_magic="0:0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running" call_id="15" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" transition_magic="0:0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running" call_id="16" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="DoFencing:child_DoFencing:3" rsc_state="stopped" op_status="0" rc_code="0" last_op="stop">
+           <lrm_rsc_op id="DoFencing:child_DoFencing:3_start_0" operation="start" op_status="0" call_id="19" rc_code="0" origin="do_update_resource" transition_key="1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:3_monitor_5000" operation="monitor" op_status="0" call_id="20" rc_code="0" origin="do_update_resource" transition_key="1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:3_stop_0" operation="stop" origin="do_update_resource" transition_magic="0:2:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="26" rc_code="0" op_status="0"/>
+         </lrm_resource>
+         <lrm_resource id="DoFencing:child_DoFencing:0" rsc_state="running" op_status="0" rc_code="0" last_op="start">
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" op_status="0" call_id="27" rc_code="0" origin="do_update_resource" transition_key="4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running"/>
+         </lrm_resource>
+       </lrm_resources>
+     </lrm>
+   </node_state>
+ </status>
+</cib>

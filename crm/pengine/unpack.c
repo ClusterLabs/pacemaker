@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.108 2005/07/18 21:31:07 andrew Exp $ */
+/* $Id: unpack.c,v 1.109 2005/07/20 20:39:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -766,7 +766,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 					start_action(rsc, NULL, FALSE);
 				}
 				
-			} else  if(*running == TRUE) {
+			} else if(*running == TRUE) {
 				crm_debug_2("Re-issuing pending recurring task:"
 					    " %s for %s on %s",
 					    task, rsc->id, node->details->id);
@@ -789,7 +789,17 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				crm_debug_3("%s active on %s",
 					    rsc->id, node->details->uname);
 				*running = TRUE;
+
+			} else if(*running) {
+				/* make sure its already created and is optional
+				 *
+				 * creating it now tells create_recurring_actions() 
+				 *  that it can safely leave it optional
+				 */
+				custom_action(rsc, crm_strdup(id),
+					      task, NULL, TRUE, data_set);
 			}
+			
 			
 			break;
 		case LRM_OP_ERROR:

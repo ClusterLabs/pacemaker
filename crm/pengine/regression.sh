@@ -171,6 +171,7 @@ do_test 662 "Bugzilla 662"
 do_test 696 "Bugzilla 696"
 do_test 726 "Bugzilla 726"
 do_test 735 "Bugzilla 735"
+do_test 764 "Bugzilla 764"
 
 
 echo ""

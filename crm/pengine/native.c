@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.65 2005/07/18 21:23:41 andrew Exp $ */
+/* $Id: native.c,v 1.66 2005/07/20 20:39:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -255,11 +255,9 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 	const char *value = NULL;
 	int interval_ms = 0;
 	gboolean is_optional = TRUE;
+	GListPtr possible_matches = NULL;
 	
 	crm_debug_2("Creating recurring actions for %s", rsc->id);
-	if(start != NULL) {
-		is_optional = start->optional;
-	}
 	if(node != NULL) {
 		node_uname = node->details->uname;
 	}
@@ -276,6 +274,18 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		}
 		
 		key = generate_op_key(rsc->id, name, interval_ms);
+		possible_matches = find_actions(rsc->actions, key, node);
+		if(start != NULL) {
+			is_optional = start->optional;
+		} else {
+			is_optional = TRUE;
+		}
+
+		/* start a monitor for an already active resource */
+		if(possible_matches == NULL) {
+			is_optional = FALSE;
+		}
+		
 		mon = custom_action(
 			rsc, key, name, node, is_optional, data_set);
 
