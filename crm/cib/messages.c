@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.52 2005/07/14 13:27:49 andrew Exp $ */
+/* $Id: messages.c,v 1.53 2005/07/21 17:29:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -568,6 +568,8 @@ cib_process_delete(
 	if(delete_xml_child(NULL, *result_cib, input) == FALSE) {
 		return cib_NOTEXISTS;		
 	}
+	
+	cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
 	return cib_ok;
 }
 
