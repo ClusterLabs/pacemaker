@@ -598,9 +598,18 @@ cib_pluralSection(const char *a_section)
 	} else if(strcmp(a_section, XML_CONS_TAG_RSC_ORDER) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
+	} else if(strcmp(a_section, "resource") == 0) {
+		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
+
 	} else if(strcmp(a_section, XML_CIB_TAG_RESOURCE) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
 
+	} else if(strcmp(a_section, XML_CIB_TAG_GROUP) == 0) {
+		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
+
+	} else if(strcmp(a_section, XML_CIB_TAG_INCARNATION) == 0) {
+		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
+		
 	} else if(strcmp(a_section, XML_CIB_TAG_NVPAIR) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CRMCONFIG);
 
