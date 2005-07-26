@@ -1,8 +1,10 @@
 #!@PYTHON@
 
 __copyright__='''
-Copyright (C) 2005 Alan Robertson <alanr@unix.sh>
-Licensed under the GNU GPL.
+Copyright:    (C) 2005 International Business Machines, Inc.
+Author:       Alan Robertson <alanr@unix.sh>
+Support:      linux-ha-dev@lists.tummy.com
+License:      GNU General Public License (GPL)
 '''
 
 #
