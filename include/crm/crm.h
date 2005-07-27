@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.67 2005/07/07 08:12:47 andrew Exp $ */
+/* $Id: crm.h,v 1.68 2005/07/27 19:10:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,7 +75,7 @@ extern gboolean crm_assert_failed;
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
-#define CRM_VERSION	"0.9"
+#define CRM_VERSION	"1.0"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
