@@ -357,6 +357,7 @@ build_operation_update(
 		op->user_data = generate_transition_key(-1, fsa_our_uname);
 	}
 	fail_state = generate_transition_magic(op->user_data, op->op_status);
+	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_KEY, op->user_data);
 	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, fail_state);
 	crm_free(fail_state);	
 	
