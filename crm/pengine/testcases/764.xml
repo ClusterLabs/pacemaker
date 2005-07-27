@@ -155,8 +155,8 @@
          </lrm_resource>
          <lrm_resource id="rsc_posic044" last_op="start" rsc_state="starting" rc_code="-1" op_status="-1">
            <lrm_rsc_op id="rsc_posic044_start_0" operation="start" origin="cib_action_update" transition_magic="-1:4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running" call_id="-1" rc_code="-1" op_status="-1" transition_key="4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11"/>
-           <lrm_rsc_op id="rsc_posic044_monitor_5000" operation="monitor" origin="build_active_RAs" transition_magic="0:0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running" call_id="13" rc_code="0" op_status="0"/>
-           <lrm_rsc_op id="rsc_posic044_stop_0" operation="stop" origin="do_update_resource" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="15" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="rsc_posic044_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running" call_id="13" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="rsc_posic044_stop_0" operation="stop" origin="do_update_resource" transition_magic="0:1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_key="1:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="stopped" call_id="15" rc_code="0" op_status="0"/>
          </lrm_resource>
          <lrm_resource id="rsc_posic042" rsc_state="running" op_status="0" rc_code="0" last_op="start">
            <lrm_rsc_op id="rsc_posic042_start_0" operation="start" op_status="0" call_id="22" rc_code="0" origin="do_update_resource" transition_key="4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" transition_magic="0:4:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" rsc_state="running"/>

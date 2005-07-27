@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.109 2005/07/20 20:39:26 andrew Exp $ */
+/* $Id: unpack.c,v 1.110 2005/07/27 07:32:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -624,9 +624,11 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 	if(a_id == -1 && b_id == -1) {
 		/* do nothing */
-	} else if(a_id < b_id || b_id == -1) {
+	} else if(a_id >= 0 && a_id < b_id) {
+		crm_debug_2("%s (%d) < %s (%d)", ID(a), a_id, ID(b), b_id);
 		return -1;
-	} else if(a_id > b_id || a_id == -1) {
+	} else if(b_id >= 0 && a_id > b_id) {
+		crm_debug_2("%s (%d) > %s (%d)", ID(a), a_id, ID(b), b_id);
 		return 1;
 	}
 
@@ -640,15 +642,17 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	 * by definition nothing else should get run on that node
 	 */
 	if(a_id == b_id) {
-		return 0;
 	} else if(a_id < b_id || b_id == -1) {
+		crm_debug_2("%s (%d) < %s (%d)", ID(a), a_id, ID(b), b_id);
 		return -1;
+
 	} else if(a_id > b_id || a_id == -1) {
+		crm_debug_2("%s (%d) > %s (%d)", ID(a), a_id, ID(b), b_id);
 		return 1;
 	}
 
+	crm_debug_2("%s == %s", ID(a), ID(b));
 	return 0;
-	
 }
 
 gboolean

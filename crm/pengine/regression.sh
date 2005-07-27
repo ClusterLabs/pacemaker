@@ -51,7 +51,6 @@ do_test rsc_dep10 "Must (but cant)"
 do_test rsc_dep2  "Must (running) "
 do_test rsc_dep8  "Must (running : alt) "
 do_test rsc_dep4  "Must (running + move)"
-do_test rsc_dep9  "Must (running + move : alt) *"
 
 echo ""
 do_test order1 "Order start 1     "
