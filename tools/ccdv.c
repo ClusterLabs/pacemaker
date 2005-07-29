@@ -3,7 +3,7 @@
  * Copyright (C) 2002-2003, by Mike Gleason, NcFTP Software.
  * All Rights Reserved.
  *
- * Licensed under the GNU Public License.
+ * Licensed under the GNU General Public License.
  */
 #include <unistd.h>
 #include <sys/types.h>
