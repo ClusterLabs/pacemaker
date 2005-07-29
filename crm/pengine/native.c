@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.66 2005/07/20 20:39:26 andrew Exp $ */
+/* $Id: native.c,v 1.67 2005/07/29 23:16:17 alan Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -291,18 +291,18 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 
 		if(start == NULL || start->runnable == FALSE) {
 			crm_warn("   %s:\t(%s) (cancelled : start un-runnable)",
-				 mon->uuid, node_uname);
+				 mon->uuid, crm_str(node_uname));
 			mon->runnable = FALSE;
 
 		} else if(node == NULL
 			  || node->details->online == FALSE
 			  || node->details->unclean) {
 			crm_warn("   %s:\t(%s) (cancelled : no node available)",
-				 mon->uuid, node_uname);
+				 mon->uuid, crm_str(node_uname));
 			mon->runnable = FALSE;
 		
 		} else if(mon->optional == FALSE) {
-			crm_info("   %s:\t(%s)", mon->uuid, node_uname);
+			crm_info("   %s:\t(%s)", mon->uuid, crm_str(node_uname));
 		}
 		custom_action_order(rsc, start_key(rsc), NULL,
 				    NULL, crm_strdup(key), mon,
