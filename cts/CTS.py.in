@@ -205,13 +205,19 @@ class LogWatcher:
 
         We return the first line which matches any of our patterns.
         '''
-
+	last_line=None
+	first_line=None
         if timeout == None: timeout = self.Timeout
 
         done=time.time()+timeout+1
+	if self.debug:
+	    print "starting search: timeout=%d" % timeout
+	    for regex in self.regexes:
+		print "Looking for regex: ", regex
+
         while (timeout <= 0 or time.time() <= done):
             newsize=os.path.getsize(self.filename)
-            if self.debug: print "newsize = %d" % newsize
+            if self.debug > 4: print "newsize = %d" % newsize
             if newsize < self.size:
                 # Somebody truncated the log!
                 if self.debug: print "Log truncated!"
@@ -219,25 +225,34 @@ class LogWatcher:
                 continue
             if newsize > self.file.tell():
                 line=self.file.readline()
-                if self.debug: print "Looking at line:", line
+                if self.debug > 2: print "Looking at line:", line
                 if line:
+                    last_line=line
+                    if not first_line:
+                        first_line=line
+                        if self.debug: print "First line: "+ line
                     which=-1
                     for regex in self.regexes:
                         which=which+1
-                        if self.debug: print "Comparing line to ", regex
+                        if self.debug > 3: print "Comparing line to ", regex
                         matchobj = re.search(regex, line)
                         if matchobj:
                             self.whichmatch=which
                             if self.returnonlymatch:
                               return matchobj.group(self.returnonlymatch)
                             else:
+                              if self.debug: print "Returning line"
                               return line
             newsize=os.path.getsize(self.filename)
             if self.file.tell() == newsize:
                 if timeout > 0:
                     time.sleep(0.025)
                 else:
+                    if self.debug: print "End of file"
+                    if self.debug: print "Last line: "+last_line
                     return None
+        if self.debug: print "Timeout"
+        if self.debug: print "Last line: "+last_line
         return None
 
     def lookforall(self, timeout=None):
@@ -380,6 +395,9 @@ class ClusterManager(UserDict):
 
         '''Start up the cluster manager on a given node'''
         self.debug("Starting %s on node %s" %(self["Name"], node))
+
+	if not self.ShouldBeStatus.has_key(node):
+	    self.ShouldBeStatus[node] = self["down"]
 
         if self.ShouldBeStatus[node] != self["down"]:
 	    return 1
@@ -1006,3 +1024,26 @@ amount of packet loss present.
             CM.unisolate_node(node)
 
         CM.log("Fix the reliability of communications")
+
+
+class BasicSanityCheck(ScenarioComponent):
+    (
+'''
+''')
+
+    def IsApplicable(self):
+        return self.Env["DoBSC"]
+
+    def SetUp(self, CM):
+        for node in CM.Env["nodes"]:
+	    CM.log("Starting BSC node")
+            if not CM.StartaCM(node):
+		return 0
+        return 1
+
+    def TearDown(self, CM):
+        for node in CM.Env["nodes"]:
+	    CM.log("Shutting down BSC node")
+            if not CM.StopaCM(node):
+		return 0
+        return 1
