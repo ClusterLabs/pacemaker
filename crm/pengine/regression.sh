@@ -30,6 +30,16 @@ echo ""
 echo Performing the following tests...
 create_mode="false"
 
+do_test 594 "Bugzilla 594"
+do_test 662 "Bugzilla 662"
+do_test 696 "Bugzilla 696"
+do_test 726 "Bugzilla 726"
+do_test 735 "Bugzilla 735"
+do_test 764 "Bugzilla 764"
+do_test 797 "Bugzilla 797"
+
+echo ""
+
 do_test simple1 "Offline     "
 do_test simple2 "Start       "
 do_test simple3 "Start 2     "
@@ -163,15 +173,6 @@ do_test bad3 "No rsc class	"
 do_test bad4 "Bad data		"
 do_test bad5 "Bad data		"
 do_test bad6 "Bad lrm_rsc	"
-
-echo ""
-do_test 594 "Bugzilla 594"
-do_test 662 "Bugzilla 662"
-do_test 696 "Bugzilla 696"
-do_test 726 "Bugzilla 726"
-do_test 735 "Bugzilla 735"
-do_test 764 "Bugzilla 764"
-
 
 echo ""
 

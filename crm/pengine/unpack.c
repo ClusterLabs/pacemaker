@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.110 2005/07/27 07:32:25 andrew Exp $ */
+/* $Id: unpack.c,v 1.111 2005/08/01 12:25:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -605,54 +605,104 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 	return TRUE;
 }
 
+#define sort_return(an_int) crm_free(a_uuid); crm_free(b_uuid); return an_int
+
 gint
 sort_op_by_callid(gconstpointer a, gconstpointer b)
 {
-	char *uuid = NULL;
+	char *a_uuid = NULL;
+	char *b_uuid = NULL;
  	const char *a_task_id = cl_get_string(a, XML_LRM_ATTR_CALLID);
  	const char *b_task_id = cl_get_string(b, XML_LRM_ATTR_CALLID);
 
-	const char *a_key = cl_get_string(a, XML_ATTR_TRANSITION_KEY);
- 	const char *b_key = cl_get_string(b, XML_ATTR_TRANSITION_KEY);
+	const char *a_key = cl_get_string(a, XML_ATTR_TRANSITION_MAGIC);
+ 	const char *b_key = cl_get_string(b, XML_ATTR_TRANSITION_MAGIC);
 
 	int a_id = -1;
 	int b_id = -1;
 
+	int a_status = -1;
+	int b_status = -1;
+	
+	int a_call_id = -1;
+	int b_call_id = -1;
+	
 	CRM_DEV_ASSERT(a_task_id != NULL && b_task_id != NULL);	
-	a_id = atoi(a_task_id);
-	b_id = atoi(b_task_id);
+	a_call_id = atoi(a_task_id);
+	b_call_id = atoi(b_task_id);
 
-	if(a_id == -1 && b_id == -1) {
-		/* do nothing */
-	} else if(a_id >= 0 && a_id < b_id) {
-		crm_debug_2("%s (%d) < %s (%d)", ID(a), a_id, ID(b), b_id);
-		return -1;
-	} else if(b_id >= 0 && a_id > b_id) {
-		crm_debug_2("%s (%d) > %s (%d)", ID(a), a_id, ID(b), b_id);
-		return 1;
+	if(a_call_id == -1 && b_call_id == -1) {
+		/* both are pending ops so it doesnt matter since
+		 *   stops are never pending
+		 */
+		sort_return(0);
+
+	} else if(a_call_id >= 0 && a_call_id < b_call_id) {
+		crm_debug_2("%s (%d) < %s (%d) : call id",
+			    ID(a), a_call_id, ID(b), b_call_id);
+		sort_return(-1);
+
+	} else if(b_call_id >= 0 && a_call_id > b_call_id) {
+		crm_debug_2("%s (%d) > %s (%d) : call id",
+			    ID(a), a_call_id, ID(b), b_call_id);
+		sort_return(1);
 	}
 
+	crm_debug_3("%s (%d) == %s (%d) : continuing",
+		    ID(a), a_call_id, ID(b), b_call_id);
+	
 	/* now process pending ops */
-	
 	CRM_DEV_ASSERT(a_key != NULL && b_key != NULL);
-	CRM_DEV_ASSERT(decode_transition_key(a_key, &uuid, &a_id)); crm_free(uuid);
-	CRM_DEV_ASSERT(decode_transition_key(b_key, &uuid, &b_id)); crm_free(uuid);
-	
-	/* test for -1 so that shutdown ops appear last
-	 * by definition nothing else should get run on that node
-	 */
-	if(a_id == b_id) {
-	} else if(a_id < b_id || b_id == -1) {
-		crm_debug_2("%s (%d) < %s (%d)", ID(a), a_id, ID(b), b_id);
-		return -1;
+	CRM_DEV_ASSERT(decode_transition_magic(a_key,&a_uuid,&a_id,&a_status));
+	CRM_DEV_ASSERT(decode_transition_magic(b_key,&b_uuid,&b_id,&b_status));
 
-	} else if(a_id > b_id || a_id == -1) {
-		crm_debug_2("%s (%d) > %s (%d)", ID(a), a_id, ID(b), b_id);
-		return 1;
+	/* try and determin the relative age of the operation...
+	 * some pending operations (ie. a start) may have been supuerceeded
+	 *   by a subsequent stop
+	 *
+	 * [a|b]_id == -1 means its a shutdown operation and _always_ comes last
+	 */
+	if(safe_str_neq(a_uuid, b_uuid) || a_id == b_id) {
+		/*
+		 * some of the logic in here may be redundant...
+		 *
+		 * if the UUID from the TE doesnt match then one better
+		 *   be a pending operation.
+		 * pending operations dont survive between elections and joins
+		 *   because we query the LRM directly
+		 */
+		
+		CRM_DEV_ASSERT(a_call_id == -1 || b_call_id == -1);
+		CRM_DEV_ASSERT(a_call_id >= 0  || b_call_id >= 0);
+
+		if(b_call_id == -1) {
+			crm_debug_2("%s (%d) < %s (%d) : transition + call id",
+				    ID(a), a_call_id, ID(b), b_call_id);
+			sort_return(-1);
+		}
+
+		if(a_call_id == -1) {
+			crm_debug_2("%s (%d) > %s (%d) : transition + call id",
+				    ID(a), a_call_id, ID(b), b_call_id);
+			sort_return(1);
+		}
+		
+	} else if((a_id >= 0 && a_id < b_id) || b_id == -1) {
+		crm_debug_2("%s (%d) < %s (%d) : transition",
+			    ID(a), a_id, ID(b), b_id);
+		sort_return(-1);
+
+	} else if((b_id >= 0 && a_id > b_id) || a_id == -1) {
+		crm_debug_2("%s (%d) > %s (%d) : transition",
+			    ID(a), a_id, ID(b), b_id);
+		sort_return(1);
 	}
 
-	crm_debug_2("%s == %s", ID(a), ID(b));
-	return 0;
+	/* we should never end up here */
+	crm_err("%s (%d:%d:%s) ?? %s (%d:%d:%s) : default",
+		ID(a), a_call_id, a_id, a_uuid, ID(b), b_call_id, b_id, b_uuid);
+	CRM_DEV_ASSERT(FALSE); 
+	sort_return(0);
 }
 
 gboolean

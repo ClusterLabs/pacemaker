@@ -194,12 +194,12 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc_c001n09" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n09_start_0" operation="start" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n09_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="7" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n09_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n09_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="7" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="DcIPaddr" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
-            <lrm_rsc_op id="DcIPaddr_start_0" operation="start" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="6" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="DcIPaddr_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="6" rc_code="0" op_status="0"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -208,22 +208,22 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" origin="build_active_RAs" transition_key="11:0" rsc_state="running" call_id="21" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n08_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="11:0" rsc_state="running" call_id="23" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n08_stop_0" operation="stop" origin="do_update_resource" transition_key="12:0" rsc_state="stopped" call_id="25" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="running" call_id="21" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n08_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="running" call_id="23" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n08_stop_0" operation="stop" origin="do_update_resource" transition_key="0:12" transition_magic="0:12:some_key" rsc_state="stopped" call_id="25" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n02" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" origin="do_update_resource" transition_key="14:0" rsc_state="running" call_id="58" rc_code="0" op_status="0" transition_id="14"/>
-            <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="14:0" rsc_state="running" call_id="60" rc_code="0" op_status="0" transition_id="14"/>
-            <lrm_rsc_op id="rsc_c001n02_stop_0" operation="stop" origin="do_update_resource" transition_key="13:0" rsc_state="stopped" call_id="47" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" origin="do_update_resource" transition_key="0:14" transition_magic="0:14:some_key" rsc_state="running" call_id="58" rc_code="0" op_status="0" transition_id="14"/>
+            <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="0:14" transition_magic="0:14:some_key" rsc_state="running" call_id="60" rc_code="0" op_status="0" transition_id="14"/>
+            <lrm_rsc_op id="rsc_c001n02_stop_0" operation="stop" origin="do_update_resource" transition_key="0:13" transition_magic="0:13:some_key" rsc_state="stopped" call_id="47" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n06" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n06_start_0" operation="start" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n06_stop_0" operation="stop" origin="build_active_RAs" transition_key="10:0" rsc_state="stopped" call_id="9" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n06_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n06_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:10" transition_magic="0:10:some_key" rsc_state="stopped" call_id="9" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n07" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n07_start_0" operation="start" origin="build_active_RAs" transition_key="10:0" rsc_state="running" call_id="12" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n07_stop_0" operation="stop" origin="build_active_RAs" transition_key="11:0" rsc_state="stopped" call_id="17" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n07_start_0" operation="start" origin="build_active_RAs" transition_key="0:10" transition_magic="0:10:some_key" rsc_state="running" call_id="12" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n07_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="stopped" call_id="17" rc_code="0" op_status="0"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -232,21 +232,21 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" origin="build_active_RAs" transition_key="10:0" rsc_state="running" call_id="12" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n08_stop_0" operation="stop" origin="build_active_RAs" transition_key="11:0" rsc_state="stopped" call_id="17" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" origin="build_active_RAs" transition_key="0:10" transition_magic="0:10:some_key" rsc_state="running" call_id="12" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n08_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="stopped" call_id="17" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n03" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n03_start_0" operation="start" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n03_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n03_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n03_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n07" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n07_start_0" operation="start" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n07_stop_0" operation="stop" origin="build_active_RAs" transition_key="10:0" rsc_state="stopped" call_id="9" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n07_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n07_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:10" transition_magic="0:10:some_key" rsc_state="stopped" call_id="9" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n02" rsc_state="stopped" op_status="0" rc_code="0" last_op="stop">
-            <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" op_status="0" rc_code="0" origin="do_update_resource" transition_id="13" transition_key="13:0" rsc_state="running" call_id="43"/>
-            <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="13" transition_key="13:0" rsc_state="running" call_id="45"/>
-            <lrm_rsc_op id="rsc_c001n02_stop_0" operation="stop" origin="do_update_resource" transition_key="14:0" rsc_state="stopped" call_id="56" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" op_status="0" rc_code="0" origin="do_update_resource" transition_id="13" transition_key="0:13" transition_magic="0:13:some_key" rsc_state="running" call_id="43"/>
+            <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="13" transition_key="0:13" transition_magic="0:13:some_key" rsc_state="running" call_id="45"/>
+            <lrm_rsc_op id="rsc_c001n02_stop_0" operation="stop" origin="do_update_resource" transition_key="0:14" transition_magic="0:14:some_key" rsc_state="stopped" call_id="56" rc_code="0" op_status="0"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -255,12 +255,12 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n08_stop_0" operation="stop" origin="build_active_RAs" transition_key="10:0" rsc_state="stopped" call_id="9" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n08_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:10" transition_magic="0:10:some_key" rsc_state="stopped" call_id="9" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n04" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n04_start_0" operation="start" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n04_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n04_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n04_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -269,8 +269,8 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc_c001n05" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n05_start_0" operation="start" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n05_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="4:0" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n05_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n05_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -279,29 +279,29 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" origin="build_active_RAs" transition_key="0:0" rsc_state="running" call_id="179" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n08_stop_0" operation="stop" origin="build_active_RAs" transition_key="1:0" rsc_state="stopped" call_id="183" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" origin="build_active_RAs" transition_key="0:0" transition_magic="0:0:some_key" rsc_state="running" call_id="179" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n08_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:1" transition_magic="0:1:some_key" rsc_state="stopped" call_id="183" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n09" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n09_start_0" operation="start" origin="build_active_RAs" transition_key="1:0" rsc_state="running" call_id="97" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n09_stop_0" operation="stop" origin="build_active_RAs" transition_key="-1:0" rsc_state="stopped" call_id="199" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n09_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:1:some_key" rsc_state="running" call_id="97" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n09_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:-1" transition_magic="0:-1:some_key" rsc_state="stopped" call_id="199" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n02" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" origin="build_active_RAs" transition_key="3:0" rsc_state="running" call_id="114" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n02_stop_0" operation="stop" origin="build_active_RAs" transition_key="-1:0" rsc_state="stopped" call_id="202" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" origin="build_active_RAs" transition_key="0:3" transition_magic="0:3:some_key" rsc_state="running" call_id="114" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n02_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:-1" transition_magic="0:-1:some_key" rsc_state="stopped" call_id="202" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n03" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n03_start_0" operation="start" origin="build_active_RAs" transition_key="1:0" rsc_state="running" call_id="132" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n03_stop_0" operation="stop" origin="build_active_RAs" transition_key="-1:0" rsc_state="stopped" call_id="203" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n03_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:1:some_key" rsc_state="running" call_id="132" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n03_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:-1" transition_magic="0:-1:some_key" rsc_state="stopped" call_id="203" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n04" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n04_start_0" operation="start" origin="build_active_RAs" transition_key="0:0" rsc_state="running" call_id="148" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n04_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:0" rsc_state="running" call_id="150" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n04_stop_0" operation="stop" origin="build_active_RAs" transition_key="3:0" rsc_state="stopped" call_id="151" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n04_start_0" operation="start" origin="build_active_RAs" transition_key="0:0" transition_magic="0:0:some_key" rsc_state="running" call_id="148" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n04_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:0" transition_magic="0:0:some_key" rsc_state="running" call_id="150" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n04_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:3" transition_magic="0:3:some_key" rsc_state="stopped" call_id="151" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n06" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n06_start_0" operation="start" origin="build_active_RAs" transition_key="10:0" rsc_state="running" call_id="206" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n06_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="10:0" rsc_state="running" call_id="209" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n06_start_0" operation="start" origin="build_active_RAs" transition_key="0:10" transition_magic="0:10:some_key" rsc_state="running" call_id="206" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n06_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:10" transition_magic="0:10:some_key" rsc_state="running" call_id="209" rc_code="0" op_status="0"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -310,8 +310,8 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc_c001n07" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
-            <lrm_rsc_op id="rsc_c001n07_start_0" operation="start" origin="build_active_RAs" transition_key="11:0" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n07_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="11:0" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n07_start_0" operation="start" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n07_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -320,8 +320,8 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" rsc_state="running" op_status="0" rc_code="0" last_op="monitor">
-            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" op_status="0" rc_code="0" origin="do_update_resource" transition_id="12" transition_key="12:0" rsc_state="running" call_id="3"/>
-            <lrm_rsc_op id="rsc_c001n08_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="12" transition_key="12:0" rsc_state="running" call_id="5"/>
+            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" op_status="0" rc_code="0" origin="do_update_resource" transition_id="12" transition_key="0:12" transition_magic="0:12:some_key" rsc_state="running" call_id="3"/>
+            <lrm_rsc_op id="rsc_c001n08_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="12" transition_key="0:12" transition_magic="0:12:some_key" rsc_state="running" call_id="5"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
