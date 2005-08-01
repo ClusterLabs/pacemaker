@@ -656,7 +656,7 @@ do_lrm_rsc_op(
 			return I_NULL;
 			
 		} else if(AM_I_DC == FALSE && fsa_state != S_NOT_DC) {
-			crm_warn("Discarding attempt to perform action %s on %s"
+			crm_err("Discarding attempt to perform action %s on %s"
 				 " in state %s", operation, rid,
 				 fsa_state2string(fsa_state));
 			return I_NULL;
@@ -1073,11 +1073,12 @@ do_lrm_event(long long action,
 	if(g_hash_table_size(shutdown_ops) > 0) {
 		char *op_id = make_stop_id(op->rsc_id, op->call_id);
 		if(g_hash_table_remove(shutdown_ops, op_id)) {
-			crm_debug("Shutdown op %d (%s %s) confirmed",
+			crm_debug("Op %d (%s %s) confirmed",
 				  op->call_id, op->op_type, op->rsc_id);
-		} else {
-			crm_debug("Shutdown op %d (%s %s) not matched: %s",
-				  op->call_id, op->op_type, op->rsc_id, op_id);
+
+		} else if(op->interval == 0) {
+			crm_err("Op %d (%s %s) not matched: %s",
+				op->call_id, op->op_type, op->rsc_id, op_id);
 		}
 		crm_free(op_id);
 	}
