@@ -115,7 +115,7 @@ class LinuxHAv2(HeartbeatCM):
         self.check_elections = 0
         self.CIBsync = {}
         cib_prefix='''
-<cib cib_feature_revision="1" num_updates="1" have_quorum="false" epoche="1">
+<cib cib_feature_revision="1" have_quorum="false">
    <configuration>
      <crm_config>'''
         cib_options="""
