@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.68 2005/07/27 19:10:14 andrew Exp $ */
+/* $Id: crm.h,v 1.69 2005/08/02 16:14:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -201,10 +201,12 @@ extern gboolean safe_str_neq(const char *a, const char *b);
 #  define crm_debug_3(fmt...) crm_log_maybe(LOG_DEBUG_3, fmt)
 #  define crm_debug_4(fmt...) crm_log_maybe(LOG_DEBUG_4, fmt)
 #  define crm_debug_5(fmt...) crm_log_maybe(LOG_DEBUG_5, fmt)
+#  define crm_debug_6(fmt...) crm_log_maybe(LOG_DEBUG_6, fmt)
 #else
 #  define crm_debug_3(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
 #  define crm_debug_4(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
 #  define crm_debug_5(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
+#  define crm_debug_6(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
 #endif
 
 extern void crm_log_message_adv(
