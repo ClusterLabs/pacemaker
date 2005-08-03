@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.3 2005/08/03 12:55:13 andrew Exp $ */
+/* $Id: iso8601.c,v 1.4 2005/08/03 13:14:06 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -871,6 +871,8 @@ subtract_time(ha_time_t *lhs, ha_time_t *rhs)
 	sub_hours(answer, rhs->hours);
 	sub_minutes(answer, rhs->minutes);
 	sub_seconds(answer, rhs->seconds);
+
+	return answer;
 }
 
 /* ha_time_interval_t* */
