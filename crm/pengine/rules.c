@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.7 2005/08/03 14:54:27 andrew Exp $ */
+/* $Id: rules.c,v 1.8 2005/08/03 20:23:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,6 +31,7 @@
 #include <crm/common/iso8601.h>
 
 enum expression_type {
+	not_expr,
 	attr_expr,
 	loc_expr,
 	time_expr
@@ -58,7 +59,7 @@ test_rule(crm_data_t *rule, node_t *node)
 	}
 	
 	xml_child_iter(
-		rule, expr, XML_TAG_EXPRESSION,
+		rule, expr, NULL,
 		test = test_expression(expr, node);
 		
 		if(test && do_and == FALSE) {
@@ -111,6 +112,9 @@ find_expression_type(crm_data_t *expr)
 
 	if(safe_str_eq(tag, "date_expression")) {
 		return time_expr;
+		
+	} else if(safe_str_neq(tag, "expression")) {
+		return not_expr;
 		
 	} else if(safe_str_eq(attr, "#uname") || safe_str_eq(attr, "#id")) {
 		return loc_expr;
@@ -290,30 +294,38 @@ test_date_expression(crm_data_t *time_expr)
 	ha_time_t *end = NULL;
 	const char *value = NULL;
 	char *value_copy = NULL;
+	char *value_copy_start = NULL;
 	const char *op = crm_element_value(time_expr, "operation");
 	ha_time_t *now = new_ha_date(TRUE);
 
 	crm_data_t *duration_spec = NULL;
 	crm_data_t *date_spec = NULL;
 
+	crm_debug_2("Testing expression: %s", ID(time_expr));
+	
 	duration_spec = cl_get_struct(time_expr, "duration");
 	date_spec = cl_get_struct(time_expr, "date_spec");
 	
 	value = crm_element_value(time_expr, "start");
 	if(value != NULL) {
 		value_copy = crm_strdup(value);
+		value_copy_start = value_copy;
 		start = parse_date(&value_copy);
-		crm_free(value_copy);
+		crm_free(value_copy_start);
 	}
 	value = crm_element_value(time_expr, "end");
 	if(value != NULL) {
 		value_copy = crm_strdup(value);
+		value_copy_start = value_copy;
 		end = parse_date(&value_copy);
-		crm_free(value_copy);
+		crm_free(value_copy_start);
 	}
 
 	if(start != NULL && end == NULL) {
  		end = parse_xml_duration(start, duration_spec);
+	}
+	if(op == NULL) {
+		op = "in_range";
 	}
 	
 	if(safe_str_eq(op, "date_spec") || safe_str_eq(op, "in_range")) {

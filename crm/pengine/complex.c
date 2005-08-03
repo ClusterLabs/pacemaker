@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.50 2005/08/03 14:54:27 andrew Exp $ */
+/* $Id: complex.c,v 1.51 2005/08/03 20:23:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -426,15 +426,18 @@ unpack_instance_attributes(
 		return;
 	}
 	
+	crm_debug_2("Checking for attributes");
 	xml_child_iter(
 		xml_obj, attr_set, XML_TAG_ATTR_SETS,
 
 		/* check any rules */
 		apply = TRUE;
+		crm_debug_2("Testing rules");
 		xml_child_iter(
 			attr_set, rule, XML_TAG_RULE,
 
 			apply = FALSE;
+			crm_debug_2("Testing rule %s", ID(rule));
 			if(test_rule(rule, node)) {
 				apply = TRUE;
 				break;
@@ -445,6 +448,7 @@ unpack_instance_attributes(
 			continue;
 		}
 		
+		crm_debug_2("Adding attributes");
 		attributes = cl_get_struct(attr_set, XML_TAG_ATTRS);
 		if(attributes == NULL) {
 			pe_err("%s with no %s child",

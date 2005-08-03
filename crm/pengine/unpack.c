@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.112 2005/08/03 14:54:27 andrew Exp $ */
+/* $Id: unpack.c,v 1.113 2005/08/03 20:23:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -159,7 +159,6 @@ gboolean
 unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 {
 	node_t *new_node   = NULL;
-	crm_data_t * attrs = NULL;
 	const char *id     = NULL;
 	const char *uname  = NULL;
 	const char *type   = NULL;
@@ -176,8 +175,6 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 		type   = crm_element_value(xml_obj, XML_ATTR_TYPE);
 		crm_debug_3("Processing node %s/%s", uname, id);
 
-		attrs = find_xml_node(xml_obj, "attributes", FALSE);
-		
 		if(id == NULL) {
 			pe_err("Must specify id tag in <node>");
 			continue;
@@ -211,7 +208,7 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 		new_node->details->attrs        = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
-
+		
 /* 		if(data_set->have_quorum == FALSE */
 /* 		   && data_set->no_quorum_policy == no_quorum_stop) { */
 /* 			/\* start shutting resources down *\/ */
@@ -1155,7 +1152,8 @@ add_node_attrs(crm_data_t *xml_obj, node_t *node, pe_working_set_t *data_set)
 				    crm_strdup(XML_BOOLEAN_FALSE));
 	}
 	
-	unpack_instance_attributes(xml_obj, node, node->details->attrs, NULL, 0);
+	unpack_instance_attributes(
+		xml_obj, node, node->details->attrs, NULL, 0);
 
 	return TRUE;
 }
