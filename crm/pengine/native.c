@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.67 2005/07/29 23:16:17 alan Exp $ */
+/* $Id: native.c,v 1.68 2005/08/03 14:54:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -286,9 +286,8 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			is_optional = FALSE;
 		}
 		
-		mon = custom_action(
-			rsc, key, name, node, is_optional, data_set);
-
+		mon = custom_action(rsc, key, name, node, is_optional,data_set);
+		
 		if(start == NULL || start->runnable == FALSE) {
 			crm_warn("   %s:\t(%s) (cancelled : start un-runnable)",
 				 mon->uuid, crm_str(node_uname));
@@ -322,6 +321,8 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		chosen = native_data->color->details->chosen_node;
 	}
 
+	unpack_instance_attributes(rsc->xml, chosen, rsc->parameters, NULL, 0);
+	
 	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
 		start = start_action(rsc, chosen, TRUE);
 		if(start->runnable) {
@@ -329,8 +330,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				 rsc->id, chosen->details->uname);
 			start->optional = FALSE;
 			start->rsc->start_pending = TRUE;
-		}
-		
+		}		
 		
 	} else if(g_list_length(native_data->running_on) > 1) {
 		pe_err("Attempting recovery of resource %s", rsc->id);
@@ -431,7 +431,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 			
 		}
 	}
-	
+
 	create_recurring_actions(rsc, start, chosen, data_set);
 }
 
@@ -1097,13 +1097,8 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 void
 native_agent_constraints(resource_t *rsc)
 {
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-
-	crm_debug_5("Applying RA restrictions to %s", rsc->id);
-	common_agent_constraints(
-		native_data->allowed_nodes, native_data->agent, rsc->id);
 }
+
 gboolean
 native_choose_color(resource_t *rsc, color_t *no_color)
 {

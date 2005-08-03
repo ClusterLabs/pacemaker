@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.6 2005/06/16 12:36:21 andrew Exp $ */
+/* $Id: rules.c,v 1.7 2005/08/03 14:54:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,222 +28,113 @@
 #include <pe_utils.h>
 #include <pe_rules.h>
 
+#include <crm/common/iso8601.h>
+
 enum expression_type {
 	attr_expr,
-	coloc_expr,
 	loc_expr,
 	time_expr
 };
 
-enum expression_type find_expression_type(
-	const char *attr, const char *op, const char *value);
+enum expression_type find_expression_type(crm_data_t *expr);
+ha_time_t *parse_xml_duration(ha_time_t *start, crm_data_t *duration_spec);
 
-typedef struct native_variant_data_s
+gboolean test_date_expression(crm_data_t *time_expr);
+gboolean cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec);
+gboolean test_attr_expression(crm_data_t *expr, GHashTable *hash);
+
+
+gboolean
+test_rule(crm_data_t *rule, node_t *node) 
 {
-		lrm_agent_t *agent;
-		GListPtr running_on;       /* node_t*           */
-		color_t *color;
-		GListPtr node_cons;        /* rsc_to_node_t*    */
-		GListPtr allowed_nodes;    /* node_t*         */
+	gboolean test = TRUE;
+	gboolean passed = TRUE;
+	gboolean do_and = TRUE;
 
-} native_variant_data_t;
+	const char *value = crm_element_value(rule, "boolean_op");
+	if(safe_str_eq(value, "or")) {
+		do_and = FALSE;
+		passed = FALSE;
+	}
+	
+	xml_child_iter(
+		rule, expr, XML_TAG_EXPRESSION,
+		test = test_expression(expr, node);
+		
+		if(test && do_and == FALSE) {
+			crm_err("Expression %s/%s passed", ID(rule), ID(expr));
+			return TRUE;
+			
+		} else if(test == FALSE && do_and) {
+			crm_err("Expression %s/%s failed", ID(rule), ID(expr));
+			return FALSE;
+		}
+		);
+		
+	if(passed == FALSE) {
+		crm_err("Rule %s failed", ID(rule));
+	}
+	return passed;
+}
+
+gboolean
+test_expression(crm_data_t *expr, node_t *node)
+{
+	gboolean accept = FALSE;
+	
+	switch(find_expression_type(expr)) {
+		case attr_expr:
+		case loc_expr:
+			accept = test_attr_expression(
+				expr, node?node->details->attrs:NULL);
+			break;
+
+		case time_expr:
+			accept = test_date_expression(expr);
+			break;
+
+		default:
+			CRM_DEV_ASSERT(FALSE /* bad type */);
+			accept = FALSE;
+	}
+		
+	return accept;
+}
 
 enum expression_type
-find_expression_type(const char *attr, const char *op, const char *value) 
+find_expression_type(crm_data_t *expr) 
 {
-	if(safe_str_eq(attr, "#uname")
-	   || safe_str_eq(attr, "#id")) {
-		return loc_expr;		
+	const char *tag = NULL;
+	const char *attr  = NULL;
+	attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
+	tag = crm_element_name(expr);
 
-	} else if(safe_str_eq(op, "#colocated")
-		  || safe_str_eq(op, "#not_colocated")) {
-/* 		return coloc_expr; */
-	}
+	if(safe_str_eq(tag, "date_expression")) {
+		return time_expr;
+		
+	} else if(safe_str_eq(attr, "#uname") || safe_str_eq(attr, "#id")) {
+		return loc_expr;
+	} 
 	
 	return attr_expr;
 }
 
-/* do NOT free the nodes returned here */
-GListPtr
-apply_node_expression(const char *attr, const char *op, const char *value,
-		 const char *type, GListPtr node_list)
-{
-	gboolean accept = FALSE;
-	GListPtr result = NULL;
-	slist_iter(
-		node, node_t, node_list, lpc,
-
-		switch(find_expression_type(attr, op, value)) {
-			case attr_expr:
-				accept = attr_expression(attr, op, value, type,
-							 node->details->attrs);
-				break;
-			case coloc_expr:
-				accept = coloc_expression(
-					attr, op, value, type, node);
-				break;
-			case loc_expr:
-				accept = loc_expression(
-					attr, op, value, type, node);
-				break;
-			default:
-				accept = FALSE;
-		}
-		
-		if(accept) {
-			result = g_list_append(result, node);
-			crm_debug_5("node %s matched", node->details->uname);
-		} else {
-			crm_debug_5("node %s did not match", node->details->uname);
-		}
-		);
-	
-	return result;
-}
-
 gboolean
-test_node_attr_expression(const char *attr, const char *op, const char *value,
-			  const char *type, node_t *node)
-{
-	gboolean accept = FALSE;
-	
-	switch(find_expression_type(attr, op, value)) {
-		case attr_expr:
-			accept = attr_expression(attr, op, value, type,
-						 node->details->attrs);
-			break;
-#if 0
-		case time_expr:
-			accept = time_expression(attr, op, value, type);
-			break;
-#endif
-		default:
-			accept = FALSE;
-	}
-		
-	return accept;
-}
-
-gboolean
-test_resource_attr_expression(
-	const char *attr, const char *op, const char *value,
-	const char *type, resource_t *rsc)
-{
-	gboolean accept = FALSE;
-	native_variant_data_t *native_data = NULL;
-	color_t *color = NULL;
-	node_t *node = NULL;
-	
-	if(rsc->variant == pe_native) {
-		native_data = rsc->variant_opaque;
-	}
-	if(native_data != NULL) {
-		color = native_data->color;
-	}
-	if(color != NULL) {
-		node = color->details->chosen_node;
-	}
-	
-	switch(find_expression_type(attr, op, value)) {
-		case attr_expr:
-			accept = attr_expression(attr, op, value, type,
-						 rsc->parameters);
-			break;
-		case coloc_expr:
-			if(native_data == NULL || color == NULL) {
-				break;
-			}
-			accept = coloc_expression(attr, op, value, type, node);
-			break;
-		case loc_expr:
-			if(native_data == NULL || color == NULL) {
-				break;
-			}
-			accept = loc_expression(attr, op, value, type, node);
-			break;
-#if 0
-		case time_expr:
-			accept = time_expression(attr, op, value, type);
-			break;
-#endif
-		default:
-			accept = FALSE;
-	}
-		
-	return accept;
-}
-
-
-gboolean
-coloc_expression(const char *attr, const char *op, const char *value,
-		const char *type, node_t *node)
-{
-	gboolean accept = FALSE;
-	
-	if(attr == NULL || op == NULL) {
-		pe_err("Invlaid attribute or operation in expression"
-			" (\'%s\' \'%s\' \'%s\')",
-			crm_str(attr), crm_str(op), crm_str(value));
-		return FALSE;
-	}
-	
-	if(safe_str_eq(op, "#colocated") && node != NULL) {
-		GListPtr rsc_list = node->details->running_rsc;
-		slist_iter(
-			rsc, resource_t, rsc_list, lpc2,
-			if(safe_str_eq(rsc->id, attr)) {
-				accept = TRUE;
-			}
-			);
-		
-	} else if(node == NULL && safe_str_eq(op, "#not_colocated")) {
-		accept = TRUE;
-
-	} else if(safe_str_eq(op, "#not_colocated")) {
-		GListPtr rsc_list = node->details->running_rsc;
-		accept = TRUE;
-		slist_iter(
-			rsc, resource_t, rsc_list, lpc2,
-			if(safe_str_eq(rsc->id, attr)) {
-				accept = FALSE;
-				break;
-			}
-			);
-	}
-	
-	if(accept && node != NULL) {
-		crm_debug_5("node %s matched", node->details->uname);
-		return TRUE;
-		
-	} else if(accept) {
-		crm_debug_5("node <NULL> matched");
-		return TRUE;
-		
-	} else if(node != NULL) {
-		crm_debug_5("node %s did not match", node->details->uname);
-
-	} else {
-		crm_debug_5("node <NULL> not matched");
-	}
-	
-	return FALSE;
-}
-
-gboolean
-loc_expression(const char *attr, const char *op, const char *value,
-	       const char *type, node_t *node)
-{
-	return attr_expression(attr, op, value, type,
-			       node?node->details->attrs:NULL);
-}
-
-gboolean
-attr_expression(const char *attr, const char *op, const char *value,
-		const char *type, GHashTable *hash)
+test_attr_expression(crm_data_t *expr, GHashTable *hash)
 {
 	gboolean accept = FALSE;
 	int cmp = 0;
 	const char *h_val = NULL;
+
+	const char *op      = NULL;
+	const char *type    = NULL;
+	const char *attr    = NULL;
+	const char *value   = NULL;
+	
+	attr  = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
+	op    = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
+	value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
+	type  = crm_element_value(expr, XML_EXPR_ATTR_TYPE);
 	
 	if(attr == NULL || op == NULL) {
 		pe_err("Invlaid attribute or operation in expression"
@@ -321,4 +212,134 @@ attr_expression(const char *attr, const char *op, const char *value,
 	}
 	
 	return accept;
+}
+
+#define cron_check(xml_field, time_field)				\
+	value = crm_element_value(cron_spec, xml_field);		\
+	if(value != NULL) {						\
+		decodeNVpair(value, '-', &value_low, &value_high);	\
+		CRM_DEV_ASSERT(value_low != NULL);			\
+		value_low_i = crm_atoi(value_low, "0");			\
+		value_high_i = crm_atoi(value_high, "-1");		\
+		if(value_low_i > now->time_field) {			\
+			return FALSE;					\
+		} else if(value_high_i < 0) {				\
+		} else if(value_high_i < now->time_field) {		\
+			return FALSE;					\
+		}							\
+	}
+
+gboolean
+cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec) 
+{
+	const char *value = NULL;
+	char *value_low = NULL;
+	char *value_high = NULL;
+
+	int value_low_i = 0;
+	int value_high_i = 0;
+
+	cron_check("seconds",   seconds);
+	cron_check("minutes",   minutes);
+	cron_check("hours",     hours);
+	cron_check("monthdays", days);
+	cron_check("weekdays",  weekdays);
+	cron_check("yeardays",  yeardays);
+	cron_check("weeks",     weeks);
+	cron_check("months",    months);
+	cron_check("years",     years);
+	cron_check("weekyears", weekyears);
+
+	free_ha_date(now);
+	
+	return TRUE;
+}
+
+#define update_field(xml_field, time_fn)				\
+	value = crm_element_value(duration_spec, xml_field);		\
+	if(value != NULL) {						\
+		int value_i = crm_atoi(value, "0");			\
+		time_fn(end, value_i);					\
+	}
+
+ha_time_t *
+parse_xml_duration(ha_time_t *start, crm_data_t *duration_spec) 
+{
+	ha_time_t *end = NULL;
+	const char *value = NULL;
+
+	end = new_ha_date(FALSE);
+	ha_set_time(end, start, TRUE);
+
+	update_field("years",   add_years);
+	update_field("months",  add_months);
+	update_field("weeks",   add_weeks);
+	update_field("days",    add_days);
+	update_field("hours",   add_hours);
+	update_field("minutes", add_minutes);
+	update_field("seconds", add_seconds);
+	
+	return end;
+}
+
+	
+gboolean
+test_date_expression(crm_data_t *time_expr)
+{
+	ha_time_t *start = NULL;
+	ha_time_t *end = NULL;
+	const char *value = NULL;
+	char *value_copy = NULL;
+	const char *op = crm_element_value(time_expr, "operation");
+	ha_time_t *now = new_ha_date(TRUE);
+
+	crm_data_t *duration_spec = NULL;
+	crm_data_t *date_spec = NULL;
+
+	duration_spec = cl_get_struct(time_expr, "duration");
+	date_spec = cl_get_struct(time_expr, "date_spec");
+	
+	value = crm_element_value(time_expr, "start");
+	if(value != NULL) {
+		value_copy = crm_strdup(value);
+		start = parse_date(&value_copy);
+		crm_free(value_copy);
+	}
+	value = crm_element_value(time_expr, "end");
+	if(value != NULL) {
+		value_copy = crm_strdup(value);
+		end = parse_date(&value_copy);
+		crm_free(value_copy);
+	}
+
+	if(start != NULL && end == NULL) {
+ 		end = parse_xml_duration(start, duration_spec);
+	}
+	
+	if(safe_str_eq(op, "date_spec") || safe_str_eq(op, "in_range")) {
+		if(start != NULL && compare_date(start, now) > 0) {
+			return FALSE;
+
+		} else if(end != NULL && compare_date(end, now) < 0) {
+			return FALSE;
+		}
+		if(safe_str_eq(op, "in_range")) {
+			return TRUE;
+		}
+		return cron_range_satisfied(now, date_spec);
+
+	} else if(safe_str_eq(op, "gt") && compare_date(start, now) < 0) {
+		return TRUE;
+
+	} else if(safe_str_eq(op, "lt") && compare_date(end, now) > 0) {
+		return TRUE;
+
+	} else if(safe_str_eq(op, "eq") && compare_date(start, now) == 0) {
+		return TRUE;
+
+	} else if(safe_str_eq(op, "neq") && compare_date(start, now) != 0) {
+		return TRUE;
+	}
+
+	return FALSE;
 }

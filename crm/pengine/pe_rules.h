@@ -1,4 +1,4 @@
-/* $Id: pe_rules.h,v 1.1 2005/03/31 16:29:35 andrew Exp $ */
+/* $Id: pe_rules.h,v 1.2 2005/08/03 14:54:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,31 +19,7 @@
 #ifndef PENGINE_RULES__H
 #define PENGINE_RULES__H
 
-/* do NOT free the nodes returned here */
-extern GListPtr apply_node_expression(
-	const char *attr, const char *op, const char *value,
-	const char *type, GListPtr node_list);
-
-
-extern gboolean test_node_attr_expression(
-	const char *attr, const char *op, const char *value,
-	const char *type, node_t *node);
-
-extern gboolean test_resource_attr_expression(
-	const char *attr, const char *op, const char *value,
-	const char *type, resource_t *rsc);
-
-extern gboolean coloc_expression(
-	const char *attr, const char *op, const char *value,
-	const char *type, node_t *node);
-
-extern gboolean loc_expression(
-	const char *attr, const char *op, const char *value,
-	const char *type, node_t *node);
-
-extern gboolean attr_expression(
-	const char *attr, const char *op, const char *value,
-	const char *type, GHashTable *hash);
-
+extern gboolean test_rule(crm_data_t *rule, node_t *node);
+extern gboolean test_expression(crm_data_t *expr, node_t *node);
 
 #endif

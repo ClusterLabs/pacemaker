@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.95 2005/07/18 16:15:06 andrew Exp $ */
+/* $Id: utils.c,v 1.96 2005/08/03 14:54:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -694,8 +694,13 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 		action->optional = FALSE;
 	}
 	
-	
 	if(rsc != NULL) {
+		if(action->node != NULL) {
+			unpack_instance_attributes(
+				action->op_entry, action->node, action->extra,
+				NULL, 0);
+		}
+		
 		if(action->node == NULL) {
 			action->runnable = FALSE;
 
@@ -766,6 +771,7 @@ unpack_operation(
 		"timeout",
 		"start_delay",
 	};
+
 	if(xml_obj != NULL) {
 		value = crm_element_value(xml_obj, "prereq");
 	}
@@ -860,9 +866,6 @@ unpack_operation(
 		value = crm_element_value(xml_obj, fields[lpc]);
 		add_hash_param(action->extra, fields[lpc], value);
 	}
-	
-	unpack_instance_attributes(xml_obj, action->extra);
-
 
 /* 	if(safe_str_eq(native_data->agent->class, "stonith")) { */
 /* 		if(rsc->start_needs == rsc_req_stonith) { */
@@ -873,8 +876,6 @@ unpack_operation(
 /* 	} */
 
 }
-
-
 
 crm_data_t *
 find_rsc_op_entry(resource_t *rsc, const char *key) 
@@ -1492,3 +1493,29 @@ merge_weights(float w1, float w2)
 	return result;
 }
 
+
+float
+char2score(const char *score) 
+{
+	float score_f = 0.0;
+	
+	if(score == NULL) {
+		
+	} else if(safe_str_eq(score, MINUS_INFINITY_S)) {
+		score_f = -INFINITY;
+		
+	} else if(safe_str_eq(score, INFINITY_S)) {
+		score_f = INFINITY;
+		
+	} else {
+		score_f = atof(score);
+		if(score_f > 0 && score_f > INFINITY) {
+			score_f = INFINITY;
+			
+		} else if(score_f < 0 && score_f < -INFINITY) {
+			score_f = -INFINITY;
+		}
+	}
+	
+	return score_f;
+}

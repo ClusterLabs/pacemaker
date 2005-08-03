@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.30 2005/06/14 11:21:02 davidlee Exp $ */
+/* $Id: color.c,v 1.31 2005/08/03 14:54:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -78,6 +78,7 @@ add_color(resource_t *resource, color_t *color)
 void
 color_resource(resource_t *rsc, pe_working_set_t *data_set)
 {
+	crm_debug_2("Coloring %s", rsc->id);
 	crm_action_debug_3(print_resource("Coloring", rsc, FALSE));
 	
 	if(rsc->provisional == FALSE) {

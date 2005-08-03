@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.111 2005/08/01 12:25:40 andrew Exp $ */
+/* $Id: unpack.c,v 1.112 2005/08/03 14:54:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -71,6 +71,9 @@ rsc_to_node_t *rsc2node_new(
 	double weight, node_t *node, pe_working_set_t *data_set);
 
 const char *param_value(crm_data_t * parent, const char *name);
+
+rsc_to_node_t *generate_location_rule(
+	resource_t *rsc, crm_data_t *location_rule, pe_working_set_t *data_set);
 
 gboolean
 unpack_config(crm_data_t * config, pe_working_set_t *data_set)
@@ -1152,142 +1155,114 @@ add_node_attrs(crm_data_t *xml_obj, node_t *node, pe_working_set_t *data_set)
 				    crm_strdup(XML_BOOLEAN_FALSE));
 	}
 	
-	unpack_instance_attributes(xml_obj, node->details->attrs);
+	unpack_instance_attributes(xml_obj, node, node->details->attrs, NULL, 0);
 
 	return TRUE;
 }
 
-
-
 gboolean
 unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 {
-	gboolean were_rules = FALSE;
 	const char *id_lh   = crm_element_value(xml_obj, "rsc");
 	const char *id      = crm_element_value(xml_obj, XML_ATTR_ID);
-	resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
-
+	resource_t *rsc_lh  = pe_find_resource(data_set->resources, id_lh);
+	
 	if(rsc_lh == NULL) {
 		pe_warn("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 
 	} else if(rsc_lh->is_managed == FALSE) {
-		crm_debug_2(
-			"Ignoring constraint %s: resource %s is not managed",
-			id, id_lh);
+		crm_debug_2("Ignoring constraint %s: resource %s not managed",
+			    id, id_lh);
 		return FALSE;
 	}
-	
-			
+
 	xml_child_iter(
-		xml_obj, rule, XML_TAG_RULE,
-
-		gboolean first_expr = TRUE;
-		gboolean do_and     = TRUE;
-		gboolean rule_has_expressions;
-
-		const char *rule_id = crm_element_value(rule, XML_ATTR_ID);
-		const char *score   = crm_element_value(rule, XML_RULE_ATTR_SCORE);
-		const char *boolean = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
-		GListPtr match_L    = NULL;
-		GListPtr old_list   = NULL;
-
-		float score_f       = 0.0;
-		rsc_to_node_t *new_con = NULL;
-
-		were_rules = TRUE;
-
-		if(score == NULL) {
-			score_f = 0.0;
-			
-		} else if(safe_str_eq(score, MINUS_INFINITY_S)) {
-			score_f = -INFINITY;
-
-		} else if(safe_str_eq(score, INFINITY_S)) {
-			score_f = INFINITY;
-
-		} else {
-			score_f = atof(score);
-		}
-		
-		if(safe_str_eq(boolean, "or")) {
-			do_and = FALSE;
-		}
-
-		new_con = rsc2node_new(rule_id, rsc_lh, score_f,NULL,data_set);
-
-		if(new_con == NULL) {
-			continue;
-		}
-		
-		crm_debug_5("processing rule: %s",
-			  crm_element_value(rule, XML_ATTR_ID));
-
-		rule_has_expressions = FALSE;
-		xml_child_iter(
-			rule, expr, XML_TAG_EXPRESSION,
-
-			const char *attr  = crm_element_value(
-				expr, XML_EXPR_ATTR_ATTRIBUTE);
-			const char *op    = crm_element_value(
-				expr, XML_EXPR_ATTR_OPERATION);
-			const char *value = crm_element_value(
-				expr, XML_EXPR_ATTR_VALUE);
-			const char *type  = crm_element_value(
-				expr, XML_EXPR_ATTR_TYPE);
-			
-			rule_has_expressions = TRUE;
-			crm_debug_5("processing expression: %s",
-				  crm_element_value(expr, XML_ATTR_ID));
-
-			match_L = apply_node_expression(
-				attr, op, value, type, data_set->nodes);
-			
-			if(first_expr) {
-				new_con->node_list_rh =	node_list_dup(
-					match_L, FALSE);
-				first_expr = FALSE;
-				continue;
-			}
-
-			old_list = new_con->node_list_rh;
-
-			if(do_and) {
-				crm_debug_5("do_and");
-				
-				new_con->node_list_rh = node_list_and(
-					old_list, match_L, FALSE);
-			} else {
-				crm_debug_5("do_or");
-				
-				new_con->node_list_rh = node_list_or(
-					old_list, match_L, FALSE);
-			}
-			pe_free_shallow_adv(match_L,  FALSE);
-			pe_free_shallow_adv(old_list, TRUE);
-			);
-
-		if(rule_has_expressions == FALSE
-		   && data_set->symmetric_cluster == FALSE) {
-			/* feels like a hack */
-			crm_debug_4("Rule %s had no expressions,"
-				  " adding all nodes", crm_element_value(rule, XML_ATTR_ID));
-
-			new_con->node_list_rh = node_list_dup(
-				data_set->nodes, FALSE);
-		}
-		
-		if(new_con->node_list_rh == NULL) {
-			crm_debug_2("No matching nodes for constraint/rule %s/%s",
-				 id, crm_element_value(rule, XML_ATTR_ID));
-		}
-		
-		crm_action_debug_3(print_rsc_to_node("Added", new_con, FALSE));
+		xml_obj, rule_xml, XML_TAG_RULE,
+		crm_debug_2("Unpacking %s/%s", id, ID(rule_xml));
+		generate_location_rule(rsc_lh, rule_xml, data_set);
 		);
+	return TRUE;
+}
 
-	if(were_rules == FALSE) {
-		crm_debug_2("no rules for constraint %s", id);
+rsc_to_node_t *
+generate_location_rule(
+	resource_t *rsc, crm_data_t *rule_xml, pe_working_set_t *data_set)
+{
+	const char *rule_id = NULL;
+	const char *score   = NULL;
+	const char *boolean = NULL;
+
+	GListPtr match_L  = NULL;
+	
+	float score_f   = 0.0;
+	gboolean do_and = TRUE;
+	gboolean accept = TRUE;
+	
+	rsc_to_node_t *location_rule = NULL;
+	
+	rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
+	score   = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
+	boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
+
+	crm_debug("processing rule: %s", rule_id);
+	
+	score_f = char2score(score);
+	
+	if(safe_str_eq(boolean, "or")) {
+		do_and = FALSE;
 	}
 	
-	return TRUE;
+	location_rule = rsc2node_new(rule_id, rsc, score_f, NULL, data_set);
+	
+	if(location_rule == NULL) {
+		return NULL;
+	}
+
+	if(do_and) {
+		match_L = node_list_dup(data_set->nodes, FALSE);
+	}
+
+	xml_child_iter(
+		rule_xml, expr, XML_TAG_EXPRESSION,		
+		
+		slist_iter(
+			node, node_t, data_set->nodes, lpc,
+
+			accept = test_expression(expr, node);
+
+			if(!do_and && accept) {
+				if(pe_find_node(match_L, node->details->uname) == NULL) {
+					node_t *dup = node_copy(node);
+					match_L = g_list_append(match_L, dup);
+					crm_debug_5("node %s matched",
+						    node->details->uname);
+				}
+				crm_debug_5("node %s already matched",
+					    node->details->uname);
+				
+			} else if(do_and && !accept) {
+				/* remove it */
+				node_t *delete = pe_find_node(
+					match_L, node->details->uname);
+				if(delete != NULL) {
+					match_L = g_list_remove(match_L,delete);
+					crm_debug_5("node %s did not match",
+						    node->details->uname);
+				}
+				crm_free(delete);
+			}
+			);
+		);
+	
+	location_rule->node_list_rh = match_L;
+	if(location_rule->node_list_rh == NULL) {
+		crm_debug_2("No matching nodes for rule %s", rule_id);
+		return NULL;
+	} 
+
+	crm_debug_2("%s: %d nodes matched",
+		    rule_id, g_list_length(location_rule->node_list_rh));
+	crm_action_debug_3(print_rsc_to_node("Added", location_rule, FALSE));
+	return location_rule;
 }

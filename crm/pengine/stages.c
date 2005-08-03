@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.70 2005/06/27 11:13:05 andrew Exp $ */
+/* $Id: stages.c,v 1.71 2005/08/03 14:54:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -90,7 +90,8 @@ stage0(pe_working_set_t *data_set)
 		crm_str_to_boolean(value, &data_set->have_quorum);
 	}
 	
-	if(data_set->have_quorum == FALSE) {
+	if(data_set->have_quorum == FALSE
+	   && data_set->no_quorum_policy != no_quorum_ignore) {
 		crm_warn("We do not have quorum"
 			 " - fencing and resource management disabled");
 	}

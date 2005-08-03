@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.49 2005/07/07 19:13:44 andrew Exp $ */
+/* $Id: complex.c,v 1.50 2005/08/03 14:54:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,6 +21,7 @@
 
 #include <pengine.h>
 #include <pe_utils.h>
+#include <pe_rules.h>
 #include <crm/msg_xml.h>
 
 gboolean update_node_weight(rsc_to_node_t *cons,const char *id,GListPtr nodes);
@@ -36,6 +37,12 @@ extern gboolean rsc_colocation_new(const char *id, enum con_strength strength,
 extern rsc_to_node_t *rsc2node_new(
 	const char *id, resource_t *rsc, double weight, node_t *node,
 	pe_working_set_t *data_set);
+
+rsc_to_node_t *generate_location_rule(
+	resource_t *rsc, crm_data_t *location_rule, pe_working_set_t *data_set);
+
+void populate_hash(crm_data_t *nvpair_list, GHashTable *hash,
+		   const char **attrs, int attrs_length);
 
 resource_object_functions_t resource_class_functions[] = {
 	{
@@ -173,6 +180,12 @@ common_unpack(
 	const char *priority = NULL;
 	const char *is_managed = NULL;
 
+	const char *allowed_attrs[] = {
+		XML_CIB_ATTR_PRIORITY,
+		XML_RSC_ATTR_INCARNATION_MAX,
+		XML_RSC_ATTR_INCARNATION_NODEMAX
+	};
+
 	crm_log_xml_debug_2(xml_obj, "Processing resource input...");
 	
 	if(id == NULL) {
@@ -207,7 +220,8 @@ common_unpack(
 	(*rsc)->parameters = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
-	unpack_instance_attributes(xml_obj, (*rsc)->parameters);
+	unpack_instance_attributes(xml_obj, NULL, (*rsc)->parameters,
+				   allowed_attrs, DIMOF(allowed_attrs));
 
 	priority = get_rsc_param(*rsc, XML_CIB_ATTR_PRIORITY);
 
@@ -394,61 +408,95 @@ void common_free(resource_t *rsc)
 }
 
 void
-common_agent_constraints(
-	GListPtr node_list, lrm_agent_t *agent, const char *id) 
+unpack_instance_attributes(
+	crm_data_t *xml_obj, node_t *node, GHashTable *hash,
+	const char **attrs, int attrs_length)
 {
-#if 0
-	slist_iter(
-		node, node_t, node_list, lpc,
-		
-		crm_debug_5("Checking if %s supports %s/%s (%s)",
-			  node->details->uname,
-			  agent->class, agent->type, agent->version);
-		
-		if(has_agent(node, agent) == FALSE) {
-			/* remove node from contention */
-			crm_debug_5("Marking node %s unavailable for %s",
-				  node->details->uname, id);
-			node->weight = -1.0;
-			node->fixed = TRUE;
-		}
-		);
-#endif
-}
-
-
-void
-unpack_instance_attributes(crm_data_t *xml_obj, GHashTable *hash)
-{
-	const char *name = NULL;
-	const char *value = NULL;
+	gboolean apply = FALSE;
+	crm_data_t *attributes = NULL;
 	
 	if(xml_obj == NULL) {
 		crm_debug_4("No instance attributes");
+		return;
+	}
+
+	if(attrs != NULL && attrs[0] == NULL) {
+		/* none allowed */
+		crm_debug_2("No instance attributes allowed");
 		return;
 	}
 	
 	xml_child_iter(
 		xml_obj, attr_set, XML_TAG_ATTR_SETS,
 
+		/* check any rules */
+		apply = TRUE;
 		xml_child_iter(
-			attr_set, attrs, XML_TAG_ATTRS,
+			attr_set, rule, XML_TAG_RULE,
 
-			/* todo: check any rules */
-			
-			xml_child_iter(
-				attrs, an_attr, XML_CIB_TAG_NVPAIR,
-				
-				name  = crm_element_value(
-					an_attr, XML_NVPAIR_ATTR_NAME);
-				value = crm_element_value(
-					an_attr, XML_NVPAIR_ATTR_VALUE);
-
-				add_hash_param(hash, name, value);
-				);
+			apply = FALSE;
+			if(test_rule(rule, node)) {
+				apply = TRUE;
+				break;
+			}
 			);
+
+		if(apply == FALSE) {
+			continue;
+		}
+		
+		attributes = cl_get_struct(attr_set, XML_TAG_ATTRS);
+		if(attributes == NULL) {
+			pe_err("%s with no %s child",
+			       XML_TAG_ATTR_SETS, XML_TAG_ATTRS);
+		} else {
+			populate_hash(attributes, hash, attrs, attrs_length);
+		}
+		
 		);
 }
+
+void
+populate_hash(crm_data_t *nvpair_list, GHashTable *hash,
+	      const char **attrs, int attrs_length) 
+{
+	int lpc = 0;
+	gboolean set_attr = FALSE;
+	const char *name = NULL;
+	const char *value = NULL;
+	xml_child_iter(
+		nvpair_list, an_attr, XML_CIB_TAG_NVPAIR,
+		
+		name  = crm_element_value(an_attr, XML_NVPAIR_ATTR_NAME);
+		
+		set_attr = TRUE;
+
+		if(attrs != NULL) {
+			set_attr = FALSE;
+		}
+		
+		for(lpc = 0; set_attr == FALSE && lpc < attrs_length
+			    && attrs[lpc] != NULL; lpc++) {
+			if(safe_str_eq(name, attrs[lpc])) {
+				set_attr = TRUE;
+			}
+		}
+		
+		if(set_attr) {
+			crm_debug_4("Setting attribute: %s", name);
+			value = crm_element_value(
+				an_attr, XML_NVPAIR_ATTR_VALUE);
+			
+			add_hash_param(hash, name, value);
+			
+		} else {
+			crm_debug_4("Skipping attribute: %s", name);
+		}
+		
+		);
+}
+
+
 
 void
 add_rsc_param(resource_t *rsc, const char *name, const char *value)
@@ -501,3 +549,4 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
 
 	crm_debug_3("dumped: name=%s value=%s", name, s_value);
 }
+
