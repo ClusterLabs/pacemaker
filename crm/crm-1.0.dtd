@@ -115,7 +115,7 @@
           max_masters      CDATA         #REQUIRED
           max_node_masters CDATA         #REQUIRED>
 <!-- Annotated version -->
-<!ELEMENT instance_attributes (rule?, attributes)>
+<!ELEMENT instance_attributes (rule*, attributes)>
 <!-- Annotated version -->
 
 <!ELEMENT constraints (rsc_order*, rsc_colocation*, rsc_location*)>
@@ -147,7 +147,7 @@
           lifetime    CDATA #IMPLIED>
 <!-- Annotated version -->
 
-<!ELEMENT rule (expression*)>
+<!ELEMENT rule (expression|time_expression)+>
 <!ATTLIST rule
           id         CDATA        #REQUIRED
           score      CDATA        #IMPLIED
@@ -158,10 +158,40 @@
 <!ATTLIST expression
           id         CDATA                    #REQUIRED
           attribute  CDATA                    #REQUIRED
-          operation  (lt|gt|lte|gte|eq|ne|defined|not_defined|colocated|not_colocated)
+          operation  (lt|gt|lte|gte|eq|ne|defined|not_defined)
           value      CDATA                    #IMPLIED
           type       (integer|string|version) 'string'>
 <!-- Annotated version -->
+
+<!ELEMENT date_expression (date_spec?,duration?)>
+<!ATTLIST date_expression
+	operation  (in_range|date_spec|gt|lt) 'in_range'
+	start      CDATA  #IMPLIED
+	end        CDATA  #IMPLIED>
+<!-- Annotated version -->
+
+<!ELEMENT date_spec>
+<!ATTLIST date_spec
+        seconds    CDATA  #IMPLIED
+        minutes    CDATA  #IMPLIED
+        hours      CDATA  #IMPLIED
+        monthdays  CDATA  #IMPLIED
+        weekdays   CDATA  #IMPLIED
+        yeardays   CDATA  #IMPLIED
+        months     CDATA  #IMPLIED
+        weeks      CDATA  #IMPLIED
+        weekyears  CDATA  #IMPLIED
+        years      CDATA  #IMPLIED>
+
+<!ELEMENT duration>
+<!ATTLIST duration
+        seconds    CDATA  #IMPLIED
+        minutes    CDATA  #IMPLIED
+        hours      CDATA  #IMPLIED
+        days       CDATA  #IMPLIED
+        weeks      CDATA  #IMPLIED
+        months     CDATA  #IMPLIED
+        years      CDATA  #IMPLIED>
 
 <!ELEMENT status (node_state*)>
 
