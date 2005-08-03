@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.4 2005/08/03 13:14:06 andrew Exp $ */
+/* $Id: iso8601.c,v 1.5 2005/08/03 20:15:03 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1060,11 +1060,11 @@ is_date_sane(ha_time_t *a_date)
 
 	CRM_DEV_ASSERT(a_date->has->months);
 	CRM_DEV_ASSERT(a_date->months > 0);
-	CRM_DEV_ASSERT(a_date->months < 13);
+	CRM_DEV_ASSERT(a_date->months <= 12);
 
 	CRM_DEV_ASSERT(a_date->has->weeks);
 	CRM_DEV_ASSERT(a_date->weeks > 0);
-	CRM_DEV_ASSERT(a_date->weeks < weeks);
+	CRM_DEV_ASSERT(a_date->weeks <= weeks);
 
 	CRM_DEV_ASSERT(a_date->has->days);
 	CRM_DEV_ASSERT(a_date->days > 0);
@@ -1072,7 +1072,7 @@ is_date_sane(ha_time_t *a_date)
 
 	CRM_DEV_ASSERT(a_date->has->weekdays);
 	CRM_DEV_ASSERT(a_date->weekdays > 0);
-	CRM_DEV_ASSERT(a_date->weekdays < 8);
+	CRM_DEV_ASSERT(a_date->weekdays <= 7);
 
 	CRM_DEV_ASSERT(a_date->has->yeardays);
 	CRM_DEV_ASSERT(a_date->yeardays > 0);
@@ -1085,7 +1085,7 @@ is_date_sane(ha_time_t *a_date)
 	CRM_DEV_ASSERT(a_date->minutes < 60);
 	
 	CRM_DEV_ASSERT(a_date->seconds >= 0);
-	CRM_DEV_ASSERT(a_date->seconds < 60);
+	CRM_DEV_ASSERT(a_date->seconds <= 60);
 	
 	return TRUE;
 }
