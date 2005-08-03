@@ -88,9 +88,7 @@ crm_mon_LDADD		= $(COMMONLIBS) \
 
 iso8601_SOURCES		= test.iso8601.c
 iso8601_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-iso8601_LDADD		= $(GLIBLIB)					\
-			$(top_builddir)/lib/clplumbing/libplumb.la	\
-			$(top_builddir)/lib/crm/common/libcrmcommon.la
+iso8601_LDADD		= $(COMMONLIBS) 
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
