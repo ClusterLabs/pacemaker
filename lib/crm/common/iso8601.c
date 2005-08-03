@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.1 2005/08/02 16:14:39 andrew Exp $ */
+/* $Id: iso8601.c,v 1.2 2005/08/03 06:13:06 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -186,30 +186,6 @@ normalize_time(ha_time_t *a_time)
 }
 
 
-/*
-Dates
-
-Dates can be described in three different ways in ISO 8601: Calendar dates, ordinal dates, and week dates. Each is detailed below.
-There is an important note on years however. Year 0001 corresponds to AD 1. The year before that is 0000, which corresponds to 1 BC. The year before that is -0001, which corresponds to 2 BC. This pattern continues. This system had already been used by astronomers (see astronomical year numbering) and may clarify the dispute about when a new century begins (see 20th century).
-The standard uses the Gregorian calendar. Dates in other calendars such as the Julian calendar should in theory be converted to the Gregorian calendar before representation in ISO 8601. However, in practice, this may or may not happen, and the standard recognizes this fact by suggesting that, in cases where there may be confusion, it is imperative that the sender and receiver must both agree which calendar is to be used. When the Gregorian calendar is applied to dates prior to its adoption, it is known as the proleptic Gregorian calendar.
-Years must be written with at least four digits to be unambiguous. Years written with two digits preceded by a hyphen may represent a year in an implied century, and two digits alone are used to designate a century. Unfortunately, common practice is to use two digits for either a year in an implied modern century or in the first century (89 might be 89 or 1989.) To prevent confusion, four digits are strongly recommended, as 0089 or 1989. Years with three digits such as 879 must be written with a leading zero, as 0879. Years may be described by more than four characters by agreement of sender and receiver. This addresses the year 10,000 problem, allowing the standard to specify dates later than AD 10000 or earlier than 10001 BC.
-For purposes of reference ISO 8601 assigns the number 1875 to the year in which the Convention du Mètre was signed in Paris.
-With the exception of years (as noted above), whenever a specification includes multiple characters, all the characters must be filled. This means that if hh is specified and the current hour is 4, the result must include a leading 0, as 04.
-
-Calendar dates
-Calendar dates are dates as most people know them. They involve determining the day within a year by counting within a month. For example, April 5 is a calendar date. ISO 8601 specifies calendar dates like this: YYYY-MM-DD. This means, for example, that the fifth day of the fourth month of 1981, or 1981-04-05, is written 1981-04-05. It may also be written 19810405 if compactness is more important than readability by human beings. The format with separators is called the extended format, while the format without is called the basic format.
-The standard allows for dates to be written with less precision. For example, you may write 1981-04 to mean April, 1981 (this is, in fact, the basic version -- you should not leave out the separator.) You may simply write 1981 to refer to that year. Or you may even write 19 to refer to a century.
-The standard also allows for dates which include an implied element, such as an implied century. It is careful to emphasize the importance of clear communication between sender and receiver when implied elements are being used. It is a lack of such clarity that led to the year 2000 problem.
-
-Ordinal dates
-Ordinal dates are dates in which a day is determined by counting within the entire year. Thus a day is represented by three digits, starting with January 1 being 001, February 1 being 032, and so on. December 31 will therefore be 365, except in leap years, where it will be 366.
-An ordinal date is specified with YYYY-DDD. Thus, 1981-04-05 is represented as 1981-095. The basic format of this drops the separator, becoming 1981095.
-
-Week dates
-Week dates are dates in which a day is determined by counting within a week. Weeks are given two digits beginning with 01 as the first week of the year (see below), up to 52 or 53 being the last week of the year. By convention, the week starts with Monday. Each day is given one digit beginning with 1 as Monday leading to 7 as Sunday. The extended format representation of week dates is YYYY-Www-d, where W is the actual letter W, ww refers to the two digit week number, and d is the day's number. This means that 1981-04-05, the Sunday of the 14th week in 1981, is represented as 1981-W14-7, or 1981W147. This format can also specify a week, as 1981W14.
-The first week of a year is the first week which includes at least four days in the new year (again using the convention that Monday is the first day of the week). It follows that the first week of the year is always the week which includes the first Thursday of January, and also the week which includes January 4. This means that week 01 may include days from the previous year, or that week 52 or 53 may include days from the next year. For example, 2004-01-01 occurs on a Thursday. This means that 2004-W01 consists of Monday, 2003-12-29 through Sunday, 2004-01-04. 2005-01-01 occurs on a Saturday, meaning that 2004-W53 is 2004-12-27 through 2005-01-02, and 2005-W01 starts on 2005-01-03.
-For a good mathematical treatment of the ISO 8601 Calendar see the external link The Mathematics of the ISO 8601 Calendar below.
-*/
 
 ha_time_t *
 parse_date(char **date_str)
@@ -224,8 +200,8 @@ parse_date(char **date_str)
 	
 	while(isspace((*date_str)[0]) == FALSE) {
 		char ch = (*date_str)[0];
-		crm_debug_5("Switching on ch=%c (len=%ld)",
-			    ch, strlen(*date_str));
+		crm_debug_5("Switching on ch=%c (len=%d)",
+			    ch, (int)strlen(*date_str));
 		
 		if(ch == 0) {
 			/* all done */
@@ -284,7 +260,7 @@ parse_date(char **date_str)
 			(*date_str)++;
 			parse_time(date_str, new_time, TRUE);
 
-		} else if(isnumber(ch)) {
+		} else if(isdigit(ch)) {
 			if(new_time->has->years == FALSE
 			   && parse_int(date_str, 4, 9999, &new_time->years)) {
 				new_time->has->years = TRUE;
@@ -967,7 +943,7 @@ parse_int(char **str, int field_width, int uppper_bound, int *result)
 		(*str)++;
 	}
 
-	for(; (fraction || lpc < field_width) && isnumber((*str)[0]); lpc++) {
+	for(; (fraction || lpc < field_width) && isdigit((*str)[0]); lpc++) {
 		if(fraction) {
 			intermediate = ((*str)[0] - '0')/(10^lpc);
 		} else {
@@ -996,7 +972,7 @@ parse_int(char **str, int field_width, int uppper_bound, int *result)
 gboolean
 check_for_ordinal(const char *str)
 {
-	if(isnumber(str[2]) == FALSE) {
+	if(isdigit(str[2]) == FALSE) {
 		crm_debug_6("char 3 == %c", str[2]);
 		return FALSE;		
 	}
