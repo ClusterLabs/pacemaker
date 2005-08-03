@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.2 2005/08/03 06:13:06 andrew Exp $ */
+/* $Id: iso8601.c,v 1.3 2005/08/03 12:55:13 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -124,8 +124,7 @@ parse_time(char **time_str, ha_time_t *a_time, gboolean with_offset)
 {
 	ha_time_t *new_time = a_time;
 	if(a_time == NULL) {
-		crm_malloc0(new_time, sizeof(ha_time_t));
-		crm_malloc0(new_time->has, sizeof(ha_has_time_t));
+		new_time = new_ha_date(FALSE);
 	}
 
 	CRM_DEV_ASSERT(new_time != NULL);
@@ -825,12 +824,9 @@ add_time(ha_time_t *lhs, ha_time_t *rhs)
 	ha_time_t *answer = NULL;
 	CRM_DEV_ASSERT(lhs != NULL && rhs != NULL);
 	
-	crm_malloc0(answer, sizeof(ha_time_t));
-	crm_malloc0(answer->has, sizeof(ha_has_time_t));
-	crm_malloc0(answer->offset, sizeof(ha_time_t));
-	crm_malloc0(answer->offset->has, sizeof(ha_has_time_t));
-
+	answer = new_ha_date(FALSE);
 	ha_set_time(answer, lhs, TRUE);	
+
 	normalize_time(lhs);
 	normalize_time(answer);
 
@@ -861,12 +857,9 @@ subtract_time(ha_time_t *lhs, ha_time_t *rhs)
 	ha_time_t *answer = NULL;
 	CRM_DEV_ASSERT(lhs != NULL && rhs != NULL);
 
-	crm_malloc0(answer, sizeof(ha_time_t));
-	crm_malloc0(answer->has, sizeof(ha_has_time_t));
-	crm_malloc0(answer->offset, sizeof(ha_time_t));
-	crm_malloc0(answer->offset->has, sizeof(ha_has_time_t));
-
+	answer = new_ha_date(FALSE);
 	ha_set_time(answer, lhs, TRUE);	
+
 	normalize_time(lhs);
 	normalize_time(rhs);
 	normalize_time(answer);
@@ -1123,3 +1116,29 @@ compare_date(ha_time_t *lhs, ha_time_t *rhs)
 	return 0;
 }
 
+ha_time_t *
+new_ha_date(gboolean set_to_now) 
+{
+	time_t tm_now = time(NULL);
+	ha_time_t *now = NULL;
+	crm_malloc0(now, sizeof(ha_time_t));
+	crm_malloc0(now->has, sizeof(ha_has_time_t));
+	crm_malloc0(now->offset, sizeof(ha_time_t));
+	crm_malloc0(now->offset->has, sizeof(ha_has_time_t));
+	if(set_to_now) {
+		ha_set_timet_time(now, &tm_now);
+	}
+	return now;
+}
+
+void
+free_ha_date(ha_time_t *a_date) 
+{
+	if(a_date == NULL) {
+		return;
+	}
+	free_ha_date(a_date->normalized);
+	free_ha_date(a_date->offset);
+	crm_free(a_date->has);
+	crm_free(a_date);
+}

@@ -1,4 +1,4 @@
-/* $Id: iso8601.h,v 1.1 2005/08/02 16:14:39 andrew Exp $ */
+/* $Id: iso8601.h,v 1.2 2005/08/03 12:55:13 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -148,6 +148,9 @@ extern int days_per_month(int month, int year);
 
 gboolean is_date_sane(ha_time_t *a_date);
 
+
+ha_time_t *new_ha_date(gboolean set_to_now);
+void free_ha_date(ha_time_t *a_date);
 
 void reset_time(ha_time_t *a_time);
 
