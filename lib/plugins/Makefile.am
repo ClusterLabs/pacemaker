@@ -24,5 +24,5 @@ if LRM_BUILD
 LRM_DIR = lrm
 endif
 
-SUBDIRS			= InterfaceMgr HBauth HBcomm stonith AppHBNotification \
-			  $(LRM_DIR)
+SUBDIRS			= InterfaceMgr HBauth HBcomm HBcompress stonith AppHBNotification \
+			  $(LRM_DIR) 
