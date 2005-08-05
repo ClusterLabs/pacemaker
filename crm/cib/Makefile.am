@@ -38,6 +38,7 @@ crmressocket	= $(havarlibdir)/api/crm.rsp
 
 COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		  $(top_builddir)/lib/clplumbing/libplumb.la		\
+		  $(top_builddir)/lib/pils/libpils.la			\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/apphb/libapphb.la		\
 		  $(top_builddir)/lib/hbclient/libhbclient.la		\
