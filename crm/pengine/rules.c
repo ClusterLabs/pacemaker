@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.8 2005/08/03 20:23:05 andrew Exp $ */
+/* $Id: rules.c,v 1.9 2005/08/07 08:15:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,7 @@
 
 enum expression_type {
 	not_expr,
+	nested_rule,
 	attr_expr,
 	loc_expr,
 	time_expr
@@ -44,6 +45,21 @@ gboolean test_date_expression(crm_data_t *time_expr);
 gboolean cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec);
 gboolean test_attr_expression(crm_data_t *expr, GHashTable *hash);
 
+gboolean
+test_ruleset(crm_data_t *ruleset, node_t *node) 
+{
+	gboolean ruleset_default = TRUE;
+	xml_child_iter(
+		ruleset, rule, XML_TAG_RULE,
+
+		ruleset_default = FALSE;
+		if(test_rule(rule, node)) {
+			return TRUE;
+		}
+		);
+	
+	return ruleset_default;
+}
 
 gboolean
 test_rule(crm_data_t *rule, node_t *node) 
@@ -57,7 +73,8 @@ test_rule(crm_data_t *rule, node_t *node)
 		do_and = FALSE;
 		passed = FALSE;
 	}
-	
+
+	crm_debug_2("Testing rule %s", ID(rule));
 	xml_child_iter(
 		rule, expr, NULL,
 		test = test_expression(expr, node);
@@ -84,6 +101,9 @@ test_expression(crm_data_t *expr, node_t *node)
 	gboolean accept = FALSE;
 	
 	switch(find_expression_type(expr)) {
+		case nested_rule:
+			accept = test_rule(expr, node);
+			break;
 		case attr_expr:
 		case loc_expr:
 			accept = test_attr_expression(
@@ -112,6 +132,9 @@ find_expression_type(crm_data_t *expr)
 
 	if(safe_str_eq(tag, "date_expression")) {
 		return time_expr;
+		
+	} else if(safe_str_eq(tag, XML_TAG_RULE)) {
+		return nested_rule;
 		
 	} else if(safe_str_neq(tag, "expression")) {
 		return not_expr;

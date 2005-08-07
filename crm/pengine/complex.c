@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.51 2005/08/03 20:23:05 andrew Exp $ */
+/* $Id: complex.c,v 1.52 2005/08/07 08:15:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -412,7 +412,6 @@ unpack_instance_attributes(
 	crm_data_t *xml_obj, node_t *node, GHashTable *hash,
 	const char **attrs, int attrs_length)
 {
-	gboolean apply = FALSE;
 	crm_data_t *attributes = NULL;
 	
 	if(xml_obj == NULL) {
@@ -431,20 +430,7 @@ unpack_instance_attributes(
 		xml_obj, attr_set, XML_TAG_ATTR_SETS,
 
 		/* check any rules */
-		apply = TRUE;
-		crm_debug_2("Testing rules");
-		xml_child_iter(
-			attr_set, rule, XML_TAG_RULE,
-
-			apply = FALSE;
-			crm_debug_2("Testing rule %s", ID(rule));
-			if(test_rule(rule, node)) {
-				apply = TRUE;
-				break;
-			}
-			);
-
-		if(apply == FALSE) {
+		if(test_ruleset(attr_set, node) == FALSE) {
 			continue;
 		}
 		

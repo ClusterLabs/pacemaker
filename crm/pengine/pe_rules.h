@@ -1,4 +1,4 @@
-/* $Id: pe_rules.h,v 1.2 2005/08/03 14:54:27 andrew Exp $ */
+/* $Id: pe_rules.h,v 1.3 2005/08/07 08:15:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,6 +19,7 @@
 #ifndef PENGINE_RULES__H
 #define PENGINE_RULES__H
 
+extern gboolean test_ruleset(crm_data_t *ruleset, node_t *node);
 extern gboolean test_rule(crm_data_t *rule, node_t *node);
 extern gboolean test_expression(crm_data_t *expr, node_t *node);
 
