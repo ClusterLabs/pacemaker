@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.54 2005/07/07 09:48:58 andrew Exp $ */
+/* $Id: graph.c,v 1.55 2005/08/07 08:17:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -56,29 +56,32 @@ update_action(action_t *action)
 	
 	crm_debug_3("Processing action %d: %s",
 		    action->id, action->optional?"optional":"required");
-#if UPDATE_THEM
+
 	slist_iter(
 		other, action_wrapper_t, action->actions_before, lpc,
 		crm_debug_3("\tChecking action %d: %s/%s",
 			    other->action->id, ordering_type2text(other->type),
 			    other->action->optional?"optional":"required");
 
-		if(other->type == pe_ordering_manditory) {
-			
-		} else if(other->type == pe_ordering_restart
+		if(other->type == pe_ordering_restart
 			  && action->rsc->start_pending == FALSE) {
-
-		} else {
+			crm_debug_3("Upgrading %s constraint to %s",
+				    ordering_type2text(other->type),
+				    ordering_type2text(pe_ordering_manditory));
+			other->type = pe_ordering_manditory;
+		}
+		
+		if(other->type != pe_ordering_manditory) {
 			crm_debug_3("\t  Ignoring: %s",
 				    ordering_type2text(other->type));
 			continue;
 			
-		}
-		if(action->optional || other->action->optional == FALSE) {
+		} else if(action->optional || other->action->optional == FALSE){
 			crm_debug_3("\t  Ignoring: %s/%s",
 				    other->action->optional?"-":"they are not optional",
 				    action->optional?"we are optional":"-");
 			continue;
+			
 		} else if(safe_str_eq(other->action->task, CRMD_ACTION_START)) {
 			const char *interval = g_hash_table_lookup(
 				action->extra, "interval");
@@ -97,29 +100,7 @@ update_action(action_t *action)
 			    other->action->id, action->id);
 		update_action(other->action);
 		);
-#else
-	slist_iter(
-		other, action_wrapper_t, action->actions_before, lpc,
-		crm_debug_3("\tChecking action %d: %s/%s",
-			    other->action->id, ordering_type2text(other->type),
-			    other->action->optional?"optional":"required");
-		if(other->type != pe_ordering_manditory) {
-			crm_debug_3("\t  Ignoring: %s",
-				    ordering_type2text(other->type));
-			continue;
-		} else if(other->action->optional || action->optional == FALSE) {
-			crm_debug_3("\t  Ignoring: %s/%s",
-				    other->action->optional?"they are optional":"-",
-				    action->optional?"-":"we are not optional");
-			continue;
-		}
 
-		change = TRUE;
-		action->optional = FALSE;
-		crm_debug_2("* Marking action %d manditory because of %d",
-			    action->id, other->action->id);
-		);
-#endif
 	slist_iter(
 		other, action_wrapper_t, action->actions_after, lpc,
 		
@@ -151,10 +132,11 @@ update_action(action_t *action)
 			}
 			
 		} else if(other->type == pe_ordering_restart) {
-			if(action->rsc != other->action->rsc) {
-				crm_err("Unexpected!");
+			CRM_DEV_ASSERT(action->rsc == other->action->rsc);
+			if(crm_assert_failed) {
 				continue;
 			}
+
 		} else {
 			crm_debug_3("\t  Ignoring: ordering %s",
 				    ordering_type2text(other->type));
