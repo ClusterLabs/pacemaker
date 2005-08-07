@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.113 2005/08/03 20:23:05 andrew Exp $ */
+/* $Id: unpack.c,v 1.114 2005/08/07 08:16:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -285,6 +285,7 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 gboolean 
 unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 {
+	crm_data_t *lifetime = NULL;
 	crm_debug("Begining unpack... %s",
 		    xml_constraints?crm_element_name(xml_constraints):"<none>");
 	xml_child_iter(
@@ -300,8 +301,14 @@ unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 		crm_debug_3("Processing constraint %s %s",
 			    crm_element_name(xml_obj),id);
 
-		if(safe_str_eq(XML_CONS_TAG_RSC_ORDER,
-			       crm_element_name(xml_obj))) {
+		lifetime = cl_get_struct(xml_obj, "lifetime");
+
+		if(test_ruleset(lifetime, NULL) == FALSE) {
+			crm_info("Constraint %s %s is not active",
+				 crm_element_name(xml_obj), id);
+
+		} else if(safe_str_eq(XML_CONS_TAG_RSC_ORDER,
+				      crm_element_name(xml_obj))) {
 			unpack_rsc_order(xml_obj, data_set);
 
 		} else if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND,
