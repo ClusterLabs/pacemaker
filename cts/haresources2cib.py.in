@@ -30,13 +30,13 @@ import xml.dom.minidom
 using_ocf = 1
 using_mon = 1
 
-hb2ocf_map = {
-	"apache" :["configfile"],
-	"IPaddr" :["ip","netmask","nic","broadcast"],
-	"IPaddr2":["ip","netmask","nic","broadcast"],
-	"db2"    :["instance"]
+ocf_ra_setting = {
+	"apache" :{"params":["configfile"],"time":["120s","60s"]},
+	"IPaddr" :{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
+	"IPaddr2":{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
+	"db2"    :{"params":["instance"],"time":["120s","60s"]}
 	}
-	
+
 def create_cib() :
 	doc = xml.dom.minidom.Document()
 	cib = doc.createElement("cib")
@@ -94,7 +94,7 @@ def cib_resource(doc,index, rsc):
 	resource = doc.createElement("primitive")
 	resource.setAttribute("id",id)
 	resource.setAttribute("type",type)
-	if using_ocf and type in hb2ocf_map :
+	if using_ocf and type in ocf_ra_setting:
 		resource.setAttribute("class","ocf")
 	else :
 		resource.setAttribute("class","heartbeat")
@@ -107,15 +107,20 @@ def cib_resource(doc,index, rsc):
 		operations.appendChild(mon_op)
 		mon_op.setAttribute("id","1")
 		mon_op.setAttribute("name","monitor")
-		mon_op.setAttribute("interval", "120s")
-		mon_op.setAttribute("timeout", "60s")
+		interval = "120s"
+		timeout = "60s"
+		if using_ocf and type in ocf_ra_setting :
+			interval = ocf_ra_setting[type]["time"][0]
+			timeout = ocf_ra_setting[type]["time"][1]
+		mon_op.setAttribute("interval", interval)
+		mon_op.setAttribute("timeout", timeout)
 
 	if len(params) != 0:
 		instance_attributes = doc.createElement("instance_attributes")
 		resource.appendChild(instance_attributes)
 		attributes = doc.createElement("attributes")
 		instance_attributes.appendChild(attributes)
-		if using_ocf and type in hb2ocf_map :
+		if using_ocf and type in ocf_ra_setting :
 			if type in ["IPaddr", "IPaddr2"] :
 				unsort = string.split(params[0], "/")
 				params = [None, None, None, None]
@@ -139,7 +144,7 @@ def cib_resource(doc,index, rsc):
 					index += 1
 					continue
 				nvpair = doc.createElement("nvpair")
-				name = hb2ocf_map[type][index]
+				name = ocf_ra_setting[type]["params"][index]
 				nvpair.setAttribute("name",name)
 				nvpair.setAttribute("value",str(param))
 				attributes.appendChild(nvpair)
