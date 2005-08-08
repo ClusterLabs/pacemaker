@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.91 2005/07/19 19:06:42 andrew Exp $ */
+/* $Id: tengine.c,v 1.92 2005/08/08 15:43:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -613,7 +613,8 @@ initiate_action(action_t *action)
 		 *   resource is running again
 		 */
 #ifdef TESTING
-		cib_action_update(action, LRM_OP_PENDING);
+		action->invoked = FALSE;
+		cib_action_update(action, LRM_OP_DONE);
 		return TRUE;
 #endif
 		action->invoked = FALSE;
@@ -679,13 +680,6 @@ cib_action_update(action_t *action, int status)
 			crm_warn("%s: %s on %s timed out",
 				 crm_element_name(action->xml), task, target);
 		}
-#ifdef TESTING
-	/* turn the "pending" notification into a "op completed" notification
-	 *  when testing... exercises more code this way.
-	 */
-	} else if(status == LRM_OP_PENDING) {
-		status = LRM_OP_DONE;
-#endif
 	}
 	code = crm_itoa(status);
 	
@@ -737,7 +731,7 @@ cib_action_update(action_t *action, int status)
 	crm_free(code);
 
 	code = generate_transition_magic(
-		crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY), -1);
+		crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY), status);
 	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, code);
 	crm_free(code);
 	
@@ -761,8 +755,8 @@ cib_action_update(action_t *action, int status)
 		add_cib_op_callback(rc, FALSE, action, cib_action_updated);
 	}
 #else
-	fprintf(stderr, "Initiating action %d: %s %s on %s\n",
-		action->id, task, rsc_id, target);
+	te_log_action(LOG_INFO, "Initiating action %d: %s %s on %s",
+		      action->id, task, rsc_id, target);
 	call_options = 0;
 	{
 		HA_Message *cmd = ha_msg_new(11);
@@ -840,8 +834,8 @@ cib_action_updated(
 	if(rsc_op != NULL) {
 		crm_log_xml_debug_2(rsc_op, "Performing");
 	}
-	cmd = create_request(
-		task, rsc_op, on_node, CRM_SYSTEM_LRMD,CRM_SYSTEM_TENGINE,NULL);
+	cmd = create_request(task, rsc_op, on_node,
+			     CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
 	
 
 #ifndef TESTING
