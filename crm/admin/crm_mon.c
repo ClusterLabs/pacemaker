@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.6 2005/07/09 09:23:14 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.7 2005/08/08 12:06:32 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -503,6 +503,16 @@ usage(const char *cmd, int exit_status)
 	stream = exit_status ? stderr : stdout;
 
 	fprintf(stream, "usage: %s [-%s]\n", cmd, OPTARGS);
+	fprintf(stream, "\t--%s (-%c) \t: This text\n", "help", '?');
+	fprintf(stream, "\t--%s (-%c) \t: Increase the debug output\n", "verbose", 'V');
+	fprintf(stream, "\t--%s (-%c) <seconds>\t: Update frequency\n", "interval", 'i');
+	fprintf(stream, "\t--%s (-%c) \t:Group resources by node\n", "group-by-node", 'n');
+	fprintf(stream, "\t--%s (-%c) \t:Display inactive resources\n", "inactive", 'r');
+	fprintf(stream, "\t--%s (-%c) \t: Display cluster status on the console\n", "as-console", 'c');
+	fprintf(stream, "\t--%s (-%c) <filename>\t: Write cluster status to the named file\n", "as-html", 'h');
+	fprintf(stream, "\t--%s (-%c) \t: Run in the background as a daemon\n", "daemonize", 'd');
+	fprintf(stream, "\t--%s (-%c) <filename>\t: Daemon pid file location\n", "pid-file", 'p');
+
 	fflush(stream);
 
 	exit(exit_status);
