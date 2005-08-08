@@ -1,4 +1,4 @@
-/* $Id: iso8601.h,v 1.2 2005/08/03 12:55:13 andrew Exp $ */
+/* $Id: iso8601.h,v 1.3 2005/08/08 12:14:47 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -153,5 +153,6 @@ ha_time_t *new_ha_date(gboolean set_to_now);
 void free_ha_date(ha_time_t *a_date);
 
 void reset_time(ha_time_t *a_time);
+void log_tm_date(int log_level, struct tm *some_tm);
 
 #endif

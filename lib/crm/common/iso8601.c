@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.5 2005/08/03 20:15:03 andrew Exp $ */
+/* $Id: iso8601.c,v 1.6 2005/08/08 12:14:47 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,7 +18,14 @@
  */
 
 /*
- * http://en.wikipedia.org/wiki/ISO_8601 as at 2005-08-01
+ * Primary reference:
+ *	http://en.wikipedia.org/wiki/ISO_8601 (as at 2005-08-01)
+ *
+ * Secondary references:
+ *	http://hydracen.com/dx/iso8601.htm
+ *	http://www.personal.ecu.edu/mccartyr/ISOwdALG.txt
+ *	http://www.personal.ecu.edu/mccartyr/isowdcal.html
+ *	http://www.phys.uu.nl/~vgent/calendar/isocalendar.htm
  *
  */
 
@@ -881,7 +888,7 @@ subtract_time(ha_time_t *lhs, ha_time_t *rhs)
 /* 	return NULL; */
 /* } */
 
-int month_days[13] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 29 };
+int month_days[14] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 29 };
 int
 days_per_month(int month, int year)
 {
@@ -1143,4 +1150,23 @@ free_ha_date(ha_time_t *a_date)
 	free_ha_date(a_date->offset);
 	crm_free(a_date->has);
 	crm_free(a_date);
+}
+
+void
+log_tm_date(int log_level, struct tm *some_tm) 
+{
+	crm_log_maybe(log_level,
+		      "%.2d/%.2d/%.4d %.2d:%.2d:%.2d %s"
+		      " (wday=%d, yday=%d, dst=%d, offset=%ld)",
+		      some_tm->tm_mday,
+		      some_tm->tm_mon,
+		      1900+some_tm->tm_year,
+		      some_tm->tm_hour,
+		      some_tm->tm_min,
+		      some_tm->tm_sec,
+		      some_tm->tm_zone,
+		      some_tm->tm_wday==0?7:some_tm->tm_wday,
+		      1+some_tm->tm_yday,
+		      some_tm->tm_isdst,
+		      some_tm->tm_gmtoff);
 }

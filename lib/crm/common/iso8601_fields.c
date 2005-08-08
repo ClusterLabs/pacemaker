@@ -1,4 +1,4 @@
-/* $Id: iso8601_fields.c,v 1.1 2005/08/02 16:14:39 andrew Exp $ */
+/* $Id: iso8601_fields.c,v 1.2 2005/08/08 12:14:47 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -134,7 +134,8 @@ add_yeardays(ha_time_t *a_time, int extra)
 		sub_yeardays(a_time, -extra);
 	} else {
 		do_add_field(a_time, yeardays, extra,
-			     is_leap_year(a_time->years)?366:365, add_ordinalyears);
+			     (is_leap_year(a_time->years)?366:365),
+			     add_ordinalyears);
 	}
 	
 	convert_from_ordinal(a_time);
