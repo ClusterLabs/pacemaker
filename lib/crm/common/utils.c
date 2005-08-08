@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.20 2005/07/16 06:58:36 andrew Exp $ */
+/* $Id: utils.c,v 1.21 2005/08/08 12:05:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -879,6 +879,26 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 	crm_malloc0(op_id, sizeof(char)*len);
 	if(op_id != NULL) {
 		sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
+	}
+	return op_id;
+}
+
+char *
+generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_type)
+{
+	int len = 12;
+	char *op_id = NULL;
+
+	CRM_DEV_ASSERT(rsc_id  != NULL); if(crm_assert_failed) { return NULL; }
+	CRM_DEV_ASSERT(op_type != NULL); if(crm_assert_failed) { return NULL; }
+	CRM_DEV_ASSERT(notify_type != NULL); if(crm_assert_failed) { return NULL; }
+	
+	len += strlen(op_type);
+	len += strlen(rsc_id);
+	len += strlen(notify_type);
+	crm_malloc0(op_id, sizeof(char)*len);
+	if(op_id != NULL) {
+		sprintf(op_id, "%s_%s_notify_%s_0", rsc_id, notify_type, op_type);
 	}
 	return op_id;
 }
