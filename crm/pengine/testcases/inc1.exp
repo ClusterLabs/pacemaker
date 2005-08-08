@@ -10,6 +10,70 @@
    </synapse>
    <synapse id="1">
      <action_set>
+       <rsc_op id="2" rsc_id="rsc2:child_rsc2:0" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+         <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
+         <attributes>
+           <nvpair name="clone" value="0"/>
+           <nvpair name="clone_max" value="5"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="6" rsc_id="rsc2" operation="start" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <rsc_op id="3" rsc_id="rsc2:child_rsc2:1" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <primitive id="rsc2:child_rsc2:1" class="heartbeat" type="apache"/>
+         <attributes>
+           <nvpair name="clone" value="1"/>
+           <nvpair name="clone_max" value="5"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="6" rsc_id="rsc2" operation="start" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="3">
+     <action_set>
+       <rsc_op id="4" rsc_id="rsc2:child_rsc2:2" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+         <primitive id="rsc2:child_rsc2:2" class="heartbeat" type="apache"/>
+         <attributes>
+           <nvpair name="clone" value="2"/>
+           <nvpair name="clone_max" value="5"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="6" rsc_id="rsc2" operation="start" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <rsc_op id="5" rsc_id="rsc2:child_rsc2:3" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <primitive id="rsc2:child_rsc2:3" class="heartbeat" type="apache"/>
+         <attributes>
+           <nvpair name="clone" value="3"/>
+           <nvpair name="clone_max" value="5"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="6" rsc_id="rsc2" operation="start" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="5">
+     <action_set>
        <pseudo_event id="6" rsc_id="rsc2" operation="start" allow_fail="false">
          <attributes/>
        </pseudo_event>
@@ -23,7 +87,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="2">
+   <synapse id="6">
      <action_set>
        <pseudo_event id="7" rsc_id="rsc2" operation="running" allow_fail="false">
          <attributes/>
@@ -44,77 +108,13 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="3">
+   <synapse id="7">
      <action_set>
        <pseudo_event id="9" rsc_id="rsc2" operation="stopped" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
      <inputs/>
-   </synapse>
-   <synapse id="4">
-     <action_set>
-       <rsc_op id="2" rsc_id="rsc2:child_rsc2:0" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
-         <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="5"/>
-         </attributes>
-      </rsc_op>
-    </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="6" rsc_id="rsc2" operation="start" allow_fail="false"/>
-       </trigger>
-     </inputs>
-  </synapse>
-   <synapse id="5">
-    <action_set>
-       <rsc_op id="3" rsc_id="rsc2:child_rsc2:1" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <primitive id="rsc2:child_rsc2:1" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair name="clone" value="1"/>
-           <nvpair name="clone_max" value="5"/>
-         </attributes>
-      </rsc_op>
-    </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="6" rsc_id="rsc2" operation="start" allow_fail="false"/>
-       </trigger>
-     </inputs>
-  </synapse>
-   <synapse id="6">
-    <action_set>
-       <rsc_op id="4" rsc_id="rsc2:child_rsc2:2" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
-         <primitive id="rsc2:child_rsc2:2" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair name="clone" value="2"/>
-           <nvpair name="clone_max" value="5"/>
-         </attributes>
-      </rsc_op>
-    </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="6" rsc_id="rsc2" operation="start" allow_fail="false"/>
-       </trigger>
-     </inputs>
-  </synapse>
-   <synapse id="7">
-    <action_set>
-       <rsc_op id="5" rsc_id="rsc2:child_rsc2:3" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <primitive id="rsc2:child_rsc2:3" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair name="clone" value="3"/>
-           <nvpair name="clone_max" value="5"/>
-         </attributes>
-      </rsc_op>
-    </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="6" rsc_id="rsc2" operation="start" allow_fail="false"/>
-       </trigger>
-     </inputs>
    </synapse>
    <synapse id="8">
      <action_set>

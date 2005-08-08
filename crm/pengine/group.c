@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.30 2005/07/07 14:50:35 andrew Exp $ */
+/* $Id: group.c,v 1.31 2005/08/08 12:09:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -508,5 +508,76 @@ group_agent_constraints(resource_t *rsc)
 		child_rsc, resource_t, group_data->child_list, lpc,
 		
 		child_rsc->fns->agent_constraints(child_rsc);
+		);
+}
+
+rsc_state_t
+group_resource_state(resource_t *rsc)
+{
+	rsc_state_t state = rsc_state_unknown;
+	rsc_state_t last_state = rsc_state_unknown;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		
+		last_state = child_rsc->fns->state(child_rsc);
+		switch(last_state) {
+			case rsc_state_unknown:
+			case rsc_state_move:
+				return last_state;
+				break;
+			case rsc_state_restart:
+				CRM_DEV_ASSERT(state != rsc_state_stopping);
+				CRM_DEV_ASSERT(state != rsc_state_stopped);
+/* 				CRM_DEV_ASSERT(state != rsc_state_active); */
+				state = last_state;
+				break;
+			case rsc_state_active:
+/* 				CRM_DEV_ASSERT(state != rsc_state_restart); */
+				CRM_DEV_ASSERT(state != rsc_state_stopping);
+				if(last_state == rsc_state_unknown) {
+					state = last_state;
+				}
+				break;
+			case rsc_state_stopped:
+				CRM_DEV_ASSERT(state != rsc_state_restart);
+				CRM_DEV_ASSERT(state != rsc_state_starting);
+				if(last_state == rsc_state_unknown) {
+					state = last_state;
+				}
+				break;
+			case rsc_state_starting:
+				CRM_DEV_ASSERT(state != rsc_state_stopped);
+				if(state != rsc_state_restart) {
+					state = last_state;
+				}
+				break;				
+			case rsc_state_stopping:
+				CRM_DEV_ASSERT(state != rsc_state_active);
+				if(state != rsc_state_restart) {
+					state = last_state;
+				}
+				break;		
+		}
+		);
+	return state;
+}
+
+
+void
+group_create_notify_element(
+	resource_t *rsc, action_t *op, crm_data_t *parent,
+	const char *tagname, pe_working_set_t *data_set)
+{
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		
+		child_rsc->fns->create_notify_element(
+			child_rsc, op, parent, tagname, data_set);
 		);
 }

@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.55 2005/08/07 08:17:37 andrew Exp $ */
+/* $Id: graph.c,v 1.56 2005/08/08 12:09:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -132,6 +132,7 @@ update_action(action_t *action)
 			}
 			
 		} else if(other->type == pe_ordering_restart) {
+		} else if(other->type == pe_ordering_postnotify) {
 			CRM_DEV_ASSERT(action->rsc == other->action->rsc);
 			if(crm_assert_failed) {
 				continue;
@@ -391,6 +392,9 @@ action2xml(action_t *action, gboolean as_input)
 		g_hash_table_foreach(action->extra, hash2nvpair, args_xml);
 	}
 	
+	if(action->extra_xml != NULL) {
+		add_node_copy(action_xml, action->extra_xml);
+	}
 	
 	crm_log_xml_debug_2(action_xml, "dumped action");
 	

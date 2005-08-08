@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.77 2005/07/05 16:31:45 davidlee Exp $ */
+/* $Id: pengine.h,v 1.78 2005/08/08 12:09:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -56,6 +56,16 @@ typedef enum no_quorum_policy_e {
 	no_quorum_stop,
 	no_quorum_ignore
 } no_quorum_policy_t;
+
+typedef enum rsc_state_e {
+	rsc_state_unknown,
+	rsc_state_active,
+	rsc_state_stopped,
+	rsc_state_starting,
+	rsc_state_stopping,
+	rsc_state_restart,
+	rsc_state_move
+} rsc_state_t;
 
 typedef struct pe_working_set_s 
 {
@@ -122,6 +132,7 @@ enum action_tasks {
 	stopped_rsc,
 	start_rsc,
 	started_rsc,
+	action_notify,
 	shutdown_crm,
 	stonith_node
 };
@@ -153,6 +164,7 @@ enum pe_ordering {
 	pe_ordering_manditory,
 	pe_ordering_restart,
 	pe_ordering_recover,
+	pe_ordering_postnotify,
 	pe_ordering_optional
 };
 
@@ -272,6 +284,7 @@ struct action_s
 		char *uuid;
 		crm_data_t *op_entry;
 		
+		gboolean notify;
 		gboolean pseudo;
 		gboolean runnable;
 		gboolean optional;
@@ -284,8 +297,8 @@ struct action_s
 		
 		int seen_count;
 
-/* 		crm_data_t *args; */
 		GHashTable *extra;
+ 		crm_data_t *extra_xml;
 		
 		GListPtr actions_before; /* action_warpper_t* */
 		GListPtr actions_after;  /* action_warpper_t* */

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.52 2005/08/07 08:15:10 andrew Exp $ */
+/* $Id: complex.c,v 1.53 2005/08/08 12:09:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -63,6 +63,8 @@ resource_object_functions_t resource_class_functions[] = {
 		native_printw,
 		native_html,
 		native_active,
+		native_resource_state,
+		native_create_notify_element,
 		native_free
 	},
 	{
@@ -83,6 +85,8 @@ resource_object_functions_t resource_class_functions[] = {
 		group_printw,
 		group_html,
 		group_active,
+		group_resource_state,
+		group_create_notify_element,
 		group_free
 	},
 	{
@@ -103,6 +107,8 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_printw,
 		clone_html,
 		clone_active,
+		clone_resource_state,
+		clone_create_notify_element,
 		clone_free
 	}
 };

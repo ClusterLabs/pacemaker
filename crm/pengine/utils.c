@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.96 2005/08/03 14:54:27 andrew Exp $ */
+/* $Id: utils.c,v 1.97 2005/08/08 12:09:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -742,7 +742,7 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 			crm_debug_2("Action is runnable");
 			action->runnable = TRUE;
 		}
-
+		
 		switch(text2task(action->task)) {
 			case stop_rsc:
 				rsc->stopping = TRUE;
@@ -772,6 +772,8 @@ unpack_operation(
 		"start_delay",
 	};
 
+	CRM_DEV_ASSERT(action->rsc != NULL);
+	
 	if(xml_obj != NULL) {
 		value = crm_element_value(xml_obj, "prereq");
 	}
@@ -856,7 +858,17 @@ unpack_operation(
 	}
 	
 	crm_debug_2("\t%s failure results in: %s", action->task, value);
+
+	value = NULL;
+	if(xml_obj != NULL) {
+		value = crm_element_value(xml_obj, "notify");
+	}
+	if(value != NULL) {
+		action->notify = crm_is_true(value);
+	}
 	
+	crm_debug_2("\t%s %s notification of %s actions", action->rsc->id,
+		    action->notify?"requires":"does not require", action->task);
 	
 	if(xml_obj == NULL) {
 		return;
@@ -947,6 +959,9 @@ ordering_type2text(enum pe_ordering type)
 		case pe_ordering_optional:
 			result = "optional";
 			break;
+		case pe_ordering_postnotify:
+			result = "post_notify";
+			break;
 	}
 	return result;
 }
@@ -968,6 +983,8 @@ text2task(const char *task)
 		return stonith_node;
 	} else if(safe_str_eq(task, CRMD_ACTION_MON)) {
 		return monitor_rsc;
+	} else if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+		return action_notify;
 	} 
 	pe_err("Unsupported action: %s", task);
 	return no_action;
@@ -1004,8 +1021,41 @@ task2text(enum action_tasks task)
 		case monitor_rsc:
 			result = CRMD_ACTION_MON;
 			break;
+		case action_notify:
+			result = CRMD_ACTION_NOTIFY;
+			break;
 	}
 	
+	return result;
+}
+
+const char *
+rsc_state2text(rsc_state_t state)
+{
+	const char *result = "<unknown>";
+	switch(state) {
+		case rsc_state_active:
+			result = "active";
+			break;
+		case rsc_state_restart:
+			result = "restart";
+			break;
+		case rsc_state_move:
+			result = "move";
+			break;
+		case rsc_state_starting:
+			result = "starting";
+			break;
+		case rsc_state_stopping:
+			result = "stopping";
+			break;
+		case rsc_state_stopped:
+			result = "stopped";
+			break;
+		case rsc_state_unknown:
+			result = "unknown";
+			break;
+	}
 	return result;
 }
 
@@ -1173,7 +1223,10 @@ print_action(const char *pre_text, action_t *action, gboolean details)
 
 void
 log_action(unsigned int log_level, const char *pre_text, action_t *action, gboolean details)
-{ 
+{
+	const char *node_uname = NULL;
+	const char *node_uuid = NULL;
+	
 	if(action == NULL) {
 
 		util_log("%s%s: <NULL>",
@@ -1182,28 +1235,47 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 		return;
 	}
 
+
+	if(action->pseudo) {
+		node_uname = NULL;
+		node_uuid = NULL;
+		
+	} else if(action->node != NULL) {
+		node_uname = action->node->details->uname;
+		node_uuid = action->node->details->id;
+	} else {
+		node_uname = "<none>";
+		node_uuid = NULL;
+	}
+	
 	switch(text2task(action->task)) {
 		case stonith_node:
 		case shutdown_crm:
 			crm_log_maybe(log_level,
-				      "%s%s%sAction %d: %s\ton %s\t\t(%s)",
+				      "%s%s%sAction %d: %s%s%s%s%s%s",
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
 				      action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 				      action->id, action->task,
-				      safe_val4("<none>",action,node,details,uname),
-				      safe_val4("",action,node,details,id));
+				      node_uname?"\ton ":"",
+				      node_uname?node_uname:"",
+				      node_uuid?"\t\t(":"",
+				      node_uuid?node_uuid:"",
+				      node_uuid?")":"");
 			break;
 		default:
 			crm_log_maybe(log_level,
-				      "%s%s%sAction %d: %s %s\ton %s\t\t(%s)",
+				      "%s%s%sAction %d: %s %s%s%s%s%s%s",
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
 				      action->optional?"Optional ":action->pseudo?"Pseduo ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
 				      action->id, action->task,
 				      safe_val3("<none>", action, rsc, id),
-				      safe_val4("<none>",action,node,details,uname),
-				      safe_val4("",action,node,details,id));
+				      node_uname?"\ton ":"",
+				      node_uname?node_uname:"",
+				      node_uuid?"\t\t(":"",
+				      node_uuid?node_uuid:"",
+				      node_uuid?")":"");
 			
 			break;
 	}

@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.29 2005/08/03 14:54:27 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.30 2005/08/08 12:09:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -104,6 +104,7 @@ extern const char *strength2text(enum con_strength strength);
 /*extern const char *modifier2text(enum con_modifier modifier); */
 extern const char *task2text(enum action_tasks task);
 extern enum action_tasks text2task(const char *task);
+extern const char *rsc_state2text(rsc_state_t state);
 
 extern crm_data_t *find_rsc_op_entry(resource_t *rsc, const char *key);
 

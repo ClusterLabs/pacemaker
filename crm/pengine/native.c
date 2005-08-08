@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.68 2005/08/03 14:54:27 andrew Exp $ */
+/* $Id: native.c,v 1.69 2005/08/08 12:09:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1375,4 +1375,159 @@ filter_nodes(resource_t *rsc)
 			lpc = -1; /* restart the loop */
 		}
 		);
+}
+
+
+rsc_state_t
+native_resource_state(resource_t *rsc)
+{
+	enum action_tasks task = no_action;
+	rsc_state_t state = rsc_state_unknown;
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
+	
+	slist_iter(
+		action, action_t, rsc->actions, lpc,
+		crm_debug_4("processing action %d for rsc=%s",
+			  action->id, rsc->id);
+		task = text2task(action->task);
+
+		if(action->optional) {
+			continue;
+		}
+
+		if(task == stop_rsc) {
+			if(state == rsc_state_starting) {
+				state = rsc_state_restart;
+				break;
+			} else {
+				state = rsc_state_stopping;
+			}
+		} else if(task == start_rsc) {
+			if(state == rsc_state_stopping) {
+				state = rsc_state_restart;
+				break;
+			} else {
+				state = rsc_state_starting;
+			}
+		}
+		);
+
+	if(native_data->running_on != NULL) {
+		node_t *chosen = NULL;
+		node_t *node = native_data->running_on->data;
+
+		if(native_data->color != NULL) {
+			chosen = native_data->color->details->chosen_node;
+		}
+		if(state == rsc_state_unknown) {
+			state = rsc_state_active;
+
+		} else if(state == rsc_state_restart) {
+			CRM_DEV_ASSERT(chosen != NULL && node != NULL);
+			if(crm_assert_failed) {
+				crm_err("State for %s is unreliable", rsc->id);
+				
+			} else if(safe_str_neq(node->details->id,
+					chosen->details->id)) {
+				state = rsc_state_move;
+			}
+		}
+		
+	} else if(state == rsc_state_unknown) {
+		state = rsc_state_stopped;
+	}
+	
+	return state;
+}
+
+void
+native_create_notify_element(
+	resource_t *rsc, action_t *op, crm_data_t *parent,
+	const char *tagname, pe_working_set_t *data_set)
+{
+/* 	char *key = NULL; */
+	int trigger_id = -1;
+	crm_data_t *trigger = NULL;
+	
+	node_t *node = NULL;
+	node_t *next = NULL;
+	node_t *current = NULL;
+
+	enum action_tasks task = text2task(op->task);
+	rsc_state_t state = rsc->fns->state(rsc);
+
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
+
+	if(native_data->color != NULL) {
+		next = native_data->color->details->chosen_node;
+	}
+	if(native_data->running_on != NULL) {
+		current = native_data->running_on->data;
+	}
+	
+	node = next;
+	switch(state) {
+		case rsc_state_active:
+		case rsc_state_restart:
+			break;
+		case rsc_state_move:
+			if(task == stop_rsc) {
+				node = current;
+			}			
+			break;
+		case rsc_state_starting:
+			if(task == stop_rsc) {
+				node = NULL;
+			}
+			break;
+		case rsc_state_stopping:
+			node = current;
+			if(task != stop_rsc) {
+				node = NULL;
+			}
+			break;
+		case rsc_state_stopped:
+			node = NULL;
+			break;
+		case rsc_state_unknown:
+			node = NULL;
+			break;
+	}
+
+	if(node == NULL) {
+		crm_debug_2("No %s created for %s: %s (%s)",
+			    tagname, op->uuid, rsc->id, rsc_state2text(state));
+		return;
+	}
+
+	crm_debug_2("Creating %s for %s: %s (%s)",
+		    tagname, op->uuid, rsc->id, rsc_state2text(state));
+
+	if(safe_str_neq(tagname, "target")) {
+		trigger_id = data_set->action_id++;
+	}
+	
+/* 	key = generate_notify_key(rsc->id, op->task, 0); */
+
+	trigger = create_xml_node(parent, tagname);
+	if(trigger_id != -1) {
+		crm_xml_add_int(trigger, XML_ATTR_ID, trigger_id);
+	} else {
+		crm_xml_add_int(trigger, XML_ATTR_ID, op->id);
+	}
+	
+	crm_xml_add(trigger, XML_LRM_ATTR_RSCID, rsc->id);
+
+	crm_xml_add(trigger, XML_LRM_ATTR_TASK, op->task);
+	crm_xml_add(trigger, XML_LRM_ATTR_TARGET, node->details->uname);
+
+	crm_xml_add(trigger, XML_LRM_ATTR_TASK_UUID, op->uuid);
+	crm_xml_add(trigger, XML_LRM_ATTR_TARGET_UUID, node->details->id);
+
+	if(trigger_id != -1) {
+/* 		crm_xml_add(trigger, "notify_task", notify_task); */
+		crm_xml_add(trigger, "allow_fail", "false");
+	}
 }

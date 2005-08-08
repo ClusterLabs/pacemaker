@@ -56,62 +56,6 @@
    </synapse>
    <synapse id="5">
      <action_set>
-       <pseudo_event id="26" rsc_id="DoFencing" operation="start" allow_fail="false">
-         <attributes/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="29" rsc_id="DoFencing" operation="stopped" allow_fail="false"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="6">
-     <action_set>
-       <pseudo_event id="27" rsc_id="DoFencing" operation="running" allow_fail="false">
-         <attributes/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:0" operation="start" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:1" operation="start" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="7">
-     <action_set>
-       <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false">
-         <attributes/>
-       </pseudo_event>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="8">
-     <action_set>
-       <pseudo_event id="29" rsc_id="DoFencing" operation="stopped" allow_fail="false">
-         <attributes/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="24" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="9">
-     <action_set>
        <rsc_op id="2" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
@@ -129,7 +73,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="10">
+   <synapse id="6">
      <action_set>
        <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
@@ -146,7 +90,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="11">
+   <synapse id="7">
      <action_set>
        <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
@@ -163,7 +107,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="12">
+   <synapse id="8">
      <action_set>
        <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:0" operation="start" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
@@ -187,7 +131,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="13">
+   <synapse id="9">
      <action_set>
        <rsc_op id="3" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
@@ -206,7 +150,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="14">
+   <synapse id="10">
      <action_set>
        <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
@@ -223,7 +167,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="15">
+   <synapse id="11">
      <action_set>
        <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:1" operation="start" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
@@ -244,7 +188,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="16">
+   <synapse id="12">
      <action_set>
        <rsc_op id="24" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
@@ -258,6 +202,62 @@
      <inputs>
        <trigger>
          <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="13">
+     <action_set>
+       <pseudo_event id="26" rsc_id="DoFencing" operation="start" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="29" rsc_id="DoFencing" operation="stopped" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="14">
+     <action_set>
+       <pseudo_event id="27" rsc_id="DoFencing" operation="running" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:0" operation="start" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:1" operation="start" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="15">
+     <action_set>
+       <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="16">
+     <action_set>
+       <pseudo_event id="29" rsc_id="DoFencing" operation="stopped" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="24" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>

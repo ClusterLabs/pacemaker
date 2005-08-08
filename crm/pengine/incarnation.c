@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.40 2005/07/18 16:14:21 andrew Exp $ */
+/* $Id: incarnation.c,v 1.41 2005/08/08 12:09:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -22,6 +22,10 @@
 #include <pengine.h>
 #include <pe_utils.h>
 #include <crm/msg_xml.h>
+
+extern void clone_create_notifications(
+	resource_t *rsc, action_t *action, action_t *action_complete,
+	pe_working_set_t *data_set);
 
 extern gboolean rsc_colocation_new(
 	const char *id, enum con_strength strength,
@@ -261,7 +265,8 @@ void clone_update_pseudo_status(resource_t *parent, resource_t *child);
 
 void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
-	action_t *op = NULL;
+	action_t *action = NULL;
+	action_t *action_complete = NULL;
 	resource_t *last_start_rsc = NULL;
 	resource_t *last_stop_rsc = NULL;
 	clone_variant_data_t *clone_data = NULL;
@@ -271,6 +276,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		child_rsc->fns->create_actions(child_rsc, data_set);
 		clone_update_pseudo_status(rsc, child_rsc);
+		
 		if(child_rsc->starting) {
 			last_start_rsc = child_rsc;
 		}
@@ -279,32 +285,92 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		}
 		);
 
-	op = start_action(clone_data->self, NULL,
+	/* start */
+	action = start_action(clone_data->self, NULL,
 			  !clone_data->child_starting);
-	op->pseudo = TRUE;
-	
-	op = custom_action(clone_data->self, started_key(rsc),
-		      CRMD_ACTION_STARTED, NULL,
+	action_complete = custom_action(clone_data->self, started_key(rsc),
+			   CRMD_ACTION_STARTED, NULL,
 			   !clone_data->child_starting, data_set);
-	op->pseudo = TRUE;
+
+	action->pseudo = TRUE;
+	action_complete->pseudo = TRUE;
 
 	child_starting_constraints(
 		clone_data, pe_ordering_optional,
 		NULL, last_start_rsc, data_set);
-	
-	op = stop_action(clone_data->self, NULL,
-			 !clone_data->child_stopping);
-	op->pseudo = TRUE;
 
-	op = custom_action(clone_data->self, stopped_key(rsc),
+	clone_create_notifications(
+		clone_data->self, action, action_complete, data_set);	
+
+
+	/* stop */
+	action = stop_action(clone_data->self, NULL,
+			     !clone_data->child_stopping);
+	action_complete = custom_action(clone_data->self, stopped_key(rsc),
 			   CRMD_ACTION_STOPPED, NULL,
 			   !clone_data->child_stopping, data_set);
-	op->pseudo = TRUE;
 
+	action->pseudo = TRUE;
+	action_complete->pseudo = TRUE;
+	
 	child_stopping_constraints(
 		clone_data, pe_ordering_optional,
 		NULL, last_stop_rsc, data_set);
+
+	clone_create_notifications(
+		clone_data->self, action, action_complete, data_set);	
 }
+
+void
+clone_create_notifications(
+	resource_t *rsc, action_t *action, action_t *action_complete,
+	pe_working_set_t *data_set)
+{
+	/*
+	 * pre_notify -> pseudo_action -> (real actions) -> pseudo_action_complete -> post_notify
+	 *
+	 * if the pre_noitfy requires confirmation,
+	 *   then a list of confirmations will be added as triggers
+	 *   to pseudo_action in clone_expand()
+	 */
+	action_t *notify = NULL;
+	char *notify_key = NULL;
+	
+	if(action->notify == FALSE) {
+		return;
+	}
+
+	/* create pre_notify */
+	notify_key = generate_notify_key(rsc->id, "pre", action->task);
+	notify = custom_action(rsc, notify_key,
+			       CRMD_ACTION_NOTIFY, NULL,
+			       action->optional, data_set);
+	add_hash_param(notify->extra, "notify_type", "pre");
+	add_hash_param(notify->extra, "notify_operation", action->task);
+	add_hash_param(notify->extra, "notify_key", notify_key);
+	notify->pseudo = TRUE;
+	
+	/* pre_notify before action */
+	custom_action_order(
+		rsc, NULL, notify, rsc, NULL, action,
+		pe_ordering_manditory, data_set);
+	
+	/* create post_notify */
+	notify_key = generate_notify_key(rsc->id, "post", action->task);
+	notify = custom_action(rsc, notify_key,
+			       CRMD_ACTION_NOTIFY, NULL,
+			       action_complete->optional, data_set);
+	add_hash_param(notify->extra, "notify_type", "post");
+	add_hash_param(notify->extra, "notify_operation", action->task);
+	add_hash_param(notify->extra, "notify_key", notify_key);
+	notify->pseudo = TRUE;
+	
+	/* action_complete before post_notify */
+	custom_action_order(
+		rsc, NULL, action_complete, rsc, NULL, notify, 
+		pe_ordering_postnotify, data_set);
+}
+
 
 void
 clone_update_pseudo_status(resource_t *parent, resource_t *child) 
@@ -625,19 +691,72 @@ void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
+	crm_data_t *notify_xml = create_xml_node(NULL, "notify");
+	
+	enum action_tasks task = no_action;
+	gboolean needs_notify = FALSE;
+	
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_3("Processing actions from %s", rsc->id);
-
-	clone_data->self->fns->expand(clone_data->self, data_set);
+	crm_debug_2("Processing actions from %s", rsc->id);
 
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
+		slist_iter(
+			action, action_t, child_rsc->actions, lpc2,
+
+			needs_notify = FALSE;
+			if(action->notify == FALSE) {
+				crm_debug_4("No notification requuired for %s",
+					    action->uuid);
+
+			} else if(!action->pseudo && !action->runnable) {
+				crm_debug_2("Skipping notifications for"
+					    " unrunnable action %s",
+					    action->uuid);
+
+			} else if(!action->pseudo && action->optional) {
+				crm_debug_3("Skipping notifications for"
+					    " optional action %s",action->uuid);
+
+			} else {
+				task = text2task(action->task);
+				if(task == stop_rsc || task == start_rsc) {
+					needs_notify = TRUE;
+				} else {
+					crm_debug_4("No notification requuired"
+						    " for %s operations",
+						    action->task);
+				}
+			}
+			
+			if(needs_notify) {
+				crm_debug_2("Processing notifications for %s",
+					    action->uuid);
+
+				child_rsc->fns->create_notify_element(
+					child_rsc, action, notify_xml, "target",
+					data_set);
+			}
+			
+			);
 		child_rsc->fns->expand(child_rsc, data_set);
 
 		);
+
+	slist_iter(
+		action, action_t, clone_data->self->actions, lpc2,
+
+		if(safe_str_eq(action->task, CRMD_ACTION_NOTIFY)) {
+			action->extra_xml = notify_xml;
+		}
+		);
+	
+	clone_data->self->fns->expand(clone_data->self, data_set);
+
+	free_xml(notify_xml);
 }
 
 gboolean clone_active(resource_t *rsc, gboolean all)
@@ -764,5 +883,27 @@ clone_agent_constraints(resource_t *rsc)
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		
 		child_rsc->fns->agent_constraints(child_rsc);
+		);
+}
+
+rsc_state_t
+clone_resource_state(resource_t *rsc)
+{
+	return rsc_state_unknown;
+}
+
+void
+clone_create_notify_element(
+	resource_t *rsc, action_t *op, crm_data_t *parent,
+	const char *tagname, pe_working_set_t *data_set)
+{
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc);
+
+	slist_iter(
+		child_rsc, resource_t, clone_data->child_list, lpc,
+		
+		child_rsc->fns->create_notify_element(
+			child_rsc, op, parent, tagname, data_set);
 		);
 }
