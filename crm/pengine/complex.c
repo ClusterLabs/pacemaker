@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.53 2005/08/08 12:09:33 andrew Exp $ */
+/* $Id: complex.c,v 1.54 2005/08/08 13:07:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -150,6 +150,7 @@ inherit_parent_attributes(
 		"multiple_active",
 		"start_prereq",
 		"resource_stickiness",
+		"notify",
 		"is_managed"
 	};
 
@@ -179,11 +180,12 @@ gboolean
 common_unpack(
 	crm_data_t * xml_obj, resource_t **rsc, pe_working_set_t *data_set)
 {
-	const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *restart  = crm_element_value(xml_obj, XML_RSC_ATTR_RESTART);
-	const char *multiple = crm_element_value(xml_obj, "multiple_active");
-	const char *placement= crm_element_value(xml_obj, "resource_stickiness");
-	const char *priority = NULL;
+	const char *id        = crm_element_value(xml_obj, XML_ATTR_ID);
+	const char *restart   = crm_element_value(xml_obj, XML_RSC_ATTR_RESTART);
+	const char *multiple  = crm_element_value(xml_obj, "multiple_active");
+	const char *placement = crm_element_value(xml_obj, "resource_stickiness");
+	const char *notify    = crm_element_value(xml_obj, "notify");
+	const char *priority  = NULL;
 	const char *is_managed = NULL;
 
 	const char *allowed_attrs[] = {
@@ -239,6 +241,7 @@ common_unpack(
 	(*rsc)->start_pending	   = FALSE; 
 	(*rsc)->starting	   = FALSE; 
 	(*rsc)->stopping	   = FALSE; 
+	(*rsc)->notify		   = crm_is_true(notify); 
 	(*rsc)->candidate_colors   = NULL;
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
@@ -308,6 +311,9 @@ common_unpack(
 		crm_debug_2("\tPlacement: optimal%s",
 			    placement == NULL?" (default)":"");
 	}
+
+	crm_debug_2("\tNotification of start/stop actions: %s",
+		    (*rsc)->notify?"required":"not required");
 	
 	(*rsc)->fns->unpack(*rsc, data_set);
 

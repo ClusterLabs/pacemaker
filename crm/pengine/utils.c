@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.97 2005/08/08 12:09:33 andrew Exp $ */
+/* $Id: utils.c,v 1.98 2005/08/08 13:07:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -859,17 +859,6 @@ unpack_operation(
 	
 	crm_debug_2("\t%s failure results in: %s", action->task, value);
 
-	value = NULL;
-	if(xml_obj != NULL) {
-		value = crm_element_value(xml_obj, "notify");
-	}
-	if(value != NULL) {
-		action->notify = crm_is_true(value);
-	}
-	
-	crm_debug_2("\t%s %s notification of %s actions", action->rsc->id,
-		    action->notify?"requires":"does not require", action->task);
-	
 	if(xml_obj == NULL) {
 		return;
 	}

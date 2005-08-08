@@ -159,6 +159,12 @@ do_test interleave-2 "coloc - interleaved   "
 do_test interleave-3 "coloc - interleaved (2)"
 
 echo ""
+do_test notify-0 "Notify reference"
+do_test notify-1 "Notify - simple"
+#do_test notify-2 "Notify - 764"
+
+
+echo ""
 do_test bad1 "Bad node		"
 do_test bad2 "Bad rsc		"
 do_test bad3 "No rsc class	"

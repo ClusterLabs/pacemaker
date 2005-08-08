@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.41 2005/08/08 12:09:33 andrew Exp $ */
+/* $Id: incarnation.c,v 1.42 2005/08/08 13:07:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -95,7 +95,11 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 	/* this is a bit of a hack - but simplifies everything else */
 	copy_in_properties(xml_self, xml_obj);
-
+	xml_obj_child = find_xml_node(xml_obj, "operations", FALSE);
+	if(xml_obj_child != NULL) {
+		add_node_copy(xml_self, xml_obj_child);
+	}
+	
 	xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_GROUP, FALSE);
 	if(xml_obj_child == NULL) {
 		xml_obj_child = find_xml_node(
@@ -336,7 +340,7 @@ clone_create_notifications(
 	action_t *notify = NULL;
 	char *notify_key = NULL;
 	
-	if(action->notify == FALSE) {
+	if(rsc->notify == FALSE) {
 		return;
 	}
 
@@ -690,11 +694,10 @@ void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 }
 
 void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
-{
-	crm_data_t *notify_xml = create_xml_node(NULL, "notify");
-	
-	enum action_tasks task = no_action;
+{	
 	gboolean needs_notify = FALSE;
+	enum action_tasks task = no_action;
+	crm_data_t *notify_xml = create_xml_node(NULL, "notify");
 	
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
@@ -708,7 +711,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 			action, action_t, child_rsc->actions, lpc2,
 
 			needs_notify = FALSE;
-			if(action->notify == FALSE) {
+			if(rsc->notify == FALSE) {
 				crm_debug_4("No notification requuired for %s",
 					    action->uuid);
 

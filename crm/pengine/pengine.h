@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.78 2005/08/08 12:09:33 andrew Exp $ */
+/* $Id: pengine.h,v 1.79 2005/08/08 13:07:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -243,6 +243,7 @@ struct resource_s {
 		float	 stickiness; 
 		float	 effective_priority; 
 
+		gboolean notify;
 		gboolean is_managed;
 		gboolean start_pending;
 		gboolean recover;
@@ -284,7 +285,6 @@ struct action_s
 		char *uuid;
 		crm_data_t *op_entry;
 		
-		gboolean notify;
 		gboolean pseudo;
 		gboolean runnable;
 		gboolean optional;

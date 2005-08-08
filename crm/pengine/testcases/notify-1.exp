@@ -1,0 +1,162 @@
+ <transition_graph global_timeout="60s" transition_id="0">
+   <synapse id="0">
+     <action_set>
+       <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache" notify="1"/>
+         <attributes>
+           <nvpair name="clone" value="1"/>
+           <nvpair name="clone_max" value="2"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="4" rsc_id="rsc1" operation="start" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <pseudo_event id="4" rsc_id="rsc1" operation="start" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="6" rsc_id="rsc1" operation="notify" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="9" rsc_id="rsc1" operation="stopped" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <pseudo_event id="5" rsc_id="rsc1" operation="running" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="3">
+     <action_set>
+       <pseudo_event id="6" rsc_id="rsc1" operation="notify" allow_fail="false">
+         <attributes>
+           <nvpair name="notify_key" value="rsc1_pre_notify_start_0"/>
+           <nvpair name="notify_type" value="pre"/>
+           <nvpair name="notify_operation" value="start"/>
+         </attributes>
+         <notify>
+           <target id="3" rsc_id="rsc1:child_rsc1:1" operation="start" on_node="node1" operation_uuid="rsc1:child_rsc1:1_start_0" on_node_uuid="uuid1"/>
+         </notify>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <pseudo_event id="7" rsc_id="rsc1" operation="notify" allow_fail="false">
+         <attributes>
+           <nvpair name="notify_key" value="rsc1_post_notify_start_0"/>
+           <nvpair name="notify_type" value="post"/>
+           <nvpair name="notify_operation" value="start"/>
+         </attributes>
+         <notify>
+           <target id="3" rsc_id="rsc1:child_rsc1:1" operation="start" on_node="node1" operation_uuid="rsc1:child_rsc1:1_start_0" on_node_uuid="uuid1"/>
+         </notify>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="5" rsc_id="rsc1" operation="running" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="5">
+     <action_set>
+       <pseudo_event id="9" rsc_id="rsc1" operation="stopped" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="6">
+     <action_set>
+       <rsc_op id="12" rsc_id="rsc2:child_rsc2:0" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache" notify="1"/>
+         <attributes>
+           <nvpair name="clone" value="0"/>
+           <nvpair name="clone_max" value="2"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="17" rsc_id="rsc2" operation="stop" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="7">
+     <action_set>
+       <pseudo_event id="17" rsc_id="rsc2" operation="stop" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="19" rsc_id="rsc2" operation="notify" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="8">
+     <action_set>
+       <pseudo_event id="18" rsc_id="rsc2" operation="stopped" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="12" rsc_id="rsc2:child_rsc2:0" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="9">
+     <action_set>
+       <pseudo_event id="19" rsc_id="rsc2" operation="notify" allow_fail="false">
+         <attributes>
+           <nvpair name="notify_key" value="rsc2_pre_notify_stop_0"/>
+           <nvpair name="notify_type" value="pre"/>
+           <nvpair name="notify_operation" value="stop"/>
+         </attributes>
+         <notify>
+           <target id="12" rsc_id="rsc2:child_rsc2:0" operation="stop" on_node="node1" operation_uuid="rsc2:child_rsc2:0_stop_0" on_node_uuid="uuid1"/>
+         </notify>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="10">
+     <action_set>
+       <pseudo_event id="20" rsc_id="rsc2" operation="notify" allow_fail="false">
+         <attributes>
+           <nvpair name="notify_key" value="rsc2_post_notify_stop_0"/>
+           <nvpair name="notify_type" value="post"/>
+           <nvpair name="notify_operation" value="stop"/>
+         </attributes>
+         <notify>
+           <target id="12" rsc_id="rsc2:child_rsc2:0" operation="stop" on_node="node1" operation_uuid="rsc2:child_rsc2:0_stop_0" on_node_uuid="uuid1"/>
+         </notify>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="18" rsc_id="rsc2" operation="stopped" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+ </transition_graph>
+
