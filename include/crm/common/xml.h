@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.27 2005/07/03 22:15:50 alan Exp $ */
+/* $Id: xml.h,v 1.28 2005/08/09 07:58:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,6 +44,7 @@
 extern gboolean add_message_xml(
 	HA_Message *msg, const char *field, const crm_data_t *xml);
 extern crm_data_t *get_message_xml(const HA_Message *msg, const char *field);
+extern GHashTable *xml2list(crm_data_t *parent);
 
 /*
  * Replacement function for xmlCopyPropList which at the very least,

@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.25 2005/07/19 19:06:42 andrew Exp $ */
+/* $Id: xml.c,v 1.26 2005/08/09 07:58:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,6 +37,9 @@
 #include <crm/common/xml.h>
 #include <crm/dmalloc_wrapper.h>
 
+int is_comment_start(const char *input);
+int is_comment_end(const char *input);
+void drop_comments(const char *input, int *offset);
 
 void dump_array(
 	int log_level, const char *message, const char **array, int depth);
@@ -491,6 +494,7 @@ stdin2xml(void)
 				xml_buffer[lpc++] = ch;
 				break;
 			case '\n':
+			case '\r':
 			case '\t':
 			case ' ':
 				ch = ' ';
@@ -1134,11 +1138,176 @@ get_attr_value(const char *input)
 	return -1;
 }
 
+int
+is_comment_start(const char *input)
+{
+	CRM_DEV_ASSERT(input != NULL);
+	if(crm_assert_failed) {
+		return 0;
+	}
+	
+	if(strlen(input) > 4
+	   && input[0] == '<'
+	   && input[1] == '!'
+	   && input[2] == '-'
+	   && input[3] == '-') {
+		crm_debug_6("Found comment start: <!--");
+		return 4;
+		
+	} else if(strlen(input) > 2
+	   && input[0] == '<'
+	   && input[1] == '!') {
+		crm_debug_6("Found comment start: <!");
+		return 2;
+
+	} else if(strlen(input) > 2
+	   && input[0] == '<'
+	   && input[1] == '?') {
+		crm_debug_6("Found comment start: <?");
+		return 2;
+	}
+	if(strlen(input) > 3) {
+		crm_debug_6("Not comment start: %c%c%c%c", input[0], input[1], input[2], input[3]);
+	} else {
+		crm_debug_6("Not comment start");
+	}
+	
+	return 0;
+}
+
+
+int
+is_comment_end(const char *input)
+{
+	CRM_DEV_ASSERT(input != NULL);
+	if(crm_assert_failed) {
+		return 0;
+	}
+	
+	if(strlen(input) > 2
+	   && input[0] == '-'
+	   && input[1] == '-'
+	   && input[2] == '>') {
+		crm_debug_6("Found comment end: -->");
+		return 3;
+		
+	} else if(strlen(input) > 1
+	   && input[0] == '?'
+	   && input[1] == '>') {
+		crm_debug_6("Found comment end: ?>");
+		return 2;
+	}
+	if(strlen(input) > 2) {
+		crm_debug_6("Not comment end: %c%c%c", input[0], input[1], input[2]);
+	} else {
+		crm_debug_6("Not comment end");
+	}
+	return 0;
+}
+
+void
+drop_comments(const char *input, int *offset)
+{
+	gboolean more = TRUE;
+	gboolean in_directive = FALSE;
+	int in_comment = FALSE;
+	const char *our_input = input;
+	int len = 0, lpc = 0;
+	int tag_len = 0;
+	char ch = 0;
+	if(input == NULL) {
+		return;
+	}
+	if(offset != NULL) {
+		our_input = input + (*offset);
+	}
+	len = strlen(our_input);
+	while(lpc < len && more) {
+		ch = our_input[lpc];
+		crm_debug_6("Processing char %c[%d]", ch, lpc);
+		switch(ch) {
+			case 0:
+				if(in_comment == FALSE) {
+					more = FALSE;
+				} else {
+					crm_err("unexpected EOS");
+					crm_warn("Parsing error at or before: %s", our_input);
+				}
+				break;
+			case '<':
+				tag_len = is_comment_start(our_input + lpc);
+				if(tag_len > 0) {
+					if(in_comment) {
+						crm_err("Nested XML comments are not supported!");
+						crm_warn("Parsing error at or before: %s", our_input);
+						crm_warn("Netsed comment found at: %s", our_input + lpc + tag_len);
+					}
+					in_comment = TRUE;
+					lpc+=tag_len;
+					if(tag_len == 2) {
+#if 1
+						if(our_input[lpc-1] == '!') {
+							in_directive = TRUE;
+						}
+#else
+						tag_len = get_tag_name(our_input + lpc);
+						crm_debug_2("Tag length: %d", len);
+						if(strncmp("DOCTYPE", our_input+lpc, tag_len) == 0) {
+							in_directive = TRUE;
+						}						
+#endif
+					}
+				} else if(in_comment == FALSE){
+					more = FALSE;
+
+				} else {
+					lpc++;
+					crm_debug_6("Skipping comment char %c", our_input[lpc]);
+				}
+				break;
+			case '>':
+				lpc++;
+				if(in_directive) {
+					in_directive = FALSE;
+					in_comment = FALSE;
+				}
+				break;
+			case '-':
+			case '?':
+				tag_len = is_comment_end(our_input + lpc);
+				if(tag_len > 0) {
+					lpc+=tag_len;
+					in_comment = FALSE;
+
+				} else {
+					lpc++;
+					crm_debug_6("Skipping comment char %c", our_input[lpc]);
+				}
+				break;
+			case ' ':
+			case '\t':
+			case '\n':
+			case '\r':
+				lpc++;
+				crm_debug_6("Skipping whitespace char %d", our_input[lpc]);
+				break;
+			default:
+				lpc++;
+				crm_debug_6("Skipping comment char %c", our_input[lpc]);
+				break;
+		}
+	}
+	crm_debug_4("Finished processing comments");
+	if(offset != NULL) {
+		(*offset) += lpc;
+	}
+}
+
 
 crm_data_t*
 parse_xml(const char *input, int *offset)
 {
-	int len = 0, lpc = 0;
+	int len = 0, lpc = 0, last_lpc = -1;
 	char ch = 0;
 	char *tag_name = NULL;
 	char *attr_name = NULL;
@@ -1156,32 +1325,23 @@ parse_xml(const char *input, int *offset)
 	}
 
 	len = strlen(our_input);
-	while(lpc < len) {
-		if(our_input[lpc] != '<') {
-
-		} else if(our_input[lpc+1] == '!') {
-			crm_warn("XML Comments are not supported");
-			crm_debug_5("Skipping char %c", our_input[lpc]);
-			lpc++;
-			
-		} else if(our_input[lpc+1] == '?') {
-			crm_debug_5("Skipping char %c", our_input[lpc]);
-			lpc++;
-		} else {
-			lpc++;
-			our_input += lpc;
-			break;
-		}
-		crm_debug_5("Skipping char %c", our_input[lpc]);
-		lpc++;
+	while(lpc < len && lpc > last_lpc) {
+		last_lpc = lpc;
+		drop_comments(our_input, &lpc);
+		crm_debug_2("Skipped %d comment chars", lpc);
 	}
-	
-	len = get_tag_name(our_input);
+	CRM_DEV_ASSERT(our_input[lpc] == '<');
+	if(crm_assert_failed) {
+		return NULL;
+	}
+	lpc++;
+	len = get_tag_name(our_input + lpc);
+	crm_debug_2("Tag length: %d", len);
 	if(len < 0) {
 		return NULL;
 	}
 	crm_malloc0(tag_name, len+1);
-	strncpy(tag_name, our_input, len+1);
+	strncpy(tag_name, our_input + lpc, len+1);
 	tag_name[len] = EOS;
 	crm_debug_4("Processing tag %s", tag_name);
 	
@@ -1189,7 +1349,7 @@ parse_xml(const char *input, int *offset)
 	CRM_DEV_ASSERT(crm_is_allocated(new_obj) == 1);
 	
 	ha_msg_add(new_obj, F_XML_TAGNAME, tag_name);
-	lpc = len;
+	lpc += len;
 
 	for(; more && error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
 			ch = our_input[lpc];
@@ -1271,6 +1431,7 @@ parse_xml(const char *input, int *offset)
 				case ' ':
 				case '\t':
 				case '\n':
+				case '\r':
 					break;
 				default:
 					len = get_attr_name(our_input+lpc);
@@ -1787,4 +1948,39 @@ delete_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *to_delete)
 		);
 	
 	return can_delete;
+}
+
+GHashTable *
+xml2list(crm_data_t *parent)
+{
+	crm_data_t *nvpair_list = NULL;
+	GHashTable *nvpair_hash = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+
+	CRM_DEV_ASSERT(parent != NULL);
+	if(parent != NULL) {
+		nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
+		if(nvpair_list == NULL) {
+			crm_debug("No attributes in %s",
+				  crm_element_name(parent));
+			crm_log_xml_debug_2(parent,"No attributes for resource op");
+		}
+	}
+	
+	xml_child_iter(
+		nvpair_list, node_iter, XML_CIB_TAG_NVPAIR,
+		
+		const char *key   = crm_element_value(
+			node_iter, XML_NVPAIR_ATTR_NAME);
+		const char *value = crm_element_value(
+			node_iter, XML_NVPAIR_ATTR_VALUE);
+		
+		crm_debug_2("Added %s=%s", key, value);
+		
+		g_hash_table_insert(
+			nvpair_hash, crm_strdup(key), crm_strdup(value));
+		);
+	
+	return nvpair_hash;
 }
