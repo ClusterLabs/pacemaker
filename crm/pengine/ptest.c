@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.59 2005/08/10 08:55:03 andrew Exp $ */
+/* $Id: ptest.c,v 1.60 2005/08/10 12:14:26 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -208,7 +208,7 @@ main(int argc, char **argv)
 					  action->pseudo?"orange":"black");
 			} else {
 				CRM_DEV_ASSERT(action->runnable == FALSE);
-				dot_write("\"%s\" [ fillcolor=\"%s\" ]",
+				dot_write("\"%s\" [ font_color=purple style=filled fillcolor=%s ]",
 					  action->uuid, "red");
 			}
 			
@@ -224,9 +224,14 @@ main(int argc, char **argv)
 
 	slist_iter(
 		action, action_t, data_set.actions, lpc,
-		optional = FALSE;
+		int last_action = -1;
 		slist_iter(
 			before, action_wrapper_t, action->actions_before, lpc2,
+			optional = FALSE;
+			if(last_action == before->action->id) {
+				continue;
+			}
+			last_action = before->action->id;
 			if(action->dumped && before->action->dumped) {
 			} else if(action->optional || before->action->optional) {
 				optional = TRUE;
