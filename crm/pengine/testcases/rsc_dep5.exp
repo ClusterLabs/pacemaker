@@ -1,7 +1,7 @@
  <transition_graph global_timeout="60s" transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="1" rsc_id="rsc3" operation="start" on_node="node1" on_node_uuid="node1" allow_fail="false">
+       <rsc_op id="1" rsc_id="rsc3" operation="start" operation_key="rsc3_start_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
          <primitive id="rsc3" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="priority" value="3.0"/>
@@ -12,7 +12,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="2" rsc_id="rsc2" operation="start" on_node="node2" on_node_uuid="node2" allow_fail="false">
+       <rsc_op id="2" rsc_id="rsc2" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false">
          <primitive id="rsc2" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="priority" value="2.0"/>

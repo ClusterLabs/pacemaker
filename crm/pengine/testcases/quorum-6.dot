@@ -1,0 +1,20 @@
+digraph "g" {
+	size = "30,30"
+"DoFencing:child_DoFencing:0_start_0" [ color="green" ]
+"DoFencing:child_DoFencing:0_monitor_5000" [ color="green" ]
+"DoFencing:child_DoFencing:1_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:2_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:3_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:4_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:5_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:6_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:7_monitor_5000" [ fontcolor="red" ]
+"DoFencing_start_0" [ color="green" fontcolor="orange" ]
+"DoFencing_running_0" [ color="green" fontcolor="orange" ]
+"DoFencing_stop_0" [ color="blue" ]
+"DoFencing_stopped_0" [ color="green" fontcolor="orange" ]
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:0_start_0"
+"DoFencing:child_DoFencing:0_start_0" -> "DoFencing:child_DoFencing:0_monitor_5000"
+"DoFencing_stopped_0" -> "DoFencing_start_0"
+"DoFencing:child_DoFencing:0_start_0" -> "DoFencing_running_0"
+}

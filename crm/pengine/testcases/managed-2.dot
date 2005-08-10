@@ -1,0 +1,37 @@
+digraph "g" {
+	size = "30,30"
+"rsc_c001n09_monitor_5000" [ color="blue" ]
+"DcIPaddr_monitor_5000" [ color="blue" ]
+"rsc_c001n08_monitor_5000" [ color="blue" ]
+"rsc_c001n02_monitor_5000" [ color="blue" ]
+"rsc_c001n03_monitor_5000" [ color="blue" ]
+"rsc_c001n04_monitor_5000" [ color="blue" ]
+"rsc_c001n05_monitor_5000" [ color="blue" ]
+"rsc_c001n06_monitor_5000" [ color="blue" ]
+"rsc_c001n07_monitor_5000" [ color="blue" ]
+"DcIPaddr_stop_0" [ color="blue" ]
+"DcIPaddr_start_0" [ color="blue" ]
+"rsc_c001n09_stop_0" [ color="green" ]
+"rsc_c001n02_stop_0" [ color="green" ]
+"rsc_c001n03_stop_0" [ color="green" ]
+"rsc_c001n04_stop_0" [ color="green" ]
+"rsc_c001n05_stop_0" [ color="green" ]
+"rsc_c001n06_stop_0" [ color="green" ]
+"rsc_c001n07_stop_0" [ color="green" ]
+"rsc_c001n08_stop_0" [ color="green" ]
+"DoFencing:child_DoFencing:0_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:1_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:2_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:3_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:4_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:5_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:6_monitor_5000" [ fontcolor="red" ]
+"DoFencing:child_DoFencing:7_monitor_5000" [ fontcolor="red" ]
+"DoFencing_start_0" [ color="blue" ]
+"DoFencing_running_0" [ color="blue" ]
+"DoFencing_stop_0" [ color="blue" ]
+"DoFencing_stopped_0" [ color="blue" ]
+"DcIPaddr_start_0" -> "DcIPaddr_monitor_5000"
+"DcIPaddr_stop_0" -> "DcIPaddr_start_0"
+"DoFencing_stopped_0" -> "DoFencing_start_0"
+}

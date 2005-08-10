@@ -1,7 +1,7 @@
  <transition_graph global_timeout="3m" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="9" rsc_id="DcIPaddr" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+       <rsc_op id="9" rsc_id="DcIPaddr" operation="stop" operation_key="DcIPaddr_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
            <nvpair name="ip" value="127.0.0.10"/>
@@ -12,7 +12,7 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="11" rsc_id="rsc_c001n08" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+       <rsc_op id="11" rsc_id="rsc_c001n08" operation="stop" operation_key="rsc_c001n08_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
          <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
            <nvpair name="ip" value="127.0.0.11"/>
@@ -23,7 +23,7 @@
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="13" rsc_id="rsc_c001n02" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+       <rsc_op id="13" rsc_id="rsc_c001n02" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
            <nvpair name="ip" value="127.0.0.12"/>
@@ -34,7 +34,7 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="15" rsc_id="rsc_c001n03" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+       <rsc_op id="15" rsc_id="rsc_c001n03" operation="stop" operation_key="rsc_c001n03_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
            <nvpair name="ip" value="127.0.0.13"/>
@@ -45,7 +45,7 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="17" rsc_id="rsc_c001n01" operation="stop" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
+       <rsc_op id="17" rsc_id="rsc_c001n01" operation="stop" operation_key="rsc_c001n01_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
          <primitive id="rsc_c001n01" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
            <nvpair name="ip" value="127.0.0.14"/>
@@ -56,7 +56,7 @@
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="2" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+       <rsc_op id="2" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
@@ -69,13 +69,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:0" operation="start" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
+         <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:0" operation="start" operation_key="DoFencing:child_DoFencing:0_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
+       <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:0" operation="stop" operation_key="DoFencing:child_DoFencing:0_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="clone" value="0"/>
@@ -86,13 +86,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" operation_key="DoFencing_stop_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="7">
      <action_set>
-       <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+       <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:0" operation="stop" operation_key="DoFencing:child_DoFencing:0_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="clone" value="0"/>
@@ -103,13 +103,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" operation_key="DoFencing_stop_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="8">
      <action_set>
-       <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:0" operation="start" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+       <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:0" operation="start" operation_key="DoFencing:child_DoFencing:0_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
@@ -121,19 +121,19 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
+         <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:0" operation="stop" operation_key="DoFencing:child_DoFencing:0_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
+         <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:0" operation="stop" operation_key="DoFencing:child_DoFencing:0_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
        </trigger>
        <trigger>
-         <pseudo_event id="26" rsc_id="DoFencing" operation="start" allow_fail="false"/>
+         <pseudo_event id="26" rsc_id="DoFencing" operation="start" operation_key="DoFencing_start_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="9">
      <action_set>
-       <rsc_op id="3" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
+       <rsc_op id="3" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" operation_key="DoFencing:child_DoFencing:1_monitor_5000" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
@@ -146,13 +146,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:1" operation="start" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
+         <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:1" operation="start" operation_key="DoFencing:child_DoFencing:1_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="10">
      <action_set>
-       <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+       <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="stop" operation_key="DoFencing:child_DoFencing:1_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="clone" value="1"/>
@@ -163,13 +163,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" operation_key="DoFencing_stop_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="11">
      <action_set>
-       <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:1" operation="start" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
+       <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:1" operation="start" operation_key="DoFencing:child_DoFencing:1_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
@@ -181,16 +181,16 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
+         <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="stop" operation_key="DoFencing:child_DoFencing:1_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
        </trigger>
        <trigger>
-         <pseudo_event id="26" rsc_id="DoFencing" operation="start" allow_fail="false"/>
+         <pseudo_event id="26" rsc_id="DoFencing" operation="start" operation_key="DoFencing_start_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="12">
      <action_set>
-       <rsc_op id="24" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+       <rsc_op id="24" rsc_id="DoFencing:child_DoFencing:2" operation="stop" operation_key="DoFencing:child_DoFencing:2_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="clone" value="2"/>
@@ -201,40 +201,40 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false"/>
+         <pseudo_event id="28" rsc_id="DoFencing" operation="stop" operation_key="DoFencing_stop_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="13">
      <action_set>
-       <pseudo_event id="26" rsc_id="DoFencing" operation="start" allow_fail="false">
+       <pseudo_event id="26" rsc_id="DoFencing" operation="start" operation_key="DoFencing_start_0" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="29" rsc_id="DoFencing" operation="stopped" allow_fail="false"/>
+         <pseudo_event id="29" rsc_id="DoFencing" operation="stopped" operation_key="DoFencing_stopped_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="14">
      <action_set>
-       <pseudo_event id="27" rsc_id="DoFencing" operation="running" allow_fail="false">
+       <pseudo_event id="27" rsc_id="DoFencing" operation="running" operation_key="DoFencing_running_0" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:0" operation="start" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
+         <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:0" operation="start" operation_key="DoFencing:child_DoFencing:0_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:1" operation="start" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
+         <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:1" operation="start" operation_key="DoFencing:child_DoFencing:1_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="15">
      <action_set>
-       <pseudo_event id="28" rsc_id="DoFencing" operation="stop" allow_fail="false">
+       <pseudo_event id="28" rsc_id="DoFencing" operation="stop" operation_key="DoFencing_stop_0" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
@@ -242,40 +242,40 @@
    </synapse>
    <synapse id="16">
      <action_set>
-       <pseudo_event id="29" rsc_id="DoFencing" operation="stopped" allow_fail="false">
+       <pseudo_event id="29" rsc_id="DoFencing" operation="stopped" operation_key="DoFencing_stopped_0" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
+         <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:0" operation="stop" operation_key="DoFencing:child_DoFencing:0_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:0" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
+         <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:0" operation="stop" operation_key="DoFencing:child_DoFencing:0_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
+         <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="stop" operation_key="DoFencing:child_DoFencing:1_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="24" rsc_id="DoFencing:child_DoFencing:2" operation="stop" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
+         <rsc_op id="24" rsc_id="DoFencing:child_DoFencing:2" operation="stop" operation_key="DoFencing:child_DoFencing:2_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="17">
      <action_set>
-       <crm_event id="30" operation="do_shutdown" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+       <crm_event id="30" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
          <attributes/>
        </crm_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="11" rsc_id="rsc_c001n08" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
+         <rsc_op id="11" rsc_id="rsc_c001n08" operation="stop" operation_key="rsc_c001n08_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="13" rsc_id="rsc_c001n02" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
+         <rsc_op id="13" rsc_id="rsc_c001n02" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="stop" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
+         <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="stop" operation_key="DoFencing:child_DoFencing:1_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>

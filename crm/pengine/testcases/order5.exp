@@ -1,7 +1,7 @@
  <transition_graph global_timeout="60s" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="3" rsc_id="rsc2" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="3" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
          <attributes/>
        </rsc_op>
@@ -10,20 +10,20 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="4" rsc_id="rsc2" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+       <rsc_op id="4" rsc_id="rsc2" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
          <attributes/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="3" rsc_id="rsc2" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+         <rsc_op id="3" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="7" rsc_id="rsc4" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="7" rsc_id="rsc4" operation="stop" operation_key="rsc4_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc4" class="heartbeat" type="apache" priority="1.0"/>
          <attributes/>
        </rsc_op>
@@ -32,20 +32,20 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="8" rsc_id="rsc4" operation="start" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+       <rsc_op id="8" rsc_id="rsc4" operation="start" operation_key="rsc4_start_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc4" class="heartbeat" type="apache" priority="1.0"/>
          <attributes/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="7" rsc_id="rsc4" operation="stop" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+         <rsc_op id="7" rsc_id="rsc4" operation="stop" operation_key="rsc4_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="9" rsc_id="rsc5" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+       <rsc_op id="9" rsc_id="rsc5" operation="stop" operation_key="rsc5_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc5" class="heartbeat" type="apache" priority="1.0"/>
          <attributes/>
        </rsc_op>
@@ -54,20 +54,20 @@
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="10" rsc_id="rsc5" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="10" rsc_id="rsc5" operation="start" operation_key="rsc5_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc5" class="heartbeat" type="apache" priority="1.0"/>
          <attributes/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="9" rsc_id="rsc5" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+         <rsc_op id="9" rsc_id="rsc5" operation="stop" operation_key="rsc5_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="13" rsc_id="rsc7" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+       <rsc_op id="13" rsc_id="rsc7" operation="stop" operation_key="rsc7_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc7" class="heartbeat" type="apache" priority="1.0"/>
          <attributes/>
        </rsc_op>
@@ -76,14 +76,14 @@
    </synapse>
    <synapse id="7">
      <action_set>
-       <rsc_op id="14" rsc_id="rsc7" operation="start" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="14" rsc_id="rsc7" operation="start" operation_key="rsc7_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc7" class="heartbeat" type="apache" priority="1.0"/>
          <attributes/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="13" rsc_id="rsc7" operation="stop" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+         <rsc_op id="13" rsc_id="rsc7" operation="stop" operation_key="rsc7_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>

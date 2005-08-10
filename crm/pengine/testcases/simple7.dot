@@ -1,0 +1,6 @@
+digraph "g" {
+	size = "30,30"
+"rsc1_stop_0" [ color="green" ]
+"do_shutdown" [ color="green" ]
+"rsc1_stop_0" -> "do_shutdown"
+}

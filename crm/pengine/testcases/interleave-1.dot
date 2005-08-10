@@ -1,0 +1,166 @@
+digraph "g" {
+	size = "30,30"
+"DoFencing:child_DoFencing:5_monitor_5000" [ color="blue" ]
+"DcIPaddr_monitor_5000" [ color="blue" ]
+"DoFencing:child_DoFencing:7_monitor_5000" [ color="blue" ]
+"rsc_c001n08_monitor_5000" [ color="blue" ]
+"rsc_c001n02_monitor_5000" [ color="blue" ]
+"DoFencing:child_DoFencing:6_monitor_5000" [ color="blue" ]
+"DoFencing:child_DoFencing:0_monitor_5000" [ color="blue" ]
+"rsc_c001n03_monitor_5000" [ color="blue" ]
+"DoFencing:child_DoFencing:1_monitor_5000" [ color="blue" ]
+"rsc_c001n04_monitor_5000" [ color="blue" ]
+"DoFencing:child_DoFencing:2_monitor_5000" [ color="blue" ]
+"rsc_c001n05_monitor_5000" [ color="blue" ]
+"DoFencing:child_DoFencing:3_monitor_5000" [ color="blue" ]
+"rsc_c001n06_monitor_5000" [ color="blue" ]
+"DoFencing:child_DoFencing:4_monitor_5000" [ color="blue" ]
+"rsc_c001n07_monitor_5000" [ color="blue" ]
+"DcIPaddr_stop_0" [ color="blue" ]
+"DcIPaddr_start_0" [ color="blue" ]
+"rsc_c001n09_monitor_5000" [ fontcolor="red" ]
+"rsc_c001n02_stop_0" [ color="blue" ]
+"rsc_c001n02_start_0" [ color="blue" ]
+"rsc_c001n03_stop_0" [ color="blue" ]
+"rsc_c001n03_start_0" [ color="blue" ]
+"rsc_c001n04_stop_0" [ color="blue" ]
+"rsc_c001n04_start_0" [ color="blue" ]
+"rsc_c001n05_stop_0" [ color="blue" ]
+"rsc_c001n05_start_0" [ color="blue" ]
+"rsc_c001n06_stop_0" [ color="blue" ]
+"rsc_c001n06_start_0" [ color="blue" ]
+"rsc_c001n07_stop_0" [ color="blue" ]
+"rsc_c001n07_start_0" [ color="blue" ]
+"rsc_c001n08_stop_0" [ color="blue" ]
+"rsc_c001n08_start_0" [ color="blue" ]
+"DoFencing:child_DoFencing:0_stop_0" [ color="blue" ]
+"DoFencing:child_DoFencing:0_start_0" [ color="blue" ]
+"DoFencing:child_DoFencing:1_stop_0" [ color="blue" ]
+"DoFencing:child_DoFencing:1_start_0" [ color="blue" ]
+"DoFencing:child_DoFencing:2_stop_0" [ color="blue" ]
+"DoFencing:child_DoFencing:2_start_0" [ color="blue" ]
+"DoFencing:child_DoFencing:3_stop_0" [ color="blue" ]
+"DoFencing:child_DoFencing:3_start_0" [ color="blue" ]
+"DoFencing:child_DoFencing:4_stop_0" [ color="blue" ]
+"DoFencing:child_DoFencing:4_start_0" [ color="blue" ]
+"DoFencing:child_DoFencing:5_stop_0" [ color="blue" ]
+"DoFencing:child_DoFencing:5_start_0" [ color="blue" ]
+"DoFencing:child_DoFencing:6_stop_0" [ color="blue" ]
+"DoFencing:child_DoFencing:6_start_0" [ color="blue" ]
+"DoFencing:child_DoFencing:7_stop_0" [ color="blue" ]
+"DoFencing:child_DoFencing:7_start_0" [ color="blue" ]
+"DoFencing_start_0" [ color="blue" ]
+"DoFencing_running_0" [ color="blue" ]
+"DoFencing_stop_0" [ color="blue" ]
+"DoFencing_stopped_0" [ color="blue" ]
+"CloneSet:child_CloneSet:0_start_0" [ color="green" ]
+"CloneSet:child_CloneSet:0_monitor_5000" [ color="green" ]
+"CloneSet:child_CloneSet:1_start_0" [ color="green" ]
+"CloneSet:child_CloneSet:1_monitor_5000" [ color="green" ]
+"CloneSet:child_CloneSet:2_start_0" [ color="green" ]
+"CloneSet:child_CloneSet:2_monitor_5000" [ color="green" ]
+"CloneSet:child_CloneSet:3_start_0" [ color="green" ]
+"CloneSet:child_CloneSet:3_monitor_5000" [ color="green" ]
+"CloneSet:child_CloneSet:4_start_0" [ color="green" ]
+"CloneSet:child_CloneSet:4_monitor_5000" [ color="green" ]
+"CloneSet:child_CloneSet:5_start_0" [ color="green" ]
+"CloneSet:child_CloneSet:5_monitor_5000" [ color="green" ]
+"CloneSet:child_CloneSet:6_start_0" [ color="green" ]
+"CloneSet:child_CloneSet:6_monitor_5000" [ color="green" ]
+"CloneSet:child_CloneSet:7_start_0" [ color="green" ]
+"CloneSet:child_CloneSet:7_monitor_5000" [ color="green" ]
+"CloneSet_start_0" [ color="green" fontcolor="orange" ]
+"CloneSet_running_0" [ color="green" fontcolor="orange" ]
+"CloneSet_stop_0" [ color="blue" ]
+"CloneSet_stopped_0" [ color="green" fontcolor="orange" ]
+"DoFencing:child_DoFencing:5_start_0" -> "DoFencing:child_DoFencing:5_monitor_5000"
+"DcIPaddr_start_0" -> "DcIPaddr_monitor_5000"
+"DoFencing:child_DoFencing:7_start_0" -> "DoFencing:child_DoFencing:7_monitor_5000"
+"rsc_c001n08_start_0" -> "rsc_c001n08_monitor_5000"
+"rsc_c001n02_start_0" -> "rsc_c001n02_monitor_5000"
+"DoFencing:child_DoFencing:6_start_0" -> "DoFencing:child_DoFencing:6_monitor_5000"
+"DoFencing:child_DoFencing:0_start_0" -> "DoFencing:child_DoFencing:0_monitor_5000"
+"rsc_c001n03_start_0" -> "rsc_c001n03_monitor_5000"
+"DoFencing:child_DoFencing:1_start_0" -> "DoFencing:child_DoFencing:1_monitor_5000"
+"rsc_c001n04_start_0" -> "rsc_c001n04_monitor_5000"
+"DoFencing:child_DoFencing:2_start_0" -> "DoFencing:child_DoFencing:2_monitor_5000"
+"rsc_c001n05_start_0" -> "rsc_c001n05_monitor_5000"
+"DoFencing:child_DoFencing:3_start_0" -> "DoFencing:child_DoFencing:3_monitor_5000"
+"rsc_c001n06_start_0" -> "rsc_c001n06_monitor_5000"
+"DoFencing:child_DoFencing:4_start_0" -> "DoFencing:child_DoFencing:4_monitor_5000"
+"rsc_c001n07_start_0" -> "rsc_c001n07_monitor_5000"
+"DcIPaddr_stop_0" -> "DcIPaddr_start_0"
+"rsc_c001n02_stop_0" -> "rsc_c001n02_start_0"
+"rsc_c001n03_stop_0" -> "rsc_c001n03_start_0"
+"rsc_c001n04_stop_0" -> "rsc_c001n04_start_0"
+"rsc_c001n05_stop_0" -> "rsc_c001n05_start_0"
+"rsc_c001n06_stop_0" -> "rsc_c001n06_start_0"
+"rsc_c001n07_stop_0" -> "rsc_c001n07_start_0"
+"rsc_c001n08_stop_0" -> "rsc_c001n08_start_0"
+"DoFencing_stop_0" -> "DoFencing:child_DoFencing:0_stop_0"
+"DoFencing:child_DoFencing:0_stop_0" -> "DoFencing:child_DoFencing:0_start_0"
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:0_start_0"
+"DoFencing_stop_0" -> "DoFencing:child_DoFencing:1_stop_0"
+"DoFencing:child_DoFencing:1_stop_0" -> "DoFencing:child_DoFencing:1_start_0"
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:1_start_0"
+"DoFencing_stop_0" -> "DoFencing:child_DoFencing:2_stop_0"
+"DoFencing:child_DoFencing:2_stop_0" -> "DoFencing:child_DoFencing:2_start_0"
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:2_start_0"
+"DoFencing_stop_0" -> "DoFencing:child_DoFencing:3_stop_0"
+"DoFencing:child_DoFencing:3_stop_0" -> "DoFencing:child_DoFencing:3_start_0"
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:3_start_0"
+"DoFencing_stop_0" -> "DoFencing:child_DoFencing:4_stop_0"
+"DoFencing:child_DoFencing:4_stop_0" -> "DoFencing:child_DoFencing:4_start_0"
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:4_start_0"
+"DoFencing_stop_0" -> "DoFencing:child_DoFencing:5_stop_0"
+"DoFencing:child_DoFencing:5_stop_0" -> "DoFencing:child_DoFencing:5_start_0"
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:5_start_0"
+"DoFencing_stop_0" -> "DoFencing:child_DoFencing:6_stop_0"
+"DoFencing:child_DoFencing:6_stop_0" -> "DoFencing:child_DoFencing:6_start_0"
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:6_start_0"
+"DoFencing_stop_0" -> "DoFencing:child_DoFencing:7_stop_0"
+"DoFencing:child_DoFencing:7_stop_0" -> "DoFencing:child_DoFencing:7_start_0"
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:7_start_0"
+"DoFencing_stopped_0" -> "DoFencing_start_0"
+"DoFencing:child_DoFencing:0_start_0" -> "DoFencing_running_0"
+"DoFencing:child_DoFencing:1_start_0" -> "DoFencing_running_0"
+"DoFencing:child_DoFencing:2_start_0" -> "DoFencing_running_0"
+"DoFencing:child_DoFencing:3_start_0" -> "DoFencing_running_0"
+"DoFencing:child_DoFencing:4_start_0" -> "DoFencing_running_0"
+"DoFencing:child_DoFencing:5_start_0" -> "DoFencing_running_0"
+"DoFencing:child_DoFencing:6_start_0" -> "DoFencing_running_0"
+"DoFencing:child_DoFencing:7_start_0" -> "DoFencing_running_0"
+"DoFencing:child_DoFencing:0_stop_0" -> "DoFencing_stopped_0"
+"DoFencing:child_DoFencing:1_stop_0" -> "DoFencing_stopped_0"
+"DoFencing:child_DoFencing:2_stop_0" -> "DoFencing_stopped_0"
+"DoFencing:child_DoFencing:3_stop_0" -> "DoFencing_stopped_0"
+"DoFencing:child_DoFencing:4_stop_0" -> "DoFencing_stopped_0"
+"DoFencing:child_DoFencing:5_stop_0" -> "DoFencing_stopped_0"
+"DoFencing:child_DoFencing:6_stop_0" -> "DoFencing_stopped_0"
+"DoFencing:child_DoFencing:7_stop_0" -> "DoFencing_stopped_0"
+"CloneSet_start_0" -> "CloneSet:child_CloneSet:0_start_0"
+"CloneSet:child_CloneSet:0_start_0" -> "CloneSet:child_CloneSet:0_monitor_5000"
+"CloneSet_start_0" -> "CloneSet:child_CloneSet:1_start_0"
+"CloneSet:child_CloneSet:1_start_0" -> "CloneSet:child_CloneSet:1_monitor_5000"
+"CloneSet_start_0" -> "CloneSet:child_CloneSet:2_start_0"
+"CloneSet:child_CloneSet:2_start_0" -> "CloneSet:child_CloneSet:2_monitor_5000"
+"CloneSet_start_0" -> "CloneSet:child_CloneSet:3_start_0"
+"CloneSet:child_CloneSet:3_start_0" -> "CloneSet:child_CloneSet:3_monitor_5000"
+"CloneSet_start_0" -> "CloneSet:child_CloneSet:4_start_0"
+"CloneSet:child_CloneSet:4_start_0" -> "CloneSet:child_CloneSet:4_monitor_5000"
+"CloneSet_start_0" -> "CloneSet:child_CloneSet:5_start_0"
+"CloneSet:child_CloneSet:5_start_0" -> "CloneSet:child_CloneSet:5_monitor_5000"
+"CloneSet_start_0" -> "CloneSet:child_CloneSet:6_start_0"
+"CloneSet:child_CloneSet:6_start_0" -> "CloneSet:child_CloneSet:6_monitor_5000"
+"CloneSet_start_0" -> "CloneSet:child_CloneSet:7_start_0"
+"CloneSet:child_CloneSet:7_start_0" -> "CloneSet:child_CloneSet:7_monitor_5000"
+"CloneSet_stopped_0" -> "CloneSet_start_0"
+"CloneSet:child_CloneSet:0_start_0" -> "CloneSet_running_0"
+"CloneSet:child_CloneSet:1_start_0" -> "CloneSet_running_0"
+"CloneSet:child_CloneSet:2_start_0" -> "CloneSet_running_0"
+"CloneSet:child_CloneSet:3_start_0" -> "CloneSet_running_0"
+"CloneSet:child_CloneSet:4_start_0" -> "CloneSet_running_0"
+"CloneSet:child_CloneSet:5_start_0" -> "CloneSet_running_0"
+"CloneSet:child_CloneSet:6_start_0" -> "CloneSet_running_0"
+"CloneSet:child_CloneSet:7_start_0" -> "CloneSet_running_0"
+}
