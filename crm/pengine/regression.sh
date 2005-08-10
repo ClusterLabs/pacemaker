@@ -39,7 +39,9 @@ do_test 764 "Bugzilla 764"
 do_test 797 "Bugzilla 797"
 
 echo ""
+do_test date-1 "Dates"
 
+echo ""
 do_test simple1 "Offline     "
 do_test simple2 "Start       "
 do_test simple3 "Start 2     "

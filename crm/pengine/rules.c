@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.9 2005/08/07 08:15:10 andrew Exp $ */
+/* $Id: rules.c,v 1.10 2005/08/10 18:03:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,18 +80,18 @@ test_rule(crm_data_t *rule, node_t *node)
 		test = test_expression(expr, node);
 		
 		if(test && do_and == FALSE) {
-			crm_err("Expression %s/%s passed", ID(rule), ID(expr));
+			crm_debug_3("Expression %s/%s passed",
+				    ID(rule), ID(expr));
 			return TRUE;
 			
 		} else if(test == FALSE && do_and) {
-			crm_err("Expression %s/%s failed", ID(rule), ID(expr));
+			crm_debug_3("Expression %s/%s failed",
+				    ID(rule), ID(expr));
 			return FALSE;
 		}
 		);
 		
-	if(passed == FALSE) {
-		crm_err("Rule %s failed", ID(rule));
-	}
+	crm_debug_2("Rule %s %s", ID(rule), passed?"passed":"failed");
 	return passed;
 }
 
@@ -119,6 +119,7 @@ test_expression(crm_data_t *expr, node_t *node)
 			accept = FALSE;
 	}
 		
+	crm_debug_2("Expression %s %s", ID(expr), accept?"passed":"failed");
 	return accept;
 }
 
@@ -276,8 +277,6 @@ cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec)
 	cron_check("months",    months);
 	cron_check("years",     years);
 	cron_check("weekyears", weekyears);
-
-	free_ha_date(now);
 	
 	return TRUE;
 }
@@ -324,6 +323,8 @@ test_date_expression(crm_data_t *time_expr)
 	crm_data_t *duration_spec = NULL;
 	crm_data_t *date_spec = NULL;
 
+	gboolean passed = FALSE;
+
 	crm_debug_2("Testing expression: %s", ID(time_expr));
 	
 	duration_spec = cl_get_struct(time_expr, "duration");
@@ -353,28 +354,31 @@ test_date_expression(crm_data_t *time_expr)
 	
 	if(safe_str_eq(op, "date_spec") || safe_str_eq(op, "in_range")) {
 		if(start != NULL && compare_date(start, now) > 0) {
-			return FALSE;
-
+			passed = FALSE;
 		} else if(end != NULL && compare_date(end, now) < 0) {
-			return FALSE;
+			passed = FALSE;
+		} else if(safe_str_eq(op, "in_range")) {
+			passed = TRUE;
+		} else {
+			passed = cron_range_satisfied(now, date_spec);
 		}
-		if(safe_str_eq(op, "in_range")) {
-			return TRUE;
-		}
-		return cron_range_satisfied(now, date_spec);
-
+		
 	} else if(safe_str_eq(op, "gt") && compare_date(start, now) < 0) {
-		return TRUE;
+		passed = TRUE;
+
 
 	} else if(safe_str_eq(op, "lt") && compare_date(end, now) > 0) {
-		return TRUE;
+		passed = TRUE;
 
 	} else if(safe_str_eq(op, "eq") && compare_date(start, now) == 0) {
-		return TRUE;
+		passed = TRUE;
 
 	} else if(safe_str_eq(op, "neq") && compare_date(start, now) != 0) {
-		return TRUE;
+		passed = TRUE;
 	}
 
-	return FALSE;
+	free_ha_date(start);
+	free_ha_date(end);
+	free_ha_date(now);
+	return passed;
 }
