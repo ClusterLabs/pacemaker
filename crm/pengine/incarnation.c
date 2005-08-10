@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.43 2005/08/10 08:55:03 andrew Exp $ */
+/* $Id: incarnation.c,v 1.44 2005/08/10 12:58:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -595,7 +595,7 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		clone_data->self, stopped_key(clone_data->self), NULL,
 		clone_data->self, start_key(clone_data->self), NULL,
-		pe_ordering_manditory, data_set);
+		pe_ordering_optional, data_set);
 	
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
