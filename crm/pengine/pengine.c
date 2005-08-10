@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.85 2005/08/03 14:54:27 andrew Exp $ */
+/* $Id: pengine.c,v 1.86 2005/08/10 08:34:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -209,6 +209,13 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input)
 	check_and_exit(7);
 #endif
 
+	crm_debug_5("creating transition graph");
+	stage8(data_set);
+
+#if MEMCHECK_STAGE_8
+	check_and_exit(8);
+#endif
+
 	crm_debug_2("=#=#=#=#= Summary =#=#=#=#=");
 	crm_debug_2("========= All Actions =========");
 	slist_iter(action, action_t, data_set->actions, lpc,
@@ -225,13 +232,6 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input)
 			   }
 			)
 		);
-	
-	crm_debug_5("creating transition graph");
-	stage8(data_set);
-
-#if MEMCHECK_STAGE_8
-	check_and_exit(8);
-#endif
 	
 	return data_set->graph;
 }
