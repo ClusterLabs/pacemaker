@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.92 2005/08/08 15:43:05 andrew Exp $ */
+/* $Id: tengine.c,v 1.93 2005/08/10 09:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -153,7 +153,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	const char *this_rsc    = NULL;
 	const char *magic       = NULL;
 
-	char *this_event;
+	const char *this_event;
 	char *update_te_uuid = NULL;
 	const char *update_event;
 	
@@ -186,9 +186,10 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	this_action = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 	this_node   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 	this_uname  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-	
-	this_event  = generate_op_key(this_rsc, this_action, action->interval);
 
+	this_event = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+	CRM_DEV_ASSERT(this_event != NULL);
+	
 	if(safe_str_neq(this_event, update_event)) {
 		crm_debug_2("Action %d : Event mismatch %s vs. %s",
 			    action->id, this_event, update_event);
@@ -200,12 +201,11 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		match = action;
 	}
 	
-	crm_free(this_event);
 	if(match == NULL) {
 		return -1;
 	}
 	
-	crm_debug("Matched action %d", action->id);
+	crm_debug("Matched action (%d) %s", action->id, this_event);
 
 	CRM_DEV_ASSERT(decode_transition_magic(
 			       magic, &update_te_uuid,
@@ -618,10 +618,11 @@ initiate_action(action_t *action)
 		return TRUE;
 #endif
 		action->invoked = FALSE;
-		if(safe_str_neq(task, CRMD_ACTION_STOP)) {
-			cib_action_update(action, LRM_OP_PENDING);
-		} else {
+		if(safe_str_eq(task, CRMD_ACTION_STOP)
+		   || safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
 			cib_action_updated(NULL, 0, cib_ok, NULL, action);
+		} else {
+			cib_action_update(action, LRM_OP_PENDING);
 		}
 		ret = TRUE;
 

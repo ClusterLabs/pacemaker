@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.114 2005/08/07 08:16:38 andrew Exp $ */
+/* $Id: unpack.c,v 1.115 2005/08/10 09:25:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -753,6 +753,11 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	CRM_DEV_ASSERT(task_status_i >= LRM_OP_PENDING);
 	if(crm_assert_failed) {return FALSE;}
 
+	if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+		/* safe to ignore these */
+		return TRUE;
+	}
+	
 	crm_debug_2("Unpacking task %s/%s (call_id=%s, status=%s) on %s",
 		    rsc->id, task, task_id, task_status, node->details->uname);
 	
