@@ -57,10 +57,7 @@
           restart_type          (ignore|restart)                 'ignore'
           multiple_active       (stop_start|stop_only|block)     'stop_start'
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
-          start_prereq          (nothing|quorum|fencing)         #IMPLIED
-
-          post_event_notify (true|false)        'false'
-          pre_event_notify  (true|false)        'false'>
+          start_prereq          (nothing|quorum|fencing)         #IMPLIED>
 <!-- Annotated version -->
 <!ELEMENT operations (op*)>
 <!ELEMENT op (instance_attributes*)>
@@ -95,6 +92,7 @@
           multiple_active       (stop_start|stop_only|block)     'stop_start'
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
           start_prereq          (nothing|quorum|fencing)         #IMPLIED
+          notify                (true|false)                     'false'
 
           ordered       (true|false)     'true'
           interleave    (true|false)     'false'>
@@ -109,6 +107,7 @@
           multiple_active       (stop_start|stop_only|block)     'stop_start'
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
           start_prereq          (nothing|quorum|fencing)         #IMPLIED
+          notify                (true|false)                     'false'
 
           ordered          (true|false)  'true'
           interleave       (true|false)  'false'
@@ -119,35 +118,33 @@
 <!-- Annotated version -->
 
 <!ELEMENT constraints (rsc_order*, rsc_colocation*, rsc_location*)>
-<!ELEMENT rsc_order EMPTY>
+<!ELEMENT rsc_order (lifetime?)>
 <!ATTLIST rsc_order
           id        CDATA #REQUIRED
           from      CDATA #REQUIRED
           action    (start|stop)        'start'
           type      (before|after)      'after'
           to        CDATA #REQUIRED
-          lifetime  CDATA #IMPLIED
           symetrical    (TRUE|FALSE)    'TRUE'>
 <!-- Annotated version -->
 
-<!ELEMENT rsc_colocation EMPTY>
+<!ELEMENT rsc_colocation (lifetime?)>
 <!ATTLIST rsc_colocation
           id        CDATA #REQUIRED
           from      CDATA #REQUIRED
           to        CDATA #REQUIRED
-          lifetime  CDATA #IMPLIED
-          type      (must|mustnot) #REQUIRED>
+          score     (INFINITY|-INFINITY) #REQUIRED>
 <!-- Annotated version -->
 
-<!ELEMENT rsc_location (rule+)>
+<!ELEMENT rsc_location (lifetime?,rule+)>
 <!ATTLIST rsc_location
           id          CDATA #REQUIRED
           description CDATA #IMPLIED
-          rsc         CDATA #REQUIRED
-          lifetime    CDATA #IMPLIED>
+          rsc         CDATA #REQUIRED>
+<!ELEMENT lifetime (rule+)>
 <!-- Annotated version -->
 
-<!ELEMENT rule (expression|time_expression)+>
+<!ELEMENT rule (expression|time_expression|rule)+>
 <!ATTLIST rule
           id         CDATA        #REQUIRED
           score      CDATA        #IMPLIED
@@ -165,16 +162,13 @@
 
 <!ELEMENT date_expression (date_spec?,duration?)>
 <!ATTLIST date_expression
-	operation  (in_range|date_spec|gt|lt) 'in_range'
-	start      CDATA  #IMPLIED
-	end        CDATA  #IMPLIED>
+        operation  (in_range|date_spec|gt|lt) 'in_range'
+        start      CDATA  #IMPLIED
+        end        CDATA  #IMPLIED>
 <!-- Annotated version -->
 
 <!ELEMENT date_spec>
 <!ATTLIST date_spec
-        seconds    CDATA  #IMPLIED
-        minutes    CDATA  #IMPLIED
-        hours      CDATA  #IMPLIED
         monthdays  CDATA  #IMPLIED
         weekdays   CDATA  #IMPLIED
         yeardays   CDATA  #IMPLIED
@@ -185,16 +179,15 @@
 
 <!ELEMENT duration>
 <!ATTLIST duration
-        seconds    CDATA  #IMPLIED
-        minutes    CDATA  #IMPLIED
-        hours      CDATA  #IMPLIED
-        days       CDATA  #IMPLIED
-        weeks      CDATA  #IMPLIED
+        monthdays  CDATA  #IMPLIED
+        weekdays   CDATA  #IMPLIED
+        yeardays   CDATA  #IMPLIED
         months     CDATA  #IMPLIED
+        weeks      CDATA  #IMPLIED
         years      CDATA  #IMPLIED>
+<!-- Annotated version -->
 
 <!ELEMENT status (node_state*)>
-
 <!ELEMENT node_state (lrm, attributes)>
 <!ATTLIST node_state
         id              CDATA                   #REQUIRED
@@ -226,11 +219,11 @@
           id            CDATA #REQUIRED
           operation     CDATA #REQUIRED
           op_status     CDATA #REQUIRED
-	  rc_code	CDATA #REQUIRED
-	  call_id	CDATA #REQUIRED
-	  rsc_state	CDATA #IMPLIED
-	  transition_key	CDATA #IMPLIED
-	  transition_magic	CDATA #REQUIRED>
+          rc_code               CDATA #REQUIRED
+          call_id               CDATA #REQUIRED
+          rsc_state             CDATA #IMPLIED
+          transition_key                CDATA #IMPLIED
+          transition_magic      CDATA #REQUIRED>
 <!ELEMENT nvpair EMPTY>
 <!ATTLIST nvpair
           id            CDATA #REQUIRED
