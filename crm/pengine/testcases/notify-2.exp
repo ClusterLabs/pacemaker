@@ -94,9 +94,6 @@
        <trigger>
          <pseudo_event id="7" rsc_id="rsc1" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0" allow_fail="false"/>
        </trigger>
-       <trigger>
-         <pseudo_event id="11" rsc_id="rsc1" operation="stopped" operation_key="rsc1_stopped_0" allow_fail="false"/>
-       </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
@@ -188,14 +185,6 @@
    </synapse>
    <synapse id="10">
      <action_set>
-       <pseudo_event id="11" rsc_id="rsc1" operation="stopped" operation_key="rsc1_stopped_0" allow_fail="false">
-         <attributes/>
-       </pseudo_event>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="11">
-     <action_set>
        <rsc_op id="16" rsc_id="rsc2:child_rsc2:0" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache" notify="1"/>
          <attributes>
@@ -210,7 +199,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="12">
+   <synapse id="11">
      <action_set>
        <rsc_op id="34" rsc_id="rsc2:child_rsc2:0" operation="notify" operation_key="rsc2:child_rsc2:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache" notify="1"/>
@@ -232,7 +221,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="13">
+   <synapse id="12">
      <action_set>
        <pseudo_event id="23" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" allow_fail="false">
          <attributes/>
@@ -244,7 +233,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="14">
+   <synapse id="13">
      <action_set>
        <pseudo_event id="24" rsc_id="rsc2" operation="stopped" operation_key="rsc2_stopped_0" allow_fail="false">
          <attributes/>
@@ -256,7 +245,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="15">
+   <synapse id="14">
      <action_set>
        <pseudo_event id="25" rsc_id="rsc2" operation="notify" operation_key="rsc2_pre_notify_stop_0" allow_fail="false">
          <attributes>
@@ -271,7 +260,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="16">
+   <synapse id="15">
      <action_set>
        <pseudo_event id="26" rsc_id="rsc2" operation="notified" operation_key="rsc2_confirmed-pre_notify_stop_0" allow_fail="false">
          <attributes>
@@ -289,7 +278,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="17">
+   <synapse id="16">
      <action_set>
        <pseudo_event id="27" rsc_id="rsc2" operation="notify" operation_key="rsc2_post_notify_stop_0" allow_fail="false">
          <attributes>
@@ -308,7 +297,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="18">
+   <synapse id="17">
      <action_set>
        <pseudo_event id="28" rsc_id="rsc2" operation="notified" operation_key="rsc2_confirmed-post_notify_stop_0" allow_fail="false">
          <attributes>

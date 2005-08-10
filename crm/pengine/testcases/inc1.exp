@@ -82,9 +82,6 @@
        <trigger>
          <rsc_op id="1" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
        </trigger>
-       <trigger>
-         <pseudo_event id="9" rsc_id="rsc2" operation="stopped" operation_key="rsc2_stopped_0" allow_fail="false"/>
-       </trigger>
      </inputs>
    </synapse>
    <synapse id="6">
@@ -109,14 +106,6 @@
      </inputs>
    </synapse>
    <synapse id="7">
-     <action_set>
-       <pseudo_event id="9" rsc_id="rsc2" operation="stopped" operation_key="rsc2_stopped_0" allow_fail="false">
-         <attributes/>
-       </pseudo_event>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="8">
      <action_set>
        <rsc_op id="10" rsc_id="rsc3" operation="start" operation_key="rsc3_start_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc3" class="heartbeat" type="apache"/>

@@ -1,7 +1,7 @@
 digraph "g" {
 	size = "30,30"
-"rsc1_start_0" [ tooltip="node2" color="green" fontcolor="black" ]
-"rsc2_start_0" [ tooltip="node2" color="green" fontcolor="black" ]
-"stonith" [ tooltip="node1" color="green" fontcolor="black" ]
-"stonith" -> "rsc2_start_0"
+"rsc1_start_0" [ tooltip="node2" style=bold color="green" fontcolor="black" ]
+"rsc2_start_0" [ tooltip="node2" style=bold color="green" fontcolor="black" ]
+"stonith" [ tooltip="node1" style=bold color="green" fontcolor="black" ]
+"stonith" -> "rsc2_start_0" [ style = bold]
 }

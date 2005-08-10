@@ -150,11 +150,7 @@
          <attributes/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="20" rsc_id="DoFencing" operation="stopped" operation_key="DoFencing_stopped_0" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="10">
      <action_set>
@@ -170,14 +166,6 @@
          <rsc_op id="16" rsc_id="DoFencing:child_DoFencing:1" operation="start" operation_key="DoFencing:child_DoFencing:1_start_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669" allow_fail="false"/>
        </trigger>
      </inputs>
-   </synapse>
-   <synapse id="11">
-     <action_set>
-       <pseudo_event id="20" rsc_id="DoFencing" operation="stopped" operation_key="DoFencing_stopped_0" allow_fail="false">
-         <attributes/>
-       </pseudo_event>
-     </action_set>
-     <inputs/>
    </synapse>
  </transition_graph>
 

@@ -1,59 +1,57 @@
 digraph "g" {
 	size = "30,30"
-"rsc_ibm1_monitor_5000" [ tooltip="ibm1" color="green" fontcolor="black" ]
-"rsc_test03_monitor_5000" [ tooltip="test03" color="green" fontcolor="black" ]
-"DcIPaddr_monitor_5000" [ tooltip="test03" color="green" fontcolor="black" ]
-"DoFencing:child_DoFencing:1_start_0" [ tooltip="sgi2" color="green" fontcolor="black" ]
-"DoFencing:child_DoFencing:0_start_0" [ tooltip="test02" color="green" fontcolor="black" ]
+"rsc_ibm1_monitor_5000" [ tooltip="ibm1" style=bold color="green" fontcolor="black" ]
+"rsc_test03_monitor_5000" [ tooltip="test03" style=bold color="green" fontcolor="black" ]
+"DcIPaddr_monitor_5000" [ tooltip="test03" style=bold color="green" fontcolor="black" ]
+"DoFencing:child_DoFencing:1_start_0" [ tooltip="sgi2" style=bold color="green" fontcolor="black" ]
+"DoFencing:child_DoFencing:0_start_0" [ tooltip="test02" style=bold color="green" fontcolor="black" ]
 "DcIPaddr_stop_0" [ style="dashed" color="blue" fontcolor="black" ]
 "DcIPaddr_start_0" [ style="dashed" color="blue" fontcolor="black" ]
-"rsc_sgi2_start_0" [ tooltip="sgi2" color="green" fontcolor="black" ]
-"rsc_sgi2_monitor_5000" [ tooltip="sgi2" color="green" fontcolor="black" ]
-"rsc_ibm1_stop_0" [ tooltip="test03" color="green" fontcolor="black" ]
-"rsc_ibm1_start_0" [ tooltip="ibm1" color="green" fontcolor="black" ]
-"rsc_test02_start_0" [ tooltip="test02" color="green" fontcolor="black" ]
-"rsc_test02_monitor_5000" [ tooltip="test02" color="green" fontcolor="black" ]
+"rsc_sgi2_start_0" [ tooltip="sgi2" style=bold color="green" fontcolor="black" ]
+"rsc_sgi2_monitor_5000" [ tooltip="sgi2" style=bold color="green" fontcolor="black" ]
+"rsc_ibm1_stop_0" [ tooltip="test03" style=bold color="green" fontcolor="black" ]
+"rsc_ibm1_start_0" [ tooltip="ibm1" style=bold color="green" fontcolor="black" ]
+"rsc_test02_start_0" [ tooltip="test02" style=bold color="green" fontcolor="black" ]
+"rsc_test02_monitor_5000" [ tooltip="test02" style=bold color="green" fontcolor="black" ]
 "rsc_test03_stop_0" [ style="dashed" color="blue" fontcolor="black" ]
 "rsc_test03_start_0" [ style="dashed" color="blue" fontcolor="black" ]
 "DoFencing:child_DoFencing:0_stop_0" [ style="dashed" color="blue" fontcolor="black" ]
-"DoFencing:child_DoFencing:0_monitor_5000" [ tooltip="test02" color="green" fontcolor="black" ]
-"DoFencing:child_DoFencing:1_stop_0" [ tooltip="test03" color="green" fontcolor="black" ]
-"DoFencing:child_DoFencing:1_monitor_5000" [ tooltip="sgi2" color="green" fontcolor="black" ]
-"DoFencing:child_DoFencing:2_start_0" [ tooltip="ibm1" color="green" fontcolor="black" ]
-"DoFencing:child_DoFencing:2_monitor_5000" [ tooltip="ibm1" color="green" fontcolor="black" ]
-"DoFencing:child_DoFencing:3_start_0" [ tooltip="test03" color="green" fontcolor="black" ]
-"DoFencing:child_DoFencing:3_monitor_5000" [ tooltip="test03" color="green" fontcolor="black" ]
-"DoFencing_start_0" [ tooltip="" color="green" fontcolor="orange" ]
-"DoFencing_running_0" [ tooltip="" color="green" fontcolor="orange" ]
-"DoFencing_stop_0" [ tooltip="" color="green" fontcolor="orange" ]
-"DoFencing_stopped_0" [ tooltip="" color="green" fontcolor="orange" ]
-"rsc_ibm1_start_0" -> "rsc_ibm1_monitor_5000"
-"rsc_test03_start_0" -> "rsc_test03_monitor_5000"
-"DcIPaddr_start_0" -> "DcIPaddr_monitor_5000"
-"DoFencing:child_DoFencing:1_stop_0" -> "DoFencing:child_DoFencing:1_start_0"
-"DoFencing:child_DoFencing:1_stop_0" -> "DoFencing:child_DoFencing:1_start_0"
-"DoFencing_start_0" -> "DoFencing:child_DoFencing:1_start_0"
-"DoFencing:child_DoFencing:0_stop_0" -> "DoFencing:child_DoFencing:0_start_0"
-"DoFencing_start_0" -> "DoFencing:child_DoFencing:0_start_0"
-"DcIPaddr_stop_0" -> "DcIPaddr_start_0"
-"rsc_sgi2_start_0" -> "rsc_sgi2_monitor_5000"
-"rsc_ibm1_stop_0" -> "rsc_ibm1_start_0"
-"rsc_ibm1_stop_0" -> "rsc_ibm1_start_0"
-"rsc_test02_start_0" -> "rsc_test02_monitor_5000"
-"rsc_test03_stop_0" -> "rsc_test03_start_0"
-"DoFencing_stop_0" -> "DoFencing:child_DoFencing:0_stop_0"
-"DoFencing:child_DoFencing:0_start_0" -> "DoFencing:child_DoFencing:0_monitor_5000"
-"DoFencing_stop_0" -> "DoFencing:child_DoFencing:1_stop_0"
-"DoFencing:child_DoFencing:1_start_0" -> "DoFencing:child_DoFencing:1_monitor_5000"
-"DoFencing_start_0" -> "DoFencing:child_DoFencing:2_start_0"
-"DoFencing:child_DoFencing:2_start_0" -> "DoFencing:child_DoFencing:2_monitor_5000"
-"DoFencing_start_0" -> "DoFencing:child_DoFencing:3_start_0"
-"DoFencing:child_DoFencing:3_start_0" -> "DoFencing:child_DoFencing:3_monitor_5000"
-"DoFencing_stopped_0" -> "DoFencing_start_0"
-"DoFencing:child_DoFencing:1_start_0" -> "DoFencing_running_0"
-"DoFencing:child_DoFencing:0_start_0" -> "DoFencing_running_0"
-"DoFencing:child_DoFencing:2_start_0" -> "DoFencing_running_0"
-"DoFencing:child_DoFencing:3_start_0" -> "DoFencing_running_0"
-"DoFencing:child_DoFencing:0_stop_0" -> "DoFencing_stopped_0"
-"DoFencing:child_DoFencing:1_stop_0" -> "DoFencing_stopped_0"
+"DoFencing:child_DoFencing:0_monitor_5000" [ tooltip="test02" style=bold color="green" fontcolor="black" ]
+"DoFencing:child_DoFencing:1_stop_0" [ tooltip="test03" style=bold color="green" fontcolor="black" ]
+"DoFencing:child_DoFencing:1_monitor_5000" [ tooltip="sgi2" style=bold color="green" fontcolor="black" ]
+"DoFencing:child_DoFencing:2_start_0" [ tooltip="ibm1" style=bold color="green" fontcolor="black" ]
+"DoFencing:child_DoFencing:2_monitor_5000" [ tooltip="ibm1" style=bold color="green" fontcolor="black" ]
+"DoFencing:child_DoFencing:3_start_0" [ tooltip="test03" style=bold color="green" fontcolor="black" ]
+"DoFencing:child_DoFencing:3_monitor_5000" [ tooltip="test03" style=bold color="green" fontcolor="black" ]
+"DoFencing_start_0" [ tooltip="" style=bold color="green" fontcolor="orange" ]
+"DoFencing_running_0" [ tooltip="" style=bold color="green" fontcolor="orange" ]
+"DoFencing_stop_0" [ tooltip="" style=bold color="green" fontcolor="orange" ]
+"DoFencing_stopped_0" [ tooltip="" style=bold color="green" fontcolor="orange" ]
+"rsc_ibm1_start_0" -> "rsc_ibm1_monitor_5000" [ style = bold]
+"rsc_test03_start_0" -> "rsc_test03_monitor_5000" [ style = dashed]
+"DcIPaddr_start_0" -> "DcIPaddr_monitor_5000" [ style = dashed]
+"DoFencing:child_DoFencing:1_stop_0" -> "DoFencing:child_DoFencing:1_start_0" [ style = bold]
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:1_start_0" [ style = bold]
+"DoFencing:child_DoFencing:0_stop_0" -> "DoFencing:child_DoFencing:0_start_0" [ style = dashed]
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:0_start_0" [ style = bold]
+"DcIPaddr_stop_0" -> "DcIPaddr_start_0" [ style = dashed]
+"rsc_sgi2_start_0" -> "rsc_sgi2_monitor_5000" [ style = bold]
+"rsc_ibm1_stop_0" -> "rsc_ibm1_start_0" [ style = bold]
+"rsc_test02_start_0" -> "rsc_test02_monitor_5000" [ style = bold]
+"rsc_test03_stop_0" -> "rsc_test03_start_0" [ style = dashed]
+"DoFencing_stop_0" -> "DoFencing:child_DoFencing:0_stop_0" [ style = dashed]
+"DoFencing:child_DoFencing:0_start_0" -> "DoFencing:child_DoFencing:0_monitor_5000" [ style = bold]
+"DoFencing_stop_0" -> "DoFencing:child_DoFencing:1_stop_0" [ style = bold]
+"DoFencing:child_DoFencing:1_start_0" -> "DoFencing:child_DoFencing:1_monitor_5000" [ style = bold]
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:2_start_0" [ style = bold]
+"DoFencing:child_DoFencing:2_start_0" -> "DoFencing:child_DoFencing:2_monitor_5000" [ style = bold]
+"DoFencing_start_0" -> "DoFencing:child_DoFencing:3_start_0" [ style = bold]
+"DoFencing:child_DoFencing:3_start_0" -> "DoFencing:child_DoFencing:3_monitor_5000" [ style = bold]
+"DoFencing_stopped_0" -> "DoFencing_start_0" [ style = bold]
+"DoFencing:child_DoFencing:1_start_0" -> "DoFencing_running_0" [ style = bold]
+"DoFencing:child_DoFencing:0_start_0" -> "DoFencing_running_0" [ style = bold]
+"DoFencing:child_DoFencing:2_start_0" -> "DoFencing_running_0" [ style = bold]
+"DoFencing:child_DoFencing:3_start_0" -> "DoFencing_running_0" [ style = bold]
+"DoFencing:child_DoFencing:0_stop_0" -> "DoFencing_stopped_0" [ style = dashed]
+"DoFencing:child_DoFencing:1_stop_0" -> "DoFencing_stopped_0" [ style = bold]
 }

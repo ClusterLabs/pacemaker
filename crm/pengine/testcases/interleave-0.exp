@@ -293,11 +293,7 @@
          <attributes/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="73" rsc_id="CloneSet" operation="stopped" operation_key="CloneSet_stopped_0" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="17">
      <action_set>
@@ -331,14 +327,6 @@
          <rsc_op id="68" rsc_id="CloneSet:child_CloneSet:7" operation="start" operation_key="CloneSet:child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false"/>
        </trigger>
      </inputs>
-   </synapse>
-   <synapse id="18">
-     <action_set>
-       <pseudo_event id="73" rsc_id="CloneSet" operation="stopped" operation_key="CloneSet_stopped_0" allow_fail="false">
-         <attributes/>
-       </pseudo_event>
-     </action_set>
-     <inputs/>
    </synapse>
  </transition_graph>
 
