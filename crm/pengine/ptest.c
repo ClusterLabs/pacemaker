@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.57 2005/06/14 11:25:54 davidlee Exp $ */
+/* $Id: ptest.c,v 1.58 2005/08/10 08:30:19 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -35,7 +35,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?X:w"
+#define OPTARGS	"V?X:wD:"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -49,6 +49,44 @@ extern crm_data_t * do_calculations(
 	pe_working_set_t *data_set, crm_data_t *xml_input);
 extern void cleanup_calculations(pe_working_set_t *data_set);
 
+FILE *dot_strm = NULL;
+#define DOT_PREFIX "PE_DOT: "
+/* #define DOT_PREFIX "" */
+
+#define dot_write(fmt...) if(dot_strm != NULL) {	\
+		fprintf(dot_strm, fmt);			\
+		fprintf(dot_strm, "\n");		\
+	} else {					\
+		crm_debug(DOT_PREFIX""fmt);		\
+	}
+
+static void
+init_dotfile(void)
+{
+	dot_write("digraph \"g\" {");
+	dot_write("	size = \"30,30\"");
+/* 	dot_write("	graph ["); */
+/* 	dot_write("		fontsize = \"12\""); */
+/* 	dot_write("		fontname = \"Times-Roman\""); */
+/* 	dot_write("		fontcolor = \"black\""); */
+/* 	dot_write("		bb = \"0,0,398.922306,478.927856\""); */
+/* 	dot_write("		color = \"black\""); */
+/* 	dot_write("	]"); */
+/* 	dot_write("	node ["); */
+/* 	dot_write("		fontsize = \"12\""); */
+/* 	dot_write("		fontname = \"Times-Roman\""); */
+/* 	dot_write("		fontcolor = \"black\""); */
+/* 	dot_write("		shape = \"ellipse\""); */
+/* 	dot_write("		color = \"black\""); */
+/* 	dot_write("	]"); */
+/* 	dot_write("	edge ["); */
+/* 	dot_write("		fontsize = \"12\""); */
+/* 	dot_write("		fontname = \"Times-Roman\""); */
+/* 	dot_write("		fontcolor = \"black\""); */
+/* 	dot_write("		color = \"black\""); */
+/* 	dot_write("	]"); */
+}
+
 int
 main(int argc, char **argv)
 {
@@ -60,6 +98,7 @@ main(int argc, char **argv)
 	char *msg_buffer = NULL;
 
 	const char *xml_file = NULL;
+	const char *dot_file = NULL;
 	
 	cl_log_set_entity("ptest");
 	cl_log_set_facility(LOG_USER);
@@ -102,6 +141,9 @@ main(int argc, char **argv)
 				break;
 			case 'X':
 				xml_file = crm_strdup(optarg);
+				break;
+			case 'D':
+				dot_file = crm_strdup(optarg);
 				break;
 			case 'V':
 				cl_log_enable_stderr(TRUE);
@@ -152,7 +194,43 @@ main(int argc, char **argv)
 	fprintf(stdout, "%s\n", msg_buffer);
 	fflush(stdout);
 	crm_free(msg_buffer);
+
+	dot_strm = fopen(dot_file, "w");
 	
+	init_dotfile();
+	slist_iter(
+		action, action_t, data_set.actions, lpc,
+		if(action->dumped == FALSE) {
+			if(action->optional) {
+				dot_write("\"%s\" [ style=\"dashed\" color=\"%s\" fontcolor=\"%s\" ]",
+					  action->uuid, "blue",
+					  action->pseudo?"orange":"black");
+			} else {
+				CRM_DEV_ASSERT(action->runnable == FALSE);
+				dot_write("\"%s\" [ fontcolor=\"%s\" ]",
+					  action->uuid, "red");
+			}
+			
+		} else {
+			dot_write("\"%s\" [ tooltip=\"%s\" color=\"%s\" fontcolor=\"%s\" ]",
+				  action->uuid,
+				  action->pseudo?"":action->node?action->node->details->uname:"<none>",
+				  "green",
+				  action->pseudo?"orange":"black");
+		}
+		);
+
+
+	slist_iter(
+		action, action_t, data_set.actions, lpc,
+		slist_iter(
+			before, action_wrapper_t, action->actions_before, lpc2,
+			dot_write("\"%s\" -> \"%s\"",
+				  before->action->uuid, action->uuid);
+			);
+		);
+	dot_write("}");
+
 	cleanup_calculations(&data_set);
 
 	crm_mem_stats(NULL);
