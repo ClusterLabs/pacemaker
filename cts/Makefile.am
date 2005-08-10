@@ -29,8 +29,9 @@ hard_SCRIPTS	=			\
 			CTSlab.py	\
 			CTStests.py	\
 			CM_LinuxHAv2.py	\
+            CTSproxy.py \
 			extracttests.py \
-                        OCFIPraTest.py  \
+            OCFIPraTest.py  \
 			haresources2cib.py
 
 hard_DATA =		README
