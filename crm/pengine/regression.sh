@@ -160,7 +160,9 @@ do_test interleave-3 "coloc - interleaved (2)"
 
 echo ""
 do_test notify-0 "Notify reference"
-do_test notify-1 "Notify - simple"
+do_test notify-1 "Notify simple"
+do_test notify-2 "Notify simple, confirm"
+do_test notify-3 "Notify move, confirm"
 #do_test notify-2 "Notify - 764"
 
 
