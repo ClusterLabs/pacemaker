@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.58 2005/08/10 08:30:19 andrew Exp $ */
+/* $Id: ptest.c,v 1.59 2005/08/10 08:55:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -90,6 +90,7 @@ init_dotfile(void)
 int
 main(int argc, char **argv)
 {
+	gboolean optional = FALSE;
 	pe_working_set_t data_set;
 	crm_data_t * cib_object = NULL;
 	int argerr = 0;
@@ -207,12 +208,12 @@ main(int argc, char **argv)
 					  action->pseudo?"orange":"black");
 			} else {
 				CRM_DEV_ASSERT(action->runnable == FALSE);
-				dot_write("\"%s\" [ fontcolor=\"%s\" ]",
+				dot_write("\"%s\" [ fillcolor=\"%s\" ]",
 					  action->uuid, "red");
 			}
 			
 		} else {
-			dot_write("\"%s\" [ tooltip=\"%s\" color=\"%s\" fontcolor=\"%s\" ]",
+			dot_write("\"%s\" [ tooltip=\"%s\" style=bold color=\"%s\" fontcolor=\"%s\" ]",
 				  action->uuid,
 				  action->pseudo?"":action->node?action->node->details->uname:"<none>",
 				  "green",
@@ -223,10 +224,16 @@ main(int argc, char **argv)
 
 	slist_iter(
 		action, action_t, data_set.actions, lpc,
+		optional = FALSE;
 		slist_iter(
 			before, action_wrapper_t, action->actions_before, lpc2,
-			dot_write("\"%s\" -> \"%s\"",
-				  before->action->uuid, action->uuid);
+			if(action->dumped && before->action->dumped) {
+			} else if(action->optional || before->action->optional) {
+				optional = TRUE;
+			}
+			dot_write("\"%s\" -> \"%s\" [ style = %s]",
+				  before->action->uuid, action->uuid,
+				  optional?"dashed":"bold");
 			);
 		);
 	dot_write("}");

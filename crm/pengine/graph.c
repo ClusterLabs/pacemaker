@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.56 2005/08/08 12:09:33 andrew Exp $ */
+/* $Id: graph.c,v 1.57 2005/08/10 08:55:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -352,6 +352,7 @@ action2xml(action_t *action, gboolean as_input)
 			action_xml, XML_LRM_ATTR_RSCID, action->rsc->id);
 	}
 	crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
+	crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
 
 	if(needs_node_info && action->node != NULL) {
 		crm_xml_add(action_xml, XML_LRM_ATTR_TARGET,
@@ -471,13 +472,15 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 	slist_iter(wrapper,action_wrapper_t,action->actions_before,lpc,
 
 		   if(last_action == wrapper->action->id) {
-			   crm_debug_2("Input %d duplicated",
-				       wrapper->action->id);
+			   crm_debug_2("Input (%d) %s duplicated",
+				       wrapper->action->id,
+				       wrapper->action->uuid);
 			   continue;
 			   
 		   } else if(wrapper->action->optional == TRUE) {
-			   crm_debug_2("Input %d optional",
-				       wrapper->action->id);
+			   crm_debug_2("Input (%d) %s optional",
+				       wrapper->action->id,
+				       wrapper->action->uuid);
 			   continue;
 		   }
 

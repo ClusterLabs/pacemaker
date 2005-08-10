@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.79 2005/08/08 13:07:52 andrew Exp $ */
+/* $Id: pengine.h,v 1.80 2005/08/10 08:55:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -133,6 +133,7 @@ enum action_tasks {
 	start_rsc,
 	started_rsc,
 	action_notify,
+	action_notified,
 	shutdown_crm,
 	stonith_node
 };
@@ -294,6 +295,12 @@ struct action_s
 
 		gboolean dumped;
 		gboolean processed;
+
+		action_t *pre_notify;
+		action_t *pre_notified;
+		action_t *post_notify;
+		action_t *post_notified;
+		
 		
 		int seen_count;
 

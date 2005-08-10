@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.18 2005/08/08 12:09:33 andrew Exp $ */
+/* $Id: complex.h,v 1.19 2005/08/10 08:55:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -67,8 +67,8 @@ typedef struct resource_object_functions_s
 		void (*html)(resource_t *, const char *, FILE*);
 		gboolean (*active)(resource_t *,gboolean);
 		rsc_state_t (*state)(resource_t *);
-		void (*create_notify_element)(resource_t*,action_t*,crm_data_t*,
-					      const char*,pe_working_set_t*);
+		void (*create_notify_element)(resource_t*,action_t*,
+					      crm_data_t*,pe_working_set_t*);
 		void (*free)(resource_t *);
 		
 } resource_object_functions_t;
@@ -97,9 +97,8 @@ extern void native_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void native_free(resource_t *rsc);
 extern rsc_state_t native_resource_state(resource_t *rsc);
 extern void native_create_notify_element(
-	resource_t *rsc, action_t *op, crm_data_t *parent,
-	const char *tagname, pe_working_set_t *data_set);
-
+	resource_t *rsc, action_t *op,
+	crm_data_t *parent, pe_working_set_t *data_set);
 
 extern void group_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern resource_t *group_find_child(resource_t *rsc, const char *id);
@@ -125,8 +124,8 @@ extern void group_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void group_free(resource_t *rsc);
 extern rsc_state_t group_resource_state(resource_t *rsc);
 extern void group_create_notify_element(
-	resource_t *rsc, action_t *op, crm_data_t *parent,
-	const char *tagname, pe_working_set_t *data_set);
+	resource_t *rsc, action_t *op,
+	crm_data_t *parent, pe_working_set_t *data_set);
 
 extern void clone_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern resource_t *clone_find_child(resource_t *rsc, const char *id);
@@ -151,8 +150,8 @@ extern void clone_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void clone_free(resource_t *rsc);
 extern rsc_state_t clone_resource_state(resource_t *rsc);
 extern void clone_create_notify_element(
-	resource_t *rsc, action_t *op, crm_data_t *parent,
-	const char *tagname, pe_working_set_t *data_set);
+	resource_t *rsc, action_t *op,
+	crm_data_t *parent, pe_working_set_t *data_set);
 
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_object_functions_t resource_class_functions[];

@@ -34,6 +34,7 @@
 
 #include <crmd.h>
 #include <crmd_messages.h>
+#include <crmd_lrm.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -302,11 +303,7 @@ delete_fsa_input(fsa_data_t *fsa_data)
 			case fsa_dt_lrm:
 				op = (lrm_op_t*)fsa_data->data;
 
- 				crm_free(op->user_data);
-				crm_free(op->output);
-				crm_free(op->rsc_id);
-				crm_free(op->app_name);
-				crm_free(op);
+				free_lrm_op(op);
 
 				break;
 				

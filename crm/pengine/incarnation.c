@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.42 2005/08/08 13:07:52 andrew Exp $ */
+/* $Id: incarnation.c,v 1.43 2005/08/10 08:55:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,6 +43,8 @@ typedef struct clone_variant_data_s
 		gboolean interleave;
 		gboolean ordered;
 
+		gboolean notify_confirm;
+		
 		GListPtr child_list; /* resource_t* */
 
 		gboolean child_starting;
@@ -86,20 +88,21 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug_3("Processing resource %s...", rsc->id);
 
 	crm_malloc0(clone_data, sizeof(clone_variant_data_t));
-	clone_data->child_list           = NULL;
-	clone_data->interleave           = FALSE;
-	clone_data->ordered              = FALSE;
-	clone_data->active_clones   = 0;
+	clone_data->child_list  = NULL;
+	clone_data->interleave  = FALSE;
+	clone_data->ordered     = FALSE;
+
+	clone_data->active_clones  = 0;
 	clone_data->clone_max      = crm_atoi(max_clones,     "1");
 	clone_data->clone_max_node = crm_atoi(max_clones_node,"1");
-
+	
 	/* this is a bit of a hack - but simplifies everything else */
 	copy_in_properties(xml_self, xml_obj);
 	xml_obj_child = find_xml_node(xml_obj, "operations", FALSE);
 	if(xml_obj_child != NULL) {
 		add_node_copy(xml_self, xml_obj_child);
 	}
-	
+
 	xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_GROUP, FALSE);
 	if(xml_obj_child == NULL) {
 		xml_obj_child = find_xml_node(
@@ -116,13 +119,23 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		crm_log_xml_err(xml_self, "Couldnt unpack dummy child");
 		return;
 	}
-
+	
 	if(crm_is_true(interleave)) {
 		clone_data->interleave = TRUE;
 	}
 	if(crm_is_true(ordered)) {
 		clone_data->ordered = TRUE;
 	}
+
+#if 0
+	{
+		const char *confirm = crm_element_value(
+			xml_obj, "notify_confirm");
+		clone_data->notify_confirm = crm_is_true(confirm);
+	}
+#else
+	clone_data->notify_confirm = clone_data->self->notify;	
+#endif	
 
 	inherit_parent_attributes(xml_self, xml_obj_child, FALSE);
 	inc_max = crm_itoa(clone_data->clone_max);
@@ -298,13 +311,13 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
-
+	
 	child_starting_constraints(
 		clone_data, pe_ordering_optional,
 		NULL, last_start_rsc, data_set);
 
 	clone_create_notifications(
-		clone_data->self, action, action_complete, data_set);	
+		rsc, action, action_complete, data_set);	
 
 
 	/* stop */
@@ -322,7 +335,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		NULL, last_stop_rsc, data_set);
 
 	clone_create_notifications(
-		clone_data->self, action, action_complete, data_set);	
+		rsc, action, action_complete, data_set);	
 }
 
 void
@@ -331,48 +344,126 @@ clone_create_notifications(
 	pe_working_set_t *data_set)
 {
 	/*
-	 * pre_notify -> pseudo_action -> (real actions) -> pseudo_action_complete -> post_notify
+	 * pre_notify -> pre_notify_complete -> pseudo_action
+	 *   -> (real actions) -> pseudo_action_complete
+	 *   -> post_notify -> post_notify_complete
 	 *
 	 * if the pre_noitfy requires confirmation,
 	 *   then a list of confirmations will be added as triggers
 	 *   to pseudo_action in clone_expand()
 	 */
 	action_t *notify = NULL;
+	action_t *notify_complete = NULL;
+	enum action_tasks task;
 	char *notify_key = NULL;
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc);
 	
 	if(rsc->notify == FALSE) {
 		return;
 	}
+	
+	task = text2task(action->task);
 
 	/* create pre_notify */
-	notify_key = generate_notify_key(rsc->id, "pre", action->task);
-	notify = custom_action(rsc, notify_key,
+	notify_key = generate_notify_key(
+		clone_data->self->id, "pre", action->task);
+	notify = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFY, NULL,
 			       action->optional, data_set);
 	add_hash_param(notify->extra, "notify_type", "pre");
 	add_hash_param(notify->extra, "notify_operation", action->task);
-	add_hash_param(notify->extra, "notify_key", notify_key);
+	if(clone_data->notify_confirm) {
+		add_hash_param(notify->extra, "notify_confirm", "yes");
+	} else {
+		add_hash_param(notify->extra, "notify_confirm", "no");
+	}
 	notify->pseudo = TRUE;
-	
-	/* pre_notify before action */
+
+	/* create pre_notify_complete */
+	notify_key = generate_notify_key(
+		clone_data->self->id, "confirmed-pre", action->task);
+	notify_complete = custom_action(clone_data->self, notify_key,
+			       CRMD_ACTION_NOTIFIED, NULL,
+			       action->optional, data_set);
+	add_hash_param(notify_complete->extra, "notify_type", "pre");
+	add_hash_param(notify_complete->extra, "notify_operation", action->task);
+	if(clone_data->notify_confirm) {
+		add_hash_param(notify->extra, "notify_confirm", "yes");
+	} else {
+		add_hash_param(notify->extra, "notify_confirm", "no");
+	}
+	notify->pseudo = TRUE;
+	notify_complete->pseudo = TRUE;
+
+	/* pre_notify before pre_notify_complete */
 	custom_action_order(
-		rsc, NULL, notify, rsc, NULL, action,
+		clone_data->self, NULL, notify,
+		clone_data->self, NULL, notify_complete,
 		pe_ordering_manditory, data_set);
 	
+	/* pre_notify_complete before action */
+	custom_action_order(
+		clone_data->self, NULL, notify_complete,
+		clone_data->self, NULL, action,
+		pe_ordering_manditory, data_set);
+
+	action->pre_notify = notify;
+	action->pre_notified = notify_complete;
+	
 	/* create post_notify */
-	notify_key = generate_notify_key(rsc->id, "post", action->task);
-	notify = custom_action(rsc, notify_key,
+	notify_key = generate_notify_key
+		(clone_data->self->id, "post", action->task);
+	notify = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFY, NULL,
 			       action_complete->optional, data_set);
 	add_hash_param(notify->extra, "notify_type", "post");
 	add_hash_param(notify->extra, "notify_operation", action->task);
-	add_hash_param(notify->extra, "notify_key", notify_key);
+	if(clone_data->notify_confirm) {
+		add_hash_param(notify->extra, "notify_confirm", "yes");
+	} else {
+		add_hash_param(notify->extra, "notify_confirm", "no");
+	}
 	notify->pseudo = TRUE;
-	
+
 	/* action_complete before post_notify */
 	custom_action_order(
-		rsc, NULL, action_complete, rsc, NULL, notify, 
+		clone_data->self, NULL, action_complete,
+		clone_data->self, NULL, notify, 
 		pe_ordering_postnotify, data_set);
+	
+	/* create post_notify_complete */
+	notify_key = generate_notify_key(
+		clone_data->self->id, "confirmed-post", action->task);
+	notify_complete = custom_action(clone_data->self, notify_key,
+			       CRMD_ACTION_NOTIFIED, NULL,
+			       action->optional, data_set);
+	add_hash_param(notify_complete->extra, "notify_type", "pre");
+	add_hash_param(notify_complete->extra, "notify_operation", action->task);
+	if(clone_data->notify_confirm) {
+		add_hash_param(notify->extra, "notify_confirm", "yes");
+	} else {
+		add_hash_param(notify->extra, "notify_confirm", "no");
+	}
+	notify_complete->pseudo = TRUE;
+
+	/* post_notify before post_notify_complete */
+	custom_action_order(
+		clone_data->self, NULL, notify,
+		clone_data->self, NULL, notify_complete,
+		pe_ordering_manditory, data_set);
+
+	action->post_notify = notify;
+	action->post_notified = notify_complete;
+
+
+	if(safe_str_eq(action->task, CRMD_ACTION_STOP)) {
+		/* post_notify_complete before start */
+		custom_action_order(
+			clone_data->self, NULL, notify_complete,
+			clone_data->self, start_key(clone_data->self), NULL,
+			pe_ordering_optional, data_set);
+	}
 }
 
 
@@ -695,8 +786,6 @@ void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 {	
-	gboolean needs_notify = FALSE;
-	enum action_tasks task = no_action;
 	crm_data_t *notify_xml = create_xml_node(NULL, "notify");
 	
 	clone_variant_data_t *clone_data = NULL;
@@ -708,47 +797,21 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
 		slist_iter(
-			action, action_t, child_rsc->actions, lpc2,
+			op, action_t, clone_data->self->actions, lpc2,
 
-			needs_notify = FALSE;
-			if(rsc->notify == FALSE) {
-				crm_debug_4("No notification requuired for %s",
-					    action->uuid);
-
-			} else if(!action->pseudo && !action->runnable) {
-				crm_debug_2("Skipping notifications for"
-					    " unrunnable action %s",
-					    action->uuid);
-
-			} else if(!action->pseudo && action->optional) {
-				crm_debug_3("Skipping notifications for"
-					    " optional action %s",action->uuid);
-
-			} else {
-				task = text2task(action->task);
-				if(task == stop_rsc || task == start_rsc) {
-					needs_notify = TRUE;
-				} else {
-					crm_debug_4("No notification requuired"
-						    " for %s operations",
-						    action->task);
-				}
-			}
-			
-			if(needs_notify) {
-				crm_debug_2("Processing notifications for %s",
-					    action->uuid);
-
-				child_rsc->fns->create_notify_element(
-					child_rsc, action, notify_xml, "target",
-					data_set);
-			}
-			
+			child_rsc->fns->create_notify_element(
+				child_rsc, op, notify_xml, data_set);
 			);
+		);
+
+	/* yes we DO need the second loop */
+	slist_iter(
+		child_rsc, resource_t, clone_data->child_list, lpc,
+		
 		child_rsc->fns->expand(child_rsc, data_set);
 
 		);
-
+	
 	slist_iter(
 		action, action_t, clone_data->self->actions, lpc2,
 
@@ -758,7 +821,6 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		);
 	
 	clone_data->self->fns->expand(clone_data->self, data_set);
-
 	free_xml(notify_xml);
 }
 
@@ -896,9 +958,8 @@ clone_resource_state(resource_t *rsc)
 }
 
 void
-clone_create_notify_element(
-	resource_t *rsc, action_t *op, crm_data_t *parent,
-	const char *tagname, pe_working_set_t *data_set)
+clone_create_notify_element(resource_t *rsc, action_t *op, crm_data_t *parent,
+			    pe_working_set_t *data_set)
 {
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
@@ -907,6 +968,6 @@ clone_create_notify_element(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		
 		child_rsc->fns->create_notify_element(
-			child_rsc, op, parent, tagname, data_set);
+			child_rsc, op, parent, data_set);
 		);
 }

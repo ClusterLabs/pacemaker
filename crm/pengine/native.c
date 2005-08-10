@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.69 2005/08/08 12:09:33 andrew Exp $ */
+/* $Id: native.c,v 1.70 2005/08/10 08:55:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,6 +46,16 @@ void create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
 action_t *create_recurring_action(resource_t *rsc, node_t *node,
 				  const char *action, const char *key);
+void register_state(
+	resource_t *rsc, action_t *op, node_t *node, crm_data_t *parent);
+void register_activity(
+	resource_t *rsc, action_t *op, node_t *node, crm_data_t *parent);
+void pe_pre_notify(
+	resource_t *rsc, node_t *node, action_t *op, 
+	crm_data_t *parent, pe_working_set_t *data_set);
+void pe_post_notify(
+	resource_t *rsc, node_t *node, action_t *op, 
+	crm_data_t *parent, pe_working_set_t *data_set);
 
 extern rsc_to_node_t *
 rsc2node_new(const char *id, resource_t *rsc,
@@ -1441,20 +1451,15 @@ native_resource_state(resource_t *rsc)
 	return state;
 }
 
+
 void
-native_create_notify_element(
-	resource_t *rsc, action_t *op, crm_data_t *parent,
-	const char *tagname, pe_working_set_t *data_set)
+native_create_notify_element(resource_t *rsc, action_t *op, crm_data_t *parent,
+			     pe_working_set_t *data_set)
 {
-/* 	char *key = NULL; */
-	int trigger_id = -1;
-	crm_data_t *trigger = NULL;
-	
-	node_t *node = NULL;
 	node_t *next = NULL;
 	node_t *current = NULL;
 
-	enum action_tasks task = text2task(op->task);
+	enum action_tasks task;
 	rsc_state_t state = rsc->fns->state(rsc);
 
 	native_variant_data_t *native_data = NULL;
@@ -1466,68 +1471,203 @@ native_create_notify_element(
 	if(native_data->running_on != NULL) {
 		current = native_data->running_on->data;
 	}
-	
-	node = next;
-	switch(state) {
-		case rsc_state_active:
-		case rsc_state_restart:
-			break;
-		case rsc_state_move:
-			if(task == stop_rsc) {
-				node = current;
-			}			
-			break;
-		case rsc_state_starting:
-			if(task == stop_rsc) {
-				node = NULL;
-			}
-			break;
-		case rsc_state_stopping:
-			node = current;
-			if(task != stop_rsc) {
-				node = NULL;
-			}
-			break;
-		case rsc_state_stopped:
-			node = NULL;
-			break;
-		case rsc_state_unknown:
-			node = NULL;
-			break;
-	}
 
-	if(node == NULL) {
-		crm_debug_2("No %s created for %s: %s (%s)",
-			    tagname, op->uuid, rsc->id, rsc_state2text(state));
+	if(op->pre_notify == NULL || op->post_notify == NULL) {
+		/* no notifications required */
+		crm_debug_4("No notificaitons required for %s", op->task);
 		return;
 	}
 
-	crm_debug_2("Creating %s for %s: %s (%s)",
-		    tagname, op->uuid, rsc->id, rsc_state2text(state));
-
-	if(safe_str_neq(tagname, "target")) {
-		trigger_id = data_set->action_id++;
-	}
+	crm_debug_2("Notificaitons required for %s", op->task);
 	
-/* 	key = generate_notify_key(rsc->id, op->task, 0); */
-
-	trigger = create_xml_node(parent, tagname);
-	if(trigger_id != -1) {
-		crm_xml_add_int(trigger, XML_ATTR_ID, trigger_id);
-	} else {
-		crm_xml_add_int(trigger, XML_ATTR_ID, op->id);
-	}
+	task = text2task(op->task);
 	
-	crm_xml_add(trigger, XML_LRM_ATTR_RSCID, rsc->id);
-
-	crm_xml_add(trigger, XML_LRM_ATTR_TASK, op->task);
-	crm_xml_add(trigger, XML_LRM_ATTR_TARGET, node->details->uname);
-
-	crm_xml_add(trigger, XML_LRM_ATTR_TASK_UUID, op->uuid);
-	crm_xml_add(trigger, XML_LRM_ATTR_TARGET_UUID, node->details->id);
-
-	if(trigger_id != -1) {
-/* 		crm_xml_add(trigger, "notify_task", notify_task); */
-		crm_xml_add(trigger, "allow_fail", "false");
+	switch(state) {
+		case rsc_state_active:
+			pe_pre_notify(rsc, current, op, parent, data_set);
+			pe_post_notify(rsc, current, op, parent, data_set);
+			register_state(rsc, op, current, parent);
+			break;
+		case rsc_state_move:
+			if(task == stop_rsc) {
+				pe_pre_notify(rsc, current, op,parent,data_set);
+				register_activity(rsc, op, current, parent);
+			} else {
+				pe_post_notify(rsc, next, op, parent, data_set);
+				register_activity(rsc, op, next, parent);
+			}
+			break;
+		case rsc_state_restart:
+			register_activity(rsc, op, current, parent);
+			if(task == stop_rsc) {
+				pe_pre_notify(rsc, current, op, parent, data_set);
+			} else {
+				pe_post_notify(rsc, current,op,parent,data_set);
+			}
+			break;
+		case rsc_state_starting:
+			if(task != stop_rsc) {
+				register_activity(rsc, op, next, parent);
+				pe_post_notify(rsc, next, op, parent, data_set);
+			}
+			break;
+		case rsc_state_stopping:
+			if(task == stop_rsc) {
+				register_activity(rsc, op, current, parent);
+				pe_pre_notify(rsc, current, op,parent,data_set);
+			}
+			break;
+		case rsc_state_stopped:
+		case rsc_state_unknown:
+			return;
+			break;
 	}
 }
+
+
+void
+register_activity(
+	resource_t *rsc, action_t *op, node_t *node, crm_data_t *parent)
+{
+	crm_data_t *target = NULL;
+/* 	const char *value = NULL; */
+
+/* 	value = g_hash_table_lookup(op->extra, "notify_type"); */
+/* 	if(safe_str_neq(value, "pre")) { */
+/* 		/\* only add once *\/ */
+/* 		return; */
+/* 	} */
+
+	CRM_DEV_ASSERT(node != NULL);
+
+	if(find_entity(parent, op->task, rsc->id) != NULL) {
+		/* only add once */
+		return;
+	}
+	
+	crm_debug_3("Creating entry for %s: %s (%s)",op->uuid,rsc->id,op->task);
+	
+	target = create_xml_node(parent, op->task);
+ 	crm_xml_add(target, XML_ATTR_ID, rsc->id);
+	crm_xml_add(target, XML_LRM_ATTR_TARGET, node->details->uname);
+	crm_xml_add(target, XML_LRM_ATTR_TARGET_UUID, node->details->id);
+}
+
+void
+register_state(
+	resource_t *rsc, action_t *op, node_t *node, crm_data_t *parent)
+{
+	crm_data_t *target = NULL;
+/* 	const char *value = NULL; */
+
+/* 	value = g_hash_table_lookup(op->extra, "notify_type"); */
+/* 	if(safe_str_neq(value, "pre")) { */
+/* 		/\* only add once *\/ */
+/* 		return; */
+/* 	} */
+
+	CRM_DEV_ASSERT(node != NULL);
+
+	if(find_entity(parent, "peer", rsc->id) != NULL) {
+		/* only add once */
+		return;
+	}
+	
+	crm_debug_3("Creating peer entry for %s: %s (%s)",
+		    op->uuid, rsc->id, op->task);
+	
+	target = create_xml_node(parent, "peer");
+	crm_xml_add(target, XML_ATTR_ID, rsc->id);
+	crm_xml_add(target, XML_LRM_ATTR_TARGET, node->details->uname);
+	crm_xml_add(target, XML_LRM_ATTR_TARGET_UUID, node->details->id);
+}
+
+
+static void dup_attr(gpointer key, gpointer value, gpointer user_data)
+{
+	g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
+}
+
+static void
+pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
+	  crm_data_t *parent, pe_working_set_t *data_set)
+{
+	char *key = NULL;
+	action_t *trigger = NULL;
+	action_wrapper_t *wrapper = NULL;
+	const char *value = NULL;
+	const char *task = NULL;
+	
+	if(op == NULL || confirm == NULL) {
+		return;
+	}
+
+	CRM_DEV_ASSERT(node != NULL);
+
+	value = g_hash_table_lookup(op->extra, "notify_type");
+	task = g_hash_table_lookup(op->extra, "notify_operation");
+
+	crm_debug_2("Creating actions for %s: %s (%s-%s)",
+		    op->uuid, rsc->id, value, task);
+	
+	key = generate_notify_key(rsc->id, value, task);
+	
+	trigger = custom_action(
+		rsc, key, op->task, node, op->optional, data_set);
+	g_hash_table_foreach(op->extra, dup_attr, trigger->extra);
+	trigger->extra_xml = parent;
+
+	/* pseudo_notify before notify */
+	crm_debug_3("Ordering %s before %s (%d->%d)",
+		op->uuid, trigger->uuid, trigger->id, op->id);
+	crm_malloc0(wrapper, sizeof(action_wrapper_t));
+	wrapper->action = op;
+	wrapper->type = pe_ordering_manditory;
+	
+	trigger->actions_before = g_list_append(
+		trigger->actions_before, wrapper);
+
+	wrapper = NULL;
+	crm_malloc0(wrapper, sizeof(action_wrapper_t));
+	wrapper->action = trigger;
+	wrapper->type = pe_ordering_manditory;
+	op->actions_after = g_list_append(
+		op->actions_after, wrapper);
+
+	/* notify before pseudo_notified */
+	crm_debug_3("Ordering %s before %s (%d->%d)",
+		    trigger->uuid, confirm->uuid, confirm->id, trigger->id);
+	value = g_hash_table_lookup(op->extra, "notify_confirm");
+	if(crm_is_true(value)) {
+		wrapper = NULL;
+		crm_malloc0(wrapper, sizeof(action_wrapper_t));
+		wrapper->action = trigger;
+		wrapper->type = pe_ordering_manditory;
+		confirm->actions_before = g_list_append(
+			confirm->actions_before, wrapper);
+
+		wrapper = NULL;
+		crm_malloc0(wrapper, sizeof(action_wrapper_t));
+		wrapper->action = confirm;
+		wrapper->type = pe_ordering_manditory;
+		trigger->actions_after = g_list_append(
+			trigger->actions_after, wrapper);
+	}	
+}
+
+void
+pe_pre_notify(resource_t *rsc, node_t *node, action_t *op,
+	      crm_data_t *parent, pe_working_set_t *data_set)
+{
+	pe_notify(rsc, node, op->pre_notify, op->pre_notified,
+		  parent, data_set);
+}
+
+void
+pe_post_notify(resource_t *rsc, node_t *node, action_t *op, 
+	crm_data_t *parent, pe_working_set_t *data_set)
+{
+	pe_notify(rsc, node, op->post_notify, op->post_notified,
+		  parent, data_set);
+}
+

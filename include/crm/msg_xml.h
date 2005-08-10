@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.40 2005/08/08 12:09:33 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.41 2005/08/10 08:55:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -158,7 +158,7 @@
 #define XML_CIB_ATTR_CLEAR_STONITH  	"clear_stonith"
 
 #define XML_LRM_ATTR_TASK		"operation"
-#define XML_LRM_ATTR_TASK_UUID		"operation_uuid"
+#define XML_LRM_ATTR_TASK_KEY		"operation_key"
 #define XML_LRM_ATTR_TARGET		"on_node"
 #define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
 #define XML_LRM_ATTR_RSCSTATE		"rsc_state"

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.98 2005/08/08 13:07:52 andrew Exp $ */
+/* $Id: utils.c,v 1.99 2005/08/10 08:55:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -974,6 +974,8 @@ text2task(const char *task)
 		return monitor_rsc;
 	} else if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
 		return action_notify;
+	} else if(safe_str_eq(task, CRMD_ACTION_NOTIFIED)) {
+		return action_notified;
 	} 
 	pe_err("Unsupported action: %s", task);
 	return no_action;
@@ -1012,6 +1014,9 @@ task2text(enum action_tasks task)
 			break;
 		case action_notify:
 			result = CRMD_ACTION_NOTIFY;
+			break;
+		case action_notified:
+			result = CRMD_ACTION_NOTIFIED;
 			break;
 	}
 	

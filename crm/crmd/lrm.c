@@ -38,6 +38,7 @@
 #include <crmd.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
+#include <crmd_lrm.h>
 
 #include <lrm/raexec.h>
 
@@ -105,7 +106,6 @@ enum crmd_rscstate {
 	crmd_rscstate_GENERIC_FAIL	
 };
 
-void free_lrm_op(lrm_op_t *op);
 
 const char *crmd_rscstate2string(enum crmd_rscstate state);
 
@@ -333,8 +333,24 @@ build_operation_update(
 	}
 	
 	xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
+
+	if(safe_str_eq(op->op_type, CRMD_ACTION_NOTIFY)) {
+		const char *n_type = g_hash_table_lookup(
+			op->params, "notify_type");
+		const char *n_task = g_hash_table_lookup(
+			op->params, "notify_operation");
+		CRM_DEV_ASSERT(n_type != NULL);
+		CRM_DEV_ASSERT(n_task != NULL);
+		op_id = generate_notify_key(op->rsc_id, n_type, n_task);
+
+		/* these are not yet allowed to fail */
+		op->op_status = LRM_OP_DONE;
+		op->rc = 0;
+		
+	} else {
+		op_id = generate_op_key(op->rsc_id, op->op_type, op->interval);
+	}
 	
-	op_id = generate_op_key(op->rsc_id, op->op_type, op->interval);
 	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
 	crm_free(op_id);
 
@@ -357,8 +373,8 @@ build_operation_update(
 		op->user_data = generate_transition_key(-1, fsa_our_uname);
 	}
 	fail_state = generate_transition_magic(op->user_data, op->op_status);
-	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_KEY, op->user_data);
-	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, fail_state);
+	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
+	crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, fail_state);
 	crm_free(fail_state);	
 	
 	switch(op->op_status) {
@@ -573,7 +589,8 @@ do_lrm_invoke(long long action,
 			input->xml, rsc_path, DIMOF(rsc_path) -2,
 			XML_ATTR_ID, TRUE);
 
-		if(id_from_cib == NULL) {
+		CRM_DEV_ASSERT(id_from_cib != NULL);
+		if(crm_assert_failed) {
 			crm_err("No value for %s in message at level %d.",
 				XML_ATTR_ID, DIMOF(rsc_path) -2);
 			crm_log_xml_err(input->xml, "Bad command");
@@ -870,47 +887,95 @@ free_lrm_op(lrm_op_t *op)
 {
 	g_hash_table_destroy(op->params);
 	crm_free(op->user_data);
+	crm_free(op->output);
+	crm_free(op->rsc_id);
 	crm_free(op->op_type);
 	crm_free(op->app_name);
 	crm_free(op);	
 }
 
 
-GHashTable *
-xml2list(crm_data_t *parent)
+static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
-	crm_data_t *nvpair_list = NULL;
-	GHashTable *nvpair_hash = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-
-	CRM_DEV_ASSERT(parent != NULL);
-	if(parent != NULL) {
-		nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
-		if(nvpair_list == NULL) {
-			crm_debug("No attributes in %s",
-				  crm_element_name(parent));
-			crm_log_xml_debug_2(parent,"No attributes for resource op");
-		}
-	}
-	
-	xml_child_iter(
-		nvpair_list, node_iter, XML_CIB_TAG_NVPAIR,
-		
-		const char *key   = crm_element_value(
-			node_iter, XML_NVPAIR_ATTR_NAME);
-		const char *value = crm_element_value(
-			node_iter, XML_NVPAIR_ATTR_VALUE);
-		
-		crm_debug_2("Added %s=%s", key, value);
-		
-		g_hash_table_insert(
-			nvpair_hash, crm_strdup(key), crm_strdup(value));
-		);
-	
-	return nvpair_hash;
+	g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
 }
 
+lrm_op_t *
+copy_lrm_op(const lrm_op_t *op)
+{
+	lrm_op_t *op_copy = NULL;
+
+	CRM_DEV_ASSERT(op != NULL);
+	if(crm_assert_failed) {
+		return NULL;
+	}
+	CRM_ASSERT(op->rsc_id != NULL);
+
+	crm_malloc0(op_copy, sizeof(lrm_op_t));
+
+	op_copy->op_type = crm_strdup(op->op_type);
+ 	/* input fields */
+	op_copy->params = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	
+	if(op->params != NULL) {
+		g_hash_table_foreach(op->params, dup_attr, op_copy->params);
+	}
+	op_copy->timeout   = op->timeout;
+	op_copy->interval  = op->interval; 
+	op_copy->target_rc = op->target_rc; 
+
+	/* in the CRM, this is always a string */
+	if(op->user_data != NULL) {
+		op_copy->user_data = crm_strdup(op->user_data); 
+	}
+	
+	/* output fields */
+	op_copy->op_status = op->op_status; 
+	op_copy->rc        = op->rc; 
+	op_copy->call_id   = op->call_id; 
+	op_copy->output    = NULL;
+	op_copy->rsc_id    = crm_strdup(op->rsc_id);
+	if(op->app_name != NULL) {
+		op_copy->app_name  = crm_strdup(op->app_name);
+	}
+	if(op->output != NULL) {
+		op_copy->output = crm_strdup(op->output);
+	}
+	
+	return op_copy;
+}
+
+
+lrm_rsc_t *
+copy_lrm_rsc(const lrm_rsc_t *rsc)
+{
+	lrm_rsc_t *rsc_copy = NULL;
+
+	if(rsc == NULL) {
+		return NULL;
+	}
+	
+	crm_malloc0(rsc_copy, sizeof(lrm_rsc_t));
+
+	rsc_copy->id       = crm_strdup(rsc->id);
+	rsc_copy->type     = crm_strdup(rsc->type);
+	rsc_copy->class    = NULL;
+	rsc_copy->provider = NULL;
+
+	if(rsc->class != NULL) {
+		rsc_copy->class    = crm_strdup(rsc->class);
+	}
+	if(rsc->provider != NULL) {
+		rsc_copy->provider = crm_strdup(rsc->provider);
+	}
+/* 	GHashTable* 	params; */
+	rsc_copy->params = NULL;
+	rsc_copy->ops    = NULL;
+
+	return rsc_copy;
+}
 
 void
 do_update_resource(lrm_op_t* op)
