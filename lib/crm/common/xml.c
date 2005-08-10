@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.27 2005/08/10 06:20:53 andrew Exp $ */
+/* $Id: xml.c,v 1.28 2005/08/10 12:47:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1378,6 +1378,13 @@ parse_xml(const char *input, int *offset)
 							crm_debug_4("Finished parsing child: %s",
 								  crm_element_name(child));
 							ha_msg_del(child);
+							if(our_input[lpc] == '<') {
+								/* lpc is about to get incrimented
+								 * make sure we process the '<' that
+								 * we're currently looking at
+								 */
+								lpc--;
+							}
 /* 							lpc++; /\* > *\/ */
 						}
 
