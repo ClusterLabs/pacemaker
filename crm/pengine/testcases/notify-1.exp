@@ -4,7 +4,7 @@
        <rsc_op id="29" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_pre_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache" notify="1"/>
          <attributes>
-           <nvpair name="notify_confirm" value="no"/>
+           <nvpair name="notify_confirm" value="yes"/>
            <nvpair name="notify_type" value="pre"/>
            <nvpair name="notify_operation" value="start"/>
            <nvpair name="clone" value="0"/>
@@ -27,7 +27,7 @@
        <rsc_op id="30" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_post_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache" notify="1"/>
          <attributes>
-           <nvpair name="notify_confirm" value="no"/>
+           <nvpair name="notify_confirm" value="yes"/>
            <nvpair name="notify_type" value="post"/>
            <nvpair name="notify_operation" value="start"/>
            <nvpair name="clone" value="0"/>
@@ -66,7 +66,7 @@
        <rsc_op id="33" rsc_id="rsc1:child_rsc1:1" operation="notify" operation_key="rsc1:child_rsc1:1_post_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache" notify="1"/>
          <attributes>
-           <nvpair name="notify_confirm" value="no"/>
+           <nvpair name="notify_confirm" value="yes"/>
            <nvpair name="notify_type" value="post"/>
            <nvpair name="notify_operation" value="start"/>
            <nvpair name="clone" value="1"/>
@@ -115,7 +115,7 @@
      <action_set>
        <pseudo_event id="6" rsc_id="rsc1" operation="notify" operation_key="rsc1_pre_notify_start_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_confirm" value="no"/>
+           <nvpair name="notify_confirm" value="yes"/>
            <nvpair name="notify_type" value="pre"/>
            <nvpair name="notify_operation" value="start"/>
          </attributes>
@@ -140,13 +140,16 @@
        <trigger>
          <pseudo_event id="6" rsc_id="rsc1" operation="notify" operation_key="rsc1_pre_notify_start_0" allow_fail="false"/>
        </trigger>
+       <trigger>
+         <rsc_op id="29" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_pre_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="8">
      <action_set>
        <pseudo_event id="8" rsc_id="rsc1" operation="notify" operation_key="rsc1_post_notify_start_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_confirm" value="no"/>
+           <nvpair name="notify_confirm" value="yes"/>
            <nvpair name="notify_type" value="post"/>
            <nvpair name="notify_operation" value="start"/>
          </attributes>
@@ -174,6 +177,12 @@
      <inputs>
        <trigger>
          <pseudo_event id="8" rsc_id="rsc1" operation="notify" operation_key="rsc1_post_notify_start_0" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="30" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_post_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="33" rsc_id="rsc1:child_rsc1:1" operation="notify" operation_key="rsc1:child_rsc1:1_post_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -206,7 +215,7 @@
        <rsc_op id="34" rsc_id="rsc2:child_rsc2:0" operation="notify" operation_key="rsc2:child_rsc2:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache" notify="1"/>
          <attributes>
-           <nvpair name="notify_confirm" value="no"/>
+           <nvpair name="notify_confirm" value="yes"/>
            <nvpair name="notify_type" value="pre"/>
            <nvpair name="notify_operation" value="stop"/>
            <nvpair name="clone" value="0"/>
@@ -251,7 +260,7 @@
      <action_set>
        <pseudo_event id="25" rsc_id="rsc2" operation="notify" operation_key="rsc2_pre_notify_stop_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_confirm" value="no"/>
+           <nvpair name="notify_confirm" value="yes"/>
            <nvpair name="notify_type" value="pre"/>
            <nvpair name="notify_operation" value="stop"/>
          </attributes>
@@ -275,13 +284,16 @@
        <trigger>
          <pseudo_event id="25" rsc_id="rsc2" operation="notify" operation_key="rsc2_pre_notify_stop_0" allow_fail="false"/>
        </trigger>
+       <trigger>
+         <rsc_op id="34" rsc_id="rsc2:child_rsc2:0" operation="notify" operation_key="rsc2:child_rsc2:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="17">
      <action_set>
        <pseudo_event id="27" rsc_id="rsc2" operation="notify" operation_key="rsc2_post_notify_stop_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_confirm" value="no"/>
+           <nvpair name="notify_confirm" value="yes"/>
            <nvpair name="notify_type" value="post"/>
            <nvpair name="notify_operation" value="stop"/>
          </attributes>

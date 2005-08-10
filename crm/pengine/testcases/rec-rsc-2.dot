@@ -1,7 +1,7 @@
 digraph "g" {
 	size = "30,30"
-"rsc1_monitor_1" [ color="blue" ]
-"rsc1_stop_0" [ color="green" ]
-"rsc1_start_0" [ color="green" ]
+"rsc1_monitor_1" [ style="dashed" color="blue" fontcolor="black" ]
+"rsc1_stop_0" [ tooltip="node1" color="green" fontcolor="black" ]
+"rsc1_start_0" [ tooltip="node1" color="green" fontcolor="black" ]
 "rsc1_stop_0" -> "rsc1_start_0"
 }

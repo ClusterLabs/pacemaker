@@ -1,13 +1,13 @@
 digraph "g" {
 	size = "30,30"
-"group1:child_DoFencing_1_start_0" [ color="green" ]
-"group1:child_DoFencing_1_monitor_5000" [ color="green" ]
-"group1:child_DoFencing_2_start_0" [ color="green" ]
-"group1:child_DoFencing_2_monitor_5000" [ color="green" ]
-"group1_start_0" [ color="green" fontcolor="orange" ]
-"group1_running_0" [ color="green" fontcolor="orange" ]
-"group1_stop_0" [ color="blue" ]
-"group1_stopped_0" [ color="blue" ]
+"group1:child_DoFencing_1_start_0" [ tooltip="hadev2" color="green" fontcolor="black" ]
+"group1:child_DoFencing_1_monitor_5000" [ tooltip="hadev2" color="green" fontcolor="black" ]
+"group1:child_DoFencing_2_start_0" [ tooltip="hadev2" color="green" fontcolor="black" ]
+"group1:child_DoFencing_2_monitor_5000" [ tooltip="hadev2" color="green" fontcolor="black" ]
+"group1_start_0" [ tooltip="" color="green" fontcolor="orange" ]
+"group1_running_0" [ tooltip="" color="green" fontcolor="orange" ]
+"group1_stop_0" [ style="dashed" color="blue" fontcolor="orange" ]
+"group1_stopped_0" [ style="dashed" color="blue" fontcolor="orange" ]
 "group1_start_0" -> "group1:child_DoFencing_1_start_0"
 "group1:child_DoFencing_1_start_0" -> "group1:child_DoFencing_1_monitor_5000"
 "group1:child_DoFencing_1_start_0" -> "group1:child_DoFencing_2_start_0"
