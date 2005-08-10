@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<cib>
+  <configuration>
+    <crm_config>
+      <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </crm_config>
+    <nodes>
+      <node id="uuid1" uname="node1" type="member">
+        <instance_attributes>
+          <attributes>
+            <nvpair id="server_group" name="server_group" value="group1"/>
+          </attributes>
+        </instance_attributes>
+      </node>
+      <node id="uuid2" uname="node2" type="member">
+        <instance_attributes>
+	  <rule id="1">
+	    <date_expression id="1" end="2005-001"/>
+	  </rule>
+          <attributes>
+            <nvpair id="server_group" name="server_group" value="group2"/>
+          </attributes>
+        </instance_attributes>
+        <instance_attributes>
+	  <rule id="2">
+	    <date_expression id="2" start="2005-001" operation="gt">
+	      <duration years="1"/>
+	    </date_expression>
+	  </rule>
+          <attributes>
+            <nvpair id="server_group" name="server_group" value="group3"/>
+          </attributes>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="rsc1" class="heartbeat" type="apache">
+        <instance_attributes>
+	  <rule id="3">
+            <expression id="1" attribute="#uname" operation="eq" value="node1"/>
+	  </rule>
+          <attributes>
+            <nvpair id="1" name="interface" value="eth1"/>
+          </attributes>
+        </instance_attributes>
+        <instance_attributes>
+	  <rule id="4">
+            <expression id="1" attribute="#uname" operation="eq" value="node2"/>
+	  </rule>
+          <attributes>
+            <nvpair id="1" name="interface" value="eth2"/>
+          </attributes>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="run_rsc1" rsc="rsc1">
+	<rule id="prefer_group3" score="100">
+	  <expression attribute="server_group" operation="eq" value="group3"/>
+	</rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+  </status>
+</cib>
