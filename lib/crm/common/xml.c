@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.26 2005/08/09 07:58:10 andrew Exp $ */
+/* $Id: xml.c,v 1.27 2005/08/10 06:20:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1328,7 +1328,7 @@ parse_xml(const char *input, int *offset)
 	while(lpc < len && lpc > last_lpc) {
 		last_lpc = lpc;
 		drop_comments(our_input, &lpc);
-		crm_debug_2("Skipped %d comment chars", lpc);
+		crm_debug_5("Skipped %d comment chars", lpc);
 	}
 	CRM_DEV_ASSERT(our_input[lpc] == '<');
 	if(crm_assert_failed) {
@@ -1336,7 +1336,7 @@ parse_xml(const char *input, int *offset)
 	}
 	lpc++;
 	len = get_tag_name(our_input + lpc);
-	crm_debug_2("Tag length: %d", len);
+	crm_debug_5("Tag length: %d", len);
 	if(len < 0) {
 		return NULL;
 	}
