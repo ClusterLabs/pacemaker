@@ -57,7 +57,8 @@ halib_PROGRAMS	= crmd atest
 ## SOURCES
 
 noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
-		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h
+		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h \
+		crmd_lrm.h
 
 atest_SOURCES	= atest.c
 atest_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
