@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.57 2005/08/10 08:55:03 andrew Exp $ */
+/* $Id: graph.c,v 1.58 2005/08/10 15:38:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -315,6 +315,11 @@ stonith_constraints(node_t *node,
 	return TRUE;
 }
 
+static void dup_attr(gpointer key, gpointer value, gpointer user_data)
+{
+	g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
+}
+
 crm_data_t *
 action2xml(action_t *action, gboolean as_input)
 {
@@ -376,6 +381,10 @@ action2xml(action_t *action, gboolean as_input)
 		return action_xml;
 	}
 
+	if(action->notify_keys != NULL) {
+		g_hash_table_foreach(
+			action->notify_keys, dup_attr, action->extra);
+	}
 	if(action->rsc != NULL && action->pseudo == FALSE) {
 		crm_data_t *rsc_xml = create_xml_node(
 			action_xml, crm_element_name(action->rsc->xml));
@@ -391,10 +400,6 @@ action2xml(action_t *action, gboolean as_input)
 	} else {
 		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
 		g_hash_table_foreach(action->extra, hash2nvpair, args_xml);
-	}
-	
-	if(action->extra_xml != NULL) {
-		add_node_copy(action_xml, action->extra_xml);
 	}
 	
 	crm_log_xml_debug_2(action_xml, "dumped action");

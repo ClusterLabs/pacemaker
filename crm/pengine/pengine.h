@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.80 2005/08/10 08:55:04 andrew Exp $ */
+/* $Id: pengine.h,v 1.81 2005/08/10 15:38:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -305,7 +305,7 @@ struct action_s
 		int seen_count;
 
 		GHashTable *extra;
- 		crm_data_t *extra_xml;
+		GHashTable *notify_keys;  /* do NOT free */
 		
 		GListPtr actions_before; /* action_warpper_t* */
 		GListPtr actions_after;  /* action_warpper_t* */
@@ -330,7 +330,6 @@ struct order_constraint_s
 /* 		int   lh_rsc_incarnation; */
 /* 		int   rh_rsc_incarnation; */
 };
-
 
 extern gboolean stage0(pe_working_set_t *data_set);
 extern gboolean stage1(pe_working_set_t *data_set);

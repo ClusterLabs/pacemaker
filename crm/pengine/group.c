@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.32 2005/08/10 08:55:03 andrew Exp $ */
+/* $Id: group.c,v 1.33 2005/08/10 15:38:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -566,8 +566,8 @@ group_resource_state(resource_t *rsc)
 }
 
 void
-group_create_notify_element(resource_t *rsc, action_t *op, crm_data_t *parent,
-			    pe_working_set_t *data_set)
+group_create_notify_element(resource_t *rsc, action_t *op,
+			    notify_data_t *n_data, pe_working_set_t *data_set)
 {
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
@@ -576,6 +576,6 @@ group_create_notify_element(resource_t *rsc, action_t *op, crm_data_t *parent,
 		child_rsc, resource_t, group_data->child_list, lpc,
 		
 		child_rsc->fns->create_notify_element(
-			child_rsc, op, parent, data_set);
+			child_rsc, op, n_data, data_set);
 		);
 }

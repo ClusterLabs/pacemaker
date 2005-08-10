@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.44 2005/08/10 12:58:36 andrew Exp $ */
+/* $Id: incarnation.c,v 1.45 2005/08/10 15:38:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -784,27 +784,240 @@ void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		);
 }
 
-void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
-{	
-	crm_data_t *notify_xml = create_xml_node(NULL, "notify");
+static gint
+sort_notify_entries(gconstpointer a, gconstpointer b)
+{
+	int tmp;
+	const notify_entry_t *entry_a = a;
+	const notify_entry_t *entry_b = b;
+
+	if(entry_a == NULL && entry_b == NULL) { return 0; }
+	if(entry_a == NULL) { return 1; }
+	if(entry_b == NULL) { return -1; }
+
+	if(entry_a->rsc == NULL && entry_b->rsc == NULL) { return 0; }
+	if(entry_a->rsc == NULL) { return 1; }
+	if(entry_b->rsc == NULL) { return -1; }
+
+	tmp = strcmp(entry_a->rsc->id, entry_b->rsc->id);
+	if(tmp != 0) {
+		return tmp;
+	}
+
+	if(entry_a->node == NULL && entry_b->node == NULL) { return 0; }
+	if(entry_a->node == NULL) { return 1; }
+	if(entry_b->node == NULL) { return -1; }
+
+	return strcmp(entry_a->node->details->id, entry_b->node->details->id);
+}
+
+static void
+expand_list(GListPtr list, int clones,
+	    char **rsc_list, char **node_list, char **uuid_list)
+{
+	int rsc_len = 0;
+	int node_len = 0;
+	int uuid_len = 0;
+	int list_len = 100 * clones;
+
+	char *rsc_list_s = NULL;
+	char *node_list_s = NULL;
+	char *uuid_list_s = NULL;
+
+	const char *uuid = NULL;
+	const char *uname = NULL;
+	const char *rsc_id = NULL;
+
+	const char *last_uuid = NULL;
+	const char *last_rsc_id = NULL;
 	
+  clone_expand_reallocate:
+	if(rsc_list != NULL) {
+		crm_malloc0(*rsc_list, sizeof(char)*list_len);
+		rsc_list_s = *rsc_list;
+		rsc_len = 0;
+	}
+	if(node_list != NULL) {
+		crm_malloc0(*node_list, sizeof(char)*list_len);
+		node_list_s = *node_list;
+		node_len = 0;
+	}
+	if(uuid_list != NULL) {
+		crm_malloc0(*uuid_list, sizeof(char)*list_len);
+		uuid_list_s = *uuid_list;
+		uuid_len = 0;
+	}
+	
+	slist_iter(entry, notify_entry_t, list, lpc,
+
+		   rsc_id = entry->rsc->id;
+		   CRM_DEV_ASSERT(rsc_id != NULL);
+		   if(crm_assert_failed) {
+			   rsc_id = "__none__";
+		   }
+
+		   uuid = NULL;
+		   if(entry->node) {
+			   uuid = entry->node->details->id;
+		   }
+		   CRM_DEV_ASSERT(uuid != NULL);
+		   if(crm_assert_failed) {
+			   uuid = "__none__";
+		   }
+
+		   uname = NULL;
+		   if(entry->node) {
+			   uname = entry->node->details->uname;
+		   }
+		   CRM_DEV_ASSERT(uname != NULL);
+		   if(crm_assert_failed) {
+			   uname = "__none__";
+		   }
+
+		   /* filter dups */
+		   if(safe_str_eq(rsc_id, last_rsc_id)
+		      && safe_str_eq(uuid, last_uuid)) {
+			   continue;
+		   }
+		   last_rsc_id = rsc_id;
+		   last_uuid = uuid;
+		   
+		   if(rsc_len + 1 + strlen(rsc_id) >= list_len) {
+			   crm_free(*rsc_list);
+			   crm_free(*node_list);
+			   crm_free(*uuid_list);
+			   list_len *= 2;
+			   goto clone_expand_reallocate;
+		   }
+		   sprintf(rsc_list_s, "%s ", rsc_id);
+		   rsc_list_s += 1 + strlen(rsc_id);
+		   rsc_len += 1 + strlen(rsc_id);
+
+
+		   if(node_len + 1 + strlen(uname) >= list_len) {
+			   crm_free(*rsc_list);
+			   crm_free(*node_list);
+			   crm_free(*uuid_list);
+			   list_len *= 2;
+			   goto clone_expand_reallocate;
+		   }
+		   sprintf(node_list_s, "%s ", uname);
+		   node_list_s += 1 + strlen(uname);
+		   node_len += 1 + strlen(uname);
+		   
+
+		   if(uuid_len + 1 + strlen(uuid) >= list_len) {
+			   crm_free(*rsc_list);
+			   crm_free(*node_list);
+			   crm_free(*uuid_list);
+			   list_len *= 2;
+			   goto clone_expand_reallocate;
+		   }
+		   sprintf(uuid_list_s, "%s ", uuid);
+		   uuid_list_s += 1 + strlen(uuid);
+		   uuid_len += 1 + strlen(uuid);
+		);
+}
+
+void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
+{
+	char *rsc_list = NULL;
+	char *node_list = NULL;
+	char *uuid_list = NULL;
+	notify_data_t *n_data = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
+	crm_malloc0(n_data, sizeof(notify_data_t));
+	n_data->keys = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	
 	crm_debug_2("Processing actions from %s", rsc->id);
 
-	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
-
+	if(rsc->notify) {
 		slist_iter(
-			op, action_t, clone_data->self->actions, lpc2,
-
-			child_rsc->fns->create_notify_element(
-				child_rsc, op, notify_xml, data_set);
+			child_rsc, resource_t, clone_data->child_list, lpc,
+			
+			slist_iter(
+				op, action_t, clone_data->self->actions, lpc2,
+			
+				child_rsc->fns->create_notify_element(
+					child_rsc, op, n_data, data_set);
+				);
 			);
-		);
+	}
+	
+	/* expand the notify data */		
+	if(rsc->notify && n_data->start) {
+		n_data->start = g_list_sort(
+			n_data->start, sort_notify_entries);
+		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		expand_list(n_data->start, clone_data->clone_max,
+			    &rsc_list, &node_list, &uuid_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_start_resource"), rsc_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_start_uname"), node_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_start_uuid"), uuid_list);
+	}
+	
+	if(rsc->notify && n_data->stop) {
+		n_data->stop = g_list_sort(
+			n_data->stop, sort_notify_entries);
+		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		expand_list(n_data->stop, clone_data->clone_max,
+			    &rsc_list, &node_list, &uuid_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_stop_resource"), rsc_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_stop_uname"), node_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_stop_uuid"), uuid_list);
+	}
 
-	/* yes we DO need the second loop */
+	if(rsc->notify && n_data->active) {
+		n_data->active = g_list_sort(
+			n_data->active, sort_notify_entries);
+		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		expand_list(n_data->active, clone_data->clone_max,
+			    &rsc_list, &node_list, &uuid_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_active_resource"), rsc_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_active_uname"), node_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_active_uuid"), uuid_list);
+	}
+
+	if(rsc->notify && n_data->inactive) {
+		n_data->inactive = g_list_sort(
+			n_data->inactive, sort_notify_entries);
+		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		expand_list(n_data->inactive, clone_data->clone_max,
+			    &rsc_list, &node_list, &uuid_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_inactive_resource"), rsc_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_inactive_uname"), node_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_inactive_uuid"), uuid_list);	
+	}
+	
+	/* yes, we DO need this second loop */
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		
@@ -812,16 +1025,23 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 		);
 	
-	slist_iter(
-		action, action_t, clone_data->self->actions, lpc2,
+/* 	slist_iter( */
+/* 		action, action_t, clone_data->self->actions, lpc2, */
 
-		if(safe_str_eq(action->task, CRMD_ACTION_NOTIFY)) {
-			action->extra_xml = notify_xml;
-		}
-		);
+/* 		if(safe_str_eq(action->task, CRMD_ACTION_NOTIFY)) { */
+/* 			action->extra_xml = notify_xml; */
+/* 		} */
+/* 		); */
 	
 	clone_data->self->fns->expand(clone_data->self, data_set);
-	free_xml(notify_xml);
+
+	/* destroy the notify_data */
+	pe_free_shallow(n_data->stop);
+	pe_free_shallow(n_data->start);
+	pe_free_shallow(n_data->active);
+	pe_free_shallow(n_data->inactive);
+	g_hash_table_destroy(n_data->keys);
+	crm_free(n_data);
 }
 
 gboolean clone_active(resource_t *rsc, gboolean all)
@@ -958,8 +1178,8 @@ clone_resource_state(resource_t *rsc)
 }
 
 void
-clone_create_notify_element(resource_t *rsc, action_t *op, crm_data_t *parent,
-			    pe_working_set_t *data_set)
+clone_create_notify_element(resource_t *rsc, action_t *op,
+			    notify_data_t *n_data, pe_working_set_t *data_set)
 {
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
@@ -968,6 +1188,6 @@ clone_create_notify_element(resource_t *rsc, action_t *op, crm_data_t *parent,
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		
 		child_rsc->fns->create_notify_element(
-			child_rsc, op, parent, data_set);
+			child_rsc, op, n_data, data_set);
 		);
 }

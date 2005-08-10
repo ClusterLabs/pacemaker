@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.19 2005/08/10 08:55:04 andrew Exp $ */
+/* $Id: complex.h,v 1.20 2005/08/10 15:38:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,6 +42,21 @@ enum pe_obj_types
 extern int get_resource_type(const char *name);
 
 
+typedef struct notify_entry_s {
+	resource_t *rsc;
+	node_t *node;
+} notify_entry_t;
+
+typedef struct notify_data_s {
+	GHashTable *keys;
+	GListPtr active;   /* notify_entry_t*  */
+	GListPtr inactive; /* notify_entry_t*  */
+	GListPtr start;    /* notify_entry_t*  */
+	GListPtr stop;     /* notify_entry_t*  */
+	
+} notify_data_t;
+
+
 typedef struct resource_object_functions_s 
 {
 		void (*unpack)(resource_t *, pe_working_set_t *);
@@ -68,7 +83,7 @@ typedef struct resource_object_functions_s
 		gboolean (*active)(resource_t *,gboolean);
 		rsc_state_t (*state)(resource_t *);
 		void (*create_notify_element)(resource_t*,action_t*,
-					      crm_data_t*,pe_working_set_t*);
+					      notify_data_t*,pe_working_set_t*);
 		void (*free)(resource_t *);
 		
 } resource_object_functions_t;
@@ -98,7 +113,7 @@ extern void native_free(resource_t *rsc);
 extern rsc_state_t native_resource_state(resource_t *rsc);
 extern void native_create_notify_element(
 	resource_t *rsc, action_t *op,
-	crm_data_t *parent, pe_working_set_t *data_set);
+	notify_data_t *n_data,pe_working_set_t *data_set);
 
 extern void group_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern resource_t *group_find_child(resource_t *rsc, const char *id);
@@ -125,7 +140,7 @@ extern void group_free(resource_t *rsc);
 extern rsc_state_t group_resource_state(resource_t *rsc);
 extern void group_create_notify_element(
 	resource_t *rsc, action_t *op,
-	crm_data_t *parent, pe_working_set_t *data_set);
+	notify_data_t *n_data,pe_working_set_t *data_set);
 
 extern void clone_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern resource_t *clone_find_child(resource_t *rsc, const char *id);
@@ -151,7 +166,7 @@ extern void clone_free(resource_t *rsc);
 extern rsc_state_t clone_resource_state(resource_t *rsc);
 extern void clone_create_notify_element(
 	resource_t *rsc, action_t *op,
-	crm_data_t *parent, pe_working_set_t *data_set);
+	notify_data_t *n_data,pe_working_set_t *data_set);
 
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_object_functions_t resource_class_functions[];

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.70 2005/08/10 08:55:03 andrew Exp $ */
+/* $Id: native.c,v 1.71 2005/08/10 15:38:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,16 +46,14 @@ void create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
 action_t *create_recurring_action(resource_t *rsc, node_t *node,
 				  const char *action, const char *key);
-void register_state(
-	resource_t *rsc, action_t *op, node_t *node, crm_data_t *parent);
-void register_activity(
-	resource_t *rsc, action_t *op, node_t *node, crm_data_t *parent);
+void register_state(resource_t *rsc, action_t *op, notify_data_t *n_data);
+void register_activity(resource_t *rsc, action_t *op, notify_data_t *n_data);
 void pe_pre_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
-	crm_data_t *parent, pe_working_set_t *data_set);
+	notify_data_t *n_data, pe_working_set_t *data_set);
 void pe_post_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
-	crm_data_t *parent, pe_working_set_t *data_set);
+	notify_data_t *n_data, pe_working_set_t *data_set);
 
 extern rsc_to_node_t *
 rsc2node_new(const char *id, resource_t *rsc,
@@ -1453,8 +1451,8 @@ native_resource_state(resource_t *rsc)
 
 
 void
-native_create_notify_element(resource_t *rsc, action_t *op, crm_data_t *parent,
-			     pe_working_set_t *data_set)
+native_create_notify_element(resource_t *rsc, action_t *op,
+			     notify_data_t *n_data, pe_working_set_t *data_set)
 {
 	node_t *next = NULL;
 	node_t *current = NULL;
@@ -1484,37 +1482,37 @@ native_create_notify_element(resource_t *rsc, action_t *op, crm_data_t *parent,
 	
 	switch(state) {
 		case rsc_state_active:
-			pe_pre_notify(rsc, current, op, parent, data_set);
-			pe_post_notify(rsc, current, op, parent, data_set);
-			register_state(rsc, op, current, parent);
+			pe_pre_notify(rsc, current, op, n_data, data_set);
+			pe_post_notify(rsc, current, op, n_data, data_set);
+			register_state(rsc, op, n_data);
 			break;
 		case rsc_state_move:
 			if(task == stop_rsc) {
-				pe_pre_notify(rsc, current, op,parent,data_set);
-				register_activity(rsc, op, current, parent);
+				pe_pre_notify(rsc, current, op,n_data,data_set);
+				register_activity(rsc, op, n_data);
 			} else {
-				pe_post_notify(rsc, next, op, parent, data_set);
-				register_activity(rsc, op, next, parent);
+				pe_post_notify(rsc, next, op, n_data, data_set);
+				register_activity(rsc, op, n_data);
 			}
 			break;
 		case rsc_state_restart:
-			register_activity(rsc, op, current, parent);
+			register_activity(rsc, op, n_data);
 			if(task == stop_rsc) {
-				pe_pre_notify(rsc, current, op, parent, data_set);
+				pe_pre_notify(rsc, current, op, n_data, data_set);
 			} else {
-				pe_post_notify(rsc, current,op,parent,data_set);
+				pe_post_notify(rsc, current,op,n_data,data_set);
 			}
 			break;
 		case rsc_state_starting:
 			if(task != stop_rsc) {
-				register_activity(rsc, op, next, parent);
-				pe_post_notify(rsc, next, op, parent, data_set);
+				register_activity(rsc, op, n_data);
+				pe_post_notify(rsc, next, op, n_data, data_set);
 			}
 			break;
 		case rsc_state_stopping:
 			if(task == stop_rsc) {
-				register_activity(rsc, op, current, parent);
-				pe_pre_notify(rsc, current, op,parent,data_set);
+				register_activity(rsc, op, n_data);
+				pe_pre_notify(rsc, current, op,n_data,data_set);
 			}
 			break;
 		case rsc_state_stopped:
@@ -1526,60 +1524,50 @@ native_create_notify_element(resource_t *rsc, action_t *op, crm_data_t *parent,
 
 
 void
-register_activity(
-	resource_t *rsc, action_t *op, node_t *node, crm_data_t *parent)
+register_activity(resource_t *rsc, action_t *op, notify_data_t *n_data)
 {
-	crm_data_t *target = NULL;
-/* 	const char *value = NULL; */
+	notify_entry_t *entry = NULL;
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
+	
+	if(safe_str_eq(op->task, CRMD_ACTION_START)) {
+		crm_malloc0(entry, sizeof(notify_entry_t));
+		entry->rsc = rsc;
+		if(native_data->color != NULL) {
+			entry->node = native_data->color->details->chosen_node;
+		}
+		n_data->start = g_list_append(n_data->start, entry);
+		
+	} else {
+		slist_iter(
+			node, node_t, native_data->running_on, lpc,
 
-/* 	value = g_hash_table_lookup(op->extra, "notify_type"); */
-/* 	if(safe_str_neq(value, "pre")) { */
-/* 		/\* only add once *\/ */
-/* 		return; */
-/* 	} */
-
-	CRM_DEV_ASSERT(node != NULL);
-
-	if(find_entity(parent, op->task, rsc->id) != NULL) {
-		/* only add once */
-		return;
+			crm_malloc0(entry, sizeof(notify_entry_t));
+			entry->rsc = rsc;
+			entry->node = node;
+			n_data->stop=g_list_append(n_data->stop, entry);
+			);
 	}
-	
-	crm_debug_3("Creating entry for %s: %s (%s)",op->uuid,rsc->id,op->task);
-	
-	target = create_xml_node(parent, op->task);
- 	crm_xml_add(target, XML_ATTR_ID, rsc->id);
-	crm_xml_add(target, XML_LRM_ATTR_TARGET, node->details->uname);
-	crm_xml_add(target, XML_LRM_ATTR_TARGET_UUID, node->details->id);
 }
 
 void
-register_state(
-	resource_t *rsc, action_t *op, node_t *node, crm_data_t *parent)
+register_state(resource_t *rsc, action_t *op, notify_data_t *n_data)
 {
-	crm_data_t *target = NULL;
-/* 	const char *value = NULL; */
+	notify_entry_t *entry = NULL;
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
 
-/* 	value = g_hash_table_lookup(op->extra, "notify_type"); */
-/* 	if(safe_str_neq(value, "pre")) { */
-/* 		/\* only add once *\/ */
-/* 		return; */
-/* 	} */
-
-	CRM_DEV_ASSERT(node != NULL);
-
-	if(find_entity(parent, "peer", rsc->id) != NULL) {
-		/* only add once */
-		return;
+	crm_malloc0(entry, sizeof(notify_entry_t));
+	entry->rsc = rsc;
+	if(native_data->color != NULL) {
+		entry->node = native_data->color->details->chosen_node;
 	}
-	
-	crm_debug_3("Creating peer entry for %s: %s (%s)",
-		    op->uuid, rsc->id, op->task);
-	
-	target = create_xml_node(parent, "peer");
-	crm_xml_add(target, XML_ATTR_ID, rsc->id);
-	crm_xml_add(target, XML_LRM_ATTR_TARGET, node->details->uname);
-	crm_xml_add(target, XML_LRM_ATTR_TARGET_UUID, node->details->id);
+
+	if(entry->node != NULL) {
+		n_data->active = g_list_append(n_data->active, entry);
+	} else {
+		n_data->inactive = g_list_append(n_data->inactive, entry);
+	}
 }
 
 
@@ -1590,7 +1578,7 @@ static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 
 static void
 pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
-	  crm_data_t *parent, pe_working_set_t *data_set)
+	  notify_data_t *n_data, pe_working_set_t *data_set)
 {
 	char *key = NULL;
 	action_t *trigger = NULL;
@@ -1611,34 +1599,34 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 		    op->uuid, rsc->id, value, task);
 	
 	key = generate_notify_key(rsc->id, value, task);
-	
-	trigger = custom_action(
-		rsc, key, op->task, node, op->optional, data_set);
+	trigger = custom_action(rsc, key, op->task, node,op->optional,data_set);
 	g_hash_table_foreach(op->extra, dup_attr, trigger->extra);
-	trigger->extra_xml = parent;
+	trigger->notify_keys = n_data->keys;
 
 	/* pseudo_notify before notify */
 	crm_debug_3("Ordering %s before %s (%d->%d)",
 		op->uuid, trigger->uuid, trigger->id, op->id);
+
 	crm_malloc0(wrapper, sizeof(action_wrapper_t));
 	wrapper->action = op;
 	wrapper->type = pe_ordering_manditory;
-	
-	trigger->actions_before = g_list_append(
-		trigger->actions_before, wrapper);
+	trigger->actions_before=g_list_append(trigger->actions_before, wrapper);
 
 	wrapper = NULL;
 	crm_malloc0(wrapper, sizeof(action_wrapper_t));
 	wrapper->action = trigger;
 	wrapper->type = pe_ordering_manditory;
-	op->actions_after = g_list_append(
-		op->actions_after, wrapper);
+	op->actions_after = g_list_append(op->actions_after, wrapper);
 
-	/* notify before pseudo_notified */
-	crm_debug_3("Ordering %s before %s (%d->%d)",
-		    trigger->uuid, confirm->uuid, confirm->id, trigger->id);
+
+	
 	value = g_hash_table_lookup(op->extra, "notify_confirm");
 	if(crm_is_true(value)) {
+		/* notify before pseudo_notified */
+		crm_debug_3("Ordering %s before %s (%d->%d)",
+			    trigger->uuid, confirm->uuid,
+			    confirm->id, trigger->id);
+
 		wrapper = NULL;
 		crm_malloc0(wrapper, sizeof(action_wrapper_t));
 		wrapper->action = trigger;
@@ -1657,17 +1645,17 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 
 void
 pe_pre_notify(resource_t *rsc, node_t *node, action_t *op,
-	      crm_data_t *parent, pe_working_set_t *data_set)
+	      notify_data_t *n_data, pe_working_set_t *data_set)
 {
 	pe_notify(rsc, node, op->pre_notify, op->pre_notified,
-		  parent, data_set);
+		  n_data, data_set);
 }
 
 void
 pe_post_notify(resource_t *rsc, node_t *node, action_t *op, 
-	crm_data_t *parent, pe_working_set_t *data_set)
+	notify_data_t *n_data, pe_working_set_t *data_set)
 {
 	pe_notify(rsc, node, op->post_notify, op->post_notified,
-		  parent, data_set);
+		  n_data, data_set);
 }
 
