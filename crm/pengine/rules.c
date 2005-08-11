@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.12 2005/08/11 17:37:01 lars Exp $ */
+/* $Id: rules.c,v 1.13 2005/08/11 20:03:32 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -259,7 +259,7 @@ test_attr_expression(crm_data_t *expr, GHashTable *hash, pe_working_set_t *data_
  * 0-7, with 0: new, 4: full
  */
 
-int
+static int
 phase_of_the_moon(ha_time_t *now)
 {
 	int epact, diy, goldn;
