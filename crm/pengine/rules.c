@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.11 2005/08/11 08:58:40 andrew Exp $ */
+/* $Id: rules.c,v 1.12 2005/08/11 17:37:01 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -242,6 +242,37 @@ test_attr_expression(crm_data_t *expr, GHashTable *hash, pe_working_set_t *data_
 	return accept;
 }
 
+/* As per the nethack rules:
+ *
+ * moon period = 29.53058 days ~= 30, year = 365.2422 days
+ * days moon phase advances on first day of year compared to preceding year
+ *      = 365.2422 - 12*29.53058 ~= 11
+ * years in Metonic cycle (time until same phases fall on the same days of
+ *      the month) = 18.6 ~= 19
+ * moon phase on first day of year (epact) ~= (11*(year%19) + 29) % 30
+ *      (29 as initial condition)
+ * current phase in days = first day phase + days elapsed in year
+ * 6 moons ~= 177 days
+ * 177 ~= 8 reported phases * 22
+ * + 11/22 for rounding
+ *
+ * 0-7, with 0: new, 4: full
+ */
+
+int
+phase_of_the_moon(ha_time_t *now)
+{
+	int epact, diy, goldn;
+
+	diy = now->yeardays;
+	goldn = (now->years % 19) + 1;
+	epact = (11 * goldn + 18) % 30;
+	if ((epact == 25 && goldn > 11) || epact == 24)
+		epact++;
+
+	return( (((((diy + epact) * 6) + 11) % 177) / 22) & 7 );
+}
+
 #define cron_check(xml_field, time_field)				\
 	value = crm_element_value(cron_spec, xml_field);		\
 	if(value != NULL) {						\
@@ -249,10 +280,10 @@ test_attr_expression(crm_data_t *expr, GHashTable *hash, pe_working_set_t *data_
 		CRM_DEV_ASSERT(value_low != NULL);			\
 		value_low_i = crm_atoi(value_low, "0");			\
 		value_high_i = crm_atoi(value_high, "-1");		\
-		if(value_low_i > now->time_field) {			\
+		if(value_low_i > time_field) {				\
 			return FALSE;					\
 		} else if(value_high_i < 0) {				\
-		} else if(value_high_i < now->time_field) {		\
+		} else if(value_high_i < time_field) {			\
 			return FALSE;					\
 		}							\
 	}
@@ -267,16 +298,17 @@ cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec)
 	int value_low_i = 0;
 	int value_high_i = 0;
 
-	cron_check("seconds",   seconds);
-	cron_check("minutes",   minutes);
-	cron_check("hours",     hours);
-	cron_check("monthdays", days);
-	cron_check("weekdays",  weekdays);
-	cron_check("yeardays",  yeardays);
-	cron_check("weeks",     weeks);
-	cron_check("months",    months);
-	cron_check("years",     years);
-	cron_check("weekyears", weekyears);
+	cron_check("seconds",	now->seconds);
+	cron_check("minutes",	now->minutes);
+	cron_check("hours",	now->hours);
+	cron_check("monthdays",	now->days);
+	cron_check("weekdays",	now->weekdays);
+	cron_check("yeardays",	now->yeardays);
+	cron_check("weeks",	now->weeks);
+	cron_check("months",	now->months);
+	cron_check("years",	now->years);
+	cron_check("weekyears",	now->weekyears);
+	cron_check("moon",	phase_of_the_moon(now));
 	
 	return TRUE;
 }
