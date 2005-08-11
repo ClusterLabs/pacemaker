@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.81 2005/08/10 15:38:52 andrew Exp $ */
+/* $Id: pengine.h,v 1.82 2005/08/11 08:58:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,6 +34,7 @@ typedef struct action_wrapper_s action_wrapper_t;
 #include <glib.h>
 #include <crm/crm.h>
 #include <crm/common/msg.h>
+#include <crm/common/iso8601.h>
 
 #include <linux-ha/config.h>
 
@@ -70,6 +71,7 @@ typedef enum rsc_state_e {
 typedef struct pe_working_set_s 
 {
 		crm_data_t *input;
+		ha_time_t *now;
 
 		/* options extracted from the input */
 		char *dc_uuid;

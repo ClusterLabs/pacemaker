@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.10 2005/08/10 18:03:37 andrew Exp $ */
+/* $Id: rules.c,v 1.11 2005/08/11 08:58:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,19 +41,19 @@ enum expression_type {
 enum expression_type find_expression_type(crm_data_t *expr);
 ha_time_t *parse_xml_duration(ha_time_t *start, crm_data_t *duration_spec);
 
-gboolean test_date_expression(crm_data_t *time_expr);
+gboolean test_date_expression(crm_data_t *time_expr, pe_working_set_t *data_set);
 gboolean cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec);
-gboolean test_attr_expression(crm_data_t *expr, GHashTable *hash);
+gboolean test_attr_expression(crm_data_t *expr, GHashTable *hash, pe_working_set_t *data_set);
 
 gboolean
-test_ruleset(crm_data_t *ruleset, node_t *node) 
+test_ruleset(crm_data_t *ruleset, node_t *node, pe_working_set_t *data_set) 
 {
 	gboolean ruleset_default = TRUE;
 	xml_child_iter(
 		ruleset, rule, XML_TAG_RULE,
 
 		ruleset_default = FALSE;
-		if(test_rule(rule, node)) {
+		if(test_rule(rule, node, data_set)) {
 			return TRUE;
 		}
 		);
@@ -62,7 +62,7 @@ test_ruleset(crm_data_t *ruleset, node_t *node)
 }
 
 gboolean
-test_rule(crm_data_t *rule, node_t *node) 
+test_rule(crm_data_t *rule, node_t *node, pe_working_set_t *data_set) 
 {
 	gboolean test = TRUE;
 	gboolean passed = TRUE;
@@ -77,7 +77,7 @@ test_rule(crm_data_t *rule, node_t *node)
 	crm_debug_2("Testing rule %s", ID(rule));
 	xml_child_iter(
 		rule, expr, NULL,
-		test = test_expression(expr, node);
+		test = test_expression(expr, node, data_set);
 		
 		if(test && do_and == FALSE) {
 			crm_debug_3("Expression %s/%s passed",
@@ -96,22 +96,22 @@ test_rule(crm_data_t *rule, node_t *node)
 }
 
 gboolean
-test_expression(crm_data_t *expr, node_t *node)
+test_expression(crm_data_t *expr, node_t *node, pe_working_set_t *data_set)
 {
 	gboolean accept = FALSE;
 	
 	switch(find_expression_type(expr)) {
 		case nested_rule:
-			accept = test_rule(expr, node);
+			accept = test_rule(expr, node, data_set);
 			break;
 		case attr_expr:
 		case loc_expr:
 			accept = test_attr_expression(
-				expr, node?node->details->attrs:NULL);
+				expr, node?node->details->attrs:NULL, data_set);
 			break;
 
 		case time_expr:
-			accept = test_date_expression(expr);
+			accept = test_date_expression(expr, data_set);
 			break;
 
 		default:
@@ -148,7 +148,7 @@ find_expression_type(crm_data_t *expr)
 }
 
 gboolean
-test_attr_expression(crm_data_t *expr, GHashTable *hash)
+test_attr_expression(crm_data_t *expr, GHashTable *hash, pe_working_set_t *data_set)
 {
 	gboolean accept = FALSE;
 	int cmp = 0;
@@ -310,7 +310,7 @@ parse_xml_duration(ha_time_t *start, crm_data_t *duration_spec)
 
 	
 gboolean
-test_date_expression(crm_data_t *time_expr)
+test_date_expression(crm_data_t *time_expr, pe_working_set_t *data_set)
 {
 	ha_time_t *start = NULL;
 	ha_time_t *end = NULL;
@@ -318,7 +318,6 @@ test_date_expression(crm_data_t *time_expr)
 	char *value_copy = NULL;
 	char *value_copy_start = NULL;
 	const char *op = crm_element_value(time_expr, "operation");
-	ha_time_t *now = new_ha_date(TRUE);
 
 	crm_data_t *duration_spec = NULL;
 	crm_data_t *date_spec = NULL;
@@ -353,32 +352,31 @@ test_date_expression(crm_data_t *time_expr)
 	}
 	
 	if(safe_str_eq(op, "date_spec") || safe_str_eq(op, "in_range")) {
-		if(start != NULL && compare_date(start, now) > 0) {
+		if(start != NULL && compare_date(start, data_set->now) > 0) {
 			passed = FALSE;
-		} else if(end != NULL && compare_date(end, now) < 0) {
+		} else if(end != NULL && compare_date(end, data_set->now) < 0) {
 			passed = FALSE;
 		} else if(safe_str_eq(op, "in_range")) {
 			passed = TRUE;
 		} else {
-			passed = cron_range_satisfied(now, date_spec);
+			passed = cron_range_satisfied(data_set->now, date_spec);
 		}
 		
-	} else if(safe_str_eq(op, "gt") && compare_date(start, now) < 0) {
+	} else if(safe_str_eq(op, "gt") && compare_date(start, data_set->now) < 0) {
 		passed = TRUE;
 
 
-	} else if(safe_str_eq(op, "lt") && compare_date(end, now) > 0) {
+	} else if(safe_str_eq(op, "lt") && compare_date(end, data_set->now) > 0) {
 		passed = TRUE;
 
-	} else if(safe_str_eq(op, "eq") && compare_date(start, now) == 0) {
+	} else if(safe_str_eq(op, "eq") && compare_date(start, data_set->now) == 0) {
 		passed = TRUE;
 
-	} else if(safe_str_eq(op, "neq") && compare_date(start, now) != 0) {
+	} else if(safe_str_eq(op, "neq") && compare_date(start, data_set->now) != 0) {
 		passed = TRUE;
 	}
 
 	free_ha_date(start);
 	free_ha_date(end);
-	free_ha_date(now);
 	return passed;
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
-<cib>
+<cib fake_now="2005-002">
   <configuration>
     <crm_config>
       <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>

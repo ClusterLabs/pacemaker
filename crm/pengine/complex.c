@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.54 2005/08/08 13:07:52 andrew Exp $ */
+/* $Id: complex.c,v 1.55 2005/08/11 08:58:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -229,7 +229,7 @@ common_unpack(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
 	unpack_instance_attributes(xml_obj, NULL, (*rsc)->parameters,
-				   allowed_attrs, DIMOF(allowed_attrs));
+				   allowed_attrs, DIMOF(allowed_attrs), data_set);
 
 	priority = get_rsc_param(*rsc, XML_CIB_ATTR_PRIORITY);
 
@@ -422,7 +422,7 @@ void common_free(resource_t *rsc)
 void
 unpack_instance_attributes(
 	crm_data_t *xml_obj, node_t *node, GHashTable *hash,
-	const char **attrs, int attrs_length)
+	const char **attrs, int attrs_length, pe_working_set_t *data_set)
 {
 	crm_data_t *attributes = NULL;
 	
@@ -442,7 +442,7 @@ unpack_instance_attributes(
 		xml_obj, attr_set, XML_TAG_ATTR_SETS,
 
 		/* check any rules */
-		if(test_ruleset(attr_set, node) == FALSE) {
+		if(test_ruleset(attr_set, node, data_set) == FALSE) {
 			continue;
 		}
 		

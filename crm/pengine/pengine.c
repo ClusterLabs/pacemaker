@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.86 2005/08/10 08:34:00 andrew Exp $ */
+/* $Id: pengine.c,v 1.87 2005/08/11 08:58:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,7 +32,8 @@
 #include <pengine.h>
 #include <pe_utils.h>
 
-crm_data_t * do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input);
+crm_data_t * do_calculations(
+	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
 
 gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
@@ -101,7 +102,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		crm_zero_mem_stats(NULL);
 
-		do_calculations(&data_set, xml_data);
+		do_calculations(&data_set, xml_data, NULL);
 		crm_log_xml_debug_3(data_set.graph, "[out]");
 
 		if (send_ipc_reply(sender, msg, data_set.graph) ==FALSE) {
@@ -146,12 +147,16 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 
 crm_data_t *
-do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input)
+do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now)
 {
 	
 /*	pe_debug_on(); */
 	set_working_set_defaults(data_set);
 	data_set->input = copy_xml(xml_input);
+	data_set->now = now;
+	if(data_set->now == NULL) {
+		data_set->now = new_ha_date(TRUE);
+	}
 	
 	crm_debug_5("unpack");		  
 	stage0(data_set);
@@ -272,6 +277,7 @@ cleanup_calculations(pe_working_set_t *data_set)
 		g_list_free(data_set->placement_constraints);
 	}
 	free_xml(data_set->graph);
+	free_ha_date(data_set->now);
 	free_xml(data_set->input);
 }
 
@@ -280,6 +286,7 @@ void
 set_working_set_defaults(pe_working_set_t *data_set) 
 {
 	data_set->input = NULL;
+	data_set->now = NULL;
 	data_set->graph = NULL;
 	
 	data_set->dc_uuid           = NULL;

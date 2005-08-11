@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.60 2005/08/10 12:14:26 andrew Exp $ */
+/* $Id: ptest.c,v 1.61 2005/08/11 08:58:40 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -46,7 +46,7 @@
 
 gboolean inhibit_exit = FALSE;
 extern crm_data_t * do_calculations(
-	pe_working_set_t *data_set, crm_data_t *xml_input);
+	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
 extern void cleanup_calculations(pe_working_set_t *data_set);
 
 FILE *dot_strm = NULL;
@@ -90,6 +90,9 @@ init_dotfile(void)
 int
 main(int argc, char **argv)
 {
+	const char *fake_now = NULL;
+	ha_time_t *a_date = NULL;
+	
 	gboolean optional = FALSE;
 	pe_working_set_t data_set;
 	crm_data_t * cib_object = NULL;
@@ -188,8 +191,19 @@ main(int argc, char **argv)
 #endif
  	CRM_DEV_ASSERT(cib_object != NULL);
 	crm_zero_mem_stats(NULL);
-	
-	do_calculations(&data_set, cib_object);
+
+	fake_now = crm_element_value(cib_object, "fake_now");
+	if(fake_now != NULL) {
+		char *fake_now_copy = crm_strdup(fake_now);
+		char *fake_now_mutable = fake_now_copy;
+		a_date = parse_date(&fake_now_mutable);
+		log_date(LOG_WARNING, "Set fake 'now' to",
+			 a_date, ha_log_date|ha_log_time);
+		log_date(LOG_WARNING, "Set fake 'now' to (localtime)",
+			 a_date, ha_log_date|ha_log_time|ha_log_local);
+		crm_free(fake_now_copy);
+	}
+	do_calculations(&data_set, cib_object, a_date);
 
 	msg_buffer = dump_xml_formatted(data_set.graph);
 	fprintf(stdout, "%s\n", msg_buffer);

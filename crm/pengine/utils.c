@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.99 2005/08/10 08:55:04 andrew Exp $ */
+/* $Id: utils.c,v 1.100 2005/08/11 08:58:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -698,7 +698,7 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 		if(action->node != NULL) {
 			unpack_instance_attributes(
 				action->op_entry, action->node, action->extra,
-				NULL, 0);
+				NULL, 0, data_set);
 		}
 		
 		if(action->node == NULL) {

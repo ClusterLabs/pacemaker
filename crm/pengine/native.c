@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.71 2005/08/10 15:38:52 andrew Exp $ */
+/* $Id: native.c,v 1.72 2005/08/11 08:58:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -329,7 +329,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		chosen = native_data->color->details->chosen_node;
 	}
 
-	unpack_instance_attributes(rsc->xml, chosen, rsc->parameters, NULL, 0);
+	unpack_instance_attributes(rsc->xml, chosen, rsc->parameters, NULL, 0, data_set);
 	
 	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
 		start = start_action(rsc, chosen, TRUE);

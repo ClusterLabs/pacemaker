@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.115 2005/08/10 09:25:10 andrew Exp $ */
+/* $Id: unpack.c,v 1.116 2005/08/11 08:58:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -303,7 +303,7 @@ unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 
 		lifetime = cl_get_struct(xml_obj, "lifetime");
 
-		if(test_ruleset(lifetime, NULL) == FALSE) {
+		if(test_ruleset(lifetime, NULL, data_set) == FALSE) {
 			crm_info("Constraint %s %s is not active",
 				 crm_element_name(xml_obj), id);
 
@@ -1165,7 +1165,7 @@ add_node_attrs(crm_data_t *xml_obj, node_t *node, pe_working_set_t *data_set)
 	}
 	
 	unpack_instance_attributes(
-		xml_obj, node, node->details->attrs, NULL, 0);
+		xml_obj, node, node->details->attrs, NULL, 0, data_set);
 
 	return TRUE;
 }
@@ -1239,7 +1239,7 @@ generate_location_rule(
 		slist_iter(
 			node, node_t, data_set->nodes, lpc,
 
-			accept = test_expression(expr, node);
+			accept = test_expression(expr, node, data_set);
 
 			if(!do_and && accept) {
 				if(pe_find_node(match_L, node->details->uname) == NULL) {
