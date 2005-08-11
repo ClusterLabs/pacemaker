@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.21 2005/08/08 12:05:02 andrew Exp $ */
+/* $Id: utils.c,v 1.22 2005/08/11 14:43:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1023,4 +1023,3 @@ crm_zero_mem_stats(volatile cl_mem_stats_t *stats)
 	active_stats->mallocbytes = 0;
 	active_stats->arena = 0;
 }
-

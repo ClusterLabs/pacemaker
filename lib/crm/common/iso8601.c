@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.7 2005/08/11 09:53:09 andrew Exp $ */
+/* $Id: iso8601.c,v 1.8 2005/08/11 14:43:30 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -91,9 +91,16 @@ log_date(int log_level, const char *prefix, ha_time_t *date_time, int flags)
 			snprintf(offset_s, 31, "Z");
 
 		} else {
+			int hr = dt->offset->hours;
+			int mins = dt->offset->minutes;
+			if(hr < 0) {
+				hr = 0 - hr;
+			}
+			if(mins < 0) {
+				mins = 0 - mins;
+			}
 			snprintf(offset_s, 31, " %s%.2d:%.2d",
-				 offset>0?"+":"-",
-				 dt->offset->hours, dt->offset->minutes);
+				 offset>0?"+":"-", hr, mins);
 		}
 	}
 	crm_log_maybe(log_level, "%s%s%s%s%s%s",
@@ -120,8 +127,34 @@ parse_time_offset(char **offset_str)
 	crm_malloc0(new_time, sizeof(ha_time_t));
 	crm_malloc0(new_time->has, sizeof(ha_has_time_t));
 
-	if((*offset_str)[0] != 'Z') {
+	if((*offset_str)[0] == 'Z') {
+		
+	} else if((*offset_str)[0] == '+'
+		  || (*offset_str)[0] == '-'
+		  || isdigit((*offset_str)[0])) {
+		gboolean negate = FALSE;
+		if((*offset_str)[0] == '-') {
+			negate = TRUE;
+		}
 		parse_time(offset_str, new_time, FALSE);
+		if(negate) {
+			new_time->hours = 0 - new_time->hours;
+			new_time->minutes = 0 - new_time->minutes;
+			new_time->seconds = 0 - new_time->seconds;
+		}
+		
+	} else {
+		time_t now = time(NULL);
+		struct tm *now_tm = localtime(&now);
+		int h_offset = now_tm->tm_gmtoff / (3600); 
+		int m_offset = (now_tm->tm_gmtoff - (3600 * h_offset)) / (60);
+		if(h_offset < 0 && m_offset < 0) {
+			m_offset = 0 - m_offset;
+		}
+		new_time->hours = h_offset;
+		new_time->minutes = m_offset;
+		new_time->has->hours = TRUE;
+		new_time->has->minutes = TRUE;
 	}
 	return new_time;
 }
@@ -130,6 +163,7 @@ ha_time_t*
 parse_time(char **time_str, ha_time_t *a_time, gboolean with_offset)
 {
 	ha_time_t *new_time = a_time;
+	tzset();
 	if(a_time == NULL) {
 		new_time = new_ha_date(FALSE);
 	}
@@ -159,6 +193,7 @@ parse_time(char **time_str, ha_time_t *a_time, gboolean with_offset)
 		}
 
 		new_time->offset = parse_time_offset(time_str);
+		normalize_time(new_time);
 	}
 	return new_time;
 }
@@ -179,13 +214,13 @@ normalize_time(ha_time_t *a_time)
 	ha_set_time(a_time->normalized, a_time, FALSE);
 	if(a_time->offset != NULL) {
 		if(a_time->offset->has->hours) {
-			add_hours(a_time->normalized, a_time->offset->hours);
+			sub_hours(a_time->normalized, a_time->offset->hours);
 		}
 		if(a_time->offset->has->minutes) {
-			add_minutes(a_time->normalized,a_time->offset->minutes);
+			sub_minutes(a_time->normalized,a_time->offset->minutes);
 		}
 		if(a_time->offset->has->seconds) {
-			add_seconds(a_time->normalized,a_time->offset->seconds);
+			sub_seconds(a_time->normalized,a_time->offset->seconds);
 		}
 	}
 	CRM_DEV_ASSERT(is_date_sane(a_time));
@@ -196,6 +231,7 @@ normalize_time(ha_time_t *a_time)
 ha_time_t *
 parse_date(char **date_str)
 {
+	gboolean is_done = FALSE;
 	gboolean converted = FALSE;
 	ha_time_t *new_time = NULL;
 	crm_malloc0(new_time, sizeof(ha_time_t));
@@ -204,17 +240,19 @@ parse_date(char **date_str)
 	CRM_DEV_ASSERT(date_str != NULL);
 	CRM_DEV_ASSERT(strlen(*date_str) > 0);
 	
-	while(isspace((*date_str)[0]) == FALSE) {
+	while(is_done == FALSE) {
 		char ch = (*date_str)[0];
 		crm_debug_5("Switching on ch=%c (len=%d)",
 			    ch, (int)strlen(*date_str));
 		
 		if(ch == 0) {
 			/* all done */
+			is_done = TRUE;
 			break;
 
 		} else if(ch == '/') {
 			/* all done - interval marker */
+			is_done = TRUE;
 			break;
 			
 		} else if(ch == 'W') {
@@ -253,7 +291,7 @@ parse_date(char **date_str)
 				new_time->has->yeardays = TRUE;
 			}
 
-		} else if(ch == 'T') {
+		} else if(ch == 'T' || ch == ' ') {
 			if(new_time->has->yeardays) {
 				converted = convert_from_ordinal(new_time);
 				
@@ -265,6 +303,7 @@ parse_date(char **date_str)
 			}
 			(*date_str)++;
 			parse_time(date_str, new_time, TRUE);
+			is_done = TRUE;
 
 		} else if(isdigit(ch)) {
 			if(new_time->has->years == FALSE
@@ -289,17 +328,9 @@ parse_date(char **date_str)
 				}
 			}
 
-		} else if(isspace(ch)) {
-			(*date_str)++;
-/* 		} else if(new_time->has->months == FALSE) { */
-/* 			new_time->months = str_lookup(*date_str, date_month); */
-/* 			new_time->has->months = TRUE; */
-			
-/* 		} else if(new_time->has->days == FALSE) { */
-/* 			new_time->days = str_lookup(*date_str, date_day); */
-/* 			new_time->has->days = TRUE; */
 		} else {
 			crm_err("Unexpected characters at: %s", *date_str);
+			is_done = TRUE;
 			break;
 		}
 	}
@@ -1127,8 +1158,11 @@ compare_date(ha_time_t *lhs, ha_time_t *rhs)
 ha_time_t *
 new_ha_date(gboolean set_to_now) 
 {
-	time_t tm_now = time(NULL);
+	time_t tm_now;
 	ha_time_t *now = NULL;
+
+	tzset();
+	tm_now = time(NULL);
 	crm_malloc0(now, sizeof(ha_time_t));
 	crm_malloc0(now->has, sizeof(ha_has_time_t));
 	crm_malloc0(now->offset, sizeof(ha_time_t));

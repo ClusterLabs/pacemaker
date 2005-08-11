@@ -1,4 +1,4 @@
-/* $Id: iso8601_fields.c,v 1.2 2005/08/08 12:14:47 andrew Exp $ */
+/* $Id: iso8601_fields.c,v 1.3 2005/08/11 14:43:30 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,6 +44,22 @@
 		crm_debug_6("Result: %d", atime->field);		\
 	}
 
+#define do_add_time_field(atime, field, extra, limit, overflow)		\
+	{								\
+		crm_debug_6("Adding %d to %d (limit=%d)",		\
+			    extra, atime->field, limit);		\
+		atime->field += extra;					\
+		if(limit > 0) {						\
+			while(limit <= atime->field) {			\
+				crm_debug_6("Overflowing: %d", atime->field); \
+				atime->field -= limit;			\
+				overflow(atime, 1);			\
+			}						\
+		}							\
+		atime->field = atime->field;				\
+		crm_debug_6("Result: %d", atime->field);		\
+	}
+
 #define do_sub_field(atime, field, extra, limit, overflow)		\
 	{								\
 		crm_debug_6("Subtracting %d from %d (limit=%d)",	\
@@ -57,13 +73,26 @@
 		crm_debug_6("Result: %d", atime->field);		\
 	}
 
+#define do_sub_time_field(atime, field, extra, limit, overflow)		\
+	{								\
+		crm_debug_6("Subtracting %d from %d (limit=%d)",	\
+			    extra, atime->field, limit);		\
+		atime->field -= extra;					\
+		while(atime->field < 0) {				\
+			crm_debug_6("Underflowing: %d", atime->field);	\
+			atime->field += limit;				\
+			overflow(atime, 1);				\
+		}							\
+		crm_debug_6("Result: %d", atime->field);		\
+	}
+
 void
 add_seconds(ha_time_t *a_time, int extra) 
 {
 	if(extra < 0) {
 		sub_seconds(a_time, -extra);
 	} else {
-		do_add_field(a_time, seconds, extra, 60, add_minutes);
+		do_add_time_field(a_time, seconds, extra, 60, add_minutes);
 	}
 }
 
@@ -74,7 +103,7 @@ add_minutes(ha_time_t *a_time, int extra)
 	if(extra < 0) {
 		sub_minutes(a_time, -extra);
 	} else {
-		do_add_field(a_time, minutes, extra, 60, add_hours);
+		do_add_time_field(a_time, minutes, extra, 60, add_hours);
 	}
 }
 
@@ -85,7 +114,7 @@ add_hours(ha_time_t *a_time, int extra)
 	if(extra < 0) {
 		sub_hours(a_time, -extra);
 	} else {
-		do_add_field(a_time, hours, extra, 24, add_days);
+		do_add_time_field(a_time, hours, extra, 24, add_days);
 	}
 }
 
@@ -219,7 +248,7 @@ sub_seconds(ha_time_t *a_time, int extra)
 	if(extra < 0) {
 		add_seconds(a_time, -extra);
 	} else {
-		do_sub_field(a_time, seconds, extra, 60, sub_minutes);
+		do_sub_time_field(a_time, seconds, extra, 60, sub_minutes);
 	}
 }
 
@@ -229,7 +258,7 @@ sub_minutes(ha_time_t *a_time, int extra)
 	if(extra < 0) {
 		add_minutes(a_time, -extra);
 	} else {
-		do_sub_field(a_time, minutes, extra, 60, sub_hours);
+		do_sub_time_field(a_time, minutes, extra, 60, sub_hours);
 	}
 }
 
@@ -239,7 +268,7 @@ sub_hours(ha_time_t *a_time, int extra)
 	if(extra < 0) {
 		add_hours(a_time, -extra);
 	} else {
-		do_sub_field(a_time, hours, extra, 24, sub_days);
+		do_sub_time_field(a_time, hours, extra, 24, sub_days);
 	}
 }
 
