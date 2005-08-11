@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.6 2005/08/08 12:14:47 andrew Exp $ */
+/* $Id: iso8601.c,v 1.7 2005/08/11 09:53:09 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -892,7 +892,6 @@ int month_days[14] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 29 };
 int
 days_per_month(int month, int year)
 {
-	month--;
 	if(month == 2 && is_leap_year(year)) {
 		month = 13;
 	}
