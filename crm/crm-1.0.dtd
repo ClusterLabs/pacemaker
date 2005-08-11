@@ -175,7 +175,8 @@
         months     CDATA  #IMPLIED
         weeks      CDATA  #IMPLIED
         weekyears  CDATA  #IMPLIED
-        years      CDATA  #IMPLIED>
+        years      CDATA  #IMPLIED
+        moon       CDATA  #IMPLIED>
 
 <!ELEMENT duration>
 <!ATTLIST duration
