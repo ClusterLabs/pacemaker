@@ -36,7 +36,7 @@ SPECSRC 		= $(top_builddir)/heartbeat.spec
 
 OTHER_DOCS              = AUTHORS COPYING ChangeLog \
                                 README authkeys ha.cf startstop haresources \
-				DirectoryMap.txt apphbd.cf
+				DirectoryMap.txt apphbd.cf ha_logd.cf
 
 doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles) 
 
