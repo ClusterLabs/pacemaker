@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.55 2005/07/07 22:09:55 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.56 2005/08/17 08:57:29 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -599,7 +599,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	int filename_len = 0;
 	const char *result = NULL;
 
-	g_source_remove(message_timer_id);
+	Gmain_timeout_remove(message_timer_id);
 
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {

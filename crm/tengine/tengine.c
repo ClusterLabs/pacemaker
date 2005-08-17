@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.93 2005/08/10 09:25:10 andrew Exp $ */
+/* $Id: tengine.c,v 1.94 2005/08/17 08:57:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -112,7 +112,7 @@ initialize_graph(void)
 				crm_debug_3("Removing timer for action: %d",
 					  action->id);
 				
-				g_source_remove(action->timer->source_id);
+				Gmain_timeout_remove(action->timer->source_id);
 			}
 
 			free_xml(action->xml);

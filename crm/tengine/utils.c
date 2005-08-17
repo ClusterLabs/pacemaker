@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.42 2005/07/19 19:06:42 andrew Exp $ */
+/* $Id: utils.c,v 1.43 2005/08/17 08:57:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -377,7 +377,7 @@ timer_callback(gpointer data)
 	
 	timer = (te_timer_t*)data;
 	if(timer->source_id > 0) {
-		g_source_remove(timer->source_id);
+		Gmain_timeout_remove(timer->source_id);
 	}
 	timer->source_id = -1;
 
@@ -454,7 +454,7 @@ stop_te_timer(te_timer_t *timer)
 	}
 	
 	if(((int)timer->source_id) > 0) {
-		g_source_remove(timer->source_id);
+		Gmain_timeout_remove(timer->source_id);
 		timer->source_id = -2;
 
 	} else {
