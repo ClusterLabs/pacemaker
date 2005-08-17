@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.28 2005/07/11 12:13:07 andrew Exp $ */
+/* $Id: io.c,v 1.29 2005/08/17 09:03:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
+#include <clplumbing/cl_misc.h>
 
 #include <cibprimatives.h>
 
@@ -270,7 +271,7 @@ initializeCib(crm_data_t *new_cib)
 			
 		} else {
 			gboolean suppress = FALSE;
-			crm_str_to_boolean(value, &suppress);
+			cl_str_to_boolean(value, &suppress);
 			if(cib_writes_enabled == suppress) {
 				cib_writes_enabled = !suppress;
 				if(cib_writes_enabled) {

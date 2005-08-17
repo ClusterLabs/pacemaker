@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.22 2005/08/11 14:43:30 andrew Exp $ */
+/* $Id: utils.c,v 1.23 2005/08/17 09:03:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,6 +37,7 @@
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/cl_syslog.h>
+#include <clplumbing/cl_misc.h>
 #include <clplumbing/coredumps.h>
 
 #include <time.h> 
@@ -610,7 +611,7 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 	crm_debug_3("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		int uselogd;
-		crm_str_to_boolean(param_val, &uselogd);
+		cl_str_to_boolean(param_val, &uselogd);
 		cl_log_set_uselogd(uselogd);
 		if(cl_log_get_uselogd()) {
 			cl_set_logging_wqueue_maxlen(500);
@@ -691,7 +692,7 @@ crm_set_env_options(void)
 	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		int uselogd;
-		crm_str_to_boolean(param_val, &uselogd);
+		cl_str_to_boolean(param_val, &uselogd);
 		cl_log_set_uselogd(uselogd);
 		if(uselogd) {
 			cl_set_logging_wqueue_maxlen(500);
@@ -716,7 +717,9 @@ gboolean
 crm_is_true(const char * s)
 {
 	gboolean ret = FALSE;
-	crm_str_to_boolean(s, &ret);
+	if(s != NULL) {
+		cl_str_to_boolean(s, &ret);
+	}
 	return ret;
 }
 
@@ -727,18 +730,18 @@ crm_str_to_boolean(const char * s, int * ret)
 		return -1;
 
 	} else if (strcasecmp(s, "true") == 0
-	||	strcasecmp(s, "on") == 0
-	||	strcasecmp(s, "yes") == 0
-	||	strcasecmp(s, "y") == 0
-	||	strcasecmp(s, "1") == 0){
+		   ||	strcasecmp(s, "on") == 0
+		   ||	strcasecmp(s, "yes") == 0
+		   ||	strcasecmp(s, "y") == 0
+		   ||	strcasecmp(s, "1") == 0){
 		*ret = TRUE;
 		return 1;
 
 	} else if (strcasecmp(s, "false") == 0
-	||	strcasecmp(s, "off") == 0
-	||	strcasecmp(s, "no") == 0
-	||	strcasecmp(s, "n") == 0
-	||	strcasecmp(s, "0") == 0){
+		   ||	strcasecmp(s, "off") == 0
+		   ||	strcasecmp(s, "no") == 0
+		   ||	strcasecmp(s, "n") == 0
+		   ||	strcasecmp(s, "0") == 0){
 		*ret = FALSE;
 		return 1;
 	}

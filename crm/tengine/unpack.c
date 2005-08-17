@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.43 2005/07/18 11:17:23 andrew Exp $ */
+/* $Id: unpack.c,v 1.44 2005/08/17 09:03:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,7 @@
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
 #include <sys/stat.h>
+#include <clplumbing/cl_misc.h>
 
 cib_t *te_cib_conn = NULL;
 action_t* unpack_action(crm_data_t *xml_action);
@@ -241,7 +242,7 @@ unpack_action(crm_data_t *xml_action)
 	action->timer->action    = action;
 
 	tmp = crm_element_value(action_copy, "can_fail");
-	crm_str_to_boolean(tmp, &(action->can_fail));
+	cl_str_to_boolean(tmp, &(action->can_fail));
 
 	return action;
 }

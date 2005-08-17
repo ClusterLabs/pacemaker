@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.71 2005/08/03 14:54:27 andrew Exp $ */
+/* $Id: stages.c,v 1.72 2005/08/17 09:03:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,6 +26,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
+#include <clplumbing/cl_misc.h>
 
 #include <glib.h>
 
@@ -87,7 +88,7 @@ stage0(pe_working_set_t *data_set)
 	unpack_config(config, data_set);
 
 	if(value != NULL) {
-		crm_str_to_boolean(value, &data_set->have_quorum);
+		cl_str_to_boolean(value, &data_set->have_quorum);
 	}
 	
 	if(data_set->have_quorum == FALSE
