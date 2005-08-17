@@ -406,14 +406,15 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 	/* Add operation code as the first argument */
 	tmp_len = strnlen(op_type, MAX_LENGTH_OF_OPNAME);
 	params_argv[1] = g_strndup(op_type, tmp_len);
-	/* Add the teminating NULL pointer */
-	params_argv[ht_size+2] = NULL;
 
-	/* No actual arguments except op_type */
+	/* 
+	 * No actual arguments needed except op_type.
+	 * Add the teminating NULL pointer. 
+	 */
+	params_argv[2] = NULL;
 	if (ht_size != 0) {
-		/* Too strict? maybe */
-		cl_log(LOG_ERR, "For LSB init script, no parameter needed.");
-		return -1;
+		cl_log(LOG_WARNING, "For LSB init script, no additional "
+			"parameters are needed.");
 	}
 
 /* Actually comment the following code, but I still think it may be used
