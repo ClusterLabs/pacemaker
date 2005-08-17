@@ -1,4 +1,4 @@
-/* $Id: test.iso8601.c,v 1.1 2005/08/02 16:14:39 andrew Exp $ */
+/* $Id: test.iso8601.c,v 1.2 2005/08/17 08:59:06 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,6 +34,7 @@ main(int argc, char **argv)
 	
 	crm_log_init("iso8601");
 	cl_log_set_facility(LOG_USER);
+	cl_log_enable_stderr(TRUE);
 	
 	if(argc < 2) {
 		argerr++;
