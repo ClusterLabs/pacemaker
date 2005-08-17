@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.13 2005/08/11 20:03:32 lars Exp $ */
+/* $Id: rules.c,v 1.14 2005/08/17 09:29:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -105,9 +105,17 @@ test_expression(crm_data_t *expr, node_t *node, pe_working_set_t *data_set)
 			accept = test_rule(expr, node, data_set);
 			break;
 		case attr_expr:
-		case loc_expr:
 			accept = test_attr_expression(
 				expr, node?node->details->attrs:NULL, data_set);
+			break;
+		case loc_expr:
+			/* location expressions can never succeed if there is
+			 * no node to compare with
+			 */
+			if(node == NULL) {
+				accept = test_attr_expression(
+					expr, node->details->attrs, data_set);
+			}
 			break;
 
 		case time_expr:
