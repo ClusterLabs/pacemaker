@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.11 2005/07/08 20:55:20 andrew Exp $ */
+/* $Id: ipc.c,v 1.12 2005/08/17 08:44:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -166,7 +166,7 @@ init_server_ipc_comms(
 	char    commpath[SOCKET_LEN];
 	IPC_WaitConnection *wait_ch;
 	
-	sprintf(commpath, WORKING_DIR "/%s", channel_name);
+	sprintf(commpath, CRM_SOCK_DIR "/%s", channel_name);
 
 	wait_ch = wait_channel_init(commpath);
 
@@ -235,11 +235,11 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 
 	
 	local_socket_len += strlen(channel_name);
-	local_socket_len += strlen(WORKING_DIR);
+	local_socket_len += strlen(CRM_SOCK_DIR);
 
 	crm_malloc0(commpath, sizeof(char)*local_socket_len);
 	if(commpath != NULL) {
-		sprintf(commpath, WORKING_DIR "/%s", channel_name);
+		sprintf(commpath, CRM_SOCK_DIR "/%s", channel_name);
 		commpath[local_socket_len - 1] = '\0';
 		crm_debug_3("Attempting to talk on: %s", commpath);
 	}

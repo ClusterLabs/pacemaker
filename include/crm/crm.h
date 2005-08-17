@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.71 2005/08/10 08:55:04 andrew Exp $ */
+/* $Id: crm.h,v 1.72 2005/08/17 08:44:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,6 +37,12 @@
 #  define CRM_DEV_BUILD 0
 #endif
 
+#define CRM_DEPRECATED_SINCE_2_0_1 1
+#define CRM_DEPRECATED_SINCE_2_0_2 1
+#define CRM_DEPRECATED_SINCE_2_0_3 1
+#define CRM_DEPRECATED_SINCE_2_0_4 1
+#define CRM_DEPRECATED_SINCE_2_1_0 1
+
 #define ipc_call_diff_max_ms 5000
 #define action_diff_warn_ms  5000
 #define action_diff_max_ms   20000
@@ -68,6 +74,7 @@ extern gboolean crm_assert_failed;
 
 /* Clean these up at some point, some probably should be runtime options */
 #define WORKING_DIR	HA_VARLIBDIR"/heartbeat/crm"
+#define CRM_SOCK_DIR	HA_VARRUNDIR"/heartbeat/crm"
 #define BIN_DIR		HA_LIBDIR"/heartbeat"
 #define SOCKET_LEN	1024
 #define APPNAME_LEN	256

@@ -22,6 +22,7 @@ SUBDIRS			=  cib crmd pengine tengine admin test
 DIST_SUBDIRS		=  cib crmd pengine tengine admin test
 
 crmdir			= $(HA_VARLIBDIR)/$(HB_PKG)/crm
+crm_sock_dir		= $(HA_VARRUNDIR)/$(HB_PKG)/crm
 noinst_HEADERS 	= dmalloc_wrapper.h
 
 install-exec-local:
@@ -29,3 +30,7 @@ install-exec-local:
 	-chown $(HA_CCMUSER) $(DESTDIR)/$(crmdir)
 	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crmdir)
 	-chmod g+w $(DESTDIR)/$(crmdir)
+	-mkdir $(DESTDIR)/$(crm_sock_dir)
+	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_sock_dir)
+	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_sock_dir)
+#	-chmod g+w $(DESTDIR)/$(crm_sock_dir)
