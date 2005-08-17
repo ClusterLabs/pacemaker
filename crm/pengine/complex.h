@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.21 2005/08/11 08:58:40 andrew Exp $ */
+/* $Id: complex.h,v 1.22 2005/08/17 09:15:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -170,8 +170,8 @@ extern void clone_create_notify_element(
 
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_object_functions_t resource_class_functions[];
-extern gboolean common_unpack(
-	crm_data_t *xml_obj, resource_t **rsc, pe_working_set_t *data_set);
+extern gboolean common_unpack(crm_data_t *xml_obj, resource_t **rsc,
+			      GHashTable *defaults, pe_working_set_t *data_set);
 extern void common_dump(
 	resource_t *rsc, const char *pre_text, gboolean details);
 extern void common_printw(resource_t *rsc, const char *pre_text, int *index);
@@ -190,14 +190,10 @@ extern void common_agent_constraints(
 	GListPtr node_list, lrm_agent_t *agent, const char *id);
 
 extern void unpack_instance_attributes(
-	crm_data_t *xml_obj, node_t *node, GHashTable *hash,
+	crm_data_t *xml_obj, const char *set_name, node_t *node, GHashTable *hash,
 	const char **attr_filter, int attrs_length, pe_working_set_t *data_set);
 extern const char *get_rsc_param(resource_t *rsc, const char *prop);
 extern void add_rsc_param(resource_t *rsc, const char *name, const char *value);
 extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
 extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
-
-extern void inherit_parent_attributes(
-	crm_data_t *parent, crm_data_t *child, gboolean overwrite);
-
 #endif

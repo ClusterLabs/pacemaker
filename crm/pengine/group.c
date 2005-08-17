@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.33 2005/08/10 15:38:52 andrew Exp $ */
+/* $Id: group.c,v 1.34 2005/08/17 09:15:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -64,7 +64,7 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 	/* this is a bit of a hack - but simplifies everything else */
 	copy_in_properties(xml_self, xml_obj);
-	if(common_unpack(xml_self, &self, data_set)) {
+	if(common_unpack(xml_self, &self, NULL,  data_set)) {
 		group_data->self = self;
 		self->restart_type = pe_restart_restart;
 
@@ -78,9 +78,8 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 		resource_t *new_rsc = NULL;
 		set_id(xml_native_rsc, rsc->id, -1);
-		inherit_parent_attributes(xml_self, xml_native_rsc, TRUE);
-
-		if(common_unpack(xml_native_rsc, &new_rsc, data_set)) {
+		if(common_unpack(xml_native_rsc, &new_rsc,
+				 group_data->self->parameters, data_set)) {
 			group_data->num_children++;
 			group_data->child_list = g_list_append(
 				group_data->child_list, new_rsc);

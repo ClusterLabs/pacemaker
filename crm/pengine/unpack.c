@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.116 2005/08/11 08:58:40 andrew Exp $ */
+/* $Id: unpack.c,v 1.117 2005/08/17 09:15:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -22,6 +22,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
+#include <clplumbing/cl_misc.h>
 
 #include <lrm/lrm_api.h>
 
@@ -70,7 +71,8 @@ rsc_to_node_t *rsc2node_new(
 	const char *id, resource_t *rsc,
 	double weight, node_t *node, pe_working_set_t *data_set);
 
-const char *param_value(crm_data_t * parent, const char *name);
+const char *param_value(
+	GHashTable *hash, crm_data_t * parent, const char *name);
 
 rsc_to_node_t *generate_location_rule(
 	resource_t *rsc, crm_data_t *location_rule, pe_working_set_t *data_set);
@@ -78,9 +80,28 @@ rsc_to_node_t *generate_location_rule(
 gboolean
 unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 {
-	const char *value = NULL;
+/* 	const char *attr_filter[] = { */
+/* 		"default_resource_stickiness", */
+/* 		"transition_idle_timeout", */
+/* 		"stonith_enabled", */
+/* 		"symmetric_cluster" */
+/* 	}; */
 	
-	value = param_value(config, "transition_idle_timeout");
+	const char *value = NULL;
+	GHashTable *config_hash = g_hash_table_new_full(
+		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+
+	unpack_instance_attributes(
+		config, "cluster_property_set", NULL, config_hash,
+		NULL, 0, data_set);
+
+#if CRM_DEPRECATED_SINCE_2_0_1
+	param_value(config_hash, config, "transition_idle_timeout");
+	param_value(config_hash, config, "default_resource_stickiness");
+	param_value(config_hash, config, "stonith_enabled");
+	param_value(config_hash, config, "symmetric_cluster");
+	param_value(config_hash, config, "no_quorum_policy");
+#endif
 	if(value != NULL) {
 		long tmp = crm_get_msec(value);
 		if(tmp > 0) {
@@ -93,26 +114,27 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	crm_debug_4("%s set to: %s",
 		 "transition_idle_timeout", transition_idle_timeout);
 
-	value = param_value(config, "default_resource_stickiness");
+	value = g_hash_table_lookup(config_hash, "default_resource_stickiness");
 	data_set->default_resource_stickiness = crm_atoi(value, "0");
 	
-	value = param_value(config, "stonith_enabled");
+	value = g_hash_table_lookup(config_hash, "stonith_enabled");
 	if(value != NULL) {
-		crm_str_to_boolean(value, &data_set->stonith_enabled);
+		cl_str_to_boolean(value, &data_set->stonith_enabled);
 	}
 	crm_info("STONITH of failed nodes is %s",
 		 data_set->stonith_enabled?"enabled":"disabled");
+
 	
-	value = param_value(config, "symmetric_cluster");
+	value = g_hash_table_lookup(config_hash, "symmetric_cluster");
 	if(value != NULL) {
-		crm_str_to_boolean(value, &data_set->symmetric_cluster);
+		cl_str_to_boolean(value, &data_set->symmetric_cluster);
 	}
 	if(data_set->symmetric_cluster) {
 		crm_info("Cluster is symmetric"
 			 " - resources can run anywhere by default");
 	}
 
-	value = param_value(config, "no_quorum_policy");
+	value = g_hash_table_lookup(config_hash, "no_quorum_policy");
 	if(safe_str_eq(value, "ignore")) {
 		data_set->no_quorum_policy = no_quorum_ignore;
 		
@@ -134,13 +156,15 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 			crm_warn("On loss of CCM Quorum: Ignore");
 			break;
 	}
-	
+
+	g_hash_table_destroy(config_hash);
 	return TRUE;
 }
 
 const char *
-param_value(crm_data_t * parent, const char *name) 
+param_value(GHashTable *hash, crm_data_t * parent, const char *name) 
 {
+	const char *value = NULL;
 	crm_data_t * a_default = NULL;
 
 	if(parent != NULL) {
@@ -152,7 +176,14 @@ param_value(crm_data_t * parent, const char *name)
 		return NULL;
 	}
 	
-	return crm_element_value(a_default, XML_NVPAIR_ATTR_VALUE);
+	value = crm_element_value(a_default, XML_NVPAIR_ATTR_VALUE);
+	if(value && hash) {
+		if(g_hash_table_lookup(hash, name) == NULL) {
+			g_hash_table_insert(
+				hash, crm_strdup(name), crm_strdup(value));
+		}
+	}
+	return value;
 }
 
 gboolean
@@ -262,7 +293,7 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 		resource_t *new_rsc = NULL;
 		crm_debug_2("Begining unpack... %s",
 			    xml_obj?crm_element_name(xml_obj):"<none>");
-		if(common_unpack(xml_obj, &new_rsc, data_set)) {
+		if(common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
 			data_set->resources = g_list_append(
 				data_set->resources, new_rsc);
 			
@@ -1100,7 +1131,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	
 	}
 
-	crm_str_to_boolean(symmetrical, &symmetrical_bool);
+	cl_str_to_boolean(symmetrical, &symmetrical_bool);
 	if(safe_str_eq(type, "before")) {
 		type_is_after = FALSE;
 	}
@@ -1165,7 +1196,8 @@ add_node_attrs(crm_data_t *xml_obj, node_t *node, pe_working_set_t *data_set)
 	}
 	
 	unpack_instance_attributes(
-		xml_obj, node, node->details->attrs, NULL, 0, data_set);
+		xml_obj, XML_TAG_ATTR_SETS, node, node->details->attrs,
+		NULL, 0, data_set);
 
 	return TRUE;
 }

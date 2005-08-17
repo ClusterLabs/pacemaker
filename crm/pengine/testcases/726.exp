@@ -6,6 +6,7 @@
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.10"/>
          </attributes>
        </rsc_op>
@@ -17,6 +18,7 @@
        <rsc_op id="8" rsc_id="rsc_sgi2" operation="start" operation_key="rsc_sgi2_start_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8" allow_fail="false">
          <primitive id="rsc_sgi2" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.11"/>
          </attributes>
        </rsc_op>
@@ -30,6 +32,7 @@
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.11"/>
          </attributes>
        </rsc_op>
@@ -47,6 +50,7 @@
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.12"/>
          </attributes>
        </rsc_op>
@@ -62,6 +66,7 @@
        <rsc_op id="10" rsc_id="rsc_ibm1" operation="stop" operation_key="rsc_ibm1_stop_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a" allow_fail="false">
          <primitive id="rsc_ibm1" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.12"/>
          </attributes>
        </rsc_op>
@@ -73,6 +78,7 @@
        <rsc_op id="11" rsc_id="rsc_ibm1" operation="start" operation_key="rsc_ibm1_start_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638" allow_fail="false">
          <primitive id="rsc_ibm1" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.12"/>
          </attributes>
        </rsc_op>
@@ -88,6 +94,7 @@
        <rsc_op id="12" rsc_id="rsc_test02" operation="start" operation_key="rsc_test02_start_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947" allow_fail="false">
          <primitive id="rsc_test02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.13"/>
          </attributes>
        </rsc_op>
@@ -101,6 +108,7 @@
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.13"/>
          </attributes>
        </rsc_op>
@@ -118,6 +126,7 @@
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.14"/>
          </attributes>
        </rsc_op>

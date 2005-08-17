@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <rsc_op id="29" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_pre_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache" notify="1"/>
+         <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="notify_start_uuid" value="uuid1 "/>
            <nvpair name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
@@ -15,6 +15,7 @@
            <nvpair name="notify_active_uname" value="node1 "/>
            <nvpair name="clone" value="0"/>
            <nvpair name="clone_max" value="2"/>
+           <nvpair name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -27,7 +28,7 @@
    <synapse id="1">
      <action_set>
        <rsc_op id="30" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_post_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache" notify="1"/>
+         <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="notify_start_uuid" value="uuid1 "/>
            <nvpair name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
@@ -40,6 +41,7 @@
            <nvpair name="notify_active_uname" value="node1 "/>
            <nvpair name="clone" value="0"/>
            <nvpair name="clone_max" value="2"/>
+           <nvpair name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -52,10 +54,11 @@
    <synapse id="2">
      <action_set>
        <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache" notify="1"/>
+         <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="clone" value="1"/>
            <nvpair name="clone_max" value="2"/>
+           <nvpair name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -68,7 +71,7 @@
    <synapse id="3">
      <action_set>
        <rsc_op id="33" rsc_id="rsc1:child_rsc1:1" operation="notify" operation_key="rsc1:child_rsc1:1_post_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache" notify="1"/>
+         <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="notify_start_uuid" value="uuid1 "/>
            <nvpair name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
@@ -81,6 +84,7 @@
            <nvpair name="notify_active_uname" value="node1 "/>
            <nvpair name="clone" value="1"/>
            <nvpair name="clone_max" value="2"/>
+           <nvpair name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -184,10 +188,11 @@
    <synapse id="10">
      <action_set>
        <rsc_op id="16" rsc_id="rsc2:child_rsc2:0" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache" notify="1"/>
+         <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="clone" value="0"/>
            <nvpair name="clone_max" value="2"/>
+           <nvpair name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -200,7 +205,7 @@
    <synapse id="11">
      <action_set>
        <rsc_op id="34" rsc_id="rsc2:child_rsc2:0" operation="notify" operation_key="rsc2:child_rsc2:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
-         <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache" notify="1"/>
+         <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair name="notify_stop_uuid" value="uuid1 "/>
            <nvpair name="notify_stop_uname" value="node1 "/>
@@ -210,6 +215,7 @@
            <nvpair name="notify_operation" value="stop"/>
            <nvpair name="clone" value="0"/>
            <nvpair name="clone_max" value="2"/>
+           <nvpair name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>

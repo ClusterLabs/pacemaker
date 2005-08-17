@@ -6,6 +6,7 @@
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.11"/>
          </attributes>
        </rsc_op>
@@ -21,6 +22,7 @@
        <rsc_op id="8" rsc_id="rsc_hadev1" operation="start" operation_key="rsc_hadev1_start_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669" allow_fail="false">
          <primitive id="rsc_hadev1" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.11"/>
          </attributes>
        </rsc_op>
@@ -36,6 +38,7 @@
        <rsc_op id="13" rsc_id="rsc_hadev1" operation="stop" operation_key="rsc_hadev1_stop_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
          <primitive id="rsc_hadev1" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.11"/>
          </attributes>
        </rsc_op>
@@ -47,6 +50,7 @@
        <rsc_op id="5" rsc_id="rsc_hadev3" operation="start" operation_key="rsc_hadev3_start_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669" allow_fail="false">
          <primitive id="rsc_hadev3" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.13"/>
          </attributes>
        </rsc_op>
@@ -60,6 +64,7 @@
          <attributes>
            <nvpair name="timeout" value="20s"/>
            <nvpair name="interval" value="5s"/>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.13"/>
          </attributes>
        </rsc_op>

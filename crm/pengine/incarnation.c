@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.45 2005/08/10 15:38:52 andrew Exp $ */
+/* $Id: incarnation.c,v 1.46 2005/08/17 09:15:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -112,7 +112,7 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	CRM_DEV_ASSERT(xml_obj_child != NULL);
 	if(crm_assert_failed) { return; }
 
-	if(common_unpack(xml_self, &self, data_set)) {
+	if(common_unpack(xml_self, &self, NULL, data_set)) {
 		clone_data->self = self;
 
 	} else {
@@ -137,7 +137,6 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	clone_data->notify_confirm = clone_data->self->notify;	
 #endif	
 
-	inherit_parent_attributes(xml_self, xml_obj_child, FALSE);
 	inc_max = crm_itoa(clone_data->clone_max);
 	for(lpc = 0; lpc < clone_data->clone_max; lpc++) {
 		resource_t *child_rsc = NULL;
@@ -145,7 +144,8 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		
 		set_id(child_copy, rsc->id, lpc);
 		
-		if(common_unpack(child_copy, &child_rsc, data_set)) {
+		if(common_unpack(child_copy, &child_rsc,
+				 clone_data->self->parameters, data_set)) {
 			char *inc_num = crm_itoa(lpc);
 			
 			clone_data->child_list = g_list_append(

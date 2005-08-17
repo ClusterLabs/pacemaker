@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.55 2005/08/11 08:58:40 andrew Exp $ */
+/* $Id: complex.c,v 1.56 2005/08/17 09:15:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -138,62 +138,36 @@ is_active(rsc_to_node_t *cons)
 	return TRUE;
 }
 
-
-void
-inherit_parent_attributes(
-	crm_data_t *parent, crm_data_t *child, gboolean overwrite)
+static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
-	int lpc = 0;
-	const char *attributes[] = {
-		XML_RSC_ATTR_STOPFAIL,
-		XML_RSC_ATTR_RESTART,
-		"multiple_active",
-		"start_prereq",
-		"resource_stickiness",
-		"notify",
-		"is_managed"
-	};
-
-	for(lpc = 0; lpc < DIMOF(attributes); lpc++) {
-		const char *attr_p = crm_element_value(parent, attributes[lpc]);
-		const char *attr_c = crm_element_value(child,  attributes[lpc]);
-
-		if(attr_p == NULL) {
-			continue;
-		} else if(safe_str_eq(attr_p, attr_c)) {
-			continue;
-		}
-		
-		if(attr_c != NULL && overwrite == FALSE) {
-			crm_debug_2("Resource %s: ignoring parent value for %s",
-				    ID(child), attributes[lpc]);
-			continue;
-		} else if(attr_c != NULL) {
-			pe_warn("Resource %s: Overwriting attribute %s: %s->%s",
-				ID(child), attributes[lpc], attr_c, attr_p);
-		}
-		crm_xml_add(child, attributes[lpc], attr_p);
-	}
+	add_hash_param(user_data, key, value);
 }
 
 gboolean	
-common_unpack(
-	crm_data_t * xml_obj, resource_t **rsc, pe_working_set_t *data_set)
+common_unpack(crm_data_t * xml_obj, resource_t **rsc,
+	      GHashTable *defaults, pe_working_set_t *data_set)
 {
-	const char *id        = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *restart   = crm_element_value(xml_obj, XML_RSC_ATTR_RESTART);
-	const char *multiple  = crm_element_value(xml_obj, "multiple_active");
-	const char *placement = crm_element_value(xml_obj, "resource_stickiness");
-	const char *notify    = crm_element_value(xml_obj, "notify");
-	const char *priority  = NULL;
-	const char *is_managed = NULL;
+	int lpc = 0;
+	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
+	const char *value = NULL;
 
 	const char *allowed_attrs[] = {
 		XML_CIB_ATTR_PRIORITY,
 		XML_RSC_ATTR_INCARNATION_MAX,
-		XML_RSC_ATTR_INCARNATION_NODEMAX
+		XML_RSC_ATTR_INCARNATION_NODEMAX,
+		"resource_stickiness"
 	};
 
+	const char *rsc_attrs[] = {
+		XML_RSC_ATTR_STOPFAIL,
+		XML_RSC_ATTR_RESTART,
+		"resource_stickiness",
+		"multiple_active",
+		"start_prereq",
+		"is_managed",
+		"notify"
+	};	
+	
 	crm_log_xml_debug_2(xml_obj, "Processing resource input...");
 	
 	if(id == NULL) {
@@ -228,28 +202,45 @@ common_unpack(
 	(*rsc)->parameters = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
-	unpack_instance_attributes(xml_obj, NULL, (*rsc)->parameters,
-				   allowed_attrs, DIMOF(allowed_attrs), data_set);
+	for(lpc = 0; lpc < DIMOF(rsc_attrs); lpc++) {
+		value = crm_element_value(xml_obj, rsc_attrs[lpc]);
+		if(value != NULL) {
+			add_hash_param(
+				(*rsc)->parameters, rsc_attrs[lpc], value);
+		}
+	}
+	
+	unpack_instance_attributes(
+		xml_obj, XML_TAG_ATTR_SETS, NULL, (*rsc)->parameters,
+		allowed_attrs, DIMOF(allowed_attrs), data_set);
 
-	priority = get_rsc_param(*rsc, XML_CIB_ATTR_PRIORITY);
-
-	(*rsc)->priority	   = atoi(priority?priority:"0"); 
-	(*rsc)->effective_priority = (*rsc)->priority;
-	(*rsc)->recovery_type      = recovery_stop_start;
+	if(defaults != NULL) {
+		g_hash_table_foreach(defaults, dup_attr, (*rsc)->parameters);
+	}
+	
 	(*rsc)->runnable	   = TRUE; 
 	(*rsc)->provisional	   = TRUE; 
 	(*rsc)->start_pending	   = FALSE; 
 	(*rsc)->starting	   = FALSE; 
 	(*rsc)->stopping	   = FALSE; 
-	(*rsc)->notify		   = crm_is_true(notify); 
+
 	(*rsc)->candidate_colors   = NULL;
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
 	(*rsc)->is_managed	   = TRUE;
+
+	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
 
-	is_managed = crm_element_value((*rsc)->xml, "is_managed");
-	if(is_managed != NULL && crm_is_true(is_managed) == FALSE) {
+	value = g_hash_table_lookup((*rsc)->parameters, XML_CIB_ATTR_PRIORITY);
+	(*rsc)->priority	   = atoi(value?value:"0"); 
+	(*rsc)->effective_priority = (*rsc)->priority;
+
+	value = g_hash_table_lookup((*rsc)->parameters, "notify");
+	(*rsc)->notify		   = crm_is_true(value); 
+	
+	value = g_hash_table_lookup((*rsc)->parameters, "is_managed");
+	if(value != NULL && crm_is_true(value) == FALSE) {
 		(*rsc)->is_managed = FALSE;
 		crm_warn("Resource %s is currently not managed", (*rsc)->id);
 #if 0		
@@ -259,7 +250,8 @@ common_unpack(
 			"is_managed_default", *rsc, -INFINITY, NULL, data_set);
 		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);
 #endif	
-	} else if((*rsc)->is_managed && data_set->symmetric_cluster) {
+	}
+	if((*rsc)->is_managed && data_set->symmetric_cluster) {
 		rsc_to_node_t *new_con = rsc2node_new(
 			"symmetric_default", *rsc, 0, NULL, data_set);
 		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);
@@ -267,7 +259,8 @@ common_unpack(
 	
 	crm_debug_2("Options for %s", id);
 	
-	if(safe_str_eq(restart, "restart")) {
+	value = g_hash_table_lookup((*rsc)->parameters, XML_RSC_ATTR_RESTART);
+	if(safe_str_eq(value, "restart")) {
 		(*rsc)->restart_type = pe_restart_restart;
 		crm_debug_2("\tDependancy restart handling: restart");
 
@@ -276,11 +269,12 @@ common_unpack(
 		crm_debug_2("\tDependancy restart handling: ignore");
 	}
 
-	if(safe_str_eq(multiple, "stop_only")) {
+	value = g_hash_table_lookup((*rsc)->parameters, "multiple_active");
+	if(safe_str_eq(value, "stop_only")) {
 		(*rsc)->recovery_type = recovery_stop_only;
 		crm_debug_2("\tMultiple running resource recovery: stop only");
 
-	} else if(safe_str_eq(multiple, "block")) {
+	} else if(safe_str_eq(value, "block")) {
 		(*rsc)->recovery_type = recovery_block;
 		crm_debug_2("\tMultiple running resource recovery: block");
 
@@ -290,26 +284,27 @@ common_unpack(
 		
 	}
 
-	if(placement != NULL) {
-		if(safe_str_eq(placement, INFINITY_S)) {
+	value = g_hash_table_lookup((*rsc)->parameters, "resource_stickiness");
+	if(value != NULL) {
+		if(safe_str_eq(value, INFINITY_S)) {
 			(*rsc)->stickiness = INFINITY;
 
-		} else if(safe_str_eq(placement, MINUS_INFINITY_S)) {
+		} else if(safe_str_eq(value, MINUS_INFINITY_S)) {
 			(*rsc)->stickiness = -INFINITY;
 
 		} else {
-			(*rsc)->stickiness = atoi(placement);
+			(*rsc)->stickiness = atoi(value);
 		}
 	}
 	if((*rsc)->stickiness > 0) {
 		crm_debug_2("\tPlacement: prefer current location%s",
-			    placement == NULL?" (default)":"");
+			    value == NULL?" (default)":"");
 	} else if((*rsc)->stickiness < 0) {
 		crm_warn("\tPlacement: always move from the current location%s",
-			    placement == NULL?" (default)":"");
+			    value == NULL?" (default)":"");
 	} else {
 		crm_debug_2("\tPlacement: optimal%s",
-			    placement == NULL?" (default)":"");
+			    value == NULL?" (default)":"");
 	}
 
 	crm_debug_2("\tNotification of start/stop actions: %s",
@@ -421,8 +416,9 @@ void common_free(resource_t *rsc)
 
 void
 unpack_instance_attributes(
-	crm_data_t *xml_obj, node_t *node, GHashTable *hash,
-	const char **attrs, int attrs_length, pe_working_set_t *data_set)
+	crm_data_t *xml_obj, const char *set_name, node_t *node,
+	GHashTable *hash, const char **attrs, int attrs_length,
+	pe_working_set_t *data_set)
 {
 	crm_data_t *attributes = NULL;
 	
@@ -439,7 +435,7 @@ unpack_instance_attributes(
 	
 	crm_debug_2("Checking for attributes");
 	xml_child_iter(
-		xml_obj, attr_set, XML_TAG_ATTR_SETS,
+		xml_obj, attr_set, set_name,
 
 		/* check any rules */
 		if(test_ruleset(attr_set, node, data_set) == FALSE) {
@@ -449,8 +445,7 @@ unpack_instance_attributes(
 		crm_debug_2("Adding attributes");
 		attributes = cl_get_struct(attr_set, XML_TAG_ATTRS);
 		if(attributes == NULL) {
-			pe_err("%s with no %s child",
-			       XML_TAG_ATTR_SETS, XML_TAG_ATTRS);
+			pe_err("%s with no %s child", set_name, XML_TAG_ATTRS);
 		} else {
 			populate_hash(attributes, hash, attrs, attrs_length);
 		}

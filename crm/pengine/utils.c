@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.100 2005/08/11 08:58:40 andrew Exp $ */
+/* $Id: utils.c,v 1.101 2005/08/17 09:15:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -697,8 +697,8 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 	if(rsc != NULL) {
 		if(action->node != NULL) {
 			unpack_instance_attributes(
-				action->op_entry, action->node, action->extra,
-				NULL, 0, data_set);
+				action->op_entry, XML_TAG_ATTR_SETS,
+				action->node, action->extra, NULL,0, data_set);
 		}
 		
 		if(action->node == NULL) {
@@ -778,7 +778,8 @@ unpack_operation(
 		value = crm_element_value(xml_obj, "prereq");
 	}
 	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_START)) {
-		value = crm_element_value(action->rsc->xml, "start_prereq");
+		value = g_hash_table_lookup(
+			action->rsc->parameters, "start_prereq");
 	}
 	
 	if(value == NULL && safe_str_neq(action->task, CRMD_ACTION_START)) {
@@ -815,7 +816,8 @@ unpack_operation(
 		value = crm_element_value(xml_obj, "on_fail");
 	}
 	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
-		value = crm_element_value(action->rsc->xml, "on_stopfail");
+		value = g_hash_table_lookup(
+			action->rsc->parameters, "on_stopfail");
 	}
 	
 	if(value == NULL) {

@@ -3,7 +3,9 @@
      <action_set>
        <rsc_op id="1" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_start"/>
-         <attributes/>
+         <attributes>
+           <nvpair name="multiple_active" value="stop_start"/>
+         </attributes>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -12,7 +14,9 @@
      <action_set>
        <rsc_op id="2" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_start"/>
-         <attributes/>
+         <attributes>
+           <nvpair name="multiple_active" value="stop_start"/>
+         </attributes>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -21,7 +25,9 @@
      <action_set>
        <rsc_op id="3" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_start"/>
-         <attributes/>
+         <attributes>
+           <nvpair name="multiple_active" value="stop_start"/>
+         </attributes>
        </rsc_op>
      </action_set>
      <inputs>

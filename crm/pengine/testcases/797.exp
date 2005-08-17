@@ -4,6 +4,7 @@
        <rsc_op id="9" rsc_id="DcIPaddr" operation="stop" operation_key="DcIPaddr_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.10"/>
          </attributes>
        </rsc_op>
@@ -15,6 +16,7 @@
        <rsc_op id="11" rsc_id="rsc_c001n08" operation="stop" operation_key="rsc_c001n08_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
          <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.11"/>
          </attributes>
        </rsc_op>
@@ -26,6 +28,7 @@
        <rsc_op id="13" rsc_id="rsc_c001n02" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.12"/>
          </attributes>
        </rsc_op>
@@ -37,6 +40,7 @@
        <rsc_op id="15" rsc_id="rsc_c001n03" operation="stop" operation_key="rsc_c001n03_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.13"/>
          </attributes>
        </rsc_op>
@@ -48,6 +52,7 @@
        <rsc_op id="17" rsc_id="rsc_c001n01" operation="stop" operation_key="rsc_c001n01_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" allow_fail="false">
          <primitive id="rsc_c001n01" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
+           <nvpair name="is_managed" value="1"/>
            <nvpair name="ip" value="127.0.0.14"/>
          </attributes>
        </rsc_op>

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.72 2005/08/11 08:58:40 andrew Exp $ */
+/* $Id: native.c,v 1.73 2005/08/17 09:15:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -99,11 +99,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			"not_managed_default", rsc, INFINITY, node, data_set);
 		return;
 
-	} else if(rsc->stickiness > 0) {
-		rsc2node_new("stickiness", rsc, INFINITY, node, data_set);
-
-	} else if(rsc->stickiness < 0) {
-		rsc2node_new("stickiness", rsc, -INFINITY, node, data_set);
+	} else if(rsc->stickiness != 0) {
+		rsc2node_new("stickiness", rsc, rsc->stickiness, node,data_set);
 	}
 	
 	if(g_list_length(native_data->running_on) > 1) {
@@ -329,7 +326,9 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		chosen = native_data->color->details->chosen_node;
 	}
 
-	unpack_instance_attributes(rsc->xml, chosen, rsc->parameters, NULL, 0, data_set);
+	unpack_instance_attributes(
+		rsc->xml, XML_TAG_ATTR_SETS, chosen, rsc->parameters,
+		NULL, 0, data_set);
 	
 	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
 		start = start_action(rsc, chosen, TRUE);
