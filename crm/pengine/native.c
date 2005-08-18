@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.73 2005/08/17 09:15:13 andrew Exp $ */
+/* $Id: native.c,v 1.74 2005/08/18 19:10:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -99,7 +99,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			"not_managed_default", rsc, INFINITY, node, data_set);
 		return;
 
-	} else if(rsc->stickiness != 0) {
+	} else if(rsc->stickiness > 0 || rsc->stickiness < 0) {
 		rsc2node_new("stickiness", rsc, rsc->stickiness, node,data_set);
 	}
 	
