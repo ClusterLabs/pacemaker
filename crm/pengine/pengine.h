@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.82 2005/08/11 08:58:40 andrew Exp $ */
+/* $Id: pengine.h,v 1.83 2005/08/19 10:02:18 sunjd Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,10 +42,11 @@ typedef struct action_wrapper_s action_wrapper_t;
  * The man pages for both curses and ncurses suggest inclusion of "curses.h".
  * We believe the following to be acceptable and portable.
  */
-#if defined(HAVE_NCURSES_H)
+
+#if defined(HAVE_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
 #  include <ncurses.h>
 #  define CURSES_ENABLED 1
-#elif defined(HAVE_CURSES_H)
+#elif defined(HAVE_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
 #  include <curses.h>
 #  define CURSES_ENABLED 1
 #else
