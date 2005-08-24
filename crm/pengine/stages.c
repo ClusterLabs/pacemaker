@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.72 2005/08/17 09:03:24 andrew Exp $ */
+/* $Id: stages.c,v 1.73 2005/08/24 09:28:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,7 +36,6 @@
 node_t *choose_fencer(action_t *stonith, node_t *node, GListPtr resources);
 void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 
-const char* transition_idle_timeout = NULL;
 
 
 
@@ -71,8 +70,6 @@ stage0(pe_working_set_t *data_set)
 	crm_debug_3("Beginning unpack");
 	
 	/* reset remaining global variables */
-
-	transition_idle_timeout = "60s"; /* 1 minute */
 	
 	if(data_set->input == NULL) {
 		return FALSE;
@@ -379,7 +376,7 @@ stage8(pe_working_set_t *data_set)
 	crm_info("Creating transition graph %d.", transition_id);
 	
 	data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
-	crm_xml_add(data_set->graph, "global_timeout", transition_idle_timeout);
+	crm_xml_add(data_set->graph, "global_timeout", data_set->transition_idle_timeout);
 	crm_xml_add(data_set->graph, "transition_id", transition_id_s);
 	crm_free(transition_id_s);
 	

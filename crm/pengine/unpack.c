@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.117 2005/08/17 09:15:13 andrew Exp $ */
+/* $Id: unpack.c,v 1.118 2005/08/24 09:28:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -102,17 +102,21 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	param_value(config_hash, config, "symmetric_cluster");
 	param_value(config_hash, config, "no_quorum_policy");
 #endif
+	value = g_hash_table_lookup(config_hash, "transition_idle_timeout");
 	if(value != NULL) {
 		long tmp = crm_get_msec(value);
 		if(tmp > 0) {
-			transition_idle_timeout = value;
+			crm_free(data_set->transition_idle_timeout);
+			data_set->transition_idle_timeout = crm_strdup(value);
 		} else {
 			crm_err("Invalid value for %s: %s",
-				"transition_idle_timeout", value);
+				"transition_idle_timeout",
+				data_set->transition_idle_timeout);
 		}
 	}
+	
 	crm_debug_4("%s set to: %s",
-		 "transition_idle_timeout", transition_idle_timeout);
+		 "transition_idle_timeout", data_set->transition_idle_timeout);
 
 	value = g_hash_table_lookup(config_hash, "default_resource_stickiness");
 	data_set->default_resource_stickiness = crm_atoi(value, "0");

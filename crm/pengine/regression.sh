@@ -144,7 +144,7 @@ do_test inc2 "Incarnation silent restart, stop, move		"
 do_test inc3 "Inter-incarnation ordering, silent restart, stop, move"
 do_test inc4 "Inter-incarnation ordering, silent restart, stop, move (ordered)"
 do_test inc5 "Inter-incarnation ordering, silent restart, stop, move (restart 1)"
-do_test inc6 "Inter-incarnation ordering, silent restart, stop, move (restart 2) *"
+do_test inc6 "Inter-incarnation ordering, silent restart, stop, move (restart 2)"
 #do_test inc7 "Inter-incarnation ordering, silent restart, stop, move (ordered subset)"
 
 echo ""

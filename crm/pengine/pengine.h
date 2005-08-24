@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.83 2005/08/19 10:02:18 sunjd Exp $ */
+/* $Id: pengine.h,v 1.84 2005/08/24 09:28:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,6 +75,7 @@ typedef struct pe_working_set_s
 		ha_time_t *now;
 
 		/* options extracted from the input */
+		char *transition_idle_timeout;
 		char *dc_uuid;
 		node_t *dc_node;
 		gboolean have_quorum;

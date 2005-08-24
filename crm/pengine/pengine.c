@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.87 2005/08/11 08:58:40 andrew Exp $ */
+/* $Id: pengine.c,v 1.88 2005/08/24 09:28:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -251,6 +251,7 @@ cleanup_calculations(pe_working_set_t *data_set)
 	}
 	
 	crm_free(data_set->dc_uuid);
+	crm_free(data_set->transition_idle_timeout);
 	
 	crm_debug_3("deleting order cons");
 	pe_free_ordering(data_set->ordering_constraints); 
@@ -289,6 +290,7 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->now = NULL;
 	data_set->graph = NULL;
 	
+	data_set->transition_idle_timeout = crm_strdup("60s");
 	data_set->dc_uuid           = NULL;
 	data_set->dc_node           = NULL;
 	data_set->have_quorum       = FALSE;
