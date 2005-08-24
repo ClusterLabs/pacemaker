@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.8 2005/08/11 14:43:30 andrew Exp $ */
+/* $Id: iso8601.c,v 1.9 2005/08/24 08:54:27 davidlee Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,6 +29,7 @@
  *
  */
 
+#include <portability.h>
 #include <crm/crm.h>
 #include <time.h>
 #include <ctype.h>
