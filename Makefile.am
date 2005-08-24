@@ -57,7 +57,7 @@ if SNMP_SUBAGENT_BUILD
 SNMP_SUBAGENT_DIR = snmp_subagent
 endif
 
-SUBDIRS	=		$(LIBLTDL_DIR) debian pkg port replace include config	\
+SUBDIRS	=		$(LIBLTDL_DIR) debian pkg port replace include 	\
 			lib						\
 			ldirectord heartbeat membership telecom		\
 			linux-ha contrib resources			\
