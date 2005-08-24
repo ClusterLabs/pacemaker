@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.9 2005/08/24 08:54:27 davidlee Exp $ */
+/* $Id: iso8601.c,v 1.10 2005/08/24 16:43:36 davidlee Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,28 @@ gboolean gregorian_to_ordinal(ha_time_t *a_date);
 gboolean ordinal_to_gregorian(ha_time_t *a_date);
 gboolean ordinal_to_weekdays(ha_time_t *a_date);
 void normalize_time(ha_time_t *a_time);
+
+/*
+ * Andrew's code was originally written for OSes whose "struct tm" contains:
+ *	long tm_gmtoff;		:: Seconds east of UTC
+ *	const char *tm_zone;	:: Timezone abbreviation
+ * Some OSes lack these, instead having:
+ *	time_t (or long) timezone;
+		:: "difference between UTC and local standard time"
+ *	char *tzname[2] = { "...", "..." };
+ * I (David Lee) confess to not understanding the details.  So my attempted
+ * generalisations for where their use is necessary may be flawed.
+ *
+ * 1. Does "difference between ..." subtract the same or opposite way?
+ * 2. Should it use "altzone" instead of "timezone"?
+ * 3. Should it use tzname[0] or tzname[1]?  Interaction with timezone/altzone?
+ */
+#if defined(HAVE_TM_GMTOFF)
+#define GMTOFF(tm) ((tm)->tm_gmtoff)
+#else
+/* Note: extern variable; macro argument not actually used.  */
+#define GMTOFF(tm) (timezone)
+#endif
 
 
 void
@@ -145,10 +167,12 @@ parse_time_offset(char **offset_str)
 		}
 		
 	} else {
+#if defined(HAVE_TM_GMTOFF)
 		time_t now = time(NULL);
 		struct tm *now_tm = localtime(&now);
-		int h_offset = now_tm->tm_gmtoff / (3600); 
-		int m_offset = (now_tm->tm_gmtoff - (3600 * h_offset)) / (60);
+#endif
+		int h_offset = GMTOFF(now_tm) / (3600); 
+		int m_offset = (GMTOFF(now_tm) - (3600 * h_offset)) / (60);
 		if(h_offset < 0 && m_offset < 0) {
 			m_offset = 0 - m_offset;
 		}
@@ -836,10 +860,10 @@ ha_set_tm_time(ha_time_t *lhs, struct tm *rhs)
 	CRM_DEV_ASSERT(lhs->offset->has != NULL);
 
 	/* tm_gmtoff == offset from UTC in seconds */
-	h_offset = rhs->tm_gmtoff / (3600); 
-	m_offset = (rhs->tm_gmtoff - (3600 * h_offset)) / (60);
+	h_offset = GMTOFF(rhs) / (3600); 
+	m_offset = (GMTOFF(rhs) - (3600 * h_offset)) / (60);
 	crm_debug_6("Offset (s): %ld, offset (hh:mm): %.2d:%.2d",
-		    rhs->tm_gmtoff, h_offset, m_offset);
+		    GMTOFF(rhs), h_offset, m_offset);
 	
 	lhs->offset->hours = h_offset;
 	lhs->offset->has->hours = TRUE;
@@ -1074,8 +1098,12 @@ reset_tm(struct tm *some_tm)
 	some_tm->tm_wday = -1;	 /* days since Sunday [0-6] */
 	some_tm->tm_yday = -1;	 /* days since January 1 [0-365] */
 	some_tm->tm_isdst = -1;	 /* Daylight Savings Time flag */
+#if defined(HAVE_TM_GMTOFF)
 	some_tm->tm_gmtoff = -1; /* offset from CUT in seconds */
+#endif
+#if defined(HAVE_TM_ZONE)
 	some_tm->tm_zone = NULL;/* timezone abbreviation */
+#endif
 }
 
 gboolean
@@ -1189,6 +1217,16 @@ free_ha_date(ha_time_t *a_date)
 void
 log_tm_date(int log_level, struct tm *some_tm) 
 {
+	const char *tzn;
+
+#if defined(HAVE_TM_ZONE)
+	tzn = some_tm->tm_zone;
+#elif defined(HAVE_TZNAME)
+	tzn = tzname[0];
+#else
+	tzn = NULL;
+#endif
+
 	crm_log_maybe(log_level,
 		      "%.2d/%.2d/%.4d %.2d:%.2d:%.2d %s"
 		      " (wday=%d, yday=%d, dst=%d, offset=%ld)",
@@ -1198,9 +1236,9 @@ log_tm_date(int log_level, struct tm *some_tm)
 		      some_tm->tm_hour,
 		      some_tm->tm_min,
 		      some_tm->tm_sec,
-		      some_tm->tm_zone,
+		      tzn,
 		      some_tm->tm_wday==0?7:some_tm->tm_wday,
 		      1+some_tm->tm_yday,
 		      some_tm->tm_isdst,
-		      some_tm->tm_gmtoff);
+		      GMTOFF(some_tm));
 }
