@@ -521,11 +521,16 @@ do_lrm_query(gboolean is_replace)
 	crm_data_t *xml_state = NULL;
 	crm_data_t *xml_data  = NULL;
 	crm_data_t *rsc_list  = NULL;
+	const char *exp_state = CRMD_STATE_ACTIVE;
 
+	if(is_set(fsa_input_register, R_SHUTDOWN)) {
+		exp_state = CRMD_STATE_INACTIVE;
+	}
+	
 	xml_state = create_node_state(
 		fsa_our_uname, fsa_our_uname,
 		ACTIVESTATUS, XML_BOOLEAN_TRUE, ONLINESTATUS,
-		CRMD_JOINSTATE_MEMBER, CRMD_JOINSTATE_MEMBER, __FUNCTION__);
+		CRMD_JOINSTATE_MEMBER, exp_state, __FUNCTION__);
 
 	xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
 	rsc_list  = create_xml_node(xml_data, XML_LRM_TAG_RESOURCES);
