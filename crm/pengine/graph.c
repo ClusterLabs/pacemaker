@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.58 2005/08/10 15:38:52 andrew Exp $ */
+/* $Id: graph.c,v 1.59 2005/08/25 09:25:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -335,7 +335,7 @@ action2xml(action_t *action, gboolean as_input)
 	crm_debug_4("Dumping action %d as XML", action->id);
 	if(safe_str_eq(action->task, CRM_OP_FENCE)) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
-		needs_node_info = FALSE;
+/* 		needs_node_info = FALSE; */
 		
 	} else if(safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
