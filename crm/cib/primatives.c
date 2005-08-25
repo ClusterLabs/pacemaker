@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.25 2005/07/14 15:45:41 andrew Exp $ */
+/* $Id: primatives.c,v 1.26 2005/08/25 08:26:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -540,18 +540,22 @@ update_node_state(crm_data_t *target, crm_data_t *update)
 	xml_remove_prop(target, XML_CIB_ATTR_CLEAR_SHUTDOWN);
 	if(clear_shutdown) {
 		/*  unset XML_CIB_ATTR_SHUTDOWN  */
-		crm_debug_2("Clearing %s", XML_CIB_ATTR_SHUTDOWN);
-		xml_remove_prop(target, XML_CIB_ATTR_SHUTDOWN);
-		any_updates = TRUE;
+		if(crm_element_value(target, XML_CIB_ATTR_SHUTDOWN) != NULL) {
+			crm_debug_2("Clearing %s", XML_CIB_ATTR_SHUTDOWN);
+			xml_remove_prop(target, XML_CIB_ATTR_SHUTDOWN);
+			any_updates = TRUE;
+		}
 	}
 
 	xml_remove_prop(target, XML_CIB_ATTR_CLEAR_STONITH);
 	if(clear_stonith) {
 		/*  unset XML_CIB_ATTR_STONITH */
-		crm_debug_2("Clearing %s", XML_CIB_ATTR_STONITH);
-		xml_remove_prop(target, XML_CIB_ATTR_STONITH);
-		any_updates = TRUE;
-	}	
+		if(crm_element_value(target, XML_CIB_ATTR_STONITH) != NULL) {
+			crm_debug_2("Clearing %s", XML_CIB_ATTR_STONITH);
+			xml_remove_prop(target, XML_CIB_ATTR_STONITH);
+			any_updates = TRUE;
+		}
+	}
 	
 	if(any_updates) {
 		set_node_tstamp(target);
