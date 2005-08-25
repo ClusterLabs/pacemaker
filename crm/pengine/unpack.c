@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.118 2005/08/24 09:28:36 andrew Exp $ */
+/* $Id: unpack.c,v 1.119 2005/08/25 09:27:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -484,11 +484,14 @@ determine_online_status(
 		return online;
 	}
 
+	if(safe_str_eq(exp_state, CRMD_JOINSTATE_MEMBER)) {
+		this_node->details->expected_up = TRUE;
+	}
 	if(shutdown != NULL) {
 		this_node->details->shutdown = TRUE;
-	}
-	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
-		this_node->details->expected_up = TRUE;
+#if 0
+		this_node->details->expected_up = FALSE;
+#endif
 	}
 
 	if(data_set->stonith_enabled == FALSE) {
@@ -516,9 +519,11 @@ determine_online_status(
 			
 			pe_err("Node %s is partially & un-expectedly down",
 				uname);
-			crm_debug_2("\tcrm_state=%s, join_state=%s, expected=%s",
-				  crm_str(crm_state), crm_str(join_state),
-				  crm_str(exp_state));
+			crm_info("\tha_state=%s, ccm_state=%s,"
+				 " crm_state=%s, join_state=%s, expected=%s",
+				 crm_str(ha_state), crm_str(ccm_state),
+				 crm_str(crm_state), crm_str(join_state),
+				 crm_str(exp_state));
 		}
 	} else {
 		if(crm_is_true(ccm_state)
@@ -539,11 +544,11 @@ determine_online_status(
 			this_node->details->unclean = TRUE;
 			
 			pe_err("Node %s is un-expectedly down", uname);
-			crm_debug_2("\tha_state=%s, ccm_state=%s",
-				  crm_str(ha_state), crm_str(ccm_state));
-			crm_debug_2("\tcrm_state=%s, join_state=%s, expected=%s",
-				  crm_str(crm_state), crm_str(join_state),
-				  crm_str(exp_state));
+			crm_info("\tha_state=%s, ccm_state=%s,"
+				 " crm_state=%s, join_state=%s, expected=%s",
+				 crm_str(ha_state), crm_str(ccm_state),
+				 crm_str(crm_state), crm_str(join_state),
+				 crm_str(exp_state));
 		}
 	}
 	

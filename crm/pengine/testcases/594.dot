@@ -23,6 +23,7 @@ digraph "g" {
 "DoFencing_running_0" [ tooltip="" style=bold color="green" fontcolor="orange" ]
 "DoFencing_stop_0" [ tooltip="" style=bold color="green" fontcolor="orange" ]
 "DoFencing_stopped_0" [ tooltip="" style=bold color="green" fontcolor="orange" ]
+"stonith" [ tooltip="hadev3" style=bold color="green" fontcolor="black" ]
 "do_shutdown" [ tooltip="hadev2" style=bold color="green" fontcolor="black" ]
 "rsc_hadev3_start_0" -> "rsc_hadev3_monitor_5000" [ style = dashed]
 "DcIPaddr_start_0" -> "DcIPaddr_monitor_5000" [ style = bold]
