@@ -100,6 +100,10 @@ crm_timer_popped(gpointer data)
  	} else if(timer == election_timeout) {
 		crm_info("Election Timeout (%s) just popped!",
 			 fsa_input2string(timer->fsa_input));
+
+ 	} else if(timer == shutdown_escalation_timer) {
+		crm_err("Shutdown Escalation Timer (%s) just popped!",
+			fsa_input2string(timer->fsa_input));
 		
 	} else {
 		crm_info("Timer %s just popped!",
@@ -1245,12 +1249,12 @@ create_node_state(
 	crm_debug_2("%s Creating node state entry for %s", src, uname);
 	set_uuid(fsa_cluster_conn, node_state, XML_ATTR_UUID, uname);
 
-	crm_xml_add(node_state, XML_ATTR_UNAME, uname);
-	crm_xml_add(node_state, XML_CIB_ATTR_HASTATE, ha_state);
-	crm_xml_add(node_state, XML_CIB_ATTR_INCCM, ccm_state);
+	crm_xml_add(node_state, XML_ATTR_UNAME,         uname);
+	crm_xml_add(node_state, XML_CIB_ATTR_HASTATE,   ha_state);
+	crm_xml_add(node_state, XML_CIB_ATTR_INCCM,     ccm_state);
 	crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, crmd_state);
 	crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE, join_state);
-	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE, exp_state);
+	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE,  exp_state);
 	crm_xml_add(node_state, "origin", src);
 
 	crm_log_xml_debug_3(node_state, "created");
