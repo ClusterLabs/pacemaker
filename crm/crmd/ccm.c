@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.86 2005/07/03 22:15:49 alan Exp $ */
+/* $Id: ccm.c,v 1.87 2005/08/25 08:29:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -608,7 +608,7 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 		}
 
 		update_data.state = XML_BOOLEAN_NO;
-		update_data.join  = CRMD_JOINSTATE_DOWN;
+		update_data.join  = CRMD_STATE_INACTIVE;
 		if(fsa_membership_copy->dead_members != NULL) {
 			g_hash_table_foreach(fsa_membership_copy->dead_members,
 					     ghash_update_cib_node, &update_data);

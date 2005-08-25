@@ -200,7 +200,7 @@ do_dc_join_req(long long action,
 
 	if(ack_nack_bool == FALSE) {
 		/* NACK this client */
-		ack_nack = CRMD_JOINSTATE_DOWN;
+		ack_nack = CRMD_STATE_INACTIVE;
 		crm_err("2) NACK'ing node %s (ref %s)", join_from, ref);
 	} else {
 		crm_debug("2) Welcoming node %s after ACK (ref %s)",
@@ -420,7 +420,12 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 
  	crm_info("4) Updating node state to %s for %s",
  		 CRMD_JOINSTATE_MEMBER, join_from);
-	
+
+#if 0
+	???dig into the fragment and clear shutdown??
+	/* the slave will re-ask if it wants to be shutdown */
+	crm_xml_add(lrm_update, XML_CIB_ATTR_CLEAR_SHUTDOWN, XML_BOOLEAN_TRUE);
+#endif
 	/* update CIB with the current LRM status from the node
 	 * We dont need to notify the TE of these updates, a transition will
 	 *   be started in due time

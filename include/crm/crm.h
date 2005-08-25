@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.72 2005/08/17 08:44:57 andrew Exp $ */
+/* $Id: crm.h,v 1.73 2005/08/25 08:29:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -139,9 +139,9 @@ extern gboolean crm_assert_failed;
 #define CRMD_STATE_ACTIVE	"member"
 #define CRMD_STATE_INACTIVE	"down"
 
-#define CRMD_JOINSTATE_DOWN	"down"
+#define CRMD_JOINSTATE_DOWN	CRMD_STATE_INACTIVE
 #define CRMD_JOINSTATE_PENDING	"pending"
-#define CRMD_JOINSTATE_MEMBER	"member"
+#define CRMD_JOINSTATE_MEMBER	CRMD_STATE_ACTIVE
 
 #define CRMD_ACTION_START		"start"
 #define CRMD_ACTION_STARTED		"running"
