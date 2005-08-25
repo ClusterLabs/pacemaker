@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.26 2005/07/18 11:17:23 andrew Exp $ */
+/* $Id: tengine.h,v 1.27 2005/08/25 09:36:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -91,6 +91,7 @@ typedef struct action_s {
 		gboolean invoked;	/* sent to the CRM */
 		gboolean complete;
 		gboolean can_fail;
+		gboolean failed;
 		
 		crm_data_t *xml;
 		

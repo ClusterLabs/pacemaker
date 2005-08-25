@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.43 2005/07/18 21:26:26 andrew Exp $ */
+/* $Id: callbacks.c,v 1.44 2005/08/25 09:36:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,6 +34,8 @@
 void te_update_confirm(const char *event, HA_Message *msg);
 void te_update_diff(const char *event, HA_Message *msg);
 crm_data_t *need_abort(crm_data_t *update);
+void cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
+			 crm_data_t *output, void *user_data);
 
 void
 te_update_diff(const char *event, HA_Message *msg)
@@ -360,8 +362,12 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 void
 tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 {
-	int action_id = -1;
-	
+	int *action_id = NULL;
+	const char *fail_text = "Fencing op failed";
+	int fail_code = te_failed;
+	void *fail_data = NULL;
+	crm_data_t *update = NULL;
+
 	if(op == NULL) {
 		crm_err("Called with a NULL op!");
 		return;
@@ -370,10 +376,15 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 	crm_info("optype=%d, node_name=%s, result=%d, node_list=%s",
 		 op->optype, op->node_name, op->op_result,
 		 (char *)op->node_list);
+
 	
 	/* this will mark the event complete if a match is found */
-	action_id = match_down_event(
-		op->node_name, CRM_OP_FENCE, op->op_result);
+	crm_malloc0(action_id, sizeof(int));
+	*action_id = match_down_event(
+		op->node_uuid, CRM_OP_FENCE, op->op_result);
+	if(*action_id == -1) {
+		crm_err("Stonith action not matched");
+	}
 	
 	if(op->op_result == STONITH_SUCCEEDED) {
 		enum cib_errors rc = cib_ok;
@@ -381,7 +392,6 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		const char *uuid   = op->node_uuid;
 		
 		/* zero out the node-status & remove all LRM status info */
-		crm_data_t *update = NULL;
 		crm_data_t *node_state = create_xml_node(
 			NULL, XML_CIB_TAG_STATE);
 
@@ -393,8 +403,10 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		crm_xml_add(node_state, XML_CIB_ATTR_HASTATE, DEADSTATUS);
 		crm_xml_add(node_state, XML_CIB_ATTR_INCCM, XML_BOOLEAN_NO);
 		crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, OFFLINESTATUS);
-		crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE,CRMD_JOINSTATE_DOWN);
-		crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_DOWN);
+		crm_xml_add(
+			node_state, XML_CIB_ATTR_JOINSTATE,CRMD_JOINSTATE_DOWN);
+		crm_xml_add(
+			node_state, XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_DOWN);
 		crm_xml_add(node_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
 		create_xml_node(node_state, XML_CIB_TAG_LRM);
 		
@@ -405,25 +417,53 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 			te_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
 			cib_quorum_override);	
 
-		if(action_id < 0) {
-			send_complete("Stonith not matched", update,
-				      te_update, i_cancel);
+		if(*action_id < 0) {
+			fail_text = "Stonith not matched";
+			fail_data = update;
+			fail_code = te_update;
 
-		} else if(rc != cib_ok) {
-			send_complete("Couldnt update CIB after stonith",
-				      update, te_failed, i_cancel);
+		} else if(rc < cib_ok) {
+			crm_err("CIB update failed: %s", cib_error2string(rc));
+			fail_text = "Couldnt update CIB after stonith";
+			fail_data = update;
+			fail_code = te_failed;
 			
 		} else {
-			process_trigger(action_id);
-			check_for_completion();
-		}
-		free_xml(update);
-		
-	} else {
-		send_complete("Fencing op failed", NULL, te_failed, i_cancel);
+			add_cib_op_callback(
+				rc, FALSE, action_id, cib_fencing_updated);
+			free_xml(update);
+			return;
+		}		
 	}
+
+	send_complete(fail_text, fail_data, fail_code, i_cancel);
+	process_trigger(*action_id);
+	free_xml(update);
+
+	return;
 }
 
+void
+cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
+		    crm_data_t *output, void *user_data)
+{
+	int *action_id = user_data;
+	CRM_ASSERT(action_id != NULL);
+	
+	if(rc < cib_ok) {
+		HA_Message *msg_copy = ha_msg_copy(msg);
+		const char *fail_text = "Couldnt update CIB after stonith";
+		crm_err("CIB update failed: %s", cib_error2string(rc));
+		send_complete(fail_text, msg_copy, te_failed, i_cancel);
+		ha_msg_del(msg_copy);
+
+	} else {
+		process_trigger(*action_id);
+		check_for_completion();
+	}
+
+	crm_free(action_id);
+}
 
 void
 tengine_stonith_connection_destroy(gpointer user_data)

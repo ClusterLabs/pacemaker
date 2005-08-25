@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.94 2005/08/17 08:57:28 andrew Exp $ */
+/* $Id: tengine.c,v 1.95 2005/08/25 09:36:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -230,6 +230,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	
 	/* stop this event's timer if it had one */
 	stop_te_timer(match->timer);
+	match->complete = TRUE;
 
 	/* Process OP status */
 	allow_fail = crm_element_value(match->xml, "allow_fail");
@@ -248,6 +249,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
+			match->failed = TRUE;
 			crm_warn("Action %s on %s failed: %s",
 				 update_event, event_node,
 				 op_status2text(op_status_i));
@@ -269,7 +271,6 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	}
 	
 	te_log_action(LOG_INFO, "Action %d confirmed", match->id);
-	match->complete = TRUE;
 	process_trigger(match->id);
 
 	if(te_fsa_state != s_in_transition) {
@@ -293,28 +294,20 @@ match_down_event(const char *target, const char *filter, int rc)
 		slist_iter(
 			action, action_t, synapse->actions, lpc2,
 
-			crm_data_t *action_args = NULL;
-			if(action->type != action_type_crm) {
-				continue;
-			}
-			
 			this_action = crm_element_value(
 				action->xml, XML_LRM_ATTR_TASK);
 
-/* 			if(crm_element_value(action->xml, XML_LRM_ATTR_RSCID)) { */
-/* 				continue; */
-				
-/* 			} else */
-				if(filter != NULL && safe_str_neq(this_action, filter)) {
+			if(action->type != action_type_crm) {
+				continue;
+
+			} else if(filter != NULL
+				  && safe_str_neq(this_action, filter)) {
 				continue;
 			}
 			
-			
 			if(safe_str_eq(this_action, CRM_OP_FENCE)) {
-				action_args = find_xml_node(
-					action->xml, XML_TAG_ATTRS, TRUE);
 				this_node = crm_element_value(
-					action_args, XML_LRM_ATTR_TARGET_UUID);
+					action->xml, XML_LRM_ATTR_TARGET_UUID);
 
 			} else if(safe_str_eq(this_action, CRM_OP_SHUTDOWN)) {
 				this_node = crm_element_value(
@@ -323,6 +316,10 @@ match_down_event(const char *target, const char *filter, int rc)
 				crm_err("Action %d : Bad action %s",
 					action->id, this_action);
 				continue;
+			}
+
+			if(this_node == NULL) {
+				crm_log_xml_err(action->xml, "No node uuid");
 			}
 			
 			if(safe_str_neq(this_node, target)) {
@@ -347,7 +344,8 @@ match_down_event(const char *target, const char *filter, int rc)
 
 	/* stop this event's timer if it had one */
 	stop_te_timer(match->timer);
-
+	match->complete = TRUE;
+	
 	/* Process OP status */
 	switch(rc) {
 		case STONITH_SUCCEEDED:
@@ -355,6 +353,7 @@ match_down_event(const char *target, const char *filter, int rc)
 		case STONITH_CANNOT:
 		case STONITH_TIMEOUT:
 		case STONITH_GENERIC:
+			match->failed = TRUE;
 			allow_fail = crm_element_value(match->xml, "allow_fail");
 			if(FALSE == crm_is_true(allow_fail)) {
 				crm_err("Stonith of %s failed (%d)..."
@@ -368,13 +367,12 @@ match_down_event(const char *target, const char *filter, int rc)
 			crm_err("Unsupported action result: %d", rc);
 			send_complete("Unsupport Stonith result",
 				      match->xml, te_failed, i_cancel);
-			return -2;
+			return -3;
 	}
 	
 	crm_debug_3("Action %d was successful, looking for next action",
 		match->id);
 
-	match->complete = TRUE;
 	return match->id;
 }
 
@@ -541,25 +539,12 @@ initiate_action(action_t *action)
 	} else if(action->type == action_type_crm
 		  && safe_str_eq(task, CRM_OP_FENCE)){
 		
-		crm_data_t *action_args = find_xml_node(
-			action->xml, XML_TAG_ATTRS, TRUE);
 		const char *uuid = NULL;
 		const char *target = NULL;
-		const char *name = NULL;
 		stonith_ops_t * st_op = NULL;
 
-		xml_child_iter(
-			action_args, nvpair, XML_CIB_TAG_NVPAIR,
-
-			name = crm_element_value(nvpair, XML_NVPAIR_ATTR_NAME);
-			if(safe_str_eq(name, XML_LRM_ATTR_TARGET)) {
-				target = crm_element_value(
-					nvpair, XML_NVPAIR_ATTR_VALUE);
-			} else if(safe_str_eq(name, XML_LRM_ATTR_TARGET_UUID)) {
-				uuid = crm_element_value(
-					nvpair, XML_NVPAIR_ATTR_VALUE);
-			} 
-			);
+		target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+		uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 		CRM_DEV_ASSERT(target != NULL);
 		CRM_DEV_ASSERT(uuid != NULL);
 
@@ -573,7 +558,7 @@ initiate_action(action_t *action)
 #endif
 		crm_malloc0(st_op, sizeof(stonith_ops_t));
 		st_op->optype = RESET;
-		st_op->timeout = crm_atoi(timeout, "10000"); /* ten seconds */
+		st_op->timeout = transition_idle_timeout / 2;
 		st_op->node_name = crm_strdup(target);
 		st_op->node_uuid = crm_strdup(uuid);
 
