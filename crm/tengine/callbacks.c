@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.44 2005/08/25 09:36:55 andrew Exp $ */
+/* $Id: callbacks.c,v 1.45 2005/08/26 08:49:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -289,18 +289,13 @@ te_update_confirm(const char *event, HA_Message *msg)
 gboolean
 process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 {
-	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
-	const char *ref    = cl_get_string(msg, XML_ATTR_REFERENCE);
-	const char *op     = cl_get_string(msg, F_CRM_TASK);
+	const char *sys_to   = cl_get_string(msg, F_CRM_SYS_TO);
+	const char *sys_from = cl_get_string(msg, F_CRM_SYS_FROM);
+	const char *ref      = cl_get_string(msg, XML_ATTR_REFERENCE);
+	const char *op       = cl_get_string(msg, F_CRM_TASK);
+	const char *type     = cl_get_string(msg, F_CRM_MSG_TYPE);
 
 	crm_log_message(LOG_DEBUG_3, msg);
-	
-	if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE), XML_ATTR_RESPONSE)
-	   && safe_str_neq(op, CRM_OP_EVENTCC)) {
-		crm_info("Message was a response not a request.  Discarding");
-		return TRUE;
-	}
-
 	crm_debug("Processing %s (%s) message", op, ref);
 	
 	if(op == NULL){
@@ -312,6 +307,22 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		crm_debug_2("Bad sys-to %s", crm_str(sys_to));
 		return FALSE;
 		
+#ifdef TESTING
+	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
+		crm_debug_4("Processing %s...", op);
+		extract_event(msg);
+#endif 
+
+	} else if(safe_str_eq(op, CRM_OP_INVOKE_LRM)
+		  && safe_str_eq(sys_from, CRM_SYSTEM_LRMD)
+		  && safe_str_eq(type, XML_ATTR_RESPONSE) ){
+		crm_err("Processing %s reply...", op);
+		extract_event(msg);
+		
+	} else if(safe_str_eq(type, XML_ATTR_RESPONSE)) {
+		crm_info("Message was a response not a request.  Discarding");
+		return TRUE;
+
 	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
 		if(te_fsa_state != s_idle) {
 			crm_debug("Attempt to start another transition");
@@ -342,16 +353,8 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		crm_info("Received quit message, terminating");
 		exit(0);
 		
-#ifdef TESTING
-	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
-		crm_debug_4("Processing %s...", CRM_OP_EVENTCC);
-		if(extract_event(msg) == FALSE) {
-			send_complete("ttest loopback", msg,
-				      te_failed, i_complete);
-		}
-#endif 
 	} else {
-		crm_err("Unknown command: %s", op);
+		crm_err("Unknown command: %s::%s from %s", type, op, sys_from);
 	}
 
 	crm_debug_3("finished processing message");

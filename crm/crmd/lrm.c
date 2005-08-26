@@ -70,6 +70,8 @@ gboolean remove_recurring_action(
 
 void free_recurring_op(gpointer value);
 
+void nack_rsc_op(lrm_op_t* op, crm_data_t *msg);
+
 GHashTable *xml2list(crm_data_t *parent);
 GHashTable *monitors = NULL;
 GHashTable *resources = NULL;
@@ -78,14 +80,6 @@ GHashTable *shutdown_ops = NULL;
 
 int num_lrm_register_fails = 0;
 int max_lrm_register_fails = 30;
-
-const char *rsc_path[] = 
-{
-/* 	XML_GRAPH_TAG_RSC_OP, */
-	XML_CIB_TAG_RESOURCE,
-	"instance_attributes",
-	"rsc_parameters"
-};
 
 enum crmd_rscstate {
 	crmd_rscstate_NULL,
@@ -563,10 +557,7 @@ do_lrm_invoke(long long action,
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 		
 	crm_op = cl_get_string(input->msg, F_CRM_TASK);
-		
-	operation = get_xml_attr_nested(
-		input->xml, rsc_path, DIMOF(rsc_path) -3,
-		XML_LRM_ATTR_TASK, FALSE);
+	operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
 	
 	if(crm_op != NULL && safe_str_eq(crm_op, "lrm_query")) {
 		crm_data_t *data = do_lrm_query(FALSE);
@@ -583,21 +574,20 @@ do_lrm_invoke(long long action,
 		char rid[64];
 		lrm_rsc_t *rsc = NULL;
 		const char *id_from_cib = NULL;
+		crm_data_t *xml_rsc = find_xml_node(
+			input->xml, XML_CIB_TAG_RESOURCE, TRUE);
 
-		if(cur_state == S_STOPPING || cur_state == S_TERMINATE) {
-			/* we will have already scheduled a stop */
-			crm_debug("Ignoring LRM operation while in state %s",
-				  fsa_state2string(cur_state));
+		CRM_DEV_ASSERT(xml_rsc != NULL);
+		if(crm_assert_failed) {
+			crm_log_xml_err(input->xml, "Bad resource");
+			return I_NULL;
 		}
-
-		id_from_cib = get_xml_attr_nested(
-			input->xml, rsc_path, DIMOF(rsc_path) -2,
-			XML_ATTR_ID, TRUE);
-
+		
+		id_from_cib = crm_element_value(xml_rsc, XML_ATTR_ID);
 		CRM_DEV_ASSERT(id_from_cib != NULL);
 		if(crm_assert_failed) {
-			crm_err("No value for %s in message at level %d.",
-				XML_ATTR_ID, DIMOF(rsc_path) -2);
+			crm_err("No value for %s in %s.",
+				XML_ATTR_ID, crm_element_name(xml_rsc));
 			crm_log_xml_err(input->xml, "Bad command");
 			return I_NULL;
 		}
@@ -624,9 +614,44 @@ struct recurring_op_s
 		int   call_id;
 };
 
+void
+nack_rsc_op(lrm_op_t* op, crm_data_t *msg)
+{
+	HA_Message *reply = NULL;
+	crm_data_t *update, *iter;
+	crm_data_t *fragment;
+
+	CRM_DEV_ASSERT(op != NULL);
+	if(crm_assert_failed) {
+		return;
+	}
+
+	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	set_uuid(fsa_cluster_conn, update, XML_ATTR_UUID, fsa_our_uname);
+	crm_xml_add(update,  XML_ATTR_UNAME, fsa_our_uname);
+
+	iter = create_xml_node(update, XML_CIB_TAG_LRM);
+	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
+	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
+
+	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
+
+	build_operation_update(iter, op, __FUNCTION__, 0);
+	fragment = create_cib_fragment(update, NULL);
+
+	reply = create_reply(msg, fragment);
+	crm_log_message_adv(LOG_ERR, "NACK Reply", reply);
+	
+	if(relay_message(reply, TRUE) == FALSE) {
+		crm_log_message_adv(LOG_ERR, "Unable to route reply", reply);
+		crm_msg_del(reply);
+	}
+	free_xml(fragment);
+	free_xml(update);
+}
+
 enum crmd_fsa_input
-do_lrm_rsc_op(
-	lrm_rsc_t *rsc, char *rid, const char *operation, crm_data_t *msg)
+do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation, crm_data_t *msg)
 {
 	int call_id  = 0;
 	char *op_id  = NULL;
@@ -647,17 +672,18 @@ do_lrm_rsc_op(
 		type = rsc->type;
 
 	} else if(msg != NULL) {
-		class = get_xml_attr_nested(
-			msg, rsc_path, DIMOF(rsc_path) -2,
-			XML_AGENT_ATTR_CLASS, TRUE);
-		
-		type = get_xml_attr_nested(
-			msg, rsc_path, DIMOF(rsc_path) -2,
-			XML_ATTR_TYPE, TRUE);
+		crm_data_t *xml_rsc = find_xml_node(
+			msg, XML_CIB_TAG_RESOURCE, TRUE);
 
-		provider = get_xml_attr_nested(
-			msg, rsc_path, DIMOF(rsc_path) -2,
-			XML_AGENT_ATTR_PROVIDER, FALSE);
+		class = crm_element_value(xml_rsc, XML_AGENT_ATTR_CLASS);
+		CRM_DEV_ASSERT(class != NULL);
+		if(crm_assert_failed) { return I_NULL; }
+		
+		type = crm_element_value(xml_rsc, XML_ATTR_TYPE);
+		CRM_DEV_ASSERT(type != NULL);
+		if(crm_assert_failed) { return I_NULL; }
+
+		provider = crm_element_value(xml_rsc, XML_AGENT_ATTR_PROVIDER);
 	}
 	
 	if(msg != NULL) {
@@ -668,23 +694,6 @@ do_lrm_rsc_op(
 		}
 	}
 
-	if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
-		if(fsa_state == S_STARTING
-		   || fsa_state == S_STOPPING
-		   || fsa_state == S_TERMINATE) {
-			crm_err("Discarding attempt to perform action %s on %s"
-				" while in state %s", operation, rid,
-				fsa_state2string(fsa_state));
-			return I_NULL;
-			
-		} else if(AM_I_DC == FALSE && fsa_state != S_NOT_DC) {
-			crm_err("Discarding attempt to perform action %s on %s"
-				 " in state %s", operation, rid,
-				 fsa_state2string(fsa_state));
-			return I_NULL;
-		}
-	}
-	
 	if(rsc == NULL) {
 		/* check if its already there */
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
@@ -776,6 +785,19 @@ do_lrm_rsc_op(
 			op->params, crm_strdup("start_delay"), delay_ms);
 	}
 
+	if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
+		if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
+		   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {
+			crm_err("Discarding attempt to perform action %s on %s"
+				" in state %s", operation, rid,
+				fsa_state2string(fsa_state));
+			nack_rsc_op(op, msg);
+			free_lrm_op(op);
+			crm_free(op_id);
+			return I_NULL;
+		}
+	}
+	
 	if(op->interval > 0) {
 		struct recurring_op_s *existing_op = NULL;
 

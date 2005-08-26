@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.95 2005/08/25 09:36:55 andrew Exp $ */
+/* $Id: tengine.c,v 1.96 2005/08/26 08:49:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -820,7 +820,7 @@ cib_action_updated(
 	if(rsc_op != NULL) {
 		crm_log_xml_debug_2(rsc_op, "Performing");
 	}
-	cmd = create_request(task, rsc_op, on_node,
+	cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, on_node,
 			     CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
 	
 

@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.73 2005/08/25 08:29:37 andrew Exp $ */
+/* $Id: crm.h,v 1.74 2005/08/26 08:49:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -135,6 +135,7 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_REGISTER		"register"
 #define CRM_OP_DEBUG_UP		"debug_inc"
 #define CRM_OP_DEBUG_DOWN	"debug_dec"
+#define CRM_OP_INVOKE_LRM	"lrm_invoke"
 
 #define CRMD_STATE_ACTIVE	"member"
 #define CRMD_STATE_INACTIVE	"down"
