@@ -74,6 +74,7 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 120 
 
 do_cmd echo Create the first resource and wait for S_IDLE after start
 args="<nvpair id=\\\"bsc-ip-1\\\" name=\\\"ip\\\" value=\\\"${ip_rsc_1}\\\"/>"
+args="$args <nvpair id=\\\"ident-string-1\\\" name=\\\"ident-string\\\" value=\\\"Linux-HA TEST configuration file - REMOVEME!!\\\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc1 ocf IPaddr - - - $args
 cts_assert "Creation of first resource failed."
@@ -86,6 +87,7 @@ cts_assert S_IDLE not reached after first resource created
 
 do_cmd echo Create the second resource and wait for S_IDLE after start
 args="<nvpair id=\\\"bsc-ip-2\\\" name=\\\"ip\\\" value=\\\"${ip_rsc_2}\\\"/>"
+args="$args <nvpair id=\\\"ident-string-2\\\" name=\\\"ident-string\\\" value=\\\"Linux-HA TEST configuration file - REMOVEME!!\\\"/>"
 crm_log_pos=$(stat -L -c %s $logfile)
 do_cmd make_resource $test_node_1 rsc2 ocf IPaddr - - - $args
 cts_assert "Creation of second resource failed."
