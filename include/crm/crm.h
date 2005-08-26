@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.74 2005/08/26 08:49:43 andrew Exp $ */
+/* $Id: crm.h,v 1.75 2005/08/26 17:54:00 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <ha_config.h>
 #include <glib.h>
+#undef MIN
+#undef MAX
 
 #include <string.h>
 #include <portability.h>

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.84 2005/08/24 09:28:36 andrew Exp $ */
+/* $Id: pengine.h,v 1.85 2005/08/26 17:54:00 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,8 +46,14 @@ typedef struct action_wrapper_s action_wrapper_t;
 #if defined(HAVE_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
 #  include <ncurses.h>
 #  define CURSES_ENABLED 1
+#elif defined(HAVE_NCURSES_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
+#  include <ncurses/ncurses.h>
+#  define CURSES_ENABLED 1
 #elif defined(HAVE_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
 #  include <curses.h>
+#  define CURSES_ENABLED 1
+#elif defined(HAVE_CURSES_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
+#  include <curses/curses.h>
 #  define CURSES_ENABLED 1
 #else
 #  define CURSES_ENABLED 0
