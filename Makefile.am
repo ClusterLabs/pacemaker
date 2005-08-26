@@ -104,7 +104,7 @@ portfile:	dist
 clean-generic: am_config_clean
 
 am_config_clean:
-		rm -fr $(PACKAGE)-*.tar.gz
+		rm -fr $(PACKAGE)-*.tar.gz libltdl.tar
 
 drpm:		dist
 		$(RPM) --nodeps $(RPMFLAGS) $(TARFILE) </dev/null;
