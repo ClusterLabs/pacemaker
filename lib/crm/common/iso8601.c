@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.10 2005/08/24 16:43:36 davidlee Exp $ */
+/* $Id: iso8601.c,v 1.11 2005/08/27 17:13:17 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -158,6 +158,7 @@ parse_time_offset(char **offset_str)
 		gboolean negate = FALSE;
 		if((*offset_str)[0] == '-') {
 			negate = TRUE;
+			(*offset_str)++;
 		}
 		parse_time(offset_str, new_time, FALSE);
 		if(negate) {
