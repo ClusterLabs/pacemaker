@@ -21,17 +21,17 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 harddir			= $(libdir)/heartbeat/cts
 
-hard_SCRIPTS	=			\
-			CM_fs.py	\
-			CM_hb.py	\
-			CTS.py		\
-			CTSaudits.py	\
-			CTSlab.py	\
-			CTStests.py	\
-			CM_LinuxHAv2.py	\
-            CTSproxy.py \
-			extracttests.py \
-            OCFIPraTest.py  \
-			haresources2cib.py
+hard_SCRIPTS	=				\
+			CM_fs.py		\
+			CM_hb.py		\
+			CM_LinuxHAv2.py		\
+			CTS.py			\
+			CTSaudits.py		\
+			CTSlab.py		\
+			CTSproxy.py		\
+			CTStests.py		\
+			extracttests.py		\
+			haresources2cib.py	\
+			OCFIPraTest.py
 
 hard_DATA =		README
