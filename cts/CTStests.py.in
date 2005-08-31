@@ -1626,6 +1626,7 @@ class ComponentFail(CTSTest):
         self.name="ComponentFail"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
+        self.stopall = SimulStopLite(cm)
         self.complist = cm.Components()
         self.theystart = cm["Pat:They_started"]
         
@@ -1634,16 +1635,16 @@ class ComponentFail(CTSTest):
         self.incr("calls")
         
         # start all nodes
+        if not self.CM.cluster_stable():
+            self.stopall(None)        
+            
         ret = self.startall(None)
         if not ret:
             return self.failure("Setup failed")
 
-#	This test is CM-specific - FIXME!!
-#       the is_applicable() doesnt address this already?
-
         # select a component to kill
         component = self.CM.Env.RandomGen.choice(self.complist)
-        self.CM.debug("choose %s to kill"%component.name)
+        self.CM.log("choose %s to kill"%component.name)
         patterns = []
         patterns.append("%s heartbeat.*Respawning.*%s" %(node, component.name))
         patterns.append(self.theystart%node)
@@ -1655,6 +1656,7 @@ class ComponentFail(CTSTest):
         
         # kill the component
         component.kill(node)
+        
         # check to see Heartbeat noticed
         match = watch.look()
         if match:
