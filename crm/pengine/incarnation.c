@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.48 2005/09/01 12:25:18 andrew Exp $ */
+/* $Id: incarnation.c,v 1.49 2005/09/01 12:36:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -272,10 +272,13 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
+		color_t *child_color = NULL;
 		if(lpc >= clone_data->active_clones) {
 			crm_warn("Clone %s cannot be started", child_rsc->id);
 		}
-		child_rsc->fns->color(child_rsc, data_set);
+		child_color = child_rsc->fns->color(child_rsc, data_set);
+		CRM_DEV_ASSERT(child_color != NULL);
+		native_assign_color(rsc, child_color);
 		);
 	return NULL;
 }

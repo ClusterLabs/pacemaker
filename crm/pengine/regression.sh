@@ -22,6 +22,7 @@
 create_mode="true"
 echo Generating test outputs for these tests...
 #do_test bad7
+do_test inc8 "Clone anti-colocation"
 
 echo ""
 
@@ -149,6 +150,7 @@ do_test inc4 "Inter-incarnation ordering, silent restart, stop, move (ordered)"
 do_test inc5 "Inter-incarnation ordering, silent restart, stop, move (restart 1)"
 do_test inc6 "Inter-incarnation ordering, silent restart, stop, move (restart 2)"
 do_test inc7 "Clone colocation"
+do_test inc8 "Clone anti-colocation"
 
 echo ""
 
