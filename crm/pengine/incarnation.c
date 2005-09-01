@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.47 2005/09/01 11:41:20 andrew Exp $ */
+/* $Id: incarnation.c,v 1.48 2005/09/01 12:25:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -213,7 +213,8 @@ int clone_num_allowed_nodes(resource_t *rsc)
 	return num_nodes;
 }
 
-void clone_color(resource_t *rsc, pe_working_set_t *data_set)
+color_t *
+clone_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int lpc = 0, lpc2 = 0, max_nodes = 0;
 	resource_t *child_0  = NULL;
@@ -223,7 +224,7 @@ void clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	get_clone_variant_data(clone_data, rsc);
 
 	if(clone_data->self->is_managed == FALSE) {
-		return;
+		return NULL;
 	}
 	
 	child_0 = g_list_nth_data(clone_data->child_list, 0);
@@ -276,6 +277,7 @@ void clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		}
 		child_rsc->fns->color(child_rsc, data_set);
 		);
+	return NULL;
 }
 
 void clone_update_pseudo_status(resource_t *parent, resource_t *child);

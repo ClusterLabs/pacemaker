@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.75 2005/09/01 11:41:20 andrew Exp $ */
+/* $Id: native.c,v 1.76 2005/09/01 12:25:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,8 +26,6 @@
 extern color_t *add_color(resource_t *rh_resource, color_t *color);
 
 gboolean native_choose_color(resource_t *lh_resource, color_t *no_color);
-
-void native_assign_color(resource_t *rsc, color_t *color);
 
 void native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 			       const char *id, GListPtr nodes);
@@ -220,7 +218,8 @@ int num_allowed_nodes4color(color_t *color)
 }
 
 
-void native_color(resource_t *rsc, pe_working_set_t *data_set)
+color_t *
+native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	color_t *new_color = NULL;
 	native_variant_data_t *native_data = NULL;
@@ -230,6 +229,7 @@ void native_color(resource_t *rsc, pe_working_set_t *data_set)
 	if( native_choose_color(rsc, data_set->no_color) ) {
 		crm_debug_3("Colored resource %s with color %d",
 			    rsc->id, native_data->color->id);
+		new_color = native_data->color;
 		
 	} else {
 		if(native_data->allowed_nodes != NULL) {
@@ -244,9 +244,11 @@ void native_color(resource_t *rsc, pe_working_set_t *data_set)
 			pe_warn("Resource %s cannot run anywhere", rsc->id);
 			print_resource("ERROR: No color", rsc, FALSE);
 			native_assign_color(rsc, data_set->no_color);
+			new_color = data_set->no_color;
 		}
 	}
 	rsc->provisional = FALSE;
+	return new_color;
 }
 
 void
@@ -1180,40 +1182,41 @@ native_choose_color(resource_t *rsc, color_t *no_color)
 void
 native_assign_color(resource_t *rsc, color_t *color) 
 {
+	native_variant_data_t *native_data = NULL;
 	color_t *local_color = add_color(rsc, color);
 	GListPtr intersection = NULL;
 	GListPtr old_list = NULL;
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
 
-	native_data->color = copy_color(local_color);
 	rsc->provisional = FALSE;
-
-	if(local_color != NULL) {
-		(local_color->details->num_resources)++;
-		local_color->details->allocated_resources =
-			g_list_append(
-				local_color->details->allocated_resources,rsc);
-
-			intersection = node_list_and(
-				local_color->details->candidate_nodes, 
-				native_data->allowed_nodes, TRUE);
-			   
-			old_list = local_color->details->candidate_nodes;
-				
-			pe_free_shallow(old_list);
-			
-			local_color->details->candidate_nodes = intersection;
-				
-			crm_debug_3("Colored resource %s with new color %d",
-				    rsc->id, native_data->color->id);
-			
-			crm_action_debug_3(
-				print_resource("Colored Resource", rsc, TRUE));
-			
-	} else {
+	
+	CRM_DEV_ASSERT(local_color != NULL);
+	if (crm_assert_failed) {
 		pe_err("local color was NULL");
+		return;
 	}
+
+	local_color->details->allocated_resources =
+		g_list_append(local_color->details->allocated_resources,rsc);
+
+	if(rsc->variant == pe_native) {
+		(local_color->details->num_resources)++;
+		get_native_variant_data(native_data, rsc);
+		native_data->color = copy_color(local_color);
+		intersection = node_list_and(
+			local_color->details->candidate_nodes, 
+			native_data->allowed_nodes, TRUE);
+		old_list = local_color->details->candidate_nodes;
+		
+		pe_free_shallow(old_list);
+		
+		local_color->details->candidate_nodes = intersection;
+	}
+	
+	crm_debug_3("Colored resource %s with new color %d",
+		    rsc->id, local_color->id);
+	
+	crm_action_debug_3(
+		print_resource("Colored Resource", rsc, TRUE));
 	
 	return;
 }

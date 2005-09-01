@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.35 2005/09/01 11:41:20 andrew Exp $ */
+/* $Id: group.c,v 1.36 2005/09/01 12:25:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -137,16 +137,20 @@ int group_num_allowed_nodes(resource_t *rsc)
  	return group_data->self->fns->num_allowed_nodes(group_data->self);
 }
 
-void group_color(resource_t *rsc, pe_working_set_t *data_set)
+color_t *
+group_color(resource_t *rsc, pe_working_set_t *data_set)
 {
+	color_t *group_color = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	if(group_data->self == NULL) {
-		return;
-	}
-
- 	group_data->self->fns->color(group_data->self, data_set);
+	CRM_ASSERT(data_set != NULL);
+	CRM_ASSERT(group_data->self != NULL);
+ 	group_color = group_data->self->fns->color(
+		group_data->self, data_set);
+	CRM_DEV_ASSERT(group_color != NULL);
+	native_assign_color(rsc, group_color);
+	return group_color;
 }
 
 void group_update_pseudo_status(resource_t *parent, resource_t *child);
