@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.76 2005/09/01 12:25:18 andrew Exp $ */
+/* $Id: native.c,v 1.77 2005/09/01 13:20:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1237,10 +1237,16 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 	}
 
 	if(node_rh->weight >= INFINITY && cons->weight <= -INFINITY) {
-		pe_err("Constraint %s mixes +/- INFINITY", cons->id);
+		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
+		       cons->id, rsc->id);
 		
+	} else if(node_rh->details->shutdown == TRUE
+		  || node_rh->details->online == FALSE
+		  || node_rh->details->unclean == TRUE) {
+
 	} else if(node_rh->weight <= -INFINITY && cons->weight >= INFINITY) {
-		pe_err("Constraint %s mixes +/- INFINITY", cons->id);
+		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
+			 cons->id, rsc->id);
 	}
 
 	if(node_rh->fixed) {
