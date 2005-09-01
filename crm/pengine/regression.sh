@@ -137,6 +137,8 @@ do_test group3 "Group + Group	"
 do_test group4 "Group + Native (nothing)"
 do_test group5 "Group + Native (move)   "
 do_test group6 "Group + Group (move)    "
+do_test group7 "Group colocation"
+do_test group8 "Group anti-colocation"
 
 echo ""
 do_test inc0 "Incarnation start					" 
@@ -146,7 +148,7 @@ do_test inc3 "Inter-incarnation ordering, silent restart, stop, move"
 do_test inc4 "Inter-incarnation ordering, silent restart, stop, move (ordered)"
 do_test inc5 "Inter-incarnation ordering, silent restart, stop, move (restart 1)"
 do_test inc6 "Inter-incarnation ordering, silent restart, stop, move (restart 2)"
-#do_test inc7 "Inter-incarnation ordering, silent restart, stop, move (ordered subset)"
+do_test inc7 "Clone colocation"
 
 echo ""
 

@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.30 2005/08/08 12:09:33 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.31 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,7 +23,7 @@
 /* General utilities */
 extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 
-extern float merge_weights(float w1, float w2);
+extern int merge_weights(int w1, int w2);
 
 /* Constraint helper functions */
 extern rsc_colocation_t *invert_constraint(rsc_colocation_t *constraint);
@@ -129,7 +129,7 @@ extern void set_id(crm_data_t *xml_obj, const char *prefix, int child);
 
 extern const char *ordering_type2text(enum pe_ordering type);
 
-extern float char2score(const char *score);
+extern int char2score(const char *score);
 
 
 /* free the various structures */

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.73 2005/08/24 09:28:36 andrew Exp $ */
+/* $Id: stages.c,v 1.74 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -155,6 +155,8 @@ stage2(pe_working_set_t *data_set)
 			/* already processed this resource */
 			continue;
 		}
+		crm_debug_2("Coloring %s::%d",
+			lh_resource->id,  lh_resource->variant);
 		color_resource(lh_resource, data_set);
 		/* next resource */
 		);
@@ -205,16 +207,19 @@ stage4(pe_working_set_t *data_set)
 		if(color->details->chosen_node == NULL) {
 			crm_debug_2("No node available for color %d", color->id);
 		} else {
-			crm_debug_4("assigned %s to color %d",
+			crm_debug_2("assigned %s to color %d",
 				    color->details->chosen_node->details->uname,
 				    color->id);
 		}
 		
 		slist_iter(
 			rsc, resource_t, color->details->allocated_resources, lpc2,
+			crm_debug_2("Processing colocation constraints for %s"
+				    " now that color %d is allocated",
+				    rsc->id, color->details->id); 
 			slist_iter(
 				constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
-				rsc->fns->rsc_colocation_lh(constraint);
+				rsc->fns->rsc_colocation_lh(rsc, constraint->rsc_rh, constraint);
 				);	
 			
 			);
@@ -441,7 +446,7 @@ choose_node_from_list(color_t *color)
 		return FALSE;
 		
 	} else if(chosen->weight < 0) {
-		crm_debug_2("Even highest ranked node for color %d, had weight %f",
+		crm_debug_2("Even highest ranked node for color %d, had weight %d",
 			  color->id, chosen->weight);
 		return FALSE;
 	}

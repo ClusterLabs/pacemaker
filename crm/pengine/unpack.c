@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.120 2005/08/27 17:06:51 andrew Exp $ */
+/* $Id: unpack.c,v 1.121 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -119,15 +119,7 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		 "transition_idle_timeout", data_set->transition_idle_timeout);
 
 	value = g_hash_table_lookup(config_hash, "default_resource_stickiness");
-	if(safe_str_eq(value, INFINITY_S)) {
-		data_set->default_resource_stickiness = INFINITY;
-	} else if(safe_str_eq(value, MINUS_INFINITY_S)) {
-		data_set->default_resource_stickiness = -INFINITY;
-	} else {
-		data_set->default_resource_stickiness = crm_atoi(value, "0");
-	}
-	
-	
+	data_set->default_resource_stickiness = char2score(value);
 	
 	value = g_hash_table_lookup(config_hash, "stonith_enabled");
 	if(value != NULL) {
@@ -1254,7 +1246,7 @@ generate_location_rule(
 
 	GListPtr match_L  = NULL;
 	
-	float score_f   = 0.0;
+	int score_f   = 0;
 	gboolean do_and = TRUE;
 	gboolean accept = TRUE;
 	

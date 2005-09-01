@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.86 2005/08/30 15:05:48 alan Exp $ */
+/* $Id: pengine.h,v 1.87 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -199,14 +199,14 @@ struct node_shared_s {
 }; 
 
 struct node_s { 
-		float	weight; 
+		int	weight; 
 		gboolean fixed;
 		struct node_shared_s *details;
 };
 
 struct color_shared_s {
 		int      id;
-		float    highest_priority;
+		int    highest_priority;
 		GListPtr candidate_nodes; /* node_t* */
 		GListPtr allocated_resources; /* resources_t* */
 		node_t  *chosen_node;
@@ -217,7 +217,7 @@ struct color_shared_s {
 struct color_s { 
 		int id; 
 		struct color_shared_s *details;
-		float local_weight;
+		int local_weight;
 };
 
 struct rsc_colocation_s { 
@@ -232,7 +232,7 @@ struct rsc_to_node_s {
 		const char *id;
 		resource_t *rsc_lh; 
 
-		float	    weight;
+		int	    weight;
 		GListPtr    node_list_rh; /* node_t* */
 };
 
@@ -254,9 +254,9 @@ struct resource_s {
 		enum rsc_recovery_type recovery_type;
 		enum pe_restart        restart_type;
 
-		float	 priority; 
-		float	 stickiness; 
-		float	 effective_priority; 
+		int	 priority; 
+		int	 stickiness; 
+		int	 effective_priority; 
 
 		gboolean notify;
 		gboolean is_managed;

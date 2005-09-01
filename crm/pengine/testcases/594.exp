@@ -227,7 +227,7 @@
    </synapse>
    <synapse id="15">
      <action_set>
-       <crm_event id="24" operation="stonith" operation_key="stonith" allow_fail="false">
+       <crm_event id="24" operation="stonith" operation_key="stonith" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669" allow_fail="false">
          <attributes>
            <nvpair name="on_node" value="hadev3"/>
            <nvpair name="on_node_uuid" value="879e65f8-4b38-4c56-9552-4752ad436669"/>

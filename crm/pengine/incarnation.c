@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.46 2005/08/17 09:15:13 andrew Exp $ */
+/* $Id: incarnation.c,v 1.47 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -617,7 +617,8 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	
 }
 
-void clone_rsc_colocation_lh(rsc_colocation_t *constraint)
+void clone_rsc_colocation_lh(
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
 	gboolean do_interleave = FALSE;
 	resource_t *rsc = constraint->rsc_lh;
@@ -651,13 +652,24 @@ void clone_rsc_colocation_lh(rsc_colocation_t *constraint)
 		/* only the LHS side needs to be labeled as interleave */
 		} else if(clone_data->interleave) {
 			do_interleave = TRUE;
+
+		} else if(constraint->strength != pecs_must_not) {
+			pe_warn("rsc_colocations other than \"-INFINITY\""
+				" are not supported for non-interleaved "
+				XML_CIB_TAG_INCARNATION" resources");
+			return;
 		}
+
+	} else if(constraint->strength != pecs_must_not) {
+		pe_warn("Co-location scores other than \"-INFINITY\" are not "
+			" allowed for non-"XML_CIB_TAG_INCARNATION" resources");
+		return;
 	}
+	
 	
 	if(do_interleave) {
 		resource_t *child_lh = NULL;
 		resource_t *child_rh = NULL;
-		resource_t *parent_rh = constraint->rsc_rh;
 		
 		GListPtr iter_lh = clone_data->child_list;
 		GListPtr iter_rh = clone_data_rh->child_list;
@@ -673,59 +685,53 @@ void clone_rsc_colocation_lh(rsc_colocation_t *constraint)
 			iter_lh = iter_lh->next;
 			iter_rh = iter_rh->next;
 			
-			constraint->rsc_rh = child_rh;
 			crm_debug_3("Colocating %s with %s", child_lh->id, child_rh->id);
-			child_rh->fns->rsc_colocation_rh(child_lh, constraint);
+			child_lh->fns->rsc_colocation_lh(child_lh, child_rh, constraint);
 		}
-		/* restore the original RHS of the constraint */
-		constraint->rsc_rh = parent_rh;
 		return;
 
-	} else if(constraint->strength != pecs_must_not) {
-		pe_warn("rsc_colocations other than \"-INFINITY\""
-			 " are not supported for non-interleaved"
-			" "XML_CIB_TAG_INCARNATION" resources");
-		return;
 	}
 	
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		
 		crm_action_debug_3(print_resource("LHS", child_rsc, TRUE));
-		child_rsc->fns->rsc_colocation_rh(child_rsc, constraint);
+		child_rsc->fns->rsc_colocation_lh(child_rsc, constraint->rsc_rh, constraint);
 		);
 }
 
-void clone_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
+void clone_rsc_colocation_rh(
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
 	clone_variant_data_t *clone_data = NULL;
+	CRM_DEV_ASSERT(rsc_lh->variant == pe_native);
 	
 	crm_debug_3("Processing RH of constraint %s", constraint->id);
 
-	if(rsc == NULL) {
+	if(rsc_lh == NULL) {
 		pe_err("rsc_lh was NULL for %s", constraint->id);
 		return;
 
-	} else if(constraint->rsc_rh == NULL) {
+	} else if(rsc_rh == NULL) {
 		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
 	} else if(constraint->strength != pecs_must_not) {
 		pe_warn("rsc_dependencies other than \"must_not\" "
-			 "are not supported for incarnation resources");
+			"are not supported for clone resources");
 		return;
 		
 	} else {
-		crm_action_debug_3(print_resource("LHS", rsc, FALSE));
+		crm_action_debug_3(print_resource("LHS", rsc_lh, FALSE));
 	}
 	
-	get_clone_variant_data(clone_data, rsc);
+	get_clone_variant_data(clone_data, rsc_rh);
 
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		
 		crm_action_debug_3(print_resource("RHS", child_rsc, FALSE));
-		child_rsc->fns->rsc_colocation_rh(child_rsc, constraint);
+		child_rsc->fns->rsc_colocation_rh(rsc_lh, child_rsc, constraint);
 		);
 }
 

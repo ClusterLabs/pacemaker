@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.16 2005/08/17 09:32:36 andrew Exp $ */
+/* $Id: rules.c,v 1.17 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -185,8 +185,8 @@ test_attr_expression(crm_data_t *expr, GHashTable *hash, pe_working_set_t *data_
 			cmp = strcmp(h_val, value);
 			
 		} else if(safe_str_eq(type, "number")) {
-			float h_val_f = atof(h_val);
-			float value_f = atof(value);
+			int h_val_f = atoi(h_val);
+			int value_f = atoi(value);
 			
 			if(h_val_f < value_f) {
 				cmp = -1;

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.56 2005/08/17 09:15:13 andrew Exp $ */
+/* $Id: complex.c,v 1.57 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -285,17 +285,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	}
 
 	value = g_hash_table_lookup((*rsc)->parameters, "resource_stickiness");
-	if(value != NULL) {
-		if(safe_str_eq(value, INFINITY_S)) {
-			(*rsc)->stickiness = INFINITY;
-
-		} else if(safe_str_eq(value, MINUS_INFINITY_S)) {
-			(*rsc)->stickiness = -INFINITY;
-
-		} else {
-			(*rsc)->stickiness = atoi(value);
-		}
-	}
+	(*rsc)->stickiness = char2score(value);
 	if((*rsc)->stickiness > 0) {
 		crm_debug_2("\tPlacement: prefer current location%s",
 			    value == NULL?" (default)":"");

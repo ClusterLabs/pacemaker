@@ -7,7 +7,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="5" operation="stonith" operation_key="stonith" allow_fail="false"/>
+         <crm_event id="5" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -54,7 +54,7 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <crm_event id="5" operation="stonith" operation_key="stonith" allow_fail="false">
+       <crm_event id="5" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <attributes>
            <nvpair name="on_node" value="node2"/>
            <nvpair name="on_node_uuid" value="uuid2"/>

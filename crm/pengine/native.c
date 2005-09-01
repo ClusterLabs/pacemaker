@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.74 2005/08/18 19:10:37 andrew Exp $ */
+/* $Id: native.c,v 1.75 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,7 +169,7 @@ int native_num_allowed_nodes(resource_t *rsc)
 		crm_debug_4("Default case");
 		slist_iter(
 			this_node, node_t, native_data->allowed_nodes, lpc,
-			crm_debug_3("Rsc %s Checking %s: %f",
+			crm_debug_3("Rsc %s Checking %s: %d",
 				    rsc->id, this_node->details->uname,
 				    this_node->weight);
 			if(this_node->details->shutdown
@@ -202,7 +202,7 @@ int num_allowed_nodes4color(color_t *color)
 	
 	slist_iter(
 		this_node, node_t, color->details->candidate_nodes, lpc,
-		crm_debug_3("Checking %s: %f",
+		crm_debug_3("Checking %s: %d",
 			    this_node->details->uname, this_node->weight);
 		if(this_node->details->shutdown
 		   || this_node->details->online == FALSE) {
@@ -450,34 +450,31 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	order_restart(rsc);
 }
 
-void native_rsc_colocation_lh(rsc_colocation_t *constraint)
+void native_rsc_colocation_lh(
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
-	resource_t *rsc = constraint->rsc_lh;
-	
-	if(rsc == NULL) {
+	if(rsc_lh == NULL) {
 		pe_err("rsc_lh was NULL for %s", constraint->id);
 		return;
 
 	} else if(constraint->rsc_rh == NULL) {
 		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
-		
-	} else {
-		crm_debug_4("Processing constraints from %s", rsc->id);
 	}
 	
-	constraint->rsc_rh->fns->rsc_colocation_rh(rsc, constraint);		
+	crm_debug_2("Processing colocation constraint between %s and %s",
+		    rsc_lh->id, rsc_rh->id);
+	
+	rsc_rh->fns->rsc_colocation_rh(rsc_lh, rsc_rh, constraint);		
 }
 
-void native_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
+void native_rsc_colocation_rh(
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
 	gboolean do_check = FALSE;
 	gboolean update_lh = FALSE;
 	gboolean update_rh = FALSE;
 	
-	resource_t *rsc_lh = rsc;
-	resource_t *rsc_rh = constraint->rsc_rh;
-
 	native_variant_data_t *native_data_lh = NULL;
 	native_variant_data_t *native_data_rh = NULL;
 
@@ -940,7 +937,7 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 	gboolean do_merge = FALSE;
 	GListPtr old_list = NULL;
 	GListPtr merged_node_list = NULL;
-	float max_pri = rsc_lh->effective_priority;
+	int max_pri = rsc_lh->effective_priority;
 	if(max_pri < rsc_rh->effective_priority) {
 		max_pri = rsc_rh->effective_priority;
 	}
@@ -974,14 +971,18 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 		crm_free(native_data_lh->color);
 		rsc_lh->runnable      = rsc_rh->runnable;
 		rsc_lh->provisional   = rsc_rh->provisional;
-		native_data_lh->color = copy_color(native_data_rh->color);
+
+		CRM_DEV_ASSERT(native_data_rh->color != NULL);
+		native_assign_color(rsc_lh, native_data_rh->color);
 	}
 	if(update_rh && rsc_rh != rsc_lh) {
 		CRM_DEV_ASSERT(native_data_lh->color != native_data_rh->color);
 		crm_free(native_data_rh->color);
 		rsc_rh->runnable      = rsc_lh->runnable;
 		rsc_rh->provisional   = rsc_lh->provisional;
-		native_data_rh->color = copy_color(native_data_lh->color);
+
+		CRM_DEV_ASSERT(native_data_lh->color != NULL);
+		native_assign_color(rsc_rh, native_data_lh->color);
 	}
 
 	if((update_rh || update_lh) && do_merge) {
@@ -1011,20 +1012,19 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 	if(update_lh) {
 		color_rh = native_data_rh->color;
 
-		if(rsc_lh->provisional) {
-			color_lh = find_color(
-				rsc_lh->candidate_colors, color_rh);
-
-			rsc_lh->candidate_colors = g_list_remove(
-				rsc_lh->candidate_colors, color_lh);
+		if(rsc_lh->provisional && color_rh != NULL) {
+			color_lh = add_color(rsc_lh, color_rh);
+			color_lh->local_weight = -INFINITY;
+			crm_debug_2("LH: Removed color %d from resource %s",
+				color_lh->id, rsc_lh->id);
 			
 			crm_action_debug_3(
 				print_color("Removed LH", color_lh, FALSE));
 			
 			crm_action_debug_3(
 				print_resource("Modified LH", rsc_lh, TRUE));
-			
-			crm_free(color_lh);
+
+		} else if(rsc_lh->provisional) {
 			
 		} else if(native_data_lh->color
 			  && native_data_lh->color->details->pending) {
@@ -1035,19 +1035,20 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 				color_lh->details->candidate_nodes,
 				safe_val5(NULL, color_rh, details,
 					  chosen_node, details, uname));
-			
-			color_lh->details->candidate_nodes =
-				g_list_remove(
-					color_lh->details->candidate_nodes,
-					node_lh);
-			
-			crm_action_debug_3(
-				print_node("Removed LH", node_lh, FALSE));
 
-			crm_action_debug_3(
-				print_color("Modified LH", color_lh, FALSE));
+			if(node_lh != NULL) {
+				node_lh->weight = -INFINITY;
+
+				crm_debug_2("LH: Removed node %s from color %d",
+					node_lh->details->uname, color_lh->id);
+				
+				crm_action_debug_3(
+					print_node("Removed LH", node_lh, FALSE));
+				
+				crm_action_debug_3(
+					print_color("Modified LH", color_lh, FALSE));
+			}
 			
-			crm_free(node_lh);
 		} else {
 			/* error, rsc marked as unrunnable above */
 			pe_warn("lh else");
@@ -1056,20 +1057,19 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 	
 	if(update_rh) {
 		color_lh = native_data_lh->color;
-		if(rsc_rh->provisional) {
-			color_rh = find_color(
-				rsc_rh->candidate_colors, color_lh);
-
-			rsc_rh->candidate_colors = g_list_remove(
-				rsc_rh->candidate_colors, color_rh);
+		if(rsc_rh->provisional && color_lh != NULL) {
+			color_rh = add_color(rsc_lh, color_lh);
+			color_rh->local_weight = -INFINITY;
+			crm_debug_2("RH: Removed color %d from resource %s",
+				color_rh->id, rsc_rh->id);
 			
 			crm_action_debug_3(
 				print_color("Removed RH", color_rh, FALSE));
 
 			crm_action_debug_3(
 				print_resource("Modified RH", rsc_rh, TRUE));
-			
-			crm_free(color_rh);
+
+		} else if(rsc_rh->provisional) {
 			
 		} else if(native_data_rh->color
 			  && native_data_rh->color->details->pending) {
@@ -1079,19 +1079,19 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 				color_rh->details->candidate_nodes,
 				safe_val5(NULL, color_lh, details,
 					  chosen_node, details, uname));
-			
-			color_rh->details->candidate_nodes =
-				g_list_remove(
-					color_rh->details->candidate_nodes,
-					node_rh);
-			
-			crm_action_debug_3(
-				print_node("Removed RH", node_rh, FALSE));
 
-			crm_action_debug_3(
-				print_color("Modified RH", color_rh, FALSE));
-
-			crm_free(node_rh);
+			if(node_rh != NULL) {
+				node_rh->weight = -INFINITY;
+				
+				crm_debug_2("RH: Removed node %s from color %d",
+					node_rh->details->uname, color_rh->id);
+				
+				crm_action_debug_3(
+					print_node("Removed RH", node_rh, FALSE));
+				
+				crm_action_debug_3(
+					print_color("Modified RH", color_rh, FALSE));
+			}
 
 		} else {
 			/* error, rsc marked as unrunnable above */
@@ -1138,6 +1138,10 @@ native_choose_color(resource_t *rsc, color_t *no_color)
 		if(this_color == NULL) {
 			pe_err("color was NULL");
 			continue;
+			
+		} else if(this_color->local_weight < 0) {
+			/* no valid color available */
+			break;
 			
 		} else if(rsc->effective_priority
 		   < this_color->details->highest_priority) {
@@ -1239,7 +1243,7 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 	if(node_rh->fixed) {
 		/* warning */
 		crm_debug_2("Constraint %s is irrelevant as the"
-			 " weight of node %s is fixed as %f.",
+			 " weight of node %s is fixed as %d.",
 			 cons->id,
 			 node_rh->details->uname,
 			 node_rh->weight);
@@ -1247,18 +1251,18 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 	}
 
 	if(cons->weight >= INFINITY && cons->weight <= -INFINITY) {
-		crm_debug_3("Constraint %s (%f): node %s weight %f.",
+		crm_debug_3("Constraint %s (%d): node %s weight %d.",
 			    cons->id,
 			    cons->weight,
 			    node_rh->details->uname,
 			    node_rh->weight);
 	} else if(cons->weight <= -INFINITY) {
-		crm_debug_3("Constraint %s (-INFINITY): node %s weight %f.",
+		crm_debug_3("Constraint %s (-INFINITY): node %s weight %d.",
 			    cons->id,
 			    node_rh->details->uname,
 			    node_rh->weight);
 	} else {
-		crm_debug_3("Constraint %s (+INFINITY): node %s weight %f.",
+		crm_debug_3("Constraint %s (+INFINITY): node %s weight %d.",
 			    cons->id,
 			    node_rh->details->uname,
 			    node_rh->weight);

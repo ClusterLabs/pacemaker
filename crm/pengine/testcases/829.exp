@@ -25,7 +25,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="31" operation="stonith" operation_key="stonith" allow_fail="false"/>
+         <crm_event id="31" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -75,7 +75,7 @@
          <pseudo_event id="29" rsc_id="DoFencing" operation="stop" operation_key="DoFencing_stop_0" allow_fail="false"/>
        </trigger>
        <trigger>
-         <crm_event id="31" operation="stonith" operation_key="stonith" allow_fail="false"/>
+         <crm_event id="31" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -292,7 +292,7 @@
    </synapse>
    <synapse id="17">
      <action_set>
-       <crm_event id="31" operation="stonith" operation_key="stonith" allow_fail="false">
+       <crm_event id="31" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
          <attributes>
            <nvpair name="on_node" value="c001n02"/>
            <nvpair name="on_node_uuid" value="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>

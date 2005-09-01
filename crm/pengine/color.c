@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.31 2005/08/03 14:54:27 andrew Exp $ */
+/* $Id: color.c,v 1.32 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -100,7 +100,8 @@ color_resource(resource_t *rsc, pe_working_set_t *data_set)
 			print_rsc_colocation(
 				"Pre-Processing constraint", constraint,FALSE));
 		
-		rsc->fns->rsc_colocation_lh(constraint);
+		rsc->fns->rsc_colocation_lh(
+			rsc, constraint->rsc_rh, constraint);
 		);
 	
 	/* avoid looping through lists when we know this resource
@@ -118,7 +119,8 @@ color_resource(resource_t *rsc, pe_working_set_t *data_set)
 		crm_action_debug_3(
 			print_rsc_colocation(
 				"Post-Processing constraint",constraint,FALSE));
-		rsc->fns->rsc_colocation_lh(constraint);
+		rsc->fns->rsc_colocation_lh(
+			rsc, constraint->rsc_rh, constraint);
 		);
 	
 	crm_action_debug_3(print_resource("Colored", rsc, TRUE));

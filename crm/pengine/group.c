@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.34 2005/08/17 09:15:13 andrew Exp $ */
+/* $Id: group.c,v 1.35 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,6 +54,7 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	resource_t *self = NULL;
 
 	crm_debug_3("Processing resource %s...", rsc->id);
+/* 	rsc->id = "dummy_group_rsc_id"; */
 
 	crm_malloc0(group_data, sizeof(group_variant_data_t));
 	group_data->num_children = 0;
@@ -77,7 +78,7 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		xml_obj, xml_native_rsc, XML_CIB_TAG_RESOURCE,
 
 		resource_t *new_rsc = NULL;
-		set_id(xml_native_rsc, rsc->id, -1);
+		set_id(xml_native_rsc, group_data->self->id, -1);
 		if(common_unpack(xml_native_rsc, &new_rsc,
 				 group_data->self->parameters, data_set)) {
 			group_data->num_children++;
@@ -101,7 +102,7 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		}
 		);
 	crm_debug_3("Added %d children to resource %s...",
-		    group_data->num_children, rsc->id);
+		    group_data->num_children, group_data->self->id);
 	
 	rsc->variant_opaque = group_data;
 }
@@ -165,7 +166,7 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	op = start_action(group_data->self, NULL, !group_data->child_starting);
 	op->pseudo   = TRUE;
 
-	op = custom_action(group_data->self, started_key(rsc),
+	op = custom_action(group_data->self, started_key(group_data->self),
 			   CRMD_ACTION_STARTED, NULL,
 			   !group_data->child_starting, data_set);
 	op->pseudo   = TRUE;
@@ -173,7 +174,7 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	op = stop_action(group_data->self, NULL, !group_data->child_stopping);
 	op->pseudo   = TRUE;
 	
-	op = custom_action(group_data->self, stopped_key(rsc),
+	op = custom_action(group_data->self, stopped_key(group_data->self),
 			   CRMD_ACTION_STOPPED, NULL,
 			   !group_data->child_stopping, data_set);
 	op->pseudo   = TRUE;
@@ -252,46 +253,47 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 }
 
 
-void group_rsc_colocation_lh(rsc_colocation_t *constraint)
+void group_rsc_colocation_lh(
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
-	resource_t *rsc = constraint->rsc_lh;
 	group_variant_data_t *group_data = NULL;
 	
-	if(rsc == NULL) {
+	if(rsc_lh == NULL) {
 		pe_err("rsc_lh was NULL for %s", constraint->id);
 		return;
 
-	} else if(constraint->rsc_rh == NULL) {
+	} else if(rsc_rh == NULL) {
 		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
-		
-	} else {
-		crm_debug_4("Processing constraints from %s", rsc->id);
 	}
+		
+	crm_debug_4("Processing constraints from %s", rsc_lh->id);
 
-	get_group_variant_data(group_data, rsc);
-	if(group_data->self == NULL) {
+	get_group_variant_data(group_data, rsc_lh);
+	CRM_DEV_ASSERT(group_data->self != NULL);
+	if(crm_assert_failed) {
 		return;
 	}
 
-	group_data->self->fns->rsc_colocation_rh(group_data->self, constraint);
+	group_data->self->fns->rsc_colocation_lh(group_data->self, rsc_rh, constraint);
 	
 }
 
-void group_rsc_colocation_rh(resource_t *rsc, rsc_colocation_t *constraint)
+void group_rsc_colocation_rh(
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
-	resource_t *rsc_lh = rsc;
 	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
+	get_group_variant_data(group_data, rsc_rh);
+	CRM_DEV_ASSERT(group_data->self != NULL);
+	if(crm_assert_failed) {
+		return;
+	}
+	CRM_DEV_ASSERT(rsc_lh->variant == pe_native);
 
 	crm_debug_3("Processing RH of constraint %s", constraint->id);
 	crm_action_debug_3(print_resource("LHS", rsc_lh, TRUE));
-
-	if(group_data->self == NULL) {
-		return;
-	}
 	
-	group_data->self->fns->rsc_colocation_rh(group_data->self, constraint);
+	group_data->self->fns->rsc_colocation_rh(rsc_lh, group_data->self, constraint);
 }
 
 
@@ -308,16 +310,16 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 		return;
 	}
 
-	stop_id = stop_key(rsc);
-	start_id = start_key(rsc);
+	stop_id = stop_key(group_data->self);
+	start_id = start_key(group_data->self);
 	
 	if(safe_str_eq(order->lh_action_task, start_id)) {
 		crm_free(order->lh_action_task);
-		order->lh_action_task = started_key(rsc);
+		order->lh_action_task = started_key(group_data->self);
 
 	} else if(safe_str_eq(order->lh_action_task, stop_id)) {
 		crm_free(order->lh_action_task);
-		order->lh_action_task = stopped_key(rsc);
+		order->lh_action_task = stopped_key(group_data->self);
 	}
 
 	crm_free(start_id);
@@ -346,7 +348,7 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_3("Processing actions from %s", rsc->id);
+	crm_debug_3("Processing actions from %s", group_data->self->id);
 
 	if(group_data->self != NULL) {
 		group_data->self->fns->rsc_location(group_data->self, constraint);
@@ -364,7 +366,7 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_3("Processing actions from %s", rsc->id);
+	crm_debug_3("Processing actions from %s", group_data->self->id);
 
 	group_data->self->fns->expand(group_data->self, data_set);
 
@@ -414,7 +416,7 @@ void group_printw(resource_t *rsc, const char *pre_text, int *index)
 	}
 	
 	move(*index, 0);
-	printw("Resource Group: %s\n", rsc->id);
+	printw("Resource Group: %s\n", group_data->self->id);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
@@ -438,7 +440,7 @@ void group_html(resource_t *rsc, const char *pre_text, FILE *stream)
 		child_text = "    ";
 	}
 	
-	fprintf(stream, "Resource Group: %s\n", rsc->id);
+	fprintf(stream, "Resource Group: %s\n", group_data->self->id);
 	fprintf(stream, "<ul>\n");
 
 	slist_iter(
@@ -476,7 +478,7 @@ void group_free(resource_t *rsc)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_3("Freeing %s", rsc->id);
+	crm_debug_3("Freeing %s", group_data->self->id);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,

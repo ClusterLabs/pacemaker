@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.101 2005/08/17 09:15:14 andrew Exp $ */
+/* $Id: utils.c,v 1.102 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -562,8 +562,8 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	const node_t *node1 = (const node_t*)a;
 	const node_t *node2 = (const node_t*)b;
 
-	float node1_weight = 0;
-	float node2_weight = 0;
+	int node1_weight = 0;
+	int node2_weight = 0;
 	
 	if(a == NULL) { return 1; }
 	if(b == NULL) { return -1; }
@@ -579,14 +579,14 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	}
 
 	if(node1_weight > node2_weight) {
-		crm_debug_4("%s (%f) > %s (%f) : weight",
+		crm_debug_4("%s (%d) > %s (%d) : weight",
 			  node1->details->id, node1_weight,
 			  node2->details->id, node2_weight);
 		return -1;
 	}
 	
 	if(node1_weight < node2_weight) {
-		crm_debug_4("%s (%f) < %s (%f) : weight",
+		crm_debug_4("%s (%d) < %s (%d) : weight",
 			  node1->details->id, node1_weight,
 			  node2->details->id, node2_weight);
 		return 1;
@@ -1066,7 +1066,7 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 		return;
 	}
 
-	crm_debug_4("%s%s%sNode %s: (weight=%f, fixed=%s)",
+	crm_debug_4("%s%s%sNode %s: (weight=%d, fixed=%s)",
 	       pre_text==NULL?"":pre_text,
 	       pre_text==NULL?"":": ",
 	       node->details==NULL?"error ":node->details->online?"":"Unavailable/Unclean ",
@@ -1133,7 +1133,7 @@ print_color(const char *pre_text, color_t *color, gboolean details)
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	crm_debug_4("%s%sColor %d: (weight=%f, node=%s, possible=%d)",
+	crm_debug_4("%s%sColor %d: (weight=%d, node=%s, possible=%d)",
 		    pre_text==NULL?"":pre_text,
 		    pre_text==NULL?"":": ",
 		    color->id, 
@@ -1162,7 +1162,7 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 		  g_list_length(cons->node_list_rh));
 
 	if(details == FALSE) {
-		crm_debug_4("\t%s (score=%f : node placement rule)",
+		crm_debug_4("\t%s (score=%d : node placement rule)",
 			  safe_val3(NULL, cons, rsc_lh, id), 
 			  cons->weight);
 
@@ -1525,10 +1525,10 @@ set_id(crm_data_t * xml_obj, const char *prefix, int child)
 	crm_free(new_id);
 }
 
-float
-merge_weights(float w1, float w2) 
+int
+merge_weights(int w1, int w2) 
 {
-	float result = w1 + w2;
+	int result = w1 + w2;
 
 	if(w1 <= -INFINITY || w2 <= -INFINITY) {
 		if(w1 >= INFINITY || w2 >= INFINITY) {
@@ -1562,10 +1562,10 @@ merge_weights(float w1, float w2)
 }
 
 
-float
+int
 char2score(const char *score) 
 {
-	float score_f = 0.0;
+	int score_f = 0;
 	
 	if(score == NULL) {
 		
@@ -1576,7 +1576,7 @@ char2score(const char *score)
 		score_f = INFINITY;
 		
 	} else {
-		score_f = atof(score);
+		score_f = atoi(score);
 		if(score_f > 0 && score_f > INFINITY) {
 			score_f = INFINITY;
 			

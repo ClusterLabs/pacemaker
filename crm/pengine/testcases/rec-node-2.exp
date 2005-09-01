@@ -23,13 +23,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="3" operation="stonith" operation_key="stonith" allow_fail="false"/>
+         <crm_event id="3" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="2">
      <action_set>
-       <crm_event id="3" operation="stonith" operation_key="stonith" allow_fail="false">
+       <crm_event id="3" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <attributes>
            <nvpair name="on_node" value="node1"/>
            <nvpair name="on_node_uuid" value="uuid1"/>

@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.22 2005/08/17 09:15:13 andrew Exp $ */
+/* $Id: complex.h,v 1.23 2005/09/01 11:41:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -67,8 +67,8 @@ typedef struct resource_object_functions_s
 		void (*internal_constraints)(resource_t *, pe_working_set_t *);
 		void (*agent_constraints)(resource_t *);
 
-		void (*rsc_colocation_lh)(rsc_colocation_t *);
-		void (*rsc_colocation_rh)(resource_t *, rsc_colocation_t *);
+		void (*rsc_colocation_lh)(resource_t *, resource_t *, rsc_colocation_t *);
+		void (*rsc_colocation_rh)(resource_t *, resource_t *, rsc_colocation_t *);
 
 		void (*rsc_order_lh)(resource_t *, order_constraint_t *);
 		void (*rsc_order_rh)(
@@ -97,9 +97,10 @@ extern void native_create_actions(
 extern void native_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void native_agent_constraints(resource_t *rsc);
-extern void native_rsc_colocation_lh(rsc_colocation_t *constraint);
+extern void native_rsc_colocation_lh(
+	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void native_rsc_colocation_rh(
-	resource_t *rsc, rsc_colocation_t *constraint);
+	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void native_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
 extern void native_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
@@ -124,9 +125,10 @@ extern void group_create_actions(
 extern void group_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void group_agent_constraints(resource_t *rsc);
-extern void group_rsc_colocation_lh(rsc_colocation_t *constraint);
+extern void group_rsc_colocation_lh(
+	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void group_rsc_colocation_rh(
-	resource_t *rsc, rsc_colocation_t *constraint);
+	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
 extern void group_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
@@ -150,9 +152,10 @@ extern void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void clone_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void clone_agent_constraints(resource_t *rsc);
-extern void clone_rsc_colocation_lh(rsc_colocation_t *constraint);
+extern void clone_rsc_colocation_lh(
+	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void clone_rsc_colocation_rh(
-	resource_t *rsc, rsc_colocation_t *constraint);
+	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
 extern void clone_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
