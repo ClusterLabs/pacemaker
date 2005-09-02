@@ -223,7 +223,7 @@ class LinuxHAv2(HeartbeatCM):
          </instance_attributes>
          <primitive id="child_DoFencing" class="stonith" type="ssh">
            <operations>
-             <op id="1" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
+             <op id="1" name="monitor" interval="20s" timeout="40s" prereq="nothing"/>
              <op id="2" name="start" timeout="20s" prereq="nothing"/>
            </operations>
            <instance_attributes>
