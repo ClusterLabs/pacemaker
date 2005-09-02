@@ -534,16 +534,16 @@ do_read_config(long long action,
 			continue;
 			
 		} else if(safe_str_eq(name, XML_CONFIG_ATTR_DC_BEAT)) {
-			dc_heartbeat->period_ms = atoi(value);
+			dc_heartbeat->period_ms = crm_get_msec(value);
 			
 		} else if(safe_str_eq(name, XML_CONFIG_ATTR_DC_DEADTIME)) {
-			election_trigger->period_ms = atoi(value);
+			election_trigger->period_ms = crm_get_msec(value);
 
 		} else if(safe_str_eq(name, XML_CONFIG_ATTR_FORCE_QUIT)) {
-			shutdown_escalation_timer->period_ms = atoi(value);
+			shutdown_escalation_timer->period_ms = crm_get_msec(value);
 
 		} else if(safe_str_eq(name, XML_CONFIG_ATTR_RECHECK)) {
-			recheck_timer->period_ms = atoi(value);
+			recheck_timer->period_ms = crm_get_msec(value);
 		}
 		);
 		
