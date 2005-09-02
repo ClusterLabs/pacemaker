@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.41 2005/08/10 08:55:04 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.42 2005/09/02 12:32:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -207,6 +207,7 @@
 #define XML_CONFIG_ATTR_DC_DEADTIME	"dc_deadtime"
 #define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown_escalation"
 #define XML_CONFIG_ATTR_REANNOUNCE	"join_reannouce"
+#define XML_CONFIG_ATTR_RECHECK		"cluster_recheck_interval"
 
 #define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 
