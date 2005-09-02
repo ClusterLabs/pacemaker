@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.53 2005/07/21 17:29:15 andrew Exp $ */
+/* $Id: messages.c,v 1.54 2005/09/02 12:39:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -914,7 +914,14 @@ sync_our_cib(HA_Message *request, gboolean all)
 		crm_log_message(LOG_ERR, request);
 	}
 	
-	if(all == FALSE && host != NULL) {
+	/* remove the all == FALSE condition
+	 *
+	 * sync_from was failing, the local client wasnt being notified
+	 *    because it didnt know it was a reply
+	 * setting this does not prevent the other nodes from applying it
+	 *    if all == TRUE
+	 */
+	if(host != NULL) {
 		ha_msg_add(replace_request, F_CIB_ISREPLY, host);
 	}
 	ha_msg_mod(replace_request, F_CIB_OPERATION, CIB_OP_REPLACE);
