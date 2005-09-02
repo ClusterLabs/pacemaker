@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.77 2005/07/19 20:29:50 andrew Exp $ */
+/* $Id: callbacks.c,v 1.78 2005/09/02 12:34:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -529,17 +529,17 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		local_notify = TRUE;
 
 	} else if(delegated != NULL) {
-		crm_debug_2("Ignoring msg for master instance");
+		crm_debug("Ignoring msg for master instance");
 		return;
 
 	} else if(host != NULL) {
 		/* this is for a specific instance and we're not it */
-		crm_debug_2("Ignoring msg for instance on %s", crm_str(host));
+		crm_debug("Ignoring msg for instance on %s", crm_str(host));
 		return;
 		
 	} else if(reply_to == NULL && cib_is_master == FALSE) {
 		/* this is for the master instance and we're not it */
-		crm_debug_2("Ignoring reply to %s", crm_str(reply_to));
+		crm_debug("Ignoring reply to %s", crm_str(reply_to));
 		return;
 		
 	} else {
@@ -587,14 +587,14 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 	}
 
 	if(process) {
-		crm_debug_3("Performing local processing:"
+		crm_debug_2("Performing local processing:"
 			    " op=%s origin=%s/%s,%s (update=%s)",
 			    cl_get_string(request, F_CIB_OPERATION), originator,
 			    cl_get_string(request, F_CIB_CLIENTID),
 			    cl_get_string(request, F_CIB_CALLID), update);
 		
 		rc = cib_process_command(request, &op_reply, &result_diff, TRUE);
-		crm_debug_3("Processing complete");
+		crm_debug_2("Processing complete");
 
 		if(rc == cib_diff_resync || rc == cib_diff_failed
 		   || rc == cib_old_data) {
@@ -626,7 +626,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		cib_client_t *client_obj = NULL;
 		HA_Message *client_reply = NULL;
 		enum cib_errors local_rc = cib_ok;
-		crm_debug_4("find the client");
+		crm_debug_2("Performing notification");
 
 		if(process == FALSE) {
 			client_reply = cib_msg_copy(request, TRUE);
@@ -676,7 +676,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		/* nothing more to do...
 		 * this was a non-originating slave update
 		 */
-		crm_debug_3("Completed slave update");
+		crm_debug_2("Completed slave update");
 		crm_msg_del(op_reply);
 		free_xml(result_diff);
 		return;
@@ -725,6 +725,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 		crm_msg_del(op_bcast);
 		
 	} else if((call_options & cib_discard_reply) == 0) {
+		crm_debug_2("Sending replies");
 		if(from_peer && originator != NULL) {
 			/* send reply via HA to originating node */
 			crm_debug("Sending request result to originator only");
@@ -1151,7 +1152,12 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 {
 	int call_type = 0;
 	const char *originator = cl_get_string(msg, F_ORIG);
+	const char *seq        = cl_get_string(msg, F_SEQ);
+	const char *op         = cl_get_string(msg, F_CIB_OPERATION);
 
+	crm_log_message_adv(LOG_MSG, "Peer[inbound]", msg);
+	crm_debug_2("Operation %s from peer %s", op, originator);
+	
 	if(originator == NULL || safe_str_eq(originator, cib_our_uname)) {
  		crm_debug_3("Discarding message %s/%s from ourselves",
 			  cl_get_string(msg, F_CIB_CLIENTID), 
@@ -1159,23 +1165,22 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 		return;
 
 	} else if(ccm_membership == NULL) {
- 		crm_debug_3("Discarding message %s/%s: membership not established",
-			  originator, cl_get_string(msg, F_SEQ));
+ 		crm_debug_2("Discarding message %s/%s:"
+			    " membership not established",
+			    originator, seq);
 		return;
 		
 	} else if(g_hash_table_lookup(ccm_membership, originator) == NULL) {
- 		crm_debug_3("Discarding message %s/%s: not in our membership",
-			  originator, cl_get_string(msg, F_CIB_CALLID));
+ 		crm_debug_2("Discarding message %s/%s: not in our membership",
+			    originator, cl_get_string(msg, F_CIB_CALLID));
 		return;
 
 	} else if(cib_get_operation_id(msg, &call_type) != cib_ok) {
-		crm_err("Invalid operation... discarding msg %s",
-			cl_get_string(msg, F_SEQ));
+		crm_err("Invalid operation... discarding msg %s", seq);
 		return;
 	}
 
-	crm_debug_4("%s Processing msg %s",
-		  cib_our_uname, cl_get_string(msg, F_SEQ));
+	crm_debug("Processing msg %s (%s) from peer %s", seq, op, originator);
 
 	cib_process_request(msg, TRUE, TRUE, NULL);
 
