@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.29 2005/08/17 09:03:23 andrew Exp $ */
+/* $Id: io.c,v 1.30 2005/09/02 12:31:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -380,7 +380,7 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 	crm_data_t *saved_cib = get_the_CIB();
 	const char *filename_bak = CIB_BACKUP; /* calculate */
 
-	crm_log_xml_debug_3(new_cib, "Attempting to activate CIB");
+	crm_log_xml_debug_4(new_cib, "Attempting to activate CIB");
 
 	CRM_ASSERT(new_cib != saved_cib);
 	crm_validate_data(new_cib);
