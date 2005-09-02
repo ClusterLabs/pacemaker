@@ -117,10 +117,17 @@ crm_timer_popped(gpointer data)
 	if(timer->fsa_input == I_INTEGRATED) {
 		register_fsa_input_before(
 			C_TIMER_POPPED, timer->fsa_input, NULL);
+
+	} else if(timer->fsa_input == I_PE_CALC
+		  && fsa_state != S_IDLE) {
+		crm_debug("Discarding %s event in state: %s",
+			  fsa_input2string(timer->fsa_input),
+			  fsa_state2string(fsa_state));
 		
 	} else if(timer->fsa_input == I_FINALIZED
 		  && fsa_state != S_FINALIZE_JOIN) {
-		crm_debug("Discarding I_FINALIZED event in state: %s",
+		crm_debug("Discarding %s event in state: %s",
+			  fsa_input2string(timer->fsa_input),
 			  fsa_state2string(fsa_state));
 		
 	} else if(timer->fsa_input != I_NULL) {

@@ -175,6 +175,7 @@ fsa_timer_t *integration_timer = NULL;
 fsa_timer_t *finalization_timer = NULL;
 fsa_timer_t *dc_heartbeat = NULL;
 fsa_timer_t *wait_timer = NULL;
+fsa_timer_t *recheck_timer = NULL;
 
 volatile gboolean do_fsa_stall = FALSE;
 
@@ -542,9 +543,14 @@ do_state_transition(long long actions,
 	if(next_state != S_ELECTION) {
 		highest_born_on = 0;
 	}
+	if(next_state != S_IDLE) {
+		crm_timer_stop(recheck_timer);
+	}
 	
 	switch(next_state) {
 		case S_PENDING:			
+			fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
+			/* fall through */
 		case S_ELECTION:
 			crm_debug_2("Resetting our DC to NULL on transition to %s",
 				    fsa_state2string(next_state));
@@ -629,10 +635,14 @@ do_state_transition(long long actions,
 			/* possibly redundant */
 			crm_timer_stop(shutdown_timer);
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
+			fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 			break;
 			
 		case S_IDLE:
 			dump_rsc_info();
+			if(recheck_timer->period_ms > 0) {
+				crm_timer_start(recheck_timer);
+			}
 			break;
 			
 		default:

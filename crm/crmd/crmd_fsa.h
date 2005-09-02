@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.43 2005/05/09 15:00:22 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.44 2005/09/02 12:40:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,6 +126,7 @@ extern fsa_timer_t *dc_heartbeat;
 extern fsa_timer_t *integration_timer;
 extern fsa_timer_t *finalization_timer;
 extern fsa_timer_t *wait_timer;
+extern fsa_timer_t *recheck_timer;
 
 extern GTRIGSource *fsa_source;
 

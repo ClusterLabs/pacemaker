@@ -257,6 +257,7 @@ do_startup(long long action,
 	crm_malloc0(shutdown_escalation_timer, sizeof(fsa_timer_t));
 	crm_malloc0(wait_timer, sizeof(fsa_timer_t));
 	crm_malloc0(shutdown_timer, sizeof(fsa_timer_t));
+	crm_malloc0(recheck_timer, sizeof(fsa_timer_t));
 
 	interval = interval * 1000;
 
@@ -336,6 +337,16 @@ do_startup(long long action,
 		shutdown_timer->fsa_input = I_SHUTDOWN;
 		shutdown_timer->callback = crm_timer_popped;
 		shutdown_timer->repeat = TRUE;
+	} else {
+		was_error = TRUE;
+	}
+
+	if(recheck_timer != NULL) {
+		recheck_timer->source_id = -1;
+		recheck_timer->period_ms = -1;
+		recheck_timer->fsa_input = I_PE_CALC;
+		recheck_timer->callback = crm_timer_popped;
+		recheck_timer->repeat = FALSE;
 	} else {
 		was_error = TRUE;
 	}
@@ -531,6 +542,8 @@ do_read_config(long long action,
 		} else if(safe_str_eq(name, XML_CONFIG_ATTR_FORCE_QUIT)) {
 			shutdown_escalation_timer->period_ms = atoi(value);
 
+		} else if(safe_str_eq(name, XML_CONFIG_ATTR_RECHECK)) {
+			recheck_timer->period_ms = atoi(value);
 		}
 		);
 		

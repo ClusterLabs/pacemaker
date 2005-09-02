@@ -68,7 +68,6 @@ do_election_vote(long long action,
 	}	
 
 	if(not_voting) {
-		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		if(AM_I_DC) {
 			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
 
@@ -223,7 +222,6 @@ do_election_count_vote(long long action,
 
 	if(we_loose) {
 		crm_timer_stop(election_timeout);
-		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		crm_debug("Election lost to %s", vote_from);
 		if(fsa_input_register & R_THE_DC) {
 			crm_debug_3("Give up the DC to %s", vote_from);
@@ -352,33 +350,26 @@ do_dc_release(long long action,
 	      fsa_data_t *msg_data)
 {
 	enum crmd_fsa_input result = I_NULL;
-
-	crm_debug_4("################## Releasing the DC ##################");
-
+	
 	crm_timer_stop(dc_heartbeat);
 	if(action & A_DC_RELEASE) {
+		crm_debug("Releasing the role of DC");
 		clear_bit_inplace(fsa_input_register, R_THE_DC);
+		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		
 	} else if (action & A_DC_RELEASED) {
-		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
-
-		if(cur_state == S_STOPPING) {
-			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
-		}
+		crm_info("DC role released");
 #if 0
-		else if( are there errors ) {
+		if( are there errors ) {
 			/* we cant stay up if not healthy */
 			/* or perhaps I_ERROR and go to S_RECOVER? */
 			result = I_SHUTDOWN;
 		}
 #endif
-		else {
-			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
-		}
+		register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
 		
 	} else {
-		crm_err("Warning, do_dc_release invoked for action %s",
-		       fsa_action2string(action));
+		crm_err("Unknown action %s", fsa_action2string(action));
 	}
 
 	crm_debug_2("Am I still the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
