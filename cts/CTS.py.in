@@ -696,7 +696,7 @@ class ClusterManager(UserDict):
         logpri = self.Env["logfacility"] + ".info"
         for node in self.Env["nodes"]:
             cmd="logger -p %s %s%s" % (logpri, prefix, node)
-            if self.rsh(node, cmd) != 0:
+            if self.rsh.noBlock(node, cmd) != 0:
                 self.log ("Warn: Cannot execute remote command [%s] on %s" (cmd, node))
         watch_result = watch.lookforall()
         if watch.unmatched:
