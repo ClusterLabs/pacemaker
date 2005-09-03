@@ -146,7 +146,7 @@ class Stonithd(ResetMechanism):
 
         return 1 
 
-    # Should we random choose a node as init_node here if init_node not specified?
+    # Should we randomly choose a node as init_node here if init_node not specified?
     def reset(self, init_node, target_node):
         return self._do_stonith(init_node, target_node, "RESET")
 
@@ -322,6 +322,8 @@ class CtsLab(UserDict):
             self["HAdir"] = "@sysconfdir@/ha.d"
         if not self.has_key("LogFileName"):
             self["LogFileName"] = "/var/log/ha-log"
+        if not self.has_key("logfacility"):
+            LogFacility = "local7"
 
         #
         #  Now set up our random number generator...
@@ -627,6 +629,7 @@ if __name__ == '__main__':
             LogFacility = config.Parameters["logfacility"][0]
         else:
             LogFacility = "local7"
+    Environment["logfacility"] = LogFacility
 
     if LimitNodes > 0:
         if len(node_list) > LimitNodes:
