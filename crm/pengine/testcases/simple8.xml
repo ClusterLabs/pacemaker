@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<!-- shutdown -->
+<cib>
+  <configuration>
+    <crm_config>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+      <nvpair id="symmetric_cluster" name="symmetric_cluster" value="true"/>
+      <nvpair id="default_resource_stickiness" name="default_resource_stickiness" value="100"/>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1" type="member"/>
+      <node id="node2" uname="node2" type="member"/>
+    </nodes>
+    <resources>
+      <primitive id="rsc3" class="heartbeat" type="apache" />
+      <primitive id="rsc4" class="heartbeat" type="apache" />
+      <group id="foo">
+	<primitive id="rsc1" class="heartbeat" type="apache"/>
+      </group>
+      <group id="bar">
+	<primitive id="rsc2" class="heartbeat" type="apache" />
+      </group>
+    </resources>
+    <constraints>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <lrm>
+	<lrm_agents>
+	  <lrm_agent class="heartbeat" type="apache"/>
+	</lrm_agents>
+        <lrm_resources>
+          <lrm_resource id="foo:rsc1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="foo:rsc1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+          </lrm_resource>
+          <lrm_resource id="rsc3" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc3" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+          </lrm_resource>
+          <lrm_resource id="bar:rsc2" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="bar:rsc2" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+          </lrm_resource>
+          <lrm_resource id="rsc4" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+            <lrm_rsc_op id="rsc4" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+    </node_state>
+  </status>
+</cib>
