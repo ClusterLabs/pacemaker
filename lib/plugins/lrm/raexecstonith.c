@@ -54,7 +54,7 @@ static PIL_rc close_stonithRA(PILInterface*, void* ud_interface);
 
 /* static const char * RA_PATH = STONITH_RA_DIR; */
 /* Temporarily use it */
-static const char * RA_PATH = "/usr/lib/stonith/plugins/stonith/";
+static const char * RA_PATH = HA_LIBDIR "/stonith/plugins/stonith/";
 
 /* The begin of exported function list */
 static int execra(const char * rsc_id,
