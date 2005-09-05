@@ -697,13 +697,31 @@ class ClusterManager(UserDict):
         for node in self.Env["nodes"]:
             cmd="logger -p %s %s%s" % (logpri, prefix, node)
             if self.rsh.noBlock(node, cmd) != 0:
-                self.log ("Warn: Cannot execute remote command [%s] on %s" (cmd, node))
+                self.log ("ERROR: Cannot execute remote command [%s] on %s" (cmd, node))
         watch_result = watch.lookforall()
         if watch.unmatched:
             self.log("ERROR: Remote logging is not working.  Please fix before continuing.")
             for regex in watch.unmatched:
-                self.log ("Warn: Test message [%s] not found in logs." % (regex))
+                self.log ("ERROR: Test message [%s] not found in logs." % (regex))
             sys.exit(1)
+
+    def CheckDf(self):
+        dfcmd="df -B1000000 /var/log | tail -1 | tr -s ' ' | cut -d' ' -f2"
+        dfmin=500
+        for node in self.Env["nodes"]:
+            dfout=self.rsh.readaline(node, dfcmd)
+            if not dfout:
+                self.log ("ERROR: Cannot execute remote df command [%s] on %s" (dfcmd, node))
+            else:
+                try:
+                    idfout = int(dfout)
+                except (ValueError, TypeError):
+                    self.log("Warning: df output from %s was invalid [%s]" % (node, dfout))
+                else:
+                    if idfout == 0:
+                        self.log("CRIT: Completely out of log disk space on %s" % node)
+                    elif idfout <= 500:
+                        self.log("WARN: Low on log disk space (%d Mbytes) on %s" % (idfout, node))
 
 class Resource:
     '''

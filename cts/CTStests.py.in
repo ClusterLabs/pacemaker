@@ -150,6 +150,7 @@ random for the selected number of iterations.
 ''')
 
         self.CM.TestLogging()
+        self.CM.CheckDf()
         BadNews=CTS.LogWatcher(self.CM["LogFileName"], self.CM["BadRegexes"]
         ,        timeout=0)
         BadNews.setwatch()
@@ -187,6 +188,9 @@ random for the selected number of iterations.
                 self.CM.log("Test %s (%s) \t[FAILED]" %(test.name,nodechoice))
                 # Better get the current info from the cluster...
                 self.CM.statall()
+		# Make sure logging is working and we have enough disk space...
+                self.CM.TestLogging()
+                self.CM.CheckDf()
             stoptime=time.time()
             elapsed_time = stoptime - starttime
             test_time = stoptime - test.starttime
