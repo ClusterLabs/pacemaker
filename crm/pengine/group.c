@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.36 2005/09/01 12:25:18 andrew Exp $ */
+/* $Id: group.c,v 1.37 2005/09/05 18:37:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -89,13 +89,14 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 			if(group_data->first_child == NULL) {
 				group_data->first_child = new_rsc;
+			} else {
+				rsc_colocation_new("pe_group_internal_colo", pecs_must,
+						   group_data->first_child, new_rsc);
 			}
 			
-			rsc_colocation_new("pe_group_internal_colo", pecs_must,
-					   group_data->self, new_rsc);
-		
 			crm_action_debug_3(
 				print_resource("Added", new_rsc, FALSE));
+			
 		} else {
 			pe_err("Failed unpacking resource %s",
 				crm_element_value(xml_obj, XML_ATTR_ID));
@@ -146,8 +147,8 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	CRM_ASSERT(data_set != NULL);
 	CRM_ASSERT(group_data->self != NULL);
- 	group_color = group_data->self->fns->color(
-		group_data->self, data_set);
+	group_color = group_data->first_child->fns->color( 
+		group_data->first_child, data_set);
 	CRM_DEV_ASSERT(group_color != NULL);
 	native_assign_color(rsc, group_color);
 	return group_color;
@@ -279,7 +280,7 @@ void group_rsc_colocation_lh(
 		return;
 	}
 
-	group_data->self->fns->rsc_colocation_lh(group_data->self, rsc_rh, constraint);
+ 	group_data->first_child->fns->rsc_colocation_lh(group_data->first_child, rsc_rh, constraint); 
 	
 }
 
@@ -297,7 +298,7 @@ void group_rsc_colocation_rh(
 	crm_debug_3("Processing RH of constraint %s", constraint->id);
 	crm_action_debug_3(print_resource("LHS", rsc_lh, TRUE));
 	
-	group_data->self->fns->rsc_colocation_rh(rsc_lh, group_data->self, constraint);
+ 	group_data->first_child->fns->rsc_colocation_rh(rsc_lh, group_data->first_child, constraint); 
 }
 
 

@@ -22,7 +22,7 @@
 create_mode="true"
 echo Generating test outputs for these tests...
 #do_test bad7
-do_test inc8 "Clone anti-colocation"
+#do_test simple8 "Stickiness"
 
 echo ""
 
@@ -55,6 +55,7 @@ do_test simple7 "Shutdown    "
 #do_test simple10 "Higher version"
 do_test simple11 "Priority (ne)"
 do_test simple12 "Priority (eq)"
+do_test simple8 "Stickiness"
 
 echo ""
 do_test rsc_dep1 "Must not     "
