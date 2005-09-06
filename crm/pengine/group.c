@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.37 2005/09/05 18:37:16 andrew Exp $ */
+/* $Id: group.c,v 1.38 2005/09/06 11:56:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -85,15 +85,15 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 			group_data->child_list = g_list_append(
 				group_data->child_list, new_rsc);
 			
-			group_data->last_child = new_rsc;
-
 			if(group_data->first_child == NULL) {
 				group_data->first_child = new_rsc;
+
 			} else {
-				rsc_colocation_new("pe_group_internal_colo", pecs_must,
-						   group_data->first_child, new_rsc);
+				rsc_colocation_new(
+					"pe_group_internal_colo", pecs_must,
+					group_data->first_child, new_rsc);
 			}
-			
+			group_data->last_child = new_rsc;
 			crm_action_debug_3(
 				print_resource("Added", new_rsc, FALSE));
 			
@@ -113,28 +113,14 @@ resource_t *
 group_find_child(resource_t *rsc, const char *id)
 {
 	group_variant_data_t *group_data = NULL;
-	if(rsc->variant == pe_group) {
-		group_data = (group_variant_data_t *)rsc->variant_opaque;
-	} else {
-		pe_err("Resource %s was not a \"group\" variant", rsc->id);
-		return NULL;
-	}
+	get_group_variant_data(group_data, rsc);
 	return pe_find_resource(group_data->child_list, id);
 }
 
 int group_num_allowed_nodes(resource_t *rsc)
 {
 	group_variant_data_t *group_data = NULL;
-	if(rsc->variant == pe_native) {
-		group_data = (group_variant_data_t *)rsc->variant_opaque;
-	} else {
-		pe_err("Resource %s was not a \"native\" variant",
-			rsc->id);
-		return 0;
-	}
-	if(group_data->self == NULL) {
-		return 0;
-	}
+	get_group_variant_data(group_data, rsc);
  	return group_data->self->fns->num_allowed_nodes(group_data->self);
 }
 
@@ -147,8 +133,7 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	CRM_ASSERT(data_set != NULL);
 	CRM_ASSERT(group_data->self != NULL);
-	group_color = group_data->first_child->fns->color( 
-		group_data->first_child, data_set);
+ 	group_color = color_resource(group_data->first_child, data_set);
 	CRM_DEV_ASSERT(group_color != NULL);
 	native_assign_color(rsc, group_color);
 	return group_color;
@@ -231,6 +216,13 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 				last_rsc, child_rsc, pe_ordering_optional);
 			order_stop_stop(
 				child_rsc, last_rsc, pe_ordering_optional);
+
+			/* recovery */
+			child_rsc->restart_type = pe_restart_restart;
+			order_start_start(
+				last_rsc, child_rsc, pe_ordering_recover);
+			order_stop_stop(
+				child_rsc, last_rsc, pe_ordering_recover);
 
 		} else {
 			custom_action_order(

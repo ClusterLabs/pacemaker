@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.49 2005/09/01 12:36:39 andrew Exp $ */
+/* $Id: incarnation.c,v 1.50 2005/09/06 11:56:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -225,8 +225,12 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	if(clone_data->self->is_managed == FALSE) {
 		return NULL;
+
+	} else if(clone_data->self->provisional == FALSE) {
+		return NULL;
+
 	}
-	
+
 	child_0 = g_list_nth_data(clone_data->child_list, 0);
 
 	max_nodes = rsc->fns->num_allowed_nodes(rsc);
@@ -280,6 +284,8 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		CRM_DEV_ASSERT(child_color != NULL);
 		native_assign_color(rsc, child_color);
 		);
+
+	clone_data->self->provisional = FALSE;
 	return NULL;
 }
 

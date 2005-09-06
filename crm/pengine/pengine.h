@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.87 2005/09/01 11:41:20 andrew Exp $ */
+/* $Id: pengine.h,v 1.88 2005/09/06 11:56:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -376,7 +376,8 @@ extern gboolean unpack_status(crm_data_t *status, pe_working_set_t *data_set);
 
 extern gboolean apply_placement_constraints(pe_working_set_t *data_set);
 
-extern void color_resource(resource_t *lh_resource, pe_working_set_t *data_set);
+extern color_t *color_resource(
+	resource_t *lh_resource, pe_working_set_t *data_set);
 
 extern gboolean choose_node_from_list(color_t *color);
 

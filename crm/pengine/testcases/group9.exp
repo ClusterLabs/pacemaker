@@ -1,0 +1,229 @@
+ <transition_graph global_timeout="60s" transition_id="0">
+   <synapse id="0">
+     <action_set>
+       <pseudo_event id="14" rsc_id="foo" operation="start" operation_key="foo_start_0" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="17" rsc_id="foo" operation="stopped" operation_key="foo_stopped_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <pseudo_event id="15" rsc_id="foo" operation="running" operation_key="foo_running_0" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="13" rsc_id="foo:rsc5" operation="start" operation_key="foo:rsc5_start_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <pseudo_event id="16" rsc_id="foo" operation="stop" operation_key="foo_stop_0" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="3">
+     <action_set>
+       <pseudo_event id="17" rsc_id="foo" operation="stopped" operation_key="foo_stopped_0" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <rsc_op id="2" rsc_id="foo:rsc4" operation="stop" operation_key="foo:rsc4_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
+         <primitive id="foo:rsc4" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="12" rsc_id="foo:rsc5" operation="stop" operation_key="foo:rsc5_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="5">
+     <action_set>
+       <rsc_op id="11" rsc_id="foo:rsc4" operation="start" operation_key="foo:rsc4_start_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
+         <primitive id="foo:rsc4" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="2" rsc_id="foo:rsc4" operation="stop" operation_key="foo:rsc4_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="6">
+     <action_set>
+       <rsc_op id="12" rsc_id="foo:rsc5" operation="stop" operation_key="foo:rsc5_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
+         <primitive id="foo:rsc5" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="16" rsc_id="foo" operation="stop" operation_key="foo_stop_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="7">
+     <action_set>
+       <rsc_op id="13" rsc_id="foo:rsc5" operation="start" operation_key="foo:rsc5_start_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
+         <primitive id="foo:rsc5" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="11" rsc_id="foo:rsc4" operation="start" operation_key="foo:rsc4_start_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="12" rsc_id="foo:rsc5" operation="stop" operation_key="foo:rsc5_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="8">
+     <action_set>
+       <pseudo_event id="22" rsc_id="bar" operation="start" operation_key="bar_start_0" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="25" rsc_id="bar" operation="stopped" operation_key="bar_stopped_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="9">
+     <action_set>
+       <pseudo_event id="23" rsc_id="bar" operation="running" operation_key="bar_running_0" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="21" rsc_id="bar:rsc8" operation="start" operation_key="bar:rsc8_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="10">
+     <action_set>
+       <pseudo_event id="24" rsc_id="bar" operation="stop" operation_key="bar_stop_0" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="11">
+     <action_set>
+       <pseudo_event id="25" rsc_id="bar" operation="stopped" operation_key="bar_stopped_0" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="18" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="12">
+     <action_set>
+       <rsc_op id="18" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
+         <primitive id="bar:rsc6" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="4" rsc_id="bar:rsc7" operation="stop" operation_key="bar:rsc7_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="13">
+     <action_set>
+       <rsc_op id="19" rsc_id="bar:rsc6" operation="start" operation_key="bar:rsc6_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false">
+         <primitive id="bar:rsc6" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="18" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="22" rsc_id="bar" operation="start" operation_key="bar_start_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="14">
+     <action_set>
+       <rsc_op id="3" rsc_id="bar:rsc7" operation="start" operation_key="bar:rsc7_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false">
+         <primitive id="bar:rsc7" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="4" rsc_id="bar:rsc7" operation="stop" operation_key="bar:rsc7_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="19" rsc_id="bar:rsc6" operation="start" operation_key="bar:rsc6_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="15">
+     <action_set>
+       <rsc_op id="4" rsc_id="bar:rsc7" operation="stop" operation_key="bar:rsc7_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
+         <primitive id="bar:rsc7" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="20" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="16">
+     <action_set>
+       <rsc_op id="20" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
+         <primitive id="bar:rsc8" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="24" rsc_id="bar" operation="stop" operation_key="bar_stop_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="17">
+     <action_set>
+       <rsc_op id="21" rsc_id="bar:rsc8" operation="start" operation_key="bar:rsc8_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false">
+         <primitive id="bar:rsc8" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="3" rsc_id="bar:rsc7" operation="start" operation_key="bar:rsc7_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="20" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+ </transition_graph>
+

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.103 2005/09/01 13:20:28 andrew Exp $ */
+/* $Id: utils.c,v 1.104 2005/09/06 11:56:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -130,11 +130,16 @@ node_list_and(GListPtr list1, GListPtr list2, gboolean filter)
 
 		if(other_node != NULL) {
 			new_node = node_copy(node);
+			crm_debug_4("Copied node %s: %d",
+				 new_node->details->uname, new_node->weight);
 		}
 		
 		if(new_node != NULL) {
 			new_node->weight = merge_weights(
 				new_node->weight, other_node->weight);
+
+			crm_debug_4("New node weight for %s: %d",
+				 new_node->details->uname, new_node->weight);
 			
 			if(filter && new_node->weight < 0) {
 				crm_free(new_node);

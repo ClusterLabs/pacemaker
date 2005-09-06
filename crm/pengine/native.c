@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.77 2005/09/01 13:20:28 andrew Exp $ */
+/* $Id: native.c,v 1.78 2005/09/06 11:56:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -225,8 +225,11 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	native_variant_data_t *native_data = NULL;
 
 	get_native_variant_data(native_data, rsc);
-	
-	if( native_choose_color(rsc, data_set->no_color) ) {
+
+	if(rsc->provisional == FALSE) {
+		return native_data->color;
+		
+	} else if( native_choose_color(rsc, data_set->no_color) ) {
 		crm_debug_3("Colored resource %s with color %d",
 			    rsc->id, native_data->color->id);
 		new_color = native_data->color;
@@ -483,9 +486,9 @@ void native_rsc_colocation_rh(
 	get_native_variant_data(native_data_lh, rsc_lh);
 	get_native_variant_data(native_data_rh, rsc_rh);
 	
-	crm_debug_2("%sColocating %s with %s",
+	crm_debug_2("%sColocating %s with %s (%s)",
 		    constraint->strength == pecs_must?"":"Anti-",
-		    rsc_lh->id, rsc_rh->id);
+		    rsc_lh->id, rsc_rh->id, constraint->id);
 	
 	if(constraint->strength == pecs_ignore
 		|| constraint->strength == pecs_startstop){
@@ -1202,9 +1205,11 @@ native_assign_color(resource_t *rsc, color_t *color)
 		(local_color->details->num_resources)++;
 		get_native_variant_data(native_data, rsc);
 		native_data->color = copy_color(local_color);
+		crm_debug_3("Created intersection for color %d",
+			    local_color->id);
 		intersection = node_list_and(
 			local_color->details->candidate_nodes, 
-			native_data->allowed_nodes, TRUE);
+			native_data->allowed_nodes, FALSE);
 		old_list = local_color->details->candidate_nodes;
 		
 		pe_free_shallow(old_list);
@@ -1257,28 +1262,28 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 			 node_rh->details->uname,
 			 node_rh->weight);
 		return;
-	}
+	}	
+	
+	node_rh->weight = merge_weights(node_rh->weight, cons->weight);
+	if(node_rh->weight <= -INFINITY) {
+		crm_debug_3("Constraint %s (-INFINITY): node %s weight %d.",
+			    cons->id,
+			    node_rh->details->uname,
+			    node_rh->weight);
+		
+	} else if(node_rh->weight >= INFINITY) {
+		crm_debug_3("Constraint %s (+INFINITY): node %s weight %d.",
+			    cons->id,
+			    node_rh->details->uname,
+			    node_rh->weight);
 
-	if(cons->weight >= INFINITY && cons->weight <= -INFINITY) {
+	} else {
 		crm_debug_3("Constraint %s (%d): node %s weight %d.",
 			    cons->id,
 			    cons->weight,
 			    node_rh->details->uname,
 			    node_rh->weight);
-	} else if(cons->weight <= -INFINITY) {
-		crm_debug_3("Constraint %s (-INFINITY): node %s weight %d.",
-			    cons->id,
-			    node_rh->details->uname,
-			    node_rh->weight);
-	} else {
-		crm_debug_3("Constraint %s (+INFINITY): node %s weight %d.",
-			    cons->id,
-			    node_rh->details->uname,
-			    node_rh->weight);
 	}
-	
-	
-	node_rh->weight = merge_weights(node_rh->weight, cons->weight);
 
 	if(node_rh->weight < 0) {
 		node_rh->fixed = TRUE;

@@ -22,7 +22,6 @@
 create_mode="true"
 echo Generating test outputs for these tests...
 #do_test bad7
-#do_test simple8 "Stickiness"
 
 echo ""
 
@@ -141,6 +140,7 @@ do_test group5 "Group + Native (move)   "
 do_test group6 "Group + Group (move)    "
 do_test group7 "Group colocation"
 do_test group8 "Group anti-colocation"
+do_test group9 "Group recovery"
 
 echo ""
 do_test inc0 "Incarnation start					" 
