@@ -629,7 +629,6 @@ if __name__ == '__main__':
             LogFacility = config.Parameters["logfacility"][0]
         else:
             LogFacility = "local7"
-    Environment["logfacility"] = LogFacility
 
     if LimitNodes > 0:
         if len(node_list) > LimitNodes:
@@ -656,6 +655,7 @@ if __name__ == '__main__':
     Environment["SuppressCib"] = SuppressCib
     Environment["DoBSC"] = DoBSC
     Environment["use_logd"] = 0
+    Environment["logfacility"] = LogFacility
     if config.Parameters.has_key("use_logd"):
 	Environment["use_logd"] = 1
     
