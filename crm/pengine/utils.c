@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.104 2005/09/06 11:56:44 andrew Exp $ */
+/* $Id: utils.c,v 1.105 2005/09/07 13:00:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1578,6 +1578,9 @@ char2score(const char *score)
 		score_f = -INFINITY;
 		
 	} else if(safe_str_eq(score, INFINITY_S)) {
+		score_f = INFINITY;
+		
+	} else if(safe_str_eq(score, "+"INFINITY_S)) {
 		score_f = INFINITY;
 		
 	} else {
