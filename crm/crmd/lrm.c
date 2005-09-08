@@ -640,6 +640,7 @@ nack_rsc_op(lrm_op_t* op, crm_data_t *msg)
 	fragment = create_cib_fragment(update, NULL);
 
 	reply = create_reply(msg, fragment);
+	crm_log_message_adv(LOG_ERR, "NACK Update", update);
 	crm_log_message_adv(LOG_ERR, "NACK Reply", reply);
 	
 	if(relay_message(reply, TRUE) == FALSE) {
@@ -791,6 +792,7 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation, crm_data_t *msg)
 			crm_err("Discarding attempt to perform action %s on %s"
 				" in state %s", operation, rid,
 				fsa_state2string(fsa_state));
+			op->rsc_id = rsc->id;
 			nack_rsc_op(op, msg);
 			free_lrm_op(op);
 			crm_free(op_id);
