@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.29 2005/09/02 12:31:07 andrew Exp $ */
+/* $Id: xml.c,v 1.30 2005/09/08 09:49:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,7 +39,7 @@
 
 int is_comment_start(const char *input);
 int is_comment_end(const char *input);
-void drop_comments(const char *input, int *offset);
+gboolean drop_comments(const char *input, int *offset);
 
 void dump_array(
 	int log_level, const char *message, const char **array, int depth);
@@ -1205,7 +1205,7 @@ is_comment_end(const char *input)
 	return 0;
 }
 
-void
+gboolean
 drop_comments(const char *input, int *offset)
 {
 	gboolean more = TRUE;
@@ -1216,7 +1216,7 @@ drop_comments(const char *input, int *offset)
 	int tag_len = 0;
 	char ch = 0;
 	if(input == NULL) {
-		return;
+		return FALSE;
 	}
 	if(offset != NULL) {
 		our_input = input + (*offset);
@@ -1259,7 +1259,7 @@ drop_comments(const char *input, int *offset)
 					}
 				} else if(in_comment == FALSE){
 					more = FALSE;
-
+					
 				} else {
 					lpc++;
 					crm_debug_6("Skipping comment char %c", our_input[lpc]);
@@ -1301,18 +1301,24 @@ drop_comments(const char *input, int *offset)
 	if(offset != NULL) {
 		(*offset) += lpc;
 	}
+	if(lpc > 0) {
+		crm_debug_5("Skipped %d comment chars", lpc);
+		return TRUE;
+	}
+	return FALSE;
 }
 
 
 crm_data_t*
 parse_xml(const char *input, int *offset)
 {
-	int len = 0, lpc = 0, last_lpc = -1;
+	int len = 0, lpc = 0;
 	char ch = 0;
 	char *tag_name = NULL;
 	char *attr_name = NULL;
 	char *attr_value = NULL;
 	gboolean more = TRUE;
+	gboolean were_comments = TRUE;
 	const char *error = NULL;
 	const char *our_input = input;
 	crm_data_t *new_obj = NULL;
@@ -1325,10 +1331,8 @@ parse_xml(const char *input, int *offset)
 	}
 
 	len = strlen(our_input);
-	while(lpc < len && lpc > last_lpc) {
-		last_lpc = lpc;
-		drop_comments(our_input, &lpc);
-		crm_debug_5("Skipped %d comment chars", lpc);
+	while(lpc < len && were_comments) {
+		were_comments = drop_comments(our_input, &lpc);
 	}
 	CRM_DEV_ASSERT(our_input[lpc] == '<');
 	if(crm_assert_failed) {
@@ -1366,6 +1370,15 @@ parse_xml(const char *input, int *offset)
 				case '<':
 					if(our_input[lpc+1] != '/') {
 						crm_data_t *child = NULL;
+						gboolean any_comments = FALSE;
+						do {
+							were_comments = drop_comments(our_input, &lpc);
+							any_comments = any_comments || were_comments;
+						} while(lpc < len && were_comments);
+						if(any_comments) {
+							lpc--;
+							break;
+						}
 						crm_debug_4("Start parsing child...");
 						child = parse_xml(our_input, &lpc);
 						if(child == NULL) {
@@ -1387,7 +1400,7 @@ parse_xml(const char *input, int *offset)
 							}
 /* 							lpc++; /\* > *\/ */
 						}
-
+					
 					} else {
 						lpc += 2; /* </ */
 						len = get_tag_name(our_input+lpc);
