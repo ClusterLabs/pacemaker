@@ -58,7 +58,8 @@ gboolean build_active_RAs(crm_data_t *rsc_list);
 void do_update_resource(lrm_op_t *op);
 
 enum crmd_fsa_input do_lrm_rsc_op(
-	lrm_rsc_t *rsc, char *rid, const char *operation, crm_data_t *msg);
+	lrm_rsc_t *rsc, char *rid, const char *operation,
+	crm_data_t *msg, HA_Message *request);
 
 enum crmd_fsa_input do_fake_lrm_op(gpointer data);
 
@@ -70,7 +71,7 @@ gboolean remove_recurring_action(
 
 void free_recurring_op(gpointer value);
 
-void nack_rsc_op(lrm_op_t* op, crm_data_t *msg);
+void nack_rsc_op(lrm_op_t* op, HA_Message *msg);
 
 GHashTable *xml2list(crm_data_t *parent);
 GHashTable *monitors = NULL;
@@ -284,7 +285,7 @@ stop_all_resources(void)
 		const char *last_op = g_hash_table_lookup(resources, rsc_id);
 		if(safe_str_neq(last_op, CRMD_ACTION_STOP)) {
 			crm_warn("Resource %s was active at shutdown", rsc_id);
-			do_lrm_rsc_op(NULL, rsc_id, CRMD_ACTION_STOP, NULL);
+			do_lrm_rsc_op(NULL, rsc_id, CRMD_ACTION_STOP, NULL, NULL);
 		}
 		);
 
@@ -597,7 +598,7 @@ do_lrm_invoke(long long action,
 		rid[63] = 0;
 		
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
-		next_input = do_lrm_rsc_op(rsc, rid, operation, input->xml);
+		next_input = do_lrm_rsc_op(rsc, rid, operation, input->xml, input->msg);
 		
 	} else {
 		crm_err("Operation was neither a lrm_query, nor a rsc op.  %s",
@@ -615,7 +616,7 @@ struct recurring_op_s
 };
 
 void
-nack_rsc_op(lrm_op_t* op, crm_data_t *msg)
+nack_rsc_op(lrm_op_t* op, HA_Message *msg)
 {
 	HA_Message *reply = NULL;
 	crm_data_t *update, *iter;
@@ -625,7 +626,13 @@ nack_rsc_op(lrm_op_t* op, crm_data_t *msg)
 	if(crm_assert_failed) {
 		return;
 	}
+	CRM_DEV_ASSERT(msg != NULL);
+	if(crm_assert_failed) {
+		return;
+	}
 
+	crm_err("NACK'ing resource op");
+	
 	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	set_uuid(fsa_cluster_conn, update, XML_ATTR_UUID, fsa_our_uname);
 	crm_xml_add(update,  XML_ATTR_UNAME, fsa_our_uname);
@@ -636,12 +643,15 @@ nack_rsc_op(lrm_op_t* op, crm_data_t *msg)
 
 	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
+	op->rc = 99;
+	op->op_status = LRM_OP_ERROR;
 	build_operation_update(iter, op, __FUNCTION__, 0);
 	fragment = create_cib_fragment(update, NULL);
 
 	reply = create_reply(msg, fragment);
-	crm_log_message_adv(LOG_ERR, "NACK Update", update);
-	crm_log_message_adv(LOG_ERR, "NACK Reply", reply);
+	crm_log_xml_info(update, "NACK Update");
+	crm_log_message_adv(LOG_INFO, "NACK'd msg", msg);
+	crm_log_message_adv(LOG_INFO, "NACK Reply", reply);
 	
 	if(relay_message(reply, TRUE) == FALSE) {
 		crm_log_message_adv(LOG_ERR, "Unable to route reply", reply);
@@ -652,7 +662,8 @@ nack_rsc_op(lrm_op_t* op, crm_data_t *msg)
 }
 
 enum crmd_fsa_input
-do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation, crm_data_t *msg)
+do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
+	      crm_data_t *msg, HA_Message *request)
 {
 	int call_id  = 0;
 	char *op_id  = NULL;
@@ -789,11 +800,11 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation, crm_data_t *msg)
 	if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
 		if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
 		   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {
-			crm_err("Discarding attempt to perform action %s on %s"
-				" in state %s", operation, rid,
-				fsa_state2string(fsa_state));
-			op->rsc_id = rsc->id;
-			nack_rsc_op(op, msg);
+			crm_info("Discarding attempt to perform action %s on %s"
+				 " in state %s", operation, rid,
+				 fsa_state2string(fsa_state));
+			op->rsc_id = crm_strdup(rsc->id);
+			nack_rsc_op(op, request);
 			free_lrm_op(op);
 			crm_free(op_id);
 			return I_NULL;
