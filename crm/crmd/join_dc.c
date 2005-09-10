@@ -283,26 +283,17 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 {
 	CRM_DEV_ASSERT(cib_not_master != rc);
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
-	if(rc == cib_remote_timeout) {
-		crm_err("Sync from %s resulted in an error: %s."
-			"  Use what we have...",
+	if(rc != cib_ok) {
+		crm_err("Sync from %s resulted in an error: %s",
 			(char*)user_data, cib_error2string(rc));
-#if 0
+#if 0		
+		register_fsa_error_adv(
+			C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+#else
 		/* restart the whole join process */
 		register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC,
 				       NULL, NULL, __FUNCTION__);
-		return;
-#else
-		rc = cib_ok;
 #endif
-	}
-	if(rc < cib_ok) {
-		crm_err("Sync from %s resulted in an error: %s",
-			(char*)user_data, cib_error2string(rc));
-		
-		register_fsa_error_adv(
-			C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
-
 	} else if(AM_I_DC && fsa_state == S_FINALIZE_JOIN) {
 		finalize_join(__FUNCTION__);
 
