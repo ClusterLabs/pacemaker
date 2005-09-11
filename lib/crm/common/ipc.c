@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.12 2005/08/17 08:44:57 andrew Exp $ */
+/* $Id: ipc.c,v 1.13 2005/09/11 20:56:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -256,6 +256,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 		
 	} else if (ch->ops->initiate_connection(ch) != IPC_OK) {
 		crm_debug("Could not init comms on: %s", commpath);
+		ch->ops->destroy(ch);
 		return NULL;
 	}
 

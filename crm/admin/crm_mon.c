@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.7 2005/08/08 12:06:32 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.8 2005/09/11 20:56:56 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -217,25 +217,26 @@ mon_timer_popped(gpointer data)
 		crm_notice("Updating...");
 	}
 	
-	if(cib_conn == NULL || cib_conn->state != cib_connected_query){
-		crm_free(cib_conn);
+	if(cib_conn == NULL) {
 		crm_debug_4("Creating CIB connection");
 		cib_conn = cib_new();
-		if(cib_conn != NULL) {
-			crm_debug_4("Connecting to the CIB");
-			if(cib_ok == cib_conn->cmds->signon(
-				   cib_conn, crm_system_name, cib_query)) {
-				failed_connections = 0;
-			}
+		CRM_DEV_ASSERT(cib_conn != NULL);
+	}
+	if(cib_conn != NULL && cib_conn->state != cib_connected_query){
+		crm_debug_4("Connecting to the CIB");
+		if(cib_ok == cib_conn->cmds->signon(
+			   cib_conn, crm_system_name, cib_query)) {
+			failed_connections = 0;
+
+		} else {
+			failed_connections++;
+			CRM_DEV_ASSERT(cib_conn->cmds->signoff(cib_conn) == cib_ok);
+			wait_for_refresh(0, "Not connected: ", 2*interval);
+			return FALSE;
 		}
+		crm_err("Channel fd: %p", cib_conn->cmds->inputfd(cib_conn));
 	}
 	if(as_console) { blank_screen(); }
-	if(cib_conn == NULL || cib_conn->state != cib_connected_query){
-		failed_connections++;
-		wait_for_refresh(0, "Not connected: ", 2*interval);
-		return FALSE;
-	}
-	
 	rc = cib_conn->cmds->query(cib_conn, NULL, NULL, options);
 	add_cib_op_callback(rc, FALSE, NULL, mon_update);
 	return FALSE;
@@ -256,9 +257,9 @@ mon_update(const HA_Message *msg, int call_id, int rc,
 		if(as_console) {
 			print_status(cib);
 		}
-		cib_conn->cmds->signoff(cib_conn);
 			
 	} else {
+		CRM_DEV_ASSERT(cib_conn->cmds->signoff(cib_conn) == cib_ok);
 		crm_err("Query failed: %s", cib_error2string(rc));
 		prefix = "Query failed! ";
 		
