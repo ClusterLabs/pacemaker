@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.1 2005/09/12 11:04:22 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.2 2005/09/12 21:13:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -345,16 +345,16 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	return rc;
 }
 
+/* 	if(safe_str_eq(scope, "reboot")				\ */
+/* 	   || safe_str_eq(scope, XML_CIB_TAG_STATUS)) {		\ */
+/* 		type = XML_CIB_TAG_STATUS;			\ */
+/* 	}							\ */
+/* 								\ */
 #define standby_common 	char *attr_id  = NULL;	\
 	char *set_name = NULL;			\
 	const char *attr_name  = "standby";	\
 	const char *type = XML_CIB_TAG_NODES;	\
 						\
-	if(safe_str_eq(scope, "reboot")				\
-	   || safe_str_eq(scope, XML_CIB_TAG_STATUS)) {		\
-		type = XML_CIB_TAG_STATUS;			\
-	}							\
-								\
 	CRM_DEV_ASSERT(uuid != NULL);					\
 	CRM_DEV_ASSERT(standby_value != NULL);				\
 									\
@@ -378,12 +378,14 @@ query_standby(cib_t *the_cib, const char *uuid, const char *scope,
 	} else {
 		rc = read_attr(the_cib, XML_CIB_TAG_NODES, uuid, set_name,
 			       attr_id, attr_name, standby_value);
+#if 0
 		if(rc == cib_NOTEXISTS) {
 			crm_info("No standby value found with lifetime=forever,"
 				 " checking lifetime=reboot.");
 			rc = read_attr(the_cib, XML_CIB_TAG_STATUS, uuid, set_name,
 				       attr_id, attr_name, standby_value);
 		}
+#endif
 	}
 	
 	crm_free(attr_id);
