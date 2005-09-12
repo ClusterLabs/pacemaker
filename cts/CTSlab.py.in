@@ -462,6 +462,7 @@ def usage(arg):
     +  " --standby (1 | 0 | yes | no)" \
     +  " --fencing (1 | 0 | yes | no)" \
     +  " --suppress_cib_writes (1 | 0 | yes | no)" \
+    +  " -lstests" \
     +  "  [number-of-iterations]"
     sys.exit(1)
 
@@ -497,6 +498,7 @@ if __name__ == '__main__':
     IPBase = "127.0.0.10"
     SuppressCib = 1
     DoBSC = 0
+    ListTests = 0
     #
     # The values of the rest of the parameters are now properly derived from
     # the configuration files.
@@ -537,6 +539,8 @@ if __name__ == '__main__':
            TruncateLog=1
        elif args[i] == "-v2":
            Version=2
+       elif args[i] == "-lstests":
+           ListTests=1
        elif args[i] == "--stonith":
            skipthis=1
            if args[i+1] == "1" or args[i+1] == "yes":
@@ -711,8 +715,14 @@ if __name__ == '__main__':
         if Tests == []:
             usage("--choose: No applicable/valid tests chosen")        
     else:
-        Tests = TestList(cm)    
+        Tests = TestList(cm)
     
+    if ListTests == 1 :
+        cm.log("Total %d tests"%len(Tests))
+        for test in Tests :
+            cm.log(str(test.name));
+        sys.exit(0)
+	
     tests = RandomTests(scenario, cm, Tests, Audits)
     Environment.RandomTests = tests
     overall, detailed = tests.run(NumIter)
