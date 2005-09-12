@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.1 2005/09/12 11:04:22 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.2 2005/09/12 21:11:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -312,9 +312,13 @@ main(int argc, char **argv)
 		}
 	}
 	the_cib->cmds->signoff(the_cib);
-	if(rc != cib_ok) {
-		crm_err("Error performing operation: %s",
-			cib_error2string(rc));
+	if(DO_WRITE == FALSE && rc == cib_NOTEXISTS) {
+		crm_warn("Error performing operation: %s",
+			 cib_error2string(rc));
+
+	} else if(rc != cib_ok) {
+		crm_warn("Error performing operation: %s",
+			 cib_error2string(rc));
 	}
 	return rc;
 }
