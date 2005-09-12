@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.56 2005/08/17 08:57:29 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.57 2005/09/12 19:32:36 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -80,6 +80,7 @@ enum debug {
 gboolean BE_VERBOSE = FALSE;
 int expected_responses = 1;
 
+gboolean BASH_EXPORT      = FALSE;
 gboolean DO_HEALTH        = FALSE;
 gboolean DO_RESET         = FALSE;
 gboolean DO_RESOURCE      = FALSE;
@@ -88,8 +89,6 @@ gboolean DO_WHOIS_DC      = FALSE;
 gboolean DO_NODE_LIST     = FALSE;
 gboolean BE_SILENT        = FALSE;
 gboolean DO_RESOURCE_LIST = FALSE;
-gboolean DO_OPTION        = FALSE;
-gboolean DO_STANDBY       = FALSE;
 enum debug DO_DEBUG       = debug_none;
 const char *crmd_operation = NULL;
 
@@ -108,7 +107,7 @@ int operation_status = 0;
 const char *sys_to = NULL;
 const char *crm_system_name = "crmadmin";
 
-#define OPTARGS	"V?K:S:HE:DW:d:i:RNs:a:qt:o:"
+#define OPTARGS	"V?K:S:HE:DW:d:i:RNqt:B"
 
 int
 main(int argc, char **argv)
@@ -126,7 +125,8 @@ main(int argc, char **argv)
 		{"quiet", 0, 0, 'q'},
 		{"reference", 1, 0, 0},
 		{XML_ATTR_TIMEOUT, 1, 0, 't'},
-
+		{"bash-export", 0, 0, 'B'},
+		
 		/* daemon options */
 		{"kill", 1, 0, 'K'},  /* stop a node */
 		{"die", 0, 0, 0},  /* kill a node, no respawn */
@@ -216,6 +216,9 @@ main(int argc, char **argv)
 			case 'D':
 				DO_WHOIS_DC = TRUE;
 				break;
+			case 'B':
+				BASH_EXPORT = TRUE;
+				break;
 			case 'W':
 				DO_RESOURCE = TRUE;
 				crm_debug_2("Option %c => %s", flag, optarg);
@@ -226,11 +229,6 @@ main(int argc, char **argv)
 				crm_debug_2("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
 				crmd_operation = CRM_OP_LOCAL_SHUTDOWN;
-				break;
-			case 'o':
-				DO_OPTION = TRUE;
-				crm_debug_2("Option %c => %s", flag, optarg);
-				crm_option = crm_strdup(optarg);
 				break;
 			case 'q':
 				BE_SILENT = TRUE;
@@ -244,17 +242,6 @@ main(int argc, char **argv)
 				DO_DEBUG = debug_dec;
 				crm_debug_2("Option %c => %s", flag, optarg);
 				dest_node = crm_strdup(optarg);
-				break;
-			case 's':
-				DO_STANDBY = TRUE;
-				crm_debug_2("Option %c => %s", flag, optarg);
-				dest_node = crm_strdup(optarg);
-				break;
-			case 'a':
-				DO_STANDBY = TRUE;
-				crm_debug_2("Option %c => %s", flag, optarg);
-				dest_node = crm_strdup(optarg);
-				standby_on_off = "off";
 				break;
 			case 'S':
 				DO_HEALTH = TRUE;
@@ -385,12 +372,10 @@ do_work(ll_cluster_t * hb_cluster)
 
 		dest_node = NULL;
 
-	} else if(DO_RESOURCE || DO_RESOURCE_LIST
-		  || DO_NODE_LIST || DO_OPTION || DO_STANDBY) {
+	} else if(DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST) {
 
 		cib_t *	the_cib = cib_new();
 		crm_data_t *output = NULL;
-		int call_options = cib_sync_call;
 		
 		enum cib_errors rc = the_cib->cmds->signon(
 			the_cib, crm_system_name, cib_command);
@@ -411,66 +396,11 @@ do_work(ll_cluster_t * hb_cluster)
 		} else if(DO_NODE_LIST) {
 			output = get_cib_copy(the_cib);
 			do_find_node_list(output);
-			
-		} else if(DO_OPTION) {
-			char *name = NULL;
-			char *value = NULL;
-			crm_data_t *xml_option = NULL;
-			crm_data_t *fragment = NULL;
-
-			if(decodeNVpair(crm_option, '=', &name, &value)==FALSE){
-				crm_err("%s needs to be of the form"
-					" <name>=<value>", crm_option);
-				return -1;
-			}
-			
-			xml_option = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
-			crm_xml_add(xml_option, XML_NVPAIR_ATTR_NAME, name);
-			crm_xml_add(xml_option, XML_NVPAIR_ATTR_VALUE, value);
-			
-			fragment = create_cib_fragment(xml_option, NULL);
-
-			free_xml(xml_option);
-			crm_free(name);
-			crm_free(value);
-			
-			rc = the_cib->cmds->modify(
-				the_cib, XML_CIB_TAG_CRMCONFIG, fragment,
-				NULL, call_options|cib_discard_reply);
-			
-			free_xml(fragment);
-
-		} else if(DO_STANDBY) {
-			crm_data_t *a_node = NULL;
-			crm_data_t *xml_obj = NULL;
-			crm_data_t *fragment = NULL;
-
-			a_node = create_xml_node(NULL, XML_CIB_TAG_NODE);
-			crm_xml_add(a_node, XML_ATTR_ID, dest_node);
-
-			xml_obj = create_xml_node(a_node, XML_TAG_ATTR_SETS);
-			xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
-			xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
-
-			crm_xml_add(xml_obj, XML_ATTR_ID, "standby");
-			crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, "standby");
-			crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, standby_on_off);
-			
-			fragment = create_cib_fragment(a_node, NULL);
-
-			free_xml(a_node);
-			
-			rc = the_cib->cmds->modify(
-				the_cib, XML_CIB_TAG_NODES, fragment,
-				NULL, call_options|cib_discard_reply);
-			
-			free_xml(fragment);
 		}
 
 		free_xml(output);
 		the_cib->cmds->signoff(the_cib);
-		exit(rc);
-		
+		exit(rc);		
 	} else if(DO_RESET) {
 		/* tell dest_node to initiate the shutdown proceedure
 		 *
@@ -576,7 +506,10 @@ do_init(void)
 	src = init_client_ipc_comms(
 		CRM_SYSTEM_CRMD, admin_msg_callback, NULL, &crmd_channel);
 
-	if(crmd_channel != NULL) {
+	if(DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST) {
+		return hb_cluster;
+		
+	} else if(crmd_channel != NULL) {
 		send_hello_message(
 			crmd_channel, admin_uuid, crm_system_name,"0", "1");
 
@@ -867,10 +800,16 @@ do_find_node_list(crm_data_t *xml_node)
 
 	xml_child_iter(
 		nodes, node, XML_CIB_TAG_NODE,	
-		printf("%s node: %s (%s)\n",
-		       crm_element_value(node, XML_ATTR_TYPE),
-		       crm_element_value(node, XML_ATTR_UNAME),
-		       crm_element_value(node, XML_ATTR_ID));
+		if(BASH_EXPORT) {
+			printf("export %s=%s\n",
+			       crm_element_value(node, XML_ATTR_UNAME),
+			       crm_element_value(node, XML_ATTR_ID));
+		} else {
+			printf("%s node: %s (%s)\n",
+			       crm_element_value(node, XML_ATTR_TYPE),
+			       crm_element_value(node, XML_ATTR_UNAME),
+			       crm_element_value(node, XML_ATTR_ID));
+		}
 		found++;
 		);
 	if(found == 0) {
@@ -891,11 +830,13 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "usage: %s [-?vs] [command] [command args]\n", cmd);
 
 	fprintf(stream, "Options\n");
+	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"turn on debug info. additional instances increase verbosity\n",
 		"verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\t: be very *very* quiet\n", "quiet", 'q');
-	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
+	fprintf(stream, "\t--%s (-%c)\t: Only applies to -N.\n"
+		"\t\tCreate Bash export entries of the form \"export uname=uuid\"\n", "bash-export", 'B');
 	fprintf(stream, "\nCommands\n");
 	fprintf(stream, "\t--%s (-%c) <node>\t: "
 		"increment the CRMd debug level on <node>\n", CRM_OP_DEBUG_UP,'i');

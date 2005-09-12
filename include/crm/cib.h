@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.29 2005/07/14 13:27:49 andrew Exp $ */
+/* $Id: cib.h,v 1.30 2005/09/12 19:32:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -342,8 +342,38 @@ extern gboolean cib_diff_version_details(
 extern gboolean cib_version_details(
 	crm_data_t *cib, int *admin_epoch, int *epoch, int *updates);
 
+extern enum cib_errors update_attr(
+	cib_t *the_cib,
+	const char *section, const char *node_uuid, const char *set_name,
+	const char *attr_id, const char *attr_name, const char *attr_value);
+
+extern enum cib_errors read_attr(
+	cib_t *the_cib,
+	const char *section, const char *node_uuid, const char *set_name,
+	const char *attr_id, const char *attr_name, char **attr_value);
+
+extern enum cib_errors delete_attr(
+	cib_t *the_cib,
+	const char *section, const char *node_uuid, const char *set_name,
+	const char *attr_id, const char *attr_name, const char *attr_value);
+
+extern enum cib_errors query_node_uuid(
+	cib_t *the_cib, const char *uname, char **uuid);
+
+extern enum cib_errors query_node_uname(
+	cib_t *the_cib, const char *uuid, char **uname);
+
+extern enum cib_errors query_standby(
+	cib_t *the_cib,
+	const char *uuid, const char *scope, char **standby_value);
+
+extern enum cib_errors set_standby(
+	cib_t *the_cib,
+	const char *uuid, const char *scope, const char *standby_value);
+
+enum cib_errors delete_standby(
+	cib_t *the_cib,
+	const char *uuid, const char *scope, const char *standby_value);
+
 #endif
-
-
-
 
