@@ -613,6 +613,9 @@ cib_pluralSection(const char *a_section)
 	} else if(strcmp(a_section, XML_CIB_TAG_NVPAIR) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CRMCONFIG);
 
+	} else if(strcmp(a_section, XML_TAG_ATTR_SETS) == 0) {
+		a_section_parent = crm_strdup(XML_CIB_TAG_CRMCONFIG);
+
 	} else {
 		crm_err("Unknown section %s", a_section);
 		a_section_parent = crm_strdup("all");
@@ -1169,7 +1172,7 @@ get_object_root(const char *object_type, crm_data_t *the_root)
 		/* these live in a different place */
 		tmp_node = find_xml_node(the_root, XML_CIB_TAG_STATUS, FALSE);
 
-		node_stack[0] = XML_CIB_TAG_STATUS;
+		node_stack[0] = object_type;
 		node_stack[1] = NULL;
 
 	} else {
