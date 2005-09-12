@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.9 2005/09/12 01:42:47 gshi Exp $ */
+/* $Id: crm_mon.c,v 1.10 2005/09/12 07:05:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -234,7 +234,6 @@ mon_timer_popped(gpointer data)
 			wait_for_refresh(0, "Not connected: ", 2*interval);
 			return FALSE;
 		}
-		crm_err("Channel fd: %d", cib_conn->cmds->inputfd(cib_conn));
 	}
 	if(as_console) { blank_screen(); }
 	rc = cib_conn->cmds->query(cib_conn, NULL, NULL, options);
