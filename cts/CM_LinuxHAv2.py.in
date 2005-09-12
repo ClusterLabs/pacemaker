@@ -145,11 +145,11 @@ class LinuxHAv2(HeartbeatCM):
             resources='''
        <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
-           <op id="1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="DcIPaddr-1" name="monitor" interval="5s" timeout="20s"/>
          </operations>
          <instance_attributes>
            <attributes>
-             <nvpair id="1" name="ip" value="%s"/>
+             <nvpair id="DcIPaddr-1" name="ip" value="%s"/>
            </attributes>
          </instance_attributes>
        </primitive>''' % self.Env["IPBase"]
@@ -157,15 +157,15 @@ class LinuxHAv2(HeartbeatCM):
                 resources=resources+'''
        <primitive id="cluster_mon" class="ocf" type="ClusterMon" provider="heartbeat" is_managed="1">
          <operations>
-           <op id="1" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
-           <op id="2" name="start" timeout="20s" prereq="nothing"/>
+           <op id="cluster_mon-1" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
+           <op id="cluster_mon-2" name="start" timeout="20s" prereq="nothing"/>
          </operations>
          <instance_attributes>
            <attributes>
-             <nvpair id="1" name="htmlfile" value="/suse/abeekhof/Export/cluster.html"/>
-             <nvpair id="2" name="update" value="10"/>
-             <nvpair id="3" name="extra_options" value="-n -r"/>
-             <nvpair id="4" name="user" value="abeekhof"/>
+             <nvpair id="cluster_mon-1" name="htmlfile" value="/suse/abeekhof/Export/cluster.html"/>
+             <nvpair id="cluster_mon-2" name="update" value="10"/>
+             <nvpair id="cluster_mon-3" name="extra_options" value="-n -r"/>
+             <nvpair id="cluster_mon-4" name="user" value="abeekhof"/>
            </attributes>
          </instance_attributes>
        </primitive>'''
@@ -192,14 +192,14 @@ class LinuxHAv2(HeartbeatCM):
                 node_resource=("""
        <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
-           <op id="1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
          </operations>
          <instance_attributes>
            <attributes>
-             <nvpair id="1" name="ip" value="%s"/>
+             <nvpair id="%s-1" name="ip" value="%s"/>
            </attributes>
          </instance_attributes>
-       </primitive>""" %("rsc_"+node, ip))
+       </primitive>""" %("rsc_"+node, "rsc_"+node, "rsc_"+node, ip))
                 resources = resources + node_resource
                 node_constraint=("""
       <rsc_location id="run_%s" rsc="%s">
@@ -217,18 +217,18 @@ class LinuxHAv2(HeartbeatCM):
        <clone id="DoFencing">
          <instance_attributes>
            <attributes>
-             <nvpair id="1" name="clone_max" value="%d"/>
-             <nvpair id="2" name="clone_node_max" value="1"/>
+             <nvpair id="DoFencing-1" name="clone_max" value="%d"/>
+             <nvpair id="DoFencing-2" name="clone_node_max" value="1"/>
            </attributes>
          </instance_attributes>
          <primitive id="child_DoFencing" class="stonith" type="ssh">
            <operations>
-             <op id="1" name="monitor" interval="20s" timeout="40s" prereq="nothing"/>
-             <op id="2" name="start" timeout="20s" prereq="nothing"/>
+             <op id="DoFencing-1" name="monitor" interval="20s" timeout="40s" prereq="nothing"/>
+             <op id="DoFencing-2" name="start" timeout="20s" prereq="nothing"/>
            </operations>
            <instance_attributes>
              <attributes>
-               <nvpair id="1" name="hostlist" value="%s"/>
+               <nvpair id="child_DoFencing-1" name="hostlist" value="%s"/>
              </attributes>
            </instance_attributes>
          </primitive>
