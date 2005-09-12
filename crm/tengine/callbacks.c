@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.45 2005/08/26 08:49:42 andrew Exp $ */
+/* $Id: callbacks.c,v 1.46 2005/09/12 07:52:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -289,6 +289,8 @@ te_update_confirm(const char *event, HA_Message *msg)
 gboolean
 process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 {
+	crm_data_t *xml_obj = NULL;
+	
 	const char *sys_to   = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *sys_from = cl_get_string(msg, F_CRM_SYS_FROM);
 	const char *ref      = cl_get_string(msg, XML_ATTR_REFERENCE);
@@ -310,14 +312,37 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 #ifdef TESTING
 	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
 		crm_debug_4("Processing %s...", op);
-		extract_event(msg);
+		xml_obj = find_xml_node(xml_data, XML_TAG_CIB, TRUE);
+		CRM_DEV_ASSERT(xml_obj != NULL);
+		if(xml_obj != NULL) {
+			xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
+			CRM_DEV_ASSERT(xml_obj != NULL);
+		}
+		if(xml_obj != NULL) {
+			crm_log_message_adv(LOG_DEBUG, "Processing Loopbacked Action", msg);
+			extract_event(xml_obj);
+		} else {
+			crm_log_message_adv(LOG_ERR, "Invalid Loopbacked Action", msg);
+		}
 #endif 
 
 	} else if(safe_str_eq(op, CRM_OP_INVOKE_LRM)
 		  && safe_str_eq(sys_from, CRM_SYSTEM_LRMD)
 		  && safe_str_eq(type, XML_ATTR_RESPONSE) ){
 		crm_err("Processing %s reply...", op);
-		extract_event(msg);
+		xml_obj = find_xml_node(xml_data, XML_TAG_CIB, TRUE);
+		CRM_DEV_ASSERT(xml_obj != NULL);
+		if(xml_obj != NULL) {
+			xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
+			CRM_DEV_ASSERT(xml_obj != NULL);
+		}
+		if(xml_obj != NULL) {
+			crm_log_message_adv(LOG_DEBUG, "Processing NACK Reply", msg);
+			extract_event(xml_obj);
+		} else {
+			crm_log_message_adv(LOG_ERR, "Invalid NACK Reply", msg);
+		}
+		
 		
 	} else if(safe_str_eq(type, XML_ATTR_RESPONSE)) {
 		crm_info("Message was a response not a request.  Discarding");
@@ -351,6 +376,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		crm_info("Received quit message, terminating");
+		/* wait for pending actions to complete? */
 		exit(0);
 		
 	} else {
