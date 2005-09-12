@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.43 2005/08/17 08:57:28 andrew Exp $ */
+/* $Id: utils.c,v 1.44 2005/09/12 11:09:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -106,7 +106,7 @@ send_complete(const char *text, crm_data_t *msg,
 	switch(reason) {
 		case te_update:
 			te_log_action(
-				LOG_DEBUG, "%d - Transition status: %s by CIB update: %s",
+				LOG_INFO, "%d - Transition status: %s by CIB update: %s",
 				transition_counter,
 				last_state!=s_idle?"Aborted":"Triggered", text);
 
