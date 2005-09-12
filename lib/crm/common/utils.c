@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.23 2005/08/17 09:03:24 andrew Exp $ */
+/* $Id: utils.c,v 1.24 2005/09/12 11:00:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -140,24 +140,32 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 }
 
 char *
+crm_concat(const char *prefix, const char *suffix, char join) 
+{
+	int len = 0;
+	char *new_str = NULL;
+	CRM_ASSERT(prefix != NULL);
+	CRM_ASSERT(suffix != NULL);
+	len = strlen(prefix) + strlen(suffix) + 2;
+
+	crm_malloc0(new_str, sizeof(char)*(len));
+	sprintf(new_str, "%s%c%s", prefix, join, suffix);
+	new_str[len-1] = 0;
+	return new_str;
+}
+
+
+char *
 generate_hash_key(const char *crm_msg_reference, const char *sys)
 {
-	int ref_len = strlen(sys?sys:"none") + strlen(crm_msg_reference) + 2;
-	char *hash_key = NULL;
-	crm_malloc0(hash_key, sizeof(char)*(ref_len));
-
-	if(hash_key != NULL) {
-		sprintf(hash_key, "%s_%s", sys?sys:"none", crm_msg_reference);
-		hash_key[ref_len-1] = '\0';
-		crm_debug_3("created hash key: (%s)", hash_key);
-	}
+	char *hash_key = crm_concat(sys?sys:"none", crm_msg_reference, '_');
+	crm_debug_3("created hash key: (%s)", hash_key);
 	return hash_key;
 }
 
 char *
 generate_hash_value(const char *src_node, const char *src_subsys)
 {
-	int ref_len;
 	char *hash_value = NULL;
 	
 	if (src_node == NULL || src_subsys == NULL) {
@@ -169,22 +177,11 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 		if (!hash_value) {
 			crm_err("memory allocation failed in "
 			       "generate_hash_value()");
-			return NULL;
 		}
 		return hash_value;
 	}
-    
-	ref_len = strlen(src_subsys) + strlen(src_node) + 2;
-	crm_malloc0(hash_value, sizeof(char)*(ref_len));
-	if (!hash_value) {
-		crm_err("memory allocation failed in "
-		       "generate_hash_value()");
-		return NULL;
-	}
 
-	snprintf(hash_value, ref_len-1, "%s_%s", src_node, src_subsys);
-	hash_value[ref_len-1] = '\0';/* make sure it is null terminated */
-
+	hash_value = crm_concat(src_node, src_subsys, '_');
 	crm_info("created hash value: (%s)", hash_value);
 	return hash_value;
 }

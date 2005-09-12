@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.21 2005/08/08 12:05:02 andrew Exp $ */
+/* $Id: util.h,v 1.22 2005/09/12 11:00:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -106,5 +106,6 @@ extern char *generate_transition_key(int transition_id, const char *node);
 extern gboolean decode_transition_key(
 	const char *key, char **uuid, int *transition_id);
 
+extern char *crm_concat(const char *prefix, const char *suffix, char join);
 
 #endif

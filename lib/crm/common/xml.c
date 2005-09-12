@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.30 2005/09/08 09:49:18 andrew Exp $ */
+/* $Id: xml.c,v 1.31 2005/09/12 11:00:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2004,3 +2004,126 @@ xml2list(crm_data_t *parent)
 	
 	return nvpair_hash;
 }
+
+
+static void
+assign_uuid(crm_data_t *xml_obj) 
+{
+	cl_uuid_t new_uuid;
+	char *new_uuid_s = NULL;
+	const char *new_uuid_s2 = NULL;
+
+	crm_malloc0(new_uuid_s, sizeof(char)*38);
+	cl_uuid_generate(&new_uuid);
+	cl_uuid_unparse(&new_uuid, new_uuid_s);
+	
+	new_uuid_s2 = crm_xml_add(xml_obj, XML_ATTR_ID, new_uuid_s);
+	crm_log_xml_warn(xml_obj, "Updated object");
+	
+	CRM_DEV_ASSERT(cl_is_allocated(new_uuid_s));
+	CRM_DEV_ASSERT(cl_is_allocated(new_uuid_s2));
+	
+	crm_free(new_uuid_s);
+	
+	CRM_DEV_ASSERT(cl_is_allocated(new_uuid_s2));
+}
+
+void
+do_id_check(crm_data_t *xml_obj, GHashTable *id_hash) 
+{
+	int lpc = 0;
+	char *lookup_id = NULL;
+
+	const char *tag_id = NULL;
+	const char *tag_name = NULL;
+	const char *lookup_value = NULL;
+
+	gboolean created_hash = FALSE;
+
+	const char *allowed_list[] = {
+		XML_TAG_CIB,
+		XML_CIB_TAG_NODES,
+		XML_CIB_TAG_RESOURCES,
+		XML_CIB_TAG_CONSTRAINTS,
+		XML_CIB_TAG_STATUS,
+		XML_CIB_TAG_LRM,
+		XML_LRM_TAG_RESOURCES,
+		"operations",
+	};
+
+	const char *non_unique[] = {
+		XML_LRM_TAG_RESOURCE,
+		XML_LRM_TAG_RSC_OP,
+	};
+	
+	if(xml_obj == NULL) {
+		return;
+
+	} else if(id_hash == NULL) {
+		created_hash = TRUE;
+		id_hash = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+	}
+
+	xml_child_iter(
+		xml_obj, xml_child, NULL,
+		do_id_check(xml_child, id_hash);
+		);
+
+	tag_id = ID(xml_obj);
+	tag_name = TYPE(xml_obj);
+	
+	xml_prop_iter(
+		xml_obj, local_prop_name, local_prop_value,
+
+		if(ID(xml_obj) != NULL) {
+			for(lpc = 0; lpc < DIMOF(non_unique); lpc++) {
+				if(safe_str_eq(tag_name, non_unique[lpc])) {
+					/* this tag is never meant to have an ID */
+					break;
+				}
+			}
+			if(lpc < DIMOF(non_unique)) {
+				break;
+			}
+			lookup_id = crm_concat(tag_name, tag_id, '-');
+			lookup_value = g_hash_table_lookup(id_hash, lookup_id);
+			if(lookup_value != NULL) {
+				assign_uuid(xml_obj);
+				crm_err("\"id\" collision detected.");
+				crm_err(" Multiple %s entries with id=\"%s\","
+					" assigned id=\"%s\"",
+					tag_name, lookup_value, ID(xml_obj));
+				crm_free(lookup_id);
+				break;
+				
+			} else {
+				g_hash_table_insert(
+					id_hash, lookup_id, crm_strdup(tag_id));
+				break;
+			}
+		}
+
+		for(lpc = 0; lpc < DIMOF(allowed_list); lpc++) {
+			if(safe_str_eq(tag_name, allowed_list[lpc])) {
+				/* this tag is never meant to have an ID */
+				break;
+			}
+		}
+		if(lpc < DIMOF(allowed_list)) {
+			break;
+		} 
+		assign_uuid(xml_obj);
+		crm_err("Object with attributes but no ID field detected."
+			"  Assigned: %s", ID(xml_obj));
+		break;
+		
+		);
+
+	if(created_hash) {
+		g_hash_table_destroy(id_hash);
+	}
+
+}
+

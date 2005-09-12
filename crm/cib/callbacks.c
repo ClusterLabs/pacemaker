@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.78 2005/09/02 12:34:16 andrew Exp $ */
+/* $Id: callbacks.c,v 1.79 2005/09/12 11:00:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -557,7 +557,6 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 	if(needs_forward) {
 		HA_Message *forward_msg = cib_msg_copy(request, TRUE);
 		ha_msg_add(forward_msg, F_CIB_DELEGATED, cib_our_uname);
-		crm_log_message(LOG_MSG, forward_msg);
 		
 		if(host != NULL) {
 			crm_debug("Forwarding %s op to %s", op, host);
@@ -814,7 +813,7 @@ cib_process_command(const HA_Message *request, HA_Message **reply,
 		if(global_update) {
 			call_options |= cib_force_diff;
 		} else {
-			do_id_check(input_fragment);
+			do_id_check(input_fragment, NULL);
 		}
 		
 	} else if(rc == cib_ok && safe_str_eq(op, CIB_OP_SYNC)) {
@@ -842,7 +841,7 @@ cib_process_command(const HA_Message *request, HA_Message **reply,
 		rc = revision_check(input, current_cib, call_options);
 		if(rc == cib_ok) {
 			input = get_object_root(section, input);
-			do_id_check(input);
+			do_id_check(input, NULL);
 		}
 	}
 	

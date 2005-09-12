@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.26 2005/08/25 08:26:48 andrew Exp $ */
+/* $Id: primatives.c,v 1.27 2005/09/12 11:00:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -564,70 +564,3 @@ update_node_state(crm_data_t *target, crm_data_t *update)
 	
 }
 
-void
-do_id_check(crm_data_t *xml_obj) 
-{
-	int lpc = 0;
-	cl_uuid_t new_uuid;
-	char *new_uuid_s = NULL;
-	const char *tag_name = NULL;
-	const char *new_uuid_s2 = NULL;
-
-	const char *allowed_list[] = {
-		XML_TAG_CIB,
-		XML_CIB_TAG_NODES,
-		XML_CIB_TAG_RESOURCES,
-		XML_CIB_TAG_CONSTRAINTS,
-		XML_CIB_TAG_STATUS,
-		XML_CIB_TAG_LRM,
-		XML_LRM_TAG_RESOURCES,
-		"operations",
-	};
-	
-	if(xml_obj == NULL) {
-		return;
-	}
-
-	xml_child_iter(
-		xml_obj, xml_child, NULL,
-		do_id_check(xml_child);
-		);
-
-	tag_name = TYPE(xml_obj);
-	
-	xml_prop_iter(
-		xml_obj, local_prop_name, local_prop_value,
-		if(safe_str_eq(local_prop_name, XML_ATTR_ID)) {
-			continue;
-
-		} else if(ID(xml_obj) != NULL) {
-			return;
-		}
-
-		for(lpc = 0; lpc < DIMOF(allowed_list); lpc++) {
-			if(safe_str_eq(tag_name, allowed_list[lpc])) {
-				/* this tag is never meant to have an ID */
-				return;
-			}
-		}
-		
-		/* create a UUID and assign it as the ID */
-		crm_malloc0(new_uuid_s, sizeof(char)*38);
-		cl_uuid_generate(&new_uuid);
-		cl_uuid_unparse(&new_uuid, new_uuid_s);
-		
-		new_uuid_s2 = crm_xml_add(xml_obj, XML_ATTR_ID, new_uuid_s);
-		crm_err("Object with attributes but no ID field detected."
-			"  Assigned: %s", ID(xml_obj));
-		crm_log_xml_warn(xml_obj, "Updated object");
-		
-		CRM_DEV_ASSERT(cl_is_allocated(new_uuid_s));
-		CRM_DEV_ASSERT(cl_is_allocated(new_uuid_s2));
-		
-		crm_free(new_uuid_s);
-		
-		CRM_DEV_ASSERT(cl_is_allocated(new_uuid_s2));
-		return;
-		
-		);
-}

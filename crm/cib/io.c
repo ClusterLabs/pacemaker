@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.30 2005/09/02 12:31:07 andrew Exp $ */
+/* $Id: io.c,v 1.31 2005/09/12 11:00:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -91,7 +91,7 @@ readCibXml(char *buffer)
 		root = string2xml(buffer);
 	}
 
-	do_id_check(root);
+	do_id_check(root, NULL);
 	
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
@@ -162,7 +162,7 @@ readCibXmlFile(const char *filename)
 			crm_xml_add(root, name, "0");
 		}
 
-		do_id_check(root);
+		do_id_check(root, NULL);
 	}
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
