@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.40 2005/06/30 14:08:14 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.41 2005/09/12 10:12:19 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -92,7 +92,7 @@ int request_id = 0;
 int operation_status = 0;
 cib_t *the_cib = NULL;
 
-#define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MBfbd"
+#define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MBfbdR"
 
 int
 main(int argc, char **argv)
