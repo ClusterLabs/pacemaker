@@ -703,11 +703,13 @@ class ClusterManager(UserDict):
             self.log("ERROR: Remote logging is not working.  Please fix before continuing.")
             for regex in watch.unmatched:
                 self.log ("ERROR: Test message [%s] not found in logs." % (regex))
-            sys.exit(1)
+            return None
+        return 1
 
     def CheckDf(self):
         dfcmd="df -B1000000 /var/log | tail -1 | tr -s ' ' | cut -d' ' -f2"
         dfmin=500
+        result=1
         for node in self.Env["nodes"]:
             dfout=self.rsh.readaline(node, dfcmd)
             if not dfout:
@@ -720,8 +722,10 @@ class ClusterManager(UserDict):
                 else:
                     if idfout == 0:
                         self.log("CRIT: Completely out of log disk space on %s" % node)
+                        result=None
                     elif idfout <= 500:
                         self.log("WARN: Low on log disk space (%d Mbytes) on %s" % (idfout, node))
+        return result
 
 class Resource:
     '''

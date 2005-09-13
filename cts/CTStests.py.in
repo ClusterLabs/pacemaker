@@ -149,8 +149,10 @@ Set up the given scenario, then run the selected tests at
 random for the selected number of iterations.
 ''')
 
-        self.CM.TestLogging()
-        self.CM.CheckDf()
+        if not self.CM.TestLogging():
+           sys.exit(1)
+        if not self.CM.CheckDf():
+           sys.exit(1)
         BadNews=CTS.LogWatcher(self.CM["LogFileName"], self.CM["BadRegexes"]
         ,        timeout=0)
         BadNews.setwatch()
