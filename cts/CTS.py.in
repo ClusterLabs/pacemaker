@@ -691,7 +691,7 @@ class ClusterManager(UserDict):
         prefix="Test message from "
         for node in self.Env["nodes"]:
             patterns.append(prefix +  node)
-        watch = LogWatcher(self["LogFileName"], patterns, 10 + len(self.Env["nodes"]))
+        watch = LogWatcher(self["LogFileName"], patterns, 30 + len(self.Env["nodes"]))
         watch.setwatch()
         logpri = self.Env["logfacility"] + ".info"
         for node in self.Env["nodes"]:
