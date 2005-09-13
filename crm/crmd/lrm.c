@@ -327,8 +327,6 @@ build_operation_update(
 		return TRUE;
 	}
 	
-	xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
-
 	if(safe_str_eq(op->op_type, CRMD_ACTION_NOTIFY)) {
 		const char *n_type = g_hash_table_lookup(
 			op->params, "notify_type");
@@ -345,14 +343,7 @@ build_operation_update(
 	} else {
 		op_id = generate_op_key(op->rsc_id, op->op_type, op->interval);
 	}
-	
-	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
-	crm_free(op_id);
 
-	crm_xml_add(xml_rsc, XML_LRM_ATTR_LASTOP, op->op_type);
-	crm_xml_add(xml_op,  XML_LRM_ATTR_TASK,   op->op_type);
-	crm_xml_add(xml_op,  "origin", src);
-	
 	/* Handle recurring ops - infer last op_status */
 	if(op->op_status == LRM_OP_PENDING && op->interval > 0) {
 		if(op->rc == 0) {
@@ -364,6 +355,45 @@ build_operation_update(
 		}
 	}
 
+	xml_op = find_entity(xml_rsc, XML_LRM_TAG_RSC_OP, op_id);
+	if(xml_op != NULL) {
+		const char *old_status_s = crm_element_value(
+			xml_op, XML_LRM_ATTR_OPSTATUS);
+		int old_status = crm_atoi(old_status_s, "-2");
+		int log_level = LOG_ERR;
+
+		if(old_status_s == NULL) {
+			crm_err("No value for "XML_LRM_ATTR_OPSTATUS);
+			
+		} else if(old_status == op->op_status) {
+			/* safe to mask */
+			log_level = LOG_WARNING;
+			
+		} else if(old_status == LRM_OP_PENDING){
+			/* ??safe to mask?? */
+/* 			log_level = LOG_WARNING; */
+		}
+ 		crm_log_maybe(log_level,
+			      "Duplicate %s operations in get_cur_state()",
+			      op_id);
+ 		crm_log_maybe(log_level-2,
+			      "New entry: %s %s (call=%d, status=%s)",
+			      op_id, op->user_data, op->call_id,
+			      op_status2text(op->op_status));
+		crm_log_xml(log_level-2, "Existing entry", xml_op);
+		crm_free(op_id);
+		return FALSE;
+		
+	} else {
+		xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
+	}
+	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
+	crm_free(op_id);
+
+	crm_xml_add(xml_rsc, XML_LRM_ATTR_LASTOP, op->op_type);
+	crm_xml_add(xml_op,  XML_LRM_ATTR_TASK,   op->op_type);
+	crm_xml_add(xml_op,  "origin", src);
+	
 	if(op->user_data == NULL) {
 		op->user_data = generate_transition_key(-1, fsa_our_uname);
 	}
@@ -797,6 +827,23 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 			op->params, crm_strdup("start_delay"), delay_ms);
 	}
 
+	if(safe_str_eq(operation, CRMD_ACTION_START)
+	   || safe_str_eq(operation, CRMD_ACTION_STOP)) {
+		char *tmp = g_hash_table_lookup(op->params, "interval");
+/* 		CRM_DEV_ASSERT(op->interval == 0); */
+/* 		CRM_DEV_ASSERT(tmp == NULL); */
+		if(op->interval != 0) {
+			crm_err("Interval for %s oepration was not 0",
+				operation);
+		}
+		if(tmp != NULL) {
+			crm_warn("An interval (%s) was specified for a"
+				 " %s operation", tmp, operation);
+		}
+		
+
+	}
+	
 	if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
 		if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
 		   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {
