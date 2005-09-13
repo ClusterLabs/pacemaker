@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.121 2005/09/01 11:41:20 andrew Exp $ */
+/* $Id: unpack.c,v 1.122 2005/09/13 10:59:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -665,6 +665,9 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	const char *a_key = cl_get_string(a, XML_ATTR_TRANSITION_MAGIC);
  	const char *b_key = cl_get_string(b, XML_ATTR_TRANSITION_MAGIC);
 
+	const char *a_xml_id = ID(a);
+	const char *b_xml_id = ID(b);
+	
 	int a_id = -1;
 	int b_id = -1;
 
@@ -673,11 +676,21 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	
 	int a_call_id = -1;
 	int b_call_id = -1;
+
+	if(safe_str_eq(a_xml_id, b_xml_id)) {
+		/* We have duplicate lrm_rsc_op entries in the status
+		 *    section which is unliklely to be a good thing
+		 *    - we can handle it easily enough, but we need to get
+		 *    to the bottom of why its happening.
+		 */
+		pe_err("Duplicate lrm_rsc_op entries named %s", a_xml_id);
+		sort_return(0);
+	}
 	
 	CRM_DEV_ASSERT(a_task_id != NULL && b_task_id != NULL);	
 	a_call_id = atoi(a_task_id);
 	b_call_id = atoi(b_task_id);
-
+	
 	if(a_call_id == -1 && b_call_id == -1) {
 		/* both are pending ops so it doesnt matter since
 		 *   stops are never pending
