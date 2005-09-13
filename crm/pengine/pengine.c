@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.88 2005/08/24 09:28:36 andrew Exp $ */
+/* $Id: pengine.c,v 1.89 2005/09/13 10:37:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,6 +72,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		copy_in_properties(generation, xml_data);
 		crm_log_xml_info(generation, "[generation]");
+		crm_log_xml_debug(status, "[status]");
 
 #if 0
 		char *xml_buffer = NULL;
@@ -102,6 +103,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		crm_zero_mem_stats(NULL);
 
+		
 		do_calculations(&data_set, xml_data, NULL);
 		crm_log_xml_debug_3(data_set.graph, "[out]");
 
@@ -125,10 +127,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 				"  Input follows:");
 			crm_log_xml_debug(log_input, "[input]");
 
-		} else if(crm_log_level == LOG_DEBUG) {
-			crm_log_xml_debug(status, "[status]");
-
-		} else {
+		} else if(crm_log_level > LOG_DEBUG) {
 			crm_log_xml_debug_2(log_input, "[input]");
 		}
 
