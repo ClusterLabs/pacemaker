@@ -238,7 +238,7 @@ the -v options above...
 How to redirect linux-HA logging the way CTS wants it using syslog-ng
 --------------------------------------------------------------------------------
 
-why syslong-ng:
+why syslog-ng:
         Syslog-ng can use tcp and guarantee availability of logs. It is
 important we get every log message or our test may fail with loss of some 
 important messages.
@@ -266,21 +266,22 @@ chkconfig --level 2345 syslog off
 
 
 4)      On exerciser machine, add the source and destination for remote log in
-	the file /etc/syslog-ng/syslong-ng.conf. You can change the port number
+	the file /etc/syslog-ng/syslog-ng.conf. You can change the port number
 	to other number, but it must be the same with the port number in cluster
 	machines (see 5)
 
-source s_tcp { tcp(port(15789) max-connections(10)); }; 
+options { long_hostnames(off); sync(0); perm(0640); stats(3600); time_reap(300); };
+source s_tcp { tcp(port(15789) max-connections(512)); }; 
 destination     d_ha  { file("/var/log/ha-log-local7"); };
 log { source(s_tcp); destination(d_ha); };
 
 
 5)      On cluster machines, send log out to a remote machine by adding the
-	following lines to /etc/syslog-ng/syslong-ng.conf after the definition
+	following lines to /etc/syslog-ng/syslog-ng.conf after the definition
 	of f_boot.  Note the port number must be the same with 4).
 	Change exerciser-machine to the exerciser machine's IP or name
 
-source s_tcp { tcp(port(15789) max-connections(10)); };
+source s_tcp { tcp(port(15789) max-connections(512)); };
 filter f_ha  { facility(local7); };
 filter f_ha_tcp  { facility(local7); };
 destination ha_local { file("/var/log/cluster.log" perm(0644)); };
