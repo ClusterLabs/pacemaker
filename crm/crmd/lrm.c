@@ -462,6 +462,21 @@ build_operation_update(
 
 	set_node_tstamp(xml_op);
 	
+#if 0
+	if(safe_str_neq(op->op_type, CRMD_ACTION_STOP)) {
+		/* this will enable us to later determin that the
+		 *   resource's parameters have changed and we should force
+		 *   a restart
+		 * however it will come at the cost of a potentially much
+		 *   larger CIB
+		 * it may also requires MAXDEPTH to be increased
+		 */
+		crm_data_t *args_xml = NULL;
+		args_xml = create_xml_node(xml_op, XML_TAG_PARAMS);
+		g_hash_table_foreach(op->params, hash2field, args_xml);
+	}
+#endif
+
 	return TRUE;
 }
 
@@ -528,7 +543,7 @@ build_active_RAs(crm_data_t *rsc_list)
 			found_op = TRUE;
 			
 			);
-		if(found_op == FALSE) {
+		if(found_op == FALSE && g_list_length(op_list) != 0) {
 			crm_err("Could not properly determin last op"
 				" for %s from %d entries", the_rsc->id,
 				g_list_length(op_list));
