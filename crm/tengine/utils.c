@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.44 2005/09/12 11:09:55 andrew Exp $ */
+/* $Id: utils.c,v 1.45 2005/09/14 15:24:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -161,7 +161,7 @@ send_complete(const char *text, crm_data_t *msg,
 			break;
 		case te_failed:
 			te_log_action(
-				LOG_ERR, "%d - Transition status: Aborted by failed action: %s",
+				LOG_WARNING, "%d - Transition status: Aborted by failed action: %s",
 				transition_counter, text);
 			crm_log_xml_debug(msg, "Cause");
 			log_level = LOG_WARNING;

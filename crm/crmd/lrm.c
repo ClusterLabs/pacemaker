@@ -679,7 +679,7 @@ nack_rsc_op(lrm_op_t* op, HA_Message *msg)
 		return;
 	}
 
-	crm_err("NACK'ing resource op");
+	crm_info("NACK'ing resource op: %s for %s", op->op_type, op->rsc_id);
 	
 	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	set_uuid(fsa_cluster_conn, update, XML_ATTR_UUID, fsa_our_uname);
@@ -697,9 +697,9 @@ nack_rsc_op(lrm_op_t* op, HA_Message *msg)
 	fragment = create_cib_fragment(update, NULL);
 
 	reply = create_reply(msg, fragment);
-	crm_log_xml_info(update, "NACK Update");
-	crm_log_message_adv(LOG_INFO, "NACK'd msg", msg);
-	crm_log_message_adv(LOG_INFO, "NACK Reply", reply);
+	crm_log_xml_debug_2(update, "NACK Update");
+	crm_log_message_adv(LOG_DEBUG_2, "NACK'd msg", msg);
+	crm_log_message_adv(LOG_DEBUG_2, "NACK Reply", reply);
 	
 	if(relay_message(reply, TRUE) == FALSE) {
 		crm_log_message_adv(LOG_ERR, "Unable to route reply", reply);
