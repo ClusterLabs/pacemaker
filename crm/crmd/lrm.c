@@ -498,6 +498,9 @@ build_active_RAs(crm_data_t *rsc_list)
 		}
 
 		crm_xml_add(xml_rsc, XML_ATTR_ID, the_rsc->id);
+		crm_xml_add(xml_rsc, XML_ATTR_TYPE, the_rsc->type);
+		crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, the_rsc->class);
+		crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER,the_rsc->provider);
 
 		op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
 
