@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.97 2005/09/15 08:03:40 andrew Exp $ */
+/* $Id: tengine.c,v 1.98 2005/09/15 17:10:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -825,7 +825,11 @@ cib_action_updated(
 #endif
 	
 	action->invoked = TRUE;
-	if(action->timeout > 0) {
+	if(safe_str_eq(CRMD_ACTION_CANCEL, task)
+	   || safe_str_eq(CRMD_ACTION_DELETE, task)) {
+		action->complete = TRUE;
+
+	} else if(action->timeout > 0) {
 		crm_debug_3("Setting timer for action %d",action->id);
 		action->timer->reason = timeout_action_warn;
 		start_te_timer(action->timer);
