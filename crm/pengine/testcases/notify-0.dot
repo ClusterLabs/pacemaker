@@ -19,8 +19,12 @@ digraph "g" {
 "rsc1_stopped_0" -> "rsc1_start_0" [ style = dashed]
 "rsc1:child_rsc1:0_start_0" -> "rsc1_running_0" [ style = dashed]
 "rsc1:child_rsc1:1_start_0" -> "rsc1_running_0" [ style = bold]
+"rsc1_start_0" -> "rsc1_running_0" [ style = bold]
+"rsc1_stop_0" -> "rsc1_stopped_0" [ style = dashed]
 "rsc1:child_rsc1:0_stop_0" -> "rsc1_stopped_0" [ style = dashed]
 "rsc2_stop_0" -> "rsc2:child_rsc2:0_stop_0" [ style = bold]
 "rsc2_stopped_0" -> "rsc2_start_0" [ style = dashed]
+"rsc2_start_0" -> "rsc2_running_0" [ style = dashed]
 "rsc2:child_rsc2:0_stop_0" -> "rsc2_stopped_0" [ style = bold]
+"rsc2_stop_0" -> "rsc2_stopped_0" [ style = bold]
 }

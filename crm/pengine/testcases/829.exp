@@ -259,6 +259,9 @@
        <trigger>
          <rsc_op id="25" rsc_id="DoFencing:child_DoFencing:2" operation="start" operation_key="DoFencing:child_DoFencing:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="27" rsc_id="DoFencing" operation="start" operation_key="DoFencing_start_0" allow_fail="false"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="15">
@@ -287,6 +290,9 @@
        </trigger>
        <trigger>
          <rsc_op id="26" rsc_id="DoFencing:child_DoFencing:3" operation="stop" operation_key="DoFencing:child_DoFencing:3_stop_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="29" rsc_id="DoFencing" operation="stop" operation_key="DoFencing_stop_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.88 2005/09/06 11:56:44 andrew Exp $ */
+/* $Id: pengine.h,v 1.89 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,14 +69,23 @@ typedef enum no_quorum_policy_e {
 	no_quorum_ignore
 } no_quorum_policy_t;
 
-typedef enum rsc_state_e {
-	rsc_state_unknown,
-	rsc_state_active,
-	rsc_state_stopped,
+/* ordering is very important here */ 
+enum rsc_state {
+	rsc_state_failed,
+	rsc_state_inactive,
 	rsc_state_starting,
-	rsc_state_stopping,
 	rsc_state_restart,
-	rsc_state_move
+	rsc_state_active,
+};
+
+typedef enum rsc_state_e {
+	rsc_unknown,
+	rsc_active,
+	rsc_stopped,
+	rsc_starting,
+	rsc_stopping,
+	rsc_restart,
+	rsc_move
 } rsc_state_t;
 
 typedef struct pe_working_set_s 
@@ -148,6 +157,10 @@ enum action_tasks {
 	started_rsc,
 	action_notify,
 	action_notified,
+	action_promote,
+	action_promoted,
+	action_demote,
+	action_demoted,
 	shutdown_crm,
 	stonith_node
 };
@@ -183,10 +196,26 @@ enum pe_ordering {
 	pe_ordering_optional
 };
 
+enum rsc_role_e {
+	RSC_ROLE_UNKNOWN,
+	RSC_ROLE_STOPPED,
+	RSC_ROLE_STARTED,
+	RSC_ROLE_SLAVE,
+	RSC_ROLE_MASTER,
+};
+#define RSC_ROLE_MAX  RSC_ROLE_MASTER+1
+
+#define	RSC_ROLE_UNKNOWN_S "Unknown"
+#define	RSC_ROLE_STOPPED_S "Stopped"
+#define	RSC_ROLE_STARTED_S "Started"
+#define	RSC_ROLE_SLAVE_S   "Slave"
+#define	RSC_ROLE_MASTER_S  "Master"
+
 struct node_shared_s { 
 		const char *id; 
 		const char *uname; 
 		gboolean online;
+		gboolean standby;
 		gboolean unclean;
 		gboolean shutdown;
 		gboolean expected_up;
@@ -222,9 +251,12 @@ struct color_s {
 
 struct rsc_colocation_s { 
 		const char	*id;
-		resource_t	*rsc_lh; 
+		resource_t	*rsc_lh;
+		resource_t	*rsc_rh;
 
-		resource_t	*rsc_rh; 
+		const char *state_lh;
+		const char *state_rh;
+		
 		enum con_strength strength;
 };
 
@@ -232,14 +264,8 @@ struct rsc_to_node_s {
 		const char *id;
 		resource_t *rsc_lh; 
 
-		int	    weight;
+		enum rsc_role_e role_filter;
 		GListPtr    node_list_rh; /* node_t* */
-};
-
-struct lrm_agent_s { 
-		const char *class;
-		const char *type;
-		const char *version;
 };
 
 struct resource_s { 
@@ -260,20 +286,28 @@ struct resource_s {
 
 		gboolean notify;
 		gboolean is_managed;
-		gboolean start_pending;
-		gboolean recover;
 		gboolean starting;
 		gboolean stopping;
 		gboolean runnable;
 		gboolean provisional;
-		gboolean unclean;
 
 		GListPtr candidate_colors; /* color_t*          */
 		GListPtr rsc_cons;         /* rsc_colocation_t* */
+		GListPtr rsc_location;     /* rsc_to_node_t*    */
 		GListPtr actions;	   /* action_t*         */
 
+		color_t *color;
+		GListPtr colors;	   /* color_t*  */
+		GListPtr running_on;       /* node_t*   */
+		GListPtr allowed_nodes;    /* node_t*   */
+
+		enum rsc_state state;
+		enum rsc_role_e role;
+		enum rsc_role_e next_role;
+		
 		GHashTable * parameters;
 };
+
 
 struct action_wrapper_s 
 {
@@ -282,9 +316,11 @@ struct action_wrapper_s
 };
 
 enum action_fail_response {
-	action_fail_nothing,
+	action_fail_ignore,
 	action_fail_block,
-	action_fail_stop,
+	action_fail_recover,
+	action_fail_migrate,
+/* 	action_fail_stop, */
 	action_fail_fence
 };
 
@@ -304,9 +340,11 @@ struct action_s
 		gboolean runnable;
 		gboolean optional;
 		gboolean failure_is_fatal;
+
 		enum rsc_start_requirement needs;
 		enum action_fail_response  on_fail;
-
+		enum rsc_role_e fail_role;
+		
 		gboolean dumped;
 		gboolean processed;
 
@@ -314,7 +352,6 @@ struct action_s
 		action_t *pre_notified;
 		action_t *post_notify;
 		action_t *post_notified;
-		
 		
 		int seen_count;
 

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.74 2005/09/01 11:41:20 andrew Exp $ */
+/* $Id: stages.c,v 1.75 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -82,6 +82,8 @@ stage0(pe_working_set_t *data_set)
 			data_set->input, XML_ATTR_DC_UUID);
 	}	
 	
+	data_set->no_color = create_color(data_set, NULL, NULL);
+
 	unpack_config(config, data_set);
 
 	if(value != NULL) {
@@ -121,7 +123,7 @@ stage1(pe_working_set_t *data_set)
 			  && node->details->online
 			  && node->details->type == node_member) {
 			data_set->max_valid_nodes++;
-		}	
+		}
 		);
 
 	apply_placement_constraints(data_set);
@@ -145,7 +147,6 @@ stage2(pe_working_set_t *data_set)
 	crm_debug_3("Coloring resources");
 	
 	crm_debug_5("create \"no color\"");
-	data_set->no_color = create_color(data_set, NULL, NULL);
 	
 	/* Take (next) highest resource */
 	slist_iter(
@@ -187,6 +188,7 @@ stage3(pe_working_set_t *data_set)
 gboolean
 stage4(pe_working_set_t *data_set)
 {
+	node_t *chosen = NULL;
 	crm_debug_3("Assigning nodes to colors");
 
 	slist_iter(
@@ -203,23 +205,25 @@ stage4(pe_working_set_t *data_set)
 		}
 		
 		choose_node_from_list(color);
-
-		if(color->details->chosen_node == NULL) {
-			crm_debug_2("No node available for color %d", color->id);
-		} else {
-			crm_debug_2("assigned %s to color %d",
-				    color->details->chosen_node->details->uname,
-				    color->id);
-		}
+		chosen = color->details->chosen_node;
 		
 		slist_iter(
 			rsc, resource_t, color->details->allocated_resources, lpc2,
 			crm_debug_2("Processing colocation constraints for %s"
 				    " now that color %d is allocated",
 				    rsc->id, color->details->id); 
+
+			if(rsc->next_role != RSC_ROLE_UNKNOWN) {
+			} else if(chosen == NULL) {
+				rsc->next_role = RSC_ROLE_STOPPED;
+			} else {
+				rsc->next_role = RSC_ROLE_STARTED;
+			}
+
 			slist_iter(
 				constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
-				rsc->fns->rsc_colocation_lh(rsc, constraint->rsc_rh, constraint);
+				rsc->fns->rsc_colocation_lh(
+					rsc, constraint->rsc_rh, constraint);
 				);	
 			
 			);
@@ -427,7 +431,7 @@ choose_node_from_list(color_t *color)
 	GListPtr nodes = color->details->candidate_nodes;
 	node_t *chosen = NULL;
 
-	crm_debug_4("Choosing node for color %d", color->id);
+	crm_debug("Choosing node for color %d", color->id);
 	color->details->candidate_nodes = g_list_sort(nodes, sort_node_weight);
 
 	chosen = g_list_nth_data(color->details->candidate_nodes, 0);
@@ -443,18 +447,21 @@ choose_node_from_list(color_t *color)
 		crm_debug_2("Even highest ranked node for color %d"
 			  " is unclean or shutting down",
 			  color->id);
+		color->details->chosen_node = NULL;
 		return FALSE;
 		
 	} else if(chosen->weight < 0) {
 		crm_debug_2("Even highest ranked node for color %d, had weight %d",
 			  color->id, chosen->weight);
+		color->details->chosen_node = NULL;
 		return FALSE;
 	}
 
 	/* todo: update the old node for each resource to reflect its
 	 * new resource count
 	 */
-	
+
+	crm_debug_2("assigned %s to color %d",chosen->details->uname,color->id);
 	chosen->details->num_resources += color->details->num_resources;
 	color->details->chosen_node = node_copy(chosen);
 	return TRUE;

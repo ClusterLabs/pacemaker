@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.61 2005/08/11 08:58:40 andrew Exp $ */
+/* $Id: ptest.c,v 1.62 2005/09/15 08:05:24 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -56,6 +56,7 @@ FILE *dot_strm = NULL;
 #define dot_write(fmt...) if(dot_strm != NULL) {	\
 		fprintf(dot_strm, fmt);			\
 		fprintf(dot_strm, "\n");		\
+		fflush(dot_strm);		\
 	} else {					\
 		crm_debug(DOT_PREFIX""fmt);		\
 	}
@@ -192,6 +193,8 @@ main(int argc, char **argv)
  	CRM_DEV_ASSERT(cib_object != NULL);
 	crm_zero_mem_stats(NULL);
 
+/* 	do_id_check(cib_object, NULL); */
+	
 	fake_now = crm_element_value(cib_object, "fake_now");
 	if(fake_now != NULL) {
 		char *fake_now_copy = crm_strdup(fake_now);
@@ -215,15 +218,21 @@ main(int argc, char **argv)
 	init_dotfile();
 	slist_iter(
 		action, action_t, data_set.actions, lpc,
+		crm_debug_3("Action %d: %p", action->id, action);
 		if(action->dumped == FALSE) {
-			if(action->optional) {
+			if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
+				dot_write("\"%s\" [ font_color=black style=filled fillcolor=%s ]",
+					  action->uuid, "purple");
+
+			} else if(action->optional) {
 				dot_write("\"%s\" [ style=\"dashed\" color=\"%s\" fontcolor=\"%s\" ]",
 					  action->uuid, "blue",
 					  action->pseudo?"orange":"black");
+
 			} else {
-				CRM_DEV_ASSERT(action->runnable == FALSE);
 				dot_write("\"%s\" [ font_color=purple style=filled fillcolor=%s ]",
 					  action->uuid, "red");
+ 				CRM_DEV_ASSERT(action->runnable == FALSE);
 			}
 			
 		} else {

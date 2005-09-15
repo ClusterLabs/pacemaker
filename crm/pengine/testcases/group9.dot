@@ -41,7 +41,9 @@ digraph "g" {
 "foo:rsc5_stop_0" -> "foo:rsc5_start_0" [ style = bold]
 "foo_stopped_0" -> "foo_start_0" [ style = bold]
 "foo:rsc5_start_0" -> "foo_running_0" [ style = bold]
+"foo_start_0" -> "foo_running_0" [ style = bold]
 "foo:rsc3_stop_0" -> "foo_stopped_0" [ style = dashed]
+"foo_stop_0" -> "foo_stopped_0" [ style = bold]
 "bar:rsc7_stop_0" -> "bar:rsc6_stop_0" [ style = bold]
 "bar:rsc6_stop_0" -> "bar:rsc6_start_0" [ style = bold]
 "bar_start_0" -> "bar:rsc6_start_0" [ style = bold]
@@ -50,5 +52,7 @@ digraph "g" {
 "bar:rsc8_stop_0" -> "bar:rsc8_start_0" [ style = bold]
 "bar_stopped_0" -> "bar_start_0" [ style = bold]
 "bar:rsc8_start_0" -> "bar_running_0" [ style = bold]
+"bar_start_0" -> "bar_running_0" [ style = bold]
 "bar:rsc6_stop_0" -> "bar_stopped_0" [ style = bold]
+"bar_stop_0" -> "bar_stopped_0" [ style = bold]
 }

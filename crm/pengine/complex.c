@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.58 2005/09/05 18:37:16 andrew Exp $ */
+/* $Id: complex.c,v 1.59 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,8 +29,6 @@ gboolean is_active(rsc_to_node_t *cons);
 gboolean constraint_violated(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint);
 void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
-
-gboolean has_agent(node_t *a_node, lrm_agent_t *an_agent);
 
 extern gboolean rsc_colocation_new(const char *id, enum con_strength strength,
 				   resource_t *rsc_lh, resource_t *rsc_rh);
@@ -110,6 +108,28 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_resource_state,
 		clone_create_notify_element,
 		clone_free
+	},
+	{
+		master_unpack,
+		clone_find_child,
+		clone_num_allowed_nodes,
+		clone_color,
+		master_create_actions,
+		master_internal_constraints,
+		clone_agent_constraints,
+		clone_rsc_colocation_lh,
+		clone_rsc_colocation_rh,
+		clone_rsc_order_lh,
+		clone_rsc_order_rh,
+		clone_rsc_location,
+		clone_expand,
+		clone_dump,
+		clone_printw,
+		clone_html,
+		clone_active,
+		clone_resource_state,
+		clone_create_notify_element,
+		clone_free
 	}
 };
 
@@ -126,6 +146,9 @@ int get_resource_type(const char *name)
 
 	} else if(safe_str_eq(name, XML_CIB_TAG_INCARNATION)) {
 		return pe_clone;
+
+	} else if(safe_str_eq(name, XML_CIB_TAG_MASTER)) {
+		return pe_master;
 	}
 	
 	return pe_unknown;
@@ -155,6 +178,8 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		XML_CIB_ATTR_PRIORITY,
 		XML_RSC_ATTR_INCARNATION_MAX,
 		XML_RSC_ATTR_INCARNATION_NODEMAX,
+		XML_RSC_ATTR_MASTER_MAX,
+		XML_RSC_ATTR_MASTER_NODEMAX,
 		"resource_stickiness"
 	};
 
@@ -220,7 +245,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	
 	(*rsc)->runnable	   = TRUE; 
 	(*rsc)->provisional	   = TRUE; 
-	(*rsc)->start_pending	   = FALSE; 
 	(*rsc)->starting	   = FALSE; 
 	(*rsc)->stopping	   = FALSE; 
 
@@ -228,6 +252,9 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
 	(*rsc)->is_managed	   = TRUE;
+	(*rsc)->state		   = rsc_state_inactive;
+	(*rsc)->role		   = RSC_ROLE_STOPPED;
+	(*rsc)->next_role	   = RSC_ROLE_UNKNOWN;
 
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
@@ -243,13 +270,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	if(value != NULL && crm_is_true(value) == FALSE) {
 		(*rsc)->is_managed = FALSE;
 		crm_warn("Resource %s is currently not managed", (*rsc)->id);
-#if 0		
-		rsc_to_node_t *new_con = NULL;
-		/* prevent this resource from running anywhere */
-		new_con = rsc2node_new(
-			"is_managed_default", *rsc, -INFINITY, NULL, data_set);
-		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);
-#endif	
 	}
 	if((*rsc)->is_managed && data_set->symmetric_cluster) {
 		rsc_to_node_t *new_con = rsc2node_new(
@@ -293,15 +313,16 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 			    value == NULL?" (default)":"");
 	} else if((*rsc)->stickiness < 0) {
 		crm_warn("\tPlacement: always move from the current location%s",
-			    value == NULL?" (default)":"");
+			 value == NULL?" (default)":"");
 	} else {
 		crm_debug_2("\tPlacement: optimal%s",
 			    value == NULL?" (default)":"");
 	}
-
+	
 	crm_debug_2("\tNotification of start/stop actions: %s",
 		    (*rsc)->notify?"required":"not required");
 	
+/* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */
 	(*rsc)->fns->unpack(*rsc, data_set);
 
 	return TRUE;
@@ -401,6 +422,7 @@ void common_free(resource_t *rsc)
 		g_hash_table_destroy(rsc->parameters);
 	}
 	pe_free_shallow_adv(rsc->candidate_colors, TRUE);
+	pe_free_shallow_adv(rsc->rsc_location, FALSE);
 	crm_free(rsc->variant_opaque);
 	crm_free(rsc);
 	crm_debug_5("Resource freed");
@@ -522,20 +544,5 @@ get_rsc_param(resource_t *rsc, const char *name)
 		return NULL;
 	}
 	return g_hash_table_lookup(rsc->parameters, name);
-}
-
-void
-hash2nvpair(gpointer key, gpointer value, gpointer user_data) 
-{
-	const char *name    = key;
-	const char *s_value = value;
-
-	crm_data_t *xml_node  = user_data;
-	crm_data_t *xml_child = create_xml_node(xml_node, XML_CIB_TAG_NVPAIR);
-
-	crm_xml_add(xml_child, XML_NVPAIR_ATTR_NAME, name);
-	crm_xml_add(xml_child, XML_NVPAIR_ATTR_VALUE, s_value);
-
-	crm_debug_3("dumped: name=%s value=%s", name, s_value);
 }
 

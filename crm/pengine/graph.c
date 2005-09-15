@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.59 2005/08/25 09:25:06 andrew Exp $ */
+/* $Id: graph.c,v 1.60 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -64,7 +64,7 @@ update_action(action_t *action)
 			    other->action->optional?"optional":"required");
 
 		if(other->type == pe_ordering_restart
-			  && action->rsc->start_pending == FALSE) {
+		   && action->rsc->state == rsc_state_active) {
 			crm_debug_3("Upgrading %s constraint to %s",
 				    ordering_type2text(other->type),
 				    ordering_type2text(pe_ordering_manditory));
@@ -270,7 +270,7 @@ stonith_constraints(node_t *node,
 			slist_iter(
 				action, action_t, stop_actions, lpc2,
 				if(node->details->online == FALSE
-				   || rsc->unclean) {
+				   || rsc->state == rsc_state_failed) {
 					/* the stop would never complete and is
 					 * now implied by the stonith operation
 					 */
@@ -433,24 +433,26 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 		crm_debug_5("action %d was already dumped", action->id);
 		return;
 
+	} else if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
+		pe_warn("action %d (%s) was for an unmanaged resource (%s)",
+			action->id, action->uuid, action->rsc->id);
+		return;
+		
 	} else if(action->pseudo
 		  || safe_str_eq(action->task,  CRM_OP_FENCE)
 		  || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
 		/* skip the next two checks */
 		
-	} else if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
-		pe_warn("action %d was for an unmanaged resource (%s)",
-			action->id, action->rsc->id);
-		return;
-		
 	} else {
 		if(action->node == NULL) {
-			pe_err("action %d was not allocated", action->id);
+			pe_err("action %d (%s) was not allocated",
+			       action->id, action->uuid);
 			log_action(LOG_DEBUG, "Unallocated action", action, FALSE);
 			return;
 			
 		} else if(action->node->details->online == FALSE) {
-			pe_err("action %d was scheduled for offline node", action->id);
+			pe_err("action %d was (%s) scheduled for offline node",
+			       action->id, action->uuid);
 			log_action(LOG_DEBUG, "Action for offline node", action, FALSE);
 			return;
 		}

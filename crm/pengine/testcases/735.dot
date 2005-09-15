@@ -34,4 +34,6 @@ digraph "g" {
 "DoFencing_stopped_0" -> "DoFencing_start_0" [ style = dashed]
 "DoFencing:child_DoFencing:0_start_0" -> "DoFencing_running_0" [ style = bold]
 "DoFencing:child_DoFencing:1_start_0" -> "DoFencing_running_0" [ style = bold]
+"DoFencing_start_0" -> "DoFencing_running_0" [ style = bold]
+"DoFencing_stop_0" -> "DoFencing_stopped_0" [ style = dashed]
 }

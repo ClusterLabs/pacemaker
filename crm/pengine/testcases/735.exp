@@ -170,6 +170,9 @@
        <trigger>
          <rsc_op id="16" rsc_id="DoFencing:child_DoFencing:1" operation="start" operation_key="DoFencing:child_DoFencing:1_start_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669" allow_fail="false"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="17" rsc_id="DoFencing" operation="start" operation_key="DoFencing_start_0" allow_fail="false"/>
+       </trigger>
      </inputs>
    </synapse>
  </transition_graph>

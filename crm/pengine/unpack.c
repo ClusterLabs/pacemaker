@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.122 2005/09/13 10:59:07 andrew Exp $ */
+/* $Id: unpack.c,v 1.123 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,14 +54,15 @@ gboolean add_node_attrs(
 
 gboolean unpack_rsc_op(
 	resource_t *rsc, node_t *node, crm_data_t *xml_op,
-	gboolean *running, int *max_call_id, pe_working_set_t *data_set);
+	int *max_call_id, pe_working_set_t *data_set);
 
 gboolean determine_online_status(
 	crm_data_t * node_state, node_t *this_node, pe_working_set_t *data_set);
 
 gboolean rsc_colocation_new(
 	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh);
+	resource_t *rsc_lh, resource_t *rsc_rh,
+	const char *state_lh, const char *state_rh);
 
 gboolean create_ordering(
 	const char *id, enum con_strength strength,
@@ -272,6 +273,7 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 			crm_info("Node %s is in standby-mode",
 				 new_node->details->uname);
 			new_node->weight = -INFINITY;
+			new_node->details->standby = TRUE;
 		}
 		
 		data_set->nodes = g_list_append(data_set->nodes, new_node);    
@@ -281,7 +283,7 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 		crm_action_debug_3(print_node("Added", new_node, FALSE));
 		);
   
-	data_set->nodes = g_list_sort(data_set->nodes, sort_node_weight);
+/* 	data_set->nodes = g_list_sort(data_set->nodes, sort_node_weight); */
 
 	return TRUE;
 }
@@ -379,15 +381,20 @@ rsc2node_new(const char *id, resource_t *rsc,
 		new_con->id           = id;
 		new_con->rsc_lh       = rsc;
 		new_con->node_list_rh = NULL;
-		new_con->weight = weight;
+		new_con->role_filter = RSC_ROLE_UNKNOWN;
 		
 		if(node != NULL) {
 			node_t *copy = node_copy(node);
+			copy->weight = weight;
 			new_con->node_list_rh = g_list_append(NULL, copy);
+		} else {
+			CRM_DEV_ASSERT(weight == 0);
 		}
 		
 		data_set->placement_constraints = g_list_append(
 			data_set->placement_constraints, new_con);
+		rsc->rsc_location = g_list_append(
+			rsc->rsc_location, new_con);
 	}
 	
 	return new_con;
@@ -402,7 +409,8 @@ rsc2node_new(const char *id, resource_t *rsc,
 gboolean
 unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 {
-	const char *uname     = NULL;
+	const char *id    = NULL;
+	const char *uname = NULL;
 
 	crm_data_t * lrm_rsc    = NULL;
 	crm_data_t * lrm_agents = NULL;
@@ -413,7 +421,7 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 	xml_child_iter(
 		status, node_state, XML_CIB_TAG_STATE,
 
-/*		id         = crm_element_value(node_state, XML_ATTR_ID); */
+		id         = crm_element_value(node_state, XML_ATTR_ID);
 		uname = crm_element_value(node_state,    XML_ATTR_UNAME);
 		attrs = find_xml_node(node_state, XML_LRM_TAG_ATTRIBUTES,FALSE);
 
@@ -423,7 +431,7 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
 
 		crm_debug_3("Processing node %s", uname);
-		this_node = pe_find_node(data_set->nodes, uname);
+		this_node = pe_find_node_id(data_set->nodes, id);
 
 		if(uname == NULL) {
 			/* error */
@@ -582,12 +590,12 @@ gboolean
 unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		     pe_working_set_t *data_set)
 {
+	enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
 	const char *rsc_id    = NULL;
 	const char *node_id   = node->details->uname;
 	const char *rsc_state = NULL;
 
 	int max_call_id = -1;
-	gboolean running = FALSE;
 
 	resource_t *rsc   = NULL;
 	GListPtr op_list = NULL;
@@ -618,7 +626,6 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			continue;
 		}
 
-		running = FALSE;
 		max_call_id = -1;
 
 		op_list = NULL;
@@ -634,19 +641,24 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		}
 		
 		sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
-
+		saved_role = rsc->role;
 		slist_iter(
 			rsc_op, crm_data_t, sorted_op_list, lpc,
 			unpack_rsc_op(rsc, node, rsc_op,
-				      &running, &max_call_id, data_set);
+				      &max_call_id, data_set);
 			);
 
 		/* no need to free the contents */
 		g_list_free(sorted_op_list);
 
-		if(running) {
+ 		if(rsc->state != rsc_state_inactive) {
+/* 		if(rsc->role != RSC_ROLE_STOPPED) { */
 			native_add_running(rsc, node, data_set);
 		}
+		if(saved_role > rsc->role) {
+			rsc->role = saved_role;
+		}
+		
 		);
 	
 	return TRUE;
@@ -767,7 +779,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 gboolean
 unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
-	      gboolean *running, int *max_call_id, pe_working_set_t *data_set) 
+	      int *max_call_id, pe_working_set_t *data_set) 
 {
 	const char *id          = NULL;
 	const char *task        = NULL;
@@ -847,6 +859,15 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			  node->details->uname, rsc->id, XML_RSC_ATTR_STOPFAIL);
 	}
 
+	if(task_status_i == LRM_OP_ERROR
+	   || task_status_i == LRM_OP_TIMEOUT
+	   || task_status_i == LRM_OP_NOTSUPPORTED) {
+		action = custom_action(rsc, crm_strdup(id), task, NULL, TRUE, data_set);
+		if(action->on_fail == action_fail_ignore) {
+			task_status_i = LRM_OP_DONE;
+		}
+	}
+	
 	switch(task_status_i) {
 		case LRM_OP_PENDING:
 			/*
@@ -864,15 +885,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			 * For now this should do
 			 */
 
-			if(is_stop_action) {
-				/* re-issue the stop and return */
-				stop_action(rsc, node, FALSE);
-				*running = TRUE;
-				rsc->recover = TRUE;
-				
-			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
-				rsc->start_pending = TRUE;
-				*running = TRUE;
+			if(safe_str_eq(task, CRMD_ACTION_START)) {
+				rsc->state = rsc_state_starting;
+				rsc->role = RSC_ROLE_STARTED;
 		
 				/* make sure it is re-issued but,
 				 * only if we have quorum
@@ -885,7 +900,11 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 					start_action(rsc, NULL, FALSE);
 				}
 				
-			} else if(*running == TRUE) {
+			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+				CRM_DEV_ASSERT(rsc->state == rsc_state_active);
+				rsc->role = RSC_ROLE_MASTER;
+
+			} else if(rsc->state > rsc_state_starting) {
 				crm_debug_2("Re-issuing pending recurring task:"
 					    " %s for %s on %s",
 					    task, rsc->id, node->details->id);
@@ -902,14 +921,24 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				    rsc->id, task, node->details->uname);
 
 			if(is_stop_action) {
-				*running = FALSE;				
+				rsc->state = rsc_state_inactive;
+				rsc->role = RSC_ROLE_STOPPED;
 
 			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
 				crm_debug_3("%s active on %s",
 					    rsc->id, node->details->uname);
-				*running = TRUE;
+				rsc->state = rsc_state_active;
+				rsc->role = RSC_ROLE_STARTED;
 
-			} else if(*running) {
+			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+				CRM_DEV_ASSERT(rsc->state == rsc_state_active);
+				rsc->role = RSC_ROLE_MASTER;
+
+			} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+				CRM_DEV_ASSERT(rsc->state == rsc_state_active);
+				rsc->role = RSC_ROLE_SLAVE;
+				
+			} else if(rsc->state > rsc_state_starting) {
 				/* make sure its already created and is optional
 				 *
 				 * creating it now tells create_recurring_actions() 
@@ -918,9 +947,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				custom_action(rsc, crm_strdup(id),
 					      task, NULL, TRUE, data_set);
 			}
-			
-			
 			break;
+
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
@@ -929,16 +957,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 			action = custom_action(
 				rsc, crm_strdup(id), task, NULL, TRUE, data_set);
-
-			if(action->on_fail == action_fail_nothing) {
-				/* pretend the op completed */
-				if(is_stop_action) {
-					*running = FALSE;
-				} else {
-					*running = TRUE;
-				}
-				break;
-			}
 
 			if(task_status_i == LRM_OP_NOTSUPPORTED
 			   || is_stop_action
@@ -949,27 +967,54 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 					     rsc, -INFINITY, node, data_set);
 			}
 
-			if(action->on_fail == action_fail_fence) {
+			if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+				CRM_DEV_ASSERT(rsc->state == rsc_state_active);
+				rsc->role = RSC_ROLE_MASTER;
+			}
+			rsc->state = rsc_state_failed;
+
+			if(node->details->unclean) {
+				rsc->state = rsc_state_failed;
+				stop_action(rsc, node, FALSE);
+
+			} else if(action->on_fail == action_fail_fence) {
 				/* treat it as if it is still running
 				 * but also mark the node as unclean
 				 */
-				rsc->unclean = TRUE;
+				rsc->state = rsc_state_failed;
 				node->details->unclean = TRUE;
 				stop_action(rsc, node, FALSE);
-				*running = TRUE;
 				
 			} else if(action->on_fail == action_fail_block) {
-				/* let this depend on the stop action
-				 * which will fail but make sure the
-				 * transition continues...
+				/* is_managed == FALSE will prevent any
+				 * actions being sent for the resource
 				 */
-				rsc->unclean = TRUE;
-				*running = TRUE;
+				rsc->is_managed = FALSE;
+				rsc->state = rsc_state_failed;
 				
-			} else if(action->on_fail == action_fail_stop) {
-				*running = TRUE;
-				stop_action(rsc, node, FALSE);
-			} 
+			} else if(action->on_fail == action_fail_migrate) {
+				rsc->state = rsc_state_failed;
+ 				stop_action(rsc, node, FALSE);
+
+				/* make sure it comes up somewhere else
+				 * or not at all
+				 */
+				rsc2node_new("__action_migration_auto__",
+					     rsc, -INFINITY, node, data_set);
+				
+			} else if(action->fail_role == RSC_ROLE_STOPPED) {
+				rsc->state = rsc_state_failed;
+				/* make sure it doesnt come up again */
+				native_assign_color(rsc, data_set->no_color);
+
+			} else if(action->fail_role != RSC_ROLE_STARTED) {
+				rsc->next_role = action->fail_role;
+
+			} else {
+				rsc->state = rsc_state_failed;
+ 				stop_action(rsc, node, FALSE);
+			}
+			
 			break;
 		case LRM_OP_CANCELLED:
 			/* do nothing?? */
@@ -981,7 +1026,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 gboolean
 rsc_colocation_new(const char *id, enum con_strength strength,
-		   resource_t *rsc_lh, resource_t *rsc_rh)
+		   resource_t *rsc_lh, resource_t *rsc_rh,
+		   const char *state_lh, const char *state_rh)
 {
 	rsc_colocation_t *new_con      = NULL;
  	rsc_colocation_t *inverted_con = NULL; 
@@ -995,12 +1041,20 @@ rsc_colocation_new(const char *id, enum con_strength strength,
 	if(new_con == NULL) {
 		return FALSE;
 	}
+	if(safe_str_eq(state_lh, CRMD_ACTION_STARTED)) {
+		state_lh = NULL;
+	}
+	if(safe_str_eq(state_rh, CRMD_ACTION_STARTED)) {
+		state_rh = NULL;
+	}
 
 	new_con->id       = id;
 	new_con->rsc_lh   = rsc_lh;
 	new_con->rsc_rh   = rsc_rh;
 	new_con->strength = strength;
-	
+	new_con->state_lh = state_lh;
+	new_con->state_rh = state_rh;
+
 	inverted_con = invert_constraint(new_con);
 	
 	crm_debug_4("Adding constraint %s (%p) to %s",
@@ -1093,6 +1147,8 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	const char *id_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
 	const char *id_lh = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
 	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+	const char *state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_FROMSTATE);
+	const char *state_rh = crm_element_value(xml_obj, XML_RULE_ATTR_TOSTATE);
 
 	resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
 	resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
@@ -1100,6 +1156,7 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	if(rsc_lh == NULL) {
 		pe_err("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
+		
 	} else if(rsc_rh == NULL) {
 		pe_err("No resource (con=%s, rsc=%s)", id, id_rh);
 		return FALSE;
@@ -1114,14 +1171,40 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	} else {
 		strength_e = pecs_must_not;
 	}
-	return rsc_colocation_new(id, strength_e, rsc_lh, rsc_rh);
+	return rsc_colocation_new(id, strength_e, rsc_lh, rsc_rh,
+				  state_lh, state_rh);
 }
+
+static const char *
+invert_action(const char *action) 
+{
+	if(safe_str_eq(action, CRMD_ACTION_START)) {
+		return CRMD_ACTION_STOP;
+
+	} else if(safe_str_eq(action, CRMD_ACTION_STOP)) {
+		return CRMD_ACTION_START;
+		
+	} else if(safe_str_eq(action, CRMD_ACTION_PROMOTE)) {
+		return CRMD_ACTION_DEMOTE;
+		
+	} else if(safe_str_eq(action, CRMD_ACTION_DEMOTE)) {
+		return CRMD_ACTION_PROMOTE;
+
+	} else if(safe_str_eq(action, CRMD_ACTION_STARTED)) {
+		return CRMD_ACTION_STOPPED;
+		
+	} else if(safe_str_eq(action, CRMD_ACTION_STOPPED)) {
+		return CRMD_ACTION_STARTED;
+		
+	}
+	pe_err("Unknown action: %s", action);
+	return NULL;
+}
+
 
 gboolean
 unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 {
-	gboolean type_is_after    = TRUE;
-	gboolean action_is_start  = TRUE;
 	gboolean symmetrical_bool = TRUE;
 	
 	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
@@ -1129,12 +1212,13 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	const char *id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
 	const char *id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
 	const char *action = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
+	const char *action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
 
 	const char *symmetrical = crm_element_value(
 		xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
-	resource_t *rsc_lh   = pe_find_resource(data_set->resources, id_lh);
-	resource_t *rsc_rh   = pe_find_resource(data_set->resources, id_rh);
+	resource_t *rsc_lh   = NULL;
+	resource_t *rsc_rh   = NULL;
 
 	if(xml_obj == NULL) {
 		pe_err("No constraint object to process.");
@@ -1145,51 +1229,82 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 			crm_element_name(xml_obj));
 		return FALSE;
 		
-	} else if(rsc_lh == NULL || rsc_rh == NULL) {
-		pe_err("Constraint %s needs two sides lh: %p rh: %p"
-			" (NULL indicates missing side)",
-			id, rsc_lh, rsc_rh);
+	} else if(id_lh == NULL || id_rh == NULL) {
+		pe_err("Constraint %s needs two sides lh: %s rh: %s",
+		       id, crm_str(id_lh), crm_str(id_rh));
+		return FALSE;
+	}
+
+	if(action == NULL) {
+		action = CRMD_ACTION_START;
+	}
+	if(action_rh == NULL) {
+		action_rh = action;
+	}
+	CRM_DEV_ASSERT(action != NULL);
+	CRM_DEV_ASSERT(action_rh != NULL);
+	
+	if(safe_str_eq(type, "before")) {
+		id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
+		id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
+		action = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
+		action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
+		if(action_rh == NULL) {
+			action_rh = CRMD_ACTION_START;
+		}
+		if(action == NULL) {
+			action = action_rh;
+		}
+	}
+
+	CRM_DEV_ASSERT(action != NULL);
+	CRM_DEV_ASSERT(action_rh != NULL);
+	
+	rsc_lh   = pe_find_resource(data_set->resources, id_rh);
+	rsc_rh   = pe_find_resource(data_set->resources, id_lh);
+
+	if(rsc_lh == NULL) {
+		pe_err("Constraint %s: no resource found for %s", id, id_lh);
 		return FALSE;
 	
+	} else if(rsc_rh == NULL) {
+		pe_err("Constraint %s: no resource found for %s", id, id_rh);
+		return FALSE;
+	}
+
+	custom_action_order(
+		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
+		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
+		pe_ordering_optional, data_set);
+
+	if(rsc_rh->restart_type == pe_restart_restart
+	   && safe_str_eq(action, action_rh)) {
+		if(safe_str_eq(action, CRMD_ACTION_START)) {
+  			order_start_start(rsc_lh, rsc_rh, pe_ordering_recover);
+ 		} else if(safe_str_eq(action, CRMD_ACTION_STOP)) {
+  			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover); 
+		}
 	}
 
 	cl_str_to_boolean(symmetrical, &symmetrical_bool);
-	if(safe_str_eq(type, "before")) {
-		type_is_after = FALSE;
+	if(symmetrical_bool == FALSE) {
+		return TRUE;
 	}
-	if(safe_str_eq(action, task2text(stop_rsc))) {
-		action_is_start = FALSE;
-	}
+	
+	action = invert_action(action);
+	action_rh = invert_action(action_rh);
+	
+	custom_action_order(
+		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
+		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
+		pe_ordering_optional, data_set);
 
-	if((type_is_after && action_is_start)
-	   || (type_is_after == FALSE && action_is_start == FALSE)){
-		if(symmetrical_bool || action_is_start == FALSE) {
-			if(rsc_lh->restart_type == pe_restart_restart){
-				order_stop_stop(rsc_lh, rsc_rh, pe_ordering_recover);
-			}
-			order_stop_stop(rsc_lh, rsc_rh, pe_ordering_optional);
-		}
-		
-		if(symmetrical_bool || action_is_start) {
-			if(rsc_lh->restart_type == pe_restart_restart){
-				order_start_start(rsc_rh, rsc_lh, pe_ordering_recover);
-			}
-			order_start_start(rsc_rh, rsc_lh, pe_ordering_optional);
-		}
-
-	} else {
-		if(symmetrical_bool || action_is_start == FALSE) {
-			if(rsc_rh->restart_type == pe_restart_restart){
-				order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover);
-			}
-			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_optional);
-		}
-
-		if(symmetrical_bool || action_is_start) {
-			if(rsc_rh->restart_type == pe_restart_restart){
-				order_start_start(rsc_lh, rsc_rh, pe_ordering_recover);
-			}
-			order_start_start(rsc_lh, rsc_rh, pe_ordering_optional);
+	if(rsc_lh->restart_type == pe_restart_restart
+	   && safe_str_eq(action, action_rh)) {
+		if(safe_str_eq(action, CRMD_ACTION_START)) {
+  			order_start_start(rsc_rh, rsc_lh, pe_ordering_recover);
+		} else if(safe_str_eq(action, CRMD_ACTION_STOP)) { 
+  			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover); 
 		}
 	}
 	
@@ -1252,63 +1367,119 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 rsc_to_node_t *
 generate_location_rule(
 	resource_t *rsc, crm_data_t *rule_xml, pe_working_set_t *data_set)
-{
+{	
 	const char *rule_id = NULL;
 	const char *score   = NULL;
 	const char *boolean = NULL;
+	const char *role    = NULL;
+	const char *attr_score = NULL;
 
 	GListPtr match_L  = NULL;
 	
 	int score_f   = 0;
 	gboolean do_and = TRUE;
 	gboolean accept = TRUE;
+	gboolean raw_score = TRUE;
 	
 	rsc_to_node_t *location_rule = NULL;
 	
 	rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
-	score   = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
 	boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
+	role = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
 
-	crm_debug("processing rule: %s", rule_id);
+	crm_debug_2("processing rule: %s", rule_id);
+
+	if(role != NULL && text2role(role) == RSC_ROLE_UNKNOWN) {
+		pe_err("Bad role specified for %s: %s", rule_id, role);
+		return NULL;
+	}
 	
-	score_f = char2score(score);
+	score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
+	if(score != NULL) {
+		score_f = char2score(score);
+
+	} else {
+		score = crm_element_value(
+			rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
+		if(score == NULL) {
+			score = crm_element_value(
+				rule_xml, XML_RULE_ATTR_SCORE_MANGLED);
+		}
+		if(score != NULL) {
+			raw_score = FALSE;
+		}
+	}
 	
 	if(safe_str_eq(boolean, "or")) {
 		do_and = FALSE;
 	}
 	
-	location_rule = rsc2node_new(rule_id, rsc, score_f, NULL, data_set);
+	location_rule = rsc2node_new(rule_id, rsc, 0, NULL, data_set);
 	
 	if(location_rule == NULL) {
 		return NULL;
 	}
-
+	if(role != NULL) {
+		location_rule->role_filter = text2role(role);
+	}
 	if(do_and) {
 		match_L = node_list_dup(data_set->nodes, FALSE);
+		slist_iter(
+			node, node_t, match_L, lpc,
+			node->weight = score_f;
+			);
 	}
 
 	xml_child_iter(
-		rule_xml, expr, XML_TAG_EXPRESSION,		
+		rule_xml, expr, NULL,		
+
+		enum expression_type type = find_expression_type(expr);
+		if(type == not_expr) {
+			pe_err("Expression <%s id=%s...> is not valid",
+			       crm_element_name(expr), crm_str(ID(expr)));
+			continue;
+			
+		}	
 		
 		slist_iter(
 			node, node_t, data_set->nodes, lpc,
 
-			accept = test_expression(expr, node, data_set);
-
-			if(!do_and && accept) {
-				if(pe_find_node(match_L, node->details->uname) == NULL) {
-					node_t *dup = node_copy(node);
-					match_L = g_list_append(match_L, dup);
-					crm_debug_5("node %s matched",
-						    node->details->uname);
+			if(type == nested_rule) {
+				accept = test_rule(expr, node, rsc, data_set);
+			} else {
+				accept = test_expression(
+					expr, node, rsc, data_set);
+			}
+			
+			if(raw_score == FALSE) {
+				attr_score = g_hash_table_lookup(
+					node->details->attrs, score);
+				if(attr_score == NULL) {
+					accept = FALSE;
+					pe_warn("node %s did not have a value"
+						" for %s",
+						node->details->uname, score);
+				} else {
+					score_f = char2score(score);
 				}
+			}
+			
+			if(!do_and && accept) {
+				node_t *local = pe_find_node_id(
+					match_L, node->details->id);
+				if(local == NULL) {
+					local = node_copy(node);
+					match_L = g_list_append(match_L, local);
+				}
+				local->weight = merge_weights(
+					local->weight, score_f);
 				crm_debug_5("node %s already matched",
 					    node->details->uname);
 				
 			} else if(do_and && !accept) {
 				/* remove it */
-				node_t *delete = pe_find_node(
-					match_L, node->details->uname);
+				node_t *delete = pe_find_node_id(
+					match_L, node->details->id);
 				if(delete != NULL) {
 					match_L = g_list_remove(match_L,delete);
 					crm_debug_5("node %s did not match",

@@ -58,10 +58,12 @@ digraph "g" {
 "DoFencing:child_DoFencing:0_start_0" -> "DoFencing_running_0" [ style = bold]
 "DoFencing:child_DoFencing:1_start_0" -> "DoFencing_running_0" [ style = bold]
 "DoFencing:child_DoFencing:2_start_0" -> "DoFencing_running_0" [ style = bold]
+"DoFencing_start_0" -> "DoFencing_running_0" [ style = bold]
 "DoFencing:child_DoFencing:0_stop_0" -> "DoFencing_stopped_0" [ style = bold]
 "DoFencing:child_DoFencing:1_stop_0" -> "DoFencing_stopped_0" [ style = bold]
 "DoFencing:child_DoFencing:2_stop_0" -> "DoFencing_stopped_0" [ style = bold]
 "DoFencing:child_DoFencing:3_stop_0" -> "DoFencing_stopped_0" [ style = bold]
+"DoFencing_stop_0" -> "DoFencing_stopped_0" [ style = bold]
 "rsc_c001n02_stop_0" -> "do_shutdown" [ style = bold]
 "DoFencing:child_DoFencing:0_stop_0" -> "do_shutdown" [ style = bold]
 }

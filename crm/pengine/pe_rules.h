@@ -1,4 +1,4 @@
-/* $Id: pe_rules.h,v 1.4 2005/08/11 08:58:40 andrew Exp $ */
+/* $Id: pe_rules.h,v 1.5 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,8 +19,24 @@
 #ifndef PENGINE_RULES__H
 #define PENGINE_RULES__H
 
-extern gboolean test_ruleset(crm_data_t *ruleset, node_t *node, pe_working_set_t *data_set);
-extern gboolean test_rule(crm_data_t *rule, node_t *node, pe_working_set_t *data_set);
-extern gboolean test_expression(crm_data_t *expr, node_t *node, pe_working_set_t *data_set);
+enum expression_type {
+	not_expr,
+	nested_rule,
+	attr_expr,
+	loc_expr,
+	role_expr,
+	time_expr
+};
+
+extern enum expression_type find_expression_type(crm_data_t *expr);
+
+extern gboolean test_ruleset(
+	crm_data_t *ruleset, node_t *node, pe_working_set_t *data_set);
+
+extern gboolean test_rule(crm_data_t *rule, node_t *node, resource_t *rsc,
+			  pe_working_set_t *data_set);
+
+extern gboolean test_expression(crm_data_t *expr, node_t *node, resource_t *rsc,
+				pe_working_set_t *data_set);
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.38 2005/09/06 11:56:44 andrew Exp $ */
+/* $Id: group.c,v 1.39 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,7 +25,9 @@
 
 extern gboolean rsc_colocation_new(
 	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh);
+	resource_t *rsc_lh, resource_t *rsc_rh,
+	const char *state_lh, const char *state_rh);
+	
 
 typedef struct group_variant_data_s
 {
@@ -65,6 +67,7 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 	/* this is a bit of a hack - but simplifies everything else */
 	copy_in_properties(xml_self, xml_obj);
+/* 	set_id(xml_self, "self", -1); */
 	if(common_unpack(xml_self, &self, NULL,  data_set)) {
 		group_data->self = self;
 		self->restart_type = pe_restart_restart;
@@ -91,7 +94,8 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 			} else {
 				rsc_colocation_new(
 					"pe_group_internal_colo", pecs_must,
-					group_data->first_child, new_rsc);
+					group_data->first_child, new_rsc,
+					NULL, NULL);
 			}
 			group_data->last_child = new_rsc;
 			crm_action_debug_3(
@@ -206,6 +210,16 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		group_data->self, start_key(group_data->self), NULL,
 		pe_ordering_optional, data_set);
 
+	custom_action_order(
+		group_data->self, stop_key(group_data->self), NULL,
+		group_data->self, stopped_key(group_data->self), NULL,
+		pe_ordering_optional, data_set);
+
+	custom_action_order(
+		group_data->self, start_key(group_data->self), NULL,
+		group_data->self, started_key(group_data->self), NULL,
+		pe_ordering_optional, data_set);
+	
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
@@ -347,13 +361,10 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 	crm_debug_3("Processing actions from %s", group_data->self->id);
 
-	if(group_data->self != NULL) {
-		group_data->self->fns->rsc_location(group_data->self, constraint);
-	}
+	group_data->self->fns->rsc_location(group_data->self, constraint);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-
 		child_rsc->fns->rsc_location(child_rsc, constraint);
 		);
 }
@@ -512,8 +523,8 @@ group_agent_constraints(resource_t *rsc)
 rsc_state_t
 group_resource_state(resource_t *rsc)
 {
-	rsc_state_t state = rsc_state_unknown;
-	rsc_state_t last_state = rsc_state_unknown;
+	rsc_state_t state = rsc_unknown;
+	rsc_state_t last_state = rsc_unknown;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
@@ -522,39 +533,39 @@ group_resource_state(resource_t *rsc)
 		
 		last_state = child_rsc->fns->state(child_rsc);
 		switch(last_state) {
-			case rsc_state_unknown:
-			case rsc_state_move:
+			case rsc_unknown:
+			case rsc_move:
 				return last_state;
 				break;
-			case rsc_state_restart:
-				CRM_DEV_ASSERT(state != rsc_state_stopping);
-				CRM_DEV_ASSERT(state != rsc_state_stopped);
-/* 				CRM_DEV_ASSERT(state != rsc_state_active); */
+			case rsc_restart:
+				CRM_DEV_ASSERT(state != rsc_stopping);
+				CRM_DEV_ASSERT(state != rsc_stopped);
+/* 				CRM_DEV_ASSERT(state != rsc_active); */
 				state = last_state;
 				break;
-			case rsc_state_active:
-/* 				CRM_DEV_ASSERT(state != rsc_state_restart); */
-				CRM_DEV_ASSERT(state != rsc_state_stopping);
-				if(last_state == rsc_state_unknown) {
+			case rsc_active:
+/* 				CRM_DEV_ASSERT(state != rsc_restart); */
+				CRM_DEV_ASSERT(state != rsc_stopping);
+				if(last_state == rsc_unknown) {
 					state = last_state;
 				}
 				break;
-			case rsc_state_stopped:
-				CRM_DEV_ASSERT(state != rsc_state_restart);
-				CRM_DEV_ASSERT(state != rsc_state_starting);
-				if(last_state == rsc_state_unknown) {
+			case rsc_stopped:
+				CRM_DEV_ASSERT(state != rsc_restart);
+				CRM_DEV_ASSERT(state != rsc_starting);
+				if(last_state == rsc_unknown) {
 					state = last_state;
 				}
 				break;
-			case rsc_state_starting:
-				CRM_DEV_ASSERT(state != rsc_state_stopped);
-				if(state != rsc_state_restart) {
+			case rsc_starting:
+				CRM_DEV_ASSERT(state != rsc_stopped);
+				if(state != rsc_restart) {
 					state = last_state;
 				}
 				break;				
-			case rsc_state_stopping:
-				CRM_DEV_ASSERT(state != rsc_state_active);
-				if(state != rsc_state_restart) {
+			case rsc_stopping:
+				CRM_DEV_ASSERT(state != rsc_active);
+				if(state != rsc_restart) {
 					state = last_state;
 				}
 				break;		

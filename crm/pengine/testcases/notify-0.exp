@@ -33,6 +33,9 @@
        <trigger>
          <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="4" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" allow_fail="false"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
@@ -68,6 +71,9 @@
      <inputs>
        <trigger>
          <rsc_op id="8" rsc_id="rsc2:child_rsc2:0" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="11" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>

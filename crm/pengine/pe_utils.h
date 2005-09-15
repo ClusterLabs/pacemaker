@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.31 2005/09/01 11:41:20 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.32 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,8 +41,6 @@ extern color_t *create_color(
 extern color_t *copy_color(color_t *a_color);
 
 /* Node helper functions */
-extern node_t *pe_find_node(GListPtr node_list, const char *uname);
-
 extern node_t *pe_find_node_id(GListPtr node_list, const char *id);
 
 extern node_t *node_copy(node_t *this_node) ;
@@ -93,6 +91,7 @@ extern void log_action(
 
 /* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
+extern gint sort_rsc_node_weight(gconstpointer a, gconstpointer b);
 extern gint sort_cons_strength(gconstpointer a, gconstpointer b);
 extern gint sort_color_weight(gconstpointer a, gconstpointer b);
 extern gint sort_node_weight(gconstpointer a, gconstpointer b);
@@ -106,22 +105,47 @@ extern const char *task2text(enum action_tasks task);
 extern enum action_tasks text2task(const char *task);
 extern const char *rsc_state2text(rsc_state_t state);
 
+extern enum rsc_role_e text2role(const char *role);
+extern const char *role2text(enum rsc_role_e role);
+
 extern crm_data_t *find_rsc_op_entry(resource_t *rsc, const char *key);
 
 extern action_t *custom_action(
 	resource_t *rsc, char *key, const char *task,
 	node_t *on_node, gboolean optional, pe_working_set_t *data_set);
 
-#define stop_action(rsc, node, optional) custom_action(			\
-		rsc, stop_key(rsc), CRMD_ACTION_STOP, node, optional, data_set);
 		
 #define stopped_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
-#define stop_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOP, 0)
+#define stopped_action(rsc, node, optional) custom_action(			\
+		rsc, stopped_key(rsc), CRMD_ACTION_STOPPED, node, optional, data_set);
 
+#define stop_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOP, 0)
+#define stop_action(rsc, node, optional) custom_action(			\
+		rsc, stop_key(rsc), CRMD_ACTION_STOP, node, optional, data_set);
+
+#define start_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_START, 0)
 #define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), CRMD_ACTION_START, node, optional, data_set)
+
 #define started_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STARTED, 0)
-#define start_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_START, 0)
+#define started_action(rsc, node, optional) custom_action(		\
+		rsc, started_key(rsc), CRMD_ACTION_STARTED, node, optional, data_set)
+
+#define promote_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_PROMOTE, 0)
+#define promote_action(rsc, node, optional) custom_action(		\
+		rsc, promote_key(rsc), CRMD_ACTION_PROMOTE, node, optional, data_set)
+
+#define promoted_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_PROMOTED, 0)
+#define promoted_action(rsc, node, optional) custom_action(		\
+		rsc, promoted_key(rsc), CRMD_ACTION_PROMOTED, node, optional, data_set)
+
+#define demote_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_DEMOTE, 0)
+#define demote_action(rsc, node, optional) custom_action(		\
+		rsc, demote_key(rsc), CRMD_ACTION_DEMOTE, node, optional, data_set)
+
+#define demoted_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_DEMOTED, 0)
+#define demoted_action(rsc, node, optional) custom_action(		\
+		rsc, demoted_key(rsc), CRMD_ACTION_DEMOTED, node, optional, data_set)
 
 extern GListPtr find_actions(GListPtr input, const char *key, node_t *on_node);
 

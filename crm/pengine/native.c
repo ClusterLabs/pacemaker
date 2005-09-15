@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.78 2005/09/06 11:56:44 andrew Exp $ */
+/* $Id: native.c,v 1.79 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,7 +28,7 @@ extern color_t *add_color(resource_t *rh_resource, color_t *color);
 gboolean native_choose_color(resource_t *lh_resource, color_t *no_color);
 
 void native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
-			       const char *id, GListPtr nodes);
+			       node_t *cons_node, GListPtr nodes);
 
 void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh);
@@ -40,6 +40,7 @@ void filter_nodes(resource_t *rsc);
 
 int num_allowed_nodes4color(color_t *color);
 
+void create_notifications(resource_t *rsc, pe_working_set_t *data_set);
 void create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
 action_t *create_recurring_action(resource_t *rsc, node_t *node,
@@ -53,17 +54,45 @@ void pe_post_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
 	notify_data_t *n_data, pe_working_set_t *data_set);
 
+
 extern rsc_to_node_t *
 rsc2node_new(const char *id, resource_t *rsc,
 	     double weight, node_t *node, pe_working_set_t *data_set);
 
+
+void NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *data_set);
+gboolean StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
+gboolean StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
+gboolean DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
+gboolean PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
+gboolean RoleError(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
+gboolean NullOp(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
+
+enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
+/* Current State */	
+/*    Next State:  Unknown 	    Stopped	      Started	        Slave	          Master */
+/* Unknown */	{ RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, },
+/* Stopped */	{ RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE, },
+/* Started */	{ RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_UNKNOWN, RSC_ROLE_UNKNOWN, },
+/* Slave */	{ RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_UNKNOWN, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+/* Master */	{ RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_UNKNOWN, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+};
+
+gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,pe_working_set_t*) = {
+/* Current State */	
+/*    Next State: Unknown	Stopped		Started		Slave		Master */
+/* Unknown */	{ RoleError,	StopRsc,	RoleError,	RoleError,	RoleError,  },
+/* Stopped */	{ RoleError,	NullOp,		StartRsc,	StartRsc,	RoleError,  },
+/* Started */	{ RoleError,	StopRsc,	NullOp,		RoleError,	RoleError,  },
+/* Slave */	{ RoleError,	StopRsc,	RoleError,	NullOp,		PromoteRsc, },
+/* Master */	{ RoleError,	RoleError,	RoleError,	DemoteRsc,	NullOp,     },
+};
+
+
 typedef struct native_variant_data_s
 {
-		lrm_agent_t *agent;
-		GListPtr running_on;       /* node_t*           */
-		color_t *color;
-		GListPtr node_cons;        /* rsc_to_node_t*    */
-		GListPtr allowed_nodes;    /* node_t*         */
+		GListPtr running_on;       /* node_t*   */
+		GListPtr allowed_nodes;    /* node_t*   */
 
 } native_variant_data_t;
 
@@ -79,7 +108,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	get_native_variant_data(native_data, rsc);
 
 	CRM_DEV_ASSERT(node != NULL); if(crm_assert_failed) { return; }
-	
+
 	slist_iter(
 		a_node, node_t, native_data->running_on, lpc,
 		CRM_DEV_ASSERT(a_node != NULL);
@@ -99,6 +128,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 
 	} else if(rsc->stickiness > 0 || rsc->stickiness < 0) {
 		rsc2node_new("stickiness", rsc, rsc->stickiness, node,data_set);
+		crm_info("Resource %s: preferring current location (%s/%s)",
+			 rsc->id, node->details->uname, node->details->id);
 	}
 	
 	if(g_list_length(native_data->running_on) > 1) {
@@ -106,29 +137,26 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			 "  Latest: %s/%s", rsc->id,
 			 g_list_length(native_data->running_on),
 			 node->details->uname, node->details->id);
+
+		if(rsc->recovery_type == recovery_stop_only) {
+			native_assign_color(rsc, data_set->no_color);
+			
+		} else if(rsc->recovery_type == recovery_block) {
+			rsc->is_managed = FALSE;
+		}
 	}
 }
 
 
 void native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
-	crm_data_t * xml_obj = rsc->xml;
 	native_variant_data_t *native_data = NULL;
 
-	const char *version  = crm_element_value(xml_obj, XML_ATTR_VERSION);
-	
 	crm_debug_3("Processing resource %s...", rsc->id);
 
 	crm_malloc0(native_data, sizeof(native_variant_data_t));
 
-	crm_malloc0(native_data->agent, sizeof(lrm_agent_t));
-	native_data->agent->class	= crm_element_value(xml_obj, "class");
-	native_data->agent->type	= crm_element_value(xml_obj, "type");
-	native_data->agent->version	= version?version:"0.0";
-
-	native_data->color		= NULL; 
 	native_data->allowed_nodes	= NULL;
-	native_data->node_cons		= NULL; 
 	native_data->running_on		= NULL;
 
 	rsc->variant_opaque = native_data;
@@ -145,17 +173,11 @@ int native_num_allowed_nodes(resource_t *rsc)
 {
 	int num_nodes = 0;
 	native_variant_data_t *native_data = NULL;
-	if(rsc->variant == pe_native) {
-		native_data = (native_variant_data_t *)rsc->variant_opaque;
-	} else {
-		pe_err("Resource %s was not a \"native\" variant",
-			rsc->id);
-		return 0;
-	}
+	get_native_variant_data(native_data, rsc);
 
-	if(native_data->color) {
+	if(rsc->color) {
 		crm_debug_4("Colored case");
-		num_nodes = num_allowed_nodes4color(native_data->color);
+		num_nodes = num_allowed_nodes4color(rsc->color);
 		
 	} else if(rsc->candidate_colors) {
 		/* TODO: sort colors first */
@@ -227,12 +249,12 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	get_native_variant_data(native_data, rsc);
 
 	if(rsc->provisional == FALSE) {
-		return native_data->color;
+		return rsc->color;
 		
 	} else if( native_choose_color(rsc, data_set->no_color) ) {
 		crm_debug_3("Colored resource %s with color %d",
-			    rsc->id, native_data->color->id);
-		new_color = native_data->color;
+			    rsc->id, rsc->color->id);
+		new_color = rsc->color;
 		
 	} else {
 		if(native_data->allowed_nodes != NULL) {
@@ -258,12 +280,13 @@ void
 create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			 pe_working_set_t *data_set) 
 {
-	action_t *mon = NULL;
 	char *key = NULL;
-	const char *node_uname = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
+	const char *node_uname = NULL;
+
 	int interval_ms = 0;
+	action_t *mon = NULL;
 	gboolean is_optional = TRUE;
 	GListPtr possible_matches = NULL;
 	
@@ -282,6 +305,16 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		if(interval_ms <= 0) {
 			continue;
 		}
+
+		value = crm_element_value(operation, "role");
+		if(start != NULL && value != NULL
+		   && text2role(value) != start->rsc->next_role) {
+			crm_debug_2("Skipping action %s::%s(%s) : %s",
+				    start->rsc->id, name, value,
+				    role2text(start->rsc->next_role));
+			continue;
+		}
+		
 		
 		key = generate_op_key(rsc->id, name, interval_ms);
 		possible_matches = find_actions(rsc->actions, key, node);
@@ -322,129 +355,63 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
 	action_t *start = NULL;
-	action_t *stop = NULL;
 	node_t *chosen = NULL;
+	enum rsc_role_e role = RSC_ROLE_UNKNOWN;
+	enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 
-	if(native_data->color != NULL) {
-		chosen = native_data->color->details->chosen_node;
+	if(rsc->color != NULL) {
+		chosen = rsc->color->details->chosen_node;
 	}
 
 	unpack_instance_attributes(
 		rsc->xml, XML_TAG_ATTR_SETS, chosen, rsc->parameters,
 		NULL, 0, data_set);
 	
-	if(chosen != NULL && g_list_length(native_data->running_on) == 0) {
-		start = start_action(rsc, chosen, TRUE);
-		if(start->runnable) {
-			crm_info("Start resource %s\t(%s)",
-				 rsc->id, chosen->details->uname);
-			start->optional = FALSE;
-			start->rsc->start_pending = TRUE;
-		}		
-		
-	} else if(g_list_length(native_data->running_on) > 1) {
-		pe_err("Attempting recovery of resource %s", rsc->id);
-		
-		if(rsc->recovery_type == recovery_stop_start
-		   || rsc->recovery_type == recovery_stop_only) {
-			slist_iter(
-				node, node_t,
-				native_data->running_on, lpc,
-				
-				pe_warn("Stop  resource %s\t(%s) (recovery)",
-					 rsc->id, node->details->uname);
-				stop = stop_action(rsc, node, FALSE);
-				);
+	if(g_list_length(native_data->running_on) > 1) {
+ 		if(rsc->recovery_type == recovery_stop_start) {
+			pe_err("Attempting recovery of resource %s", rsc->id);
+			StopRsc(rsc, NULL, data_set);
+			rsc->role = RSC_ROLE_STOPPED;
 		}
 		
-		if(rsc->recovery_type == recovery_stop_start && chosen) {
-			/* if one of the "stops" is for a node outside
-			 * our partition, then this will block anyway
-			 */
-			start = start_action(rsc, chosen, FALSE);
-			if(start->runnable) {
-				pe_warn("Recover resource %s\t(%s)",
-					rsc->id, chosen->details->uname);
-			}
-			
-			/* make the restart required */
-			order_stop_start(rsc, rsc, pe_ordering_manditory);
+	} else if(native_data->running_on != NULL) {
+		node_t *current = native_data->running_on->data;
+		NoRoleChange(rsc, current, chosen, data_set);
+
+	} else if(rsc->role == RSC_ROLE_STOPPED && rsc->next_role == RSC_ROLE_STOPPED) {
+		char *key = start_key(rsc);
+		GListPtr possible_matches = find_actions(rsc->actions, key, NULL);
+		slist_iter(
+			action, action_t, possible_matches, lpc,
+			action->optional = TRUE;
+/*			action->pseudo = TRUE; */
+			);
+		crm_debug_2("Stopping a stopped resource");
+		crm_free(key);
+		return;
+	} 
+
+	role = rsc->role;
+	crm_info("%s: %s->%s", rsc->id,
+		  role2text(rsc->role), role2text(rsc->next_role));
+
+	while(role != rsc->next_role) {
+		next_role = rsc_state_matrix[role][rsc->next_role];
+		crm_debug("Executing: %s->%s (%s)",
+			  role2text(role), role2text(next_role), rsc->id);
+		if(rsc_action_matrix[role][next_role](
+			   rsc, chosen, data_set) == FALSE) {
+			break;
 		}
-
-		if(rsc->recovery_type == recovery_block) {
-			pe_warn("RESOURCE %s WILL REMAIN ACTIVE ON MULTIPLE"
-				 " NODES PENDING MANUAL INTERVENTION", rsc->id);
-			
-			slist_iter(
-				node, node_t, native_data->running_on, lpc,
-				pe_warn("Resource %s active on %s",
-					 rsc->id, node->details->uname);
-				);
-		}
-		
-	} else if(g_list_length(native_data->running_on) == 1) {
-		node_t *node = native_data->running_on->data;
-		
-		crm_debug_2("Stop%s of %s", chosen?" and restart":"", rsc->id);
-		CRM_DEV_ASSERT(node != NULL);
-
-		if(chosen == NULL) {
-			crm_info("Stop  resource %s\t(%s)",
-				 rsc->id, node->details->uname);
-			stop_action(rsc, node, FALSE);
-
-		} else if(safe_str_eq(node->details->id, chosen->details->id)) {
-			stop = stop_action(rsc, node, TRUE);
-			start = start_action(rsc, chosen, TRUE);
-
-			if(start->runnable == FALSE) {
-				crm_info("Stop  resource %s\t(%s)",
-					 rsc->id, node->details->uname);
-				stop->optional = FALSE;
-
-			} else if(rsc->recover) {
-				crm_info("Restart resource %s\t(%s)",
-					 rsc->id, node->details->uname);
-				/* make the restart required */
-				order_stop_start(rsc, rsc, pe_ordering_manditory);
-				start->optional = FALSE;
-				stop->optional = FALSE;
-
-			} else {
-				crm_info("Leave resource %s\t(%s)",
-					 rsc->id, node->details->uname);
-
-				if(stop->optional == FALSE) {
- 					start->optional = FALSE;
-
-				} else if(rsc->start_pending) { 
- 					start->optional = FALSE;
- 				}
-			}
-			
-		} else {
-			/* move */
-			stop = stop_action(rsc, node, FALSE);
-			start = start_action(rsc, chosen, FALSE);
-
-			if(start->runnable) {
-				crm_info("Move  resource %s\t(%s -> %s)", rsc->id,
-					 node->details->uname,
-					 chosen->details->uname);
-			} else {
-				crm_info("Stop  resource %s\t(%s)", rsc->id,
-					 node->details->uname);
-			}
-			
-			/* make the restart required */
-			order_stop_start(rsc, rsc, pe_ordering_manditory);
-			
-		}
+		role = next_role;
 	}
 
-	create_recurring_actions(rsc, start, chosen, data_set);
+	if(rsc->next_role != RSC_ROLE_STOPPED && rsc->is_managed) {
+		start = start_action(rsc, chosen, TRUE);
+		create_recurring_actions(rsc, start, chosen, data_set);
+	}
 }
 
 void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
@@ -473,6 +440,32 @@ void native_rsc_colocation_lh(
 	rsc_rh->fns->rsc_colocation_rh(rsc_lh, rsc_rh, constraint);		
 }
 
+static gboolean
+filter_colocation_constraint(
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
+{
+	if(constraint->strength == pecs_ignore
+		|| constraint->strength == pecs_startstop){
+		crm_debug_4("Skipping constraint type %d", constraint->strength);
+		return FALSE;
+	}
+
+	if(constraint->state_lh != NULL
+	   && text2role(constraint->state_lh) != rsc_lh->next_role) {
+		crm_debug_4("RH: Skipping constraint: \"%s\" state filter",
+			    constraint->state_rh);
+		return FALSE;
+	}
+	
+	if(constraint->state_rh != NULL
+	   && text2role(constraint->state_rh) != rsc_rh->next_role) {
+		crm_debug_4("RH: Skipping constraint: \"%s\" state filter",
+			    constraint->state_rh);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 void native_rsc_colocation_rh(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
@@ -490,15 +483,14 @@ void native_rsc_colocation_rh(
 		    constraint->strength == pecs_must?"":"Anti-",
 		    rsc_lh->id, rsc_rh->id, constraint->id);
 	
-	if(constraint->strength == pecs_ignore
-		|| constraint->strength == pecs_startstop){
-		crm_debug_4("Skipping constraint type %d", constraint->strength);
+	if(filter_colocation_constraint(rsc_lh, rsc_rh, constraint) == FALSE) {
 		return;
 	}
-
+	
 	if(rsc_lh->provisional && rsc_rh->provisional) {
 		if(constraint->strength == pecs_must) {
 			/* update effective_priorities */
+			crm_debug_3("Priority update");
 			native_rsc_colocation_rh_must(
 				rsc_lh, update_lh, rsc_rh, update_rh);
 		} else {
@@ -509,8 +501,8 @@ void native_rsc_colocation_rh(
 		return;
 
 	} else if( (!rsc_lh->provisional) && (!rsc_rh->provisional)
-		   && (!native_data_lh->color->details->pending)
-		   && (!native_data_rh->color->details->pending) ) {
+		   && (!rsc_lh->color->details->pending)
+		   && (!rsc_rh->color->details->pending) ) {
 		/* error check */
 		do_check = TRUE;
 		if(rsc_lh->effective_priority < rsc_rh->effective_priority) {
@@ -526,12 +518,12 @@ void native_rsc_colocation_rh(
 		}
 
 	} else if(rsc_lh->provisional == FALSE
-		  && native_data_lh->color->details->pending == FALSE) {
+		  && rsc_lh->color->details->pending == FALSE) {
 		/* update _them_    : postproc color version */
 		update_rh = TRUE;
 		
 	} else if(rsc_rh->provisional == FALSE
-		  && native_data_rh->color->details->pending == FALSE) {
+		  && rsc_rh->color->details->pending == FALSE) {
 		/* update _us_  : postproc color alt version */
 		update_lh = TRUE;
 
@@ -736,25 +728,31 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
 	GListPtr or_list;
 	native_variant_data_t *native_data = NULL;
-	
-	crm_action_debug_3(print_rsc_to_node("Applying", constraint, FALSE));
+
+	crm_debug("Applying %s (%s) to %s", constraint->id,
+		  role2text(constraint->role_filter), rsc->id);
+
 	/* take "lifetime" into account */
 	if(constraint == NULL) {
 		pe_err("Constraint is NULL");
 		return;
-			
-	} else if(is_active(constraint) == FALSE) {
-		crm_debug_2("Constraint (%s) is not active", constraint->id);
-		return;
+
 	} else if(rsc == NULL) {
 		pe_err("LHS of rsc_to_node (%s) is NULL", constraint->id);
+		return;
+
+	} else if(constraint->role_filter > 0
+		  && constraint->role_filter != rsc->next_role) {
+		crm_debug("Constraint (%s) is not active (role : %s)",
+			    constraint->id, role2text(constraint->role_filter));
+		return;
+		
+	} else if(is_active(constraint) == FALSE) {
+		crm_debug_2("Constraint (%s) is not active", constraint->id);
 		return;
 	}
     
 	get_native_variant_data(native_data, rsc);
-
-	native_data->node_cons =
-		g_list_append(native_data->node_cons, constraint);
 
 	if(constraint->node_list_rh == NULL) {
 		crm_debug_2("RHS of constraint %s is NULL", constraint->id);
@@ -769,9 +767,8 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	native_data->allowed_nodes = or_list;
 
 	slist_iter(node_rh, node_t, constraint->node_list_rh, lpc,
-		   native_update_node_weight(
-			   rsc, constraint, node_rh->details->uname,
-			   native_data->allowed_nodes));
+		   native_update_node_weight(rsc, constraint, node_rh,
+					     native_data->allowed_nodes));
 
 	crm_action_debug_3(print_resource("after update", rsc, TRUE));
 
@@ -827,7 +824,7 @@ void native_printw(resource_t *rsc, const char *pre_text, int *index)
 	} else if(g_list_length(native_data->running_on) == 1) {
 		node_t *node = native_data->running_on->data;
 		printw("%s (%s)", node->details->uname, node->details->id);
-		if(rsc->unclean) {
+		if(rsc->state == rsc_state_failed) {
 			printw(" FAILED");
 		}
 		
@@ -857,7 +854,7 @@ void native_html(resource_t *rsc, const char *pre_text, FILE *stream)
 		fprintf(stream, " (unmanaged)</font> ");
 	}
 	
-	if(rsc->unclean) {
+	if(rsc->state == rsc_state_failed) {
 		fprintf(stream, "<font color=\"orange\">");
 	} else if(g_list_length(native_data->running_on) == 0) {
 		fprintf(stream, "<font color=\"red\">");
@@ -893,17 +890,16 @@ void native_dump(resource_t *rsc, const char *pre_text, gboolean details)
 
 	common_dump(rsc, pre_text, details);
 	crm_debug_4("\t%d candidate colors, %d allowed nodes,"
-		  " %d rsc_cons and %d node_cons",
+		  " %d rsc_cons",
 		  g_list_length(rsc->candidate_colors),
 		  g_list_length(native_data->allowed_nodes),
-		  g_list_length(rsc->rsc_cons),
-		  g_list_length(native_data->node_cons));
+		  g_list_length(rsc->rsc_cons));
 	
 	if(details) {
 		crm_debug_4("\t=== Actions");
 		slist_iter(
 			action, action_t, rsc->actions, lpc, 
-			print_action("\trsc action: ", action, FALSE);
+			log_action(LOG_DEBUG_4, "\trsc action: ", action, FALSE);
 			);
 		
 		crm_debug_4("\t=== Colors");
@@ -925,10 +921,9 @@ void native_free(resource_t *rsc)
 	native_variant_data_t *native_data =
 		(native_variant_data_t *)rsc->variant_opaque;
 	
-	crm_debug_4("Freeing Allowed Nodes & Agent");
-	crm_free(native_data->color);
+	crm_debug_4("Freeing Allowed Nodes");
+	crm_free(rsc->color);
 	pe_free_shallow(native_data->allowed_nodes);
-	crm_free(native_data->agent);
 	common_free(rsc);
 }
 
@@ -952,48 +947,54 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 	get_native_variant_data(native_data_lh, rsc_lh);
 	get_native_variant_data(native_data_rh, rsc_rh);
 
-	if(native_data_lh->color && native_data_rh->color) {
+	crm_debug_2("Colocating %s with %s."
+		    " Update LHS: %s, Update RHS: %s",
+		    rsc_lh->id, rsc_rh->id,
+		    update_lh?"true":"false", update_rh?"true":"false");
+
+	
+	if(rsc_lh->color && rsc_rh->color) {
 		do_merge = TRUE;
 		merged_node_list = node_list_and(
-			native_data_lh->color->details->candidate_nodes,
-			native_data_rh->color->details->candidate_nodes, TRUE);
+			rsc_lh->color->details->candidate_nodes,
+			rsc_rh->color->details->candidate_nodes, TRUE);
 			
-	} else if(native_data_lh->color) {
+	} else if(rsc_lh->color) {
 		do_merge = TRUE;
 		merged_node_list = node_list_and(
-			native_data_lh->color->details->candidate_nodes,
+			rsc_lh->color->details->candidate_nodes,
 			native_data_rh->allowed_nodes, TRUE);
 
-	} else if(native_data_rh->color) {
+	} else if(rsc_rh->color) {
 		do_merge = TRUE;
 		merged_node_list = node_list_and(
 			native_data_lh->allowed_nodes,
-			native_data_rh->color->details->candidate_nodes, TRUE);
+			rsc_rh->color->details->candidate_nodes, TRUE);
 	}
 		
 	if(update_lh && rsc_rh != rsc_lh) {
-		CRM_DEV_ASSERT(native_data_lh->color != native_data_rh->color);
-		crm_free(native_data_lh->color);
+		CRM_DEV_ASSERT(rsc_lh->color != rsc_rh->color);
+		crm_free(rsc_lh->color);
 		rsc_lh->runnable      = rsc_rh->runnable;
 		rsc_lh->provisional   = rsc_rh->provisional;
 
-		CRM_DEV_ASSERT(native_data_rh->color != NULL);
-		native_assign_color(rsc_lh, native_data_rh->color);
+		CRM_DEV_ASSERT(rsc_rh->color != NULL);
+		native_assign_color(rsc_lh, rsc_rh->color);
 	}
 	if(update_rh && rsc_rh != rsc_lh) {
-		CRM_DEV_ASSERT(native_data_lh->color != native_data_rh->color);
-		crm_free(native_data_rh->color);
+		CRM_DEV_ASSERT(rsc_lh->color != rsc_rh->color);
+		crm_free(rsc_rh->color);
 		rsc_rh->runnable      = rsc_lh->runnable;
 		rsc_rh->provisional   = rsc_lh->provisional;
 
-		CRM_DEV_ASSERT(native_data_lh->color != NULL);
-		native_assign_color(rsc_rh, native_data_lh->color);
+		CRM_DEV_ASSERT(rsc_lh->color != NULL);
+		native_assign_color(rsc_rh, rsc_lh->color);
 	}
 
 	if((update_rh || update_lh) && do_merge) {
 		crm_debug_4("Merging candidate nodes");
-		old_list = native_data_rh->color->details->candidate_nodes;
-		native_data_rh->color->details->candidate_nodes = merged_node_list;
+		old_list = rsc_rh->color->details->candidate_nodes;
+		rsc_rh->color->details->candidate_nodes = merged_node_list;
 		pe_free_shallow(old_list);
 	}
 		
@@ -1015,7 +1016,7 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 	crm_debug_4("Processing pecs_must_not constraint");
 	/* pecs_must_not */
 	if(update_lh) {
-		color_rh = native_data_rh->color;
+		color_rh = rsc_rh->color;
 
 		if(rsc_lh->provisional && color_rh != NULL) {
 			color_lh = add_color(rsc_lh, color_rh);
@@ -1031,15 +1032,15 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 
 		} else if(rsc_lh->provisional) {
 			
-		} else if(native_data_lh->color
-			  && native_data_lh->color->details->pending) {
+		} else if(rsc_lh->color
+			  && rsc_lh->color->details->pending) {
 			node_t *node_lh = NULL;
 			
-			color_lh = native_data_lh->color;
-			node_lh = pe_find_node(
+			color_lh = rsc_lh->color;
+			node_lh = pe_find_node_id(
 				color_lh->details->candidate_nodes,
 				safe_val5(NULL, color_rh, details,
-					  chosen_node, details, uname));
+					  chosen_node, details, id));
 
 			if(node_lh != NULL) {
 				node_lh->weight = -INFINITY;
@@ -1061,7 +1062,7 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 	}
 	
 	if(update_rh) {
-		color_lh = native_data_lh->color;
+		color_lh = rsc_lh->color;
 		if(rsc_rh->provisional && color_lh != NULL) {
 			color_rh = add_color(rsc_lh, color_lh);
 			color_rh->local_weight = -INFINITY;
@@ -1076,14 +1077,14 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 
 		} else if(rsc_rh->provisional) {
 			
-		} else if(native_data_rh->color
-			  && native_data_rh->color->details->pending) {
+		} else if(rsc_rh->color
+			  && rsc_rh->color->details->pending) {
 			node_t *node_rh = NULL;
-			color_rh = native_data_rh->color;
-			node_rh = pe_find_node(
+			color_rh = rsc_rh->color;
+			node_rh = pe_find_node_id(
 				color_rh->details->candidate_nodes,
 				safe_val5(NULL, color_lh, details,
-					  chosen_node, details, uname));
+					  chosen_node, details, id));
 
 			if(node_rh != NULL) {
 				node_rh->weight = -INFINITY;
@@ -1131,7 +1132,7 @@ native_choose_color(resource_t *rsc, color_t *no_color)
 	
 	rsc->candidate_colors = sorted_colors;
 	
-	crm_debug_3("Choose a color from %d possibilities",
+	crm_debug("Choose a color from %d possibilities",
 		    g_list_length(sorted_colors));
 	
 	slist_iter(
@@ -1146,6 +1147,7 @@ native_choose_color(resource_t *rsc, color_t *no_color)
 			
 		} else if(this_color->local_weight < 0) {
 			/* no valid color available */
+			crm_debug("no valid color available");
 			break;
 			
 		} else if(rsc->effective_priority
@@ -1158,11 +1160,6 @@ native_choose_color(resource_t *rsc, color_t *no_color)
 			len = g_list_length(minus);
 			pe_free_shallow(minus);
 			
-			if(len > 0) {
-				native_assign_color(rsc, this_color);
-				break;
-			}
-			
 		} else {
 			intersection = node_list_and(
 				this_color->details->candidate_nodes, 
@@ -1171,10 +1168,11 @@ native_choose_color(resource_t *rsc, color_t *no_color)
 			len = g_list_length(intersection);
 			pe_free_shallow(intersection);
 			
-			if(len != 0) {
-				native_assign_color(rsc, this_color);
-				break;
-			}
+		}
+		if(len > 0) {
+			crm_debug("Assigning color to %s", rsc->id);
+			native_assign_color(rsc, this_color);
+			break;
 		}
 		);
 
@@ -1204,7 +1202,7 @@ native_assign_color(resource_t *rsc, color_t *color)
 	if(rsc->variant == pe_native) {
 		(local_color->details->num_resources)++;
 		get_native_variant_data(native_data, rsc);
-		native_data->color = copy_color(local_color);
+		rsc->color = copy_color(local_color);
 		crm_debug_3("Created intersection for color %d",
 			    local_color->id);
 		intersection = node_list_and(
@@ -1217,7 +1215,7 @@ native_assign_color(resource_t *rsc, color_t *color)
 		local_color->details->candidate_nodes = intersection;
 	}
 	
-	crm_debug_3("Colored resource %s with new color %d",
+	crm_debug("Colored resource %s with color %d",
 		    rsc->id, local_color->id);
 	
 	crm_action_debug_3(
@@ -1228,20 +1226,39 @@ native_assign_color(resource_t *rsc, color_t *color)
 
 void
 native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
-			  const char *id, GListPtr nodes)
+			  node_t *cons_node, GListPtr nodes)
 {
 	node_t *node_rh = NULL;
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 
-	node_rh = pe_find_node(native_data->allowed_nodes, id);
+	CRM_DEV_ASSERT(cons_node != NULL);
+	
+	node_rh = pe_find_node_id(
+		native_data->allowed_nodes, cons_node->details->id);
 
+	if(node_rh == NULL) {
+		pe_err("Node not found - adding %s to %s",
+		       cons_node->details->id, rsc->id);
+		node_rh = node_copy(cons_node);
+		native_data->allowed_nodes = g_list_append(
+			native_data->allowed_nodes, node_rh);
+
+		node_rh = pe_find_node_id(
+			native_data->allowed_nodes, cons_node->details->id);
+
+		CRM_DEV_ASSERT(node_rh != NULL);
+		return;
+	}
+
+	CRM_DEV_ASSERT(node_rh != NULL);
+	
 	if(node_rh == NULL) {
 		pe_err("Node not found - cant update");
 		return;
 	}
 
-	if(node_rh->weight >= INFINITY && cons->weight <= -INFINITY) {
+	if(node_rh->weight >= INFINITY && cons_node->weight <= -INFINITY) {
 		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
 		       cons->id, rsc->id);
 		
@@ -1249,7 +1266,7 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 		  || node_rh->details->online == FALSE
 		  || node_rh->details->unclean == TRUE) {
 
-	} else if(node_rh->weight <= -INFINITY && cons->weight >= INFINITY) {
+	} else if(node_rh->weight <= -INFINITY && cons_node->weight >= INFINITY) {
 		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
 			 cons->id, rsc->id);
 	}
@@ -1257,32 +1274,27 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 	if(node_rh->fixed) {
 		/* warning */
 		crm_debug_2("Constraint %s is irrelevant as the"
-			 " weight of node %s is fixed as %d.",
-			 cons->id,
-			 node_rh->details->uname,
-			 node_rh->weight);
+			 " weight of node %s is fixed as %d (%s).",
+			 cons->id, node_rh->details->uname,
+			 node_rh->weight, rsc->id);
 		return;
 	}	
 	
-	node_rh->weight = merge_weights(node_rh->weight, cons->weight);
+	node_rh->weight = merge_weights(node_rh->weight, cons_node->weight);
 	if(node_rh->weight <= -INFINITY) {
-		crm_debug_3("Constraint %s (-INFINITY): node %s weight %d.",
-			    cons->id,
-			    node_rh->details->uname,
-			    node_rh->weight);
+		crm_debug_3("Constraint %s (-INFINITY): node %s weight %d (%s).",
+			    cons->id, node_rh->details->uname,
+			    node_rh->weight, rsc->id);
 		
 	} else if(node_rh->weight >= INFINITY) {
-		crm_debug_3("Constraint %s (+INFINITY): node %s weight %d.",
-			    cons->id,
-			    node_rh->details->uname,
-			    node_rh->weight);
+		crm_debug_3("Constraint %s (+INFINITY): node %s weight %d (%s).",
+			    cons->id, node_rh->details->uname,
+			    node_rh->weight, rsc->id);
 
 	} else {
-		crm_debug_3("Constraint %s (%d): node %s weight %d.",
-			    cons->id,
-			    cons->weight,
-			    node_rh->details->uname,
-			    node_rh->weight);
+		crm_debug_3("Constraint %s (%d): node %s weight %d (%s).",
+			    cons->id, cons_node->weight, node_rh->details->uname,
+			    node_rh->weight, rsc->id);
 	}
 
 	if(node_rh->weight < 0) {
@@ -1313,8 +1325,8 @@ native_constraint_violated(
 	get_native_variant_data(native_data_lh, rsc_lh);
 	get_native_variant_data(native_data_rh, rsc_rh);
 
-	color_lh = native_data_lh->color;
-	color_rh = native_data_rh->color;
+	color_lh = rsc_lh->color;
+	color_rh = rsc_rh->color;
 
 	if(constraint->strength == pecs_must_not) {
 		matched = TRUE;
@@ -1407,7 +1419,7 @@ rsc_state_t
 native_resource_state(resource_t *rsc)
 {
 	enum action_tasks task = no_action;
-	rsc_state_t state = rsc_state_unknown;
+	rsc_state_t state = rsc_unknown;
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 	
@@ -1422,18 +1434,18 @@ native_resource_state(resource_t *rsc)
 		}
 
 		if(task == stop_rsc) {
-			if(state == rsc_state_starting) {
-				state = rsc_state_restart;
+			if(state == rsc_starting) {
+				state = rsc_restart;
 				break;
 			} else {
-				state = rsc_state_stopping;
+				state = rsc_stopping;
 			}
 		} else if(task == start_rsc) {
-			if(state == rsc_state_stopping) {
-				state = rsc_state_restart;
+			if(state == rsc_stopping) {
+				state = rsc_restart;
 				break;
 			} else {
-				state = rsc_state_starting;
+				state = rsc_starting;
 			}
 		}
 		);
@@ -1442,29 +1454,47 @@ native_resource_state(resource_t *rsc)
 		node_t *chosen = NULL;
 		node_t *node = native_data->running_on->data;
 
-		if(native_data->color != NULL) {
-			chosen = native_data->color->details->chosen_node;
+		if(rsc->color != NULL) {
+			chosen = rsc->color->details->chosen_node;
 		}
-		if(state == rsc_state_unknown) {
-			state = rsc_state_active;
+		if(state == rsc_unknown) {
+			state = rsc_active;
 
-		} else if(state == rsc_state_restart) {
+		} else if(state == rsc_restart) {
 			CRM_DEV_ASSERT(chosen != NULL && node != NULL);
 			if(crm_assert_failed) {
 				crm_err("State for %s is unreliable", rsc->id);
 				
 			} else if(safe_str_neq(node->details->id,
 					chosen->details->id)) {
-				state = rsc_state_move;
+				state = rsc_move;
 			}
 		}
 		
-	} else if(state == rsc_state_unknown) {
-		state = rsc_state_stopped;
+	} else if(state == rsc_unknown) {
+		state = rsc_stopped;
 	}
 	
 	return state;
 }
+
+void
+create_notifications(resource_t *rsc, pe_working_set_t *data_set)
+{
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
+
+	if(rsc->notify == FALSE) {
+		return;
+	}
+	
+/* 	slist_iter( */
+/* 		action, action_t, rsc->actions, lpc, */
+		
+/* 		); */
+
+}
+
 
 
 void
@@ -1480,8 +1510,8 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 
-	if(native_data->color != NULL) {
-		next = native_data->color->details->chosen_node;
+	if(rsc->color != NULL) {
+		next = rsc->color->details->chosen_node;
 	}
 	if(native_data->running_on != NULL) {
 		current = native_data->running_on->data;
@@ -1498,12 +1528,12 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	task = text2task(op->task);
 	
 	switch(state) {
-		case rsc_state_active:
+		case rsc_active:
 			pe_pre_notify(rsc, current, op, n_data, data_set);
 			pe_post_notify(rsc, current, op, n_data, data_set);
 			register_state(rsc, op, n_data);
 			break;
-		case rsc_state_move:
+		case rsc_move:
 			if(task == stop_rsc) {
 				pe_pre_notify(rsc, current, op,n_data,data_set);
 				register_activity(rsc, op, n_data);
@@ -1512,7 +1542,7 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 				register_activity(rsc, op, n_data);
 			}
 			break;
-		case rsc_state_restart:
+		case rsc_restart:
 			register_activity(rsc, op, n_data);
 			if(task == stop_rsc) {
 				pe_pre_notify(rsc, current, op, n_data, data_set);
@@ -1520,20 +1550,20 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 				pe_post_notify(rsc, current,op,n_data,data_set);
 			}
 			break;
-		case rsc_state_starting:
+		case rsc_starting:
 			if(task != stop_rsc) {
 				register_activity(rsc, op, n_data);
 				pe_post_notify(rsc, next, op, n_data, data_set);
 			}
 			break;
-		case rsc_state_stopping:
+		case rsc_stopping:
 			if(task == stop_rsc) {
 				register_activity(rsc, op, n_data);
 				pe_pre_notify(rsc, current, op,n_data,data_set);
 			}
 			break;
-		case rsc_state_stopped:
-		case rsc_state_unknown:
+		case rsc_stopped:
+		case rsc_unknown:
 			return;
 			break;
 	}
@@ -1550,8 +1580,8 @@ register_activity(resource_t *rsc, action_t *op, notify_data_t *n_data)
 	if(safe_str_eq(op->task, CRMD_ACTION_START)) {
 		crm_malloc0(entry, sizeof(notify_entry_t));
 		entry->rsc = rsc;
-		if(native_data->color != NULL) {
-			entry->node = native_data->color->details->chosen_node;
+		if(rsc->color != NULL) {
+			entry->node = rsc->color->details->chosen_node;
 		}
 		n_data->start = g_list_append(n_data->start, entry);
 		
@@ -1576,8 +1606,8 @@ register_state(resource_t *rsc, action_t *op, notify_data_t *n_data)
 
 	crm_malloc0(entry, sizeof(notify_entry_t));
 	entry->rsc = rsc;
-	if(native_data->color != NULL) {
-		entry->node = native_data->color->details->chosen_node;
+	if(rsc->color != NULL) {
+		entry->node = rsc->color->details->chosen_node;
 	}
 
 	if(entry->node != NULL) {
@@ -1674,5 +1704,136 @@ pe_post_notify(resource_t *rsc, node_t *node, action_t *op,
 {
 	pe_notify(rsc, node, op->post_notify, op->post_notified,
 		  n_data, data_set);
+}
+
+
+void
+NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *data_set)
+{
+	action_t *start = NULL;
+	action_t *stop = NULL;
+
+	crm_debug("Executing: %s", rsc->id);
+
+	if(current == NULL || next == NULL) {
+		return;
+	}
+
+	if(safe_str_neq(current->details->id, next->details->id)) {
+		crm_info("Move  resource %s\t(%s -> %s)", rsc->id,
+			 current->details->uname,
+			 next->details->uname);
+		stop = stop_action(rsc, current, FALSE);
+		start = start_action(rsc, next, FALSE);
+		
+	} else {
+		if(rsc->state == rsc_state_failed) {
+			crm_info("Recover resource %s\t(%s)",
+				 rsc->id, next->details->uname);
+			stop = stop_action(rsc, current, FALSE);
+			start = start_action(rsc, next, FALSE);
+/* 			/\* make the restart required *\/ */
+/* 			order_stop_start(rsc, rsc, pe_ordering_manditory); */
+			
+		} else if(rsc->state == rsc_state_starting) {
+			start = start_action(rsc, next, TRUE);
+			if(start->runnable) {
+				/* wait for StartRsc() to be called */
+				rsc->role = RSC_ROLE_STOPPED;
+			} else {
+				/* wait for StopRsc() to be called */
+				rsc->next_role = RSC_ROLE_STOPPED;
+			}
+			
+		} else {
+			crm_info("Leave resource %s\t(%s)",
+				 rsc->id, next->details->uname);
+			stop = stop_action(rsc, current, TRUE);
+			start = start_action(rsc, next, TRUE);
+			stop->optional = start->optional;
+			if(start->runnable == FALSE) {
+				rsc->next_role = RSC_ROLE_STOPPED;
+			}
+			
+		}
+	}
+}
+
+
+gboolean
+StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+{
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
+
+	crm_debug("Executing: %s", rsc->id);
+	
+	slist_iter(
+		current, node_t, native_data->running_on, lpc,
+		crm_info("Stop  resource %s\t(%s)",
+			 rsc->id, current->details->uname);
+		stop_action(rsc, current, FALSE);
+		);
+	return TRUE;
+}
+
+gboolean
+StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+{
+	action_t *start = NULL;
+	
+	crm_debug("Executing: %s", rsc->id);
+	start = start_action(rsc, next, TRUE);
+	if(start->runnable) {
+		crm_info("Start resource %s\t(%s)",
+			 rsc->id, next->details->uname);
+		start->optional = FALSE;
+	}		
+	return TRUE;
+}
+
+gboolean
+PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+{
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
+	crm_debug("Executing: %s", rsc->id);
+
+	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_MASTER);
+	crm_info("Promote resource %s\t(%s)", rsc->id, next->details->uname);
+	promote_action(rsc, next, FALSE);
+	return TRUE;
+}
+
+gboolean
+DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+{
+	native_variant_data_t *native_data = NULL;
+	get_native_variant_data(native_data, rsc);
+	crm_debug("Executing: %s", rsc->id);
+
+	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_SLAVE);
+	slist_iter(
+		current, node_t, native_data->running_on, lpc,
+		crm_info("Demote resource %s\t(%s)",
+			 rsc->id, current->details->uname);
+		demote_action(rsc, current, FALSE);
+		);
+	return TRUE;
+}
+
+gboolean
+RoleError(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+{
+	crm_debug("Executing: %s", rsc->id);
+	CRM_DEV_ASSERT(FALSE);
+	return FALSE;
+}
+
+gboolean
+NullOp(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+{
+	crm_debug("Executing: %s", rsc->id);
+	return FALSE;
 }
 

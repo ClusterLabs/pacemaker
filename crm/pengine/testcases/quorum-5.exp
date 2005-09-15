@@ -17,6 +17,9 @@
        <trigger>
          <rsc_op id="3" rsc_id="group1:child_DoFencing_2" operation="start" operation_key="group1:child_DoFencing_2_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="5" rsc_id="group1" operation="start" operation_key="group1_start_0" allow_fail="false"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="2">

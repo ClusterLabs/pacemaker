@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.24 2005/09/01 12:25:18 andrew Exp $ */
+/* $Id: complex.h,v 1.25 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,14 +29,16 @@
 
 #define PE_OBJ_T_NATIVE		"native"
 #define PE_OBJ_T_GROUP		"group"
-#define PE_OBJ_T_INCARNATION	"incarnation"
+#define PE_OBJ_T_INCARNATION	"clone"
+#define PE_OBJ_T_MASTER		"master"
 
 enum pe_obj_types 
 {
+	pe_unknown = -1,
 	pe_native = 0,
 	pe_group = 1,
 	pe_clone = 2,
-	pe_unknown = -1
+	pe_master = 3
 };
 
 extern int get_resource_type(const char *name);
@@ -172,6 +174,12 @@ extern void clone_create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data,pe_working_set_t *data_set);
 
+extern void master_unpack(resource_t *rsc, pe_working_set_t *data_set);
+extern void master_create_actions(resource_t *rsc, pe_working_set_t *data_set);
+extern void master_internal_constraints(
+	resource_t *rsc, pe_working_set_t *data_set);
+
+
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_object_functions_t resource_class_functions[];
 extern gboolean common_unpack(crm_data_t *xml_obj, resource_t **rsc,
@@ -199,5 +207,4 @@ extern void unpack_instance_attributes(
 extern const char *get_rsc_param(resource_t *rsc, const char *prop);
 extern void add_rsc_param(resource_t *rsc, const char *name, const char *value);
 extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
-extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 #endif

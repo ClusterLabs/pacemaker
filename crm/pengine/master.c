@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.1 2005/09/12 11:04:22 andrew Exp $ */
+/* $Id: master.c,v 1.2 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -189,12 +189,39 @@ master_update_pseudo_status(
 
 }
 
+#define apply_master_location(list)					\
+	slist_iter(							\
+		cons, rsc_to_node_t, list, lpc2,			\
+		cons_node = NULL;					\
+		if(cons->role_filter == RSC_ROLE_MASTER) {		\
+			crm_debug("Applying %s to %s",			\
+				  cons->id, child_rsc->id);		\
+			cons_node = pe_find_node_id(			\
+				cons->node_list_rh, chosen->details->id); \
+		}							\
+		if(cons_node != NULL) {				\
+			int new_priority = merge_weights(		\
+				child_rsc->priority, cons_node->weight); \
+			crm_debug("\t%s: %d->%d", child_rsc->id,	\
+				  child_rsc->priority, new_priority);	\
+			child_rsc->priority = new_priority;		\
+		}							\
+		);
+
+struct masters_s 
+{
+		node_t *node;
+		int num_masters;
+};
+
 void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int len = 0;
 	node_t *chosen = NULL;
 	char *attr_name = NULL;
 	const char *attr_value = NULL;
+
+	node_t *cons_node = NULL;
 	
 	action_t *action = NULL;
 	action_t *action_complete = NULL;
@@ -211,6 +238,12 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	int max_nodes = 0;
 	int master_max = crm_atoi(master_max_s, "1");
 	int master_node_max = crm_atoi(master_node_max_s, "1");
+
+	struct masters_s *master_hash_obj = NULL;
+	GHashTable *master_hash = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+
 	
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
@@ -228,7 +261,6 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	/*
 	 * assign priority
 	 */
-
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
@@ -254,27 +286,28 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				attr_value = g_hash_table_lookup(
 					chosen->details->attrs, attr_name);
 
-				crm_err("%s=%s for %s", attr_name,
-					crm_str(attr_value),
-					chosen->details->uname);
+				crm_info("%s=%s for %s", attr_name,
+					 crm_str(attr_value),
+					 chosen->details->uname);
 				
 				if(attr_value != NULL) {
 					child_rsc->priority = char2score(
 						attr_value);
 				}
 				crm_free(attr_name);
+				apply_master_location(child_rsc->rsc_location);
+				apply_master_location(rsc->rsc_location);
 				break;
+
 			case RSC_ROLE_SLAVE:
-				child_rsc->priority = -1;
-				break;
 			case RSC_ROLE_STOPPED:
-				child_rsc->priority = -2;
+				child_rsc->priority = -INFINITY;
 				break;
 			default:
 				CRM_DEV_ASSERT(FALSE/* unhandled */);
 		}
 		);
-
+	
 	/* sort based on the new "promote" priority */
 	clone_data->child_list = g_list_sort(
 		clone_data->child_list, sort_rsc_priority);
@@ -284,14 +317,38 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		switch(child_rsc->next_role) {
 			case RSC_ROLE_STARTED:
-				if(child_rsc->priority > 0 && master_max > lpc){
+
+				master_hash_obj = g_hash_table_lookup(
+					master_hash, chosen->details->id);
+				if(master_hash_obj == NULL) {
+					crm_malloc0(master_hash_obj,
+						    sizeof(struct masters_s));
+					master_hash_obj->node = chosen;
+					g_hash_table_insert(
+						master_hash,
+						crm_strdup(chosen->details->id),
+						master_hash_obj);
+				}
+
+				if(master_hash_obj->num_masters >= master_node_max) {
+					crm_info("Demoting %s (node master max)",
+						 child_rsc->id);
+					child_rsc->next_role = RSC_ROLE_SLAVE;
+
+				} else if(child_rsc->priority < 0) {
+					crm_info("Demoting %s (priority)",
+						 child_rsc->id);
+					child_rsc->next_role = RSC_ROLE_SLAVE;
+					
+				} else if(master_max >= promoted) {
+					crm_info("Demoting %s (masters max)",
+						 child_rsc->id);
+					child_rsc->next_role = RSC_ROLE_SLAVE;
+
+				} else {
 					crm_info("Promoting %s", child_rsc->id);
 					child_rsc->next_role = RSC_ROLE_MASTER;
 					promoted++;
-					
-				} else {
-					crm_info("Demoting %s", child_rsc->id);
-					child_rsc->next_role = RSC_ROLE_SLAVE;
 				}
 				break;
 				
@@ -315,7 +372,8 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		}
 		);
 	crm_info("Promoted %d (of %d) slaves to master", promoted, master_max);
-	
+	g_hash_table_destroy(master_hash);
+
 	/* create actions as normal */
 	clone_create_actions(rsc, data_set);
 

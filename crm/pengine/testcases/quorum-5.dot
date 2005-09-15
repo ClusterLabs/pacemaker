@@ -14,4 +14,6 @@ digraph "g" {
 "group1:child_DoFencing_2_start_0" -> "group1:child_DoFencing_2_monitor_5000" [ style = bold]
 "group1_stopped_0" -> "group1_start_0" [ style = dashed]
 "group1:child_DoFencing_2_start_0" -> "group1_running_0" [ style = bold]
+"group1_start_0" -> "group1_running_0" [ style = bold]
+"group1_stop_0" -> "group1_stopped_0" [ style = dashed]
 }

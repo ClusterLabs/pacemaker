@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<!-- initial -->
+<cib>
+  <configuration>
+    <!-- pre-comment -->
+    <crm_config>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+      <!-- post-comment -->
+    </crm_config>
+    <nodes>
+      <node id="node2" uname="node2" type="member"/>
+      <!-- embedded-comment -->
+      <node id="node1" uname="node1" type="member"/>
+    </nodes>
+    <resources>
+      <primitive id="rsc1" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="1.0"/>
+          </attributes>
+        </instance_attributes>
+      </primitive>
+      <primitive id="rsc2" class="heartbeat" type="apache">
+        <instance_attributes>
+          <attributes>
+            <nvpair name="priority" value="1.0"/>
+          </attributes>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="run_rsc1" rsc="rsc1">
+	<rule id="cannot1" score="-INFINITY" boolean_op="or"><!-- no spaces --><expression id="exp1" attribute="#uname" operation="eq" value="node2"/>
+	</rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="node2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+  </status>
+</cib>

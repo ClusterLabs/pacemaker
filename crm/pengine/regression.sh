@@ -21,7 +21,7 @@
 
 create_mode="true"
 echo Generating test outputs for these tests...
-#do_test bad7
+#do_test master-1 "Stopped -> Promote"
 
 echo ""
 
@@ -29,18 +29,6 @@ echo Done.
 echo ""
 echo Performing the following tests...
 create_mode="false"
-
-do_test 594 "Bugzilla 594"
-do_test 662 "Bugzilla 662"
-do_test 696 "Bugzilla 696"
-do_test 726 "Bugzilla 726"
-do_test 735 "Bugzilla 735"
-do_test 764 "Bugzilla 764"
-do_test 797 "Bugzilla 797"
-do_test 829 "Bugzilla 829"
-
-echo ""
-do_test date-1 "Dates"
 
 echo ""
 do_test simple1 "Offline     "
@@ -55,6 +43,13 @@ do_test simple7 "Shutdown    "
 do_test simple11 "Priority (ne)"
 do_test simple12 "Priority (eq)"
 do_test simple8 "Stickiness"
+
+echo ""
+do_test date-1 "Dates"
+do_test comments "Comments"
+do_test master-0 "Stopped -> Slave"
+do_test master-1 "Stopped -> Promote"
+do_test master-2 "Stopped -> Promote : notify"
 
 echo ""
 do_test rsc_dep1 "Must not     "
@@ -172,6 +167,17 @@ do_test notify-1 "Notify simple"
 do_test notify-2 "Notify simple, confirm"
 do_test notify-3 "Notify move, confirm"
 #do_test notify-2 "Notify - 764"
+
+echo ""
+
+do_test 594 "Bugzilla 594"
+do_test 662 "Bugzilla 662"
+do_test 696 "Bugzilla 696"
+do_test 726 "Bugzilla 726"
+do_test 735 "Bugzilla 735"
+do_test 764 "Bugzilla 764"
+do_test 797 "Bugzilla 797"
+do_test 829 "Bugzilla 829"
 
 
 echo ""

@@ -38,16 +38,16 @@ function do_test {
     dot_png=$io_dir/${base}.png
 
     if [ ! -f $input ]; then
-	echo "Test $name	($base)...	Error ($input)";
+	echo "Test $name	($base)...	Error (PE : input)";
 	return;
     fi
 
     if [ "$create_mode" != "true" -a ! -f $expected ]; then
-	echo "Test $name	($base)...	Error ($expected)";
+	echo "Test $name	($base)...	Error (PE : expected)";
 #	return;
     fi
 
-    ./ptest -V -X $input -D $dot_output > $output
+    ./ptest -VV -X $input -D $dot_output > $output
 
     if [ -s core ]; then
 	echo "Test $name	($base)...	Moved core to core.${base}";
@@ -57,19 +57,19 @@ function do_test {
     fi
 
     if [ ! -s $output ]; then
-	echo "Test $name	($base)...	Error ($output)";
+	echo "Test $name	($base)...	Error (PE : raw output)";
 	rm $output
 	return;
     fi
 
     if [ ! -s $dot_output ]; then
-	echo "Test $name	($base)...	Error ($output)";
+	echo "Test $name	($base)...	Error (PE : dot output)";
 	rm $output
 	return;
     fi
 
     if [ ! -s $output ]; then
-	echo "Test $name	($base)...	Error (fixed $output)";
+	echo "Test $name	($base)...	Error (PE : fixed output)";
 	rm $output
 	return;
     fi

@@ -2,13 +2,6 @@ digraph "g" {
 	size = "30,30"
 "DoFencing:child_DoFencing:0_start_0" [ tooltip="hadev2" style=bold color="green" fontcolor="black" ]
 "DoFencing:child_DoFencing:0_monitor_5000" [ tooltip="hadev2" style=bold color="green" fontcolor="black" ]
-"DoFencing:child_DoFencing:1_monitor_5000" [ font_color=purple style=filled fillcolor=red ]
-"DoFencing:child_DoFencing:2_monitor_5000" [ font_color=purple style=filled fillcolor=red ]
-"DoFencing:child_DoFencing:3_monitor_5000" [ font_color=purple style=filled fillcolor=red ]
-"DoFencing:child_DoFencing:4_monitor_5000" [ font_color=purple style=filled fillcolor=red ]
-"DoFencing:child_DoFencing:5_monitor_5000" [ font_color=purple style=filled fillcolor=red ]
-"DoFencing:child_DoFencing:6_monitor_5000" [ font_color=purple style=filled fillcolor=red ]
-"DoFencing:child_DoFencing:7_monitor_5000" [ font_color=purple style=filled fillcolor=red ]
 "DoFencing_start_0" [ tooltip="" style=bold color="green" fontcolor="orange" ]
 "DoFencing_running_0" [ tooltip="" style=bold color="green" fontcolor="orange" ]
 "DoFencing_stop_0" [ style="dashed" color="blue" fontcolor="orange" ]
@@ -17,4 +10,6 @@ digraph "g" {
 "DoFencing:child_DoFencing:0_start_0" -> "DoFencing:child_DoFencing:0_monitor_5000" [ style = bold]
 "DoFencing_stopped_0" -> "DoFencing_start_0" [ style = dashed]
 "DoFencing:child_DoFencing:0_start_0" -> "DoFencing_running_0" [ style = bold]
+"DoFencing_start_0" -> "DoFencing_running_0" [ style = bold]
+"DoFencing_stop_0" -> "DoFencing_stopped_0" [ style = dashed]
 }

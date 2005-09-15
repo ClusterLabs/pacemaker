@@ -37,7 +37,7 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="13" rsc_id="rsc_posic043" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596" allow_fail="false">
+       <rsc_op id="12" rsc_id="rsc_posic043" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596" allow_fail="false">
          <primitive id="rsc_posic043" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
            <nvpair name="is_managed" value="1"/>
@@ -61,7 +61,7 @@
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596" allow_fail="false">
+       <rsc_op id="18" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>
@@ -76,7 +76,7 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" operation_key="DoFencing:child_DoFencing:1_monitor_5000" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" allow_fail="false">
+       <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" operation_key="DoFencing:child_DoFencing:1_monitor_5000" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
            <nvpair name="timeout" value="20s"/>

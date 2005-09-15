@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.17 2005/09/01 11:41:20 andrew Exp $ */
+/* $Id: rules.c,v 1.18 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,20 +30,14 @@
 
 #include <crm/common/iso8601.h>
 
-enum expression_type {
-	not_expr,
-	nested_rule,
-	attr_expr,
-	loc_expr,
-	time_expr
-};
-
-enum expression_type find_expression_type(crm_data_t *expr);
 ha_time_t *parse_xml_duration(ha_time_t *start, crm_data_t *duration_spec);
 
 gboolean test_date_expression(crm_data_t *time_expr, pe_working_set_t *data_set);
 gboolean cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec);
-gboolean test_attr_expression(crm_data_t *expr, GHashTable *hash, pe_working_set_t *data_set);
+gboolean test_attr_expression(
+	crm_data_t *expr, GHashTable *hash, pe_working_set_t *data_set);
+gboolean test_role_expression(
+	crm_data_t *expr, resource_t *rsc, pe_working_set_t *data_set);
 
 gboolean
 test_ruleset(crm_data_t *ruleset, node_t *node, pe_working_set_t *data_set) 
@@ -53,7 +47,7 @@ test_ruleset(crm_data_t *ruleset, node_t *node, pe_working_set_t *data_set)
 		ruleset, rule, XML_TAG_RULE,
 
 		ruleset_default = FALSE;
-		if(test_rule(rule, node, data_set)) {
+		if(test_rule(rule, node, NULL, data_set)) {
 			return TRUE;
 		}
 		);
@@ -62,7 +56,8 @@ test_ruleset(crm_data_t *ruleset, node_t *node, pe_working_set_t *data_set)
 }
 
 gboolean
-test_rule(crm_data_t *rule, node_t *node, pe_working_set_t *data_set) 
+test_rule(crm_data_t *rule, node_t *node, resource_t *rsc,
+	  pe_working_set_t *data_set) 
 {
 	gboolean test = TRUE;
 	gboolean passed = TRUE;
@@ -77,7 +72,7 @@ test_rule(crm_data_t *rule, node_t *node, pe_working_set_t *data_set)
 	crm_debug_2("Testing rule %s", ID(rule));
 	xml_child_iter(
 		rule, expr, NULL,
-		test = test_expression(expr, node, data_set);
+		test = test_expression(expr, node, rsc, data_set);
 		
 		if(test && do_and == FALSE) {
 			crm_debug_3("Expression %s/%s passed",
@@ -96,13 +91,14 @@ test_rule(crm_data_t *rule, node_t *node, pe_working_set_t *data_set)
 }
 
 gboolean
-test_expression(crm_data_t *expr, node_t *node, pe_working_set_t *data_set)
+test_expression(crm_data_t *expr, node_t *node, resource_t *rsc,
+		pe_working_set_t *data_set)
 {
 	gboolean accept = FALSE;
 	
 	switch(find_expression_type(expr)) {
 		case nested_rule:
-			accept = test_rule(expr, node, data_set);
+			accept = test_rule(expr, node, rsc, data_set);
 			break;
 		case attr_expr:
 		case loc_expr:
@@ -117,6 +113,12 @@ test_expression(crm_data_t *expr, node_t *node, pe_working_set_t *data_set)
 
 		case time_expr:
 			accept = test_date_expression(expr, data_set);
+			break;
+
+		case role_expr:
+			if(rsc != NULL) {
+				accept = test_role_expression(expr, rsc, data_set);
+			}
 			break;
 
 		default:
@@ -147,9 +149,56 @@ find_expression_type(crm_data_t *expr)
 		
 	} else if(safe_str_eq(attr, "#uname") || safe_str_eq(attr, "#id")) {
 		return loc_expr;
+
+	} else if(safe_str_eq(attr, "#role")) {
+		return role_expr;
 	} 
 	
 	return attr_expr;
+}
+
+gboolean
+test_role_expression(
+	crm_data_t *expr, resource_t *rsc, pe_working_set_t *data_set)
+{
+	gboolean accept = FALSE;
+	const char *op      = NULL;
+	const char *value   = NULL;
+
+	if(rsc == NULL) {
+		return accept;
+	}
+	
+	value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
+	op    = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
+
+	if(safe_str_eq(op, "defined")) {
+		if(rsc->next_role > RSC_ROLE_STARTED) {
+			accept = TRUE;
+		}
+		
+	} else if(safe_str_eq(op, "not_defined")) {
+		if(rsc->next_role < RSC_ROLE_SLAVE
+			&& rsc->next_role > RSC_ROLE_UNKNOWN) {
+			accept = TRUE;
+		}
+		
+	} else if(safe_str_eq(op, "eq")) {
+		if(text2role(value) == rsc->next_role) {
+			accept = TRUE;
+		}
+		
+	} else if(safe_str_eq(op, "ne")) {
+		/* we will only test "ne" wtih master/slave roles style */
+		if(rsc->next_role < RSC_ROLE_SLAVE
+			&& rsc->next_role > RSC_ROLE_UNKNOWN) {
+			accept = FALSE;
+			
+		} else if(text2role(value) != rsc->next_role) {
+			accept = TRUE;
+		}
+	}	   
+	return accept;
 }
 
 gboolean

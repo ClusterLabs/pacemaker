@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.50 2005/09/06 11:56:44 andrew Exp $ */
+/* $Id: incarnation.c,v 1.51 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,13 +23,14 @@
 #include <pe_utils.h>
 #include <crm/msg_xml.h>
 
-extern void clone_create_notifications(
+void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
 	pe_working_set_t *data_set);
 
 extern gboolean rsc_colocation_new(
 	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh);
+	resource_t *rsc_lh, resource_t *rsc_rh,
+	const char *state_lh, const char *state_rh);
 
 typedef struct clone_variant_data_s
 {
@@ -39,16 +40,14 @@ typedef struct clone_variant_data_s
 		int clone_max_node;
 
 		int active_clones;
-
+		int max_nodes;
+		
 		gboolean interleave;
 		gboolean ordered;
 
 		gboolean notify_confirm;
 		
 		GListPtr child_list; /* resource_t* */
-
-		gboolean child_starting;
-		gboolean child_stopping;
 		
 } clone_variant_data_t;
 
@@ -62,7 +61,7 @@ void child_starting_constraints(
 
 
 #define get_clone_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc->variant == pe_clone);				\
+	CRM_ASSERT(rsc->variant == pe_clone || rsc->variant == pe_master); \
 	data = (clone_variant_data_t *)rsc->variant_opaque;
 
 void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
@@ -98,6 +97,7 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	
 	/* this is a bit of a hack - but simplifies everything else */
 	copy_in_properties(xml_self, xml_obj);
+/* 	set_id(xml_self, "self", -1); */
 	xml_obj_child = find_xml_node(xml_obj, "operations", FALSE);
 	if(xml_obj_child != NULL) {
 		add_node_copy(xml_self, xml_obj_child);
@@ -180,12 +180,7 @@ resource_t *
 clone_find_child(resource_t *rsc, const char *id)
 {
 	clone_variant_data_t *clone_data = NULL;
-	if(rsc->variant == pe_clone) {
-		clone_data = (clone_variant_data_t *)rsc->variant_opaque;
-	} else {
-		pe_err("Resource %s was not a \"" XML_CIB_TAG_INCARNATION "\" variant", rsc->id);
-		return NULL;
-	}
+	get_clone_variant_data(clone_data, rsc);
 	return pe_find_resource(clone_data->child_list, id);
 }
 
@@ -193,13 +188,7 @@ int clone_num_allowed_nodes(resource_t *rsc)
 {
 	int num_nodes = 0;
 	clone_variant_data_t *clone_data = NULL;
-	if(rsc->variant == pe_clone) {
-		clone_data = (clone_variant_data_t *)rsc->variant_opaque;
-	} else {
-		pe_err("Resource %s was not an \"" XML_CIB_TAG_INCARNATION "\" variant",
-			rsc->id);
-		return 0;
-	}
+	get_clone_variant_data(clone_data, rsc);
 
 	/* what *should* we return here? */
 	slist_iter(
@@ -216,64 +205,63 @@ int clone_num_allowed_nodes(resource_t *rsc)
 color_t *
 clone_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-	int lpc = 0, lpc2 = 0, max_nodes = 0;
+	int lpc = 0, lpc2 = 0;
 	resource_t *child_0  = NULL;
 	resource_t *child_lh = NULL;
 	resource_t *child_rh = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	if(clone_data->self->is_managed == FALSE) {
+	if(clone_data->self->provisional == FALSE) {
 		return NULL;
-
-	} else if(clone_data->self->provisional == FALSE) {
-		return NULL;
-
 	}
 
 	child_0 = g_list_nth_data(clone_data->child_list, 0);
 
-	max_nodes = rsc->fns->num_allowed_nodes(rsc);
+	clone_data->max_nodes = rsc->fns->num_allowed_nodes(rsc);
 
 	/* generate up to max_nodes * clone_node_max constraints */
 	lpc = 0;
-	clone_data->active_clones = max_nodes * clone_data->clone_max_node;
+	clone_data->active_clones = clone_data->max_nodes * clone_data->clone_max_node;
 	if(clone_data->active_clones > clone_data->clone_max) {
 		clone_data->active_clones = clone_data->clone_max;
 	}
 	crm_info("Distributing %d (of %d) %s clones over %d nodes",
 		 clone_data->active_clones, clone_data->clone_max,
-		 rsc->id, max_nodes);
+		 rsc->id, clone_data->max_nodes);
 
-	for(; lpc < clone_data->active_clones && lpc < max_nodes; lpc++) {
-		child_lh = g_list_nth_data(clone_data->child_list, lpc);
-		for(lpc2 = lpc + 1; lpc2 < clone_data->active_clones; lpc2++) {
-			child_rh = g_list_nth_data(clone_data->child_list,lpc2);
-
-			if(lpc2 < max_nodes) {
-				crm_debug_2("Clone %d will not run with %d",
-					    lpc, lpc2);
-				rsc_colocation_new(
-					"__clone_internal_must_not__",
-					pecs_must_not, child_lh, child_rh);
-
-			} else if((lpc2 % max_nodes) == lpc) {
-				crm_debug_2("Clone %d can run with %d",
-					    lpc, lpc2);
-				rsc_colocation_new(
-					"__clone_internal_must__",
-					pecs_must, child_lh, child_rh);
+	if(clone_data->self->is_managed) {	
+		for(; lpc < clone_data->active_clones && lpc < clone_data->max_nodes; lpc++) {
+			child_lh = g_list_nth_data(clone_data->child_list, lpc);
+			for(lpc2 = lpc + 1; lpc2 < clone_data->active_clones; lpc2++) {
+				child_rh = g_list_nth_data(clone_data->child_list,lpc2);
+				
+				if(lpc2 < clone_data->max_nodes) {
+					crm_debug_2("Clone %d will not run with %d",
+						    lpc, lpc2);
+					rsc_colocation_new(
+						"__clone_internal_must_not__",
+						pecs_must_not, child_lh, child_rh, NULL, NULL);
+					
+				} else if((lpc2 % clone_data->max_nodes) == lpc) {
+					crm_debug_2("Clone %d can run with %d",
+						    lpc, lpc2);
+					rsc_colocation_new(
+						"__clone_internal_must__",
+						pecs_must, child_lh, child_rh, NULL, NULL);
+				}
 			}
+			for(; lpc2 < clone_data->clone_max; lpc2++) {
+				child_rh = g_list_nth_data(clone_data->child_list,lpc2);
+				crm_debug_2("Unrunnable: Clone %d will not run with %d",
+					    lpc2, lpc);
+				rsc_colocation_new("__clone_internal_must_not__",
+						   pecs_must_not, child_lh, child_rh, NULL, NULL);
+			}
+			
 		}
-		for(; lpc2 < clone_data->clone_max; lpc2++) {
-			child_rh = g_list_nth_data(clone_data->child_list,lpc2);
-			crm_debug_2("Unrunnable: Clone %d will not run with %d",
-				    lpc2, lpc);
-			rsc_colocation_new("__clone_internal_must_not__",
-					   pecs_must_not, child_lh, child_rh);
-		}
-		
 	}
+
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		color_t *child_color = NULL;
@@ -289,21 +277,49 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	return NULL;
 }
 
-void clone_update_pseudo_status(resource_t *parent, resource_t *child);
+static void
+clone_update_pseudo_status(
+	resource_t *child, gboolean *stopping, gboolean *starting) 
+{
+	CRM_ASSERT(stopping != NULL);
+	CRM_ASSERT(starting != NULL);
+
+	slist_iter(
+		action, action_t, child->actions, lpc,
+
+		if(*starting && *stopping) {
+			return;
+
+		} else if(action->optional) {
+			continue;
+
+		} else if(safe_str_eq(CRMD_ACTION_STOP, action->task)) {
+			*stopping = TRUE;
+
+		} else if(safe_str_eq(CRMD_ACTION_START, action->task)) {
+			*starting = TRUE;
+		}
+		);
+
+}
 
 void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
+	gboolean child_starting = FALSE;
+	gboolean child_stopping = FALSE;
 	action_t *action = NULL;
 	action_t *action_complete = NULL;
 	resource_t *last_start_rsc = NULL;
 	resource_t *last_stop_rsc = NULL;
 	clone_variant_data_t *clone_data = NULL;
+
 	get_clone_variant_data(clone_data, rsc);
 	
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		child_rsc->fns->create_actions(child_rsc, data_set);
-		clone_update_pseudo_status(rsc, child_rsc);
+		clone_update_pseudo_status(
+			child_rsc, &child_stopping, &child_starting);
 		
 		if(child_rsc->starting) {
 			last_start_rsc = child_rsc;
@@ -314,39 +330,33 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 	/* start */
-	action = start_action(clone_data->self, NULL,
-			  !clone_data->child_starting);
-	action_complete = custom_action(clone_data->self, started_key(rsc),
-			   CRMD_ACTION_STARTED, NULL,
-			   !clone_data->child_starting, data_set);
+	action = start_action(clone_data->self, NULL, !child_starting);
+	action_complete = custom_action(
+		clone_data->self, started_key(rsc),
+		CRMD_ACTION_STARTED, NULL, !child_starting, data_set);
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
 	
-	child_starting_constraints(
-		clone_data, pe_ordering_optional,
-		NULL, last_start_rsc, data_set);
+	child_starting_constraints(clone_data, pe_ordering_optional, 
+				   NULL, last_start_rsc, data_set);
 
-	clone_create_notifications(
-		rsc, action, action_complete, data_set);	
+	clone_create_notifications(rsc, action, action_complete, data_set);	
 
 
 	/* stop */
-	action = stop_action(clone_data->self, NULL,
-			     !clone_data->child_stopping);
-	action_complete = custom_action(clone_data->self, stopped_key(rsc),
-			   CRMD_ACTION_STOPPED, NULL,
-			   !clone_data->child_stopping, data_set);
+	action = stop_action(clone_data->self, NULL, !child_stopping);
+	action_complete = custom_action(
+		clone_data->self, stopped_key(rsc),
+		CRMD_ACTION_STOPPED, NULL, !child_stopping, data_set);
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
 	
-	child_stopping_constraints(
-		clone_data, pe_ordering_optional,
-		NULL, last_stop_rsc, data_set);
+	child_stopping_constraints(clone_data, pe_ordering_optional,
+				   NULL, last_stop_rsc, data_set);
 
-	clone_create_notifications(
-		rsc, action, action_complete, data_set);	
+	clone_create_notifications(rsc, action, action_complete, data_set);	
 }
 
 void
@@ -474,33 +484,21 @@ clone_create_notifications(
 			clone_data->self, NULL, notify_complete,
 			clone_data->self, start_key(clone_data->self), NULL,
 			pe_ordering_optional, data_set);
+
+	} else if(safe_str_eq(action->task, CRMD_ACTION_START)) {
+		/* post_notify_complete before promote */
+		custom_action_order(
+			clone_data->self, NULL, notify_complete,
+			clone_data->self, promote_key(clone_data->self), NULL,
+			pe_ordering_optional, data_set);
+
+	} else if(safe_str_eq(action->task, CRMD_ACTION_DEMOTE)) {
+		/* post_notify_complete before promote */
+		custom_action_order(
+			clone_data->self, NULL, notify_complete,
+			clone_data->self, stop_key(clone_data->self), NULL,
+			pe_ordering_optional, data_set);
 	}
-}
-
-
-void
-clone_update_pseudo_status(resource_t *parent, resource_t *child) 
-{
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, parent);
-
-	if(clone_data->child_stopping
-	   && clone_data->child_starting) {
-		return;
-	}
-	slist_iter(
-		action, action_t, child->actions, lpc,
-
-		if(action->optional) {
-			continue;
-		}
-		if(safe_str_eq(CRMD_ACTION_STOP, action->task)) {
-			clone_data->child_stopping = TRUE;
-		} else if(safe_str_eq(CRMD_ACTION_START, action->task)) {
-			clone_data->child_starting = TRUE;
-		}
-		);
-
 }
 
 void
@@ -602,6 +600,18 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
+	/* global stop before stopped */
+	custom_action_order(
+		clone_data->self, stop_key(clone_data->self), NULL,
+		clone_data->self, stopped_key(clone_data->self), NULL,
+		pe_ordering_optional, data_set);
+
+	/* global start before started */
+	custom_action_order(
+		clone_data->self, start_key(clone_data->self), NULL,
+		clone_data->self, started_key(clone_data->self), NULL,
+		pe_ordering_optional, data_set);
+	
 	/* global stopped before start */
 	custom_action_order(
 		clone_data->self, stopped_key(clone_data->self), NULL,
@@ -1191,7 +1201,7 @@ clone_agent_constraints(resource_t *rsc)
 rsc_state_t
 clone_resource_state(resource_t *rsc)
 {
-	return rsc_state_unknown;
+	return rsc_unknown;
 }
 
 void

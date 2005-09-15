@@ -17,6 +17,9 @@
       <trigger>
          <rsc_op id="3" rsc_id="rsc1:child_rsc3" operation="start" operation_key="rsc1:child_rsc3_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
       </trigger>
+       <trigger>
+         <pseudo_event id="4" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" allow_fail="false"/>
+       </trigger>
     </inputs>
   </synapse>
    <synapse id="2">

@@ -58,9 +58,9 @@ halib_PROGRAMS	= ptest pengine
 
 ## SOURCES
 
-libpengine_la_SOURCES	= color.c unpack.c graph.c			\
-			native.c group.c incarnation.c complex.c	\
-			rules.c pengine.c stages.c utils.c
+libpengine_la_SOURCES	= color.c unpack.c graph.c rules.c pengine.c \
+			utils.c complex.c native.c stages.c \
+			group.c incarnation.c master.c
 
 libpengine_la_LDFLAGS	= -version-info 0:0:0
 

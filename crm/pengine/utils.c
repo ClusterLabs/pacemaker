@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.105 2005/09/07 13:00:01 andrew Exp $ */
+/* $Id: utils.c,v 1.106 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,6 +57,8 @@ invert_constraint(rsc_colocation_t *constraint)
 	/* swap the direction */
 	inverted_con->rsc_lh = constraint->rsc_rh;
 	inverted_con->rsc_rh = constraint->rsc_lh;
+	inverted_con->state_lh = constraint->state_rh;
+	inverted_con->state_rh = constraint->state_lh;
 
 	crm_action_debug_3(
 		print_rsc_colocation("Inverted constraint", inverted_con, FALSE));
@@ -87,7 +89,7 @@ node_list_eq(GListPtr list1, GListPtr list2, gboolean filter)
 		}
 
 		other_node = (node_t*)
-			pe_find_node(rhs, node->details->uname);
+			pe_find_node_id(rhs, node->details->id);
 
 		if(other_node == NULL || other_node->weight < 0) {
 			return FALSE;
@@ -105,7 +107,7 @@ node_list_eq(GListPtr list1, GListPtr list2, gboolean filter)
 		}
 
 		other_node = (node_t*)
-			pe_find_node(rhs, node->details->uname);
+			pe_find_node_id(rhs, node->details->id);
 
 		if(other_node == NULL || other_node->weight < 0) {
 			return FALSE;
@@ -125,12 +127,12 @@ node_list_and(GListPtr list1, GListPtr list2, gboolean filter)
 
 	for(lpc = 0; lpc < g_list_length(list1); lpc++) {
 		node_t *node = (node_t*)g_list_nth_data(list1, lpc);
-		node_t *other_node = pe_find_node(list2, node->details->uname);
+		node_t *other_node = pe_find_node_id(list2, node->details->id);
 		node_t *new_node = NULL;
 
 		if(other_node != NULL) {
 			new_node = node_copy(node);
-			crm_debug_4("Copied node %s: %d",
+			crm_debug_3("Copied node %s: %d",
 				 new_node->details->uname, new_node->weight);
 		}
 		
@@ -138,7 +140,7 @@ node_list_and(GListPtr list1, GListPtr list2, gboolean filter)
 			new_node->weight = merge_weights(
 				new_node->weight, other_node->weight);
 
-			crm_debug_4("New node weight for %s: %d",
+			crm_debug_3("New node weight for %s: %d",
 				 new_node->details->uname, new_node->weight);
 			
 			if(filter && new_node->weight < 0) {
@@ -164,7 +166,7 @@ node_list_minus(GListPtr list1, GListPtr list2, gboolean filter)
 
 	slist_iter(
 		node, node_t, list1, lpc,
-		node_t *other_node = pe_find_node(list2, node->details->uname);
+		node_t *other_node = pe_find_node_id(list2, node->details->id);
 		node_t *new_node = NULL;
 		
 		if(node == NULL || other_node != NULL
@@ -191,7 +193,7 @@ node_list_xor(GListPtr list1, GListPtr list2, gboolean filter)
 		node, node_t, list1, lpc,
 		node_t *new_node = NULL;
 		node_t *other_node = (node_t*)
-			pe_find_node(list2, node->details->uname);
+			pe_find_node_id(list2, node->details->id);
 
 		if(node == NULL || other_node != NULL
 		   || (filter && node->weight < 0)) {
@@ -206,7 +208,7 @@ node_list_xor(GListPtr list1, GListPtr list2, gboolean filter)
 		node, node_t, list2, lpc,
 		node_t *new_node = NULL;
 		node_t *other_node = (node_t*)
-			pe_find_node(list1, node->details->uname);
+			pe_find_node_id(list1, node->details->id);
 
 		if(node == NULL || other_node != NULL
 		   || (filter && node->weight < 0)) {
@@ -236,8 +238,8 @@ node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
 			continue;
 		}
 
-		other_node = (node_t*)pe_find_node(
-			result, node->details->uname);
+		other_node = (node_t*)pe_find_node_id(
+			result, node->details->id);
 
 		if(other_node != NULL) {
 			other_node->weight = merge_weights(
@@ -421,22 +423,6 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 
 
 node_t *
-pe_find_node(GListPtr nodes, const char *uname)
-{
-	unsigned lpc = 0;
-	node_t *node = NULL;
-  
-	for(lpc = 0; lpc < g_list_length(nodes); lpc++) {
-		node = g_list_nth_data(nodes, lpc);
-		if(node != NULL && safe_str_eq(node->details->uname, uname)) {
-			return node;
-		}
-	}
-	/* error */
-	return NULL;
-}
-
-node_t *
 pe_find_node_id(GListPtr nodes, const char *id)
 {
 	unsigned lpc = 0;
@@ -499,6 +485,57 @@ gint sort_rsc_priority(gconstpointer a, gconstpointer b)
 	if(resource1->priority < resource2->priority) {
 		return 1;
 	}
+
+	return 0;
+}
+
+gint sort_rsc_node_weight(gconstpointer a, gconstpointer b)
+{
+	const resource_t *resource1 = (const resource_t*)a;
+	const resource_t *resource2 = (const resource_t*)b;
+
+	const color_t *color1 = NULL;
+	const color_t *color2 = NULL;
+
+	const node_t *node1 = NULL;
+	const node_t *node2 = NULL;
+
+	CRM_ASSERT(resource1 != NULL);
+	CRM_ASSERT(resource2 != NULL);
+
+	color1 = resource1->color;
+	color2 = resource2->color;
+	
+	CRM_DEV_ASSERT(color1 != NULL);
+	CRM_DEV_ASSERT(color2 != NULL);
+	node1 = color1->details->chosen_node;
+	node2 = color2->details->chosen_node;
+
+	if(node1 == NULL && node2 == NULL) { return 0; }
+	if(node1 == NULL) { return 1; }
+	if(node2 == NULL) { return -1; }
+
+	CRM_ASSERT(node1 != NULL);
+	CRM_ASSERT(node2 != NULL);
+	if(node1->weight > node2->weight) {
+		crm_debug("%s (%d) > %s (%d) : %s vs. %s",
+			  node1->details->id, node1->weight,
+			  node2->details->id, node2->weight,
+			  resource1->id, resource2->id);
+		return -1;
+	}
+	
+	if(node1->weight < node2->weight) {
+		crm_debug("%s (%d) < %s (%d) : %s vs. %s",
+			  node1->details->id, node1->weight,
+			  node2->details->id, node2->weight,
+			  resource1->id, resource2->id);
+		return 1;
+	}
+	crm_debug("%s (%d) == %s (%d) : %s vs. %s",
+		  node1->details->id, node1->weight,
+		  node2->details->id, node2->weight,
+		  resource1->id, resource2->id);
 
 	return 0;
 }
@@ -584,30 +621,34 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	}
 
 	if(node1_weight > node2_weight) {
-		crm_debug_4("%s (%d) > %s (%d) : weight",
+		crm_debug("%s (%d) > %s (%d) : weight",
 			  node1->details->id, node1_weight,
 			  node2->details->id, node2_weight);
 		return -1;
 	}
 	
 	if(node1_weight < node2_weight) {
-		crm_debug_4("%s (%d) < %s (%d) : weight",
+		crm_debug("%s (%d) < %s (%d) : weight",
 			  node1->details->id, node1_weight,
 			  node2->details->id, node2_weight);
 		return 1;
 	}
 
+	crm_debug("%s (%d) == %s (%d) : weight",
+		  node1->details->id, node1_weight,
+		  node2->details->id, node2_weight);
+	
 	/* now try to balance resources across the cluster */
 	if(node1->details->num_resources
 	   < node2->details->num_resources) {
-		crm_debug_4("%s (%d) < %s (%d) : resources",
+		crm_debug("%s (%d) < %s (%d) : resources",
 			  node1->details->id, node1->details->num_resources,
 			  node2->details->id, node2->details->num_resources);
 		return -1;
 		
 	} else if(node1->details->num_resources
 		  > node2->details->num_resources) {
-		crm_debug_4("%s (%d) > %s (%d) : resources",
+		crm_debug("%s (%d) > %s (%d) : resources",
 			  node1->details->id, node1->details->num_resources,
 			  node2->details->id, node2->details->num_resources);
 		return 1;
@@ -705,14 +746,19 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 				action->op_entry, XML_TAG_ATTR_SETS,
 				action->node, action->extra, NULL,0, data_set);
 		}
-		
+
 		if(action->node == NULL) {
 			action->runnable = FALSE;
 
+		} else if(rsc->is_managed == FALSE) {
+			pe_warn("Action %d %s is for %s (unmanaged)",
+				 action->id, task, rsc->id);
+			action->optional = TRUE;
+/*   			action->runnable = FALSE; */
+
 		} else if(action->node->details->online == FALSE) {
 			pe_warn("Action %d %s for %s on %s is unrunnable",
-				 action->id,
-				 task, rsc?rsc->id:"<NULL>",
+				 action->id, task, rsc->id,
 				 action->node?action->node->details->uname:"<none>");
 			action->runnable = FALSE;
 
@@ -820,28 +866,45 @@ unpack_operation(
 	if(xml_obj != NULL) {
 		value = crm_element_value(xml_obj, "on_fail");
 	}
+#if CRM_DEPRECATED_SINCE_2_0_2
 	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
 		value = g_hash_table_lookup(
 			action->rsc->parameters, "on_stopfail");
+		if(value != NULL) {
+			crm_err("The \"on_stopfail\" attribute in %s is deprecated",
+				action->rsc->id);
+			crm_err("Please use specify the \"on_fail\" attribute on the"
+				" \"stop\" operation instead");
+			
+		}
 	}
-	
+#endif
 	if(value == NULL) {
-
-	} else if(safe_str_eq(value, "fence")) {
-		action->on_fail = action_fail_fence;
-		value = "node fencing";
-	} else if(safe_str_eq(value, "stop")) {
-		action->on_fail = action_fail_stop;
-		value = "resource stop";
-	} else if(safe_str_eq(value, "nothing")) {
-		action->on_fail = action_fail_nothing;
 
 	} else if(safe_str_eq(value, "block")) {
 		action->on_fail = action_fail_block;
 
+	} else if(safe_str_eq(value, "fence")) {
+		action->on_fail = action_fail_fence;
+		value = "node fencing";
+
 	} else if(safe_str_eq(value, "ignore")) {
-		action->on_fail = action_fail_nothing;
-		value = "nothing";
+		action->on_fail = action_fail_ignore;
+		value = "ignore";
+
+	} else if(safe_str_eq(value, "migrate")) {
+		action->on_fail = action_fail_migrate;
+		value = "force migration";
+		
+	} else if(safe_str_eq(value, "stop")) {
+		action->fail_role = RSC_ROLE_STOPPED;
+		value = "stop resource";
+		
+	} else if(safe_str_eq(value, "restart")
+		|| safe_str_eq(value, "nothing")) {
+		action->on_fail = action_fail_recover;
+		value = "restart (and possibly migrate)";
+		
 	} else {
 		pe_err("Resource %s: Unknown failure type (%s)",
 		       action->rsc->id, value);
@@ -860,12 +923,30 @@ unpack_operation(
 		}
 		
 	} else if(value == NULL) {
-		action->on_fail = action_fail_stop;		
-		value = "resource stop (default)";
+		action->on_fail = action_fail_recover;		
+		value = "restart (and possibly migrate) (default)";
 	}
 	
-	crm_debug_2("\t%s failure results in: %s", action->task, value);
+	crm_debug_2("\t%s failure handling: %s", action->task, value);
 
+	value = NULL;
+	if(xml_obj != NULL) {
+		value = crm_element_value(xml_obj, "role_after_failure");
+	}
+	if(value != NULL && action->fail_role == RSC_ROLE_UNKNOWN) {
+		action->fail_role = text2role(value);
+	}
+	/* defaults */
+	if(action->fail_role == RSC_ROLE_UNKNOWN) {
+		if(safe_str_eq(action->task, CRMD_ACTION_PROMOTE)) {
+			action->fail_role = RSC_ROLE_SLAVE;
+		} else {
+			action->fail_role = RSC_ROLE_STARTED;
+		}
+	}
+	crm_debug_2("\t%s failure results in: %s",
+		    action->task, role2text(action->fail_role));
+	
 	if(xml_obj == NULL) {
 		return;
 	}
@@ -983,6 +1064,14 @@ text2task(const char *task)
 		return action_notify;
 	} else if(safe_str_eq(task, CRMD_ACTION_NOTIFIED)) {
 		return action_notified;
+	} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+		return action_promote;
+	} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+		return action_demote;
+	} else if(safe_str_eq(task, CRMD_ACTION_PROMOTED)) {
+		return action_promoted;
+	} else if(safe_str_eq(task, CRMD_ACTION_DEMOTED)) {
+		return action_demoted;
 	} 
 	pe_err("Unsupported action: %s", task);
 	return no_action;
@@ -1025,9 +1114,59 @@ task2text(enum action_tasks task)
 		case action_notified:
 			result = CRMD_ACTION_NOTIFIED;
 			break;
+		case action_promote:
+			result = CRMD_ACTION_PROMOTE;
+			break;
+		case action_promoted:
+			result = CRMD_ACTION_PROMOTED;
+			break;
+		case action_demote:
+			result = CRMD_ACTION_DEMOTE;
+			break;
+		case action_demoted:
+			result = CRMD_ACTION_DEMOTED;
+			break;
 	}
 	
 	return result;
+}
+
+const char *
+role2text(enum rsc_role_e role) 
+{
+	CRM_DEV_ASSERT(role >= RSC_ROLE_UNKNOWN);
+	CRM_DEV_ASSERT(role < RSC_ROLE_MAX);
+	switch(role) {
+		case RSC_ROLE_UNKNOWN:
+			return RSC_ROLE_UNKNOWN_S;
+		case RSC_ROLE_STOPPED:
+			return RSC_ROLE_STOPPED_S;
+		case RSC_ROLE_STARTED:
+			return RSC_ROLE_STARTED_S;
+		case RSC_ROLE_SLAVE:
+			return RSC_ROLE_SLAVE_S;
+		case RSC_ROLE_MASTER:
+			return RSC_ROLE_MASTER_S;
+	}
+	return RSC_ROLE_UNKNOWN_S;
+}
+
+enum rsc_role_e
+text2role(const char *role) 
+{
+	if(safe_str_eq(role, RSC_ROLE_STOPPED_S)) {
+		return RSC_ROLE_STOPPED;
+	} else if(safe_str_eq(role, RSC_ROLE_STARTED_S)) {
+		return RSC_ROLE_STARTED;
+	} else if(safe_str_eq(role, RSC_ROLE_SLAVE_S)) {
+		return RSC_ROLE_SLAVE;
+	} else if(safe_str_eq(role, RSC_ROLE_MASTER_S)) {
+		return RSC_ROLE_MASTER;
+	} else if(safe_str_eq(role, RSC_ROLE_UNKNOWN_S)) {
+		return RSC_ROLE_UNKNOWN;
+	}
+	crm_err("Unknown role: %s", role);
+	return RSC_ROLE_UNKNOWN;
 }
 
 const char *
@@ -1035,25 +1174,25 @@ rsc_state2text(rsc_state_t state)
 {
 	const char *result = "<unknown>";
 	switch(state) {
-		case rsc_state_active:
+		case rsc_active:
 			result = "active";
 			break;
-		case rsc_state_restart:
+		case rsc_restart:
 			result = "restart";
 			break;
-		case rsc_state_move:
+		case rsc_move:
 			result = "move";
 			break;
-		case rsc_state_starting:
+		case rsc_starting:
 			result = "starting";
 			break;
-		case rsc_state_stopping:
+		case rsc_stopping:
 			result = "stopping";
 			break;
-		case rsc_state_stopped:
+		case rsc_stopped:
 			result = "stopped";
 			break;
-		case rsc_state_unknown:
+		case rsc_unknown:
 			result = "unknown";
 			break;
 	}
@@ -1160,16 +1299,15 @@ print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 		return;
 	}
 	crm_debug_4("%s%s%s Constraint %s (%p) - %d nodes:",
-	       pre_text==NULL?"":pre_text,
-	       pre_text==NULL?"":": ",
-	       "rsc_to_node",
-		  cons->id, cons,
-		  g_list_length(cons->node_list_rh));
+		    pre_text==NULL?"":pre_text,
+		    pre_text==NULL?"":": ",
+		    "rsc_to_node",
+		    cons->id, cons,
+		    g_list_length(cons->node_list_rh));
 
 	if(details == FALSE) {
-		crm_debug_4("\t%s (score=%d : node placement rule)",
-			  safe_val3(NULL, cons, rsc_lh, id), 
-			  cons->weight);
+		crm_debug_4("\t%s (node placement rule)",
+			  safe_val3(NULL, cons, rsc_lh, id));
 
 		slist_iter(
 			node, node_t, cons->node_list_rh, lpc,
@@ -1213,12 +1351,6 @@ print_resource(const char *pre_text, resource_t *rsc, gboolean details)
 	rsc->fns->dump(rsc, pre_text, details);
 }
 
-
-void
-print_action(const char *pre_text, action_t *action, gboolean details)
-{
-	log_action(LOG_DEBUG_3, pre_text, action, details);
-}
 
 #define util_log(fmt...)  do_crm_log(log_level,  __FILE__, __FUNCTION__, fmt)
 

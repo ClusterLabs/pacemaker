@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.33 2005/09/06 11:56:44 andrew Exp $ */
+/* $Id: color.c,v 1.34 2005/09/15 08:05:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,8 +30,6 @@
 
 #include <pengine.h>
 #include <pe_utils.h>
-
-color_t *no_color = NULL;
 
 color_t *add_color(resource_t *rh_resource, color_t *color);
 
@@ -116,6 +114,7 @@ color_resource(resource_t *rsc, pe_working_set_t *data_set)
 		print_resource("Post-processing", rsc, TRUE));
 
 	/*------ Post-processing */
+#if 1
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 		crm_action_debug_3(
@@ -124,7 +123,7 @@ color_resource(resource_t *rsc, pe_working_set_t *data_set)
 		rsc->fns->rsc_colocation_lh(
 			rsc, constraint->rsc_rh, constraint);
 		);
-	
+#endif
 	crm_action_debug_3(print_resource("Colored", rsc, TRUE));
 	return color;
 }
