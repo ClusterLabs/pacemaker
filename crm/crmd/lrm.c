@@ -390,7 +390,6 @@ build_operation_update(
 	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
 	crm_free(op_id);
 
-	crm_xml_add(xml_rsc, XML_LRM_ATTR_LASTOP, op->op_type);
 	crm_xml_add(xml_op,  XML_LRM_ATTR_TASK,   op->op_type);
 	crm_xml_add(xml_op,  "origin", src);
 	
@@ -420,7 +419,6 @@ build_operation_update(
 				sprintf(fail_state, "%s_failed", op->op_type);
 			}
 			crm_xml_add(xml_op, XML_LRM_ATTR_RSCSTATE, fail_state);
-			crm_xml_add(xml_rsc, XML_LRM_ATTR_RSCSTATE, fail_state);
 			crm_free(fail_state);			
 			break;
 		case LRM_OP_DONE:
@@ -441,7 +439,6 @@ build_operation_update(
 			}	
 
 			crm_xml_add(xml_op, XML_LRM_ATTR_RSCSTATE, state);
-			crm_xml_add(xml_rsc, XML_LRM_ATTR_RSCSTATE, state);
 			break;
 	}
 	
@@ -452,24 +449,20 @@ build_operation_update(
 	/* set these on 'xml_rsc' too to make life easy for the TE */
 	tmp = crm_itoa(op->rc);
 	crm_xml_add(xml_op, XML_LRM_ATTR_RC, tmp);
-	crm_xml_add(xml_rsc, XML_LRM_ATTR_RC, tmp);
 	crm_free(tmp);
 
 	tmp = crm_itoa(op->op_status);
 	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, tmp);
-	crm_xml_add(xml_rsc, XML_LRM_ATTR_OPSTATUS, tmp);
 	crm_free(tmp);
 
 	set_node_tstamp(xml_op);
-	
-#if 0
+#if 1
 	if(safe_str_neq(op->op_type, CRMD_ACTION_STOP)) {
 		/* this will enable us to later determin that the
 		 *   resource's parameters have changed and we should force
 		 *   a restart
 		 * however it will come at the cost of a potentially much
 		 *   larger CIB
-		 * it may also requires MAXDEPTH to be increased
 		 */
 		crm_data_t *args_xml = NULL;
 		args_xml = create_xml_node(xml_op, XML_TAG_PARAMS);
@@ -619,6 +612,28 @@ do_lrm_invoke(long long action,
 		}
 		free_xml(data);
 
+	} else if(safe_str_eq(crm_op, "lrm_delete")) {
+		char rid[64];
+		const char *id_from_msg = cl_get_string(
+			input->msg, XML_LRM_ATTR_RSCID);
+		int rc = HA_OK;
+
+		if(id_from_msg == NULL) {
+			crm_err("No resource to remove");
+			return I_NULL;
+		}
+		
+		strncpy(rid, id_from_msg, 64);
+		rid[63] = 0;
+
+		rc = fsa_lrm_conn->lrm_ops->delete_rsc(fsa_lrm_conn, rid);
+		if(rc != HA_OK) {
+			crm_err("Failed to remove resource %s from local LRM",
+				rid);
+		} else {
+			crm_info("Resource %s removed from local LRM", rid);
+		}
+		
 	} else if(operation != NULL) {
 		char rid[64];
 		lrm_rsc_t *rsc = NULL;
