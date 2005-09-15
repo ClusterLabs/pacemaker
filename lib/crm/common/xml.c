@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.31 2005/09/12 11:00:19 andrew Exp $ */
+/* $Id: xml.c,v 1.32 2005/09/15 07:49:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -202,8 +202,7 @@ find_entity(crm_data_t *parent, const char *node_name, const char *id)
 	crm_validate_data(parent);
 	xml_child_iter(
 		parent, a_child, node_name,
-		if(id == NULL 
-		   || safe_str_eq(id,crm_element_value(a_child,XML_ATTR_ID))){
+		if(id == NULL || safe_str_eq(id, ID(a_child))) {
 			crm_debug_4("returning node (%s).", 
 				  xmlGetNodePath(a_child));
 			return a_child;
