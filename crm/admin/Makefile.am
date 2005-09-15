@@ -66,12 +66,13 @@ noinst_HEADERS		=
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crmadmin_LDFLAGS	= $(XML_LIBS)
-crmadmin_LDADD		= $(COMMONLIBS) 				
+crmadmin_LDADD		= $(COMMONLIBS) \
+			$(top_builddir)/crm/pengine/libpengine.la
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cibadmin_LDFLAGS	= $(XML_LIBS)
-cibadmin_LDADD		= $(COMMONLIBS) 				
+cibadmin_LDADD		= $(COMMONLIBS)
 
 ccm_tool_SOURCES	= ccm_epoche.c
 ccm_tool_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'

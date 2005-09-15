@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.10 2005/09/12 07:05:54 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.11 2005/09/15 08:27:40 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -326,9 +326,16 @@ print_status(crm_data_t *cib)
 	lpc++;
 	
 	slist_iter(node, node_t, data_set.nodes, lpc2,
+		   const char *node_mode = "OFFLINE";
+		   if(node->details->standby) {
+			   node_mode = "standby";
+		   } else if(node->details->online) {
+			   node_mode = "online";
+		   }
+		   
 		   printw_at(lpc, "Node: %s (%s): %s",
 			     node->details->uname, node->details->id,
-			     node->details->online?"online":"OFFLINE");
+			     node_mode);
 		   if(group_by_node) {
 			   slist_iter(rsc, resource_t,
 				      node->details->running_rsc, lpc2,
@@ -364,9 +371,11 @@ print_html_status(crm_data_t *cib, const char *filename)
 	static int updates = 0;
 	pe_working_set_t data_set;
 	node_t *dc = NULL;
+	char *filename_tmp = crm_concat(filename, "tmp", '.');
 
-	FILE *stream = fopen(filename, "w");
+	FILE *stream = fopen(filename_tmp, "w");
 	if(stream == NULL) {
+		crm_free(filename_tmp);
 		return -1;
 	}	
 	updates++;
@@ -479,6 +488,10 @@ print_html_status(crm_data_t *cib, const char *filename)
 	fflush(stream);
 	fclose(stream);
 
+	if(rename(filename_tmp, filename) != 0) {
+		cl_perror("Unable to rename %s->%s", filename_tmp, filename);
+	}
+	crm_free(filename_tmp);
 	return 0;
 }
 

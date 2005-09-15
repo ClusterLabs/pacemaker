@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.57 2005/09/12 19:32:36 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.58 2005/09/15 08:27:40 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -42,6 +42,8 @@
 #include <crm/common/xml.h>
 #include <crm/common/ctrl.h>
 #include <crm/common/ipc.h>
+#include <crm/pengine/pengine.h>
+#include <crm/pengine/pe_utils.h>
 
 #include <crm/cib.h>
 
@@ -400,7 +402,8 @@ do_work(ll_cluster_t * hb_cluster)
 
 		free_xml(output);
 		the_cib->cmds->signoff(the_cib);
-		exit(rc);		
+		exit(rc);
+		
 	} else if(DO_RESET) {
 		/* tell dest_node to initiate the shutdown proceedure
 		 *
@@ -655,73 +658,40 @@ int
 do_find_resource(const char *rsc, crm_data_t *xml_node)
 {
 	int found = 0;
-	crm_data_t *nodestates = get_object_root(XML_CIB_TAG_STATUS, xml_node);
-	const char *path2[] = {
-		XML_CIB_TAG_LRM,
-		XML_LRM_TAG_RESOURCES
-	};
+	pe_working_set_t data_set;
+	resource_t *the_rsc = NULL;
+	
+	set_working_set_defaults(&data_set);
+	data_set.input = xml_node;
+	stage0(&data_set);
 
-	xml_child_iter(
-		nodestates, a_node, XML_CIB_TAG_STATE,
-		crm_data_t *rscstates = NULL;
+	the_rsc = pe_find_resource(data_set.resources, rsc);
+	if(the_rsc == NULL) {
+		return 0;
+	}
 
-		if(is_node_online(a_node) == FALSE) {
-			crm_debug_3("Skipping offline node: %s",
-				crm_element_value(a_node, XML_ATTR_ID));
-			continue;
-		}
-		
-		rscstates = find_xml_node_nested(a_node, path2, DIMOF(path2));
-		xml_child_iter(
-			rscstates, rsc_state, XML_LRM_TAG_RESOURCE,
-			const char *id = crm_element_value(
-				rsc_state,XML_ATTR_ID);
-			const char *target = crm_element_value(
-				a_node, XML_ATTR_UNAME);
-			const char *last_op = crm_element_value(
-				rsc_state,XML_LRM_ATTR_LASTOP);
-			const char *op_code = crm_element_value(
-				rsc_state,XML_LRM_ATTR_OPSTATUS);
-			
-			crm_debug_3("checking %s:%s for %s", target, id, rsc);
-
-			if(safe_str_neq(rsc, id)){
-				crm_debug_4("no match");
-				continue;
-			}
-			
-			if(safe_str_eq("stop", last_op)) {
-				crm_debug_3("resource %s is stopped on: %s",
-					  rsc, target);
-				
-			} else if(safe_str_eq(op_code, "-1")) {
-				crm_debug_3("resource %s is pending on: %s",
-					  rsc, target);				
-
-			} else if(safe_str_neq(op_code, "0")) {
-				crm_debug_3("resource %s is failed on: %s",
-					  rsc, target);				
-
-			} else {
-				crm_debug_3("resource %s is running on: %s",
-					  rsc, target);				
-				printf("resource %s is running on: %s\n",
-				       rsc, target);
-				if(BE_SILENT) {
-					fprintf(stderr, "%s ", target);
-				}
-				found++;
-			}
-			);
-		if(BE_SILENT) {
-			fprintf(stderr, "\n");
-		}
+	slist_iter(node, node_t, the_rsc->running_on, lpc,
+		   crm_debug_3("resource %s is running on: %s",
+			       rsc, node->details->uname);
+		   printf("resource %s is running on: %s\n",
+			       rsc, node->details->uname);
+		   if(BE_SILENT) {
+			   fprintf(stderr, "%s ", node->details->uname);
+		   }
+		   found++;
 		);
+	
+	if(BE_SILENT) {
+		fprintf(stderr, "\n");
+	}
 	
 	if(found == 0) {
 		printf("resource %s is NOT running\n", rsc);
 	}
 					
+	data_set.input = NULL;
+	cleanup_calculations(&data_set);
+
 	return found;
 }
 
