@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.107 2005/09/15 15:23:54 andrew Exp $ */
+/* $Id: utils.c,v 1.108 2005/09/15 15:56:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -670,7 +670,7 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 	CRM_DEV_ASSERT(task != NULL);
 	if(crm_assert_failed) { return NULL; }
 
-	if(rsc != NULL) {
+	if(foo && rsc != NULL) {
 		possible_matches = find_actions(rsc->actions, key, on_node);
 	}
 	
