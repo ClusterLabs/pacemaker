@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.29 2005/09/12 11:00:19 andrew Exp $ */
+/* $Id: xml.h,v 1.30 2005/09/15 07:59:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,6 +45,8 @@ extern gboolean add_message_xml(
 	HA_Message *msg, const char *field, const crm_data_t *xml);
 extern crm_data_t *get_message_xml(const HA_Message *msg, const char *field);
 extern GHashTable *xml2list(crm_data_t *parent);
+extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
+extern void hash2field(gpointer key, gpointer value, gpointer user_data);
 extern void do_id_check(crm_data_t *xml_obj, GHashTable *id_hash);
 
 /*

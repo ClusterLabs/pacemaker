@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.32 2005/09/15 07:49:39 andrew Exp $ */
+/* $Id: xml.c,v 1.33 2005/09/15 07:59:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1969,6 +1969,35 @@ delete_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *to_delete)
 	return can_delete;
 }
 
+void
+hash2nvpair(gpointer key, gpointer value, gpointer user_data) 
+{
+	const char *name    = key;
+	const char *s_value = value;
+
+	crm_data_t *xml_node  = user_data;
+	crm_data_t *xml_child = create_xml_node(xml_node, XML_CIB_TAG_NVPAIR);
+
+	crm_xml_add(xml_child, XML_ATTR_ID, name);
+	crm_xml_add(xml_child, XML_NVPAIR_ATTR_NAME, name);
+	crm_xml_add(xml_child, XML_NVPAIR_ATTR_VALUE, s_value);
+
+	crm_debug_3("dumped: name=%s value=%s", name, s_value);
+}
+
+void
+hash2field(gpointer key, gpointer value, gpointer user_data) 
+{
+	const char *name    = key;
+	const char *s_value = value;
+
+	crm_data_t *xml_node  = user_data;
+	crm_xml_add(xml_node, name, s_value);
+
+	crm_debug_3("dumped: %s=%s", name, s_value);
+}
+
+
 GHashTable *
 xml2list(crm_data_t *parent)
 {
@@ -2047,6 +2076,7 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 		XML_CIB_TAG_STATUS,
 		XML_CIB_TAG_LRM,
 		XML_LRM_TAG_RESOURCES,
+		XML_TAG_PARAMS,
 		"operations",
 	};
 
