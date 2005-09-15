@@ -650,28 +650,6 @@ do_lrm_invoke(long long action,
 		}
 		free_xml(data);
 
-	} else if(safe_str_eq(crm_op, "lrm_delete")) {
-		char rid[64];
-		const char *id_from_msg = cl_get_string(
-			input->msg, XML_LRM_ATTR_RSCID);
-		int rc = HA_OK;
-
-		if(id_from_msg == NULL) {
-			crm_err("No resource to remove");
-			return I_NULL;
-		}
-		
-		strncpy(rid, id_from_msg, 64);
-		rid[63] = 0;
-
-		rc = fsa_lrm_conn->lrm_ops->delete_rsc(fsa_lrm_conn, rid);
-		if(rc != HA_OK) {
-			crm_err("Failed to remove resource %s from local LRM",
-				rid);
-		} else {
-			crm_info("Resource %s removed from local LRM", rid);
-		}
-		
 	} else if(operation != NULL) {
 		char rid[64];
 		lrm_rsc_t *rsc = NULL;
@@ -700,10 +678,34 @@ do_lrm_invoke(long long action,
 		
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 
-		if(safe_str_eq(operation, "cancel")) {
+		if(safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
+			if(rsc == NULL) {
+				return I_NULL;
+			}
 			cancel_monitor(rsc, crm_element_value(
 					       xml_rsc, "operation_key"));
 
+		} else if(safe_str_eq(operation, CRMD_ACTION_DELETE)) {
+			int rc = HA_OK;
+			const char *lastop = g_hash_table_lookup(resources,rid);
+			if(rsc == NULL) {
+				return I_NULL;
+			}
+			crm_info("Removing resource %s from the LRM", rsc->id);
+
+			if(safe_str_neq(lastop, CRMD_ACTION_STOP)) {
+				crm_err("Not removing resource %s: lastop=%s",
+					rsc->id, lastop);
+				return I_NULL;
+			}
+
+			rc = fsa_lrm_conn->lrm_ops->delete_rsc(
+				fsa_lrm_conn, rid);
+
+			if(rc != HA_OK) {
+				crm_err("Failed to remove resource %s", rid);
+			}
+			
 		} else {
 			next_input = do_lrm_rsc_op(
 				rsc, rid, operation, input->xml, input->msg);
