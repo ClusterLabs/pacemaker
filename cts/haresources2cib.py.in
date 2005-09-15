@@ -80,17 +80,29 @@ def create_cib() :
 def cib_resource(doc,index, rsc):
 
 	id, type, params = None, None, None
-
-	if len(string.split(string.split(rsc,'/')[0],'.')) == 4 :
-		id = "IPaddr_"+str(index)
-		type = "IPaddr"
-		params = [rsc]
+	
+	#if no parameters in rsc, like "apache", "192.168.0.11"
+	if string.find(rsc, "::") == -1 :
+		#if there is a IP address in rsc, like "192.168.0.11"
+		if len(string.split(string.split(rsc,'/')[0],'.')) == 4 :
+			type = "IPaddr"
+			params = [rsc]
+		#no IP address, like "apache"
+		else :
+			type = rsc
+	#else there have "::" in rsc,
+	#like "IPaddr::192.168.0.11", "IPaddr2::192.168.0.11"
 	else :
-		fields = string.split(rsc,"::")
-		id = fields[0]+"_"+str(index)
-		type = fields[0]
-		params = fields[1:]
-
+		if string.find(rsc, "IPaddr") == 0 :
+			type = string.split(rsc, "::")[0]
+			params = [string.split(rsc, "::")[1]]
+		else :			
+			fields = string.split(rsc,"::")
+			type = fields[0]
+			params = fields[1:]
+		
+	id = type+"_"+str(index)
+	
 	resource = doc.createElement("primitive")
 	resource.setAttribute("id",id)
 	resource.setAttribute("type",type)
@@ -105,7 +117,7 @@ def cib_resource(doc,index, rsc):
 		resource.appendChild(operations)
 		mon_op = doc.createElement("op")
 		operations.appendChild(mon_op)
-		mon_op.setAttribute("id","1")
+		mon_op.setAttribute("id", id + "_mon")
 		mon_op.setAttribute("name","monitor")
 		interval = "120s"
 		timeout = "60s"
@@ -115,7 +127,7 @@ def cib_resource(doc,index, rsc):
 		mon_op.setAttribute("interval", interval)
 		mon_op.setAttribute("timeout", timeout)
 
-	if len(params) != 0:
+	if params != None and len(params) != 0:
 		instance_attributes = doc.createElement("instance_attributes")
 		resource.appendChild(instance_attributes)
 		attributes = doc.createElement("attributes")
@@ -145,6 +157,7 @@ def cib_resource(doc,index, rsc):
 					continue
 				nvpair = doc.createElement("nvpair")
 				name = ocf_ra_setting[type]["params"][index]
+				nvpair.setAttribute("id",id + "_attr_" + str(index))
 				nvpair.setAttribute("name",name)
 				nvpair.setAttribute("value",str(param))
 				attributes.appendChild(nvpair)
@@ -153,6 +166,7 @@ def cib_resource(doc,index, rsc):
 			index = 1
 			for param in params :
 				nvpair = doc.createElement("nvpair")
+				nvpair.setAttribute("id",id + "_attr_" + str(index))
 				nvpair.setAttribute("name",str(index))
 				nvpair.setAttribute("value",str(param))
 				attributes.appendChild(nvpair)
@@ -168,6 +182,7 @@ def cib_rsc_location(doc, id, node):
 	rule.setAttribute("score","100")
 	rsc_location.appendChild(rule)
 	expression = doc.createElement("expression")
+	expression.setAttribute("id","prefered_location_"+id+"_expr")
 	expression.setAttribute("attribute","#uname")
 	expression.setAttribute("operation","eq")
 	expression.setAttribute("value", node)
@@ -237,7 +252,7 @@ if __name__=="__main__" :
 			id_index += 1
 		elif len(fields) > 2 :
 			add_resource_group(cib, id_index, fields[0], fields[1:])
-			id_index += len(fields) 
+			id_index += len(fields)
 		else :
 			print "can not parse this line:"+line
 
