@@ -4,18 +4,18 @@
        <rsc_op id="29" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_pre_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="notify_start_uuid" value="uuid1 "/>
-           <nvpair name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
-           <nvpair name="notify_active_uuid" value="uuid1 "/>
-           <nvpair name="notify_confirm" value="yes"/>
-           <nvpair name="notify_type" value="pre"/>
-           <nvpair name="notify_operation" value="start"/>
-           <nvpair name="notify_start_uname" value="node1 "/>
-           <nvpair name="notify_start_resource" value="rsc1:child_rsc1:1 "/>
-           <nvpair name="notify_active_uname" value="node1 "/>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="2"/>
-           <nvpair name="notify" value="1"/>
+           <nvpair id="notify_start_uuid" name="notify_start_uuid" value="uuid1 "/>
+           <nvpair id="notify_active_resource" name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
+           <nvpair id="notify_active_uuid" name="notify_active_uuid" value="uuid1 "/>
+           <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
+           <nvpair id="notify_type" name="notify_type" value="pre"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
+           <nvpair id="notify_start_uname" name="notify_start_uname" value="node1 "/>
+           <nvpair id="notify_start_resource" name="notify_start_resource" value="rsc1:child_rsc1:1 "/>
+           <nvpair id="notify_active_uname" name="notify_active_uname" value="node1 "/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="2"/>
+           <nvpair id="notify" name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -30,18 +30,18 @@
        <rsc_op id="30" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_post_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="notify_start_uuid" value="uuid1 "/>
-           <nvpair name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
-           <nvpair name="notify_active_uuid" value="uuid1 "/>
-           <nvpair name="notify_confirm" value="yes"/>
-           <nvpair name="notify_type" value="post"/>
-           <nvpair name="notify_operation" value="start"/>
-           <nvpair name="notify_start_uname" value="node1 "/>
-           <nvpair name="notify_start_resource" value="rsc1:child_rsc1:1 "/>
-           <nvpair name="notify_active_uname" value="node1 "/>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="2"/>
-           <nvpair name="notify" value="1"/>
+           <nvpair id="notify_start_uuid" name="notify_start_uuid" value="uuid1 "/>
+           <nvpair id="notify_active_resource" name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
+           <nvpair id="notify_active_uuid" name="notify_active_uuid" value="uuid1 "/>
+           <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
+           <nvpair id="notify_type" name="notify_type" value="post"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
+           <nvpair id="notify_start_uname" name="notify_start_uname" value="node1 "/>
+           <nvpair id="notify_start_resource" name="notify_start_resource" value="rsc1:child_rsc1:1 "/>
+           <nvpair id="notify_active_uname" name="notify_active_uname" value="node1 "/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="2"/>
+           <nvpair id="notify" name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -56,9 +56,9 @@
        <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="1"/>
-           <nvpair name="clone_max" value="2"/>
-           <nvpair name="notify" value="1"/>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="2"/>
+           <nvpair id="notify" name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -73,18 +73,18 @@
        <rsc_op id="33" rsc_id="rsc1:child_rsc1:1" operation="notify" operation_key="rsc1:child_rsc1:1_post_notify_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="notify_start_uuid" value="uuid1 "/>
-           <nvpair name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
-           <nvpair name="notify_active_uuid" value="uuid1 "/>
-           <nvpair name="notify_confirm" value="yes"/>
-           <nvpair name="notify_type" value="post"/>
-           <nvpair name="notify_operation" value="start"/>
-           <nvpair name="notify_start_uname" value="node1 "/>
-           <nvpair name="notify_start_resource" value="rsc1:child_rsc1:1 "/>
-           <nvpair name="notify_active_uname" value="node1 "/>
-           <nvpair name="clone" value="1"/>
-           <nvpair name="clone_max" value="2"/>
-           <nvpair name="notify" value="1"/>
+           <nvpair id="notify_start_uuid" name="notify_start_uuid" value="uuid1 "/>
+           <nvpair id="notify_active_resource" name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
+           <nvpair id="notify_active_uuid" name="notify_active_uuid" value="uuid1 "/>
+           <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
+           <nvpair id="notify_type" name="notify_type" value="post"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
+           <nvpair id="notify_start_uname" name="notify_start_uname" value="node1 "/>
+           <nvpair id="notify_start_resource" name="notify_start_resource" value="rsc1:child_rsc1:1 "/>
+           <nvpair id="notify_active_uname" name="notify_active_uname" value="node1 "/>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="2"/>
+           <nvpair id="notify" name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -125,9 +125,9 @@
      <action_set>
        <pseudo_event id="6" rsc_id="rsc1" operation="notify" operation_key="rsc1_pre_notify_start_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_confirm" value="yes"/>
-           <nvpair name="notify_type" value="pre"/>
-           <nvpair name="notify_operation" value="start"/>
+           <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
+           <nvpair id="notify_type" name="notify_type" value="pre"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -137,8 +137,8 @@
      <action_set>
        <pseudo_event id="7" rsc_id="rsc1" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_type" value="pre"/>
-           <nvpair name="notify_operation" value="start"/>
+           <nvpair id="notify_type" name="notify_type" value="pre"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -155,9 +155,9 @@
      <action_set>
        <pseudo_event id="8" rsc_id="rsc1" operation="notify" operation_key="rsc1_post_notify_start_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_confirm" value="yes"/>
-           <nvpair name="notify_type" value="post"/>
-           <nvpair name="notify_operation" value="start"/>
+           <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
+           <nvpair id="notify_type" name="notify_type" value="post"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -171,8 +171,8 @@
      <action_set>
        <pseudo_event id="9" rsc_id="rsc1" operation="notified" operation_key="rsc1_confirmed-post_notify_start_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_type" value="pre"/>
-           <nvpair name="notify_operation" value="start"/>
+           <nvpair id="notify_type" name="notify_type" value="pre"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -193,9 +193,9 @@
        <rsc_op id="16" rsc_id="rsc2:child_rsc2:0" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="2"/>
-           <nvpair name="notify" value="1"/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="2"/>
+           <nvpair id="notify" name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -210,15 +210,15 @@
        <rsc_op id="34" rsc_id="rsc2:child_rsc2:0" operation="notify" operation_key="rsc2:child_rsc2:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="notify_stop_uuid" value="uuid1 "/>
-           <nvpair name="notify_stop_uname" value="node1 "/>
-           <nvpair name="notify_confirm" value="yes"/>
-           <nvpair name="notify_type" value="pre"/>
-           <nvpair name="notify_stop_resource" value="rsc2:child_rsc2:0 "/>
-           <nvpair name="notify_operation" value="stop"/>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="2"/>
-           <nvpair name="notify" value="1"/>
+           <nvpair id="notify_stop_uuid" name="notify_stop_uuid" value="uuid1 "/>
+           <nvpair id="notify_stop_uname" name="notify_stop_uname" value="node1 "/>
+           <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
+           <nvpair id="notify_type" name="notify_type" value="pre"/>
+           <nvpair id="notify_stop_resource" name="notify_stop_resource" value="rsc2:child_rsc2:0 "/>
+           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="2"/>
+           <nvpair id="notify" name="notify" value="1"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -259,9 +259,9 @@
      <action_set>
        <pseudo_event id="25" rsc_id="rsc2" operation="notify" operation_key="rsc2_pre_notify_stop_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_confirm" value="yes"/>
-           <nvpair name="notify_type" value="pre"/>
-           <nvpair name="notify_operation" value="stop"/>
+           <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
+           <nvpair id="notify_type" name="notify_type" value="pre"/>
+           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -271,8 +271,8 @@
      <action_set>
        <pseudo_event id="26" rsc_id="rsc2" operation="notified" operation_key="rsc2_confirmed-pre_notify_stop_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_type" value="pre"/>
-           <nvpair name="notify_operation" value="stop"/>
+           <nvpair id="notify_type" name="notify_type" value="pre"/>
+           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -289,9 +289,9 @@
      <action_set>
        <pseudo_event id="27" rsc_id="rsc2" operation="notify" operation_key="rsc2_post_notify_stop_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_confirm" value="yes"/>
-           <nvpair name="notify_type" value="post"/>
-           <nvpair name="notify_operation" value="stop"/>
+           <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
+           <nvpair id="notify_type" name="notify_type" value="post"/>
+           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -305,8 +305,8 @@
      <action_set>
        <pseudo_event id="28" rsc_id="rsc2" operation="notified" operation_key="rsc2_confirmed-post_notify_stop_0" allow_fail="false">
          <attributes>
-           <nvpair name="notify_type" value="pre"/>
-           <nvpair name="notify_operation" value="stop"/>
+           <nvpair id="notify_type" name="notify_type" value="pre"/>
+           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
          </attributes>
        </pseudo_event>
      </action_set>

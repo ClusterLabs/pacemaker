@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.45 2005/09/15 08:03:40 andrew Exp $ */
+/* $Id: unpack.c,v 1.46 2005/09/15 15:23:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -224,10 +224,10 @@ unpack_action(crm_data_t *xml_action)
 			node_iter, XML_NVPAIR_ATTR_VALUE);
 
 		if(safe_str_eq(key, "timeout")) {
-			action->timeout = crm_get_msec(value);
+			action->timeout = atoi(value);
 
 		} else if(safe_str_eq(key, "interval")) {
-			action->interval = crm_get_msec(value);
+			action->interval = atoi(value);
 		}
 		);
 

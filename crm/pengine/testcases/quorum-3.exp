@@ -4,7 +4,7 @@
        <rsc_op id="1" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1" class="heartbeat" type="apache" on_stopfail="block"/>
          <attributes>
-           <nvpair name="on_stopfail" value="block"/>
+           <nvpair id="on_stopfail" name="on_stopfail" value="block"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -15,7 +15,7 @@
        <rsc_op id="3" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc2" class="heartbeat" type="apache" on_stopfail="block"/>
          <attributes>
-           <nvpair name="on_stopfail" value="block"/>
+           <nvpair id="on_stopfail" name="on_stopfail" value="block"/>
          </attributes>
        </rsc_op>
      </action_set>

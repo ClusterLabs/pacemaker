@@ -13,8 +13,8 @@
        <rsc_op id="2" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_5000" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="timeout" value="3s"/>
-           <nvpair name="interval" value="5s"/>
+           <nvpair id="timeout" name="timeout" value="3000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
          </attributes>
        </rsc_op>
      </action_set>

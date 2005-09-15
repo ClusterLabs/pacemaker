@@ -4,7 +4,7 @@
        <rsc_op id="2" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1" class="heartbeat" type="apache" on_stopfail="ignore"/>
          <attributes>
-           <nvpair name="on_stopfail" value="ignore"/>
+           <nvpair id="on_stopfail" name="on_stopfail" value="ignore"/>
          </attributes>
        </rsc_op>
      </action_set>

@@ -4,8 +4,8 @@
        <rsc_op id="6" rsc_id="DcIPaddr" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596" allow_fail="false">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.10"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.10"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -16,8 +16,8 @@
        <rsc_op id="8" rsc_id="rsc_posic041" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" allow_fail="false">
          <primitive id="rsc_posic041" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.11"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.11"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -28,8 +28,8 @@
        <rsc_op id="10" rsc_id="rsc_posic042" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" allow_fail="false">
          <primitive id="rsc_posic042" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.12"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.12"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -40,8 +40,8 @@
        <rsc_op id="12" rsc_id="rsc_posic043" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596" allow_fail="false">
          <primitive id="rsc_posic043" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.13"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.13"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -52,8 +52,8 @@
        <rsc_op id="15" rsc_id="rsc_posic044" operation="stop" operation_key="rsc_posic044_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" allow_fail="false">
          <primitive id="rsc_posic044" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.14"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.14"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -64,11 +64,11 @@
        <rsc_op id="18" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="4"/>
-           <nvpair name="hostlist" value="posic041 posic042 posic043 posic044 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="4"/>
+           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -79,11 +79,11 @@
        <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" operation_key="DoFencing:child_DoFencing:1_monitor_5000" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="1"/>
-           <nvpair name="clone_max" value="4"/>
-           <nvpair name="hostlist" value="posic041 posic042 posic043 posic044 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="4"/>
+           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
          </attributes>
        </rsc_op>
      </action_set>

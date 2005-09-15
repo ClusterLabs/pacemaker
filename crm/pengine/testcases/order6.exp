@@ -4,7 +4,7 @@
        <rsc_op id="3" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc2" class="heartbeat" type="apache" priority="1.0" restart_type="restart"/>
          <attributes>
-           <nvpair name="restart_type" value="restart"/>
+           <nvpair id="restart_type" name="restart_type" value="restart"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -15,7 +15,7 @@
        <rsc_op id="4" rsc_id="rsc2" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc2" class="heartbeat" type="apache" priority="1.0" restart_type="restart"/>
          <attributes>
-           <nvpair name="restart_type" value="restart"/>
+           <nvpair id="restart_type" name="restart_type" value="restart"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -78,7 +78,7 @@
        <rsc_op id="11" rsc_id="rsc6" operation="stop" operation_key="rsc6_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc6" class="heartbeat" type="apache" priority="1.0" restart_type="restart"/>
          <attributes>
-           <nvpair name="restart_type" value="restart"/>
+           <nvpair id="restart_type" name="restart_type" value="restart"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -89,7 +89,7 @@
        <rsc_op id="12" rsc_id="rsc6" operation="start" operation_key="rsc6_start_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc6" class="heartbeat" type="apache" priority="1.0" restart_type="restart"/>
          <attributes>
-           <nvpair name="restart_type" value="restart"/>
+           <nvpair id="restart_type" name="restart_type" value="restart"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -107,7 +107,7 @@
        <rsc_op id="13" rsc_id="rsc7" operation="stop" operation_key="rsc7_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc7" class="heartbeat" type="apache" priority="1.0" restart_type="restart"/>
          <attributes>
-           <nvpair name="restart_type" value="restart"/>
+           <nvpair id="restart_type" name="restart_type" value="restart"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -118,7 +118,7 @@
        <rsc_op id="14" rsc_id="rsc7" operation="start" operation_key="rsc7_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc7" class="heartbeat" type="apache" priority="1.0" restart_type="restart"/>
          <attributes>
-           <nvpair name="restart_type" value="restart"/>
+           <nvpair id="restart_type" name="restart_type" value="restart"/>
          </attributes>
        </rsc_op>
      </action_set>

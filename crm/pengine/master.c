@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.2 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: master.c,v 1.3 2005/09/15 15:23:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -393,7 +393,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action = promote_action(clone_data->self, NULL, !any_promoting);
 	action_complete = custom_action(
 		clone_data->self, promoted_key(rsc),
-		CRMD_ACTION_PROMOTED, NULL, !any_promoting, data_set);
+		CRMD_ACTION_PROMOTED, NULL, !any_promoting, TRUE, data_set);
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
@@ -408,7 +408,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action = demote_action(clone_data->self, NULL, !any_demoting);
 	action_complete = custom_action(
 		clone_data->self, demoted_key(rsc),
-		CRMD_ACTION_DEMOTED, NULL, !any_demoting, data_set);
+		CRMD_ACTION_DEMOTED, NULL, !any_demoting, TRUE, data_set);
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;

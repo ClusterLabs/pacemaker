@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.51 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: incarnation.c,v 1.52 2005/09/15 15:23:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -333,7 +333,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action = start_action(clone_data->self, NULL, !child_starting);
 	action_complete = custom_action(
 		clone_data->self, started_key(rsc),
-		CRMD_ACTION_STARTED, NULL, !child_starting, data_set);
+		CRMD_ACTION_STARTED, NULL, !child_starting, TRUE, data_set);
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
@@ -348,7 +348,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action = stop_action(clone_data->self, NULL, !child_stopping);
 	action_complete = custom_action(
 		clone_data->self, stopped_key(rsc),
-		CRMD_ACTION_STOPPED, NULL, !child_stopping, data_set);
+		CRMD_ACTION_STOPPED, NULL, !child_stopping, TRUE, data_set);
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
@@ -391,7 +391,7 @@ clone_create_notifications(
 		clone_data->self->id, "pre", action->task);
 	notify = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFY, NULL,
-			       action->optional, data_set);
+			       action->optional, TRUE, data_set);
 	add_hash_param(notify->extra, "notify_type", "pre");
 	add_hash_param(notify->extra, "notify_operation", action->task);
 	if(clone_data->notify_confirm) {
@@ -406,7 +406,7 @@ clone_create_notifications(
 		clone_data->self->id, "confirmed-pre", action->task);
 	notify_complete = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFIED, NULL,
-			       action->optional, data_set);
+			       action->optional, TRUE, data_set);
 	add_hash_param(notify_complete->extra, "notify_type", "pre");
 	add_hash_param(notify_complete->extra, "notify_operation", action->task);
 	if(clone_data->notify_confirm) {
@@ -437,7 +437,7 @@ clone_create_notifications(
 		(clone_data->self->id, "post", action->task);
 	notify = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFY, NULL,
-			       action_complete->optional, data_set);
+			       action_complete->optional, TRUE, data_set);
 	add_hash_param(notify->extra, "notify_type", "post");
 	add_hash_param(notify->extra, "notify_operation", action->task);
 	if(clone_data->notify_confirm) {
@@ -458,7 +458,7 @@ clone_create_notifications(
 		clone_data->self->id, "confirmed-post", action->task);
 	notify_complete = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFIED, NULL,
-			       action->optional, data_set);
+			       action->optional, TRUE, data_set);
 	add_hash_param(notify_complete->extra, "notify_type", "pre");
 	add_hash_param(notify_complete->extra, "notify_operation", action->task);
 	if(clone_data->notify_confirm) {

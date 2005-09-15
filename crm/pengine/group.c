@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.39 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: group.c,v 1.40 2005/09/15 15:23:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -162,7 +162,7 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	op = custom_action(group_data->self, started_key(group_data->self),
 			   CRMD_ACTION_STARTED, NULL,
-			   !group_data->child_starting, data_set);
+			   !group_data->child_starting, TRUE, data_set);
 	op->pseudo   = TRUE;
 
 	op = stop_action(group_data->self, NULL, !group_data->child_stopping);
@@ -170,7 +170,7 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	
 	op = custom_action(group_data->self, stopped_key(group_data->self),
 			   CRMD_ACTION_STOPPED, NULL,
-			   !group_data->child_stopping, data_set);
+			   !group_data->child_stopping, TRUE, data_set);
 	op->pseudo   = TRUE;
 }
 

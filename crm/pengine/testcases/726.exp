@@ -4,10 +4,10 @@
        <rsc_op id="3" rsc_id="DcIPaddr" operation="monitor" operation_key="DcIPaddr_monitor_5000" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a" allow_fail="false">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.10"/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.10"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -18,8 +18,8 @@
        <rsc_op id="8" rsc_id="rsc_sgi2" operation="start" operation_key="rsc_sgi2_start_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8" allow_fail="false">
          <primitive id="rsc_sgi2" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.11"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.11"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -30,10 +30,10 @@
        <rsc_op id="9" rsc_id="rsc_sgi2" operation="monitor" operation_key="rsc_sgi2_monitor_5000" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8" allow_fail="false">
          <primitive id="rsc_sgi2" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.11"/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.11"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -48,10 +48,10 @@
        <rsc_op id="1" rsc_id="rsc_ibm1" operation="monitor" operation_key="rsc_ibm1_monitor_5000" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638" allow_fail="false">
          <primitive id="rsc_ibm1" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.12"/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.12"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -66,8 +66,8 @@
        <rsc_op id="10" rsc_id="rsc_ibm1" operation="stop" operation_key="rsc_ibm1_stop_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a" allow_fail="false">
          <primitive id="rsc_ibm1" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.12"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.12"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -78,8 +78,8 @@
        <rsc_op id="11" rsc_id="rsc_ibm1" operation="start" operation_key="rsc_ibm1_start_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638" allow_fail="false">
          <primitive id="rsc_ibm1" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.12"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.12"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -94,8 +94,8 @@
        <rsc_op id="12" rsc_id="rsc_test02" operation="start" operation_key="rsc_test02_start_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947" allow_fail="false">
          <primitive id="rsc_test02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.13"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.13"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -106,10 +106,10 @@
        <rsc_op id="13" rsc_id="rsc_test02" operation="monitor" operation_key="rsc_test02_monitor_5000" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947" allow_fail="false">
          <primitive id="rsc_test02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.13"/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.13"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -124,10 +124,10 @@
        <rsc_op id="2" rsc_id="rsc_test03" operation="monitor" operation_key="rsc_test03_monitor_5000" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a" allow_fail="false">
          <primitive id="rsc_test03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="is_managed" value="1"/>
-           <nvpair name="ip" value="127.0.0.14"/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.14"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -138,10 +138,10 @@
        <rsc_op id="5" rsc_id="DoFencing:child_DoFencing:0" operation="start" operation_key="DoFencing:child_DoFencing:0_start_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="4"/>
-           <nvpair name="hostlist" value="sgi2 ibm1 test02 test03 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="4"/>
+           <nvpair id="hostlist" name="hostlist" value="sgi2 ibm1 test02 test03 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -156,11 +156,11 @@
        <rsc_op id="16" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="4"/>
-           <nvpair name="hostlist" value="sgi2 ibm1 test02 test03 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="4"/>
+           <nvpair id="hostlist" name="hostlist" value="sgi2 ibm1 test02 test03 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -175,10 +175,10 @@
        <rsc_op id="4" rsc_id="DoFencing:child_DoFencing:1" operation="start" operation_key="DoFencing:child_DoFencing:1_start_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="clone" value="1"/>
-           <nvpair name="clone_max" value="4"/>
-           <nvpair name="hostlist" value="sgi2 ibm1 test02 test03 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="4"/>
+           <nvpair id="hostlist" name="hostlist" value="sgi2 ibm1 test02 test03 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -196,9 +196,9 @@
        <rsc_op id="17" rsc_id="DoFencing:child_DoFencing:1" operation="stop" operation_key="DoFencing:child_DoFencing:1_stop_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="clone" value="1"/>
-           <nvpair name="clone_max" value="4"/>
-           <nvpair name="hostlist" value="sgi2 ibm1 test02 test03 "/>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="4"/>
+           <nvpair id="hostlist" name="hostlist" value="sgi2 ibm1 test02 test03 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -213,11 +213,11 @@
        <rsc_op id="18" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" operation_key="DoFencing:child_DoFencing:1_monitor_5000" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="1"/>
-           <nvpair name="clone_max" value="4"/>
-           <nvpair name="hostlist" value="sgi2 ibm1 test02 test03 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="4"/>
+           <nvpair id="hostlist" name="hostlist" value="sgi2 ibm1 test02 test03 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -232,10 +232,10 @@
        <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:2" operation="start" operation_key="DoFencing:child_DoFencing:2_start_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="clone" value="2"/>
-           <nvpair name="clone_max" value="4"/>
-           <nvpair name="hostlist" value="sgi2 ibm1 test02 test03 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone_max" name="clone_max" value="4"/>
+           <nvpair id="hostlist" name="hostlist" value="sgi2 ibm1 test02 test03 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -250,11 +250,11 @@
        <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:2" operation="monitor" operation_key="DoFencing:child_DoFencing:2_monitor_5000" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="2"/>
-           <nvpair name="clone_max" value="4"/>
-           <nvpair name="hostlist" value="sgi2 ibm1 test02 test03 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone_max" name="clone_max" value="4"/>
+           <nvpair id="hostlist" name="hostlist" value="sgi2 ibm1 test02 test03 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -269,10 +269,10 @@
        <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:3" operation="start" operation_key="DoFencing:child_DoFencing:3_start_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="clone" value="3"/>
-           <nvpair name="clone_max" value="4"/>
-           <nvpair name="hostlist" value="sgi2 ibm1 test02 test03 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="4"/>
+           <nvpair id="hostlist" name="hostlist" value="sgi2 ibm1 test02 test03 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -287,11 +287,11 @@
        <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:3" operation="monitor" operation_key="DoFencing:child_DoFencing:3_monitor_5000" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="3"/>
-           <nvpair name="clone_max" value="4"/>
-           <nvpair name="hostlist" value="sgi2 ibm1 test02 test03 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="4"/>
+           <nvpair id="hostlist" name="hostlist" value="sgi2 ibm1 test02 test03 "/>
          </attributes>
        </rsc_op>
      </action_set>

@@ -4,8 +4,8 @@
        <rsc_op id="1" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc1" class="heartbeat" type="apache" on_stopfail="block" start_prereq="quorum"/>
          <attributes>
-           <nvpair name="on_stopfail" value="block"/>
-           <nvpair name="start_prereq" value="quorum"/>
+           <nvpair id="on_stopfail" name="on_stopfail" value="block"/>
+           <nvpair id="start_prereq" name="start_prereq" value="quorum"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -16,8 +16,8 @@
        <rsc_op id="2" rsc_id="rsc2" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc2" class="heartbeat" type="apache" on_stopfail="block" start_prereq="fencing"/>
          <attributes>
-           <nvpair name="on_stopfail" value="block"/>
-           <nvpair name="start_prereq" value="fencing"/>
+           <nvpair id="on_stopfail" name="on_stopfail" value="block"/>
+           <nvpair id="start_prereq" name="start_prereq" value="fencing"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -31,8 +31,8 @@
      <action_set>
        <crm_event id="3" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <attributes>
-           <nvpair name="on_node" value="node1"/>
-           <nvpair name="on_node_uuid" value="uuid1"/>
+           <nvpair id="on_node" name="on_node" value="node1"/>
+           <nvpair id="on_node_uuid" name="on_node_uuid" value="uuid1"/>
          </attributes>
        </crm_event>
      </action_set>

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.59 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: complex.c,v 1.60 2005/09/15 15:23:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -193,7 +193,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		"notify"
 	};	
 	
-	crm_log_xml_debug_2(xml_obj, "Processing resource input...");
+	crm_log_xml_debug_3(xml_obj, "Processing resource input...");
 	
 	if(id == NULL) {
 		pe_err("Must specify id tag in <resource>");
@@ -420,6 +420,9 @@ void common_free(resource_t *rsc)
 	}
 	if(rsc->parameters != NULL) {
 		g_hash_table_destroy(rsc->parameters);
+	}
+	if(rsc->orphan) {
+		free_xml(rsc->xml);
 	}
 	pe_free_shallow_adv(rsc->candidate_colors, TRUE);
 	pe_free_shallow_adv(rsc->rsc_location, FALSE);

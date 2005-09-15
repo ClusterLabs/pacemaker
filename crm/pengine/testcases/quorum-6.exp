@@ -4,10 +4,10 @@
        <rsc_op id="1" rsc_id="DoFencing:child_DoFencing:0" operation="start" operation_key="DoFencing:child_DoFencing:0_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="hadev1 hadev2 hadev3 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -22,11 +22,11 @@
        <rsc_op id="2" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="hadev1 hadev2 hadev3 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
          </attributes>
        </rsc_op>
      </action_set>

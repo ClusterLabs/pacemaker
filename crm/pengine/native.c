@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.79 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: native.c,v 1.80 2005/09/15 15:23:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,8 +43,6 @@ int num_allowed_nodes4color(color_t *color);
 void create_notifications(resource_t *rsc, pe_working_set_t *data_set);
 void create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
-action_t *create_recurring_action(resource_t *rsc, node_t *node,
-				  const char *action, const char *key);
 void register_state(resource_t *rsc, action_t *op, notify_data_t *n_data);
 void register_activity(resource_t *rsc, action_t *op, notify_data_t *n_data);
 void pe_pre_notify(
@@ -329,7 +327,8 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			is_optional = FALSE;
 		}
 		
-		mon = custom_action(rsc, key, name, node, is_optional,data_set);
+		mon = custom_action(rsc, key, name, node,
+				    is_optional, TRUE, data_set);
 		
 		if(start == NULL || start->runnable == FALSE) {
 			crm_warn("   %s:\t(%s) (cancelled : start un-runnable)",
@@ -1646,7 +1645,8 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 		    op->uuid, rsc->id, value, task);
 	
 	key = generate_notify_key(rsc->id, value, task);
-	trigger = custom_action(rsc, key, op->task, node,op->optional,data_set);
+	trigger = custom_action(rsc, key, op->task, node,
+				op->optional, TRUE, data_set);
 	g_hash_table_foreach(op->extra, dup_attr, trigger->extra);
 	trigger->notify_keys = n_data->keys;
 

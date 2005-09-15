@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.89 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: pengine.h,v 1.90 2005/09/15 15:23:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -100,6 +100,10 @@ typedef struct pe_working_set_s
 		gboolean have_quorum;
 		gboolean stonith_enabled;
 		gboolean symmetric_cluster;
+
+		gboolean stop_rsc_orphans;
+		gboolean stop_action_orphans;
+		
 		int default_resource_stickiness;
 		no_quorum_policy_t no_quorum_policy;
 
@@ -291,6 +295,8 @@ struct resource_s {
 		gboolean runnable;
 		gboolean provisional;
 
+		gboolean orphan;
+		
 		GListPtr candidate_colors; /* color_t*          */
 		GListPtr rsc_cons;         /* rsc_colocation_t* */
 		GListPtr rsc_location;     /* rsc_to_node_t*    */
@@ -305,7 +311,7 @@ struct resource_s {
 		enum rsc_role_e role;
 		enum rsc_role_e next_role;
 		
-		GHashTable * parameters;
+		GHashTable *parameters;
 };
 
 

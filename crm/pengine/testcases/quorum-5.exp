@@ -27,8 +27,8 @@
        <rsc_op id="1" rsc_id="group1:child_DoFencing_1" operation="start" operation_key="group1:child_DoFencing_1_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
          <primitive id="group1:child_DoFencing_1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="start_prereq" value="nothing"/>
-           <nvpair name="hostlist" value="hadev1 hadev2 hadev3 "/>
+           <nvpair id="start_prereq" name="start_prereq" value="nothing"/>
+           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -43,10 +43,10 @@
        <rsc_op id="2" rsc_id="group1:child_DoFencing_1" operation="monitor" operation_key="group1:child_DoFencing_1_monitor_5000" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
          <primitive id="group1:child_DoFencing_1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="start_prereq" value="nothing"/>
-           <nvpair name="hostlist" value="hadev1 hadev2 hadev3 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="start_prereq" name="start_prereq" value="nothing"/>
+           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -61,8 +61,8 @@
        <rsc_op id="3" rsc_id="group1:child_DoFencing_2" operation="start" operation_key="group1:child_DoFencing_2_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
          <primitive id="group1:child_DoFencing_2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="start_prereq" value="nothing"/>
-           <nvpair name="hostlist" value="hadev1 hadev2 hadev3 "/>
+           <nvpair id="start_prereq" name="start_prereq" value="nothing"/>
+           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -77,10 +77,10 @@
        <rsc_op id="4" rsc_id="group1:child_DoFencing_2" operation="monitor" operation_key="group1:child_DoFencing_2_monitor_5000" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" allow_fail="false">
          <primitive id="group1:child_DoFencing_2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="start_prereq" value="nothing"/>
-           <nvpair name="hostlist" value="hadev1 hadev2 hadev3 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="start_prereq" name="start_prereq" value="nothing"/>
+           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
          </attributes>
        </rsc_op>
      </action_set>

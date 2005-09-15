@@ -13,8 +13,8 @@
        <rsc_op id="2" rsc_id="rsc1:child_rsc1:0" operation="start" operation_key="rsc1:child_rsc1:0_start_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="5"/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -29,8 +29,8 @@
        <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node3" on_node_uuid="uuid3" allow_fail="false">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="1"/>
-           <nvpair name="clone_max" value="5"/>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -45,8 +45,8 @@
        <rsc_op id="4" rsc_id="rsc1:child_rsc1:2" operation="start" operation_key="rsc1:child_rsc1:2_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc1:child_rsc1:2" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="2"/>
-           <nvpair name="clone_max" value="5"/>
+           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone_max" name="clone_max" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -61,8 +61,8 @@
        <rsc_op id="5" rsc_id="rsc1:child_rsc1:3" operation="start" operation_key="rsc1:child_rsc1:3_start_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc1:child_rsc1:3" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="3"/>
-           <nvpair name="clone_max" value="5"/>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -77,8 +77,8 @@
        <rsc_op id="6" rsc_id="rsc1:child_rsc1:4" operation="start" operation_key="rsc1:child_rsc1:4_start_0" on_node="node3" on_node_uuid="uuid3" allow_fail="false">
          <primitive id="rsc1:child_rsc1:4" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="4"/>
-           <nvpair name="clone_max" value="5"/>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -128,8 +128,8 @@
        <rsc_op id="11" rsc_id="rsc2:child_rsc2:0" operation="start" operation_key="rsc2:child_rsc2:0_start_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="5"/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -144,8 +144,8 @@
        <rsc_op id="12" rsc_id="rsc2:child_rsc2:1" operation="start" operation_key="rsc2:child_rsc2:1_start_0" on_node="node3" on_node_uuid="uuid3" allow_fail="false">
          <primitive id="rsc2:child_rsc2:1" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="1"/>
-           <nvpair name="clone_max" value="5"/>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -160,8 +160,8 @@
        <rsc_op id="13" rsc_id="rsc2:child_rsc2:2" operation="start" operation_key="rsc2:child_rsc2:2_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc2:child_rsc2:2" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="2"/>
-           <nvpair name="clone_max" value="5"/>
+           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone_max" name="clone_max" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -176,8 +176,8 @@
        <rsc_op id="14" rsc_id="rsc2:child_rsc2:3" operation="start" operation_key="rsc2:child_rsc2:3_start_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc2:child_rsc2:3" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="3"/>
-           <nvpair name="clone_max" value="5"/>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -192,8 +192,8 @@
        <rsc_op id="15" rsc_id="rsc2:child_rsc2:4" operation="start" operation_key="rsc2:child_rsc2:4_start_0" on_node="node3" on_node_uuid="uuid3" allow_fail="false">
          <primitive id="rsc2:child_rsc2:4" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair name="clone" value="4"/>
-           <nvpair name="clone_max" value="5"/>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="5"/>
          </attributes>
        </rsc_op>
      </action_set>

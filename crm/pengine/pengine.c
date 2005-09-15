@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.89 2005/09/13 10:37:23 andrew Exp $ */
+/* $Id: pengine.c,v 1.90 2005/09/15 15:23:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -297,6 +297,8 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->symmetric_cluster = TRUE;
 	data_set->no_quorum_policy  = no_quorum_freeze;
 	
+	data_set->stop_action_orphans = FALSE;
+	data_set->stop_rsc_orphans = FALSE;
 	
 	data_set->nodes     = NULL;
 	data_set->resources = NULL;

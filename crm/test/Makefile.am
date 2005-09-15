@@ -33,4 +33,4 @@ install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(testdir)
 	-chown $(HA_CCMUSER) $(DESTDIR)/$(testdir)
 	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(testdir)
-	-chmod g+w $(DESTDIR)/$(testdir)
+#	-chmod g+w $(DESTDIR)/$(testdir)

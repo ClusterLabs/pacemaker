@@ -585,6 +585,44 @@ do_lrm_query(gboolean is_replace)
 	return xml_result;
 }
 
+struct recurring_op_s 
+{
+		char *rsc_id;
+		int   call_id;
+};
+
+
+static void
+cancel_monitor(lrm_rsc_t *rsc, const char *key)
+{
+	struct recurring_op_s *existing_op = NULL;
+
+	if(rsc == NULL) {	
+		crm_err("No resource to cancel and operation for");
+		return;
+		
+	} else if(key == NULL) {
+		crm_err("No operation to cancel");
+		return;
+	}
+	
+	existing_op = g_hash_table_lookup(monitors, key);
+	if(existing_op != NULL) {
+		crm_debug("Cancelling previous invocation of %s (%d)",
+			  key, existing_op->call_id);
+		/*cancel it so we can then restart it without conflict*/
+		if(rsc->ops->cancel_op(rsc, existing_op->call_id) != HA_OK) {
+			crm_err("Couldn't cancel %s (%d)",
+				key, existing_op->call_id);
+		} else {
+			g_hash_table_remove(monitors, key);
+		}
+
+	} else {
+		crm_debug("No previous invocation of %s", key);
+	}
+}
+
 /*	 A_LRM_INVOKE	*/
 enum crmd_fsa_input
 do_lrm_invoke(long long action,
@@ -661,7 +699,15 @@ do_lrm_invoke(long long action,
 		rid[63] = 0;
 		
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
-		next_input = do_lrm_rsc_op(rsc, rid, operation, input->xml, input->msg);
+
+		if(safe_str_eq(operation, "cancel")) {
+			cancel_monitor(rsc, crm_element_value(
+					       xml_rsc, "operation_key"));
+
+		} else {
+			next_input = do_lrm_rsc_op(
+				rsc, rid, operation, input->xml, input->msg);
+		}
 		
 	} else {
 		crm_err("Operation was neither a lrm_query, nor a rsc op.  %s",
@@ -671,12 +717,6 @@ do_lrm_invoke(long long action,
 
 	return next_input;
 }
-
-struct recurring_op_s 
-{
-		char *rsc_id;
-		int   call_id;
-};
 
 void
 nack_rsc_op(lrm_op_t* op, HA_Message *msg)
@@ -829,57 +869,38 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 	}
 
 	op->params = params;
-	op->interval = crm_get_msec(g_hash_table_lookup(op->params,"interval"));
-	op->timeout  = crm_get_msec(g_hash_table_lookup(op->params, "timeout"));
-	op->start_delay = crm_get_msec(
-		g_hash_table_lookup(op->params,"start_delay"));
+	op->interval = crm_atoi(g_hash_table_lookup(op->params,"interval"),"0");
+	op->timeout  = crm_atoi(g_hash_table_lookup(op->params, "timeout"),"0");
+	op->start_delay = crm_atoi(
+		g_hash_table_lookup(op->params,"start_delay"), "0");
 
 	/* sanity */
 	if(op->interval < 0) {
 		op->interval = 0;
+		g_hash_table_replace(
+			op->params, crm_strdup("interval"), crm_strdup("0"));
 	}
 	if(op->timeout < 0) {
 		op->timeout = 0;
+		g_hash_table_replace(
+			op->params, crm_strdup("timeout"), crm_strdup("0"));
 	}
 	if(op->start_delay < 0) {
 		op->start_delay = 0;
-	}
-	if(g_hash_table_lookup(op->params, "timeout") != NULL) {
-		char *timeout_ms = crm_itoa(op->timeout);
 		g_hash_table_replace(
-			op->params, crm_strdup("timeout"), timeout_ms);
-	}
-	if(g_hash_table_lookup(op->params, "interval") != NULL) {
-		char *interval_ms = crm_itoa(op->interval);
-		g_hash_table_replace(
-			op->params, crm_strdup("interval"), interval_ms);
-	}
-	if(g_hash_table_lookup(op->params, "start_delay") != NULL) {
-		char *delay_ms = crm_itoa(op->start_delay);
-		g_hash_table_replace(
-			op->params, crm_strdup("start_delay"), delay_ms);
+			op->params, crm_strdup("start_delay"), crm_strdup("0"));
 	}
 
 	if(safe_str_eq(operation, CRMD_ACTION_START)
 	   || safe_str_eq(operation, CRMD_ACTION_STOP)) {
-		char *tmp = g_hash_table_lookup(op->params, "interval");
-/* 		CRM_DEV_ASSERT(op->interval == 0); */
-/* 		CRM_DEV_ASSERT(tmp == NULL); */
-		if(op->interval != 0) {
-			crm_err("Interval for %s oepration was not 0",
-				operation);
-		}
-		if(tmp != NULL) {
-			crm_warn("An interval (%s) was specified for a"
-				 " %s operation", tmp, operation);
-		}
-		
-
+		char *interval_s = g_hash_table_lookup(op->params, "interval");
+ 		CRM_DEV_ASSERT(op->interval == 0);
+ 		CRM_DEV_ASSERT(interval_s == NULL);
 	}
 	
-	if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
-		if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
-		   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {
+	if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
+	   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {
+		if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
 			crm_info("Discarding attempt to perform action %s on %s"
 				 " in state %s", operation, rid,
 				 fsa_state2string(fsa_state));
@@ -892,18 +913,8 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 	}
 	
 	if(op->interval > 0) {
-		struct recurring_op_s *existing_op = NULL;
-
 		op_id = generate_op_key(rsc->id, op->op_type, op->interval);
-		existing_op = g_hash_table_lookup(monitors, op_id);
-		if(existing_op != NULL) {
-			crm_debug("Cancelling previous invocation of"
-				  " %s on %s (%d)",
-				  crm_str(op_id), rsc->id,existing_op->call_id);
-			/*cancel it so we can then restart it without conflict*/
-			rsc->ops->cancel_op(rsc, existing_op->call_id);
-			g_hash_table_remove(monitors, op_id);
-		}
+		cancel_monitor(rsc, op_id);
 	}
 
 	op->app_name = crm_strdup(CRM_SYSTEM_CRMD);

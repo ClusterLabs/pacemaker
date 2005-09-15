@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.123 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: unpack.c,v 1.124 2005/09/15 15:23:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -102,6 +102,8 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	param_value(config_hash, config, "stonith_enabled");
 	param_value(config_hash, config, "symmetric_cluster");
 	param_value(config_hash, config, "no_quorum_policy");
+	param_value(config_hash, config, "stop_orphan_resources");
+	param_value(config_hash, config, "stop_orphan_actions");
 #endif
 	value = g_hash_table_lookup(config_hash, "transition_idle_timeout");
 	if(value != NULL) {
@@ -127,8 +129,7 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		cl_str_to_boolean(value, &data_set->stonith_enabled);
 	}
 	crm_info("STONITH of failed nodes is %s",
-		 data_set->stonith_enabled?"enabled":"disabled");
-
+		 data_set->stonith_enabled?"enabled":"disabled");	
 	
 	value = g_hash_table_lookup(config_hash, "symmetric_cluster");
 	if(value != NULL) {
@@ -162,6 +163,20 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 			break;
 	}
 
+	value = g_hash_table_lookup(config_hash, "stop_orphan_resources");
+	if(value != NULL) {
+		cl_str_to_boolean(value, &data_set->stop_rsc_orphans);
+	}
+	crm_info("Orphan resources are %s",
+		 data_set->stop_rsc_orphans?"stopped":"ignored");	
+	
+	value = g_hash_table_lookup(config_hash, "stop_orphan_actions");
+	if(value != NULL) {
+		cl_str_to_boolean(value, &data_set->stop_action_orphans);
+	}
+	crm_info("Orphan resource actions are %s",
+		 data_set->stop_action_orphans?"stopped":"ignored");	
+	
 	g_hash_table_destroy(config_hash);
 	return TRUE;
 }
@@ -489,6 +504,7 @@ determine_online_status(
 		crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
 
 	if(this_node == NULL) {
+		crm_err("No node to check");
 		return online;
 	}
 
@@ -619,13 +635,43 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			    rsc_id, node_id, rsc_state);
 
 		if(rsc == NULL) {
-			pe_err("Could not find a match for resource"
-				" %s in %s's status section",
-				rsc_id, node_id);
 			crm_log_xml_debug(rsc_entry, "Invalid status entry");
-			continue;
-		}
 
+			pe_warn("Nothing known about resource"
+				" %s running on %s", rsc_id, node_id);
+			
+			if(data_set->stop_rsc_orphans == FALSE) {
+				continue;
+
+			} else {
+				crm_data_t *xml_rsc = create_xml_node(
+					NULL, XML_CIB_TAG_RESOURCE);
+
+				crm_info("Making sure orphan %s is stopped",
+					rsc_id);
+				
+				copy_in_properties(xml_rsc, rsc_entry);
+				
+				common_unpack(xml_rsc, &rsc, NULL, data_set);
+				rsc->orphan = TRUE;
+
+				data_set->resources = g_list_append(
+					data_set->resources, rsc);
+			
+				crm_action_debug_3(
+					print_resource(
+						"Added orphan", rsc, FALSE));
+				
+				CRM_DEV_ASSERT(rsc != NULL);
+				slist_iter(
+					any_node, node_t, data_set->nodes, lpc,
+					rsc2node_new(
+						"dont_run__orphan", rsc,
+						-INFINITY, any_node, data_set);
+					);
+			}
+		}
+		
 		max_call_id = -1;
 
 		op_list = NULL;
@@ -791,6 +837,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 	action_t *action = NULL;
 	gboolean is_stop_action = FALSE;
+
+	crm_data_t *params = find_xml_node(xml_op, XML_TAG_PARAMS, FALSE);
 	
 	CRM_DEV_ASSERT(rsc    != NULL); if(crm_assert_failed) { return FALSE; }
 	CRM_DEV_ASSERT(node   != NULL); if(crm_assert_failed) { return FALSE; }
@@ -816,7 +864,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	if(crm_assert_failed) {return FALSE;}
 
 	CRM_DEV_ASSERT(task_status_i >= LRM_OP_PENDING);
-	if(crm_assert_failed) {return FALSE;}
+	if(crm_assert_failed) { return FALSE; }
 
 	if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
 		/* safe to ignore these */
@@ -825,6 +873,99 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	
 	crm_debug_2("Unpacking task %s/%s (call_id=%s, status=%s) on %s",
 		    rsc->id, task, task_id, task_status, node->details->uname);
+	
+	if(params != NULL
+	   && (rsc->orphan == FALSE || data_set->stop_rsc_orphans == FALSE)) {
+		crm_data_t *op_match = NULL;
+		crm_data_t *pdiff = NULL;
+		GHashTable *local_rsc_params = NULL;
+		crm_data_t *pnow = NULL;
+		const char *interval_s = crm_element_value(params, "interval");
+		int interval = crm_atoi(interval_s, "0");
+		
+		crm_debug_2("Checking parameters to %s action", task);
+		
+		xml_child_iter(
+			rsc->ops_xml, operation, "op",
+			
+			const char *name = crm_element_value(operation, "name");
+			int value = crm_get_msec(
+				crm_element_value(operation, "interval"));
+			if(interval <= 0) {
+				break;
+				
+			} else if(safe_str_neq(name, task)) {
+				continue;
+
+			} else if(value != interval) {
+				continue;
+			}
+			op_match = operation;
+			);
+		
+		if(interval > 0 && op_match == NULL) {
+			if(data_set->stop_action_orphans == FALSE) {
+				/* create a cancel action */
+				crm_info("Ignoring orphan action: %s", id);
+				return TRUE;
+			}
+
+			crm_warn("Orphan action detected: %s", id);
+			action = custom_action(
+				rsc, crm_strdup(id), "cancel", node,
+				FALSE, TRUE, data_set);
+
+			crm_info("Orphan action will be stopped: %d",
+				 action->id);
+			
+			custom_action_order(
+				rsc, NULL, action,
+				rsc, stop_key(rsc), NULL,
+				pe_ordering_optional, data_set);
+
+			return TRUE;
+		}
+
+		action = custom_action(rsc, crm_strdup(id), task, node,
+				       TRUE, FALSE, data_set);
+
+		local_rsc_params = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+
+		unpack_instance_attributes(
+			rsc->xml, XML_TAG_ATTR_SETS, node, local_rsc_params,
+			NULL, 0, data_set);
+		
+		pnow = create_xml_node(NULL, XML_TAG_PARAMS);
+		g_hash_table_foreach(action->extra, hash2field, pnow);
+		g_hash_table_foreach(rsc->parameters, hash2field, pnow);
+		g_hash_table_foreach(local_rsc_params, hash2field, pnow);
+
+ 		pdiff = diff_xml_object(params, pnow, FALSE);
+		if(pdiff != NULL) {
+			crm_err("Parameters to %s action changed", task);
+			log_xml_diff(LOG_INFO, pdiff, __FUNCTION__);
+
+			custom_action(rsc, crm_strdup(id), task, NULL,
+				      FALSE, TRUE, data_set);
+			
+/* 			if(safe_str_neq(task, CRMD_ACTION_START)) { */
+/* 				task_status_i = LRM_OP_PENDING; */
+/* 			} else { */
+/* 				rsc->state = rsc_state_failed; */
+/* 			} */
+			
+		}
+		
+		g_hash_table_destroy(action->extra);
+		crm_free(action->uuid);
+		crm_free(action);
+		free_xml(pnow);
+		free_xml(pdiff);
+		g_hash_table_destroy(local_rsc_params);
+		action = NULL;
+	}
 	
 	if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 		is_stop_action = TRUE;
@@ -862,7 +1003,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	if(task_status_i == LRM_OP_ERROR
 	   || task_status_i == LRM_OP_TIMEOUT
 	   || task_status_i == LRM_OP_NOTSUPPORTED) {
-		action = custom_action(rsc, crm_strdup(id), task, NULL, TRUE, data_set);
+		action = custom_action(rsc, crm_strdup(id), task, NULL,
+				       TRUE, TRUE, data_set);
 		if(action->on_fail == action_fail_ignore) {
 			task_status_i = LRM_OP_DONE;
 		}
@@ -911,8 +1053,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				/* do not specify the node, we may want
 				 * to start it elsewhere
 				 */
-				custom_action(rsc, crm_strdup(id),
-					      task, NULL, FALSE, data_set);
+				custom_action(rsc, crm_strdup(id), task,
+					      NULL, FALSE, TRUE, data_set);
 			}
 			break;
 		
@@ -944,19 +1086,20 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				 * creating it now tells create_recurring_actions() 
 				 *  that it can safely leave it optional
 				 */
-				custom_action(rsc, crm_strdup(id),
-					      task, NULL, TRUE, data_set);
+				custom_action(rsc, crm_strdup(id), task,
+					      NULL, TRUE, TRUE, data_set);
 			}
 			break;
 
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			crm_debug_2("Processing failed op (%s) for %s on %s",
-				  task, rsc->id, node->details->uname);
+			crm_warn("Processing failed op (%s) for %s on %s",
+				 task, rsc->id, node->details->uname);
 
 			action = custom_action(
-				rsc, crm_strdup(id), task, NULL, TRUE, data_set);
+				rsc, crm_strdup(id), task, NULL,
+				TRUE, TRUE, data_set);
 
 			if(task_status_i == LRM_OP_NOTSUPPORTED
 			   || is_stop_action

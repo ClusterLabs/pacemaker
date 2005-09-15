@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.106 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: utils.c,v 1.107 2005/09/15 15:23:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -622,45 +622,45 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 
 	if(node1_weight > node2_weight) {
 		crm_debug("%s (%d) > %s (%d) : weight",
-			  node1->details->id, node1_weight,
-			  node2->details->id, node2_weight);
+			  node1->details->uname, node1_weight,
+			  node2->details->uname, node2_weight);
 		return -1;
 	}
 	
 	if(node1_weight < node2_weight) {
 		crm_debug("%s (%d) < %s (%d) : weight",
-			  node1->details->id, node1_weight,
-			  node2->details->id, node2_weight);
+			  node1->details->uname, node1_weight,
+			  node2->details->uname, node2_weight);
 		return 1;
 	}
 
 	crm_debug("%s (%d) == %s (%d) : weight",
-		  node1->details->id, node1_weight,
-		  node2->details->id, node2_weight);
+		  node1->details->uname, node1_weight,
+		  node2->details->uname, node2_weight);
 	
 	/* now try to balance resources across the cluster */
 	if(node1->details->num_resources
 	   < node2->details->num_resources) {
 		crm_debug("%s (%d) < %s (%d) : resources",
-			  node1->details->id, node1->details->num_resources,
-			  node2->details->id, node2->details->num_resources);
+			  node1->details->uname, node1->details->num_resources,
+			  node2->details->uname, node2->details->num_resources);
 		return -1;
 		
 	} else if(node1->details->num_resources
 		  > node2->details->num_resources) {
 		crm_debug("%s (%d) > %s (%d) : resources",
-			  node1->details->id, node1->details->num_resources,
-			  node2->details->id, node2->details->num_resources);
+			  node1->details->uname, node1->details->num_resources,
+			  node2->details->uname, node2->details->num_resources);
 		return 1;
 	}
 	
-	crm_debug_4("%s = %s", node1->details->id, node2->details->id);
+	crm_debug_4("%s = %s", node1->details->uname, node2->details->uname);
 	return 0;
 }
 
 action_t *
 custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
-	      gboolean optional, pe_working_set_t *data_set)
+	      gboolean optional, gboolean foo, pe_working_set_t *data_set)
 {
 	action_t *action = NULL;
 	GListPtr possible_matches = NULL;
@@ -697,7 +697,11 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 
 		crm_malloc0(action, sizeof(action_t));
 		if(action != NULL) {
-			action->id   = data_set->action_id++;
+			if(foo) {
+				action->id   = data_set->action_id++;
+			} else {
+				action->id = 0;
+			}
 			action->rsc  = rsc;
 			action->task = task;
 			action->node = on_node;
@@ -717,19 +721,23 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 				g_str_hash, g_str_equal,
 				g_hash_destroy_str, g_hash_destroy_str);
 
-			data_set->actions = g_list_append(
+			if(foo) {
+				data_set->actions = g_list_append(
 					data_set->actions, action);
-
+			}
+			
 			action->uuid = key;
 
 			if(rsc != NULL) {
 				action->op_entry = find_rsc_op_entry(rsc, key);
-
+				
 				unpack_operation(
 					action, action->op_entry, data_set);
 
-				rsc->actions = g_list_append(
-					rsc->actions, action);
+				if(foo) {
+					rsc->actions = g_list_append(
+						rsc->actions, action);
+				}
 			}
 			crm_debug_4("Action %d created", action->id);
 		}
@@ -953,7 +961,16 @@ unpack_operation(
 	
 	for(;lpc < DIMOF(fields); lpc++) {
 		value = crm_element_value(xml_obj, fields[lpc]);
-		add_hash_param(action->extra, fields[lpc], value);
+		if(value != NULL) {
+			int tmp_i = crm_get_msec(value);
+			char *tmp_ms = NULL;
+			if(tmp_i < 0) {
+				tmp_i = 0;
+			}
+			tmp_ms = crm_itoa(tmp_i);
+			g_hash_table_insert(
+				action->extra, crm_strdup(fields[lpc]), tmp_ms);
+		}
 	}
 
 /* 	if(safe_str_eq(native_data->agent->class, "stonith")) { */
@@ -1072,6 +1089,8 @@ text2task(const char *task)
 		return action_promoted;
 	} else if(safe_str_eq(task, CRMD_ACTION_DEMOTED)) {
 		return action_demoted;
+	} else if(safe_str_eq(task, "cancel")) {
+		return no_action;
 	} 
 	pe_err("Unsupported action: %s", task);
 	return no_action;

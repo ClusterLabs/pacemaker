@@ -4,9 +4,9 @@
        <rsc_op id="53" rsc_id="CloneSet:child_CloneSet:0" operation="start" operation_key="CloneSet:child_CloneSet:0_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -21,11 +21,11 @@
        <rsc_op id="54" rsc_id="CloneSet:child_CloneSet:0" operation="monitor" operation_key="CloneSet:child_CloneSet:0_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="0"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -40,9 +40,9 @@
        <rsc_op id="55" rsc_id="CloneSet:child_CloneSet:1" operation="start" operation_key="CloneSet:child_CloneSet:1_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="clone" value="1"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -57,11 +57,11 @@
        <rsc_op id="56" rsc_id="CloneSet:child_CloneSet:1" operation="monitor" operation_key="CloneSet:child_CloneSet:1_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="1"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -76,9 +76,9 @@
        <rsc_op id="57" rsc_id="CloneSet:child_CloneSet:2" operation="start" operation_key="CloneSet:child_CloneSet:2_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="clone" value="2"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -93,11 +93,11 @@
        <rsc_op id="58" rsc_id="CloneSet:child_CloneSet:2" operation="monitor" operation_key="CloneSet:child_CloneSet:2_monitor_5000" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="2"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -112,9 +112,9 @@
        <rsc_op id="59" rsc_id="CloneSet:child_CloneSet:3" operation="start" operation_key="CloneSet:child_CloneSet:3_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="clone" value="3"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -129,11 +129,11 @@
        <rsc_op id="60" rsc_id="CloneSet:child_CloneSet:3" operation="monitor" operation_key="CloneSet:child_CloneSet:3_monitor_5000" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="3"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -148,9 +148,9 @@
        <rsc_op id="61" rsc_id="CloneSet:child_CloneSet:4" operation="start" operation_key="CloneSet:child_CloneSet:4_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="clone" value="4"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -165,11 +165,11 @@
        <rsc_op id="62" rsc_id="CloneSet:child_CloneSet:4" operation="monitor" operation_key="CloneSet:child_CloneSet:4_monitor_5000" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="4"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -184,9 +184,9 @@
        <rsc_op id="63" rsc_id="CloneSet:child_CloneSet:5" operation="start" operation_key="CloneSet:child_CloneSet:5_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="clone" value="5"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -201,11 +201,11 @@
        <rsc_op id="64" rsc_id="CloneSet:child_CloneSet:5" operation="monitor" operation_key="CloneSet:child_CloneSet:5_monitor_5000" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="5"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -220,9 +220,9 @@
        <rsc_op id="65" rsc_id="CloneSet:child_CloneSet:6" operation="start" operation_key="CloneSet:child_CloneSet:6_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="clone" value="6"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -237,11 +237,11 @@
        <rsc_op id="66" rsc_id="CloneSet:child_CloneSet:6" operation="monitor" operation_key="CloneSet:child_CloneSet:6_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="6"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -256,9 +256,9 @@
        <rsc_op id="67" rsc_id="CloneSet:child_CloneSet:7" operation="start" operation_key="CloneSet:child_CloneSet:7_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="clone" value="7"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="clone" name="clone" value="7"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
@@ -273,11 +273,11 @@
        <rsc_op id="68" rsc_id="CloneSet:child_CloneSet:7" operation="monitor" operation_key="CloneSet:child_CloneSet:7_monitor_5000" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
          <primitive id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair name="timeout" value="20s"/>
-           <nvpair name="interval" value="5s"/>
-           <nvpair name="clone" value="7"/>
-           <nvpair name="clone_max" value="8"/>
-           <nvpair name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="7"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
