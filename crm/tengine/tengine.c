@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.96 2005/08/26 08:49:42 andrew Exp $ */
+/* $Id: tengine.c,v 1.97 2005/09/15 08:03:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -382,7 +382,6 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	int rc                = -1;
 	int action_id         = -1;
 	int op_status_i       = 0;
-	const char *task      = NULL;
 	const char *rsc_id    = NULL;
 	const char *op_status = NULL;
 
@@ -395,7 +394,6 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		return TRUE;
 	}
 
-	task      = crm_element_value(event, XML_LRM_ATTR_LASTOP);
 	rsc_id    = crm_element_value(event, XML_ATTR_ID);
 	op_status = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
 
@@ -603,11 +601,11 @@ initiate_action(action_t *action)
 		return TRUE;
 #endif
 		action->invoked = FALSE;
-		if(safe_str_eq(task, CRMD_ACTION_STOP)
-		   || safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
-			cib_action_updated(NULL, 0, cib_ok, NULL, action);
-		} else {
+		if(safe_str_eq(task, CRMD_ACTION_START)
+		   || safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 			cib_action_update(action, LRM_OP_PENDING);
+		} else {
+			cib_action_updated(NULL, 0, cib_ok, NULL, action);
 		}
 		ret = TRUE;
 
@@ -700,10 +698,6 @@ cib_action_update(action_t *action, int status)
 	crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
 	crm_xml_add(rsc, XML_LRM_ATTR_RSCSTATE,
 			      get_rsc_state(task, status));
-	
-	crm_xml_add(rsc, XML_LRM_ATTR_OPSTATUS, code);
-	crm_xml_add(rsc, XML_LRM_ATTR_RC, code);
-	crm_xml_add(rsc, XML_LRM_ATTR_LASTOP, task);
 	
 	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, code);
 	crm_xml_add(xml_op, XML_LRM_ATTR_CALLID, "-1");

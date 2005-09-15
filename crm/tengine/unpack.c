@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.44 2005/08/17 09:03:24 andrew Exp $ */
+/* $Id: unpack.c,v 1.45 2005/09/15 08:03:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,7 +34,6 @@
 
 cib_t *te_cib_conn = NULL;
 action_t* unpack_action(crm_data_t *xml_action);
-crm_data_t *create_shutdown_event(const char *node, int op_status);
 void set_timer_value(te_timer_t *timer, const char *time, int time_default);
 extern int transition_counter;
 
@@ -342,19 +341,3 @@ extract_event(crm_data_t *msg)
 	return TRUE;
 }
 
-crm_data_t*
-create_shutdown_event(const char *node, int op_status)
-{
-	crm_data_t *event = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	char *code = crm_itoa(op_status);
-
-	crm_xml_add(event, XML_LRM_ATTR_TARGET_UUID, node);
-/*	event_rsc    = crm_xml_add(event, XML_ATTR_ID); */
-	crm_xml_add(event, XML_LRM_ATTR_RC, "0");
-	crm_xml_add(event, XML_LRM_ATTR_LASTOP, XML_CIB_ATTR_SHUTDOWN);
-	crm_xml_add(event, XML_LRM_ATTR_RSCSTATE, CRMD_ACTION_GENERIC_OK);
-	crm_xml_add(event, XML_LRM_ATTR_OPSTATUS, code);
-	
-	crm_free(code);
-	return event;
-}
