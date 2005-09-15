@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.33 2005/09/15 07:59:49 andrew Exp $ */
+/* $Id: xml.c,v 1.34 2005/09/15 17:09:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1992,9 +1992,13 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
 	const char *s_value = value;
 
 	crm_data_t *xml_node  = user_data;
-	crm_xml_add(xml_node, name, s_value);
 
-	crm_debug_3("dumped: %s=%s", name, s_value);
+	if(crm_element_value(xml_node, name) == NULL) {
+		crm_xml_add(xml_node, name, s_value);
+		crm_debug_3("dumped: %s=%s", name, s_value);
+	} else {
+		crm_debug_2("duplicate: %s=%s", name, s_value);
+	}
 }
 
 
