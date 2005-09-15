@@ -26,12 +26,24 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 from UserDict import UserDict
-import sys, time, types, syslog, whrandom, os, struct, string
+import sys, time, types, syslog, whrandom, os, struct, string, signal
 from CTS  import ClusterManager
 from CM_hb import HeartbeatCM
 from CTStests import BSC_AddResource
 from socket import gethostbyname_ex
 
+tests = None
+cm = None
+old_handler = None
+
+def sig_handler(signum, frame) :
+    if cm != None:
+        cm.log("Interrupted by signal %d"%signum)
+    if signum == 10 and tests != None :
+        tests.summarize()
+    if signum == 15 :
+        sys.exit(1)
+        
 class ResetMechanism:
     def reset(self, node):
         raise ValueError("Abstract class member (reset)")
@@ -511,7 +523,9 @@ if __name__ == '__main__':
     # and I haven't written the code to set it properly yet.  Patches are
     # being accepted...
 
-
+    # Set the signal handler
+    signal.signal(15, sig_handler)
+    signal.signal(10, sig_handler)
     
     # Process arguments...
 
@@ -726,5 +740,9 @@ if __name__ == '__main__':
 	
     tests = RandomTests(scenario, cm, Tests, Audits)
     Environment.RandomTests = tests
-    overall, detailed = tests.run(NumIter)
+    try :
+        overall, detailed = tests.run(NumIter)
+    except :
+        cm.log("Exception by %s" % sys.exc_info()[0])
+        
     tests.summarize()
