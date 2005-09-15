@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.76 2005/09/02 12:31:44 andrew Exp $ */
+/* $Id: crm.h,v 1.77 2005/09/15 08:02:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -155,6 +155,11 @@ extern gboolean crm_assert_failed;
 #define CRMD_ACTION_STOPPED		"stopped"
 #define CRMD_ACTION_STOP_FAIL		"stop_failed"
 #define CRMD_ACTION_STOP_PENDING	"stopping"
+
+#define CRMD_ACTION_PROMOTE		"promote"
+#define CRMD_ACTION_PROMOTED		"promoted"
+#define CRMD_ACTION_DEMOTE		"demote"
+#define CRMD_ACTION_DEMOTED		"demoted"
 
 #define CRMD_ACTION_NOTIFY		"notify"
 #define CRMD_ACTION_NOTIFIED		"notified"

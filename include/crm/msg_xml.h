@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.42 2005/09/02 12:32:01 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.43 2005/09/15 08:02:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -112,10 +112,12 @@
 
 #define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #define XML_TAG_ATTRS			"attributes"
+#define XML_TAG_PARAMS			"parameters"
 
 #define XML_CIB_TAG_RESOURCE	  	"primitive"
 #define XML_CIB_TAG_GROUP	  	"group"
 #define XML_CIB_TAG_INCARNATION		"clone"
+#define XML_CIB_TAG_MASTER		"master_slave"
 
 #define XML_RSC_ATTR_STOPFAIL	   	"on_stopfail"
 #define XML_RSC_ATTR_RESTART	  	"restart_type"
@@ -126,6 +128,9 @@
 #define XML_RSC_ATTR_INCARNATION	"clone"
 #define XML_RSC_ATTR_INCARNATION_MAX	"clone_max"
 #define XML_RSC_ATTR_INCARNATION_NODEMAX	"clone_node_max"
+#define XML_RSC_ATTR_MASTER_MAX		"master_max"
+#define XML_RSC_ATTR_MASTER_NODEMAX	"master_node_max"
+#define XML_RSC_ATTR_STATE		"clone_state"
 
 #define XML_CIB_TAG_LRM		  	"lrm"
 #define XML_LRM_TAG_RESOURCES     	"lrm_resources"
@@ -163,7 +168,6 @@
 #define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
 #define XML_LRM_ATTR_RSCSTATE		"rsc_state"
 #define XML_LRM_ATTR_RSCID		"rsc_id"
-#define XML_LRM_ATTR_LASTOP		"last_op"
 #define XML_LRM_ATTR_OPSTATUS		"op_status"
 #define XML_LRM_ATTR_RC			"rc_code"
 #define XML_LRM_ATTR_CALLID		"call_id"
@@ -175,8 +179,13 @@
 
 #define XML_TAG_RULE			"rule"
 #define XML_RULE_ATTR_SCORE		"score"
+#define XML_RULE_ATTR_SCORE_ATTRIBUTE	"score_attribute"
+#define XML_RULE_ATTR_SCORE_MANGLED	"score_attribute_mangled"
+#define XML_RULE_ATTR_ROLE		"role"
 #define XML_RULE_ATTR_RESULT		"result"
 #define XML_RULE_ATTR_BOOLEAN_OP	"boolean_op"
+#define XML_RULE_ATTR_FROMSTATE		"from_state"
+#define XML_RULE_ATTR_TOSTATE		"to_state"
 
 #define XML_TAG_EXPRESSION		"expression"
 #define XML_EXPR_ATTR_ATTRIBUTE		"attribute"
@@ -190,6 +199,7 @@
 #define XML_CONS_ATTR_FROM		"from"
 #define XML_CONS_ATTR_TO		"to"
 #define XML_CONS_ATTR_ACTION		"action"
+#define XML_CONS_ATTR_TOACTION		"to_action"
 #define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
 
