@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.124 2005/09/15 15:23:54 andrew Exp $ */
+/* $Id: unpack.c,v 1.125 2005/09/15 17:13:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -104,6 +104,7 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	param_value(config_hash, config, "no_quorum_policy");
 	param_value(config_hash, config, "stop_orphan_resources");
 	param_value(config_hash, config, "stop_orphan_actions");
+	param_value(config_hash, config, "remove_after_stop");
 #endif
 	value = g_hash_table_lookup(config_hash, "transition_idle_timeout");
 	if(value != NULL) {
@@ -176,6 +177,14 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	}
 	crm_info("Orphan resource actions are %s",
 		 data_set->stop_action_orphans?"stopped":"ignored");	
+
+	value = g_hash_table_lookup(config_hash, "remove_after_stop");
+	if(value != NULL) {
+		cl_str_to_boolean(value, &data_set->remove_on_stop);
+	}
+	crm_info("After stop, resources are %s the LRM %s",
+		 data_set->stop_rsc_orphans?"removed from":"left in",	
+		 data_set->stop_rsc_orphans?"":"(legacy-mode)");	
 	
 	g_hash_table_destroy(config_hash);
 	return TRUE;
@@ -428,7 +437,6 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 	const char *uname = NULL;
 
 	crm_data_t * lrm_rsc    = NULL;
-	crm_data_t * lrm_agents = NULL;
 	crm_data_t * attrs      = NULL;
 	node_t    *this_node  = NULL;
 	
@@ -440,9 +448,7 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 		uname = crm_element_value(node_state,    XML_ATTR_UNAME);
 		attrs = find_xml_node(node_state, XML_LRM_TAG_ATTRIBUTES,FALSE);
 
-		lrm_rsc    = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-		lrm_agents = find_xml_node(lrm_rsc, XML_LRM_TAG_AGENTS, FALSE);
-
+		lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
 		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
 
 		crm_debug_3("Processing node %s", uname);
@@ -912,7 +918,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 			crm_warn("Orphan action detected: %s", id);
 			action = custom_action(
-				rsc, crm_strdup(id), "cancel", node,
+				rsc, crm_strdup(id), CRMD_ACTION_CANCEL, node,
 				FALSE, TRUE, data_set);
 
 			crm_info("Orphan action will be stopped: %d",

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.80 2005/09/15 15:23:54 andrew Exp $ */
+/* $Id: native.c,v 1.81 2005/09/15 17:13:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1712,6 +1712,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 {
 	action_t *start = NULL;
 	action_t *stop = NULL;
+	action_t *delete = NULL;
 
 	crm_debug("Executing: %s", rsc->id);
 
@@ -1725,6 +1726,13 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 			 next->details->uname);
 		stop = stop_action(rsc, current, FALSE);
 		start = start_action(rsc, next, FALSE);
+
+		if(data_set->remove_on_stop) {
+			delete = delete_action(rsc, current);
+			custom_action_order(
+				rsc, NULL, stop, rsc, NULL, delete,
+				pe_ordering_manditory, data_set);
+		}
 		
 	} else {
 		if(rsc->state == rsc_state_failed) {
@@ -1763,6 +1771,9 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 gboolean
 StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
+	action_t *stop = NULL;
+	action_t *delete = NULL;
+	
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 
@@ -1772,8 +1783,16 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 		current, node_t, native_data->running_on, lpc,
 		crm_info("Stop  resource %s\t(%s)",
 			 rsc->id, current->details->uname);
-		stop_action(rsc, current, FALSE);
+		stop = stop_action(rsc, current, FALSE);
+
+		if(data_set->remove_on_stop) {
+			delete = delete_action(rsc, current);
+			custom_action_order(
+				rsc, NULL, stop, rsc, NULL, delete,
+				pe_ordering_manditory, data_set);
+		}
 		);
+	
 	return TRUE;
 }
 

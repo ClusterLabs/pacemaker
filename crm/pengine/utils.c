@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.108 2005/09/15 15:56:36 andrew Exp $ */
+/* $Id: utils.c,v 1.109 2005/09/15 17:13:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1090,6 +1090,8 @@ text2task(const char *task)
 	} else if(safe_str_eq(task, CRMD_ACTION_DEMOTED)) {
 		return action_demoted;
 	} else if(safe_str_eq(task, "cancel")) {
+		return no_action;
+	} else if(safe_str_eq(task, "delete")) {
 		return no_action;
 	} 
 	pe_err("Unsupported action: %s", task);

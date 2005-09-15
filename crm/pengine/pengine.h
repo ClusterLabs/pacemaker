@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.90 2005/09/15 15:23:54 andrew Exp $ */
+/* $Id: pengine.h,v 1.91 2005/09/15 17:13:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -103,6 +103,8 @@ typedef struct pe_working_set_s
 
 		gboolean stop_rsc_orphans;
 		gboolean stop_action_orphans;
+
+		gboolean remove_on_stop;
 		
 		int default_resource_stickiness;
 		no_quorum_policy_t no_quorum_policy;
