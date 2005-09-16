@@ -58,6 +58,7 @@ do_ha_control(long long action,
 	
 	if(action & A_HA_DISCONNECT) {
 		if(fsa_cluster_conn != NULL) {
+			set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
 			fsa_cluster_conn->llc_ops->signoff(
 				fsa_cluster_conn, FALSE);
 		}
@@ -79,6 +80,7 @@ do_ha_control(long long action,
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 			return I_NULL;
 		}
+		clear_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
 	} 
 	
 	if(action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) {

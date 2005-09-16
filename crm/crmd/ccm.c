@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.87 2005/08/25 08:29:37 andrew Exp $ */
+/* $Id: ccm.c,v 1.88 2005/09/16 16:45:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,11 +70,13 @@ do_ccm_control(long long action,
 	gboolean did_fail = FALSE;
 	
 	if(action & A_CCM_DISCONNECT){
+		set_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
 		oc_ev_unregister(fsa_ev_token);
 	}
 
 	if(action & A_CCM_CONNECT) {
 		crm_debug_3("Registering with CCM");
+		clear_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
 		ret = oc_ev_register(&fsa_ev_token);
 		if (ret != 0) {
 			crm_warn("CCM registration failed");

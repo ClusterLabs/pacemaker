@@ -378,6 +378,11 @@ crmd_client_status_callback(const char * node, const char * client,
 void
 crmd_ha_connection_destroy(gpointer user_data)
 {
+	if(is_set(fsa_input_register, R_HA_DISCONNECTED)) {
+		/* we signed out, so this is expected */
+		return;
+	}
+
 	crm_crit("Heartbeat has left us");
 	/* this is always an error */
 	/* feed this back into the FSA */
@@ -430,11 +435,17 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 	
 	crm_debug_3("received callback");	
 	rc = oc_ev_handle_event(ccm_token);
+
 	if(rc != 0) {
-		crm_err("CCM connection appears to have failed: rc=%d.", rc);
-		register_fsa_input(C_CCM_CALLBACK, I_ERROR, NULL);
+		if(is_set(fsa_input_register, R_CCM_DISCONNECTED) == FALSE) {
+			/* we signed out, so this is expected */
+			register_fsa_input(C_CCM_CALLBACK, I_ERROR, NULL);
+			crm_err("CCM connection appears to have failed: rc=%d.",
+				rc);
+		}
 		was_error = TRUE;
 	}
+
 	G_main_set_trigger(fsa_source);
 	return !was_error;
 }

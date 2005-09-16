@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.39 2005/05/25 12:51:02 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.40 2005/09/16 16:45:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -434,13 +434,15 @@ enum crmd_fsa_input {
 #define	R_PE_REQUIRED	0x00002000ULL /* Is the Policy Engine required? */
 #define	R_TE_REQUIRED	0x00004000ULL /* Is the Transition Engine required? */
 
-
 #define	R_CIB_DONE	0x00010000ULL /* Have we calculated the CIB? */
 #define R_HAVE_CIB	0x00020000ULL /* Do we have an up-to-date CIB */
 #define R_CIB_ASKED	0x00040000ULL /* Have we asked for an up-to-date CIB */
 
 #define R_CCM_DATA	0x00100000ULL /* Have we got CCM data yet */
 #define R_PEER_DATA	0x00200000ULL /* Have we got T_CL_STATUS data yet */
+
+#define R_HA_DISCONNECTED  0x00400000ULL /* did we sign out of our own accord */
+#define R_CCM_DISCONNECTED 0x00800000ULL /* did we sign out of our own accord */
 
 #define	R_REQ_PEND	0x01000000ULL /* Are there Requests waiting for
 					 processing? */
@@ -451,7 +453,6 @@ enum crmd_fsa_input {
 #define	R_RESP_PEND	0x08000000ULL /* Do we have clients waiting on a
 					 response? if so perhaps we shouldnt
 					 stop yet */
-
 
 #define R_IN_TRANSITION	0x10000000ULL /*  */
 #define R_SENT_RSC_STOP 0x20000000ULL /* Have we sent a stop action to all
