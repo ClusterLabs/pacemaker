@@ -534,7 +534,7 @@ build_active_RAs(crm_data_t *rsc_list)
 			}
 			max_call_id = op->call_id;
 			found_op = TRUE;
-			
+			lrm_free_op(op);
 			);
 		if(found_op == FALSE && g_list_length(op_list) != 0) {
 			crm_err("Could not properly determin last op"
@@ -543,6 +543,7 @@ build_active_RAs(crm_data_t *rsc_list)
 		}
 
 		g_list_free(op_list);
+		lrm_free_rsc(the_rsc);
 		);
 
 	g_list_free(lrm_list);
@@ -635,7 +636,7 @@ do_lrm_invoke(long long action,
 	const char *operation = NULL;
 	enum crmd_fsa_input next_input = I_NULL;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-		
+
 	crm_op = cl_get_string(input->msg, F_CRM_TASK);
 	operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
 	
@@ -666,7 +667,7 @@ do_lrm_invoke(long long action,
 		id_from_cib = crm_element_value(xml_rsc, XML_ATTR_ID);
 		CRM_DEV_ASSERT(id_from_cib != NULL);
 		if(crm_assert_failed) {
-			crm_err("No value for %s in %s.",
+			crm_err("No value for %s in %s",
 				XML_ATTR_ID, crm_element_name(xml_rsc));
 			crm_log_xml_err(input->xml, "Bad command");
 			return I_NULL;
@@ -691,11 +692,12 @@ do_lrm_invoke(long long action,
 			if(rsc == NULL) {
 				return I_NULL;
 			}
-			crm_info("Removing resource %s from the LRM", rsc->id);
 
+			crm_info("Removing resource %s from the LRM", rsc->id);
 			if(safe_str_neq(lastop, CRMD_ACTION_STOP)) {
 				crm_err("Not removing resource %s: lastop=%s",
 					rsc->id, lastop);
+				lrm_free_rsc(rsc);
 				return I_NULL;
 			}
 
@@ -710,6 +712,7 @@ do_lrm_invoke(long long action,
 			next_input = do_lrm_rsc_op(
 				rsc, rid, operation, input->xml, input->msg);
 		}
+		lrm_free_rsc(rsc);
 		
 	} else {
 		crm_err("Operation was neither a lrm_query, nor a rsc op.  %s",
@@ -1139,7 +1142,17 @@ do_update_resource(lrm_op_t* op)
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
 
 	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
+	if(safe_str_eq(CRMD_ACTION_STOP, op->op_type)) {
+		lrm_rsc_t *rsc = fsa_lrm_conn->lrm_ops->get_rsc(
+			fsa_lrm_conn, op->rsc_id);
 
+		crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
+		crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->class);
+		crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER,rsc->provider);
+		
+		lrm_free_rsc(rsc);
+	}
+	
 	build_operation_update(iter, op, __FUNCTION__, 0);
 	fragment = create_cib_fragment(update, NULL);
 
