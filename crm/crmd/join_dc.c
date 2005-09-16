@@ -285,7 +285,7 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 	CRM_DEV_ASSERT(cib_not_master != rc);
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 	if(rc != cib_ok) {
-		crm_log_maybe(rc==cib_old_data?LOG_WARNING:LOG_ERR,
+		crm_log_maybe((rc==cib_old_data?LOG_WARNING:LOG_ERR),
 			      "Sync from %s resulted in an error: %s",
 			      (char*)user_data, cib_error2string(rc));
 
