@@ -26,7 +26,7 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 from UserDict import UserDict
-import sys, time, types, syslog, whrandom, os, struct, string, signal
+import sys, time, types, syslog, whrandom, os, struct, string, signal, traceback
 from CTS  import ClusterManager
 from CM_hb import HeartbeatCM
 from CTStests import BSC_AddResource
@@ -173,6 +173,16 @@ class Logger:
 
     def __call__(self, lines):
         raise ValueError("Abstract class member (__call__)")
+    def write(self, line):
+        return self(line.rstrip())
+    def writelines(self, lines):
+        for s in lines:
+            self.write(s)
+        return 1
+    def flush(self):
+        return 1
+    def isatty(self):
+        return None
 
 class SysLog(Logger):
     # http://docs.python.org/lib/module-syslog.html
@@ -743,6 +753,8 @@ if __name__ == '__main__':
     try :
         overall, detailed = tests.run(NumIter)
     except :
-        cm.log("Exception by %s" % sys.exc_info()[0])
+        cm.Env.log("Exception by %s" % sys.exc_info()[0])
+        for logmethod in Environment["logger"]:
+	  traceback.print_exc(50, logmethod)
         
     tests.summarize()
