@@ -234,7 +234,7 @@ class HAResourceAudit(ClusterAudit):
                 up_count += 1
                 
         #Make sure the resouces are running on one and only one node
-        Resources = self.CM.Resources()
+        Resources,Groups = self.CM.Resources()
         for resource in Resources :
             RunningNodes = self._RscRunningNodes(resource)
             NodeofRsc[resource.rid]=RunningNodes
@@ -286,7 +286,17 @@ class HAResourceAudit(ClusterAudit):
                     self.CM.log("Incarnation %s has %d instances(max %d instances).\
                         Now %d nodes are up"%(str(inc_name),NumofInc[inc_name], \
                         MaxofInc[inc_name],up_count))
-
+        
+        for group in Groups :
+            RunningNodes = NodeofRsc[group[0].rid]
+            for rsc in group :
+                if RunningNodes != NodeofRsc[rsc.rid] :
+                    passed = 0 
+                    self.CM.log("Not all resources in group %s running on same node"%
+                                str(group))
+                    self.CM.log("%s running on %s"%(group[0].rid,NodeofRsc(group[0].rid)))
+                    self.CM.log("%s running on %s"%(rsc.rid,NodeofRsc(rsc.rid)))
+                                
         #Make sure the resouces with "must","placement" constraint are running on the same node
         Dependancies = self.CM.Dependencies()
         for dependency in Dependancies:

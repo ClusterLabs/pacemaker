@@ -415,13 +415,24 @@ class LinuxHAv2(HeartbeatCM):
     
     def Resources(self):
         ResourceList = []
+        GroupList = []
         #read resources in cib
         configuration = self.Configuration()
         resources = configuration.getElementsByTagName('resources')[0]
+        groups = configuration.getElementsByTagName('group')
         rscs = configuration.getElementsByTagName('primitive')
         for rsc in rscs:
             if rsc in resources.childNodes:
                 ResourceList.append(HAResource(self,rsc))
+        for grp in groups:
+            group = []
+            GroupList.append(group)
+            for rsc in rscs:
+                if rsc in grp.childNodes:
+                    resource = HAResource(self,rsc,grp.getAttribute('id'))
+                    ResourceList.append(resource)
+                    group.append(resource)
+                    
         incs = configuration.getElementsByTagName('clone')
         for inc in incs:
             max = 0
@@ -441,7 +452,7 @@ class LinuxHAv2(HeartbeatCM):
                 rsc.rid = inc_name+":"+rsc.rid + ":%d"%i
                 rsc.Instance = rsc.rid
                 ResourceList.append(rsc)
-        return ResourceList
+        return ResourceList, GroupList
 
     def Dependencies(self):
         DependencyList = []
@@ -524,11 +535,14 @@ class LinuxHAv2(HeartbeatCM):
         return True
 
 class HAResource(Resource):
-    def __init__(self, cm, node):
+    def __init__(self, cm, node, group=None):
         '''
         Get information from xml node
         '''
-        self.rid     = str(node.getAttribute('id'))
+        if group == None :
+            self.rid     = str(node.getAttribute('id'))
+        else :
+            self.rid     = group + ":" + str(node.getAttribute('id'))
         self.rclass  = str(node.getAttribute('class'))
         self.rtype   = str(node.getAttribute('type'))
         self.inc_name = None
