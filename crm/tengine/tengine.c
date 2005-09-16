@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.98 2005/09/15 17:10:32 andrew Exp $ */
+/* $Id: tengine.c,v 1.99 2005/09/16 17:28:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -741,7 +741,7 @@ cib_action_update(action_t *action, int status)
 	{
 		HA_Message *cmd = ha_msg_new(11);
 		ha_msg_add(cmd, F_TYPE,		T_CRM);
-		ha_msg_add(cmd, F_CRM_VERSION,	CRM_VERSION);
+		ha_msg_add(cmd, F_CRM_VERSION,	CRM_FEATURE_SET);
 		ha_msg_add(cmd, F_CRM_MSG_TYPE, XML_ATTR_REQUEST);
 		ha_msg_add(cmd, F_CRM_TASK,	CRM_OP_EVENTCC);
 		ha_msg_add(cmd, F_CRM_SYS_TO,   CRM_SYSTEM_TENGINE);
@@ -828,6 +828,7 @@ cib_action_updated(
 	if(safe_str_eq(CRMD_ACTION_CANCEL, task)
 	   || safe_str_eq(CRMD_ACTION_DELETE, task)) {
 		action->complete = TRUE;
+		process_trigger(action->id);
 
 	} else if(action->timeout > 0) {
 		crm_debug_3("Setting timer for action %d",action->id);
