@@ -54,6 +54,54 @@ struct crm_subsystem_s *cib_subsystem = NULL;
 int cib_retries = 0;
 
 
+static void
+revision_check_callback(const HA_Message *msg, int call_id, int rc,
+			crm_data_t *output, void *user_data)
+{
+	int cmp = -1;
+	const char *revision = NULL;
+	crm_data_t *generation = find_xml_node(output, XML_TAG_CIB, TRUE);
+
+	if(rc != cib_ok) {
+		fsa_data_t *msg_data = NULL;
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+		return;
+	}
+	
+	crm_debug_3("Checking our feature revision is allowed: %s",
+		    CIB_FEATURE_SET);
+
+	revision = crm_element_value(generation, XML_ATTR_CIB_REVISION);
+	cmp = compare_version(revision, CIB_FEATURE_SET);
+	
+	if(cmp > 0) {
+		crm_err("This build (%s) does not support the current"
+			" resource configuration", VERSION);
+		crm_err("We can support up to CIB feature set %s (current=%s)",
+			CIB_FEATURE_SET, revision);
+		crm_err("Shutting down the CRM");
+		/* go into a stall state */
+		register_fsa_error_adv(
+			C_FSA_INTERNAL, I_SHUTDOWN, NULL, NULL, __FUNCTION__);
+		return;
+	}
+
+	revision = crm_element_value(generation, XML_ATTR_CRM_VERSION);
+	cmp = compare_version(revision, CRM_FEATURE_SET);
+	
+	if(cmp > 0) {
+		crm_err("This build (%s) does not support the current"
+			" resource configuration", VERSION);
+		crm_err("We can support up to CRM feature set %s (current=%s)",
+			revision, CRM_FEATURE_SET);
+		crm_err("Shutting down the CRM");
+		/* go into a stall state */
+		register_fsa_error_adv(
+			C_FSA_INTERNAL, I_SHUTDOWN, NULL, NULL, __FUNCTION__);
+		return;
+	}
+}
+
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
 enum crmd_fsa_input
 do_cib_control(long long action,
@@ -117,6 +165,12 @@ do_cib_control(long long action,
 						C_FSA_INTERNAL, I_ERROR, NULL);
 				}
 			} else {
+				int rc = fsa_cib_conn->cmds->query(
+					fsa_cib_conn, NULL, NULL,
+					cib_scope_local);
+
+				add_cib_op_callback(rc, FALSE, NULL,
+						    revision_check_callback);
 				cib_retries = 0;
 			}
 			

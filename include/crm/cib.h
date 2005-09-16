@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.30 2005/09/12 19:32:36 andrew Exp $ */
+/* $Id: cib.h,v 1.31 2005/09/16 16:55:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,8 +26,8 @@
 #include <crm/common/xml.h>
 #include <ha_msg.h>
 
-#define cib_feature_revision 1
-#define cib_feature_revision_s "1"
+#define CIB_FEATURE_SET "1.1"
+/* use compare_version() for doing comparisons */
 
 enum cib_variant {
 	cib_native,
@@ -374,6 +374,8 @@ extern enum cib_errors set_standby(
 enum cib_errors delete_standby(
 	cib_t *the_cib,
 	const char *uuid, const char *scope, const char *standby_value);
+
+extern const char *feature_set(crm_data_t *xml_obj);
 
 #endif
 

@@ -30,6 +30,7 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <cib_private.h>
 
@@ -363,6 +364,30 @@ cib_native_perform_op(
 	}
 
 	if(rc == HA_OK && data != NULL) {
+		const char *tag = crm_element_name(data);
+		crm_data_t *cib = data;
+		if(safe_str_neq(tag, XML_TAG_CIB)) {
+			cib = find_xml_node(data, XML_TAG_CIB, FALSE);
+			tag = crm_element_name(cib);
+		}
+		
+		if(safe_str_eq(tag, XML_TAG_CIB)) {
+			const char *version = feature_set(cib);
+#if 1
+			/* only needed for 2.0.2 */
+			int cmp = compare_version(version, "1.1");
+			if(cmp != 0) {
+				crm_err("Set XML_ATTR_CIB_REVISION=%s",
+					version);
+				crm_xml_add(cib, XML_ATTR_CIB_REVISION,version);
+			}
+#else
+			crm_xml_add(cib, XML_ATTR_CIB_REVISION, version);
+#endif
+		} else {
+			crm_err("Skipping feature check for %s tag", tag);
+		}
+
 		add_message_xml(op_msg, F_CIB_CALLDATA, data);
 	}
 	

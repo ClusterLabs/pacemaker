@@ -1307,7 +1307,6 @@ createEmptyCib(void)
 	
 /* 	crm_xml_add(cib_root, "version", "1"); */
 	crm_xml_add(cib_root, "generated", XML_BOOLEAN_TRUE);
-	crm_xml_add(cib_root, XML_ATTR_CIB_REVISION, cib_feature_revision_s);
 
 	create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
 	create_xml_node(config, XML_CIB_TAG_NODES);

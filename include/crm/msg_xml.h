@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.43 2005/09/15 08:02:41 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.44 2005/09/16 16:55:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,6 +35,8 @@
 #define XML_ATTR_PARENT			F_XML_PARENT
 #define XML_TAG_CIB			"cib"
 #define XML_TAG_FAILED			"failed"
+
+#define XML_ATTR_CRM_VERSION		"crm_feature_set"
 
 #define XML_ATTR_NUMPEERS		"num_peers"
 #define XML_ATTR_HAVE_QUORUM		"have_quorum"

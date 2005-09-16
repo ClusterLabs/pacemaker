@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.5 2005/06/15 13:39:48 andrew Exp $ */
+/* $Id: msg.c,v 1.6 2005/09/16 16:55:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -232,7 +232,7 @@ create_request_adv(const char *task, crm_data_t *msg_data,
 
 	ha_msg_add(request, F_CRM_ORIGIN,	origin);
 	ha_msg_add(request, F_TYPE,		T_CRM);
-	ha_msg_add(request, F_CRM_VERSION,	CRM_VERSION);
+	ha_msg_add(request, F_CRM_VERSION,	CRM_FEATURE_SET);
 	ha_msg_add(request, F_CRM_MSG_TYPE,     XML_ATTR_REQUEST);
 	ha_msg_add(request, XML_ATTR_REFERENCE, reference);
 	ha_msg_add(request, F_CRM_TASK,		task);
@@ -273,6 +273,7 @@ create_reply_adv(HA_Message *original_request,
 	if (type == NULL) {
 		crm_err("Cannot create new_message,"
 			" no message type in original message");
+		CRM_ASSERT(type != NULL);
 		return NULL;
 #if 0
 	} else if (strcmp(XML_ATTR_REQUEST, type) != 0) {
@@ -285,7 +286,7 @@ create_reply_adv(HA_Message *original_request,
 
 	ha_msg_add(reply, F_CRM_ORIGIN,		origin);
 	ha_msg_add(reply, F_TYPE,		T_CRM);
-	ha_msg_add(reply, F_CRM_VERSION,	CRM_VERSION);
+	ha_msg_add(reply, F_CRM_VERSION,	CRM_FEATURE_SET);
 	ha_msg_add(reply, F_CRM_MSG_TYPE,	XML_ATTR_RESPONSE);
 	ha_msg_add(reply, XML_ATTR_REFERENCE,	crm_msg_reference);
 	ha_msg_add(reply, F_CRM_TASK,		operation);

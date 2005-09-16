@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.78 2005/09/15 17:10:03 andrew Exp $ */
+/* $Id: crm.h,v 1.79 2005/09/16 16:55:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,7 +84,7 @@ extern gboolean crm_assert_failed;
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
-#define CRM_VERSION	"1.0"
+#define CRM_FEATURE_SET	"1.0.0"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
@@ -208,7 +208,7 @@ extern gboolean safe_str_neq(const char *a, const char *b);
 #define crm_warn(w...)    do_crm_log(LOG_WARNING, __FILE__, __FUNCTION__, w)
 #define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FILE__, __FUNCTION__, w)
 #define crm_info(w...)    do_crm_log(LOG_INFO,    __FILE__, __FUNCTION__, w)
-#define crm_log_maybe(level, fmt...) if(crm_log_level >= level) {	\
+#define crm_log_maybe(level, fmt...) if(crm_log_level >= (level)) {	\
 		do_crm_log(level, __FILE__, __FUNCTION__, fmt);		\
 	}
 
