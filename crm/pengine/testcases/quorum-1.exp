@@ -27,7 +27,22 @@
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="5" rsc_id="rsc3" operation="start" operation_key="rsc3_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="5" rsc_id="rsc2" operation="delete" operation_key="rsc2_delete_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <primitive id="rsc2" class="heartbeat" type="apache" on_stopfail="block"/>
+         <attributes>
+           <nvpair id="on_stopfail" name="on_stopfail" value="block"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="3" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="3">
+     <action_set>
+       <rsc_op id="6" rsc_id="rsc3" operation="start" operation_key="rsc3_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
          <primitive id="rsc3" class="heartbeat" type="apache" on_stopfail="block"/>
          <attributes>
            <nvpair id="on_stopfail" name="on_stopfail" value="block"/>

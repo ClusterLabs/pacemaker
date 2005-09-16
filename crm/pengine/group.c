@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.40 2005/09/15 15:23:54 andrew Exp $ */
+/* $Id: group.c,v 1.41 2005/09/16 17:32:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -520,58 +520,24 @@ group_agent_constraints(resource_t *rsc)
 		);
 }
 
-rsc_state_t
+enum rsc_role_e
 group_resource_state(resource_t *rsc)
 {
-	rsc_state_t state = rsc_unknown;
-	rsc_state_t last_state = rsc_unknown;
+	enum rsc_role_e group_role = RSC_ROLE_UNKNOWN;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		
-		last_state = child_rsc->fns->state(child_rsc);
-		switch(last_state) {
-			case rsc_unknown:
-			case rsc_move:
-				return last_state;
-				break;
-			case rsc_restart:
-				CRM_DEV_ASSERT(state != rsc_stopping);
-				CRM_DEV_ASSERT(state != rsc_stopped);
-/* 				CRM_DEV_ASSERT(state != rsc_active); */
-				state = last_state;
-				break;
-			case rsc_active:
-/* 				CRM_DEV_ASSERT(state != rsc_restart); */
-				CRM_DEV_ASSERT(state != rsc_stopping);
-				if(last_state == rsc_unknown) {
-					state = last_state;
-				}
-				break;
-			case rsc_stopped:
-				CRM_DEV_ASSERT(state != rsc_restart);
-				CRM_DEV_ASSERT(state != rsc_starting);
-				if(last_state == rsc_unknown) {
-					state = last_state;
-				}
-				break;
-			case rsc_starting:
-				CRM_DEV_ASSERT(state != rsc_stopped);
-				if(state != rsc_restart) {
-					state = last_state;
-				}
-				break;				
-			case rsc_stopping:
-				CRM_DEV_ASSERT(state != rsc_active);
-				if(state != rsc_restart) {
-					state = last_state;
-				}
-				break;		
+
+		if(child_rsc->next_role > group_role) {
+			group_role = rsc->next_role;
+		}
+		if(child_rsc->failed) {
+			rsc->failed = TRUE;
 		}
 		);
-	return state;
+	return group_role;
 }
 
 void

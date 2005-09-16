@@ -1,333 +1,697 @@
  <transition_graph global_timeout="120s" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="53" rsc_id="CloneSet:child_CloneSet:0" operation="start" operation_key="CloneSet:child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
+       <rsc_op id="18" rsc_id="DoFencing:child_DoFencing:0" operation="delete" operation_key="DoFencing:child_DoFencing:0_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="69" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="54" rsc_id="CloneSet:child_CloneSet:0" operation="monitor" operation_key="CloneSet:child_CloneSet:0_monitor_5000" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
+       <rsc_op id="27" rsc_id="DoFencing:child_DoFencing:0" operation="delete" operation_key="DoFencing:child_DoFencing:0_delete_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="interval" name="interval" value="5000"/>
            <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="53" rsc_id="CloneSet:child_CloneSet:0" operation="start" operation_key="CloneSet:child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="55" rsc_id="CloneSet:child_CloneSet:1" operation="start" operation_key="CloneSet:child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
+       <rsc_op id="32" rsc_id="DoFencing:child_DoFencing:0" operation="delete" operation_key="DoFencing:child_DoFencing:0_delete_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="69" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="56" rsc_id="CloneSet:child_CloneSet:1" operation="monitor" operation_key="CloneSet:child_CloneSet:1_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
+       <rsc_op id="39" rsc_id="DoFencing:child_DoFencing:0" operation="delete" operation_key="DoFencing:child_DoFencing:0_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="interval" name="interval" value="5000"/>
-           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="55" rsc_id="CloneSet:child_CloneSet:1" operation="start" operation_key="CloneSet:child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="57" rsc_id="CloneSet:child_CloneSet:2" operation="start" operation_key="CloneSet:child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
+       <rsc_op id="1" rsc_id="DoFencing:child_DoFencing:1" operation="delete" operation_key="DoFencing:child_DoFencing:1_delete_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone" name="clone" value="1"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="69" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="58" rsc_id="CloneSet:child_CloneSet:2" operation="monitor" operation_key="CloneSet:child_CloneSet:2_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
+       <rsc_op id="28" rsc_id="DoFencing:child_DoFencing:1" operation="delete" operation_key="DoFencing:child_DoFencing:1_delete_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="interval" name="interval" value="5000"/>
-           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone" name="clone" value="1"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="57" rsc_id="CloneSet:child_CloneSet:2" operation="start" operation_key="CloneSet:child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="59" rsc_id="CloneSet:child_CloneSet:3" operation="start" operation_key="CloneSet:child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
+       <rsc_op id="33" rsc_id="DoFencing:child_DoFencing:1" operation="delete" operation_key="DoFencing:child_DoFencing:1_delete_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone" name="clone" value="1"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="69" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="7">
      <action_set>
-       <rsc_op id="60" rsc_id="CloneSet:child_CloneSet:3" operation="monitor" operation_key="CloneSet:child_CloneSet:3_monitor_5000" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
+       <rsc_op id="40" rsc_id="DoFencing:child_DoFencing:1" operation="delete" operation_key="DoFencing:child_DoFencing:1_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="interval" name="interval" value="5000"/>
-           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone" name="clone" value="1"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="59" rsc_id="CloneSet:child_CloneSet:3" operation="start" operation_key="CloneSet:child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="8">
      <action_set>
-       <rsc_op id="61" rsc_id="CloneSet:child_CloneSet:4" operation="start" operation_key="CloneSet:child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
+       <rsc_op id="10" rsc_id="DoFencing:child_DoFencing:2" operation="delete" operation_key="DoFencing:child_DoFencing:2_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone" name="clone" value="2"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="69" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="9">
      <action_set>
-       <rsc_op id="62" rsc_id="CloneSet:child_CloneSet:4" operation="monitor" operation_key="CloneSet:child_CloneSet:4_monitor_5000" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
+       <rsc_op id="34" rsc_id="DoFencing:child_DoFencing:2" operation="delete" operation_key="DoFencing:child_DoFencing:2_delete_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="interval" name="interval" value="5000"/>
-           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone" name="clone" value="2"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="61" rsc_id="CloneSet:child_CloneSet:4" operation="start" operation_key="CloneSet:child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="10">
      <action_set>
-       <rsc_op id="63" rsc_id="CloneSet:child_CloneSet:5" operation="start" operation_key="CloneSet:child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
+       <rsc_op id="42" rsc_id="DoFencing:child_DoFencing:2" operation="delete" operation_key="DoFencing:child_DoFencing:2_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone" name="clone" value="2"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="69" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="11">
      <action_set>
-       <rsc_op id="64" rsc_id="CloneSet:child_CloneSet:5" operation="monitor" operation_key="CloneSet:child_CloneSet:5_monitor_5000" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
+       <rsc_op id="2" rsc_id="DoFencing:child_DoFencing:3" operation="delete" operation_key="DoFencing:child_DoFencing:3_delete_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="interval" name="interval" value="5000"/>
-           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone" name="clone" value="3"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="63" rsc_id="CloneSet:child_CloneSet:5" operation="start" operation_key="CloneSet:child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="12">
      <action_set>
-       <rsc_op id="65" rsc_id="CloneSet:child_CloneSet:6" operation="start" operation_key="CloneSet:child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
+       <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:3" operation="delete" operation_key="DoFencing:child_DoFencing:3_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone" name="clone" value="3"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="69" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="13">
      <action_set>
-       <rsc_op id="66" rsc_id="CloneSet:child_CloneSet:6" operation="monitor" operation_key="CloneSet:child_CloneSet:6_monitor_5000" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
+       <rsc_op id="44" rsc_id="DoFencing:child_DoFencing:3" operation="delete" operation_key="DoFencing:child_DoFencing:3_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="interval" name="interval" value="5000"/>
-           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone" name="clone" value="3"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="65" rsc_id="CloneSet:child_CloneSet:6" operation="start" operation_key="CloneSet:child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="14">
      <action_set>
-       <rsc_op id="67" rsc_id="CloneSet:child_CloneSet:7" operation="start" operation_key="CloneSet:child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
+       <rsc_op id="53" rsc_id="DoFencing:child_DoFencing:3" operation="delete" operation_key="DoFencing:child_DoFencing:3_delete_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="clone" name="clone" value="7"/>
+           <nvpair id="clone" name="clone" value="3"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="69" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="15">
      <action_set>
-       <rsc_op id="68" rsc_id="CloneSet:child_CloneSet:7" operation="monitor" operation_key="CloneSet:child_CloneSet:7_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false">
-         <primitive id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
+       <rsc_op id="11" rsc_id="DoFencing:child_DoFencing:4" operation="delete" operation_key="DoFencing:child_DoFencing:4_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="interval" name="interval" value="5000"/>
-           <nvpair id="clone" name="clone" value="7"/>
+           <nvpair id="clone" name="clone" value="4"/>
            <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
          </attributes>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="67" rsc_id="CloneSet:child_CloneSet:7" operation="start" operation_key="CloneSet:child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="16">
      <action_set>
-       <pseudo_event id="69" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false">
-         <attributes/>
-       </pseudo_event>
+       <rsc_op id="30" rsc_id="DoFencing:child_DoFencing:4" operation="delete" operation_key="DoFencing:child_DoFencing:4_delete_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="17">
      <action_set>
-       <pseudo_event id="70" rsc_id="CloneSet" operation="running" operation_key="CloneSet_running_0" allow_fail="false">
+       <rsc_op id="51" rsc_id="DoFencing:child_DoFencing:4" operation="delete" operation_key="DoFencing:child_DoFencing:4_delete_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="18">
+     <action_set>
+       <rsc_op id="54" rsc_id="DoFencing:child_DoFencing:4" operation="delete" operation_key="DoFencing:child_DoFencing:4_delete_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="19">
+     <action_set>
+       <rsc_op id="4" rsc_id="DoFencing:child_DoFencing:5" operation="delete" operation_key="DoFencing:child_DoFencing:5_delete_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:5" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="20">
+     <action_set>
+       <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:5" operation="delete" operation_key="DoFencing:child_DoFencing:5_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:5" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="21">
+     <action_set>
+       <rsc_op id="46" rsc_id="DoFencing:child_DoFencing:5" operation="delete" operation_key="DoFencing:child_DoFencing:5_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:5" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="22">
+     <action_set>
+       <rsc_op id="14" rsc_id="DoFencing:child_DoFencing:6" operation="delete" operation_key="DoFencing:child_DoFencing:6_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:6" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="23">
+     <action_set>
+       <rsc_op id="24" rsc_id="DoFencing:child_DoFencing:6" operation="delete" operation_key="DoFencing:child_DoFencing:6_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:6" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="24">
+     <action_set>
+       <rsc_op id="48" rsc_id="DoFencing:child_DoFencing:6" operation="delete" operation_key="DoFencing:child_DoFencing:6_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:6" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="25">
+     <action_set>
+       <rsc_op id="49" rsc_id="DoFencing:child_DoFencing:7" operation="delete" operation_key="DoFencing:child_DoFencing:7_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:7" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="7"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="resource_stickiness" name="resource_stickiness" value="200"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="26">
+     <action_set>
+       <rsc_op id="91" rsc_id="CloneSet:child_CloneSet:0" operation="start" operation_key="CloneSet:child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="107" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="27">
+     <action_set>
+       <rsc_op id="92" rsc_id="CloneSet:child_CloneSet:0" operation="monitor" operation_key="CloneSet:child_CloneSet:0_monitor_5000" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="91" rsc_id="CloneSet:child_CloneSet:0" operation="start" operation_key="CloneSet:child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="28">
+     <action_set>
+       <rsc_op id="93" rsc_id="CloneSet:child_CloneSet:1" operation="start" operation_key="CloneSet:child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="107" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="29">
+     <action_set>
+       <rsc_op id="94" rsc_id="CloneSet:child_CloneSet:1" operation="monitor" operation_key="CloneSet:child_CloneSet:1_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="93" rsc_id="CloneSet:child_CloneSet:1" operation="start" operation_key="CloneSet:child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="30">
+     <action_set>
+       <rsc_op id="95" rsc_id="CloneSet:child_CloneSet:2" operation="start" operation_key="CloneSet:child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="107" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="31">
+     <action_set>
+       <rsc_op id="96" rsc_id="CloneSet:child_CloneSet:2" operation="monitor" operation_key="CloneSet:child_CloneSet:2_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="95" rsc_id="CloneSet:child_CloneSet:2" operation="start" operation_key="CloneSet:child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="32">
+     <action_set>
+       <rsc_op id="97" rsc_id="CloneSet:child_CloneSet:3" operation="start" operation_key="CloneSet:child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="107" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="33">
+     <action_set>
+       <rsc_op id="98" rsc_id="CloneSet:child_CloneSet:3" operation="monitor" operation_key="CloneSet:child_CloneSet:3_monitor_5000" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="97" rsc_id="CloneSet:child_CloneSet:3" operation="start" operation_key="CloneSet:child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="34">
+     <action_set>
+       <rsc_op id="99" rsc_id="CloneSet:child_CloneSet:4" operation="start" operation_key="CloneSet:child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="107" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="35">
+     <action_set>
+       <rsc_op id="100" rsc_id="CloneSet:child_CloneSet:4" operation="monitor" operation_key="CloneSet:child_CloneSet:4_monitor_5000" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="99" rsc_id="CloneSet:child_CloneSet:4" operation="start" operation_key="CloneSet:child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="36">
+     <action_set>
+       <rsc_op id="101" rsc_id="CloneSet:child_CloneSet:5" operation="start" operation_key="CloneSet:child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="107" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="37">
+     <action_set>
+       <rsc_op id="102" rsc_id="CloneSet:child_CloneSet:5" operation="monitor" operation_key="CloneSet:child_CloneSet:5_monitor_5000" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="101" rsc_id="CloneSet:child_CloneSet:5" operation="start" operation_key="CloneSet:child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="38">
+     <action_set>
+       <rsc_op id="103" rsc_id="CloneSet:child_CloneSet:6" operation="start" operation_key="CloneSet:child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="107" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="39">
+     <action_set>
+       <rsc_op id="104" rsc_id="CloneSet:child_CloneSet:6" operation="monitor" operation_key="CloneSet:child_CloneSet:6_monitor_5000" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="103" rsc_id="CloneSet:child_CloneSet:6" operation="start" operation_key="CloneSet:child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="40">
+     <action_set>
+       <rsc_op id="105" rsc_id="CloneSet:child_CloneSet:7" operation="start" operation_key="CloneSet:child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="7"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="107" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="41">
+     <action_set>
+       <rsc_op id="106" rsc_id="CloneSet:child_CloneSet:7" operation="monitor" operation_key="CloneSet:child_CloneSet:7_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false">
+         <primitive id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="timeout" name="timeout" value="20000"/>
+           <nvpair id="interval" name="interval" value="5000"/>
+           <nvpair id="clone" name="clone" value="7"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="105" rsc_id="CloneSet:child_CloneSet:7" operation="start" operation_key="CloneSet:child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="42">
+     <action_set>
+       <pseudo_event id="107" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false">
+         <attributes/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="43">
+     <action_set>
+       <pseudo_event id="108" rsc_id="CloneSet" operation="running" operation_key="CloneSet_running_0" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="53" rsc_id="CloneSet:child_CloneSet:0" operation="start" operation_key="CloneSet:child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false"/>
+         <rsc_op id="91" rsc_id="CloneSet:child_CloneSet:0" operation="start" operation_key="CloneSet:child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="55" rsc_id="CloneSet:child_CloneSet:1" operation="start" operation_key="CloneSet:child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
+         <rsc_op id="93" rsc_id="CloneSet:child_CloneSet:1" operation="start" operation_key="CloneSet:child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="57" rsc_id="CloneSet:child_CloneSet:2" operation="start" operation_key="CloneSet:child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
+         <rsc_op id="95" rsc_id="CloneSet:child_CloneSet:2" operation="start" operation_key="CloneSet:child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="59" rsc_id="CloneSet:child_CloneSet:3" operation="start" operation_key="CloneSet:child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false"/>
+         <rsc_op id="97" rsc_id="CloneSet:child_CloneSet:3" operation="start" operation_key="CloneSet:child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="61" rsc_id="CloneSet:child_CloneSet:4" operation="start" operation_key="CloneSet:child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false"/>
+         <rsc_op id="99" rsc_id="CloneSet:child_CloneSet:4" operation="start" operation_key="CloneSet:child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="63" rsc_id="CloneSet:child_CloneSet:5" operation="start" operation_key="CloneSet:child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false"/>
+         <rsc_op id="101" rsc_id="CloneSet:child_CloneSet:5" operation="start" operation_key="CloneSet:child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="65" rsc_id="CloneSet:child_CloneSet:6" operation="start" operation_key="CloneSet:child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false"/>
+         <rsc_op id="103" rsc_id="CloneSet:child_CloneSet:6" operation="start" operation_key="CloneSet:child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="67" rsc_id="CloneSet:child_CloneSet:7" operation="start" operation_key="CloneSet:child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false"/>
+         <rsc_op id="105" rsc_id="CloneSet:child_CloneSet:7" operation="start" operation_key="CloneSet:child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false"/>
        </trigger>
        <trigger>
-         <pseudo_event id="69" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
+         <pseudo_event id="107" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>

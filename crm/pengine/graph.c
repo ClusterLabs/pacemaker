@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.60 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: graph.c,v 1.61 2005/09/16 17:32:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -64,7 +64,7 @@ update_action(action_t *action)
 			    other->action->optional?"optional":"required");
 
 		if(other->type == pe_ordering_restart
-		   && action->rsc->state == rsc_state_active) {
+		   && action->rsc->role > RSC_ROLE_STOPPED) {
 			crm_debug_3("Upgrading %s constraint to %s",
 				    ordering_type2text(other->type),
 				    ordering_type2text(pe_ordering_manditory));
@@ -270,7 +270,10 @@ stonith_constraints(node_t *node,
 			slist_iter(
 				action, action_t, stop_actions, lpc2,
 				if(node->details->online == FALSE
-				   || rsc->state == rsc_state_failed) {
+				   || rsc->failed) {
+					crm_info("Stop of failed resource %s is"
+						 " implict after %s is fenced",
+						 rsc->id, node->details->uname);
 					/* the stop would never complete and is
 					 * now implied by the stonith operation
 					 */
@@ -281,6 +284,10 @@ stonith_constraints(node_t *node,
 						rsc, stop_key(rsc), NULL,
 						pe_ordering_manditory, data_set);
 				} else {
+					crm_info("Moving healthy resource %s"
+						 " off %s before fencing",
+						 rsc->id, node->details->uname);
+					
 					/* stop healthy resources before the
 					 * stonith op
 					 */

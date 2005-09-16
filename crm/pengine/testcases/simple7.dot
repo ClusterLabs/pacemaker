@@ -1,6 +1,8 @@
 digraph "g" {
 	size = "30,30"
 "rsc1_stop_0" [ tooltip="node1" style=bold color="green" fontcolor="black" ]
+"rsc1_delete_0" [ tooltip="node1" style=bold color="green" fontcolor="black" ]
 "do_shutdown" [ tooltip="node1" style=bold color="green" fontcolor="black" ]
+"rsc1_stop_0" -> "rsc1_delete_0" [ style = bold]
 "rsc1_stop_0" -> "do_shutdown" [ style = bold]
 }

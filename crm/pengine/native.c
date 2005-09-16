@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.81 2005/09/15 17:13:08 andrew Exp $ */
+/* $Id: native.c,v 1.82 2005/09/16 17:32:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -823,7 +823,7 @@ void native_printw(resource_t *rsc, const char *pre_text, int *index)
 	} else if(g_list_length(native_data->running_on) == 1) {
 		node_t *node = native_data->running_on->data;
 		printw("%s (%s)", node->details->uname, node->details->id);
-		if(rsc->state == rsc_state_failed) {
+		if(rsc->failed) {
 			printw(" FAILED");
 		}
 		
@@ -853,7 +853,7 @@ void native_html(resource_t *rsc, const char *pre_text, FILE *stream)
 		fprintf(stream, " (unmanaged)</font> ");
 	}
 	
-	if(rsc->state == rsc_state_failed) {
+	if(rsc->failed) {
 		fprintf(stream, "<font color=\"orange\">");
 	} else if(g_list_length(native_data->running_on) == 0) {
 		fprintf(stream, "<font color=\"red\">");
@@ -1414,67 +1414,17 @@ filter_nodes(resource_t *rsc)
 }
 
 
-rsc_state_t
+enum rsc_role_e
 native_resource_state(resource_t *rsc)
 {
-	enum action_tasks task = no_action;
-	rsc_state_t state = rsc_unknown;
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-	
-	slist_iter(
-		action, action_t, rsc->actions, lpc,
-		crm_debug_4("processing action %d for rsc=%s",
-			  action->id, rsc->id);
-		task = text2task(action->task);
-
-		if(action->optional) {
-			continue;
-		}
-
-		if(task == stop_rsc) {
-			if(state == rsc_starting) {
-				state = rsc_restart;
-				break;
-			} else {
-				state = rsc_stopping;
-			}
-		} else if(task == start_rsc) {
-			if(state == rsc_stopping) {
-				state = rsc_restart;
-				break;
-			} else {
-				state = rsc_starting;
-			}
-		}
-		);
-
-	if(native_data->running_on != NULL) {
-		node_t *chosen = NULL;
-		node_t *node = native_data->running_on->data;
-
-		if(rsc->color != NULL) {
-			chosen = rsc->color->details->chosen_node;
-		}
-		if(state == rsc_unknown) {
-			state = rsc_active;
-
-		} else if(state == rsc_restart) {
-			CRM_DEV_ASSERT(chosen != NULL && node != NULL);
-			if(crm_assert_failed) {
-				crm_err("State for %s is unreliable", rsc->id);
-				
-			} else if(safe_str_neq(node->details->id,
-					chosen->details->id)) {
-				state = rsc_move;
-			}
-		}
-		
-	} else if(state == rsc_unknown) {
-		state = rsc_stopped;
+	if(rsc->next_role != RSC_ROLE_UNKNOWN) {
+		return rsc->next_role;
 	}
-	
-	return state;
+	if(rsc->role != RSC_ROLE_UNKNOWN) {
+		return rsc->role;
+	}
+
+	return RSC_ROLE_STOPPED;
 }
 
 void
@@ -1504,7 +1454,6 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	node_t *current = NULL;
 
 	enum action_tasks task;
-	rsc_state_t state = rsc->fns->state(rsc);
 
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
@@ -1525,46 +1474,36 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	crm_debug_2("Notificaitons required for %s", op->task);
 	
 	task = text2task(op->task);
-	
-	switch(state) {
-		case rsc_active:
+
+	if(task == stop_rsc
+	   && rsc->role == RSC_ROLE_STARTED
+	   && rsc->next_role == RSC_ROLE_STOPPED) {
+		register_activity(rsc, op, n_data);
+		pe_pre_notify(rsc, current, op,n_data,data_set);
+
+	} else if(task != stop_rsc
+		  && rsc->role == RSC_ROLE_STOPPED
+		  && rsc->next_role == RSC_ROLE_STARTED ){
+		register_activity(rsc, op, n_data);
+		pe_post_notify(rsc, next, op, n_data, data_set);
+
+	} else if(rsc->role == RSC_ROLE_STARTED
+		  && rsc->next_role == RSC_ROLE_STARTED) {
+		action_t *start = start_action(rsc, next, TRUE);
+		if(start->optional) {
+			/* nothing happening to this resource */
 			pe_pre_notify(rsc, current, op, n_data, data_set);
 			pe_post_notify(rsc, current, op, n_data, data_set);
 			register_state(rsc, op, n_data);
-			break;
-		case rsc_move:
-			if(task == stop_rsc) {
-				pe_pre_notify(rsc, current, op,n_data,data_set);
-				register_activity(rsc, op, n_data);
-			} else {
-				pe_post_notify(rsc, next, op, n_data, data_set);
-				register_activity(rsc, op, n_data);
-			}
-			break;
-		case rsc_restart:
+
+			/* restarting or moving */
+		} else if(task == stop_rsc) {
+			pe_pre_notify(rsc, current, op,n_data,data_set);
 			register_activity(rsc, op, n_data);
-			if(task == stop_rsc) {
-				pe_pre_notify(rsc, current, op, n_data, data_set);
-			} else {
-				pe_post_notify(rsc, current,op,n_data,data_set);
-			}
-			break;
-		case rsc_starting:
-			if(task != stop_rsc) {
-				register_activity(rsc, op, n_data);
-				pe_post_notify(rsc, next, op, n_data, data_set);
-			}
-			break;
-		case rsc_stopping:
-			if(task == stop_rsc) {
-				register_activity(rsc, op, n_data);
-				pe_pre_notify(rsc, current, op,n_data,data_set);
-			}
-			break;
-		case rsc_stopped:
-		case rsc_unknown:
-			return;
-			break;
+		} else {
+			pe_post_notify(rsc, next, op, n_data, data_set);
+			register_activity(rsc, op, n_data);
+		}
 	}
 }
 
@@ -1714,7 +1653,8 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 	action_t *stop = NULL;
 	action_t *delete = NULL;
 
-	crm_debug("Executing: %s", rsc->id);
+	crm_info("Executing: %s (role=%s)",
+		  rsc->id, role2text(rsc->next_role));
 
 	if(current == NULL || next == NULL) {
 		return;
@@ -1727,7 +1667,9 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 		stop = stop_action(rsc, current, FALSE);
 		start = start_action(rsc, next, FALSE);
 
-		if(data_set->remove_on_stop) {
+		if(data_set->remove_on_stop
+		   && rsc->failed == FALSE
+		   && stop->runnable) {
 			delete = delete_action(rsc, current);
 			custom_action_order(
 				rsc, NULL, stop, rsc, NULL, delete,
@@ -1735,7 +1677,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 		}
 		
 	} else {
-		if(rsc->state == rsc_state_failed) {
+		if(rsc->failed) {
 			crm_info("Recover resource %s\t(%s)",
 				 rsc->id, next->details->uname);
 			stop = stop_action(rsc, current, FALSE);
@@ -1743,7 +1685,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 /* 			/\* make the restart required *\/ */
 /* 			order_stop_start(rsc, rsc, pe_ordering_manditory); */
 			
-		} else if(rsc->state == rsc_state_starting) {
+		} else if(rsc->start_pending) {
 			start = start_action(rsc, next, TRUE);
 			if(start->runnable) {
 				/* wait for StartRsc() to be called */
@@ -1785,7 +1727,9 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 			 rsc->id, current->details->uname);
 		stop = stop_action(rsc, current, FALSE);
 
-		if(data_set->remove_on_stop) {
+		if(data_set->remove_on_stop
+		   && rsc->failed == FALSE
+		   && stop->runnable) {
 			delete = delete_action(rsc, current);
 			custom_action_order(
 				rsc, NULL, stop, rsc, NULL, delete,

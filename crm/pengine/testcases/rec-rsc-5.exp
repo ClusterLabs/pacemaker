@@ -7,7 +7,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="5" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+         <crm_event id="6" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -54,7 +54,22 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <crm_event id="5" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+       <rsc_op id="5" rsc_id="rsc2" operation="delete" operation_key="rsc2_delete_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+         <primitive id="rsc2" class="heartbeat" type="apache" on_stopfail="fence"/>
+         <attributes>
+           <nvpair id="on_stopfail" name="on_stopfail" value="fence"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="3" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="5">
+     <action_set>
+       <crm_event id="6" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <attributes>
            <nvpair id="on_node" name="on_node" value="node2"/>
            <nvpair id="on_node_uuid" name="on_node_uuid" value="uuid2"/>

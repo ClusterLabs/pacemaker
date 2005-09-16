@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.62 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: ptest.c,v 1.63 2005/09/16 17:32:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -193,7 +193,8 @@ main(int argc, char **argv)
  	CRM_DEV_ASSERT(cib_object != NULL);
 	crm_zero_mem_stats(NULL);
 
-/* 	do_id_check(cib_object, NULL); */
+	crm_notice("Required feature set: %s", feature_set(cib_object));
+ 	do_id_check(cib_object, NULL);
 	
 	fake_now = crm_element_value(cib_object, "fake_now");
 	if(fake_now != NULL) {

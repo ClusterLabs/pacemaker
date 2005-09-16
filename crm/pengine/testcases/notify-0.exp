@@ -50,21 +50,37 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="11" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" allow_fail="false"/>
+         <pseudo_event id="12" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="4">
      <action_set>
-       <pseudo_event id="11" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" allow_fail="false">
+       <rsc_op id="9" rsc_id="rsc2:child_rsc2:0" operation="delete" operation_key="rsc2:child_rsc2:0_delete_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="2"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="8" rsc_id="rsc2:child_rsc2:0" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="5">
+     <action_set>
+       <pseudo_event id="12" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="5">
+   <synapse id="6">
      <action_set>
-       <pseudo_event id="12" rsc_id="rsc2" operation="stopped" operation_key="rsc2_stopped_0" allow_fail="false">
+       <pseudo_event id="13" rsc_id="rsc2" operation="stopped" operation_key="rsc2_stopped_0" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
@@ -73,7 +89,7 @@
          <rsc_op id="8" rsc_id="rsc2:child_rsc2:0" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
        </trigger>
        <trigger>
-         <pseudo_event id="11" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" allow_fail="false"/>
+         <pseudo_event id="12" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>

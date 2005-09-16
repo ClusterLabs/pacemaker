@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.25 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: complex.h,v 1.26 2005/09/16 17:32:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -83,7 +83,7 @@ typedef struct resource_object_functions_s
 		void (*printw)(resource_t *, const char *, int*);
 		void (*html)(resource_t *, const char *, FILE*);
 		gboolean (*active)(resource_t *,gboolean);
-		rsc_state_t (*state)(resource_t *);
+		enum rsc_role_e (*state)(resource_t *);
 		void (*create_notify_element)(resource_t*,action_t*,
 					      notify_data_t*,pe_working_set_t*);
 		void (*free)(resource_t *);
@@ -113,7 +113,7 @@ extern gboolean native_active(resource_t *rsc, gboolean all);
 extern void native_printw(resource_t *rsc, const char *pre_text, int *index);
 extern void native_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void native_free(resource_t *rsc);
-extern rsc_state_t native_resource_state(resource_t *rsc);
+extern enum rsc_role_e native_resource_state(resource_t *rsc);
 extern void native_create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data,pe_working_set_t *data_set);
@@ -142,7 +142,7 @@ extern gboolean group_active(resource_t *rsc, gboolean all);
 extern void group_printw(resource_t *rsc, const char *pre_text, int *index);
 extern void group_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void group_free(resource_t *rsc);
-extern rsc_state_t group_resource_state(resource_t *rsc);
+extern enum rsc_role_e group_resource_state(resource_t *rsc);
 extern void group_create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data,pe_working_set_t *data_set);
@@ -169,7 +169,7 @@ extern gboolean clone_active(resource_t *rsc, gboolean all);
 extern void clone_printw(resource_t *rsc, const char *pre_text, int *index);
 extern void clone_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void clone_free(resource_t *rsc);
-extern rsc_state_t clone_resource_state(resource_t *rsc);
+extern enum rsc_role_e clone_resource_state(resource_t *rsc);
 extern void clone_create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data,pe_working_set_t *data_set);

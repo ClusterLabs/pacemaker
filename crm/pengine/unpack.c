@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.125 2005/09/15 17:13:08 andrew Exp $ */
+/* $Id: unpack.c,v 1.126 2005/09/16 17:32:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -183,8 +183,8 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		cl_str_to_boolean(value, &data_set->remove_on_stop);
 	}
 	crm_info("After stop, resources are %s the LRM %s",
-		 data_set->stop_rsc_orphans?"removed from":"left in",	
-		 data_set->stop_rsc_orphans?"":"(legacy-mode)");	
+		 data_set->remove_on_stop?"removed from":"left in",	
+		 data_set->remove_on_stop?"":"(legacy-mode)");	
 	
 	g_hash_table_destroy(config_hash);
 	return TRUE;
@@ -201,7 +201,7 @@ param_value(GHashTable *hash, crm_data_t * parent, const char *name)
 	}
 	
 	if(a_default == NULL) {
-		crm_warn("Option %s not set", name);
+		crm_debug("Option %s not set", name);
 		return NULL;
 	}
 	
@@ -703,14 +703,21 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		/* no need to free the contents */
 		g_list_free(sorted_op_list);
 
- 		if(rsc->state != rsc_state_inactive) {
-/* 		if(rsc->role != RSC_ROLE_STOPPED) { */
+ 		if(rsc->role != RSC_ROLE_STOPPED) { 
 			native_add_running(rsc, node, data_set);
+
+		} else if(rsc->failed == FALSE && node->details->online) {
+			action_t *delete = delete_action(rsc, node);
+			/* just in case we try and start it back on this node */
+			custom_action_order(
+				rsc, NULL, delete, rsc, start_key(rsc), NULL,
+				pe_ordering_optional, data_set);
+
 		}
+		
 		if(saved_role > rsc->role) {
 			rsc->role = saved_role;
 		}
-		
 		);
 	
 	return TRUE;
@@ -955,13 +962,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 			custom_action(rsc, crm_strdup(id), task, NULL,
 				      FALSE, TRUE, data_set);
-			
-/* 			if(safe_str_neq(task, CRMD_ACTION_START)) { */
-/* 				task_status_i = LRM_OP_PENDING; */
-/* 			} else { */
-/* 				rsc->state = rsc_state_failed; */
-/* 			} */
-			
 		}
 		
 		g_hash_table_destroy(action->extra);
@@ -1034,7 +1034,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			 */
 
 			if(safe_str_eq(task, CRMD_ACTION_START)) {
-				rsc->state = rsc_state_starting;
+				rsc->start_pending = TRUE;
 				rsc->role = RSC_ROLE_STARTED;
 		
 				/* make sure it is re-issued but,
@@ -1049,10 +1049,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				}
 				
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
-				CRM_DEV_ASSERT(rsc->state == rsc_state_active);
 				rsc->role = RSC_ROLE_MASTER;
 
-			} else if(rsc->state > rsc_state_starting) {
+			} else if(rsc->role > RSC_ROLE_STOPPED) {
 				crm_debug_2("Re-issuing pending recurring task:"
 					    " %s for %s on %s",
 					    task, rsc->id, node->details->id);
@@ -1069,24 +1068,20 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				    rsc->id, task, node->details->uname);
 
 			if(is_stop_action) {
-				rsc->state = rsc_state_inactive;
 				rsc->role = RSC_ROLE_STOPPED;
 
 			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
 				crm_debug_3("%s active on %s",
 					    rsc->id, node->details->uname);
-				rsc->state = rsc_state_active;
 				rsc->role = RSC_ROLE_STARTED;
 
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
-				CRM_DEV_ASSERT(rsc->state == rsc_state_active);
 				rsc->role = RSC_ROLE_MASTER;
 
 			} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-				CRM_DEV_ASSERT(rsc->state == rsc_state_active);
 				rsc->role = RSC_ROLE_SLAVE;
 				
-			} else if(rsc->state > rsc_state_starting) {
+			} else if(rsc->role > RSC_ROLE_STOPPED) {
 				/* make sure its already created and is optional
 				 *
 				 * creating it now tells create_recurring_actions() 
@@ -1115,22 +1110,30 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				rsc2node_new("dont_run__failed_stopstart",
 					     rsc, -INFINITY, node, data_set);
 			}
+			
+			rsc->failed = TRUE;
 
 			if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
-				CRM_DEV_ASSERT(rsc->state == rsc_state_active);
 				rsc->role = RSC_ROLE_MASTER;
+
+			} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+				rsc->role = RSC_ROLE_MASTER;
+				
+			} else if(is_stop_action
+				  && rsc->role < RSC_ROLE_STARTED) {
+				rsc->role = RSC_ROLE_STARTED;
 			}
-			rsc->state = rsc_state_failed;
+
+			crm_info("Resource %s: set role=%s",
+				 rsc->id, role2text(rsc->role));
 
 			if(node->details->unclean) {
-				rsc->state = rsc_state_failed;
 				stop_action(rsc, node, FALSE);
 
 			} else if(action->on_fail == action_fail_fence) {
 				/* treat it as if it is still running
 				 * but also mark the node as unclean
 				 */
-				rsc->state = rsc_state_failed;
 				node->details->unclean = TRUE;
 				stop_action(rsc, node, FALSE);
 				
@@ -1139,10 +1142,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				 * actions being sent for the resource
 				 */
 				rsc->is_managed = FALSE;
-				rsc->state = rsc_state_failed;
 				
 			} else if(action->on_fail == action_fail_migrate) {
-				rsc->state = rsc_state_failed;
  				stop_action(rsc, node, FALSE);
 
 				/* make sure it comes up somewhere else
@@ -1152,7 +1153,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 					     rsc, -INFINITY, node, data_set);
 				
 			} else if(action->fail_role == RSC_ROLE_STOPPED) {
-				rsc->state = rsc_state_failed;
 				/* make sure it doesnt come up again */
 				native_assign_color(rsc, data_set->no_color);
 
@@ -1160,7 +1160,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				rsc->next_role = action->fail_role;
 
 			} else {
-				rsc->state = rsc_state_failed;
  				stop_action(rsc, node, FALSE);
 			}
 			
@@ -1170,6 +1169,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			pe_err("Dont know what to do for cancelled ops yet");
 			break;
 	}
+
+	crm_info("Resource %s after %s: role=%s",
+		 rsc->id, task, role2text(rsc->role));
+	
 	return TRUE;
 }
 

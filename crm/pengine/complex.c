@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.60 2005/09/15 15:23:54 andrew Exp $ */
+/* $Id: complex.c,v 1.61 2005/09/16 17:32:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -252,7 +252,8 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
 	(*rsc)->is_managed	   = TRUE;
-	(*rsc)->state		   = rsc_state_inactive;
+	(*rsc)->failed		   = FALSE;
+	(*rsc)->start_pending	   = FALSE;	
 	(*rsc)->role		   = RSC_ROLE_STOPPED;
 	(*rsc)->next_role	   = RSC_ROLE_UNKNOWN;
 

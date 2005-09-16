@@ -12,7 +12,22 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="2" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+       <rsc_op id="2" rsc_id="rsc1" operation="delete" operation_key="rsc1_delete_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+         <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_only"/>
+         <attributes>
+           <nvpair id="multiple_active" name="multiple_active" value="stop_only"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="1" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <rsc_op id="3" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
          <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_only"/>
          <attributes>
            <nvpair id="multiple_active" name="multiple_active" value="stop_only"/>
@@ -20,6 +35,21 @@
        </rsc_op>
      </action_set>
      <inputs/>
+   </synapse>
+   <synapse id="3">
+     <action_set>
+       <rsc_op id="4" rsc_id="rsc1" operation="delete" operation_key="rsc1_delete_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+         <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_only"/>
+         <attributes>
+           <nvpair id="multiple_active" name="multiple_active" value="stop_only"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="3" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+       </trigger>
+     </inputs>
    </synapse>
  </transition_graph>
 

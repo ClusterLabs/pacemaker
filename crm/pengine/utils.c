@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.109 2005/09/15 17:13:08 andrew Exp $ */
+/* $Id: utils.c,v 1.110 2005/09/16 17:32:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1188,36 +1188,6 @@ text2role(const char *role)
 	}
 	crm_err("Unknown role: %s", role);
 	return RSC_ROLE_UNKNOWN;
-}
-
-const char *
-rsc_state2text(rsc_state_t state)
-{
-	const char *result = "<unknown>";
-	switch(state) {
-		case rsc_active:
-			result = "active";
-			break;
-		case rsc_restart:
-			result = "restart";
-			break;
-		case rsc_move:
-			result = "move";
-			break;
-		case rsc_starting:
-			result = "starting";
-			break;
-		case rsc_stopping:
-			result = "stopping";
-			break;
-		case rsc_stopped:
-			result = "stopped";
-			break;
-		case rsc_unknown:
-			result = "unknown";
-			break;
-	}
-	return result;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.52 2005/09/15 15:23:54 andrew Exp $ */
+/* $Id: incarnation.c,v 1.53 2005/09/16 17:32:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1198,10 +1198,10 @@ clone_agent_constraints(resource_t *rsc)
 		);
 }
 
-rsc_state_t
+enum rsc_role_e
 clone_resource_state(resource_t *rsc)
 {
-	return rsc_unknown;
+	return RSC_ROLE_UNKNOWN;
 }
 
 void

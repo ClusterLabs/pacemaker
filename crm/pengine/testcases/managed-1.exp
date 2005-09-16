@@ -1,2 +1,147 @@
- <transition_graph global_timeout="120s" transition_id="0"/>
+ <transition_graph global_timeout="120s" transition_id="0">
+   <synapse id="0">
+     <action_set>
+       <rsc_op id="39" rsc_id="rsc_c001n09" operation="delete" operation_key="rsc_c001n09_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.11"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <rsc_op id="26" rsc_id="rsc_c001n02" operation="delete" operation_key="rsc_c001n02_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.12"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <rsc_op id="42" rsc_id="rsc_c001n02" operation="delete" operation_key="rsc_c001n02_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.12"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="3">
+     <action_set>
+       <rsc_op id="44" rsc_id="rsc_c001n03" operation="delete" operation_key="rsc_c001n03_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.13"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <rsc_op id="46" rsc_id="rsc_c001n04" operation="delete" operation_key="rsc_c001n04_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.14"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="5">
+     <action_set>
+       <rsc_op id="13" rsc_id="rsc_c001n06" operation="delete" operation_key="rsc_c001n06_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.16"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="6">
+     <action_set>
+       <rsc_op id="16" rsc_id="rsc_c001n07" operation="delete" operation_key="rsc_c001n07_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.17"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="7">
+     <action_set>
+       <rsc_op id="23" rsc_id="rsc_c001n07" operation="delete" operation_key="rsc_c001n07_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.17"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="8">
+     <action_set>
+       <rsc_op id="9" rsc_id="rsc_c001n08" operation="delete" operation_key="rsc_c001n08_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.18"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="9">
+     <action_set>
+       <rsc_op id="18" rsc_id="rsc_c001n08" operation="delete" operation_key="rsc_c001n08_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.18"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="10">
+     <action_set>
+       <rsc_op id="27" rsc_id="rsc_c001n08" operation="delete" operation_key="rsc_c001n08_delete_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
+         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.18"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="11">
+     <action_set>
+       <rsc_op id="38" rsc_id="rsc_c001n08" operation="delete" operation_key="rsc_c001n08_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.18"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+ </transition_graph>
 

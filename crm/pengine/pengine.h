@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.91 2005/09/15 17:13:08 andrew Exp $ */
+/* $Id: pengine.h,v 1.92 2005/09/16 17:32:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,24 +69,6 @@ typedef enum no_quorum_policy_e {
 	no_quorum_ignore
 } no_quorum_policy_t;
 
-/* ordering is very important here */ 
-enum rsc_state {
-	rsc_state_failed,
-	rsc_state_inactive,
-	rsc_state_starting,
-	rsc_state_restart,
-	rsc_state_active,
-};
-
-typedef enum rsc_state_e {
-	rsc_unknown,
-	rsc_active,
-	rsc_stopped,
-	rsc_starting,
-	rsc_stopping,
-	rsc_restart,
-	rsc_move
-} rsc_state_t;
 
 typedef struct pe_working_set_s 
 {
@@ -297,6 +279,9 @@ struct resource_s {
 		gboolean runnable;
 		gboolean provisional;
 
+		gboolean failed;
+		gboolean start_pending;
+		
 		gboolean orphan;
 		
 		GListPtr candidate_colors; /* color_t*          */
@@ -309,7 +294,6 @@ struct resource_s {
 		GListPtr running_on;       /* node_t*   */
 		GListPtr allowed_nodes;    /* node_t*   */
 
-		enum rsc_state state;
 		enum rsc_role_e role;
 		enum rsc_role_e next_role;
 		

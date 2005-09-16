@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.34 2005/09/15 17:13:08 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.35 2005/09/16 17:32:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -100,10 +100,9 @@ extern gint sort_action_id(gconstpointer a, gconstpointer b);
 /* enum 2 text functions (mostly used by print_*) */
 extern const char *contype2text(enum con_type type);
 extern const char *strength2text(enum con_strength strength);
-/*extern const char *modifier2text(enum con_modifier modifier); */
+
 extern const char *task2text(enum action_tasks task);
 extern enum action_tasks text2task(const char *task);
-extern const char *rsc_state2text(rsc_state_t state);
 
 extern enum rsc_role_e text2role(const char *role);
 extern const char *role2text(enum rsc_role_e role);
@@ -118,7 +117,7 @@ extern action_t *custom_action(
 #define delete_action(rsc, node) custom_action(				\
 		rsc, delete_key(rsc), CRMD_ACTION_DELETE, node,		\
 		FALSE, TRUE, data_set);
-		
+
 #define stopped_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
 #define stopped_action(rsc, node, optional) custom_action(		\
 		rsc, stopped_key(rsc), CRMD_ACTION_STOPPED, node,	\

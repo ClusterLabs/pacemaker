@@ -38,7 +38,22 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="6" rsc_id="rsc3" operation="start" operation_key="rsc3_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false">
+       <rsc_op id="4" rsc_id="rsc4" operation="delete" operation_key="rsc4_delete_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
+         <primitive id="rsc4" class="heartbeat" type="apache"/>
+         <attributes>
+           <nvpair id="priority" name="priority" value="2.0"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="2" rsc_id="rsc4" operation="stop" operation_key="rsc4_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <rsc_op id="7" rsc_id="rsc3" operation="start" operation_key="rsc3_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false">
          <primitive id="rsc3" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair id="priority" name="priority" value="1.0"/>

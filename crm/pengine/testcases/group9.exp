@@ -103,34 +103,34 @@
    </synapse>
    <synapse id="8">
      <action_set>
-       <pseudo_event id="22" rsc_id="bar" operation="start" operation_key="bar_start_0" allow_fail="false">
+       <pseudo_event id="24" rsc_id="bar" operation="start" operation_key="bar_start_0" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="25" rsc_id="bar" operation="stopped" operation_key="bar_stopped_0" allow_fail="false"/>
+         <pseudo_event id="27" rsc_id="bar" operation="stopped" operation_key="bar_stopped_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="9">
      <action_set>
-       <pseudo_event id="23" rsc_id="bar" operation="running" operation_key="bar_running_0" allow_fail="false">
+       <pseudo_event id="25" rsc_id="bar" operation="running" operation_key="bar_running_0" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="21" rsc_id="bar:rsc8" operation="start" operation_key="bar:rsc8_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false"/>
+         <rsc_op id="22" rsc_id="bar:rsc8" operation="start" operation_key="bar:rsc8_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false"/>
        </trigger>
        <trigger>
-         <pseudo_event id="22" rsc_id="bar" operation="start" operation_key="bar_start_0" allow_fail="false"/>
+         <pseudo_event id="24" rsc_id="bar" operation="start" operation_key="bar_start_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="10">
      <action_set>
-       <pseudo_event id="24" rsc_id="bar" operation="stop" operation_key="bar_stop_0" allow_fail="false">
+       <pseudo_event id="26" rsc_id="bar" operation="stop" operation_key="bar_stop_0" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
@@ -138,7 +138,7 @@
    </synapse>
    <synapse id="11">
      <action_set>
-       <pseudo_event id="25" rsc_id="bar" operation="stopped" operation_key="bar_stopped_0" allow_fail="false">
+       <pseudo_event id="27" rsc_id="bar" operation="stopped" operation_key="bar_stopped_0" allow_fail="false">
          <attributes/>
        </pseudo_event>
      </action_set>
@@ -147,7 +147,7 @@
          <rsc_op id="18" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
        </trigger>
        <trigger>
-         <pseudo_event id="24" rsc_id="bar" operation="stop" operation_key="bar_stop_0" allow_fail="false"/>
+         <pseudo_event id="26" rsc_id="bar" operation="stop" operation_key="bar_stop_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
@@ -176,11 +176,24 @@
          <rsc_op id="18" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
        </trigger>
        <trigger>
-         <pseudo_event id="22" rsc_id="bar" operation="start" operation_key="bar_start_0" allow_fail="false"/>
+         <pseudo_event id="24" rsc_id="bar" operation="start" operation_key="bar_start_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="14">
+     <action_set>
+       <rsc_op id="20" rsc_id="bar:rsc6" operation="delete" operation_key="bar:rsc6_delete_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
+         <primitive id="bar:rsc6" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="18" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="15">
      <action_set>
        <rsc_op id="3" rsc_id="bar:rsc7" operation="start" operation_key="bar:rsc7_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false">
          <primitive id="bar:rsc7" class="heartbeat" type="apache"/>
@@ -196,7 +209,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="15">
+   <synapse id="16">
      <action_set>
        <rsc_op id="4" rsc_id="bar:rsc7" operation="stop" operation_key="bar:rsc7_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
          <primitive id="bar:rsc7" class="heartbeat" type="apache"/>
@@ -205,26 +218,26 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="20" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+         <rsc_op id="21" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="16">
+   <synapse id="17">
      <action_set>
-       <rsc_op id="20" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
+       <rsc_op id="21" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
          <primitive id="bar:rsc8" class="heartbeat" type="apache"/>
          <attributes/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="24" rsc_id="bar" operation="stop" operation_key="bar_stop_0" allow_fail="false"/>
+         <pseudo_event id="26" rsc_id="bar" operation="stop" operation_key="bar_stop_0" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="17">
+   <synapse id="18">
      <action_set>
-       <rsc_op id="21" rsc_id="bar:rsc8" operation="start" operation_key="bar:rsc8_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false">
+       <rsc_op id="22" rsc_id="bar:rsc8" operation="start" operation_key="bar:rsc8_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false">
          <primitive id="bar:rsc8" class="heartbeat" type="apache"/>
          <attributes/>
        </rsc_op>
@@ -234,7 +247,20 @@
          <rsc_op id="3" rsc_id="bar:rsc7" operation="start" operation_key="bar:rsc7_start_0" on_node="node2" on_node_uuid="node2" allow_fail="false"/>
        </trigger>
        <trigger>
-         <rsc_op id="20" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+         <rsc_op id="21" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="19">
+     <action_set>
+       <rsc_op id="23" rsc_id="bar:rsc8" operation="delete" operation_key="bar:rsc8_delete_0" on_node="node1" on_node_uuid="node1" allow_fail="false">
+         <primitive id="bar:rsc8" class="heartbeat" type="apache"/>
+         <attributes/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="21" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1" allow_fail="false"/>
        </trigger>
      </inputs>
    </synapse>

@@ -1,2 +1,485 @@
- <transition_graph global_timeout="120s" transition_id="0"/>
+ <transition_graph global_timeout="120s" transition_id="0">
+   <synapse id="0">
+     <action_set>
+       <rsc_op id="39" rsc_id="rsc_c001n09" operation="delete" operation_key="rsc_c001n09_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.11"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <rsc_op id="26" rsc_id="rsc_c001n02" operation="delete" operation_key="rsc_c001n02_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.12"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <rsc_op id="42" rsc_id="rsc_c001n02" operation="delete" operation_key="rsc_c001n02_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.12"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="3">
+     <action_set>
+       <rsc_op id="44" rsc_id="rsc_c001n03" operation="delete" operation_key="rsc_c001n03_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.13"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <rsc_op id="46" rsc_id="rsc_c001n04" operation="delete" operation_key="rsc_c001n04_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.14"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="5">
+     <action_set>
+       <rsc_op id="13" rsc_id="rsc_c001n06" operation="delete" operation_key="rsc_c001n06_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.16"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="6">
+     <action_set>
+       <rsc_op id="16" rsc_id="rsc_c001n07" operation="delete" operation_key="rsc_c001n07_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.17"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="7">
+     <action_set>
+       <rsc_op id="23" rsc_id="rsc_c001n07" operation="delete" operation_key="rsc_c001n07_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.17"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="8">
+     <action_set>
+       <rsc_op id="9" rsc_id="rsc_c001n08" operation="delete" operation_key="rsc_c001n08_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.18"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="9">
+     <action_set>
+       <rsc_op id="18" rsc_id="rsc_c001n08" operation="delete" operation_key="rsc_c001n08_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.18"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="10">
+     <action_set>
+       <rsc_op id="27" rsc_id="rsc_c001n08" operation="delete" operation_key="rsc_c001n08_delete_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
+         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.18"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="11">
+     <action_set>
+       <rsc_op id="38" rsc_id="rsc_c001n08" operation="delete" operation_key="rsc_c001n08_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
+         <attributes>
+           <nvpair id="is_managed" name="is_managed" value="1"/>
+           <nvpair id="ip" name="ip" value="127.0.0.18"/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="12">
+     <action_set>
+       <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:0" operation="delete" operation_key="DoFencing:child_DoFencing:0_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="13">
+     <action_set>
+       <rsc_op id="28" rsc_id="DoFencing:child_DoFencing:0" operation="delete" operation_key="DoFencing:child_DoFencing:0_delete_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="14">
+     <action_set>
+       <rsc_op id="33" rsc_id="DoFencing:child_DoFencing:0" operation="delete" operation_key="DoFencing:child_DoFencing:0_delete_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="15">
+     <action_set>
+       <rsc_op id="40" rsc_id="DoFencing:child_DoFencing:0" operation="delete" operation_key="DoFencing:child_DoFencing:0_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="0"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="16">
+     <action_set>
+       <rsc_op id="2" rsc_id="DoFencing:child_DoFencing:1" operation="delete" operation_key="DoFencing:child_DoFencing:1_delete_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="17">
+     <action_set>
+       <rsc_op id="29" rsc_id="DoFencing:child_DoFencing:1" operation="delete" operation_key="DoFencing:child_DoFencing:1_delete_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="18">
+     <action_set>
+       <rsc_op id="34" rsc_id="DoFencing:child_DoFencing:1" operation="delete" operation_key="DoFencing:child_DoFencing:1_delete_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="19">
+     <action_set>
+       <rsc_op id="41" rsc_id="DoFencing:child_DoFencing:1" operation="delete" operation_key="DoFencing:child_DoFencing:1_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="1"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="20">
+     <action_set>
+       <rsc_op id="11" rsc_id="DoFencing:child_DoFencing:2" operation="delete" operation_key="DoFencing:child_DoFencing:2_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="21">
+     <action_set>
+       <rsc_op id="35" rsc_id="DoFencing:child_DoFencing:2" operation="delete" operation_key="DoFencing:child_DoFencing:2_delete_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="22">
+     <action_set>
+       <rsc_op id="43" rsc_id="DoFencing:child_DoFencing:2" operation="delete" operation_key="DoFencing:child_DoFencing:2_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="2"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="23">
+     <action_set>
+       <rsc_op id="3" rsc_id="DoFencing:child_DoFencing:3" operation="delete" operation_key="DoFencing:child_DoFencing:3_delete_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="24">
+     <action_set>
+       <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:3" operation="delete" operation_key="DoFencing:child_DoFencing:3_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="25">
+     <action_set>
+       <rsc_op id="45" rsc_id="DoFencing:child_DoFencing:3" operation="delete" operation_key="DoFencing:child_DoFencing:3_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="26">
+     <action_set>
+       <rsc_op id="54" rsc_id="DoFencing:child_DoFencing:3" operation="delete" operation_key="DoFencing:child_DoFencing:3_delete_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="3"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="27">
+     <action_set>
+       <rsc_op id="12" rsc_id="DoFencing:child_DoFencing:4" operation="delete" operation_key="DoFencing:child_DoFencing:4_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="28">
+     <action_set>
+       <rsc_op id="31" rsc_id="DoFencing:child_DoFencing:4" operation="delete" operation_key="DoFencing:child_DoFencing:4_delete_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="29">
+     <action_set>
+       <rsc_op id="52" rsc_id="DoFencing:child_DoFencing:4" operation="delete" operation_key="DoFencing:child_DoFencing:4_delete_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="30">
+     <action_set>
+       <rsc_op id="55" rsc_id="DoFencing:child_DoFencing:4" operation="delete" operation_key="DoFencing:child_DoFencing:4_delete_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="4"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="31">
+     <action_set>
+       <rsc_op id="5" rsc_id="DoFencing:child_DoFencing:5" operation="delete" operation_key="DoFencing:child_DoFencing:5_delete_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:5" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="32">
+     <action_set>
+       <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:5" operation="delete" operation_key="DoFencing:child_DoFencing:5_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:5" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="33">
+     <action_set>
+       <rsc_op id="47" rsc_id="DoFencing:child_DoFencing:5" operation="delete" operation_key="DoFencing:child_DoFencing:5_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:5" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="5"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="34">
+     <action_set>
+       <rsc_op id="15" rsc_id="DoFencing:child_DoFencing:6" operation="delete" operation_key="DoFencing:child_DoFencing:6_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:6" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="35">
+     <action_set>
+       <rsc_op id="25" rsc_id="DoFencing:child_DoFencing:6" operation="delete" operation_key="DoFencing:child_DoFencing:6_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:6" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="36">
+     <action_set>
+       <rsc_op id="49" rsc_id="DoFencing:child_DoFencing:6" operation="delete" operation_key="DoFencing:child_DoFencing:6_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:6" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="6"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="37">
+     <action_set>
+       <rsc_op id="50" rsc_id="DoFencing:child_DoFencing:7" operation="delete" operation_key="DoFencing:child_DoFencing:7_delete_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2" allow_fail="false">
+         <primitive id="DoFencing:child_DoFencing:7" class="stonith" type="ssh"/>
+         <attributes>
+           <nvpair id="clone" name="clone" value="7"/>
+           <nvpair id="clone_max" name="clone_max" value="8"/>
+           <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+         </attributes>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+ </transition_graph>
 
