@@ -1559,17 +1559,15 @@ class ResourceRecover(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        # if there are no resources , return directly
-        resourcelist=self.CM.Resources()
+        (resourcelist, groups)  = self.CM.Resources()
+        # if there are no resourcelist, return directly
         if len(resourcelist)==0:
             self.CM.log("Can't find any resource on cluster,exit this test")
             return self.skipped()
 
-        resourcelist=self.CM.Resources()
         resource=self.CM.Env.RandomGen.choice(resourcelist)
-        
         resourcetype = str(resource.Type())
-	self.rid = str(resource.rid)
+        self.rid = str(resource.rid)
         label = resourcetype+"::"+str(resource.rid)
         nodes=resource.RunningNodes()
         if len(nodes) == 0:
