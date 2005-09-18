@@ -234,7 +234,7 @@ class HAResourceAudit(ClusterAudit):
                 up_count += 1
                 
         #Make sure the resouces are running on one and only one node
-        Resources,Groups = self.CM.Resources()
+        Resources = self.CM.Resources()
         for resource in Resources :
             RunningNodes = self._RscRunningNodes(resource)
             NodeofRsc[resource.rid]=RunningNodes
@@ -286,7 +286,8 @@ class HAResourceAudit(ClusterAudit):
                     self.CM.log("Incarnation %s has %d instances(max %d instances).\
                         Now %d nodes are up"%(str(inc_name),NumofInc[inc_name], \
                         MaxofInc[inc_name],up_count))
-        
+                        
+        Groups = self.CM.ResourceGroups()
         for group in Groups :
             RunningNodes = NodeofRsc[group[0].rid]
             for rsc in group :
