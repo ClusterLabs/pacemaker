@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.82 2005/09/16 17:32:16 andrew Exp $ */
+/* $Id: native.c,v 1.83 2005/09/18 19:26:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -89,7 +89,6 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,pe
 
 typedef struct native_variant_data_s
 {
-		GListPtr running_on;       /* node_t*   */
 		GListPtr allowed_nodes;    /* node_t*   */
 
 } native_variant_data_t;
@@ -108,14 +107,14 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	CRM_DEV_ASSERT(node != NULL); if(crm_assert_failed) { return; }
 
 	slist_iter(
-		a_node, node_t, native_data->running_on, lpc,
+		a_node, node_t, rsc->running_on, lpc,
 		CRM_DEV_ASSERT(a_node != NULL);
 		if(safe_str_eq(a_node->details->id, node->details->id)) {
 			return;
 		}
 		);
 	
-	native_data->running_on = g_list_append(native_data->running_on, node);
+	rsc->running_on = g_list_append(rsc->running_on, node);
 	node->details->running_rsc = g_list_append(
 		node->details->running_rsc, rsc);
 
@@ -130,10 +129,10 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			 rsc->id, node->details->uname, node->details->id);
 	}
 	
-	if(g_list_length(native_data->running_on) > 1) {
+	if(g_list_length(rsc->running_on) > 1) {
 		pe_warn("Resource %s is (potentially) active on %d nodes."
 			 "  Latest: %s/%s", rsc->id,
-			 g_list_length(native_data->running_on),
+			 g_list_length(rsc->running_on),
 			 node->details->uname, node->details->id);
 
 		if(rsc->recovery_type == recovery_stop_only) {
@@ -155,7 +154,7 @@ void native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	crm_malloc0(native_data, sizeof(native_variant_data_t));
 
 	native_data->allowed_nodes	= NULL;
-	native_data->running_on		= NULL;
+	rsc->running_on		= NULL;
 
 	rsc->variant_opaque = native_data;
 }
@@ -368,15 +367,15 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		rsc->xml, XML_TAG_ATTR_SETS, chosen, rsc->parameters,
 		NULL, 0, data_set);
 	
-	if(g_list_length(native_data->running_on) > 1) {
+	if(g_list_length(rsc->running_on) > 1) {
  		if(rsc->recovery_type == recovery_stop_start) {
 			pe_err("Attempting recovery of resource %s", rsc->id);
 			StopRsc(rsc, NULL, data_set);
 			rsc->role = RSC_ROLE_STOPPED;
 		}
 		
-	} else if(native_data->running_on != NULL) {
-		node_t *current = native_data->running_on->data;
+	} else if(rsc->running_on != NULL) {
+		node_t *current = rsc->running_on->data;
 		NoRoleChange(rsc, current, chosen, data_set);
 
 	} else if(rsc->role == RSC_ROLE_STOPPED && rsc->next_role == RSC_ROLE_STOPPED) {
@@ -789,7 +788,7 @@ gboolean native_active(resource_t *rsc, gboolean all)
 	get_native_variant_data(native_data, rsc);
 
 	slist_iter(
-		a_node, node_t, native_data->running_on, lpc,
+		a_node, node_t, rsc->running_on, lpc,
 
 		if(a_node->details->online == FALSE) {
 			crm_debug("Resource %s: node %s is offline",
@@ -817,19 +816,19 @@ void native_printw(resource_t *rsc, const char *pre_text, int *index)
 	if(rsc->is_managed == FALSE) {
 		printw(" (unmanaged) ");
 	}
-	if(g_list_length(native_data->running_on) == 0) {
+	if(g_list_length(rsc->running_on) == 0) {
 		printw("NOT ACTIVE");
 		
-	} else if(g_list_length(native_data->running_on) == 1) {
-		node_t *node = native_data->running_on->data;
+	} else if(g_list_length(rsc->running_on) == 1) {
+		node_t *node = rsc->running_on->data;
 		printw("%s (%s)", node->details->uname, node->details->id);
 		if(rsc->failed) {
 			printw(" FAILED");
 		}
 		
-	} else if(g_list_length(native_data->running_on) == 1) {
+	} else if(g_list_length(rsc->running_on) == 1) {
 		printw("[");
-		slist_iter(node, node_t, native_data->running_on, lpc,
+		slist_iter(node, node_t, rsc->running_on, lpc,
 			   if(lpc > 0) { printw(", "); }
 			   printw("%s (%s)", node->details->uname, node->details->id);
 			);
@@ -855,25 +854,25 @@ void native_html(resource_t *rsc, const char *pre_text, FILE *stream)
 	
 	if(rsc->failed) {
 		fprintf(stream, "<font color=\"orange\">");
-	} else if(g_list_length(native_data->running_on) == 0) {
+	} else if(g_list_length(rsc->running_on) == 0) {
 		fprintf(stream, "<font color=\"red\">");
-	} else if(g_list_length(native_data->running_on) > 1) {
+	} else if(g_list_length(rsc->running_on) > 1) {
 		fprintf(stream, "<font color=\"orange\">");
 	} else {
 		fprintf(stream, "<font color=\"green\">");
 	}	
 	
-	if(g_list_length(native_data->running_on) == 0) {
+	if(g_list_length(rsc->running_on) == 0) {
 		fprintf(stream, "<b>NOT ACTIVE</b>");
 		
-	} else if(g_list_length(native_data->running_on) == 1) {
-		node_t *node = native_data->running_on->data;
+	} else if(g_list_length(rsc->running_on) == 1) {
+		node_t *node = rsc->running_on->data;
 		fprintf(stream, "%s (%s)",
 			node->details->uname, node->details->id);
 		
-	} else if(g_list_length(native_data->running_on) > 1) {
+	} else if(g_list_length(rsc->running_on) > 1) {
 		fprintf(stream, "<ul>\n");
-		slist_iter(node, node_t, native_data->running_on, lpc,
+		slist_iter(node, node_t, rsc->running_on, lpc,
 			   fprintf(stream, "<li><b>%s (%s)</b></li>\n",
 				   node->details->uname, node->details->id);
 			);
@@ -1461,8 +1460,8 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	if(rsc->color != NULL) {
 		next = rsc->color->details->chosen_node;
 	}
-	if(native_data->running_on != NULL) {
-		current = native_data->running_on->data;
+	if(rsc->running_on != NULL) {
+		current = rsc->running_on->data;
 	}
 
 	if(op->pre_notify == NULL || op->post_notify == NULL) {
@@ -1525,7 +1524,7 @@ register_activity(resource_t *rsc, action_t *op, notify_data_t *n_data)
 		
 	} else {
 		slist_iter(
-			node, node_t, native_data->running_on, lpc,
+			node, node_t, rsc->running_on, lpc,
 
 			crm_malloc0(entry, sizeof(notify_entry_t));
 			entry->rsc = rsc;
@@ -1722,7 +1721,7 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	crm_debug("Executing: %s", rsc->id);
 	
 	slist_iter(
-		current, node_t, native_data->running_on, lpc,
+		current, node_t, rsc->running_on, lpc,
 		crm_info("Stop  resource %s\t(%s)",
 			 rsc->id, current->details->uname);
 		stop = stop_action(rsc, current, FALSE);
@@ -1777,7 +1776,7 @@ DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 
 	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_SLAVE);
 	slist_iter(
-		current, node_t, native_data->running_on, lpc,
+		current, node_t, rsc->running_on, lpc,
 		crm_info("Demote resource %s\t(%s)",
 			 rsc->id, current->details->uname);
 		demote_action(rsc, current, FALSE);
