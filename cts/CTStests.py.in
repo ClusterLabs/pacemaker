@@ -1559,7 +1559,7 @@ class ResourceRecover(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        (resourcelist, groups)  = self.CM.Resources()
+        resourcelist = self.CM.Resources()
         # if there are no resourcelist, return directly
         if len(resourcelist)==0:
             self.CM.log("Can't find any resource on cluster,exit this test")
