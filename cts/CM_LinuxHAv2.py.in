@@ -415,25 +415,23 @@ class LinuxHAv2(HeartbeatCM):
     
     def Resources(self):
         ResourceList = []
-        GroupList = []
         #read resources in cib
         configuration = self.Configuration()
         resources = configuration.getElementsByTagName('resources')[0]
-        groups = configuration.getElementsByTagName('group')
         rscs = configuration.getElementsByTagName('primitive')
+        incs = configuration.getElementsByTagName('clone')
+        groups = configuration.getElementsByTagName('group')
+        
         for rsc in rscs:
             if rsc in resources.childNodes:
                 ResourceList.append(HAResource(self,rsc))
+                
         for grp in groups:
-            group = []
-            GroupList.append(group)
             for rsc in rscs:
                 if rsc in grp.childNodes:
                     resource = HAResource(self,rsc,grp.getAttribute('id'))
                     ResourceList.append(resource)
-                    group.append(resource)
-                    
-        incs = configuration.getElementsByTagName('clone')
+        
         for inc in incs:
             max = 0
             inc_name = inc.getAttribute("id")
@@ -452,8 +450,23 @@ class LinuxHAv2(HeartbeatCM):
                 rsc.rid = inc_name+":"+rsc.rid + ":%d"%i
                 rsc.Instance = rsc.rid
                 ResourceList.append(rsc)
-        return ResourceList, GroupList
-
+        return ResourceList
+    
+    def ResourceGroups(self):
+        GroupList = []
+        #read resources in cib
+        configuration = self.Configuration()
+        groups = configuration.getElementsByTagName('group')
+        rscs = configuration.getElementsByTagName('primitive')
+        for grp in groups:
+            group = []
+            GroupList.append(group)
+            for rsc in rscs:
+                if rsc in grp.childNodes:
+                    resource = HAResource(self,rsc,grp.getAttribute('id'))
+                    group.append(resource)
+        return GroupList
+        
     def Dependencies(self):
         DependencyList = []
         #read dependency in cib
