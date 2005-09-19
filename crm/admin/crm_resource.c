@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.2 2005/09/19 08:39:46 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.3 2005/09/19 20:37:25 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -59,10 +59,12 @@ gboolean BE_QUIET = FALSE;
 char *host_id = NULL;
 const char *rsc_id = NULL;
 const char *host_uname = NULL;
-const char *crm_system_name = "crm_master";
+const char *crm_system_name = NULL;
+const char *prop_name = NULL;
+const char *prop_value = NULL;
 char rsc_cmd = 0;
 
-#define OPTARGS	"V?SLRQDCMWmr:h:"
+#define OPTARGS	"V?SLRQDCP:WMr:h:v:"
 
 int
 main(int argc, char **argv)
@@ -85,12 +87,13 @@ main(int argc, char **argv)
 		{"query",   0, 0, 'Q'},
 		{"delete",  0, 0, 'D'},
 		{"cleanup", 0, 0, 'C'},
-		{"managed", 0, 0, 'M'},
 		{"locate",  0, 0, 'W'},
-		{"migrate", 0, 0, 'm'},
+		{"migrate", 0, 0, 'M'},
 		{"resource",1, 0, 'r'},
 		{"host_uname", 1, 0, 'H'},
 		{"host_uuid",  1, 0, 'h'},
+		{"set-property",    1, 0, 'P'},
+		{"property-value",  1, 0, 'v'},
 
 		{0, 0, 0, 0}
 	};
@@ -133,7 +136,6 @@ main(int argc, char **argv)
 				
 			case 'R':
 				rsc_cmd = flag;
-				crm_debug_2("Option %c => %s", flag, optarg);
 				break;
 				
 			case 'Q':
@@ -148,7 +150,9 @@ main(int argc, char **argv)
 				rsc_cmd = flag;
 				break;
 				
-			case 'M':
+			case 'P':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				prop_name = optarg;
 				rsc_cmd = flag;
 				break;
 				
@@ -156,18 +160,26 @@ main(int argc, char **argv)
 				rsc_cmd = flag;
 				break;
 				
-			case 'm':
+			case 'M':
 				rsc_cmd = flag;
 				break;				
 			case 'r':
+				crm_debug_2("Option %c => %s", flag, optarg);
 				rsc_id = optarg;
 				break;
 
+			case 'v':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				prop_value = optarg;
+				break;
+
 			case 'H':
+				crm_debug_2("Option %c => %s", flag, optarg);
 				host_uname = optarg;
 				break;
 				
 			case 'h':
+				crm_debug_2("Option %c => %s", flag, optarg);
 				host_id = crm_strdup(optarg);
 				break;
 				
@@ -220,7 +232,7 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'C') {
 	} else if(rsc_cmd == 'M') {
 	} else if(rsc_cmd == 'r') {
-	} else if(rsc_cmd == 'm') {
+	} else if(rsc_cmd == 'P') {
 	}
 
 	the_cib->cmds->signoff(the_cib);
