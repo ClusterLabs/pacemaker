@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.1 2005/09/19 08:29:38 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.2 2005/09/19 08:39:46 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -204,19 +204,15 @@ main(int argc, char **argv)
 
 	if(rsc_cmd == 'L') {
 		crm_data_t *cib_xml_copy = get_cib_copy(the_cib);
-		do_find_resource_list(LOG_INFO, cib_xml_copy);
+		crm_data_t *resource_list = get_object_root(
+			XML_CIB_TAG_RESOURCES, cib_xml_copy);
+		do_find_resource_list(LOG_INFO, resource_list);
 		free_xml(cib_xml_copy);
 		
 	} else if(rsc_cmd == 'W') {
-		int found = 0;
 		crm_data_t *cib_xml_copy = get_cib_copy(the_cib);
-		found = do_find_resource(rsc_id, cib_xml_copy);
+		rc = do_find_resource(rsc_id, cib_xml_copy);
 		free_xml(cib_xml_copy);
-		if(found > 0) {
-			rc = cib_ok;
-		} else {
-			rc = cib_NOTEXISTS;
-		}
 		
 	} else if(rsc_cmd == 'R') {
 	} else if(rsc_cmd == 'Q') {
@@ -232,7 +228,7 @@ main(int argc, char **argv)
 		crm_warn("Error performing operation: %s",
 			 cib_error2string(rc));
 
-	} else if(rc != cib_ok) {
+	} else if(rc < cib_ok) {
 		crm_warn("Error performing operation: %s",
 			 cib_error2string(rc));
 	}
@@ -252,7 +248,7 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 
 	the_rsc = pe_find_resource(data_set.resources, rsc);
 	if(the_rsc == NULL) {
-		return 0;
+		return cib_NOTEXISTS;
 	}
 
 	slist_iter(node, node_t, the_rsc->running_on, lpc,
@@ -281,14 +277,13 @@ do_find_resource(const char *rsc, crm_data_t *xml_node)
 }
 
 int
-do_find_resource_list(int level, crm_data_t *cib)
+do_find_resource_list(int level, crm_data_t *resource_list)
 {
 	int lpc = 0;
 	int found = 0;
 	const char *name = NULL;
 	const char *type = NULL;
 	const char *class = NULL;
-	crm_data_t *resource_list = get_object_root(XML_CIB_TAG_RESOURCES, cib);
 	
 	xml_child_iter(
 		resource_list, rsc, NULL,
