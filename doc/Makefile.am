@@ -34,7 +34,7 @@ CLEANFILES              = ChangeLog $(txtfiles)
 
 SPECSRC 		= $(top_builddir)/heartbeat.spec
 
-OTHER_DOCS              = AUTHORS COPYING ChangeLog \
+OTHER_DOCS              = AUTHORS COPYING COPYING.LGPL ChangeLog \
                                 README authkeys ha.cf startstop haresources \
 				DirectoryMap.txt apphbd.cf ha_logd.cf
 
