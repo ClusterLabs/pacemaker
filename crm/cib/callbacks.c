@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.79 2005/09/12 11:00:19 andrew Exp $ */
+/* $Id: callbacks.c,v 1.80 2005/09/20 15:22:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,7 +51,6 @@
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean cib_msg_timeout(gpointer data);
 void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
-gboolean ghash_str_clfree(gpointer key, gpointer value, gpointer user_data);
 gboolean can_write(int flags);
 HA_Message *cib_msg_copy(const HA_Message *msg, gboolean with_data);
 gboolean ccm_manual_check(gpointer data);
@@ -1270,8 +1269,8 @@ cib_client_status_callback(const char * node, const char * client,
 			   const char * status, void * private)
 {
 	if(safe_str_eq(client, CRM_SYSTEM_CIB)) {
-		crm_debug_2("Status update: Client %s/%s now has status [%s]",
-			    node, client, status);
+		crm_info("Status update: Client %s/%s now has status [%s]",
+			 node, client, status);
 		g_hash_table_replace(peer_hash, crm_strdup(node), crm_strdup(status));
 		set_connected_peers(the_cib);
 	}
@@ -1310,6 +1309,11 @@ gboolean cib_ccm_dispatch(int fd, gpointer user_data)
 		crm_err("CCM connection appears to have failed: rc=%d.", rc);
 		return FALSE;
 	}
+}
+
+static void crm_ghash_clfree(gpointer data)
+{
+	crm_free(data);
 }
 
 void 
@@ -1381,22 +1385,32 @@ cib_ccm_msg_callback(
 			 cib_have_quorum?"(re)attained":"lost",
 			 ccm_event_name(event), instance);
 		
-		if(ccm_membership != NULL) {
-			g_hash_table_foreach_remove(
-				ccm_membership, ghash_str_clfree, NULL);
+		if(ccm_membership == NULL) {
+			ccm_membership = g_hash_table_new_full(
+				g_str_hash, g_str_equal,
+				crm_ghash_clfree, NULL);
 		}
-		ccm_membership = g_hash_table_new(g_str_hash, g_str_equal);
 
-		if(membership != NULL) {
-			members = membership->m_n_member;
-			offset = membership->m_memb_idx;
+		if(membership != NULL && membership->m_n_in != 0) {
+			members = membership->m_n_in;
+			offset = membership->m_in_idx;
+			for(lpc = 0; lpc < members; lpc++) {
+				oc_node_t a_node = membership->m_array[lpc+offset];
+				char *uname = crm_strdup(a_node.node_uname);
+				crm_info("Added: %s", uname);
+				g_hash_table_replace(
+					ccm_membership, uname, uname);	
+			}
 		}
-		
-		for(lpc = 0; lpc < members; lpc++) {
-			oc_node_t a_node = membership->m_array[lpc+offset];
-			char *uname = crm_strdup(a_node.node_uname);
-			g_hash_table_insert(
-				ccm_membership, uname, uname);	
+		if(membership != NULL && membership->m_n_out != 0) {
+			members = membership->m_n_out;
+			offset = membership->m_out_idx;
+			for(lpc = 0; lpc < members; lpc++) {
+				oc_node_t a_node = membership->m_array[lpc+offset];
+				crm_info("LOST: %s", a_node.node_uname);
+				g_hash_table_remove(
+					ccm_membership, a_node.node_uname);	
+			}
 		}
 	}
 	
@@ -1405,14 +1419,6 @@ cib_ccm_msg_callback(
 	return;
 }
 
-gboolean
-ghash_str_clfree(gpointer key, gpointer value, gpointer user_data)
-{
-	if(key != NULL) {
-		crm_free(key);
-	}
-	return TRUE;
-}
 
 gboolean
 can_write(int flags)
