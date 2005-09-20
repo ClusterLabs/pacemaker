@@ -1,4 +1,4 @@
-/* $Id: scandir.c,v 1.9 2005/09/20 20:20:45 alan Exp $ */
+/* $Id: scandir.c,v 1.10 2005/09/20 20:25:23 alan Exp $ */
 /* scandir: Scan a directory, collecting all (selected) items into a an array.
  *
  * This code borrowed from 'libit', which can be found here:
@@ -13,11 +13,16 @@
  * code which I obtained from his site.
  *
  * I think the correct spelling of his name is Rich Salz.  I think he's now 
- * rsalz@datapower.net...
+ * rsalz@datapower.com...
  * -- 
  * Rich Salz, Chief Security Architect
  * DataPower Technology                           http://www.datapower.com
  * XS40 XML Security Gateway   http://www.datapower.com/products/xs40.html
+ *
+ *	Copyright(C):	none (public domain)
+ *	License:	none (public domain)
+ *	Author:		Rich Salz <rsalz@datapower.com>
+ *
  *
  *
  *	-- Alan Robertson
