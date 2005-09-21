@@ -61,6 +61,7 @@ class LinuxHAv2(HeartbeatCM):
             "StatusCmd"      : "@libdir@/heartbeat/crmadmin -S %s 2>/dev/null",
             "EpocheCmd"      : "@libdir@/heartbeat/ccm_tool -e",
             "QuorumCmd"      : "@libdir@/heartbeat/ccm_tool -q",
+	    "CibQuery"       : "@libdir@/heartbeat/cibadmin -Ql",
             "ParitionCmd"    : "@libdir@/heartbeat/ccm_tool -p",
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s monitor 0 0 EVERYTIME 2>/dev/null|grep return",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
