@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.2 2005/09/12 21:11:17 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.3 2005/09/21 10:26:22 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -44,6 +44,7 @@
 #include <crm/common/ipc.h>
 
 #include <crm/cib.h>
+#include <sys/utsname.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -198,6 +199,22 @@ main(int argc, char **argv)
 		return rc;
 	}
 	
+	if(safe_str_eq(crm_system_name, "crm_master")) {
+		dest_node = getenv("OCF_RESKEY_on_node_uuid");
+		if(dest_node == NULL) {
+			struct utsname name;
+			crm_err("Could not determin node UUID."
+				"  Using local uname.");
+
+			if(uname(&name) != 0) {
+				cl_perror("uname(3) call failed");
+				return 1;
+			}
+			dest_uname = name.nodename;
+			crm_info("Detected: %s", dest_uname);
+		}
+	}
+
 	if(dest_node == NULL && dest_uname != NULL) {
 		rc = query_node_uuid(the_cib, dest_uname, &dest_node);
 		if(rc != cib_ok) {
@@ -213,9 +230,8 @@ main(int argc, char **argv)
 		int len = 0;
 		char *rsc = NULL;
 		
-		dest_node = getenv("OCF_RESKEY_target_uuid");
 		if(dest_node == NULL) {
-			crm_err("Please specify a value for -U or -u");
+			crm_err("Could not determin node UUID.");
 			return 1;
 		}
 		if(safe_str_eq(type, "reboot")) {
