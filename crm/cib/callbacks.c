@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.80 2005/09/20 15:22:39 andrew Exp $ */
+/* $Id: callbacks.c,v 1.81 2005/09/21 13:57:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -376,6 +376,7 @@ cib_common_callback(
 	int rc = cib_ok;
 	int lpc = 0;
 
+	const char *op = NULL;
 	HA_Message *op_request = NULL;
 	cib_client_t *cib_client = user_data;
 
@@ -402,8 +403,10 @@ cib_common_callback(
 			break;
 		}
 
-		crm_debug_2("Processing IPC message from %s on %s channel",
-			    cib_client->id, cib_client->channel_name);
+
+		op = cl_get_string(op_request, F_CIB_OPERATION);
+		crm_info("Operation %s from client %s/%s",
+			 op, cib_client->id, cib_client->channel_name);
 		crm_log_message_adv(LOG_MSG, "Client[inbound]", op_request);
 		
 		lpc++;
@@ -603,10 +606,8 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 			crm_err("%s operation failed: %s",
 				crm_str(op), cib_error2string(rc));
 			crm_log_message_adv(LOG_DEBUG, "CIB[output]", op_reply);
-			crm_debug("Input message");
-			crm_log_message(LOG_DEBUG, request);
+			crm_log_message_adv(LOG_INFO, "Input message", request);
 		}
-		
 
 		if(op_reply == NULL && (needs_reply || local_notify)) {
 			crm_err("Unexpected NULL reply to message");
@@ -1154,31 +1155,28 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 	const char *op         = cl_get_string(msg, F_CIB_OPERATION);
 
 	crm_log_message_adv(LOG_MSG, "Peer[inbound]", msg);
-	crm_debug_2("Operation %s from peer %s", op, originator);
 	
 	if(originator == NULL || safe_str_eq(originator, cib_our_uname)) {
- 		crm_debug_3("Discarding message %s/%s from ourselves",
-			  cl_get_string(msg, F_CIB_CLIENTID), 
-			  cl_get_string(msg, F_CIB_CALLID));
+ 		crm_debug_3("Discarding %s message from ourselves", op);
 		return;
 
 	} else if(ccm_membership == NULL) {
- 		crm_debug_2("Discarding message %s/%s:"
-			    " membership not established",
-			    originator, seq);
+ 		crm_info("Discarding %s message (%s) from %s:"
+			 " membership not established", op, seq, originator);
 		return;
 		
 	} else if(g_hash_table_lookup(ccm_membership, originator) == NULL) {
- 		crm_debug_2("Discarding message %s/%s: not in our membership",
-			    originator, cl_get_string(msg, F_CIB_CALLID));
+ 		crm_warn("Discarding %s message (%s) from %s:"
+			 " not in our membership", op, seq, originator);
 		return;
 
 	} else if(cib_get_operation_id(msg, &call_type) != cib_ok) {
-		crm_err("Invalid operation... discarding msg %s", seq);
+ 		crm_err("Discarding %s message (%s) from %s:"
+			" Invalid operation", op, seq, originator);
 		return;
 	}
 
-	crm_debug("Processing msg %s (%s) from peer %s", seq, op, originator);
+	crm_info("Processing %s msg (%s) from %s", op, seq, originator);
 
 	cib_process_request(msg, TRUE, TRUE, NULL);
 
@@ -1415,6 +1413,7 @@ cib_ccm_msg_callback(
 	}
 	
 	oc_ev_callback_done(cookie);
+	set_connected_peers(the_cib);
 	
 	return;
 }
