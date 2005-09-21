@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.27 2005/06/14 10:37:04 davidlee Exp $ */
+/* $Id: main.c,v 1.28 2005/09/21 15:16:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -220,9 +220,9 @@ init_start(void)
 
 	if(was_error == FALSE) {
 		/* Async get client status information in the cluster */
-		crm_debug_3("Requesting an initial dump of CRMD client_status");
+		crm_debug_3("Requesting an initial dump of CIB client_status");
 		hb_conn->llc_ops->client_status(
-			hb_conn, NULL, CRM_SYSTEM_CRMD, -1);
+			hb_conn, NULL, CRM_SYSTEM_CIB, -1);
 
 		/* Create the mainloop and run it... */
 		mainloop = g_main_new(FALSE);
