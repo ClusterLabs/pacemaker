@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.3 2005/09/15 15:23:54 andrew Exp $ */
+/* $Id: master.c,v 1.4 2005/09/21 10:32:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -315,6 +315,10 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	/* mark the first N as masters */
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
+
+		CRM_DEV_ASSERT(child_rsc->color != NULL);
+		chosen = child_rsc->color->details->chosen_node;
+
 		switch(child_rsc->next_role) {
 			case RSC_ROLE_STARTED:
 
@@ -340,7 +344,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 						 child_rsc->id);
 					child_rsc->next_role = RSC_ROLE_SLAVE;
 					
-				} else if(master_max >= promoted) {
+				} else if(master_max <= promoted) {
 					crm_info("Demoting %s (masters max)",
 						 child_rsc->id);
 					child_rsc->next_role = RSC_ROLE_SLAVE;
@@ -349,6 +353,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 					crm_info("Promoting %s", child_rsc->id);
 					child_rsc->next_role = RSC_ROLE_MASTER;
 					promoted++;
+					master_hash_obj->num_masters++;
 				}
 				break;
 				
