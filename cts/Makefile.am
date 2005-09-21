@@ -31,7 +31,6 @@ hard_SCRIPTS	=				\
 			CTSproxy.py		\
 			CTStests.py		\
 			extracttests.py		\
-			haresources2cib.py	\
 			OCFIPraTest.py
 
 hard_DATA =		README
