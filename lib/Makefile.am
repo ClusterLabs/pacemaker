@@ -28,6 +28,11 @@ MAINTAINERCLEANFILES    = Makefile.in
 #	to use any of the libraries (nothing can be linked against them)
 #
 #
+
+if MGMT_BUILD
+MGMT_DIR = mgmt
+endif
+
 ## Subdirectories...
 SUBDIRS			=  	\
 	pils			\
@@ -39,7 +44,8 @@ SUBDIRS			=  	\
 	fencing			\
 	plugins 		\
 	crm			\
-	lrm
+	lrm			\
+	$(MGMT_DIR)
 
 #	bindings
 
@@ -53,5 +59,7 @@ DIST_SUBDIRS		=  	\
 	plugins 		\
 	fencing			\
 	crm			\
-	lrm			
+	lrm			\
+	$(MGMT_DIR)
+
 #	bindings

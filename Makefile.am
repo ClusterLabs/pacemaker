@@ -57,12 +57,16 @@ if SNMP_SUBAGENT_BUILD
 SNMP_SUBAGENT_DIR = snmp_subagent
 endif
 
+if MGMT_BUILD
+MGMT_DIR = mgmt
+endif
+
 SUBDIRS	=		$(LIBLTDL_DIR) debian pkg port replace include 	\
 			lib						\
 			ldirectord heartbeat membership telecom		\
 			linux-ha contrib resources			\
 			crm lrm $(SNMP_SUBAGENT_DIR)			\
-			tools logd fencing doc cts
+			tools logd fencing doc cts $(MGMT_DIR)
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
 HBDOCS = doc/heartbeat_api.html
