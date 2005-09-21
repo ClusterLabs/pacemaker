@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.53 2005/09/16 17:32:16 andrew Exp $ */
+/* $Id: incarnation.c,v 1.54 2005/09/21 10:35:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1092,33 +1092,8 @@ gboolean clone_active(resource_t *rsc, gboolean all)
 	}
 }
 
-void clone_printw(resource_t *rsc, const char *pre_text, int *index)
-{
-#if CURSES_ENABLED
-	const char *child_text = NULL;
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-	if(pre_text != NULL) {
-		child_text = "        ";
-	} else {
-		child_text = "    ";
-	}
-
-	move(*index, 0);
-	printw("Clone: %s\n", rsc->id);
-	
-	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
-		
-		(*index)++;
-		child_rsc->fns->printw(child_rsc, child_text, index);
-		);
-#else
-	crm_err("printw support requires ncurses to be available during configure");
-#endif
-}
-
-void clone_html(resource_t *rsc, const char *pre_text, FILE *stream)
+void clone_print(
+	resource_t *rsc, const char *pre_text, long options, void *print_data)
 {
 	const char *child_text = NULL;
 	clone_variant_data_t *clone_data = NULL;
@@ -1128,36 +1103,36 @@ void clone_html(resource_t *rsc, const char *pre_text, FILE *stream)
 	} else {
 		child_text = "    ";
 	}
-	
-	fprintf(stream, "Clone: %s\n", rsc->id);
-	fprintf(stream, "<ul>\n");
 
+	if(rsc->variant == pe_master) {
+		status_print("%sMaster/Slave Set: %s\n",
+			     pre_text?pre_text:"", clone_data->self->id);
+
+	} else {
+		status_print("%sClone Set: %s\n",
+			     pre_text?pre_text:"", clone_data->self->id);
+	}
+	
+	if(options & pe_print_html) {
+		status_print("<ul>\n");
+	}
+	
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		
-		fprintf(stream, "<li>\n");
-		child_rsc->fns->html(child_rsc, child_text, stream);
-		fprintf(stream, "</li>\n");
+		if(options & pe_print_html) {
+			status_print("<li>\n");
+		}
+		child_rsc->fns->print(
+			child_rsc, child_text, options, print_data);
+		if(options & pe_print_html) {
+			status_print("</li>\n");
+		}
 		);
-	fprintf(stream, "</ul>\n");
-}
 
-
-void clone_dump(resource_t *rsc, const char *pre_text, gboolean details)
-{
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-
-	common_dump(rsc, pre_text, details);
-	
-	clone_data->self->fns->dump(
-		clone_data->self, pre_text, details);
-
-	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
-		
-		child_rsc->fns->dump(child_rsc, pre_text, details);
-		);
+	if(options & pe_print_html) {
+		status_print("</ul>\n");
+	}
 }
 
 void clone_free(resource_t *rsc)

@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.26 2005/09/16 17:32:16 andrew Exp $ */
+/* $Id: complex.h,v 1.27 2005/09/21 10:35:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -79,9 +79,7 @@ typedef struct resource_object_functions_s
 		void (*rsc_location)(resource_t *, rsc_to_node_t *);
 
 		void (*expand)(resource_t *, pe_working_set_t *);
-		void (*dump)(resource_t *, const char *, gboolean);
-		void (*printw)(resource_t *, const char *, int*);
-		void (*html)(resource_t *, const char *, FILE*);
+		void (*print)(resource_t *, const char *, long, void *);
 		gboolean (*active)(resource_t *,gboolean);
 		enum rsc_role_e (*state)(resource_t *);
 		void (*create_notify_element)(resource_t*,action_t*,
@@ -110,7 +108,9 @@ extern void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void native_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details);
 extern gboolean native_active(resource_t *rsc, gboolean all);
-extern void native_printw(resource_t *rsc, const char *pre_text, int *index);
+extern void native_print(resource_t *rsc, const char *pre_text, long options, void *print_data);
+extern void native_print(resource_t *rsc, const char *pre_text, long options, void *print_data);
+
 extern void native_html(resource_t *rsc, const char *pre_text, FILE *stream);
 extern void native_free(resource_t *rsc);
 extern enum rsc_role_e native_resource_state(resource_t *rsc);
@@ -137,10 +137,8 @@ extern void group_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
-extern void group_dump(resource_t *rsc, const char *pre_text, gboolean details);
 extern gboolean group_active(resource_t *rsc, gboolean all);
-extern void group_printw(resource_t *rsc, const char *pre_text, int *index);
-extern void group_html(resource_t *rsc, const char *pre_text, FILE *stream);
+extern void group_print(resource_t *rsc, const char *pre_text, long options, void *print_data);
 extern void group_free(resource_t *rsc);
 extern enum rsc_role_e group_resource_state(resource_t *rsc);
 extern void group_create_notify_element(
@@ -164,10 +162,8 @@ extern void clone_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void clone_expand(resource_t *rsc, pe_working_set_t *data_set);
-extern void clone_dump(resource_t *rsc, const char *pre_text, gboolean details);
 extern gboolean clone_active(resource_t *rsc, gboolean all);
-extern void clone_printw(resource_t *rsc, const char *pre_text, int *index);
-extern void clone_html(resource_t *rsc, const char *pre_text, FILE *stream);
+extern void clone_print(resource_t *rsc, const char *pre_text, long options, void *print_data);
 extern void clone_free(resource_t *rsc);
 extern enum rsc_role_e clone_resource_state(resource_t *rsc);
 extern void clone_create_notify_element(
@@ -184,10 +180,7 @@ extern void master_internal_constraints(
 extern resource_object_functions_t resource_class_functions[];
 extern gboolean common_unpack(crm_data_t *xml_obj, resource_t **rsc,
 			      GHashTable *defaults, pe_working_set_t *data_set);
-extern void common_dump(
-	resource_t *rsc, const char *pre_text, gboolean details);
-extern void common_printw(resource_t *rsc, const char *pre_text, int *index);
-extern void common_html(resource_t *rsc, const char *pre_text, FILE *stream);
+extern void common_print(resource_t *rsc, const char *pre_text, long options, void *print_data);
 
 extern void common_free(resource_t *rsc);
 extern void native_add_running(
@@ -207,4 +200,27 @@ extern void unpack_instance_attributes(
 extern const char *get_rsc_param(resource_t *rsc, const char *prop);
 extern void add_rsc_param(resource_t *rsc, const char *name, const char *value);
 extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
+
+#if CURSES_ENABLED
+#  define status_printw(fmt...) printw(fmt)
+#else
+#  define status_printw(fmt...) \
+	crm_err("printw support requires ncurses to be available during configure"); \
+	do_crm_log(LOG_WARNING, NULL, NULL, fmt);
+#endif
+
+#define status_print(fmt...)				\
+	if(options & pe_print_html) {			\
+		FILE *stream = print_data;		\
+		fprintf(stream, fmt);			\
+	} else if(options & pe_print_ncurses) {		\
+		status_printw(fmt);			\
+	} else if(options & pe_print_printf) {		\
+		FILE *stream = print_data;		\
+		fprintf(stream, fmt);			\
+	} else if(options & pe_print_log) {		\
+		int log_level = *(int*)print_data;	\
+		do_crm_log(log_level, NULL, NULL, fmt);	\
+	}
+
 #endif

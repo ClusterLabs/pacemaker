@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.126 2005/09/16 17:32:17 andrew Exp $ */
+/* $Id: unpack.c,v 1.127 2005/09/21 10:35:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1572,6 +1572,7 @@ generate_location_rule(
 		return NULL;
 	}
 	if(role != NULL) {
+		crm_debug_2("Setting role filter: %s", role);
 		location_rule->role_filter = text2role(role);
 	}
 	if(do_and) {

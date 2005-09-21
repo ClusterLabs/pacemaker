@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.110 2005/09/16 17:32:17 andrew Exp $ */
+/* $Id: utils.c,v 1.111 2005/09/21 10:35:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1332,14 +1332,20 @@ print_rsc_colocation(const char *pre_text, rsc_colocation_t *cons, gboolean deta
 
 void
 print_resource(const char *pre_text, resource_t *rsc, gboolean details)
-{ 
+{
+	long options = pe_print_log;
+	int log_level = LOG_DEBUG_4;
+	
 	if(rsc == NULL) {
 		crm_debug_4("%s%s: <NULL>",
 		       pre_text==NULL?"":pre_text,
 		       pre_text==NULL?"":": ");
 		return;
 	}
-	rsc->fns->dump(rsc, pre_text, details);
+	if(details) {
+		options |= pe_print_details;
+	}
+	rsc->fns->print(rsc, pre_text, options, &log_level);
 }
 
 

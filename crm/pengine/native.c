@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.83 2005/09/18 19:26:54 andrew Exp $ */
+/* $Id: native.c,v 1.84 2005/09/21 10:35:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -806,107 +806,141 @@ gboolean native_active(resource_t *rsc, gboolean all)
 	return FALSE;
 }
 
-
-void native_printw(resource_t *rsc, const char *pre_text, int *index)
+void
+native_print(
+	resource_t *rsc, const char *pre_text, long options, void *print_data)
 {
-#if CURSES_ENABLED
+	node_t *node = NULL;	
+	const char *prov = crm_element_value(rsc->xml,XML_AGENT_ATTR_PROVIDER);
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
-	common_printw(rsc, pre_text, index);
-	if(rsc->is_managed == FALSE) {
-		printw(" (unmanaged) ");
+
+	if(rsc->running_on != NULL) {
+		node = rsc->running_on->data;
 	}
-	if(g_list_length(rsc->running_on) == 0) {
-		printw("NOT ACTIVE");
+	
+	if(options & pe_print_html) {
+		if(rsc->is_managed == FALSE) {
+			status_print("<font color=\"yellow\">");
+
+		} else if(rsc->failed) {
+			status_print("<font color=\"red\">");
+			
+		} else if(rsc->variant == pe_native
+			  && g_list_length(rsc->running_on) == 0) {
+			status_print("<font color=\"red\">");
+
+		} else if(g_list_length(rsc->running_on) > 1) {
+			status_print("<font color=\"orange\">");
+
+		} else {
+			status_print("<font color=\"green\">");
+		}
+	}
+
+	if(options & pe_print_rsconly) {
+		const char *desc = NULL;
+		desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
+		status_print("%s%s (%s%s%s:%s)%s%s",
+			     pre_text?pre_text:"", rsc->id,
+			     prov?prov:"", prov?"::":"",
+			     crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
+			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
+			     desc?": ":"", desc?desc:"");
+
+	} else {
+		status_print("%s%s (%s%s%s:%s):\t%s",
+			     pre_text?pre_text:"", rsc->id,
+			     prov?prov:"", prov?"::":"",
+			     crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
+			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
+			     (rsc->variant!=pe_native)?"":node==NULL?"NOT ACTIVE":node->details->uname);
+	}
+	
+	if(options & pe_print_html) {
+		status_print(" </font> ");
+	}
+
+	if(rsc->is_managed == FALSE) {
+		status_print(" (unmanaged) ");
+	}
+	
+	if((options & pe_print_rsconly) == 0) {
+/* 	} else if(rsc->variant == pe_native */
+/* 		  && g_list_length(rsc->running_on) == 0) { */
+/* 		status_print("NOT ACTIVE"); */
 		
-	} else if(g_list_length(rsc->running_on) == 1) {
-		node_t *node = rsc->running_on->data;
-		printw("%s (%s)", node->details->uname, node->details->id);
-		if(rsc->failed) {
-			printw(" FAILED");
+/* 	} else if(g_list_length(rsc->running_on) == 1) { */
+		
+	} else if(g_list_length(rsc->running_on) > 1) {
+
+		if(options & pe_print_html) {
+			status_print("<ul>\n");
+		} else if((options & pe_print_printf)
+			  || (options & pe_print_ncurses)) {
+			status_print("[");
 		}
 		
-	} else if(g_list_length(rsc->running_on) == 1) {
-		printw("[");
 		slist_iter(node, node_t, rsc->running_on, lpc,
-			   if(lpc > 0) { printw(", "); }
-			   printw("%s (%s)", node->details->uname, node->details->id);
+			   if(options & pe_print_html) {
+				   status_print("<li>\n");
+
+			   } else if((options & pe_print_printf)
+				     || (options & pe_print_ncurses)) {
+				   status_print(" ");
+
+			   } else if((options & pe_print_log)) {
+				   status_print("\t-");
+			   }
+			   status_print("%s", node->details->uname);
+			   if(options & pe_print_html) {
+				   status_print("</li>\n");
+
+			   }
 			);
-		printw("]");
-	}
-	printw("\n");
-#else
-	crm_err("printw support requires ncurses to be available during configure");
-#endif
-}
-
-void native_html(resource_t *rsc, const char *pre_text, FILE *stream)
-{
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-	if(rsc->is_managed == FALSE) {
-		fprintf(stream, "<font color=\"orange\">");
-	}
-	common_html(rsc, pre_text, stream);
-	if(rsc->is_managed == FALSE) {
-		fprintf(stream, " (unmanaged)</font> ");
-	}
-	
-	if(rsc->failed) {
-		fprintf(stream, "<font color=\"orange\">");
-	} else if(g_list_length(rsc->running_on) == 0) {
-		fprintf(stream, "<font color=\"red\">");
-	} else if(g_list_length(rsc->running_on) > 1) {
-		fprintf(stream, "<font color=\"orange\">");
-	} else {
-		fprintf(stream, "<font color=\"green\">");
-	}	
-	
-	if(g_list_length(rsc->running_on) == 0) {
-		fprintf(stream, "<b>NOT ACTIVE</b>");
 		
-	} else if(g_list_length(rsc->running_on) == 1) {
-		node_t *node = rsc->running_on->data;
-		fprintf(stream, "%s (%s)",
-			node->details->uname, node->details->id);
-		
-	} else if(g_list_length(rsc->running_on) > 1) {
-		fprintf(stream, "<ul>\n");
-		slist_iter(node, node_t, rsc->running_on, lpc,
-			   fprintf(stream, "<li><b>%s (%s)</b></li>\n",
-				   node->details->uname, node->details->id);
-			);
-		fprintf(stream, "</ul>\n");
+		if(options & pe_print_html) {
+			status_print("</ul>\n");
+		} else if((options & pe_print_printf)
+			  || (options & pe_print_ncurses)) {
+			status_print(" ]");
+		}
 	}
-	fprintf(stream, "</font><br/>\n");
-}
 
-void native_dump(resource_t *rsc, const char *pre_text, gboolean details)
-{
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
+	if(options & pe_print_html) {
+		status_print("<br/>\n");
+	} else if((options & pe_print_printf) || (options & pe_print_ncurses)) {
+		status_print("\n");
+	}
 
-	common_dump(rsc, pre_text, details);
-	crm_debug_4("\t%d candidate colors, %d allowed nodes,"
-		  " %d rsc_cons",
-		  g_list_length(rsc->candidate_colors),
-		  g_list_length(native_data->allowed_nodes),
-		  g_list_length(rsc->rsc_cons));
+	if(options & pe_print_details) {
+		status_print("%s\t(%s%svariant=%s, priority=%f)",
+			     pre_text, rsc->provisional?"provisional, ":"",
+			     rsc->runnable?"":"non-startable, ",
+			     crm_element_name(rsc->xml),
+			     (double)rsc->priority);
+
+		status_print("%s\t%d candidate colors, %d allowed nodes,"
+			     " %d rsc_cons",
+			     pre_text, g_list_length(rsc->candidate_colors),
+			     g_list_length(native_data->allowed_nodes),
+			     g_list_length(rsc->rsc_cons));
+	}
 	
-	if(details) {
-		crm_debug_4("\t=== Actions");
+	if(options & pe_print_max_details) {
+		status_print("%s\t=== Actions.\n", pre_text);
 		slist_iter(
 			action, action_t, rsc->actions, lpc, 
 			log_action(LOG_DEBUG_4, "\trsc action: ", action, FALSE);
 			);
 		
-		crm_debug_4("\t=== Colors");
+		status_print("%s\t=== Colors\n", pre_text);
 		slist_iter(
 			color, color_t, rsc->candidate_colors, lpc,
 			print_color("\t", color, FALSE)
 			);
 
-		crm_debug_4("\t=== Allowed Nodes");
+		status_print("%s\t=== Allowed Nodes\n", pre_text);
 		slist_iter(
 			node, node_t, native_data->allowed_nodes, lpc,
 			print_node("\t", node, FALSE);

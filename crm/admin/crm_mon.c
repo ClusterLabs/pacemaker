@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.11 2005/09/15 08:27:40 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.12 2005/09/21 10:35:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -63,7 +63,7 @@ const char *crm_system_name = "crm_mon";
 void usage(const char *cmd, int exit_status);
 void blank_screen(void);
 int print_status(crm_data_t *cib);
-#define printw_at(line, fmt...) move(line, 0); printw(fmt); line++
+/* #define printw_at(line, fmt...) move(line, 0); printw(fmt); line++ */
 void wait_for_refresh(int offset, const char *prefix, int seconds);
 int print_html_status(crm_data_t *cib, const char *filename);
 void make_daemon(gboolean daemonize, const char *pidfile);
@@ -187,6 +187,7 @@ main(int argc, char **argv)
 	
 	mainloop = g_main_new(FALSE);
 	timer_id = Gmain_timeout_add(interval*1000, mon_timer_popped, NULL);
+	mon_timer_popped(NULL);
 	g_main_run(mainloop);
 	return_to_orig_privs();
 	
@@ -210,7 +211,7 @@ mon_timer_popped(gpointer data)
 
 	if(as_console) {
 		move(0, 0);
-		printw("Updating...");
+		printw("Updating...\n");
 		clrtoeol();
 		refresh();
 	} else {
@@ -278,9 +279,9 @@ wait_for_refresh(int offset, const char *prefix, int seconds)
 	
 	crm_notice("%sRefresh in %ds...", prefix?prefix:"", lpc);
 	while(lpc > 0) {
-		move(offset, 0);
+		move(0, 0);
 /* 		printw("%sRefresh in \033[01;32m%ds\033[00m...", prefix?prefix:"", lpc); */
-		printw("%sRefresh in %ds...", prefix?prefix:"", lpc);
+		printw("%sRefresh in %ds...\n", prefix?prefix:"", lpc);
 		clrtoeol();
 		refresh();
 		lpc--;
@@ -297,10 +298,12 @@ wait_for_refresh(int offset, const char *prefix, int seconds)
 int
 print_status(crm_data_t *cib) 
 {
-	static int updates = 0;
-	int lpc = 0;
-	pe_working_set_t data_set;
 	node_t *dc = NULL;
+	static int updates = 0;
+	pe_working_set_t data_set;
+	char *since_epoch = NULL;
+	time_t a_time = time(NULL);
+	int print_opts = pe_print_rsconly|pe_print_ncurses;
 	updates++;
 	set_working_set_defaults(&data_set);
 	data_set.input = cib;
@@ -308,23 +311,31 @@ print_status(crm_data_t *cib)
 
 	dc = data_set.dc_node;
 
-	lpc++;
+	blank_screen();
+	printw("\n\n============\n");
+
+	if(a_time == (time_t)-1) {
+		cl_perror("set_node_tstamp(): Invalid time returned");
+		return 1;
+	}
 	
-	printw_at(lpc, "============");
+	since_epoch = ctime(&a_time);
+	if(since_epoch != NULL) {
+		printw("Last updated: %s", since_epoch);
+	}
+
 	if(dc == NULL) {
-		printw_at(lpc, "Current DC: NONE");
+		printw("Current DC: NONE\n");
 	} else {
-		printw_at(lpc, "Current DC: %s (%s)",
+		printw("Current DC: %s (%s)\n",
 			  dc->details->uname, dc->details->id);
 	}
-	printw_at(lpc, "%d Nodes configured.",
+	printw("%d Nodes configured.\n",
 		  g_list_length(data_set.nodes));
-	printw_at(lpc, "%d Resources configured.",
+	printw("%d Resources configured.\n",
 		  g_list_length(data_set.resources));
-	printw_at(lpc, "============");
+	printw("============\n");
 
-	lpc++;
-	
 	slist_iter(node, node_t, data_set.nodes, lpc2,
 		   const char *node_mode = "OFFLINE";
 		   if(node->details->standby) {
@@ -333,36 +344,31 @@ print_status(crm_data_t *cib)
 			   node_mode = "online";
 		   }
 		   
-		   printw_at(lpc, "Node: %s (%s): %s",
-			     node->details->uname, node->details->id,
-			     node_mode);
+		   printw("Node: %s (%s): %s\n",
+			  node->details->uname, node->details->id,
+			  node_mode);
 		   if(group_by_node) {
 			   slist_iter(rsc, resource_t,
 				      node->details->running_rsc, lpc2,
-				      common_printw(rsc, "\t", &lpc);
-/* 				      rsc->fns->printw(rsc, "\t", &lpc); */
-				      lpc++;
+ 				      rsc->fns->print(
+					      rsc, "\t", print_opts, NULL);
 				   );
 		   }
 		);
 
-	lpc++;
-	
 	if(group_by_node && inactive_resources) {
-		printw_at(lpc, "Full list of resources:");
+		printw("\nFull list of resources:\n");
 	}
 	if(group_by_node == FALSE || inactive_resources) {
 		slist_iter(rsc, resource_t, data_set.resources, lpc2,
-			   rsc->fns->printw(rsc, NULL, &lpc);
-			   lpc++;
+			   rsc->fns->print(rsc, NULL, pe_print_ncurses, NULL);
 			);
 	}
-	move(lpc, 0);
 
 	refresh();
 	data_set.input = NULL;
 	cleanup_calculations(&data_set);
-	return lpc;
+	return 0;
 }
 
 int
@@ -457,7 +463,8 @@ print_html_status(crm_data_t *cib, const char *filename)
 			   slist_iter(rsc, resource_t,
 				      node->details->running_rsc, lpc2,
 				      fprintf(stream, "<li>");
-				      common_html(rsc, "\t", stream);
+				      rsc->fns->print(rsc, NULL,
+						      pe_print_html, stream);
 				      fprintf(stream, "</li>\n");
 				   );
 			   fprintf(stream, "</ul>\n");
@@ -478,7 +485,7 @@ print_html_status(crm_data_t *cib, const char *filename)
 			   if(group_by_node && rsc->fns->active(rsc, TRUE)) {
 				   continue;
 			   }
-			   rsc->fns->html(rsc, NULL, stream);
+			   rsc->fns->print(rsc, NULL, pe_print_html, stream);
 			);
 	}
 

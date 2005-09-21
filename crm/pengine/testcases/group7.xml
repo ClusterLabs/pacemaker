@@ -18,9 +18,9 @@
 	<primitive id="child_rsc3" class="heartbeat" type="apache"/>
       </group>
       <group id="rsc3" priority="1.0">
-	<primitive id="child_rsc1" class="heartbeat" type="apache"/>
-	<primitive id="child_rsc2" class="heartbeat" type="apache"/>
-	<primitive id="child_rsc3" class="heartbeat" type="apache"/>
+	<primitive id="child_rsc4" class="heartbeat" type="apache"/>
+	<primitive id="child_rsc5" class="heartbeat" type="apache"/>
+	<primitive id="child_rsc6" class="heartbeat" type="apache"/>
       </group>
     </resources>
     <constraints>

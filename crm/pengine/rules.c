@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.18 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: rules.c,v 1.19 2005/09/21 10:35:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -153,7 +153,7 @@ find_expression_type(crm_data_t *expr)
 	} else if(safe_str_eq(attr, "#role")) {
 		return role_expr;
 	} 
-	
+
 	return attr_expr;
 }
 

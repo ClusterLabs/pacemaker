@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.92 2005/09/16 17:32:17 andrew Exp $ */
+/* $Id: pengine.h,v 1.93 2005/09/21 10:35:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -68,6 +68,17 @@ typedef enum no_quorum_policy_e {
 	no_quorum_stop,
 	no_quorum_ignore
 } no_quorum_policy_t;
+
+enum pe_print_options {
+
+	pe_print_log     = 0x0001,
+	pe_print_html    = 0x0002,
+	pe_print_ncurses = 0x0004,
+	pe_print_printf  = 0x0008,
+	pe_print_details = 0x0010,
+	pe_print_max_details = 0x0020,
+	pe_print_rsconly = 0x0040,
+};
 
 
 typedef struct pe_working_set_s 

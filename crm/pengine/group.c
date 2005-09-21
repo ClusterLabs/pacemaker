@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.41 2005/09/16 17:32:16 andrew Exp $ */
+/* $Id: group.c,v 1.42 2005/09/21 10:35:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -411,33 +411,8 @@ gboolean group_active(resource_t *rsc, gboolean all)
 	}
 }
 
-void group_printw(resource_t *rsc, const char *pre_text, int *index)
-{
-#if CURSES_ENABLED
-	const char *child_text = NULL;
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-	if(pre_text != NULL) {
-		child_text = "        ";
-	} else {
-		child_text = "    ";
-	}
-	
-	move(*index, 0);
-	printw("Resource Group: %s\n", group_data->self->id);
-
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		
-		(*index)++;
-		child_rsc->fns->printw(child_rsc, child_text, index);
-		);
-#else
-	crm_err("printw support requires ncurses to be available during configure");
-#endif
-}
-
-void group_html(resource_t *rsc, const char *pre_text, FILE *stream)
+void group_print(
+	resource_t *rsc, const char *pre_text, long options, void *print_data)
 {
 	const char *child_text = NULL;
 	group_variant_data_t *group_data = NULL;
@@ -448,37 +423,29 @@ void group_html(resource_t *rsc, const char *pre_text, FILE *stream)
 		child_text = "    ";
 	}
 	
-	fprintf(stream, "Resource Group: %s\n", group_data->self->id);
-	fprintf(stream, "<ul>\n");
+	status_print("%sResource Group: %s\n",
+		     pre_text?pre_text:"", group_data->self->id);
 
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		
-		fprintf(stream, "<li>\n");
-		child_rsc->fns->html(child_rsc, child_text, stream);
-		fprintf(stream, "</li>\n");
-		);
-	fprintf(stream, "</ul>\n");
-}
-
-void group_dump(resource_t *rsc, const char *pre_text, gboolean details)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	if(group_data->self == NULL) {
-		return;
+	if(options & pe_print_html) {
+		status_print("<ul>\n");
 	}
-
-	common_dump(rsc, pre_text, details);
 	
-	group_data->self->fns->dump(group_data->self, pre_text, details);
-
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 		
-		child_rsc->fns->dump(child_rsc, pre_text, details);
+		if(options & pe_print_html) {
+			status_print("<li>\n");
+		}
+		child_rsc->fns->print(
+			child_rsc, child_text, options, print_data);
+		if(options & pe_print_html) {
+			status_print("</li>\n");
+		}
 		);
+
+	if(options & pe_print_html) {
+		status_print("</ul>\n");
+	}
 }
 
 void group_free(resource_t *rsc)

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.61 2005/09/16 17:32:16 andrew Exp $ */
+/* $Id: complex.c,v 1.62 2005/09/21 10:35:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,9 +57,7 @@ resource_object_functions_t resource_class_functions[] = {
 		native_rsc_order_rh,
 		native_rsc_location,
 		native_expand,
-		native_dump,
-		native_printw,
-		native_html,
+		native_print,
 		native_active,
 		native_resource_state,
 		native_create_notify_element,
@@ -79,9 +77,7 @@ resource_object_functions_t resource_class_functions[] = {
 		group_rsc_order_rh,
 		group_rsc_location,
 		group_expand,
-		group_dump,
-		group_printw,
-		group_html,
+		group_print,
 		group_active,
 		group_resource_state,
 		group_create_notify_element,
@@ -101,9 +97,7 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_rsc_order_rh,
 		clone_rsc_location,
 		clone_expand,
-		clone_dump,
-		clone_printw,
-		clone_html,
+		clone_print,
 		clone_active,
 		clone_resource_state,
 		clone_create_notify_element,
@@ -123,9 +117,7 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_rsc_order_rh,
 		clone_rsc_location,
 		clone_expand,
-		clone_dump,
-		clone_printw,
-		clone_html,
+		clone_print,
 		clone_active,
 		clone_resource_state,
 		clone_create_notify_element,
@@ -364,44 +356,6 @@ order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *orde
 	}
 }
 
-void common_html(resource_t *rsc, const char *pre_text, FILE *stream)
-{
-	const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-	
-	fprintf(stream, "%s%s (%s%s%s:%s):\t",
-		pre_text?pre_text:"", rsc->id,
-		prov?prov:"", prov?"::":"",
-		crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
-		crm_element_value(rsc->xml, XML_ATTR_TYPE));
-}
-
-void common_printw(resource_t *rsc, const char *pre_text, int *index)
-{
-#if CURSES_ENABLED
-	const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-	
-	move(*index, 0);
-	printw("%s%s (%s%s%s:%s):\t",
-	       pre_text?pre_text:"", rsc->id,
-	       prov?prov:"", prov?"::":"",
-	       crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
-	       crm_element_value(rsc->xml, XML_ATTR_TYPE));
-#else
-	crm_err("printw support requires ncurses to be available during configure");
-#endif
-}
-
-void common_dump(resource_t *rsc, const char *pre_text, gboolean details)
-{
-	crm_debug_4("%s%s%s%sResource %s: (variant=%s, priority=%f)",
-		  pre_text==NULL?"":pre_text,
-		  pre_text==NULL?"":": ",
-		  rsc->provisional?"Provisional ":"",
-		  rsc->runnable?"":"(Non-Startable) ",
-		  rsc->id,
-		  crm_element_name(rsc->xml),
-		  (double)rsc->priority);
-}
 
 void common_free(resource_t *rsc)
 {
