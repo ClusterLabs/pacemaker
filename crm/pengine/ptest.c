@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.63 2005/09/16 17:32:17 andrew Exp $ */
+/* $Id: ptest.c,v 1.64 2005/09/21 10:33:59 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -180,6 +180,8 @@ main(int argc, char **argv)
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
   
 	
+	crm_zero_mem_stats(NULL);
+
 	if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
 		cib_object = file2xml(xml_strm);
@@ -191,7 +193,6 @@ main(int argc, char **argv)
 	mtrace();
 #endif
  	CRM_DEV_ASSERT(cib_object != NULL);
-	crm_zero_mem_stats(NULL);
 
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	do_id_check(cib_object, NULL);
@@ -269,6 +270,8 @@ main(int argc, char **argv)
 
 	cleanup_calculations(&data_set);
 
+	free_xml(cib_object);
+
 	crm_mem_stats(NULL);
  	CRM_DEV_ASSERT(crm_mem_stats(NULL) == FALSE);
 	
@@ -277,7 +280,6 @@ main(int argc, char **argv)
 	muntrace();
 #endif
 	
-	free_xml(cib_object);
 
 	/* required for MallocDebug.app */
 	if(inhibit_exit) {
