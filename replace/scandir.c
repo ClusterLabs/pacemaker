@@ -1,4 +1,4 @@
-/* $Id: scandir.c,v 1.10 2005/09/20 20:25:23 alan Exp $ */
+/* $Id: scandir.c,v 1.11 2005/09/21 13:21:50 alan Exp $ */
 /* scandir: Scan a directory, collecting all (selected) items into a an array.
  *
  * This code borrowed from 'libit', which can be found here:
@@ -50,6 +50,33 @@
  * completely sure of the spelling) a long while ago.  I think that nowadays,
  * Rick is better known as the main author of the nice INN package.
  *
+ **************************************************************************
+ *
+ * I spent a little time verifying this with Rick Salz.
+ * The results are below:
+ *
+ **************************************************************************
+ *
+ * Date: Tue, 20 Sep 2005 21:52:09 -0400 (EDT)
+ * From: Rich Salz <rsalz@datapower.com>
+ * To: Alan Robertson <alanr@unix.sh>
+ * Subject: Re: Verifying permissions/licenses/etc on some old code of yours -
+ *  scandir.c
+ * In-Reply-To: <433071CA.8000107@unix.sh>
+ * Message-ID: <Pine.LNX.4.44L0.0509202151270.9198-100000@smtp.datapower.com>
+ * Content-Type: TEXT/PLAIN; charset=US-ASCII
+ *
+ * yes, it's most definitely in the public domain.
+ *
+ * I'm glad you find it useful.  I'm surprised it hasn't been replaced by,
+ * e.g,. something in GLibC.  Ii'm impressed you tracked me down.
+ *
+ *	/r$
+ *
+ * -- 
+ * Rich Salz                  Chief Security Architect
+ * DataPower Technology       http://www.datapower.com
+ * XS40 XML Security Gateway  http://www.datapower.com/products/xs40.html
  * ---------------------------------------------------------------------->
  * Subject:	scandir, ftw REDUX
  * Date: 	1 Jan 88 00:47:01 GMT
