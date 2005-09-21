@@ -1,4 +1,4 @@
-/* $Id: xml_diff.c,v 1.3 2005/06/14 11:55:29 davidlee Exp $ */
+/* $Id: xml_diff.c,v 1.4 2005/09/21 16:30:33 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -53,12 +53,15 @@
 const char *crm_system_name = "diff";
 void usage(const char *cmd, int exit_status);
 
-#define OPTARGS	"V?o:n:p:sc"
+#define OPTARGS	"V?o:n:p:scfO:N:"
 
 int
 main(int argc, char **argv)
 {
 	gboolean apply = TRUE;
+	gboolean raw_1  = FALSE;
+	gboolean raw_2  = FALSE;
+	gboolean filter = FALSE;
 	gboolean use_stdin = FALSE;
 	gboolean as_cib = FALSE;
 	int argerr = 0;
@@ -75,6 +78,8 @@ main(int argc, char **argv)
 		/* Top-level Options */
 		{"original", 1, 0, 'o'},
 		{"new",      1, 0, 'n'},
+		{"original-string", 1, 0, 'O'},
+		{"new-string",      1, 0, 'N'},
 		{"patch",    1, 0, 'p'},
 		{"stdin",    0, 0, 's'},
 		{"cib",      0, 0, 'c'},
@@ -105,15 +110,25 @@ main(int argc, char **argv)
 		switch(flag) {
 			case 'o':
 				xml_file_1 = optarg;
-				apply = FALSE;
+				break;
+			case 'O':
+				xml_file_1 = optarg;
+				raw_1 = TRUE;
 				break;
 			case 'n':
 				xml_file_2 = optarg;
 				apply = FALSE;
 				break;
+			case 'N':
+				xml_file_2 = optarg;
+				raw_2 = TRUE;
+				break;
 			case 'p':
 				xml_file_2 = optarg;
 				apply = TRUE;
+				break;
+			case 'f':
+				filter = TRUE;
 				break;
 			case 's':
 				use_stdin = TRUE;
@@ -149,7 +164,10 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
-	if(use_stdin) {
+	if(raw_1) {
+		object_1 = string2xml(xml_file_1);
+
+	} else if(use_stdin) {
 		fprintf(stderr, "Input first XML fragment:");
 		object_1 = stdin2xml();
 
@@ -163,7 +181,10 @@ main(int argc, char **argv)
 		}
 	}
 	
-	if(use_stdin) {
+	if(raw_1) {
+		object_2 = string2xml(xml_file_2);
+
+	} else if(use_stdin) {
 		fprintf(stderr, "Input second XML fragment:");
 		object_2 = stdin2xml();
 
@@ -185,13 +206,13 @@ main(int argc, char **argv)
 		if(apply) {
 			apply_xml_diff(object_1, object_2, &output);
 		} else {
-			output = diff_xml_object(object_1, object_2, FALSE);
+			output = diff_xml_object(object_1, object_2, filter);
 		}
 	} else {
 		if(apply) {
 			apply_cib_diff(object_1, object_2, &output);
 		} else {
-			output = diff_cib_object(object_1, object_2, FALSE);
+			output = diff_cib_object(object_1, object_2, filter);
 		}
 	}
 	
@@ -201,8 +222,13 @@ main(int argc, char **argv)
 		fprintf(stdout, "%s", crm_str(buffer));
 		crm_free(buffer);
 	}
+
+	if(apply == FALSE && output != NULL) {
+		return 1;
+	}
 	
 	return 0;
+	
 }
 
 
