@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<cib>
+  <configuration>
+    <crm_config>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </crm_config>
+    <nodes>
+      <node id="uuid1" uname="node1" type="member">
+        <instance_attributes id="master-uuid1">
+          <attributes>
+            <nvpair id="master-rsc1:child_rsc1:0-uuid1" name="master-rsc1:child_rsc1:0" value="10"/>
+            <nvpair id="master-rsc1:child_rsc1:1-uuid1" name="master-rsc1:child_rsc1:1" value="100"/>
+            <nvpair id="master-rsc1:child_rsc1:2-uuid1" name="master-rsc1:child_rsc1:2" value="20"/>
+            <nvpair id="master-rsc1:child_rsc1:3-uuid1" name="master-rsc1:child_rsc1:3" value="200"/>
+            <nvpair id="master-rsc1:child_rsc1:4-uuid1" name="master-rsc1:child_rsc1:4" value="500"/>
+          </attributes>
+        </instance_attributes>
+      </node>
+      <node id="uuid2" uname="node2" type="member">
+        <instance_attributes id="master-uuid2">
+          <attributes>
+            <nvpair id="master-rsc1:child_rsc1:0-uuid2" name="master-rsc1:child_rsc1:0" value="300"/>
+            <nvpair id="master-rsc1:child_rsc1:1-uuid2" name="master-rsc1:child_rsc1:1" value="30"/>
+            <nvpair id="master-rsc1:child_rsc1:2-uuid2" name="master-rsc1:child_rsc1:2" value="400"/>
+            <nvpair id="master-rsc1:child_rsc1:3-uuid2" name="master-rsc1:child_rsc1:3" value="40"/>
+            <nvpair id="master-rsc1:child_rsc1:4-uuid2" name="master-rsc1:child_rsc1:4" value="600"/>
+          </attributes>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <master_slave id="rsc1">
+        <instance_attributes>
+          <attributes>
+            <nvpair id="rsc1-attr1" name="clone_max" value="5"/>
+            <nvpair id="rsc1-attr2" name="clone_node_max" value="2"/>
+            <nvpair id="rsc1-attr3" name="master_max" value="2"/>
+            <nvpair id="rsc1-attr4" name="master_node_max" value="1"/>
+          </attributes>
+        </instance_attributes>
+	<primitive id="child_rsc1" class="heartbeat" type="apache"/>
+      </master_slave>
+    </resources>
+    <constraints>
+      <rsc_location id="loc-1" rsc="rsc1">
+	<rule id="loc-1-rule-1" score="-INFINITY" role="Master">
+	  <expression id="loc-1-rule-1-expr-1" attribute="#uname" operation="eq" value="node1"/>
+	</rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+    </node_state>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+    </node_state>
+  </status>
+</cib>

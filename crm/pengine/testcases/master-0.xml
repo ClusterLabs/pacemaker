@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<cib>
+  <configuration>
+    <crm_config>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </crm_config>
+    <nodes>
+      <node id="uuid1" uname="node1" type="member"/>
+      <node id="uuid2" uname="node2" type="member"/>
+    </nodes>
+    <resources>
+      <master_slave id="rsc1">
+        <instance_attributes>
+          <attributes>
+            <nvpair id="rsc1-attr1" name="clone_max" value="5"/>
+            <nvpair id="rsc1-attr2" name="clone_node_max" value="2"/>
+            <nvpair id="rsc1-attr3" name="master_max" value="2"/>
+            <nvpair id="rsc1-attr4" name="master_node_max" value="1"/>
+          </attributes>
+        </instance_attributes>
+	<primitive id="child_rsc1" class="heartbeat" type="apache"/>
+      </master_slave>
+    </resources>
+    <constraints>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+    </node_state>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+    </node_state>
+  </status>
+</cib>
