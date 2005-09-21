@@ -30,6 +30,7 @@ habindir		= @bindir@
 gliblib			= @GLIBLIB@
 
 habin_PROGRAMS		= cl_status cl_respawn
+habin_SCRIPTS		= haresources2cib.py	
 
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
