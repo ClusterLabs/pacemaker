@@ -28,8 +28,6 @@ hadir			= $(sysconfdir)/ha.d
 halibdir		= $(libdir)/@HB_PKG@
 commmoddir		= $(halibdir)/modules/comm
 havarlibdir		= $(localstatedir)/lib/@HB_PKG@
-XML_FLAGS		= `xml2-config --cflags`
-XML_LIBS		= `xml2-config --libs`
 
 # sockets with path
 crmdir			= $(havarlibdir)/crm
@@ -64,14 +62,12 @@ halib_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
 noinst_HEADERS		= 
 
 crmadmin_SOURCES	= crmadmin.c
-crmadmin_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-crmadmin_LDFLAGS	= $(XML_LIBS)
+crmadmin_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crmadmin_LDADD		= $(COMMONLIBS) \
 			$(top_builddir)/crm/pengine/libpengine.la
 
 cibadmin_SOURCES	= cibadmin.c
-cibadmin_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-cibadmin_LDFLAGS	= $(XML_LIBS)
+cibadmin_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cibadmin_LDADD		= $(COMMONLIBS)
 
 ccm_tool_SOURCES	= ccm_epoche.c
@@ -106,7 +102,7 @@ crm_resource_LDADD	= $(COMMONLIBS) \
 			$(top_builddir)/crm/pengine/libpengine.la
 
 iso8601_SOURCES		= test.iso8601.c
-iso8601_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+iso8601_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 iso8601_LDADD		= $(COMMONLIBS) 
 
 clean-generic:

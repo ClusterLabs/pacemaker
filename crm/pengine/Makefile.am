@@ -28,8 +28,6 @@ hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
 commmoddir	= $(halibdir)/modules/comm
 havarlibdir	= $(localstatedir)/lib/@HB_PKG@
-XML_FLAGS	= `xml2-config --cflags`
-XML_LIBS	= `xml2-config --libs`
 
 # sockets with path
 crmdir		= $(havarlibdir)/crm

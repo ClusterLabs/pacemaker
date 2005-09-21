@@ -26,8 +26,6 @@ hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
 commmoddir	= $(halibdir)/modules/comm
 havarlibdir	= $(localstatedir)/lib/@HB_PKG@
-XML_FLAGS	= `xml2-config --cflags`
-XML_LIBS	= `xml2-config --libs`
 
 # sockets with path
 crmdir		= $(havarlibdir)/crm
@@ -60,15 +58,13 @@ noinst_HEADERS		= cibio.h cibmessages.h cibprimatives.h notify.h \
 
 cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c \
 			callbacks.c main.c
-cib_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-cib_LDFLAGS		= $(XML_LIBS)
+cib_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cib_LDADD		= $(COMMONLIBS) \
 			$(top_builddir)/membership/ccm/libccmclient.la  
 
 
 cibmon_SOURCES		= cibmon.c
-cibmon_CFLAGS		= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-cibmon_LDFLAGS		= $(XML_LIBS)
+cibmon_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cibmon_LDADD		= $(COMMONLIBS) 				
 
 clean-generic:

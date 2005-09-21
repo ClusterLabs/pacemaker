@@ -26,8 +26,6 @@ hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
 commmoddir	= $(halibdir)/modules/comm
 havarlibdir	= $(localstatedir)/lib/@HB_PKG@
-XML_FLAGS	= `xml2-config --cflags`
-XML_LIBS	= `xml2-config --libs`
 
 # sockets with path
 crmdir		= $(havarlibdir)/crm
@@ -61,8 +59,7 @@ noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
 		crmd_lrm.h
 
 atest_SOURCES	= atest.c
-atest_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-atest_LDFLAGS	= $(XML_LIBS)
+atest_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 atest_LDADD	= $(COMMONLIBS)
 
 
@@ -72,8 +69,7 @@ crmd_SOURCES	= main.c crmd.c 					\
 		cib.c pengine.c tengine.c lrm.c 			\
 		utils.c misc.c
 
-crmd_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-crmd_LDFLAGS	= $(XML_LIBS)
+crmd_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crmd_LDADD	= $(COMMONLIBS) 					\
 		  $(top_builddir)/lib/lrm/liblrm.la			\
 		  $(top_builddir)/membership/ccm/libccmclient.la  

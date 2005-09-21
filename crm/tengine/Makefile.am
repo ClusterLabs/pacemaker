@@ -52,14 +52,12 @@ halib_PROGRAMS	= ttest tengine
 noinst_HEADERS	= tengine.h
 
 tengine_SOURCES	= tengine.c unpack.c utils.c callbacks.c main.c
-tengine_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-tengine_LDFLAGS	= $(XML_LIBS)
+tengine_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 tengine_LDADD	= $(COMMONLIBS) \
                     $(top_builddir)/lib/fencing/libstonithd.la
 
 ttest_SOURCES	= tengine.c unpack.c utils.c callbacks.c ttest.c
-ttest_CFLAGS	= $(XML_FLAGS) -DTESTING=1 -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-ttest_LDFLAGS	= $(XML_LIBS)
+ttest_CFLAGS	= -DTESTING=1 -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ttest_LDADD	= $(COMMONLIBS) \
                     $(top_builddir)/lib/fencing/libstonithd.la
 
