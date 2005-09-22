@@ -1,4 +1,4 @@
-/* $Id: xml_diff.c,v 1.4 2005/09/21 16:30:33 andrew Exp $ */
+/* $Id: xml_diff.c,v 1.5 2005/09/22 10:27:13 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -58,7 +58,7 @@ void usage(const char *cmd, int exit_status);
 int
 main(int argc, char **argv)
 {
-	gboolean apply = TRUE;
+	gboolean apply = FALSE;
 	gboolean raw_1  = FALSE;
 	gboolean raw_2  = FALSE;
 	gboolean filter = FALSE;
@@ -117,7 +117,6 @@ main(int argc, char **argv)
 				break;
 			case 'n':
 				xml_file_2 = optarg;
-				apply = FALSE;
 				break;
 			case 'N':
 				xml_file_2 = optarg;
@@ -181,7 +180,7 @@ main(int argc, char **argv)
 		}
 	}
 	
-	if(raw_1) {
+	if(raw_2) {
 		object_2 = string2xml(xml_file_2);
 
 	} else if(use_stdin) {
@@ -215,7 +214,6 @@ main(int argc, char **argv)
 			output = diff_cib_object(object_1, object_2, filter);
 		}
 	}
-	
 	
 	if(output != NULL) {
 		char *buffer = dump_xml_formatted(output);
