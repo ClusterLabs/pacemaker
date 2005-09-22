@@ -541,7 +541,7 @@ build_active_RAs(crm_data_t *rsc_list)
 			}
 			max_call_id = op->call_id;
 			found_op = TRUE;
-			
+			lrm_free_op(op);
 			);
 		if(found_op == FALSE && g_list_length(op_list) != 0) {
 			crm_err("Could not properly determin last op"
@@ -550,6 +550,7 @@ build_active_RAs(crm_data_t *rsc_list)
 		}
 
 		g_list_free(op_list);
+		lrm_free_rsc(the_rsc);
 		);
 
 	g_list_free(lrm_list);
@@ -646,7 +647,9 @@ do_lrm_invoke(long long action,
 		rid[63] = 0;
 		
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
-		next_input = do_lrm_rsc_op(rsc, rid, operation, input->xml, input->msg);
+		next_input = do_lrm_rsc_op(rsc, rid, operation, input->xml,
+				input->msg);
+		lrm_free_rsc(the_rsc);
 		
 	} else {
 		crm_err("Operation was neither a lrm_query, nor a rsc op.  %s",

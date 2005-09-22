@@ -194,11 +194,11 @@ do_election_count_vote(long long action,
 	} else if(your_version == NULL) {
 		crm_info("Election pass: they are shutting down");
 
-	} else if(compare_version(your_version, CRM_VERSION) > 0) {
+	} else if(compare_version(your_version, CRM_VERSION) < 0) {
 		crm_debug("Election fail: version");
 		we_loose = TRUE;
 		
-	} else if(compare_version(your_version, CRM_VERSION) < 0) {
+	} else if(compare_version(your_version, CRM_VERSION) > 0) {
 		crm_debug("Election pass: version");
 		
 	} else if(your_node->node_born_on < our_node->node_born_on) {
