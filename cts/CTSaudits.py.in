@@ -414,43 +414,61 @@ class CIBAudit(ClusterAudit):
         ccm_partitions = self.CM.find_partitions()
 
         if len(ccm_partitions) == 0:
+	    self.CM.debug("\tNo partitions to audit")
             return 1
-
+        
         for partition in ccm_partitions:
-	    self.CM.log("\t %s" %partition)
+	    self.CM.debug("\tAuditing CIB consistency for: %s" %partition)
             partition_passed = 0
             if self.audit_cib_contents(partition) == 0:
                 passed = 0
-
+        
         return passed
 
     def audit_cib_contents(self, hostlist):
 	passed = 1
 	first_host = None
-	first_host_xml = None
-	for a_host in hostlist:
+	first_host_xml = ""
+	partition_hosts = hostlist.split()
+	for a_host in partition_hosts:
 		if first_host == None:
 			first_host = a_host
 			first_host_xml = self.store_remote_cib(a_host)
+			self.CM.debug("Retrieved CIB: %s" % first_host_xml) 
 		else:
 			a_host_xml = self.store_remote_cib(a_host)
-			diff_cmd="@libdir@/heartbeat/crm_diff -f -O \"$first_host_xml\" -N \"$a_host_xml\""
-        		if (os.system(diff_cmd + " > /dev/null")) != 0:
-				passed = 0
-				self.CM.log("Differences found between %s and %s" % (first_host, a_host))
-			        f = os.popen(diff_cmd)
-        			for line in f.readlines():
-				    self.CM.log("CibDiff[%s-%s]: " % (first_node, a_node, line)) 
+			diff_cmd="@libdir@/heartbeat/crm_diff -VV -f -N \'%s\' -O '%s'" % (a_host_xml, first_host_xml)
+
+		        infile, outfile, errfile = os.popen3(diff_cmd)
+			diff_lines = outfile.readlines()
+        		for line in diff_lines:
+			    passed = 0
+			    self.CM.log("CibDiff[%s-%s]: %s" 
+					% (first_host, a_host, line)) 
+
+			diff_lines = errfile.readlines()
+        		for line in diff_lines:
+			    passed = 0
+			    self.CM.log("CibDiff[%s-%s] ERROR: %s" 
+					% (first_host, a_host, line)) 
 
 	return passed
 		
     def store_remote_cib(self, node):
-	combined = None
-        lines = self.rsh.readlines(node, self.CM["CibQuery"])
+	combined = ""
+	extra_debug = 0
+        self.CM.debug("\tRetrieving CIB from: %s" % node)
+        lines = self.CM.rsh.readlines(node, self.CM["CibQuery"])
+	if extra_debug:
+	    self.CM.debug("Start Cib[%s]" % node) 
         for line in lines:
-            self.CM.debug("Cib[%s]: " % (node, line)) 
-	    combined = combined + line
+	    combined = combined + line[:-1]
+	    if extra_debug:
+                self.CM.debug("[Cib]" + line) 
+	if extra_debug:
+	    self.CM.debug("End Cib[%s]" % node) 
 
+	#self.CM.debug("Complete CIB: %s" % combined) 
 	return combined
 
     def name(self):
