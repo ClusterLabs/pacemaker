@@ -649,7 +649,7 @@ do_lrm_invoke(long long action,
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 		next_input = do_lrm_rsc_op(rsc, rid, operation, input->xml,
 				input->msg);
-		lrm_free_rsc(the_rsc);
+		lrm_free_rsc(rsc);
 		
 	} else {
 		crm_err("Operation was neither a lrm_query, nor a rsc op.  %s",
