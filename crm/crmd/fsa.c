@@ -356,9 +356,9 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 		else IF_FSA_ACTION(A_LOG,   do_log)
 
 		/* essential start tasks */
-		else IF_FSA_ACTION(A_HA_CONNECT,  do_ha_control)
 		else IF_FSA_ACTION(A_STARTUP,	  do_startup)
 		else IF_FSA_ACTION(A_CIB_START,	  do_cib_control)
+		else IF_FSA_ACTION(A_HA_CONNECT,  do_ha_control)
 		else IF_FSA_ACTION(A_READCONFIG,  do_read_config)
 
 		/* sub-system start/connect */

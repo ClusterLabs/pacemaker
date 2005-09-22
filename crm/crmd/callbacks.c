@@ -328,7 +328,9 @@ crmd_client_status_callback(const char * node, const char * client,
 	g_hash_table_replace(
 		crmd_peer_state, crm_strdup(node), crm_strdup(status));
 
-	if(fsa_state == S_STARTING || fsa_state == S_STOPPING) {
+	if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+		return;
+	} else if(fsa_state == S_STOPPING) {
 		return;
 	}
 

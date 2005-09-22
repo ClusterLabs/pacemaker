@@ -117,6 +117,7 @@ do_cib_control(long long action,
 	long long start_actions = A_CIB_START;
 
 	if(action & stop_actions) {
+		clear_bit_inplace(fsa_input_register, R_CIB_CONNECTED);
 		if(fsa_cib_conn != NULL
 		   && fsa_cib_conn->state != cib_disconnected) {
 			fsa_cib_conn->cmds->signoff(fsa_cib_conn);
