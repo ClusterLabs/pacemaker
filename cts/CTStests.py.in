@@ -1467,8 +1467,11 @@ class Split_brainTest(CTSTest):
         watchstoppats = [ ]
         stoppat = self.CM["Pat:They_stopped"]
         for member in self.CM.Env["nodes"]:
-            thispat = (stoppat % member)
-            watchstoppats.append(thispat)
+            if member != node:
+                thispat = (stoppat % (node,member))
+                watchstoppats.append(thispat)
+                thatpat = (stoppat % (member,node))
+                watchstoppats.append(thatpat)
 
         watchstop = CTS.LogWatcher(self.CM["LogFileName"], watchstoppats\
         ,       timeout=self.CM["DeadTime"]+60)
@@ -1535,6 +1538,7 @@ class Split_brainTest(CTSTest):
         ,        "ERROR:.*lost a lot of packets!"
         ,        "ERROR: Cannot rexmit pkt .*: seqno too low"
         ,        "ERROR: Irretrievably lost packet: node"
+        ,        "CRIT: Cluster node .* returning after partition"
         ]
 
 AllTestClasses.append(Split_brainTest)
