@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.12 2005/09/21 10:35:03 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.13 2005/09/22 12:00:59 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -205,7 +205,7 @@ gboolean
 mon_timer_popped(gpointer data)
 {
 	int rc = cib_ok;
-	int options = cib_scope_local;
+	int options = cib_none;
 
 	Gmain_timeout_remove(timer_id);
 
