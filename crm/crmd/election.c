@@ -32,11 +32,6 @@
 
 uint highest_born_on = -1;
 
-void ghash_count_vote(gpointer key, gpointer value, gpointer user_data);
-void revision_check_callback(const HA_Message *msg, int call_id, int rc,
-			     crm_data_t *output, void *user_data);
-
-
 /*	A_ELECTION_VOTE	*/
 enum crmd_fsa_input
 do_election_vote(long long action,
@@ -194,11 +189,11 @@ do_election_count_vote(long long action,
 	} else if(your_version == NULL) {
 		crm_info("Election pass: they are shutting down");
 
-	} else if(compare_version(your_version, CRM_VERSION) < 0) {
+	} else if(compare_version(your_version, CRM_FEATURE_SET) < 0) {
 		crm_debug("Election fail: version");
 		we_loose = TRUE;
 		
-	} else if(compare_version(your_version, CRM_VERSION) > 0) {
+	} else if(compare_version(your_version, CRM_FEATURE_SET) > 0) {
 		crm_debug("Election pass: version");
 		
 	} else if(your_node->node_born_on < our_node->node_born_on) {
@@ -262,6 +257,15 @@ do_election_timer_ctrl(long long action,
 }
 
 
+static void
+feature_update_callback(const HA_Message *msg, int call_id, int rc,
+			crm_data_t *output, void *user_data)
+{
+	if(rc != cib_ok) {
+		fsa_data_t *msg_data = NULL;
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+	}
+}
 
 /*	 A_DC_TAKEOVER	*/
 enum crmd_fsa_input
@@ -272,6 +276,8 @@ do_dc_takeover(long long action,
 	       fsa_data_t *msg_data)
 {
 	int rc = cib_ok;
+	crm_data_t *cib = NULL;
+	crm_data_t *fragment = NULL;
 	
 	crm_info("Taking over DC status for this partition");
 	set_bit_inplace(fsa_input_register, R_THE_DC);
@@ -295,15 +301,16 @@ do_dc_takeover(long long action,
 /* 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none); */
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
 	
-	rc = fsa_cib_conn->cmds->query(
-		fsa_cib_conn, NULL, NULL, cib_scope_local);
-	
-	if(FALSE == add_cib_op_callback(
-		   rc, TRUE, NULL, revision_check_callback)) {
-		crm_err("Retrieval of generation failed");
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
-	}	
+	cib = createEmptyCib();
+	crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+	crm_xml_add(cib, XML_ATTR_CIB_REVISION, CIB_FEATURE_SET);
+	fragment = create_cib_fragment(cib, NULL);
+	fsa_cib_conn->cmds->modify(
+		fsa_cib_conn, NULL, fragment, NULL, cib_quorum_override);
+	add_cib_op_callback(rc, FALSE, NULL, feature_update_callback);
+
+	free_xml(cib);
+	free_xml(fragment);
 	
 	crm_debug_3("Requesting an initial dump of CRMD client_status");
 	fsa_cluster_conn->llc_ops->client_status(
@@ -312,34 +319,6 @@ do_dc_takeover(long long action,
 	return I_NULL;
 }
 
-
-void
-revision_check_callback(const HA_Message *msg, int call_id, int rc,
-			crm_data_t *output, void *user_data)
-{
-	int revision_i = -1;
-	const char *revision = NULL;
-	crm_data_t *generation = find_xml_node(output, XML_TAG_CIB, TRUE);
-
-	if(rc != cib_ok) {
-		fsa_data_t *msg_data = NULL;
-		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-		return;
-	}
-	
-	crm_debug_3("Checking our feature revision is allowed: %d",
-		    cib_feature_revision);
-	
-	revision = crm_element_value(generation, XML_ATTR_CIB_REVISION);
-	revision_i = atoi(revision?revision:"0");
-	
-	if(revision_i > cib_feature_revision) {
-		crm_err("Feature revision not permitted");
-		/* go into a stall state */
-		register_fsa_error_adv(
-			C_FSA_INTERNAL, I_HALT, NULL, NULL, __FUNCTION__);
-	}
-}
 
 /*	 A_DC_RELEASE	*/
 enum crmd_fsa_input
@@ -375,28 +354,5 @@ do_dc_release(long long action,
 	crm_debug_2("Am I still the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
 
 	return result;
-}
-
-void
-ghash_count_vote(gpointer key, gpointer value, gpointer user_data)
-{
-	
-	struct election_data_s *election_data =
-		(struct election_data_s *)user_data;
-
-	oc_node_t *cur_node = (oc_node_t*)value;
-	const char *node_uname = (const char*)key;
-	
-	if(election_data->winning_bornon > cur_node->node_born_on) {
-		election_data->winning_uname = node_uname;
-		election_data->winning_bornon = cur_node->node_born_on;
-		
-	} else if(election_data->winning_bornon == cur_node->node_born_on
-		  && (election_data->winning_uname == NULL
-		      || strcmp(election_data->winning_uname, node_uname) > 0)) {
-		election_data->winning_uname = node_uname;
-		election_data->winning_bornon = cur_node->node_born_on;
-
-	}
 }
 
