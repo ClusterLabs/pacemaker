@@ -26,11 +26,11 @@ EXTRA_DIST		= ccdv.c
 
 apigid			= @HA_APIGID@
 habindir		= @bindir@
-#halibdir		= $(libdir)/@HB_PKG@
+halibdir		= $(libdir)/@HB_PKG@
 gliblib			= @GLIBLIB@
 
 habin_PROGRAMS		= cl_status cl_respawn
-habin_SCRIPTS		= haresources2cib.py	
+halib_SCRIPTS	= haresources2cib.py	
 
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
