@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.44 2005/09/16 16:55:23 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.45 2005/09/26 07:48:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -225,6 +225,12 @@
 
 #define XML_ATTR_TRANSITION_MAGIC	"transition_magic"
 #define XML_ATTR_TRANSITION_KEY		"transition_key"
+
+#define XML_ATTR_TE_NOWAIT		"te-no-wait"
+#define XML_ATTR_TE_TARGET_RC		"te-target-rc"
+#define XML_ATTR_TE_ALLOWFAIL		"te-allow-fail"
+#define XML_ATTR_LRM_PROBE		"lrm-is-probe"
+#define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"
 
 #include <crm/common/xml.h> 
 

@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.35 2005/09/21 10:29:12 andrew Exp $ */
+/* $Id: xml.c,v 1.36 2005/09/26 07:48:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1746,7 +1746,8 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 		XML_ATTR_TSTAMP,
 		"last_written",
 		"debug_source",
-		"origin"
+		"origin",
+		"te-allow-fail"
 	};
 
 	if(left == NULL) {

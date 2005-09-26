@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.2 2005/09/12 21:13:03 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.3 2005/09/26 07:48:53 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -69,7 +69,12 @@ update_attr(cib_t *the_cib,
 		tag = XML_CIB_TAG_NODE;
 		
 	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-		tag = XML_CIB_TAG_STATE;
+		xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_STATE);
+		crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
+		if(xml_top == NULL) {
+			xml_top = xml_obj;
+		}
+		tag = XML_TAG_TRANSIENT_NODEATTRS;
 
 	} else {
 		return cib_NOSECTION;
@@ -77,9 +82,11 @@ update_attr(cib_t *the_cib,
 	
 	crm_debug("Creating %s/%s", section, tag);
 	if(tag != NULL) {
-		xml_obj = create_xml_node(NULL, tag);
+		xml_obj = create_xml_node(xml_obj, tag);
 		crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
-		xml_top = xml_obj;
+		if(xml_top == NULL) {
+			xml_top = xml_obj;
+		}
 	}
 
 	if(set_name != NULL) {
@@ -134,19 +141,6 @@ read_attr(cib_t *the_cib,
 	crm_debug("Searching for attribute %s (section=%s, node=%s, set=%s)",
 		  attr_name, section, crm_str(node_uuid), crm_str(set_name));
 
-	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
-		tag = NULL;
-		
-	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
-		tag = XML_CIB_TAG_NODE;
-		
-	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-		tag = XML_CIB_TAG_STATE;
-
-	} else {
-		return cib_NOSECTION;
-	}
-	
 	rc = the_cib->cmds->query(
 		the_cib, section, &fragment, cib_sync_call);
 
@@ -161,6 +155,22 @@ read_attr(cib_t *the_cib,
 	xml_obj = get_object_root(section, a_node);
 	CRM_ASSERT(xml_obj != NULL);
 	crm_log_xml_debug_2(xml_obj, "Result section");
+
+
+	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
+		tag = NULL;
+		
+	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
+		tag = XML_CIB_TAG_NODE;
+		
+	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+		xml_next = find_entity(xml_obj, XML_CIB_TAG_STATE, node_uuid);
+		tag = XML_TAG_TRANSIENT_NODEATTRS;
+
+	} else {
+		return cib_NOSECTION;
+	}
+	
 	
 	if(tag != NULL) {
 		xml_next = find_entity(xml_obj, tag, node_uuid);

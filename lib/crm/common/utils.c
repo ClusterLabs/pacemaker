@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.24 2005/09/12 11:00:19 andrew Exp $ */
+/* $Id: utils.c,v 1.25 2005/09/26 07:48:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -508,8 +508,8 @@ crm_strdup(const char *a)
 
 static GHashTable *crm_uuid_cache = NULL;
 
-void
-set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname) 
+const char *
+get_uuid(ll_cluster_t *hb, const char *uname) 
 {
 	char *uuid_calc = NULL;
 
@@ -524,8 +524,7 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 	/* avoid blocking calls where possible */
 	uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
 	if(uuid_calc != NULL) {
-		crm_xml_add(node, attr, uuid_calc);
-		return;
+		return uuid_calc;
 	}
 	
 	crm_malloc0(uuid_calc, sizeof(char)*50);
@@ -543,13 +542,23 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 			cl_uuid_unparse(&uuid_raw, uuid_calc);
 			g_hash_table_insert(
 				crm_uuid_cache,
-				crm_strdup(uname), crm_strdup(uuid_calc));
+				crm_strdup(uname), uuid_calc);
+			uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
 		}
-		crm_xml_add(node, attr, uuid_calc);
+		return uuid_calc;
 	}
 	
 	crm_free(uuid_calc);
-}/*memory leak*/ /* BEAM BUG - this is not a memory leak */
+	return NULL;
+}
+
+void
+set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname) 
+{
+	const char *uuid_calc = get_uuid(hb, uname);
+	crm_xml_add(node, attr, uuid_calc);
+	return;
+}
 
 
 void
@@ -848,16 +857,16 @@ op_status2text(op_status_t status)
 			return "complete";
 			break;
 		case LRM_OP_ERROR:
-			return "ERROR";
+			return "Error";
 			break;
 		case LRM_OP_TIMEOUT:
-			return "TIMED OUT";
+			return "Timed Out";
 			break;
 		case LRM_OP_NOTSUPPORTED:
 			return "NOT SUPPORTED";
 			break;
 		case LRM_OP_CANCELLED:
-			return "cancelled";
+			return "Cancelled";
 			break;
 	}
 	CRM_DEV_ASSERT(status >= LRM_OP_PENDING && status <= LRM_OP_CANCELLED);
@@ -904,9 +913,9 @@ generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_
 }
 
 char *
-generate_transition_magic(const char *transition_key, int op_status)
+generate_transition_magic_v202(const char *transition_key, int op_status)
 {
-	int len = 40;
+	int len = 80;
 	char *fail_state = NULL;
 
 	CRM_DEV_ASSERT(transition_key != NULL);
@@ -916,19 +925,45 @@ generate_transition_magic(const char *transition_key, int op_status)
 	
 	crm_malloc0(fail_state, sizeof(char)*len);
 	if(fail_state != NULL) {
-		snprintf(fail_state, len, "%d:%s", op_status, transition_key);
+		snprintf(fail_state, len, "%d:%s", op_status,transition_key);
+	}
+	return fail_state;
+}
+
+char *
+generate_transition_magic(const char *transition_key, int op_status, int op_rc)
+{
+	int len = 80;
+	char *fail_state = NULL;
+
+	CRM_DEV_ASSERT(transition_key != NULL);
+	if(crm_assert_failed) { return NULL; }
+	
+	len += strlen(transition_key);
+	
+	crm_malloc0(fail_state, sizeof(char)*len);
+	if(fail_state != NULL) {
+		snprintf(fail_state, len, "%d:%d:%s",
+			 op_status, op_rc, transition_key);
 	}
 	return fail_state;
 }
 
 gboolean
 decode_transition_magic(
-	const char *magic, char **uuid, int *transition_id, int *op_status)
+	const char *magic, char **uuid, int *transition_id,
+	int *op_status, int *op_rc)
 {
+	char *rc = NULL;
 	char *key = NULL;
+	char *magic2 = NULL;
 	char *status = NULL;
 
-	if(decodeNVpair(magic, ':', &status, &key) == FALSE) {
+	if(decodeNVpair(magic, ':', &status, &magic2) == FALSE) {
+		return FALSE;
+	}
+
+	if(decodeNVpair(magic2, ':', &rc, &key) == FALSE) {
 		return FALSE;
 	}
 
@@ -936,6 +971,7 @@ decode_transition_magic(
 		return FALSE;
 	}
 	
+	*op_rc = atoi(rc);
 	*op_status = atoi(status);
 
 	crm_free(key);

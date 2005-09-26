@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.80 2005/09/22 17:35:30 alan Exp $ */
+/* $Id: crm.h,v 1.81 2005/09/26 07:48:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,7 +84,7 @@ extern gboolean crm_assert_failed;
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
-#define CRM_FEATURE_SET	"1.0.0"
+#define CRM_FEATURE_SET	"1.0.3"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
@@ -146,6 +146,7 @@ extern gboolean crm_assert_failed;
 #define CRMD_JOINSTATE_PENDING	"pending"
 #define CRMD_JOINSTATE_MEMBER	CRMD_STATE_ACTIVE
 
+#define CRMD_ACTION_PROBED		"probe_complete"
 #define CRMD_ACTION_DELETE		"delete"
 #define CRMD_ACTION_CANCEL		"cancel"
 
@@ -167,6 +168,7 @@ extern gboolean crm_assert_failed;
 #define CRMD_ACTION_NOTIFY		"notify"
 #define CRMD_ACTION_NOTIFIED		"notified"
 
+#define CRMD_ACTION_STATUS		"status"
 #define CRMD_ACTION_MON			"monitor"
 #define CRMD_ACTION_MON_PENDING		CRMD_ACTION_STARTED
 #define CRMD_ACTION_MON_OK		CRMD_ACTION_STARTED

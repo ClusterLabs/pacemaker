@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.23 2005/09/15 07:49:39 andrew Exp $ */
+/* $Id: util.h,v 1.24 2005/09/26 07:48:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -68,6 +68,8 @@ extern void alter_debug(int nsig);
 
 extern void g_hash_destroy_str(gpointer data);
 
+extern const char *get_uuid(ll_cluster_t *hb, const char *uname);
+
 extern void set_uuid(
 	ll_cluster_t* hb, crm_data_t *node, const char *attr, const char *uname);
 
@@ -95,11 +97,15 @@ extern gboolean crm_mem_stats(volatile cl_mem_stats_t *mem_stats);
 
 extern void crm_zero_mem_stats(volatile cl_mem_stats_t *stats);
 
-extern char *generate_transition_magic(
+extern char *generate_transition_magic_v202(
 	const char *transition_key, int op_status);
 
+extern char *generate_transition_magic(
+	const char *transition_key, int op_status, int op_rc);
+
 extern gboolean decode_transition_magic(
-	const char *magic, char **uuid, int *transition_id, int *op_status);
+	const char *magic, char **uuid,
+	int *transition_id, int *op_status, int *op_rc);
 
 extern char *generate_transition_key(int transition_id, const char *node);
 
