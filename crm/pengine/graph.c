@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.62 2005/09/21 10:35:03 andrew Exp $ */
+/* $Id: graph.c,v 1.63 2005/09/26 07:44:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -347,6 +347,9 @@ action2xml(action_t *action, gboolean as_input)
 	} else if(safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
+/* 	} else if(safe_str_eq(action->task, CRMD_ACTION_PROBED)) { */
+/* 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT); */
+
 	} else if(action->pseudo) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_PSEUDO_EVENT);
 		needs_node_info = FALSE;
@@ -381,8 +384,11 @@ action2xml(action_t *action, gboolean as_input)
 
 	}
 
-	crm_xml_add(action_xml, "allow_fail",
-		action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
+	if(action->failure_is_fatal) {
+		g_hash_table_insert(
+			action->extra, crm_strdup(XML_ATTR_TE_ALLOWFAIL),
+			crm_strdup(XML_BOOLEAN_TRUE));
+	}
 	
 	if(as_input) {
 		return action_xml;

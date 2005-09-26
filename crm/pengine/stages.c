@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.76 2005/09/15 15:23:54 andrew Exp $ */
+/* $Id: stages.c,v 1.77 2005/09/26 07:44:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -166,19 +166,65 @@ stage2(pe_working_set_t *data_set)
 }
 
 /*
- * not sure if this is a good idea or not, but eventually we might like
- *  to utilize as many nodes as possible... and this might be a convienient
- *  hook
+ * Check nodes for resources started outside of the LRM
  */
 gboolean
 stage3(pe_working_set_t *data_set)
 {
-	/* not sure if this is a good idea or not */
-	if((ssize_t)g_list_length(data_set->colors) > data_set->max_valid_nodes) {
-		/* we need to consolidate some */
-	} else if((ssize_t)g_list_length(data_set->colors) < data_set->max_valid_nodes) {
-		/* we can create a few more */
-	}
+	action_t *probe_complete = NULL;
+	action_t *probe_node_complete = NULL;
+
+	slist_iter(
+		node, node_t, data_set->nodes, lpc,
+		const char *probed = g_hash_table_lookup(
+			node->details->attrs, CRMD_ACTION_PROBED);
+
+		crm_info("%s probed: %s", node->details->uname, probed);
+		
+		if(crm_is_true(probed)) {
+			continue;
+
+		} else if(node->details->online == FALSE) {
+			continue;
+			
+		} else if(node->details->unclean) {
+			continue;
+
+		} else if(probe_complete == NULL) {
+			probe_complete = custom_action(
+				NULL, crm_strdup(CRMD_ACTION_PROBED),
+				CRMD_ACTION_PROBED, NULL, FALSE, TRUE,
+				data_set);
+
+			probe_complete->pseudo = TRUE;
+		}
+		
+
+		probe_node_complete = custom_action(
+			NULL, crm_strdup(CRMD_ACTION_PROBED),
+			CRMD_ACTION_PROBED, node, FALSE, TRUE, data_set);
+/* 		probe_node_complete->pseudo = TRUE; */
+		add_hash_param(probe_node_complete->extra,
+			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+	
+		custom_action_order(NULL, NULL, probe_node_complete,
+				    NULL, NULL, probe_complete,
+				    pe_ordering_manditory, data_set);
+		
+		slist_iter(
+			rsc, resource_t, data_set->resources, lpc2,
+
+			
+			if(rsc->fns->create_probe(
+				   rsc, node, probe_node_complete, data_set)) {
+				custom_action_order(
+					NULL, NULL, probe_complete,
+					rsc, start_key(rsc), NULL,
+					pe_ordering_manditory, data_set);
+			}
+			);
+		);
+
 	return TRUE;
 }
 

@@ -1,3 +1,8 @@
 digraph "g" {
 	size = "30,30"
+"probe_complete" [ style=bold color="green" fontcolor="orange" ]
+"probe_complete node1" [ style=bold color="green" fontcolor="black" ]
+"probe_complete node2" [ style=bold color="green" fontcolor="black" ]
+"probe_complete node1" -> "probe_complete" [ style = bold]
+"probe_complete node2" -> "probe_complete" [ style = bold]
 }

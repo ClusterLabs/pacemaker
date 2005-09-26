@@ -1293,7 +1293,7 @@ process_client_disconnect(crmd_client_t *curr_client)
 	crm_debug_2("received HUP from %s", curr_client->table_key);
 		
 	if (curr_client->sub_sys == NULL) {
-		crm_debug("Client hadn't registered with us yet");
+		crm_debug_2("Client hadn't registered with us yet");
 		
 	} else if (strcmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) {
 		the_subsystem = pe_subsystem;

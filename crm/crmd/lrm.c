@@ -69,9 +69,12 @@ void stop_recurring_action(
 gboolean remove_recurring_action(
 	gpointer key, gpointer value, gpointer user_data);
 
-void free_recurring_op(gpointer value);
+lrm_op_t *construct_op(
+	crm_data_t *rsc_op, lrm_rsc_t *rsc, const char *operation);
 
-void nack_rsc_op(lrm_op_t* op, HA_Message *msg);
+void send_direct_ack(lrm_op_t* op, const char *rsc_id);
+
+void free_recurring_op(gpointer value);
 
 GHashTable *xml2list(crm_data_t *parent);
 GHashTable *monitors = NULL;
@@ -159,7 +162,6 @@ crmd_rscstate2string(enum crmd_rscstate state)
 	}
 	return "<unknown>";
 }
-
 
 /*	 A_LRM_CONNECT	*/
 enum crmd_fsa_input
@@ -313,6 +315,8 @@ build_operation_update(
 	const char *state = NULL;
 	crm_data_t *xml_op = NULL;
 	char *op_id = NULL;
+	const char *caller_version = NULL;
+	
 
 	CRM_DEV_ASSERT(op != NULL);
 	if(crm_assert_failed) {
@@ -396,7 +400,18 @@ build_operation_update(
 	if(op->user_data == NULL) {
 		op->user_data = generate_transition_key(-1, fsa_our_uname);
 	}
-	fail_state = generate_transition_magic(op->user_data, op->op_status);
+	
+#if CRM_DEPRECATED_SINCE_2_0_3
+	caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
+	if(compare_version("1.0.3", caller_version) > 0) {
+		fail_state = generate_transition_magic_v202(op->user_data, op->op_status);
+	} else {
+		fail_state = generate_transition_magic(op->user_data, op->op_status, op->rc);
+	}
+#else
+	fail_state = generate_transition_magic(op->user_data, op->op_status, op->rc);
+#endif
+	
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, fail_state);
 	crm_free(fail_state);	
@@ -651,6 +666,18 @@ do_lrm_invoke(long long action,
 		}
 		free_xml(data);
 
+	} else if(safe_str_eq(operation, CRMD_ACTION_PROBED)) {
+		const char *our_uuid = get_uuid(fsa_cluster_conn,fsa_our_uname);
+		char *attr_id = crm_concat("lrm-probe", our_uuid, '-');
+		char *attr_set = crm_concat("crmd-transient-", our_uuid, '-');
+
+		update_attr(fsa_cib_conn, XML_CIB_TAG_STATUS, our_uuid,
+			    attr_set, attr_id,
+			    CRMD_ACTION_PROBED, XML_BOOLEAN_TRUE);
+
+		crm_free(attr_id);
+		crm_free(attr_set);	
+
 	} else if(operation != NULL) {
 		char rid[64];
 		lrm_rsc_t *rsc = NULL;
@@ -685,28 +712,42 @@ do_lrm_invoke(long long action,
 			}
 			cancel_monitor(rsc, crm_element_value(
 					       xml_rsc, "operation_key"));
-
+			lrm_op_t* op = construct_op(input->xml, rsc, operation);
+			op->op_status = LRM_OP_DONE;
+			op->rc = EXECRA_OK;
+			send_direct_ack(op, rsc->id);
+			free_lrm_op(op);			
+			
 		} else if(safe_str_eq(operation, CRMD_ACTION_DELETE)) {
 			int rc = HA_OK;
 			const char *lastop = g_hash_table_lookup(resources,rid);
-			if(rsc == NULL) {
-				return I_NULL;
-			}
+			lrm_op_t* op = construct_op(input->xml, rsc, operation);
+			op->op_status = LRM_OP_DONE;
+			op->rc = EXECRA_OK;
 
-			crm_info("Removing resource %s from the LRM", rsc->id);
-			if(safe_str_neq(lastop, CRMD_ACTION_STOP)) {
+			if(rsc == NULL) {
+			} else if(safe_str_eq(lastop, CRMD_ACTION_STOP)
+				  || safe_str_eq(lastop, CRMD_ACTION_STATUS)) {
+				crm_info("Removing resource %s from the LRM",
+					 rsc->id);
+				rc = fsa_lrm_conn->lrm_ops->delete_rsc(
+					fsa_lrm_conn, rid);
+				if(rc != HA_OK) {
+					crm_err("Failed to remove resource %s",
+						rid);
+					op->op_status = LRM_OP_ERROR;
+					op->rc = EXECRA_UNKNOWN_ERROR;
+				}
+
+			} else {
 				crm_err("Not removing resource %s: lastop=%s",
 					rsc->id, lastop);
-				lrm_free_rsc(rsc);
-				return I_NULL;
+				op->op_status = LRM_OP_ERROR;
+				op->rc = EXECRA_UNKNOWN_ERROR;
 			}
 
-			rc = fsa_lrm_conn->lrm_ops->delete_rsc(
-				fsa_lrm_conn, rid);
-
-			if(rc != HA_OK) {
-				crm_err("Failed to remove resource %s", rid);
-			}
+			send_direct_ack(op, rsc->id);
+			free_lrm_op(op);			
 			
 		} else {
 			next_input = do_lrm_rsc_op(
@@ -723,8 +764,76 @@ do_lrm_invoke(long long action,
 	return next_input;
 }
 
+lrm_op_t *
+construct_op(crm_data_t *rsc_op, lrm_rsc_t *rsc, const char *operation)
+{
+	lrm_op_t *op = NULL;
+	const char *transition = NULL;
+	CRM_DEV_ASSERT(rsc != NULL);
+
+	crm_malloc0(op, sizeof(lrm_op_t));
+	op->op_type   = crm_strdup(operation);
+	op->op_status = LRM_OP_PENDING;
+	op->rc = -1;
+	op->rsc_id = crm_strdup(rsc->id);
+	op->interval = 0;
+	op->timeout  = 0;
+	op->start_delay = 0;
+
+	if(rsc_op == NULL) {
+		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
+		op->user_data = NULL;
+		op->user_data_len = 0;
+		op->params = NULL;
+		return op;
+	}
+
+	transition = crm_element_value(rsc_op, XML_ATTR_TRANSITION_KEY);
+	CRM_ASSERT(transition != NULL);
+	
+	op->user_data = crm_strdup(transition);
+	op->user_data_len = 1+strlen(op->user_data);
+
+	op->params = xml2list(rsc_op);
+	if(op->params == NULL) {
+		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
+	}
+	
+	op->interval = crm_atoi(g_hash_table_lookup(op->params,"interval"),"0");
+	op->timeout  = crm_atoi(g_hash_table_lookup(op->params, "timeout"),"0");
+	op->start_delay = crm_atoi(g_hash_table_lookup(
+					   op->params,"start_delay"),"0");
+	
+	/* sanity */
+	if(op->interval < 0) {
+		op->interval = 0;
+		g_hash_table_replace(
+			op->params, crm_strdup("interval"), crm_strdup("0"));
+	}
+	if(op->timeout < 0) {
+		op->timeout = 0;
+		g_hash_table_replace(
+			op->params, crm_strdup("timeout"), crm_strdup("0"));
+	}
+	if(op->start_delay < 0) {
+		op->start_delay = 0;
+		g_hash_table_replace(
+			op->params, crm_strdup("start_delay"), crm_strdup("0"));
+	}
+
+	if(safe_str_eq(operation, CRMD_ACTION_START)
+	   || safe_str_eq(operation, CRMD_ACTION_STOP)) {
+		char *interval_s = g_hash_table_lookup(op->params, "interval");
+ 		CRM_DEV_ASSERT(op->interval == 0);
+ 		CRM_DEV_ASSERT(interval_s == NULL);
+	}
+
+	return op;
+}
+
+
 void
-nack_rsc_op(lrm_op_t* op, HA_Message *msg)
+send_direct_ack(lrm_op_t* op, const char *rsc_id)
 {
 	HA_Message *reply = NULL;
 	crm_data_t *update, *iter;
@@ -734,11 +843,11 @@ nack_rsc_op(lrm_op_t* op, HA_Message *msg)
 	if(crm_assert_failed) {
 		return;
 	}
-	CRM_DEV_ASSERT(msg != NULL);
-	if(crm_assert_failed) {
-		return;
+	if(op->rsc_id == NULL) {
+		CRM_DEV_ASSERT(rsc_id != NULL);
+		op->rsc_id = crm_strdup(rsc_id);
 	}
-
+	
 	crm_info("NACK'ing resource op: %s for %s", op->op_type, op->rsc_id);
 	
 	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
@@ -751,14 +860,13 @@ nack_rsc_op(lrm_op_t* op, HA_Message *msg)
 
 	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-	op->rc = 99;
-	op->op_status = LRM_OP_ERROR;
 	build_operation_update(iter, op, __FUNCTION__, 0);
 	fragment = create_cib_fragment(update, NULL);
 
-	reply = create_reply(msg, fragment);
+	reply = create_request(CRM_OP_INVOKE_LRM, fragment, NULL,
+			       CRM_SYSTEM_TENGINE, CRM_SYSTEM_LRMD, NULL);
+/* 	reply = create_reply(msg, fragment); */
 	crm_log_xml_debug_2(update, "NACK Update");
-	crm_log_message_adv(LOG_DEBUG_2, "NACK'd msg", msg);
 	crm_log_message_adv(LOG_DEBUG_2, "NACK Reply", reply);
 	
 	if(relay_message(reply, TRUE) == FALSE) {
@@ -847,61 +955,9 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 			monitors, remove_recurring_action, rsc);
 	}
 	
-	
 	/* now do the op */
 	crm_info("Performing op %s on %s", operation, rid);
-	crm_malloc0(op, sizeof(lrm_op_t));
-	op->op_type   = crm_strdup(operation);
-	op->op_status = LRM_OP_PENDING;
-	op->user_data = NULL;
-	op->user_data_len = 0;
-	
-	if(transition != NULL) {
-		op->user_data = crm_strdup(transition);
-		op->user_data_len = 1+strlen(op->user_data);
-	} else {
-		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
-	}
-	
-
-	if(params == NULL) {
-		if(msg != NULL) {
-			params = xml2list(msg);
-		} else {
-			CRM_DEV_ASSERT(safe_str_eq(
-					       CRMD_ACTION_STOP, operation));
-		}
-	}
-
-	op->params = params;
-	op->interval = crm_atoi(g_hash_table_lookup(op->params,"interval"),"0");
-	op->timeout  = crm_atoi(g_hash_table_lookup(op->params, "timeout"),"0");
-	op->start_delay = crm_atoi(
-		g_hash_table_lookup(op->params,"start_delay"), "0");
-
-	/* sanity */
-	if(op->interval < 0) {
-		op->interval = 0;
-		g_hash_table_replace(
-			op->params, crm_strdup("interval"), crm_strdup("0"));
-	}
-	if(op->timeout < 0) {
-		op->timeout = 0;
-		g_hash_table_replace(
-			op->params, crm_strdup("timeout"), crm_strdup("0"));
-	}
-	if(op->start_delay < 0) {
-		op->start_delay = 0;
-		g_hash_table_replace(
-			op->params, crm_strdup("start_delay"), crm_strdup("0"));
-	}
-
-	if(safe_str_eq(operation, CRMD_ACTION_START)
-	   || safe_str_eq(operation, CRMD_ACTION_STOP)) {
-		char *interval_s = g_hash_table_lookup(op->params, "interval");
- 		CRM_DEV_ASSERT(op->interval == 0);
- 		CRM_DEV_ASSERT(interval_s == NULL);
-	}
+	op = construct_op(msg, rsc, operation);
 	
 	if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
 	   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {
@@ -909,8 +965,9 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 			crm_info("Discarding attempt to perform action %s on %s"
 				 " in state %s", operation, rid,
 				 fsa_state2string(fsa_state));
-			op->rsc_id = crm_strdup(rsc->id);
-			nack_rsc_op(op, request);
+			op->rc = 99;
+			op->op_status = LRM_OP_ERROR;
+			send_direct_ack(op, rsc->id);
 			free_lrm_op(op);
 			crm_free(op_id);
 			return I_NULL;
@@ -970,7 +1027,8 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 		char *call_id_s = make_stop_id(rsc->id, call_id);
 		g_hash_table_replace(
 			shutdown_ops, call_id_s, crm_strdup(rsc->id));
-		crm_debug("Recording pending op: %s", call_id_s);
+		crm_debug("Recording pending op: %s/%s %s",
+			  rsc->id, operation, call_id_s);
 	}
 
 	crm_free(op_id);
@@ -1200,6 +1258,8 @@ do_lrm_event(long long action,
 {
 	lrm_op_t* op = NULL;
 	const char *last_op = NULL;
+	const char *probe_s = NULL;
+	gboolean is_probe = FALSE;
 	
 	if(msg_data->fsa_cause != C_LRM_OP_CALLBACK) {
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
@@ -1211,17 +1271,42 @@ do_lrm_event(long long action,
 	CRM_DEV_ASSERT(op != NULL);
 	CRM_DEV_ASSERT(op != NULL && op->rsc_id != NULL);
 
-	if(crm_assert_failed) {
-		return I_NULL;
-	}
+	if(crm_assert_failed) { return I_NULL; }
 
-	if(op->op_status == LRM_OP_DONE && op->rc != EXECRA_OK) {
-		crm_warn("Mapping operation %d status with a rc=%d"
-			 " to status %d",
-			 op->op_status, op->rc, LRM_OP_ERROR);
-		op->op_status = LRM_OP_ERROR;
-	}
+	probe_s = g_hash_table_lookup(op->params, XML_ATTR_LRM_PROBE);
+	is_probe = crm_is_true(probe_s);
 
+	if(is_probe) {
+		int target_rc = EXECRA_OK;
+		const char *target_rc_s = NULL;
+
+		target_rc_s = g_hash_table_lookup(
+			op->params, XML_ATTR_TE_TARGET_RC);
+
+		CRM_DEV_ASSERT(target_rc_s != NULL);
+		if(crm_assert_failed) { return I_NULL; }
+
+		target_rc = atoi(target_rc_s);
+		if(target_rc == op->rc) {
+			char *op_id = make_stop_id(op->rsc_id, op->call_id);
+			crm_info("Confirmed stopped: %s", op->rsc_id);
+			send_direct_ack(op, NULL);
+			if(g_hash_table_remove(shutdown_ops, op_id)) {
+				crm_debug("Op %d (%s %s) confirmed",
+					  op->call_id, op->op_type, op->rsc_id);
+			} else if(op->interval == 0) {
+				crm_err("Op %d (%s %s) not matched: %s",
+					op->call_id, op->op_type, op->rsc_id, op_id);
+			}
+			crm_free(op_id);
+
+			return I_NULL;
+
+		} else {
+			crm_warn("Detected active resource: %s", op->rsc_id);
+		}
+	}
+	
 	switch(op->op_status) {
 		case LRM_OP_PENDING:
 			/* this really shouldnt happen */

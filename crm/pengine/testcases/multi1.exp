@@ -1,63 +1,120 @@
  <transition_graph global_timeout="60s" transition_id="0">
   <synapse id="0">
     <action_set>
-       <rsc_op id="1" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="4" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes/>
+         <attributes>
+           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
+           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+         </attributes>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
   <synapse id="1">
     <action_set>
-       <rsc_op id="2" rsc_id="rsc1" operation="delete" operation_key="rsc1_delete_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="5" rsc_id="rsc1" operation="delete" operation_key="rsc1_delete_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes/>
+         <attributes>
+           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
+           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+         </attributes>
       </rsc_op>
     </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="1" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+         <rsc_op id="4" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-       <rsc_op id="3" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+       <rsc_op id="6" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes/>
+         <attributes>
+           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
+           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+         </attributes>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="4" rsc_id="rsc1" operation="delete" operation_key="rsc1_delete_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false">
+       <rsc_op id="7" rsc_id="rsc1" operation="delete" operation_key="rsc1_delete_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes/>
+         <attributes>
+           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
+           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+         </attributes>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="3" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+         <rsc_op id="6" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="5" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false">
+       <rsc_op id="8" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes/>
+         <attributes>
+           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
+           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+         </attributes>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-         <rsc_op id="1" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1" allow_fail="false"/>
+         <rsc_op id="4" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
       <trigger>
-         <rsc_op id="3" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2" allow_fail="false"/>
+         <rsc_op id="6" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2"/>
       </trigger>
     </inputs>
   </synapse>
+   <synapse id="5">
+     <action_set>
+       <crm_event id="1" operation="probe_complete" operation_key="probe_complete">
+         <attributes>
+           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
+           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+         </attributes>
+       </crm_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <crm_event id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
+       <trigger>
+         <crm_event id="3" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="6">
+     <action_set>
+       <crm_event id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
+         <attributes>
+           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
+           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
+           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+         </attributes>
+       </crm_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="7">
+     <action_set>
+       <crm_event id="3" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
+         <attributes>
+           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
+           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
+           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+         </attributes>
+       </crm_event>
+     </action_set>
+     <inputs/>
+   </synapse>
 </transition_graph>
 

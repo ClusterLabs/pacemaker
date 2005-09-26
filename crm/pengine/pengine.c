@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.91 2005/09/15 17:13:08 andrew Exp $ */
+/* $Id: pengine.c,v 1.92 2005/09/26 07:44:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -248,7 +248,9 @@ cleanup_calculations(pe_working_set_t *data_set)
 	if(data_set == NULL) {
 		return;
 	}
-	
+
+	g_hash_table_destroy(data_set->config_hash);
+
 	crm_free(data_set->dc_uuid);
 	crm_free(data_set->transition_idle_timeout);
 	
@@ -296,11 +298,12 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->stonith_enabled   = FALSE;
 	data_set->symmetric_cluster = TRUE;
 	data_set->no_quorum_policy  = no_quorum_freeze;
+	data_set->is_managed_default = TRUE;
 	
 	data_set->stop_action_orphans = FALSE;
 	data_set->stop_rsc_orphans = FALSE;
-	data_set->remove_on_stop = TRUE;
 	
+	data_set->config_hash = NULL;
 	data_set->nodes     = NULL;
 	data_set->resources = NULL;
 	data_set->ordering_constraints  = NULL;

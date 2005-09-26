@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.62 2005/09/21 10:35:03 andrew Exp $ */
+/* $Id: complex.c,v 1.63 2005/09/26 07:44:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,6 +23,7 @@
 #include <pe_utils.h>
 #include <pe_rules.h>
 #include <crm/msg_xml.h>
+#include <clplumbing/cl_misc.h>
 
 gboolean update_node_weight(rsc_to_node_t *cons,const char *id,GListPtr nodes);
 gboolean is_active(rsc_to_node_t *cons);
@@ -49,6 +50,7 @@ resource_object_functions_t resource_class_functions[] = {
 		native_num_allowed_nodes,
 		native_color,
 		native_create_actions,
+		native_create_probe,
 		native_internal_constraints,
 		native_agent_constraints,
 		native_rsc_colocation_lh,
@@ -69,6 +71,7 @@ resource_object_functions_t resource_class_functions[] = {
 		group_num_allowed_nodes,
 		group_color,
 		group_create_actions,
+		group_create_probe,
 		group_internal_constraints,
 		group_agent_constraints,
 		group_rsc_colocation_lh,
@@ -89,6 +92,7 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_num_allowed_nodes,
 		clone_color,
 		clone_create_actions,
+		clone_create_probe,
 		clone_internal_constraints,
 		clone_agent_constraints,
 		clone_rsc_colocation_lh,
@@ -109,6 +113,7 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_num_allowed_nodes,
 		clone_color,
 		master_create_actions,
+		clone_create_probe,
 		master_internal_constraints,
 		clone_agent_constraints,
 		clone_rsc_colocation_lh,
@@ -243,7 +248,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->candidate_colors   = NULL;
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
-	(*rsc)->is_managed	   = TRUE;
+	(*rsc)->is_managed	   = data_set->is_managed_default;
 	(*rsc)->failed		   = FALSE;
 	(*rsc)->start_pending	   = FALSE;	
 	(*rsc)->role		   = RSC_ROLE_STOPPED;
@@ -260,11 +265,13 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->notify		   = crm_is_true(value); 
 	
 	value = g_hash_table_lookup((*rsc)->parameters, "is_managed");
-	if(value != NULL && crm_is_true(value) == FALSE) {
-		(*rsc)->is_managed = FALSE;
-		crm_warn("Resource %s is currently not managed", (*rsc)->id);
+	if(value != NULL) {
+		cl_str_to_boolean(value, &((*rsc)->is_managed));
 	}
-	if((*rsc)->is_managed && data_set->symmetric_cluster) {
+	if((*rsc)->is_managed == FALSE) {
+		crm_warn("Resource %s is currently not managed", (*rsc)->id);
+
+	} else if(data_set->symmetric_cluster) {
 		rsc_to_node_t *new_con = rsc2node_new(
 			"symmetric_default", *rsc, 0, NULL, data_set);
 		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);

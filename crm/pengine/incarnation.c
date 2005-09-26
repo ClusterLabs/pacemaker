@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.54 2005/09/21 10:35:03 andrew Exp $ */
+/* $Id: incarnation.c,v 1.55 2005/09/26 07:44:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1192,4 +1192,22 @@ clone_create_notify_element(resource_t *rsc, action_t *op,
 		child_rsc->fns->create_notify_element(
 			child_rsc, op, n_data, data_set);
 		);
+}
+
+gboolean
+clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
+		    pe_working_set_t *data_set) 
+{
+	gboolean any_created = FALSE;
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc);
+
+	slist_iter(
+		child_rsc, resource_t, clone_data->child_list, lpc,
+		
+		any_created = child_rsc->fns->create_probe(
+			child_rsc, node, complete, data_set) || any_created;
+		);
+
+	return any_created;
 }

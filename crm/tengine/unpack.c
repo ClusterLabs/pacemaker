@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.46 2005/09/15 15:23:55 andrew Exp $ */
+/* $Id: unpack.c,v 1.47 2005/09/26 07:44:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,12 +169,11 @@ unpack_graph(crm_data_t *xml_graph)
 action_t*
 unpack_action(crm_data_t *xml_action) 
 {
-	const char *tmp        = crm_element_value(xml_action, XML_ATTR_ID);
-	action_t   *action     = NULL;
+	action_t   *action = NULL;
 	crm_data_t *action_copy = NULL;
-	crm_data_t *nvpair_list = NULL;
+	const char *value = crm_element_value(xml_action, XML_ATTR_ID);
 
-	if(tmp == NULL) {
+	if(value == NULL) {
 		crm_err("Actions must have an id!");
 		crm_log_xml_debug_3(xml_action, "Action with missing id");
 		return NULL;
@@ -186,7 +185,7 @@ unpack_action(crm_data_t *xml_action)
 		return NULL;
 	}
 	
-	action->id       = atoi(tmp);
+	action->id       = atoi(value);
 	action->timeout  = 0;
 	action->interval = 0;
 	action->timer    = NULL;
@@ -209,28 +208,23 @@ unpack_action(crm_data_t *xml_action)
 		action->type = action_type_crm;
 	}
 
-	nvpair_list = find_xml_node(action_copy, XML_TAG_ATTRS, FALSE);
-	if(nvpair_list == NULL) {
-		crm_debug_2("No attributes in %s",
-			    crm_element_name(action_copy));
+	action->params = xml2list(action_copy);
+
+	value = g_hash_table_lookup(action->params, "timeout");
+	if(value != NULL) {
+		action->timeout = atoi(value);
+	}
+
+	value = g_hash_table_lookup(action->params, "interval");
+	if(value != NULL) {
+		action->interval = atoi(value);
+	}
+
+	value = g_hash_table_lookup(action->params, "can_fail");
+	if(value != NULL) {	
+		cl_str_to_boolean(value, &(action->can_fail));
 	}
 	
-	xml_child_iter(
-		nvpair_list, node_iter, XML_CIB_TAG_NVPAIR,
-		
-		const char *key   = crm_element_value(
-			node_iter, XML_NVPAIR_ATTR_NAME);
-		const char *value = crm_element_value(
-			node_iter, XML_NVPAIR_ATTR_VALUE);
-
-		if(safe_str_eq(key, "timeout")) {
-			action->timeout = atoi(value);
-
-		} else if(safe_str_eq(key, "interval")) {
-			action->interval = atoi(value);
-		}
-		);
-
 	crm_debug_3("Action %d has timer set to %dms",
 		  action->id, action->timeout);
 	
@@ -239,9 +233,6 @@ unpack_action(crm_data_t *xml_action)
 	action->timer->source_id = -1;
 	action->timer->reason    = timeout_action;
 	action->timer->action    = action;
-
-	tmp = crm_element_value(action_copy, "can_fail");
-	cl_str_to_boolean(tmp, &(action->can_fail));
 
 	return action;
 }

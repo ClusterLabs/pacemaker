@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.27 2005/08/25 09:36:55 andrew Exp $ */
+/* $Id: tengine.h,v 1.28 2005/09/26 07:44:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -87,6 +87,8 @@ typedef struct action_s {
 
 		action_type_e type;
 
+		GHashTable *params;
+		
 		gboolean sent_update;	/* sent to the CIB */
 		gboolean invoked;	/* sent to the CRM */
 		gboolean complete;

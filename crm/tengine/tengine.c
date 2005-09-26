@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.99 2005/09/16 17:28:58 andrew Exp $ */
+/* $Id: tengine.c,v 1.100 2005/09/26 07:44:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -110,11 +110,11 @@ initialize_graph(void)
 
 			if(action->timer->source_id > 0) {
 				crm_debug_3("Removing timer for action: %d",
-					  action->id);
+					    action->id);
 				
 				Gmain_timeout_remove(action->timer->source_id);
 			}
-
+			g_hash_table_destroy(action->params);
 			free_xml(action->xml);
 			crm_free(action->timer);
 			crm_free(action);
@@ -125,7 +125,9 @@ initialize_graph(void)
 			synapse->inputs =
 				g_list_remove(synapse->inputs, action);
 
+			g_hash_table_destroy(action->params);
 			free_xml(action->xml);
+			crm_free(action->timer);
 			crm_free(action);
 			
 		}
@@ -146,6 +148,7 @@ initialize_graph(void)
 int
 match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 {
+	const char *target_rc_s = NULL;
 	const char *allow_fail  = NULL;
 	const char *this_action = NULL;
 	const char *this_node   = NULL;
@@ -159,6 +162,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	
 	action_t *match = NULL;
 	int op_status_i = -3;
+	int op_rc_i = -3;
 	int transition_i = -1;
 
 	if(event == NULL) {
@@ -209,7 +213,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 
 	CRM_DEV_ASSERT(decode_transition_magic(
 			       magic, &update_te_uuid,
-			       &transition_i, &op_status_i));
+			       &transition_i, &op_status_i, &op_rc_i));
 	
 	if(transition_i == -1) {
 		/* we never expect these - recompute */
@@ -232,8 +236,28 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	stop_te_timer(match->timer);
 	match->complete = TRUE;
 
+	target_rc_s = g_hash_table_lookup(match->params,XML_ATTR_TE_TARGET_RC);
+	if(target_rc_s != NULL) {
+		int target_rc = atoi(target_rc_s);
+		
+		crm_info("Target rc = %d (%s)", target_rc, target_rc_s);
+		if(target_rc == op_rc_i) {
+			crm_info("Target rc: == %d", op_rc_i);
+			if(op_status_i != LRM_OP_DONE) {
+				crm_info("Re-mapping op status to LRM_OP_DONE");
+				op_status_i = LRM_OP_DONE;
+			}
+		} else {
+			crm_info("Target rc: != %d", op_rc_i);
+			if(op_status_i != LRM_OP_ERROR) {
+				crm_info("Re-mapping op status to LRM_OP_ERROR");
+				op_status_i = LRM_OP_ERROR;
+			}
+		}
+	}
+	
 	/* Process OP status */
-	allow_fail = crm_element_value(match->xml, "allow_fail");
+	allow_fail = g_hash_table_lookup(match->params, XML_ATTR_TE_ALLOWFAIL);
 	switch(op_status_i) {
 		case -3:
 			crm_err("Action returned the same as last time..."
@@ -354,7 +378,9 @@ match_down_event(const char *target, const char *filter, int rc)
 		case STONITH_TIMEOUT:
 		case STONITH_GENERIC:
 			match->failed = TRUE;
-			allow_fail = crm_element_value(match->xml, "allow_fail");
+			allow_fail = g_hash_table_lookup(
+				match->params, XML_ATTR_TE_ALLOWFAIL);
+
 			if(FALSE == crm_is_true(allow_fail)) {
 				crm_err("Stonith of %s failed (%d)..."
 					" aborting transition.", target, rc);
@@ -711,7 +737,7 @@ cib_action_update(action_t *action, int status)
 	crm_free(code);
 
 	code = generate_transition_magic(
-		crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY), status);
+		crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY), status, status);
 	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, code);
 	crm_free(code);
 	
@@ -772,6 +798,7 @@ cib_action_updated(
 	const char *task    = NULL;
 	const char *rsc_id  = NULL;
 	const char *on_node = NULL;
+	const char *value = NULL;
 
 	action_t *action = user_data;
 	char *counter = crm_itoa(transition_counter);
@@ -825,8 +852,9 @@ cib_action_updated(
 #endif
 	
 	action->invoked = TRUE;
-	if(safe_str_eq(CRMD_ACTION_CANCEL, task)
-	   || safe_str_eq(CRMD_ACTION_DELETE, task)) {
+	value = g_hash_table_lookup(action->params, XML_ATTR_TE_NOWAIT);
+	if(crm_is_true(value)) {
+		crm_info("Skipping wait for %d", action->id);
 		action->complete = TRUE;
 		process_trigger(action->id);
 

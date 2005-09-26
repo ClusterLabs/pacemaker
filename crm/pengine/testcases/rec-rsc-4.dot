@@ -1,6 +1,14 @@
 digraph "g" {
 	size = "30,30"
-"rsc1_stop_0" [ font_color=black style=filled fillcolor=purple ]
-"rsc1_start_0" [ font_color=black style=filled fillcolor=purple ]
-"rsc1_stop_0" -> "rsc1_start_0" [ style = dashed]
+"rsc1_stop_0 node2" [ font_color=black style=filled fillcolor=purple ]
+"probe_complete" [ style=bold color="green" fontcolor="orange" ]
+"probe_complete node1" [ style=bold color="green" fontcolor="black" ]
+"rsc1_status_0 node1" [ font_color=black style=filled fillcolor=purple ]
+"probe_complete node2" [ style=bold color="green" fontcolor="black" ]
+"rsc1_start_0 node1" [ font_color=black style=filled fillcolor=purple ]
+"probe_complete node1" -> "probe_complete" [ style = bold]
+"probe_complete node2" -> "probe_complete" [ style = bold]
+"rsc1_status_0 node1" -> "probe_complete node1" [ style = bold]
+"probe_complete" -> "rsc1_start_0 node1" [ style = dashed]
+"rsc1_stop_0 node2" -> "rsc1_start_0 node1" [ style = dashed]
 }

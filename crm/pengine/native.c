@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.84 2005/09/21 10:35:03 andrew Exp $ */
+/* $Id: native.c,v 1.85 2005/09/26 07:44:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -866,14 +866,8 @@ native_print(
 	}
 	
 	if((options & pe_print_rsconly) == 0) {
-/* 	} else if(rsc->variant == pe_native */
-/* 		  && g_list_length(rsc->running_on) == 0) { */
-/* 		status_print("NOT ACTIVE"); */
-		
-/* 	} else if(g_list_length(rsc->running_on) == 1) { */
 		
 	} else if(g_list_length(rsc->running_on) > 1) {
-
 		if(options & pe_print_html) {
 			status_print("<ul>\n");
 		} else if((options & pe_print_printf)
@@ -926,7 +920,7 @@ native_print(
 			     g_list_length(native_data->allowed_nodes),
 			     g_list_length(rsc->rsc_cons));
 	}
-	
+
 	if(options & pe_print_max_details) {
 		status_print("%s\t=== Actions.\n", pre_text);
 		slist_iter(
@@ -1700,9 +1694,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 		stop = stop_action(rsc, current, FALSE);
 		start = start_action(rsc, next, FALSE);
 
-		if(data_set->remove_on_stop
-		   && rsc->failed == FALSE
-		   && stop->runnable) {
+		if(rsc->failed == FALSE && stop->runnable) {
 			delete = delete_action(rsc, current);
 			custom_action_order(
 				rsc, NULL, stop, rsc, NULL, delete,
@@ -1760,9 +1752,7 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 			 rsc->id, current->details->uname);
 		stop = stop_action(rsc, current, FALSE);
 
-		if(data_set->remove_on_stop
-		   && rsc->failed == FALSE
-		   && stop->runnable) {
+		if(rsc->failed == FALSE && stop->runnable) {
 			delete = delete_action(rsc, current);
 			custom_action_order(
 				rsc, NULL, stop, rsc, NULL, delete,
@@ -1833,3 +1823,35 @@ NullOp(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	return FALSE;
 }
 
+
+gboolean
+native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
+		    pe_working_set_t *data_set) 
+{
+	char *key = NULL;
+	char *target_rc = NULL;
+	action_t *probe = NULL;
+	node_t *running = pe_find_node_id(rsc->running_on, node->details->id);
+
+	if(running != NULL) {
+		/* we already know the status of the resource on this node */
+		return FALSE;
+	}
+	
+	target_rc = crm_itoa(EXECRA_NOT_RUNNING);
+	key = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
+	probe = custom_action(rsc, key, CRMD_ACTION_STATUS, node,
+			      FALSE, TRUE, data_set);
+
+	g_hash_table_insert(probe->extra,
+			    crm_strdup(XML_ATTR_TE_TARGET_RC), target_rc);
+
+	g_hash_table_insert(probe->extra,
+			    crm_strdup(XML_ATTR_LRM_PROBE),
+			    crm_strdup(XML_BOOLEAN_TRUE));
+	
+	custom_action_order(rsc, NULL, probe, rsc, NULL, complete,
+			    pe_ordering_manditory, data_set);	
+
+	return TRUE;
+}

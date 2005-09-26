@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.93 2005/09/21 10:35:03 andrew Exp $ */
+/* $Id: pengine.h,v 1.94 2005/09/26 07:44:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,7 +80,6 @@ enum pe_print_options {
 	pe_print_rsconly = 0x0040,
 };
 
-
 typedef struct pe_working_set_s 
 {
 		crm_data_t *input;
@@ -93,15 +92,16 @@ typedef struct pe_working_set_s
 		gboolean have_quorum;
 		gboolean stonith_enabled;
 		gboolean symmetric_cluster;
+		gboolean is_managed_default;
 
 		gboolean stop_rsc_orphans;
 		gboolean stop_action_orphans;
 
-		gboolean remove_on_stop;
-		
 		int default_resource_stickiness;
 		no_quorum_policy_t no_quorum_policy;
 
+		GHashTable *config_hash;
+		
 		/* intermediate steps */
 		color_t *no_color;
 		

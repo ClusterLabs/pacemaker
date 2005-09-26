@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.127 2005/09/21 10:35:03 andrew Exp $ */
+/* $Id: unpack.c,v 1.128 2005/09/26 07:44:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,6 +92,8 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	GHashTable *config_hash = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
+	data_set->config_hash = config_hash;	
+
 	unpack_instance_attributes(
 		config, "cluster_property_set", NULL, config_hash,
 		NULL, 0, data_set);
@@ -105,6 +107,7 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	param_value(config_hash, config, "stop_orphan_resources");
 	param_value(config_hash, config, "stop_orphan_actions");
 	param_value(config_hash, config, "remove_after_stop");
+	param_value(config_hash, config, "is_managed_default");
 #endif
 	value = g_hash_table_lookup(config_hash, "transition_idle_timeout");
 	if(value != NULL) {
@@ -178,15 +181,13 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	crm_info("Orphan resource actions are %s",
 		 data_set->stop_action_orphans?"stopped":"ignored");	
 
-	value = g_hash_table_lookup(config_hash, "remove_after_stop");
+	value = g_hash_table_lookup(config_hash, "is_managed_default");
 	if(value != NULL) {
-		cl_str_to_boolean(value, &data_set->remove_on_stop);
+		cl_str_to_boolean(value, &data_set->is_managed_default);
 	}
-	crm_info("After stop, resources are %s the LRM %s",
-		 data_set->remove_on_stop?"removed from":"left in",	
-		 data_set->remove_on_stop?"":"(legacy-mode)");	
-	
-	g_hash_table_destroy(config_hash);
+	crm_info("By default resources are %smanaged",
+		 data_set->is_managed_default?"":"not ");
+
 	return TRUE;
 }
 
@@ -446,7 +447,8 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 
 		id         = crm_element_value(node_state, XML_ATTR_ID);
 		uname = crm_element_value(node_state,    XML_ATTR_UNAME);
-		attrs = find_xml_node(node_state, XML_LRM_TAG_ATTRIBUTES,FALSE);
+		attrs = find_xml_node(
+			node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
 
 		lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
 		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
@@ -459,7 +461,7 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 			continue;
 
 		} else if(this_node == NULL) {
-			pe_warn("Node %s in status section no longer exists",
+			crm_warn("Node %s in status section no longer exists",
 				uname);
 			continue;
 		}
@@ -470,7 +472,7 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 		this_node->details->unclean = FALSE;
 		
 		crm_debug_3("Adding runtime node attrs");
-		add_node_attrs(node_state, this_node, data_set);
+		add_node_attrs(attrs, this_node, data_set);
 
 		crm_debug_3("determining node state");
 		determine_online_status(node_state, this_node, data_set);
@@ -742,6 +744,9 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	int a_id = -1;
 	int b_id = -1;
 
+	int a_rc = -1;
+	int b_rc = -1;
+
 	int a_status = -1;
 	int b_status = -1;
 	
@@ -784,8 +789,10 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	
 	/* now process pending ops */
 	CRM_DEV_ASSERT(a_key != NULL && b_key != NULL);
-	CRM_DEV_ASSERT(decode_transition_magic(a_key,&a_uuid,&a_id,&a_status));
-	CRM_DEV_ASSERT(decode_transition_magic(b_key,&b_uuid,&b_id,&b_status));
+	CRM_DEV_ASSERT(decode_transition_magic(
+			       a_key,&a_uuid,&a_id,&a_status, &a_rc));
+	CRM_DEV_ASSERT(decode_transition_magic(
+			       b_key,&b_uuid,&b_id,&b_status, &b_rc));
 
 	/* try and determin the relative age of the operation...
 	 * some pending operations (ie. a start) may have been supuerceeded
@@ -955,7 +962,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		g_hash_table_foreach(rsc->parameters, hash2field, pnow);
 		g_hash_table_foreach(local_rsc_params, hash2field, pnow);
 
- 		pdiff = diff_xml_object(params, pnow, FALSE);
+ 		pdiff = diff_xml_object(params, pnow, TRUE);
 		if(pdiff != NULL) {
 			crm_err("Parameters to %s action changed", task);
 			log_xml_diff(LOG_INFO, pdiff, __FUNCTION__);

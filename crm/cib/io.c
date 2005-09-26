@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.31 2005/09/12 11:00:19 andrew Exp $ */
+/* $Id: io.c,v 1.32 2005/09/26 07:44:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,6 +76,7 @@ gboolean cib_writes_enabled = TRUE;
 extern char *ccm_transition_id;
 extern gboolean cib_have_quorum;
 extern GHashTable *peer_hash;
+extern GHashTable *ccm_membership;
 
 int set_connected_peers(crm_data_t *xml_obj);
 void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);

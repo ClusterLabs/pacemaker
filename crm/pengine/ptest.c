@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.64 2005/09/21 10:33:59 andrew Exp $ */
+/* $Id: ptest.c,v 1.65 2005/09/26 07:44:44 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -88,6 +88,25 @@ init_dotfile(void)
 /* 	dot_write("	]"); */
 }
 
+static char *
+create_action_name(action_t *action) 
+{
+	char *action_name = NULL;
+	const char *action_host = NULL;
+	if(action->node) {
+		action_host = action->node->details->uname;
+		action_name = crm_concat(action->uuid, action_host, ' ');
+
+	} else if(action->pseudo) {
+		action_name = crm_strdup(action->uuid);
+		
+	} else {
+		action_host = "<none>";
+		action_name = crm_concat(action->uuid, action_host, ' ');
+	}
+	return action_name;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -104,6 +123,7 @@ main(int argc, char **argv)
 
 	const char *xml_file = NULL;
 	const char *dot_file = NULL;
+
 	
 	cl_log_set_entity("ptest");
 	cl_log_set_facility(LOG_USER);
@@ -220,30 +240,32 @@ main(int argc, char **argv)
 	init_dotfile();
 	slist_iter(
 		action, action_t, data_set.actions, lpc,
+
+		char *action_name = create_action_name(action);
 		crm_debug_3("Action %d: %p", action->id, action);
+
 		if(action->dumped == FALSE) {
 			if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
 				dot_write("\"%s\" [ font_color=black style=filled fillcolor=%s ]",
-					  action->uuid, "purple");
+					  action_name, "purple");
 
 			} else if(action->optional) {
 				dot_write("\"%s\" [ style=\"dashed\" color=\"%s\" fontcolor=\"%s\" ]",
-					  action->uuid, "blue",
+					  action_name, "blue",
 					  action->pseudo?"orange":"black");
 
 			} else {
 				dot_write("\"%s\" [ font_color=purple style=filled fillcolor=%s ]",
-					  action->uuid, "red");
+					  action_name, "red");
  				CRM_DEV_ASSERT(action->runnable == FALSE);
 			}
 			
 		} else {
-			dot_write("\"%s\" [ tooltip=\"%s\" style=bold color=\"%s\" fontcolor=\"%s\" ]",
-				  action->uuid,
-				  action->pseudo?"":action->node?action->node->details->uname:"<none>",
-				  "green",
+			dot_write("\"%s\" [ style=bold color=\"%s\" fontcolor=\"%s\" ]",
+				  action_name, "green",
 				  action->pseudo?"orange":"black");
 		}
+		crm_free(action_name);
 		);
 
 
@@ -252,6 +274,8 @@ main(int argc, char **argv)
 		int last_action = -1;
 		slist_iter(
 			before, action_wrapper_t, action->actions_before, lpc2,
+			char *before_name = NULL;
+			char *after_name = NULL;
 			optional = FALSE;
 			if(last_action == before->action->id) {
 				continue;
@@ -261,9 +285,13 @@ main(int argc, char **argv)
 			} else if(action->optional || before->action->optional) {
 				optional = TRUE;
 			}
+			before_name = create_action_name(before->action);
+			after_name = create_action_name(action);
 			dot_write("\"%s\" -> \"%s\" [ style = %s]",
-				  before->action->uuid, action->uuid,
+				  before_name, after_name,
 				  optional?"dashed":"bold");
+			crm_free(before_name);
+			crm_free(after_name);
 			);
 		);
 	dot_write("}");

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.111 2005/09/21 10:35:03 andrew Exp $ */
+/* $Id: utils.c,v 1.112 2005/09/26 07:44:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -721,6 +721,13 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 				g_str_hash, g_str_equal,
 				g_hash_destroy_str, g_hash_destroy_str);
 
+			/* include our version number...
+			 *   so future versions know what to be compatible
+			 *   with when we're DC
+			 */
+			add_hash_param(action->extra,
+				       XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+			
 			if(foo) {
 				data_set->actions = g_list_append(
 					data_set->actions, action);
@@ -1089,9 +1096,13 @@ text2task(const char *task)
 		return action_promoted;
 	} else if(safe_str_eq(task, CRMD_ACTION_DEMOTED)) {
 		return action_demoted;
-	} else if(safe_str_eq(task, "cancel")) {
+	} else if(safe_str_eq(task, CRMD_ACTION_CANCEL)) {
 		return no_action;
-	} else if(safe_str_eq(task, "delete")) {
+	} else if(safe_str_eq(task, CRMD_ACTION_DELETE)) {
+		return no_action;
+	} else if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
+		return no_action;
+	} else if(safe_str_eq(task, CRMD_ACTION_PROBED)) {
 		return no_action;
 	} 
 	pe_err("Unsupported action: %s", task);

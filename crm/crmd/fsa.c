@@ -66,7 +66,7 @@ void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
 #define DOT_PREFIX "live.dot: "
 #define DOT_LOG    LOG_DEBUG_2
 #define do_dot_log(fmt...)     do_crm_log(DOT_LOG, NULL, NULL, fmt)
-#define do_dot_action(fmt...)  do_crm_log(DOT_LOG, NULL, NULL, fmt)
+#define do_dot_action(fmt...)  do_crm_log(LOG_DEBUG, NULL, NULL, fmt)
 
 longclock_t action_start = 0;
 longclock_t action_stop = 0;
@@ -348,12 +348,13 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 		 * are performed first
 		 */
 
-		/* get out of here NOW! before anything worse happens */
-		IF_FSA_ACTION(A_EXIT_1,		do_exit)
 
-		else IF_FSA_ACTION(A_ERROR, do_log)
+		IF_FSA_ACTION(A_ERROR, do_log)
 		else IF_FSA_ACTION(A_WARN,  do_log)
 		else IF_FSA_ACTION(A_LOG,   do_log)
+
+		/* get out of here NOW! before anything worse happens */
+		else IF_FSA_ACTION(A_EXIT_1,do_exit)
 
 		/* essential start tasks */
 		else IF_FSA_ACTION(A_STARTUP,	  do_startup)
@@ -367,8 +368,7 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 		else IF_FSA_ACTION(A_TE_START,	  do_te_control)
 		else IF_FSA_ACTION(A_PE_START,	  do_pe_control)
 		
-		/* sub-system restart
-		 */
+		/* sub-system restart */
 		else IF_FSA_ACTION(O_CIB_RESTART,	do_cib_control)
 		else IF_FSA_ACTION(O_PE_RESTART,	do_pe_control)
 		else IF_FSA_ACTION(O_TE_RESTART,	do_te_control)

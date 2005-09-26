@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.42 2005/09/21 10:35:03 andrew Exp $ */
+/* $Id: group.c,v 1.43 2005/09/26 07:44:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -520,4 +520,21 @@ group_create_notify_element(resource_t *rsc, action_t *op,
 		child_rsc->fns->create_notify_element(
 			child_rsc, op, n_data, data_set);
 		);
+}
+
+gboolean
+group_create_probe(resource_t *rsc, node_t *node, action_t *complete,
+		    pe_working_set_t *data_set) 
+{
+	gboolean any_created = FALSE;
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		
+		any_created = child_rsc->fns->create_probe(
+			child_rsc, node, complete, data_set) || any_created;
+		);
+	return any_created;
 }

@@ -293,6 +293,7 @@ crmd_ha_status_callback(
 		node, node, status, NULL, NULL, NULL, NULL, __FUNCTION__);
 	
 	crm_xml_add(update, XML_CIB_ATTR_CLEAR_SHUTDOWN, XML_BOOLEAN_TRUE);
+	crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS);
 
 	/* this change should not be broadcast */
 	update_local_cib(create_cib_fragment(update, NULL));
@@ -316,7 +317,7 @@ crmd_client_status_callback(const char * node, const char * client,
 
 	if(safe_str_eq(status, JOINSTATUS)){
 		status = ONLINESTATUS;
-		extra  = XML_CIB_ATTR_CLEAR_SHUTDOWN;
+/* 		extra  = XML_CIB_ATTR_CLEAR_SHUTDOWN; */
 
 	} else if(safe_str_eq(status, LEAVESTATUS)){
 		status = OFFLINESTATUS;
@@ -351,6 +352,10 @@ crmd_client_status_callback(const char * node, const char * client,
 			__FUNCTION__);
 		
 		crm_xml_add(update, extra, XML_BOOLEAN_TRUE);
+		if(safe_str_eq(extra, XML_CIB_ATTR_CLEAR_SHUTDOWN)) {
+			crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS);
+		}
+		
 		fragment = create_cib_fragment(update, NULL);
 
 		/* it is safe to keep these updates on the local node
@@ -571,7 +576,8 @@ crmd_ccm_msg_callback(
 void
 crmd_cib_connection_destroy(gpointer user_data)
 {
-	if(is_set(fsa_input_register, R_SHUTDOWN)) {
+	if(is_set(fsa_input_register, R_SHUTDOWN)
+	   || is_set(fsa_input_register, R_CIB_CONNECTED)) {
 		crm_info("Connection to the CIB terminated...");
 		return;
 	}
